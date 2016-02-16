@@ -33,6 +33,16 @@ IF(PASTIX_FOUND)
 
 ENDIF(PASTIX_FOUND)
 
+IF(MUMPS_FOUND)
+
+  ADD_EXECUTABLE( test_sparse_matrix_mumps test_sparse_matrix_mumps.F90 )
+  TARGET_LINK_LIBRARIES( test_sparse_matrix_mumps sll_sparse_matrix )
+  ADD_TEST(NAME sparse_matrix_mumps COMMAND test_sparse_matrix_mumps )
+  SET_TESTS_PROPERTIES( sparse_matrix_mumps PROPERTIES 
+    PASS_REGULAR_EXPRESSION "PASSED" TIMEOUT 20 )
+
+ENDIF(MUMPS_FOUND)
+
 
 ADD_LIBRARY(sll_csr_one_constraint STATIC sll_csr_one_constraint_module.F90)
 TARGET_LINK_LIBRARIES(sll_csr_one_constraint sll_utilities sll_memory)
