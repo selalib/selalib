@@ -1,4 +1,4 @@
-module sll_paralution
+module sll_m_paralution
 use, intrinsic :: ISO_C_BINDING
 
 implicit none
@@ -108,5 +108,5 @@ mat%num_nz = l
 return
 end subroutine uni2D
 
-end module sll_paralution
+end module sll_m_paralution
 

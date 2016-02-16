@@ -60,13 +60,11 @@ SET_TESTS_PROPERTIES( gmres PROPERTIES TIMEOUT 2 )
 
 IF(BUILD_PARALUTION)
 
-  INCLUDE_DIRECTORIES(${CMAKE_BINARY_DIR}/paralution-prefix/src/paralution/src/)
   LINK_DIRECTORIES(${CMAKE_BINARY_DIR}/paralution-prefix/src/paralution-build/lib/)
-  ADD_LIBRARY(sll_paralution paralution_fortran.cpp sll_paralution.F90)
-  ADD_EXECUTABLE(paralution_solver test_paralution.F90) 
-  TARGET_LINK_LIBRARIES(paralution_solver sll_sparse_matrix sll_paralution paralution)
-  ADD_TEST( NAME paralution COMMAND paralution_solver )
-  SET_TESTS_PROPERTIES( paralution PROPERTIES TIMEOUT 10 )
+  ADD_EXECUTABLE(test_paralution test_paralution.F90) 
+  TARGET_LINK_LIBRARIES(test_paralution sll_sparse_matrix sll_paralution paralution)
+  ADD_TEST( NAME paralution-${PARALUTION_VERSION} COMMAND test_paralution )
+  SET_TESTS_PROPERTIES( paralution-${PARALUTION_VERSION} PROPERTIES TIMEOUT 10 )
 
 ENDIF(BUILD_PARALUTION)
 

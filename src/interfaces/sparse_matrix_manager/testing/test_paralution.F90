@@ -9,7 +9,7 @@ use, intrinsic :: ISO_C_BINDING, only : C_INT,       &
                                         C_NULL_CHAR, &
                                         C_LOC
 
-use sll_paralution
+use sll_m_paralution
 
 implicit none
 
