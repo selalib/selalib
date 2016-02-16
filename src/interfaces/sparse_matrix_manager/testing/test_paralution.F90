@@ -85,7 +85,7 @@ call paralution_fortran_solve_csr(       &
 call date_and_time(values = tend)
 
 tbegin = tend - tbegin
-tsolver = 0.001 * tbegin(8) + tbegin(7) + 60 * tbegin(6) + 3600 * tbegin(5)
+tsolver = 0.001_f64 * tbegin(8) + tbegin(7) + 60 * tbegin(6) + 3600 * tbegin(5)
 write(*,fmt='(A,F0.2,A)') '(Fortran) Solver ended after ', tsolver,'sec.'
 
 ! Print solver details
@@ -101,4 +101,3 @@ write(*,*) "error =", maxval(abs(x-1))
 deallocate( rhs, x )
 
 end program test_paralution_solver
-
