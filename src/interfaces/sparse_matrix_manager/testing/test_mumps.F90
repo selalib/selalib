@@ -1,16 +1,16 @@
 #define MPI_MASTER 0
 
-program test_pastix
+program test_mumps
 #include "sll_working_precision.h"
 #include "sll_memory.h"
 use sll_m_collective
-use sll_m_pastix 
+use sll_m_mumps 
 
 implicit none
 
 sll_int32 :: nhinv, m
 
-type(pastix_solver)               :: linear_solver
+type(mumps_solver)                :: linear_solver
 sll_int32                         :: nnzeros
 sll_int32,  dimension(:), pointer :: ia
 sll_int32,  dimension(:), pointer :: ja
@@ -111,4 +111,4 @@ end do
 
 end subroutine uni_laplace_2D
 
-end program test_pastix
+end program test_mumps

@@ -34,7 +34,7 @@ interface initialize
 end interface initialize
 
 interface solve
-   module procedure solve_mumps_with_rhs
+   module procedure solve_mumps_without_rhs
 end interface solve
 
 interface factorize
@@ -58,6 +58,7 @@ subroutine init_mumps(self,n,nnzeros,row_ptr,col_ind,val)
   sll_int32                        :: error
   sll_int32                        :: prank    
   sll_int32                        :: psize
+  sll_int32                        :: i, k, l
 
   if( .not. associated(sll_v_world_collective)) then
      call sll_s_boot_collective()
@@ -74,23 +75,31 @@ subroutine init_mumps(self,n,nnzeros,row_ptr,col_ind,val)
   self%mumps_par%PAR = 1
   call dmumps(self%mumps_par)
 
-  if (self%mumps_par%INFOG(1).LT.0) then
+  if (self%mumps_par%infog(1).LT.0) then
     write(6,'(A,A,I6,A,I9)') " ERROR RETURN: ", &
-              "  mumps_par%INFOG(1)= ", self%mumps_par%INFOG(1),  &
-              "  mumps_par%INFOG(2)= ", self%mumps_par%INFOG(2) 
+              "  mumps_par%infog(1)= ", self%mumps_par%infog(1),  &
+              "  mumps_par%infog(2)= ", self%mumps_par%infog(2) 
     stop
   end if
 
   self%mumps_par%N  = n
   self%mumps_par%NZ = nnzeros
-  allocate( self%mumps_par%IRN ( self%mumps_par%NZ ) )
-  allocate( self%mumps_par%JCN ( self%mumps_par%NZ ) )
-  allocate( self%mumps_par%A(    self%mumps_par%NZ ) )
-  allocate( self%mumps_par%RHS ( self%mumps_par%N  ) )
-  !mumps_par%IRN
-  !mumps_par%JCN
-  !mumps_par%A(I)
-  !mumps_par%RHS(I)
+  SLL_ALLOCATE( self%mumps_par%IRN ( self%mumps_par%NZ ) , error)
+  SLL_ALLOCATE( self%mumps_par%JCN ( self%mumps_par%NZ ) , error)
+  SLL_ALLOCATE( self%mumps_par%A(    self%mumps_par%NZ ) , error)
+  SLL_ALLOCATE( self%mumps_par%rhs ( self%mumps_par%N  ) , error)
+
+  l = 0
+    do i = 1, n
+       do k = row_ptr(i),row_ptr(i+1)-1 
+          l = l + 1
+          self%mumps_par%IRN(l) = i
+          self%mumps_par%JCN(l) = col_ind(l)
+          self%mumps_par%A(l)   = val(l)
+       end do
+    end do
+
+  self%mumps_par%rhs = 0.0_f64
 
 end subroutine init_mumps
 
@@ -98,19 +107,49 @@ subroutine factorize_mumps(self)
 
   type(mumps_solver) :: self
 
+  self%mumps_par%JOB = 4
+  call dmumps(self%mumps_par)
+
 end subroutine factorize_mumps
 
-subroutine solve_mumps_with_rhs(self, rhs, sol)
+subroutine solve_mumps_without_rhs(self, sol)
 
-  type(mumps_solver)      :: self
-  sll_real64, dimension(:) :: rhs
+  type(mumps_solver)       :: self
   sll_real64, dimension(:) :: sol
 
-end subroutine solve_mumps_with_rhs
+  self%mumps_par%rhs = sol
+  !  Call package for solution
+  self%mumps_par%JOB = 3
+  call dmumps(self%mumps_par)
+  if (self%mumps_par%infog(1) < 0) then
+   write(6,'(A,A,I6,A,I9)') " ERROR RETURN: ", &
+              "  mumps_par%infog(1)= ", self%mumps_par%infog(1),  &
+              "  mumps_par%infog(2)= ", self%mumps_par%infog(2) 
+  else
+    sol = self%mumps_par%rhs
+  end if
+
+end subroutine solve_mumps_without_rhs
 
 subroutine free_mumps(self)
 
   type(mumps_solver) :: self
+
+  !  Deallocate user data
+  if ( self%mumps_par%MYID == 0 ) then
+    deallocate( self%mumps_par%IRN )
+    deallocate( self%mumps_par%JCN )
+    deallocate( self%mumps_par%A   )
+    deallocate( self%mumps_par%rhs )
+  end if
+  !  Destroy the instance (deallocate internal data structures)
+  self%mumps_par%JOB = -2
+  call dmumps(self%mumps_par)
+  IF (self%mumps_par%infog(1).LT.0) THEN
+    write(6,'(A,A,I6,A,I9)') " ERROR RETURN: ", &
+              "  mumps_par%infog(1)= ", self%mumps_par%infog(1),  &
+              "  mumps_par%infog(2)= ", self%mumps_par%infog(2) 
+  end if
 
 end subroutine free_mumps
 

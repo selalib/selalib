@@ -10,6 +10,9 @@ ADD_TEST(NAME sparse_matrix_cg COMMAND test_sparse_matrix_cg )
 SET_TESTS_PROPERTIES( sparse_matrix_cg PROPERTIES 
   PASS_REGULAR_EXPRESSION "PASSED" TIMEOUT 20 )
 
+ADD_EXECUTABLE(test_lapack test_lapack.F90)
+TARGET_LINK_LIBRARIES( test_lapack ${LAPACK_LIBRARIES} )
+
 IF(SUITESPARSE_FOUND)
 
   ADD_EXECUTABLE( test_sparse_matrix_umfpack test_sparse_matrix_umfpack.F90 )
@@ -72,11 +75,10 @@ ENDIF(PASTIX_FOUND)
 
 IF(MUMPS_FOUND) #Simple test from the library 
 
-  ADD_EXECUTABLE( test_mumps dsimpletest.F90 )
-  TARGET_LINK_LIBRARIES( test_mumps ${MUMPS_LIBRARIES} )
-  SET(EXECUTABLE "${CMAKE_BINARY_DIR}/bin/test_mumps")
-  SET(INPUT_FILE "${CMAKE_CURRENT_SOURCE_DIR}/input_simpletest_real")
-  ADD_TEST( NAME mumps COMMAND ${EXECUTABLE} ${INPUT_FILE} )
-  SET_TESTS_PROPERTIES( mumps PROPERTIES TIMEOUT 10 )
+  ADD_EXECUTABLE( test_mumps test_mumps.F90 )
+  TARGET_LINK_LIBRARIES( test_mumps sll_sparse_matrix 
+                           sll_collective ${MUMPS_LIBRARIES} )
+  ADD_TEST( NAME mumps COMMAND test_mumps )
+  SET_TESTS_PROPERTIES( mumps PROPERTIES PASS_REGULAR_EXPRESSION "PASSED" )
 
 ENDIF(MUMPS_FOUND)
