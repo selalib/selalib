@@ -130,8 +130,8 @@ module sll_m_sim_bsl_gc_2d0v_cart
   use sll_m_poisson_2d_elliptic_solver, only: &
     sll_f_new_poisson_2d_elliptic_solver
 
-  use sll_m_poisson_2d_periodic_fft, only: &
-    sll_f_new_poisson_2d_periodic_fft
+  use sll_m_poisson_2d_periodic, only: &
+    sll_f_new_poisson_2d_periodic
 
   use sll_m_reduction, only: &
     sll_f_compute_integral_trapezoid_1d
@@ -1008,7 +1008,7 @@ contains
 #endif
       case ("SLL_POISSON_FFT")     
         !stop  
-        sim%poisson => sll_f_new_poisson_2d_periodic_fft( &
+        sim%poisson => sll_f_new_poisson_2d_periodic( &
           x1_min,&
           x1_max,&
           Nc_x1,&

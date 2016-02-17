@@ -1,11 +1,11 @@
-program test_poisson_2d_periodic_fft
+program test_poisson_2d_periodic
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_memory.h"
 #include "sll_working_precision.h"
 
 use sll_m_constants
 use sll_m_poisson_2d_base
-use sll_m_poisson_2d_periodic_fft
+use sll_m_poisson_2d_periodic
 
 implicit none
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -129,7 +129,7 @@ SLL_ALLOCATE(rho(Nc_x1+1,Nc_x2+1),ierr)
 
 rho = 1._f64
 
-poisson_class => sll_f_new_poisson_2d_periodic_fft(x1_min,x1_max,Nc_x1,x2_min,x2_max,Nc_x2)
+poisson_class => sll_f_new_poisson_2d_periodic(x1_min,x1_max,Nc_x1,x2_min,x2_max,Nc_x2)
 
 call poisson_class%compute_phi_from_rho( phi, rho )
 
@@ -141,4 +141,4 @@ else
  stop '#FAILED'
 end if
 
-end program test_poisson_2d_periodic_fft
+end program test_poisson_2d_periodic
