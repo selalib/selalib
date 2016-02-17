@@ -85,7 +85,7 @@ module sll_m_fft
      sll_int32                        :: direction
      sll_int32                        :: problem_rank
      sll_int32, allocatable           :: problem_shape(:)
-     sll_int32, pointer, private      :: scramble_index(:)
+     sll_int32, pointer, private      :: scramble_index(:) ! scratch data for twiddles. Pointer required. TODO: Understand why pointer is needed.
      sll_int32, private               :: transform_type !< Type of the transform. Use for assertion to make sure execution is called of the same type as fft object was initialized for.
   end type sll_t_fft
 
