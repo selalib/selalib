@@ -15,7 +15,7 @@
 !  "http://www.cecill.info". 
 !**************************************************************
 !> @ingroup fft
-!> @author ???? and Katharina Kormann (IPP)
+!> @author Katharina Kormann (IPP)
 !> @brief FFT interface for FFTW
 module sll_m_fft
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++

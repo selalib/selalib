@@ -28,7 +28,7 @@ sll_real64, dimension(:,:), allocatable :: rhs
 sll_real64, dimension(:,:), allocatable :: phi
 sll_real64, dimension(:,:), allocatable :: phi_exact
 
-type(sll_t_poisson_2d_periodic_fftpack) :: poisson
+type(sll_t_poisson_2d_periodic_fft) :: poisson
 
 sll_real64                :: x1
 sll_real64                :: x2
