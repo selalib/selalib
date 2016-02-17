@@ -86,7 +86,7 @@ module sll_m_fft
      sll_int32                        :: problem_rank
      sll_int32, allocatable           :: problem_shape(:)
      sll_int32, allocatable, private  :: scramble_index(:)
-     sll_int32, private                :: transform_type !< Type of the transform. Use for assertion to make sure execution is called of the same type as fft object was initialized for.
+     sll_int32, private               :: transform_type !< Type of the transform. Use for assertion to make sure execution is called of the same type as fft object was initialized for.
   end type sll_t_fft
 
 
@@ -250,7 +250,7 @@ contains
 ! ------
   !> Create new 1d complex to complex plan
   subroutine sll_s_fft_init_c2c_1d(plan, nx,array_in,array_out,direction,normalized, aligned, optimization) 
-    type(sll_t_fft)                         :: plan !< FFT planner object 
+    type(sll_t_fft),     intent(out)        :: plan !< FFT planner object 
     sll_int32,           intent(in)         :: nx !< Number of points
     sll_comp64,          intent(inout)      :: array_in(:) !< (Typical) input array (gets overwritten for certain options)
     sll_comp64,          intent(inout)      :: array_out(:) !< (Typical) output array (gets overwritten for certain options)
@@ -690,8 +690,8 @@ contains
  !> Compute fast Fourier transform in real to complex mode.
   subroutine sll_s_fft_exec_r2c_2d(plan,array_in,array_out)
     type(sll_t_fft), intent(in)           :: plan      !< FFT planner object
-    sll_real64,      intent(inout)        :: array_in(0:,:)  !< Real input data to be Fourier transformed
-    sll_comp64,      intent(out)          :: array_out(0:,:) !< Complex Fourier coefficients (only half part along first dimension due to symmetry)
+    sll_real64,      intent(inout)        :: array_in(0:,0:)  !< Real input data to be Fourier transformed
+    sll_comp64,      intent(out)          :: array_out(0:,0:) !< Complex Fourier coefficients (only half part along first dimension due to symmetry)
 
     sll_int32                                       :: nx, i, ny, k
     sll_real64 :: factor
@@ -849,7 +849,7 @@ contains
     sll_comp64, dimension(1:n/2), intent(out) :: t
     sll_int32                                 :: k
     sll_real64                                :: theta
-    if ( n .eq. 0 ) then
+    if ( n .eq. 0 .or. n .eq. 1) then
        print *, "ERROR: Zero array size passed to compute_twiddle_factors()."
        return
     else if (size(t) .lt. n/2) then
