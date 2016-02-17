@@ -5,7 +5,7 @@ module sll_m_sim_4d_drift_kinetic_cartesian_finite_volume
 
   use sll_m_collective
   use sll_m_remapper
-  use sll_m_poisson_2d_periodic_cartesian_par
+  use sll_m_poisson_2d_periodic_fft_cartesian_par
 
 
   use sll_m_sim_base
