@@ -68,9 +68,9 @@ module sll_m_sim_pic_vp_2d2v_cart_remapped
   use sll_m_gnuplot, only: &
     sll_o_gnuplot_2d
 
-  use sll_m_poisson_2d_periodic_fft, only: &
-    sll_f_new_poisson_2d_periodic_fft, &
-    sll_t_poisson_2d_periodic_fft
+  use sll_m_poisson_2d_periodic, only: &
+    sll_f_new_poisson_2d_periodic, &
+    sll_t_poisson_2d_periodic
 
   use sll_m_remapped_pic_base, only: &
     sll_c_remapped_particle_group
@@ -166,7 +166,7 @@ module sll_m_sim_pic_vp_2d2v_cart_remapped
      type(sll_t_charge_accumulator_2d_cs_ptr), dimension(:), pointer  :: q_accumulator_CS
      type(sll_t_electric_field_accumulator_cs), pointer :: E_accumulator_CS
      sll_real64, dimension(:,:), pointer :: rho
-     type(sll_t_poisson_2d_periodic_fft), pointer :: poisson
+     type(sll_t_poisson_2d_periodic), pointer :: poisson
      sll_real64 :: total_density
 
      sll_real64, dimension(:,:), pointer :: E1, E2
@@ -360,7 +360,7 @@ contains
     sim%mesh_2d =>  sll_f_new_cartesian_mesh_2d( NC_X, NC_Y, &
                                            XMIN, XMAX, YMIN, YMAX )
 
-    sim%poisson => sll_f_new_poisson_2d_periodic_fft( sim%mesh_2d%eta1_min,    &
+    sim%poisson => sll_f_new_poisson_2d_periodic( sim%mesh_2d%eta1_min,    &
                                               sim%mesh_2d%eta1_max,    &
                                               sim%mesh_2d%num_cells1,  &
                                               sim%mesh_2d%eta2_min,    &

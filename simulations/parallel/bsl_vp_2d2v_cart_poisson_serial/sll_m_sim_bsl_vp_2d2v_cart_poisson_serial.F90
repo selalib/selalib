@@ -127,7 +127,7 @@ module sll_m_sim_bsl_vp_2d2v_cart_poisson_serial
     sll_f_is_even
 
   use sll_m_poisson_2d_base
-  use sll_m_poisson_2d_periodic_fft
+  use sll_m_poisson_2d_periodic
 
   implicit none
 
@@ -635,7 +635,7 @@ contains
     end select
       
     !poisson: for the moment no choice
-    sim%poisson => sll_f_new_poisson_2d_periodic_fft(&
+    sim%poisson => sll_f_new_poisson_2d_periodic(&
       x1_min, &
       x1_max, &
       num_cells_x1, &

@@ -27,9 +27,9 @@ program test_operator_splitting_pic_vp_2d2v
   use sll_m_particle_group_base, only: &
     sll_c_particle_group_base
 
-  use sll_m_poisson_2d_periodic_fft, only: &
-    sll_f_new_poisson_2d_periodic_fft, &
-    sll_t_poisson_2d_periodic_fft
+  use sll_m_poisson_2d_periodic, only: &
+    sll_f_new_poisson_2d_periodic, &
+    sll_t_poisson_2d_periodic
 
   implicit none
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -51,7 +51,7 @@ program test_operator_splitting_pic_vp_2d2v
   class(sll_t_kernel_smoother_spline_2d), pointer :: specific_kernel_smoother
   
   ! Poisson solver
-  class(sll_t_poisson_2d_periodic_fft), pointer :: poisson_solver 
+  class(sll_t_poisson_2d_periodic), pointer :: poisson_solver 
   
   ! Specific operator splitting
   class(sll_t_operator_splitting_pic_vp_2d2v), pointer :: propagator
@@ -121,7 +121,7 @@ program test_operator_splitting_pic_vp_2d2v
          degree_smoother, sll_p_collocation)
   kernel_smoother => specific_kernel_smoother
   
-  poisson_solver => sll_f_new_poisson_2d_periodic_fft( &
+  poisson_solver => sll_f_new_poisson_2d_periodic( &
        eta_min(1), eta_max(1), num_cells(1), &
        eta_min(2), eta_max(2), num_cells(2))
   SLL_ALLOCATE(efield(kernel_smoother%n_dofs,2),ierr)
