@@ -58,7 +58,6 @@ subroutine init_mumps(self,n,nnzeros,row_ptr,col_ind,val)
   sll_int32                        :: error
   sll_int32                        :: prank    
   sll_int32                        :: psize
-  sll_int32                        :: i, k, l
 
   if( .not. associated(sll_v_world_collective)) then
      call sll_s_boot_collective()
@@ -88,16 +87,6 @@ subroutine init_mumps(self,n,nnzeros,row_ptr,col_ind,val)
   SLL_ALLOCATE( self%mumps_par%JCN ( self%mumps_par%NZ ) , error)
   SLL_ALLOCATE( self%mumps_par%A(    self%mumps_par%NZ ) , error)
   SLL_ALLOCATE( self%mumps_par%rhs ( self%mumps_par%N  ) , error)
-
-  !l = 0
-  !do i = 1, n
-  !  do k = row_ptr(i),row_ptr(i+1)-1 
-  !    l = l + 1
-  !    self%mumps_par%IRN(l) = i
-  !    self%mumps_par%JCN(l) = col_ind(l)
-  !    self%mumps_par%A(l)   = val(l)
-  !  end do
-  !end do
 
   self%mumps_par%rhs = 0.0_f64
 

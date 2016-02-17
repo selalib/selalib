@@ -69,9 +69,9 @@ module sll_m_sim_pic_vp_2d2v_cart_optim
     sll_s_first_charge_accumulation_2d, &
     sll_s_first_charge_accumulation_2d_cs
 
-  use sll_m_poisson_2d_fft, only: &
-    sll_f_new_poisson_2d_fft_solver, &
-    sll_t_poisson_2d_fft_solver
+  use sll_m_poisson_2d_periodic_fft, only: &
+    sll_f_new_poisson_2d_periodic_fft, &
+    sll_t_poisson_2d_periodic_fft
 
   use sll_m_sim_base, only: &
     sll_c_simulation_base_class
@@ -113,7 +113,7 @@ module sll_m_sim_pic_vp_2d2v_cart_optim
      type(sll_t_charge_accumulator_2d_cs_ptr), dimension(:), pointer  :: q_accumulator_CS
      type(sll_t_electric_field_accumulator_cs), pointer :: E_accumulator_CS
      sll_real64, dimension(:,:), pointer :: rho
-     type(sll_t_poisson_2d_fft_solver), pointer :: poisson
+     type(sll_t_poisson_2d_periodic_fft), pointer :: poisson
      sll_real64, dimension(:,:), pointer :: E1, E2
      sll_int32 :: my_rank
      sll_int32 :: world_size
@@ -199,7 +199,7 @@ contains
 
     sim%sorter => sll_f_new_particle_sorter_2d( sim%m2d )
 
-    sim%poisson => sll_f_new_poisson_2d_fft_solver( sim%m2d%eta1_min,    &
+    sim%poisson => sll_f_new_poisson_2d_periodic_fft( sim%m2d%eta1_min,    &
                                               sim%m2d%eta1_max,    & 
                                               sim%m2d%num_cells1,  &
                                               sim%m2d%eta2_min,    &
