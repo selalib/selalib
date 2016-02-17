@@ -20,8 +20,8 @@ module sll_m_operator_splitting_pic_vp_2d2v
   use sll_m_particle_group_base, only: &
     sll_c_particle_group_base
 
-  use sll_m_poisson_2d_periodic_fft, only: &
-    sll_t_poisson_2d_periodic_fft
+  use sll_m_poisson_2d_periodic, only: &
+    sll_t_poisson_2d_periodic
 
   use sll_mpi, only: &
     mpi_sum
@@ -37,7 +37,7 @@ module sll_m_operator_splitting_pic_vp_2d2v
 
   !> Operator splitting type for 2d2v Vlasov-Poisson
   type, extends(sll_t_operator_splitting) :: sll_t_operator_splitting_pic_vp_2d2v
-     class(sll_t_poisson_2d_periodic_fft), pointer    :: poisson_solver      !< Poisson solver (TODO: Use a base class here)
+     class(sll_t_poisson_2d_periodic), pointer    :: poisson_solver      !< Poisson solver (TODO: Use a base class here)
      class(sll_c_kernel_smoother_base), pointer :: kernel_smoother  !< Kernel smoother
      class(sll_c_particle_group_base), pointer  :: particle_group    !< Particle group
 
@@ -160,7 +160,7 @@ contains
   !> Initialization function
   subroutine initialize_operator_splitting_pic_vp_2d2v(this, poisson_solver, kernel_smoother, particle_group)
     class(sll_t_operator_splitting_pic_vp_2d2v), intent(out) :: this !< object 
-    class(sll_t_poisson_2d_periodic_fft),pointer, intent(in) :: poisson_solver !< poisson solver
+    class(sll_t_poisson_2d_periodic),pointer, intent(in) :: poisson_solver !< poisson solver
     class(sll_c_kernel_smoother_base),pointer, intent(in) :: kernel_smoother !< kernel smoother
     class(sll_c_particle_group_base),pointer, intent(in) :: particle_group !< particle group
 
@@ -184,7 +184,7 @@ contains
   !> Constructor.
   function sll_f_new_hamiltonian_splitting_pic_vp_2d2v(poisson_solver, kernel_smoother, particle_group, efield_dofs) result(this)
     class(sll_t_operator_splitting_pic_vp_2d2v), pointer :: this !< time splitting object 
-    class(sll_t_poisson_2d_periodic_fft),pointer, intent(in) :: poisson_solver !< Poisson solver
+    class(sll_t_poisson_2d_periodic),pointer, intent(in) :: poisson_solver !< Poisson solver
     class(sll_c_kernel_smoother_base),pointer, intent(in) :: kernel_smoother !< Kernel smoother
     class(sll_c_particle_group_base),pointer, intent(in) :: particle_group !< Particle group
     sll_real64, pointer  :: efield_dofs(:,:)  !< Values of the electric field at grid points

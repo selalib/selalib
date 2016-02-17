@@ -22,7 +22,7 @@
 !> Numerical method uses Fast Fourier Transform and periodic
 !> boundary conditions.
 !> @snippet poisson_solvers/test_poisson_2d_fft.F90 example
-module sll_m_poisson_2d_periodic_fft
+module sll_m_poisson_2d_periodic
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_memory.h"
 #include "sll_working_precision.h"
@@ -61,9 +61,9 @@ implicit none
 private
 
 public ::                            &
-  sll_f_new_poisson_2d_periodic_fft, &
+  sll_f_new_poisson_2d_periodic, &
   sll_f_new_poisson_2d_periodic_fftpack, &
-  sll_t_poisson_2d_periodic_fft,     &
+  sll_t_poisson_2d_periodic,     &
   sll_t_poisson_2d_periodic_fftpack, &
 #ifdef FFTW
   sll_t_poisson_2d_periodic_fftw,    &
@@ -131,7 +131,7 @@ end type sll_t_poisson_2d_periodic_fftw
 
 #endif
 
-type, extends(sll_c_poisson_2d_base) :: sll_t_poisson_2d_periodic_fft
+type, extends(sll_c_poisson_2d_base) :: sll_t_poisson_2d_periodic
 
   type(sll_t_poisson_2d_periodic_fftpack), private, pointer :: solver
 
@@ -139,7 +139,7 @@ contains
 
   !> Create the Poisson solver
   procedure, public, pass(poisson) :: initialize => &
-    initialize_poisson_2d_periodic_fft
+    initialize_poisson_2d_periodic
   !> Compute potential solving the Poisson equation
   procedure, public, pass(poisson) :: compute_phi_from_rho => &
     compute_phi_from_rho_2d_fft
@@ -147,7 +147,7 @@ contains
   procedure, public, pass(poisson) :: compute_E_from_rho => &
     compute_E_from_rho_2d_fft
     
-end type sll_t_poisson_2d_periodic_fft
+end type sll_t_poisson_2d_periodic
 
 interface sll_o_initialize
   module procedure initialize_poisson_2d_periodic_fftpack
@@ -174,8 +174,8 @@ end interface
 
 contains
 
-  !> @returns a pointer to the derived type sll_t_poisson_2d_periodic_fft.
-  function sll_f_new_poisson_2d_periodic_fft( &
+  !> @returns a pointer to the derived type sll_t_poisson_2d_periodic.
+  function sll_f_new_poisson_2d_periodic( &
     eta1_min, &
     eta1_max, &
     nc_eta1, &
@@ -184,7 +184,7 @@ contains
     nc_eta2) &     
     result(poisson)
       
-    type(sll_t_poisson_2d_periodic_fft),pointer :: poisson
+    type(sll_t_poisson_2d_periodic),pointer :: poisson
     sll_real64 :: eta1_min
     sll_real64 :: eta1_max
     sll_int32 :: nc_eta1
@@ -194,7 +194,7 @@ contains
     sll_int32 :: ierr
       
     SLL_ALLOCATE(poisson,ierr)
-    call initialize_poisson_2d_periodic_fft( &
+    call initialize_poisson_2d_periodic( &
     poisson, &
     eta1_min, &
     eta1_max, &
@@ -203,9 +203,9 @@ contains
     eta2_max, &
     nc_eta2)     
     
-  end function sll_f_new_poisson_2d_periodic_fft
+  end function sll_f_new_poisson_2d_periodic
   
-  subroutine initialize_poisson_2d_periodic_fft( &
+  subroutine initialize_poisson_2d_periodic( &
     poisson, &
     eta1_min, &
     eta1_max, &
@@ -213,7 +213,7 @@ contains
     eta2_min, &
     eta2_max, &
     nc_eta2)     
-    class(sll_t_poisson_2d_periodic_fft) :: poisson
+    class(sll_t_poisson_2d_periodic) :: poisson
     sll_real64 :: eta1_min
     sll_real64 :: eta1_max
     sll_int32 :: nc_eta1
@@ -234,11 +234,11 @@ contains
       nc_eta2, &
       ierr) 
 
-  end subroutine initialize_poisson_2d_periodic_fft
+  end subroutine initialize_poisson_2d_periodic
   
   !> solves \f$ -\Delta phi(x,y) = rho (x,y) \f$
   subroutine compute_phi_from_rho_2d_fft( poisson, phi, rho )
-    class(sll_t_poisson_2d_periodic_fft), target :: poisson
+    class(sll_t_poisson_2d_periodic), target :: poisson
     sll_real64,dimension(:,:),intent(in) :: rho
     sll_real64,dimension(:,:),intent(out) :: phi
     
@@ -255,7 +255,7 @@ contains
   !> -\Delta \phi(x,y) = \rho(x,y)
   !> \f]
   subroutine compute_E_from_rho_2d_fft( poisson, E1, E2, rho )
-    class(sll_t_poisson_2d_periodic_fft) :: poisson
+    class(sll_t_poisson_2d_periodic) :: poisson
     sll_real64,dimension(:,:),intent(in) :: rho
     sll_real64,dimension(:,:),intent(out) :: E1
     sll_real64,dimension(:,:),intent(out) :: E2
@@ -779,4 +779,4 @@ end subroutine delete_poisson_2d_periodic_fftw
 
 #endif /* FFTW */
  
-end module sll_m_poisson_2d_periodic_fft
+end module sll_m_poisson_2d_periodic

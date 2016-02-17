@@ -24,7 +24,7 @@ use sll_m_utilities, only: &
   sll_s_int2string
 
 use sll_m_poisson_2d_base
-use sll_m_poisson_2d_periodic_fft
+use sll_m_poisson_2d_periodic
 
 implicit none
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -111,7 +111,7 @@ end do
 eta1feet = eta1tot
 eta2feet = eta2tot
 
-poisson => sll_f_new_poisson_2d_periodic_fft( eta1_min, eta1_max, nc_eta1, eta2_min, eta2_max, nc_eta2)
+poisson => sll_f_new_poisson_2d_periodic( eta1_min, eta1_max, nc_eta1, eta2_min, eta2_max, nc_eta2)
 
 call spl_eta1%initialize(nc_eta1+1, eta1_min, eta1_max, sll_p_periodic )
 call spl_eta2%initialize(nc_eta2+1, eta2_min, eta2_max, sll_p_periodic )

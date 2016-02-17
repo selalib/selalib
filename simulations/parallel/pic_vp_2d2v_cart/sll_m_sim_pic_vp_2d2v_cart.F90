@@ -49,9 +49,9 @@ module sll_m_sim_pic_vp_2d2v_cart
     sll_s_particle_initialize_random_landau_2d2v, &
     sll_s_particle_initialize_sobol_landau_2d2v
 
-  use sll_m_poisson_2d_periodic_fft, only: &
-    sll_f_new_poisson_2d_periodic_fft, &
-    sll_t_poisson_2d_periodic_fft
+  use sll_m_poisson_2d_periodic, only: &
+    sll_f_new_poisson_2d_periodic, &
+    sll_t_poisson_2d_periodic
 
   use sll_m_sim_base, only: &
     sll_c_simulation_base_class
@@ -87,7 +87,7 @@ module sll_m_sim_pic_vp_2d2v_cart
      class(sll_t_kernel_smoother_spline_2d), pointer :: specific_kernel_smoother
 
      ! Poisson solver
-     class(sll_t_poisson_2d_periodic_fft), pointer :: poisson_solver 
+     class(sll_t_poisson_2d_periodic), pointer :: poisson_solver 
 
      ! Abstract operator splitting
      class(sll_t_operator_splitting), pointer :: propagator
@@ -238,7 +238,7 @@ contains
     !print*, 'rd', rnd_seed_size
 
     ! Initialize the field solver
-    sim%poisson_solver => sll_f_new_poisson_2d_periodic_fft( &
+    sim%poisson_solver => sll_f_new_poisson_2d_periodic( &
          sim%mesh%eta1_min, sim%mesh%eta1_max, sim%mesh%num_cells1, &
          sim%mesh%eta2_min, sim%mesh%eta2_max, sim%mesh%num_cells2)
 

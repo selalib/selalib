@@ -7,7 +7,7 @@ use particules
 use diagno
 
 use sll_m_poisson_2d_base
-use sll_m_poisson_2d_periodic_fft
+use sll_m_poisson_2d_periodic
 
 implicit none
 
@@ -78,7 +78,7 @@ call sll_o_gnuplot_2d(xmin, xmax, nx+1, &
                       ymin, ymax, ny+1, &
                       f%r0, 'rho', 1, error)
 
-poisson => sll_f_new_poisson_2d_periodic_fft( xmin, xmax, nx, &
+poisson => sll_f_new_poisson_2d_periodic( xmin, xmax, nx, &
                        ymin, ymax, ny) 
 
 call poisson%compute_e_from_rho( f%ex, f%ey, f%r0)
