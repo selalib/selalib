@@ -242,7 +242,7 @@ subroutine initialize_poisson_2d_periodic_fft(self, &
   self%dy   = (y_max-y_min) / real( nc_y, f64)
 
 #ifdef DEBUG
-  print*, " FFTW version of poisson 2d periodic solver "
+  print*, " FFT version of poisson 2d periodic solver "
 #endif
 
   SLL_ALLOCATE(self%rht(1:nc_x/2+1,1:nc_y),error)
