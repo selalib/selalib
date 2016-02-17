@@ -85,7 +85,7 @@ module sll_m_fft
      sll_int32                        :: direction
      sll_int32                        :: problem_rank
      sll_int32, allocatable           :: problem_shape(:)
-     sll_int32, pointer, private      :: scramble_index(:)
+     sll_int32, allocatable, private  :: scramble_index(:)
      sll_int32, private               :: transform_type !< Type of the transform. Use for assertion to make sure execution is called of the same type as fft object was initialized for.
   end type sll_t_fft
 
@@ -250,7 +250,7 @@ contains
 ! ------
   !> Create new 1d complex to complex plan
   subroutine sll_s_fft_init_c2c_1d(plan, nx,array_in,array_out,direction,normalized, aligned, optimization) 
-    type(sll_t_fft)                         :: plan !< FFT planner object 
+    type(sll_t_fft),     intent(out)        :: plan !< FFT planner object 
     sll_int32,           intent(in)         :: nx !< Number of points
     sll_comp64,          intent(inout)      :: array_in(:) !< (Typical) input array (gets overwritten for certain options)
     sll_comp64,          intent(inout)      :: array_out(:) !< (Typical) output array (gets overwritten for certain options)
