@@ -271,6 +271,7 @@ program test_fft
            ierr = MAX(ERROR_MAX(data_comp2d(1:s,j) - data_copy2d(1:s,j)),ierr)
         enddo
         if( ierr > err_max ) then
+           print*, 'average error', err_max
            stop 'Average error too big'
         endif
      enddo
@@ -348,6 +349,8 @@ program test_fft
   enddo
   print *, 'OK', ierr
 #endif
+
+  print*, 'PASSED'
 
 contains
 

@@ -11,24 +11,17 @@ module sll_m_sparse_grid_interpolator
 
   use iso_c_binding, only: &
     c_double_complex, &
-    c_f_pointer, &
-    c_ptr, &
     c_size_t
 
-#ifdef FFTW_F2003
-  use sll_m_fftw3, only: &
-    fftw_alloc_complex, &
-    fftw_backward, &
-    fftw_execute_dft, &
-    fftw_forward, &
-    fftw_measure, &
-    fftw_plan_dft_1d
-#else
-  use sll_m_fftw3, only: &
-       fftw_backward, &
-       fftw_forward, &
-       fftw_measure
-#endif
+  use sll_m_fft, only : &
+    sll_t_fft, &
+    sll_s_fft_init_c2c_1d, &
+    sll_s_fft_exec_c2c_1d, &
+    sll_s_fft_free, &
+    sll_f_fft_allocate_aligned_complex, &
+    sll_p_fft_forward, &
+    sll_p_fft_backward, &
+    sll_p_fft_measure
 
   use sll_m_interpolators_1d_base, only: &
     sll_c_interpolator_1d
@@ -46,14 +39,12 @@ module sll_m_sparse_grid_interpolator
 
   !> class to hold values for hierarchical fft computations
   type :: fft_hierarchical
-     type(C_PTR)  :: fw
-     type(C_PTR)  :: bw
-     complex(C_DOUBLE_COMPLEX), dimension(:), pointer :: in
-     complex(C_DOUBLE_COMPLEX), dimension(:), pointer :: out
-     type(C_PTR) :: p_in
-     type(C_PTR) :: p_out
-     integer(C_SIZE_T) :: sz_in
-     integer(C_SIZE_T) :: sz_out
+     type( sll_t_fft ) :: fw
+     type( sll_t_fft ) :: bw
+     complex(c_double_complex), dimension(:), pointer :: in
+     complex(c_double_complex), dimension(:), pointer :: out
+     integer(c_size_t) :: sz_in
+     integer(c_size_t) :: sz_out
   end type fft_hierarchical
 
   !> Data type for sparse grid node
@@ -72,6 +63,7 @@ module sll_m_sparse_grid_interpolator
   type :: interpolator_base_ptr
      class(sll_c_interpolator_1d), pointer :: ptr
   end type interpolator_base_ptr
+
 
 
 !> Class defining the sparse grid data structure
@@ -137,6 +129,7 @@ module sll_m_sparse_grid_interpolator
      procedure :: initialize_sg
      procedure :: hierarchical_part_order
      procedure :: dehierarchical_order
+     procedure :: free => free_sparse_grid
 
   end type sll_t_sparse_grid_interpolator
 
@@ -1663,8 +1656,8 @@ subroutine fft_on_stripe(interpolator,level)
 
   no_points = 2**level
 
-  call fftw_execute_dft(interpolator%fft_object(level+1)%fw,&
-       interpolator%fft_object(level+1)%in,interpolator%fft_object(level+1)%out)
+  call sll_s_fft_exec_c2c_1d( interpolator%fft_object(level+1)%fw,&
+       interpolator%fft_object(level+1)%in,interpolator%fft_object(level+1)%out )
   ! Scale the Fourier coefficients
   do i=1,no_points
      interpolator%fft_object(level+1)%out(i) = &
@@ -1677,7 +1670,7 @@ subroutine ifft_on_stripe(interpolator,level)
   class(sll_t_sparse_grid_interpolator), intent(inout) :: interpolator
   sll_int32, intent(in) :: level
   
-  call fftw_execute_dft(interpolator%fft_object(level+1)%bw,&
+  call sll_s_fft_exec_c2c_1d(interpolator%fft_object(level+1)%bw,&
        interpolator%fft_object(level+1)%out,interpolator%fft_object(level+1)%in)
 
 end subroutine ifft_on_stripe
@@ -1687,52 +1680,60 @@ subroutine fft_initialize(fft_object,levels)
   class(fft_hierarchical), dimension(:),pointer :: fft_object
   sll_int32,intent(in) :: levels 
   sll_int32 :: l,size
-#ifndef FFTW_F2003
-  sll_int32 :: ierr
-#endif
 
   size = 1
   do l=1,levels+1
-
-#ifdef FFTW_F2003
+     
      fft_object(l)%sz_in = int(size,C_SIZE_T)
      fft_object(l)%sz_out = int(size,C_SIZE_T)
-     fft_object(l)%p_in = fftw_alloc_complex(fft_object(l)%sz_in)
-     call c_f_pointer(fft_object(l)%p_in,fft_object(l)%in,[size])
-     fft_object(l)%p_out = fftw_alloc_complex(fft_object(l)%sz_out) 
-     call c_f_pointer(fft_object(l)%p_out,fft_object(l)%out,[size])
-     fft_object(l)%fw = fftw_plan_dft_1d(size, fft_object(l)%in, &
-          fft_object(l)%out,FFTW_BACKWARD, FFTW_MEASURE);
-     fft_object(l)%bw = fftw_plan_dft_1d(size, fft_object(l)%out, &
-          fft_object(l)%in,FFTW_FORWARD, FFTW_MEASURE);
-#else
-     fft_object(l)%sz_in = int(size,C_SIZE_T)
-     fft_object(l)%sz_out = int(size,C_SIZE_T)
-     SLL_ALLOCATE(fft_object(l)%in(size),ierr);
-     SLL_ALLOCATE(fft_object(l)%out(size),ierr);
-     call dfftw_plan_dft_1d(fft_object(l)%fw,size,fft_object(l)%in, &
-          fft_object(l)%out,FFTW_BACKWARD, FFTW_MEASURE);
-     call dfftw_plan_dft_1d(fft_object(l)%bw,size,fft_object(l)%out, &
-          fft_object(l)%in,FFTW_FORWARD, FFTW_MEASURE);
-#endif
+     fft_object(l)%out => sll_f_fft_allocate_aligned_complex(size)
+     fft_object(l)%in => sll_f_fft_allocate_aligned_complex(size)
+     call sll_s_fft_init_c2c_1d( fft_object(l)%fw, size, fft_object(l)%in, &
+          fft_object(l)%out, sll_p_fft_backward, normalized = .false., &
+          aligned = .true., optimization = sll_p_fft_measure )
+     
+     call sll_s_fft_init_c2c_1d( fft_object(l)%bw, size, fft_object(l)%out, &
+          fft_object(l)%in, sll_p_fft_forward, normalized = .false., &
+          aligned = .true., optimization = sll_p_fft_measure )
+     
      size = size*2
   end do
      
 
 end subroutine fft_initialize
 
-!PN DEFINED BUT NOT USED
-!subroutine fft_finalize(fft_object,levels)
-!  class(fft_hierarchical), dimension(:),pointer :: fft_object
-!  sll_int32, intent(in) :: levels
-!  sll_int32 :: l
-! 
-!  do l=1,levels+1
-!     call fftw_destroy_plan(fft_object(l)%fw)
-!     call fftw_destroy_plan(fft_object(l)%bw)
-!  end do
-!
-!end subroutine fft_finalize
+
+
+subroutine fft_finalize(fft_object,levels)
+  class(fft_hierarchical), dimension(:),pointer :: fft_object
+  sll_int32, intent(in) :: levels
+  sll_int32 :: l
+ 
+  do l=1,levels+1
+     call sll_s_fft_free(fft_object(l)%fw)
+     call sll_s_fft_free(fft_object(l)%bw)
+  end do
+
+end subroutine fft_finalize
+
+!> Finalize sparse grid
+subroutine free_sparse_grid(interpolator)
+  class(sll_t_sparse_grid_interpolator), intent(inout) :: interpolator
+
+  call fft_finalize(interpolator%fft_object, interpolator%max_level)
+  deallocate(interpolator%hierarchy)
+  deallocate(interpolator%stripe)
+  deallocate(interpolator%stripe_out)
+  deallocate(interpolator%hs_weights)
+  deallocate(interpolator%hs_weights_index)
+  deallocate(interpolator%interp)
+  deallocate(interpolator%level_mapping)
+  deallocate(interpolator%eta_min)
+  deallocate(interpolator%eta_max)
+  deallocate(interpolator%length)
+
+end subroutine free_sparse_grid
+
 
 !> Compute Fourier coefficients on sparse grid along dimension \a dim. 
 subroutine ToHierarchical1D(interpolator,dim,max_level,index,data_in,data_out)
