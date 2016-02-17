@@ -32,7 +32,7 @@ sll_real64                        :: t0
 sll_real64                        :: t1
 sll_real64                        :: tcpu
 sll_int32,  parameter             :: nx = 64
-sll_int32,  parameter             :: ny = 48
+sll_int32,  parameter             :: ny = 32
 sll_real64, parameter             :: xmin = -3.0_f64
 sll_real64, parameter             :: xmax = +3.0_f64
 sll_real64, parameter             :: ymin = -2.0_f64

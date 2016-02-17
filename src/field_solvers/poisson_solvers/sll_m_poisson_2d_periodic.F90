@@ -31,6 +31,8 @@ module sll_m_poisson_2d_periodic
 use sll_m_poisson_2d_base, only: sll_c_poisson_2d_base
 use sll_m_constants, only: sll_p_pi
 use sll_m_fft, only: sll_t_fft, &
+  sll_s_fft_init_c2r_2d,        &
+  sll_s_fft_init_r2c_2d,        &
   sll_s_fft_exec_c2r_2d,        &
   sll_s_fft_exec_r2c_2d,        &
   sll_s_fft_free
@@ -223,15 +225,15 @@ subroutine initialize_poisson_2d_periodic_fft(self, &
   error )
 
   type(sll_t_poisson_2d_periodic_fft) :: self   !< Self data object
-  sll_real64, intent(in)         :: x_min  !< left corner direction x
-  sll_real64, intent(in)         :: x_max  !< right corner direction x
-  sll_real64, intent(in)         :: y_min  !< left corner direction y
-  sll_real64, intent(in)         :: y_max  !< right corner direction y
-  sll_int32                      :: error  !< error code
-  sll_int32                      :: nc_x   !< number of cells direction x
-  sll_int32                      :: nc_y   !< number of cells direction y
-  sll_int32                      :: ik, jk
-  sll_real64                     :: kx1, kx0, ky0
+  sll_real64, intent(in)              :: x_min  !< left corner direction x
+  sll_real64, intent(in)              :: x_max  !< right corner direction x
+  sll_real64, intent(in)              :: y_min  !< left corner direction y
+  sll_real64, intent(in)              :: y_max  !< right corner direction y
+  sll_int32                           :: error  !< error code
+  sll_int32                           :: nc_x   !< number of cells direction x
+  sll_int32                           :: nc_y   !< number of cells direction y
+  sll_int32                           :: ik, jk
+  sll_real64                          :: kx1, kx0, ky0
 
   self%nc_x = nc_x
   self%nc_y = nc_y
@@ -245,9 +247,9 @@ subroutine initialize_poisson_2d_periodic_fft(self, &
 
   SLL_ALLOCATE(self%rht(1:nc_x/2+1,1:nc_y),error)
   SLL_ALLOCATE(self%exy(1:nc_x/2+1,1:nc_y),error)
-  SLL_ALLOCATE(self%tmp(nc_x,nc_y),error)
-  call sll_s_fft_exec_r2c_2d(self%fw,self%tmp,self%rht)
-  call sll_s_fft_exec_c2r_2d(self%bw,self%rht,self%tmp)
+  SLL_CLEAR_ALLOCATE(self%tmp(1:nc_x,1:nc_y),error)
+  call sll_s_fft_init_r2c_2d(self%fw,nc_x,nc_y,self%tmp,self%rht)
+  call sll_s_fft_init_c2r_2d(self%bw,nc_x,nc_y,self%rht,self%tmp)
    
   SLL_ALLOCATE(self%kx(nc_x/2+1,nc_y), error)
   SLL_ALLOCATE(self%ky(nc_x/2+1,nc_y), error)
