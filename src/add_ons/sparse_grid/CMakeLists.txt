@@ -1,4 +1,4 @@
-IF (FFTW_FOUND AND FFTW_ENABLED)
+IF (NOT (FFT_LIB STREQUAL "SLLFFT"))
 
   SET( SPARSEGRID_SRC_FILES    
     sll_m_sparse_grid_interpolator.F90
