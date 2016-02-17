@@ -1,8 +1,5 @@
-
-MESSAGE( "SG: FFT_LIB=${FFT_LIB}")
-#IF (FFTW_FOUND AND FFTW_ENABLED)
 IF (NOT (FFT_LIB STREQUAL "SLLFFT"))
-  MESSAGE("************* Compile SG")
+
   SET( SPARSEGRID_SRC_FILES    
     sll_m_sparse_grid_interpolator.F90
     sll_m_sparse_grid_4d.F90
