@@ -3,9 +3,6 @@ TARGET_LINK_LIBRARIES( test_poisson_2d_fft sll_poisson_solvers )
 ADD_TEST( NAME poisson_2d_fft  COMMAND test_poisson_2d_fft     )
 SET_TESTS_PROPERTIES( poisson_2d_fft PROPERTIES PASS_REGULAR_EXPRESSION "PASSED" )
 
-ADD_EXECUTABLE( test_poisson_1d_fd test_poisson_1d_fd.F90 )
-TARGET_LINK_LIBRARIES( test_poisson_1d_fd sll_poisson_solvers )
-
 ADD_EXECUTABLE( test_poisson_1d_polar test_poisson_1d_polar.F90 )
 TARGET_LINK_LIBRARIES( test_poisson_1d_polar sll_poisson_solvers )
 ADD_TEST( NAME poisson_1d_polar COMMAND test_poisson_1d_polar     )
@@ -18,10 +15,6 @@ SET_TESTS_PROPERTIES( poisson_2d_polar PROPERTIES PASS_REGULAR_EXPRESSION "PASSE
 
 ADD_EXECUTABLE( test_poisson_1d_periodic test_poisson_1d_periodic.F90 )
 TARGET_LINK_LIBRARIES( test_poisson_1d_periodic sll_poisson_solvers )
-
-# Cannot be compiled
-#ADD_EXECUTABLE( test_poisson_1d_fem test_poisson_1d_fem.F90 )
-#TARGET_LINK_LIBRARIES( test_poisson_1d_fem sll_poisson_solvers )
 
 ADD_EXECUTABLE( test_poisson_2d_periodic test_poisson_2d_periodic.F90 )
 TARGET_LINK_LIBRARIES( test_poisson_2d_periodic sll_poisson_solvers )
