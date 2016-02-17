@@ -16,35 +16,32 @@
 !**************************************************************
 
 !> @brief Spectral 1d advection
-!> @details We are using FFTW to compute ffts. Boundary conditions
-!> must be periodic.
+!> @details Boundary conditions must be periodic.
 module sll_m_advection_1d_ampere
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_errors.h"
 #include "sll_memory.h"
 #include "sll_working_precision.h"
 
-  use sll_m_advection_1d_base, only: &
-    sll_c_advection_1d_base
+use sll_m_advection_1d_base, only: sll_c_advection_1d_base
 
-  use sll_m_constants, only: &
-    sll_p_pi
+use sll_m_constants, only: sll_p_pi
 
-  use sll_m_fft, only: &
-    sll_s_fft_exec_c2r_1d, &
-    sll_s_fft_exec_r2c_1d, &
-    sll_s_fft_free, &
-    sll_s_fft_init_c2r_1d, &
-    sll_s_fft_init_r2c_1d, &
-    sll_t_fft
+use sll_m_fft, only: &
+  sll_s_fft_exec_c2r_1d, &
+  sll_s_fft_exec_r2c_1d, &
+  sll_s_fft_free, &
+  sll_s_fft_init_c2r_1d, &
+  sll_s_fft_init_r2c_1d, &
+  sll_t_fft
 
-  implicit none
+implicit none
 
-  public :: &
-    sll_t_ampere_1d_advector_ptr, &
-    sll_f_new_ampere_1d_advector
+public :: &
+  sll_t_ampere_1d_advector_ptr, &
+  sll_f_new_ampere_1d_advector
 
-  private
+private
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 type,extends(sll_c_advection_1d_base) :: ampere_1d_advector

@@ -26,14 +26,10 @@ ADD_LIBRARY( sll_poisson_solvers STATIC ${POISSON_SRCS} )
 TARGET_LINK_LIBRARIES( sll_poisson_solvers
   sll_general_coordinate_elliptic_solvers 
   sll_meshes
+  sll_fft 
   sll_memory 
   sll_assert 
-  dfftpack 
   ${LAPACK_LIBRARIES})
-
-IF(FFTW_ENABLED AND FFTW_FOUND)
-  TARGET_LINK_LIBRARIES( sll_poisson_solvers ${FFTW_LIBRARIES})
-ENDIF()
 
 IF(BUILD_MUDPACK)
   TARGET_LINK_LIBRARIES( sll_poisson_solvers mudpack)
