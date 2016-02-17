@@ -6,7 +6,8 @@ use zone
 use particules
 use diagno
 
-use sll_m_poisson_2d_periodic_fftpack
+use sll_m_poisson_2d_base
+use sll_m_poisson_2d_periodic_fft
 
 implicit none
 
@@ -31,7 +32,7 @@ sll_real64 :: aux1, aux2
 sll_real64 :: t0, t1
 
 character(len=272) :: argv
-type(sll_t_poisson_2d_periodic_fftpack) :: poisson
+class(sll_c_poisson_2d_base), pointer :: poisson
 
 n = iargc()
 if (n == 0) stop 'Usage: ./bin/test_pic2d fichier-de-donnees.nml'
@@ -77,10 +78,10 @@ call sll_o_gnuplot_2d(xmin, xmax, nx+1, &
                       ymin, ymax, ny+1, &
                       f%r0, 'rho', 1, error)
 
-call sll_o_initialize( poisson, xmin, xmax, nx, &
-                       ymin, ymax, ny, error) 
+poisson => sll_f_new_poisson_2d_periodic_fft( xmin, xmax, nx, &
+                       ymin, ymax, ny) 
 
-call sll_o_solve( poisson, f%ex, f%ey, f%r0)
+call poisson%compute_e_from_rho( f%ex, f%ey, f%r0)
 
 !gnuplot -p ex.gnu (to plot the initial ex field)
 call sll_o_gnuplot_2d(xmin, xmax, nx+1, &
@@ -94,7 +95,7 @@ do istep = 1, nstep
   call avancee_vitesse( p )
   call avancee_part( p, 1.d0 )
   call calcul_rho( p, f )
-  call sll_o_solve( poisson, f%ex, f%ey, f%r0)
+  call poisson%compute_e_from_rho( f%ex, f%ey, f%r0)
 
   time = time + dt
 

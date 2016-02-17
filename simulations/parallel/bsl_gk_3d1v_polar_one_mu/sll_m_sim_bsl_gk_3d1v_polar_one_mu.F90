@@ -43,11 +43,6 @@ module sll_m_sim_bsl_gk_3d1v_polar_one_mu
 #include "sll_memory.h"
 #include "sll_working_precision.h"
 
-! use F77_fftpack, only: &
-!   dfftb, &
-!   dfftf, &
-!   dffti
-
   use sll_m_advection_1d_base, only: &
     sll_c_advection_1d_base
 

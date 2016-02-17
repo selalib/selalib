@@ -110,7 +110,7 @@ contains
 
     ! solves E = -\nabla Phi in 2d
 !    subroutine compute_E_from_phi_2d_fft( poisson, phi, E1, E2 )
-!      class(poisson_2d_fft_solver) :: poisson
+!      class(poisson_2d_periodic_fft) :: poisson
 !      sll_real64,dimension(:,:),intent(in) :: phi
 !      sll_real64,dimension(:,:),intent(out) :: E1
 !      sll_real64,dimension(:,:),intent(out) :: E2
