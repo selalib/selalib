@@ -87,7 +87,7 @@ program test_operator_splitting_pic_vp_2d2v
   n_particles = 2!10
   eta_min = 0.0_f64
   eta_max = 4.0_f64*sll_p_pi
-  num_cells = 16
+  num_cells = 10
   delta_t = 0.1_f64
   degree_smoother = 3
   passed = .TRUE.
