@@ -61,7 +61,8 @@ module sll_m_poisson_2d_mudpack_curvilinear_old
     sll_p_non_separable_without_cross_terms
 
   use sll_m_poisson_2d_base, only: &
-    sll_c_poisson_2d_base
+    sll_c_poisson_2d_base, &
+    sll_f_function_of_position
 
   implicit none
 
@@ -111,7 +112,16 @@ module sll_m_poisson_2d_mudpack_curvilinear_old
       compute_E_from_rho_2d_mudpack_curvilinear
 !    procedure, pass(poisson) :: compute_E_from_phi => &
 !      compute_E_from_phi_2d_polar
-      
+
+    !> Compute the squarred L_2 for given coefficients
+    procedure :: &
+         l2norm_squared => l2norm_squarred_2d_mudpack_curvilinear
+    !> Compute the right hand side from a given function
+    procedure :: &
+         compute_rhs_from_function => compute_rhs_from_function_2d_mudpack_curvilinear
+    !> Destructor
+    procedure :: free => delete_2d_mudpack_curvilinear_solver
+
   end type poisson_2d_mudpack_curvilinear_old
 
   class(poisson_2d_mudpack_curvilinear_old), pointer   :: mudpack_curvilinear_wrapper => null()
@@ -665,7 +675,33 @@ contains
       !call solve( poisson%poiss, E1, E2, rho)
       
     end subroutine compute_E_from_rho_2d_mudpack_curvilinear
+
+
+
+  function l2norm_squarred_2d_mudpack_curvilinear(poisson, coefs_dofs) result(r)
+    class( poisson_2d_mudpack_curvilinear_solver), intent(in)  :: poisson !< Poisson solver object.
+    sll_real64, intent(in)                                     :: coefs_dofs(:,:) !< Values of the coefficient vectors for each DoF
+    sll_real64                                     :: r
+    
+    print*, 'l2norm_squared not implemented for poisson_2d_mudpack_curvilinear_solver.'
+    
+  end function l2norm_squarred_2d_mudpack_curvilinear
   
+  subroutine compute_rhs_from_function_2d_mudpack_curvilinear(poisson, func, coefs_dofs)
+    class( poisson_2d_mudpack_curvilinear_solver)  :: poisson !< Poisson solver object.
+    procedure(sll_f_function_of_position)          :: func !< Function to be projected.
+    sll_real64, intent(out)                        :: coefs_dofs(:) !< Coefficients of the projection.
+    
+    print*, 'compute_rhs_from_function not implemented for poisson_2d_mudpack_curvilinear_solver.'
+    
+  end subroutine compute_rhs_from_function_2d_mudpack_curvilinear
+  
+  subroutine delete_2d_mudpack_curvilinear_solver(poisson)
+    class( poisson_2d_mudpack_curvilinear_solver)  :: poisson !< Poisson solver object.
+  
+  end subroutine delete_2d_mudpack_curvilinear_solver
+
+
 subroutine coefxxyy_array(b11,b12,b21,b22,transf,eta1_min,eta2_min, &
                          delta1,delta2,nx,ny,cxx_array,cyy_array)
   implicit none                     
