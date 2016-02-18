@@ -33,7 +33,7 @@ module sll_m_pic_poisson_2d
      sll_int32 :: no_dofs
 
      class(sll_c_kernel_smoother), pointer :: kernel
-     class(sll_c_poisson_2d_base),   pointer :: solver
+     class(sll_c_poisson_2d_base), pointer :: solver
      sll_real64, allocatable               :: rho_dofs(:)
      sll_real64, allocatable               :: rho_dofs_local(:)
      sll_real64, allocatable               :: rho_analyt_dofs(:)
