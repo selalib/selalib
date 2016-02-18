@@ -28,8 +28,8 @@ sll_real64 :: delta_eta1, delta_eta2
 sll_int32  :: nc_eta1, nc_eta2
 sll_int32  :: error
 
-type(sll_t_maxwell_2d_pstd)              :: maxwell_TE
-type(sll_t_maxwell_2d_pstd)              :: maxwell_TM
+type(sll_t_maxwell_2d_pstd)        :: maxwell_TE
+type(sll_t_maxwell_2d_pstd)        :: maxwell_TM
 sll_int32                          :: i, j
 sll_real64                         :: omega
 sll_real64                         :: time
@@ -66,7 +66,7 @@ call cpu_time(tstart)
 eta1_min = .0_f64; eta1_max = 1.0_f64
 eta2_min = .0_f64; eta2_max = 1.0_f64
 
-nc_eta1 = 127; nc_eta2 = 127
+nc_eta1 = 128; nc_eta2 = 128
 
 delta_eta1 = (eta1_max-eta1_min)/nc_eta1
 delta_eta2 = (eta2_max-eta2_min)/nc_eta2

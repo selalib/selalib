@@ -182,7 +182,7 @@
 !>
 !> !** INIT DATA **
 !>
-!> call sll_s_fft_init_c2r_2d( n, in, out )
+!> call sll_s_fft_init_c2r_2d( p, n, m, in, out )
 !> call sll_s_fft_exec_c2r_2d( p, in, out )
 !> call sll_s_fft_free( p )
 !> \endcode

@@ -21,23 +21,23 @@
 
 #define D_DX(field)                                           \
 self%d_dx = field;                                            \
-call fftw_execute_dft_r2c(self%fwx, self%d_dx, self%tmp_x);   \
+call sll_s_fft_exec_r2c_1d(self%fwx, self%d_dx, self%tmp_x);   \
 self%tmp_x(2:nc_x/2+1)=-cmplx(0.0_f64,self%kx(2:nc_x/2+1),kind=f64)*self%tmp_x(2:nc_x/2+1);     \
-call fftw_execute_dft_c2r(self%bwx, self%tmp_x, self%d_dx);   \
+call sll_s_fft_exec_c2r_1d(self%bwx, self%tmp_x, self%d_dx);   \
 self%d_dx = self%d_dx / nc_x
 
 #define D_DY(field)                                           \
 self%d_dy = field;                                            \
-call fftw_execute_dft_r2c(self%fwy, self%d_dy, self%tmp_y);   \
+call sll_s_fft_exec_r2c_1d(self%fwy, self%d_dy, self%tmp_y);   \
 self%tmp_y(2:nc_y/2+1)=-cmplx(0.0_f64,self%ky(2:nc_y/2+1),kind=f64)*self%tmp_y(2:nc_y/2+1);     \
-call fftw_execute_dft_c2r(self%bwy, self%tmp_y, self%d_dy);   \
+call sll_s_fft_exec_c2r_1d(self%bwy, self%tmp_y, self%d_dy);   \
 self%d_dy = self%d_dy / nc_y
 
 #define D_DZ(field)                                           \
 self%d_dz = field;                                            \
-call fftw_execute_dft_r2c(self%fwz, self%d_dz, self%tmp_z);   \
+call sll_s_fft_exec_r2c_1d(self%fwz, self%d_dz, self%tmp_z);   \
 self%tmp_z(2:nc_z/2+1)=-cmplx(0.0_f64,self%kz(2:nc_z/2+1),kind=f64)*self%tmp_z(2:nc_z/2+1);     \
-call fftw_execute_dft_c2r(self%bwz, self%tmp_z, self%d_dz);   \
+call sll_s_fft_exec_c2r_1d(self%bwz, self%tmp_z, self%d_dz);   \
 self%d_dz = self%d_dz / nc_z
 
 !> @ingroup maxwell_solvers
@@ -68,40 +68,18 @@ module sll_m_maxwell_3d_pstd
 #include "sll_working_precision.h"
 #include "sll_maxwell_solvers_macros.h"
 
-  use iso_c_binding, only: &
-    c_associated, &
-    c_double_complex, &
-    c_f_pointer, &
-    c_ptr, &
-    c_size_t
+use sll_m_constants, only: sll_p_pi
 
-  use sll_m_constants, only: &
-    sll_p_pi
+use sll_m_fft
 
-#ifdef FFTW_F2003
-  use sll_m_fftw3, only: &
-    fftw_alloc_complex, &
-    fftw_destroy_plan, &
-    fftw_execute_dft_c2r, &
-    fftw_execute_dft_r2c, &
-    fftw_free, &
-    fftw_patient, &
-    fftw_plan_dft_c2r_1d, &
-    fftw_plan_dft_r2c_1d
-#else
-  use sll_m_fftw3, only: &
-       fftw_patient
-#endif
+implicit none
 
-
-  implicit none
-
-  public :: &
+public :: &
     sll_o_delete, &
     sll_o_new, &
     sll_o_solve
 
-  private
+private
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 !> Initialize maxwell solver 2d cartesian periodic with PSTD scheme
@@ -142,21 +120,15 @@ type :: maxwell_pstd_3d
    sll_real64, dimension(:), pointer  :: kx           !< x wave number
    sll_real64, dimension(:), pointer  :: ky           !< y wave number
    sll_real64, dimension(:), pointer  :: kz           !< z wave number
-   fftw_plan                          :: fwx          !< forward fft plan along x
-   fftw_plan                          :: fwy          !< forward fft plan along y
-   fftw_plan                          :: fwz          !< forward fft plan along y
-   fftw_plan                          :: bwx          !< backward fft plan along x
-   fftw_plan                          :: bwy          !< backward fft plan along y
-   fftw_plan                          :: bwz          !< backward fft plan along y
-   fftw_plan                          :: p_tmp_x      !< pointer for memory allocation
-   fftw_plan                          :: p_tmp_y      !< pointer for memory allocation
-   fftw_plan                          :: p_tmp_z      !< pointer for memory allocation
-   fftw_comp                , pointer :: tmp_x(:)     !< x fft transform
-   fftw_comp                , pointer :: tmp_y(:)     !< y fft transform
-   fftw_comp                , pointer :: tmp_z(:)     !< y fft transform
-   fftw_int                           :: sz_tmp_x     !< size for memory allocation
-   fftw_int                           :: sz_tmp_y     !< size for memory allocation
-   fftw_int                           :: sz_tmp_z     !< size for memory allocation
+   type(sll_t_fft)                    :: fwx          !< forward fft plan along x
+   type(sll_t_fft)                    :: fwy          !< forward fft plan along y
+   type(sll_t_fft)                    :: fwz          !< forward fft plan along y
+   type(sll_t_fft)                    :: bwx          !< backward fft plan along x
+   type(sll_t_fft)                    :: bwy          !< backward fft plan along y
+   type(sll_t_fft)                    :: bwz          !< backward fft plan along y
+   sll_comp64               , pointer :: tmp_x(:)     !< x fft transform
+   sll_comp64               , pointer :: tmp_y(:)     !< y fft transform
+   sll_comp64               , pointer :: tmp_z(:)     !< y fft transform
    sll_int32                          :: polarization !< TE or TM
    sll_real64                         :: e_0          !< electric conductivity
    sll_real64                         :: mu_0         !< magnetic permeability
@@ -189,10 +161,6 @@ subroutine new_maxwell_3d_pstd(self,xmin,xmax,nc_x, &
    sll_real64            :: ky0
    sll_real64            :: kz0
 
-   fftw_int              :: sz_tmp_x
-   fftw_int              :: sz_tmp_y
-   fftw_int              :: sz_tmp_z
-
    sll_int32             :: i, j, k
 
    self%nc_x = nc_x
@@ -202,9 +170,9 @@ subroutine new_maxwell_3d_pstd(self,xmin,xmax,nc_x, &
    self%e_0  = 1._f64
    self%mu_0 = 1._f64
 
-   FFTW_ALLOCATE(self%tmp_x,nc_x/2+1,sz_tmp_x,self%p_tmp_x)
-   FFTW_ALLOCATE(self%tmp_y,nc_y/2+1,sz_tmp_y,self%p_tmp_y)
-   FFTW_ALLOCATE(self%tmp_z,nc_z/2+1,sz_tmp_z,self%p_tmp_z)
+   SLL_ALLOCATE(self%tmp_x(nc_x/2+1), error)
+   SLL_ALLOCATE(self%tmp_y(nc_y/2+1), error)
+   SLL_ALLOCATE(self%tmp_z(nc_z/2+1), error)
 
    SLL_ALLOCATE(self%d_dx(nc_x), error)
    SLL_ALLOCATE(self%d_dy(nc_y), error)
@@ -212,14 +180,14 @@ subroutine new_maxwell_3d_pstd(self,xmin,xmax,nc_x, &
 
    !call dfftw_init_threads(error)
    !if (error == 0) stop 'FFTW CAN''T USE THREADS'
-   !call dfftw_plan_with_nthreads(nthreads)
+   !call dsll_t_fft_with_nthreads(nthreads)
    
-   NEW_FFTW_PLAN_R2C_1D(self%fwx, nc_x, self%d_dx,  self%tmp_x)
-   NEW_FFTW_PLAN_C2R_1D(self%bwx, nc_x, self%tmp_x, self%d_dx)
-   NEW_FFTW_PLAN_R2C_1D(self%fwy, nc_y, self%d_dy,  self%tmp_y)
-   NEW_FFTW_PLAN_C2R_1D(self%bwy, nc_y, self%tmp_y, self%d_dy)
-   NEW_FFTW_PLAN_R2C_1D(self%fwz, nc_z, self%d_dz,  self%tmp_z)
-   NEW_FFTW_PLAN_C2R_1D(self%bwz, nc_z, self%tmp_z, self%d_dz)
+   call sll_s_fft_init_r2c_1d(self%fwx, nc_x, self%d_dx,  self%tmp_x)
+   call sll_s_fft_init_c2r_1d(self%bwx, nc_x, self%tmp_x, self%d_dx)
+   call sll_s_fft_init_r2c_1d(self%fwy, nc_y, self%d_dy,  self%tmp_y)
+   call sll_s_fft_init_c2r_1d(self%bwy, nc_y, self%tmp_y, self%d_dy)
+   call sll_s_fft_init_r2c_1d(self%fwz, nc_z, self%d_dz,  self%tmp_z)
+   call sll_s_fft_init_c2r_1d(self%bwz, nc_z, self%tmp_z, self%d_dz)
 
    SLL_ALLOCATE(self%kx(nc_x/2+1), error)
    SLL_ALLOCATE(self%ky(nc_y/2+1), error)
@@ -412,22 +380,12 @@ end subroutine ampere
 subroutine free_maxwell_3d_pstd(self)
 type(maxwell_pstd_3d) :: self
 
-#ifdef FFTW_F2003
-if (c_associated(self%p_tmp_x)) call fftw_free(self%p_tmp_x)
-if (c_associated(self%p_tmp_y)) call fftw_free(self%p_tmp_y)
-if (c_associated(self%p_tmp_z)) call fftw_free(self%p_tmp_z)
-#endif
-
-call fftw_destroy_plan(self%fwx)
-call fftw_destroy_plan(self%fwy)
-call fftw_destroy_plan(self%fwz)
-call fftw_destroy_plan(self%bwx)
-call fftw_destroy_plan(self%bwy)
-call fftw_destroy_plan(self%bwz)
-
-!if (nthreads > 1) then
-!   call dfftw_cleanup_threads(error)
-!end if
+call sll_s_fft_free(self%fwx)
+call sll_s_fft_free(self%fwy)
+call sll_s_fft_free(self%fwz)
+call sll_s_fft_free(self%bwx)
+call sll_s_fft_free(self%bwy)
+call sll_s_fft_free(self%bwz)
 
 end subroutine free_maxwell_3d_pstd
 
