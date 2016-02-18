@@ -42,12 +42,12 @@ module sll_m_kernel_smoother_base
 
   !---------------------------------------------------------------------------!
   abstract interface
-     subroutine add_single(self, position, weight, rho_dofs) 
+     subroutine add_single(self, position, marker_charge, rho_dofs) 
        use sll_m_working_precision
        import sll_c_kernel_smoother
        class (sll_c_kernel_smoother), intent( inout ) :: self !< Kernel smoother object
        sll_real64,                intent( in ) :: position(self%dim) !< Position of the particle
-       sll_real64,                intent( in ) :: weight !< Weight of the particle
+       sll_real64,                intent( in ) :: marker_charge !< Particle weight times charge
        sll_real64,                    intent( inout ) :: rho_dofs(self%n_dofs) !< Coefficient vector of the charge distribution
 
      end subroutine add_single
@@ -55,15 +55,15 @@ module sll_m_kernel_smoother_base
   
   !---------------------------------------------------------------------------!
   abstract interface
-     subroutine add_update (self, position_old, position_new, weight, qoverm, bfield_dofs, vi, j_dofs)
+     subroutine add_update (self, position_old, position_new, marker_charge, qoverm, bfield_dofs, vi, j_dofs)
        use sll_m_working_precision
        import sll_c_kernel_smoother
        class(sll_c_kernel_smoother), intent(inout) :: self !< kernel smoother object
-       sll_real64, intent(in) :: position_old(self%dim)
-       sll_real64, intent(in) :: position_new(self%dim)
-       sll_real64, intent(in) :: weight
-       sll_real64, intent(in) :: qoverm
-       sll_real64, intent(in) :: bfield_dofs(self%n_dofs)
+       sll_real64, intent(in)    :: position_old(self%dim)
+       sll_real64, intent(in)    :: position_new(self%dim)
+       sll_real64, intent(in)    :: marker_charge
+       sll_real64, intent(in)    :: qoverm
+       sll_real64, intent(in)    :: bfield_dofs(self%n_dofs)
        sll_real64, intent(inout) :: vi(:)
        sll_real64, intent(inout) :: j_dofs(self%n_dofs)
 

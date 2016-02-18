@@ -67,12 +67,12 @@ module sll_m_pic_poisson_2d
 contains
 
   !> Add charge from one particle
-  subroutine add_charge_single_2d(self, position, weight)
+  subroutine add_charge_single_2d(self, position, marker_charge)
     class(sll_t_pic_poisson_2d), intent( inout ) :: self !< Pic Poisson solver object
     sll_real64,                intent( in ) :: position(self%dim) !< Position of the particle
-    sll_real64,                intent( in ) :: weight !< Weight of the particle
+    sll_real64,                intent( in ) :: marker_charge !< Particle weight times charge
 
-    call self%kernel%add_charge( position, weight, self%rho_dofs_local )
+    call self%kernel%add_charge( position, marker_charge, self%rho_dofs_local )
        
 
   end subroutine add_charge_single_2d
