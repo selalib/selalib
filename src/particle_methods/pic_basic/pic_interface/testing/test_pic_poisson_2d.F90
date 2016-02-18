@@ -22,9 +22,8 @@ program test_pic_poisson_2d
     sll_s_new_pic_poisson_2d, &
     sll_t_pic_poisson_2d
 
-  use sll_m_poisson_2d_fft, only: &
-    sll_f_new_poisson_2d_fft_solver, &
-    sll_t_poisson_2d_fft_solver
+  use sll_m_poisson_2d_periodic, only: &
+    sll_f_new_poisson_2d_periodic
 
   use sll_m_poisson_2d_base, only: &
     sll_c_poisson_2d_base
@@ -64,7 +63,7 @@ program test_pic_poisson_2d
   ! Just test allocation and deallocation since functionality is tested in the building blocks.
 
   ! Initialize the field solver
-  poisson_solver => sll_f_new_poisson_2d_fft_solver( &
+  poisson_solver => sll_f_new_poisson_2d_periodic( &
        domain(1,1), domain(1,2), num_cells(1), &
        domain(2,1), domain(2,2), num_cells(2) )
   
