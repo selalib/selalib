@@ -144,7 +144,7 @@ contains
     character(len=256) :: init_case
     logical     :: with_control_variate
 
-    sll_int32, parameter :: input_file = 99
+    sll_int32 :: input_file ! unit for nml file
     sll_int32 :: io_stat
     
 
@@ -155,7 +155,7 @@ contains
     namelist /pic_params/         init_case, n_particles, degree_smoother, with_control_variate
 
     ! Read parameters from file
-    open(unit = input_file, file=trim(filename), IOStat=io_stat)
+    open(newunit = input_file, file=trim(filename), IOStat=io_stat)
     if (io_stat /= 0) then
        print*, 'init_pic_2d2v() failed to open file ', filename
        STOP
