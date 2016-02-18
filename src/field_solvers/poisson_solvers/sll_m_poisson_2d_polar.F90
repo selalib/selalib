@@ -119,7 +119,7 @@ use sll_m_tridiagonal, only:  &
 
 use sll_m_poisson_2d_base, only: &
   sll_c_poisson_2d_base, &
-  sll_f_function_of_position
+  sll_i_fucntion_of_position
 
 implicit none
 
@@ -858,7 +858,7 @@ end subroutine compute_E_from_rho_2d_polar
 
 subroutine compute_rhs_from_function_2d_polar(poisson, func, coefs_dofs)
   class( poisson_2d_polar_solver)                    :: poisson !< Maxwell solver object.
-  procedure(sll_f_function_of_position)          :: func !< Function to be projected.
+  procedure(sll_i_fucntion_of_position)          :: func !< Function to be projected.
   sll_real64, intent(out)                        :: coefs_dofs(:) !< Coefficients of the projection.
 
   SLL_ERROR('compute_rhs_from_function_2d_polar', 'Procedure not implemented.')

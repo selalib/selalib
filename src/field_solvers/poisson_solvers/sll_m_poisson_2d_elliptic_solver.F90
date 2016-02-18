@@ -57,7 +57,7 @@ module sll_m_poisson_2d_elliptic_solver
 
   use sll_m_poisson_2d_base, only: &
     sll_c_poisson_2d_base, &
-    sll_f_function_of_position
+    sll_i_fucntion_of_position
 
   use sll_m_scalar_field_2d, only: &
     sll_f_new_scalar_field_2d_discrete
@@ -879,7 +879,7 @@ contains
     
      subroutine compute_rhs_from_function_2d_elliptic_solver(poisson, func, coefs_dofs)
        class( poisson_2d_elliptic_solver)                    :: poisson !< Maxwell solver object.
-       procedure(sll_f_function_of_position)          :: func !< Function to be projected.
+       procedure(sll_i_fucntion_of_position)          :: func !< Function to be projected.
        sll_real64, intent(out)                        :: coefs_dofs(:) !< Coefficients of the projection.
 
        print*, 'compute_rhs_from_function not implemented for 2d elliptic solver.'
