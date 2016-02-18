@@ -46,8 +46,8 @@ module sll_m_kernel_smoother_base
        use sll_m_working_precision
        import sll_c_kernel_smoother
        class (sll_c_kernel_smoother), intent( inout ) :: self !< Kernel smoother object
-       sll_real64,                intent( in ) :: position(self%dim) !< Position of the particle
-       sll_real64,                intent( in ) :: marker_charge !< Particle weight times charge
+       sll_real64,                    intent( in )    :: position(self%dim) !< Position of the particle
+       sll_real64,                    intent( in )    :: marker_charge !< Particle weight times charge
        sll_real64,                    intent( inout ) :: rho_dofs(self%n_dofs) !< Coefficient vector of the charge distribution
 
      end subroutine add_single
@@ -59,13 +59,13 @@ module sll_m_kernel_smoother_base
        use sll_m_working_precision
        import sll_c_kernel_smoother
        class(sll_c_kernel_smoother), intent(inout) :: self !< kernel smoother object
-       sll_real64, intent(in)    :: position_old(self%dim)
-       sll_real64, intent(in)    :: position_new(self%dim)
-       sll_real64, intent(in)    :: marker_charge
-       sll_real64, intent(in)    :: qoverm
-       sll_real64, intent(in)    :: bfield_dofs(self%n_dofs)
-       sll_real64, intent(inout) :: vi(:)
-       sll_real64, intent(inout) :: j_dofs(self%n_dofs)
+       sll_real64, intent(in)    :: position_old(self%dim) !< Position at time t
+       sll_real64, intent(in)    :: position_new(self%dim) !< Position at time t+\Delta t
+       sll_real64, intent(in)    :: marker_charge          !< Particle weight times charge
+       sll_real64, intent(in)    :: qoverm   !< charge to mass ratio
+       sll_real64, intent(in)    :: bfield_dofs(self%n_dofs) !< values of the B-field at the dofs
+       sll_real64, intent(inout) :: vi(:) !< Velocity of the particle
+       sll_real64, intent(inout) :: j_dofs(self%n_dofs) !< Current at the DoFs
 
      end subroutine add_update
   end interface
@@ -78,8 +78,8 @@ module sll_m_kernel_smoother_base
        use sll_m_working_precision
        import sll_c_kernel_smoother
        class (sll_c_kernel_smoother), intent( inout ) :: self !< Kernel smoother object 
-       sll_real64,                intent( in ) :: position(self%dim) !< Position of the particle
-       sll_real64,                    intent( in ) :: field_dofs(self%n_dofs) !< Coefficient vector for the field DoFs
+       sll_real64,                    intent( in )    :: position(self%dim) !< Position of the particle
+       sll_real64,                    intent( in )    :: field_dofs(self%n_dofs) !< Coefficient vector for the field DoFs
        sll_real64, intent(out) :: field_value !< Value(s) of the electric fields at given position
      end subroutine eval_single
   end interface
@@ -90,10 +90,10 @@ module sll_m_kernel_smoother_base
        use sll_m_working_precision
        import sll_c_kernel_smoother
        class (sll_c_kernel_smoother), intent( inout ) :: self !< Kernel smoother object 
-       sll_real64,                intent( in ) :: position(self%dim) !< Position of the particle
-       sll_int32, intent(in) :: components(:)
-       sll_real64,                    intent( in ) :: field_dofs(:,:) !< Coefficient vector for the field DoFs
-       sll_real64, intent(out)                             :: field_value(:) !< Value(s) of the electric fields at given position
+       sll_real64,                    intent( in )    :: position(self%dim) !< Position of the particle
+       sll_int32,                     intent(in)      :: components(:)
+       sll_real64,                    intent( in )    :: field_dofs(:,:) !< Coefficient vector for the field DoFs
+       sll_real64,                    intent(out)     :: field_value(:) !< Value(s) of the electric fields at given position
      end subroutine eval_multiple
   end interface
 
