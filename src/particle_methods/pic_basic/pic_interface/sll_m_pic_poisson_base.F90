@@ -55,12 +55,12 @@ module sll_m_pic_poisson_base
   
   !---------------------------------------------------------------------------!
   abstract interface
-     subroutine add_single(self, position, weight) 
+     subroutine add_single(self, position, marker_charge) 
        use sll_m_working_precision
        import sll_c_pic_poisson
        class (sll_c_pic_poisson), intent( inout ) :: self !< Pic Poisson solver object
        sll_real64,                intent( in ) :: position(self%dim) !< Position of the particle
-       sll_real64,                intent( in ) :: weight !< Weight of the particle
+       sll_real64,                intent( in ) :: marker_charge !< Particle Weight times charge
      end subroutine add_single
   end interface
 
@@ -175,17 +175,17 @@ contains
 
     !---------------------------------------------------------------------------!
     !< Add the contribution of \a n_part particles to the charge density. Per default it is implemented as a loop over the implementation for a single particle but can be overwritten if necessary.
-  subroutine add_charge_vector(self,n_part, position, weight) 
+  subroutine add_charge_vector(self,n_part, position, marker_charge) 
     class (sll_c_pic_poisson), intent( inout ) :: self !< Pic Poisson solver object
     sll_int32,                 intent( in ) :: n_part !< Number of particles whos positions are given
     sll_real64,                intent( in ) :: position(self%dim, n_part) !< Position of the particle
-    sll_real64,                intent( in ) :: weight(n_part) !< Weight of the particle
+    sll_real64,                intent( in ) :: marker_charge(n_part) !< Particle weights times charge
 
     !local variables
     sll_int32  :: i_part
 
     do i_part = 1, n_part
-       call self%add_charge_single( position(:,i_part), weight(i_part))
+       call self%add_charge_single( position(:,i_part), marker_charge(i_part))
     end do
 
   end subroutine add_charge_vector

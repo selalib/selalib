@@ -71,10 +71,10 @@ contains
 
   !---------------------------------------------------------------------------!
   !> Add charge of one particle
-  subroutine add_charge_single_spline_1d(self, position, weight, rho_dofs)
+  subroutine add_charge_single_spline_1d(self, position, marker_charge, rho_dofs)
     class( sll_t_kernel_smoother_spline_1d ), intent(inout) :: self !< kernel smoother object
-    sll_real64, intent(in)  :: position(self%dim) !< Position of the particle
-    sll_real64,                intent( in ) :: weight !< Weight of the particle
+    sll_real64,                 intent( in )    :: position(self%dim) !< Position of the particle
+    sll_real64,                 intent( in )    :: marker_charge !< Particle weights time charge
     sll_real64,                 intent( inout ) :: rho_dofs(self%n_dofs) !< Coefficient vector of the charge distribution
 
     !local variables
@@ -92,20 +92,20 @@ contains
     do i1 = 1, self%n_span
        index1d = modulo(index+i1-2,self%n_grid(1))+1
        rho_dofs(index1d) = rho_dofs(index1d) +&
-            (weight * self%spline_val(i1)* self%scaling)
+            (marker_charge * self%spline_val(i1)* self%scaling)
     end do
 
   end subroutine add_charge_single_spline_1d
 
 
   !> Add current for one particle and update v (according to H_p1 part in Hamiltonian splitting)
-  subroutine add_current_update_v_spline_1d (self, position_old, position_new, weight, qoverm, bfield_dofs, vi, j_dofs)
+  subroutine add_current_update_v_spline_1d (self, position_old, position_new, marker_charge, qoverm, bfield_dofs, vi, j_dofs)
     class(sll_t_kernel_smoother_spline_1d), intent(inout) :: self !< kernel smoother object
-    sll_real64, intent(in) :: position_old(self%dim)
-    sll_real64, intent(in) :: position_new(self%dim)
-    sll_real64, intent(in) :: weight
-    sll_real64, intent(in) :: qoverm
-    sll_real64, intent(in) :: bfield_dofs(self%n_dofs)
+    sll_real64, intent(in)    :: position_old(self%dim)
+    sll_real64, intent(in)    :: position_new(self%dim)
+    sll_real64, intent(in)    :: marker_charge
+    sll_real64, intent(in)    :: qoverm
+    sll_real64, intent(in)    :: bfield_dofs(self%n_dofs)
     sll_real64, intent(inout) :: vi(:)
     sll_real64, intent(inout) :: j_dofs(self%n_dofs)
 
@@ -129,28 +129,28 @@ contains
 
        if (index_old == index_new) then
           if (r_old < r_new) then
-             call self%update_jv(r_old, r_new, index_old, weight, &
+             call self%update_jv(r_old, r_new, index_old, marker_charge, &
                   qoverm, 1.0_f64, vi(2), j_dofs, bfield_dofs)
           else
-             call self%update_jv(r_new, r_old, index_old, weight, qoverm, &
+             call self%update_jv(r_new, r_old, index_old, marker_charge, qoverm, &
                   -1.0_f64, vi(2), j_dofs, bfield_dofs)
           end if
        elseif (index_old < index_new) then
-          call self%update_jv (r_old, 1.0_f64, index_old, weight, &
+          call self%update_jv (r_old, 1.0_f64, index_old, marker_charge, &
                qoverm, 1.0_f64, vi(2), j_dofs, bfield_dofs)
-          call self%update_jv (0.0_f64, r_new, index_new, weight, &
+          call self%update_jv (0.0_f64, r_new, index_new, marker_charge, &
                qoverm, 1.0_f64, vi(2), j_dofs, bfield_dofs)
           do ind = index_old+1, index_new-1
-             call self%update_jv (0.0_f64, 1.0_f64, ind, weight, &
+             call self%update_jv (0.0_f64, 1.0_f64, ind, marker_charge, &
                   qoverm, 1.0_f64, vi(2), j_dofs, bfield_dofs)
           end do
        else
-          call self%update_jv (r_new, 1.0_f64, index_new, weight, qoverm, &
+          call self%update_jv (r_new, 1.0_f64, index_new, marker_charge, qoverm, &
                -1.0_f64, vi(2), j_dofs, bfield_dofs)
-          call self%update_jv (0.0_f64, r_old, index_old, weight, qoverm, &
+          call self%update_jv (0.0_f64, r_old, index_old, marker_charge, qoverm, &
                -1.0_f64, vi(2), j_dofs, bfield_dofs)
           do ind = index_new+1, index_old-1
-             call self%update_jv (0.0_f64, 1.0_f64, ind, weight, qoverm, &
+             call self%update_jv (0.0_f64, 1.0_f64, ind, marker_charge, qoverm, &
                   -1.0_f64, vi(2), j_dofs, bfield_dofs)
           end do
        end if    
@@ -159,12 +159,12 @@ contains
      end subroutine add_current_update_v_spline_1d
 
  !> Helper function for \a add_current_update_v.
- subroutine update_jv(self, lower, upper, index, weight, qoverm, sign, vi, j_dofs, bfield_dofs)
+ subroutine update_jv(self, lower, upper, index, marker_charge, qoverm, sign, vi, j_dofs, bfield_dofs)
    class(sll_t_kernel_smoother_spline_1d), intent(inout) :: self !< time splitting object 
    sll_real64, intent(in) :: lower
    sll_real64, intent(in) :: upper
    sll_int32,  intent(in) :: index
-   sll_real64, intent(in) :: weight
+   sll_real64, intent(in) :: marker_charge
    sll_real64, intent(in) :: qoverm
    sll_real64, intent(in) :: sign
    sll_real64, intent(inout) :: vi
@@ -195,7 +195,7 @@ contains
    do i_grid = index - self%spline_degree , index
       i_mod = modulo(i_grid, n_cells ) + 1
       j_dofs(i_mod) = j_dofs(i_mod) + &
-           (weight*self%spline_val(ind)* self%scaling)
+           (marker_charge*self%spline_val(ind)* self%scaling)
       vi = vi - qoverm* self%spline_val(ind)*bfield_dofs(i_mod)
       ind = ind + 1
    end do
