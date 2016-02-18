@@ -162,7 +162,7 @@ contains
     character(len=256)   :: splitting_case
     sll_int32   :: spline_degree 
 
-    sll_int32, parameter :: input_file = 99
+    sll_int32   :: input_file
     
 
     namelist /sim_params/         delta_t, n_time_steps, alpha, n_mode, thermal_v, T_r, beta
@@ -172,7 +172,7 @@ contains
     namelist /pic_params/         n_particles, init_case, splitting_case, spline_degree!, degree_smoother
 
     ! Read parameters from file
-    open(unit = input_file, file=trim(filename), IOStat=io_stat)
+    open(newunit = input_file, file=trim(filename), IOStat=io_stat)
     if (io_stat /= 0) then
        print*, 'init_pic_1d2v() failed to open file ', filename
        STOP
