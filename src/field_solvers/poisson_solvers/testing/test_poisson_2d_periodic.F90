@@ -28,7 +28,7 @@ sll_real64, dimension(:,:), allocatable :: rhs
 sll_real64, dimension(:,:), allocatable :: phi
 sll_real64, dimension(:,:), allocatable :: phi_exact
 
-type(sll_t_poisson_2d_periodic_fftpack) :: poisson
+type(sll_t_poisson_2d_periodic_fft) :: poisson
 
 sll_real64                :: x1
 sll_real64                :: x2
@@ -53,7 +53,7 @@ sll_int32 :: ierr
 eta1_min = .0_f64; eta1_max = 2.0_f64*sll_p_pi
 eta2_min = .0_f64; eta2_max = 2.0_f64*sll_p_pi
 
-nc_eta1 = 127; nc_eta2 = 127
+nc_eta1 = 128; nc_eta2 = 128
 
 SLL_CLEAR_ALLOCATE(ex(nc_eta1+1,nc_eta2+1),info)
 SLL_CLEAR_ALLOCATE(ey(nc_eta1+1,nc_eta2+1),info)
