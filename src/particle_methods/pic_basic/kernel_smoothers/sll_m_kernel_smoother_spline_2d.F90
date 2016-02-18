@@ -88,10 +88,10 @@ contains
 
   !---------------------------------------------------------------------------!
   !> Add charge of single particle
-  subroutine add_charge_single_spline_2d(self, position, weight, rho_dofs)
+  subroutine add_charge_single_spline_2d(self, position, marker_charge, rho_dofs)
     class( sll_t_kernel_smoother_spline_2d), intent(inout)    :: self !< kernel smoother object
     sll_real64, intent( in ) :: position(self%dim)
-    sll_real64, intent( in ) :: weight
+    sll_real64, intent( in ) :: marker_charge
     sll_real64, intent(inout)                       :: rho_dofs(self%n_dofs ) !< spline coefficient of accumulated density
     
     !local variables
@@ -107,7 +107,7 @@ contains
           index1d(2) = indices(2)+i2-2
           index2d = index_1dto2d_column_major(self,index1d)
           rho_dofs(index2d) = rho_dofs(index2d) +&
-               ( weight* self%scaling * &
+               ( marker_charge* self%scaling * &
                self%spline_val(i1,1) * self%spline_val(i2,2))
        end do
     end do
@@ -117,11 +117,11 @@ contains
 
  !---------------------------------------------------------------------------!
   !> Add current and update v for single particle
-  subroutine add_current_update_v_spline_2d (self, position_old, position_new, weight, qoverm, bfield_dofs, vi, j_dofs)
+  subroutine add_current_update_v_spline_2d (self, position_old, position_new, marker_charge, qoverm, bfield_dofs, vi, j_dofs)
     class(sll_t_kernel_smoother_spline_2d), intent(inout) :: self !< kernel smoother object
     sll_real64, intent(in) :: position_old(self%dim)
     sll_real64, intent(in) :: position_new(self%dim)
-    sll_real64, intent(in) :: weight
+    sll_real64, intent(in) :: marker_charge
     sll_real64, intent(in) :: qoverm
     sll_real64, intent(in) :: bfield_dofs(self%n_dofs)
     sll_real64, intent(inout) :: vi(:)
