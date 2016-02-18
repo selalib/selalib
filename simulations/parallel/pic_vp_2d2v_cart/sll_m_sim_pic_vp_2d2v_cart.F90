@@ -53,9 +53,8 @@ module sll_m_sim_pic_vp_2d2v_cart
     sll_s_new_pic_poisson_2d, &
     sll_t_pic_poisson_2d
 
-  use sll_m_poisson_2d_fft, only: &
-    sll_f_new_poisson_2d_fft_solver, &
-    sll_t_poisson_2d_fft_solver
+  use sll_m_poisson_2d_periodic, only: &
+    sll_f_new_poisson_2d_periodic
 
   use sll_m_poisson_2d_base, only: &
     sll_c_poisson_2d_base
@@ -260,7 +259,7 @@ contains
 
 
     ! Initialize the field solver
-    sim%poisson_solver => sll_f_new_poisson_2d_fft_solver( &
+    sim%poisson_solver => sll_f_new_poisson_2d_periodic( &
          sim%mesh%eta1_min, sim%mesh%eta1_max, sim%mesh%num_cells1, &
          sim%mesh%eta2_min, sim%mesh%eta2_max, sim%mesh%num_cells2)
 

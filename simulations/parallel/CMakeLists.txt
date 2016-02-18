@@ -54,7 +54,6 @@ if( HDF5_ENABLED AND HDF5_IS_PARALLEL AND HDF5_PARALLEL_ENABLED )
     # Particle simulations
 
     ## Vlasov-Poisson 1Dx1D
-    add_subdirectory( pic_vp_1d1v_cart                         )
 
     ## Vlasov-Maxwell 1Dx2D
     add_subdirectory( pic_vm_1d2v_cart                         )

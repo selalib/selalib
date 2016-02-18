@@ -26,8 +26,8 @@ program test_operator_splitting_pic_vp_2d2v
   use sll_m_particle_group_base, only: &
     sll_c_particle_group_base
 
-  use sll_m_poisson_2d_fft, only: &
-    sll_f_new_poisson_2d_fft_solver
+  use sll_m_poisson_2d_periodic, only: &
+    sll_f_new_poisson_2d_periodic
 
   use sll_m_poisson_2d_base, only: &
     sll_c_poisson_2d_base
@@ -127,7 +127,7 @@ program test_operator_splitting_pic_vp_2d2v
          domain, num_cells, n_particles, &
          degree_smoother, sll_p_collocation)
   
-  poisson_solver => sll_f_new_poisson_2d_fft_solver( &
+  poisson_solver => sll_f_new_poisson_2d_periodic( &
        eta_min(1), eta_max(1), num_cells(1), &
        eta_min(2), eta_max(2), num_cells(2))
 

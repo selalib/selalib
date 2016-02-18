@@ -12,7 +12,7 @@ use sll_m_common_coordinate_transformations
 use sll_m_coordinate_transformation_2d_base
 use sll_m_coordinate_transformations_2d
 use sll_m_poisson_2d_base
-use sll_m_poisson_2d_fft
+use sll_m_poisson_2d_periodic
 use sll_m_gnuplot
 
 implicit none
@@ -78,7 +78,7 @@ SLL_ALLOCATE(vgx(nx,ny),error)
 SLL_ALLOCATE(vgy(nx,ny),error)                                        
 SLL_ALLOCATE(omg(nx,ny),error)                                       
                                                                               
-poisson => sll_f_new_poisson_2d_fft_solver(xmin,xmax,nx,ymin,ymax,ny)
+poisson => sll_f_new_poisson_2d_periodic(xmin,xmax,nx,ymin,ymax,ny)
                                                                               
 nbpart = 4000
 

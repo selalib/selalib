@@ -4,37 +4,25 @@ program landau_4d
 #include "sll_memory.h"
 #include "sll_working_precision.h"
 
-  use sll_m_boundary_condition_descriptors, only: &
-    sll_p_periodic
+use sll_m_boundary_condition_descriptors, only: &
+  sll_p_periodic
 
-  use sll_m_constants, only: &
-    sll_p_pi
+use sll_m_constants, only: &
+  sll_p_pi
 
-  use sll_m_cubic_spline_interpolator_1d, only: &
-    sll_t_cubic_spline_interpolator_1d
+use sll_m_cubic_spline_interpolator_1d, only: &
+  sll_t_cubic_spline_interpolator_1d
 
-  use sll_m_interpolators_1d_base, only: &
-    sll_c_interpolator_1d
+use sll_m_interpolators_1d_base, only: &
+  sll_c_interpolator_1d
 
-  use sll_m_utilities, only: &
-    sll_s_int2string
+use sll_m_utilities, only: &
+  sll_s_int2string
 
-#ifdef FFTW
-  use sll_m_poisson_2d_periodic_fftw, only: &
-    sll_o_initialize, &
-    sll_t_poisson_2d_periodic_fftw, &
-    sll_o_solve
+use sll_m_poisson_2d_base
+use sll_m_poisson_2d_periodic
 
-#define poisson_2d_periodic sll_t_poisson_2d_periodic_fftw
-#else
-use sll_m_poisson_2d_periodic_fftpack, only: &
-    sll_o_initialize, &
-    sll_t_poisson_2d_periodic_fftpack, &
-    sll_o_solve
-
-#define poisson_2d_periodic sll_t_poisson_2d_periodic_fftpack
-#endif
-  implicit none
+implicit none
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
   
 !Geometry
@@ -61,12 +49,12 @@ sll_real64, dimension(:,:), allocatable :: ey
 sll_real64, dimension(:,:), allocatable :: phi
 sll_real64, dimension(:,:), allocatable :: rho
 
-type(poisson_2d_periodic)               :: poisson
+class(sll_c_poisson_2d_base), pointer   :: poisson
 
-class(sll_c_interpolator_1d), pointer    :: interp_1
-class(sll_c_interpolator_1d), pointer    :: interp_2
-class(sll_c_interpolator_1d), pointer    :: interp_3
-class(sll_c_interpolator_1d), pointer    :: interp_4
+class(sll_c_interpolator_1d), pointer   :: interp_1
+class(sll_c_interpolator_1d), pointer   :: interp_2
+class(sll_c_interpolator_1d), pointer   :: interp_3
+class(sll_c_interpolator_1d), pointer   :: interp_4
 
 type(sll_t_cubic_spline_interpolator_1d), target  :: spl_eta1
 type(sll_t_cubic_spline_interpolator_1d), target  :: spl_eta2
@@ -105,8 +93,8 @@ SLL_ALLOCATE(ex(nc_eta1+1,nc_eta2+1),error)
 SLL_ALLOCATE(ey(nc_eta1+1,nc_eta2+1),error)
 
 
-call sll_o_initialize(poisson, eta1_min, eta1_max, nc_eta1, &
-                         eta2_min, eta2_max, nc_eta2, error)
+poisson => sll_f_new_poisson_2d_periodic( eta1_min, eta1_max, nc_eta1, &
+                         eta2_min, eta2_max, nc_eta2)
 
 call spl_eta1%initialize(nc_eta1+1, eta1_min, eta1_max, sll_p_periodic )
 call spl_eta2%initialize(nc_eta2+1, eta2_min, eta2_max, sll_p_periodic )
@@ -158,7 +146,8 @@ do i_step = 1, n_step !Loop over time
    time  = time + 0.5 * delta_t
 
    call compute_rho()
-   call sll_o_solve(poisson,ex,ey,rho,nrj(i_step))
+   call poisson%compute_e_from_rho(ex,ey,rho)
+   nrj(i_step)  = sum(ex*ex)
    call online_plot() 
 
 

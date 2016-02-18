@@ -9,12 +9,6 @@ module sll_m_sparse_grid_2d
 #include "sll_memory.h"
 #include "sll_working_precision.h"
 
-  use iso_c_binding, only: &
-    c_double, &
-    c_double_complex, &
-    c_ptr, &
-    c_size_t
-
   use sll_m_constants, only: &
     sll_p_pi
 
@@ -29,19 +23,9 @@ module sll_m_sparse_grid_2d
   private
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
-!> Object for sparse grid fast Fourier transform implemented based on FFTW library
-  type :: fft_fg_2d
-     type(C_PTR)  :: bw
-     complex(C_DOUBLE_COMPLEX), dimension(:,:), pointer :: in
-     real(C_DOUBLE), dimension(:,:), pointer :: out
-     type(C_PTR) :: p_in, p_out
-     integer(C_SIZE_T) :: sz
-  end type fft_fg_2d
-
 !> Sparse grid object for 2d with interpolation routines.
 type, extends(sll_t_sparse_grid_interpolator) :: sll_t_sparse_grid_interpolator_2d
 sll_int32, dimension(:,:), pointer  :: index !< 2d mapping: for each 2d index l on the sparse grid, \a index gives the index of the first node belonging to this level 
-type(fft_fg_2d) :: fft_object_fg !< FFT object for sparse grid FFT implementation based on FFTW
 
 contains
   procedure :: initialize => initialize_sg2d!> Initialization routine
