@@ -22,35 +22,24 @@ module sll_m_advection_1d_spectral
 #include "sll_errors.h"
 #include "sll_memory.h"
 #include "sll_working_precision.h"
-#include "sll_fftw.h"
 
-  use iso_c_binding, only: &
-    c_associated, &
-    c_double_complex, &
-    c_f_pointer, &
-    c_ptr, &
-    c_size_t
+use sll_m_advection_1d_base, only: sll_c_advection_1d_base
 
-  use sll_m_advection_1d_base, only: &
-    sll_c_advection_1d_base
+use sll_m_constants, only: sll_p_pi
 
-  use sll_m_constants, only: &
-    sll_p_pi
+use sll_m_fft, only: &
+  sll_s_fft_init_c2r_1d, &
+  sll_s_fft_init_r2c_1d, &
+  sll_s_fft_exec_c2r_1d, &
+  sll_s_fft_exec_r2c_1d, &
+  sll_s_fft_free, &
+  sll_t_fft
 
-  use sll_m_fft, only: &
-    sll_s_fft_init_c2r_1d, &
-    sll_s_fft_init_r2c_1d, &
-    sll_s_fft_exec_c2r_1d, &
-    sll_s_fft_exec_r2c_1d, &
-    sll_s_fft_free, &
-    sll_t_fft
+implicit none
 
-  implicit none
+public :: sll_f_new_spectral_1d_advector
 
-  public :: &
-    sll_f_new_spectral_1d_advector
-
-  private
+private
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 type,extends(sll_c_advection_1d_base) :: spectral_1d_advector
@@ -82,9 +71,9 @@ contains
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 function sll_f_new_spectral_1d_advector( num_cells, &
-                                   eta_min,   &
-                                   eta_max    &
-                                   ) result(adv)      
+                                         eta_min,   &
+                                         eta_max    &
+                                         ) result(adv)      
 
   type(spectral_1d_advector), pointer :: adv
 
