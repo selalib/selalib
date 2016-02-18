@@ -30,7 +30,7 @@ module sll_m_poisson_2d_periodic
 
 use sll_m_poisson_2d_base, only: &
      sll_c_poisson_2d_base, &
-     sll_f_function_of_position
+     sll_i_fucntion_of_position
 
 use sll_m_constants, only: &
      sll_p_pi
@@ -123,7 +123,7 @@ contains
   
   subroutine compute_rhs_from_function_2d_periodic(poisson, func, coefs_dofs)
     class( sll_t_poisson_2d_periodic)                    :: poisson !< Maxwell solver object.
-    procedure(sll_f_function_of_position)          :: func !< Function to be projected.
+    procedure(sll_i_fucntion_of_position)          :: func !< Function to be projected.
     sll_real64, intent(out)                        :: coefs_dofs(:) !< Coefficients of the projection.
     
     print*, 'compute_rhs_from_function not implemented for sll_t_poisson_2d_periodic.'
