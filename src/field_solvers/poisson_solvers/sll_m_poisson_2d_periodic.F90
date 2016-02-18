@@ -28,8 +28,12 @@ module sll_m_poisson_2d_periodic
 #include "sll_working_precision.h"
 #include "sll_assert.h"
 
-use sll_m_poisson_2d_base, only: sll_c_poisson_2d_base
-use sll_m_constants, only: sll_p_pi
+use sll_m_poisson_2d_base, only: &
+     sll_c_poisson_2d_base, &
+     sll_f_function_of_position
+
+use sll_m_constants, only: &
+     sll_p_pi
 use sll_m_fft, only: sll_t_fft, &
   sll_s_fft_init_c2r_2d,        &
   sll_s_fft_init_r2c_2d,        &
@@ -93,9 +97,43 @@ contains
   procedure, public, pass(poisson) :: compute_E_from_rho => &
     compute_E_from_rho_2d_fft
     
+  !> Compute the squarred L_2 for given coefficients
+  procedure :: &
+       l2norm_squared => l2norm_squarred_2d_periodic
+  !> Compute the right hand side from a given function
+  procedure :: &
+       compute_rhs_from_function => compute_rhs_from_function_2d_periodic
+  !> Destructor
+  procedure :: free => delete_2d_periodic
+
 end type sll_t_poisson_2d_periodic
 
 contains
+
+
+  
+  function l2norm_squarred_2d_periodic(poisson, coefs_dofs) result(r)
+    class( sll_t_poisson_2d_periodic) , intent(in)        :: poisson !< Poisson solver object.
+    sll_real64   , intent(in)                                  :: coefs_dofs(:,:) !< Values of the coefficient vectors for each DoF
+    sll_real64                                     :: r
+    
+    r = sum(coefs_dofs**2)* poisson%solver%dx * poisson%solver%dy
+    
+  end function l2norm_squarred_2d_periodic
+  
+  subroutine compute_rhs_from_function_2d_periodic(poisson, func, coefs_dofs)
+    class( sll_t_poisson_2d_periodic)                    :: poisson !< Maxwell solver object.
+    procedure(sll_f_function_of_position)          :: func !< Function to be projected.
+    sll_real64, intent(out)                        :: coefs_dofs(:) !< Coefficients of the projection.
+    
+    print*, 'compute_rhs_from_function not implemented for sll_t_poisson_2d_periodic.'
+    
+  end subroutine compute_rhs_from_function_2d_periodic
+  
+  subroutine delete_2d_periodic(poisson)
+    class( sll_t_poisson_2d_periodic)                    :: poisson !< Maxwell solver object.
+  end subroutine delete_2d_periodic
+
 
   !> @returns a pointer to the derived type sll_t_poisson_2d_periodic.
   function sll_f_new_poisson_2d_periodic( &
