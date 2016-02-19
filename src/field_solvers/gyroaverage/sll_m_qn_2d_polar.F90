@@ -607,7 +607,7 @@ contains
     sll_real64,dimension(1:quasineutral%Nc(1)+1,1:quasineutral%Nc(2)),intent(inout) :: phi
     sll_comp64,dimension(:,:),allocatable :: phi_comp,phi_old
     sll_real64,dimension(:),allocatable::buf_fft
-    type(sll_t_fft) :: fw, bw
+    !type(sll_t_fft) :: fw, bw
     sll_comp64 :: result
     sll_int32 :: Nr,Ntheta
     sll_int32 :: error
@@ -620,16 +620,16 @@ contains
  ! Allocate
     SLL_ALLOCATE(phi_comp(1:Nr+1,1:Ntheta),error)
     SLL_ALLOCATE(phi_old(1:Nr+1,1:Ntheta),error)
-    SLL_CLEAR_ALLOCATE(buf_fft(1:2*Ntheta-2),error)
+    SLL_CLEAR_ALLOCATE(buf_fft(1:4*Ntheta+15),error)
  
  ! FFT(PHI)
     phi_comp=phi*(1._f64,0._f64)
-    !call zffti(Ntheta,buf_fft)
-    call sll_s_fft_init_c2r_1d(fw, 2*ntheta-2,phi_comp(1,:),buf_fft)
-    call sll_s_fft_init_r2c_1d(bw, 2*ntheta-2,buf_fft,phi_comp(1,:))
+    call zffti(Ntheta,buf_fft)
+    !call sll_s_fft_init_c2r_1d(fw, 2*ntheta-2,phi_comp(1,:),buf_fft)
+    !call sll_s_fft_init_r2c_1d(bw, 2*ntheta-2,buf_fft,phi_comp(1,:))
     do i=1,Nr+1
-      !call zfftf(Ntheta,phi_comp(i,:),buf_fft)
-      call sll_s_fft_exec_c2r_1d(fw, phi_comp(i,:),buf_fft)
+      call zfftf(Ntheta,phi_comp(i,:),buf_fft)
+      !call sll_s_fft_exec_c2r_1d(fw, phi_comp(i,:),buf_fft)
     enddo   
 
  ! Produit matrice/vecteur 
@@ -647,8 +647,8 @@ contains
     
  ! FFT^-1
     do i=1,Nr+1
-    !call zfftb(Ntheta,phi_comp(i,:),buf_fft)
-    call sll_s_fft_exec_r2c_1d(bw, buf_fft, phi_comp(i,:))
+    call zfftb(Ntheta,phi_comp(i,:),buf_fft)
+    !call sll_s_fft_exec_r2c_1d(bw, buf_fft, phi_comp(i,:))
   enddo
   phi=real(phi_comp,f64)/real(Ntheta,f64)
     
@@ -656,8 +656,8 @@ contains
  !   print *,"phi_min : ",minval(phi)
  !   print *,"phi_max : ",maxval(phi)
     
-    call sll_s_fft_free(fw)
-    call sll_s_fft_free(bw)
+    !call sll_s_fft_free(fw)
+    !call sll_s_fft_free(bw)
  ! Deallocate    
     SLL_DEALLOCATE_ARRAY(phi_comp,error)
     SLL_DEALLOCATE_ARRAY(phi_old,error)
@@ -797,24 +797,24 @@ subroutine solve_circulant_system(Ntheta,Nr,mat_circ,sol)
   sll_int32 :: INFO
   sll_real64,dimension(0:Ntheta-1,0:Nr,0:Nr),intent(in) :: mat_circ
   sll_real64,dimension(1:Nr+1,1:Ntheta),intent(inout) :: sol
-  type(sll_t_fft) :: fw, bw
+  !type(sll_t_fft) :: fw, bw
 
  SLL_ALLOCATE(Dm(0:Ntheta-1,0:Nr,0:Nr),error)
  SLL_ALLOCATE(sol_comp(1:Nr+1,1:Ntheta),error)
  SLL_ALLOCATE(sol_old(1:Nr+1,1:Ntheta),error)
- SLL_ALLOCATE(buf_fft(1:2*Ntheta-2),error)
+ SLL_ALLOCATE(buf_fft(1:4*Ntheta+15),error)
  SLL_ALLOCATE(IPIV(Nr+1),error)
  SLL_ALLOCATE(WORK((Nr+1)**2),error)
 
  sol_comp=sol*(1._f64,0._f64)
  
  ! FFT(PHI)
- !call zffti(Ntheta,buf_fft)
- call sll_s_fft_init_c2r_1d(fw,2*ntheta-2,sol_comp(1,:),buf_fft)
- call sll_s_fft_init_r2c_1d(bw,2*ntheta-2,buf_fft,sol_comp(1,:))
+ call zffti(Ntheta,buf_fft)
+ !call sll_s_fft_init_c2r_1d(fw,2*ntheta-2,sol_comp(1,:),buf_fft)
+ !call sll_s_fft_init_r2c_1d(bw,2*ntheta-2,buf_fft,sol_comp(1,:))
   do i=1,Nr+1
-    !call zfftf(Ntheta,sol_comp(i,:),buf_fft)
-    call sll_s_fft_exec_c2r_1d(fw,sol_comp(i,:),buf_fft)
+    call zfftf(Ntheta,sol_comp(i,:),buf_fft)
+    !call sll_s_fft_exec_c2r_1d(fw,sol_comp(i,:),buf_fft)
   enddo   
 
  ! Matrices Dm  
@@ -845,14 +845,14 @@ subroutine solve_circulant_system(Ntheta,Nr,mat_circ,sol)
     
     ! FFT^-1
     do i=1,Nr+1
-    !call zfftb(Ntheta,sol_comp(i,:),buf_fft)
-    call sll_s_fft_exec_r2c_1d(bw,buf_fft,sol_comp(i,:))
+    call zfftb(Ntheta,sol_comp(i,:),buf_fft)
+    !call sll_s_fft_exec_r2c_1d(bw,buf_fft,sol_comp(i,:))
   enddo
   
   sol=real(sol_comp/cmplx(Ntheta,0._f64,f64),f64)
 
-  call sll_s_fft_free(fw)
-  call sll_s_fft_free(bw)
+  !call sll_s_fft_free(fw)
+  !call sll_s_fft_free(bw)
 
 end subroutine solve_circulant_system
 
