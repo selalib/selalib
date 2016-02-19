@@ -549,8 +549,8 @@ contains
        acc = 0.0_f64
 
        ! allocate arrays and initialize them
-       SLL_ALLOCATE(data_in(npts),ierr)
-       SLL_ALLOCATE(correct_data_out(npts), ierr)
+       SLL_CLEAR_ALLOCATE(data_in(1:npts),ierr)
+       SLL_CLEAR_ALLOCATE(correct_data_out(1:npts), ierr)
 
        do i=0,npts-1
           x1 = xmin + real(i,f64)*h1
@@ -569,15 +569,15 @@ contains
           x1 = xmin + real(i,f64)*h1 
           val = interpolator_f(x1,spline)
           acc = acc + abs(val-correct_data_out(i+1))
-!!$                    print *, '(i) = ',i+1, 'correct value = ', &
-!!$                         correct_data_out(i+1), '. Calculated = ', val, 'delta = ', h1, 'delta^4 = ', h1**4
+          !print *, '(i) = ',i+1, 'correct value = ', &
+          !correct_data_out(i+1), '. Calculated = ', val, 'delta = ', h1, 'delta^4 = ', h1**4
        end do
        ! Do the last point separately because due to roundoff, the last value
        ! is outside of the specified domain.
        val = interpolator_f(xmax, spline)
        acc = acc + abs(val-correct_data_out(i+1))
-!!$       print *, '(i) = ',npts, 'correct value = ', correct_data_out(npts), &
-!!$            '. Calculated = ', val, 'delta = ', h1, 'delta^4 = ', h1**4
+       !print *, '(i) = ',npts, 'correct value = ', correct_data_out(npts), &
+       !     '. Calculated = ', val, 'delta = ', h1, 'delta^4 = ', h1**4
        average_error = acc/(real(npts,f64))
        print *, 'Test for num. points: ', npts,'Average error = ', average_error
        if( average_error .le. h1**4 ) then
