@@ -22,20 +22,16 @@ module sll_m_qn_2d_polar
 #include "sll_memory.h"
 #include "sll_working_precision.h"
 
-! use F77_fftpack, only: &
-!   zfftb, &
-!   zfftf, &
-!   zffti
+  use sll_m_constants, only: sll_p_pi
 
-! use F77_lapack, only: &
-!   zgetrf, &
-!   zgetri
+  use sll_m_gnuplot, only: sll_o_gnuplot_2d
 
-  use sll_m_constants, only: &
-    sll_p_pi
-
-  use sll_m_gnuplot, only: &
-    sll_o_gnuplot_2d
+  use sll_m_fft, only: sll_t_fft, &
+    sll_s_fft_init_c2r_1d, &
+    sll_s_fft_exec_c2r_1d, &
+    sll_s_fft_init_r2c_1d, &
+    sll_s_fft_exec_r2c_1d, &
+    sll_s_fft_free
 
   use sll_m_gyroaverage_utilities, only: &
     sll_s_compute_shape_circle, &
@@ -70,35 +66,33 @@ module sll_m_qn_2d_polar
      sll_real64          :: eta_min(2)     !< r min et theta min
      sll_real64          :: eta_max(2)     !< r max et theta max
      sll_int32           :: Nc(2)          !< number of cells in r and in theta
+     sll_int32           :: N_points       !< number of points on the circle
      
-     sll_int32           :: N_points          !< number of points on the circle
-     
-     sll_real64, dimension(:,:), pointer    :: points
-     sll_int32, dimension(:,:), pointer       :: pre_compute_N
-     sll_real64, dimension(:,:,:), pointer    :: pre_compute_coeff
-     sll_int32, dimension(:,:,:), pointer     :: pre_compute_index
-     sll_real64, dimension(:,:), pointer      :: pre_compute_coeff_spl
+     sll_real64, dimension(:,:),   pointer   :: points
+     sll_int32,  dimension(:,:),   pointer   :: pre_compute_N
+     sll_real64, dimension(:,:,:), pointer   :: pre_compute_coeff
+     sll_int32,  dimension(:,:,:), pointer   :: pre_compute_index
+     sll_real64, dimension(:,:),   pointer   :: pre_compute_coeff_spl
      sll_int32 :: size_pre_compute
 
-     sll_real64, dimension(:,:,:), pointer    :: mat_gyro
-     sll_real64, dimension(:,:,:), pointer    :: mat_double_gyro 
-     sll_real64, dimension(:,:,:,:), pointer    :: mat_gyro_circ
-     sll_real64, dimension(:,:,:,:), pointer    :: mat_double_gyro_circ
+     sll_real64, dimension(:,:,:),   pointer :: mat_gyro
+     sll_real64, dimension(:,:,:),   pointer :: mat_double_gyro 
+     sll_real64, dimension(:,:,:,:), pointer :: mat_gyro_circ
+     sll_real64, dimension(:,:,:,:), pointer :: mat_double_gyro_circ
 
-     sll_comp64, dimension(:,:,:), pointer    :: mat_qn_inverse
+     sll_comp64, dimension(:,:,:),   pointer :: mat_qn_inverse
      
-     sll_real64, dimension(:), allocatable    :: lambda
-     sll_real64, dimension(:), allocatable    :: T_i
+     sll_real64, dimension(:), allocatable   :: lambda
+     sll_real64, dimension(:), allocatable   :: T_i
      ! solve \lambda(r)\phi-\tilde{\phi} = second member
      
-     sll_real64, dimension(:), pointer        :: mu_points_for_phi
-     sll_real64, dimension(:), pointer        :: mu_weights_for_phi
-     sll_int32                                :: N_mu_for_phi
+     sll_real64, dimension(:), pointer       :: mu_points_for_phi
+     sll_real64, dimension(:), pointer       :: mu_weights_for_phi
+     sll_int32                               :: N_mu_for_phi
 
   end type sll_t_plan_qn_polar
 
 contains
-
 
   function sll_f_new_plan_qn_polar_splines(eta_min,eta_max,Nc,N_points,lambda,T_i) result(this)
 
@@ -608,27 +602,16 @@ contains
     
   end subroutine sll_s_precompute_inverse_qn_matrix_polar_splines
 
-
-
-
-
-
- 
- 
    subroutine sll_s_solve_qn_polar_splines(quasineutral,phi)
     type(sll_t_plan_qn_polar) :: quasineutral
     sll_real64,dimension(1:quasineutral%Nc(1)+1,1:quasineutral%Nc(2)),intent(inout) :: phi
     sll_comp64,dimension(:,:),allocatable :: phi_comp,phi_old
     sll_real64,dimension(:),allocatable::buf_fft
-    !sll_int32,dimension(:),allocatable :: IPIV
-    !sll_comp64,dimension(:),allocatable :: WORK
-    !sll_real64 :: mode
+    type(sll_t_fft) :: fw, bw
     sll_comp64 :: result
-    !sll_int32 :: INFO
     sll_int32 :: Nr,Ntheta
     sll_int32 :: error
     sll_int32 :: i,j,m
-    !sll_int32 :: ii(2)
   
  ! Taille du maillage  
     Nr = quasineutral%Nc(1)
@@ -637,13 +620,16 @@ contains
  ! Allocate
     SLL_ALLOCATE(phi_comp(1:Nr+1,1:Ntheta),error)
     SLL_ALLOCATE(phi_old(1:Nr+1,1:Ntheta),error)
-    SLL_ALLOCATE(buf_fft(1:4*Ntheta+15),error)
+    SLL_CLEAR_ALLOCATE(buf_fft(1:2*Ntheta-2),error)
  
  ! FFT(PHI)
     phi_comp=phi*(1._f64,0._f64)
-    call zffti(Ntheta,buf_fft)
+    !call zffti(Ntheta,buf_fft)
+    call sll_s_fft_init_c2r_1d(fw, 2*ntheta-2,phi_comp(1,:),buf_fft)
+    call sll_s_fft_init_r2c_1d(bw, 2*ntheta-2,buf_fft,phi_comp(1,:))
     do i=1,Nr+1
-    call zfftf(Ntheta,phi_comp(i,:),buf_fft)
+      !call zfftf(Ntheta,phi_comp(i,:),buf_fft)
+      call sll_s_fft_exec_c2r_1d(fw, phi_comp(i,:),buf_fft)
     enddo   
 
  ! Produit matrice/vecteur 
@@ -661,7 +647,8 @@ contains
     
  ! FFT^-1
     do i=1,Nr+1
-    call zfftb(Ntheta,phi_comp(i,:),buf_fft)
+    !call zfftb(Ntheta,phi_comp(i,:),buf_fft)
+    call sll_s_fft_exec_r2c_1d(bw, buf_fft, phi_comp(i,:))
   enddo
   phi=real(phi_comp,f64)/real(Ntheta,f64)
     
@@ -669,6 +656,8 @@ contains
  !   print *,"phi_min : ",minval(phi)
  !   print *,"phi_max : ",maxval(phi)
     
+    call sll_s_fft_free(fw)
+    call sll_s_fft_free(bw)
  ! Deallocate    
     SLL_DEALLOCATE_ARRAY(phi_comp,error)
     SLL_DEALLOCATE_ARRAY(phi_old,error)
@@ -791,10 +780,16 @@ subroutine solve_circulant_system(Ntheta,Nr,mat_circ,sol)
   ! Solve mat_circ*X=sol where mat_circ(0:Ntheta-1,0:Nr,0:Nr) 
   ! is a circulent matrix of size Ntheta*(Nr+1) Ntheta*(Nr+1)
   ! and sol(1:Nr+1,1:Ntheta)
-  sll_int32 :: Ntheta,Nr,i,j,m,error
-  sll_comp64,dimension(:,:,:),allocatable :: Dm
-  sll_comp64,dimension(:,:),allocatable :: sol_comp,sol_old
-  sll_real64,dimension(:),allocatable::buf_fft
+  sll_int32                                :: Ntheta
+  sll_int32                                :: Nr
+  sll_int32                                :: i
+  sll_int32                                :: j
+  sll_int32                                :: m
+  sll_int32                                :: error
+  sll_comp64, dimension(:,:,:),allocatable :: Dm
+  sll_comp64, dimension(:,:),  allocatable :: sol_comp
+  sll_comp64, dimension(:,:),  allocatable :: sol_old
+  sll_real64, dimension(:),    allocatable :: buf_fft
   sll_real64 :: mode
   sll_comp64 :: exp_comp,result
   sll_int32,dimension(:),allocatable :: IPIV
@@ -802,20 +797,24 @@ subroutine solve_circulant_system(Ntheta,Nr,mat_circ,sol)
   sll_int32 :: INFO
   sll_real64,dimension(0:Ntheta-1,0:Nr,0:Nr),intent(in) :: mat_circ
   sll_real64,dimension(1:Nr+1,1:Ntheta),intent(inout) :: sol
+  type(sll_t_fft) :: fw, bw
 
  SLL_ALLOCATE(Dm(0:Ntheta-1,0:Nr,0:Nr),error)
  SLL_ALLOCATE(sol_comp(1:Nr+1,1:Ntheta),error)
  SLL_ALLOCATE(sol_old(1:Nr+1,1:Ntheta),error)
- SLL_ALLOCATE(buf_fft(1:4*Ntheta+15),error)
+ SLL_ALLOCATE(buf_fft(1:2*Ntheta-2),error)
  SLL_ALLOCATE(IPIV(Nr+1),error)
  SLL_ALLOCATE(WORK((Nr+1)**2),error)
 
  sol_comp=sol*(1._f64,0._f64)
  
  ! FFT(PHI)
-  call zffti(Ntheta,buf_fft)
+ !call zffti(Ntheta,buf_fft)
+ call sll_s_fft_init_c2r_1d(fw,2*ntheta-2,sol_comp(1,:),buf_fft)
+ call sll_s_fft_init_r2c_1d(bw,2*ntheta-2,buf_fft,sol_comp(1,:))
   do i=1,Nr+1
-  call zfftf(Ntheta,sol_comp(i,:),buf_fft)
+    !call zfftf(Ntheta,sol_comp(i,:),buf_fft)
+    call sll_s_fft_exec_c2r_1d(fw,sol_comp(i,:),buf_fft)
   enddo   
 
  ! Matrices Dm  
@@ -846,10 +845,14 @@ subroutine solve_circulant_system(Ntheta,Nr,mat_circ,sol)
     
     ! FFT^-1
     do i=1,Nr+1
-    call zfftb(Ntheta,sol_comp(i,:),buf_fft)
+    !call zfftb(Ntheta,sol_comp(i,:),buf_fft)
+    call sll_s_fft_exec_r2c_1d(bw,buf_fft,sol_comp(i,:))
   enddo
   
   sol=real(sol_comp/cmplx(Ntheta,0._f64,f64),f64)
+
+  call sll_s_fft_free(fw)
+  call sll_s_fft_free(bw)
 
 end subroutine solve_circulant_system
 
