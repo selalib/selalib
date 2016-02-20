@@ -145,7 +145,9 @@ contains
     logical     :: with_control_variate
 
     sll_int32 :: input_file ! unit for nml file
-    sll_int32 :: io_stat
+    sll_int32 :: io_stat, ierr
+    sll_real64, pointer :: control_variate_parameter(:)
+    sll_real64 :: domain(2,2)
     
 
     namelist /sim_params/         delta_t, n_time_steps, alpha, n_mode, thermal_v1, thermal_v2
@@ -196,29 +198,7 @@ contains
        sim%no_weights = 1
     end if
 
-  end subroutine init_pic_2d2v
-
-!------------------------------------------------------------------------------!
-
-  subroutine run_pic_2d2v (sim)
-    class(sll_t_sim_pic_vp_2d2v_cart), intent(inout) :: sim
-
-    ! Loop variables
-    sll_int32, allocatable :: rnd_seed(:)
-    sll_int32 :: j, ierr
-    sll_real64 :: domain(2,2)
-    sll_int32 :: rnd_seed_size
-    sll_int64 :: sobol_seed
-    sll_real64 :: eenergy
-    sll_int32 :: th_diag_id
-    sll_real64, pointer :: control_variate_parameter(:)
-
-
-    if (sim%rank == 0) then
-       call sll_s_ascii_file_create('thdiag.dat', th_diag_id, ierr)
-    end if
-
-    ! Initialize the particles   
+  ! Initialize the particles   
     call sll_s_new_particle_group_2d2v_ptr&
          (sim%particle_group, sim%n_particles, &
          sim%n_total_particles ,1.0_f64, 1.0_f64, sim%no_weights)
@@ -231,31 +211,6 @@ contains
     call sim%control_variate%init(control_variate_equi, &
          control_variate_parameter)
 
-
-    if (sim%init_case == SLL_INIT_RANDOM) then
-       ! Set the seed for the random initialization
-       call random_seed(size=rnd_seed_size)
-       SLL_ALLOCATE(rnd_seed(rnd_seed_size), j)
-       do j=1, rnd_seed_size
-          rnd_seed(j) = (-1)**j*(100 + 15*j)*(2*sim%rank + 1)
-       end do
-
-       ! Initialize position and velocity of the particles.
-       ! Random initialization
-       call sll_s_particle_initialize_random_landau_2d2v &
-            (sim%particle_group, sim%landau_param, &
-            [sim%mesh%eta1_min, sim%mesh%eta2_min] , &
-            [sim%mesh%eta1_max - sim%mesh%eta1_min, sim%mesh%eta2_max -sim%mesh%eta2_min], &
-            sim%thermal_velocity, rnd_seed)
-    elseif (sim%init_case == SLL_INIT_SOBOL) then
-       sobol_seed = int(10 + sim%rank*sim%particle_group%n_particles, 8)
-       ! Pseudorandom initialization with sobol numbers
-       call sll_s_particle_initialize_sobol_landau_2d2v(sim%particle_group, &
-            sim%landau_param,  [sim%mesh%eta1_min, sim%mesh%eta2_min] , &
-            [sim%mesh%eta1_max - sim%mesh%eta1_min, &
-            sim%mesh%eta2_max -sim%mesh%eta2_min], &
-            sim%thermal_velocity, sobol_seed)
-    end if
 
 
     ! Initialize the field solver
@@ -282,6 +237,53 @@ contains
     elseif (sim%no_weights == 3) then
        call sim%propagator%init( &
             sim%solver, sim%particle_group, sim%control_variate, 3)
+    end if
+
+
+  end subroutine init_pic_2d2v
+
+!------------------------------------------------------------------------------!
+
+  subroutine run_pic_2d2v (sim)
+    class(sll_t_sim_pic_vp_2d2v_cart), intent(inout) :: sim
+
+    ! Loop variables
+    sll_int32, allocatable :: rnd_seed(:)
+    sll_int32 :: j, ierr
+    sll_int32 :: rnd_seed_size
+    sll_int64 :: sobol_seed
+    sll_real64 :: eenergy
+    sll_int32 :: th_diag_id
+
+
+    if (sim%rank == 0) then
+       call sll_s_ascii_file_create('thdiag.dat', th_diag_id, ierr)
+    end if
+
+
+    if (sim%init_case == SLL_INIT_RANDOM) then
+       ! Set the seed for the random initialization
+       call random_seed(size=rnd_seed_size)
+       SLL_ALLOCATE(rnd_seed(rnd_seed_size), j)
+       do j=1, rnd_seed_size
+          rnd_seed(j) = (-1)**j*(100 + 15*j)*(2*sim%rank + 1)
+       end do
+
+       ! Initialize position and velocity of the particles.
+       ! Random initialization
+       call sll_s_particle_initialize_random_landau_2d2v &
+            (sim%particle_group, sim%landau_param, &
+            [sim%mesh%eta1_min, sim%mesh%eta2_min] , &
+            [sim%mesh%eta1_max - sim%mesh%eta1_min, sim%mesh%eta2_max -sim%mesh%eta2_min], &
+            sim%thermal_velocity, rnd_seed)
+    elseif (sim%init_case == SLL_INIT_SOBOL) then
+       sobol_seed = int(10 + sim%rank*sim%particle_group%n_particles, 8)
+       ! Pseudorandom initialization with sobol numbers
+       call sll_s_particle_initialize_sobol_landau_2d2v(sim%particle_group, &
+            sim%landau_param,  [sim%mesh%eta1_min, sim%mesh%eta2_min] , &
+            [sim%mesh%eta1_max - sim%mesh%eta1_min, &
+            sim%mesh%eta2_max -sim%mesh%eta2_min], &
+            sim%thermal_velocity, sobol_seed)
     end if
 
 
