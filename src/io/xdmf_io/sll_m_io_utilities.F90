@@ -197,8 +197,7 @@ contains
 
     sll_int32 :: iunit
 
-    iunit = 1234
-    open(unit=iunit, file=filename, status="old", action="read")
+    open( newunit=iunit, file=trim(filename), status="old", action="read" )
     read(unit=iunit, fmt=*) data
     close(unit=iunit)
 
