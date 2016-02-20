@@ -12,7 +12,7 @@ module sll_m_pic_poisson_2d
   use sll_m_kernel_smoother_base, only : &
        sll_c_kernel_smoother
   use sll_m_poisson_2d_base, only : &
-       sll_c_poisson_2d_base, sll_i_fucntion_of_position
+       sll_c_poisson_2d_base, sll_i_function_of_position
   use sll_m_collective, only : &
        sll_v_world_collective, sll_o_collective_allreduce
   use sll_mpi, only: &
@@ -180,10 +180,10 @@ contains
 
   end subroutine add_analytic_charge_2d
 
-  !> Set analytic charge defined by a function \a func obeying the interface \a sll_i_fucntion_of_position
+  !> Set analytic charge defined by a function \a func obeying the interface \a sll_i_function_of_position
   subroutine set_analytic_charge_2d(self, func)
     class( sll_t_pic_poisson_2d ), intent( inout )    :: self !< PIC Poisson solver object.
-    procedure(sll_i_fucntion_of_position)                :: func !< Function to be projected.
+    procedure(sll_i_function_of_position)                :: func !< Function to be projected.
 
     call self%solver%compute_rhs_from_function(func, self%rho_analyt_dofs)
 

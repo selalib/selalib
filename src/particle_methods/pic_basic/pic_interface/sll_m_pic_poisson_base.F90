@@ -10,7 +10,7 @@ module sll_m_pic_poisson_base
 #include "sll_working_precision.h"
 
   use sll_m_poisson_2d_base, only : &
-       sll_i_fucntion_of_position
+       sll_i_function_of_position
 
   implicit none
 
@@ -112,9 +112,9 @@ module sll_m_pic_poisson_base
      subroutine update_dofs_function(self, func)
        use sll_m_working_precision
        import sll_c_pic_poisson
-       import sll_i_fucntion_of_position
+       import sll_i_function_of_position
        class( sll_c_pic_poisson ),       intent( inout )    :: self !< PIC Poisson solver object.
-       procedure(sll_i_fucntion_of_position)                :: func !< Function to be projected.
+       procedure(sll_i_function_of_position)                :: func !< Function to be projected.
      end subroutine update_dofs_function
   end interface
 

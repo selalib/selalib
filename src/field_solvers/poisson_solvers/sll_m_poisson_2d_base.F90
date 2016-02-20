@@ -12,7 +12,7 @@ module sll_m_poisson_2d_base
 
   public :: &
     sll_c_poisson_2d_base, &
-    sll_i_fucntion_of_position
+    sll_i_function_of_position
 
   private
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -45,11 +45,11 @@ module sll_m_poisson_2d_base
 
   abstract interface
      !> nd real function
-     function sll_i_fucntion_of_position(x)
+     function sll_i_function_of_position(x)
        use sll_m_working_precision 
-       sll_real64             :: sll_i_fucntion_of_position
+       sll_real64             :: sll_i_function_of_position
        sll_real64, intent(in) :: x(:)
-     end function sll_i_fucntion_of_position
+     end function sll_i_function_of_position
   end interface
   
 
@@ -103,9 +103,9 @@ module sll_m_poisson_2d_base
      subroutine signature_update_dofs_function(poisson, func, coefs_dofs)
        use sll_m_working_precision
        import sll_c_poisson_2d_base
-       import sll_i_fucntion_of_position
+       import sll_i_function_of_position
        class( sll_c_poisson_2d_base)                    :: poisson !< Maxwell solver object.
-       procedure(sll_i_fucntion_of_position)          :: func !< Function to be projected.
+       procedure(sll_i_function_of_position)          :: func !< Function to be projected.
        sll_real64, intent(out)                        :: coefs_dofs(:) !< Coefficients of the projection.
      end subroutine signature_update_dofs_function
   end interface
