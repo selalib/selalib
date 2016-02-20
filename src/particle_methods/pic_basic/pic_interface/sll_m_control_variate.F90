@@ -11,14 +11,14 @@ module sll_m_control_variate
   implicit none
   private
 
-  public :: sll_f_control_variate
+  public :: sll_i_control_variate
 
   !> Control variate object
   type, public :: sll_t_control_variate
 
      sll_real64, pointer :: control_variate_parameters(:) => null()
 
-     procedure(sll_f_control_variate), pointer :: control_variate => null()
+     procedure(sll_i_control_variate), pointer :: control_variate => null()
 
    contains
 
@@ -31,16 +31,16 @@ module sll_m_control_variate
 
   abstract interface
      !> 1d real function, abstract interface for function defining the control variate
-     function sll_f_control_variate(self, xi, vi, time)
+     function sll_i_control_variate(self, xi, vi, time)
        use sll_m_working_precision 
        import sll_t_control_variate
        class(sll_t_control_variate)       :: self  !< Control variate object      
        sll_real64, optional, intent( in ) :: xi(:) !< particle position
        sll_real64, optional, intent( in ) :: vi(:) !< particle velocity
        sll_real64, optional, intent( in ) :: time  !< current time
-       sll_real64               :: sll_f_control_variate
+       sll_real64               :: sll_i_control_variate
 
-     end function sll_f_control_variate
+     end function sll_i_control_variate
   end interface
 
 
@@ -63,7 +63,7 @@ module sll_m_control_variate
     !> Initialization
     subroutine init_control_variate( self, control_function, parameters ) 
       class(sll_t_control_variate), intent(out) :: self !< Control variate object
-      procedure(sll_f_control_variate) :: control_function !< Function defining the control variate
+      procedure(sll_i_control_variate) :: control_function !< Function defining the control variate
       sll_real64, pointer, intent(in) :: parameters(:) !< Parameter values needed in control variate function
 
       self%control_variate => control_function

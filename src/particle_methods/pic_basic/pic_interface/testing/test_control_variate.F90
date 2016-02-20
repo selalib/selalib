@@ -5,7 +5,7 @@ program test_control_variate
 
   use sll_m_control_variate, only : &
        sll_t_control_variate, &
-       sll_f_control_variate
+       sll_i_control_variate
   use sll_m_particle_group_2d2v, only : &
        sll_t_particle_group_2d2v
 
@@ -79,15 +79,15 @@ contains
 
 !------------------------------------------------------------------------------!
 
-  function control_variate_equi( this, xi, vi, time) result(sll_f_control_variate)
+  function control_variate_equi( this, xi, vi, time) result(sll_i_control_variate)
     class(sll_t_control_variate) :: this
     sll_real64, optional,  intent( in ) :: xi(:) !< particle position
     sll_real64, optional, intent( in ) :: vi(:) !< particle velocity
     sll_real64, optional, intent( in ) :: time  !< current time
-    sll_real64               :: sll_f_control_variate
+    sll_real64               :: sll_i_control_variate
 
 
-    sll_f_control_variate = exp(-0.5_f64*&
+    sll_i_control_variate = exp(-0.5_f64*&
          ((vi(1)/this%control_variate_parameters(1))**2+&
          (vi(2)/this%control_variate_parameters(2))**2))/&
          (2.0_f64*sll_p_pi*product(this%control_variate_parameters))
