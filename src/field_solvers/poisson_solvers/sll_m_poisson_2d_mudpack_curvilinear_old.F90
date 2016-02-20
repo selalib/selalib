@@ -62,7 +62,7 @@ module sll_m_poisson_2d_mudpack_curvilinear_old
 
   use sll_m_poisson_2d_base, only: &
     sll_c_poisson_2d_base, &
-    sll_i_fucntion_of_position
+    sll_i_function_of_position
 
   implicit none
 
@@ -700,7 +700,7 @@ contains
   
   subroutine compute_rhs_from_function_2d_mudpack_curvilinear(poisson, func, coefs_dofs)
     class( poisson_2d_mudpack_curvilinear_solver)  :: poisson !< Poisson solver object.
-    procedure(sll_i_fucntion_of_position)          :: func !< Function to be projected.
+    procedure(sll_i_function_of_position)          :: func !< Function to be projected.
     sll_real64, intent(out)                        :: coefs_dofs(:) !< Coefficients of the projection.
     
     print*, 'compute_rhs_from_function not implemented for poisson_2d_mudpack_curvilinear_solver.'
