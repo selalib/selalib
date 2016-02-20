@@ -163,6 +163,7 @@ contains
     sll_int32   :: spline_degree 
 
     sll_int32   :: input_file
+    sll_int32   :: ierr
     
 
     namelist /sim_params/         delta_t, n_time_steps, alpha, n_mode, thermal_v, T_r, beta
@@ -223,30 +224,6 @@ contains
        print*, '#splitting case ', splitting_case, ' not implemented.'
     end select
 
-  end subroutine init_pic_vm_1d2v
-
-!------------------------------------------------------------------------------!
-
-  subroutine run_pic_vm_1d2v (sim)
-    class(sll_t_sim_pic_vm_1d2v_cart), intent(inout) :: sim
-
-    ! Local variables
-    sll_int32, allocatable :: rnd_seed(:)
-    sll_int32 :: rnd_seed_size
-    sll_int64 :: sobol_seed
-    sll_int32 :: j, ierr, i_part
-    sll_real64, allocatable :: rho(:), rho_local(:)
-    sll_int32 :: th_diag_id
-
-    sll_real64 :: wi(1)
-    sll_real64 :: xi(3)
-   
-
-    ! Initialize file for diagnostics
-    if (sim%rank == 0) then
-       call sll_s_ascii_file_create('thdiag5.dat', th_diag_id, ierr)
-    end if
-
     ! Initialize the particles   (mass and charge set to 1.0)
      call sll_s_new_particle_group_1d2v_ptr(sim%particle_group, sim%n_particles, &
          sim%n_total_particles, 1.0_f64, 1.0_f64, 1)
@@ -266,7 +243,49 @@ contains
     call sll_s_new_kernel_smoother_spline_1d_ptr(sim%kernel_smoother_0, &
          sim%domain(1:2), [sim%n_gcells], &
          sim%n_particles, sim%degree_smoother, sll_p_galerkin) 
-    
+   
+
+    ! Initialize the arrays for the spline coefficients of the fields
+    SLL_ALLOCATE(sim%efield_dofs(sim%n_gcells,2), ierr)
+    SLL_ALLOCATE(sim%bfield_dofs(sim%n_gcells), ierr)
+
+    ! Initialize the time-splitting propagator
+    if (sim%splitting_case == sll_p_splitting_symplectic) then
+       call sll_s_new_hamiltonian_splitting_pic_vm_1d2v(&
+            sim%propagator, sim%maxwell_solver, &
+            sim%kernel_smoother_0, sim%kernel_smoother_1, sim%particle_group, &
+            sim%efield_dofs, sim%bfield_dofs, &
+            sim%domain(1), sim%domain(3))
+    end if
+
+   ! Allocate the vector holding the values of the fields at the grid points
+    SLL_ALLOCATE(sim%fields_grid(sim%n_gcells,3), ierr)
+
+
+  end subroutine init_pic_vm_1d2v
+
+!------------------------------------------------------------------------------!
+
+  subroutine run_pic_vm_1d2v (sim)
+    class(sll_t_sim_pic_vm_1d2v_cart), intent(inout) :: sim
+
+    ! Local variables
+    sll_int32, allocatable :: rnd_seed(:)
+    sll_int32 :: rnd_seed_size
+    sll_int64 :: sobol_seed
+    sll_int32 :: j, ierr, i_part
+    sll_real64, allocatable :: rho(:), rho_local(:)
+    sll_int32 :: th_diag_id
+
+    sll_real64 :: wi(1)
+    sll_real64 :: xi(3)
+   
+ 
+    ! Initialize file for diagnostics
+    if (sim%rank == 0) then
+       call sll_s_ascii_file_create('thdiag5.dat', th_diag_id, ierr)
+    end if
+
 
     if (sim%init_case == sll_p_init_random) then
        ! Set the seed for the random initialization
@@ -293,7 +312,6 @@ contains
 
        ! Initialize position and velocity of the particles.
        ! Random initialization
-       !call sll_s_particle_initialize_random_landau_1d2v &
        call sll_s_particle_initialize_random_landau_symmetric_1d2v &
             (sim%particle_group, sim%landau_param, &
             sim%domain(1) , &
@@ -314,23 +332,12 @@ contains
             sim%thermal_velocity, sobol_seed)
     end if
 
-    ! Initialize the arrays for the spline coefficients of the fields
-    SLL_ALLOCATE(sim%efield_dofs(sim%n_gcells,2), ierr)
-    SLL_ALLOCATE(sim%bfield_dofs(sim%n_gcells), ierr)
-
-    ! Initialize the time-splitting propagator
-    if (sim%splitting_case == sll_p_splitting_symplectic) then
-       call sll_s_new_hamiltonian_splitting_pic_vm_1d2v(&
-            sim%propagator, sim%maxwell_solver, &
-            sim%kernel_smoother_0, sim%kernel_smoother_1, sim%particle_group, &
-            sim%efield_dofs, sim%bfield_dofs, &
-            sim%domain(1), sim%domain(3))
-    end if
-
+    
     ! Set the initial fields
     SLL_ALLOCATE(rho_local(sim%n_gcells), ierr)
     SLL_ALLOCATE(rho(sim%n_gcells), ierr)
-    ! Efield 1 by Poisson
+
+   ! Efield 1 by Poisson
     rho_local = 0.0_f64
     do i_part = 1, sim%particle_group%n_particles
        xi = sim%particle_group%get_x(i_part)
@@ -353,9 +360,6 @@ contains
          sim%bfield_dofs) 
 
     ! End field initialization
-
-    ! Allocate the vector holding the values of the fields at the grid points
-    SLL_ALLOCATE(sim%fields_grid(sim%n_gcells,3), ierr)
 
     ! Diagnostics
     call sll_s_time_history_diagnostics_pic_vm_1d2v( &
