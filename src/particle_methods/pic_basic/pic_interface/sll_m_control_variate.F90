@@ -38,7 +38,7 @@ module sll_m_control_variate
        sll_real64, optional, intent( in ) :: xi(:) !< particle position
        sll_real64, optional, intent( in ) :: vi(:) !< particle velocity
        sll_real64, optional, intent( in ) :: time  !< current time
-       sll_real64               :: sll_i_control_variate
+       sll_real64                         :: sll_i_control_variate
 
      end function sll_i_control_variate
   end interface

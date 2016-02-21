@@ -62,7 +62,7 @@ contains
   !> Strang splitting
   subroutine strang_splitting_pic_vp_2d2v(this, dt)
     class(sll_t_operator_splitting_pic_vp_2d2v), intent(inout) :: this !< time splitting object 
-    sll_real64, intent(in) :: dt   !< time step
+    sll_real64,                                  intent(in)    :: dt   !< time step
 
 
     call this%operatorT(0.5_f64*dt)
@@ -79,7 +79,7 @@ contains
   !> Push x 
   subroutine advection_x_pic_vp_2d2v(this, dt)
     class(sll_t_operator_splitting_pic_vp_2d2v), intent(inout) :: this !< time splitting object 
-    sll_real64, intent(in) :: dt   !< time step
+    sll_real64,                                  intent(in)    :: dt   !< time step
 
 
     !local variables
@@ -108,7 +108,7 @@ contains
   ! Push v
   subroutine advection_v_pic_vp_2d2v(this, dt)
     class(sll_t_operator_splitting_pic_vp_2d2v), intent(inout) :: this !< time splitting object 
-    sll_real64, intent(in) :: dt   !< time step
+    sll_real64,                                  intent(in)    :: dt   !< time step
 
     !local variables
     sll_int32 :: i_part
@@ -159,11 +159,11 @@ contains
        particle_group, &
        control_variate, &
        i_weight)
-    class(sll_t_operator_splitting_pic_vp_2d2v), intent(out) :: this !< time splitting object 
-    class(sll_c_pic_poisson),pointer, intent(in) :: solver !< Poisson solver
-    class(sll_c_particle_group_base),pointer, intent(in) :: particle_group !< Particle group
+    class(sll_t_operator_splitting_pic_vp_2d2v),    intent(out):: this !< time splitting object 
+    class(sll_c_pic_poisson),pointer,               intent(in) :: solver !< Poisson solver
+    class(sll_c_particle_group_base),pointer,       intent(in) :: particle_group !< Particle group
     class(sll_t_control_variate), optional, target, intent(in) :: control_variate !< Control variate (if delta f)
-    sll_int32, optional, intent(in) :: i_weight !< Index of weight to be used by propagator
+    sll_int32, optional,                            intent(in) :: i_weight !< Index of weight to be used by propagator
 
     this%solver => solver
     this%particle_group => particle_group
@@ -193,11 +193,11 @@ contains
        particle_group, &
        control_variate, &
        i_weight) 
-    class(sll_t_operator_splitting), pointer, intent(out) :: splitting !< time splitting object 
-    class(sll_c_pic_poisson),pointer, intent(in) :: solver !< Poisson solver
-    class(sll_c_particle_group_base),pointer, intent(in) :: particle_group !< Particle group
+    class(sll_t_operator_splitting), pointer,        intent(out):: splitting !< time splitting object 
+    class(sll_c_pic_poisson),pointer,                intent(in) :: solver !< Poisson solver
+    class(sll_c_particle_group_base),pointer,        intent(in) :: particle_group !< Particle group
     class(sll_t_control_variate), optional, pointer, intent(in) :: control_variate !< Control variate (if delta f)
-    sll_int32, optional, intent(in) :: i_weight !< Index of weight to be used by propagator
+    sll_int32, optional,                             intent(in) :: i_weight !< Index of weight to be used by propagator
  
     !local variables
     sll_int32 :: ierr

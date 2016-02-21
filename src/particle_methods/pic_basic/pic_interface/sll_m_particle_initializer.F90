@@ -44,26 +44,22 @@ contains
        Lx, &
        thermal_velocity, &
        rnd_seed)
-    class(sll_c_particle_group_base),  intent(inout)              :: particle_group
-    sll_real64, intent(in)                                      :: landau_param(2) !< parameter defining the perturbation: landau_param(1)*cos(landau_param(2)*x1)
-    sll_real64, intent(in)                                      :: xmin !< lower bound of the domain
-    sll_real64, intent(in)                                      :: Lx !< length of the domain.
-    sll_real64, intent(in)                                      :: thermal_velocity(2) !< Value of the thermal velocity along each dimension.
-    sll_int64,  intent(inout)                                   :: rnd_seed !< Random seed.
+    class(sll_c_particle_group_base),  intent(inout)   :: particle_group
+    sll_real64,                        intent(in)      :: landau_param(2) !< parameter defining the perturbation: landau_param(1)*cos(landau_param(2)*x1)
+    sll_real64,                        intent(in)      :: xmin !< lower bound of the domain
+    sll_real64,                        intent(in)      :: Lx !< length of the domain.
+    sll_real64,                        intent(in)      :: thermal_velocity(2) !< Value of the thermal velocity along each dimension.
+    sll_int64,                         intent(inout)   :: rnd_seed !< Random seed.
 
-    sll_real64                                                  :: x(3),v(3)
-    sll_int32                                                   :: i_part
-    sll_int32                                                   :: i_v
-    sll_real64                                                  :: rdn(3)
-    sll_real64                                                  :: wi
+    sll_real64                                         :: x(3),v(3)
+    sll_int32                                          :: i_part
+    sll_int32                                          :: i_v
+    sll_real64                                         :: rdn(3)
+    sll_real64                                         :: wi
     
 
     x = 0.0_f64
     v = 0.0_f64
-
-    !rdn(1) = 0.1_f64
-    !call sll_s_normal_cdf_inv(rdn(1), 0.0_f64, 1.0_f64, v(1))
-    !print*, 'cdf', v(1)
 
     ! 1/Np in common weight
     call particle_group%set_common_weight &
@@ -104,12 +100,12 @@ contains
        Lx, &
        thermal_velocity, &
        rnd_seed)
-    class(sll_c_particle_group_base),  intent(inout)              :: particle_group
-    sll_real64, intent(in)                                      :: landau_param(2) !< parameter defining the perturbation: landau_param(1)*cos(landau_param(2)*x1)
-    sll_real64, intent(in)                                      :: xmin !< lower bound of the domain
-    sll_real64, intent(in)                                      :: Lx !< length of the domain.
-    sll_real64, intent(in)                                      :: thermal_velocity(2) !< Value of the thermal velocity along each dimension.
-    sll_int64,  intent(inout)                                   :: rnd_seed !< Random seed.
+    class(sll_c_particle_group_base),  intent(inout)            :: particle_group
+    sll_real64,                        intent(in)               :: landau_param(2) !< parameter defining the perturbation: landau_param(1)*cos(landau_param(2)*x1)
+    sll_real64,                        intent(in)               :: xmin !< lower bound of the domain
+    sll_real64,                        intent(in)               :: Lx !< length of the domain.
+    sll_real64,                        intent(in)               :: thermal_velocity(2) !< Value of the thermal velocity along each dimension.
+    sll_int64,                         intent(inout)            :: rnd_seed !< Random seed.
 
     sll_real64                                                  :: x(3),v(3)
     sll_int32                                                   :: i_part
@@ -122,9 +118,6 @@ contains
     x = 0.0_f64
     v = 0.0_f64
 
-    !rdn(1) = 0.1_f64
-    !call sll_s_normal_cdf_inv(rdn(1), 0.0_f64, 1.0_f64, v(1))
-    !print*, 'cdf', v(1)
     if (modulo(particle_group%n_particles,8) .NE. 0) then
        SLL_ERROR('sll_s_particle_initialize_random_landau_symmetric_1d2v', 'particle number not multiple of 8')
     end if
@@ -177,12 +170,12 @@ contains
        Lx, &
        thermal_velocity, &
        rnd_seed)
-    class(sll_c_particle_group_base),  intent(inout)              :: particle_group
-    sll_real64, intent(in)                                      :: landau_param(2) !< parameter defining the perturbation: landau_param(1)*cos(landau_param(2)*x1)
-    sll_real64, intent(in)                                      :: xmin !< lower bound of the domain
-    sll_real64, intent(in)                                      :: Lx !< length of the domain.
-    sll_real64, intent(in)                                      :: thermal_velocity(2) !< Value of the thermal velocity along each dimension.
-    sll_int32,  intent(inout)                                   :: rnd_seed(:) !< Random seed.
+    class(sll_c_particle_group_base),  intent(inout)            :: particle_group
+    sll_real64,                        intent(in)               :: landau_param(2) !< parameter defining the perturbation: landau_param(1)*cos(landau_param(2)*x1)
+    sll_real64,                        intent(in)               :: xmin !< lower bound of the domain
+    sll_real64,                        intent(in)               :: Lx !< length of the domain.
+    sll_real64,                        intent(in)               :: thermal_velocity(2) !< Value of the thermal velocity along each dimension.
+    sll_int32,                         intent(inout)            :: rnd_seed(:) !< Random seed.
 
     sll_real64                                                  :: x(3),v(3)
     sll_real64                                                  :: rnd_no
@@ -236,12 +229,12 @@ contains
        Lx, &
        thermal_velocity, &
        rnd_seed)
-    class(sll_c_particle_group_base),  intent(inout)              :: particle_group
-    sll_real64, intent(in)                                      :: landau_param(2) !< parameter defining the perturbation: landau_param(1)*cos(landau_param(2)*x1)
-    sll_real64, intent(in)                                      :: xmin !< lower bound of the domain
-    sll_real64, intent(in)                                      :: Lx !< length of the domain.
-    sll_real64, intent(in)                                      :: thermal_velocity(2) !< Value of the thermal velocity along each dimension.
-    sll_int32,  intent(inout)                                   :: rnd_seed(:) !< Random seed.
+    class(sll_c_particle_group_base),  intent(inout)            :: particle_group
+    sll_real64,                        intent(in)               :: landau_param(2) !< parameter defining the perturbation: landau_param(1)*cos(landau_param(2)*x1)
+    sll_real64,                        intent(in)               :: xmin !< lower bound of the domain
+    sll_real64,                        intent(in)               :: Lx !< length of the domain.
+    sll_real64,                        intent(in)               :: thermal_velocity(2) !< Value of the thermal velocity along each dimension.
+    sll_int32,                         intent(inout)            :: rnd_seed(:) !< Random seed.
 
     sll_real64                                                  :: x(3),v(3), wi(1)
     sll_real64                                                  :: rnd_no
@@ -311,12 +304,12 @@ contains
        Lx, &
        thermal_velocity, &
        rnd_seed)
-    class(sll_c_particle_group_base),  intent(inout)              :: particle_group
-    sll_real64, intent(in)                                      :: landau_param(2) !< parameter defining the perturbation: landau_param(1)*cos(landau_param(2)*x1)
-    sll_real64, intent(in)                                      :: xmin(2) !< lower bound of the domain
-    sll_real64, intent(in)                                      :: Lx(2) !< length of the domain.
-    sll_real64, intent(in)                                      :: thermal_velocity(2) !< Value of the thermal velocity along each dimension.
-    sll_int64,  intent(inout)                                   :: rnd_seed !< Random seed.
+    class(sll_c_particle_group_base),  intent(inout)            :: particle_group
+    sll_real64,                        intent(in)               :: landau_param(2) !< parameter defining the perturbation: landau_param(1)*cos(landau_param(2)*x1)
+    sll_real64,                        intent(in)               :: xmin(2) !< lower bound of the domain
+    sll_real64,                        intent(in)               :: Lx(2) !< length of the domain.
+    sll_real64,                        intent(in)               :: thermal_velocity(2) !< Value of the thermal velocity along each dimension.
+    sll_int64,                         intent(inout)            :: rnd_seed !< Random seed.
     
 
     sll_real64                                                  :: x(3),v(3)
@@ -379,12 +372,12 @@ contains
        Lx, &
        thermal_velocity, &
        rnd_seed)
-    class(sll_c_particle_group_base),  intent(inout)              :: particle_group
-    sll_real64, intent(in)                                      :: landau_param(2) !< parameter defining the perturbation: landau_param(1)*cos(landau_param(2)*x1)
-    sll_real64, intent(in)                                      :: xmin(2) !< lower bound of the domain
-    sll_real64, intent(in)                                      :: Lx(2) !< length of the domain.
-    sll_real64, intent(in)                                      :: thermal_velocity(2) !< Value of the thermal velocity along each dimension.
-    sll_int32,  intent(inout)                                   :: rnd_seed(:) !< Random seed.
+    class(sll_c_particle_group_base),  intent(inout)            :: particle_group
+    sll_real64,                        intent(in)               :: landau_param(2) !< parameter defining the perturbation: landau_param(1)*cos(landau_param(2)*x1)
+    sll_real64,                        intent(in)               :: xmin(2) !< lower bound of the domain
+    sll_real64,                        intent(in)               :: Lx(2) !< length of the domain.
+    sll_real64,                        intent(in)               :: thermal_velocity(2) !< Value of the thermal velocity along each dimension.
+    sll_int32,                         intent(inout)            :: rnd_seed(:) !< Random seed.
 
     sll_real64                                                  :: x(3),v(3)
     sll_real64                                                  :: rnd_no

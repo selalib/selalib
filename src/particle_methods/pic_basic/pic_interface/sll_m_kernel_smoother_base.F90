@@ -55,7 +55,14 @@ module sll_m_kernel_smoother_base
   
   !---------------------------------------------------------------------------!
   abstract interface
-     subroutine add_update (self, position_old, position_new, marker_charge, qoverm, bfield_dofs, vi, j_dofs)
+     subroutine add_update (self, &
+          position_old, &
+          position_new, &
+          marker_charge, &
+          qoverm, &
+          bfield_dofs, &
+          vi, &
+          j_dofs)
        use sll_m_working_precision
        import sll_c_kernel_smoother
        class(sll_c_kernel_smoother), intent(inout) :: self !< kernel smoother object
