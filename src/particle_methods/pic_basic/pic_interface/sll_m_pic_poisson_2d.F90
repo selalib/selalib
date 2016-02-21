@@ -69,8 +69,8 @@ contains
   !> Add charge from one particle
   subroutine add_charge_single_2d(self, position, marker_charge)
     class(sll_t_pic_poisson_2d), intent( inout ) :: self !< Pic Poisson solver object
-    sll_real64,                intent( in ) :: position(self%dim) !< Position of the particle
-    sll_real64,                intent( in ) :: marker_charge !< Particle weight times charge
+    sll_real64,                  intent( in )    :: position(self%dim) !< Position of the particle
+    sll_real64,                  intent( in )    :: marker_charge !< Particle weight times charge
 
     call self%kernel%add_charge( position, marker_charge, self%rho_dofs_local )
        
@@ -80,8 +80,8 @@ contains
   !> Evaluate charge density \a rho at one position
   subroutine evaluate_rho_single_2d(self, position, func_value)
     class(sll_t_pic_poisson_2d), intent( inout ) :: self !< Pic Poisson solver object
-    sll_real64,                intent( in ) :: position(self%dim) !< Position of the particle
-    sll_real64, intent(out) :: func_value !< Value of rho at given position
+    sll_real64,                  intent( in )    :: position(self%dim) !< Position of the particle
+    sll_real64,                  intent(out)     :: func_value !< Value of rho at given position
 
     if (self%rho_collected .EQV. .FALSE.) then
        self%rho_collected = .TRUE.
@@ -107,9 +107,9 @@ contains
   !> Evaluate components \a components of the electric field as one position
   subroutine evaluate_field_single_2d(self, position, components, func_value)
     class(sll_t_pic_poisson_2d), intent( inout ) :: self !< Pic Poisson solver object
-    sll_int32, intent(in ) :: components(:)
-    sll_real64,                intent( in ) :: position(self%dim) !< Position of the particle
-    sll_real64, intent(out) :: func_value(:)
+    sll_int32,                   intent(in )     :: components(:)
+    sll_real64,                  intent( in )    :: position(self%dim) !< Position of the particle
+    sll_real64,                  intent(out)     :: func_value(:)
 
     call self%kernel%evaluate_multiple( position, components, self%efield_dofs, &
          func_value)
@@ -192,8 +192,8 @@ contains
   !> Compute the squared l2 norm of component \a component of the field
   function compute_field_energy_2d(self, component) result(energy)
     class (sll_t_pic_poisson_2d), intent( in ) :: self
-    sll_int32, intent( in ) :: component !< Component of the electric field for which the energy should be computed
-    sll_real64 :: energy !< L2 norm squarred of 
+    sll_int32,                    intent( in ) :: component !< Component of the electric field for which the energy should be computed
+    sll_real64                                 :: energy !< L2 norm squarred of 
 
 
     if (component == 1) then
@@ -207,10 +207,10 @@ contains
   !-------------------------------------------------------------------------------------------
   !< Constructor 
   subroutine init_pic_poisson_2d(self, no_gridpts, solver, kernel)
-    class( sll_t_pic_poisson_2d), intent(out) :: self
-    sll_int32, intent(in) :: no_gridpts(2)
-    class( sll_c_poisson_2d_base), pointer, intent(in) :: solver
-    class( sll_c_kernel_smoother), pointer, intent(in)   :: kernel !< kernel smoother object
+    class( sll_t_pic_poisson_2d),           intent(out) :: self
+    sll_int32,                              intent(in)  :: no_gridpts(2)
+    class( sll_c_poisson_2d_base), pointer, intent(in)  :: solver
+    class( sll_c_kernel_smoother), pointer, intent(in)  :: kernel !< kernel smoother object
 
     !local variables
     sll_int32 :: ierr
@@ -265,10 +265,10 @@ contains
 
   !> Constructor for abstract type
   subroutine sll_s_new_pic_poisson_2d(poisson_solver, no_gridpts, solver, kernel)    
-    class( sll_c_pic_poisson), pointer, intent(out) :: poisson_solver
-    sll_int32, intent(in) :: no_gridpts(2)
-    class( sll_c_poisson_2d_base), pointer, intent(in) :: solver
-    class( sll_c_kernel_smoother), pointer, intent(in)   :: kernel !< kernel smoother object
+    class( sll_c_pic_poisson),     pointer, intent(out) :: poisson_solver
+    sll_int32,                              intent(in)  :: no_gridpts(2)
+    class( sll_c_poisson_2d_base), pointer, intent(in)  :: solver
+    class( sll_c_kernel_smoother), pointer, intent(in)  :: kernel !< kernel smoother object
 
     !local variables
     sll_int32 :: ierr

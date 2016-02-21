@@ -35,10 +35,10 @@ module sll_m_particle_group_base
   type, abstract :: sll_c_particle_group_base
 
     class( sll_t_species ), allocatable :: species
-    sll_int32                     :: id
-    sll_int32                     :: n_particles !< number of particles local to the processor
-    sll_int32                     :: n_total_particles !< number of particles in total simulation    
-    sll_int32                     :: n_weights !< number of weights per particle
+    sll_int32                           :: id
+    sll_int32                           :: n_particles !< number of particles local to the processor
+    sll_int32                           :: n_total_particles !< number of particles in total simulation    
+    sll_int32                           :: n_weights !< number of weights per particle
 
   contains
     ! Getters
@@ -68,8 +68,8 @@ module sll_m_particle_group_base
     use sll_m_working_precision
     import sll_c_particle_group_base
     class( sll_c_particle_group_base ), intent( in ) :: self
-    sll_int32                       , intent( in ) :: i
-    sll_int32, optional             , intent( in ) :: i_weight
+    sll_int32                       ,   intent( in ) :: i
+    sll_int32, optional             ,   intent( in ) :: i_weight
     sll_real64 :: r
    end function i_get_scalar
   end interface
@@ -80,8 +80,8 @@ module sll_m_particle_group_base
     use sll_m_working_precision
     import sll_c_particle_group_base
     class( sll_c_particle_group_base ), intent( in ) :: self
-    sll_int32                       , intent( in ) :: i
-    sll_real64 :: r(3)
+    sll_int32                       ,   intent( in ) :: i
+    sll_real64                                       :: r(3)
    end function i_get_coords
   end interface
 
@@ -91,8 +91,8 @@ module sll_m_particle_group_base
     use sll_m_working_precision
     import sll_c_particle_group_base
     class( sll_c_particle_group_base ), intent( in ) :: self
-    sll_int32                       , intent( in ) :: i
-    sll_real64 :: r(self%n_weights)
+    sll_int32                       ,   intent( in ) :: i
+    sll_real64                                       :: r(self%n_weights)
   end function i_get_array
   end interface
 
@@ -102,8 +102,8 @@ module sll_m_particle_group_base
     use sll_m_working_precision
     import sll_c_particle_group_base
     class( sll_c_particle_group_base ), intent( inout ) :: self
-    sll_int32                       , intent( in    ) :: i
-    sll_real64                      , intent( in    ) :: x(3)
+    sll_int32                         , intent( in    ) :: i
+    sll_real64                        , intent( in    ) :: x(3)
    end subroutine i_set_coords
   end interface
 
@@ -113,8 +113,8 @@ module sll_m_particle_group_base
     use sll_m_working_precision
     import sll_c_particle_group_base
     class( sll_c_particle_group_base ), intent( inout ) :: self
-    sll_int32                       , intent( in    ) :: i
-    sll_real64                      , intent( in    ) :: x
+    sll_int32                        , intent( in    ) :: i
+    sll_real64                       , intent( in    ) :: x
   end subroutine i_set_scalar
   end interface
 
@@ -124,7 +124,7 @@ module sll_m_particle_group_base
     use sll_m_working_precision
     import sll_c_particle_group_base
     class( sll_c_particle_group_base ), intent( inout ) :: self
-    sll_real64                      , intent( in    ) :: x
+    sll_real64                        , intent( in    ) :: x
   end subroutine set_scalar
   end interface
 
@@ -134,8 +134,8 @@ module sll_m_particle_group_base
     use sll_m_working_precision
     import sll_c_particle_group_base
     class( sll_c_particle_group_base ), intent( inout ) :: self
-    sll_int32                       , intent( in    ) :: i
-    sll_real64                      , intent( in    ) :: x(self%n_weights)
+    sll_int32                         , intent( in    ) :: i
+    sll_real64                        , intent( in    ) :: x(self%n_weights)
   end subroutine i_set_array
   end interface
 
@@ -168,8 +168,8 @@ contains
        species_mass        &
        )
     class(sll_t_species), intent ( out ) :: self
-    sll_real64, intent ( in )   :: species_charge
-    sll_real64, intent ( in )   :: species_mass
+    sll_real64,           intent ( in )  :: species_charge
+    sll_real64,           intent ( in )  :: species_mass
 
 
     self%q = species_charge
