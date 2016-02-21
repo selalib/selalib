@@ -39,7 +39,7 @@ module sll_m_hamiltonian_splitting_pic_vm_1d2v
 
   !> Hamiltonian splitting type for Vlasov-Maxwell 1d2v
   type, extends(sll_c_hamiltonian_splitting_base) :: sll_t_hamiltonian_splitting_pic_vm_1d2v
-     class(sll_c_maxwell_1d_base), pointer  :: maxwell_solver      !< Maxwell solver
+     class(sll_c_maxwell_1d_base), pointer :: maxwell_solver      !< Maxwell solver
      class(sll_c_kernel_smoother), pointer :: kernel_smoother_0  !< Kernel smoother (order p+1)
      class(sll_c_kernel_smoother), pointer :: kernel_smoother_1  !< Kernel smoother (order p)
      class(sll_c_particle_group_base), pointer  :: particle_group    !< Particle group
@@ -75,9 +75,9 @@ contains
 
   !> Strang splitting
   subroutine strang_splitting_pic_vm_1d2v(self,dt, number_steps)
-    class(sll_t_hamiltonian_splitting_pic_vm_1d2v) :: self !< time splitting object 
-    sll_real64, intent(in) :: dt   !< time step
-    sll_int32, intent(in)  :: number_steps !< number of time steps
+    class(sll_t_hamiltonian_splitting_pic_vm_1d2v), intent(inout) :: self !< time splitting object 
+    sll_real64,                                     intent(in)    :: dt   !< time step
+    sll_int32,                                      intent(in)    :: number_steps !< number of time steps
 
     sll_int32 :: i_step
 
@@ -95,9 +95,9 @@ contains
 
   !> Lie splitting
   subroutine lie_splitting_pic_vm_1d2v(self,dt, number_steps)
-    class(sll_t_hamiltonian_splitting_pic_vm_1d2v) :: self !< time splitting object 
-    sll_real64, intent(in) :: dt   !< time step
-    sll_int32, intent(in)  :: number_steps !< number of time steps
+    class(sll_t_hamiltonian_splitting_pic_vm_1d2v), intent(inout) :: self !< time splitting object 
+    sll_real64,                                     intent(in)    :: dt   !< time step
+    sll_int32,                                      intent(in)    :: number_steps !< number of time steps
 
     sll_int32 :: i_step
 
@@ -119,7 +119,7 @@ contains
   !> \partial_t B = 0 => B_new = B_old 
   subroutine operatorHp1_pic_vm_1d2v(self, dt)
     class(sll_t_hamiltonian_splitting_pic_vm_1d2v), intent(inout) :: self !< time splitting object 
-    sll_real64, intent(in) :: dt   !< time step
+    sll_real64,                                     intent(in)    :: dt   !< time step
 
     !local variables
     sll_int32 :: i_part
@@ -190,7 +190,7 @@ contains
   !> \partial_t B = 0 => B_new = B_old
   subroutine operatorHp2_pic_vm_1d2v(self, dt)
     class(sll_t_hamiltonian_splitting_pic_vm_1d2v), intent(inout) :: self !< time splitting object 
-    sll_real64, intent(in) :: dt   !< time step
+    sll_real64,                                     intent(in)    :: dt   !< time step
 
     !local variables
     sll_int32  :: i_part, n_cells
@@ -243,7 +243,7 @@ contains
   !> \partial_t B + \partial_{x_1} E_2 = 0 => B_new = B_old - dt \partial_{x_1} E_2
   subroutine operatorHE_pic_vm_1d2v(self, dt)
     class(sll_t_hamiltonian_splitting_pic_vm_1d2v), intent(inout) :: self !< time splitting object 
-    sll_real64, intent(in) :: dt   !< time step
+    sll_real64,                                     intent(in)    :: dt   !< time step
 
     !local variables
     sll_int32 :: i_part
@@ -283,7 +283,7 @@ contains
   !> \partial_t B = 0 -> B_new = B_old
   subroutine operatorHB_pic_vm_1d2v(self, dt)
     class(sll_t_hamiltonian_splitting_pic_vm_1d2v), intent(inout) :: self !< time splitting object 
-    sll_real64, intent(in) :: dt   !< time step
+    sll_real64,                                     intent(in)    :: dt   !< time step
     
     ! Update efield2
     call self%maxwell_solver%compute_E_from_B(&
@@ -306,14 +306,14 @@ contains
        x_min, &
        Lx) 
     class(sll_t_hamiltonian_splitting_pic_vm_1d2v), intent(out) :: self !< time splitting object 
-    class(sll_c_maxwell_1d_base), pointer, intent(in)  :: maxwell_solver      !< Maxwell solver
-    class(sll_c_kernel_smoother), pointer, intent(in) :: kernel_smoother_0  !< Kernel smoother
-    class(sll_c_kernel_smoother), pointer, intent(in) :: kernel_smoother_1  !< Kernel smoother
-    class(sll_c_particle_group_base), pointer, intent(in) :: particle_group !< Particle group
-    sll_real64, pointer, intent(in) :: efield_dofs(:,:) !< array for the coefficients of the efields 
-    sll_real64, pointer, intent(in) :: bfield_dofs(:) !< array for the coefficients of the bfield
-    sll_real64, intent(in) :: x_min !< Lower bound of x domain
-    sll_real64, intent(in) :: Lx !< Length of the domain in x direction.
+    class(sll_c_maxwell_1d_base), pointer,          intent(in)  :: maxwell_solver      !< Maxwell solver
+    class(sll_c_kernel_smoother), pointer,          intent(in)  :: kernel_smoother_0  !< Kernel smoother
+    class(sll_c_kernel_smoother), pointer,          intent(in)  :: kernel_smoother_1  !< Kernel smoother
+    class(sll_c_particle_group_base), pointer,      intent(in)  :: particle_group !< Particle group
+    sll_real64, pointer,                            intent(in)  :: efield_dofs(:,:) !< array for the coefficients of the efields 
+    sll_real64, pointer,                            intent(in)  :: bfield_dofs(:) !< array for the coefficients of the bfield
+    sll_real64,                                     intent(in)  :: x_min !< Lower bound of x domain
+    sll_real64,                                     intent(in)  :: Lx !< Length of the domain in x direction.
 
     !local variables
     sll_int32 :: ierr
@@ -374,14 +374,14 @@ contains
        x_min, &
        Lx) 
     class(sll_c_hamiltonian_splitting_base), allocatable, intent(out) :: splitting !< time splitting object 
-    class(sll_c_maxwell_1d_base), pointer, intent(in)  :: maxwell_solver      !< Maxwell solver
-    class(sll_c_kernel_smoother), pointer, intent(in) :: kernel_smoother_0  !< Kernel smoother
-    class(sll_c_kernel_smoother), pointer, intent(in) :: kernel_smoother_1  !< Kernel smoother
-    class(sll_c_particle_group_base),pointer, intent(in) :: particle_group !< Particle group
-    sll_real64, pointer, intent(in) :: efield_dofs(:,:) !< array for the coefficients of the efields 
-    sll_real64, pointer, intent(in) :: bfield_dofs(:) !< array for the coefficients of the bfield
-    sll_real64, intent(in) :: x_min !< Lower bound of x domain
-    sll_real64, intent(in) :: Lx !< Length of the domain in x direction.
+    class(sll_c_maxwell_1d_base), pointer,                intent(in)  :: maxwell_solver      !< Maxwell solver
+    class(sll_c_kernel_smoother), pointer,                intent(in)  :: kernel_smoother_0  !< Kernel smoother
+    class(sll_c_kernel_smoother), pointer,                intent(in)  :: kernel_smoother_1  !< Kernel smoother
+    class(sll_c_particle_group_base),pointer,             intent(in)  :: particle_group !< Particle group
+    sll_real64, pointer,                                  intent(in)  :: efield_dofs(:,:) !< array for the coefficients of the efields 
+    sll_real64, pointer,                                  intent(in)  :: bfield_dofs(:) !< array for the coefficients of the bfield
+    sll_real64,                                           intent(in)  :: x_min !< Lower bound of x domain
+    sll_real64,                                           intent(in)  :: Lx !< Length of the domain in x direction.
 
     !local variables
     sll_int32 :: ierr
@@ -416,14 +416,14 @@ contains
        x_min, &
        Lx) 
     class(sll_c_hamiltonian_splitting_base), pointer, intent(out) :: splitting !< time splitting object 
-    class(sll_c_maxwell_1d_base), pointer, intent(in)  :: maxwell_solver      !< Maxwell solver
-    class(sll_c_kernel_smoother), pointer, intent(in) :: kernel_smoother_0  !< Kernel smoother
-    class(sll_c_kernel_smoother), pointer, intent(in) :: kernel_smoother_1  !< Kernel smoother
-    class(sll_c_particle_group_base),pointer, intent(in) :: particle_group !< Particle group
-    sll_real64, pointer, intent(in) :: efield_dofs(:,:) !< array for the coefficients of the efields 
-    sll_real64, pointer, intent(in) :: bfield_dofs(:) !< array for the coefficients of the bfield
-    sll_real64, intent(in) :: x_min !< Lower bound of x domain
-    sll_real64, intent(in) :: Lx !< Length of the domain in x direction.
+    class(sll_c_maxwell_1d_base), pointer,            intent(in)  :: maxwell_solver      !< Maxwell solver
+    class(sll_c_kernel_smoother), pointer,            intent(in)  :: kernel_smoother_0  !< Kernel smoother
+    class(sll_c_kernel_smoother), pointer,            intent(in)  :: kernel_smoother_1  !< Kernel smoother
+    class(sll_c_particle_group_base),pointer,         intent(in)  :: particle_group !< Particle group
+    sll_real64, pointer,                              intent(in)  :: efield_dofs(:,:) !< array for the coefficients of the efields 
+    sll_real64, pointer,                              intent(in)  :: bfield_dofs(:) !< array for the coefficients of the bfield
+    sll_real64,                                       intent(in)  :: x_min !< Lower bound of x domain
+    sll_real64,                                       intent(in)  :: Lx !< Length of the domain in x direction.
 
     !local variables
     sll_int32 :: ierr

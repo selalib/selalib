@@ -15,7 +15,7 @@ module sll_m_hamiltonian_splitting_base
    contains 
      procedure(splitting), deferred :: lie_splitting
      procedure(splitting), deferred :: strang_splitting
-     procedure(empty), deferred :: free
+     procedure(empty),     deferred :: free
   end type sll_c_hamiltonian_splitting_base
 
 
@@ -23,9 +23,9 @@ module sll_m_hamiltonian_splitting_base
      subroutine splitting(self, dt, number_steps)
        use sll_m_working_precision
        import sll_c_hamiltonian_splitting_base
-       class(sll_c_hamiltonian_splitting_base)   :: self !< time splitting object
-       sll_real64, intent(in)             :: dt !< time step size
-       sll_int32, intent(in)              :: number_steps !< number of time steps
+       class(sll_c_hamiltonian_splitting_base), intent(inout)   :: self !< time splitting object
+       sll_real64,                              intent(in)      :: dt !< time step size
+       sll_int32,                               intent(in)      :: number_steps !< number of time steps
      end subroutine splitting
   end interface
 
