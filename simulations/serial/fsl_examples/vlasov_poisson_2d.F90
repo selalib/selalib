@@ -9,11 +9,11 @@ program test_deposit_cubic_splines
 use sll_m_cubic_splines
 use sll_m_constants
 use sll_m_boundary_condition_descriptors
-use, intrinsic :: iso_c_binding
+use sll_m_fft
 implicit none
-include "fftw3.f03"
 
-type(C_PTR) :: PlnFwd,PlnBwd,PlnF,PlnB
+type(sll_t_fft) :: PlnFwd,PlnBwd,PlnF,PlnB
+
 type(sll_t_cubic_spline_2D), pointer :: spl_fsl
 sll_int32  :: step,nb_step
 sll_int32  :: i,j,bc1_type,bc2_type,err
@@ -21,7 +21,7 @@ sll_real64 :: eta1,delta_eta1,eta1_min,eta1_max,eta2
 sll_real64 :: xi1_0,xi2_0,x
 sll_real64 :: T,eps!,L
 sll_real64,dimension(:,:), pointer :: eta1feet,eta2feet
-integer(4),parameter ::  ntau =32,Nn=512
+integer(4),parameter ::  ntau =32,Nn=128
 
 sll_real64 :: x1_array(Nn+1),r_array(Nn),t1,t2
 sll_real64 :: fh_fsl(Nn+1,Nn+1),f0(Nn,Nn)
@@ -47,10 +47,10 @@ eta1_max =  4.0_f64
 !L=4.0d0
 allocate (fgen1(Nn))
 allocate (fgen2(Nn))
-PlnFwd = fftw_plan_dft_1d(ntau,AF2,AF1,FFTW_FORWARD, FFTW_MEASURE+FFTW_UNALIGNED)
-PlnBwd = fftw_plan_dft_1d(ntau,AF1,AF2,FFTW_BACKWARD,FFTW_MEASURE+FFTW_UNALIGNED)
-PlnF = fftw_plan_dft_1d(Nn,Fgen1,Fgen2,FFTW_FORWARD, FFTW_MEASURE+FFTW_UNALIGNED)
-PlnB = fftw_plan_dft_1d(Nn,Fgen2,Fgen1,FFTW_BACKWARD,FFTW_MEASURE+FFTW_UNALIGNED)
+call sll_s_fft_init_c2c_1d(PlnFwd ,ntau, AF2,   AF1,   sll_p_fft_forward)
+call sll_s_fft_init_c2c_1d(PlnBwd ,ntau, AF1,   AF2,   sll_p_fft_forward)
+call sll_s_fft_init_c2c_1d(PlnF   ,Nn,   Fgen1, Fgen2, sll_p_fft_forward)
+call sll_s_fft_init_c2c_1d(PlnB   ,Nn,   Fgen2, Fgen1, sll_p_fft_forward)
 deallocate (fgen1)
 deallocate (fgen2)
 ! ---- * Parameters * ----
@@ -143,8 +143,8 @@ do step=1,nb_step
         F2(m)=(dcos(2.0d0*taut(m))**2*(dcos(taut(m))**2*xi1_0+0.5d0*dsin(2.0d0*taut(m))*xi2_0)+dcos(taut(m))*gn(m,i,j))/dble(ntau)
         enddo
 
-        call fftw_execute_dft(PlnFwd, F1, AF1)
-        call fftw_execute_dft(PlnFwd, F2, AF2)
+        call sll_s_fft_exec_c2c_1d(PlnFwd, F1, AF1)
+        call sll_s_fft_exec_c2c_1d(PlnFwd, F2, AF2)
         Ftilde1(:,i,j)=AF1
         Ftilde2(:,i,j)=AF2
         do m=1,ntau-1
@@ -153,8 +153,8 @@ do step=1,nb_step
         enddo
         temp1(0)=0.0d0
         temp2(0)=0.0d0
-        call fftw_execute_dft(PlnBwd, temp1,F1)
-        call fftw_execute_dft(PlnBwd, temp2,F2)
+        call sll_s_fft_exec_c2c_1d(PlnBwd, temp1,F1)
+        call sll_s_fft_exec_c2c_1d(PlnBwd, temp2,F2)
         F1=F1-sum(temp1)
         F2=F2-sum(temp2)
         w1_0(:,i,j)=xi1_0+eps*dreal(F1)
@@ -172,32 +172,32 @@ do step=1,nb_step
         dtF1(m)=(-dcos(2.0d0*taut(m))**2*(0.5d0*dsin(2.0d0*taut(m))*Ftilde1(0,i,j)+dsin(taut(m))**2*Ftilde2(0,i,j))-dsin(taut(m))*dtgn)/dble(ntau)
         dtF2(m)=(dcos(2.0d0*taut(m))**2*(dcos(taut(m))**2*Ftilde1(0,i,j)+0.5d0*dsin(2.0d0*taut(m))*Ftilde2(0,i,j))+dcos(taut(m))*dtgn)/dble(ntau)
         enddo
-        call fftw_execute_dft(PlnFwd,dtF1,AF1)
-        call fftw_execute_dft(PlnFwd,dtF2,AF2)
+        call sll_s_fft_exec_c2c_1d(PlnFwd,dtF1,AF1)
+        call sll_s_fft_exec_c2c_1d(PlnFwd,dtF2,AF2)
         do m=1,ntau-1
             AF1(m)=-sll_p_i1*AF1(m)/ltau(m)
             AF2(m)=-sll_p_i1*AF2(m)/ltau(m)
         enddo
         AF1(0)=0.0d0
         AF2(0)=0.0d0
-        call fftw_execute_dft(PlnBwd,AF1,dtF1)
-        call fftw_execute_dft(PlnBwd,AF2,dtF2)
+        call sll_s_fft_exec_c2c_1d(PlnBwd,AF1,dtF1)
+        call sll_s_fft_exec_c2c_1d(PlnBwd,AF2,dtF2)
         temp1=(dtF1-sum(AF1))/dble(ntau)
         temp2=(dtF2-sum(AF2))/dble(ntau)
-        call fftw_execute_dft(PlnFwd,temp1,temp1_F)
-        call fftw_execute_dft(PlnFwd,temp2,temp2_F)
+        call sll_s_fft_exec_c2c_1d(PlnFwd,temp1,temp1_F)
+        call sll_s_fft_exec_c2c_1d(PlnFwd,temp2,temp2_F)
         Term1=(F1-(temp1-temp1_F(0))*eps)/dble(ntau)
         Term2=(F2-(temp2-temp2_F(0))*eps)/dble(ntau)
-        call fftw_execute_dft(PlnFwd,Term1, temp1_F)
-        call fftw_execute_dft(PlnFwd,Term2, temp2_F)
+        call sll_s_fft_exec_c2c_1d(PlnFwd,Term1, temp1_F)
+        call sll_s_fft_exec_c2c_1d(PlnFwd,Term2, temp2_F)
         do m=1,ntau-1
             temp1_F(m)=-sll_p_i1*temp1_F(m)/ltau(m)
             temp2_F(m)=-sll_p_i1*temp2_F(m)/ltau(m)
         enddo
         temp1_F(0)=0.0d0
         temp2_F(0)=0.0d0
-        call fftw_execute_dft(PlnBwd, temp1_F,temp1)
-        call fftw_execute_dft(PlnBwd, temp2_F,temp2)
+        call sll_s_fft_exec_c2c_1d(PlnBwd, temp1_F,temp1)
+        call sll_s_fft_exec_c2c_1d(PlnBwd, temp2_F,temp2)
         temp1=temp1-sum(temp1_F)
         temp2=temp2-sum(temp2_F)
         w1_0(:,i,j)=x1_array(i)+eps*dreal(temp1)
@@ -237,14 +237,14 @@ do step=1,nb_step
         enddo
         temp1=w1_0(:,i,j)+k/2.0d0*F1
         temp2=w2_0(:,i,j)+k/2.0d0*F2
-        call fftw_execute_dft(PlnFwd, temp1, AF1)
-        call fftw_execute_dft(PlnFwd, temp2, AF2)
+        call sll_s_fft_exec_c2c_1d(PlnFwd, temp1, AF1)
+        call sll_s_fft_exec_c2c_1d(PlnFwd, temp2, AF2)
         do m=0,ntau-1
             AF1(m)=AF1(m)/(1.0d0+sll_p_i1*k/2.0d0*ltau(m)/eps)/dble(ntau)
             AF2(m)=AF2(m)/(1.0d0+sll_p_i1*k/2.0d0*ltau(m)/eps)/dble(ntau)
         enddo
-        call fftw_execute_dft(PlnBwd, AF1,temp1_F)
-        call fftw_execute_dft(PlnBwd, AF2,temp2_F)
+        call sll_s_fft_exec_c2c_1d(PlnBwd, AF1,temp1_F)
+        call sll_s_fft_exec_c2c_1d(PlnBwd, AF2,temp2_F)
         Ftilde1(:,i,j)=temp1_F
         Ftilde2(:,i,j)=temp2_F
         !----------Insert half step evaluation--------
@@ -272,12 +272,12 @@ do step=1,nb_step
         F1(m)=-dcos(2.0d0*taut(m))**2*(0.5d0*dsin(2.0d0*taut(m))*Ftilde1(m,i,j)+dsin(taut(m))**2*Ftilde2(m,i,j))-dsin(taut(m))*gn(m,i,j)
         F2(m)=dcos(2.0d0*taut(m))**2*(dcos(taut(m))**2*Ftilde1(m,i,j)+0.5d0*dsin(2.0d0*taut(m))*Ftilde2(m,i,j))+dcos(taut(m))*gn(m,i,j)
         enddo
-        call fftw_execute_dft(PlnFwd, F1,  AF1)
-        call fftw_execute_dft(PlnFwd, F2,  AF2)
+        call sll_s_fft_exec_c2c_1d(PlnFwd, F1,  AF1)
+        call sll_s_fft_exec_c2c_1d(PlnFwd, F2,  AF2)
         w1c=w1_0(:,i,j)
         w2c=w2_0(:,i,j)
-        call fftw_execute_dft(PlnFwd, w1c, F1)
-        call fftw_execute_dft(PlnFwd, w2c, F2)
+        call sll_s_fft_exec_c2c_1d(PlnFwd, w1c, F1)
+        call sll_s_fft_exec_c2c_1d(PlnFwd, w2c, F2)
         do m=0,ntau-1
         temp1(m)=(F1(m)*(1.0d0-sll_p_i1*k/eps/2.0d0*ltau(m))+k*AF1(m))/(1.0d0+sll_p_i1*k/2.0d0*ltau(m)/eps)/dble(ntau)
         temp2(m)=(F2(m)*(1.0d0-sll_p_i1*k/eps/2.0d0*ltau(m))+k*AF2(m))/(1.0d0+sll_p_i1*k/2.0d0*ltau(m)/eps)/dble(ntau)
@@ -303,15 +303,16 @@ enddo
 !print *, 'whole time = ' , t2 - t1
 f0=fh_fsl(1:Nn,1:Nn)
 call fvrinterp(f0,t,r_array,Nn,fvr)
-call fftw_destroy_plan(PlnFwd)
-call fftw_destroy_plan(PlnBwd)
-call fftw_destroy_plan(PlnF)
-call fftw_destroy_plan(PlnB)
+call sll_s_fft_free(PlnFwd)
+call sll_s_fft_free(PlnBwd)
+call sll_s_fft_free(PlnF)
+call sll_s_fft_free(PlnB)
 open(unit=850,file='fh.dat')
 do i=1,Nn
 do j=1,Nn
-write(850,*)fvr(i,j)!fh_fsl(i,j)!  , !eta2feet(i,j),eta1feet(i,j),
+write(850,*)i,j,sngl(fvr(i,j))!fh_fsl(i,j)!  , !eta2feet(i,j),eta1feet(i,j),
 enddo
+write(850,*)
 enddo
 close(850)
 contains
@@ -383,11 +384,10 @@ end subroutine fvrinterp
 subroutine poissonsolver(fh_fsl,r,tau,lx,Nn,Ntau,En,Enr,Ent,PlnF,PlnB)
 ! ---PoissonSolver-------
 use sll_m_constants
-use, intrinsic :: iso_c_binding
+use sll_m_fft
 use sll_m_working_precision
 implicit none
-include "fftw3.f03"
-type(C_PTR), intent(in) :: PlnF,PlnB
+type(sll_t_fft), intent(in) :: PlnF,PlnB
 integer(4), intent(in)   :: Nn,Ntau
 real(8), intent(in)      :: fh_fsl(Nn,Nn),r(Nn),lx(1:Nn),tau(0:Ntau-1)
 real(8), intent(inout)   :: En(0:Ntau-1,1:Nn),Enr(0:Ntau-1,1:Nn),Ent(0:Ntau-1,1:Nn)
@@ -404,15 +404,15 @@ do i=0,Ntau-1
     call fvrinterp(fh_fsl,tau(i),r,Nn,fvr)
     do n=1,Nn
         vctmp = fvr(n,:)
-        call fftw_execute_dft(PlnF, vctmp, fvptilde)
+        call sll_s_fft_exec_c2c_1d(PlnF, vctmp, fvptilde)
         sum0(n)=fvptilde(1)/dble(Nn)*(2.0d0*L)*r(n) !r*int_R fdv
     enddo
-    call fftw_execute_dft(PlnF,sum0, fvptilde)
+    call sll_s_fft_exec_c2c_1d(PlnF,sum0, fvptilde)
     do n=2,Nn
         fvptilde(n)=fvptilde(n)/sll_p_i1/lx(n)/dble(Nn)
     enddo
     fvptilde(1)=cmplx(0.0d0,0.0d0,kind=f64)
-    call fftw_execute_dft(PlnB, fvptilde,temp)
+    call sll_s_fft_exec_c2c_1d(PlnB, fvptilde,temp)
     do n=1,Nn
         En(i,n)=dreal(temp(n)-temp(Nn/2+1))/x(n) !g(tau,r)
         Enr(i,n)=dreal(sum0(n)-En(i,n))/x(n)
@@ -422,15 +422,15 @@ enddo
 do n=1,Nn
     vctmp = fh_fsl(n,:)
     uctmp = fh_fsl(:,n)
-    call fftw_execute_dft(PlnF, vctmp, fvptilde)
-    call fftw_execute_dft(PlnF, uctmp, fvptilde0)
+    call sll_s_fft_exec_c2c_1d(PlnF, vctmp, fvptilde)
+    call sll_s_fft_exec_c2c_1d(PlnF, uctmp, fvptilde0)
     do m=1,Nn
     fvptilde0(m)=fvptilde0(m)/dble(Nn)*sll_p_i1*lx(m)
     fvptilde(m)=fvptilde(m)/dble(Nn)*sll_p_i1*lx(m)
     enddo
-    call fftw_execute_dft(PlnB, fvptilde, temp)
+    call sll_s_fft_exec_c2c_1d(PlnB, fvptilde, temp)
     ftv(n,:)=dreal(temp)  !\partial_\xi1 f_filde(\xi1,\xi2)
-    call fftw_execute_dft(PlnB, fvptilde0, temp)
+    call sll_s_fft_exec_c2c_1d(PlnB, fvptilde0, temp)
     ftr(:,n)=dreal(temp)  !\partial_\xi2 f_filde(\xi1,\xi2)
 enddo
 
@@ -454,15 +454,15 @@ do i=0,Ntau-1
         do m=1,Nn
         vctmp(m)=(dcos(2.0d0*tau(i))**2*(xi1(i,n,m)*dcos(tau(i))+xi2(i,n,m)*dsin(tau(i)))+gn(i,n,m))*(-dsin(tau(i))*ftemp1(n,m)+dcos(tau(i))*ftemp2(n,m))!partial_t f_tilde(xi1,xi2)
         enddo
-        call fftw_execute_dft(PlnF, vctmp, fvptilde)
+        call sll_s_fft_exec_c2c_1d(PlnF, vctmp, fvptilde)
         sum0(n)=fvptilde(1)/dble(Nn)*(2.0d0*L)*r(n)
     enddo
-    call fftw_execute_dft(PlnF,sum0, fvptilde)
+    call sll_s_fft_exec_c2c_1d(PlnF,sum0, fvptilde)
     do n=2,Nn
         fvptilde(n)=fvptilde(n)/sll_p_i1/lx(n)/dble(Nn)
     enddo
     fvptilde(1)=cmplx(0.0d0,0.0d0,kind=f64)
-    call fftw_execute_dft(PlnB, fvptilde,temp)
+    call sll_s_fft_exec_c2c_1d(PlnB, fvptilde,temp)
     do n=1,Nn
         Ent(i,n)=dreal(temp(n)-temp(Nn/2+1))/x(n)!E_tilde(tau,r)
     enddo
@@ -475,10 +475,9 @@ subroutine poissonsolver2(fh_fsl,r,tau,lx,Nn,Ntau,En,PlnF,PlnB)
 ! ---PoissonSolver-------
 use sll_m_constants
 use sll_m_working_precision
-use, intrinsic :: iso_c_binding
+use sll_m_fft
 implicit none
-include "fftw3.f03"
-type(C_PTR), intent(in) :: PlnF,PlnB
+type(sll_t_fft), intent(in) :: PlnF,PlnB
 integer(4), intent(in)   :: Nn,Ntau
 real(8), intent(in)      :: fh_fsl(Nn,Nn),r(Nn),lx(Nn),tau(0:Ntau-1)
 real(8), intent(inout)   :: En(0:Ntau-1,Nn)
@@ -495,15 +494,15 @@ do i=0,Ntau-1
     do m=1,Nn
         vctmp(m) = fvr(n,m)
     enddo
-    call fftw_execute_dft(PlnF, vctmp, fvptilde)
+    call sll_s_fft_exec_c2c_1d(PlnF, vctmp, fvptilde)
     sum0(n)=fvptilde(1)/dble(Nn)*(2.0d0*L)*r(n) !r*int_R fdv
     enddo
-    call fftw_execute_dft(PlnF,sum0, fvptilde)
+    call sll_s_fft_exec_c2c_1d(PlnF,sum0, fvptilde)
     do n=2,Nn
     fvptilde(n)=fvptilde(n)/sll_p_i1/lx(n)/dble(Nn)
     enddo
     fvptilde(1)=cmplx(0.0d0,0.0d0,kind=f64)
-    call fftw_execute_dft(PlnB, fvptilde,temp)
+    call sll_s_fft_exec_c2c_1d(PlnB, fvptilde,temp)
     do n=1,Nn
     En(i,n)=dreal(temp(n)-temp(Nn/2+1))/x(n) !g(tau,r)
     enddo
