@@ -185,8 +185,8 @@ do step=1,nb_step
 
       !------------for 1st order correction------------------
       do m=0,ntau-1
-        F1(m)= fct1(taut(m), ntau, cmplx(xi1_0,0.0,f64), cmplx(xi2_0,0.0,f64), cmplx(gn(m,i,j),0.0,f64))
-        F2(m)= fct2(taut(m), ntau, cmplx(xi1_0,0.0,f64), cmplx(xi2_0,0.0,f64), cmplx(gn(m,i,j),0.0,f64))
+        F1(m)= rfct1(taut(m), ntau, xi1_0, xi2_0, gn(m,i,j))
+        F2(m)= rfct2(taut(m), ntau, xi1_0, xi2_0, gn(m,i,j))
       enddo
 
       call sll_s_fft_exec_c2c_1d(PlnFwd, F1, F1)
@@ -220,10 +220,13 @@ do step=1,nb_step
     !------------for 2nd order correction------------------
     do m=0,ntau-1
 
-      F1(m)= fct1(taut(m), 1, cmplx(w1_0(m,i,j),0.0,f64), cmplx(w2_0(m,i,j),0.0,f64), cmplx(gn(m,i,j),0.0,f64))
-      F2(m)= fct2(taut(m), 1, cmplx(w1_0(m,i,j),0.0,f64), cmplx(w2_0(m,i,j),0.0,f64), cmplx(gn(m,i,j),0.0,f64))
+      F1(m)= rfct1(taut(m), 1, w1_0(m,i,j), w2_0(m,i,j), gn(m,i,j))
+      F2(m)= rfct2(taut(m), 1, w1_0(m,i,j), w2_0(m,i,j), gn(m,i,j))
 
-      dtgn=gnt(m,i,j)+gnr(m,i,j)*(cos(taut(m))*Ftilde1(0,i,j)+sin(taut(m))*Ftilde2(0,i,j))
+      dtgn=cmplx(gnt(m,i,j),0.0,f64) &
+          +cmplx(gnr(m,i,j),0.0,f64) &
+          *(cmplx(cos(taut(m)),0.0,f64)*Ftilde1(0,i,j) &
+           +cmplx(sin(taut(m)),0.0,f64)*Ftilde2(0,i,j))
 
       dtF1(m)= fct1(taut(m), ntau, Ftilde1(0,i,j), Ftilde2(0,i,j), dtgn)
       dtF2(m)= fct2(taut(m), ntau, Ftilde1(0,i,j), Ftilde2(0,i,j), dtgn)
@@ -271,8 +274,8 @@ do step=1,nb_step
   do i=1,n+1
   do j=1,n+1
     do m=0,ntau-1
-      F1(m)=fct1(taut(m),1,cmplx(w1_0(m,i,j),0.0,f64),cmplx(w2_0(m,i,j),0.0,f64),cmplx(gn(m,i,j),0.0,f64))
-      F2(m)=fct2(taut(m),1,cmplx(w1_0(m,i,j),0.0,f64),cmplx(w2_0(m,i,j),0.0,f64),cmplx(gn(m,i,j),0.0,f64))
+      F1(m)=rfct1(taut(m),1,w1_0(m,i,j),w2_0(m,i,j),gn(m,i,j))
+      F2(m)=rfct2(taut(m),1,w1_0(m,i,j),w2_0(m,i,j),gn(m,i,j))
     enddo
     tmp1=w1_0(:,i,j)+k/2.0d0*F1
     tmp2=w2_0(:,i,j)+k/2.0d0*F2
@@ -429,6 +432,41 @@ function fct2( tau, ntau, xi1, xi2, gn )
          + cos(ctau)*gn )/cmplx(ntau,0.0,f64)
 
 end function fct2
+
+function rfct1( tau, ntau, xi1, xi2, gn )
+
+  sll_comp64 :: rfct1
+  sll_real64 :: tau
+  sll_int32  :: ntau
+  sll_real64 :: xi1
+  sll_real64 :: xi2
+  sll_real64 :: gn
+  sll_real64 :: tmp
+
+  tmp = ( - cos(2.0*tau)**2 * ( 0.5_f64*sin(2.0*tau)*xi1 + sin(tau)**2*xi2) &
+          - sin(tau)*gn)/real(ntau,f64)
+
+  rfct1 = cmplx(tmp,0.0,f64)
+
+
+end function rfct1
+
+function rfct2( tau, ntau, xi1, xi2, gn )
+
+  sll_comp64 :: rfct2
+  sll_real64 :: tau
+  sll_int32  :: ntau
+  sll_real64 :: xi1
+  sll_real64 :: xi2
+  sll_real64 :: gn
+  sll_real64 :: tmp
+
+  tmp = (  cos(2.0*tau)**2 * ( cos(tau)**2*xi1 + 0.5_f64*sin(2.0*tau)*xi2)  &
+         + cos(tau)*gn )/real(ntau,f64)
+
+  rfct2 = cmplx(tmp,0.0,f64)
+
+end function rfct2
 
 
 end program test_deposit_cubic_splines
