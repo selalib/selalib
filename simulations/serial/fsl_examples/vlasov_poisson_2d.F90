@@ -29,22 +29,50 @@ sll_int32  :: step,nb_step
 sll_int32  :: i,j,bc1_type,bc2_type,err
 sll_real64 :: eta1,delta_eta1,eta1_min,eta1_max,eta2
 sll_real64 :: xi1_0,xi2_0,x
-sll_real64 :: T,eps!,L
+sll_real64 :: T,eps
 
 sll_real64, dimension(:,:), allocatable :: eta1feet
 sll_real64, dimension(:,:), allocatable :: eta2feet
 
-sll_real64 :: x1_array(Nn+1),r_array(Nn),t1,t2
-sll_real64 :: fh_fsl(Nn+1,Nn+1),f0(Nn,Nn)
-sll_comp64 :: temp1(0:ntau-1),temp2(0:ntau-1), AF1(0:ntau-1), AF2(0:ntau-1),w1c(0:ntau-1),w2c(0:ntau-1)
-sll_real64 :: k,h,En(0:Ntau-1,1:Nn),Enr(0:Ntau-1,1:Nn),Ent(0:Ntau-1,1:Nn)
-sll_real64 :: gn(0:Ntau-1,Nn+1,Nn+1),gnr(0:Ntau-1,Nn+1,Nn+1),gnt(0:Ntau-1,Nn+1,Nn+1)
-sll_comp64 :: sumup1,sumup2,dtgn
-sll_real64 :: tau(0:ntau-1), ltau(0:ntau-1),lx(1:Nn),fvr(1:Nn,1:Nn),taut(0:ntau-1)
-sll_real64 :: w1_0(0:ntau-1,Nn+1,Nn+1),w2_0(0:ntau-1,Nn+1,Nn+1)
-sll_comp64 :: F1(0:ntau-1),F2(0:ntau-1),Ftilde1(0:ntau-1,Nn+1,Nn+1),Ftilde2(0:ntau-1,Nn+1,Nn+1)
-sll_comp64 :: Term2(0:ntau-1),Term1(0:ntau-1)
-sll_comp64 :: temp1_F(0:ntau-1),temp2_F(0:ntau-1),dtF1(0:ntau-1),dtF2(0:ntau-1)
+sll_real64 :: x1_array(Nn+1)
+sll_real64 :: r_array(Nn)
+sll_real64 :: t1
+sll_real64 :: t2
+sll_real64 :: fh_fsl(Nn+1,Nn+1)
+sll_real64 :: f0(Nn,Nn)
+sll_comp64 :: temp1(0:ntau-1)
+sll_comp64 :: temp2(0:ntau-1)
+sll_comp64 :: AF1(0:ntau-1)
+sll_comp64 :: AF2(0:ntau-1)
+sll_comp64 :: w1c(0:ntau-1)
+sll_comp64 :: w2c(0:ntau-1)
+sll_real64 :: k,h
+sll_real64 :: En(0:Ntau-1,1:Nn)
+sll_real64 :: Enr(0:Ntau-1,1:Nn)
+sll_real64 :: Ent(0:Ntau-1,1:Nn)
+sll_real64 :: gn(0:Ntau-1,Nn+1,Nn+1)
+sll_real64 :: gnr(0:Ntau-1,Nn+1,Nn+1)
+sll_real64 :: gnt(0:Ntau-1,Nn+1,Nn+1)
+sll_comp64 :: sumup1
+sll_comp64 :: sumup2
+sll_comp64 :: dtgn
+sll_real64 :: tau(0:ntau-1)
+sll_real64 :: ltau(0:ntau-1)
+sll_real64 :: lx(1:Nn)
+sll_real64 :: fvr(1:Nn,1:Nn)
+sll_real64 :: taut(0:ntau-1)
+sll_real64 :: w1_0(0:ntau-1,Nn+1,Nn+1)
+sll_real64 :: w2_0(0:ntau-1,Nn+1,Nn+1)
+sll_comp64 :: F1(0:ntau-1)
+sll_comp64 :: F2(0:ntau-1)
+sll_comp64 :: Ftilde1(0:ntau-1,Nn+1,Nn+1)
+sll_comp64 :: Ftilde2(0:ntau-1,Nn+1,Nn+1)
+sll_comp64 :: Term1(0:ntau-1)
+sll_comp64 :: Term2(0:ntau-1)
+sll_comp64 :: temp1_F(0:ntau-1)
+sll_comp64 :: temp2_F(0:ntau-1)
+sll_comp64 :: dtF1(0:ntau-1)
+sll_comp64 :: dtF2(0:ntau-1)
 sll_int32  :: n,m
 
 sll_comp64,  allocatable :: fgen(:)
@@ -120,9 +148,9 @@ do m=0,ntau-1
   tau(m)=dble(m)*h
 enddo
 m       = ntau/2
-ltau    = [ sll_real64 :: (n, n=0,m-1), (n, n=-m,-1 ) ]
+ltau    = [ (real(n,f64), n=0,m-1), (real(n,f64), n=-m,-1 ) ]
 m       = Nn/2
-lx      = (/ (n, n=0,m-1), (n, n=-m,-1 )/)*2.0d0*sll_p_pi/(eta1_max-eta1_min)
+lx      = [ (real(n,f64), n=0,m-1), (real(n,f64), n=-m,-1 ) ]*2.0d0*sll_p_pi/(eta1_max-eta1_min)
 t       = 0.0d0
 r_array = x1_array(1:Nn)
 
@@ -142,8 +170,15 @@ do step=1,nb_step
     xi2_0=x1_array(j)
     !------------for 1st order correction------------------
     do m=0,ntau-1
-      F1(m)=(-dcos(2.0d0*taut(m))**2*(0.5d0*dsin(2.0d0*taut(m))*xi1_0+dsin(taut(m))**2*xi2_0)-dsin(taut(m))*gn(m,i,j))/dble(ntau)
-      F2(m)=(dcos(2.0d0*taut(m))**2*(dcos(taut(m))**2*xi1_0+0.5d0*dsin(2.0d0*taut(m))*xi2_0)+dcos(taut(m))*gn(m,i,j))/dble(ntau)
+      F1(m)=(       -cos(2.0d0*taut(m))**2
+             *( 0.5d0*sin(2.0d0*taut(m))*xi1_0
+               + sin(taut(m))**2*xi2_0)
+               - sin(taut(m))*gn(m,i,j))/real(ntau,f64)
+
+      F2(m)=(        cos(2.0d0*taut(m))**2
+             *( cos(taut(m))**2*xi1_0
+               + 0.5d0 * sin(2.0d0*taut(m))*xi2_0)
+               + cos(taut(m))*gn(m,i,j))/real(ntau, f64)
     enddo
 
     call sll_s_fft_exec_c2c_1d(PlnFwd, F1, AF1)
