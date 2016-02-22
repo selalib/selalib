@@ -16,15 +16,15 @@ use sll_m_fft
 implicit none
 
 sll_comp64, parameter :: sll_p_i0 = (0.0_f64, 0.0_f64)
-sll_int32,  parameter :: n   = 128
-sll_int32,  parameter :: ntau = 32
+sll_int32,  parameter :: n  = 128
+sll_int32,  parameter :: ntau     = 32
 
 type(sll_t_fft) :: PlnFwd
 type(sll_t_fft) :: PlnBwd
 type(sll_t_fft) :: PlnF
 type(sll_t_fft) :: PlnB
 
-type(sll_t_cubic_spline_2d), pointer :: spl
+type(sll_t_cubic_spline_2d), pointer :: spl_2d
 
 sll_int32  :: step,nb_step
 sll_int32  :: i,j,l
@@ -133,14 +133,14 @@ deallocate (fgen)
 ! allocations of the arrays
 SLL_ALLOCATE(eta1feet(n+1,n+1), err)
 SLL_ALLOCATE(eta2feet(n+1,n+1), err)
-spl => sll_f_new_cubic_spline_2d( n+1,     &
-                                  n+1,     &
-                                  eta1_min, &
-                                  eta1_max, &
-                                  eta1_min, &
-                                  eta1_max, &
-                                  bc1_type, &
-                                  bc2_type)
+spl_2d => sll_f_new_cubic_spline_2d( n+1,     &
+                                     n+1,     &
+                                     eta1_min, &
+                                     eta1_max, &
+                                     eta1_min, &
+                                     eta1_max, &
+                                     bc1_type, &
+                                     bc2_type)
 
 ! ---- * Initializations * ----
 
@@ -173,7 +173,7 @@ do step=1,nb_step
 
   taut=tau+t
   f0=fh_fsl(1:n,1:n)
-  call sll_s_compute_cubic_spline_2d(fh_fsl,spl)
+  call sll_s_compute_cubic_spline_2d(fh_fsl,spl_2d)
   call poissonsolver(f0,r_array,taut,lx,n,ntau,En,Enr,Ent,PlnF,PlnB)
   call ge0(n,ntau,taut,x1,En,Ent,Enr,gn,gnt,gnr)
 
@@ -282,8 +282,8 @@ do step=1,nb_step
     call sll_s_fft_exec_c2c_1d(PlnFwd, tmp1, AF1)
     call sll_s_fft_exec_c2c_1d(PlnFwd, tmp2, AF2)
     do m=0,ntau-1
-        AF1(m)=AF1(m)/(1.0d0+sll_p_i1*k/2.0d0*ltau(m)/eps)/cmplx(ntau,0.0,f64)
-        AF2(m)=AF2(m)/(1.0d0+sll_p_i1*k/2.0d0*ltau(m)/eps)/cmplx(ntau,0.0,f64)
+      AF1(m)=AF1(m)/(1.0d0+sll_p_i1*k/2.0d0*ltau(m)/eps)/cmplx(ntau,0.0,f64)
+      AF2(m)=AF2(m)/(1.0d0+sll_p_i1*k/2.0d0*ltau(m)/eps)/cmplx(ntau,0.0,f64)
     enddo
     call sll_s_fft_exec_c2c_1d(PlnBwd, AF1,tmp1_F)
     call sll_s_fft_exec_c2c_1d(PlnBwd, AF2,tmp2_F)
@@ -293,8 +293,8 @@ do step=1,nb_step
     sumup1=cmplx(0.0d0,0.0d0,kind=f64)
     sumup2=cmplx(0.0d0,0.0d0,kind=f64)
     do l=0,ntau-1
-        sumup1=sumup1+AF1(l)*cdexp(0.5*sll_p_i1*ltau(l)*k/eps)
-        sumup2=sumup2+AF2(l)*cdexp(0.5*sll_p_i1*ltau(l)*k/eps)
+      sumup1=sumup1+AF1(l)*cdexp(0.5*sll_p_i1*ltau(l)*k/eps)
+      sumup2=sumup2+AF2(l)*cdexp(0.5*sll_p_i1*ltau(l)*k/eps)
     enddo
     eta1=dreal(sumup1)
     eta2=dreal(sumup2)
@@ -303,7 +303,7 @@ do step=1,nb_step
     eta2feet(i,j)=eta2
   enddo
   enddo
-  call sll_s_deposit_value_2d(eta1feet,eta2feet,spl,fh_fsl) !function value at the half time
+  call sll_s_deposit_value_2d(eta1feet,eta2feet,spl_2d,fh_fsl) !function value at the half time
   f0=fh_fsl(1:n,1:n)
   call poissonsolver2(f0,r_array,taut,lx,n,ntau,En,PlnF,PlnB)
   !------End evaluation and continue 2nd solver-------------
@@ -338,7 +338,7 @@ do step=1,nb_step
       eta2feet(i,j)=eta2
   enddo
   enddo
-  call sll_s_deposit_value_2d(eta1feet,eta2feet,spl,fh_fsl)
+  call sll_s_deposit_value_2d(eta1feet,eta2feet,spl_2d,fh_fsl)
   t=real(step,f64)*k/eps
 
   print"('Step =', i6, ' Time = ', g15.3)", step, t
@@ -375,25 +375,26 @@ enddo
 close(ref_id)
 print"('Error = ', g15.3)", error / real(n*n,f32)
 
-
 contains
 
 !> Corrections on the BC 
 subroutine apply_bc()
-do while (eta1>eta1_max)
-  eta1 = eta1-(eta1_max-eta1_min)
-enddo
-do while (eta1<eta1_min)
-  eta1 = eta1+(eta1_max-eta1_min)
-enddo
-do while (eta2>eta1_max)
-  eta2 = eta2-(eta1_max-eta1_min)
-enddo
-do while (eta2<eta1_min)
-  eta2 = eta2+(eta1_max-eta1_min)
-enddo
-if (dabs(eta1)<1.0d-12) eta1=0.0d0
-if (dabs(eta2)<1.0d-12) eta2=0.0d0
+
+  do while (eta1>eta1_max)
+    eta1 = eta1-(eta1_max-eta1_min)
+  enddo
+  do while (eta1<eta1_min)
+    eta1 = eta1+(eta1_max-eta1_min)
+  enddo
+  do while (eta2>eta1_max)
+    eta2 = eta2-(eta1_max-eta1_min)
+  enddo
+  do while (eta2<eta1_min)
+    eta2 = eta2+(eta1_max-eta1_min)
+  enddo
+  if (abs(eta1) < 1.0d-12) eta1 = 0.0_f64
+  if (abs(eta2) < 1.0d-12) eta2 = 0.0_f64
+
 end subroutine apply_bc
 
 function fct1( tau, ntau, xi1, xi2, gn )
@@ -411,7 +412,6 @@ function fct1( tau, ntau, xi1, xi2, gn )
 
   fct1 = ( - cos(2.0*ctau)**2 * ( cmplx(0.5,0.0,f64)*sin(2.0*ctau)*xi1 + sin(ctau)**2*xi2) &
           - sin(ctau)*gn)/cmplx(ntau,0.0,f64)
-
 
 end function fct1
 
@@ -448,7 +448,6 @@ function rfct1( tau, ntau, xi1, xi2, gn )
 
   rfct1 = cmplx(tmp,0.0,f64)
 
-
 end function rfct1
 
 function rfct2( tau, ntau, xi1, xi2, gn )
@@ -467,7 +466,6 @@ function rfct2( tau, ntau, xi1, xi2, gn )
   rfct2 = cmplx(tmp,0.0,f64)
 
 end function rfct2
-
 
 end program test_deposit_cubic_splines
 
