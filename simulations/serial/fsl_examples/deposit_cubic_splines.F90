@@ -38,12 +38,12 @@ call sll_s_compute_cubic_spline_2D(f0,spl_fsl1)
 
 do n=1,Nn
   do m=1,Nn
-    x=dcos(t)*r(n)-dsin(t)*r(m)
-    y=dsin(t)*r(n)+dcos(t)*r(m)
-    if (dabs(x)<L .and. dabs(y)<L) then
-        fvr(n,m)=sll_f_interpolate_value_2D(x,y,spl_fsl1)
+    x=cos(t)*r(n)-sin(t)*r(m)
+    y=sin(t)*r(n)+cos(t)*r(m)
+    if (abs(x)<L .and. abs(y)<L) then
+      fvr(n,m)=sll_f_interpolate_value_2D(x,y,spl_fsl1)
     else
-    fvr(n,m)=0.0d0
+      fvr(n,m)=0.0d0
     endif
   enddo
 enddo
