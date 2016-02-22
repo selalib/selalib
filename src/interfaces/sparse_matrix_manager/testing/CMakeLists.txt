@@ -54,6 +54,7 @@ IF(Fortran_COMPILER MATCHES IBM)
 ENDIF(Fortran_COMPILER MATCHES IBM)
 
 ADD_EXECUTABLE( test_gmres test_gmres_driver.F90 dPackgmres.f )
+ADD_DEPENDENCIES( test_gmres sll_constants)
 TARGET_LINK_LIBRARIES( test_gmres ${BLAS_LIBRARIES} )
 ADD_TEST( NAME gmres COMMAND test_gmres )
 SET_TESTS_PROPERTIES( gmres PROPERTIES TIMEOUT 2 )

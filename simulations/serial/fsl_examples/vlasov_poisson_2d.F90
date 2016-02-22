@@ -15,8 +15,9 @@ use sll_m_fft
 
 implicit none
 
-sll_int32, parameter :: Nn   = 128
-sll_int32, parameter :: ntau = 32
+sll_comp64, parameter :: sll_p_i0 = (0.0_f64, 0.0_f64)
+sll_int32,  parameter :: n   = 128
+sll_int32,  parameter :: ntau = 32
 
 type(sll_t_fft) :: PlnFwd
 type(sll_t_fft) :: PlnBwd
@@ -34,7 +35,7 @@ sll_real64 :: eta1_max
 sll_real64 :: xi1_0,xi2_0
 sll_real64 :: T,eps
 sll_real64 :: eta1,  eta2
-sll_real64 :: x1(Nn+1), x2(Nn+1)
+sll_real64 :: x1(n+1), x2(n+1)
 
 sll_real64, dimension(:,:), allocatable :: eta1feet
 sll_real64, dimension(:,:), allocatable :: eta2feet
@@ -43,39 +44,40 @@ sll_comp64 :: AF1(0:ntau-1)
 sll_comp64 :: AF2(0:ntau-1)
 sll_comp64 :: dtF1(0:ntau-1)
 sll_comp64 :: dtF2(0:ntau-1)
-sll_real64 :: r_array(Nn)
-sll_real64 :: fh_fsl(Nn+1,Nn+1)
-sll_real64 :: f0(Nn,Nn)
+sll_comp64 :: F1(0:ntau-1)
+sll_comp64 :: F2(0:ntau-1)
+
+sll_real64 :: r_array(n)
+sll_real64 :: fh_fsl(n+1,n+1)
+sll_real64 :: f0(n,n)
 sll_comp64 :: temp1(0:ntau-1)
 sll_comp64 :: temp2(0:ntau-1)
 sll_real64 :: k, h
-sll_real64 :: En(0:Ntau-1,1:Nn)
-sll_real64 :: Enr(0:Ntau-1,1:Nn)
-sll_real64 :: Ent(0:Ntau-1,1:Nn)
-sll_real64 :: gn(0:Ntau-1,Nn+1,Nn+1)
-sll_real64 :: gnr(0:Ntau-1,Nn+1,Nn+1)
-sll_real64 :: gnt(0:Ntau-1,Nn+1,Nn+1)
+sll_real64 :: En(0:ntau-1,1:n)
+sll_real64 :: Enr(0:ntau-1,1:n)
+sll_real64 :: Ent(0:ntau-1,1:n)
+sll_real64 :: gn(0:ntau-1,n+1,n+1)
+sll_real64 :: gnr(0:ntau-1,n+1,n+1)
+sll_real64 :: gnt(0:ntau-1,n+1,n+1)
 sll_comp64 :: sumup1
 sll_comp64 :: sumup2
 sll_comp64 :: dtgn
 sll_real64 :: tau(0:ntau-1)
 sll_real64 :: ltau(0:ntau-1)
-sll_real64 :: lx(1:Nn)
-sll_real64 :: fvr(1:Nn,1:Nn)
+sll_real64 :: lx(1:n)
+sll_real64 :: fvr(1:n,1:n)
 sll_real64 :: taut(0:ntau-1)
-sll_real64 :: w1_0(0:ntau-1,Nn+1,Nn+1)
-sll_real64 :: w2_0(0:ntau-1,Nn+1,Nn+1)
-sll_comp64 :: F1(0:ntau-1)
-sll_comp64 :: F2(0:ntau-1)
-sll_comp64 :: Ftilde1(0:ntau-1,Nn+1,Nn+1)
-sll_comp64 :: Ftilde2(0:ntau-1,Nn+1,Nn+1)
+sll_real64 :: w1_0(0:ntau-1,n+1,n+1)
+sll_real64 :: w2_0(0:ntau-1,n+1,n+1)
+sll_comp64 :: Ftilde1(0:ntau-1,n+1,n+1)
+sll_comp64 :: Ftilde2(0:ntau-1,n+1,n+1)
 sll_comp64 :: Term1(0:ntau-1)
 sll_comp64 :: Term2(0:ntau-1)
 sll_comp64 :: temp1_F(0:ntau-1)
 sll_comp64 :: temp2_F(0:ntau-1)
 sll_comp64 :: w1c(0:ntau-1)
 sll_comp64 :: w2c(0:ntau-1)
-sll_int32  :: n, m, ref_id
+sll_int32  :: m, ref_id
 sll_real32 :: fdum, error
 sll_real64 :: tstart, tend
 
@@ -102,7 +104,7 @@ bc2_type = SLL_P_PERIODIC
 ! ---- * Time and space steps * ----
 
 ! space steps
-delta_eta1 = (eta1_max-eta1_min)/real(Nn,f64)
+delta_eta1 = (eta1_max-eta1_min)/real(n,f64)
 
 ! time step and number of steps
 k       = 0.05d0  !T*delta_eta1
@@ -112,7 +114,7 @@ h       = 2.0d0 * sll_p_pi/ntau
 
 ! ---- * Messages * ----
 
-print *,'# N=',Nn
+print *,'# N=',n
 print *,'# k=',k
 print *,'# T=',T
 print *,'# eps=',eps
@@ -121,18 +123,18 @@ call cpu_time(tstart)
 
 ! ---- * Allocation and creation of the splines * ----
 !L=4.0d0
-allocate (fgen(Nn))
+allocate (fgen(n))
 call sll_s_fft_init_c2c_1d(PlnFwd ,ntau, AF2,   AF1, sll_p_fft_forward)
 call sll_s_fft_init_c2c_1d(PlnBwd ,ntau, AF1,   AF2, sll_p_fft_forward)
-call sll_s_fft_init_c2c_1d(PlnF   ,Nn,   Fgen, Fgen, sll_p_fft_forward)
-call sll_s_fft_init_c2c_1d(PlnB   ,Nn,   Fgen, Fgen, sll_p_fft_forward)
+call sll_s_fft_init_c2c_1d(PlnF   ,n,   Fgen, Fgen, sll_p_fft_forward)
+call sll_s_fft_init_c2c_1d(PlnB   ,n,   Fgen, Fgen, sll_p_fft_forward)
 deallocate (fgen)
 
 ! allocations of the arrays
-SLL_ALLOCATE(eta1feet(Nn+1,Nn+1), err)
-SLL_ALLOCATE(eta2feet(Nn+1,Nn+1), err)
-spl_fsl => sll_f_new_cubic_spline_2D( Nn+1,     &
-                                      Nn+1,     &
+SLL_ALLOCATE(eta1feet(n+1,n+1), err)
+SLL_ALLOCATE(eta2feet(n+1,n+1), err)
+spl_fsl => sll_f_new_cubic_spline_2D( n+1,     &
+                                      n+1,     &
                                       eta1_min, &
                                       eta1_max, &
                                       eta1_min, &
@@ -143,40 +145,40 @@ spl_fsl => sll_f_new_cubic_spline_2D( Nn+1,     &
 ! ---- * Initializations * ----
 
 ! Analytic distribution function and data for the mesh
-do i=1,Nn+1
+do i=1,n+1
   x1(i) = eta1_min + (i-1)*delta_eta1
 enddo
-do j=1,Nn+1
+do j=1,n+1
   x2(j) = eta1_min + (j-1)*delta_eta1
 enddo
 
-do i=1,Nn+1
-  do j=1,Nn+1
+do i=1,n+1
+  do j=1,n+1
     fh_fsl(i,j) = dexp(-2.0d0*(x1(i)**2+x2(j)**2))
   end do
 end do
 do m=0,ntau-1
-  tau(m)=dble(m)*h
+  tau(m)=real(m,f64)*h
 enddo
 m       = ntau/2
 ltau    = [ (real(l,f64), l=0,m-1), (real(l,f64), l=-m,-1 ) ]
-m       = Nn/2
+m       = n/2
 lx      = [ (real(l,f64), l=0,m-1), (real(l,f64), l=-m,-1 ) ]*2.0d0*sll_p_pi/(eta1_max-eta1_min)
 t       = 0.0d0
-r_array = x1(1:Nn)
+r_array = x1(1:n)
 
 !t1= second();
 !-------- * Evolution in time * ---------
 do step=1,nb_step
 
   taut=tau+t
-  f0=fh_fsl(1:Nn,1:Nn)
+  f0=fh_fsl(1:n,1:n)
   call sll_s_compute_cubic_spline_2D(fh_fsl,spl_fsl)
-  call poissonsolver(f0,r_array,taut,lx,Nn,Ntau,En,Enr,Ent,PlnF,PlnB)
-  call ge0(Nn,Ntau,taut,x1,En,Ent,Enr,gn,gnt,gnr)
+  call poissonsolver(f0,r_array,taut,lx,n,ntau,En,Enr,Ent,PlnF,PlnB)
+  call ge0(n,ntau,taut,x1,En,Ent,Enr,gn,gnt,gnr)
 
-  do i=1,Nn+1
-    do j=1,Nn+1
+  do i=1,n+1
+    do j=1,n+1
 
       xi1_0=x1(i)
       xi2_0=x2(j)
@@ -196,8 +198,8 @@ do step=1,nb_step
       temp1(1:ntau-1) = - sll_p_i1 * Ftilde1(1:ntau-1,i,j) / ltau(1:ntau-1)
       temp2(1:ntau-1) = - sll_p_i1 * Ftilde2(1:ntau-1,i,j) / ltau(1:ntau-1)
 
-      temp1(0)=0.0d0
-      temp2(0)=0.0d0
+      temp1(0) = sll_p_i0
+      temp2(0) = sll_p_i0
 
       call sll_s_fft_exec_c2c_1d(PlnBwd, temp1,F1)
       call sll_s_fft_exec_c2c_1d(PlnBwd, temp2,F2)
@@ -211,17 +213,17 @@ do step=1,nb_step
     enddo
   enddo
 
-  call ge1(Nn,Ntau,taut,w1_0,w2_0,En,Ent,Enr,gn,gnt,gnr) ! gn,gnt,gnr 3d array output
+  call ge1(n,ntau,taut,w1_0,w2_0,En,Ent,Enr,gn,gnt,gnr) ! gn,gnt,gnr 3d array output
 
-  do i=1,Nn+1
-  do j=1,Nn+1
+  do i=1,n+1
+  do j=1,n+1
     !------------for 2nd order correction------------------
     do m=0,ntau-1
 
       F1(m)= fct1(taut(m), 1, cmplx(w1_0(m,i,j),0.0,f64), cmplx(w2_0(m,i,j),0.0,f64), cmplx(gn(m,i,j),0.0,f64))
       F2(m)= fct2(taut(m), 1, cmplx(w1_0(m,i,j),0.0,f64), cmplx(w2_0(m,i,j),0.0,f64), cmplx(gn(m,i,j),0.0,f64))
 
-      dtgn=gnt(m,i,j)+gnr(m,i,j)*(dcos(taut(m))*Ftilde1(0,i,j)+dsin(taut(m))*Ftilde2(0,i,j))
+      dtgn=gnt(m,i,j)+gnr(m,i,j)*(cos(taut(m))*Ftilde1(0,i,j)+sin(taut(m))*Ftilde2(0,i,j))
 
       dtF1(m)= fct1(taut(m), ntau, Ftilde1(0,i,j), Ftilde2(0,i,j), dtgn)
       dtF2(m)= fct2(taut(m), ntau, Ftilde1(0,i,j), Ftilde2(0,i,j), dtgn)
@@ -236,37 +238,37 @@ do step=1,nb_step
       AF2(m)=-sll_p_i1*AF2(m)/ltau(m)
     enddo
 
-    AF1(0)=0.0d0
-    AF2(0)=0.0d0
+    AF1(0) = sll_p_i0
+    AF2(0) = sll_p_i0
 
     call sll_s_fft_exec_c2c_1d(PlnBwd,AF1,dtF1)
     call sll_s_fft_exec_c2c_1d(PlnBwd,AF2,dtF2)
-    temp1=(dtF1-sum(AF1))/dble(ntau)
-    temp2=(dtF2-sum(AF2))/dble(ntau)
+    temp1=(dtF1-sum(AF1))/cmplx(ntau,0.0,f64)
+    temp2=(dtF2-sum(AF2))/cmplx(ntau,0.0,f64)
     call sll_s_fft_exec_c2c_1d(PlnFwd,temp1,temp1_F)
     call sll_s_fft_exec_c2c_1d(PlnFwd,temp2,temp2_F)
-    Term1=(F1-(temp1-temp1_F(0))*eps)/dble(ntau)
-    Term2=(F2-(temp2-temp2_F(0))*eps)/dble(ntau)
+    Term1=(F1-(temp1-temp1_F(0))*eps)/cmplx(ntau,0.0,f64)
+    Term2=(F2-(temp2-temp2_F(0))*eps)/cmplx(ntau,0.0,f64)
     call sll_s_fft_exec_c2c_1d(PlnFwd,Term1, temp1_F)
     call sll_s_fft_exec_c2c_1d(PlnFwd,Term2, temp2_F)
     do m=1,ntau-1
       temp1_F(m)=-sll_p_i1*temp1_F(m)/ltau(m)
       temp2_F(m)=-sll_p_i1*temp2_F(m)/ltau(m)
     enddo
-    temp1_F(0)=0.0d0
-    temp2_F(0)=0.0d0
+    temp1_F(0) = sll_p_i0
+    temp2_F(0) = sll_p_i0
     call sll_s_fft_exec_c2c_1d(PlnBwd, temp1_F,temp1)
     call sll_s_fft_exec_c2c_1d(PlnBwd, temp2_F,temp2)
     temp1=temp1-sum(temp1_F)
     temp2=temp2-sum(temp2_F)
-    w1_0(:,i,j)=x1(i)+eps*dreal(temp1)
-    w2_0(:,i,j)=x2(j)+eps*dreal(temp2)
+    w1_0(:,i,j)=x1(i)+eps*real(temp1)
+    w2_0(:,i,j)=x2(j)+eps*real(temp2)
   enddo
   enddo
-  call ge2(Nn,Ntau,taut,w1_0,w2_0,En,gn)
+  call ge2(n,ntau,taut,w1_0,w2_0,En,gn)
 
-  do i=1,Nn+1
-  do j=1,Nn+1
+  do i=1,n+1
+  do j=1,n+1
     do m=0,ntau-1
       F1(m)=fct1(taut(m),1,cmplx(w1_0(m,i,j),0.0,f64),cmplx(w2_0(m,i,j),0.0,f64),cmplx(gn(m,i,j),0.0,f64))
       F2(m)=fct2(taut(m),1,cmplx(w1_0(m,i,j),0.0,f64),cmplx(w2_0(m,i,j),0.0,f64),cmplx(gn(m,i,j),0.0,f64))
@@ -276,8 +278,8 @@ do step=1,nb_step
     call sll_s_fft_exec_c2c_1d(PlnFwd, temp1, AF1)
     call sll_s_fft_exec_c2c_1d(PlnFwd, temp2, AF2)
     do m=0,ntau-1
-        AF1(m)=AF1(m)/(1.0d0+sll_p_i1*k/2.0d0*ltau(m)/eps)/dble(ntau)
-        AF2(m)=AF2(m)/(1.0d0+sll_p_i1*k/2.0d0*ltau(m)/eps)/dble(ntau)
+        AF1(m)=AF1(m)/(1.0d0+sll_p_i1*k/2.0d0*ltau(m)/eps)/cmplx(ntau,0.0,f64)
+        AF2(m)=AF2(m)/(1.0d0+sll_p_i1*k/2.0d0*ltau(m)/eps)/cmplx(ntau,0.0,f64)
     enddo
     call sll_s_fft_exec_c2c_1d(PlnBwd, AF1,temp1_F)
     call sll_s_fft_exec_c2c_1d(PlnBwd, AF2,temp2_F)
@@ -286,9 +288,9 @@ do step=1,nb_step
     !----------Insert half step evaluation--------
     sumup1=cmplx(0.0d0,0.0d0,kind=f64)
     sumup2=cmplx(0.0d0,0.0d0,kind=f64)
-    do n=0,ntau-1
-        sumup1=sumup1+AF1(n)*cdexp(0.5*sll_p_i1*ltau(n)*k/eps)
-        sumup2=sumup2+AF2(n)*cdexp(0.5*sll_p_i1*ltau(n)*k/eps)
+    do l=0,ntau-1
+        sumup1=sumup1+AF1(l)*cdexp(0.5*sll_p_i1*ltau(l)*k/eps)
+        sumup2=sumup2+AF2(l)*cdexp(0.5*sll_p_i1*ltau(l)*k/eps)
     enddo
     eta1=dreal(sumup1)
     eta2=dreal(sumup2)
@@ -298,31 +300,31 @@ do step=1,nb_step
   enddo
   enddo
   call sll_s_deposit_value_2D(eta1feet,eta2feet,spl_fsl,fh_fsl) !function value at the half time
-  f0=fh_fsl(1:Nn,1:Nn)
-  call poissonsolver2(f0,r_array,taut,lx,Nn,Ntau,En,PlnF,PlnB)
+  f0=fh_fsl(1:n,1:n)
+  call poissonsolver2(f0,r_array,taut,lx,n,ntau,En,PlnF,PlnB)
   !------End evaluation and continue 2nd solver-------------
-  call ge2(Nn,Ntau,taut,dreal(Ftilde1),dreal(Ftilde2),En,gn)
-  do i=1,Nn+1
-    do j=1,Nn+1
+  call ge2(n,ntau,taut,dreal(Ftilde1),dreal(Ftilde2),En,gn)
+  do i=1,n+1
+    do j=1,n+1
       do m=0,ntau-1
         F1(m)=fct1(taut(m), 1, Ftilde1(m,i,j), Ftilde2(m,i,j), cmplx(gn(m,i,j),0.0,f64))
         F2(m)=fct2(taut(m), 1, Ftilde1(m,i,j), Ftilde2(m,i,j), cmplx(gn(m,i,j),0.0,f64))
       enddo
       call sll_s_fft_exec_c2c_1d(PlnFwd, F1,  AF1)
       call sll_s_fft_exec_c2c_1d(PlnFwd, F2,  AF2)
-      w1c=w1_0(:,i,j)
-      w2c=w2_0(:,i,j)
+      w1c = cmplx(w1_0(:,i,j),0.0,f64)
+      w2c = cmplx(w2_0(:,i,j),0.0,f64)
       call sll_s_fft_exec_c2c_1d(PlnFwd, w1c, F1)
       call sll_s_fft_exec_c2c_1d(PlnFwd, w2c, F2)
       do m=0,ntau-1
-        temp1(m)=(F1(m)*(1.0d0-sll_p_i1*k/eps/2.0d0*ltau(m))+k*AF1(m))/(1.0d0+sll_p_i1*k/2.0d0*ltau(m)/eps)/dble(ntau)
-        temp2(m)=(F2(m)*(1.0d0-sll_p_i1*k/eps/2.0d0*ltau(m))+k*AF2(m))/(1.0d0+sll_p_i1*k/2.0d0*ltau(m)/eps)/dble(ntau)
+        temp1(m)=(F1(m)*(1.0d0-sll_p_i1*k/eps/2.0d0*ltau(m))+k*AF1(m))/(1.0d0+sll_p_i1*k/2.0d0*ltau(m)/eps)/cmplx(ntau,0.0,f64)
+        temp2(m)=(F2(m)*(1.0d0-sll_p_i1*k/eps/2.0d0*ltau(m))+k*AF2(m))/(1.0d0+sll_p_i1*k/2.0d0*ltau(m)/eps)/cmplx(ntau,0.0,f64)
       enddo
       sumup1=cmplx(0.0d0,0.0d0,kind=f64)
       sumup2=cmplx(0.0d0,0.0d0,kind=f64)
-      do n=0,ntau-1
-        sumup1=sumup1+temp1(n)*cdexp(sll_p_i1*ltau(n)*k/eps)
-        sumup2=sumup2+temp2(n)*cdexp(sll_p_i1*ltau(n)*k/eps)
+      do l=0,ntau-1
+        sumup1=sumup1+temp1(l)*cdexp(sll_p_i1*ltau(l)*k/eps)
+        sumup2=sumup2+temp2(l)*cdexp(sll_p_i1*ltau(l)*k/eps)
       enddo
 !---------------end time solve-------------------------
       eta1=dreal(sumup1)
@@ -333,11 +335,13 @@ do step=1,nb_step
   enddo
   enddo
   call sll_s_deposit_value_2D(eta1feet,eta2feet,spl_fsl,fh_fsl)
-  t=dble(step)*k/eps
+  t=real(step,f64)*k/eps
+
+  print"('Step =', i6, ' Time = ', g15.3)", step, t
 enddo
 
-f0=fh_fsl(1:Nn,1:Nn)
-call fvrinterp(f0,t,r_array,Nn,fvr)
+f0=fh_fsl(1:n,1:n)
+call fvrinterp(f0,t,r_array,n,fvr)
 call sll_s_fft_free(PlnFwd)
 call sll_s_fft_free(PlnBwd)
 call sll_s_fft_free(PlnF)
@@ -347,8 +351,8 @@ call cpu_time(tend)
 print"('CPU time = ', g15.3)", tend - tstart
 
 open(unit=850,file='fh.dat')
-do i=1,Nn
-  do j=1,Nn
+do i=1,n
+  do j=1,n
     write(850,*) i, j, sngl(fvr(i,j))
   enddo
   write(850,*)
@@ -357,15 +361,15 @@ close(850)
 
 error = 0.0
 open(newunit = ref_id, file='fh.ref')
-do i=1,Nn
-  do j=1,Nn
-    read(ref_id,*) m, n, fdum
+do i=1,n
+  do j=1,n
+    read(ref_id,*) m, l, fdum
     error = error + abs(fdum-sngl(fvr(i,j)))
   enddo
   read(ref_id,*)
 enddo
 close(ref_id)
-print"('Error = ', g15.3)", error / real(Nn*Nn,f32)
+print"('Error = ', g15.3)", error / real(n*n,f32)
 
 
 contains
@@ -397,8 +401,12 @@ function fct1( tau, ntau, xi1, xi2, gn )
   sll_comp64 :: xi2
   sll_comp64 :: gn
 
-  fct1 = ( - cos(2.0*tau)**2 * ( 0.5*sin(2.0*tau)*xi1 + sin(tau)**2*xi2) &
-          - sin(tau)*gn)/real(ntau,f64)
+  sll_comp64 :: ctau
+
+  ctau = cmplx(tau,0.0,f64)
+
+  fct1 = ( - cos(2.0*ctau)**2 * ( cmplx(0.5,0.0,f64)*sin(2.0*ctau)*xi1 + sin(ctau)**2*xi2) &
+          - sin(ctau)*gn)/cmplx(ntau,0.0,f64)
 
 
 end function fct1
@@ -412,8 +420,12 @@ function fct2( tau, ntau, xi1, xi2, gn )
   sll_comp64 :: xi2
   sll_comp64 :: gn
 
-  fct2 = (  cos(2.0*tau)**2 * ( cos(tau)**2*xi1 + 0.5*sin(2.0*tau)*xi2)  &
-         + cos(tau)*gn )/real(ntau,f64)
+  sll_comp64 :: ctau
+
+  ctau = cmplx(tau,0.0,f64)
+
+  fct2 = (  cos(2.0*ctau)**2 * ( cos(ctau)**2*xi1 + cmplx(0.5,0.0,f64)*sin(2.0*ctau)*xi2)  &
+         + cos(ctau)*gn )/cmplx(ntau,0.0,f64)
 
 end function fct2
 
