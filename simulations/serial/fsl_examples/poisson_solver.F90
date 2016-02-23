@@ -88,13 +88,13 @@ end subroutine free_poisson_solver
 !> PoissonSolver
 subroutine poisson_solver_1(self,fh_fsl,tau,num_cells,ntau,En,Enr,Ent)
 
-class(poisson)              :: self
-sll_int32,  intent(in)      :: num_cells,ntau
-sll_real64, intent(in)      :: fh_fsl(num_cells,num_cells)
-sll_real64, intent(in)      :: tau(0:ntau-1)
-sll_real64, intent(inout)   :: En(0:ntau-1,1:num_cells)
-sll_real64, intent(inout)   :: Enr(0:ntau-1,1:num_cells)
-sll_real64, intent(inout)   :: Ent(0:ntau-1,1:num_cells)
+class(poisson)            :: self
+sll_int32,  intent(in)    :: num_cells,ntau
+sll_real64, intent(in)    :: fh_fsl(num_cells,num_cells)
+sll_real64, intent(in)    :: tau(0:ntau-1)
+sll_real64, intent(inout) :: En(0:ntau-1,1:num_cells)
+sll_real64, intent(inout) :: Enr(0:ntau-1,1:num_cells)
+sll_real64, intent(inout) :: Ent(0:ntau-1,1:num_cells)
 
 sll_real64 :: x(1:num_cells)
 sll_real64 :: fvr(num_cells,num_cells)
@@ -173,11 +173,11 @@ do i=0,ntau-1
                +gn(i,j,m))*(-sin(tau(i))*ftemp1(j,m)+cos(tau(i))*ftemp2(j,m))
     enddo
     call sll_s_fft_exec_c2c_1d(self%fw, vctmp, fvptilde)
-    sum0(j)=fvptilde(1)/real(num_cells)*(2.0d0*self%L)*self%r(j)
+    sum0(j)=fvptilde(1)/real(num_cells,f64)*(2.0d0*self%L)*self%r(j)
   enddo
   call sll_s_fft_exec_c2c_1d(self%fw,sum0, fvptilde)
   do j=2,num_cells
-    fvptilde(j)=fvptilde(j)/sll_p_i1/self%lx(j)/real(num_cells)
+    fvptilde(j)=fvptilde(j)/sll_p_i1/self%lx(j)/real(num_cells,f64)
   enddo
   fvptilde(1)=cmplx(0.0d0,0.0d0,kind=f64)
   call sll_s_fft_exec_c2c_1d(self%bw, fvptilde,temp)

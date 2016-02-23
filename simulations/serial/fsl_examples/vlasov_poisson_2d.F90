@@ -342,7 +342,7 @@ do step=1,nb_step
 enddo
 
 f0=fh_fsl(1:n,1:n)
-call fvrinterp(f0,t,r_array,n,fvr)
+call solver%interp(f0,t,n,fvr)
 call sll_s_fft_free(PlnFwd)
 call sll_s_fft_free(PlnBwd)
 call solver%free()
