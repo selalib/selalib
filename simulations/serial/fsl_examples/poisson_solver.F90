@@ -100,14 +100,14 @@ sll_real64 :: x(1:num_cells)
 sll_real64 :: fvr(num_cells,num_cells)
 sll_real64 :: ftv(num_cells,num_cells)
 sll_real64 :: ftr(num_cells,num_cells)
-sll_real64 :: ftemp1(num_cells,num_cells)
-sll_real64 :: ftemp2(num_cells,num_cells)
+sll_real64 :: ftmp1(num_cells,num_cells)
+sll_real64 :: ftmp2(num_cells,num_cells)
 sll_real64 :: xi1(0:ntau-1,num_cells+1,num_cells+1)
 sll_real64 :: xi2(0:ntau-1,num_cells+1,num_cells+1)
 sll_real64 :: v(num_cells+1)
 sll_comp64 :: fvptilde(1:num_cells)
 sll_comp64 :: fvptilde0(num_cells)
-sll_comp64 :: temp(num_cells)
+sll_comp64 :: tmp(num_cells)
 sll_comp64 :: sum0(num_cells)
 sll_comp64 :: vctmp(num_cells)
 sll_comp64 :: uctmp(num_cells)
@@ -117,37 +117,41 @@ sll_int32  :: m, i, j
 x=self%r
 x(num_cells/2+1)=1.0d0
 do i=0,ntau-1
+
   call self%interp(fh_fsl,tau(i),num_cells,fvr)
   do j=1,num_cells
-    vctmp = fvr(j,:)
-    call sll_s_fft_exec_c2c_1d(self%fw, vctmp, fvptilde)
-    sum0(j)=fvptilde(1)/real(num_cells)*(2.0d0*self%L)*self%r(j) 
+    tmp = fvr(j,:)
+    call sll_s_fft_exec_c2c_1d(self%fw, tmp, tmp)
+    sum0(j)=tmp(1)/real(num_cells)*(2.0d0*self%L)*self%r(j) 
   enddo
-  call sll_s_fft_exec_c2c_1d(self%fw,sum0, fvptilde)
+  call sll_s_fft_exec_c2c_1d(self%fw, sum0, tmp)
   do j=2,num_cells
-    fvptilde(j)=fvptilde(j)/sll_p_i1/self%lx(j)/real(num_cells)
+    tmp(j)=tmp(j)/sll_p_i1/self%lx(j)/real(num_cells)
   enddo
-  fvptilde(1)=cmplx(0.0d0,0.0d0,kind=f64)
-  call sll_s_fft_exec_c2c_1d(self%bw, fvptilde,temp)
-  do j=1,num_cells
-    En(i,j)=real(temp(j)-temp(num_cells/2+1))/x(j) 
-    Enr(i,j)=real(sum0(j)-En(i,j))/x(j)
-  enddo
+  tmp(1)=cmplx(0.0d0,0.0d0,kind=f64)
+  call sll_s_fft_exec_c2c_1d(self%bw, tmp,tmp)
+
+  En (i,:)=real(tmp-tmp(num_cells/2+1))/x
+  Enr(i,:)=real(sum0-En(i,:))/x
+
 enddo
 
 do j=1,num_cells
+
   vctmp = fh_fsl(j,:)
   uctmp = fh_fsl(:,j)
-  call sll_s_fft_exec_c2c_1d(self%fw, vctmp, fvptilde)
-  call sll_s_fft_exec_c2c_1d(self%fw, uctmp, fvptilde0)
-  do m=1,num_cells
-  fvptilde0(m)=fvptilde0(m)/real(num_cells)*sll_p_i1*self%lx(m)
-  fvptilde(m)=fvptilde(m)/real(num_cells)*sll_p_i1*self%lx(m)
-  enddo
-  call sll_s_fft_exec_c2c_1d(self%bw, fvptilde, temp)
-  ftv(j,:)=real(temp)  !\partial_\xi1 f_filde(\xi1,\xi2)
-  call sll_s_fft_exec_c2c_1d(self%bw, fvptilde0, temp)
-  ftr(:,j)=real(temp)  !\partial_\xi2 f_filde(\xi1,\xi2)
+
+  call sll_s_fft_exec_c2c_1d(self%fw, vctmp, vctmp)
+  call sll_s_fft_exec_c2c_1d(self%fw, uctmp, uctmp)
+  
+  uctmp = uctmp/real(num_cells)*sll_p_i1*self%lx
+  vctmp = vctmp/real(num_cells)*sll_p_i1*self%lx
+ 
+  call sll_s_fft_exec_c2c_1d(self%bw, vctmp, tmp)
+  ftv(j,:)=real(tmp)  !\partial_\x1 f_tilde(\xi1,\xi2)
+  call sll_s_fft_exec_c2c_1d(self%bw, uctmp, tmp)
+  ftr(:,j)=real(tmp)  !\partial_\x2 f_tilde(\xi1,\xi2)
+
 enddo
 
 v(1:num_cells)=self%r
@@ -164,13 +168,13 @@ enddo
 call ge2(num_cells,ntau,tau,xi1,xi2,En,gn)
 
 do i=0,ntau-1
-  call self%interp(ftv,tau(i),num_cells,ftemp1)
-  call self%interp(ftr,tau(i),num_cells,ftemp2)
+  call self%interp(ftv,tau(i),num_cells,ftmp1)
+  call self%interp(ftr,tau(i),num_cells,ftmp2)
   do j=1,num_cells
     do m=1,num_cells
       vctmp(m)=(cos(2.0d0*tau(i))**2* & !partial_t f_tilde(xi1,xi2)
                (xi1(i,j,m)*cos(tau(i))+xi2(i,j,m)*sin(tau(i))) &
-               +gn(i,j,m))*(-sin(tau(i))*ftemp1(j,m)+cos(tau(i))*ftemp2(j,m))
+               +gn(i,j,m))*(-sin(tau(i))*ftmp1(j,m)+cos(tau(i))*ftmp2(j,m))
     enddo
     call sll_s_fft_exec_c2c_1d(self%fw, vctmp, fvptilde)
     sum0(j)=fvptilde(1)/real(num_cells,f64)*(2.0d0*self%L)*self%r(j)
@@ -180,14 +184,13 @@ do i=0,ntau-1
     fvptilde(j)=fvptilde(j)/sll_p_i1/self%lx(j)/real(num_cells,f64)
   enddo
   fvptilde(1)=cmplx(0.0d0,0.0d0,kind=f64)
-  call sll_s_fft_exec_c2c_1d(self%bw, fvptilde,temp)
+  call sll_s_fft_exec_c2c_1d(self%bw, fvptilde,tmp)
   do j=1,num_cells
-    Ent(i,j)=real(temp(j)-temp(num_cells/2+1))/x(j)!E_tilde(tau,r)
+    Ent(i,j)=real(tmp(j)-tmp(num_cells/2+1))/x(j)!E_tilde(tau,r)
   enddo
 enddo
 end subroutine poisson_solver_1
 
-! ---PoissonSolver-------
 subroutine poisson_solver_2(self,fh_fsl,tau,num_cells,ntau,En)
 
 class(poisson)              :: self
@@ -198,31 +201,33 @@ sll_real64,   intent(inout) :: En(0:ntau-1,num_cells)
 sll_real64                  :: x(num_cells)
 sll_real64                  :: fvr(num_cells,num_cells)
 sll_int32                   :: m,i,j
-sll_comp64                  :: fvptilde(num_cells)
-sll_comp64                  :: temp(num_cells)
+sll_comp64                  :: tmp(num_cells)
 sll_comp64                  :: sum0(num_cells)
-sll_comp64                  :: vctmp(num_cells)
 
 x=self%r
 x(num_cells/2+1)=1.0d0
 do i=0,ntau-1
+
   call self%interp(fh_fsl,tau(i),num_cells,fvr)
+
   do j=1,num_cells
-    do m=1,num_cells
-      vctmp(m) = cmplx(fvr(j,m),0.0,f64)
-    enddo
-    call sll_s_fft_exec_c2c_1d(self%fw, vctmp, fvptilde)
-    sum0(j)=fvptilde(1)/real(num_cells,f64)*(2.0d0*self%L)*self%r(j) !r*int_R fdv
+    tmp = cmplx(fvr(j,:),0.0,f64)
+    call sll_s_fft_exec_c2c_1d(self%fw, tmp, tmp)
+    sum0(j)=tmp(1)*self%r(j) !r*int_R fdv
   enddo
-  call sll_s_fft_exec_c2c_1d(self%fw,sum0, fvptilde)
-  do j=2,num_cells
-    fvptilde(j)=fvptilde(j)/sll_p_i1/self%lx(j)/real(num_cells,f64)
-  enddo
-  fvptilde(1)=cmplx(0.0d0,0.0d0,kind=f64)
-  call sll_s_fft_exec_c2c_1d(self%bw, fvptilde,temp)
-  do j=1,num_cells
-    En(i,j)=real(temp(j)-temp(num_cells/2+1),f64)/x(j) 
-  enddo
+
+  sum0 = sum0 * 2.0_f64 * self%L / cmplx(num_cells,0.0, f64)
+
+  call sll_s_fft_exec_c2c_1d(self%fw, sum0, tmp)
+
+  tmp(1)=cmplx(0.0d0,0.0d0,kind=f64)
+
+  tmp(2:num_cells) = tmp(2:num_cells) / sll_p_i1 / self%lx(2:num_cells) / cmplx(num_cells,0.0,f64)
+
+  call sll_s_fft_exec_c2c_1d(self%bw, tmp, tmp)
+  
+  En(i,:)=real(tmp-tmp(num_cells/2+1),f64)/x(:)
+ 
 enddo
 end subroutine poisson_solver_2
 
