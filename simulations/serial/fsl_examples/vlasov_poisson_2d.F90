@@ -273,34 +273,40 @@ do step=1,nb_step
 
   do i=1,n+1
     do j=1,n+1
+
       do m=0,ntau-1
         F1(m)=rfct1(taut(m),1,w1_0(m,i,j),w2_0(m,i,j),gn(m,i,j))
         F2(m)=rfct2(taut(m),1,w1_0(m,i,j),w2_0(m,i,j),gn(m,i,j))
       enddo
-      tmp1=w1_0(:,i,j)+k/2.0d0*F1
-      tmp2=w2_0(:,i,j)+k/2.0d0*F2
+
+      tmp1=w1_0(:,i,j) + 0.5_f64*k*F1
+      tmp2=w2_0(:,i,j) + 0.5_f64*k*F2
+
       call sll_s_fft_exec_c2c_1d(fw_fft, tmp1, AF1)
       call sll_s_fft_exec_c2c_1d(fw_fft, tmp2, AF2)
-      do m=0,ntau-1
-        AF1(m)=AF1(m)/(1.0d0+sll_p_i1*k/2.0d0*ltau(m)/eps)/cmplx(ntau,0.0,f64)
-        AF2(m)=AF2(m)/(1.0d0+sll_p_i1*k/2.0d0*ltau(m)/eps)/cmplx(ntau,0.0,f64)
-      enddo
+
+      AF1 = AF1/(1.0d0+sll_p_i1*k/2.0d0*ltau/eps)/cmplx(ntau,0.0,f64)
+      AF2 = AF2/(1.0d0+sll_p_i1*k/2.0d0*ltau/eps)/cmplx(ntau,0.0,f64)
+
       call sll_s_fft_exec_c2c_1d(bw_fft, AF1,tmp1_f)
       call sll_s_fft_exec_c2c_1d(bw_fft, AF2,tmp2_f)
+
       Ftilde1(:,i,j)=tmp1_f
       Ftilde2(:,i,j)=tmp2_f
+
       !----------Insert half step evaluation--------
-      sumup1=cmplx(0.0d0,0.0d0,kind=f64)
-      sumup2=cmplx(0.0d0,0.0d0,kind=f64)
-      do l=0,ntau-1
-        sumup1=sumup1+AF1(l)*cdexp(0.5*sll_p_i1*ltau(l)*k/eps)
-        sumup2=sumup2+AF2(l)*cdexp(0.5*sll_p_i1*ltau(l)*k/eps)
-      enddo
+
+      sumup1 = sum(AF1*exp(0.5*sll_p_i1*ltau*k/eps))
+      sumup2 = sum(AF2*exp(0.5*sll_p_i1*ltau*k/eps))
+
       eta1=dreal(sumup1)
       eta2=dreal(sumup2)
+
       call apply_bc()
+
       eta1feet(i,j)=eta1
       eta2feet(i,j)=eta2
+
     enddo
   enddo
 
@@ -310,36 +316,42 @@ do step=1,nb_step
   call solver%solve2(f0,taut,n,ntau,En)
   !------End evaluation and continue 2nd solver-------------
   call ge2(n,ntau,taut,dreal(Ftilde1),dreal(Ftilde2),En,gn)
+
   do i=1,n+1
     do j=1,n+1
+
       do m=0,ntau-1
         F1(m)=fct1(taut(m), 1, Ftilde1(m,i,j), Ftilde2(m,i,j), cmplx(gn(m,i,j),0.0,f64))
         F2(m)=fct2(taut(m), 1, Ftilde1(m,i,j), Ftilde2(m,i,j), cmplx(gn(m,i,j),0.0,f64))
       enddo
+
       call sll_s_fft_exec_c2c_1d(fw_fft, F1,  AF1)
       call sll_s_fft_exec_c2c_1d(fw_fft, F2,  AF2)
+
       w1c = cmplx(w1_0(:,i,j),0.0,f64)
       w2c = cmplx(w2_0(:,i,j),0.0,f64)
+
       call sll_s_fft_exec_c2c_1d(fw_fft, w1c, F1)
       call sll_s_fft_exec_c2c_1d(fw_fft, w2c, F2)
-      do m=0,ntau-1
-        tmp1(m)=(F1(m)*(1.0d0-sll_p_i1*k/eps/2.0d0*ltau(m))+k*AF1(m)) &
-               /(1.0d0+sll_p_i1*k/2.0d0*ltau(m)/eps)/cmplx(ntau,0.0,f64)
-        tmp2(m)=(F2(m)*(1.0d0-sll_p_i1*k/eps/2.0d0*ltau(m))+k*AF2(m)) &
-               /(1.0d0+sll_p_i1*k/2.0d0*ltau(m)/eps)/cmplx(ntau,0.0,f64)
-      enddo
-      sumup1=cmplx(0.0d0,0.0d0,kind=f64)
-      sumup2=cmplx(0.0d0,0.0d0,kind=f64)
-      do l=0,ntau-1
-        sumup1=sumup1+tmp1(l)*cdexp(sll_p_i1*ltau(l)*k/eps)
-        sumup2=sumup2+tmp2(l)*cdexp(sll_p_i1*ltau(l)*k/eps)
-      enddo
+
+      tmp1=(F1*(1.0d0-sll_p_i1*k/eps/2.0d0*ltau)+k*AF1) &
+              /(1.0d0+sll_p_i1*k/2.0d0*ltau/eps)/cmplx(ntau,0.0,f64)
+      tmp2=(F2*(1.0d0-sll_p_i1*k/eps/2.0d0*ltau)+k*AF2) &
+               /(1.0d0+sll_p_i1*k/2.0d0*ltau/eps)/cmplx(ntau,0.0,f64)
+
+      sumup1 = sum(tmp1*exp(sll_p_i1*ltau*k/eps))
+      sumup2 = sum(tmp2*exp(sll_p_i1*ltau*k/eps))
+
 !---------------end time solve-------------------------
-      eta1=dreal(sumup1)
-      eta2=dreal(sumup2)
+
+      eta1 = real(sumup1)
+      eta2 = real(sumup2)
+
       call apply_bc()
+
       eta1feet(i,j)=eta1
       eta2feet(i,j)=eta2
+
     enddo
   enddo
 
