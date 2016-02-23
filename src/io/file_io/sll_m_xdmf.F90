@@ -243,9 +243,15 @@ end subroutine sll_xdmf_array_3d
 !>Subroutine to write a 2D array in xdmf format
 !>The field is describe on a cartesian mesh
 !>Axis are perpendicular and spacing is constant
-subroutine sll_s_xdmf_corect2d_nodes( file_name,array,array_name, &
-                                    eta1_min,delta_eta1,        &
-                                    eta2_min, delta_eta2, file_format) 
+subroutine sll_s_xdmf_corect2d_nodes( file_name,  &
+                                      array,      &
+                                      array_name, &
+                                      eta1_min,   &
+                                      delta_eta1, &
+                                      eta2_min,   &
+                                      delta_eta2, &
+                                      file_format,&
+                                      iplot       ) 
 
 sll_real64, intent(in)       :: array(:,:)  !< data array
 character(len=*), intent(in) :: file_name   !< xmf file name
@@ -259,6 +265,9 @@ sll_int32                    :: file_id     !< xmf file unit number
 sll_int32                    :: nx1         !< x nodes number
 sll_int32                    :: nx2         !< y nodes number
 character(len=4), optional   :: file_format !< "HDF5" or "Binary"
+sll_int32       , optional   :: iplot       !< plot index
+
+character(len=4)             :: cplot     
 #ifndef NOHDF5
 sll_int32                    :: hfile_id    !< h5 file unit number
 #endif
@@ -266,7 +275,13 @@ sll_int32                    :: hfile_id    !< h5 file unit number
 nx1 = size(array,1)
 nx2 = size(array,2)
 
-call sll_s_xml_file_create(file_name//".xmf",file_id,error)
+if( present(iplot)) then
+  call sll_s_int2string(iplot, cplot)
+  call sll_s_xml_file_create(file_name//cplot//".xmf",file_id,error)
+else
+  call sll_s_xml_file_create(file_name//".xmf",file_id,error)
+end if
+
 write(file_id,"(a)")"<Grid Name='mesh' GridType='Uniform'>"
 write(file_id,"(a,2i5,a)")"<Topology TopologyType='2DCoRectMesh' NumberOfElements='", &
                           nx2,nx1,"'/>"
@@ -281,20 +296,28 @@ write(file_id,"(a)")"</Geometry>"
 write(file_id,"(a)")"<Attribute Name='"//array_name//"' AttributeType='Scalar' Center='Node'>"
 
 if(present(file_format)) then
-   if( file_format == "HDF5") then
-      write(file_id,"(a,2i5,a)")"<DataItem Dimensions='",nx2,nx1, &
-                                "' NumberType='Float' Precision='8' Format='HDF'>"
+  if( file_format == "HDF5") then
+    write(file_id,"(a,2i5,a)")"<DataItem Dimensions='",nx2,nx1, &
+                              "' NumberType='Float' Precision='8' Format='HDF'>"
+    if (present(iplot)) then
       write(file_id,"(a)")array_name//".h5:/node_values"
+    else
+      write(file_id,"(a)")array_name//cplot//".h5:/node_values"
+    end if
 #ifndef NOHDF5
+    if (present(iplot)) then
       call sll_o_hdf5_file_create(array_name//".h5",hfile_id,error)
-      call sll_o_hdf5_write_array(hfile_id,array,"/node_values",error)
-      call sll_o_hdf5_file_close(hfile_id, error)
+    else
+      call sll_o_hdf5_file_create(array_name//cplot//".h5",hfile_id,error)
+    end if
+    call sll_o_hdf5_write_array(hfile_id,array,"/node_values",error)
+    call sll_o_hdf5_file_close(hfile_id, error)
 #endif
-   end if
+  end if
 else
-   write(file_id,"(a,2i5,a)")"<DataItem Dimensions='",nx2,nx1, &
+  write(file_id,"(a,2i5,a)")"<DataItem Dimensions='",nx2,nx1, &
                              "' NumberType='Float' Precision='8' Format='XML'>"
-   call sll_o_ascii_write_array(file_id,array,error)
+  call sll_o_ascii_write_array(file_id,array,error)
 end if
 write(file_id,"(a)")"</DataItem>"
 write(file_id,"(a)")"</Attribute>"
@@ -370,8 +393,13 @@ end subroutine sll_s_xdmf_corect3d_nodes
 !>Subroutine to write a 2D array in xdmf format.
 !>The field is describe on a cartesian mesh.
 !>Axis are perpendicular and spacing is define by eta1 and eta2 arrays.
-subroutine sll_s_xdmf_rect2d_nodes( file_name, array, array_name,  &
-                                  eta1, eta2, file_format) 
+subroutine sll_s_xdmf_rect2d_nodes( file_name,   &
+                                    array,       &
+                                    array_name,  &
+                                    eta1,        &
+                                    eta2,        &
+                                    file_format, &
+                                    iplot        ) 
 
 sll_real64, intent(in)       :: array(:,:) !< data array
 sll_real64, intent(in)       :: eta1(:)    !< x data
@@ -383,7 +411,9 @@ sll_int32                    :: file_id    !< xmf file unit number
 sll_int32                    :: nx1        !< x nodes number
 sll_int32                    :: nx2        !< y nodes number
 character(len=4), optional   :: file_format!< file format "HDF5" or "Binary"
+sll_int32, optional          :: iplot      !< plot index
 sll_int32                    :: i, j
+character(len=4)             :: cplot
 #ifndef NOHDF5
 sll_int32                    :: hfile_id    !< h5 file unit number
 #endif
@@ -394,7 +424,12 @@ nx2 = size(array,2)
 SLL_ASSERT(nx1 == size(eta1))
 SLL_ASSERT(nx2 == size(eta2))
 
-call sll_s_xml_file_create(file_name//".xmf",file_id,error)
+if (present(iplot)) then
+  call sll_s_int2string(iplot, cplot)
+  call sll_s_xml_file_create(file_name//cplot//".xmf",file_id,error)
+else
+  call sll_s_xml_file_create(file_name//".xmf",file_id,error)
+end if
 write(file_id,"(a)")"<Grid Name='mesh' GridType='Uniform'>"
 write(file_id,"(a,2i5,a)")"<Topology TopologyType='2DRectMesh' NumberOfElements='", &
                           nx2,nx1,"'/>"
@@ -411,12 +446,20 @@ write(file_id,"(a)")"</Geometry>"
 write(file_id,"(a)")"<Attribute Name='"//array_name//"' AttributeType='Scalar' Center='Node'>"
 if(present(file_format) .and. file_format == "HDF5") then
    write(file_id,"(a,2i5,a)")"<DataItem Dimensions='",nx2,nx1, &
-                                 "' NumberType='Float' Precision='8' Format='HDF'>"
-   write(file_id,"(a)")array_name//".h5:/node_values"
+                             "' NumberType='Float' Precision='8' Format='HDF'>"
+  if (present(iplot)) then
+     write(file_id,"(a)")array_name//cplot//".h5:/node_values"
+  else
+     write(file_id,"(a)")array_name//".h5:/node_values"
+  end if
 #ifndef NOHDF5
-   call sll_o_hdf5_file_create(array_name//".h5",hfile_id,error)
-   call sll_o_hdf5_write_array(hfile_id,array,"/node_values",error)
-   call sll_o_hdf5_file_close(hfile_id, error)
+  if (present(iplot)) then
+    call sll_o_hdf5_file_create(array_name//cplot//".h5",hfile_id,error)
+  else
+    call sll_o_hdf5_file_create(array_name//".h5",hfile_id,error)
+  end if
+  call sll_o_hdf5_write_array(hfile_id,array,"/node_values",error)
+  call sll_o_hdf5_file_close(hfile_id, error)
 #endif
 else
    write(file_id,"(a,2i5,a)")"<DataItem Dimensions='",nx2,nx1, &
@@ -733,13 +776,13 @@ end subroutine sll_s_xdmf_close
 !> @details
 !> This routine will create a file named array_name_[iplot].xmf
 subroutine sll_s_plot_f_cartesian( iplot,      &
-                                 f,          &
-                                 vec_x1,     &
-                                 nnodes_x1,  &
-                                 vec_x2,     &
-                                 nnodes_x2,  &
-                                 array_name, &
-                                 time)    
+                                   f,          &
+                                   vec_x1,     &
+                                   nnodes_x1,  &
+                                   vec_x2,     &
+                                   nnodes_x2,  &
+                                   array_name, &
+                                   time)    
 
   sll_int32,                  intent(in) :: iplot
   sll_real64, dimension(:,:), intent(in) :: f
