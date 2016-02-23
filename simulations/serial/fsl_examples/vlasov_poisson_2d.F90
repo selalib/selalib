@@ -15,7 +15,6 @@ use sll_m_boundary_condition_descriptors
 use sll_m_fft
 use sll_m_gnuplot
 use sll_m_xdmf
-use sll_m_utilities
 
 implicit none
 
@@ -78,7 +77,6 @@ sll_real32 :: fdum, error
 sll_real64 :: tstart, tend
 sll_int32  :: ierr
 
-character(len=4) :: cstep
 
 type(poisson) :: solver
 
@@ -366,9 +364,8 @@ do step=1,nb_step
   f0=fh_fsl(1:n,1:n)
   call solver%interp(f0,t,n,fvr)
   call sll_o_gnuplot_2d(n, x1, n, x2, fvr, 'fh', step, ierr)
-  call sll_s_int2string(step, cstep)
-  call sll_s_xdmf_rect2d_nodes( 'fh_'//cstep, fvr, 'fh', x1(1:n), x2(1:n), 'HDF5') 
-
+  call sll_s_xdmf_rect2d_nodes( 'fh', fvr, 'fh', x1(1:n), x2(1:n), &
+                                'HDF5', step) 
 enddo
 
 call sll_s_fft_free(fw_fft)
@@ -377,7 +374,6 @@ call solver%free()
 
 call cpu_time(tend)
 print"('CPU time = ', g15.3)", tend - tstart
-
 
 error = 0.0
 open(newunit = ref_id, file='fh.ref')
@@ -426,8 +422,8 @@ function fct1( tau, ntau, xi1, xi2, gn )
 
   ctau = cmplx(tau,0.0,f64)
 
-  fct1 = ( - cos(2.0*ctau)**2 * ( cmplx(0.5,0.0,f64)*sin(2.0*ctau)*xi1 + sin(ctau)**2*xi2) &
-          - sin(ctau)*gn)/cmplx(ntau,0.0,f64)
+  fct1 = ( - cos(2.0*ctau)**2 * ( cmplx(0.5,0.0,f64)*sin(2.0*ctau)*xi1 &
+           + sin(ctau)**2*xi2) - sin(ctau)*gn)/cmplx(ntau,0.0,f64)
 
 end function fct1
 
@@ -444,8 +440,9 @@ function fct2( tau, ntau, xi1, xi2, gn )
 
   ctau = cmplx(tau,0.0,f64)
 
-  fct2 = (  cos(2.0*ctau)**2 * ( cos(ctau)**2*xi1 + cmplx(0.5,0.0,f64)*sin(2.0*ctau)*xi2)  &
-         + cos(ctau)*gn )/cmplx(ntau,0.0,f64)
+  fct2 = (  cos(2.0*ctau)**2 * ( cos(ctau)**2*xi1 &
+          + cmplx(0.5,0.0,f64)*sin(2.0*ctau)*xi2)  &
+          + cos(ctau)*gn )/cmplx(ntau,0.0,f64)
 
 end function fct2
 
