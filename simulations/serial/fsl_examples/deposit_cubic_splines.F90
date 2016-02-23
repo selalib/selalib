@@ -32,41 +32,46 @@ sll_real64 :: E0(Nn+1)
 sll_real64 :: E1(Nn+1)
 sll_real64 :: E2(Nn+1)
 
-L=4.0d0
+L=4.0_f64
 spl_fsl1 => sll_f_new_cubic_spline_1D(Nn+1, -L, L, SLL_P_PERIODIC)
 spl_fsl0 => sll_f_new_cubic_spline_1D(Nn+1, -L, L, SLL_P_PERIODIC)
 spl_fsl2 => sll_f_new_cubic_spline_1D(Nn+1, -L, L, SLL_P_PERIODIC)
 
 do n=0,Ntau-1
-  do j=1,Nn
-  E0(j)=En(n,j)
-  E1(j)=Enr(n,j)
-  E2(j)=Ent(n,j)
-  enddo
-  E0(Nn+1)=0.0d0
-  E1(Nn+1)=0.0d0
-  E2(Nn+1)=0.0d0
+
+  E0(1:Nn)=En (n,1:Nn)
+  E1(1:Nn)=Enr(n,1:Nn)
+  E2(1:Nn)=Ent(n,1:Nn)
+
+  E0(Nn+1)=0.0_f64
+  E1(Nn+1)=0.0_f64
+  E2(Nn+1)=0.0_f64
+
   call sll_s_compute_cubic_spline_1D(E0,spl_fsl0)
   call sll_s_compute_cubic_spline_1D(E1,spl_fsl1)
   call sll_s_compute_cubic_spline_1D(E2,spl_fsl2)
+
   do j=1,Nn+1
-  do i=1,Nn+1
-      x=dcos(tau(n))*w0(i)+dsin(tau(n))*w0(j)
-      if (dabs(x)<L) then
-      gn(n,i,j)=sll_f_interpolate_from_interpolant_value(x,spl_fsl0)
-      gnr(n,i,j)=sll_f_interpolate_from_interpolant_value(x,spl_fsl1)
-      gnt(n,i,j)=sll_f_interpolate_from_interpolant_value(x,spl_fsl2)
+    do i=1,Nn+1
+      x=cos(tau(n))*w0(i)+sin(tau(n))*w0(j)
+      if (abs(x)<L) then
+        gn(n,i,j)  = sll_f_interpolate_from_interpolant_value(x,spl_fsl0)
+        gnr(n,i,j) = sll_f_interpolate_from_interpolant_value(x,spl_fsl1)
+        gnt(n,i,j) = sll_f_interpolate_from_interpolant_value(x,spl_fsl2)
       else
-      gn(n,i,j)=0.0d0
-      gnr(n,i,j)=0.0d0
-      gnt(n,i,j)=0.0d0
+        gn(n,i,j)  = 0.0_f64
+        gnr(n,i,j) = 0.0_f64
+        gnt(n,i,j) = 0.0_f64
       endif
+    enddo
   enddo
-  enddo
+
 enddo
+
 call sll_o_delete(spl_fsl1)
 call sll_o_delete(spl_fsl0)
 call sll_o_delete(spl_fsl2)
+
 end subroutine ge0
 
 subroutine ge1(Nn,Ntau,tau,w1,w2,En,Ent,Enr,gn,gnt,gnr)
@@ -94,22 +99,20 @@ sll_real64                :: E0(Nn+1)
 sll_real64                :: E1(Nn+1)
 sll_real64                :: E2(Nn+1)
 
-L=4.0d0
+L=4.0_f64
 spl_fsl1 => sll_f_new_cubic_spline_1D(Nn+1, -L, L, SLL_P_PERIODIC)
 spl_fsl0 => sll_f_new_cubic_spline_1D(Nn+1, -L, L, SLL_P_PERIODIC)
 spl_fsl2 => sll_f_new_cubic_spline_1D(Nn+1, -L, L, SLL_P_PERIODIC)
 
 do n=0,Ntau-1
 
-  do j=1,Nn
-    E0(j)=En(n,j)
-    E1(j)=Enr(n,j)
-    E2(j)=Ent(n,j)
-  enddo
+  E0(1:Nn)=En (n,1:Nn)
+  E1(1:Nn)=Enr(n,1:Nn)
+  E2(1:Nn)=Ent(n,1:Nn)
 
-  E0(Nn+1)=0.0d0
-  E1(Nn+1)=0.0d0
-  E2(Nn+1)=0.0d0
+  E0(Nn+1)=0.0_f64
+  E1(Nn+1)=0.0_f64
+  E2(Nn+1)=0.0_f64
 
   call sll_s_compute_cubic_spline_1D(E0,spl_fsl0)
   call sll_s_compute_cubic_spline_1D(E1,spl_fsl1)
@@ -117,15 +120,15 @@ do n=0,Ntau-1
 
   do j=1,Nn+1
   do i=1,Nn+1
-    x=dcos(tau(n))*w1(n,i,j)+dsin(tau(n))*w2(n,i,j)
-    if (dabs(x)<L) then
+    x=cos(tau(n))*w1(n,i,j)+sin(tau(n))*w2(n,i,j)
+    if (abs(x)<L) then
       gn( n,i,j) = sll_f_interpolate_from_interpolant_value(x,spl_fsl0)
       gnr(n,i,j) = sll_f_interpolate_from_interpolant_value(x,spl_fsl1)
       gnt(n,i,j) = sll_f_interpolate_from_interpolant_value(x,spl_fsl2)
     else
-      gn( n,i,j) = 0.0d0
-      gnr(n,i,j) = 0.0d0
-      gnt(n,i,j) = 0.0d0
+      gn( n,i,j) = 0.0_f64
+      gnr(n,i,j) = 0.0_f64
+      gnt(n,i,j) = 0.0_f64
     endif
   enddo
   enddo
@@ -156,26 +159,25 @@ sll_int32                 :: n
 sll_int32                 :: i
 sll_int32                 :: j
 
-L = 4.0d0
+L = 4.0_f64
 spl_fsl0=>sll_f_new_cubic_spline_1D(Nn+1, -L, L, SLL_P_PERIODIC)
 do n=0,Ntau-1
-  do j=1,Nn
-    E0(j)=En(n,j)
-  enddo
-  E0(Nn+1)=0.0d0
+  E0(1:Nn)=En(n,1:Nn)
+  E0(Nn+1)=0.0_f64
   call sll_s_compute_cubic_spline_1D(E0,spl_fsl0)
   do j=1,Nn+1
   do i=1,Nn+1
-    x=dcos(tau(n))*w1(n,i,j)+dsin(tau(n))*w2(n,i,j)
-    if (dabs(x)<L) then
+    x=cos(tau(n))*w1(n,i,j)+sin(tau(n))*w2(n,i,j)
+    if (abs(x)<L) then
       gn(n,i,j)=sll_f_interpolate_from_interpolant_value(x,spl_fsl0)
     else
-      gn(n,i,j)=0.0d0
+      gn(n,i,j)=0.0_f64
     endif
   enddo
   enddo
 enddo
 call sll_o_delete(spl_fsl0)
+
 end subroutine ge2
 
 end module deposit_cubic_splines
