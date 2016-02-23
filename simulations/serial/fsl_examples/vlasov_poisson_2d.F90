@@ -110,7 +110,7 @@ delta_eta1 = (eta1_max-eta1_min)/real(n,f64)
 k       = 0.05d0  !T*delta_eta1
 nb_step = floor(T/k)
 eps     = 1.00d0
-h       = 2.0d0 * sll_p_pi/ ntau
+h       = 2.0d0 * sll_p_pi/ real(ntau,f64)
 
 ! ---- * Messages * ----
 
