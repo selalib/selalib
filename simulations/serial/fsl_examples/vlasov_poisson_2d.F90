@@ -8,6 +8,7 @@ program test_deposit_cubic_splines
 #include "sll_memory.h"
 
 use deposit_cubic_splines
+use poisson_solver
 use sll_m_cubic_splines
 use sll_m_constants
 use sll_m_boundary_condition_descriptors
@@ -21,8 +22,6 @@ sll_int32,  parameter :: ntau     = 32
 
 type(sll_t_fft) :: PlnFwd
 type(sll_t_fft) :: PlnBwd
-type(sll_t_fft) :: PlnF
-type(sll_t_fft) :: PlnB
 
 type(sll_t_cubic_spline_2d), pointer :: spl_2d
 
@@ -82,7 +81,7 @@ sll_int32  :: m, ref_id
 sll_real32 :: fdum, error
 sll_real64 :: tstart, tend
 
-sll_comp64,  allocatable :: fgen(:)
+type(poisson) :: solver
 
 ! ---- * Parameters * ----
 
@@ -121,14 +120,12 @@ print *,'# eps=',eps
 
 call cpu_time(tstart)
 
+call solver%init( eta1_min, eta1_max, n)
+
 ! ---- * Allocation and creation of the splines * ----
 !L=4.0d0
-allocate (fgen(n))
 call sll_s_fft_init_c2c_1d(PlnFwd ,ntau, AF2,   AF1, sll_p_fft_forward)
 call sll_s_fft_init_c2c_1d(PlnBwd ,ntau, AF1,   AF2, sll_p_fft_backward)
-call sll_s_fft_init_c2c_1d(PlnF   ,n,   Fgen, Fgen,  sll_p_fft_forward)
-call sll_s_fft_init_c2c_1d(PlnB   ,n,   Fgen, Fgen,  sll_p_fft_backward)
-deallocate (fgen)
 
 ! allocations of the arrays
 SLL_ALLOCATE(eta1feet(n+1,n+1), err)
@@ -174,7 +171,7 @@ do step=1,nb_step
   taut=tau+t
   f0=fh_fsl(1:n,1:n)
   call sll_s_compute_cubic_spline_2d(fh_fsl,spl_2d)
-  call poissonsolver(f0,r_array,taut,lx,n,ntau,En,Enr,Ent,PlnF,PlnB)
+  call solver%solve1(f0,taut,n,ntau,En,Enr,Ent)
   call ge0(n,ntau,taut,x1,En,Ent,Enr,gn,gnt,gnr)
 
   do i=1,n+1
@@ -305,7 +302,7 @@ do step=1,nb_step
   enddo
   call sll_s_deposit_value_2d(eta1feet,eta2feet,spl_2d,fh_fsl) !function value at the half time
   f0=fh_fsl(1:n,1:n)
-  call poissonsolver2(f0,r_array,taut,lx,n,ntau,En,PlnF,PlnB)
+  call solver%solve2(f0,taut,n,ntau,En)
   !------End evaluation and continue 2nd solver-------------
   call ge2(n,ntau,taut,dreal(Ftilde1),dreal(Ftilde2),En,gn)
   do i=1,n+1
@@ -348,8 +345,7 @@ f0=fh_fsl(1:n,1:n)
 call fvrinterp(f0,t,r_array,n,fvr)
 call sll_s_fft_free(PlnFwd)
 call sll_s_fft_free(PlnBwd)
-call sll_s_fft_free(PlnF)
-call sll_s_fft_free(PlnB)
+call solver%free()
 
 call cpu_time(tend)
 print"('CPU time = ', g15.3)", tend - tstart
