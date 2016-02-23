@@ -18,9 +18,10 @@ use sll_m_xdmf
 
 implicit none
 
-sll_comp64, parameter :: sll_p_i0 = (0.0_f64, 0.0_f64)
-sll_int32,  parameter :: n        = 128
-sll_int32,  parameter :: ntau     = 32
+sll_comp64, parameter :: sll_p_i0   = (0.0_f64, 0.0_f64)
+sll_int32,  parameter :: n          = 128
+sll_int32,  parameter :: ntau       = 32
+sll_real64, parameter :: final_time = 0.4_f64
 
 type(sll_t_fft) :: fw_fft
 type(sll_t_fft) :: bw_fft
@@ -33,8 +34,7 @@ sll_int32  :: bc1_type,bc2_type,err
 sll_real64 :: delta_eta1
 sll_real64 :: eta1_min
 sll_real64 :: eta1_max
-sll_real64 :: xi1_0,xi2_0
-sll_real64 :: T,eps
+sll_real64 :: eps
 sll_real64 :: eta1,  eta2
 sll_real64 :: x1(n+1), x2(n+1)
 
@@ -77,7 +77,6 @@ sll_real32 :: fdum, error
 sll_real64 :: tstart, tend
 sll_int32  :: ierr
 
-
 type(poisson) :: solver
 
 ! ---- * Parameters * ----
@@ -90,8 +89,6 @@ eta1_max =  4.0_f64
 
 ! --- Space and time parameters --
 
-! Final time
-T = 0.4_f64
 
 ! ---- * Construction of the mesh * ----
 bc1_type = SLL_P_PERIODIC
@@ -104,16 +101,16 @@ delta_eta1 = (eta1_max-eta1_min)/real(n,f64)
 
 ! time step and number of steps
 k       = 0.05d0  !T*delta_eta1
-nb_step = floor(T/k)
+nb_step = floor(final_time/k)
 eps     = 1.00d0
 h       = 2.0d0 * sll_p_pi/ real(ntau,f64)
 
 ! ---- * Messages * ----
 
-print *,'# N=',n
-print *,'# k=',k
-print *,'# T=',T
-print *,'# eps=',eps
+print *,'# N   = ',n
+print *,'# k   = ',k
+print *,'# T   = ',final_time
+print *,'# eps = ',eps
 
 call cpu_time(tstart)
 
@@ -157,14 +154,14 @@ m    = ntau/2
 ltau = [(real(l,f64),l=0,m-1),(real(l,f64),l=-m,-1)]
 m    = n/2
 lx   = [(real(l,f64),l=0,m-1),(real(l,f64),l=-m,-1)]*2.0d0*sll_p_pi/(eta1_max-eta1_min)
-t    = 0.0d0
 
 !t1= second();
 !-------- * Evolution in time * ---------
 do step=1,nb_step
 
-  taut = tau + t
+  taut = tau + real(step-1,f64)*k/eps
   f0   = fh_fsl(1:n,1:n)
+
   call sll_s_compute_cubic_spline_2d(fh_fsl,spl_2d)
   call solver%solve1(f0,taut,n,ntau,En,Enr,Ent)
   call ge0(n,ntau,taut,x1,En,Ent,Enr,gn,gnt,gnr)
@@ -172,35 +169,32 @@ do step=1,nb_step
   do i=1,n+1
     do j=1,n+1
 
-      xi1_0 = x1(i)
-      xi2_0 = x2(j)
-
       !------------for 1st order correction------------------
       do m=0,ntau-1
-        F1(m) = rfct1(taut(m), ntau, xi1_0, xi2_0, gn(m,i,j))
-        F2(m) = rfct2(taut(m), ntau, xi1_0, xi2_0, gn(m,i,j))
+        F1(m) = rfct1(taut(m), ntau, x1(i), x2(j), gn(m,i,j))
+        F2(m) = rfct2(taut(m), ntau, x1(i), x2(j), gn(m,i,j))
       enddo
 
-      call sll_s_fft_exec_c2c_1d(fw_fft, F1, F1)
-      call sll_s_fft_exec_c2c_1d(fw_fft, F2, F2)
+      call sll_s_fft_exec_c2c_1d(fw_fft, F1, tmp1_f)
+      call sll_s_fft_exec_c2c_1d(fw_fft, F2, tmp2_f)
 
-      Ftilde1(:,i,j) = F1
-      Ftilde2(:,i,j) = F2
+      Ftilde1(:,i,j) = tmp1_f
+      Ftilde2(:,i,j) = tmp2_f
 
-      tmp1(1:ntau-1) = - sll_p_i1 * F1(1:ntau-1) / ltau(1:ntau-1)
-      tmp2(1:ntau-1) = - sll_p_i1 * F2(1:ntau-1) / ltau(1:ntau-1)
+      tmp1_f(1:ntau-1) = - sll_p_i1 * tmp1_f(1:ntau-1) / ltau(1:ntau-1)
+      tmp2_f(1:ntau-1) = - sll_p_i1 * tmp2_f(1:ntau-1) / ltau(1:ntau-1)
 
-      tmp1(0) = sll_p_i0
-      tmp2(0) = sll_p_i0
+      tmp1_f(0) = sll_p_i0
+      tmp2_f(0) = sll_p_i0
 
-      call sll_s_fft_exec_c2c_1d(bw_fft, tmp1, F1)
-      call sll_s_fft_exec_c2c_1d(bw_fft, tmp2, F2)
+      call sll_s_fft_exec_c2c_1d(bw_fft, tmp1_f, F1)
+      call sll_s_fft_exec_c2c_1d(bw_fft, tmp2_f, F2)
 
-      F1 = F1 - sum(tmp1)
-      F2 = F2 - sum(tmp2)
+      F1 = F1 - sum(tmp1_f)
+      F2 = F2 - sum(tmp2_f)
 
-      w1_0(:,i,j) = xi1_0 + eps*real(F1)
-      w2_0(:,i,j) = xi2_0 + eps*real(F2)
+      w1_0(:,i,j) = x1(i) + eps*real(F1)
+      w2_0(:,i,j) = x2(j) + eps*real(F2)
 
     enddo
   enddo
@@ -316,7 +310,7 @@ do step=1,nb_step
 
   !------End evaluation and continue 2nd solver-------------
 
-  call ge2(n,ntau,taut,dreal(Ftilde1),dreal(Ftilde2),En,gn)
+  call ge2(n,ntau,taut,real(Ftilde1),real(Ftilde2),En,gn)
 
   do i=1,n+1
     do j=1,n+1
@@ -358,11 +352,9 @@ do step=1,nb_step
 
   call sll_s_deposit_value_2d(eta1feet,eta2feet,spl_2d,fh_fsl)
 
-  t = real(step,f64)*k/eps
-
-  print"('Step =', i6, ' Time = ', g15.3)", step, t
+  print"('Step =', i6, ' Time = ', g15.3)", step, real(step*k/eps)
   f0=fh_fsl(1:n,1:n)
-  call solver%interp(f0,t,n,fvr)
+  call solver%interp(f0,real(step*k/eps,f64),n,fvr)
   call sll_o_gnuplot_2d(n, x1, n, x2, fvr, 'fh', step, ierr)
   call sll_s_xdmf_rect2d_nodes( 'fh', fvr, 'fh', x1(1:n), x2(1:n), &
                                 'HDF5', step) 
