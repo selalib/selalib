@@ -22,8 +22,8 @@ type :: poisson
 
 contains
 
-  procedure :: init => init_poisson_solver 
-  procedure :: free => free_poisson_solver 
+  procedure :: init   => init_poisson_solver 
+  procedure :: free   => free_poisson_solver 
   procedure :: solve1 => poisson_solver_1
   procedure :: solve2 => poisson_solver_2
 
@@ -38,13 +38,13 @@ sll_int32 , intent(in)  :: num_cells
 sll_real64, intent(in)  :: xmin
 sll_real64, intent(in)  :: xmax
 
-sll_int32               :: l, m
+sll_int32               :: i, j, m
 sll_comp64, allocatable :: tmp(:)
 
 self%num_cells = num_cells
 m = num_cells/2
 allocate(self%lx(num_cells))
-self%lx = [ (real(l,f64), l=0,m-1), (real(l,f64), l=-m,-1 ) ]
+self%lx = [ (real(j,f64), j=0,m-1), (real(j,f64), j=-m,-1 ) ]
 self%lx = self%lx * 2.0d0*sll_p_pi/(xmax-xmin)
 
 self%L = 4.0_f64
@@ -66,6 +66,11 @@ self%spl_2d => sll_f_new_cubic_spline_2D(num_cells+1, &
 allocate(self%f0(num_cells+1,num_cells+1))
 self%f0 = 0.0_f64
 
+allocate(self%r(num_cells))
+do i = 1, num_cells
+  self%r(i) = xmin + (i-1) * (xmax-xmin)/real(num_cells,f64)
+end do
+
 end subroutine init_poisson_solver
 
 subroutine free_poisson_solver( self )
@@ -79,27 +84,27 @@ call sll_s_fft_free(self%bw)
 end subroutine free_poisson_solver
 
 !> PoissonSolver
-subroutine poisson_solver_1(self,fh_fsl,r,tau,Nn,Ntau,En,Enr,Ent)
+subroutine poisson_solver_1(self,fh_fsl,tau,Nn,Ntau,En,Enr,Ent)
 
-class(poisson)   :: self
-sll_int32, intent(in)   :: Nn,Ntau
-sll_real64, intent(in)      :: fh_fsl(Nn,Nn),r(Nn),tau(0:Ntau-1)
+class(poisson)              :: self
+sll_int32,  intent(in)      :: Nn,Ntau
+sll_real64, intent(in)      :: fh_fsl(Nn,Nn),tau(0:Ntau-1)
 sll_real64, intent(inout)   :: En(0:Ntau-1,1:Nn),Enr(0:Ntau-1,1:Nn),Ent(0:Ntau-1,1:Nn)
-sll_real64    :: x(1:Nn),L,fvr(Nn,Nn),ftv(Nn,Nn),ftr(Nn,Nn)
+sll_real64    :: x(1:Nn),fvr(Nn,Nn),ftv(Nn,Nn),ftr(Nn,Nn)
 sll_real64    :: ftemp1(Nn,Nn),ftemp2(Nn,Nn),xi1(0:Ntau-1,Nn+1,Nn+1),xi2(0:Ntau-1,Nn+1,Nn+1),v(Nn+1)
 sll_int32 :: n,m,i
 sll_comp64 :: fvptilde(1:Nn),fvptilde0(Nn),temp(Nn),sum0(Nn)
 sll_comp64 :: vctmp(Nn),uctmp(Nn)
 sll_real64 :: gn(0:Ntau-1,Nn+1,Nn+1)
-L=4.0d0
-x=r
+
+x=self%r
 x(Nn/2+1)=1.0d0
 do i=0,Ntau-1
-    call fvrinterp(fh_fsl,tau(i),r,Nn,fvr)
+    call fvrinterp(fh_fsl,tau(i),self%r,Nn,fvr)
     do n=1,Nn
         vctmp = fvr(n,:)
         call sll_s_fft_exec_c2c_1d(self%fw, vctmp, fvptilde)
-        sum0(n)=fvptilde(1)/real(Nn)*(2.0d0*L)*r(n) !r*int_R fdv
+        sum0(n)=fvptilde(1)/real(Nn)*(2.0d0*self%L)*self%r(n) 
     enddo
     call sll_s_fft_exec_c2c_1d(self%fw,sum0, fvptilde)
     do n=2,Nn
@@ -108,7 +113,7 @@ do i=0,Ntau-1
     fvptilde(1)=cmplx(0.0d0,0.0d0,kind=f64)
     call sll_s_fft_exec_c2c_1d(self%bw, fvptilde,temp)
     do n=1,Nn
-        En(i,n)=real(temp(n)-temp(Nn/2+1))/x(n) !g(tau,r)
+        En(i,n)=real(temp(n)-temp(Nn/2+1))/x(n) 
         Enr(i,n)=real(sum0(n)-En(i,n))/x(n)
     enddo
 enddo
@@ -128,8 +133,8 @@ do n=1,Nn
     ftr(:,n)=real(temp)  !\partial_\xi2 f_filde(\xi1,\xi2)
 enddo
 
-v(1:Nn)=r
-v(Nn+1)=L
+v(1:Nn)=self%r
+v(Nn+1)=self%L
 do i=0,Ntau-1
     do n=1,Nn+1
     do m=1,Nn+1
@@ -142,14 +147,14 @@ enddo
 call ge2(Nn,Ntau,tau,xi1,xi2,En,gn)
 
 do i=0,Ntau-1
-    call fvrinterp(ftv,tau(i),r,Nn,ftemp1)
-    call fvrinterp(ftr,tau(i),r,Nn,ftemp2)
+    call fvrinterp(ftv,tau(i),self%r,Nn,ftemp1)
+    call fvrinterp(ftr,tau(i),self%r,Nn,ftemp2)
     do n=1,Nn
         do m=1,Nn
         vctmp(m)=(cos(2.0d0*tau(i))**2*(xi1(i,n,m)*cos(tau(i))+xi2(i,n,m)*sin(tau(i)))+gn(i,n,m))*(-sin(tau(i))*ftemp1(n,m)+cos(tau(i))*ftemp2(n,m))!partial_t f_tilde(xi1,xi2)
         enddo
         call sll_s_fft_exec_c2c_1d(self%fw, vctmp, fvptilde)
-        sum0(n)=fvptilde(1)/real(Nn)*(2.0d0*L)*r(n)
+        sum0(n)=fvptilde(1)/real(Nn)*(2.0d0*self%L)*self%r(n)
     enddo
     call sll_s_fft_exec_c2c_1d(self%fw,sum0, fvptilde)
     do n=2,Nn
@@ -164,16 +169,14 @@ enddo
 end subroutine poisson_solver_1
 
 ! ---PoissonSolver-------
-subroutine poisson_solver_2(self,fh_fsl,r,tau,Nn,Ntau,En)
+subroutine poisson_solver_2(self,fh_fsl,tau,Nn,Ntau,En)
 
 class(poisson)   :: self
 sll_int32,       intent(in)    :: Nn,Ntau
 sll_real64,      intent(in)    :: fh_fsl(Nn,Nn)
-sll_real64,      intent(in)    :: r(Nn)
 sll_real64,      intent(in)    :: tau(0:Ntau-1)
 sll_real64,      intent(inout) :: En(0:Ntau-1,Nn)
 sll_real64                     :: x(Nn)
-sll_real64                     :: L
 sll_real64                     :: fvr(Nn,Nn)
 sll_int32                      :: n,m,i
 sll_comp64                     :: fvptilde(Nn)
@@ -181,17 +184,16 @@ sll_comp64                     :: temp(Nn)
 sll_comp64                     :: sum0(Nn)
 sll_comp64                     :: vctmp(Nn)
 
-L=4.0d0
-x=r
+x=self%r
 x(Nn/2+1)=1.0d0
 do i=0,Ntau-1
-  call fvrinterp(fh_fsl,tau(i),r,Nn,fvr)
+  call fvrinterp(fh_fsl,tau(i),self%r,Nn,fvr)
   do n=1,Nn
     do m=1,Nn
         vctmp(m) = fvr(n,m)
     enddo
     call sll_s_fft_exec_c2c_1d(self%fw, vctmp, fvptilde)
-    sum0(n)=fvptilde(1)/real(Nn)*(2.0d0*L)*r(n) !r*int_R fdv
+    sum0(n)=fvptilde(1)/real(Nn)*(2.0d0*self%L)*self%r(n) !r*int_R fdv
   enddo
   call sll_s_fft_exec_c2c_1d(self%fw,sum0, fvptilde)
   do n=2,Nn
@@ -200,7 +202,7 @@ do i=0,Ntau-1
   fvptilde(1)=cmplx(0.0d0,0.0d0,kind=f64)
   call sll_s_fft_exec_c2c_1d(self%bw, fvptilde,temp)
   do n=1,Nn
-    En(i,n)=real(temp(n)-temp(Nn/2+1))/x(n) !g(tau,r)
+    En(i,n)=real(temp(n)-temp(Nn/2+1))/x(n) 
   enddo
 enddo
 end subroutine poisson_solver_2
