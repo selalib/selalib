@@ -26,6 +26,7 @@ contains
   procedure :: free   => free_poisson_solver 
   procedure :: solve1 => poisson_solver_1
   procedure :: solve2 => poisson_solver_2
+  procedure :: interp => poisson_interp
 
 end type poisson
 
@@ -80,6 +81,7 @@ class(poisson)   :: self
 deallocate(self%lx)
 call sll_s_fft_free(self%fw)
 call sll_s_fft_free(self%bw)
+call sll_o_delete(self%spl_2d)
 
 end subroutine free_poisson_solver
 
@@ -100,7 +102,7 @@ sll_real64 :: gn(0:Ntau-1,Nn+1,Nn+1)
 x=self%r
 x(Nn/2+1)=1.0d0
 do i=0,Ntau-1
-    call fvrinterp(fh_fsl,tau(i),self%r,Nn,fvr)
+    call self%interp(fh_fsl,tau(i),Nn,fvr)
     do n=1,Nn
         vctmp = fvr(n,:)
         call sll_s_fft_exec_c2c_1d(self%fw, vctmp, fvptilde)
@@ -147,8 +149,8 @@ enddo
 call ge2(Nn,Ntau,tau,xi1,xi2,En,gn)
 
 do i=0,Ntau-1
-    call fvrinterp(ftv,tau(i),self%r,Nn,ftemp1)
-    call fvrinterp(ftr,tau(i),self%r,Nn,ftemp2)
+    call self%interp(ftv,tau(i),Nn,ftemp1)
+    call self%interp(ftr,tau(i),Nn,ftemp2)
     do n=1,Nn
         do m=1,Nn
         vctmp(m)=(cos(2.0d0*tau(i))**2*(xi1(i,n,m)*cos(tau(i))+xi2(i,n,m)*sin(tau(i)))+gn(i,n,m))*(-sin(tau(i))*ftemp1(n,m)+cos(tau(i))*ftemp2(n,m))!partial_t f_tilde(xi1,xi2)
@@ -187,7 +189,7 @@ sll_comp64                     :: vctmp(Nn)
 x=self%r
 x(Nn/2+1)=1.0d0
 do i=0,Ntau-1
-  call fvrinterp(fh_fsl,tau(i),self%r,Nn,fvr)
+  call self%interp(fh_fsl,tau(i),Nn,fvr)
   do n=1,Nn
     do m=1,Nn
         vctmp(m) = fvr(n,m)
@@ -206,5 +208,35 @@ do i=0,Ntau-1
   enddo
 enddo
 end subroutine poisson_solver_2
+
+subroutine poisson_interp(self, fh_fsl,t,n,fvr)
+class(poisson)              :: self
+sll_int32,  intent(in)      :: n
+sll_real64, intent(in)      :: fh_fsl(n,n)
+sll_real64, intent(in)      :: t
+sll_real64, intent(inout)   :: fvr(n,n)
+
+sll_real64                  :: x, y
+sll_int32                   :: i, j
+
+self%f0(1:n,1:n) = fh_fsl
+self%f0(n+1,:)   = 0.0d0
+self%f0(:,n+1)   = 0.0d0
+
+call sll_s_compute_cubic_spline_2d(self%f0, self%spl_2d)
+
+do j=1,n
+  do i=1,n
+    x=cos(t)*self%r(i)-sin(t)*self%r(j)
+    y=sin(t)*self%r(i)+cos(t)*self%r(j)
+    if (abs(x)<self%L .and. abs(y)<self%L) then
+      fvr(i,j)=sll_f_interpolate_value_2d(x,y,self%spl_2d)
+    else
+      fvr(i,j)=0.0d0
+    endif
+  enddo
+enddo
+
+end subroutine poisson_interp
 
 end module poisson_solver
