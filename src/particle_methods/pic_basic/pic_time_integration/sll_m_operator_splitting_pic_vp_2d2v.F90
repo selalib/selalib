@@ -52,6 +52,8 @@ module sll_m_operator_splitting_pic_vp_2d2v
      procedure :: operatorT => advection_x_pic_vp_2d2v  !< Operator for x advection
      procedure :: operatorV => advection_v_pic_vp_2d2v  !< Operator for v advection
      procedure :: strang_splitting => strang_splitting_pic_vp_2d2v !< Strang splitting
+     procedure :: field_solver => field_solver_vp_2d2v
+     procedure :: charge_deposition => charge_deposition_vp_2d2v
 
      procedure :: init => initialize_operator_splitting_pic_vp_2d2v !>initializer
   end type sll_t_operator_splitting_pic_vp_2d2v
@@ -66,6 +68,8 @@ contains
 
 
     call this%operatorT(0.5_f64*dt)
+    call this%charge_deposition()
+    call this%field_solver()
     call this%operatorV(dt)
     call this%operatorT(0.5_f64*dt)
 
@@ -116,18 +120,8 @@ contains
     sll_real64 :: efield(2)
     sll_real64 :: qm
     sll_real64 :: xi(3)
-    sll_real64 :: wi, wall(3)
+    sll_real64 :: wall(3)
 
-
-    ! Assemble right-hand-side
-    call this%pic_poisson%reset()
-    do i_part = 1, this%particle_group%n_particles
-       xi = this%particle_group%get_x(i_part)
-       wi = this%particle_group%get_charge(i_part, this%i_weight)
-       call this%pic_poisson%add_charge(xi(1:2), wi)
-    end do
-
-    call this%pic_poisson%solve_fields()
 
     ! V_new = V_old + dt *q/m* E
     qm = this%particle_group%species%q_over_m();
@@ -150,7 +144,37 @@ contains
     
 
   end subroutine advection_v_pic_vp_2d2v
-  
+
+  !---------------------------------------------------------------------------!
+  ! Charge deposition
+  subroutine charge_deposition_vp_2d2v(this)
+    class(sll_t_operator_splitting_pic_vp_2d2v), intent(inout) :: this !< time splitting object 
+
+    sll_int32 :: i_part
+    sll_real64 :: xi(3)
+    sll_real64 :: wi
+
+
+    ! Assemble right-hand-side
+    call this%pic_poisson%reset()
+    do i_part = 1, this%particle_group%n_particles
+       xi = this%particle_group%get_x(i_part)
+       wi = this%particle_group%get_charge(i_part, this%i_weight)
+       call this%pic_poisson%add_charge(xi(1:2), wi)
+    end do
+
+  end subroutine charge_deposition_vp_2d2v
+
+
+  !---------------------------------------------------------------------------!
+  ! Solve Poisson's equation for the electric field
+  subroutine field_solver_vp_2d2v(this)
+    class(sll_t_operator_splitting_pic_vp_2d2v), intent(inout) :: this !< time splitting object 
+
+    call this%pic_poisson%solve_fields()
+
+  end subroutine field_solver_vp_2d2v
+
   !---------------------------------------------------------------------------!
   !> Initialization function
   subroutine initialize_operator_splitting_pic_vp_2d2v(&
