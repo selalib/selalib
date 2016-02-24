@@ -24,18 +24,17 @@ sll_real64            :: x
 sll_real64            :: y(1:Nn**2)
 sll_real64            :: L
 sll_real64            :: h
-
 sll_int32             :: n,m,p,q,i,j,ier
 
-L=4.0d0
-h=2.0d0*L/Nn
-t=0.4d0/0.5d0
+L=4.0_f64
+h=2.0_f64*L/Nn
+t=0.4_f64/0.5_f64
 m=Nn/2
 lx=(/ (n, n=0,m-1), (n, n=-m,-1 )/)*sll_p_pi/L
-y=0.0d0
+y=0.0_f64
 do i=1,Nn
   r(i)      = -L+(i-1)*h
-  fh_fsl(i) = dexp(-1.5d0*r(i)**2)
+  fh_fsl(i) = dexp(-1.5_f64*r(i)**2)
 enddo
 call sll_s_fft_init_c2c_1d(PlnF,Nn,ftemp,ftilde,SLL_P_FFT_FORWARD)
 ftemp=fh_fsl
@@ -46,7 +45,7 @@ do n=1,Nn
   do m=1,Nn
     x=dcos(t)*r(n)-dsin(t)*r(m)
     q=m+(n-1)*Nn
-    sum0=0.0d0
+    sum0=0.0_f64
     if (dabs(x)<L) then
       j=j+1
       y(j)=x
@@ -69,21 +68,13 @@ do n=1,Nn
       j=j+1
       fnufft(q)=dreal(cj(j))
     else
-      fnufft(q)=0.0d0
+      fnufft(q)=0.0_f64
     endif
   enddo
 enddo
-fh=0.0d0
-do i=1,Nn**2
-  if (dabs(fvr(i)-fnufft(i))>fh) then
-    fh=dabs(fvr(i)-fnufft(i))
-  endif
-enddo
+
+fh = maxval(abs(fvr-fnufft))
+
 print *,'# max error', fh
 
-!open(unit=850,file='fh.dat')
-!do i=1,Nn
-!write(850,*) fvr(i)-fnufft(i)!,fvr(i,j)!, !eta2feet(i,j),eta1feet(i,j),
-!enddo
-!close(850)
-end program
+end program test_nufft_1d
