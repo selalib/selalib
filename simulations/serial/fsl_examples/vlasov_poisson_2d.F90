@@ -7,8 +7,6 @@ program test_deposit_cubic_splines
 #include "sll_assert.h"
 #include "sll_memory.h"
 
-use deposit_cubic_splines
-use poisson_solver
 use sll_m_cubic_splines
 use sll_m_constants
 use sll_m_boundary_condition_descriptors
@@ -77,6 +75,19 @@ sll_real32 :: fdum, error
 sll_real64 :: tstart, tend
 sll_int32  :: ierr
 
+type :: poisson
+
+  sll_comp64, allocatable              :: lx(:)
+  type(sll_t_fft)                      :: fw
+  type(sll_t_fft)                      :: bw
+  sll_real64                           :: L
+  sll_real64, allocatable              :: r(:)
+  sll_int32                            :: num_cells
+  type(sll_t_cubic_spline_2d), pointer :: spl_2d
+  sll_real64, allocatable              :: f0(:,:)
+
+end type poisson
+
 type(poisson) :: solver
 sll_real64    :: E0(n+1)
 sll_real64    :: E1(n+1)
@@ -131,7 +142,7 @@ print *,'# eps = ',eps
 
 call cpu_time(tstart)
 
-call solver%init( eta1_min, eta1_max, n)
+call init_poisson_solver( solver, eta1_min, eta1_max, n)
 
 call sll_s_fft_init_c2c_1d(fw_fft ,ntau, tmp1, tmp1_f, sll_p_fft_forward)
 call sll_s_fft_init_c2c_1d(bw_fft ,ntau, tmp1_f, tmp1, sll_p_fft_backward)
@@ -186,106 +197,101 @@ do step=1,nb_step
 
   call sll_s_compute_cubic_spline_2d(fh_fsl,spl_2d)
 
-  !call solver%solve1(f0,taut,n,ntau,En,Enr,Ent)
-
-!subroutine poisson_solver_1(self,fh_fsl,tau,n,ntau,En,Enr,Ent)
-!
-!class(poisson)            :: self
-!sll_int32,  intent(in)    :: n,ntau
-!sll_real64, intent(in)    :: fh_fsl(n,n)
-!sll_real64, intent(in)    :: tau(0:ntau-1)
-!sll_real64, intent(inout) :: En(0:ntau-1,1:n)
-!sll_real64, intent(inout) :: Enr(0:ntau-1,1:n)
-!sll_real64, intent(inout) :: Ent(0:ntau-1,1:n)
-!
-!sll_real64 :: x(1:n)
-!sll_real64 :: fvr(n,n)
-!sll_comp64 :: tmp(n)
-!sll_comp64 :: sum0(n)
-!sll_real64 :: gn(0:ntau-1,n+1,n+1)
-!sll_int32  :: m, i, j
-
-r=solver%r
-r(n/2+1)=1.0d0
-do i=0,ntau-1
-
-  call solver%interp(f0,taut(i),n,fvr)
-  do j=1,n
-    tmp = cmplx(fvr(j,:),0.,f64)
-    call sll_s_fft_exec_c2c_1d(solver%fw, tmp, tmp)
-    sum0(j)=tmp(1)*cmplx(2.0*solver%L*solver%r(j)/n,0.0,f64) 
+  r=solver%r
+  r(n/2+1)=1.0d0
+  do i=0,ntau-1
+  
+    call poisson_interp(solver,f0,taut(i),n,fvr)
+    do j=1,n
+      tmp = cmplx(fvr(j,:),0.,f64)
+      call sll_s_fft_exec_c2c_1d(solver%fw, tmp, tmp)
+      sum0(j)=tmp(1)*cmplx(2.0*solver%L*solver%r(j)/n,0.0,f64) 
+    enddo
+    call sll_s_fft_exec_c2c_1d(solver%fw, sum0, tmp)
+    
+    tmp(2:n)=tmp(2:n)/solver%lx(2:n)
+    tmp(1)=cmplx(0.0d0,0.0d0,kind=f64)
+    call sll_s_fft_exec_c2c_1d(solver%bw, tmp,tmp)
+  
+    En (i,:)=real(tmp-tmp(n/2+1))/r
+    Enr(i,:)=real(sum0-En(i,:))/r
+  
   enddo
-  call sll_s_fft_exec_c2c_1d(solver%fw, sum0, tmp)
   
-  tmp(2:n)=tmp(2:n)/solver%lx(2:n)
-  tmp(1)=cmplx(0.0d0,0.0d0,kind=f64)
-  call sll_s_fft_exec_c2c_1d(solver%bw, tmp,tmp)
-
-  En (i,:)=real(tmp-tmp(n/2+1))/r
-  Enr(i,:)=real(sum0-En(i,:))/r
-
-enddo
-
-do j=1,n
-
-  vctmp = cmplx(f0(j,:),0.,f64)
-  uctmp = cmplx(f0(:,j),0.,f64)
-
-  call sll_s_fft_exec_c2c_1d(solver%fw, vctmp, vctmp)
-  call sll_s_fft_exec_c2c_1d(solver%fw, uctmp, uctmp)
+  do j=1,n
   
-  uctmp = uctmp/cmplx(n**2,0.,f64)*solver%lx
-  vctmp = vctmp/cmplx(n**2,0.,f64)*solver%lx
- 
-  call sll_s_fft_exec_c2c_1d(solver%bw, vctmp, tmp)
-  ftv(j,:)=real(tmp)  !\partial_\x1 f_tilde(\xi1,\xi2)
-  call sll_s_fft_exec_c2c_1d(solver%bw, uctmp, tmp)
-  ftr(:,j)=real(tmp)  !\partial_\x2 f_tilde(\xi1,\xi2)
-
-enddo
-
-v(1:n)=solver%r
-v(n+1)=solver%L
-do i=0,ntau-1
-  do j=1,n+1
-    do m=1,n+1
-      xi1(i,j,m)=v(j)*cos(taut(i))-v(m)*sin(taut(i))
-      xi2(i,j,m)=v(j)*sin(taut(i))+v(m)*cos(taut(i))
+    vctmp = cmplx(f0(j,:),0.,f64)
+    uctmp = cmplx(f0(:,j),0.,f64)
+  
+    call sll_s_fft_exec_c2c_1d(solver%fw, vctmp, vctmp)
+    call sll_s_fft_exec_c2c_1d(solver%fw, uctmp, uctmp)
+    
+    uctmp = uctmp/cmplx(n**2,0.,f64)*solver%lx
+    vctmp = vctmp/cmplx(n**2,0.,f64)*solver%lx
+   
+    call sll_s_fft_exec_c2c_1d(solver%bw, vctmp, tmp)
+    ftv(j,:)=real(tmp)  !\partial_\x1 f_tilde(\xi1,\xi2)
+    call sll_s_fft_exec_c2c_1d(solver%bw, uctmp, tmp)
+    ftr(:,j)=real(tmp)  !\partial_\x2 f_tilde(\xi1,\xi2)
+  
+  enddo
+  
+  v(1:n)=solver%r
+  v(n+1)=solver%L
+  do i=0,ntau-1
+    do j=1,n+1
+      do m=1,n+1
+        xi1(i,j,m)=v(j)*cos(taut(i))-v(m)*sin(taut(i))
+        xi2(i,j,m)=v(j)*sin(taut(i))+v(m)*cos(taut(i))
+      enddo
     enddo
   enddo
-enddo
-
-call ge2(n,ntau,taut,xi1,xi2,En,gn)
-
-do i=0,ntau-1
-
-  call solver%interp(ftv,taut(i),n,ftmp1)
-  call solver%interp(ftr,taut(i),n,ftmp2)
-
-  do j=1,n
-
-    do m=1,n
-      s1 =  xi1(i,j,m)*cos(taut(i))+xi2(i,j,m)*sin(taut(i))
-      s2 = -sin(taut(i))*ftmp1(j,m)+cos(taut(i))*ftmp2(j,m)
-      s3 = (cos(2.0_f64*taut(i))**2 * s1 + gn(i,j,m))*s2
-      vctmp(m) = cmplx(s3,0.,f64)
+  
+  do l=0,Ntau-1
+    E0(1:n)=En(l,1:n)
+    E0(n+1)=0.0_f64
+    call sll_s_compute_cubic_spline_1D(E0,spl_1d)
+    do j=1,n+1
+    do i=1,n+1
+      x=cos(taut(l))*xi1(l,i,j)+sin(taut(l))*xi2(l,i,j)
+      if (x > eta1_min .and. x < eta1_max) then
+        gn(l,i,j)=sll_f_interpolate_from_interpolant_value(x,spl_1d)
+      else
+        gn(l,i,j)=0.0_f64
+      endif
     enddo
-
-    call sll_s_fft_exec_c2c_1d(solver%fw, vctmp, tmp)
-    sum0(j)=tmp(1)*cmplx(2.0d0*solver%L*solver%r(j)/n,0.,f64)
-
+    enddo
   enddo
 
-  call sll_s_fft_exec_c2c_1d(solver%fw, sum0, tmp)
-
-  tmp(2:n)=tmp(2:n)/solver%lx(2:n)
-  tmp(1)=cmplx(0.0d0,0.0d0,kind=f64)
-
-  call sll_s_fft_exec_c2c_1d(solver%bw, tmp, tmp)
-
-  Ent(i,:)=real(tmp-tmp(n/2+1))/r
-
-enddo
+  do i=0,ntau-1
+  
+    call poisson_interp(solver,ftv,taut(i),n,ftmp1)
+    call poisson_interp(solver,ftr,taut(i),n,ftmp2)
+  
+    do j=1,n
+  
+      do m=1,n
+        s1 =  xi1(i,j,m)*cos(taut(i))+xi2(i,j,m)*sin(taut(i))
+        s2 = -sin(taut(i))*ftmp1(j,m)+cos(taut(i))*ftmp2(j,m)
+        s3 = (cos(2.0_f64*taut(i))**2 * s1 + gn(i,j,m))*s2
+        vctmp(m) = cmplx(s3,0.,f64)
+      enddo
+  
+      call sll_s_fft_exec_c2c_1d(solver%fw, vctmp, tmp)
+      sum0(j)=tmp(1)*cmplx(2.0d0*solver%L*solver%r(j)/n,0.,f64)
+  
+    enddo
+  
+    call sll_s_fft_exec_c2c_1d(solver%fw, sum0, tmp)
+  
+    tmp(2:n)=tmp(2:n)/solver%lx(2:n)
+    tmp(1)=cmplx(0.0d0,0.0d0,kind=f64)
+  
+    call sll_s_fft_exec_c2c_1d(solver%bw, tmp, tmp)
+  
+    Ent(i,:)=real(tmp-tmp(n/2+1))/r
+  
+  enddo
 
 
   do l=0,Ntau-1
@@ -553,7 +559,7 @@ enddo
   r(n/2+1)=1.0d0
   do i=0,ntau-1
   
-    call solver%interp(f0,taut(i),n,fvr)
+    call poisson_interp(solver,f0,taut(i),n,fvr)
   
     do j=1,n
       tmp = cmplx(fvr(j,:),0.0,f64)
@@ -636,7 +642,7 @@ enddo
 
   print"('Step =', i6, ' Time = ', g15.3)", step, real(step*k/eps)
   f0=fh_fsl(1:n,1:n)
-  call solver%interp(f0,real(step*k/eps,f64),n,fvr)
+  call poisson_interp(solver,f0,real(step*k/eps,f64),n,fvr)
   call sll_o_gnuplot_2d(n, x1, n, x2, fvr, 'fh', step, ierr)
   call sll_s_xdmf_rect2d_nodes( 'fh', fvr, 'fh', x1(1:n), x2(1:n), &
                                 'HDF5', step) 
@@ -646,7 +652,7 @@ call sll_o_delete(spl_1d)
 call sll_o_delete(spl_2d)
 call sll_s_fft_free(fw_fft)
 call sll_s_fft_free(bw_fft)
-call solver%free()
+call free_poisson_solver(solver)
 
 call cpu_time(tend)
 print"('CPU time = ', g15.3)", tend - tstart
@@ -755,6 +761,92 @@ function rfct2( tau, ntau, xi1, xi2, gn )
   rfct2 = cmplx(tmp,0.0,f64)
 
 end function rfct2
+
+subroutine init_poisson_solver( self, xmin, xmax, num_cells)
+
+class(poisson)   :: self
+sll_int32 , intent(in)  :: num_cells
+sll_real64, intent(in)  :: xmin
+sll_real64, intent(in)  :: xmax
+
+sll_int32               :: i, j, m
+sll_comp64, allocatable :: tmp(:)
+
+self%num_cells = num_cells
+m = num_cells/2
+allocate(self%lx(num_cells))
+self%lx = [ (cmplx(j,0.,f64), j=0,m-1), (cmplx(j,0.,f64), j=-m,-1 ) ]
+self%lx = self%lx * 2.0d0*sll_p_pi/(xmax-xmin) * sll_p_i1 * num_cells
+
+self%L = 4.0_f64
+
+allocate(tmp(num_cells))
+call sll_s_fft_init_c2c_1d(self%fw, num_cells, tmp, tmp, sll_p_fft_forward)
+call sll_s_fft_init_c2c_1d(self%bw, num_cells, tmp, tmp, sll_p_fft_backward)
+deallocate(tmp)
+
+self%spl_2d => sll_f_new_cubic_spline_2D(num_cells+1, &
+                                         num_cells+1, &
+                                                xmin, &
+                                                xmax, &
+                                                xmin, &
+                                                xmax, &
+                                      SLL_P_PERIODIC, &
+                                      SLL_P_PERIODIC)
+
+allocate(self%f0(num_cells+1,num_cells+1))
+self%f0 = 0.0_f64
+
+allocate(self%r(num_cells))
+do i = 1, num_cells
+  self%r(i) = xmin + (i-1) * (xmax-xmin)/real(num_cells,f64)
+end do
+
+end subroutine init_poisson_solver
+
+subroutine free_poisson_solver( self )
+
+class(poisson)   :: self
+
+deallocate(self%lx)
+call sll_s_fft_free(self%fw)
+call sll_s_fft_free(self%bw)
+call sll_o_delete(self%spl_2d)
+
+end subroutine free_poisson_solver
+
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+subroutine poisson_interp(self, fh_fsl,t,num_cells,fvr)
+
+class(poisson)              :: self
+sll_int32,  intent(in)      :: num_cells
+sll_real64, intent(in)      :: fh_fsl(num_cells,num_cells)
+sll_real64, intent(in)      :: t
+sll_real64, intent(inout)   :: fvr(num_cells,num_cells)
+
+sll_real64                  :: x, y
+sll_int32                   :: i, j
+
+self%f0(1:num_cells,1:num_cells) = fh_fsl
+self%f0(num_cells+1,:)   = 0.0d0
+self%f0(:,num_cells+1)   = 0.0d0
+
+call sll_s_compute_cubic_spline_2d(self%f0, self%spl_2d)
+
+do j=1,num_cells
+  do i=1,num_cells
+    x=cos(t)*self%r(i)-sin(t)*self%r(j)
+    y=sin(t)*self%r(i)+cos(t)*self%r(j)
+    if (abs(x)<self%L .and. abs(y)<self%L) then
+      fvr(i,j)=sll_f_interpolate_value_2d(x,y,self%spl_2d)
+    else
+      fvr(i,j)=0.0d0
+    endif
+  enddo
+enddo
+
+end subroutine poisson_interp
 
 end program test_deposit_cubic_splines
 
