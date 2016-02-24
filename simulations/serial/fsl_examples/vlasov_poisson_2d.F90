@@ -85,6 +85,16 @@ sll_real64    :: x
 sll_comp64    :: tmp(n)
 sll_comp64    :: sum0(n)
 sll_real64    :: r(n)
+sll_real64    :: xi1(0:ntau-1,n+1,n+1)
+sll_real64    :: xi2(0:ntau-1,n+1,n+1)
+sll_real64    :: ftv(n,n)
+sll_real64    :: ftr(n,n)
+sll_comp64    :: vctmp(n)
+sll_comp64    :: uctmp(n)
+sll_real64    :: v(n+1)
+sll_real64    :: s1, s2, s3
+sll_real64    :: ftmp1(n,n)
+sll_real64    :: ftmp2(n,n)
 
 ! ---- * Parameters * ----
 
@@ -175,7 +185,108 @@ do step=1,nb_step
   f0   = fh_fsl(1:n,1:n)
 
   call sll_s_compute_cubic_spline_2d(fh_fsl,spl_2d)
-  call solver%solve1(f0,taut,n,ntau,En,Enr,Ent)
+
+  !call solver%solve1(f0,taut,n,ntau,En,Enr,Ent)
+
+!subroutine poisson_solver_1(self,fh_fsl,tau,n,ntau,En,Enr,Ent)
+!
+!class(poisson)            :: self
+!sll_int32,  intent(in)    :: n,ntau
+!sll_real64, intent(in)    :: fh_fsl(n,n)
+!sll_real64, intent(in)    :: tau(0:ntau-1)
+!sll_real64, intent(inout) :: En(0:ntau-1,1:n)
+!sll_real64, intent(inout) :: Enr(0:ntau-1,1:n)
+!sll_real64, intent(inout) :: Ent(0:ntau-1,1:n)
+!
+!sll_real64 :: x(1:n)
+!sll_real64 :: fvr(n,n)
+!sll_comp64 :: tmp(n)
+!sll_comp64 :: sum0(n)
+!sll_real64 :: gn(0:ntau-1,n+1,n+1)
+!sll_int32  :: m, i, j
+
+r=solver%r
+r(n/2+1)=1.0d0
+do i=0,ntau-1
+
+  call solver%interp(f0,taut(i),n,fvr)
+  do j=1,n
+    tmp = cmplx(fvr(j,:),0.,f64)
+    call sll_s_fft_exec_c2c_1d(solver%fw, tmp, tmp)
+    sum0(j)=tmp(1)*cmplx(2.0*solver%L*solver%r(j)/n,0.0,f64) 
+  enddo
+  call sll_s_fft_exec_c2c_1d(solver%fw, sum0, tmp)
+  
+  tmp(2:n)=tmp(2:n)/solver%lx(2:n)
+  tmp(1)=cmplx(0.0d0,0.0d0,kind=f64)
+  call sll_s_fft_exec_c2c_1d(solver%bw, tmp,tmp)
+
+  En (i,:)=real(tmp-tmp(n/2+1))/r
+  Enr(i,:)=real(sum0-En(i,:))/r
+
+enddo
+
+do j=1,n
+
+  vctmp = cmplx(f0(j,:),0.,f64)
+  uctmp = cmplx(f0(:,j),0.,f64)
+
+  call sll_s_fft_exec_c2c_1d(solver%fw, vctmp, vctmp)
+  call sll_s_fft_exec_c2c_1d(solver%fw, uctmp, uctmp)
+  
+  uctmp = uctmp/cmplx(n**2,0.,f64)*solver%lx
+  vctmp = vctmp/cmplx(n**2,0.,f64)*solver%lx
+ 
+  call sll_s_fft_exec_c2c_1d(solver%bw, vctmp, tmp)
+  ftv(j,:)=real(tmp)  !\partial_\x1 f_tilde(\xi1,\xi2)
+  call sll_s_fft_exec_c2c_1d(solver%bw, uctmp, tmp)
+  ftr(:,j)=real(tmp)  !\partial_\x2 f_tilde(\xi1,\xi2)
+
+enddo
+
+v(1:n)=solver%r
+v(n+1)=solver%L
+do i=0,ntau-1
+  do j=1,n+1
+    do m=1,n+1
+      xi1(i,j,m)=v(j)*cos(taut(i))-v(m)*sin(taut(i))
+      xi2(i,j,m)=v(j)*sin(taut(i))+v(m)*cos(taut(i))
+    enddo
+  enddo
+enddo
+
+call ge2(n,ntau,taut,xi1,xi2,En,gn)
+
+do i=0,ntau-1
+
+  call solver%interp(ftv,taut(i),n,ftmp1)
+  call solver%interp(ftr,taut(i),n,ftmp2)
+
+  do j=1,n
+
+    do m=1,n
+      s1 =  xi1(i,j,m)*cos(taut(i))+xi2(i,j,m)*sin(taut(i))
+      s2 = -sin(taut(i))*ftmp1(j,m)+cos(taut(i))*ftmp2(j,m)
+      s3 = (cos(2.0_f64*taut(i))**2 * s1 + gn(i,j,m))*s2
+      vctmp(m) = cmplx(s3,0.,f64)
+    enddo
+
+    call sll_s_fft_exec_c2c_1d(solver%fw, vctmp, tmp)
+    sum0(j)=tmp(1)*cmplx(2.0d0*solver%L*solver%r(j)/n,0.,f64)
+
+  enddo
+
+  call sll_s_fft_exec_c2c_1d(solver%fw, sum0, tmp)
+
+  tmp(2:n)=tmp(2:n)/solver%lx(2:n)
+  tmp(1)=cmplx(0.0d0,0.0d0,kind=f64)
+
+  call sll_s_fft_exec_c2c_1d(solver%bw, tmp, tmp)
+
+  Ent(i,:)=real(tmp-tmp(n/2+1))/r
+
+enddo
+
 
   do l=0,Ntau-1
   
