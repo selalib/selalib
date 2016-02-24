@@ -173,7 +173,66 @@ do step=1,nb_step
 
   call sll_s_compute_cubic_spline_2d(fh_fsl,spl_2d)
   call solver%solve1(f0,taut,n,ntau,En,Enr,Ent)
-  call ge0(n,ntau,taut,x1,En,Ent,Enr,gn,gnt,gnr)
+
+  do l=0,Ntau-1
+  
+    E0(1:n)=En(l,1:n)
+    E0(n+1)=0.0_f64
+  
+    call sll_s_compute_cubic_spline_1D(E0,spl_1d)
+  
+    do j=1,n+1
+      do i=1,n+1
+        x=cos(taut(l))*x1(i)+sin(taut(l))*x1(j)
+        if (x > eta1_min .and. x < eta1_max) then
+          gn (l,i,j) = sll_f_interpolate_from_interpolant_value(x,spl_1d)
+        else
+          gn( l,i,j)  = 0.0_f64
+        endif
+      enddo
+    enddo
+  
+  enddo
+  
+  do l=0,Ntau-1
+  
+    E1(1:n)=Enr(l,1:n)
+    E1(n+1)=0.0_f64
+  
+    call sll_s_compute_cubic_spline_1D(E1,spl_1d)
+  
+    do j=1,n+1
+      do i=1,n+1
+        x=cos(taut(l))*x1(i)+sin(taut(l))*x1(j)
+        if (x > eta1_min .and. x < eta1_max) then
+          gnr(l,i,j) = sll_f_interpolate_from_interpolant_value(x,spl_1d)
+        else
+          gnr(l,i,j) = 0.0_f64
+        endif
+      enddo
+    enddo
+  
+  enddo
+  
+  do l=0,Ntau-1
+  
+    E2(1:n)=Ent(l,1:n)
+    E2(n+1)=0.0_f64
+  
+    call sll_s_compute_cubic_spline_1D(E2,spl_1d)
+  
+    do j=1,n+1
+      do i=1,n+1
+        x=cos(taut(l))*x1(i)+sin(taut(l))*x1(j)
+        if (x > eta1_min .and. x < eta1_max) then
+          gnt(l,i,j) = sll_f_interpolate_from_interpolant_value(x,spl_1d)
+        else
+          gnt(l,i,j) = 0.0_f64
+        endif
+      enddo
+    enddo
+  
+  enddo
 
   do i=1,n+1
     do j=1,n+1
