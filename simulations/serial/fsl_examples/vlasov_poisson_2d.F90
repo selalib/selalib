@@ -9,6 +9,12 @@ use sll_m_boundary_condition_descriptors
 use sll_m_fft
 use sll_m_gnuplot
 use sll_m_xdmf
+use sll_m_cubic_spline_interpolator_1d
+use sll_m_cubic_spline_interpolator_2d
+use sll_m_interpolators_1d_base
+use sll_m_interpolators_2d_base
+
+
 
 implicit none
 
@@ -20,8 +26,11 @@ sll_real64, parameter :: final_time = 0.4_f64
 type(sll_t_fft) :: fw_fft
 type(sll_t_fft) :: bw_fft
 
+class(sll_c_interpolator_1d), pointer :: interp_1d
+
+type(sll_t_cubic_spline_interpolator_1d), target :: spl_1d
+
 type(sll_t_cubic_spline_2d), pointer :: spl_2d
-type(sll_t_cubic_spline_1D), pointer :: spl_1d
 
 sll_int32  :: step,nb_step
 sll_int32  :: i,j,l
@@ -64,6 +73,7 @@ sll_int32  :: m, ref_id
 sll_real32 :: fdum, error
 sll_real64 :: tstart, tend
 sll_int32  :: ierr
+
 
 type :: fsl_solver
 
@@ -137,10 +147,8 @@ call sll_s_fft_init_c2c_1d(bw_fft ,ntau, tmp1_f, tmp1, sll_p_fft_backward)
 SLL_ALLOCATE(eta1feet(n+1,n+1), err)
 SLL_ALLOCATE(eta2feet(n+1,n+1), err)
 
-spl_1d => sll_f_new_cubic_spline_1d( n+1,      &
-                                     eta1_min, &
-                                     eta1_max, &
-                                     SLL_P_PERIODIC)
+call spl_1d%initialize(n+1, eta1_min, eta1_max, sll_p_periodic )
+interp_1d => spl_1d
 
 spl_2d => sll_f_new_cubic_spline_2d( n+1,      &
                                      n+1,      &
@@ -183,7 +191,6 @@ ltau = [(cmplx(l,0.,f64),l=0,m-1),(cmplx(l,0.,f64),l=-m,-1)] / sll_p_i1
 !t1= second();
 !-------- * Evolution in time * ---------
 do step=1,nb_step
-
 
   call sll_s_compute_cubic_spline_2d(fh_fsl,spl_2d)
 
@@ -238,12 +245,12 @@ do step=1,nb_step
   enddo
   
   do l=0,Ntau-1
-    call sll_s_compute_cubic_spline_1D(Ens(:,l),spl_1d)
+    call interp_1d%compute_interpolants(Ens(:,l))
     do j=1,n+1
     do i=1,n+1
       x=cos(tau(l))*xi1(l,i,j)+sin(tau(l))*xi2(l,i,j)
       if (x > eta1_min .and. x < eta1_max) then
-        gn(l,i,j)=sll_f_interpolate_from_interpolant_value(x,spl_1d)
+        gn(l,i,j)=interp_1d%interpolate_from_interpolant_value(x)
       else
         gn(l,i,j)=0.0_f64
       endif
@@ -284,13 +291,13 @@ do step=1,nb_step
 
   do l=0,Ntau-1
   
-    call sll_s_compute_cubic_spline_1D(Ens(:,l),spl_1d)
+    call interp_1d%compute_interpolants(Ens(:,l))
   
     do j=1,n+1
       do i=1,n+1
         x=cos(tau(l))*x1(i)+sin(tau(l))*x1(j)
         if (x > eta1_min .and. x < eta1_max) then
-          gn (l,i,j) = sll_f_interpolate_from_interpolant_value(x,spl_1d)
+          gn (l,i,j) = interp_1d%interpolate_from_interpolant_value(x)
         else
           gn( l,i,j)  = 0.0_f64
         endif
@@ -301,13 +308,13 @@ do step=1,nb_step
   
   do l=0,Ntau-1
   
-    call sll_s_compute_cubic_spline_1D(Enr(:,l),spl_1d)
+    call interp_1d%compute_interpolants(Enr(:,l))
   
     do j=1,n+1
       do i=1,n+1
         x=cos(tau(l))*x1(i)+sin(tau(l))*x1(j)
         if (x > eta1_min .and. x < eta1_max) then
-          gnr(l,i,j) = sll_f_interpolate_from_interpolant_value(x,spl_1d)
+          gnr(l,i,j) = interp_1d%interpolate_from_interpolant_value(x)
         else
           gnr(l,i,j) = 0.0_f64
         endif
@@ -318,13 +325,13 @@ do step=1,nb_step
   
   do l=0,Ntau-1
   
-    call sll_s_compute_cubic_spline_1D(Ent(:,l),spl_1d)
+    call interp_1d%compute_interpolants(Ent(:,l))
   
     do j=1,n+1
       do i=1,n+1
         x=cos(tau(l))*x1(i)+sin(tau(l))*x1(j)
         if (x > eta1_min .and. x < eta1_max) then
-          gnt(l,i,j) = sll_f_interpolate_from_interpolant_value(x,spl_1d)
+          gnt(l,i,j) = interp_1d%interpolate_from_interpolant_value(x)
         else
           gnt(l,i,j) = 0.0_f64
         endif
@@ -368,39 +375,39 @@ do step=1,nb_step
 
   do l=0,Ntau-1
   
-    call sll_s_compute_cubic_spline_1d(Ens(:,l),spl_1d)
+    call interp_1d%compute_interpolants(Ens(:,l))
   
     do j=1,n+1
     do i=1,n+1
       x=cos(tau(l))*xi1(l,i,j)+sin(tau(l))*xi2(l,i,j)
       if ( x > eta1_min .and. x < eta1_max) then
-        gn(l,i,j) = sll_f_interpolate_from_interpolant_value(x,spl_1d)
+        gn(l,i,j) = interp_1d%interpolate_from_interpolant_value(x)
       else
         gn(l,i,j) = 0.0_f64
       endif
     enddo
     enddo
 
-    call sll_s_compute_cubic_spline_1d(Enr(:,l),spl_1d)
+    call interp_1d%compute_interpolants(Enr(:,l))
 
     do j=1,n+1
     do i=1,n+1
       x=cos(tau(l))*xi1(l,i,j)+sin(tau(l))*xi2(l,i,j)
       if ( x > eta1_min .and. x < eta1_max) then
-        gnr(l,i,j) = sll_f_interpolate_from_interpolant_value(x,spl_1d)
+        gnr(l,i,j) = interp_1d%interpolate_from_interpolant_value(x)
       else
         gnr(l,i,j) = 0.0_f64
       endif
     enddo
     enddo
 
-    call sll_s_compute_cubic_spline_1d(Ent(:,l),spl_1d)
+    call interp_1d%compute_interpolants(Ent(:,l))
   
     do j=1,n+1
     do i=1,n+1
       x=cos(tau(l))*xi1(l,i,j)+sin(tau(l))*xi2(l,i,j)
       if ( x > eta1_min .and. x < eta1_max) then
-        gnt(l,i,j) = sll_f_interpolate_from_interpolant_value(x,spl_1d)
+        gnt(l,i,j) = interp_1d%interpolate_from_interpolant_value(x)
       else
         gnt(l,i,j) = 0.0_f64
       endif
@@ -471,12 +478,12 @@ do step=1,nb_step
   enddo
 
   do l=0,Ntau-1
-    call sll_s_compute_cubic_spline_1D(Ens(:,l),spl_1d)
+    call interp_1d%compute_interpolants(Ens(:,l))
     do j=1,n+1
     do i=1,n+1
       x=cos(tau(l))*xi1(l,i,j)+sin(tau(l))*xi2(l,i,j)
       if (x > eta1_min .and. x < eta1_max ) then
-        gn(l,i,j)=sll_f_interpolate_from_interpolant_value(x,spl_1d)
+        gn(l,i,j)=interp_1d%interpolate_from_interpolant_value(x)
       else
         gn(l,i,j)=0.0_f64
       endif
@@ -551,13 +558,13 @@ do step=1,nb_step
   !------End evaluation and continue 2nd solver-------------
 
   do l=0,Ntau-1
-    call sll_s_compute_cubic_spline_1D(Ens(:,l),spl_1d)
+    call interp_1d%compute_interpolants(Ens(:,l))
     do j=1,n+1
     do i=1,n+1
       x = cos(tau(l))*real(ftilde1(l,i,j)) &
         + sin(tau(l))*real(ftilde2(l,i,j))
       if (x > eta1_min .and. x < eta1_max ) then
-        gn(l,i,j)=sll_f_interpolate_from_interpolant_value(x,spl_1d)
+        gn(l,i,j)=interp_1d%interpolate_from_interpolant_value(x)
       else
         gn(l,i,j)=0.0_f64
       endif
