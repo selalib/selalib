@@ -53,7 +53,6 @@ sll_real64 :: tau(0:ntau-1)
 sll_comp64 :: ltau(0:ntau-1)
 
 sll_real64 :: fh_fsl(n+1,n+1)
-sll_real64 :: f0(n,n)
 sll_real64 :: k, h
 sll_real64 :: Ens(n+1,0:ntau-1)
 sll_real64 :: Enr(n+1,0:ntau-1)
@@ -194,7 +193,6 @@ ltau = [(cmplx(l,0.,f64),l=0,m-1),(cmplx(l,0.,f64),l=-m,-1)] / sll_p_i1
 do step=1,nb_step
 
   taut = tau + real(step-1,f64)*k/eps
-  f0   = fh_fsl(1:n,1:n)
 
   call sll_s_compute_cubic_spline_2d(fh_fsl,spl_2d)
 
@@ -202,7 +200,7 @@ do step=1,nb_step
   r(n/2+1)=1.0d0
   do i=0,ntau-1
   
-    call fsl_interp(solver,f0,taut(i),n,fvr)
+    call fsl_interp(solver,fh_fsl,taut(i),n,fvr)
     do j=1,n
       tmp = cmplx(fvr(j,:),0.,f64)
       call sll_s_fft_exec_c2c_1d(solver%fw, tmp, tmp)
@@ -221,8 +219,8 @@ do step=1,nb_step
   
   do j=1,n
   
-    vctmp = cmplx(f0(j,:),0.,f64)
-    uctmp = cmplx(f0(:,j),0.,f64)
+    vctmp = cmplx(fh_fsl(j,1:n),0.,f64)
+    uctmp = cmplx(fh_fsl(1:n,j),0.,f64)
   
     call sll_s_fft_exec_c2c_1d(solver%fw, vctmp, vctmp)
     call sll_s_fft_exec_c2c_1d(solver%fw, uctmp, uctmp)
@@ -533,13 +531,11 @@ do step=1,nb_step
 
   call sll_s_deposit_value_2d(eta1feet,eta2feet,spl_2d,fh_fsl) !function value at the half time
 
-  f0 = fh_fsl(1:n,1:n)
-
   r=solver%r
   r(n/2+1)=1.0d0
   do i=0,ntau-1
   
-    call fsl_interp(solver,f0,taut(i),n,fvr)
+    call fsl_interp(solver,fh_fsl,taut(i),n,fvr)
   
     do j=1,n
       tmp = cmplx(fvr(j,:),0.0,f64)
@@ -619,8 +615,7 @@ do step=1,nb_step
   call sll_s_deposit_value_2d(eta1feet,eta2feet,spl_2d,fh_fsl)
 
   print"('Step =', i6, ' Time = ', g15.3)", step, real(step*k/eps)
-  f0=fh_fsl(1:n,1:n)
-  call fsl_interp(solver,f0,real(step*k/eps,f64),n,fvr)
+  call fsl_interp(solver,fh_fsl,real(step*k/eps,f64),n,fvr)
   call sll_o_gnuplot_2d(n, x1, n, x2, fvr, 'fh', step, ierr)
   call sll_s_xdmf_rect2d_nodes( 'fh', fvr, 'fh', x1(1:n), x2(1:n), &
                                 'HDF5', step) 
@@ -799,16 +794,16 @@ subroutine fsl_interp(self, fh_fsl,t,num_cells,fvr)
 
 type(fsl_solver)            :: self
 sll_int32,  intent(in)      :: num_cells
-sll_real64, intent(in)      :: fh_fsl(num_cells,num_cells)
+sll_real64, intent(in)      :: fh_fsl(:,:)
 sll_real64, intent(in)      :: t
 sll_real64, intent(inout)   :: fvr(num_cells,num_cells)
 
 sll_real64                  :: x, y
 sll_int32                   :: i, j
 
-self%f0(1:num_cells,1:num_cells) = fh_fsl
-self%f0(num_cells+1,:)   = 0.0d0
-self%f0(:,num_cells+1)   = 0.0d0
+self%f0(1:num_cells,1:num_cells) = fh_fsl(1:num_cells,1:num_cells)
+self%f0(num_cells+1,:)           = 0.0d0
+self%f0(:,num_cells+1)           = 0.0d0
 
 call sll_s_compute_cubic_spline_2d(self%f0, self%spl_2d)
 
