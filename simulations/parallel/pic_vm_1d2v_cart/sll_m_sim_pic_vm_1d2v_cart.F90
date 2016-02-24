@@ -150,7 +150,7 @@ contains
   ! Read in the simulation parameters from input file
   subroutine init_pic_vm_1d2v (sim, filename)
     class(sll_t_sim_pic_vm_1d2v_cart), intent(inout) :: sim
-    character(len=*), intent(in)                                :: filename
+    character(len=*),                  intent(in)    :: filename
 
     sll_int32   :: io_stat
     sll_int32   :: n_time_steps
@@ -465,15 +465,23 @@ contains
 
 !> Diagnostics for PIC Vlasov-Maxwell 1d2v 
 !> @todo (should be part of the library)
-  subroutine sll_s_time_history_diagnostics_pic_vm_1d2v(particle_group, maxwell_solver, time, degree, efield_dofs, bfield_dofs, mpi_rank, file_id)
+  subroutine sll_s_time_history_diagnostics_pic_vm_1d2v(&
+       particle_group, &
+       maxwell_solver, &
+       time, &
+       degree, &
+       efield_dofs, &
+       bfield_dofs, &
+       mpi_rank, &
+       file_id)
     class(sll_c_particle_group_base), intent(in) :: particle_group
-    class(sll_c_maxwell_1d_base), intent(in) :: maxwell_solver
-    sll_real64, intent(in) :: time
-    sll_real64, intent(in) :: efield_dofs(:,:)
-    sll_real64, intent(in) :: bfield_dofs(:)
-    sll_int32, intent(in) :: degree
-    sll_int32, intent(in) :: mpi_rank
-    sll_int32, intent(in)                  :: file_id
+    class(sll_c_maxwell_1d_base),     intent(in) :: maxwell_solver
+    sll_real64,                       intent(in) :: time
+    sll_real64,                       intent(in) :: efield_dofs(:,:)
+    sll_real64,                       intent(in) :: bfield_dofs(:)
+    sll_int32,                        intent(in) :: degree
+    sll_int32,                        intent(in) :: mpi_rank
+    sll_int32,                        intent(in) :: file_id
 
     ! local variables
     sll_real64 :: diagnostics_local(3)

@@ -95,7 +95,6 @@ module sll_m_sim_pic_vp_2d2v_cart
 
      ! Abstract operator splitting
      type(sll_t_operator_splitting_pic_vp_2d2v) :: propagator
-     !class(sll_t_operator_splitting), pointer :: propagator
 
      ! Control variate
      type(sll_t_control_variate), pointer :: control_variate
@@ -134,7 +133,7 @@ contains
   ! Read in the simulation parameters from input file
   subroutine init_pic_2d2v (sim, filename)
     class(sll_t_sim_pic_vp_2d2v_cart), intent(inout) :: sim
-    character(len=*), intent(in)                                :: filename
+    character(len=*),                  intent(in)    :: filename
 
     sll_int32   :: n_time_steps
     sll_real64  :: delta_t, alpha, n_mode, thermal_v1, thermal_v2
@@ -339,8 +338,8 @@ contains
   function control_variate_equi( this, xi, vi, time) result(sll_f_control_variate)
     class(sll_t_control_variate) :: this
     sll_real64, optional,  intent( in ) :: xi(:) !< particle position
-    sll_real64, optional, intent( in ) :: vi(:) !< particle velocity
-    sll_real64, optional, intent( in ) :: time  !< current time
+    sll_real64, optional,  intent( in ) :: vi(:) !< particle velocity
+    sll_real64, optional,  intent( in ) :: time  !< current time
     sll_real64               :: sll_f_control_variate
 
 
