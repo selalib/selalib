@@ -27,6 +27,7 @@ type(sll_t_fft) :: fw_fft
 type(sll_t_fft) :: bw_fft
 
 type(sll_t_cubic_spline_2d), pointer :: spl_2d
+type(sll_t_cubic_spline_1D), pointer :: spl_1d
 
 sll_int32  :: step,nb_step
 sll_int32  :: i,j,l
@@ -51,7 +52,7 @@ sll_comp64 :: w1c(0:ntau-1)
 sll_comp64 :: w2c(0:ntau-1)
 
 sll_real64 :: tau(0:ntau-1)
-sll_real64 :: ltau(0:ntau-1)
+sll_comp64 :: ltau(0:ntau-1)
 
 sll_real64 :: fh_fsl(n+1,n+1)
 sll_real64 :: f0(n,n)
@@ -65,7 +66,6 @@ sll_real64 :: gnt(0:ntau-1,n+1,n+1)
 sll_comp64 :: sumup1
 sll_comp64 :: sumup2
 sll_comp64 :: dtgn
-sll_real64 :: lx(1:n)
 sll_real64 :: fvr(1:n,1:n)
 sll_real64 :: taut(0:ntau-1)
 sll_real64 :: w1_0(0:ntau-1,n+1,n+1)
@@ -78,6 +78,10 @@ sll_real64 :: tstart, tend
 sll_int32  :: ierr
 
 type(poisson) :: solver
+sll_real64    :: E0(n+1)
+sll_real64    :: E1(n+1)
+sll_real64    :: E2(n+1)
+sll_real64    :: x
 
 ! ---- * Parameters * ----
 
@@ -122,8 +126,14 @@ call sll_s_fft_init_c2c_1d(bw_fft ,ntau, tmp1_f, tmp1, sll_p_fft_backward)
 ! allocations of the arrays
 SLL_ALLOCATE(eta1feet(n+1,n+1), err)
 SLL_ALLOCATE(eta2feet(n+1,n+1), err)
-spl_2d => sll_f_new_cubic_spline_2d( n+1,     &
-                                     n+1,     &
+
+spl_1d => sll_f_new_cubic_spline_1d( n+1,      &
+                                     eta1_min, &
+                                     eta1_max, &
+                                     SLL_P_PERIODIC)
+
+spl_2d => sll_f_new_cubic_spline_2d( n+1,      &
+                                     n+1,      &
                                      eta1_min, &
                                      eta1_max, &
                                      eta1_min, &
@@ -146,14 +156,13 @@ do i=1,n+1
     fh_fsl(i,j) = exp(-2.0d0*(x1(i)**2+x2(j)**2))
   end do
 end do
+
 do m=0,ntau-1
   tau(m)=real(m,f64)*h
 enddo
 
 m    = ntau/2
-ltau = [(real(l,f64),l=0,m-1),(real(l,f64),l=-m,-1)]
-m    = n/2
-lx   = [(real(l,f64),l=0,m-1),(real(l,f64),l=-m,-1)]*2.0d0*sll_p_pi/(eta1_max-eta1_min)
+ltau = [(cmplx(l,0.,f64),l=0,m-1),(cmplx(l,0.,f64),l=-m,-1)] / sll_p_i1
 
 !t1= second();
 !-------- * Evolution in time * ---------
@@ -181,8 +190,8 @@ do step=1,nb_step
       Ftilde1(:,i,j) = tmp1_f
       Ftilde2(:,i,j) = tmp2_f
 
-      tmp1_f(1:ntau-1) = - sll_p_i1 * tmp1_f(1:ntau-1) / ltau(1:ntau-1)
-      tmp2_f(1:ntau-1) = - sll_p_i1 * tmp2_f(1:ntau-1) / ltau(1:ntau-1)
+      tmp1_f(1:ntau-1) = - tmp1_f(1:ntau-1) / ltau(1:ntau-1)
+      tmp2_f(1:ntau-1) = - tmp2_f(1:ntau-1) / ltau(1:ntau-1)
 
       tmp1_f(0) = sll_p_i0
       tmp2_f(0) = sll_p_i0
@@ -199,7 +208,57 @@ do step=1,nb_step
     enddo
   enddo
 
-  call ge1(n,ntau,taut,w1_0,w2_0,En,Ent,Enr,gn,gnt,gnr) ! gn,gnt,gnr 3d array output
+  do l=0,Ntau-1
+  
+    E0(1:n)=En (l,1:n)
+    E1(1:n)=Enr(l,1:n)
+    E2(1:n)=Ent(l,1:n)
+  
+    E0(n+1)=0.0_f64
+    E1(n+1)=0.0_f64
+    E2(n+1)=0.0_f64
+  
+    call sll_s_compute_cubic_spline_1d(E0,spl_1d)
+  
+    do j=1,n+1
+    do i=1,n+1
+      x=cos(taut(l))*w1_0(l,i,j)+sin(taut(l))*w2_0(l,i,j)
+      if ( x > eta1_min .and. x < eta1_max) then
+        gn( l,i,j) = sll_f_interpolate_from_interpolant_value(x,spl_1d)
+      else
+        gn( l,i,j) = 0.0_f64
+      endif
+    enddo
+    enddo
+
+    call sll_s_compute_cubic_spline_1d(E1,spl_1d)
+
+    do j=1,n+1
+    do i=1,n+1
+      x=cos(taut(l))*w1_0(l,i,j)+sin(taut(l))*w2_0(l,i,j)
+      if ( x > eta1_min .and. x < eta1_max) then
+        gnr(l,i,j) = sll_f_interpolate_from_interpolant_value(x,spl_1d)
+      else
+        gnr(l,i,j) = 0.0_f64
+      endif
+    enddo
+    enddo
+
+    call sll_s_compute_cubic_spline_1d(E2,spl_1d)
+  
+    do j=1,n+1
+    do i=1,n+1
+      x=cos(taut(l))*w1_0(l,i,j)+sin(taut(l))*w2_0(l,i,j)
+      if ( x > eta1_min .and. x < eta1_max) then
+        gnt(l,i,j) = sll_f_interpolate_from_interpolant_value(x,spl_1d)
+      else
+        gnt(l,i,j) = 0.0_f64
+      endif
+    enddo
+    enddo
+
+  enddo
+  
 
   do i=1,n+1
     do j=1,n+1
@@ -222,8 +281,8 @@ do step=1,nb_step
       call sll_s_fft_exec_c2c_1d(fw_fft, tmp1, tmp1_f)
       call sll_s_fft_exec_c2c_1d(fw_fft, tmp2, tmp2_f)
 
-      tmp1_f(1:ntau-1) = -sll_p_i1*tmp1_f(1:ntau-1)/ltau(1:ntau-1)
-      tmp2_f(1:ntau-1) = -sll_p_i1*tmp2_f(1:ntau-1)/ltau(1:ntau-1)
+      tmp1_f(1:ntau-1) = - tmp1_f(1:ntau-1)/ltau(1:ntau-1)
+      tmp2_f(1:ntau-1) = - tmp2_f(1:ntau-1)/ltau(1:ntau-1)
 
       tmp1_f(0) = sll_p_i0
       tmp2_f(0) = sll_p_i0
@@ -243,8 +302,8 @@ do step=1,nb_step
       call sll_s_fft_exec_c2c_1d(fw_fft, tmp1_f, tmp1_f)
       call sll_s_fft_exec_c2c_1d(fw_fft, tmp2_f, tmp2_f)
 
-      tmp1_f(1:ntau-1) = -sll_p_i1*tmp1_f(1:ntau-1)/ltau(1:ntau-1)
-      tmp2_f(1:ntau-1) = -sll_p_i1*tmp2_f(1:ntau-1)/ltau(1:ntau-1)
+      tmp1_f(1:ntau-1) = -tmp1_f(1:ntau-1)/ltau(1:ntau-1)
+      tmp2_f(1:ntau-1) = -tmp2_f(1:ntau-1)/ltau(1:ntau-1)
 
       tmp1_f(0) = sll_p_i0
       tmp2_f(0) = sll_p_i0
@@ -261,7 +320,21 @@ do step=1,nb_step
     enddo
   enddo
 
-  call ge2(n,ntau,taut,w1_0,w2_0,En,gn)
+  do l=0,Ntau-1
+    E0(1:n)=En(l,1:n)
+    E0(n+1)=0.0_f64
+    call sll_s_compute_cubic_spline_1D(E0,spl_1d)
+    do j=1,n+1
+    do i=1,n+1
+      x=cos(taut(l))*w1_0(l,i,j)+sin(taut(l))*w2_0(l,i,j)
+      if (x > eta1_min .and. x < eta1_max ) then
+        gn(l,i,j)=sll_f_interpolate_from_interpolant_value(x,spl_1d)
+      else
+        gn(l,i,j)=0.0_f64
+      endif
+    enddo
+    enddo
+  enddo
 
   do i=1,n+1
     do j=1,n+1
@@ -277,8 +350,8 @@ do step=1,nb_step
       call sll_s_fft_exec_c2c_1d(fw_fft, tmp1, tmp1_f)
       call sll_s_fft_exec_c2c_1d(fw_fft, tmp2, tmp2_f)
 
-      tmp1_f = tmp1_f/(1.0d0+sll_p_i1*k/2.0d0*ltau/eps)/cmplx(ntau,0.0,f64)
-      tmp2_f = tmp2_f/(1.0d0+sll_p_i1*k/2.0d0*ltau/eps)/cmplx(ntau,0.0,f64)
+      tmp1_f = tmp1_f/(1.0d0-0.5_f64*k*ltau/eps)/cmplx(ntau,0.0,f64)
+      tmp2_f = tmp2_f/(1.0d0-0.5_f64*k*ltau/eps)/cmplx(ntau,0.0,f64)
 
       call sll_s_fft_exec_c2c_1d(bw_fft, tmp1_f, tmp1)
       call sll_s_fft_exec_c2c_1d(bw_fft, tmp2_f, tmp2)
@@ -288,11 +361,8 @@ do step=1,nb_step
 
       !----------Insert half step evaluation--------
 
-      sumup1 = sum(tmp1_f*exp(0.5*sll_p_i1*ltau*k/eps))
-      sumup2 = sum(tmp2_f*exp(0.5*sll_p_i1*ltau*k/eps))
-
-      eta1=dreal(sumup1)
-      eta2=dreal(sumup2)
+      eta1 = real(sum(tmp1_f*exp(-0.5_f64*ltau*k/eps)))
+      eta2 = real(sum(tmp2_f*exp(-0.5_f64*ltau*k/eps)))
 
       call apply_bc()
 
@@ -304,13 +374,28 @@ do step=1,nb_step
 
   call sll_s_deposit_value_2d(eta1feet,eta2feet,spl_2d,fh_fsl) !function value at the half time
 
-  f0=fh_fsl(1:n,1:n)
+  f0 = fh_fsl(1:n,1:n)
 
   call solver%solve2(f0,taut,n,ntau,En)
 
   !------End evaluation and continue 2nd solver-------------
 
-  call ge2(n,ntau,taut,real(Ftilde1),real(Ftilde2),En,gn)
+  do l=0,Ntau-1
+    E0(1:n)=En(l,1:n)
+    E0(n+1)=0.0_f64
+    call sll_s_compute_cubic_spline_1D(E0,spl_1d)
+    do j=1,n+1
+    do i=1,n+1
+      x = cos(taut(l))*real(ftilde1(l,i,j)) &
+        + sin(taut(l))*real(ftilde2(l,i,j))
+      if (x > eta1_min .and. x < eta1_max ) then
+        gn(l,i,j)=sll_f_interpolate_from_interpolant_value(x,spl_1d)
+      else
+        gn(l,i,j)=0.0_f64
+      endif
+    enddo
+    enddo
+  enddo
 
   do i=1,n+1
     do j=1,n+1
@@ -329,13 +414,13 @@ do step=1,nb_step
       call sll_s_fft_exec_c2c_1d(fw_fft, w1c, F1)
       call sll_s_fft_exec_c2c_1d(fw_fft, w2c, F2)
 
-      tmp1=(F1*(1.0_f64-sll_p_i1*0.5_f64*k/eps*ltau)+k*tmp1_f) &
-              /(1.0_f64+sll_p_i1*0.5_f64*k*ltau/eps)
-      tmp2=(F2*(1.0_f64-sll_p_i1*0.5_f64*k/eps*ltau)+k*tmp2_f) &
-              /(1.0_f64+sll_p_i1*0.5_f64*k*ltau/eps)
+      tmp1=(F1*(1.0_f64+0.5_f64*k/eps*ltau)+k*tmp1_f) &
+              /(1.0_f64-0.5_f64*k*ltau/eps)
+      tmp2=(F2*(1.0_f64+0.5_f64*k/eps*ltau)+k*tmp2_f) &
+              /(1.0_f64-0.5_f64*k*ltau/eps)
 
-      sumup1 = sum(tmp1*exp(sll_p_i1*ltau*k/eps))/cmplx(ntau,0.0,f64)
-      sumup2 = sum(tmp2*exp(sll_p_i1*ltau*k/eps))/cmplx(ntau,0.0,f64)
+      sumup1 = sum(tmp1*exp(-ltau*k/eps))/cmplx(ntau,0.0,f64)
+      sumup2 = sum(tmp2*exp(-ltau*k/eps))/cmplx(ntau,0.0,f64)
 
 !---------------end time solve-------------------------
 
@@ -360,6 +445,8 @@ do step=1,nb_step
                                 'HDF5', step) 
 enddo
 
+call sll_o_delete(spl_1d)
+call sll_o_delete(spl_2d)
 call sll_s_fft_free(fw_fft)
 call sll_s_fft_free(bw_fft)
 call solver%free()
