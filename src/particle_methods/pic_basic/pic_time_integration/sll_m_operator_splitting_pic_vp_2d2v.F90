@@ -40,7 +40,7 @@ module sll_m_operator_splitting_pic_vp_2d2v
 
   !> Operator splitting type for 2d2v Vlasov-Poisson
   type, extends(sll_t_operator_splitting) :: sll_t_operator_splitting_pic_vp_2d2v
-     class(sll_c_pic_poisson), pointer :: solver
+     class(sll_c_pic_poisson), pointer :: pic_poisson !< PIC poisson solver
      class(sll_c_particle_group_base), pointer  :: particle_group    !< Particle group
 
 
@@ -120,21 +120,21 @@ contains
 
 
     ! Assemble right-hand-side
-    call this%solver%reset()
+    call this%pic_poisson%reset()
     do i_part = 1, this%particle_group%n_particles
        xi = this%particle_group%get_x(i_part)
        wi = this%particle_group%get_charge(i_part, this%i_weight)
-       call this%solver%add_charge(xi(1:2), wi)
+       call this%pic_poisson%add_charge(xi(1:2), wi)
     end do
 
-    call this%solver%solve_fields()
+    call this%pic_poisson%solve_fields()
 
     ! V_new = V_old + dt *q/m* E
     qm = this%particle_group%species%q_over_m();
     do i_part=1,this%particle_group%n_particles
        ! Evaluate efields at particle position
        xi = this%particle_group%get_x(i_part)
-       call this%solver%evaluate_field_single(xi(1:2), [1,2], efield)
+       call this%pic_poisson%evaluate_field_single(xi(1:2), [1,2], efield)
        v_new = this%particle_group%get_v(i_part)
        v_new(1:2) = v_new(1:2) + dt * qm * efield
        call this%particle_group%set_v(i_part, v_new)
@@ -155,17 +155,17 @@ contains
   !> Initialization function
   subroutine initialize_operator_splitting_pic_vp_2d2v(&
        this, &
-       solver, &
+       pic_poisson, &
        particle_group, &
        control_variate, &
        i_weight)
     class(sll_t_operator_splitting_pic_vp_2d2v),    intent(out):: this !< time splitting object 
-    class(sll_c_pic_poisson),pointer,               intent(in) :: solver !< Poisson solver
+    class(sll_c_pic_poisson),pointer,               intent(in) :: pic_poisson !< PIC Poisson solver
     class(sll_c_particle_group_base),pointer,       intent(in) :: particle_group !< Particle group
     class(sll_t_control_variate), optional, target, intent(in) :: control_variate !< Control variate (if delta f)
     sll_int32, optional,                            intent(in) :: i_weight !< Index of weight to be used by propagator
 
-    this%solver => solver
+    this%pic_poisson => pic_poisson
     this%particle_group => particle_group
 
     this%i_weight = 1
@@ -179,7 +179,7 @@ contains
   subroutine delete_operator_splitting_pic_vp_2d2v( this )
     class(sll_t_operator_splitting_pic_vp_2d2v), intent(inout) :: this !< time splitting object 
 
-    this%solver => null()
+    this%pic_poisson => null()
     this%particle_group => null()
     this%control_variate => null()
 
@@ -189,12 +189,12 @@ contains
   !> Constructor for abstract type
   subroutine sll_s_new_operator_splitting_pic_vp_2d2v &
        (splitting, &
-       solver, &
+       pic_poisson, &
        particle_group, &
        control_variate, &
        i_weight) 
     class(sll_t_operator_splitting), pointer,        intent(out):: splitting !< time splitting object 
-    class(sll_c_pic_poisson),pointer,                intent(in) :: solver !< Poisson solver
+    class(sll_c_pic_poisson),pointer,                intent(in) :: pic_poisson !< PIC Poisson solver
     class(sll_c_particle_group_base),pointer,        intent(in) :: particle_group !< Particle group
     class(sll_t_control_variate), optional, pointer, intent(in) :: control_variate !< Control variate (if delta f)
     sll_int32, optional,                             intent(in) :: i_weight !< Index of weight to be used by propagator
@@ -206,7 +206,7 @@ contains
 
     select type( splitting )
     type is ( sll_t_operator_splitting_pic_vp_2d2v )
-       call splitting%init(solver, particle_group, control_variate, i_weight)
+       call splitting%init(pic_poisson, particle_group, control_variate, i_weight)
     end select
 
   end subroutine sll_s_new_operator_splitting_pic_vp_2d2v
