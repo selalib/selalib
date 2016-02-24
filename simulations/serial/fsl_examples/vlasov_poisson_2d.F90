@@ -1,7 +1,3 @@
-! Mouton example
-! N_tau optimised
-! taut optimised; 1d nufft corrected
-! in rotating framework
 program test_deposit_cubic_splines
 #include "sll_working_precision.h"
 #include "sll_assert.h"
@@ -62,7 +58,6 @@ sll_comp64 :: sumup1
 sll_comp64 :: sumup2
 sll_comp64 :: dtgn
 sll_real64 :: fvr(1:n,1:n)
-sll_real64 :: taut(0:ntau-1)
 sll_comp64 :: Ftilde1(0:ntau-1,n+1,n+1)
 sll_comp64 :: Ftilde2(0:ntau-1,n+1,n+1)
 sll_int32  :: m, ref_id
@@ -189,7 +184,6 @@ ltau = [(cmplx(l,0.,f64),l=0,m-1),(cmplx(l,0.,f64),l=-m,-1)] / sll_p_i1
 !-------- * Evolution in time * ---------
 do step=1,nb_step
 
-  taut = tau + real(step-1,f64)*k/eps
 
   call sll_s_compute_cubic_spline_2d(fh_fsl,spl_2d)
 
@@ -197,7 +191,7 @@ do step=1,nb_step
   r(n/2+1)=1.0d0
   do i=0,ntau-1
   
-    call fsl_interp(solver,fh_fsl,taut(i),n,fvr)
+    call fsl_interp(solver,fh_fsl,tau(i),n,fvr)
     do j=1,n
       tmp = cmplx(fvr(j,:),0.,f64)
       call sll_s_fft_exec_c2c_1d(solver%fw, tmp, tmp)
@@ -237,8 +231,8 @@ do step=1,nb_step
   do i=0,ntau-1
     do j=1,n+1
       do m=1,n+1
-        xi1(i,j,m)=v(j)*cos(taut(i))-v(m)*sin(taut(i))
-        xi2(i,j,m)=v(j)*sin(taut(i))+v(m)*cos(taut(i))
+        xi1(i,j,m)=v(j)*cos(tau(i))-v(m)*sin(tau(i))
+        xi2(i,j,m)=v(j)*sin(tau(i))+v(m)*cos(tau(i))
       enddo
     enddo
   enddo
@@ -247,7 +241,7 @@ do step=1,nb_step
     call sll_s_compute_cubic_spline_1D(Ens(:,l),spl_1d)
     do j=1,n+1
     do i=1,n+1
-      x=cos(taut(l))*xi1(l,i,j)+sin(taut(l))*xi2(l,i,j)
+      x=cos(tau(l))*xi1(l,i,j)+sin(tau(l))*xi2(l,i,j)
       if (x > eta1_min .and. x < eta1_max) then
         gn(l,i,j)=sll_f_interpolate_from_interpolant_value(x,spl_1d)
       else
@@ -259,15 +253,15 @@ do step=1,nb_step
 
   do i=0,ntau-1
   
-    call fsl_interp(solver,ftv,taut(i),n,ftmp1)
-    call fsl_interp(solver,ftr,taut(i),n,ftmp2)
+    call fsl_interp(solver,ftv,tau(i),n,ftmp1)
+    call fsl_interp(solver,ftr,tau(i),n,ftmp2)
   
     do j=1,n
   
       do m=1,n
-        s1 =  xi1(i,j,m)*cos(taut(i))+xi2(i,j,m)*sin(taut(i))
-        s2 = -sin(taut(i))*ftmp1(j,m)+cos(taut(i))*ftmp2(j,m)
-        s3 = (cos(2.0_f64*taut(i))**2 * s1 + gn(i,j,m))*s2
+        s1 =  xi1(i,j,m)*cos(tau(i))+xi2(i,j,m)*sin(tau(i))
+        s2 = -sin(tau(i))*ftmp1(j,m)+cos(tau(i))*ftmp2(j,m)
+        s3 = (cos(2.0_f64*tau(i))**2 * s1 + gn(i,j,m))*s2
         vctmp(m) = cmplx(s3,0.,f64)
       enddo
   
@@ -294,7 +288,7 @@ do step=1,nb_step
   
     do j=1,n+1
       do i=1,n+1
-        x=cos(taut(l))*x1(i)+sin(taut(l))*x1(j)
+        x=cos(tau(l))*x1(i)+sin(tau(l))*x1(j)
         if (x > eta1_min .and. x < eta1_max) then
           gn (l,i,j) = sll_f_interpolate_from_interpolant_value(x,spl_1d)
         else
@@ -311,7 +305,7 @@ do step=1,nb_step
   
     do j=1,n+1
       do i=1,n+1
-        x=cos(taut(l))*x1(i)+sin(taut(l))*x1(j)
+        x=cos(tau(l))*x1(i)+sin(tau(l))*x1(j)
         if (x > eta1_min .and. x < eta1_max) then
           gnr(l,i,j) = sll_f_interpolate_from_interpolant_value(x,spl_1d)
         else
@@ -328,7 +322,7 @@ do step=1,nb_step
   
     do j=1,n+1
       do i=1,n+1
-        x=cos(taut(l))*x1(i)+sin(taut(l))*x1(j)
+        x=cos(tau(l))*x1(i)+sin(tau(l))*x1(j)
         if (x > eta1_min .and. x < eta1_max) then
           gnt(l,i,j) = sll_f_interpolate_from_interpolant_value(x,spl_1d)
         else
@@ -344,8 +338,8 @@ do step=1,nb_step
 
       !------------for 1st order correction------------------
       do m=0,ntau-1
-        F1(m) = rfct1(taut(m), ntau, x1(i), x2(j), gn(m,i,j))
-        F2(m) = rfct2(taut(m), ntau, x1(i), x2(j), gn(m,i,j))
+        F1(m) = rfct1(tau(m), ntau, x1(i), x2(j), gn(m,i,j))
+        F2(m) = rfct2(tau(m), ntau, x1(i), x2(j), gn(m,i,j))
       enddo
 
       call sll_s_fft_exec_c2c_1d(fw_fft, F1, tmp1_f)
@@ -378,7 +372,7 @@ do step=1,nb_step
   
     do j=1,n+1
     do i=1,n+1
-      x=cos(taut(l))*xi1(l,i,j)+sin(taut(l))*xi2(l,i,j)
+      x=cos(tau(l))*xi1(l,i,j)+sin(tau(l))*xi2(l,i,j)
       if ( x > eta1_min .and. x < eta1_max) then
         gn(l,i,j) = sll_f_interpolate_from_interpolant_value(x,spl_1d)
       else
@@ -391,7 +385,7 @@ do step=1,nb_step
 
     do j=1,n+1
     do i=1,n+1
-      x=cos(taut(l))*xi1(l,i,j)+sin(taut(l))*xi2(l,i,j)
+      x=cos(tau(l))*xi1(l,i,j)+sin(tau(l))*xi2(l,i,j)
       if ( x > eta1_min .and. x < eta1_max) then
         gnr(l,i,j) = sll_f_interpolate_from_interpolant_value(x,spl_1d)
       else
@@ -404,7 +398,7 @@ do step=1,nb_step
   
     do j=1,n+1
     do i=1,n+1
-      x=cos(taut(l))*xi1(l,i,j)+sin(taut(l))*xi2(l,i,j)
+      x=cos(tau(l))*xi1(l,i,j)+sin(tau(l))*xi2(l,i,j)
       if ( x > eta1_min .and. x < eta1_max) then
         gnt(l,i,j) = sll_f_interpolate_from_interpolant_value(x,spl_1d)
       else
@@ -421,16 +415,16 @@ do step=1,nb_step
       !------------for 2nd order correction------------------
       do m=0,ntau-1
 
-        F1(m)= rfct1(taut(m), 1, xi1(m,i,j), xi2(m,i,j), gn(m,i,j))
-        F2(m)= rfct2(taut(m), 1, xi1(m,i,j), xi2(m,i,j), gn(m,i,j))
+        F1(m)= rfct1(tau(m), 1, xi1(m,i,j), xi2(m,i,j), gn(m,i,j))
+        F2(m)= rfct2(tau(m), 1, xi1(m,i,j), xi2(m,i,j), gn(m,i,j))
 
         dtgn=  cmplx(gnt(m,i,j),0.0,f64) &
              + cmplx(gnr(m,i,j),0.0,f64) &
-             *(cmplx(cos(taut(m)),0.0,f64)*Ftilde1(0,i,j) &
-             + cmplx(sin(taut(m)),0.0,f64)*Ftilde2(0,i,j))
+             *(cmplx(cos(tau(m)),0.0,f64)*Ftilde1(0,i,j) &
+             + cmplx(sin(tau(m)),0.0,f64)*Ftilde2(0,i,j))
 
-        tmp1(m)= fct1(taut(m), ntau, Ftilde1(0,i,j), Ftilde2(0,i,j), dtgn)
-        tmp2(m)= fct2(taut(m), ntau, Ftilde1(0,i,j), Ftilde2(0,i,j), dtgn)
+        tmp1(m)= fct1(tau(m), ntau, Ftilde1(0,i,j), Ftilde2(0,i,j), dtgn)
+        tmp2(m)= fct2(tau(m), ntau, Ftilde1(0,i,j), Ftilde2(0,i,j), dtgn)
 
       enddo
 
@@ -480,7 +474,7 @@ do step=1,nb_step
     call sll_s_compute_cubic_spline_1D(Ens(:,l),spl_1d)
     do j=1,n+1
     do i=1,n+1
-      x=cos(taut(l))*xi1(l,i,j)+sin(taut(l))*xi2(l,i,j)
+      x=cos(tau(l))*xi1(l,i,j)+sin(tau(l))*xi2(l,i,j)
       if (x > eta1_min .and. x < eta1_max ) then
         gn(l,i,j)=sll_f_interpolate_from_interpolant_value(x,spl_1d)
       else
@@ -494,8 +488,8 @@ do step=1,nb_step
     do j=1,n+1
 
       do m=0,ntau-1
-        F1(m)=rfct1(taut(m),1,xi1(m,i,j),xi2(m,i,j),gn(m,i,j))
-        F2(m)=rfct2(taut(m),1,xi1(m,i,j),xi2(m,i,j),gn(m,i,j))
+        F1(m)=rfct1(tau(m),1,xi1(m,i,j),xi2(m,i,j),gn(m,i,j))
+        F2(m)=rfct2(tau(m),1,xi1(m,i,j),xi2(m,i,j),gn(m,i,j))
       enddo
 
       tmp1 = xi1(:,i,j) + 0.5_f64*k*F1
@@ -532,7 +526,7 @@ do step=1,nb_step
   r(n/2+1)=1.0d0
   do i=0,ntau-1
   
-    call fsl_interp(solver,fh_fsl,taut(i),n,fvr)
+    call fsl_interp(solver,fh_fsl,tau(i),n,fvr)
   
     do j=1,n
       tmp = cmplx(fvr(j,:),0.0,f64)
@@ -560,8 +554,8 @@ do step=1,nb_step
     call sll_s_compute_cubic_spline_1D(Ens(:,l),spl_1d)
     do j=1,n+1
     do i=1,n+1
-      x = cos(taut(l))*real(ftilde1(l,i,j)) &
-        + sin(taut(l))*real(ftilde2(l,i,j))
+      x = cos(tau(l))*real(ftilde1(l,i,j)) &
+        + sin(tau(l))*real(ftilde2(l,i,j))
       if (x > eta1_min .and. x < eta1_max ) then
         gn(l,i,j)=sll_f_interpolate_from_interpolant_value(x,spl_1d)
       else
@@ -575,8 +569,8 @@ do step=1,nb_step
     do j=1,n+1
 
       do m=0,ntau-1
-        F1(m)=fct1(taut(m), 1, Ftilde1(m,i,j), Ftilde2(m,i,j), cmplx(gn(m,i,j),0.0,f64))
-        F2(m)=fct2(taut(m), 1, Ftilde1(m,i,j), Ftilde2(m,i,j), cmplx(gn(m,i,j),0.0,f64))
+        F1(m)=fct1(tau(m), 1, Ftilde1(m,i,j), Ftilde2(m,i,j), cmplx(gn(m,i,j),0.0,f64))
+        F2(m)=fct2(tau(m), 1, Ftilde1(m,i,j), Ftilde2(m,i,j), cmplx(gn(m,i,j),0.0,f64))
       enddo
 
       call sll_s_fft_exec_c2c_1d(fw_fft, F1, tmp1_f)
@@ -615,6 +609,8 @@ do step=1,nb_step
   call sll_o_gnuplot_2d(n, x1, n, x2, fvr, 'fh', step, ierr)
   call sll_s_xdmf_rect2d_nodes( 'fh', fvr, 'fh', x1(1:n), x2(1:n), &
                                 'HDF5', step) 
+  tau = tau + k/eps
+
 enddo
 !---------------end time solve-------------------------
 
