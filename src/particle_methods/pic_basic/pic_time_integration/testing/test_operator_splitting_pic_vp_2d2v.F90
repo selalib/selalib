@@ -163,6 +163,8 @@ program test_operator_splitting_pic_vp_2d2v
      print*, 'Error in operatorT.'
   end if
 
+  call propagator%charge_deposition()
+  call propagator%field_solver()
   call propagator%operatorV(delta_t)
   ! Compare to reference
   ! Particle information after operatorV application 
