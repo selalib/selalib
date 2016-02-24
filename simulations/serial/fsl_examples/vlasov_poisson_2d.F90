@@ -65,8 +65,6 @@ sll_comp64 :: sumup2
 sll_comp64 :: dtgn
 sll_real64 :: fvr(1:n,1:n)
 sll_real64 :: taut(0:ntau-1)
-sll_real64 :: w1_0(0:ntau-1,n+1,n+1)
-sll_real64 :: w2_0(0:ntau-1,n+1,n+1)
 sll_comp64 :: Ftilde1(0:ntau-1,n+1,n+1)
 sll_comp64 :: Ftilde2(0:ntau-1,n+1,n+1)
 sll_int32  :: m, ref_id
@@ -370,8 +368,8 @@ do step=1,nb_step
       F1 = F1 - sum(tmp1_f)
       F2 = F2 - sum(tmp2_f)
 
-      w1_0(:,i,j) = x1(i) + eps*real(F1)
-      w2_0(:,i,j) = x2(j) + eps*real(F2)
+      xi1(:,i,j) = x1(i) + eps*real(F1)
+      xi2(:,i,j) = x2(j) + eps*real(F2)
 
     enddo
   enddo
@@ -382,7 +380,7 @@ do step=1,nb_step
   
     do j=1,n+1
     do i=1,n+1
-      x=cos(taut(l))*w1_0(l,i,j)+sin(taut(l))*w2_0(l,i,j)
+      x=cos(taut(l))*xi1(l,i,j)+sin(taut(l))*xi2(l,i,j)
       if ( x > eta1_min .and. x < eta1_max) then
         gn(l,i,j) = sll_f_interpolate_from_interpolant_value(x,spl_1d)
       else
@@ -395,7 +393,7 @@ do step=1,nb_step
 
     do j=1,n+1
     do i=1,n+1
-      x=cos(taut(l))*w1_0(l,i,j)+sin(taut(l))*w2_0(l,i,j)
+      x=cos(taut(l))*xi1(l,i,j)+sin(taut(l))*xi2(l,i,j)
       if ( x > eta1_min .and. x < eta1_max) then
         gnr(l,i,j) = sll_f_interpolate_from_interpolant_value(x,spl_1d)
       else
@@ -408,7 +406,7 @@ do step=1,nb_step
   
     do j=1,n+1
     do i=1,n+1
-      x=cos(taut(l))*w1_0(l,i,j)+sin(taut(l))*w2_0(l,i,j)
+      x=cos(taut(l))*xi1(l,i,j)+sin(taut(l))*xi2(l,i,j)
       if ( x > eta1_min .and. x < eta1_max) then
         gnt(l,i,j) = sll_f_interpolate_from_interpolant_value(x,spl_1d)
       else
@@ -425,8 +423,8 @@ do step=1,nb_step
       !------------for 2nd order correction------------------
       do m=0,ntau-1
 
-        F1(m)= rfct1(taut(m), 1, w1_0(m,i,j), w2_0(m,i,j), gn(m,i,j))
-        F2(m)= rfct2(taut(m), 1, w1_0(m,i,j), w2_0(m,i,j), gn(m,i,j))
+        F1(m)= rfct1(taut(m), 1, xi1(m,i,j), xi2(m,i,j), gn(m,i,j))
+        F2(m)= rfct2(taut(m), 1, xi1(m,i,j), xi2(m,i,j), gn(m,i,j))
 
         dtgn=  cmplx(gnt(m,i,j),0.0,f64) &
              + cmplx(gnr(m,i,j),0.0,f64) &
@@ -474,8 +472,8 @@ do step=1,nb_step
       tmp1 = tmp1 - sum(tmp1_f)
       tmp2 = tmp2 - sum(tmp2_f)
 
-      w1_0(:,i,j) = x1(i) + eps*real(tmp1)
-      w2_0(:,i,j) = x2(j) + eps*real(tmp2)
+      xi1(:,i,j) = x1(i) + eps*real(tmp1)
+      xi2(:,i,j) = x2(j) + eps*real(tmp2)
 
     enddo
   enddo
@@ -484,7 +482,7 @@ do step=1,nb_step
     call sll_s_compute_cubic_spline_1D(Ens(:,l),spl_1d)
     do j=1,n+1
     do i=1,n+1
-      x=cos(taut(l))*w1_0(l,i,j)+sin(taut(l))*w2_0(l,i,j)
+      x=cos(taut(l))*xi1(l,i,j)+sin(taut(l))*xi2(l,i,j)
       if (x > eta1_min .and. x < eta1_max ) then
         gn(l,i,j)=sll_f_interpolate_from_interpolant_value(x,spl_1d)
       else
@@ -498,12 +496,12 @@ do step=1,nb_step
     do j=1,n+1
 
       do m=0,ntau-1
-        F1(m)=rfct1(taut(m),1,w1_0(m,i,j),w2_0(m,i,j),gn(m,i,j))
-        F2(m)=rfct2(taut(m),1,w1_0(m,i,j),w2_0(m,i,j),gn(m,i,j))
+        F1(m)=rfct1(taut(m),1,xi1(m,i,j),xi2(m,i,j),gn(m,i,j))
+        F2(m)=rfct2(taut(m),1,xi1(m,i,j),xi2(m,i,j),gn(m,i,j))
       enddo
 
-      tmp1 = w1_0(:,i,j) + 0.5_f64*k*F1
-      tmp2 = w2_0(:,i,j) + 0.5_f64*k*F2
+      tmp1 = xi1(:,i,j) + 0.5_f64*k*F1
+      tmp2 = xi2(:,i,j) + 0.5_f64*k*F2
 
       call sll_s_fft_exec_c2c_1d(fw_fft, tmp1, tmp1_f)
       call sll_s_fft_exec_c2c_1d(fw_fft, tmp2, tmp2_f)
@@ -586,8 +584,8 @@ do step=1,nb_step
       call sll_s_fft_exec_c2c_1d(fw_fft, F1, tmp1_f)
       call sll_s_fft_exec_c2c_1d(fw_fft, F2, tmp2_f)
 
-      w1c = cmplx(w1_0(:,i,j),0.0,f64)
-      w2c = cmplx(w2_0(:,i,j),0.0,f64)
+      w1c = cmplx(xi1(:,i,j),0.0,f64)
+      w2c = cmplx(xi2(:,i,j),0.0,f64)
 
       call sll_s_fft_exec_c2c_1d(fw_fft, w1c, F1)
       call sll_s_fft_exec_c2c_1d(fw_fft, w2c, F2)
