@@ -82,6 +82,9 @@ sll_real64    :: E0(n+1)
 sll_real64    :: E1(n+1)
 sll_real64    :: E2(n+1)
 sll_real64    :: x
+sll_comp64    :: tmp(n)
+sll_comp64    :: sum0(n)
+sll_real64    :: r(n)
 
 ! ---- * Parameters * ----
 
@@ -435,7 +438,31 @@ do step=1,nb_step
 
   f0 = fh_fsl(1:n,1:n)
 
-  call solver%solve2(f0,taut,n,ntau,En)
+  r=solver%r
+  r(n/2+1)=1.0d0
+  do i=0,ntau-1
+  
+    call solver%interp(f0,taut(i),n,fvr)
+  
+    do j=1,n
+      tmp = cmplx(fvr(j,:),0.0,f64)
+      call sll_s_fft_exec_c2c_1d(solver%fw, tmp, tmp)
+      sum0(j)=tmp(1)*solver%r(j) !r*int_R fdv
+    enddo
+  
+    sum0 = sum0 * 2.0_f64 * solver%L / cmplx(n,0.0, f64)
+  
+    call sll_s_fft_exec_c2c_1d(solver%fw, sum0, tmp)
+  
+    tmp(1)=cmplx(0.0d0,0.0d0,kind=f64)
+  
+    tmp(2:n) = tmp(2:n) / solver%lx(2:n)
+  
+    call sll_s_fft_exec_c2c_1d(solver%bw, tmp, tmp)
+    
+    En(i,:)=real(tmp-tmp(n/2+1),f64)/r(:)
+   
+  enddo
 
   !------End evaluation and continue 2nd solver-------------
 

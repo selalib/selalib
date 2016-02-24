@@ -25,7 +25,6 @@ contains
   procedure :: init   => init_poisson_solver 
   procedure :: free   => free_poisson_solver 
   procedure :: solve1 => poisson_solver_1
-  procedure :: solve2 => poisson_solver_2
   procedure :: interp => poisson_interp
 
 end type poisson
@@ -202,46 +201,6 @@ end subroutine poisson_solver_1
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
-subroutine poisson_solver_2(self,fh_fsl,tau,num_cells,ntau,En)
-
-class(poisson)              :: self
-sll_int32,    intent(in)    :: num_cells,ntau
-sll_real64,   intent(in)    :: fh_fsl(num_cells,num_cells)
-sll_real64,   intent(in)    :: tau(0:ntau-1)
-sll_real64,   intent(inout) :: En(0:ntau-1,num_cells)
-sll_real64                  :: x(num_cells)
-sll_real64                  :: fvr(num_cells,num_cells)
-sll_int32                   :: i,j
-sll_comp64                  :: tmp(num_cells)
-sll_comp64                  :: sum0(num_cells)
-
-x=self%r
-x(num_cells/2+1)=1.0d0
-do i=0,ntau-1
-
-  call self%interp(fh_fsl,tau(i),num_cells,fvr)
-
-  do j=1,num_cells
-    tmp = cmplx(fvr(j,:),0.0,f64)
-    call sll_s_fft_exec_c2c_1d(self%fw, tmp, tmp)
-    sum0(j)=tmp(1)*self%r(j) !r*int_R fdv
-  enddo
-
-  sum0 = sum0 * 2.0_f64 * self%L / cmplx(num_cells,0.0, f64)
-
-  call sll_s_fft_exec_c2c_1d(self%fw, sum0, tmp)
-
-  tmp(1)=cmplx(0.0d0,0.0d0,kind=f64)
-
-  tmp(2:num_cells) = tmp(2:num_cells) / self%lx(2:num_cells)
-
-  call sll_s_fft_exec_c2c_1d(self%bw, tmp, tmp)
-  
-  En(i,:)=real(tmp-tmp(num_cells/2+1),f64)/x(:)
- 
-enddo
-
-end subroutine poisson_solver_2
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
