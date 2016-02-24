@@ -91,7 +91,7 @@ module sll_m_sim_pic_vp_2d2v_cart
      class(sll_c_poisson_2d_base), pointer :: poisson_solver 
 
      ! PIC Poisson solver
-     class(sll_c_pic_poisson), pointer :: solver
+     class(sll_c_pic_poisson), pointer :: pic_poisson
 
      ! Abstract operator splitting
      type(sll_t_operator_splitting_pic_vp_2d2v) :: propagator
@@ -226,17 +226,17 @@ contains
          sim%degree_smoother, sll_p_collocation)
 
     ! Initialize the PIC field solver
-    call sll_s_new_pic_poisson_2d(sim%solver, &
+    call sll_s_new_pic_poisson_2d(sim%pic_poisson, &
          [sim%mesh%num_cells1, sim%mesh%num_cells2], &
          sim%poisson_solver, sim%kernel_smoother)
 
 
     ! Initialize the time-splitting propagator
     if (sim%no_weights == 1) then
-       call sim%propagator%init(sim%solver, sim%particle_group)
+       call sim%propagator%init(sim%pic_poisson, sim%particle_group)
     elseif (sim%no_weights == 3) then
        call sim%propagator%init( &
-            sim%solver, sim%particle_group, sim%control_variate, 3)
+            sim%pic_poisson, sim%particle_group, sim%control_variate, 3)
     end if
 
 
@@ -295,7 +295,7 @@ contains
 
        ! Diagnostics
        if (sim%rank == 0) then
-          eenergy = sim%solver%compute_field_energy(1)
+          eenergy = sim%pic_poisson%compute_field_energy(1)
           write(th_diag_id,'(f12.5,2g20.12)' ) real(j,f64)*sim%delta_t,  eenergy
        end if
     end do
@@ -319,8 +319,8 @@ contains
   subroutine delete_pic_2d2v (sim)
     class(sll_t_sim_pic_vp_2d2v_cart), intent(inout) :: sim
     
-    call sim%solver%free()
-    deallocate(sim%solver)
+    call sim%pic_poisson%free()
+    deallocate(sim%pic_poisson)
     call sim%particle_group%free()
     deallocate (sim%particle_group)
     call sim%mesh%delete()
