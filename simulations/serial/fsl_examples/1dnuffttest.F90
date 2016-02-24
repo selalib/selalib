@@ -30,22 +30,22 @@ L=4.0_f64
 h=2.0_f64*L/Nn
 t=0.4_f64/0.5_f64
 m=Nn/2
-lx=(/ (n, n=0,m-1), (n, n=-m,-1 )/)*sll_p_pi/L
+lx=(/ (real(n,f64), n=0,m-1), (real(n,f64), n=-m,-1 )/)*sll_p_pi/L
 y=0.0_f64
 do i=1,Nn
   r(i)      = -L+(i-1)*h
   fh_fsl(i) = dexp(-1.5_f64*r(i)**2)
 enddo
 call sll_s_fft_init_c2c_1d(PlnF,Nn,ftemp,ftilde,SLL_P_FFT_FORWARD)
-ftemp=fh_fsl
+ftemp = cmplx(fh_fsl,0.,f64)
 call sll_s_fft_exec_c2c_1d(PlnF, ftemp, ftilde)
-ftilde=ftilde/dble(Nn)
+ftilde=ftilde/cmplx(Nn,0.,f64)
 j=0
 do n=1,Nn
   do m=1,Nn
     x=dcos(t)*r(n)-dsin(t)*r(m)
     q=m+(n-1)*Nn
-    sum0=0.0_f64
+    sum0= (0.0_f64, 0.0_f64)
     if (dabs(x)<L) then
       j=j+1
       y(j)=x
