@@ -83,7 +83,6 @@ type :: fsl_solver
   sll_real64, allocatable              :: r(:)
   sll_int32                            :: num_cells
   type(sll_t_cubic_spline_2d), pointer :: spl_2d
-  sll_real64, allocatable              :: f0(:,:)
 
 end type fsl_solver
 
@@ -94,8 +93,8 @@ sll_comp64       :: sum0(n)
 sll_real64       :: r(n)
 sll_real64       :: xi1(0:ntau-1,n+1,n+1)
 sll_real64       :: xi2(0:ntau-1,n+1,n+1)
-sll_real64       :: ftv(n,n)
-sll_real64       :: ftr(n,n)
+sll_real64       :: ftv(n+1,n+1)
+sll_real64       :: ftr(n+1,n+1)
 sll_comp64       :: vctmp(n)
 sll_comp64       :: uctmp(n)
 sll_real64       :: v(n+1)
@@ -166,6 +165,8 @@ spl_2d => sll_f_new_cubic_spline_2d( n+1,      &
 Ens = 0.0_f64
 Enr = 0.0_f64
 Ent = 0.0_f64
+ftv = 0.0_f64
+ftr = 0.0_f64
 
 ! Analytic distribution function and data for the mesh
 do i=1,n+1
@@ -229,9 +230,9 @@ do step=1,nb_step
     vctmp = vctmp/cmplx(n**2,0.,f64)*solver%lx
    
     call sll_s_fft_exec_c2c_1d(solver%bw, vctmp, tmp)
-    ftv(j,:)=real(tmp)  !\partial_\x1 f_tilde(\xi1,\xi2)
+    ftv(j,1:n)=real(tmp)  !\partial_\x1 f_tilde(\xi1,\xi2)
     call sll_s_fft_exec_c2c_1d(solver%bw, uctmp, tmp)
-    ftr(:,j)=real(tmp)  !\partial_\x2 f_tilde(\xi1,\xi2)
+    ftr(1:n,j)=real(tmp)  !\partial_\x2 f_tilde(\xi1,\xi2)
   
   enddo
   
@@ -383,9 +384,9 @@ do step=1,nb_step
     do i=1,n+1
       x=cos(taut(l))*w1_0(l,i,j)+sin(taut(l))*w2_0(l,i,j)
       if ( x > eta1_min .and. x < eta1_max) then
-        gn( l,i,j) = sll_f_interpolate_from_interpolant_value(x,spl_1d)
+        gn(l,i,j) = sll_f_interpolate_from_interpolant_value(x,spl_1d)
       else
-        gn( l,i,j) = 0.0_f64
+        gn(l,i,j) = 0.0_f64
       endif
     enddo
     enddo
@@ -599,7 +600,6 @@ do step=1,nb_step
       sumup1 = sum(tmp1*exp(-ltau*k/eps))/cmplx(ntau,0.0,f64)
       sumup2 = sum(tmp2*exp(-ltau*k/eps))/cmplx(ntau,0.0,f64)
 
-!---------------end time solve-------------------------
 
       eta1 = real(sumup1)
       eta2 = real(sumup2)
@@ -620,6 +620,7 @@ do step=1,nb_step
   call sll_s_xdmf_rect2d_nodes( 'fh', fvr, 'fh', x1(1:n), x2(1:n), &
                                 'HDF5', step) 
 enddo
+!---------------end time solve-------------------------
 
 call sll_o_delete(spl_1d)
 call sll_o_delete(spl_2d)
@@ -767,9 +768,6 @@ self%spl_2d => sll_f_new_cubic_spline_2D(num_cells+1, &
                                       SLL_P_PERIODIC, &
                                       SLL_P_PERIODIC)
 
-allocate(self%f0(num_cells+1,num_cells+1))
-self%f0 = 0.0_f64
-
 allocate(self%r(num_cells))
 do i = 1, num_cells
   self%r(i) = xmin + (i-1) * (xmax-xmin)/real(num_cells,f64)
@@ -801,11 +799,7 @@ sll_real64, intent(inout)   :: fvr(num_cells,num_cells)
 sll_real64                  :: x, y
 sll_int32                   :: i, j
 
-self%f0(1:num_cells,1:num_cells) = fh_fsl(1:num_cells,1:num_cells)
-self%f0(num_cells+1,:)           = 0.0d0
-self%f0(:,num_cells+1)           = 0.0d0
-
-call sll_s_compute_cubic_spline_2d(self%f0, self%spl_2d)
+call sll_s_compute_cubic_spline_2d(fh_fsl, self%spl_2d)
 
 do j=1,num_cells
   do i=1,num_cells
