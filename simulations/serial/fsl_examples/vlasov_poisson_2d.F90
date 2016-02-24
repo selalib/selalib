@@ -55,9 +55,9 @@ sll_comp64 :: ltau(0:ntau-1)
 sll_real64 :: fh_fsl(n+1,n+1)
 sll_real64 :: f0(n,n)
 sll_real64 :: k, h
-sll_real64 :: Ens(n,0:ntau-1)
-sll_real64 :: Enr(n,0:ntau-1)
-sll_real64 :: Ent(n,0:ntau-1)
+sll_real64 :: Ens(n+1,0:ntau-1)
+sll_real64 :: Enr(n+1,0:ntau-1)
+sll_real64 :: Ent(n+1,0:ntau-1)
 sll_real64 :: gn(0:ntau-1,n+1,n+1)
 sll_real64 :: gnr(0:ntau-1,n+1,n+1)
 sll_real64 :: gnt(0:ntau-1,n+1,n+1)
@@ -89,23 +89,20 @@ type :: fsl_solver
 end type fsl_solver
 
 type(fsl_solver) :: solver
-sll_real64    :: E0(n+1)
-sll_real64    :: E1(n+1)
-sll_real64    :: E2(n+1)
-sll_real64    :: x
-sll_comp64    :: tmp(n)
-sll_comp64    :: sum0(n)
-sll_real64    :: r(n)
-sll_real64    :: xi1(0:ntau-1,n+1,n+1)
-sll_real64    :: xi2(0:ntau-1,n+1,n+1)
-sll_real64    :: ftv(n,n)
-sll_real64    :: ftr(n,n)
-sll_comp64    :: vctmp(n)
-sll_comp64    :: uctmp(n)
-sll_real64    :: v(n+1)
-sll_real64    :: s1, s2, s3
-sll_real64    :: ftmp1(n,n)
-sll_real64    :: ftmp2(n,n)
+sll_real64       :: x
+sll_comp64       :: tmp(n)
+sll_comp64       :: sum0(n)
+sll_real64       :: r(n)
+sll_real64       :: xi1(0:ntau-1,n+1,n+1)
+sll_real64       :: xi2(0:ntau-1,n+1,n+1)
+sll_real64       :: ftv(n,n)
+sll_real64       :: ftr(n,n)
+sll_comp64       :: vctmp(n)
+sll_comp64       :: uctmp(n)
+sll_real64       :: v(n+1)
+sll_real64       :: s1, s2, s3
+sll_real64       :: ftmp1(n,n)
+sll_real64       :: ftmp2(n,n)
 
 ! ---- * Parameters * ----
 
@@ -167,6 +164,10 @@ spl_2d => sll_f_new_cubic_spline_2d( n+1,      &
 
 ! ---- * Initializations * ----
 
+Ens = 0.0_f64
+Enr = 0.0_f64
+Ent = 0.0_f64
+
 ! Analytic distribution function and data for the mesh
 do i=1,n+1
   x1(i) = eta1_min + (i-1)*delta_eta1
@@ -213,8 +214,8 @@ do step=1,nb_step
     tmp(1)=cmplx(0.0d0,0.0d0,kind=f64)
     call sll_s_fft_exec_c2c_1d(solver%bw, tmp,tmp)
   
-    Ens(:,i)=real(tmp-tmp(n/2+1))/r
-    Enr(:,i)=real(sum0-Ens(:,i))/r
+    Ens(1:n,i)=real(tmp-tmp(n/2+1))/r
+    Enr(1:n,i)=real(sum0-Ens(1:n,i))/r
   
   enddo
   
@@ -248,9 +249,7 @@ do step=1,nb_step
   enddo
   
   do l=0,Ntau-1
-    E0(1:n)=Ens(1:n,l)
-    E0(n+1)=0.0_f64
-    call sll_s_compute_cubic_spline_1D(E0,spl_1d)
+    call sll_s_compute_cubic_spline_1D(Ens(:,l),spl_1d)
     do j=1,n+1
     do i=1,n+1
       x=cos(taut(l))*xi1(l,i,j)+sin(taut(l))*xi2(l,i,j)
@@ -289,17 +288,14 @@ do step=1,nb_step
   
     call sll_s_fft_exec_c2c_1d(solver%bw, tmp, tmp)
   
-    Ent(:,i)=real(tmp-tmp(n/2+1))/r
+    Ent(1:n,i)=real(tmp-tmp(n/2+1))/r
   
   enddo
 
 
   do l=0,Ntau-1
   
-    E0(1:n)=Ens(1:n,l)
-    E0(n+1)=0.0_f64
-  
-    call sll_s_compute_cubic_spline_1D(E0,spl_1d)
+    call sll_s_compute_cubic_spline_1D(Ens(:,l),spl_1d)
   
     do j=1,n+1
       do i=1,n+1
@@ -316,10 +312,7 @@ do step=1,nb_step
   
   do l=0,Ntau-1
   
-    E1(1:n)=Enr(1:n,l)
-    E1(n+1)=0.0_f64
-  
-    call sll_s_compute_cubic_spline_1D(E1,spl_1d)
+    call sll_s_compute_cubic_spline_1D(Enr(:,l),spl_1d)
   
     do j=1,n+1
       do i=1,n+1
@@ -336,10 +329,7 @@ do step=1,nb_step
   
   do l=0,Ntau-1
   
-    E2(1:n)=Ent(1:n,l)
-    E2(n+1)=0.0_f64
-  
-    call sll_s_compute_cubic_spline_1D(E2,spl_1d)
+    call sll_s_compute_cubic_spline_1D(Ent(:,l),spl_1d)
   
     do j=1,n+1
       do i=1,n+1
@@ -389,15 +379,7 @@ do step=1,nb_step
 
   do l=0,Ntau-1
   
-    E0(1:n)=Ens(1:n,l)
-    E1(1:n)=Enr(1:n,l)
-    E2(1:n)=Ent(1:n,l)
-  
-    E0(n+1)=0.0_f64
-    E1(n+1)=0.0_f64
-    E2(n+1)=0.0_f64
-  
-    call sll_s_compute_cubic_spline_1d(E0,spl_1d)
+    call sll_s_compute_cubic_spline_1d(Ens(:,l),spl_1d)
   
     do j=1,n+1
     do i=1,n+1
@@ -410,7 +392,7 @@ do step=1,nb_step
     enddo
     enddo
 
-    call sll_s_compute_cubic_spline_1d(E1,spl_1d)
+    call sll_s_compute_cubic_spline_1d(Enr(:,l),spl_1d)
 
     do j=1,n+1
     do i=1,n+1
@@ -423,7 +405,7 @@ do step=1,nb_step
     enddo
     enddo
 
-    call sll_s_compute_cubic_spline_1d(E2,spl_1d)
+    call sll_s_compute_cubic_spline_1d(Ent(:,l),spl_1d)
   
     do j=1,n+1
     do i=1,n+1
@@ -500,9 +482,7 @@ do step=1,nb_step
   enddo
 
   do l=0,Ntau-1
-    E0(1:n)=Ens(1:n,l)
-    E0(n+1)=0.0_f64
-    call sll_s_compute_cubic_spline_1D(E0,spl_1d)
+    call sll_s_compute_cubic_spline_1D(Ens(:,l),spl_1d)
     do j=1,n+1
     do i=1,n+1
       x=cos(taut(l))*w1_0(l,i,j)+sin(taut(l))*w2_0(l,i,j)
@@ -577,16 +557,14 @@ do step=1,nb_step
   
     call sll_s_fft_exec_c2c_1d(solver%bw, tmp, tmp)
     
-    Ens(:,i)=real(tmp-tmp(n/2+1),f64)/r(:)
+    Ens(1:n,i)=real(tmp-tmp(n/2+1),f64)/r(:)
    
   enddo
 
   !------End evaluation and continue 2nd solver-------------
 
   do l=0,Ntau-1
-    E0(1:n)=Ens(1:n,l)
-    E0(n+1)=0.0_f64
-    call sll_s_compute_cubic_spline_1D(E0,spl_1d)
+    call sll_s_compute_cubic_spline_1D(Ens(:,l),spl_1d)
     do j=1,n+1
     do i=1,n+1
       x = cos(taut(l))*real(ftilde1(l,i,j)) &
