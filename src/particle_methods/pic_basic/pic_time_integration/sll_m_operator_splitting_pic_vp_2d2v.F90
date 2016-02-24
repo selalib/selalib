@@ -1,4 +1,4 @@
-!> @ingroup particle_pushers
+!> @ingroup pic_time_integration
 !> @author Katharina Kormann, IPP
 !> @brief Particle pusher based on operator splitting for 2d2v Vlasov-Poisson.
 !> @details MPI parallelization by domain cloning. Periodic boundaries.
