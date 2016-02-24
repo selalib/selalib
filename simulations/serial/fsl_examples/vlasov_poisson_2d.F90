@@ -55,9 +55,9 @@ sll_comp64 :: ltau(0:ntau-1)
 sll_real64 :: fh_fsl(n+1,n+1)
 sll_real64 :: f0(n,n)
 sll_real64 :: k, h
-sll_real64 :: En(0:ntau-1,1:n)
-sll_real64 :: Enr(0:ntau-1,1:n)
-sll_real64 :: Ent(0:ntau-1,1:n)
+sll_real64 :: Ens(n,0:ntau-1)
+sll_real64 :: Enr(n,0:ntau-1)
+sll_real64 :: Ent(n,0:ntau-1)
 sll_real64 :: gn(0:ntau-1,n+1,n+1)
 sll_real64 :: gnr(0:ntau-1,n+1,n+1)
 sll_real64 :: gnt(0:ntau-1,n+1,n+1)
@@ -75,7 +75,7 @@ sll_real32 :: fdum, error
 sll_real64 :: tstart, tend
 sll_int32  :: ierr
 
-type :: poisson
+type :: fsl_solver
 
   sll_comp64, allocatable              :: lx(:)
   type(sll_t_fft)                      :: fw
@@ -86,9 +86,9 @@ type :: poisson
   type(sll_t_cubic_spline_2d), pointer :: spl_2d
   sll_real64, allocatable              :: f0(:,:)
 
-end type poisson
+end type fsl_solver
 
-type(poisson) :: solver
+type(fsl_solver) :: solver
 sll_real64    :: E0(n+1)
 sll_real64    :: E1(n+1)
 sll_real64    :: E2(n+1)
@@ -142,7 +142,7 @@ print *,'# eps = ',eps
 
 call cpu_time(tstart)
 
-call init_poisson_solver( solver, eta1_min, eta1_max, n)
+call init_fsl_solver( solver, eta1_min, eta1_max, n)
 
 call sll_s_fft_init_c2c_1d(fw_fft ,ntau, tmp1, tmp1_f, sll_p_fft_forward)
 call sll_s_fft_init_c2c_1d(bw_fft ,ntau, tmp1_f, tmp1, sll_p_fft_backward)
@@ -201,7 +201,7 @@ do step=1,nb_step
   r(n/2+1)=1.0d0
   do i=0,ntau-1
   
-    call poisson_interp(solver,f0,taut(i),n,fvr)
+    call fsl_interp(solver,f0,taut(i),n,fvr)
     do j=1,n
       tmp = cmplx(fvr(j,:),0.,f64)
       call sll_s_fft_exec_c2c_1d(solver%fw, tmp, tmp)
@@ -213,8 +213,8 @@ do step=1,nb_step
     tmp(1)=cmplx(0.0d0,0.0d0,kind=f64)
     call sll_s_fft_exec_c2c_1d(solver%bw, tmp,tmp)
   
-    En (i,:)=real(tmp-tmp(n/2+1))/r
-    Enr(i,:)=real(sum0-En(i,:))/r
+    Ens(:,i)=real(tmp-tmp(n/2+1))/r
+    Enr(:,i)=real(sum0-Ens(:,i))/r
   
   enddo
   
@@ -248,7 +248,7 @@ do step=1,nb_step
   enddo
   
   do l=0,Ntau-1
-    E0(1:n)=En(l,1:n)
+    E0(1:n)=Ens(1:n,l)
     E0(n+1)=0.0_f64
     call sll_s_compute_cubic_spline_1D(E0,spl_1d)
     do j=1,n+1
@@ -265,8 +265,8 @@ do step=1,nb_step
 
   do i=0,ntau-1
   
-    call poisson_interp(solver,ftv,taut(i),n,ftmp1)
-    call poisson_interp(solver,ftr,taut(i),n,ftmp2)
+    call fsl_interp(solver,ftv,taut(i),n,ftmp1)
+    call fsl_interp(solver,ftr,taut(i),n,ftmp2)
   
     do j=1,n
   
@@ -289,14 +289,14 @@ do step=1,nb_step
   
     call sll_s_fft_exec_c2c_1d(solver%bw, tmp, tmp)
   
-    Ent(i,:)=real(tmp-tmp(n/2+1))/r
+    Ent(:,i)=real(tmp-tmp(n/2+1))/r
   
   enddo
 
 
   do l=0,Ntau-1
   
-    E0(1:n)=En(l,1:n)
+    E0(1:n)=Ens(1:n,l)
     E0(n+1)=0.0_f64
   
     call sll_s_compute_cubic_spline_1D(E0,spl_1d)
@@ -316,7 +316,7 @@ do step=1,nb_step
   
   do l=0,Ntau-1
   
-    E1(1:n)=Enr(l,1:n)
+    E1(1:n)=Enr(1:n,l)
     E1(n+1)=0.0_f64
   
     call sll_s_compute_cubic_spline_1D(E1,spl_1d)
@@ -336,7 +336,7 @@ do step=1,nb_step
   
   do l=0,Ntau-1
   
-    E2(1:n)=Ent(l,1:n)
+    E2(1:n)=Ent(1:n,l)
     E2(n+1)=0.0_f64
   
     call sll_s_compute_cubic_spline_1D(E2,spl_1d)
@@ -389,9 +389,9 @@ do step=1,nb_step
 
   do l=0,Ntau-1
   
-    E0(1:n)=En (l,1:n)
-    E1(1:n)=Enr(l,1:n)
-    E2(1:n)=Ent(l,1:n)
+    E0(1:n)=Ens(1:n,l)
+    E1(1:n)=Enr(1:n,l)
+    E2(1:n)=Ent(1:n,l)
   
     E0(n+1)=0.0_f64
     E1(n+1)=0.0_f64
@@ -500,7 +500,7 @@ do step=1,nb_step
   enddo
 
   do l=0,Ntau-1
-    E0(1:n)=En(l,1:n)
+    E0(1:n)=Ens(1:n,l)
     E0(n+1)=0.0_f64
     call sll_s_compute_cubic_spline_1D(E0,spl_1d)
     do j=1,n+1
@@ -559,7 +559,7 @@ do step=1,nb_step
   r(n/2+1)=1.0d0
   do i=0,ntau-1
   
-    call poisson_interp(solver,f0,taut(i),n,fvr)
+    call fsl_interp(solver,f0,taut(i),n,fvr)
   
     do j=1,n
       tmp = cmplx(fvr(j,:),0.0,f64)
@@ -577,14 +577,14 @@ do step=1,nb_step
   
     call sll_s_fft_exec_c2c_1d(solver%bw, tmp, tmp)
     
-    En(i,:)=real(tmp-tmp(n/2+1),f64)/r(:)
+    Ens(:,i)=real(tmp-tmp(n/2+1),f64)/r(:)
    
   enddo
 
   !------End evaluation and continue 2nd solver-------------
 
   do l=0,Ntau-1
-    E0(1:n)=En(l,1:n)
+    E0(1:n)=Ens(1:n,l)
     E0(n+1)=0.0_f64
     call sll_s_compute_cubic_spline_1D(E0,spl_1d)
     do j=1,n+1
@@ -642,7 +642,7 @@ do step=1,nb_step
 
   print"('Step =', i6, ' Time = ', g15.3)", step, real(step*k/eps)
   f0=fh_fsl(1:n,1:n)
-  call poisson_interp(solver,f0,real(step*k/eps,f64),n,fvr)
+  call fsl_interp(solver,f0,real(step*k/eps,f64),n,fvr)
   call sll_o_gnuplot_2d(n, x1, n, x2, fvr, 'fh', step, ierr)
   call sll_s_xdmf_rect2d_nodes( 'fh', fvr, 'fh', x1(1:n), x2(1:n), &
                                 'HDF5', step) 
@@ -652,7 +652,7 @@ call sll_o_delete(spl_1d)
 call sll_o_delete(spl_2d)
 call sll_s_fft_free(fw_fft)
 call sll_s_fft_free(bw_fft)
-call free_poisson_solver(solver)
+call free_fsl_solver(solver)
 
 call cpu_time(tend)
 print"('CPU time = ', g15.3)", tend - tstart
@@ -762,9 +762,9 @@ function rfct2( tau, ntau, xi1, xi2, gn )
 
 end function rfct2
 
-subroutine init_poisson_solver( self, xmin, xmax, num_cells)
+subroutine init_fsl_solver( self, xmin, xmax, num_cells)
 
-class(poisson)   :: self
+type(fsl_solver)        :: self
 sll_int32 , intent(in)  :: num_cells
 sll_real64, intent(in)  :: xmin
 sll_real64, intent(in)  :: xmax
@@ -802,24 +802,24 @@ do i = 1, num_cells
   self%r(i) = xmin + (i-1) * (xmax-xmin)/real(num_cells,f64)
 end do
 
-end subroutine init_poisson_solver
+end subroutine init_fsl_solver
 
-subroutine free_poisson_solver( self )
+subroutine free_fsl_solver( self )
 
-class(poisson)   :: self
+type(fsl_solver)   :: self
 
 deallocate(self%lx)
 call sll_s_fft_free(self%fw)
 call sll_s_fft_free(self%bw)
 call sll_o_delete(self%spl_2d)
 
-end subroutine free_poisson_solver
+end subroutine free_fsl_solver
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
-subroutine poisson_interp(self, fh_fsl,t,num_cells,fvr)
+subroutine fsl_interp(self, fh_fsl,t,num_cells,fvr)
 
-class(poisson)              :: self
+type(fsl_solver)            :: self
 sll_int32,  intent(in)      :: num_cells
 sll_real64, intent(in)      :: fh_fsl(num_cells,num_cells)
 sll_real64, intent(in)      :: t
@@ -846,7 +846,7 @@ do j=1,num_cells
   enddo
 enddo
 
-end subroutine poisson_interp
+end subroutine fsl_interp
 
 end program test_deposit_cubic_splines
 
