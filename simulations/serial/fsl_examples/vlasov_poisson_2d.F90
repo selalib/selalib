@@ -46,8 +46,6 @@ sll_comp64 :: tmp1(0:ntau-1)
 sll_comp64 :: tmp2(0:ntau-1)
 sll_comp64 :: tmp1_f(0:ntau-1)
 sll_comp64 :: tmp2_f(0:ntau-1)
-sll_comp64 :: w1c(0:ntau-1)
-sll_comp64 :: w2c(0:ntau-1)
 
 sll_real64 :: tau(0:ntau-1)
 sll_comp64 :: ltau(0:ntau-1)
@@ -584,11 +582,11 @@ do step=1,nb_step
       call sll_s_fft_exec_c2c_1d(fw_fft, F1, tmp1_f)
       call sll_s_fft_exec_c2c_1d(fw_fft, F2, tmp2_f)
 
-      w1c = cmplx(xi1(:,i,j),0.0,f64)
-      w2c = cmplx(xi2(:,i,j),0.0,f64)
+      tmp1 = cmplx(xi1(:,i,j),0.0,f64)
+      tmp2 = cmplx(xi2(:,i,j),0.0,f64)
 
-      call sll_s_fft_exec_c2c_1d(fw_fft, w1c, F1)
-      call sll_s_fft_exec_c2c_1d(fw_fft, w2c, F2)
+      call sll_s_fft_exec_c2c_1d(fw_fft, tmp1, F1)
+      call sll_s_fft_exec_c2c_1d(fw_fft, tmp2, F2)
 
       tmp1=(F1*(1.0_f64+0.5_f64*k/eps*ltau)+k*tmp1_f) &
               /(1.0_f64-0.5_f64*k*ltau/eps)
