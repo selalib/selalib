@@ -32,19 +32,19 @@ module sll_m_pic_poisson_2d
      sll_int32 :: no_gridpts(2)
      sll_int32 :: no_dofs
 
-     class(sll_c_kernel_smoother), pointer :: kernel
-     class(sll_c_poisson_2d_base), pointer :: solver
-     sll_real64, allocatable               :: rho_dofs(:)
-     sll_real64, allocatable               :: rho_dofs_local(:)
-     sll_real64, allocatable               :: rho_analyt_dofs(:)
-     sll_real64, allocatable               :: efield_dofs(:,:)
-     sll_real64, allocatable               :: phi_dofs(:)
-     sll_real64, allocatable               :: rho2d(:,:)
-     sll_real64, allocatable               :: efield1(:,:)
-     sll_real64, allocatable               :: efield2(:,:)
-     sll_real64, allocatable               :: phi2d(:,:)
+     class(sll_c_kernel_smoother), pointer :: kernel     !< Kernel smoother taking care of charge deposition and field evaluation
+     class(sll_c_poisson_2d_base), pointer :: poisson !< Poisson solver
+     sll_real64, allocatable               :: rho_dofs(:) !< Coefficients of expansion of rho (MPI global version)
+     sll_real64, allocatable               :: rho_dofs_local(:) !< Coefficients of expansion of rho (MPI local version)
+     sll_real64, allocatable               :: rho_analyt_dofs(:) !< Analytic contribution to the coefficients of expansion of rho (for delta f)
+     sll_real64, allocatable               :: efield_dofs(:,:) !< Coefficients of expansion of electric field
+     sll_real64, allocatable               :: phi_dofs(:) !< Coefficients of expansion of potential
+     sll_real64, allocatable               :: rho2d(:,:) !< 2d version of rho_dofs to adjust to field solver format
+     sll_real64, allocatable               :: efield1(:,:) !< 2d version of efield_dofs(:,1) to adjust to field solver format
+     sll_real64, allocatable               :: efield2(:,:) !< 2d version of efield_dofs(:,2) to adjust to field solver format
+     sll_real64, allocatable               :: phi2d(:,:) !< 2d version of phi_dofs to adjust to field solver format
 
-     logical                               :: rho_collected
+     logical                               :: rho_collected !< Flag to indicate if charge deposition has been finished
 
      contains
        procedure :: add_charge_single => add_charge_single_2d !< Add contribution of one particle to the charge density.
@@ -137,7 +137,7 @@ contains
             self%no_dofs, MPI_SUM, self%rho_dofs)
     end if
     self%rho2d = reshape(self%rho_dofs, self%no_gridpts)
-    call self%solver%compute_phi_from_rho(self%phi2d, self%rho2d)
+    call self%poisson%compute_phi_from_rho(self%phi2d, self%rho2d)
     self%phi_dofs = reshape(self%phi2d, [self%no_dofs])
 
   end subroutine solve_phi_2d
@@ -153,7 +153,7 @@ contains
             self%no_dofs, MPI_SUM, self%rho_dofs)
     end if
     self%rho2d = reshape(self%rho_dofs, self%no_gridpts)
-    call self%solver%compute_E_from_rho(self%efield1, self%efield2, self%rho2d)
+    call self%poisson%compute_E_from_rho(self%efield1, self%efield2, self%rho2d)
     self%efield_dofs(:,1) = reshape(self%efield1, [self%no_dofs])
     self%efield_dofs(:,2) = reshape(self%efield2, [self%no_dofs])
 
@@ -185,7 +185,7 @@ contains
     class( sll_t_pic_poisson_2d ), intent( inout )    :: self !< PIC Poisson solver object.
     procedure(sll_i_function_of_position)                :: func !< Function to be projected.
 
-    call self%solver%compute_rhs_from_function(func, self%rho_analyt_dofs)
+    call self%poisson%compute_rhs_from_function(func, self%rho_analyt_dofs)
 
   end subroutine set_analytic_charge_2d
 
@@ -197,19 +197,19 @@ contains
 
 
     if (component == 1) then
-       energy = self%solver%l2norm_squared(self%efield1)
+       energy = self%poisson%l2norm_squared(self%efield1)
     elseif (component == 2) then
-       energy = self%solver%l2norm_squared(self%efield2)
+       energy = self%poisson%l2norm_squared(self%efield2)
     end if
 
   end function compute_field_energy_2d
 
   !-------------------------------------------------------------------------------------------
   !< Constructor 
-  subroutine init_pic_poisson_2d(self, no_gridpts, solver, kernel)
+  subroutine init_pic_poisson_2d(self, no_gridpts, poisson, kernel)
     class( sll_t_pic_poisson_2d),           intent(out) :: self
     sll_int32,                              intent(in)  :: no_gridpts(2)
-    class( sll_c_poisson_2d_base), pointer, intent(in)  :: solver
+    class( sll_c_poisson_2d_base), pointer, intent(in)  :: poisson
     class( sll_c_kernel_smoother), pointer, intent(in)  :: kernel !< kernel smoother object
 
     !local variables
@@ -220,7 +220,7 @@ contains
     self%no_dofs = product(no_gridpts)
     self%rho_collected = .FALSE.
     
-    self%solver => solver
+    self%poisson => poisson
     self%kernel => kernel
 
     allocate(self%rho_dofs(self%no_dofs), stat=ierr)
@@ -257,26 +257,26 @@ contains
     deallocate(self%efield1)
     deallocate(self%efield2)
     deallocate(self%phi2d)
-    self%solver => null()
+    self%poisson => null()
     self%kernel => null()
 
   end subroutine free_pic_poisson_2d
 
 
   !> Constructor for abstract type
-  subroutine sll_s_new_pic_poisson_2d(poisson_solver, no_gridpts, solver, kernel)    
-    class( sll_c_pic_poisson),     pointer, intent(out) :: poisson_solver
+  subroutine sll_s_new_pic_poisson_2d(pic_poisson, no_gridpts, poisson, kernel)    
+    class( sll_c_pic_poisson),     pointer, intent(out) :: pic_poisson
     sll_int32,                              intent(in)  :: no_gridpts(2)
-    class( sll_c_poisson_2d_base), pointer, intent(in)  :: solver
+    class( sll_c_poisson_2d_base), pointer, intent(in)  :: poisson
     class( sll_c_kernel_smoother), pointer, intent(in)  :: kernel !< kernel smoother object
 
     !local variables
     sll_int32 :: ierr
  
-    allocate( sll_t_pic_poisson_2d :: poisson_solver, stat=ierr)
-    select type( poisson_solver)
+    allocate( sll_t_pic_poisson_2d :: pic_poisson, stat=ierr)
+    select type( pic_poisson)
     type is ( sll_t_pic_poisson_2d )
-       call poisson_solver%init( no_gridpts, solver, kernel)
+       call pic_poisson%init( no_gridpts, poisson, kernel)
     end select
 
   end subroutine sll_s_new_pic_poisson_2d
