@@ -1,3 +1,4 @@
+
 program test_deposit_cubic_splines
 #include "sll_working_precision.h"
 #include "sll_assert.h"
@@ -86,7 +87,7 @@ sll_real64 :: ft2(n,n)
 sll_int32  :: m, ref_id
 sll_real32 :: fdum, error
 sll_real64 :: tstart, tend
-sll_real64 :: ctau, stau
+sll_real64 :: ctau, stau, csq
 
 type :: fsl_solver
 
@@ -263,12 +264,16 @@ do step=1,nb_step
     call fsl_interp_2d(solver,ftv,tau(l),n,ft1)
     call fsl_interp_2d(solver,ftr,tau(l),n,ft2)
   
+    ctau = cos(tau(l))
+    stau = sin(tau(l))
+    csq  = cos(2.0_f64*tau(l))**2
+
     do i=1,n
-  
+
       do j=1,n
-        s1 =  xi1(l,i,j)*cos(tau(l))+xi2(l,i,j)*sin(tau(l))
-        s2 = -sin(tau(l))*ft1(i,j)+cos(tau(l))*ft2(i,j)
-        s3 = (cos(2.0_f64*tau(l))**2 * s1 + gn(l,i,j))*s2
+        s1 =  xi1(l,i,j)*ctau+xi2(l,i,j)*stau
+        s2 = -stau*ft1(i,j)+ctau*ft2(i,j)
+        s3 = (csq * s1 + gn(l,i,j)) * s2
         vctmp(j) = cmplx(s3,0.,f64)
       enddo
   
@@ -279,8 +284,8 @@ do step=1,nb_step
   
     call sll_s_fft_exec_c2c_1d(solver%fw, sum0, tmp)
   
-    tmp(2:n)=tmp(2:n)/solver%lx(2:n)
-    tmp(1)=cmplx(0.0d0,0.0d0,kind=f64)
+    tmp(2:n) = tmp(2:n)/solver%lx(2:n)
+    tmp(1)   = cmplx(0.0d0,0.0d0,kind=f64)
   
     call sll_s_fft_exec_c2c_1d(solver%bw, tmp, tmp)
   
@@ -309,9 +314,9 @@ do step=1,nb_step
     do i=1,n+1
 
       !------------for 1st order correction------------------
-      do m=0,ntau-1
-        F1(m) = rfct1(tau(m), ntau, x1(i), x2(j), gn(m,i,j))
-        F2(m) = rfct2(tau(m), ntau, x1(i), x2(j), gn(m,i,j))
+      do l=0,ntau-1
+        F1(l) = rfct1(tau(l), ntau, x1(i), x2(j), gn(l,i,j))
+        F2(l) = rfct2(tau(l), ntau, x1(i), x2(j), gn(l,i,j))
       enddo
 
       call sll_s_fft_exec_c2c_1d(fw_fft, F1, tmp1_f)
@@ -357,18 +362,18 @@ do step=1,nb_step
   do j=1,n+1
     do i=1,n+1
       !------------for 2nd order correction------------------
-      do m=0,ntau-1
+      do l=0,ntau-1
 
-        F1(m)= rfct1(tau(m), 1, xi1(m,i,j), xi2(m,i,j), gn(m,i,j))
-        F2(m)= rfct2(tau(m), 1, xi1(m,i,j), xi2(m,i,j), gn(m,i,j))
+        F1(l)= rfct1(tau(l), 1, xi1(l,i,j), xi2(l,i,j), gn(l,i,j))
+        F2(l)= rfct2(tau(l), 1, xi1(l,i,j), xi2(l,i,j), gn(l,i,j))
 
-        dtgn=  cmplx(gnt(m,i,j),0.0,f64) &
-             + cmplx(gnr(m,i,j),0.0,f64) &
-             *(cmplx(cos(tau(m)),0.0,f64)*ftilde1(0,i,j) &
-             + cmplx(sin(tau(m)),0.0,f64)*ftilde2(0,i,j))
+        dtgn=  cmplx(gnt(l,i,j),0.0,f64) &
+             + cmplx(gnr(l,i,j),0.0,f64) &
+             *(cmplx(cos(tau(l)),0.0,f64)*ftilde1(0,i,j) &
+             + cmplx(sin(tau(l)),0.0,f64)*ftilde2(0,i,j))
 
-        tmp1(m)= fct1(tau(m), ntau, ftilde1(0,i,j), ftilde2(0,i,j), dtgn)
-        tmp2(m)= fct2(tau(m), ntau, ftilde1(0,i,j), ftilde2(0,i,j), dtgn)
+        tmp1(l)= cfct1(tau(l), ntau, ftilde1(0,i,j), ftilde2(0,i,j), dtgn)
+        tmp2(l)= cfct2(tau(l), ntau, ftilde1(0,i,j), ftilde2(0,i,j), dtgn)
 
       enddo
 
@@ -429,8 +434,8 @@ do step=1,nb_step
     do i=1,n+1
 
       do m=0,ntau-1
-        F1(m)=rfct1(tau(m),1,xi1(m,i,j),xi2(m,i,j),gn(m,i,j))
-        F2(m)=rfct2(tau(m),1,xi1(m,i,j),xi2(m,i,j),gn(m,i,j))
+        F1(m) = rfct1(tau(m),1,xi1(m,i,j),xi2(m,i,j),gn(m,i,j))
+        F2(m) = rfct2(tau(m),1,xi1(m,i,j),xi2(m,i,j),gn(m,i,j))
       enddo
 
       tmp1 = xi1(:,i,j) + 0.5_f64*k*F1
@@ -506,9 +511,9 @@ do step=1,nb_step
   do j=1,n+1
     do i=1,n+1
 
-      do m=0,ntau-1
-        F1(m)=fct1(tau(m), 1, ftilde1(m,i,j), ftilde2(m,i,j), cmplx(gn(m,i,j),0.0,f64))
-        F2(m)=fct2(tau(m), 1, ftilde1(m,i,j), ftilde2(m,i,j), cmplx(gn(m,i,j),0.0,f64))
+      do l=0,ntau-1
+        F1(l) = cfct1(tau(l), 1, ftilde1(l,i,j), ftilde2(l,i,j), cmplx(gn(l,i,j),0.0,f64))
+        F2(l) = cfct2(tau(l), 1, ftilde1(l,i,j), ftilde2(l,i,j), cmplx(gn(l,i,j),0.0,f64))
       enddo
 
       call sll_s_fft_exec_c2c_1d(fw_fft, F1, tmp1_f)
@@ -520,10 +525,10 @@ do step=1,nb_step
       call sll_s_fft_exec_c2c_1d(fw_fft, tmp1, F1)
       call sll_s_fft_exec_c2c_1d(fw_fft, tmp2, F2)
 
-      tmp1=(F1*(1.0_f64+0.5_f64*k/eps*ltau)+k*tmp1_f) &
-              /(1.0_f64-0.5_f64*k*ltau/eps)
-      tmp2=(F2*(1.0_f64+0.5_f64*k/eps*ltau)+k*tmp2_f) &
-              /(1.0_f64-0.5_f64*k*ltau/eps)
+      tmp1 = (F1*(1.0_f64+0.5_f64*k/eps*ltau)+k*tmp1_f) &
+                /(1.0_f64-0.5_f64*k*ltau/eps)
+      tmp2 = (F2*(1.0_f64+0.5_f64*k/eps*ltau)+k*tmp2_f) &
+                /(1.0_f64-0.5_f64*k*ltau/eps)
 
       sumup1 = sum(tmp1*exp(-ltau*k/eps))/cmplx(ntau,0.0,f64)
       sumup2 = sum(tmp2*exp(-ltau*k/eps))/cmplx(ntau,0.0,f64)
@@ -594,9 +599,9 @@ subroutine apply_bc()
 
 end subroutine apply_bc
 
-function fct1( tau, ntau, xi1, xi2, gn )
+function cfct1( tau, ntau, xi1, xi2, gn )
 
-  sll_comp64 :: fct1
+  sll_comp64 :: cfct1
   sll_real64 :: tau
   sll_int32  :: ntau
   sll_comp64 :: xi1
@@ -607,14 +612,14 @@ function fct1( tau, ntau, xi1, xi2, gn )
 
   ctau = cmplx(tau,0.0,f64)
 
-  fct1 = ( - cos(2.0*ctau)**2 * ( cmplx(0.5,0.0,f64)*sin(2.0*ctau)*xi1 &
-           + sin(ctau)**2*xi2) - sin(ctau)*gn)/cmplx(ntau,0.0,f64)
+  cfct1 = ( - cos(2.0*ctau)**2 * ( cmplx(0.5,0.0,f64)*sin(2.0*ctau)*xi1 &
+            + sin(ctau)**2*xi2) - sin(ctau)*gn)/cmplx(ntau,0.0,f64)
 
-end function fct1
+end function cfct1
 
-function fct2( tau, ntau, xi1, xi2, gn )
+function cfct2( tau, ntau, xi1, xi2, gn )
 
-  sll_comp64 :: fct2
+  sll_comp64 :: cfct2
   sll_real64 :: tau
   sll_int32  :: ntau
   sll_comp64 :: xi1
@@ -625,11 +630,11 @@ function fct2( tau, ntau, xi1, xi2, gn )
 
   ctau = cmplx(tau,0.0,f64)
 
-  fct2 = (  cos(2.0*ctau)**2 * ( cos(ctau)**2*xi1 &
-          + cmplx(0.5,0.0,f64)*sin(2.0*ctau)*xi2)  &
-          + cos(ctau)*gn )/cmplx(ntau,0.0,f64)
+  cfct2 = (  cos(2.0*ctau)**2 * ( cos(ctau)**2*xi1 &
+           + cmplx(0.5,0.0,f64)*sin(2.0*ctau)*xi2)  &
+           + cos(ctau)*gn )/cmplx(ntau,0.0,f64)
 
-end function fct2
+end function cfct2
 
 function rfct1( tau, ntau, xi1, xi2, gn )
 
