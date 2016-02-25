@@ -172,13 +172,6 @@ SLL_ALLOCATE(ft2(n,n),err)
 SLL_ALLOCATE(eta1feet(n+1,n+1), err)
 SLL_ALLOCATE(eta2feet(n+1,n+1), err)
 
-!$OMP PARALLEL NUM_THREADS(1)                              & 
-!$OMP DEFAULT(SHARED)                                      &
-!$OMP PRIVATE(spl_1d, spl_2d, solver, bw_fft, fw_fft)
- 
-!$OMP CRITICAL
-!$ PRINT*, OMP_GET_NUM_THREADS(), OMP_GET_THREAD_NUM()
-!$OMP END CRITICAL
 
 call init_fsl_solver( solver, eta1_min, eta1_max, n)
 call sll_s_fft_init_c2c_1d(fw_fft ,ntau, tmp1, tmp1_f, sll_p_fft_forward)
@@ -217,19 +210,27 @@ do i=1,n+1
   end do
 end do
 
-do l=0,ntau-1
-  tau(l)=real(l,f64)*h
-enddo
-
 ltau = [(cmplx(0.,-l,f64),l=0,ntau/2-1),(cmplx(0,-l,f64),l=-ntau/2,-1)]
+
+!$OMP PARALLEL DEFAULT(SHARED) PRIVATE(l) FIRSTPRIVATE(k,nb_step,eps,h)
+!$OMP CRITICAL
+!$ PRINT*, OMP_GET_NUM_THREADS(), OMP_GET_THREAD_NUM()
+!$OMP END CRITICAL
 
 do step=1,nb_step !-------- * Evolution in time * ---------
 
-
+  !$OMP MASTER
+  do l=0,ntau-1
+    tau(l)=real(l,f64)*h + real(step-1,f64)*k/eps
+  enddo
+  
   call sll_s_compute_cubic_spline_2d(fh_fsl,spl_2d)
+  !$OMP END MASTER
 
   r        = solver%r
   r(n/2+1) = 1.0_f64
+
+  !$OMP MASTER
   do l=0,ntau-1
   
     call fsl_interp_2d(solver,fh_fsl,tau(l),n,fvr)
@@ -248,7 +249,9 @@ do step=1,nb_step !-------- * Evolution in time * ---------
     Enr(1:n,l)=real(sum0-Ens(1:n,l))/r
   
   enddo
+  !$OMP END MASTER
   
+  !$OMP MASTER
   do j=1,n
   
     vctmp = cmplx(fh_fsl(j,1:n),0.,f64)
@@ -266,7 +269,9 @@ do step=1,nb_step !-------- * Evolution in time * ---------
     ftr(1:n,j)=real(tmp)  !\partial_\x2 f_tilde(\xi1,\xi2)
   
   enddo
-  
+  !$OMP END MASTER
+
+  !$OMP MASTER
   v(1:n)=solver%r
   v(n+1)=solver%L
   do l=0,ntau-1
@@ -283,7 +288,10 @@ do step=1,nb_step !-------- * Evolution in time * ---------
     call fsl_interp_1d(spl_1d, n, x, ens(:,l), gn(l,:,:))
 
   enddo
+  !$OMP END MASTER
 
+    
+  !$OMP MASTER
   do l=0,ntau-1
   
     call fsl_interp_2d(solver,ftv,tau(l),n,ft1)
@@ -317,8 +325,10 @@ do step=1,nb_step !-------- * Evolution in time * ---------
     Ent(1:n,l)=real(tmp-tmp(n/2+1))/r
   
   enddo
+  !$OMP END MASTER
 
 
+  !$OMP MASTER
   do l=0,Ntau-1
   
     ctau = cos(tau(l))
@@ -334,7 +344,9 @@ do step=1,nb_step !-------- * Evolution in time * ---------
     call fsl_interp_1d(spl_1d, n, x, ent(:,l), gnt(l,:,:))
   
   enddo
+  !$OMP END MASTER
 
+  !$OMP MASTER
   do j=1,n+1
     do i=1,n+1
 
@@ -367,7 +379,9 @@ do step=1,nb_step !-------- * Evolution in time * ---------
 
     enddo
   enddo
+  !$OMP END MASTER
 
+  !$OMP MASTER
   do l=0,Ntau-1
   
     ctau = cos(tau(l))
@@ -383,7 +397,9 @@ do step=1,nb_step !-------- * Evolution in time * ---------
     call fsl_interp_1d(spl_1d, n, x, ent(:,l), gnt(l,:,:))
 
   enddo
+  !$OMP END MASTER
   
+  !$OMP MASTER
   do j=1,n+1
     do i=1,n+1
       !------------for 2nd order correction------------------
@@ -443,7 +459,9 @@ do step=1,nb_step !-------- * Evolution in time * ---------
 
     enddo
   enddo
+  !$OMP END MASTER
 
+  !$OMP MASTER
   do l=0,Ntau-1
     ctau = cos(tau(l))
     stau = sin(tau(l))
@@ -454,7 +472,9 @@ do step=1,nb_step !-------- * Evolution in time * ---------
     end do
     call fsl_interp_1d(spl_1d, n, x, ens(:,l), gn(l,:,:))
   enddo
+  !$OMP END MASTER
 
+  !$OMP MASTER
   do j=1,n+1
     do i=1,n+1
 
@@ -490,9 +510,13 @@ do step=1,nb_step !-------- * Evolution in time * ---------
 
     enddo
   enddo
+  !$OMP END MASTER
 
+  !$OMP MASTER
   call sll_s_deposit_value_2d(eta1feet,eta2feet,spl_2d,fh_fsl) !function value at the half time
+  !$OMP END MASTER
 
+  !$OMP MASTER
   r        = solver%r
   r(n/2+1) = 1.0_f64
 
@@ -519,9 +543,11 @@ do step=1,nb_step !-------- * Evolution in time * ---------
     Ens(1:n,l)=real(tmp-tmp(n/2+1),f64)/r(:)
    
   enddo
+  !$OMP END MASTER
 
   !------End evaluation and continue 2nd solver-------------
 
+  !$OMP MASTER
   do l=0,Ntau-1
     ctau = cos(tau(l))
     stau = sin(tau(l))
@@ -532,7 +558,9 @@ do step=1,nb_step !-------- * Evolution in time * ---------
     end do
     call fsl_interp_1d(spl_1d, n, x, ens(:,l), gn(l,:,:))
   enddo
+  !$OMP END MASTER
 
+  !$OMP MASTER
   do j=1,n+1
     do i=1,n+1
 
@@ -568,17 +596,22 @@ do step=1,nb_step !-------- * Evolution in time * ---------
 
     enddo
   enddo
+  !$OMP END MASTER
 
+  !$OMP MASTER
   call sll_s_deposit_value_2d(eta1feet,eta2feet,spl_2d,fh_fsl)
-
   print"('Step =', i6, ' Time = ', g15.3)", step, real(step*k/eps)
+  !$OMP END MASTER
+
   !call sll_o_gnuplot_2d(n, x1, n, x2, fvr, 'fh', step, ierr)
   !call sll_s_xdmf_rect2d_nodes( 'fh', fvr, 'fh', x1(1:n), x2(1:n), &
   !                              'HDF5', step) 
 
-  tau = tau + k/eps
+
 
 enddo
+
+!$OMP END PARALLEL
 
 !---------------end time solve-------------------------
 
@@ -589,7 +622,6 @@ call sll_s_fft_free(bw_fft)
 call fsl_interp_2d(solver,fh_fsl,real(nb_step*k/eps,f64),n,fvr)
 call free_fsl_solver(solver)
 
-!$OMP END PARALLEL
 
 call cpu_time(tend)
 print"('CPU time = ', g15.3)", tend - tstart
