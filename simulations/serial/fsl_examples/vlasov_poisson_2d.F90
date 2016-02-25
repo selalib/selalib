@@ -10,10 +10,9 @@ use sll_m_boundary_condition_descriptors
 use sll_m_fft
 use sll_m_gnuplot
 use sll_m_xdmf
-use sll_m_cubic_spline_interpolator_1d
-use sll_m_cubic_spline_interpolator_2d
-use sll_m_interpolators_1d_base
-use sll_m_interpolators_2d_base
+use sll_m_cubic_splines
+
+!$ use omp_lib
 
 implicit none
 
@@ -24,11 +23,7 @@ sll_real64, parameter :: final_time = 0.4_f64
 
 type(sll_t_fft) :: fw_fft
 type(sll_t_fft) :: bw_fft
-
-class(sll_c_interpolator_1d), pointer :: interp_1d
-
-type(sll_t_cubic_spline_interpolator_1d), target :: spl_1d
-
+type(sll_t_cubic_spline_1d), pointer :: spl_1d
 type(sll_t_cubic_spline_2d), pointer :: spl_2d
 
 sll_int32  :: step,nb_step
@@ -83,7 +78,7 @@ sll_real64 :: k, h
 sll_comp64 :: sumup1
 sll_comp64 :: sumup2
 sll_real64 :: s1, s2, s3
-sll_int32  :: m, ref_id
+sll_int32  :: ref_id
 sll_real32 :: fdum, error
 sll_real64 :: tstart, tend
 sll_real64 :: ctau, stau, csq
@@ -139,10 +134,6 @@ print *,'# eps = ',eps
 
 call cpu_time(tstart)
 
-call init_fsl_solver( solver, eta1_min, eta1_max, n)
-
-call sll_s_fft_init_c2c_1d(fw_fft ,ntau, tmp1, tmp1_f, sll_p_fft_forward)
-call sll_s_fft_init_c2c_1d(bw_fft ,ntau, tmp1_f, tmp1, sll_p_fft_backward)
 
 ! allocations of the arrays
 SLL_ALLOCATE(ftilde1(0:ntau-1,n+1,n+1),err)
@@ -181,8 +172,19 @@ SLL_ALLOCATE(ft2(n,n),err)
 SLL_ALLOCATE(eta1feet(n+1,n+1), err)
 SLL_ALLOCATE(eta2feet(n+1,n+1), err)
 
-call spl_1d%initialize(n+1, eta1_min, eta1_max, sll_p_periodic )
-interp_1d => spl_1d
+!$OMP PARALLEL NUM_THREADS(1)                              & 
+!$OMP DEFAULT(SHARED)                                      &
+!$OMP PRIVATE(spl_1d, spl_2d, solver, bw_fft, fw_fft)
+ 
+!$OMP CRITICAL
+!$ PRINT*, OMP_GET_NUM_THREADS(), OMP_GET_THREAD_NUM()
+!$OMP END CRITICAL
+
+call init_fsl_solver( solver, eta1_min, eta1_max, n)
+call sll_s_fft_init_c2c_1d(fw_fft ,ntau, tmp1, tmp1_f, sll_p_fft_forward)
+call sll_s_fft_init_c2c_1d(bw_fft ,ntau, tmp1_f, tmp1, sll_p_fft_backward)
+
+spl_1d => sll_f_new_cubic_spline_1d( n+1, eta1_min, eta1_max, sll_p_periodic )
 
 spl_2d => sll_f_new_cubic_spline_2d( n+1,      &
                                      n+1,      &
@@ -215,14 +217,14 @@ do i=1,n+1
   end do
 end do
 
-do m=0,ntau-1
-  tau(m)=real(m,f64)*h
+do l=0,ntau-1
+  tau(l)=real(l,f64)*h
 enddo
 
-m    = ntau/2
-ltau = [(cmplx(l,0.,f64),l=0,m-1),(cmplx(l,0.,f64),l=-m,-1)] / sll_p_i1
+ltau = [(cmplx(0.,-l,f64),l=0,ntau/2-1),(cmplx(0,-l,f64),l=-ntau/2,-1)]
 
 do step=1,nb_step !-------- * Evolution in time * ---------
+
 
   call sll_s_compute_cubic_spline_2d(fh_fsl,spl_2d)
 
@@ -267,27 +269,18 @@ do step=1,nb_step !-------- * Evolution in time * ---------
   
   v(1:n)=solver%r
   v(n+1)=solver%L
-  do m=1,n+1
-    do j=1,n+1
-      do i=0,ntau-1
-        xi1(i,j,m)=v(j)*cos(tau(i))-v(m)*sin(tau(i))
-        xi2(i,j,m)=v(j)*sin(tau(i))+v(m)*cos(tau(i))
-      enddo
-    enddo
-  enddo
-  
-  do l=0,Ntau-1
-
-
+  do l=0,ntau-1
     ctau = cos(tau(l))
     stau = sin(tau(l))
     do j=1,n+1
       do i=1,n+1
-        x(i,j)=ctau*xi1(l,i,j)+stau*xi2(l,i,j)
+        xi1(l,i,j)= v(i)*ctau-v(j)*stau
+        xi2(l,i,j)= v(i)*stau+v(j)*ctau
+        x(i,j)    = v(i) 
       end do
     end do
 
-    call fsl_interp_1d(interp_1d, n, x, ens(:,l), gn(l,:,:))
+    call fsl_interp_1d(spl_1d, n, x, ens(:,l), gn(l,:,:))
 
   enddo
 
@@ -336,9 +329,9 @@ do step=1,nb_step !-------- * Evolution in time * ---------
       end do
     end do
 
-    call fsl_interp_1d(interp_1d, n, x, ens(:,l), gn(l,:,:))
-    call fsl_interp_1d(interp_1d, n, x, enr(:,l), gnr(l,:,:))
-    call fsl_interp_1d(interp_1d, n, x, ent(:,l), gnt(l,:,:))
+    call fsl_interp_1d(spl_1d, n, x, ens(:,l), gn(l,:,:))
+    call fsl_interp_1d(spl_1d, n, x, enr(:,l), gnr(l,:,:))
+    call fsl_interp_1d(spl_1d, n, x, ent(:,l), gnt(l,:,:))
   
   enddo
 
@@ -385,9 +378,9 @@ do step=1,nb_step !-------- * Evolution in time * ---------
       end do
     end do
 
-    call fsl_interp_1d(interp_1d, n, x, ens(:,l), gn(l,:,:))
-    call fsl_interp_1d(interp_1d, n, x, enr(:,l), gnr(l,:,:))
-    call fsl_interp_1d(interp_1d, n, x, ent(:,l), gnt(l,:,:))
+    call fsl_interp_1d(spl_1d, n, x, ens(:,l), gn(l,:,:))
+    call fsl_interp_1d(spl_1d, n, x, enr(:,l), gnr(l,:,:))
+    call fsl_interp_1d(spl_1d, n, x, ent(:,l), gnt(l,:,:))
 
   enddo
   
@@ -459,15 +452,15 @@ do step=1,nb_step !-------- * Evolution in time * ---------
         x(i,j)=ctau*xi1(l,i,j)+stau*xi2(l,i,j)
       end do
     end do
-    call fsl_interp_1d(interp_1d, n, x, ens(:,l), gn(l,:,:))
+    call fsl_interp_1d(spl_1d, n, x, ens(:,l), gn(l,:,:))
   enddo
 
   do j=1,n+1
     do i=1,n+1
 
-      do m=0,ntau-1
-        F1(m) = rfct1(tau(m),1,xi1(m,i,j),xi2(m,i,j),gn(m,i,j))
-        F2(m) = rfct2(tau(m),1,xi1(m,i,j),xi2(m,i,j),gn(m,i,j))
+      do l=0,ntau-1
+        F1(l) = rfct1(tau(l),1,xi1(l,i,j),xi2(l,i,j),gn(l,i,j))
+        F2(l) = rfct2(tau(l),1,xi1(l,i,j),xi2(l,i,j),gn(l,i,j))
       enddo
 
       tmp1 = xi1(:,i,j) + 0.5_f64*k*F1
@@ -537,7 +530,7 @@ do step=1,nb_step !-------- * Evolution in time * ---------
         x(i,j)=ctau*real(ftilde1(l,i,j))+stau*real(ftilde2(l,i,j))
       end do
     end do
-    call fsl_interp_1d(interp_1d, n, x, ens(:,l), gn(l,:,:))
+    call fsl_interp_1d(spl_1d, n, x, ens(:,l), gn(l,:,:))
   enddo
 
   do j=1,n+1
@@ -586,24 +579,27 @@ do step=1,nb_step !-------- * Evolution in time * ---------
   tau = tau + k/eps
 
 enddo
+
 !---------------end time solve-------------------------
 
 call sll_o_delete(spl_1d)
 call sll_o_delete(spl_2d)
 call sll_s_fft_free(fw_fft)
 call sll_s_fft_free(bw_fft)
+call fsl_interp_2d(solver,fh_fsl,real(nb_step*k/eps,f64),n,fvr)
+call free_fsl_solver(solver)
+
+!$OMP END PARALLEL
 
 call cpu_time(tend)
 print"('CPU time = ', g15.3)", tend - tstart
 
-call fsl_interp_2d(solver,fh_fsl,real(nb_step*k/eps,f64),n,fvr)
-call free_fsl_solver(solver)
 
 error = 0.0
 open(newunit = ref_id, file='fh.ref')
 do i=1,n
   do j=1,n
-    read(ref_id,*) m, l, fdum
+    read(ref_id,*) err, l, fdum
     error = error + abs(fdum-sngl(fvr(i,j)))
   enddo
   read(ref_id,*)
@@ -789,21 +785,21 @@ enddo
 
 end subroutine fsl_interp_2d
 
-subroutine fsl_interp_1d(interp, n, x, e, g)
+subroutine fsl_interp_1d(spl, n, x, e, g)
 
-class(sll_c_interpolator_1d), pointer :: interp
-sll_int32,  intent(in)                :: n
-sll_real64, intent(in)                :: x(:,:)
-sll_real64, intent(in)                :: e(:)
-sll_real64, intent(out)               :: g(:,:)
+type(sll_t_cubic_spline_1d), pointer :: spl
+sll_int32,  intent(in)               :: n
+sll_real64, intent(in)               :: x(:,:)
+sll_real64, intent(in)               :: e(:)
+sll_real64, intent(out)              :: g(:,:)
 
 sll_int32 :: i, j
 
-call interp%compute_interpolants(e)
+call sll_s_compute_cubic_spline_1d(e, spl)
 do j=1,n+1
   do i=1,n+1
     if (eta1_min < x(i,j) .and. x(i,j) < eta1_max ) then
-      g(i,j) = interp%interpolate_from_interpolant_value(x(i,j))
+      g(i,j) = sll_f_interpolate_from_interpolant_value(x(i,j), spl)
     else
       g(i,j) = 0.0_f64
     end if
