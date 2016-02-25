@@ -45,10 +45,10 @@ program test_pic_poisson_2d
   sll_int32  :: n_particles
 
   ! Poisson solver
-  class(sll_c_poisson_2d_base), pointer :: poisson_solver 
+  class(sll_c_poisson_2d_base), pointer :: pic_poisson 
   
   ! PIC Poisson solver
-  class(sll_c_pic_poisson), pointer :: solver
+  class(sll_c_pic_poisson), pointer :: poisson
 
   ! Abstract kernel smoother
   class(sll_c_kernel_smoother), pointer :: kernel_smoother
@@ -63,7 +63,7 @@ program test_pic_poisson_2d
   ! Just test allocation and deallocation since functionality is tested in the building blocks.
 
   ! Initialize the field solver
-  poisson_solver => sll_f_new_poisson_2d_periodic( &
+  pic_poisson => sll_f_new_poisson_2d_periodic( &
        domain(1,1), domain(1,2), num_cells(1), &
        domain(2,1), domain(2,2), num_cells(2) )
   
@@ -73,16 +73,16 @@ program test_pic_poisson_2d
        degree_smoother, sll_p_collocation)
   
   ! Initialize the PIC field solver
-  call sll_s_new_pic_poisson_2d( solver, &
+  call sll_s_new_pic_poisson_2d( poisson, &
        num_cells, &
-       poisson_solver, kernel_smoother)
+       pic_poisson, kernel_smoother)
 
-  call solver%free()
+  call poisson%free()
   call kernel_smoother%free()
-  call poisson_solver%free()
-  deallocate(solver)
+  call pic_poisson%free()
+  deallocate(poisson)
   deallocate(kernel_smoother)
-  deallocate(poisson_solver)
+  deallocate(pic_poisson)
 
   ! Test passed if init and free successfull.
   print*, 'PASSED'
