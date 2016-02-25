@@ -14,9 +14,6 @@ use sll_m_cubic_spline_interpolator_1d
 use sll_m_cubic_spline_interpolator_2d
 use sll_m_interpolators_1d_base
 use sll_m_interpolators_2d_base
-#ifdef _OPENMP
-!use omp_lib
-#endif
 
 implicit none
 
@@ -42,49 +39,50 @@ sll_real64 :: eta1_min
 sll_real64 :: eta1_max
 sll_real64 :: eps
 sll_real64 :: eta1,  eta2
-sll_real64 :: x1(n+1), x2(n+1)
 
 sll_real64, dimension(:,:), allocatable :: eta1feet
 sll_real64, dimension(:,:), allocatable :: eta2feet
 
-sll_comp64 :: F1(0:ntau-1)
-sll_comp64 :: F2(0:ntau-1)
-sll_comp64 :: tmp1(0:ntau-1)
-sll_comp64 :: tmp2(0:ntau-1)
-sll_comp64 :: tmp1_f(0:ntau-1)
-sll_comp64 :: tmp2_f(0:ntau-1)
+sll_comp64, allocatable :: ftilde1(:,:,:)
+sll_comp64, allocatable :: ftilde2(:,:,:)
+sll_comp64, allocatable :: F1     (:)
+sll_comp64, allocatable :: F2     (:)
+sll_comp64, allocatable :: tmp1   (:)
+sll_comp64, allocatable :: tmp2   (:)
+sll_comp64, allocatable :: tmp1_f (:)
+sll_comp64, allocatable :: tmp2_f (:)
+sll_comp64, allocatable :: ltau   (:)
+sll_comp64, allocatable :: tmp    (:)
+sll_comp64, allocatable :: sum0   (:)
+sll_comp64, allocatable :: vctmp  (:)
+sll_comp64, allocatable :: uctmp  (:)
 
-sll_real64 :: tau(0:ntau-1)
-sll_comp64 :: ltau(0:ntau-1)
+sll_real64, allocatable :: gn     (:,:,:)
+sll_real64, allocatable :: gnr    (:,:,:)
+sll_real64, allocatable :: gnt    (:,:,:)
+sll_real64, allocatable :: xi1    (:,:,:)
+sll_real64, allocatable :: xi2    (:,:,:)
+sll_real64, allocatable :: ftv    (:,:)
+sll_real64, allocatable :: ftr    (:,:)
+sll_real64, allocatable :: ft1    (:,:)
+sll_real64, allocatable :: ft2    (:,:)
+sll_real64, allocatable :: fh_fsl (:,:)
+sll_real64, allocatable :: Ens    (:,:)
+sll_real64, allocatable :: Enr    (:,:)
+sll_real64, allocatable :: Ent    (:,:)
+sll_real64, allocatable :: fvr    (:,:)
+sll_real64, allocatable :: x      (:,:)
+sll_real64, allocatable :: x1     (:)
+sll_real64, allocatable :: x2     (:)
+sll_real64, allocatable :: tau    (:)
+sll_real64, allocatable :: r      (:)
+sll_real64, allocatable :: v      (:)
 
-sll_real64 :: fh_fsl(n+1,n+1)
+sll_comp64 :: dtgn
 sll_real64 :: k, h
-sll_real64 :: Ens(n+1,0:ntau-1)
-sll_real64 :: Enr(n+1,0:ntau-1)
-sll_real64 :: Ent(n+1,0:ntau-1)
-sll_real64 :: gn(0:ntau-1,n+1,n+1)
-sll_real64 :: gnr(0:ntau-1,n+1,n+1)
-sll_real64 :: gnt(0:ntau-1,n+1,n+1)
 sll_comp64 :: sumup1
 sll_comp64 :: sumup2
-sll_comp64 :: dtgn
-sll_real64 :: fvr(1:n,1:n)
-sll_comp64 :: ftilde1(0:ntau-1,n+1,n+1)
-sll_comp64 :: ftilde2(0:ntau-1,n+1,n+1)
-sll_real64 :: x(n+1,n+1)
-sll_comp64 :: tmp(n)
-sll_comp64 :: sum0(n)
-sll_real64 :: r(n)
-sll_real64 :: xi1(0:ntau-1,n+1,n+1)
-sll_real64 :: xi2(0:ntau-1,n+1,n+1)
-sll_real64 :: ftv(n+1,n+1)
-sll_real64 :: ftr(n+1,n+1)
-sll_comp64 :: vctmp(n)
-sll_comp64 :: uctmp(n)
-sll_real64 :: v(n+1)
 sll_real64 :: s1, s2, s3
-sll_real64 :: ft1(n,n)
-sll_real64 :: ft2(n,n)
 sll_int32  :: m, ref_id
 sll_real32 :: fdum, error
 sll_real64 :: tstart, tend
@@ -147,6 +145,39 @@ call sll_s_fft_init_c2c_1d(fw_fft ,ntau, tmp1, tmp1_f, sll_p_fft_forward)
 call sll_s_fft_init_c2c_1d(bw_fft ,ntau, tmp1_f, tmp1, sll_p_fft_backward)
 
 ! allocations of the arrays
+SLL_ALLOCATE(ftilde1(0:ntau-1,n+1,n+1),err)
+SLL_ALLOCATE(ftilde2(0:ntau-1,n+1,n+1),err)
+SLL_ALLOCATE(x1(n+1),err)
+SLL_ALLOCATE(x2(n+1),err)
+SLL_ALLOCATE(fh_fsl(n+1,n+1),err)
+SLL_ALLOCATE(Ens(n+1,0:ntau-1),err)
+SLL_ALLOCATE(Enr(n+1,0:ntau-1),err)
+SLL_ALLOCATE(Ent(n+1,0:ntau-1),err)
+SLL_ALLOCATE(gn(0:ntau-1,n+1,n+1),err)
+SLL_ALLOCATE(gnr(0:ntau-1,n+1,n+1),err)
+SLL_ALLOCATE(gnt(0:ntau-1,n+1,n+1),err)
+SLL_ALLOCATE(F1(0:ntau-1),err)
+SLL_ALLOCATE(F2(0:ntau-1),err)
+SLL_ALLOCATE(tmp1(0:ntau-1),err)
+SLL_ALLOCATE(tmp2(0:ntau-1),err)
+SLL_ALLOCATE(tmp1_f(0:ntau-1),err)
+SLL_ALLOCATE(tmp2_f(0:ntau-1),err)
+SLL_ALLOCATE(tau(0:ntau-1),err)
+SLL_ALLOCATE(ltau(0:ntau-1),err)
+SLL_ALLOCATE(fvr(1:n,1:n),err)
+SLL_ALLOCATE(x(n+1,n+1),err)
+SLL_ALLOCATE(tmp(n),err)
+SLL_ALLOCATE(sum0(n),err)
+SLL_ALLOCATE(r(n),err)
+SLL_ALLOCATE(xi1(0:ntau-1,n+1,n+1),err)
+SLL_ALLOCATE(xi2(0:ntau-1,n+1,n+1),err)
+SLL_ALLOCATE(ftv(n+1,n+1),err)
+SLL_ALLOCATE(ftr(n+1,n+1),err)
+SLL_ALLOCATE(vctmp(n),err)
+SLL_ALLOCATE(uctmp(n),err)
+SLL_ALLOCATE(v(n+1),err)
+SLL_ALLOCATE(ft1(n,n),err)
+SLL_ALLOCATE(ft2(n,n),err)
 SLL_ALLOCATE(eta1feet(n+1,n+1), err)
 SLL_ALLOCATE(eta2feet(n+1,n+1), err)
 
@@ -190,10 +221,6 @@ enddo
 
 m    = ntau/2
 ltau = [(cmplx(l,0.,f64),l=0,m-1),(cmplx(l,0.,f64),l=-m,-1)] / sll_p_i1
-
-!!$OMP PARALLEL NUM_THREADS(1) DEFAULT(PRIVATE)
-!!$ PRINT*, OMP_GET_NUM_THREADS(), OMP_GET_THREAD_NUM()
-!!$OMP END PARALLEL
 
 do step=1,nb_step !-------- * Evolution in time * ---------
 
