@@ -10,7 +10,6 @@ sll_int32  ,parameter :: Nn=64
 sll_real64            :: fh_fsl(1:Nn)
 sll_real64            :: t
 sll_real64            :: r(1:Nn)
-sll_real64            :: v(1:Nn)
 sll_real64            :: lx(1:Nn)
 sll_real64            :: fh
 sll_real64            :: fvr(1:Nn**2)
