@@ -73,7 +73,7 @@ sll_int32  :: m, ref_id
 sll_real32 :: fdum, error
 sll_real64 :: tstart, tend
 sll_int32  :: ierr
-
+sll_real64 :: ctau, stau
 
 type :: fsl_solver
 
@@ -88,7 +88,7 @@ type :: fsl_solver
 end type fsl_solver
 
 type(fsl_solver) :: solver
-sll_real64       :: x
+sll_real64       :: x(n+1,n+1)
 sll_comp64       :: tmp(n)
 sll_comp64       :: sum0(n)
 sll_real64       :: r(n)
@@ -235,9 +235,9 @@ do step=1,nb_step
   
   v(1:n)=solver%r
   v(n+1)=solver%L
-  do i=0,ntau-1
+  do m=1,n+1
     do j=1,n+1
-      do m=1,n+1
+      do i=0,ntau-1
         xi1(i,j,m)=v(j)*cos(tau(i))-v(m)*sin(tau(i))
         xi2(i,j,m)=v(j)*sin(tau(i))+v(m)*cos(tau(i))
       enddo
@@ -245,17 +245,27 @@ do step=1,nb_step
   enddo
   
   do l=0,Ntau-1
+
     call interp_1d%compute_interpolants(Ens(:,l))
+
+    ctau = cos(tau(l))
+    stau = sin(tau(l))
+    do j=1,n+1
+      do i=1,n+1
+        x(i,j)=ctau*xi1(l,i,j)+stau*xi2(l,i,j)
+      end do
+    end do
+
     do j=1,n+1
     do i=1,n+1
-      x=cos(tau(l))*xi1(l,i,j)+sin(tau(l))*xi2(l,i,j)
-      if (x > eta1_min .and. x < eta1_max) then
-        gn(l,i,j)=interp_1d%interpolate_from_interpolant_value(x)
+      if (eta1_min < x(i,j) .and. x(i,j) < eta1_max ) then
+        gn(l,i,j)=interp_1d%interpolate_from_interpolant_value(x(i,j))
       else
         gn(l,i,j)=0.0_f64
-      endif
+      end if
     enddo
     enddo
+
   enddo
 
   do i=0,ntau-1
@@ -291,50 +301,42 @@ do step=1,nb_step
 
   do l=0,Ntau-1
   
+    do j=1,n+1
+    do i=1,n+1
+      x(i,j)=cos(tau(l))*x1(i)+sin(tau(l))*x1(j)
+    end do
+    end do
+
     call interp_1d%compute_interpolants(Ens(:,l))
-  
     do j=1,n+1
       do i=1,n+1
-        x=cos(tau(l))*x1(i)+sin(tau(l))*x1(j)
-        if (x > eta1_min .and. x < eta1_max) then
-          gn (l,i,j) = interp_1d%interpolate_from_interpolant_value(x)
+        if (eta1_min < x(i,j) .and. x(i,j) < eta1_max ) then
+          gn(l,i,j) = interp_1d%interpolate_from_interpolant_value(x(i,j))
         else
-          gn( l,i,j)  = 0.0_f64
-        endif
+          gn(l,i,j)=0.0_f64
+        end if
       enddo
     enddo
-  
-  enddo
-  
-  do l=0,Ntau-1
   
     call interp_1d%compute_interpolants(Enr(:,l))
-  
     do j=1,n+1
       do i=1,n+1
-        x=cos(tau(l))*x1(i)+sin(tau(l))*x1(j)
-        if (x > eta1_min .and. x < eta1_max) then
-          gnr(l,i,j) = interp_1d%interpolate_from_interpolant_value(x)
+        if (eta1_min < x(i,j) .and. x(i,j) < eta1_max ) then
+          gnr(l,i,j) = interp_1d%interpolate_from_interpolant_value(x(i,j))
         else
-          gnr(l,i,j) = 0.0_f64
-        endif
+          gnr(l,i,j)=0.0_f64
+        end if
       enddo
     enddo
   
-  enddo
-  
-  do l=0,Ntau-1
-  
     call interp_1d%compute_interpolants(Ent(:,l))
-  
     do j=1,n+1
       do i=1,n+1
-        x=cos(tau(l))*x1(i)+sin(tau(l))*x1(j)
-        if (x > eta1_min .and. x < eta1_max) then
-          gnt(l,i,j) = interp_1d%interpolate_from_interpolant_value(x)
+        if (eta1_min < x(i,j) .and. x(i,j) < eta1_max ) then
+          gnt(l,i,j) = interp_1d%interpolate_from_interpolant_value(x(i,j))
         else
           gnt(l,i,j) = 0.0_f64
-        endif
+        end if
       enddo
     enddo
   
@@ -375,50 +377,51 @@ do step=1,nb_step
 
   do l=0,Ntau-1
   
-    call interp_1d%compute_interpolants(Ens(:,l))
-  
+    ctau = cos(tau(l))
+    stau = sin(tau(l))
     do j=1,n+1
-    do i=1,n+1
-      x=cos(tau(l))*xi1(l,i,j)+sin(tau(l))*xi2(l,i,j)
-      if ( x > eta1_min .and. x < eta1_max) then
-        gn(l,i,j) = interp_1d%interpolate_from_interpolant_value(x)
-      else
-        gn(l,i,j) = 0.0_f64
-      endif
-    enddo
+      do i=1,n+1
+        x(i,j)=ctau*xi1(l,i,j)+stau*xi2(l,i,j)
+      end do
+    end do
+
+    call interp_1d%compute_interpolants(Ens(:,l))
+    do j=1,n+1
+      do i=1,n+1
+        if (eta1_min < x(i,j) .and. x(i,j) < eta1_max ) then
+          gn(l,i,j) = interp_1d%interpolate_from_interpolant_value(x(i,j))
+        else
+          gn(l,i,j) = 0.0_f64
+        end if
+      enddo
     enddo
 
     call interp_1d%compute_interpolants(Enr(:,l))
-
     do j=1,n+1
-    do i=1,n+1
-      x=cos(tau(l))*xi1(l,i,j)+sin(tau(l))*xi2(l,i,j)
-      if ( x > eta1_min .and. x < eta1_max) then
-        gnr(l,i,j) = interp_1d%interpolate_from_interpolant_value(x)
-      else
-        gnr(l,i,j) = 0.0_f64
-      endif
-    enddo
+      do i=1,n+1
+        if (eta1_min < x(i,j) .and. x(i,j) < eta1_max ) then
+          gnr(l,i,j) = interp_1d%interpolate_from_interpolant_value(x(i,j))
+        else
+          gnr(l,i,j) = 0.0_f64
+        end if
+      enddo
     enddo
 
     call interp_1d%compute_interpolants(Ent(:,l))
-  
     do j=1,n+1
-    do i=1,n+1
-      x=cos(tau(l))*xi1(l,i,j)+sin(tau(l))*xi2(l,i,j)
-      if ( x > eta1_min .and. x < eta1_max) then
-        gnt(l,i,j) = interp_1d%interpolate_from_interpolant_value(x)
-      else
-        gnt(l,i,j) = 0.0_f64
-      endif
-    enddo
+      do i=1,n+1
+        if (eta1_min < x(i,j) .and. x(i,j) < eta1_max ) then
+          gnt(l,i,j) = interp_1d%interpolate_from_interpolant_value(x(i,j))
+        else
+          gnt(l,i,j) = 0.0_f64
+        end if
+      enddo
     enddo
 
   enddo
   
-
-  do i=1,n+1
-    do j=1,n+1
+  do j=1,n+1
+    do i=1,n+1
       !------------for 2nd order correction------------------
       do m=0,ntau-1
 
@@ -478,21 +481,27 @@ do step=1,nb_step
   enddo
 
   do l=0,Ntau-1
+    ctau = cos(tau(l))
+    stau = sin(tau(l))
+    do j=1,n+1
+      do i=1,n+1
+        x(i,j)=ctau*xi1(l,i,j)+stau*xi2(l,i,j)
+      end do
+    end do
     call interp_1d%compute_interpolants(Ens(:,l))
     do j=1,n+1
-    do i=1,n+1
-      x=cos(tau(l))*xi1(l,i,j)+sin(tau(l))*xi2(l,i,j)
-      if (x > eta1_min .and. x < eta1_max ) then
-        gn(l,i,j)=interp_1d%interpolate_from_interpolant_value(x)
-      else
-        gn(l,i,j)=0.0_f64
-      endif
-    enddo
+      do i=1,n+1
+        if (eta1_min < x(i,j) .and. x(i,j) < eta1_max ) then
+          gn(l,i,j)=interp_1d%interpolate_from_interpolant_value(x(i,j))
+        else
+          gn(l,i,j)=0.0_f64
+        end if
+      enddo
     enddo
   enddo
 
-  do i=1,n+1
-    do j=1,n+1
+  do j=1,n+1
+    do i=1,n+1
 
       do m=0,ntau-1
         F1(m)=rfct1(tau(m),1,xi1(m,i,j),xi2(m,i,j),gn(m,i,j))
@@ -529,16 +538,17 @@ do step=1,nb_step
 
   call sll_s_deposit_value_2d(eta1feet,eta2feet,spl_2d,fh_fsl) !function value at the half time
 
-  r=solver%r
-  r(n/2+1)=1.0d0
-  do i=0,ntau-1
+  r        = solver%r
+  r(n/2+1) = 1.0_f64
+
+  do l=0,ntau-1
   
-    call fsl_interp(solver,fh_fsl,tau(i),n,fvr)
+    call fsl_interp(solver,fh_fsl,tau(l),n,fvr)
   
-    do j=1,n
-      tmp = cmplx(fvr(j,:),0.0,f64)
+    do i=1,n
+      tmp = cmplx(fvr(i,:),0.0,f64)
       call sll_s_fft_exec_c2c_1d(solver%fw, tmp, tmp)
-      sum0(j)=tmp(1)*solver%r(j) !r*int_R fdv
+      sum0(i)=tmp(1)*solver%r(i) !r*int_R fdv
     enddo
   
     sum0 = sum0 * 2.0_f64 * solver%L / cmplx(n,0.0, f64)
@@ -551,29 +561,34 @@ do step=1,nb_step
   
     call sll_s_fft_exec_c2c_1d(solver%bw, tmp, tmp)
     
-    Ens(1:n,i)=real(tmp-tmp(n/2+1),f64)/r(:)
+    Ens(1:n,l)=real(tmp-tmp(n/2+1),f64)/r(:)
    
   enddo
 
   !------End evaluation and continue 2nd solver-------------
 
   do l=0,Ntau-1
+    ctau = cos(tau(l))
+    stau = sin(tau(l))
+    do j=1,n+1
+      do i=1,n+1
+        x(i,j)=ctau*real(ftilde1(l,i,j))+stau*real(ftilde2(l,i,j))
+      end do
+    end do
     call interp_1d%compute_interpolants(Ens(:,l))
     do j=1,n+1
-    do i=1,n+1
-      x = cos(tau(l))*real(ftilde1(l,i,j)) &
-        + sin(tau(l))*real(ftilde2(l,i,j))
-      if (x > eta1_min .and. x < eta1_max ) then
-        gn(l,i,j)=interp_1d%interpolate_from_interpolant_value(x)
-      else
-        gn(l,i,j)=0.0_f64
-      endif
-    enddo
+      do i=1,n+1
+        if (eta1_min < x(i,j) .and. x(i,j) < eta1_max ) then
+          gn(l,i,j)=interp_1d%interpolate_from_interpolant_value(x(i,j))
+        else
+          gn(l,i,j)=0.0_f64
+        end if
+      enddo
     enddo
   enddo
 
-  do i=1,n+1
-    do j=1,n+1
+  do j=1,n+1
+    do i=1,n+1
 
       do m=0,ntau-1
         F1(m)=fct1(tau(m), 1, Ftilde1(m,i,j), Ftilde2(m,i,j), cmplx(gn(m,i,j),0.0,f64))
@@ -597,7 +612,6 @@ do step=1,nb_step
       sumup1 = sum(tmp1*exp(-ltau*k/eps))/cmplx(ntau,0.0,f64)
       sumup2 = sum(tmp2*exp(-ltau*k/eps))/cmplx(ntau,0.0,f64)
 
-
       eta1 = real(sumup1)
       eta2 = real(sumup2)
 
@@ -613,7 +627,7 @@ do step=1,nb_step
 
   print"('Step =', i6, ' Time = ', g15.3)", step, real(step*k/eps)
   call fsl_interp(solver,fh_fsl,real(step*k/eps,f64),n,fvr)
-  call sll_o_gnuplot_2d(n, x1, n, x2, fvr, 'fh', step, ierr)
+  !call sll_o_gnuplot_2d(n, x1, n, x2, fvr, 'fh', step, ierr)
   call sll_s_xdmf_rect2d_nodes( 'fh', fvr, 'fh', x1(1:n), x2(1:n), &
                                 'HDF5', step) 
   tau = tau + k/eps
@@ -795,19 +809,25 @@ sll_real64, intent(in)      :: fh_fsl(:,:)
 sll_real64, intent(in)      :: t
 sll_real64, intent(inout)   :: fvr(num_cells,num_cells)
 
+sll_real64                  :: ct, st
 sll_real64                  :: x, y
+sll_real64                  :: xj, yj
 sll_int32                   :: i, j
 
 call sll_s_compute_cubic_spline_2d(fh_fsl, self%spl_2d)
 
+ct = cos(t)
+st = sin(t)
 do j=1,num_cells
+  xj = st*self%r(j)
+  yj = ct*self%r(j)
   do i=1,num_cells
-    x=cos(t)*self%r(i)-sin(t)*self%r(j)
-    y=sin(t)*self%r(i)+cos(t)*self%r(j)
+    x = ct*self%r(i)-xj
+    y = st*self%r(i)+yj
     if (abs(x)<self%L .and. abs(y)<self%L) then
       fvr(i,j)=sll_f_interpolate_value_2d(x,y,self%spl_2d)
     else
-      fvr(i,j)=0.0d0
+      fvr(i,j)=0.0_f64
     endif
   enddo
 enddo
