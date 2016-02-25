@@ -14,8 +14,9 @@ use sll_m_cubic_spline_interpolator_1d
 use sll_m_cubic_spline_interpolator_2d
 use sll_m_interpolators_1d_base
 use sll_m_interpolators_2d_base
-
-
+#ifdef _OPENMP
+!use omp_lib
+#endif
 
 implicit none
 
@@ -103,11 +104,13 @@ end type fsl_solver
 
 type(fsl_solver) :: solver
 
+
 ! ---- * Parameters * ----
 
 ! mesh type : cartesian
 ! domain    : square [eta1_min eta1_max] x [eta2_min eta2_max]
 ! BC        : periodic-periodic
+
 eta1_min = -4.0_f64
 eta1_max =  4.0_f64
 
@@ -188,21 +191,23 @@ enddo
 m    = ntau/2
 ltau = [(cmplx(l,0.,f64),l=0,m-1),(cmplx(l,0.,f64),l=-m,-1)] / sll_p_i1
 
-!t1= second();
-!-------- * Evolution in time * ---------
-do step=1,nb_step
+!!$OMP PARALLEL NUM_THREADS(1) DEFAULT(PRIVATE)
+!!$ PRINT*, OMP_GET_NUM_THREADS(), OMP_GET_THREAD_NUM()
+!!$OMP END PARALLEL
+
+do step=1,nb_step !-------- * Evolution in time * ---------
 
   call sll_s_compute_cubic_spline_2d(fh_fsl,spl_2d)
 
   r        = solver%r
   r(n/2+1) = 1.0_f64
-  do i=0,ntau-1
+  do l=0,ntau-1
   
-    call fsl_interp_2d(solver,fh_fsl,tau(i),n,fvr)
-    do j=1,n
-      tmp = cmplx(fvr(j,:),0.,f64)
+    call fsl_interp_2d(solver,fh_fsl,tau(l),n,fvr)
+    do i=1,n
+      tmp = cmplx(fvr(i,:),0.,f64)
       call sll_s_fft_exec_c2c_1d(solver%fw, tmp, tmp)
-      sum0(j)=tmp(1)*cmplx(2.0*solver%L*solver%r(j)/n,0.0,f64) 
+      sum0(i)=tmp(1)*cmplx(2.0*solver%L*solver%r(i)/n,0.0,f64) 
     enddo
     call sll_s_fft_exec_c2c_1d(solver%fw, sum0, tmp)
     
@@ -210,8 +215,8 @@ do step=1,nb_step
     tmp(1)=cmplx(0.0d0,0.0d0,kind=f64)
     call sll_s_fft_exec_c2c_1d(solver%bw, tmp, tmp)
   
-    Ens(1:n,i)=real(tmp-tmp(n/2+1))/r
-    Enr(1:n,i)=real(sum0-Ens(1:n,i))/r
+    Ens(1:n,l)=real(tmp-tmp(n/2+1))/r
+    Enr(1:n,l)=real(sum0-Ens(1:n,l))/r
   
   enddo
   
@@ -547,10 +552,10 @@ do step=1,nb_step
   call sll_s_deposit_value_2d(eta1feet,eta2feet,spl_2d,fh_fsl)
 
   print"('Step =', i6, ' Time = ', g15.3)", step, real(step*k/eps)
-  call fsl_interp_2d(solver,fh_fsl,real(step*k/eps,f64),n,fvr)
   !call sll_o_gnuplot_2d(n, x1, n, x2, fvr, 'fh', step, ierr)
-  call sll_s_xdmf_rect2d_nodes( 'fh', fvr, 'fh', x1(1:n), x2(1:n), &
-                                'HDF5', step) 
+  !call sll_s_xdmf_rect2d_nodes( 'fh', fvr, 'fh', x1(1:n), x2(1:n), &
+  !                              'HDF5', step) 
+
   tau = tau + k/eps
 
 enddo
@@ -560,10 +565,12 @@ call sll_o_delete(spl_1d)
 call sll_o_delete(spl_2d)
 call sll_s_fft_free(fw_fft)
 call sll_s_fft_free(bw_fft)
-call free_fsl_solver(solver)
 
 call cpu_time(tend)
 print"('CPU time = ', g15.3)", tend - tstart
+
+call fsl_interp_2d(solver,fh_fsl,real(nb_step*k/eps,f64),n,fvr)
+call free_fsl_solver(solver)
 
 error = 0.0
 open(newunit = ref_id, file='fh.ref')
