@@ -90,7 +90,6 @@ type :: fsl_solver
 
   type(sll_t_fft)                      :: fw
   type(sll_t_fft)                      :: bw
-  sll_real64                           :: L
 
 end type fsl_solver
 
@@ -244,7 +243,7 @@ do step=1,nb_step !-------- * Evolution in time * ---------
     do i=1,n
       tmp = cmplx(fvr(i,:),0.,f64)
       call sll_s_fft_exec_c2c_1d(solver%fw, tmp, tmp)
-      sum0(i)=tmp(1)*cmplx(2.0*solver%L*r(i)/n,0.0,f64) 
+      sum0(i)=tmp(1)*cmplx((eta1_max-eta1_min)*r(i)/n,0.0,f64) 
     enddo
     call sll_s_fft_exec_c2c_1d(solver%fw, sum0, tmp)
     
@@ -276,7 +275,7 @@ do step=1,nb_step !-------- * Evolution in time * ---------
   enddo
 
   v(1:n)=r
-  v(n+1)=solver%L
+  v(n+1)=eta1_max
   do l=0,ntau-1
     ctau = cos(tau(l))
     stau = sin(tau(l))
@@ -312,7 +311,7 @@ do step=1,nb_step !-------- * Evolution in time * ---------
       enddo
   
       call sll_s_fft_exec_c2c_1d(solver%fw, vctmp, tmp)
-      sum0(i)=tmp(1)*cmplx(2.0d0*solver%L*r(i)/n,0.,f64)
+      sum0(i)=tmp(1)*cmplx((eta1_max-eta1_min)*r(i)/n,0.,f64)
   
     enddo
   
@@ -515,7 +514,7 @@ do step=1,nb_step !-------- * Evolution in time * ---------
       sum0(i)=tmp(1)*r(i) !r*int_R fdv
     enddo
   
-    sum0 = sum0 * 2.0_f64 * solver%L / cmplx(n,0.0, f64)
+    sum0 = sum0 * (eta1_max-eta1_min) / cmplx(n,0.0, f64)
   
     call sll_s_fft_exec_c2c_1d(solver%fw, sum0, tmp)
   
@@ -719,8 +718,6 @@ sll_real64, intent(in)  :: xmax
 sll_int32               :: i, j, m
 sll_comp64, allocatable :: tmp(:)
 
-self%L = 4.0_f64
-
 allocate(tmp(n))
 call sll_s_fft_init_c2c_1d(self%fw, n, tmp, tmp, sll_p_fft_forward)
 call sll_s_fft_init_c2c_1d(self%bw, n, tmp, tmp, sll_p_fft_backward)
@@ -762,7 +759,7 @@ do j=1,n
   do i=1,n
     x = ct*r(i)-xj
     y = st*r(i)+yj
-    if (abs(x)<self%L .and. abs(y)<self%L) then
+    if (abs(x)<eta1_max .and. abs(y)<eta1_max) then
       fvr(i,j)=sll_f_interpolate_value_2d(x,y,spl_2d_f)
     else
       fvr(i,j)=0.0_f64
