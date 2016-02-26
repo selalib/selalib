@@ -73,6 +73,7 @@ sll_real64, allocatable :: tau    (:)
 sll_real64, allocatable :: r      (:)
 sll_real64, allocatable :: rk     (:)
 sll_real64, allocatable :: v      (:)
+sll_comp64, allocatable :: lx     (:)
 
 sll_comp64 :: dtgn
 sll_real64 :: k, h
@@ -86,7 +87,6 @@ sll_real64 :: ctau, stau, csq
 
 type :: fsl_solver
 
-  sll_comp64, allocatable              :: lx(:)
   type(sll_t_fft)                      :: fw
   type(sll_t_fft)                      :: bw
   sll_real64                           :: L
@@ -207,6 +207,9 @@ enddo
 do i = 1, n
   r(i) = eta1_min + (i-1) * (eta1_max-eta1_min)/real(n,f64)
 end do
+allocate(lx(n))
+lx = [ (cmplx(j,0.,f64), j=0,n/2-1), (cmplx(j,0.,f64), j=-n/2,-1 ) ]
+lx = lx * 2.0d0*sll_p_pi/(eta1_max-eta1_min) * sll_p_i1 * n
 
 do i=1,n+1
   do j=1,n+1
@@ -237,7 +240,7 @@ do step=1,nb_step !-------- * Evolution in time * ---------
     enddo
     call sll_s_fft_exec_c2c_1d(solver%fw, sum0, tmp)
     
-    tmp(2:n)=tmp(2:n)/solver%lx(2:n)
+    tmp(2:n)=tmp(2:n)/lx(2:n)
     tmp(1)=cmplx(0.0d0,0.0d0,kind=f64)
     call sll_s_fft_exec_c2c_1d(solver%bw, tmp, tmp)
   
@@ -254,8 +257,8 @@ do step=1,nb_step !-------- * Evolution in time * ---------
     call sll_s_fft_exec_c2c_1d(solver%fw, vctmp, vctmp)
     call sll_s_fft_exec_c2c_1d(solver%fw, uctmp, uctmp)
     
-    uctmp = uctmp/cmplx(n**2,0.,f64)*solver%lx
-    vctmp = vctmp/cmplx(n**2,0.,f64)*solver%lx
+    uctmp = uctmp/cmplx(n**2,0.,f64)*lx
+    vctmp = vctmp/cmplx(n**2,0.,f64)*lx
    
     call sll_s_fft_exec_c2c_1d(solver%bw, vctmp, tmp)
     ftv(j,1:n)=real(tmp)  !\partial_\x1 f_tilde(\xi1,\xi2)
@@ -307,7 +310,7 @@ do step=1,nb_step !-------- * Evolution in time * ---------
   
     call sll_s_fft_exec_c2c_1d(solver%fw, sum0, tmp)
   
-    tmp(2:n) = tmp(2:n)/solver%lx(2:n)
+    tmp(2:n) = tmp(2:n)/lx(2:n)
     tmp(1)   = cmplx(0.0d0,0.0d0,kind=f64)
   
     call sll_s_fft_exec_c2c_1d(solver%bw, tmp, tmp)
@@ -510,7 +513,7 @@ do step=1,nb_step !-------- * Evolution in time * ---------
   
     tmp(1)=cmplx(0.0d0,0.0d0,kind=f64)
   
-    tmp(2:n) = tmp(2:n) / solver%lx(2:n)
+    tmp(2:n) = tmp(2:n) / lx(2:n)
   
     call sll_s_fft_exec_c2c_1d(solver%bw, tmp, tmp)
     
@@ -709,10 +712,6 @@ sll_int32               :: i, j, m
 sll_comp64, allocatable :: tmp(:)
 
 self%num_cells = num_cells
-m = num_cells/2
-allocate(self%lx(num_cells))
-self%lx = [ (cmplx(j,0.,f64), j=0,m-1), (cmplx(j,0.,f64), j=-m,-1 ) ]
-self%lx = self%lx * 2.0d0*sll_p_pi/(xmax-xmin) * sll_p_i1 * num_cells
 
 self%L = 4.0_f64
 
@@ -737,7 +736,6 @@ subroutine free_fsl_solver( self )
 
 type(fsl_solver)   :: self
 
-deallocate(self%lx)
 call sll_s_fft_free(self%fw)
 call sll_s_fft_free(self%bw)
 call sll_o_delete(self%spl_2d)
