@@ -30,9 +30,9 @@ type(sll_t_cubic_spline_2d), pointer :: spl_2d_f
 sll_int32  :: step,nb_step
 sll_int32  :: i,j,l
 sll_int32  :: bc1_type,bc2_type,err
-sll_real64 :: delta_eta1
-sll_real64 :: eta1_min
-sll_real64 :: eta1_max
+sll_real64 :: delta_eta
+sll_real64 :: eta_min
+sll_real64 :: eta_max
 sll_real64 :: eps
 sll_real64 :: eta1,  eta2
 
@@ -99,11 +99,11 @@ type(fsl_solver) :: solver
 ! ---- * Parameters * ----
 
 ! mesh type : cartesian
-! domain    : square [eta1_min eta1_max] x [eta2_min eta2_max]
+! domain    : square [eta_min eta_max] x [eta_min eta_max]
 ! BC        : periodic-periodic
 
-eta1_min = -4.0_f64
-eta1_max =  4.0_f64
+eta_min = -4.0_f64
+eta_max =  4.0_f64
 
 ! --- Space and time parameters --
 
@@ -115,10 +115,10 @@ bc2_type = SLL_P_PERIODIC
 ! ---- * Time and space steps * ----
 
 ! space steps
-delta_eta1 = (eta1_max-eta1_min)/real(n,f64)
+delta_eta = (eta_max-eta_min)/real(n,f64)
 
 ! time step and number of steps
-k       = 0.05d0  !T*delta_eta1
+k       = 0.05d0  !T*delta_eta
 nb_step = floor(final_time/k)
 eps     = 1.00d0
 h       = 2.0d0 * sll_p_pi/ real(ntau,f64)
@@ -172,27 +172,27 @@ SLL_ALLOCATE(eta1feet(n+1,n+1), err)
 SLL_ALLOCATE(eta2feet(n+1,n+1), err)
 
 
-call init_fsl_solver( solver, eta1_min, eta1_max, n)
+call init_fsl_solver( solver, eta_min, eta_max, n)
 call sll_s_fft_init_c2c_1d(fw_fft ,ntau, tmp1, tmp1_f, sll_p_fft_forward)
 call sll_s_fft_init_c2c_1d(bw_fft ,ntau, tmp1_f, tmp1, sll_p_fft_backward)
 
-spl_1d => sll_f_new_cubic_spline_1d( n+1, eta1_min, eta1_max, sll_p_periodic )
+spl_1d => sll_f_new_cubic_spline_1d( n+1, eta_min, eta_max, sll_p_periodic )
 
 spl_2d => sll_f_new_cubic_spline_2d( n+1,      &
                                      n+1,      &
-                                     eta1_min, &
-                                     eta1_max, &
-                                     eta1_min, &
-                                     eta1_max, &
+                                     eta_min, &
+                                     eta_max, &
+                                     eta_min, &
+                                     eta_max, &
                                      bc1_type, &
                                      bc2_type)
 
 spl_2d_f => sll_f_new_cubic_spline_2d( n+1,      &
                                        n+1,      &
-                                       eta1_min, &
-                                       eta1_max, &
-                                       eta1_min, &
-                                       eta1_max, &
+                                       eta_min, &
+                                       eta_max, &
+                                       eta_min, &
+                                       eta_max, &
                                        bc1_type, &
                                        bc2_type)
 
@@ -206,17 +206,17 @@ ftr = 0.0_f64
 
 ! Analytic distribution function and data for the mesh
 do i=1,n+1
-  x1(i) = eta1_min + (i-1)*delta_eta1
+  x1(i) = eta_min + (i-1)*delta_eta
 enddo
 do j=1,n+1
-  x2(j) = eta1_min + (j-1)*delta_eta1
+  x2(j) = eta_min + (j-1)*delta_eta
 enddo
 do i = 1, n
-  r(i) = eta1_min + (i-1) * (eta1_max-eta1_min)/real(n,f64)
+  r(i)  = eta_min + (i-1)*delta_eta
 end do
 allocate(lx(n))
 lx = [ (cmplx(j,0.,f64), j=0,n/2-1), (cmplx(j,0.,f64), j=-n/2,-1 ) ]
-lx = lx * 2.0d0*sll_p_pi/(eta1_max-eta1_min) * sll_p_i1 * n
+lx = lx * 2.0d0*sll_p_pi/(eta_max-eta_min) * sll_p_i1 * n
 
 do i=1,n+1
   do j=1,n+1
@@ -243,7 +243,7 @@ do step=1,nb_step !-------- * Evolution in time * ---------
     do i=1,n
       tmp = cmplx(fvr(i,:),0.,f64)
       call sll_s_fft_exec_c2c_1d(solver%fw, tmp, tmp)
-      sum0(i)=tmp(1)*cmplx((eta1_max-eta1_min)*r(i)/n,0.0,f64) 
+      sum0(i)=tmp(1)*cmplx((eta_max-eta_min)*r(i)/n,0.0,f64) 
     enddo
     call sll_s_fft_exec_c2c_1d(solver%fw, sum0, tmp)
     
@@ -275,7 +275,7 @@ do step=1,nb_step !-------- * Evolution in time * ---------
   enddo
 
   v(1:n)=r
-  v(n+1)=eta1_max
+  v(n+1)=eta_max
   do l=0,ntau-1
     ctau = cos(tau(l))
     stau = sin(tau(l))
@@ -311,7 +311,7 @@ do step=1,nb_step !-------- * Evolution in time * ---------
       enddo
   
       call sll_s_fft_exec_c2c_1d(solver%fw, vctmp, tmp)
-      sum0(i)=tmp(1)*cmplx((eta1_max-eta1_min)*r(i)/n,0.,f64)
+      sum0(i)=tmp(1)*cmplx((eta_max-eta_min)*r(i)/n,0.,f64)
   
     enddo
   
@@ -514,7 +514,7 @@ do step=1,nb_step !-------- * Evolution in time * ---------
       sum0(i)=tmp(1)*r(i) !r*int_R fdv
     enddo
   
-    sum0 = sum0 * (eta1_max-eta1_min) / cmplx(n,0.0, f64)
+    sum0 = sum0 * (eta_max-eta_min) / cmplx(n,0.0, f64)
   
     call sll_s_fft_exec_c2c_1d(solver%fw, sum0, tmp)
   
@@ -620,17 +620,17 @@ contains
 !> Corrections on the BC 
 subroutine apply_bc()
 
-  do while (eta1>eta1_max)
-    eta1 = eta1-(eta1_max-eta1_min)
+  do while (eta1>eta_max)
+    eta1 = eta1-(eta_max-eta_min)
   enddo
-  do while (eta1<eta1_min)
-    eta1 = eta1+(eta1_max-eta1_min)
+  do while (eta1<eta_min)
+    eta1 = eta1+(eta_max-eta_min)
   enddo
-  do while (eta2>eta1_max)
-    eta2 = eta2-(eta1_max-eta1_min)
+  do while (eta2>eta_max)
+    eta2 = eta2-(eta_max-eta_min)
   enddo
-  do while (eta2<eta1_min)
-    eta2 = eta2+(eta1_max-eta1_min)
+  do while (eta2<eta_min)
+    eta2 = eta2+(eta_max-eta_min)
   enddo
   if (abs(eta1) < 1.0d-12) eta1 = 0.0_f64
   if (abs(eta2) < 1.0d-12) eta2 = 0.0_f64
@@ -759,7 +759,7 @@ do j=1,n
   do i=1,n
     x = ct*r(i)-xj
     y = st*r(i)+yj
-    if (abs(x)<eta1_max .and. abs(y)<eta1_max) then
+    if (abs(x)<eta_max .and. abs(y)<eta_max) then
       fvr(i,j)=sll_f_interpolate_value_2d(x,y,spl_2d_f)
     else
       fvr(i,j)=0.0_f64
@@ -782,7 +782,7 @@ sll_int32 :: i, j
 call sll_s_compute_cubic_spline_1d(e, spl)
 do j=1,n+1
   do i=1,n+1
-    if (eta1_min < x(i,j) .and. x(i,j) < eta1_max ) then
+    if (eta_min < x(i,j) .and. x(i,j) < eta_max ) then
       g(i,j) = sll_f_interpolate_from_interpolant_value(x(i,j), spl)
     else
       g(i,j) = 0.0_f64
