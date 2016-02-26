@@ -17,7 +17,7 @@ use sll_m_cubic_splines
 implicit none
 
 sll_comp64, parameter :: sll_p_i0   = (0.0_f64, 0.0_f64)
-sll_int32,  parameter :: n          = 128
+sll_int32,  parameter :: n          = 64
 sll_int32,  parameter :: ntau       = 32
 sll_real64, parameter :: final_time = 0.4_f64
 
@@ -161,13 +161,13 @@ SLL_ALLOCATE(eta1feet(n+1,n+1), err)
 SLL_ALLOCATE(eta2feet(n+1,n+1), err)
 SLL_ALLOCATE(lx(n), err)
 
-!$OMP PARALLEL NUM_THREADS(1)                                                  &                              
+!$OMP PARALLEL NUM_THREADS(2)                                                  &                              
 !$OMP DEFAULT(SHARED)                                                          &
 !$OMP FIRSTPRIVATE(k, eps, h, delta_eta, eta_min, eta_max, nb_step )           &
 !$OMP PRIVATE(spl_1d, bw_fft, fw_fft, it, nt, spl_2d_f, l, ltau, lx, tau, sum0,&
 !$OMP         i, j, rk, step, fsl_fw, fsl_bw, tmp, tmp1, tmp1_f, x1, x2, r,    &
-!$OMP         fvr, uctmp, vctmp, v, ctau, stau, x, s1, s2, s3, ft1, ft2, csq   &
-!$OMP         ) 
+!$OMP         fvr, uctmp, vctmp, v, ctau, stau, x, s1, s2, s3, ft1, ft2, csq,  &
+!$OMP         err) 
 !$ it = omp_get_thread_num()
 !$ nt = omp_get_num_threads()
 
@@ -207,13 +207,13 @@ spl_2d => sll_f_new_cubic_spline_2d( n+1,            &
 
 ! ---- * Initializations * ----
 
-!$OMP MASTER
+!$OMP SINGLE
 Ens = 0.0_f64
 Enr = 0.0_f64
 Ent = 0.0_f64
 ftv = 0.0_f64
 ftr = 0.0_f64
-!$OMP END MASTER
+!$OMP END SINGLE
 
 ! Analytic distribution function and data for the mesh
 do i=1,n+1
@@ -239,15 +239,12 @@ end do
 
 ltau = [(cmplx(0.,-l,f64),l=0,ntau/2-1),(cmplx(0,-l,f64),l=-ntau/2,-1)]
 
-
 do step=1,nb_step !-------- * Evolution in time * ---------
-
 
   do l=0,ntau-1
     tau(l)=real(l,f64)*h + real(step-1,f64)*k/eps
   enddo
 
-  
   !$OMP MASTER
   call sll_s_compute_cubic_spline_2d(fh_fsl,spl_2d)
   !$OMP END MASTER
@@ -257,9 +254,10 @@ do step=1,nb_step !-------- * Evolution in time * ---------
 
   !$OMP BARRIER
 
-  do l=it*ntau/nt,(it+1)/nt*ntau-1
+  do l=it*ntau/nt,(it+1)*ntau/nt-1
   
     call fsl_interp_2d(spl_2d_f,fh_fsl,tau(l),n,fvr)
+
     do i=1,n
       tmp = cmplx(fvr(i,:),0.,f64)
       call sll_s_fft_exec_c2c_1d(fsl_fw, tmp, tmp)
@@ -275,7 +273,8 @@ do step=1,nb_step !-------- * Evolution in time * ---------
     Enr(1:n,l)=real(sum0-Ens(1:n,l))/rk
   
   enddo
-  
+
+  !$OMP BARRIER
 
   !$OMP MASTER
   do j=1,n
@@ -303,7 +302,7 @@ do step=1,nb_step !-------- * Evolution in time * ---------
   v(n+1)=eta_max
 
 
-  do l=it*ntau/nt,(it+1)/nt*ntau-1
+  do l=it*ntau/nt,(it+1)*ntau/nt-1
     ctau = cos(tau(l))
     stau = sin(tau(l))
     do j=1,n+1
@@ -321,7 +320,7 @@ do step=1,nb_step !-------- * Evolution in time * ---------
 
   !$OMP BARRIER
     
-  do l=it*ntau/nt,(it+1)/nt*ntau-1
+  do l=it*ntau/nt,(it+1)*ntau/nt-1
   
     call fsl_interp_2d(spl_2d_f,ftv,tau(l),n,ft1)
     call fsl_interp_2d(spl_2d_f,ftr,tau(l),n,ft2)
@@ -357,7 +356,7 @@ do step=1,nb_step !-------- * Evolution in time * ---------
 
   !$OMP BARRIER
 
-  do l=it*ntau/nt,(it+1)/nt*ntau-1
+  do l=it*ntau/nt,(it+1)*ntau/nt-1
   
     ctau = cos(tau(l))
     stau = sin(tau(l))
@@ -411,7 +410,7 @@ do step=1,nb_step !-------- * Evolution in time * ---------
 
   !$OMP BARRIER
 
-  do l=it*ntau/nt,(it+1)/nt*ntau-1
+  do l=it*ntau/nt,(it+1)*ntau/nt-1
   
     ctau = cos(tau(l))
     stau = sin(tau(l))
@@ -493,7 +492,7 @@ do step=1,nb_step !-------- * Evolution in time * ---------
 
   !$OMP BARRIER
 
-  do l=it*ntau/nt,(it+1)/nt*ntau-1
+  do l=it*ntau/nt,(it+1)*ntau/nt-1
     ctau = cos(tau(l))
     stau = sin(tau(l))
     do j=1,n+1
@@ -554,7 +553,7 @@ do step=1,nb_step !-------- * Evolution in time * ---------
   rk(n/2+1) = 1.0_f64
 
 
-  do l=it*ntau/nt,(it+1)/nt*ntau-1
+  do l=it*ntau/nt,(it+1)*ntau/nt-1
   
     call fsl_interp_2d(spl_2d_f,fh_fsl,tau(l),n,fvr)
   
@@ -586,7 +585,7 @@ do step=1,nb_step !-------- * Evolution in time * ---------
 
   !------End evaluation and continue 2nd solver-------------
 
-  do l=it*ntau/nt,(it+1)/nt*ntau-1
+  do l=it*ntau/nt,(it+1)*ntau/nt-1
     ctau = cos(tau(l))
     stau = sin(tau(l))
     do j=1,n+1
@@ -639,7 +638,6 @@ do step=1,nb_step !-------- * Evolution in time * ---------
 
   !$OMP END MASTER
 
-  !call sll_o_gnuplot_2d(n, x1, n, x2, fvr, 'fh', step, ierr)
   !call sll_s_xdmf_rect2d_nodes( 'fh', fvr, 'fh', x1(1:n), x2(1:n), &
   !                              'HDF5', step) 
 
@@ -654,11 +652,11 @@ call fsl_interp_2d(spl_2d_f,fh_fsl,real(nb_step*k/eps,f64),n,fvr)
 call sll_o_delete(spl_1d)
 call sll_s_fft_free(fw_fft)
 call sll_s_fft_free(bw_fft)
+call sll_o_delete(spl_2d_f)
 
 
 !$OMP MASTER
 call sll_o_delete(spl_2d)
-call sll_o_delete(spl_2d_f)
 call sll_s_fft_free(fsl_fw)
 call sll_s_fft_free(fsl_bw)
 !$OMP END MASTER
