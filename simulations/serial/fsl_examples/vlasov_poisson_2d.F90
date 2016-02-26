@@ -29,7 +29,7 @@ type(sll_t_cubic_spline_2d), pointer :: spl_2d_f
 
 sll_int32  :: step,nb_step
 sll_int32  :: i,j,l
-sll_int32  :: bc1_type,bc2_type,err
+sll_int32  :: err
 sll_real64 :: delta_eta
 sll_real64 :: eta_min
 sll_real64 :: eta_max
@@ -86,6 +86,9 @@ sll_real32 :: fdum, error
 sll_real64 :: tstart, tend
 sll_real64 :: ctau, stau, csq
 
+sll_int32  :: it = 0
+sll_int32  :: nt = 1
+
 type(sll_t_fft)                      :: fsl_fw
 type(sll_t_fft)                      :: fsl_bw
 
@@ -99,13 +102,6 @@ eta_min = -4.0_f64
 eta_max =  4.0_f64
 
 ! --- Space and time parameters --
-
-
-! ---- * Construction of the mesh * ----
-bc1_type = SLL_P_PERIODIC
-bc2_type = SLL_P_PERIODIC
-
-! ---- * Time and space steps * ----
 
 ! space steps
 delta_eta = (eta_max-eta_min)/real(n,f64)
@@ -163,40 +159,61 @@ SLL_ALLOCATE(ft1(n,n),err)
 SLL_ALLOCATE(ft2(n,n),err)
 SLL_ALLOCATE(eta1feet(n+1,n+1), err)
 SLL_ALLOCATE(eta2feet(n+1,n+1), err)
+SLL_ALLOCATE(lx(n), err)
 
+!$OMP PARALLEL NUM_THREADS(1)                                                  &                              
+!$OMP DEFAULT(SHARED)                                                          &
+!$OMP FIRSTPRIVATE(k, eps, h, delta_eta, eta_min, eta_max, nb_step )           &
+!$OMP PRIVATE(spl_1d, bw_fft, fw_fft, it, nt, spl_2d_f, l, ltau, lx, tau, sum0,&
+!$OMP         i, j, rk, step, fsl_fw, fsl_bw, tmp, tmp1, tmp1_f, x1, x2, r,    &
+!$OMP         fvr, uctmp, vctmp, v, ctau, stau, x, s1, s2, s3, ft1, ft2, csq   &
+!$OMP         ) 
+!$ it = omp_get_thread_num()
+!$ nt = omp_get_num_threads()
+
+!$OMP CRITICAL
+print"('thread num:',i3, ' num threads:', i3)", it, nt
 
 call sll_s_fft_init_c2c_1d(fw_fft ,ntau, tmp1, tmp1_f, sll_p_fft_forward)
 call sll_s_fft_init_c2c_1d(bw_fft ,ntau, tmp1_f, tmp1, sll_p_fft_backward)
+
 call sll_s_fft_init_c2c_1d(fsl_fw, n, tmp, tmp, sll_p_fft_forward)
 call sll_s_fft_init_c2c_1d(fsl_bw, n, tmp, tmp, sll_p_fft_backward)
+!$OMP END CRITICAL
 
 spl_1d => sll_f_new_cubic_spline_1d( n+1, eta_min, eta_max, sll_p_periodic )
 
-spl_2d => sll_f_new_cubic_spline_2d( n+1,      &
-                                     n+1,      &
-                                     eta_min,  &
-                                     eta_max,  &
-                                     eta_min,  &
-                                     eta_max,  &
-                                     bc1_type, &
-                                     bc2_type)
+spl_2d_f => sll_f_new_cubic_spline_2d( n+1,            &
+                                       n+1,            &
+                                       eta_min,        &
+                                       eta_max,        &
+                                       eta_min,        &
+                                       eta_max,        &
+                                       sll_p_periodic, &
+                                       sll_p_periodic)
 
-spl_2d_f => sll_f_new_cubic_spline_2d( n+1,      &
-                                       n+1,      &
-                                       eta_min,  &
-                                       eta_max,  &
-                                       eta_min,  &
-                                       eta_max,  &
-                                       bc1_type, &
-                                       bc2_type)
+!$OMP MASTER
+spl_2d => sll_f_new_cubic_spline_2d( n+1,            &
+                                     n+1,            &
+                                     eta_min,        &
+                                     eta_max,        &
+                                     eta_min,        &
+                                     eta_max,        &
+                                     sll_p_periodic, &
+                                     sll_p_periodic)
+
+!$OMP END MASTER
+
 
 ! ---- * Initializations * ----
 
+!$OMP MASTER
 Ens = 0.0_f64
 Enr = 0.0_f64
 Ent = 0.0_f64
 ftv = 0.0_f64
 ftr = 0.0_f64
+!$OMP END MASTER
 
 ! Analytic distribution function and data for the mesh
 do i=1,n+1
@@ -208,36 +225,45 @@ enddo
 do i = 1, n
   r(i)  = eta_min + (i-1)*delta_eta
 end do
-allocate(lx(n))
+
 lx = [ (cmplx(j,0.,f64), j=0,n/2-1), (cmplx(j,0.,f64), j=-n/2,-1 ) ]
 lx = lx * 2.0d0*sll_p_pi * sll_p_i1 / delta_eta
 
+!$OMP MASTER
 do i=1,n+1
   do j=1,n+1
     fh_fsl(i,j) = exp(-2.0d0*(x1(i)**2+x2(j)**2))
   end do
 end do
+!$OMP END MASTER
 
 ltau = [(cmplx(0.,-l,f64),l=0,ntau/2-1),(cmplx(0,-l,f64),l=-ntau/2,-1)]
 
+
 do step=1,nb_step !-------- * Evolution in time * ---------
+
 
   do l=0,ntau-1
     tau(l)=real(l,f64)*h + real(step-1,f64)*k/eps
   enddo
+
   
+  !$OMP MASTER
   call sll_s_compute_cubic_spline_2d(fh_fsl,spl_2d)
+  !$OMP END MASTER
 
   rk        = r
   rk(n/2+1) = 1.0_f64
 
-  do l=0,ntau-1
+  !$OMP BARRIER
+
+  do l=it*ntau/nt,(it+1)/nt*ntau-1
   
-    call fsl_interp_2d(fh_fsl,tau(l),n,fvr)
+    call fsl_interp_2d(spl_2d_f,fh_fsl,tau(l),n,fvr)
     do i=1,n
       tmp = cmplx(fvr(i,:),0.,f64)
       call sll_s_fft_exec_c2c_1d(fsl_fw, tmp, tmp)
-      sum0(i)=tmp(1)*cmplx((eta_max-eta_min)*r(i)/n,0.0,f64) 
+      sum0(i)=tmp(1)*cmplx(delta_eta*r(i),0.0,f64) 
     enddo
     call sll_s_fft_exec_c2c_1d(fsl_fw, sum0, tmp)
     
@@ -250,6 +276,8 @@ do step=1,nb_step !-------- * Evolution in time * ---------
   
   enddo
   
+
+  !$OMP MASTER
   do j=1,n
   
     vctmp = cmplx(fh_fsl(j,1:n),0.,f64)
@@ -267,10 +295,15 @@ do step=1,nb_step !-------- * Evolution in time * ---------
     ftr(1:n,j)=real(tmp)  !\partial_\x2 f_tilde(\xi1,\xi2)
   
   enddo
+  !$OMP END MASTER
+
+  !$OMP BARRIER
 
   v(1:n)=r
   v(n+1)=eta_max
-  do l=0,ntau-1
+
+
+  do l=it*ntau/nt,(it+1)/nt*ntau-1
     ctau = cos(tau(l))
     stau = sin(tau(l))
     do j=1,n+1
@@ -285,11 +318,13 @@ do step=1,nb_step !-------- * Evolution in time * ---------
 
   enddo
 
+
+  !$OMP BARRIER
     
-  do l=0,ntau-1
+  do l=it*ntau/nt,(it+1)/nt*ntau-1
   
-    call fsl_interp_2d(ftv,tau(l),n,ft1)
-    call fsl_interp_2d(ftr,tau(l),n,ft2)
+    call fsl_interp_2d(spl_2d_f,ftv,tau(l),n,ft1)
+    call fsl_interp_2d(spl_2d_f,ftr,tau(l),n,ft2)
   
     ctau = cos(tau(l))
     stau = sin(tau(l))
@@ -320,8 +355,9 @@ do step=1,nb_step !-------- * Evolution in time * ---------
   
   enddo
 
+  !$OMP BARRIER
 
-  do l=0,Ntau-1
+  do l=it*ntau/nt,(it+1)/nt*ntau-1
   
     ctau = cos(tau(l))
     stau = sin(tau(l))
@@ -337,6 +373,8 @@ do step=1,nb_step !-------- * Evolution in time * ---------
   
   enddo
 
+
+  !$OMP MASTER
   do j=1,n+1
     do i=1,n+1
 
@@ -369,8 +407,11 @@ do step=1,nb_step !-------- * Evolution in time * ---------
 
     enddo
   enddo
+  !$OMP END MASTER
 
-  do l=0,Ntau-1
+  !$OMP BARRIER
+
+  do l=it*ntau/nt,(it+1)/nt*ntau-1
   
     ctau = cos(tau(l))
     stau = sin(tau(l))
@@ -385,7 +426,10 @@ do step=1,nb_step !-------- * Evolution in time * ---------
     call fsl_interp_1d(spl_1d, n, x, ent(:,l), gnt(l,:,:))
 
   enddo
+
+  !$OMP BARRIER
   
+  !$OMP MASTER
   do j=1,n+1
     do i=1,n+1
       !------------for 2nd order correction------------------
@@ -445,8 +489,11 @@ do step=1,nb_step !-------- * Evolution in time * ---------
 
     enddo
   enddo
+  !$OMP END MASTER
 
-  do l=0,Ntau-1
+  !$OMP BARRIER
+
+  do l=it*ntau/nt,(it+1)/nt*ntau-1
     ctau = cos(tau(l))
     stau = sin(tau(l))
     do j=1,n+1
@@ -457,6 +504,9 @@ do step=1,nb_step !-------- * Evolution in time * ---------
     call fsl_interp_1d(spl_1d, n, x, ens(:,l), gn(l,:,:))
   enddo
 
+  !$OMP BARRIER
+
+  !$OMP MASTER
   do j=1,n+1
     do i=1,n+1
 
@@ -495,12 +545,18 @@ do step=1,nb_step !-------- * Evolution in time * ---------
 
   call sll_s_deposit_value_2d(eta1feet,eta2feet,spl_2d,fh_fsl) !function value at the half time
 
+  !$OMP END MASTER
+
+
+  !$OMP BARRIER
+
   rk        = r
   rk(n/2+1) = 1.0_f64
 
-  do l=0,ntau-1
+
+  do l=it*ntau/nt,(it+1)/nt*ntau-1
   
-    call fsl_interp_2d(fh_fsl,tau(l),n,fvr)
+    call fsl_interp_2d(spl_2d_f,fh_fsl,tau(l),n,fvr)
   
     do i=1,n
       tmp = cmplx(fvr(i,:),0.0,f64)
@@ -522,9 +578,15 @@ do step=1,nb_step !-------- * Evolution in time * ---------
    
   enddo
 
+  !$OMP BARRIER
+
+  !print"(32f5.1)", tau
+  !$OMP BARRIER
+  !stop
+
   !------End evaluation and continue 2nd solver-------------
 
-  do l=0,Ntau-1
+  do l=it*ntau/nt,(it+1)/nt*ntau-1
     ctau = cos(tau(l))
     stau = sin(tau(l))
     do j=1,n+1
@@ -535,6 +597,7 @@ do step=1,nb_step !-------- * Evolution in time * ---------
     call fsl_interp_1d(spl_1d, n, x, ens(:,l), gn(l,:,:))
   enddo
 
+  !$OMP MASTER
   do j=1,n+1
     do i=1,n+1
 
@@ -574,23 +637,33 @@ do step=1,nb_step !-------- * Evolution in time * ---------
   call sll_s_deposit_value_2d(eta1feet,eta2feet,spl_2d,fh_fsl)
   print"('Step =', i6, ' Time = ', g15.3)", step, real(step*k/eps)
 
+  !$OMP END MASTER
+
   !call sll_o_gnuplot_2d(n, x1, n, x2, fvr, 'fh', step, ierr)
   !call sll_s_xdmf_rect2d_nodes( 'fh', fvr, 'fh', x1(1:n), x2(1:n), &
   !                              'HDF5', step) 
 
 enddo
 
-call fsl_interp_2d(fh_fsl,real(nb_step*k/eps,f64),n,fvr)
+!$OMP MASTER
+call fsl_interp_2d(spl_2d_f,fh_fsl,real(nb_step*k/eps,f64),n,fvr)
+!$OMP END MASTER
 
 !---------------end time solve-------------------------
 
 call sll_o_delete(spl_1d)
-call sll_o_delete(spl_2d)
 call sll_s_fft_free(fw_fft)
 call sll_s_fft_free(bw_fft)
+
+
+!$OMP MASTER
+call sll_o_delete(spl_2d)
+call sll_o_delete(spl_2d_f)
 call sll_s_fft_free(fsl_fw)
 call sll_s_fft_free(fsl_bw)
+!$OMP END MASTER
 
+!$OMP END PARALLEL 
 
 call cpu_time(tend)
 print"('CPU time = ', g15.3)", tend - tstart
@@ -705,19 +778,20 @@ end function rfct2
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
-subroutine fsl_interp_2d(fh_fsl,t,n,fvr)
+subroutine fsl_interp_2d(spl,fh_fsl,t,n,fvr)
 
-sll_int32,  intent(in)      :: n
-sll_real64, intent(in)      :: fh_fsl(:,:)
-sll_real64, intent(in)      :: t
-sll_real64, intent(inout)   :: fvr(n,n)
+type(sll_t_cubic_spline_2d), pointer :: spl
+sll_int32,  intent(in)               :: n
+sll_real64, intent(in)               :: fh_fsl(:,:)
+sll_real64, intent(in)               :: t
+sll_real64, intent(inout)            :: fvr(:,:)
 
-sll_real64                  :: ct, st
-sll_real64                  :: x, y
-sll_real64                  :: xj, yj
-sll_int32                   :: i, j
+sll_real64                           :: ct, st
+sll_real64                           :: x, y
+sll_real64                           :: xj, yj
+sll_int32                            :: i, j
 
-call sll_s_compute_cubic_spline_2d(fh_fsl, spl_2d_f)
+call sll_s_compute_cubic_spline_2d(fh_fsl, spl)
 
 ct = cos(t)
 st = sin(t)
@@ -728,7 +802,7 @@ do j=1,n
     x = ct*r(i)-xj
     y = st*r(i)+yj
     if (abs(x)<eta_max .and. abs(y)<eta_max) then
-      fvr(i,j)=sll_f_interpolate_value_2d(x,y,spl_2d_f)
+      fvr(i,j)=sll_f_interpolate_value_2d(x,y,spl)
     else
       fvr(i,j)=0.0_f64
     endif
