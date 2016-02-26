@@ -86,15 +86,8 @@ sll_real32 :: fdum, error
 sll_real64 :: tstart, tend
 sll_real64 :: ctau, stau, csq
 
-type :: fsl_solver
-
-  type(sll_t_fft)                      :: fw
-  type(sll_t_fft)                      :: bw
-
-end type fsl_solver
-
-type(fsl_solver) :: solver
-
+type(sll_t_fft)                      :: fsl_fw
+type(sll_t_fft)                      :: fsl_bw
 
 ! ---- * Parameters * ----
 
@@ -172,27 +165,28 @@ SLL_ALLOCATE(eta1feet(n+1,n+1), err)
 SLL_ALLOCATE(eta2feet(n+1,n+1), err)
 
 
-call init_fsl_solver( solver, eta_min, eta_max, n)
 call sll_s_fft_init_c2c_1d(fw_fft ,ntau, tmp1, tmp1_f, sll_p_fft_forward)
 call sll_s_fft_init_c2c_1d(bw_fft ,ntau, tmp1_f, tmp1, sll_p_fft_backward)
+call sll_s_fft_init_c2c_1d(fsl_fw, n, tmp, tmp, sll_p_fft_forward)
+call sll_s_fft_init_c2c_1d(fsl_bw, n, tmp, tmp, sll_p_fft_backward)
 
 spl_1d => sll_f_new_cubic_spline_1d( n+1, eta_min, eta_max, sll_p_periodic )
 
 spl_2d => sll_f_new_cubic_spline_2d( n+1,      &
                                      n+1,      &
-                                     eta_min, &
-                                     eta_max, &
-                                     eta_min, &
-                                     eta_max, &
+                                     eta_min,  &
+                                     eta_max,  &
+                                     eta_min,  &
+                                     eta_max,  &
                                      bc1_type, &
                                      bc2_type)
 
 spl_2d_f => sll_f_new_cubic_spline_2d( n+1,      &
                                        n+1,      &
-                                       eta_min, &
-                                       eta_max, &
-                                       eta_min, &
-                                       eta_max, &
+                                       eta_min,  &
+                                       eta_max,  &
+                                       eta_min,  &
+                                       eta_max,  &
                                        bc1_type, &
                                        bc2_type)
 
@@ -216,7 +210,7 @@ do i = 1, n
 end do
 allocate(lx(n))
 lx = [ (cmplx(j,0.,f64), j=0,n/2-1), (cmplx(j,0.,f64), j=-n/2,-1 ) ]
-lx = lx * 2.0d0*sll_p_pi/(eta_max-eta_min) * sll_p_i1 * n
+lx = lx * 2.0d0*sll_p_pi * sll_p_i1 / delta_eta
 
 do i=1,n+1
   do j=1,n+1
@@ -239,17 +233,17 @@ do step=1,nb_step !-------- * Evolution in time * ---------
 
   do l=0,ntau-1
   
-    call fsl_interp_2d(solver,fh_fsl,tau(l),n,fvr)
+    call fsl_interp_2d(fh_fsl,tau(l),n,fvr)
     do i=1,n
       tmp = cmplx(fvr(i,:),0.,f64)
-      call sll_s_fft_exec_c2c_1d(solver%fw, tmp, tmp)
+      call sll_s_fft_exec_c2c_1d(fsl_fw, tmp, tmp)
       sum0(i)=tmp(1)*cmplx((eta_max-eta_min)*r(i)/n,0.0,f64) 
     enddo
-    call sll_s_fft_exec_c2c_1d(solver%fw, sum0, tmp)
+    call sll_s_fft_exec_c2c_1d(fsl_fw, sum0, tmp)
     
     tmp(2:n)=tmp(2:n)/lx(2:n)
     tmp(1)=cmplx(0.0d0,0.0d0,kind=f64)
-    call sll_s_fft_exec_c2c_1d(solver%bw, tmp, tmp)
+    call sll_s_fft_exec_c2c_1d(fsl_bw, tmp, tmp)
   
     Ens(1:n,l)=real(tmp-tmp(n/2+1))/rk
     Enr(1:n,l)=real(sum0-Ens(1:n,l))/rk
@@ -261,15 +255,15 @@ do step=1,nb_step !-------- * Evolution in time * ---------
     vctmp = cmplx(fh_fsl(j,1:n),0.,f64)
     uctmp = cmplx(fh_fsl(1:n,j),0.,f64)
   
-    call sll_s_fft_exec_c2c_1d(solver%fw, vctmp, vctmp)
-    call sll_s_fft_exec_c2c_1d(solver%fw, uctmp, uctmp)
+    call sll_s_fft_exec_c2c_1d(fsl_fw, vctmp, vctmp)
+    call sll_s_fft_exec_c2c_1d(fsl_fw, uctmp, uctmp)
     
     uctmp = uctmp/cmplx(n**2,0.,f64)*lx
     vctmp = vctmp/cmplx(n**2,0.,f64)*lx
    
-    call sll_s_fft_exec_c2c_1d(solver%bw, vctmp, tmp)
+    call sll_s_fft_exec_c2c_1d(fsl_bw, vctmp, tmp)
     ftv(j,1:n)=real(tmp)  !\partial_\x1 f_tilde(\xi1,\xi2)
-    call sll_s_fft_exec_c2c_1d(solver%bw, uctmp, tmp)
+    call sll_s_fft_exec_c2c_1d(fsl_bw, uctmp, tmp)
     ftr(1:n,j)=real(tmp)  !\partial_\x2 f_tilde(\xi1,\xi2)
   
   enddo
@@ -294,8 +288,8 @@ do step=1,nb_step !-------- * Evolution in time * ---------
     
   do l=0,ntau-1
   
-    call fsl_interp_2d(solver,ftv,tau(l),n,ft1)
-    call fsl_interp_2d(solver,ftr,tau(l),n,ft2)
+    call fsl_interp_2d(ftv,tau(l),n,ft1)
+    call fsl_interp_2d(ftr,tau(l),n,ft2)
   
     ctau = cos(tau(l))
     stau = sin(tau(l))
@@ -310,17 +304,17 @@ do step=1,nb_step !-------- * Evolution in time * ---------
         vctmp(j) = cmplx(s3,0.,f64)
       enddo
   
-      call sll_s_fft_exec_c2c_1d(solver%fw, vctmp, tmp)
-      sum0(i)=tmp(1)*cmplx((eta_max-eta_min)*r(i)/n,0.,f64)
+      call sll_s_fft_exec_c2c_1d(fsl_fw, vctmp, tmp)
+      sum0(i)=tmp(1)*cmplx(delta_eta*r(i),0.,f64)
   
     enddo
   
-    call sll_s_fft_exec_c2c_1d(solver%fw, sum0, tmp)
+    call sll_s_fft_exec_c2c_1d(fsl_fw, sum0, tmp)
   
     tmp(2:n) = tmp(2:n)/lx(2:n)
     tmp(1)   = cmplx(0.0d0,0.0d0,kind=f64)
   
-    call sll_s_fft_exec_c2c_1d(solver%bw, tmp, tmp)
+    call sll_s_fft_exec_c2c_1d(fsl_bw, tmp, tmp)
   
     Ent(1:n,l)=real(tmp-tmp(n/2+1))/rk
   
@@ -506,23 +500,23 @@ do step=1,nb_step !-------- * Evolution in time * ---------
 
   do l=0,ntau-1
   
-    call fsl_interp_2d(solver,fh_fsl,tau(l),n,fvr)
+    call fsl_interp_2d(fh_fsl,tau(l),n,fvr)
   
     do i=1,n
       tmp = cmplx(fvr(i,:),0.0,f64)
-      call sll_s_fft_exec_c2c_1d(solver%fw, tmp, tmp)
+      call sll_s_fft_exec_c2c_1d(fsl_fw, tmp, tmp)
       sum0(i)=tmp(1)*r(i) !r*int_R fdv
     enddo
   
-    sum0 = sum0 * (eta_max-eta_min) / cmplx(n,0.0, f64)
+    sum0 = sum0 * cmplx(delta_eta,0.0, f64)
   
-    call sll_s_fft_exec_c2c_1d(solver%fw, sum0, tmp)
+    call sll_s_fft_exec_c2c_1d(fsl_fw, sum0, tmp)
   
     tmp(1)=cmplx(0.0d0,0.0d0,kind=f64)
   
     tmp(2:n) = tmp(2:n) / lx(2:n)
   
-    call sll_s_fft_exec_c2c_1d(solver%bw, tmp, tmp)
+    call sll_s_fft_exec_c2c_1d(fsl_bw, tmp, tmp)
     
     Ens(1:n,l)=real(tmp-tmp(n/2+1),f64)/rk(:)
    
@@ -584,11 +578,9 @@ do step=1,nb_step !-------- * Evolution in time * ---------
   !call sll_s_xdmf_rect2d_nodes( 'fh', fvr, 'fh', x1(1:n), x2(1:n), &
   !                              'HDF5', step) 
 
-
-
 enddo
 
-call fsl_interp_2d(solver,fh_fsl,real(nb_step*k/eps,f64),n,fvr)
+call fsl_interp_2d(fh_fsl,real(nb_step*k/eps,f64),n,fvr)
 
 !---------------end time solve-------------------------
 
@@ -596,7 +588,8 @@ call sll_o_delete(spl_1d)
 call sll_o_delete(spl_2d)
 call sll_s_fft_free(fw_fft)
 call sll_s_fft_free(bw_fft)
-call free_fsl_solver(solver)
+call sll_s_fft_free(fsl_fw)
+call sll_s_fft_free(fsl_bw)
 
 
 call cpu_time(tend)
@@ -708,37 +701,12 @@ function rfct2( tau, ntau, xi1, xi2, gn )
 
 end function rfct2
 
-subroutine init_fsl_solver( self, xmin, xmax, n)
 
-type(fsl_solver)        :: self
-sll_int32 , intent(in)  :: n
-sll_real64, intent(in)  :: xmin
-sll_real64, intent(in)  :: xmax
-
-sll_int32               :: i, j, m
-sll_comp64, allocatable :: tmp(:)
-
-allocate(tmp(n))
-call sll_s_fft_init_c2c_1d(self%fw, n, tmp, tmp, sll_p_fft_forward)
-call sll_s_fft_init_c2c_1d(self%bw, n, tmp, tmp, sll_p_fft_backward)
-deallocate(tmp)
-
-end subroutine init_fsl_solver
-
-subroutine free_fsl_solver( self )
-
-type(fsl_solver)   :: self
-
-call sll_s_fft_free(self%fw)
-call sll_s_fft_free(self%bw)
-
-end subroutine free_fsl_solver
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
-subroutine fsl_interp_2d(self, fh_fsl,t,n,fvr)
+subroutine fsl_interp_2d(fh_fsl,t,n,fvr)
 
-type(fsl_solver)            :: self
 sll_int32,  intent(in)      :: n
 sll_real64, intent(in)      :: fh_fsl(:,:)
 sll_real64, intent(in)      :: t
