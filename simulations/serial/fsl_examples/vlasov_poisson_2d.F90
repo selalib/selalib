@@ -25,6 +25,7 @@ type(sll_t_fft) :: fw_fft
 type(sll_t_fft) :: bw_fft
 type(sll_t_cubic_spline_1d), pointer :: spl_1d
 type(sll_t_cubic_spline_2d), pointer :: spl_2d
+type(sll_t_cubic_spline_2d), pointer :: spl_2d_f
 
 sll_int32  :: step,nb_step
 sll_int32  :: i,j,l
@@ -90,8 +91,6 @@ type :: fsl_solver
   type(sll_t_fft)                      :: fw
   type(sll_t_fft)                      :: bw
   sll_real64                           :: L
-  sll_int32                            :: num_cells
-  type(sll_t_cubic_spline_2d), pointer :: spl_2d
 
 end type fsl_solver
 
@@ -188,6 +187,15 @@ spl_2d => sll_f_new_cubic_spline_2d( n+1,      &
                                      eta1_max, &
                                      bc1_type, &
                                      bc2_type)
+
+spl_2d_f => sll_f_new_cubic_spline_2d( n+1,      &
+                                       n+1,      &
+                                       eta1_min, &
+                                       eta1_max, &
+                                       eta1_min, &
+                                       eta1_max, &
+                                       bc1_type, &
+                                       bc2_type)
 
 ! ---- * Initializations * ----
 
@@ -581,6 +589,7 @@ do step=1,nb_step !-------- * Evolution in time * ---------
 
 enddo
 
+call fsl_interp_2d(solver,fh_fsl,real(nb_step*k/eps,f64),n,fvr)
 
 !---------------end time solve-------------------------
 
@@ -588,7 +597,6 @@ call sll_o_delete(spl_1d)
 call sll_o_delete(spl_2d)
 call sll_s_fft_free(fw_fft)
 call sll_s_fft_free(bw_fft)
-call fsl_interp_2d(solver,fh_fsl,real(nb_step*k/eps,f64),n,fvr)
 call free_fsl_solver(solver)
 
 
@@ -701,34 +709,22 @@ function rfct2( tau, ntau, xi1, xi2, gn )
 
 end function rfct2
 
-subroutine init_fsl_solver( self, xmin, xmax, num_cells)
+subroutine init_fsl_solver( self, xmin, xmax, n)
 
 type(fsl_solver)        :: self
-sll_int32 , intent(in)  :: num_cells
+sll_int32 , intent(in)  :: n
 sll_real64, intent(in)  :: xmin
 sll_real64, intent(in)  :: xmax
 
 sll_int32               :: i, j, m
 sll_comp64, allocatable :: tmp(:)
 
-self%num_cells = num_cells
-
 self%L = 4.0_f64
 
-allocate(tmp(num_cells))
-call sll_s_fft_init_c2c_1d(self%fw, num_cells, tmp, tmp, sll_p_fft_forward)
-call sll_s_fft_init_c2c_1d(self%bw, num_cells, tmp, tmp, sll_p_fft_backward)
+allocate(tmp(n))
+call sll_s_fft_init_c2c_1d(self%fw, n, tmp, tmp, sll_p_fft_forward)
+call sll_s_fft_init_c2c_1d(self%bw, n, tmp, tmp, sll_p_fft_backward)
 deallocate(tmp)
-
-self%spl_2d => sll_f_new_cubic_spline_2D(num_cells+1, &
-                                         num_cells+1, &
-                                                xmin, &
-                                                xmax, &
-                                                xmin, &
-                                                xmax, &
-                                      SLL_P_PERIODIC, &
-                                      SLL_P_PERIODIC)
-
 
 end subroutine init_fsl_solver
 
@@ -738,37 +734,36 @@ type(fsl_solver)   :: self
 
 call sll_s_fft_free(self%fw)
 call sll_s_fft_free(self%bw)
-call sll_o_delete(self%spl_2d)
 
 end subroutine free_fsl_solver
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
-subroutine fsl_interp_2d(self, fh_fsl,t,num_cells,fvr)
+subroutine fsl_interp_2d(self, fh_fsl,t,n,fvr)
 
 type(fsl_solver)            :: self
-sll_int32,  intent(in)      :: num_cells
+sll_int32,  intent(in)      :: n
 sll_real64, intent(in)      :: fh_fsl(:,:)
 sll_real64, intent(in)      :: t
-sll_real64, intent(inout)   :: fvr(num_cells,num_cells)
+sll_real64, intent(inout)   :: fvr(n,n)
 
 sll_real64                  :: ct, st
 sll_real64                  :: x, y
 sll_real64                  :: xj, yj
 sll_int32                   :: i, j
 
-call sll_s_compute_cubic_spline_2d(fh_fsl, self%spl_2d)
+call sll_s_compute_cubic_spline_2d(fh_fsl, spl_2d_f)
 
 ct = cos(t)
 st = sin(t)
-do j=1,num_cells
+do j=1,n
   xj = st*r(j)
   yj = ct*r(j)
-  do i=1,num_cells
+  do i=1,n
     x = ct*r(i)-xj
     y = st*r(i)+yj
     if (abs(x)<self%L .and. abs(y)<self%L) then
-      fvr(i,j)=sll_f_interpolate_value_2d(x,y,self%spl_2d)
+      fvr(i,j)=sll_f_interpolate_value_2d(x,y,spl_2d_f)
     else
       fvr(i,j)=0.0_f64
     endif
