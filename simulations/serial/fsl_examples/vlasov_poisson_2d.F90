@@ -540,9 +540,7 @@ do step=1,nb_step !-------- * Evolution in time * ---------
   !$OMP END DO
 
   !$OMP MASTER
-
   call sll_s_deposit_value_2d(eta1feet,eta2feet,spl_2d,fh_fsl) !function value at the half time
-
   !$OMP END MASTER
 
   !$OMP BARRIER
@@ -661,12 +659,12 @@ call sll_s_fft_free(fw_fft)
 call sll_s_fft_free(bw_fft)
 call sll_o_delete(spl_2d_f)
 
-
 !$OMP MASTER
 call sll_o_delete(spl_2d)
+!$OMP END MASTER
+
 call sll_s_fft_free(fsl_fw)
 call sll_s_fft_free(fsl_bw)
-!$OMP END MASTER
 
 deallocate(lx)
 deallocate(tau)
