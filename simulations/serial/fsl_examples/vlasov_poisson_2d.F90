@@ -125,8 +125,6 @@ call cpu_time(tstart)
 ! allocations of the arrays
 SLL_ALLOCATE(ftilde1(0:ntau-1,n+1,n+1),err)
 SLL_ALLOCATE(ftilde2(0:ntau-1,n+1,n+1),err)
-SLL_ALLOCATE(x1(n+1),err)
-SLL_ALLOCATE(x2(n+1),err)
 SLL_ALLOCATE(fh_fsl(n+1,n+1),err)
 SLL_ALLOCATE(Ens(n+1,0:ntau-1),err)
 SLL_ALLOCATE(Enr(n+1,0:ntau-1),err)
@@ -136,30 +134,14 @@ SLL_ALLOCATE(gnr(0:ntau-1,n+1,n+1),err)
 SLL_ALLOCATE(gnt(0:ntau-1,n+1,n+1),err)
 SLL_ALLOCATE(F1(0:ntau-1),err)
 SLL_ALLOCATE(F2(0:ntau-1),err)
-SLL_ALLOCATE(tmp1(0:ntau-1),err)
 SLL_ALLOCATE(tmp2(0:ntau-1),err)
-SLL_ALLOCATE(tmp1_f(0:ntau-1),err)
 SLL_ALLOCATE(tmp2_f(0:ntau-1),err)
-SLL_ALLOCATE(tau(0:ntau-1),err)
-SLL_ALLOCATE(ltau(0:ntau-1),err)
-SLL_ALLOCATE(fvr(1:n,1:n),err)
-SLL_ALLOCATE(x(n+1,n+1),err)
-SLL_ALLOCATE(tmp(n),err)
-SLL_ALLOCATE(sum0(n),err)
-SLL_ALLOCATE(r(n),err)
-SLL_ALLOCATE(rk(n),err)
 SLL_ALLOCATE(xi1(0:ntau-1,n+1,n+1),err)
 SLL_ALLOCATE(xi2(0:ntau-1,n+1,n+1),err)
 SLL_ALLOCATE(ftv(n+1,n+1),err)
 SLL_ALLOCATE(ftr(n+1,n+1),err)
-SLL_ALLOCATE(vctmp(n),err)
-SLL_ALLOCATE(uctmp(n),err)
-SLL_ALLOCATE(v(n+1),err)
-SLL_ALLOCATE(ft1(n,n),err)
-SLL_ALLOCATE(ft2(n,n),err)
 SLL_ALLOCATE(eta1feet(n+1,n+1), err)
 SLL_ALLOCATE(eta2feet(n+1,n+1), err)
-SLL_ALLOCATE(lx(n), err)
 
 !$OMP PARALLEL NUM_THREADS(2)                                                  &                              
 !$OMP DEFAULT(SHARED)                                                          &
@@ -170,6 +152,25 @@ SLL_ALLOCATE(lx(n), err)
 !$OMP         err) 
 !$ it = omp_get_thread_num()
 !$ nt = omp_get_num_threads()
+
+SLL_ALLOCATE(lx(n), err)
+SLL_ALLOCATE(tau(0:ntau-1),err)
+SLL_ALLOCATE(tmp(n),err)
+SLL_ALLOCATE(sum0(n),err)
+SLL_ALLOCATE(r(n),err)
+SLL_ALLOCATE(tmp1_f(0:ntau-1),err)
+SLL_ALLOCATE(rk(n),err)
+SLL_ALLOCATE(fvr(1:n,1:n),err)
+SLL_ALLOCATE(vctmp(n),err)
+SLL_ALLOCATE(uctmp(n),err)
+SLL_ALLOCATE(ft1(n,n),err)
+SLL_ALLOCATE(ft2(n,n),err)
+SLL_ALLOCATE(x(n+1,n+1),err)
+SLL_ALLOCATE(ltau(0:ntau-1),err)
+SLL_ALLOCATE(x1(n+1),err)
+SLL_ALLOCATE(x2(n+1),err)
+SLL_ALLOCATE(tmp1(0:ntau-1),err)
+SLL_ALLOCATE(v(n+1),err)
 
 !$OMP CRITICAL
 print"('thread num:',i3, ' num threads:', i3)", it, nt
@@ -201,7 +202,6 @@ spl_2d => sll_f_new_cubic_spline_2d( n+1,            &
                                      eta_max,        &
                                      sll_p_periodic, &
                                      sll_p_periodic)
-
 !$OMP END MASTER
 
 
@@ -256,7 +256,7 @@ do step=1,nb_step !-------- * Evolution in time * ---------
 
   do l=it*ntau/nt,(it+1)*ntau/nt-1
   
-    call fsl_interp_2d(spl_2d_f,fh_fsl,tau(l),n,fvr)
+    call fsl_interp_2d(spl_2d_f,fh_fsl,tau(l),n,r,fvr)
 
     do i=1,n
       tmp = cmplx(fvr(i,:),0.,f64)
@@ -275,6 +275,16 @@ do step=1,nb_step !-------- * Evolution in time * ---------
   enddo
 
   !$OMP BARRIER
+  !!$OMP MASTER
+  !do l = 0, ntau-1
+  !  do i = 1, n
+  !     write(12,*) r(i), tau(l), Ens(i,l), Enr(i,l)
+  !  end do
+  !  write(12,*)
+  !end do
+  !!$OMP END MASTER
+  !!$OMP BARRIER
+  !stop
 
   !$OMP MASTER
   do j=1,n
@@ -322,8 +332,8 @@ do step=1,nb_step !-------- * Evolution in time * ---------
     
   do l=it*ntau/nt,(it+1)*ntau/nt-1
   
-    call fsl_interp_2d(spl_2d_f,ftv,tau(l),n,ft1)
-    call fsl_interp_2d(spl_2d_f,ftr,tau(l),n,ft2)
+    call fsl_interp_2d(spl_2d_f,ftv,tau(l),n,r,ft1)
+    call fsl_interp_2d(spl_2d_f,ftr,tau(l),n,r,ft2)
   
     ctau = cos(tau(l))
     stau = sin(tau(l))
@@ -555,7 +565,7 @@ do step=1,nb_step !-------- * Evolution in time * ---------
 
   do l=it*ntau/nt,(it+1)*ntau/nt-1
   
-    call fsl_interp_2d(spl_2d_f,fh_fsl,tau(l),n,fvr)
+    call fsl_interp_2d(spl_2d_f,fh_fsl,tau(l),n,r,fvr)
   
     do i=1,n
       tmp = cmplx(fvr(i,:),0.0,f64)
@@ -644,7 +654,18 @@ do step=1,nb_step !-------- * Evolution in time * ---------
 enddo
 
 !$OMP MASTER
-call fsl_interp_2d(spl_2d_f,fh_fsl,real(nb_step*k/eps,f64),n,fvr)
+call fsl_interp_2d(spl_2d_f,fh_fsl,real(nb_step*k/eps,f64),n,r,fvr)
+error = 0.0
+open(newunit = ref_id, file='fh.ref')
+do i=1,n
+  do j=1,n
+    read(ref_id,*) err, l, fdum
+    error = error + abs(fdum-sngl(fvr(i,j)))
+  enddo
+  read(ref_id,*)
+enddo
+close(ref_id)
+print"('Error = ', g15.3)", error / real(n*n,f32)
 !$OMP END MASTER
 
 !---------------end time solve-------------------------
@@ -661,23 +682,17 @@ call sll_s_fft_free(fsl_fw)
 call sll_s_fft_free(fsl_bw)
 !$OMP END MASTER
 
+deallocate(lx)
+deallocate(tau)
+deallocate(tmp)
+deallocate(sum0)
+
 !$OMP END PARALLEL 
 
 call cpu_time(tend)
 print"('CPU time = ', g15.3)", tend - tstart
 
 
-error = 0.0
-open(newunit = ref_id, file='fh.ref')
-do i=1,n
-  do j=1,n
-    read(ref_id,*) err, l, fdum
-    error = error + abs(fdum-sngl(fvr(i,j)))
-  enddo
-  read(ref_id,*)
-enddo
-close(ref_id)
-print"('Error = ', g15.3)", error / real(n*n,f32)
 
 contains
 
@@ -776,11 +791,12 @@ end function rfct2
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
-subroutine fsl_interp_2d(spl,fh_fsl,t,n,fvr)
+subroutine fsl_interp_2d(spl,fh_fsl,t,n,r,fvr)
 
 type(sll_t_cubic_spline_2d), pointer :: spl
 sll_int32,  intent(in)               :: n
 sll_real64, intent(in)               :: fh_fsl(:,:)
+sll_real64, intent(in)               :: r(:)
 sll_real64, intent(in)               :: t
 sll_real64, intent(inout)            :: fvr(:,:)
 
