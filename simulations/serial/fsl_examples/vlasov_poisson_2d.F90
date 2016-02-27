@@ -251,11 +251,11 @@ do step=1,nb_step !-------- * Evolution in time * ---------
   !$OMP MASTER
   call sll_s_compute_cubic_spline_2d(fh_fsl,spl_2d)
   !$OMP END MASTER
+  !$OMP BARRIER
 
   rk        = r
   rk(n/2+1) = 1.0_f64
 
-  !$OMP BARRIER
 
   !$OMP DO 
   do l=0, ntau-1
@@ -278,8 +278,6 @@ do step=1,nb_step !-------- * Evolution in time * ---------
   
   enddo
   !$OMP END DO
-
-  !$OMP BARRIER
 
   !$OMP DO
   do j=1,n
@@ -321,9 +319,6 @@ do step=1,nb_step !-------- * Evolution in time * ---------
   enddo
   !$OMP END DO 
 
-
-  !$OMP BARRIER
-    
   !$OMP DO 
   do l=0, ntau-1
   
@@ -360,8 +355,6 @@ do step=1,nb_step !-------- * Evolution in time * ---------
   enddo
   !$OMP END DO 
 
-  !$OMP BARRIER
-
   !$OMP DO 
   do l=0, ntau-1
   
@@ -379,7 +372,6 @@ do step=1,nb_step !-------- * Evolution in time * ---------
   
   enddo
   !$OMP END DO 
-
 
   !$OMP DO
   do j=1,n+1
@@ -416,8 +408,6 @@ do step=1,nb_step !-------- * Evolution in time * ---------
   enddo
   !$OMP END DO
 
-  !$OMP BARRIER
-
   !$OMP DO 
   do l=0, ntau-1
   
@@ -436,8 +426,6 @@ do step=1,nb_step !-------- * Evolution in time * ---------
   enddo
   !$OMP END DO 
 
-  !$OMP BARRIER
-  
   !$OMP DO
   do j=1,n+1
     do i=1,n+1
@@ -500,8 +488,6 @@ do step=1,nb_step !-------- * Evolution in time * ---------
   enddo
   !$OMP END DO
 
-  !$OMP BARRIER
-
   !$OMP DO 
   do l=0, ntau-1
     ctau = cos(tau(l))
@@ -515,9 +501,7 @@ do step=1,nb_step !-------- * Evolution in time * ---------
   enddo
   !$OMP END DO 
 
-  !$OMP BARRIER
-
-  !$OMP MASTER
+  !$OMP DO
   do j=1,n+1
     do i=1,n+1
 
@@ -553,14 +537,13 @@ do step=1,nb_step !-------- * Evolution in time * ---------
 
     enddo
   enddo
-  !$OMP END MASTER
+  !$OMP END DO
 
   !$OMP MASTER
 
   call sll_s_deposit_value_2d(eta1feet,eta2feet,spl_2d,fh_fsl) !function value at the half time
 
   !$OMP END MASTER
-
 
   !$OMP BARRIER
 
@@ -593,8 +576,6 @@ do step=1,nb_step !-------- * Evolution in time * ---------
   enddo
   !$OMP END DO 
 
-  !$OMP BARRIER
-
   !------End evaluation and continue 2nd solver-------------
 
   !$OMP DO 
@@ -610,9 +591,7 @@ do step=1,nb_step !-------- * Evolution in time * ---------
   enddo
   !$OMP END DO 
 
-  !$OMP BARRIER
-
-  !$OMP MASTER
+  !$OMP DO
   do j=1,n+1
     do i=1,n+1
 
@@ -648,7 +627,7 @@ do step=1,nb_step !-------- * Evolution in time * ---------
 
     enddo
   enddo
-  !$OMP END MASTER
+  !$OMP END DO
 
   !$OMP MASTER
   call sll_s_deposit_value_2d(eta1feet,eta2feet,spl_2d,fh_fsl)
