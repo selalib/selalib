@@ -280,7 +280,7 @@ do step=1,nb_step !-------- * Evolution in time * ---------
 
   !$OMP BARRIER
 
-  !$OMP MASTER
+  !$OMP DO
   do j=1,n
   
     vctmp = cmplx(fh_fsl(j,1:n),0.,f64)
@@ -298,7 +298,7 @@ do step=1,nb_step !-------- * Evolution in time * ---------
     ftr(1:n,j)=real(tmp)  !\partial_\x2 f_tilde(\xi1,\xi2)
   
   enddo
-  !$OMP END MASTER
+  !$OMP END DO
 
   v(1:n)=r
   v(n+1)=eta_max
@@ -545,13 +545,16 @@ do step=1,nb_step !-------- * Evolution in time * ---------
       eta1 = real(sum(tmp1_f*exp(-0.5_f64*ltau*k/eps)))
       eta2 = real(sum(tmp2_f*exp(-0.5_f64*ltau*k/eps)))
 
-      call apply_bc()
+      call apply_bc(eta1, eta2, eta_min, eta_max)
 
       eta1feet(i,j)=eta1
       eta2feet(i,j)=eta2
 
     enddo
   enddo
+  !$OMP END MASTER
+
+  !$OMP MASTER
 
   call sll_s_deposit_value_2d(eta1feet,eta2feet,spl_2d,fh_fsl) !function value at the half time
 
@@ -637,7 +640,7 @@ do step=1,nb_step !-------- * Evolution in time * ---------
       eta1 = real(sumup1)
       eta2 = real(sumup2)
 
-      call apply_bc()
+      call apply_bc(eta1, eta2, eta_min, eta_max)
 
       eta1feet(i,j)=eta1
       eta2feet(i,j)=eta2
@@ -695,12 +698,14 @@ deallocate(sum0)
 call cpu_time(tend)
 print"('CPU time = ', g15.3)", tend - tstart
 
-
-
 contains
 
 !> Corrections on the BC 
-subroutine apply_bc()
+subroutine apply_bc(eta1, eta2, eta_min, eta_max)
+sll_real64 :: eta1
+sll_real64 :: eta2
+sll_real64 :: eta_min
+sll_real64 :: eta_max
 
   do while (eta1>eta_max)
     eta1 = eta1-(eta_max-eta_min)
