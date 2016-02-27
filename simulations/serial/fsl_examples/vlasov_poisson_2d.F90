@@ -147,7 +147,8 @@ SLL_ALLOCATE(eta2feet(n+1,n+1), err)
 !$OMP PRIVATE(spl_1d, bw_fft, fw_fft, it, nt, spl_2d_f, l, ltau, lx, tau, sum0,&
 !$OMP         i, j, rk, step, fsl_fw, fsl_bw, tmp, tmp1, tmp1_f, x1, x2, r,    &
 !$OMP         fvr, uctmp, vctmp, v, ctau, stau, x, s1, s2, s3, ft1, ft2, csq,  &
-!$OMP         err, tmp2, tmp2_f, dtgn, f1, f2, sumup1, sumup2, error) 
+!$OMP         err, tmp2, tmp2_f, dtgn, f1, f2, sumup1, sumup2, error, eta1,    &
+!$OMP         eta2) 
 !$ it = omp_get_thread_num()
 !$ nt = omp_get_num_threads()
 
@@ -380,7 +381,7 @@ do step=1,nb_step !-------- * Evolution in time * ---------
   !$OMP END DO 
 
 
-  !$OMP MASTER
+  !$OMP DO
   do j=1,n+1
     do i=1,n+1
 
@@ -413,7 +414,7 @@ do step=1,nb_step !-------- * Evolution in time * ---------
 
     enddo
   enddo
-  !$OMP END MASTER
+  !$OMP END DO
 
   !$OMP BARRIER
 
@@ -437,7 +438,7 @@ do step=1,nb_step !-------- * Evolution in time * ---------
 
   !$OMP BARRIER
   
-  !$OMP MASTER
+  !$OMP DO
   do j=1,n+1
     do i=1,n+1
       !------------for 2nd order correction------------------
@@ -497,7 +498,7 @@ do step=1,nb_step !-------- * Evolution in time * ---------
 
     enddo
   enddo
-  !$OMP END MASTER
+  !$OMP END DO
 
   !$OMP BARRIER
 
