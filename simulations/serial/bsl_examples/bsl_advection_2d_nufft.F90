@@ -26,8 +26,8 @@ sll_real64 :: eta2
 !#########################################################
 !Simulation parameters and geometry sizes                !
                                                          !
-sll_int32,  parameter :: nc_eta1 = 8                   !
-sll_int32,  parameter :: nc_eta2 = 8                   !
+sll_int32,  parameter :: nc_eta1 = 64                   !
+sll_int32,  parameter :: nc_eta2 = 64                   !
 sll_real64, parameter :: eta1_min =  0.0_f64
 sll_real64, parameter :: eta1_max =  2*sll_p_pi           !
 sll_real64, parameter :: eta2_min = - 0.0_f64
@@ -106,12 +106,8 @@ do i_step=1, n_step
     do i = 1, nc_eta1
       eta1 = eta1_min + (i-1)*delta_eta1 -sll_p_pi
       eta2 = eta2_min + (j-1)*delta_eta2 -sll_p_pi
-      !x1   = eta1 - (eta2-sll_p_pi) * delta_t !cos(delta_t)*eta1-sin(delta_t)*eta2
-      !x2   = eta2 + (eta1-sll_p_pi) * delta_t!sin(delta_t)*eta1+cos(delta_t)*eta2
       x1   = cos(delta_t)*eta1-sin(delta_t)*eta2 + sll_p_pi
       x2   = sin(delta_t)*eta1+cos(delta_t)*eta2 + sll_p_pi
-     ! x1 = eta1_min + modulo(x1-eta1_min,eta1_max-eta1_min)
-     ! x2 = eta2_min + modulo(x2-eta2_min,eta2_max-eta2_min)
       if ( eta1_min < x1 .and. x1 < eta1_max .and. &
            eta2_min < x2 .and. x2 < eta2_max ) then
         p=p+1
