@@ -17,7 +17,7 @@ use sll_m_cubic_splines
 implicit none
 
 sll_comp64, parameter :: sll_p_i0   = (0.0_f64, 0.0_f64)
-sll_int32,  parameter :: n          = 64
+sll_int32,  parameter :: n          = 128
 sll_int32,  parameter :: ntau       = 32
 sll_real64, parameter :: final_time = 0.4_f64
 
@@ -27,7 +27,7 @@ type(sll_t_cubic_spline_1d), pointer :: spl_1d
 type(sll_t_cubic_spline_2d), pointer :: spl_2d
 type(sll_t_cubic_spline_2d), pointer :: spl_2d_f
 
-sll_int32  :: step,nb_step
+sll_int32  :: step, nb_step
 sll_int32  :: i,j,l
 sll_int32  :: err
 sll_real64 :: delta_eta
@@ -39,8 +39,23 @@ sll_real64 :: eta1,  eta2
 sll_real64, dimension(:,:), allocatable :: eta1feet
 sll_real64, dimension(:,:), allocatable :: eta2feet
 
+!Shared 
 sll_comp64, allocatable :: ftilde1(:,:,:)
 sll_comp64, allocatable :: ftilde2(:,:,:)
+sll_real64, allocatable :: gn     (:,:,:)
+sll_real64, allocatable :: gnr    (:,:,:)
+sll_real64, allocatable :: gnt    (:,:,:)
+sll_real64, allocatable :: xi1    (:,:,:)
+sll_real64, allocatable :: xi2    (:,:,:)
+sll_real64, allocatable :: ftv    (:,:)
+sll_real64, allocatable :: ftr    (:,:)
+sll_real64, allocatable :: fvr    (:,:)
+sll_real64, allocatable :: fh_fsl (:,:)
+sll_real64, allocatable :: Ens    (:,:)
+sll_real64, allocatable :: Enr    (:,:)
+sll_real64, allocatable :: Ent    (:,:)
+
+!Private 
 sll_comp64, allocatable :: F1     (:)
 sll_comp64, allocatable :: F2     (:)
 sll_comp64, allocatable :: tmp1   (:)
@@ -52,21 +67,8 @@ sll_comp64, allocatable :: tmp    (:)
 sll_comp64, allocatable :: sum0   (:)
 sll_comp64, allocatable :: vctmp  (:)
 sll_comp64, allocatable :: uctmp  (:)
-
-sll_real64, allocatable :: gn     (:,:,:)
-sll_real64, allocatable :: gnr    (:,:,:)
-sll_real64, allocatable :: gnt    (:,:,:)
-sll_real64, allocatable :: xi1    (:,:,:)
-sll_real64, allocatable :: xi2    (:,:,:)
-sll_real64, allocatable :: ftv    (:,:)
-sll_real64, allocatable :: ftr    (:,:)
 sll_real64, allocatable :: ft1    (:,:)
 sll_real64, allocatable :: ft2    (:,:)
-sll_real64, allocatable :: fh_fsl (:,:)
-sll_real64, allocatable :: Ens    (:,:)
-sll_real64, allocatable :: Enr    (:,:)
-sll_real64, allocatable :: Ent    (:,:)
-sll_real64, allocatable :: fvr    (:,:)
 sll_real64, allocatable :: x      (:,:)
 sll_real64, allocatable :: x1     (:)
 sll_real64, allocatable :: x2     (:)
@@ -132,10 +134,6 @@ SLL_ALLOCATE(Ent(n+1,0:ntau-1),err)
 SLL_ALLOCATE(gn(0:ntau-1,n+1,n+1),err)
 SLL_ALLOCATE(gnr(0:ntau-1,n+1,n+1),err)
 SLL_ALLOCATE(gnt(0:ntau-1,n+1,n+1),err)
-SLL_ALLOCATE(F1(0:ntau-1),err)
-SLL_ALLOCATE(F2(0:ntau-1),err)
-SLL_ALLOCATE(tmp2(0:ntau-1),err)
-SLL_ALLOCATE(tmp2_f(0:ntau-1),err)
 SLL_ALLOCATE(xi1(0:ntau-1,n+1,n+1),err)
 SLL_ALLOCATE(xi2(0:ntau-1,n+1,n+1),err)
 SLL_ALLOCATE(ftv(n+1,n+1),err)
@@ -149,7 +147,7 @@ SLL_ALLOCATE(eta2feet(n+1,n+1), err)
 !$OMP PRIVATE(spl_1d, bw_fft, fw_fft, it, nt, spl_2d_f, l, ltau, lx, tau, sum0,&
 !$OMP         i, j, rk, step, fsl_fw, fsl_bw, tmp, tmp1, tmp1_f, x1, x2, r,    &
 !$OMP         fvr, uctmp, vctmp, v, ctau, stau, x, s1, s2, s3, ft1, ft2, csq,  &
-!$OMP         err) 
+!$OMP         err, tmp2, tmp2_f, dtgn, f1, f2, sumup1, sumup2, error) 
 !$ it = omp_get_thread_num()
 !$ nt = omp_get_num_threads()
 
@@ -171,6 +169,10 @@ SLL_ALLOCATE(x1(n+1),err)
 SLL_ALLOCATE(x2(n+1),err)
 SLL_ALLOCATE(tmp1(0:ntau-1),err)
 SLL_ALLOCATE(v(n+1),err)
+SLL_ALLOCATE(tmp2(0:ntau-1),err)
+SLL_ALLOCATE(tmp2_f(0:ntau-1),err)
+SLL_ALLOCATE(F1(0:ntau-1),err)
+SLL_ALLOCATE(F2(0:ntau-1),err)
 
 !$OMP CRITICAL
 print"('thread num:',i3, ' num threads:', i3)", it, nt
@@ -193,7 +195,7 @@ spl_2d_f => sll_f_new_cubic_spline_2d( n+1,            &
                                        sll_p_periodic, &
                                        sll_p_periodic)
 
-!$OMP MASTER
+!$OMP SINGLE
 spl_2d => sll_f_new_cubic_spline_2d( n+1,            &
                                      n+1,            &
                                      eta_min,        &
@@ -202,7 +204,7 @@ spl_2d => sll_f_new_cubic_spline_2d( n+1,            &
                                      eta_max,        &
                                      sll_p_periodic, &
                                      sll_p_periodic)
-!$OMP END MASTER
+!$OMP END SINGLE
 
 
 ! ---- * Initializations * ----
@@ -229,13 +231,13 @@ end do
 lx = [ (cmplx(j,0.,f64), j=0,n/2-1), (cmplx(j,0.,f64), j=-n/2,-1 ) ]
 lx = lx * 2.0d0*sll_p_pi * sll_p_i1 / delta_eta
 
-!$OMP MASTER
+!$OMP DO
 do i=1,n+1
   do j=1,n+1
     fh_fsl(i,j) = exp(-2.0d0*(x1(i)**2+x2(j)**2))
   end do
 end do
-!$OMP END MASTER
+!$OMP END DO
 
 ltau = [(cmplx(0.,-l,f64),l=0,ntau/2-1),(cmplx(0,-l,f64),l=-ntau/2,-1)]
 
@@ -254,7 +256,8 @@ do step=1,nb_step !-------- * Evolution in time * ---------
 
   !$OMP BARRIER
 
-  do l=it*ntau/nt,(it+1)*ntau/nt-1
+  !$OMP DO 
+  do l=0, ntau-1
   
     call fsl_interp_2d(spl_2d_f,fh_fsl,tau(l),n,r,fvr)
 
@@ -273,18 +276,9 @@ do step=1,nb_step !-------- * Evolution in time * ---------
     Enr(1:n,l)=real(sum0-Ens(1:n,l))/rk
   
   enddo
+  !$OMP END DO
 
   !$OMP BARRIER
-  !!$OMP MASTER
-  !do l = 0, ntau-1
-  !  do i = 1, n
-  !     write(12,*) r(i), tau(l), Ens(i,l), Enr(i,l)
-  !  end do
-  !  write(12,*)
-  !end do
-  !!$OMP END MASTER
-  !!$OMP BARRIER
-  !stop
 
   !$OMP MASTER
   do j=1,n
@@ -306,13 +300,11 @@ do step=1,nb_step !-------- * Evolution in time * ---------
   enddo
   !$OMP END MASTER
 
-  !$OMP BARRIER
-
   v(1:n)=r
   v(n+1)=eta_max
 
-
-  do l=it*ntau/nt,(it+1)*ntau/nt-1
+  !$OMP DO 
+  do l=0, ntau-1
     ctau = cos(tau(l))
     stau = sin(tau(l))
     do j=1,n+1
@@ -326,11 +318,13 @@ do step=1,nb_step !-------- * Evolution in time * ---------
     call fsl_interp_1d(spl_1d, n, x, ens(:,l), gn(l,:,:))
 
   enddo
+  !$OMP END DO 
 
 
   !$OMP BARRIER
     
-  do l=it*ntau/nt,(it+1)*ntau/nt-1
+  !$OMP DO 
+  do l=0, ntau-1
   
     call fsl_interp_2d(spl_2d_f,ftv,tau(l),n,r,ft1)
     call fsl_interp_2d(spl_2d_f,ftr,tau(l),n,r,ft2)
@@ -363,10 +357,12 @@ do step=1,nb_step !-------- * Evolution in time * ---------
     Ent(1:n,l)=real(tmp-tmp(n/2+1))/rk
   
   enddo
+  !$OMP END DO 
 
   !$OMP BARRIER
 
-  do l=it*ntau/nt,(it+1)*ntau/nt-1
+  !$OMP DO 
+  do l=0, ntau-1
   
     ctau = cos(tau(l))
     stau = sin(tau(l))
@@ -381,6 +377,7 @@ do step=1,nb_step !-------- * Evolution in time * ---------
     call fsl_interp_1d(spl_1d, n, x, ent(:,l), gnt(l,:,:))
   
   enddo
+  !$OMP END DO 
 
 
   !$OMP MASTER
@@ -420,7 +417,8 @@ do step=1,nb_step !-------- * Evolution in time * ---------
 
   !$OMP BARRIER
 
-  do l=it*ntau/nt,(it+1)*ntau/nt-1
+  !$OMP DO 
+  do l=0, ntau-1
   
     ctau = cos(tau(l))
     stau = sin(tau(l))
@@ -435,6 +433,7 @@ do step=1,nb_step !-------- * Evolution in time * ---------
     call fsl_interp_1d(spl_1d, n, x, ent(:,l), gnt(l,:,:))
 
   enddo
+  !$OMP END DO 
 
   !$OMP BARRIER
   
@@ -502,7 +501,8 @@ do step=1,nb_step !-------- * Evolution in time * ---------
 
   !$OMP BARRIER
 
-  do l=it*ntau/nt,(it+1)*ntau/nt-1
+  !$OMP DO 
+  do l=0, ntau-1
     ctau = cos(tau(l))
     stau = sin(tau(l))
     do j=1,n+1
@@ -512,6 +512,7 @@ do step=1,nb_step !-------- * Evolution in time * ---------
     end do
     call fsl_interp_1d(spl_1d, n, x, ens(:,l), gn(l,:,:))
   enddo
+  !$OMP END DO 
 
   !$OMP BARRIER
 
@@ -562,8 +563,8 @@ do step=1,nb_step !-------- * Evolution in time * ---------
   rk        = r
   rk(n/2+1) = 1.0_f64
 
-
-  do l=it*ntau/nt,(it+1)*ntau/nt-1
+  !$OMP DO 
+  do l=0, ntau-1
   
     call fsl_interp_2d(spl_2d_f,fh_fsl,tau(l),n,r,fvr)
   
@@ -586,16 +587,14 @@ do step=1,nb_step !-------- * Evolution in time * ---------
     Ens(1:n,l)=real(tmp-tmp(n/2+1),f64)/rk(:)
    
   enddo
+  !$OMP END DO 
 
   !$OMP BARRIER
-
-  !print"(32f5.1)", tau
-  !$OMP BARRIER
-  !stop
 
   !------End evaluation and continue 2nd solver-------------
 
-  do l=it*ntau/nt,(it+1)*ntau/nt-1
+  !$OMP DO 
+  do l=0, ntau-1
     ctau = cos(tau(l))
     stau = sin(tau(l))
     do j=1,n+1
@@ -605,6 +604,9 @@ do step=1,nb_step !-------- * Evolution in time * ---------
     end do
     call fsl_interp_1d(spl_1d, n, x, ens(:,l), gn(l,:,:))
   enddo
+  !$OMP END DO 
+
+  !$OMP BARRIER
 
   !$OMP MASTER
   do j=1,n+1
@@ -642,10 +644,11 @@ do step=1,nb_step !-------- * Evolution in time * ---------
 
     enddo
   enddo
+  !$OMP END MASTER
 
+  !$OMP MASTER
   call sll_s_deposit_value_2d(eta1feet,eta2feet,spl_2d,fh_fsl)
   print"('Step =', i6, ' Time = ', g15.3)", step, real(step*k/eps)
-
   !$OMP END MASTER
 
   !call sll_s_xdmf_rect2d_nodes( 'fh', fvr, 'fh', x1(1:n), x2(1:n), &
