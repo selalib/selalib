@@ -34,9 +34,8 @@ sll_real64, parameter :: eta2_min = + 0.0_f64
 sll_real64, parameter :: eta2_max = + 2*sll_p_pi           !
 sll_real64 :: delta_eta1 = (eta1_max-eta1_min)/nc_eta1   !
 sll_real64 :: delta_eta2 = (eta2_max-eta2_min)/nc_eta2   !
-sll_real64, parameter :: delta_t = 0.01_f64              !
-sll_int32,  parameter :: n_step  = 500                   !
-sll_real64 :: r(nc_eta1)
+sll_real64, parameter :: delta_t = 0.1_f64              !
+sll_int32,  parameter :: n_step  = 50                   !
                                                          !
 !#########################################################
 
@@ -62,9 +61,6 @@ do i=1,nc_eta1
 end do
 end do
 
-do i=1,nc_eta1
-  r(i) = eta1_min + (i-1)*delta_eta1 - sll_p_pi
-end do
 
 call sll_s_init_nufft_2d( interp_2d, &
                           nc_eta1, eta1_min, eta1_max, &
@@ -75,7 +71,7 @@ do i_step=1, n_step
 
   time = time+delta_t
 
-  call sll_s_exec_nufft_2d( interp_2d, f, delta_t, nc_eta1, r )
+  call sll_s_exec_nufft_2d( interp_2d, f, delta_t, nc_eta1 )
 
   call sll_o_gnuplot_2d( eta1_min, eta1_max, nc_eta1, &
                          eta2_min, eta2_max, nc_eta2, &
