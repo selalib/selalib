@@ -9,7 +9,7 @@ ENDIF(HDF5_IS_PARALLEL AND HDF5_ENABLED)
 
 ADD_LIBRARY( sll_pic_visu STATIC sll_m_pic_visu.F90 sll_m_pic_viewer.F90 )
 
-TARGET_LINK_LIBRARIES( sll_pic_visu sll_utilities sll_file_io sll_assert)
+TARGET_LINK_LIBRARIES( sll_pic_visu sll_coordinate_transformations sll_file_io sll_utilities sll_file_io sll_assert)
     
 IF(BUILD_TESTING AND MPI_ENABLED)
   ADD_SUBDIRECTORY(testing)
