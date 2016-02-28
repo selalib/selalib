@@ -140,7 +140,7 @@ SLL_ALLOCATE( ftr     (n+1,n+1)         ,err)
 SLL_ALLOCATE( eta1feet(n+1,n+1)         ,err)
 SLL_ALLOCATE( eta2feet(n+1,n+1)         ,err)
 
-!$OMP PARALLEL 
+!$OMP PARALLEL                                                                 &
 !$OMP DEFAULT(SHARED)                                                          &
 !$OMP FIRSTPRIVATE(k, eps, h, delta_eta, eta_min, eta_max, nb_step )           &
 !$OMP PRIVATE(spl_1d, bw_fft, fw_fft, it, nt, spl_2d_f, l, ltau, lx, tau, sum0,&
