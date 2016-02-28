@@ -35,6 +35,7 @@ sll_real64 :: eta_min
 sll_real64 :: eta_max
 sll_real64 :: eps
 sll_real64 :: eta1,  eta2
+logical    :: flag
 
 sll_real64, dimension(:,:), allocatable :: eta1feet
 sll_real64, dimension(:,:), allocatable :: eta2feet
@@ -147,7 +148,7 @@ SLL_ALLOCATE( eta2feet(n+1,n+1)         ,err)
 !$OMP         i, j, rk, step, fsl_fw, fsl_bw, tmp, tmp1, tmp1_f, x1, x2, r,    &
 !$OMP         fvr, uctmp, vctmp, v, ctau, stau, x, s1, s2, s3, ft1, ft2, csq,  &
 !$OMP         err, tmp2, tmp2_f, dtgn, f1, f2, sumup1, sumup2, error, eta1,    &
-!$OMP         eta2) 
+!$OMP         eta2, flag) 
 !$ it = omp_get_thread_num()
 !$ nt = omp_get_num_threads()
 
@@ -636,18 +637,21 @@ do step=1,nb_step !-------- * Evolution in time * ---------
 enddo
 
 !$OMP MASTER
-call fsl_interp_2d(spl_2d_f,fh_fsl,real(nb_step*k/eps,f64),n,r,fvr)
-error = 0.0
-open(newunit = ref_id, file='fh.ref')
-do i=1,n
-  do j=1,n
-    read(ref_id,*) xdum, ydum, fdum
-    error = error + abs(fdum-sngl(fvr(i,j)))
+inquire (file="fh.ref",exist=flag)
+if (flag) then
+  call fsl_interp_2d(spl_2d_f,fh_fsl,real(nb_step*k/eps,f64),n,r,fvr)
+  error = 0.0
+  open(newunit = ref_id, file='fh.ref')
+  do i=1,n
+    do j=1,n
+      read(ref_id,*) xdum, ydum, fdum
+      error = error + abs(fdum-sngl(fvr(i,j)))
+    enddo
+    read(ref_id,*)
   enddo
-  read(ref_id,*)
-enddo
-close(ref_id)
-print"('Error = ', g15.3)", error / real(n*n,f32)
+  close(ref_id)
+  print"('Error = ', g15.3)", error / real(n*n,f32)
+end if
 !$OMP END MASTER
 
 !---------------end time solve-------------------------
