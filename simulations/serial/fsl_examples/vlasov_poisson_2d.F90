@@ -772,8 +772,6 @@ function rfct2( tau, ntau, xi1, xi2, gn )
 
 end function rfct2
 
-
-
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 subroutine fsl_interp_2d(spl,fh_fsl,t,n,r,fvr)
