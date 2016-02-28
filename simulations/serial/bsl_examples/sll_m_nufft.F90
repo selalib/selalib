@@ -85,12 +85,11 @@ type(sll_t_nufft_2d) :: self
 
 end subroutine sll_s_free_nufft_2d
 
-subroutine sll_s_exec_nufft_2d( self, fh_fsl, t, n )
+subroutine sll_s_exec_nufft_2d( self, fh_fsl, t )
 
 type(sll_t_nufft_2d)                 :: self
 sll_real64, intent(inout)            :: fh_fsl(:,:)
 sll_real64, intent(in)               :: t
-sll_int32,  intent(in)               :: n
 
 sll_real64                           :: ct, st
 sll_real64                           :: x, y
@@ -99,29 +98,33 @@ sll_int32                            :: i, j
                                                          !
 !#########################################################
 
-sll_int32  :: m, p
+sll_int32  :: m, n1, n2,  p
 
-self%fcmplx = cmplx(fh_fsl(1:n,1:n),0.,f64)
+n1 = self%nc_eta1
+n2 = self%nc_eta1
+
+self%fcmplx = cmplx(fh_fsl(1:n1,1:n2),0.,f64)
 call sll_s_fft_exec_c2c_2d(self%fft, self%fcmplx, self%fcmplx)
-self%fcmplx = self%fcmplx / cmplx(n*n,0.,f64)
+self%fcmplx = self%fcmplx / cmplx(n1*n2,0.,f64)
 
-m = n/2
-do i=1,n
+m = n2/2
+do i=1,n1
   self%f2=self%fcmplx(i,:)
-  self%fcmplx(i,:)=self%f2([[(p,p=m+1,n)],[(p,p=1,m)]] )
+  self%fcmplx(i,:)=self%f2([[(p,p=m+1,n2)],[(p,p=1,m)]] )
 enddo
-do j=1,n
+m = n1/2
+do j=1,n2
   self%f1=self%fcmplx(:,j)
-  self%fcmplx(:,j)=self%f1([[(p,p=m+1,n)], [(p,p=1,m)]])
+  self%fcmplx(:,j)=self%f1([[(p,p=m+1,n1)], [(p,p=1,m)]])
 enddo
 
 ct = cos(t)
 st = sin(t)
 p  = 0
-do j=1,n
+do j=1,n2
   xj = st*self%r2(j)
   yj = ct*self%r2(j)
-  do i=1,n
+  do i=1,n1
     x = ct*self%r1(i)-xj + sll_p_pi
     y = st*self%r1(i)+yj + sll_p_pi
     if ( 0.0_f64 < x .and. x < 2.0*sll_p_pi .and. &
@@ -143,8 +146,8 @@ call nufft2d2f90(p,                 &
                  self%ftmp_1d(1:p), &
                  1,                 &
                  self%epsnufft,     &
-                 n,                 &
-                 n,                 &
+                 n1,                &
+                 n2,                &
                  self%fcmplx,       &
                  error)
 do i=1,p
