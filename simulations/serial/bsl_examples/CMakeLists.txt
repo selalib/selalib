@@ -22,9 +22,7 @@ TARGET_LINK_LIBRARIES(bsl_landau_2d sll_interpolators
                                     sll_maxwell_solvers )
 
 ADD_EXECUTABLE(bsl_advection_2d_nufft bsl_advection_2d_nufft.F90)
-TARGET_LINK_LIBRARIES(bsl_advection_2d_nufft sll_file_io sll_fft nufft)
-ADD_EXECUTABLE(nufft_interpolation_2d sll_m_nufft.F90 nufft_interpolation_2d.F90)
-TARGET_LINK_LIBRARIES(nufft_interpolation_2d sll_file_io sll_fft nufft)
+TARGET_LINK_LIBRARIES(bsl_advection_2d_nufft sll_file_io sll_fft sll_nufft_interpolation)
 
 IF (BUILD_MUDPACK)
   ADD_EXECUTABLE(bsl_2d_multigrid landau_2d_multigrid.F90)
