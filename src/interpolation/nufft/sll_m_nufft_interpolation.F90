@@ -149,11 +149,12 @@ enddo
 
 end subroutine sll_s_nufft_2d_interpolate_array_values
 
-subroutine sll_s_nufft_2d_rotation( self, f, t )
+subroutine sll_s_nufft_2d_rotation( self, t, f_in, f_out )
 
 type(sll_t_nufft_2d)                 :: self
-sll_real64, intent(inout)            :: f(:,:)
 sll_real64, intent(in)               :: t
+sll_real64, intent(in)               :: f_in(:,:)
+sll_real64, intent(out)              :: f_out(:,:)
 
 sll_real64                           :: ct, st
 sll_real64                           :: x, y
@@ -164,7 +165,7 @@ sll_int32                            :: m, n1, n2,  p
 n1 = self%nc_eta1
 n2 = self%nc_eta2
 
-self%fcmplx = cmplx(f(1:n1,1:n2),0.,f64)
+self%fcmplx = cmplx(f_in(1:n1,1:n2),0.,f64)
 call sll_s_fft_exec_c2c_2d(self%fft, self%fcmplx, self%fcmplx)
 self%fcmplx = self%fcmplx / cmplx(n1*n2,0.,f64)
 
@@ -196,7 +197,7 @@ do j=1,n2
       self%x_array(p)  = x
       self%y_array(p)  = y
     else
-      f(i,j) = 0.0_f64
+      f_out(i,j) = 0.0_f64
     endif
   enddo
 enddo
@@ -212,7 +213,7 @@ call nufft2d2f90(p,                 &
                  self%fcmplx,       &
                  error)
 do i=1,p
-  f(self%ntrace(i),self%mtrace(i))=real(self%f1d(i))
+  f_out(self%ntrace(i),self%mtrace(i))=real(self%f1d(i))
 enddo
 
 end subroutine sll_s_nufft_2d_rotation

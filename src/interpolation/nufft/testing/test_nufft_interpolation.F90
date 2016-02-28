@@ -70,7 +70,7 @@ do i_step=1, n_step
 
   time = time+delta_t
 
-  call sll_s_nufft_2d_rotation( interp_2d, f, delta_t )
+  call sll_s_nufft_2d_rotation( interp_2d, delta_t, f, f )
 
   do j=1,nc_eta2
     do i = 1, nc_eta1
