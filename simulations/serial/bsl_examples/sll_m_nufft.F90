@@ -13,6 +13,8 @@ type :: sll_t_nufft_2d
   sll_comp64, allocatable :: fcmplx(:,:)
   sll_int32,  allocatable :: ntrace(:)
   sll_int32,  allocatable :: mtrace(:)
+  sll_real64, allocatable :: r1(:)
+  sll_real64, allocatable :: r2(:)
   sll_real64, allocatable :: x_array(:)
   sll_real64, allocatable :: y_array(:)
   sll_real64              :: epsnufft=1.0d-9
@@ -35,6 +37,10 @@ sll_int32,  intent(in) :: nc_eta2
 sll_real64, intent(in) :: eta1_min, eta1_max
 sll_real64, intent(in) :: eta2_min, eta2_max
 sll_int32              :: err
+sll_int32              :: i, j
+
+  self%nc_eta1  = nc_eta1      
+  self%nc_eta2  = nc_eta1      
 
   self%eta1_min = eta1_min
   self%eta2_min = eta2_min
@@ -49,9 +55,18 @@ sll_int32              :: err
   SLL_ALLOCATE(self%f1      (1:nc_eta1),           err)
   SLL_ALLOCATE(self%f2      (1:nc_eta2),           err)
   SLL_ALLOCATE(self%ftmp_1d (1:nc_eta1*nc_eta2),   err)
+  SLL_ALLOCATE(self%r1      (1:nc_eta1),           err)
+  SLL_ALLOCATE(self%r2      (1:nc_eta2),           err)
 
   call sll_s_fft_init_c2c_2d(self%fft,nc_eta1,nc_eta2, &
     self%fcmplx,self%fcmplx,sll_p_fft_forward)
+
+  do i=1,nc_eta1
+    self%r1(i) = (i-1)*2.0*sll_p_pi/ real(nc_eta1,f64) - sll_p_pi
+  end do
+  do j=1,nc_eta2
+    self%r2(j) = (j-1)*2.0*sll_p_pi/ real(nc_eta2,f64) - sll_p_pi
+  end do
 
 end subroutine sll_s_init_nufft_2d
 
@@ -70,13 +85,12 @@ type(sll_t_nufft_2d) :: self
 
 end subroutine sll_s_free_nufft_2d
 
-subroutine sll_s_exec_nufft_2d( self, fh_fsl, t, n, r )
+subroutine sll_s_exec_nufft_2d( self, fh_fsl, t, n )
 
 type(sll_t_nufft_2d)                 :: self
 sll_real64, intent(inout)            :: fh_fsl(:,:)
 sll_real64, intent(in)               :: t
 sll_int32,  intent(in)               :: n
-sll_real64, intent(in)               :: r(:)
 
 sll_real64                           :: ct, st
 sll_real64                           :: x, y
@@ -105,13 +119,13 @@ ct = cos(t)
 st = sin(t)
 p  = 0
 do j=1,n
-  xj = st*r(j)
-  yj = ct*r(j)
+  xj = st*self%r2(j)
+  yj = ct*self%r2(j)
   do i=1,n
-    x = ct*r(i)-xj + sll_p_pi
-    y = st*r(i)+yj + sll_p_pi
-    if ( self%eta1_min < x .and. x < self%eta1_max .and. &
-         self%eta2_min < y .and. y < self%eta2_max ) then
+    x = ct*self%r1(i)-xj + sll_p_pi
+    y = st*self%r1(i)+yj + sll_p_pi
+    if ( 0.0_f64 < x .and. x < 2.0*sll_p_pi .and. &
+         0.0_f64 < y .and. y < 2.0*sll_p_pi ) then
       p=p+1
       self%ntrace(p)   = i
       self%mtrace(p)   = j
