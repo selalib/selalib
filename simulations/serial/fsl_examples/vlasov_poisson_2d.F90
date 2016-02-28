@@ -17,7 +17,7 @@ use sll_m_cubic_splines
 implicit none
 
 sll_comp64, parameter :: sll_p_i0   = (0.0_f64, 0.0_f64)
-sll_int32,  parameter :: n          = 128
+sll_int32,  parameter :: n          = 512
 sll_int32,  parameter :: ntau       = 32
 sll_real64, parameter :: final_time = 0.4_f64
 
@@ -84,7 +84,7 @@ sll_comp64 :: sumup1
 sll_comp64 :: sumup2
 sll_real64 :: s1, s2, s3
 sll_int32  :: ref_id
-sll_real32 :: fdum, error
+sll_real32 :: xdum, ydum, fdum, error
 sll_real64 :: tstart, tend
 sll_real64 :: ctau, stau, csq
 
@@ -140,7 +140,7 @@ SLL_ALLOCATE( ftr     (n+1,n+1)         ,err)
 SLL_ALLOCATE( eta1feet(n+1,n+1)         ,err)
 SLL_ALLOCATE( eta2feet(n+1,n+1)         ,err)
 
-!$OMP PARALLEL NUM_THREADS(2)                                                  &                              
+!$OMP PARALLEL 
 !$OMP DEFAULT(SHARED)                                                          &
 !$OMP FIRSTPRIVATE(k, eps, h, delta_eta, eta_min, eta_max, nb_step )           &
 !$OMP PRIVATE(spl_1d, bw_fft, fw_fft, it, nt, spl_2d_f, l, ltau, lx, tau, sum0,&
@@ -641,7 +641,7 @@ error = 0.0
 open(newunit = ref_id, file='fh.ref')
 do i=1,n
   do j=1,n
-    read(ref_id,*) err, l, fdum
+    read(ref_id,*) xdum, ydum, fdum
     error = error + abs(fdum-sngl(fvr(i,j)))
   enddo
   read(ref_id,*)
