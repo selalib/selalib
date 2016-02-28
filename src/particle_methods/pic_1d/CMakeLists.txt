@@ -1,1 +1,2 @@
-ADD_LIBRARY( sll_particle_1d_description OBJECT sll_m_particle_1d_description.F90)
+ADD_LIBRARY( sll_particle_1d_description STATIC sll_m_particle_1d_description.F90)
+TARGET_LINK_LIBRARIES( sll_particle_1d_description sll_working_precision sll_memory)
