@@ -42,7 +42,7 @@ sll_real64, dimension(:,:), allocatable :: eta2feet
 !Shared 
 sll_comp64, allocatable :: ftilde1(:,:,:)
 sll_comp64, allocatable :: ftilde2(:,:,:)
-sll_real64, allocatable :: gn     (:,:,:)
+sll_real64, allocatable :: gns    (:,:,:)
 sll_real64, allocatable :: gnr    (:,:,:)
 sll_real64, allocatable :: gnt    (:,:,:)
 sll_real64, allocatable :: xi1    (:,:,:)
@@ -130,11 +130,11 @@ SLL_ALLOCATE( fh_fsl  (n+1,n+1)         ,err)
 SLL_ALLOCATE( Ens     (n+1,0:ntau-1)    ,err)
 SLL_ALLOCATE( Enr     (n+1,0:ntau-1)    ,err)
 SLL_ALLOCATE( Ent     (n+1,0:ntau-1)    ,err)
-SLL_ALLOCATE( gn      (0:ntau-1,n+1,n+1),err)
-SLL_ALLOCATE( gnr     (0:ntau-1,n+1,n+1),err)
-SLL_ALLOCATE( gnt     (0:ntau-1,n+1,n+1),err)
-SLL_ALLOCATE( xi1     (0:ntau-1,n+1,n+1),err)
-SLL_ALLOCATE( xi2     (0:ntau-1,n+1,n+1),err)
+SLL_ALLOCATE( gns     (n+1,n+1,0:ntau-1),err)
+SLL_ALLOCATE( gnr     (n+1,n+1,0:ntau-1),err)
+SLL_ALLOCATE( gnt     (n+1,n+1,0:ntau-1),err)
+SLL_ALLOCATE( xi1     (n+1,n+1,0:ntau-1),err)
+SLL_ALLOCATE( xi2     (n+1,n+1,0:ntau-1),err)
 SLL_ALLOCATE( ftv     (n+1,n+1)         ,err)
 SLL_ALLOCATE( ftr     (n+1,n+1)         ,err)
 SLL_ALLOCATE( eta1feet(n+1,n+1)         ,err)
@@ -255,7 +255,6 @@ do step=1,nb_step !-------- * Evolution in time * ---------
   rk        = r
   rk(n/2+1) = 1.0_f64
 
-
   !$OMP DO 
   do l=0, ntau-1
   
@@ -276,7 +275,7 @@ do step=1,nb_step !-------- * Evolution in time * ---------
     Enr(1:n,l)=real(sum0-Ens(1:n,l))/rk
   
   enddo
-  !$OMP END DO
+  !$OMP END DO NOWAIT
 
   !$OMP DO
   do j=1,n
@@ -307,13 +306,13 @@ do step=1,nb_step !-------- * Evolution in time * ---------
     stau = sin(tau(l))
     do j=1,n+1
       do i=1,n+1
-        xi1(l,i,j)= v(i)*ctau-v(j)*stau
-        xi2(l,i,j)= v(i)*stau+v(j)*ctau
+        xi1(i,j,l)= v(i)*ctau-v(j)*stau
+        xi2(i,j,l)= v(i)*stau+v(j)*ctau
         x(i,j)    = v(i) 
       end do
     end do
 
-    call fsl_interp_1d(spl_1d, n, x, ens(:,l), gn(l,:,:))
+    call fsl_interp_1d(spl_1d, n, x, ens(:,l), gns(:,:,l))
 
   enddo
   !$OMP END DO 
@@ -331,9 +330,9 @@ do step=1,nb_step !-------- * Evolution in time * ---------
     do i=1,n
 
       do j=1,n
-        s1 =  xi1(l,i,j)*ctau+xi2(l,i,j)*stau
+        s1 =  xi1(i,j,l)*ctau+xi2(i,j,l)*stau
         s2 = -stau*ft1(i,j)+ctau*ft2(i,j)
-        s3 = (csq * s1 + gn(l,i,j)) * s2
+        s3 = (csq * s1 + gns(i,j,l)) * s2
         vctmp(j) = cmplx(s3,0.,f64)
       enddo
   
@@ -365,9 +364,9 @@ do step=1,nb_step !-------- * Evolution in time * ---------
       end do
     end do
 
-    call fsl_interp_1d(spl_1d, n, x, ens(:,l), gn(l,:,:))
-    call fsl_interp_1d(spl_1d, n, x, enr(:,l), gnr(l,:,:))
-    call fsl_interp_1d(spl_1d, n, x, ent(:,l), gnt(l,:,:))
+    call fsl_interp_1d(spl_1d, n, x, ens(:,l), gns(:,:,l))
+    call fsl_interp_1d(spl_1d, n, x, enr(:,l), gnr(:,:,l))
+    call fsl_interp_1d(spl_1d, n, x, ent(:,l), gnt(:,:,l))
   
   enddo
   !$OMP END DO 
@@ -378,8 +377,8 @@ do step=1,nb_step !-------- * Evolution in time * ---------
 
       !------------for 1st order correction------------------
       do l=0,ntau-1
-        F1(l) = rfct1(tau(l), ntau, x1(i), x2(j), gn(l,i,j))
-        F2(l) = rfct2(tau(l), ntau, x1(i), x2(j), gn(l,i,j))
+        F1(l) = rfct1(tau(l), ntau, x1(i), x2(j), gns(i,j,l))
+        F2(l) = rfct2(tau(l), ntau, x1(i), x2(j), gns(i,j,l))
       enddo
 
       call sll_s_fft_exec_c2c_1d(fw_fft, F1, tmp1_f)
@@ -400,8 +399,8 @@ do step=1,nb_step !-------- * Evolution in time * ---------
       F1 = F1 - sum(tmp1_f)
       F2 = F2 - sum(tmp2_f)
 
-      xi1(:,i,j) = x1(i) + eps*real(F1)
-      xi2(:,i,j) = x2(j) + eps*real(F2)
+      xi1(i,j,:) = x1(i) + eps*real(F1)
+      xi2(i,j,:) = x2(j) + eps*real(F2)
 
     enddo
   enddo
@@ -414,13 +413,13 @@ do step=1,nb_step !-------- * Evolution in time * ---------
     stau = sin(tau(l))
     do j=1,n+1
       do i=1,n+1
-        x(i,j)=ctau*xi1(l,i,j)+stau*xi2(l,i,j)
+        x(i,j)=ctau*xi1(i,j,l)+stau*xi2(i,j,l)
       end do
     end do
 
-    call fsl_interp_1d(spl_1d, n, x, ens(:,l), gn(l,:,:))
-    call fsl_interp_1d(spl_1d, n, x, enr(:,l), gnr(l,:,:))
-    call fsl_interp_1d(spl_1d, n, x, ent(:,l), gnt(l,:,:))
+    call fsl_interp_1d(spl_1d, n, x, ens(:,l), gns(:,:,l))
+    call fsl_interp_1d(spl_1d, n, x, enr(:,l), gnr(:,:,l))
+    call fsl_interp_1d(spl_1d, n, x, ent(:,l), gnt(:,:,l))
 
   enddo
   !$OMP END DO 
@@ -431,11 +430,11 @@ do step=1,nb_step !-------- * Evolution in time * ---------
       !------------for 2nd order correction------------------
       do l=0,ntau-1
 
-        F1(l)= rfct1(tau(l), 1, xi1(l,i,j), xi2(l,i,j), gn(l,i,j))
-        F2(l)= rfct2(tau(l), 1, xi1(l,i,j), xi2(l,i,j), gn(l,i,j))
+        F1(l)= rfct1(tau(l), 1, xi1(i,j,l), xi2(i,j,l), gns(i,j,l))
+        F2(l)= rfct2(tau(l), 1, xi1(i,j,l), xi2(i,j,l), gns(i,j,l))
 
-        dtgn=  cmplx(gnt(l,i,j),0.0,f64) &
-             + cmplx(gnr(l,i,j),0.0,f64) &
+        dtgn=  cmplx(gnt(i,j,l),0.0,f64) &
+             + cmplx(gnr(i,j,l),0.0,f64) &
              *(cmplx(cos(tau(l)),0.0,f64)*ftilde1(0,i,j) &
              + cmplx(sin(tau(l)),0.0,f64)*ftilde2(0,i,j))
 
@@ -480,8 +479,8 @@ do step=1,nb_step !-------- * Evolution in time * ---------
       tmp1 = tmp1 - sum(tmp1_f)
       tmp2 = tmp2 - sum(tmp2_f)
 
-      xi1(:,i,j) = x1(i) + eps*real(tmp1)
-      xi2(:,i,j) = x2(j) + eps*real(tmp2)
+      xi1(i,j,:) = x1(i) + eps*real(tmp1)
+      xi2(i,j,:) = x2(j) + eps*real(tmp2)
 
     enddo
   enddo
@@ -493,10 +492,10 @@ do step=1,nb_step !-------- * Evolution in time * ---------
     stau = sin(tau(l))
     do j=1,n+1
       do i=1,n+1
-        x(i,j)=ctau*xi1(l,i,j)+stau*xi2(l,i,j)
+        x(i,j)=ctau*xi1(i,j,l)+stau*xi2(i,j,l)
       end do
     end do
-    call fsl_interp_1d(spl_1d, n, x, ens(:,l), gn(l,:,:))
+    call fsl_interp_1d(spl_1d, n, x, ens(:,l), gns(:,:,l))
   enddo
   !$OMP END DO 
 
@@ -505,12 +504,12 @@ do step=1,nb_step !-------- * Evolution in time * ---------
     do i=1,n+1
 
       do l=0,ntau-1
-        F1(l) = rfct1(tau(l),1,xi1(l,i,j),xi2(l,i,j),gn(l,i,j))
-        F2(l) = rfct2(tau(l),1,xi1(l,i,j),xi2(l,i,j),gn(l,i,j))
+        F1(l) = rfct1(tau(l),1,xi1(i,j,l),xi2(i,j,l),gns(i,j,l))
+        F2(l) = rfct2(tau(l),1,xi1(i,j,l),xi2(i,j,l),gns(i,j,l))
       enddo
 
-      tmp1 = xi1(:,i,j) + 0.5_f64*k*F1
-      tmp2 = xi2(:,i,j) + 0.5_f64*k*F2
+      tmp1 = xi1(i,j,:) + 0.5_f64*k*F1
+      tmp2 = xi2(i,j,:) + 0.5_f64*k*F2
 
       call sll_s_fft_exec_c2c_1d(fw_fft, tmp1, tmp1_f)
       call sll_s_fft_exec_c2c_1d(fw_fft, tmp2, tmp2_f)
@@ -584,7 +583,7 @@ do step=1,nb_step !-------- * Evolution in time * ---------
         x(i,j)=ctau*real(ftilde1(l,i,j))+stau*real(ftilde2(l,i,j))
       end do
     end do
-    call fsl_interp_1d(spl_1d, n, x, ens(:,l), gn(l,:,:))
+    call fsl_interp_1d(spl_1d, n, x, ens(:,l), gns(:,:,l))
   enddo
   !$OMP END DO 
 
@@ -593,15 +592,15 @@ do step=1,nb_step !-------- * Evolution in time * ---------
     do i=1,n+1
 
       do l=0,ntau-1
-        F1(l) = cfct1(tau(l), 1, ftilde1(l,i,j), ftilde2(l,i,j), cmplx(gn(l,i,j),0.0,f64))
-        F2(l) = cfct2(tau(l), 1, ftilde1(l,i,j), ftilde2(l,i,j), cmplx(gn(l,i,j),0.0,f64))
+        F1(l) = cfct1(tau(l), 1, ftilde1(l,i,j), ftilde2(l,i,j), cmplx(gns(i,j,l),0.0,f64))
+        F2(l) = cfct2(tau(l), 1, ftilde1(l,i,j), ftilde2(l,i,j), cmplx(gns(i,j,l),0.0,f64))
       enddo
 
       call sll_s_fft_exec_c2c_1d(fw_fft, F1, tmp1_f)
       call sll_s_fft_exec_c2c_1d(fw_fft, F2, tmp2_f)
 
-      tmp1 = cmplx(xi1(:,i,j),0.0,f64)
-      tmp2 = cmplx(xi2(:,i,j),0.0,f64)
+      tmp1 = cmplx(xi1(i,j,:),0.0,f64)
+      tmp2 = cmplx(xi2(i,j,:),0.0,f64)
 
       call sll_s_fft_exec_c2c_1d(fw_fft, tmp1, F1)
       call sll_s_fft_exec_c2c_1d(fw_fft, tmp2, F2)
