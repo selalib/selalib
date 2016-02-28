@@ -1,4 +1,4 @@
-program sequential_advection
+program bsl_advection_using_nufft
 
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_memory.h"
@@ -26,18 +26,18 @@ sll_real64 :: eta2
 !#########################################################
 !Simulation parameters and geometry sizes                !
                                                          !
-sll_int32,  parameter :: nc_eta1 = 64                   !
-sll_int32,  parameter :: nc_eta2 = 64                   !
-sll_real64, parameter :: eta1_min =  0.0_f64
-sll_real64, parameter :: eta1_max =  2*sll_p_pi           !
-sll_real64, parameter :: eta2_min = - 0.0_f64
-sll_real64, parameter :: eta2_max = + 2*sll_p_pi           !
+sll_int32,  parameter :: nc_eta1 = 64                    !
+sll_int32,  parameter :: nc_eta2 = 64                    !
+sll_real64, parameter :: eta1_min =  0.0_f64             !
+sll_real64, parameter :: eta1_max =  2*sll_p_pi          !
+sll_real64, parameter :: eta2_min = - 0.0_f64            !
+sll_real64, parameter :: eta2_max = + 2*sll_p_pi         !
 sll_real64 :: delta_eta1 = (eta1_max-eta1_min)/nc_eta1   !
 sll_real64 :: delta_eta2 = (eta2_max-eta2_min)/nc_eta2   !
 sll_real64, parameter :: delta_t = 0.01_f64              !
 sll_int32,  parameter :: n_step  = 500                   !
-sll_real64 :: alpha1, x1
-sll_real64 :: alpha2, x2
+sll_real64 :: alpha1, x1                                 !
+sll_real64 :: alpha2, x2                                 !
                                                          !
 !#########################################################
 
@@ -160,4 +160,4 @@ deallocate(ftilde)
 
 
 
-end program sequential_advection
+end program bsl_advection_using_nufft
