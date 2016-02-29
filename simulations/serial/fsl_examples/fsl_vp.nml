@@ -7,4 +7,5 @@ eps          = 1d0
 final_time   = 0.4d0
 plot_enabled = .true.
 ntau         = 32
+example      = 2
 $end
