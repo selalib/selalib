@@ -80,7 +80,7 @@ end do
 
 call sll_s_fft_init_c2c_2d(plan,nc_eta1,nc_eta2,fcmplx,ftilde,sll_p_fft_forward)
 
-time = 0.0
+time = 0.0_f64
 do i_step=1, n_step
 
   time = time+delta_t
@@ -146,8 +146,7 @@ do i_step=1, n_step
                          eta2_min, eta2_max, nc_eta2, &
                          f, 'f_sequential', i_step, error)
 
-  write(*,"(10x,' error = ', G15.3, i6 )") sum((f-fe)**2)/(nc_eta1*nc_eta2), nc_eta1
-  
+  write(*,"(10x,' error = ', G15.3 )") sum((f-fe)**2)/real(nc_eta1*nc_eta2, f64)
 
 end do
 

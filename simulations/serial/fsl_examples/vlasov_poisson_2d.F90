@@ -21,6 +21,7 @@ sll_int32             :: n             = 128
 sll_int32             :: ntau          = 32
 sll_real64            :: final_time    = 0.4_f64
 logical               :: plot_enabled  = .false.
+sll_int32             :: example       = 1
 
 type(sll_t_fft)                      :: fw_fft
 type(sll_t_fft)                      :: bw_fft
@@ -104,6 +105,7 @@ namelist/list_parameters/ eta_min,  & !dimensions
                               eps,  & !epsilon
                        final_time,  & !simulation time
                      plot_enabled,  & !enable outputs
+                          example,  & !example number
                              ntau     !ntau
 
 
@@ -149,6 +151,7 @@ print *,'# eps          = ', eps
 print *,'# h            = ', h
 print *,'# final_time   = ', final_time
 print *,'# nb_step      = ', nb_step   
+print *,'# example      = ', example   
 
 call cpu_time(tstart)
 
@@ -263,7 +266,12 @@ lx = lx * 2.0d0*sll_p_pi * sll_p_i1 / delta_eta
 !$OMP DO
 do i=1,n+1
   do j=1,n+1
-    fh_fsl(i,j) = exp(-2.0d0*(x1(i)**2+x2(j)**2))
+    if (example == 2) then
+      fh_fsl(i,j) = 2.0_f64/sqrt(0.4_f64*sll_p_pi) * exp(-x2(j)**2/0.4_f64) &
+        * 0.5_f64 * (erf((x1(i)+1.2_f64)/0.3_f64)-erf((x1(i)-1.2_f64)/0.3_f64))
+    else 
+      fh_fsl(i,j) = exp(-2.0d0*(x1(i)**2+x2(j)**2))
+    end if
   end do
 end do
 !$OMP END DO
@@ -656,7 +664,7 @@ do step=1,nb_step !-------- * Evolution in time * ---------
 
   !$OMP MASTER
   call sll_s_deposit_value_2d(eta1feet,eta2feet,spl_2d,fh_fsl)
-  print"('Step =', i6, ' Time = ', g15.3)", step, real(step*k/eps)
+  print"('Step =', i6, ' Time = ', g15.3)", step, real(step*k)
 
   if (plot_enabled) then
     call sll_s_xdmf_rect2d_nodes( 'fh', fvr, 'fh', x1(1:n), x2(1:n), &
@@ -769,8 +777,8 @@ function cfct2( tau, ntau, xi1, xi2, gn )
 
   ctau = cmplx(tau,0.0,f64)
 
-  cfct2 = (  cos(2.0*ctau)**2 * ( cos(ctau)**2*xi1 &
-           + cmplx(0.5,0.0,f64)*sin(2.0*ctau)*xi2)  &
+  cfct2 = (  cos(2.0*ctau)**2 * &
+           ( cos(ctau)**2*xi1 + cmplx(0.5,0.0,f64)*sin(2.0*ctau)*xi2)  &
            + cos(ctau)*gn )/cmplx(ntau,0.0,f64)
 
 end function cfct2
