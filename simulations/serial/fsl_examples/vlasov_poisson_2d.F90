@@ -11,24 +11,22 @@ use sll_m_fft
 use sll_m_gnuplot
 use sll_m_xdmf
 use sll_m_cubic_splines
-use sll_m_nufft_interpolation
 
 !$ use omp_lib
 
 implicit none
 
-sll_comp64, parameter :: sll_p_i0   = (0.0_f64, 0.0_f64)
-sll_int32,  parameter :: n          = 512
-sll_int32,  parameter :: ntau       = 32
-sll_real64, parameter :: final_time = 0.4_f64
-logical,    parameter :: nufft      = .false.
+sll_comp64, parameter :: sll_p_i0      = (0.0_f64, 0.0_f64)
+sll_int32             :: n             = 128
+sll_int32             :: ntau          = 32
+sll_real64            :: final_time    = 0.4_f64
+logical               :: plot_enabled  = .false.
 
 type(sll_t_fft)                      :: fw_fft
 type(sll_t_fft)                      :: bw_fft
 type(sll_t_cubic_spline_1d), pointer :: spl_1d
 type(sll_t_cubic_spline_2d), pointer :: spl_2d
 type(sll_t_cubic_spline_2d), pointer :: spl_2d_f
-type(sll_t_nufft_2d)                 :: interp_2d
 
 sll_int32  :: step, nb_step
 sll_int32  :: i,j,l
@@ -97,6 +95,17 @@ sll_int32  :: nt = 1
 
 type(sll_t_fft)                      :: fsl_fw
 type(sll_t_fft)                      :: fsl_bw
+character(len=72)                    :: arg
+
+namelist/list_parameters/ eta_min,  & !dimensions 
+                          eta_max,  & !mesh
+                                n,  & !number of points
+                                k,  & !time step
+                              eps,  & !epsilon
+                       final_time,  & !simulation time
+                     plot_enabled,  & !enable outputs
+                             ntau     !ntau
+
 
 ! ---- * Parameters * ----
 
@@ -109,21 +118,37 @@ eta_max =  4.0_f64
 
 ! --- Space and time parameters --
 
-! space steps
-delta_eta = (eta_max-eta_min)/real(n,f64)
-
 ! time step and number of steps
 k       = 0.05d0  !T*delta_eta
-nb_step = floor(final_time/k)
 eps     = 1.00d0
-h       = 2.0d0 * sll_p_pi/ real(ntau,f64)
+
+call get_command_argument(1, arg)
+if (len_trim(arg) == 0) then
+  stop 'Please enter tne path to the input file'
+    write (*,*) trim(arg)
+else
+  write(*,*) " Input file name :"// trim(arg)
+  open(93,file=trim(arg),status='old')
+  read(93,list_parameters) 
+  close(93)
+end if
 
 ! ---- * Messages * ----
 
-print *,'# N   = ',n
-print *,'# k   = ',k
-print *,'# T   = ',final_time
-print *,'# eps = ',eps
+! space steps
+delta_eta = (eta_max-eta_min)/real(n,f64)
+! time steps
+nb_step = floor(final_time/k)
+! tau step size
+h       = 2.0d0 * sll_p_pi/ real(ntau,f64)
+
+print *,'# N            = ', n
+print *,'# k            = ', k
+print *,'# T            = ', final_time
+print *,'# eps          = ', eps
+print *,'# h            = ', h
+print *,'# final_time   = ', final_time
+print *,'# nb_step      = ', nb_step   
 
 call cpu_time(tstart)
 
@@ -146,12 +171,11 @@ SLL_ALLOCATE( eta2feet(n+1,n+1)         ,err)
 
 !$OMP PARALLEL                                                                 &
 !$OMP DEFAULT(SHARED)                                                          &
-!$OMP FIRSTPRIVATE(k, eps, h, delta_eta, eta_min, eta_max, nb_step )           &
 !$OMP PRIVATE(spl_1d, bw_fft, fw_fft, it, nt, spl_2d_f, l, ltau, lx, tau, sum0,&
 !$OMP         i, j, rk, step, fsl_fw, fsl_bw, tmp, tmp1, tmp1_f, x1, x2, r,    &
 !$OMP         fvr, uctmp, vctmp, v, ctau, stau, x, s1, s2, s3, ft1, ft2, csq,  &
 !$OMP         err, tmp2, tmp2_f, dtgn, f1, f2, sumup1, sumup2, error, eta1,    &
-!$OMP         eta2, flag, interp_2d) 
+!$OMP         eta2, flag) 
 !$ it = omp_get_thread_num()
 !$ nt = omp_get_num_threads()
 
@@ -179,7 +203,6 @@ SLL_ALLOCATE( F1    (0:ntau-1),err)
 SLL_ALLOCATE( F2    (0:ntau-1),err)
 
 !$OMP CRITICAL
-print"('thread num:',i3, ' num threads:', i3)", it, nt
 
 call sll_s_fft_init_c2c_1d(fw_fft ,ntau, tmp1, tmp1_f, sll_p_fft_forward)
 call sll_s_fft_init_c2c_1d(bw_fft ,ntau, tmp1_f, tmp1, sll_p_fft_backward)
@@ -191,22 +214,17 @@ call sll_s_fft_init_c2c_1d(fsl_bw, n, tmp, tmp, sll_p_fft_backward)
 spl_1d => sll_f_new_cubic_spline_1d( n+1, eta_min, eta_max, sll_p_periodic )
 
 
-if (nufft) then
-  call sll_s_nufft_2d_init( interp_2d,           &
-                            n, eta_min, eta_max, &
-                            n, eta_min, eta_max)
-else
-  spl_2d_f => sll_f_new_cubic_spline_2d( n+1,            &
-                                         n+1,            &
-                                         eta_min,        &
-                                         eta_max,        &
-                                         eta_min,        &
-                                         eta_max,        &
-                                         sll_p_periodic, &
-                                         sll_p_periodic)
-end if
+spl_2d_f => sll_f_new_cubic_spline_2d( n+1,            &
+                                       n+1,            &
+                                       eta_min,        &
+                                       eta_max,        &
+                                       eta_min,        &
+                                       eta_max,        &
+                                       sll_p_periodic, &
+                                       sll_p_periodic)
 
-!$OMP SINGLE
+!$OMP MASTER
+print*,"# nthreads     = ", nt
 spl_2d => sll_f_new_cubic_spline_2d( n+1,            &
                                      n+1,            &
                                      eta_min,        &
@@ -215,7 +233,7 @@ spl_2d => sll_f_new_cubic_spline_2d( n+1,            &
                                      eta_max,        &
                                      sll_p_periodic, &
                                      sll_p_periodic)
-!$OMP END SINGLE
+!$OMP END MASTER
 
 
 ! ---- * Initializations * ----
@@ -269,11 +287,7 @@ do step=1,nb_step !-------- * Evolution in time * ---------
   !$OMP DO 
   do l=0, ntau-1
   
-    if (nufft) then
-      call sll_s_nufft_2d_rotation(interp_2d, tau(l), fh_fsl, fvr )
-    else
-      call cubic_splines_interp_2d(spl_2d_f,fh_fsl,tau(l),n,r,fvr)
-    end if
+    call cubic_splines_interp_2d(spl_2d_f,fh_fsl,tau(l),n,r,fvr)
 
     do i=1,n
       tmp = cmplx(fvr(i,:),0.,f64)
@@ -335,13 +349,8 @@ do step=1,nb_step !-------- * Evolution in time * ---------
   !$OMP DO 
   do l=0, ntau-1
   
-    if (nufft) then
-      call sll_s_nufft_2d_rotation(interp_2d, tau(l), ftv, ft1 )
-      call sll_s_nufft_2d_rotation(interp_2d, tau(l), ftr, ft2 )
-    else
-      call cubic_splines_interp_2d(spl_2d_f,ftv,tau(l),n,r,ft1)
-      call cubic_splines_interp_2d(spl_2d_f,ftr,tau(l),n,r,ft2)
-    end if
+    call cubic_splines_interp_2d(spl_2d_f,ftv,tau(l),n,r,ft1)
+    call cubic_splines_interp_2d(spl_2d_f,ftr,tau(l),n,r,ft2)
   
     ctau = cos(tau(l))
     stau = sin(tau(l))
@@ -569,11 +578,7 @@ do step=1,nb_step !-------- * Evolution in time * ---------
   !$OMP DO 
   do l=0, ntau-1
   
-    if (nufft) then
-      call sll_s_nufft_2d_rotation(interp_2d, tau(l), fh_fsl, fvr )
-    else
-      call cubic_splines_interp_2d(spl_2d_f,fh_fsl,tau(l),n,r,fvr)
-    end if
+    call cubic_splines_interp_2d(spl_2d_f,fh_fsl,tau(l),n,r,fvr)
   
     do i=1,n
       tmp = cmplx(fvr(i,:),0.0,f64)
@@ -652,21 +657,23 @@ do step=1,nb_step !-------- * Evolution in time * ---------
   !$OMP MASTER
   call sll_s_deposit_value_2d(eta1feet,eta2feet,spl_2d,fh_fsl)
   print"('Step =', i6, ' Time = ', g15.3)", step, real(step*k/eps)
-  !$OMP END MASTER
 
-  !call sll_s_xdmf_rect2d_nodes( 'fh', fvr, 'fh', x1(1:n), x2(1:n), &
-  !                              'HDF5', step) 
+  if (plot_enabled) then
+    call sll_s_xdmf_rect2d_nodes( 'fh', fvr, 'fh', x1(1:n), x2(1:n), &
+                                  'HDF5', step) 
+  end if
+  !$OMP END MASTER
 
 enddo
 
 !$OMP MASTER
+
+call sll_o_gnuplot_2d( eta_min, eta_max, n+1, eta_min, eta_max, n+1, &
+                       fh_fsl, 'fh_fsl', 1, err)
+
 inquire (file="fh.ref",exist=flag)
 if (flag) then
-  if (nufft) then
-    call sll_s_nufft_2d_rotation(interp_2d,real(nb_step*k/eps,f64),fh_fsl,fvr)
-  else
-    call cubic_splines_interp_2d(spl_2d_f,fh_fsl,real(nb_step*k/eps,f64),n,r,fvr)
-  end if
+  call cubic_splines_interp_2d(spl_2d_f,fh_fsl,real(nb_step*k/eps,f64),n,r,fvr)
   error = 0.0
   open(newunit = ref_id, file='fh.ref')
   do i=1,n
@@ -686,12 +693,7 @@ end if
 call sll_o_delete(spl_1d)
 call sll_s_fft_free(fw_fft)
 call sll_s_fft_free(bw_fft)
-
-if (nufft) then
-  call sll_s_nufft_2d_free( interp_2d )
-else
-  call sll_o_delete(spl_2d_f)
-end if
+call sll_o_delete(spl_2d_f)
 
 !$OMP MASTER
 call sll_o_delete(spl_2d)
@@ -866,8 +868,7 @@ enddo
 
 end subroutine cubic_splines_interp_1d
 
-
-
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 
 end program test_deposit_cubic_splines

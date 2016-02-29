@@ -58,8 +58,10 @@ SLL_ALLOCATE(self%f1d     (1:nc_eta1*nc_eta2),   err)
 SLL_ALLOCATE(self%r1      (1:nc_eta1),           err)
 SLL_ALLOCATE(self%r2      (1:nc_eta2),           err)
 
+!$OMP CRITICAL
 call sll_s_fft_init_c2c_2d(self%fft,nc_eta1,nc_eta2, &
   self%fcmplx,self%fcmplx,sll_p_fft_forward)
+!$OMP END CRITICAL
 
 do i=1,nc_eta1
   self%r1(i) = (i-1)*2.0*sll_p_pi/ real(nc_eta1,f64) - sll_p_pi
@@ -88,10 +90,10 @@ end subroutine sll_s_nufft_2d_free
 subroutine sll_s_nufft_2d_interpolate_array_values( self, f_in, x, y, f_out )
 
 type(sll_t_nufft_2d)                 :: self
-sll_real64, intent(in)               :: f_in(:,:)
+sll_real64, intent(inout)            :: f_in(:,:)
 sll_real64, intent(in)               :: x(:,:)
 sll_real64, intent(in)               :: y(:,:)
-sll_real64, intent(out)              :: f_out(:,:)
+sll_real64, optional                 :: f_out(:,:)
 
 sll_int32                            :: i, j
 sll_int32                            :: m, n1, n2,  p
@@ -127,8 +129,6 @@ do j=1,n2
       self%mtrace(p)   = j
       self%x_array(p)  = xij * 2.0 * sll_p_pi
       self%y_array(p)  = yij * 2.0 * sll_p_pi
-    else
-      f_out(i,j) = 0.0_f64
     endif
   enddo
 enddo
@@ -143,9 +143,18 @@ call nufft2d2f90(p,                 &
                  n2,                &
                  self%fcmplx,       &
                  error)
-do i=1,p
-  f_out(self%ntrace(i),self%mtrace(i))=real(self%f1d(i))
-enddo
+
+if (present(f_out)) then
+  f_out = 0.0_f64
+  do i=1,p
+    f_out(self%ntrace(i),self%mtrace(i))=real(self%f1d(i))
+  enddo
+else
+  f_in = 0.0_f64
+  do i=1,p
+    f_in(self%ntrace(i),self%mtrace(i))=real(self%f1d(i))
+  end do
+end if
 
 end subroutine sll_s_nufft_2d_interpolate_array_values
 
@@ -153,8 +162,8 @@ subroutine sll_s_nufft_2d_rotation( self, t, f_in, f_out )
 
 type(sll_t_nufft_2d)                 :: self
 sll_real64, intent(in)               :: t
-sll_real64, intent(in)               :: f_in(:,:)
-sll_real64, intent(out)              :: f_out(:,:)
+sll_real64, intent(inout)            :: f_in(:,:)
+sll_real64, optional                 :: f_out(:,:)
 
 sll_real64                           :: ct, st
 sll_real64                           :: x, y
@@ -196,8 +205,6 @@ do j=1,n2
       self%mtrace(p)   = j
       self%x_array(p)  = x
       self%y_array(p)  = y
-    else
-      f_out(i,j) = 0.0_f64
     endif
   enddo
 enddo
@@ -212,9 +219,18 @@ call nufft2d2f90(p,                 &
                  n2,                &
                  self%fcmplx,       &
                  error)
-do i=1,p
-  f_out(self%ntrace(i),self%mtrace(i))=real(self%f1d(i))
-enddo
+
+if (present(f_out)) then
+  f_out = 0.0_f64
+  do i=1,p
+    f_out(self%ntrace(i),self%mtrace(i))=real(self%f1d(i))
+  enddo
+else
+  f_in = 0.0_f64
+  do i=1,p
+    f_in(self%ntrace(i),self%mtrace(i))=real(self%f1d(i))
+  end do
+end if
 
 end subroutine sll_s_nufft_2d_rotation
 
