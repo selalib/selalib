@@ -8,19 +8,23 @@ use sll_m_fft
 use sll_m_nufft_interpolation
 use sll_m_boundary_condition_descriptors, only: sll_p_periodic
 use sll_m_constants
+use sll_m_gnuplot
 
 implicit none
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 sll_real64, dimension(:,:),  allocatable :: f
 sll_real64, dimension(:,:),  allocatable :: fe
+sll_real64, dimension(:,:),  allocatable :: x
+sll_real64, dimension(:,:),  allocatable :: y
+
+sll_real64, dimension(:),  allocatable :: eta1
+sll_real64, dimension(:),  allocatable :: eta2
 
 sll_int32  :: i_step
 sll_real64 :: tcpu1
 sll_real64 :: tcpu2
 sll_int32  :: error
-sll_real64 :: eta1
-sll_real64 :: eta2
 
 !#########################################################
 !Simulation parameters and geometry sizes                !
@@ -45,18 +49,27 @@ type(sll_t_nufft_2d) :: interp_2d
 
 call cpu_time(tcpu1)
 
-SLL_ALLOCATE(f(1:nc_eta1,1:nc_eta2),error)
+SLL_ALLOCATE(f(1:nc_eta1,1:nc_eta2) ,error)
 SLL_ALLOCATE(fe(1:nc_eta1,1:nc_eta2),error)
+SLL_ALLOCATE(x(1:nc_eta1,1:nc_eta2) ,error)
+SLL_ALLOCATE(y(1:nc_eta1,1:nc_eta2) ,error)
+SLL_ALLOCATE(eta1(1:nc_eta1)        ,error)
+SLL_ALLOCATE(eta2(1:nc_eta2)        ,error)
 
-do j=1,nc_eta2
 do i=1,nc_eta1
+  eta1(i)  = eta1_min+(i-1)*delta_eta1
+end do
+do j=1,nc_eta2
+  eta2(j)  = eta2_min+(j-1)*delta_eta2
+end do
 
-   eta1  = eta1_min+(i-1)*delta_eta1
-   eta2  = eta2_min+(j-1)*delta_eta2
+do j=1, nc_eta2
+do i=1, nc_eta1
+
    x1c   = (eta1_min+eta1_max)*0.5 + (eta1_max-eta1_min)*0.25
    x2c   = (eta1_min+eta1_max)*0.5 
 
-   f(i,j) = exp(-.5*((eta1-x1c)**2+(eta2-x2c)**2)*10.)
+   f(i,j) = exp(-.5*((eta1(i)-x1c)**2+(eta2(j)-x2c)**2)*10.)
 
 end do
 end do
@@ -68,17 +81,25 @@ call sll_s_nufft_2d_init( interp_2d,                   &
 time = 0.0_f64
 do i_step=1, n_step
 
+  call sll_o_gnuplot_2d( eta1_min, eta1_max, nc_eta1, &
+                         eta2_min, eta2_max, nc_eta2, &
+                         f, 'f_nufft', i_step, error)
   time = time+delta_t
 
-  call sll_s_nufft_2d_rotation( interp_2d, delta_t, f, f )
+  do j=1,nc_eta2
+    do i=1,nc_eta1
+      x(i,j) = cos(delta_t)*eta1(i)-sin(delta_t)*eta2(j)
+      y(i,j) = sin(delta_t)*eta1(i)+cos(delta_t)*eta2(j) 
+    enddo
+  enddo
+
+  call sll_s_nufft_2d_interpolate_array_values_inplace( interp_2d, f, x, y )
 
   do j=1,nc_eta2
     do i = 1, nc_eta1
-      eta1    = eta1_min + (i-1)*delta_eta1 
-      eta2    = eta2_min + (j-1)*delta_eta2 
       x1c     = cos(-time)*0.25*(eta1_max-eta1_min)+(eta1_min+eta1_max)*0.5
       x2c     = sin(-time)*0.25*(eta2_max-eta2_min)+(eta2_min+eta2_max)*0.5 
-      fe(i,j) = exp(-.5*((eta1-x1c)**2+(eta2-x2c)**2)*10.)
+      fe(i,j) = exp(-.5*((eta1(i)-x1c)**2+(eta2(j)-x2c)**2)*10.)
     enddo
   enddo
 
