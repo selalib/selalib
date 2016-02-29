@@ -30,15 +30,15 @@ sll_int32  :: error
 !Simulation parameters and geometry sizes                !
                                                          !
 sll_int32,  parameter :: nc_eta1 = 64                   !
-sll_int32,  parameter :: nc_eta2 = 128                   !
-sll_real64, parameter :: eta1_min = - 5.0_f64            !
-sll_real64, parameter :: eta1_max = + 5.0_f64            !
-sll_real64, parameter :: eta2_min = - 5.0_f64            !
-sll_real64, parameter :: eta2_max = + 5.0_f64            !
+sll_int32,  parameter :: nc_eta2 = 64                   !
+sll_real64, parameter :: eta1_min = - 4.0_f64            !
+sll_real64, parameter :: eta1_max = + 4.0_f64            !
+sll_real64, parameter :: eta2_min = - 4.0_f64            !
+sll_real64, parameter :: eta2_max = + 4.0_f64            !
 sll_real64 :: delta_eta1 = (eta1_max-eta1_min)/nc_eta1   !
 sll_real64 :: delta_eta2 = (eta2_max-eta2_min)/nc_eta2   !
 sll_real64, parameter :: delta_t = 0.1_f64               !
-sll_int32,  parameter :: n_step  = 50                    !
+sll_int32,  parameter :: n_step  = 20                    !
                                                          !
 !#########################################################
 
@@ -66,7 +66,7 @@ end do
 do j=1, nc_eta2
 do i=1, nc_eta1
 
-   x1c   = (eta1_min+eta1_max)*0.5 + (eta1_max-eta1_min)*0.25
+   x1c   = (eta1_min+eta1_max)*0.5 !+ (eta1_max-eta1_min)*0.25
    x2c   = (eta1_min+eta1_max)*0.5 
 
    f(i,j) = exp(-.5*((eta1(i)-x1c)**2+(eta2(j)-x2c)**2)*10.)
@@ -81,10 +81,32 @@ call sll_s_nufft_2d_init( interp_2d,                   &
 time = 0.0_f64
 do i_step=1, n_step
 
+  time = time+delta_t
+
+  call sll_s_nufft_2d_compute_fft( interp_2d, f ) 
+
+  do j=1,nc_eta2
+    do i=1,nc_eta1
+      x(i,j)= eta1_min + modulo(eta1(i)-eta1_min-delta_t,eta1_max-eta1_min)
+      y(i,j)= eta2_min + modulo(eta2(j)-eta2_min,eta2_max-eta2_min)
+    enddo
+  enddo
+
+  call sll_s_nufft_2d_interpolate_array_from_fft( interp_2d, x, y, f ) 
+
   call sll_o_gnuplot_2d( eta1_min, eta1_max, nc_eta1, &
                          eta2_min, eta2_max, nc_eta2, &
                          f, 'f_nufft', i_step, error)
-  time = time+delta_t
+
+end do
+
+time = 0.0_f64
+
+do i_step=n_step+1, int(4*n_step)
+
+  call sll_o_gnuplot_2d( eta1_min, eta1_max, nc_eta1, &
+                         eta2_min, eta2_max, nc_eta2, &
+                         f, 'f_nufft', i_step, error)
 
   do j=1,nc_eta2
     do i=1,nc_eta1
@@ -93,7 +115,9 @@ do i_step=1, n_step
     enddo
   enddo
 
-  call sll_s_nufft_2d_interpolate_array_values_inplace( interp_2d, f, x, y )
+  call sll_s_nufft_2d_interpolate_array_values_axi( interp_2d, f, x, y )
+
+  time = time+delta_t
 
   do j=1,nc_eta2
     do i = 1, nc_eta1
@@ -102,7 +126,6 @@ do i_step=1, n_step
       fe(i,j) = exp(-.5*((eta1(i)-x1c)**2+(eta2(j)-x2c)**2)*10.)
     enddo
   enddo
-
 
 end do
 

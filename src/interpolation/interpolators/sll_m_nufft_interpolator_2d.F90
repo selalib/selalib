@@ -27,7 +27,13 @@ module sll_m_nufft_interpolator_2d
 #include "sll_memory.h"
 #include "sll_working_precision.h"
 
-use sll_m_nufft_interpolation
+use sll_m_nufft_interpolation, only:        & 
+ sll_t_nufft_2d,                            &
+ sll_s_nufft_2d_compute_fft,                &
+ sll_s_nufft_2d_init,                       &
+ sll_s_nufft_2d_free,                       &
+ sll_f_nufft_2d_interpolate_value_from_fft, &
+ sll_s_nufft_2d_interpolate_array_values
 
 use sll_m_interpolators_2d_base, only: sll_c_interpolator_2d
 
@@ -100,27 +106,17 @@ class(sll_t_nufft_interpolator_2d), intent(inout) :: interpolator
 call sll_s_nufft_2d_free(interpolator%nufft)
     
 end subroutine sll_s_nufft_interpolator_2d_free
+
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   
 subroutine sll_s_nufft_interpolator_2d_init( &
-      interpolator,                          &
-      npts1,                                 &
-      npts2,                                 &
-      eta1_min,                              &
-      eta1_max,                              &
-      eta2_min,                              &
-      eta2_max,                              &
-      spline_degree1,                        &
-      spline_degree2,                        &
-      eta1_bc_type,                          &
-      eta2_bc_type,                          &
-      const_eta1_min_slope,                  &
-      const_eta1_max_slope,                  &
-      const_eta2_min_slope,                  &
-      const_eta2_max_slope,                  &
-      eta1_min_slopes,                       &
-      eta1_max_slopes,                       &
-      eta2_min_slopes,                       &
-      eta2_max_slopes )
+  interpolator,                              &
+  npts1,                                     &
+  npts2,                                     &
+  eta1_min,                                  &
+  eta1_max,                                  &
+  eta2_min,                                  &
+  eta2_max                                   )
 
 class(sll_t_nufft_interpolator_2d), intent(inout) :: interpolator
 sll_int32,  intent(in)                            :: npts1
@@ -129,18 +125,6 @@ sll_real64, intent(in)                            :: eta1_min
 sll_real64, intent(in)                            :: eta1_max
 sll_real64, intent(in)                            :: eta2_min
 sll_real64, intent(in)                            :: eta2_max
-sll_int32,  intent(in)                            :: spline_degree1
-sll_int32,  intent(in)                            :: spline_degree2
-sll_int32,  intent(in),              optional     :: eta1_bc_type
-sll_int32,  intent(in),              optional     :: eta2_bc_type
-sll_real64, intent(in),              optional     :: const_eta1_min_slope
-sll_real64, intent(in),              optional     :: const_eta1_max_slope
-sll_real64, intent(in),              optional     :: const_eta2_min_slope
-sll_real64, intent(in),              optional     :: const_eta2_max_slope
-sll_real64, dimension(:),intent(in), optional     :: eta1_min_slopes
-sll_real64, dimension(:),intent(in), optional     :: eta1_max_slopes
-sll_real64, dimension(:),intent(in), optional     :: eta2_min_slopes
-sll_real64, dimension(:),intent(in), optional     :: eta2_max_slopes
 
 interpolator%npts1    = npts1
 interpolator%npts2    = npts2
@@ -159,6 +143,8 @@ call sll_s_nufft_2d_init(              &
      eta2_max)
 
 end subroutine sll_s_nufft_interpolator_2d_init
+
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 subroutine compute_interpolants_nufft2d( &
      interpolator,                       &
@@ -179,6 +165,8 @@ call sll_s_nufft_2d_compute_fft( interpolator%nufft, data_array )
 
 end subroutine compute_interpolants_nufft2d
 
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
 function interpolate_value_nufft2d( interpolator, eta1, eta2 ) result(val)
 
 class(sll_t_nufft_interpolator_2d), intent(in) :: interpolator
@@ -187,9 +175,11 @@ sll_real64,                         intent(in) :: eta2
 
 sll_real64 :: val 
 
-val = sll_f_nufft_2d_interpolate_value( interpolator%nufft, eta1, eta2)
+val = sll_f_nufft_2d_interpolate_value_from_fft( interpolator%nufft, eta1, eta2)
 
 end function
+
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 function interpolate_deriv1_nufft2d( interpolator, eta1, eta2 ) result(val)
 
@@ -204,6 +194,8 @@ SLL_ERROR( 'interpolate_deriv1_nufft2d', 'not implemented' )
 
 end function
 
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
 function interpolate_deriv2_nufft2d( interpolator, eta1, eta2 ) result(val)
 
 class(sll_t_nufft_interpolator_2d), intent(in) :: interpolator
@@ -216,6 +208,8 @@ val = 0.0_f64
 SLL_ERROR( 'interpolate_deriv2_nufft2d', 'not implemented' )
 
 end function
+
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 subroutine nufft_interpolate2d(this,              &
                                num_points1,       &
@@ -233,10 +227,12 @@ sll_real64, dimension(:,:),          intent(in) :: eta2
 sll_real64, dimension(:,:),          intent(in) :: data_in
 sll_real64,                          intent(out):: data_out(num_points1,num_points2)
 
-call sll_s_nufft_2d_interpolate_array_value( this%nufft, &
+call sll_s_nufft_2d_interpolate_array_values( this%nufft, &
   data_in, eta1, eta2, data_out )
 
 end subroutine nufft_interpolate2d
+
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 subroutine nufft_interpolate2d_disp(this,        &
                                     num_points1, &
@@ -291,6 +287,8 @@ call sll_s_nufft_2d_interpolate_array_values( this%nufft, &
 
 end subroutine nufft_interpolate2d_disp
 
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
 subroutine set_coefficients_nufft2d(  &
         interpolator,                 &
         coeffs_1d,                    &
@@ -327,6 +325,8 @@ SLL_ERROR('set_coefficients','Not implemented for nufft2d')
 
 end subroutine !set_coefficients_nufft2d
   
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
 function get_coefficients_nufft2d(interpolator) result(res)
 class(sll_t_nufft_interpolator_2d), intent(in)    :: interpolator
 sll_real64, pointer :: res(:,:)
@@ -336,6 +336,8 @@ res = 0.0_f64
 SLL_ERROR('get_coefficients','Not implemented for nufft2d')
 
 end function get_coefficients_nufft2d
+
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 function coefficients_are_set_nufft2d( interpolator ) result(res) 
 class(sll_t_nufft_interpolator_2d), intent(in) :: interpolator
@@ -348,4 +350,6 @@ SLL_ERROR('coefficients_are_set','Not implemented for nufft2d')
 
 end function coefficients_are_set_nufft2d
 
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 end module sll_m_nufft_interpolator_2d
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!

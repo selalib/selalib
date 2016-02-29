@@ -91,7 +91,6 @@ sll_real32 :: xdum, ydum, fdum, error
 sll_real64 :: tstart, tend
 sll_real64 :: ctau, stau, csq
 
-sll_int32  :: it = 0
 sll_int32  :: nt = 1
 
 type(sll_t_fft)                      :: fsl_fw
