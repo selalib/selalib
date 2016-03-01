@@ -1,2 +1,0 @@
-ADD_LIBRARY( sll_control_variates STATIC sll_m_control_variate.F90 )
-TARGET_LINK_LIBRARIES( sll_control_variates sll_working_precision )
