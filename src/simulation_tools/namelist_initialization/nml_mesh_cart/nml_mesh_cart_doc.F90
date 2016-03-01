@@ -29,12 +29,12 @@
 !>!TARGET_LINK_LIBRARIES(my_prog sll_nml_mesh_cart)
 !>program my_prog
 !>use sll_m_cartesian_meshes, only : &
-!>    sll_cartesian_mesh_1d
+!>    sll_t_cartesian_mesh_1d
 !>use sll_m_nml_mesh_1d_unif_cart, only : &
 !>    sll_s_nml_mesh_1d_unif_cart
 !>  implicit none
 !>
-!>  type(sll_cartesian_mesh_1d), pointer :: mesh
+!>  type(sll_t_cartesian_mesh_1d), pointer :: mesh
 !>  call sll_s_nml_mesh_1d_unif_cart( "test", mesh )
 !>  print *,'#mesh%num_cells=',mesh%num_cells
 !>end program
@@ -66,12 +66,12 @@
 !>!TARGET_LINK_LIBRARIES(my_prog sll_nml_mesh_cart)
 !>program my_prog
 !>use sll_m_cartesian_meshes, only : &
-!>    sll_cartesian_mesh_1d
+!>    sll_t_cartesian_mesh_1d
 !>use sll_m_nml_mesh_1d_unif_cart, only : &
 !>    sll_s_nml_mesh_1d_unif_cart
 !>  implicit none
 !>
-!>  type(sll_cartesian_mesh_1d), pointer :: mesh
+!>  type(sll_t_cartesian_mesh_1d), pointer :: mesh
 !>  call sll_s_nml_mesh_1d_unif_cart( "test", mesh, clone="_2" )
 !>  print *,'#mesh%num_cells=',mesh%num_cells
 !>end program
@@ -84,7 +84,7 @@
 !> <br>
 !> We can also choose the mesh we want to initialize
 !> when we want to initialize an array
-!> (not a <code>sll_cartesian_mesh_1d</code> which is uniform) 
+!> (not a <code>sll_t_cartesian_mesh_1d</code> which is uniform) 
 !> <br>
 !> Suppose that we have the following namelist file test.nml
 !> <br>
