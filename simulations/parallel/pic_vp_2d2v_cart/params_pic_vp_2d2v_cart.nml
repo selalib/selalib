@@ -17,7 +17,8 @@
 /
 
 &pic_params
-        init_case == "SLL_INIT_SOBOL"
+        init_case = "SLL_INIT_SOBOL"
         n_particles = 100000
         degree_smoother = 1
+        with_control_variate = .FALSE.
 /
