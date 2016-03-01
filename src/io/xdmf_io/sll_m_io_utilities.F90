@@ -22,7 +22,9 @@ module sll_m_io_utilities
     sll_s_ints_to_string, &
     sll_s_read_file, &
     sll_s_remove_file, &
-    sll_s_split_path
+    sll_s_split_path, &
+    sll_s_read_data_real_array, &
+    sll_s_concatenate_filename_and_path
 
   private
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -185,6 +187,42 @@ contains
     tail = path(1:nc)
 
   end subroutine sll_s_split_path
+
+
+  !----------------------------------------------------------------------------
+  !> Read data from file to real array
+  subroutine sll_s_read_data_real_array( filename, data )
+    character(len=*), intent(in   ) :: filename  !< filename
+    sll_real64,       intent(  out) :: data(:)   !< data
+
+    sll_int32 :: iunit
+
+    open( newunit=iunit, file=trim(filename), status="old", action="read" )
+    read(unit=iunit, fmt=*) data
+    close(unit=iunit)
+
+  end subroutine sll_s_read_data_real_array
+
+  !----------------------------------------------------------------------------
+  !> Concatenate filename and path where path is extracted from another file name
+  !> Example use: 
+  !> call sll_s_concatenate_filename_and_path( 'reference.dat', __FILE__, filepath)
+  !> @param [in] filename name of the file (without path)
+  !> @param [in] otherfile file name with path of another file in same folder 
+  !> @param [out] filepath filename with path
+  subroutine sll_s_concatenate_filename_and_path( filename, otherfile, filepath )
+    character(len=*), intent(in   ) :: filename  
+    character(len=*), intent(in   ) :: otherfile 
+    character(len=*), intent(  out) :: filepath  
+    
+    sll_int32          :: ipath
+
+    ipath = scan(otherfile, "/", back=.true.)
+    filepath = trim(otherfile(1:ipath))//filename
+
+  end subroutine sll_s_concatenate_filename_and_path
+
+
 
 !==============================================================================
 end module sll_m_io_utilities
