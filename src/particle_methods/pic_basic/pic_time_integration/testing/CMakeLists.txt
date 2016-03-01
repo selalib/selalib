@@ -1,11 +1,12 @@
 ADD_EXECUTABLE( test_operator_splitting_pic_vp_2d2v test_operator_splitting_pic_vp_2d2v.F90)
 TARGET_LINK_LIBRARIES(test_operator_splitting_pic_vp_2d2v sll_pic_time_integration)
-ADD_TEST( NAME operator_splitting_pic_vp_2d2v COMMAND test_operator_splitting_pic_vp_2d2v)
-SET_TESTS_PROPERTIES(operator_splitting_pic_vp_2d2v PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
+
 
 ADD_EXECUTABLE( test_hamiltonian_splitting_pic_vm_1d2v test_hamiltonian_splitting_pic_vm_1d2v.F90)
 TARGET_LINK_LIBRARIES(test_hamiltonian_splitting_pic_vm_1d2v sll_pic_time_integration)
 if (FFT_LIB STREQUAL "FFTW") 
   ADD_TEST( NAME hamiltonian_splitting_pic_vm_1d2v COMMAND test_hamiltonian_splitting_pic_vm_1d2v)
   SET_TESTS_PROPERTIES(hamiltonian_splitting_pic_vm_1d2v PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
+  ADD_TEST( NAME operator_splitting_pic_vp_2d2v COMMAND test_operator_splitting_pic_vp_2d2v)
+  SET_TESTS_PROPERTIES(operator_splitting_pic_vp_2d2v PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
 endif()
