@@ -2,9 +2,8 @@ ADD_LIBRARY( sll_lagrange_interpolation STATIC
              sll_m_lagrange_interpolation_1d.F90
              sll_m_lagrange_fast.F90)
 
-ADD_DEPENDENCIES(sll_lagrange_interpolation sll_boundary_condition_descriptors)
 
-TARGET_LINK_LIBRARIES( sll_lagrange_interpolation sll_utilities)
+TARGET_LINK_LIBRARIES( sll_lagrange_interpolation sll_utilities sll_boundary_condition_descriptors)
 
 # Ctest
 IF(BUILD_TESTING)
