@@ -5,21 +5,22 @@
 # level: once the parallel hdf5 is found, all the library should be compiled 
 # with the mpi wrapper compiler.
 if( HDF5_ENABLED AND HDF5_IS_PARALLEL )
-  set( CMAKE_Fortran_COMPILER ${MPI_Fortran_COMPILER} )
+  set(CMAKE_Fortran_COMPILER ${MPI_Fortran_COMPILER} )
 endif( HDF5_ENABLED AND HDF5_IS_PARALLEL )
 
-add_library( sll_pic_initializers STATIC 
-  sll_m_particle_initializers_4d.F90 
-  sll_m_particle_initializers_2d.F90 )
-
-target_link_libraries( sll_pic_initializers
-  sll_pic_particles
+add_library( sll_pic_opt2d_accumulators STATIC sll_m_accumulators.F90 )
+target_link_libraries( sll_pic_opt2d_accumulators
   sll_meshes
-  sll_assert
   sll_memory
-  sll_random_deviate_generators )
+  sll_assert)
 
 # Tests
-if( MPI_ENABLED AND BUILD_TESTING )
+if( BUILD_TESTING )
   add_subdirectory( testing )
-endif( MPI_ENABLED AND BUILD_TESTING )
+endif( BUILD_TESTING )
+
+# TODO: why is there an executable here?
+add_executable( particle_fourier_modes_test  particle_fourier_modes_test.F90 )
+target_link_libraries( particle_fourier_modes_test sll_memory 
+						sll_assert
+						sll_timer)
