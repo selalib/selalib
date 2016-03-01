@@ -21,7 +21,7 @@ program VP1d_BSL_time_split
 
   type(sll_cubic_spline_interpolator_1d), target  :: interp_spline_x, interp_spline_v
   class(sll_c_interpolator_1d), pointer    :: interp_x, interp_v
-  type(sll_cartesian_mesh_2d), pointer :: mesh2d_cart
+  type(sll_t_cartesian_mesh_2d), pointer :: mesh2d_cart
   class(sll_coordinate_transformation_2d_base), pointer   :: mesh2d_base
   type(init_landau_2d), target :: init_landau
   type(init_tsi_2d), target :: init_tsi
@@ -168,7 +168,7 @@ program VP1d_BSL_time_split
 !!$       )
 !!$  mesh2d_base => mesh2d
 
-  mesh2d_cart => new_cartesian_mesh_2d( &
+  mesh2d_cart => sll_f_new_cartesian_mesh_2d( &
        Ncx, &
        Ncv,  &
        xmin,       &
