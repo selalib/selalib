@@ -1,6 +1,5 @@
 add_library( sll_pic_utilities STATIC
              sll_m_pic_utilities.F90
-             #sll_m_representation_conversion.F90
              sll_m_charge_to_density.F90
              sll_m_particle_sort.F90
              sll_m_particle_method_descriptors.F90 )
