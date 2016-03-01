@@ -274,18 +274,24 @@ lx = lx * 2.0d0*sll_p_pi * sll_p_i1 / delta_eta
 do i=1,n+1
   do j=1,n+1
 
-    if (example == 2) then
+    if (example == 1) then
 
+      !a(t) = cos^2(t) 
+      fh_fsl(i,j) = exp(-2.0d0*(x1(i)**2+x2(j)**2))
+
+    else if (example == 2) then
+
+      !a(t) = cos^2(t) 
       fh_fsl(i,j) = 2.0_f64/sqrt(0.4_f64*sll_p_pi) * exp(-x2(j)**2/0.4_f64) &
         * 0.5_f64 * (erf((x1(i)+1.2_f64)/0.3_f64)-erf((x1(i)-1.2_f64)/0.3_f64))
 
-    else if (example == 3) then
+    else 
 
-      !Case I
+      !Case I (example = 31)
       !a(t) = cos^2(t) , v_0 = 0.1   , n_0 = 4,   r_m = 1.85
-      !Case II
+      !Case II (example = 32)
       !a(t) = cos^2(2t), v_0 = 0.1   , n_0 = 4,   r_m = 0.75
-      !Case III
+      !Case III (example = 33)
       !a(t) = 0.0      , v_0 = 0.0725, n_0 = 0.3, r_m = 0.75
       if (abs(x1(i)) <= r_m) then                                                      
         fh_fsl(i,j) = real(n_0,f64)/sqrt(2.0_f64*sll_p_pi)/v_0 &
@@ -294,9 +300,6 @@ do i=1,n+1
         fh_fsl(i,j) = 0.0_f64                                                                         
       endif                                                                           
   
-    else 
-
-      fh_fsl(i,j) = exp(-2.0d0*(x1(i)**2+x2(j)**2))
 
     end if
 
@@ -442,8 +445,8 @@ do step=1,nb_step !-------- * Evolution in time * ---------
 
       !------------for 1st order correction------------------
       do l=0,ntau-1
-        F1(l) = rfct1(tau(l), ntau, x1(i), x2(j), gns(i,j,l))
-        F2(l) = rfct2(tau(l), ntau, x1(i), x2(j), gns(i,j,l))
+        F1(l) = rfct1(tau(l), a(tau(l),example), ntau, x1(i), x2(j), gns(i,j,l))
+        F2(l) = rfct2(tau(l), a(tau(l),example), ntau, x1(i), x2(j), gns(i,j,l))
       enddo
 
       call sll_s_fft_exec_c2c_1d(fw_fft, F1, tmp1_f)
@@ -495,16 +498,16 @@ do step=1,nb_step !-------- * Evolution in time * ---------
       !------------for 2nd order correction------------------
       do l=0,ntau-1
 
-        F1(l)= rfct1(tau(l), 1, xi1(i,j,l), xi2(i,j,l), gns(i,j,l))
-        F2(l)= rfct2(tau(l), 1, xi1(i,j,l), xi2(i,j,l), gns(i,j,l))
+        F1(l)= rfct1(tau(l), a(tau(l),example), 1, xi1(i,j,l), xi2(i,j,l), gns(i,j,l))
+        F2(l)= rfct2(tau(l), a(tau(l),example), 1, xi1(i,j,l), xi2(i,j,l), gns(i,j,l))
 
         dtgn=  cmplx(gnt(i,j,l),0.0,f64) &
              + cmplx(gnr(i,j,l),0.0,f64) &
              *(cmplx(cos(tau(l)),0.0,f64)*ftilde1(0,i,j) &
              + cmplx(sin(tau(l)),0.0,f64)*ftilde2(0,i,j))
 
-        tmp1(l)= cfct1(tau(l), ntau, ftilde1(0,i,j), ftilde2(0,i,j), dtgn)
-        tmp2(l)= cfct2(tau(l), ntau, ftilde1(0,i,j), ftilde2(0,i,j), dtgn)
+        tmp1(l)= cfct1(tau(l), a(tau(l),example), ntau, ftilde1(0,i,j), ftilde2(0,i,j), dtgn)
+        tmp2(l)= cfct2(tau(l), a(tau(l),example), ntau, ftilde1(0,i,j), ftilde2(0,i,j), dtgn)
 
       enddo
 
@@ -569,8 +572,8 @@ do step=1,nb_step !-------- * Evolution in time * ---------
     do i=1,n+1
 
       do l=0,ntau-1
-        F1(l) = rfct1(tau(l),1,xi1(i,j,l),xi2(i,j,l),gns(i,j,l))
-        F2(l) = rfct2(tau(l),1,xi1(i,j,l),xi2(i,j,l),gns(i,j,l))
+        F1(l) = rfct1(tau(l),a(tau(l),example),1,xi1(i,j,l),xi2(i,j,l),gns(i,j,l))
+        F2(l) = rfct2(tau(l),a(tau(l),example),1,xi1(i,j,l),xi2(i,j,l),gns(i,j,l))
       enddo
 
       tmp1 = xi1(i,j,:) + 0.5_f64*k*F1
@@ -657,8 +660,8 @@ do step=1,nb_step !-------- * Evolution in time * ---------
     do i=1,n+1
 
       do l=0,ntau-1
-        F1(l) = cfct1(tau(l), 1, ftilde1(l,i,j), ftilde2(l,i,j), cmplx(gns(i,j,l),0.0,f64))
-        F2(l) = cfct2(tau(l), 1, ftilde1(l,i,j), ftilde2(l,i,j), cmplx(gns(i,j,l),0.0,f64))
+        F1(l) = cfct1(tau(l), a(tau(l),example),1, ftilde1(l,i,j), ftilde2(l,i,j), cmplx(gns(i,j,l),0.0,f64))
+        F2(l) = cfct2(tau(l), a(tau(l),example),1, ftilde1(l,i,j), ftilde2(l,i,j), cmplx(gns(i,j,l),0.0,f64))
       enddo
 
       call sll_s_fft_exec_c2c_1d(fw_fft, F1, tmp1_f)
@@ -774,10 +777,11 @@ sll_real64 :: eta_max
 
 end subroutine apply_bc
 
-function cfct1( tau, ntau, xi1, xi2, gn )
+function cfct1( tau, a, ntau, xi1, xi2, gn )
 
   sll_comp64 :: cfct1
   sll_real64 :: tau
+  sll_real64 :: a
   sll_int32  :: ntau
   sll_comp64 :: xi1
   sll_comp64 :: xi2
@@ -787,15 +791,16 @@ function cfct1( tau, ntau, xi1, xi2, gn )
 
   ctau = cmplx(tau,0.0,f64)
 
-  cfct1 = ( - cos(2.0*ctau)**2 * ( cmplx(0.5,0.0,f64)*sin(2.0*ctau)*xi1 &
+  cfct1 = ( - cmplx(a,0.,f64) * ( cmplx(0.5,0.0,f64)*sin(2.0*ctau)*xi1 &
             + sin(ctau)**2*xi2) - sin(ctau)*gn)/cmplx(ntau,0.0,f64)
 
 end function cfct1
 
-function cfct2( tau, ntau, xi1, xi2, gn )
+function cfct2( tau, a, ntau, xi1, xi2, gn )
 
   sll_comp64 :: cfct2
   sll_real64 :: tau
+  sll_real64 :: a
   sll_int32  :: ntau
   sll_comp64 :: xi1
   sll_comp64 :: xi2
@@ -805,40 +810,42 @@ function cfct2( tau, ntau, xi1, xi2, gn )
 
   ctau = cmplx(tau,0.0,f64)
 
-  cfct2 = (  cos(2.0*ctau)**2 * &
+  cfct2 = (  cmplx(a,0.,f64) * &
            ( cos(ctau)**2*xi1 + cmplx(0.5,0.0,f64)*sin(2.0*ctau)*xi2)  &
            + cos(ctau)*gn )/cmplx(ntau,0.0,f64)
 
 end function cfct2
 
-function rfct1( tau, ntau, xi1, xi2, gn )
+function rfct1( tau, a, ntau, xi1, xi2, gn )
 
   sll_comp64 :: rfct1
   sll_real64 :: tau
+  sll_real64 :: a
   sll_int32  :: ntau
   sll_real64 :: xi1
   sll_real64 :: xi2
   sll_real64 :: gn
   sll_real64 :: tmp
 
-  tmp = ( - cos(2.0*tau)**2 * ( 0.5_f64*sin(2.0*tau)*xi1 + sin(tau)**2*xi2) &
+  tmp = ( - a * ( 0.5_f64*sin(2.0*tau)*xi1 + sin(tau)**2*xi2) &
           - sin(tau)*gn)/real(ntau,f64)
 
   rfct1 = cmplx(tmp,0.0,f64)
 
 end function rfct1
 
-function rfct2( tau, ntau, xi1, xi2, gn )
+function rfct2( tau, a, ntau, xi1, xi2, gn )
 
   sll_comp64 :: rfct2
   sll_real64 :: tau
+  sll_real64 :: a
   sll_int32  :: ntau
   sll_real64 :: xi1
   sll_real64 :: xi2
   sll_real64 :: gn
   sll_real64 :: tmp
 
-  tmp = (  cos(2.0*tau)**2 * ( cos(tau)**2*xi1 + 0.5_f64*sin(2.0*tau)*xi2)  &
+  tmp = (  a * ( cos(tau)**2*xi1 + 0.5_f64*sin(2.0*tau)*xi2)  &
          + cos(tau)*gn )/real(ntau,f64)
 
   rfct2 = cmplx(tmp,0.0,f64)
@@ -905,6 +912,21 @@ enddo
 end subroutine cubic_splines_interp_1d
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+function a( tau, example ) 
+  sll_real64 :: a
+  sll_real64 :: tau
+  sll_int32  :: example
+
+  if (example == 31) then
+    a = cos(tau) * cos(tau)
+  else if (example == 33) then
+    a = 0.0_f64 
+  else
+    a = cos(2.0_f64*tau) * cos(2.0_f64*tau)
+  end if
+
+end function 
 
 
 end program test_deposit_cubic_splines
