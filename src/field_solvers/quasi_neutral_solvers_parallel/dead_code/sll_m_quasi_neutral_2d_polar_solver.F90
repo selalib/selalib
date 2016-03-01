@@ -25,7 +25,7 @@ use sll_m_poisson_2d_base
 use sll_m_poisson_2d_polar
 implicit none
 
-  type,extends(sll_poisson_2d_base) :: quasi_neutral_2d_polar_solver     
+  type,extends(sll_c_poisson_2d_base) :: quasi_neutral_2d_polar_solver     
   
   type(sll_plan_poisson_polar), pointer                   :: poiss
   
