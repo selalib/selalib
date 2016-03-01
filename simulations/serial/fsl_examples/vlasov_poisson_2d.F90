@@ -288,7 +288,7 @@ do i=1,n+1
       !Case III
       !a(t) = 0.0      , v_0 = 0.0725, n_0 = 0.3, r_m = 0.75
       if (abs(x1(i)) <= r_m) then                                                      
-        fh_fsl(i,j) = n_0/sqrt(2.0_f64*sll_p_pi)/v_0 &
+        fh_fsl(i,j) = real(n_0,f64)/sqrt(2.0_f64*sll_p_pi)/v_0 &
                     * exp(-x2(j)**2/2.0d0/v_0**2)
       else                                                                            
         fh_fsl(i,j) = 0.0_f64                                                                         
