@@ -9,16 +9,19 @@ module sll_m_maxwell_1d_fem
 #include "sll_memory.h"
 #include "sll_working_precision.h"
 
-! use F77_fftpack, only: &
-!   dfftb, &
-!   dfftf, &
-!   dffti
-
   use sll_m_arbitrary_degree_splines, only: &
     sll_s_uniform_b_splines_at_x
 
   use sll_m_constants, only: &
     sll_p_pi
+
+  use sll_m_fft, only: &
+    sll_t_fft, &
+    sll_s_fft_init_r2r_1d, &
+    sll_s_fft_exec_r2r_1d, &
+    sll_s_fft_free, &
+    sll_p_fft_forward, &
+    sll_p_fft_backward
 
   use sll_m_gauss_legendre_integration, only: &
     sll_f_gauss_legendre_points_and_weights
@@ -30,12 +33,7 @@ module sll_m_maxwell_1d_fem
   implicit none
 
   public :: &
-    sll_s_compute_b_from_e_1d_fem, &
-    sll_s_compute_e_from_b_1d_fem, &
-    sll_s_compute_e_from_rho_1d_fem, &
-    sll_s_compute_fem_rhs, &
-    sll_t_maxwell_1d_fem, &
-    sll_f_new_maxwell_1d_fem
+    sll_t_maxwell_1d_fem
 
   private
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -53,8 +51,10 @@ module sll_m_maxwell_1d_fem
      sll_real64, allocatable :: eig_mass1(:)   !< eigenvalues of circulant 1-form mass matrix
      sll_real64, allocatable :: eig_weak_ampere(:)  !< eigenvalues of circulant update matrix for Ampere
      sll_real64, allocatable :: eig_weak_poisson(:) !< eigenvalues of circulant update matrix for Poisson
-     sll_real64, dimension(:), pointer :: wsave !< array used by fftpack
-     sll_real64, dimension(:), pointer :: work  !< array used by fftpack
+     type(sll_t_fft) :: plan_fw !< fft plan (forward)
+     type(sll_t_fft) :: plan_bw !< fft plan (backward)
+     sll_real64, allocatable :: wsave(:) !< scratch data
+     sll_real64, allocatable :: work(:)  !< scratch data
 
    contains
      procedure :: &
@@ -68,9 +68,14 @@ module sll_m_maxwell_1d_fem
      procedure :: &
           compute_rhs_from_function => sll_s_compute_fem_rhs
      procedure :: &
-          L2norm_squarred => L2norm_squarred_1d_fem
+          L2norm_squared => L2norm_squared_1d_fem
      procedure :: &
           L2projection => L2projection_1d_fem
+     procedure :: &
+          free => free_1d_fem
+     procedure :: &
+          init => init_1d_fem
+
   end type sll_t_maxwell_1d_fem
 
 contains
@@ -118,16 +123,25 @@ contains
      sll_int32, intent(in)                 :: component !< Component of the Efield to be computed
      sll_real64,dimension(:),intent(inout) :: E !< Updated electric field
      ! local variables
-     !sll_int32 :: i 
+     sll_int32 :: i 
+     sll_real64, dimension(self%n_dofs) :: eigvals
 
      ! Multiply by inverse mass matrix  using the eigenvalues of the circulant inverse matrix
+     eigvals=0.0_f64
      if (component == 1) then
-        call solve_circulant(self, self%eig_mass1, current, self%work)
+        do i=1,self%n_dofs/2+1
+           eigvals(i) = 1.0_f64 / self%eig_mass1(i)
+        end do
+        call solve_circulant(self, eigvals, current, self%work)
      elseif (component == 2) then
-        call solve_circulant(self, self%eig_mass0, current, self%work)
+        do i=1,self%n_dofs/2+1
+           eigvals(i) = 1.0_f64 / self%eig_mass0(i)
+        end do
+        call solve_circulant(self, eigvals, current, self%work)
      else
         print*, 'Component ', component, 'not implemented in compute_E_from_j_1d_fem.'
      end if
+     
 
      ! Update the electric field and scale
      E = E - self%work/self%delta_x
@@ -145,10 +159,11 @@ contains
      call solve_circulant(self, self%eig_weak_poisson, rho, self%work)
      ! Compute spline coefficients of Ex from those of phi
      do i=2,self%n_dofs
-        E(i) =  (self%work(i-1) -  self%work(i)) * (self%delta_x)
+        E(i) =  (self%work(i-1) -  self%work(i)) !* (self%delta_x)
      end do
      ! treat Periodic point
-     E(1) = (self%work(self%n_dofs) - self%work(1)) * (self%delta_x)
+     E(1) = (self%work(self%n_dofs) - self%work(1)) !* (self%delta_x)
+
    end subroutine sll_s_compute_e_from_rho_1d_fem
 
    subroutine solve_circulant(self, eigvals, rhs, res)
@@ -163,21 +178,23 @@ contains
      ! Compute res from rhs, using eigenvalue of circulant  matrix
      res = rhs
      ! Forward FFT
-     call dfftf( self%n_dofs, res, self%wsave)
-     ! multiply by eigenvalue vector
-     res(1) = res(1) * eigvals(1)
-     do k= 1, self%n_dofs/2 - 1
-        re = res(2*k) * eigvals(2*k) - res(2*k+1) * eigvals(2*k+1)
-        im = res(2*k) * eigvals(2*k+1) + res(2*k+1) * eigvals(2*k)
-        res(2*k) = re
-        res(2*k+1) = im
+     call sll_s_fft_exec_r2r_1d ( self%plan_fw, res, self%wsave )
+     self%wsave(1) = self%wsave(1) * eigvals(1)
+     do k=2, self%n_dofs/2
+        re = self%wsave(k) * eigvals(k) - &
+             self%wsave(self%n_dofs-k+2) * eigvals(self%n_dofs-k+2)
+        im = self%wsave(k) * eigvals(self%n_dofs-k+2) + &
+             self%wsave(self%n_dofs-k+2) * eigvals(k)
+        self%wsave(k) = re
+        self%wsave(self%n_dofs-k+2) = im
      end do
-     res(self%n_dofs) = res(self%n_dofs) * eigvals(self%n_dofs)
+     self%wsave(self%n_dofs/2+1) = self%wsave(self%n_dofs/2+1)*eigvals(self%n_dofs/2+1)
      ! Backward FFT 
-     call dfftb( self%n_dofs, res,  self%wsave )
+     call sll_s_fft_exec_r2r_1d( self%plan_bw, self%wsave, res )
      ! normalize
      res = res / self%n_dofs
    end subroutine solve_circulant
+
 
    !> Compute the FEM right-hand-side for a given function f and periodic splines of given degree
    !> Its components are $\int f N_i dx$ where $N_i$ is the B-spline starting at $x_i$ 
@@ -213,7 +230,7 @@ contains
            enddo
         enddo
         ! rescale by cell size
-        coefs_dofs(i) = coef!*self%delta_x
+        coefs_dofs(i) = coef*self%delta_x
      enddo
 
    end subroutine sll_s_compute_fem_rhs
@@ -237,72 +254,58 @@ contains
      ! Multiply by inverse mass matrix (! complex numbers stored in real array with fftpack ordering)
      eigvals=0.0_f64
      if (degree == self%s_deg_0) then
-        eigvals(1) = 1.0_f64 / self%eig_mass0(1)
-        do i=1,self%n_dofs/2
-           eigvals(2*i) = 1.0_f64 / self%eig_mass0(2*i)
+        do i=1,self%n_dofs/2+1
+           eigvals(i) = 1.0_f64 / self%eig_mass0(i)
         end do
      elseif  (degree == self%s_deg_0-1) then
-        eigvals(1) = 1.0_f64 / self%eig_mass1(1)
-        do i=1,self%n_dofs/2
-           eigvals(2*i) = 1.0_f64 / self%eig_mass1(2*i)
+        do i=1,self%n_dofs/2+1
+           eigvals(i) = 1.0_f64 / self%eig_mass1(i)
         end do
      else
         print*, 'degree ', degree, 'not availlable in maxwell_1d_fem object' 
      endif
 
      call solve_circulant(self, eigvals, self%work, coefs_dofs)
+     ! Account for scaling in the mass matrix by dx
+     coefs_dofs = coefs_dofs/self%delta_x
 
    end subroutine L2projection_1d_fem
 
    !> Compute square of the L2norm 
-   function L2norm_squarred_1d_fem(self, coefs_dofs, degree) result (r)
+   function L2norm_squared_1d_fem(self, coefs_dofs, degree) result (r)
      class(sll_t_maxwell_1d_fem) :: self !< Maxwell solver object
      sll_real64 :: coefs_dofs(:) !< Coefficient for each DoF
      sll_int32  :: degree !< Specify the degree of the basis functions
      sll_real64 :: r !< Result: squared L2 norm
 
-     !Local variables
-     sll_int32 :: j, k
-
+     ! Multiply coefficients by mass matrix (use diagonalization FFT and mass matrix eigenvalues)
      if (degree == self%s_deg_0 ) then
-        r = sum(coefs_dofs**2)*self%mass_0(1)*0.5_f64
-     
-        do j = 2,self%s_deg_0+1
-           r = r + self%mass_0(j)*sum(coefs_dofs(1:self%n_dofs-j+1)*coefs_dofs(j:self%n_dofs))
-           do k= 1,j-1
-              r = r + self%mass_0(j)*coefs_dofs(self%n_dofs-j+1+k)*coefs_dofs(k)
-           end do
-        end do
+
+        call solve_circulant(self, self%eig_mass0, coefs_dofs, self%work)
+
      elseif (degree == self%s_deg_1) then
-         r = sum(coefs_dofs**2)*self%mass_1(1)*0.5_f64
-     
-        do j = 2,self%s_deg_0
-           r = r + self%mass_1(j)*sum(coefs_dofs(1:self%n_dofs-j+1)*&
-                coefs_dofs(j:self%n_dofs))
-           do k= 1,j-1
-              r = r + self%mass_1(j)*coefs_dofs(self%n_dofs-j+1+k)*coefs_dofs(k)
-           end do
-        end do
+
+        call solve_circulant(self, self%eig_mass1, coefs_dofs, self%work)
+
      end if
+     ! Multiply by the coefficients from the left (inner product)
+     r = sum(coefs_dofs*self%work)
+     ! Scale by delt_x
+     r = r*self%delta_x
 
-     r = r*self%delta_x*2.0_f64
-        
-   end function L2norm_squarred_1d_fem
+   end function L2norm_squared_1d_fem
 
-
-   function sll_f_new_maxwell_1d_fem(domain, n_dofs, s_deg_0) result(self)
-     sll_real64 :: domain(2)     ! xmin, xmax
-     sll_int32 :: n_dofs  ! number of degrees of freedom (here number of cells and grid points)
+   subroutine init_1d_fem( self, domain, n_dofs, s_deg_0 )
+     class(sll_t_maxwell_1d_fem), intent(out) :: self !< solver object
+     sll_real64, intent(in) :: domain(2)     ! xmin, xmax
+     sll_int32, intent(in) :: n_dofs  ! number of degrees of freedom (here number of cells and grid points)
      !sll_real64 :: delta_x ! cell size
-     sll_int32 :: s_deg_0 ! highest spline degree
-     type(sll_t_maxwell_1d_fem), pointer :: self
+     sll_int32, intent(in) :: s_deg_0 ! highest spline degree
 
-     ! local variables
+    ! local variables
      sll_int32 :: ierr
      sll_int32 :: j, k ! loop variables
      sll_real64 :: coef0, coef1, sin_mode, cos_mode 
-
-     SLL_ALLOCATE(self, ierr)
 
      self%n_dofs = n_dofs
      self%Lx = domain(2) - domain(1)
@@ -340,17 +343,18 @@ contains
         self%mass_1(3) = 1.0_f64/120.0_f64
 
      case default
-        print*, 'sll_f_new_maxwell_1d_fem: spline degree ', s_deg_0, ' not implemented'
+        print*, 'sll_t_maxwell_1d_fem init: spline degree ', s_deg_0, ' not implemented'
      end select
 
      SLL_ALLOCATE(self%eig_mass0(n_dofs), ierr)
      SLL_ALLOCATE(self%eig_mass1(n_dofs), ierr)
      SLL_ALLOCATE(self%eig_weak_ampere(n_dofs), ierr)
      SLL_ALLOCATE(self%eig_weak_poisson(n_dofs), ierr)
-     ! Initialise FFT
-     SLL_ALLOCATE(self%wsave(2*self%n_dofs+15),ierr)
-     call dffti(self%n_dofs,self%wsave)
+     ! Initialise FFT     
      SLL_ALLOCATE(self%work(n_dofs),ierr)
+     SLL_ALLOCATE(self%wsave(n_dofs),ierr)
+     call sll_s_fft_init_r2r_1d( self%plan_fw, self%n_dofs, self%work, self%wsave, sll_p_fft_forward, normalized=.false. )
+     call sll_s_fft_init_r2r_1d( self%plan_bw, self%n_dofs, self%work, self%work, sll_p_fft_backward, normalized=.false. )
 
      ! Compute eigenvalues of circulant Ampere update matrix M_0^{-1} D^T M_1
      ! and circulant Poisson Matrix (D^T M_1 D)^{-1}
@@ -372,17 +376,17 @@ contains
         j = s_deg_0
         coef0 = coef0 + 2* self%mass_0(j+1)*cos(2*sll_p_pi*j*k/n_dofs)
         ! compute eigenvalues
-        self%eig_mass0(2*k) = coef0 ! real part
-        self%eig_mass0(2*k+1) = 0.0_f64 ! imaginary part
-        self%eig_mass1(2*k) = coef1 ! real part
-        self%eig_mass1(2*k+1) = 0.0_f64 ! imaginary part
+        self%eig_mass0(k+1) = coef0 ! real part
+        self%eig_mass0(n_dofs-k+1) = 0.0_f64 ! imaginary part
+        self%eig_mass1(k+1) = coef1 ! real part
+        self%eig_mass1(n_dofs-k+1) = 0.0_f64 ! imaginary part
         cos_mode = cos(2*sll_p_pi*k/n_dofs)
         sin_mode = sin(2*sll_p_pi*k/n_dofs)
-        self%eig_weak_ampere(2*k) =  (coef1 / coef0) * (1-cos_mode) ! real part
-        self%eig_weak_ampere(2*k+1) =  -(coef1 / coef0) * sin_mode   ! imaginary part
-        self%eig_weak_poisson(2*k) = 1.0_f64 / (coef1 * ((1-cos_mode)**2 + &
+        self%eig_weak_ampere(k+1) =  (coef1 / coef0) * (1-cos_mode) ! real part
+        self%eig_weak_ampere(n_dofs-k+1) =  -(coef1 / coef0) * sin_mode   ! imaginary part
+        self%eig_weak_poisson(k+1) = 1.0_f64 / (coef1 * ((1-cos_mode)**2 + &
              sin_mode**2))  ! real part
-        self%eig_weak_poisson(2*k+1) = 0.0_f64  ! imaginary part
+        self%eig_weak_poisson(n_dofs-k+1) = 0.0_f64  ! imaginary part
      enddo
      ! N/2 mode
      coef0 =  self%mass_0(1)
@@ -391,17 +395,34 @@ contains
         coef0 = coef0 + 2 * self%mass_0(j+1)*cos(sll_p_pi*j)
         coef1 = coef1 + 2 * self%mass_1(j+1)*cos(sll_p_pi*j)
      enddo
+     
      ! add last term for larger matrix
      j = s_deg_0
      coef0 = coef0 + 2 * self%mass_0(j+1)*cos(sll_p_pi*j)
 
      ! compute eigenvalues
-     self%eig_mass0(n_dofs) = coef0
-     self%eig_mass1(n_dofs) = coef1
-     self%eig_weak_ampere(n_dofs) = 2.0_f64 * (coef1 / coef0)
-     self%eig_weak_poisson(n_dofs) = 1.0_f64 / (coef1 *4.0_f64) 
-   end function sll_f_new_maxwell_1d_fem
+     self%eig_mass0(n_dofs/2+1) = coef0
+     self%eig_mass1(n_dofs/2+1) = coef1
+     self%eig_weak_ampere(n_dofs/2+1) = 2.0_f64 * (coef1 / coef0)
+     self%eig_weak_poisson(n_dofs/2+1) = 1.0_f64 / (coef1 *4.0_f64) 
 
+   end subroutine init_1d_fem
+
+   subroutine free_1d_fem(self)
+     class(sll_t_maxwell_1d_fem) :: self
+
+     call sll_s_fft_free( self%plan_fw )
+     call sll_s_fft_free( self%plan_bw )
+     deallocate(self%mass_0)
+     deallocate(self%mass_1)
+     deallocate(self%eig_mass0)
+     deallocate(self%eig_mass1)
+     deallocate(self%eig_weak_ampere)
+     deallocate(self%eig_weak_poisson)
+     deallocate(self%wsave)
+     deallocate(self%work)
+
+   end subroutine free_1d_fem
 
 
 end module sll_m_maxwell_1d_fem
