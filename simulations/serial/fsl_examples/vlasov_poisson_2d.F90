@@ -22,6 +22,9 @@ sll_int32             :: ntau          = 32
 sll_real64            :: final_time    = 0.4_f64
 logical               :: plot_enabled  = .false.
 sll_int32             :: example       = 1
+sll_int32             :: n_0           = 4
+sll_real64            :: v_0           = 0.1_f64
+sll_real64            :: r_m           = 1.85_f64
 
 type(sll_t_fft)                      :: fw_fft
 type(sll_t_fft)                      :: bw_fft
@@ -105,7 +108,10 @@ namelist/list_parameters/ eta_min,  & !dimensions
                        final_time,  & !simulation time
                      plot_enabled,  & !enable outputs
                           example,  & !example number
-                             ntau     !ntau
+                             ntau,  & !ntau
+                              n_0,  & !n0 (example 3 parameter)
+                              v_0,  & !v0 (example 3 parameter)
+                              r_m     !rm (example 3 parameter)
 
 
 ! ---- * Parameters * ----
@@ -265,12 +271,33 @@ lx = lx * 2.0d0*sll_p_pi * sll_p_i1 / delta_eta
 !$OMP DO
 do i=1,n+1
   do j=1,n+1
+
     if (example == 2) then
+
       fh_fsl(i,j) = 2.0_f64/sqrt(0.4_f64*sll_p_pi) * exp(-x2(j)**2/0.4_f64) &
         * 0.5_f64 * (erf((x1(i)+1.2_f64)/0.3_f64)-erf((x1(i)-1.2_f64)/0.3_f64))
+
+    else if (example == 3) then
+
+      !Case I
+      !a(t) = cos^2(t) , v_0 = 0.1   , n_0 = 4,   r_m = 1.85
+      !Case II
+      !a(t) = cos^2(2t), v_0 = 0.1   , n_0 = 4,   r_m = 0.75
+      !Case III
+      !a(t) = 0.0      , v_0 = 0.0725, n_0 = 0.3, r_m = 0.75
+      if (abs(x1(i)) <= r_m) then                                                      
+        fh_fsl(i,j) = n_0/sqrt(2.0_f64*sll_p_pi)/v_0 &
+                    * exp(-x2(j)**2/2.0d0/v_0**2)
+      else                                                                            
+        fh_fsl(i,j) = 0.0_f64                                                                         
+      endif                                                                           
+  
     else 
+
       fh_fsl(i,j) = exp(-2.0d0*(x1(i)**2+x2(j)**2))
+
     end if
+
   end do
 end do
 !$OMP END DO
