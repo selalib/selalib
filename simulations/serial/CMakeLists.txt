@@ -20,6 +20,7 @@ if(HDF5_ENABLED)
   add_subdirectory( bsl_vp_1d1v_cart_serial                   )
   add_subdirectory( bsl_vp_1d1v_cart_deltaf                   )
   add_subdirectory( bsl_vp_1d1v_cart_micro_macro              )
+  add_subdirectory( fsl_vp_1d1v_cart_tau                      )
 
   ## Vlasov-Poisson 2Dx2D
   add_subdirectory( bsl_vp_2d2v_cart_fullsparsegrid           )

@@ -1,0 +1,11 @@
+$list_parameters 
+eta_min      = -4d0
+eta_max      =  4d0
+n            = 512
+k            = 0.05d0
+eps          = 1d0
+final_time   = 0.4d0
+plot_enabled = .true.
+ntau         = 32
+example      = 2
+$end
