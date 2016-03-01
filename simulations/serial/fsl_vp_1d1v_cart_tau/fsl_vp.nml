@@ -8,4 +8,7 @@ final_time   = 0.4d0
 plot_enabled = .true.
 ntau         = 32
 example      = 2
+n_0          = 4
+v_0          = 0.1_f64
+r_m          = 1.85_f64
 $end
