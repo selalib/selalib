@@ -15,6 +15,7 @@ IF(HDF5_IS_PARALLEL)
 ENDIF(HDF5_IS_PARALLEL)
 
 ADD_LIBRARY(maxwell_helper_functions STATIC m_maxwell_helper_functions.F90)
+TARGET_LINK_LIBRARIES(maxwell_helper_functions sll_constants)
 ADD_EXECUTABLE(test_maxwell_2d_diga_periodic test_maxwell_2d_diga_periodic.F90)
 TARGET_LINK_LIBRARIES(test_maxwell_2d_diga_periodic maxwell_helper_functions sll_maxwell_solvers)
 ADD_EXECUTABLE(test_maxwell_2d_diga_discrete test_maxwell_2d_discrete.F90)
