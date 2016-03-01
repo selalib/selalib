@@ -157,6 +157,9 @@ print *,'# h            = ', h
 print *,'# final_time   = ', final_time
 print *,'# nb_step      = ', nb_step   
 print *,'# example      = ', example   
+print *,'# n_0          = ', n_0   
+print *,'# v_0          = ', v_0   
+print *,'# r_m          = ', r_m   
 
 call cpu_time(tstart)
 
@@ -179,12 +182,11 @@ SLL_ALLOCATE( eta2feet(n+1,n+1)         ,err)
 
 !$OMP PARALLEL                                                                 &
 !$OMP DEFAULT(SHARED)                                                          &
-!$OMP PRIVATE(spl_1d, bw_fft, fw_fft, it, nt, spl_2d_f, l, ltau, lx, tau, sum0,&
+!$OMP PRIVATE(spl_1d, bw_fft, fw_fft, nt, spl_2d_f, l, ltau, lx, tau, sum0,    &
 !$OMP         i, j, rk, step, fsl_fw, fsl_bw, tmp, tmp1, tmp1_f, x1, x2, r,    &
 !$OMP         fvr, uctmp, vctmp, v, ctau, stau, x, s1, s2, s3, ft1, ft2, csq,  &
 !$OMP         err, tmp2, tmp2_f, dtgn, f1, f2, sumup1, sumup2, error, eta1,    &
 !$OMP         eta2, flag) 
-!$ it = omp_get_thread_num()
 !$ nt = omp_get_num_threads()
 
 SLL_ALLOCATE( lx    (n)       ,err)
