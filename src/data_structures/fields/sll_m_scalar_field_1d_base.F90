@@ -47,7 +47,7 @@ module sll_m_scalar_field_1d_base
 !       use sll_m_cartesian_meshes
 !       import sll_c_scalar_field_1d_base
 !       class(sll_c_scalar_field_1d_base), intent(in) :: field
-!       type(sll_cartesian_mesh_1d), pointer :: res  ! a implementer
+!       type(sll_t_cartesian_mesh_1d), pointer :: res  ! a implementer
 !     end function function_get_mesh_1d
 !  end interface
 !  
