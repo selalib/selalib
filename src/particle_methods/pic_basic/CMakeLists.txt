@@ -1,5 +1,4 @@
 add_subdirectory(pic_interface)
 add_subdirectory(particle_types)
-add_subdirectory(particle_initializers)
 add_subdirectory(kernel_smoothers)
-add_subdirectory(particle_pushers)
+add_subdirectory(pic_time_integration)

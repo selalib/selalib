@@ -14,7 +14,7 @@ TARGET_LINK_LIBRARIES( sll_simple_pic
   sll_meshes
   sll_remapped_pic
   sll_pic_interface
-  sll_pic_accumulators
+  sll_pic_opt2d_accumulators
   sll_remapped_pic_utilities
   sll_simple_pic_4d_particle
   )

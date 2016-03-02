@@ -41,7 +41,7 @@ module sll_m_remapped_pic_base
   !============================================================================
   !> @brief Particle group
   !============================================================================
-  type, abstract :: sll_c_remapped_particle_group       ! previous name sll_particle_group_base
+  type, abstract :: sll_c_remapped_particle_group       ! previous name sll_c_particle_group_base
 
     class( sll_temp_species ), pointer :: species
     sll_int32                     :: id

@@ -3,7 +3,7 @@ ADD_LIBRARY( sll_remapped_pic STATIC
   )
 
 TARGET_LINK_LIBRARIES( sll_remapped_pic
-  sll_pic_accumulators
+  sll_pic_opt2d_accumulators
   )
 
 if( MPI_ENABLED )
