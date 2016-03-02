@@ -697,7 +697,7 @@ do step=1,nb_step !-------- * Evolution in time * ---------
 
   if (plot_enabled) then
     call sll_s_xdmf_rect2d_nodes( 'fh', fvr, 'fh', x1(1:n), x2(1:n), &
-                                  'HDF5', step) 
+                                  'HDF5', step, real(step*k,f64)) 
   end if
   !$OMP END MASTER
 
@@ -790,7 +790,7 @@ function cfct1( tau, a, ntau, xi1, xi2, gn )
   ctau = cmplx(cos(tau),0.0,f64)
   stau = cmplx(sin(tau),0.0,f64)
 
-  cfct1 = (-cmplx(a,0.,f64)*(ctau*stau*xi1+stau**2*xi2)-stau*gn)/cmplx(ntau,0.0,f64)
+  cfct1 = (-cmplx(a,0.,f64)*(ctau*stau*xi1+stau*stau*xi2)-stau*gn)/cmplx(ntau,0.0,f64)
 
 end function cfct1
 
@@ -809,7 +809,7 @@ function cfct2( tau, a, ntau, xi1, xi2, gn )
   ctau = cmplx(cos(tau),0.0,f64)
   stau = cmplx(sin(tau),0.0,f64)
 
-  cfct2 = (cmplx(a,0.,f64)*(ctau**2*xi1+ctau*stau*xi2)+ctau*gn)/cmplx(ntau,0.0,f64)
+  cfct2 = (cmplx(a,0.,f64)*(ctau*ctau*xi1+ctau*stau*xi2)+ctau*gn)/cmplx(ntau,0.0,f64)
 
 end function cfct2
 
@@ -829,7 +829,7 @@ function rfct1( tau, a, ntau, xi1, xi2, gn )
   ctau = cos(tau)
   stau = sin(tau)
 
-  tmp = (-a*(ctau*stau*xi1+stau**2*xi2)-stau*gn)/real(ntau,f64)
+  tmp = (-a*(ctau*stau*xi1+stau*stau*xi2)-stau*gn)/real(ntau,f64)
 
   rfct1 = cmplx(tmp,0.0,f64)
 
@@ -851,7 +851,7 @@ function rfct2( tau, a, ntau, xi1, xi2, gn )
   ctau = cos(tau)
   stau = sin(tau)
 
-  tmp = (a*(ctau**2*xi1+ctau*stau*xi2)+ctau*gn)/real(ntau,f64)
+  tmp = (a*(ctau*ctau*xi1+ctau*stau*xi2)+ctau*gn)/real(ntau,f64)
 
   rfct2 = cmplx(tmp,0.0,f64)
 
