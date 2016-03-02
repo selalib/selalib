@@ -53,8 +53,8 @@ call cpu_time(tcpu1)
 n_step = int(2.0_f64*sll_p_pi/delta_t)
   
 call nufft2d%initialize( &
-     nc_eta1,            &
-     nc_eta2,            &
+     nc_eta1+1,          &
+     nc_eta2+1,          &
      eta1_min,           &
      eta1_max,           &
      eta2_min,           &
@@ -62,13 +62,13 @@ call nufft2d%initialize( &
 
 interp2d => nufft2d
 
-SLL_ALLOCATE(f(1:nc_eta1,1:nc_eta2),error)
-SLL_ALLOCATE(g(1:nc_eta1,1:nc_eta2),error)
-SLL_ALLOCATE(x(1:nc_eta1,1:nc_eta2),error)
-SLL_ALLOCATE(y(1:nc_eta1,1:nc_eta2),error)
+SLL_ALLOCATE(f(1:nc_eta1+1,1:nc_eta2+1),error)
+SLL_ALLOCATE(g(1:nc_eta1+1,1:nc_eta2+1),error)
+SLL_ALLOCATE(x(1:nc_eta1+1,1:nc_eta2+1),error)
+SLL_ALLOCATE(y(1:nc_eta1+1,1:nc_eta2+1),error)
 
-do j=1,nc_eta2
-do i=1,nc_eta1
+do j=1,nc_eta2+1
+do i=1,nc_eta1+1
 
    eta1  = eta1_min+(i-1)*delta_eta1-0.5*(eta1_min+eta2_max)
    eta2  = eta2_min+(j-1)*delta_eta2-0.5*(eta1_min+eta1_max)
@@ -85,8 +85,8 @@ do i_step=1, n_step
 
   time = time+delta_t
 
-  do j = 1, nc_eta2
-    do i = 1, nc_eta1
+  do j = 1, nc_eta2+1
+    do i = 1, nc_eta1+1
       eta1   = (i-1)*delta_eta1
       eta2   = (j-1)*delta_eta2 
       x(i,j) = eta1_min+modulo(eta1-delta_t,eta1_max-eta1_min)
@@ -94,12 +94,12 @@ do i_step=1, n_step
     enddo
   enddo
 
-  call interp2d%interpolate_array( nc_eta1, &
-                                   nc_eta2, &
-                                   f,       &
-                                   x,       &
-                                   y,       &
-                                   g        )
+  call interp2d%interpolate_array( nc_eta1+1, &
+                                   nc_eta2+1, &
+                                   f,         &
+                                   x,         &
+                                   y,         &
+                                   g          )
 
 !  call sll_o_gnuplot_2d( eta1_min, eta1_max, nc_eta1, &
 !                         eta2_min, eta2_max, nc_eta2, &

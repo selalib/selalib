@@ -22,9 +22,9 @@ sll_int32             :: ntau          = 32
 sll_real64            :: final_time    = 0.4_f64
 logical               :: plot_enabled  = .false.
 sll_int32             :: example       = 1
-sll_int32             :: n_0           = 4
-sll_real64            :: v_0           = 0.1_f64
-sll_real64            :: r_m           = 1.85_f64
+sll_real64            :: n_0 
+sll_real64            :: v_0 
+sll_real64            :: r_m 
 
 type(sll_t_fft)                      :: fw_fft
 type(sll_t_fft)                      :: bw_fft
@@ -108,13 +108,7 @@ namelist/list_parameters/ eta_min,  & !dimensions
                        final_time,  & !simulation time
                      plot_enabled,  & !enable outputs
                           example,  & !example number
-                             ntau,  & !ntau
-                              n_0,  & !n0 (example 3 parameter)
-                              v_0,  & !v0 (example 3 parameter)
-                              r_m     !rm (example 3 parameter)
-
-
-! ---- * Parameters * ----
+                             ntau
 
 ! mesh type : cartesian
 ! domain    : square [eta_min eta_max] x [eta_min eta_max]
@@ -148,6 +142,20 @@ delta_eta = (eta_max-eta_min)/real(n,f64)
 nb_step = floor(final_time/k)
 ! tau step size
 h       = 2.0d0 * sll_p_pi/ real(ntau,f64)
+!Case I (example = 31)
+!a(t) = cos^2(t) , v_0 = 0.1   , n_0 = 4,   r_m = 1.85
+!Case II (example = 32)
+!a(t) = cos^2(2t), v_0 = 0.1   , n_0 = 4,   r_m = 0.75
+!Case III (example = 33)
+!a(t) = 0.0      , v_0 = 0.0725, n_0 = 0.3, r_m = 0.75
+select case(example)
+case(31)
+  v_0 = 0.1_f64;     n_0 = 4.0_f64; r_m = 1.85_f64
+case(32)
+  v_0 = 0.1_f64;     n_0 = 4.0_f64; r_m = 0.75_f64
+case(33)
+  v_0 = 0.07225_f64; n_0 = 0.3_f64; r_m = 0.75_f64
+end select
 
 print *,'# N            = ', n
 print *,'# k            = ', k
@@ -213,16 +221,13 @@ SLL_ALLOCATE( F1    (0:ntau-1),err)
 SLL_ALLOCATE( F2    (0:ntau-1),err)
 
 !$OMP CRITICAL
-
-call sll_s_fft_init_c2c_1d(fw_fft ,ntau, tmp1, tmp1_f, sll_p_fft_forward)
-call sll_s_fft_init_c2c_1d(bw_fft ,ntau, tmp1_f, tmp1, sll_p_fft_backward)
-
-call sll_s_fft_init_c2c_1d(fsl_fw, n, tmp, tmp, sll_p_fft_forward)
-call sll_s_fft_init_c2c_1d(fsl_bw, n, tmp, tmp, sll_p_fft_backward)
+call sll_s_fft_init_c2c_1d(fw_fft, ntau, tmp1,   tmp1_f, sll_p_fft_forward)
+call sll_s_fft_init_c2c_1d(bw_fft, ntau, tmp1_f, tmp1,   sll_p_fft_backward)
+call sll_s_fft_init_c2c_1d(fsl_fw, n,    tmp,    tmp,    sll_p_fft_forward)
+call sll_s_fft_init_c2c_1d(fsl_bw, n,    tmp,    tmp,    sll_p_fft_backward)
 !$OMP END CRITICAL
 
 spl_1d => sll_f_new_cubic_spline_1d( n+1, eta_min, eta_max, sll_p_periodic )
-
 
 spl_2d_f => sll_f_new_cubic_spline_2d( n+1,            &
                                        n+1,            &
@@ -232,7 +237,6 @@ spl_2d_f => sll_f_new_cubic_spline_2d( n+1,            &
                                        eta_max,        &
                                        sll_p_periodic, &
                                        sll_p_periodic)
-
 !$OMP MASTER
 print*,"# nthreads     = ", nt
 spl_2d => sll_f_new_cubic_spline_2d( n+1,            &
@@ -287,12 +291,6 @@ do i=1,n+1
 
     else 
 
-      !Case I (example = 31)
-      !a(t) = cos^2(t) , v_0 = 0.1   , n_0 = 4,   r_m = 1.85
-      !Case II (example = 32)
-      !a(t) = cos^2(2t), v_0 = 0.1   , n_0 = 4,   r_m = 0.75
-      !Case III (example = 33)
-      !a(t) = 0.0      , v_0 = 0.0725, n_0 = 0.3, r_m = 0.75
       if (abs(x1(i)) <= r_m) then                                                      
         fh_fsl(i,j) = real(n_0,f64)/sqrt(2.0_f64*sll_p_pi)/v_0 &
                     * exp(-x2(j)**2/2.0d0/v_0**2)
@@ -787,12 +785,12 @@ function cfct1( tau, a, ntau, xi1, xi2, gn )
   sll_comp64 :: xi2
   sll_comp64 :: gn
 
-  sll_comp64 :: ctau
+  sll_comp64 :: ctau, stau
 
-  ctau = cmplx(tau,0.0,f64)
+  ctau = cmplx(cos(tau),0.0,f64)
+  stau = cmplx(sin(tau),0.0,f64)
 
-  cfct1 = ( - cmplx(a,0.,f64) * ( cmplx(0.5,0.0,f64)*sin(2.0*ctau)*xi1 &
-            + sin(ctau)**2*xi2) - sin(ctau)*gn)/cmplx(ntau,0.0,f64)
+  cfct1 = (-cmplx(a,0.,f64)*(ctau*stau*xi1+stau**2*xi2)-stau*gn)/cmplx(ntau,0.0,f64)
 
 end function cfct1
 
@@ -806,13 +804,12 @@ function cfct2( tau, a, ntau, xi1, xi2, gn )
   sll_comp64 :: xi2
   sll_comp64 :: gn
 
-  sll_comp64 :: ctau
+  sll_comp64 :: ctau, stau
 
-  ctau = cmplx(tau,0.0,f64)
+  ctau = cmplx(cos(tau),0.0,f64)
+  stau = cmplx(sin(tau),0.0,f64)
 
-  cfct2 = (  cmplx(a,0.,f64) * &
-           ( cos(ctau)**2*xi1 + cmplx(0.5,0.0,f64)*sin(2.0*ctau)*xi2)  &
-           + cos(ctau)*gn )/cmplx(ntau,0.0,f64)
+  cfct2 = (cmplx(a,0.,f64)*(ctau**2*xi1+ctau*stau*xi2)+ctau*gn)/cmplx(ntau,0.0,f64)
 
 end function cfct2
 
@@ -825,10 +822,14 @@ function rfct1( tau, a, ntau, xi1, xi2, gn )
   sll_real64 :: xi1
   sll_real64 :: xi2
   sll_real64 :: gn
+  sll_real64 :: ctau
+  sll_real64 :: stau
   sll_real64 :: tmp
 
-  tmp = ( - a * ( 0.5_f64*sin(2.0*tau)*xi1 + sin(tau)**2*xi2) &
-          - sin(tau)*gn)/real(ntau,f64)
+  ctau = cos(tau)
+  stau = sin(tau)
+
+  tmp = (-a*(ctau*stau*xi1+stau**2*xi2)-stau*gn)/real(ntau,f64)
 
   rfct1 = cmplx(tmp,0.0,f64)
 
@@ -843,10 +844,14 @@ function rfct2( tau, a, ntau, xi1, xi2, gn )
   sll_real64 :: xi1
   sll_real64 :: xi2
   sll_real64 :: gn
+  sll_real64 :: ctau
+  sll_real64 :: stau
   sll_real64 :: tmp
 
-  tmp = (  a * ( cos(tau)**2*xi1 + 0.5_f64*sin(2.0*tau)*xi2)  &
-         + cos(tau)*gn )/real(ntau,f64)
+  ctau = cos(tau)
+  stau = sin(tau)
+
+  tmp = (a*(ctau**2*xi1+ctau*stau*xi2)+ctau*gn)/real(ntau,f64)
 
   rfct2 = cmplx(tmp,0.0,f64)
 
@@ -888,6 +893,8 @@ enddo
 
 end subroutine cubic_splines_interp_2d
 
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
 subroutine cubic_splines_interp_1d(spl, n, x, e, g)
 
 type(sll_t_cubic_spline_1d), pointer :: spl
@@ -914,6 +921,7 @@ end subroutine cubic_splines_interp_1d
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 function a( tau, example ) 
+
   sll_real64 :: a
   sll_real64 :: tau
   sll_int32  :: example
@@ -927,7 +935,6 @@ function a( tau, example )
   end if
 
 end function 
-
 
 end program test_deposit_cubic_splines
 
