@@ -422,7 +422,8 @@ subroutine sll_s_xdmf_rect2d_nodes( file_name,   &
                                     eta1,        &
                                     eta2,        &
                                     file_format, &
-                                    iplot        ) 
+                                    iplot,       & 
+                                    time         ) 
 
 sll_real64, intent(in)       :: array(:,:) !< data array
 sll_real64, intent(in)       :: eta1(:)    !< x data
@@ -434,7 +435,8 @@ sll_int32                    :: file_id    !< xmf file unit number
 sll_int32                    :: nx1        !< x nodes number
 sll_int32                    :: nx2        !< y nodes number
 character(len=4), optional   :: file_format!< file format "HDF5" or "Binary"
-sll_int32, optional          :: iplot      !< plot index
+sll_int32,  optional         :: iplot      !< plot index
+sll_real64, optional         :: time       !< time
 sll_int32                    :: i, j
 character(len=4)             :: cplot
 #ifndef NOHDF5
@@ -454,6 +456,9 @@ else
   call sll_s_xml_file_create(file_name//".xmf",file_id,error)
 end if
 write(file_id,"(a)")"<Grid Name='mesh' GridType='Uniform'>"
+if (present(time)) then
+  write(file_id,"(a,f12.6,a)") "<Time Value='",time,"'/>"
+end if
 write(file_id,"(a,2i5,a)")"<Topology TopologyType='2DRectMesh' NumberOfElements='", &
                           nx2,nx1,"'/>"
 write(file_id,"(a)")"<Geometry GeometryType='VXVY'>"

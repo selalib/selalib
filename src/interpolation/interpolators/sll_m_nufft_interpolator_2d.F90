@@ -303,8 +303,11 @@ do j = 1, nc2
   end do
 end do
 
-call sll_s_nufft_2d_interpolate_array_values( this%nufft, &
-  data_in(1:nc1,1:nc2), eta1, eta2, data_out(1:nc1,1:nc2) )
+call sll_s_nufft_2d_interpolate_array_values( this%nufft,           &
+                                              data_in(1:nc1,1:nc2), &
+                                              eta1,                 &
+                                              eta2,                 &
+                                              data_out(1:nc1,1:nc2) )
 
 data_out(nc1+1,:) = data_out(1,:)
 data_out(:,nc2+1) = data_out(:,1)
