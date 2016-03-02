@@ -56,9 +56,9 @@ private
 !> Where the diverse interpolators diverge is in the way to initialize them.
 type, extends(sll_c_interpolator_2d) :: sll_t_nufft_interpolator_2d
 
-  sll_int32                      :: npts1          !< Number of points along x direction
-  sll_int32                      :: npts2          !< Number of points along y direction
-  type(sll_t_nufft_2d)           :: nufft          !< The nufft object
+  sll_int32                      :: num_cells1    !< Number of cells along x
+  sll_int32                      :: num_cells2    !< Number of cells along y 
+  type(sll_t_nufft_2d)           :: nufft         !< The nufft object
   sll_real64                     :: eta1_min
   sll_real64                     :: eta1_max
   sll_real64                     :: eta2_min
@@ -126,19 +126,19 @@ sll_real64, intent(in)                            :: eta1_max
 sll_real64, intent(in)                            :: eta2_min
 sll_real64, intent(in)                            :: eta2_max
 
-interpolator%npts1    = npts1
-interpolator%npts2    = npts2
-interpolator%eta1_min = eta1_min
-interpolator%eta1_max = eta1_max
-interpolator%eta2_min = eta2_min
-interpolator%eta2_max = eta2_max
+interpolator%num_cells1 = npts1-1
+interpolator%num_cells2 = npts2-1
+interpolator%eta1_min   = eta1_min
+interpolator%eta1_max   = eta1_max
+interpolator%eta2_min   = eta2_min
+interpolator%eta2_max   = eta2_max
 
 call sll_s_nufft_2d_init(              &
      interpolator%nufft,               &
-     npts1,                            &
+     npts1-1,                          &
      eta1_min,                         &
      eta1_max,                         &
-     npts2,                            &
+     npts2-1,                          &
      eta2_min,                         &
      eta2_max)
 
@@ -160,8 +160,13 @@ sll_real64, dimension(:),           intent(in), optional :: eta1_coords
 sll_real64, dimension(:),           intent(in), optional :: eta2_coords
 sll_int32,                          intent(in), optional :: size_eta1_coords
 sll_int32,                          intent(in), optional :: size_eta2_coords
+sll_int32 :: nc1, nc2
 
-call sll_s_nufft_2d_compute_fft( interpolator%nufft, data_array )
+nc1 = interpolator%num_cells1
+nc2 = interpolator%num_cells2
+
+call sll_s_nufft_2d_compute_fft( interpolator%nufft, &
+                                 data_array(1:nc1,1:nc2) )
 
 end subroutine compute_interpolants_nufft2d
 
@@ -227,8 +232,19 @@ sll_real64, dimension(:,:),          intent(in) :: eta2
 sll_real64, dimension(:,:),          intent(in) :: data_in
 sll_real64,                          intent(out):: data_out(num_points1,num_points2)
 
-call sll_s_nufft_2d_interpolate_array_values( this%nufft, &
-  data_in, eta1, eta2, data_out )
+sll_int32 :: nc1, nc2
+
+nc1 = this%num_cells1
+nc2 = this%num_cells2
+
+call sll_s_nufft_2d_interpolate_array_values( this%nufft,           &
+                                              data_in(1:nc1,1:nc2), &
+                                              eta1(1:nc1,1:nc2),    &
+                                              eta2(1:nc1,1:nc2),    &
+                                              data_out(1:nc1,1:nc2) )
+
+data_out(nc1+1,:) = data_out(1,:)
+data_out(:,nc2+1) = data_out(:,1)
 
 end subroutine nufft_interpolate2d
 
@@ -263,27 +279,35 @@ sll_real64                                     :: delta_eta2
 sll_int32                                      :: i
 sll_int32                                      :: j
 sll_int32                                      :: error
+sll_int32                                      :: nc1
+sll_int32                                      :: nc2
+
+nc1 = this%num_cells1
+nc2 = this%num_cells2
 
 eta1_min   = this%eta1_min
 eta1_max   = this%eta1_max
 eta2_min   = this%eta2_min
 eta2_max   = this%eta2_max
-delta_eta1 = (this%eta1_max-this%eta1_min)/real(this%npts1-1,f64)
-delta_eta2 = (this%eta2_max-this%eta2_min)/real(this%npts2-1,f64)
+delta_eta1 = (this%eta1_max-this%eta1_min)/real(this%num_cells1,f64)
+delta_eta2 = (this%eta2_max-this%eta2_min)/real(this%num_cells2,f64)
 
-SLL_ALLOCATE(eta1(1:num_points1,1:num_points2), error)
-SLL_ALLOCATE(eta2(1:num_points1,1:num_points2), error)
-do j = 1, num_points2
-  do i = 1, num_points1
-    eta1(i,j)= (i-1)*delta_eta1
-    eta2(i,j)= (j-1)*delta_eta2
-    eta1(i,j)= eta1_min + modulo(eta1(i,j)+alpha1(i,j),eta1_max-eta1_min)
-    eta2(i,j)= eta2_min + modulo(eta2(i,j)+alpha2(i,j),eta2_max-eta2_min)
+SLL_ALLOCATE(eta1(1:nc1,1:nc2), error)
+SLL_ALLOCATE(eta2(1:nc1,1:nc2), error)
+do j = 1, nc2
+  do i = 1, nc1
+    eta1(i,j) = (i-1)*delta_eta1
+    eta2(i,j) = (j-1)*delta_eta2
+    eta1(i,j) = eta1_min + modulo(eta1(i,j)+alpha1(i,j),eta1_max-eta1_min)
+    eta2(i,j) = eta2_min + modulo(eta2(i,j)+alpha2(i,j),eta2_max-eta2_min)
   end do
 end do
 
 call sll_s_nufft_2d_interpolate_array_values( this%nufft, &
-  data_in, eta1, eta2, data_out )
+  data_in(1:nc1,1:nc2), eta1, eta2, data_out(1:nc1,1:nc2) )
+
+data_out(nc1+1,:) = data_out(1,:)
+data_out(:,nc2+1) = data_out(:,1)
 
 end subroutine nufft_interpolate2d_disp
 
@@ -310,7 +334,7 @@ sll_real64, dimension(:),           intent(in),   optional :: knots2
 sll_int32,                          intent(in),   optional :: size_knots1
 sll_int32,                          intent(in),   optional :: size_knots2
 
-print*, interpolator%npts1
+print*, interpolator%num_cells1, interpolator%num_cells2
 
 if(present(coeffs_1d))     print*,'coeffs_1d present but not used'
 if(present(coeffs_2d))     print*,'coeffs_2d present but not used'
