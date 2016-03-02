@@ -1,8 +1,9 @@
 ADD_EXECUTABLE( test_kernel_smoother_spline_1d test_kernel_smoother_spline_1d.F90)
 TARGET_LINK_LIBRARIES( test_kernel_smoother_spline_1d sll_kernel_smoothers sll_particle_types)
 ADD_TEST( NAME kernel_smoother_spline_1d COMMAND test_kernel_smoother_spline_1d)
-
+SET_TESTS_PROPERTIES(kernel_smoother_spline_1d PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
 
 ADD_EXECUTABLE( test_kernel_smoother_spline_2d test_kernel_smoother_spline_2d.F90)
 TARGET_LINK_LIBRARIES( test_kernel_smoother_spline_2d sll_kernel_smoothers sll_particle_types)
 ADD_TEST( NAME kernel_smoother_spline_2d COMMAND test_kernel_smoother_spline_2d)
+SET_TESTS_PROPERTIES(kernel_smoother_spline_2d PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")

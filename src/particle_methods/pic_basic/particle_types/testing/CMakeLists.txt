@@ -3,3 +3,9 @@ TARGET_LINK_LIBRARIES( test_particle_group_1d2v sll_particle_types )
 
 ADD_EXECUTABLE( test_particle_group_2d2v test_particle_group_2d2v.F90 )
 TARGET_LINK_LIBRARIES( test_particle_group_2d2v sll_particle_types )
+
+ADD_TEST(NAME particle_group_1d2v COMMAND test_particle_group_1d2v)
+SET_TESTS_PROPERTIES(particle_group_1d2v PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
+
+ADD_TEST(NAME particle_group_2d2v COMMAND test_particle_group_2d2v)
+SET_TESTS_PROPERTIES(particle_group_2d2v PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
