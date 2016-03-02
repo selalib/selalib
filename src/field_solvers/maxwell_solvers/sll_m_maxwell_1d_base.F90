@@ -36,23 +36,34 @@ module sll_m_maxwell_1d_base
      !     solve !< Solve Amperes law and Faraday equation
      procedure(update_dofs_function), deferred :: &
           compute_rhs_from_function !< Compute the right-hand-side for a given function f. For Galerkin it is the inner product with the basis functions. For Collocation it is simply a function evaluation at the grid points.
-     procedure(norm_squarred), deferred :: &
-          L2norm_squarred !< Square of the L2norm
+     procedure(norm_squared), deferred :: &
+          L2norm_squared !< Square of the L2norm
      procedure(update_dofs_function), deferred :: &
             L2projection !< L2 projection
+     procedure(empty), deferred :: &
+          free !< destructor
 
   end type sll_c_maxwell_1d_base
 
 !---------------------------------------------------------------------------!
   abstract interface
-     function norm_squarred(self, coefs_dofs, degree) result( r )
+     subroutine empty(self) 
+       import sll_c_maxwell_1d_base
+       class( sll_c_maxwell_1d_base)                    :: self !< Maxwell solver object.
+       
+     end subroutine empty
+  end interface
+
+!---------------------------------------------------------------------------!
+  abstract interface
+     function norm_squared(self, coefs_dofs, degree) result( r )
        use sll_m_working_precision
        import sll_c_maxwell_1d_base
        class( sll_c_maxwell_1d_base)                    :: self !< Maxwell solver object.
        sll_real64                                     :: coefs_dofs(:) !< Values of the coefficient vectors for each DoF
        sll_int32                                      :: degree !< Degree of the basis function used for whcih the DoF-coefficients are given.
        sll_real64                                     :: r
-     end function norm_squarred
+     end function norm_squared
   end interface
 
 !---------------------------------------------------------------------------!
