@@ -53,7 +53,7 @@ contains
     class(init_gaussian_2d), intent(inout)       :: init_obj
     class(sll_coordinate_transformation_2d_base), pointer :: transf
     sll_real64, dimension(:,:), intent(out)    :: data_out
-    class(sll_cartesian_mesh_2d), pointer         :: mesh
+    class(sll_t_cartesian_mesh_2d), pointer         :: mesh
     sll_int32  :: i
     sll_int32  :: j
     sll_int32  :: num_pts1
