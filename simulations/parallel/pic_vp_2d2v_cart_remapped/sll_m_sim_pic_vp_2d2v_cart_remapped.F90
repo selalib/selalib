@@ -880,7 +880,7 @@ contains
       !> In the time loop, the field \f$E^{n+1}\f$ is obtained with a call to the Poisson solver.  Again, sim\%rho has
       !> the proper sign so that we do not need to multiply it by an additional physical constant.
 
-      ! [[file:~/selalib/src/poisson_solvers/sll_poisson_2d_base.F90::compute_E_from_rho]]
+      ! [[file:~/selalib/src/poisson_solvers/sll_c_poisson_2d_base.F90::compute_E_from_rho]]
       call sim%poisson%compute_E_from_rho( sim%E1, sim%E2, sim%rho )
 
       !! -- --  diagnostics (plotting) [begin]  -- --

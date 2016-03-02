@@ -62,7 +62,7 @@ module sll_m_poisson_2d_mudpack_curvilinear_old
 
   use sll_m_poisson_2d_base, only: &
     sll_c_poisson_2d_base, &
-    sll_f_function_of_position
+    sll_i_function_of_position
 
   implicit none
 
@@ -652,6 +652,17 @@ contains
     
   end subroutine compute_phi_from_rho_2d_mudpack_curvilinear
 
+<<<<<<< HEAD:src/field_solvers/poisson_solvers/sll_m_poisson_2d_mudpack_curvilinear_solver_old.F90
+    ! solves E = -\nabla Phi in 2d
+!    subroutine compute_E_from_phi_2d_fft( poisson, phi, E1, E2 )
+!      class(sll_t_poisson_2d_fft_solver) :: poisson
+!      sll_real64,dimension(:,:),intent(in) :: phi
+!      sll_real64,dimension(:,:),intent(out) :: E1
+!      sll_real64,dimension(:,:),intent(out) :: E2
+!    end subroutine compute_E_from_phi_2d_fft
+
+=======
+>>>>>>> develop:src/field_solvers/poisson_solvers/sll_m_poisson_2d_mudpack_curvilinear_old.F90
     ! solves E = -\nabla Phi with -\Delta phi = rho in 2d 
     subroutine compute_E_from_rho_2d_mudpack_curvilinear( poisson, E1, E2, rho )
       class(poisson_2d_mudpack_curvilinear_old) :: poisson
@@ -689,7 +700,7 @@ contains
   
   subroutine compute_rhs_from_function_2d_mudpack_curvilinear(poisson, func, coefs_dofs)
     class( poisson_2d_mudpack_curvilinear_solver)  :: poisson !< Poisson solver object.
-    procedure(sll_f_function_of_position)          :: func !< Function to be projected.
+    procedure(sll_i_function_of_position)          :: func !< Function to be projected.
     sll_real64, intent(out)                        :: coefs_dofs(:) !< Coefficients of the projection.
     
     print*, 'compute_rhs_from_function not implemented for poisson_2d_mudpack_curvilinear_solver.'
