@@ -14,7 +14,7 @@ module sll_m_sim_4d_drift_kinetic_cartesian_finite_volume
   use sll_m_gnuplot_parallel
   implicit none
 
-  type, extends(sll_simulation_base_class) :: &
+  type, extends(sll_c_simulation_base_class) :: &
        sll_simulation_4d_drift_kinetic_cart_finite_volume
      ! Parallel environment parameters
      sll_int32  :: world_size
