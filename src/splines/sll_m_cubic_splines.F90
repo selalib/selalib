@@ -248,7 +248,7 @@ MAKE_GET_SLOT_FUNCTION(get_x2_delta_cs2d,sll_t_cubic_spline_2d,x2_delta,sll_real
   ! The following parameter determines the problem size at which the alternative
   ! spline algorithm is used.
 
-#define NUM_TERMS 27  
+#define NUM_TERMS 27
 
 #endif /* DOXYGEN_SHOULD_SKIP_THIS */
 
@@ -312,26 +312,26 @@ MAKE_GET_SLOT_FUNCTION(get_x2_delta_cs2d,sll_t_cubic_spline_2d,x2_delta,sll_real
           sll_f_new_cubic_spline_1d%slope_R = 0.0_f64
        end if
        if( sll_f_new_cubic_spline_1d%use_fast_algorithm .eqv. .false. ) then
-          SLL_ALLOCATE(sll_f_new_cubic_spline_1d%a(3*num_points),ierr)
-          SLL_ALLOCATE(sll_f_new_cubic_spline_1d%cts(7*num_points),ierr)
-          SLL_ALLOCATE(sll_f_new_cubic_spline_1d%ipiv(num_points),ierr)
+          SLL_ALLOCATE(sll_f_new_cubic_spline_1d%a(3*(num_points-1)),ierr)
+          SLL_ALLOCATE(sll_f_new_cubic_spline_1d%cts(7*(num_points-1)),ierr)
+          SLL_ALLOCATE(sll_f_new_cubic_spline_1d%ipiv(num_points-1),ierr)
           sll_f_new_cubic_spline_1d%f_aux => null() ! not needed in periodic case
           ! Initialize and factorize the tridiagonal system. See detailed
           ! comment below regarding the structure of this matrix.
           sll_f_new_cubic_spline_1d%a(1) = 1.0_f64/6.0_f64
           sll_f_new_cubic_spline_1d%a(2) = 4.0_f64/6.0_f64
           sll_f_new_cubic_spline_1d%a(3) = 1.0_f64/6.0_f64
-          sll_f_new_cubic_spline_1d%a(3*num_points-2) = 1.0_f64/6.0_f64
-          sll_f_new_cubic_spline_1d%a(3*num_points-1) = 4.0_f64/6.0_f64
-          sll_f_new_cubic_spline_1d%a(3*num_points  ) = 1.0_f64/6.0_f64
-          do i=1,num_points-2
+          sll_f_new_cubic_spline_1d%a(3*num_points-5) = 1.0_f64/6.0_f64
+          sll_f_new_cubic_spline_1d%a(3*num_points-4) = 4.0_f64/6.0_f64
+          sll_f_new_cubic_spline_1d%a(3*num_points-3  ) = 1.0_f64/6.0_f64
+          do i=1,num_points-3 
              sll_f_new_cubic_spline_1d%a(3*i+1) = 1.0_f64/6.0_f64
              sll_f_new_cubic_spline_1d%a(3*i+2) = 4.0_f64/6.0_f64
              sll_f_new_cubic_spline_1d%a(3*i+3) = 1.0_f64/6.0_f64
           end do
           call sll_s_setup_cyclic_tridiag( &
                sll_f_new_cubic_spline_1d%a, &
-               num_points, &
+               num_points-1, &
                sll_f_new_cubic_spline_1d%cts, &
                sll_f_new_cubic_spline_1d%ipiv )
        else
@@ -695,19 +695,20 @@ MAKE_GET_SLOT_FUNCTION(get_x2_delta_cs2d,sll_t_cubic_spline_2d,x2_delta,sll_real
             spline%n_points-1, ' . Passed size: ', size(f)
        STOP
     end if
-    np = spline%n_points
     if( spline%use_fast_algorithm .eqv. .false. ) then
+       np = spline%n_points - 1 ! remove periodic point for this algorithm
        call sll_s_solve_cyclic_tridiag_double( &
             spline%cts, &
             spline%ipiv, &
             f, &
-            spline%n_points, &
+            np, &
             spline%coeffs(1:np) )
        ! and set the periodic BC by setting the coefficient values
-       spline%coeffs(0)    = spline%coeffs(np-1)
-       spline%coeffs(np+1) = spline%coeffs(2)
-       spline%coeffs(np+2) = spline%coeffs(3)
+       spline%coeffs(0)    = spline%coeffs(np)
+       spline%coeffs(np+1) = spline%coeffs(1)
+       spline%coeffs(np+2) = spline%coeffs(2)
     else
+       np = spline%n_points
        fp     => f
        d      => spline%d
        coeffs => spline%coeffs(0:np+2)
