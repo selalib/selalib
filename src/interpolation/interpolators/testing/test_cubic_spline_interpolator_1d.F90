@@ -29,8 +29,10 @@ sll_real64, allocatable, dimension(:) :: coord
 sll_real64, allocatable, dimension(:) :: gdata
 
 sll_int32 :: ierr, i
-sll_int32, parameter :: n = 32
+sll_int32, parameter :: n = 64
 sll_int32, parameter :: m = 512
+sll_real64, parameter :: tol = 1.d-3 ! tolerance for error
+
 sll_real64  :: x_min, x_max, delta
 
 SLL_ALLOCATE(coord(n), ierr)
@@ -46,6 +48,7 @@ delta = (x_max - x_min ) / real(n-1,f64)
 do i=1,n
    coord(i) = (i-1)*delta
    pdata(i) = f(coord(i))
+!print*, i,coord(i), pdata(i)
 end do
 
 delta = (x_max - x_min ) / real(m-1,f64) 
@@ -65,18 +68,23 @@ do i = 1, m
 end do
 
 error = maxval(abs(gdata-fdata))
-print*, 'Successful, exiting program.'
-print*, 'PASSED'
+print*, 'error=', error
+if (error < tol) then
+   print*, 'Successful, exiting program.'
+   print*, 'PASSED'
+else
+   print*, 'FAILED'
+end if
 
 contains
 
-function f(x)
+  function f(x)
 
-  sll_real64 :: x
-  sll_real64 :: f
+    sll_real64 :: x
+    sll_real64 :: f
 
-  f = 2.0_f64*(sin(x) + 2.5_f64 + cos(x))
+    f = 2.0_f64*(sin(x) + 2.5_f64 + cos(x))
 
-end function f
+  end function f
 
 end program cubic_spline_interpolator_1d
