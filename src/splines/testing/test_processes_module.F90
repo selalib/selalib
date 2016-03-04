@@ -116,7 +116,7 @@ module test_processes_module
        sll_real64, intent(in) :: x
        sll_real64, intent(in) :: y
        type(sll_t_cubic_spline_2d), pointer :: spline
-     end function spline_interpolator_2d
+     END function spline_interpolator_2d
   end interface
 
 contains
@@ -148,54 +148,54 @@ contains
     print *, 'Spline module unit tester'
     print *, 'allocate data array'
     
-    SLL_ALLOCATE(data(NP), err)
-    SLL_ALLOCATE(deriv(NP), err)
-    SLL_ALLOCATE(out(NP), err)
-    SLL_ALLOCATE(coordinates(NP), err)
+    SLL_ALLOCATE(data(np), err)
+    SLL_ALLOCATE(deriv(np), err)
+    SLL_ALLOCATE(out(np), err)
+    SLL_ALLOCATE(coordinates(np), err)
     
     print *, 'initialize data and coordinates array'
-    do i=1,NP
-       phase          = real(i-1,f64)*(XMAX-XMIN)/real(NP-1,f64) + XMIN
+    do i=1,np
+       phase          = real(i-1,f64)*(xmax-xmin)/real(np-1,f64) + xmin
        data(i)        = f(phase, i_test)
        deriv(i)       = fprime(phase, i_test)
        coordinates(i) = phase
     end do
      
     print *, 'proceed to allocate the spline...'
-    sp1 =>  sll_f_new_cubic_spline_1d( NP, XMIN, XMAX, sll_p_periodic )
+    sp1 =>  sll_f_new_cubic_spline_1d( np, xmin, xmax, sll_p_periodic )
     call sll_s_compute_cubic_spline_1d( data, sp1 )
     sp2 =>  sll_f_new_cubic_spline_1d( &
-         NP, &
-         XMIN, &
-         XMAX, &
+         np, &
+         xmin, &
+         xmax, &
          sll_p_hermite, &
-         fprime(XMIN, i_test), &
-         fprime(XMAX, i_test) )
+         fprime(xmin, i_test), &
+         fprime(xmax, i_test) )
     call sll_s_compute_cubic_spline_1d( data, sp2 )
     
     print *, 'cumulative errors: '
-    print *, 'periodic case, NP-1 points: '
-    print *, 'interpolating individual values from 1 to NP-1:'
-    do i=1, NP-1
-       x = real(i-1,f64)*(XMAX-XMIN)/real(NP-1,f64)+XMIN
+    print *, 'periodic case, np-1 points: '
+    print *, 'interpolating individual values from 1 to np-1:'
+    do i=1, np-1
+       x = real(i-1,f64)*(xmax-xmin)/real(np-1,f64)+xmin
        accumulator1 = accumulator1 + abs(data(i) - sll_f_interpolate_from_interpolant_value(x, sp1))
     end do
     print *, 'checking periodicity:'
-    print *, 'difference between values at points 1 and NP: ', &
-         abs(data(1) - sll_f_interpolate_from_interpolant_value(XMAX,sp1))
+    print *, 'difference between values at points 1 and np: ', &
+         abs(data(1) - sll_f_interpolate_from_interpolant_value(xmax,sp1))
     print *, 'interpolating the whole array:'
-    call sll_s_interpolate_from_interpolant_array(coordinates, out, NP-1, sp1)
-    do i=1, NP-1
+    call sll_s_interpolate_from_interpolant_array(coordinates, out, np-1, sp1)
+    do i=1, np-1
        accumulator3 = accumulator3 + abs(data(i) - out(i))
     end do
     
-    print *, 'hermite case, NP points: '
-    do i=1, NP
-       x = real(i-1,f64)*(XMAX-XMIN)/real(NP-1,f64) + XMIN
+    print *, 'hermite case, np points: '
+    do i=1, np
+       x = real(i-1,f64)*(xmax-xmin)/real(np-1,f64) + xmin
        accumulator2 = accumulator2 + abs(data(i) - sll_f_interpolate_from_interpolant_value(x, sp2))
     end do
-    call sll_s_interpolate_from_interpolant_array(coordinates, out, NP, sp2)
-    do i=1, NP
+    call sll_s_interpolate_from_interpolant_array(coordinates, out, np, sp2)
+    do i=1, np
        accumulator4 = accumulator4 + abs(data(i) - out(i))
     end do
      
@@ -203,19 +203,19 @@ contains
     print *, 'RESULTS: '
     print *, 'Periodic case: '
     print *, 'average error at the nodes (single values) = '
-    print *, accumulator1/real(NP,f64)
+    print *, accumulator1/real(np,f64)
     print *, 'average error at the nodes (whole array) = '
-    print *, accumulator3/real(NP,f64)
+    print *, accumulator3/real(np,f64)
     write (*,'(a,f8.5)')   'original data(0)    = ', data(1)
     write (*,'(a,f20.15)') &
-         'interpolated        = ', sll_f_interpolate_from_interpolant_value( XMIN,sp1)
+         'interpolated        = ', sll_f_interpolate_from_interpolant_value( xmin,sp1)
     
-    write (*,'(a,f20.15)')   'original data((NP-1)/4) = ', data((NP-1)/4)
+    write (*,'(a,f20.15)')   'original data((np-1)/4) = ', data((np-1)/4)
     write (*,'(a,f20.15)') &
-         'interpolated        = ', sll_f_interpolate_from_interpolant_value( (XMAX-XMIN)/4.0+XMIN,sp1)
+         'interpolated        = ', sll_f_interpolate_from_interpolant_value( (xmax-xmin)/4.0+xmin,sp1)
      
-    if ( (accumulator1/real(NP,f64) >= 1.0e-15) .or. &
-         (accumulator3/real(NP,f64) >= 1.0e-15) ) then 
+    if ( (accumulator1/real(np,f64) >= 1.0d-14) .or. &
+         (accumulator3/real(np,f64) >= 1.0d-14) ) then 
        ok = 0
        print*, 'i_test =', i_test
        print *, 'splines unit test stopped by periodic spline1d test failure'
@@ -225,17 +225,17 @@ contains
     print *, '**************************** '
     print *, 'Hermite case: '
     print *, 'average error at the nodes = '
-    print *, accumulator2/real(NP,f64)
+    print *, accumulator2/real(np,f64)
     write (*,'(a,f8.5)')   'original data(0)    = ', data(1)
     write (*,'(a,f20.15)') &
          'interpolated        = ', sll_f_interpolate_from_interpolant_value( 0.0_f64,sp2)
-    write (*,'(a,f20.15)')   'original data((NP-1)/4) = ', data((NP-1)/4+1)
+    write (*,'(a,f20.15)')   'original data((np-1)/4) = ', data((np-1)/4+1)
     write (*,'(a,f20.15)') &
-         'interpolated        = ', sll_f_interpolate_from_interpolant_value( (XMAX-XMIN)/4.0,sp2)
+         'interpolated        = ', sll_f_interpolate_from_interpolant_value( (xmax-xmin)/4.0,sp2)
      print *, 'spline coefficients: '
      
-    if ( (accumulator2/real(NP,f64) >= 1.0e-15) .or. &
-         (accumulator4/real(NP,f64) >= 1.0e-15) ) then
+    if ( (accumulator2/real(np,f64) >= 1.0d-14) .or. &
+         (accumulator4/real(np,f64) >= 1.0d-14) ) then
        ok = 0
        print*, 'i_test =', i_test
        print *, 'splines unit test stopped by Hermite slpine1d test failure'
@@ -244,8 +244,8 @@ contains
     if (i_test<=12) then 
        print *, '---------------------------------------------'
        print *, 'DERIVATIVES TEST'
-       do i=1, NP
-          phase = real(i-1,f64)*(XMAX-XMIN)/real(NP-1,f64)+XMIN
+       do i=1, np
+          phase = real(i-1,f64)*(xmax-xmin)/real(np-1,f64)+xmin
           accumulator5 = accumulator5 + abs(deriv(i) - &
                          sll_f_interpolate_derivative(phase, sp1))
           accumulator6 = accumulator6 + abs(deriv(i) - &
@@ -253,13 +253,13 @@ contains
        end do
     
        if ( &
-            (accumulator5/real(NP,f64) > 1.0e-6) .or. &
-            (accumulator6/real(NP,f64) > 1.0e-6) ) then
+            (accumulator5/real(np,f64) > 1.0d-6) .or. &
+            (accumulator6/real(np,f64) > 1.0d-6) ) then
           ok = 0
           print *, 'average error at the nodes (single values, periodic) = '
-          print *, accumulator5/real(NP,f64)
+          print *, accumulator5/real(np,f64)
           print *, 'average error at the nodes (single values, hermite) = '
-          print *, accumulator6/real(NP,f64)
+          print *, accumulator6/real(np,f64)
           print *, 'i_test =', i_test
           print *, 'splines unit test stopped by DERIVATIVES TEST failure'
           stop
@@ -292,122 +292,122 @@ contains
     sll_real64, allocatable, dimension(:)   :: coordinates_i
     sll_real64, allocatable, dimension(:)   :: coordinates_j
 
-    SLL_ALLOCATE(data_2d(NPX1, NPX2), err)        
-    SLL_ALLOCATE(coordinates_i(NPX1),err)
-    SLL_ALLOCATE(coordinates_j(NPX2),err)
+    SLL_ALLOCATE(data_2d(npx1, npx2), err)        
+    SLL_ALLOCATE(coordinates_i(npx1),err)
+    SLL_ALLOCATE(coordinates_j(npx2),err)
         
-    do i=1, NPX1
-       coordinates_i(i) = real(i-1,f64)*(X1MAX-X1MIN)/real(NPX1-1,f64)+X1MIN
+    do i=1, npx1
+       coordinates_i(i) = real(i-1,f64)*(x1max-x1min)/real(npx1-1,f64)+x1min
     end do
         
-    do j=1, NPX2
-       coordinates_j(j) = real(j-1,f64)*(X2MAX-X2MIN)/real(NPX2-1,f64)+X2MIN
+    do j=1, npx2
+       coordinates_j(j) = real(j-1,f64)*(x2max-x2min)/real(npx2-1,f64)+x2min
     end do
         
-    do j=1,NPX2
+    do j=1,npx2
        phase_x2 = coordinates_j(j)
-       do i=1,NPX1
+       do i=1,npx1
           phase_x1 = coordinates_i(i)
           data_2d(i,j) = f(phase_x1, i_test)*f(phase_x2, j_test)
        end do
     end do
         
     ! Test the periodic-periodic spline2d 
-    sp2d_1 => sll_f_new_cubic_spline_2d( NPX1, NPX2, &
-         X1MIN, X1MAX, &
-         X2MIN, X2MAX, &
+    sp2d_1 => sll_f_new_cubic_spline_2d( npx1, npx2, &
+         x1min, x1max, &
+         x2min, x2max, &
          sll_p_periodic, sll_p_periodic )
     call sll_s_compute_cubic_spline_2d( data_2d, sp2d_1 )
     acc_2D = 0.0_f64
-    do j=1, NPX2
-       do i=1, NPX1
+    do j=1, npx2
+       do i=1, npx1
           x1 = coordinates_i(i)
           x2 = coordinates_j(j)
           acc_2D = acc_2D + &
                abs(data_2d(i,j) - sll_f_interpolate_value_2d(x1,x2,sp2d_1))
        end do
     end do
-    if (acc_2D/(NPX1*NPX2)>=1.e-14) then
+    if (acc_2D/(npx1*npx2)>=1.d-14) then
        ok = 0
        print*, '(i_test, j_test) = (', i_test, ',', j_test,')' 
        print *, 'Average cumulative error, spline2d, periodic-periodic: ', &
-         acc_2D/(NPX1*NPX2)
+         acc_2D/(npx1*npx2)
        print *, 'splines unit test stopped by periodic-periodic spline2d test failure'
        stop
     endif
     ! Test the Hermite-periodic spline2d
     !print *, 'Testing hermite-periodic spline. Test 1'
-    sp2d_2 => sll_f_new_cubic_spline_2d( NPX1, NPX2, &
-         X1MIN, X1MAX, &
-         X2MIN, X2MAX, &
+    sp2d_2 => sll_f_new_cubic_spline_2d( npx1, npx2, &
+         x1min, x1max, &
+         x2min, x2max, &
          sll_p_hermite, sll_p_periodic, &
-         const_slope_x1_min = fprime(X1MIN, i_test), &
-         const_slope_x1_max = fprime(X1MAX, i_test) )
+         const_slope_x1_min = fprime(x1min, i_test), &
+         const_slope_x1_max = fprime(x1max, i_test) )
     call sll_s_compute_cubic_spline_2d( data_2d, sp2d_2 )
     acc_2D = 0.0_f64
-    do j=1, NPX2
-       do i=1, NPX1
+    do j=1, npx2
+       do i=1, npx1
           x1 = coordinates_i(i)
           x2 = coordinates_j(j)
           acc_2D = acc_2D + &
                abs(data_2d(i,j) - sll_f_interpolate_value_2d(x1,x2,sp2d_2))
        end do
     end do
-    if (acc_2D/(NPX1*NPX2)>=1.e-14) then
+    if (acc_2D/(npx1*npx2)>=1.d-14) then
        ok = 0
        print*, '(i_test, j_test) = (', i_test, ',', j_test,')' 
        print *, 'Average cumulative error, spline2d, Hermite-periodic: ', &
-         acc_2D/(NPX1*NPX2)
+         acc_2D/(npx1*npx2)
        print *, 'splines unit test stopped by Hermite-periodic spline2d test failure'
        stop
     endif
     ! Test the periodic-Hermite spline2d
-    sp2d_3 => sll_f_new_cubic_spline_2d( NPX1, NPX2, &
-         X1MIN, X1MAX, &
-         X2MIN, X2MAX, &
+    sp2d_3 => sll_f_new_cubic_spline_2d( npx1, npx2, &
+         x1min, x1max, &
+         x2min, x2max, &
          sll_p_periodic, sll_p_hermite, &
-         const_slope_x2_min = fprime(X2MIN, j_test), &
-         const_slope_x2_max = fprime(X2MAX, j_test) )
+         const_slope_x2_min = fprime(x2min, j_test), &
+         const_slope_x2_max = fprime(x2max, j_test) )
     call sll_s_compute_cubic_spline_2d( data_2d, sp2d_3 )
     acc_2D = 0.0_f64
-    do j=1, NPX2
-       do i=1, NPX1
+    do j=1, npx2
+       do i=1, npx1
           x1 = coordinates_i(i)
           x2 = coordinates_j(j)
           acc_2D = acc_2D + &
                abs(data_2d(i,j) - sll_f_interpolate_value_2d(x1,x2,sp2d_3))
        end do
     end do
-    if (acc_2D/(NPX1*NPX2)>=1.e-14) then
+    if (acc_2D/(npx1*npx2)>=1.d-14) then
        ok = 0
        print*, '(i_test, j_test) = (', i_test, ',', j_test,')' 
        print *, 'Average cumulative error, spline2d, periodic-Hermite: ', &
-         acc_2D/(NPX1*NPX2)
+         acc_2D/(npx1*npx2)
        print *, 'splines unit test stopped by periodic-Hermite spline2d test failure'
        stop
     endif
     ! Test the Hermite-Hermite spline2d
-    sp2d_4 => sll_f_new_cubic_spline_2d( NPX1, NPX2, &
-         X1MIN, X1MAX, &
-         X2MIN, X2MAX, &
+    sp2d_4 => sll_f_new_cubic_spline_2d( npx1, npx2, &
+         x1min, x1max, &
+         x2min, x2max, &
          sll_p_hermite, sll_p_hermite,&
-         fprime(X1MIN, i_test), fprime(X1MAX, i_test), &
-         fprime(X2MIN, j_test), fprime(X2MAX, j_test) )   
+         fprime(x1min, i_test), fprime(x1max, i_test), &
+         fprime(x2min, j_test), fprime(x2max, j_test) )   
     call sll_s_compute_cubic_spline_2d( data_2d, sp2d_4 )
     acc_2D = 0.0_f64
-    do j=1, NPX2
-       do i=1, NPX1
+    do j=1, npx2
+       do i=1, npx1
           x1 = coordinates_i(i)
           x2 = coordinates_j(j)
           acc_2D = acc_2D + &
                abs(data_2d(i,j) - sll_f_interpolate_value_2d(x1,x2,sp2d_4))
        end do
     end do
-    if (acc_2D/(NPX1*NPX2)>=1.e-14) then
+    if (acc_2D/(npx1*npx2)>=1.d-14) then
        ok = 0
        print*, '(i_test, j_test) = (', i_test, ',', j_test,')' 
        print *, 'Average cumulative error, spline2d, Hermite-Hermite: ', &
-         acc_2D/(NPX1*NPX2)
+         acc_2D/(npx1*npx2)
        print *, 'splines unit test stopped by Hermite-Hermite spline2d test failure'
        stop
     endif
@@ -465,7 +465,7 @@ contains
     if(present(criterion)) then
        max_tolerable_err = criterion
     else
-       max_tolerable_err = 1.0e-14_f64
+       max_tolerable_err = 1.0d-14
     end if
     h1 = (xmax - xmin)/real(npts-1,f64)
     acc = 0.0_f64
@@ -539,7 +539,7 @@ contains
     if(present(criterion)) then
        max_tolerable_err = criterion
     else
-       max_tolerable_err = 1.0e-14_f64
+       max_tolerable_err = 1.0d-14
     end if
 
     test_passed = .true.
@@ -617,41 +617,41 @@ contains
     sll_int32            :: npts
 
     local_test_passed = .true.
-    print *, 'X1MIN, X1MAX = ', X1MIN, X1MAX
+    print *, 'x1min, x1max = ', x1min, x1max
     ! Run the test over a range of data sizes.
     print*, np_min , np_max
     do npts=np_min, np_max
-       h1 = (X1MAX - X1MIN)/real(npts-1,f64)
+       h1 = (x1max - x1min)/real(npts-1,f64)
        acc = 0.0_f64
        print*, npts
        SLL_ALLOCATE(data_in(npts),ierr)
        do i=0,npts-1
-          x1 = X1MIN + real(i,f64)*h1 
+          x1 = x1min + real(i,f64)*h1 
           data_in(i+1) = func_1d(x1)
        end do
        spline => sll_f_new_cubic_spline_1d( &
             npts, &
-            X1MIN, &
-            X1MAX, &
+            x1min, &
+            x1max, &
             sll_p_hermite )
        
        call sll_s_compute_cubic_spline_1d( data_in, spline )
        acc = 0.0_f64
        do i=0,npts-2 ! last point excluded and done separately...
-          x1 = X1MIN + real(i,f64)*h1 
+          x1 = x1min + real(i,f64)*h1 
           val = sll_f_interpolate_from_interpolant_value(x1,spline)
           !print *,'x = ', x1, 'true data: ',data_in(i+1), 'interpolated: ', val
           acc = acc + abs(val-data_in(i+1))  
        end do
        ! Do the last point separately because due to roundoff error, it ends
        ! up out of the range inside the loop.
-       val = sll_f_interpolate_from_interpolant_value(X1MAX, spline)
+       val = sll_f_interpolate_from_interpolant_value(x1max, spline)
        acc = acc + abs(val-data_in(npts))    
 
        average_error = acc/(real(npts,f64))
        print *, 'test_spline_1d_hrmt(): average error = ', average_error, &
             'problem size = ', npts, 'points.'
-       if( average_error .le. 5.0e-15 ) then
+       if( average_error .le. 5.0d-14 ) then
           local_test_passed = local_test_passed .and. .true.
        else
           local_test_passed = .false.
@@ -682,47 +682,47 @@ contains
     sll_real64 :: acc, val
     type(sll_t_cubic_spline_2d), pointer :: spline
     sll_real64 :: average_error
-    h1 = (X1MAX - X1MIN)/real(NPX1-1,f64)
-    h2 = (X2MAX - X2MIN)/real(NPX2-1,f64)
+    h1 = (x1max - x1min)/real(npx1-1,f64)
+    h2 = (x2max - x2min)/real(npx2-1,f64)
     acc = 0.0_f64
 
     ! allocate arrays and initialize them
-    SLL_ALLOCATE(data_in(NPX1,NPX2),ierr)
-    SLL_ALLOCATE(correct_data_out(NPX1,NPX2), ierr)
-    do j=0,NPX2-1
-       do i=0,NPX1-1
-          x1 = X1MIN + real(i,f64)*h1 
-          x2 = X2MIN + real(j,f64)*h2
+    SLL_ALLOCATE(data_in(npx1,npx2),ierr)
+    SLL_ALLOCATE(correct_data_out(npx1,npx2), ierr)
+    do j=0,npx2-1
+       do i=0,npx1-1
+          x1 = x1min + real(i,f64)*h1 
+          x2 = x2min + real(j,f64)*h2
           data_in(i+1,j+1) = func_2d(x1,x2)
           correct_data_out(i+1,j+1) = partial_x1(x1,x2)
        end do
     end do
 
     spline => sll_f_new_cubic_spline_2d( &
-      NPX1, &
-      NPX2, &
-      X1MIN, &
-      X1MAX, &
-      X2MIN, &
-      X2MAX, &
+      npx1, &
+      npx2, &
+      x1min, &
+      x1max, &
+      x2min, &
+      x2max, &
       sll_p_periodic, &
       sll_p_periodic )
 
     call sll_s_compute_cubic_spline_2d(data_in,spline)
 
-    do j=0,NPX2-1
-       do i=0,NPX1-1
-          x1 = X1MIN + real(i,f64)*h1 
-          x2 = X2MIN + real(j,f64)*h2
+    do j=0,npx2-1
+       do i=0,npx1-1
+          x1 = x1min + real(i,f64)*h1 
+          x2 = x2min + real(j,f64)*h2
           val = interpolation_func(x1,x2,spline)
           acc = acc + abs(val-correct_data_out(i+1,j+1))  
  !         print *, '(i,j) = ',i+1,j+1, 'correct value = ', &
  !              correct_data_out(i+1,j+1), '. Calculated = ', val     
        end do
     end do
-    average_error = acc/(real(NPX1*NPX2,f64))
+    average_error = acc/(real(npx1*npx2,f64))
     print *, 'Average error = ', average_error
-    if( average_error .le. 1.0e-5 ) then
+    if( average_error .le. 1.0d-5 ) then
        test_passed = .true.
     else
        test_passed = .false.
@@ -752,20 +752,20 @@ contains
     sll_real64 :: acc, val, err, min_err, max_err
     type(sll_t_cubic_spline_2d), pointer :: spline
     sll_real64 :: average_error
-    h1  = 1.0_f64/real(NPX1-1,f64)
-    h2  = 1.0_f64/real(NPX2-1,f64)
+    h1  = 1.0_f64/real(npx1-1,f64)
+    h2  = 1.0_f64/real(npx2-1,f64)
     acc = 0.0_f64
 
     max_err = 0.0_f64
     min_err = 1.0_f64
     ! allocate arrays and initialize them
-    SLL_ALLOCATE(data_in(NPX1,NPX2),ierr)
-    SLL_ALLOCATE(correct_data_out(NPX1,NPX2), ierr)
-    SLL_ALLOCATE(slopes_min(NPX2), ierr)
-    SLL_ALLOCATE(slopes_max(NPX2), ierr)
+    SLL_ALLOCATE(data_in(npx1,npx2),ierr)
+    SLL_ALLOCATE(correct_data_out(npx1,npx2), ierr)
+    SLL_ALLOCATE(slopes_min(npx2), ierr)
+    SLL_ALLOCATE(slopes_max(npx2), ierr)
 
-    do j=0,NPX2-1
-       do i=0,NPX1-1
+    do j=0,npx2-1
+       do i=0,npx1-1
           x1 = real(i,f64)*h1 
           x2 = real(j,f64)*h2
           data_in(i+1,j+1) = func_2d(x1,x2)
@@ -773,15 +773,15 @@ contains
        end do
     end do
 
-    do j=0,NPX2-1
+    do j=0,npx2-1
        x2 = real(j,f64)*h2
        slopes_min(j+1) = slope_min_func(0.0_f64,x2)
        slopes_max(j+1) = slope_max_func(1.0_f64,x2)
     end do
 
     spline => sll_f_new_cubic_spline_2d( &
-      NPX1, &
-      NPX2, &
+      npx1, &
+      npx2, &
       0.0_f64, &
       1.0_f64, &
       0.0_f64, &
@@ -793,8 +793,8 @@ contains
 
     call sll_s_compute_cubic_spline_2d(data_in,spline)
 
-    do j=0,NPX2-1
-       do i=0,NPX1-1
+    do j=0,npx2-1
+       do i=0,npx1-1
           x1 = real(i,f64)*h1 
           x2 = real(j,f64)*h2
           val = interpolation_func(x1,x2,spline)
@@ -812,11 +812,11 @@ contains
 !               correct_data_out(i+1,j+1), '. Calculated = ', val     
        end do
     end do
-    average_error = acc/(real(NPX1*NPX2,f64))
+    average_error = acc/(real(npx1*npx2,f64))
     print *, 'interpolator_tester_2d_hrmt_prdc results. Average error = ', &
          average_error, 'Max err = ', max_err, 'Min err = ', min_err
     print *, 'max error at (i,j) = ', imax, jmax
-    if( average_error .le. 1.0e-5 ) then
+    if( average_error .le. 1.0d-5 ) then
        test_passed = .true.
     else
        test_passed = .false.
@@ -842,30 +842,30 @@ contains
     sll_real64 :: h1, h2, eta1, eta2, acc, val, true_val, ave_err
     type(sll_t_cubic_spline_2d), pointer :: spline
 
-    h1 = 1.0_f64/(NPX1-1)
-    h2 = 1.0_f64/(NPX2-1)
+    h1 = 1.0_f64/(npx1-1)
+    h2 = 1.0_f64/(npx2-1)
     ! allocate and fill out the data
-    SLL_ALLOCATE(data(NPX1,NPX2),ierr)
-    do j=0,NPX2-1
+    SLL_ALLOCATE(data(npx1,npx2),ierr)
+    do j=0,npx2-1
        eta2 = real(j,f64)*h2
-       do i=0,NPX1-1
+       do i=0,npx1-1
           eta1 = real(i,f64)*h1
           data(i+1,j+1) = transform_func(eta1,eta2)
        end do
     end do
 
     ! allocate and fill out the bc data
-    SLL_ALLOCATE(eta1_min_slopes(NPX2),ierr)
-    SLL_ALLOCATE(eta1_max_slopes(NPX2),ierr)
-    do j=0,NPX2-1
+    SLL_ALLOCATE(eta1_min_slopes(npx2),ierr)
+    SLL_ALLOCATE(eta1_max_slopes(npx2),ierr)
+    do j=0,npx2-1
        eta2 = real(j,f64)*h2
        eta1_min_slopes(j+1) = eta1_min_slope_func(0.0_f64,eta2)
        eta1_max_slopes(j+1) = eta1_max_slope_func(1.0_f64,eta2)
     end do
 
     spline =>sll_f_new_cubic_spline_2d( &
-         NPX1, &
-         NPX2, &
+         npx1, &
+         npx2, &
          0.0_f64, &
          1.0_f64, &
          0.0_f64, &
@@ -879,23 +879,23 @@ contains
 
     ! compare results
     acc = 0.0_f64
-    do j=0,NPX2-1
+    do j=0,npx2-1
        eta2 = real(j,f64)*h2
-       do i=0,NPX1-1
+       do i=0,npx1-1
           eta1     = real(i,f64)*h1
           val      = sll_f_interpolate_value_2d( eta1, eta2, spline )
           true_val = transform_func( eta1, eta2 )
           acc      = acc + abs(true_val - val)
-          if(abs(true_val-val).gt.1.0e-14) then
+          if(abs(true_val-val).gt.1.0d-14) then
              print *, 'i,j = ',i,j, 'eta1,eta2 = ', eta1, eta2, 'true, val = ',&
                   true_val, val
-             !print *, spline%coeffs(NPX1,j-1:j+1)
+             !print *, spline%coeffs(npx1,j-1:j+1)
           end if
        end do
     end do
-    ave_err = acc/real(NPX1*NPX2,f64) 
+    ave_err = acc/real(npx1*npx2,f64) 
     print *, 'test_2d_spline_hrmt_prdc results. Average error = ', ave_err
-    if( ave_err .le. 1.0e-14 ) then
+    if( ave_err .le. 1.0d-14 ) then
        test_passed = .true.
     else
        test_passed = .false.
@@ -925,30 +925,30 @@ contains
     sll_real64 :: h1, h2, eta1, eta2, acc, val, true_val, ave_err
     type(sll_t_cubic_spline_2d), pointer :: spline
 
-    h1 = 1.0_f64/(NPX1-1)
-    h2 = 1.0_f64/(NPX2-1)
+    h1 = 1.0_f64/(npx1-1)
+    h2 = 1.0_f64/(npx2-1)
     ! allocate and fill out the data
-    SLL_ALLOCATE(data(NPX1,NPX2),ierr)
-    do j=0,NPX2-1
+    SLL_ALLOCATE(data(npx1,npx2),ierr)
+    do j=0,npx2-1
        eta2 = real(j,f64)*h2
-       do i=0,NPX1-1
+       do i=0,npx1-1
           eta1 = real(i,f64)*h1
           data(i+1,j+1) = transform_func(eta1,eta2)
        end do
     end do
 
     ! allocate and fill out the bc data
-    SLL_ALLOCATE(eta1_min_slopes(NPX2),ierr)
-    SLL_ALLOCATE(eta1_max_slopes(NPX2),ierr)
-    do j=0,NPX2-1
+    SLL_ALLOCATE(eta1_min_slopes(npx2),ierr)
+    SLL_ALLOCATE(eta1_max_slopes(npx2),ierr)
+    do j=0,npx2-1
        eta2 = real(j,f64)*h2
        eta1_min_slopes(j+1) = eta1_min_slope_func(0.0_f64,eta2)
        eta1_max_slopes(j+1) = eta1_max_slope_func(1.0_f64,eta2)
     end do
 
     spline =>sll_f_new_cubic_spline_2d( &
-         NPX1, &
-         NPX2, &
+         npx1, &
+         npx2, &
          0.0_f64, &
          1.0_f64, &
          0.0_f64, &
@@ -962,23 +962,23 @@ contains
 
     ! compare results
     acc = 0.0_f64
-    do j=0,NPX2-1
+    do j=0,npx2-1
        eta2 = real(j,f64)*h2
-       do i=0,NPX1-1
+       do i=0,npx1-1
           eta1     = real(i,f64)*h1
           val      = sll_f_interpolate_value_2d( eta1, eta2, spline )
           true_val = transform_func( eta1, eta2 )
           acc      = acc + abs(true_val - val)
-          if(abs(true_val-val).gt.1.0e-14) then
+          if(abs(true_val-val).gt.1.0d-14) then
              print *, 'i,j = ',i,j, 'eta1,eta2 = ', eta1, eta2, 'true, val = ',&
                   true_val, val
-             !print *, spline%coeffs(NPX1,j-1:j+1)
+             !print *, spline%coeffs(npx1,j-1:j+1)
           end if
        end do
     end do
-    ave_err = acc/real(NPX1*NPX2,f64) 
+    ave_err = acc/real(npx1*npx2,f64) 
     print *, 'test_2d_spline_hrmt_prdc results. Average error = ', ave_err
-    if( ave_err .le. 1.0e-14 ) then
+    if( ave_err .le. 1.0d-14 ) then
        test_passed = .true.
     else
        test_passed = .false.
@@ -1008,22 +1008,22 @@ contains
     sll_real64 :: h1, h2, eta1, eta2, acc, val, true_val, ave_err
     type(sll_t_cubic_spline_2d), pointer :: spline
 
-    h1 = 1.0_f64/(NPX1-1)
-    h2 = 1.0_f64/(NPX2-1)
+    h1 = 1.0_f64/(npx1-1)
+    h2 = 1.0_f64/(npx2-1)
     ! allocate and fill out the data
-    SLL_ALLOCATE(data(NPX1,NPX2),ierr)
-    do j=0,NPX2-1
+    SLL_ALLOCATE(data(npx1,npx2),ierr)
+    do j=0,npx2-1
        eta2 = real(j,f64)*h2
-       do i=0,NPX1-1
+       do i=0,npx1-1
           eta1 = real(i,f64)*h1
           data(i+1,j+1) = transform_func(eta1,eta2)
        end do
     end do
 
     ! allocate and fill out the bc data
-    SLL_ALLOCATE(eta2_min_slopes(NPX1),ierr)
-    SLL_ALLOCATE(eta2_max_slopes(NPX1),ierr)
-    do i=0,NPX1-1
+    SLL_ALLOCATE(eta2_min_slopes(npx1),ierr)
+    SLL_ALLOCATE(eta2_max_slopes(npx1),ierr)
+    do i=0,npx1-1
        eta1 = real(i,f64)*h1
        eta2 = 0.0_f64
        eta2_min_slopes(i+1) = eta2_min_slope_func(eta1,eta2)
@@ -1031,8 +1031,8 @@ contains
     end do
 
     spline =>sll_f_new_cubic_spline_2d( &
-         NPX1, &
-         NPX2, &
+         npx1, &
+         npx2, &
          0.0_f64, &
          1.0_f64, &
          0.0_f64, &
@@ -1046,23 +1046,23 @@ contains
 
     ! compare results
     acc = 0.0_f64
-    do j=0,NPX2-1
+    do j=0,npx2-1
        eta2 = real(j,f64)*h2
-       do i=0,NPX1-1
+       do i=0,npx1-1
           eta1     = real(i,f64)*h1
           val      = sll_f_interpolate_value_2d( eta1, eta2, spline )
           true_val = transform_func( eta1, eta2 )
           acc      = acc + abs(true_val - val)
-          if(abs(true_val-val).gt.1.0e-14) then
+          if(abs(true_val-val).gt.1.0d-14) then
              print *, 'i,j = ',i,j, 'eta1,eta2 = ', eta1, eta2, 'true, val = ',&
                   true_val, val
-             !print *, spline%coeffs(NPX1,j-1:j+1)
+             !print *, spline%coeffs(npx1,j-1:j+1)
           end if
        end do
     end do
-    ave_err = acc/real(NPX1*NPX2,f64) 
+    ave_err = acc/real(npx1*npx2,f64) 
     print *, 'test_2d_spline_prdc_hrmt results. Average error = ', ave_err
-    if( ave_err .le. 1.0e-14 ) then
+    if( ave_err .le. 1.0d-14 ) then
        test_passed = .true.
     else
        test_passed = .false.
@@ -1091,22 +1091,22 @@ contains
     sll_real64 :: h1, h2, eta1, eta2, acc, val, true_val, ave_err
     type(sll_t_cubic_spline_2d), pointer :: spline
 
-    h1 = 1.0_f64/(NPX1-1)
-    h2 = 1.0_f64/(NPX2-1)
+    h1 = 1.0_f64/(npx1-1)
+    h2 = 1.0_f64/(npx2-1)
     ! allocate and fill out the data
-    SLL_ALLOCATE(data(NPX1,NPX2),ierr)
-    do j=0,NPX2-1
+    SLL_ALLOCATE(data(npx1,npx2),ierr)
+    do j=0,npx2-1
        eta2 = real(j,f64)*h2
-       do i=0,NPX1-1
+       do i=0,npx1-1
           eta1 = real(i,f64)*h1
           data(i+1,j+1) = transform_func(eta1,eta2)
        end do
     end do
 
     ! allocate and fill out the bc data
-    SLL_ALLOCATE(eta2_min_slopes(NPX1),ierr)
-    SLL_ALLOCATE(eta2_max_slopes(NPX1),ierr)
-    do i=0,NPX1-1
+    SLL_ALLOCATE(eta2_min_slopes(npx1),ierr)
+    SLL_ALLOCATE(eta2_max_slopes(npx1),ierr)
+    do i=0,npx1-1
        eta1 = real(i,f64)*h1
        eta2 = 0.0_f64
        eta2_min_slopes(i+1) = eta2_min_slope_func(eta1,eta2)
@@ -1114,8 +1114,8 @@ contains
     end do
 
     spline =>sll_f_new_cubic_spline_2d( &
-         NPX1, &
-         NPX2, &
+         npx1, &
+         npx2, &
          0.0_f64, &
          1.0_f64, &
          0.0_f64, &
@@ -1129,23 +1129,23 @@ contains
 
     ! compare results
     acc = 0.0_f64
-    do j=0,NPX2-1
+    do j=0,npx2-1
        eta2 = real(j,f64)*h2
-       do i=0,NPX1-1
+       do i=0,npx1-1
           eta1     = real(i,f64)*h1
           val      = sll_f_interpolate_value_2d( eta1, eta2, spline )
           true_val = transform_func( eta1, eta2 )
           acc      = acc + abs(true_val - val)
-          if(abs(true_val-val).gt.1.0e-14) then
+          if(abs(true_val-val).gt.1.0d-14) then
              print *, 'i,j = ',i,j, 'eta1,eta2 = ', eta1, eta2, 'true, val = ',&
                   true_val, val
-             !print *, spline%coeffs(NPX1,j-1:j+1)
+             !print *, spline%coeffs(npx1,j-1:j+1)
           end if
        end do
     end do
-    ave_err = acc/real(NPX1*NPX2,f64) 
+    ave_err = acc/real(npx1*npx2,f64) 
     print *, 'test_2d_spline_prdc_hrmt results. Average error = ', ave_err
-    if( ave_err .le. 1.0e-14 ) then
+    if( ave_err .le. 1.0d-14 ) then
        test_passed = .true.
     else
        test_passed = .false.
@@ -1180,32 +1180,32 @@ contains
     sll_real64 :: h1, h2, eta1, eta2, acc, val, true_val, ave_err
     type(sll_t_cubic_spline_2d), pointer :: spline
 
-    h1 = 1.0_f64/(NPX1-1)
-    h2 = 1.0_f64/(NPX2-1)
+    h1 = 1.0_f64/(npx1-1)
+    h2 = 1.0_f64/(npx2-1)
     ! allocate and fill out the data
-    SLL_ALLOCATE(data(NPX1,NPX2),ierr)
-    do j=0,NPX2-1
+    SLL_ALLOCATE(data(npx1,npx2),ierr)
+    do j=0,npx2-1
        eta2 = real(j,f64)*h2
-       do i=0,NPX1-1
+       do i=0,npx1-1
           eta1 = real(i,f64)*h1
           data(i+1,j+1) = transform_func(eta1,eta2)
        end do
     end do
 
     ! allocate and fill out the bc data
-    SLL_ALLOCATE(eta1_min_slopes(NPX1),ierr)
-    SLL_ALLOCATE(eta1_max_slopes(NPX1),ierr)
-    SLL_ALLOCATE(eta2_min_slopes(NPX1),ierr)
-    SLL_ALLOCATE(eta2_max_slopes(NPX1),ierr)
+    SLL_ALLOCATE(eta1_min_slopes(npx1),ierr)
+    SLL_ALLOCATE(eta1_max_slopes(npx1),ierr)
+    SLL_ALLOCATE(eta2_min_slopes(npx1),ierr)
+    SLL_ALLOCATE(eta2_max_slopes(npx1),ierr)
 
-    do i=0,NPX1-1
+    do i=0,npx1-1
        eta1 = real(i,f64)*h1
        eta2 = 0.0_f64
        eta2_min_slopes(i+1) = eta2_min_slope_func(eta1,eta2)
        eta2_max_slopes(i+1) = eta2_max_slope_func(eta1,eta2)
     end do
 
-    do j=0,NPX2-1
+    do j=0,npx2-1
        eta1 = 0.0_f64
        eta2 = real(j,f64)*h2
        eta1_min_slopes(j+1) = eta1_min_slope_func(eta1,eta2)
@@ -1213,8 +1213,8 @@ contains
     end do
 
     spline =>sll_f_new_cubic_spline_2d( &
-         NPX1, &
-         NPX2, &
+         npx1, &
+         npx2, &
          0.0_f64, &
          1.0_f64, &
          0.0_f64, &
@@ -1230,23 +1230,23 @@ contains
 
     ! compare results
     acc = 0.0_f64
-    do j=0,NPX2-1
+    do j=0,npx2-1
        eta2 = real(j,f64)*h2
-       do i=0,NPX1-1
+       do i=0,npx1-1
           eta1     = real(i,f64)*h1
           val      = sll_f_interpolate_value_2d( eta1, eta2, spline )
           true_val = transform_func( eta1, eta2 )
           acc      = acc + abs(true_val - val)
-          if(abs(true_val-val).gt.1.0e-14) then
+          if(abs(true_val-val).gt.1.0d-14) then
              print *, 'i,j = ',i,j, 'eta1,eta2 = ', eta1, eta2, 'true, val = ',&
                   true_val, val
-             !print *, spline%coeffs(NPX1,j-1:j+1)
+             !print *, spline%coeffs(npx1,j-1:j+1)
           end if
        end do
     end do
-    ave_err = acc/real(NPX1*NPX2,f64) 
+    ave_err = acc/real(npx1*npx2,f64) 
     print *, 'test_2d_spline_hrmt_hrmt results. Average error = ', ave_err
-    if( ave_err .le. 1.0e-14 ) then
+    if( ave_err .le. 1.0d-14 ) then
        test_passed = .true.
     else
        test_passed = .false.
@@ -1265,21 +1265,21 @@ contains
     sll_real64 :: h1, h2, eta1, eta2, acc, val, true_val, ave_err, max_err
     type(sll_t_cubic_spline_2d), pointer :: spline
 
-    h1 = 1.0_f64/(NPX1-1)
-    h2 = 1.0_f64/(NPX2-1)
+    h1 = 1.0_f64/(npx1-1)
+    h2 = 1.0_f64/(npx2-1)
     ! allocate and fill out the data
-    SLL_ALLOCATE(data(NPX1,NPX2),ierr)
-    do j=0,NPX2-1
+    SLL_ALLOCATE(data(npx1,npx2),ierr)
+    do j=0,npx2-1
        eta2 = real(j,f64)*h2
-       do i=0,NPX1-1
+       do i=0,npx1-1
           eta1 = real(i,f64)*h1
           data(i+1,j+1) = transform_func(eta1,eta2)
        end do
     end do
 
     spline =>sll_f_new_cubic_spline_2d( &
-         NPX1, &
-         NPX2, &
+         npx1, &
+         npx2, &
          0.0_f64, &
          1.0_f64, &
          0.0_f64, &
@@ -1292,9 +1292,9 @@ contains
     ! compare results
     max_err = 0.0_f64
     acc     = 0.0_f64
-    do j=0,NPX2-1
+    do j=0,npx2-1
        eta2 = real(j,f64)*h2
-       do i=0,NPX1-1
+       do i=0,npx1-1
           eta1     = real(i,f64)*h1
           val      = sll_f_interpolate_value_2d( eta1, eta2, spline )
           true_val = transform_func( eta1, eta2 )
@@ -1304,16 +1304,16 @@ contains
              jm = j
           end if
           acc      = acc + abs(true_val - val)
-          if(abs(true_val-val).gt.1.0e-14) then
+          if(abs(true_val-val).gt.1.0d-14) then
              print *, 'i,j = ',i,j, 'eta1,eta2 = ', eta1, eta2, 'true, val = ',&
                   true_val, val
-             !print *, spline%coeffs(NPX1,j-1:j+1)
+             !print *, spline%coeffs(npx1,j-1:j+1)
           end if
        end do
     end do
-    ave_err = acc/real(NPX1*NPX2,f64) 
+    ave_err = acc/real(npx1*npx2,f64) 
     print *, 'test_2d_spline_hrmt_hrmt results. Average error = ', ave_err
-    if( ave_err .le. 1.0e-14 ) then
+    if( ave_err .le. 1.0d-14 ) then
        test_passed = .true.
     else
        test_passed = .false.
