@@ -19,7 +19,7 @@ module sll_m_pic_poisson_base
   private
 
   !> Basic type of Poisson solver for PIC simulations
-  type, public, abstract :: sll_c_pic_poisson
+  type, abstract :: sll_c_pic_poisson
      sll_int32              :: dim !< Dimension
      sll_int32              :: no_weights = 1 !< Number of weights used for accumulation (one per default)
      
