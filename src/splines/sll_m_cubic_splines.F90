@@ -265,8 +265,10 @@ MAKE_GET_SLOT_FUNCTION(get_x2_delta_cs2d,sll_t_cubic_spline_2d,x2_delta,sll_real
   !> of hermite boundary conditions.
   !> @param[in] sr OPTIONAL: The value of the slope at xmin, for use in the case
   !> of hermite boundary conditions.
+  !> @param[in] sr OPTIONAL: Flag to change between fast algorithm and LU-based 
+  !> algorithm (for num_points>NUM_TERMS). Default: true for num_points>NUM_TERMS.
   !> @return a pointer to a heap-allocated cubic spline object.
-  function sll_f_new_cubic_spline_1d( num_points, xmin, xmax, bc_type, sl, sr )
+  function sll_f_new_cubic_spline_1d( num_points, xmin, xmax, bc_type, sl, sr, fast_algorithm )
     type(sll_t_cubic_spline_1d), pointer   :: sll_f_new_cubic_spline_1d
     sll_int32,  intent(in)               :: num_points
     sll_real64, intent(in)               :: xmin
@@ -274,6 +276,7 @@ MAKE_GET_SLOT_FUNCTION(get_x2_delta_cs2d,sll_t_cubic_spline_2d,x2_delta,sll_real
     sll_int32,  intent(in)               :: bc_type
     sll_real64, intent(in), optional     :: sl
     sll_real64, intent(in), optional     :: sr
+    logical,    intent(in), optional     :: fast_algorithm
     sll_int32                            :: ierr
     sll_int32                            :: i
 
@@ -288,6 +291,9 @@ MAKE_GET_SLOT_FUNCTION(get_x2_delta_cs2d,sll_t_cubic_spline_2d,x2_delta,sll_real
        sll_f_new_cubic_spline_1d%use_fast_algorithm = .false.
     else
        sll_f_new_cubic_spline_1d%use_fast_algorithm = .true.
+       if (present(fast_algorithm)) then          
+          sll_f_new_cubic_spline_1d%use_fast_algorithm = fast_algorithm
+       end if
     end if
     if( xmin .gt. xmax ) then
        print *, 'ERROR, sll_f_new_cubic_spline_1d: xmin is greater than xmax, ', &

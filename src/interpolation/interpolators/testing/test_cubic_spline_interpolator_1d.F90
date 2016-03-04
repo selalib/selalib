@@ -18,22 +18,21 @@ program cubic_spline_interpolator_1d
   implicit none
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
-    sll_int32, parameter  :: n1 = 20
-    sll_int32, parameter  :: n2 = 64
+    sll_int32, parameter  :: n = 64
     sll_int32, parameter  :: m = 512
-    sll_real64, parameter :: tol1 = 1.d-4 ! tolerance for error (n1)
-    sll_real64, parameter :: tol2 = 1.d-6 ! tolerance for error (n2)
+    sll_real64, parameter :: tol = 1.d-6 ! tolerance for error
     sll_real64            :: error1
     sll_real64            :: error2
 
-    call test_for_given_n( n1, error1 )
-    call test_for_given_n( n2, error2 )
+    
+    call test_for_given_n( .true., error1 )
+    call test_for_given_n( .false., error2 )
 
-    if (error1 > tol1) then
-       print*, 'Failed for n=', n1
+    if (error1 > tol) then
+       print*, 'Failed for fast algorithm.'
        print*, 'FAILED.'
-    elseif (error2 > tol2) then
-       print*, 'Failed for n=', n2
+    elseif (error2 > tol) then
+       print*, 'Failed for LU-based algorithm.'
        print*, 'FAILED.'
     else
        print*, 'Successful, exiting program.'
@@ -42,8 +41,8 @@ program cubic_spline_interpolator_1d
 
 contains
 
-  subroutine test_for_given_n (n, error)
-    sll_int32,  intent(in)  :: n
+  subroutine test_for_given_n (fast_algorithm, error)
+    logical,    intent(in)  :: fast_algorithm
     sll_real64, intent(out) :: error
 
     class(sll_c_interpolator_1d), pointer       :: interp
@@ -82,7 +81,8 @@ contains
     end do
     
     print*, 'Cubic spline interpolation'
-    call spline%initialize(n, x_min, x_max, sll_p_periodic )
+    call spline%initialize &
+         (n, x_min, x_max, sll_p_periodic, fast_algorithm=fast_algorithm )
     
     interp => spline
     call interp%compute_interpolants(pdata)
