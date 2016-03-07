@@ -9,9 +9,10 @@
 ! The following lines will be read by doxygen to generate documentation:
 
 
+
 !> @defgroup operator_splitting sll_operator_splitting 
 !> @brief 
-!> The operator_splitting library implements operator splitting methods
+!> The sll_t_operator_splitting library implements operator splitting methods
 !> @author Selalib team <br>
 !> Contact: Eric Sonnendr&uuml;cker
 !> @details
@@ -23,7 +24,7 @@
 !> different kinds of composition methods defined by their coefficients.
 !>
 !> The application of an operator splitting method to a concrete problem is done
-!> by extending the operator_splitting splitting base class by a new type
+!> by extending the sll_t_operator_splitting splitting base class by a new type
 !> containing on the one hand the data on which the operators act
 !> and a specific implementation of the two operators
 !>

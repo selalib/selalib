@@ -53,11 +53,11 @@ module sll_m_qn_solver_2d
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
   type sll_t_qn_solver_2d
-     sll_int32                   :: BC ! Boundary_conditions
-     sll_int32                   :: NP_r!Number of points in r-direction
-     sll_int32                   :: NP_theta!Number of points in theta-direction
-     sll_real64                  :: rmin
-     sll_real64                  :: rmax
+     sll_int32              :: BC ! Boundary_conditions
+     sll_int32              :: NP_r!Number of points in r-direction
+     sll_int32              :: NP_theta!Number of points in theta-direction
+     sll_real64             :: rmin
+     sll_real64             :: rmax
      type(sll_t_fft)        :: fft_plan
      type(sll_t_fft)        :: inv_fft_plan
   end type sll_t_qn_solver_2d

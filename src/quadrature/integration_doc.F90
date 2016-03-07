@@ -28,7 +28,7 @@
 !>
 !> <b> Examples </b>
 !> \code
-!> gauss_legendre_points_and_weights(5,-1.0_f64,1.0_f64)
+!> sll_f_gauss_legendre_points_and_weights(5,-1.0_f64,1.0_f64)
 !>  x = gauss_lobatto_points( 10, -1._f64, 1._f64)
 !>  w = gauss_lobatto_weights(10)
 !> \endcode

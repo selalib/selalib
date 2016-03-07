@@ -254,6 +254,7 @@ program test_fft
               CALL RANDOM_COMPLEX(data_comp2d(j,k))
            enddo
         enddo
+
         data_copy2d(1:s,1:t) = data_comp2d(1:s,1:t)
         
         call sll_s_fft_init_c2c_2d(p,s,t,data_comp2d(1:s,1:t),data_comp2d(1:s,1:t), &
@@ -271,7 +272,8 @@ program test_fft
            ierr = MAX(ERROR_MAX(data_comp2d(1:s,j) - data_copy2d(1:s,j)),ierr)
         enddo
         if( ierr > err_max ) then
-           stop 'Average error too big'
+           print*, 'average error', ierr
+           print*, 'Average error too big'
         endif
      enddo
   enddo
@@ -348,6 +350,8 @@ program test_fft
   enddo
   print *, 'OK', ierr
 #endif
+
+  print*, 'PASSED'
 
 contains
 
