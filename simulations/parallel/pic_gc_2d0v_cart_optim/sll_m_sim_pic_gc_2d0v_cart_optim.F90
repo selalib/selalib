@@ -66,9 +66,9 @@ module sll_m_sim_pic_gc_2d0v_cart_optim
     sll_s_first_gc_charge_accumulation_2d, &
     sll_s_first_gc_charge_accumulation_2d_cs
 
-  use sll_m_poisson_2d_fft, only: &
-    sll_f_new_poisson_2d_fft_solver, &
-    sll_t_poisson_2d_fft_solver
+  use sll_m_poisson_2d_periodic, only: &
+    sll_f_new_poisson_2d_periodic, &
+    sll_t_poisson_2d_periodic
 
   use sll_m_sim_base, only: &
     sll_c_simulation_base_class
@@ -112,7 +112,7 @@ module sll_m_sim_pic_gc_2d0v_cart_optim
      type(sll_t_charge_accumulator_2d_cs_ptr), dimension(:), pointer  :: q_accumulator_CS
      type(sll_t_electric_field_accumulator_cs), pointer :: E_accumulator_CS
      sll_real64, dimension(:,:), pointer :: rho
-     type(sll_t_poisson_2d_fft_solver), pointer :: poisson
+     type(sll_t_poisson_2d_periodic), pointer :: poisson
      sll_real64, dimension(:,:), pointer :: E1, E2
      sll_int32 :: my_rank
      sll_int32 :: world_size
@@ -191,7 +191,7 @@ contains
 
     sim%sorter => sll_f_new_particle_sorter_2d( sim%m2d )
 
-    sim%poisson => sll_f_new_poisson_2d_fft_solver( sim%m2d%eta1_min,    &
+    sim%poisson => sll_f_new_poisson_2d_periodic( sim%m2d%eta1_min,    &
                                               sim%m2d%eta1_max,    & 
                                               sim%m2d%num_cells1,  &
                                               sim%m2d%eta2_min,    &
@@ -266,8 +266,9 @@ contains
     class(sll_t_pic_simulation_2d_gc_cartesian), intent(inout)  :: sim
     sll_int32  :: ierr, it!, counter
     sll_int32  :: i, j
-    sll_real64 :: tmp3, tmp4, tmp5, tmp6
-    sll_real64 :: tmp7, tmp8
+    sll_real32 :: tmp3, tmp4
+    sll_real64 :: tmp5, tmp6
+    sll_real32 :: tmp7, tmp8
     sll_real64 :: ee_val, enst
     sll_real64, dimension(:,:), pointer :: phi
     sll_int32  :: ncx, ncy, ic_x,ic_y
@@ -283,8 +284,9 @@ contains
     !sll_real64 :: pp_vx,  pp_vy
     sll_real64 :: dt!, tfin
     !type(sll_t_time_mark) :: tinit
-    sll_real64 :: temp
-    sll_real64 :: temp1(1:4,1:2), temp2(1:4,1:2)
+    sll_real32 :: temp
+    sll_real32 :: temp1(1:4,1:2)
+    sll_real32 :: temp2(1:4,1:2)
     type(sll_t_particle_2d), dimension(:), pointer :: p
     type(sll_t_particle_2d), dimension(:), allocatable :: ploc
     type(sll_t_field_accumulator_cell), dimension(:), pointer :: accumE
@@ -639,8 +641,9 @@ contains
     class(sll_t_pic_simulation_2d_gc_cartesian), intent(inout)  :: sim
     sll_int32  :: ierr, it!, counter
     sll_int32  :: i, j
-    sll_real64 :: tmp3, tmp4, tmp5, tmp6
-    sll_real64 :: tmp7, tmp8
+    sll_real32 :: tmp3, tmp4
+    sll_real64 :: tmp5, tmp6
+    sll_real32 :: tmp7, tmp8
     sll_real64, dimension(:,:), pointer :: phi
     sll_int32  :: ncx, ncy, ic_x,ic_y
     !sll_int32  :: ic_x1,ic_y1
@@ -655,8 +658,9 @@ contains
     !sll_real64 :: pp_vx,  pp_vy
     sll_real64 :: dt!, tfin
     type(sll_t_time_mark) :: tinit
-    sll_real64 :: temp
-    sll_real64 :: temp1(1:4,1:2), temp2(1:4,1:2)
+    sll_real32 :: temp
+    sll_real32 :: temp1(1:4,1:2)
+    sll_real32 :: temp2(1:4,1:2)
     type(sll_t_particle_2d), dimension(:), pointer :: p
     type(sll_t_field_accumulator_cell), dimension(:), pointer :: accumE
     type(sll_t_field_accumulator_cs), dimension(:), pointer :: accumE_CS

@@ -1325,7 +1325,7 @@ do k = itest1, itest2
 
 end do
 
-!call sll_ascii_file_create("solutions_gces.gnu",file_id,ierr)
+!call sll_s_ascii_file_create("solutions_gces.gnu",file_id,ierr)
 do k = itest1, itest2
   write(*,"(a)") case_name(k)
   print"('test',i2,' : ','norm L2=',g15.3,' norm H1=',g15.3,' times=',2g15.3)" &

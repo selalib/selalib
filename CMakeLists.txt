@@ -11,24 +11,33 @@ IF(OPTIONS_FILE)
   MESSAGE("OPTIONS_FILE ARE READ")
 ENDIF()
 
+CMAKE_MINIMUM_REQUIRED(VERSION 2.8.12)
 PROJECT(SeLaLib)
 
 ENABLE_LANGUAGE(Fortran)
-CMAKE_MINIMUM_REQUIRED(VERSION 2.8.12)
+
+IF (${CMAKE_SOURCE_DIR} MATCHES ${CMAKE_BINARY_DIR})                            
+  MESSAGE(SEND_ERROR)                                                           
+  MESSAGE("-- ERROR: in-tree-build not allowed.")                               
+  MESSAGE("-- TRY: rm -f CMakeCache.txt; mkdir -p build; cd build; cmake ..; make")
+  RETURN()                                                                      
+ENDIF()                               
 
 SET(OPENMP_ENABLED        OFF CACHE BOOL   "Enable use of OpenMP library")
 SET(MPI_ENABLED           ON  CACHE BOOL   "Enable use of MPI library")
 SET(HDF5_ENABLED          ON  CACHE BOOL   "Use HDF5 library for data output")
 SET(HDF5_PARALLEL_ENABLED OFF CACHE BOOL   "Use Parallel HDF5")
 SET(FFTW_ENABLED          ON  CACHE BOOL   "Enable use of FFTW library")
-SET(PASTIX_ENABLED        OFF CACHE BOOL   "Build PasTiX solvers ")
-SET(SUITESPARSE_ENABLED   OFF CACHE BOOL   "Enable UMFpack solvers")
+SET(PASTIX_ENABLED        OFF CACHE BOOL   "Enable PasTiX solver ")
+SET(MUMPS_ENABLED         OFF CACHE BOOL   "Enable MUMPS solver ")
+SET(SUITESPARSE_ENABLED   OFF CACHE BOOL   "Enable UMFpack solver")
 SET(BUILD_SIMULATIONS     ON  CACHE BOOL   "Build selalib simulations")
+SET(BUILD_GSL             OFF CACHE BOOL   "Build GSL and FGSL libraries")
 SET(BUILD_PARALUTION      OFF CACHE BOOL   "Build paralution library")
 SET(BUILD_SPRNG           OFF CACHE BOOL   "Build SPRNG libraries")
-SET(PROCS                 4   CACHE STRING "Number of MPI processes for tests")
 SET(USE_MKL               OFF CACHE BOOL   "Using Intel Math Kernel Library")
 SET(BUILD_MUDPACK         OFF CACHE BOOL   "Build mudpack library")
+SET(PROCS                 4   CACHE STRING "Number of MPI processes for tests")
 
 IF(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
   GET_FILENAME_COMPONENT(INSTALL_DIR "${CMAKE_SOURCE_DIR}/usr" ABSOLUTE)
@@ -91,15 +100,6 @@ ENDIF()
 INCLUDE(CTest)
 INCLUDE(HDF5Config)
 
-IF(PASTIX_ENABLED)
-  FIND_PACKAGE(SCOTCH)
-  FIND_PACKAGE(PASTIX)
-ELSE()
-  IF(SUITESPARSE_ENABLED)
-    FIND_PACKAGE(SUITESPARSE)
-  ENDIF(SUITESPARSE_ENABLED)
-ENDIF(PASTIX_ENABLED)
-
 MACRO(SLL_TEST _NAME)
   ADD_EXECUTABLE( test_${_NAME} "test_${_NAME}.F90")
   TARGET_LINK_LIBRARIES(test_${_NAME} ${ARGN})
@@ -122,7 +122,7 @@ IF(BUILD_PARALUTION)
   SET(PARALUTION_VERSION 1.1.0 CACHE STRING "Paralution version number")
   EXTERNALPROJECT_ADD( paralution
      URL  http://www.paralution.com/downloads/paralution-${PARALUTION_VERSION}.tar.gz
-     CMAKE_ARGS -DSUPPORT_CUDA=OFF -DBUILD_EXAMPLES=OFF
+     CMAKE_ARGS -DSUPPORT_CUDA=OFF -DBUILD_EXAMPLES=OFF -DCMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER} -DCMAKE_C_COMPILER=${CMAKE_C_COMPILER}
      INSTALL_COMMAND ""
   )
 ENDIF()
@@ -137,23 +137,7 @@ IF($ENV{PFUNIT})
 ENDIF()
 
 IF(BUILD_SPRNG)
-  FIND_PACKAGE(MPI REQUIRED CXX)
-  SET(SPRNG_CXX_COMPILER ${MPI_CXX_COMPILER} CACHE FILEPATH  "CXX compiler for SPRNG")
-  SET(SPRNG_LIBS "-lmpi_cxx" CACHE STRING  "LIBS configure argument for SPRNG")
-  IF(APPLE)
-    MESSAGE(STATUS "Warning: Build SPRNG library on mac is tricky")
-  ENDIF(APPLE)
-  INCLUDE(ExternalProject)
-  SET(SPRNG_VERSION 5 CACHE STRING "SPRNG version number")
-  EXTERNALPROJECT_ADD( sprng
-     URL  http://www.sprng.org/Version5.0/sprng${SPRNG_VERSION}.tar.bz2
-     SOURCE_DIR ${CMAKE_BINARY_DIR}/sprng
-     BINARY_DIR ${CMAKE_BINARY_DIR}/sprng
-     #UPDATE_COMMAND autoreconf -if
-     CONFIGURE_COMMAND ${CMAKE_BINARY_DIR}/sprng/configure --enable-silent-rules --prefix=${CMAKE_BINARY_DIR}/sprng --with-mpi=yes CXX=${SPRNG_CXX_COMPILER} LIBS=${SPRNG_LIBS} "CXXFLAGS=-w -g -O2"
-     BUILD_COMMAND ${MAKE}
-     INSTALL_COMMAND ""
-  )
+  INCLUDE(BuildSPRNG)
 ENDIF()
 
 MESSAGE(STATUS "############################################################")

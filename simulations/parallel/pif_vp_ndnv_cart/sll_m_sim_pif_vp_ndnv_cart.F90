@@ -363,7 +363,7 @@ function solve_field_sum_generalvp_pif(sim, rhs) result(solution)
  
  SELECT CASE (sim%FIELDSOLVER)
     CASE(PIF_NO_E_FIELD)
-     solution=0.0_f64
+     solution=cmplx(0.0,0.0,f64)
     CASE(PIF_POISSON)
       solution=sim%SOLVER%solve_poisson(rhs)
     CASE(PIF_QUASINEUTRAL_RHO)
@@ -487,7 +487,7 @@ do tstep=1,sim%tsteps
   call sim%symplectic_rungekutta()
   end SELECT
         if (sim%coll_rank==0) write(*,'(A2, G10.4,  G20.8,  G20.8, G20.8, G20.8)') '#', sim%dt*(sim%tstep-1), &
-                           abs(sim%moment(1,sim%tstep))/sim%npart, sim%energy_error(sim%tstep), &
+                           abs(sim%moment(1,sim%tstep))/real(sim%npart,f64), sim%energy_error(sim%tstep), &
                            sim%fieldenergy(sim%tstep), sqrt(sum(sim%moment(:,tstep)**2))
       !if ( (gnuplot_inline_output.eqv. .true.) .AND. coll_rank==0 .AND. mod(timestep-1,timesteps/100)==0  ) then
 !                    call sll_s_energies_electrostatic_gnuplot_inline(kineticenergy(1:tstep), fieldenergy(1:tstep),&
@@ -752,7 +752,7 @@ subroutine calculate_diagnostics_generalvp_pif(sim)
 
 sll_int32 :: idx
 
-sim%kineticenergy(sim%tstep)=sum(sum(sim%particle(sim%maskv,:)**2,1)*sim%particle(sim%maskw,:))/sim%npart
+sim%kineticenergy(sim%tstep)=sum(sum(sim%particle(sim%maskv,:)**2,1)*sim%particle(sim%maskw,:))/real(sim%npart,f64)
 call sll_o_collective_globalsum(sll_v_world_collective, sim%kineticenergy(sim%tstep))
 
 sim%fieldenergy(sim%tstep)=abs(dot_product(sim%solution,sim%rhs))
@@ -771,10 +771,10 @@ call sll_o_collective_globalsum(sll_v_world_collective, sim%moment(:,sim%tstep))
 
 sim%moment_error(sim%tstep)=sqrt(sum((sim%moment(:,1)-sim%moment(:,sim%tstep))**2))
 
-sim%weight_sum(sim%tstep)=sum(sim%particle(sim%maskw,:))/sim%npart
+sim%weight_sum(sim%tstep)=sum(sim%particle(sim%maskw,:))/real(sim%npart,f64)
 call sll_o_collective_globalsum(sll_v_world_collective, sim%weight_sum(sim%tstep))
 
-sim%weight_var(sim%tstep)=sum( (sim%particle(sim%maskw,:)-sim%weight_sum(sim%tstep))**2)/sim%npart
+sim%weight_var(sim%tstep)=sum( (sim%particle(sim%maskw,:)-sim%weight_sum(sim%tstep))**2)/real(sim%npart,f64)
 call sll_o_collective_globalsum(sll_v_world_collective, sim%weight_var(sim%tstep))
 
 end subroutine calculate_diagnostics_generalvp_pif
@@ -959,7 +959,7 @@ subroutine heun_generalvp_pif(sim)
      E= sim%E(sim%particle(sim%maskx,:),t) + (sim%SOLVER%eval_gradient(sim%particle(sim%maskx,:),sim%solution)) 
      
      sim%particle(sim%maskv ,:)=xv0(sim%dimx+1:2*sim%dimx,:)/2.0 +  sim%particle(sim%maskv,:)/2.0+  &
-              sim%dt*sim%qm*(sim%vxB(sim%particle(sim%maskx,:),sim%particle(sim%maskv,:),t) + E)/2 
+              sim%dt*sim%qm*(sim%vxB(sim%particle(sim%maskx,:),sim%particle(sim%maskv,:),t) + E)/2.0_f64 
 
      sim%particle(sim%maskx,:)=xv0(1:sim%dimx,:)/2.0 +  sim%particle(sim%maskx,:)/2.0 + &
                                           sim%dt*sim%particle(sim%maskv,:)/2.0
@@ -1071,43 +1071,45 @@ end subroutine rk4_generalvp_pif
   sll_real64, dimension(3,size(v,2)) :: c
   sll_real64, dimension(:), intent(in) :: omega
 !    
-  c(1,:) = w(1,:) + w(1,:)*(v(2,:)**2 + v(3,:)**2)*(cos(omega) - 1) + v(2,:)*w(3,:)*sin(omega) - v(3,:)*w(2,:)*sin(omega) - v(1,:)*v(2,:)*w(2,:)*(cos(omega) - 1) - v(1,:)*v(3,:)*w(3,:)*(cos(omega) - 1) 
-  c(2,:) = w(2,:) + w(2,:)*(v(1,:)**2 + v(3,:)**2)*(cos(omega) - 1) - v(1,:)*w(3,:)*sin(omega) + v(3,:)*w(1,:)*sin(omega) - v(1,:)*v(2,:)*w(1,:)*(cos(omega) - 1) - v(2,:)*v(3,:)*w(3,:)*(cos(omega) - 1) 
-  c(3,:) = w(3,:) + w(3,:)*(v(1,:)**2 + v(2,:)**2)*(cos(omega) - 1) + v(1,:)*w(2,:)*sin(omega) - v(2,:)*w(1,:)*sin(omega) - v(1,:)*v(3,:)*w(1,:)*(cos(omega) - 1) - v(2,:)*v(3,:)*w(2,:)*(cos(omega) - 1)  
+  c(1,:) = w(1,:) + w(1,:)*(v(2,:)**2 + v(3,:)**2)*(cos(omega)-1.0_f64) + v(2,:)*w(3,:)*sin(omega) - v(3,:)*w(2,:)*sin(omega) - v(1,:)*v(2,:)*w(2,:)*(cos(omega)-1.0_f64) - v(1,:)*v(3,:)*w(3,:)*(cos(omega)-1.0_f64) 
+  c(2,:) = w(2,:) + w(2,:)*(v(1,:)**2 + v(3,:)**2)*(cos(omega)-1.0_f64) - v(1,:)*w(3,:)*sin(omega) + v(3,:)*w(1,:)*sin(omega) - v(1,:)*v(2,:)*w(1,:)*(cos(omega)-1.0_f64) - v(2,:)*v(3,:)*w(3,:)*(cos(omega)-1.0_f64) 
+  c(3,:) = w(3,:) + w(3,:)*(v(1,:)**2 + v(2,:)**2)*(cos(omega)-1.0_f64) + v(1,:)*w(2,:)*sin(omega) - v(2,:)*w(1,:)*sin(omega) - v(1,:)*v(3,:)*w(1,:)*(cos(omega)-1.0_f64) - v(2,:)*v(3,:)*w(2,:)*(cos(omega)-1.0_f64)  
    
   end function
 
 
-  function exp_skew_product( v, w) result(c)
-  sll_real64, dimension(:,:), intent(in) :: v, w
-  sll_real64, dimension(3,size(v,2)) :: c
-  sll_real64, dimension(size(v,2)) :: vv
-  sll_comp64, dimension(size(v,2)) :: sqrtvv
-  
-  
-  vv=-(v(1,:)**2+v(2,:)**2+v(3,:)**2)
-  sqrtvv=sll_p_i1*sqrt(-vv)
-  
-     c(1,:) = real((w(1,:)*exp(-sqrtvv)*(v(1,:)**2*exp(sqrtvv)*2.0_f64+v(3,:)**2*exp(sqrtvv*2.0_f64)+v(3,:)**2*exp(sqrtvv*2.0_f64)+v(3,:)**2+v(3,:)**2)*&
-     (-1.0_f64/2.0_f64))/vv+1.0_f64/sqrtvv**(3.0_f64)*w(2,:)*exp(-sqrtvv)*(exp(sqrtvv)-1.0_f64)*&
-     (v(3,:)**3*exp(sqrtvv)+v(1,:)**2*v(3,:)+v(3,:)**2*v(3,:)+v(3,:)**3+v(1,:)**2*v(3,:)*&
-     exp(sqrtvv)+v(3,:)**2*v(3,:)*exp(sqrtvv)-sqrtvv*v(1,:)*v(3,:)+sqrtvv*v(1,:)*v(3,:)*exp(sqrtvv))*(1.0_f64/2.0_f64)+(w(3,:)*&
-     exp(-sqrtvv)*(exp(sqrtvv)-1.0_f64)*(sqrtvv*v(3,:)-v(1,:)*v(3,:)+sqrtvv*v(3,:)*exp(sqrtvv)+v(1,:)*v(3,:)*exp(sqrtvv))*(1.0_f64/2.0_f64))/vv)
-  
-     c(2,:) =real( (w(2,:)*exp(-sqrtvv)*(v(3,:)**2*exp(sqrtvv)*2.0_f64+v(1,:)**2*exp(sqrtvv*2.0_f64)+v(3,:)**2*exp(sqrtvv*2.0_f64)+v(1,:)**2+v(3,:)**2)*&
-     (-1.0_f64/2.0_f64))/vv-1.0_f64/sqrtvv**(3.0_f64)*w(1,:)*exp(-sqrtvv)*(exp(sqrtvv)-1.0_f64)*(v(3,:)**3*&
-     exp(sqrtvv)+v(1,:)**2*v(3,:)+v(3,:)**2*v(3,:)+v(3,:)**3+v(1,:)**2*v(3,:)*exp(sqrtvv)+v(3,:)**2*v(3,:)*&
-     exp(sqrtvv)+sqrtvv*v(1,:)*v(3,:)-sqrtvv*v(1,:)*v(3,:)*exp(sqrtvv))*(1.0_f64/2.0_f64)-&
-     (w(3,:)*exp(-sqrtvv)*(exp(sqrtvv)-1.0_f64)*(sqrtvv*v(1,:)+v(3,:)*v(3,:)+sqrtvv*v(1,:)*&
-     exp(sqrtvv)-v(3,:)*v(3,:)*exp(sqrtvv))*(1.0_f64/2.0_f64))/vv)
-     
-     
-     c(3,:) = real((w(3,:)*exp(-sqrtvv)*(v(3,:)**2*exp(sqrtvv)*2.0_f64+v(1,:)**2*exp(sqrtvv*2.0_f64)+v(3,:)**2*exp(sqrtvv*2.0_f64)+v(1,:)**2+v(3,:)**2)*(-1.0_f64/2.0_f64))/&
-     vv-1.0_f64/sqrtvv**(3.0_f64)*w(2,:)*exp(-sqrtvv)*(exp(sqrtvv)-1.0_f64)*(v(1,:)**3*exp(sqrtvv)+v(1,:)*v(3,:)**2+v(1,:)*v(3,:)**2+v(1,:)**3+v(1,:)&
-     *v(3,:)**2*exp(sqrtvv)+v(1,:)*v(3,:)**2*exp(sqrtvv)+sqrtvv*v(3,:)*v(3,:)-sqrtvv*v(3,:)*v(3,:)*exp(sqrtvv))*(1.0_f64/2.0_f64)+&
-     1.0_f64/sqrtvv**(3.0_f64)*w(1,:)*exp(-sqrtvv)*(exp(sqrtvv)-1.0_f64)*(v(3,:)**3*exp(sqrtvv)+v(1,:)**2*v(3,:)+v(3,:)*v(3,:)**2+&
-     v(3,:)**3+v(1,:)**2*v(3,:)*exp(sqrtvv)+v(3,:)*v(3,:)**2*exp(sqrtvv)-sqrtvv*v(1,:)*v(3,:)+sqrtvv*v(1,:)*v(3,:)*exp(sqrtvv))*(1.0_f64/2.0_f64))
-  end function
+!PN Function not used
+!PN
+!PN   function exp_skew_product( v, w) result(c)
+!PN   sll_real64, dimension(:,:), intent(in) :: v, w
+!PN   sll_real64, dimension(3,size(v,2)) :: c
+!PN   sll_real64, dimension(size(v,2)) :: vv
+!PN   sll_comp64, dimension(size(v,2)) :: sqrtvv
+!PN   
+!PN   
+!PN   vv=-(v(1,:)**2+v(2,:)**2+v(3,:)**2)
+!PN   sqrtvv=sll_p_i1*cmplx(sqrt(-vv),0.0,f64)
+!PN   
+!PN      c(1,:) = real((w(1,:)*exp(-sqrtvv)*(v(1,:)**2*exp(sqrtvv)*2.0_f64+v(3,:)**2*exp(sqrtvv*2.0_f64)+v(3,:)**2*exp(sqrtvv*2.0_f64)+v(3,:)**2+v(3,:)**2)*&
+!PN      (-1.0_f64/2.0_f64))/vv+1.0_f64/sqrtvv**(3.0_f64)*w(2,:)*exp(-sqrtvv)*(exp(sqrtvv)-1.0_f64)*&
+!PN      (v(3,:)**3*exp(sqrtvv)+v(1,:)**2*v(3,:)+v(3,:)**2*v(3,:)+v(3,:)**3+v(1,:)**2*v(3,:)*&
+!PN      exp(sqrtvv)+v(3,:)**2*v(3,:)*exp(sqrtvv)-sqrtvv*v(1,:)*v(3,:)+sqrtvv*v(1,:)*v(3,:)*exp(sqrtvv))*(1.0_f64/2.0_f64)+(w(3,:)*&
+!PN      exp(-sqrtvv)*(exp(sqrtvv)-1.0_f64)*(sqrtvv*v(3,:)-v(1,:)*v(3,:)+sqrtvv*v(3,:)*exp(sqrtvv)+v(1,:)*v(3,:)*exp(sqrtvv))*(1.0_f64/2.0_f64))/vv)
+!PN   
+!PN      c(2,:) =real( (w(2,:)*exp(-sqrtvv)*(v(3,:)**2*exp(sqrtvv)*2.0_f64+v(1,:)**2*exp(sqrtvv*2.0_f64)+v(3,:)**2*exp(sqrtvv*2.0_f64)+v(1,:)**2+v(3,:)**2)*&
+!PN      (-1.0_f64/2.0_f64))/vv-1.0_f64/sqrtvv**(3.0_f64)*w(1,:)*exp(-sqrtvv)*(exp(sqrtvv)-1.0_f64)*(v(3,:)**3*&
+!PN      exp(sqrtvv)+v(1,:)**2*v(3,:)+v(3,:)**2*v(3,:)+v(3,:)**3+v(1,:)**2*v(3,:)*exp(sqrtvv)+v(3,:)**2*v(3,:)*&
+!PN      exp(sqrtvv)+sqrtvv*v(1,:)*v(3,:)-sqrtvv*v(1,:)*v(3,:)*exp(sqrtvv))*(1.0_f64/2.0_f64)-&
+!PN      (w(3,:)*exp(-sqrtvv)*(exp(sqrtvv)-1.0_f64)*(sqrtvv*v(1,:)+v(3,:)*v(3,:)+sqrtvv*v(1,:)*&
+!PN      exp(sqrtvv)-v(3,:)*v(3,:)*exp(sqrtvv))*(1.0_f64/2.0_f64))/vv)
+!PN      
+!PN      
+!PN      c(3,:) = real((w(3,:)*exp(-sqrtvv)*(v(3,:)**2*exp(sqrtvv)*2.0_f64+v(1,:)**2*exp(sqrtvv*2.0_f64)+v(3,:)**2*exp(sqrtvv*2.0_f64)+v(1,:)**2+v(3,:)**2)*(-1.0_f64/2.0_f64))/&
+!PN      vv-1.0_f64/sqrtvv**(3.0_f64)*w(2,:)*exp(-sqrtvv)*(exp(sqrtvv)-1.0_f64)*(v(1,:)**3*exp(sqrtvv)+v(1,:)*v(3,:)**2+v(1,:)*v(3,:)**2+v(1,:)**3+v(1,:)&
+!PN      *v(3,:)**2*exp(sqrtvv)+v(1,:)*v(3,:)**2*exp(sqrtvv)+sqrtvv*v(3,:)*v(3,:)-sqrtvv*v(3,:)*v(3,:)*exp(sqrtvv))*(1.0_f64/2.0_f64)+&
+!PN      1.0_f64/sqrtvv**(3.0_f64)*w(1,:)*exp(-sqrtvv)*(exp(sqrtvv)-1.0_f64)*(v(3,:)**3*exp(sqrtvv)+v(1,:)**2*v(3,:)+v(3,:)*v(3,:)**2+&
+!PN      v(3,:)**3+v(1,:)**2*v(3,:)*exp(sqrtvv)+v(3,:)*v(3,:)**2*exp(sqrtvv)-sqrtvv*v(1,:)*v(3,:)+sqrtvv*v(1,:)*v(3,:)*exp(sqrtvv))*(1.0_f64/2.0_f64))
+!PN   end function
  
  
 subroutine set_symplectic_rungekutta_coeffs_generalvp_pif(sim,rk_order)

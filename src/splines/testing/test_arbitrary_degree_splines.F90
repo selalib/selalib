@@ -9,7 +9,7 @@ program test_arbitrary_degree_splines
   use sll_m_arbitrary_degree_splines, only: &
     sll_t_arbitrary_degree_spline_1d, &
     sll_f_spline_derivatives_at_x, &
-    sll_f_splines_and_derivs_at_x, &
+    sll_s_splines_and_derivs_at_x, &
     sll_f_splines_at_x, &
     sll_s_compute_b_spline_and_deriv_at_x_mm, &
     sll_s_compute_b_spline_at_x_mm, &
@@ -18,9 +18,9 @@ program test_arbitrary_degree_splines
     sll_p_open_arbitrary_deg_spline, &
     sll_p_periodic_arbitrary_deg_spline, &
     sll_o_delete, &
-    sll_f_uniform_b_spline_derivatives_at_x, &
-    sll_f_uniform_b_splines_and_derivs_at_x, &
-    sll_f_uniform_b_splines_at_x
+    sll_s_uniform_b_spline_derivatives_at_x, &
+    sll_s_uniform_b_splines_and_derivs_at_x, &
+    sll_s_uniform_b_splines_at_x
 
   use sll_m_timer, only: &
     sll_s_set_time_mark, &
@@ -129,7 +129,7 @@ contains
        ! computing all non zero spline derivatives at point x:
        answer2(:) = sll_f_spline_derivatives_at_x(spline, cell, x)
        ! computing both all non zero splines and derivatives at point x:
-       answer3(:,:) = sll_f_splines_and_derivs_at_x(spline, cell, x)
+       call sll_s_splines_and_derivs_at_x(spline, cell, x, answer3)
        ! testing partition of unity property of b-splines:
        acc = abs(1.0_f64 - sum(answer1(1:degree+1)))
        passed_test = passed_test .and. (acc < criterion)
@@ -423,13 +423,13 @@ contains
           ! draw random number between 0 and 1
           call random_number(argument)
           ! compute values with uniform splines
-          results(:) = sll_f_uniform_b_splines_at_x(j, argument)
-          derivatives(:) = sll_f_uniform_b_spline_derivatives_at_x(j, argument)
-          sp_and_derivs(:,:) = sll_f_uniform_b_splines_and_derivs_at_x(j, argument)
+          call sll_s_uniform_b_splines_at_x(j, argument, results)
+          call sll_s_uniform_b_spline_derivatives_at_x(j, argument, derivatives)
+          call sll_s_uniform_b_splines_and_derivs_at_x(j, argument, sp_and_derivs)
           ! compute values with non uniform splines (cell is always 1)
           results_n(:) = sll_f_splines_at_x(spline, 1, argument)
           derivatives_n(:) = sll_f_spline_derivatives_at_x(spline, 1, argument)
-          sp_and_derivs_n(:,:) = sll_f_splines_and_derivs_at_x(spline, 1, argument)
+          call sll_s_splines_and_derivs_at_x(spline, 1, argument, sp_and_derivs_n)
 
           passed_flag = passed_flag .and. &
                (maxval(abs(results-results_n)).le.criterion)
@@ -574,7 +574,7 @@ contains
        ! test values and derivatives
        acc  = 0.0_f64
        acc2 = 0.0_f64
-       answer2(:,:) = sll_f_splines_and_derivs_at_x(spline, cell, x)
+       call sll_s_splines_and_derivs_at_x(spline, cell, x, answer2)
        acc  = sum(answer2(1,1:degree+1))
        acc2 = sum(answer2(2,1:degree+1))
        passed_test = passed_test .and. (abs(1.0_f64 - acc) < criterion)
@@ -692,31 +692,31 @@ contains
     ! computing both all non zero splines and derivatives at point x:
     call sll_s_set_time_mark(t0)
     do j=1,num_tests
-       answer3(:,:) = sll_f_splines_and_derivs_at_x(spline, cells(j), x(j))
+       call sll_s_splines_and_derivs_at_x(spline, cells(j), x(j), answer3)
     end do
     time = sll_f_time_elapsed_since(t0)
-    print *, 'Computing time for  sll_f_splines_and_derivs_at_x: ', time
+    print *, 'Computing time for  sll_s_splines_and_derivs_at_x: ', time
     ! computing all non zero uniform splines  at point x:
     call sll_s_set_time_mark(t0)
     do j=1,num_tests
-       answer1(:) = sll_f_uniform_b_splines_at_x(degree, xx(j))
+       call sll_s_uniform_b_splines_at_x(degree, xx(j), answer1)
     end do
     time = sll_f_time_elapsed_since(t0)
-    print *, 'Computing time for  sll_f_uniform_b_splines_at_x: ', time
+    print *, 'Computing time for  sll_s_uniform_b_splines_at_x: ', time
     ! computing all non zero uniform splines derivatives at point x:
     call sll_s_set_time_mark(t0)
     do j=1,num_tests
-       answer2(:) = sll_f_uniform_b_spline_derivatives_at_x(degree, xx(j))
+       call sll_s_uniform_b_spline_derivatives_at_x(degree, xx(j),answer2)
     end do
     time = sll_f_time_elapsed_since(t0)
-    print *, 'Computing time for  sll_f_uniform_b_spline_derivatives_at_x: ', time
+    print *, 'Computing time for  sll_s_uniform_b_spline_derivatives_at_x: ', time
     ! computing all non zero uniform splines and derivatives at point x:
     call sll_s_set_time_mark(t0)
     do j=1,num_tests
-       answer3(:,:) = sll_f_uniform_b_splines_and_derivs_at_x(degree, xx(j))
+       call sll_s_uniform_b_splines_and_derivs_at_x(degree, xx(j), answer3)
     end do
     time = sll_f_time_elapsed_since(t0)
-    print *, 'Computing time for  sll_f_uniform_b_splines_and_derivs_at_x: ', time
+    print *, 'Computing time for  sll_s_uniform_b_splines_and_derivs_at_x: ', time
 
   end subroutine test_cpu_time
 

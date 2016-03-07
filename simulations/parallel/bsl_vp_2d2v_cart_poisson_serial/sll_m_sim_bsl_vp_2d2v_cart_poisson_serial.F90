@@ -126,21 +126,9 @@ module sll_m_sim_bsl_vp_2d2v_cart_poisson_serial
     sll_s_int2string, &
     sll_f_is_even
 
-#ifdef FFTW
-  use sll_m_poisson_2d_periodic_fftw, only: &
-    sll_o_new, &
-    sll_t_poisson_2d_periodic_fftw, &
-    sll_o_solve
+  use sll_m_poisson_2d_base
+  use sll_m_poisson_2d_periodic
 
-#define poisson_2d_periodic sll_t_poisson_2d_periodic_fftw
-#else
-  use sll_m_poisson_2d_periodic_fftpack, only: &
-    sll_o_new, &
-    sll_t_poisson_2d_periodic_fftpack, &
-    sll_o_solve
-
-#define poisson_2d_periodic sll_t_poisson_2d_periodic_fftpack
-#endif
   implicit none
 
   public :: &
@@ -183,9 +171,8 @@ module sll_m_sim_bsl_vp_2d2v_cart_poisson_serial
    class(sll_c_advection_1d_base), pointer    :: advect_x4
    
    !poisson solver
-   !class(sll_poisson_2d_base), pointer   :: poisson
-   type(poisson_2d_periodic), pointer   :: poisson
-   type(poisson_2d_periodic), pointer   :: poisson_for_K
+   class(sll_c_poisson_2d_base), pointer   :: poisson
+   !class(sll_c_poisson_2d_base), pointer   :: poisson_for_K
    ! -Delta K = 4Det(Jac(E)) 
    !   = 4(\partial_x1E_x1\partial_x2E_x2-\partial_x1E_x2\partial_x2E_x1
    sll_int32 :: stencil_r
@@ -648,14 +635,13 @@ contains
     end select
       
     !poisson: for the moment no choice
-    sim%poisson => sll_o_new(&
+    sim%poisson => sll_f_new_poisson_2d_periodic(&
       x1_min, &
       x1_max, &
       num_cells_x1, &
       x2_min, &
       x2_max, &
-      num_cells_x2, &
-      ierr)
+      num_cells_x2)
     sim%stencil_r = stencil_r    
     sim%stencil_s = stencil_s    
   end subroutine initialize_vlasov_par_poisson_seq_cart
@@ -940,7 +926,8 @@ contains
 !         recv_buf_x1x2 )
 !    call sll_s_unload_buffer_2d(layout2d_par_x1x2, recv_buf_x1x2, rho_full)
 
-    call sll_o_solve(sim%poisson,E_x1,E_x2,rho_full,nrj)
+    call sim%poisson%compute_e_from_rho(E_x1,E_x2,rho_full)
+    nrj = sum(E_x1*E_x1+E_x2*E_x2) * delta1*delta2
     call compute_jacobian( &
       E_x1, &
       E_x2, &
@@ -955,7 +942,8 @@ contains
     field_x2(:,:,1) = E_x2(:,:)
     nrj_jac = 0._f64
     if(sim%split%dim_split_V==2)then            
-      call sll_o_solve(sim%poisson,field_x1(:,:,2),field_x2(:,:,2),jacobian_E,nrj_jac)
+      call sim%poisson%compute_e_from_rho(field_x1(:,:,2),field_x2(:,:,2),jacobian_E)
+      nrj_jac = sum(field_x1(:,:,2)*field_x1(:,:,2)+field_x2(:,:,2)+field_x2(:,:,2))*delta1*delta2
     endif
 
 
@@ -1166,7 +1154,8 @@ call sll_o_gnuplot_2d( &
 !            recv_buf_x1x2 )
 !          call sll_s_unload_buffer_2d(layout2d_par_x1x2, recv_buf_x1x2, rho_full)
 
-          call sll_o_solve(sim%poisson,E_x1,E_x2,rho_full,nrj)
+          call sim%poisson%compute_e_from_rho(E_x1,E_x2,rho_full)
+          nrj = sum(E_x1*E_x1+E_x2*E_x2)*delta1*delta2
           call compute_jacobian( &
             E_x1, &
             E_x2, &
@@ -1182,7 +1171,8 @@ call sll_o_gnuplot_2d( &
           field_x2(:,:,1) = E_x2(:,:)
           nrj_jac = 0._f64
           if(sim%split%dim_split_V==2)then            
-            call sll_o_solve(sim%poisson,field_x1(:,:,2),field_x2(:,:,2),jacobian_E,nrj_jac)
+            call sim%poisson%compute_e_from_rho(field_x1(:,:,2),field_x2(:,:,2),jacobian_E)
+            nrj_jac = sum(field_x1(:,:,2)*field_x1(:,:,2)+field_x2(:,:,2)*field_x2(:,:,2))*delta1*delta2
           endif
           
           
@@ -1560,11 +1550,11 @@ call sll_o_gnuplot_2d( &
      !SLL_DEALLOCATE(sim%poisson,ierr)
      nullify(sim%poisson)
    endif
-   if(associated(sim%poisson_for_K)) then
+   !if(associated(sim%poisson_for_K)) then
      !call sll_o_delete(sim%poisson_for_K,ierr)
      !SLL_DEALLOCATE(sim%poisson_for_K,ierr)
-     nullify(sim%poisson_for_K)
-   endif
+     !nullify(sim%poisson_for_K)
+   !endif
     
     
   end subroutine sll_s_delete_vp4d_par_cart

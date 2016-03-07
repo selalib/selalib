@@ -17,20 +17,18 @@
 !  Contact : Pierre Navaro http://wwww-irma.u-strasbg.fr/~navaro
 !
 
-#include "sll_fftw.h"
-
 #define D_DX(field)                                                   \
 plan%d_dx = field; \
-call fftw_execute_dft_r2c(plan%fwx, plan%d_dx, plan%fft_x_array);     \
+call sll_s_fft_exec_r2c_1d(plan%fwx, plan%d_dx, plan%fft_x_array);     \
 plan%fft_x_array(2:ncx/2+1) = -cmplx(0.0_f64,plan%kx(2:ncx/2+1),kind=f64)*plan%fft_x_array(2:ncx/2+1); \
-call fftw_execute_dft_c2r(plan%bwx, plan%fft_x_array, plan%d_dx);     \
+call sll_s_fft_exec_c2r_1d(plan%bwx, plan%fft_x_array, plan%d_dx);     \
 plan%d_dx = plan%d_dx / plan%ncx
 
 #define D_DY(field)                                                   \
 plan%d_dy = field; \
-call fftw_execute_dft_r2c(plan%fwy, plan%d_dy, plan%fft_y_array);     \
+call sll_s_fft_exec_r2c_1d(plan%fwy, plan%d_dy, plan%fft_y_array);     \
 plan%fft_y_array(2:ncy/2+1) = -cmplx(0.0_f64,plan%ky(2:ncy/2+1),kind=f64)*plan%fft_y_array(2:ncy/2+1); \
-call fftw_execute_dft_c2r(plan%bwy, plan%fft_y_array, plan%d_dy);     \
+call sll_s_fft_exec_c2r_1d(plan%bwy, plan%fft_y_array, plan%d_dy);     \
 plan%d_dy = plan%d_dy / plan%ncy
 
 #define MPI_MASTER 0
@@ -44,35 +42,22 @@ module sll_m_maxwell_2d_periodic_cartesian_par
 #include "sll_working_precision.h"
 #include "sll_maxwell_solvers_macros.h"
 
-  use iso_c_binding, only: &
-    c_associated, &
-    c_double_complex, &
-    c_f_pointer, &
-    c_ptr, &
-    c_size_t
+use sll_m_collective, only: &
+  sll_f_get_collective_rank, &
+  sll_f_get_collective_size, &
+  sll_v_world_collective
 
-  use sll_m_collective, only: &
-    sll_f_get_collective_rank, &
-    sll_f_get_collective_size, &
-    sll_v_world_collective
+use sll_m_constants, only: &
+  sll_p_pi
 
-  use sll_m_constants, only: &
-    sll_p_pi
-
-#ifdef FFTW_F2003
-  use sll_m_fftw3, only: &
-    fftw_alloc_complex, &
-    fftw_destroy_plan, &
-    fftw_execute_dft_c2r, &
-    fftw_execute_dft_r2c, &
-    fftw_free, &
-    fftw_patient, &
-    fftw_plan_dft_c2r_1d, &
-    fftw_plan_dft_r2c_1d
-#else
-  use sll_m_fftw3, only: &
-       fftw_patient
-#endif
+use sll_m_fft, only: &
+    sll_t_fft, &
+    sll_s_fft_free, &
+    sll_s_fft_init_c2r_1d, &
+    sll_s_fft_init_r2c_1d, &
+    sll_s_fft_exec_c2r_1d, &
+    sll_s_fft_exec_r2c_1d, &
+    sll_s_fft_free
 
   use sll_m_remapper, only: &
     sll_o_apply_remap_2d, &
@@ -99,28 +84,26 @@ module sll_m_maxwell_2d_periodic_cartesian_par
 
 !> Maxwell solver 2D object, PSTD scheme
 type sll_t_maxwell_2d_periodic_plan_cartesian_par
-   sll_int32                           :: ncx         !< number of cells x
-   sll_int32                           :: ncy         !< number of cells y
-   fftw_plan                           :: fwx         !< fftw plan forward x
-   fftw_plan                           :: fwy         !< fftw plan forward y
-   fftw_plan                           :: bwx         !< fftw plan backward x
-   fftw_plan                           :: bwy         !< fftw plan backward y
-   sll_real64, dimension(:), pointer   :: d_dx        !< x derivative
-   sll_real64, dimension(:), pointer   :: d_dy        !< y derivative
-   fftw_comp,  dimension(:), pointer   :: fft_x_array !< fft x transform
-   fftw_comp,  dimension(:), pointer   :: fft_y_array !< fft y transform
-   sll_real64                          :: e_0         !< electric conductibility
-   sll_real64                          :: mu_0        !< magnetic permeability
-   fftw_plan                           :: p_x_array   !< x pointer to memory
-   fftw_plan                           :: p_y_array   !< y pointer to memory
-   type(sll_t_layout_2d),  pointer           :: layout_x    !< layout sequential in x
-   type(sll_t_layout_2d),  pointer           :: layout_y    !< layout sequential in y
+   sll_int32                                 :: ncx         !< number of cells x
+   sll_int32                                 :: ncy         !< number of cells y
+   type(sll_t_fft)                           :: fwx         !< fft plan forward x
+   type(sll_t_fft)                           :: fwy         !< fft plan forward y
+   type(sll_t_fft)                           :: bwx         !< fft plan backward x
+   type(sll_t_fft)                           :: bwy         !< fft plan backward y
+   sll_real64, dimension(:), pointer         :: d_dx        !< x derivative
+   sll_real64, dimension(:), pointer         :: d_dy        !< y derivative
+   sll_comp64, dimension(:), pointer         :: fft_x_array !< fft x transform
+   sll_comp64, dimension(:), pointer         :: fft_y_array !< fft y transform
+   sll_real64                                :: e_0         !< electric conductibility
+   sll_real64                                :: mu_0        !< magnetic permeability
+   type(sll_t_layout_2d),            pointer :: layout_x    !< layout sequential in x
+   type(sll_t_layout_2d),            pointer :: layout_y    !< layout sequential in y
    type(sll_t_remap_plan_2d_real64), pointer :: rmp_xy      !< remap x->y pointer
    type(sll_t_remap_plan_2d_real64), pointer :: rmp_yx      !< remap y->x pointer
-   sll_real64, dimension(:,:), pointer :: fz_x        !< array sequential in x
-   sll_real64, dimension(:,:), pointer :: fz_y        !< array sequential in y
-   sll_real64, dimension(:), pointer   :: kx          !< x wave number
-   sll_real64, dimension(:), pointer   :: ky          !< y wave number
+   sll_real64, dimension(:,:),       pointer :: fz_x        !< array sequential in x
+   sll_real64, dimension(:,:),       pointer :: fz_y        !< array sequential in y
+   sll_real64, dimension(:),         pointer :: kx          !< x wave number
+   sll_real64, dimension(:),         pointer :: ky          !< y wave number
 end type sll_t_maxwell_2d_periodic_plan_cartesian_par
 
 
@@ -146,8 +129,6 @@ contains
     sll_int32                :: error    !< error code
     sll_int32                :: nx_loc   !< x local points
     sll_int32                :: ny_loc   !< y local points
-    fftw_int                 :: sz_x_array
-    fftw_int                 :: sz_y_array
     sll_real64               :: kx0
     sll_real64               :: ky0
     sll_int32                :: i, j
@@ -163,24 +144,20 @@ contains
        stop
     end if
 
-    SLL_ALLOCATE(plan,                 error)
+    SLL_ALLOCATE(plan,                   error)
     SLL_CLEAR_ALLOCATE(plan%d_dx(1:ncx), error)
     SLL_CLEAR_ALLOCATE(plan%d_dy(1:ncy), error)
 
     plan%ncx = ncx
     plan%ncy = ncy
 
-    FFTW_ALLOCATE(plan%fft_x_array,ncx/2+1,sz_x_array,plan%p_x_array)
-    FFTW_ALLOCATE(plan%fft_y_array,ncy/2+1,sz_y_array,plan%p_y_array)
+    SLL_ALLOCATE(plan%fft_x_array(ncx/2+1), error)
+    SLL_ALLOCATE(plan%fft_y_array(ncy/2+1), error)
 
-    NEW_FFTW_PLAN_R2C_1D(plan%fwx,ncx,plan%d_dx,plan%fft_x_array)
-    NEW_FFTW_PLAN_C2R_1D(plan%bwx,ncx,plan%fft_x_array,plan%d_dx)
-    NEW_FFTW_PLAN_R2C_1D(plan%fwy,ncy,plan%d_dy,plan%fft_y_array)
-    NEW_FFTW_PLAN_C2R_1D(plan%bwy,ncy,plan%fft_y_array,plan%d_dy)
-
-   !call dfftw_init_threads(error)
-   !if (error == 0) stop 'FFTW CAN''T USE THREADS'
-   !call dfftw_plan_with_nthreads(nthreads)
+    call sll_s_fft_init_r2c_1d(plan%fwx,ncx,plan%d_dx,plan%fft_x_array)
+    call sll_s_fft_init_c2r_1d(plan%bwx,ncx,plan%fft_x_array,plan%d_dx)
+    call sll_s_fft_init_r2c_1d(plan%fwy,ncy,plan%d_dy,plan%fft_y_array)
+    call sll_s_fft_init_c2r_1d(plan%bwy,ncy,plan%fft_y_array,plan%d_dy)
 
     ! Layout and local sizes for FFTs in x-direction
     plan%layout_x => layout_x
@@ -436,15 +413,10 @@ contains
        STOP
     end if
 
-#ifdef FFTW_F2003
-    if (c_associated(plan%p_x_array)) call fftw_free(plan%p_x_array)
-    if (c_associated(plan%p_y_array)) call fftw_free(plan%p_y_array)
-#endif
-
-    call fftw_destroy_plan(plan%fwx)
-    call fftw_destroy_plan(plan%fwy)
-    call fftw_destroy_plan(plan%bwx)
-    call fftw_destroy_plan(plan%bwy)
+    call sll_s_fft_free(plan%fwx)
+    call sll_s_fft_free(plan%fwy)
+    call sll_s_fft_free(plan%bwx)
+    call sll_s_fft_free(plan%bwy)
 
     call sll_o_delete(plan%rmp_xy)
     call sll_o_delete(plan%rmp_yx)

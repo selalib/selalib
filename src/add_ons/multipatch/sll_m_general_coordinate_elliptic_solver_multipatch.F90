@@ -33,7 +33,7 @@ module sll_m_general_coordinate_elliptic_solver_multipatch
     sll_t_csr_matrix, &
     sll_s_mult_csr_matrix_vector, &
     sll_s_solve_csr_matrix, &
-    sll_o_delete
+    sll_s_free_csr_matrix
 
   use sll_m_sparse_matrix_mp, only: &
     sll_f_new_csr_matrix_mp
@@ -350,8 +350,8 @@ SLL_DEALLOCATE(es_mp%local_to_global_row,ierr)
 SLL_DEALLOCATE(es_mp%local_to_global_col,ierr)
 SLL_DEALLOCATE(es_mp%local_to_global_spline_indices_source_row,ierr)
 SLL_DEALLOCATE(es_mp%local_to_global_spline_indices_source_col,ierr)
-call sll_o_delete(es_mp%sll_csr_mat)
-call sll_o_delete(es_mp%sll_csr_mat_source)
+call sll_s_free_csr_matrix(es_mp%sll_csr_mat)
+call sll_s_free_csr_matrix(es_mp%sll_csr_mat_source)
 SLL_DEALLOCATE(es_mp%rho_vec,ierr)
 SLL_DEALLOCATE(es_mp%phi_vec,ierr)
 SLL_DEALLOCATE(es_mp%knots1_rho,ierr)
