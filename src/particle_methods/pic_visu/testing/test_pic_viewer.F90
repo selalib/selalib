@@ -12,7 +12,7 @@ use sll_m_common_coordinate_transformations
 use sll_m_coordinate_transformation_2d_base
 use sll_m_coordinate_transformations_2d
 use sll_m_poisson_2d_base
-use sll_m_poisson_2d_fft
+use sll_m_poisson_2d_periodic
 use sll_m_gnuplot
 
 implicit none
@@ -32,7 +32,7 @@ sll_real64                        :: t0
 sll_real64                        :: t1
 sll_real64                        :: tcpu
 sll_int32,  parameter             :: nx = 64
-sll_int32,  parameter             :: ny = 48
+sll_int32,  parameter             :: ny = 32
 sll_real64, parameter             :: xmin = -3.0_f64
 sll_real64, parameter             :: xmax = +3.0_f64
 sll_real64, parameter             :: ymin = -2.0_f64
@@ -78,7 +78,7 @@ SLL_ALLOCATE(vgx(nx,ny),error)
 SLL_ALLOCATE(vgy(nx,ny),error)                                        
 SLL_ALLOCATE(omg(nx,ny),error)                                       
                                                                               
-poisson => sll_f_new_poisson_2d_fft_solver(xmin,xmax,nx,ymin,ymax,ny)
+poisson => sll_f_new_poisson_2d_periodic(xmin,xmax,nx,ymin,ymax,ny)
                                                                               
 nbpart = 4000
 

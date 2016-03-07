@@ -61,7 +61,8 @@ module sll_m_poisson_2d_mudpack_curvilinear_old
     sll_p_non_separable_without_cross_terms
 
   use sll_m_poisson_2d_base, only: &
-    sll_c_poisson_2d_base
+    sll_c_poisson_2d_base, &
+    sll_i_function_of_position
 
   implicit none
 
@@ -111,7 +112,16 @@ module sll_m_poisson_2d_mudpack_curvilinear_old
       compute_E_from_rho_2d_mudpack_curvilinear
 !    procedure, pass(poisson) :: compute_E_from_phi => &
 !      compute_E_from_phi_2d_polar
-      
+
+    !> Compute the squarred L_2 for given coefficients
+    procedure :: &
+         l2norm_squared => l2norm_squarred_2d_mudpack_curvilinear
+    !> Compute the right hand side from a given function
+    procedure :: &
+         compute_rhs_from_function => compute_rhs_from_function_2d_mudpack_curvilinear
+    !> Destructor
+    procedure :: free => delete_2d_mudpack_curvilinear_solver
+
   end type poisson_2d_mudpack_curvilinear_old
 
   class(poisson_2d_mudpack_curvilinear_old), pointer   :: mudpack_curvilinear_wrapper => null()
@@ -261,6 +271,9 @@ contains
 
     nx = nc_eta1+1
     ny = nc_eta2+1
+
+    allocate(phi(nx*ny))
+    allocate(rhs(nx*ny))
 
     delta1   = (eta1_max - eta1_min)/real(nc_eta1,f64)
     delta2   = (eta2_max - eta2_min)/real(nc_eta2,f64)
@@ -639,6 +652,17 @@ contains
     
   end subroutine compute_phi_from_rho_2d_mudpack_curvilinear
 
+<<<<<<< HEAD:src/field_solvers/poisson_solvers/sll_m_poisson_2d_mudpack_curvilinear_solver_old.F90
+    ! solves E = -\nabla Phi in 2d
+!    subroutine compute_E_from_phi_2d_fft( poisson, phi, E1, E2 )
+!      class(sll_t_poisson_2d_fft_solver) :: poisson
+!      sll_real64,dimension(:,:),intent(in) :: phi
+!      sll_real64,dimension(:,:),intent(out) :: E1
+!      sll_real64,dimension(:,:),intent(out) :: E2
+!    end subroutine compute_E_from_phi_2d_fft
+
+=======
+>>>>>>> develop:src/field_solvers/poisson_solvers/sll_m_poisson_2d_mudpack_curvilinear_old.F90
     ! solves E = -\nabla Phi with -\Delta phi = rho in 2d 
     subroutine compute_E_from_rho_2d_mudpack_curvilinear( poisson, E1, E2, rho )
       class(poisson_2d_mudpack_curvilinear_old) :: poisson
@@ -662,7 +686,33 @@ contains
       !call solve( poisson%poiss, E1, E2, rho)
       
     end subroutine compute_E_from_rho_2d_mudpack_curvilinear
+
+
+
+  function l2norm_squarred_2d_mudpack_curvilinear(poisson, coefs_dofs) result(r)
+    class( poisson_2d_mudpack_curvilinear_solver), intent(in)  :: poisson !< Poisson solver object.
+    sll_real64, intent(in)                                     :: coefs_dofs(:,:) !< Values of the coefficient vectors for each DoF
+    sll_real64                                     :: r
+    
+    print*, 'l2norm_squared not implemented for poisson_2d_mudpack_curvilinear_solver.'
+    
+  end function l2norm_squarred_2d_mudpack_curvilinear
   
+  subroutine compute_rhs_from_function_2d_mudpack_curvilinear(poisson, func, coefs_dofs)
+    class( poisson_2d_mudpack_curvilinear_solver)  :: poisson !< Poisson solver object.
+    procedure(sll_i_function_of_position)          :: func !< Function to be projected.
+    sll_real64, intent(out)                        :: coefs_dofs(:) !< Coefficients of the projection.
+    
+    print*, 'compute_rhs_from_function not implemented for poisson_2d_mudpack_curvilinear_solver.'
+    
+  end subroutine compute_rhs_from_function_2d_mudpack_curvilinear
+  
+  subroutine delete_2d_mudpack_curvilinear_solver(poisson)
+    class( poisson_2d_mudpack_curvilinear_solver)  :: poisson !< Poisson solver object.
+  
+  end subroutine delete_2d_mudpack_curvilinear_solver
+
+
 subroutine coefxxyy_array(b11,b12,b21,b22,transf,eta1_min,eta2_min, &
                          delta1,delta2,nx,ny,cxx_array,cyy_array)
   implicit none                     

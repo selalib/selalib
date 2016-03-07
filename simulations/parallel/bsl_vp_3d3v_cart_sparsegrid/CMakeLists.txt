@@ -1,4 +1,4 @@
-if (FFTW_FOUND AND FFTW_ENABLED)
+if (NOT (FFT_LIB STREQUAL "SLLFFT"))
 
   set(    SIM_NAME bsl_vp_3d3v_cart_sparsegrid  )
   set(   TEST_NAME "sim_${SIM_NAME}"            )

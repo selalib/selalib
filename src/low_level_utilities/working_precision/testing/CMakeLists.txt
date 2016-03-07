@@ -1,1 +1,2 @@
 ADD_EXECUTABLE( test_working_precision test_working_precision.F90 )
+TARGET_LINK_LIBRARIES( test_working_precision sll_working_precision )

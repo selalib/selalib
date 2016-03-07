@@ -1,11 +1,3 @@
-ADD_EXECUTABLE( test_poisson_2d_fft test_poisson_2d_fft.F90 )
-TARGET_LINK_LIBRARIES( test_poisson_2d_fft sll_poisson_solvers )
-ADD_TEST( NAME poisson_2d_fft  COMMAND test_poisson_2d_fft     )
-SET_TESTS_PROPERTIES( poisson_2d_fft PROPERTIES PASS_REGULAR_EXPRESSION "PASSED" )
-
-ADD_EXECUTABLE( test_poisson_1d_fd test_poisson_1d_fd.F90 )
-TARGET_LINK_LIBRARIES( test_poisson_1d_fd sll_poisson_solvers )
-
 ADD_EXECUTABLE( test_poisson_1d_polar test_poisson_1d_polar.F90 )
 TARGET_LINK_LIBRARIES( test_poisson_1d_polar sll_poisson_solvers )
 ADD_TEST( NAME poisson_1d_polar COMMAND test_poisson_1d_polar     )
@@ -52,9 +44,13 @@ IF(BUILD_MUDPACK)
   # Ctests
   ADD_MUDPACK_PROGRAM( cartesian )
   ADD_MUDPACK_PROGRAM( polar )
+
+  ADD_EXECUTABLE( test_poisson_2d_mudpack_curvilinear test_poisson_2d_mudpack_curvilinear.F90 )
+  TARGET_LINK_LIBRARIES( test_poisson_2d_mudpack_curvilinear sll_poisson_solvers )
+  ADD_TEST( NAME poisson_2d_mudpack_curvilinear COMMAND test_poisson_2d_mudpack_curvilinear )
+  SET_TESTS_PROPERTIES( poisson_2d_mudpack_curvilinear PROPERTIES PASS_REGULAR_EXPRESSION "PASSED" )
+
 ENDIF(BUILD_MUDPACK)
-
-
 
 ADD_TEST( NAME poisson_1d_periodic     COMMAND test_poisson_1d_periodic     )
 SET_TESTS_PROPERTIES( poisson_1d_periodic PROPERTIES PASS_REGULAR_EXPRESSION "PASSED" )
@@ -72,3 +68,13 @@ ADD_EXECUTABLE( test_hex_poisson test_hex_poisson.F90 )
 TARGET_LINK_LIBRARIES( test_hex_poisson sll_poisson_solvers )
 ADD_TEST( NAME hex_poisson COMMAND test_hex_poisson )
 SET_TESTS_PROPERTIES( hex_poisson PROPERTIES PASS_REGULAR_EXPRESSION "PASSED" )
+
+IF(HDF5_ENABLED AND HDF5_IS_PARALLEL)
+  SET(CMAKE_Fortran_COMPILER ${MPI_Fortran_COMPILER})
+ENDIF(HDF5_ENABLED AND HDF5_IS_PARALLEL)
+IF(BUILD_MUDPACK)
+  ADD_EXECUTABLE( test_poisson_2d_mudpack_curvilinear_old test_poisson_2d_mudpack_curvilinear_old.F90 )
+  TARGET_LINK_LIBRARIES( test_poisson_2d_mudpack_curvilinear_old sll_poisson_solvers )
+  ADD_TEST( NAME poisson_2d_mudpack_curvilinear_old COMMAND test_poisson_2d_mudpack_curvilinear_old )
+  SET_TESTS_PROPERTIES( poisson_2d_mudpack_curvilinear_old PROPERTIES PASS_REGULAR_EXPRESSION "PASSED" )
+ENDIF(BUILD_MUDPACK)

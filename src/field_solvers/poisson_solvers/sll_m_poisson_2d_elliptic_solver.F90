@@ -56,7 +56,8 @@ module sll_m_poisson_2d_elliptic_solver
     sll_c_interpolator_2d
 
   use sll_m_poisson_2d_base, only: &
-    sll_c_poisson_2d_base
+    sll_c_poisson_2d_base, &
+    sll_i_function_of_position
 
   use sll_m_scalar_field_2d, only: &
     sll_f_new_scalar_field_2d_discrete
@@ -113,6 +114,11 @@ module sll_m_poisson_2d_elliptic_solver
       compute_phi_from_rho_2d_elliptic_solver
     procedure, pass(poisson) :: compute_E_from_rho => &
       compute_E_from_rho_2d_elliptic_solver
+
+    procedure :: l2norm_squared => l2norm_squarred_2d_elliptic_solver
+    procedure :: compute_rhs_from_function => compute_rhs_from_function_2d_elliptic_solver
+    procedure :: free => delete_poisson_2d_elliptic_solver
+
   end type poisson_2d_elliptic_solver
 
 contains
@@ -826,7 +832,7 @@ contains
 
     ! solves E = -\nabla Phi in 2d
 !    subroutine compute_E_from_phi_2d_fft( poisson, phi, E1, E2 )
-!      class(poisson_2d_fft_solver) :: poisson
+!      class(poisson_2d_periodic_fft) :: poisson
 !      sll_real64,dimension(:,:),intent(in) :: phi
 !      sll_real64,dimension(:,:),intent(out) :: E1
 !      sll_real64,dimension(:,:),intent(out) :: E2
@@ -859,7 +865,31 @@ contains
       !call solve( poisson%poiss, E1, E2, rho)
       
     end subroutine compute_E_from_rho_2d_elliptic_solver
+
+
+    function l2norm_squarred_2d_elliptic_solver(poisson, coefs_dofs) result(r)
+       class( poisson_2d_elliptic_solver), intent(in) :: poisson !< Poisson solver object.
+       sll_real64,intent(in)                      :: coefs_dofs(:,:) !< Values of the coefficient vectors for each DoF
+       sll_real64                                   :: r
+       
+       r = 0.0_f64
+       print*, 'l2norm_squared not implemented for 2d elliptic solver.'
+
+     end function l2norm_squarred_2d_elliptic_solver
     
+     subroutine compute_rhs_from_function_2d_elliptic_solver(poisson, func, coefs_dofs)
+       class( poisson_2d_elliptic_solver)                    :: poisson !< Maxwell solver object.
+       procedure(sll_i_function_of_position)          :: func !< Function to be projected.
+       sll_real64, intent(out)                        :: coefs_dofs(:) !< Coefficients of the projection.
+
+       print*, 'compute_rhs_from_function not implemented for 2d elliptic solver.'
+
+     end subroutine compute_rhs_from_function_2d_elliptic_solver
+
+     subroutine delete_poisson_2d_elliptic_solver(poisson)
+       class( poisson_2d_elliptic_solver)                    :: poisson !< Maxwell solver object.
+     end subroutine delete_poisson_2d_elliptic_solver
+
  end module sll_m_poisson_2d_elliptic_solver
   
 #endif /* DOXYGEN_SHOULD_SKIP_THIS */
