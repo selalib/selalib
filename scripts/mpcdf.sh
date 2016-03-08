@@ -1,35 +1,47 @@
 #!/bin/bash
 
 # ---
-# Build selalib on MPCDF systems (Hydra, Linux clusters) using the Intel toolchain.
-# 2015, khr@mpcdf.mpg.de
+# Example script to build selalib on MPCDF systems (Hydra, Linux clusters).
+#
+# By default, this script needs to be run from the ./scripts/ folder in the
+# git checkout to be able to correctly determine the source location.  If you
+# want to run it elsewhere, please set SLL_BASE accordingly (see below).
+#
+# 2016, khr@mpcdf.mpg.de
 # ---
 
 
-# --- Determine the absolute location of the selalib source tree,
-#     assuming that this script is invoked from the 'scripts' directory.
-SLL_BASE=`pwd`/../
-SLL_BASE=`readlink -f $SLL_BASE`
-#SLL_BASE=/home/...
-# --- build (object) directory
-BUILD_DIR=$HOME/selalib/obj
+# --- OPTIONS ---
 DO_CONF=true
 DO_BUILD=true
-# --- number of processors to be used for a parallel build
+BUILD_DIR=$HOME/selalib/obj
+BUILD_TYPE="Release"
+#BUILD_TYPE="Debug"
+# number of processors to be used for a parallel build
 JMAKE=1
+# --- automatically determine the absolute location of the selalib source tree
+SLL_BASE=`pwd`/../
+SLL_BASE=`readlink -f $SLL_BASE`
 
 
 # --- load environment modules
+source /etc/profile.d/modules.sh
 module purge
 # ---
 module load gcc
 module load intel
 module load mkl
-module load impi || module load mpi.intel
-module load hdf5-mpi
+if [ x"$CLUSTER" != x"" ]; then
+  # on any Linux cluster, we have Intel MPI in the impi module
+  module load impi
+else
+  # whereas on Hydra, the module is labeled differently
+  module load mpi.intel
+fi
 module load fftw
-module load cmake/3.2
+module load hdf5-mpi
 module load git
+module load cmake/3.2
 module load python33/python
 # ---
 module list
@@ -50,7 +62,7 @@ cd $BUILD_DIR
 if [ x"$DO_CONF" == x"true" ]
 then
   cmake $SLL_BASE \
-    -DCMAKE_BUILD_TYPE:STRING="Release" \
+    -DCMAKE_BUILD_TYPE:STRING="${BUILD_TYPE}" \
     -DOPENMP_ENABLED:BOOL=ON \
     -DUSE_MKL:BOOL=ON \
     -DHDF5_PARALLEL_ENABLED:BOOL=ON \
@@ -71,4 +83,3 @@ then
 else
   echo "skipping make step ..."
 fi
-
