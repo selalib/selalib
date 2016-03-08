@@ -298,7 +298,8 @@ contains  ! ****************************************************************
     xmax, &
     bc_type, &
     slope_left, &
-    slope_right ) result(res)
+    slope_right, &
+    fast_algorithm ) result(res)
 
     type(sll_t_cubic_spline_interpolator_1d),  pointer :: res
     sll_int32,  intent(in)               :: num_points
@@ -307,16 +308,49 @@ contains  ! ****************************************************************
     sll_int32,  intent(in)               :: bc_type
     sll_real64, intent(in), optional     :: slope_left
     sll_real64, intent(in), optional     :: slope_right
+    logical,    intent(in), optional     :: fast_algorithm
+
     sll_int32 :: ierr
     SLL_ALLOCATE(res,ierr)
-    call initialize_cs1d_interpolator( &
-         res, &
-         num_points, &
-         xmin, &
-         xmax, &
-         bc_type, &
-         slope_left, &
-         slope_right )
+
+    if (present(slope_left).and.present(slope_right)) then
+       if (present(fast_algorithm)) then
+          call initialize_cs1d_interpolator( &
+               res, &
+               num_points, &
+               xmin, &
+               xmax, &
+               bc_type, &
+               slope_left, &
+               slope_right, &
+               fast_algorithm )
+       else
+          call initialize_cs1d_interpolator( &
+               res, &
+               num_points, &
+               xmin, &
+               xmax, &
+               bc_type, &
+               slope_left, &
+               slope_right )
+       end if
+    elseif (present(fast_algorithm)) then
+       call initialize_cs1d_interpolator( &
+            res, &
+            num_points, &
+            xmin, &
+            xmax, &
+            bc_type, &
+            fast_algorithm = fast_algorithm )
+    else
+       call initialize_cs1d_interpolator( &
+            res, &
+            num_points, &
+            xmin, &
+            xmax, &
+            bc_type)
+    end if
+
   end function sll_f_new_cubic_spline_interpolator_1d
 
   ! Why is the name of this function changing depending on the standard?
@@ -330,7 +364,8 @@ contains  ! ****************************************************************
     xmax, &
     bc_type, &
     slope_left, &
-    slope_right )
+    slope_right, &
+    fast_algorithm )
 
     class(sll_t_cubic_spline_interpolator_1d),  intent(inout) :: interpolator
     sll_int32,  intent(in)               :: num_points
@@ -339,6 +374,7 @@ contains  ! ****************************************************************
     sll_int32,  intent(in)               :: bc_type
     sll_real64, intent(in), optional     :: slope_left
     sll_real64, intent(in), optional     :: slope_right
+    logical,    intent(in), optional     :: fast_algorithm
     sll_int32                            :: ierr
     sll_int32  :: i
     sll_real64 :: delta
@@ -354,12 +390,28 @@ contains  ! ****************************************************************
     interpolator%interpolation_points(num_points) = xmax
     interpolator%bc_type = bc_type
     if (present(slope_left).and.present(slope_right)) then
+       if (present(fast_algorithm)) then
+          interpolator%spline => sll_f_new_cubic_spline_1d( &
+               num_points, &
+               xmin, xmax, &
+               bc_type, &
+               slope_left, &
+               slope_right, &
+               fast_algorithm)
+       else
+          interpolator%spline => sll_f_new_cubic_spline_1d( &
+               num_points, &
+               xmin, xmax, &
+               bc_type, &
+               slope_left, &
+               slope_right )
+       end if
+    elseif (present(fast_algorithm)) then
        interpolator%spline => sll_f_new_cubic_spline_1d( &
             num_points, &
             xmin, xmax, &
             bc_type, &
-            slope_left, &
-            slope_right )
+            fast_algorithm=fast_algorithm)
     else
        interpolator%spline => &
             sll_f_new_cubic_spline_1d(num_points, xmin, xmax, bc_type)
