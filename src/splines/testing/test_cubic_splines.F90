@@ -90,14 +90,14 @@ test_passed = .true.
   ! Test with impulse functions
   print *, '***************************************************'
   print *, 'Test of the 1D spline with impulse functions: '
-  do i_test=13,NP+12
+  do i_test=13,np+12
      call test_process_1d(i_test, ok)
   enddo
 
   print *, '***************************************************'
   print *, 'Test of the 2D spline with impulse functions: '
-  do j_test=13,NPX2+12
-     do i_test=13,NPX1+12
+  do j_test=13,npx2+12
+     do i_test=13,npx1+12
         call test_process_2d(i_test, j_test, ok)
      enddo
   enddo
