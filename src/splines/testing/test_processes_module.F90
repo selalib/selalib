@@ -450,7 +450,7 @@ contains
     sll_real64, intent(in)            :: xmin
     sll_real64, intent(in)            :: xmax
     sll_int32, intent(in)             :: npts
-    logical, intent(out)              :: test_passed
+    logical, intent(inout)            :: test_passed
     sll_real64, intent(in), optional  :: criterion
     sll_real64                        :: max_tolerable_err
     sll_real64, allocatable, dimension(:) :: data_in
@@ -575,7 +575,7 @@ contains
        ! Do the last point separately because due to roundoff, the last value
        ! is outside of the specified domain.
        val = interpolator_f(xmax, spline)
-       acc = acc + abs(val-correct_data_out(i+1))
+       acc = acc + abs(val-correct_data_out(npts))
        !print *, '(i) = ',npts, 'correct value = ', correct_data_out(npts), &
        !     '. Calculated = ', val, 'delta = ', h1, 'delta^4 = ', h1**4
        average_error = acc/(real(npts,f64))

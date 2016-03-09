@@ -6,18 +6,22 @@ program test_arbitrary_degree_splines
 #include "sll_memory.h"
 #include "sll_working_precision.h"
 
+  use sll_m_boundary_condition_descriptors, only: &
+       sll_p_hermite, &
+       sll_p_greville, &
+       sll_p_periodic
+
   use sll_m_arbitrary_degree_splines, only: &
     sll_t_arbitrary_degree_spline_1d, &
-    sll_f_spline_derivatives_at_x, &
+    sll_s_spline_derivatives_at_x, &
     sll_s_splines_and_derivs_at_x, &
-    sll_f_splines_at_x, &
+    sll_s_splines_and_n_derivs_at_x, &
+    sll_s_splines_at_x, &
     sll_s_compute_b_spline_and_deriv_at_x_mm, &
     sll_s_compute_b_spline_at_x_mm, &
     sll_f_find_cell, &
-    sll_f_new_arbitrary_degree_spline_1d, &
-    sll_p_open_arbitrary_deg_spline, &
-    sll_p_periodic_arbitrary_deg_spline, &
-    sll_o_delete, &
+    sll_s_arbitrary_degree_spline_1d_init, &
+    sll_s_arbitrary_degree_spline_1d_free, &
     sll_s_uniform_b_spline_derivatives_at_x, &
     sll_s_uniform_b_splines_and_derivs_at_x, &
     sll_s_uniform_b_splines_at_x
@@ -74,7 +78,7 @@ contains
     sll_real64 :: rnd
     sll_int32  :: cell
     sll_real64 :: x
-    sll_real64 :: acc, acc2
+    sll_real64 :: acc, acc2, acc3
     sll_real64 :: criterion
     sll_int32  :: num_tests
     sll_real64, dimension(:), allocatable :: x_test
@@ -83,7 +87,8 @@ contains
     sll_real64, dimension(:), allocatable :: answer1
     sll_real64, dimension(:), allocatable :: answer2
     sll_real64, dimension(:,:), allocatable :: answer3
-    type(sll_t_arbitrary_degree_spline_1d), pointer :: spline
+    sll_real64, dimension(:,:), allocatable :: answer4
+    type(sll_t_arbitrary_degree_spline_1d)  :: spline
 
     ! Test on random grid for random degree
     num_tests = 10
@@ -98,6 +103,7 @@ contains
     SLL_ALLOCATE(answer1(degree+1),ierr)
     SLL_ALLOCATE(answer2(degree+1),ierr)
     SLL_ALLOCATE(answer3(2,degree+1),ierr)
+    SLL_ALLOCATE(answer4(2,degree+1),ierr)
 
     ! --------- 1D SPLINE INITIALIZATION ON NON UNIFORM MESH ----
     ! Creating non uniform mesh....
@@ -108,11 +114,12 @@ contains
     end do
     ! ..... non uniform mesh done
     ! creating non uniform 1d spline 
-    spline => sll_f_new_arbitrary_degree_spline_1d( &
+    call sll_s_arbitrary_degree_spline_1d_init( &
+         spline, &
          degree, &
          grid, &
          num_pts, &
-         sll_p_periodic_arbitrary_deg_spline )
+         sll_p_periodic )
     ! --------- INITIALIZATION DONE ------------
 
     ! To compensate random factor, we do the test more than once:
@@ -125,11 +132,13 @@ contains
        ! initialization accumulator:
        acc = 0.0_f64
        ! computing all non zero splines at point x:
-       answer1(:) = sll_f_splines_at_x(spline, cell, x)
+       call sll_s_splines_at_x(spline, cell, x, answer1)
        ! computing all non zero spline derivatives at point x:
-       answer2(:) = sll_f_spline_derivatives_at_x(spline, cell, x)
+       call sll_s_spline_derivatives_at_x(spline, cell, x, answer2)
        ! computing both all non zero splines and derivatives at point x:
        call sll_s_splines_and_derivs_at_x(spline, cell, x, answer3)
+       ! computing both all non zero splines and derivatives at point x:
+       call sll_s_splines_and_n_derivs_at_x(spline, cell, x, 1, answer4)
        ! testing partition of unity property of b-splines:
        acc = abs(1.0_f64 - sum(answer1(1:degree+1)))
        passed_test = passed_test .and. (acc < criterion)
@@ -164,40 +173,55 @@ contains
                " (expected 0) =", sum(answer1(1:degree+1)), "... PASSED"
        end if
 
-       ! test function sll_f_splines_and_derivs_at_x
-       ! check that spline values are the same as those from sll_f_splines_at_x
-       ! and derivatives are the same as those from sll_f_spline_derivatives_at_x
+       ! test subroutine sll_s_splines_and_derivs_at_x
+       ! check that spline values are the same as those from sll_s_splines_at_x
+       ! and derivatives are the same as those from sll_s_spline_derivatives_at_x
        acc  = 0.0_f64
        acc2 = 0.0_f64
+       acc3 = 0.0_f64
        do i=1, degree+1
           acc  = max(acc,  abs(answer1(i)-answer3(1,i)))
           acc2 = max(acc2, abs(answer2(i)-answer3(2,i)))
+          acc3 = max(acc3, abs(answer3(2,i)-answer4(2,i)))
        end do
 
        passed_test = passed_test .and. (acc < criterion)
        if( passed_test .eqv. .false. ) then
           print *, 'periodic nonuniform splines test failure:'          
-          print*,  'values of splines computed in sll_f_splines_at_x and ',&
-               ' sll_f_spline_derivatives_at_x are not the same'
+          print*,  'values of splines computed in sll_s_splines_at_x and ',&
+               ' sll_s_spline_derivatives_at_x are not the same'
           print *, 'cell = ', cell, 'x = ', x
-          print *, 'sll_f_splines_at_x: ', answer1(:)
+          print *, 'sll_s_splines_at_x: ', answer1(:)
           print *, 'b_spline_and_derivs_at_x: ', answer3(1,:)
           print *, 'accumulator = ', acc
-          print*, 'Exiting...'
-          stop
+!          print*, 'Exiting...'
+!          stop
        end if
        passed_test = passed_test .and. (acc2 < criterion)
        if( passed_test .eqv. .false. ) then
           print *, 'periodic nonuniform splines test failure:'
           print*,  'values of derivatives computed in ', &
-               'sll_f_spline_derivatives_at_x and ',&
+               'sll_s_spline_derivatives_at_x and ',&
                ' b_spline_and_derivs_at_x are not the same'
           print *, 'cell = ', cell, 'x = ', x
-          print *, 'sll_f_spline_derivatives_at_x: ', answer2(:)
+          print *, 'sll_s_spline_derivatives_at_x: ', answer2(:)
           print *, 'b_spline_and_derivs_at_x: ', answer3(2,:)
           print *, 'accumulator = ', acc2
-          print*, 'Exiting...'
-          stop
+!          print*, 'Exiting...'
+!          stop
+       end if
+       passed_test = passed_test .and. (acc3 < criterion)
+       if( passed_test .eqv. .false. ) then
+          print *, 'periodic nonuniform splines test failure:'
+          print*,  'values of derivatives computed in ', &
+               'sll_s_spline_and_derivs_at_x and ',&
+               'sll_s_spline_and_n_derivs_at_x are not the same'
+          print *, 'cell = ', cell, 'x = ', x
+          print *, 'sll_s_spline_and_derivs_at_x: ', answer3(2,:)
+          print *, 'sll_s_spline_and_n_derivs_at_x: ', answer4(2,:)
+          print *, 'accumulator = ', acc3
+!          print*, 'Exiting...'
+!          stop
        end if
 
     end do
@@ -207,7 +231,7 @@ contains
     SLL_DEALLOCATE_ARRAY(answer2, ierr)
     SLL_DEALLOCATE_ARRAY(answer3, ierr)
 
-    call sll_o_delete(spline)
+    call sll_s_arbitrary_degree_spline_1d_free(spline)
 
     ! Test on given grid with known answer
     criterion = 1.0d-15
@@ -229,11 +253,12 @@ contains
     ! Define non uniform grid
     grid = (/0.0_f64, 2.0_f64, 3.0_f64, 4.5_f64, 5.0_f64 /)
     ! creating non uniform 1d spline 
-    spline => sll_f_new_arbitrary_degree_spline_1d( &
+    call sll_s_arbitrary_degree_spline_1d_init( &
+         spline, &
          degree, &
          grid, &
          num_pts, &
-         sll_p_periodic_arbitrary_deg_spline )
+         sll_p_periodic)
     ! --------- INITIALIZATION DONE ------------
     ! array of points where splines will be evaluated
     x_test = (/0._f64, 0.5_f64, 1.2_f64, 2.001_f64, 3._f64, 4.0_f64, 5.0_f64 /)
@@ -319,7 +344,7 @@ contains
        ! initialization accumulator:
        acc = 0.0_f64
        ! computing all non zero splines at point x:
-       answer1(:) = sll_f_splines_at_x(spline, cell, x)
+       call sll_s_splines_at_x(spline, cell, x, answer1)
        ! check difference with expected values
        do i = 1, degree + 1
           acc = max(acc,abs(answer1(i)-expected1(i,j)))
@@ -341,7 +366,7 @@ contains
 
        ! test spline derivatives
        ! computing derivatives of all non zero splines:
-       answer2(:) = sll_f_spline_derivatives_at_x(spline, cell, x)
+       call sll_s_spline_derivatives_at_x(spline, cell, x, answer2)
        ! check difference with expected values
        acc = 0.0_f64
        do i = 1, degree + 1
@@ -368,7 +393,7 @@ contains
     SLL_DEALLOCATE_ARRAY(answer2, ierr)
     SLL_DEALLOCATE_ARRAY(answer3, ierr)
 
-    call sll_o_delete(spline)
+    call sll_s_arbitrary_degree_spline_1d_free(spline)
 
   end subroutine test_nonuniform_arb_deg_splines_periodic
 
@@ -391,7 +416,7 @@ contains
     sll_int32                   :: ierr
     sll_int32, parameter        :: num_pts = 12
     sll_real64, dimension(num_pts)  :: grid 
-    type(sll_t_arbitrary_degree_spline_1d), pointer :: spline
+    type(sll_t_arbitrary_degree_spline_1d) :: spline
 
     criterion          = 1.0d-14
     argument           = 0.0_f64
@@ -413,11 +438,12 @@ contains
        SLL_CLEAR_ALLOCATE(sp_and_derivs_n(1:2,1:j+1),ierr)
 
        ! creating non uniform 1d spline on uniform grid for comparison
-       spline => sll_f_new_arbitrary_degree_spline_1d( &
+       call sll_s_arbitrary_degree_spline_1d_init( &
+            spline, &
             j, &
             grid, &
             num_pts, &
-            sll_p_periodic_arbitrary_deg_spline )
+            sll_p_periodic)
 
        do i=1,num_tests
           ! draw random number between 0 and 1
@@ -427,8 +453,8 @@ contains
           call sll_s_uniform_b_spline_derivatives_at_x(j, argument, derivatives)
           call sll_s_uniform_b_splines_and_derivs_at_x(j, argument, sp_and_derivs)
           ! compute values with non uniform splines (cell is always 1)
-          results_n(:) = sll_f_splines_at_x(spline, 1, argument)
-          derivatives_n(:) = sll_f_spline_derivatives_at_x(spline, 1, argument)
+          call sll_s_splines_at_x(spline, 1, argument, results_n)
+          call sll_s_spline_derivatives_at_x(spline, 1, argument, derivatives_n)
           call sll_s_splines_and_derivs_at_x(spline, 1, argument, sp_and_derivs_n)
 
           passed_flag = passed_flag .and. &
@@ -483,7 +509,7 @@ contains
        SLL_DEALLOCATE_ARRAY(results_n, ierr)
        SLL_DEALLOCATE_ARRAY(derivatives_n, ierr)
        SLL_DEALLOCATE_ARRAY(sp_and_derivs_n, ierr)
-       call sll_o_delete(spline)
+       call sll_s_arbitrary_degree_spline_1d_free(spline)
     end do
   end subroutine test_uniform_b_splines_randomly
 
@@ -510,7 +536,7 @@ contains
     sll_int32  :: num_tests
     sll_real64, dimension(:), allocatable     :: answer
     sll_real64, dimension(:,:), allocatable   :: answer2
-    type(sll_t_arbitrary_degree_spline_1d), pointer :: spline
+    type(sll_t_arbitrary_degree_spline_1d)    :: spline
 
     num_tests = 10 !100000
     criterion = 1.0d-15
@@ -532,11 +558,12 @@ contains
     !print *, 'knots array = ', knots(:)
 
     ! fill spline object
-    spline => sll_f_new_arbitrary_degree_spline_1d( &
+    call sll_s_arbitrary_degree_spline_1d_init( &
+         spline, &
          degree, &
          knots, &
          num_pts, &
-         sll_p_open_arbitrary_deg_spline )
+         sll_p_hermite )
 
     do j=1,num_tests
        call random_number(rnd)
@@ -545,7 +572,7 @@ contains
        acc = 0.0_f64
        
        ! test spline values
-       answer(:) = sll_f_splines_at_x(spline, cell, x)
+       call sll_s_splines_at_x(spline, cell, x, answer)
        acc = sum(answer(1:degree+1))
        passed_test = passed_test .and. (abs(1.0_f64 - acc) < criterion)
        if( passed_test .eqv. .false. ) then
@@ -559,7 +586,7 @@ contains
        
        ! test spline derivatives
        acc = 0.0_f64
-       answer(:) = sll_f_spline_derivatives_at_x(spline, cell, x)
+       call sll_s_spline_derivatives_at_x(spline, cell, x, answer)
        acc = sum(answer(1:degree+1))
        passed_test = passed_test .and. (abs(acc) < criterion)
        if( passed_test .eqv. .false. ) then
@@ -593,7 +620,7 @@ contains
     end do
     SLL_DEALLOCATE_ARRAY(answer, ierr)
     SLL_DEALLOCATE_ARRAY(answer2, ierr)
-    call sll_o_delete(spline)
+    call sll_s_arbitrary_degree_spline_1d_free(spline)
   end subroutine test_nonuniform_arb_deg_splines_open
 
   subroutine test_cpu_time
@@ -612,7 +639,7 @@ contains
     sll_real64, dimension(:), allocatable :: answer1
     sll_real64, dimension(:), allocatable :: answer2
     sll_real64, dimension(:,:), allocatable :: answer3
-    type(sll_t_arbitrary_degree_spline_1d), pointer :: spline
+    type(sll_t_arbitrary_degree_spline_1d) :: spline
     type(sll_t_time_mark)  :: t0 
     sll_real64 :: time 
 
@@ -642,11 +669,12 @@ contains
     end do
     ! ..... non uniform mesh done
     ! creating non uniform 1d spline 
-    spline => sll_f_new_arbitrary_degree_spline_1d( &
+    call sll_s_arbitrary_degree_spline_1d_init( &
+         spline, &
          degree, &
          grid, &
          num_pts, &
-         sll_p_periodic_arbitrary_deg_spline )
+         sll_p_periodic)
     ! --------- INITIALIZATION DONE ------------
 
     do j=1,num_tests
@@ -661,10 +689,10 @@ contains
     ! computing all non zero splines at all points in x:
     call sll_s_set_time_mark(t0)
     do j=1,num_tests
-       answer1(:) = sll_f_splines_at_x(spline, cells(j), x(j))
+       call sll_s_splines_at_x(spline, cells(j), x(j), answer1)
     end do
     time = sll_f_time_elapsed_since(t0)
-    print *, 'Computing time for  sll_f_splines_at_x: ', time
+    print *, 'Computing time for  sll_s_splines_at_x: ', time
 
     call sll_s_set_time_mark(t0)
     do j=1,num_tests
@@ -676,10 +704,10 @@ contains
     ! computing all non zero spline derivatives at point x:
     call sll_s_set_time_mark(t0)
     do j=1,num_tests
-       answer2(:) = sll_f_spline_derivatives_at_x(spline, cells(j), x(j))
+       call sll_s_spline_derivatives_at_x(spline, cells(j), x(j), answer2)
     end do
     time = sll_f_time_elapsed_since(t0)
-    print *, 'Computing time for  sll_f_spline_derivatives_at_x: ', time
+    print *, 'Computing time for  sll_s_spline_derivatives_at_x: ', time
 
     call sll_s_set_time_mark(t0)
     do j=1,num_tests
@@ -696,6 +724,13 @@ contains
     end do
     time = sll_f_time_elapsed_since(t0)
     print *, 'Computing time for  sll_s_splines_and_derivs_at_x: ', time
+    ! computing both all non zero splines and all derivatives at point x:
+    call sll_s_set_time_mark(t0)
+    do j=1,num_tests
+       call sll_s_splines_and_n_derivs_at_x(spline, cells(j), x(j), 1, answer3)
+    end do
+    time = sll_f_time_elapsed_since(t0)
+    print *, 'Computing time for  sll_s_splines_and_n_derivs_at_x: ', time
     ! computing all non zero uniform splines  at point x:
     call sll_s_set_time_mark(t0)
     do j=1,num_tests

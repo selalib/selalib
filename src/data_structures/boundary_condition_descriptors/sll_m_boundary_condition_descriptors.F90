@@ -33,6 +33,7 @@ module sll_m_boundary_condition_descriptors
     sll_p_neumann, &
     sll_p_neumann_mode_0, &
     sll_p_periodic, &
+    sll_p_greville, &
     sll_p_set_to_limit, &
     sll_p_silver_muller, &
     sll_p_user_defined
@@ -66,6 +67,8 @@ module sll_m_boundary_condition_descriptors
   sll_int32, parameter :: sll_p_one_sided    = 10
   !> Values outside the domain are provided as halo cells (for domain decomposition)
   sll_int32, parameter :: sll_p_halo         = 11
+  !> Use Greville points instead of conditions on derivative for B-Spline interpolation
+  sll_int32, parameter :: sll_p_greville         = 12
 
 
 end module sll_m_boundary_condition_descriptors

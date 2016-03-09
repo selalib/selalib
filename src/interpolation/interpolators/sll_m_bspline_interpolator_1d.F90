@@ -28,7 +28,7 @@ module sll_m_bspline_interpolator_1d
   use sll_m_boundary_condition_descriptors, only: &
     sll_p_periodic
 
-  use sll_m_bsplines, only: &
+  use sll_m_bspline_interpolation, only: &
     sll_s_compute_bspline_1d, &
     sll_s_delete_bspline_1d, &
     sll_s_interpolate_array_derivatives_1d, &
@@ -309,14 +309,14 @@ call sll_s_compute_bspline_1d ( interpolator%bspline, data_array )
 end subroutine compute_interpolants_bs1d
 
     
-!> @brief Interpolation on the points eta using
+!> @brief Interpolation at the points eta using
 !> the arbitrary degree splines interpolator 1d
 !> @details computing the values with the interpolator 
 !> arbitrary degree splines 1d
 !> on the points eta of arbitrary degree splines 1d
 !> @param[in] interpolator the type sll_t_bspline_interpolator_1d
 !> @param[in] eta1 the point
-!> @return val the values on the points eta
+!> @return val the value at the points eta
 function interpolate_value_bs1d( interpolator, eta1) result(val)
 
 class(sll_t_bspline_interpolator_1d), intent(in)  :: interpolator
@@ -344,7 +344,7 @@ end function interpolate_value_bs1d
 
 !> @brief initializing the coefficients of splines.
 !> @details  initializing the coefficients of splines
-!>  fot the arbitrary degree splines interpolator 1d
+!>  for the arbitrary degree splines interpolator 1d
 !> The parameters are
 !> @param interpolator the type sll_t_bspline_interpolator_1d
 !> @param[in] coeffs the 1d arrays corresponding of the splines coefficients
@@ -370,7 +370,7 @@ end subroutine set_coefficients_bs1d
 !> The parameters are
 !> @param interpolator the type sll_t_bspline_interpolator_1d
 !> @param[in] eta1 the point
-!> @return val the values on the point eta of the first derivative
+!> @return val the values at the point eta1 of the first derivative
 
 function interpolate_derivative_bs1d( interpolator, eta1 ) result(val)
 
