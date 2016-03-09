@@ -11,7 +11,7 @@ program test_bsplines_2d
   use sll_m_boundary_condition_descriptors, only: &
     sll_p_periodic
 
-  use sll_m_bsplines, only: &
+  use sll_m_bspline_interpolation, only: &
     sll_o_compute_bspline_2d, &
     sll_s_interpolate_array_values_2d, &
     sll_f_new_bspline_2d, &

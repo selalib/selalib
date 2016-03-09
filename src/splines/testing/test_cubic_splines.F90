@@ -62,7 +62,7 @@ program test_cubic_splines
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 sll_int32                              :: ok
-
+sll_int32                              :: i_test, j_test
 
 sll_int32, parameter                   :: nbtest = 12
 logical                                :: test_passed
