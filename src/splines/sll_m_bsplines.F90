@@ -19,14 +19,9 @@ module sll_m_bspline_interpolation
        sll_s_arbitrary_degree_spline_1d_free, &
        sll_f_find_cell, &
        sll_s_splines_at_x, &
+       sll_s_spline_derivatives_at_x, &
        sll_s_splines_and_n_derivs_at_x, &
        sll_s_uniform_b_splines_at_x
-
-  use sll_m_deboor_splines_1d, only: &
-    sll_s_bsplvb, &
-    sll_s_bsplvd, &
-    sll_t_deboor_type, &
-    sll_s_interv
 
   use schur_complement
 
@@ -36,20 +31,19 @@ module sll_m_bspline_interpolation
   implicit none
 
   public :: &
-    sll_s_compute_bspline_1d, &
+       sll_t_bspline_interpolation_1d, &
+       sll_s_bspline_interpolation_1d_init, &
+       sll_s_compute_bspline_1d, &
+       sll_f_interpolate_value_1d, &
+       sll_s_interpolate_array_values_1d, &
+       sll_f_interpolate_derivative_1d, &
+       sll_s_interpolate_array_derivatives_1d, &
+       sll_s_bspline_interpolation_1d_free, &
+       sll_t_bspline_interpolation_2d, &
+       sll_s_bspline_interpolation_2d_init !, &
 !    sll_o_compute_bspline_2d, &
-    sll_s_delete_bspline_1d, &
-!    sll_s_interpolate_array_derivatives_1d, &
-    sll_s_interpolate_array_values_1d, &
-!    sll_s_interpolate_array_values_2d, &
-!    sll_f_interpolate_derivative_1d, &
-    sll_f_interpolate_value_1d, &
 !    sll_f_interpolate_value_2d, &
-    sll_s_bspline_interpolation_1d_init, &
-    sll_s_bspline_interpolation_2d_init, &
-    sll_t_bspline_interpolation_1d, &
-    sll_t_bspline_interpolation_2d
-!    sll_s_update_bspline_1d
+!    sll_s_interpolate_array_values_2d
 
   private
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -59,17 +53,17 @@ module sll_m_bspline_interpolation
 !> @details This should be
 !> treated as an opaque type. It is better to use it through interpolator
 type :: sll_t_bspline_interpolation_1d
-  type (sll_t_arbitrary_degree_spline_1d) :: bs1
+  type (sll_t_arbitrary_degree_spline_1d) :: bsp
   sll_int32                 :: n        ! dimension of spline space
   sll_int32                 :: deg      ! degree of spline
   sll_real64, pointer       :: tau(:)   ! n interpolation points
-!  sll_real64, pointer       :: t(:)   ! n+k knots
-  sll_real64, pointer       :: q(:,:)   ! triangular factorization of coefficient matrix
   sll_real64, pointer       :: bcoef(:) ! bspline coefficients
   sll_int32                 :: bc_type
-!  sll_real64, pointer       :: a(:,:)
-!  sll_real64, pointer       :: dbiatx(:,:)
+  sll_real64, pointer       :: q(:,:)   ! triangular factorization of coefficient matrix
+  sll_real64, pointer       :: values(:) 
+  sll_real64, pointer       :: bsdx(:,:)
   sll_real64                :: length
+  sll_int32                 :: offset
   type(schur_complement_solver)  :: schur
 !!$  sll_real64                :: vl
 !!$  sll_real64                :: vr
@@ -136,28 +130,31 @@ contains
     !  sll_int32                            :: k
     !  sll_int32, parameter                 :: m=0 !ES m=2
     sll_real64                           :: delta
-!    sll_int32                            :: icell
-!    sll_real64                           :: x
 
     ! set first attributes
     self%bc_type = bc_type
     if (bc_type == sll_p_periodic) then
-       self%n = num_points - 1 ! dimension of periodic spline space 
+       self%n = num_points - 1 ! dimension of periodic spline space
+       self%offset = degree/2  ! offset needed for periodic spline evaluation
     else
        self%n = num_points + degree - 1 ! dimension of non periodic spline space
+       self%offset = 0  
     end if
     self%deg       = degree
     self%length  = xmax - xmin
     ! define grid for knots
     delta = self%length / (num_points-1)
-    do i=1,num_points
+    do i=1,num_points-1
        grid(i) = xmin + (i-1) * delta
     end do
+    grid(num_points) = xmax
     ! construct a sll_t_arbitrary_degree_spline_1d object
-    call sll_s_arbitrary_degree_spline_1d_init(self%bs1, degree, grid, num_points, bc_type )
+    call sll_s_arbitrary_degree_spline_1d_init(self%bsp, degree, grid, num_points, bc_type )
 
     SLL_ALLOCATE(self%bcoef(self%n),  ierr)
-
+    SLL_ALLOCATE(self%values(self%deg+1), ierr)
+    SLL_ALLOCATE(self%bsdx(self%deg+1,self%deg+1), ierr)
+    
     ! Allocate tau which contains interpolation points
     SLL_ALLOCATE(self%tau(self%n), ierr)
     select case (bc_type)
@@ -183,6 +180,7 @@ contains
           ! for odd degree interpolation points are grid points including last point
           do i = 1, num_points 
              self%tau(i) = xmin + (i-1) * delta
+             print*, i, self%tau(i)
           end do
        end if
     case (sll_p_greville)
@@ -190,13 +188,13 @@ contains
           ! Set interpolation points to be Greville points 
           self%tau(i) = 0.0_f64
           do j=1-degree,0
-             self%tau(i) = self%tau(i) + self%bs1%knots(i+j)
+             self%tau(i) = self%tau(i) + self%bsp%knots(i+j)
           end do
           self%tau(i) = self%tau(i) / degree
        end do
     end select
-    print*, 'tau ', self%tau
-    print*, 'knots', self%bs1%knots
+    !print*, 'tau ', self%tau
+    !print*, 'knots', self%bsp%knots
     ! Assemble banded matrix (B_j(tau(i))) for spline interpolation
     select case (bc_type)
     case (sll_p_periodic) 
@@ -204,15 +202,10 @@ contains
     case (sll_p_greville)
        call build_system_greville(self)
     case (sll_p_hermite)
-       call build_system_with_derivative(self,degree/2)
+       call build_system_with_derivative(self)
     end select
-!    do i= 1, 2*sizeq+1
-!       print*, self%q(i,:)
-!    end do
-
     
 
-    !ES to be removed
     !  allocate(self%dbiatx(k,m))
     !  allocate(self%aj(k))
     !  allocate(self%dl(k))
@@ -230,24 +223,24 @@ contains
     sll_int32                              :: j
     sll_int32                              :: ierr
     sll_int32                              :: sizeq
-    sll_real64, dimension(self%deg+1)      :: values
 
     ! evaluate bsplines at interpolation points
     if (modulo(self%deg,2) == 0) then
        ! for even degree interpolation points are cell midpoints
-       call sll_s_uniform_b_splines_at_x(self%deg, 0.5_f64, values)
+       call sll_s_uniform_b_splines_at_x(self%deg, 0.5_f64, self%values)
     else
        ! for odd degree interpolation points are grid points
-       call sll_s_uniform_b_splines_at_x(self%deg, 0.0_f64, values)
+       call sll_s_uniform_b_splines_at_x(self%deg, 0.0_f64, self%values)
     end if
     sizeq = self%deg/2
     ! assemble matrix q for linear system
     SLL_ALLOCATE(self%q(2*sizeq+1,self%n), ierr)
     do j=1,self%n
        do i=1, 2*sizeq+1
-          self%q(i,j) = values(i)
+          self%q(i,j) = self%values(i)
        end do
     end do
+
     ! Perform LU decomposition of matrix q
     call schur_complement_fac(self%schur, self%n, sizeq, self%q)
 
@@ -260,26 +253,27 @@ contains
     type(sll_t_bspline_interpolation_1d)   :: self
     ! local variables
     sll_int32                            :: iflag
-    sll_int32                            :: sizeq
     sll_int32                            :: i
     sll_int32                            :: j
+    sll_int32                            :: k
+    sll_int32                            :: ib
     sll_int32                            :: icell
     sll_real64                           :: x
-    sll_real64, dimension(self%deg+1)    :: values
     
-    sizeq = self%deg
-    SLL_ALLOCATE(self%q(2*sizeq+1,self%n), iflag)
+    k = self%deg
+    SLL_ALLOCATE(self%q(2*k+1,self%n), iflag)
     do i=1,self%n
        x = self%tau(i)
-       icell = sll_f_find_cell(self%bs1, x )
-       call sll_s_splines_at_x(self%bs1, icell, x, values)
-       do j=1,self%deg+1
-          !             print*, i, icell, j, icell + j + degree + 2 - i , values(j)
-          self%q( i-icell- j + self%deg+2,i) = values(j)
+       icell = sll_f_find_cell(self%bsp, x )
+       call sll_s_splines_at_x(self%bsp, icell, x, self%values)
+       do j=1,k+1
+!          print*, i, icell, j,  icell+j-1, icell+j-i+k , x, self%values(j)
+          ib = icell+j-1
+          self%q( i-icell-j+k+2,ib) = self%values(j)
        end do
     end do
     ! Perform LU decomposition of matrix q
-    call banfac ( self%q, 2*self%deg+1, self%n, self%deg, self%deg, iflag )
+    call banfac ( self%q, 2*k+1, self%n, k, k, iflag )
 
   end subroutine build_system_greville
   
@@ -287,104 +281,94 @@ contains
   !> linear system needed for spline interpolation with Hermite boundary conditions
   !> @param[inout] self bspline interpolation object
   !> @param[in] nder number of derivatives to be computed
-  subroutine build_system_with_derivative(self,nder)
+  subroutine build_system_with_derivative(self)
     type(sll_t_bspline_interpolation_1d)   :: self
-    sll_int32                              :: nder
+
     ! local variables
+    sll_int32                              :: nder
     sll_int32                              :: iflag
     sll_int32                              :: i
     sll_int32                              :: j
+    sll_int32                              :: ib
+    sll_int32                              :: k
     sll_int32                              :: icell
     sll_real64                             :: x
-    sll_real64, dimension(self%deg+1)      :: values
-    sll_real64, dimension(nder,self%deg+1) :: bsdx
-    
+
     SLL_ALLOCATE(self%q(2*self%deg+1,self%n), iflag)
     
+    k = self%deg
+    ! number of values needed on boundary depending on spline degree
+    nder = k/2
     ! Left hand side of interval with derivatives
-    x = self%bs1%xmin
-    icell = sll_f_find_cell(self%bs1, x )
-    call sll_s_splines_and_n_derivs_at_x( self%bs1, icell, x , nder , bsdx)
+    x = self%bsp%xmin
+    icell = sll_f_find_cell(self%bsp, x )
+    call sll_s_splines_and_n_derivs_at_x( self%bsp, icell, x , nder , self%bsdx)
     do i=1, nder
-       do j=1,self%deg+1
-          self%q( i-icell- j + self%deg+2,i) = bsdx(i,j)
+       do j=1,k+1
+          ib = icell+j-1
+          self%q( i-icell-j+k+2,ib) = self%bsdx(i,j)
        end do
     end do
     do i=nder+1,self%n - nder
-       x = self%tau(i)
-       icell = sll_f_find_cell(self%bs1, x )
-       
-       call sll_s_splines_at_x(self%bs1, icell, x, values)
-       do j=1,self%deg+1
-          !             print*, i, icell, j, icell + j + degree + 2 - i , values(j)
-          self%q( i-icell- j + self%deg+2,i) = values(j)
+       x = self%tau(i-nder)
+       icell = sll_f_find_cell(self%bsp, x )
+       call sll_s_splines_at_x(self%bsp, icell, x, self%values)
+       do j=1,k+1
+          !print*, i,x,icell, i-nder, self%tau(i-nder)
+          ib = icell+j-1
+          self%q( i-icell-j+k+2,ib) = self%values(j)
        end do
     end do
     ! Right hand side of interval with derivatives
-    x = self%bs1%xmax
-    icell = sll_f_find_cell(self%bs1, x )
-    call sll_s_splines_and_n_derivs_at_x( self%bs1, icell, x , nder , bsdx)
+    x = self%bsp%xmax
+    icell = sll_f_find_cell(self%bsp, x )
+    call sll_s_splines_and_n_derivs_at_x( self%bsp, icell, x , nder , self%bsdx)
     do i= self%n-nder+1, self%n
-       do j=1,self%deg+1
-          self%q( i-icell- j + self%deg+2,i) = bsdx(self%n-i+1,j)
+       do j=1,k+1
+          ib = icell+j-1
+          self%q( i-icell-j+k+2,ib) = self%bsdx(self%n-i+1,j)
        end do
     end do
     ! Perform LU decomposition of matrix q
-    call banfac ( self%q, 2*self%deg+1, self%n, self%deg, self%deg, iflag )
+    call banfac ( self%q, 2*k+1, self%n, k, k, iflag )
 
   end subroutine build_system_with_derivative
   
-subroutine sll_s_compute_bspline_1d(self, gtau) !, slope_min, slope_max)
+  subroutine sll_s_compute_bspline_1d(self, gtau, val_min, val_max)
 
-  type(sll_t_bspline_interpolation_1d)   :: self
-  sll_real64, intent(in) :: gtau(:)
-!  sll_real64, optional   :: slope_min
-!  sll_real64, optional   :: slope_max
+    type(sll_t_bspline_interpolation_1d)   :: self
+    sll_real64, intent(in) :: gtau(:)
+    sll_real64, optional   :: val_min(:)
+    sll_real64, optional   :: val_max(:)
+    ! local variables
+    sll_int32   :: ncond
+    
+    select case (self%bc_type)
+    case(sll_p_periodic)
+       self%bcoef = gtau
+       call schur_complement_slv ( self%schur, self%n, self%deg/2, self%q,  self%bcoef )
+    case (sll_p_greville)
+       self%bcoef = gtau
+       call banslv ( self%q, 2*self%deg+1, self%n, self%deg, self%deg, self%bcoef )
+    case (sll_p_hermite)
+       ! number of needed conditions at boundary
+       ncond = self%deg/2
+       if (present(val_min)) then
+          self%bcoef(1:ncond) = val_min(1:ncond)
+       else  ! set needed boundary values to 0
+          self%bcoef(1:ncond) = 0.0_f64
+       end if
+       self%bcoef(ncond+1:self%n-ncond) = gtau
+       if (present(val_max)) then
+          self%bcoef(self%n-ncond+1:self%n) = val_max(1:ncond)
+       else ! set needed boundary values to 0
+          self%bcoef(self%n-ncond+1:self%n) = 0.0_f64
+       end if
+       call banslv ( self%q, 2*self%deg+1, self%n, self%deg, self%deg, self%bcoef )
+    end select
+    !  call sll_s_update_bspline_1d( self, gtau)
 
-  self%bcoef = gtau
-  if (self%bc_type == sll_p_periodic) then
-     call schur_complement_slv ( self%schur, self%n, self%deg/2, self%q,  self%bcoef )
-  else
-     call banslv ( self%q, 2*self%deg+1, self%n, self%deg, self%deg, self%bcoef )
-  end if
-!  call sll_s_update_bspline_1d( self, gtau)
-
-end subroutine sll_s_compute_bspline_1d
-
-  !> @brief
-  !> Evaluate spline curve at array of points
-  !> @param[in] self spline curve
-  !> @param[in] n number of points where spline curve is evaluated
-  !> @param[in] eval_points(n) array of points where spline curve will be evaluated
-  !> @param[out] sval(n) Values of spline curve at eval_points
-!!$  subroutine sll_s_eval_spline_curve(self, n, eval_points, sval)
-!!$    class(sll_t_arbitrary_degree_spline_1d)   :: self
-!!$    sll_int32  :: n 
-!!$    sll_real64 :: eval_points(n) 
-!!$    sll_real64 :: sval(n) 
-!!$    
-!!$    sll_real64 :: bspl(self%deg+1)
-!!$    sll_real64 :: val
-!!$    sll_real64 :: x
-!!$    sll_int32  :: i
-!!$    sll_int32  :: j
-!!$    sll_int32  :: imj
-!!$    sll_int32  :: icell
-!!$
-!!$    do i= 1, n
-!!$       x = eval_points(i)
-!!$       val = 0.0_f64
-!!$       ! get bspline values at x
-!!$       icell =  sll_f_find_cell( self, x )
-!!$       call sll_s_splines_at_x(self, icell, x, bspl)
-!!$       do j=1, self%deg
-!!$          imj = mod(i-1-j+n,n) + 1 
-!!$          val = val + bspl(j)*self%bcoef(imj)
-!!$          !print*, i,j, imj, bspl(j),val
-!!$       enddo
-!!$       sval(i) = val 
-!!$    end do
-!!$  end subroutine sll_s_eval_spline_curve
+  end subroutine sll_s_compute_bspline_1d
 
 !> @brief returns the value of the image of an abscissae,
 !> The spline coefficients
@@ -395,29 +379,29 @@ end subroutine sll_s_compute_bspline_1d
 !> results of the interpolation.
 !> @param[inout] spline the spline object pointer, duly initialized and 
 !> already operated on by the sll_s_compute_bspline_1d() subroutine.
-function sll_f_interpolate_value_1d( self, x) result(y)
+  function sll_f_interpolate_value_1d( self, x) result(y)
 
-  type(sll_t_bspline_interpolation_1d)    :: self 
-  sll_real64, intent(in)  :: x
-  sll_real64              :: y
-  !local variables
-  sll_int32               :: icell
-  sll_int32               :: imj
-  sll_int32               :: j
-  sll_real64              :: val
-  sll_real64 :: bspl(self%deg+1)
-  
-  ! get bspline values at x
-  icell =  sll_f_find_cell( self%bs1, x )
-  call sll_s_splines_at_x(self%bs1, icell, x, bspl)
-  y = 0.0_f64
-  do j=1, self%deg+1
-     imj = mod(icell-1-j+self%n,self%n) + 1 
-     y = y + bspl(j)*self%bcoef(imj)
-     !print*, i,j, imj, bspl(j),val
-  enddo 
-  
-end function sll_f_interpolate_value_1d
+    type(sll_t_bspline_interpolation_1d)    :: self 
+    sll_real64, intent(in)  :: x
+    sll_real64              :: y
+    !local variables
+    sll_int32               :: icell
+    sll_int32               :: ib
+    sll_int32               :: j
+    sll_real64              :: val
+
+    ! get bspline values at x
+    icell =  sll_f_find_cell( self%bsp, x )
+    call sll_s_splines_at_x(self%bsp, icell, x, self%values)
+    y = 0.0_f64
+    do j=1,self%deg+1
+       !       ib = mod(icell+j-self%deg/2-2+self%n,self%n) + 1
+       ib = mod(icell+j-2-self%offset+self%n,self%n) + 1
+       y = y + self%values(j)*self%bcoef(ib)
+    !        print*, icell,j, ib, self%values(j), y
+    enddo
+
+  end function sll_f_interpolate_value_1d
 
 !> @brief returns the values of the images of a collection of 
 !> abscissae, represented by a 1D array in another output array. 
@@ -437,307 +421,123 @@ subroutine sll_s_interpolate_array_values_1d( self, n, x, y)
   sll_real64,           intent(in)  :: x(n)
   sll_real64,           intent(out) :: y(n)
   ! local variables    
-  sll_real64 :: bspl(self%deg+1)
   sll_real64 :: val
   sll_real64 :: xx
   sll_int32  :: i
   sll_int32  :: j
-  sll_int32  :: imj
+  sll_int32  :: ib
   sll_int32  :: icell
 
   do i= 1, n
      xx = x(i)
      val = 0.0_f64
      ! get bspline values at x
-     icell =  sll_f_find_cell( self%bs1, xx )
-     call sll_s_splines_at_x(self%bs1, icell, xx, bspl)
-       do j=1, self%deg
-          imj = mod(icell-1-j+self%n,self%n) + 1
-          !print*, i,j, imj, bspl(j),val
-          val = val + bspl(j)*self%bcoef(imj)
-       enddo
-       y(i) = val 
-    end do
-  
-end subroutine sll_s_interpolate_array_values_1d
-!!$
-!!$!> @brief returns the values of the derivatives evaluated at a 
-!!$!> collection of abscissae stored by a 1D array in another output 
-!!$!> array. The spline coefficients used are stored in the spline 
-!!$!> object pointer.
-!!$!> @param[in] x input double-precison element array containing the 
-!!$!> abscissae to be interpolated.
-!!$!> @param[out] y output double-precision element array containing the 
-!!$!> results of the interpolation.
-!!$!> @param[in] n the number of elements of the input array which are to be
-!!$!> interpolated.
-!!$!> @param[inout] spline the spline object pointer, duly initialized and 
-!!$!> already operated on by the sll_s_compute_bspline_1d() subroutine.
-!!$subroutine sll_s_interpolate_array_derivatives_1d( self, n, x, y)
-!!$  type(sll_t_bspline_interpolation_1d)    :: self 
-!!$  sll_int32,  intent(in)  :: n
-!!$  sll_real64, intent(in)  :: x(n)
-!!$  sll_real64, intent(out) :: y(n)
-!!$
-!!$  call interpolate_array_derivatives_1d_aux( self, n, x, y, jderiv=1)
-!!$
-!!$end subroutine sll_s_interpolate_array_derivatives_1d
-!!$
-!!$subroutine interpolate_array_derivatives_1d_aux( self, n, x, y, jderiv)
-!!$
-!!$  type(sll_t_bspline_interpolation_1d)    :: self 
-!!$  sll_int32,  intent(in)  :: n
-!!$  sll_real64, intent(in)  :: x(n)
-!!$  sll_real64, intent(out) :: y(n)
-!!$  
-!!$  sll_int32               :: i
-!!$  sll_int32               :: j
-!!$  sll_int32               :: jlo
-!!$  sll_int32               :: jc
-!!$  sll_int32               :: jcmax
-!!$  sll_int32               :: jcmin
-!!$  sll_int32               :: jj
-!!$  sll_int32               :: mflag
-!!$  sll_int32               :: ierr
-!!$  sll_int32               :: k
-!!$  sll_int32               :: l
-!!$  sll_int32               :: nmk
-!!$  sll_int32,  parameter   :: m = 2
-!!$  sll_real64, allocatable :: aj(:)
-!!$  sll_real64, allocatable :: dl(:)
-!!$  sll_real64, allocatable :: dr(:)
-!!$  sll_real64              :: xi
-!!$  sll_int32               :: jderiv
-!!$  type(sll_t_deboor_type)       :: db
-!!$  
-!!$  k = self%deg + 1
-!!$
-!!$  if (self%bc_type == sll_p_periodic) then
-!!$    nmk = n+k
-!!$  else
-!!$    nmk = n+m+k
-!!$  end if
-!!$  
-!!$  SLL_ALLOCATE(aj(k), ierr)
-!!$  SLL_ALLOCATE(dl(k), ierr)
-!!$  SLL_ALLOCATE(dr(k), ierr)
-!!$  
-!!$  db%ilo = k
-!!$  
-!!$  do l = 1, n
-!!$  
-!!$    xi = x(l)
-!!$    if ( k <= jderiv ) cycle
-!!$    !
-!!$    !  Find I so that 1 <= I < N+K and T(I) < T(I+1) and T(I) <= X < T(I+1).
-!!$    !
-!!$    !  If no such I can be found, X lies outside the support of the
-!!$    !  spline F and  sll_f_bvalue = 0.  The asymmetry in this choice of I makes F
-!!$    !  right continuous.
-!!$    !
-!!$    call sll_s_interv ( db, self%t, nmk, xi, i, mflag )
-!!$    
-!!$    if ( mflag /= 0 ) return
-!!$    !
-!!$    !  If K = 1 (and JDERIV = 0), sll_f_bvalue = BCOEF(I).
-!!$    !
-!!$    if ( k <= 1 ) then
-!!$      y(l) = self%bcoef(i)
-!!$      cycle
-!!$    end if
-!!$    !
-!!$    !  Store the K B-spline coefficients relevant for the knot interval
-!!$    !  ( T(I),T(I+1) ) in AJ(1),...,AJ(K) and compute DL(J) = X - T(I+1-J),
-!!$    !  DR(J) = T(I+J)-X, J=1,...,K-1.  Set any of the AJ not obtainable
-!!$    !  from input to zero.
-!!$    !
-!!$    !  Set any T's not obtainable equal to T(1) or to T(N+K) appropriately.
-!!$    !
-!!$    jcmin = 1
-!!$    
-!!$    if ( k <= i ) then
-!!$      do j = 1, k-1
-!!$        dl(j) = x(l) - self%t(i+1-j)
-!!$      end do
-!!$    else
-!!$      jcmin = 1 - ( i - k )
-!!$      do j = 1, i
-!!$        dl(j) = xi - self%t(i+1-j)
-!!$      end do
-!!$      do j = i, k-1
-!!$        aj(k-j) = 0.0_f64
-!!$        dl(j) = dl(i)
-!!$      end do
-!!$    end if
-!!$    
-!!$    jcmax = k
-!!$    if ( nmk-k < i ) then
-!!$      jcmax = k + n + m - i
-!!$      do j = 1, jcmax
-!!$        dr(j) = self%t(i+j) - xi
-!!$      end do
-!!$      do j = jcmax, k-1
-!!$        aj(j+1) = 0.0_8
-!!$        dr(j) = dr(jcmax)
-!!$      end do
-!!$    else
-!!$      do j = 1, k-1
-!!$        dr(j) = self%t(i+j) - xi
-!!$      end do
-!!$    end if
-!!$    
-!!$    do jc = jcmin, jcmax
-!!$      aj(jc) = self%bcoef(i-k+jc)
-!!$    end do
-!!$    !  Difference the coefficients JDERIV times.
-!!$    do j = 1, jderiv
-!!$      jlo = k - j
-!!$      do jj = 1, k - j
-!!$        aj(jj) = ((aj(jj+1)-aj(jj))/(dl(jlo)+dr(jj)))*(k-j)
-!!$        jlo = jlo - 1
-!!$      end do
-!!$    end do
-!!$    !
-!!$    !  Compute value at X in (T(I),T(I+1)) of JDERIV-th derivative,
-!!$    !  given its relevant B-spline coefficients in AJ(1),...,AJ(K-JDERIV).
-!!$    !
-!!$    do j = jderiv+1, k-1
-!!$      jlo = k-j
-!!$      do jj = 1, k-j
-!!$        aj(jj) = (aj(jj+1)*dl(jlo)+aj(jj)*dr(jj))/(dl(jlo)+dr(jj))
-!!$        jlo = jlo - 1
-!!$      end do
-!!$    end do
-!!$    
-!!$    y(l) = aj(1)
-!!$
-!!$  end do
-!!$
-!!$  deallocate(aj,dl,dr)
-!!$
-!!$end subroutine interpolate_array_derivatives_1d_aux
-!!$
-!!$function sll_f_interpolate_derivative_1d( self, x) result(y)
-!!$
-!!$  type(sll_t_bspline_interpolation_1d)    :: self 
-!!$  sll_real64, intent(in)  :: x
-!!$  sll_real64              :: y
-!!$  
-!!$  sll_int32               :: i
-!!$  sll_int32               :: j
-!!$  sll_int32               :: ilo
-!!$  sll_int32               :: jc
-!!$  sll_int32               :: jcmax
-!!$  sll_int32               :: jcmin
-!!$  sll_int32               :: jj
-!!$  sll_int32               :: mflag
-!!$  sll_int32               :: k
-!!$  sll_int32               :: n
-!!$  sll_int32               :: nmk
-!!$  sll_int32,  parameter   :: m = 2
-!!$  sll_int32,  parameter   :: jderiv = 1
-!!$  type(sll_t_deboor_type)       :: db
-!!$  
-!!$  k = self%deg + 1 
-!!$  n = self%n
-!!$
-!!$  if (self%bc_type == sll_p_periodic) then
-!!$    nmk = n+k
-!!$  else
-!!$    nmk = n+m+k
-!!$  end if
-!!$  
-!!$  !  Find I so that 1 <= I < N+K and T(I) < T(I+1) and T(I) <= X < T(I+1).
-!!$  !
-!!$  !  If no such I can be found, X lies outside the support of the
-!!$  !  spline F and  sll_f_bvalue = 0.  The asymmetry in this choice of I makes F
-!!$  !  right continuous.
-!!$  !
-!!$  call sll_s_interv ( db, self%t, nmk, x, i, mflag )
-!!$  
-!!$  y = self%bcoef(i)
-!!$  
-!!$  if ( k <= jderiv ) return
-!!$  
-!!$  if ( mflag /= 0 ) return
-!!$  !
-!!$  !  If K = 1 (and JDERIV = 0), sll_f_bvalue = BCOEF(I).
-!!$  !
-!!$  if ( k <= 1 ) return
-!!$  !
-!!$  !  Store the K B-spline coefficients relevant for the knot interval
-!!$  !  ( T(I),T(I+1) ) in AJ(1),...,AJ(K) and compute DL(J) = X - T(I+1-J),
-!!$  !  DR(J) = T(I+J)-X, J=1,...,K-1.  Set any of the AJ not obtainable
-!!$  !  from input to zero.
-!!$  !
-!!$  !  Set any T's not obtainable equal to T(1) or to T(N+K) appropriately.
-!!$  !
-!!$  jcmin = 1
-!!$  
-!!$  if ( k <= i ) then
-!!$    do j = 1, k-1
-!!$      self%dl(j) = x - self%t(i+1-j)
-!!$    end do
-!!$  else
-!!$    jcmin = 1-(i-k)
-!!$    do j = 1, i
-!!$      self%dl(j) = x - self%t(i+1-j)
-!!$    end do
-!!$    do j = i, k-1
-!!$      self%aj(k-j) = 0.0_f64
-!!$      self%dl(j) = self%dl(i)
-!!$    end do
-!!$  end if
-!!$  
-!!$  jcmax = k
-!!$  if ( nmk-k < i ) then
-!!$    jcmax = nmk-i
-!!$    do j = 1, jcmax
-!!$      self%dr(j) = self%t(i+j) - x
-!!$    end do
-!!$    do j = jcmax, k-1
-!!$      self%aj(j+1) = 0.0_8
-!!$      self%dr(j) = self%dr(jcmax)
-!!$    end do
-!!$  else
-!!$    do j = 1, k-1
-!!$      self%dr(j) = self%t(i+j) - x
-!!$    end do
-!!$  end if
-!!$  
-!!$  do jc = jcmin, jcmax
-!!$    self%aj(jc) = self%bcoef(i-k+jc)
-!!$  end do
-!!$  !  Difference the coefficients JDERIV times.
-!!$  do j = 1, jderiv
-!!$    ilo = k - j
-!!$    do jj = 1, k - j
-!!$      self%aj(jj) = ((self%aj(jj+1)-self%aj(jj)) &
-!!$                    /(self%dl(ilo)+self%dr(jj)))*(k-j)
-!!$      ilo = ilo-1
-!!$    end do
-!!$  end do
-!!$  !
-!!$  !  Compute value at X in (T(I),T(I+1)) of JDERIV-th derivative,
-!!$  !  given its relevant B-spline coefficients in AJ(1),...,AJ(K-JDERIV).
-!!$  !
-!!$  do j = jderiv+1, k-1
-!!$    ilo = k-j
-!!$    do jj = 1, k-j
-!!$      self%aj(jj) = (self%aj(jj+1)*self%dl(ilo)+self%aj(jj)*self%dr(jj)) &
-!!$        /(self%dl(ilo)+self%dr(jj))
-!!$      ilo = ilo-1
-!!$    end do
-!!$  end do
-!!$  
-!!$  y = self%aj(1)
-!!$  
-!!$end function sll_f_interpolate_derivative_1d
+     icell =  sll_f_find_cell( self%bsp, xx )
+     call sll_s_splines_at_x(self%bsp, icell, xx, self%values)
+     do j=1, self%deg+1
+        !ib = mod(icell+j-self%deg/2-2+self%n,self%n) + 1
+        ib = mod(icell+j-2-self%offset+self%n,self%n) + 1
+        val = val + self%values(j)*self%bcoef(ib)
+     enddo
+     y(i) = val 
+  end do
 
-subroutine sll_s_delete_bspline_1d( spline )
-  type(sll_t_bspline_interpolation_1d) :: spline
-  !print*, associated(spline)
-end subroutine sll_s_delete_bspline_1d 
+end subroutine sll_s_interpolate_array_values_1d
+
+
+!> @brief returns the values of the derivatives evaluated at a point.
+!> The spline coefficients used are stored in the spline object.
+!> @param[inout] self the spline object pointer, duly initialized and 
+!> already operated on by the sll_s_compute_bspline_1d() subroutine.
+!> @param[in] x  abscissa to be interpolated.
+!> @param[out] y  result of the interpolation.
+function sll_f_interpolate_derivative_1d( self, x) result(y)
+
+  type(sll_t_bspline_interpolation_1d)    :: self 
+  sll_real64, intent(in)  :: x
+  sll_real64              :: y
+
+    !local variables
+  sll_int32               :: icell
+  sll_int32               :: ib
+  sll_int32               :: j
+  sll_real64              :: val
+  
+  ! get bspline derivatives at x
+  icell =  sll_f_find_cell( self%bsp, x )
+  call sll_s_spline_derivatives_at_x(self%bsp, icell, x, self%values)
+  y = 0.0_f64
+  do j=1,self%deg+1
+     !ib = mod(icell+j-self%deg/2-2+self%n,self%n) + 1
+     ib = mod(icell+j-2-self%offset+self%n,self%n) + 1
+     y = y + self%values(j)*self%bcoef(ib)
+!     print*, icell,j, ib, self%bcoef(ib), self%values(j), y
+  enddo
+  ! scale
+  !y = y / self%length
+end function sll_f_interpolate_derivative_1d
+
+
+!> @brief returns the values of the derivatives evaluated at a 
+!> collection of abscissae stored by a 1D array in another output 
+!> array. The spline coefficients used are stored in the spline 
+!> object pointer.
+!> @param[in] x input double-precison element array containing the 
+!> abscissae to be interpolated.
+!> @param[out] y output double-precision element array containing the 
+!> results of the interpolation.
+!> @param[in] n the number of elements of the input array which are to be
+!> interpolated.
+!> @param[inout] spline the spline object pointer, duly initialized and 
+!> already operated on by the sll_s_compute_bspline_1d() subroutine.
+subroutine sll_s_interpolate_array_derivatives_1d( self, n, x, y)
+  type(sll_t_bspline_interpolation_1d)    :: self 
+  sll_int32,  intent(in)  :: n
+  sll_real64, intent(in)  :: x(n)
+  sll_real64, intent(out) :: y(n)
+
+  ! local variables    
+  sll_real64 :: val
+  sll_real64 :: xx
+  sll_int32  :: i
+  sll_int32  :: j
+  sll_int32  :: ib
+  sll_int32  :: icell
+
+  do i= 1, n
+     xx = x(i)
+     val = 0.0_f64
+     ! get bspline derivatives at xx
+     icell =  sll_f_find_cell( self%bsp, xx )
+     call sll_s_spline_derivatives_at_x(self%bsp, icell, xx, self%values)
+     do j=1, self%deg+1
+        !ib = mod(icell+j-self%deg/2-2+self%n,self%n) + 1
+        ib = mod(icell+j-2-self%offset+self%n,self%n) + 1
+        val = val + self%values(j)*self%bcoef(ib)
+     enddo
+     y(i) = val 
+  end do
+
+end subroutine sll_s_interpolate_array_derivatives_1d
+
+!> @brief Destructor. Frees all pointers of object
+!> @param[inout] self object to be freed
+subroutine sll_s_bspline_interpolation_1d_free( self )
+  type(sll_t_bspline_interpolation_1d) :: self
+  sll_int32 :: ierr
+
+  ! deallocate all pointers
+  SLL_DEALLOCATE_ARRAY(self%bcoef,ierr)
+  SLL_DEALLOCATE_ARRAY(self%tau,ierr)
+  SLL_DEALLOCATE_ARRAY(self%q,ierr)
+  SLL_DEALLOCATE_ARRAY(self%values,ierr)
+  SLL_DEALLOCATE_ARRAY(self%bsdx,ierr)
+
+  ! free attribute objects
+  call sll_s_arbitrary_degree_spline_1d_free(self%bsp)
+  call schur_complement_free(self%schur)
+  
+end subroutine sll_s_bspline_interpolation_1d_free
 
   
 !>@brief
@@ -836,7 +636,7 @@ end subroutine sll_s_delete_bspline_1d
 !> of hermite boundary conditions.
 !> @param[in] sr2 OPTIONAL: The value of the slope at xmin, for use in the case
 !> of hermite boundary conditions.
-!> @return a pointer to a heap-allocated cubic spline object.
+!> @return a spline interpolation object.
 subroutine sll_s_bspline_interpolation_2d_init( self, nx1, degree1, x1_min, x1_max, bc1, &
                          nx2, degree2, x2_min, x2_max, bc2 )
 

@@ -297,8 +297,8 @@ contains
     sll_int32                                       :: r
 
     ! Run some checks on the arguments.
-    SLL_ASSERT(x >= self%xmin)
-    SLL_ASSERT(x <= self%xmax)
+    SLL_ASSERT(x > self%xmin - 1.0d-14)
+    SLL_ASSERT(x < self%xmax + 1.0d-14)
     SLL_ASSERT(icell >= 1)
     SLL_ASSERT(icell <= self%num_pts - 1)
     ! This is checked always. If it appear to penalise too much the performances
@@ -359,8 +359,8 @@ contains
 
     ! Run some checks on the arguments.
     SLL_ASSERT(associated(self%knots))
-    SLL_ASSERT(x >= self%xmin)
-    SLL_ASSERT(x <= self%xmax)
+    SLL_ASSERT(x > self%xmin - 1.0d-14)
+    SLL_ASSERT(x < self%xmax + 1.0d-14)
     SLL_ASSERT(icell >= 1)
     SLL_ASSERT(icell <= self%num_pts - 1)
     ! This is checked always.
@@ -432,8 +432,8 @@ contains
 
     ! Run some checks on the arguments.
     SLL_ASSERT(associated(self%knots))
-    SLL_ASSERT(x >= self%xmin)
-    SLL_ASSERT(x <= self%xmax)
+    SLL_ASSERT(x > self%xmin - 1.0d-14)
+    SLL_ASSERT(x < self%xmax + 1.0d-14)
     SLL_ASSERT(icell >= 1)
     SLL_ASSERT(icell <= self%num_pts - 1)
     ! This is checked always.
@@ -531,8 +531,8 @@ contains
 
     ! Run some checks on the arguments.
     SLL_ASSERT(associated(self%knots))
-    SLL_ASSERT(x >= self%xmin)
-    SLL_ASSERT(x <= self%xmax)
+    SLL_ASSERT(x > self%xmin - 1.0d-14)
+    SLL_ASSERT(x < self%xmax + 1.0d-14)
     SLL_ASSERT(icell >= 1)
     SLL_ASSERT(icell <= self%num_pts - 1)
     ! This is checked always.

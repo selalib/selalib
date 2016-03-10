@@ -77,6 +77,18 @@ end type schur_complement_solver
 
 contains
 
+  ! deallocate arrays
+  subroutine schur_complement_free(s)
+    type(schur_complement_solver) :: s
+    integer :: ierr
+    
+    deallocate(s%bb, stat=ierr)
+    deallocate(s%cc, stat=ierr)
+    deallocate(s%dd, stat=ierr)
+    deallocate(s%c1, stat=ierr)
+    deallocate(s%z2, stat=ierr)
+  end subroutine schur_complement_free
+  
 subroutine schur_complement_fac(s, n, k, q)
 
   type(schur_complement_solver) :: s
