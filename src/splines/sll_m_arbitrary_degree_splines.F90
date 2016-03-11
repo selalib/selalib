@@ -535,6 +535,7 @@ contains
     SLL_ASSERT(x < self%xmax + 1.0d-14)
     SLL_ASSERT(icell >= 1)
     SLL_ASSERT(icell <= self%num_pts - 1)
+    SLL_ASSERT(n <= self%deg/2)
     ! This is checked always.
     if( .not. (x >= self%knots(icell)) &
          .and. (x <= self%knots(icell+1))) then

@@ -180,7 +180,6 @@ contains
           ! for odd degree interpolation points are grid points including last point
           do i = 1, num_points 
              self%tau(i) = xmin + (i-1) * delta
-             print*, i, self%tau(i)
           end do
        end if
     case (sll_p_greville)
@@ -262,6 +261,7 @@ contains
     
     k = self%deg
     SLL_ALLOCATE(self%q(2*k+1,self%n), iflag)
+
     do i=1,self%n
        x = self%tau(i)
        icell = sll_f_find_cell(self%bsp, x )
@@ -290,44 +290,65 @@ contains
     sll_int32                              :: i
     sll_int32                              :: j
     sll_int32                              :: ib
+    sll_int32                              :: offset
+    sll_int32                              :: mid
     sll_int32                              :: k
     sll_int32                              :: icell
     sll_real64                             :: x
 
-    SLL_ALLOCATE(self%q(2*self%deg+1,self%n), iflag)
-    
     k = self%deg
-    ! number of values needed on boundary depending on spline degree
+    
+    ! number of derivative values needed on boundary depending on spline degree
     nder = k/2
-    ! Left hand side of interval with derivatives
+
+    SLL_ALLOCATE(self%q(2*(k+nder)+1,self%n), iflag)
+    
+    ! For even degree splines interpolation points are at cell midpoints
+    ! value of function on the boundary needed as additional boundary conditions
+    ! for odd degree splines  baundary is in the interpolation points
+    ! only derivative values are needed as boundary conditions
+    if (modulo(k,2)==0) then ! spline degree even
+       offset = 0
+       mid = k
+    else
+       offset = 1
+       mid = k + 1
+    end if
+   
+    ! boundary conditions at xmin
     x = self%bsp%xmin
     icell = sll_f_find_cell(self%bsp, x )
     call sll_s_splines_and_n_derivs_at_x( self%bsp, icell, x , nder , self%bsdx)
     do i=1, nder
        do j=1,k+1
           ib = icell+j-1
-          self%q( i-icell-j+k+2,ib) = self%bsdx(i,j)
+          !  i-icell-j+k+2
+          self%q(i-ib+mid,ib) = self%bsdx(i+offset,j)
        end do
     end do
+    ! interpolation points
     do i=nder+1,self%n - nder
        x = self%tau(i-nder)
        icell = sll_f_find_cell(self%bsp, x )
        call sll_s_splines_at_x(self%bsp, icell, x, self%values)
        do j=1,k+1
-          !print*, i,x,icell, i-nder, self%tau(i-nder)
-          ib = icell+j-1
-          self%q( i-icell-j+k+2,ib) = self%values(j)
+          ib = icell+j-1 
+          print*, i,x,icell, i-nder -ib+mid, ib
+          self%q(i - nder -ib + mid,ib) = self%values(j)
        end do
     end do
-    ! Right hand side of interval with derivatives
+    ! boundary conditions at xmax
     x = self%bsp%xmax
     icell = sll_f_find_cell(self%bsp, x )
     call sll_s_splines_and_n_derivs_at_x( self%bsp, icell, x , nder , self%bsdx)
-    do i= self%n-nder+1, self%n
+    do i= 1, nder
        do j=1,k+1
           ib = icell+j-1
-          self%q( i-icell-j+k+2,ib) = self%bsdx(self%n-i+1,j)
+          self%q( self%n-nder+i-ib+mid,ib) = self%bsdx(i+offset,j)
        end do
+    end do
+    do i=1,2*k+1
+       print*,self%q(i,:)
     end do
     ! Perform LU decomposition of matrix q
     call banfac ( self%q, 2*k+1, self%n, k, k, iflag )

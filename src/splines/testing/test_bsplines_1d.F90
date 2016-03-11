@@ -53,19 +53,20 @@ print*,'***************************************************************'
 print*,'*** 1D PERIODIC ***'
 print*,'***************************************************************'
 do deg=3,6
-   call test_process_1d(sll_p_periodic,deg, passed_test)
+!   call test_process_1d(sll_p_periodic,deg, passed_test)
 end do
 print*,'***************************************************************'
 print*,'*** 1D GREVILLE ***'
 print*,'***************************************************************'
 do deg=3,3
-   call test_process_1d(sll_p_greville,deg, passed_test)
+!   call test_process_1d(sll_p_greville,deg, passed_test)
 end do
 print*,'***************************************************************'
 print*,'*** 1D HERMITE ***'
 print*,'***************************************************************'
-deg=3
-!call test_process_1d(sll_p_hermite,deg,passed_test)
+do deg=3,3
+   call test_process_1d(sll_p_hermite,deg,passed_test)
+end do
 print*,'***************************************************************'
 print*,'*** 2D PERIODIC ***'
 print*,'***************************************************************'
@@ -98,7 +99,7 @@ contains
     sll_real64, dimension(:), allocatable :: gtau
     sll_real64, dimension(:), allocatable :: htau
 
-    sll_int32,  parameter                 :: npts = 51 ! defines bsplines
+    sll_int32,  parameter                 :: npts = 5 ! defines bsplines
     sll_int32,  parameter                 :: n = 27    ! number of evaluation points
     sll_real64                            :: h
 
