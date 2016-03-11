@@ -27,7 +27,7 @@ module sll_m_pic_poisson_2d
   private
 
   !> PIC Poisson solver 2d 
-  type, public, extends(sll_c_pic_poisson) :: sll_t_pic_poisson_2d
+  type, extends(sll_c_pic_poisson) :: sll_t_pic_poisson_2d
      
      sll_int32 :: no_gridpts(2)
      sll_int32 :: no_dofs
