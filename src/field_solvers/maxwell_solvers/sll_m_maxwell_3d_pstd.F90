@@ -76,16 +76,16 @@ implicit none
 
 public :: &
     sll_o_delete, &
-    sll_o_new, &
+    sll_o_create, &
     sll_o_solve
 
 private
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 !> Initialize maxwell solver 2d cartesian periodic with PSTD scheme
-interface sll_o_new
+interface sll_o_create
  module procedure new_maxwell_3d_pstd
-end interface sll_o_new
+end interface sll_o_create
 
 !> Solve maxwell solver 3d cartesian periodic with PSTD scheme
 interface sll_o_solve
@@ -109,7 +109,7 @@ end interface sll_o_delete
 
 
 !> Maxwell solver object
-type :: maxwell_pstd_3d
+type, public :: sll_t_maxwell_3d_pstd
    private
    sll_int32                          :: nc_x         !< x cells number
    sll_int32                          :: nc_y         !< y cells number
@@ -132,8 +132,7 @@ type :: maxwell_pstd_3d
    sll_int32                          :: polarization !< TE or TM
    sll_real64                         :: e_0          !< electric conductivity
    sll_real64                         :: mu_0         !< magnetic permeability
-end type maxwell_pstd_3d
-
+end type sll_t_maxwell_3d_pstd
 
 contains
 
@@ -142,26 +141,26 @@ subroutine new_maxwell_3d_pstd(self,xmin,xmax,nc_x, &
                                     ymin,ymax,nc_y, &
                                     zmin,zmax,nc_z )
 
-   type(maxwell_pstd_3d) :: self         !< maxwell object
-   sll_real64, intent(in):: xmin         !< x min
-   sll_real64, intent(in):: xmax         !< x max
-   sll_real64, intent(in):: ymin         !< y min
-   sll_real64, intent(in):: ymax         !< y max
-   sll_real64, intent(in):: zmin         !< z min
-   sll_real64, intent(in):: zmax         !< z max
-   sll_int32 , intent(in):: nc_x         !< x cells number
-   sll_int32 , intent(in):: nc_y         !< y cells number
-   sll_int32 , intent(in):: nc_z         !< z cells number
+   type(sll_t_maxwell_3d_pstd) :: self   !< maxwell object
+   sll_real64, intent(in)      :: xmin   !< x min
+   sll_real64, intent(in)      :: xmax   !< x max
+   sll_real64, intent(in)      :: ymin   !< y min
+   sll_real64, intent(in)      :: ymax   !< y max
+   sll_real64, intent(in)      :: zmin   !< z min
+   sll_real64, intent(in)      :: zmax   !< z max
+   sll_int32 , intent(in)      :: nc_x   !< x cells number
+   sll_int32 , intent(in)      :: nc_y   !< y cells number
+   sll_int32 , intent(in)      :: nc_z   !< z cells number
 
-   sll_int32             :: error        !< error code
-   sll_real64            :: dx           !< x space step
-   sll_real64            :: dy           !< y space step
-   sll_real64            :: dz           !< z space step
-   sll_real64            :: kx0
-   sll_real64            :: ky0
-   sll_real64            :: kz0
+   sll_int32                   :: error  !< error code
+   sll_real64                  :: dx     !< x space step
+   sll_real64                  :: dy     !< y space step
+   sll_real64                  :: dz     !< z space step
+   sll_real64                  :: kx0
+   sll_real64                  :: ky0
+   sll_real64                  :: kz0
 
-   sll_int32             :: i, j, k
+   sll_int32                   :: i, j, k
 
    self%nc_x = nc_x
    self%nc_y = nc_y
@@ -220,18 +219,18 @@ end subroutine new_maxwell_3d_pstd
 !> in your appication.
 subroutine solve_maxwell_3d(self, ex, ey, ez, bx, by, bz, dt)
 
-   type(maxwell_pstd_3d), intent(inout)        :: self !< maxwell object
-   sll_real64, intent(inout), dimension(:,:,:) :: ex   !< Ex field
-   sll_real64, intent(inout), dimension(:,:,:) :: ey   !< Ey field
-   sll_real64, intent(inout), dimension(:,:,:) :: ez   !< Ez field
-   sll_real64, intent(inout), dimension(:,:,:) :: bx   !< Bx field
-   sll_real64, intent(inout), dimension(:,:,:) :: by   !< By field
-   sll_real64, intent(inout), dimension(:,:,:) :: bz   !< Bz field
-   sll_real64, intent(in)                      :: dt   !< time step
+  type(sll_t_maxwell_3d_pstd), intent(inout)  :: self !< maxwell object
+  sll_real64, intent(inout), dimension(:,:,:) :: ex   !< Ex field
+  sll_real64, intent(inout), dimension(:,:,:) :: ey   !< Ey field
+  sll_real64, intent(inout), dimension(:,:,:) :: ez   !< Ez field
+  sll_real64, intent(inout), dimension(:,:,:) :: bx   !< Bx field
+  sll_real64, intent(inout), dimension(:,:,:) :: by   !< By field
+  sll_real64, intent(inout), dimension(:,:,:) :: bz   !< Bz field
+  sll_real64, intent(in)                      :: dt   !< time step
 
-   call faraday(self, ex, ey, ez, bx, by, bz, 0.5*dt)   
-   call ampere(self, ex, ey, ez, bx, by, bz, dt) 
-   call faraday(self, ex, ey, ez, bx, by, bz, 0.5*dt)   
+  call faraday(self, ex, ey, ez, bx, by, bz, 0.5*dt)   
+  call ampere(self, ex, ey, ez, bx, by, bz, dt) 
+  call faraday(self, ex, ey, ez, bx, by, bz, 0.5*dt)   
 
 end subroutine solve_maxwell_3d
 
@@ -263,7 +262,7 @@ end subroutine solve_maxwell_3d
 !> Solve faraday equation  (hx,hy,ez)
 subroutine faraday(self, hx, hy, hz, ex, ey, ez, dt)
 
-   type(maxwell_pstd_3d),intent(inout)         :: self  !< Maxwell object
+   type(sll_t_maxwell_3d_pstd),  intent(inout) :: self  !< Maxwell object
    sll_real64, dimension(:,:,:), intent(inout) :: hx    !< Magnetic field x
    sll_real64, dimension(:,:,:), intent(inout) :: hy    !< Magnetic field y
    sll_real64, dimension(:,:,:), intent(inout) :: hz    !< Magnetic field z
@@ -287,27 +286,27 @@ subroutine faraday(self, hx, hy, hz, ex, ey, ez, dt)
    do k = 1, nc_z
       do i = 1, nc_x
          D_DY(ez(i,1:nc_y,k))
-         hx(i,:,k) = hx(i,:,k) - dt_mu * self%d_dy
+         hx(i,1:nc_y,k) = hx(i,1:nc_y,k) - dt_mu * self%d_dy
          D_DY(ex(i,1:nc_y,k))
-         hz(i,:,k) = hz(i,:,k) + dt_mu * self%d_dy
+         hz(i,1:nc_y,k) = hz(i,1:nc_y,k) + dt_mu * self%d_dy
       end do
    end do
 
    do j = 1, nc_y
       do i = 1, nc_x
          D_DZ(ey(i,j,1:nc_z))
-         hx(i,j,:) = hx(i,j,:) + dt_mu * self%d_dz
+         hx(i,j,1:nc_z) = hx(i,j,1:nc_z) + dt_mu * self%d_dz
          D_DZ(ex(i,j,1:nc_z))
-         hy(i,j,:) = hy(i,j,:) - dt_mu * self%d_dz
+         hy(i,j,1:nc_z) = hy(i,j,1:nc_z) - dt_mu * self%d_dz
       end do
    end do
 
    do k = 1, nc_z
       do j = 1, nc_y
          D_DX(ez(1:nc_x,j,k))
-         hy(:,j,k) = hy(:,j,k) + dt_mu * self%d_dx
+         hy(1:nc_x,j,k) = hy(1:nc_x,j,k) + dt_mu * self%d_dx
          D_DX(ey(1:nc_x,j,k))
-         hz(:,j,k) = hz(:,j,k) - dt_mu * self%d_dx
+         hz(1:nc_x,j,k) = hz(1:nc_x,j,k) - dt_mu * self%d_dx
       end do
    end do
    
@@ -316,21 +315,21 @@ end subroutine faraday
 !> Solve ampere maxwell equation (hx,hy,ez)
 subroutine ampere(self, hx, hy, hz, ex, ey, ez, dt, jx, jy, jz)
 
-   type(maxwell_pstd_3d),intent(inout)    :: self !< maxwell object
-   sll_real64, dimension(:,:,:)           :: hx   !< magnetic field x
-   sll_real64, dimension(:,:,:)           :: hy   !< magnetic field y
-   sll_real64, dimension(:,:,:)           :: hz   !< magnetic field z
-   sll_real64, dimension(:,:,:)           :: ex   !< electric field x
-   sll_real64, dimension(:,:,:)           :: ey   !< electric field y
-   sll_real64, dimension(:,:,:)           :: ez   !< electric field z
-   sll_real64                             :: dt   !< time step
-   sll_real64, dimension(:,:,:), optional :: jx   !< current z
-   sll_real64, dimension(:,:,:), optional :: jy   !< current z
-   sll_real64, dimension(:,:,:), optional :: jz   !< current z
+   type(sll_t_maxwell_3d_pstd),intent(inout) :: self !< maxwell object
+   sll_real64, dimension(:,:,:)              :: hx   !< magnetic field x
+   sll_real64, dimension(:,:,:)              :: hy   !< magnetic field y
+   sll_real64, dimension(:,:,:)              :: hz   !< magnetic field z
+   sll_real64, dimension(:,:,:)              :: ex   !< electric field x
+   sll_real64, dimension(:,:,:)              :: ey   !< electric field y
+   sll_real64, dimension(:,:,:)              :: ez   !< electric field z
+   sll_real64                                :: dt   !< time step
+   sll_real64, dimension(:,:,:), optional    :: jx   !< current z
+   sll_real64, dimension(:,:,:), optional    :: jy   !< current z
+   sll_real64, dimension(:,:,:), optional    :: jz   !< current z
 
-   sll_int32                              :: nc_x !< x cells number
-   sll_int32                              :: nc_y !< y cells number
-   sll_int32                              :: nc_z !< z cells number
+   sll_int32                                 :: nc_x !< x cells number
+   sll_int32                                 :: nc_y !< y cells number
+   sll_int32                                 :: nc_z !< z cells number
 
    sll_real64 :: dt_e
    sll_int32  :: i, j, k
@@ -344,27 +343,27 @@ subroutine ampere(self, hx, hy, hz, ex, ey, ez, dt, jx, jy, jz)
    do k = 1, nc_z
    do i = 1, nc_x
       D_DY(hz(i,1:nc_y,k))
-      ex(i,:,k) = ex(i,:,k) + dt_e * self%d_dy
+      ex(i,1:nc_y,k) = ex(i,1:nc_y,k) + dt_e * self%d_dy
       D_DY(hx(i,1:nc_y,k))
-      ez(i,:,k) = ez(i,:,k) - dt_e * self%d_dy
+      ez(i,1:nc_y,k) = ez(i,1:nc_y,k) - dt_e * self%d_dy
    end do
    end do
 
    do j = 1, nc_y
    do i = 1, nc_x
       D_DZ(hy(i,j,1:nc_z))
-      ex(i,j,:) = ex(i,j,:) - dt_e * self%d_dz
+      ex(i,j,1:nc_z) = ex(i,j,1:nc_z) - dt_e * self%d_dz
       D_DZ(hx(i,j,1:nc_z))
-      ey(i,j,:) = ey(i,j,:) + dt_e * self%d_dz
+      ey(i,j,1:nc_z) = ey(i,j,1:nc_z) + dt_e * self%d_dz
    end do
    end do
 
    do k = 1, nc_z
    do j = 1, nc_y
       D_DX(hz(1:nc_x,j,k))
-      ey(:,j,k) = ey(:,j,k) - dt_e * self%d_dx
+      ey(1:nc_x,j,k) = ey(1:nc_x,j,k) - dt_e * self%d_dx
       D_DX(hy(1:nc_x,j,k))
-      ez(:,j,k) = ez(:,j,k) + dt_e * self%d_dx
+      ez(1:nc_x,j,k) = ez(1:nc_x,j,k) + dt_e * self%d_dx
    end do
    end do
 
@@ -378,7 +377,7 @@ end subroutine ampere
 
 !> delete maxwell solver object
 subroutine free_maxwell_3d_pstd(self)
-type(maxwell_pstd_3d) :: self
+type(sll_t_maxwell_3d_pstd) :: self
 
 call sll_s_fft_free(self%fwx)
 call sll_s_fft_free(self%fwy)
