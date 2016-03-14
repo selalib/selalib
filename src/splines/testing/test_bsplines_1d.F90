@@ -58,14 +58,14 @@ end do
 print*,'***************************************************************'
 print*,'*** 1D GREVILLE ***'
 print*,'***************************************************************'
-do deg=3,3
-!   call test_process_1d(sll_p_greville,deg, passed_test)
+do deg=5,9
+   call test_process_1d(sll_p_greville,deg, passed_test)
 end do
 print*,'***************************************************************'
 print*,'*** 1D HERMITE ***'
 print*,'***************************************************************'
 do deg=3,3
-   call test_process_1d(sll_p_hermite,deg,passed_test)
+!   call test_process_1d(sll_p_hermite,deg,passed_test)
 end do
 print*,'***************************************************************'
 print*,'*** 2D PERIODIC ***'
@@ -99,7 +99,7 @@ contains
     sll_real64, dimension(:), allocatable :: gtau
     sll_real64, dimension(:), allocatable :: htau
 
-    sll_int32,  parameter                 :: npts = 5 ! defines bsplines
+    sll_int32,  parameter                 :: npts = 51 ! defines bsplines
     sll_int32,  parameter                 :: n = 27    ! number of evaluation points
     sll_real64                            :: h
 
@@ -136,7 +136,7 @@ contains
     do j = 1,n
        !print*, x_max, x(j), bspline_1d%bsp%knots(npts)
        y(j) = sll_f_interpolate_value_1d( bspline_1d, x(j))
-       !print*, j, x(j), cos(2*sll_p_pi*x(j)), y(j), y(j) - cos(2*sll_p_pi*x(j))
+       print*, j, x(j), cos(2*sll_p_pi*x(j)), y(j), y(j) - cos(2*sll_p_pi*x(j))
     end do
     err1 = maxval(abs(y-cos(2*sll_p_pi*x)))
     if (err1 > tol) then
