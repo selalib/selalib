@@ -66,10 +66,10 @@ type :: sll_t_bspline_interpolation_1d
   sll_real64                :: length
   sll_int32                 :: offset
   type(schur_complement_solver)  :: schur
-!!$  sll_real64                :: vl
-!!$  sll_real64                :: vr
-!!$  sll_real64                :: sl
-!!$  sll_real64                :: sr
+  sll_real64, pointer       :: bc_left(:)
+  sll_real64, pointer       :: bc_right(:)
+!  sll_real64                :: sl
+!  sll_real64                :: sr
 !!$  logical                   :: compute_vl
 !!$  logical                   :: compute_vr
 !!$  logical                   :: compute_sl
@@ -111,14 +111,17 @@ contains
 !> to be interpolated.
 !> @param[in] bc_type A boundary condition specifier. Can be either
 !> sll_p_periodic for periodic splines or sll_p_open for open knots  
-  subroutine sll_s_bspline_interpolation_1d_init( self, num_points, degree, xmin, xmax, bc_type)
+  subroutine sll_s_bspline_interpolation_1d_init( self, num_points, degree, xmin, xmax, bc_type, &
+       bc_left, bc_right)
     type(sll_t_bspline_interpolation_1d) :: self
     sll_int32,  intent(in)               :: num_points
     sll_int32,  intent(in)               :: degree
     sll_real64, intent(in)               :: xmin
     sll_real64, intent(in)               :: xmax
     sll_int32,  intent(in)               :: bc_type
-
+    sll_real64, optional                 :: bc_left(:)
+    sll_real64, optional                 :: bc_right(:)
+    
     ! local variables
     sll_real64, dimension(num_points)    :: grid
     sll_int32                            :: ierr
@@ -178,6 +181,15 @@ contains
           do i = 1, num_points 
              self%tau(i) = xmin + (i-1) * delta
           end do
+       end if
+       ! deal with possible boundary conditions
+       if (present(bc_left).and. present(bc_right)) then
+          SLL_ASSERT((size(bc_left)==self%deg/2))
+          SLL_ASSERT((size(bc_right)==self%deg/2))
+          SLL_ALLOCATE(self%bc_left(self%deg/2),ierr)
+          self%bc_left = bc_left
+          SLL_ALLOCATE(self%bc_right(self%deg/2),ierr)
+          self%bc_right = bc_right
        end if
     case (sll_p_greville)
        do i = 1, self%n
