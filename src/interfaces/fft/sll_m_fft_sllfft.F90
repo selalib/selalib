@@ -261,6 +261,7 @@ contains
 
     sll_int32 :: ierr, i
 
+    SLL_ASSERT( nx>2 ) ! For nx=2, there is a bug in SLLFFT 
     SLL_ASSERT(size(array_in).ge.nx)
     SLL_ASSERT(size(array_out).ge.nx)
     plan%transform_type = p_fftw_c2c_1d
@@ -337,6 +338,8 @@ contains
     SLL_ASSERT(size(array_in,dim=2).ge.ny)
     SLL_ASSERT(size(array_out,dim=1).ge.nx)
     SLL_ASSERT(size(array_out,dim=2).ge.ny)
+    SLL_ASSERT( nx>2 ) ! For nx=2, there is a bug in SLLFFT 
+    SLL_ASSERT( ny>2 )  
 
     plan%transform_type = p_fftw_c2c_2d
     plan%direction = direction
@@ -361,7 +364,7 @@ contains
 
     call compute_twiddles(ny,plan%t(nx/2+1:nx/2 + ny/2))
     if ( direction == sll_p_fft_forward ) then
-       plan%t(ny/2+1:ny/2 + ny/2) = conjg(plan%t(nx/2+1:nx/2 + ny/2))
+       plan%t(nx/2+1:nx/2 + ny/2) = conjg(plan%t(nx/2+1:nx/2 + ny/2))
     end if
     call bit_reverse_complex(ny/2,plan%t(nx/2+1:nx/2 + ny/2))
 
