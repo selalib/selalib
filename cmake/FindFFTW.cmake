@@ -8,10 +8,11 @@ ELSE()
    SET(FFTW_ROOT "/usr/local" CACHE PATH "FFTW location")
 ENDIF()
 
-SET(TRIAL_PATHS $ENV{FFTW_HOME}
-                ${FFTW_ROOT}
+SET(TRIAL_PATHS ${FFTW_ROOT}
+                $ENV{FFTW_HOME}
                 $ENV{FFTW_DIR}
                 $ENV{FFTW_BASE}
+                $ENV{FFTW_ROOT_DIR}
                 /usr
                 /usr/local
                 /usr/lib64/mpich2
