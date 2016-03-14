@@ -27,9 +27,9 @@ TARGET_LINK_LIBRARIES( test_bsplines sll_splines )
 #TARGET_LINK_LIBRARIES( test_bsplines_2d sll_splines )
 
 # Ctests
-ADD_TEST( NAME bsplines_1d COMMAND test_bsplines_1d )
+ADD_TEST( NAME bsplines COMMAND test_bsplines )
 #ADD_TEST( NAME bsplines_2d COMMAND test_bsplines_2d )
-SET_TESTS_PROPERTIES( bsplines_1d PROPERTIES PASS_REGULAR_EXPRESSION "PASSED" )
+SET_TESTS_PROPERTIES( bsplines PROPERTIES PASS_REGULAR_EXPRESSION "PASSED" )
 #SET_TESTS_PROPERTIES( bsplines_2d PROPERTIES PASS_REGULAR_EXPRESSION "PASSED" )
 #...........................................
 
