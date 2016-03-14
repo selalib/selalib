@@ -42,7 +42,6 @@ sll_int32                     :: i
 sll_int32                     :: j
 sll_int32,  parameter         :: nstep = 1
 sll_real64,  parameter        :: tol = 1.0d-3    ! tolerance for tests
-!sll_int32,  parameter         :: m = 2
 sll_real64                    :: t0, t1, t2, t3, t4, t5
 sll_int32                     :: ierr
 sll_int32                     :: deg
@@ -52,20 +51,20 @@ passed_test = .true.
 print*,'***************************************************************'
 print*,'*** 1D PERIODIC ***'
 print*,'***************************************************************'
-do deg=3,6
+do deg=3,9
 !   call test_process_1d(sll_p_periodic,deg, passed_test)
 end do
 print*,'***************************************************************'
 print*,'*** 1D GREVILLE ***'
 print*,'***************************************************************'
-do deg=5,9
-   call test_process_1d(sll_p_greville,deg, passed_test)
+do deg=3,9
+!   call test_process_1d(sll_p_greville,deg, passed_test)
 end do
 print*,'***************************************************************'
 print*,'*** 1D HERMITE ***'
 print*,'***************************************************************'
-do deg=3,3
-!   call test_process_1d(sll_p_hermite,deg,passed_test)
+do deg=3,9
+   call test_process_1d(sll_p_hermite,deg,passed_test)
 end do
 print*,'***************************************************************'
 print*,'*** 2D PERIODIC ***'
@@ -98,6 +97,7 @@ contains
     sll_real64, dimension(:), allocatable :: y
     sll_real64, dimension(:), allocatable :: gtau
     sll_real64, dimension(:), allocatable :: htau
+    sll_real64, dimension(:), allocatable :: bc
 
     sll_int32,  parameter                 :: npts = 51 ! defines bsplines
     sll_int32,  parameter                 :: n = 27    ! number of evaluation points
@@ -123,20 +123,38 @@ contains
     print*, 'bspline_interpolation_1d_init constructed'
 
     SLL_ALLOCATE(gtau(bspline_1d%n),ierr)
+    SLL_ALLOCATE(bc(2*(deg/2)),ierr)
     print*, '------------------------------------------'
     print*, 'Test on cosinus at uniformly spaced points'
     print*, '------------------------------------------'
     gtau = cos(2*sll_p_pi*bspline_1d%tau)
     !print*, 'tau:  ', bspline_1d%tau
     !print*, 'gtau: ', gtau
-
+    
     call cpu_time(t0)
-    call sll_s_compute_bspline_1d(bspline_1d, gtau)
+    if (bc_type == sll_p_hermite) then
+       ! Compute boundary conditions for Hermite case
+       bc=0.0_f64
+       if (modulo(deg,2) == 0) then
+          bc(1) = 1.0_f64 
+          do i=3,deg/2,2
+             bc(i)=-4*sll_p_pi**2*bc(i-2)
+          end do
+       else
+          bc(2) = -4*sll_p_pi**2
+          do i=4,deg/2,2
+             bc(i)=-4*sll_p_pi**2*bc(i-2)
+          end do
+       end if
+       call sll_s_compute_bspline_1d(bspline_1d, gtau, bc, bc)
+    else    
+       call sll_s_compute_bspline_1d(bspline_1d, gtau)
+    end if
     call cpu_time(t1)
     do j = 1,n
        !print*, x_max, x(j), bspline_1d%bsp%knots(npts)
        y(j) = sll_f_interpolate_value_1d( bspline_1d, x(j))
-       print*, j, x(j), cos(2*sll_p_pi*x(j)), y(j), y(j) - cos(2*sll_p_pi*x(j))
+       !print*, j, x(j), cos(2*sll_p_pi*x(j)), y(j), y(j) - cos(2*sll_p_pi*x(j))
     end do
     err1 = maxval(abs(y-cos(2*sll_p_pi*x)))
     if (err1 > tol) then
@@ -204,7 +222,24 @@ contains
     print*, ' -----------------------------'
     SLL_ALLOCATE(htau(bspline_1d%n),ierr)
     htau = sin(2*sll_p_pi*bspline_1d%tau)
-    call sll_s_compute_bspline_1d(bspline_1d, htau)
+    if (bc_type == sll_p_hermite) then
+       ! Compute boundary conditions for Hermite case
+       bc=0.0_f64
+       if (modulo(deg,2) == 0) then
+          bc(2) = 2*sll_p_pi
+          do i=4,deg/2,2
+             bc(i)=-4*sll_p_pi**2*bc(i-2)
+          end do
+       else
+          bc(1) = 2*sll_p_pi
+          do i=3,deg/2,2
+             bc(i)=-4*sll_p_pi**2*bc(i-2)
+          end do
+       end if
+       call sll_s_compute_bspline_1d(bspline_1d, htau, bc, bc)
+    else    
+       call sll_s_compute_bspline_1d(bspline_1d, htau)
+    end if
 
     do j = 1,n
        y(j) = sll_f_interpolate_value_1d( bspline_1d, xx(j))
