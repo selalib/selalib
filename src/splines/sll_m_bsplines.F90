@@ -59,9 +59,10 @@ type :: sll_t_bspline_interpolation_1d
   sll_real64, pointer       :: tau(:)   ! n interpolation points
   sll_real64, pointer       :: bcoef(:) ! bspline coefficients
   sll_int32                 :: bc_type
-  sll_real64, allocatable       :: q(:,:)   ! triangular factorization of coefficient matrix
-  sll_real64, allocatable       :: values(:) 
-  sll_real64, allocatable       :: bsdx(:,:)
+  sll_real64, pointer       :: q(:,:)   ! triangular factorization of coefficient matrix
+  sll_real64, pointer       :: values(:) 
+  sll_real64, pointer       :: bsdx(:,:)
+  sll_int32, pointer        :: ipiv(:)
   sll_real64                :: length
   sll_int32                 :: offset
   type(schur_complement_solver)  :: schur
@@ -73,9 +74,7 @@ type :: sll_t_bspline_interpolation_1d
 !!$  logical                   :: compute_vr
 !!$  logical                   :: compute_sl
 !!$  logical                   :: compute_sr
-!!$  sll_real64, allocatable   :: aj(:)
-!!$  sll_real64, allocatable   :: dl(:)
-!!$  sll_real64, allocatable   :: dr(:)
+
 
 end type sll_t_bspline_interpolation_1d
 
@@ -126,9 +125,6 @@ contains
     sll_int32                            :: i
     sll_int32                            :: j
     sll_int32                            :: iflag
-    !  sll_int32                            :: n
-    !  sll_int32                            :: k
-    !  sll_int32, parameter                 :: m=0 !ES m=2
     sll_real64                           :: delta
 
     ! set first attributes
@@ -153,7 +149,8 @@ contains
 
     SLL_ALLOCATE(self%bcoef(self%n),  ierr)
     SLL_ALLOCATE(self%values(self%deg+1), ierr)
-    SLL_ALLOCATE(self%bsdx(self%deg+1,self%deg+1), ierr)
+    SLL_ALLOCATE(self%bsdx(self%deg/2+1,self%deg+1), ierr)
+    SLL_ALLOCATE(self%ipiv(self%n), ierr)
     
     ! Allocate tau which contains interpolation points
     SLL_ALLOCATE(self%tau(self%n), ierr)
@@ -192,8 +189,7 @@ contains
           self%tau(i) = self%tau(i) / degree
        end do
     end select
-    !print*, 'tau ', self%tau
-    !print*, 'knots', self%bsp%knots
+
     ! Assemble banded matrix (B_j(tau(i))) for spline interpolation
     select case (bc_type)
     case (sll_p_periodic) 
@@ -204,12 +200,6 @@ contains
        call build_system_with_derivative(self)
     end select
     
-
-    !  allocate(self%dbiatx(k,m))
-    !  allocate(self%aj(k))
-    !  allocate(self%dl(k))
-    !  allocate(self%dr(k))
-
   end subroutine sll_s_bspline_interpolation_1d_init
 
   !> @brief private subroutine for assembling and factorizing 
@@ -234,6 +224,7 @@ contains
     sizeq = self%deg/2
     ! assemble matrix q for linear system
     SLL_ALLOCATE(self%q(2*sizeq+1,self%n), ierr)
+    
     do j=1,self%n
        do i=1, 2*sizeq+1
           self%q(i,j) = self%values(i)
@@ -252,7 +243,6 @@ contains
     type(sll_t_bspline_interpolation_1d)   :: self
     ! local variables
     sll_int32                            :: iflag
-!    sll_int32                            :: i
     sll_int32                            :: j
     sll_int32                            :: k
     sll_int32                            :: ii
@@ -263,43 +253,33 @@ contains
     ! The matrix q is a banded matrix using the storage required by banfac (De Boor)
     ! It has k bands above diagonal, k bands below and the diagonal itself
     ! The term A(ii,jj) of the full matrix is stored in q(ii-jj+k+1,jj)
-    k = self%deg - 1 
-    SLL_ALLOCATE(self%q(2*k+1,self%n), iflag)
-
     ! The Bspline interpolation matrix at Greville points x_ii is
     ! A(ii,jj) = B_jj(x_ii)
-    
+    k = self%deg - 1 
+    SLL_CLEAR_ALLOCATE(self%q(2*k+1,self%n), iflag)
+    self%q = 0.0_f64 ! should be redundant with SLL_CLEAR_ALLOCATE but is not!
+    !print*,'maxval',maxval(self%q)   
     
     ! Treat i=1 separately
     x =  self%bsp%xmin
     icell = 1
     ii = 1   ! first Greville point
     call sll_s_splines_at_x(self%bsp, icell, x, self%values)
-    ! iterate only to k as last bspline is 0
+    ! iterate only to k+1 as last bspline is 0
     do j=1,k+1
        jj = icell+j-1
        self%q(ii-jj+k+1,jj) = self%values(j)
-       !print*, x, ii, jj, ii-jj+k+1, j,  self%values(j)
     end do
-!    do j=1,2*k+1
-!       print*, self%q(j,:)
-!    end do
-!    print*,'-----'
+
     do ii=2,self%n - 1
        x = self%tau(ii)
        icell = sll_f_find_cell(self%bsp, x )
-       !print*, 'allocated', associated(self%values)
        call sll_s_splines_at_x(self%bsp, icell, x, self%values)
        do j=1,k+2
           jj = icell+j-1
-          print*,x, ii, jj, ii-jj+k+1, j ,  self%values(j)
           self%q(ii-jj+k+1,jj) = self%values(j)
        end do
     end do
-!!$    do j=1,2*k+1
-!!$       print*, self%q(j,:)
-!!$    end do
-!!$    print*,'-----'
     ! Treat i=self%n separately
     x =  self%bsp%xmax
     icell = self%n - self%deg
@@ -313,9 +293,6 @@ contains
     ! Perform LU decomposition of matrix q
     call banfac ( self%q, 2*k+1, self%n, k, k, iflag )
 
- !   do j=1,2*k+1
- !      print*, self%q(j,:)
- !   end do
   end subroutine build_system_greville
   
   !> @brief private subroutine for assembling and factorizing 
@@ -326,73 +303,78 @@ contains
     type(sll_t_bspline_interpolation_1d)   :: self
 
     ! local variables
-    sll_int32                              :: nder
+    sll_int32                              :: nbc
     sll_int32                              :: iflag
     sll_int32                              :: i
     sll_int32                              :: j
-    sll_int32                              :: ib
+    sll_int32                              :: ii
+    sll_int32                              :: jj
     sll_int32                              :: offset
-    sll_int32                              :: mid
     sll_int32                              :: k
     sll_int32                              :: icell
     sll_real64                             :: x
-
-    k = self%deg
     
-    ! number of derivative values needed on boundary depending on spline degree
-    nder = k/2
+    ! number of boundary conditions neededdepending on spline degree
+    k = self%deg-1
+    nbc = self%deg/2
 
-    SLL_ALLOCATE(self%q(2*(k+nder)+1,self%n), iflag)
-    
+    ! The matrix q is a banded matrix using the storage required by DGBTRF (LAPACK)
+    ! It has 2*k bands above diagonal, k bands below and the diagonal itself
+    ! k additional bands above diagonal needed for pivoting
+    ! The term A(ii,jj) of the full matrix is stored in q(ii-jj+2*k+1,jj)
+    ! The Bspline interpolation matrix at Greville points x_ii is
+    ! A(ii,jj) = B_jj(x_ii)
+    SLL_ALLOCATE(self%q(3*k+1,self%n), iflag)
+    self%q = 0.0_f64
+     
     ! For even degree splines interpolation points are at cell midpoints
     ! value of function on the boundary needed as additional boundary conditions
     ! for odd degree splines  baundary is in the interpolation points
     ! only derivative values are needed as boundary conditions
-    if (modulo(k,2)==0) then ! spline degree even
+    if (modulo(k+1,2)==0) then ! spline degree even
        offset = 0
-       mid = k
     else
        offset = 1
-       mid = k + 1
     end if
    
     ! boundary conditions at xmin
+    ii=0
     x = self%bsp%xmin
-    icell = sll_f_find_cell(self%bsp, x )
-    call sll_s_splines_and_n_derivs_at_x( self%bsp, icell, x , nder , self%bsdx)
-    do i=1, nder
+    icell = 1
+    call sll_s_splines_and_n_derivs_at_x( self%bsp, icell, x , nbc , self%bsdx)
+    do i=1, nbc
+       ! iterate only to k+1 as last bspline is 0
+       ii=ii+1
        do j=1,k+1
-          ib = icell+j-1
-          !  i-icell-j+k+2
-          self%q(i-ib+mid,ib) = self%bsdx(i+offset,j)
+          jj = icell+j-1
+          self%q(ii-jj+2*k+1,jj) = self%bsdx(i+offset,j)
        end do
     end do
     ! interpolation points
-    do i=nder+1,self%n - nder
-       x = self%tau(i-nder)
+    do i=1,self%n - 2*nbc
+       ii = ii + 1
+       x = self%tau(i)
        icell = sll_f_find_cell(self%bsp, x )
        call sll_s_splines_at_x(self%bsp, icell, x, self%values)
-       do j=1,k+1
-          ib = icell+j-1 
-          print*, i,x,icell, i-nder -ib+mid, ib
-          self%q(i - nder -ib + mid,ib) = self%values(j)
+       do j=1,k+2
+          jj = icell+j-1
+          self%q(ii-jj+2*k+1,jj) = self%values(j)
        end do
     end do
     ! boundary conditions at xmax
     x = self%bsp%xmax
-    icell = sll_f_find_cell(self%bsp, x )
-    call sll_s_splines_and_n_derivs_at_x( self%bsp, icell, x , nder , self%bsdx)
-    do i= 1, nder
-       do j=1,k+1
-          ib = icell+j-1
-          self%q( self%n-nder+i-ib+mid,ib) = self%bsdx(i+offset,j)
+    icell = self%n - self%deg
+    call sll_s_splines_and_n_derivs_at_x( self%bsp, icell, x , nbc , self%bsdx)
+    do i= 1, nbc
+       ii = ii + 1
+       do j=2,k+2
+          jj = icell+j-1
+          self%q( ii-jj+2*k+1,jj) = self%bsdx(i+offset,j)
        end do
     end do
-    do i=1,2*k+1
-       print*,self%q(i,:)
-    end do
-    ! Perform LU decomposition of matrix q
-    call banfac ( self%q, 2*k+1, self%n, k, k, iflag )
+
+    ! Perform LU decomposition of matrix q with Lapack
+    call dgbtrf(self%n,self%n,k,k,self%q,3*k+1,self%ipiv,iflag)
 
   end subroutine build_system_with_derivative
   
@@ -404,6 +386,8 @@ contains
     sll_real64, optional   :: val_max(:)
     ! local variables
     sll_int32   :: ncond
+    sll_int32   :: k
+    sll_int32   :: iflag
     
     select case (self%bc_type)
     case(sll_p_periodic)
@@ -420,15 +404,16 @@ contains
        else  ! set needed boundary values to 0
           self%bcoef(1:ncond) = 0.0_f64
        end if
-       self%bcoef(ncond+1:self%n-ncond) = gtau
+       self%bcoef(ncond+1:self%n-ncond) = gtau(1:self%n-2*ncond)
        if (present(val_max)) then
           self%bcoef(self%n-ncond+1:self%n) = val_max(1:ncond)
        else ! set needed boundary values to 0
           self%bcoef(self%n-ncond+1:self%n) = 0.0_f64
        end if
-       call banslv ( self%q, 2*self%deg+1, self%n, self%deg, self%deg, self%bcoef )
+       ! Use Lapack to solve banded system
+       k = self%deg-1
+       call dgbtrs('N',self%n,k,k,1,self%q,3*k+1,self%ipiv,self%bcoef, self%n, iflag)
     end select
-    !  call sll_s_update_bspline_1d( self, gtau)
 
   end subroutine sll_s_compute_bspline_1d
 
@@ -497,7 +482,6 @@ subroutine sll_s_interpolate_array_values_1d( self, n, x, y)
      icell =  sll_f_find_cell( self%bsp, xx )
      call sll_s_splines_at_x(self%bsp, icell, xx, self%values)
      do j=1, self%deg+1
-        !ib = mod(icell+j-self%deg/2-2+self%n,self%n) + 1
         ib = mod(icell+j-2-self%offset+self%n,self%n) + 1
         val = val + self%values(j)*self%bcoef(ib)
      enddo
@@ -530,13 +514,9 @@ function sll_f_interpolate_derivative_1d( self, x) result(y)
   call sll_s_spline_derivatives_at_x(self%bsp, icell, x, self%values)
   y = 0.0_f64
   do j=1,self%deg+1
-     !ib = mod(icell+j-self%deg/2-2+self%n,self%n) + 1
      ib = mod(icell+j-2-self%offset+self%n,self%n) + 1
      y = y + self%values(j)*self%bcoef(ib)
-!     print*, icell,j, ib, self%bcoef(ib), self%values(j), y
   enddo
-  ! scale
-  !y = y / self%length
 end function sll_f_interpolate_derivative_1d
 
 
@@ -573,7 +553,6 @@ subroutine sll_s_interpolate_array_derivatives_1d( self, n, x, y)
      icell =  sll_f_find_cell( self%bsp, xx )
      call sll_s_spline_derivatives_at_x(self%bsp, icell, xx, self%values)
      do j=1, self%deg+1
-        !ib = mod(icell+j-self%deg/2-2+self%n,self%n) + 1
         ib = mod(icell+j-2-self%offset+self%n,self%n) + 1
         val = val + self%values(j)*self%bcoef(ib)
      enddo
@@ -600,70 +579,6 @@ subroutine sll_s_bspline_interpolation_1d_free( self )
   call schur_complement_free(self%schur)
   
 end subroutine sll_s_bspline_interpolation_1d_free
-
-  
-!>@brief
-!> produces the B-spline coefficients of an interpolating spline.
-!> @details
-!> If interpolants are already computed and if you change only 
-!> the data set and knots and points positions did not change
-!> use self routine.
-!>
-!!$subroutine sll_s_update_bspline_1d(self, gtau) !, slope_min, slope_max)
-!!$
-!!$  type(sll_t_bspline_interpolation_1d)    :: self 
-!!$  sll_real64, intent(in)  :: gtau(:)
-!!$!  sll_real64, optional    :: slope_min
-!!$!  sll_real64, optional    :: slope_max
-!!$
-!!$
-!!$  sll_int32               :: n
-!!$  sll_int32               :: k
-!!$  sll_int32, parameter    :: m = 2
-!!$  sll_real64              :: slope(0:1)
-!!$
-!!$  n = self%n
-!!$  k = self%k
-!!$
-!!$  SLL_ASSERT(size(gtau) == n)
-!!$
-!!$  if (self%bc_type == sll_p_periodic) then
-!!$
-!!$    self%bcoef = gtau
-!!$    call banslv ( self%q, k+k-1, n, k-1, k-1, self%bcoef )
-!!$
-!!$  else
-!!$
-!!$    self%bcoef(1)   = gtau(1)
-!!$
-!!$    if(self%compute_sl) then
-!!$      call sll_s_apply_fd(k+1,1,self%tau(1:k+1),gtau(1:k+1), &
-!!$        self%tau(1),slope(0:1))
-!!$      self%bcoef(2) = slope(1)
-!!$    else if (present(slope_min)) then
-!!$      self%bcoef(2) = slope_min
-!!$    else
-!!$      self%bcoef(2) = self%sl
-!!$    end if
-!!$    self%bcoef(3:n) = gtau(2:n-1)
-!!$    if(self%compute_sr) then
-!!$      call sll_s_apply_fd(k+1,1,self%tau(n-k-1:n),gtau(n-k-1:n), &
-!!$        self%tau(n),slope(0:1))
-!!$      self%bcoef(n+1) = slope(1)
-!!$    else if (present(slope_max)) then
-!!$      self%bcoef(n+1) = slope_max
-!!$    else
-!!$      self%bcoef(n+1) = self%sr
-!!$    end if
-!!$    self%bcoef(n+2) = gtau(n)
-!!$     
-!!$     self%bcoef = gtau
-!!$!ES ?     call banslv ( self%q, k+k-1, n+m, k-1, k-1, self%bcoef )
-!!$
-!!$  end if
-!!$  
-!!$end subroutine sll_s_update_bspline_1d
-
   
   ! *************************************************************************
   !
