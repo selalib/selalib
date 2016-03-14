@@ -20,8 +20,8 @@ SET_TESTS_PROPERTIES( quintic_splines PROPERTIES
 #...........................................
 
 # Deboor B-splines ............................
-ADD_EXECUTABLE( test_bsplines_1d test_bsplines_1d.F90 )
-TARGET_LINK_LIBRARIES( test_bsplines_1d sll_splines )
+ADD_EXECUTABLE( test_bsplines test_bsplines.F90 )
+TARGET_LINK_LIBRARIES( test_bsplines sll_splines )
 
 #ADD_EXECUTABLE( test_bsplines_2d test_bsplines_2d.F90 )
 #TARGET_LINK_LIBRARIES( test_bsplines_2d sll_splines )
