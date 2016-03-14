@@ -59,9 +59,9 @@ type :: sll_t_bspline_interpolation_1d
   sll_real64, pointer       :: tau(:)   ! n interpolation points
   sll_real64, pointer       :: bcoef(:) ! bspline coefficients
   sll_int32                 :: bc_type
-  sll_real64, pointer       :: q(:,:)   ! triangular factorization of coefficient matrix
-  sll_real64, pointer       :: values(:) 
-  sll_real64, pointer       :: bsdx(:,:)
+  sll_real64, allocatable       :: q(:,:)   ! triangular factorization of coefficient matrix
+  sll_real64, allocatable       :: values(:) 
+  sll_real64, allocatable       :: bsdx(:,:)
   sll_real64                :: length
   sll_int32                 :: offset
   type(schur_complement_solver)  :: schur
@@ -252,29 +252,70 @@ contains
     type(sll_t_bspline_interpolation_1d)   :: self
     ! local variables
     sll_int32                            :: iflag
-    sll_int32                            :: i
+!    sll_int32                            :: i
     sll_int32                            :: j
     sll_int32                            :: k
-    sll_int32                            :: ib
+    sll_int32                            :: ii
+    sll_int32                            :: jj
     sll_int32                            :: icell
     sll_real64                           :: x
     
-    k = self%deg
+    ! The matrix q is a banded matrix using the storage required by banfac (De Boor)
+    ! It has k bands above diagonal, k bands below and the diagonal itself
+    ! The term A(ii,jj) of the full matrix is stored in q(ii-jj+k+1,jj)
+    k = self%deg - 1 
     SLL_ALLOCATE(self%q(2*k+1,self%n), iflag)
 
-    do i=1,self%n
-       x = self%tau(i)
+    ! The Bspline interpolation matrix at Greville points x_ii is
+    ! A(ii,jj) = B_jj(x_ii)
+    
+    
+    ! Treat i=1 separately
+    x =  self%bsp%xmin
+    icell = 1
+    ii = 1   ! first Greville point
+    call sll_s_splines_at_x(self%bsp, icell, x, self%values)
+    ! iterate only to k as last bspline is 0
+    do j=1,k+1
+       jj = icell+j-1
+       self%q(ii-jj+k+1,jj) = self%values(j)
+       !print*, x, ii, jj, ii-jj+k+1, j,  self%values(j)
+    end do
+!    do j=1,2*k+1
+!       print*, self%q(j,:)
+!    end do
+!    print*,'-----'
+    do ii=2,self%n - 1
+       x = self%tau(ii)
        icell = sll_f_find_cell(self%bsp, x )
+       !print*, 'allocated', associated(self%values)
        call sll_s_splines_at_x(self%bsp, icell, x, self%values)
-       do j=1,k+1
-!          print*, i, icell, j,  icell+j-1, icell+j-i+k , x, self%values(j)
-          ib = icell+j-1
-          self%q( i-icell-j+k+2,ib) = self%values(j)
+       do j=1,k+2
+          jj = icell+j-1
+          print*,x, ii, jj, ii-jj+k+1, j ,  self%values(j)
+          self%q(ii-jj+k+1,jj) = self%values(j)
        end do
+    end do
+!!$    do j=1,2*k+1
+!!$       print*, self%q(j,:)
+!!$    end do
+!!$    print*,'-----'
+    ! Treat i=self%n separately
+    x =  self%bsp%xmax
+    icell = self%n - self%deg
+    ii = self%n  ! last Greville point
+    call sll_s_splines_at_x(self%bsp, icell, x, self%values)
+    ! iterate only to k as first bspline is 0
+    do j=2,k+2
+       jj = icell+j-1
+       self%q(ii-jj+k+1,jj) = self%values(j)
     end do
     ! Perform LU decomposition of matrix q
     call banfac ( self%q, 2*k+1, self%n, k, k, iflag )
 
+ !   do j=1,2*k+1
+ !      print*, self%q(j,:)
+ !   end do
   end subroutine build_system_greville
   
   !> @brief private subroutine for assembling and factorizing 
@@ -370,7 +411,7 @@ contains
        call schur_complement_slv ( self%schur, self%n, self%deg/2, self%q,  self%bcoef )
     case (sll_p_greville)
        self%bcoef = gtau
-       call banslv ( self%q, 2*self%deg+1, self%n, self%deg, self%deg, self%bcoef )
+       call banslv ( self%q, 2*self%deg-1, self%n, self%deg-1, self%deg-1, self%bcoef )
     case (sll_p_hermite)
        ! number of needed conditions at boundary
        ncond = self%deg/2
