@@ -138,4 +138,5 @@ endif()
 #-------------------------------------------------------------------------------
 # ADD LIBRARY
 #-------------------------------------------------------------------------------
+set(CMAKE_Fortran_COMPILER ${MPI_Fortran_COMPILER})
 add_library( sll_mpi STATIC sll_mpi.F90 )
