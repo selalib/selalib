@@ -8,7 +8,8 @@ program test_bsplines_1d
   use sll_m_boundary_condition_descriptors, only: &
        sll_p_hermite, &
        sll_p_greville, &
-       sll_p_periodic
+       sll_p_periodic, &
+       sll_p_mirror
 
   use sll_m_bspline_interpolation, only: &
     sll_s_compute_bspline_1d, &
@@ -52,19 +53,25 @@ print*,'***************************************************************'
 print*,'*** 1D PERIODIC ***'
 print*,'***************************************************************'
 do deg=3,9
-!   call test_process_1d(sll_p_periodic,deg, passed_test)
+   call test_process_1d(sll_p_periodic,deg, passed_test)
 end do
 print*,'***************************************************************'
 print*,'*** 1D GREVILLE ***'
 print*,'***************************************************************'
 do deg=3,9
-!   call test_process_1d(sll_p_greville,deg, passed_test)
+   call test_process_1d(sll_p_greville,deg, passed_test)
 end do
 print*,'***************************************************************'
 print*,'*** 1D HERMITE ***'
 print*,'***************************************************************'
 do deg=3,9
    call test_process_1d(sll_p_hermite,deg,passed_test)
+end do
+print*,'***************************************************************'
+print*,'*** 1D HERMITE  WITH MIRROR KNOT POINTS***'
+print*,'***************************************************************'
+do deg=3,9
+   call test_process_1d(sll_p_hermite,deg, passed_test,sll_p_mirror)
 end do
 print*,'***************************************************************'
 print*,'*** 2D PERIODIC ***'
@@ -82,11 +89,13 @@ end if
 
 contains
 
-  subroutine test_process_1d(bc_type,deg,passed_test)
+  subroutine test_process_1d(bc_type,deg,passed_test,spline_bc_type)
 
     type(sll_t_bspline_interpolation_1d) :: bspline_1d
     sll_int32, intent(in) :: bc_type
     logical :: passed_test
+    sll_int32, optional :: spline_bc_type
+    ! local variables
     sll_int32  :: deg
     sll_real64 :: x_min   = 0.0_f64
     sll_real64 :: x_max   = 1.0_f64
@@ -119,7 +128,13 @@ contains
     print*,'+++++++++++++++++++++++++++++++++'
     print*,'*** Spline degree = ', deg
     print*,'+++++++++++++++++++++++++++++++++'
-    call sll_s_bspline_interpolation_1d_init( bspline_1d, npts, deg, x_min, x_max, bc_type)
+    if (present(spline_bc_type)) then
+       call sll_s_bspline_interpolation_1d_init( bspline_1d, npts, deg, x_min, x_max, &
+            bc_type, spline_bc_type )
+    else 
+       call sll_s_bspline_interpolation_1d_init( bspline_1d, npts, deg, x_min, x_max, &
+            bc_type)
+    end if
     print*, 'bspline_interpolation_1d_init constructed'
 
     SLL_ALLOCATE(gtau(bspline_1d%n),ierr)
