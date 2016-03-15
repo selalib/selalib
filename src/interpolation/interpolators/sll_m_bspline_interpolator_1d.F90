@@ -136,6 +136,7 @@ function new_bspline_interpolator_1d( &
   eta_max,                            &
   spl_deg,                            &
   bc_type,                            &
+  spline_bc_type,                     &
   bc_l,                               &
   bc_r) result(interpolator)
 
@@ -146,6 +147,7 @@ sll_real64, intent(in) :: eta_min
 sll_real64, intent(in) :: eta_max
 sll_int32,  intent(in) :: bc_type
 sll_int32,  intent(in) :: spl_deg
+sll_int32,  optional   :: spline_bc_type
 sll_real64, optional   :: bc_l(:)
 sll_real64, optional   :: bc_r(:)
 
@@ -162,16 +164,27 @@ if ( present(bc_l) .and. present(bc_r) ) then
                                      eta_max,  &
                                      spl_deg,  &
                                      bc_type,  &
+                                     spline_bc_type,  &
                                      bc_l,  &
                                      bc_r)
+
+else if (present(spline_bc_type)) then
+
+  call initialize_bs1d_interpolator( interpolator,  &
+                                     num_pts,  &
+                                     eta_min,  &
+                                     eta_max,  &
+                                     spl_deg,  &
+                                     bc_type,  &
+                                     spline_bc_type)
 else
 
   call initialize_bs1d_interpolator( interpolator,  &
                                      num_pts,  &
                                      eta_min,  &
                                      eta_max,  &
-                                     bc_type,  &
-                                     spl_deg  )
+                                     spl_deg,  &
+                                     bc_type)
 
 end if
                                            
@@ -194,6 +207,7 @@ subroutine initialize_bs1d_interpolator( interpolator,  &
                                          eta_max,  &
                                          spl_deg,  &
                                          bc_type,  &
+                                         spline_bc_type,  &
                                          bc_l,  &
                                          bc_r)
 
@@ -204,6 +218,7 @@ sll_real64,      intent(in) :: eta_min
 sll_real64,      intent(in) :: eta_max
 sll_int32,       intent(in) :: spl_deg
 sll_int32,       intent(in) :: bc_type
+sll_int32,       optional   :: spline_bc_type
 sll_real64,      optional   :: bc_l(:)
 sll_real64,      optional   :: bc_r(:)
 
@@ -220,8 +235,18 @@ if (present(bc_l) .and. present(bc_r)) then
                                           eta_min, &
                                           eta_max, &
                                           bc_type, &
+                                          spline_bc_type, &
                                           bc_l, &
                                           bc_r)
+elseif (present(spline_bc_type)) then 
+
+   call sll_s_bspline_interpolation_1d_init(interpolator%bspline, &
+                                          num_pts, &
+                                          spl_deg, &
+                                          eta_min, &
+                                          eta_max, &
+                                          bc_type, &
+                                          spline_bc_type)
 else
 
    call sll_s_bspline_interpolation_1d_init(interpolator%bspline, &
