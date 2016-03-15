@@ -46,11 +46,11 @@ sll_real64  :: pi = sll_p_pi
 call cpu_time(tstart)
 
 !w  =   sqrt(6)*pi
-!ex =   cos(pi*x)*sin(pi*y)*sin(-2*pi*z)*cos(w*t)
-!ey =   sin(pi*x)*cos(pi*y)*sin(-2*pi*z)*cos(w*t)
-!ez =   sin(pi*x)*sin(pi*y)*cos(-2*pi*z)*cos(w*t)
-!hx = - sin(pi*x)*cos(pi*y)*cos(-2*pi*z)*sin(w*t)*3*pi/w
-!hy =   cos(pi*x)*sin(pi*y)*cos(-2*pi*z)*sin(w*t)*3*pi/w
+!ex =   cos(pi*x)*sin(pi*y)*sin(-2*pi*z)*cos(omega*t)
+!ey =   sin(pi*x)*cos(pi*y)*sin(-2*pi*z)*cos(omega*t)
+!ez =   sin(pi*x)*sin(pi*y)*cos(-2*pi*z)*cos(omega*t)
+!hx = - sin(pi*x)*cos(pi*y)*cos(-2*pi*z)*sin(omega*t)*3*pi/omega
+!hy =   cos(pi*x)*sin(pi*y)*cos(-2*pi*z)*sin(omega*t)*3*pi/omega
 !hz = + 0
 
 x_min = .0_f64; x_max = 1.0_f64
@@ -78,7 +78,6 @@ do k = 1, nc_z+1
 end do
 
 dt    = cfl/sqrt(1./delta_x**2+1./delta_y**2+1./delta_z**2)
-time  = 0._f64
 omega = sqrt(6.0_f64)*pi
 nstep = int(2*pi / dt,i32)
 
@@ -99,13 +98,15 @@ call sll_o_create(maxwell,            &
                   y_min, y_max, nc_y, & 
                   z_min, z_max, nc_z  )
 
-ex =   cos(pi*x)*sin(pi*y)*sin(-2.0_f64*pi*z)
-ey =   sin(pi*x)*cos(pi*y)*sin(-2.0_f64*pi*z)
-ez =   sin(pi*x)*sin(pi*y)*cos(-2.0_f64*pi*z)
-hx = - sin(pi*x)*cos(pi*y)*cos(-2.0_f64*pi*z)*sin(omega*(-0.5_f64*dt))*3.0_f64*pi/omega
-hy =   cos(pi*x)*sin(pi*y)*cos(-2.0_f64*pi*z)*sin(omega*(-0.5_f64*dt))*3.0_f64*pi/omega
-hz =   0.0_f64
+time = -0.5_f64*dt
+hx   = - sin(pi*x)*cos(pi*y)*cos(-2.0_f64*pi*z)*sin(omega*time)*3.0_f64*pi/omega
+hy   =   cos(pi*x)*sin(pi*y)*cos(-2.0_f64*pi*z)*sin(omega*time)*3.0_f64*pi/omega
+hz   =   0.0_f64
 
+time =  0.0_f64
+ex   =   cos(pi*x)*sin(pi*y)*sin(-2.0_f64*pi*z)*cos(omega*time)
+ey   =   sin(pi*x)*cos(pi*y)*sin(-2.0_f64*pi*z)*cos(omega*time)
+ez   =   sin(pi*x)*sin(pi*y)*cos(-2.0_f64*pi*z)*cos(omega*time)
 
 do istep = 1, nstep !*** Loop over time
 
@@ -114,10 +115,32 @@ do istep = 1, nstep !*** Loop over time
   write(*,"(', error = ',g15.5)") &
   maxval(abs(hx+sin(pi*x)*cos(pi*y)*cos(-2*pi*z)*sin(omega*time)*3.0_f64*pi/omega)) 
 
+  call plot_field( 'ex.dat', ex )
+  call plot_field( 'ey.dat', ey )
+  call plot_field( 'ez.dat', ez )
   call ampere(maxwell, ex, ey, ez, hx, hy, hz, dt) 
-  call faraday(maxwell, ex, ey, ez, hx, hy, hz, dt)   
+  time = time + 0.5_f64*dt
+  call plot_field( 'hx.dat', hx )
+  call plot_field( 'hy.dat', hy )
+  call plot_field( 'hz.dat', hz )
+  hx = - sin(pi*x)*cos(pi*y)*cos(-2.0_f64*pi*z)*sin(omega*time)*3.0_f64*pi/omega
+  hy =   cos(pi*x)*sin(pi*y)*cos(-2.0_f64*pi*z)*sin(omega*time)*3.0_f64*pi/omega
+  hz =   0.0_f64
+  call plot_field( 'hx.ref', hx )
+  call plot_field( 'hy.ref', hy )
+  call plot_field( 'hz.ref', hz )
+  stop
 
-  time = time + dt
+  call faraday(maxwell, hx, hy, hz, ex, ey, ez, dt)   
+  time = time + 0.5_f64*dt
+
+  ex   =   cos(pi*x)*sin(pi*y)*sin(-2.0_f64*pi*z)*cos(omega*time)
+  ey   =   sin(pi*x)*cos(pi*y)*sin(-2.0_f64*pi*z)*cos(omega*time)
+  ez   =   sin(pi*x)*sin(pi*y)*cos(-2.0_f64*pi*z)*cos(omega*time)
+  call plot_field( 'ex.ref', ex )
+  call plot_field( 'ey.ref', ey )
+  call plot_field( 'ez.ref', ez )
+
 
 end do ! next time step
 
@@ -126,5 +149,30 @@ print"('CPU time : ',g15.3)", tend-tstart
 print*,'PASSED'
 
 deallocate(hx,hy,hz,ex,ey,ez)
+
+contains
+
+subroutine plot_field( filename, field )
+
+  character(len=*) :: filename
+  sll_real64       :: field(:,:,:)
+  sll_int32        :: n1, n2, n3
+  sll_int32        :: i, j
+
+  n1 = size(field,1)
+  n2 = size(field,2)
+  n3 = size(field,3)
+
+  open(10, file=filename)
+  do i =1,n1
+    do j=1,n2
+      write(10,*) i, j, sngl(field(i,j,n3/2))
+    end do
+    write(10,*) 
+  end do
+  close(10)
+
+end subroutine plot_field
+
 
 end program test_maxwell_3d_pstd
