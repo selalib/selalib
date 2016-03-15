@@ -81,8 +81,7 @@ implicit none
 public :: &
     faraday, ampere, &
     sll_o_delete, &
-    sll_o_create, &
-    sll_o_solve
+    sll_o_create
 
 private
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -91,11 +90,6 @@ private
 interface sll_o_create
  module procedure new_maxwell_3d_pstd
 end interface sll_o_create
-
-!> Solve maxwell solver 3d cartesian periodic with PSTD scheme
-interface sll_o_solve
- module procedure solve_maxwell_3d
-end interface sll_o_solve
 
 !> Solve Ampere equation 3d cartesian periodic with PSTD scheme
 interface sll_solve_ampere
@@ -216,53 +210,16 @@ subroutine new_maxwell_3d_pstd(self,xmin,xmax,nc_x, &
 
 end subroutine new_maxwell_3d_pstd
 
-!> self routine exists only for testing purpose. Use ampere and faraday
-!> in your appication.
-subroutine solve_maxwell_3d(self, ex, ey, ez, bx, by, bz, dt)
-
-  type(sll_t_maxwell_3d_pstd), intent(inout)  :: self !< maxwell object
-  sll_real64, intent(inout), dimension(:,:,:) :: ex   !< Ex field
-  sll_real64, intent(inout), dimension(:,:,:) :: ey   !< Ey field
-  sll_real64, intent(inout), dimension(:,:,:) :: ez   !< Ez field
-  sll_real64, intent(inout), dimension(:,:,:) :: bx   !< Bx field
-  sll_real64, intent(inout), dimension(:,:,:) :: by   !< By field
-  sll_real64, intent(inout), dimension(:,:,:) :: bz   !< Bz field
-  sll_real64, intent(in)                      :: dt   !< time step
-
-  call faraday(self, ex, ey, ez, bx, by, bz, 0.5*dt)   
-  call ampere(self, ex, ey, ez, bx, by, bz, dt) 
-  call faraday(self, ex, ey, ez, bx, by, bz, 0.5*dt)   
-
-end subroutine solve_maxwell_3d
-
-
-subroutine bc_periodic(self, field )
-
-  type(sll_t_maxwell_3d_pstd), intent(inout)   :: self   !< maxwell object
-  sll_real64 , intent(inout), dimension(:,:,:) :: field  !< E or H
-  sll_int32 :: nc_x, nc_y, nc_z
-
-  nc_x = self%nc_x
-  nc_y = self%nc_y
-  nc_z = self%nc_z
-
-  field(:,:,nc_z+1) = field(:,:,1) 
-  field(:,nc_y+1,:) = field(:,1,:) 
-  field(nc_x+1,:,:) = field(1,:,:) 
-
-end subroutine bc_periodic
-
-
 !> Solve faraday equation  (hx,hy,ez)
-subroutine faraday(self, hx, hy, hz, ex, ey, ez, dt)
+subroutine faraday(self, ex, ey, ez, hx, hy, hz, dt)
 
   type(sll_t_maxwell_3d_pstd),  intent(inout) :: self  !< Maxwell object
-  sll_real64, dimension(:,:,:), intent(inout) :: hx    !< Magnetic field x
-  sll_real64, dimension(:,:,:), intent(inout) :: hy    !< Magnetic field y
-  sll_real64, dimension(:,:,:), intent(inout) :: hz    !< Magnetic field z
   sll_real64, dimension(:,:,:), intent(inout) :: ex    !< Electric field x
   sll_real64, dimension(:,:,:), intent(inout) :: ey    !< Electric field y
   sll_real64, dimension(:,:,:), intent(inout) :: ez    !< Electric field z
+  sll_real64, dimension(:,:,:), intent(inout) :: hx    !< Magnetic field x
+  sll_real64, dimension(:,:,:), intent(inout) :: hy    !< Magnetic field y
+  sll_real64, dimension(:,:,:), intent(inout) :: hz    !< Magnetic field z
   sll_int32                                   :: nc_x  !< x cells number
   sll_int32                                   :: nc_y  !< y cells number
   sll_int32                                   :: nc_z  !< z cells number
@@ -277,8 +234,8 @@ subroutine faraday(self, hx, hy, hz, ex, ey, ez, dt)
 
   dt_mu = dt / self%mu_0 
 
-  do k = 1, nc_z
-     do i = 1, nc_x
+  do k = 1, nc_z+1
+     do i = 1, nc_x+1
         D_DY(ez(i,1:nc_y,k))
         hx(i,1:nc_y,k) = hx(i,1:nc_y,k) - dt_mu * self%d_dy
         D_DY(ex(i,1:nc_y,k))
@@ -286,8 +243,11 @@ subroutine faraday(self, hx, hy, hz, ex, ey, ez, dt)
      end do
   end do
 
-  do j = 1, nc_y
-     do i = 1, nc_x
+  hx(:,nc_y+1,:) = hx(:,1,:)
+  hz(:,nc_y+1,:) = hz(:,1,:)
+
+  do j = 1, nc_y+1
+     do i = 1, nc_x+1
         D_DZ(ey(i,j,1:nc_z))
         hx(i,j,1:nc_z) = hx(i,j,1:nc_z) + dt_mu * self%d_dz
         D_DZ(ex(i,j,1:nc_z))
@@ -295,8 +255,11 @@ subroutine faraday(self, hx, hy, hz, ex, ey, ez, dt)
      end do
   end do
 
-  do k = 1, nc_z
-     do j = 1, nc_y
+  hx(:,:,nc_z+1) = hx(:,:,1)
+  hy(:,:,nc_z+1) = hy(:,:,1)
+
+  do k = 1, nc_z+1
+     do j = 1, nc_y+1
         D_DX(ez(1:nc_x,j,k))
         hy(1:nc_x,j,k) = hy(1:nc_x,j,k) + dt_mu * self%d_dx
         D_DX(ey(1:nc_x,j,k))
@@ -304,10 +267,9 @@ subroutine faraday(self, hx, hy, hz, ex, ey, ez, dt)
      end do
   end do
 
-  call bc_periodic(self,hx)
-  call bc_periodic(self,hy)
-  call bc_periodic(self,hz)
-   
+  hy(nc_x+1,:,:) = hx(1,:,:)
+  hz(nc_x+1,:,:) = hy(1,:,:)
+
 end subroutine faraday
 
 !> Solve ampere maxwell equation (hx,hy,ez)
@@ -347,6 +309,9 @@ subroutine ampere(self, hx, hy, hz, ex, ey, ez, dt, jx, jy, jz)
   end do
   end do
 
+  ex(:,nc_y+1,:) = ex(:,1,:)
+  ez(:,nc_y+1,:) = ez(:,1,:)
+
   do j = 1, nc_y
   do i = 1, nc_x
     D_DZ(hy(i,j,1:nc_z))
@@ -355,6 +320,9 @@ subroutine ampere(self, hx, hy, hz, ex, ey, ez, dt, jx, jy, jz)
     ey(i,j,1:nc_z) = ey(i,j,1:nc_z) + dt_e * self%d_dz
   end do
   end do
+
+  ex(:,:,nc_z+1) = ex(:,:,1)
+  ey(:,:,nc_z+1) = ey(:,:,1)
 
   do k = 1, nc_z
   do j = 1, nc_y
@@ -365,15 +333,15 @@ subroutine ampere(self, hx, hy, hz, ex, ey, ez, dt, jx, jy, jz)
   end do
   end do
 
+  ey(nc_x+1,:,:) = ex(1,:,:)
+  ez(nc_x+1,:,:) = ey(1,:,:)
+
   if (present(jx) .and. present(jy) .and. present(jz)) then
     ex = ex - dt_e * jx 
     ey = ey - dt_e * jy 
     ez = ez - dt_e * jz 
   end if
 
-  call bc_periodic(self,ex)
-  call bc_periodic(self,ey)
-  call bc_periodic(self,ez)
 
 end subroutine ampere
 
