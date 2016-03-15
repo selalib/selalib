@@ -54,11 +54,15 @@ self%d_dz = self%d_dz / nc_z
 !> For Maxwell system the scheme is
 !>
 !>\f$ \displaystyle
-!>H_u\Big|^{n+1/2}_{i,j,k} = H_u\Big|^{n-1/2}_{i,j,k}  - \frac{\Delta t}{\mu} \Big\{F_v^{-1}[-jk_vF_v(E_w)]|_{i,j,k}^n -F_w^{-1}[-jk_wF_w(E_v)]|_{i,j,k}^{n}\Big\},
+!>H_u\Big|^{n+1/2}_{i,j,k} = H_u\Big|^{n-1/2}_{i,j,k}  
+!> - \frac{\Delta t}{\mu} \Big\{F_v^{-1}[-jk_vF_v(E_w)]|_{i,j,k}^n 
+!> -F_w^{-1}[-jk_wF_w(E_v)]|_{i,j,k}^{n}\Big\},
 !>\f$
 !>
 !>\f$ \displaystyle
-!>E_u\Big|^{n+1}_{i,j,k} = E_u\Big|^{n}_{i,j,k}  + \frac{\Delta t}{\varepsilon} \Big\{F_v^{-1}[-jk_vF_v(H_w)]|_{i,j,k}^{n+1/2} -F_w^{-1}[-jk_wF_w(H_v)]|_{i,j,k}^{n+1/2}\Big\},
+!>E_u\Big|^{n+1}_{i,j,k} = E_u\Big|^{n}_{i,j,k}  
+!> + \frac{\Delta t}{\varepsilon} \Big\{F_v^{-1}[-jk_vF_v(H_w)]|_{i,j,k}^{n+1/2} 
+!> -F_w^{-1}[-jk_wF_w(H_v)]|_{i,j,k}^{n+1/2}\Big\},
 !>\f$
 !>
 !>where \f$(u,v,w) = (x,y,z),(y,z,x),(z,x,y)\f$
@@ -75,6 +79,7 @@ use sll_m_fft
 implicit none
 
 public :: &
+    faraday, ampere, &
     sll_o_delete, &
     sll_o_create, &
     sll_o_solve
@@ -110,28 +115,28 @@ end interface sll_o_delete
 
 !> Maxwell solver object
 type, public :: sll_t_maxwell_3d_pstd
-   private
-   sll_int32                          :: nc_x         !< x cells number
-   sll_int32                          :: nc_y         !< y cells number
-   sll_int32                          :: nc_z         !< z cells number
-   sll_real64, dimension(:), pointer  :: d_dx         !< field x derivative
-   sll_real64, dimension(:), pointer  :: d_dy         !< field y derivative
-   sll_real64, dimension(:), pointer  :: d_dz         !< field y derivative
-   sll_real64, dimension(:), pointer  :: kx           !< x wave number
-   sll_real64, dimension(:), pointer  :: ky           !< y wave number
-   sll_real64, dimension(:), pointer  :: kz           !< z wave number
-   type(sll_t_fft)                    :: fwx          !< forward fft plan along x
-   type(sll_t_fft)                    :: fwy          !< forward fft plan along y
-   type(sll_t_fft)                    :: fwz          !< forward fft plan along y
-   type(sll_t_fft)                    :: bwx          !< backward fft plan along x
-   type(sll_t_fft)                    :: bwy          !< backward fft plan along y
-   type(sll_t_fft)                    :: bwz          !< backward fft plan along y
-   sll_comp64               , pointer :: tmp_x(:)     !< x fft transform
-   sll_comp64               , pointer :: tmp_y(:)     !< y fft transform
-   sll_comp64               , pointer :: tmp_z(:)     !< y fft transform
-   sll_int32                          :: polarization !< TE or TM
-   sll_real64                         :: e_0          !< electric conductivity
-   sll_real64                         :: mu_0         !< magnetic permeability
+  private
+  sll_int32                          :: nc_x         !< x cells number
+  sll_int32                          :: nc_y         !< y cells number
+  sll_int32                          :: nc_z         !< z cells number
+  sll_real64, dimension(:), pointer  :: d_dx         !< field x derivative
+  sll_real64, dimension(:), pointer  :: d_dy         !< field y derivative
+  sll_real64, dimension(:), pointer  :: d_dz         !< field y derivative
+  sll_real64, dimension(:), pointer  :: kx           !< x wave number
+  sll_real64, dimension(:), pointer  :: ky           !< y wave number
+  sll_real64, dimension(:), pointer  :: kz           !< z wave number
+  type(sll_t_fft)                    :: fwx          !< forward fft plan along x
+  type(sll_t_fft)                    :: fwy          !< forward fft plan along y
+  type(sll_t_fft)                    :: fwz          !< forward fft plan along y
+  type(sll_t_fft)                    :: bwx          !< backward fft plan along x
+  type(sll_t_fft)                    :: bwy          !< backward fft plan along y
+  type(sll_t_fft)                    :: bwz          !< backward fft plan along y
+  sll_comp64               , pointer :: tmp_x(:)     !< x fft transform
+  sll_comp64               , pointer :: tmp_y(:)     !< y fft transform
+  sll_comp64               , pointer :: tmp_z(:)     !< y fft transform
+  sll_int32                          :: polarization !< TE or TM
+  sll_real64                         :: e_0          !< electric conductivity
+  sll_real64                         :: mu_0         !< magnetic permeability
 end type sll_t_maxwell_3d_pstd
 
 contains
@@ -141,77 +146,73 @@ subroutine new_maxwell_3d_pstd(self,xmin,xmax,nc_x, &
                                     ymin,ymax,nc_y, &
                                     zmin,zmax,nc_z )
 
-   type(sll_t_maxwell_3d_pstd) :: self   !< maxwell object
-   sll_real64, intent(in)      :: xmin   !< x min
-   sll_real64, intent(in)      :: xmax   !< x max
-   sll_real64, intent(in)      :: ymin   !< y min
-   sll_real64, intent(in)      :: ymax   !< y max
-   sll_real64, intent(in)      :: zmin   !< z min
-   sll_real64, intent(in)      :: zmax   !< z max
-   sll_int32 , intent(in)      :: nc_x   !< x cells number
-   sll_int32 , intent(in)      :: nc_y   !< y cells number
-   sll_int32 , intent(in)      :: nc_z   !< z cells number
+  type(sll_t_maxwell_3d_pstd) :: self   !< maxwell object
+  sll_real64, intent(in)      :: xmin   !< x min
+  sll_real64, intent(in)      :: xmax   !< x max
+  sll_real64, intent(in)      :: ymin   !< y min
+  sll_real64, intent(in)      :: ymax   !< y max
+  sll_real64, intent(in)      :: zmin   !< z min
+  sll_real64, intent(in)      :: zmax   !< z max
+  sll_int32 , intent(in)      :: nc_x   !< x cells number
+  sll_int32 , intent(in)      :: nc_y   !< y cells number
+  sll_int32 , intent(in)      :: nc_z   !< z cells number
 
-   sll_int32                   :: error  !< error code
-   sll_real64                  :: dx     !< x space step
-   sll_real64                  :: dy     !< y space step
-   sll_real64                  :: dz     !< z space step
-   sll_real64                  :: kx0
-   sll_real64                  :: ky0
-   sll_real64                  :: kz0
+  sll_int32                   :: error  !< error code
+  sll_real64                  :: dx     !< x space step
+  sll_real64                  :: dy     !< y space step
+  sll_real64                  :: dz     !< z space step
+  sll_real64                  :: kx0
+  sll_real64                  :: ky0
+  sll_real64                  :: kz0
 
-   sll_int32                   :: i, j, k
+  sll_int32                   :: i, j, k
 
-   self%nc_x = nc_x
-   self%nc_y = nc_y
-   self%nc_z = nc_z
+  self%nc_x = nc_x
+  self%nc_y = nc_y
+  self%nc_z = nc_z
 
-   self%e_0  = 1._f64
-   self%mu_0 = 1._f64
+  self%e_0  = 1.0_f64
+  self%mu_0 = 1.0_f64
 
-   SLL_ALLOCATE(self%tmp_x(nc_x/2+1), error)
-   SLL_ALLOCATE(self%tmp_y(nc_y/2+1), error)
-   SLL_ALLOCATE(self%tmp_z(nc_z/2+1), error)
+  SLL_ALLOCATE(self%tmp_x(nc_x/2+1), error)
+  SLL_ALLOCATE(self%tmp_y(nc_y/2+1), error)
+  SLL_ALLOCATE(self%tmp_z(nc_z/2+1), error)
 
-   SLL_ALLOCATE(self%d_dx(nc_x), error)
-   SLL_ALLOCATE(self%d_dy(nc_y), error)
-   SLL_ALLOCATE(self%d_dz(nc_z), error)
+  SLL_ALLOCATE(self%d_dx(nc_x), error)
+  SLL_ALLOCATE(self%d_dy(nc_y), error)
+  SLL_ALLOCATE(self%d_dz(nc_z), error)
 
-   !call dfftw_init_threads(error)
-   !if (error == 0) stop 'FFTW CAN''T USE THREADS'
-   !call dsll_t_fft_with_nthreads(nthreads)
-   
-   call sll_s_fft_init_r2c_1d(self%fwx, nc_x, self%d_dx,  self%tmp_x)
-   call sll_s_fft_init_c2r_1d(self%bwx, nc_x, self%tmp_x, self%d_dx)
-   call sll_s_fft_init_r2c_1d(self%fwy, nc_y, self%d_dy,  self%tmp_y)
-   call sll_s_fft_init_c2r_1d(self%bwy, nc_y, self%tmp_y, self%d_dy)
-   call sll_s_fft_init_r2c_1d(self%fwz, nc_z, self%d_dz,  self%tmp_z)
-   call sll_s_fft_init_c2r_1d(self%bwz, nc_z, self%tmp_z, self%d_dz)
+  call sll_s_fft_init_r2c_1d(self%fwx, nc_x, self%d_dx,  self%tmp_x)
+  call sll_s_fft_init_c2r_1d(self%bwx, nc_x, self%tmp_x, self%d_dx)
+  call sll_s_fft_init_r2c_1d(self%fwy, nc_y, self%d_dy,  self%tmp_y)
+  call sll_s_fft_init_c2r_1d(self%bwy, nc_y, self%tmp_y, self%d_dy)
+  call sll_s_fft_init_r2c_1d(self%fwz, nc_z, self%d_dz,  self%tmp_z)
+  call sll_s_fft_init_c2r_1d(self%bwz, nc_z, self%tmp_z, self%d_dz)
 
-   SLL_ALLOCATE(self%kx(nc_x/2+1), error)
-   SLL_ALLOCATE(self%ky(nc_y/2+1), error)
-   SLL_ALLOCATE(self%kz(nc_z/2+1), error)
-   
-   dx = (xmax-xmin) / nc_x
-   dy = (ymax-ymin) / nc_y
-   dz = (zmax-zmin) / nc_z
+  SLL_ALLOCATE(self%kx(nc_x/2+1), error)
+  SLL_ALLOCATE(self%ky(nc_y/2+1), error)
+  SLL_ALLOCATE(self%kz(nc_z/2+1), error)
+  
+  dx = (xmax-xmin) / nc_x
+  dy = (ymax-ymin) / nc_y
+  dz = (zmax-zmin) / nc_z
 
-   kx0 = 2._f64*sll_p_pi/(nc_x*dx)
-   ky0 = 2._f64*sll_p_pi/(nc_y*dy)
-   kz0 = 2._f64*sll_p_pi/(nc_z*dz)
+  kx0 = 2._f64*sll_p_pi/(nc_x*dx)
+  ky0 = 2._f64*sll_p_pi/(nc_y*dy)
+  kz0 = 2._f64*sll_p_pi/(nc_z*dz)
 
-   do i=2,nc_x/2+1
-      self%kx(i) = (i-1)*kx0
-   end do
-   self%kx(1) = 1.0_f64
-   do j=2,nc_y/2+1
-      self%ky(j) = (j-1)*ky0
-   end do
-   self%ky(1) = 1.0_f64
-   do k=2,nc_z/2+1
-      self%kz(k) = (k-1)*kz0
-   end do
-   self%kz(1) = 1.0_f64
+  do i=2,nc_x/2+1
+     self%kx(i) = (i-1)*kx0
+  end do
+  self%kx(1) = 1.0_f64
+  do j=2,nc_y/2+1
+     self%ky(j) = (j-1)*ky0
+  end do
+  self%ky(1) = 1.0_f64
+  do k=2,nc_z/2+1
+     self%kz(k) = (k-1)*kz0
+  end do
+  self%kz(1) = 1.0_f64
 
 end subroutine new_maxwell_3d_pstd
 
@@ -235,156 +236,158 @@ subroutine solve_maxwell_3d(self, ex, ey, ez, bx, by, bz, dt)
 end subroutine solve_maxwell_3d
 
 
-!!> Impose periodic boundary conditions
-!subroutine bc_periodic(self, ex, ey, ez, hx, hy, hz)
-!
-!   type(maxwell_pstd_3d), intent(inout)          :: self !< maxwell object
-!   sll_real64 , intent(inout), dimension(:,:) :: ex   !< Ex
-!   sll_real64 , intent(inout), dimension(:,:) :: ey   !< Ey
-!   sll_real64 , intent(inout), dimension(:,:) :: ez   !< Ez
-!   sll_real64 , intent(inout), dimension(:,:) :: hx   !< Bx
-!   sll_real64 , intent(inout), dimension(:,:) :: hy   !< By
-!   sll_real64 , intent(inout), dimension(:,:) :: hz   !< Bz
-!   sll_int32 :: nc_x, nc_y, nc_z
-!
-!   nc_x = self%nc_x
-!   nc_y = self%nc_y
-!   nc_z = self%nc_z
-!
-!   !fx(:,nc_y+1) = fx(:,1) 
-!   !fy(nc_x+1,:) = fy(1,:)
-!   !fz(nc_x+1,:) = fz(1,:)
-!   !fz(:,nc_y+1) = fz(:,1)
-!
-!end subroutine bc_periodic
+subroutine bc_periodic(self, field )
+
+  type(sll_t_maxwell_3d_pstd), intent(inout)   :: self   !< maxwell object
+  sll_real64 , intent(inout), dimension(:,:,:) :: field  !< E or H
+  sll_int32 :: nc_x, nc_y, nc_z
+
+  nc_x = self%nc_x
+  nc_y = self%nc_y
+  nc_z = self%nc_z
+
+  field(:,:,nc_z+1) = field(:,:,1) 
+  field(:,nc_y+1,:) = field(:,1,:) 
+  field(nc_x+1,:,:) = field(1,:,:) 
+
+end subroutine bc_periodic
 
 
 !> Solve faraday equation  (hx,hy,ez)
 subroutine faraday(self, hx, hy, hz, ex, ey, ez, dt)
 
-   type(sll_t_maxwell_3d_pstd),  intent(inout) :: self  !< Maxwell object
-   sll_real64, dimension(:,:,:), intent(inout) :: hx    !< Magnetic field x
-   sll_real64, dimension(:,:,:), intent(inout) :: hy    !< Magnetic field y
-   sll_real64, dimension(:,:,:), intent(inout) :: hz    !< Magnetic field z
-   sll_real64, dimension(:,:,:), intent(inout) :: ex    !< Electric field x
-   sll_real64, dimension(:,:,:), intent(inout) :: ey    !< Electric field y
-   sll_real64, dimension(:,:,:), intent(inout) :: ez    !< Electric field z
-   sll_int32                                   :: nc_x  !< x cells number
-   sll_int32                                   :: nc_y  !< y cells number
-   sll_int32                                   :: nc_z  !< z cells number
-   sll_real64, intent(in)                      :: dt    !< time step
+  type(sll_t_maxwell_3d_pstd),  intent(inout) :: self  !< Maxwell object
+  sll_real64, dimension(:,:,:), intent(inout) :: hx    !< Magnetic field x
+  sll_real64, dimension(:,:,:), intent(inout) :: hy    !< Magnetic field y
+  sll_real64, dimension(:,:,:), intent(inout) :: hz    !< Magnetic field z
+  sll_real64, dimension(:,:,:), intent(inout) :: ex    !< Electric field x
+  sll_real64, dimension(:,:,:), intent(inout) :: ey    !< Electric field y
+  sll_real64, dimension(:,:,:), intent(inout) :: ez    !< Electric field z
+  sll_int32                                   :: nc_x  !< x cells number
+  sll_int32                                   :: nc_y  !< y cells number
+  sll_int32                                   :: nc_z  !< z cells number
+  sll_real64, intent(in)                      :: dt    !< time step
 
-   sll_real64 :: dt_mu
-   sll_int32  :: i, j, k
+  sll_real64 :: dt_mu
+  sll_int32  :: i, j, k
 
-   nc_x = self%nc_x
-   nc_y = self%nc_y
-   nc_z = self%nc_z
+  nc_x = self%nc_x
+  nc_y = self%nc_y
+  nc_z = self%nc_z
 
-   dt_mu = dt / self%mu_0 
+  dt_mu = dt / self%mu_0 
 
-   do k = 1, nc_z
-      do i = 1, nc_x
-         D_DY(ez(i,1:nc_y,k))
-         hx(i,1:nc_y,k) = hx(i,1:nc_y,k) - dt_mu * self%d_dy
-         D_DY(ex(i,1:nc_y,k))
-         hz(i,1:nc_y,k) = hz(i,1:nc_y,k) + dt_mu * self%d_dy
-      end do
-   end do
+  do k = 1, nc_z
+     do i = 1, nc_x
+        D_DY(ez(i,1:nc_y,k))
+        hx(i,1:nc_y,k) = hx(i,1:nc_y,k) - dt_mu * self%d_dy
+        D_DY(ex(i,1:nc_y,k))
+        hz(i,1:nc_y,k) = hz(i,1:nc_y,k) + dt_mu * self%d_dy
+     end do
+  end do
 
-   do j = 1, nc_y
-      do i = 1, nc_x
-         D_DZ(ey(i,j,1:nc_z))
-         hx(i,j,1:nc_z) = hx(i,j,1:nc_z) + dt_mu * self%d_dz
-         D_DZ(ex(i,j,1:nc_z))
-         hy(i,j,1:nc_z) = hy(i,j,1:nc_z) - dt_mu * self%d_dz
-      end do
-   end do
+  do j = 1, nc_y
+     do i = 1, nc_x
+        D_DZ(ey(i,j,1:nc_z))
+        hx(i,j,1:nc_z) = hx(i,j,1:nc_z) + dt_mu * self%d_dz
+        D_DZ(ex(i,j,1:nc_z))
+        hy(i,j,1:nc_z) = hy(i,j,1:nc_z) - dt_mu * self%d_dz
+     end do
+  end do
 
-   do k = 1, nc_z
-      do j = 1, nc_y
-         D_DX(ez(1:nc_x,j,k))
-         hy(1:nc_x,j,k) = hy(1:nc_x,j,k) + dt_mu * self%d_dx
-         D_DX(ey(1:nc_x,j,k))
-         hz(1:nc_x,j,k) = hz(1:nc_x,j,k) - dt_mu * self%d_dx
-      end do
-   end do
+  do k = 1, nc_z
+     do j = 1, nc_y
+        D_DX(ez(1:nc_x,j,k))
+        hy(1:nc_x,j,k) = hy(1:nc_x,j,k) + dt_mu * self%d_dx
+        D_DX(ey(1:nc_x,j,k))
+        hz(1:nc_x,j,k) = hz(1:nc_x,j,k) - dt_mu * self%d_dx
+     end do
+  end do
+
+  call bc_periodic(self,hx)
+  call bc_periodic(self,hy)
+  call bc_periodic(self,hz)
    
 end subroutine faraday
 
 !> Solve ampere maxwell equation (hx,hy,ez)
 subroutine ampere(self, hx, hy, hz, ex, ey, ez, dt, jx, jy, jz)
 
-   type(sll_t_maxwell_3d_pstd),intent(inout) :: self !< maxwell object
-   sll_real64, dimension(:,:,:)              :: hx   !< magnetic field x
-   sll_real64, dimension(:,:,:)              :: hy   !< magnetic field y
-   sll_real64, dimension(:,:,:)              :: hz   !< magnetic field z
-   sll_real64, dimension(:,:,:)              :: ex   !< electric field x
-   sll_real64, dimension(:,:,:)              :: ey   !< electric field y
-   sll_real64, dimension(:,:,:)              :: ez   !< electric field z
-   sll_real64                                :: dt   !< time step
-   sll_real64, dimension(:,:,:), optional    :: jx   !< current z
-   sll_real64, dimension(:,:,:), optional    :: jy   !< current z
-   sll_real64, dimension(:,:,:), optional    :: jz   !< current z
+  type(sll_t_maxwell_3d_pstd),intent(inout) :: self !< maxwell object
+  sll_real64, dimension(:,:,:)              :: hx   !< magnetic field x
+  sll_real64, dimension(:,:,:)              :: hy   !< magnetic field y
+  sll_real64, dimension(:,:,:)              :: hz   !< magnetic field z
+  sll_real64, dimension(:,:,:)              :: ex   !< electric field x
+  sll_real64, dimension(:,:,:)              :: ey   !< electric field y
+  sll_real64, dimension(:,:,:)              :: ez   !< electric field z
+  sll_real64                                :: dt   !< time step
+  sll_real64, dimension(:,:,:), optional    :: jx   !< current x
+  sll_real64, dimension(:,:,:), optional    :: jy   !< current y
+  sll_real64, dimension(:,:,:), optional    :: jz   !< current z
 
-   sll_int32                                 :: nc_x !< x cells number
-   sll_int32                                 :: nc_y !< y cells number
-   sll_int32                                 :: nc_z !< z cells number
+  sll_int32                                 :: nc_x !< x cells number
+  sll_int32                                 :: nc_y !< y cells number
+  sll_int32                                 :: nc_z !< z cells number
 
-   sll_real64 :: dt_e
-   sll_int32  :: i, j, k
+  sll_real64 :: dt_e
+  sll_int32  :: i, j, k
 
-   nc_x = self%nc_x
-   nc_y = self%nc_y
-   nc_z = self%nc_z
+  nc_x = self%nc_x
+  nc_y = self%nc_y
+  nc_z = self%nc_z
 
-   dt_e = dt / self%e_0
+  dt_e = dt / self%e_0
 
-   do k = 1, nc_z
-   do i = 1, nc_x
-      D_DY(hz(i,1:nc_y,k))
-      ex(i,1:nc_y,k) = ex(i,1:nc_y,k) + dt_e * self%d_dy
-      D_DY(hx(i,1:nc_y,k))
-      ez(i,1:nc_y,k) = ez(i,1:nc_y,k) - dt_e * self%d_dy
-   end do
-   end do
+  do k = 1, nc_z
+  do i = 1, nc_x
+    D_DY(hz(i,1:nc_y,k))
+    ex(i,1:nc_y,k) = ex(i,1:nc_y,k) + dt_e * self%d_dy
+    D_DY(hx(i,1:nc_y,k))
+    ez(i,1:nc_y,k) = ez(i,1:nc_y,k) - dt_e * self%d_dy
+  end do
+  end do
 
-   do j = 1, nc_y
-   do i = 1, nc_x
-      D_DZ(hy(i,j,1:nc_z))
-      ex(i,j,1:nc_z) = ex(i,j,1:nc_z) - dt_e * self%d_dz
-      D_DZ(hx(i,j,1:nc_z))
-      ey(i,j,1:nc_z) = ey(i,j,1:nc_z) + dt_e * self%d_dz
-   end do
-   end do
+  do j = 1, nc_y
+  do i = 1, nc_x
+    D_DZ(hy(i,j,1:nc_z))
+    ex(i,j,1:nc_z) = ex(i,j,1:nc_z) - dt_e * self%d_dz
+    D_DZ(hx(i,j,1:nc_z))
+    ey(i,j,1:nc_z) = ey(i,j,1:nc_z) + dt_e * self%d_dz
+  end do
+  end do
 
-   do k = 1, nc_z
-   do j = 1, nc_y
-      D_DX(hz(1:nc_x,j,k))
-      ey(1:nc_x,j,k) = ey(1:nc_x,j,k) - dt_e * self%d_dx
-      D_DX(hy(1:nc_x,j,k))
-      ez(1:nc_x,j,k) = ez(1:nc_x,j,k) + dt_e * self%d_dx
-   end do
-   end do
+  do k = 1, nc_z
+  do j = 1, nc_y
+    D_DX(hz(1:nc_x,j,k))
+    ey(1:nc_x,j,k) = ey(1:nc_x,j,k) - dt_e * self%d_dx
+    D_DX(hy(1:nc_x,j,k))
+    ez(1:nc_x,j,k) = ez(1:nc_x,j,k) + dt_e * self%d_dx
+  end do
+  end do
 
-   if (present(jx) .and. present(jy) .and. present(jz)) then
-      ex = ex - dt_e * jx 
-      ey = ey - dt_e * jy 
-      ez = ez - dt_e * jz 
-   end if
+  if (present(jx) .and. present(jy) .and. present(jz)) then
+    ex = ex - dt_e * jx 
+    ey = ey - dt_e * jy 
+    ez = ez - dt_e * jz 
+  end if
+
+  call bc_periodic(self,ex)
+  call bc_periodic(self,ey)
+  call bc_periodic(self,ez)
 
 end subroutine ampere
 
 !> delete maxwell solver object
 subroutine free_maxwell_3d_pstd(self)
-type(sll_t_maxwell_3d_pstd) :: self
 
-call sll_s_fft_free(self%fwx)
-call sll_s_fft_free(self%fwy)
-call sll_s_fft_free(self%fwz)
-call sll_s_fft_free(self%bwx)
-call sll_s_fft_free(self%bwy)
-call sll_s_fft_free(self%bwz)
+  type(sll_t_maxwell_3d_pstd) :: self
+  
+  call sll_s_fft_free(self%fwx)
+  call sll_s_fft_free(self%fwy)
+  call sll_s_fft_free(self%fwz)
+  call sll_s_fft_free(self%bwx)
+  call sll_s_fft_free(self%bwy)
+  call sll_s_fft_free(self%bwz)
 
 end subroutine free_maxwell_3d_pstd
 
