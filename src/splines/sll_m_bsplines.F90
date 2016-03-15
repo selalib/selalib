@@ -1,5 +1,5 @@
 !> @ingroup splines
-!> Implements arbitrary degree bspline implementation at knot averages (Greville points)
+!> Implements arbitrary degree bspline interpolation on a uniform grid
 !> given a B-Spline object from sll_m_arbitrary_degree_splines
 module sll_m_bspline_interpolation
 
@@ -11,7 +11,8 @@ module sll_m_bspline_interpolation
   use sll_m_boundary_condition_descriptors, only: &
        sll_p_periodic, &
        sll_p_hermite, &
-       sll_p_greville
+       sll_p_greville, &
+       sll_p_mirror
 
   use sll_m_arbitrary_degree_splines, only: &
        sll_t_arbitrary_degree_spline_1d, &
@@ -49,9 +50,7 @@ module sll_m_bspline_interpolation
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
   
 !> @brief 
-!> basic type for one-dimensional B-spline data. 
-!> @details This should be
-!> treated as an opaque type. It is better to use it through interpolator
+!> basic type for one-dimensional B-spline interpolation. 
 type :: sll_t_bspline_interpolation_1d
   type (sll_t_arbitrary_degree_spline_1d) :: bsp
   sll_int32                 :: n        ! dimension of spline space
@@ -112,13 +111,14 @@ contains
 !> @param[in] bc_type A boundary condition specifier. Can be either
 !> sll_p_periodic for periodic splines or sll_p_open for open knots  
   subroutine sll_s_bspline_interpolation_1d_init( self, num_points, degree, xmin, xmax, bc_type, &
-       bc_left, bc_right)
+       spline_bc_type, bc_left, bc_right)
     type(sll_t_bspline_interpolation_1d) :: self
     sll_int32,  intent(in)               :: num_points
     sll_int32,  intent(in)               :: degree
     sll_real64, intent(in)               :: xmin
     sll_real64, intent(in)               :: xmax
     sll_int32,  intent(in)               :: bc_type
+    sll_int32,  optional                 :: spline_bc_type
     sll_real64, optional                 :: bc_left(:)
     sll_real64, optional                 :: bc_right(:)
     
@@ -127,9 +127,16 @@ contains
     sll_int32                            :: ierr
     sll_int32                            :: i
     sll_int32                            :: j
-    sll_int32                            :: iflag
     sll_real64                           :: delta
 
+    ! knot point mirroring works only for Hermite boundary conditions. Check this
+    if (present(spline_bc_type).and.(spline_bc_type == sll_p_mirror)) then
+       if (.not.(bc_type == sll_p_hermite)) then
+          print*, 'Mirror knot sequence at boundary only works with Hermite BC'
+          stop
+       end if
+    end if
+    
     ! set first attributes
     self%bc_type = bc_type
     if (bc_type == sll_p_periodic) then
@@ -148,7 +155,13 @@ contains
     end do
     grid(num_points) = xmax
     ! construct a sll_t_arbitrary_degree_spline_1d object
-    call sll_s_arbitrary_degree_spline_1d_init(self%bsp, degree, grid, num_points, bc_type )
+    if (present(spline_bc_type)) then
+       call sll_s_arbitrary_degree_spline_1d_init(self%bsp, degree, grid, num_points, &
+            bc_type, spline_bc_type )
+    else
+       call sll_s_arbitrary_degree_spline_1d_init(self%bsp, degree, grid, num_points, &
+            bc_type)
+    end if
 
     SLL_ALLOCATE(self%bcoef(self%n),  ierr)
     SLL_ALLOCATE(self%values(self%deg+1), ierr)
@@ -268,9 +281,8 @@ contains
     ! The Bspline interpolation matrix at Greville points x_ii is
     ! A(ii,jj) = B_jj(x_ii)
     k = self%deg - 1 
-    SLL_CLEAR_ALLOCATE(self%q(2*k+1,self%n), iflag)
-    self%q = 0.0_f64 ! should be redundant with SLL_CLEAR_ALLOCATE but is not!
-    !print*,'maxval',maxval(self%q)   
+    SLL_ALLOCATE(self%q(2*k+1,self%n), iflag)
+    self%q = 0.0_f64
     
     ! Treat i=1 separately
     x =  self%bsp%xmin
@@ -447,17 +459,14 @@ contains
     sll_int32               :: icell
     sll_int32               :: ib
     sll_int32               :: j
-    sll_real64              :: val
 
     ! get bspline values at x
     icell =  sll_f_find_cell( self%bsp, x )
     call sll_s_splines_at_x(self%bsp, icell, x, self%values)
     y = 0.0_f64
     do j=1,self%deg+1
-       !       ib = mod(icell+j-self%deg/2-2+self%n,self%n) + 1
        ib = mod(icell+j-2-self%offset+self%n,self%n) + 1
        y = y + self%values(j)*self%bcoef(ib)
-    !        print*, icell,j, ib, self%values(j), y
     enddo
 
   end function sll_f_interpolate_value_1d
@@ -519,8 +528,7 @@ function sll_f_interpolate_derivative_1d( self, x) result(y)
   sll_int32               :: icell
   sll_int32               :: ib
   sll_int32               :: j
-  sll_real64              :: val
-  
+ 
   ! get bspline derivatives at x
   icell =  sll_f_find_cell( self%bsp, x )
   call sll_s_spline_derivatives_at_x(self%bsp, icell, x, self%values)
