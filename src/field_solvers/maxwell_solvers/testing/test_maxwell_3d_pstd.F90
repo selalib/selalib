@@ -115,31 +115,24 @@ do istep = 1, nstep !*** Loop over time
   write(*,"(', error = ',g15.5)") &
   maxval(abs(hx+sin(pi*x)*cos(pi*y)*cos(-2*pi*z)*sin(omega*time)*3.0_f64*pi/omega)) 
 
-  call plot_field( 'ex.dat', ex )
-  call plot_field( 'ey.dat', ey )
-  call plot_field( 'ez.dat', ez )
   call ampere(maxwell, ex, ey, ez, hx, hy, hz, dt) 
   time = time + 0.5_f64*dt
+  hx = hx - sin(pi*x)*cos(pi*y)*cos(-2.0_f64*pi*z)*sin(omega*time)*3.0_f64*pi/omega
+  hy = hy - cos(pi*x)*sin(pi*y)*cos(-2.0_f64*pi*z)*sin(omega*time)*3.0_f64*pi/omega
   call plot_field( 'hx.dat', hx )
   call plot_field( 'hy.dat', hy )
   call plot_field( 'hz.dat', hz )
-  hx = - sin(pi*x)*cos(pi*y)*cos(-2.0_f64*pi*z)*sin(omega*time)*3.0_f64*pi/omega
-  hy =   cos(pi*x)*sin(pi*y)*cos(-2.0_f64*pi*z)*sin(omega*time)*3.0_f64*pi/omega
-  hz =   0.0_f64
-  call plot_field( 'hx.ref', hx )
-  call plot_field( 'hy.ref', hy )
-  call plot_field( 'hz.ref', hz )
   stop
 
   call faraday(maxwell, hx, hy, hz, ex, ey, ez, dt)   
   time = time + 0.5_f64*dt
 
-  ex   =   cos(pi*x)*sin(pi*y)*sin(-2.0_f64*pi*z)*cos(omega*time)
-  ey   =   sin(pi*x)*cos(pi*y)*sin(-2.0_f64*pi*z)*cos(omega*time)
-  ez   =   sin(pi*x)*sin(pi*y)*cos(-2.0_f64*pi*z)*cos(omega*time)
-  call plot_field( 'ex.ref', ex )
-  call plot_field( 'ey.ref', ey )
-  call plot_field( 'ez.ref', ez )
+  ex = ex-cos(pi*x)*sin(pi*y)*sin(-2.0_f64*pi*z)*cos(omega*time)
+  ey = ey-sin(pi*x)*cos(pi*y)*sin(-2.0_f64*pi*z)*cos(omega*time)
+  ez = ez-sin(pi*x)*sin(pi*y)*cos(-2.0_f64*pi*z)*cos(omega*time)
+  call plot_field( 'ex.dat', ex )
+  call plot_field( 'ey.dat', ey )
+  call plot_field( 'ez.dat', ez )
 
 
 end do ! next time step
