@@ -19,18 +19,17 @@ SET_TESTS_PROPERTIES( quintic_splines PROPERTIES
                       PASS_REGULAR_EXPRESSION "PASSED" )
 #...........................................
 
-# Deboor B-splines ............................
-ADD_EXECUTABLE( test_bsplines test_bsplines.F90 )
-TARGET_LINK_LIBRARIES( test_bsplines sll_splines )
-
-#ADD_EXECUTABLE( test_bsplines_2d test_bsplines_2d.F90 )
-#TARGET_LINK_LIBRARIES( test_bsplines_2d sll_splines )
+# B-splines ............................
+ADD_EXECUTABLE( test_bsplines_1d test_bsplines_1d.F90 )
+TARGET_LINK_LIBRARIES( test_bsplines_1d sll_splines )
+ADD_EXECUTABLE( test_bsplines_2d test_bsplines_2d.F90 )
+TARGET_LINK_LIBRARIES( test_bsplines_2d sll_splines )
 
 # Ctests
-ADD_TEST( NAME bsplines COMMAND test_bsplines )
-#ADD_TEST( NAME bsplines_2d COMMAND test_bsplines_2d )
-SET_TESTS_PROPERTIES( bsplines PROPERTIES PASS_REGULAR_EXPRESSION "PASSED" )
-#SET_TESTS_PROPERTIES( bsplines_2d PROPERTIES PASS_REGULAR_EXPRESSION "PASSED" )
+ADD_TEST( NAME bsplines_1d COMMAND test_bsplines_1d )
+ADD_TEST( NAME bsplines_2d COMMAND test_bsplines_2d )
+SET_TESTS_PROPERTIES( bsplines_1d PROPERTIES PASS_REGULAR_EXPRESSION "PASSED" )
+SET_TESTS_PROPERTIES( bsplines_2d PROPERTIES PASS_REGULAR_EXPRESSION "PASSED" )
 #...........................................
 
 # Cubic non uniform splines ............................
