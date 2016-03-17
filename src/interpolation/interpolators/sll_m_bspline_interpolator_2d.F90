@@ -30,11 +30,11 @@ module sll_m_bspline_interpolator_2d
     sll_p_hermite, &
     sll_p_periodic
 
-  use sll_m_bsplines, only: &
+  use sll_m_bspline_interpolation, only: &
     sll_o_compute_bspline_2d, &
     sll_f_interpolate_value_2d, &
-    sll_f_new_bspline_2d, &
-    sll_t_bspline_2d
+    sll_t_bspline_interpolation_2d, &
+    sll_s_bspline_interpolation_2d_init
 
   use sll_m_interpolators_2d_base, only: &
     sll_c_interpolator_2d
