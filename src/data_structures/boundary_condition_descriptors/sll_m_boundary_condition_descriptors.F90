@@ -33,6 +33,8 @@ module sll_m_boundary_condition_descriptors
     sll_p_neumann, &
     sll_p_neumann_mode_0, &
     sll_p_periodic, &
+    sll_p_open, &
+    sll_p_mirror, &
     sll_p_greville, &
     sll_p_set_to_limit, &
     sll_p_silver_muller, &
@@ -68,7 +70,11 @@ module sll_m_boundary_condition_descriptors
   !> Values outside the domain are provided as halo cells (for domain decomposition)
   sll_int32, parameter :: sll_p_halo         = 11
   !> Use Greville points instead of conditions on derivative for B-Spline interpolation
-  sll_int32, parameter :: sll_p_greville         = 12
+  sll_int32, parameter :: sll_p_greville      = 12
+  !> Duplicate boundary points to define knots for B-splines from grid
+  sll_int32, parameter :: sll_p_open         = 13
+  !> Mirror points around boundary to define knots for B-splines from grid
+  sll_int32, parameter :: sll_p_mirror       = 14
 
 
 end module sll_m_boundary_condition_descriptors

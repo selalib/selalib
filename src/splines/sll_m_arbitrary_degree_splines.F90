@@ -21,6 +21,8 @@
 !> @details
 !> This module defines low level algorithms of the arbitrary
 !> degree spline.
+!> For non periodic boundary conditions, knots defined from a grid
+!> are either duplicated (open knot sequence) or mirror outside boundary.
 !> It is a selalib implemnation of the classical algorithms
 !> found in the de Boor book "Practical guide to splines"
 !> or the NURBS book by Piegl and Tiller.  
@@ -32,8 +34,8 @@ module sll_m_arbitrary_degree_splines
 
   use sll_m_boundary_condition_descriptors, only: &
        sll_p_periodic, &
-       sll_p_hermite, &
-       sll_p_greville
+       sll_p_open,     &
+       sll_p_mirror
 
   implicit none
 
@@ -58,7 +60,6 @@ module sll_m_arbitrary_degree_splines
 
   type :: sll_t_arbitrary_degree_spline_1d
      sll_int32                           :: num_pts
-     sll_int32                           :: bc_type
      sll_int32                           :: deg
      sll_real64                          :: xmin
      sll_real64                          :: xmax
@@ -70,19 +71,31 @@ module sll_m_arbitrary_degree_splines
      sll_real64, dimension(:,:), pointer :: a       ! needed for n derivatives
   end type sll_t_arbitrary_degree_spline_1d
 
+interface sll_s_arbitrary_degree_spline_1d_init
+  module procedure sll_s_arbitrary_degree_spline_1d_from_grid
+  module procedure sll_s_arbitrary_degree_spline_1d_from_knots
+end interface sll_s_arbitrary_degree_spline_1d_init
+
 contains
   !> @brief
   !> Build new sll_t_arbitrary_degree_spline_1d object 
   !> @details
-  !> based on a on a grid of 
-  !> strictly increasing points including the last point also for periodic
-  !> domains.
-  subroutine sll_s_arbitrary_degree_spline_1d_init(self, degree, grid, num_pts, bc_type )
-    type(sll_t_arbitrary_degree_spline_1d)   :: self
-    sll_int32, intent(in)                    :: degree !< spline degree
-    sll_real64, dimension(:), intent(in)     :: grid   !< grid points 
-    sll_int32,  intent(in)                   :: num_pts !< number of grid points
-    sll_int32,  intent(in)                   :: bc_type !< boundary condition
+  !> based on a on a grid of strictly increasing points including the last point also
+  !> for periodic domains.
+  !> @param[inout] self arbitrary_degree_spline_1d object
+  !> @param[in] degree spline_degree
+  !> @param[in] grid  grid points
+  !> @param[in] num_pts number of grid points
+  !> @param[in] bc_type boundary condition for grid
+  !> @param[in] spline_bc_type  boundary condition on knots
+  subroutine sll_s_arbitrary_degree_spline_1d_from_grid(self, degree, grid, &
+       num_pts, bc_type, spline_bc_type )
+    type(sll_t_arbitrary_degree_spline_1d) :: self
+    sll_int32, intent(in)                  :: degree 
+    sll_real64, dimension(:), intent(in)   :: grid   
+    sll_int32,  intent(in)                 :: num_pts 
+    sll_int32,  intent(in)                 :: bc_type 
+    sll_int32,  optional                   :: spline_bc_type 
     ! local variables
     sll_int32                                :: i
     sll_int32                                :: ierr
@@ -90,14 +103,14 @@ contains
     sll_real64                               :: gridmin
 
     if( size(grid) < num_pts ) then
-       print *, 'ERROR. sll_s_arbitrary_degree_spline_1d_init: ', &
+       print *, 'ERROR. sll_s_arbitrary_degree_spline_1d_from_grid: ', &
             'size of given grid array is smaller than the stated ', &
             'number of points.'
        print *, 'size(grid) = ', size(grid), 'num_pts = ', num_pts
        STOP
     end if
     if( degree < 1 ) then
-       print *, 'ERROR. sll_s_arbitrary_degree_spline_1d_init: ', &
+       print *, 'ERROR. sll_s_arbitrary_degree_spline_1d_from_grid: ', &
             'only strictly positive integer values for degree are allowed, ', &
             'given: ', degree
     end if
@@ -107,20 +120,13 @@ contains
        gridmin = min(gridmin, grid(i)-grid(i-1)) 
     end do
     if (gridmin < 1.d-10) then
-       print*, 'ERROR. sll_f_new_arbitrary_degree_spline_1d: ', &
+       print*, 'ERROR. sll_s_arbitrary_degree_spline_1d_from_grid: ', &
             ' we require that grid points are in strictly increasing', &
             ' order and that each cell length is at least 1.e-10.'
     end if
-    if (.not.(( bc_type == sll_p_greville) .or. ( bc_type == sll_p_hermite) .or. &
-         ( bc_type == sll_p_periodic))) then
-       print *, 'ERROR. sll_f_new_arbitrary_degree_spline_1d: ', &
-            'invalid boundary condition type supplied.'
-       STOP
-    end if
 
     self%num_pts  = num_pts
-    self%bc_type  = bc_type
-    self%deg   = degree
+    self%deg      = degree
     self%xmin     = grid(1)
     self%xmax     = grid(num_pts)
 
@@ -128,7 +134,7 @@ contains
     period = grid(num_pts) - grid(1)
 
     ! Create the knots array from the grid points. Here take the grid points
-    ! as konts and simply add to the left and the right the
+    ! as knots and simply add to the left and the right the
     ! amount of knots that depends on the degree of the requested 
     ! spline. We aim at setting up the indexing in such a way that the 
     ! original indexing of 'grid' is preserved, i.e.: grid(i) = knot(i), at
@@ -144,13 +150,13 @@ contains
     else 
        self%n = num_pts + degree - 1 ! dimension of non periodic spline space
     end if
-    
+
     ! Allocate work arrays for evaluation
     SLL_ALLOCATE(self%left(degree),ierr)
     SLL_ALLOCATE(self%right(degree),ierr)
     SLL_ALLOCATE(self%ndu(0:degree,0:degree),ierr)
     SLL_ALLOCATE(self%a(0:1,0:degree),ierr)
-    
+
     ! Fill out the extra points at both ends of the local knot array with
     ! values proper to the boundary condition requested.
     if ( bc_type == sll_p_periodic ) then
@@ -191,26 +197,105 @@ contains
           self%knots(num_pts+i) = &
                grid(i+1) + period
        end do
-
-    else
-       ! 'open' knot sequences in all non periodic cases when the knots are constructed from a grid.
-       ! The 'open' boundary condition simply extends the new values
-       ! of the local array at both ends with repeated endpoint values.
-       ! That is
-       !
-       !     ... = knots(-2) = knots(-1) = knots(0) = knots(1)
-       !
-       ! and
-       !
-       !    knots(n+1) = knots(n+2) = knots(n+3) = ... =  knots(n)
-       do i=1-degree,0
-          self%knots(i) = grid(1)
-       end do
-       do i=num_pts+1,num_pts+degree
-          self%knots(i) = grid(num_pts)
-       end do
+    else 
+       if ( present(spline_bc_type) .and. (spline_bc_type == sll_p_mirror) ) then
+          ! The mirror boundary condition mirrors the knot values on
+          ! each side of the grid
+          ! of the local array at both ends with repeated endpoint values.
+          ! That is
+          !
+          !     ... =  = knots(-1) = knots(0) = knots(1)
+          !
+          ! and
+          !
+          !    knots(n+1) = knots(n+2) = knots(n+3) = ... =  knots(n)
+          do i=1-degree,0
+             self%knots(i) = 2*grid(1) - grid(2-i) 
+          end do
+          do i=1,degree
+             self%knots(num_pts+i) = 2*grid(num_pts) - grid(num_pts-i) 
+          end do
+       else
+          ! The default is open boundary conditions for knots
+          ! The 'open' boundary condition simply extends the new values
+          ! of the local array at both ends with repeated endpoint values.
+          ! That is
+          !
+          !     ... = knots(-2) = knots(-1) = knots(0) = knots(1)
+          !
+          ! and
+          !
+          !    knots(n+1) = knots(n+2) = knots(n+3) = ... =  knots(n)
+          do i=1-degree,0
+             self%knots(i) = grid(1)
+          end do
+          do i=num_pts+1,num_pts+degree
+             self%knots(i) = grid(num_pts)
+          end do
+       end if
     end if
-  end subroutine sll_s_arbitrary_degree_spline_1d_init
+  end subroutine sll_s_arbitrary_degree_spline_1d_from_grid
+
+  !> @brief
+  !> Build new sll_t_arbitrary_degree_spline_1d object 
+  !> @details
+  !> based on a given array of knots
+  !> which is a non decreasing array
+  !> @param[inout] self spline object
+  !> @param[in] degree spline degree
+  !> @param[in] n dimension of spline space
+  !> @param[in] knots array of give knots
+  subroutine sll_s_arbitrary_degree_spline_1d_from_knots(self, degree, n, knots)
+    type(sll_t_arbitrary_degree_spline_1d) :: self
+    sll_int32, intent(in)                  :: degree
+    sll_int32, intent(in)                  :: n
+    sll_real64, dimension(:), intent(in)   :: knots   
+  
+    ! local variables
+    sll_int32                                :: i
+    sll_int32                                :: ierr
+    sll_real64                               :: knotmin
+    
+    ! Error checking
+    SLL_ASSERT(size(knots)==n+2*degree)
+    if( degree < 1 ) then
+       print *, 'ERROR. sll_s_arbitrary_degree_spline_1d_from_knots: ', &
+            'only strictly positive integer values for degree are allowed, ', &
+            'given: ', degree
+    end if
+    ! Check whether grid points are in strictly increasing order
+    knotmin = knots(2)-knots(1)
+    do i=2, n+2*degree
+       knotmin = min(knotmin, knots(i)-knots(i-1)) 
+    end do
+    if (knotmin < 0.0_f64) then
+       print*, 'ERROR. sll_s_arbitrary_degree_spline_1d_from_knots: ', &
+            ' we require that knots  are in non decreasing.'
+    end if
+
+
+    
+    ! Initialise variables
+    self%n = n
+    self%deg = degree
+    self%num_pts = n - degree + 1
+    self%xmin=knots(degree+1)
+    self%xmax=knots(n+1)
+
+    ! We aim at setting up the indexing in such a way that the 
+    ! the computation grid is [knot(1),knots(num_pts)],  at
+    ! least whenever the scope of the indices defined here is active.
+    SLL_ALLOCATE(self%knots(1-degree:n+1),ierr)
+    self%knots(1-degree:n+1) = knots
+    
+   ! Allocate work arrays for evaluation
+    SLL_ALLOCATE(self%left(degree),ierr)
+    SLL_ALLOCATE(self%right(degree),ierr)
+    SLL_ALLOCATE(self%ndu(0:degree,0:degree),ierr)
+    SLL_ALLOCATE(self%a(0:1,0:degree),ierr)
+
+  end subroutine sll_s_arbitrary_degree_spline_1d_from_knots
+  
   !>@brief find cell returns the index i of the grid cell such that:
   !> self%knots(i) <= x <= self%knots(i+1).
   !>
@@ -347,7 +432,7 @@ contains
     type(sll_t_arbitrary_degree_spline_1d)     :: self
     sll_int32, intent(in)                      :: icell
     sll_real64, intent(in)                     :: x
-    sll_real64, dimension(0:self%deg)       :: bsdx 
+    sll_real64, dimension(0:self%deg)          :: bsdx 
 
     sll_int32                                  :: deg
     sll_int32                                  :: num_pts
