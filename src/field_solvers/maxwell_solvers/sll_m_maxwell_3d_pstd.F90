@@ -168,13 +168,13 @@ subroutine new_maxwell_3d_pstd(self,xmin,xmax,nc_x, &
   self%e_0  = 1.0_f64
   self%mu_0 = 1.0_f64
 
-  SLL_ALLOCATE(self%tmp_x(nc_x/2+1), error)
-  SLL_ALLOCATE(self%tmp_y(nc_y/2+1), error)
-  SLL_ALLOCATE(self%tmp_z(nc_z/2+1), error)
+  SLL_ALLOCATE(self%tmp_x(1:nc_x/2+1), error); self%tmp_x = (0.0_f64,0.0_f64)
+  SLL_ALLOCATE(self%tmp_y(1:nc_y/2+1), error); self%tmp_y = (0.0_f64,0.0_f64)
+  SLL_ALLOCATE(self%tmp_z(1:nc_z/2+1), error); self%tmp_z = (0.0_f64,0.0_f64)
 
-  SLL_ALLOCATE(self%d_dx(nc_x), error)
-  SLL_ALLOCATE(self%d_dy(nc_y), error)
-  SLL_ALLOCATE(self%d_dz(nc_z), error)
+  SLL_CLEAR_ALLOCATE(self%d_dx(1:nc_x), error)
+  SLL_CLEAR_ALLOCATE(self%d_dy(1:nc_y), error)
+  SLL_CLEAR_ALLOCATE(self%d_dz(1:nc_z), error)
 
   call sll_s_fft_init_r2c_1d(self%fwx, nc_x, self%d_dx,  self%tmp_x)
   call sll_s_fft_init_c2r_1d(self%bwx, nc_x, self%tmp_x, self%d_dx)
@@ -195,18 +195,18 @@ subroutine new_maxwell_3d_pstd(self,xmin,xmax,nc_x, &
   ky0 = 2._f64*sll_p_pi/(nc_y*dy)
   kz0 = 2._f64*sll_p_pi/(nc_z*dz)
 
+  self%kx(1) = 1.0_f64
   do i=2,nc_x/2+1
      self%kx(i) = (i-1)*kx0
   end do
-  self%kx(1) = 1.0_f64
+  self%ky(1) = 1.0_f64
   do j=2,nc_y/2+1
      self%ky(j) = (j-1)*ky0
   end do
-  self%ky(1) = 1.0_f64
+  self%kz(1) = 1.0_f64
   do k=2,nc_z/2+1
      self%kz(k) = (k-1)*kz0
   end do
-  self%kz(1) = 1.0_f64
 
 end subroutine new_maxwell_3d_pstd
 
@@ -235,36 +235,36 @@ subroutine faraday(self, ex, ey, ez, hx, hy, hz, dt)
   dt_mu = dt / self%mu_0 
 
   do k = 1, nc_z+1
-     do i = 1, nc_x+1
-        D_DY(ez(i,1:nc_y,k))
-        hx(i,1:nc_y,k) = hx(i,1:nc_y,k) - dt_mu * self%d_dy
-        D_DY(ex(i,1:nc_y,k))
-        hz(i,1:nc_y,k) = hz(i,1:nc_y,k) + dt_mu * self%d_dy
-     end do
+    do i = 1, nc_x+1
+      D_DY(ez(i,1:nc_y,k))
+      hx(i,1:nc_y,k) = hx(i,1:nc_y,k) - dt_mu * self%d_dy
+      D_DY(ex(i,1:nc_y,k))
+      hz(i,1:nc_y,k) = hz(i,1:nc_y,k) + dt_mu * self%d_dy
+    end do
   end do
 
   hx(:,nc_y+1,:) = hx(:,1,:)
   hz(:,nc_y+1,:) = hz(:,1,:)
 
   do j = 1, nc_y+1
-     do i = 1, nc_x+1
-        D_DZ(ey(i,j,1:nc_z))
-        hx(i,j,1:nc_z) = hx(i,j,1:nc_z) + dt_mu * self%d_dz
-        D_DZ(ex(i,j,1:nc_z))
-        hy(i,j,1:nc_z) = hy(i,j,1:nc_z) - dt_mu * self%d_dz
-     end do
+    do i = 1, nc_x+1
+      D_DZ(ey(i,j,1:nc_z))
+      hx(i,j,1:nc_z) = hx(i,j,1:nc_z) + dt_mu * self%d_dz
+      D_DZ(ex(i,j,1:nc_z))
+      hy(i,j,1:nc_z) = hy(i,j,1:nc_z) - dt_mu * self%d_dz
+    end do
   end do
 
   hx(:,:,nc_z+1) = hx(:,:,1)
   hy(:,:,nc_z+1) = hy(:,:,1)
 
   do k = 1, nc_z+1
-     do j = 1, nc_y+1
-        D_DX(ez(1:nc_x,j,k))
-        hy(1:nc_x,j,k) = hy(1:nc_x,j,k) + dt_mu * self%d_dx
-        D_DX(ey(1:nc_x,j,k))
-        hz(1:nc_x,j,k) = hz(1:nc_x,j,k) - dt_mu * self%d_dx
-     end do
+    do j = 1, nc_y+1
+      D_DX(ez(1:nc_x,j,k))
+      hy(1:nc_x,j,k) = hy(1:nc_x,j,k) + dt_mu * self%d_dx
+      D_DX(ey(1:nc_x,j,k))
+      hz(1:nc_x,j,k) = hz(1:nc_x,j,k) - dt_mu * self%d_dx
+    end do
   end do
 
   hy(nc_x+1,:,:) = hx(1,:,:)
