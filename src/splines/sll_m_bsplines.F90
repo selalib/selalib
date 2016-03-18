@@ -41,10 +41,11 @@ module sll_m_bspline_interpolation
        sll_s_interpolate_array_derivatives_1d, &
        sll_s_bspline_interpolation_1d_free, &
        sll_t_bspline_interpolation_2d, &
-       sll_s_bspline_interpolation_2d_init !, &
-!    sll_o_compute_bspline_2d, &
-!    sll_f_interpolate_value_2d, &
-!    sll_s_interpolate_array_values_2d
+       sll_s_bspline_interpolation_2d_init, &
+       sll_s_bspline_interpolation_2d_free, &
+       sll_f_interpolate_value_2d,          &
+       sll_f_interpolate_derivative_2d,     &
+       sll_s_interpolate_array_derivatives_2d
 
   private
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -52,28 +53,22 @@ module sll_m_bspline_interpolation
 !> @brief 
 !> basic type for one-dimensional B-spline interpolation. 
 type :: sll_t_bspline_interpolation_1d
-  type (sll_t_arbitrary_degree_spline_1d) :: bsp
-  sll_int32                 :: n        ! dimension of spline space
-  sll_int32                 :: deg      ! degree of spline
-  sll_real64, pointer       :: tau(:)   ! n interpolation points
-  sll_real64, pointer       :: bcoef(:) ! bspline coefficients
-  sll_int32                 :: bc_type
-  sll_real64, pointer       :: q(:,:)   ! triangular factorization of coefficient matrix
-  sll_real64, pointer       :: values(:) 
-  sll_real64, pointer       :: bsdx(:,:)
-  sll_int32, pointer        :: ipiv(:)
-  sll_real64                :: length
-  sll_int32                 :: offset
-  type(schur_complement_solver)  :: schur
-  sll_real64, pointer       :: bc_left(:)
-  sll_real64, pointer       :: bc_right(:)
-!  sll_real64                :: sl
-!  sll_real64                :: sr
-!!$  logical                   :: compute_vl
-!!$  logical                   :: compute_vr
-!!$  logical                   :: compute_sl
-!!$  logical                   :: compute_sr
 
+  type (sll_t_arbitrary_degree_spline_1d) :: bsp
+  sll_int32                               :: n        ! dimension of spline space
+  sll_int32                               :: deg      ! degree of spline
+  sll_real64, pointer                     :: tau(:)   ! n interpolation points
+  sll_real64, pointer                     :: bcoef(:) ! bspline coefficients
+  sll_int32                               :: bc_type  ! boundary condition
+  sll_real64, pointer                     :: q(:,:)   ! triangular factorization
+  sll_real64, pointer                     :: values(:) 
+  sll_real64, pointer                     :: bsdx(:,:)
+  sll_int32,  pointer                     :: ipiv(:)
+  sll_real64                              :: length
+  sll_int32                               :: offset
+  type(schur_complement_solver)           :: schur
+  sll_real64, pointer                     :: bc_left(:)
+  sll_real64, pointer                     :: bc_right(:)
 
 end type sll_t_bspline_interpolation_1d
 
@@ -89,16 +84,9 @@ type :: sll_t_bspline_interpolation_2d
 
 end type sll_t_bspline_interpolation_2d
 
-!!$interface sll_o_compute_bspline_2d
-!!$  module procedure compute_bspline_2d_with_constant_slopes
-!!$  module procedure compute_bspline_2d_with_variable_slopes
-!!$end interface sll_o_compute_bspline_2d
-
-
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 contains
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-
 
 !> @brief Constructor for sll_t_bspline_interpolation_1d object
 !> @param[in] num_points Number of points where the data to be 
@@ -110,8 +98,16 @@ contains
 !> to be interpolated.
 !> @param[in] bc_type A boundary condition specifier. Can be either
 !> sll_p_periodic for periodic splines or sll_p_open for open knots  
-  subroutine sll_s_bspline_interpolation_1d_init( self, num_points, degree, xmin, xmax, bc_type, &
-       spline_bc_type, bc_left, bc_right)
+  subroutine sll_s_bspline_interpolation_1d_init( self, &
+    num_points,     &
+    degree,         &
+    xmin,           &
+    xmax,           &
+    bc_type,        &
+    spline_bc_type, &
+    bc_left,        &
+    bc_right)
+
     type(sll_t_bspline_interpolation_1d) :: self
     sll_int32,  intent(in)               :: num_points
     sll_int32,  intent(in)               :: degree
@@ -232,6 +228,7 @@ contains
   !> @param[inout] self bspline interpolation object
   subroutine build_system_periodic(self)
     type(sll_t_bspline_interpolation_1d)   :: self
+
     ! local variables
     sll_int32                              :: i
     sll_int32                              :: j
@@ -265,7 +262,8 @@ contains
   !> linear system needed for spline interpolation at Greville points
   !> @param[inout] self bspline interpolation object
   subroutine build_system_greville(self)
-    type(sll_t_bspline_interpolation_1d)   :: self
+    type(sll_t_bspline_interpolation_1d) :: self
+
     ! local variables
     sll_int32                            :: iflag
     sll_int32                            :: j
@@ -484,10 +482,11 @@ contains
 !> already operated on by the sll_s_compute_bspline_1d() subroutine.
 subroutine sll_s_interpolate_array_values_1d( self, n, x, y)
 
-  type(sll_t_bspline_interpolation_1d)     :: self
-  sll_int32,            intent(in)  :: n
-  sll_real64,           intent(in)  :: x(n)
-  sll_real64,           intent(out) :: y(n)
+  type(sll_t_bspline_interpolation_1d) :: self
+  sll_int32,            intent(in)     :: n
+  sll_real64,           intent(in)     :: x(n)
+  sll_real64,           intent(out)    :: y(n)
+
   ! local variables    
   sll_real64 :: val
   sll_real64 :: xx
@@ -511,7 +510,6 @@ subroutine sll_s_interpolate_array_values_1d( self, n, x, y)
 
 end subroutine sll_s_interpolate_array_values_1d
 
-
 !> @brief returns the values of the derivatives evaluated at a point.
 !> The spline coefficients used are stored in the spline object.
 !> @param[inout] self the spline object pointer, duly initialized and 
@@ -520,14 +518,14 @@ end subroutine sll_s_interpolate_array_values_1d
 !> @param[out] y  result of the interpolation.
 function sll_f_interpolate_derivative_1d( self, x) result(y)
 
-  type(sll_t_bspline_interpolation_1d)    :: self 
-  sll_real64, intent(in)  :: x
-  sll_real64              :: y
+  type(sll_t_bspline_interpolation_1d) :: self 
+  sll_real64, intent(in)               :: x
+  sll_real64                           :: y
 
-    !local variables
-  sll_int32               :: icell
-  sll_int32               :: ib
-  sll_int32               :: j
+  !local variables
+  sll_int32                            :: icell
+  sll_int32                            :: ib
+  sll_int32                            :: j
  
   ! get bspline derivatives at x
   icell =  sll_f_find_cell( self%bsp, x )
@@ -537,6 +535,7 @@ function sll_f_interpolate_derivative_1d( self, x) result(y)
      ib = mod(icell+j-2-self%offset+self%n,self%n) + 1
      y = y + self%values(j)*self%bcoef(ib)
   enddo
+
 end function sll_f_interpolate_derivative_1d
 
 
@@ -634,101 +633,69 @@ end subroutine sll_s_bspline_interpolation_1d_free
 !> @param[in] sr2 OPTIONAL: The value of the slope at xmin, for use in the case
 !> of hermite boundary conditions.
 !> @return a spline interpolation object.
-subroutine sll_s_bspline_interpolation_2d_init( self, nx1, degree1, x1_min, x1_max, bc1, &
-                         nx2, degree2, x2_min, x2_max, bc2 )
+subroutine sll_s_bspline_interpolation_2d_init( &
+  self,            &
+  nx1,             &
+  nx2,             &
+  degree1,         &
+  degree2,         &
+  x1_min,          &
+  x2_min,          &
+  x1_max,          &
+  x2_max,          &
+  bc1,             &
+  bc2,             &
+  spline_bc_type1, &
+  spline_bc_type2, &
+  bc_left1,        &
+  bc_left2,        &
+  bc_right1,       &
+  bc_right2        )
 
-  type(sll_t_bspline_interpolation_2d)    :: self
+  type(sll_t_bspline_interpolation_2d) :: self
 
-  sll_int32,  intent(in)           :: nx1
-  sll_int32,  intent(in)           :: degree1
-  sll_real64, intent(in)           :: x1_min
-  sll_real64, intent(in)           :: x1_max
-  sll_int32,  intent(in)           :: bc1
-  sll_int32,  intent(in)           :: nx2
-  sll_int32,  intent(in)           :: degree2
-  sll_real64, intent(in)           :: x2_min
-  sll_real64, intent(in)           :: x2_max
-  sll_int32,  intent(in)           :: bc2
+  sll_int32,  intent(in)               :: nx1
+  sll_int32,  intent(in)               :: degree1
+  sll_real64, intent(in)               :: x1_min
+  sll_real64, intent(in)               :: x1_max
+  sll_int32,  intent(in)               :: bc1
+  sll_int32,  intent(in)               :: nx2
+  sll_int32,  intent(in)               :: degree2
+  sll_real64, intent(in)               :: x2_min
+  sll_real64, intent(in)               :: x2_max
+  sll_int32,  intent(in)               :: bc2
 
-  sll_int32                        :: n1
-  sll_int32                        :: n2
-  sll_int32                        :: ierr
+  sll_int32,  optional                 :: spline_bc_type1
+  sll_int32,  optional                 :: spline_bc_type2
+  sll_real64, optional, pointer        :: bc_left1(:)
+  sll_real64, optional, pointer        :: bc_left2(:)
+  sll_real64, optional, pointer        :: bc_right1(:)
+  sll_real64, optional, pointer        :: bc_right2(:)
+
+  sll_int32                            :: n1
+  sll_int32                            :: n2
+  sll_int32                            :: ierr
 
   call sll_s_bspline_interpolation_1d_init(self%bs1,nx1,degree1,x1_min,x1_max,bc1)
   call sll_s_bspline_interpolation_1d_init(self%bs2,nx2,degree2,x2_min,x2_max,bc2)
 
-  n1 = size(self%bs1%bcoef)
-  n2 = size(self%bs2%bcoef)
+  n1 = self%bs1%n
+  n2 = self%bs2%n
   SLL_CLEAR_ALLOCATE(self%bcoef(1:n1,1:n2), ierr)
 
 end subroutine sll_s_bspline_interpolation_2d_init
   
-!!$subroutine compute_bspline_2d_with_constant_slopes(self, gtau, &
-!!$  sl1_l, sl1_r, sl2_l, sl2_r)
-!!$
-!!$  type(sll_t_bspline_interpolation_2d)    :: self 
-!!$  sll_real64, intent(in)  :: gtau(:,:)
-!!$  sll_real64, optional    :: sl1_l
-!!$  sll_real64, optional    :: sl1_r
-!!$  sll_real64, optional    :: sl2_l
-!!$  sll_real64, optional    :: sl2_r
-!!$
-!!$  if ( self%bs1%bc_type == sll_p_periodic) then
-!!$    call build_system_periodic(self%bs1)
-!!$  else
-!!$    call build_system_with_derivative(self%bs1)
-!!$  end if
-!!$
-!!$  if ( self%bs2%bc_type == sll_p_periodic) then
-!!$    call build_system_periodic(self%bs2)
-!!$  else
-!!$    call build_system_with_derivative(self%bs2)
-!!$  end if
-!!$
-!!$  if (present(sl1_l)) self%x1_min_slopes = sl1_l
-!!$  if (present(sl1_r)) self%x1_max_slopes = sl1_r
-!!$  if (present(sl2_l)) self%x2_min_slopes = sl2_l
-!!$  if (present(sl2_r)) self%x2_max_slopes = sl2_r
-!!$
-!!$  call update_bspline_2d(self, gtau)
-!!$
-!!$end subroutine compute_bspline_2d_with_constant_slopes
-!!$
-!!$subroutine compute_bspline_2d_with_variable_slopes(self, gtau, &
-!!$  sl1_l, sl1_r, sl2_l, sl2_r)
-!!$
-!!$  type(sll_t_bspline_interpolation_2d)    :: self 
-!!$  sll_real64, intent(in)  :: gtau(:,:)
-!!$  sll_real64, intent(in)  :: sl1_l(:)
-!!$  sll_real64, intent(in)  :: sl1_r(:)
-!!$  sll_real64, intent(in)  :: sl2_l(:)
-!!$  sll_real64, intent(in)  :: sl2_r(:)
-!!$
-!!$  if ( self%bs1%bc_type == sll_p_periodic) then
-!!$    call build_system_periodic(self%bs1)
-!!$  else
-!!$    call build_system_with_derivative(self%bs1)
-!!$  end if
-!!$
-!!$  if ( self%bs2%bc_type == sll_p_periodic) then
-!!$    call build_system_periodic(self%bs2)
-!!$  else
-!!$    call build_system_with_derivative(self%bs2)
-!!$  end if
-!!$
-!!$  SLL_ASSERT(size(sl1_l) == self%bs2%n)
-!!$  self%x1_min_slopes = sl1_l
-!!$  SLL_ASSERT(size(sl1_r) == self%bs2%n)
-!!$  self%x1_max_slopes = sl1_r
-!!$  SLL_ASSERT(size(sl2_l) == self%bs1%n)
-!!$  self%x2_min_slopes = sl2_l
-!!$  SLL_ASSERT(size(sl2_r) == self%bs1%n)
-!!$  self%x2_max_slopes = sl2_r
-!!$
-!!$  call update_bspline_2d(self, gtau)
-!!$
-!!$end subroutine compute_bspline_2d_with_variable_slopes
+subroutine compute_bspline_2d(self, gtau)
 
+  type(sll_t_bspline_interpolation_2d)    :: self 
+  sll_real64, intent(in)  :: gtau(:,:)
+
+  call build_system_periodic(self%bs1)
+  call build_system_periodic(self%bs2)
+
+  !call update_bspline_2d(self, gtau)
+
+end subroutine compute_bspline_2d
 
 !!$!> @brief 
 !!$!> update 2 values before computing bsplines coefficients
@@ -798,15 +765,9 @@ end subroutine sll_s_bspline_interpolation_2d_init
 !!$
 !!$end subroutine update_bspline_2d
 
-
-
-
-
-
-subroutine delete_bspline_2D( spline )
+subroutine free_bspline_2D( spline )
   type(sll_t_bspline_interpolation_2d) :: spline
-  !print*, associated(spline)
-end subroutine delete_bspline_2D 
+end subroutine free_bspline_2D 
 
 !!$subroutine sll_s_interpolate_array_values_2d(self, n1, n2, x, y, ideriv, jderiv)
 !!$
@@ -997,15 +958,17 @@ end subroutine delete_bspline_2D
 !!$
 !!$end subroutine sll_s_interpolate_array_values_2d
 !!$
-!!$function sll_f_interpolate_value_2d(self, xi, xj, ideriv, jderiv ) result (y)
-!!$
-!!$type(sll_t_bspline_interpolation_2d)    :: self
-!!$sll_real64, intent(in)  :: xi
-!!$sll_real64, intent(in)  :: xj
-!!$sll_int32,  intent(in)  :: ideriv
-!!$sll_int32,  intent(in)  :: jderiv
-!!$sll_real64              :: y
-!!$
+function sll_f_interpolate_value_2d(self, xi, xj, ideriv, jderiv ) result (y)
+
+type(sll_t_bspline_interpolation_2d)    :: self
+sll_real64, intent(in)  :: xi
+sll_real64, intent(in)  :: xj
+sll_int32,  intent(in), optional  :: ideriv
+sll_int32,  intent(in), optional  :: jderiv
+sll_real64              :: y
+
+y = 0.0_f64
+
 !!$sll_int32               :: jj
 !!$sll_int32               :: jc, jcmin, jcmax
 !!$sll_int32               :: nx, kx, ny, ky
@@ -1156,7 +1119,7 @@ end subroutine delete_bspline_2D
 !!$end do
 !!$y = self%bs2%aj(1)
 !!$
-!!$end function sll_f_interpolate_value_2d
+end function sll_f_interpolate_value_2d
 !!$
 !!$subroutine interpolate_array_x1_derivatives_2d(self, n1, n2, x, y)
 !!$
@@ -1189,5 +1152,26 @@ end subroutine delete_bspline_2D
 !!$call sll_s_interpolate_array_values_2d(self, n1, n2, x, y, 0, 1)
 !!$
 !!$end subroutine interpolate_array_x2_derivatives_2d
+
+function sll_f_interpolate_derivative_2d(self, x1, x2 ) result(y)
+type(sll_t_bspline_interpolation_2d)    :: self
+sll_real64, intent(in)  :: x1, x2
+sll_real64 :: y
+
+y = 0.0_f64
+
+end function sll_f_interpolate_derivative_2d
+
+subroutine sll_s_bspline_interpolation_2d_free(self ) 
+type(sll_t_bspline_interpolation_2d)    :: self
+
+
+end subroutine sll_s_bspline_interpolation_2d_free
+
+subroutine sll_s_interpolate_array_derivatives_2d( self, n1, n2, xx, yy, y)
+type(sll_t_bspline_interpolation_2d)    :: self
+sll_int32 :: n1, n2
+sll_real64 :: xx(:,:), yy(:,:), y(:,:)
+end subroutine sll_s_interpolate_array_derivatives_2d
 
 end module sll_m_bspline_interpolation
