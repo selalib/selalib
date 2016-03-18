@@ -61,8 +61,8 @@ do k=1,nbpart
             & + a3 * tm1%ex(i+1,j+1) + a4 * tm1%ex(i  ,j+1) 
    ele%epy(k) = a1 * tm1%ey(i  ,j  ) + a2 * tm1%ey(i+1,j  ) &
             & + a3 * tm1%ey(i+1,j+1) + a4 * tm1%ey(i  ,j+1) 
-   ele%bpz(k) = a1 * tm1%bz(i  ,j  ) + a2 * tm1%bz(i+1,j  ) &
-            & + a3 * tm1%bz(i+1,j+1) + a4 * tm1%bz(i  ,j+1) 
+!   ele%bpz(k) = a1 * tm1%bz(i  ,j  ) + a2 * tm1%bz(i+1,j  ) &
+!            & + a3 * tm1%bz(i+1,j+1) + a4 * tm1%bz(i  ,j+1) 
 
 end do
 
@@ -262,7 +262,7 @@ if (bcname == 'period') then
 end if
 
 rho_total = sum(tm%r0(1:nx,1:ny))*dx*dy
-print*,'rho total',rho_total 
+!print*,'rho total',rho_total
 ! Neutralisation du milieu
 tm%r0 = tm%r0 - rho_total/dimx/dimy
 
@@ -272,14 +272,14 @@ subroutine plasma( ele )
 
 type (particle) :: ele
 sll_real64 :: speed, theta, vth, n
-sll_real64 :: a, b, eps, R
+sll_real64 :: a, b, eps, R,temm,xi,yi,zi
 sll_real64 :: ppx, ppy
 sll_int32  :: k, error
 
 eps = 1.d-12
 
 vth =  1.0_f64
-nbpart = 100*(nx)*(ny)
+nbpart =150000 !100*(nx)*(ny)
 n = 1.d0/nbpart
 
 SLL_ALLOCATE(ele%dpx(nbpart),error)
@@ -299,20 +299,40 @@ do k=0,nbpart-1
 
   theta = trinary_reversing( k ) * 2.0_f64 * pi
 
-  a = 0.0_f64; b = dimx ! 2*pi/kx 
-  R = bit_reversing( k )
-  call dichotomie_x(a,b,R,eps) 
-  ppx = a
-  ppy = dimy * penta_reversing( k ) 
+!  a = 0.0_f64; b = dimx ! 2*pi/kx 
+!  R = bit_reversing( k )
+!  call dichotomie_x(a,b,R,eps) 
+!  ppx = a
+!  ppy = dimy * penta_reversing( k ) 
 
-  ele%idx(k+1) = floor(ppx/dimx*nx)
-  ele%idy(k+1) = floor(ppy/dimy*ny)
-  
+!  ele%idx(k+1) = floor(ppx/dimx*nx)
+!  ele%idy(k+1) = floor(ppy/dimy*ny)
+!  ele%dpx(k+1) = real(ppx - ele%idx(k+1)*dx, f32)
+!  ele%dpy(k+1) = real(ppy - ele%idy(k+1)*dy, f32)
   ele%vpx(k+1) = speed * cos(theta)
   ele%vpy(k+1) = speed * sin(theta)
 
   ele%p(k+1) = poids * n
 
+enddo
+
+!--add by me: rejection sampling--
+k=1
+do while (k<=nbpart)
+    call random_number(xi)
+    xi=dimx*xi
+    call random_number(yi)
+    yi=dimy*yi
+    call random_number(zi)
+    zi=2.0d0+alpha
+    temm=1.0d0+dsin(yi)+alpha*dcos(kx*xi)
+    if (temm>=zi) then
+        ele%idx(k) = floor(xi/dimx*nx)
+        ele%idy(k) = floor(yi/dimy*ny)
+        ele%dpx(k) = real(xi - ele%idx(k)*dx, f32)
+        ele%dpy(k) = real(yi - ele%idy(k)*dy, f32)
+        k=k+1
+    endif
 enddo
 
 end subroutine plasma
