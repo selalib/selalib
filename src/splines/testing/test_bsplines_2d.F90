@@ -5,40 +5,20 @@ program test_bsplines_2d
 #include "sll_memory.h"
 #include "sll_working_precision.h"
 
-  use sll_m_boundary_condition_descriptors, only: &
-       sll_p_hermite, &
-       sll_p_greville, &
-       sll_p_periodic, &
-       sll_p_mirror
+use sll_m_boundary_condition_descriptors, only: &
+     sll_p_hermite, &
+     sll_p_greville, &
+     sll_p_periodic, &
+     sll_p_mirror
 
-  use sll_m_bspline_interpolation, only: &
-    sll_s_compute_bspline_1d, &
- !   sll_o_compute_bspline_2d, &
-    sll_s_interpolate_array_derivatives_1d, &
-    sll_s_interpolate_array_values_1d, &
- !   sll_s_interpolate_array_values_2d, &
-    sll_f_interpolate_derivative_1d, &
-    sll_f_interpolate_value_1d, &
-    !   sll_f_interpolate_value_2d, &
-    sll_s_bspline_interpolation_1d_init, &
-    sll_s_bspline_interpolation_1d_free, &
-    sll_s_bspline_interpolation_2d_init, &
-    sll_t_bspline_interpolation_1d, &
-    sll_t_bspline_interpolation_2d 
+use sll_m_bspline_interpolation
 
+use sll_m_constants, only: pi => sll_p_pi
 
-  use sll_m_constants, only: &
-    sll_p_pi
-
-  implicit none
+implicit none
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 sll_real64                    :: err1
-sll_real64                    :: err2
-sll_real64                    :: err3
-sll_real64                    :: err4
-sll_real64                    :: err5
-sll_real64                    :: err6
 sll_int32                     :: i
 sll_int32                     :: j
 sll_int32,  parameter         :: nstep = 1
@@ -50,101 +30,130 @@ logical                                :: passed_test
 passed_test = .true.
   
 print*,'***************************************************************'
-print*,'*** 1D PERIODIC ***'
+print*,'*** 2D PERIODIC-PERIODIC ***'
 print*,'***************************************************************'
 do deg=3,9
-   call test_process_1d(sll_p_periodic,deg, passed_test)
+   call test_process_2d(sll_p_periodic,deg, passed_test)
 end do
 print*,'***************************************************************'
-print*,'*** 1D GREVILLE ***'
+print*,'*** 2D GREVILLE-GREVILLE ***'
 print*,'***************************************************************'
 do deg=3,9
-   call test_process_1d(sll_p_greville,deg, passed_test)
+   call test_process_2d(sll_p_greville,deg, passed_test)
 end do
 print*,'***************************************************************'
-print*,'*** 1D HERMITE ***'
+print*,'*** 2D HERMITE-HERMITE ***'
 print*,'***************************************************************'
 do deg=3,9
-   call test_process_1d(sll_p_hermite,deg,passed_test)
+   call test_process_2d(sll_p_hermite,deg,passed_test)
 end do
 print*,'***************************************************************'
-print*,'*** 1D HERMITE  WITH MIRROR KNOT POINTS***'
+print*,'*** 1D HERMITE WITH MIRROR KNOT POINTS***'
 print*,'***************************************************************'
 do deg=3,9
-   call test_process_1d(sll_p_hermite,deg, passed_test,sll_p_mirror)
+   call test_process_2d(sll_p_hermite,deg, passed_test,sll_p_mirror)
 end do
-print*,'***************************************************************'
-print*,'*** 2D PERIODIC ***'
-print*,'***************************************************************'
-!call test_process_2d(sll_p_periodic,sll_p_periodic, passed_test)
-print*,'***************************************************************'
-print*,'*** 2D OPEN  ***'
-print*,'***************************************************************'
-!call test_process_2d(sll_p_open,sll_p_open, passed_test)
+
 if (passed_test) then
-   print *, 'PASSED'
+  print *, 'PASSED'
 else
-   print *, 'FAILED'
+  print *, 'FAILED'
 end if
 
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 contains
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
-  subroutine test_process_1d(bc_type,deg,passed_test,spline_bc_type)
+  subroutine test_process_2d(bc_type,deg,passed_test,spline_bc_type)
 
-    type(sll_t_bspline_interpolation_1d) :: bspline_1d
-    sll_int32, intent(in) :: bc_type
-    logical :: passed_test
-    sll_int32, optional :: spline_bc_type
+    type(sll_t_bspline_interpolation_2d) :: bspline_2d
+    sll_int32, intent(in)                :: bc_type
+    logical                              :: passed_test
+    sll_int32, optional                  :: spline_bc_type
+
     ! local variables
     sll_int32  :: deg
-    sll_real64 :: x_min   = 0.0_f64
-    sll_real64 :: x_max   = 1.0_f64
+    sll_real64 :: x1_min   = 0.0_f64
+    sll_real64 :: x1_max   = 1.0_f64
+    sll_real64 :: x2_min   = 0.0_f64
+    sll_real64 :: x2_max   = 1.0_f64
 
 
-    sll_real64, dimension(:), allocatable :: x
-    sll_real64, dimension(:), allocatable :: xx
-    sll_real64, dimension(:), allocatable :: y
-    sll_real64, dimension(:), allocatable :: gtau
-    sll_real64, dimension(:), allocatable :: htau
+    sll_real64, dimension(:,:), allocatable :: x1
+    sll_real64, dimension(:,:), allocatable :: x2
+    sll_real64, dimension(:,:), allocatable :: y
+    sll_real64, dimension(:,:), allocatable :: xx
+    sll_real64, dimension(:,:), allocatable :: yy
+    sll_real64, dimension(:,:), allocatable :: gtau
+    sll_real64, dimension(:,:), allocatable :: htau
+
     sll_real64, dimension(:), allocatable :: bc
 
-    sll_int32,  parameter                 :: npts = 51 ! defines bsplines
-    sll_int32,  parameter                 :: n = 27    ! number of evaluation points
-    sll_real64                            :: h
+    sll_int32,  parameter                 :: npts1 = 51 ! defines bsplines
+    sll_int32,  parameter                 :: npts2 = 51 ! defines bsplines
+    sll_int32,  parameter                 :: n1 = 27    ! nb of evaluation pts
+    sll_int32,  parameter                 :: n2 = 27    ! nb of evaluation pts
+    sll_real64                            :: h1, h2
 
-    SLL_ALLOCATE(x(n),ierr)
-    SLL_ALLOCATE(y(n),ierr)
-    SLL_ALLOCATE(xx(n),ierr)
+    SLL_ALLOCATE(x1(n1,n2),ierr)
+    SLL_ALLOCATE(x2(n1,n2),ierr)
+    SLL_ALLOCATE(y(n1,n2),ierr)
+    SLL_ALLOCATE(xx(n1,n2),ierr)
+    SLL_ALLOCATE(yy(n1,n2),ierr)
 
     ! define uniform evaluation grid
-    h = (x_max-x_min)/(n-1)
-    do i = 1, n
-       x(i) = x_min + (i-1)*h
+    h1 = (x1_max-x1_min)/(n1-1)
+    h2 = (x2_max-x2_min)/(n2-1)
+    do j = 1, n2
+      do i = 1, n1
+        x1(i,j) = x1_min + (i-1)*h1
+        x2(i,j) = x2_min + (j-1)*h2
+      end do
     end do
+
     ! define set of random numbers for evaluation
     call random_number(xx)
-    xx = xx * (x_max-x_min)
+    call random_seed()
+    call random_number(yy)
+    xx = xx * (x1_max-x1_min)
+    yy = yy * (x2_max-x2_min)
+
+    do j = 1, n2
+      do i = 1, n1
+        write(11,*) xx(i,j), yy(i,j), sin(2*pi*xx)*cos(2*pi*xx)
+      end do
+      write(11,*)
+    end do
+    stop
 
     print*,'+++++++++++++++++++++++++++++++++'
     print*,'*** Spline degree = ', deg
     print*,'+++++++++++++++++++++++++++++++++'
-    if (present(spline_bc_type)) then
-       call sll_s_bspline_interpolation_1d_init( bspline_1d, npts, deg, x_min, x_max, &
-            bc_type, spline_bc_type )
-    else 
-       call sll_s_bspline_interpolation_1d_init( bspline_1d, npts, deg, x_min, x_max, &
-            bc_type)
-    end if
-    print*, 'bspline_interpolation_1d_init constructed'
 
-    SLL_ALLOCATE(gtau(bspline_1d%n),ierr)
+    if (present(spline_bc_type)) then
+       call sll_s_bspline_interpolation_2d_init( bspline_2d, &
+         npts1, npts2, deg, deg, x1_min, x2_min, x1_max, x2_max, &
+         bc_type, bc_type, spline_bc_type, spline_bc_type )
+    else 
+       call sll_s_bspline_interpolation_2d_init( bspline_2d, &
+         npts1, npts2, deg, deg, x1_min, x2_min, x1_max, x2_max, &
+         bc_type, bc_type)
+    end if
+
+    print*, 'bspline_interpolation_2d_init constructed'
+
+    SLL_ALLOCATE(gtau(bspline_2d%bs1%n, bspline_2d%bs2%n),ierr)
     SLL_ALLOCATE(bc(2*(deg/2)),ierr)
+
     print*, '------------------------------------------'
     print*, 'Test on cosinus at uniformly spaced points'
     print*, '------------------------------------------'
-    gtau = cos(2*sll_p_pi*bspline_1d%tau)
-    !print*, 'tau:  ', bspline_1d%tau
-    !print*, 'gtau: ', gtau
+    do j = 1, n2
+      do i = 1, n1
+        gtau(i,j) = cos(2*pi*bspline_2d%bs1%tau(i)) &
+                  * cos(2*pi*bspline_2d%bs2%tau(j)) 
+      end do
+    end do
     
     call cpu_time(t0)
     if (bc_type == sll_p_hermite) then
@@ -153,75 +162,77 @@ contains
        if (modulo(deg,2) == 0) then
           bc(1) = 1.0_f64 
           do i=3,deg/2,2
-             bc(i)=-4*sll_p_pi**2*bc(i-2)
+             bc(i)=-4*pi**2*bc(i-2)
           end do
        else
-          bc(2) = -4*sll_p_pi**2
+          bc(2) = -4*pi**2
           do i=4,deg/2,2
-             bc(i)=-4*sll_p_pi**2*bc(i-2)
+             bc(i)=-4*pi**2*bc(i-2)
           end do
        end if
-       call sll_s_compute_bspline_1d(bspline_1d, gtau, bc, bc)
+       call sll_s_compute_bspline_2d(bspline_2d, gtau, bc, bc)
     else    
-       call sll_s_compute_bspline_1d(bspline_1d, gtau)
+       call sll_s_compute_bspline_2d(bspline_2d, gtau)
     end if
     call cpu_time(t1)
-    do j = 1,n
-       !print*, x_max, x(j), bspline_1d%bsp%knots(npts)
-       y(j) = sll_f_interpolate_value_1d( bspline_1d, x(j))
-       !print*, j, x(j), cos(2*sll_p_pi*x(j)), y(j), y(j) - cos(2*sll_p_pi*x(j))
+    do j = 1,n2
+      do i = 1,n1
+        y(i,j) = sll_f_interpolate_value_2d( bspline_2d, x1(i,j),x2(i,j))
+      end do
     end do
-    err1 = maxval(abs(y-cos(2*sll_p_pi*x)))
+    err1 = maxval(abs(y-cos(2*pi*x1)*cos(2*pi*x2)))
     if (err1 > tol) then
-       print*,'-------> Test failed in sll_f_interpolate_value_1d'
+       print*,'-------> Test failed in sll_f_interpolate_value_2d'
        passed_test = .false.
     end if
-    print*, " sll_f_interpolate_value_1d: average error =             ", &
-         sum(abs(y-cos(2*sll_p_pi*x)))/real(n,f64)
-    print*, " sll_f_interpolate_value_1d: maximum error =             ", &
-         maxval(abs(y-cos(2*sll_p_pi*x)))
+    print*, " sll_f_interpolate_value_2d: average error =             ", &
+         sum(abs(y-cos(2*pi*x1)*cos(2*pi*x2)))/real(n1*n2,f64)
+    print*, " sll_f_interpolate_value_2d: maximum error =             ", &
+         maxval(abs(y-cos(2*pi*x1)*cos(2*pi*x2)))
     call cpu_time(t2)
     !.......
     do j = 1,nstep
-       call sll_s_interpolate_array_values_1d( bspline_1d, n, x, y)
+       call sll_s_interpolate_array_values_2d( bspline_2d, n1, n2, x1, x2, y)
     end do
-    err1 = maxval(abs(y-cos(2*sll_p_pi*x)))
+    err1 = maxval(abs(y-cos(2*pi*x1)*cos(2*pi*x2)))
     if (err1 > tol) then
-       print*,'-------> Test failed in sll_s_interpolate_array_values_1d'
+       print*,'-------> Test failed in sll_s_interpolate_array_values_2d'
        passed_test = .false.
     end if
-    print*, " sll_s_interpolate_array_values_1d: average error =      ", &
-         sum(abs(y-cos(2*sll_p_pi*x)))/real(n,f64)
-    print*, " sll_s_interpolate_array_values_1d: maximum error =      ", &
-         maxval(abs(y-cos(2*sll_p_pi*x)))
+    print*, " sll_s_interpolate_array_values_2d: average error =      ", &
+         sum(abs(y-cos(2*pi*x1)*cos(2*pi*x2)))/real(n1*n2,f64)
+    print*, " sll_s_interpolate_array_values_2d: maximum error =      ", &
+         maxval(abs(y-cos(2*pi*x1)*cos(2*pi*x2)))
     call cpu_time(t3)
     !......
-    do j = 1,n
-       y(j) = sll_f_interpolate_derivative_1d( bspline_1d, x(j))
+    do j = 1,n2
+    do i = 1,n1
+       y(i,j) = sll_f_interpolate_derivative_2d( bspline_2d, x1(i,j), x2(i,j))
     end do
-    err1 = maxval(abs(y+2*sll_p_pi*sin(2*sll_p_pi*x)))
+    end do
+    err1 = maxval(abs(y+2*pi*sin(2*pi*x1)*cos(2*pi*x2)))
     if (err1 > tol) then
-       print*,'-------> Test failed in sll_f_interpolate_derivative_1d'
+       print*,'-------> Test failed in sll_f_interpolate_derivative_2d'
        passed_test = .false.
     end if
-    print*, " sll_f_interpolate_derivative_1d: average error =        ", &
-         sum(abs(y+2*sll_p_pi*sin(2*sll_p_pi*x)))/real(n,f64)
-    print*, " sll_f_interpolate_derivative_1d: maximum error =        ", &
-         maxval(abs(y+2*sll_p_pi*sin(2*sll_p_pi*x)))
+    print*, " sll_f_interpolate_derivative_2d: average error =        ", &
+         sum(abs(y+2*pi*sin(2*pi*x1)*cos(2*pi*x2)))/real(n1*n2,f64)
+    print*, " sll_f_interpolate_derivative_2d: maximum error =        ", &
+         maxval(abs(y+2*pi*sin(2*pi*x1)*cos(2*pi*x2)))
     call cpu_time(t4)
     !......
     do j = 1,nstep
-       call sll_s_interpolate_array_derivatives_1d( bspline_1d, n, x, y)
+       call sll_s_interpolate_array_derivatives_2d( bspline_2d, n1, n2, x1, x2, y)
     end do
-    err1 = maxval(abs(y+2*sll_p_pi*sin(2*sll_p_pi*x)))
+    err1 = maxval(abs(y+2*pi*sin(2*pi*x1)*cos(2*pi*x2)))
     if (err1 > tol) then
-       print*,'-------> Test failed in sll_s_interpolate_array_derivatives_1d'
+       print*,'-------> Test failed in sll_s_interpolate_array_derivatives_2d'
        passed_test = .false.
     end if
-    print*, " sll_s_interpolate_array_derivatives_1d: average error = ", &
-         sum(abs(y+2*sll_p_pi*sin(2*sll_p_pi*x)))/real(n,f64)
-    print*, " sll_s_interpolate_array_derivatives_1d: maximum error = ", &
-         maxval(abs(y+2*sll_p_pi*sin(2*sll_p_pi*x)))
+    print*, " sll_s_interpolate_array_derivatives_2d: average error = ", &
+         sum(abs(y+2*pi*sin(2*pi*x1)*cos(2*pi*x2)))/real(n1*n2,f64)
+    print*, " sll_s_interpolate_array_derivatives_2d: maximum error = ", &
+         maxval(abs(y+2*pi*sin(2*pi*x1)*cos(2*pi*x2)))
     call cpu_time(t5)
 
     print*, ' ------------------------------------------------------- '
@@ -235,226 +246,97 @@ contains
 
     print*, 'Test on sinus at random points'
     print*, ' -----------------------------'
-    SLL_ALLOCATE(htau(bspline_1d%n),ierr)
-    htau = sin(2*sll_p_pi*bspline_1d%tau)
+    SLL_ALLOCATE(htau(bspline_2d%bs1%n, bspline_2d%bs2%n),ierr)
+    do j = 1, n2
+      do i = 1, n1
+        htau(i,j) = sin(2*pi*bspline_2d%bs1%tau(i)) &
+                  * sin(2*pi*bspline_2d%bs2%tau(j))
+      end do
+    end do
     if (bc_type == sll_p_hermite) then
        ! Compute boundary conditions for Hermite case
        bc=0.0_f64
        if (modulo(deg,2) == 0) then
-          bc(2) = 2*sll_p_pi
+          bc(2) = 2*pi
           do i=4,deg/2,2
-             bc(i)=-4*sll_p_pi**2*bc(i-2)
+             bc(i)=-4*pi**2*bc(i-2)
           end do
        else
-          bc(1) = 2*sll_p_pi
+          bc(1) = 2*pi
           do i=3,deg/2,2
-             bc(i)=-4*sll_p_pi**2*bc(i-2)
+             bc(i)=-4*pi**2*bc(i-2)
           end do
        end if
-       call sll_s_compute_bspline_1d(bspline_1d, htau, bc, bc)
+       call sll_s_compute_bspline_2d(bspline_2d, htau, bc, bc)
     else    
-       call sll_s_compute_bspline_1d(bspline_1d, htau)
+       call sll_s_compute_bspline_2d(bspline_2d, htau)
     end if
 
-    do j = 1,n
-       y(j) = sll_f_interpolate_value_1d( bspline_1d, xx(j))
+    do j = 1,n2
+     do i = 1,n1
+       y(i,j) = sll_f_interpolate_value_2d( bspline_2d, xx(i,j), yy(i,j))
+     end do
     end do
-    err1 = maxval(abs(y-sin(2*sll_p_pi*xx)))
+    err1 = maxval(abs(y-sin(2*pi*xx)*sin(2*pi*yy)))
     if (err1 > tol) then
-       print*,'-------> Test failed in sll_f_interpolate_value_1d'
+       print*,'-------> Test failed in sll_f_interpolate_value_2d'
        passed_test = .false.
     end if
-    print*, " sll_f_interpolate_value_1d: average error =             ", &
-         sum(abs(y-sin(2*sll_p_pi*xx)))/real(n,f64)
-    print*, " sll_f_interpolate_value_1d: maximum error =             ", &
-         maxval(abs(y-sin(2*sll_p_pi*xx)))
+    print*, " sll_f_interpolate_value_2d: average error =             ", &
+         sum(abs(y-sin(2*pi*xx)*sin(2*pi*yy)))/real(n1*n2,f64)
+    print*, " sll_f_interpolate_value_2d: maximum error =             ", &
+         maxval(abs(y-sin(2*pi*xx)*sin(2*pi*yy)))
     call cpu_time(t2)
     !.......
     do j = 1,nstep
-       call sll_s_interpolate_array_values_1d( bspline_1d, n, xx, y)
+       call sll_s_interpolate_array_values_2d( bspline_2d, n1, n2, xx, yy, y)
     end do
-    err1 = maxval(abs(y-sin(2*sll_p_pi*xx)))
+    err1 = maxval(abs(y-sin(2*pi*xx)))
     if (err1 > tol) then
-       print*,'-------> Test failed in sll_s_interpolate_array_values_1d'
+       print*,'-------> Test failed in sll_s_interpolate_array_values_2d'
        passed_test = .false.
     end if
-    print*, " sll_s_interpolate_array_values_1d: average error =      ", &
-         sum(abs(y-sin(2*sll_p_pi*xx)))/real(n,f64)
-    print*, " sll_s_interpolate_array_values_1d: maximum error =      ", &
-         maxval(abs(y-sin(2*sll_p_pi*xx)))
+    print*, " sll_s_interpolate_array_values_2d: average error =      ", &
+         sum(abs(y-sin(2*pi*xx)))/real(n1*n2,f64)
+    print*, " sll_s_interpolate_array_values_2d: maximum error =      ", &
+         maxval(abs(y-sin(2*pi*xx)*sin(2*pi*yy)))
     call cpu_time(t3)
     !......
-    do j = 1,n
-       y(j) = sll_f_interpolate_derivative_1d( bspline_1d, xx(j))
+    do j = 1,n2
+      do i = 1,n1
+        y(i,j) = sll_f_interpolate_derivative_2d( bspline_2d, xx(i,j), yy(i,j))
+      end do
     end do
-    err1 = maxval(abs(y-2*sll_p_pi*cos(2*sll_p_pi*xx)))
+    err1 = maxval(abs(y-2*pi*cos(2*pi*xx)*cos(2*pi*yy)))
     if (err1 > tol) then
-       print*,'-------> Test failed in sll_f_interpolate_derivative_1d'
+       print*,'-------> Test failed in sll_f_interpolate_derivative_2d'
        passed_test = .false.
     end if
-    print*, " sll_f_interpolate_derivative_1d: average error =        ", &
-         sum(abs(y-2*sll_p_pi*cos(2*sll_p_pi*xx)))/real(n,f64)
-    print*, " sll_f_interpolate_derivative_1d: maximum error =        ", &
-         maxval(abs(y-2*sll_p_pi*cos(2*sll_p_pi*xx)))
+    print*, " sll_f_interpolate_derivative_2d: average error =        ", &
+         sum(abs(y-2*pi*cos(2*pi*xx)*cos(2*pi*yy)))/real(n1*n2,f64)
+    print*, " sll_f_interpolate_derivative_2d: maximum error =        ", &
+         maxval(abs(y-2*pi*cos(2*pi*xx)*cos(2*pi*yy)))
     call cpu_time(t4)
     !......
     do j = 1,nstep
-       call sll_s_interpolate_array_derivatives_1d( bspline_1d, n, xx, y)
+       call sll_s_interpolate_array_derivatives_2d( bspline_2d, n1, n2, xx, yy, y)
     end do
-    err1 = maxval(abs(y-2*sll_p_pi*cos(2*sll_p_pi*xx)))
+    err1 = maxval(abs(y-2*pi*cos(2*pi*xx)*cos(2*pi*yy)))
     if (err1 > tol) then
-       print*,'-------> Test failed in sll_s_interpolate_array_derivatives_1d'
+       print*,'-------> Test failed in sll_s_interpolate_array_derivatives_2d'
        passed_test = .false.
     end if
-    print*, " sll_s_interpolate_array_derivatives_1d: average error = ", &
-         sum(abs(y-2*sll_p_pi*cos(2*sll_p_pi*xx)))/real(n,f64)
-    print*, " sll_s_interpolate_array_derivatives_1d: maximum error = ", &
-         maxval(abs(y-2*sll_p_pi*cos(2*sll_p_pi*xx)))
+    print*, " sll_s_interpolate_array_derivatives_2d: average error = ", &
+         sum(abs(y-2*pi*cos(2*pi*xx)*cos(2*pi*yy)))/real(n1*n2,f64)
+    print*, " sll_s_interpolate_array_derivatives_2d: maximum error = ", &
+         maxval(abs(y-2*pi*cos(2*pi*xx)*cos(2*pi*yy)))
     call cpu_time(t5)
 
     !......
     SLL_DEALLOCATE_ARRAY(gtau,ierr)
     SLL_DEALLOCATE_ARRAY(htau,ierr)
-    call sll_s_bspline_interpolation_1d_free(bspline_1d)
+    call sll_s_bspline_interpolation_2d_free(bspline_2d)
 
-  end subroutine test_process_1d
-
-!!$subroutine test_process_2d(bc1_type, bc2_type)
-!!$
-!!$ type(sll_t_bspline_interpolation_2d) :: bspline_2d  
-!!$  sll_int32, intent(in)   :: bc1_type
-!!$  sll_int32, intent(in)   :: bc2_type
-!!$
-!!$  sll_real64, allocatable :: ftau(:,:)
-!!$  sll_real64, allocatable :: gtau(:,:)
-!!$  sll_real64, allocatable :: tau1(:,:)
-!!$  sll_real64, allocatable :: tau2(:,:)
-!!$
-!!$  sll_int32,  parameter   :: n1 = 64
-!!$  sll_int32,  parameter   :: n2 = 64
-!!$  sll_real64              :: sl1(n2)      ! slopes at boundaries
-!!$  sll_real64              :: sr1(n2)      ! slopes at boundaries
-!!$  sll_real64              :: sl2(n1)      ! slopes at boundaries
-!!$  sll_real64              :: sr2(n1)      ! slopes at boundaries
-!!$
-!!$  sll_real64              :: f
-!!$
-!!$  sll_real64, parameter   :: dpi = 2*sll_p_pi
-!!$
-!!$  sll_real64, parameter   :: x1_min = 0.0_f64
-!!$  sll_real64, parameter   :: x1_max = 1.0_f64
-!!$  sll_real64, parameter   :: x2_min = 0.0_f64
-!!$  sll_real64, parameter   :: x2_max = 1.0_f64
-!!$
-!!$  bspline_2d => sll_f_new_bspline_2d( n1, d, x1_min, x1_max, bc1_type, &
-!!$       n2, d, x2_min, x2_max, bc2_type  )
-!!$  print*, 'bspline_2d allocated'
-!!$
-!!$  allocate(ftau(n1,n2), gtau(n1,n2))
-!!$  allocate(tau1(n1,n2), tau2(n1,n2))
-!!$
-!!$  do j = 1, n2
-!!$     do i = 1, n1
-!!$        tau1(i,j) = bspline_2d%bs1%tau(i)
-!!$        tau2(i,j) = bspline_2d%bs2%tau(j)
-!!$     end do
-!!$  end do
-!!$
-!!$  ftau = cos(2*sll_p_pi*tau1) * cos(2*sll_p_pi*tau2)
-!!$
-!!$  sl1 = - sin(2*sll_p_pi*x1_min) * 2.0_f64*sll_p_pi * cos(2*sll_p_pi*tau2( 1, :))
-!!$  sr1 = - sin(2*sll_p_pi*x1_max) * 2.0_f64*sll_p_pi * cos(2*sll_p_pi*tau2(n1, :))
-!!$  sl2 = - sin(2*sll_p_pi*x2_min) * 2.0_f64*sll_p_pi * cos(2*sll_p_pi*tau1( :, 1))
-!!$  sr2 = - sin(2*sll_p_pi*x2_max) * 2.0_f64*sll_p_pi * cos(2*sll_p_pi*tau1( :,n2))
-!!$
-!!$  call cpu_time(t0)
-!!$  call sll_o_compute_bspline_2d(bspline_2d, ftau, sl1, sr1, sl2, sr2)
-!!$  call cpu_time(t1)
-!!$  do j = 1,nstep
-!!$     call sll_s_interpolate_array_values_2d( bspline_2d, n1, n2, ftau, gtau, 0, 0)
-!!$  end do
-!!$  err1 = sum(abs(gtau-cos(dpi*tau1)*cos(dpi*tau2)))/real(n1*n2,f64)
-!!$  err2 = maxval(abs(gtau-cos(dpi*tau1)*cos(dpi*tau2)))
-!!$  call cpu_time(t2)
-!!$  do j = 1,nstep
-!!$     call sll_s_interpolate_array_values_2d( bspline_2d, n1, n2, ftau, gtau, 1, 0)
-!!$  end do
-!!$  err3 = sum(abs(gtau+dpi*sin(dpi*tau1)*cos(dpi*tau2)))/real(n1*n2,f64)
-!!$  err4 = maxval(abs(gtau+dpi*sin(dpi*tau1)*cos(dpi*tau2)))
-!!$  call cpu_time(t3)
-!!$  do j = 1,nstep
-!!$     call sll_s_interpolate_array_values_2d( bspline_2d, n1, n2, ftau, gtau, 0, 1)
-!!$  end do
-!!$  err5 = sum(abs(gtau+dpi*sin(dpi*tau2)*cos(dpi*tau1)))/real(n1*n2,f64)
-!!$  err6 = maxval(abs(gtau+dpi*sin(dpi*tau2)*cos(dpi*tau1)))
-!!$  call cpu_time(t4)
-!!$
-!!$  print*, "-----------------------------------------------------------"
-!!$  print*, "ERRORS USING ARRAYS FUNCTIONS -----------------------------"
-!!$  print*, "-----------------------------------------------------------"
-!!$  print*, " average                                   : ", err1
-!!$  print*, " maximum                                   : ", err2
-!!$  print*, " average x1 derivatives                    : ", err3
-!!$  print*, " maximum x1 derivatives                    : ", err4
-!!$  print*, " average x2 derivatives                    : ", err5
-!!$  print*, " maximum x2 derivatives                    : ", err6
-!!$  print*, "-----------------------------------------------------------"
-!!$  print*, "CPU TIME USING ARRAYS FUNCTIONS ---------------------------"
-!!$  print*, "-----------------------------------------------------------"
-!!$  print*, ' compute interpolants             : ', t1-t0
-!!$  print*, ' interpolate array values         : ', t2-t1
-!!$  print*, ' interpolate array x1 derivatives : ', t3-t2
-!!$  print*, ' interpolate array x2 derivatives : ', t4-t3
-!!$  print*, "-----------------------------------------------------------"
-!!$
-!!$  call cpu_time(t0)
-!!$  call sll_o_compute_bspline_2d(bspline_2d, ftau, sl1, sr1, sl2, sr2)
-!!$  call cpu_time(t1)
-!!$  err1 = 0.0_f64
-!!$  do j = 1, n2
-!!$     do i = 1, n1
-!!$        f = sll_f_interpolate_value_2d(bspline_2d,tau1(i,j),tau2(i,j),0,0)
-!!$        err1 = err1 + abs(f-ftau(i,j))
-!!$        write(10,*) tau1(i,j), tau2(i,j), f, ftau(i,j)
-!!$     end do
-!!$     write(10,*) 
-!!$  end do
-!!$  call cpu_time(t2)
-!!$  err2 = 0.0_f64
-!!$  do j = 1, n2
-!!$     do i = 1, n1
-!!$        f = sll_f_interpolate_value_2d(bspline_2d,tau1(i,j),tau2(i,j),1,0)
-!!$        err2 = err2 + abs(f+dpi*sin(dpi*tau1(i,j))*cos(dpi*tau2(i,j)))
-!!$     end do
-!!$  end do
-!!$  call cpu_time(t3)
-!!$  err3 = 0.0_f64
-!!$  do j = 1, n2
-!!$     do i = 1, n1
-!!$        f = sll_f_interpolate_value_2d(bspline_2d,tau1(i,j),tau2(i,j),0,1)
-!!$        err3 = err3 + abs(f+dpi*sin(dpi*tau2(i,j))*cos(dpi*tau1(i,j)))
-!!$     end do
-!!$  end do
-!!$  call cpu_time(t4)
-!!$
-!!$  print*, "----------------------------------------------------------"
-!!$  print*, "ERRORS USING POINT VALUE FUNCTION ------------------------"
-!!$  print*, "----------------------------------------------------------"
-!!$  print*, " values                             : ", err1/(n1*n2)
-!!$  print*, " x1 derivatives                     : ", err2/(n1*n2)
-!!$  print*, " x2 derivatives                     : ", err3/(n1*n2)
-!!$  print*, "----------------------------------------------------------"
-!!$  print*, "CPU TIME USING POINT VALUE FUCNTION ----------------------"
-!!$  print*, "----------------------------------------------------------"
-!!$  print*, ' compute interpolants      : ', t1-t0
-!!$  print*, ' interpolate_from_interpolant_value         : ', t2-t1
-!!$  print*, ' interpolate_x1_derivative : ', t3-t2
-!!$  print*, ' interpolate_x2_derivative : ', t4-t3
-!!$  print*, "----------------------------------------------------------"
-!!$
-!!$  deallocate(tau1, tau2)
-!!$  deallocate(ftau, gtau)
-!!$
-!!$end subroutine test_process_2d
+  end subroutine test_process_2d
 
 end program test_bsplines_2d
