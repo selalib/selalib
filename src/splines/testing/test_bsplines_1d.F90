@@ -34,11 +34,11 @@ program test_bsplines_1d
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 sll_real64                    :: err1
-sll_real64                    :: err2
-sll_real64                    :: err3
-sll_real64                    :: err4
-sll_real64                    :: err5
-sll_real64                    :: err6
+!sll_real64                    :: err2
+!sll_real64                    :: err3
+!sll_real64                    :: err4
+!sll_real64                    :: err5
+!sll_real64                    :: err6
 sll_int32                     :: i
 sll_int32                     :: j
 sll_int32,  parameter         :: nstep = 1
