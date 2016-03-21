@@ -10,8 +10,7 @@ program test_maxwell_2d_pstd
 #include "sll_working_precision.h"
 #include "sll_maxwell_solvers_macros.h"
 
-  use sll_m_constants, only: &
-    sll_p_pi
+  use sll_m_constants, only: pi => sll_p_pi
 
   use sll_m_maxwell_2d_pstd, only: &
     sll_o_create, &
@@ -86,8 +85,8 @@ nstep = 100
 
 time  = 0._f64
 
-omega = sqrt( (mode*sll_p_pi/(nc_eta1*delta_eta1))**2   &
-        &    +(mode*sll_p_pi/(nc_eta2*delta_eta2))**2)
+omega = sqrt( (mode*pi/(nc_eta1*delta_eta1))**2   &
+        &    +(mode*pi/(nc_eta2*delta_eta2))**2)
 
 SLL_ALLOCATE(hx(nc_eta1+1,nc_eta2+1), error)
 SLL_ALLOCATE(hy(nc_eta1+1,nc_eta2+1), error)
@@ -110,16 +109,13 @@ do istep = 1, nstep !*** Loop over time
 
    time = time + 0.5_f64*dt
 
-   ez_exact =   cos(mode*sll_p_pi*eta1)*cos(mode*sll_p_pi*eta2)*cos(omega*time)
-   hz_exact = - cos(mode*sll_p_pi*eta1)*cos(mode*sll_p_pi*eta2)*cos(omega*time)
+   ez_exact =   cos(mode*pi*eta1)*cos(mode*pi*eta2)*cos(omega*time)
+   hz_exact = - cos(mode*pi*eta1)*cos(mode*pi*eta2)*cos(omega*time)
   
    if (istep == 1) then
       ez = ez_exact
       hz = hz_exact
    end if
-
-   !call plot_fields('ez',ez, ez_exact, istep, time)
-   !call plot_fields('hz',hz, hz_exact, istep, time)
 
    err_tm = maxval(abs(ez - ez_exact))
    err_te = maxval(abs(hz - hz_exact))
