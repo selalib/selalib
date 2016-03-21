@@ -30,7 +30,13 @@ ADD_TEST(NAME maxwell_2d_diga_wave COMMAND test_maxwell_2d_diga_wave)
 SET_TESTS_PROPERTIES(maxwell_2d_diga_wave
                      PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
 
+
 ADD_EXECUTABLE(test_maxwell_2d_pstd test_maxwell_2d_pstd.F90 )
 TARGET_LINK_LIBRARIES(test_maxwell_2d_pstd sll_maxwell_solvers)
 ADD_TEST(NAME maxwell_2d_pstd COMMAND test_maxwell_2d_pstd)
 SET_TESTS_PROPERTIES(maxwell_2d_pstd PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
+
+ADD_EXECUTABLE(test_maxwell_3d_pstd test_maxwell_3d_pstd.F90 )
+TARGET_LINK_LIBRARIES(test_maxwell_3d_pstd sll_maxwell_solvers)
+ADD_TEST(NAME maxwell_3d_pstd COMMAND test_maxwell_3d_pstd)
+SET_TESTS_PROPERTIES(maxwell_3d_pstd PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
