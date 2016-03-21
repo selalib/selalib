@@ -78,35 +78,6 @@ use sll_m_fft
 
 implicit none
 
-public :: &
-    faraday, ampere, &
-    sll_o_delete, &
-    sll_o_create
-
-private
-!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-
-!> Initialize maxwell solver 2d cartesian periodic with PSTD scheme
-interface sll_o_create
- module procedure new_maxwell_3d_pstd
-end interface sll_o_create
-
-!> Solve Ampere equation 3d cartesian periodic with PSTD scheme
-interface sll_solve_ampere
- module procedure ampere
-end interface sll_solve_ampere
-
-!> Solve Faraday equation 3d cartesian periodic with PSTD scheme
-interface sll_solve_faraday
- module procedure faraday
-end interface sll_solve_faraday
-
-!> Delete maxwell solver 3d cartesian periodic with PSTD scheme
-interface sll_o_delete
- module procedure free_maxwell_3d_pstd
-end interface sll_o_delete
-
-
 !> Maxwell solver object
 type, public :: sll_t_maxwell_3d_pstd
   private
@@ -135,10 +106,10 @@ end type sll_t_maxwell_3d_pstd
 
 contains
 
-!> Initialize 2d maxwell solver on cartesian mesh with PSTD scheme
-subroutine new_maxwell_3d_pstd(self,xmin,xmax,nc_x, &
-                                    ymin,ymax,nc_y, &
-                                    zmin,zmax,nc_z )
+!> Initialize 3d maxwell solver on cartesian mesh with PSTD scheme
+subroutine sll_s_maxwell_3d_pstd_init(self,xmin,xmax,nc_x, &
+                                      ymin,ymax,nc_y, &
+                                      zmin,zmax,nc_z )
 
   type(sll_t_maxwell_3d_pstd) :: self   !< maxwell object
   sll_real64, intent(in)      :: xmin   !< x min
@@ -208,10 +179,10 @@ subroutine new_maxwell_3d_pstd(self,xmin,xmax,nc_x, &
      self%kz(k) = (k-1)*kz0
   end do
 
-end subroutine new_maxwell_3d_pstd
+end subroutine sll_s_maxwell_3d_pstd_init
 
 !> Solve faraday equation  (hx,hy,ez)
-subroutine faraday(self, ex, ey, ez, hx, hy, hz, dt)
+subroutine sll_s_maxwell_3d_pstd_faraday(self, ex, ey, ez, hx, hy, hz, dt)
 
   type(sll_t_maxwell_3d_pstd),  intent(inout) :: self  !< Maxwell object
   sll_real64, dimension(:,:,:), intent(inout) :: ex    !< Electric field x
@@ -267,13 +238,13 @@ subroutine faraday(self, ex, ey, ez, hx, hy, hz, dt)
     end do
   end do
 
-  hy(nc_x+1,:,:) = hx(1,:,:)
-  hz(nc_x+1,:,:) = hy(1,:,:)
+  hy(nc_x+1,:,:) = hy(1,:,:)
+  hz(nc_x+1,:,:) = hz(1,:,:)
 
-end subroutine faraday
+end subroutine sll_s_maxwell_3d_pstd_faraday
 
 !> Solve ampere maxwell equation (hx,hy,ez)
-subroutine ampere(self, hx, hy, hz, ex, ey, ez, dt, jx, jy, jz)
+subroutine sll_s_maxwell_3d_pstd_ampere(self, hx, hy, hz, ex, ey, ez, dt, jx, jy, jz)
 
   type(sll_t_maxwell_3d_pstd),intent(inout) :: self !< maxwell object
   sll_real64, dimension(:,:,:)              :: hx   !< magnetic field x
@@ -300,8 +271,8 @@ subroutine ampere(self, hx, hy, hz, ex, ey, ez, dt, jx, jy, jz)
 
   dt_e = dt / self%e_0
 
-  do k = 1, nc_z
-  do i = 1, nc_x
+  do k = 1, nc_z+1
+  do i = 1, nc_x+1
     D_DY(hz(i,1:nc_y,k))
     ex(i,1:nc_y,k) = ex(i,1:nc_y,k) + dt_e * self%d_dy
     D_DY(hx(i,1:nc_y,k))
@@ -312,8 +283,8 @@ subroutine ampere(self, hx, hy, hz, ex, ey, ez, dt, jx, jy, jz)
   ex(:,nc_y+1,:) = ex(:,1,:)
   ez(:,nc_y+1,:) = ez(:,1,:)
 
-  do j = 1, nc_y
-  do i = 1, nc_x
+  do j = 1, nc_y+1
+  do i = 1, nc_x+1
     D_DZ(hy(i,j,1:nc_z))
     ex(i,j,1:nc_z) = ex(i,j,1:nc_z) - dt_e * self%d_dz
     D_DZ(hx(i,j,1:nc_z))
@@ -324,8 +295,8 @@ subroutine ampere(self, hx, hy, hz, ex, ey, ez, dt, jx, jy, jz)
   ex(:,:,nc_z+1) = ex(:,:,1)
   ey(:,:,nc_z+1) = ey(:,:,1)
 
-  do k = 1, nc_z
-  do j = 1, nc_y
+  do k = 1, nc_z+1
+  do j = 1, nc_y+1
     D_DX(hz(1:nc_x,j,k))
     ey(1:nc_x,j,k) = ey(1:nc_x,j,k) - dt_e * self%d_dx
     D_DX(hy(1:nc_x,j,k))
@@ -333,8 +304,8 @@ subroutine ampere(self, hx, hy, hz, ex, ey, ez, dt, jx, jy, jz)
   end do
   end do
 
-  ey(nc_x+1,:,:) = ex(1,:,:)
-  ez(nc_x+1,:,:) = ey(1,:,:)
+  ey(nc_x+1,:,:) = ey(1,:,:)
+  ez(nc_x+1,:,:) = ez(1,:,:)
 
   if (present(jx) .and. present(jy) .and. present(jz)) then
     ex = ex - dt_e * jx 
@@ -343,10 +314,10 @@ subroutine ampere(self, hx, hy, hz, ex, ey, ez, dt, jx, jy, jz)
   end if
 
 
-end subroutine ampere
+end subroutine sll_s_maxwell_3d_pstd_ampere
 
 !> delete maxwell solver object
-subroutine free_maxwell_3d_pstd(self)
+subroutine sll_s_maxwell_3d_pstd_free(self)
 
   type(sll_t_maxwell_3d_pstd) :: self
   
@@ -357,6 +328,6 @@ subroutine free_maxwell_3d_pstd(self)
   call sll_s_fft_free(self%bwy)
   call sll_s_fft_free(self%bwz)
 
-end subroutine free_maxwell_3d_pstd
+end subroutine sll_s_maxwell_3d_pstd_free
 
 end module sll_m_maxwell_3d_pstd
