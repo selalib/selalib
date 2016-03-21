@@ -100,7 +100,8 @@ do istep = 1, nstep
   time = time + dt
 
   call modeE( f, istep, time )
-  write(*,"('istep = ', i6, ' time = ',g15.3)", advance='no') istep, time
+  write(*,"('istep = ', i6, ' time = ',g15.3, ' nbpart =', i8)", advance='no') &
+    istep, time, nbpart
 
 end do
 

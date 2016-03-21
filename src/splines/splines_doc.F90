@@ -16,25 +16,18 @@
 !> @details
 !> Low level modules for sll_interpolators.
 !> Library to use splines, contains:
-!>    - cubic_splines            : B-splines of degree 3
+!>    - sll_m_cubic_splines            : B-splines of degree 3
 !>    - sll_m_cubic_non_uniform_splines: non-uniform B-splines of degree 3
-!>    - quintic_splines          : B-splines of degree 5
-!>    - bsplines                 : B-splines 1D and 2D
-!>    - arbitrary_degree_splines : De Boor splines of arbitrary degree
-!>    - box_splines              : Box-splines for hexagonal mesh
-!>    - hex_pre_filters          : Hexagonal prefilters associated to boxsplines
+!>    - sll_m_quintic_splines          : B-splines of degree 5
+!>    - sll_m_bsplines                 : B-splines 1D and 2D
+!>    - sll_m_arbitrary_degree_splines : De Boor splines of arbitrary degree
+!>    - sll_m_box_splines              : Box-splines for hexagonal mesh
+!>    - sll_m_hex_pre_filters          : Hexagonal prefilters associated to boxsplines
 !>
 !> <b> How to use it </b>
 !> - Link with   <code>-lsll_splines</code>
-!> - Add <code> use sll_<spline_moudle_name> </code>
+!> - Add <code> use sll_m_<module_name> </code>
 !>
 !> <b> Examples </b>
 !> @snippet see splines/testing directory
-!>
-!> Some fortran modules with deboor prefix are designed to
-!> compute Bsplines of arbitrary degree using deboor algorithm.
-!> @author Aurore Back, Pierre Navaro.
-!> @details
-!> Original F77 files are available
-!> on Carl de Boor webpage http://pages.cs.wisc.edu/~deboor/
 !>
