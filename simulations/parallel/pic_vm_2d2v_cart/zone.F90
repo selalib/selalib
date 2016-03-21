@@ -76,6 +76,26 @@ namelist/donnees/ dimx,  & !dimensions du domaine
 
 !*** Initialisation des valeurs pas default
 
+
+nstepmax = 2000          ! nbre d'iterations maxi
+dimx     = 1.0_f64
+dimy     = 1.0_f64       ! dimensions du domaine 
+nx       = 120           ! nombre de pts suivant x
+ny       = 10            ! nombre de pts suivant y
+cfl      = 0.9_f64       ! nombre de Courant-Friedrich-Levy
+tfinal   = 10.0_f64      ! temps final
+idiag    = 10            ! frequence des sorties graphiques
+bcname   = "period"      ! type de conditions limites
+exext    = 0.0_f64       ! champ electrique exterieur suivant x
+eyext    = 0.0_f64       ! champ electrique exterieur suivant y
+bzext    = 0.0_f64       ! champ magnetique exterieur
+charge   = 1.0_f64       ! charge d'une macro particule
+masse    = 1.0_f64       ! masse d'une macro particule
+c        = 8.0_f64       ! vitesse de la lumiere
+e0       = 1.0_f64       ! permittivite du vide
+relativ  = .false.       ! relativistic pusher or not
+
+
 pi = 4.0_f64 * atan(1.)
 
 write(*,*) " Input file name :"// filename
