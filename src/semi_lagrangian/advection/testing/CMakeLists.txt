@@ -149,3 +149,6 @@
 
   ADD_EXECUTABLE( test_rotation_2d rotation_2d.F90)
   TARGET_LINK_LIBRARIES( test_rotation_2d sll_advection)
+
+ADD_EXECUTABLE( test_advection_2d_nufft test_advection_2d_nufft.F90)
+TARGET_LINK_LIBRARIES( test_advection_2d_nufft sll_advection)
