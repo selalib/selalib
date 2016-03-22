@@ -11,6 +11,7 @@
 !> Aliou DIOUF (aliou.l.diouf@inria.fr), 
 !> Edwin CHACON-GOLCHER (chacongolcher@math.unistra.fr)
 !> Pierre NAVARO (navaro@math.unistra.fr)
+!> Katharina Kormann
 !                                  
 !************************************************************************
 
@@ -34,10 +35,11 @@ program test_poisson_3d_periodic_par
     sll_p_pi
 
   use sll_m_poisson_3d_periodic_par, only: &
-    sll_s_delete_poisson_3d_periodic_plan_par, &
-    sll_f_new_poisson_3d_periodic_plan_par, &
-    sll_t_poisson_3d_periodic_plan_par, &
-    sll_s_solve_poisson_3d_periodic_par
+    sll_s_poisson_3d_periodic_par_compute_e_from_phi, &
+    sll_s_poisson_3d_periodic_par_free, &
+    sll_s_poisson_3d_periodic_par_init, &
+    sll_t_poisson_3d_periodic_par, &
+    sll_s_poisson_3d_periodic_par_solve
 
   use sll_m_remapper, only: &
     sll_o_compute_local_sizes, &
@@ -61,13 +63,19 @@ program test_poisson_3d_periodic_par
   sll_real64, dimension(:,:,:), allocatable    :: rho
   sll_real64, dimension(:,:,:), allocatable    :: phi_an
   sll_real64, dimension(:,:,:), allocatable    :: phi
+  sll_real64, dimension(:,:,:), allocatable    :: ex
+  sll_real64, dimension(:,:,:), allocatable    :: ey
+  sll_real64, dimension(:,:,:), allocatable    :: ez
+  sll_real64, dimension(:,:,:), allocatable    :: ex_an
+  sll_real64, dimension(:,:,:), allocatable    :: ey_an
+  sll_real64, dimension(:,:,:), allocatable    :: ez_an
   sll_int32                                    :: i, j, k
-  type (sll_t_poisson_3d_periodic_plan_par), pointer :: plan
+  type (sll_t_poisson_3d_periodic_par)         :: plan
   sll_real64                                   :: average_err
   sll_int32, dimension(1:3)                    :: global
   sll_int32                                    :: gi, gj, gk
   sll_int32                                    :: myrank
-  type(sll_t_layout_3d), pointer                     :: layout
+  type(sll_t_layout_3d), pointer               :: layout
   sll_int64                                    :: colsz ! collective size
   sll_int32                                    :: i_test
   sll_int32                                    :: npx, npy, npz
@@ -103,12 +111,19 @@ program test_poisson_3d_periodic_par
   call sll_o_initialize_layout_with_distributed_array( nx, ny, &
                                   nz, npx, npy, npz, layout )
 
-  plan => sll_f_new_poisson_3d_periodic_plan_par(layout, nx, ny, &
-                                             nz, Lx, Ly, Lz)
+  call sll_s_poisson_3d_periodic_par_init(layout, nx, ny, &
+       nz, Lx, Ly, Lz, plan)
+
 
   call sll_o_compute_local_sizes( layout, nx_loc, ny_loc, nz_loc )
 
   SLL_ALLOCATE(rho(nx_loc,ny_loc,nz_loc), ierr)
+  SLL_ALLOCATE(ex(nx_loc,ny_loc,nz_loc), ierr)
+  SLL_ALLOCATE(ey(nx_loc,ny_loc,nz_loc), ierr)
+  SLL_ALLOCATE(ez(nx_loc,ny_loc,nz_loc), ierr)
+  SLL_ALLOCATE(ex_an(nx_loc,ny_loc,nz_loc), ierr)
+  SLL_ALLOCATE(ey_an(nx_loc,ny_loc,nz_loc), ierr)
+  SLL_ALLOCATE(ez_an(nx_loc,ny_loc,nz_loc), ierr)
   SLL_ALLOCATE(x(nx_loc,ny_loc,nz_loc),ierr)
   SLL_ALLOCATE(y(nx_loc,ny_loc,nz_loc),ierr)
   SLL_ALLOCATE(z(nx_loc,ny_loc,nz_loc),ierr)
@@ -132,10 +147,18 @@ program test_poisson_3d_periodic_par
 
      if (i_test==1) then
         phi_an = cos(x)*sin(y)*cos(z)
+        ex_an =  sin(x)*sin(y)*cos(z)
+        ey_an =  -cos(x)*cos(y)*cos(z)
+        ez_an =  cos(x)*sin(y)*sin(z)
      else if (i_test == 2) then
         phi_an = (4.0_f64/(sll_p_pi * sqrt(sll_p_pi)*Lx*Ly*Lz)) &
              * exp(-.5*(x-Lx/2)**2)                   &
              * exp(-.5*(y-Ly/2)**2) * sin(z)
+        ex_an = phi_an * (x - Lx/2)
+        ey_an = phi_an * (y - Ly/2)
+        ez_an =  -(4.0_f64/(sll_p_pi * sqrt(sll_p_pi)*Lx*Ly*Lz)) &
+             * exp(-.5*(x-Lx/2)**2)                   &
+             * exp(-.5*(y-Ly/2)**2) * cos(z)
      end if
 
      do k=1,nz_loc
@@ -153,7 +176,7 @@ program test_poisson_3d_periodic_par
      enddo
 
      SLL_ALLOCATE(phi(nx_loc,ny_loc,nz_loc), ierr)
-     call sll_s_solve_poisson_3d_periodic_par(plan, rho, phi)
+     call sll_s_poisson_3d_periodic_par_solve(plan, rho, phi)
 
      average_err  = 0._f64
 
@@ -179,6 +202,77 @@ program test_poisson_3d_periodic_par
         stop
      endif
 
+     call sll_s_poisson_3d_periodic_par_compute_e_from_phi(plan, phi, ex, ey, ez)
+
+     average_err  = 0._f64
+
+     do k=1,nz_loc
+        do j=1,ny_loc
+           do i=1,nx_loc
+              average_err  = average_err + abs( ex_an(i,j,k) &
+                             - ex(i,j,k) )
+           enddo
+        enddo
+     enddo
+
+     average_err  = average_err  / (nx_loc*ny_loc*nz_loc)
+
+     flush( output_unit ); print*, ' ------------------'
+     flush( output_unit ); print*, ' myrank ', myrank
+     flush( output_unit ); print*, 'local average error in ex:', average_err
+     flush( output_unit ); print*, ' ------------------'
+
+     if (average_err> dx*dy*dz ) then
+        print*, 'Test stopped by "sll_m_poisson_3d_periodic_par" failure'
+        stop
+     endif
+
+     average_err  = 0._f64
+
+     do k=1,nz_loc
+        do j=1,ny_loc
+           do i=1,nx_loc
+              average_err  = average_err + abs( ey_an(i,j,k) &
+                             - ey(i,j,k) )
+           enddo
+        enddo
+     enddo
+
+     average_err  = average_err  / (nx_loc*ny_loc*nz_loc)
+
+     flush( output_unit ); print*, ' ------------------'
+     flush( output_unit ); print*, ' myrank ', myrank
+     flush( output_unit ); print*, 'local average error in ey:', average_err
+     flush( output_unit ); print*, ' ------------------'
+
+     if (average_err> dx*dy*dz ) then
+        print*, 'Test stopped by "sll_m_poisson_3d_periodic_par" failure'
+        stop
+     endif
+
+     average_err  = 0._f64
+
+     do k=1,nz_loc
+        do j=1,ny_loc
+           do i=1,nx_loc
+              average_err  = average_err + abs( ez_an(i,j,k) &
+                             - ez(i,j,k) )
+           enddo
+        enddo
+     enddo
+
+     average_err  = average_err  / (nx_loc*ny_loc*nz_loc)
+
+     flush( output_unit ); print*, ' ------------------'
+     flush( output_unit ); print*, ' myrank ', myrank
+     flush( output_unit ); print*, 'local average error in ez:', average_err
+     flush( output_unit ); print*, ' ------------------'
+
+     if (average_err> dx*dy*dz ) then
+        print*, 'Test stopped by "sll_m_poisson_3d_periodic_par" failure'
+        stop
+     endif
+
      SLL_DEALLOCATE_ARRAY(phi, ierr)
 
   end do
@@ -197,8 +291,7 @@ program test_poisson_3d_periodic_par
         endif
      endif           
 
-  call sll_s_delete_poisson_3d_periodic_plan_par(plan)
-  deallocate(plan)
+  call sll_s_poisson_3d_periodic_par_free(plan)
 
   SLL_DEALLOCATE_ARRAY(phi_an, ierr)
   SLL_DEALLOCATE_ARRAY(rho, ierr)
