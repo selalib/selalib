@@ -99,7 +99,7 @@ end do
 write(11,*) 
 end do
 
-call interpol_eb( f, p )
+call interpol_eb_m4( f, p )
 
 do k = 1, nbpart
    write(12,*) sngl(xmin+(p%idx(k)+p%dpx(k))*dx), &
