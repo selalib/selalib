@@ -713,6 +713,7 @@ MAKE_GET_SLOT_FUNCTION(get_x2_delta_cs2d,sll_t_cubic_spline_2d,x2_delta,sll_real
        spline%coeffs(0)    = spline%coeffs(np)
        spline%coeffs(np+1) = spline%coeffs(1)
        spline%coeffs(np+2) = spline%coeffs(2)
+       spline%coeffs(np+3) = spline%coeffs(3)
     else
        np = spline%n_points
        fp     => f
