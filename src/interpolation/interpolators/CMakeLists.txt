@@ -12,7 +12,7 @@ SET( INTERPOLATORS_SRC_FILES
   sll_m_arbitrary_degree_spline_interpolator_1d.F90
   sll_m_arbitrary_degree_spline_interpolator_2d.F90
   sll_m_bspline_interpolator_1d.F90
-  sll_m_bspline_interpolator_2d.F90
+  #sll_m_bspline_interpolator_2d.F90
   sll_m_nufft_interpolator_2d.F90)
 
 ADD_LIBRARY( sll_interpolators STATIC ${INTERPOLATORS_SRC_FILES} )
