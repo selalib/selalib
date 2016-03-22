@@ -12,17 +12,19 @@ implicit none
 type(tm_mesh_fields) :: f
 type(particle)       :: p
 
+sll_int32  :: npm
 sll_int32  :: i, j, k, l, error
 sll_real64 :: xp, yp
 sll_real64 :: xmin, xmax, ymin, ymax
 
 nx  = 100 
 ny  = 100 
+npm = 100
 
 pi = 4.0_f64 * atan(1.)
 
-xmin = -5.0_f64; xmax = 5.0_f64
-ymin = -5.0_f64; ymax = 5.0_f64
+xmin = 0.0_f64; xmax = 10.0_f64
+ymin = 0.0_f64; ymax = 10.0_f64
 
 dimx = xmax - xmin
 dimy = ymax - ymin
@@ -37,7 +39,7 @@ SLL_CLEAR_ALLOCATE(f%r0(0:nx,0:ny), error)
 
 print*, 'initialize particles '
 
-nbpart = 10*(nx-10)*(ny-10)
+nbpart = npm*nx*ny
 SLL_ALLOCATE(p%dpx(nbpart),error)
 SLL_ALLOCATE(p%dpy(nbpart),error)
 SLL_ALLOCATE(p%idx(nbpart),error)
@@ -51,15 +53,15 @@ call random_number(p%dpx)
 call random_number(p%dpy)
 
 k = 0
-do j = 5, ny-6
-do i = 5, nx-6
-do l = 1, 10
+do j = 0, ny-1
+do i = 0, nx-1
+do l = 1, npm
 
  k = k+1
  p%idx(k) = i
  p%idy(k) = j
- xp = xmin + (i+p%dpx(k))*dx
- yp = ymin + (j+p%dpy(k))*dy
+ xp = (i+p%dpx(k))*dx - 0.5*dimx
+ yp = (j+p%dpy(k))*dy - 0.5*dimy
 
  p%p(k) = dimx * dimy * exp(-(xp*xp+yp*yp)) / real(nbpart,f64)
 
@@ -68,8 +70,6 @@ do l = 1, 10
 end do
 end do
 end do
-
-print*, sum(p%p)
 
 print*, 'compute rho'
 call calcul_rho( p, f )
@@ -87,8 +87,8 @@ call sll_o_gnuplot_2d(xmin, xmax, nx+1, &
 do j = 0, ny
 do i = 0, nx
 
- xp = xmin + i*dx 
- yp = ymin + j*dy 
+ xp = xmin + i*dx - 0.5*dimx
+ yp = ymin + j*dy - 0.5*dimy
 
  f%ex(i,j) = exp(-(xp*xp+yp*yp)) 
  f%ey(i,j) = exp(-(xp*xp+yp*yp)) 
