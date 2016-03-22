@@ -10,6 +10,9 @@ TARGET_LINK_LIBRARIES(pic_vm_2d2v_cart sll_pic_visu nufft)
 ADD_EXECUTABLE(sim_pic_vm_2d2v_cart main.F90)
 TARGET_LINK_LIBRARIES(sim_pic_vm_2d2v_cart pic_vm_2d2v_cart sll_poisson_solvers) 
 
+ADD_EXECUTABLE(test_interpolation_m4 test_interpolation_m4.F90)
+TARGET_LINK_LIBRARIES(test_interpolation_m4 pic_vm_2d2v_cart) 
+
 #SET(ARGS "${CMAKE_CURRENT_SOURCE_DIR}/input/data.nml")
 #ADD_TEST(NAME test_pic2d COMMAND ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/test_pic2d ${ARGS})
 #ET_TESTS_PROPERTIES(test_pic2d PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
