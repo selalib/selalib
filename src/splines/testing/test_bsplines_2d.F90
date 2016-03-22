@@ -124,7 +124,6 @@ contains
       end do
       write(11,*)
     end do
-    stop
 
     print*,'+++++++++++++++++++++++++++++++++'
     print*,'*** Spline degree = ', deg
@@ -267,7 +266,7 @@ contains
              bc(i)=-4*pi**2*bc(i-2)
           end do
        end if
-       call sll_s_compute_bspline_2d(bspline_2d, htau, bc, bc)
+       call sll_s_compute_bspline_2d(bspline_2d, htau, bc, bc, bc, bc)
     else    
        call sll_s_compute_bspline_2d(bspline_2d, htau)
     end if

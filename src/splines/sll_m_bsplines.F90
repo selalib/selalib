@@ -26,25 +26,24 @@ module sll_m_bspline_interpolation
 
   use schur_complement
 
-!ES  use sll_m_fornberg, only: &
-!ES    sll_s_apply_fd
-
   implicit none
 
-  public :: &
-       sll_t_bspline_interpolation_1d, &
-       sll_s_bspline_interpolation_1d_init, &
-       sll_s_compute_bspline_1d, &
-       sll_f_interpolate_value_1d, &
-       sll_s_interpolate_array_values_1d, &
-       sll_f_interpolate_derivative_1d, &
+  public ::                                    &
+       sll_t_bspline_interpolation_1d,         &
+       sll_t_bspline_interpolation_2d,         &
+       sll_s_bspline_interpolation_1d_init,    &
+       sll_s_bspline_interpolation_2d_init,    &
+       sll_s_bspline_interpolation_1d_free,    &
+       sll_s_bspline_interpolation_2d_free,    &
+       sll_s_compute_bspline_1d,               &
+       sll_s_compute_bspline_2d,               &
+       sll_f_interpolate_value_1d,             &
+       sll_f_interpolate_value_2d,             &
+       sll_s_interpolate_array_values_1d,      &
+       sll_s_interpolate_array_values_2d,      &
+       sll_f_interpolate_derivative_1d,        &
+       sll_f_interpolate_derivative_2d,        &
        sll_s_interpolate_array_derivatives_1d, &
-       sll_s_bspline_interpolation_1d_free, &
-       sll_t_bspline_interpolation_2d, &
-       sll_s_bspline_interpolation_2d_init, &
-       sll_s_bspline_interpolation_2d_free, &
-       sll_f_interpolate_value_2d,          &
-       sll_f_interpolate_derivative_2d,     &
        sll_s_interpolate_array_derivatives_2d
 
   private
@@ -80,7 +79,8 @@ type :: sll_t_bspline_interpolation_2d
 
   type(sll_t_bspline_interpolation_1d) :: bs1
   type(sll_t_bspline_interpolation_1d) :: bs2
-  sll_real64,           pointer :: bcoef(:,:)
+  sll_real64, pointer                  :: bcoef(:,:)
+  sll_real64, pointer                  :: bwork(:,:)
 
 end type sll_t_bspline_interpolation_2d
 
@@ -609,29 +609,27 @@ end subroutine sll_s_bspline_interpolation_1d_free
 !> @param[in] nx1 Number of points where the data to be interpolated are 
 !>            represented.
 !> @param[in] degree1 Spline degree 
-!> @param[in] x1min Minimum value of the abscissae where the data are meant 
+!> @param[in] x1_min Minimum value of the abscissae where the data are meant 
 !> to be interpolated.
-!> @param[in] x1max Maximum value of the abscissae where the data are meant 
+!> @param[in] x1_max Maximum value of the abscissae where the data are meant 
 !> to be interpolated.
 !> @param[in] bc1 A boundary condition specifier. Must be one of the
 !> symbols defined in the SLL_BOUNDARY_CONDITION_DESCRIPTORS module.
-!> @param[in] sl1 OPTIONAL: The value of the slope at xmin, for use in the case
-!> of hermite boundary conditions.
-!> @param[in] sr1 OPTIONAL: The value of the slope at xmin, for use in the case
-!> of hermite boundary conditions.
 !> @param[in] nx2 Number of points where the data to be interpolated are 
 !>            represented.
 !> @param[in] degree2 Spline degree 
-!> @param[in] x2min Minimum value of the abscissae where the data are meant 
+!> @param[in] x2_min Minimum value of the abscissae where the data are meant 
 !> to be interpolated.
-!> @param[in] x2max Maximum value of the abscissae where the data are meant 
+!> @param[in] x2_max Maximum value of the abscissae where the data are meant 
 !> to be interpolated.
 !> @param[in] bc2 A boundary condition specifier. Must be one of the
 !> symbols defined in the sll_m_boundary_condition_descriptors module.
-!> @param[in] sl2 OPTIONAL: The value of the slope at xmin, for use in the case
-!> of hermite boundary conditions.
-!> @param[in] sr2 OPTIONAL: The value of the slope at xmin, for use in the case
-!> of hermite boundary conditions.
+!> @param[in] spline_bc_type1 A boundary condition specifier (see sll_s_bspline_interpolation_1d_init). 
+!> @param[in] spline_bc_type2 A boundary condition specifier (see sll_s_bspline_interpolation_1d_init). 
+!> @param[in] bc_left1 value of function on the west boundary
+!> @param[in] bc_left2 value of function on the south boundary
+!> @param[in] bc_right1 value of function on the east boundary
+!> @param[in] bc_right2 value of the function on the north boundary
 !> @return a spline interpolation object.
 subroutine sll_s_bspline_interpolation_2d_init( &
   self,            &
@@ -681,21 +679,39 @@ subroutine sll_s_bspline_interpolation_2d_init( &
 
   n1 = self%bs1%n
   n2 = self%bs2%n
+  SLL_CLEAR_ALLOCATE(self%bwork(1:n2,1:n1), ierr)
   SLL_CLEAR_ALLOCATE(self%bcoef(1:n1,1:n2), ierr)
 
 end subroutine sll_s_bspline_interpolation_2d_init
   
-subroutine compute_bspline_2d(self, gtau)
+subroutine sll_s_compute_bspline_2d(self, gtau, &
+  val1_min, val1_max, val2_min, val2_max)
 
-  type(sll_t_bspline_interpolation_2d)    :: self 
-  sll_real64, intent(in)  :: gtau(:,:)
+  type(sll_t_bspline_interpolation_2d) :: self 
+  sll_real64, intent(in)               :: gtau(:,:)
+  sll_real64, intent(in), optional     :: val1_min(:)
+  sll_real64, intent(in), optional     :: val1_max(:)
+  sll_real64, intent(in), optional     :: val2_min(:)
+  sll_real64, intent(in), optional     :: val2_max(:)
 
-  call build_system_periodic(self%bs1)
-  call build_system_periodic(self%bs2)
+  sll_int32                            :: n1
+  sll_int32                            :: n2
+  sll_int32                            :: i
+  sll_int32                            :: j
 
-  !call update_bspline_2d(self, gtau)
+  n1 = size(self%bs1%bcoef)
+  n2 = size(self%bs2%bcoef)
 
-end subroutine compute_bspline_2d
+  do j = 1, n2
+    call sll_s_compute_bspline_1d( self%bs1, gtau(:,j))
+    self%bwork(j,:) = self%bs1%bcoef(:)
+  end do
+  do i = 1, n1
+    call sll_s_compute_bspline_1d( self%bs2, self%bwork(:,i))
+    self%bcoef(i,:) = self%bs2%bcoef(:)
+  end do
+
+end subroutine sll_s_compute_bspline_2d
 
 !!$!> @brief 
 !!$!> update 2 values before computing bsplines coefficients
@@ -756,10 +772,6 @@ end subroutine compute_bspline_2d
  ! coeff1(1:n1) = self%x2_min_slopes(:)
 !  coeff2(1:n1) = self%x2_max_slopes(:)
 
-!  do i = 1, n1+m1
-!    call sll_s_update_bspline_1d( self%bs2, bwork(:,i), coeff1(i), coeff2(i))
-!    self%bcoef(i,:) = self%bs2%bcoef(:)
-!  end do
 !!$
 !!$  deallocate(bwork)
 !!$
@@ -769,195 +781,29 @@ subroutine free_bspline_2D( spline )
   type(sll_t_bspline_interpolation_2d) :: spline
 end subroutine free_bspline_2D 
 
-!!$subroutine sll_s_interpolate_array_values_2d(self, n1, n2, x, y, ideriv, jderiv)
-!!$
-!!$type(sll_t_bspline_interpolation_2d)    :: self
-!!$sll_int32               :: n1
-!!$sll_int32               :: n2
-!!$sll_real64, intent(in)  :: x(:,:)
-!!$sll_real64, intent(out) :: y(:,:)
-!!$sll_int32               :: ideriv
-!!$sll_int32               :: jderiv
-!!$
-!!$sll_int32               :: i
-!!$sll_int32               :: j, jj
-!!$sll_int32               :: jc, jcmin, jcmax
-!!$
-!!$sll_real64, allocatable :: ajx(:), ajy(:)
-!!$sll_real64, allocatable :: dlx(:), dly(:)
-!!$sll_real64, allocatable :: drx(:), dry(:)
-!!$sll_real64, allocatable :: wrk(:)
-!!$
-!!$sll_int32               :: nx, kx, ny, ky
-!!$sll_int32               :: left, leftx, lefty
-!!$sll_int32               :: jlo
-!!$sll_int32               :: klo
-!!$sll_int32               :: llo
-!!$sll_int32               :: mflag
-!!$sll_int32               :: ierr
-!!$sll_int32               :: jjj
-!!$sll_int32               :: kkk
-!!$sll_int32               :: nmkx
-!!$sll_int32               :: nmky
-!!$
-!!$sll_real64              :: xi
-!!$sll_real64              :: xj
-!!$sll_real64, pointer     :: tx(:)
-!!$sll_real64, pointer     :: ty(:)
-!!$type(sll_t_deboor_type)       :: db
-!!$
-!!$nx   =  self%bs1%n
-!!$ny   =  self%bs2%n
-!!$SLL_ASSERT(n1 <= nx)
-!!$SLL_ASSERT(n2 <= ny)
-!!$SLL_ASSERT(n1 == size(x,1))
-!!$SLL_ASSERT(n2 == size(x,2))
-!!$kx   =  self%bs1%deg + 1
-!!$ky   =  self%bs2%deg + 1
-!!$tx   => self%bs1%t
-!!$ty   => self%bs2%t
-!!$
-!!$if (self%bs1%bc_type == sll_p_periodic) then
-!!$  nmkx = nx+kx
-!!$else
-!!$  nmkx = nx+kx+2
-!!$end if
-!!$if (self%bs2%bc_type == sll_p_periodic) then
-!!$  nmky = ny+ky
-!!$else
-!!$  nmky = ny+ky+2
-!!$end if
-!!$
-!!$SLL_CLEAR_ALLOCATE(ajx(1:kx),ierr)
-!!$SLL_CLEAR_ALLOCATE(dlx(1:kx),ierr)
-!!$SLL_CLEAR_ALLOCATE(drx(1:kx),ierr)
-!!$SLL_CLEAR_ALLOCATE(ajy(1:ky),ierr)
-!!$SLL_CLEAR_ALLOCATE(dly(1:ky),ierr)
-!!$SLL_CLEAR_ALLOCATE(dry(1:ky),ierr)
-!!$SLL_CLEAR_ALLOCATE(wrk(1:nmkx),ierr)
-!!$
-!!$jlo = ky
-!!$do j=1,n2
-!!$  db%ilo = kx
-!!$  klo = jlo
-!!$  xj  = self%bs2%tau(j)
-!!$  call sll_s_interv(db,ty,nmky,xj,lefty,mflag)
-!!$  do i=1,nx
-!!$    xi = self%bs1%tau(i)
-!!$    call sll_s_interv(db,tx,nmkx,xi,leftx,mflag)
-!!$    do jj=1,ky
-!!$      jcmin = 1
-!!$      if ( kx <= leftx ) then
-!!$        do jjj = 1, kx-1
-!!$          dlx(jjj) = xi - tx(leftx+1-jjj)
-!!$        end do
-!!$      else
-!!$        jcmin = 1-(leftx-kx)
-!!$        do jjj = 1, leftx
-!!$          dlx(jjj) = xi - tx(leftx+1-jjj)
-!!$        end do
-!!$        do jjj = leftx, kx-1
-!!$          ajx(kx-jjj) = 0.0_f64
-!!$          dlx(jjj) = dlx(leftx)
-!!$        end do
-!!$      end if
-!!$      jcmax = kx
-!!$      if ( nmkx-kx < leftx ) then
-!!$        jcmax = nmkx-leftx
-!!$        do jjj = 1, nmkx-leftx
-!!$          drx(jjj) = tx(leftx+jjj) - xi
-!!$        end do
-!!$        do jjj = nmkx-leftx, kx-1
-!!$          ajx(jjj+1) = 0.0_f64
-!!$          drx(jjj) = drx(nmkx-leftx)
-!!$        end do
-!!$      else
-!!$        do jjj = 1, kx-1
-!!$          drx(jjj) = tx(leftx+jjj) - xi
-!!$        end do
-!!$      end if
-!!$      do jc = jcmin, jcmax
-!!$        ajx(jc) = self%bcoef(leftx-kx+jc,lefty-ky+jj)
-!!$      end do
-!!$      do jjj = 1, ideriv
-!!$        llo = kx - jjj
-!!$        do kkk = 1, kx - jjj
-!!$          ajx(kkk) = ((ajx(kkk+1)-ajx(kkk))/(dlx(llo)+drx(kkk)))*(kx-jjj)
-!!$          llo = llo-1
-!!$        end do
-!!$      end do
-!!$      do jjj = ideriv+1, kx-1
-!!$        llo = kx-jjj
-!!$        do kkk = 1, kx-jjj
-!!$          ajx(kkk) = (ajx(kkk+1)*dlx(llo)+ajx(kkk)*drx(kkk)) &
-!!$                     /(dlx(llo)+drx(kkk))
-!!$          llo = llo - 1
-!!$        end do
-!!$      end do
-!!$      wrk(jj) = ajx(1)
-!!$    end do
-!!$    call sll_s_interv(db,ty(lefty-ky+1:nmky),ky+ky,xj,left,mflag)
-!!$    jcmin = 1
-!!$    if ( ky <= left ) then
-!!$      do jjj = 1, ky-1
-!!$        dly(jjj) = xj - ty(lefty-ky+left+1-jjj)
-!!$      end do
-!!$    else
-!!$      jcmin = 1-(left-ky)
-!!$      do jjj = 1, left
-!!$        dly(jjj) = xj - ty(lefty-ky+left+1-jjj)
-!!$      end do
-!!$      do jjj = left, ky-1
-!!$        ajy(ky-jjj) = 0.0_f64
-!!$        dly(jjj) = dly(left)
-!!$      end do
-!!$    end if
-!!$    jcmax = ky
-!!$    if ( ky < left ) then
-!!$      jcmax = ky+ky-left
-!!$      do jjj = 1, ky+ky-left
-!!$        dry(jjj) = ty(lefty-ky+left+jjj) - xj
-!!$      end do
-!!$      do jjj = ky+ky-left, ky-1
-!!$        ajy(jjj+1) = 0.0_f64
-!!$        dry(jjj) = dry(ky+ky-left)
-!!$      end do
-!!$    else
-!!$      do jjj = 1, ky-1
-!!$        dry(jjj) = ty(lefty-ky+left+jjj) - xj
-!!$      end do
-!!$    end if
-!!$    do jc = jcmin, jcmax
-!!$      ajy(jc) = wrk(left-ky+jc)
-!!$    end do
-!!$    do jjj = 1, jderiv
-!!$      llo = ky - jjj
-!!$      do kkk = 1, ky - jjj
-!!$        ajy(kkk) = ((ajy(kkk+1)-ajy(kkk))/(dly(llo)+dry(kkk)))*(ky-jjj)
-!!$        llo = llo-1
-!!$      end do
-!!$    end do
-!!$    do jjj = jderiv+1, ky-1
-!!$      llo = ky-jjj
-!!$      do kkk = 1, ky-jjj
-!!$        ajy(kkk) = (ajy(kkk+1)*dly(llo)+ajy(kkk)*dry(kkk))/(dly(llo)+dry(kkk))
-!!$        llo = llo - 1
-!!$      end do
-!!$    end do
-!!$    y(i,j) = ajy(1)
-!!$  end do
-!!$end do
-!!$
-!!$deallocate(ajx)
-!!$deallocate(dlx)
-!!$deallocate(drx)
-!!$deallocate(ajy)
-!!$deallocate(dly)
-!!$deallocate(dry)
-!!$deallocate(wrk)
-!!$
-!!$end subroutine sll_s_interpolate_array_values_2d
-!!$
+subroutine sll_s_interpolate_array_values_2d(self, n1, n2, x1, x2, y )
+
+type(sll_t_bspline_interpolation_2d) :: self
+sll_int32                            :: n1
+sll_int32                            :: n2
+sll_real64, intent(in)               :: x1(:,:)
+sll_real64, intent(in)               :: x2(:,:)
+sll_real64, intent(out)              :: y(:,:)
+
+sll_int32 :: nx
+sll_int32 :: ny
+
+nx   =  self%bs1%n
+ny   =  self%bs2%n
+SLL_ASSERT(n1 <= nx)
+SLL_ASSERT(n2 <= ny)
+SLL_ASSERT(n1 == size(x1,1) .and. n1 == size(x2,1) )
+SLL_ASSERT(n2 == size(x1,2) .and. n2 == size(x2,2) )
+
+y = 0.0_f64
+
+end subroutine sll_s_interpolate_array_values_2d
+
 function sll_f_interpolate_value_2d(self, xi, xj, ideriv, jderiv ) result (y)
 
 type(sll_t_bspline_interpolation_2d)    :: self
@@ -969,159 +815,9 @@ sll_real64              :: y
 
 y = 0.0_f64
 
-!!$sll_int32               :: jj
-!!$sll_int32               :: jc, jcmin, jcmax
-!!$sll_int32               :: nx, kx, ny, ky
-!!$sll_int32               :: left, leftx, lefty
-!!$sll_int32               :: llo
-!!$sll_int32               :: mflag
-!!$sll_int32               :: jjj
-!!$sll_int32               :: kkk
-!!$sll_int32               :: nmkx
-!!$sll_int32               :: nmky
-!!$
-!!$sll_real64, pointer     :: tx(:)
-!!$sll_real64, pointer     :: ty(:)
-!!$
-!!$sll_real64, allocatable :: work(:)
-!!$type(sll_t_deboor_type)       :: db
-!!$
-!!$nx   =  self%bs1%n
-!!$ny   =  self%bs2%n
-!!$kx   =  self%bs1%deg + 1
-!!$ky   =  self%bs2%deg + 1
-!!$tx   => self%bs1%t
-!!$ty   => self%bs2%t
-!!$
-!!$allocate(work(size(self%bs1%bcoef)))
-!!$work = 0.0_f64
-!!$
-!!$if (self%bs1%bc_type == sll_p_periodic) then
-!!$  nmkx = nx+kx
-!!$else
-!!$  nmkx = nx+kx+2
-!!$end if
-!!$if (self%bs1%bc_type == sll_p_periodic) then
-!!$  nmky = ny+ky
-!!$else
-!!$  nmky = ny+ky+2
-!!$end if
-!!$
-!!$call sll_s_interv(db,tx,nmkx,xi,leftx,mflag)
-!!$call sll_s_interv(db,ty,nmky,xj,lefty,mflag)
-!!$
-!!$do jj=1,ky
-!!$  jcmin = 1
-!!$  if ( kx <= leftx ) then
-!!$    do jjj = 1, kx-1
-!!$      self%bs1%dl(jjj) = xi - tx(leftx+1-jjj)
-!!$    end do
-!!$  else
-!!$    jcmin = 1-(leftx-kx)
-!!$    do jjj = 1, leftx
-!!$      self%bs1%dl(jjj) = xi - tx(leftx+1-jjj)
-!!$    end do
-!!$    do jjj = leftx, kx-1
-!!$      self%bs1%aj(kx-jjj) = 0.0_f64
-!!$      self%bs1%dl(jjj) = self%bs1%dl(leftx)
-!!$    end do
-!!$  end if
-!!$  jcmax = kx
-!!$  if ( nmkx-kx < leftx ) then
-!!$    jcmax = nmkx-leftx
-!!$    do jjj = 1, nmkx-leftx
-!!$      self%bs1%dr(jjj) = tx(leftx+jjj) - xi
-!!$    end do
-!!$    do jjj = nmkx-leftx, kx-1
-!!$      self%bs1%aj(jjj+1) = 0.0_f64
-!!$      self%bs1%dr(jjj) = self%bs1%dr(nmkx-leftx)
-!!$    end do
-!!$  else
-!!$    do jjj = 1, kx-1
-!!$      self%bs1%dr(jjj) = tx(leftx+jjj) - xi
-!!$    end do
-!!$  end if
-!!$  do jc = jcmin, jcmax
-!!$    self%bs1%aj(jc) = self%bcoef(leftx-kx+jc,lefty-ky+jj)
-!!$  end do
-!!$  do jjj = 1, ideriv
-!!$    llo = kx - jjj
-!!$    do kkk = 1, kx - jjj
-!!$      self%bs1%aj(kkk) = ((self%bs1%aj(kkk+1)-self%bs1%aj(kkk)) &
-!!$        /(self%bs1%dl(llo)+self%bs1%dr(kkk)))*(kx-jjj)
-!!$      llo = llo-1
-!!$    end do
-!!$  end do
-!!$  do jjj = ideriv+1, kx-1
-!!$    llo = kx-jjj
-!!$    do kkk = 1, kx-jjj
-!!$      self%bs1%aj(kkk) = (self%bs1%aj(kkk+1)*self%bs1%dl(llo)+ &
-!!$                          self%bs1%aj(kkk  )*self%bs1%dr(kkk))/  &
-!!$                         (self%bs1%dl(llo  )+self%bs1%dr(kkk))
-!!$      llo = llo - 1
-!!$    end do
-!!$  end do
-!!$  work(jj) = self%bs1%aj(1)
-!!$end do
-!!$
-!!$!klo = self%bs2%ilo
-!!$call sll_s_interv(db,ty(lefty-ky+1:nmky),ky+ky,xj,left,mflag)
-!!$
-!!$jcmin = 1
-!!$if ( ky <= left ) then
-!!$  do jjj = 1, ky-1
-!!$    self%bs2%dl(jjj) = xj - ty(lefty-ky+left+1-jjj)
-!!$  end do
-!!$else
-!!$  jcmin = 1-(left-ky)
-!!$  do jjj = 1, left
-!!$    self%bs2%dl(jjj) = xj - ty(lefty-ky+left+1-jjj)
-!!$  end do
-!!$  do jjj = left, ky-1
-!!$    self%bs2%aj(ky-jjj) = 0.0_f64
-!!$    self%bs2%dl(jjj) = self%bs2%dl(left)
-!!$  end do
-!!$end if
-!!$jcmax = ky
-!!$if ( ky < left ) then
-!!$  jcmax = ky+ky-left
-!!$  do jjj = 1, ky+ky-left
-!!$    self%bs2%dr(jjj) = ty(lefty-ky+left+jjj) - xj
-!!$  end do
-!!$  do jjj = ky+ky-left, ky-1
-!!$    self%bs2%aj(jjj+1) = 0.0_f64
-!!$    self%bs2%dr(jjj) = self%bs2%dr(ky+ky-left)
-!!$  end do
-!!$else
-!!$  do jjj = 1, ky-1
-!!$    self%bs2%dr(jjj) = ty(lefty-ky+left+jjj) - xj
-!!$  end do
-!!$end if
-!!$do jc = jcmin, jcmax
-!!$  self%bs2%aj(jc) = work(left-ky+jc)
-!!$end do
-!!$do jjj = 1, jderiv
-!!$  llo = ky - jjj
-!!$  do kkk = 1, ky - jjj
-!!$    self%bs2%aj(kkk) = ((self%bs2%aj(kkk+1)-self%bs2%aj(kkk)) &
-!!$      /(self%bs2%dl(llo)+self%bs2%dr(kkk)))*(ky-jjj)
-!!$    llo = llo-1
-!!$  end do
-!!$end do
-!!$do jjj = jderiv+1, ky-1
-!!$  llo = ky-jjj
-!!$  do kkk = 1, ky-jjj
-!!$    self%bs2%aj(kkk) = (self%bs2%aj(kkk+1)*self%bs2%dl(llo)+ &
-!!$                        self%bs2%aj(kkk)*self%bs2%dr(kkk))/  &
-!!$                       (self%bs2%dl(llo)+self%bs2%dr(kkk))
-!!$    llo = llo - 1
-!!$  end do
-!!$end do
-!!$y = self%bs2%aj(1)
-!!$
 end function sll_f_interpolate_value_2d
-!!$
-!!$subroutine interpolate_array_x1_derivatives_2d(self, n1, n2, x, y)
+
+!$subroutine interpolate_array_x1_derivatives_2d(self, n1, n2, x, y)
 !!$
 !!$type(sll_t_bspline_interpolation_2d)    :: self
 !!$sll_int32,  intent(in)  :: n1
@@ -1153,25 +849,41 @@ end function sll_f_interpolate_value_2d
 !!$
 !!$end subroutine interpolate_array_x2_derivatives_2d
 
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
 function sll_f_interpolate_derivative_2d(self, x1, x2 ) result(y)
-type(sll_t_bspline_interpolation_2d)    :: self
-sll_real64, intent(in)  :: x1, x2
-sll_real64 :: y
+
+type(sll_t_bspline_interpolation_2d) :: self
+sll_real64, intent(in)               :: x1
+sll_real64, intent(in)               :: x2
+sll_real64                           :: y
 
 y = 0.0_f64
 
 end function sll_f_interpolate_derivative_2d
 
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
 subroutine sll_s_bspline_interpolation_2d_free(self ) 
+
 type(sll_t_bspline_interpolation_2d)    :: self
 
 
 end subroutine sll_s_bspline_interpolation_2d_free
 
-subroutine sll_s_interpolate_array_derivatives_2d( self, n1, n2, xx, yy, y)
-type(sll_t_bspline_interpolation_2d)    :: self
-sll_int32 :: n1, n2
-sll_real64 :: xx(:,:), yy(:,:), y(:,:)
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+subroutine sll_s_interpolate_array_derivatives_2d( self, n1, n2, x1, y2, y)
+
+type(sll_t_bspline_interpolation_2d) :: self
+sll_int32                            :: n1
+sll_int32                            :: n2
+sll_real64                           :: x1(:,:)
+sll_real64                           :: x2(:,:)
+sll_real64                           :: y(:,:)
+
+y = 0.0_f64
+
 end subroutine sll_s_interpolate_array_derivatives_2d
 
 end module sll_m_bspline_interpolation
