@@ -6,7 +6,6 @@ use quietstart
 
 implicit none
 
-
 type particle
   sll_real32, pointer :: dpx(:)
   sll_real32, pointer :: dpy(:)
@@ -29,7 +28,6 @@ subroutine interpol_eb( tm1, ele )
 type  (particle) :: ele
 type(tm_mesh_fields) :: tm1
 sll_real64 :: a1, a2, a3, a4
-sll_real64 :: weight
 sll_int32  :: k 
 sll_int32  :: i, j
 sll_real32 :: dpx
@@ -43,26 +41,25 @@ sll_real32 :: dpy
 !  |     |        |
 !  |_____|________|
 
-weight = 1./(dx*dy)
 
 do k=1,nbpart
 
-   i = ele%idx(k)
-   j = ele%idy(k)
+   i   = ele%idx(k)
+   j   = ele%idy(k)
    dpx = ele%dpx(k)
    dpy = ele%dpy(k)
 
-   a1 = (dx-dpx) * (dy-dpy) * weight
-   a2 = (   dpx) * (dy-dpy) * weight
-   a3 = (   dpx) * (   dpy) * weight
-   a4 = (dx-dpx) * (   dpy) * weight
+   a1 = (1.0-dpx) * (1.0-dpy) 
+   a2 = (    dpx) * (1.0-dpy) 
+   a3 = (    dpx) * (    dpy) 
+   a4 = (1.0-dpx) * (    dpy) 
 
    ele%epx(k) = a1 * tm1%ex(i  ,j  ) + a2 * tm1%ex(i+1,j  ) &
             & + a3 * tm1%ex(i+1,j+1) + a4 * tm1%ex(i  ,j+1) 
    ele%epy(k) = a1 * tm1%ey(i  ,j  ) + a2 * tm1%ey(i+1,j  ) &
             & + a3 * tm1%ey(i+1,j+1) + a4 * tm1%ey(i  ,j+1) 
-!   ele%bpz(k) = a1 * tm1%bz(i  ,j  ) + a2 * tm1%bz(i+1,j  ) &
-!            & + a3 * tm1%bz(i+1,j+1) + a4 * tm1%bz(i  ,j+1) 
+   ele%bpz(k) = a1 * tm1%bz(i  ,j  ) + a2 * tm1%bz(i+1,j  ) &
+            & + a3 * tm1%bz(i+1,j+1) + a4 * tm1%bz(i  ,j+1) 
 
 end do
 
@@ -156,8 +153,8 @@ sll_real64 :: ppy
 
 do k=1,nbpart     
 
-  ppx = ele%idx(k)*dx + ele%dpx(k) + ele%vpx(k)*dt*coef
-  ppy = ele%idy(k)*dy + ele%dpy(k) + ele%vpy(k)*dt*coef
+  ppx = (ele%idx(k)+ele%dpx(k))*dx + ele%vpx(k)*dt*coef
+  ppy = (ele%idy(k)+ele%dpy(k))*dy + ele%vpy(k)*dt*coef
 
   if (bcname == 'period') then
 
@@ -177,8 +174,8 @@ do k=1,nbpart
 
   ele%idx(k) = floor(ppx/dimx*nx)
   ele%idy(k) = floor(ppy/dimy*ny)
-  ele%dpx(k) = real(ppx - ele%idx(k)*dx, f32)
-  ele%dpy(k) = real(ppy - ele%idy(k)*dy, f32)
+  ele%dpx(k) = real(ppx/dx - ele%idx(k), f32)
+  ele%dpy(k) = real(ppy/dy - ele%idy(k), f32) 
 
 end do
 
@@ -232,15 +229,15 @@ tm%r0 = 0.d0
 
 do k=1,nbpart
 
-  i   = ele%idx(k)
-  j   = ele%idy(k)
-  dpx = ele%dpx(k)
-  dpy = ele%dpy(k)
+  i      = ele%idx(k)
+  j      = ele%idy(k)
+  dpx    = ele%dpx(k)
+  dpy    = ele%dpy(k)
   weight = ele%p(k) 
-  a1  = (dx-dpx) * (dy-dpy) * weight
-  a2  = (dpx)    * (dy-dpy) * weight
-  a3  = (dpx)    * (dpy)    * weight
-  a4  = (dx-dpx) * (dpy)    * weight
+  a1  = (1.0-dpx) * (1.0-dpy) * weight
+  a2  = (dpx)     * (1.0-dpy) * weight
+  a3  = (dpx)     * (dpy)     * weight
+  a4  = (1.0-dpx) * (dpy)     * weight
   tm%r0(i,j)     = tm%r0(i,j)     + a1 
   tm%r0(i+1,j)   = tm%r0(i+1,j)   + a2 
   tm%r0(i+1,j+1) = tm%r0(i+1,j+1) + a3
@@ -248,7 +245,7 @@ do k=1,nbpart
 
 end do
 
-tm%r0 = tm%r0 / (dx*dy) / (dx*dy)
+tm%r0 = tm%r0 / (dx*dy)
 
 if (bcname == 'period') then
   do i=0,nx
@@ -262,7 +259,7 @@ if (bcname == 'period') then
 end if
 
 rho_total = sum(tm%r0(1:nx,1:ny))*dx*dy
-!print*,'rho total',rho_total
+print*,'rho total',rho_total
 ! Neutralisation du milieu
 tm%r0 = tm%r0 - rho_total/dimx/dimy
 
@@ -307,8 +304,8 @@ do k=0,nbpart-1
 
 !  ele%idx(k+1) = floor(ppx/dimx*nx)
 !  ele%idy(k+1) = floor(ppy/dimy*ny)
-!  ele%dpx(k+1) = real(ppx - ele%idx(k+1)*dx, f32)
-!  ele%dpy(k+1) = real(ppy - ele%idy(k+1)*dy, f32)
+!  ele%dpx(k+1) = real(ppx/dx - ele%idx(k+1), f32)
+!  ele%dpy(k+1) = real(ppy/dx - ele%idy(k+1), f32)
   ele%vpx(k+1) = speed * cos(theta)
   ele%vpy(k+1) = speed * sin(theta)
 
@@ -329,8 +326,8 @@ do while (k<=nbpart)
     if (temm>=zi) then
         ele%idx(k) = floor(xi/dimx*nx)
         ele%idy(k) = floor(yi/dimy*ny)
-        ele%dpx(k) = real(xi - ele%idx(k)*dx, f32)
-        ele%dpy(k) = real(yi - ele%idy(k)*dy, f32)
+        ele%dpx(k) = real(xi/dx - ele%idx(k), f32)
+        ele%dpy(k) = real(yi/dx - ele%idy(k), f32)
         k=k+1
     endif
 enddo
@@ -344,19 +341,20 @@ end subroutine plasma
 !> M4(x) |  1/4 (2−q)^3,            for 1 <= q <= 2
 !>       |  0                       for q > 2.
 
-sll_real32 function f_m4( x )
+function f_m4( x )
 sll_real32, intent(in) :: x
 sll_real32, parameter  :: pi = 3.1415926535897932384626433832795
-sll_real32, parameter  :: sigma = 10.0 / (7.0 * pi)
-if( x > 2. ) then
-   f_m4 = 0._f64
+sll_real32             :: f_m4
+
+if ( x < 1. ) then
+   f_m4 = 1 - 1.5*x*x+0.75*x*x*x
 else if ( x >= 1. .and. x <= 2. ) then
-   f_m4 = 0.25 * (2.-x)**3 
-else if ( x <= 1. ) then
-   f_m4 = 1. - 1.5 *x**2 + 0.75 * x**3
+   f_m4 = 0.25*(2.-x)**3 
+else
+   f_m4 = 0.0
 end if
 
-f_m4 = sigma * f_m4  ! normalizing factor in 2D
+f_m4 = f_m4 * 2.0 / 3.0
 
 return
 end function f_m4
@@ -365,7 +363,6 @@ subroutine interpol_eb_m4( tm1, ele )
 
 type(particle)       :: ele
 type(tm_mesh_fields) :: tm1
-sll_real64           :: weight
 sll_int32            :: k 
 sll_int32            :: i, j
 sll_int32            :: im1, im2, ip1, ip2
@@ -383,7 +380,6 @@ sll_real32           :: cp2y
 sll_real32           :: cm1y 
 sll_real32           :: cp1y 
 
-weight = 1./(dx*dy)
 
 do k=1,nbpart
 
@@ -399,8 +395,8 @@ do k=1,nbpart
    jp1 = modulo(j+1,ny)                                                              
    jp2 = modulo(j+2,ny)   
 
-   dpx = ele%dpx(k)
-   dpy = ele%dpy(k)
+   dpx = ele%dpx(k)/dx
+   dpy = ele%dpy(k)/dy
 
    cm2x = f_m4(2.+dpx)
    cp2x = f_m4(2.-dpx)
@@ -510,16 +506,16 @@ sll_int32  :: jm1, jm2, jp1, jp2
 sll_real32 :: dpx, dpy
 sll_real32 :: cx, cm1x, cm2x, cp1x, cp2x
 sll_real32 :: cy, cm1y, cm2y, cp1y, cp2y
-sll_real64 :: weight
+sll_real64 :: weight, rho_total
 
 tm%r0 = 0.0_f64
 
 do k = 1, nbpart
 
-  i   = ele%idx(k)
-  j   = ele%idy(k)
-  dpx = ele%dpx(k)
-  dpy = ele%dpy(k)
+  i      = ele%idx(k)
+  j      = ele%idy(k)
+  dpx    = ele%dpx(k)
+  dpy    = ele%dpy(k)
   weight = ele%p(k) 
 
   im2 = modulo(i-2,nx)                                                            
@@ -585,6 +581,11 @@ if (bcname == 'period') then
   end do
 end if
 
+tm%r0 = tm%r0 / (dx*dy) 
+
+rho_total = sum(tm%r0(1:nx,1:ny))*dx*dy
+print*,'rho total',rho_total
+
 end subroutine calcul_rho_m4
 
 !Bspline weighting function
@@ -639,6 +640,8 @@ do k = 1, nbpart
   tm%r0( i+1,j+1) = tm%r0( i+1,j+1) + c2x*c2y   * weight
 
 end do
+
+tm%r0 = tm%r0 / (dx*dy) 
 
 end subroutine calcul_rho_m3
 
