@@ -115,7 +115,7 @@ subroutine delete_bs1d_interpolator( interpolator )
 
 class(sll_t_bspline_interpolator_1d), intent(inout) :: interpolator
 
-call sll_s_delete_bspline_1d(interpolator%bspline)
+!call sll_s_delete_bspline_1d(interpolator%bspline)
 
 end subroutine delete_bs1d_interpolator
 
