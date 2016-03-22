@@ -395,8 +395,8 @@ do k=1,nbpart
    jp1 = modulo(j+1,ny)                                                              
    jp2 = modulo(j+2,ny)   
 
-   dpx = ele%dpx(k)/dx
-   dpy = ele%dpy(k)/dy
+   dpx = ele%dpx(k)
+   dpy = ele%dpy(k)
 
    cm2x = f_m4(2.+dpx)
    cp2x = f_m4(2.-dpx)
