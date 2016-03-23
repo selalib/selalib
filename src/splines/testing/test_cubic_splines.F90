@@ -14,7 +14,6 @@ program test_cubic_splines
     sll_s_compute_cubic_spline_1d, &
     sll_s_compute_cubic_spline_2d, &
     sll_f_interpolate_derivative, &
-    sll_s_interpolate_from_interpolant_array, &
     sll_f_interpolate_from_interpolant_value, &
     sll_f_interpolate_value_2d, &
     sll_f_interpolate_x1_derivative_2d, &
