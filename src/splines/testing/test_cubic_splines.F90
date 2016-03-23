@@ -108,7 +108,7 @@ contains
        deriv_interp(i) = sll_f_interpolate_derivative(x(i), sp1)
     end do
     
-    x_ngrid = sll_p_pi + 0.15_f64
+    x_ngrid = (real(np/2,f64)-0.5_f64)*delta_x
     ref_ngrid(1) = exp(sin(x_ngrid))
     interp_ngrid(1) = sll_f_interpolate_from_interpolant_value(x_ngrid, sp1)
     ref_ngrid(2) = cos(x_ngrid)*exp(sin(x_ngrid))
@@ -128,11 +128,11 @@ contains
        print*, 'Maximum error of derivative at grid points too large.'
        passed = .false.
     end if
-    if (abs(ref_ngrid(1)-interp_ngrid(1)) > 1d-5 ) then
+    if (abs(ref_ngrid(1)-interp_ngrid(1)) > 2d-5 ) then
        print*, 'Error at non-grid point too large.'
        passed = .false.
     end if
-    if (abs(ref_ngrid(2)-interp_ngrid(2)) > 2d-4 ) then
+    if (abs(ref_ngrid(2)-interp_ngrid(2)) > 3d-5 ) then
        print*, 'Error of derivative at non-grid point too large.'
        passed = .false.
     end if
@@ -237,8 +237,8 @@ contains
        end do
     end do
     
-    x_ngrid = sll_p_pi + 0.15_f64
-    y_ngrid = sll_p_pi - 0.25_f64
+    x_ngrid = (real(np1/2,f64)-0.5_f64)*delta_x
+    y_ngrid = (real(np2/2,f64)+0.5_f64)*delta_y
     ref_ngrid(1) =  exp( cos(x_ngrid)* sin(y_ngrid) )
     interp_ngrid(1) = sll_f_interpolate_value_2d(x_ngrid, y_ngrid, sp2)
     ref_ngrid(2) = -ref_ngrid(1) * sin( x_ngrid ) * sin( y_ngrid )
@@ -265,7 +265,7 @@ contains
        print*, 'Maximum error of x1 derivative at grid points too large.'
        passed = .false.
     end if
-    if (abs(ref_ngrid(1)-interp_ngrid(1)) > 2d-6 ) then
+    if (abs(ref_ngrid(1)-interp_ngrid(1)) > 2d-5 ) then
        print*, 'Error at non-grid point too large.'
        passed = .false.
     end if
@@ -273,7 +273,7 @@ contains
        print*, 'Error of x1 derivative at non-grid point too large.'
        passed = .false.
     end if    
-    if (abs(ref_ngrid(3)-interp_ngrid(3)) > 6d-5 ) then
+    if (abs(ref_ngrid(3)-interp_ngrid(3)) > 4d-5 ) then
        print*, 'Error of x2 derivative at non-grid point too large.'
        passed = .false.
     end if
