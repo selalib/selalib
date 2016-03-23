@@ -9,6 +9,7 @@ program test_cubic_splines
   use sll_m_constants, only : &
        sll_p_twopi, &
        sll_p_pi
+
  use sll_m_cubic_splines, only: &
     sll_s_compute_cubic_spline_1d, &
     sll_s_compute_cubic_spline_2d, &
@@ -23,10 +24,6 @@ program test_cubic_splines
     sll_t_cubic_spline_1d, &
     sll_t_cubic_spline_2d, &
     sll_o_delete
-
-  use test_func_module, only: &
-    f, &
-    fprime
 
   implicit none
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
