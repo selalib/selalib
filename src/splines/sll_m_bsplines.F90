@@ -81,6 +81,7 @@ type :: sll_t_bspline_interpolation_2d
   type(sll_t_bspline_interpolation_1d) :: bs2
   sll_real64, pointer                  :: bcoef(:,:)
   sll_real64, pointer                  :: bwork(:,:)
+  sll_real64, pointer                  :: values(:,:)
 
 end type sll_t_bspline_interpolation_2d
 
@@ -681,6 +682,7 @@ subroutine sll_s_bspline_interpolation_2d_init( &
   n2 = self%bs2%n
   SLL_CLEAR_ALLOCATE(self%bwork(1:n2,1:n1), ierr)
   SLL_CLEAR_ALLOCATE(self%bcoef(1:n1,1:n2), ierr)
+  SLL_CLEAR_ALLOCATE(self%values(1:nx1,1:nx2), ierr)
 
 end subroutine sll_s_bspline_interpolation_2d_init
   
@@ -804,16 +806,46 @@ y = 0.0_f64
 
 end subroutine sll_s_interpolate_array_values_2d
 
-function sll_f_interpolate_value_2d(self, xi, xj, ideriv, jderiv ) result (y)
+function sll_f_interpolate_value_2d(self, xi, xj ) result (y)
 
 type(sll_t_bspline_interpolation_2d)    :: self
 sll_real64, intent(in)  :: xi
 sll_real64, intent(in)  :: xj
-sll_int32,  intent(in), optional  :: ideriv
-sll_int32,  intent(in), optional  :: jderiv
 sll_real64              :: y
 
-y = 0.0_f64
+sll_int32  :: n1, n2
+sll_int32  :: icell, jcell
+sll_real64 :: x1, x2
+sll_real64, allocatable :: work(:)
+
+n1 = self%bs1%n
+n2 = self%bs2%n
+allocate(work(n1))
+y  = 0.0_f64
+
+! get bspline values at x
+icell = sll_f_find_cell( self%bs1%bsp, x1 )
+jcell = sll_f_find_cell( self%bs2%bsp, x2 )
+!do l=1,self%bs2%deg+1
+!  jb = mod(jcell+l-2-self%bs2%offset+self%bs2%n,self%bs2%n) + 1
+!  call sll_s_spline_at_x(self%bs1%bsp, icell, x1, self%bcoef(1,jb))
+!  work(l) = 0.0_f64
+!  do k=1,self%deg+1
+!    ib = mod(icell+k-2-self%bs1%offset+self%bs1%n,self%bs1%n) + 1
+!    work(l) = work(l) + self%values(j)*self%bcoef(ib)
+!  end do
+!enddo
+!      
+!      work(k) = 
+!
+!
+!
+!    end do
+!      y = y + self%values(j)*self%bcoef(ib)
+!  end do
+!end do
+!
+deallocate(work)
 
 end function sll_f_interpolate_value_2d
 
@@ -873,7 +905,7 @@ end subroutine sll_s_bspline_interpolation_2d_free
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
-subroutine sll_s_interpolate_array_derivatives_2d( self, n1, n2, x1, y2, y)
+subroutine sll_s_interpolate_array_derivatives_2d( self, n1, n2, x1, x2, y)
 
 type(sll_t_bspline_interpolation_2d) :: self
 sll_int32                            :: n1
