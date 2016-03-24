@@ -184,6 +184,7 @@ contains
        print*,'-------> Test failed in sll_f_interpolate_value_2d'
        passed_test = .false.
     end if
+    stop
     print*, " sll_f_interpolate_value_2d: average error =             ", &
          sum(abs(y-cos(2*pi*x1)*cos(2*pi*x2)))/real(n1*n2,f64)
     print*, " sll_f_interpolate_value_2d: maximum error =             ", &
