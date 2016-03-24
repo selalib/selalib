@@ -1,6 +1,5 @@
 # Cubic splines ............................
-ADD_EXECUTABLE( test_cubic_splines test_cubic_splines.F90 test_func_module.F90
-                util_constants.F90 test_processes_module.F90 )
+ADD_EXECUTABLE( test_cubic_splines test_cubic_splines.F90  )
 TARGET_LINK_LIBRARIES( test_cubic_splines sll_splines )
 
 # Ctests
