@@ -408,7 +408,9 @@ contains
     sll_real64,          intent(inout) :: array_out(:) !< Fourier coefficients in real form (sin/cos coefficients)
 
     sll_real64                              :: factor
-
+#ifndef FFTW_F2003
+    sll_int32                               :: j
+#endif
     
     SLL_ASSERT( plan%transform_type == p_fftw_r2r_1d )
 
