@@ -439,7 +439,7 @@ subroutine sll_s_solve_poisson_polar(plan,f,phi)
       plan%a(1)=0._f64
     endif
     if(bc(1)==sll_p_neumann_mode_0)then 
-      if(k==0)then!Neumann for mode zero
+      if(ind_k==0)then!Neumann for mode zero
         plan%a(2)=plan%a(2)+plan%a(1)
         plan%a(1)=0._f64
       else !Dirichlet for other modes
@@ -456,7 +456,7 @@ subroutine sll_s_solve_poisson_polar(plan,f,phi)
       plan%a(3*(nr-1))=0.0_f64
     endif
     if(bc(2)==sll_p_neumann_mode_0)then 
-      if(k==0)then!Neumann for mode zero
+      if(ind_k==0)then!Neumann for mode zero
         plan%a(3*(nr-1)-1)=plan%a(3*(nr-1)-1)+plan%a(3*(nr-1))
         plan%a(3*(nr-1))=0.0_f64
       else !Dirichlet for other modes
@@ -476,7 +476,7 @@ subroutine sll_s_solve_poisson_polar(plan,f,phi)
       plan%phik(1)=plan%phik(2) !Neumann
     endif
     if(bc(1)==sll_p_neumann_mode_0)then 
-      if(k==0)then!Neumann for mode zero
+      if(ind_k==0)then!Neumann for mode zero
         plan%phik(1)=plan%phik(2)
       else !Dirichlet for other modes
         plan%phik(1)=(0.0_f64,0.0_f64)
@@ -491,7 +491,7 @@ subroutine sll_s_solve_poisson_polar(plan,f,phi)
       plan%phik(nr+1)=plan%phik(nr) !Neumann
     endif
     if(bc(2)==sll_p_neumann_mode_0)then 
-      if(k==0)then!Neumann for mode zero
+      if(ind_k==0)then!Neumann for mode zero
         plan%phik(nr+1)=plan%phik(nr)
       else !Dirichlet for other modes
         plan%phik(nr+1)=(0.0_f64,0.0_f64)
@@ -601,7 +601,7 @@ subroutine sll_s_poisson_solve_polar(plan,f,phi,ierr)
       plan%a(1)=0._f64
     endif
     if(bc(1)==sll_p_neumann_mode_0)then 
-      if(k==0)then!Neumann for mode zero
+      if(ind_k==0)then!Neumann for mode zero
         plan%a(2)=plan%a(2)+plan%a(1)
         plan%a(1)=0._f64
       else !Dirichlet for other modes
@@ -618,7 +618,7 @@ subroutine sll_s_poisson_solve_polar(plan,f,phi,ierr)
       plan%a(3*(nr-1))=0.0_f64
     endif
     if(bc(2)==sll_p_neumann_mode_0)then 
-      if(k==0)then!Neumann for mode zero
+      if(ind_k==0)then!Neumann for mode zero
         plan%a(3*(nr-1)-1)=plan%a(3*(nr-1)-1)+plan%a(3*(nr-1))
         plan%a(3*(nr-1))=0.0_f64
       else !Dirichlet for other modes
@@ -638,7 +638,7 @@ subroutine sll_s_poisson_solve_polar(plan,f,phi,ierr)
       plan%phik(1)=plan%phik(2) !Neumann
     endif
     if(bc(1)==sll_p_neumann_mode_0)then 
-      if(k==0)then!Neumann for mode zero
+      if(ind_k==0)then!Neumann for mode zero
         plan%phik(1)=plan%phik(2)
       else !Dirichlet for other modes
         plan%phik(1)=(0.0_f64,0.0_f64)
@@ -653,7 +653,7 @@ subroutine sll_s_poisson_solve_polar(plan,f,phi,ierr)
       plan%phik(nr+1)=plan%phik(nr) !Neumann
     endif
     if(bc(2)==sll_p_neumann_mode_0)then 
-      if(k==0)then!Neumann for mode zero
+      if(ind_k==0)then!Neumann for mode zero
         plan%phik(nr+1)=plan%phik(nr)
       else !Dirichlet for other modes
         plan%phik(nr+1)=(0.0_f64,0.0_f64)
