@@ -696,19 +696,15 @@ subroutine sll_s_compute_bspline_2d(self, gtau, &
   sll_real64, intent(in), optional     :: val2_min(:)
   sll_real64, intent(in), optional     :: val2_max(:)
 
-  sll_int32                            :: n1
-  sll_int32                            :: n2
   sll_int32                            :: i
   sll_int32                            :: j
 
-  n1 = size(self%bs1%bcoef)
-  n2 = size(self%bs2%bcoef)
 
-  do j = 1, n2
+  do j = 1, size(gtau,2)
     call sll_s_compute_bspline_1d( self%bs1, gtau(:,j))
     self%bwork(j,:) = self%bs1%bcoef(:)
   end do
-  do i = 1, n1
+  do i = 1, size(self%bs1%bcoef)
     call sll_s_compute_bspline_1d( self%bs2, self%bwork(:,i))
     self%bcoef(i,:) = self%bs2%bcoef(:)
   end do
@@ -808,46 +804,60 @@ end subroutine sll_s_interpolate_array_values_2d
 
 function sll_f_interpolate_value_2d(self, xi, xj ) result (y)
 
-type(sll_t_bspline_interpolation_2d)    :: self
-sll_real64, intent(in)  :: xi
-sll_real64, intent(in)  :: xj
-sll_real64              :: y
+type(sll_t_bspline_interpolation_2d) :: self
+sll_real64, intent(in)               :: xi
+sll_real64, intent(in)               :: xj
+sll_real64                           :: y
 
-sll_int32  :: n1, n2
-sll_int32  :: icell, jcell
-sll_real64 :: x1, x2
-sll_real64, allocatable :: work(:)
+sll_int32                            :: j
+sll_int32                            :: k
+sll_int32                            :: ib
+sll_int32                            :: jb
+sll_int32                            :: n1
+sll_int32                            :: n2
+sll_int32                            :: icell
+sll_int32                            :: jcell
+sll_real64, allocatable              :: work(:)
 
 n1 = self%bs1%n
 n2 = self%bs2%n
 allocate(work(n1))
-y  = 0.0_f64
+work = 0.0_f64
+y    = 0.0_f64
 
-! get bspline values at x
-icell = sll_f_find_cell( self%bs1%bsp, x1 )
-jcell = sll_f_find_cell( self%bs2%bsp, x2 )
-!do l=1,self%bs2%deg+1
-!  jb = mod(jcell+l-2-self%bs2%offset+self%bs2%n,self%bs2%n) + 1
-!  call sll_s_spline_at_x(self%bs1%bsp, icell, x1, self%bcoef(1,jb))
-!  work(l) = 0.0_f64
-!  do k=1,self%deg+1
-!    ib = mod(icell+k-2-self%bs1%offset+self%bs1%n,self%bs1%n) + 1
-!    work(l) = work(l) + self%values(j)*self%bcoef(ib)
-!  end do
-!enddo
-!      
-!      work(k) = 
-!
-!
-!
-!    end do
-!      y = y + self%values(j)*self%bcoef(ib)
-!  end do
-!end do
-!
+icell = sll_f_find_cell( self%bs1%bsp, xi )
+jcell = sll_f_find_cell( self%bs2%bsp, xj )
+
+do j = 1, self%bs2%deg+1
+  jb = mod(jcell+j-2-self%bs2%offset+self%bs2%n,self%bs2%n) + 1
+  call sll_s_splines_at_x(self%bs1%bsp, icell, xi, self%bs1%values)
+  do k=1,self%bs1%deg+1
+    ib = mod(icell+k-2-self%bs1%offset+self%bs1%n,self%bs1%n) + 1
+    work(k) = work(k) + self%bs1%values(k)*self%bcoef(ib,jb)
+  end do
+end do
+
+call sll_s_splines_at_x(self%bs2%bsp, jcell, xj, self%bs2%values)
+y = 0.0_f64
+do k=1,self%bs2%deg+1
+  jb = mod(jcell+k-2-self%bs2%offset+self%bs2%n,self%bs2%n) + 1
+  y = y + self%bs2%values(k)*work(k)
+enddo
+
 deallocate(work)
 
+
+
 end function sll_f_interpolate_value_2d
+
+!  icell =  sll_f_find_cell( self%bsp, x )
+!  call sll_s_splines_at_x(self%bsp, icell, x, self%values)
+!    y = 0.0_f64
+!    do j=1,self%deg+1
+!       ib = mod(icell+j-2-self%offset+self%n,self%n) + 1
+!       y = y + self%values(j)*self%bcoef(ib)
+!    enddo
+
 
 !$subroutine interpolate_array_x1_derivatives_2d(self, n1, n2, x, y)
 !!$
