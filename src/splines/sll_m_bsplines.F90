@@ -83,7 +83,6 @@ type :: sll_t_bspline_interpolation_2d
   type(sll_t_bspline_interpolation_1d) :: bs2
   sll_real64, pointer                  :: bcoef(:,:)
   sll_real64, pointer                  :: bwork(:,:)
-  sll_real64, pointer                  :: values(:,:)
 
 end type sll_t_bspline_interpolation_2d
 
@@ -677,14 +676,25 @@ subroutine sll_s_bspline_interpolation_2d_init( &
   sll_int32                            :: n2
   sll_int32                            :: ierr
 
-  call sll_s_bspline_interpolation_1d_init(self%bs1,nx1,degree1,x1_min,x1_max,bc1)
-  call sll_s_bspline_interpolation_1d_init(self%bs2,nx2,degree2,x2_min,x2_max,bc2)
+  if (present(spline_bc_type1)) then
+    call sll_s_bspline_interpolation_1d_init(self%bs1,nx1,degree1, &
+      x1_min,x1_max,bc1, spline_bc_type1)
+  else
+    call sll_s_bspline_interpolation_1d_init(self%bs1,nx1,degree1, &
+      x1_min,x1_max,bc1)
+  end if
+  if (present(spline_bc_type2)) then
+    call sll_s_bspline_interpolation_1d_init(self%bs2,nx2,degree2, &
+      x2_min,x2_max,bc2, spline_bc_type2)
+  else
+    call sll_s_bspline_interpolation_1d_init(self%bs2,nx2,degree2, &
+      x2_min,x2_max,bc2)
+  end if
 
   n1 = self%bs1%n
   n2 = self%bs2%n
   SLL_CLEAR_ALLOCATE(self%bwork(1:n2,1:n1), ierr)
   SLL_CLEAR_ALLOCATE(self%bcoef(1:n1,1:n2), ierr)
-  SLL_CLEAR_ALLOCATE(self%values(1:nx1,1:nx2), ierr)
 
 end subroutine sll_s_bspline_interpolation_2d_init
   
@@ -701,15 +711,30 @@ subroutine sll_s_compute_bspline_2d(self, gtau, &
   sll_int32                            :: i
   sll_int32                            :: j
 
+  if( present(val1_min) .and. present(val1_max)) then
+    do j = 1, size(gtau,2)
+      call sll_s_compute_bspline_1d( self%bs1, gtau(:,j), val1_min, val1_max)
+      self%bwork(j,:) = self%bs1%bcoef(:)
+    end do
 
-  do j = 1, size(gtau,2)
-    call sll_s_compute_bspline_1d( self%bs1, gtau(:,j))
-    self%bwork(j,:) = self%bs1%bcoef(:)
-  end do
-  do i = 1, size(self%bs1%bcoef)
-    call sll_s_compute_bspline_1d( self%bs2, self%bwork(:,i))
-    self%bcoef(i,:) = self%bs2%bcoef(:)
-  end do
+  else
+    do j = 1, size(gtau,2)
+      call sll_s_compute_bspline_1d( self%bs1, gtau(:,j))
+      self%bwork(j,:) = self%bs1%bcoef(:)
+    end do
+  end if
+
+  if( present(val2_min) .and. present(val2_max)) then
+    do i = 1, size(self%bs1%bcoef)
+      call sll_s_compute_bspline_1d( self%bs2, self%bwork(:,i), val2_min, val2_max)
+      self%bcoef(i,:) = self%bs2%bcoef(:)
+    end do
+  else
+    do i = 1, size(self%bs1%bcoef)
+      call sll_s_compute_bspline_1d( self%bs2, self%bwork(:,i))
+      self%bcoef(i,:) = self%bs2%bcoef(:)
+    end do
+  end if
 
 end subroutine sll_s_compute_bspline_2d
 
@@ -913,13 +938,47 @@ sll_real64                           :: x1(:,:)
 sll_real64                           :: x2(:,:)
 sll_real64                           :: y(:,:)
 
-sll_int32 :: i, j
+sll_int32 :: i1, i2
+sll_real64, allocatable :: work(:)
+sll_int32               :: i, j
+sll_int32               :: k1, k2, icell, jcell
+sll_int32               :: ib, jb
+sll_real64              :: xi, xj, yy
 
-do j = 1, n2
-  do i = 1, n1
-    y(i,j) = sll_f_interpolate_derivative_x1_2d(self, x1(i,j), x2(i,j) ) 
+k1 = self%bs1%deg+1
+k2 = self%bs2%deg+1
+allocate(work(k2))
+
+do i2 = 1, n2
+  do i1 = 1, n1
+
+    xi = x1(i1,i2)
+    xj = x2(i1,i2)
+    icell =  sll_f_find_cell( self%bs1%bsp, xi )
+    jcell =  sll_f_find_cell( self%bs2%bsp, xj )
+    
+    work = 0.0_f64
+    do j = 1, k2
+      jb = mod(jcell+j-2-self%bs2%offset+self%bs2%n,self%bs2%n) + 1
+      call sll_s_spline_derivatives_at_x(self%bs1%bsp, icell, xi, self%bs1%values)
+      do i = 1, k1
+        ib = mod(icell+i-2-self%bs1%offset+self%bs1%n,self%bs1%n) + 1
+        work(j) = work(j) + self%bs1%values(i)*self%bcoef(ib,jb)
+      enddo
+    end do
+    call sll_s_splines_at_x(self%bs2%bsp, jcell, xj, self%bs2%values)
+    yy = 0.0_f64
+    do j = 1, k2
+      jb = mod(jcell+j-2-self%bs2%offset+self%bs2%n,self%bs2%n) + 1
+      yy = yy + self%bs2%values(j)*work(j)
+    enddo
+    
+    y(i1,i2) = yy
+    
   end do
 end do
+
+deallocate(work)
 
 end subroutine sll_s_interpolate_array_derivatives_x1_2d
 
@@ -932,13 +991,46 @@ sll_real64                           :: x1(:,:)
 sll_real64                           :: x2(:,:)
 sll_real64                           :: y(:,:)
 
-sll_int32 :: i, j
+sll_real64, allocatable :: work(:)
+sll_int32               :: i, j, i1, i2
+sll_int32               :: k1, k2, icell, jcell
+sll_int32               :: ib, jb
+sll_real64              :: xi, xj, yy
 
-do j = 1, n2
-  do i = 1, n1
-    y(i,j) = sll_f_interpolate_derivative_x2_2d(self, x1(i,j), x2(i,j) ) 
+k1 = self%bs1%deg+1
+k2 = self%bs2%deg+1
+allocate(work(k2))
+
+do i2 = 1, n2
+  do i1 = 1, n1
+    xi = x1(i1,i2)
+    xj = x2(i1,i2)
+    icell =  sll_f_find_cell( self%bs1%bsp, xi )
+    jcell =  sll_f_find_cell( self%bs2%bsp, xj )
+    
+    work = 0.0_f64
+    do j = 1, k2
+      jb = mod(jcell+j-2-self%bs2%offset+self%bs2%n,self%bs2%n) + 1
+      call sll_s_splines_at_x(self%bs1%bsp, icell, xi, self%bs1%values)
+      do i = 1, k1
+        ib = mod(icell+i-2-self%bs1%offset+self%bs1%n,self%bs1%n) + 1
+        work(j) = work(j) + self%bs1%values(i)*self%bcoef(ib,jb)
+      enddo
+    end do
+    
+    call sll_s_spline_derivatives_at_x(self%bs2%bsp, jcell, xj, self%bs2%values)
+    yy = 0.0_f64
+    do j = 1, k2
+      jb = mod(jcell+j-2-self%bs2%offset+self%bs2%n,self%bs2%n) + 1
+      yy = yy + self%bs2%values(j)*work(j)
+    enddo
+
+    y(i1,i2) = yy
+
   end do
 end do
+
+deallocate(work)
 
 end subroutine sll_s_interpolate_array_derivatives_x2_2d
 
