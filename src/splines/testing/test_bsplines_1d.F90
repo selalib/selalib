@@ -13,18 +13,13 @@ program test_bsplines_1d
 
   use sll_m_bspline_interpolation, only: &
     sll_s_compute_bspline_1d, &
- !   sll_o_compute_bspline_2d, &
     sll_s_interpolate_array_derivatives_1d, &
     sll_s_interpolate_array_values_1d, &
- !   sll_s_interpolate_array_values_2d, &
     sll_f_interpolate_derivative_1d, &
     sll_f_interpolate_value_1d, &
-    !   sll_f_interpolate_value_2d, &
     sll_s_bspline_interpolation_1d_init, &
     sll_s_bspline_interpolation_1d_free, &
-    sll_s_bspline_interpolation_2d_init, &
-    sll_t_bspline_interpolation_1d, &
-    sll_t_bspline_interpolation_2d 
+    sll_t_bspline_interpolation_1d
 
 
   use sll_m_constants, only: &
