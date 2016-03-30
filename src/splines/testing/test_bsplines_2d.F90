@@ -101,8 +101,6 @@ sll_real64                              :: h1, h2
 SLL_ALLOCATE(x1(n1,n2),ierr)
 SLL_ALLOCATE(x2(n1,n2),ierr)
 SLL_ALLOCATE(y(n1,n2),ierr)
-SLL_ALLOCATE(xx(n1,n2),ierr)
-SLL_ALLOCATE(yy(n1,n2),ierr)
 
 ! define uniform evaluation grid
 h1 = (x1_max-x1_min)/(n1-1)
@@ -114,19 +112,6 @@ do j = 1, n2
   end do
 end do
 
-! define set of random numbers for evaluation
-call random_number(xx)
-call random_number(yy)
-xx = xx * (x1_max-x1_min)
-yy = yy * (x2_max-x2_min)
-
-do j = 1, n2
-  do i = 1, n1
-    write(11,*) xx(i,j), yy(i,j), sin(2*pi*xx(i,j))*sin(2*pi*yy(i,j))
-  end do
-  write(11,*)
-end do
-close(11)
 
 print*,'+++++++++++++++++++++++++++++++++'
 print*,'*** Spline degree = ', deg
@@ -175,7 +160,7 @@ if (bc_type == sll_p_hermite) then
       bc(i)=-4*pi**2*bc(i-2)
     end do
   end if
-  call sll_s_compute_bspline_2d(bspline_2d, gtau, bc, bc)
+  call sll_s_compute_bspline_2d(bspline_2d, gtau, bc, bc, bc, bc)
 else    
   call sll_s_compute_bspline_2d(bspline_2d, gtau)
 end if
@@ -187,25 +172,6 @@ do j = 1,n2
     y(i,j) = sll_f_interpolate_value_2d( bspline_2d, x1(i,j),x2(i,j))
   end do
 end do
-
-!! generate and print out function values
-!print 620,(tauy(j),j=1,size(tauy))
-!do i=1,size(taux)
-!  print 632,taux(i),(gtau(i,j),j=1,size(tauy))
-!end do
-!print 630,(tauy(j),j=1,size(tauy))
-!do i=1,size(taux)
-!  print 632,taux(i),(y(i,j),j=1,size(tauy))
-!end do
-!print 640,(tauy(j),j=1,size(tauy))
-!do i=1,size(taux)
-!  print 632,taux(i),(y(i,j)-gtau(i,j),j=1,size(tauy))
-!end do
-!
-!620 format(/' given data'//5x,11f8.1)
-!630 format(/' interpolated data'//5x,11f8.1)
-!640 format(/' interpolation error'//5x,11f8.1)
-!632 format(f5.1,11f8.4)
 
 err1 = maxval(abs(y-cos(2*pi*x1)*cos(2*pi*x2)))
 if (err1 > tol) then
@@ -323,10 +289,18 @@ print*, ' ------------------------------------------------------- '
 
 print*, 'Test on sinus at random points'
 print*, ' -----------------------------'
+
+SLL_ALLOCATE(xx(n1,n2),ierr)
+SLL_ALLOCATE(yy(n1,n2),ierr)
+call random_number(xx)
+call random_number(yy)
+xx = xx * (x1_max-x1_min)
+yy = yy * (x2_max-x2_min)
+
 SLL_ALLOCATE(htau(bspline_2d%bs1%n, bspline_2d%bs2%n),ierr)
 
-do j = 1, size(tauy)
-  do i = 1, size(taux)
+do j = 1, bspline_2d%bs2%n
+  do i = 1, bspline_2d%bs1%n
     htau(i,j) = sin(2*pi*taux(i))*sin(2*pi*tauy(j))
     write(12,*) taux(i), tauy(j), htau(i,j) 
   end do
