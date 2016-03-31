@@ -22,7 +22,7 @@ sll_real64                    :: err1
 sll_int32                     :: i
 sll_int32                     :: j
 sll_int32,  parameter         :: nstep = 1
-sll_real64,  parameter        :: tol = 1.0d-3    ! tolerance for tests
+sll_real64,  parameter        :: tol = 1.0d-2    ! tolerance for tests
 sll_real64                    :: t0, t1, t2, t3, t4, t5, t6, t7
 sll_int32                     :: ierr
 sll_int32                     :: deg
@@ -30,6 +30,12 @@ logical                       :: passed_test
 
 passed_test = .true.
   
+print*,'***************************************************************'
+print*,'*** 2D HERMITE-HERMITE ***'
+print*,'***************************************************************'
+do deg=3,9
+   call test_process_2d(sll_p_hermite,deg, passed_test)
+end do
 print*,'***************************************************************'
 print*,'*** 2D PERIODIC-PERIODIC ***'
 print*,'***************************************************************'
@@ -43,13 +49,7 @@ do deg=3,9
    call test_process_2d(sll_p_greville,deg, passed_test)
 end do
 print*,'***************************************************************'
-print*,'*** 2D HERMITE-HERMITE ***'
-print*,'***************************************************************'
-do deg=3,9
-   call test_process_2d(sll_p_hermite,deg, passed_test)
-end do
-print*,'***************************************************************'
-print*,'*** 1D HERMITE WITH MIRROR KNOT POINTS***'
+print*,'*** 2D HERMITE WITH MIRROR KNOT POINTS***'
 print*,'***************************************************************'
 do deg=3,9
    call test_process_2d(sll_p_hermite,deg, passed_test, sll_p_mirror)
@@ -92,10 +92,10 @@ sll_real64, dimension(:), pointer       :: tauy
 
 sll_real64, dimension(:),   allocatable :: bc
 
-sll_int32,  parameter                   :: npts1 = 51 ! defines bsplines
-sll_int32,  parameter                   :: npts2 = 51 ! defines bsplines
-sll_int32,  parameter                   :: n1 = 27    ! nb of evaluation pts
-sll_int32,  parameter                   :: n2 = 27    ! nb of evaluation pts
+sll_int32,  parameter                   :: npts1 = 11 ! defines bsplines
+sll_int32,  parameter                   :: npts2 = 11 ! defines bsplines
+sll_int32,  parameter                   :: n1 = 7    ! nb of evaluation pts
+sll_int32,  parameter                   :: n2 = 7    ! nb of evaluation pts
 sll_real64                              :: h1, h2
 
 SLL_ALLOCATE(x1(n1,n2),ierr)
@@ -132,7 +132,7 @@ tauy => bspline_2d%bs2%tau
 
 print*, 'bspline_interpolation_2d_init constructed'
 
-SLL_ALLOCATE(gtau(bspline_2d%bs1%n, bspline_2d%bs2%n),ierr)
+SLL_ALLOCATE(gtau(size(taux), size(tauy)),ierr)
 SLL_ALLOCATE(bc(2*(deg/2)),ierr)
 
 print*, '------------------------------------------'
@@ -288,25 +288,30 @@ print*, ' time spent to interpolate array  x2 derivatives : ', t7-t6
 print*, ' ------------------------------------------------------- '
 
 print*, 'Test on sinus at random points'
+print*, 'size(tau) =', size(taux), size(tauy)
 print*, ' -----------------------------'
 
 SLL_ALLOCATE(xx(n1,n2),ierr)
 SLL_ALLOCATE(yy(n1,n2),ierr)
+call random_seed()
 call random_number(xx)
 call random_number(yy)
 xx = xx * (x1_max-x1_min)
 yy = yy * (x2_max-x2_min)
 
-SLL_ALLOCATE(htau(bspline_2d%bs1%n, bspline_2d%bs2%n),ierr)
+SLL_CLEAR_ALLOCATE(htau(1:size(taux),1:size(tauy)),ierr)
 
-do j = 1, bspline_2d%bs2%n
-  do i = 1, bspline_2d%bs1%n
+open(12, file='htau.dat')
+rewind(12)
+do j = 1, size(tauy)
+  do i = 1, size(taux)
     htau(i,j) = sin(2*pi*taux(i))*sin(2*pi*tauy(j))
     write(12,*) taux(i), tauy(j), htau(i,j) 
   end do
   write(12,*)
 end do
 close(12)
+call printout(taux,tauy,htau)
 
 if (bc_type == sll_p_hermite) then
   ! Compute boundary conditions for Hermite case
@@ -326,6 +331,8 @@ if (bc_type == sll_p_hermite) then
 else    
   call sll_s_compute_bspline_2d(bspline_2d, htau)
 end if
+call printout(taux,tauy,bspline_2d%bwork)
+call printout(taux,tauy,bspline_2d%bcoef)
 
 do j = 1,n2
   do i = 1,n1
@@ -446,10 +453,28 @@ print*, ' time spent to interpolate array  x1 derivatives : ', t6-t5
 print*, ' time spent to interpolate array  x2 derivatives : ', t7-t6
 print*, ' ------------------------------------------------------- '
 
+nullify(taux)
+nullify(tauy)
 SLL_DEALLOCATE_ARRAY(gtau,ierr)
 SLL_DEALLOCATE_ARRAY(htau,ierr)
 call sll_s_bspline_interpolation_2d_free(bspline_2d)
 
 end subroutine test_process_2d
+
+subroutine printout(taux, tauy, htau)
+sll_real64 :: taux(:)
+sll_real64 :: tauy(:)
+sll_real64 :: htau(:,:)
+character(len=10) :: frmt
+
+print 620,(tauy(j),j=1,size(tauy))
+do i=1,size(taux)
+  print 632,taux(i),(htau(i,j),j=1,size(tauy))
+end do
+
+620 format(//5x,20f8.1)
+632 format(f5.1,20f8.4)
+
+end subroutine printout
 
 end program test_bsplines_2d
