@@ -76,7 +76,7 @@ module sll_m_remapped_pic_base
 
   !----------------------------------------------------------------------------
   abstract interface
-   pure function i_get_scalar( self, i ) result( r )
+   pure function i_get_scalar( self, i ) result( r )      ! todo: rename as sll_i_i_get_scalar (or sll_i_int_get_scalar ?) -- check first
     use sll_m_working_precision
     import sll_c_remapped_particle_group
     class( sll_c_remapped_particle_group ), intent( in ) :: self

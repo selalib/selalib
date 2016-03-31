@@ -77,7 +77,7 @@ module sll_m_bsl_lt_pic_4d_group
   !  sll_int32, parameter :: SLL_BSL_LT_PIC_TRANSPORTED_RANDOM = 1
 
   !> Group of @ref sll_bsl_lt_pic_4d_particle
-  type, extends(sll_c_remapped_particle_group) :: sll_bsl_lt_pic_4d_group
+  type, extends(sll_c_remapped_particle_group) :: sll_bsl_lt_pic_4d_group  ! todo: rename as sll_t_bsl_lt_pic_4d_group
 
     !> @name The markers (particles pushed forward, carry no weights) -- structured case
     !> @{
