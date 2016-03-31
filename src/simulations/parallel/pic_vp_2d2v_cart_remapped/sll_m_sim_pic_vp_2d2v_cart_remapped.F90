@@ -470,7 +470,7 @@ contains
     initial_density_identifier = 0     ! for the moment we only use one density (landau)
 
     sim%target_total_charge = SPECIES_CHARGE * 1._f64 * (XMAX - XMIN) * (YMAX - YMIN)
-    enforce_total_charge = .true.       ! todo : make it a simulation parameter
+    enforce_total_charge = .false.
 
     call sim%particle_group%initializer( initial_density_identifier, sim%target_total_charge, enforce_total_charge, &
                                          rand_seed, sim%my_rank, sim%world_size )
@@ -898,7 +898,7 @@ contains
       call sll_set_time_mark(deposit_time_mark)
 
       ! [[file:~/selalib/src/particle_methods/sll_pic_base.F90::deposit_charge_2d]]
-      enforce_total_charge = .true.
+      enforce_total_charge = .false.
       charge_accumulator => sim%q_accumulator_ptr(thread_id+1)%q
       call sim%particle_group%deposit_charge_2d( charge_accumulator, sim%target_total_charge, enforce_total_charge )
 
@@ -971,6 +971,12 @@ contains
         call sim%particle_group%visualize_f_slice_x_vx(trim(field_name), plot_np_x, plot_np_y, plot_np_vx, plot_np_vy, it+1)
 
       end if
+
+      !  ------------------------------------------------------------------
+      !  ------
+      !  ------  CONDITIONAL REMAPPING
+      !  ------
+      !  ------------------------------------------------------------------
 
       if (sim%use_lt_pic_scheme .and. sim%my_rank == 0 .and. mod(it+1, sim%remap_period)==0 ) then
         ! note: condition on rank == 0 needs to be revised for the actual parallel version...
