@@ -18,22 +18,40 @@
 !http://en.wikipedia.org/wiki/Trapezoidal_rule_%28differential_equations%29
 
 module sll_m_characteristics_1d_trapezoid_conservative
-#include "sll_working_precision.h"
-#include "sll_memory.h"
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_assert.h"
-use sll_m_boundary_condition_descriptors
-use sll_m_characteristics_1d_base
-use sll_m_interpolators_1d_base
+#include "sll_memory.h"
+#include "sll_working_precision.h"
 
-implicit none
+  use sll_m_boundary_condition_descriptors, only: &
+    sll_p_periodic, &
+    sll_p_set_to_limit, &
+    sll_p_user_defined
 
-  type,extends(sll_characteristics_1d_base) :: trapezoid_conservative_1d_charac_computer
+  use sll_m_characteristics_1d_base, only: &
+    sll_f_process_outside_point_periodic, &
+    sll_f_process_outside_point_set_to_limit, &
+    sll_i_signature_process_outside_point_1d, &
+    sll_c_characteristics_1d_base
+
+  use sll_m_interpolators_1d_base, only: &
+    sll_c_interpolator_1d
+
+  implicit none
+
+  public :: &
+    sll_f_new_trapezoid_conservative_1d_charac
+
+  private
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+  type,extends(sll_c_characteristics_1d_base) :: trapezoid_conservative_1d_charac_computer
     sll_int32                               :: Npts
     sll_real64                              :: eta_min   
     sll_real64                              :: eta_max  
-    procedure(signature_process_outside_point_1d), pointer, nopass    :: &
+    procedure(sll_i_signature_process_outside_point_1d), pointer, nopass    :: &
       process_outside_point
-    class(sll_interpolator_1d_base), pointer               :: A_interp
+    class(sll_c_interpolator_1d), pointer               :: A_interp
     sll_int32 :: maxiter
     sll_real64 :: tol
     sll_int32 :: bc_type 
@@ -45,7 +63,7 @@ implicit none
   end type trapezoid_conservative_1d_charac_computer
 
 contains
-  function new_trapezoid_conservative_1d_charac(&
+  function sll_f_new_trapezoid_conservative_1d_charac(&
       Npts, &
       A_interp, &
       bc_type, &
@@ -61,9 +79,9 @@ contains
     sll_int32, intent(in), optional :: bc_type
     sll_real64, intent(in), optional  :: eta_min
     sll_real64, intent(in), optional  :: eta_max
-    procedure(signature_process_outside_point_1d), optional    :: &
+    procedure(sll_i_signature_process_outside_point_1d), optional    :: &
       process_outside_point
-    class(sll_interpolator_1d_base), target :: A_interp
+    class(sll_c_interpolator_1d), target :: A_interp
     sll_int32, intent(in), optional :: maxiter
     sll_real64, intent(in), optional :: tol
     sll_int32 :: ierr
@@ -81,7 +99,7 @@ contains
       tol)
 
     
-  end function new_trapezoid_conservative_1d_charac
+  end function sll_f_new_trapezoid_conservative_1d_charac
   subroutine initialize_trapezoid_conservative_1d_charac(&
       charac, &
       Npts, &
@@ -98,9 +116,9 @@ contains
     sll_int32, intent(in), optional :: bc_type
     sll_real64, intent(in), optional  :: eta_min
     sll_real64, intent(in), optional  :: eta_max
-    procedure(signature_process_outside_point_1d), optional    :: &
+    procedure(sll_i_signature_process_outside_point_1d), optional    :: &
       process_outside_point
-    class(sll_interpolator_1d_base), target :: A_interp
+    class(sll_c_interpolator_1d), target :: A_interp
     sll_int32, intent(in), optional :: maxiter
     sll_real64, intent(in), optional :: tol
 
@@ -122,7 +140,7 @@ contains
     
     if(present(process_outside_point)) then
       charac%process_outside_point => process_outside_point
-      charac%bc_type = SLL_USER_DEFINED
+      charac%bc_type = sll_p_user_defined
     else if(.not.(present(bc_type))) then
       print *,'#provide boundary condition'
       print *,'#bc_type or process_outside_point function'
@@ -131,10 +149,10 @@ contains
     else
       charac%bc_type = bc_type
       select case (bc_type)
-        case (SLL_PERIODIC)
-          charac%process_outside_point => process_outside_point_periodic          
-        case (SLL_SET_TO_LIMIT)
-          charac%process_outside_point => process_outside_point_set_to_limit        
+        case (sll_p_periodic)
+          charac%process_outside_point => sll_f_process_outside_point_periodic          
+        case (sll_p_set_to_limit)
+          charac%process_outside_point => sll_f_process_outside_point_set_to_limit        
         case default
           print *,'#bad value of boundary condition'
           print *,'#in initialize_trapezoid_conservative_1d_charac'
@@ -221,7 +239,7 @@ contains
             x2_i = x2  
           endif                      
           x2 = 0.5_f64*(input(j)+input(j+1)) &
-            -0.5_f64*dt*(charac%A_interp%interpolate_value(x2_i)+A(j))
+            -0.5_f64*dt*(charac%A_interp%interpolate_from_interpolant_value(x2_i)+A(j))
         end do
         if (iter==charac%maxiter .and. abs(x2_old-x2)>charac%tol) then
           print*,'#not enough iterations for compute_trapezoid_conservative_1d_charac',&
@@ -236,10 +254,10 @@ contains
 
 
     select case (charac%bc_type)
-      case (SLL_PERIODIC)
+      case (sll_p_periodic)
         output_min = output(Npts-1) - (eta_max-eta_min)
         output_max = output(1) + (eta_max-eta_min)
-      case (SLL_SET_TO_LIMIT)
+      case (sll_p_set_to_limit)
         output_min = 2._f64*eta_min-output(1)
         output_max = 2._f64*eta_max-output(Npts-1)
       case default

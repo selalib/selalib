@@ -1,10 +1,41 @@
 program test_serial_blocks
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_working_precision.h"
-use mpi
-use hdf5
-use sll_m_hdf5_io_serial
-use sll_m_xdmf_serial_blocks
-implicit none
+
+  use hdf5, only: &
+    hid_t, &
+    hsize_t
+
+  use sll_m_hdf5_io_serial, only: &
+    sll_o_hdf5_file_close, &
+    sll_o_hdf5_file_create, &
+    sll_o_hdf5_write_array
+
+  use sll_m_utilities, only: &
+    sll_s_int2string, &
+    sll_s_mpe_decomp1d
+
+  use sll_m_xdmf_serial_blocks, only: &
+    sll_s_xdmf_array_2d_serial_blocks, &
+    sll_s_xdmf_close_serial_blocks, &
+    sll_s_xdmf_open_serial_blocks
+
+  use sll_mpi, only: &
+    mpi_barrier, &
+    mpi_cart_coords, &
+    mpi_cart_create, &
+    mpi_cart_shift, &
+    mpi_comm_rank, &
+    mpi_comm_size, &
+    mpi_comm_world, &
+    mpi_dims_create, &
+    mpi_finalize, &
+    mpi_init, &
+    mpi_proc_null, &
+    mpi_wtime
+
+  implicit none
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 sll_int32 :: i, j
 sll_int32 :: nx, ny, sx, ex, sy, ey
@@ -92,8 +123,8 @@ if (prank == 0) then
    write(*,"(a,g12.3)")" nombre ny             = ", ny
 end if
 
-call mpe_decomp1d(nx,dims(1),coords(1),sx,ex)
-call mpe_decomp1d(ny,dims(2),coords(2),sy,ey)
+call sll_s_mpe_decomp1d(nx,dims(1),coords(1),sx,ex)
+call sll_s_mpe_decomp1d(ny,dims(2),coords(2),sy,ey)
 
 do iproc=1, psize
    if (prank == iproc-1) then
@@ -114,9 +145,9 @@ do j=sy,ey
    end do
 end do
 
-z = prank
+z = real(prank,f64)
 
-call int2string(prank,my_proc)
+call sll_s_int2string(prank,my_proc)
 field_label = "xdmf2d"
 mesh_label  = "mesh2d"
 
@@ -127,21 +158,21 @@ coordNames(2) = "/Y"
 !Write separate coordinate arrays for the x and y coordinates.
 nx = ex-sx+1
 ny = ey-sy+1
-data_dims = (/nx,ny/)
+data_dims = [int(nx,HSIZE_T),int(ny,HSIZE_T)]
 
 iplot = iplot+1
-call int2string(iplot,cplot)
+call sll_s_int2string(iplot,cplot)
 mesh_name  = trim(mesh_label)//my_proc//".h5"
 field_name = trim(field_label)//my_proc//"-"//cplot//".h5"
 
-call sll_hdf5_file_create(trim(mesh_name),file_id,error)
-call sll_hdf5_write_array(file_id,x(sx:ex,sy:ey),coordnames(1),error)
-call sll_hdf5_write_array(file_id,y(sx:ex,sy:ey),coordnames(2),error)
-call sll_hdf5_file_close(file_id, error)
+call sll_o_hdf5_file_create(trim(mesh_name),file_id,error)
+call sll_o_hdf5_write_array(file_id,x(sx:ex,sy:ey),coordnames(1),error)
+call sll_o_hdf5_write_array(file_id,y(sx:ex,sy:ey),coordnames(2),error)
+call sll_o_hdf5_file_close(file_id, error)
 
-call sll_hdf5_file_create(trim(field_name),file_id,error)
-call sll_hdf5_write_array(file_id,z(sx:ex,sy:ey),"/Z",error)
-call sll_hdf5_file_close(file_id, error)
+call sll_o_hdf5_file_create(trim(field_name),file_id,error)
+call sll_o_hdf5_write_array(file_id,z(sx:ex,sy:ey),"/Z",error)
+call sll_o_hdf5_file_close(file_id, error)
 
 if (prank == 0) then
    open(xmf,file="all_domains"//cplot//".xmf")
@@ -152,7 +183,7 @@ if (prank == 0) then
    write(xmf,'(a)')  &
    "<Grid Name=""Domain"" GridType=""Collection"" CollectionType=""Spatial"">"
    do iproc = 0, psize-1
-      call int2string(iproc,cproc)
+      call sll_s_int2string(iproc,cproc)
       write(xmf,'(a)')"<Grid Name=""SubDomain"" GridType=""Uniform"">"
       write(xmf,'(a,2i6,a)') &
       "<Topology TopologyType=""2DSMesh"" NumberOfElements='",ny,nx,"'/>"
@@ -181,9 +212,9 @@ if (prank == 0) then
    close(xmf)
 end if
 
-call sll_xdmf_open_serial_blocks("data_serial_blocks", x, y, xmf_id, error)
-call sll_xdmf_array_2d_serial_blocks(xmf_id,"data_serial_blocks",z,"z_values",error)
-call sll_xdmf_close_serial_blocks(xmf_id,error)
+call sll_s_xdmf_open_serial_blocks("data_serial_blocks", x, y, xmf_id, error)
+call sll_s_xdmf_array_2d_serial_blocks(xmf_id,"data_serial_blocks",z,"z_values",error)
+call sll_s_xdmf_close_serial_blocks(xmf_id,error)
 
 tcpu2 = MPI_WTIME()
 

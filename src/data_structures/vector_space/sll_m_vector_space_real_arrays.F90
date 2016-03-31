@@ -12,19 +12,21 @@
 !------------------------------------------------------------------------------
 module sll_m_vector_space_real_arrays
 
-#include "sll_working_precision.h"
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_errors.h"
+#include "sll_working_precision.h"
 
-  use sll_m_vector_space_base, only: sll_vector_space_base
+  use sll_m_vector_space_base, only: &
+    sll_c_vector_space_base
 
   implicit none
 
-!  public :: &
-!    sll_vector_space_real_1d, &
-!    sll_vector_space_real_2d, &
-!    sll_vector_space_real_3d
+  public :: &
+    sll_t_vector_space_real_1d, &
+    sll_t_vector_space_real_2d
 
   private
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
   !============================================================================
   ! Generic interface for real arrays - assumes contiguous array storage
@@ -42,7 +44,7 @@ module sll_m_vector_space_real_arrays
   !>          contiguous, hence we strongly suggest to use allocatable arrays.
   !============================================================================
   type, public, abstract, &
-                      extends( sll_vector_space_base ) :: sll_vector_space_real
+                      extends( sll_c_vector_space_base ) :: sll_vector_space_real
 
     sll_real64, private, pointer, contiguous :: d(:)        => null()
     logical   , private                      :: owns_memory = .false.
@@ -82,7 +84,7 @@ module sll_m_vector_space_real_arrays
   !---------
   !> Simple vector space for 1D Fortran arrays (double precision float).
   !============================================================================
-  type, public, extends( sll_vector_space_real ) :: sll_vector_space_real_1d
+  type, extends( sll_vector_space_real ) :: sll_t_vector_space_real_1d
 
     sll_real64, pointer, contiguous :: array(:) => null()      !< 1D real array
 
@@ -91,14 +93,14 @@ module sll_m_vector_space_real_arrays
     procedure          :: delete          => delete__real_1d !< Erase contents
     procedure, private :: initialize_copy => initialize_copy__real_1d
 
-  end type sll_vector_space_real_1d
+  end type sll_t_vector_space_real_1d
 
   !============================================================================
   ! 2D array
   !---------
   !> Simple vector space for 2D Fortran arrays (double precision float).
   !============================================================================
-  type, public, extends( sll_vector_space_real ) :: sll_vector_space_real_2d
+  type, extends( sll_vector_space_real ) :: sll_t_vector_space_real_2d
 
     sll_real64, pointer, contiguous :: array(:,:) => null()    !< 2D real array
 
@@ -107,14 +109,14 @@ module sll_m_vector_space_real_arrays
     procedure          :: delete          => delete__real_2d !< Erase contents
     procedure, private :: initialize_copy => initialize_copy__real_2d
 
-  end type sll_vector_space_real_2d
+  end type sll_t_vector_space_real_2d
 
   !============================================================================
   ! 3D array
   !---------
   !> Simple vector space for 3D Fortran arrays (double precision float).
   !============================================================================
-  type, public, extends( sll_vector_space_real ) :: sll_vector_space_real_3d
+  type, extends( sll_vector_space_real ) :: sll_vector_space_real_3d
 
     sll_real64, pointer, contiguous :: array(:,:,:) => null()  !< 3D real array
 
@@ -135,7 +137,7 @@ contains
   !----------------------------------------------------------------------------
   subroutine copy__real( self, x )
     class( sll_vector_space_real ), intent( inout ) :: self
-    class( sll_vector_space_base ), intent( in    ) :: x
+    class( sll_c_vector_space_base ), intent( in    ) :: x
     select type( x ); class is( sll_vector_space_real )
  
     self%d = x%d
@@ -146,7 +148,7 @@ contains
   !----------------------------------------------------------------------------
   subroutine incr__real( self, x )
     class( sll_vector_space_real ), intent( inout ) :: self
-    class( sll_vector_space_base ), intent( in    ) :: x
+    class( sll_c_vector_space_base ), intent( in    ) :: x
     select type( x ); class is( sll_vector_space_real )
 
     self%d = self%d + x%d
@@ -166,8 +168,8 @@ contains
   !----------------------------------------------------------------------------
   subroutine add__real( self, x, y )
     class( sll_vector_space_real ), intent( inout ) :: self
-    class( sll_vector_space_base ), intent( in    ) :: x
-    class( sll_vector_space_base ), intent( in    ) :: y
+    class( sll_c_vector_space_base ), intent( in    ) :: x
+    class( sll_c_vector_space_base ), intent( in    ) :: y
     select type( x ); class is( sll_vector_space_real )
     select type( y ); class is( sll_vector_space_real )
 
@@ -181,7 +183,7 @@ contains
   subroutine mult__real( self, a, x )
     class( sll_vector_space_real ), intent( inout ) :: self
     sll_real64                    , intent( in    ) :: a
-    class( sll_vector_space_base ), intent( in    ) :: x
+    class( sll_c_vector_space_base ), intent( in    ) :: x
     select type( x ); class is( sll_vector_space_real )
 
     self%d = a * x%d
@@ -193,8 +195,8 @@ contains
   subroutine mult_add__real( self, a, x, y )
     class( sll_vector_space_real ), intent( inout ) :: self
     sll_real64                    , intent( in    ) :: a
-    class( sll_vector_space_base ), intent( in    ) :: x
-    class( sll_vector_space_base ), intent( in    ) :: y
+    class( sll_c_vector_space_base ), intent( in    ) :: x
+    class( sll_c_vector_space_base ), intent( in    ) :: y
     select type( x ); class is( sll_vector_space_real )
     select type( y ); class is( sll_vector_space_real )
     
@@ -208,7 +210,7 @@ contains
   subroutine incr_mult__real( self, a, x )
     class( sll_vector_space_real ), intent( inout ) :: self
     sll_real64                    , intent( in    ) :: a
-    class( sll_vector_space_base ), intent( in    ) :: x
+    class( sll_c_vector_space_base ), intent( in    ) :: x
     select type( x ); class is( sll_vector_space_real )
     
     self%d = self%d + a * x%d
@@ -220,7 +222,7 @@ contains
   subroutine lcmb__real( self, a, x )
     class( sll_vector_space_real ), intent( inout ) :: self
     sll_real64                    , intent( in    ) :: a(:)
-    class( sll_vector_space_base ), intent( in    ) :: x(:)
+    class( sll_c_vector_space_base ), intent( in    ) :: x(:)
 
     integer    :: i
 !    integer    :: j
@@ -250,7 +252,7 @@ contains
   subroutine incr_lcmb__real( self, a, x )
     class( sll_vector_space_real ), intent( inout ) :: self
     sll_real64                    , intent( in    ) :: a(:)
-    class( sll_vector_space_base ), intent( in    ) :: x(:)
+    class( sll_c_vector_space_base ), intent( in    ) :: x(:)
 
     integer  :: i
 
@@ -276,7 +278,7 @@ contains
   !----------------------------------------------------------------------------
   function inner__real( self, x ) result( res )
     class( sll_vector_space_real ), intent( in ) :: self
-    class( sll_vector_space_base ), intent( in ) :: x
+    class( sll_c_vector_space_base ), intent( in ) :: x
     sll_real64                                   :: res
     select type( x ); class is( sll_vector_space_real )
 
@@ -300,7 +302,7 @@ contains
   !> @param[inout] x    1D Fortran array
   !----------------------------------------------------------------------------
   subroutine attach__real_1d( self, x )
-    class( sll_vector_space_real_1d ),         intent( inout ) :: self
+    class( sll_t_vector_space_real_1d ),         intent( inout ) :: self
     sll_real64                       , target, intent( inout ) :: x(:)
     ! Safer option: Automatic pointer targetting, not yet supported by ifort:
     ! sll_real64, pointer, intent( in ) :: x(:)
@@ -313,7 +315,7 @@ contains
 
   !----------------------------------------------------------------------------
   subroutine initialize_copy__real_1d( self )
-    class( sll_vector_space_real_1d ), intent( inout ) :: self
+    class( sll_t_vector_space_real_1d ), intent( inout ) :: self
 
     sll_real64, pointer, contiguous :: p(:)
     sll_int32                       :: sz, lb(1), ub(1)
@@ -339,7 +341,7 @@ contains
   !> @param[inout] self 1D vector *z*, caller
   !----------------------------------------------------------------------------
   subroutine delete__real_1d( self )
-    class( sll_vector_space_real_1d ), intent( inout ) :: self
+    class( sll_t_vector_space_real_1d ), intent( inout ) :: self
 
     if( self%owns_memory ) then
       deallocate( self%d )
@@ -365,7 +367,7 @@ contains
   !> @param[inout] x    2D Fortran array
   !----------------------------------------------------------------------------
   subroutine attach__real_2d( self, x )
-    class( sll_vector_space_real_2d ),         intent( inout ) :: self
+    class( sll_t_vector_space_real_2d ),         intent( inout ) :: self
     sll_real64,            contiguous, target, intent( inout ) :: x(:,:)
     ! Safer option: Automatic pointer targetting, not yet supported by ifort:
     ! sll_real64, contiguous, pointer, intent( in ) :: x(:,:)
@@ -377,7 +379,7 @@ contains
 
   !----------------------------------------------------------------------------
   subroutine initialize_copy__real_2d( self )
-    class( sll_vector_space_real_2d ), intent( inout ) :: self
+    class( sll_t_vector_space_real_2d ), intent( inout ) :: self
 
     sll_real64, pointer, contiguous :: p(:,:)
     sll_int32                       :: sz, lb(2), ub(2)
@@ -404,7 +406,7 @@ contains
   !> @param[inout] self 2D vector *z*, caller
   !----------------------------------------------------------------------------
   subroutine delete__real_2d( self )
-    class( sll_vector_space_real_2d ), intent( inout ) :: self
+    class( sll_t_vector_space_real_2d ), intent( inout ) :: self
 
     if( self%owns_memory ) then
       deallocate( self%d )

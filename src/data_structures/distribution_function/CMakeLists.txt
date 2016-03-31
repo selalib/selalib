@@ -3,7 +3,7 @@ SET( DISTRIBUTION_SOURCES_LIBRARY
                sll_m_scalar_field_2d_base_old.F90
                sll_m_scalar_field_2d_old.F90
                sll_m_fdistribu4d_dk.F90
-	         sll_m_initial_distribution_functions.F90
+               #sll_m_initial_distribution_functions.F90
                sll_m_landau_2d_initializer.F90
                sll_m_tsi_2d_initializer.F90
                sll_m_distribution_function.F90

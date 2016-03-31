@@ -797,9 +797,10 @@ RECURSIVE              = YES
 # Note that relative paths are relative to the directory from which doxygen is
 # run.
 
-EXCLUDE                = @CMAKE_CURRENT_SOURCE_DIR@/src/interfaces \
-                         @CMAKE_CURRENT_SOURCE_DIR@/src/particle_methods \
-                         @CMAKE_CURRENT_SOURCE_DIR@/src/Makefile \
+EXCLUDE                = @CMAKE_CURRENT_SOURCE_DIR@/src/Makefile \
+                         @CMAKE_CURRENT_SOURCE_DIR@/src/parallelization/remap/ \
+                         @CMAKE_CURRENT_SOURCE_DIR@/src/particle_methods/pic_1d \
+                         @CMAKE_CURRENT_SOURCE_DIR@/src/interfaces/mpi \
                          @CMAKE_CURRENT_SOURCE_DIR@/src/simulations 
 
 # The EXCLUDE_SYMLINKS tag can be used to select whether or not files or
@@ -2170,14 +2171,14 @@ CLASS_GRAPH            = YES
 # The default value is: YES.
 # This tag requires that the tag HAVE_DOT is set to YES.
 
-COLLABORATION_GRAPH    = NO
+COLLABORATION_GRAPH    = YES
 
 # If the GROUP_GRAPHS tag is set to YES then doxygen will generate a graph for
 # groups, showing the direct groups dependencies.
 # The default value is: YES.
 # This tag requires that the tag HAVE_DOT is set to YES.
 
-GROUP_GRAPHS           = NO
+GROUP_GRAPHS           = YES
 
 # If the UML_LOOK tag is set to YES, doxygen will generate inheritance and
 # collaboration diagrams in a style similar to the OMG's Unified Modeling
@@ -2235,7 +2236,7 @@ INCLUDED_BY_GRAPH      = YES
 # The default value is: NO.
 # This tag requires that the tag HAVE_DOT is set to YES.
 
-CALL_GRAPH             = NO
+CALL_GRAPH             = YES
 
 # If the CALLER_GRAPH tag is set to YES then doxygen will generate a caller
 # dependency graph for every global function or class method.
@@ -2246,7 +2247,7 @@ CALL_GRAPH             = NO
 # The default value is: NO.
 # This tag requires that the tag HAVE_DOT is set to YES.
 
-CALLER_GRAPH           = NO
+CALLER_GRAPH           = YES
 
 # If the GRAPHICAL_HIERARCHY tag is set to YES then doxygen will graphical
 # hierarchy of all classes instead of a textual one.

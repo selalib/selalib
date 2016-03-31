@@ -103,19 +103,97 @@
 !!
 !<
 module sll_m_common_coordinate_transformations
-#include "sll_working_precision.h"
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_assert.h"
+#include "sll_working_precision.h"
 
-  use sll_m_constants, only : &
-       sll_pi
+  use sll_m_constants, only: &
+    sll_p_pi
 
-implicit none
+  implicit none
+
+  public :: &
+    sll_f_affine_jac11, &
+    sll_f_affine_jac12, &
+    sll_f_affine_jac21, &
+    sll_f_affine_jac22, &
+    sll_f_affine_x1, &
+    sll_f_affine_x2, &
+    sll_f_sharped_geo_jac11, &
+    sll_f_sharped_geo_jac12, &
+    sll_f_sharped_geo_jac21, &
+    sll_f_sharped_geo_jac22, &
+    sll_f_sharped_geo_x1, &
+    sll_f_sharped_geo_x2, &
+    sll_f_deriv1_jacobian_polar_f, &
+    sll_f_deriv_x1_polar_f_eta1, &
+    sll_f_deriv_x1_polar_f_eta2, &
+    sll_f_deriv_x2_polar_f_eta1, &
+    sll_f_deriv_x2_polar_f_eta2, &
+    sll_f_homography_jac11, &
+    sll_f_homography_jac12, &
+    sll_f_homography_jac21, &
+    sll_f_homography_jac22, &
+    sll_f_homography_x1, &
+    sll_f_homography_x2, &
+    sll_f_identity_jac11, &
+    sll_f_identity_jac12, &
+    sll_f_identity_jac21, &
+    sll_f_identity_jac22, &
+    sll_f_identity_x1, &
+    sll_f_identity_x2, &
+    sll_f_jacobian_polar_f, &
+    sll_f_polar_eta1, &
+    sll_f_polar_eta2, &
+    sll_f_polar_jac11, &
+    sll_f_polar_jac12, &
+    sll_f_polar_jac21, &
+    sll_f_polar_jac22, &
+    sll_f_polar_shear_jac11, &
+    sll_f_polar_shear_jac12, &
+    sll_f_polar_shear_jac21, &
+    sll_f_polar_shear_jac22, &
+    sll_f_polar_shear_x1, &
+    sll_f_polar_shear_x2, &
+    sll_f_polar_x1, &
+    sll_f_polar_x2, &
+    sll_f_polygonal_jac11, &
+    sll_f_polygonal_jac12, &
+    sll_f_polygonal_jac21, &
+    sll_f_polygonal_jac22, &
+    sll_f_polygonal_x1, &
+    sll_f_polygonal_x2, &
+    sll_f_rubber_sheeting_jac11, &
+    sll_f_rubber_sheeting_jac12, &
+    sll_f_rubber_sheeting_jac21, &
+    sll_f_rubber_sheeting_jac22, &
+    sll_f_rubber_sheeting_x1, &
+    sll_f_rubber_sheeting_x2, &
+    sll_f_sinprod_gen_jac, &
+    sll_f_sinprod_gen_jac11, &
+    sll_f_sinprod_gen_jac12, &
+    sll_f_sinprod_gen_jac21, &
+    sll_f_sinprod_gen_jac22, &
+    sll_f_sinprod_gen_x1, &
+    sll_f_sinprod_gen_x2, &
+    sll_f_sinprod_jac, &
+    sll_f_sinprod_jac11, &
+    sll_f_sinprod_jac12, &
+    sll_f_sinprod_jac21, &
+    sll_f_sinprod_jac22, &
+    sll_f_sinprod_x1, &
+    sll_f_sinprod_x2, &
+    sll_f_x1_polar_f, &
+    sll_f_x2_polar_f
+
+  private
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
   
 contains
 
   !> direct mapping 
-  function identity_x1 ( eta1, eta2, params )
-    sll_real64  :: identity_x1
+  function sll_f_identity_x1 ( eta1, eta2, params )
+    sll_real64  :: sll_f_identity_x1
     sll_real64, intent(in)   :: eta1
     sll_real64, intent(in)   :: eta2
     sll_real64, dimension(:), intent(in) :: params
@@ -123,13 +201,13 @@ contains
     sll_real64 :: dummy
     dummy = params(1)
 #endif
-    identity_x1 = eta2
-    identity_x1 = eta1
-  end function identity_x1
+    sll_f_identity_x1 = eta2
+    sll_f_identity_x1 = eta1
+  end function sll_f_identity_x1
 
   !> direct mapping
-  function identity_x2 ( eta1, eta2, params )
-    sll_real64  :: identity_x2
+  function sll_f_identity_x2 ( eta1, eta2, params )
+    sll_real64  :: sll_f_identity_x2
     sll_real64, intent(in)   :: eta1
     sll_real64, intent(in)   :: eta2
     sll_real64, dimension(:), intent(in) :: params
@@ -137,9 +215,9 @@ contains
     sll_real64 :: dummy
     dummy = params(1)
 #endif
-    identity_x2 = eta1
-    identity_x2 = eta2
-  end function identity_x2
+    sll_f_identity_x2 = eta1
+    sll_f_identity_x2 = eta2
+  end function sll_f_identity_x2
 
   !> inverse mapping
   function identity_eta1 ( x1, x2, params )
@@ -170,8 +248,8 @@ contains
   end function identity_eta2
 
   !> jacobian maxtrix
-  function identity_jac11 ( eta1, eta2, params )
-    sll_real64  :: identity_jac11
+  function sll_f_identity_jac11 ( eta1, eta2, params )
+    sll_real64  :: sll_f_identity_jac11
     sll_real64, intent(in)   :: eta1
     sll_real64, intent(in)   :: eta2
     sll_real64, dimension(:), intent(in) :: params
@@ -179,13 +257,13 @@ contains
     sll_real64 :: dummy
     dummy = params(1)
 #endif
-    identity_jac11 = eta1 + eta2
-    identity_jac11 = 1.0_f64
-  end function identity_jac11
+    sll_f_identity_jac11 = eta1 + eta2
+    sll_f_identity_jac11 = 1.0_f64
+  end function sll_f_identity_jac11
 
   !> jacobian maxtrix
-  function identity_jac12 ( eta1, eta2, params )
-    sll_real64  :: identity_jac12
+  function sll_f_identity_jac12 ( eta1, eta2, params )
+    sll_real64  :: sll_f_identity_jac12
     sll_real64, intent(in)   :: eta1
     sll_real64, intent(in)   :: eta2
     sll_real64, dimension(:), intent(in) :: params
@@ -193,13 +271,13 @@ contains
     sll_real64 :: dummy
     dummy = params(1)
 #endif
-    identity_jac12 = eta1 + eta2
-    identity_jac12 = 0.0_f64
-  end function identity_jac12
+    sll_f_identity_jac12 = eta1 + eta2
+    sll_f_identity_jac12 = 0.0_f64
+  end function sll_f_identity_jac12
 
   !> jacobian maxtrix
-  function identity_jac21 ( eta1, eta2, params )
-    sll_real64  :: identity_jac21
+  function sll_f_identity_jac21 ( eta1, eta2, params )
+    sll_real64  :: sll_f_identity_jac21
     sll_real64, intent(in)   :: eta1
     sll_real64, intent(in)   :: eta2
     sll_real64, dimension(:), intent(in) :: params
@@ -207,13 +285,13 @@ contains
     sll_real64 :: dummy
     dummy = params(1)
 #endif
-    identity_jac21 = eta1 + eta2
-    identity_jac21 = 0.0_f64
-  end function identity_jac21
+    sll_f_identity_jac21 = eta1 + eta2
+    sll_f_identity_jac21 = 0.0_f64
+  end function sll_f_identity_jac21
 
   !> jacobian maxtrix
-  function identity_jac22 ( eta1, eta2, params )
-    sll_real64  :: identity_jac22
+  function sll_f_identity_jac22 ( eta1, eta2, params )
+    sll_real64  :: sll_f_identity_jac22
     sll_real64, intent(in)   :: eta1
     sll_real64, intent(in)   :: eta2
     sll_real64, dimension(:), intent(in) :: params
@@ -221,9 +299,9 @@ contains
     sll_real64 :: dummy
     dummy = params(1)
 #endif
-    identity_jac22 = eta1 + eta2
-    identity_jac22 = 1.0_f64
-  end function identity_jac22
+    sll_f_identity_jac22 = eta1 + eta2
+    sll_f_identity_jac22 = 1.0_f64
+  end function sll_f_identity_jac22
 
   !> jacobian ie determinant of jacobian matrix
   function identity_jac ( eta1, eta2, params )
@@ -240,8 +318,8 @@ contains
   end function identity_jac
 
   !> direct mapping
-  function affine_x1 ( eta1, eta2, params )
-    sll_real64  :: affine_x1
+  function sll_f_affine_x1 ( eta1, eta2, params )
+    sll_real64  :: sll_f_affine_x1
     sll_real64, intent(in)   :: eta1
     sll_real64, intent(in)   :: eta2
     sll_real64, dimension(:), intent(in) :: params
@@ -253,12 +331,12 @@ contains
     A1 = params(1)
     B1 = params(2)
     alpha = params(5)
-    affine_x1 = (B1-A1)*(cos(alpha)*eta1-sin(alpha)*eta2) + A1
-  end function affine_x1
+    sll_f_affine_x1 = (B1-A1)*(cos(alpha)*eta1-sin(alpha)*eta2) + A1
+  end function sll_f_affine_x1
 
   !> direct mapping
-  function affine_x2 ( eta1, eta2, params )
-    sll_real64  :: affine_x2
+  function sll_f_affine_x2 ( eta1, eta2, params )
+    sll_real64  :: sll_f_affine_x2
     sll_real64, intent(in)   :: eta1
     sll_real64, intent(in)   :: eta2
     sll_real64, dimension(:), intent(in) :: params
@@ -270,13 +348,13 @@ contains
     A2 = params(3)
     B2 = params(4)
     alpha = params(5)
-    affine_x2 = (B2-A2)*(sin(alpha)*eta1+cos(alpha)*eta2) + A2
-  end function affine_x2
+    sll_f_affine_x2 = (B2-A2)*(sin(alpha)*eta1+cos(alpha)*eta2) + A2
+  end function sll_f_affine_x2
 
   ! jacobian maxtrix
   !> jacobian maxtrix
-  function affine_jac11 ( eta1, eta2, params )
-    sll_real64  :: affine_jac11
+  function sll_f_affine_jac11 ( eta1, eta2, params )
+    sll_real64  :: sll_f_affine_jac11
     sll_real64, intent(in)   :: eta1
     sll_real64, intent(in)   :: eta2
     sll_real64, dimension(:), intent(in) :: params
@@ -288,13 +366,13 @@ contains
     A1 = params(1)
     B1 = params(2)
     alpha = params(5)
-    affine_jac11 = eta1+eta2
-    affine_jac11 = (B1-A1)*cos(alpha)
-  end function affine_jac11
+    sll_f_affine_jac11 = eta1+eta2
+    sll_f_affine_jac11 = (B1-A1)*cos(alpha)
+  end function sll_f_affine_jac11
 
   !> jacobian maxtrix
-  function affine_jac12 ( eta1, eta2, params )
-    sll_real64  :: affine_jac12
+  function sll_f_affine_jac12 ( eta1, eta2, params )
+    sll_real64  :: sll_f_affine_jac12
     sll_real64, intent(in)   :: eta1
     sll_real64, intent(in)   :: eta2
     sll_real64, dimension(:), intent(in) :: params
@@ -303,13 +381,13 @@ contains
     a1 = params(1)
     b1 = params(2)
     alpha = params(5)
-    affine_jac12 = eta1+eta2
-    affine_jac12 = -(B1-A1)*sin(alpha)
-  end function affine_jac12
+    sll_f_affine_jac12 = eta1+eta2
+    sll_f_affine_jac12 = -(B1-A1)*sin(alpha)
+  end function sll_f_affine_jac12
 
   !> jacobian maxtrix
-  function affine_jac21 ( eta1, eta2, params )
-    sll_real64  :: affine_jac21
+  function sll_f_affine_jac21 ( eta1, eta2, params )
+    sll_real64  :: sll_f_affine_jac21
     sll_real64, intent(in)   :: eta1
     sll_real64, intent(in)   :: eta2
     sll_real64 :: alpha, a2, b2
@@ -319,13 +397,13 @@ contains
     a2 = params(3)
     b2 = params(4)
     alpha = params(5)
-    affine_jac21 = eta1+eta2
-    affine_jac21 = (b2-a2)*sin(alpha)
-  end function affine_jac21
+    sll_f_affine_jac21 = eta1+eta2
+    sll_f_affine_jac21 = (b2-a2)*sin(alpha)
+  end function sll_f_affine_jac21
 
   !> jacobian maxtrix
-  function affine_jac22 ( eta1, eta2, params )
-    sll_real64  :: affine_jac22
+  function sll_f_affine_jac22 ( eta1, eta2, params )
+    sll_real64  :: sll_f_affine_jac22
     sll_real64, intent(in)   :: eta1
     sll_real64, intent(in)   :: eta2
     sll_real64, dimension(:), intent(in) :: params
@@ -337,10 +415,10 @@ contains
     A2 = params(3)
     B2 = params(4)
     alpha = params(5)
-    affine_jac22 = eta1+eta2
-    affine_jac22 = (B2-A2)*cos(alpha)
+    sll_f_affine_jac22 = eta1+eta2
+    sll_f_affine_jac22 = (B2-A2)*cos(alpha)
 
-  end function affine_jac22
+  end function sll_f_affine_jac22
 
   !> jacobian ie determinant of jacobian matrix
   function affine_jac ( eta1, eta2, params )
@@ -366,8 +444,8 @@ contains
 
 
   !> direct mapping
-  function homography_x1 ( eta1, eta2, params )
-    sll_real64  :: homography_x1
+  function sll_f_homography_x1 ( eta1, eta2, params )
+    sll_real64  :: sll_f_homography_x1
     sll_real64, intent(in)   :: eta1
     sll_real64, intent(in)   :: eta2
     sll_real64, dimension(:), intent(in) :: params
@@ -381,13 +459,13 @@ contains
     g = params(7)
     h = params(8)
 
-    homography_x1 = (a*eta1+b*eta2+c)/(g*eta1+h*eta2+1)
+    sll_f_homography_x1 = (a*eta1+b*eta2+c)/(g*eta1+h*eta2+1)
 
-  end function homography_x1
+  end function sll_f_homography_x1
 
   !> direct mapping
-  function homography_x2 ( eta1, eta2, params )
-    sll_real64  :: homography_x2
+  function sll_f_homography_x2 ( eta1, eta2, params )
+    sll_real64  :: sll_f_homography_x2
     sll_real64, intent(in)   :: eta1
     sll_real64, intent(in)   :: eta2
     sll_real64, dimension(:), intent(in) :: params
@@ -401,13 +479,13 @@ contains
     g = params(7)
     h = params(8)
 
-    homography_x2 = (d*eta1+e*eta2+f)/(g*eta1+h*eta2+1)
+    sll_f_homography_x2 = (d*eta1+e*eta2+f)/(g*eta1+h*eta2+1)
 
-  end function homography_x2
+  end function sll_f_homography_x2
 
   !> jacobian maxtrix
-  function homography_jac11 ( eta1, eta2, params )
-    sll_real64  :: homography_jac11
+  function sll_f_homography_jac11 ( eta1, eta2, params )
+    sll_real64  :: sll_f_homography_jac11
     sll_real64, intent(in)   :: eta1
     sll_real64, intent(in)   :: eta2
     sll_real64 :: a, b, c, g, h
@@ -422,13 +500,13 @@ contains
     h = params(8)
 
 
-    homography_jac11 = a/(eta1*g+eta2*h+1)-(a*eta1+b*eta2+c)*g/(eta1*g+eta2*h+1)**2
+    sll_f_homography_jac11 = a/(eta1*g+eta2*h+1)-(a*eta1+b*eta2+c)*g/(eta1*g+eta2*h+1)**2
 
-  end function homography_jac11
+  end function sll_f_homography_jac11
 
   !> jacobian maxtrix
-  function homography_jac12 ( eta1, eta2, params )
-    sll_real64  :: homography_jac12
+  function sll_f_homography_jac12 ( eta1, eta2, params )
+    sll_real64  :: sll_f_homography_jac12
     sll_real64, intent(in)   :: eta1
     sll_real64, intent(in)   :: eta2
     sll_real64, dimension(:), intent(in) :: params
@@ -442,13 +520,13 @@ contains
     g = params(7)
     h = params(8)
 
-    homography_jac12 = b/(eta1*g+eta2*h+1)-(a*eta1+b*eta2+c)*h/(eta1*g+eta2*h+1)**2
+    sll_f_homography_jac12 = b/(eta1*g+eta2*h+1)-(a*eta1+b*eta2+c)*h/(eta1*g+eta2*h+1)**2
 
-  end function homography_jac12
+  end function sll_f_homography_jac12
 
   !> jacobian maxtrix
-  function homography_jac21 ( eta1, eta2, params )
-    sll_real64  :: homography_jac21
+  function sll_f_homography_jac21 ( eta1, eta2, params )
+    sll_real64  :: sll_f_homography_jac21
     sll_real64, intent(in)   :: eta1
     sll_real64, intent(in)   :: eta2
     sll_real64, dimension(:), intent(in) :: params
@@ -462,13 +540,13 @@ contains
     g = params(7)
     h = params(8)
 
-    homography_jac21 = d/(eta1*g+eta2*h+1)-(d*eta1+e*eta2+f)*g/(eta1*g+eta2*h+1)**2
+    sll_f_homography_jac21 = d/(eta1*g+eta2*h+1)-(d*eta1+e*eta2+f)*g/(eta1*g+eta2*h+1)**2
 
-  end function homography_jac21
+  end function sll_f_homography_jac21
 
   !> jacobian maxtrix
-  function homography_jac22 ( eta1, eta2, params )
-    sll_real64  :: homography_jac22
+  function sll_f_homography_jac22 ( eta1, eta2, params )
+    sll_real64  :: sll_f_homography_jac22
     sll_real64, intent(in)   :: eta1
     sll_real64, intent(in)   :: eta2
     sll_real64, dimension(:), intent(in) :: params
@@ -482,9 +560,9 @@ contains
     g = params(7)
     h = params(8)
 
-    homography_jac22 = e/(eta1*g+eta2*h+1)-(d*eta1+e*eta2+f)*h/(eta1*g+eta2*h+1)**2
+    sll_f_homography_jac22 = e/(eta1*g+eta2*h+1)-(d*eta1+e*eta2+f)*h/(eta1*g+eta2*h+1)**2
 
-  end function homography_jac22
+  end function sll_f_homography_jac22
 
   !> jacobian ie determinant of jacobian matrix
   function homography_jac ( eta1, eta2, params )
@@ -515,8 +593,8 @@ contains
 
 
   !> direct mapping
-  function rubber_sheeting_x1 ( eta1, eta2, params )
-    sll_real64  :: rubber_sheeting_x1
+  function sll_f_rubber_sheeting_x1 ( eta1, eta2, params )
+    sll_real64  :: sll_f_rubber_sheeting_x1
     sll_real64, intent(in)   :: eta1
     sll_real64, intent(in)   :: eta2
     sll_real64, dimension(:), intent(in) :: params
@@ -529,13 +607,13 @@ contains
     c = params(3)
     d = params(4)
 
-    rubber_sheeting_x1 = a*eta1*eta2+b*eta1+c*eta2+d
+    sll_f_rubber_sheeting_x1 = a*eta1*eta2+b*eta1+c*eta2+d
 
-  end function rubber_sheeting_x1
+  end function sll_f_rubber_sheeting_x1
 
   !> direct mapping
-  function rubber_sheeting_x2 ( eta1, eta2, params )
-    sll_real64  :: rubber_sheeting_x2
+  function sll_f_rubber_sheeting_x2 ( eta1, eta2, params )
+    sll_real64  :: sll_f_rubber_sheeting_x2
     sll_real64, intent(in)   :: eta1
     sll_real64, intent(in)   :: eta2
     sll_real64, dimension(:), intent(in) :: params
@@ -548,13 +626,13 @@ contains
     g = params(7)
     h = params(8)
 
-    rubber_sheeting_x2 = e*eta1*eta2+f*eta1+g*eta2+h
+    sll_f_rubber_sheeting_x2 = e*eta1*eta2+f*eta1+g*eta2+h
 
-  end function rubber_sheeting_x2
+  end function sll_f_rubber_sheeting_x2
 
   !> jacobian maxtrix
-  function rubber_sheeting_jac11 ( eta1, eta2, params )
-    sll_real64  :: rubber_sheeting_jac11
+  function sll_f_rubber_sheeting_jac11 ( eta1, eta2, params )
+    sll_real64  :: sll_f_rubber_sheeting_jac11
     sll_real64, intent(in)   :: eta1
     sll_real64, intent(in)   :: eta2
     sll_real64 :: a, b
@@ -564,14 +642,14 @@ contains
 
     a = params(1)
     b = params(2)
-    rubber_sheeting_jac11 = eta1
-    rubber_sheeting_jac11 = a*eta2+b
+    sll_f_rubber_sheeting_jac11 = eta1
+    sll_f_rubber_sheeting_jac11 = a*eta2+b
 
-  end function rubber_sheeting_jac11
+  end function sll_f_rubber_sheeting_jac11
 
   !> jacobian maxtrix
-  function rubber_sheeting_jac12 ( eta1, eta2, params )
-    sll_real64  :: rubber_sheeting_jac12
+  function sll_f_rubber_sheeting_jac12 ( eta1, eta2, params )
+    sll_real64  :: sll_f_rubber_sheeting_jac12
     sll_real64, intent(in)   :: eta1
     sll_real64, intent(in)   :: eta2
     sll_real64, dimension(:), intent(in) :: params
@@ -581,14 +659,14 @@ contains
 
     a = params(1)
     c = params(3)
-    rubber_sheeting_jac12 = eta2
-    rubber_sheeting_jac12 = a*eta1+c
+    sll_f_rubber_sheeting_jac12 = eta2
+    sll_f_rubber_sheeting_jac12 = a*eta1+c
 
-  end function rubber_sheeting_jac12
+  end function sll_f_rubber_sheeting_jac12
 
   !> jacobian maxtrix
-  function rubber_sheeting_jac21 ( eta1, eta2, params )
-    sll_real64  :: rubber_sheeting_jac21
+  function sll_f_rubber_sheeting_jac21 ( eta1, eta2, params )
+    sll_real64  :: sll_f_rubber_sheeting_jac21
     sll_real64, intent(in)   :: eta1
     sll_real64, intent(in)   :: eta2
     sll_real64, dimension(:), intent(in) :: params
@@ -598,14 +676,14 @@ contains
 
     e = params(5)
     f = params(6)
-    rubber_sheeting_jac21 = eta1
-    rubber_sheeting_jac21 = e*eta2+f
+    sll_f_rubber_sheeting_jac21 = eta1
+    sll_f_rubber_sheeting_jac21 = e*eta2+f
 
-  end function rubber_sheeting_jac21
+  end function sll_f_rubber_sheeting_jac21
 
   !> jacobian maxtrix
-  function rubber_sheeting_jac22 ( eta1, eta2, params )
-    sll_real64  :: rubber_sheeting_jac22
+  function sll_f_rubber_sheeting_jac22 ( eta1, eta2, params )
+    sll_real64  :: sll_f_rubber_sheeting_jac22
     sll_real64, intent(in)   :: eta1
     sll_real64, intent(in)   :: eta2
     sll_real64, dimension(:), intent(in) :: params
@@ -615,10 +693,10 @@ contains
 
     e = params(5)
     g = params(7)
-    rubber_sheeting_jac22 = eta2
-    rubber_sheeting_jac22 = e*eta1+g
+    sll_f_rubber_sheeting_jac22 = eta2
+    sll_f_rubber_sheeting_jac22 = e*eta1+g
 
-  end function rubber_sheeting_jac22
+  end function sll_f_rubber_sheeting_jac22
 
   !> jacobian ie determinant of jacobian matrix
   function rubber_sheeting_jac ( eta1, eta2, params )
@@ -653,8 +731,8 @@ contains
   ! **************************************************************************
 
   !> direct mapping
-  function polar_x1 ( eta1, eta2, params )
-    sll_real64  :: polar_x1
+  function sll_f_polar_x1 ( eta1, eta2, params )
+    sll_real64  :: sll_f_polar_x1
     sll_real64, intent(in)   :: eta1
     sll_real64, intent(in)   :: eta2
     sll_real64, dimension(:), intent(in) :: params
@@ -662,12 +740,12 @@ contains
     sll_real64 :: dummy
     dummy = params(1)
 #endif
-    polar_x1 = eta1 * cos( eta2 )
-  end function polar_x1
+    sll_f_polar_x1 = eta1 * cos( eta2 )
+  end function sll_f_polar_x1
 
   !> direct mapping
-  function polar_x2 ( eta1, eta2, params )
-    sll_real64  :: polar_x2
+  function sll_f_polar_x2 ( eta1, eta2, params )
+    sll_real64  :: sll_f_polar_x2
     sll_real64, intent(in)   :: eta1
     sll_real64, intent(in)   :: eta2
     sll_real64, dimension(:), intent(in) :: params
@@ -675,12 +753,12 @@ contains
     sll_real64 :: dummy
     dummy = params(1)
 #endif
-    polar_x2 = eta1 * sin( eta2 )
-  end function polar_x2
+    sll_f_polar_x2 = eta1 * sin( eta2 )
+  end function sll_f_polar_x2
 
   !> inverse mapping
-  function polar_eta1 ( x1, x2, params )
-    sll_real64  :: polar_eta1
+  function sll_f_polar_eta1 ( x1, x2, params )
+    sll_real64  :: sll_f_polar_eta1
     sll_real64, intent(in)   :: x1
     sll_real64, intent(in)   :: x2
     sll_real64, dimension(:), intent(in) :: params
@@ -688,12 +766,12 @@ contains
     sll_real64 :: dummy
     dummy = params(1)
 #endif
-    polar_eta1 = sqrt( x1*x1 + x2*x2 )
-  end function polar_eta1
+    sll_f_polar_eta1 = sqrt( x1*x1 + x2*x2 )
+  end function sll_f_polar_eta1
 
   !> inverse mapping
-  function polar_eta2 ( x1, x2, params )
-    sll_real64  :: polar_eta2
+  function sll_f_polar_eta2 ( x1, x2, params )
+    sll_real64  :: sll_f_polar_eta2
     sll_real64, intent(in)   :: x1
     sll_real64, intent(in)   :: x2
     sll_real64, dimension(:), intent(in) :: params
@@ -701,12 +779,12 @@ contains
     sll_real64 :: dummy
     dummy = params(1)
 #endif
-    polar_eta2 = atan( x2 / x1 ) 
-  end function polar_eta2
+    sll_f_polar_eta2 = atan( x2 / x1 ) 
+  end function sll_f_polar_eta2
 
   !> jacobian matrix
-  function polar_jac11 ( eta1, eta2, params )
-    sll_real64  :: polar_jac11
+  function sll_f_polar_jac11 ( eta1, eta2, params )
+    sll_real64  :: sll_f_polar_jac11
     sll_real64, intent(in)   :: eta1
     sll_real64, intent(in)   :: eta2
     sll_real64, dimension(:), intent(in) :: params
@@ -714,13 +792,13 @@ contains
     sll_real64 :: dummy
     dummy = params(1)
 #endif
-    polar_jac11 = eta1
-    polar_jac11 = cos ( eta2 ) 
-  end function polar_jac11
+    sll_f_polar_jac11 = eta1
+    sll_f_polar_jac11 = cos ( eta2 ) 
+  end function sll_f_polar_jac11
 
   !> jacobian matrix
-    function polar_jac12 ( eta1, eta2, params )
-    sll_real64  :: polar_jac12
+    function sll_f_polar_jac12 ( eta1, eta2, params )
+    sll_real64  :: sll_f_polar_jac12
     sll_real64, intent(in)   :: eta1
     sll_real64, intent(in)   :: eta2
     sll_real64, dimension(:), intent(in) :: params
@@ -728,12 +806,12 @@ contains
     sll_real64 :: dummy
     dummy = params(1)
 #endif
-    polar_jac12 = - eta1 * sin( eta2 )
-  end function polar_jac12
+    sll_f_polar_jac12 = - eta1 * sin( eta2 )
+  end function sll_f_polar_jac12
 
   !> jacobian matrix
-  function polar_jac21 ( eta1, eta2, params )
-    sll_real64  :: polar_jac21
+  function sll_f_polar_jac21 ( eta1, eta2, params )
+    sll_real64  :: sll_f_polar_jac21
     sll_real64, intent(in)   :: eta1
     sll_real64, intent(in)   :: eta2
     sll_real64, dimension(:), intent(in) :: params
@@ -741,13 +819,13 @@ contains
     sll_real64 :: dummy
     dummy = params(1)
 #endif
-    polar_jac21 = eta1
-    polar_jac21 = sin ( eta2 )
-  end function polar_jac21
+    sll_f_polar_jac21 = eta1
+    sll_f_polar_jac21 = sin ( eta2 )
+  end function sll_f_polar_jac21
 
   !> jacobian matrix
-  function polar_jac22 ( eta1, eta2, params )
-    sll_real64  :: polar_jac22
+  function sll_f_polar_jac22 ( eta1, eta2, params )
+    sll_real64  :: sll_f_polar_jac22
     sll_real64, intent(in)   :: eta1
     sll_real64, intent(in)   :: eta2
     sll_real64, dimension(:), intent(in) :: params
@@ -755,8 +833,8 @@ contains
     sll_real64 :: dummy
     dummy = params(1)
 #endif
-    polar_jac22 = eta1 * cos ( eta2 )
-  end function polar_jac22
+    sll_f_polar_jac22 = eta1 * cos ( eta2 )
+  end function sll_f_polar_jac22
 
  !> jacobian ie determinant of jacobian matrix
   function polar_jac ( eta1, eta2, params )
@@ -784,8 +862,8 @@ contains
   ! **************************************************************************
 
   !> direct mapping
-  function polar_shear_x1 ( eta1, eta2, params )
-    sll_real64  :: polar_shear_x1
+  function sll_f_polar_shear_x1 ( eta1, eta2, params )
+    sll_real64  :: sll_f_polar_shear_x1
     sll_real64, intent(in)   :: eta1
     sll_real64, intent(in)   :: eta2
     sll_real64, dimension(:), intent(in) :: params
@@ -795,12 +873,12 @@ contains
     alpha1=params(1)
     alpha2=params(2)
     
-    polar_shear_x1 = eta1 * cos( eta2 + alpha1*eta1 + alpha2 )
-  end function polar_shear_x1
+    sll_f_polar_shear_x1 = eta1 * cos( eta2 + alpha1*eta1 + alpha2 )
+  end function sll_f_polar_shear_x1
 
   !> direct mapping
-  function polar_shear_x2 ( eta1, eta2, params )
-    sll_real64  :: polar_shear_x2
+  function sll_f_polar_shear_x2 ( eta1, eta2, params )
+    sll_real64  :: sll_f_polar_shear_x2
     sll_real64, intent(in)   :: eta1
     sll_real64, intent(in)   :: eta2
     sll_real64, dimension(:), intent(in) :: params
@@ -810,13 +888,13 @@ contains
     alpha1=params(1)
     alpha2=params(2)
 
-    polar_shear_x2 = eta1 * sin( eta2 + alpha1*eta1 + alpha2 )
-  end function polar_shear_x2
+    sll_f_polar_shear_x2 = eta1 * sin( eta2 + alpha1*eta1 + alpha2 )
+  end function sll_f_polar_shear_x2
 
 
   !> jacobian matrix
-  function polar_shear_jac11 ( eta1, eta2, params )
-    sll_real64  :: polar_shear_jac11
+  function sll_f_polar_shear_jac11 ( eta1, eta2, params )
+    sll_real64  :: sll_f_polar_shear_jac11
     sll_real64, intent(in)   :: eta1
     sll_real64, intent(in)   :: eta2
     sll_real64, dimension(:), intent(in) :: params
@@ -826,13 +904,13 @@ contains
     alpha1=params(1)
     alpha2=params(2)
 
-    polar_shear_jac11 = cos(eta2+alpha1*eta1+alpha2) &
+    sll_f_polar_shear_jac11 = cos(eta2+alpha1*eta1+alpha2) &
       -eta1*alpha1*sin(eta2+alpha1*eta1+alpha2)
-  end function polar_shear_jac11
+  end function sll_f_polar_shear_jac11
 
   !> jacobian matrix
-    function polar_shear_jac12 ( eta1, eta2, params )
-    sll_real64  :: polar_shear_jac12
+    function sll_f_polar_shear_jac12 ( eta1, eta2, params )
+    sll_real64  :: sll_f_polar_shear_jac12
     sll_real64, intent(in)   :: eta1
     sll_real64, intent(in)   :: eta2
     sll_real64, dimension(:), intent(in) :: params
@@ -842,12 +920,12 @@ contains
     alpha1=params(1)
     alpha2=params(2)
     
-    polar_shear_jac12 = - eta1 * sin( eta2 + alpha1*eta1 + alpha2  )
-  end function polar_shear_jac12
+    sll_f_polar_shear_jac12 = - eta1 * sin( eta2 + alpha1*eta1 + alpha2  )
+  end function sll_f_polar_shear_jac12
 
   !> jacobian matrix
-  function polar_shear_jac21 ( eta1, eta2, params )
-    sll_real64  :: polar_shear_jac21
+  function sll_f_polar_shear_jac21 ( eta1, eta2, params )
+    sll_real64  :: sll_f_polar_shear_jac21
     sll_real64, intent(in)   :: eta1
     sll_real64, intent(in)   :: eta2
     sll_real64, dimension(:), intent(in) :: params
@@ -857,13 +935,13 @@ contains
     alpha1=params(1)
     alpha2=params(2)
 
-    polar_shear_jac21 = sin(eta2+alpha1*eta1+alpha2) &
+    sll_f_polar_shear_jac21 = sin(eta2+alpha1*eta1+alpha2) &
       +eta1*alpha1*cos(eta2+alpha1*eta1+alpha2)
-  end function polar_shear_jac21
+  end function sll_f_polar_shear_jac21
 
   !> jacobian matrix
-  function polar_shear_jac22 ( eta1, eta2, params )
-    sll_real64  :: polar_shear_jac22
+  function sll_f_polar_shear_jac22 ( eta1, eta2, params )
+    sll_real64  :: sll_f_polar_shear_jac22
     sll_real64, intent(in)   :: eta1
     sll_real64, intent(in)   :: eta2
     sll_real64, dimension(:), intent(in) :: params
@@ -873,8 +951,8 @@ contains
     alpha1=params(1)
     alpha2=params(2)
 
-    polar_shear_jac22 = eta1 * cos ( eta2+ alpha1*eta1 + alpha2   )
-  end function polar_shear_jac22
+    sll_f_polar_shear_jac22 = eta1 * cos ( eta2+ alpha1*eta1 + alpha2   )
+  end function sll_f_polar_shear_jac22
 
  !> jacobian ie determinant of jacobian matrix not computed
   function polar_shear_jac ( eta1, eta2, params )
@@ -907,8 +985,8 @@ contains
   ! **************************************************************************
 
   !> direct mapping
-  function polygonal_x1 ( eta1, eta2, params )
-    sll_real64  :: polygonal_x1
+  function sll_f_polygonal_x1 ( eta1, eta2, params )
+    sll_real64  :: sll_f_polygonal_x1
     sll_real64, intent(in)   :: eta1
     sll_real64, intent(in)   :: eta2
     sll_real64, dimension(:), intent(in) :: params
@@ -921,17 +999,17 @@ contains
     
     eps = params(1)
     num_sides = params(2)
-    eta2_shift = eta2+params(3)*2._f64*sll_pi/num_sides    
-    eta2r = eta2+sll_pi/num_sides
-    eta2r = eta2r*0.5_f64*num_sides/sll_pi
+    eta2_shift = eta2+params(3)*2._f64*sll_p_pi/num_sides    
+    eta2r = eta2+sll_p_pi/num_sides
+    eta2r = eta2r*0.5_f64*num_sides/sll_p_pi
     eta2i = floor(eta2r)
-    eta2r = sqrt((eta2-eta2i*sll_pi/(0.5_f64*num_sides))**2+eps**2)
-    polygonal_x1 = eta1*cos(sll_pi/num_sides)*cos(eta2_shift)/cos(sll_pi/num_sides-eta2r)
-  end function polygonal_x1
+    eta2r = sqrt((eta2-eta2i*sll_p_pi/(0.5_f64*num_sides))**2+eps**2)
+    sll_f_polygonal_x1 = eta1*cos(sll_p_pi/num_sides)*cos(eta2_shift)/cos(sll_p_pi/num_sides-eta2r)
+  end function sll_f_polygonal_x1
 
   !> direct mapping
-  function polygonal_x2 ( eta1, eta2, params )
-    sll_real64  :: polygonal_x2
+  function sll_f_polygonal_x2 ( eta1, eta2, params )
+    sll_real64  :: sll_f_polygonal_x2
     sll_real64, intent(in)   :: eta1
     sll_real64, intent(in)   :: eta2
     sll_real64, dimension(:), intent(in) :: params
@@ -944,18 +1022,18 @@ contains
 
     eps = params(1)
     num_sides = params(2)
-    eta2_shift = eta2+params(3)*2._f64*sll_pi/num_sides    
-    eta2r = eta2+sll_pi/num_sides
-    eta2r = eta2r*0.5_f64*num_sides/sll_pi
+    eta2_shift = eta2+params(3)*2._f64*sll_p_pi/num_sides    
+    eta2r = eta2+sll_p_pi/num_sides
+    eta2r = eta2r*0.5_f64*num_sides/sll_p_pi
     eta2i = floor(eta2r)
-    eta2r = sqrt((eta2-eta2i*sll_pi/(0.5_f64*num_sides))**2+eps**2)
-    polygonal_x2 = eta1*cos(sll_pi/num_sides)*sin(eta2_shift)/cos(sll_pi/num_sides-eta2r)
-  end function polygonal_x2
+    eta2r = sqrt((eta2-eta2i*sll_p_pi/(0.5_f64*num_sides))**2+eps**2)
+    sll_f_polygonal_x2 = eta1*cos(sll_p_pi/num_sides)*sin(eta2_shift)/cos(sll_p_pi/num_sides-eta2r)
+  end function sll_f_polygonal_x2
 
 
   !> jacobian matrix
-  function polygonal_jac11 ( eta1, eta2, params )
-    sll_real64  :: polygonal_jac11
+  function sll_f_polygonal_jac11 ( eta1, eta2, params )
+    sll_real64  :: sll_f_polygonal_jac11
     sll_real64, intent(in)   :: eta1
     sll_real64, intent(in)   :: eta2
     sll_real64, dimension(:), intent(in) :: params
@@ -968,18 +1046,18 @@ contains
 
     eps = params(1)
     num_sides = params(2)
-    eta2_shift = eta2+params(3)*2._f64*sll_pi/num_sides    
-    eta2r = eta2+sll_pi/num_sides
-    eta2r = eta2r*0.5_f64*num_sides/sll_pi
+    eta2_shift = eta2+params(3)*2._f64*sll_p_pi/num_sides    
+    eta2r = eta2+sll_p_pi/num_sides
+    eta2r = eta2r*0.5_f64*num_sides/sll_p_pi
     eta2i = floor(eta2r)
-    eta2r = sqrt((eta2-eta2i*sll_pi/(0.5_f64*num_sides))**2+eps**2)
-    polygonal_jac11 = eta1
-    polygonal_jac11 = cos(sll_pi/num_sides)*cos(eta2_shift)/cos(sll_pi/num_sides-eta2r) 
-  end function polygonal_jac11
+    eta2r = sqrt((eta2-eta2i*sll_p_pi/(0.5_f64*num_sides))**2+eps**2)
+    sll_f_polygonal_jac11 = eta1
+    sll_f_polygonal_jac11 = cos(sll_p_pi/num_sides)*cos(eta2_shift)/cos(sll_p_pi/num_sides-eta2r) 
+  end function sll_f_polygonal_jac11
 
   !> jacobian matrix
-    function polygonal_jac12 ( eta1, eta2, params )
-    sll_real64  :: polygonal_jac12
+    function sll_f_polygonal_jac12 ( eta1, eta2, params )
+    sll_real64  :: sll_f_polygonal_jac12
     sll_real64, intent(in)   :: eta1
     sll_real64, intent(in)   :: eta2
     sll_real64, dimension(:), intent(in) :: params
@@ -993,20 +1071,20 @@ contains
 
     eps = params(1)
     num_sides = params(2)
-    eta2_shift = eta2+params(3)*2._f64*sll_pi/num_sides    
-    eta2r = eta2+sll_pi/num_sides
-    eta2r = eta2r*0.5_f64*num_sides/sll_pi
+    eta2_shift = eta2+params(3)*2._f64*sll_p_pi/num_sides    
+    eta2r = eta2+sll_p_pi/num_sides
+    eta2r = eta2r*0.5_f64*num_sides/sll_p_pi
     eta2i = floor(eta2r)
-    a = eta2i*sll_pi/(0.5_f64*num_sides) 
+    a = eta2i*sll_p_pi/(0.5_f64*num_sides) 
     eta2r = sqrt((eta2-a)**2+eps**2)
-    polygonal_jac12 = -eta1*cos(sll_pi/num_sides)*sin(eta2_shift)/cos(sll_pi/num_sides-eta2r) &
-      +eta1*cos(sll_pi/num_sides)*cos(eta2_shift) &
-      *sin(sll_pi/num_sides-eta2r)/cos(sll_pi/num_sides-eta2r)**2*(eta2-a)/eta2r
-  end function polygonal_jac12
+    sll_f_polygonal_jac12 = -eta1*cos(sll_p_pi/num_sides)*sin(eta2_shift)/cos(sll_p_pi/num_sides-eta2r) &
+      +eta1*cos(sll_p_pi/num_sides)*cos(eta2_shift) &
+      *sin(sll_p_pi/num_sides-eta2r)/cos(sll_p_pi/num_sides-eta2r)**2*(eta2-a)/eta2r
+  end function sll_f_polygonal_jac12
 
   !> jacobian matrix
-  function polygonal_jac21 ( eta1, eta2, params )
-    sll_real64  :: polygonal_jac21
+  function sll_f_polygonal_jac21 ( eta1, eta2, params )
+    sll_real64  :: sll_f_polygonal_jac21
     sll_real64, intent(in)   :: eta1
     sll_real64, intent(in)   :: eta2
     sll_real64, dimension(:), intent(in) :: params
@@ -1019,18 +1097,18 @@ contains
 
     eps = params(1)
     num_sides = params(2)
-    eta2_shift = eta2+params(3)*2._f64*sll_pi/num_sides    
-    eta2r = eta2+sll_pi/num_sides
-    eta2r = eta2r*0.5_f64*num_sides/sll_pi
+    eta2_shift = eta2+params(3)*2._f64*sll_p_pi/num_sides    
+    eta2r = eta2+sll_p_pi/num_sides
+    eta2r = eta2r*0.5_f64*num_sides/sll_p_pi
     eta2i = floor(eta2r)
-    eta2r = sqrt((eta2-eta2i*sll_pi/(0.5_f64*num_sides))**2+eps**2)
-    polygonal_jac21 = eta1
-    polygonal_jac21 = cos(sll_pi/num_sides)*sin(eta2_shift)/cos(sll_pi/num_sides-eta2r)
-  end function polygonal_jac21
+    eta2r = sqrt((eta2-eta2i*sll_p_pi/(0.5_f64*num_sides))**2+eps**2)
+    sll_f_polygonal_jac21 = eta1
+    sll_f_polygonal_jac21 = cos(sll_p_pi/num_sides)*sin(eta2_shift)/cos(sll_p_pi/num_sides-eta2r)
+  end function sll_f_polygonal_jac21
 
   !> jacobian matrix
-  function polygonal_jac22 ( eta1, eta2, params )
-    sll_real64  :: polygonal_jac22
+  function sll_f_polygonal_jac22 ( eta1, eta2, params )
+    sll_real64  :: sll_f_polygonal_jac22
     sll_real64, intent(in)   :: eta1
     sll_real64, intent(in)   :: eta2
     sll_real64, dimension(:), intent(in) :: params
@@ -1044,17 +1122,17 @@ contains
 
     eps = params(1)
     num_sides = params(2)
-    eta2_shift = eta2+params(3)*2._f64*sll_pi/num_sides 
+    eta2_shift = eta2+params(3)*2._f64*sll_p_pi/num_sides 
     
-    eta2r = eta2+sll_pi/num_sides
-    eta2r = eta2r*0.5_f64*num_sides/sll_pi
+    eta2r = eta2+sll_p_pi/num_sides
+    eta2r = eta2r*0.5_f64*num_sides/sll_p_pi
     eta2i = floor(eta2r)
-    a = eta2i*sll_pi/(0.5_f64*num_sides)
+    a = eta2i*sll_p_pi/(0.5_f64*num_sides)
     eta2r = sqrt((eta2-a)**2+eps**2)
-    polygonal_jac22 = eta1*cos(sll_pi/num_sides)*cos(eta2_shift)/cos(sll_pi/num_sides-eta2r) &
-      +eta1*cos(sll_pi/num_sides)*sin(eta2_shift) &
-      *sin(sll_pi/num_sides-eta2r)/cos(sll_pi/num_sides-eta2r)**2*(eta2-a)/eta2r
-  end function polygonal_jac22
+    sll_f_polygonal_jac22 = eta1*cos(sll_p_pi/num_sides)*cos(eta2_shift)/cos(sll_p_pi/num_sides-eta2r) &
+      +eta1*cos(sll_p_pi/num_sides)*sin(eta2_shift) &
+      *sin(sll_p_pi/num_sides-eta2r)/cos(sll_p_pi/num_sides-eta2r)**2*(eta2-a)/eta2r
+  end function sll_f_polygonal_jac22
 
  !> jacobian ie determinant of jacobian matrix
  !>not used for the moment (recomputed)
@@ -1071,15 +1149,15 @@ contains
     dummy = params(1)+eta1
 #endif
 
-    eta2r = eta2+sll_pi/6._f64
-    eta2r = eta2r*3._f64/sll_pi
+    eta2r = eta2+sll_p_pi/6._f64
+    eta2r = eta2r*3._f64/sll_p_pi
     eta2i = floor(eta2r)
-    eta2r = abs(eta2-eta2i*sll_pi/3._f64)
+    eta2r = abs(eta2-eta2i*sll_p_pi/3._f64)
     polygonal_jac = eta2
-!    polygonal_jac = polygonal_jac11( eta1, eta2, params ) * &
-!      polygonal_jac22( eta1, eta2, params ) &
-!      -polygonal_jac21( eta1, eta2, params ) * &
-!      polygonal_jac12( eta1, eta2, params ) &
+!    polygonal_jac = sll_f_polygonal_jac11( eta1, eta2, params ) * &
+!      sll_f_polygonal_jac22( eta1, eta2, params ) &
+!      -sll_f_polygonal_jac21( eta1, eta2, params ) * &
+!      sll_f_polygonal_jac12( eta1, eta2, params ) &
   end function polygonal_jac
 
 
@@ -1123,8 +1201,8 @@ contains
   ! **************************************************************************
 
   !> direct mapping
-  function sinprod_gen_x1 ( eta1, eta2, params )
-    sll_real64  :: sinprod_gen_x1
+  function sll_f_sinprod_gen_x1 ( eta1, eta2, params )
+    sll_real64  :: sll_f_sinprod_gen_x1
     sll_real64, intent(in)   :: eta1
     sll_real64, intent(in)   :: eta2
     sll_real64, dimension(:), intent(in) :: params
@@ -1162,14 +1240,14 @@ contains
     coef1 = ( b_2 - a_2 )/ (b_1 - a_1 )
     coef2 = ( a_2*b_1 - b_2*a_1 )/ (b_1 - a_1 )
  
-    pi2 = 2.0_f64*sll_pi
-    sinprod_gen_x1 = eta1 + alpha1 * sin(pi2*rl1)*sin(pi2*rl2)
-    sinprod_gen_x1 = coef1 * sinprod_gen_x1 + coef2
-  end function sinprod_gen_x1
+    pi2 = 2.0_f64*sll_p_pi
+    sll_f_sinprod_gen_x1 = eta1 + alpha1 * sin(pi2*rl1)*sin(pi2*rl2)
+    sll_f_sinprod_gen_x1 = coef1 * sll_f_sinprod_gen_x1 + coef2
+  end function sll_f_sinprod_gen_x1
 
   !> direct mapping
-  function sinprod_gen_x2 ( eta1, eta2, params )
-    sll_real64  :: sinprod_gen_x2
+  function sll_f_sinprod_gen_x2 ( eta1, eta2, params )
+    sll_real64  :: sll_f_sinprod_gen_x2
     sll_real64, intent(in)   :: eta1
     sll_real64, intent(in)   :: eta2
     sll_real64, dimension(:), intent(in) :: params
@@ -1208,10 +1286,10 @@ contains
     coef1 = ( d_2 - c_2 )/ (d_1 - c_1 )
     coef2 = ( c_2*d_1 - d_2*c_1 )/ (d_1 - c_1 )
  
-    pi2 = 2.0_f64*sll_pi
-    sinprod_gen_x2 = eta2 + alpha2 * sin(pi2*rl1)*sin(pi2*rl2)
-    sinprod_gen_x2 = coef1 * sinprod_gen_x2 + coef2
-  end function sinprod_gen_x2
+    pi2 = 2.0_f64*sll_p_pi
+    sll_f_sinprod_gen_x2 = eta2 + alpha2 * sin(pi2*rl1)*sin(pi2*rl2)
+    sll_f_sinprod_gen_x2 = coef1 * sll_f_sinprod_gen_x2 + coef2
+  end function sll_f_sinprod_gen_x2
 
   !> inverse mapping 
   !> cannot be computed analytically in this case. Use fixed point iterations.
@@ -1248,8 +1326,8 @@ contains
   end function sinprod_gen_eta2
 
   !> jacobian matrix
-  function sinprod_gen_jac11 ( eta1, eta2, params )
-    sll_real64  :: sinprod_gen_jac11
+  function sll_f_sinprod_gen_jac11 ( eta1, eta2, params )
+    sll_real64  :: sll_f_sinprod_gen_jac11
     sll_real64, intent(in)   :: eta1
     sll_real64, intent(in)   :: eta2
     sll_real64, dimension(:), intent(in) :: params
@@ -1287,15 +1365,15 @@ contains
     coef1 = ( b_2 - a_2 )/ (b_1 - a_1 )
     coef2 = ( a_2*b_1 - b_2*a_1 )/ (b_1 - a_1 )
  
-    pi2 = 2.0_f64*sll_pi
+    pi2 = 2.0_f64*sll_p_pi
 
-    sinprod_gen_jac11 = 1.0_f64 + alpha1*pi2/ (b_1 - a_1 ) *cos(pi2*rl1)*sin(pi2*rl2)
-    sinprod_gen_jac11 = coef1 * sinprod_gen_jac11
-  end function sinprod_gen_jac11
+    sll_f_sinprod_gen_jac11 = 1.0_f64 + alpha1*pi2/ (b_1 - a_1 ) *cos(pi2*rl1)*sin(pi2*rl2)
+    sll_f_sinprod_gen_jac11 = coef1 * sll_f_sinprod_gen_jac11
+  end function sll_f_sinprod_gen_jac11
 
   !> jacobian matrix
-  function sinprod_gen_jac12 ( eta1, eta2, params )
-    sll_real64  :: sinprod_gen_jac12
+  function sll_f_sinprod_gen_jac12 ( eta1, eta2, params )
+    sll_real64  :: sll_f_sinprod_gen_jac12
     sll_real64, intent(in)   :: eta1
     sll_real64, intent(in)   :: eta2
     sll_real64, dimension(:), intent(in) :: params
@@ -1332,15 +1410,15 @@ contains
     coef1 = ( b_2 - a_2 )/ (b_1 - a_1 )
     coef2 = ( a_2*b_1 - b_2*a_1 )/ (b_1 - a_1 )
  
-    pi2 = 2.0_f64*sll_pi
+    pi2 = 2.0_f64*sll_p_pi
 
-    sinprod_gen_jac12 = alpha1*pi2/ (d_1 - c_1 ) *sin(pi2*rl1)*cos(pi2*rl2)
-    sinprod_gen_jac12 = coef1 * sinprod_gen_jac12
-  end function sinprod_gen_jac12
+    sll_f_sinprod_gen_jac12 = alpha1*pi2/ (d_1 - c_1 ) *sin(pi2*rl1)*cos(pi2*rl2)
+    sll_f_sinprod_gen_jac12 = coef1 * sll_f_sinprod_gen_jac12
+  end function sll_f_sinprod_gen_jac12
   
   !> jacobian matrix
-  function sinprod_gen_jac21 ( eta1, eta2, params )
-    sll_real64  :: sinprod_gen_jac21
+  function sll_f_sinprod_gen_jac21 ( eta1, eta2, params )
+    sll_real64  :: sll_f_sinprod_gen_jac21
     sll_real64, intent(in)   :: eta1
     sll_real64, intent(in)   :: eta2
     sll_real64, dimension(:), intent(in) :: params
@@ -1378,14 +1456,14 @@ contains
     coef1 = ( d_2 - c_2 )/ (d_1 - c_1 )
     coef2 = ( c_2*d_1 - d_2*c_1 )/ (d_1 - c_1 )
  
-    pi2 = 2.0_f64*sll_pi
-    sinprod_gen_jac21 = alpha2*pi2/ (b_1 - a_1 ) *cos(pi2*rl1)*sin(pi2*rl2)
-    sinprod_gen_jac21 = coef1 * sinprod_gen_jac21
-  end function sinprod_gen_jac21
+    pi2 = 2.0_f64*sll_p_pi
+    sll_f_sinprod_gen_jac21 = alpha2*pi2/ (b_1 - a_1 ) *cos(pi2*rl1)*sin(pi2*rl2)
+    sll_f_sinprod_gen_jac21 = coef1 * sll_f_sinprod_gen_jac21
+  end function sll_f_sinprod_gen_jac21
 
   !> jacobian matrix
-  function sinprod_gen_jac22 ( eta1, eta2, params )
-    sll_real64  :: sinprod_gen_jac22
+  function sll_f_sinprod_gen_jac22 ( eta1, eta2, params )
+    sll_real64  :: sll_f_sinprod_gen_jac22
     sll_real64, intent(in)   :: eta1
     sll_real64, intent(in)   :: eta2
     sll_real64, dimension(:), intent(in) :: params
@@ -1423,16 +1501,16 @@ contains
     coef1 = ( d_2 - c_2 )/ (d_1 - c_1 )
     coef2 = ( c_2*d_1 - d_2*c_1 )/ (d_1 - c_1 )
  
-    pi2 = 2.0_f64*sll_pi
+    pi2 = 2.0_f64*sll_p_pi
 
-    sinprod_gen_jac22 = 1.0_f64 + alpha2*pi2/ (d_1 - c_1 )*sin(pi2*rl1)*cos(pi2*rl2)
-    sinprod_gen_jac22 = coef1 * sinprod_gen_jac22
+    sll_f_sinprod_gen_jac22 = 1.0_f64 + alpha2*pi2/ (d_1 - c_1 )*sin(pi2*rl1)*cos(pi2*rl2)
+    sll_f_sinprod_gen_jac22 = coef1 * sll_f_sinprod_gen_jac22
     
-  end function sinprod_gen_jac22
+  end function sll_f_sinprod_gen_jac22
 
    !> jacobian ie determinant of jacobian matrix
-  function sinprod_gen_jac ( eta1, eta2, params )
-    sll_real64  :: sinprod_gen_jac
+  function sll_f_sinprod_gen_jac ( eta1, eta2, params )
+    sll_real64  :: sll_f_sinprod_gen_jac
     sll_real64, intent(in)   :: eta1
     sll_real64, intent(in)   :: eta2
     sll_real64, dimension(:), intent(in) :: params
@@ -1443,14 +1521,14 @@ contains
     !alpha2 = params(2)
     !rl1    = 1.0_f64/params(3)
     !rl2    = 1.0_f64/params(4)
-    !pi2 = 2.0_f64*sll_pi
-    !sinprod_jac = 1.0_f64 + 0.2_f64 *sll_pi * sin (2*sll_pi**(eta1+eta2)) 
-    !sinprod_gen_jac = 1.0_f64 + alpha2*pi2*rl2*sin(pi2*rl1*eta1)*cos(pi2*rl2*eta2) + &
+    !pi2 = 2.0_f64*sll_p_pi
+    !sll_f_sinprod_jac = 1.0_f64 + 0.2_f64 *sll_p_pi * sin (2*sll_p_pi**(eta1+eta2)) 
+    !sll_f_sinprod_gen_jac = 1.0_f64 + alpha2*pi2*rl2*sin(pi2*rl1*eta1)*cos(pi2*rl2*eta2) + &
     !                        alpha1*pi2*rl1*cos(pi2*rl1*eta1)*sin(pi2*rl2*eta2)
 
-    sinprod_gen_jac=sinprod_gen_jac22( eta1, eta2, params )*sinprod_gen_jac11( eta1, eta2, params )&
-                  - sinprod_gen_jac12( eta1, eta2, params )*sinprod_gen_jac21( eta1, eta2, params )
-  end function sinprod_gen_jac
+    sll_f_sinprod_gen_jac=sll_f_sinprod_gen_jac22( eta1, eta2, params )*sll_f_sinprod_gen_jac11( eta1, eta2, params )&
+                  - sll_f_sinprod_gen_jac12( eta1, eta2, params )*sll_f_sinprod_gen_jac21( eta1, eta2, params )
+  end function sll_f_sinprod_gen_jac
 
   ! **************************************************************************
   !
@@ -1474,8 +1552,8 @@ contains
   ! **************************************************************************
 
   !> direct mapping
-  function sinprod_x1 ( eta1, eta2, params )
-    sll_real64  :: sinprod_x1
+  function sll_f_sinprod_x1 ( eta1, eta2, params )
+    sll_real64  :: sll_f_sinprod_x1
     sll_real64, intent(in)   :: eta1
     sll_real64, intent(in)   :: eta2
     sll_real64, dimension(:), intent(in) :: params
@@ -1488,13 +1566,13 @@ contains
     alpha1 = params(1)
     rl1    = 1.0_f64/params(3)
     rl2    = 1.0_f64/params(4)
-    pi2 = 2.0_f64*sll_pi
-    sinprod_x1 = eta1 + alpha1 * sin(pi2*rl1*eta1)*sin(pi2*rl2*eta2)
-  end function sinprod_x1
+    pi2 = 2.0_f64*sll_p_pi
+    sll_f_sinprod_x1 = eta1 + alpha1 * sin(pi2*rl1*eta1)*sin(pi2*rl2*eta2)
+  end function sll_f_sinprod_x1
 
   !> direct mapping
-  function sinprod_x2 ( eta1, eta2, params )
-    sll_real64  :: sinprod_x2
+  function sll_f_sinprod_x2 ( eta1, eta2, params )
+    sll_real64  :: sll_f_sinprod_x2
     sll_real64, intent(in)   :: eta1
     sll_real64, intent(in)   :: eta2
     sll_real64, dimension(:),intent(in) :: params
@@ -1507,9 +1585,9 @@ contains
     alpha2 = params(2)
     rl1    = 1.0_f64/params(3)
     rl2    = 1.0_f64/params(4)
-    pi2 = 2.0_f64*sll_pi
-    sinprod_x2 = eta2 + alpha2*sin(pi2*rl1*eta1)*sin(pi2*rl2*eta2)
-  end function sinprod_x2
+    pi2 = 2.0_f64*sll_p_pi
+    sll_f_sinprod_x2 = eta2 + alpha2*sin(pi2*rl1*eta1)*sin(pi2*rl2*eta2)
+  end function sll_f_sinprod_x2
 
   !> inverse mapping 
   !> cannot be computed analytically in this case. Use fixed point iterations.
@@ -1546,8 +1624,8 @@ contains
   end function sinprod_eta2
 
   !> jacobian matrix
-  function sinprod_jac11 ( eta1, eta2, params )
-    sll_real64  :: sinprod_jac11
+  function sll_f_sinprod_jac11 ( eta1, eta2, params )
+    sll_real64  :: sll_f_sinprod_jac11
     sll_real64, intent(in)   :: eta1
     sll_real64, intent(in)   :: eta2
     sll_real64, dimension(:), intent(in) :: params
@@ -1560,13 +1638,13 @@ contains
     alpha1 = params(1)
     rl1    = 1.0_f64/params(3)
     rl2    = 1.0_f64/params(4)
-    pi2 = 2.0_f64*sll_pi
-    sinprod_jac11 = 1.0_f64 + alpha1*pi2*rl1*cos(pi2*rl1*eta1)*sin(pi2*rl2*eta2)
-  end function sinprod_jac11
+    pi2 = 2.0_f64*sll_p_pi
+    sll_f_sinprod_jac11 = 1.0_f64 + alpha1*pi2*rl1*cos(pi2*rl1*eta1)*sin(pi2*rl2*eta2)
+  end function sll_f_sinprod_jac11
 
   !> jacobian matrix
-  function sinprod_jac12 ( eta1, eta2, params )
-    sll_real64  :: sinprod_jac12
+  function sll_f_sinprod_jac12 ( eta1, eta2, params )
+    sll_real64  :: sll_f_sinprod_jac12
     sll_real64, intent(in)   :: eta1
     sll_real64, intent(in)   :: eta2
     sll_real64, dimension(:), intent(in) :: params
@@ -1579,13 +1657,13 @@ contains
     alpha1 = params(1)
     rl1    = 1.0_f64/params(3)
     rl2    = 1.0_f64/params(4)
-    pi2 = 2.0_f64*sll_pi
-    sinprod_jac12 = alpha1*pi2*rl2*sin(pi2*rl1*eta1)*cos(pi2*rl2*eta2)
-  end function sinprod_jac12
+    pi2 = 2.0_f64*sll_p_pi
+    sll_f_sinprod_jac12 = alpha1*pi2*rl2*sin(pi2*rl1*eta1)*cos(pi2*rl2*eta2)
+  end function sll_f_sinprod_jac12
 
   !> jacobian matrix
-  function sinprod_jac21 ( eta1, eta2, params )
-    sll_real64  :: sinprod_jac21
+  function sll_f_sinprod_jac21 ( eta1, eta2, params )
+    sll_real64  :: sll_f_sinprod_jac21
     sll_real64, intent(in)   :: eta1
     sll_real64, intent(in)   :: eta2
     sll_real64, dimension(:), intent(in) :: params
@@ -1598,13 +1676,13 @@ contains
     alpha2 = params(2)
     rl1    = 1.0_f64/params(3)
     rl2    = 1.0_f64/params(4)
-    pi2 = 2.0_f64*sll_pi
-    sinprod_jac21 = alpha2*pi2*rl1*cos(pi2*rl1*eta1)*sin(pi2*rl2*eta2)
-  end function sinprod_jac21
+    pi2 = 2.0_f64*sll_p_pi
+    sll_f_sinprod_jac21 = alpha2*pi2*rl1*cos(pi2*rl1*eta1)*sin(pi2*rl2*eta2)
+  end function sll_f_sinprod_jac21
 
   !> jacobian matrix
-  function sinprod_jac22 ( eta1, eta2, params )
-    sll_real64  :: sinprod_jac22
+  function sll_f_sinprod_jac22 ( eta1, eta2, params )
+    sll_real64  :: sll_f_sinprod_jac22
     sll_real64, intent(in)   :: eta1
     sll_real64, intent(in)   :: eta2
     sll_real64, dimension(:), intent(in) :: params
@@ -1618,13 +1696,13 @@ contains
     alpha2 = params(2)
     rl1    = 1.0_f64/params(3)
     rl2    = 1.0_f64/params(4)
-    pi2 = 2.0_f64*sll_pi
-    sinprod_jac22 = 1.0_f64 + alpha2*pi2*rl2*sin(pi2*rl1*eta1)*cos(pi2*rl2*eta2)
-  end function sinprod_jac22
+    pi2 = 2.0_f64*sll_p_pi
+    sll_f_sinprod_jac22 = 1.0_f64 + alpha2*pi2*rl2*sin(pi2*rl1*eta1)*cos(pi2*rl2*eta2)
+  end function sll_f_sinprod_jac22
 
    !> jacobian ie determinant of jacobian matrix
-  function sinprod_jac ( eta1, eta2, params )
-    sll_real64  :: sinprod_jac
+  function sll_f_sinprod_jac ( eta1, eta2, params )
+    sll_real64  :: sll_f_sinprod_jac
     sll_real64, intent(in)   :: eta1
     sll_real64, intent(in)   :: eta2
     sll_real64, dimension(:), intent(in) :: params
@@ -1640,11 +1718,11 @@ contains
     alpha2 = params(2)
     rl1    = 1.0_f64/params(3)
     rl2    = 1.0_f64/params(4)
-    pi2 = 2.0_f64*sll_pi
-    !sinprod_jac = 1.0_f64 + 0.2_f64 *sll_pi * sin (2*sll_pi**(eta1+eta2)) 
-    sinprod_jac = 1.0_f64 + alpha2*pi2*rl2*sin(pi2*rl1*eta1)*cos(pi2*rl2*eta2) + &
+    pi2 = 2.0_f64*sll_p_pi
+    !sll_f_sinprod_jac = 1.0_f64 + 0.2_f64 *sll_p_pi * sin (2*sll_p_pi**(eta1+eta2)) 
+    sll_f_sinprod_jac = 1.0_f64 + alpha2*pi2*rl2*sin(pi2*rl1*eta1)*cos(pi2*rl2*eta2) + &
                             alpha1*pi2*rl1*cos(pi2*rl1*eta1)*sin(pi2*rl2*eta2)
-  end function sinprod_jac
+  end function sll_f_sinprod_jac
 
 #if 0
 ! Only one Colella transformation should survive, the parametrized one above...
@@ -1667,7 +1745,7 @@ contains
     else
        alpha1 = 0.1_f64
     end if 
-    pi2 = 2.0_f64*sll_pi
+    pi2 = 2.0_f64*sll_p_pi
     sinprod_x1_rect = eta1 + alpha1*sin(0.5*eta1)*sin(pi2*eta2)
   end function sinprod_x1_rect
   
@@ -1684,7 +1762,7 @@ contains
     else
        alpha2 = 0.1_f64
     end if
-    pi2 = 2.0_f64*sll_pi
+    pi2 = 2.0_f64*sll_p_pi
     sinprod_x2_rect = eta2 + alpha2*sin(0.5*eta1)*sin(pi2*eta2)
   end function sinprod_x2_rect
   
@@ -1701,7 +1779,7 @@ contains
     else
        alpha1 = 0.1_f64
     end if 
-    sinprod_jac11_rect = 1.0_8 + 0.5_8*alpha1 * cos (0.5*eta1) * sin (2*sll_pi*eta2)
+    sinprod_jac11_rect = 1.0_8 + 0.5_8*alpha1 * cos (0.5*eta1) * sin (2*sll_p_pi*eta2)
   end function sinprod_jac11_rect
   
   function sinprod_jac12_rect ( eta1, eta2, params )
@@ -1715,7 +1793,7 @@ contains
     else
        alpha1 = 0.1_f64
     end if
-    sinprod_jac12_rect = 2._8 *sll_pi*alpha1* sin (0.5*eta1) * cos (2*sll_pi*eta2)
+    sinprod_jac12_rect = 2._8 *sll_p_pi*alpha1* sin (0.5*eta1) * cos (2*sll_p_pi*eta2)
   end function sinprod_jac12_rect
   
   function sinprod_jac21_rect ( eta1, eta2, params )
@@ -1729,7 +1807,7 @@ contains
     else
        alpha2 = 0.1_f64
     end if
-    sinprod_jac21_rect = 0.5_8*alpha2* cos (0.5*eta1) * sin (2*sll_pi*eta2)
+    sinprod_jac21_rect = 0.5_8*alpha2* cos (0.5*eta1) * sin (2*sll_p_pi*eta2)
   end function sinprod_jac21_rect
 
   function sinprod_jac22_rect ( eta1, eta2, params )
@@ -1744,7 +1822,7 @@ contains
        alpha2 = 0.1_f64
     end if
     sinprod_jac22_rect = 1.0_8 + &
-         2.0_8*sll_pi*alpha2*sin(0.5*eta1)*cos(2*sll_pi*eta2)
+         2.0_8*sll_p_pi*alpha2*sin(0.5*eta1)*cos(2*sll_p_pi*eta2)
   end function sinprod_jac22_rect
   
   ! jacobian ie determinant of jacobian matrix
@@ -1753,7 +1831,7 @@ contains
     real(8), intent(in)   :: eta1
     real(8), intent(in)   :: eta2
     sll_real64, dimension(:), optional, intent(in) :: params
-    !sinprod_jac = 1.0_f64 + 0.2_f64 *sll_pi * sin (2*sll_pi**(eta1+eta2)) 
+    !sll_f_sinprod_jac = 1.0_f64 + 0.2_f64 *sll_p_pi * sin (2*sll_p_pi**(eta1+eta2)) 
     if(present(params)) then
        SLL_ASSERT(size(params) >= 2)
        alpha2 = params(2)
@@ -1763,10 +1841,10 @@ contains
        alpha1 = 0.1_f64
     end if
     sinprod_jac_rect = &
-         (1.0_8 + 0.5_8*alpha1 * cos (0.5*eta1) * sin (2*sll_pi*eta2))* &
-         (1.0_8 + 2.0_8* sll_pi*alpha2 * sin(0.5*eta1) * cos(2*sll_pi*eta2) ) - &
-         2.0_8 *sll_pi*alpha2 * sin (0.5*eta1) * cos (2*sll_pi*eta2) * &
-         0.5_8*alpha1 * cos (0.5*eta1) * sin (2*sll_pi*eta2)
+         (1.0_8 + 0.5_8*alpha1 * cos (0.5*eta1) * sin (2*sll_p_pi*eta2))* &
+         (1.0_8 + 2.0_8* sll_p_pi*alpha2 * sin(0.5*eta1) * cos(2*sll_p_pi*eta2) ) - &
+         2.0_8 *sll_p_pi*alpha2 * sin (0.5*eta1) * cos (2*sll_p_pi*eta2) * &
+         0.5_8*alpha1 * cos (0.5*eta1) * sin (2*sll_p_pi*eta2)
   end function sinprod_jac_rect
   
 
@@ -1832,7 +1910,7 @@ contains
     real(8), intent(in)   :: eta1
     real(8), intent(in)   :: eta2
     sll_real64, dimension(:), optional, intent(in) :: params
-    !sinprod_jac = 1.0_f64 + 0.2_f64 *sll_pi * sin (2*sll_pi**(eta1+eta2)) 
+    !sll_f_sinprod_jac = 1.0_f64 + 0.2_f64 *sll_p_pi * sin (2*sll_p_pi**(eta1+eta2)) 
     sinprod_jac_square = &
          (1.0_8 + 0.5_8*0.1_8 * cos (0.5*eta1) * sin (0.5*eta2))* &
          (1.0_8 + 0.5_8*0.1_8 * sin(0.5*eta1) * cos(0.5*eta2) ) - &
@@ -1852,7 +1930,7 @@ contains
     sll_real64, intent(in)   :: eta1
     sll_real64, intent(in)   :: eta2
     sll_real64, dimension(:), optional, intent(in) :: params
-    test_x1 = eta1 + 0.1_f64 * sin( 2.0_f64* sll_pi * eta1 )
+    test_x1 = eta1 + 0.1_f64 * sin( 2.0_f64* sll_p_pi * eta1 )
     !test_x1 = eta1**2
   end function test_x1
 
@@ -1861,7 +1939,7 @@ contains
     sll_real64, intent(in)   :: eta1
     sll_real64, intent(in)   :: eta2
     sll_real64, dimension(:), optional, intent(in) :: params
-    test_x2 = eta2 + 0.1_f64 * sin( 2.0_f64* sll_pi * eta2 )
+    test_x2 = eta2 + 0.1_f64 * sin( 2.0_f64* sll_p_pi * eta2 )
   end function test_x2
 
   ! inverse mapping
@@ -1887,7 +1965,7 @@ contains
     sll_real64, intent(in)   :: eta1
     sll_real64, intent(in)   :: eta2
     sll_real64, dimension(:), optional, intent(in) :: params
-    test_jac11 = 1.0_f64 / (1.0_f64 + 2.0_f64 * sll_pi* 0.1_f64 * cos( 2.0_f64* sll_pi * eta1))
+    test_jac11 = 1.0_f64 / (1.0_f64 + 2.0_f64 * sll_p_pi* 0.1_f64 * cos( 2.0_f64* sll_p_pi * eta1))
   end function test_jac11
 
     function test_jac12 ( eta1, eta2, params )
@@ -1911,7 +1989,7 @@ contains
     sll_real64, intent(in)   :: eta1
     sll_real64, intent(in)   :: eta2
     sll_real64, dimension(:), optional, intent(in) :: params
-    test_jac22 = 1.0_f64 / (1.0_f64 + 2.0_f64 * sll_pi* 0.1_f64 * cos( 2.0_f64* sll_pi * eta2))
+    test_jac22 = 1.0_f64 / (1.0_f64 + 2.0_f64 * sll_p_pi* 0.1_f64 * cos( 2.0_f64* sll_p_pi * eta2))
   end function test_jac22
 
   ! jacobian ie determinant of jacobian matrix
@@ -1920,8 +1998,8 @@ contains
     sll_real64, intent(in)   :: eta1
     sll_real64, intent(in)   :: eta2
     sll_real64, dimension(:), optional, intent(in) :: params
-    test_jac =  (1.0_f64 + 2.0_f64 * sll_pi* 0.1_f64 * cos( 2.0_f64* sll_pi * eta1)) * &
-         (1.0_f64 + 2.0_f64 * sll_pi* 0.1_f64 * cos( 2.0_f64* sll_pi * eta2))
+    test_jac =  (1.0_f64 + 2.0_f64 * sll_p_pi* 0.1_f64 * cos( 2.0_f64* sll_p_pi * eta1)) * &
+         (1.0_f64 + 2.0_f64 * sll_p_pi* 0.1_f64 * cos( 2.0_f64* sll_p_pi * eta2))
     !test_jac =  2 * eta1!
   end function test_jac
 #endif
@@ -1943,8 +2021,8 @@ contains
 
 
   !> direct mapping
-  function x1_polar_f( eta1, eta2, params )
-    sll_real64 :: x1_polar_f
+  function sll_f_x1_polar_f( eta1, eta2, params )
+    sll_real64 :: sll_f_x1_polar_f
     sll_real64, intent(in) :: eta1, eta2
     sll_real64, dimension(:), intent(in) :: params
     sll_real64 :: r1
@@ -1953,12 +2031,12 @@ contains
     SLL_ASSERT(size(params) >= 2)
     r1 = params(1)
     r2 = params(2)
-    x1_polar_f = (r1 + (r2-r1)*eta1)*cos(2.0_f64*sll_pi*eta2)
-  end function x1_polar_f
+    sll_f_x1_polar_f = (r1 + (r2-r1)*eta1)*cos(2.0_f64*sll_p_pi*eta2)
+  end function sll_f_x1_polar_f
 
   !> direct mapping
-  function x2_polar_f( eta1, eta2, params )
-    sll_real64 :: x2_polar_f
+  function sll_f_x2_polar_f( eta1, eta2, params )
+    sll_real64 :: sll_f_x2_polar_f
     sll_real64, intent(in) :: eta1, eta2
     sll_real64, dimension(:), intent(in) :: params
     sll_real64 :: r1
@@ -1967,12 +2045,12 @@ contains
     SLL_ASSERT(size(params) >= 2)
     r1 = params(1)
     r2 = params(2)
-    x2_polar_f = (r1 + (r2-r1)*eta1)*sin(2.0_f64*sll_pi*eta2)
-  end function x2_polar_f
+    sll_f_x2_polar_f = (r1 + (r2-r1)*eta1)*sin(2.0_f64*sll_p_pi*eta2)
+  end function sll_f_x2_polar_f
 
   !> PLEASE ADD DOCUMENTATION
-  function deriv_x1_polar_f_eta1( eta1, eta2, params )
-    sll_real64 :: deriv_x1_polar_f_eta1
+  function sll_f_deriv_x1_polar_f_eta1( eta1, eta2, params )
+    sll_real64 :: sll_f_deriv_x1_polar_f_eta1
     sll_real64, intent(in) :: eta1, eta2
     sll_real64, dimension(:), intent(in) :: params
     sll_real64 :: r1
@@ -1981,59 +2059,59 @@ contains
     SLL_ASSERT(size(params) >= 2)
     r1 = params(1)
     r2 = params(2)
-    deriv_x1_polar_f_eta1 = eta1
-    deriv_x1_polar_f_eta1 = (r2-r1)*cos(2.0_f64*sll_pi*eta2)
-  end function deriv_x1_polar_f_eta1
+    sll_f_deriv_x1_polar_f_eta1 = eta1
+    sll_f_deriv_x1_polar_f_eta1 = (r2-r1)*cos(2.0_f64*sll_p_pi*eta2)
+  end function sll_f_deriv_x1_polar_f_eta1
 
   !> PLEASE ADD DOCUMENTATION
-  function deriv_x1_polar_f_eta2( eta1, eta2, params )
-    sll_real64 :: deriv_x1_polar_f_eta2
-    sll_real64, intent(in) :: eta1, eta2
-    sll_real64, dimension(:), intent(in) :: params
-    sll_real64 :: k
-    sll_real64 :: r1
-    sll_real64 :: r2
-    deriv_x1_polar_f_eta2  = eta1+eta2
-    SLL_ASSERT(size(params) >= 2)
-    r1 = params(1)
-    r2 = params(2)
-    k = 2.0_f64*sll_pi
-    deriv_x1_polar_f_eta2 = -(r1+(r2-r1)*eta1)*sin(k*eta2)*k
-  end function deriv_x1_polar_f_eta2
-
-  !> PLEASE ADD DOCUMENTATION
-  function deriv_x2_polar_f_eta1( eta1, eta2, params )
-    sll_real64 :: deriv_x2_polar_f_eta1
-    sll_real64, intent(in) :: eta1, eta2
-    sll_real64, dimension(:), intent(in) :: params
-    sll_real64 :: r1
-    sll_real64 :: r2
-
-    SLL_ASSERT(size(params) >= 2)
-    r1 = params(1)
-    r2 = params(2)
-    deriv_x2_polar_f_eta1 = eta1
-    deriv_x2_polar_f_eta1 = (r2-r1)*sin(2.0_f64*sll_pi*eta2)
-  end function deriv_x2_polar_f_eta1
-
-  !> PLEASE ADD DOCUMENTATION
-  function deriv_x2_polar_f_eta2( eta1, eta2, params )
-    sll_real64 :: deriv_x2_polar_f_eta2
+  function sll_f_deriv_x1_polar_f_eta2( eta1, eta2, params )
+    sll_real64 :: sll_f_deriv_x1_polar_f_eta2
     sll_real64, intent(in) :: eta1, eta2
     sll_real64, dimension(:), intent(in) :: params
     sll_real64 :: k
     sll_real64 :: r1
     sll_real64 :: r2
-    deriv_x2_polar_f_eta2 = eta1+eta2
+    sll_f_deriv_x1_polar_f_eta2  = eta1+eta2
     SLL_ASSERT(size(params) >= 2)
     r1 = params(1)
     r2 = params(2)
-    k = 2.0_f64*sll_pi
-    deriv_x2_polar_f_eta2 = (r1+(r2-r1)*eta1)*cos(k*eta2)*k
-  end function deriv_x2_polar_f_eta2
+    k = 2.0_f64*sll_p_pi
+    sll_f_deriv_x1_polar_f_eta2 = -(r1+(r2-r1)*eta1)*sin(k*eta2)*k
+  end function sll_f_deriv_x1_polar_f_eta2
 
   !> PLEASE ADD DOCUMENTATION
-  function jacobian_polar_f( eta1, eta2, params ) result(jac)
+  function sll_f_deriv_x2_polar_f_eta1( eta1, eta2, params )
+    sll_real64 :: sll_f_deriv_x2_polar_f_eta1
+    sll_real64, intent(in) :: eta1, eta2
+    sll_real64, dimension(:), intent(in) :: params
+    sll_real64 :: r1
+    sll_real64 :: r2
+
+    SLL_ASSERT(size(params) >= 2)
+    r1 = params(1)
+    r2 = params(2)
+    sll_f_deriv_x2_polar_f_eta1 = eta1
+    sll_f_deriv_x2_polar_f_eta1 = (r2-r1)*sin(2.0_f64*sll_p_pi*eta2)
+  end function sll_f_deriv_x2_polar_f_eta1
+
+  !> PLEASE ADD DOCUMENTATION
+  function sll_f_deriv_x2_polar_f_eta2( eta1, eta2, params )
+    sll_real64 :: sll_f_deriv_x2_polar_f_eta2
+    sll_real64, intent(in) :: eta1, eta2
+    sll_real64, dimension(:), intent(in) :: params
+    sll_real64 :: k
+    sll_real64 :: r1
+    sll_real64 :: r2
+    sll_f_deriv_x2_polar_f_eta2 = eta1+eta2
+    SLL_ASSERT(size(params) >= 2)
+    r1 = params(1)
+    r2 = params(2)
+    k = 2.0_f64*sll_p_pi
+    sll_f_deriv_x2_polar_f_eta2 = (r1+(r2-r1)*eta1)*cos(k*eta2)*k
+  end function sll_f_deriv_x2_polar_f_eta2
+
+  !> PLEASE ADD DOCUMENTATION
+  function sll_f_jacobian_polar_f( eta1, eta2, params ) result(jac)
     sll_real64             :: jac
     sll_real64, intent(in) :: eta1, eta2
     sll_real64, dimension(:), intent(in) :: params
@@ -2044,14 +2122,14 @@ contains
     SLL_ASSERT(size(params) >= 2)
     r1 = params(1)
     r2 = params(2)
-    jac = 2.0_f64*sll_pi*(r1+(r2-r1)*eta1)*(r2-r1)
-  end function jacobian_polar_f
+    jac = 2.0_f64*sll_p_pi*(r1+(r2-r1)*eta1)*(r2-r1)
+  end function sll_f_jacobian_polar_f
 
   ! what is the following used for? It is not meant or used for the 
   ! coordinate transformation class... this one is used in the unit_test_2d.F90
   ! file but, what else?
   !> PLEASE ADD DOCUMENTATION
-  function deriv1_jacobian_polar_f(eta1, eta2, params ) result(deriv)
+  function sll_f_deriv1_jacobian_polar_f(eta1, eta2, params ) result(deriv)
     sll_real64             :: deriv
     sll_real64, intent(in) :: eta1, eta2
     sll_real64, dimension(:), intent(in) :: params
@@ -2062,8 +2140,8 @@ contains
     SLL_ASSERT(size(params) >= 2)
     r1 = params(1)
     r2 = params(2)
-    deriv = 2.0_f64*sll_pi*(r2-r1)**2
-  end function deriv1_jacobian_polar_f
+    deriv = 2.0_f64*sll_p_pi*(r2-r1)**2
+  end function sll_f_deriv1_jacobian_polar_f
 
 ! why is this here?
 !!$  function zero_function(eta1, eta2)
@@ -2161,8 +2239,8 @@ contains
   ! **************************************************************************
 
   !> direct mapping
-  function D_sharped_Geo_x1 ( eta1, eta2, params )
-    sll_real64  :: D_sharped_Geo_x1
+  function sll_f_sharped_geo_x1 ( eta1, eta2, params )
+    sll_real64  :: sll_f_sharped_geo_x1
     sll_real64, intent(in)   :: eta1
     sll_real64, intent(in)   :: eta2
     sll_real64, dimension(:), intent(in) :: params
@@ -2190,16 +2268,16 @@ contains
     eta1_max =params(8)
     eta2_max =params(9)
     
-    pi2 = 2.0_f64*sll_pi
+    pi2 = 2.0_f64*sll_p_pi
     eta1n = (eta1 - eta1_min)/(eta1_max - eta1_min)
     eta2n = (eta2 - eta2_min)/(eta2_max - eta2_min)
-    D_sharped_Geo_x1= alpha1+(alpha2*(2._f64*eta1n-1._f64)+alpha3)* &
+    sll_f_sharped_geo_x1= alpha1+(alpha2*(2._f64*eta1n-1._f64)+alpha3)* &
                       cos(pi2*eta2n+alpha4*sin(pi2*eta2n))
-  end function D_sharped_Geo_x1
+  end function sll_f_sharped_geo_x1
 
   !> direct mapping
-  function D_sharped_Geo_x2 ( eta1, eta2, params )
-    sll_real64  :: D_sharped_Geo_x2
+  function sll_f_sharped_geo_x2 ( eta1, eta2, params )
+    sll_real64  :: sll_f_sharped_geo_x2
     sll_real64, intent(in)   :: eta1
     sll_real64, intent(in)   :: eta2
     sll_real64, dimension(:),intent(in) :: params
@@ -2227,15 +2305,15 @@ contains
     eta1_max =params(8)
     eta2_max =params(9)
     
-    pi2 = 2.0_f64*sll_pi
+    pi2 = 2.0_f64*sll_p_pi
     eta1n = (eta1 - eta1_min)/(eta1_max - eta1_min)
     eta2n = (eta2 - eta2_min)/(eta2_max - eta2_min)
-    D_sharped_Geo_x2 = alpha5*(alpha2*(2._f64*eta1n-1._f64)+alpha3)*sin(pi2*eta2n)
-  end function D_sharped_Geo_x2
+    sll_f_sharped_geo_x2 = alpha5*(alpha2*(2._f64*eta1n-1._f64)+alpha3)*sin(pi2*eta2n)
+  end function sll_f_sharped_geo_x2
 
   !> jacobian matrix
-  function D_sharped_Geo_jac11 ( eta1, eta2, params )
-    sll_real64  :: D_sharped_Geo_jac11
+  function sll_f_sharped_geo_jac11 ( eta1, eta2, params )
+    sll_real64  :: sll_f_sharped_geo_jac11
     sll_real64, intent(in)   :: eta1
     sll_real64, intent(in)   :: eta2
     sll_real64, dimension(:), intent(in) :: params
@@ -2263,16 +2341,16 @@ contains
     eta1_max =params(8)
     eta2_max =params(9)
     
-    pi2 = 2.0_f64*sll_pi
+    pi2 = 2.0_f64*sll_p_pi
     eta1n = (eta1 - eta1_min)/(eta1_max - eta1_min)
     eta2n = (eta2 - eta2_min)/(eta2_max - eta2_min)
-    D_sharped_Geo_jac11 = alpha2*2._f64*cos(pi2*eta2n+alpha4*sin(pi2*eta2n))
-    D_sharped_Geo_jac11 = D_sharped_Geo_jac11 /(eta1_max - eta1_min) 
-  end function D_sharped_Geo_jac11
+    sll_f_sharped_geo_jac11 = alpha2*2._f64*cos(pi2*eta2n+alpha4*sin(pi2*eta2n))
+    sll_f_sharped_geo_jac11 = sll_f_sharped_geo_jac11 /(eta1_max - eta1_min) 
+  end function sll_f_sharped_geo_jac11
 
   !> jacobian matrix
-  function D_sharped_Geo_jac12 ( eta1, eta2, params )
-    sll_real64  :: D_sharped_Geo_jac12
+  function sll_f_sharped_geo_jac12 ( eta1, eta2, params )
+    sll_real64  :: sll_f_sharped_geo_jac12
     sll_real64, intent(in)   :: eta1
     sll_real64, intent(in)   :: eta2
     sll_real64, dimension(:), intent(in) :: params
@@ -2300,17 +2378,17 @@ contains
     eta1_max =params(8)
     eta2_max =params(9)
     
-    pi2 = 2.0_f64*sll_pi
+    pi2 = 2.0_f64*sll_p_pi
     eta1n = (eta1 - eta1_min)/(eta1_max - eta1_min)
     eta2n = (eta2 - eta2_min)/(eta2_max - eta2_min)
-    D_sharped_Geo_jac12 = -(alpha2*(2._f64*eta1n-1._f64)+alpha3)*(pi2+pi2*alpha4*cos(pi2*eta2n))*&
+    sll_f_sharped_geo_jac12 = -(alpha2*(2._f64*eta1n-1._f64)+alpha3)*(pi2+pi2*alpha4*cos(pi2*eta2n))*&
                           sin(pi2*eta2n+alpha4*sin(pi2*eta2n)) 
-    D_sharped_Geo_jac12 = D_sharped_Geo_jac12/(eta2_max - eta2_min)                        
-  end function D_sharped_Geo_jac12
+    sll_f_sharped_geo_jac12 = sll_f_sharped_geo_jac12/(eta2_max - eta2_min)                        
+  end function sll_f_sharped_geo_jac12
 
   !> jacobian matrix
-  function D_sharped_Geo_jac21 ( eta1, eta2, params )
-    sll_real64  :: D_sharped_Geo_jac21
+  function sll_f_sharped_geo_jac21 ( eta1, eta2, params )
+    sll_real64  :: sll_f_sharped_geo_jac21
     sll_real64, intent(in)   :: eta1
     sll_real64, intent(in)   :: eta2
     sll_real64, dimension(:), intent(in) :: params
@@ -2337,16 +2415,16 @@ contains
     eta2_min =params(7)
     eta1_max =params(8)
     eta2_max =params(9)
-    pi2 = 2.0_f64*sll_pi
+    pi2 = 2.0_f64*sll_p_pi
     eta1n = (eta1 - eta1_min)/(eta1_max - eta1_min)
     eta2n = (eta2 - eta2_min)/(eta2_max - eta2_min)
-    D_sharped_Geo_jac21 = 2._f64*alpha5*alpha2*sin(pi2*eta2n)
-    D_sharped_Geo_jac21 = D_sharped_Geo_jac21/(eta1_max - eta1_min)
-  end function D_sharped_Geo_jac21
+    sll_f_sharped_geo_jac21 = 2._f64*alpha5*alpha2*sin(pi2*eta2n)
+    sll_f_sharped_geo_jac21 = sll_f_sharped_geo_jac21/(eta1_max - eta1_min)
+  end function sll_f_sharped_geo_jac21
 
   !> jacobian matrix
-  function D_sharped_Geo_jac22 ( eta1, eta2, params )
-    sll_real64  :: D_sharped_Geo_jac22
+  function sll_f_sharped_geo_jac22 ( eta1, eta2, params )
+    sll_real64  :: sll_f_sharped_geo_jac22
     sll_real64, intent(in)   :: eta1
     sll_real64, intent(in)   :: eta2
     sll_real64, dimension(:), intent(in) :: params
@@ -2373,12 +2451,12 @@ contains
     eta2_min =params(7)
     eta1_max =params(8)
     eta2_max =params(9)
-    pi2 = 2.0_f64*sll_pi
+    pi2 = 2.0_f64*sll_p_pi
     eta1n = (eta1 - eta1_min)/(eta1_max - eta1_min)
     eta2n = (eta2 - eta2_min)/(eta2_max - eta2_min)
-    D_sharped_Geo_jac22 = alpha5*(alpha2*(2._f64*eta1n - 1._f64)+alpha3)*cos(pi2*eta2n)*pi2
-    D_sharped_Geo_jac22 =  D_sharped_Geo_jac22/(eta2_max - eta2_min) 
-  end function D_sharped_Geo_jac22
+    sll_f_sharped_geo_jac22 = alpha5*(alpha2*(2._f64*eta1n - 1._f64)+alpha3)*cos(pi2*eta2n)*pi2
+    sll_f_sharped_geo_jac22 =  sll_f_sharped_geo_jac22/(eta2_max - eta2_min) 
+  end function sll_f_sharped_geo_jac22
 
    !> jacobian ie determinant of jacobian matrix
   function D_sharped_Geo_jac ( eta1, eta2, params )
@@ -2410,7 +2488,7 @@ contains
     eta2_min =params(7)
     eta1_max =params(8)
     eta2_max =params(9)
-    pi2 = 2.0_f64*sll_pi
+    pi2 = 2.0_f64*sll_p_pi
     
     eta1n = (eta1 - eta1_min)/(eta1_max - eta1_min)
     eta2n = (eta2 - eta2_min)/(eta2_max - eta2_min)

@@ -21,13 +21,23 @@
 !> @details
 !> This module are not fully tested, please use it carefully.
 module sll_m_penta_diagonal
-#include "sll_working_precision.h"
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_memory.h"
-implicit none
-private
+#include "sll_working_precision.h"
+
+  implicit none
+
+  public :: &
+    sll_o_create, &
+    sll_o_delete, &
+    sll_t_penta_diagonal_solver, &
+    sll_o_solve
+
+  private
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
   !> Initialize the penta diagonal solver
-  type sll_penta_diagonal_solver  
+  type sll_t_penta_diagonal_solver  
     sll_int32                         :: n
     sll_real64, dimension(:), pointer :: e1
     sll_real64, dimension(:), pointer :: e2
@@ -35,24 +45,20 @@ private
     sll_real64, dimension(:), pointer :: z
     sll_real64, dimension(:), pointer :: w
     sll_real64, dimension(:), pointer :: solution
-  end type sll_penta_diagonal_solver
+  end type sll_t_penta_diagonal_solver
 
-interface sll_create
+interface sll_o_create
    module procedure new_penta_diagonal
-end interface sll_create
+end interface sll_o_create
 
-interface sll_solve
+interface sll_o_solve
    module procedure solve_penta_diagonal
-end interface sll_solve
+end interface sll_o_solve
 
-interface sll_delete
+interface sll_o_delete
    module procedure delete_penta_diagonal
-end interface sll_delete
+end interface sll_o_delete
 
-public :: sll_create, &
-          sll_delete, &
-          sll_penta_diagonal_solver, &
-          sll_solve
 
 contains 
 
@@ -60,7 +66,7 @@ contains
   function new_penta_diagonal(n) result(plan)
 
     sll_int32                               :: n, ierr
-    type(sll_penta_diagonal_solver), pointer :: plan
+    type(sll_t_penta_diagonal_solver), pointer :: plan
 
     if (n<3) then
       print*, 'Matrix size must be at least 3x3'
@@ -88,12 +94,12 @@ contains
 
     sll_real64                              :: a, b, c
     sll_real64, dimension(:)                :: f
-    type(sll_penta_diagonal_solver), pointer :: plan
+    type(sll_t_penta_diagonal_solver), pointer :: plan
     sll_real64                              :: s, t, p, l1, l2
     sll_real64                              :: d, d1, d2
     sll_int32                               :: n, i, sign_of_a=0
 
-    if ( abs(a) <= 2d0*(abs(b)+abs(c)) ) then   
+    if ( abs(a) <= 2.0_f64*(abs(b)+abs(c)) ) then
       print*, 'a, b, and c must be such that: |a| > 2(|b|+|c|)'
       print*, a, b, c
       print*, 'Exiting...'
@@ -105,28 +111,28 @@ contains
     s = (a/2+c)*(a/2+c) - b*b
     t = a*a/2 - b*b - 2*c*c
 
-    if (a/=0.d0) then
+    if (a/=0.0_f64) then
        sign_of_a = int(a/abs(a))
     endif
 
     p = (a-2*c)/4 + real(sign_of_a,f64)*sqrt(sign_of_a*(a-2*c)* &
-                     sqrt(s)+t)/2d0 + real(sign_of_a,f64)*sqrt(s)/2d0
+                     sqrt(s)+t)/2.0_f64 + real(sign_of_a,f64)*sqrt(s)/2.0_f64
     l1 = b/(p+c)
     l2 = c/p
 
     do i=1,n
       plan%y(i) = f(i)/p
-      plan%e1(i) = 0.d0
-      plan%e2(i) = 0.d0
+      plan%e1(i) = 0.0_f64
+      plan%e2(i) = 0.0_f64
     enddo
-    plan%e1(1) = 1.d0
-    plan%e2(2) = 1.d0
+    plan%e1(1) = 1.0_f64
+    plan%e2(2) = 1.0_f64
 
     plan%y = solve_subsystem(l1, l2, plan%y, n)
     plan%z = solve_subsystem(l1, l2, plan%e1,  n)
     plan%w = solve_subsystem(l1, l2, plan%e2,  n)
 
-    d = 1.d0 + l1*l2*(plan%z(2)+plan%w(1)) + l2*l2*(plan%z(1)+plan%w(2)) + &
+    d = 1.0_f64 + l1*l2*(plan%z(2)+plan%w(1)) + l2*l2*(plan%z(1)+plan%w(2)) + &
            l1*l1*plan%z(1) + l2**4*(plan%z(1)*plan%w(2)-plan%z(2)*plan%w(1))
 
     d1 = l2**4*(plan%y(1)*plan%w(2)-plan%y(2)*plan%w(1)) + &
@@ -155,8 +161,8 @@ contains
     
     do i=3,n
       tmp=b(i) - ( l2*y(i-2) + l1*y(i-1) )
-      if(abs(tmp)<1e-30)then
-        tmp=0._f64
+      if(abs(tmp)<1e-30_f64)then
+        tmp=0.0_f64
       endif
       y(i) = tmp
     enddo
@@ -165,8 +171,8 @@ contains
     x(n-1) = y(n-1) - l1*y(n)
     do i=n-2,1,-1
       tmp = y(i) - ( l1*x(i+1) + l2*x(i+2) )
-      if(abs(tmp)<1e-30)then
-        tmp=0._f64
+      if(abs(tmp)<1e-30_f64)then
+        tmp=0.0_f64
       endif      
       x(i) = tmp
     enddo
@@ -177,7 +183,7 @@ contains
   !> deallocat the solver
   subroutine delete_penta_diagonal(plan)
 
-    type(sll_penta_diagonal_solver), pointer :: plan
+    type(sll_t_penta_diagonal_solver), pointer :: plan
     sll_int32                               :: ierr
 
     ! Plan components deallocation 

@@ -5,15 +5,20 @@ program test_maxwell_2d_pstd
 !-------------------------------------------------------------------
 !  test 2D Maxwell solver based on FFT
 !-------------------------------------------------------------------
-#include "sll_working_precision.h"
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_memory.h"
-#include "sll_assert.h"
-#include "sll_maxwell_solvers.h"
-use sll_m_constants
+#include "sll_working_precision.h"
+#include "sll_maxwell_solvers_macros.h"
 
-use sll_m_maxwell_2d_pstd
+  use sll_m_constants, only: pi => sll_p_pi
 
-implicit none
+  use sll_m_maxwell_2d_pstd, only: &
+    sll_o_create, &
+    sll_t_maxwell_2d_pstd, &
+    sll_o_solve
+
+  implicit none
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 sll_real64 :: eta1_max, eta1_min
 sll_real64 :: eta2_max, eta2_min
@@ -22,8 +27,8 @@ sll_real64 :: delta_eta1, delta_eta2
 sll_int32  :: nc_eta1, nc_eta2
 sll_int32  :: error
 
-type(sll_maxwell_2d_pstd)              :: maxwell_TE
-type(sll_maxwell_2d_pstd)              :: maxwell_TM
+type(sll_t_maxwell_2d_pstd)        :: maxwell_TE
+type(sll_t_maxwell_2d_pstd)        :: maxwell_TM
 sll_int32                          :: i, j
 sll_real64                         :: omega
 sll_real64                         :: time
@@ -60,7 +65,7 @@ call cpu_time(tstart)
 eta1_min = .0_f64; eta1_max = 1.0_f64
 eta2_min = .0_f64; eta2_max = 1.0_f64
 
-nc_eta1 = 127; nc_eta2 = 127
+nc_eta1 = 128; nc_eta2 = 128
 
 delta_eta1 = (eta1_max-eta1_min)/nc_eta1
 delta_eta2 = (eta2_max-eta2_min)/nc_eta2
@@ -80,15 +85,15 @@ nstep = 100
 
 time  = 0._f64
 
-omega = sqrt( (mode*sll_pi/(nc_eta1*delta_eta1))**2   &
-        &    +(mode*sll_pi/(nc_eta2*delta_eta2))**2)
+omega = sqrt( (mode*pi/(nc_eta1*delta_eta1))**2   &
+        &    +(mode*pi/(nc_eta2*delta_eta2))**2)
 
 SLL_ALLOCATE(hx(nc_eta1+1,nc_eta2+1), error)
 SLL_ALLOCATE(hy(nc_eta1+1,nc_eta2+1), error)
 SLL_ALLOCATE(ez(nc_eta1+1,nc_eta2+1), error)
 SLL_ALLOCATE(ez_exact(nc_eta1+1,nc_eta2+1), error)
 
-call sll_create(maxwell_TM, eta1_min, eta1_max, nc_eta1, &
+call sll_o_create(maxwell_TM, eta1_min, eta1_max, nc_eta1, &
          eta2_min, eta2_max, nc_eta2, TM_POLARIZATION)
 
 SLL_ALLOCATE(ex(nc_eta1+1,nc_eta2+1), error)
@@ -96,7 +101,7 @@ SLL_ALLOCATE(ey(nc_eta1+1,nc_eta2+1), error)
 SLL_ALLOCATE(hz(nc_eta1+1,nc_eta2+1), error)
 SLL_ALLOCATE(hz_exact(nc_eta1+1,nc_eta2+1), error)
 
-call sll_create(maxwell_TE, eta1_min, eta1_max, nc_eta1, &
+call sll_o_create(maxwell_TE, eta1_min, eta1_max, nc_eta1, &
          eta2_min, eta2_max, nc_eta2, TE_POLARIZATION)
 
 
@@ -104,16 +109,13 @@ do istep = 1, nstep !*** Loop over time
 
    time = time + 0.5_f64*dt
 
-   ez_exact =   cos(mode*sll_pi*eta1)*cos(mode*sll_pi*eta2)*cos(omega*time)
-   hz_exact = - cos(mode*sll_pi*eta1)*cos(mode*sll_pi*eta2)*cos(omega*time)
+   ez_exact =   cos(mode*pi*eta1)*cos(mode*pi*eta2)*cos(omega*time)
+   hz_exact = - cos(mode*pi*eta1)*cos(mode*pi*eta2)*cos(omega*time)
   
    if (istep == 1) then
       ez = ez_exact
       hz = hz_exact
    end if
-
-   !call plot_fields('ez',ez, ez_exact, istep, time)
-   !call plot_fields('hz',hz, hz_exact, istep, time)
 
    err_tm = maxval(abs(ez - ez_exact))
    err_te = maxval(abs(hz - hz_exact))
@@ -122,9 +124,9 @@ do istep = 1, nstep !*** Loop over time
    write(*,"(' time = ',g12.3,' sec')",advance="no") time
    write(*,"(' erreurs TM,TE = ',2g15.5)") err_tm, err_te
 
-   call sll_solve(maxwell_TM, hx, hy, ez, dt)
+   call sll_o_solve(maxwell_TM, hx, hy, ez, dt)
 
-   call sll_solve(maxwell_TE, ex, ey, hz, dt)
+   call sll_o_solve(maxwell_TE, ex, ey, hz, dt)
 
    time = time + 0.5_f64*dt
 

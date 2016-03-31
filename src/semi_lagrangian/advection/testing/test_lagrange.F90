@@ -1,7 +1,18 @@
 program test_lagrange
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_working_precision.h"
-  use sll_m_lagrange_interpolation
+
+  use sll_m_boundary_condition_descriptors, only: &
+    sll_p_periodic
+
+  use sll_m_lagrange_interpolation, only: &
+    sll_s_compact_derivative_weight, &
+    sll_s_compute_stencil_plus, &
+    sll_f_lagrange_interpolate, &
+    sll_o_weight_product_x1
+
   implicit none
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 #define NP 20
 #define XMIN  0.0_f64
@@ -28,18 +39,18 @@ program test_lagrange
   ! We could add more points in between the nodes...
   do i=1, NP
      tmp = xi(i)
-     res = lagrange_interpolate( tmp, 3, xi, yi )
+     res = sll_f_lagrange_interpolate( tmp, 3, xi, yi )
      print *, '#interpolated value = ', res, '. Correct value = ', yi(i)
   end do
 
   !----------->
   ! test of derivatives
   do p=0,5
-    call compute_stencil_plus(p,r,s)
-    call compact_derivative_weight(w(r:s),r,s)
+    call sll_s_compute_stencil_plus(p,r,s)
+    call sll_s_compact_derivative_weight(w(r:s),r,s)
     print *,r,s
     print *, w(r:s)
-    call weight_product_x1(yi,xi,NP-1,w(r:s),r,s,SLL_PERIODIC)
+    call sll_o_weight_product_x1(yi,xi,NP-1,w(r:s),r,s,sll_p_periodic)
        do i=1, NP
        print *, '#derivative(i) = ',xi(i),2._f64*(XMIN + real(i-1,f64)*DELTA)
     end do    

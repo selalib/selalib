@@ -27,7 +27,7 @@ program test_quasi_neutral
   print*, '----------------------------------------------------'
 
   ! Initialize parallel environment
-  call sll_boot_collective()
+  call sll_s_boot_collective()
   ! Test intialisation
   ! Allocation
   npr = 10
@@ -176,7 +176,7 @@ program test_quasi_neutral
  write (8,*) U
  
  !halt parallel environment
- call sll_halt_collective()
+ call sll_s_halt_collective()
  print*, 'end of test'
 
 end program test_quasi_neutral

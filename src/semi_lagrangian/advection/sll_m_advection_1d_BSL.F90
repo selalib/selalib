@@ -20,19 +20,31 @@
 
 
 module sll_m_advection_1d_BSL
-#include "sll_working_precision.h"
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_memory.h"
-#include "sll_assert.h"
-use sll_m_boundary_condition_descriptors
-use sll_m_advection_1d_base
-use sll_m_characteristics_1d_base
-use sll_m_interpolators_1d_base
-implicit none
+#include "sll_working_precision.h"
 
-  type,extends(sll_advection_1d_base) :: BSL_1d_advector
+  use sll_m_advection_1d_base, only: &
+    sll_c_advection_1d_base
+
+  use sll_m_characteristics_1d_base, only: &
+    sll_c_characteristics_1d_base
+
+  use sll_m_interpolators_1d_base, only: &
+    sll_c_interpolator_1d
+
+  implicit none
+
+  public :: &
+    sll_f_new_bsl_1d_advector
+
+  private
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+  type,extends(sll_c_advection_1d_base) :: BSL_1d_advector
   
-    class(sll_interpolator_1d_base), pointer  :: interp
-    class(sll_characteristics_1d_base), pointer  :: charac
+    class(sll_c_interpolator_1d), pointer  :: interp
+    class(sll_c_characteristics_1d_base), pointer  :: charac
     sll_real64, dimension(:), pointer :: eta_coords
     sll_real64, dimension(:), pointer :: charac_feet
     sll_int32 :: Npts
@@ -51,7 +63,7 @@ implicit none
 
 
 contains
-  function new_BSL_1d_advector( &
+  function sll_f_new_bsl_1d_advector( &
     interp, &
     charac, &
     Npts, &
@@ -60,8 +72,8 @@ contains
     eta_coords) &  
     result(adv)      
     type(BSL_1d_advector), pointer :: adv
-    class(sll_interpolator_1d_base), pointer :: interp
-    class(sll_characteristics_1d_base), pointer  :: charac
+    class(sll_c_interpolator_1d), pointer :: interp
+    class(sll_c_characteristics_1d_base), pointer  :: charac
     sll_int32, intent(in) :: Npts
     sll_real64, intent(in), optional :: eta_min
     sll_real64, intent(in), optional :: eta_max
@@ -79,7 +91,7 @@ contains
       eta_max, &
       eta_coords)    
     
-  end function  new_BSL_1d_advector
+  end function  sll_f_new_bsl_1d_advector
 
 
   subroutine initialize_BSL_1d_advector(&
@@ -91,8 +103,8 @@ contains
     eta_max, &
     eta_coords)    
     class(BSL_1d_advector), intent(inout) :: adv
-    class(sll_interpolator_1d_base), pointer :: interp
-    class(sll_characteristics_1d_base), pointer  :: charac
+    class(sll_c_interpolator_1d), pointer :: interp
+    class(sll_c_characteristics_1d_base), pointer  :: charac
     sll_int32, intent(in) :: Npts
     sll_real64, intent(in), optional :: eta_min
     sll_real64, intent(in), optional :: eta_max
@@ -163,10 +175,12 @@ contains
 !      adv%eta2_coords, &
 !      adv%Npts2 )
 
-    output = adv%interp%interpolate_array( &
+    
+    call adv%interp%interpolate_array( &
       adv%Npts, &
       input, &
-      adv%charac_feet)      
+      adv%charac_feet, &
+      output)      
           
   end subroutine BSL_advect_1d
 
@@ -204,10 +218,11 @@ contains
 !      adv%eta2_coords, &
 !      adv%Npts2 )
 
-    output = adv%interp%interpolate_array( &
+    call adv%interp%interpolate_array( &
       adv%Npts, &
       input, &
-      adv%charac_feet)      
+      adv%charac_feet, &
+      output)      
 
     SLL_DEALLOCATE_ARRAY(A1,ierr)
 

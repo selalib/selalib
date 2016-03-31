@@ -1,12 +1,34 @@
 program test_fcisl
-#include "sll_working_precision.h"
-#include "sll_assert.h"
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_memory.h"
-  use sll_m_fcisl
-  use sll_m_constants
-  use sll_m_advection_1d_periodic
-  
+#include "sll_working_precision.h"
+
+  use sll_m_advection_1d_base, only: &
+    sll_c_advection_1d_base
+
+  use sll_m_advection_1d_periodic, only: &
+    sll_f_new_periodic_1d_advector
+
+  use sll_m_constants, only: &
+    sll_p_pi
+
+  use sll_m_fcisl, only: &
+    sll_s_compute_at_aligned, &
+    sll_s_compute_iota_from_shift, &
+    sll_s_compute_oblic_shift, &
+    sll_s_compute_spaghetti, &
+    sll_s_compute_spaghetti_and_shift_from_guess, &
+    sll_s_compute_spaghetti_size_from_shift, &
+    sll_s_load_spaghetti, &
+    sll_f_new_oblic_derivative, &
+    sll_t_oblic_derivative, &
+    sll_s_unload_spaghetti
+
+  use sll_m_periodic_interp, only: &
+    sll_p_spline
+
   implicit none
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
   
   sll_int32 :: Nc_x1
   sll_int32 :: Nc_x2
@@ -29,8 +51,8 @@ program test_fcisl
   sll_real64 :: x2_max
   sll_real64 :: delta_x1
   sll_real64 :: delta_x2
-  type(sll_oblic_derivative), pointer :: deriv
-  class(sll_advection_1d_base), pointer :: adv
+  type(sll_t_oblic_derivative), pointer :: deriv
+  class(sll_c_advection_1d_base), pointer :: adv
   sll_int32 :: degree
   sll_real64, dimension(:,:), allocatable :: phi
   sll_real64, dimension(:,:), allocatable :: phi_at_aligned
@@ -142,16 +164,16 @@ program test_fcisl
     do i1=1,Nc_x1+1
       x1 = x1_min+real(i1-1,f64)*delta_x1
       x2 = x2_min+real(i2-1,f64)*delta_x2
-      f_init(i1,i2) = sin(2._f64*sll_pi*real(k_mode,f64)*(-A2_0*x1+A1_0*x2))
+      f_init(i1,i2) = sin(2._f64*sll_p_pi*real(k_mode,f64)*(-A2_0*x1+A1_0*x2))
       x1 = x1 - A1*real(nb_step,f64)*dt
       x2 = x2 - A2*real(nb_step,f64)*dt
-      f_exact(i1,i2) = sin(2._f64*sll_pi*real(k_mode,f64)*(-A2_0*x1+A1_0*x2))
+      f_exact(i1,i2) = sin(2._f64*sll_p_pi*real(k_mode,f64)*(-A2_0*x1+A1_0*x2))
     enddo
   enddo
 
   
   phi = 1._f64
-  call compute_oblic_shift( &
+  call sll_s_compute_oblic_shift( &
     iota, &
     Nc_x1, &
     shift, &
@@ -159,7 +181,7 @@ program test_fcisl
   !spaghetti_size_guess = Nc_x1
   print *,'#shift from iota=',shift
   print *,'#iota_modif=',iota_modif
-  call compute_spaghetti_size_from_shift( &
+  call sll_s_compute_spaghetti_size_from_shift( &
     Nc_x1, &
     shift, &
     spaghetti_size)
@@ -173,7 +195,7 @@ program test_fcisl
   print *,'#iota_guess=',iota
   print *,'#spaghetti_size_guess=',spaghetti_size_guess
   print *,'#spaghetti_size between 1 and ',Nc_x1
-  call compute_spaghetti_and_shift_from_guess( &
+  call sll_s_compute_spaghetti_and_shift_from_guess( &
     Nc_x1, &
     Nc_x2, &
     iota, &
@@ -183,7 +205,7 @@ program test_fcisl
 
   print *,'#shift=',shift
   print *,'#spaghetti_size=',spaghetti_size
-  call compute_iota_from_shift(Nc_x1,shift,iota_modif)
+  call sll_s_compute_iota_from_shift(Nc_x1,shift,iota_modif)
   print *,'#iota_modif=',iota_modif
   !stop
 
@@ -197,14 +219,14 @@ program test_fcisl
 ! and iota near to iota_guess
 ! this permits to avoid to declare oblic 1d advectors of several sizes
   
-  adv => new_periodic_1d_advector( &
+  adv => sll_f_new_periodic_1d_advector( &
     Nc_x1, &
     x1_min, &
     x1_max, &
-    SPLINE, & 
+    sll_p_spline, & 
     4) 
 
-  call compute_at_aligned( &
+  call sll_s_compute_at_aligned( &
     phi, &
     phi_at_aligned, &
     Nc_x1, &
@@ -219,14 +241,14 @@ program test_fcisl
   
   
   
-  call compute_spaghetti_size_from_shift( &
+  call sll_s_compute_spaghetti_size_from_shift( &
     Nc_x1, &
     shift, &
     spaghetti_size)
   print *,'#shift=',shift,spaghetti_size
   
   !do shift=-2*Nc_x1,2*Nc_x1
-  call compute_spaghetti( &
+  call sll_s_compute_spaghetti( &
     Nc_x1, &
     Nc_x2, &
     shift, &
@@ -238,7 +260,7 @@ program test_fcisl
   print *,'#num_spaghetti=',num_spaghetti
   
   !stop  
-  call load_spaghetti( &
+  call sll_s_load_spaghetti( &
     phi_at_aligned, &
     buf1d_spaghetti, &
     spaghetti_index, &
@@ -257,7 +279,7 @@ program test_fcisl
     s = s+spaghetti_size*Nc_x2
   enddo   
 
-  call unload_spaghetti( &
+  call sll_s_unload_spaghetti( &
     buf1d_spaghetti, &
     phi_at_aligned, &
     spaghetti_index, &
@@ -270,7 +292,7 @@ program test_fcisl
   stop    
 
   
-  deriv => new_oblic_derivative( &
+  deriv => sll_f_new_oblic_derivative( &
     degree, &
     x1_min, &
     x1_max, &

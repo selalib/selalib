@@ -19,15 +19,15 @@
 
 !> @author MCP ALH
 
-!> @brief Module for groups of particles of type sll_bsl_lt_pic_4d_particle
+!> @brief Module for groups of particles of type sll_t_bsl_lt_pic_4d_particle
 
 module sll_m_bsl_lt_pic_4d_group
 
-#include "sll_working_precision.h"
-#include "sll_memory.h"
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_assert.h"
-#include "sll_accumulators.h"
 #include "sll_errors.h"
+#include "sll_memory.h"
+#include "sll_working_precision.h"
 
   use sll_m_constants, only: sll_pi
   use sll_m_working_precision
@@ -43,8 +43,47 @@ module sll_m_bsl_lt_pic_4d_group
             get_4d_cell_containing_point
   use sll_m_gnuplot
   use sll_m_sobol, only: i8_sobol
+  use sll_m_accumulators, only: &
+    sll_t_charge_accumulator_cell_2d, &
+    sll_s_reset_charge_accumulator_to_zero, &
+    sll_t_charge_accumulator_2d
+
+  use sll_m_bsl_lt_pic_4d_particle, only: &
+    sll_t_bsl_lt_pic_4d_particle
+
+  use sll_m_bsl_lt_pic_4d_utilities, only: &
+    sll_s_apply_periodic_bc_x, &
+    sll_s_apply_periodic_bc_y, &
+    sll_f_eval_hat_function, &
+    sll_f_eval_landau_fx, &
+    sll_s_get_init_position_on_cart_grid_from_particle_index, &
+    sll_s_get_particle_index_from_init_position_on_cart_grid, &
+    sll_f_pic_shape, &
+    sll_s_update_closest_particle_arrays
+
+  use sll_m_cartesian_meshes, only: &
+    sll_f_new_cartesian_mesh_4d, &
+    sll_t_cartesian_mesh_2d, &
+    sll_t_cartesian_mesh_4d
+
+  use sll_m_constants, only: &
+    sll_p_pi
+
+  use sll_m_gnuplot, only: &
+    sll_o_gnuplot_2d
+
+  use sll_m_remapped_pic_base, only: &
+    sll_c_remapped_particle_group, &
+    sll_f_temp_species_new
 
   implicit none
+
+  public :: &
+    sll_t_bsl_lt_pic_4d_group, &
+    sll_f_bsl_lt_pic_4d_group_new, &
+    sll_o_delete
+
+  private
 
   ! types of interpolation for the remapped f
   sll_int32, parameter :: SLL_BSL_LT_PIC_REMAP_WITH_SPLINES = 0
@@ -72,15 +111,13 @@ module sll_m_bsl_lt_pic_4d_group
   sll_int32, parameter :: SLL_BSL_LT_PIC_FIXED = 0
   sll_int32, parameter :: SLL_BSL_LT_PIC_PUSHED = 1
 
-  ! old values:
-  !  sll_int32, parameter :: SLL_BSL_LT_PIC_FIXED_GRID = 0
-  !  sll_int32, parameter :: SLL_BSL_LT_PIC_TRANSPORTED_RANDOM = 1
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
-  !> Group of @ref sll_bsl_lt_pic_4d_particle
-  type, extends(sll_c_remapped_particle_group) :: sll_bsl_lt_pic_4d_group  ! todo: rename as sll_t_bsl_lt_pic_4d_group
+  !> Group of @ref sll_t_bsl_lt_pic_4d_particle
+  type, extends(sll_c_remapped_particle_group) :: sll_t_bsl_lt_pic_4d_group
 
-    !> @name The markers (particles pushed forward, carry no weights) -- structured case
-    !> @{
+   !> @name The markers (particles pushed forward, carry no weights) -- structured case 
+   !> @{
     sll_int32                                                   :: flow_markers_type        ! structured or unstructured
     ! structured flow markers always start from a cartesian grid in phase space (at initialization and remapping steps)
     sll_int32                                                   :: number_flow_markers_x
@@ -88,8 +125,8 @@ module sll_m_bsl_lt_pic_4d_group
     sll_int32                                                   :: number_flow_markers_vx
     sll_int32                                                   :: number_flow_markers_vy
     sll_int32                                                   :: number_struct_flow_markers
-    type(sll_cartesian_mesh_4d), pointer                        :: initial_markers_grid
-    type(sll_bsl_lt_pic_4d_particle),   dimension(:), pointer   :: struct_markers_list
+    type(sll_t_cartesian_mesh_4d), pointer                      :: initial_markers_grid
+    type(sll_t_bsl_lt_pic_4d_particle),   dimension(:), pointer :: struct_markers_list
     ! When using unstructured flow markers, we store their indices in chained lists attached to the flow cells
     sll_int32                                                   :: nb_unstruct_markers_per_cell
     sll_int32                                                   :: max_nb_unstruct_markers
@@ -104,7 +141,7 @@ module sll_m_bsl_lt_pic_4d_group
 
     !> @name The flow grid (4d cartesian cells where the flow is linearized)
     !> @{
-    type(sll_cartesian_mesh_4d), pointer    :: flow_grid
+    type(sll_t_cartesian_mesh_4d), pointer  :: flow_grid
     sll_real64                              :: flow_grid_h    !< average step in grid
     sll_real64                              :: flow_grid_a1   !< anisotropic parameters: h_dim = flow_grid_h * flow_grid_a_dim
     sll_real64                              :: flow_grid_a2
@@ -114,7 +151,7 @@ module sll_m_bsl_lt_pic_4d_group
 
     !> @name The physical mesh used eg in the Poisson solver
     !> @{
-    type(sll_cartesian_mesh_2d), pointer    :: space_mesh_2d
+    type(sll_t_cartesian_mesh_2d), pointer    :: space_mesh_2d
     !> @}
 
     !> @name The deposition particles (will be created on the fly in each cell of the flow_grid, when depositing the charge)
@@ -122,7 +159,7 @@ module sll_m_bsl_lt_pic_4d_group
     sll_int32                                 :: deposition_particles_type       !< basic (=first implementation) or flexible (new)
     sll_int32                                 :: deposition_particles_pos_type   !< structured  or  unstructured (random)
     sll_int32                                 :: deposition_particles_move_type  !< fixed (new at each step) or pushed (until remap)
-    type(sll_cartesian_mesh_4d), pointer      :: deposition_particles_grid                 !< used if type = struct_grid
+    type(sll_t_cartesian_mesh_4d), pointer    :: deposition_particles_grid                 !< used if type = struct_grid
     sll_int32                                 :: number_deposition_particles        !< number of deposition particles
     sll_int32                                 :: number_moving_deposition_particles !< number of pushed deposition particles
     sll_real64, dimension(:,:), allocatable   :: deposition_particles_eta           !< used for if type = flexible
@@ -154,7 +191,7 @@ module sll_m_bsl_lt_pic_4d_group
 
     !> @name The sparse grid object used for the interpolation of the remapped density f, if remapping with sparse grid
     !> @{
-    type(sparse_grid_interpolator_4d)                           :: sparse_grid_interpolator
+    type(sll_t_sparse_grid_interpolator_4d)                     :: sparse_grid_interpolator
     sll_int32,  dimension(4)                                    :: sparse_grid_max_levels
     sll_real64, dimension(:), allocatable                       :: remapped_f_sparse_grid_coefficients
     ! maybe more stuff is needed here
@@ -162,7 +199,7 @@ module sll_m_bsl_lt_pic_4d_group
 
     !> @name The cartesian grid used for the interpolation of the remapped density f, if remapping with splines
     !> @{
-    type(sll_cartesian_mesh_4d),                pointer         :: remapping_cart_grid
+    type(sll_t_cartesian_mesh_4d),                pointer       :: remapping_cart_grid
     sll_real64, dimension(:,:,:,:), allocatable                 :: remapped_f_splines_coefficients
     sll_int32                                                   :: remapping_cart_grid_number_cells_x
     sll_int32                                                   :: remapping_cart_grid_number_cells_y
@@ -256,11 +293,11 @@ module sll_m_bsl_lt_pic_4d_group
     procedure :: anisotropic_flow_grid_distance
     procedure :: periodic_correction
 
-  end type sll_bsl_lt_pic_4d_group
+  end type sll_t_bsl_lt_pic_4d_group
 
-  interface sll_delete
+  interface sll_o_delete
      module procedure sll_bsl_lt_pic_4d_group_delete
-  end interface sll_delete
+  end interface sll_o_delete
 
 
   !! MCP (July 16) -- this is to make the subroutine external, in a separate file, but does not work yet --
@@ -268,8 +305,8 @@ module sll_m_bsl_lt_pic_4d_group
 !  interface
 !    subroutine bsl_lt_pic_4d_initializer( self, initial_density_identifier, rand_seed, rank, world_size )
 !    use sll_m_working_precision
-!    import sll_bsl_lt_pic_4d_group
-!    class( sll_bsl_lt_pic_4d_group ), intent( inout ) :: self
+!    import sll_t_bsl_lt_pic_4d_group
+!    class( sll_t_bsl_lt_pic_4d_group ), intent( inout ) :: self
 !    sll_int32                       , intent( in    ) :: initial_density_identifier
 !    sll_int32, dimension(:)         , intent( in ), optional :: rand_seed
 !    sll_int32                       , intent( in ), optional :: rank, world_size
@@ -285,7 +322,7 @@ contains
 
   !----------------------------------------------------------------------------
   pure function bsl_lt_pic_4d_get_charge( self, i ) result( r )
-    class( sll_bsl_lt_pic_4d_group ), intent( in ) :: self
+    class( sll_t_bsl_lt_pic_4d_group ), intent( in ) :: self
     sll_int32                       , intent( in ) :: i
     sll_real64 :: r
 
@@ -296,7 +333,7 @@ contains
 
   !----------------------------------------------------------------------------
   pure function bsl_lt_pic_4d_get_mass( self, i ) result( r )
-    class( sll_bsl_lt_pic_4d_group ), intent( in ) :: self
+    class( sll_t_bsl_lt_pic_4d_group ), intent( in ) :: self
     sll_int32                       , intent( in ) :: i
     sll_real64 :: r
 
@@ -311,7 +348,7 @@ contains
   !   2) or a deposition particle (for i = self%number_flow_markers+1, ... self%number_moving_deposition_particles)
 
   pure function bsl_lt_pic_4d_get_x( self, i ) result( r )
-    class( sll_bsl_lt_pic_4d_group ), intent( in ) :: self
+    class( sll_t_bsl_lt_pic_4d_group ), intent( in ) :: self
     sll_int32                       , intent( in ) :: i
     sll_real64 :: r(3)
 
@@ -356,7 +393,7 @@ contains
   !   2) or a deposition particle (for i = self%number_flow_markers+1, ... self%number_moving_deposition_particles)
 
   pure function bsl_lt_pic_4d_get_v( self, i ) result( r )
-    class( sll_bsl_lt_pic_4d_group ), intent( in ) :: self
+    class( sll_t_bsl_lt_pic_4d_group ), intent( in ) :: self
     sll_int32                       , intent( in ) :: i
     sll_real64 :: r(3)
 
@@ -407,7 +444,7 @@ contains
   ! note: almost the same function in the simple_pic_4d group -- maybe use the same function?
 
   pure function bsl_lt_pic_4d_get_cell_index(self, i) result(i_out)
-    class(sll_bsl_lt_pic_4d_group),  intent( in )   ::  self
+    class(sll_t_bsl_lt_pic_4d_group),  intent( in )   ::  self
     sll_int32,                      intent( in )    ::  i       !> particle index
     sll_int32                                       ::  i_out   !> cell index
     sll_int32  ::  i_cell_x, i_cell_y
@@ -475,17 +512,17 @@ contains
   !    so that: - in periodic domains, the flows are better represented (no information is lost using modulo)
   !             - in non-periodic domains we can track outside particles (markers)
   !
-  ! note: the integer index of the physical cell (used eg for the Poisson solver) is then obtained with get_poisson_cell_index
+  ! note: the integer index of the physical cell (used eg for the Poisson solver) is then obtained with sll_s_get_poisson_cell_index
   !
   ! same function in the simple_pic_4d group -- (possible to use the same function?)
 
   subroutine bsl_lt_pic_4d_set_x( self, i, x )
-    class( sll_bsl_lt_pic_4d_group ), intent( inout ) :: self
+    class( sll_t_bsl_lt_pic_4d_group ), intent( inout ) :: self
     sll_int32                       , intent( in    ) :: i
     sll_real64                      , intent( in    ) :: x(3)
 
-    type(sll_cartesian_mesh_2d),      pointer :: space_mesh_2d
-    type(sll_bsl_lt_pic_4d_particle), pointer :: particle
+    type(sll_t_cartesian_mesh_2d),      pointer :: space_mesh_2d
+    type(sll_t_bsl_lt_pic_4d_particle), pointer :: particle
     sll_int32                :: i_cell_x, i_cell_y
     sll_real32               :: offset_x, offset_y
     sll_real64               :: temp
@@ -565,11 +602,11 @@ contains
   !   2) or a deposition particle (for i = self%number_flow_markers+1, ... self%number_moving_deposition_particles)
 
  subroutine bsl_lt_pic_4d_set_v( self, i, x )
-    class( sll_bsl_lt_pic_4d_group ), intent( inout ) :: self
+    class( sll_t_bsl_lt_pic_4d_group ), intent( inout ) :: self
     sll_int32                       , intent( in    ) :: i
     sll_real64                      , intent( in    ) :: x(3)  !> this is the velocity, but argument name in abstract interface is x
 
-    type(sll_bsl_lt_pic_4d_particle), pointer :: particle
+    type(sll_t_bsl_lt_pic_4d_particle), pointer :: particle
     sll_real64, dimension(4) :: eta_marker
     sll_int32  :: old_j_x, old_j_y, old_j_vx, old_j_vy
     logical    :: marker_is_outside
@@ -620,10 +657,10 @@ contains
 
   !----------------------------------------------------------------------------
   subroutine bsl_lt_pic_4d_set_common_weight( self, s )
-    class( sll_bsl_lt_pic_4d_group ), intent( inout ) :: self
+    class( sll_t_bsl_lt_pic_4d_group ), intent( inout ) :: self
     sll_real64                      , intent( in    ) :: s
 
-    print*, "Error (9O8657864) -- this subroutine is not implemented for sll_bsl_lt_pic_4d_group objects", s, storage_size(self)
+    print*, "Error (9O8657864) -- this subroutine is not implemented for sll_t_bsl_lt_pic_4d_group objects", s, storage_size(self)
     stop
 
   end subroutine bsl_lt_pic_4d_set_common_weight
@@ -631,7 +668,7 @@ contains
 
   !----------------------------------------------------------------------------
   subroutine bsl_lt_pic_4d_set_particle_weight( self, i, s )
-    class( sll_bsl_lt_pic_4d_group ), intent( inout ) :: self
+    class( sll_t_bsl_lt_pic_4d_group ), intent( inout ) :: self
     sll_int32                       , intent( in    ) :: i
     sll_real64                      , intent( in    ) :: s
 
@@ -643,7 +680,7 @@ contains
 
   !----------------------------------------------------------------------------
   subroutine bsl_lt_pic_4d_set_landau_parameters( self, thermal_speed, alpha, k_landau )
-    class( sll_bsl_lt_pic_4d_group ), intent( inout ) :: self
+    class( sll_t_bsl_lt_pic_4d_group ), intent( inout ) :: self
     sll_real64                      , intent( in    ) :: thermal_speed
     sll_real64                      , intent( in    ) :: alpha
     sll_real64                      , intent( in    ) :: k_landau
@@ -857,13 +894,13 @@ contains
   ! deposit charge carried by the bsl_lt_pic_4d particles on a 2d mesh
 
   subroutine bsl_lt_pic_4d_deposit_charge_2d( self, charge_accumulator, target_total_charge, enforce_total_charge)
-    class( sll_bsl_lt_pic_4d_group ),           intent( inout ) :: self
-    type( sll_charge_accumulator_2d ), pointer, intent( inout ) :: charge_accumulator
+    class( sll_t_bsl_lt_pic_4d_group ),           intent( inout ) :: self
+    type( sll_t_charge_accumulator_2d ), pointer, intent( inout ) :: charge_accumulator
     sll_real64,                                 intent(in)      :: target_total_charge
     logical,                                    intent(in)      :: enforce_total_charge
 
-    type(charge_accumulator_cell_2d), pointer :: charge_accumulator_cell
-    type(sll_cartesian_mesh_4d),     pointer  :: void_grid_4d        ! make this argument optional ?
+    type(sll_t_charge_accumulator_cell_2d), pointer :: charge_accumulator_cell
+    type(sll_t_cartesian_mesh_4d),     pointer  :: void_grid_4d        ! make this argument optional ?
     sll_real64, dimension(:,:),      pointer  :: void_array_2d       ! make this argument optional ?
     sll_int32     :: scenario
 
@@ -884,7 +921,7 @@ contains
       nullify(void_grid_4d)
       nullify(void_array_2d)
       scenario = SLL_BSL_LT_PIC_DEPOSIT_F
-      call reset_charge_accumulator_to_zero ( charge_accumulator )
+      call sll_s_reset_charge_accumulator_to_zero ( charge_accumulator )
 
       call self%bsl_lt_pic_4d_write_f_on_grid_or_deposit(charge_accumulator,                                &
                                                          scenario,                                          &
@@ -958,7 +995,7 @@ contains
 
   subroutine bsl_lt_pic_4d_visualize_f_slice_x_vx(self, array_name, plot_np_x, plot_np_y, plot_np_vx, plot_np_vy, iplot)
 
-    class( sll_bsl_lt_pic_4d_group ),   intent( inout ) :: self
+    class( sll_t_bsl_lt_pic_4d_group ),   intent( inout ) :: self
     character(len=*),                   intent(in)      :: array_name   !< field name
     sll_int32,                          intent(in)      :: plot_np_x    !< nb of points in the x  plotting grid (see comment above)
     sll_int32,                          intent(in)      :: plot_np_y    !< nb of points in the y  plotting grid (see comment above)
@@ -969,8 +1006,8 @@ contains
     sll_int32 :: ierr
 
     sll_real64, dimension(:,:),       pointer :: x_vx_grid_values
-    type(sll_cartesian_mesh_4d),      pointer :: plotting_grid_4d
-    type(sll_charge_accumulator_2d),  pointer :: void_charge_accumulator
+    type(sll_t_cartesian_mesh_4d),      pointer :: plotting_grid_4d
+    type(sll_t_charge_accumulator_2d),  pointer :: void_charge_accumulator
     sll_int32     :: scenario
     sll_real64    :: dummy_total_charge
     logical       :: enforce_total_charge
@@ -981,7 +1018,7 @@ contains
 
     SLL_ALLOCATE( x_vx_grid_values(plot_np_x, plot_np_vx), ierr)
 
-    plotting_grid_4d => new_cartesian_mesh_4d(plot_np_x  - 1,                 &
+    plotting_grid_4d => sll_f_new_cartesian_mesh_4d(plot_np_x  - 1,                 &
                                               plot_np_y  - 1,                 &
                                               plot_np_vx - 1,                 &
                                               plot_np_vy - 1,                 &
@@ -1009,7 +1046,7 @@ contains
 
     ! print *, "plot T"
 
-    call sll_gnuplot_2d(self%remapping_grid_eta_min(1), &
+    call sll_o_gnuplot_2d(self%remapping_grid_eta_min(1), &
                         self%remapping_grid_eta_max(1), &
                         plot_np_x,                      &     ! (note: this is indeed the nb of plotted points, not 'cells')
                         self%remapping_grid_eta_min(3), &
@@ -1079,7 +1116,7 @@ contains
   !----------------------------------------------------------------------------
   ! Constructor
   !> @brief Constructor for a group of bsl_lt_pic_4d particles
-  function sll_bsl_lt_pic_4d_group_new(             &
+  function sll_f_bsl_lt_pic_4d_group_new(             &
         species_charge,                             &
         species_mass,                               &
         particle_group_id,                          &
@@ -1116,7 +1153,7 @@ contains
         flow_grid_number_cells_vy,                  &
         space_mesh_2d ) result(res)
 
-    type( sll_bsl_lt_pic_4d_group ), pointer :: res
+    type( sll_t_bsl_lt_pic_4d_group ), pointer :: res
 
     sll_real64,               intent(in)  :: species_charge
     sll_real64,               intent(in)  :: species_mass
@@ -1155,7 +1192,7 @@ contains
     sll_int32,                intent(in)  :: flow_grid_number_cells_vy
 
 
-    type(sll_cartesian_mesh_2d), pointer, intent(in) :: space_mesh_2d
+    type(sll_t_cartesian_mesh_2d), pointer, intent(in) :: space_mesh_2d
 
     sll_int32               :: number_cells_initial_markers_grid_x
     sll_int32               :: number_cells_initial_markers_grid_y
@@ -1163,7 +1200,7 @@ contains
     sll_int32               :: number_cells_initial_markers_grid_vy
 
     sll_int32               :: ierr
-    character(len=*), parameter :: this_fun_name = "sll_bsl_lt_pic_4d_group_new"
+    character(len=*), parameter :: this_fun_name = "sll_f_bsl_lt_pic_4d_group_new"
     character(len=128)      :: err_msg
 
     sll_int32  :: effective_nb_deposition_particles_x
@@ -1204,7 +1241,7 @@ contains
     SLL_ALLOCATE( res, ierr )
 
     !> create the species object for this particle group
-    res%species => temp_species_new( species_charge, species_mass )
+    res%species => sll_f_temp_species_new( species_charge, species_mass )
 
     res%id = particle_group_id
     res%dimension_x = 2
@@ -1604,7 +1641,7 @@ contains
     !      SLL_ERROR( this_fun_name, err_msg )
     !    end if
 
-  end function sll_bsl_lt_pic_4d_group_new
+  end function sll_f_bsl_lt_pic_4d_group_new
 
 
   !> initializes the interpolation coefficients for f0 on the remapping grid, and the flow markers
@@ -1616,7 +1653,7 @@ contains
         enforce_total_charge, &
         rand_seed, rank, world_size )
 
-    class( sll_bsl_lt_pic_4d_group ), intent( inout ) :: self
+    class( sll_t_bsl_lt_pic_4d_group ), intent( inout ) :: self
     sll_int32                       , intent( in    ) :: initial_density_identifier
     sll_real64,                       intent( in )    :: target_total_charge
     logical,                          intent( in )    :: enforce_total_charge
@@ -1691,7 +1728,7 @@ contains
               thermal_speed, alpha, k_landau        &
               )
 
-    class(sll_bsl_lt_pic_4d_group), intent(inout)    :: p_group
+    class(sll_t_bsl_lt_pic_4d_group), intent(inout)    :: p_group
     sll_real64, intent(in)                          :: thermal_speed, alpha, k_landau
 
     sll_int32 :: j
@@ -1724,7 +1761,7 @@ contains
     !    sll_real64 :: total_density ! DEBUG
 
     one_over_thermal_velocity = 1./thermal_speed
-    one_over_two_pi = 1./(2*sll_pi)
+    one_over_two_pi = 1./(2*sll_p_pi)
 
 
     ! print*, "bsl_lt_pic_4d_write_landau_density_on_remapping_grid -- a "
@@ -1757,7 +1794,7 @@ contains
 
       do j_x = 1, number_nodes_x
         x_j = x_min + (j_x-1) * h_x
-        f_x = eval_landau_fx(alpha, k_landau, x_j)
+        f_x = sll_f_eval_landau_fx(alpha, k_landau, x_j)
 
         do j_y = 1, number_nodes_y
           ! (density does not depend on y)
@@ -1934,7 +1971,7 @@ contains
         basis_height, shift &
       )
 
-    class(sll_bsl_lt_pic_4d_group), intent(inout)     :: p_group
+    class(sll_t_bsl_lt_pic_4d_group), intent(inout)     :: p_group
     sll_real64, intent(in)                            :: x0, y0, vx0, vy0
     sll_real64, intent(in)                            :: r_x, r_y, r_vx, r_vy
     sll_real64, intent(in)                            :: basis_height, shift
@@ -1993,7 +2030,7 @@ contains
               vy_j = vy_min + (j_vy-1) * h_vy
 
               ! here we store a nodal value but later this array will indeed store spline coefficients
-              p_group%remapped_f_splines_coefficients(j_x,j_y,j_vx,j_vy) = eval_hat_function(x0,y0,vx0,vy0,r_x,r_y,r_vx,r_vy,   &  !todo: use temp array
+              p_group%remapped_f_splines_coefficients(j_x,j_y,j_vx,j_vy) = sll_f_eval_hat_function(x0,y0,vx0,vy0,r_x,r_y,r_vx,r_vy,   &  !todo: use temp array
                                                                          basis_height, shift,                                   &
                                                                          x_j, y_j, vx_j, vy_j)
             end do
@@ -2012,8 +2049,8 @@ contains
         vy_j = p_group%sparse_grid_interpolator%hierarchy(j)%coordinate(4)
 
         ! here we store a nodal value but later this array will indeed store sparse grid coefficients
-        p_group%remapped_f_sparse_grid_coefficients(j) = eval_hat_function(x0,y0,vx0,vy0,r_x,r_y,r_vx,r_vy,     &
-                                                             basis_height, shift,                               &
+        p_group%remapped_f_sparse_grid_coefficients(j) = sll_f_eval_hat_function(x0,y0,vx0,vy0,r_x,r_y,r_vx,r_vy,     &
+                                                             basis_height, shift,                                     &
                                                              x_j, y_j, vx_j, vy_j)
       end do
 
@@ -2105,7 +2142,7 @@ contains
   subroutine bsl_lt_pic_4d_compute_new_spline_coefs( &
               p_group, nodal_values_on_remapping_cart_grid )
 
-    class(sll_bsl_lt_pic_4d_group),       intent(inout) :: p_group
+    class(sll_t_bsl_lt_pic_4d_group),       intent(inout) :: p_group
     sll_real64, dimension(:,:,:,:),   target,    intent( in ),  optional  :: nodal_values_on_remapping_cart_grid
     sll_real64, dimension(:,:,:,:),   allocatable, target   :: tmp_nodal_values
     sll_real64, dimension(:,:,:,:),   pointer       :: tmp_nodal_values_ptr
@@ -2400,7 +2437,7 @@ contains
 
   !> initialize the markers on the initial (markers) grid
   subroutine bsl_lt_pic_4d_initialize_unstruct_markers( p_group )
-    class(sll_bsl_lt_pic_4d_group),intent(inout) :: p_group
+    class(sll_t_bsl_lt_pic_4d_group),intent(inout) :: p_group
 
     type(int_list_element),  pointer   :: new_int_list_element, head
     sll_real64, dimension(4) :: flow_cell_eta_min
@@ -3460,10 +3497,10 @@ contains
 
   subroutine bsl_lt_pic_4d_remap_f( p_group )
 
-    class(sll_bsl_lt_pic_4d_group),intent(inout) :: p_group
+    class(sll_t_bsl_lt_pic_4d_group),intent(inout) :: p_group
 
-    type(sll_charge_accumulator_2d),pointer :: void_charge_accumulator
-    type(sll_cartesian_mesh_4d),    pointer :: void_grid_4d
+    type(sll_t_charge_accumulator_2d),pointer :: void_charge_accumulator
+    type(sll_t_cartesian_mesh_4d),    pointer :: void_grid_4d
     sll_real64, dimension(:,:),     pointer :: void_array_2d
 
     sll_real64    :: dummy_total_charge
@@ -3605,15 +3642,15 @@ contains
                                                       enforce_total_charge       &
                                                       )
 
-    class(sll_bsl_lt_pic_4d_group),           intent(inout) :: p_group          !> particle group (with markers and remapping grid)
-    type(sll_charge_accumulator_2d), pointer, intent(inout) :: charge_accumulator
+    class(sll_t_bsl_lt_pic_4d_group),         intent(inout) :: p_group          !> particle group (with markers and remapping grid)
+    type(sll_t_charge_accumulator_2d), pointer, intent(inout) :: charge_accumulator
     sll_int32,                                intent(in)    :: scenario
-    type(sll_cartesian_mesh_4d),     pointer, intent(in)    :: given_grid_4d
+    type(sll_t_cartesian_mesh_4d),     pointer, intent(in)    :: given_grid_4d
     sll_real64, dimension(:,:),      pointer, intent(inout) :: given_array_2d   ! assumed in x, vx for now
     sll_real64,                               intent(in)    :: target_total_charge
     logical,                                  intent(in)    :: enforce_total_charge
 
-    type(charge_accumulator_cell_2d),  pointer :: charge_accumulator_cell
+    type(sll_t_charge_accumulator_cell_2d),  pointer :: charge_accumulator_cell
 
     sll_real64 :: deposited_charge
     sll_real64 :: charge_correction_factor
@@ -4647,7 +4684,7 @@ contains
     sll_real64 :: dim_t0
     sll_int32 :: neighbour
 
-    type(sll_bsl_lt_pic_4d_particle), dimension(:), pointer,intent(in) :: p_list
+    type(sll_t_bsl_lt_pic_4d_particle), dimension(:), pointer,intent(in) :: p_list
 
     !sll_int32 :: ngb_dim_right_index
     !sll_int32 :: ngb_dim_left_index
@@ -4779,7 +4816,7 @@ contains
                         d41,d42,d43,d44         &
                         )
 
-        class(sll_bsl_lt_pic_4d_group),intent(inout) :: p_group
+        class(sll_t_bsl_lt_pic_4d_group),intent(inout) :: p_group
         sll_int32, intent(in) :: k
 
         sll_real64, intent(in)  :: mesh_period_x
@@ -5203,10 +5240,10 @@ end subroutine get_ltp_deformation_matrix
 ! puts the point (x,y) back into the computational domain if periodic in x or y (or both)
 ! otherwise, does nothing
 subroutine periodic_correction(p_group, x, y)
-    class(sll_bsl_lt_pic_4d_group),  intent(in)    :: p_group
+    class(sll_t_bsl_lt_pic_4d_group),  intent(in)    :: p_group
     sll_real64, intent(inout) :: x
     sll_real64, intent(inout) :: y
-    type(sll_cartesian_mesh_2d), pointer :: mesh
+    type(sll_t_cartesian_mesh_2d), pointer :: mesh
 
     mesh => p_group%space_mesh_2d
 
@@ -5214,13 +5251,13 @@ subroutine periodic_correction(p_group, x, y)
         .and.                                               &
         ( (x < mesh%eta1_min) .or. (x >= mesh%eta1_max) )   &
       ) then
-          call apply_periodic_bc_x( mesh, x)
+          call sll_s_apply_periodic_bc_x( mesh, x)
     end if
     if( p_group%domain_is_periodic(2)                        &
         .and.                                               &
         ( (y < mesh%eta2_min) .or. (y >= mesh%eta2_max) )   &
       ) then
-          call apply_periodic_bc_y( mesh, y)
+          call sll_s_apply_periodic_bc_y( mesh, y)
     end if
   end subroutine periodic_correction
 
@@ -5228,7 +5265,7 @@ subroutine periodic_correction(p_group, x, y)
   !----------------------------------------------------------------------------
   ! Destructor
   subroutine sll_bsl_lt_pic_4d_group_delete(particle_group)
-    class(sll_bsl_lt_pic_4d_group), pointer :: particle_group
+    class(sll_t_bsl_lt_pic_4d_group), pointer :: particle_group
     sll_int32 :: ierr
 
     if(.not. associated(particle_group) ) then

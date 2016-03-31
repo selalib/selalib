@@ -8,148 +8,107 @@ use sll_m_pastix
 
 implicit none
 
-sll_int32,  parameter   :: NPTS = 5
-sll_real64              :: A(NPTS,NPTS), LU(NPTS,NPTS), B(NPTS), X(NPTS)
-sll_real64, allocatable :: AB(:,:)
-sll_int32,  allocatable :: ipiv(:)
+sll_int32 :: nhinv, m
 
-sll_int32 :: kd, kl, ku, ldab, info
-sll_int32 :: istep, nstep = 1
-sll_int32 :: i, j, nrhs
+type(pastix_solver)               :: linear_solver
+sll_int32                         :: nnzeros
+sll_int32,  dimension(:), pointer :: ia
+sll_int32,  dimension(:), pointer :: ja
+sll_real64, dimension(:), pointer :: avals
+sll_real64, dimension(:), pointer :: rhs
+sll_real64, dimension(:), pointer :: sol
 
-type(pastix_solver)                   :: linear_solver
-sll_int32                             :: n
-sll_int32                             :: nnzeros
-sll_int32,  dimension(:), allocatable :: ia,ja
-sll_real64, dimension(:), allocatable :: avals,rhs
+call sll_s_boot_collective()
 
-call sll_boot_collective()
+!set inverse of the mesh size (feel free to change)
+nhinv=5
+!first allocate the vectors with correct size
+m=(nhinv-1)**2
+nnzeros = 5*m
+allocate(avals(nnzeros),ja(nnzeros),ia(m+1),rhs(m),sol(m))
 
-A = 0
-A(1,1) = 2; A(1,2) = -1.0
-do i = 2, NPTS-1
-   A(i,i) =  2
-   A(i,i-1) = -1
-   A(i,i+1) = -1
-end do
-A(NPTS,NPTS) = 2
-A(NPTS,NPTS-1) = -1
+call uni_laplace_2d(nhinv-1,rhs,avals,ja,ia)
 
-do i = 1, NPTS
-   B(i) = i-1
-end do
+call initialize(linear_solver,m,nnzeros,ia,ja,avals)
 
-do i = 1, NPTS
-   write(*,100)(sngl(A(i,j)), j= 1, NPTS), B(i)
-end do
-
-!General Matrix Factorization
-allocate(IPIV(NPTS))
-
-LU = A
-call DGETRF(NPTS,NPTS,LU,NPTS,IPIV,INFO)
-X = B
-NRHS = 1
-do istep=1, nstep
-   call DGETRS('N',NPTS,NRHS,LU,NPTS,IPIV,X,NPTS,INFO)
-end do
-write(*,100) X
-
-!LU factorization of a real m-by-n band matrix
-KL = 1
-KU = 1
-LDAB=2*KL+KU+1
-allocate(AB(ldab,NPTS))
-AB = 0.0
-do j = 1, NPTS
-do i = max(1,j-KU), min(NPTS,j+KL)
-   AB(KL+KU+1+i-j,j) = A(i,j) 
-end do
-end do
-call DGBTRF(NPTS,NPTS,KL,KU,AB,LDAB,IPIV,INFO)
-X=B
-NRHS = 1
-do istep = 1, nstep
-call DGBTRS('N',NPTS,KL,KU,NRHS,AB,LDAB,IPIV,X,NPTS,INFO)
-end do
-write(*,100) X
-
-
-!Cholesky factorization of a real symmetric positive definite band matrix
-KD = 1
-LDAB=KD+1
-deallocate(AB)
-allocate(AB(ldab,NPTS))
-AB = 0.0
-do j = 1, NPTS
-do i = max(1,j-KD), j
-   AB(KD+1+i-j,j) = A(i,j) 
-end do
-end do
-NRHS = 1
-call DPBTRF('U',NPTS,KD,AB,LDAB,INFO)
-X=B
-do istep=1, nstep
-   call DPBTRS('U',NPTS,KD,NRHS,AB,LDAB,X,NPTS,INFO)
-end do
-write(*,100) X
-
-100 format(6(1x,f7.4))
-!200 format(5(1x,f7.4))
-
-
-n = 5
-nnzeros = 3*n - 2
-! Allocating
-allocate( ia     (n+1)    )
-allocate( ja     (nnzeros))
-allocate( avals  (nnzeros))
-allocate( rhs    (n)      )
-
-! Building ia, ja and avals and rhs
-j=1
-do i = 1, n
-   ia(i) = j
-   ! /* ONLY triangular inferior matrix */
-   ! /*       if (i != 0) */
-   ! /*     { */
-   ! /*       (*ja)[j]    = i; */
-   ! /*       (*avals)[j] = -1; */
-   ! /*       j++; */
-   ! /*     } */
-   ja(j)    = i
-   avals(j) = 2
-   j=j+1
-   if (i /= n) then
-      ja(j)    = i+1
-      avals(j) = -1.
-      j=j + 1
-   end if
-
-   rhs(i) = 0
-end do
-ia(n+1) = j
-rhs(1)  = 1
-rhs(n)  = 1
-
-call initialize(linear_solver,n,nnzeros)
-
-linear_solver%colptr = ia
-linear_solver%row    = ja
-linear_solver%avals  = avals
 print *,'#enter factorize'
 call factorize(linear_solver)
 print *,'#end of factorize'
-X = B
+sol = rhs
 print *,'#enter solve'
-call solve(linear_solver,X)
+call solve(linear_solver,sol)
 print *,'#end of solve'
-write(*,100) X
+write(*,100) sol
 call delete(linear_solver)
 print *,'#end of delete'
 
-call sll_halt_collective()
+call sll_s_halt_collective()
 
 print *,'#PASSED'
+100 format(6(1x,f7.4))
+
+contains
+
+!----------------------------------------------------------------------
+subroutine uni_laplace_2d(m,f,a,ja,ia)
+!
+! Fill a matrix in CSR format corresponding to a constant coefficient
+! five-point stencil on a square grid
+!
+sll_real64 :: f(:)
+sll_real64 :: a(:)
+sll_int32  :: m
+sll_int32  :: ia(:)
+sll_int32  :: ja(:)
+sll_int32  :: k,l,i,j
+
+sll_real64, parameter :: zero =  0.0_f64
+sll_real64, parameter :: cx   = -1.0_f64
+sll_real64, parameter :: cy   = -1.0_f64
+sll_real64, parameter :: cd   =  4.0_f64
+
+k     = 0
+l     = 0
+ia(1) = 1
+do i=1,m
+  do j=1,m
+    k     = k+1
+    l     = l+1
+    a(l)  = cd
+    ja(l) = k
+    f(k)  = zero
+    if (j < m) then
+      l     = l+1
+      a(l)  = cx
+      ja(l) = k+1
+    else
+      f(k) = f(k)-cx
+    end if
+    if (i < m) then
+      l     = l+1
+      a(l)  = cy
+      ja(l) = k+m
+    else
+      f(k)  = f(k)-cy
+    end if
+    if (j > 1) then
+      l     = l+1
+      a(l)  = cx
+      ja(l) = k-1
+    else
+      f(k)  = f(k)-cx
+    end if
+    if (i > 1) then
+      l     = l+1
+      a(l)  = cy
+      ja(l) = k-m
+    else
+      f(k)  = f(k)-cy
+    end if
+    ia(k+1) = l+1
+  end do
+end do
+
+end subroutine uni_laplace_2D
 
 end program test_pastix

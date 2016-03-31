@@ -16,25 +16,35 @@
 !**************************************************************
 
 !> @brief Spectral 1d advection
-!> @details We are using FFTW to compute ffts. Boundary conditions
-!> must be periodic.
+!> @details Boundary conditions must be periodic.
 module sll_m_advection_1d_ampere
-#include "sll_working_precision.h"
-#include "sll_memory.h"
-#include "sll_assert.h"
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_errors.h"
+#include "sll_memory.h"
+#include "sll_working_precision.h"
 
-use sll_m_boundary_condition_descriptors
-use sll_m_advection_1d_base
-use sll_m_interpolators_1d_base
-use sll_m_fft
-use sll_m_constants, only : &
-     sll_pi
+use sll_m_advection_1d_base, only: sll_c_advection_1d_base
+
+use sll_m_constants, only: sll_p_pi
+
+use sll_m_fft, only: &
+  sll_s_fft_exec_c2r_1d, &
+  sll_s_fft_exec_r2c_1d, &
+  sll_s_fft_free, &
+  sll_s_fft_init_c2r_1d, &
+  sll_s_fft_init_r2c_1d, &
+  sll_t_fft
+
 implicit none
 
-private
+public :: &
+  sll_t_ampere_1d_advector_ptr, &
+  sll_f_new_ampere_1d_advector
 
-type,extends(sll_advection_1d_base), public :: ampere_1d_advector
+private
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+type,extends(sll_c_advection_1d_base) :: ampere_1d_advector
   
   sll_int32                         :: nc_eta1
   sll_real64                        :: eta1_min
@@ -42,8 +52,8 @@ type,extends(sll_advection_1d_base), public :: ampere_1d_advector
   sll_real64                        :: delta_eta1
   sll_real64, dimension(:), pointer :: d_dx
   sll_real64, dimension(:), pointer :: kx
-  type(sll_fft_plan),       pointer :: fwx
-  type(sll_fft_plan),       pointer :: bwx
+  type(sll_t_fft)                   :: fwx
+  type(sll_t_fft)                   :: bwx
   sll_comp64, dimension(:), pointer :: fk
   sll_comp64, dimension(:), pointer :: r0
   sll_comp64, dimension(:), pointer :: r1
@@ -58,17 +68,16 @@ contains
 
 end type ampere_1d_advector
 
-type, public :: ampere_1d_advector_ptr 
+type :: sll_t_ampere_1d_advector_ptr 
   class(ampere_1d_advector), pointer :: ptr
-end type ampere_1d_advector_ptr
+end type sll_t_ampere_1d_advector_ptr
 
-public ::  new_ampere_1d_advector
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 contains
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
-function new_ampere_1d_advector( nc_eta1,  &
+function sll_f_new_ampere_1d_advector( nc_eta1,  &
                                  eta1_min, &
                                  eta1_max  ) result(adv)      
 
@@ -84,7 +93,7 @@ function new_ampere_1d_advector( nc_eta1,  &
       
   call initialize( adv, nc_eta1, eta1_min, eta1_max  )
   
-end function new_ampere_1d_advector
+end function sll_f_new_ampere_1d_advector
 
 subroutine initialize( adv, nc_eta1, eta1_min, eta1_max )
 
@@ -112,12 +121,12 @@ subroutine initialize( adv, nc_eta1, eta1_min, eta1_max )
   adv%r0 = (0.0_f64, 0.0_f64)
   adv%r1 = (0.0_f64, 0.0_f64)
 
-  adv%fwx => fft_new_plan(nc_eta1, adv%d_dx,  adv%fk)
-  adv%bwx => fft_new_plan(nc_eta1, adv%fk, adv%d_dx)
+  call sll_s_fft_init_r2c_1d(adv%fwx, nc_eta1, adv%d_dx,  adv%fk)
+  call sll_s_fft_init_c2r_1d(adv%bwx, nc_eta1, adv%fk, adv%d_dx)
 
   SLL_CLEAR_ALLOCATE(adv%kx(1:nc_eta1/2+1), error)
    
-  kx0 = 2._f64*sll_pi/(eta1_max-eta1_min)
+  kx0 = 2._f64*sll_p_pi/(eta1_max-eta1_min)
 
   adv%kx(1) = 1.0_f64
   do i=2,nc_eta1/2+1
@@ -147,8 +156,8 @@ subroutine delete(adv)
 
   class(ampere_1d_advector), intent(inout) :: adv
 
-  call fft_delete_plan(adv%fwx)
-  call fft_delete_plan(adv%bwx)
+  call sll_s_fft_free(adv%fwx)
+  call sll_s_fft_free(adv%bwx)
 
 end subroutine delete
 
@@ -165,11 +174,11 @@ subroutine advect_1d_constant( adv, a, dt, input, output )
   nc_x = adv%nc_eta1
 
   adv%d_dx = input(1:nc_x)
-  call fft_apply_plan(adv%fwx, adv%d_dx, adv%fk)
+  call sll_s_fft_exec_r2c_1d(adv%fwx, adv%d_dx, adv%fk)
   do i = 2, nc_x/2+1
     adv%fk(i) = adv%fk(i)*cmplx(cos(adv%kx(i)*a*dt),-sin(adv%kx(i)*a*dt),kind=f64)
   end do
-  call fft_apply_plan(adv%bwx, adv%fk, adv%d_dx)
+  call sll_s_fft_exec_c2r_1d(adv%bwx, adv%fk, adv%d_dx)
 
   output(1:nc_x) = adv%d_dx / nc_x
   output(nc_x+1) = output(1)

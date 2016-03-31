@@ -20,7 +20,7 @@
 !> provides capabilities for data and derivative
 !> interpolation with quintic splines 
 !> @details
-!> inspl5 and spln5 routines come from
+!> sll_s_inspl5 and spln5 routines come from
 !> "An algorithm for the interpolation of functions using quintic splines"
 !> by E.H. Mund, P. Hallet and J.P. Hennart
 !> Journal of COmputational and Applied Mathematics, volume 1, number 4, 1975.
@@ -28,16 +28,23 @@
 !> Periodic boundary conditions are not implemented. You must set function value
 !> and its derivative a the boundary
 module sll_m_quintic_splines
-#include "sll_working_precision.h"
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_memory.h"
-#include "sll_assert.h"
+#include "sll_working_precision.h"
 
-implicit double precision (a-h,o-z)
+  implicit none
+
+  public :: &
+    sll_s_inspl5, &
+    sll_s_splin5
+
+  private
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 contains
 
 !> Calculation of the parameters of an interpolating quintic splines
-subroutine inspl5(n,x,ind1,indn,cf,h)
+subroutine sll_s_inspl5(n,x,ind1,indn,cf,h)
 
 sll_int32,  intent(in)    :: n         !< number of interpolation points
 sll_real64, intent(in)    :: x(n)      !< vector of abscissae
@@ -50,6 +57,15 @@ sll_int32,  intent(in)    :: indn      !< boundary conditions switches at x=n.
                                        !< = 0 type 2
                                        !< =-1 type 3
 sll_real64, intent(out)   :: h(6*n-3)  !< auxiliary vector
+
+sll_real64 :: a, as, det, di1, di2, di3, di4
+sll_real64 :: dp1, dp2, dp3, dp4, dpd1, dpd2
+sll_real64 :: ds1, ds2, ds3, ds4
+sll_real64 :: fp, fp3, fp4
+sll_real64 :: p1, p2, p3, q1, q2
+sll_real64 :: sf1, sf2
+sll_int32  :: i, im, k
+
 
 h = 0.0_f64
 
@@ -200,6 +216,7 @@ goto 15
 
    if(i>=n) goto 65
 
+
    h(im+3)=(+dp4*ds1-dp3*ds2)/det
    h(im+4)=(-dp2*ds1+dp1*ds2)/det
    h(im+5)=(+dp4*ds3-dp3*ds4)/det
@@ -229,11 +246,11 @@ goto 15
      im      =  im-6
    end do
 
-end subroutine inspl5
+end subroutine sll_s_inspl5
 
 !> Calculation of the values of an interpolating quintic pline
 !> and of its first and second derivatives at any point xx
-subroutine splin5(n,x,cf,xx,order,f)
+subroutine sll_s_splin5(n,x,cf,xx,order,f)
 sll_int32,  intent(in)  :: n          !< number of interpolation points
 sll_real64, intent(in)  :: x(n)       !< vector of abscissae
 sll_real64, intent(in)  :: cf(1:3,n)  !< ordinates, first and second derivatives
@@ -244,6 +261,11 @@ sll_int32,  intent(in)  :: order      !< order of derivative
 sll_real64, intent(out) :: f          !< 0: value of the interpolating function
                                       !< 1: value of its first derivative
                                       !< 2: value of its second derivative
+
+sll_real64 :: cc, h, u, w, y
+sll_real64 :: xn, xr1, xr2, xr3
+sll_int32  :: i
+
 
 f = 0.0_f64
 
@@ -313,7 +335,7 @@ else
 
 end if
 
-end subroutine splin5
+end subroutine sll_s_splin5
 
 subroutine inspl5_periodic(n,dx,cf,h)
 
@@ -322,6 +344,13 @@ sll_real64, intent(in)    :: dx         !< vector of abscissae
 sll_real64, intent(inout) :: cf(1:3,n)  !< ordinates, first and second derivatives
 sll_real64, intent(out)   :: h(6*n-3)   !< auxiliary vector
 
+sll_real64 :: a, as, det, di1, di2, di3, di4
+sll_real64 :: dp1, dp2, dp3, dp4, dpd1, dpd2
+sll_real64 :: ds1, ds2, ds3, ds4
+sll_real64 :: fp, fp3, fp4
+sll_real64 :: p1, p2, p3, q1, q2
+sll_real64 :: sf1, sf2
+sll_int32  :: i, i1, i2, im, k
 
 h = 0.0_f64
 

@@ -1,0 +1,8 @@
+sll_int32 num_cells 32
+sll_real64 eta_min -6._f64
+sll_real64 eta_max 6._f64
+sll_real64 eta_in_min 0._f64
+sll_real64 eta_in_max 1._f64
+sll_real64 density_out_min 1._f64
+sll_real64 density_in 1._f64
+sll_real64 density_out_max 1._f64

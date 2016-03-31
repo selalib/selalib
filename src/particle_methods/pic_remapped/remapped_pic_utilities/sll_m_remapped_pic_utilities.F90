@@ -17,18 +17,23 @@
 
 module sll_m_remapped_pic_utilities
 
-#include "sll_working_precision.h"
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_memory.h"
+#include "sll_working_precision.h"
 #include "sll_assert.h"
 #include "sll_errors.h"
-!#include "sll_m_accumulators.h"
-!#include "particle_representation.h"
 
-  use sll_m_cartesian_meshes
-  use sll_m_working_precision
-  use sll_m_timer
+  use sll_m_cartesian_meshes, only: &
+    sll_t_cartesian_mesh_2d
 
-implicit none
+  implicit none
+
+  public :: &
+    sll_s_apply_periodic_bc_on_cartesian_mesh_2d, &
+    sll_f_is_in_domain_2d
+
+  private
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 contains
 
@@ -37,11 +42,11 @@ contains
   ! todo: put this in the right module (with the meshes?)
   ! tells whether the given point is in the given domain, with boolean arguments for the domain periodicity
   ! (taken from previous function in_bounds_periodic)
-  function x_is_in_domain_2d( x, y, mesh, x_periodic, y_periodic ) result(res)
+  function sll_f_x__is_in_domain_2d( x, y, mesh, x_periodic, y_periodic ) result(res)
 
 !    use sll_m_cartesian_meshes
     sll_real64,                     intent( in )            :: x, y
-    type(sll_cartesian_mesh_2d),    intent( in ), pointer   :: mesh
+    type(sll_t_cartesian_mesh_2d),    intent( in ), pointer   :: mesh
     logical,                        intent( in )            :: x_periodic
     logical,                        intent( in )            :: y_periodic
     logical     :: res
@@ -54,29 +59,29 @@ contains
           .and.                                                                                                     &
           ( ( y < mesh%eta2_max .and. y_periodic ) .or. ( y <= mesh%eta2_max .and. .not. y_periodic) )
 
-  end function x_is_in_domain_2d
+  end function sll_f_x_is_in_domain_2d
 
-  ! <<apply_periodic_bc_on_cartesian_mesh_2d>>
+  ! <<sll_s_apply_periodic_bc_on_cartesian_mesh_2d>>
 
   ! todo: put this in the right module (with the meshes?)
-  subroutine apply_periodic_bc_on_cartesian_mesh_2d( mesh, x, y )
+  subroutine sll_s_apply_periodic_bc_on_cartesian_mesh_2d( mesh, x, y )
 
 !    use sll_m_cartesian_meshes
     ! [[file:../working_precision/sll_m_working_precision.h]]
 !    use sll_m_working_precision
 
-    type(sll_cartesian_mesh_2d), pointer :: mesh
+    type(sll_t_cartesian_mesh_2d), pointer :: mesh
     sll_real64, intent(inout) :: x
     sll_real64, intent(inout) :: y
 
     x = mesh%eta1_min + modulo(x - mesh%eta1_min, mesh%eta1_max - mesh%eta1_min)
     y = mesh%eta2_min + modulo(y - mesh%eta2_min, mesh%eta2_max - mesh%eta2_min)
-  end subroutine apply_periodic_bc_on_cartesian_mesh_2d
+  end subroutine sll_s_apply_periodic_bc_on_cartesian_mesh_2d
 
   ! todo: put this in the right module (with the meshes?)
-  subroutine get_4d_cell_containing_point(eta, grid, i_cell_1, i_cell_2, i_cell_3, i_cell_4, point_is_outside_grid)
+  subroutine sll_s_get_4d_cell_containing_point(eta, grid, i_cell_1, i_cell_2, i_cell_3, i_cell_4, point_is_outside_grid)
     sll_real64, dimension(4),             intent( in )   :: eta     !> point coordinates
-    type(sll_cartesian_mesh_4d), pointer, intent( in )   :: grid
+    type(sll_t_cartesian_mesh_4d), pointer, intent( in )   :: grid
     sll_int32,                            intent( out)   :: i_cell_1, i_cell_2, i_cell_3, i_cell_4
     logical,                              intent( out )  :: point_is_outside_grid
     sll_real64 ::  tmp
@@ -107,14 +112,14 @@ contains
       point_is_outside_grid = .true.
     end if
 
-  end subroutine get_4d_cell_containing_point
+  end subroutine sll_s_get_4d_cell_containing_point
 
 
   ! ------------------------------------------------------------------------------------------------------------------------
   ! computes the inverse of a matrix with given matrix_size
   !   - here we must have   matrix_size <= 4   and the matrices are 4x4 arrays filled with 0s if matrix_size < 4
   !   - borrows code from David G. Simpson, NASA Goddard Space Flight Center, Greenbelt, Maryland  20771
-  subroutine get_inverse_matrix_with_given_size(matrix_size, a, inv_a, ok_flag)
+  subroutine sll_s_get_inverse_matrix_with_given_size(matrix_size, a, inv_a, ok_flag)
     sll_int32,                  intent(in)  :: matrix_size
     sll_real64, dimension(4,4), intent(in)  :: a
     sll_real64, dimension(4,4), intent(out) :: inv_a
@@ -186,12 +191,12 @@ contains
       cofactor(4,4) = a(1,1)*(a(2,2)*a(3,3)-a(2,3)*a(3,2))+a(1,2)*(a(2,3)*a(3,1)-a(2,1)*a(3,3))+a(1,3)*(a(2,1)*a(3,2)-a(2,2)*a(3,1))
 
     else
-      SLL_ERROR("get_inverse_matrix_with_given_size", "incorrect value for matrix_size")
+      SLL_ERROR("sll_s_get_inverse_matrix_with_given_size", "incorrect value for matrix_size")
     end if
 
     if( abs(determinant) .le. epsilon )then
        inv_a = 0.0d0
-       print *, "[WARNING --- pbm in routine get_inverse_matrix_with_given_size] -- matrix_size, determinant = ", &
+       print *, "[WARNING --- pbm in routine sll_s_get_inverse_matrix_with_given_size] -- matrix_size, determinant = ", &
                       matrix_size, determinant
        ok_flag = .false.
     else
@@ -205,6 +210,6 @@ contains
       ok_flag = .true.
     end if
 
-  end subroutine
+  end subroutine sll_s_get_inverse_matrix_with_given_size
 
 end module sll_m_remapped_pic_utilities

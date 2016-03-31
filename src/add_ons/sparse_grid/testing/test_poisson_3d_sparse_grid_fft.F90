@@ -1,23 +1,24 @@
 program test_poisson_3d_sparsegrid_fft
-#include "sll_working_precision.h"
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_memory.h"
-#include "sll_assert.h"
-#include "sll_poisson_solvers.h"
+#include "sll_working_precision.h"
 
-   !-------------------------------------------------------------------
-   !  test 3D Poisson solver based on FFT on sparse grid
-   !-------------------------------------------------------------------
+  use sll_m_constants, only: &
+    sll_p_pi
 
-   use sll_m_poisson_3d_sparse_grid_fft
-   use sll_m_sparse_grid_3d
-   use sll_m_constants, only : sll_pi
+  use sll_m_poisson_3d_sparse_grid_fft, only: &
+    sll_t_fft3d_derivative
 
-   implicit none
+  use sll_m_sparse_grid_3d, only: &
+    sll_t_sparse_grid_interpolator_3d
+
+  implicit none
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
    sll_real64                    :: eta_max(3), eta_min(3)
    sll_int32                    :: error
 
-   type(sparse_grid_interpolator_3d) :: interp
+   type(sll_t_sparse_grid_interpolator_3d) :: interp
 
    sll_real64, allocatable      :: ex(:)
    sll_real64, allocatable      :: ey(:)
@@ -29,7 +30,7 @@ program test_poisson_3d_sparsegrid_fft
    sll_real64, allocatable      :: phi(:)
    sll_real64, allocatable      :: phi_exact(:)
    sll_real64, allocatable      :: rho_hsp(:), phi_hsp(:)
-   type(sll_fft3d_derivative)   :: poisson
+   type(sll_t_fft3d_derivative)   :: poisson
 
    sll_real64                   :: x(3)
    sll_int32                    :: i
@@ -42,9 +43,9 @@ program test_poisson_3d_sparsegrid_fft
    order = 2;
    levels(1) = 8; levels(2) = 6; levels(3) = 7;
 
-   eta_min(1) = .0_f64; eta_max(1) = 4.0_f64*sll_pi
-   eta_min(2) = .0_f64; eta_max(2) = 4.0_f64*sll_pi
-   eta_min(3) = .0_f64; eta_max(3) = 4.0_f64*sll_pi
+   eta_min(1) = .0_f64; eta_max(1) = 4.0_f64*sll_p_pi
+   eta_min(2) = .0_f64; eta_max(2) = 4.0_f64*sll_p_pi
+   eta_min(3) = .0_f64; eta_max(3) = 4.0_f64*sll_p_pi
 
    call interp%initialize(levels,order, order+1,0,eta_min,eta_max,0,0);
 

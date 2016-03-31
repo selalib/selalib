@@ -40,23 +40,30 @@
 !>
 module sll_m_maxwell_2d_fdtd
 
-#include "sll_working_precision.h"
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_memory.h"
-#include "sll_assert.h"
+#include "sll_working_precision.h"
 #include "sll_maxwell_solvers_macros.h"
 
-use sll_m_maxwell_solvers_base
-implicit none
+  implicit none
+
+  public :: &
+    sll_o_create, &
+    sll_t_maxwell_2d_fdtd, &
+    sll_o_solve
+
+  private
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 !> Initialize maxwell solver 2d with FDTD scheme
-interface sll_create
+interface sll_o_create
  module procedure initialize_maxwell_2d_fdtd
  module procedure initialize_maxwell_2d_fdtd_alt
-end interface sll_create
+end interface sll_o_create
 !> Solve maxwell solver 2d with FDTD scheme
-interface sll_solve
+interface sll_o_solve
  module procedure solve_maxwell_2d_fdtd
-end interface sll_solve
+end interface sll_o_solve
 !> Solve Ampere-Maxwell equation
 interface sll_solve_ampere
  module procedure ampere_2d_fdtd
@@ -66,11 +73,10 @@ interface sll_solve_faraday
  module procedure ampere_2d_fdtd
 end interface sll_solve_faraday
 
-public :: sll_create, sll_solve, sll_solve_ampere, sll_solve_faraday
 
 !> @brief Object with data to solve Maxwell equation 
 !> Maxwell in TE mode: (Ex,Ey,Bz)
-type, public :: sll_maxwell_2d_fdtd
+type :: sll_t_maxwell_2d_fdtd
   private
   sll_int32  :: nc_eta1      !< x cells number
   sll_int32  :: nc_eta2      !< y cells number
@@ -90,17 +96,16 @@ type, public :: sll_maxwell_2d_fdtd
   sll_int32  :: j2           !< last indice of the block dimension 2
   sll_real64 :: dx           !< step size along dimension 1
   sll_real64 :: dy           !< step size along dimension 2
-end type sll_maxwell_2d_fdtd
+end type sll_t_maxwell_2d_fdtd
 
-private
 
 contains
 
 !>Initilialize the maxwell solver
-subroutine initialize_maxwell_2d_fdtd_alt(this, x1, x2, nc_x, &
+subroutine initialize_maxwell_2d_fdtd_alt(self, x1, x2, nc_x, &
                                       y1, y2, nc_y, polarization )
 
-   type(sll_maxwell_2d_fdtd) :: this         !< maxwell solver object
+   type(sll_t_maxwell_2d_fdtd) :: self         !< maxwell solver object
    sll_real64            :: x1           !< first incidice along x
    sll_real64            :: y1           !< last indice along x
    sll_real64            :: x2           !< first indice along y
@@ -109,24 +114,24 @@ subroutine initialize_maxwell_2d_fdtd_alt(this, x1, x2, nc_x, &
    sll_int32             :: nc_y         !< size step along y
    sll_int32             :: polarization !< TE or TM
 
-   this%c   = 1.0_f64
-   this%e_0 = 1.0_f64
+   self%c   = 1.0_f64
+   self%e_0 = 1.0_f64
    
-   this%dx  = (x2-x1)/nc_x
-   this%dy  = (y2-y1)/nc_y
-   this%i1  = 1
-   this%j1  = nc_x+1
-   this%i2  = 1
-   this%j2  = nc_y+1
+   self%dx  = (x2-x1)/nc_x
+   self%dy  = (y2-y1)/nc_y
+   self%i1  = 1
+   self%j1  = nc_x+1
+   self%i2  = 1
+   self%j2  = nc_y+1
 
-   this%polarization = polarization
+   self%polarization = polarization
 
 end subroutine initialize_maxwell_2d_fdtd_alt
 
 !>Initilialize the maxwell solver
-subroutine initialize_maxwell_2d_fdtd(this, i1, j1, i2, j2, dx, dy, polarization )
+subroutine initialize_maxwell_2d_fdtd(self, i1, j1, i2, j2, dx, dy, polarization )
 
-   type(sll_maxwell_2d_fdtd) :: this        !< maxwell solver object
+   type(sll_t_maxwell_2d_fdtd) :: self        !< maxwell solver object
    sll_int32          :: i1             !< first incidice along x
    sll_int32          :: j1             !< last indice along x
    sll_int32          :: i2             !< first indice along y
@@ -136,44 +141,44 @@ subroutine initialize_maxwell_2d_fdtd(this, i1, j1, i2, j2, dx, dy, polarization
    sll_int32          :: polarization   !< TE or TM
    !sll_int32        :: error           !< error code
 
-   this%c   = 1.0_f64
-   this%e_0 = 1.0_f64
+   self%c   = 1.0_f64
+   self%e_0 = 1.0_f64
    
-   this%dx = dx
-   this%dy = dy
-   this%i1 = i1
-   this%j1 = j1
-   this%i2 = i2
-   this%j2 = j2
-   this%polarization = polarization
+   self%dx = dx
+   self%dy = dy
+   self%i1 = i1
+   self%j1 = j1
+   self%i2 = i2
+   self%j2 = j2
+   self%polarization = polarization
 
 end subroutine initialize_maxwell_2d_fdtd
 
-!> this routine exists only for testing purpose. Use ampere and faraday
+!> self routine exists only for testing purpose. Use ampere and faraday
 !> in your appication.
-subroutine solve_maxwell_2d_fdtd(this, fx, fy, fz, dt)
+subroutine solve_maxwell_2d_fdtd(self, fx, fy, fz, dt)
 
-   type(sll_maxwell_2d_fdtd)         :: this !< maxwell object
+   type(sll_t_maxwell_2d_fdtd)         :: self !< maxwell object
    sll_real64, dimension(:,:) :: fx   !< Ex or Bx
    sll_real64, dimension(:,:) :: fy   !< Ey or By
    sll_real64, dimension(:,:) :: fz   !< Bz or Ez
    sll_real64, intent(in)     :: dt   !< time step
 
-   call faraday_2d_fdtd(this, fx, fy, fz, 0.5*dt)   
-   call bc_periodic_2d_fdtd(this, fx, fy, fz, dt)
-   call ampere_2d_fdtd(this, fx, fy, fz, dt) 
-   call bc_periodic_2d_fdtd(this, fx, fy, fz, dt)
-   call faraday_2d_fdtd(this, fx, fy, fz, 0.5*dt)   
-   call bc_periodic_2d_fdtd(this, fx, fy, fz, dt)
+   call faraday_2d_fdtd(self, fx, fy, fz, 0.5*dt)   
+   call bc_periodic_2d_fdtd(self, fx, fy, fz, dt)
+   call ampere_2d_fdtd(self, fx, fy, fz, dt) 
+   call bc_periodic_2d_fdtd(self, fx, fy, fz, dt)
+   call faraday_2d_fdtd(self, fx, fy, fz, 0.5*dt)   
+   call bc_periodic_2d_fdtd(self, fx, fy, fz, dt)
 
 end subroutine solve_maxwell_2d_fdtd
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 !> Solve Faraday equation
-subroutine faraday_2d_fdtd( this, fx, fy, fz, dt )
+subroutine faraday_2d_fdtd( self, fx, fy, fz, dt )
 
-type(sll_maxwell_2d_fdtd)                 :: this !< Maxwell object
+type(sll_t_maxwell_2d_fdtd)                 :: self !< Maxwell object
 sll_real64, dimension(:,:), target :: fx   !< Ex or Bx
 sll_real64, dimension(:,:), target :: fy   !< Ey or By
 sll_real64, dimension(:,:), target :: fz   !< Bz or Ez
@@ -189,19 +194,19 @@ sll_real64, dimension(:,:), pointer :: bx
 sll_real64, dimension(:,:), pointer :: by
 sll_real64, dimension(:,:), pointer :: bz
 
-dx  = this%dx
-dy  = this%dy
+dx  = self%dx
+dy  = self%dy
 
 !*** On utilise l'equation de Faraday sur un demi pas
 !*** de temps pour le calcul du champ magnetique  Bz 
 !*** a l'instant n puis n+1/2 
 
-i1 = this%i1
-j1 = this%j1
-i2 = this%i2
-j2 = this%j2
+i1 = self%i1
+j1 = self%j1
+i2 = self%i2
+j2 = self%j2
 
-if (this%polarization == TE_POLARIZATION) then
+if (self%polarization == TE_POLARIZATION) then
 
    ex => fx; ey => fy; bz => fz
    do i=i1,j1-1
@@ -214,7 +219,7 @@ if (this%polarization == TE_POLARIZATION) then
 
 end if
 
-if (this%polarization == TM_POLARIZATION) then
+if (self%polarization == TM_POLARIZATION) then
 
    bx => fx; by => fy; ez => fz
    do i=i1,j1
@@ -238,9 +243,9 @@ end subroutine faraday_2d_fdtd
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 !> Solve ampere-maxwell equation with FDTD scheme
-subroutine ampere_2d_fdtd( this, fx, fy, fz, dt, jx, jy )
+subroutine ampere_2d_fdtd( self, fx, fy, fz, dt, jx, jy )
 
-type(sll_maxwell_2d_fdtd) :: this !< Maxwell object
+type(sll_t_maxwell_2d_fdtd) :: self !< Maxwell object
 sll_int32 :: i1, j1, i2, j2
 sll_real64, dimension(:,:), intent(inout), target :: fx !< Ex or Bx
 sll_real64, dimension(:,:), intent(inout), target :: fy !< Ey or By
@@ -259,21 +264,21 @@ sll_real64, dimension(:,:), pointer :: bx
 sll_real64, dimension(:,:), pointer :: by
 sll_real64, dimension(:,:), pointer :: bz
 
-i1 = this%i1
-j1 = this%j1
-i2 = this%i2
-j2 = this%j2
+i1 = self%i1
+j1 = self%j1
+i2 = self%i2
+j2 = self%j2
 
-csq = this%c * this%c
-dx  = this%dx
-dy  = this%dy
+csq = self%c * self%c
+dx  = self%dx
+dy  = self%dy
 
 !*** Calcul du champ electrique E au temps n+1
 !*** sur les points internes du maillage
 !*** Ex aux points (i+1/2,j)
 !*** Ey aux points (i,j+1/2)
 
-if (this%polarization == TE_POLARIZATION) then
+if (self%polarization == TE_POLARIZATION) then
 
    ex => fx; ey => fy; bz => fz
 
@@ -293,14 +298,14 @@ if (this%polarization == TE_POLARIZATION) then
 
    if (present(jx) .and. present(jy)) then
 
-      ex(i1:j1,i2+1:j2) = ex(i1:j1,i2+1:j2) - dt * jx(i1:j1,i2+1:j2) / this%e_0
-      ey(i1+1:j1,i2:j2) = ey(i1+1:j1,i2:j2) - dt * jy(i1+1:j1,i2:j2) / this%e_0
+      ex(i1:j1,i2+1:j2) = ex(i1:j1,i2+1:j2) - dt * jx(i1:j1,i2+1:j2) / self%e_0
+      ey(i1+1:j1,i2:j2) = ey(i1+1:j1,i2:j2) - dt * jy(i1+1:j1,i2:j2) / self%e_0
 
    endif
 
 end if
 
-if (this%polarization == TM_POLARIZATION) then
+if (self%polarization == TM_POLARIZATION) then
 
    bx => fx; by => fy; ez => fz
 
@@ -314,7 +319,7 @@ if (this%polarization == TM_POLARIZATION) then
 
    if (present(jx) .and. .not. present(jy)) then
 
-      ez(i1:j1-1,i2:j2-1) = ez(i1:j1-1,i2:j2-1) - dt * jx(i1:j1-1,i2:j2-1) / this%e_0
+      ez(i1:j1-1,i2:j2-1) = ez(i1:j1-1,i2:j2-1) - dt * jx(i1:j1-1,i2:j2-1) / self%e_0
 
    endif
 
@@ -325,9 +330,9 @@ end subroutine ampere_2d_fdtd
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 !> Set boundary conditions 
-subroutine bc_periodic_2d_fdtd(this, fx, fy, fz, dt)
+subroutine bc_periodic_2d_fdtd(self, fx, fy, fz, dt)
 
-type(sll_maxwell_2d_fdtd) :: this !< maxwell solver object
+type(sll_t_maxwell_2d_fdtd) :: self !< maxwell solver object
 sll_int32 :: i1, j1, i2, j2
 sll_real64, dimension(:,:), intent(inout) :: fx !< Ex or Bx
 sll_real64, dimension(:,:), intent(inout) :: fy !< Ey or By
@@ -338,21 +343,21 @@ sll_real64 :: dx, dy
 sll_int32 :: i, j
 sll_real64 :: csq
 
-i1 = this%i1
-j1 = this%j1
-i2 = this%i2
-j2 = this%j2
+i1 = self%i1
+j1 = self%j1
+i2 = self%i2
+j2 = self%j2
 
-csq = this%c * this%c
-dx  = this%dx
-dy  = this%dy
+csq = self%c * self%c
+dx  = self%dx
+dy  = self%dy
 
 fz(i1:j1-1,j2) = fz(i1:j1-1,i2)
 fz(j1,i2:j2-1) = fz(i1,i2:j2-1)
 
 fz(j1,j2) = fz(i1,i2)
 
-if ( this%polarization == TE_POLARIZATION) then
+if ( self%polarization == TE_POLARIZATION) then
    do i = i1, j1
       dbz_dy = (fz(i,i2)-fz(i,j2-1)) / dy
       fx(i,i2) = fx(i,j2) + dt*csq*dbz_dy 
@@ -364,7 +369,7 @@ if ( this%polarization == TE_POLARIZATION) then
    end do
 end if
 
-if ( this%polarization == TM_POLARIZATION) then
+if ( self%polarization == TM_POLARIZATION) then
    do i = i1, j1
       dez_dy = (fz(i,i2)-fz(i,j2-1)) / dy
       fx(i,i2) = fx(i,j2) - dt*csq*dez_dy 
@@ -382,9 +387,9 @@ end subroutine bc_periodic_2d_fdtd
 
 !PN DEFINED BUT NOT USED
 !PN !> Set periodic bounday conditions
-!PN subroutine bc_metallic_2d_fdtd(this, fx, fy, fz, side)
+!PN subroutine bc_metallic_2d_fdtd(self, fx, fy, fz, side)
 !PN 
-!PN type(sll_maxwell_2d_fdtd) :: this !< maxwell object
+!PN type(sll_t_maxwell_2d_fdtd) :: self !< maxwell object
 !PN sll_int32, intent(in) :: side !< which domain edge
 !PN sll_real64, dimension(:,:), target  :: fx !< Ex or Bx
 !PN sll_real64, dimension(:,:), target  :: fy !< Ey or By
@@ -393,26 +398,26 @@ end subroutine bc_periodic_2d_fdtd
 !PN sll_real64, dimension(:,:), pointer :: ex, ey, bz
 !PN sll_int32 :: i1, j1, i2, j2
 !PN 
-!PN i1 = this%i1
-!PN j1 = this%j1
-!PN i2 = this%i2
-!PN j2 = this%j2
+!PN i1 = self%i1
+!PN j1 = self%j1
+!PN i2 = self%i2
+!PN j2 = self%j2
 !PN 
-!PN if (this%polarization == TE_POLARIZATION) then
+!PN if (self%polarization == TE_POLARIZATION) then
 !PN    ex => fx; ey => fy; bz => fz
 !PN    select case(side)
 !PN    case(SOUTH)
-!PN       ex(i1:j1,i2) = 0.d0
+!PN       ex(i1:j1,i2) = 0._f64
 !PN    case(NORTH)
 !PN       bz(i1:j1,j2) = bz(i1:j1,j2-1)
 !PN    case(WEST)
-!PN       ey(i1,i2:j2) = 0.d0
+!PN       ey(i1,i2:j2) = 0._f64
 !PN    case(EAST)
 !PN       bz(j1,i2:j2) = bz(j1-1,i2:j2)
 !PN    end select
 !PN end if
 !PN 
-!PN if (this%polarization == TM_POLARIZATION) then
+!PN if (self%polarization == TM_POLARIZATION) then
 !PN    bx => fx; by => fy; ez => fz
 !PN    select case(side)
 !PN    case(SOUTH)
@@ -420,7 +425,7 @@ end subroutine bc_periodic_2d_fdtd
 !PN    case(NORTH)
 !PN       ez(i1:j1,j2) = ez(i1:j1,j2-1)
 !PN    case(WEST)
-!PN       by(i1,i2:j2) = 0.d0
+!PN       by(i1,i2:j2) = 0._f64
 !PN    case(EAST)
 !PN       ez(j1,i2:j2) = ez(j1-1,i2:j2)
 !PN    end select
@@ -431,9 +436,9 @@ end subroutine bc_periodic_2d_fdtd
 !PN !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 !PN 
 !PN !> Bundary conditions
-!PN subroutine bc_silver_muller_2d_fdtd( this, ex, ey, bz, ccall, dt )
+!PN subroutine bc_silver_muller_2d_fdtd( self, ex, ey, bz, ccall, dt )
 !PN 
-!PN type(sll_maxwell_2d_fdtd) :: this !< maxwell object
+!PN type(sll_t_maxwell_2d_fdtd) :: self !< maxwell object
 !PN sll_int32, intent(in) :: ccall !< domain edge (N,S,E,W)
 !PN sll_int32 :: i1, j1, i2, j2
 !PN sll_real64 :: a11,a12,a21,a22,b1,b2,dis
@@ -444,15 +449,15 @@ end subroutine bc_periodic_2d_fdtd
 !PN sll_real64, dimension(:,:), pointer :: ey !< y electric field
 !PN sll_real64, dimension(:,:), pointer :: bz !< z magnetic field
 !PN 
-!PN c   = this%c
+!PN c   = self%c
 !PN csq = c * c
-!PN dx  = this%dx
-!PN dy  = this%dy
+!PN dx  = self%dx
+!PN dy  = self%dy
 !PN 
-!PN i1 = this%i1
-!PN j1 = this%j1
-!PN i2 = this%i2
-!PN j2 = this%j2
+!PN i1 = self%i1
+!PN j1 = self%j1
+!PN i2 = self%i2
+!PN j2 = self%j2
 !PN 
 !PN !Conditions de Silver-Muller
 !PN !------------------------------------
