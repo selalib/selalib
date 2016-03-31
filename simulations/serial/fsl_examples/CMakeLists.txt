@@ -1,0 +1,8 @@
+ADD_EXECUTABLE(fsl_advection_2d advection_2d.F90)
+TARGET_LINK_LIBRARIES(fsl_advection_2d sll_interpolators )
+
+ADD_EXECUTABLE(fsl_landau_2d landau_2d.F90)
+TARGET_LINK_LIBRARIES(fsl_landau_2d sll_interpolators sll_poisson_solvers)
+
+ADD_EXECUTABLE(fsl_test_nufft 1dnuffttest.F90)
+TARGET_LINK_LIBRARIES(fsl_test_nufft sll_fft nufft)

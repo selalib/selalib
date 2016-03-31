@@ -4,8 +4,8 @@
 ! MODULE: sll_m_fft
 !
 ! DESCRIPTION:
-!> @defgroup fft sll_m_fft
-!> @author Edwin Chacon-Golcher, Samuel De Santis and Pierre Navaro.
+!> @defgroup fft sll_fft
+!> @author Edwin Chacon-Golcher, Samuel De Santis, Pierre Navaro, Katharina Kormann
 !> @brief Interface around fftpack, fftw and the selalib fft.
 !> @details 
 !> 
@@ -13,26 +13,27 @@
 !> \section how How to use sll_m_fft module?
 !>
 !> The first thing is to add the line \code use sll_m_fft \endcode
-!> The sll_m_fft module can use internal or external librarie 
+!> The sll_m_fft module can use internal or external librarie s
 !> 
 !> 1. Declare a fft plan
-!> \code type(sll_fft_plan), pointer :: p \endcode
+!> \code type(sll_t_fft) :: p \endcode
 !> 2. Initialize the plan
-!> \code p => fft_new_plan(size,in,out,direction,flags) \endcode
-!> The arrays in and out can be real and/or complex, 1d or 2d. The size is only a power of two (radix-2).
+!> \code call sll_s_fft_init_c2c_1d( p, size, in, out, direction, normalized, aligned, optimization ) \endcode
+!>
+!> The arrays in and out can be real and/or complex, 1d or 2d. Change c2c_1d accordingly.
 !> \warning For complex to real and real to complex transform, there is no direction flag.
-!>          \code p => fft_new_plan(size,in,out,flags) \endcode
+!>          \code call sll_s_fft_init_r2c_1d( p, size, in, out, normalized, aligned, optimization ) \endcode
 !>
-!> \a direction can take two values : FFT_FORWARD and FFT_INVERSE
+!> \a direction can take two values : sll_p_fft_forward and sll_p_fft_backward
 !>
-!> \a flags optional argument that can be : FFT_NORMALIZE
-!>                                FFT_ONLY_FIRST_DIRECTION, FFT_ONLY_SECOND_DIRECTION (2d case only)
-!> You can combine flags with '+'.
+!> \a normalized is a boolean optional argument: If true, the transformed data is normalized by the (product) of the element length.  [default: false]
+!> \a aligned is a boolean optional argument (only used by FFTW): If true, FFTW assumes the the data is aligned (use \a fft_alloc for in/out data allocation in this case).  [default: false]         
+!> \a optimization is an optional argument (only used by FFTW): With this argument, you can set how rigorous the initialization of the planner will be. It can take the values  sll_p_fft_patient, sll_p_fft_estimate, sll_p_fft_exhaustive, sll_p_fft_wisdom_only. Note that \a in and \a out are overwritten for the last three options. sll_p_fft_wisdom_only only works if wisdom is available. [default: sll_p_fft_estimate]                      
 !>
 !> 3. Execute the plan
-!> \code call fft_apply_plan(p,in,out) \endcode
+!> \code call sll_s_fft_exec_c2c_1d( p, in, out ) \endcode
 !> 4. Delete the plan
-!> \code call fft_delete_plan(p) \endcode
+!> \code call sll_s_fft_free( p ) \endcode
 !>
 !>
 !> \section sum Summary:
@@ -46,7 +47,9 @@
 !> <th> size of in </th>
 !> <th> size of out </th>
 !> <th> direction </th>
-!> <th> flags </th>
+!> <th> normalized </th>
+!> <th> aligned </th>
+!> <th> optimization </th>
 !> </tr>
 !> <tr>
 !> <td> n </td>
@@ -54,8 +57,10 @@
 !> <td> real </td>
 !> <td> n </td>
 !> <td> n </td>
-!> <td> FFT_FORWARD <br /> FFT_INVERSE </td>
-!> <td> FFT_NORMALIZE </td>
+!> <td> sll_p_fft_forward <br /> sll_p_fft_backward </td>
+!> <td> .TRUE. <br /> .FALSE. </td>
+!> <td> .TRUE. <br /> .FALSE. </td>
+!> <td> sll_p_fft_estimate <br /> sll_p_wisdom_only <br />  sll_p_fft_measure <br /> sll_p_fft_patient <br /> sll_p_fft_exhaustive  </td>
 !> </tr>
 !> <tr>
 !> <td> n </td>
@@ -63,8 +68,10 @@
 !> <td> complex </td>
 !> <td> n </td>
 !> <td> n </td>
-!> <td> FFT_FORWARD <br /> FFT_INVERSE </td>
-!> <td> FFT_NORMALIZE </td>
+!> <td> sll_p_fft_forward <br /> sll_p_fft_backward </td>
+!> <td> .TRUE. <br /> .FALSE. </td>
+!> <td> .TRUE. <br /> .FALSE. </td>
+!> <td> sll_p_fft_estimate <br /> sll_p_wisdom_only <br />  sll_p_fft_measure <br /> sll_p_fft_patient <br /> sll_p_fft_exhaustive  </td>
 !> </tr>
 !> <tr>
 !> <td> n </td>
@@ -73,7 +80,9 @@
 !> <td> n </td>
 !> <td> n/2+1 </td>
 !> <td> ----- </td>
-!> <td> FFT_NORMALIZE </td>
+!> <td> .TRUE. <br /> .FALSE. </td>
+!> <td> .TRUE. <br /> .FALSE. </td>
+!> <td> sll_p_fft_estimate <br /> sll_p_wisdom_only <br />  sll_p_fft_measure <br /> sll_p_fft_patient <br /> sll_p_fft_exhaustive  </td>
 !> </tr>
 !> <tr>
 !> <td> n </td>
@@ -82,7 +91,9 @@
 !> <td> n/2+1 </td>
 !> <td> n </td>
 !> <td> ----- </td>
-!> <td> FFT_NORMALIZE </td>
+!> <td> .TRUE. <br /> .FALSE. </td>
+!> <td> .TRUE. <br /> .FALSE. </td>
+!> <td> sll_p_fft_estimate <br /> sll_p_wisdom_only <br />  sll_p_fft_measure <br /> sll_p_fft_patient <br /> sll_p_fft_exhaustive  </td>
 !> </tr>
 !> </table>
 !>
@@ -96,7 +107,9 @@
 !> <th> size of in </th>
 !> <th> size of out </th>
 !> <th> direction present </th>
-!> <th> flags </th>
+!> <th> normalized </th>
+!> <th> aligned </th>
+!> <th> optimization </th>
 !> </tr>
 !> <tr>
 !> <td> n,m </td>
@@ -104,8 +117,10 @@
 !> <td> real </td>
 !> <td> n,m </td>
 !> <td> n,m </td>
-!> <td> FFT_FORWARD <br /> FFT_INVERSE </td>
-!> <td> FFT_NORMALIZE </td>
+!> <td> sll_p_fft_forward <br /> sll_p_fft_backward </td>
+!> <td> .TRUE. <br /> .FALSE. </td>
+!> <td> .TRUE. <br /> .FALSE. </td>
+!> <td> sll_p_fft_estimate <br /> sll_p_wisdom_only <br />  sll_p_fft_measure <br /> sll_p_fft_patient <br /> sll_p_fft_exhaustive  </td>
 !> </tr>
 !> <tr>
 !> <td> n,m </td>
@@ -113,8 +128,10 @@
 !> <td> complex </td>
 !> <td> n,m </td>
 !> <td> n,m </td>
-!> <td> FFT_FORWARD <br /> FFT_INVERSE </td>
-!> <td> FFT_NORMALIZE <br /> FFT_ONLY_FIRST_DIRECTION <br /> FFT_ONLY_SECOND_DIRECTION </td>
+!> <td> sll_p_fft_forward <br /> sll_p_fft_backward </td>
+!> <td> .TRUE. <br /> .FALSE. </td>
+!> <td> .TRUE. <br /> .FALSE. </td>
+!> <td> sll_p_fft_estimate <br /> sll_p_wisdom_only <br />  sll_p_fft_measure <br /> sll_p_fft_patient <br /> sll_p_fft_exhaustive  </td>
 !> </tr>
 !> <tr>
 !> <td> n,m </td>
@@ -123,7 +140,9 @@
 !> <td> n,m </td>
 !> <td> n/2,m </td>
 !> <td> ----- </td>
-!> <td> FFT_NORMALIZE </td>
+!> <td> .TRUE. <br /> .FALSE. </td>
+!> <td> .TRUE. <br /> .FALSE. </td>
+!> <td> sll_p_fft_estimate <br /> sll_p_wisdom_only <br />  sll_p_fft_measure <br /> sll_p_fft_patient <br /> sll_p_fft_exhaustive  </td>
 !> </tr>
 !> <tr>
 !> <td> n,m </td>
@@ -132,7 +151,9 @@
 !> <td> n/2,m </td>
 !> <td> n,m </td>
 !> <td> ----- </td>
-!> <td> FFT_NORMALIZE </td>
+!> <td> .TRUE. <br /> .FALSE. </td>
+!> <td> .TRUE. <br /> .FALSE. </td>
+!> <td> sll_p_fft_estimate <br /> sll_p_wisdom_only <br />  sll_p_fft_measure <br /> sll_p_fft_patient <br /> sll_p_fft_exhaustive  </td>
 !> </tr>
 !> </table>
 !>
@@ -142,13 +163,13 @@
 !> \code
 !> sll_int32, parameter :: n = 2**5
 !> sll_comp64, dimension(0,n-1) :: in
-!> type(sll_fft_plan), pointer  :: p
+!> type(sll_t_fft)  :: p
 !>
 !> !** INIT DATA **
 !>
-!> p => fft_new_plan(n,in,in,FFT_FORWARD,FFT_NORMALIZE)
-!> call fft_apply_plan(p,in,in)
-!> call fft_delete_plan(p)
+!> call sll_s_fft_init_c2c_1d( p, n, in, in, sll_p_fft_forward, normalized = .TRUE. )
+!> call sll_s_fft_exec_c2c_1d( p, in, in )
+!> call sll_s_fft_free( p )
 !> \endcode
 !>
 !> Two-dimensional transform  
@@ -157,162 +178,42 @@
 !> sll_int32, parameter :: m = 2**3
 !> sll_comp64, dimension(n/2,m) :: in
 !> sll_real64, dimension(n,m) :: out
-!> type(sll_fft_plan), pointer  :: p
+!> type(sll_t_fft)  :: p
 !>
 !> !** INIT DATA **
 !>
-!> p => fft_new_plan(n,in,out,FFT_INVERSE)
-!> call fft_apply_plan(p,in,out)
-!> call fft_delete_plan(p)
+!> call sll_s_fft_init_c2r_2d( p, n, m, in, out )
+!> call sll_s_fft_exec_c2r_2d( p, in, out )
+!> call sll_s_fft_free( p )
 !> \endcode
 !>
-!> Transform in one direction
-!> \code
-!> sll_int32, parameter :: n = 2**5
-!> sll_int32, parameter :: m = 2**3
-!> sll_comp64, dimension(n,m) :: in
-!> sll_comp64, dimension(n,m) :: out
-!> type(sll_fft_plan), pointer  :: p
-!>
-!> !** INIT DATA **
-!>
-!> p => fft_new_plan(n,in,out,FFT_FORWARD,FFT_ONLY_FIRST_DIRECTION)
-!> call fft_apply_plan(p,in,out)
-!> call fft_delete_plan(p)
-!> \endcode
-!>
-!> \section acc Access the mode
-!> 
-!> To get the value of a mode call the function fft_get_mode(plan,data,num_mode)
-!>
-!> \code
-!> sll_int32, parameter :: n = 2**5
-!> sll_comp64, dimension(0,n-1) :: in
-!> type(sll_fft_plan), pointer  :: p
-!> sll_comp64 :: mode
-!> sll_int32 :: k = 3
-!>
-!> !** INIT DATA **
-!>
-!> p => fft_new_plan(n,in,in,FFT_FORWARD,FFT_NORMALIZE)
-!> call fft_apply_plan(p,in,in)
-!> mode = fft_get_mode(plan,in,k)
-!> call fft_delete_plan(p)
-!> \endcode
-!>
-!> \code
-!> sll_int32, parameter :: n = 2**5
-!> sll_int32, parameter :: m = 2**3
-!> sll_comp64, dimension(n/2,m) :: in
-!> sll_real64, dimension(n,m) :: out
-!> type(sll_fft_plan), pointer  :: p
-!> sll_comp64 :: mode
-!> sll_int32 :: k=4, l=2
-!>
-!> !** INIT DATA **
-!>
-!> p => fft_new_plan(n,in,out,FFT_INVERSE)
-!> call fft_apply_plan(p,in,out)
-!> mode = fft_get_mode(plan,out,k,l)
-!> call fft_delete_plan(p)
-!> \endcode
-!>
-!> \code
-!> sll_int32, parameter :: n = 2**5
-!> sll_real64, dimension(0,n-1) :: in
-!> sll_real64, dimension(0,n-1) :: out
-!> type(sll_fft_plan), pointer  :: p
-!> sll_comp64 :: mode
-!> sll_int32 :: k = 3
-!>
-!> !** INIT DATA **
-!>
-!> p => fft_new_plan(n,in,out,FFT_FORWARD,FFT_NORMALIZE)
-!> call fft_apply_plan(p,in,out)
-!> mode = fft_get_mode(plan,out,k)
-!> call fft_delete_plan(p)
-!> \endcode
-!>
-!> To set a mode call the subroutine fft_set_mode(plan,data,new_value,num_mode)
-!>
-!> \code
-!> sll_int32, parameter :: n = 2**5
-!> sll_comp64, dimension(0,n-1) :: in
-!> type(sll_fft_plan), pointer  :: p
-!> sll_comp64 :: new_value
-!> sll_int32 :: k = 3
-!>
-!> !** INIT DATA **
-!>
-!> p => fft_new_plan(n,in,in,FFT_FORWARD,FFT_NORMALIZE)
-!> call fft_apply_plan(p,in,in)
-!> new_value = complex(5.0_f64,3.2_f64)
-!> call fft_set_mode(plan,in,new_value,k)
-!> call fft_delete_plan(p)
-!> \endcode
-!>
-!> \code
-!> sll_int32, parameter :: n = 2**5
-!> sll_int32, parameter :: m = 2**3
-!> sll_comp64, dimension(n/2,m) :: in
-!> sll_real64, dimension(n,m) :: out
-!> type(sll_fft_plan), pointer  :: p
-!> sll_comp64 :: new_value
-!> sll_int32 :: k=4, l=2
-!>
-!> !** INIT DATA **
-!>
-!> p => fft_new_plan(n,in,out,FFT_INVERSE)
-!> call fft_apply_plan(p,in,out)
-!> new_value = complex(5.0_f64,3.2_f64)
-!> call fft_set_mode(plan,out,new_value,k,l)
-!> call fft_delete_plan(p)
-!> \endcode
-!>
-!> \code
-!> sll_int32, parameter :: n = 2**5
-!> sll_real64, dimension(0,n-1) :: in
-!> sll_real64, dimension(0,n-1) :: out
-!> type(sll_fft_plan), pointer  :: p
-!> sll_comp64 :: new_value
-!> sll_int32 :: k = 0
-!>
-!> !** INIT DATA **
-!>
-!> p => fft_new_plan(n,in,out,FFT_FORWARD,FFT_NORMALIZE)
-!> call fft_apply_plan(p,in,out)
-!> new_value = complex(5.0_f64,3.2_f64)
-!> call fft_set_mode(plan,out,new_value,k)
-!> call fft_delete_plan(p)
-!> \endcode
 !>
 !> \section what What sll_m_fft really computes
 !>
-!> The forward (FFT_FORWARD) DFT of a 1d complex array x of size n computes an array X, where:
+!> The forward (sll_p_fft_forward) DFT of a 1d complex array x of size n computes an array X, where:
 !>
 !> \f[ X_k = \sum_{i=0}^{n-1} x_i e^{-2\pi i j k/n}. \f]
 !>
-!> The backward (FFT_INVERSE) DFT computes:
+!> The backward (sll_p_fft_backward) DFT computes:
 !>
 !> \f[ x_i = \sum_{k=0}^{n-1} X_k e^{2\pi k j i/n}. \f]
 !>
-! For the real transform, we have
-! \f$ (x_0,x_1,\dots,x_{n-1}) \rightarrow
-!     (r_0,r_{n/2},r_1,i_1,\dots,r_{n/2-1},i_{n/2-1})\f$
-! which must be interpreted as the complex array
-! \f[ \begin{pmatrix} r_0 &,& 0
-!                     \\ r_1 &,& i_1
-!                     \\ \vdots  & & \vdots 
-!                     \\ r_{n/2-1} &,& i_{n/2-1}
-!                     \\ r_{n/2} &,& 0
-!                     \\ r_{n/2-1} &,& -i_{n/2-1}
-!                     \\ \vdots    & & \vdots
-!                     \\ r_1 &,& -i_1 
-! \end{pmatrix}\f] 
-! \warning Note that ffw use \f$(r_0,r_1,\dots,r_{n/2-1},r_{n/2},i_{n/2-1},\dots,i_1)\f$
-!          convention whereas fftpack use \f$(r_0,r_1,i_1,\dots,r_{n/2-1},i_{n/2-1},r_{n/2})\f$
-! 
-!
-! By example if, the input data is \f$(x_0,x_1,x_2,x_3)\f$ the output is \f$(X_0,X_2,X_1,X_3)\f$.
-! Thus, sll_get_index(1) returns 2 (cause data[1]=X_2) and sll_get_mode(1) returns X_1.
+!> For the real transform, we have
+!> \f$ (x_0,x_1,\dots,x_{n-1}) \rightarrow
+!>     (r_0,r_{n/2},r_1,i_1,\dots,r_{n/2-1},i_{n/2-1})\f$
+!> which must be interpreted as the complex array
+!> \f[ \begin{pmatrix} r_0 &,& 0
+!>                     \\ r_1 &,& i_1
+!>                     \\ \vdots  & & \vdots 
+!>                     \\ r_{n/2-1} &,& i_{n/2-1}
+!>                     \\ r_{n/2} &,& 0
+!>                     \\ r_{n/2-1} &,& -i_{n/2-1}
+!>                     \\ \vdots    & & \vdots
+!>                     \\ r_1 &,& -i_1 
+!> \end{pmatrix}\f] 
+!> \warning Note that ffw uses \f$(r_0,r_1,\dots,r_{n/2-1},r_{n/2},i_{n/2-1},\dots,i_1)\f$
+!>          convention whereas fftpack uses \f$(r_0,r_1,i_1,\dots,r_{n/2-1},i_{n/2-1},r_{n/2})\f$. Through the interface, FFTW ordering is enforced also for FFTPACK. 
+!> For r2c and r2c, the lower half (plus one element) is stored (non-negative frequencies). In higher dimensions, the first dimension is reduced to n/2+1 whereas the others remain n.
+!> 
+!>
 !------------------------------------------------------------------------------

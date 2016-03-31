@@ -18,18 +18,28 @@
 !in development
 
 module sll_m_advection_2d_CSL
-#include "sll_working_precision.h"
-#include "sll_memory.h"
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_assert.h"
-use sll_m_boundary_condition_descriptors
-use sll_m_advection_2d_base
-use sll_m_characteristics_2d_base
-use sll_m_interpolators_2d_base
-implicit none
+#include "sll_memory.h"
+#include "sll_working_precision.h"
 
-  type,extends(sll_advection_2d_base) :: CSL_2d_advector
+  use sll_m_advection_2d_base, only: &
+    sll_c_advection_2d_base
+
+  use sll_m_characteristics_2d_base, only: &
+    sll_c_characteristics_2d_base
+
+  implicit none
+
+  public :: &
+    sll_f_new_csl_2d_advector
+
+  private
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+  type,extends(sll_c_advection_2d_base) :: CSL_2d_advector
   
-    class(sll_characteristics_2d_base), pointer  :: charac
+    class(sll_c_characteristics_2d_base), pointer  :: charac
     sll_real64, dimension(:), pointer :: eta1_coords
     sll_real64, dimension(:), pointer :: eta2_coords
     sll_real64, dimension(:,:), pointer :: charac_feet1
@@ -58,7 +68,7 @@ implicit none
 
 
 contains
-  function new_CSL_2d_advector( &
+  function sll_f_new_csl_2d_advector( &
     charac, &
     Npts1, &
     Npts2, &
@@ -70,7 +80,7 @@ contains
     eta2_coords) &  
     result(adv)      
     type(CSL_2d_advector), pointer :: adv
-    class(sll_characteristics_2d_base), pointer  :: charac
+    class(sll_c_characteristics_2d_base), pointer  :: charac
     sll_int32, intent(in) :: Npts1
     sll_int32, intent(in) :: Npts2
     sll_real64, intent(in), optional :: eta1_min
@@ -95,7 +105,7 @@ contains
       eta1_coords, &
       eta2_coords)    
     
-  end function  new_CSL_2d_advector
+  end function  sll_f_new_csl_2d_advector
 
 
   subroutine initialize_CSL_2d_advector(&
@@ -110,7 +120,7 @@ contains
     eta1_coords, &
     eta2_coords)    
     class(CSL_2d_advector), intent(inout) :: adv
-    class(sll_characteristics_2d_base), pointer  :: charac
+    class(sll_c_characteristics_2d_base), pointer  :: charac
     sll_int32, intent(in) :: Npts1
     sll_int32, intent(in) :: Npts2
     sll_real64, intent(in), optional :: eta1_min

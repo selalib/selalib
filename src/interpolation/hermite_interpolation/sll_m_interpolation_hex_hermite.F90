@@ -1,19 +1,34 @@
 module sll_m_interpolation_hex_hermite
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_memory.h"
 #include "sll_working_precision.h"
-#include "sll_assert.h"
 
-  use sll_m_hexagonal_meshes
-  use sll_m_hermite_interpolation_2d
+  use sll_m_hermite_interpolation_2d, only: &
+    sll_s_compute_w_hermite
+
+  use sll_m_hexagonal_meshes, only: &
+    sll_s_get_cell_vertices_index, &
+    sll_s_get_edge_index, &
+    sll_s_get_triangle_index, &
+    sll_t_hex_mesh_2d
+
   implicit none
+
+  public :: &
+    sll_s_der_finite_difference, &
+    sll_s_hermite_interpolation, &
+    sll_s_print_method
+
+  private
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 contains
 
 
-  subroutine der_finite_difference( f_tn, p, step, mesh, deriv )
+  subroutine sll_s_der_finite_difference( f_tn, p, step, mesh, deriv )
     !-> computation of the partial derivatives in the directions H1, H2 and H3
     ! with dirichlet boundary condition
-    type(sll_hex_mesh_2d), pointer         :: mesh
+    type(sll_t_hex_mesh_2d), pointer         :: mesh
     sll_real64, dimension(:,:), intent(out):: deriv
     sll_real64, dimension(:), intent(in)   :: f_tn
     sll_real64, intent(in)                 :: step
@@ -64,7 +79,7 @@ contains
 
     allocate( w(r:s),f(1:6,r:s) )
 
-    call compute_w_hermite(w,r,s) 
+    call sll_s_compute_w_hermite(w,r,s) 
 
     !***********************************************************************
     ! Computation of the derivatives in both hexa directions h1 and h2,
@@ -485,14 +500,14 @@ contains
 
     deallocate(f,w)
 
-  end subroutine der_finite_difference
+  end subroutine sll_s_der_finite_difference
 
 
 
 
-  subroutine hermite_interpolation(num, x, y, f_tn, center_value, edge_value, output_tn1, mesh, deriv, aire, num_method)
+  subroutine sll_s_hermite_interpolation(num, x, y, f_tn, center_value, edge_value, output_tn1, mesh, deriv, aire, num_method)
 
-    type(sll_hex_mesh_2d), pointer         :: mesh
+    type(sll_t_hex_mesh_2d), pointer         :: mesh
     sll_real64,dimension(:), intent(in)    :: f_tn
     sll_real64,dimension(:), intent(in)    :: edge_value
     sll_real64,dimension(:), intent(in)    :: center_value
@@ -534,7 +549,7 @@ contains
 
     step = mesh%delta
 
-    call get_cell_vertices_index( x, y, mesh, i1, i2, i3 )
+    call sll_s_get_cell_vertices_index( x, y, mesh, i1, i2, i3 )
 
 
     x1 = mesh%cartesian_coord(1,i1) 
@@ -594,7 +609,7 @@ contains
 
     endif
 
-    if (test .eqv. .false. ) print*, "anomaly in hermite_interpolation l289"
+    if (test .eqv. .false. ) print*, "anomaly in sll_s_hermite_interpolation l289"
 
     a2  = 0.5_f64/aire
     y3y = y3 - y
@@ -616,7 +631,7 @@ contains
 
     else if (num_method == 10 ) then
 
-       call get_triangle_index(k11,k12,mesh,x,center_index)
+       call sll_s_get_triangle_index(k11,k12,mesh,x,center_index)
        freedom(10) = center_value(center_index)
        !freedom(10) = (f_tn(i1)+f_tn(i2)+f_tn(i3))/3._f64
        !call reconstruction_center_values(mesh,f_tn,center_index,freedom(10))
@@ -642,7 +657,7 @@ contains
 
        ! values at the middle of the edges
 
-       call get_edge_index(k11,k12,mesh,x,edge_index1,edge_index2,edge_index3)
+       call sll_s_get_edge_index(k11,k12,mesh,x,edge_index1,edge_index2,edge_index3)
        freedom(12) = edge_value(edge_index1)
        freedom(11) = edge_value(edge_index2)
        freedom(10) = edge_value(edge_index3)
@@ -663,7 +678,7 @@ contains
     
     deallocate(freedom,base)
 
-  end subroutine hermite_interpolation
+  end subroutine sll_s_hermite_interpolation
 
   
 
@@ -756,7 +771,7 @@ contains
   
   subroutine get_sub_triangle_hex(mesh,x1,x3,y1,y2,y3,x,y,&
        num_sub_triangle)
-    type(sll_hex_mesh_2d), pointer :: mesh
+    type(sll_t_hex_mesh_2d), pointer :: mesh
     sll_real64,intent(in) :: x1, y1 ! cartesian coordinates of the lowest point
     sll_real64,intent(in) :: y2     ! ordinate of the middle point
     sll_real64,intent(in) :: x3, y3 ! cartesian coordinates of the highest point
@@ -891,7 +906,7 @@ contains
 
 
   subroutine base_Hsieh_Clough_Tocher_reduced(base,x1,x3,y1,y2,y3,x,y,l1,l2,l3,mesh)
-    type(sll_hex_mesh_2d), pointer :: mesh
+    type(sll_t_hex_mesh_2d), pointer :: mesh
     sll_real64,dimension(:),intent(out) :: base
     sll_real64,intent(in)               :: x1,x3,y1,y2,y3
     sll_real64,intent(in)               :: x,y,l1,l2,l3
@@ -972,7 +987,7 @@ contains
 
   
   subroutine base_from_local_base_xi_htc_c(base,xi,num_sub_triangle,mesh)
-    type(sll_hex_mesh_2d), pointer      :: mesh
+    type(sll_t_hex_mesh_2d), pointer      :: mesh
     sll_real64,dimension(:),intent(out) :: base
     sll_real64,dimension(:),intent(in)  :: xi 
     sll_int32,              intent(in)  :: num_sub_triangle
@@ -1026,7 +1041,7 @@ contains
 
 
   subroutine base_Hsieh_Clough_Tocher_complete(base,x1,x3,y1,y2,y3,x,y,l1,l2,l3,mesh)
-    type(sll_hex_mesh_2d), pointer      :: mesh
+    type(sll_t_hex_mesh_2d), pointer      :: mesh
     sll_real64,dimension(:),intent(out) :: base
     sll_real64,intent(in)               :: x1,x3,y1,y2,y3
     sll_real64,intent(in)               :: x,y,l1,l2,l3
@@ -1070,7 +1085,7 @@ contains
   !*******************************************************************************
 
   subroutine get_normal_der(deriv,i1,i2,mesh,freedom)
-    type(sll_hex_mesh_2d), pointer         :: mesh
+    type(sll_t_hex_mesh_2d), pointer         :: mesh
     sll_real64, dimension(:,:), intent(in) :: deriv 
     sll_real64, dimension(3) , intent(out) :: freedom
     sll_real64                             :: x1, x2
@@ -1503,7 +1518,7 @@ contains
 
 
   subroutine base_ganev_dimitrov(base,l1,l2,l3,mesh)
-    type(sll_hex_mesh_2d), pointer      :: mesh
+    type(sll_t_hex_mesh_2d), pointer      :: mesh
     sll_real64,dimension(:),intent(out) :: base
     sll_real64,intent(in)               :: l1,l2,l3
     sll_real64,dimension(:),allocatable :: xi 
@@ -1539,7 +1554,7 @@ contains
 
 
   subroutine reconstruction_center_values(mesh,f_tn,center_index,center_value)
-    type(sll_hex_mesh_2d), pointer       :: mesh
+    type(sll_t_hex_mesh_2d), pointer       :: mesh
     sll_real64, dimension(:), intent(in) :: f_tn 
     sll_int32                 ,intent(in):: center_index
     sll_real64               ,intent(out):: center_value
@@ -1555,7 +1570,7 @@ contains
     x = mesh%center_cartesian_coord(1,center_index)
     y = mesh%center_cartesian_coord(2,center_index)
 
-    call get_cell_vertices_index( x, y, mesh, i1, i2, i3 )
+    call sll_s_get_cell_vertices_index( x, y, mesh, i1, i2, i3 )
 
     x1 = mesh%cartesian_coord(1,i1) 
 
@@ -1632,31 +1647,31 @@ contains
        ! l5 = -336._f64/6000._f64
        ! l6 = 0._f64
        
-       ! l1 = -1.9704302961946860E-003
-       ! l2 =  1.9878164458669901E-002
-       ! l3 = -0.10671435656759629 
-       ! l4 =  0.84482198949347154
-       ! l5 =  0.30720799617944411
-       ! l6 = -7.7983568260935790E-002
-       ! l7 =  1.6484331502311610E-002 
-       ! l8 = -1.7241265091703488E-00! 3
+       ! l1 = -1.9704302961946860e-3_f64
+       ! l2 =  1.9878164458669901e-2_f64
+       ! l3 = -0.10671435656759629e0_f64
+       ! l4 =  0.84482198949347154e0_f64
+       ! l5 =  0.30720799617944411e0_f64
+       ! l6 = -7.7983568260935790e-2_f64
+       ! l7 =  1.6484331502311610e-2_f64
+       ! l8 = -1.7241265091703488e-3_f64
 
-       r8 = -1.9704302961946860D-003
-       r7 =  1.9878164458669901D-002
-       r6 = -0.10671435656759629D0
-       r5 =  0.84482198949347154D0
-       r4 =  0.30720799617944411D0
-       r3 = -7.7983568260935790D-002
-       r2 =  1.6484331502311610D-002 
-       r1 = -1.7241265091703488D-003
+       r8 = -1.9704302961946860e-3_f64
+       r7 =  1.9878164458669901e-2_f64
+       r6 = -0.10671435656759629e0_f64
+       r5 =  0.84482198949347154e0_f64
+       r4 =  0.30720799617944411e0_f64
+       r3 = -7.7983568260935790e-2_f64
+       r2 =  1.6484331502311610e-2_f64
+       r1 = -1.7241265091703488e-3_f64
 
        ! r1 = 0._f64
-       ! r2 =  9.60219478738e-3
-       ! r3 = -7.68175583e-2
-       ! r4 =  0.3840877915
-       ! r5 =  0.768175583
-       ! r6 = -9.60219478738e-2
-       ! r7 =  1.09739369e-2 
+       ! r2 =  9.60219478738e-3_f64
+       ! r3 = -7.68175583e-2_f64
+       ! r4 =  0.3840877915_f64
+       ! r5 =  0.768175583_f64
+       ! r6 = -9.60219478738e-2_f64
+       ! r7 =  1.09739369e-2_f64
        ! r8 = 0._f64
 
        ! r1 = 0._f64
@@ -1667,7 +1682,6 @@ contains
        ! r6 = -384._f64/6000._f64
        ! r7 = 0._f64
        ! r8 = 0._f64
-
 
     if ( x < x1) then    ! first case  : triangle oriented left
        !center_value1 = l1*fi_3 + l2*fi_2 + l3*fi_1 + l4*fi + l5*fi1 + l6*fi2&
@@ -1938,7 +1952,7 @@ contains
 
   
   
-  subroutine  print_method(num_method)
+  subroutine  sll_s_print_method(num_method)
     sll_int32, intent(in) :: num_method
 
     if (num_method == 9 ) then
@@ -1975,7 +1989,7 @@ contains
        print*, "specify another number correspoonding to a existing implemented method 9, 10, 11, 12 or 15"
     endif
 
-  end subroutine print_method
+  end subroutine sll_s_print_method
 
 
 

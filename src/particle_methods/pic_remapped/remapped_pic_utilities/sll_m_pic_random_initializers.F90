@@ -21,17 +21,30 @@
 
 module sll_m_pic_random_initializers
 
-#include "sll_working_precision.h"
-#include "sll_memory.h"
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_assert.h"
-!#include "particle_representation.h"
+#include "sll_memory.h"
+#include "sll_working_precision.h"
 
-  use sll_m_constants, only: sll_pi
-  use sll_m_cartesian_meshes
-  use sll_m_remapped_pic_base
-  use sll_m_gaussian
+  use sll_m_cartesian_meshes, only: &
+    sll_t_cartesian_mesh_2d
+
+  use sll_m_constants, only: &
+    sll_p_pi
+
+  use sll_m_gaussian, only: &
+    sll_s_gaussian_deviate_2d
+
+  use sll_m_remapped_pic_base, only: &
+    sll_c_remapped_particle_group
 
   implicit none
+
+  public :: &
+    sll_s_pic_4d_random_unweighted_initializer_landau_f0
+
+  private
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
   
 
 contains
@@ -43,7 +56,7 @@ contains
   !
   !> note: here we assume that the abstract particles are in dimension 2Dx2V,
   !> that they are allocated (with given number) and that they have a common weight
-  subroutine sll_pic_4d_random_unweighted_initializer_landau_f0 (   &
+  subroutine sll_s_pic_4d_random_unweighted_initializer_landau_f0 (   &
       thermal_speed, alpha, k_landau,                               &
       particle_group,                                               &
       space_mesh_2d,                                                &
@@ -56,7 +69,7 @@ contains
     sll_int32,                          intent(in)              :: number_particles
     sll_real64,                         intent(in)              :: thermal_speed, alpha, k_landau
     class(sll_c_remapped_particle_group),  intent(inout)        :: particle_group
-    type(sll_cartesian_mesh_2d),        intent(in)              :: space_mesh_2d
+    type(sll_t_cartesian_mesh_2d),        intent(in)              :: space_mesh_2d
 
     sll_real64,                         intent( in )            :: target_total_charge
     logical,                            intent( in )            :: enforce_total_charge
@@ -118,7 +131,7 @@ contains
       if ( eval_landau(alpha, k_landau, x(1)) >= x(2) ) then
         call random_number(aux_random)
         x(2) = (y_max - y_min) * aux_random + y_min
-        call gaussian_deviate_2D(val)
+        call sll_s_gaussian_deviate_2d(val)
         v(1) = val(1) * thermal_speed
         v(2) = val(2) * thermal_speed
 
@@ -135,7 +148,7 @@ contains
    !PN ADDED TO AVOID WARNING
    SLL_ASSERT(present(rank)) 
    
-  end subroutine sll_pic_4d_random_unweighted_initializer_landau_f0
+  end subroutine sll_s_pic_4d_random_unweighted_initializer_landau_f0
 
 
   function eval_landau(alpha, kx, x)

@@ -16,15 +16,36 @@
 !**************************************************************
 
 program test_characteristics_2d_verlet
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_working_precision.h"
-use sll_m_characteristics_2d_verlet
-use sll_m_boundary_condition_descriptors
-use sll_m_cubic_spline_interpolator_1d
-use sll_m_cubic_spline_interpolator_2d
 
-implicit none
+  use sll_m_boundary_condition_descriptors, only: &
+    sll_p_hermite, &
+    sll_p_periodic, &
+    sll_p_set_to_limit
+
+  use sll_m_characteristics_2d_base, only: &
+    sll_c_characteristics_2d_base
+
+  use sll_m_characteristics_2d_verlet, only: &
+    sll_f_new_verlet_2d_charac
+
+  use sll_m_cubic_spline_interpolator_1d, only: &
+    sll_f_new_cubic_spline_interpolator_1d
+
+  use sll_m_cubic_spline_interpolator_2d, only: &
+    sll_f_new_cubic_spline_interpolator_2d
+
+  use sll_m_interpolators_1d_base, only: &
+    sll_c_interpolator_1d
+
+  use sll_m_interpolators_2d_base, only: &
+    sll_c_interpolator_2d
+
+  implicit none
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
   
-  class(sll_characteristics_2d_base),pointer :: verlet
+  class(sll_c_characteristics_2d_base),pointer :: verlet
 
   
   sll_int32 :: Npts1
@@ -41,10 +62,10 @@ implicit none
   sll_real64 :: dt
   sll_real64 :: err
   !sll_real64 :: tmp
-  class(sll_interpolator_2d_base), pointer   :: A1_interp_x1x2
-  class(sll_interpolator_2d_base), pointer   :: A2_interp_x1x2
-  class(sll_interpolator_1d_base), pointer   :: A1_interp_x1
-  class(sll_interpolator_1d_base), pointer   :: A2_interp_x1
+  class(sll_c_interpolator_2d), pointer   :: A1_interp_x1x2
+  class(sll_c_interpolator_2d), pointer   :: A2_interp_x1x2
+  class(sll_c_interpolator_1d), pointer   :: A1_interp_x1
+  class(sll_c_interpolator_1d), pointer   :: A2_interp_x1
 
   
   
@@ -57,50 +78,50 @@ implicit none
 
   
   !initialization for verlet
-  A1_interp_x1 => new_cubic_spline_interpolator_1d( &
+  A1_interp_x1 => sll_f_new_cubic_spline_interpolator_1d( &
     Npts1, &
     0._f64, &
     1._f64, &
-    SLL_HERMITE)
+    sll_p_hermite)
 
-  A2_interp_x1 => new_cubic_spline_interpolator_1d( &
+  A2_interp_x1 => sll_f_new_cubic_spline_interpolator_1d( &
     Npts1, &
     0._f64, &
     1._f64, &
-    SLL_HERMITE)
+    sll_p_hermite)
 
-  A1_interp_x1x2 => new_cubic_spline_interpolator_2d( &
+  A1_interp_x1x2 => sll_f_new_cubic_spline_interpolator_2d( &
        Npts1, &
        Npts2, &
        0.0_f64, &
        1.0_f64, &
        0.0_f64, &
        1.0_f64, &
-       SLL_HERMITE, &
-       SLL_PERIODIC)
+       sll_p_hermite, &
+       sll_p_periodic)
 
-  A2_interp_x1x2 => new_cubic_spline_interpolator_2d( &
+  A2_interp_x1x2 => sll_f_new_cubic_spline_interpolator_2d( &
        Npts1, &
        Npts2, &
        0.0_f64, &
        1.0_f64, &
        0.0_f64, &
        1.0_f64, &
-       SLL_HERMITE, &
-       SLL_PERIODIC)
+       sll_p_hermite, &
+       sll_p_periodic)
 
 
 
   verlet => &
-    new_verlet_2d_charac(&
+    sll_f_new_verlet_2d_charac(&
       Npts1, &
       Npts2, &
       A1_interp_x1x2, &
       A2_interp_x1x2, &
       A1_interp_x1, &
       A2_interp_x1, &
-      bc_type_1=SLL_SET_TO_LIMIT, &
-      bc_type_2=SLL_PERIODIC)
+      bc_type_1=sll_p_set_to_limit, &
+      bc_type_2=sll_p_periodic)
                   
 
   allocate(input1(Npts1))

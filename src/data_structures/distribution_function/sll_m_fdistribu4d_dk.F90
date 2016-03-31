@@ -16,14 +16,45 @@
 !>@details
 !-----------------------------------------------------------
 module sll_m_fdistribu4d_dk
-#include "sll_working_precision.h"
-#include "sll_memory.h"
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_assert.h"
+#include "sll_memory.h"
+#include "sll_working_precision.h"
 
-  use sll_m_constants
-  use sll_m_boundary_condition_descriptors
+  use sll_m_boundary_condition_descriptors, only: &
+    sll_p_hermite, &
+    sll_p_periodic
+
+  use sll_m_common_coordinate_transformations, only: &
+    sll_f_polar_eta1, &
+    sll_f_polar_eta2
+
+  use sll_m_constants, only: &
+    sll_p_pi
+
+  use sll_m_cubic_splines, only: &
+    sll_s_compute_cubic_spline_1d, &
+    sll_s_compute_cubic_spline_2d, &
+    sll_f_interpolate_from_interpolant_value, &
+    sll_f_interpolate_value_2d, &
+    sll_f_new_cubic_spline_1d, &
+    sll_f_new_cubic_spline_2d, &
+    sll_t_cubic_spline_1d, &
+    sll_t_cubic_spline_2d, &
+    sll_o_delete
 
   implicit none
+
+  public :: &
+    sll_s_function_xy_from_rtheta, &
+    sll_s_init_brtheta, &
+    sll_f_init_exact_profile_r, &
+    sll_s_init_fequilibrium, &
+    sll_s_init_fequilibrium_xy, &
+    sll_f_profil_xy_exacte
+
+  private
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
   sll_real64, dimension(1) :: whatever  ! dummy params array
 
@@ -105,12 +136,12 @@ module sll_m_fdistribu4d_dk
   !  delta = params(2)
   !  rx    = params(3)
   !---------------------------------------- -----------------------
-  function profil_xy_exacte(x,y,params_profil) 
+  function sll_f_profil_xy_exacte(x,y,params_profil) 
     
     sll_real64, intent(in) :: x
     sll_real64, intent(in) :: y
     sll_real64, dimension(:), intent(in) ::params_profil
-    sll_real64 :: profil_xy_exacte
+    sll_real64 :: sll_f_profil_xy_exacte
     sll_real64 :: kappa
     sll_real64 :: delta
     sll_real64 :: rx
@@ -120,9 +151,9 @@ module sll_m_fdistribu4d_dk
     delta = params_profil(2)
     rx    = params_profil(3)
     r = sqrt(x**2+y**2)
-    profil_xy_exacte = exp(-kappa*delta*tanh((r-rx)/delta))
+    sll_f_profil_xy_exacte = exp(-kappa*delta*tanh((r-rx)/delta))
     
-  end function profil_xy_exacte
+  end function sll_f_profil_xy_exacte
 
 
   !---------------------------------------- -----------------------
@@ -136,12 +167,12 @@ module sll_m_fdistribu4d_dk
   !  delta = params(2)
   !  rx    = params(3)
   !---------------------------------------- -----------------------
-  function init_exact_profile_r(r,params_profil) 
+  function sll_f_init_exact_profile_r(r,params_profil) 
     
     sll_real64, intent(in) :: r
     sll_real64, dimension(:), intent(in) :: params_profil
 
-    sll_real64 :: init_exact_profile_r
+    sll_real64 :: sll_f_init_exact_profile_r
     sll_real64 :: kappa
     sll_real64 :: delta
     sll_real64 :: rx
@@ -149,9 +180,9 @@ module sll_m_fdistribu4d_dk
     kappa = params_profil(1)
     delta = params_profil(2)
     rx    = params_profil(3)
-    init_exact_profile_r = exp(-kappa*delta*tanh((r-rx)/delta))
+    sll_f_init_exact_profile_r = exp(-kappa*delta*tanh((r-rx)/delta))
     
-  end function init_exact_profile_r
+  end function sll_f_init_exact_profile_r
 
   
   
@@ -206,7 +237,7 @@ module sll_m_fdistribu4d_dk
   !---------------------------------------------------------------
   ! Initialisation of the magnetic field B(r,theta)
   !---------------------------------------------------------------
-  subroutine init_Brtheta(r_grid,theta_grid,B_rtheta)
+  subroutine sll_s_init_brtheta(r_grid,theta_grid,B_rtheta)
     sll_real64, dimension(:)  , intent(in)    :: r_grid
     sll_real64, dimension(:)  , intent(in)    :: theta_grid
     sll_real64, dimension(:,:), intent(inout) :: B_rtheta
@@ -222,7 +253,7 @@ module sll_m_fdistribu4d_dk
         B_rtheta(ir,itheta) = 1._f64
       end do
     end do
-  end subroutine init_Brtheta
+  end subroutine sll_s_init_brtheta
 
 
   !---------------------------------------------------------------
@@ -243,7 +274,7 @@ module sll_m_fdistribu4d_dk
     sll_real64, intent(in) :: Ti_r
 
     SLL_ASSERT(r >= 0.0)
-    val = n0_r/sqrt(2._f64*sll_pi*Ti_r) * &
+    val = n0_r/sqrt(2._f64*sll_p_pi*Ti_r) * &
       exp(-0.5_f64*vpar**2/Ti_r) 
   end function compute_feq_val
 
@@ -254,7 +285,7 @@ module sll_m_fdistribu4d_dk
   !  feq(r,vpar) = n0(r)/(2*pi*Ti(r))**(1/2) * 
   !                    exp(-0.5*vpar**2/Ti(r))
   !----------------------------------------------------
-  subroutine init_fequilibrium(Nr,Nvpar, &
+  subroutine sll_s_init_fequilibrium(Nr,Nvpar, &
     r_grid,vpar_grid,n0_1d,Ti_1d,feq_2d)
     sll_int32, intent(in) :: Nr
     sll_int32, intent(in) :: Nvpar
@@ -276,7 +307,7 @@ module sll_m_fdistribu4d_dk
         feq_2d(ir,ivpar) = compute_feq_val(r,vpar,n0_r,Ti_r)
       end do
     end do
-  end subroutine init_fequilibrium
+  end subroutine sll_s_init_fequilibrium
 
 
   !----------------------------------------------------
@@ -284,9 +315,6 @@ module sll_m_fdistribu4d_dk
   !----------------------------------------------------
   subroutine function_xy_from_r(r_grid,func_r, &
     xgrid_2d,ygrid_2d,func_xy)
-    use sll_m_cubic_splines
-    use sll_m_common_coordinate_transformations, only : &
-      polar_eta1
     sll_real64, dimension(:)  , intent(in)  :: r_grid
     sll_real64, dimension(:)  , intent(in)  :: func_r
     sll_real64, dimension(:,:), intent(in)  :: xgrid_2d
@@ -297,38 +325,34 @@ module sll_m_fdistribu4d_dk
     sll_int32  :: ix, iy
     sll_real64 :: r, x, y
  
-    type(sll_cubic_spline_1D), pointer :: sp1d_r
+    type(sll_t_cubic_spline_1d), pointer :: sp1d_r
 
     Nr   = size(r_grid,1)
     Npt1 = size(xgrid_2d,1)
     Npt2 = size(xgrid_2d,2)
 
-    sp1d_r => new_cubic_spline_1d(Npt1, &
-      r_grid(1),r_grid(Nr),SLL_HERMITE)
-    call compute_cubic_spline_1D(func_r,sp1d_r)
+    sp1d_r => sll_f_new_cubic_spline_1d(Npt1, &
+      r_grid(1),r_grid(Nr),sll_p_hermite)
+    call sll_s_compute_cubic_spline_1d(func_r,sp1d_r)
 
     do iy = 1,Npt2
       do ix = 1,Npt1
         x = xgrid_2d(ix,iy)
         y = ygrid_2d(ix,iy)
-        r = polar_eta1(x,y,(/0.0_f64/)) ! params doesn't matter for polar_eta1 
+        r = sll_f_polar_eta1(x,y,(/0.0_f64/)) ! params doesn't matter for sll_f_polar_eta1 
         r = min(max(r,r_grid(1)),r_grid(Nr))
-        func_xy(ix,iy) = interpolate_value(r,sp1d_r)
+        func_xy(ix,iy) = sll_f_interpolate_from_interpolant_value(r,sp1d_r)
       end do
     end do
-    call sll_delete(sp1d_r)
+    call sll_o_delete(sp1d_r)
   end subroutine function_xy_from_r
 
 
   !----------------------------------------------------
   ! Compute func(x,y) from func(r,theta)
   !----------------------------------------------------
-  subroutine function_xy_from_rtheta(r_grid,theta_grid, &
+  subroutine sll_s_function_xy_from_rtheta(r_grid,theta_grid, &
     func_rtheta,xgrid_2d,ygrid_2d,func_xy)
-    use sll_m_constants
-    use sll_m_cubic_splines
-    use sll_m_common_coordinate_transformations, only : &
-      polar_eta1, polar_eta2
     sll_real64, dimension(:)  , intent(in)  :: r_grid
     sll_real64, dimension(:)  , intent(in)  :: theta_grid
     sll_real64, dimension(:,:), intent(in)  :: func_rtheta
@@ -341,32 +365,32 @@ module sll_m_fdistribu4d_dk
     sll_int32  :: ix, iy
     sll_real64 :: r, theta, x, y
  
-    type(sll_cubic_spline_2D), pointer :: sp2d_rtheta
+    type(sll_t_cubic_spline_2d), pointer :: sp2d_rtheta
 
     Nr     = size(r_grid,1)
     Ntheta = size(theta_grid,1)
     Npt1   = size(xgrid_2d,1)
     Npt2   = size(xgrid_2d,2)
 
-    sp2d_rtheta => new_cubic_spline_2d(Npt1,Npt2, &
+    sp2d_rtheta => sll_f_new_cubic_spline_2d(Npt1,Npt2, &
       r_grid(1),r_grid(Nr), &
       theta_grid(1),theta_grid(Ntheta), &
-      SLL_HERMITE,SLL_PERIODIC)
-    call compute_cubic_spline_2D(func_rtheta,sp2d_rtheta)
+      sll_p_hermite,sll_p_periodic)
+    call sll_s_compute_cubic_spline_2d(func_rtheta,sp2d_rtheta)
 
     do iy = 1,Npt2
       do ix = 1,Npt1
         x     = xgrid_2d(ix,iy)
         y     = ygrid_2d(ix,iy)
-        r     = polar_eta1(x,y,whatever)
+        r     = sll_f_polar_eta1(x,y,whatever)
         r     = min(max(r,r_grid(1)),r_grid(Nr))
-        theta = polar_eta2(x,y,whatever)
-        theta = modulo(theta,2._f64*sll_pi)
-        func_xy(ix,iy) = interpolate_value_2D(r,theta,sp2d_rtheta)
+        theta = sll_f_polar_eta2(x,y,whatever)
+        theta = modulo(theta,2._f64*sll_p_pi)
+        func_xy(ix,iy) = sll_f_interpolate_value_2d(r,theta,sp2d_rtheta)
       end do
     end do
-    call sll_delete(sp2d_rtheta)
-  end subroutine function_xy_from_rtheta
+    call sll_o_delete(sp2d_rtheta)
+  end subroutine sll_s_function_xy_from_rtheta
 
 
   !----------------------------------------------------
@@ -375,7 +399,7 @@ module sll_m_fdistribu4d_dk
   !  feq(x,y,vpar) = n0(x,y)/(2*pi*Ti(x,y))**(1/2) * 
   !                    exp(-0.5*vpar**2/Ti(x,y))
   !----------------------------------------------------
-  subroutine init_fequilibrium_xy(xgrid_2d,ygrid_2d, &
+  subroutine sll_s_init_fequilibrium_xy(xgrid_2d,ygrid_2d, &
     vpar_grid,n0_xy,Ti_xy,feq_xyvpar)
     sll_real64, dimension(:,:)  , intent(in)  :: xgrid_2d
     sll_real64, dimension(:,:)  , intent(in)  :: ygrid_2d
@@ -396,10 +420,10 @@ module sll_m_fdistribu4d_dk
         do ix = 1,Npt1
            feq_xyvpar(ix,iy,ivpar) = n0_xy(ix,iy) * &
                 exp(-0.5_f64*vpar_grid(ivpar)**2/Ti_xy(ix,iy))&
-                /sqrt(2._f64*sll_pi*Ti_xy(ix,iy))
+                /sqrt(2._f64*sll_p_pi*Ti_xy(ix,iy))
         end do
       end do
     end do
-  end subroutine init_fequilibrium_xy
+  end subroutine sll_s_init_fequilibrium_xy
 
 end module sll_m_fdistribu4d_dk

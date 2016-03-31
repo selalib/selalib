@@ -1,6 +1,5 @@
 # Cubic splines ............................
-ADD_EXECUTABLE( test_cubic_splines test_cubic_splines.F90 test_func_module.F90
-                util_constants.F90 test_processes_module.F90 )
+ADD_EXECUTABLE( test_cubic_splines test_cubic_splines.F90  )
 TARGET_LINK_LIBRARIES( test_cubic_splines sll_splines )
 
 # Ctests
@@ -57,5 +56,3 @@ SET_TESTS_PROPERTIES( arbitrary_degree_splines PROPERTIES
 ADD_EXECUTABLE( test_box_splines_derivatives test_box_splines_derivatives.F90 )
 TARGET_LINK_LIBRARIES( test_box_splines_derivatives sll_splines )
 
-# Ctests
-#...........................................

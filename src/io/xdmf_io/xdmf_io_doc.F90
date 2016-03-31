@@ -1,4 +1,4 @@
-!> @defgroup xdmf sll_m_xdmf
+!> @defgroup xdmf sll_xdmf
 !!
 !! @authors Yaman Güçlü    - <yaman.guclu@gmail.com>
 !! @authors Marco Restelli - <marco.restelli@gmail.com>

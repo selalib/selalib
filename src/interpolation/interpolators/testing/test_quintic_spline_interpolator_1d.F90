@@ -1,15 +1,19 @@
 program quintic_spline_interpolator_1d
-#include "sll_working_precision.h"
-#include "sll_assert.h"
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_memory.h"
+#include "sll_working_precision.h"
 
-use sll_m_constants
-use sll_m_interpolators_1d_base
-use sll_m_quintic_spline_interpolator_1d
+  use sll_m_boundary_condition_descriptors, only: &
+    sll_p_dirichlet
 
-implicit none
+  use sll_m_quintic_spline_interpolator_1d, only: &
+    sll_s_set_values_at_boundary, &
+    sll_t_quintic_spline_interpolator_1d
 
-type(sll_quintic_spline_interpolator_1d) :: spline
+  implicit none
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+type(sll_t_quintic_spline_interpolator_1d) :: spline
 
 sll_real64                            :: error
 sll_real64, allocatable, dimension(:) :: point
@@ -39,9 +43,9 @@ do i=1,n
 end do
 
 print*, 'Quintic spline interpolation'
-call spline%initialize(n, x_min, x_max, SLL_DIRICHLET, SLL_DIRICHLET )
+call spline%initialize(n, x_min, x_max, sll_p_dirichlet, sll_p_dirichlet )
 
-call set_values_at_boundary( spline,     &
+call sll_s_set_values_at_boundary( spline,     &
                              f( x_min),  &
                              f( x_max),  &
                              df(x_min),  &
@@ -54,7 +58,7 @@ delta = (x_max - x_min ) / real(m-1,f64)
 do i=1,m
   point(i) = x_min + (i-1)*delta
   gdata(i) = f(point(i))
-  fdata(i) = spline%interpolate_value(point(i))
+  fdata(i) = spline%interpolate_from_interpolant_value(point(i))
   write(47,*) point(i), fdata(i), gdata(i)
 end do
 

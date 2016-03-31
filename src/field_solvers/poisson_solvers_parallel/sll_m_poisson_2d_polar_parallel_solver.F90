@@ -26,27 +26,43 @@
 
 !> @ingroup poisson_solvers
 module sll_m_poisson_2d_polar_parallel_solver
-#include "sll_working_precision.h"
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_memory.h"
-#include "sll_assert.h"
-!use sll_m_boundary_condition_descriptors
-use sll_m_poisson_2d_base
-use sll_m_poisson_polar_parallel
-implicit none
+#include "sll_working_precision.h"
+
+  use sll_m_poisson_2d_base, only: &
+    sll_c_poisson_2d_base, &
+    sll_i_function_of_position
+
+  use sll_m_poisson_polar_parallel, only: &
+    sll_f_new_poisson_polar, &
+    sll_t_poisson_polar, &
+    sll_s_solve_poisson_polar
+
+  use sll_m_remapper, only: &
+    sll_t_layout_2d
+
+  implicit none
+
+  public :: &
+    sll_f_new_poisson_2d_polar_parallel_solver
+
+  private
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
   sll_int32, parameter :: SLL_POISSON_CLASSIC = 0
   sll_int32, parameter :: SLL_POISSON_DRIFT_KINETIC = 1
 
-  type,extends(sll_poisson_2d_base) :: poisson_2d_polar_parallel_solver     
+  type,extends(sll_c_poisson_2d_base) :: poisson_2d_polar_parallel_solver     
   
-  type(sll_poisson_polar), pointer :: poiss
+  type(sll_t_poisson_polar), pointer :: poiss
   sll_int32 :: poisson_case
   sll_real64,dimension(:), pointer :: dlog_density
   sll_real64,dimension(:), pointer :: inv_Te
   
   
   contains
-    procedure, pass(poisson) :: initialize => &
+    procedure, pass(poisson) :: sll_o_initialize => &
       initialize_poisson_2d_polar_parallel_solver
     procedure, pass(poisson) :: compute_phi_from_rho => &
       compute_phi_from_rho_2d_polar
@@ -54,11 +70,19 @@ implicit none
       compute_E_from_rho_2d_polar
 !    procedure, pass(poisson) :: compute_E_from_phi => &
 !      compute_E_from_phi_2d_polar
+
+    !> Compute the squarred L_2 for given coefficients
+    procedure :: &
+         l2norm_squared => l2norm_squarred_2d_polar
+    !> Compute the right hand side from a given function
+    procedure :: &
+         compute_rhs_from_function => compute_rhs_from_function_2d_polar
+    procedure :: free => delete_2d_polar_parallel
       
   end type poisson_2d_polar_parallel_solver
 
 contains
-  function new_poisson_2d_polar_parallel_solver( &
+  function sll_f_new_poisson_2d_polar_parallel_solver( &
     layout_r, &
     layout_a, &
     eta1_min, &
@@ -72,8 +96,8 @@ contains
     result(poisson)
     implicit none
     type(poisson_2d_polar_parallel_solver),pointer :: poisson
-    type(layout_2D), pointer :: layout_r !< sequential in r direction
-    type(layout_2D), pointer :: layout_a !< sequential in theta direction
+    type(sll_t_layout_2d), pointer :: layout_r !< sequential in r direction
+    type(sll_t_layout_2d), pointer :: layout_a !< sequential in theta direction
     sll_real64, intent(in) :: eta1_min
     sll_real64, intent(in) :: eta1_max
     sll_int32, intent(in) :: nc_eta1
@@ -98,7 +122,7 @@ contains
       inv_Te, &
       poisson_case)
     
-  end function new_poisson_2d_polar_parallel_solver
+  end function sll_f_new_poisson_2d_polar_parallel_solver
   
   
   subroutine initialize_poisson_2d_polar_parallel_solver( &
@@ -114,8 +138,8 @@ contains
     inv_Te, &
     poisson_case)
     class(poisson_2d_polar_parallel_solver) :: poisson
-    type(layout_2D), pointer :: layout_r !< sequential in r direction
-    type(layout_2D), pointer :: layout_a !< sequential in theta direction
+    type(sll_t_layout_2d), pointer :: layout_r !< sequential in r direction
+    type(sll_t_layout_2d), pointer :: layout_a !< sequential in theta direction
     sll_real64, intent(in) :: eta1_min
     sll_real64, intent(in) :: eta1_max
     sll_int32, intent(in) :: nc_eta1
@@ -143,7 +167,7 @@ contains
     
     select case(poisson%poisson_case)
       case (SLL_POISSON_CLASSIC)
-         poisson%poiss => new_poisson_polar( &
+         poisson%poiss => sll_f_new_poisson_polar( &
           layout_r, &
           layout_a, &
           eta1_min, &
@@ -174,7 +198,7 @@ contains
         endif
         poisson%dlog_density(1:nc_eta1+1)=dlog_density(1:nc_eta1+1)
         poisson%inv_Te(1:nc_eta1+1)=inv_Te(1:nc_eta1+1)
-        poisson%poiss => new_poisson_polar( &
+        poisson%poiss => sll_f_new_poisson_polar( &
           layout_r, &
           layout_a, &
           eta1_min, &
@@ -199,26 +223,26 @@ contains
     sll_real64,dimension(:,:),intent(in) :: rho
     sll_real64,dimension(:,:),intent(out) :: phi
     
-    call solve_poisson_polar(poisson%poiss,rho,phi)
+    call sll_s_solve_poisson_polar(poisson%poiss,rho,phi)
     
 !    select case(poisson%poisson_case)
 !      case (SLL_POISSON_CLASSIC)
 !        call poisson_solve_polar(poisson%poiss,rho,phi)            
 !      case (SLL_POISSON_DRIFT_KINETIC)    
-!        call solve_poisson_polar(poisson%poiss,rho,phi)
+!        call sll_s_solve_poisson_polar(poisson%poiss,rho,phi)
 !      case default
 !        print *,'#bad value of poisson_case=', poisson%poisson_case
 !        print *,'#not implemented'
 !        print *,'in compute_phi_from_rho_2d_polar'
 !        stop
 !     end select   
-    !call solve( poisson%poiss, rho, phi)
+    !call sll_o_solve( poisson%poiss, rho, phi)
     
   end subroutine compute_phi_from_rho_2d_polar
 
     ! solves E = -\nabla Phi in 2d
 !    subroutine compute_E_from_phi_2d_fft( poisson, phi, E1, E2 )
-!      class(poisson_2d_fft_solver) :: poisson
+!      class(poisson_2d_periodic_fft) :: poisson
 !      sll_real64,dimension(:,:),intent(in) :: phi
 !      sll_real64,dimension(:,:),intent(out) :: E1
 !      sll_real64,dimension(:,:),intent(out) :: E2
@@ -244,11 +268,31 @@ contains
 
       stop
       
-      !call solve( poisson%poiss, E1, E2, rho)
+      !call sll_o_solve( poisson%poiss, E1, E2, rho)
       
     end subroutine compute_E_from_rho_2d_polar
   
+    function l2norm_squarred_2d_polar(poisson, coefs_dofs) result(r)
+    class( poisson_2d_polar_parallel_solver) , intent(in)        :: poisson !< Poisson solver object.
+    sll_real64, intent(in)                                     :: coefs_dofs(:,:) !< Values of the coefficient vectors for each DoF
+    sll_real64                                     :: r
+    
+    r = 0.0_f64
+    print*, 'l2norm_squared not implemented for poisson_2d_polar_parallel_solver.'
+    
+  end function l2norm_squarred_2d_polar
   
-  
+  subroutine compute_rhs_from_function_2d_polar(poisson, func, coefs_dofs)
+    class( poisson_2d_polar_parallel_solver)                    :: poisson !< Maxwell solver object.
+    procedure(sll_i_function_of_position)          :: func !< Function to be projected.
+    sll_real64, intent(out)                        :: coefs_dofs(:) !< Coefficients of the projection.
+    
+    print*, 'compute_rhs_from_function not implemented for poisson_2d_polar_parallel_solver.'
+    
+  end subroutine compute_rhs_from_function_2d_polar
+
+  subroutine delete_2d_polar_parallel( poisson )
+    class( poisson_2d_polar_parallel_solver)                    :: poisson !< Maxwell solver object.
+  end subroutine delete_2d_polar_parallel
   
 end module sll_m_poisson_2d_polar_parallel_solver

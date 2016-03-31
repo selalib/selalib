@@ -8,50 +8,48 @@ Modular library for the kinetic and gyrokinetic simulation of tokamak plasmas by
 </p>
 <p>
 In the context of the <a
-href="http://www-math.u-strasbg.fr/ae_fusion">French Action Fusion
-(Action d'envergure Nationale Fusion)</a> and a longstanding
+href="https://team.inria.fr/ipl-fratres/"> Inria Project Lab FRATRES </a> and a longstanding
 collaboration between the CEA-Cadarache (French Atomic Energy
-Commision), the  <a href="http://www-math.u-strasbg.fr/calvi/">Tonus
+Commision), the  <a href="hhtp://www.inria.fr/equipes/tonus">Tonus
 INRIA Project Team</a> based at the University of Strasbourg and the 
 <a href="https://www.ipp.mpg.de/ippcms/eng/for/bereiche/numerik">Max-Planck-Institut
 f&uuml;r Plasmaphysik (IPP)</a> in Garching, we
-are currently developing the Selalib library. Selalib is a collection
-of interfaces and implementations of individual building blocks
-that can help researchers create and test numerical methods, develop
-new types of simulations, parallelization schemes, etc., either
-independently or in preparation for making modifications in existing
-production code such as <a
-href='http://gyseladoc.gforge.inria.fr'>GYSELA</a>, the CEA's
-massively parallel gyrokinetic, full-tokamak simulator. The Selalib
-project arose from the need of researchers to develop numerical
-methods with simplified test cases while also having independently
-tested modules that would facilitate gradual changes in existing
-production code. While originally envisioned to be specialized on
-the semi-lagrangian method, the abstractions that we have built can
+are currently developing the Selalib library. 
+</p>
+<p>
+The SeLaLib software library is a modular library for kinetic and
+gyrokinetic simulations of plasmas in fusion energy devices by
+semi-Lagrangian or particle-in-cell methods.
+</p>
+<p>
+The SeLaLib project arose from the need of researchers to develop
+numerical methods with simplified test cases while also having
+independently tested modules that would facilitate gradual changes in
+existing production code. While originally envisioned to be specialized
+on the semi-lagrangian method, the abstractions that we have built can
 be used with other types of approaches, such as particle-in-cell.
+</p>
+<p>
+SeLaLib contains a collection of individual building blocks for the
+parallel simulation of the Vlasov equations and the gyrokinetic equation
+either based on semi-Lagrangian schemes or particle methods. Besides
+numerical algorithms the library provides low-level utilities,
+input-output modules as well as parallelization strategies. Moreover, a
+collection of simulations for typical test cases with various
+discretization schemes supplements the library.
+</p>
+<p>
+The developments that are planned for the next years include - but are
+not limited to - new numerical algorithms, more complex geometries and
+physical models as well as performance optimizations.
 Thus far, the development is being kept within an international
 group of collaborators, but we expect a stable release soon. Stay
-tuned!  </p>
+tuned! 
+</p>
 
+<h2>Contributing to SeLalib </h2>
 Sign in to the INRIA GForge and 
-<a href="http://lists.gforge.inria.fr/mailman/listinfo/selalib-devel">Subscribe to the developers list</a> 
-
-<h2>SeLalib for users</h2>
-<table class="contentstable" align="center" style="margin-left: 30px"><tr>
-  <td width="50%">
-    <p class="biglink"><a class="biglink" href="{{ pathto("install/index") }}">Build the library and run examples</a> <img src="{{ pathto("_static/new_anime.gif", 1) }}" border="0" /><br/>
-    <span class="linkdescr">Get the beta release</span></p>
-  </td>
-<!--
-  <td width="50%">
-    <p class="biglink"><a class="biglink" href="{{ pathto("contents") }}">Contents</a><br/>
-    <span class="linkdescr">for a complete overview</span></p>
-  </td>
--->
-  </tr>
-</table>
-
-<h2>SeLalib for developers </h2>
+<a href="http://lists.gforge.inria.fr/mailman/listinfo/selalib-devel">subscribe to the developers list</a> 
 <table class="contentstable" align="center" style="margin-left: 30px"><tr>
   <td width="50%">
     <p class="biglink"><a class="biglink" href="{{ pathto("developer/getting_started") }}">Getting Started</a><br/>

@@ -40,27 +40,37 @@
 !> To solve a tridiagonal system, first: \n
 !> -# Assemble the matrix 'a' as a single array with the layout just 
 !>    described above
-!> -# Use 'setup_cyclic_tridiag( a, n, cts, ipiv )' to factorize the system:
+!> -# Use 'sll_s_setup_cyclic_tridiag( a, n, cts, ipiv )' to factorize the system:
 !>    In 'setup_cyclic_tridag', a is the array to be factorized, stored 
 !>        with the layout shown above. 'n' is essentially the problem size.
 !>        cts and ipiv are respectively real and integer arrays of size 7*n 
 !>        and n that are needed to return factorization information. ipiv
 !>        is the usual 'pivot' array.
 !> -# To solve the system, make a call to 
-!>         'solve_cyclic_tridiag(cts, ipiv, b, n, x)'
-!>    Here, cts and ipiv are the ones returned by setup_cyclic_tridiag. The
+!>         'sll_o_solve_cyclic_tridiag(cts, ipiv, b, n, x)'
+!>    Here, cts and ipiv are the ones returned by sll_s_setup_cyclic_tridiag. The
 !>    function returns the solution to Ax = b, storing the results in 'x'.
 !>    In case that an 'in-place' computation is desired, it is acceptable to
 !>    make the call like: 
-!>          solve_cyclic_tridiag(cts, ipiv, b, n, b)
+!>          sll_o_solve_cyclic_tridiag(cts, ipiv, b, n, b)
 !>
 module sll_m_tridiagonal
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_working_precision.h"
-implicit none
+
+  implicit none
+
+  public :: &
+    sll_s_setup_cyclic_tridiag, &
+    sll_o_solve_cyclic_tridiag, &
+    sll_s_solve_cyclic_tridiag_double
+
+  private
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
   !> Solve tridiagonal system (double or complex)
-  interface solve_cyclic_tridiag
-     module procedure solve_cyclic_tridiag_double, solve_cyclic_tridiag_complex
+  interface sll_o_solve_cyclic_tridiag
+     module procedure sll_s_solve_cyclic_tridiag_double, solve_cyclic_tridiag_complex
   end interface
 contains
 
@@ -74,9 +84,9 @@ contains
   ! **********************
   ! (Adapted) description for the C implementation:
   !
-  ! setup_cyclic_tridiag computes the LU factorization of a cylic
+  ! sll_s_setup_cyclic_tridiag computes the LU factorization of a cylic
   !  tridiagonal matrix specified in a band-diagonal representation.
-  !  solve_cyclic_tridiag uses this factorization to solve of the
+  !  sll_o_solve_cyclic_tridiag uses this factorization to solve of the
   !  system to solve the system Ax = b quickly and robustly.
   !
   !  Unambigously, the input tridiagonal system is specified by:
@@ -96,7 +106,7 @@ contains
   !
   ! The output factorization is stored in "cts" and "ipiv" (the pivot
   ! information).  In general, all you need to know about "cts" is that 
-  ! it is what you give to solve_cyclic_tridiag. However, for the 
+  ! it is what you give to sll_o_solve_cyclic_tridiag. However, for the 
   ! masochistic, the final factorization is stored in seven vectors 
   ! of length n which are packed into the vector cts in the order: 
   ! d u v q r l m. The L and U factors of A are built out of vectors 
@@ -140,7 +150,7 @@ contains
 
 !---------------------------------------------------------------------------  
 !> @brief Give the factorization of the matrix in argument.
-!> @details setup_cyclic_tridiag has been adapted from the C version written
+!> @details sll_s_setup_cyclic_tridiag has been adapted from the C version written
 !>          by Kevin Bowers for the Desmond molecular dynamics code.
 !>          For the Fortran implementation, we have adjusted the algorithm
 !>          such that it is compatible with the 1-based array indexing:
@@ -149,7 +159,7 @@ contains
 !> @param[in] n the problem size (A is nXn)     
 !> @param[out] ipiv an ineteger array of length n on wich pivoting information will be returned
 !> @param[out] cts a real array of size 7n where factorization information will be returned 
-subroutine setup_cyclic_tridiag( a, n, cts, ipiv )
+subroutine sll_s_setup_cyclic_tridiag( a, n, cts, ipiv )
   intrinsic :: abs
   sll_real64, dimension(:) :: a    ! 3*n size allocation
   sll_int32,  intent(in)   :: n    ! a is nXn
@@ -492,7 +502,7 @@ subroutine setup_cyclic_tridiag( a, n, cts, ipiv )
         end if
      end do
 
-   end subroutine setup_cyclic_tridiag
+   end subroutine sll_s_setup_cyclic_tridiag
 #undef aa
 
    !---------------------------------------------------------------------------  
@@ -503,10 +513,10 @@ subroutine setup_cyclic_tridiag( a, n, cts, ipiv )
    !>          <center> <b> A x = b </b> </center>
    !> 
    !>          For a cyclic tridiagonal matrix A. The matrix cts is filled with
-   !>          the output of the function setup_cyclic_tridiag.  Note that the
+   !>          the output of the function sll_s_setup_cyclic_tridiag.  Note that the
    !>          call:
    !>
-   !>          solve_cyclic_tridiag( cts, ipiv, b, n, b )
+   !>          sll_o_solve_cyclic_tridiag( cts, ipiv, b, n, b )
    !>
    !>          is valid if you want run in-place and overwrite the right hand side
    !>          with the solution.
@@ -516,7 +526,7 @@ subroutine setup_cyclic_tridiag( a, n, cts, ipiv )
    !> @param b the second member of the equation
    !> @param n the problem size
    !> @param x the solution vector
-   subroutine solve_cyclic_tridiag_double( cts, ipiv, b, n, x )
+   subroutine sll_s_solve_cyclic_tridiag_double( cts, ipiv, b, n, x )
    ! size of the allocations:
    ! x:     n
    ! cts:  7n
@@ -583,9 +593,9 @@ subroutine setup_cyclic_tridiag( a, n, cts, ipiv )
         x(i) = (x(i)-(u(i)*x(i+1) + v(i)*x(i+2) + &
                       q(i)*x(n-1) + r(i)*x(n) ))/d(i)
      end do
-   end subroutine solve_cyclic_tridiag_double
+   end subroutine sll_s_solve_cyclic_tridiag_double
 
-   !> Complex version of  solve_cyclic_tridiag_double
+   !> Complex version of  sll_s_solve_cyclic_tridiag_double
    !> @param cts a real array of size 7n where factorization information will be returned
    !> @param[in] ipiv an ineteger array of length n on wich pivoting information will be returned
    !> @param b the second member of the equation
@@ -666,8 +676,8 @@ subroutine setup_cyclic_tridiag( a, n, cts, ipiv )
    ! sll_real64, DIMENSION(1:7*n)            :: cts 
    ! sll_int32,  DIMENSION(1:n)              :: ipiv
    ! sll_real64, DIMENSION(:)                :: x
-   ! CALL setup_cyclic_tridiag( a, n, cts, ipiv )
-   ! CALL solve_cyclic_tridiag( cts, ipiv, b, n, x )
+   ! CALL sll_s_setup_cyclic_tridiag( a, n, cts, ipiv )
+   ! CALL sll_o_solve_cyclic_tridiag( cts, ipiv, b, n, x )
    !END SUBROUTINE solve_tridiag
 
 end module sll_m_tridiagonal

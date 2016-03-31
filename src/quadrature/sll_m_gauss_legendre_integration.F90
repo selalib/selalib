@@ -6,10 +6,20 @@
 !> that applies the 
 !> Gauss-Legendre method to compute numeric integrals.
 module sll_m_gauss_legendre_integration
-#include "sll_working_precision.h"
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_assert.h"
-!  use sll_splines
+#include "sll_working_precision.h"
+
   implicit none
+
+  public :: &
+    sll_o_gauss_legendre_integrate_1d, &
+    sll_f_gauss_legendre_points, &
+    sll_f_gauss_legendre_points_and_weights, &
+    sll_f_gauss_legendre_weights
+
+  private
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
   
   ! The following interface is supposed to represent any function of one
   ! real argument that returns a real value (double precision).
@@ -48,7 +58,7 @@ module sll_m_gauss_legendre_integration
 !  end interface
 
   !> Compute numerical integration with Gauss-Legendre formula
-  interface gauss_legendre_integrate_1d
+  interface sll_o_gauss_legendre_integrate_1d
      module procedure gauss_legendre_integral_1d !,gauss_legendre_integral_interpolated_1d
   end interface
 
@@ -183,7 +193,7 @@ contains
   end function gauss_legendre_integral_1d
 
   ! Consider changing this into a function that simply receives as an
-  ! argument the spline_1d object and internally calls the interpolate_value()
+  ! argument the spline_1d object and internally calls the interpolate_from_interpolant_value()
   ! function. This would have a simpler interface. Although, there could be
   ! some advantages to have the interpolating function parametrized also, like
   ! in this case.
@@ -254,7 +264,7 @@ contains
   !> contains the pair (x_k, w_k). Optionally, the user may provide the
   !> endpoints for the desired interval [a,b] where the gauss points should
   !> be mapped.
-  function gauss_legendre_points_and_weights(npoints, a, b ) result(xw)
+  function sll_f_gauss_legendre_points_and_weights(npoints, a, b ) result(xw)
     sll_int32, intent(in)              :: npoints
     sll_real64, intent(in), optional   :: a
     sll_real64, intent(in), optional   :: b
@@ -288,9 +298,9 @@ contains
        xw(2,1:npoints) = wk(1:npoints)
     end if
 
-  end function gauss_legendre_points_and_weights
+  end function sll_f_gauss_legendre_points_and_weights
 
-  function gauss_legendre_points(npoints, a, b ) result(xw)
+  function sll_f_gauss_legendre_points(npoints, a, b ) result(xw)
     sll_int32, intent(in)              :: npoints
     sll_real64, intent(in), optional   :: a
     sll_real64, intent(in), optional   :: b
@@ -322,9 +332,9 @@ contains
        xw(1:npoints) = xk(1:npoints)
     end if
 
-  end function gauss_legendre_points
+  end function sll_f_gauss_legendre_points
 
-  function gauss_legendre_weights(npoints, a, b ) result(xw)
+  function sll_f_gauss_legendre_weights(npoints, a, b ) result(xw)
     sll_int32, intent(in)              :: npoints
     sll_real64, intent(in), optional   :: a
     sll_real64, intent(in), optional   :: b
@@ -356,7 +366,7 @@ contains
        xw(1:npoints) = wk(1:npoints)
     end if
 
-  end function gauss_legendre_weights
+  end function sll_f_gauss_legendre_weights
 
 
 end module sll_m_gauss_legendre_integration

@@ -1,10 +1,32 @@
-program unit_test_1d
-#include "sll_working_precision.h"
+program test_scalar_field_1d
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_memory.h"
-use sll_m_cartesian_meshes
-use sll_m_constants
-use sll_m_scalar_field_1d
-implicit none
+#include "sll_working_precision.h"
+
+  use sll_m_arbitrary_degree_spline_interpolator_1d, only: &
+    sll_s_initialize_ad1d_interpolator, &
+    sll_t_arbitrary_degree_spline_interpolator_1d
+
+  use sll_m_boundary_condition_descriptors, only: &
+    sll_p_dirichlet, &
+    sll_p_periodic
+
+  use sll_m_cartesian_meshes, only: &
+    sll_f_new_cartesian_mesh_1d, &
+    sll_t_cartesian_mesh_1d
+
+  use sll_m_constants, only: &
+    sll_p_pi
+
+  use sll_m_scalar_field_1d, only: &
+    sll_f_new_scalar_field_1d_analytic, &
+    sll_f_new_scalar_field_1d_discrete
+
+  use sll_m_scalar_field_1d_base, only: &
+    sll_c_scalar_field_1d_base
+
+  implicit none
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
   
 #define SPLINE_DEG1 3
 #define NUM_CELLS1  64
@@ -12,13 +34,13 @@ implicit none
 #define ETA1MAX  1.0_f64
 #define PRINT_COMPARISON .false.
   
-type(sll_cartesian_mesh_1d), pointer                      :: mesh_1d
-type(sll_arbitrary_degree_spline_interpolator_1d), target :: interp_1d
+type(sll_t_cartesian_mesh_1d), pointer                      :: mesh_1d
+type(sll_t_arbitrary_degree_spline_interpolator_1d), target :: interp_1d
 
-class(sll_scalar_field_1d_base), pointer :: periodic_analytic
-class(sll_scalar_field_1d_base), pointer :: dirichlet_analytic
-class(sll_scalar_field_1d_base), pointer :: periodic_discrete
-class(sll_scalar_field_1d_base), pointer :: dirichlet_discrete
+class(sll_c_scalar_field_1d_base), pointer :: periodic_analytic
+class(sll_c_scalar_field_1d_base), pointer :: dirichlet_analytic
+class(sll_c_scalar_field_1d_base), pointer :: periodic_discrete
+class(sll_c_scalar_field_1d_base), pointer :: dirichlet_discrete
 
 sll_int32                                :: nc1!, iplot
 sll_real64                               :: grad1_node_val,grad1ref
@@ -29,10 +51,6 @@ sll_real64                               :: eta1
 sll_real64                               :: h1
 sll_int32                                :: i
 
-real(8), external :: test_function_per
-real(8), external :: test_function_per_der1
-real(8), external :: test_function_dir
-real(8), external :: test_function_dir_der1
 
 sll_real64 :: normL2_1,normL2_2,normL2_3,normL2_4
 sll_real64 :: normH1_1,normH1_2,normH1_3,normH1_4
@@ -41,18 +59,18 @@ nc1 = NUM_CELLS1
 h1 = (ETA1MAX-ETA1MIN)/real(nc1,f64)
   
 ! First thing, initialize the logical mesh associated with this problem.        
-mesh_1d => new_cartesian_mesh_1d( NUM_CELLS1,ETA1MIN, ETA1MAX)
+mesh_1d => sll_f_new_cartesian_mesh_1d( NUM_CELLS1,ETA1MIN, ETA1MAX)
   
 ! --------------------------------------------------------------------------
 !   Test case periodic analytic
 !----------------------------------------------------------------------------
   
 ! ----> initialization of the field
-periodic_analytic  => new_scalar_field_1d_analytic( &
+periodic_analytic  => sll_f_new_scalar_field_1d_analytic( &
   test_function_per, &
    "periodic_analytic",  &
-  SLL_PERIODIC,      &
-  SLL_PERIODIC,      &
+  sll_p_periodic,      &
+  sll_p_periodic,      &
   mesh_1d,           &
   first_derivative=test_function_per_der1)
   
@@ -84,11 +102,11 @@ call periodic_analytic%delete()
 !   Test case dirichlet analytic
 !----------------------------------------------------------------------------
   
-dirichlet_analytic  => new_scalar_field_1d_analytic( &
+dirichlet_analytic  => sll_f_new_scalar_field_1d_analytic( &
   test_function_dir,                                 &
   "dirichlet_analytic",                                  &
-  SLL_PERIODIC,                                      &
-  SLL_PERIODIC,                                      &
+  sll_p_periodic,                                      &
+  sll_p_periodic,                                      &
   mesh_1d,                                           &
   first_derivative=test_function_dir_der1)
   
@@ -124,19 +142,19 @@ do i=1,nc1 + 1
   tab_values(i) = test_function_per(point1(i))
 end do
   
-call initialize_ad1d_interpolator( interp_1d,    &
+call sll_s_initialize_ad1d_interpolator( interp_1d,    &
                                    NUM_CELLS1+1, &
                                    ETA1MIN,      &
                                    ETA1MAX,      &
-                                   SLL_PERIODIC, &
-                                   SLL_PERIODIC, &
+                                   sll_p_periodic, &
+                                   sll_p_periodic, &
                                    SPLINE_DEG1)
   
-periodic_discrete => new_scalar_field_1d_discrete( &
+periodic_discrete => sll_f_new_scalar_field_1d_discrete( &
        "periodic_discrete", &
        interp_1d, &
-       SLL_PERIODIC, &
-       SLL_PERIODIC,&
+       sll_p_periodic, &
+       sll_p_periodic,&
        mesh_1d,&
        point1,&
        nc1+1)
@@ -183,20 +201,20 @@ do i=1,nc1 + 1
   tab_values(i)   = test_function_dir(point1(i) )
 end do
 
-call initialize_ad1d_interpolator( &
+call sll_s_initialize_ad1d_interpolator( &
        interp_1d, &
        NUM_CELLS1+1, &
        ETA1MIN, &
        ETA1MAX, &
-       SLL_DIRICHLET,&
-       SLL_DIRICHLET,&
+       sll_p_dirichlet,&
+       sll_p_dirichlet,&
        SPLINE_DEG1)
   
-dirichlet_discrete => new_scalar_field_1d_discrete( &
+dirichlet_discrete => sll_f_new_scalar_field_1d_discrete( &
        "dirichlet_discrete", &
        interp_1d, &
-       SLL_DIRICHLET,&
-       SLL_DIRICHLET,&
+       sll_p_dirichlet,&
+       sll_p_dirichlet,&
        mesh_1d,&
        point1,&
        nc1+1)
@@ -267,36 +285,45 @@ if ( ( sqrt(normL2_1) <= h1**(SPLINE_DEG1))   .AND. &
      ( sqrt(normH1_4) <= h1**(SPLINE_DEG1-1))) then
    print *, 'PASSED'
 end if
-end program unit_test_1d
 
-function test_function_per( eta1) result(res)
-   use sll_m_constants
-   real(8) :: res
-   real(8), intent(in) :: eta1
+contains
+
+function test_function_per( eta1, params ) result(res)
+   sll_real64 :: res
+   sll_real64, intent(in) :: eta1
+   sll_real64, dimension(:), intent(in), optional :: params
   intrinsic :: cos
-  res = cos(2*sll_pi*eta1)
+  res = cos(2*sll_p_pi*eta1)
 end function test_function_per
 
-function test_function_per_der1( eta1) result(res)
-  use sll_m_constants
+
+function test_function_per_der1( eta1, params) result(res)
   intrinsic :: cos,sin
-  real(8) :: res
-  real(8), intent(in) :: eta1
-  res = -2*sll_pi*sin(2*sll_pi*eta1)
+  sll_real64 :: res
+  sll_real64, intent(in) :: eta1
+  sll_real64, dimension(:), intent(in), optional :: params
+
+  res = -2*sll_p_pi*sin(2*sll_p_pi*eta1)
 end function test_function_per_der1
 
-function test_function_dir( eta1) result(res)
-  use sll_m_constants
+
+function test_function_dir( eta1, params) result(res)
   intrinsic :: cos,sin
-  real(8) :: res
-  real(8), intent(in) :: eta1
-  res = sin(2*sll_pi*eta1)
+  sll_real64 :: res
+  sll_real64, intent(in) :: eta1
+   sll_real64, dimension(:), intent(in), optional :: params
+
+  res = sin(2*sll_p_pi*eta1)
 end function test_function_dir
 
-function test_function_dir_der1( eta1) result(res)
-  use sll_m_constants
+function test_function_dir_der1( eta1, params) result(res)
   intrinsic :: cos
-  real(8) :: res
-  real(8), intent(in) :: eta1
-  res = 2.0*sll_pi*cos(2*sll_pi*eta1)
+  sll_real64 :: res
+  sll_real64, intent(in) :: eta1
+   sll_real64, dimension(:), intent(in), optional :: params
+
+  res = 2.0*sll_p_pi*cos(2*sll_p_pi*eta1)
 end function test_function_dir_der1
+
+end program test_scalar_field_1d
+

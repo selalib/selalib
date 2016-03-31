@@ -15,8 +15,8 @@ use sll_m_triangle_dg_matrices, only : &
 implicit none
 private
 
-sll_real64, parameter :: xi = 0d0
-sll_real64, parameter :: c  = 1d0
+sll_real64, parameter :: xi = 0._f64
+sll_real64, parameter :: c  = 1._f64
 
 type, public :: maxwell_dg_hex_mesh
 
@@ -65,9 +65,9 @@ public :: initialize, solve
 
 contains
 
-subroutine init_gd_solver_2d(this, mesh, degree)
+subroutine init_gd_solver_2d(self, mesh, degree)
 
-type(maxwell_dg_hex_mesh), intent(inout) :: this
+type(maxwell_dg_hex_mesh), intent(inout) :: self
 type(sll_hex_mesh_2d), pointer, intent(in)   :: mesh
 sll_int32, intent(in)                      :: degree
 sll_int32 :: idl, error, iel
@@ -83,52 +83,52 @@ sll_int32 :: jel1, jel2, jel3, nel1, nel2, nel3
 sll_real64 :: x1, x2
 sll_int32 :: i, j
 
-this%degree  = degree
+self%degree  = degree
 n_ddl = (degree+1)*(degree+2)/2
-this%n_ddl = n_ddl
+self%n_ddl = n_ddl
 SLL_ALLOCATE(xref(n_ddl), error)
 SLL_ALLOCATE(yref(n_ddl), error)
 
-SLL_ALLOCATE(this%Elem%MassMat(n_ddl,n_ddl),error)
+SLL_ALLOCATE(self%Elem%MassMat(n_ddl,n_ddl),error)
 if (error.ne.0) print*, 'error in allocation of Elem%MassMat'
-this%Elem%MassMat = 0d0
-SLL_ALLOCATE(this%Elem%MassMatInv(n_ddl,n_ddl),error)
+self%Elem%MassMat = 0._f64
+SLL_ALLOCATE(self%Elem%MassMatInv(n_ddl,n_ddl),error)
 if (error.ne.0) print*, 'error in allocation of Elem%MassMatInv'
-this%Elem%MassMatInv = 0d0
-SLL_ALLOCATE(this%Elem%DxMat(n_ddl,n_ddl),error)
+self%Elem%MassMatInv = 0._f64
+SLL_ALLOCATE(self%Elem%DxMat(n_ddl,n_ddl),error)
 if (error.ne.0) print*, 'error in allocation of Elem%DxMat'
-this%Elem%DxMat = 0d0
-SLL_ALLOCATE(this%Elem%DyMat(n_ddl,n_ddl),error)
+self%Elem%DxMat = 0._f64
+SLL_ALLOCATE(self%Elem%DyMat(n_ddl,n_ddl),error)
 if (error.ne.0) print*, 'error in allocation of Elem%DyMat'
-this%Elem%DyMat = 0d0
-SLL_ALLOCATE(this%Elem%BndMassMat(degree+1,degree+1),error)
+self%Elem%DyMat = 0._f64
+SLL_ALLOCATE(self%Elem%BndMassMat(degree+1,degree+1),error)
 if (error.ne.0) print*, 'error in allocation of Elem%BndMassMat'
-this%Elem%BndMassMat = 0d0
+self%Elem%BndMassMat = 0._f64
 
-call AssMatElem(this%Elem,degree,xref,yref)
+call AssMatElem(self%Elem,degree,xref,yref)
 
-SLL_CLEAR_ALLOCATE(this%Ex(1:n_ddl,1:mesh%num_triangles),error)
-SLL_CLEAR_ALLOCATE(this%Ey(1:n_ddl,1:mesh%num_triangles),error)
-SLL_CLEAR_ALLOCATE(this%Bz(1:n_ddl,1:mesh%num_triangles),error)
-SLL_CLEAR_ALLOCATE(this%Po(1:n_ddl,1:mesh%num_triangles),error)
-SLL_CLEAR_ALLOCATE(this%Jx(1:n_ddl,1:mesh%num_triangles),error)
-SLL_CLEAR_ALLOCATE(this%Jy(1:n_ddl,1:mesh%num_triangles),error)
-SLL_CLEAR_ALLOCATE(this%Ro(1:n_ddl,1:mesh%num_triangles),error)
+SLL_CLEAR_ALLOCATE(self%Ex(1:n_ddl,1:mesh%num_triangles),error)
+SLL_CLEAR_ALLOCATE(self%Ey(1:n_ddl,1:mesh%num_triangles),error)
+SLL_CLEAR_ALLOCATE(self%Bz(1:n_ddl,1:mesh%num_triangles),error)
+SLL_CLEAR_ALLOCATE(self%Po(1:n_ddl,1:mesh%num_triangles),error)
+SLL_CLEAR_ALLOCATE(self%Jx(1:n_ddl,1:mesh%num_triangles),error)
+SLL_CLEAR_ALLOCATE(self%Jy(1:n_ddl,1:mesh%num_triangles),error)
+SLL_CLEAR_ALLOCATE(self%Ro(1:n_ddl,1:mesh%num_triangles),error)
 
-SLL_CLEAR_ALLOCATE(this%D_Ex(1:n_ddl,1:mesh%num_triangles),error)
-SLL_CLEAR_ALLOCATE(this%D_Ey(1:n_ddl,1:mesh%num_triangles),error)
-SLL_CLEAR_ALLOCATE(this%D_Bz(1:n_ddl,1:mesh%num_triangles),error)
-SLL_CLEAR_ALLOCATE(this%D_Po(1:n_ddl,1:mesh%num_triangles),error)
+SLL_CLEAR_ALLOCATE(self%D_Ex(1:n_ddl,1:mesh%num_triangles),error)
+SLL_CLEAR_ALLOCATE(self%D_Ey(1:n_ddl,1:mesh%num_triangles),error)
+SLL_CLEAR_ALLOCATE(self%D_Bz(1:n_ddl,1:mesh%num_triangles),error)
+SLL_CLEAR_ALLOCATE(self%D_Po(1:n_ddl,1:mesh%num_triangles),error)
 
 !Les matrices derivees
-SLL_CLEAR_ALLOCATE(this%DxP(1:n_ddl,n_ddl,1:mesh%num_triangles), error)
-SLL_CLEAR_ALLOCATE(this%DyP(1:n_ddl,n_ddl,1:mesh%num_triangles), error)
+SLL_CLEAR_ALLOCATE(self%DxP(1:n_ddl,n_ddl,1:mesh%num_triangles), error)
+SLL_CLEAR_ALLOCATE(self%DyP(1:n_ddl,n_ddl,1:mesh%num_triangles), error)
 
 !Determinant de l'element et coordonnees des D.D.L.
-SLL_ALLOCATE(this%x_ddl(n_ddl,mesh%num_triangles),error)
-SLL_ALLOCATE(this%y_ddl(n_ddl,mesh%num_triangles),error)
+SLL_ALLOCATE(self%x_ddl(n_ddl,mesh%num_triangles),error)
+SLL_ALLOCATE(self%y_ddl(n_ddl,mesh%num_triangles),error)
 
-SLL_ALLOCATE(this%ntri(3,mesh%num_triangles),error)
+SLL_ALLOCATE(self%ntri(3,mesh%num_triangles),error)
 
 do iel = 1, mesh%num_triangles    !Boucle sur les elements
 
@@ -150,28 +150,28 @@ do iel = 1, mesh%num_triangles    !Boucle sur les elements
    det = (xs2-xs1)*(ys3-ys1)-(xs3-xs1)*(ys2-ys1)
 
    if (det > 0) then
-      this%ntri(:,iel) = [is1,is2,is3]
+      self%ntri(:,iel) = [is1,is2,is3]
    else
-      this%ntri(:,iel) = [is1,is3,is2]
+      self%ntri(:,iel) = [is1,is3,is2]
    end if
 
-   xs1 = mesh%global_to_x1(this%ntri(1,iel))
-   ys1 = mesh%global_to_x2(this%ntri(1,iel))
-   xs2 = mesh%global_to_x1(this%ntri(2,iel))
-   ys2 = mesh%global_to_x2(this%ntri(2,iel))
-   xs3 = mesh%global_to_x1(this%ntri(3,iel))
-   ys3 = mesh%global_to_x2(this%ntri(3,iel))
+   xs1 = mesh%global_to_x1(self%ntri(1,iel))
+   ys1 = mesh%global_to_x2(self%ntri(1,iel))
+   xs2 = mesh%global_to_x1(self%ntri(2,iel))
+   ys2 = mesh%global_to_x2(self%ntri(2,iel))
+   xs3 = mesh%global_to_x1(self%ntri(3,iel))
+   ys3 = mesh%global_to_x2(self%ntri(3,iel))
 
    det = (xs2-xs1)*(ys3-ys1)-(xs3-xs1)*(ys2-ys1)
 
    !Positions absolues des D.D.L
    do idl = 1, n_ddl
-      this%x_ddl(idl,iel) = xs1 + (xs2-xs1)*xref(idl) + (xs3-xs1)*yref(idl)
-      this%y_ddl(idl,iel) = ys1 + (ys2-ys1)*xref(idl) + (ys3-ys1)*yref(idl)
+      self%x_ddl(idl,iel) = xs1 + (xs2-xs1)*xref(idl) + (xs3-xs1)*yref(idl)
+      self%y_ddl(idl,iel) = ys1 + (ys2-ys1)*xref(idl) + (ys3-ys1)*yref(idl)
    end do
 
-   this%DxP(:,:,iel) = ((ys3-ys1)*this%Elem%DxMat+(ys1-ys2)*this%Elem%DyMat)/det
-   this%DyP(:,:,iel) = ((xs1-xs3)*this%Elem%DxMat+(xs2-xs1)*this%Elem%DyMat)/det
+   self%DxP(:,:,iel) = ((ys3-ys1)*self%Elem%DxMat+(ys1-ys2)*self%Elem%DyMat)/det
+   self%DyP(:,:,iel) = ((xs1-xs3)*self%Elem%DxMat+(xs2-xs1)*self%Elem%DyMat)/det
 
 end do
 
@@ -184,9 +184,9 @@ SLL_ALLOCATE(npoel1(mesh%num_pts_tot+1),error)
 npoel1 = 0
 do iel = 1,mesh%num_triangles
 
-   npoel1(this%ntri(1,iel)+1) = npoel1(this%ntri(1,iel)+1)+1
-   npoel1(this%ntri(2,iel)+1) = npoel1(this%ntri(2,iel)+1)+1
-   npoel1(this%ntri(3,iel)+1) = npoel1(this%ntri(3,iel)+1)+1
+   npoel1(self%ntri(1,iel)+1) = npoel1(self%ntri(1,iel)+1)+1
+   npoel1(self%ntri(2,iel)+1) = npoel1(self%ntri(2,iel)+1)+1
+   npoel1(self%ntri(3,iel)+1) = npoel1(self%ntri(3,iel)+1)+1
 
 end do
 
@@ -215,7 +215,7 @@ indc   = 1  !Le tableau temporaire indc doit etre initialise a 1
 do iel = 1,mesh%num_triangles
 
    do k = 1,3
-      is = this%ntri(k,iel)
+      is = self%ntri(k,iel)
       npoel2(npoel1(is)+indc(is)) = iel
       indc(is) = indc(is)+1
    end do
@@ -226,15 +226,15 @@ end do
 
 write(*,*)"*** Compute neighbors ***"
 
-SLL_ALLOCATE(this%nvois(3,mesh%num_triangles),error); this%nvois = -1
-SLL_ALLOCATE(this%nvoif(3,mesh%num_triangles),error); this%nvoif = -1
+SLL_ALLOCATE(self%nvois(3,mesh%num_triangles),error); self%nvois = -1
+SLL_ALLOCATE(self%nvoif(3,mesh%num_triangles),error); self%nvoif = -1
 
 do iel=1,mesh%num_triangles
 
    ! ... numeros des 3 sommets du triangle
-   is1 = this%ntri(1,iel)
-   is2 = this%ntri(2,iel)
-   is3 = this%ntri(3,iel)
+   is1 = self%ntri(1,iel)
+   is2 = self%ntri(2,iel)
+   is3 = self%ntri(3,iel)
 
    ! ... boucles imbriquees sur les elements pointant vers
    !     les 2 noeuds extremites de l'arete consideree
@@ -251,7 +251,7 @@ do iel=1,mesh%num_triangles
        do i2=1,nel2
          jel2=npoel2(npoel1(is2)+i2)
          if(jel2 == jel1) then
-           this%nvois(1,iel)  = jel1
+           self%nvois(1,iel)  = jel1
            exit loop1
          end if
        end do
@@ -269,7 +269,7 @@ do iel=1,mesh%num_triangles
        do i3=1,nel3
          jel3=npoel2(npoel1(is3)+i3)
          if(jel3 == jel2) then
-           this%nvois(2,iel)=jel2
+           self%nvois(2,iel)=jel2
            exit loop2
          end if
        end do
@@ -287,7 +287,7 @@ do iel=1,mesh%num_triangles
        do i1=1,nel1
          jel1=npoel2(npoel1(is1)+i1)
          if(jel1 == jel3) then
-           this%nvois(3,iel)=jel3
+           self%nvois(3,iel)=jel3
            exit loop3
          end if
        end do
@@ -298,16 +298,16 @@ end do
 
 !Calcul de nvoif : Numero local dans le voisin de la face j commune a l'elt i
 
-this%nvoif = this%nvois
+self%nvoif = self%nvois
 
 do i = 1, mesh%num_triangles
   do j = 1,3
-    jel1 = this%nvois(j,i)
+    jel1 = self%nvois(j,i)
     if (jel1 > 0) then
       do k = 1,3
-        jel2 = this%nvois(k,jel1)
+        jel2 = self%nvois(k,jel1)
         if (jel2 == i) then 
-          this%nvoif(j,i) = k
+          self%nvoif(j,i) = k
           exit
         end if
       end do
@@ -317,9 +317,9 @@ end do
 
 end subroutine init_gd_solver_2d
 
-subroutine gd_solver_2d_TE(this, mesh)
+subroutine gd_solver_2d_TE(self, mesh)
 
-type(maxwell_dg_hex_mesh),  intent(inout) :: this
+type(maxwell_dg_hex_mesh),  intent(inout) :: self
 type(sll_hex_mesh_2d), pointer, intent(in)    :: mesh
 
 sll_int32 :: idl, jdl, i, j, l, jdv, i1, i2
@@ -330,32 +330,32 @@ sll_real64 :: n1, n2
 sll_real64 :: W_l(4), W_r(4)
 sll_real64 :: A_m(4,4), A_p(4,4)
 sll_real64 :: det
-sll_real64 :: flux(this%degree+1,4)
+sll_real64 :: flux(self%degree+1,4)
 sll_real64 :: xs(3), ys(3)
-sll_real64 :: Esn(this%degree+1)
+sll_real64 :: Esn(self%degree+1)
 
-n_ddl = (this%degree+1)*(this%degree+2)/2
+n_ddl = (self%degree+1)*(self%degree+2)/2
 
 do iel = 1, mesh%num_triangles   !Boucle sur les elements
 
-  this%D_Ex(:,iel) = c*c*( - matmul(this%DyP(:,:,iel),this%Bz(:,iel)) &
-                   + xi*xi * matmul(this%DxP(:,:,iel),this%Po(:,iel)))
-  this%D_Ey(:,iel) = c*c*( + matmul(this%DxP(:,:,iel),this%Bz(:,iel)) &
-                   + xi*xi * matmul(this%DyP(:,:,iel),this%Po(:,iel)))
-  this%D_Bz(:,iel) =    -    matmul(this%DyP(:,:,iel),this%Ex(:,iel)) &
-                        +    matmul(this%DxP(:,:,iel),this%Ey(:,iel))
-  this%D_Po(:,iel) = xi*xi * matmul(this%DxP(:,:,iel),this%Ex(:,iel)) &
-                   + xi*xi * matmul(this%DyP(:,:,iel),this%Ey(:,iel))
+  self%D_Ex(:,iel) = c*c*( - matmul(self%DyP(:,:,iel),self%Bz(:,iel)) &
+                   + xi*xi * matmul(self%DxP(:,:,iel),self%Po(:,iel)))
+  self%D_Ey(:,iel) = c*c*( + matmul(self%DxP(:,:,iel),self%Bz(:,iel)) &
+                   + xi*xi * matmul(self%DyP(:,:,iel),self%Po(:,iel)))
+  self%D_Bz(:,iel) =    -    matmul(self%DyP(:,:,iel),self%Ex(:,iel)) &
+                        +    matmul(self%DxP(:,:,iel),self%Ey(:,iel))
+  self%D_Po(:,iel) = xi*xi * matmul(self%DxP(:,:,iel),self%Ex(:,iel)) &
+                   + xi*xi * matmul(self%DyP(:,:,iel),self%Ey(:,iel))
 
-  this%Ro(:,iel)   = matmul(this%DxP(:,:,iel),this%Ex(:,iel)) &
-                   + matmul(this%DyP(:,:,iel),this%Ey(:,iel))
+  self%Ro(:,iel)   = matmul(self%DxP(:,:,iel),self%Ex(:,iel)) &
+                   + matmul(self%DyP(:,:,iel),self%Ey(:,iel))
 
-  xs(1) = mesh%global_to_x1(this%ntri(1,iel))
-  ys(1) = mesh%global_to_x2(this%ntri(1,iel))
-  xs(2) = mesh%global_to_x1(this%ntri(2,iel))
-  ys(2) = mesh%global_to_x2(this%ntri(2,iel))
-  xs(3) = mesh%global_to_x1(this%ntri(3,iel))
-  ys(3) = mesh%global_to_x2(this%ntri(3,iel))
+  xs(1) = mesh%global_to_x1(self%ntri(1,iel))
+  ys(1) = mesh%global_to_x2(self%ntri(1,iel))
+  xs(2) = mesh%global_to_x1(self%ntri(2,iel))
+  ys(2) = mesh%global_to_x2(self%ntri(2,iel))
+  xs(3) = mesh%global_to_x1(self%ntri(3,iel))
+  ys(3) = mesh%global_to_x2(self%ntri(3,iel))
 
   do ifl = 1, 3   !Boucle sur les faces
 
@@ -367,37 +367,37 @@ do iel = 1, mesh%num_triangles   !Boucle sur les elements
 
     A_p(1,:) = [ (n2*n2+xi*n1*n1)*c,     n2*n1*(xi-1)*c,  -n2*c*c, n1*c*c]
     A_p(2,:) = [     n2*n1*(xi-1)*c, (n1*n1+xi*n2*n2)*c,   n1*c*c, n2*c*c]
-    A_p(3,:) = [                -n2,                 n1,        c,    0d0]
-    A_p(4,:) = [           n1*xi*xi,           n2*xi*xi,      0d0,   xi*c]
+    A_p(3,:) = [                -n2,                 n1,        c,    0._f64]
+    A_p(4,:) = [           n1*xi*xi,           n2*xi*xi,      0._f64,   xi*c]
 
     A_m(1,:) = [-(n2*n2+xi*n1*n1)*c,    -n2*n1*(xi-1)*c,  -n2*c*c, n1*c*c]
     A_m(2,:) = [    -n2*n1*(xi-1)*c,-(n1*n1+xi*n2*n2)*c,   n1*c*c, n2*c*c]
-    A_m(3,:) = [                -n2,                 n1,       -c,    0d0]
-    A_m(4,:) = [           n1*xi*xi,           n2*xi*xi,      0d0,  -xi*c]
+    A_m(3,:) = [                -n2,                 n1,       -c,    0._f64]
+    A_m(4,:) = [           n1*xi*xi,           n2*xi*xi,      0._f64,  -xi*c]
 
     A_p = 0.5 * A_p
     A_m = 0.5 * A_m
 
-    iev = this%nvois(ifl,iel)         !Numero du voisin
-    ifv = this%nvoif(ifl,iel)         !Numero de face dans le voisin
+    iev = self%nvois(ifl,iel)         !Numero du voisin
+    ifv = self%nvoif(ifl,iel)         !Numero de face dans le voisin
 
     if ( iev > 0 ) then               !Cote interne
 
-      do idl = 1, this%degree+1                !Boucle sur les D.D.L.
+      do idl = 1, self%degree+1                !Boucle sur les D.D.L.
     
-        jdl = iddl_local(ifl,idl,this%degree)   !indice local du DDL
+        jdl = iddl_local(ifl,idl,self%degree)   !indice local du DDL
      
-        W_l(1) = this%Ex(jdl,iel)
-        W_l(2) = this%Ey(jdl,iel)
-        W_l(3) = this%Bz(jdl,iel)
-        W_l(4) = this%Po(jdl,iel)
+        W_l(1) = self%Ex(jdl,iel)
+        W_l(2) = self%Ey(jdl,iel)
+        W_l(3) = self%Bz(jdl,iel)
+        W_l(4) = self%Po(jdl,iel)
 
-        jdv = iddl_voisin(ifv,idl,this%degree)  !indice dans le voisin 
+        jdv = iddl_voisin(ifv,idl,self%degree)  !indice dans le voisin 
 
-        W_r(1) = this%Ex(jdv,iev)
-        W_r(2) = this%Ey(jdv,iev)
-        W_r(3) = this%Bz(jdv,iev)
-        W_r(4) = this%Po(jdv,iev)
+        W_r(1) = self%Ex(jdv,iev)
+        W_r(2) = self%Ey(jdv,iev)
+        W_r(3) = self%Bz(jdv,iev)
+        W_r(4) = self%Po(jdv,iev)
 
         flux(idl,:) = matmul(A_p,w_l)+matmul(A_m,w_r)
         Esn(idl) = 0.5*(n1*(W_l(1)+W_r(1))+n2*(W_l(2)+W_r(2)))
@@ -408,14 +408,14 @@ do iel = 1, mesh%num_triangles   !Boucle sur les elements
 
       ief = 1 !- iev
 
-      do idl = 1, this%degree+1
+      do idl = 1, self%degree+1
 
-            jdl = iddl_local(ifl,idl,this%degree)   !indice local du DDL
+            jdl = iddl_local(ifl,idl,self%degree)   !indice local du DDL
 
-            W_l(1) = this%Ex(jdl,iel)
-            W_l(2) = this%Ey(jdl,iel)
-            W_l(3) = this%Bz(jdl,iel)
-            W_l(4) = this%Po(jdl,iel)
+            W_l(1) = self%Ex(jdl,iel)
+            W_l(2) = self%Ey(jdl,iel)
+            W_l(3) = self%Bz(jdl,iel)
+            W_l(4) = self%Po(jdl,iel)
      
             if (ief == 1) then          !Conducteur parfait E x n = 0, B . n = 0
                W_r(1) = - W_l(1)
@@ -426,7 +426,7 @@ do iel = 1, mesh%num_triangles   !Boucle sur les elements
             else if (ief == 3) then
                flux(idl,:) = matmul(A_p,W_l)
             else
-               flux = 0d0
+               flux = 0._f64
             end if
 
             Esn(idl) = n1*W_l(1)+n2*W_l(2)
@@ -437,22 +437,22 @@ do iel = 1, mesh%num_triangles   !Boucle sur les elements
       
       det = (xs(2)-xs(1))*(ys(3)-ys(1))-(xs(3)-xs(1))*(ys(2)-ys(1))
 
-      flux(:,1) = matmul(this%Elem%BndMassMat,flux(:,1))/det
-      flux(:,2) = matmul(this%Elem%BndMassMat,flux(:,2))/det
-      flux(:,3) = matmul(this%Elem%BndMassMat,flux(:,3))/det
-      flux(:,4) = matmul(this%Elem%BndMassMat,flux(:,4))/det
+      flux(:,1) = matmul(self%Elem%BndMassMat,flux(:,1))/det
+      flux(:,2) = matmul(self%Elem%BndMassMat,flux(:,2))/det
+      flux(:,3) = matmul(self%Elem%BndMassMat,flux(:,3))/det
+      flux(:,4) = matmul(self%Elem%BndMassMat,flux(:,4))/det
 
-      Esn = matmul(this%Elem%BndMassMat,Esn)/det
+      Esn = matmul(self%Elem%BndMassMat,Esn)/det
 
       do i = 1, n_ddl
-         do j = 1, this%degree+1
-            l = iddl_local(ifl,j,this%degree)
-            this%D_Ex(i,iel)=this%D_Ex(i,iel)-this%Elem%MassMatInv(i,l)*flux(j,1)
-            this%D_Ey(i,iel)=this%D_Ey(i,iel)-this%Elem%MassMatInv(i,l)*flux(j,2)
-            this%D_Bz(i,iel)=this%D_Bz(i,iel)-this%Elem%MassMatInv(i,l)*flux(j,3)
-            this%D_Po(i,iel)=this%D_Po(i,iel)-this%Elem%MassMatInv(i,l)*flux(j,4)
+         do j = 1, self%degree+1
+            l = iddl_local(ifl,j,self%degree)
+            self%D_Ex(i,iel)=self%D_Ex(i,iel)-self%Elem%MassMatInv(i,l)*flux(j,1)
+            self%D_Ey(i,iel)=self%D_Ey(i,iel)-self%Elem%MassMatInv(i,l)*flux(j,2)
+            self%D_Bz(i,iel)=self%D_Bz(i,iel)-self%Elem%MassMatInv(i,l)*flux(j,3)
+            self%D_Po(i,iel)=self%D_Po(i,iel)-self%Elem%MassMatInv(i,l)*flux(j,4)
 
-            this%Ro(i,iel)=this%Ro(i,iel)-this%Elem%MassMatInv(i,l)*Esn(j)
+            self%Ro(i,iel)=self%Ro(i,iel)-self%Elem%MassMatInv(i,l)*Esn(j)
 
          end do
       end do

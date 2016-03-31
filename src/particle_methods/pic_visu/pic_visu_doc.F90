@@ -9,7 +9,7 @@
 ! The following lines will be read by doxygen to generate documentation:
 
 
-!> @defgroup pic_visu sll_m_pic_visu
+!> @defgroup pic_visu sll_pic_visu
 !> @brief 
 !> Output routines to plot particles and field after PIC simulation.
 !> @author Pierre Navaro

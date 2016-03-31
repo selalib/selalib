@@ -12,19 +12,24 @@
 !------------------------------------------------------------------------------
 module sll_m_vector_space_base
 
-#include "sll_working_precision.h"
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_errors.h"
+#include "sll_working_precision.h"
 
   implicit none
-!  public :: sll_vector_space_base
+
+  public :: &
+    sll_c_vector_space_base
+
   private
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
   !============================================================================
   ! Abstract type definition
   !============================================================================
 
   !> @brief   Abstract base class for all vector spaces
-  type, public, abstract :: sll_vector_space_base
+  type, abstract :: sll_c_vector_space_base
 
   contains
     !> @name Basic operations (abstract methods)
@@ -63,7 +68,7 @@ module sll_m_vector_space_base
     procedure, private :: source_array    => source_array__base
     !> @}
 
-  end type sll_vector_space_base
+  end type sll_c_vector_space_base
 
   !============================================================================
   ! Abstract interfaces: basic operations
@@ -78,9 +83,9 @@ module sll_m_vector_space_base
   !----------------------------------------------------------------------------
   abstract interface
    subroutine i_copy( self, x )
-    import sll_vector_space_base
-    class( sll_vector_space_base ), intent( inout ) :: self
-    class( sll_vector_space_base ), intent( in    ) :: x
+    import sll_c_vector_space_base
+    class( sll_c_vector_space_base ), intent( inout ) :: self
+    class( sll_c_vector_space_base ), intent( in    ) :: x
    end subroutine i_copy
   end interface
 
@@ -93,9 +98,9 @@ module sll_m_vector_space_base
   !----------------------------------------------------------------------------
   abstract interface
    subroutine i_incr( self, x )
-    import sll_vector_space_base
-    class( sll_vector_space_base ), intent( inout ) :: self
-    class( sll_vector_space_base ), intent( in    ) :: x
+    import sll_c_vector_space_base
+    class( sll_c_vector_space_base ), intent( inout ) :: self
+    class( sll_c_vector_space_base ), intent( in    ) :: x
    end subroutine i_incr
   end interface
 
@@ -109,14 +114,13 @@ module sll_m_vector_space_base
   abstract interface
    subroutine i_scal( self, a )
     use sll_m_working_precision
-    import sll_vector_space_base
-    class( sll_vector_space_base ), intent( inout ) :: self
+    import sll_c_vector_space_base
+    class( sll_c_vector_space_base ), intent( inout ) :: self
     sll_real64                    , intent( in    ) :: a
    end subroutine i_scal
   end interface
 
   !++++++++++++++++++++++++++++++++++
-  private :: add__base  ! for Doxygen
   !++++++++++++++++++++++++++++++++++
 
   contains
@@ -136,9 +140,9 @@ module sll_m_vector_space_base
   !> @param[in]    y    Input vector #2
   !----------------------------------------------------------------------------
   subroutine add__base( self, x, y )
-    class( sll_vector_space_base ), intent( inout ) :: self
-    class( sll_vector_space_base ), intent( in    ) :: x
-    class( sll_vector_space_base ), intent( in    ) :: y
+    class( sll_c_vector_space_base ), intent( inout ) :: self
+    class( sll_c_vector_space_base ), intent( in    ) :: x
+    class( sll_c_vector_space_base ), intent( in    ) :: y
 
     call self%copy( x )
     call self%incr( y )
@@ -157,9 +161,9 @@ module sll_m_vector_space_base
   !> @param[in]    x    Input vector
   !----------------------------------------------------------------------------
   subroutine mult__base( self, a, x )
-    class( sll_vector_space_base ), intent( inout ) :: self
+    class( sll_c_vector_space_base ), intent( inout ) :: self
     sll_real64                    , intent( in    ) :: a
-    class( sll_vector_space_base ), intent( in    ) :: x
+    class( sll_c_vector_space_base ), intent( in    ) :: x
 
     call self%copy( x )
     call self%scal( a )
@@ -179,10 +183,10 @@ module sll_m_vector_space_base
   !> @param[in]    y    Input vector #2
   !----------------------------------------------------------------------------
   subroutine mult_add__base( self, a, x, y )
-    class( sll_vector_space_base ), intent( inout ) :: self
+    class( sll_c_vector_space_base ), intent( inout ) :: self
     sll_real64                    , intent( in    ) :: a
-    class( sll_vector_space_base ), intent( in    ) :: x
-    class( sll_vector_space_base ), intent( in    ) :: y
+    class( sll_c_vector_space_base ), intent( in    ) :: x
+    class( sll_c_vector_space_base ), intent( in    ) :: y
     
     call self%mult( a, x )
     call self%incr( y )
@@ -200,11 +204,11 @@ module sll_m_vector_space_base
   !> @param[in]    x    Input vector
   !----------------------------------------------------------------------------
   subroutine incr_mult__base( self, a, x )
-    class( sll_vector_space_base ), intent( inout ) :: self
+    class( sll_c_vector_space_base ), intent( inout ) :: self
     sll_real64                    , intent( in    ) :: a
-    class( sll_vector_space_base ), intent( in    ) :: x
+    class( sll_c_vector_space_base ), intent( in    ) :: x
     
-    class( sll_vector_space_base ), allocatable     :: temp
+    class( sll_c_vector_space_base ), allocatable     :: temp
 
     call self%source( temp )
     call temp%mult( a, x )
@@ -225,11 +229,11 @@ module sll_m_vector_space_base
   !> @param[in]    x    Array of N vectors
   !----------------------------------------------------------------------------
   subroutine lcmb__base( self, a, x )
-    class( sll_vector_space_base ), intent( inout ) :: self
+    class( sll_c_vector_space_base ), intent( inout ) :: self
     sll_real64                    , intent( in    ) :: a(:)
-    class( sll_vector_space_base ), intent( in    ) :: x(:)
+    class( sll_c_vector_space_base ), intent( in    ) :: x(:)
 
-    class( sll_vector_space_base ), allocatable     :: temp
+    class( sll_c_vector_space_base ), allocatable     :: temp
     integer                                         :: i
 
     call self%source( temp )
@@ -254,11 +258,11 @@ module sll_m_vector_space_base
   !> @param[in]    x    Array of N vectors
   !----------------------------------------------------------------------------
   subroutine incr_lcmb__base( self, a, x )
-    class( sll_vector_space_base ), intent( inout ) :: self
+    class( sll_c_vector_space_base ), intent( inout ) :: self
     sll_real64                    , intent( in    ) :: a(:)
-    class( sll_vector_space_base ), intent( in    ) :: x(:)
+    class( sll_c_vector_space_base ), intent( in    ) :: x(:)
 
-    class( sll_vector_space_base ), allocatable     :: temp
+    class( sll_c_vector_space_base ), allocatable     :: temp
     integer                                         :: i
 
     call self%source( temp )
@@ -284,7 +288,7 @@ module sll_m_vector_space_base
   !> @returns        Scalar value, of type *sll_real64*
   !----------------------------------------------------------------------------
   function norm__base( self ) result( res )
-    class( sll_vector_space_base ), intent( in ) :: self
+    class( sll_c_vector_space_base ), intent( in ) :: self
     sll_real64                                   :: res
 
     res = self%inner( self )
@@ -302,8 +306,8 @@ module sll_m_vector_space_base
   !> @returns        Scalar value, of type *sll_real64*
   !----------------------------------------------------------------------------
   function inner__base( self, x ) result( res )
-    class( sll_vector_space_base ), intent( in ) :: self
-    class( sll_vector_space_base ), intent( in ) :: x
+    class( sll_c_vector_space_base ), intent( in ) :: self
+    class( sll_c_vector_space_base ), intent( in ) :: x
     sll_real64                                   :: res
 
     SLL_ERROR( "inner", "Function not implemented." )
@@ -319,7 +323,7 @@ module sll_m_vector_space_base
   !> @param[in] self Vector *z*, caller
   !----------------------------------------------------------------------------
   subroutine show__base( self )
-    class( sll_vector_space_base ), intent( in ) :: self
+    class( sll_c_vector_space_base ), intent( in ) :: self
 
     SLL_WARNING( "show", "Overload this subroutine if you need it." )
     print*, storage_size(self)
@@ -331,7 +335,7 @@ module sll_m_vector_space_base
   !> @param[inout] self Vector *z*, caller
   !----------------------------------------------------------------------------
   subroutine delete__base( self )
-    class( sll_vector_space_base ), intent( inout ) :: self
+    class( sll_c_vector_space_base ), intent( inout ) :: self
 
     SLL_ERROR( "delete", "Subroutine not implemented." )
 #ifdef DEBUG
@@ -367,7 +371,7 @@ module sll_m_vector_space_base
   !> @param[inout] self Vector *x*, caller
   !----------------------------------------------------------------------------
   subroutine initialize_copy__base( self )
-    class( sll_vector_space_base ), intent( inout ) :: self
+    class( sll_c_vector_space_base ), intent( inout ) :: self
     ! Do nothing for now
 #ifdef DEBUG
     print*, storage_size(self)
@@ -379,15 +383,15 @@ module sll_m_vector_space_base
   !> @brief      Copy constructor: create one copy of vector *z*
   !> @details    Allocate vector *x* and copy contents of *z* into it. Usage:
   !>             \code
-  !>               class( sll_vector_space_base ), allocatable :: x
+  !>               class( sll_c_vector_space_base ), allocatable :: x
   !>               call z%source(x) 
   !>             \endcode
   !> @param[in]  self Vector *z*, caller
   !> @param[out] x    Output copy (allocatable)
   !----------------------------------------------------------------------------
   subroutine source_scalar__base( self, x )
-    class( sll_vector_space_base ),              intent( in    ) :: self
-    class( sll_vector_space_base ), allocatable, intent(   out ) :: x
+    class( sll_c_vector_space_base ),              intent( in    ) :: self
+    class( sll_c_vector_space_base ), allocatable, intent(   out ) :: x
 
     allocate( x, source=self )
     call x%initialize_copy()
@@ -399,7 +403,7 @@ module sll_m_vector_space_base
   !> @details    Allocate array *x* of *n* vectors, and copy contents of *z*
   !>             into each element *x(i)*. Usage:
   !>             \code
-  !>               class( sll_vector_space_base ), allocatable :: x(:)
+  !>               class( sll_c_vector_space_base ), allocatable :: x(:)
   !>               call z%source(x,n) 
   !>             \endcode
   !> @param[in]  self Vector *z*, caller
@@ -407,8 +411,8 @@ module sll_m_vector_space_base
   !> @param[in]  n    Number of identical copies required
   !----------------------------------------------------------------------------
   subroutine source_array__base( self, x, n )
-    class( sll_vector_space_base ),              intent( in    ) :: self
-    class( sll_vector_space_base ), allocatable, intent(   out ) :: x(:)
+    class( sll_c_vector_space_base ),              intent( in    ) :: self
+    class( sll_c_vector_space_base ), allocatable, intent(   out ) :: x(:)
     sll_int32                                  , intent( in    ) :: n
 
     sll_int32 :: i

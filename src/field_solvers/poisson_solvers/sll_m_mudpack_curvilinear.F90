@@ -8,18 +8,40 @@
 !>  - first mud2cr is called to generate a second-order approximation.  
 !>  - then mud24cr is called to improve the estimate to fourth-order.
 module sll_m_mudpack_curvilinear
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_working_precision.h"
-#include "sll_assert.h"
-use sll_m_common_coordinate_transformations
-use sll_m_coordinate_transformation_2d_base
-use sll_m_interpolators_2d_base
-use sll_m_cubic_spline_interpolator_2d
 
-implicit none
-private
+! use F77_mudpack, only: &
+!   muh24cr, &
+!   muh2cr
+
+  use sll_m_boundary_condition_descriptors, only: &
+    sll_p_dirichlet, &
+    sll_p_periodic
+
+  use sll_m_coordinate_transformation_2d_base, only: &
+    sll_c_coordinate_transformation_2d_base
+
+  use sll_m_cubic_spline_interpolator_2d, only: &
+    sll_f_new_cubic_spline_interpolator_2d
+
+  use sll_m_interpolators_2d_base, only: &
+    sll_c_interpolator_2d
+
+  implicit none
+
+  public :: &
+    sll_t_mudpack_2d, &
+    sll_o_create, &
+    sll_p_non_separable_with_cross_terms, &
+    sll_p_non_separable_without_cross_terms, &
+    sll_p_separable
+
+  private
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 !> Mudpack solver cartesian 2d
-type, public :: mudpack_2d
+type :: sll_t_mudpack_2d
 
    sll_real64, dimension(:), allocatable :: work !< array for tmp data
    sll_int32  :: mgopt(4)           !< Option to control multigrid
@@ -28,53 +50,43 @@ type, public :: mudpack_2d
    sll_int32  :: iguess             !< Initial solution or loop over time
    sll_int32, pointer :: iwork(:,:) !< Internal work array for mudpack library
 
-end type mudpack_2d
+end type sll_t_mudpack_2d
 
-integer, parameter, public :: SLL_SEPARABLE  = 1                        !< type of equation
-integer, parameter, public :: SLL_NON_SEPARABLE_WITHOUT_CROSS_TERMS = 2 !< type of equation
-integer, parameter, public :: SLL_NON_SEPARABLE_WITH_CROSS_TERMS = 3    !< type of equation
+integer, parameter :: sll_p_separable  = 1                        !< type of equation
+integer, parameter :: sll_p_non_separable_without_cross_terms = 2 !< type of equation
+integer, parameter :: sll_p_non_separable_with_cross_terms = 3    !< type of equation
 
 !> Interpolator to compute derivative xx
-class(sll_interpolator_2d_base), pointer :: cxx_interp
+class(sll_c_interpolator_2d), pointer :: cxx_interp
 !> Interpolator to compute derivative yy
-class(sll_interpolator_2d_base), pointer :: cyy_interp
+class(sll_c_interpolator_2d), pointer :: cyy_interp
 !> Interpolator to compute derivative xy
-class(sll_interpolator_2d_base), pointer :: cxy_interp
+class(sll_c_interpolator_2d), pointer :: cxy_interp
 !> Interpolator to compute derivative x
-class(sll_interpolator_2d_base), pointer :: cx_interp
+class(sll_c_interpolator_2d), pointer :: cx_interp
 !> Interpolator to compute derivative y
-class(sll_interpolator_2d_base), pointer :: cy_interp
+class(sll_c_interpolator_2d), pointer :: cy_interp
 !> Interpolator to compute rhs coefficient
-class(sll_interpolator_2d_base), pointer :: ce_interp
+class(sll_c_interpolator_2d), pointer :: ce_interp
 !> PLEASE ADD DOCUMENTATION
-class(sll_interpolator_2d_base), pointer :: a12_interp
+class(sll_c_interpolator_2d), pointer :: a12_interp
 !> PLEASE ADD DOCUMENTATION
-class(sll_interpolator_2d_base), pointer :: a21_interp
+class(sll_c_interpolator_2d), pointer :: a21_interp
 
 !> Coordinate transformation of the mesh
-class(sll_coordinate_transformation_2d_base), pointer :: transformation
+class(sll_c_coordinate_transformation_2d_base), pointer :: transformation
 
-interface sll_create
+interface sll_o_create
   module procedure initialize_poisson_curvilinear_mudpack
-end interface sll_create
+end interface sll_o_create
 
-public :: sll_create
-public :: cxx_interp
-public :: cyy_interp
-public :: cxy_interp
-public :: cx_interp
-public :: cy_interp
-public :: ce_interp
-public :: a12_interp
-public :: a21_interp
-public :: solve_poisson_curvilinear_mudpack
 
 contains
 
 !> Initialize the Poisson solver in curvilinear coordinates using MUDPACK
 !> library
 subroutine initialize_poisson_curvilinear_mudpack( &
-   this,          &
+   self,          &
    transf,        &
    b11,           &
    b12,           &
@@ -92,7 +104,7 @@ subroutine initialize_poisson_curvilinear_mudpack( &
    bc_eta2_left,  &
    bc_eta2_right)
 
-type(mudpack_2d) :: this              !< Solver object
+type(sll_t_mudpack_2d) :: self              !< Solver object
 sll_real64, intent(in) :: eta1_min    !< eta1 min
 sll_real64, intent(in) :: eta1_max    !< eta1 min
 sll_real64, intent(in) :: eta2_min    !< eta2 min
@@ -100,7 +112,6 @@ sll_real64, intent(in) :: eta2_max    !< eta2 max
 sll_int32, intent(in)  :: nc_eta1     !<  number of cells
 sll_int32, intent(in)  :: nc_eta2     !<  number of cells
 sll_int32 :: icall
-!sll_int32 :: iiex,jjey
 sll_int32 :: llwork
 sll_int32 :: bc_eta1_left             !< left boundary condition r
 sll_int32 :: bc_eta1_right            !< right boundary condition r
@@ -116,7 +127,7 @@ sll_real64, dimension(:,:), pointer :: b21 !< for general coordinate solver
 sll_real64, dimension(:,:), pointer :: b22 !< for general coordinate solver
 sll_real64, dimension(:,:), pointer :: c   !< for general coordinate solver
 
-class(sll_coordinate_transformation_2d_base), pointer :: transf !< coordinate transformation
+class(sll_c_coordinate_transformation_2d_base), pointer :: transf !< coordinate transformation
 
 ! put integer and floating point argument names in contiguous
 ! storeage for labelling in vectors iprm,fprm
@@ -139,11 +150,9 @@ sll_real64,dimension(:,:),allocatable :: a12_array
 sll_real64,dimension(:,:),allocatable :: a21_array
 sll_real64 :: delta1,delta2
 sll_int32,  parameter   :: iixp = 2 , jjyq = 2
+
 equivalence(intl,iprm)
 equivalence(xa,fprm)
-
-! declare coefficient and boundary condition input subroutines external
-external coefcr,bndcr,cofx,cofy
 
 nx = nc_eta1+1
 ny = nc_eta2+1
@@ -164,82 +173,82 @@ allocate(a21_array(nx,ny))
 allocate(phi(nx,ny))
 
 transformation => transf
-cxx_interp => new_cubic_spline_interpolator_2d( &
+cxx_interp => sll_f_new_cubic_spline_interpolator_2d( &
           nx, &
           ny, &
           eta1_min, &
           eta1_max, &
           eta2_min, &
           eta2_max, &
-          SLL_PERIODIC, &
-          SLL_PERIODIC)
+          sll_p_periodic, &
+          sll_p_periodic)
           
-cyy_interp => new_cubic_spline_interpolator_2d( &
+cyy_interp => sll_f_new_cubic_spline_interpolator_2d( &
           nx, &
           ny, &
           eta1_min, &
           eta1_max, &
           eta2_min, &
           eta2_max, &
-          SLL_PERIODIC, &
-          SLL_PERIODIC) 
+          sll_p_periodic, &
+          sll_p_periodic) 
           
- cxy_interp => new_cubic_spline_interpolator_2d( &
+ cxy_interp => sll_f_new_cubic_spline_interpolator_2d( &
           nx, &
           ny, &
           eta1_min, &
           eta1_max, &
           eta2_min, &
           eta2_max, &
-          SLL_PERIODIC, &
-          SLL_PERIODIC)  
+          sll_p_periodic, &
+          sll_p_periodic)  
           
- cx_interp => new_cubic_spline_interpolator_2d( &
+ cx_interp => sll_f_new_cubic_spline_interpolator_2d( &
           nx, &
           ny, &
           eta1_min, &
           eta1_max, &
           eta2_min, &
           eta2_max, &
-          SLL_PERIODIC, &
-          SLL_PERIODIC) 
- cy_interp => new_cubic_spline_interpolator_2d( &
+          sll_p_periodic, &
+          sll_p_periodic) 
+ cy_interp => sll_f_new_cubic_spline_interpolator_2d( &
           nx, &
           ny, &
           eta1_min, &
           eta1_max, &
           eta2_min, &
           eta2_max, &
-          SLL_PERIODIC, &
-          SLL_PERIODIC)    
+          sll_p_periodic, &
+          sll_p_periodic)    
                                          
-ce_interp => new_cubic_spline_interpolator_2d( &
+ce_interp => sll_f_new_cubic_spline_interpolator_2d( &
           nx, &
           ny, &
           eta1_min, &
           eta1_max, &
           eta2_min, &
           eta2_max, &
-          SLL_PERIODIC, &
-          SLL_PERIODIC)   
-a12_interp => new_cubic_spline_interpolator_2d( &
+          sll_p_periodic, &
+          sll_p_periodic)   
+a12_interp => sll_f_new_cubic_spline_interpolator_2d( &
           nx, &
           ny, &
           eta1_min, &
           eta1_max, &
           eta2_min, &
           eta2_max, &
-          SLL_PERIODIC, &
-          SLL_PERIODIC) 
-a21_interp => new_cubic_spline_interpolator_2d( &
+          sll_p_periodic, &
+          sll_p_periodic) 
+a21_interp => sll_f_new_cubic_spline_interpolator_2d( &
           nx, &
           ny, &
           eta1_min, &
           eta1_max, &
           eta2_min, &
           eta2_max, &
-          SLL_PERIODIC, &
-          SLL_PERIODIC)                             
+          sll_p_periodic, &
+          sll_p_periodic)                             
 !cxx_array = 1._f64          
 call coefxxyy_array(b11,b12,b21,b22,transf,eta1_min,eta2_min,delta1,delta2,nx,ny,cxx_array,cyy_array)          
 call cxx_interp%compute_interpolants( cxx_array )  
@@ -260,7 +269,7 @@ call cy_interp%compute_interpolants( cy_array )
 ce_array = -c
 call ce_interp%compute_interpolants( ce_array ) 
      
-allocate(this%work(llwork))
+allocate(self%work(llwork))
 icall = 0
 
 ! set input sll_int32 arguments
@@ -280,7 +289,7 @@ jey = ceiling(log((ny-1.)/jyq)/log(2.))+1
 
 nx = ixp*(2**(iex-1))+1
 ny = jyq*(2**(jey-1))+1
-allocate(this%iwork(ixp+1,jyq+1))
+allocate(self%iwork(ixp+1,jyq+1))
 if (nx /= nc_eta1+1 .or. ny /= nc_eta2+1) then
    print*, "nx,nc_eta1+1=", nx, nc_eta1+1
    print*, "ny,nc_eta2+1=", ny, nc_eta2+1
@@ -289,10 +298,10 @@ end if
 
 ! set multigrid arguments (w(2,1) cycling with fully weighted
 ! residual restriction and cubic prolongation)
-this%mgopt(1) = 2
-this%mgopt(2) = 2
-this%mgopt(3) = 1
-this%mgopt(4) = 3
+self%mgopt(1) = 2
+self%mgopt(2) = 2
+self%mgopt(3) = 1
+self%mgopt(4) = 3
 
 ! set three cycles to ensure second-order approx
 maxcy = 3
@@ -317,14 +326,13 @@ tolmax = 0.0_8
 
 write(*,100)
 write(*,101) (iprm(i),i=1,15)
-write(*,102) (this%mgopt(i),i=1,4)
+write(*,102) (self%mgopt(i),i=1,4)
 write(*,103) xa,xb,yc,yd,tolmax
 write(*,104) intl
 
-
-!call mud2cr(iprm,fprm,this%work,coefcr,bndcr,rhs,phi,this%mgopt,ierror)
- call muh2cr(iprm,fprm,this%work,this%iwork,coefcr,bndcr,rhs,phi,this%mgopt,ierror)
-!call mud2sp(iprm,fprm,this%work,cofx,cofy,bndcr,rhs,phi,this%mgopt,ierror)
+!call mud2cr(iprm,fprm,self%work,coefcr,bndcr,rhs,phi,self%mgopt,ierror)
+ call muh2cr(iprm,fprm,self%work,self%iwork,coefcr,bndcr,rhs,phi,self%mgopt,ierror)
+!call mud2sp(iprm,fprm,self%work,cofx,cofy,bndcr,rhs,phi,self%mgopt,ierror)
 write (*,200) ierror,iprm(16)
 if (ierror > 0) call exit(0)
 
@@ -345,16 +353,13 @@ if (ierror > 0) call exit(0)
 104 format(/' discretization call to mud2cr', ' intl = ', i2)
 200 format(' ierror = ',i2, ' minimum work space = ',i7)
 
-return
 end subroutine initialize_poisson_curvilinear_mudpack
 
 
 !> Solve the Poisson equation and get the potential
-subroutine solve_poisson_curvilinear_mudpack(this, phi, rho)
-implicit none
-
+subroutine solve_poisson_curvilinear_mudpack(self, phi, rho)
 ! set grid size params
-type(mudpack_2d) :: this  !< solver data object
+type(sll_t_mudpack_2d) :: self  !< solver data object
 sll_int32 :: icall
 sll_int32, parameter :: iixp = 2 , jjyq = 2
 
@@ -380,10 +385,6 @@ common/ftmud2cr/xa,xb,yc,yd,tolmax,relmax
 equivalence(intl,iprm)
 equivalence(xa,fprm)
 
-!    
-! declare coefficient and boundary condition input subroutines external
-external coefcr,bndcr,cofx,cofy
-
 allocate(rhs(nx,ny))
 rhs=0._f64
     do i2=1,ny
@@ -393,22 +394,22 @@ rhs=0._f64
         rhs(i1,i2)=-rho(i1,i2)*transformation%jacobian(eta1,eta2)
       end do
     end do
-  if(nxa == SLL_DIRICHLET) then
+  if(nxa == sll_p_dirichlet) then
        do i2=1,ny
           phi(1,i2) = 0._f64
        end do
     endif
-    if(nxb == SLL_DIRICHLET) then
+    if(nxb == sll_p_dirichlet) then
        do i2=1,ny
           phi(nx,i2) = 0._f64
        end do
     endif
-    if(nyc == SLL_DIRICHLET) then
+    if(nyc == sll_p_dirichlet) then
        do i1=1,nx
           phi(i1,1) = 0._f64
        end do
     endif
-    if(nyd == SLL_DIRICHLET) then
+    if(nyd == sll_p_dirichlet) then
        do i1=1,nx
           phi(i1,ny) = 0._f64
        end do
@@ -419,17 +420,17 @@ intl  = 1
 !YG write(*,106) intl,method,iguess
 
 ! attempt solution
-!call mud2cr(iprm,fprm,this%work,coefcr,bndcr,rhs,phi,this%mgopt,ierror)
-call muh2cr(iprm,fprm,this%work,this%iwork,coefcr,bndcr,rhs,phi,this%mgopt,ierror)
-!call mud2sp(iprm,fprm,this%work,cofx,cofy,bndcr,rhs,phi,this%mgopt,ierror)
+!call mud2cr(iprm,fprm,self%work,coefcr,bndcr,rhs,phi,self%mgopt,ierror)
+call muh2cr(iprm,fprm,self%work,self%iwork,coefcr,bndcr,rhs,phi,self%mgopt,ierror)
+!call mud2sp(iprm,fprm,self%work,cofx,cofy,bndcr,rhs,phi,self%mgopt,ierror)
 !SLL_ASSERT(ierror == 0)
 !YG write(*,107) ierror
 if (ierror > 0) call exit(0)
 
 ! attempt fourth order approximation
-!call mud24cr(this%work,coefcr,bndcr,phi,ierror)
-call muh24cr(this%work,this%iwork,coefcr,bndcr,phi,ierror)
-!call mud24sp(this%work,phi,ierror)
+!call mud24cr(self%work,coefcr,bndcr,phi,ierror)
+call muh24cr(self%work,self%iwork,coefcr,bndcr,phi,ierror)
+!call mud24sp(self%work,phi,ierror)
 !SLL_ASSERT(ierror == 0)
 !YG write (*,108) ierror
 if (ierror > 0) call exit(0)
@@ -451,7 +452,7 @@ subroutine coefxxyy_array(b11,b12,b21,b22,transf,eta1_min,eta2_min, &
     sll_int32                 :: i,j,nx,ny
     sll_real64, dimension(:,:):: cxx_array,cyy_array
     sll_real64, dimension(1:2,1:2) :: jac_m
-    class(sll_coordinate_transformation_2d_base), pointer :: transf
+    class(sll_c_coordinate_transformation_2d_base), pointer :: transf
     sll_real64, dimension(:,:) :: b11
     sll_real64, dimension(:,:) :: b12
     sll_real64, dimension(:,:) :: b21 
@@ -481,7 +482,7 @@ subroutine coefxy_array(b11,b12,b21,b22,transf,eta1_min,eta2_min, &
     sll_int32                 :: i,j,nx,ny
     sll_real64, dimension(:,:):: cxy_array
     sll_real64, dimension(1:2,1:2) :: jac_m
-    class(sll_coordinate_transformation_2d_base), pointer :: transf
+    class(sll_c_coordinate_transformation_2d_base), pointer :: transf
     sll_real64, dimension(:,:) :: b11
     sll_real64, dimension(:,:) :: b12
     sll_real64, dimension(:,:) :: b21 
@@ -503,14 +504,13 @@ enddo
 end subroutine coefxy_array
 
 subroutine a12_a21_array(b11,b12,b21,b22,transf,eta1_min,eta2_min,delta1,delta2,nx,ny,a12_array,a21_array)
-  implicit none                     
     sll_real64                :: eta1,eta1_min,eta2_min
     sll_real64                :: eta2,delta1,delta2
     sll_real64                :: a12,a21
     sll_int32                 :: i,j,nx,ny
     sll_real64, dimension(:,:):: a12_array
     sll_real64, dimension(:,:):: a21_array
-    class(sll_coordinate_transformation_2d_base), pointer :: transf
+    class(sll_c_coordinate_transformation_2d_base), pointer :: transf
     sll_real64, dimension(:,:) :: b11
     sll_real64, dimension(:,:) :: b12
     sll_real64, dimension(:,:) :: b21 
@@ -534,7 +534,6 @@ end subroutine a12_a21_array
 
 subroutine coefx_array(eta1_min,eta2_min, &
                          delta1,delta2,nx,ny,cx_array)
-  implicit none                     
     sll_real64                :: eta1,eta1_min,eta2_min
     sll_real64                :: eta2,delta1,delta2
     sll_int32                 :: i,j,nx,ny
@@ -545,14 +544,14 @@ do j=1,ny
  eta2 = eta2_min + real(j-1,f64)*delta2
  do i=1,nx
    eta1 = eta1_min + real(i-1,f64)*delta1   
-   cx_array(i,j)= cxx_interp%interpolate_derivative_eta1(eta1,eta2)+ &
-                  a21_interp%interpolate_derivative_eta2(eta1,eta2)                         
+   cx_array(i,j)= cxx_interp%interpolate_from_interpolant_derivative_eta1(eta1,eta2)+ &
+                  a21_interp%interpolate_from_interpolant_derivative_eta2(eta1,eta2)                         
  enddo
 enddo 
 end subroutine coefx_array
+
 subroutine coefy_array(eta1_min,eta2_min, &
                          delta1,delta2,nx,ny,cy_array)
-  implicit none                     
     sll_real64                :: eta1,eta1_min,eta2_min
     sll_real64                :: eta2,delta1,delta2
     sll_int32                 :: i,j,nx,ny
@@ -562,52 +561,45 @@ do j=1,ny
  eta2 = eta2_min + real(j-1,f64)*delta2
  do i=1,nx
    eta1 = eta1_min + real(i-1,f64)*delta1    
-   cy_array(i,j)= cyy_interp%interpolate_derivative_eta2(eta1,eta2)+ &
-                  a12_interp%interpolate_derivative_eta1(eta1,eta2)                         
+   cy_array(i,j)= cyy_interp%interpolate_from_interpolant_derivative_eta2(eta1,eta2)+ &
+                  a12_interp%interpolate_from_interpolant_derivative_eta1(eta1,eta2)                         
  enddo
 enddo 
 end subroutine coefy_array
-end module sll_m_mudpack_curvilinear
-
 
 !> input pde coefficients at any grid point (x,y) in the solution region
 !> (xa.le.x.le.xb,yc.le.y.le.yd) to mud2cr
 subroutine coefcr(x,y,cxx,cxy,cyy,cx,cy,ce)
-use sll_m_mudpack_curvilinear
-implicit none
 real(8)  :: x,cxx,cx,cxy
 real(8)  :: y,cyy,cy,ce
-cxx = cxx_interp%interpolate_value(x,y)
-cxy = cxy_interp%interpolate_value(x,y) 
-cyy = cyy_interp%interpolate_value(x,y) 
-cx  = cx_interp%interpolate_value(x,y)
-cy  = cy_interp%interpolate_value(x,y) 
-ce  = ce_interp%interpolate_value(x,y)
-return
-end subroutine
-!> input x dependent coefficients
-subroutine cofx(x,cxx,cx,cex)
-implicit none
-real(8)  :: x,cxx,cx,cex
-cxx = 1.0_8  !cxx_interp%interpolate_value(x)
-cx  = 0.0_8 + x - x
-cex = 0.0_8
-return
-end
+cxx = cxx_interp%interpolate_from_interpolant_value(x,y)
+cxy = cxy_interp%interpolate_from_interpolant_value(x,y) 
+cyy = cyy_interp%interpolate_from_interpolant_value(x,y) 
+cx  = cx_interp%interpolate_from_interpolant_value(x,y)
+cy  = cy_interp%interpolate_from_interpolant_value(x,y) 
+ce  = ce_interp%interpolate_from_interpolant_value(x,y)
+end subroutine coefcr
 
-!> input y dependent coefficients
-subroutine cofy(y,cyy,cy,cey)
-implicit none
-real(8)  :: y,cyy,cy,cey
-cyy = 1.0_8
-cy  = 0.0_8 + y - y
-cey = 0.0_8
-return
-end
+!!> input x dependent coefficients
+!subroutine cofx(x,cxx,cx,cex)
+!implicit none
+!real(8)  :: x,cxx,cx,cex
+!cxx = 1.0_8  !cxx_interp%interpolate_from_interpolant_value(x)
+!cx  = 0.0_8 + x - x
+!cex = 0.0_8
+!end subroutine cofx
+!
+!!> input y dependent coefficients
+!subroutine cofy(y,cyy,cy,cey)
+!real(8)  :: y,cyy,cy,cey
+!cyy = 1.0_8
+!cy  = 0.0_8 + y - y
+!cey = 0.0_8
+!end subroutine cofy
+!
 !> input mixed "oblique" derivative b.c. to mud2cr
 !> at upper y boundary
 subroutine bndcr(kbdy,xory,alfa,beta,gama,gbdy)
-implicit none
 integer  :: kbdy
 real(8)  :: xory,alfa,beta,gama,gbdy
 
@@ -639,7 +631,8 @@ if (kbdy.eq.1) then
 
 end if
 
-return
-end subroutine
+end subroutine bndcr
+
+end module sll_m_mudpack_curvilinear
 
 #endif /* DOXYGEN_SHOULD_SKIP_THIS */

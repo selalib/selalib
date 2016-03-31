@@ -1,26 +1,50 @@
 module sll_m_fcisl
-#include "sll_working_precision.h"
-#include "sll_memory.h"
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_assert.h"
-  use sll_m_cartesian_meshes
-  use sll_m_advection_1d_base
-implicit none
+#include "sll_memory.h"
+#include "sll_working_precision.h"
+
+  use sll_m_advection_1d_base, only: &
+    sll_c_advection_1d_base
+
+  use sll_m_cartesian_meshes, only: &
+    sll_f_new_cartesian_mesh_1d, &
+    sll_t_cartesian_mesh_1d
+
+  implicit none
+
+  public :: &
+    sll_s_compute_at_aligned, &
+    sll_s_compute_derivative_periodic, &
+    sll_s_compute_iota_from_shift, &
+    sll_s_compute_oblic_shift, &
+    sll_s_compute_spaghetti, &
+    sll_s_compute_spaghetti_and_shift_from_guess, &
+    sll_s_compute_spaghetti_size_from_shift, &
+    sll_s_compute_w_hermite, &
+    sll_s_load_spaghetti, &
+    sll_f_new_oblic_derivative, &
+    sll_t_oblic_derivative, &
+    sll_s_unload_spaghetti
+
+  private
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 ! a direction is chosen for interpolation
 ! derivative computation and advection
 
-  type :: sll_oblic_derivative
+  type :: sll_t_oblic_derivative
     sll_int32 :: degree
     sll_real64, dimension(:,:), pointer :: buf
-    type(sll_cartesian_mesh_1d), pointer :: mesh_x1
-    type(sll_cartesian_mesh_1d), pointer :: mesh_x2
-    class(sll_advection_1d_base), pointer :: adv
+    type(sll_t_cartesian_mesh_1d), pointer :: mesh_x1
+    type(sll_t_cartesian_mesh_1d), pointer :: mesh_x2
+    class(sll_c_advection_1d_base), pointer :: adv
     sll_real64, dimension(:), pointer :: w
-  end type sll_oblic_derivative
+  end type sll_t_oblic_derivative
 
 contains
 
-  subroutine compute_oblic_shift(iota,Nc_x1,shift, iota_modif)
+  subroutine sll_s_compute_oblic_shift(iota,Nc_x1,shift, iota_modif)
     sll_real64, intent(in) :: iota
     sll_int32, intent(in) :: Nc_x1
     sll_int32, intent(out) :: shift
@@ -29,19 +53,19 @@ contains
     shift = floor(iota*Nc_x1+0.5)
     iota_modif = real(shift,f64)/real(Nc_x1,f64)
     
-  end subroutine compute_oblic_shift
+  end subroutine sll_s_compute_oblic_shift
 
-  subroutine compute_iota_from_shift(Nc_x1,shift, iota_modif)
+  subroutine sll_s_compute_iota_from_shift(Nc_x1,shift, iota_modif)
     sll_int32, intent(in) :: Nc_x1
     sll_int32, intent(out) :: shift
     sll_real64, intent(out) :: iota_modif
     
     iota_modif = real(shift,f64)/real(Nc_x1,f64)
     
-  end subroutine compute_iota_from_shift
+  end subroutine sll_s_compute_iota_from_shift
   
   !warning: normalization to correct/choose  
-  subroutine compute_at_aligned( &
+  subroutine sll_s_compute_at_aligned( &
     f_input, &
     f_output, &
     Nc_x1, &
@@ -54,7 +78,7 @@ contains
     sll_real64, dimension(:,:), intent(out) :: f_output
     sll_int32, intent(in) :: Nc_x1
     sll_int32, intent(in) :: Nc_x2
-    class(sll_advection_1d_base), pointer :: adv
+    class(sll_c_advection_1d_base), pointer :: adv
     sll_real64, intent(in) :: x1_min
     sll_real64, intent(in) :: x1_max
     sll_real64, intent(in) :: iota
@@ -72,9 +96,9 @@ contains
         f_input(1:Nc_x1+1,i), &
         f_output(1:Nc_x1+1,i))      
     enddo
-  end subroutine compute_at_aligned
+  end subroutine sll_s_compute_at_aligned
   
-  subroutine compute_spaghetti_size_from_shift( &
+  subroutine sll_s_compute_spaghetti_size_from_shift( &
     Nc_x1, &
     shift, &
     spaghetti_size)
@@ -94,7 +118,7 @@ contains
         exit
       endif  
     enddo
-  end subroutine compute_spaghetti_size_from_shift
+  end subroutine sll_s_compute_spaghetti_size_from_shift
 
 
 !< compute shift and spaghetti_size
@@ -102,7 +126,7 @@ contains
 !< first search the existing spaghetti_size nearest of spaghetti_size_guess
 !< for a shift between -Nc_x1 to Nc_x1
 !< then looks for a shift that is near shift guess that has the same spaghetti_size   
-  subroutine compute_spaghetti_and_shift_from_guess( &
+  subroutine sll_s_compute_spaghetti_and_shift_from_guess( &
     Nc_x1, &
     Nc_x2, &
     iota_guess, &
@@ -132,7 +156,7 @@ contains
     s = 0
     val = 2*Nc_x1
     do i=-Nc_x1,Nc_x1
-      call compute_spaghetti_size_from_shift( &
+      call sll_s_compute_spaghetti_size_from_shift( &
         Nc_x1, &
         i, &
         spaghetti_size)
@@ -145,7 +169,7 @@ contains
       endif
     enddo
     
-    call compute_spaghetti_size_from_shift( &
+    call sll_s_compute_spaghetti_size_from_shift( &
       Nc_x1, &
       i_val, &
       spaghetti_size)
@@ -157,7 +181,7 @@ contains
     
     
     do i=0,Nc_x1
-      call compute_spaghetti_size_from_shift( &
+      call sll_s_compute_spaghetti_size_from_shift( &
         Nc_x1, &
         shift_guess+i, &
         spaghetti_size_new)
@@ -167,7 +191,7 @@ contains
       endif
     enddo
     do i=0,Nc_x1              
-      call compute_spaghetti_size_from_shift( &
+      call sll_s_compute_spaghetti_size_from_shift( &
         Nc_x1, &
         shift_guess-i, &
         spaghetti_size_new)      
@@ -184,22 +208,22 @@ contains
     endif
 
     
-    call compute_spaghetti_size_from_shift( &
+    call sll_s_compute_spaghetti_size_from_shift( &
       Nc_x1, &
       shift, &
       spaghetti_size)
 
 
-!    call compute_spaghetti_size_from_shift( &
+!    call sll_s_compute_spaghetti_size_from_shift( &
 !      Nc_x1, &
 !      shift_guess, &
 !      spaghetti_size)
     
     
     
-  end subroutine compute_spaghetti_and_shift_from_guess  
+  end subroutine sll_s_compute_spaghetti_and_shift_from_guess  
   
-  subroutine compute_spaghetti( &
+  subroutine sll_s_compute_spaghetti( &
     Nc_x1, &
     Nc_x2, &
     shift, &
@@ -270,9 +294,9 @@ contains
       stop
     endif
     
-  end subroutine compute_spaghetti
+  end subroutine sll_s_compute_spaghetti
 
-  subroutine load_spaghetti( &
+  subroutine sll_s_load_spaghetti( &
     input, &
     output, &
     spaghetti_index, &
@@ -296,9 +320,9 @@ contains
         output(s) = input(spaghetti_index(i),j)
       enddo  
     enddo
-  end subroutine load_spaghetti
+  end subroutine sll_s_load_spaghetti
 
-  subroutine unload_spaghetti( &
+  subroutine sll_s_unload_spaghetti( &
     input, &
     output, &
     spaghetti_index, &
@@ -322,12 +346,12 @@ contains
         output(spaghetti_index(i),j) = input(s) 
       enddo  
     enddo
-  end subroutine unload_spaghetti
+  end subroutine sll_s_unload_spaghetti
   
   
 
   
-  function new_oblic_derivative( &
+  function sll_f_new_oblic_derivative( &
     degree, &
     x1_min, &
     x1_max, &
@@ -337,7 +361,7 @@ contains
     Nc_x2, &
     adv &
     ) result(res)
-    type(sll_oblic_derivative), pointer :: res
+    type(sll_t_oblic_derivative), pointer :: res
     sll_int32, intent(in) :: degree
     sll_real64, intent(in) :: x1_min
     sll_real64, intent(in) :: x1_max
@@ -345,7 +369,7 @@ contains
     sll_real64, intent(in) :: x2_max
     sll_int32, intent(in) :: Nc_x1
     sll_int32, intent(in) :: Nc_x2
-    class(sll_advection_1d_base), pointer :: adv
+    class(sll_c_advection_1d_base), pointer :: adv
     !local variables
     sll_int32 :: ierr
     SLL_ALLOCATE(res,ierr)    
@@ -360,7 +384,7 @@ contains
       Nc_x2, &
       adv)
     
-  end function new_oblic_derivative
+  end function sll_f_new_oblic_derivative
   
   subroutine initialize_oblic_derivative( &
     deriv, &
@@ -372,7 +396,7 @@ contains
     Nc_x1, &
     Nc_x2, &
     adv)
-    type(sll_oblic_derivative) :: deriv
+    type(sll_t_oblic_derivative) :: deriv
     sll_int32, intent(in) :: degree
     sll_real64, intent(in) :: x1_min
     sll_real64, intent(in) :: x1_max
@@ -380,12 +404,12 @@ contains
     sll_real64, intent(in) :: x2_max
     sll_int32, intent(in) :: Nc_x1
     sll_int32, intent(in) :: Nc_x2
-    class(sll_advection_1d_base), pointer :: adv
+    class(sll_c_advection_1d_base), pointer :: adv
     sll_int32 :: ierr
     
     deriv%degree = degree    
-    deriv%mesh_x1 => new_cartesian_mesh_1d(Nc_x1,eta_min=x1_min,eta_max=x1_max)
-    deriv%mesh_x2 => new_cartesian_mesh_1d(Nc_x2,eta_min=x2_min,eta_max=x2_max)
+    deriv%mesh_x1 => sll_f_new_cartesian_mesh_1d(Nc_x1,eta_min=x1_min,eta_max=x1_max)
+    deriv%mesh_x2 => sll_f_new_cartesian_mesh_1d(Nc_x2,eta_min=x2_min,eta_max=x2_max)
     deriv%adv => adv
     
     SLL_ALLOCATE(deriv%buf(1:Nc_x2+2*degree+1,1:Nc_x1+1),ierr) 
@@ -403,11 +427,11 @@ contains
     tau, &
     phi, &
     D_phi)
-    type(sll_oblic_derivative), pointer :: deriv
+    type(sll_t_oblic_derivative), pointer :: deriv
     sll_real64, intent(in) :: tau
     sll_real64, dimension(:,:), intent(in) :: phi
     sll_real64, dimension(:,:), intent(out) :: D_phi
-    class(sll_advection_1d_base), pointer :: adv
+    class(sll_c_advection_1d_base), pointer :: adv
     !local variables
     sll_real64, dimension(:,:), pointer :: buf
     sll_int32 :: step
@@ -470,7 +494,7 @@ contains
 
 
 
-  subroutine compute_w_hermite(w,r,s)
+  subroutine sll_s_compute_w_hermite(w,r,s)
     sll_int32,intent(in)::r,s
     sll_real64,dimension(r:s),intent(out)::w
     sll_int32 ::i,j
@@ -545,10 +569,10 @@ contains
     !
 
   
-  end subroutine compute_w_hermite
+  end subroutine sll_s_compute_w_hermite
   
   
-  subroutine compute_derivative_periodic( &
+  subroutine sll_s_compute_derivative_periodic( &
     input, &
     output, &
     Nc, &
@@ -579,7 +603,7 @@ contains
       output(i) = tmp/dx
     enddo
         
-  end subroutine compute_derivative_periodic
+  end subroutine sll_s_compute_derivative_periodic
 
   subroutine compute_finite_difference_init(w,p)
     integer,intent(in)::p    
@@ -667,8 +691,8 @@ contains
 !  subroutine compute_field_from_phi_cartesian_1d(phi,mesh,A,interp)
 !    sll_real64, dimension(:), intent(in) :: phi
 !    sll_real64, dimension(:), intent(out) :: A
-!    type(sll_cartesian_mesh_1d), pointer :: mesh
-!    class(sll_interpolator_1d_base), pointer   :: interp
+!    type(sll_t_cartesian_mesh_1d), pointer :: mesh
+!    class(sll_c_interpolator_1d), pointer   :: interp
 !    sll_int32 :: Nc_x1
 !    sll_real64 :: x1_min
 !    sll_real64 :: delta_x1
@@ -683,7 +707,7 @@ contains
 !
 !    do i1=1,Nc_x1+1
 !      x1=x1_min+real(i1-1,f64)*delta_x1
-!      A(i1)=interp%interpolate_derivative_eta1(x1)
+!      A(i1)=interp%interpolate_from_interpolant_derivative_eta1(x1)
 !    end do
 !  end subroutine compute_field_from_phi_cartesian_1d
 

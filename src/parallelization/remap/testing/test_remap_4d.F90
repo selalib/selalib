@@ -1,11 +1,57 @@
 program remap_test_4d
-  use sll_m_collective
-  use sll_m_remapper
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_memory.h"
 #include "sll_working_precision.h"
-  use sll_m_utilities, only : &
-       is_power_of_two
+
+  use iso_fortran_env, only: &
+    output_unit
+
+  use sll_m_collective, only: &
+    sll_s_boot_collective, &
+    sll_s_collective_barrier, &
+    sll_o_collective_reduce, &
+    sll_f_get_collective_rank, &
+    sll_f_get_collective_size, &
+    sll_s_halt_collective, &
+    sll_v_world_collective
+
+  use sll_m_remapper, only: &
+    sll_o_apply_remap_4d, &
+    sll_o_compute_local_sizes, &
+    sll_o_get_layout_i_max, &
+    sll_o_get_layout_i_min, &
+    sll_o_get_layout_j_max, &
+    sll_o_get_layout_j_min, &
+    sll_o_get_layout_k_max, &
+    sll_o_get_layout_k_min, &
+    sll_o_get_layout_l_max, &
+    sll_o_get_layout_l_min, &
+    sll_o_initialize_layout_with_distributed_array, &
+    sll_t_layout_4d, &
+    sll_o_local_to_global, &
+    sll_f_new_layout_4d, &
+    sll_o_new_remap_plan, &
+    sll_t_remap_plan_4d_real64, &
+    sll_o_set_layout_i_max, &
+    sll_o_set_layout_i_min, &
+    sll_o_set_layout_j_max, &
+    sll_o_set_layout_j_min, &
+    sll_o_set_layout_k_max, &
+    sll_o_set_layout_k_min, &
+    sll_o_set_layout_l_max, &
+    sll_o_set_layout_l_min, &
+    sll_o_delete, &
+    sll_o_get_num_nodes, &
+    sll_o_view_lims
+
+  use sll_m_utilities, only: &
+    sll_f_is_power_of_two
+
+  use sll_mpi, only: &
+    mpi_prod
+
   implicit none
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
   ! Test of the 4D remapper takes a 4D array whose global size N1*N2*N3*N4,
   ! distributed among NPi*NPj*NPk*NPl processors.
@@ -36,9 +82,9 @@ program remap_test_4d
   integer                                   :: myrank
   sll_int64                                 :: colsz        ! collective size
   ! Remap stuff
-  type(layout_4D), pointer                  :: layout1
-  type(layout_4D), pointer                  :: layout2
-  type(remap_plan_4D_real64), pointer       :: rmp4
+  type(sll_t_layout_4d), pointer                  :: layout1
+  type(sll_t_layout_4d), pointer                  :: layout2
+  type(sll_t_remap_plan_4d_real64), pointer       :: rmp4
 
   sll_real64                                :: rand_real
   integer, parameter                        :: nbtest = 25
@@ -51,20 +97,20 @@ program remap_test_4d
 
 
   ! Boot parallel environment
-  call sll_boot_collective()
+  call sll_s_boot_collective()
   !  end_result = .true.
-  colsz  = sll_get_collective_size(sll_world_collective)
-  myrank = sll_get_collective_rank(sll_world_collective)
+  colsz  = int(sll_f_get_collective_size(sll_v_world_collective),i64)
+  myrank = sll_f_get_collective_rank(sll_v_world_collective)
 
   if( myrank .eq. 0) then
      print *, ' '
      print *, '--------------- REMAP 4D test ---------------------'
      print *, ' '
      print *, 'Running a test on ', colsz, 'processes'
-     call flush(6)
+     flush( output_unit )
   end if
 
-  if (.not. is_power_of_two(colsz)) then     
+  if (.not. sll_f_is_power_of_two(colsz)) then     
      print *, 'This test needs to run in a number of processes which is ',&
           'a power of 2.'
      stop
@@ -72,11 +118,11 @@ program remap_test_4d
 
   ok = 1
   do, i_test=1, nbtest
-     call flush(6)
+     flush( output_unit )
      if( myrank .eq. 0 ) then
         print *, 'Iteration ', i_test, ' of ', nbtest
      end if
-     layout1  => new_layout_4D( sll_world_collective )        
+     layout1  => sll_f_new_layout_4d( sll_v_world_collective )        
      call factorize_in_random_2powers_4d(colsz, npi, npj, npk, npl)
 !!$     npi = 2
 !!$     npj = 4
@@ -86,7 +132,7 @@ program remap_test_4d
         print *, 'source configuration: ', npi, npj, npk, npl
      end if
 
-     call initialize_layout_with_distributed_array( &
+     call sll_o_initialize_layout_with_distributed_array( &
           ni, &
           nj, &
           nk, &
@@ -97,7 +143,7 @@ program remap_test_4d
           npl, &
           layout1 )
 
-     call compute_local_sizes( &
+     call sll_o_compute_local_sizes( &
           layout1, &
           loc_sz_i_init, &
           loc_sz_j_init, &
@@ -112,19 +158,19 @@ program remap_test_4d
            do j=1,loc_sz_j_init 
               do i=1,loc_sz_i_init
                  tmpa(:) = (/i, j, k, l/)
-                 global_indices =  local_to_global( layout1, tmpa )
+                 global_indices =  sll_o_local_to_global( layout1, tmpa )
                  gi = global_indices(1)
                  gj = global_indices(2)
                  gk = global_indices(3)
                  gl = global_indices(4)
                  local_array1(i,j,k,l) = &
-                      gi + (gj-1)*ni + (gk-1)*ni*nj + (gl-1)*ni*nj*nk
+                   real(gi+(gj-1)*ni+(gk-1)*ni*nj+(gl-1)*ni*nj*nk,f64)
               end do
            end do
         end do
      end do
      
-     layout2  => new_layout_4D( sll_world_collective )
+     layout2  => sll_f_new_layout_4d( sll_v_world_collective )
      call factorize_in_random_2powers_4d(colsz, npi, npj, npk, npl)
 !!$     npi = 4
 !!$     npj = 2
@@ -135,7 +181,7 @@ program remap_test_4d
         print *, 'target configuration: ', npi, npj, npk, npl
      end if
 
-     call initialize_layout_with_distributed_array( &
+     call sll_o_initialize_layout_with_distributed_array( &
           ni, &
           nj, &
           nk, &
@@ -148,7 +194,7 @@ program remap_test_4d
 
      call reorganize_randomly_4d(layout2)
      
-     call compute_local_sizes( &
+     call sll_o_compute_local_sizes( &
           layout2, &
           loc_sz_i_final, &
           loc_sz_j_final, &
@@ -157,18 +203,18 @@ program remap_test_4d
 
      SLL_ALLOCATE(local_array2(loc_sz_i_final,loc_sz_j_final,loc_sz_k_final,loc_sz_l_final), ierr )
     
-     rmp4 => new_remap_plan( layout1, layout2, local_array1)     
+     rmp4 => sll_o_new_remap_plan( layout1, layout2, local_array1)     
 
-     call apply_remap_4D( rmp4, local_array1, local_array2 ) 
+     call sll_o_apply_remap_4d( rmp4, local_array1, local_array2 ) 
 
      SLL_ALLOCATE(arrays_diff(loc_sz_i_final,loc_sz_j_final,loc_sz_k_final,loc_sz_l_final),ierr )
  
 #if 0
      if( myrank .eq. 0 ) then
         print *, i_test, myrank, 'Printing layout1: '
-        call sll_view_lims( layout1 )
+        call sll_o_view_lims( layout1 )
         print *, i_test, myrank, 'Printing layout2: '
-        call sll_view_lims( layout2 )
+        call sll_o_view_lims( layout2 )
      end if
 #endif
      ! compare results with expected data
@@ -177,7 +223,7 @@ program remap_test_4d
            do j=1,loc_sz_j_final 
               do i=1,loc_sz_i_final
                  tmpa(:) = (/i,j,k,l/)
-                 global_indices =  local_to_global( layout2, tmpa )
+                 global_indices =  sll_o_local_to_global( layout2, tmpa )
                  gi = global_indices(1)
                  gj = global_indices(2)
                  gk = global_indices(3)
@@ -209,14 +255,14 @@ program remap_test_4d
                     !    end if
                     
                     print *, i_test, myrank, 'Printing layout1: '
-                    call sll_view_lims( layout1 )
+                    call sll_o_view_lims( layout1 )
                     print *, i_test, myrank, 'Printing layout2: '
-                    call sll_view_lims( layout2 )
+                    call sll_o_view_lims( layout2 )
                     
                     print*, 'program stopped by failure'
                     stop
                  end if
-                 call flush(6)
+                 flush( output_unit )
               end do
            end do
         end do
@@ -226,8 +272,8 @@ program remap_test_4d
      ! corresponding absolute values must be null. Each processor compute a local 
      ! sum and all local sums are finally added and the result is sent to 
      ! processor 0 which will check if equal 0 to validate the test. (*)
-     call sll_collective_reduce( &
-          sll_world_collective, &
+     call sll_o_collective_reduce( &
+          sll_v_world_collective, &
           (/ real(ok) /), &
           1, &
           MPI_PROD, &
@@ -238,14 +284,14 @@ program remap_test_4d
         print *, ' '
         print *, '-------------------------------------------'
         print *, ' '
-        call flush(6)
+        flush( output_unit )
      end if
-     call flush(6) 
+     flush( output_unit ) 
        
-     call sll_collective_barrier(sll_world_collective)
+     call sll_s_collective_barrier(sll_v_world_collective)
   
-     call sll_delete( layout1 )
-     call sll_delete( layout2 )
+     call sll_o_delete( layout1 )
+     call sll_o_delete( layout2 )
      SLL_DEALLOCATE_ARRAY(local_array1, ierr)
      SLL_DEALLOCATE_ARRAY(local_array2, ierr)
      SLL_DEALLOCATE_ARRAY(arrays_diff, ierr)
@@ -257,16 +303,16 @@ program remap_test_4d
      endif
   endif
   
-  call sll_halt_collective()
+  call sll_s_halt_collective()
   
 contains
 
   subroutine reorganize_randomly_4d(layout)
     implicit none
-    type(layout_4D), pointer   :: layout
+    type(sll_t_layout_4d), pointer   :: layout
     integer                    :: i, colsz, proc_n, proc_p
     real                       :: rand_real
-    colsz = sll_get_num_nodes(layout)
+    colsz = sll_o_get_num_nodes(layout)
     do i=0, colsz-1
        call random_number(rand_real)
        proc_n = int(rand_real*(colsz-1))
@@ -279,48 +325,48 @@ contains
   subroutine swap_box_4D(proc_n, proc_p, layout)
     implicit none
     integer                  :: proc_n, proc_p
-    type(layout_4D), pointer :: layout
+    type(sll_t_layout_4d), pointer :: layout
     integer                  :: i_min_n, i_max_n, j_min_n, j_max_n, &
     k_min_n, k_max_n, l_min_n, l_max_n, i_min_p, i_max_p, j_min_p, j_max_p, k_min_p, k_max_p, l_min_p, l_max_p    
     ! Get proc_n contents from layout
-    i_min_n = get_layout_i_min( layout, proc_n )
-    i_max_n = get_layout_i_max( layout, proc_n )
-    j_min_n = get_layout_j_min( layout, proc_n )
-    j_max_n = get_layout_j_max( layout, proc_n )
-    k_min_n = get_layout_k_min( layout, proc_n )
-    k_max_n = get_layout_k_max( layout, proc_n )
-    l_min_n = get_layout_l_min( layout, proc_n )
-    l_max_n = get_layout_l_max( layout, proc_n )
+    i_min_n = sll_o_get_layout_i_min( layout, proc_n )
+    i_max_n = sll_o_get_layout_i_max( layout, proc_n )
+    j_min_n = sll_o_get_layout_j_min( layout, proc_n )
+    j_max_n = sll_o_get_layout_j_max( layout, proc_n )
+    k_min_n = sll_o_get_layout_k_min( layout, proc_n )
+    k_max_n = sll_o_get_layout_k_max( layout, proc_n )
+    l_min_n = sll_o_get_layout_l_min( layout, proc_n )
+    l_max_n = sll_o_get_layout_l_max( layout, proc_n )
 
     ! Get proc_p contents from layout
-    i_min_p = get_layout_i_min( layout, proc_p )
-    i_max_p = get_layout_i_max( layout, proc_p )
-    j_min_p = get_layout_j_min( layout, proc_p )
-    j_max_p = get_layout_j_max( layout, proc_p )
-    k_min_p = get_layout_k_min( layout, proc_p )
-    k_max_p = get_layout_k_max( layout, proc_p )
-    l_min_p = get_layout_l_min( layout, proc_p )
-    l_max_p = get_layout_l_max( layout, proc_p )
+    i_min_p = sll_o_get_layout_i_min( layout, proc_p )
+    i_max_p = sll_o_get_layout_i_max( layout, proc_p )
+    j_min_p = sll_o_get_layout_j_min( layout, proc_p )
+    j_max_p = sll_o_get_layout_j_max( layout, proc_p )
+    k_min_p = sll_o_get_layout_k_min( layout, proc_p )
+    k_max_p = sll_o_get_layout_k_max( layout, proc_p )
+    l_min_p = sll_o_get_layout_l_min( layout, proc_p )
+    l_max_p = sll_o_get_layout_l_max( layout, proc_p )
 
     ! Set proc_n contents in layout
-    call set_layout_i_min( layout, proc_n, i_min_p )
-    call set_layout_i_max( layout, proc_n, i_max_p)
-    call set_layout_j_min( layout, proc_n, j_min_p )
-    call set_layout_j_max( layout, proc_n, j_max_p )
-    call set_layout_k_min( layout, proc_n, k_min_p )
-    call set_layout_k_max( layout, proc_n, k_max_p )
-    call set_layout_l_min( layout, proc_n, l_min_p )
-    call set_layout_l_max( layout, proc_n, l_max_p )
+    call sll_o_set_layout_i_min( layout, proc_n, i_min_p )
+    call sll_o_set_layout_i_max( layout, proc_n, i_max_p)
+    call sll_o_set_layout_j_min( layout, proc_n, j_min_p )
+    call sll_o_set_layout_j_max( layout, proc_n, j_max_p )
+    call sll_o_set_layout_k_min( layout, proc_n, k_min_p )
+    call sll_o_set_layout_k_max( layout, proc_n, k_max_p )
+    call sll_o_set_layout_l_min( layout, proc_n, l_min_p )
+    call sll_o_set_layout_l_max( layout, proc_n, l_max_p )
 
     ! Set proc_p contents in layout
-    call set_layout_i_min( layout, proc_p, i_min_n )
-    call set_layout_i_max( layout, proc_p, i_max_n )
-    call set_layout_j_min( layout, proc_p, j_min_n )
-    call set_layout_j_max( layout, proc_p, j_max_n )
-    call set_layout_k_min( layout, proc_p, k_min_n )
-    call set_layout_k_max( layout, proc_p, k_max_n )   
-    call set_layout_l_min( layout, proc_p, l_min_n )
-    call set_layout_l_max( layout, proc_p, l_max_n )
+    call sll_o_set_layout_i_min( layout, proc_p, i_min_n )
+    call sll_o_set_layout_i_max( layout, proc_p, i_max_n )
+    call sll_o_set_layout_j_min( layout, proc_p, j_min_n )
+    call sll_o_set_layout_j_max( layout, proc_p, j_max_n )
+    call sll_o_set_layout_k_min( layout, proc_p, k_min_n )
+    call sll_o_set_layout_k_max( layout, proc_p, k_max_n )   
+    call sll_o_set_layout_l_min( layout, proc_p, l_min_n )
+    call sll_o_set_layout_l_max( layout, proc_p, l_max_n )
   end subroutine swap_box_4D
 
   function theoretical_global_4D_indices(d, ni, nj, nk)
@@ -355,7 +401,7 @@ contains
     sll_int64, intent(in) :: n
     integer, intent(out) ::n1, n2, n3, n4
     integer   :: expo, expo1, expo2, expo3, expo4
-    if (.not.is_power_of_two(n)) then   
+    if (.not.sll_f_is_power_of_two(n)) then   
        print*, 'The number of processors must be a power of 2'
        stop
     endif 

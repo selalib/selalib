@@ -6,10 +6,20 @@
 !> that applies the 
 !> Gauss-Lobatto method to compute numeric integrals.
 module sll_m_gauss_lobatto_integration
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_working_precision.h"
-#include "sll_assert.h"
-  
-implicit none
+
+  implicit none
+
+  public :: &
+    sll_f_gauss_lobatto_derivative_matrix, &
+    sll_o_gauss_lobatto_integrate_1d, &
+    sll_f_gauss_lobatto_points, &
+    sll_f_gauss_lobatto_points_and_weights, &
+    sll_f_gauss_lobatto_weights
+
+  private
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 #ifndef DOXYGEN_SHOULD_SKIP_THIS
 abstract interface
@@ -25,11 +35,10 @@ end interface
 #endif
 
 !> Integrate numerically with Gauss-Lobatto formula
-interface gauss_lobatto_integrate_1d
+interface sll_o_gauss_lobatto_integrate_1d
   module procedure gauss_lobatto_integral_1d 
 end interface
 
-private :: dlob, dgauss
 
 contains
 
@@ -73,16 +82,15 @@ contains
 
     alpha = 0.0_f64
     do k = 0, n-1
-       !beta(k)=real(k,kind(n-1))**2/((2.0d0*k+1)*(2.0d0*k-1))
-       beta(k)=real(k,f64)**2/((2.0d0*k+1)*(2.0d0*k-1))
+       beta(k) = real( k**2, f64 ) / real( (2*k+1)*(2*k-1), f64 )
     end do
 
     !for Gauss-Legendre and Gauss-Lobatto, beta(0)=int(dlambda)
     !see Algorithm xxx - ORTHPOL: A package of routines for  generating orthogonal
     !polynomials and Gauss-type quadrature rules by _Walter Gautschi_
-    beta(0)=2.0d0
+    beta(0) = 2.0_f64
 
-    call dlob(n-2,alpha,beta,-1.d0,1.d0,xk,wk,err,de,da,db)
+    call dlob(n-2,alpha,beta,-1.0_f64,1.0_f64,xk,wk,err,de,da,db)
 
     xk(1) = -1.0_f64
     xk(n) =  1.0_f64
@@ -106,16 +114,16 @@ contains
   !> @param[in] a OPTIONAL Minimum value of the interval.
   !> @param[in] b OPTIONAL Maximun value of the interval.
   !> @return array containing points (1,:) and weights (2,:)
-  function gauss_lobatto_points_and_weights(n,a,b) result(wx)
+  function sll_f_gauss_lobatto_points_and_weights(n,a,b) result(wx)
     sll_int32,  intent(in)     :: n 
     sll_real64, intent(in),optional    :: a
     sll_real64, intent(in),optional    :: b
     sll_real64, dimension(2,n) :: wx !< wx points and weights
     
-    wx(1,1:n) = gauss_lobatto_points( n, a, b )
-    wx(2,1:n) = gauss_lobatto_weights(n, a, b)
+    wx(1,1:n) = sll_f_gauss_lobatto_points( n, a, b )
+    wx(2,1:n) = sll_f_gauss_lobatto_weights(n, a, b)
 
-  end function gauss_lobatto_points_and_weights
+  end function sll_f_gauss_lobatto_points_and_weights
   
   
   !> Returns a 1d array of size (n) containing gauss-lobatto 
@@ -124,7 +132,7 @@ contains
   !> @param[in] a OPTIONAL Minimum value of the interval.
   !> @param[in] b OPTIONAL Maximun value of the interval.
   !> @return xk array containing points
-  function gauss_lobatto_points( n, a, b ) result(xk)
+  function sll_f_gauss_lobatto_points( n, a, b ) result(xk)
     sll_int32,  intent(in)          :: n 
     sll_real64, intent(in),optional :: a
     sll_real64, intent(in),optional :: b
@@ -141,14 +149,13 @@ contains
     
     alpha = 0.0_f64
     do k = 0, n-1
-       !beta(k)=real(k,kind(n-1))**2/((2.0d0*k+1)*(2.0d0*k-1))
-       beta(k)=real(k,f64)**2/((2.0d0*k+1)*(2.0d0*k-1))
+       beta(k) = real( k**2, f64 ) / real( (2*k+1)*(2*k-1), f64 )
     end do
     
     !for Gauss-Legendre and Gauss-Lobatto, beta(0)=int(dlambda)
     !see Algorithm xxx - ORTHPOL: A package of routines for  generating orthogonal
     !polynomials and Gauss-type quadrature rules by _Walter Gautschi_
-    beta(0)=2.0d0
+    beta(0) = 2.0_f64
     
     call dlob(n-2,alpha,beta,-1._f64,1._f64,xk,wk,err,de,da,db)
     ! The results of this call can yield values that are beyond
@@ -164,7 +171,7 @@ contains
        xk = c1*xk + c2
     end if
     
-    end function gauss_lobatto_points
+    end function sll_f_gauss_lobatto_points
 
   !> Returns a 1d array of size (n) containing gauss-lobatto 
   !> weights in the interval [a,b].
@@ -172,7 +179,7 @@ contains
   !> @param[in] a OPTIONAL Minimum value of the interval.
   !> @param[in] b OPTIONAL Maximun value of the interval.
   !> @return wk array containing points
-  function gauss_lobatto_weights( n,a,b ) result(wk)
+  function sll_f_gauss_lobatto_weights( n,a,b ) result(wk)
     sll_int32,  intent(in)           :: n 
     sll_real64, intent(in), optional :: a
     sll_real64, intent(in), optional :: b
@@ -189,14 +196,13 @@ contains
     
     alpha = 0.0_f64
     do k = 0, n-1
-       !beta(k)=real(k,kind(n-1))**2/((2.0d0*k+1)*(2.0d0*k-1))
-       beta(k)=real(k,f64)**2/((2.0d0*k+1)*(2.0d0*k-1))
+       beta(k) = real( k**2, f64 ) / real( (2*k+1)*(2*k-1), f64 )
     end do
     
     !for Gauss-Legendre and Gauss-Lobatto, beta(0)=int(dlambda)
     !see Algorithm xxx - ORTHPOL: A package of routines for  generating orthogonal
     !polynomials and Gauss-type quadrature rules by _Walter Gautschi_
-    beta(0)=2.0d0
+    beta(0) = 2.0_f64
     
     call dlob(n-2,alpha,beta,-1._f64,1._f64,xk,wk,err,de,da,db)
     
@@ -204,14 +210,14 @@ contains
        c1 = 0.5_f64*(b-a)
        wk = c1*wk
     end if
-  end function gauss_lobatto_weights
+  end function sll_f_gauss_lobatto_weights
   
   !> Construction of the derivative matrix for Gauss-Lobatto,
   !> The matrix must be already allocated of size \f$ n^2 \f$.
   !> \f[
   !>  der(i,j)=(Phi_i.Phi'_j)
   !> \f]
-  function  gauss_lobatto_derivative_matrix(n, y) result(d)
+  function  sll_f_gauss_lobatto_derivative_matrix(n, y) result(d)
     sll_int32,  intent(in) :: n
     sll_real64, optional :: y(n)
     sll_real64 :: x(n)
@@ -222,7 +228,7 @@ contains
     if (present(y)) then
        x = y
     else
-       x =  gauss_lobatto_points(n)
+       x =  sll_f_gauss_lobatto_points(n)
     end if
 
     d = 0.0_f64
@@ -260,7 +266,7 @@ contains
        end do
     end do
 
-  end function gauss_lobatto_derivative_matrix
+  end function sll_f_gauss_lobatto_derivative_matrix
 
 !> This comes from http://dl.acm.org, Algorithme 726 : ORTHPOL, appendices and supplements
 !> To use those functions, READ the documentation beside and find more information 
@@ -312,17 +318,17 @@ sll_int32 :: n, ierr, k, np1, np2
 sll_real64 :: dleft,dright,depsma,dp0l,dp0r,dp1l,dp1r,dpm1l
 sll_real64 :: dpm1r,ddet,dalpha(*),dbeta(*),dzero(*),dweigh(*),de(*),da(*),db(*)
 
-      depsma=epsilon(1.0d0)
+      depsma=epsilon(1.0_f64)
       np1=n+1
       np2=n+2
       do 10 k=1,np2
         da(k)=dalpha(k)
         db(k)=dbeta(k)
    10 continue
-      dp0l=0.d0
-      dp0r=0.d0
-      dp1l=1.d0
-      dp1r=1.d0
+      dp0l=0.0_f64
+      dp0r=0.0_f64
+      dp1l=1.0_f64
+      dp1r=1.0_f64
       do 20 k=1,np1
         dpm1l=dp0l
         dp0l=dp1l
@@ -395,58 +401,58 @@ sll_real64 :: dalpha(n),dbeta(n),dzero(n),dweigh(n),de(n)
       end if
       ierr=0
       dzero(1)=dalpha(1)
-      if(dbeta(1).lt.0.d0) then
+      if(dbeta(1) .lt. 0.0_f64) then
         ierr=-2
         return
       end if
       dweigh(1)=dbeta(1)
       if (n.eq.1) return
-      dweigh(1)=1.d0
-      de(n)=0.d0
+      dweigh(1)=1.0_f64
+      de(n)=0.0_f64
       do 100 k=2,n
         dzero(k)=dalpha(k)
-        if(dbeta(k).lt.0.d0) then
+        if(dbeta(k) .lt. 0.0_f64) then
           ierr=-2
           return
         end if
-        de(k-1)=dsqrt(dbeta(k))
-        dweigh(k)=0.d0
+        de(k-1)=sqrt(dbeta(k))
+        dweigh(k)=0.0_f64
   100 continue
       do 240 l=1,n
         j=0
   105   do 110 m=l,n
           if(m.eq.n) goto 120
-          if(dabs(de(m)).le.deps*(dabs(dzero(m))+dabs(dzero(m+1)))) goto 120
+          if(abs(de(m)).le.deps*(abs(dzero(m))+abs(dzero(m+1)))) goto 120
   110   continue
   120   dp=dzero(l)
         if(m.eq.l) goto 240
         if(j.eq.30) goto 400
         j=j+1
-        dg=(dzero(l+1)-dp)/(2.d0*de(l))
-        dr=dsqrt(dg*dg+1.d0)
-        dg=dzero(m)-dp+de(l)/(dg+dsign(dr,dg))
-        ds=1.d0
-        dc=1.d0
-        dp=0.d0
+        dg=(dzero(l+1)-dp)/(2.0_f64*de(l))
+        dr=sqrt(dg*dg+1.0_f64)
+        dg=dzero(m)-dp+de(l)/(dg+sign(dr,dg))
+        ds=1.0_f64
+        dc=1.0_f64
+        dp=0.0_f64
         mml=m-l
         do 200 ii=1,mml
           i=m-ii
           df=ds*de(i)
           db=dc*de(i)
-          if(dabs(df).lt.dabs(dg)) goto 150
+          if(abs(df).lt.abs(dg)) goto 150
           dc=dg/df
-          dr=dsqrt(dc*dc+1.d0)
+          dr=sqrt(dc*dc+1.0_f64)
           de(i+1)=df*dr
-          ds=1.d0/dr
+          ds=1.0_f64/dr
           dc=dc*ds
           goto 160
   150     ds=df/dg
-          dr=dsqrt(ds*ds+1.d0)
+          dr=sqrt(ds*ds+1.0_f64)
           de(i+1)=dg*dr
-          dc=1.d0/dr
+          dc=1.0_f64/dr
           ds=ds*dc
   160     dg=dzero(i+1)-dp
-          dr=(dzero(i)-dg)*ds+2.d0*dc*db
+          dr=(dzero(i)-dg)*ds+2.0_f64*dc*db
           dp=ds*dr
           dzero(i+1)=dg+dp
           dg=dc*dr-db
@@ -456,7 +462,7 @@ sll_real64 :: dalpha(n),dbeta(n),dzero(n),dweigh(n),de(n)
   200   continue
         dzero(l)=dzero(l)-dp
         de(l)=dg
-        de(m)=0.d0
+        de(m)=0.0_f64
         goto 105
   240 continue
       do 300 ii=2,n
