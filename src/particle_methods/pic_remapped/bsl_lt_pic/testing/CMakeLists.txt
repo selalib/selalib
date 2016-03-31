@@ -1,9 +1,7 @@
-# 
 # BSL-LT-PIC tests cmakefile
+# ==========================
 # 
-# ======================================================================
 # MCP and ALH
-# ======================================================================
 #   This code SeLaLib (for Semi-Lagrangian-Library) 
 #   is a parallel library for simulating the plasma turbulence 
 #   in a tokamak.
@@ -14,9 +12,11 @@
 #   the software under the terms of the CeCILL-B license as 
 #   circulated by CEA, CNRS and INRIA at the following URL
 #   "http://www.cecill.info". 
-# ======================================================================
-# [[shell:header\alh 'CMakeLists.txt']] (cf [[file:~/alh/bin/headeralh]])
-# emacs-keywords authors="MCP and ALH" brief="BSL-LT-PIC tests cmakefile" default=0 make selalib start=02/11/15
+# 
+# [[elisp:(alh-set-keywords)]] ([[file:~/.emacs::alh-set-keywords]])
+# emacs-keywords authors="MCP and ALH" brief="BSL-LT-PIC tests cmakefile" make selalib start=02/11/15
+
+# <<<<test_bsl_lt_pic_4d>>>> [[file:test_bsl_lt_pic_4d.F90]]
 
 ADD_EXECUTABLE( test_bsl_lt_pic_4d test_bsl_lt_pic_4d.F90 )
 TARGET_LINK_LIBRARIES( test_bsl_lt_pic_4d
@@ -31,7 +31,7 @@ TARGET_LINK_LIBRARIES( test_bsl_lt_pic_4d
 ADD_TEST( NAME bsl_lt_pic_4d COMMAND test_bsl_lt_pic_4d )
 SET_TESTS_PROPERTIES( bsl_lt_pic_4d PROPERTIES PASS_REGULAR_EXPRESSION "PASSED" )
 
-# <<<<test_4dsg_for_remapped_pic>>>> [[file:test_4dsg_for_remapped_pic.F90]]
+# <<test_4dsg_for_remapped_pic>> [[file:test_4dsg_for_remapped_pic.F90]]
 # Configuration from [[selalib:src/simulations/parallel/pic_vp_2d2v_cart_remapped/README]]
 # [[elisp:(compile "cd ${SELALIB}/build && make test_4dsg_for_remapped_pic && ${SELALIB}/build/bin/test_4dsg_for_remapped_pic")]]
 

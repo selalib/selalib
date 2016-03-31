@@ -683,6 +683,8 @@ contains
   end subroutine bsl_lt_pic_4d_set_hat_f0_parameters
 
 
+  ! <<reset_deposition_particles_coordinates>>
+  
   !--------------------------------------------------------------------------------------------------------------------------
   !> This subroutine places the deposition particles with the sepcified method. It does not compute the weights.
   !> The weights are computed in an external call to the 'write_f_on_grid_or_deposit' subroutine
@@ -796,6 +798,8 @@ contains
   ! do not change the position of the deposition particles, but compute (and set)
   ! their weights using a direct interpolation with the remapping tool (ie with flow = Id)
 
+  ! <<reset_deposition_particles_weights_with_direct_interpolation>>
+  
   subroutine reset_deposition_particles_weights_with_direct_interpolation(  &
       self,                             &
       target_total_charge,              &
@@ -1665,9 +1669,10 @@ contains
       if(present(rank))then
         call self%reset_deposition_particles_coordinates(rank)
       else
-        call self%reset_deposition_particles_coordinates()
+        call self%reset_deposition_particles_coordinates() ! [[reset_deposition_particles_coordinates]]
       end if
       ! since the remapping tool has been set, computing the weights can be done with straightforward interpolation (flow = Id)
+      ! [[reset_deposition_particles_weights_with_direct_interpolation]]
       call self%reset_deposition_particles_weights_with_direct_interpolation( target_total_charge, enforce_total_charge )
 
     end if
@@ -3440,7 +3445,9 @@ contains
       print *, "bsl_lt_pic_4d_remap -- (C) will reset ", self%number_deposition_particles, "deposition_particles..."
       ! if deposition particles are fixed, then they are initialized at each time step, in the deposition routine
       call self%reset_deposition_particles_coordinates()
+
       ! since the remapping tool has been reset, computing the weights can be done with straightforward interpolation (flow = Id)
+      ! [[reset_deposition_particles_weights_with_direct_interpolation]]
       call self%reset_deposition_particles_weights_with_direct_interpolation( target_total_charge, enforce_total_charge )
     end if
 
@@ -3482,7 +3489,8 @@ contains
 
   end subroutine bsl_lt_pic_4d_remap_f
 
-
+  ! <<bsl_lt_pic_4d_interpolate_value_of_remapped_f>>
+  
   !> separate interpolation routine for the remapped f
   function bsl_lt_pic_4d_interpolate_value_of_remapped_f ( p_group, eta ) result(val)
     class(sll_bsl_lt_pic_4d_group), intent(inout)  :: p_group
@@ -3497,6 +3505,7 @@ contains
 
     else if( p_group%remapped_f_interpolation_type == SLL_BSL_LT_PIC_REMAP_WITH_SPARSE_GRIDS )then
 
+       ! <<sparse_grid_interpolate_value>>
       val = p_group%sparse_grid_interpolator%interpolate_value(p_group%remapped_f_sparse_grid_coefficients, eta)
 
     else
