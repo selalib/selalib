@@ -18,16 +18,30 @@
 
 
 module sll_m_gyroaverage_2d_polar_pade_solver
-#include "sll_working_precision.h"
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_memory.h"
-#include "sll_assert.h"
-use sll_m_gyroaverage_2d_base
-use sll_m_gyroaverage_2d_polar
-implicit none
+#include "sll_working_precision.h"
 
-  type,extends(sll_gyroaverage_2d_base) :: gyroaverage_2d_polar_pade_solver     
+  use sll_m_gyroaverage_2d_base, only: &
+    sll_c_gyroaverage_2d_base
+
+  use sll_m_gyroaverage_2d_polar, only: &
+    sll_s_compute_gyroaverage_pade_high_order_polar, &
+    sll_s_compute_gyroaverage_pade_polar, &
+    sll_f_new_plan_gyroaverage_polar_pade, &
+    sll_t_plan_gyroaverage_polar
+
+  implicit none
+
+  public :: &
+    sll_f_new_gyroaverage_2d_polar_pade_solver
+
+  private
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+  type,extends(sll_c_gyroaverage_2d_base) :: gyroaverage_2d_polar_pade_solver     
   
-    type(sll_plan_gyroaverage_polar), pointer                   :: gyro
+    type(sll_t_plan_gyroaverage_polar), pointer                   :: gyro
      sll_int32 :: pade_case
 	! pade_case
 	! (/0,2/)
@@ -43,7 +57,7 @@ implicit none
   end type gyroaverage_2d_polar_pade_solver
 
 contains
-  function new_gyroaverage_2d_polar_pade_solver( &
+  function sll_f_new_gyroaverage_2d_polar_pade_solver( &
     eta_min, &
     eta_max, &
     Nc, &
@@ -65,7 +79,7 @@ contains
       Nc, &
       pade_case)
     
-  end function new_gyroaverage_2d_polar_pade_solver
+  end function sll_f_new_gyroaverage_2d_polar_pade_solver
   
   
   subroutine initialize_gyroaverage_2d_polar_pade_solver( &
@@ -95,7 +109,7 @@ contains
       stop  
     endif   
 
-        gyroaverage%gyro => new_plan_gyroaverage_polar_pade( &
+        gyroaverage%gyro => sll_f_new_plan_gyroaverage_polar_pade( &
         eta_min, &
         eta_max, &
         Nc) 
@@ -112,13 +126,13 @@ contains
 
     select case(gyroaverage%pade_case)
       case (0)
-        call compute_gyroaverage_pade_polar(gyroaverage%gyro,f,larmor_rad)
+        call sll_s_compute_gyroaverage_pade_polar(gyroaverage%gyro,f,larmor_rad)
       case (1)
-        call compute_gyroaverage_pade_high_order_polar(gyroaverage%gyro,f,larmor_rad,(/0,2/))
+        call sll_s_compute_gyroaverage_pade_high_order_polar(gyroaverage%gyro,f,larmor_rad,(/0,2/))
       case (2)
-        call compute_gyroaverage_pade_high_order_polar(gyroaverage%gyro,f,larmor_rad,(/0,4/))
+        call sll_s_compute_gyroaverage_pade_high_order_polar(gyroaverage%gyro,f,larmor_rad,(/0,4/))
       case (3)
-        call compute_gyroaverage_pade_high_order_polar(gyroaverage%gyro,f,larmor_rad,(/2,4/))
+        call sll_s_compute_gyroaverage_pade_high_order_polar(gyroaverage%gyro,f,larmor_rad,(/2,4/))
       case default
         print *,'#bad value of pade_case=', gyroaverage%pade_case
         print *,'#not implemented'

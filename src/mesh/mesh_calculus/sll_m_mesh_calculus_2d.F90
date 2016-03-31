@@ -1,13 +1,30 @@
 module sll_m_mesh_calculus_2d
-#include "sll_working_precision.h"
-#include "sll_memory.h"
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_assert.h"
+#include "sll_memory.h"
+#include "sll_working_precision.h"
 
-  use sll_m_cartesian_meshes
-  use sll_m_triangular_meshes
-  use sll_m_coordinate_transformation_2d_base
-  use sll_m_gauss_legendre_integration
+  use sll_m_cartesian_meshes, only: &
+    sll_t_cartesian_mesh_2d
+
+  use sll_m_coordinate_transformation_2d_base, only: &
+    sll_c_coordinate_transformation_2d_base
+
+  use sll_m_gauss_legendre_integration, only: &
+    sll_f_gauss_legendre_points_and_weights
+
   implicit none
+
+  public :: &
+    sll_f_cell_volume, &
+    sll_f_edge_length_eta1_minus, &
+    sll_f_edge_length_eta1_plus, &
+    sll_f_edge_length_eta2_minus, &
+    sll_f_edge_length_eta2_plus, &
+    sll_f_normal_integral_eta1_plus
+
+  private
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
   ! --------------------------------------------------------------------------
   !
@@ -19,9 +36,9 @@ module sll_m_mesh_calculus_2d
 
 contains
 
-  function cell_volume( T, ic, jc, integration_degree ) result(vol)
+  function sll_f_cell_volume( T, ic, jc, integration_degree ) result(vol)
     intrinsic :: abs
-    class(sll_coordinate_transformation_2d_base), pointer :: T
+    class(sll_c_coordinate_transformation_2d_base), pointer :: T
     sll_int32, intent(in) :: ic
     sll_int32, intent(in) :: jc
     sll_int32, intent(in) :: integration_degree
@@ -41,7 +58,7 @@ contains
     !sll_real64 :: factor2
     sll_int32  :: i
     sll_int32  :: j
-    class(sll_cartesian_mesh_2d), pointer :: m
+    class(sll_t_cartesian_mesh_2d), pointer :: m
 
     ! Verify arguments
     SLL_ASSERT(associated(T))
@@ -67,10 +84,10 @@ contains
     !factor1 = 0.5_f64*(max1-min1)
     !factor2 = 0.5_f64*(max2-min2) 
     pts_g1(:,:) = &
-         gauss_legendre_points_and_weights(integration_degree, min1, max1)
+         sll_f_gauss_legendre_points_and_weights(integration_degree, min1, max1)
     !gauss_points(integration_degree, min1, max1)
     pts_g2(:,:) = &
-         gauss_legendre_points_and_weights(integration_degree, min2, max2)
+         sll_f_gauss_legendre_points_and_weights(integration_degree, min2, max2)
     ! gauss_points(integration_degree, min2, max2)
 
     do j=1,integration_degree
@@ -81,12 +98,12 @@ contains
     end do
     !vol = vol*factor1*factor2
 
-  end function cell_volume
+  end function sll_f_cell_volume
 
   ! length of the 'east' edge of the cell.
-  function edge_length_eta1_plus( T, ic, jc, integration_degree ) result(len)
+  function sll_f_edge_length_eta1_plus( T, ic, jc, integration_degree ) result(len)
     intrinsic :: abs
-    class(sll_coordinate_transformation_2d_base), pointer :: T
+    class(sll_c_coordinate_transformation_2d_base), pointer :: T
     sll_int32, intent(in) :: ic
     sll_int32, intent(in) :: jc
     sll_int32, intent(in) :: integration_degree
@@ -108,7 +125,7 @@ contains
     sll_int32  :: j
     sll_real64 :: x1_eta2  ! derivative of x1(eta1,eta2) with respect to eta2
     sll_real64 :: x2_eta2  ! derivative of x1(eta1,eta2) with respect to eta2
-    class(sll_cartesian_mesh_2d), pointer :: m
+    class(sll_t_cartesian_mesh_2d), pointer :: m
 
     ! Verify arguments
     SLL_ASSERT(associated(T))
@@ -125,11 +142,11 @@ contains
     delta2   = m%delta_eta2
 
     ! The limits of integration are the limits of the cell in eta-space
-    eta1    = ic*delta1 ! only difference with edge_length_eta1_minus function
+    eta1    = ic*delta1 ! only difference with sll_f_edge_length_eta1_minus function
     min2    = eta2_min + (jc-1)*delta2
     max2    = eta2_min + jc*delta2
     pts_g2(:,:) = &
-         gauss_legendre_points_and_weights(integration_degree, min2, max2)
+         sll_f_gauss_legendre_points_and_weights(integration_degree, min2, max2)
     
     do j=1,integration_degree
        ! this can be made more efficient if we could access directly each
@@ -140,12 +157,12 @@ contains
        len = len + sqrt(x1_eta2**2 + x2_eta2**2)*pts_g2(2,j)
     end do
     !len = len*factor2
-  end function edge_length_eta1_plus
+  end function sll_f_edge_length_eta1_plus
 
   ! length of the 'west' edge of the cell.
-  function edge_length_eta1_minus( T, ic, jc, integration_degree ) result(len)
+  function sll_f_edge_length_eta1_minus( T, ic, jc, integration_degree ) result(len)
     intrinsic :: abs
-    class(sll_coordinate_transformation_2d_base), pointer :: T
+    class(sll_c_coordinate_transformation_2d_base), pointer :: T
     sll_int32, intent(in) :: ic
     sll_int32, intent(in) :: jc
     sll_int32, intent(in) :: integration_degree
@@ -167,7 +184,7 @@ contains
     sll_int32  :: j
     sll_real64 :: x1_eta2  ! derivative of x1(eta1,eta2) with respect to eta2
     sll_real64 :: x2_eta2  ! derivative of x1(eta1,eta2) with respect to eta2
-    class(sll_cartesian_mesh_2d), pointer :: m
+    class(sll_t_cartesian_mesh_2d), pointer :: m
     
     ! Verify arguments
     SLL_ASSERT(associated(T))
@@ -192,7 +209,7 @@ contains
     !    factor2 = 0.5_f64*(max2-min2) 
     !    pts_g1(:,:) = gauss_points(integration_degree, min1, max1)
     pts_g2(:,:) = &
-         gauss_legendre_points_and_weights(integration_degree, min2, max2)
+         sll_f_gauss_legendre_points_and_weights(integration_degree, min2, max2)
     !gauss_points(integration_degree, min2, max2)
     
     do j=1,integration_degree
@@ -204,12 +221,12 @@ contains
        len = len + sqrt(x1_eta2**2 + x2_eta2**2)*pts_g2(2,j)
     end do
     !len = len*factor2
-  end function edge_length_eta1_minus
+  end function sll_f_edge_length_eta1_minus
 
   ! length of the 'north' edge of the cell.
-  function edge_length_eta2_plus( T, ic, jc, integration_degree ) result(len)
+  function sll_f_edge_length_eta2_plus( T, ic, jc, integration_degree ) result(len)
     intrinsic :: abs
-    class(sll_coordinate_transformation_2d_base), pointer :: T
+    class(sll_c_coordinate_transformation_2d_base), pointer :: T
     sll_int32, intent(in) :: ic
     sll_int32, intent(in) :: jc
     sll_int32, intent(in) :: integration_degree
@@ -227,7 +244,7 @@ contains
     sll_int32  :: i
     sll_real64 :: x1_eta1  ! derivative of x1(eta1,eta2) with respect to eta1
     sll_real64 :: x2_eta1  ! derivative of x1(eta1,eta2) with respect to eta1
-    class(sll_cartesian_mesh_2d), pointer :: m
+    class(sll_t_cartesian_mesh_2d), pointer :: m
 
     ! Verify arguments
     SLL_ASSERT(associated(T))
@@ -246,9 +263,9 @@ contains
     ! The limits of integration are the limits of the cell in eta-space
     min1    = eta1_min + (ic-1)*delta1
     max1    = eta1_min + ic*delta1
-    eta2    = jc*delta2 ! only difference with edge_length_eta2_minus function
+    eta2    = jc*delta2 ! only difference with sll_f_edge_length_eta2_minus function
     pts_g1(:,:) = &
-         gauss_legendre_points_and_weights(integration_degree, min1, max1)
+         sll_f_gauss_legendre_points_and_weights(integration_degree, min1, max1)
     !gauss_points(integration_degree, min1, max1)
     !    pts_g2(:,:) = gauss_points(integration_degree, min2, max2)
     
@@ -261,12 +278,12 @@ contains
        len = len + sqrt(x1_eta1**2 + x2_eta1**2)*pts_g1(2,i)
     end do
     ! len = len*factor1
-  end function edge_length_eta2_plus
+  end function sll_f_edge_length_eta2_plus
   
   ! length of the 'south' edge of the cell.
-  function edge_length_eta2_minus( T, ic, jc, integration_degree ) result(len)
+  function sll_f_edge_length_eta2_minus( T, ic, jc, integration_degree ) result(len)
     intrinsic :: abs
-    class(sll_coordinate_transformation_2d_base), pointer :: T
+    class(sll_c_coordinate_transformation_2d_base), pointer :: T
     sll_int32, intent(in) :: ic
     sll_int32, intent(in) :: jc
     sll_int32, intent(in) :: integration_degree
@@ -288,7 +305,7 @@ contains
     sll_int32  :: i
     sll_real64 :: x1_eta1  ! derivative of x1(eta1,eta2) with respect to eta1
     sll_real64 :: x2_eta1  ! derivative of x1(eta1,eta2) with respect to eta1
-    class(sll_cartesian_mesh_2d), pointer :: m
+    class(sll_t_cartesian_mesh_2d), pointer :: m
 
     ! Verify arguments
     SLL_ASSERT(associated(T))
@@ -307,13 +324,13 @@ contains
     ! The limits of integration are the limits of the cell in eta-space
     min1    = eta1_min + (ic-1)*delta1
     max1    = eta1_min + ic*delta1
-    eta2    = (jc-1)*delta2 !only difference with edge_length_eta2_plus function
+    eta2    = (jc-1)*delta2 !only difference with sll_f_edge_length_eta2_plus function
     !    min2    = eta2_min + (jc-1)*delta2
     !    max2    = eta2_min + jc*delta2
     !factor1 = 0.5_f64*(max1-min1)
     !    factor2 = 0.5_f64*(max2-min2) 
     pts_g1(:,:) = &
-         gauss_legendre_points_and_weights(integration_degree, min1, max1)
+         sll_f_gauss_legendre_points_and_weights(integration_degree, min1, max1)
     !gauss_points(integration_degree, min1, max1)
     !    pts_g2(:,:) = gauss_points(integration_degree, min2, max2)
     
@@ -326,11 +343,11 @@ contains
        len = len + sqrt(x1_eta1**2 + x2_eta1**2)*pts_g1(2,i)
     end do
     !len = len*factor1
-  end function edge_length_eta2_minus
+  end function sll_f_edge_length_eta2_minus
   
   ! integral of the normal vector over the 'east' edge of the cell.
-  function normal_integral_eta1_plus( T,ic,jc,integration_degree ) result(res)
-    class(sll_coordinate_transformation_2d_base), pointer :: T
+  function sll_f_normal_integral_eta1_plus( T,ic,jc,integration_degree ) result(res)
+    class(sll_c_coordinate_transformation_2d_base), pointer :: T
     sll_int32, intent(in)     :: ic
     sll_int32, intent(in)     :: jc
     sll_int32, intent(in)     :: integration_degree
@@ -354,7 +371,7 @@ contains
     sll_real64 :: eta1_x1  ! derivative of eta1(x1,x2) with respect to x1
     sll_real64 :: eta1_x2  ! derivative of eta1(x1,x2) with respect to x2
     sll_real64 :: edge_length
-    class(sll_cartesian_mesh_2d), pointer :: m
+    class(sll_t_cartesian_mesh_2d), pointer :: m
 
     ! Verify arguments
     SLL_ASSERT(associated(T))
@@ -379,7 +396,7 @@ contains
     !factor2 = 0.5_f64*(max2-min2) 
     !    pts_g1(:,:) = gauss_points(integration_degree, min1, max1)
     pts_g2(:,:) = &
-         gauss_legendre_points_and_weights(integration_degree, min2, max2)
+         sll_f_gauss_legendre_points_and_weights(integration_degree, min2, max2)
     !gauss_points(integration_degree, min2, max2)
     
     ! For efficiency, this code should be refactored. Consider:
@@ -388,7 +405,7 @@ contains
     ! - use macros to eliminate the massive code redundancy in this module's
     !   functions.
     ! - same macros can be used to improve a function call like the one next.
-    edge_length = edge_length_eta1_plus( T, ic, jc, integration_degree )
+    edge_length = sll_f_edge_length_eta1_plus( T, ic, jc, integration_degree )
     res(:) = 0.0_f64
     
     do j=1,integration_degree
@@ -403,11 +420,11 @@ contains
     end do
     res(1) = res(1)*edge_length !res(1) = res(1)*factor2*edge_length 
     res(2) = res(2)*edge_length ! res(2) = res(2)*factor2*edge_length
-  end function normal_integral_eta1_plus
+  end function sll_f_normal_integral_eta1_plus
   
   ! integral of the normal vector over the 'west' edge of the cell.
   function normal_integral_eta1_minus( T,ic,jc,integration_degree ) result(res)
-    class(sll_coordinate_transformation_2d_base), pointer :: T
+    class(sll_c_coordinate_transformation_2d_base), pointer :: T
     sll_int32, intent(in)    :: ic
     sll_int32, intent(in)    :: jc
     sll_int32, intent(in)    :: integration_degree
@@ -430,7 +447,7 @@ contains
     sll_real64 :: eta1_x1  ! derivative of eta1(x1,x2) with respect to x1
     sll_real64 :: eta1_x2  ! derivative of eta1(x1,x2) with respect to x2
     sll_real64 :: edge_length
-    class(sll_cartesian_mesh_2d), pointer :: m
+    class(sll_t_cartesian_mesh_2d), pointer :: m
     
     ! Verify arguments
     SLL_ASSERT(associated(T))
@@ -447,14 +464,14 @@ contains
     ! The limits of integration are the limits of the cell in eta-space
     !    min1    = eta1_min + (ic-1)*delta1
     !    max1    = eta1_min + ic*delta1
-    eta1    = (ic-1)*delta1 ! <- line differs w/ normal_integral_eta1_plus()
+    eta1    = (ic-1)*delta1 ! <- line differs w/ sll_f_normal_integral_eta1_plus()
     min2    = eta2_min + (jc-1)*delta2
     max2    = eta2_min + jc*delta2
     !    factor1 = 0.5_f64*(max1-min1)
     !factor2 = 0.5_f64*(max2-min2) 
     !    pts_g1(:,:) = gauss_points(integration_degree, min1, max1)
     pts_g2(:,:) = &
-         gauss_legendre_points_and_weights(integration_degree, min2, max2)
+         sll_f_gauss_legendre_points_and_weights(integration_degree, min2, max2)
     !gauss_points(integration_degree, min2, max2)
     
     ! For efficiency, this code should be refactored. Consider:
@@ -463,7 +480,7 @@ contains
     ! - use macros to eliminate the massive code redundancy in this module's
     !   functions.
     ! - same macros can be used to improve a function call like the one next.
-    edge_length = edge_length_eta1_minus( T, ic, jc, integration_degree )
+    edge_length = sll_f_edge_length_eta1_minus( T, ic, jc, integration_degree )
     
     do j=1,integration_degree
        ! this can be made more efficient if we could access directly each
@@ -484,7 +501,7 @@ contains
   
   ! integral of the normal vector over the 'north' edge of the cell.
   function normal_integral_eta2_plus( T,ic,jc,integration_degree ) result(res)
-    class(sll_coordinate_transformation_2d_base), pointer :: T
+    class(sll_c_coordinate_transformation_2d_base), pointer :: T
     sll_int32, intent(in)    :: ic
     sll_int32, intent(in)    :: jc
     sll_int32, intent(in)    :: integration_degree
@@ -508,7 +525,7 @@ contains
     sll_real64 :: eta2_x1  ! derivative of eta2(x1,x2) with respect to x1
     sll_real64 :: eta2_x2  ! derivative of eta2(x1,x2) with respect to x2
     sll_real64 :: edge_length
-    class(sll_cartesian_mesh_2d), pointer :: m
+    class(sll_t_cartesian_mesh_2d), pointer :: m
 
     ! Verify arguments
     SLL_ASSERT(associated(T))
@@ -530,7 +547,7 @@ contains
     !    max2    = eta2_min + jc*delta2
    ! factor1 = 0.5_f64*(max1-min1)
     !    factor2 = 0.5_f64*(max2-min2) 
-    pts_g1(:,:) = gauss_legendre_points_and_weights(integration_degree, min1, max1)
+    pts_g1(:,:) = sll_f_gauss_legendre_points_and_weights(integration_degree, min1, max1)
     !gauss_points(integration_degree, min1, max1)
     !    pts_g2(:,:) = gauss_points(integration_degree, min2, max2)
     
@@ -540,7 +557,7 @@ contains
     ! - use macros to eliminate the massive code redundancy in this module's
     !   functions.
     ! - same macros can be used to improve a function call like the one next.
-    edge_length = edge_length_eta2_plus( T, ic, jc, integration_degree )
+    edge_length = sll_f_edge_length_eta2_plus( T, ic, jc, integration_degree )
     res(:) = 0.0_f64
     
     do i=1,integration_degree
@@ -561,7 +578,7 @@ contains
   
   ! integral of the normal vector over the 'southth' edge of the cell.
   function normal_integral_eta2_minus( T,ic,jc,integration_degree ) result(res)
-    class(sll_coordinate_transformation_2d_base), pointer :: T
+    class(sll_c_coordinate_transformation_2d_base), pointer :: T
     sll_int32, intent(in)    :: ic
     sll_int32, intent(in)    :: jc
     sll_int32, intent(in)    :: integration_degree
@@ -585,7 +602,7 @@ contains
     sll_real64 :: eta2_x1  ! derivative of eta2(x1,x2) with respect to x1
     sll_real64 :: eta2_x2  ! derivative of eta2(x1,x2) with respect to x2
     sll_real64 :: edge_length
-    class(sll_cartesian_mesh_2d), pointer :: m
+    class(sll_t_cartesian_mesh_2d), pointer :: m
 
     ! Verify arguments
     SLL_ASSERT(associated(T))
@@ -607,7 +624,7 @@ contains
     !    max2    = eta2_min + jc*delta2
     !factor1 = 0.5_f64*(max1-min1)
     !    factor2 = 0.5_f64*(max2-min2) 
-    pts_g1(:,:) = gauss_legendre_points_and_weights(integration_degree, min1, max1)
+    pts_g1(:,:) = sll_f_gauss_legendre_points_and_weights(integration_degree, min1, max1)
     !gauss_points(integration_degree, min1, max1)
     !    pts_g2(:,:) = gauss_points(integration_degree, min2, max2)
     
@@ -617,7 +634,7 @@ contains
     ! - use macros to eliminate the massive code redundancy in this module's
     !   functions.
     ! - same macros can be used to improve a function call like the one next.
-    edge_length = edge_length_eta2_minus( T, ic, jc, integration_degree )
+    edge_length = sll_f_edge_length_eta2_minus( T, ic, jc, integration_degree )
     res(:) = 0.0_f64
 
     do i=1,integration_degree

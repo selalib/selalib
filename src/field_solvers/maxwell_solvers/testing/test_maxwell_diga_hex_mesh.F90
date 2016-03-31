@@ -65,22 +65,22 @@ dt = cfl/sqrt(2./(mesh%delta/(degree+1))**2)
 !Low storage Runge Kutta order 4
 
 A(1) = 0
-A(2) = - 567301805773D0/1357537059087D0
-A(3) = - 2404267990393D0/2016746695238D0
-A(4) = - 3550918686646D0/2091501179385D0
-A(5) = - 1275806237668D0/842570457699D0
+A(2) = - 567301805773e0_f64/1357537059087e0_f64
+A(3) = - 2404267990393e0_f64/2016746695238e0_f64
+A(4) = - 3550918686646e0_f64/2091501179385e0_f64
+A(5) = - 1275806237668e0_f64/842570457699e0_f64
 
-B(1) = 1432997174477D0/9575080441755D0
-B(2) = 5161836677717D0/13612068292357D0
-B(3) = 1720146321549D0/2090206949498D0
-B(4) = 3134564353537D0/4481467310338D0
-B(5) = 2277821191437D0/14882151754819D0
+B(1) = 1432997174477e0_f64/9575080441755e0_f64
+B(2) = 5161836677717e0_f64/13612068292357e0_f64
+B(3) = 1720146321549e0_f64/2090206949498e0_f64
+B(4) = 3134564353537e0_f64/4481467310338e0_f64
+B(5) = 2277821191437e0_f64/14882151754819e0_f64
 
-C(1) = 0D0
-C(2) = 1432997174477D0/9575080441755D0
-C(3) = 2526269341429D0/6820363962896D0
-C(4) = 2006345519317D0/3224310063776D0
-C(5) = 2802321613138D0/2924317926251D0
+C(1) = 0e0_f64
+C(2) = 1432997174477e0_f64/9575080441755e0_f64
+C(3) = 2526269341429e0_f64/6820363962896e0_f64
+C(4) = 2006345519317e0_f64/3224310063776e0_f64
+C(5) = 2802321613138e0_f64/2924317926251e0_f64
 
 time = 0.0
 
@@ -89,19 +89,19 @@ SLL_CLEAR_ALLOCATE(tmp_Ey(maxwell%n_ddl,mesh%num_triangles), error)
 SLL_CLEAR_ALLOCATE(tmp_Bz(maxwell%n_ddl,mesh%num_triangles), error)
 SLL_CLEAR_ALLOCATE(tmp_Po(maxwell%n_ddl,mesh%num_triangles), error)
 
-maxwell%Ex = 0d0
-maxwell%Ey = 0d0
+maxwell%Ex = 0._f64
+maxwell%Ey = 0._f64
 maxwell%Bz = exp(-(maxwell%x_ddl**2+maxwell%y_ddl**2))
-maxwell%Jx = 0d0
-maxwell%Jy = 0d0
+maxwell%Jx = 0._f64
+maxwell%Jy = 0._f64
 
 do istep = 1, nstep
 
 
-   !maxwell%Ex = sin(time)*maxwell%x_ddl*sin(sll_pi*maxwell%y_ddl)
-   !maxwell%Ey = sin(time)*maxwell%y_ddl*sin(sll_pi*maxwell%x_ddl)
-   !maxwell%Bz = (cos(time)-1)*(sll_pi*maxwell%y*cos(sll_pi*maxwell%x_ddl) &
-   !            -sll_pi*maxwell%x_ddl*cos(sll_pi*maxwell%y_ddl))
+   !maxwell%Ex = sin(time)*maxwell%x_ddl*sin(sll_p_pi*maxwell%y_ddl)
+   !maxwell%Ey = sin(time)*maxwell%y_ddl*sin(sll_p_pi*maxwell%x_ddl)
+   !maxwell%Bz = (cos(time)-1)*(sll_p_pi*maxwell%y*cos(sll_p_pi*maxwell%x_ddl) &
+   !            -sll_p_pi*maxwell%x_ddl*cos(sll_p_pi*maxwell%y_ddl))
 
       
 !   call rksetup()
@@ -150,7 +150,7 @@ do istep = 1, nstep
    write(*,"(10x,' istep = ',I6)",advance="no") istep
    write(*,"(' time = ',g15.3,' s, ')",advance="no") time
    write(*,*)
-   !write(*,"(' Ex error = ',g25.15)") maxval(abs(maxwell%Ex-sin(time)*maxwell%x_ddl*sin(sll_pi*maxwell%y_ddl)))
+   !write(*,"(' Ex error = ',g25.15)") maxval(abs(maxwell%Ex-sin(time)*maxwell%x_ddl*sin(sll_p_pi*maxwell%y_ddl)))
 
 end do
 
@@ -160,13 +160,13 @@ subroutine set_charge_and_currents(t)
 
    sll_real64, intent(in) :: t
 
-   maxwell%Jx = ((cos(t)-1)*(sll_pi*cos(sll_pi*maxwell%x_ddl) &
-               +sll_pi*sll_pi*maxwell%x_ddl*sin(sll_pi*maxwell%y_ddl)) &
-               -cos(t)*maxwell%x_ddl*sin(sll_pi*maxwell%y_ddl))
-   maxwell%Jy = ((cos(t)-1)*(sll_pi*cos(sll_pi*maxwell%y_ddl) &
-               +sll_pi*sll_pi*maxwell%y_ddl*sin(sll_pi*maxwell%x_ddl)) &
-               -cos(t)*maxwell%y_ddl*sin(sll_pi*maxwell%x_ddl))
-   maxwell%Ro = sin(t)*(sin(sll_pi*maxwell%y_ddl)+sin(sll_pi*maxwell%x_ddl))
+   maxwell%Jx = ((cos(t)-1)*(sll_p_pi*cos(sll_p_pi*maxwell%x_ddl) &
+               +sll_p_pi*sll_p_pi*maxwell%x_ddl*sin(sll_p_pi*maxwell%y_ddl)) &
+               -cos(t)*maxwell%x_ddl*sin(sll_p_pi*maxwell%y_ddl))
+   maxwell%Jy = ((cos(t)-1)*(sll_p_pi*cos(sll_p_pi*maxwell%y_ddl) &
+               +sll_p_pi*sll_p_pi*maxwell%y_ddl*sin(sll_p_pi*maxwell%x_ddl)) &
+               -cos(t)*maxwell%y_ddl*sin(sll_p_pi*maxwell%x_ddl))
+   maxwell%Ro = sin(t)*(sin(sll_p_pi*maxwell%y_ddl)+sin(sll_p_pi*maxwell%x_ddl))
 
 end subroutine set_charge_and_currents
 
@@ -200,9 +200,9 @@ subroutine rkstep()
 
 end subroutine rkstep
 
-subroutine plot_simple( this, mesh )
+subroutine plot_simple( self, mesh )
 
-   type(maxwell_dg_hex_mesh), intent(in) :: this
+   type(maxwell_dg_hex_mesh), intent(in) :: self
    type(sll_hex_mesh_2d),     intent(in) :: mesh
    sll_int32, save                       :: iplot = 0
    sll_int32                             :: idl
@@ -240,20 +240,20 @@ subroutine plot_simple( this, mesh )
 
    do iel = 1, mesh%num_triangles
 
-      do idl = 1, this%n_ddl
-         write(94,*) sngl(this%x_ddl(idl,iel)), &
-                     sngl(this%y_ddl(idl,iel)), &
-                     sngl(this%Ex(idl,iel)),    &
-                     sngl(this%Ey(idl,iel)),    &
-                     sngl(this%Bz(idl,iel))
+      do idl = 1, self%n_ddl
+         write(94,*) sngl(self%x_ddl(idl,iel)), &
+                     sngl(self%y_ddl(idl,iel)), &
+                     sngl(self%Ex(idl,iel)),    &
+                     sngl(self%Ey(idl,iel)),    &
+                     sngl(self%Bz(idl,iel))
       end do
 
       idl = 1
-      write(94,*) sngl(this%x_ddl(idl,iel)), &
-                  sngl(this%y_ddl(idl,iel)), &
-                  sngl(this%Ex(idl,iel)),    &
-                  sngl(this%Ey(idl,iel)),    &
-                  sngl(this%Bz(idl,iel))
+      write(94,*) sngl(self%x_ddl(idl,iel)), &
+                  sngl(self%y_ddl(idl,iel)), &
+                  sngl(self%Ex(idl,iel)),    &
+                  sngl(self%Ey(idl,iel)),    &
+                  sngl(self%Bz(idl,iel))
       write(94,*)
       write(94,*)
    
@@ -263,9 +263,9 @@ subroutine plot_simple( this, mesh )
 
 end subroutine plot_simple
 
-subroutine plot_double( this, mesh )
+subroutine plot_double( self, mesh )
 
-   type(maxwell_dg_hex_mesh), intent(in) :: this
+   type(maxwell_dg_hex_mesh), intent(in) :: self
    type(sll_hex_mesh_2d),         intent(in) :: mesh
    sll_int32, save :: iplot = 0
    sll_int32       :: idl, iel
@@ -291,18 +291,18 @@ subroutine plot_double( this, mesh )
 
    do iel = 1, mesh%num_triangles
 
-      do idl = 1, this%n_ddl
-         write(94,*) sngl(this%x_ddl(idl,iel)), &
-                     sngl(this%y_ddl(idl,iel)), &
-                     sngl(this%Ex(idl,iel)),    &
-                     sngl(-sin(time)*this%x_ddl(idl,iel)*sin(sll_pi*this%y_ddl(idl,iel)))
+      do idl = 1, self%n_ddl
+         write(94,*) sngl(self%x_ddl(idl,iel)), &
+                     sngl(self%y_ddl(idl,iel)), &
+                     sngl(self%Ex(idl,iel)),    &
+                     sngl(-sin(time)*self%x_ddl(idl,iel)*sin(sll_p_pi*self%y_ddl(idl,iel)))
       end do
 
       idl = 1
-      write(94,*) sngl(this%x_ddl(idl,iel)), &
-                  sngl(this%y_ddl(idl,iel)), &
-                  sngl(this%Ex(idl,iel)),    &
-                  sngl(-sin(time)*this%x_ddl(idl,iel)*sin(sll_pi*this%y_ddl(idl,iel)))
+      write(94,*) sngl(self%x_ddl(idl,iel)), &
+                  sngl(self%y_ddl(idl,iel)), &
+                  sngl(self%Ex(idl,iel)),    &
+                  sngl(-sin(time)*self%x_ddl(idl,iel)*sin(sll_p_pi*self%y_ddl(idl,iel)))
       write(94,*)
       write(94,*)
    

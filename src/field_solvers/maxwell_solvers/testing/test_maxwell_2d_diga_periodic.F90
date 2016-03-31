@@ -25,20 +25,54 @@ program test_maxwell_2d_diga_periodic
 !--------------------------------------------------------------------------
 !  test 2D Maxwell solver based on discontinuous galerkine on a mapped mesh
 !--------------------------------------------------------------------------
-#include "sll_working_precision.h"
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_memory.h"
-#include "sll_assert.h"
+#include "sll_working_precision.h"
 #include "sll_maxwell_solvers_macros.h"
 
-use sll_m_common_coordinate_transformations
-use sll_m_coordinate_transformation_2d_base
-use sll_m_coordinate_transformations_2d
-use sll_m_dg_fields
-use sll_m_maxwell_2d_diga
-use sll_m_maxwell_solvers_base
-use sll_m_cartesian_meshes
+  use m_maxwell_helper_functions, only: &
+    sol_bz, &
+    sol_ex, &
+    sol_ey
 
-implicit none
+  use sll_m_boundary_condition_descriptors, only: &
+    sll_p_periodic
+
+  use sll_m_cartesian_meshes, only: &
+    sll_f_new_cartesian_mesh_2d, &
+    sll_t_cartesian_mesh_2d, &
+    sll_o_new
+
+  use sll_m_common_coordinate_transformations, only: &
+    sll_f_identity_jac11, &
+    sll_f_identity_jac12, &
+    sll_f_identity_jac21, &
+    sll_f_identity_jac22, &
+    sll_f_identity_x1, &
+    sll_f_identity_x2
+
+  use sll_m_coordinate_transformation_2d_base, only: &
+    sll_c_coordinate_transformation_2d_base, &
+    sll_p_io_mtv
+
+  use sll_m_coordinate_transformations_2d, only: &
+    sll_f_new_coordinate_transformation_2d_analytic
+
+  use sll_m_dg_fields, only: &
+    sll_t_dg_field_2d, &
+    sll_o_new
+
+  use sll_m_maxwell_2d_diga, only: &
+    sll_o_create, &
+    sll_t_maxwell_2d_diga, &
+    sll_o_solve, &
+    sll_p_uncentered
+
+  use sll_m_maxwell_solvers_base, only: &
+    sll_s_plot_two_fields
+
+  implicit none
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 !=====================================!
 ! Simulation parameters               !
@@ -53,23 +87,21 @@ sll_real64 :: eta1_max, eta1_min
 sll_real64 :: eta2_max, eta2_min
 sll_real64 :: delta_eta1, delta_eta2
 
-type(sll_cartesian_mesh_2d), pointer :: mesh
-class(sll_coordinate_transformation_2d_base), pointer :: tau
+type(sll_t_cartesian_mesh_2d), pointer :: mesh
+class(sll_c_coordinate_transformation_2d_base), pointer :: tau
 
-type(sll_maxwell_2d_diga)   :: maxwell_TE
+type(sll_t_maxwell_2d_diga)   :: maxwell_TE
 
-type(sll_dg_field_2d), pointer :: ex, ex0, dx, sx
-type(sll_dg_field_2d), pointer :: ey, ey0, dy, sy
-type(sll_dg_field_2d), pointer :: bz, bz0, dz, sz
-type(sll_dg_field_2d), pointer :: exact
+type(sll_t_dg_field_2d), pointer :: ex, ex0, dx, sx
+type(sll_t_dg_field_2d), pointer :: ey, ey0, dy, sy
+type(sll_t_dg_field_2d), pointer :: bz, bz0, dz, sz
+type(sll_t_dg_field_2d), pointer :: exact
 
 sll_real64  :: time
 sll_int32   :: istep
 sll_real64  :: dt
 sll_real64  :: cfl = 0.1_f64
 sll_real64  :: error
-!init functions
-sll_real64, external :: sol_bz, sol_ex, sol_ey, linear_x, linear_y
 
 #ifdef DEBUG
 sll_int32 :: i, j
@@ -77,7 +109,7 @@ sll_real64, dimension(nc_eta1,nc_eta2) :: f1
 sll_real64, dimension(nc_eta1,nc_eta2) :: f2
 #endif
 
-mesh => new_cartesian_mesh_2d(nc_eta1, nc_eta2, &
+mesh => sll_f_new_cartesian_mesh_2d(nc_eta1, nc_eta2, &
                             eta1_min=0._f64, eta1_max=1._f64, &
                             eta2_min=0._f64, eta2_max=1._f64)
 
@@ -93,45 +125,45 @@ delta_eta1 = mesh%delta_eta1
 delta_eta2 = mesh%delta_eta2
 
 ! "Identity transformation";
-tau => new_coordinate_transformation_2d_analytic( &
+tau => sll_f_new_coordinate_transformation_2d_analytic( &
        "identity_transformation",                 &
        mesh,                                      &
-       identity_x1,                               &
-       identity_x2,                               &
-       identity_jac11,                            &
-       identity_jac12,                            &
-       identity_jac21,                            &
-       identity_jac22,                            &
+       sll_f_identity_x1,                               &
+       sll_f_identity_x2,                               &
+       sll_f_identity_jac11,                            &
+       sll_f_identity_jac12,                            &
+       sll_f_identity_jac21,                            &
+       sll_f_identity_jac22,                            &
        SLL_NULL_REAL64 )
 
-call tau%write_to_file(SLL_IO_MTV)
+call tau%write_to_file(sll_p_io_mtv)
 
 time = 0.0_f64
 
-ex  => sll_new(degree,tau,sol_ex) 
-ey  => sll_new(degree,tau,sol_ey) 
-bz  => sll_new(degree,tau,sol_bz) 
+ex  => sll_o_new(degree,tau,sol_ex) 
+ey  => sll_o_new(degree,tau,sol_ey) 
+bz  => sll_o_new(degree,tau,sol_bz) 
 
-ex0 => sll_new(degree,tau) 
-ey0 => sll_new(degree,tau) 
-bz0 => sll_new(degree,tau) 
+ex0 => sll_o_new(degree,tau) 
+ey0 => sll_o_new(degree,tau) 
+bz0 => sll_o_new(degree,tau) 
 
-dx  => sll_new(degree,tau) 
-dy  => sll_new(degree,tau) 
-dz  => sll_new(degree,tau) 
+dx  => sll_o_new(degree,tau) 
+dy  => sll_o_new(degree,tau) 
+dz  => sll_o_new(degree,tau) 
 
-sx  => sll_new(degree,tau) 
-sy  => sll_new(degree,tau) 
-sz  => sll_new(degree,tau) 
+sx  => sll_o_new(degree,tau) 
+sy  => sll_o_new(degree,tau) 
+sz  => sll_o_new(degree,tau) 
 
-exact => sll_new( degree, tau)
+exact => sll_o_new( degree, tau)
 
 dt = cfl/sqrt(1./(delta_eta1/(degree+1))**2+1./(delta_eta2/(degree+1))**2)
 nstep = 100
 
-call sll_create(maxwell_TE, tau, degree, TE_POLARIZATION, &
-                SLL_PERIODIC, SLL_PERIODIC, SLL_PERIODIC, SLL_PERIODIC, &
-                SLL_UNCENTERED )
+call sll_o_create(maxwell_TE, tau, degree, TE_POLARIZATION, &
+                sll_p_periodic, sll_p_periodic, sll_p_periodic, sll_p_periodic, &
+                sll_p_uncentered )
 
 
 do istep = 1, nstep !*** Loop over time
@@ -140,20 +172,20 @@ do istep = 1, nstep !*** Loop over time
 
    call rksetup()
 
-   call sll_solve(maxwell_TE, ex, ey, bz, dx, dy, dz)
+   call sll_o_solve(maxwell_TE, ex, ey, bz, dx, dy, dz)
 
    call accumulate(1._f64/6._f64)
    call rkstage(0.5_f64)
 
-   call sll_solve(maxwell_TE, ex, ey, bz, dx, dy, dz)
+   call sll_o_solve(maxwell_TE, ex, ey, bz, dx, dy, dz)
    call accumulate(1._f64/3._f64)
    call rkstage(0.5_f64)
 
-   call sll_solve(maxwell_TE, ex, ey, bz, dx, dy, dz)
+   call sll_o_solve(maxwell_TE, ex, ey, bz, dx, dy, dz)
    call accumulate(1._f64/3._f64)
    call rkstage(1.0_f64)
 
-   call sll_solve(maxwell_TE, ex, ey, bz, dx, dy, dz)
+   call sll_o_solve(maxwell_TE, ex, ey, bz, dx, dy, dz)
    call accumulate(1._f64/6._f64)
 
    call rkstep()
@@ -170,7 +202,7 @@ do istep = 1, nstep !*** Loop over time
    end do
    end do
 
-   call sll_plot_two_fields('bz', nc_eta1, nc_eta2, f1, f2, istep, time)
+   call sll_s_plot_two_fields('bz', nc_eta1, nc_eta2, f1, f2, istep, time)
 
 #endif
 

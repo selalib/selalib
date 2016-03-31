@@ -1,104 +1,116 @@
-!> @ingroup kernel_smoothers
+!> @ingroup pic_interface
 !> @author Katharina Kormann, IPP
 !> @brief Base class for kernel smoothers for accumulation and field evaluation in PIC.
 !> @details This base class gives an abstract interface to the basic functions for accumulation of charge and current densities as well as the evaluation of a function at particle positions.
 module sll_m_kernel_smoother_base
 
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_working_precision.h"
 
-  use sll_m_particle_group_base
-
   implicit none
-  private
 
-  public :: SLL_GALERKIN, SLL_COLLOCATION
+  public :: &
+    sll_p_collocation, &
+    sll_p_galerkin, &
+    sll_c_kernel_smoother
+
+  private
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
   
   ! Define parameters to set if Galerkin or collocation scaling should be used in accumulation routines
-  sll_int32, parameter :: SLL_GALERKIN = 0
-  sll_int32, parameter :: SLL_COLLOCATION = 1
+  sll_int32, parameter :: sll_p_galerkin = 0
+  sll_int32, parameter :: sll_p_collocation = 1
 
   !> Basic type of a kernel smoother used for PIC simulations
-  type, public, abstract :: sll_kernel_smoother_base
+  type, abstract :: sll_c_kernel_smoother
+     sll_int32              :: dim
      sll_int32              :: n_dofs  !< Number of degrees of freedom of the smoothing kernels.
      sll_int32, allocatable :: n_grid(:) !< Number of grid points per dimension for use on tensor product grid based smoothing kernels.
      
    contains
-     procedure(update_this), deferred           :: compute_shape_factors !< Prepare for the accumulation by computing the shape factors
-     procedure(update_dofs), deferred           :: accumulate_rho_from_klimontovich !< Accumulate the charge density
-     procedure(update_dofs_component), deferred :: accumulate_j_from_klimontovich !< Accumulate the current density
-     procedure(evaluate_particle), deferred     :: evaluate_kernel_function_particle !< Evaluate function for a certain particle based on the precomputed shape factors
-     procedure    :: evaluate_kernel_function_particles !< Evaluate function for all particle based on the precomputed shape factors
-  end type sll_kernel_smoother_base
 
-!---------------------------------------------------------------------------!
-  abstract interface
-     subroutine update_this(this, particle_group)
-       use sll_m_working_precision
-       import sll_particle_group_base
-       import sll_kernel_smoother_base
-       class( sll_kernel_smoother_base), intent(inout) :: this !< Kernel smoother object.
-       class( sll_particle_group_base), intent(in)     :: particle_group !< Particle group object.
-     end subroutine update_this
-  end interface
-  
-!---------------------------------------------------------------------------!
-  abstract interface
-     subroutine update_dofs(this, particle_group, rho_dofs)       
-       use sll_m_working_precision
-       import sll_particle_group_base
-       import sll_kernel_smoother_base
-       class( sll_kernel_smoother_base), intent(in)    :: this !< Kernel smoother object.
-       class( sll_particle_group_base), intent(in)     :: particle_group !< Particle group object.
-       sll_real64, intent(inout)                       :: rho_dofs(:) !< Degrees of freedom in kernel representation (can be point values or weights in a basis function representation).
-     end subroutine update_dofs
-  end interface
+     procedure(add_single), deferred        :: add_charge !> Add the contribution of one particle to the charge density
+     procedure(add_update) , deferred       :: add_current_update_v !> Add contribution of pne particle to the current density and update velocity 
+!     procedure(add_single), deferred        :: add_current_single !> Add the contribution of one particle to the charge density
+     procedure(eval_single), deferred       :: evaluate
+     procedure(eval_multiple), deferred     :: evaluate_multiple
+     procedure(empty), deferred             :: free !< Destructor
 
-!---------------------------------------------------------------------------!
-  abstract interface
-     subroutine update_dofs_component(this, &
-          particle_group, &
-          j_dofs, &
-          component)       
-       use sll_m_working_precision
-       import sll_particle_group_base
-       import sll_kernel_smoother_base
-       class( sll_kernel_smoother_base), intent(in)    :: this !< Kernel smoother object.
-       class( sll_particle_group_base), intent(in)     :: particle_group !< Particle group object.
-       sll_real64, intent(inout)                       :: j_dofs(:)!< Degrees of freedom in kernel representation (can be point values or weights in a basis function representation).
-       sll_int32, intent (in)                          :: component !< Component of the current density that should be evaluated.
-     end subroutine update_dofs_component
-  end interface
 
-!---------------------------------------------------------------------------!
-  abstract interface
-     subroutine evaluate_particle(this, rho_dofs, i_part, particle_value)       
-       use sll_m_working_precision
-       import sll_kernel_smoother_base
-       class( sll_kernel_smoother_base), intent(in) :: this !< Kernel smoother object.
-       sll_real64, intent(in)                       :: rho_dofs(:) !< Degrees of freedom in kernel representation.
-       sll_int32, intent(in)                        :: i_part !< particle number
-       sll_real64, intent(out)                      :: particle_value !< Value of the function at the position of particle \a i_part
-     end subroutine evaluate_particle
-  end interface
+  end type sll_c_kernel_smoother
 
-contains
+
+  !---------------------------------------------------------------------------!
+  abstract interface
+     subroutine add_single(self, position, marker_charge, rho_dofs) 
+       use sll_m_working_precision
+       import sll_c_kernel_smoother
+       class (sll_c_kernel_smoother), intent( inout ) :: self !< Kernel smoother object
+       sll_real64,                    intent( in )    :: position(self%dim) !< Position of the particle
+       sll_real64,                    intent( in )    :: marker_charge !< Particle weight times charge
+       sll_real64,                    intent( inout ) :: rho_dofs(self%n_dofs) !< Coefficient vector of the charge distribution
+
+     end subroutine add_single
+  end interface
   
   !---------------------------------------------------------------------------!
-  subroutine evaluate_kernel_function_particles(this, particle_group, rho_dofs, particle_values)       
-    class( sll_kernel_smoother_base), intent(in)    :: this !< Kernel smoother object.
-    class( sll_particle_group_base), intent(in)     :: particle_group !< Particle group object.
-    sll_real64, intent(in)                       :: rho_dofs(:) !< Degrees of freedom in kernel representation.
-    sll_real64, intent(out)                      :: particle_values(:) !< Values of the function represented by \a rho_dofs at particle positions.
-    
-    !local variables
-    sll_int32 :: i_part
-    
-    do i_part = 1, particle_group%n_particles
-       call this%evaluate_kernel_function_particle(rho_dofs, i_part, particle_values(i_part))
-    end do
-    
-  end subroutine evaluate_kernel_function_particles
+  abstract interface
+     subroutine add_update (self, &
+          position_old, &
+          position_new, &
+          marker_charge, &
+          qoverm, &
+          bfield_dofs, &
+          vi, &
+          j_dofs)
+       use sll_m_working_precision
+       import sll_c_kernel_smoother
+       class(sll_c_kernel_smoother), intent(inout) :: self !< kernel smoother object
+       sll_real64, intent(in)    :: position_old(self%dim) !< Position at time t
+       sll_real64, intent(in)    :: position_new(self%dim) !< Position at time t+\Delta t
+       sll_real64, intent(in)    :: marker_charge          !< Particle weight times charge
+       sll_real64, intent(in)    :: qoverm   !< charge to mass ratio
+       sll_real64, intent(in)    :: bfield_dofs(self%n_dofs) !< values of the B-field at the dofs
+       sll_real64, intent(inout) :: vi(:) !< Velocity of the particle
+       sll_real64, intent(inout) :: j_dofs(self%n_dofs) !< Current at the DoFs
+
+     end subroutine add_update
+  end interface
 
 
+
+  !---------------------------------------------------------------------------!
+  abstract interface
+     subroutine eval_single(self, position, field_dofs, field_value)
+       use sll_m_working_precision
+       import sll_c_kernel_smoother
+       class (sll_c_kernel_smoother), intent( inout ) :: self !< Kernel smoother object 
+       sll_real64,                    intent( in )    :: position(self%dim) !< Position of the particle
+       sll_real64,                    intent( in )    :: field_dofs(self%n_dofs) !< Coefficient vector for the field DoFs
+       sll_real64, intent(out) :: field_value !< Value(s) of the electric fields at given position
+     end subroutine eval_single
+  end interface
+
+  !---------------------------------------------------------------------------!
+  abstract interface
+     subroutine eval_multiple(self, position, components, field_dofs, field_value)
+       use sll_m_working_precision
+       import sll_c_kernel_smoother
+       class (sll_c_kernel_smoother), intent( inout ) :: self !< Kernel smoother object 
+       sll_real64,                    intent( in )    :: position(self%dim) !< Position of the particle
+       sll_int32,                     intent(in)      :: components(:)
+       sll_real64,                    intent( in )    :: field_dofs(:,:) !< Coefficient vector for the field DoFs
+       sll_real64,                    intent(out)     :: field_value(:) !< Value(s) of the electric fields at given position
+     end subroutine eval_multiple
+  end interface
+
+ !---------------------------------------------------------------------------!  
+  abstract interface
+     subroutine empty(self)
+       import sll_c_kernel_smoother
+       class (sll_c_kernel_smoother), intent( inout ) :: self !< Kernel smoother object 
+
+     end subroutine empty
+  end interface
 
 end module sll_m_kernel_smoother_base

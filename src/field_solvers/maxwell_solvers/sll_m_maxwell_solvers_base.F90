@@ -21,17 +21,24 @@
 !> This module contains common subroutines for  Maxwell solvers
 module sll_m_maxwell_solvers_base
 
-#include "sll_working_precision.h"
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_memory.h"
-#include "sll_assert.h"
+#include "sll_working_precision.h"
 #include "sll_maxwell_solvers_macros.h"
-  use sll_m_utilities, only : int2string
-use sll_m_boundary_condition_descriptors
 
-implicit none
+  use sll_m_utilities, only: &
+    sll_s_int2string
+
+  implicit none
+
+  public :: &
+    sll_s_plot_two_fields
+
+  private
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
   !> Parent object of all Maxwell solvers
-  type, public :: sll_maxwell_solver
+  type :: sll_maxwell_solver
 
    sll_int32  :: nc_eta1      !< x cells number
    sll_int32  :: nc_eta2      !< y cells number
@@ -51,7 +58,7 @@ implicit none
 contains
 
 !> write files to visualize 2d fields with gnuplot
-subroutine sll_plot_two_fields(fname, n1, n2, f1, f2, iplot, time )
+subroutine sll_s_plot_two_fields(fname, n1, n2, f1, f2, iplot, time )
 character(len=*),             intent(in) :: fname !< output file name
 sll_int32,                    intent(in) :: n1    !< size of f1 and f2 first index
 sll_int32,                    intent(in) :: n2    !< size of f1 and f2 second index
@@ -63,7 +70,7 @@ sll_real64,                   intent(in) :: time  !< step time
 integer          :: i, j
 character(len=4) :: cplot
 
-call int2string(iplot, cplot)
+call sll_s_int2string(iplot, cplot)
 
 !write domains
 open( 80, file = fname//cplot//".dat" )
@@ -91,6 +98,6 @@ write(90,"(a)",advance='no')"splot '"//fname//cplot//".dat' w lines"
 write(90,"(a)",advance='no')",'"//fname//cplot//".dat' u 1:2:4 w lines"
 close(90)
 
-end subroutine sll_plot_two_fields
+end subroutine sll_s_plot_two_fields
 
 end module sll_m_maxwell_solvers_base

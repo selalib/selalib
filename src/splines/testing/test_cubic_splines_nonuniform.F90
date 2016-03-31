@@ -1,14 +1,23 @@
 program test_cubic_splines_nonuniform
-#include "sll_working_precision.h"
-#include "sll_assert.h"
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_memory.h"
+#include "sll_working_precision.h"
 
-  use sll_m_cubic_non_uniform_splines
-  use sll_m_constants
-  use sll_m_boundary_condition_descriptors
-  use sll_m_tridiagonal
-  !use sort_module
+  use sll_m_boundary_condition_descriptors, only: &
+    sll_p_hermite, &
+    sll_p_periodic
+
+  use sll_m_constants, only: &
+    sll_p_pi
+
+  use sll_m_cubic_non_uniform_splines, only: &
+    sll_s_compute_spline_nonunif, &
+    sll_t_cubic_nonunif_spline_1d, &
+    sll_s_interpolate_array_value_nonunif, &
+    sll_f_new_cubic_nonunif_spline_1d
+
   implicit none
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
   
   
   logical                                :: test_passed
@@ -18,7 +27,7 @@ program test_cubic_splines_nonuniform
   sll_real64,dimension(:), pointer :: new_node_positions,f_new
   sll_real64,dimension(:), pointer :: fine_node_positions,f_fine
   sll_real64,dimension(:,:,:), pointer :: f_deriv
-  type(cubic_nonunif_spline_1D), pointer :: spl_per, spl_hrmt, spl 
+  type(sll_t_cubic_nonunif_spline_1d), pointer :: spl_per, spl_hrmt, spl 
 
   sll_real64 :: x,xmin,xmax,tmp,linf_err(4),linf(4)
   sll_real64 :: xmin_val,xmax_val,slope_left,slope_right,fmin_val,fmax_val,local_xval(4)
@@ -73,9 +82,9 @@ program test_cubic_splines_nonuniform
   SLL_ALLOCATE(new_node_positions(N_new), err)
   SLL_ALLOCATE(f_new(N_new), err)
   
-  spl_per =>  new_cubic_nonunif_spline_1D( N, SLL_PERIODIC)
+  spl_per =>  sll_f_new_cubic_nonunif_spline_1d( N, sll_p_periodic)
 
-  spl_hrmt =>  new_cubic_nonunif_spline_1D( N, SLL_HERMITE)
+  spl_hrmt =>  sll_f_new_cubic_nonunif_spline_1d( N, sll_p_hermite)
   
   
   do bdr_case=1,2
@@ -172,7 +181,7 @@ program test_cubic_splines_nonuniform
     endif
     if(test==N_test1+2)then
       do i=1,N+1
-        f(i)=sin(2._f64*sll_pi/(xmax-xmin)*node_positions(i))
+        f(i)=sin(2._f64*sll_p_pi/(xmax-xmin)*node_positions(i))
       enddo
     endif
     
@@ -184,13 +193,13 @@ program test_cubic_splines_nonuniform
     call random_number(slope_left) 
     call random_number(slope_right) 
 
-    !call compute_spline_nonunif( f, spl, node_positions)
+    !call sll_s_compute_spline_nonunif( f, spl, node_positions)
     if (bdr_case==1)then
-      call compute_spline_nonunif( f_per, spl_per, node_positions)
+      call sll_s_compute_spline_nonunif( f_per, spl_per, node_positions)
     endif 
     if(bdr_case==2)then
-      call compute_spline_nonunif( f_hrmt, spl_hrmt, node_positions,slope_left,slope_right)
-      !call compute_spline_nonunif( f_hrmt, spl_hrmt, sl=slope_left,sr=slope_right)
+      call sll_s_compute_spline_nonunif( f_hrmt, spl_hrmt, node_positions,slope_left,slope_right)
+      !call sll_s_compute_spline_nonunif( f_hrmt, spl_hrmt, sl=slope_left,sr=slope_right)
     endif 
     
     
@@ -217,7 +226,7 @@ program test_cubic_splines_nonuniform
     enddo
     
     
-    call interpolate_array_value_nonunif( fine_node_positions, f_fine,4*N, spl)
+    call sll_s_interpolate_array_value_nonunif( fine_node_positions, f_fine,4*N, spl)
     
     
     !print *,'ival=',ival
@@ -302,8 +311,8 @@ program test_cubic_splines_nonuniform
       
     enddo
     
-    !call compute_spline_nonunif( f_hrmt, spl_hrmt, sl=f_deriv(2,1,1), sr=f_deriv(2,2,N))
-    !call compute_spline_nonunif( f_per, spl_per)
+    !call sll_s_compute_spline_nonunif( f_hrmt, spl_hrmt, sl=f_deriv(2,1,1), sr=f_deriv(2,2,N))
+    !call sll_s_compute_spline_nonunif( f_per, spl_per)
     
     !print *,f_deriv(2,1,1),f_deriv(2,2,N)
     
@@ -442,7 +451,7 @@ program test_cubic_splines_nonuniform
         index_max_err(6)=test
       endif
     
-    call interpolate_array_value_nonunif( new_node_positions, f_new,N_new, spl)
+    call sll_s_interpolate_array_value_nonunif( new_node_positions, f_new,N_new, spl)
     
   enddo
   

@@ -12,6 +12,7 @@
 !------------------------------------------------------------------------------
 module sll_m_xml
 
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
   implicit none
 
   public :: &
@@ -19,6 +20,7 @@ module sll_m_xml
     sll_t_xml_element
 
   private
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
  
 !==============================================================================
 
@@ -339,11 +341,16 @@ contains
     end if
 
     ! Write first line (only line if element is empty)
-    write(fid,'(*(a))') &
-      repeat( ' ', indent )//'<'//trim( self%name ), & ! element name
-      (' '//self%attributes(i)%to_string(), i=1,na), & ! attributes
-      trim( closing )                                  ! closing tag
-
+    if(na>0)then
+      write(fid,'(*(a))') &
+        repeat( ' ', indent )//'<'//trim( self%name ), & ! element name
+        (' '//self%attributes(i)%to_string(), i=1,na), & ! attributes
+        trim( closing )                                  ! closing tag
+    else
+      write(fid,'(*(a))') &
+        repeat( ' ', indent )//'<'//trim( self%name ), & ! element name
+        trim( closing )                                  ! closing tag
+    endif
     ! Write contents and last line (do nothing if element is empty)
     if (.not. empty_element) then
       call self%content%write( indent+2, fid )

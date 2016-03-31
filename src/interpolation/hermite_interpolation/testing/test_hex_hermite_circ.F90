@@ -1,24 +1,31 @@
-program test_hex_hermite
+program test_hex_hermite_circ
 
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_memory.h"
 #include "sll_working_precision.h"
-#include "sll_assert.h"
 
-  use sll_m_constants
-  use sll_m_interpolation_hex_hermite
-  !use sll_m_euler_2d_hex
+  use sll_m_hexagonal_meshes, only: &
+    sll_s_delete_hex_mesh_2d, &
+    sll_f_new_hex_mesh_2d, &
+    sll_t_hex_mesh_2d
+
+  use sll_m_interpolation_hex_hermite, only: &
+    sll_s_der_finite_difference, &
+    sll_s_hermite_interpolation, &
+    sll_s_print_method
 
   implicit none
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
   sll_real64, dimension(:,:), allocatable :: deriv
 
   sll_int32    :: num_cells, n_points, n_triangle, n_edge
   sll_int32    :: i
   sll_int32    :: num_method = 15
-  character(len = 5) ::name_test = "gauss"
+  !character(len = 5) ::name_test = "gauss"
   sll_int32    :: nloops,ierr, EXTRA_TABLES = 1 ! put 1 for num_method = 15
   ! initial distribution
-  sll_real64   :: r_min
+  !sll_real64   :: r_min
   sll_real64   :: gauss_x2
   sll_real64   :: gauss_x1
   sll_real64   :: gauss_sig
@@ -53,10 +60,10 @@ program test_hex_hermite
   sll_real64   :: cfl
   ! character(len = 4) :: number
   logical      :: inside
-  type(sll_hex_mesh_2d), pointer :: mesh
-  character(len = 50) :: filename
-  character(len = 50) :: filename2
-  character(len = 4)  :: filenum
+  type(sll_t_hex_mesh_2d), pointer :: mesh
+  !character(len = 50) :: filename
+  !character(len = 50) :: filename2
+  !character(len = 4)  :: filenum
 
   center_mesh_x1 = 0._f64
   center_mesh_x2 = 0._f64
@@ -65,7 +72,7 @@ program test_hex_hermite
   !r_min  = 0._f64   ! beware there are some restrictions to respect 
 
 
-  call print_method(num_method)
+  call sll_s_print_method(num_method)
 
   open(unit = 33, file="hex_errors.txt", action="write", status="replace")
 
@@ -118,7 +125,7 @@ program test_hex_hermite
      !                  Mesh initialization   
      !*********************************************************
      
-     mesh => new_hex_mesh_2d( num_cells, center_mesh_x1, center_mesh_x2, radius=radius, EXTRA_TABLES = EXTRA_TABLES ) 
+     mesh => sll_f_new_hex_mesh_2d( num_cells, center_mesh_x1, center_mesh_x2, radius=radius, EXTRA_TABLES = EXTRA_TABLES ) 
      gauss_x1  = 2._f64
      gauss_x2  = 2._f64
      gauss_sig = 1._f64/( 2._f64 * sqrt(2._f64)) 
@@ -197,7 +204,7 @@ program test_hex_hermite
 
         nloops = nloops + 1
 
-        call  der_finite_difference( f_tn, p, step, mesh, deriv)
+        call  sll_s_der_finite_difference( f_tn, p, step, mesh, deriv)
 
         t = t + dt
         !*********************************************************
@@ -231,7 +238,7 @@ program test_hex_hermite
               if ( abs(xx) > (radius-1e-15)*sqrt(3._f64)*0.5_f64  ) inside = .false.
 
               if ( inside ) then
-                 call hermite_interpolation(i, xx, yy, f_tn, center_values_tn,&
+                 call sll_s_hermite_interpolation(i, xx, yy, f_tn, center_values_tn,&
                       edge_values_tn, center_values_tn1, mesh, deriv, aire,& 
                  num_method)
               else 
@@ -291,7 +298,7 @@ program test_hex_hermite
 
 
               if ( inside ) then
-                 call hermite_interpolation(i, xx, yy, f_tn, center_values_tn,&
+                 call sll_s_hermite_interpolation(i, xx, yy, f_tn, center_values_tn,&
                       edge_values_tn, edge_values_tn1, mesh, deriv, aire,& 
                  num_method)
               else 
@@ -353,7 +360,7 @@ program test_hex_hermite
 
            if ( inside ) then
 
-              call hermite_interpolation(i, xx, yy, f_tn, center_values_tn,&
+              call sll_s_hermite_interpolation(i, xx, yy, f_tn, center_values_tn,&
                    edge_values_tn, f_tn1, mesh, deriv, aire,& 
                    num_method)
            else 
@@ -453,7 +460,7 @@ program test_hex_hermite
 
      deallocate(deriv)
  
-     call delete_hex_mesh_2d( mesh )
+     call sll_s_delete_hex_mesh_2d( mesh )
 
      call cpu_time(t_end)
 
@@ -489,12 +496,12 @@ contains
 
 
   subroutine compute_hex_fields(mesh,uxn,uyn,dxux,dyux,dxuy,dyuy,phi,type)
-    type(sll_hex_mesh_2d), pointer :: mesh
+    type(sll_t_hex_mesh_2d), pointer :: mesh
     sll_real64,dimension(:)        :: uxn, uyn, phi,dxux,dyux,dxuy,dyuy
     sll_int32,          intent(in) :: type
-    sll_int32  :: i,h1,h2
-    sll_real64 :: phii_2, phii_1, phii1, phii2, phij_2, phij_1, phij1, phij2
-    sll_real64 :: uh1, uh2
+    sll_int32  :: i!,h1,h2
+    !sll_real64 :: phii_2, phii_1, phii1, phii2, phij_2, phij_1, phij1, phij2
+    !sll_real64 ::  uh2
 
     
     if (type==1) then
@@ -514,7 +521,7 @@ contains
   end subroutine compute_hex_fields
 
 
-end program test_hex_hermite
+end program test_hex_hermite_circ
 
 
 

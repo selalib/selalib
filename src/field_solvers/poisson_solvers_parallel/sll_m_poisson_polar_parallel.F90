@@ -16,57 +16,91 @@
 !**************************************************************
 
 !> @ingroup poisson_solvers
-!> Module to solve Poisson equation on polar mesh using FFT transform
+!> Module to sll_o_solve Poisson equation on polar mesh using FFT transform
 module sll_m_poisson_polar_parallel
-#include "sll_working_precision.h"
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_memory.h"
-#include "sll_assert.h"
+#include "sll_working_precision.h"
 
-  use sll_m_fft
-  use sll_m_tridiagonal
-  use sll_m_collective
-  use sll_m_remapper
-  use sll_m_boundary_condition_descriptors
+  use sll_m_boundary_condition_descriptors, only: &
+    sll_p_dirichlet, &
+    sll_p_neumann, &
+    sll_p_neumann_mode_0
+
+  use sll_m_collective, only: &
+    sll_f_get_collective_size, &
+    sll_s_halt_collective, &
+    sll_v_world_collective
+
+  use sll_m_fft, only: &
+    sll_s_fft_exec_c2c_1d, &
+    sll_p_fft_backward, &
+    sll_s_fft_free, &
+    sll_p_fft_forward, &
+    sll_s_fft_init_c2c_1d, &
+    sll_t_fft
+
+  use sll_m_remapper, only: &
+    sll_o_apply_remap_2d, &
+    sll_o_compute_local_sizes, &
+    sll_t_layout_2d, &
+    sll_o_local_to_global, &
+    sll_o_new_remap_plan, &
+    sll_t_remap_plan_2d_comp64
+
+  use sll_m_tridiagonal, only: &
+    sll_s_setup_cyclic_tridiag, &
+    sll_o_solve_cyclic_tridiag
 
   implicit none
+
+  public :: &
+    sll_o_initialize, &
+    sll_f_new_poisson_polar, &
+    sll_t_poisson_polar, &
+    sll_o_solve, &
+    sll_s_solve_poisson_polar
+
+  private
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
   !>Class for the Poisson solver in polar coordinate
-  type sll_poisson_polar
+  type sll_t_poisson_polar
    sll_real64                          :: rmin     !< left corner of r dimension
    sll_real64                          :: rmax     !< right corner of r dimension
    sll_real64                          :: dr       !< step size along r
    sll_int32                           :: nr       !< number of nodes along r
    sll_int32                           :: nt       !< number of nodes along theta
    sll_int32                           :: bc(2)    !< boundary conditions options
-   type(sll_fft_plan), pointer         :: fw       !< Forward FFT plan
-   type(sll_fft_plan), pointer         :: bw       !< Inverse FFT plan
+   type(sll_t_fft)        :: fw       !< Forward FFT plan
+   type(sll_t_fft)         :: bw       !< Inverse FFT plan
    sll_comp64, dimension(:),   pointer :: fk       !< RHSf fft
    sll_comp64, dimension(:),   pointer :: phik     !< Potential fft
    sll_real64, dimension(:),   pointer :: mat      !< Matrix
    sll_real64, dimension(:),   pointer :: cts      !< Lapack coefficient
    sll_int32,  dimension(:),   pointer :: ipiv     !< Lapack pivot indices
-   type(layout_2D),  pointer           :: layout_r !< layout sequential in r
-   type(layout_2D),  pointer           :: layout_a !< layout sequential in theta
-   type(remap_plan_2D_comp64), pointer :: rmp_ra   !< remap r->theta 
-   type(remap_plan_2D_comp64), pointer :: rmp_ar   !< remap theta->r
+   type(sll_t_layout_2d),  pointer           :: layout_r !< layout sequential in r
+   type(sll_t_layout_2d),  pointer           :: layout_a !< layout sequential in theta
+   type(sll_t_remap_plan_2d_comp64), pointer :: rmp_ra   !< remap r->theta 
+   type(sll_t_remap_plan_2d_comp64), pointer :: rmp_ar   !< remap theta->r
    sll_comp64, dimension(:,:), pointer :: f_r      !< array sequential in r
    sll_comp64, dimension(:,:), pointer :: f_a      !< array sequential in theta
    sll_real64, dimension(:), pointer :: dlog_density,inv_Te !<for quasi neutral solver
 
-  end type sll_poisson_polar
+  end type sll_t_poisson_polar
 
-  !> Initialize the Poisson solver on polar mesh
-  interface initialize
+  !> sll_o_initialize the Poisson solver on polar mesh
+  interface sll_o_initialize
      module procedure initialize_poisson_polar
-  end interface initialize
+  end interface sll_o_initialize
 
   !> Compute the potential solving the Poisson equation on polar mesh
-  interface solve
-     module procedure solve_poisson_polar
-  end interface solve
+  interface sll_o_solve
+     module procedure sll_s_solve_poisson_polar
+  end interface sll_o_solve
 
 contains
-  !> new: wrapper of initialize
-  function new_poisson_polar( &
+  !> new: wrapper of sll_o_initialize
+  function sll_f_new_poisson_polar( &
     layout_r, &
     layout_a, &
     rmin, &
@@ -79,9 +113,9 @@ contains
     inv_Te) &
     result(this)
     implicit none
-    type(sll_poisson_polar), pointer  :: this     !< Poisson solver class
-    type(layout_2D), pointer :: layout_r !< sequential in r direction
-    type(layout_2D), pointer :: layout_a !< sequential in theta direction
+    type(sll_t_poisson_polar), pointer  :: this     !< Poisson solver class
+    type(sll_t_layout_2d), pointer :: layout_r !< sequential in r direction
+    type(sll_t_layout_2d), pointer :: layout_a !< sequential in theta direction
 
 
     sll_real64               :: rmin    !< rmin
@@ -111,16 +145,16 @@ contains
       dlog_density, &
       inv_Te)
 
-  end function new_poisson_polar
+  end function sll_f_new_poisson_polar
 
-  !> Initialize the Poisson solver in polar coordinates
+  !> sll_o_initialize the Poisson solver in polar coordinates
   subroutine initialize_poisson_polar(this, layout_r, layout_a, &
              rmin,rmax,nr,ntheta,bc_rmin,bc_rmax,dlog_density,inv_Te)
 
     implicit none
-    type(sll_poisson_polar)  :: this     !< Poisson solver class
-    type(layout_2D), pointer :: layout_r !< sequential in r direction
-    type(layout_2D), pointer :: layout_a !< sequential in theta direction
+    type(sll_t_poisson_polar)  :: this     !< Poisson solver class
+    type(sll_t_layout_2d), pointer :: layout_r !< sequential in r direction
+    type(sll_t_layout_2d), pointer :: layout_a !< sequential in theta direction
 
 
     sll_real64               :: rmin    !< rmin
@@ -175,40 +209,40 @@ contains
     end if
 
     SLL_ALLOCATE(buf(ntheta),error)
-    this%fw => fft_new_plan(ntheta,buf,buf,FFT_FORWARD,FFT_NORMALIZE)
-    this%bw => fft_new_plan(ntheta,buf,buf,FFT_INVERSE)
+    call sll_s_fft_init_c2c_1d(this%fw,ntheta,buf,buf,sll_p_fft_forward,normalized=.true.)
+    call sll_s_fft_init_c2c_1d(this%bw,ntheta,buf,buf,sll_p_fft_backward)
     SLL_DEALLOCATE_ARRAY(buf,error)
 
-    psize = sll_get_collective_size(sll_world_collective)
+    psize = sll_f_get_collective_size(sll_v_world_collective)
 
     this%layout_r => layout_r
-    call compute_local_sizes(layout_r,nr_loc,na_loc)
+    call sll_o_compute_local_sizes(layout_r,nr_loc,na_loc)
     SLL_ALLOCATE(this%f_r(1:nr_loc,1:na_loc),error)
     this%f_r = (0.0_f64,0.0_f64)
 
     ! Layout and local sizes for FFTs in theta-direction
     this%layout_a => layout_a
-    call compute_local_sizes(layout_a,nr_loc,na_loc)
+    call sll_o_compute_local_sizes(layout_a,nr_loc,na_loc)
     SLL_ALLOCATE(this%f_a(1:nr_loc,1:na_loc),error)
     this%f_a = (0.0_f64,0.0_f64)
 
-    this%rmp_ra => new_remap_plan(this%layout_r, this%layout_a, this%f_r)
-    this%rmp_ar => new_remap_plan(this%layout_a, this%layout_r, this%f_a)
+    this%rmp_ra => sll_o_new_remap_plan(this%layout_r, this%layout_a, this%f_r)
+    this%rmp_ar => sll_o_new_remap_plan(this%layout_a, this%layout_r, this%f_a)
 
 
 
   end subroutine initialize_poisson_polar
 
-  !>delete a sll_poisson_polar object
+  !>delete a sll_t_poisson_polar object
   subroutine delete_poisson_polar(this)
 
     implicit none
 
-    type(sll_poisson_polar), pointer :: this !< Poisson solver object
+    type(sll_t_poisson_polar), pointer :: this !< Poisson solver object
     sll_int32 :: err
     if (associated(this)) then
-       call fft_delete_plan(this%fw)
-       call fft_delete_plan(this%bw)
+       call sll_s_fft_free(this%fw)
+       call sll_s_fft_free(this%bw)
        SLL_DEALLOCATE_ARRAY(this%fk,err)
        SLL_DEALLOCATE_ARRAY(this%phik,err)
        SLL_DEALLOCATE_ARRAY(this%mat,err)
@@ -220,12 +254,12 @@ contains
   end subroutine delete_poisson_polar
 
 
-  !> Solve the Poisson equation and get the potential
-  subroutine solve_poisson_polar(this,rhs,phi)
+  !> sll_o_solve the Poisson equation and get the potential
+  subroutine sll_s_solve_poisson_polar(this,rhs,phi)
 
     implicit none
 
-    type(sll_poisson_polar) :: this !< Poisson solver object
+    type(sll_t_poisson_polar) :: this !< Poisson solver object
     sll_real64, dimension(:,:), intent(in)  :: rhs !< Charge density
     sll_real64, dimension(:,:), intent(out) :: phi !< Potential
 
@@ -247,29 +281,29 @@ contains
     call verify_argument_sizes_par(this%layout_a, rhs)
     this%f_a = cmplx(rhs, 0_f64, kind=f64)
 
-    call compute_local_sizes( this%layout_a, nr_loc, na_loc )
+    call sll_o_compute_local_sizes( this%layout_a, nr_loc, na_loc )
 
     do i=1,nr_loc
-      call fft_apply_plan(this%fw,this%f_a(i,1:ntheta),this%f_a(i,1:ntheta))
+      call sll_s_fft_exec_c2c_1d(this%fw,this%f_a(i,1:ntheta),this%f_a(i,1:ntheta))
     end do
 
     
-    call apply_remap_2D( this%rmp_ar, this%f_a, this%f_r )
+    call sll_o_apply_remap_2d( this%rmp_ar, this%f_a, this%f_r )
     
     
-    call compute_local_sizes( this%layout_r, nr_loc, na_loc )
-    !global = local_to_global( this%layout_r, (/1, 1/))
+    call sll_o_compute_local_sizes( this%layout_r, nr_loc, na_loc )
+    !global = sll_o_local_to_global( this%layout_r, (/1, 1/))
     !k = global(2)/2 - 1
     
-    !print *,'#na_loc=',sll_get_collective_rank(sll_world_collective),na_loc
+    !print *,'#na_loc=',sll_f_get_collective_rank(sll_v_world_collective),na_loc
     !do i=1,na_loc
-    !  print *,sll_get_collective_rank(sll_world_collective),i,this%f_r(nr_loc/2,i)
+    !  print *,sll_f_get_collective_rank(sll_v_world_collective),i,this%f_r(nr_loc/2,i)
     !enddo
     
     !do j = 1, na_loc-1, 2
     do j = 1, na_loc  
       !k = k + 1
-      global = local_to_global( this%layout_r, (/1, j/))
+      global = sll_o_local_to_global( this%layout_r, (/1, j/))
       k = global(2)
       if (k<=ntheta/2) then
         k = k-1
@@ -277,7 +311,7 @@ contains
         k = ntheta-(k-1)
       endif
       
-      !print *,'#k=',k,sll_get_collective_rank(sll_world_collective)
+      !print *,'#k=',k,sll_f_get_collective_rank(sll_v_world_collective)
 
       do i=2,nr
 
@@ -304,12 +338,12 @@ contains
       this%phik=(0.0_f64,0.0_f64)
 
       !boundary condition at rmin
-      if (bc(1)==SLL_DIRICHLET) then !Dirichlet
+      if (bc(1)==sll_p_dirichlet) then !Dirichlet
         this%mat(1)=0.0_f64
-      else if (bc(1)==SLL_NEUMANN) then
+      else if (bc(1)==sll_p_neumann) then
         this%mat(2)=this%mat(2)+this%mat(1) !Neumann
         this%mat(1)=0._f64
-      else if(bc(1)==SLL_NEUMANN_MODE_0)then 
+      else if(bc(1)==sll_p_neumann_mode_0)then 
         if(k==0)then!Neumann for mode zero
           this%mat(2)=this%mat(2)+this%mat(1)
           this%mat(1)=0._f64
@@ -319,12 +353,12 @@ contains
       endif
 
       !boundary condition at rmax
-      if(bc(2)==SLL_DIRICHLET)then !Dirichlet
+      if(bc(2)==sll_p_dirichlet)then !Dirichlet
         this%mat(3*(nr-1))=0.0_f64
-      else if(bc(2)==SLL_NEUMANN)then
+      else if(bc(2)==sll_p_neumann)then
         this%mat(3*(nr-1)-1)=this%mat(3*(nr-1)-1)+this%mat(3*(nr-1)) !Neumann
         this%mat(3*(nr-1))=0.0_f64
-      else if(bc(2)==SLL_NEUMANN_MODE_0)then 
+      else if(bc(2)==sll_p_neumann_mode_0)then 
         if(k==0)then!Neumann for mode zero
           this%mat(3*(nr-1)-1)=this%mat(3*(nr-1)-1)+this%mat(3*(nr-1))
           this%mat(3*(nr-1))=0.0_f64
@@ -333,15 +367,15 @@ contains
         endif
       endif
 
-      call setup_cyclic_tridiag(this%mat,nr-1,this%cts,this%ipiv)
-      call solve_cyclic_tridiag(this%cts,this%ipiv,this%fk(2:nr),nr-1,this%phik(2:nr))
+      call sll_s_setup_cyclic_tridiag(this%mat,nr-1,this%cts,this%ipiv)
+      call sll_o_solve_cyclic_tridiag(this%cts,this%ipiv,this%fk(2:nr),nr-1,this%phik(2:nr))
 
       !boundary condition at rmin
-      if(bc(1)==SLL_DIRICHLET)then !Dirichlet
+      if(bc(1)==sll_p_dirichlet)then !Dirichlet
         this%phik(1)=(0.0_f64,0.0_f64)
-      else if (bc(1)==SLL_NEUMANN) then
+      else if (bc(1)==sll_p_neumann) then
         this%phik(1)=this%phik(2) !Neumann
-      else if (bc(1)==SLL_NEUMANN_MODE_0) then 
+      else if (bc(1)==sll_p_neumann_mode_0) then 
         if (k==0) then!Neumann for mode zero
           this%phik(1)=this%phik(2)
         else !Dirichlet for other modes
@@ -350,11 +384,11 @@ contains
       endif
 
       !boundary condition at rmax
-      if (bc(2)==SLL_DIRICHLET) then !Dirichlet
+      if (bc(2)==sll_p_dirichlet) then !Dirichlet
         this%phik(nr+1)=(0.0_f64,0.0_f64)
-      else if (bc(2)==SLL_NEUMANN) then
+      else if (bc(2)==sll_p_neumann) then
         this%phik(nr+1)=this%phik(nr) !Neumann
-      else if (bc(2)==SLL_NEUMANN_MODE_0) then 
+      else if (bc(2)==sll_p_neumann_mode_0) then 
         if(k==0)then!Neumann for mode zero
           this%phik(nr+1)=this%phik(nr)
         else !Dirichlet for other modes
@@ -370,31 +404,31 @@ contains
          !   this%f_r(i,2) = real(this%phik(i),kind=f64)
          !else
          !   this%f_r(i,j) = real(this%phik(i),kind=f64)
-         !   this%f_r(i,j+1) = dimag(this%phik(i))
+         !   this%f_r(i,j+1) = aimag(this%phik(i))
          !endif
 
       end do
 
     end do
 
-    call apply_remap_2D( this%rmp_ra, this%f_r, this%f_a )
-    call compute_local_sizes( this%layout_a, nr_loc, na_loc )
+    call sll_o_apply_remap_2d( this%rmp_ra, this%f_r, this%f_a )
+    call sll_o_compute_local_sizes( this%layout_a, nr_loc, na_loc )
 
     call verify_argument_sizes_par(this%layout_a, phi)
     
     do i=1,nr_loc
       !call fft_apply_plan(this%bw,this%f_a(i,1:ntheta),phi(i,1:ntheta))
-      call fft_apply_plan(this%bw,this%f_a(i,1:ntheta),this%f_a(i,1:ntheta))
+      call sll_s_fft_exec_c2c_1d(this%bw,this%f_a(i,1:ntheta),this%f_a(i,1:ntheta))
       phi(i,1:ntheta) = real(this%f_a(i,1:ntheta))
     end do
 
-  end subroutine solve_poisson_polar
+  end subroutine sll_s_solve_poisson_polar
 
 
   !> Check if array sizes are compatble with the layout 
   subroutine verify_argument_sizes_par(layout, array)
 
-    type(layout_2D), pointer       :: layout
+    type(sll_t_layout_2d), pointer       :: layout
     sll_real64, dimension(:,:)     :: array
     sll_int32,  dimension(2)       :: n ! nx_loc, ny_loc
     sll_int32                      :: i
@@ -402,7 +436,7 @@ contains
     ! Note that this checks for strict sizes, not an array being bigger
     ! than a certain size, but exactly a desired size... This may be a bit
     ! too stringent.
-    call compute_local_sizes( layout, n(1), n(2) )
+    call sll_o_compute_local_sizes( layout, n(1), n(2) )
 
     do i=1,2
        if ( (n(i)/=size(array,i))) then
@@ -416,7 +450,7 @@ contains
                   'mismatch in direction theta'
           endif
           print *, 'Exiting...'
-          call sll_halt_collective()
+          call sll_s_halt_collective()
           stop
        endif
     enddo

@@ -27,20 +27,36 @@
 program test_bsl_lt_pic_4d
 
   ! [[file:../working_precision/sll_m_working_precision.h]]
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+#include "sll_memory.h"
 #include "sll_working_precision.h"
 
-  ! [[file:../memory/sll_m_memory.h]]
-#include "sll_memory.h"
+  use sll_m_bsl_lt_pic_4d_group, only: &
+    sll_t_bsl_lt_pic_4d_group, &
+    sll_f_bsl_lt_pic_4d_group_new
 
-  ! [[file:../assert/sll_m_assert.h]]
-#include "sll_assert.h"
+  use sll_m_bsl_lt_pic_4d_utilities, only: &
+    sll_f_eval_hat_function
 
-  use sll_m_constants, only: sll_pi
-  use sll_m_bsl_lt_pic_4d_group
-  use sll_m_cartesian_meshes
-  use sll_m_timer
-  use sll_m_remapped_pic_utilities, only:x_is_in_domain_2d, apply_periodic_bc_on_cartesian_mesh_2d
+  use sll_m_cartesian_meshes, only: &
+    sll_f_new_cartesian_mesh_2d, &
+    sll_t_cartesian_mesh_2d
 
+  use sll_m_constants, only: &
+    sll_p_pi
+
+  use sll_m_remapped_pic_utilities, only: &
+    sll_s_apply_periodic_bc_on_cartesian_mesh_2d, &
+    sll_f_is_in_domain_2d
+
+  use sll_m_timer, only: &
+    sll_s_set_time_mark, &
+    sll_f_time_elapsed_since, &
+    sll_t_time_mark
+
+  implicit none
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+  
 #define SPECIES_CHARGE  1._f64
 #define SPECIES_MASS    1._f64
 #define particle_group_id 1_i32
@@ -77,7 +93,7 @@ program test_bsl_lt_pic_4d
 #define OMEGA   1.323_f64
 #define GAMMA  -0.151_f64
 #define X_MIN 0._f64
-#define X_MAX (2._f64*sll_pi/KX)
+#define X_MAX (2._f64*sll_p_pi/KX)
 #define NC_Y 64_i32
 #define Y_MIN 0._f64
 #define Y_MAX 1._f64
@@ -101,10 +117,8 @@ program test_bsl_lt_pic_4d
 #define PLOT_CST_DIM4 4
 #define X4_PLOT_CST 0._f64
 
-  implicit none
-  
-  type(sll_bsl_lt_pic_4d_group),        pointer     :: p_group
-  type(sll_cartesian_mesh_2d),          pointer     :: mesh_2d
+  type(sll_t_bsl_lt_pic_4d_group),        pointer     :: p_group
+  type(sll_t_cartesian_mesh_2d),          pointer     :: mesh_2d
 
   character(5)      :: ncx_name, ncy_name
 
@@ -162,7 +176,7 @@ program test_bsl_lt_pic_4d
   sll_int32 :: flow_markers_type
 
   ! Benchmarking remap performance
-  type(sll_time_mark) :: remapstart
+  type(sll_t_time_mark) :: remapstart
   sll_real64 :: remaptime
 
   sll_real64, dimension(3) :: coords
@@ -196,7 +210,7 @@ program test_bsl_lt_pic_4d
 
   ! A -- build and initialize the particle group
 
-  mesh_2d =>  new_cartesian_mesh_2d( NC_X, NC_Y, X_MIN, X_MAX, Y_MIN, Y_MAX )
+  mesh_2d =>  sll_f_new_cartesian_mesh_2d( NC_X, NC_Y, X_MIN, X_MAX, Y_MIN, Y_MAX )
 
   if( DEBUG_MODE )then
     print*, "[test_bsl_lt_pic_4d - DEBUG] -- AA"
@@ -218,13 +232,13 @@ program test_bsl_lt_pic_4d
 
   flow_markers_type = SLL_BSL_LT_PIC_STRUCTURED
 
-  p_group => sll_bsl_lt_pic_4d_group_new(             &
+  p_group => sll_f_bsl_lt_pic_4d_group_new(             &
         SPECIES_CHARGE,                               &
         SPECIES_MASS,                                 &
         particle_group_id,                            &
         DOMAIN_IS_X_PERIODIC,                         &
         DOMAIN_IS_Y_PERIODIC,                         &
-        SLL_BSL_LT_PIC_REMAP_WITH_SPARSE_GRIDS,       &       !! other option SLL_BSL_LT_PIC_REMAP_WITH_SPLINES
+        SLL_BSL_LT_PIC_REMAP_WITH_SPARSE_GRIDS,       &       !! other option is SLL_BSL_LT_PIC_REMAP_WITH_SPLINES
         REMAP_DEGREE,                                 &
         REMAP_GRID_VX_MIN,                            &
         REMAP_GRID_VX_MAX,                            &
@@ -267,8 +281,8 @@ program test_bsl_lt_pic_4d
 
   !MCP: for a constant (1) function, take shift = 0 and basis_height = 1
   !MCP: for the std tensor-product hat function, take shift = 1 and basis_height = 0
-  shift = 1._f64
-  basis_height = 0._f64
+  shift = 1.0_f64
+  basis_height = 0.0_f64
 
   target_total_charge = 0._f64
   enforce_total_charge = .false.
@@ -340,9 +354,9 @@ program test_bsl_lt_pic_4d
 
             f_j = real( p_group%remapped_f_splines_coefficients(j_x,j_y,j_vx,j_vy)/d_vol ,f64)
 
-            SLL_ASSERT( x_is_in_domain_2d( x_j, y_j, p_group%space_mesh_2d,  DOMAIN_IS_X_PERIODIC, DOMAIN_IS_Y_PERIODIC ) )
+            SLL_ASSERT( sll_f_x_is_in_domain_2d( x_j, y_j, p_group%space_mesh_2d,  DOMAIN_IS_X_PERIODIC, DOMAIN_IS_Y_PERIODIC ) )
 
-            f_target = eval_hat_function(x0,y0,vx0,vy0,r_x,r_y,r_vx,r_vy, basis_height, shift, x_j, y_j, vx_j, vy_j)
+            f_target = sll_f_eval_hat_function(x0,y0,vx0,vy0,r_x,r_y,r_vx,r_vy, basis_height, shift, x_j, y_j, vx_j, vy_j)
             error = max( error, abs( f_j - f_target ) )
             write(70,*) x_j, y_j, vx_j, vy_j,  f_j, f_target, abs( f_j - f_target )
 
@@ -376,9 +390,9 @@ program test_bsl_lt_pic_4d
           vx_j = p_group%sparse_grid_interpolator%hierarchy(j)%coordinate(3)
           vy_j = p_group%sparse_grid_interpolator%hierarchy(j)%coordinate(4)
 
-          SLL_ASSERT( x_is_in_domain_2d( x_j, y_j, p_group%space_mesh_2d, DOMAIN_IS_X_PERIODIC, DOMAIN_IS_Y_PERIODIC ) )
+          SLL_ASSERT( sll_f_x_is_in_domain_2d( x_j, y_j, p_group%space_mesh_2d, DOMAIN_IS_X_PERIODIC, DOMAIN_IS_Y_PERIODIC ) )
 
-          f_target = eval_hat_function(x0,y0,vx0,vy0,r_x,r_y,r_vx,r_vy, basis_height, shift, x_j, y_j, vx_j, vy_j)
+          f_target = sll_f_eval_hat_function(x0,y0,vx0,vy0,r_x,r_y,r_vx,r_vy, basis_height, shift, x_j, y_j, vx_j, vy_j)
           error = max( error, abs( f_j - f_target ) )
           write(70,*) x_j, y_j, vx_j, vy_j,  f_j, f_target, abs( f_j - f_target )
 
@@ -420,9 +434,9 @@ program test_bsl_lt_pic_4d
 
               f_j = p_group%bsl_lt_pic_4d_interpolate_value_of_remapped_f( eta )
 
-              SLL_ASSERT( x_is_in_domain_2d( x_j, y_j, p_group%space_mesh_2d,  DOMAIN_IS_X_PERIODIC, DOMAIN_IS_Y_PERIODIC ) )
+              SLL_ASSERT( sll_f_x_is_in_domain_2d( x_j, y_j, p_group%space_mesh_2d,  DOMAIN_IS_X_PERIODIC, DOMAIN_IS_Y_PERIODIC ) )
 
-              f_target = eval_hat_function(x0,y0,vx0,vy0,r_x,r_y,r_vx,r_vy, basis_height, shift, x_j, y_j, vx_j, vy_j)
+              f_target = sll_f_eval_hat_function(x0,y0,vx0,vy0,r_x,r_y,r_vx,r_vy, basis_height, shift, x_j, y_j, vx_j, vy_j)
               error = max( error, abs( f_j - f_target ) )
               write(70,*) x_j, y_j, vx_j, vy_j,  f_j, f_target, abs( f_j - f_target )
 
@@ -469,10 +483,10 @@ program test_bsl_lt_pic_4d
      ! Flow is cte + A*(x,y,vx,vy), where det A = 1, cf [[test_forward_push]]
      call test_forward_push(x_k, y_k, vx_k, vy_k, new_x_k, new_y_k, new_vx_k, new_vy_k)
 
-     if( .not. x_is_in_domain_2d( new_x_k, new_y_k, p_group%space_mesh_2d, DOMAIN_IS_X_PERIODIC, DOMAIN_IS_Y_PERIODIC ) )then
+     if( .not. sll_f_x_is_in_domain_2d( new_x_k, new_y_k, p_group%space_mesh_2d, DOMAIN_IS_X_PERIODIC, DOMAIN_IS_Y_PERIODIC ) )then
         !! -- -- put outside particles back in domain
         ! [[selalib:src/particle_methods/pic_remapped/remapped_pic_utilities/sll_m_remapped_pic_utilities.F90::apply_periodic_bc_on_cartesian_mesh_2d]]
-        call apply_periodic_bc_on_cartesian_mesh_2d( p_group%space_mesh_2d, new_x_k, new_y_k)
+        call sll_s_apply_periodic_bc_on_cartesian_mesh_2d( p_group%space_mesh_2d, new_x_k, new_y_k)
      end if
 
      ! set particle position
@@ -494,7 +508,7 @@ program test_bsl_lt_pic_4d
     remap_type = 'bsl_ltp'
   else
     ! called as an executable, with an argument
-    call getarg(1,remap_type)
+    call get_command_argument(1,remap_type)
   end if
 
   print *, "plotting transported f slice in gnuplot format "
@@ -503,7 +517,7 @@ program test_bsl_lt_pic_4d
 
   ! D --- remap the particle group to get the values of transported f on the remapping grid
 
-  call sll_set_time_mark(remapstart)
+  call sll_s_set_time_mark(remapstart)
   if(remap_type == 'ltp') then
     print*, "[test_bsl_lt_pic_4d]  Error (875454367554242): ltp remapping not implemented yet, stop."
     stop
@@ -521,7 +535,7 @@ program test_bsl_lt_pic_4d
   print *, "plotting remapped f slice in gnuplot format "
   call p_group%visualize_f_slice_x_vx("f_remapped", plot_np_x, plot_np_y, plot_np_vx, plot_np_vy, 1)
 
-  remaptime = sll_time_elapsed_since(remapstart)
+  remaptime = sll_f_time_elapsed_since(remapstart)
 
   ! formats at [[http://www.cs.mtu.edu/~shene/COURSES/cs201/NOTES/chap05/format.html]]
   write(*,'(A,A,ES8.2,A,A,ES8.2,A)') trim(remap_type),' remap time = ',remaptime,' sec',&
@@ -574,16 +588,16 @@ program test_bsl_lt_pic_4d
             end if
 
             f_j = real( p_group%remapped_f_splines_coefficients(j_x,j_y,j_vx,j_vy)/d_vol ,f64)
-            call test_backward_push(x_j, y_j, vx_j, vy_j, new_x, new_y, new_vx, new_vy)
+            call sll_s_test_backward_push(x_j, y_j, vx_j, vy_j, new_x, new_y, new_vx, new_vy)
 
-            if( .not. x_is_in_domain_2d( new_x, new_y, p_group%space_mesh_2d,   &
+            if( .not. sll_f_x_is_in_domain_2d( new_x, new_y, p_group%space_mesh_2d,   &
                                          DOMAIN_IS_X_PERIODIC, DOMAIN_IS_Y_PERIODIC ) &
                  ) then
               !! -- -- put outside particles back in domain
-              call apply_periodic_bc_on_cartesian_mesh_2d( p_group%space_mesh_2d, new_x, new_y)
+              call sll_S_apply_periodic_bc_on_cartesian_mesh_2d( p_group%space_mesh_2d, new_x, new_y)
             end if
 
-            f_target = eval_hat_function(x0,y0,vx0,vy0,r_x,r_y,r_vx,r_vy, basis_height, shift, new_x, new_y, new_vx, new_vy)
+            f_target = sll_f_eval_hat_function(x0,y0,vx0,vy0,r_x,r_y,r_vx,r_vy, basis_height, shift, new_x, new_y, new_vx, new_vy)
             error = max( error, abs( f_j - f_target ) )
             write(80,*) x_j, y_j, vx_j, vy_j,  f_j, f_target, abs( f_j - f_target )
 
@@ -687,8 +701,8 @@ program test_bsl_lt_pic_4d
   write(82,*) "(maximum) error after remapping: ", error
   close(82)
   
-!  call sll_delete( p_group )
-!  call sll_delete( mesh_2d )
+!  call sll_o_delete( particle_group )
+!  call sll_o_delete( mesh_2d )
 
   tolerance = real( 1e-6, f64)
   if( error < tolerance )then

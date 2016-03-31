@@ -16,18 +16,38 @@
 !**************************************************************
 
 program test_qn_solver_3d_polar_parallel_x1_wrapper
+
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_working_precision.h"
 #include "sll_memory.h"
-#include "sll_assert.h"
-use sll_m_qn_solver_3d_polar_parallel_x1_wrapper
-use sll_m_remapper
-use sll_m_collective
 
-!use sll_m_boundary_condition_descriptors
+  use sll_m_boundary_condition_descriptors, only: &
+    sll_p_dirichlet, &
+    sll_p_neumann_mode_0
 
-implicit none
+  use sll_m_collective, only: &
+    sll_s_boot_collective, &
+    sll_f_get_collective_rank, &
+    sll_f_get_collective_size, &
+    sll_s_halt_collective, &
+    sll_v_world_collective
+
+  use sll_m_poisson_3d_base, only: &
+    sll_c_poisson_3d_base
+
+  use sll_m_qn_solver_3d_polar_parallel_x1_wrapper, only: &
+    sll_f_new_qn_solver_3d_polar_parallel_x1_wrapper
+
+  use sll_m_remapper, only: &
+    sll_o_compute_local_sizes, &
+    sll_o_initialize_layout_with_distributed_array, &
+    sll_f_new_layout_2d, &
+    sll_t_layout_2d
+
+  implicit none
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
   
-  class(sll_poisson_3d_base), pointer :: poisson 
+  class(sll_c_poisson_3d_base), pointer :: poisson 
   sll_real64 :: err
   sll_real64 :: x1_min
   sll_real64 :: x1_max
@@ -40,8 +60,8 @@ implicit none
   sll_int32 :: num_proc
   sll_int32 :: nproc_x1
   sll_int32 :: nproc_x2
-  type(layout_2D), pointer :: layout2d_parx1
-  type(layout_2D), pointer :: layout2d_parx2
+  type(sll_t_layout_2d), pointer :: layout2d_parx1
+  type(sll_t_layout_2d), pointer :: layout2d_parx2
   sll_int32 :: loc2d_sz_x1
   sll_int32 :: loc2d_sz_x2
   
@@ -54,20 +74,20 @@ implicit none
   Nc_x3 = 8
   
   
-  call sll_boot_collective()
+  call sll_s_boot_collective()
    
-  num_proc = sll_get_collective_size(sll_world_collective)  
+  num_proc = sll_f_get_collective_size(sll_v_world_collective)  
   nproc_x1 = num_proc
   nproc_x2 = 1
-  layout2d_parx1  => new_layout_2D( sll_world_collective )
-  call initialize_layout_with_distributed_array( &
+  layout2d_parx1  => sll_f_new_layout_2d( sll_v_world_collective )
+  call sll_o_initialize_layout_with_distributed_array( &
     Nc_x1+1, & 
     Nc_x2, & 
     nproc_x1, &
     nproc_x2, &
     layout2d_parx1 )
 
-  call compute_local_sizes( &
+  call sll_o_compute_local_sizes( &
     layout2d_parx1, &
     loc2d_sz_x1, &
     loc2d_sz_x2)
@@ -79,8 +99,8 @@ implicit none
 
   nproc_x1 = 1
   nproc_x2 = num_proc
-  layout2d_parx2  => new_layout_2D( sll_world_collective )
-  call initialize_layout_with_distributed_array( &
+  layout2d_parx2  => sll_f_new_layout_2d( sll_v_world_collective )
+  call sll_o_initialize_layout_with_distributed_array( &
     Nc_x1+1, & 
     Nc_x2, & 
     nproc_x1, &
@@ -97,7 +117,7 @@ implicit none
 
 
 
-  poisson => new_qn_solver_3d_polar_parallel_x1_wrapper( &
+  poisson => sll_f_new_qn_solver_3d_polar_parallel_x1_wrapper( &
     layout2d_parx2, &
     layout2d_parx1, &
     x1_min, &
@@ -105,13 +125,13 @@ implicit none
     Nc_x1, &
     Nc_x2, &
     Nc_x3, &
-    SLL_NEUMANN_MODE_0, &
-    SLL_DIRICHLET)
+    sll_p_neumann_mode_0, &
+    sll_p_dirichlet)
   
   call poisson%compute_phi_from_rho( phi, rho )
-  print *,'#bounds on proc', sll_get_collective_rank(sll_world_collective),'=',maxval(phi),minval(phi)
+  print *,'#bounds on proc', sll_f_get_collective_rank(sll_v_world_collective),'=',maxval(phi),minval(phi)
 
-  if(sll_get_collective_rank(sll_world_collective)==0)then
+  if(sll_f_get_collective_rank(sll_v_world_collective)==0)then
     print *,'#bounds on proc 0 =',maxval(phi),minval(phi)
     print *,'#bounds on proc 0.1 =',maxval(phi(:,:,1)),minval(phi(:,:,1))
     print *,'#bounds on proc 0.2 =',maxval(phi(:,:,Nc_x3)),minval(phi(:,:,Nc_x3))
@@ -121,6 +141,6 @@ implicit none
     endif
   endif
   
-  call sll_halt_collective()
+  call sll_s_halt_collective()
   
 end program test_qn_solver_3d_polar_parallel_x1_wrapper

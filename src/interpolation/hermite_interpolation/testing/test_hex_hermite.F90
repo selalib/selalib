@@ -1,14 +1,24 @@
 program test_hex_hermite
 
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_memory.h"
 #include "sll_working_precision.h"
-#include "sll_assert.h"
 
-  use sll_m_constants
-  use sll_m_interpolation_hex_hermite
-  !use sll_m_euler_2d_hex
+  use sll_m_constants, only: &
+    sll_p_pi
+
+  use sll_m_hexagonal_meshes, only: &
+    sll_s_delete_hex_mesh_2d, &
+    sll_f_new_hex_mesh_2d, &
+    sll_t_hex_mesh_2d
+
+  use sll_m_interpolation_hex_hermite, only: &
+    sll_s_der_finite_difference, &
+    sll_s_hermite_interpolation, &
+    sll_s_print_method
 
   implicit none
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
   sll_real64, dimension(:,:), allocatable :: deriv
 
@@ -18,7 +28,7 @@ program test_hex_hermite
   character(len = 5) ::name_test = "gauss"!"dioco"!"gauss"!
   sll_int32    :: nloops,ierr, EXTRA_TABLES = 1 ! put 1 for num_method = 15
   ! initial distribution
-  sll_real64   :: r_min
+  !sll_real64   :: r_min
   sll_real64   :: gauss_x2
   sll_real64   :: gauss_x1
   sll_real64   :: gauss_sig
@@ -27,8 +37,8 @@ program test_hex_hermite
   sll_real64   :: dioco_rplus
   sll_real64   :: dioco_eps
   sll_real64   :: dioco_kmode
-  sll_real64   :: dioco_r
-  sll_real64   :: dioco_theta
+  !sll_real64   :: dioco_r
+  !sll_real64   :: dioco_theta
   sll_real64,dimension(:),allocatable :: x1
   sll_real64,dimension(:),allocatable :: x2
   sll_real64,dimension(:),allocatable :: f_init
@@ -61,10 +71,10 @@ program test_hex_hermite
   sll_real64   :: cfl
   ! character(len = 4) :: number
   logical      :: inside
-  type(sll_hex_mesh_2d), pointer :: mesh
-  character(len = 50) :: filename
-  character(len = 50) :: filename2
-  character(len = 4)  :: filenum
+  type(sll_t_hex_mesh_2d), pointer :: mesh
+  !character(len = 50) :: filename
+  !character(len = 50) :: filename2
+  !character(len = 4)  :: filenum
 
   center_mesh_x1 = 0._f64
   center_mesh_x2 = 0._f64
@@ -73,7 +83,7 @@ program test_hex_hermite
   !r_min  = 0._f64   ! beware there are some restrictions to respect 
 
 
-  call print_method(num_method)
+  call sll_s_print_method(num_method)
 
   open(unit = 33, file="hex_errors.txt", action="write", status="replace")
 
@@ -126,7 +136,7 @@ program test_hex_hermite
      !                  Mesh initialization   
      !*********************************************************
      
-     mesh => new_hex_mesh_2d( num_cells, center_mesh_x1, center_mesh_x2, radius=radius, EXTRA_TABLES = EXTRA_TABLES ) 
+     mesh => sll_f_new_hex_mesh_2d( num_cells, center_mesh_x1, center_mesh_x2, radius=radius, EXTRA_TABLES = EXTRA_TABLES ) 
      print*,""
      print*,"num_cell : ",num_cells,"           num_pts : ", mesh%num_pts_tot
      print*,""
@@ -161,7 +171,7 @@ program test_hex_hermite
            ! if ( x2(i) >= 0 ) then
            !    dioco_theta = acos( x1(i) / dioco_r )
            ! else
-           !    dioco_theta = 2._f64 * sll_pi-acos( x1(i) / dioco_r )
+           !    dioco_theta = 2._f64 * sll_p_pi-acos( x1(i) / dioco_r )
            ! endif
            ! if(( dioco_r >= dioco_rminus ).and.( dioco_r <= dioco_rplus) ) then
            !    f_init(i) = 1.0_f64 + dioco_eps*cos( dioco_kmode * dioco_theta )
@@ -193,7 +203,7 @@ program test_hex_hermite
               ! if ( y >= 0 ) then
               !    dioco_theta = acos( x / dioco_r )
               ! else
-              !    dioco_theta = 2._f64 * sll_pi-acos( x / dioco_r )
+              !    dioco_theta = 2._f64 * sll_p_pi-acos( x / dioco_r )
               ! endif
               ! if(( dioco_r >= dioco_rminus ).and.( dioco_r <= dioco_rplus) ) then
               !    center_values_tn(i) = (1.0_f64 + dioco_eps*cos( dioco_kmode * dioco_theta ))
@@ -223,7 +233,7 @@ program test_hex_hermite
               ! if ( y >= 0 ) then
               !    dioco_theta = acos( x / dioco_r )
               ! else
-              !    dioco_theta = 2._f64 * sll_pi-acos( x / dioco_r )
+              !    dioco_theta = 2._f64 * sll_p_pi-acos( x / dioco_r )
               ! endif
               ! if(( dioco_r >= dioco_rminus ).and.( dioco_r <= dioco_rplus) ) then
               !    edge_values_tn(i) = (1.0_f64 + dioco_eps*cos( dioco_kmode * dioco_theta ))
@@ -259,8 +269,8 @@ program test_hex_hermite
         x2_char(:) = x2(:) - advec*dt
      else
         ! Circular advection
-        !x1_char(:) = x1(:)*cos(2._f64*sll_pi*dt) - x2(:)*sin(2._f64*sll_pi*dt)
-        !x2_char(:) = x1(:)*sin(2._f64*sll_pi*dt) + x2(:)*cos(2._f64*sll_pi*dt)
+        !x1_char(:) = x1(:)*cos(2._f64*sll_p_pi*dt) - x2(:)*sin(2._f64*sll_p_pi*dt)
+        !x2_char(:) = x1(:)*sin(2._f64*sll_p_pi*dt) + x2(:)*cos(2._f64*sll_p_pi*dt)
         x1_char(:) = x1(:)*cos(dt) - x2(:)*sin(dt)
         x2_char(:) = x1(:)*sin(dt) + x2(:)*cos(dt)
      end if
@@ -289,7 +299,7 @@ program test_hex_hermite
         ! with p the degree of the approximation
         !*********************************************************
 
-        call  der_finite_difference( f_tn, p, step, mesh, deriv)
+        call  sll_s_der_finite_difference( f_tn, p, step, mesh, deriv)
 
         t = t + dt
         !*********************************************************
@@ -316,8 +326,8 @@ program test_hex_hermite
               y = mesh%center_cartesian_coord(2,i)
 
 
-              !xx = x*cos(2._f64*sll_pi*dt) - y*sin(2._f64*sll_pi*dt);
-              !yy = x*sin(2._f64*sll_pi*dt) + y*cos(2._f64*sll_pi*dt);
+              !xx = x*cos(2._f64*sll_p_pi*dt) - y*sin(2._f64*sll_p_pi*dt);
+              !yy = x*sin(2._f64*sll_p_pi*dt) + y*cos(2._f64*sll_p_pi*dt);
 
               xx = x*cos(dt) - y*sin(dt);
               yy = x*sin(dt) + y*cos(dt);
@@ -333,7 +343,7 @@ program test_hex_hermite
               if ( abs(xx) > (radius-1e-15)*sqrt(3._f64)*0.5_f64  ) inside = .false.
 
               if ( inside ) then
-                 call hermite_interpolation(i, xx, yy, f_tn, center_values_tn,&
+                 call sll_s_hermite_interpolation(i, xx, yy, f_tn, center_values_tn,&
                       edge_values_tn, center_values_tn1, mesh, deriv, aire,& 
                  num_method)
               else 
@@ -344,8 +354,8 @@ program test_hex_hermite
                  xx = x - advec*dt*nloops
                  yy = y - advec*dt*nloops
               else                         ! Circular advection
-                 !xx = x*cos(2._f64*sll_pi*t) - y*sin(2._f64*sll_pi*t);
-                 !yy = x*sin(2._f64*sll_pi*t) + y*cos(2._f64*sll_pi*t);
+                 !xx = x*cos(2._f64*sll_p_pi*t) - y*sin(2._f64*sll_p_pi*t);
+                 !yy = x*sin(2._f64*sll_p_pi*t) + y*cos(2._f64*sll_p_pi*t);
 
                  xx = x*cos(dt) - y*sin(dt);
                  yy = x*sin(dt) + y*cos(dt);
@@ -399,8 +409,8 @@ program test_hex_hermite
               x = mesh%edge_center_cartesian_coord(1,i)
               y = mesh%edge_center_cartesian_coord(2,i)
 
-              xx = x*cos(2._f64*sll_pi*dt) - y*sin(2._f64*sll_pi*dt);
-              yy = x*sin(2._f64*sll_pi*dt) + y*cos(2._f64*sll_pi*dt);
+              xx = x*cos(2._f64*sll_p_pi*dt) - y*sin(2._f64*sll_p_pi*dt);
+              yy = x*sin(2._f64*sll_p_pi*dt) + y*cos(2._f64*sll_p_pi*dt);
 
               !             INTERPOLATION
               inside = .true.
@@ -413,7 +423,7 @@ program test_hex_hermite
 
 
               if ( inside ) then
-                 call hermite_interpolation(i, xx, yy, f_tn, center_values_tn,&
+                 call sll_s_hermite_interpolation(i, xx, yy, f_tn, center_values_tn,&
                       edge_values_tn, edge_values_tn1, mesh, deriv, aire,& 
                  num_method)
               else 
@@ -424,8 +434,8 @@ program test_hex_hermite
                  xx = x - advec*dt*nloops
                  yy = y - advec*dt*nloops
               else                         ! Circular advection
-                 xx = x*cos(2._f64*sll_pi*t) - y*sin(2._f64*sll_pi*t);
-                 yy = x*sin(2._f64*sll_pi*t) + y*cos(2._f64*sll_pi*t);
+                 xx = x*cos(2._f64*sll_p_pi*t) - y*sin(2._f64*sll_p_pi*t);
+                 yy = x*sin(2._f64*sll_p_pi*t) + y*cos(2._f64*sll_p_pi*t);
               end if
 
 
@@ -467,28 +477,28 @@ program test_hex_hermite
            x = mesh%cartesian_coord(1,i)
            y = mesh%cartesian_coord(2,i)
 
-           !xx = x*cos(2._f64*sll_pi*dt) - y*sin(2._f64*sll_pi*dt);
-           !yy = x*sin(2._f64*sll_pi*dt) + y*cos(2._f64*sll_pi*dt);
+           !xx = x*cos(2._f64*sll_p_pi*dt) - y*sin(2._f64*sll_p_pi*dt);
+           !yy = x*sin(2._f64*sll_p_pi*dt) + y*cos(2._f64*sll_p_pi*dt);
 
            xx = x*cos(dt) - y*sin(dt);
            yy = x*sin(dt) + y*cos(dt);
-           ! xx = x - 2._f64*sll_pi*dt*y
-           ! yy = y + 2._f64*sll_pi*dt*x
+           ! xx = x - 2._f64*sll_p_pi*dt*y
+           ! yy = y + 2._f64*sll_p_pi*dt*x
 
         !*********************************************************
         !  computation of the root of the characteristics
         !*********************************************************
 
            ! call compute_characteristic_adams2_2d_hex( x,y,uxn,uyn,uxn_1,uyn_1,&
-           !      dxuxn,dyuxn,dxuyn,dyuyn,i,xx,yy,2._f64*sll_pi*dt)
+           !      dxuxn,dyuxn,dxuyn,dyuyn,i,xx,yy,2._f64*sll_p_pi*dt)
 
            !call  compute_characteristic_leapfrog_2d_hex( x,y,uxn,uyn,uxn_1,&
-           !    uyn_1,dxuxn,dyuxn,dxuyn,dyuyn,i,xx,yy,2._f64*sll_pi*dt)
+           !    uyn_1,dxuxn,dyuxn,dxuyn,dyuyn,i,xx,yy,2._f64*sll_p_pi*dt)
            !- > for the leapfrog scheme to work, one needs to 
            ! make a interpolation on f(tn-dt) instead of f(tn)
 
            !call compute_characteristic_euler_2d_hex( &
-           !     x,y,uxn,uyn,i,xx,yy,2._f64*sll_pi*dt )
+           !     x,y,uxn,uyn,i,xx,yy,2._f64*sll_p_pi*dt )
            call compute_characteristic_euler_2d_hex( &
                 x,y,uxn,uyn,i,xx,yy,dt )
 
@@ -508,7 +518,7 @@ program test_hex_hermite
 
            if ( inside ) then
 
-              call hermite_interpolation(i, xx, yy, f_tn, center_values_tn,&
+              call sll_s_hermite_interpolation(i, xx, yy, f_tn, center_values_tn,&
                    edge_values_tn, f_tn1, mesh, deriv, aire,& 
                    num_method)
            else 
@@ -528,8 +538,8 @@ program test_hex_hermite
               x = mesh%cartesian_coord(1,i) - advec*dt*nloops
               y = mesh%cartesian_coord(2,i) - advec*dt*nloops
            else                         ! Circular advection
-              !x = x1(i)*cos(2._f64*sll_pi*t) - x2(i)*sin(2._f64*sll_pi*t);
-              !y = x1(i)*sin(2._f64*sll_pi*t) + x2(i)*cos(2._f64*sll_pi*t);
+              !x = x1(i)*cos(2._f64*sll_p_pi*t) - x2(i)*sin(2._f64*sll_p_pi*t);
+              !y = x1(i)*sin(2._f64*sll_p_pi*t) + x2(i)*cos(2._f64*sll_p_pi*t);
               x = x1(i)*cos(t) - x2(i)*sin(t);
               y = x1(i)*sin(t) + x2(i)*cos(t);
            end if
@@ -543,7 +553,7 @@ program test_hex_hermite
               ! if (y>=0) then
               !    dioco_theta = acos(x/dioco_r)
               ! else
-              !    dioco_theta = 2._f64*sll_pi-acos(x/dioco_r)
+              !    dioco_theta = 2._f64*sll_p_pi-acos(x/dioco_r)
               ! endif
               ! if( dioco_r>=dioco_rminus .and. dioco_r<=dioco_rplus )then
               !    f_sol(i) = 1.0_f64+dioco_eps*cos(dioco_kmode*dioco_theta)
@@ -629,7 +639,7 @@ program test_hex_hermite
 
      deallocate(deriv)
 
-     call delete_hex_mesh_2d( mesh )
+     call sll_s_delete_hex_mesh_2d( mesh )
 
      call cpu_time(t_end)
 
@@ -683,12 +693,12 @@ contains
 
 
   subroutine compute_hex_fields(mesh,uxn,uyn,dxux,dyux,dxuy,dyuy,phi,type)
-    type(sll_hex_mesh_2d), pointer :: mesh
+    type(sll_t_hex_mesh_2d), pointer :: mesh
     sll_real64,dimension(:)        :: uxn, uyn, phi,dxux,dyux,dxuy,dyuy
     sll_int32,          intent(in) :: type
-    sll_int32  :: i,h1,h2
-    sll_real64 :: phii_2, phii_1, phii1, phii2, phij_2, phij_1, phij1, phij2
-    sll_real64 :: uh1, uh2
+    sll_int32  :: i!,h1,h2
+    !sll_real64 :: phii_2, phii_1, phii1, phii2, phij_2, phij_1, phij1, phij2
+    !sll_real64 :: uh2
 
     
     if (type==1) then

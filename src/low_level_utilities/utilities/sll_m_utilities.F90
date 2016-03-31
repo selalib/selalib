@@ -18,10 +18,28 @@
 !> @ingroup utilities
 !> Some common numerical utilities
 module sll_m_utilities
-#include "sll_working_precision.h"
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_errors.h"
+#include "sll_working_precision.h"
 
   implicit none
+
+  public :: &
+    sll_p_byte_size, &
+    sll_s_compute_bloc, &
+    sll_s_compute_mesh_from_bloc, &
+    sll_s_display_matrix_2d_integer, &
+    sll_s_int2string, &
+    sll_f_is_even, &
+    sll_f_is_power_of_two, &
+    sll_s_mpe_decomp1d, &
+    sll_s_pfenvelope, &
+    sll_o_display, &
+    sll_o_factorial, &
+    sll_s_new_file_id
+
+  private
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 !  intrinsic :: selected_int_kind ! this line gives an error, why?
 
   ! Tentative implementation of a standard-compliant way to get the
@@ -47,54 +65,54 @@ module sll_m_utilities
   ! need to be checked further.
 
   !> kind of integers
-  integer, parameter :: byte_size = selected_int_kind(0)
+  integer, parameter :: sll_p_byte_size = selected_int_kind(0)
 
   !> Functions to display on screen matrix or vector
-  interface sll_display
-     module procedure display_matrix_2d_integer
+  interface sll_o_display
+     module procedure sll_s_display_matrix_2d_integer
      module procedure display_matrix_2d_real
      module procedure display_vector_integer
      module procedure display_vector_real
-  end interface sll_display
+  end interface sll_o_display
 
   !> @param logical variable used to print time history
-  logical, private :: flag = .true.
+  logical :: flag = .true.
 
   !> Return factorial
-  interface sll_factorial
+  interface sll_o_factorial
      module procedure factorial_int32, factorial_int64
-  end interface sll_factorial
+  end interface sll_o_factorial
 
 contains
 
   !> Check if an integer is equal to \f[2^n\f]
-  function is_power_of_two( n )
+  function sll_f_is_power_of_two( n )
     sll_int64, intent(in) :: n
-    logical               :: is_power_of_two
+    logical               :: sll_f_is_power_of_two
 
     intrinsic :: not, iand
 
     if( (n>0) .and. (0 .eq. (iand(n,(n-1)))) ) then
-       is_power_of_two = .true.
+       sll_f_is_power_of_two = .true.
     else
-       is_power_of_two = .false.
+       sll_f_is_power_of_two = .false.
     end if
-  end function is_power_of_two
+  end function sll_f_is_power_of_two
 
 
   !> Check if an integer is even
-  function is_even( n )
+  function sll_f_is_even( n )
     sll_int32, intent(in) :: n
-    logical               :: is_even
+    logical               :: sll_f_is_even
 
     intrinsic :: modulo
 
     if( modulo(n,2) .eq. 0 ) then
-       is_even = .true.
+       sll_f_is_even = .true.
     else
-       is_even = .false.
+       sll_f_is_even = .false.
     end if
-  end function is_even
+  end function sll_f_is_even
 
 
   !> It would have been nice to declare the next functions as 'pure' functions,
@@ -150,7 +168,7 @@ contains
 
 
   !> Convert an integer < 9999 to a 4 characters string
-  subroutine int2string( istep, cstep )
+  subroutine sll_s_int2string( istep, cstep )
     integer         , intent(in ) :: istep   !< input integer
     character(len=4), intent(out) :: cstep   !< output string
 
@@ -168,16 +186,16 @@ contains
        dd  = char(kk4 + 48)
        cstep = aa//bb//cc//dd
     else
-       SLL_WARNING( 'int2string', 'index is negative or greater than 9999' )
+       SLL_WARNING( 'sll_s_int2string', 'index is negative or greater than 9999' )
        print*, 'index =', istep
        cstep = 'xxxx'
     end if
 
-  end subroutine int2string
+  end subroutine sll_s_int2string
 
 
   !> Get a file unit number free before creating a file
-  subroutine sll_new_file_id( file_id, error )
+  subroutine sll_s_new_file_id( file_id, error )
     sll_int32, intent(out) :: file_id   !< file unit number
     sll_int32, intent(out) :: error     !< error code
 
@@ -201,7 +219,7 @@ contains
 
     !SLL_ASSERT(error == 0)
    
-  end subroutine sll_new_file_id
+  end subroutine sll_s_new_file_id
 
 
   !> Display a vector to screen
@@ -265,7 +283,7 @@ contains
 
 
   !> Display matrix to screen
-  subroutine display_matrix_2d_integer( array, integer_format )
+  subroutine sll_s_display_matrix_2d_integer( array, integer_format )
    sll_int32, dimension(:,:), intent(in) :: array
    character(len=*)         , intent(in) :: integer_format
 
@@ -283,7 +301,7 @@ contains
    end do
    write(*,*)
 
-  end subroutine display_matrix_2d_integer
+  end subroutine sll_s_display_matrix_2d_integer
 
 
 !> Subroutine to open data file for slv2d and
@@ -297,13 +315,13 @@ subroutine initialize_file( data_file_id, thf_file_id )
   integer                     :: IO_stat
   sll_int32                   :: error
 
-  call getarg( 1, filename)
+  call get_command_argument( 1, filename)
 
-  call sll_new_file_id(data_file_id, error)
+  call sll_s_new_file_id(data_file_id, error)
   open(data_file_id,file=trim(filename),IOStat=IO_stat)
   if (IO_stat/=0) SLL_ERROR( this_sub_name, "Miss argument file.nml" )
 
-  call sll_new_file_id(thf_file_id, error)
+  call sll_s_new_file_id(thf_file_id, error)
   open(thf_file_id,file="thf.dat",IOStat=IO_stat, position='append')
   if (IO_stat/=0) SLL_ERROR( this_sub_name, "Cannot open file thf.dat" )
 
@@ -343,7 +361,7 @@ end subroutine time_history
 !>  product decomposition.  The values returned assume a "global" domain 
 !>  in [1:n]
 !------------------------------------------------------------------------
-subroutine mpe_decomp1d( n, numprocs, myid, s, e)
+subroutine sll_s_mpe_decomp1d( n, numprocs, myid, s, e)
    sll_int32, intent(in)  :: n
    sll_int32, intent(in)  :: numprocs
    sll_int32, intent(in)  :: myid
@@ -363,7 +381,7 @@ subroutine mpe_decomp1d( n, numprocs, myid, s, e)
    e = s + nlocal - 1
    if (e  >  n .or. myid == numprocs-1) e = n
 
-end subroutine mpe_decomp1d
+end subroutine sll_s_mpe_decomp1d
 
 
 !> S: the wave form at a given point in time. This wave form is 
@@ -373,7 +391,7 @@ end subroutine mpe_decomp1d
 !>    envelope, defined in the main portion of this program.
 !> turn_drive_off: 1 if the drive should be turned off after a time
 !>    tflat, and 0 otherwise
-subroutine PFenvelope(S,               &
+subroutine sll_s_pfenvelope(S,               &
                       t,               &
                       tflat,           &
                       tL,              &
@@ -413,7 +431,7 @@ subroutine PFenvelope(S,               &
   S = S + 0.*tflat ! for use of unused
   return
 
-end subroutine PFenvelope
+end subroutine sll_s_pfenvelope
 
 
 !> - Input: 
@@ -430,7 +448,7 @@ end subroutine PFenvelope
 !>  + bloc_index(1) = i1 
 !>  + bloc_index(2) = N_fine 
 !>  + bloc_index(3) = N-i1-N_fine
-subroutine compute_bloc( bloc_coord, bloc_index, N )
+subroutine sll_s_compute_bloc( bloc_coord, bloc_index, N )
 
   sll_real64, intent(inout)  :: bloc_coord(2)
   sll_int32,  intent(inout)  :: bloc_index(3)
@@ -476,11 +494,11 @@ subroutine compute_bloc( bloc_coord, bloc_index, N )
 
   else
 
-    print*, 'case in compute_bloc not implemented yet'
+    print*, 'case in sll_s_compute_bloc not implemented yet'
 
   endif
   
-end subroutine compute_bloc
+end subroutine sll_s_compute_bloc
 
 
 !> - Input:   
@@ -492,7 +510,7 @@ end subroutine compute_bloc
 !>   + node_positions(1:N+1)
 !>   + with constraints node_positions(i1+1)=x1,node_positions(i2+1)=x2
 !>   + node_positions(1)=0, node_positions(N+1)=1
-subroutine compute_mesh_from_bloc( bloc_coord, bloc_index, node_positions )
+subroutine sll_s_compute_mesh_from_bloc( bloc_coord, bloc_index, node_positions )
 
   sll_real64,               intent(in)  :: bloc_coord(2)
   sll_int32,                intent(in)  :: bloc_index(3)
@@ -511,20 +529,25 @@ subroutine compute_mesh_from_bloc( bloc_coord, bloc_index, node_positions )
   node_positions(N+1)   = 1._f64
   
   !piecewise linear mapping (maybe enhanced like in complete mesh)
-  dx=bloc_coord(1)/real(bloc_index(1),f64)
-  do i=2,bloc_index(1)
-     node_positions(i) = (real(i,f64)-1._f64)*dx
-  enddo
-  dx=(bloc_coord(2)-bloc_coord(1))/real(bloc_index(2),f64)
-  do i=2,bloc_index(2)
-    node_positions(i+i1)=bloc_coord(1)+(real(i,f64)-1._f64)*dx
-  enddo
-  dx=(1._f64-bloc_coord(2))/real(bloc_index(3),f64)
-  do i=2,bloc_index(3)
-    node_positions(i+i2)=bloc_coord(2)+(real(i,f64)-1._f64)*dx
-  enddo
-        
-end subroutine compute_mesh_from_bloc
+  if(bloc_index(1).ne. 0)then
+    dx=bloc_coord(1)/real(bloc_index(1),f64)
+    do i=2,bloc_index(1)
+      node_positions(i) = (real(i,f64)-1._f64)*dx
+    enddo
+  endif
+  if(bloc_index(2).ne.0)then  
+    dx=(bloc_coord(2)-bloc_coord(1))/real(bloc_index(2),f64)
+    do i=2,bloc_index(2)
+      node_positions(i+i1)=bloc_coord(1)+(real(i,f64)-1._f64)*dx
+    enddo
+  endif
+  if(bloc_index(3).ne.0)then  
+    dx=(1._f64-bloc_coord(2))/real(bloc_index(3),f64)
+    do i=2,bloc_index(3)
+      node_positions(i+i2)=bloc_coord(2)+(real(i,f64)-1._f64)*dx
+    enddo
+  endif      
+end subroutine sll_s_compute_mesh_from_bloc
 
 
 end module sll_m_utilities

@@ -6,17 +6,36 @@
 !> with cubic B-splines on non uniform mesh
 
 module sll_m_cubic_non_uniform_splines
-#include "sll_working_precision.h"
-#include "sll_memory.h"
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_assert.h"
-use sll_m_tridiagonal
-use sll_m_boundary_condition_descriptors
+#include "sll_memory.h"
+#include "sll_working_precision.h"
+
+  use sll_m_boundary_condition_descriptors, only: &
+    sll_p_hermite, &
+    sll_p_periodic
+
+  use sll_m_tridiagonal, only: &
+    sll_s_setup_cyclic_tridiag, &
+    sll_o_solve_cyclic_tridiag
 
   implicit none
+
+  public :: &
+    sll_s_compute_spline_nonunif, &
+    sll_s_compute_spline_nonunif_1d_periodic_aux2, &
+    sll_t_cubic_nonunif_spline_1d, &
+    sll_s_interpolate_array_value_nonunif, &
+    sll_s_interpolate_array_value_nonunif_aux, &
+    sll_f_new_cubic_nonunif_spline_1d, &
+    sll_s_setup_spline_nonunif_1d_periodic_aux, &
+    sll_o_delete
+
   private
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
   !> Spline object
-  type, public :: cubic_nonunif_spline_1D
+  type :: sll_t_cubic_nonunif_spline_1d
     sll_int32                         :: n_cells        !< number of cells
     sll_real64, dimension(:), pointer :: node_positions !< the non uniform 
                                                         !< mesh normalized on (0,1)
@@ -31,54 +50,47 @@ use sll_m_boundary_condition_descriptors
     LOGICAL                           :: is_setup       !< check splines setup
     sll_real64                        :: slope_L        !< left slope, for Hermite
     sll_real64                        :: slope_R        !< right slope, for Hermite
-  end type cubic_nonunif_spline_1D
+  end type sll_t_cubic_nonunif_spline_1d
 
-  interface sll_delete
+  interface sll_o_delete
     module procedure delete_cubic_nonunif_spline_1d
-  end interface sll_delete
+  end interface sll_o_delete
 
-  public new_cubic_nonunif_spline_1D
-  public compute_spline_nonunif
-  public interpolate_array_value_nonunif
-  public compute_spline_nonunif_1d_periodic_aux2
-  public setup_spline_nonunif_1d_periodic_aux
-  public interpolate_array_value_nonunif_aux
-  public sll_delete
   
   
 contains  ! ****************************************************************
   !> create new spline object
-  function new_cubic_nonunif_spline_1D( n_cells, bc_type )
-    type(cubic_nonunif_spline_1D), pointer        :: new_cubic_nonunif_spline_1D
+  function sll_f_new_cubic_nonunif_spline_1d( n_cells, bc_type )
+    type(sll_t_cubic_nonunif_spline_1d), pointer        :: sll_f_new_cubic_nonunif_spline_1d
     sll_int32,  intent(in)                        :: n_cells
     sll_int32,  intent(in)                        :: bc_type
     sll_int32                                     :: ierr,size_buf,size_ibuf
     
-    SLL_ALLOCATE( new_cubic_nonunif_spline_1D, ierr )
-    new_cubic_nonunif_spline_1D%n_cells = n_cells
-    new_cubic_nonunif_spline_1D%bc_type  = bc_type
+    SLL_ALLOCATE( sll_f_new_cubic_nonunif_spline_1d, ierr )
+    sll_f_new_cubic_nonunif_spline_1d%n_cells = n_cells
+    sll_f_new_cubic_nonunif_spline_1d%bc_type  = bc_type
     
-    SLL_ALLOCATE( new_cubic_nonunif_spline_1D%node_positions(-2:n_cells+2),   ierr )
+    SLL_ALLOCATE( sll_f_new_cubic_nonunif_spline_1d%node_positions(-2:n_cells+2),   ierr )
     
     size_buf = 10*(n_cells+1)
     size_ibuf = n_cells+1 
-    new_cubic_nonunif_spline_1D%size_buf = size_buf
-    SLL_ALLOCATE( new_cubic_nonunif_spline_1D%buf(size_buf),   ierr )
-    new_cubic_nonunif_spline_1D%size_ibuf = size_ibuf
-    SLL_ALLOCATE( new_cubic_nonunif_spline_1D%ibuf(size_ibuf),   ierr )    
+    sll_f_new_cubic_nonunif_spline_1d%size_buf = size_buf
+    SLL_ALLOCATE( sll_f_new_cubic_nonunif_spline_1d%buf(size_buf),   ierr )
+    sll_f_new_cubic_nonunif_spline_1d%size_ibuf = size_ibuf
+    SLL_ALLOCATE( sll_f_new_cubic_nonunif_spline_1d%ibuf(size_ibuf),   ierr )    
 
-    SLL_ALLOCATE( new_cubic_nonunif_spline_1D%coeffs(-1:n_cells+1),   ierr )
+    SLL_ALLOCATE( sll_f_new_cubic_nonunif_spline_1d%coeffs(-1:n_cells+1),   ierr )
     
-    new_cubic_nonunif_spline_1D%is_setup = .FALSE.
+    sll_f_new_cubic_nonunif_spline_1d%is_setup = .FALSE.
     
-    new_cubic_nonunif_spline_1D%slope_L = 0.0_f64
-    new_cubic_nonunif_spline_1D%slope_R = 0.0_f64
+    sll_f_new_cubic_nonunif_spline_1d%slope_L = 0.0_f64
+    sll_f_new_cubic_nonunif_spline_1d%slope_R = 0.0_f64
     
-  end function new_cubic_nonunif_spline_1D
+  end function sll_f_new_cubic_nonunif_spline_1d
 
   !> delete spline object
   subroutine delete_cubic_nonunif_spline_1D( spline, ierr)
-    type(cubic_nonunif_spline_1D), pointer :: spline
+    type(sll_t_cubic_nonunif_spline_1d), pointer :: spline
     sll_int32                    :: ierr
     SLL_ASSERT( associated(spline) )
     SLL_DEALLOCATE( spline%node_positions, ierr )
@@ -89,9 +101,9 @@ contains  ! ****************************************************************
   end subroutine delete_cubic_nonunif_spline_1D
   
   !> compute splines coefficients
-  subroutine compute_spline_nonunif( f, spline, node_positions, sl, sr)
+  subroutine sll_s_compute_spline_nonunif( f, spline, node_positions, sl, sr)
     sll_real64, dimension(:), intent(in) :: f    ! data to be fit
-    type(cubic_nonunif_spline_1D), pointer         :: spline
+    type(sll_t_cubic_nonunif_spline_1d), pointer         :: spline
     sll_real64, dimension(:), intent(in), optional :: node_positions    ! non uniform mesh
     sll_real64, intent(in), optional     :: sl
     sll_real64, intent(in), optional     :: sr
@@ -115,9 +127,9 @@ contains  ! ****************************************************************
       node_pos(0) = 0.0_f64
       node_pos(n_cells) = 1.0_f64        
       select case (bc_type)
-      case (SLL_PERIODIC)
-        call setup_spline_nonunif_1D_periodic_aux(node_pos,n_cells,spline%buf,spline%ibuf)
-      case (SLL_HERMITE)
+      case (sll_p_periodic)
+        call sll_s_setup_spline_nonunif_1d_periodic_aux(node_pos,n_cells,spline%buf,spline%ibuf)
+      case (sll_p_hermite)
         call setup_spline_nonunif_1D_hermite_aux(node_pos,n_cells,spline%buf,spline%ibuf)
       case default
         print *, 'ERROR: compute_spline_nonunif_1D(): not recognized boundary condition'
@@ -135,9 +147,9 @@ contains  ! ****************************************************************
     end if
 
     select case (bc_type)
-    case (SLL_PERIODIC)
+    case (sll_p_periodic)
       call compute_spline_nonunif_1D_periodic( f, spline )
-    case (SLL_HERMITE)
+    case (sll_p_hermite)
       if( present(sl) ) then
         spline%slope_L = sl
       end if
@@ -149,12 +161,12 @@ contains  ! ****************************************************************
        print *, 'ERROR: compute_spline_nonunif_1D(): not recognized boundary condition'
        STOP
     end select  
-  end subroutine compute_spline_nonunif
+  end subroutine sll_s_compute_spline_nonunif
 
   !> PLEASE ADD DOCUMENTATION
   subroutine compute_spline_nonunif_1D_periodic( f, spline )
     sll_real64, dimension(:), intent(in), target :: f    ! data to be fit
-    type(cubic_nonunif_spline_1D), pointer         :: spline
+    type(sll_t_cubic_nonunif_spline_1d), pointer         :: spline
     sll_real64, dimension(:), pointer :: buf,fp,coeffs
     sll_int32, dimension(:), pointer :: ibuf
     sll_int32 :: nc
@@ -184,7 +196,7 @@ contains  ! ****************************************************************
   !> PLEASE ADD DOCUMENTATION
   subroutine compute_spline_nonunif_1D_hermite( f, spline )
     sll_real64, dimension(:), intent(in), target :: f    ! data to be fit
-    type(cubic_nonunif_spline_1D), pointer         :: spline
+    type(sll_t_cubic_nonunif_spline_1d), pointer         :: spline
     sll_real64, dimension(:), pointer :: buf,fp,coeffs
     sll_int32, dimension(:), pointer :: ibuf
     sll_int32 :: nc
@@ -255,7 +267,7 @@ contains  ! ****************************************************************
 
 
   !> PLEASE ADD DOCUMENTATION
-  subroutine setup_spline_nonunif_1D_periodic_aux( node_pos, N, buf, ibuf)
+  subroutine sll_s_setup_spline_nonunif_1d_periodic_aux( node_pos, N, buf, ibuf)
     sll_real64, dimension(:), pointer :: node_pos,buf
     sll_int32, intent(in) :: N
     sll_real64, dimension(:), pointer :: a, cts
@@ -284,10 +296,10 @@ contains  ! ****************************************************************
     enddo
     !print *,'#a=',a
     !initialize the tridiagonal solver
-    call setup_cyclic_tridiag (a, N, cts, ipiv)
+    call sll_s_setup_cyclic_tridiag (a, N, cts, ipiv)
     !print *,'#cts=',maxval(cts),minval(cts)
     !print *,'#ipiv=',ipiv    
-  end subroutine setup_spline_nonunif_1D_periodic_aux
+  end subroutine sll_s_setup_spline_nonunif_1d_periodic_aux
 
   subroutine setup_spline_nonunif_1D_hermite_aux( node_pos, N, buf, ibuf)
     sll_real64, dimension(:), pointer :: node_pos,buf
@@ -336,7 +348,7 @@ contains  ! ****************************************************************
     a(3*N+3)=0.0_f64
 
     !initialize the tridiagonal solver
-    call setup_cyclic_tridiag (a, Np, cts, ipiv)
+    call sll_s_setup_cyclic_tridiag (a, Np, cts, ipiv)
         
   end subroutine setup_spline_nonunif_1D_hermite_aux
 
@@ -356,7 +368,7 @@ contains  ! ****************************************************************
     ipiv => ibuf(1:N)
 
     !compute the spline coefficients
-    call solve_cyclic_tridiag( cts, ipiv, f, N, coeffs(0:N-1) )
+    call sll_o_solve_cyclic_tridiag( cts, ipiv, f, N, coeffs(0:N-1) )
     coeffs(-1) = coeffs(N-1)
     coeffs(N)  = coeffs(0)
     coeffs(N+1) = coeffs(1)
@@ -372,7 +384,7 @@ contains  ! ****************************************************************
   end subroutine compute_spline_nonunif_1D_periodic_aux
 
   !> PLEASE ADD DOCUMENTATION
-  subroutine compute_spline_nonunif_1D_periodic_aux2( f, N, buf, ibuf, coeffs )
+  subroutine sll_s_compute_spline_nonunif_1d_periodic_aux2( f, N, buf, ibuf, coeffs )
     sll_real64, dimension(:) :: f
     sll_real64, dimension(:), pointer :: buf
     sll_real64, dimension(:), pointer :: coeffs
@@ -398,7 +410,7 @@ contains  ! ****************************************************************
     b(1:N) = f(1:N)
     
     !compute the spline coefficients
-    !call solve_cyclic_tridiag( cts, ipiv, f, N, coeffs(0:N-1) )
+    !call sll_o_solve_cyclic_tridiag( cts, ipiv, f, N, coeffs(0:N-1) )
     coeffs(0:N-1) = 0._f64
     !do i=0,N-1
     !  if(coeffs(i) .ne. 0._f64)then
@@ -409,7 +421,7 @@ contains  ! ****************************************************************
     
 
     
-    call solve_cyclic_tridiag( cts, ipiv, f(1:N), N, coeffs(0:N-1) )
+    call sll_o_solve_cyclic_tridiag( cts, ipiv, f(1:N), N, coeffs(0:N-1) )
     
     
     
@@ -426,7 +438,7 @@ contains  ! ****************************************************************
     !  endif
     !enddo
     !print *,'error of compute_spline=',linf_err
-  end subroutine compute_spline_nonunif_1D_periodic_aux2
+  end subroutine sll_s_compute_spline_nonunif_1d_periodic_aux2
 
 
 
@@ -445,7 +457,7 @@ contains  ! ****************************************************************
     coeffs(1:N-1)=f(2:N)
     coeffs(0)=f(1)+lift(1,1)
     coeffs(N)=f(N+1)+lift(1,2)
-    call solve_cyclic_tridiag( cts, ipiv, coeffs(0:N), Np, coeffs(0:N) )
+    call sll_o_solve_cyclic_tridiag( cts, ipiv, coeffs(0:N), Np, coeffs(0:N) )
     !coeffs(-1) = coeffs(1)+lift(2,1)
     !coeffs(N+1) = coeffs(N-1)+lift(2,2)
     
@@ -461,7 +473,7 @@ contains  ! ****************************************************************
     !warning not tested, should not work->t o be adapted like array
     sll_real64                                     :: interpolate_value_nonunif
     sll_real64, intent(in)                         :: x
-    type(cubic_nonunif_spline_1D), pointer      :: spline
+    type(sll_t_cubic_nonunif_spline_1d), pointer      :: spline
     sll_int32 :: j
     sll_real64 ::xx
     sll_real64, dimension(:), pointer :: Xj,coef
@@ -504,12 +516,12 @@ contains  ! ****************************************************************
   end function interpolate_value_nonunif
 
   !> get spline interpolate on an array of points
-  subroutine interpolate_array_value_nonunif( a_in, a_out, n, spline )
+  subroutine sll_s_interpolate_array_value_nonunif( a_in, a_out, n, spline )
     sll_int32, intent(in) :: n
     sll_real64, dimension(1:n), intent(in)  :: a_in
     sll_real64, dimension(1:n), intent(out) :: a_out
     sll_real64                         :: x
-    type(cubic_nonunif_spline_1D), pointer      :: spline
+    type(sll_t_cubic_nonunif_spline_1d), pointer      :: spline
     sll_int32 :: i,j,shift=3
     sll_real64 ::xx
     sll_real64, dimension(:), pointer :: Xj
@@ -520,7 +532,7 @@ contains  ! ****************************************************************
     xx = (x-spline%xmin)/(spline%xmax-spline%xmin)
     if(.not.((xx .ge. 0.0_f64) .and. (xx .le. 1.0_f64 ))) then
       print *,'bad_value of x=',x, 'xmin=', spline%xmin, 'xmax=', spline%xmax, xx,xx-1.0_f64
-      print *,'in subroutine interpolate_array_value_nonunif()'
+      print *,'in subroutine sll_s_interpolate_array_value_nonunif()'
       STOP
     endif
     !SLL_ASSERT( (xx .ge. 0.0_f64) .and. (xx .le. 1.0_f64 ))
@@ -540,7 +552,7 @@ contains  ! ****************************************************************
       x = (a_in(i)-spline%xmin)/(spline%xmax-spline%xmin)
       if(.not.((x .ge. 0.0_f64) .and. (x .le. 1.0_f64 ))) then
         print *,'bad_value of a_in(',i,')=',a_in(i), 'xmin=', spline%xmin, 'xmax=', spline%xmax 
-        print *,'in subroutine interpolate_array_value_nonunif()'
+        print *,'in subroutine sll_s_interpolate_array_value_nonunif()'
         STOP
       endif
       if (x==1.0_f64) then
@@ -591,17 +603,17 @@ contains  ! ****************************************************************
       a_out(i) = w(1)*coef(1)+w(2)*coef(2)+w(3)*coef(3)+w(4)*coef(4)
 
     enddo  
-  end subroutine interpolate_array_value_nonunif
+  end subroutine sll_s_interpolate_array_value_nonunif
 
 
   !> PLEASE ADD DOCUMENTATION
-  subroutine interpolate_array_value_nonunif_aux( a_in, a_out, n, node_pos,coeffs,n_cells )
+  subroutine sll_s_interpolate_array_value_nonunif_aux( a_in, a_out, n, node_pos,coeffs,n_cells )
     sll_int32, intent(in) :: n,n_cells
     sll_real64, dimension(1:n), intent(in)  :: a_in
     !sll_real64, dimension(-1:n+1), intent(in)  :: node_pos
     sll_real64, dimension(1:n), intent(out) :: a_out
     sll_real64                         :: x
-    !type(cubic_nonunif_spline_1D), pointer      :: spline
+    !type(sll_t_cubic_nonunif_spline_1d), pointer      :: spline
     sll_int32 :: i,j,shift=3
     sll_real64 ::xx
     sll_real64, dimension(:), pointer :: Xj
@@ -616,7 +628,7 @@ contains  ! ****************************************************************
     !xx = (x-spline%xmin)/(spline%xmax-spline%xmin)
     if(.not.((xx .ge. 0.0_f64) .and. (xx .le. 1.0_f64 ))) then
       print *,'bad_value of x=',x!, 'xmin=', spline%xmin, 'xmax=', spline%xmax, xx,xx-1.0_f64
-      print *,'in subroutine interpolate_array_value_nonunif()'
+      print *,'in subroutine sll_s_interpolate_array_value_nonunif()'
       STOP
     endif
     !SLL_ASSERT( (xx .ge. 0.0_f64) .and. (xx .le. 1.0_f64 ))
@@ -636,7 +648,7 @@ contains  ! ****************************************************************
       x = a_in(i)
       if(.not.((x .ge. 0.0_f64) .and. (x .le. 1.0_f64 ))) then
         print *,'bad_value of a_in(',i,')=',a_in(i)!, 'xmin=', spline%xmin, 'xmax=', spline%xmax 
-        print *,'in subroutine interpolate_array_value_nonunif()'
+        print *,'in subroutine sll_s_interpolate_array_value_nonunif()'
         STOP
       endif
       if (x==1.0_f64) then
@@ -699,7 +711,7 @@ contains  ! ****************************************************************
     !do i=1,n
     !  print *,i,a_in(i),a_out(i)
     !enddo  
-  end subroutine interpolate_array_value_nonunif_aux
+  end subroutine sll_s_interpolate_array_value_nonunif_aux
 
 
 

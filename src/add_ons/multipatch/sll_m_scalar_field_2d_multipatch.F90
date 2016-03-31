@@ -26,48 +26,77 @@
 ! TODO_dd_mmm_yyyy - TODO_describe_appropriate_changes - TODO_name
 !------------------------------------------------------------------------------
 module sll_m_scalar_field_2d_multipatch
-#include "sll_working_precision.h"
-#include "sll_memory.h"
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_assert.h"
+#include "sll_memory.h"
+#include "sll_working_precision.h"
 
-  use sll_m_scalar_field_2d
-  use sll_m_coordinate_transformation_multipatch
-  use sll_m_constants
-  use sll_m_interpolators_2d_base
-  use sll_m_arbitrary_degree_spline_interpolator_2d
-  use sll_m_utilities
-  use sll_m_boundary_condition_descriptors
-  use sll_m_gnuplot
-  use sll_m_utilities, only: sll_new_file_id, int2string
-  use sll_m_xdmf
+  use sll_m_arbitrary_degree_spline_interpolator_2d, only: &
+    sll_f_new_arbitrary_degree_spline_interp2d, &
+    sll_s_set_slope2d, &
+    sll_t_arbitrary_degree_spline_interpolator_2d, &
+    sll_t_arbitrary_degree_spline_interpolator_2d_ptr, &
+    sll_o_delete
+
+  use sll_m_boundary_condition_descriptors, only: &
+    sll_p_hermite
+
+  use sll_m_cartesian_meshes, only: &
+    sll_t_cartesian_mesh_2d
+
+  use sll_m_coordinate_transformation_multipatch, only: &
+    sll_t_multipatch_data_2d_real, &
+    sll_t_coordinate_transformation_multipatch_2d
+
+  use sll_m_coordinate_transformations_2d_nurbs, only: &
+    sll_t_coordinate_transformation_2d_nurbs
+
+  use sll_m_scalar_field_2d, only: &
+    sll_f_new_scalar_field_2d_discrete, &
+    sll_t_scalar_field_2d_discrete_ptr, &
+    sll_o_delete
+
+  use sll_m_utilities, only: &
+    sll_s_int2string, &
+    sll_s_new_file_id
+
   implicit none
 
+  public :: &
+    sll_f_new_scalar_field_multipatch_2d, &
+    sll_s_set_slope_mp, &
+    sll_o_delete, &
+    sll_t_scalar_field_multipatch_2d
 
-  type ::  sll_scalar_field_multipatch_2d
+  private
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+
+  type ::  sll_t_scalar_field_multipatch_2d
      sll_int32 :: num_patches
      character(len=128) :: field_name
-     type(sll_coordinate_transformation_multipatch_2d), pointer    :: transf
-     type(sll_scalar_field_2d_discrete_ptr), dimension(:), pointer :: fields &
+     type(sll_t_coordinate_transformation_multipatch_2d), pointer    :: transf
+     type(sll_t_scalar_field_2d_discrete_ptr), dimension(:), pointer :: fields &
           => null()
-     type(sll_arbitrary_degree_spline_interpolator_2d_ptr), dimension(:), pointer :: interps &
+     type(sll_t_arbitrary_degree_spline_interpolator_2d_ptr), dimension(:), pointer :: interps &
           => null()
      ! to be used if the field is supposed to allocate its own data and so
      ! it would be responsible for deleting it too. Else, it is just a pointer
      ! that needs to be set with the proper access function.
      logical                                         :: owns_memory = .false.
-     type(multipatch_data_2d_real), dimension(:), pointer :: patch_data => null()
+     type(sll_t_multipatch_data_2d_real), dimension(:), pointer :: patch_data => null()
      ! The following memory buffers are meant to mimic the type of 
      ! organization that we will need for the parallel case. The actual 
      ! size of these buffers depend on the degree of the spline used to 
      ! reconstruct the field data and of course the logical mesh size.
-     type(multipatch_data_2d_real), dimension(:), pointer :: buffers0 => null()
-     type(multipatch_data_2d_real), dimension(:), pointer :: buffers1 => null()
-     type(multipatch_data_2d_real), dimension(:), pointer :: buffers2 => null()
-     type(multipatch_data_2d_real), dimension(:), pointer :: buffers3 => null()
-     type(multipatch_data_2d_real), dimension(:), pointer :: derivs0 => null()
-     type(multipatch_data_2d_real), dimension(:), pointer :: derivs1 => null()
-     type(multipatch_data_2d_real), dimension(:), pointer :: derivs2 => null()
-     type(multipatch_data_2d_real), dimension(:), pointer :: derivs3 => null()
+     type(sll_t_multipatch_data_2d_real), dimension(:), pointer :: buffers0 => null()
+     type(sll_t_multipatch_data_2d_real), dimension(:), pointer :: buffers1 => null()
+     type(sll_t_multipatch_data_2d_real), dimension(:), pointer :: buffers2 => null()
+     type(sll_t_multipatch_data_2d_real), dimension(:), pointer :: buffers3 => null()
+     type(sll_t_multipatch_data_2d_real), dimension(:), pointer :: derivs0 => null()
+     type(sll_t_multipatch_data_2d_real), dimension(:), pointer :: derivs1 => null()
+     type(sll_t_multipatch_data_2d_real), dimension(:), pointer :: derivs2 => null()
+     type(sll_t_multipatch_data_2d_real), dimension(:), pointer :: derivs3 => null()
    contains
      procedure, pass :: initialize => initialize_scalar_field_sfmp2d
      procedure, pass :: allocate_memory => allocate_memory_sfmp2d
@@ -97,31 +126,31 @@ module sll_m_scalar_field_2d_multipatch
      procedure, pass :: set_field_data => set_field_data_sfmp2d
      procedure, pass :: write_to_file => write_to_file_sfmp2d
      procedure, pass :: delete => delete_field_sfmp2d
-  end type sll_scalar_field_multipatch_2d
+  end type sll_t_scalar_field_multipatch_2d
 
 
-  interface sll_delete
+  interface sll_o_delete
      module procedure delete_field_sfmp2d_ptr
-  end interface sll_delete
+  end interface sll_o_delete
 
 
 contains   ! *****************************************************************
 
 
-  function new_scalar_field_multipatch_2d( &
+  function sll_f_new_scalar_field_multipatch_2d( &
     field_name, &
     transformation, &
     owns_data ) result(obj)
 
-    type(sll_scalar_field_multipatch_2d), pointer             :: obj
+    type(sll_t_scalar_field_multipatch_2d), pointer             :: obj
     character(len=*), intent(in)                              :: field_name
-    type(sll_coordinate_transformation_multipatch_2d), target :: transformation
+    type(sll_t_coordinate_transformation_multipatch_2d), target :: transformation
     logical, intent(in), optional                             :: owns_data
     sll_int32  :: ierr
 
     SLL_ALLOCATE(obj,ierr)
     call obj%initialize( field_name, transformation, owns_data )
-  end function new_scalar_field_multipatch_2d
+  end function sll_f_new_scalar_field_multipatch_2d
   
   subroutine initialize_scalar_field_sfmp2d( &
     fmp, &
@@ -129,12 +158,12 @@ contains   ! *****************************************************************
     transf, &
     owns_data )
     
-    class(sll_scalar_field_multipatch_2d)                     :: fmp
+    class(sll_t_scalar_field_multipatch_2d)                     :: fmp
     character(len=*), intent(in)                              :: field_name
-    type(sll_coordinate_transformation_multipatch_2d), target :: transf
+    type(sll_t_coordinate_transformation_multipatch_2d), target :: transf
     logical, intent(in), optional                             :: owns_data
     character(len=256)                                        :: patch_name
-    class(sll_cartesian_mesh_2d), pointer                       :: lm
+    class(sll_t_cartesian_mesh_2d), pointer                       :: lm
     sll_int32, dimension(1:2)                                 :: connectivity
     character(len=128) :: format_string 
     sll_int32  :: i
@@ -197,36 +226,36 @@ contains   ! *****************************************************************
        ! just being paranoid, there is no way that one of the values could be
        ! negative and not the other...
        if( (connectivity(1) >= 0) .and. (connectivity(2) >= 0) ) then
-          bc_bottom = SLL_HERMITE
+          bc_bottom = sll_p_hermite
        else
-          bc_bottom = SLL_HERMITE!SLL_DIRICHLET ! THIS IS TEMPORARY, MORE OPTIONS ARE NEEDED
+          bc_bottom = sll_p_hermite!sll_p_dirichlet ! THIS IS TEMPORARY, MORE OPTIONS ARE NEEDED
        end if
 
        connectivity(:) = fmp%transf%get_connectivity(i,1)
        ! just being paranoid, there is no way that one of the values could be
        ! negative and not the other...
        if( (connectivity(1) >= 0) .and. (connectivity(2) >= 0) ) then
-          bc_left = SLL_HERMITE
+          bc_left = sll_p_hermite
        else
-          bc_left = SLL_HERMITE!SLL_DIRICHLET ! THIS IS TEMPORARY, MORE OPTIONS ARE NEEDED
+          bc_left = sll_p_hermite!sll_p_dirichlet ! THIS IS TEMPORARY, MORE OPTIONS ARE NEEDED
        end if
 
        connectivity(:) = fmp%transf%get_connectivity(i,2)
        ! just being paranoid, there is no way that one of the values could be
        ! negative and not the other...
        if( (connectivity(1) >= 0) .and. (connectivity(2) >= 0) ) then
-          bc_top = SLL_HERMITE
+          bc_top = sll_p_hermite
        else
-          bc_top = SLL_HERMITE!SLL_DIRICHLET ! THIS IS TEMPORARY, MORE OPTIONS ARE NEEDED
+          bc_top = sll_p_hermite!sll_p_dirichlet ! THIS IS TEMPORARY, MORE OPTIONS ARE NEEDED
        end if
 
        connectivity(:) = fmp%transf%get_connectivity(i,3)
        ! just being paranoid, there is no way that one of the values could be
        ! negative and not the other...
        if( (connectivity(1) >= 0) .and. (connectivity(2) >= 0) ) then
-          bc_right = SLL_HERMITE
+          bc_right = sll_p_hermite
        else
-          bc_right = SLL_HERMITE!SLL_DIRICHLET ! THIS IS TEMPORARY, MORE OPTIONS ARE NEEDED
+          bc_right = sll_p_hermite!sll_p_dirichlet ! THIS IS TEMPORARY, MORE OPTIONS ARE NEEDED
        end if
 
        ! NOTE THAT THE SPLINE DEGREE 3 WAS HARDWIRED HERE. NEED A DECISION
@@ -235,7 +264,7 @@ contains   ! *****************************************************************
        print *, 'building patch named ', patch_name
 
        
-       fmp%interps(i+1)%interp => new_arbitrary_degree_spline_interp2d( &
+       fmp%interps(i+1)%interp => sll_f_new_arbitrary_degree_spline_interp2d( &
             lm%num_cells1+1, &
             lm%num_cells2+1, &
             lm%eta1_min, &
@@ -252,7 +281,7 @@ contains   ! *****************************************************************
        print *, 'created interpolator for patch ', i
        print *, "num cells = ", lm%num_cells1, lm%num_cells2
  
-      fmp%fields(i+1)%f => new_scalar_field_2d_discrete( &
+      fmp%fields(i+1)%f => sll_f_new_scalar_field_2d_discrete( &
             patch_name, &
             fmp%interps(i+1)%interp, &
             fmp%get_transformation(i), &
@@ -315,13 +344,13 @@ contains   ! *****************************************************************
 
   function get_number_patches_sfmp2d( field ) result(res)
     sll_int32 :: res
-    class(sll_scalar_field_multipatch_2d), intent(in) :: field
+    class(sll_t_scalar_field_multipatch_2d), intent(in) :: field
     res = field%num_patches
   end function get_number_patches_sfmp2d
 
 
   subroutine delete_field_sfmp2d_ptr( field )
-    class(sll_scalar_field_multipatch_2d), pointer :: field
+    class(sll_t_scalar_field_multipatch_2d), pointer :: field
     sll_int32 :: ierr
 
     call field%delete()
@@ -332,15 +361,15 @@ contains   ! *****************************************************************
 
 
   subroutine delete_field_sfmp2d( field )
-    class(sll_scalar_field_multipatch_2d), intent(inout) :: field
+    class(sll_t_scalar_field_multipatch_2d), intent(inout) :: field
     sll_int32 :: i
     sll_int32 :: num_patches
     sll_int32 :: ierr
 
     num_patches = field%get_number_patches()
     do i=0,num_patches-1
-       call sll_delete(field%fields(i+1)%f)
-       call sll_delete(field%interps(i+1)%interp)
+       call sll_o_delete(field%fields(i+1)%f)
+       call sll_o_delete(field%interps(i+1)%interp)
        SLL_DEALLOCATE_ARRAY(field%buffers0(i+1)%array,ierr)
        SLL_DEALLOCATE_ARRAY(field%buffers1(i+1)%array,ierr)
        SLL_DEALLOCATE_ARRAY(field%buffers2(i+1)%array,ierr)
@@ -376,8 +405,8 @@ contains   ! *****************************************************************
   ! the data associated with a multipatch field by resetting pointers only and
   ! thus avoiding unnecessary memory copying.
   subroutine allocate_memory_sfmp2d( field )
-    class(sll_scalar_field_multipatch_2d), intent(inout) :: field
-    class(sll_cartesian_mesh_2d), pointer :: lm
+    class(sll_t_scalar_field_multipatch_2d), intent(inout) :: field
+    class(sll_t_cartesian_mesh_2d), pointer :: lm
     sll_int32 :: i
     sll_int32 :: ierr
     sll_int32 :: num_patches
@@ -419,10 +448,10 @@ contains   ! *****************************************************************
   end subroutine allocate_memory_sfmp2d
 
   subroutine set_field_data_sfmp2d( mp, patch, values )
-    class(sll_scalar_field_multipatch_2d), intent(inout) :: mp
+    class(sll_t_scalar_field_multipatch_2d), intent(inout) :: mp
     sll_int32, intent(in)                               :: patch
     sll_real64, dimension(:,:), intent(in)              :: values
-    class(sll_cartesian_mesh_2d), pointer                 :: lm
+    class(sll_t_cartesian_mesh_2d), pointer                 :: lm
     sll_int32                                           :: numpts1
     sll_int32                                           :: numpts2
 
@@ -440,20 +469,20 @@ contains   ! *****************************************************************
 
   function get_patch_data_ptr_sfmp2d( mp, patch ) result(ptr)
     sll_real64, dimension(:,:), pointer                  :: ptr
-    class(sll_scalar_field_multipatch_2d), intent(inout) :: mp
+    class(sll_t_scalar_field_multipatch_2d), intent(inout) :: mp
     sll_int32, intent(in)                                :: patch
     ptr => mp%fields(patch+1)%f%get_data_pointer()
   end function get_patch_data_ptr_sfmp2d
 
   subroutine set_patch_data_ptr_sfmp2d( mp, patch, ptr )
     sll_real64, dimension(:,:), pointer                  :: ptr
-    class(sll_scalar_field_multipatch_2d), intent(inout) :: mp
+    class(sll_t_scalar_field_multipatch_2d), intent(inout) :: mp
     sll_int32, intent(in)                                :: patch
     mp%patch_data(patch+1)%array => ptr
   end subroutine set_patch_data_ptr_sfmp2d
 
   subroutine update_interp_coeffs_sfmp2d( mp )
-    class(sll_scalar_field_multipatch_2d), intent(inout) :: mp
+    class(sll_t_scalar_field_multipatch_2d), intent(inout) :: mp
     sll_int32 :: ipatch
     ! WARNING: this step would be unnecessary if the fields referred to 
     ! their data via a pointer, the following call will be copying lots of
@@ -473,8 +502,8 @@ contains   ! *****************************************************************
   ! THIS SHOULD BE CHANGED TO INCLUDE THE CASE IN WHICH THE CELL SPACING
   ! CHANGES IN BETWEEN PATCHES!!!
   subroutine compute_compatible_derivatives_in_borders( fmp )
-    class(sll_scalar_field_multipatch_2d), intent(inout) :: fmp
-    class(sll_cartesian_mesh_2d), pointer :: m
+    class(sll_t_scalar_field_multipatch_2d), intent(inout) :: fmp
+    class(sll_t_cartesian_mesh_2d), pointer :: m
     sll_int32 :: num_patches
     sll_int32 :: ip
     sll_int32 :: i
@@ -731,16 +760,16 @@ contains   ! *****************************************************************
   end subroutine compute_compatible_derivatives_in_borders
 
   function get_patch_transformation_sfmp2d( mp, patch ) result(res)
-    class(sll_coordinate_transformation_2d_nurbs), pointer :: res
-    class(sll_scalar_field_multipatch_2d), intent(in)      :: mp
+    class(sll_t_coordinate_transformation_2d_nurbs), pointer :: res
+    class(sll_t_scalar_field_multipatch_2d), intent(in)      :: mp
     sll_int32, intent(in)                                 :: patch
     SLL_ASSERT( (patch >= 0) .and. (patch < mp%num_patches) )
     res => mp%transf%get_transformation( patch )
   end function get_patch_transformation_sfmp2d
 
   function get_patch_logical_mesh_sfmp2d( mp, patch ) result(res)
-    class(sll_cartesian_mesh_2d), pointer                 :: res
-    class(sll_scalar_field_multipatch_2d), intent(in)   :: mp
+    class(sll_t_cartesian_mesh_2d), pointer                 :: res
+    class(sll_t_scalar_field_multipatch_2d), intent(in)   :: mp
     sll_int32, intent(in)                              :: patch
     SLL_ASSERT( (patch >= 0) .and. (patch < mp%num_patches) )
     res => mp%transf%get_cartesian_mesh(patch)
@@ -748,7 +777,7 @@ contains   ! *****************************************************************
 
   function get_jacobian_matrix_sfmp2d( mp, eta1, eta2, patch ) result(res)
     sll_real64, dimension(2,2) :: res
-    class(sll_scalar_field_multipatch_2d), intent(in)   :: mp
+    class(sll_t_scalar_field_multipatch_2d), intent(in)   :: mp
     sll_real64, intent(in)                             :: eta1
     sll_real64, intent(in)                             :: eta2
     sll_int32, intent(in)                              :: patch
@@ -758,7 +787,7 @@ contains   ! *****************************************************************
 
   function value_at_pt_sfmp2d( mp, eta1, eta2, patch ) result(res)
     sll_real64                                          :: res
-    class(sll_scalar_field_multipatch_2d), intent(in) :: mp
+    class(sll_t_scalar_field_multipatch_2d), intent(in) :: mp
     sll_real64, intent(in)                              :: eta1
     sll_real64, intent(in)                              :: eta2
     sll_int32, intent(in)                               :: patch
@@ -768,7 +797,7 @@ contains   ! *****************************************************************
 
   function value_at_indices_sfmp2d( mp, i, j, patch ) result(res)
     sll_real64                                       :: res
-    class(sll_scalar_field_multipatch_2d), intent(in) :: mp
+    class(sll_t_scalar_field_multipatch_2d), intent(in) :: mp
     sll_int32, intent(in)                            :: i
     sll_int32, intent(in)                            :: j
     sll_int32, intent(in)                            :: patch
@@ -777,7 +806,7 @@ contains   ! *****************************************************************
   end function value_at_indices_sfmp2d
 
   subroutine set_value_at_indices_sfmp2d( mp, i, j, patch, val )
-    class(sll_scalar_field_multipatch_2d), intent(in) :: mp
+    class(sll_t_scalar_field_multipatch_2d), intent(in) :: mp
     sll_int32, intent(in)                             :: i
     sll_int32, intent(in)                             :: j
     sll_int32, intent(in)                             :: patch
@@ -790,7 +819,7 @@ contains   ! *****************************************************************
     result(res)
 
     sll_real64                                       :: res
-    class(sll_scalar_field_multipatch_2d), intent(in) :: mp
+    class(sll_t_scalar_field_multipatch_2d), intent(in) :: mp
     sll_real64, intent(in)                           :: eta1
     sll_real64, intent(in)                           :: eta2
     sll_int32, intent(in)                            :: patch
@@ -802,7 +831,7 @@ contains   ! *****************************************************************
     result(res)
 
     sll_real64                                       :: res
-    class(sll_scalar_field_multipatch_2d), intent(in) :: mp
+    class(sll_t_scalar_field_multipatch_2d), intent(in) :: mp
     sll_real64, intent(in)                           :: eta1
     sll_real64, intent(in)                           :: eta2
     sll_int32, intent(in)                            :: patch
@@ -814,7 +843,7 @@ contains   ! *****************************************************************
     result(res)
 
     sll_real64                                       :: res
-    class(sll_scalar_field_multipatch_2d), intent(in) :: mp
+    class(sll_t_scalar_field_multipatch_2d), intent(in) :: mp
     sll_int32, intent(in)                            :: i
     sll_int32, intent(in)                            :: j
     sll_int32, intent(in)                            :: patch
@@ -826,7 +855,7 @@ contains   ! *****************************************************************
     result(res)
 
     sll_real64                                       :: res
-    class(sll_scalar_field_multipatch_2d), intent(in) :: mp
+    class(sll_t_scalar_field_multipatch_2d), intent(in) :: mp
     sll_int32, intent(in)                            :: i
     sll_int32, intent(in)                            :: j
     sll_int32, intent(in)                            :: patch
@@ -836,7 +865,7 @@ contains   ! *****************************************************************
 
 
   subroutine write_to_file_sfmp2d( mp, tag )
-    class(sll_scalar_field_multipatch_2d), intent(in) :: mp
+    class(sll_t_scalar_field_multipatch_2d), intent(in) :: mp
     sll_int32, intent(in)                            :: tag
     sll_int32                                        :: num_patches
     sll_int32                                        :: i
@@ -849,9 +878,9 @@ contains   ! *****************************************************************
         call mp%fields(i)%f%write_to_file( tag )
     end do
 
-    call sll_new_file_id(gnu_id, error)
+    call sll_s_new_file_id(gnu_id, error)
 
-    call int2string(tag,ctag)
+    call sll_s_int2string(tag,ctag)
     open(gnu_id,file=trim(mp%field_name)//".gnu")
     write(gnu_id,"(a)",advance='no') &
         "splot '"//trim(mp%fields(1)%f%name)//"_"//ctag//".dat' w l"
@@ -866,7 +895,7 @@ contains   ! *****************************************************************
 
   end subroutine write_to_file_sfmp2d
 
-  subroutine set_slope_mp(mp,patch,slope_left,&
+  subroutine sll_s_set_slope_mp(mp,patch,slope_left,&
        slope_right,&
        slope_bottom,&
        slope_top)
@@ -875,8 +904,8 @@ contains   ! *****************************************************************
     sll_real64, dimension(:),optional :: slope_right
     sll_real64, dimension(:),optional :: slope_bottom
     sll_real64, dimension(:),optional :: slope_top
-    class(sll_scalar_field_multipatch_2d), intent(in) :: mp
-    class(sll_arbitrary_degree_spline_interpolator_2d),pointer:: interpolator
+    class(sll_t_scalar_field_multipatch_2d), intent(in) :: mp
+    class(sll_t_arbitrary_degree_spline_interpolator_2d),pointer:: interpolator
     sll_int32 :: patch
     sll_int32 :: num_pts1,num_pts2
 
@@ -890,7 +919,7 @@ contains   ! *****************************************************************
          (present(slope_bottom)) .and. &
          (present(slope_top)) ) then
 
-       call set_slope2d(&
+       call sll_s_set_slope2d(&
          interpolator,&
          slope_left,&
          slope_right,&
@@ -901,7 +930,7 @@ contains   ! *****************************************************************
        ! ATTENTION !
        ! see convention above about the face numbering
        ! 
-       call set_slope2d(&
+       call sll_s_set_slope2d(&
             interpolator,&
             mp%derivs1(patch+1)%array(1:num_pts2,1),&
             mp%derivs3(patch+1)%array(1:num_pts2,1),&
@@ -909,7 +938,7 @@ contains   ! *****************************************************************
             mp%derivs2(patch+1)%array(1:num_pts1,1))
     end if
 
-  end subroutine set_slope_mp
+  end subroutine sll_s_set_slope_mp
 
 
   !! normally in the Ahmed code local_index_array
@@ -923,7 +952,7 @@ contains   ! *****************************************************************
   !! i.e. k + (l-1)* num_cell for k = 1,num_cell and 
   !! l = 1, num_splines_loc
 !!$  function get_spline_local_index_sfmp2d(mp,patch,splines_local,cell_i,cell_j)result(res)
-!!$    class(sll_scalar_field_multipatch_2d), intent(inout) :: mp
+!!$    class(sll_t_scalar_field_multipatch_2d), intent(inout) :: mp
 !!$    sll_int32 :: patch
 !!$    sll_int32 :: splines_local
 !!$    sll_int32 :: cell_i,cell_j
@@ -931,7 +960,7 @@ contains   ! *****************************************************************
 !!$    sll_int32 :: res
 !!$    sll_int32 :: num_spline_loc_max
 !!$    sll_int32 :: total_num_cells_in_patch
-!!$    type(sll_cartesian_mesh_2d), pointer                         :: lm
+!!$    type(sll_t_cartesian_mesh_2d), pointer                         :: lm
 !!$    
 !!$   
 !!$    SLL_ASSERT( (patch >= 0) .and. (patch < mp%num_patches) )
@@ -956,7 +985,7 @@ contains   ! *****************************************************************
 !!$  !!                                   * (number_cells_eta2_patch_i + deg_spline_eta2_patch_i) 
 !!$  
 !!$  function get_spline_global_index_sfmp2d(mp,num_splines_global)result(res)
-!!$    class(sll_scalar_field_multipatch_2d), intent(inout) :: mp
+!!$    class(sll_t_scalar_field_multipatch_2d), intent(inout) :: mp
 !!$    sll_int32 :: num_splines_global
 !!$    sll_int32 :: res
 !!$    
@@ -976,7 +1005,7 @@ contains   ! *****************************************************************
 !!$  !! l = 1, num_splines_loc
 !!$  function get_spline_local_to_global_index_sfmp2d(mp,patch,splines_local,cell_i,cell_j)&
 !!$       result(res)
-!!$    class(sll_scalar_field_multipatch_2d), intent(inout) :: mp
+!!$    class(sll_t_scalar_field_multipatch_2d), intent(inout) :: mp
 !!$    sll_int32 :: patch
 !!$    sll_int32 :: splines_local
 !!$    sll_int32 :: cell_i,cell_j
@@ -985,7 +1014,7 @@ contains   ! *****************************************************************
 !!$    sll_int32 :: num_spline_loc_max
 !!$    sll_int32 :: index
 !!$    sll_int32 :: total_num_cells_in_patch
-!!$    type(sll_cartesian_mesh_2d), pointer                         :: lm
+!!$    type(sll_t_cartesian_mesh_2d), pointer                         :: lm
 !!$    
 !!$    
 !!$    SLL_ASSERT( (patch >= 0) .and. (patch < mp%num_patches) )

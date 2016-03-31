@@ -21,16 +21,16 @@
 
 #define D_DX(FIELD)                                           \
 self%d_dx = FIELD;                                            \
-call fftw_execute_dft_r2c(self%fwx, self%d_dx, self%tmp_x);   \
+call sll_s_fft_exec_r2c_1d(self%fwx, self%d_dx, self%tmp_x);   \
 self%tmp_x(2:nc_x/2+1)=-cmplx(0.0_f64,self%kx(2:nc_x/2+1),kind=f64)*self%tmp_x(2:nc_x/2+1); \
-call fftw_execute_dft_c2r(self%bwx, self%tmp_x, self%d_dx);   \
+call sll_s_fft_exec_c2r_1d(self%bwx, self%tmp_x, self%d_dx);   \
 self%d_dx = self%d_dx / nc_x
 
 #define D_DY(FIELD)                                           \
 self%d_dy = FIELD;                                            \
-call fftw_execute_dft_r2c(self%fwy, self%d_dy, self%tmp_y);   \
+call sll_s_fft_exec_r2c_1d(self%fwy, self%d_dy, self%tmp_y);   \
 self%tmp_y(2:nc_y/2+1)=-cmplx(0.0_f64,self%ky(2:nc_y/2+1),kind=f64)*self%tmp_y(2:nc_y/2+1); \
-call fftw_execute_dft_c2r(self%bwy, self%tmp_y, self%d_dy);   \
+call sll_s_fft_exec_c2r_1d(self%bwy, self%tmp_y, self%d_dy);   \
 self%d_dy = self%d_dy / nc_y
 
 !> @ingroup maxwell_solvers
@@ -56,16 +56,30 @@ self%d_dy = self%d_dy / nc_y
 !>
 !>where \f$(u,v,w) = (x,y,z),(y,z,x),(z,x,y)\f$
 module sll_m_maxwell_2d_pstd
-#include "sll_working_precision.h"
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_memory.h"
-#include "sll_assert.h"
+#include "sll_working_precision.h"
 #include "sll_maxwell_solvers_macros.h"
 
-  use sll_m_fftw3
-  use sll_m_constants, only : &
-       sll_pi
+use sll_m_constants, only: sll_p_pi
+use sll_m_fft, only: sll_t_fft, &
+  sll_s_fft_free,               &
+  sll_s_fft_init_c2r_1d,        &
+  sll_s_fft_init_r2c_1d,        &
+  sll_s_fft_exec_c2r_1d,        &
+  sll_s_fft_exec_r2c_1d
 
-implicit none
+  implicit none
+
+  public :: &
+    sll_o_create, &
+    sll_o_delete, &
+    sll_t_maxwell_2d_pstd, &
+    sll_o_solve, &
+    sll_o_solve_ampere
+
+  private
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 
 !> @brief 
@@ -73,7 +87,7 @@ implicit none
 !> @details
 !> We solve Maxwell system with PSTD numerical method. The type contains
 !> information about FFT, mesh and physical properties.
-type, public :: sll_maxwell_2d_pstd
+type :: sll_t_maxwell_2d_pstd
 
    private
    sll_int32           :: nc_eta1      !< x cells number
@@ -92,33 +106,29 @@ type, public :: sll_maxwell_2d_pstd
    sll_real64, pointer :: d_dy(:)      !< field y derivative
    sll_real64, pointer :: kx(:)        !< x wave number
    sll_real64, pointer :: ky(:)        !< y wave number
-   fftw_plan           :: fwx          !< forward fft plan along x
-   fftw_plan           :: fwy          !< forward fft plan along y
-   fftw_plan           :: bwx          !< backward fft plan along x
-   fftw_plan           :: bwy          !< backward fft plan along y
-   fftw_plan           :: p_tmp_x      !< pointer for fft memory allocation
-   fftw_plan           :: p_tmp_y      !< pointer for fft memory allocation
-   fftw_comp , pointer :: tmp_x(:)     !< x fft transform
-   fftw_comp , pointer :: tmp_y(:)     !< y fft transform
-   fftw_int            :: sz_tmp_x     !< size for memory allocation
-   fftw_int            :: sz_tmp_y     !< size for memory allocation
+   type(sll_t_fft)     :: fwx          !< forward fft plan along x
+   type(sll_t_fft)     :: fwy          !< forward fft plan along y
+   type(sll_t_fft)     :: bwx          !< backward fft plan along x
+   type(sll_t_fft)     :: bwy          !< backward fft plan along y
+   sll_comp64, pointer :: tmp_x(:)     !< x fft transform
+   sll_comp64, pointer :: tmp_y(:)     !< y fft transform
 
-end type sll_maxwell_2d_pstd
+end type sll_t_maxwell_2d_pstd
 
 !> Initialize maxwell solver 2d cartesian periodic with PSTD scheme
-interface sll_create
+interface sll_o_create
  module procedure new_maxwell_2d_pstd
-end interface sll_create
+end interface sll_o_create
 
 !> Solve maxwell solver 2d cartesian periodic with PSTD scheme
-interface sll_solve
+interface sll_o_solve
  module procedure solve_maxwell_2d_pstd
-end interface sll_solve
+end interface sll_o_solve
 
 !> Solve ampere equation using maxwell solver 2d cartesian periodic with PSTD scheme
-interface sll_solve_ampere
+interface sll_o_solve_ampere
  module procedure ampere_2d_pstd
-end interface sll_solve_ampere
+end interface sll_o_solve_ampere
 
 !> Solve faraday equation using solver 2d cartesian periodic with PSTD scheme
 interface sll_solve_faraday
@@ -126,24 +136,18 @@ interface sll_solve_faraday
 end interface sll_solve_faraday
 
 !> Delete maxwell solver 2d cartesian periodic with PSTD scheme
-interface sll_delete
+interface sll_o_delete
  module procedure free_maxwell_2d_pstd
-end interface sll_delete
+end interface sll_o_delete
 
-public sll_create
-public sll_delete
-public sll_solve_faraday
-public sll_solve_ampere
-public sll_solve
 
-private
 
 contains
 
 !> Initialize 2d maxwell solver on cartesian mesh with PSTD scheme
 subroutine new_maxwell_2d_pstd(self,xmin,xmax,nc_x,ymin,ymax,nc_y,polarization)
 
-   type(sll_maxwell_2d_pstd) :: self         !< maxwell object
+   type(sll_t_maxwell_2d_pstd) :: self         !< maxwell object
    sll_real64, intent(in)    :: xmin         !< x min
    sll_real64, intent(in)    :: xmax         !< x max
    sll_real64, intent(in)    :: ymin         !< y min
@@ -169,26 +173,22 @@ subroutine new_maxwell_2d_pstd(self,xmin,xmax,nc_x,ymin,ymax,nc_y,polarization)
    SLL_ALLOCATE(self%d_dx(nc_x), error)
    SLL_ALLOCATE(self%d_dy(nc_y), error)
 
-   FFTW_ALLOCATE(self%tmp_x,nc_x/2+1,self%sz_tmp_x,self%p_tmp_x)
-   FFTW_ALLOCATE(self%tmp_y,nc_y/2+1,self%sz_tmp_y,self%p_tmp_y)
+   SLL_ALLOCATE(self%tmp_x(nc_x/2+1), error)
+   SLL_ALLOCATE(self%tmp_y(nc_y/2+1), error)
 
-   NEW_FFTW_PLAN_R2C_1D(self%fwx, nc_x, self%d_dx,  self%tmp_x)
-   NEW_FFTW_PLAN_C2R_1D(self%bwx, nc_x, self%tmp_x, self%d_dx)
-   NEW_FFTW_PLAN_R2C_1D(self%fwy, nc_y, self%d_dy,  self%tmp_y)
-   NEW_FFTW_PLAN_C2R_1D(self%bwy, nc_y, self%tmp_y, self%d_dy)
+   call sll_s_fft_init_r2c_1d(self%fwx, nc_x, self%d_dx,  self%tmp_x)
+   call sll_s_fft_init_c2r_1d(self%bwx, nc_x, self%tmp_x, self%d_dx)
+   call sll_s_fft_init_r2c_1d(self%fwy, nc_y, self%d_dy,  self%tmp_y)
+   call sll_s_fft_init_c2r_1d(self%bwy, nc_y, self%tmp_y, self%d_dy)
 
-   !call dfftw_init_threads(error)
-   !if (error == 0) stop 'FFTW CAN''T USE THREADS'
-   !call dfftw_plan_with_nthreads(nthreads)
-   
    SLL_ALLOCATE(self%kx(nc_x/2+1), error)
    SLL_ALLOCATE(self%ky(nc_y/2+1), error)
    
    dx = (xmax-xmin) / nc_x
    dy = (ymax-ymin) / nc_y
 
-   kx0 = 2._f64*sll_pi/(nc_x*dx)
-   ky0 = 2._f64*sll_pi/(nc_y*dy)
+   kx0 = 2._f64*sll_p_pi/(nc_x*dx)
+   ky0 = 2._f64*sll_p_pi/(nc_y*dy)
 
    do i=2,nc_x/2+1
       self%kx(i) = (i-1)*kx0
@@ -201,11 +201,11 @@ subroutine new_maxwell_2d_pstd(self,xmin,xmax,nc_x,ymin,ymax,nc_y,polarization)
 
 end subroutine new_maxwell_2d_pstd
 
-!> this routine exists only for testing purpose. Use ampere and faraday
+!> self routine exists only for testing purpose. Use ampere and faraday
 !> in your appication.
 subroutine solve_maxwell_2d_pstd(self, fx, fy, fz, dt)
 
-   type(sll_maxwell_2d_pstd), intent(inout)          :: self !< maxwell object
+   type(sll_t_maxwell_2d_pstd), intent(inout)          :: self !< maxwell object
    sll_real64 , intent(inout), dimension(:,:) :: fx   !< Ex or Bx
    sll_real64 , intent(inout), dimension(:,:) :: fy   !< Ey or By
    sll_real64 , intent(inout), dimension(:,:) :: fz   !< Bz or Ez
@@ -234,7 +234,7 @@ end subroutine solve_maxwell_2d_pstd
 !> Impose periodic boundary conditions
 subroutine bc_periodic_2d_pstd(self, fx, fy, fz)
 
-   type(sll_maxwell_2d_pstd), intent(inout)      :: self !< maxwell object
+   type(sll_t_maxwell_2d_pstd), intent(inout):: self !< maxwell object
    sll_real64, intent(inout), dimension(:,:) :: fx   !< Ex or Bx
    sll_real64, intent(inout), dimension(:,:) :: fy   !< Ey or By
    sll_real64, intent(inout), dimension(:,:) :: fz   !< Bz or Ez
@@ -252,7 +252,7 @@ end subroutine bc_periodic_2d_pstd
 
 !> Solve Faraday equation
 subroutine faraday_2d_pstd(self, fx, fy, fz, dt)
-   type(sll_maxwell_2d_pstd),intent(inout)       :: self    !< Maxwell object
+   type(sll_t_maxwell_2d_pstd),intent(inout) :: self    !< Maxwell object
    sll_real64, dimension(:,:), intent(inout) :: fx      !< field x
    sll_real64, dimension(:,:), intent(inout) :: fy      !< field y
    sll_real64, dimension(:,:), intent(inout) :: fz      !< field z
@@ -269,7 +269,7 @@ subroutine faraday_2d_pstd(self, fx, fy, fz, dt)
 end subroutine faraday_2d_pstd
 
 subroutine ampere_2d_pstd(self, fx, fy, fz, dt, sx, sy)
-   type(sll_maxwell_2d_pstd),intent(inout)       :: self    !< Maxwell object
+   type(sll_t_maxwell_2d_pstd),intent(inout) :: self    !< Maxwell object
    sll_real64, dimension(:,:), intent(inout) :: fx      !< field x
    sll_real64, dimension(:,:), intent(inout) :: fy      !< field y
    sll_real64, dimension(:,:), intent(inout) :: fz      !< field z
@@ -290,7 +290,7 @@ end subroutine ampere_2d_pstd
 !> Solve faraday equation  (hx,hy,ez)
 subroutine faraday_tm_2d_pstd(self, hx, hy, ez, dt)
 
-   type(sll_maxwell_2d_pstd),intent(inout)       :: self    !< Maxwell object
+   type(sll_t_maxwell_2d_pstd),intent(inout) :: self    !< Maxwell object
    sll_real64, dimension(:,:), intent(inout) :: hx      !< Magnetic field x
    sll_real64, dimension(:,:), intent(inout) :: hy      !< Magnetic field y
    sll_real64, dimension(:,:), intent(inout) :: ez      !< Electric field z
@@ -321,7 +321,7 @@ end subroutine faraday_tm_2d_pstd
 !> Solve faraday equation (ex,ey,hz)
 subroutine faraday_te_2d_pstd(self, ex, ey, hz, dt)
 
-   type(sll_maxwell_2d_pstd),intent(inout)       :: self   !< maxwell object
+   type(sll_t_maxwell_2d_pstd),intent(inout) :: self   !< maxwell object
    sll_real64, dimension(:,:), intent(inout) :: ex     !< electric field x
    sll_real64, dimension(:,:), intent(inout) :: ey     !< electric field y
    sll_real64, dimension(:,:), intent(inout) :: hz     !< magnetic field z
@@ -355,17 +355,17 @@ end subroutine faraday_te_2d_pstd
 !> Solve ampere maxwell equation (hx,hy,ez)
 subroutine ampere_tm_2d_pstd(self, hx, hy, ez, dt, jz)
 
-   type(sll_maxwell_2d_pstd),intent(inout)   :: self   !< maxwell object
-   sll_int32                             :: nc_x   !< x cells number
-   sll_int32                             :: nc_y   !< y cells number
-   sll_real64, dimension(:,:)            :: hx     !< magnetic field x
-   sll_real64, dimension(:,:)            :: hy     !< magnetic field y
-   sll_real64, dimension(:,:)            :: ez     !< electric field z
-   sll_real64                            :: dt     !< time step
-   sll_real64, dimension(:,:), optional  :: jz     !< current z
+   type(sll_t_maxwell_2d_pstd),intent(inout) :: self   !< maxwell object
+   sll_int32                                 :: nc_x   !< x cells number
+   sll_int32                                 :: nc_y   !< y cells number
+   sll_real64, dimension(:,:)                :: hx     !< magnetic field x
+   sll_real64, dimension(:,:)                :: hy     !< magnetic field y
+   sll_real64, dimension(:,:)                :: ez     !< electric field z
+   sll_real64                                :: dt     !< time step
+   sll_real64, dimension(:,:), optional      :: jz     !< current z
 
-   sll_real64                            :: dt_e
-   sll_int32                             :: i, j
+   sll_real64                                :: dt_e
+   sll_int32                                 :: i, j
 
    nc_x = self%nc_eta1
    nc_y = self%nc_eta2
@@ -391,18 +391,18 @@ end subroutine ampere_tm_2d_pstd
 !> Solve ampere maxwell equation (ex,ey,hz)
 subroutine ampere_te_2d_pstd(self, ex, ey, hz, dt, jx, jy)
 
-   type(sll_maxwell_2d_pstd),intent(inout)      :: self   !< maxwell equation
-   sll_real64, dimension(:,:)            :: ex     !< electric field x
-   sll_real64, dimension(:,:)            :: ey     !< electric field y
-   sll_real64, dimension(:,:)            :: hz     !< magnetic field z
-   sll_real64                            :: dt     !< time step
-   sll_real64, dimension(:,:), optional  :: jx     !< current x
-   sll_real64, dimension(:,:), optional  :: jy     !< current y
+   type(sll_t_maxwell_2d_pstd),intent(inout) :: self   !< maxwell equation
+   sll_real64, dimension(:,:)                :: ex     !< electric field x
+   sll_real64, dimension(:,:)                :: ey     !< electric field y
+   sll_real64, dimension(:,:)                :: hz     !< magnetic field z
+   sll_real64                                :: dt     !< time step
+   sll_real64, dimension(:,:), optional      :: jx     !< current x
+   sll_real64, dimension(:,:), optional      :: jy     !< current y
 
-   sll_real64                            :: dt_e
-   sll_int32                             :: nc_x
-   sll_int32                             :: nc_y
-   sll_int32                             :: i, j
+   sll_real64                                :: dt_e
+   sll_int32                                 :: nc_x
+   sll_int32                                 :: nc_y
+   sll_int32                                 :: i, j
 
    nc_x = self%nc_eta1
    nc_y = self%nc_eta2
@@ -431,20 +431,12 @@ end subroutine ampere_te_2d_pstd
 
 !> delete maxwell solver object
 subroutine free_maxwell_2d_pstd(self)
-type(sll_maxwell_2d_pstd) :: self
+type(sll_t_maxwell_2d_pstd) :: self
 
-#ifdef FFTW_F2003
-if (c_associated(self%p_tmp_x)) call fftw_free(self%p_tmp_x)
-if (c_associated(self%p_tmp_y)) call fftw_free(self%p_tmp_y)
-#endif
-
-call fftw_destroy_plan(self%fwx)
-call fftw_destroy_plan(self%fwy)
-call fftw_destroy_plan(self%bwx)
-call fftw_destroy_plan(self%bwy)
-!if (nthreads > 1) then
-!   call dfftw_cleanup_threads(error)
-!end if
+call sll_s_fft_free(self%fwx)
+call sll_s_fft_free(self%fwy)
+call sll_s_fft_free(self%bwx)
+call sll_s_fft_free(self%bwy)
 
 end subroutine free_maxwell_2d_pstd
 

@@ -16,18 +16,26 @@
 !**************************************************************
 
 program test_advection_1d_spectral
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_memory.h"
 #include "sll_working_precision.h"
 
-use sll_m_advection_1d_base
-use sll_m_advection_1d_spectral
-use sll_m_boundary_condition_descriptors
+  use sll_m_advection_1d_base, only: &
+    sll_t_advection_1d_base_ptr
 
-!$ use omp_lib
+  use sll_m_advection_1d_spectral, only: &
+    sll_f_new_spectral_1d_advector
 
-implicit none
+#ifdef _OPENMP
+  use omp_lib, only: &
+    omp_get_num_threads, &
+    omp_get_thread_num
+
+#endif
+  implicit none
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
   
-type(sll_advection_1d_base_ptr), pointer  :: adv(:)
+type(sll_t_advection_1d_base_ptr), pointer  :: adv(:)
 
 sll_real64                            :: xmin
 sll_real64                            :: xmax
@@ -68,7 +76,7 @@ SLL_ALLOCATE(adv(psize),ierr)
 
 input = 1.0_f64
 
-adv(prank+1)%ptr => new_spectral_1d_advector(num_cells, xmin, xmax) 
+adv(prank+1)%ptr => sll_f_new_spectral_1d_advector(num_cells, xmin, xmax) 
 
 call adv(prank+1)%ptr%advect_1d_constant( a, dt, input, output)
 

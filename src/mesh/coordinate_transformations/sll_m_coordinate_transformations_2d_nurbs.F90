@@ -12,30 +12,60 @@
 !> This needs to be present to answer questions like T%x_node(i,j). 
 !> We set this logical mesh outside of the read_from_file routine.
 module sll_m_coordinate_transformations_2d_nurbs
-#include "sll_working_precision.h"
-#include "sll_memory.h"
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_assert.h"
+#include "sll_memory.h"
+#include "sll_working_precision.h"
 
+  use sll_m_arbitrary_degree_spline_interpolator_2d, only: &
+    sll_f_new_arbitrary_degree_spline_interp2d
 
-  use sll_m_xdmf
-  use sll_m_meshes_base
-  use sll_m_cartesian_meshes
-  use sll_m_cubic_spline_interpolator_2d
-  use sll_m_gnuplot
-  use sll_m_interpolators_2d_base
-  use sll_m_coordinate_transformation_2d_base
-  use sll_m_deboor_splines_2d
-  use sll_m_constants, only : &
-       sll_epsilon_0
-  use sll_m_plotmtv
-  use sll_m_utilities, only: sll_new_file_id
+  use sll_m_boundary_condition_descriptors, only: &
+    sll_p_dirichlet
+
+  use sll_m_cartesian_meshes, only: &
+    sll_f_new_cartesian_mesh_2d, &
+    sll_t_cartesian_mesh_2d
+
+  use sll_m_constants, only: &
+    sll_p_epsilon_0
+
+  use sll_m_coordinate_transformation_2d_base, only: &
+    sll_c_coordinate_transformation_2d_base, &
+    sll_p_io_mtv, &
+    sll_p_io_xdmf
+
+  use sll_m_interpolators_2d_base, only: &
+    sll_c_interpolator_2d
+
+  use sll_m_meshes_base, only: &
+    sll_c_mesh_2d_base
+
+  use sll_m_plotmtv, only: &
+    sll_o_plotmtv_write
+
+  use sll_m_utilities, only: &
+    sll_s_new_file_id
+
+  use sll_m_xdmf, only: &
+    sll_s_xdmf_close, &
+    sll_o_xdmf_open, &
+    sll_o_xdmf_write_array
 
   implicit none
+
+  public :: &
+    sll_f_new_nurbs_2d_transformation_from_file, &
+    sll_t_coordinate_transformation_2d_nurbs, &
+    sll_t_coordinate_transformation_2d_nurbs_ptr, &
+    sll_o_delete
+
   private
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
   
   !> Nurbs-based coordinate transformation 
-  type, extends(sll_coordinate_transformation_2d_base), public :: &
-       sll_coordinate_transformation_2d_nurbs
+  type, extends(sll_c_coordinate_transformation_2d_base) :: &
+       sll_t_coordinate_transformation_2d_nurbs
      !> \f$ x_1(i,j) \f$
      sll_real64, dimension(:,:), pointer :: x1_node =>null()  
      !> \f$ x_2(i,j) \f$
@@ -45,11 +75,11 @@ module sll_m_coordinate_transformations_2d_nurbs
      !> PLEASE ADD DOCUMENTATION
      sll_real64, dimension(:,:), pointer :: x2_cell =>null()
      !> PLEASE ADD DOCUMENTATION
-     class(sll_interpolator_2d_base), pointer :: x1_interp =>null()
+     class(sll_c_interpolator_2d), pointer :: x1_interp =>null()
      !> PLEASE ADD DOCUMENTATION
-     class(sll_interpolator_2d_base), pointer :: x2_interp =>null()
+     class(sll_c_interpolator_2d), pointer :: x2_interp =>null()
      !> PLEASE ADD DOCUMENTATION
-     class(sll_interpolator_2d_base), pointer :: x3_interp =>null()
+     class(sll_c_interpolator_2d), pointer :: x3_interp =>null()
      !> PLEASE ADD DOCUMENTATION
      sll_int32 :: is_rational
      !> PLEASE ADD DOCUMENTATION
@@ -60,8 +90,8 @@ module sll_m_coordinate_transformations_2d_nurbs
      sll_real64, dimension(:),pointer :: knots1
      !> PLEASE ADD DOCUMENTATION
      sll_real64, dimension(:),pointer :: knots2
-!     type(sll_cartesian_mesh_2d), pointer  :: mesh2d_minimal =>null()
-!     type(sll_cartesian_mesh_2d), pointer :: mesh
+!     type(sll_t_cartesian_mesh_2d), pointer  :: mesh2d_minimal =>null()
+!     type(sll_t_cartesian_mesh_2d), pointer :: mesh
    contains
      
      !> PLEASE ADD DOCUMENTATION
@@ -95,35 +125,32 @@ module sll_m_coordinate_transformations_2d_nurbs
      procedure, pass(transf) :: read_from_file => read_from_file_2d_nurbs
      !> PLEASE ADD DOCUMENTATION
      procedure, pass(transf) :: delete => delete_transformation_2d_nurbs
-  end type sll_coordinate_transformation_2d_nurbs
+  end type sll_t_coordinate_transformation_2d_nurbs
 
-  type, public :: sll_coordinate_transformation_2d_nurbs_ptr
+  type :: sll_t_coordinate_transformation_2d_nurbs_ptr
      !> Pointer to class
-     class(sll_coordinate_transformation_2d_nurbs), pointer :: T
-  end type sll_coordinate_transformation_2d_nurbs_ptr
+     class(sll_t_coordinate_transformation_2d_nurbs), pointer :: T
+  end type sll_t_coordinate_transformation_2d_nurbs_ptr
 
-  interface sll_delete
+  interface sll_o_delete
      module procedure delete_transformation_2d_nurbs
-  end interface sll_delete
+  end interface sll_o_delete
 
-  public sll_delete
-  public new_nurbs_2d_transformation_from_file
 
   
 contains
 
      !> PLEASE ADD DOCUMENTATION
-  function new_nurbs_2d_transformation_from_file( filename ) result(res)
-    type(sll_coordinate_transformation_2d_nurbs), pointer :: res
+  function sll_f_new_nurbs_2d_transformation_from_file( filename ) result(res)
+    type(sll_t_coordinate_transformation_2d_nurbs), pointer :: res
     character(len=*), intent(in) :: filename
     sll_int32 :: ierr
     SLL_ALLOCATE(res,ierr)
     call read_from_file_2d_nurbs( res, filename )
-  end function new_nurbs_2d_transformation_from_file
+  end function sll_f_new_nurbs_2d_transformation_from_file
 
   subroutine read_from_file_2d_nurbs( transf, filename )
-    use sll_m_arbitrary_degree_spline_interpolator_2d
-    class(sll_coordinate_transformation_2d_nurbs), intent(inout) :: transf
+    class(sll_t_coordinate_transformation_2d_nurbs), intent(inout) :: transf
     character(len=*), intent(in) :: filename
     intrinsic :: trim
     !sll_int32 :: interpolator_type
@@ -177,7 +204,7 @@ contains
     filename_local = trim(filename)
     
     ! get a new identifier for the file.
-    call sll_new_file_id( input_file_id, ierr )
+    call sll_s_new_file_id( input_file_id, ierr )
     if( ierr .ne. 0 ) then
        print *, 'ERROR while trying to obtain an unique identifier for file ',&
             filename, '. Called from read_from_file_2d_nurbs().'
@@ -310,10 +337,10 @@ contains
     ! but we must modified this part <-- this means that this info must
     ! come within the input file: ECG
 
-    bc_left   = SLL_DIRICHLET
-    bc_right  = SLL_DIRICHLET 
-    bc_bottom = SLL_DIRICHLET 
-    bc_top    = SLL_DIRICHLET
+    bc_left   = sll_p_dirichlet
+    bc_right  = sll_p_dirichlet 
+    bc_bottom = sll_p_dirichlet 
+    bc_top    = sll_p_dirichlet
 
 !!$    ! the number of points is the knots witout the multiplicity
    
@@ -323,7 +350,7 @@ contains
     ! Initialize the first interpolator for 
     ! the first component of our change of coordinates
 
-    transf%x1_interp => new_arbitrary_degree_spline_interp2d(&
+    transf%x1_interp => sll_f_new_arbitrary_degree_spline_interp2d(&
          number_cells1 + 1,  &  
          number_cells2 + 1,  &  
          eta1_min_minimal,  &  
@@ -353,7 +380,7 @@ contains
     ! Initialize the second interpolator for 
     ! the second component of our change of coordinates
 
-    transf%x2_interp => new_arbitrary_degree_spline_interp2d(&
+    transf%x2_interp => sll_f_new_arbitrary_degree_spline_interp2d(&
          number_cells1 + 1,  & 
          number_cells2 + 2,  & 
          eta1_min_minimal,  & 
@@ -384,7 +411,7 @@ contains
     ! the rational component of our change of coordinates
     ! That is useful if the transfromation is NURBS
 
-    transf%x3_interp => new_arbitrary_degree_spline_interp2d(&
+    transf%x3_interp => sll_f_new_arbitrary_degree_spline_interp2d(&
          number_cells1 + 1,  & 
          number_cells2 + 1,  & 
          eta1_min_minimal,  & 
@@ -418,7 +445,7 @@ contains
     ! possession of the logical mesh or not... For now we keep the minimum
     ! information related with the number of cells to at least be able to
     ! initialize a logical mesh outside of the object.
-    transf%mesh => new_cartesian_mesh_2d(&
+    transf%mesh => sll_f_new_cartesian_mesh_2d(&
          number_cells1,&
          number_cells2,&
          eta1_min = eta1_min_minimal,&
@@ -443,14 +470,14 @@ contains
 
      !> PLEASE ADD DOCUMENTATION
   function get_cartesian_mesh_nurbs_2d( transf ) result(res)
-    class(sll_cartesian_mesh_2d), pointer :: res
-    class(sll_coordinate_transformation_2d_nurbs), intent(in) :: transf
+    class(sll_t_cartesian_mesh_2d), pointer :: res
+    class(sll_t_coordinate_transformation_2d_nurbs), intent(in) :: transf
     res => transf%mesh
   end function get_cartesian_mesh_nurbs_2d
 
   function x1_node_nurbs( transf, i, j ) result(val)
-    class(sll_coordinate_transformation_2d_nurbs) :: transf
-    class(sll_cartesian_mesh_2d), pointer :: lm
+    class(sll_t_coordinate_transformation_2d_nurbs) :: transf
+    class(sll_t_cartesian_mesh_2d), pointer :: lm
     sll_real64             :: val
     sll_int32, intent(in) :: i
     sll_int32, intent(in) :: j
@@ -468,16 +495,16 @@ contains
     SLL_ASSERT( eta2 >= 0.0_f64)
 
     if (transf%is_rational == 0) then ! IN the case of SPLINE
-       val = transf%x1_interp%interpolate_value(eta1,eta2)
+       val = transf%x1_interp%interpolate_from_interpolant_value(eta1,eta2)
     else ! In the case of NURBS
-       val = transf%x1_interp%interpolate_value(eta1,eta2)/&
-             transf%x3_interp%interpolate_value(eta1,eta2)
+       val = transf%x1_interp%interpolate_from_interpolant_value(eta1,eta2)/&
+             transf%x3_interp%interpolate_from_interpolant_value(eta1,eta2)
     end if
   end function x1_node_nurbs
   
   function x2_node_nurbs( transf, i, j ) result(val)
-    class(sll_coordinate_transformation_2d_nurbs) :: transf
-    class(sll_mesh_2d_base), pointer :: lm
+    class(sll_t_coordinate_transformation_2d_nurbs) :: transf
+    class(sll_c_mesh_2d_base), pointer :: lm
     sll_real64             :: val
     sll_int32, intent(in) :: i
     sll_int32, intent(in) :: j
@@ -495,17 +522,17 @@ contains
     SLL_ASSERT( eta2 >= 0.0_f64)
 
     if (transf%is_rational == 0) then ! IN the case of SPLINE
-       val = transf%x2_interp%interpolate_value(eta1,eta2)
+       val = transf%x2_interp%interpolate_from_interpolant_value(eta1,eta2)
     else ! In the case of NURBS
-       val = transf%x2_interp%interpolate_value(eta1,eta2)/&
-            transf%x3_interp%interpolate_value(eta1,eta2)
+       val = transf%x2_interp%interpolate_from_interpolant_value(eta1,eta2)/&
+            transf%x3_interp%interpolate_from_interpolant_value(eta1,eta2)
     end if
 
   end function x2_node_nurbs
 
   function x1_cell_nurbs( transf, i, j ) result(val)
-    class(sll_coordinate_transformation_2d_nurbs) :: transf
-    class(sll_cartesian_mesh_2d), pointer :: lm
+    class(sll_t_coordinate_transformation_2d_nurbs) :: transf
+    class(sll_t_cartesian_mesh_2d), pointer :: lm
     sll_real64             :: val
     sll_int32, intent(in) :: i
     sll_int32, intent(in) :: j
@@ -528,17 +555,17 @@ contains
     SLL_ASSERT( eta2 >= 0.0_f64 )
 
     if (transf%is_rational == 0) then ! IN the case of SPLINE
-       val = transf%x1_interp%interpolate_value(eta1,eta2)
+       val = transf%x1_interp%interpolate_from_interpolant_value(eta1,eta2)
     else ! In the case of NURBS
-       val = transf%x1_interp%interpolate_value(eta1,eta2)/&
-            transf%x3_interp%interpolate_value(eta1,eta2)
+       val = transf%x1_interp%interpolate_from_interpolant_value(eta1,eta2)/&
+            transf%x3_interp%interpolate_from_interpolant_value(eta1,eta2)
     end if
     
   end function x1_cell_nurbs
   
    function x2_cell_nurbs( transf, i, j ) result(val)
-    class(sll_coordinate_transformation_2d_nurbs) :: transf
-    class(sll_cartesian_mesh_2d), pointer :: lm
+    class(sll_t_coordinate_transformation_2d_nurbs) :: transf
+    class(sll_t_cartesian_mesh_2d), pointer :: lm
     sll_real64             :: val
     sll_int32, intent(in) :: i
     sll_int32, intent(in) :: j
@@ -558,16 +585,16 @@ contains
     SLL_ASSERT( eta2 >= 0.0_f64)
     
     if (transf%is_rational == 0) then ! IN the case of SPLINE
-       val = transf%x2_interp%interpolate_value(eta1,eta2)
+       val = transf%x2_interp%interpolate_from_interpolant_value(eta1,eta2)
     else ! In the case of NURBS
-       val = transf%x2_interp%interpolate_value(eta1,eta2)/&
-            transf%x3_interp%interpolate_value(eta1,eta2)
+       val = transf%x2_interp%interpolate_from_interpolant_value(eta1,eta2)/&
+            transf%x3_interp%interpolate_from_interpolant_value(eta1,eta2)
     end if
     
   end function x2_cell_nurbs
   
   function x1_nurbs( transf, eta1, eta2 ) result(val)
-    class(sll_coordinate_transformation_2d_nurbs) :: transf
+    class(sll_t_coordinate_transformation_2d_nurbs) :: transf
     sll_real64             :: val
     sll_real64, intent(in) :: eta1
     sll_real64, intent(in) :: eta2
@@ -580,16 +607,16 @@ contains
     SLL_ASSERT( eta2 >= 0.0_f64)
 
     if (transf%is_rational == 0) then ! IN the case of SPLINE
-       val = transf%x1_interp%interpolate_value(eta1,eta2)
+       val = transf%x1_interp%interpolate_from_interpolant_value(eta1,eta2)
     else ! In the case of NURBS
-       val = transf%x1_interp%interpolate_value(eta1,eta2)/&
-             transf%x3_interp%interpolate_value(eta1,eta2)
+       val = transf%x1_interp%interpolate_from_interpolant_value(eta1,eta2)/&
+             transf%x3_interp%interpolate_from_interpolant_value(eta1,eta2)
     end if
   end function x1_nurbs
 
   
   function x2_nurbs( transf, eta1, eta2 ) result(val)
-    class(sll_coordinate_transformation_2d_nurbs) :: transf
+    class(sll_t_coordinate_transformation_2d_nurbs) :: transf
     sll_real64             :: val
     sll_real64, intent(in) :: eta1
     sll_real64, intent(in) :: eta2
@@ -601,16 +628,16 @@ contains
     
 
     if (transf%is_rational == 0) then ! IN the case of SPLINE
-       val = transf%x2_interp%interpolate_value(eta1,eta2)
+       val = transf%x2_interp%interpolate_from_interpolant_value(eta1,eta2)
     else ! In the case of NURBS
-       val = transf%x2_interp%interpolate_value(eta1,eta2)/&
-            transf%x3_interp%interpolate_value(eta1,eta2)
+       val = transf%x2_interp%interpolate_from_interpolant_value(eta1,eta2)/&
+            transf%x3_interp%interpolate_from_interpolant_value(eta1,eta2)
     end if
   end function x2_nurbs
 
   
   function jacobian_2d_nurbs( transf, eta1, eta2 ) result(jac)
-    class(sll_coordinate_transformation_2d_nurbs) :: transf
+    class(sll_t_coordinate_transformation_2d_nurbs) :: transf
     sll_real64, intent(in) :: eta1
     sll_real64, intent(in) :: eta2
     sll_real64             :: jac
@@ -632,10 +659,10 @@ contains
   end function jacobian_2d_nurbs
   
   function transf_2d_jacobian_node_nurbs( transf, i, j )
-    class(sll_coordinate_transformation_2d_nurbs)   :: transf
+    class(sll_t_coordinate_transformation_2d_nurbs)   :: transf
     sll_int32, intent(in)   :: i
     sll_int32, intent(in)   :: j
-    class(sll_cartesian_mesh_2d), pointer :: lm
+    class(sll_t_cartesian_mesh_2d), pointer :: lm
     sll_real64              :: transf_2d_jacobian_node_nurbs
     sll_real64  :: eta1
     sll_real64  :: eta2
@@ -664,10 +691,10 @@ contains
 
   
   function jacobian_2d_cell_nurbs( transf, i, j ) result(var)
-    class(sll_coordinate_transformation_2d_nurbs) :: transf
+    class(sll_t_coordinate_transformation_2d_nurbs) :: transf
     sll_int32, intent(in)              :: i
     sll_int32, intent(in)              :: j
-    class(sll_cartesian_mesh_2d), pointer :: lm
+    class(sll_t_cartesian_mesh_2d), pointer :: lm
     sll_real64                         :: var
     sll_real64  :: eta1
     sll_real64  :: eta2
@@ -698,7 +725,7 @@ contains
 
   
   function jacobian_matrix_2d_nurbs( transf, eta1, eta2 )
-    class(sll_coordinate_transformation_2d_nurbs), intent(in):: transf
+    class(sll_t_coordinate_transformation_2d_nurbs), intent(in):: transf
     sll_real64, dimension(1:2,1:2)     :: jacobian_matrix_2d_nurbs
     sll_real64, intent(in) :: eta1
     sll_real64, intent(in) :: eta2
@@ -718,10 +745,10 @@ contains
     
     if (transf%is_rational == 0) then ! IN the case of SPLINE
        
-       j11 = transf%x1_interp%interpolate_derivative_eta1( eta1, eta2 )
-       j12 = transf%x1_interp%interpolate_derivative_eta2( eta1, eta2 )
-       j21 = transf%x2_interp%interpolate_derivative_eta1( eta1, eta2 )
-       j22 = transf%x2_interp%interpolate_derivative_eta2( eta1, eta2 )
+       j11 = transf%x1_interp%interpolate_from_interpolant_derivative_eta1( eta1, eta2 )
+       j12 = transf%x1_interp%interpolate_from_interpolant_derivative_eta2( eta1, eta2 )
+       j21 = transf%x2_interp%interpolate_from_interpolant_derivative_eta1( eta1, eta2 )
+       j22 = transf%x2_interp%interpolate_from_interpolant_derivative_eta2( eta1, eta2 )
 
        jacobian_matrix(1,1) = j11
        jacobian_matrix(1,2) = j12
@@ -730,15 +757,15 @@ contains
        
     else 
 
-       value_11 = transf%x1_interp%interpolate_derivative_eta1( eta1, eta2 )
-       value_12 = transf%x1_interp%interpolate_derivative_eta2( eta1, eta2 )
-       value_21 = transf%x2_interp%interpolate_derivative_eta1( eta1, eta2 )
-       value_22 = transf%x2_interp%interpolate_derivative_eta2( eta1, eta2 )
-       value_31 = transf%x3_interp%interpolate_derivative_eta1( eta1, eta2 )
-       value_32 = transf%x3_interp%interpolate_derivative_eta2( eta1, eta2 )
-       value_3  = transf%x3_interp%interpolate_value(eta1,eta2)
-       value_2  = transf%x2_interp%interpolate_value(eta1,eta2)
-       value_1  = transf%x1_interp%interpolate_value(eta1,eta2)
+       value_11 = transf%x1_interp%interpolate_from_interpolant_derivative_eta1( eta1, eta2 )
+       value_12 = transf%x1_interp%interpolate_from_interpolant_derivative_eta2( eta1, eta2 )
+       value_21 = transf%x2_interp%interpolate_from_interpolant_derivative_eta1( eta1, eta2 )
+       value_22 = transf%x2_interp%interpolate_from_interpolant_derivative_eta2( eta1, eta2 )
+       value_31 = transf%x3_interp%interpolate_from_interpolant_derivative_eta1( eta1, eta2 )
+       value_32 = transf%x3_interp%interpolate_from_interpolant_derivative_eta2( eta1, eta2 )
+       value_3  = transf%x3_interp%interpolate_from_interpolant_value(eta1,eta2)
+       value_2  = transf%x2_interp%interpolate_from_interpolant_value(eta1,eta2)
+       value_1  = transf%x1_interp%interpolate_from_interpolant_value(eta1,eta2)
        ratio_value_3_square = 1.0_f64/(value_3)**2
        
        j11 = value_11*value_3- value_31*value_1
@@ -763,7 +790,7 @@ contains
 
   
   function inverse_jacobian_matrix_2d_nurbs( transf, eta1, eta2 )
-    class(sll_coordinate_transformation_2d_nurbs),intent(in) :: transf
+    class(sll_t_coordinate_transformation_2d_nurbs),intent(in) :: transf
     sll_real64, intent(in) :: eta1
     sll_real64, intent(in) :: eta2
     sll_real64, dimension(1:2,1:2)     :: inverse_jacobian_matrix_2d_nurbs
@@ -784,7 +811,7 @@ contains
        print *, 'Warning: inverse_jacobian_matrix_2d_nurbs(): 0-valued ', &
             'jacobian found. NaNs expected. Values of eta1 and eta2 = ', &
             eta1, eta2, 'Jacobian matrix: ', jacobian_matrix(:,:)
-       jac = sll_epsilon_0
+       jac = sll_p_epsilon_0
     end if
     r_jac = 1.0_f64/jac   
     inverse_jacobian_matrix_2d_nurbs(1,1) =  j22*r_jac
@@ -795,9 +822,9 @@ contains
     
 
   subroutine write_to_file_2d_nurbs(transf,output_format)
-    class(sll_coordinate_transformation_2d_nurbs) :: transf
+    class(sll_t_coordinate_transformation_2d_nurbs) :: transf
     sll_int32, optional :: output_format 
-    class(sll_cartesian_mesh_2d), pointer :: lm
+    class(sll_t_cartesian_mesh_2d), pointer :: lm
     sll_int32           :: local_format 
     sll_real64, dimension(:,:), pointer :: x1mesh
     sll_real64, dimension(:,:), pointer :: x2mesh
@@ -815,7 +842,7 @@ contains
 
 
     if (.not. present(output_format)) then
-       local_format = SLL_IO_XDMF
+       local_format = sll_p_io_xdmf
     else
        local_format = output_format
     end if
@@ -823,7 +850,7 @@ contains
     print*, 'label', transf%label
     if ( .not. transf%written ) then
 
-       if (local_format == SLL_IO_XDMF) then
+       if (local_format == sll_p_io_xdmf) then
           SLL_ALLOCATE(x1mesh(npts_eta1,npts_eta2), ierr)
           SLL_ALLOCATE(x2mesh(npts_eta1,npts_eta2), ierr)
           do i1=1, npts_eta1
@@ -834,13 +861,13 @@ contains
              end do
           end do
 
-          call sll_xdmf_open(trim(transf%label)//".xmf",transf%label, &
+          call sll_o_xdmf_open(trim(transf%label)//".xmf",transf%label, &
                npts_eta1,npts_eta2,file_id,ierr)
-          call sll_xdmf_write_array(transf%label,x1mesh,"x1",ierr)
-          call sll_xdmf_write_array(transf%label,x2mesh,"x2",ierr)
-          call sll_xdmf_close(file_id,ierr)
+          call sll_o_xdmf_write_array(transf%label,x1mesh,"x1",ierr)
+          call sll_o_xdmf_write_array(transf%label,x2mesh,"x2",ierr)
+          call sll_s_xdmf_close(file_id,ierr)
 
-       else if (local_format == SLL_IO_MTV) then
+       else if (local_format == sll_p_io_mtv) then
 
           SLL_ALLOCATE(x1mesh(npts_eta1,npts_eta2), ierr)
           SLL_ALLOCATE(x2mesh(npts_eta1,npts_eta2), ierr)
@@ -852,7 +879,7 @@ contains
              end do
           end do
        
-          call sll_plotmtv_write( npts_eta1,npts_eta2, &
+          call sll_o_plotmtv_write( npts_eta1,npts_eta2, &
                                   x1mesh, x2mesh, trim(transf%label),ierr)
 
        else
@@ -880,7 +907,7 @@ contains
   ! would wish to 'recycle' interpolators.
 
   subroutine delete_transformation_2d_nurbs( transf )
-    class(sll_coordinate_transformation_2d_nurbs), intent(inout) :: transf
+    class(sll_t_coordinate_transformation_2d_nurbs), intent(inout) :: transf
     sll_int32 :: ierr
 
     transf%label = ""
