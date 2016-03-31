@@ -129,8 +129,8 @@ module sll_m_sim_pic_vp_2d2v_cart_remapped
   
 contains
 
-  ! <<particles_snapshot>> ALH - gnuplot-compatible output of all particles with their position and speed at a given
-  ! time
+  ! <<particles_snapshot>> gnuplot-compatible output of all particles with their position and speed at a given time ALH_BUG Develop the
+  ! corresponding gnuplot visualisation script <<ALH>>
 
   subroutine particles_snapshot(time,sim)
 
@@ -761,6 +761,7 @@ contains
     omega_r = sim%elec_params(5)
     psi = sim%elec_params(4)
 
+    ! [[logE_run]]
     write (field_name, "(A9,I4.4,A4)") 'logE_run=', sim%run_nb, '.dat'
     if (sim%my_rank ==0) open(65,file=trim(field_name))
 
@@ -768,7 +769,6 @@ contains
     !    t2 = omp_get_wtime() !   call sll_set_time_mark(t2)
     !#endif
 
-    !AAA-ALH-HERE
     !  ----------------------------------------------------------------------------------------------------
     !> ## Content of the time loop
     !>          - starting from
@@ -792,7 +792,9 @@ contains
        this_is_the_last_time_loop = (it == sim%num_iterations-1)
 
        !! -- --  <<diagnostics>> (computing energy) [begin]  -- --
-       !AAA-ALH-HERE
+
+       ! <<logE_run>>
+
        if (sim%my_rank == 0) then
           exval_ee = une_cst * exp(2._f64 * omega_i * real(it,f64) * sim%dt)                          &
                              * ( 0.5_f64 + 0.5_f64 * cos(2._f64 * (omega_r * real(it,f64) * sim%dt - psi)) )
@@ -803,6 +805,8 @@ contains
                                  sim%E1,                                            &
                                  sim%mesh_2d%delta_eta1, sim%mesh_2d%delta_eta2 )
           counter = 1 + mod(it,save_nb)
+
+          ! <<logE_run_columns>>
           diag_energy(counter,:) = (/ it*sim%dt, val_lee, log(sqrt(exval_ee)), &
                val_ee, exval_ee /)
 
@@ -961,7 +965,7 @@ contains
         plot_np_vx = 20
         plot_np_vy = 5
 
-        ! base class definition of visualize_f_slice_x_vx:
+        ! <<f_slice>> base class definition of visualize_f_slice_x_vx:
         !   [[selalib:src/particle_methods/pic_remapped/sll_m_remapped_pic_base.F90::visualize_f_slice_x_vx]]
         ! specialized in:
         ! - [[selalib:src/particle_methods/pic_remapped/bsl_lt_pic/sll_m_bsl_lt_pic_4d_group.F90::bsl_lt_pic_4d_visualize_f_slice_x_vx]]
