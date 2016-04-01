@@ -573,7 +573,7 @@ contains
     sll_int32  :: ierr, it, jj, counter
     sll_int32  :: i, j, k
     !sll_real64 :: tmp1, tmp2, tmp3, tmp4
-    sll_real64 :: tmp5, tmp6!, temp
+    sll_real32 :: tmp5, tmp6!, temp
     !sll_real32 :: ttmp(1:4,1:2), ttmp1(1:4,1:2), ttmp2(1:4,1:2)
     !sll_real64 :: valeur, val2
     sll_real64, dimension(:,:), pointer :: phi
@@ -989,7 +989,7 @@ contains
 
          ! <<rho_init_standPUSH>> This will also generate the corresponding gnuplot script
         write (field_name, "(A8,I4.4)") 'rho_run=', sim%run_nb
-        call sll_gnuplot_2d(xmin, sim%mesh_2d%eta1_max, ncx+1, ymin, &
+        call sll_o_gnuplot_2d(xmin, sim%mesh_2d%eta1_max, ncx+1, ymin, &
               sim%mesh_2d%eta2_max, ncy+1,                            &
               sim%rho, trim(field_name), it+1, ierr )
       end if

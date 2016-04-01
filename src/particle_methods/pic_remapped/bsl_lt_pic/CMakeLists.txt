@@ -17,12 +17,12 @@ TARGET_LINK_LIBRARIES( sll_bsl_lt_pic
   sll_bsl_lt_pic_4d_particle
   sll_remapped_pic
   sll_remapped_pic_utilities
-  sll_pic_accumulators
+  # sll_pic_accumulators
   sll_sparse_grid
   sll_pic_opt2d_accumulators
   sll_timer # needed?
   sll_file_io # needed?
-  sll_sobol
+  sobol
   )
 
 # Ctest
