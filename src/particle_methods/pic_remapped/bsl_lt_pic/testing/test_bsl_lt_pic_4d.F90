@@ -27,11 +27,19 @@
 program test_bsl_lt_pic_4d
 
   ! [[file:../working_precision/sll_m_working_precision.h]]
+
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+#include "sll_assert.h"
 #include "sll_memory.h"
 #include "sll_working_precision.h"
 
   use sll_m_bsl_lt_pic_4d_group, only: &
+    SLL_BSL_LT_PIC_BASIC,  &
+    SLL_BSL_LT_PIC_HAT_F0, &
+    SLL_BSL_LT_PIC_REMAP_WITH_SPARSE_GRIDS, &
+    SLL_BSL_LT_PIC_REMAP_WITH_SPLINES,  &
+    SLL_BSL_LT_PIC_STRUCTURED,  &
     sll_t_bsl_lt_pic_4d_group, &
     sll_f_bsl_lt_pic_4d_group_new
 
@@ -47,7 +55,7 @@ program test_bsl_lt_pic_4d
 
   use sll_m_remapped_pic_utilities, only: &
     sll_s_apply_periodic_bc_on_cartesian_mesh_2d, &
-    sll_f_is_in_domain_2d
+    sll_f_x_is_in_domain_2d
 
   use sll_m_timer, only: &
     sll_s_set_time_mark, &
@@ -55,6 +63,7 @@ program test_bsl_lt_pic_4d
     sll_t_time_mark
 
   implicit none
+
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
   
 #define SPECIES_CHARGE  1._f64
@@ -594,7 +603,7 @@ program test_bsl_lt_pic_4d
                                          DOMAIN_IS_X_PERIODIC, DOMAIN_IS_Y_PERIODIC ) &
                  ) then
               !! -- -- put outside particles back in domain
-              call sll_S_apply_periodic_bc_on_cartesian_mesh_2d( p_group%space_mesh_2d, new_x, new_y)
+              call sll_s_apply_periodic_bc_on_cartesian_mesh_2d( p_group%space_mesh_2d, new_x, new_y)
             end if
 
             f_target = sll_f_eval_hat_function(x0,y0,vx0,vy0,r_x,r_y,r_vx,r_vy, basis_height, shift, new_x, new_y, new_vx, new_vy)
@@ -634,17 +643,17 @@ program test_bsl_lt_pic_4d
         y_j  = p_group%sparse_grid_interpolator%hierarchy(j)%coordinate(2)
         vx_j = p_group%sparse_grid_interpolator%hierarchy(j)%coordinate(3)
         vy_j = p_group%sparse_grid_interpolator%hierarchy(j)%coordinate(4)
-        call test_backward_push(x_j, y_j, vx_j, vy_j, new_x, new_y, new_vx, new_vy)
+        call sll_s_test_backward_push(x_j, y_j, vx_j, vy_j, new_x, new_y, new_vx, new_vy)
 
-        if( .not. x_is_in_domain_2d( new_x, new_y, p_group%space_mesh_2d,   &
+        if( .not. sll_f_x_is_in_domain_2d( new_x, new_y, p_group%space_mesh_2d,   &
                                      DOMAIN_IS_X_PERIODIC, DOMAIN_IS_Y_PERIODIC ) &
              ) then
           !! -- -- put outside particles back in domain
-          call apply_periodic_bc_on_cartesian_mesh_2d( p_group%space_mesh_2d, new_x, new_y)
+          call sll_s_apply_periodic_bc_on_cartesian_mesh_2d( p_group%space_mesh_2d, new_x, new_y)
         end if
 
 
-        f_target = eval_hat_function(x0,y0,vx0,vy0,r_x,r_y,r_vx,r_vy, basis_height, shift, new_x, new_y, new_vx, new_vy)
+        f_target = sll_f_eval_hat_function(x0,y0,vx0,vy0,r_x,r_y,r_vx,r_vy, basis_height, shift, new_x, new_y, new_vx, new_vy)
         error = max( error, abs( f_j - f_target ) )
 
         write(80,*) x_j, y_j, vx_j, vy_j,  f_j, f_target, abs( f_j - f_target )
@@ -751,7 +760,7 @@ contains
 
   end subroutine test_forward_push
 
-  subroutine test_backward_push(x, y, vx, vy, new_x, new_y, new_vx, new_vy)
+  subroutine sll_s_test_backward_push(x, y, vx, vy, new_x, new_y, new_vx, new_vy)
 
     ! [[file:../working_precision/sll_m_working_precision.h]]
     use sll_m_working_precision
@@ -770,6 +779,6 @@ contains
     new_vx = vx
     new_vy = vy
 
-  end subroutine test_backward_push
+  end subroutine sll_s_test_backward_push
 
 end program test_bsl_lt_pic_4d

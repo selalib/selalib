@@ -24,13 +24,16 @@ module sll_m_remapped_pic_utilities
 #include "sll_errors.h"
 
   use sll_m_cartesian_meshes, only: &
-    sll_t_cartesian_mesh_2d
+    sll_t_cartesian_mesh_2d,  &
+    sll_t_cartesian_mesh_4d
 
   implicit none
 
   public :: &
+    sll_f_x_is_in_domain_2d,  &
     sll_s_apply_periodic_bc_on_cartesian_mesh_2d, &
-    sll_f_is_in_domain_2d
+    sll_s_get_4d_cell_containing_point, &
+    sll_s_get_inverse_matrix_with_given_size
 
   private
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -42,7 +45,7 @@ contains
   ! todo: put this in the right module (with the meshes?)
   ! tells whether the given point is in the given domain, with boolean arguments for the domain periodicity
   ! (taken from previous function in_bounds_periodic)
-  function sll_f_x__is_in_domain_2d( x, y, mesh, x_periodic, y_periodic ) result(res)
+  function sll_f_x_is_in_domain_2d( x, y, mesh, x_periodic, y_periodic ) result(res)
 
 !    use sll_m_cartesian_meshes
     sll_real64,                     intent( in )            :: x, y

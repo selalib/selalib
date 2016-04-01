@@ -39,16 +39,18 @@ module sll_m_bsl_lt_pic_4d_utilities
     sll_t_int_list_element_ptr, &
     sll_t_marker_list_element, &
     sll_t_marker_list_element_ptr, &
+    sll_f_add_element_in_int_list, &
+    sll_f_add_element_in_marker_list, &
     sll_s_apply_periodic_bc_x, &
     sll_s_apply_periodic_bc_y, &
     sll_f_eval_hat_function, &
     sll_f_eval_landau_fx, &
-    sll_s_get_init_position_on_cart_grid_from_particle_index, &
-    sll_s_get_particle_index_from_init_position_on_cart_grid, &
+    sll_s_get_initial_position_on_cartesian_grid_from_marker_index, &
+    sll_f_marker_index_from_initial_position_on_cartesian_grid, &
     sll_s_get_poisson_cell_index, &
     sll_s_global_to_cell_offset_extended, &
     sll_f_pic_shape, &
-    sll_s_update_closest_particle_arrays
+    sll_s_update_closest_marker_arrays
 
   private
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -75,26 +77,26 @@ module sll_m_bsl_lt_pic_4d_utilities
   end type sll_t_marker_list_element
 
   type sll_t_marker_list_element_ptr ! we need this type for arrays of lists
-    type(marker_list_element), pointer :: pointed_element
+    type( sll_t_marker_list_element ), pointer :: pointed_element
   end type sll_t_marker_list_element_ptr
 
 
 contains
 
-  function sll_f_add_element_in_int_list(head, new_element)
+  function sll_f_add_element_in_int_list(head, new_element) result( new_list )
     type( sll_t_int_list_element ), pointer :: head, new_element
-    type( sll_t_int_list_element ), pointer :: add_element_in_int_list
+    type( sll_t_int_list_element ), pointer :: new_list
 
     new_element%next => head
-    add_element_in_int_list => new_element
+    new_list => new_element
   end function
 
-  function sll_f_add_element_in_marker_list(head, new_element)
+  function sll_f_add_element_in_marker_list(head, new_element) result( new_list )
     type( sll_t_marker_list_element ), pointer :: head, new_element
-    type( sll_t_marker_list_element ), pointer :: add_element_in_marker_list
+    type( sll_t_marker_list_element ), pointer :: new_list
 
     new_element%next => head
-    add_element_in_marker_list => new_element
+    new_list => new_element
   end function
 
 
@@ -229,7 +231,7 @@ contains
     return
     SLL_ASSERT(n_parts_x>0)
 
-  end subroutine
+  end subroutine sll_s_get_initial_position_on_cartesian_grid_from_marker_index
 
 
   ! <<sll_f_pic_shape>>
