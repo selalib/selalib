@@ -47,7 +47,7 @@ module sll_m_simple_pic_4d_group
 
   use sll_m_remapped_pic_utilities, only: &
     sll_s_apply_periodic_bc_on_cartesian_mesh_2d, &
-    sll_f_is_in_domain_2d
+    sll_f_x_is_in_domain_2d
 
   use sll_m_simple_pic_4d_particle, only: &
     sll_t_simple_pic_4d_particle

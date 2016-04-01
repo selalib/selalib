@@ -29,56 +29,74 @@ module sll_m_bsl_lt_pic_4d_group
 #include "sll_memory.h"
 #include "sll_working_precision.h"
 
-  use sll_m_constants, only: sll_pi
   use sll_m_working_precision
-  use sll_m_cartesian_meshes
-  use sll_m_sparse_grid_4d, only: sparse_grid_interpolator_4d
-  use sll_m_remapped_pic_base
-  use sll_m_bsl_lt_pic_4d_particle
-  use sll_m_bsl_lt_pic_4d_utilities !, only: int_list_element, int_list_element_ptr, add_element_in_int_list
-  use sll_m_remapped_pic_utilities, only:           &
-            x_is_in_domain_2d,                      &
-            apply_periodic_bc_on_cartesian_mesh_2d, &
-            get_inverse_matrix_with_given_size,     &
-            get_4d_cell_containing_point
-  use sll_m_gnuplot
-  use sll_m_sobol, only: i8_sobol
+
+  use sll_m_constants, only: &
+    sll_p_pi
+
+  use sll_m_sparse_grid_4d, only: &
+    sll_t_sparse_grid_interpolator_4d
+
+  use sll_m_sobol, only: &
+    sll_s_i8_sobol
+
   use sll_m_accumulators, only: &
     sll_t_charge_accumulator_cell_2d, &
     sll_s_reset_charge_accumulator_to_zero, &
     sll_t_charge_accumulator_2d
 
+  use sll_m_remapped_pic_base, only: &
+    sll_c_remapped_particle_group, &
+    sll_f_temp_species_new
+
+  use sll_m_remapped_pic_utilities, only:  &
+    sll_f_x_is_in_domain_2d, &
+    sll_s_get_inverse_matrix_with_given_size, &
+    sll_s_get_4d_cell_containing_point
+
   use sll_m_bsl_lt_pic_4d_particle, only: &
     sll_t_bsl_lt_pic_4d_particle
 
   use sll_m_bsl_lt_pic_4d_utilities, only: &
+    sll_t_int_list_element, &
+    sll_t_int_list_element_ptr, &
+    sll_t_marker_list_element, &
+    sll_f_add_element_in_int_list, &
+    sll_f_add_element_in_marker_list, &
     sll_s_apply_periodic_bc_x, &
     sll_s_apply_periodic_bc_y, &
     sll_f_eval_hat_function, &
     sll_f_eval_landau_fx, &
-    sll_s_get_init_position_on_cart_grid_from_particle_index, &
-    sll_s_get_particle_index_from_init_position_on_cart_grid, &
+    sll_s_get_initial_position_on_cartesian_grid_from_marker_index, &
+    sll_f_marker_index_from_initial_position_on_cartesian_grid, &
     sll_f_pic_shape, &
-    sll_s_update_closest_particle_arrays
+    sll_s_update_closest_marker_arrays
 
   use sll_m_cartesian_meshes, only: &
     sll_f_new_cartesian_mesh_4d, &
     sll_t_cartesian_mesh_2d, &
     sll_t_cartesian_mesh_4d
 
-  use sll_m_constants, only: &
-    sll_p_pi
-
   use sll_m_gnuplot, only: &
     sll_o_gnuplot_2d
-
-  use sll_m_remapped_pic_base, only: &
-    sll_c_remapped_particle_group, &
-    sll_f_temp_species_new
 
   implicit none
 
   public :: &
+    SLL_BSL_LT_PIC_REMAP_WITH_SPLINES,  &
+    SLL_BSL_LT_PIC_REMAP_WITH_SPARSE_GRIDS,  &
+    SLL_BSL_LT_PIC_DEPOSIT_F,  &
+    SLL_BSL_LT_PIC_REMAP_F,  &
+    SLL_BSL_LT_PIC_WRITE_F_ON_GIVEN_GRID, &
+    SLL_BSL_LT_PIC_SET_WEIGHTS_ON_DEPOSITION_PARTICLES, &
+    SLL_BSL_LT_PIC_LANDAU_F0,  &
+    SLL_BSL_LT_PIC_HAT_F0,  &
+    SLL_BSL_LT_PIC_BASIC,  &
+    SLL_BSL_LT_PIC_FLEXIBLE,  &
+    SLL_BSL_LT_PIC_STRUCTURED,  &
+    SLL_BSL_LT_PIC_UNSTRUCTURED ,  &
+    SLL_BSL_LT_PIC_FIXED,  &
+    SLL_BSL_LT_PIC_PUSHED,  &
     sll_t_bsl_lt_pic_4d_group, &
     sll_f_bsl_lt_pic_4d_group_new, &
     sll_o_delete
@@ -132,8 +150,8 @@ module sll_m_bsl_lt_pic_4d_group
     sll_int32                                                   :: max_nb_unstruct_markers
     sll_int32                                                   :: number_flow_markers      !< used for struct or unstruct markers
 
-    type(int_list_element_ptr), dimension(:,:,:,:), allocatable :: unstruct_markers_in_flow_cell   !< to track markers in each cell
-    type(int_list_element),     pointer                         :: unstruct_markers_outside_flow_grid   !< to track markers outside
+    type(sll_t_int_list_element_ptr), dimension(:,:,:,:), allocatable :: unstruct_markers_in_flow_cell  !< track markers in cells
+    type(sll_t_int_list_element),     pointer                   :: unstruct_markers_outside_flow_grid  !< track markers outside
     sll_real64, dimension(:,:), allocatable                     :: unstruct_markers_eta
     sll_real64, dimension(:,:), allocatable                     :: unstruct_markers_eta_at_remapping_time
     sll_int32,  dimension(:),   allocatable                     :: unstruct_markers_relevant_neighbor
@@ -568,7 +586,7 @@ contains
         ! we also need to update the flow cell's lists:
         ! store previous flow cell index
         eta_marker = self%unstruct_markers_eta(i, :)
-        call get_4d_cell_containing_point(eta_marker, self%flow_grid, old_j_x, old_j_y, old_j_vx, old_j_vy, marker_is_outside)
+        call sll_s_get_4d_cell_containing_point(eta_marker, self%flow_grid, old_j_x, old_j_y, old_j_vx, old_j_vy, marker_is_outside)
 
         ! set x and y
         self%unstruct_markers_eta(i, 1) = x(1)
@@ -628,7 +646,7 @@ contains
         ! we also need to update the flow cell's lists:
         ! store previous flow cell index
         eta_marker = self%unstruct_markers_eta(i, :)
-        call get_4d_cell_containing_point(eta_marker, self%flow_grid, old_j_x, old_j_y, old_j_vx, old_j_vy, marker_is_outside)
+        call sll_s_get_4d_cell_containing_point(eta_marker, self%flow_grid, old_j_x, old_j_y, old_j_vx, old_j_vy, marker_is_outside)
 
         ! set vx and vy
         self%unstruct_markers_eta(i, 3) = x(1)
@@ -672,7 +690,7 @@ contains
     sll_int32                       , intent( in    ) :: i
     sll_real64                      , intent( in    ) :: s
 
-    print*, "Error (97658758) -- this subroutine is not implemented for sll_bsl_lt_pic_4d_group objects", i, s, storage_size(self)
+    print*, "Error (97658758) -- this subroutine is not implemented for sll_t_bsl_lt_pic_4d_group objects", i, s, storage_size(self)
     stop
 
   end subroutine bsl_lt_pic_4d_set_particle_weight
@@ -694,7 +712,7 @@ contains
 
 !----------------------------------------------------------------------------
   subroutine bsl_lt_pic_4d_set_hat_f0_parameters( self, x0, y0, vx0, vy0, r_x, r_y, r_vx, r_vy, basis_height, shift )
-    class(sll_bsl_lt_pic_4d_group), intent(inout)   :: self
+    class(sll_t_bsl_lt_pic_4d_group), intent(inout)   :: self
     sll_real64,                     intent(in)      :: x0
     sll_real64,                     intent(in)      :: y0
     sll_real64,                     intent(in)      :: vx0
@@ -726,7 +744,7 @@ contains
   !> This subroutine places the deposition particles with the sepcified method. It does not compute the weights.
   !> The weights are computed in an external call to the 'write_f_on_grid_or_deposit' subroutine
   subroutine reset_deposition_particles_coordinates(self, rank)
-    class(sll_bsl_lt_pic_4d_group), intent(inout)   :: self
+    class(sll_t_bsl_lt_pic_4d_group), intent(inout)   :: self
     sll_int32, intent(in), optional                 :: rank
     sll_int32                                       :: this_rank
     sll_int32                                       :: i_x, i_y, i_vx, i_vy
@@ -751,7 +769,7 @@ contains
 
       do i_part = 1, self%number_deposition_particles
         ! Generate Sobol numbers on [0,1]
-        call i8_sobol(int(4,8), sobol_seed, rdn)
+        call sll_s_i8_sobol(int(4,8), sobol_seed, rdn)
 
         ! Transform rdn to the proper intervals
         do i_dim = 1, 4
@@ -797,11 +815,11 @@ contains
       target_total_charge,              &
       enforce_total_charge              &
   )
-    class( sll_bsl_lt_pic_4d_group ),           intent( inout ) :: self
+    class( sll_t_bsl_lt_pic_4d_group ),           intent( inout ) :: self
     sll_real64,                                 intent( in )    :: target_total_charge
     logical,                                    intent( in )    :: enforce_total_charge
-    type(sll_charge_accumulator_2d),  pointer :: void_charge_accumulator
-    type(sll_cartesian_mesh_4d),      pointer :: void_grid_4d
+    type(sll_t_charge_accumulator_2d),  pointer :: void_charge_accumulator
+    type(sll_t_cartesian_mesh_4d),      pointer :: void_grid_4d
     sll_real64, dimension(:,:),       pointer :: void_array_2d
 
     sll_int32     :: scenario
@@ -842,7 +860,7 @@ contains
       target_total_charge,              &
       enforce_total_charge              &
   )
-    class( sll_bsl_lt_pic_4d_group ),           intent( inout ) :: self
+    class( sll_t_bsl_lt_pic_4d_group ),           intent( inout ) :: self
     sll_real64,                                 intent( in )    :: target_total_charge
     logical,                                    intent( in )    :: enforce_total_charge
     sll_real64    :: eta(4)
@@ -965,7 +983,7 @@ contains
 
         charge_accumulator_cell => charge_accumulator%q_acc(i_cell)
 
-        if( x_is_in_domain_2d(    x_part, y_part,                 &
+        if( sll_f_x_is_in_domain_2d(    x_part, y_part,                 &
                                   self%space_mesh_2d,             &
                                   self%domain_is_periodic(1),     &
                                   self%domain_is_periodic(2) ))then
@@ -991,7 +1009,7 @@ contains
   !> bsl_lt_pic_4d_visualize_f_slice_x_vx  plots an approximation of  f_x_vx = \int \int f(x,y,v_x,v_y) d y d v_y
   !>   - the plot is done on a 2d grid, but uses a 4d grid to evaluate f
   !>   - grid dimensions: we give the number of points, and the boundaries are given by the remapping domain
-  !>   - calls sll_gnuplot_2d to write the data file
+  !>   - calls sll_o_gnuplot_2d to write the data file
 
   subroutine bsl_lt_pic_4d_visualize_f_slice_x_vx(self, array_name, plot_np_x, plot_np_y, plot_np_vx, plot_np_vy, iplot)
 
@@ -1060,7 +1078,7 @@ contains
   end subroutine bsl_lt_pic_4d_visualize_f_slice_x_vx
 
   function remapping_cart_grid_number_nodes_x(p_group) result(val)
-    class(sll_bsl_lt_pic_4d_group), intent(in)  :: p_group
+    class(sll_t_bsl_lt_pic_4d_group), intent(in)  :: p_group
     sll_int32                                  :: val
 
     if( p_group%domain_is_periodic(1) )then
@@ -1071,7 +1089,7 @@ contains
   end function
 
   function remapping_cart_grid_number_nodes_y(p_group) result(val)
-    class(sll_bsl_lt_pic_4d_group), intent(in)  :: p_group
+    class(sll_t_bsl_lt_pic_4d_group), intent(in)  :: p_group
     sll_int32                                  :: val
 
     if( p_group%domain_is_periodic(2) )then
@@ -1082,21 +1100,21 @@ contains
   end function
 
   function remapping_cart_grid_number_nodes_vx(p_group) result(val)
-    class(sll_bsl_lt_pic_4d_group), intent(in)  :: p_group
+    class(sll_t_bsl_lt_pic_4d_group), intent(in)  :: p_group
     sll_int32                                  :: val
 
     val = p_group%remapping_cart_grid_number_cells_vx + 1
   end function
 
   function remapping_cart_grid_number_nodes_vy(p_group) result(val)
-    class(sll_bsl_lt_pic_4d_group), intent(in)  :: p_group
+    class(sll_t_bsl_lt_pic_4d_group), intent(in)  :: p_group
     sll_int32                                  :: val
 
     val = p_group%remapping_cart_grid_number_cells_vy + 1
   end function
 
   function get_deposition_particle_charge_factor(p_group) result(val)
-    class(sll_bsl_lt_pic_4d_group), intent(in)  :: p_group
+    class(sll_t_bsl_lt_pic_4d_group), intent(in)  :: p_group
     sll_real64 :: val
 
     sll_int32  :: nodes_number
@@ -1257,7 +1275,7 @@ contains
 
 
     !> A.1 flow grid
-    res%flow_grid => new_cartesian_mesh_4d( &
+    res%flow_grid => sll_f_new_cartesian_mesh_4d( &
       flow_grid_number_cells_x, &
       flow_grid_number_cells_y, &
       flow_grid_number_cells_vx, &
@@ -1314,7 +1332,7 @@ contains
       number_cells_initial_markers_grid_vx = number_flow_markers_vx - 1
       number_cells_initial_markers_grid_vy = number_flow_markers_vy - 1
 
-      res%initial_markers_grid => new_cartesian_mesh_4d( &
+      res%initial_markers_grid => sll_f_new_cartesian_mesh_4d( &
         number_cells_initial_markers_grid_x, &
         number_cells_initial_markers_grid_y, &
         number_cells_initial_markers_grid_vx, &
@@ -1355,7 +1373,7 @@ contains
                                                   flow_grid_number_cells_vx,    &
                                                   flow_grid_number_cells_vy )   &
                , stat=ierr)
-      call test_error_code(ierr, 'Memory allocation Failure.', __FILE__, __LINE__)
+      call sll_s_test_error_code(ierr, 'Memory allocation Failure.', __FILE__, __LINE__)
       ! no need to do something for the list unstruct_markers_outside_flow_grid, it will just be nullified at the initialization
 
       SLL_ALLOCATE( res%unstruct_markers_eta(res%max_nb_unstruct_markers, 4) , ierr )
@@ -1411,7 +1429,7 @@ contains
       res%remapping_cart_grid_number_cells_vx = remapping_cart_grid_number_cells_vx
       res%remapping_cart_grid_number_cells_vy = remapping_cart_grid_number_cells_vy
 
-      res%remapping_cart_grid => new_cartesian_mesh_4d(       &
+      res%remapping_cart_grid => sll_f_new_cartesian_mesh_4d(       &
                                                   remapping_cart_grid_number_cells_x,        &
                                                   remapping_cart_grid_number_cells_y,        &
                                                   remapping_cart_grid_number_cells_vx,       &
@@ -1441,7 +1459,7 @@ contains
                                                     res%remapping_cart_grid_number_nodes_vx(),    &
                                                     res%remapping_cart_grid_number_nodes_vy() )   &
                , stat=ierr)
-      call test_error_code(ierr, 'Memory allocation Failure.', __FILE__, __LINE__)
+      call sll_s_test_error_code(ierr, 'Memory allocation Failure.', __FILE__, __LINE__)
 
 
     else if( res%remapped_f_interpolation_type == SLL_BSL_LT_PIC_REMAP_WITH_SPARSE_GRIDS )then
@@ -1579,7 +1597,8 @@ contains
       deposition_particles_grid_vy_min = res%remapping_grid_eta_min(4)
       deposition_particles_grid_vy_max = res%remapping_grid_eta_max(4)
 
-      res%deposition_particles_grid => new_cartesian_mesh_4d( deposition_particles_grid_num_cells_x,        &
+      res%deposition_particles_grid => sll_f_new_cartesian_mesh_4d(                               &
+                                                    deposition_particles_grid_num_cells_x,        &
                                                     deposition_particles_grid_num_cells_y,        &
                                                     deposition_particles_grid_num_cells_vx,       &
                                                     deposition_particles_grid_num_cells_vy,       &
@@ -1881,7 +1900,7 @@ contains
       !      number_nodes_vx = 51
       !      number_nodes_vy = 51
       !
-      !      h_x    = 4*sll_pi / number_nodes_x
+      !      h_x    = 4*sll_p_pi / number_nodes_x
       !      h_y    = 1./number_nodes_y
       !      h_vx   = 10./(number_nodes_vx-1)
       !      h_vy   = 10./(number_nodes_vy-1)
@@ -1932,7 +1951,7 @@ contains
   !              thermal_speed, alpha, k_landau        &
   !              )
   !
-  !    class(sll_bsl_lt_pic_4d_group), intent(inout)   :: p_group
+  !    class(sll_t_bsl_lt_pic_4d_group), intent(inout)   :: p_group
   !    sll_real64, intent(in)                          :: thermal_speed, alpha, k_landau
   !
   !    sll_int32 :: j
@@ -1946,7 +1965,7 @@ contains
   !    sll_real64 :: f_vy
   !
   !    one_over_thermal_velocity = 1./thermal_speed
-  !    one_over_two_pi = 1./(2*sll_pi)
+  !    one_over_two_pi = 1./(2*sll_p_pi)
   !
   !    do j=1, p_group%sparse_grid_interpolator%size_basis
   !        x_j = p_group%sparse_grid_interpolator%hierarchy(j)%coordinate(1)
@@ -2066,7 +2085,7 @@ contains
   !        basis_height, hat_shift &
   !      )
   !
-  !    class(sll_bsl_lt_pic_4d_group), intent(inout)       :: p_group
+  !    class(sll_t_bsl_lt_pic_4d_group), intent(inout)       :: p_group
   !    sll_real64, intent(in)                          :: x0, y0, vx0, vy0
   !    sll_real64, intent(in)                          :: r_x, r_y, r_vx, r_vy
   !    sll_real64, intent(in)                          :: basis_height, hat_shift
@@ -2289,7 +2308,7 @@ contains
 
   !> set the connectivity arrays so that every marker knows its neighbors on the initial (cartesian) grid
   subroutine bsl_lt_pic_4d_set_markers_connectivity( p_group )
-    class(sll_bsl_lt_pic_4d_group),intent(inout) :: p_group
+    class(sll_t_bsl_lt_pic_4d_group),intent(inout) :: p_group
 
     sll_int32  :: k
     sll_int32  :: k_ngb
@@ -2350,8 +2369,8 @@ contains
             vy_j = vy_min + (j_vy-1) * h_vy
 
             k_check = k_check + 1
-            k = marker_index_from_initial_position_on_cartesian_grid(                         &
-                    j_x, j_y, j_vx, j_vy,                                                     &
+            k = sll_f_marker_index_from_initial_position_on_cartesian_grid(                                       &
+                    j_x, j_y, j_vx, j_vy,                                                                         &
                     number_flow_markers_x, number_flow_markers_y, number_flow_markers_vx, number_flow_markers_vy  &
                 )
             SLL_ASSERT(k == k_check)
@@ -2439,7 +2458,7 @@ contains
   subroutine bsl_lt_pic_4d_initialize_unstruct_markers( p_group )
     class(sll_t_bsl_lt_pic_4d_group),intent(inout) :: p_group
 
-    type(int_list_element),  pointer   :: new_int_list_element, head
+    type(sll_t_int_list_element),  pointer   :: new_int_list_element, head
     sll_real64, dimension(4) :: flow_cell_eta_min
     sll_real64, dimension(4) :: flow_cell_eta_max
 
@@ -2483,7 +2502,7 @@ contains
             do i_local_marker = 1, nb_unstruct_markers_per_cell
 
               ! Generate 4 Sobol numbers on [0,1]
-              call i8_sobol(int(4,8), sobol_seed, rdn)
+              call sll_s_i8_sobol(int(4,8), sobol_seed, rdn)
 
               ! Transform rdn to the proper intervals
               do i_dim = 1, 4
@@ -2496,7 +2515,7 @@ contains
               new_int_list_element%value = i_marker
               head => p_group%unstruct_markers_in_flow_cell(j_x,j_y,j_vx,j_vy)%pointed_element
               p_group%unstruct_markers_in_flow_cell(j_x,j_y,j_vx,j_vy)%pointed_element &
-                    => add_element_in_int_list(head, new_int_list_element)
+                    => sll_f_add_element_in_int_list(head, new_int_list_element)
 
               ! increment the global marker index
               i_marker = i_marker + 1
@@ -2540,14 +2559,14 @@ contains
   !> p_group%flow_grid%delta_eta4 = p_group%flow_grid_a4 * p_group%flow_grid_h
 
   subroutine bsl_lt_pic_4d_prepare_unstruct_markers_for_flow_jacobians( p_group )
-    class(sll_bsl_lt_pic_4d_group),intent(inout) :: p_group
+    class(sll_t_bsl_lt_pic_4d_group),intent(inout) :: p_group
 
 
-    type(int_list_element),       pointer           :: list_of_marker_indices_to_be_discarded
-    type(int_list_element),       pointer           :: new_int_list_element, head_int_list
-    type(int_list_element),       pointer           :: new_aux_int_list_element
-    type(marker_list_element),    pointer           :: list_of_markers_to_be_added
-    type(marker_list_element),    pointer           :: new_marker_list_element, head_marker_list
+    type(sll_t_int_list_element),       pointer           :: list_of_marker_indices_to_be_discarded
+    type(sll_t_int_list_element),       pointer           :: new_int_list_element, head_int_list
+    type(sll_t_int_list_element),       pointer           :: new_aux_int_list_element
+    type(sll_t_marker_list_element),    pointer           :: list_of_markers_to_be_added
+    type(sll_t_marker_list_element),    pointer           :: new_marker_list_element, head_marker_list
 
     sll_real64, dimension(4)    :: flow_cell_eta_min
     sll_real64, dimension(4)    :: flow_cell_eta_mid
@@ -2661,7 +2680,7 @@ contains
                 end do
                 ! compute the inverse matrix
                 matrix_size = i_relevant-2
-                call get_inverse_matrix_with_given_size(matrix_size, aux_matrix, projection_matrix, ok_flag)
+                call sll_s_get_inverse_matrix_with_given_size(matrix_size, aux_matrix, projection_matrix, ok_flag)
                 SLL_ASSERT( ok_flag )
               end if
 
@@ -2687,7 +2706,7 @@ contains
 
                 else
                   ! no more markers in cell: create a new one with quasi-random coordinates
-                  call i8_sobol(int(4,8), sobol_seed, rdn) ! 4 Sobol numbers in [0,1]
+                  call sll_s_i8_sobol(int(4,8), sobol_seed, rdn) ! 4 Sobol numbers in [0,1]
 
                   ! Transform rdn to the proper intervals
                   do i_dim = 1, 4
@@ -2768,7 +2787,7 @@ contains
                     new_marker_list_element%flag = 1      ! means: relevant
                     ! increment the proper linked list
                     head_marker_list => list_of_markers_to_be_added
-                    list_of_markers_to_be_added => add_element_in_marker_list(head_marker_list, new_marker_list_element)
+                    list_of_markers_to_be_added => sll_f_add_element_in_marker_list(head_marker_list, new_marker_list_element)
                   end if
                 else
                   ! if the test is failed then this marker is not relevant, just ignore it. Its index may be stored later for removal
@@ -2798,7 +2817,7 @@ contains
                   new_aux_int_list_element%value = i_marker
                   ! increment the proper linked list
                   head_int_list => list_of_marker_indices_to_be_discarded
-                  list_of_marker_indices_to_be_discarded => add_element_in_int_list(      &
+                  list_of_marker_indices_to_be_discarded => sll_f_add_element_in_int_list(      &
                                                               head_int_list,              &
                                                               new_aux_int_list_element)
                 else
@@ -2812,7 +2831,7 @@ contains
             do while( nb_unrelevant_markers_in_this_cell < p_group%nb_unstruct_markers_per_cell - 5 )
 
               ! not enough markers in cell: create a new one with quasi-random coordinates
-              call i8_sobol(int(4,8), sobol_seed, rdn) ! 4 Sobol numbers in [0,1]
+              call sll_s_i8_sobol(int(4,8), sobol_seed, rdn) ! 4 Sobol numbers in [0,1]
 
               ! Transform rdn to the proper intervals
               do i_dim = 1, 4
@@ -2831,7 +2850,7 @@ contains
               new_marker_list_element%flag = 0      ! means: not relevant
               ! increment the proper linked list
               head_marker_list => list_of_markers_to_be_added
-              list_of_markers_to_be_added => add_element_in_marker_list(head_marker_list, new_marker_list_element)
+              list_of_markers_to_be_added => sll_f_add_element_in_marker_list(head_marker_list, new_marker_list_element)
 
               nb_markers_created = nb_markers_created + 1
               nb_unrelevant_markers_in_this_cell = nb_unrelevant_markers_in_this_cell + 1
@@ -2853,7 +2872,7 @@ contains
       new_aux_int_list_element%value = i_marker
       ! increment the proper linked list
       head_int_list => list_of_marker_indices_to_be_discarded
-      list_of_marker_indices_to_be_discarded => add_element_in_int_list(      &
+      list_of_marker_indices_to_be_discarded => sll_f_add_element_in_int_list(      &
                                                   head_int_list,              &
                                                   new_aux_int_list_element)
 
@@ -2883,12 +2902,12 @@ contains
       SLL_ASSERT( p_group%unstruct_markers_relevant_neighbor(i_marker) == 0 )
       ! store index of the flow cell containing the obsolete marker, to remove its index from cell list
       eta_marker_to_remove = p_group%unstruct_markers_eta(i_marker,:)
-      call get_4d_cell_containing_point(    &
-              eta_marker_to_remove,                     &
-              p_group%flow_grid,                        &
-              old_j_x, old_j_y, old_j_vx, old_j_vy,     &
-              marker_is_outside                         &
-           )
+      call sll_s_get_4d_cell_containing_point(    &
+        eta_marker_to_remove,                     &
+        p_group%flow_grid,                        &
+        old_j_x, old_j_y, old_j_vx, old_j_vy,     &
+        marker_is_outside                         &
+      )
       ! store this marker coordinates in main array
       p_group%unstruct_markers_eta(i_marker,:) = new_marker_list_element%eta
       ! test whether the new (relevant) marker is in a different cell than the old (unrelevant) one
@@ -3010,11 +3029,11 @@ contains
                                                              i_marker,  &
                                                              old_j_x, old_j_y, old_j_vx, old_j_vy, &
                                                              new_j_x, new_j_y, new_j_vx, new_j_vy)
-    class(sll_bsl_lt_pic_4d_group), intent(inout) :: p_group
+    class(sll_t_bsl_lt_pic_4d_group), intent(inout) :: p_group
     sll_int32,                      intent(in)  :: i_marker
     sll_int32,                      intent(in)  :: old_j_x, old_j_y, old_j_vx, old_j_vy
     sll_int32,                      intent(in), optional  :: new_j_x, new_j_y, new_j_vx, new_j_vy
-    type(int_list_element),       pointer           :: new_int_list_element, head_int_list
+    type(sll_t_int_list_element),       pointer           :: new_int_list_element, head_int_list
     sll_real64, dimension(4)    :: eta_marker
     sll_int32  :: j_x, j_y, j_vx, j_vy
     sll_int32  :: ierr
@@ -3027,7 +3046,7 @@ contains
       ! this is usually the case when the marker has just been moved and we do not know in which flow cell it is
       SLL_ASSERT( (.not. present(new_j_y)) .and. (.not. present(new_j_vx)) .and. (.not. present(new_j_vy)) )
       eta_marker = p_group%unstruct_markers_eta(i_marker, :)
-      call get_4d_cell_containing_point(eta_marker, p_group%flow_grid, j_x, j_y, j_vx, j_vy, eta_is_outside_grid)
+      call sll_s_get_4d_cell_containing_point(eta_marker, p_group%flow_grid, j_x, j_y, j_vx, j_vy, eta_is_outside_grid)
     else
       SLL_ASSERT( (present(new_j_y)) .and. (present(new_j_vx)) .and. (present(new_j_vy)) )
       j_x = new_j_x
@@ -3063,11 +3082,11 @@ contains
       if( eta_is_outside_grid )then
         head_int_list => p_group%unstruct_markers_outside_flow_grid
         p_group%unstruct_markers_outside_flow_grid &
-                        => add_element_in_int_list(head_int_list, new_int_list_element)
+                        => sll_f_add_element_in_int_list(head_int_list, new_int_list_element)
       else
         head_int_list => p_group%unstruct_markers_in_flow_cell(j_x, j_y, j_vx, j_vy)%pointed_element
         p_group%unstruct_markers_in_flow_cell(j_x,j_y,j_vx,j_vy)%pointed_element &
-                        => add_element_in_int_list(head_int_list, new_int_list_element)
+                        => sll_f_add_element_in_int_list(head_int_list, new_int_list_element)
       end if
       ! 2. remove the element i_marker from the list of the old cell
       marker_found_and_removed = .false.
@@ -3154,7 +3173,7 @@ contains
                       d41, d42, d43, d44                            &
                    )
 
-    class(sll_bsl_lt_pic_4d_group),intent(inout) :: p_group
+    class(sll_t_bsl_lt_pic_4d_group),intent(inout) :: p_group
     sll_int32,  intent(in)  :: j_x, j_y, j_vx, j_vy                 !< indices of the flow cell
     sll_real64, intent(in)  :: mesh_period_x
     sll_real64, intent(in)  :: mesh_period_y
@@ -3166,7 +3185,7 @@ contains
     sll_real64, intent(out) :: d31,d32,d33,d34
     sll_real64, intent(out) :: d41,d42,d43,d44
 
-    type(int_list_element),  pointer  :: head_int_list
+    type(sll_t_int_list_element),  pointer  :: head_int_list
 
     sll_real64, dimension(4)    :: flow_cell_eta_min
     sll_real64, dimension(4)    :: flow_cell_eta_mid
@@ -3304,7 +3323,7 @@ contains
 
     ! 2. compute D = J^{-1} = hat_delta_eta * (delta_eta)^{-1}
     matrix_size = 4
-    call get_inverse_matrix_with_given_size( matrix_size, delta_eta, inverse_delta_eta, ok_flag )
+    call sll_s_get_inverse_matrix_with_given_size( matrix_size, delta_eta, inverse_delta_eta, ok_flag )
     SLL_ASSERT( ok_flag )
     bwd_jacobian = 0.0d0
     do l = 1, 4
@@ -3349,7 +3368,7 @@ contains
   end subroutine get_deformation_matrix_from_unstruct_markers_in_cell
 
   function anisotropic_flow_grid_scalar_product(p_group, eta_a, eta_b) result(val)
-    class(sll_bsl_lt_pic_4d_group), intent(inout) :: p_group
+    class(sll_t_bsl_lt_pic_4d_group), intent(inout) :: p_group
     sll_real64, dimension(4),       intent(in)    :: eta_a
     sll_real64, dimension(4),       intent(in)    :: eta_b
     sll_real64                                    :: val
@@ -3362,7 +3381,7 @@ contains
   end function
 
   function anisotropic_flow_grid_distance(p_group, eta_a, eta_b) result(val)
-    class(sll_bsl_lt_pic_4d_group), intent(inout) :: p_group
+    class(sll_t_bsl_lt_pic_4d_group), intent(inout) :: p_group
     sll_real64, dimension(4),       intent(in)    :: eta_a
     sll_real64, dimension(4),       intent(in)    :: eta_b
     sll_real64                                    :: val
@@ -3374,7 +3393,7 @@ contains
 
   !> reset the structured markers on the initial (markers) grid
   subroutine bsl_lt_pic_4d_reset_markers_position( p_group )
-    class(sll_bsl_lt_pic_4d_group),intent(inout) :: p_group
+    class(sll_t_bsl_lt_pic_4d_group),intent(inout) :: p_group
 
     sll_int32 :: k
     sll_int32 :: k_check
@@ -3432,8 +3451,8 @@ contains
             vy_j = vy_min + (j_vy-1) * h_vy
 
             k_check = k_check + 1
-            k = marker_index_from_initial_position_on_cartesian_grid(                         &
-                    j_x, j_y, j_vx, j_vy,                                                     &
+            k = sll_f_marker_index_from_initial_position_on_cartesian_grid(                                       &
+                    j_x, j_y, j_vx, j_vy,                                                                         &
                     number_flow_markers_x, number_flow_markers_y, number_flow_markers_vx, number_flow_markers_vy  &
                 )
             SLL_ASSERT(k == k_check)
@@ -3458,7 +3477,7 @@ contains
   !> and
   !> reset the markers on the initial grid
   subroutine bsl_lt_pic_4d_remap( self, target_total_charge, enforce_total_charge )
-    class(sll_bsl_lt_pic_4d_group),   intent( inout ) :: self
+    class(sll_t_bsl_lt_pic_4d_group),   intent( inout ) :: self
     sll_real64,                       intent( in )    :: target_total_charge
     logical,                          intent( in )    :: enforce_total_charge
 
@@ -3530,7 +3549,7 @@ contains
   
   !> separate interpolation routine for the remapped f
   function bsl_lt_pic_4d_interpolate_value_of_remapped_f ( p_group, eta ) result(val)
-    class(sll_bsl_lt_pic_4d_group), intent(inout)  :: p_group
+    class(sll_t_bsl_lt_pic_4d_group), intent(inout)  :: p_group
     sll_real64, dimension(4),       intent(in)  :: eta           !< Position where to interpolate
     sll_real64                                  :: val
 
@@ -3543,7 +3562,7 @@ contains
     else if( p_group%remapped_f_interpolation_type == SLL_BSL_LT_PIC_REMAP_WITH_SPARSE_GRIDS )then
 
        ! <<sparse_grid_interpolate_value>>
-      val = p_group%sparse_grid_interpolator%interpolate_value(p_group%remapped_f_sparse_grid_coefficients, eta)
+      val = p_group%sparse_grid_interpolator%interpolate_from_interpolant_value(p_group%remapped_f_sparse_grid_coefficients, eta)
 
     else
 
@@ -3569,7 +3588,7 @@ contains
             y_aux = y - p_group%flow_grid%eta2_min;                                                                     \
             vx_aux = vx - p_group%flow_grid%eta3_min;                                                                   \
             vy_aux = vy - p_group%flow_grid%eta4_min;                                                                   \
-            call update_closest_marker_arrays(k_neighbor,                                                               \
+            call sll_s_update_closest_marker_arrays(k_neighbor,                                                         \
                                                 x_aux, y_aux, vx_aux, vy_aux,                                           \
                                                 j_x, j_y, j_vx, j_vy,                                                   \
                                                 h_flow_grid_x,                                                          \
@@ -3669,8 +3688,8 @@ contains
 
     ! array of integer linked lists (declared below) useful when remapping on sparse grids
     ! (can also simplify the code when remapping on cartesian grids which do not match with the flow cells? but maybe too costly)
-    type(int_list_element_ptr), dimension(:,:,:,:), allocatable     :: nodes_in_flow_cell
-    type(int_list_element),     pointer                             :: new_int_list_element, head
+    type(sll_t_int_list_element_ptr), dimension(:,:,:,:), allocatable     :: nodes_in_flow_cell
+    type(sll_t_int_list_element),     pointer                             :: new_int_list_element, head
 
     sll_int32  :: k ! marker index
     sll_int32  :: k_neighbor
@@ -3696,7 +3715,7 @@ contains
     sll_real64 :: deposition_dvol
 
     ! <<g>> cartesian grid pointer to the remapping grid
-    type(sll_cartesian_mesh_4d),pointer :: g
+    type(sll_t_cartesian_mesh_4d),pointer :: g
 
     sll_int32  :: g_num_points_x
     sll_int32  :: g_num_points_y
@@ -3917,7 +3936,7 @@ contains
                                   flow_grid_num_cells_vx,  &
                                   flow_grid_num_cells_vy)  &
              , stat=ierr)
-      call test_error_code(ierr, 'Memory allocation Failure.', __FILE__, __LINE__)
+      call sll_s_test_error_code(ierr, 'Memory allocation Failure.', __FILE__, __LINE__)
 
       do j_x = 1, flow_grid_num_cells_x
         do j_y = 1, flow_grid_num_cells_y
@@ -3989,7 +4008,7 @@ contains
           SLL_ALLOCATE( new_int_list_element, ierr )
           new_int_list_element%value = node_index
           head => nodes_in_flow_cell(j_x,j_y,j_vx,j_vy)%pointed_element
-          nodes_in_flow_cell(j_x,j_y,j_vx,j_vy)%pointed_element => add_element_in_int_list(head, new_int_list_element)
+          nodes_in_flow_cell(j_x,j_y,j_vx,j_vy)%pointed_element => sll_f_add_element_in_int_list(head, new_int_list_element)
 
         end if
 
@@ -4056,7 +4075,7 @@ contains
                                        flow_grid_num_cells_vx,  &
                                        flow_grid_num_cells_vy)  &
                  , stat=ierr)
-      call test_error_code(ierr, 'Memory allocation Failure.', __FILE__, __LINE__)
+      call sll_s_test_error_code(ierr, 'Memory allocation Failure.', __FILE__, __LINE__)
       closest_marker_distance(:,:,:,:) = 0.0_f64
 
       closest_marker_distance_to_first_corner = 1d30
@@ -4092,7 +4111,7 @@ contains
              j_vx >= 1 .and. j_vx <= flow_grid_num_cells_vx .and. &
              j_vy >= 1 .and. j_vy <= flow_grid_num_cells_vy  )then
 
-          call update_closest_marker_arrays(k,                              &
+          call sll_s_update_closest_marker_arrays(k,                        &
                                             x_aux, y_aux, vx_aux, vy_aux,   &
                                             j_x, j_y, j_vx, j_vy,           &
                                             h_flow_grid_x,                  &
@@ -4225,9 +4244,9 @@ contains
                    )
 
               ! Find position of marker k at time 0
-              ! [[get_initial_position_on_cartesian_grid_from_marker_index]]
+              ! [[sll_s_get_initial_position_on_cartesian_grid_from_marker_index]]
 
-              call get_initial_position_on_cartesian_grid_from_marker_index(k,                    &
+              call sll_s_get_initial_position_on_cartesian_grid_from_marker_index(k,              &
                    p_group%number_flow_markers_x, p_group%number_flow_markers_y,                  &
                    p_group%number_flow_markers_vx, p_group%number_flow_markers_vy,                &
                    m_x,m_y,m_vx,m_vy)
@@ -5264,7 +5283,7 @@ subroutine periodic_correction(p_group, x, y)
 
   !----------------------------------------------------------------------------
   ! Destructor
-  subroutine sll_bsl_lt_pic_4d_group_delete(particle_group)
+  subroutine sll_bsl_lt_pic_4d_group_delete(particle_group)     !todo: use proper delete terminology
     class(sll_t_bsl_lt_pic_4d_group), pointer :: particle_group
     sll_int32 :: ierr
 

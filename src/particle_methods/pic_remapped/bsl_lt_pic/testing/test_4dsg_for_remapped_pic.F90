@@ -27,7 +27,7 @@ program test_4dsg_for_remapped_pic
 #include "sll_memory.h"
 #include "sll_assert.h"
 
-  use sll_m_constants, only : sll_pi
+  use sll_m_constants, only : sll_p_pi
   use sll_m_sparse_grid_4d
   implicit none
 
@@ -47,10 +47,10 @@ program test_4dsg_for_remapped_pic
   sll_real64,dimension(4) :: dx
 
   ! <<interp>> Interpolation object of type
-  ! [[selalib:src/add_ons/sparse_grid/sll_m_sparse_grid_4d.F90::sparse_grid_interpolator_4d]] which extends
+  ! [[selalib:src/add_ons/sparse_grid/sll_m_sparse_grid_4d.F90::sll_t_sparse_grid_interpolator_4d]] which extends
   ! [[selalib:src/add_ons/sparse_grid/sll_m_sparse_grid_interpolator.F90::type,%20public%20::%20sparse_grid_interpolator]]
   
-  type(sparse_grid_interpolator_4d), target   :: interp
+  type(sll_t_sparse_grid_interpolator_4d), target   :: interp
 
   ! <<f>> Function to interpolate
   sll_real64, dimension(:), allocatable :: f
@@ -63,10 +63,10 @@ program test_4dsg_for_remapped_pic
   ! ------------ end of declarations
   
   ! [[eta_min]], [[eta_max]]
-  eta_min(1) = 0.0_f64; eta_max(1) = 2.0_f64*sll_pi;
-  eta_min(2) = 0.0_f64; eta_max(2) = 2.0_f64*sll_pi;
-  eta_min(3) = 0.0_f64; eta_max(3) = 2.0_f64*sll_pi;
-  eta_min(4) = 0.0_f64; eta_max(4) = 2.0_f64*sll_pi;
+  eta_min(1) = 0.0_f64; eta_max(1) = 2.0_f64*sll_p_pi;
+  eta_min(2) = 0.0_f64; eta_max(2) = 2.0_f64*sll_p_pi;
+  eta_min(3) = 0.0_f64; eta_max(3) = 2.0_f64*sll_p_pi;
+  eta_min(4) = 0.0_f64; eta_max(4) = 2.0_f64*sll_p_pi;
 
   ! [[levels]] This is a tunable parameter
   levels = 12;
@@ -111,7 +111,7 @@ program test_4dsg_for_remapped_pic
 
      ! <<interpolate_value>> [[file:~/selalib/src/add_ons/sparse_grid/sll_m_sparse_grid_4d.F90::function%20interpolate_value]]
 
-     finterp = interp%interpolate_value(f,dx);
+     finterp = interp%interpolate_from_interpolant_value(f,dx);
      fref = testfunction(dx(1),dx(2),dx(3),dx(4));
      ferr = abs(finterp-fref)
      ferrmax = max(ferr,ferrmax)
