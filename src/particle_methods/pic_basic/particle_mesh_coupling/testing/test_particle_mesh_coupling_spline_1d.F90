@@ -1,16 +1,16 @@
-program test_kernel_smoother_spline_1d
+program test_particle_mesh_coupling_spline_1d
 
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_working_precision.h"
 
-  use sll_m_kernel_smoother_base, only: &
+  use sll_m_particle_mesh_coupling_base, only: &
     sll_p_collocation, &
-    sll_c_kernel_smoother
+    sll_c_particle_mesh_coupling
 
-  use sll_m_kernel_smoother_spline_1d, only: &
-    sll_t_kernel_smoother_spline_1d, &
-     sll_s_new_kernel_smoother_spline_1d, &
-     sll_s_new_kernel_smoother_spline_1d_ptr
+  use sll_m_particle_mesh_coupling_spline_1d, only: &
+    sll_t_particle_mesh_coupling_spline_1d, &
+     sll_s_new_particle_mesh_coupling_spline_1d, &
+     sll_s_new_particle_mesh_coupling_spline_1d_ptr
 
   use sll_m_particle_group_1d2v, only: &
     sll_t_particle_group_1d2v
@@ -18,9 +18,9 @@ program test_kernel_smoother_spline_1d
   implicit none
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
-  !class(sll_c_kernel_smoother), allocatable :: ksa
-  class(sll_c_kernel_smoother), pointer     :: ksp
-  type(sll_t_kernel_smoother_spline_1d) :: kernel
+  !class(sll_c_particle_mesh_coupling), allocatable :: ksa
+  class(sll_c_particle_mesh_coupling), pointer     :: ksp
+  type(sll_t_particle_mesh_coupling_spline_1d) :: kernel
   ! Abstract particle group
   type(sll_t_particle_group_1d2v) :: particle_group
 
@@ -95,8 +95,8 @@ program test_kernel_smoother_spline_1d
        (domain, [n_cells], n_particles, spline_degree, sll_p_collocation)
   
   ! Check that the constructors for the abstract type are working.
-  !call sll_s_new_kernel_smoother_spline_1d(ksa, domain, [n_cells], n_particles, spline_degree, sll_p_collocation)
-  call sll_s_new_kernel_smoother_spline_1d_ptr(ksp, domain, [n_cells], n_particles, spline_degree, sll_p_collocation)
+  !call sll_s_new_particle_mesh_coupling_spline_1d(ksa, domain, [n_cells], n_particles, spline_degree, sll_p_collocation)
+  call sll_s_new_particle_mesh_coupling_spline_1d_ptr(ksp, domain, [n_cells], n_particles, spline_degree, sll_p_collocation)
 
   ! Accumulate rho
   rho_dofs = 0.0_f64
@@ -172,4 +172,4 @@ program test_kernel_smoother_spline_1d
   call particle_group%free()
 
 
-end program test_kernel_smoother_spline_1d
+end program test_particle_mesh_coupling_spline_1d

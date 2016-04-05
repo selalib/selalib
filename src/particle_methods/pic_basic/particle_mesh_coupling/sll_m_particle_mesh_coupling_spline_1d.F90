@@ -2,7 +2,7 @@
 !> @author Katharina Kormann, IPP
 !> @brief Kernel smoother for 2d with splines of arbitrary degree placed on a uniform mesh.
 !> @details Spline with index i starts at point i
-module sll_m_kernel_smoother_spline_1d
+module sll_m_particle_mesh_coupling_spline_1d
 
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_assert.h"
@@ -15,9 +15,9 @@ module sll_m_kernel_smoother_spline_1d
   use sll_m_gauss_legendre_integration, only : &
     sll_f_gauss_legendre_points_and_weights
 
-  use sll_m_kernel_smoother_base, only: &
+  use sll_m_particle_mesh_coupling_base, only: &
     sll_p_collocation, &
-    sll_c_kernel_smoother, &
+    sll_c_particle_mesh_coupling, &
     sll_p_galerkin
 
   use sll_m_particle_group_base, only: &
@@ -27,15 +27,15 @@ module sll_m_kernel_smoother_spline_1d
   implicit none
 
   public :: &
-    sll_t_kernel_smoother_spline_1d, &
-    sll_s_new_kernel_smoother_spline_1d_ptr, &
-    sll_s_new_kernel_smoother_spline_1d
+    sll_t_particle_mesh_coupling_spline_1d, &
+    sll_s_new_particle_mesh_coupling_spline_1d_ptr, &
+    sll_s_new_particle_mesh_coupling_spline_1d
 
   private
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
   !>  Spline kernel smoother in1d.
-  type, extends(sll_c_kernel_smoother) :: sll_t_kernel_smoother_spline_1d
+  type, extends(sll_c_particle_mesh_coupling) :: sll_t_particle_mesh_coupling_spline_1d
 
      ! Information about the 1d mesh
      sll_real64 :: delta_x(1)  !< Value of grid spacing along both directions.
@@ -64,14 +64,14 @@ module sll_m_kernel_smoother_spline_1d
      procedure :: init => init_spline_1d !> Constructor
      procedure :: free => free_spline_1d !> Destructor
 
-  end type sll_t_kernel_smoother_spline_1d
+  end type sll_t_particle_mesh_coupling_spline_1d
   
 contains
 
   !---------------------------------------------------------------------------!
   !> Add charge of one particle
   subroutine add_charge_single_spline_1d(self, position, marker_charge, rho_dofs)
-    class( sll_t_kernel_smoother_spline_1d ), intent(inout)   :: self !< kernel smoother object
+    class( sll_t_particle_mesh_coupling_spline_1d ), intent(inout)   :: self !< kernel smoother object
     sll_real64,                               intent( in )    :: position(self%dim) !< Position of the particle
     sll_real64,                               intent( in )    :: marker_charge !< Particle weights time charge
     sll_real64,                               intent( inout ) :: rho_dofs(self%n_dofs) !< Coefficient vector of the charge distribution
@@ -99,7 +99,7 @@ contains
 
   !> Add current for one particle and update v (according to H_p1 part in Hamiltonian splitting)
   subroutine add_current_update_v_spline_1d (self, position_old, position_new, marker_charge, qoverm, bfield_dofs, vi, j_dofs)
-    class(sll_t_kernel_smoother_spline_1d), intent(inout) :: self !< kernel smoother object
+    class(sll_t_particle_mesh_coupling_spline_1d), intent(inout) :: self !< kernel smoother object
     sll_real64, intent(in)    :: position_old(self%dim) !< Position at time t
     sll_real64, intent(in)    :: position_new(self%dim) !< Position at time t + \Delta t
     sll_real64, intent(in)    :: marker_charge !< Particle weight time charge
@@ -159,7 +159,7 @@ contains
 
  !> Helper function for \a add_current_update_v.
  subroutine update_jv(self, lower, upper, index, marker_charge, qoverm, sign, vi, j_dofs, bfield_dofs)
-   class(sll_t_kernel_smoother_spline_1d), intent(inout) :: self !< time splitting object 
+   class(sll_t_particle_mesh_coupling_spline_1d), intent(inout) :: self !< time splitting object 
    sll_real64,                             intent(in)    :: lower
    sll_real64,                             intent(in)    :: upper
    sll_int32,                              intent(in)    :: index
@@ -228,7 +228,7 @@ contains
   !---------------------------------------------------------------------------!
  !> Evaluate field at at position \a position
   subroutine evaluate_field_single_spline_1d(self, position, field_dofs, field_value)
-    class (sll_t_kernel_smoother_spline_1d), intent( inout ) :: self !< Kernel smoother object 
+    class (sll_t_particle_mesh_coupling_spline_1d), intent( inout ) :: self !< Kernel smoother object 
     sll_real64,                              intent( in )    :: position(self%dim) !< Position of the particle
     sll_real64,                              intent( in )    :: field_dofs(self%n_dofs) !< Coefficient vector for the field DoFs
     sll_real64,                              intent( out )   :: field_value !< Value(s) of the electric fields at given position
@@ -260,7 +260,7 @@ contains
   !---------------------------------------------------------------------------!
   !> Evaluate several fields at position \a position
   subroutine evaluate_multiple_spline_1d(self, position, components, field_dofs, field_value)
-    class (sll_t_kernel_smoother_spline_1d), intent( inout ) :: self !< Kernel smoother object 
+    class (sll_t_particle_mesh_coupling_spline_1d), intent( inout ) :: self !< Kernel smoother object 
     sll_real64,                              intent( in )    :: position(self%dim) !< Position of the particle
     sll_int32,                               intent(in)      :: components(:) !< Components of field_dofs that shall be updated
     sll_real64,                              intent( in )    :: field_dofs(:,:) !< Coefficient vector for the field DoFs
@@ -293,7 +293,7 @@ contains
 
   !> Destructor
   subroutine free_spline_1d(self)
-    class (sll_t_kernel_smoother_spline_1d), intent( inout ) :: self !< Kernel smoother object 
+    class (sll_t_particle_mesh_coupling_spline_1d), intent( inout ) :: self !< Kernel smoother object 
 
     deallocate(self%spline_val)
     deallocate(self%spline_val_more)
@@ -306,8 +306,8 @@ contains
 
   !-------------------------------------------------------------------------------------------
   !< Constructor for abstract type
-  subroutine sll_s_new_kernel_smoother_spline_1d_ptr(smoother, domain, n_grid, no_particles, spline_degree, smoothing_type)
-    class( sll_c_kernel_smoother), pointer, intent(out) :: smoother !< kernel smoother object
+  subroutine sll_s_new_particle_mesh_coupling_spline_1d_ptr(smoother, domain, n_grid, no_particles, spline_degree, smoothing_type)
+    class( sll_c_particle_mesh_coupling), pointer, intent(out) :: smoother !< kernel smoother object
     sll_int32,                              intent(in)  :: n_grid(1) !< number of DoFs (spline coefficients)
     sll_real64,                             intent(in)  :: domain(2) !< x_min and x_max of the domain
     sll_int32,                              intent(in)  :: no_particles !< number of particles
@@ -318,20 +318,20 @@ contains
     sll_int32 :: ierr
 
 
-    SLL_ALLOCATE( sll_t_kernel_smoother_spline_1d :: smoother , ierr)
+    SLL_ALLOCATE( sll_t_particle_mesh_coupling_spline_1d :: smoother , ierr)
     SLL_ASSERT( ierr == 0)
     
     select type( smoother )
-    type is ( sll_t_kernel_smoother_spline_1d )
+    type is ( sll_t_particle_mesh_coupling_spline_1d )
        call smoother%init( domain, n_grid, no_particles, spline_degree, smoothing_type )
     end select
 
-  end subroutine sll_s_new_kernel_smoother_spline_1d_ptr
+  end subroutine sll_s_new_particle_mesh_coupling_spline_1d_ptr
 
   !-------------------------------------------------------------------------------------------
   !< Constructor for abstract type
-  subroutine sll_s_new_kernel_smoother_spline_1d(smoother, domain, n_grid, no_particles, spline_degree, smoothing_type)
-    class( sll_c_kernel_smoother), allocatable, intent(out):: smoother !< kernel smoother object
+  subroutine sll_s_new_particle_mesh_coupling_spline_1d(smoother, domain, n_grid, no_particles, spline_degree, smoothing_type)
+    class( sll_c_particle_mesh_coupling), allocatable, intent(out):: smoother !< kernel smoother object
     sll_int32,                                  intent(in) :: n_grid(1) !< number of DoFs (spline coefficients)
     sll_real64,                                 intent(in) :: domain(2) !< x_min and x_max of the domain
     sll_int32,                                  intent(in) :: no_particles !< number of particles
@@ -342,19 +342,19 @@ contains
     sll_int32 :: ierr
 
 
-    allocate( sll_t_kernel_smoother_spline_1d :: smoother , stat=ierr)
+    allocate( sll_t_particle_mesh_coupling_spline_1d :: smoother , stat=ierr)
     SLL_ASSERT( ierr == 0)
     
     select type( smoother )
-    type is ( sll_t_kernel_smoother_spline_1d )
+    type is ( sll_t_particle_mesh_coupling_spline_1d )
        call smoother%init( domain, n_grid, no_particles, spline_degree, smoothing_type )
     end select
 
-  end subroutine sll_s_new_kernel_smoother_spline_1d
+  end subroutine sll_s_new_particle_mesh_coupling_spline_1d
 
   !> Initializer
   subroutine init_spline_1d( self, domain, n_grid, no_particles, spline_degree, smoothing_type )
-    class( sll_t_kernel_smoother_spline_1d), intent(out)  :: self !< kernel smoother object
+    class( sll_t_particle_mesh_coupling_spline_1d), intent(out)  :: self !< kernel smoother object
     sll_int32,                               intent(in) :: n_grid(1) !< number of DoFs (spline coefficients)
     sll_real64,                              intent(in) :: domain(2) !< x_min and x_max of the domain
     sll_int32,                               intent(in) :: no_particles !< number of particles
@@ -406,4 +406,4 @@ contains
 
   
 
-end module sll_m_kernel_smoother_spline_1d
+end module sll_m_particle_mesh_coupling_spline_1d

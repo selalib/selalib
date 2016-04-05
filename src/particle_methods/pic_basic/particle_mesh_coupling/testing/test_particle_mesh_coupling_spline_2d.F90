@@ -1,16 +1,16 @@
-program test_kernel_smoother_spline_2d
+program test_particle_mesh_coupling_spline_2d
 
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_working_precision.h"
 
-  use sll_m_kernel_smoother_base, only: &
-    sll_c_kernel_smoother, &
+  use sll_m_particle_mesh_coupling_base, only: &
+    sll_c_particle_mesh_coupling, &
     sll_p_collocation
 
-  use sll_m_kernel_smoother_spline_2d, only: &
-    sll_t_kernel_smoother_spline_2d, &
-    sll_s_new_kernel_smoother_spline_2d, &
-    sll_s_new_kernel_smoother_spline_2d_ptr
+  use sll_m_particle_mesh_coupling_spline_2d, only: &
+    sll_t_particle_mesh_coupling_spline_2d, &
+    sll_s_new_particle_mesh_coupling_spline_2d, &
+    sll_s_new_particle_mesh_coupling_spline_2d_ptr
 
   use sll_m_particle_group_2d2v, only: &
     sll_t_particle_group_2d2v
@@ -19,9 +19,9 @@ program test_kernel_smoother_spline_2d
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
   
-  !class(sll_c_kernel_smoother), allocatable :: ksa
-  class(sll_c_kernel_smoother), pointer     :: ksp
-  type(sll_t_kernel_smoother_spline_2d) :: kernel
+  !class(sll_c_particle_mesh_coupling), allocatable :: ksa
+  class(sll_c_particle_mesh_coupling), pointer     :: ksp
+  type(sll_t_particle_mesh_coupling_spline_2d) :: kernel
   ! Abstract particle group
   type(sll_t_particle_group_2d2v) :: particle_group
   ! Parameters for the test
@@ -88,8 +88,8 @@ program test_kernel_smoother_spline_2d
   call kernel%init &
        (domain, [n_cells, n_cells], n_particles, spline_degree, sll_p_collocation)
   ! Check that the constructors for the abstract type are working.
-  !call sll_s_new_kernel_smoother_spline_2d(ksa, domain, [n_cells, n_cells], n_particles, spline_degree, sll_p_collocation)
-  call sll_s_new_kernel_smoother_spline_2d_ptr(ksp, domain, [n_cells, n_cells], n_particles, spline_degree, sll_p_collocation)
+  !call sll_s_new_particle_mesh_coupling_spline_2d(ksa, domain, [n_cells, n_cells], n_particles, spline_degree, sll_p_collocation)
+  call sll_s_new_particle_mesh_coupling_spline_2d_ptr(ksp, domain, [n_cells, n_cells], n_particles, spline_degree, sll_p_collocation)
 
 
   
@@ -199,4 +199,4 @@ program test_kernel_smoother_spline_2d
   call particle_group%free()
 
 
-end program test_kernel_smoother_spline_2d
+end program test_particle_mesh_coupling_spline_2d
