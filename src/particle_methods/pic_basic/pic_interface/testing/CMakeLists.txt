@@ -12,7 +12,7 @@ ADD_TEST( NAME particle_initializer COMMAND test_particle_initializer)
 SET_TESTS_PROPERTIES(particle_initializer PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
 
 ADD_EXECUTABLE( test_pic_poisson_2d test_pic_poisson_2d.F90 )
-TARGET_LINK_LIBRARIES( test_pic_poisson_2d sll_pic_interface sll_kernel_smoothers sll_poisson_solvers )
+TARGET_LINK_LIBRARIES( test_pic_poisson_2d sll_pic_interface sll_particle_mesh_coupling sll_poisson_solvers )
 
 ADD_TEST( NAME pic_poisson_2d COMMAND test_pic_poisson_2d )
 SET_TESTS_PROPERTIES(pic_poisson_2d PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")

@@ -28,13 +28,13 @@ program test_pic_poisson_2d
   use sll_m_poisson_2d_base, only: &
     sll_c_poisson_2d_base
 
-  use sll_m_kernel_smoother_base, only: &
+  use sll_m_particle_mesh_coupling_base, only: &
     sll_p_collocation, &
-    sll_c_kernel_smoother
+    sll_c_particle_mesh_coupling
 
-  use sll_m_kernel_smoother_spline_2d, only: &
-    sll_t_kernel_smoother_spline_2d, &
-    sll_s_new_kernel_smoother_spline_2d_ptr
+  use sll_m_particle_mesh_coupling_spline_2d, only: &
+    sll_t_particle_mesh_coupling_spline_2d, &
+    sll_s_new_particle_mesh_coupling_spline_2d_ptr
 
   implicit none
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -51,7 +51,7 @@ program test_pic_poisson_2d
   class(sll_c_pic_poisson), pointer :: poisson
 
   ! Abstract kernel smoother
-  class(sll_c_kernel_smoother), pointer :: kernel_smoother
+  class(sll_c_particle_mesh_coupling), pointer :: kernel_smoother
 
 
   num_cells = [32, 32]
@@ -68,7 +68,7 @@ program test_pic_poisson_2d
        domain(2,1), domain(2,2), num_cells(2) )
   
   ! Initialize the kernel smoother
-  call sll_s_new_kernel_smoother_spline_2d_ptr(kernel_smoother, &
+  call sll_s_new_particle_mesh_coupling_spline_2d_ptr(kernel_smoother, &
        domain, num_cells, n_particles, &
        degree_smoother, sll_p_collocation)
   

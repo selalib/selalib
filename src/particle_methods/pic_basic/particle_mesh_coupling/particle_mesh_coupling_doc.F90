@@ -1,4 +1,4 @@
-!> @defgroup kernel_smoothers sll_kernel_smoothers
+!> @defgroup kernel_smoothers sll_particle_mesh_coupling
 !> @brief
 !> Library implementing kernel smoothers for accumulation and evaluation of charge densities for pic_basic.
 !> @details
