@@ -21,6 +21,7 @@ implicit none
 sll_real64                    :: err1
 sll_int32                     :: i
 sll_int32                     :: j
+sll_int32                     :: k
 sll_int32,  parameter         :: nstep = 1
 sll_real64,  parameter        :: tol = 1.0d-2    ! tolerance for tests
 sll_real64                    :: t0, t1, t2, t3, t4, t5, t6, t7
@@ -91,11 +92,15 @@ sll_real64, dimension(:), pointer       :: taux
 sll_real64, dimension(:), pointer       :: tauy
 
 sll_real64, dimension(:),   allocatable :: bc
+sll_real64, dimension(:,:), allocatable :: bc1_min
+sll_real64, dimension(:,:), allocatable :: bc1_max
+sll_real64, dimension(:,:), allocatable :: bc2_min
+sll_real64, dimension(:,:), allocatable :: bc2_max
 
-sll_int32,  parameter                   :: npts1 = 11 ! defines bsplines
-sll_int32,  parameter                   :: npts2 = 11 ! defines bsplines
-sll_int32,  parameter                   :: n1 = 7    ! nb of evaluation pts
-sll_int32,  parameter                   :: n2 = 7    ! nb of evaluation pts
+sll_int32,  parameter                   :: npts1 = 51 ! defines bsplines
+sll_int32,  parameter                   :: npts2 = 51 ! defines bsplines
+sll_int32,  parameter                   :: n1 = 27    ! nb of evaluation pts
+sll_int32,  parameter                   :: n2 = 27    ! nb of evaluation pts
 sll_real64                              :: h1, h2
 
 SLL_ALLOCATE(x1(n1,n2),ierr)
@@ -134,6 +139,10 @@ print*, 'bspline_interpolation_2d_init constructed'
 
 SLL_ALLOCATE(gtau(size(taux), size(tauy)),ierr)
 SLL_ALLOCATE(bc(2*(deg/2)),ierr)
+SLL_CLEAR_ALLOCATE(bc1_min(1:2*(deg/2),1:n2),ierr)
+SLL_CLEAR_ALLOCATE(bc1_max(1:2*(deg/2),1:n2),ierr)
+SLL_CLEAR_ALLOCATE(bc2_min(1:2*(deg/2),1:size(taux)),ierr)
+SLL_CLEAR_ALLOCATE(bc2_max(1:2*(deg/2),1:size(taux)),ierr)
 
 print*, '------------------------------------------'
 print*, 'Test on cosinus at uniformly spaced points'
@@ -160,7 +169,16 @@ if (bc_type == sll_p_hermite) then
       bc(i)=-4*pi**2*bc(i-2)
     end do
   end if
-  call sll_s_compute_bspline_2d(bspline_2d, gtau, bc, bc, bc, bc)
+  do j = 1, n2
+    bc1_min(:,j) = bc * cos(2*pi*tauy(j))
+    bc1_max(:,j) = bc * cos(2*pi*tauy(j))
+  end do
+  do i = 1, size(taux)
+    bc2_min(:,i) = bc * cos(2*pi*taux(i))
+    bc2_max(:,i) = bc * cos(2*pi*taux(i))
+  end do
+  call sll_s_compute_bspline_2d(bspline_2d, gtau, &
+    bc1_min, bc1_max, bc2_min, bc2_max)
 else    
   call sll_s_compute_bspline_2d(bspline_2d, gtau)
 end if
@@ -311,7 +329,7 @@ do j = 1, size(tauy)
   write(12,*)
 end do
 close(12)
-call printout(taux,tauy,htau)
+!call printout(taux,tauy,htau)
 
 if (bc_type == sll_p_hermite) then
   ! Compute boundary conditions for Hermite case
@@ -327,18 +345,37 @@ if (bc_type == sll_p_hermite) then
       bc(i)=-4*pi**2*bc(i-2)
     end do
   end if
-  call sll_s_compute_bspline_2d(bspline_2d, htau, bc, bc, bc, bc)
+  do k = 1, deg/2
+    do j = 1, n2
+      bc1_min(k,j) = bc(k) * sin(2*pi*tauy(j))
+      bc1_max(k,j) = bc(k) * sin(2*pi*tauy(j))
+    end do
+    do i = 1, n1
+      bc2_min(k,i) = bc(k) * sin(2*pi*taux(i))
+      bc2_max(k,i) = bc(k) * sin(2*pi*taux(i))
+    end do
+  end do
+  call sll_s_compute_bspline_2d(bspline_2d, htau, &
+    bc1_min, bc1_max, bc2_min, bc2_max)
 else    
   call sll_s_compute_bspline_2d(bspline_2d, htau)
 end if
-call printout(taux,tauy,bspline_2d%bwork)
-call printout(taux,tauy,bspline_2d%bcoef)
+!call printout(taux,tauy,bspline_2d%bwork)
+!call printout(taux,tauy,bspline_2d%bcoef)
 
 do j = 1,n2
   do i = 1,n1
     y(i,j) = sll_f_interpolate_value_2d( bspline_2d, xx(i,j), yy(i,j))
+    write(30,*) x1(i,j), x2(i,j), &
+      sll_f_interpolate_value_2d( bspline_2d, x1(i,j), x2(i,j)) - &
+      sin(2*pi*x1(i,j))*sin(2*pi*x2(i,j))
+    write(40,*) xx(i,j), yy(i,j), y(i,j)
   end do
+  write(30,*) 
+  write(40,*) 
 end do
+close(30)
+close(40)
 err1 = maxval(abs(y-sin(2*pi*xx)*sin(2*pi*yy)))
 if (err1 > tol) then
   print*,'-------> Test failed in sll_f_interpolate_value_2d'
@@ -465,11 +502,10 @@ subroutine printout(taux, tauy, htau)
 sll_real64 :: taux(:)
 sll_real64 :: tauy(:)
 sll_real64 :: htau(:,:)
-character(len=10) :: frmt
 
-print 620,(tauy(j),j=1,size(tauy))
-do i=1,size(taux)
-  print 632,taux(i),(htau(i,j),j=1,size(tauy))
+print 620,tauy
+do i=lbound(taux,1), ubound(taux,1)
+  print 632,taux(i), htau(i,:)
 end do
 
 620 format(//5x,20f8.1)

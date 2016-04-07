@@ -703,17 +703,18 @@ subroutine sll_s_compute_bspline_2d(self, gtau, &
 
   type(sll_t_bspline_interpolation_2d) :: self 
   sll_real64, intent(in)               :: gtau(:,:)
-  sll_real64, intent(in), optional     :: val1_min(:)
-  sll_real64, intent(in), optional     :: val1_max(:)
-  sll_real64, intent(in), optional     :: val2_min(:)
-  sll_real64, intent(in), optional     :: val2_max(:)
+  sll_real64, intent(in), optional     :: val1_min(:,:)
+  sll_real64, intent(in), optional     :: val1_max(:,:)
+  sll_real64, intent(in), optional     :: val2_min(:,:)
+  sll_real64, intent(in), optional     :: val2_max(:,:)
 
   sll_int32                            :: i
   sll_int32                            :: j
 
   if( present(val1_min) .and. present(val1_max)) then
     do j = 1, size(gtau,2)
-      call sll_s_compute_bspline_1d( self%bs1, gtau(:,j), val1_min, val1_max)
+      call sll_s_compute_bspline_1d( self%bs1, gtau(:,j), &
+        val1_min(:,j), val1_max(:,j))
       self%bwork(j,:) = self%bs1%bcoef(:)
     end do
 
@@ -726,7 +727,8 @@ subroutine sll_s_compute_bspline_2d(self, gtau, &
 
   if( present(val2_min) .and. present(val2_max)) then
     do i = 1, size(self%bs1%bcoef)
-      call sll_s_compute_bspline_1d( self%bs2, self%bwork(:,i), val2_min, val2_max)
+      call sll_s_compute_bspline_1d( self%bs2, self%bwork(:,i), &
+        val2_min(:,i), val2_max(:,i))
       self%bcoef(i,:) = self%bs2%bcoef(:)
     end do
   else
