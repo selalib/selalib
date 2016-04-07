@@ -7,7 +7,7 @@ TARGET_LINK_LIBRARIES( sll_pic_time_integration
   sll_assert
   sll_splitting_methods
   sll_pic_interface
-  sll_kernel_smoothers
+  sll_particle_mesh_coupling
   sll_poisson_solvers
   sll_maxwell_solvers
   sll_collective
