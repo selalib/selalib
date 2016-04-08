@@ -15,8 +15,8 @@ module sll_m_hamiltonian_splitting_pic_vm_1d2v
   use sll_m_hamiltonian_splitting_base, only: &
     sll_c_hamiltonian_splitting_base
 
-  use sll_m_kernel_smoother_base, only: &
-    sll_c_kernel_smoother
+  use sll_m_particle_mesh_coupling_base, only: &
+    sll_c_particle_mesh_coupling
 
   use sll_m_maxwell_1d_base, only: &
     sll_c_maxwell_1d_base
@@ -40,8 +40,8 @@ module sll_m_hamiltonian_splitting_pic_vm_1d2v
   !> Hamiltonian splitting type for Vlasov-Maxwell 1d2v
   type, extends(sll_c_hamiltonian_splitting_base) :: sll_t_hamiltonian_splitting_pic_vm_1d2v
      class(sll_c_maxwell_1d_base), pointer :: maxwell_solver      !< Maxwell solver
-     class(sll_c_kernel_smoother), pointer :: kernel_smoother_0  !< Kernel smoother (order p+1)
-     class(sll_c_kernel_smoother), pointer :: kernel_smoother_1  !< Kernel smoother (order p)
+     class(sll_c_particle_mesh_coupling), pointer :: kernel_smoother_0  !< Kernel smoother (order p+1)
+     class(sll_c_particle_mesh_coupling), pointer :: kernel_smoother_1  !< Kernel smoother (order p)
      class(sll_c_particle_group_base), pointer  :: particle_group    !< Particle group
 
      sll_int32 :: spline_degree !< Degree of the spline for j,B. Here 3.
@@ -307,8 +307,8 @@ contains
        Lx) 
     class(sll_t_hamiltonian_splitting_pic_vm_1d2v), intent(out) :: self !< time splitting object 
     class(sll_c_maxwell_1d_base), pointer,          intent(in)  :: maxwell_solver      !< Maxwell solver
-    class(sll_c_kernel_smoother), pointer,          intent(in)  :: kernel_smoother_0  !< Kernel smoother
-    class(sll_c_kernel_smoother), pointer,          intent(in)  :: kernel_smoother_1  !< Kernel smoother
+    class(sll_c_particle_mesh_coupling), pointer,          intent(in)  :: kernel_smoother_0  !< Kernel smoother
+    class(sll_c_particle_mesh_coupling), pointer,          intent(in)  :: kernel_smoother_1  !< Kernel smoother
     class(sll_c_particle_group_base), pointer,      intent(in)  :: particle_group !< Particle group
     sll_real64, pointer,                            intent(in)  :: efield_dofs(:,:) !< array for the coefficients of the efields 
     sll_real64, pointer,                            intent(in)  :: bfield_dofs(:) !< array for the coefficients of the bfield
@@ -375,8 +375,8 @@ contains
        Lx) 
     class(sll_c_hamiltonian_splitting_base), allocatable, intent(out) :: splitting !< time splitting object 
     class(sll_c_maxwell_1d_base), pointer,                intent(in)  :: maxwell_solver      !< Maxwell solver
-    class(sll_c_kernel_smoother), pointer,                intent(in)  :: kernel_smoother_0  !< Kernel smoother
-    class(sll_c_kernel_smoother), pointer,                intent(in)  :: kernel_smoother_1  !< Kernel smoother
+    class(sll_c_particle_mesh_coupling), pointer,                intent(in)  :: kernel_smoother_0  !< Kernel smoother
+    class(sll_c_particle_mesh_coupling), pointer,                intent(in)  :: kernel_smoother_1  !< Kernel smoother
     class(sll_c_particle_group_base),pointer,             intent(in)  :: particle_group !< Particle group
     sll_real64, pointer,                                  intent(in)  :: efield_dofs(:,:) !< array for the coefficients of the efields 
     sll_real64, pointer,                                  intent(in)  :: bfield_dofs(:) !< array for the coefficients of the bfield
@@ -417,8 +417,8 @@ contains
        Lx) 
     class(sll_c_hamiltonian_splitting_base), pointer, intent(out) :: splitting !< time splitting object 
     class(sll_c_maxwell_1d_base), pointer,            intent(in)  :: maxwell_solver      !< Maxwell solver
-    class(sll_c_kernel_smoother), pointer,            intent(in)  :: kernel_smoother_0  !< Kernel smoother
-    class(sll_c_kernel_smoother), pointer,            intent(in)  :: kernel_smoother_1  !< Kernel smoother
+    class(sll_c_particle_mesh_coupling), pointer,            intent(in)  :: kernel_smoother_0  !< Kernel smoother
+    class(sll_c_particle_mesh_coupling), pointer,            intent(in)  :: kernel_smoother_1  !< Kernel smoother
     class(sll_c_particle_group_base),pointer,         intent(in)  :: particle_group !< Particle group
     sll_real64, pointer,                              intent(in)  :: efield_dofs(:,:) !< array for the coefficients of the efields 
     sll_real64, pointer,                              intent(in)  :: bfield_dofs(:) !< array for the coefficients of the bfield

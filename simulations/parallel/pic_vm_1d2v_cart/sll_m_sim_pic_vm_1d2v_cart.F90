@@ -36,13 +36,13 @@ module sll_m_sim_pic_vm_1d2v_cart
     sll_s_read_data_real_array, &
     sll_s_concatenate_filename_and_path
 
-  use sll_m_kernel_smoother_base, only: &
+  use sll_m_particle_mesh_coupling_base, only: &
     sll_p_galerkin, &
-    sll_c_kernel_smoother
+    sll_c_particle_mesh_coupling
 
-  use sll_m_kernel_smoother_spline_1d, only: &
-    sll_t_kernel_smoother_spline_1d, &
-    sll_s_new_kernel_smoother_spline_1d_ptr
+  use sll_m_particle_mesh_coupling_spline_1d, only: &
+    sll_t_particle_mesh_coupling_spline_1d, &
+    sll_s_new_particle_mesh_coupling_spline_1d_ptr
 
   use sll_m_maxwell_1d_base, only: &
     sll_c_maxwell_1d_base
@@ -101,8 +101,8 @@ module sll_m_sim_pic_vm_1d2v_cart
      class(sll_c_maxwell_1d_base), pointer :: maxwell_solver
 
      ! Abstract kernel smoothers
-     class(sll_c_kernel_smoother), pointer :: kernel_smoother_0     
-     class(sll_c_kernel_smoother), pointer :: kernel_smoother_1
+     class(sll_c_particle_mesh_coupling), pointer :: kernel_smoother_0     
+     class(sll_c_particle_mesh_coupling), pointer :: kernel_smoother_1
 
 
      ! Specific operator splitting
@@ -237,10 +237,10 @@ contains
      end select
 
     ! Initialize kernel smoother    
-    call sll_s_new_kernel_smoother_spline_1d_ptr(sim%kernel_smoother_1, &
+    call sll_s_new_particle_mesh_coupling_spline_1d_ptr(sim%kernel_smoother_1, &
          sim%domain(1:2), [sim%n_gcells], &
          sim%n_particles, sim%degree_smoother-1, sll_p_galerkin) 
-    call sll_s_new_kernel_smoother_spline_1d_ptr(sim%kernel_smoother_0, &
+    call sll_s_new_particle_mesh_coupling_spline_1d_ptr(sim%kernel_smoother_0, &
          sim%domain(1:2), [sim%n_gcells], &
          sim%n_particles, sim%degree_smoother, sll_p_galerkin) 
    

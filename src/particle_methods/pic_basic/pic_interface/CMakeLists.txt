@@ -1,7 +1,7 @@
 ADD_LIBRARY( sll_pic_interface STATIC 
   sll_m_particle_group_base.F90 
   sll_m_pic_poisson_base.F90
-  sll_m_kernel_smoother_base.F90
+  sll_m_particle_mesh_coupling_base.F90
   sll_m_particle_initializer.F90
   sll_m_control_variate.F90
   sll_m_pic_poisson_2d.F90)

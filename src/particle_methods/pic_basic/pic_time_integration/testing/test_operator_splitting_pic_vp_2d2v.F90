@@ -8,13 +8,13 @@ program test_operator_splitting_pic_vp_2d2v
   use sll_m_constants, only: &
     sll_p_pi
 
-  use sll_m_kernel_smoother_base, only: &
+  use sll_m_particle_mesh_coupling_base, only: &
     sll_p_collocation, &
-    sll_c_kernel_smoother
+    sll_c_particle_mesh_coupling
 
-  use sll_m_kernel_smoother_spline_2d, only: &
-    sll_t_kernel_smoother_spline_2d, &
-    sll_s_new_kernel_smoother_spline_2d_ptr
+  use sll_m_particle_mesh_coupling_spline_2d, only: &
+    sll_t_particle_mesh_coupling_spline_2d, &
+    sll_s_new_particle_mesh_coupling_spline_2d_ptr
 
   use sll_m_operator_splitting_pic_vp_2d2v, only: &
     sll_t_operator_splitting_pic_vp_2d2v
@@ -54,7 +54,7 @@ program test_operator_splitting_pic_vp_2d2v
   !sll_real64, pointer :: efield(:,:)
 
   ! Abstract kernel smoother
-  class(sll_c_kernel_smoother), pointer :: kernel_smoother
+  class(sll_c_particle_mesh_coupling), pointer :: kernel_smoother
   
   ! Poisson solver
   class(sll_c_poisson_2d_base), pointer :: poisson_solver 
@@ -123,7 +123,7 @@ program test_operator_splitting_pic_vp_2d2v
 
   domain(:,1) = eta_min
   domain(:,2) = eta_max
-  call sll_s_new_kernel_smoother_spline_2d_ptr(kernel_smoother, &
+  call sll_s_new_particle_mesh_coupling_spline_2d_ptr(kernel_smoother, &
          domain, num_cells, n_particles, &
          degree_smoother, sll_p_collocation)
   

@@ -2,398 +2,280 @@ program test_cubic_splines
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_memory.h"
 #include "sll_working_precision.h"
-
   use sll_m_boundary_condition_descriptors, only: &
+    sll_p_hermite, &
     sll_p_periodic
 
-  use sll_m_constants, only: &
-    sll_p_pi
+  use sll_m_constants, only : &
+       sll_p_twopi, &
+       sll_p_pi
 
-  use sll_m_cubic_splines, only: &
+ use sll_m_cubic_splines, only: &
+    sll_s_compute_cubic_spline_1d, &
     sll_s_compute_cubic_spline_2d, &
     sll_f_interpolate_derivative, &
     sll_f_interpolate_from_interpolant_value, &
     sll_f_interpolate_value_2d, &
     sll_f_interpolate_x1_derivative_2d, &
     sll_f_interpolate_x2_derivative_2d, &
+    sll_f_new_cubic_spline_1d, &
     sll_f_new_cubic_spline_2d, &
-    sll_t_cubic_spline_2d
-
-  use test_processes_module, only: &
-    coscos, &
-    deriv1_polar_x, &
-    deriv1_polar_y, &
-    deriv2_polar_x, &
-    deriv2_polar_y, &
-    dmycos, &
-    fxy, &
-    interpolator_tester_1d_hrmt, &
-    interpolator_tester_1d_prdc, &
-    interpolator_tester_2d_hrmt_prdc, &
-    interpolator_tester_2d_prdc_prdc, &
-    line, &
-    mcossin, &
-    msincos, &
-    mycos, &
-    plane, &
-    plane2, &
-    plane2_deriv, &
-    plane3, &
-    plane3_deriv_x, &
-    plane3_deriv_y, &
-    plane_deriv, &
-    polar_x, &
-    polar_y, &
-    sincos_prod, &
-    sinsin, &
-    test_2d_spline_hrmt_hrmt, &
-    test_2d_spline_hrmt_hrmt_no_slopes, &
-    test_2d_spline_hrmt_prdc, &
-    test_2d_spline_hrmt_prdc_no_slopes, &
-    test_2d_spline_prdc_hrmt, &
-    test_2d_spline_prdc_hrmt_no_slopes, &
-    test_spline_1d_hrmt
-
-  use util_constants, only: &
-    npx1, &
-    npx2
+    sll_t_cubic_spline_1d, &
+    sll_t_cubic_spline_2d, &
+    sll_o_delete
 
   implicit none
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
-sll_int32                              :: ok
+  logical :: passed
 
+  passed = .true.
 
-sll_int32, parameter                   :: nbtest = 12
-logical                                :: test_passed
-logical                                :: test_flag
-print *, 'Test of the 1D spline: '
-ok = 1
-test_passed = .true.
+  ! Test 1d cubic splines with periodic boundary conditions
+  call test_cubic_spline_1d( 0, passed )
+  ! Test 1d cubic splines with Hermite boundary condtions
+  call test_cubic_spline_1d( 1, passed )
 
-#if 0
+  ! Test 2d cubic splines with periodic-periodic boundary conditions
+  call test_cubic_spline_2d( 0, passed )
+  ! Test 2d cubic splines with periodic-Hermite boundary condtions
+  call test_cubic_spline_2d( 1, passed )
+  ! Test 2d cubic splines with Hermite-periodic boundary conditions
+  call test_cubic_spline_2d( 2, passed )
+  ! Test 2d cubic splines with Hermite-Hermite boundary condtions
+  call test_cubic_spline_2d( 3, passed )
 
-  do i_test=1,nbtest
-     call test_process_1d(i_test, ok)
-  enddo
-
-  print *, '***************************************************'
-  print *, 'Test of the 2D spline: '
-  do j_test=1,nbtest
-     do i_test=1,nbtest
-        call test_process_2d(i_test, j_test, ok)
-     enddo
-  enddo
-  print *, '********************************'
-
-
-  ! Test with impulse functions
-  print *, '***************************************************'
-  print *, 'Test of the 1D spline with impulse functions: '
-  do i_test=13,np+12
-     call test_process_1d(i_test, ok)
-  enddo
-
-  print *, '***************************************************'
-  print *, 'Test of the 2D spline with impulse functions: '
-  do j_test=13,npx2+12
-     do i_test=13,npx1+12
-        call test_process_2d(i_test, j_test, ok)
-     enddo
-  enddo
-
-#endif
-
-  ! The following tests are currently not included in determining the
-  ! value of the OK flag, this should be fixed. The OK flag should be a
-  ! logical variable...
-  print *, 'test_spline_1d_hrmt, linear function case: '
-  call test_spline_1d_hrmt( line, test_flag )
-  call test_error_flag( test_flag, test_passed, 'test_spline_1d_hrmt')
-
-  print *, ' '
-  print *, 'interpolator_tester_1D_prdc(), cos(x), normal values'
-  call interpolator_tester_1d_prdc( &
-       mycos, &
-       mycos, &
-       sll_f_interpolate_from_interpolant_value, &
-       0.0_f64, &
-       2.0_f64*sll_p_pi, &
-       33, &
-       test_flag )
-  call test_error_flag( test_flag, test_passed, 'interpolator_tester_1d_prdc')
-
-  print *, ' '
-  print *, 'interpolator_tester_1D_prdc(), cos(x), derivatives test'
-  call interpolator_tester_1d_prdc( &
-       mycos, &
-       dmycos, &
-       sll_f_interpolate_derivative, &
-       0.0_f64, &
-       2.0_f64*sll_p_pi, &
-       33, &
-       test_flag, &
-       6.0e-6_f64)
-  call test_error_flag( test_flag, test_passed, 'interpolator_tester_1d_prdc')
-
-  print *, ' '
-  print *, 'interpolator_tester_1D_hrmt(), cos(x), derivatives test'
-  call interpolator_tester_1d_hrmt( &
-       mycos, &
-       dmycos, &
-       sll_f_interpolate_derivative, &
-       0.0_f64, &
-       2.0_f64*sll_p_pi, &
-       test_flag )
-  call test_error_flag( test_flag, test_passed, 'interpolator_tester_1d_hrmt')
-
-
-  print *, ' '
-  print *, 'interpolator_tester_2d(), cos(x)*cos(y) case, deriv in X1: '
-  call interpolator_tester_2d_prdc_prdc( &
-       coscos, &
-       msincos, &
-       sll_f_interpolate_x1_derivative_2d, &
-       test_flag )
-  call test_error_flag( test_flag, test_passed, &
-       'interpolator_tester_2d_prdc_prdc')
-
-  print *, ' '
-  print *, 'interpolator_tester_2d(), cos(x)*cos(y) case, deriv in X2: '
-  call interpolator_tester_2d_prdc_prdc( &
-       coscos, &
-       mcossin, &
-       sll_f_interpolate_x2_derivative_2d, &
-       test_flag )
-  call test_error_flag( test_flag, test_passed, &
-       'interpolator_tester_2d_prdc_prdc')
-
-  print *, '----------------------------------------------------'
-  print *,  'Test polar transformation case: '
-  print *, '----------------------------------------------------'
-  print *, ' '
-  print *, 'hrmt_prdc on polar_x:'
-  call test_2d_spline_hrmt_prdc( &
-       polar_x, &
-       deriv1_polar_x, &
-       deriv1_polar_x, &
-       test_flag )
-  call test_error_flag( test_flag, test_passed, 'test_2d_spline_hrmt_prdc')
-
-  print *, ' '
-  print *, 'hrmt_prdc on polar_x, test default slopes:'
-  call test_2d_spline_hrmt_prdc_no_slopes( &
-       polar_x, &
-       deriv1_polar_x, &
-       deriv1_polar_x, &
-       test_flag )
-  call test_error_flag( test_flag, test_passed, &
-       'test_2d_spline_hrmt_prdc_no_slopes')
-  print *, ' '
-  print *, 'hrmt_prdc on polar_y, deriv1:'
-  call test_2d_spline_hrmt_prdc( &
-       polar_y, &
-       deriv1_polar_y, &
-       deriv1_polar_y, &
-       test_flag )
-  call test_error_flag( test_flag, test_passed, 'test_2d_spline_hrmt_prdc')
-
-  print *, ' '
-  print *, 'hrmt_prdc on polar_y, deriv2:'
-  call test_2d_spline_hrmt_prdc( &
-       polar_y, &
-       deriv2_polar_y, &
-       deriv2_polar_y, &
-       test_flag )
-  call test_error_flag( test_flag, test_passed, 'test_2d_spline_hrmt_prdc')
-
-  print *, ' '
-  print *, 'interpolator tester, hrmt_prdc, on polar_x, deriv1:'
-  call interpolator_tester_2d_hrmt_prdc( &
-       polar_x, &
-       deriv1_polar_x, &
-       sll_f_interpolate_x1_derivative_2d, &
-       deriv1_polar_x, &
-       deriv1_polar_x, &
-       test_flag )
-  call test_error_flag( test_flag, test_passed, &
-       'interpolator_tester_2d_hrmt_prdc')
-
-  print *, ' '
-  print *, 'interpolator tester, hrmt_prdc, on polar_x, deriv2:'
-  call interpolator_tester_2d_hrmt_prdc( &
-       polar_x, &
-       deriv2_polar_x, &
-       sll_f_interpolate_x2_derivative_2d, &
-       deriv1_polar_x, &
-       deriv1_polar_x, &
-       test_flag )
-  call test_error_flag( test_flag, test_passed, &
-       'interpolator_tester_2d_hrmt_prdc')
-
-  print *, ' '
-  print *, 'interpolator tester, hrmt_prdc, on polar_y, deriv1:'
-  call interpolator_tester_2d_hrmt_prdc( &
-       polar_y, &
-       deriv1_polar_y, &
-       sll_f_interpolate_x1_derivative_2d, &
-       deriv1_polar_y, &
-       deriv1_polar_y, &
-       test_flag )
-  call test_error_flag( test_flag, test_passed, &
-       'interpolator_tester_2d_hrmt_prdc')
-
-  print *, ' '
-  print *, 'interpolator tester, hrmt_prdc, on polar_y, deriv2:'
-  call interpolator_tester_2d_hrmt_prdc( &
-       polar_y, &
-       deriv2_polar_y, &
-       sll_f_interpolate_x2_derivative_2d, &
-       deriv1_polar_y, &
-       deriv1_polar_y, &
-       test_flag )
-  call test_error_flag( test_flag, test_passed, &
-       'interpolator_tester_2d_hrmt_prdc')
-
-
-  print *, 'plane test case'
-  call test_2d_spline_hrmt_prdc( plane, plane_deriv, plane_deriv, test_flag )
-  call test_error_flag( test_flag, test_passed, &
-       'test_2d_spline_hrmt_prdc')
-
-  call test_2d_spline_prdc_hrmt( plane2,plane2_deriv,plane2_deriv,test_flag )
-  call test_error_flag( test_flag, test_passed, &
-       'test_2d_spline_prdc_hrmt')
-
-  print *, ' '
-  print *, 'testing the default, computed slope values'
-  call test_2d_spline_prdc_hrmt_no_slopes( &
-       plane2, &
-       plane2_deriv, &
-       plane2_deriv, &
-       test_flag )
-  call test_error_flag( test_flag, test_passed, &
-       'test_2d_spline_prdc_hrmt_no_slopes')
-
-  print *, 'testing hermite-hermite case, with derivatives test'
-  call test_2d_spline_hrmt_hrmt( &
-       plane3, &
-       plane3_deriv_x, &
-       plane3_deriv_x, &
-       plane3_deriv_y, &
-       plane3_deriv_y, &
-       test_flag )
-  call test_error_flag( test_flag, test_passed, &
-       'test_2d_spline_hrmt_hrmt')
-
-  !print *, 'test_passed : ', test_passed
-  print *, 'test default slope values, hermite-hermite case'
-  call test_2d_spline_hrmt_hrmt_no_slopes( &
-       sinsin, &
-       test_flag )
-  call test_error_flag( test_flag, test_passed, &
-       'test_2d_spline_hrmt_hrmt_no_slopes')
-
-  call test_2d_cubic_splines_periodic( sincos_prod, &
-  !     (/0.0_f64,1.0*sll_p_pi,0.0_f64,1.0*sll_p_pi/), 33,33)
-  !   (/0.0_f64,2.0_f64*sll_p_pi,0.0_f64,2.0_f64/), 33,33)
-       (/sll_p_pi,3.0_f64*sll_p_pi,sll_p_pi,3.0_f64*sll_p_pi/), 33,33, test_flag)
-
-  call test_error_flag( test_flag, test_passed, &
-       'test_2d_cubic_splines_periodic')
-
-  if (test_passed .eqv. .true.) then
-     print *, ' '
-     print *, 'Cubic splines unit test: PASSED'
-     print *, ' '
+  if (passed .eqv. .true. ) then
+     print*, 'PASSED.'
   else
-     print *, ' '
-     print *, 'Cuplines unit test: FAILED'
-     print *, ' '
-  endif
+     print*, 'FAILED.'
+  end if
 
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-  
 contains
 
-  subroutine test_error_flag( individual_flag, general_flag, message )
-    logical, intent(in) :: individual_flag 
-    logical, intent(inout) :: general_flag
-    character(len=*) :: message
-    ! print *, individual_flag
-    general_flag = general_flag .and. individual_flag
-    if( individual_flag .eqv. .false. ) then
-       print *, 'FAILURE IN FUNCTION: ', message
-       stop
+  subroutine test_cubic_spline_1d( bc, passed )
+    integer(kind=4), intent( in    ) :: bc ! specify boundary condtions: 0 for periodic, 1 for Hermite
+    logical,         intent( inout ) :: passed
+
+    sll_int32, parameter :: np = 32
+
+    sll_int32 :: i
+    sll_real64 :: xmin, xmax
+    sll_real64 :: delta_x
+    
+    sll_real64 :: x(np+1)
+    sll_real64 :: data(np+1)
+    sll_real64 :: deriv(np+1)
+    sll_real64 :: data_interp(np)
+    sll_real64 :: deriv_interp(np)
+    sll_real64 :: interp_ngrid(2)
+    sll_real64 :: ref_ngrid(2)
+    sll_real64 :: x_ngrid
+    type(sll_t_cubic_spline_1d), pointer :: sp1
+    
+    xmin = 0.0_f64
+    xmax = sll_p_twopi
+    
+    delta_x = (xmax-xmin)/real(np,f64)
+    
+    do i=1,np+1
+       x(i) = real(i-1, f64)* delta_x
+       data(i) = exp(sin(x(i)))
+       deriv(i) = cos(x(i)) * exp(sin(x(i)))
+    end do
+    
+    if ( bc == 0) then! periodic boundary conditions       
+       print*, 'Cubic spline 1d, periodic boundary conditions:'
+       sp1 =>  sll_f_new_cubic_spline_1d( np+1, xmin, xmax, sll_p_periodic )
+    elseif( bc == 1) then ! Hermite boundary conditions
+       print*, 'Cubic spline 1d, Hermite boundary conditions:'
+       sp1 =>  sll_f_new_cubic_spline_1d( &
+            np+1, &
+            xmin, &
+            xmax, &
+            sll_p_hermite, &
+            deriv(1), &
+            deriv(np+1) )
     end if
-  end subroutine test_error_flag
-
-  subroutine test_2d_cubic_splines_periodic( func, lims, npts1, npts2, &
-    test_flag )
-
-    procedure(fxy) :: func
-    sll_real64, dimension(:), intent(in) :: lims
-    sll_int32, intent(in) :: npts1, npts2
-    logical, intent(out) :: test_flag
-    type(sll_t_cubic_spline_2d), pointer :: s
-    sll_real64                              :: phase_x1, phase_x2
-    sll_real64                              :: acc_2D, x1, x2
-    sll_real64, allocatable, dimension(:,:) :: data_2d
-    sll_real64, allocatable, dimension(:)   :: coordinates_i
-    sll_real64, allocatable, dimension(:)   :: coordinates_j
-    sll_real64 :: x1min
-    sll_real64 :: x1max
-    sll_real64 :: x2min
-    sll_real64 :: x2max
-    sll_int32  :: i,j,err
-
-    test_flag = .true.
-    x1min = lims(1)
-    x1max = lims(2)
-    x2min = lims(3)
-    x2max = lims(4)
-
-    SLL_ALLOCATE(data_2d(npts1, npts2), err)        
-    SLL_ALLOCATE(coordinates_i(npts1),err)
-    SLL_ALLOCATE(coordinates_j(npts2),err)
-        
-    do i=1, npts1
-       coordinates_i(i) = real(i-1,f64)*(x1max-x1min)/real(npts1-1,f64)+x1min
+    call sll_s_compute_cubic_spline_1d( data, sp1 )
+    
+    do i=1,np
+       data_interp(i) = sll_f_interpolate_from_interpolant_value(x(i), sp1)
+       deriv_interp(i) = sll_f_interpolate_derivative(x(i), sp1)
     end do
-        
-    do j=1, npts2
-       coordinates_j(j) = real(j-1,f64)*(x2max-x2min)/real(npts2-1,f64)+x2min
+    
+    x_ngrid = (real(np/2,f64)-0.5_f64)*delta_x
+    ref_ngrid(1) = exp(sin(x_ngrid))
+    interp_ngrid(1) = sll_f_interpolate_from_interpolant_value(x_ngrid, sp1)
+    ref_ngrid(2) = cos(x_ngrid)*exp(sin(x_ngrid))
+    interp_ngrid(2) = sll_f_interpolate_derivative(x_ngrid, sp1)
+    
+    print*, 'Interpolation error for value at', x_ngrid, ':', ref_ngrid(1)-interp_ngrid(1)
+    print*, 'Interpolation error for derivative at', x_ngrid, ':',ref_ngrid(2)-interp_ngrid(2)
+    print*, 'Maximum error of values at grid points:', maxval(abs(data(1:np)-data_interp))
+    print*, 'Maximum error of derivative at grid points:', maxval(abs(deriv(1:np)-deriv_interp))
+    
+    
+    if ( maxval(abs(data(1:np)-data_interp))> 1d-14 ) then
+       print*, 'Maximum error at grid points too large.'
+       passed = .false.
+    end if
+    if ( maxval(abs(deriv(1:np)-deriv_interp))> 3d-4 ) then
+       print*, 'Maximum error of derivative at grid points too large.'
+       passed = .false.
+    end if
+    if (abs(ref_ngrid(1)-interp_ngrid(1)) > 2d-5 ) then
+       print*, 'Error at non-grid point too large.'
+       passed = .false.
+    end if
+    if (abs(ref_ngrid(2)-interp_ngrid(2)) > 3d-5 ) then
+       print*, 'Error of derivative at non-grid point too large.'
+       passed = .false.
+    end if
+    
+    call sll_o_delete(sp1)
+
+  end subroutine test_cubic_spline_1d
+
+
+  subroutine test_cubic_spline_2d( bc, passed )
+    integer(kind=4), intent( in    ) :: bc ! specify boundary condtions: 0 for periodic, 1 for Hermite
+    logical,         intent( inout ) :: passed
+
+    sll_int32, parameter :: np1 = 28
+    sll_int32, parameter :: np2 = 32
+
+    sll_int32 :: i, j
+    sll_real64 :: xmin, xmax
+    sll_real64 :: delta_x
+    sll_real64 :: ymin, ymax
+    sll_real64 :: delta_y
+    
+    sll_real64 :: x(np1+1), y(np2+1)
+    sll_real64 :: data(np1+1, np2+1)
+    sll_real64 :: deriv_x(np1+1, np2+1), deriv_y(np1+1, np2+1)
+    sll_real64 :: data_interp(np1, np2)
+    sll_real64 :: deriv_x_interp(np1, np2), deriv_y_interp(np1, np2)
+    sll_real64 :: interp_ngrid(3)
+    sll_real64 :: ref_ngrid(3)
+    sll_real64 :: x_ngrid, y_ngrid
+    type(sll_t_cubic_spline_2d), pointer :: sp2
+    
+    print*, 'Cubic splines 2d:'
+    xmin = 0.0_f64
+    xmax = sll_p_twopi
+    
+    delta_x = (xmax-xmin)/real(np1,f64)
+
+    do i=1,np1+1
+       x(i) = real(i-1, f64)* delta_x
+    end do
+    ymin = 0.0_f64
+    ymax = sll_p_twopi
+    
+    delta_y = (ymax-ymin)/real(np2,f64)
+
+    do j=1,np2+1
+       y(j) = real(j-1, f64)* delta_y
     end do
 
-    do j=1,npts2
-       phase_x2 = coordinates_j(j)
-       do i=1,npts1
-          phase_x1 = coordinates_i(i)
-          data_2d(i,j) = func(phase_x1, phase_x2)
+    do i=1, np1+1
+       do j=1, np2+1
+          data(i,j) = exp( cos(x(i))* sin(y(j)) )
+          deriv_x(i,j) = -data(i,j) * sin( x(i) ) * sin( y(j) )
+          deriv_y(i,j) = data(i,j) * cos( x(i) ) * cos( y(j) )
        end do
     end do
+    
+    if (bc == 0) then ! periodic-periodic
+       print*, 'Cubic spline 2d, periodic-periodic:'
+       sp2 => sll_f_new_cubic_spline_2d( np1+1, np2+1, &
+            xmin, xmax, &
+            ymin, ymax, &
+            sll_p_periodic, sll_p_periodic)
+    elseif (bc == 1) then ! periodic-Hermite
+       print*, 'Cubic spline 2d, periodic-periodic:'
+       sp2 => sll_f_new_cubic_spline_2d( np1+1, np2+1, &
+            xmin, xmax, &
+            ymin, ymax, &
+            sll_p_periodic, sll_p_hermite, &
+            x2_min_slopes = deriv_y(:,1), &
+            x2_max_slopes = deriv_y(:,1) )
+    elseif(bc == 2) then ! Hermite-periodic
+       print*, 'Cubic spline 2d, periodic-periodic:'
+       sp2 => sll_f_new_cubic_spline_2d( np1+1, np2+1, &
+            xmin, xmax, &
+            ymin, ymax, &
+            sll_p_hermite, sll_p_periodic, &
+            x1_min_slopes = deriv_x(1,:), &
+            x1_max_slopes = deriv_x(1,:) )
+    elseif( bc == 3 ) then ! Hermite-Hermite
+       sp2 => sll_f_new_cubic_spline_2d( np1+1, np2+1, &
+            xmin, xmax, &
+            ymin, ymax, &
+            sll_p_hermite, sll_p_hermite, &
+            x1_min_slopes = deriv_x(1,:), &
+            x1_max_slopes = deriv_x(1,:), &
+            x2_min_slopes = deriv_y(:,1), &
+            x2_max_slopes = deriv_y(:,1) )
+    else
+       print*, 'Boundary type not implemented.'
+       passed = .false.
+    end if
 
-    s => sll_f_new_cubic_spline_2d( npts1, npts2, x1min, x1max, x2min, x2max, &
-         sll_p_periodic, sll_p_periodic )
+    call sll_s_compute_cubic_spline_2d( data, sp2 )
 
-    call sll_s_compute_cubic_spline_2d( data_2d, s )
-    acc_2D = 0.0_f64
-    do j=1, npts2
-       do i=1, npts1
-          x1 = coordinates_i(i)
-          x2 = coordinates_j(j)
-          acc_2D = acc_2D + &
-               abs(data_2d(i,j) - sll_f_interpolate_value_2d(x1,x2,s))
+    do i=1,np1
+       do j=1, np2
+          data_interp(i,j) = sll_f_interpolate_value_2d(x(i), y(j), sp2)
+          deriv_x_interp(i,j) = sll_f_interpolate_x1_derivative_2d(x(i), y(j), sp2)
+          deriv_y_interp(i,j) = sll_f_interpolate_x2_derivative_2d(x(i), y(j), sp2)
        end do
     end do
-    print *, 'Average cumulative error, spline2d, periodic-periodic: ', &
-         acc_2D/(NPX1*NPX2)
+    
+    x_ngrid = (real(np1/2,f64)-0.5_f64)*delta_x
+    y_ngrid = (real(np2/2,f64)+0.5_f64)*delta_y
+    ref_ngrid(1) =  exp( cos(x_ngrid)* sin(y_ngrid) )
+    interp_ngrid(1) = sll_f_interpolate_value_2d(x_ngrid, y_ngrid, sp2)
+    ref_ngrid(2) = -ref_ngrid(1) * sin( x_ngrid ) * sin( y_ngrid )
+    interp_ngrid(2) = sll_f_interpolate_x1_derivative_2d(x_ngrid, y_ngrid, sp2)
+    ref_ngrid(3) = ref_ngrid(1) * cos( x_ngrid ) * cos( y_ngrid )
+    interp_ngrid(3) = sll_f_interpolate_x2_derivative_2d(x_ngrid, y_ngrid, sp2)
+    
+    print*, 'Interpolation error for value at (', x_ngrid, ',', y_ngrid, '):', ref_ngrid(1)-interp_ngrid(1)
+    print*, 'Interpolation error for x1 derivative at (', x_ngrid, ',', y_ngrid, '):' ,ref_ngrid(2)-interp_ngrid(2)
+    print*, 'Interpolation error for x2 derivative at (', x_ngrid, ',', y_ngrid, '):' ,ref_ngrid(3)-interp_ngrid(3)
+    print*, 'Maximum error of values at grid points:', maxval(abs(data(1:np1, 1:np2)-data_interp))
+    print*, 'Maximum error of x1 derivative at grid points:', maxval(abs(deriv_x(1:np1, 1:np2)-deriv_x_interp))
+    print*, 'Maximum error of x2 derivative at grid points:', maxval(abs(deriv_y(1:np1, 1:np2)-deriv_y_interp))
 
-    if (acc_2D/(NPX1*NPX2)>=1.e-14) then
-       print *, 'test periodic cubic 2d spline: error is too big'
-       test_flag = .false.
-    endif
+    if ( maxval(abs(data(1:np1, 1:np2)-data_interp))> 1d-14 ) then
+       print*, 'Maximum error at grid points too large.'
+       passed = .false.
+    end if
+    if ( maxval(abs(deriv_x(1:np1, 1:np2)-deriv_x_interp))> 4d-4 ) then
+       print*, 'Maximum error of x1 derivative at grid points too large.'
+       passed = .false.
+    end if
+    if ( maxval(abs(deriv_y(1:np1, 1:np2)-deriv_y_interp))> 3d-4 ) then
+       print*, 'Maximum error of x1 derivative at grid points too large.'
+       passed = .false.
+    end if
+    if (abs(ref_ngrid(1)-interp_ngrid(1)) > 2d-5 ) then
+       print*, 'Error at non-grid point too large.'
+       passed = .false.
+    end if
+    if (abs(ref_ngrid(2)-interp_ngrid(2)) > 3d-6 ) then
+       print*, 'Error of x1 derivative at non-grid point too large.'
+       passed = .false.
+    end if    
+    if (abs(ref_ngrid(3)-interp_ngrid(3)) > 4d-5 ) then
+       print*, 'Error of x2 derivative at non-grid point too large.'
+       passed = .false.
+    end if
+    
 
-  end subroutine test_2d_cubic_splines_periodic
+  end subroutine test_cubic_spline_2d
+
 
 end program test_cubic_splines
