@@ -29,20 +29,20 @@ subroutine interpol_eb( tm1, ele )
 
 type  (particle) :: ele
 type(tm_mesh_fields) :: tm1
-sll_real64 :: a1, a2, a3, a4
-sll_int32  :: k 
+sll_real32 :: a1, a2, a3, a4
+sll_int32  :: k
 sll_int32  :: i, j
 sll_real32 :: dpx
 sll_real32 :: dpy
-!   ______________
+
+! i,j+1_________i+1,j+1
 !  |     |        |
-!  | a2  |  a1    |
-!  |_____|________|
-!  |     |        |
+!  | a2     a1    |
+!  |____ P _______|
+!  |              |
 !  | a3  |  a4    |
 !  |     |        |
-!  |_____|________|
-
+! i,j____|______i+1,j
 
 do k=1,nbpart
 
@@ -51,17 +51,17 @@ do k=1,nbpart
    dpx = ele%dpx(k)
    dpy = ele%dpy(k)
 
-   a1 = (1.0-dpx) * (1.0-dpy) 
-   a2 = (    dpx) * (1.0-dpy) 
-   a3 = (    dpx) * (    dpy) 
-   a4 = (1.0-dpx) * (    dpy) 
+   a1 = (1.0-dpx) * (1.0-dpy)
+   a2 = (    dpx) * (1.0-dpy)
+   a3 = (    dpx) * (    dpy)
+   a4 = (1.0-dpx) * (    dpy)
 
    ele%epx(k) = a1 * tm1%ex(i  ,j  ) + a2 * tm1%ex(i+1,j  ) &
-            & + a3 * tm1%ex(i+1,j+1) + a4 * tm1%ex(i  ,j+1) 
+            & + a3 * tm1%ex(i+1,j+1) + a4 * tm1%ex(i  ,j+1)
    ele%epy(k) = a1 * tm1%ey(i  ,j  ) + a2 * tm1%ey(i+1,j  ) &
-            & + a3 * tm1%ey(i+1,j+1) + a4 * tm1%ey(i  ,j+1) 
+            & + a3 * tm1%ey(i+1,j+1) + a4 * tm1%ey(i  ,j+1)
    ele%bpz(k) = a1 * tm1%bz(i  ,j  ) + a2 * tm1%bz(i+1,j  ) &
-            & + a3 * tm1%bz(i+1,j+1) + a4 * tm1%bz(i  ,j+1) 
+            & + a3 * tm1%bz(i+1,j+1) + a4 * tm1%bz(i  ,j+1)
 
 end do
 
@@ -75,7 +75,7 @@ type (particle) :: ele
 sll_real64 :: dum, u2
 sll_real64 :: tantheta, sintheta
 sll_real64 :: gamma
-sll_int32  :: k 
+sll_int32  :: k
 
 do k = 1, nbpart
 
@@ -85,7 +85,7 @@ do k = 1, nbpart
 
       u2  = ele%vpx(k)*ele%vpx(k) &
           + ele%vpy(k)*ele%vpy(k)
-      if ( u2 >= csq ) then 
+      if ( u2 >= csq ) then
          print*,'Erreur : u2 >= c2 dans le calcul de la vitesse'
          print*,'k = ',k,' vx = ',ele%vpx(k),' vy = ',ele%vpy(k)
          stop
@@ -112,8 +112,8 @@ do k = 1, nbpart
    ele%vpy(k) = ele%vpy(k) + dum*(ele%epy(k)+eyext)
 
    !*** Algorithme de Buneman pour les effets magnetiques
- 
-   tantheta = dum * (ele%bpz(k)+bzext) / gamma 
+
+   tantheta = dum * (ele%bpz(k)+bzext) / gamma
    sintheta = 2.0 * tantheta / ( 1. + tantheta*tantheta)
 
    ele%vpx(k) = ele%vpx(k) + ele%vpy(k)*tantheta
@@ -133,7 +133,7 @@ do k = 1, nbpart
            + ele%vpy(k)*ele%vpy(k)
 
       gamma = sqrt( 1. + u2/csq )
- 
+
       ele%vpx(k) = ele%vpx(k) / gamma
       ele%vpy(k) = ele%vpy(k) / gamma
 
@@ -149,11 +149,11 @@ subroutine avancee_part( ele, coef )  !Avancee de coef * dt
 
 type(particle) :: ele
 sll_real64 :: coef
-sll_int32  :: k 
+sll_int32  :: k
 sll_real64 :: ppx
 sll_real64 :: ppy
 
-do k=1,nbpart     
+do k=1,nbpart
 
   ppx = (ele%idx(k)+ele%dpx(k))*dx + ele%vpx(k)*dt*coef
   ppy = (ele%idy(k)+ele%dpy(k))*dy + ele%vpy(k)*dt*coef
@@ -177,16 +177,16 @@ do k=1,nbpart
   ele%idx(k) = floor(ppx/dimx*nx)
   ele%idy(k) = floor(ppy/dimy*ny)
   ele%dpx(k) = real(ppx/dx - ele%idx(k), f32)
-  ele%dpy(k) = real(ppy/dy - ele%idy(k), f32) 
+  ele%dpy(k) = real(ppy/dy - ele%idy(k), f32)
 
 end do
 
 if (bcname /= 'period') then
   k = 1
-  do while ( k <= nbpart )  
-    if (      ele%idx(k) < 0 .or. ele%idx(k) >= nx      &	
+  do while ( k <= nbpart )
+    if (      ele%idx(k) < 0 .or. ele%idx(k) >= nx      &
          .or. ele%idy(k) < 0 .or. ele%idy(k) >= ny ) then
-        
+
         ele%dpx(k) = ele%dpx(nbpart)
         ele%dpy(k) = ele%dpy(nbpart)
         ele%vpx(k) = ele%vpx(nbpart)
@@ -213,13 +213,13 @@ type(particle) :: ele
 type(tm_mesh_fields) :: tm
 sll_real64 :: a1, a2, a3, a4, weight
 sll_real64 :: rho_total
-sll_int32  :: k 
-sll_int32  :: i, j 
+sll_int32  :: k
+sll_int32  :: i, j
 sll_real32 :: dpx
 sll_real32 :: dpy
 
-tm%r0 = 0.d0    
-                
+tm%r0 = 0.d0
+
 !   ______________
 !  |     |        |
 !  | a2  |  a1    |
@@ -235,13 +235,13 @@ do k=1,nbpart
   j      = ele%idy(k)
   dpx    = ele%dpx(k)
   dpy    = ele%dpy(k)
-  weight = ele%p(k) 
+  weight = ele%p(k)
   a1  = (1.0-dpx) * (1.0-dpy) * weight
   a2  = (dpx)     * (1.0-dpy) * weight
   a3  = (dpx)     * (dpy)     * weight
   a4  = (1.0-dpx) * (dpy)     * weight
-  tm%r0(i,j)     = tm%r0(i,j)     + a1 
-  tm%r0(i+1,j)   = tm%r0(i+1,j)   + a2 
+  tm%r0(i,j)     = tm%r0(i,j)     + a1
+  tm%r0(i+1,j)   = tm%r0(i+1,j)   + a2
   tm%r0(i+1,j+1) = tm%r0(i+1,j+1) + a3
   tm%r0(i,j+1)   = tm%r0(i,j+1)   + a4
 
@@ -298,11 +298,11 @@ do k=0,nbpart-1
 
   theta = trinary_reversing( k ) * 2.0_f64 * pi
 
-  a = 0.0_f64; b = dimx ! 2*pi/kx 
+  a = 0.0_f64; b = dimx ! 2*pi/kx
   R = bit_reversing( k )
-  call dichotomie_x(a,b,R,eps) 
+  call dichotomie_x(a,b,R,eps)
   ppx = a
-  ppy = dimy * penta_reversing( k ) 
+  ppy = dimy * penta_reversing( k )
 
   ele%idx(k+1) = floor(ppx/dimx*nx)
   ele%idy(k+1) = floor(ppy/dimy*ny)
@@ -339,9 +339,9 @@ end subroutine plasma
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 !> M4 function from Monhagan (SPH method)
 !> Cubic spline
-!>       |  1 - 1.5 q^2 + 0.75 q^3  for 0 <= q <= 1
-!> M4(x) |  1/4 (2−q)^3,            for 1 <= q <= 2
-!>       |  0                       for q > 2.
+!>             |  1 - 1.5 q^2 + 0.75 q^3  for 0 <= q <= 1
+!> M4(x) = 2/3 |  1/4 (2−q)^3,            for 1 <= q <= 2
+!>             |  0                       for q > 2.
 
 function f_m4( x )
 sll_real32, intent(in) :: x
@@ -350,8 +350,8 @@ sll_real32             :: f_m4
 
 if ( x < 1. ) then
    f_m4 = 1 - 1.5*x*x+0.75*x*x*x
-else if ( x >= 1. .and. x <= 2. ) then
-   f_m4 = 0.25*(2.-x)**3 
+else if ( x >= 1. .and. x < 2. ) then
+   f_m4 = 0.25*(2.-x)**3
 else
    f_m4 = 0.0
 end if
@@ -365,22 +365,81 @@ subroutine interpol_eb_m4( tm1, ele )
 
 type(particle)       :: ele
 type(tm_mesh_fields) :: tm1
-sll_int32            :: k 
+sll_int32            :: k
 sll_int32            :: i, j
 sll_int32            :: im1, im2, ip1, ip2
 sll_int32            :: jm1, jm2, jp1, jp2
 sll_real32           :: dpx
 sll_real32           :: dpy
-sll_real32           :: cm2x 
-sll_real32           :: cp2x 
-sll_real32           :: cm1x 
-sll_real32           :: cp1x 
-sll_real32           :: cx   
-sll_real32           :: cy   
-sll_real32           :: cm2y 
-sll_real32           :: cp2y 
-sll_real32           :: cm1y 
-sll_real32           :: cp1y 
+sll_real32           :: cm2x
+sll_real32           :: cp2x
+sll_real32           :: cm1x
+sll_real32           :: cp1x
+sll_real32           :: cx
+sll_real32           :: cy
+sll_real32           :: cm2y
+sll_real32           :: cp2y
+sll_real32           :: cm1y
+sll_real32           :: cp1y
+sll_real64           :: e(-1:1,-1:1)
+
+sll_real64, allocatable :: ehx(:,:)
+sll_real64, allocatable :: ehy(:,:)
+sll_real64, allocatable :: bhz(:,:)
+
+e(-1,-1) =  1.0_f64/36.0_f64
+e( 0,-1) =  4.0_f64/36.0_f64
+e(+1,-1) =  1.0_f64/36.0_f64
+e(-1, 0) =  4.0_f64/36.0_f64
+e( 0, 0) = 16.0_f64/36.0_f64
+e(+1, 0) =  4.0_f64/36.0_f64
+e(-1,+1) =  1.0_f64/36.0_f64
+e( 0,+1) =  4.0_f64/36.0_f64
+e(+1,+1) =  1.0_f64/36.0_f64
+
+allocate(ehx(0:nx,0:ny))
+allocate(ehy(0:nx,0:ny))
+allocate(bhz(0:nx,0:ny))
+
+do j = 0, ny
+  jm1 = modulo(j-1,ny)
+  jp1 = modulo(j+1,ny)
+  do i = 0, nx
+
+     im1 = modulo(i-1,nx)
+     ip1 = modulo(i+1,nx)
+
+     ehx(i,j) = e(-1,-1)*tm1%ex(im1,jm1) & 
+              + e(-1, 0)*tm1%ex(im1,j  ) &
+              + e(-1,+1)*tm1%ex(im1,jp1) &
+              + e( 0,-1)*tm1%ex(  i,jm1) &
+              + e( 0, 0)*tm1%ex(  i,j  ) &
+              + e( 0,+1)*tm1%ex(  i,jp1) &
+              + e(+1,-1)*tm1%ex(ip1,jm1) &
+              + e(+1, 0)*tm1%ex(ip1,j  ) &
+              + e(+1,+1)*tm1%ex(ip1,jp1)
+
+     ehy(i,j) = e(-1,-1)*tm1%ey(im1,jm1) & 
+              + e(-1, 0)*tm1%ey(im1,j  ) &
+              + e(-1,+1)*tm1%ey(im1,jp1) &
+              + e( 0,-1)*tm1%ey(  i,jm1) &
+              + e( 0, 0)*tm1%ey(  i,j  ) &
+              + e( 0,+1)*tm1%ey(  i,jp1) &
+              + e(+1,-1)*tm1%ey(ip1,jm1) &
+              + e(+1, 0)*tm1%ey(ip1,j  ) &
+              + e(+1,+1)*tm1%ey(ip1,jp1)
+
+     bhz(i,j) = e(-1,-1)*tm1%bz(im1,jm1) & 
+              + e(-1, 0)*tm1%bz(im1,j  ) &
+              + e(-1,+1)*tm1%bz(im1,jp1) &
+              + e( 0,-1)*tm1%bz(  i,jm1) &
+              + e( 0, 0)*tm1%bz(  i,j  ) &
+              + e( 0,+1)*tm1%bz(  i,jp1) &
+              + e(+1,-1)*tm1%bz(ip1,jm1) &
+              + e(+1, 0)*tm1%bz(ip1,j  ) &
+              + e(+1,+1)*tm1%bz(ip1,jp1)
+  end do
+end do
 
 
 do k=1,nbpart
@@ -388,14 +447,14 @@ do k=1,nbpart
    i   = ele%idx(k)
    j   = ele%idy(k)
 
-   im2 = modulo(i-2,nx)                                                            
-   im1 = modulo(i-1,nx)                                                              
-   ip1 = modulo(i+1,nx)                                                              
-   ip2 = modulo(i+2,nx)   
-   jm2 = modulo(j-2,ny)                                                            
-   jm1 = modulo(j-1,ny)                                                              
-   jp1 = modulo(j+1,ny)                                                              
-   jp2 = modulo(j+2,ny)   
+   im2 = modulo(i-2,nx)
+   im1 = modulo(i-1,nx)
+   ip1 = modulo(i+1,nx)
+   ip2 = modulo(i+2,nx)
+   jm2 = modulo(j-2,ny)
+   jm1 = modulo(j-1,ny)
+   jp1 = modulo(j+1,ny)
+   jp2 = modulo(j+2,ny)
 
    dpx = ele%dpx(k)
    dpy = ele%dpy(k)
@@ -411,88 +470,97 @@ do k=1,nbpart
    cm1y = f_m4(1.+dpy)
    cp1y = f_m4(1.-dpy)
 
+
    ele%epx(k) =                                    &
-   &             + cm2x * cm2y * tm1%ex(im2,jm2)   &
-   &             + cm2x * cm1y * tm1%ex(im2,jm1)   &
-   &             + cm2x * cy   * tm1%ex(im2,j  )   &
-   &             + cm2x * cp1y * tm1%ex(im2,jp1)   &
-   &             + cm2x * cp2y * tm1%ex(im2,jp2)   &
-   &             + cm1x * cm2y * tm1%ex(im1,jm2)   &
-   &             + cm1x * cm1y * tm1%ex(im1,jm1)   &
-   &             + cm1x * cy   * tm1%ex(im1,j  )   &
-   &             + cm1x * cp1y * tm1%ex(im1,j+1)   &
-   &             + cm1x * cp2y * tm1%ex(im1,jp2)   &
-   &             + cx   * cm2y * tm1%ex(i  ,jm2)   &
-   &             + cx   * cm1y * tm1%ex(i  ,jm1)   &
-   &             + cx   * cy   * tm1%ex(i  ,j  )   &
-   &             + cx   * cp1y * tm1%ex(i  ,jp1)   &
-   &             + cx   * cp2y * tm1%ex(i  ,jp2)   &
-   &             + cp1x * cm2y * tm1%ex(ip1,jm2)   &
-   &             + cp1x * cm1y * tm1%ex(ip1,jm1)   &
-   &             + cp1x * cy   * tm1%ex(ip1,j  )   &
-   &             + cp1x * cp1y * tm1%ex(ip1,jp1)   &
-   &             + cp1x * cp2y * tm1%ex(ip1,jp2)   &
-   &             + cp2x * cm2y * tm1%ex(ip2,jm2)   &
-   &             + cp2x * cm1y * tm1%ex(ip2,jm1)   &
-   &             + cp2x * cy   * tm1%ex(ip2,j  )   &
-   &             + cp2x * cp1y * tm1%ex(ip2,jp1)   &
-   &             + cp2x * cp2y * tm1%ex(ip2,jp2)   
+   &             + cm2x * cm2y * ehx(im2,jm2)   &
+   &             + cm2x * cm1y * ehx(im2,jm1)   &
+   &             + cm2x * cy   * ehx(im2,j  )   &
+   &             + cm2x * cp1y * ehx(im2,jp1)   &
+   &             + cm2x * cp2y * ehx(im2,jp2)   &
+   &             + cm1x * cm2y * ehx(im1,jm2)   &
+   &             + cm1x * cm1y * ehx(im1,jm1)   &
+   &             + cm1x * cy   * ehx(im1,j  )   &
+   &             + cm1x * cp1y * ehx(im1,j+1)   &
+   &             + cm1x * cp2y * ehx(im1,jp2)   &
+   &             + cx   * cm2y * ehx(i  ,jm2)   &
+   &             + cx   * cm1y * ehx(i  ,jm1)   &
+   &             + cx   * cy   * ehx(i  ,j  )   &
+   &             + cx   * cp1y * ehx(i  ,jp1)   &
+   &             + cx   * cp2y * ehx(i  ,jp2)   &
+   &             + cp1x * cm2y * ehx(ip1,jm2)   &
+   &             + cp1x * cm1y * ehx(ip1,jm1)   &
+   &             + cp1x * cy   * ehx(ip1,j  )   &
+   &             + cp1x * cp1y * ehx(ip1,jp1)   &
+   &             + cp1x * cp2y * ehx(ip1,jp2)   &
+   &             + cp2x * cm2y * ehx(ip2,jm2)   &
+   &             + cp2x * cm1y * ehx(ip2,jm1)   &
+   &             + cp2x * cy   * ehx(ip2,j  )   &
+   &             + cp2x * cp1y * ehx(ip2,jp1)   &
+   &             + cp2x * cp2y * ehx(ip2,jp2)
 
    ele%epy(k) =                                    &
-   &             + cm2x * cm2y * tm1%ey(im2,jm2)   &
-   &             + cm2x * cm1y * tm1%ey(im2,jm1)   &
-   &             + cm2x * cy   * tm1%ey(im2,j  )   &
-   &             + cm2x * cp1y * tm1%ey(im2,jp1)   &
-   &             + cm2x * cp2y * tm1%ey(im2,jp2)   &
-   &             + cm1x * cm2y * tm1%ey(im1,jm2)   &
-   &             + cm1x * cm1y * tm1%ey(im1,jm1)   &
-   &             + cm1x * cy   * tm1%ey(im1,j  )   &
-   &             + cm1x * cp1y * tm1%ey(im1,jp1)   &
-   &             + cm1x * cp2y * tm1%ey(im1,jp2)   &
-   &             + cx   * cm2y * tm1%ey(i  ,jm2)   &
-   &             + cx   * cm1y * tm1%ey(i  ,jm1)   &
-   &             + cx   * cy   * tm1%ey(i  ,j  )   &
-   &             + cx   * cp1y * tm1%ey(i  ,jp1)   &
-   &             + cx   * cp2y * tm1%ey(i  ,jp2)   &
-   &             + cp1x * cm2y * tm1%ey(ip1,jm2)   &
-   &             + cp1x * cm1y * tm1%ey(ip1,jm1)   &
-   &             + cp1x * cy   * tm1%ey(ip1,j  )   &
-   &             + cp1x * cp1y * tm1%ey(ip1,jp1)   &
-   &             + cp1x * cp2y * tm1%ey(ip1,jp2)   &
-   &             + cp2x * cm2y * tm1%ey(ip2,jm2)   &
-   &             + cp2x * cm1y * tm1%ey(ip2,jm1)   &
-   &             + cp2x * cy   * tm1%ey(ip2,j  )   &
-   &             + cp2x * cp1y * tm1%ey(ip2,jp1)   &
-   &             + cp2x * cp2y * tm1%ey(ip2,jp2)   
+   &             + cm2x * cm2y * ehy(im2,jm2)   &
+   &             + cm2x * cm1y * ehy(im2,jm1)   &
+   &             + cm2x * cy   * ehy(im2,j  )   &
+   &             + cm2x * cp1y * ehy(im2,jp1)   &
+   &             + cm2x * cp2y * ehy(im2,jp2)   &
+   &             + cm1x * cm2y * ehy(im1,jm2)   &
+   &             + cm1x * cm1y * ehy(im1,jm1)   &
+   &             + cm1x * cy   * ehy(im1,j  )   &
+   &             + cm1x * cp1y * ehy(im1,jp1)   &
+   &             + cm1x * cp2y * ehy(im1,jp2)   &
+   &             + cx   * cm2y * ehy(i  ,jm2)   &
+   &             + cx   * cm1y * ehy(i  ,jm1)   &
+   &             + cx   * cy   * ehy(i  ,j  )   &
+   &             + cx   * cp1y * ehy(i  ,jp1)   &
+   &             + cx   * cp2y * ehy(i  ,jp2)   &
+   &             + cp1x * cm2y * ehy(ip1,jm2)   &
+   &             + cp1x * cm1y * ehy(ip1,jm1)   &
+   &             + cp1x * cy   * ehy(ip1,j  )   &
+   &             + cp1x * cp1y * ehy(ip1,jp1)   &
+   &             + cp1x * cp2y * ehy(ip1,jp2)   &
+   &             + cp2x * cm2y * ehy(ip2,jm2)   &
+   &             + cp2x * cm1y * ehy(ip2,jm1)   &
+   &             + cp2x * cy   * ehy(ip2,j  )   &
+   &             + cp2x * cp1y * ehy(ip2,jp1)   &
+   &             + cp2x * cp2y * ehy(ip2,jp2)
 
    ele%bpz(k) =                                    &
-   &             + cm2x * cm2y * tm1%bz(im2,jm2)   &
-   &             + cm2x * cm1y * tm1%bz(im2,jm1)   &
-   &             + cm2x * cy   * tm1%bz(im2,j  )   &
-   &             + cm2x * cp1y * tm1%bz(im2,jp1)   &
-   &             + cm2x * cp2y * tm1%bz(im2,jp2)   &
-   &             + cm1x * cm2y * tm1%bz(im1,jm2)   &
-   &             + cm1x * cm1y * tm1%bz(im1,jm1)   &
-   &             + cm1x * cy   * tm1%bz(im1,j  )   &
-   &             + cm1x * cp1y * tm1%bz(im1,jp1)   &
-   &             + cm1x * cp2y * tm1%bz(im1,jp2)   &
-   &             + cx   * cm2y * tm1%bz(i  ,jm2)   &
-   &             + cx   * cm1y * tm1%bz(i  ,jm1)   &
-   &             + cx   * cy   * tm1%bz(i  ,j  )   &
-   &             + cx   * cp1y * tm1%bz(i  ,jp1)   &
-   &             + cx   * cp2y * tm1%bz(i  ,jp2)   &
-   &             + cp1x * cm2y * tm1%bz(ip1,jm2)   &
-   &             + cp1x * cm1y * tm1%bz(ip1,jm1)   &
-   &             + cp1x * cy   * tm1%bz(ip1,j  )   &
-   &             + cp1x * cp1y * tm1%bz(ip1,jp1)   &
-   &             + cp1x * cp2y * tm1%bz(ip1,jp2)   &
-   &             + cp2x * cm2y * tm1%bz(ip2,jm2)   &
-   &             + cp2x * cm1y * tm1%bz(ip2,jm1)   &
-   &             + cp2x * cy   * tm1%bz(ip2,j  )   &
-   &             + cp2x * cp1y * tm1%bz(ip2,jp1)   &
-   &             + cp2x * cp2y * tm1%bz(ip2,jp2)
+   &             + cm2x * cm2y * bhz(im2,jm2)   &
+   &             + cm2x * cm1y * bhz(im2,jm1)   &
+   &             + cm2x * cy   * bhz(im2,j  )   &
+   &             + cm2x * cp1y * bhz(im2,jp1)   &
+   &             + cm2x * cp2y * bhz(im2,jp2)   &
+   &             + cm1x * cm2y * bhz(im1,jm2)   &
+   &             + cm1x * cm1y * bhz(im1,jm1)   &
+   &             + cm1x * cy   * bhz(im1,j  )   &
+   &             + cm1x * cp1y * bhz(im1,jp1)   &
+   &             + cm1x * cp2y * bhz(im1,jp2)   &
+   &             + cx   * cm2y * bhz(i  ,jm2)   &
+   &             + cx   * cm1y * bhz(i  ,jm1)   &
+   &             + cx   * cy   * bhz(i  ,j  )   &
+   &             + cx   * cp1y * bhz(i  ,jp1)   &
+   &             + cx   * cp2y * bhz(i  ,jp2)   &
+   &             + cp1x * cm2y * bhz(ip1,jm2)   &
+   &             + cp1x * cm1y * bhz(ip1,jm1)   &
+   &             + cp1x * cy   * bhz(ip1,j  )   &
+   &             + cp1x * cp1y * bhz(ip1,jp1)   &
+   &             + cp1x * cp2y * bhz(ip1,jp2)   &
+   &             + cp2x * cm2y * bhz(ip2,jm2)   &
+   &             + cp2x * cm1y * bhz(ip2,jm1)   &
+   &             + cp2x * cy   * bhz(ip2,j  )   &
+   &             + cp2x * cp1y * bhz(ip2,jp1)   &
+   &             + cp2x * cp2y * bhz(ip2,jp2)
 
-end do 
+end do
+
+!tm1%ex = ehx
+!tm1%ey = ehy
+!tm1%bz = bhz
+
+deallocate(ehx)
+deallocate(ehy)
+deallocate(bhz)
 
 end subroutine interpol_eb_m4
 
@@ -518,16 +586,16 @@ do k = 1, nbpart
   j      = ele%idy(k)
   dpx    = ele%dpx(k)
   dpy    = ele%dpy(k)
-  weight = ele%p(k) 
+  weight = ele%p(k)
 
-  im2 = modulo(i-2,nx)                                                            
-  im1 = modulo(i-1,nx)                                                              
-  ip1 = modulo(i+1,nx)                                                              
-  ip2 = modulo(i+2,nx)   
-  jm2 = modulo(j-2,ny)                                                            
-  jm1 = modulo(j-1,ny)                                                              
-  jp1 = modulo(j+1,ny)                                                              
-  jp2 = modulo(j+2,ny)   
+  im2 = modulo(i-2,nx)
+  im1 = modulo(i-1,nx)
+  ip1 = modulo(i+1,nx)
+  ip2 = modulo(i+2,nx)
+  jm2 = modulo(j-2,ny)
+  jm1 = modulo(j-1,ny)
+  jp1 = modulo(j+1,ny)
+  jp2 = modulo(j+2,ny)
 
   cm2x = f_m4(2.+dpx)
   cp2x = f_m4(2.-dpx)
@@ -572,20 +640,12 @@ do k = 1, nbpart
 
 end do
 
-if (bcname == 'period') then
-  do i=0,nx
-    tm%r0(i,0)  = tm%r0(i,0) + tm%r0(i,ny)
-    tm%r0(i,ny) = tm%r0(i,0)
-  end do
-  do j=0,ny
-    tm%r0(0,j)  = tm%r0(0,j) + tm%r0(nx,j)
-    tm%r0(nx,j) = tm%r0(0,j)
-  end do
-end if
+tm%r0(:,ny)  = tm%r0(:,0)
+tm%r0(nx,:)  = tm%r0(0,:)
 
-tm%r0 = tm%r0 / (dx*dy) 
+tm%r0 = tm%r0 / (dx*dy)
 
-rho_total = sum(tm%r0(1:nx,1:ny))*dx*dy
+rho_total = sum(tm%r0(0:nx-1,0:ny-1))*dx*dy
 print*,'rho total',rho_total
 tm%r0 = tm%r0 - rho_total/dimx/dimy
 
@@ -628,7 +688,7 @@ do k = 1, nbpart
   j      = ele%idy(k)
   dpx    = ele%dpx(k)
   dpy    = ele%dpy(k)
-  weight = ele%p(k) 
+  weight = ele%p(k)
 
   BSPLINES(dpx,dpy)
 
@@ -644,7 +704,7 @@ do k = 1, nbpart
 
 end do
 
-tm%r0 = tm%r0 / (dx*dy) 
+tm%r0 = tm%r0 / (dx*dy)
 
 end subroutine calcul_rho_m3
 
