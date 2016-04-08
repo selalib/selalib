@@ -77,7 +77,7 @@ call sll_s_fft_init_c2c_1d(PlnB,Ntau,g(1,:),gtilde(1,:),sll_p_FFT_BACKWARD,optim
 m=ntau/2
 ltau=(/ (n, n=0,m-1), (n, n=-m,-1 )/)
 do i=0,Ntau-1
-    tau(i) =i*dtau
+  tau(i) =i*dtau
 enddo
 !--end added--
 
