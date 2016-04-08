@@ -1,4 +1,5 @@
 !Mar 1st 2016 two-scale solver
+!using new dpx,dpy
 !initial: (5.38)
 program test_pic2d
 #include "sll_working_precision.h"
@@ -19,7 +20,7 @@ type(particle)       :: p
 
 !-----added----
 type(sll_t_fft) :: PlnF, PlnB
-integer(4)  ,parameter :: Ntau=16,npp=150000
+integer(4)  ,parameter :: Ntau=16,npp=200000
 real(8)  :: xt(2),xu(2,npp),vu(2,npp),h(2,0:Ntau-1,npp),w(2,0:Ntau-1,npp)
 complex(8) :: temp(2,0:Ntau-1),gn(2,0:Ntau-1,npp),gntilde(2,0:Ntau-1,npp)
 real(8)  :: ep,dtau,tau(0:Ntau-1),ltau(0:Ntau-1),Et(2,0:Ntau-1,npp),aux(2,npp),auxpx(2,npp)
@@ -65,7 +66,7 @@ time  = 0.d0
 iplot = 0
 
 !---added---
-ep=0.05/1.0d0
+ep=0.5d0
 dtau=2.0d0*sll_p_pi/ntau
 call sll_s_fft_init_c2c_1d(PlnF,Ntau,g(1,:),gtilde(1,:),sll_p_fft_FORWARD,optimization=sll_p_FFT_MEASURE)
 call sll_s_fft_init_c2c_1d(PlnB,Ntau,g(1,:),gtilde(1,:),sll_p_FFT_BACKWARD,optimization=sll_p_FFT_MEASURE)
@@ -90,8 +91,8 @@ do i=0,nx
   aux2 = alpha * cos(kx*i*dx)
   do j=0,ny
     f%ex(i,j) = aux1
-    f%r0(i,j) = aux2+dsin(ky*j*dy)+1.0d0
-    f%ey(i,j) = -dcos(ky*j*dy)/ky
+    f%r0(i,j) = aux2!+dsin(ky*j*dy)+1.0d0
+    !f%ey(i,j) = -dcos(ky*j*dy)/ky
   enddo
 enddo
       
@@ -153,7 +154,7 @@ call interpol_eb( f, p )
 !    p%idy(m) = floor((xt(2)-ymin)/dimy*ny)
 !    p%dpy(m) = real(xt(2)-ymin- p%idy(m)*dy, f32)
 !    enddo
-!    call interpol_eb( f, p )
+!    call interpol_eb_m4( f, p )
 !    Et(1,n,:)=p%epx
 !    Et(2,n,:)=p%epy
 !enddo
@@ -184,8 +185,8 @@ call interpol_eb( f, p )
 !--3rd order--
 aux(1,:)=p%epx
 aux(2,:)=p%epy
-auxpx(1,:)=p%dpx+xmin+p%idx*dx
-auxpx(2,:)=p%dpy+ymin+p%idy*dy
+auxpx(1,:)=p%dpx+p%idx*dx
+auxpx(2,:)=p%dpy+p%idy*dy
 xu(1,:)=auxpx(1,:)+ep*p%vpy
 xu(2,:)=auxpx(2,:)-ep*p%vpx
 do n=0,Ntau-1
@@ -197,9 +198,9 @@ do n=0,Ntau-1
         xt=xu(:,m)+h(:,n,m)
         call apply_bc()
         p%idx(m) = floor((xt(1)-xmin)/dimx*nx)
-        p%dpx(m) = real(xt(1)-xmin- p%idx(m)*dx, f32)
+        p%dpx(m) = real(xt(1)-xmin- p%idx(m)*dx , f32)
         p%idy(m) = floor((xt(2)-ymin)/dimy*ny)
-        p%dpy(m) = real(xt(2)-ymin- p%idy(m)*dy, f32)
+        p%dpy(m) = real(xt(2)-ymin- p%idy(m)*dy , f32)
     enddo
     call interpol_eb( f, p )
     Et(1,n,:)=p%epx
@@ -252,15 +253,17 @@ do m=1,nbpart
 !    call sll_s_fft_exec_c2c_1d(PlnF, g(1,:), gtilde(1,:))
 !    call sll_s_fft_exec_c2c_1d(PlnF, g(2,:), gtilde(2,:))
     do n=0,Ntau-1
-!        h(1,n,m)=h(1,n,m)+ep**3*alpha*dcos(kx*auxpx(1,m))*(dsin(tau(n))*p%vpx(m)-dcos(tau(n))*p%vpy(m))/2.0d0
-!        h(2,n,m)=h(2,n,m)+ep**3*alpha*dcos(kx*auxpx(1,m))*(dsin(tau(n))*p%vpy(m)+dcos(tau(n))*p%vpx(m))/2.0d0  ! oringial
-        h(1,n,m)=h(1,n,m)+ep**3*(alpha*dcos(kx*auxpx(1,m))+dsin(auxpx(2,m)))*(dsin(tau(n))*p%vpx(m)-dcos(tau(n))*p%vpy(m))/2.0d0 !(5.38)
-        h(2,n,m)=h(2,n,m)+ep**3*(alpha*dcos(kx*auxpx(1,m))+dsin(auxpx(2,m)))*(dsin(tau(n))*p%vpy(m)+dcos(tau(n))*p%vpx(m))/2.0d0
+        h(1,n,m)=h(1,n,m)+ep**3*alpha*dcos(kx*auxpx(1,m))*(dsin(tau(n))*p%vpx(m)-dcos(tau(n))*p%vpy(m))/2.0d0
+        h(2,n,m)=h(2,n,m)+ep**3*alpha*dcos(kx*auxpx(1,m))*(dsin(tau(n))*p%vpy(m)+dcos(tau(n))*p%vpx(m))/2.0d0  ! oringial
+!        h(1,n,m)=h(1,n,m)+ep**3*(alpha*dcos(kx*auxpx(1,m))+dsin(auxpx(2,m)))*(dsin(tau(n))*p%vpx(m)-dcos(tau(n))*p%vpy(m))/2.0d0 !(5.38)
+!        h(2,n,m)=h(2,n,m)+ep**3*(alpha*dcos(kx*auxpx(1,m))+dsin(auxpx(2,m)))*(dsin(tau(n))*p%vpy(m)+dcos(tau(n))*p%vpx(m))/2.0d0
     enddo
     xu(:,m)=auxpx(:,m)-h(:,0,m)
     do n=0,Ntau-1   ! here involves derivatives: dx_E
-        w(1,n,m)=ep**3*(alpha*dcos(tau(n))*dcos(kx*auxpx(1,m))*aux(2,m)+dsin(tau(n))*dsin(auxpx(2,m))*aux(1,m))
-        w(2,n,m)=ep**3*(alpha*dsin(tau(n))*dcos(kx*auxpx(1,m))*aux(2,m)-dcos(tau(n))*dsin(auxpx(2,m))*aux(1,m))
+!        w(1,n,m)=ep**3*(alpha*dcos(tau(n))*dcos(kx*auxpx(1,m))*aux(2,m)+dsin(tau(n))*dsin(auxpx(2,m))*aux(1,m))
+!        w(2,n,m)=ep**3*(alpha*dsin(tau(n))*dcos(kx*auxpx(1,m))*aux(2,m)-dcos(tau(n))*dsin(auxpx(2,m))*aux(1,m))
+        w(1,n,m)=ep**3*(alpha*dcos(tau(n))*dcos(kx*auxpx(1,m))*aux(2,m))
+        w(2,n,m)=ep**3*(alpha*dsin(tau(n))*dcos(kx*auxpx(1,m))*aux(2,m))
     enddo
 enddo
 do n=0,Ntau-1
@@ -270,7 +273,7 @@ do n=0,Ntau-1
         p%idx(m) = floor((xt(1)-xmin)/dimx*nx)
         p%dpx(m) = real(xt(1)-xmin- p%idx(m)*dx, f32)
         p%idy(m) = floor((xt(2)-ymin)/dimy*ny)
-        p%dpy(m) = real(xt(2)-ymin- p%idy(m)*dy, f32)
+        p%dpy(m) = real(xt(2)-ymin- p%idy(m)*dy , f32)
     enddo
     call interpol_eb( f, p )
     Et(1,n,:)=p%epx
@@ -317,9 +320,9 @@ do istep = 1, nstep
             xt=xu(:,m)+h(:,n,m)
             call apply_bc()
             p%idx(m) = floor((xt(1)-xmin)/dimx*nx)
-            p%dpx(m) = real(xt(1)-xmin- p%idx(m)*dx, f32)
+            p%dpx(m) = real(xt(1)-xmin- p%idx(m)*dx , f32)
             p%idy(m) = floor((xt(2)-ymin)/dimy*ny)
-            p%dpy(m) = real(xt(2)-ymin- p%idy(m)*dy, f32)
+            p%dpy(m) = real(xt(2)-ymin- p%idy(m)*dy , f32)
         enddo
         call interpol_eb( f, p )
         Et(1,n,:)=p%epx

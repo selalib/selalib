@@ -107,17 +107,17 @@ csq     = c*c
 q_sur_m = charge / masse
 poids   = charge
 
-alpha = 0.05d0  !original it's 0.10_f64
+alpha = 0.1d0  !original it's 0.10_f64
 kx    = 0.50_f64
-ky    = 1.0d0   !original it's 0.0_f64
+ky    = 0.0d0   !original it's 0.0_f64
 dimx  = 2*pi/kx
-dimy  = 2*pi/ky  ! original it's 1
+!dimy  = 2*pi/ky  ! original it's 1
 poids = dimx * dimy ! car int(f0) = dimx*dimy
 
 dx = dimx / nx
 dy = dimy / ny
 
-dt=1.0d-2/1.0d0
+dt=1.0d-1/8.0d0
 !dt = cfl  / sqrt (1./(dx*dx)+1./(dy*dy)) / c
 
 nstep = floor(tfinal/dt)
