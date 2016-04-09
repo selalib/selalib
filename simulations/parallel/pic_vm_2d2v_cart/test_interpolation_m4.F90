@@ -77,7 +77,7 @@ do l = 1, npm
  xp = (i+p%dpx(k))*dx 
  yp = (j+p%dpy(k))*dy 
 
- p%p(k) = cos(2.*pi*xp)*cos(2.*pi*yp) / real(nbpart,f64)
+ p%p(k) = (1.+cos(2.*pi*xp)*cos(2.*pi*yp)) / real(nbpart,f64)
 
  write(10,*) xp, yp, p%p(k)
 
@@ -85,21 +85,30 @@ end do
 end do
 end do
 
+print*, 'rho total ', sum(p%p)
+
 print*, 'compute rho'
 call calcul_rho( p, f )
 
-print*, 'rho error =', sum(abs(f%r0-cos(2*pi*x)*cos(2*pi*y))) &
-        / ((nx+1)*(ny+1))
 !gnuplot -p rho.gnu (to plot the initial rho)
 call sll_o_gnuplot_2d(xmin, xmax, nx+1, &
                       ymin, ymax, ny+1, &
                       f%r0, 'rho', 1, error)
 
+print*, 'compute rho M4'
 call calcul_rho_m4( p, f )
-!gnuplot -p rho.gnu (to plot the initial rho)
+!gnuplot -p rho_m4.gnu (to plot the initial rho)
 call sll_o_gnuplot_2d(xmin, xmax, nx+1, &
                       ymin, ymax, ny+1, &
                       f%r0, 'rho_m4', 1, error)
+
+print*, 'compute rho M6'
+call calcul_rho_m6( p, f )
+!gnuplot -p rho_m6.gnu (to plot the initial rho)
+call sll_o_gnuplot_2d(xmin, xmax, nx+1, &
+                      ymin, ymax, ny+1, &
+                      f%r0, 'rho_m6', 1, error)
+
 
 poisson => sll_f_new_poisson_2d_periodic(xmin,xmax,nx,ymin,ymax,ny)
 call poisson%compute_e_from_rho( f%ex(0:nx,0:ny), &
