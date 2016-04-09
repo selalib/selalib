@@ -89,6 +89,7 @@ print*, 'rho total ', sum(p%p)
 
 print*, 'compute rho'
 call calcul_rho( p, f )
+print*, 'rho error ', sum(abs(f%r0-cos(2*pi*x)*cos(2*pi*y)))/(nx*ny)
 
 !gnuplot -p rho.gnu (to plot the initial rho)
 call sll_o_gnuplot_2d(xmin, xmax, nx+1, &
@@ -97,6 +98,7 @@ call sll_o_gnuplot_2d(xmin, xmax, nx+1, &
 
 print*, 'compute rho M4'
 call calcul_rho_m4( p, f )
+print*, 'rho error ', sum(abs(f%r0-cos(2*pi*x)*cos(2*pi*y)))/(nx*ny)
 !gnuplot -p rho_m4.gnu (to plot the initial rho)
 call sll_o_gnuplot_2d(xmin, xmax, nx+1, &
                       ymin, ymax, ny+1, &
@@ -104,6 +106,7 @@ call sll_o_gnuplot_2d(xmin, xmax, nx+1, &
 
 print*, 'compute rho M6'
 call calcul_rho_m6( p, f )
+print*, 'rho error ', sum(abs(f%r0-cos(2*pi*x)*cos(2*pi*y)))/(nx*ny)
 !gnuplot -p rho_m6.gnu (to plot the initial rho)
 call sll_o_gnuplot_2d(xmin, xmax, nx+1, &
                       ymin, ymax, ny+1, &
@@ -127,7 +130,7 @@ end do
 write(11,*) 
 end do
 
-call interpol_eb_m4( f, p )
+call interpol_eb_m6( f, p )
 
 do j = 0, ny
 do i = 0, nx
