@@ -26,7 +26,7 @@ ny  = 40
 allocate(x(0:nx,0:ny))
 allocate(y(0:nx,0:ny))
 
-npm = 500
+npm = 5
 
 pi = 4.0_f64 * atan(1.)
 
@@ -77,7 +77,7 @@ do l = 1, npm
  xp = (i+p%dpx(k))*dx 
  yp = (j+p%dpy(k))*dy 
 
- p%p(k) = (1.+cos(2.*pi*xp)*cos(2.*pi*yp)) / real(nbpart,f64)
+ p%p(k) = (1.+cos(2.*pi*xp)*sin(2.*pi*yp)) / real(nbpart,f64)
 
  write(10,*) xp, yp, p%p(k)
 
@@ -89,7 +89,7 @@ print*, 'rho total ', sum(p%p)
 
 print*, 'compute rho'
 call calcul_rho( p, f )
-print*, 'rho error ', sum(abs(f%r0-cos(2*pi*x)*cos(2*pi*y)))/(nx*ny)
+print*, 'rho error ', sum(abs(f%r0-cos(2*pi*x)*sin(2*pi*y)))/(nx*ny)
 
 !gnuplot -p rho.gnu (to plot the initial rho)
 call sll_o_gnuplot_2d(xmin, xmax, nx+1, &
@@ -98,7 +98,7 @@ call sll_o_gnuplot_2d(xmin, xmax, nx+1, &
 
 print*, 'compute rho M4'
 call calcul_rho_m4( p, f )
-print*, 'rho error ', sum(abs(f%r0-cos(2*pi*x)*cos(2*pi*y)))/(nx*ny)
+print*, 'rho error ', sum(abs(f%r0-cos(2*pi*x)*sin(2*pi*y)))/(nx*ny)
 !gnuplot -p rho_m4.gnu (to plot the initial rho)
 call sll_o_gnuplot_2d(xmin, xmax, nx+1, &
                       ymin, ymax, ny+1, &
@@ -106,12 +106,11 @@ call sll_o_gnuplot_2d(xmin, xmax, nx+1, &
 
 print*, 'compute rho M6'
 call calcul_rho_m6( p, f )
-print*, 'rho error ', sum(abs(f%r0-cos(2*pi*x)*cos(2*pi*y)))/(nx*ny)
+print*, 'rho error ', sum(abs(f%r0-cos(2*pi*x)*sin(2*pi*y)))/(nx*ny)
 !gnuplot -p rho_m6.gnu (to plot the initial rho)
 call sll_o_gnuplot_2d(xmin, xmax, nx+1, &
                       ymin, ymax, ny+1, &
                       f%r0, 'rho_m6', 1, error)
-
 
 poisson => sll_f_new_poisson_2d_periodic(xmin,xmax,nx,ymin,ymax,ny)
 call poisson%compute_e_from_rho( f%ex(0:nx,0:ny), &
@@ -146,17 +145,8 @@ write(12,*)
 end do
 
 print*, "x momentum error =", abs(sum(p%epx*p%p)- &
-        sum(f%ex(1:nx,1:ny)*f%r0(1:nx,1:ny))*dx*dy)
+        sum(f%ex(0:nx-1,0:ny-1)*f%r0(0:nx-1,0:ny-1))*dx*dy)
 print*, "y momentum error =", abs(sum(p%epy*p%p)- &
-        sum(f%ey(1:nx,1:ny)*f%r0(1:nx,1:ny))*dx*dy)
-
-do k = 1, nbpart
-   write(13,*) sngl(xmin+(p%idx(k)+p%dpx(k))*dx), &
-               sngl(ymin+(p%idy(k)+p%dpy(k))*dy), &
-               sngl(p%epx(k)),             &
-               sngl(p%epy(k)),             &
-               sngl(p%bpz(k))
-end do
-
+        sum(f%ey(0:nx-1,0:ny-1)*f%r0(0:nx-1,0:ny-1))*dx*dy)
 
 end program test_interpolation_m4
