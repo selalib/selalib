@@ -396,9 +396,9 @@ e(-1,+1) =  1.0_f64/36.0_f64
 e( 0,+1) =  4.0_f64/36.0_f64
 e(+1,+1) =  1.0_f64/36.0_f64
 
-allocate(ehx(0:nx,0:ny))
-allocate(ehy(0:nx,0:ny))
-allocate(bhz(0:nx,0:ny))
+allocate(ehx(0:nx-1,0:ny-1))
+allocate(ehy(0:nx-1,0:ny-1))
+allocate(bhz(0:nx-1,0:ny-1))
 
 do j = 0, ny
   jm1 = modulo(j-1,ny)
@@ -464,13 +464,12 @@ do k=1,nbpart
    cp1x = f_m4(1.-dpx)
    cx   = f_m4(dpx)
    cy   = f_m4(dpy)
-   cm2y = f_m4(2.+dpy)
-   cp2y = f_m4(2.-dpy)
-   cm1y = f_m4(1.+dpy)
    cp1y = f_m4(1.-dpy)
+   cm1y = f_m4(1.+dpy)
+   cp2y = f_m4(2.-dpy)
+   cm2y = f_m4(2.+dpy)
 
-
-   ele%epx(k) =                                    &
+   ele%epx(k) =                                 &
    &             + cm2x * cm2y * ehx(im2,jm2)   &
    &             + cm2x * cm1y * ehx(im2,jm1)   &
    &             + cm2x * cy   * ehx(im2,j  )   &
@@ -497,7 +496,7 @@ do k=1,nbpart
    &             + cp2x * cp1y * ehx(ip2,jp1)   &
    &             + cp2x * cp2y * ehx(ip2,jp2)
 
-   ele%epy(k) =                                    &
+   ele%epy(k) =                                 &
    &             + cm2x * cm2y * ehy(im2,jm2)   &
    &             + cm2x * cm1y * ehy(im2,jm1)   &
    &             + cm2x * cy   * ehy(im2,j  )   &
@@ -524,7 +523,7 @@ do k=1,nbpart
    &             + cp2x * cp1y * ehy(ip2,jp1)   &
    &             + cp2x * cp2y * ehy(ip2,jp2)
 
-   ele%bpz(k) =                                    &
+   ele%bpz(k) =                                 &
    &             + cm2x * cm2y * bhz(im2,jm2)   &
    &             + cm2x * cm1y * bhz(im2,jm1)   &
    &             + cm2x * cy   * bhz(im2,j  )   &
@@ -779,12 +778,12 @@ do k = 1, nbpart
   cp1x = f_m6(1.-dpx)
   cx   = f_m6(dpx)
   cy   = f_m6(dpy)
-  cm1y = f_m6(1.+dpy)
   cp1y = f_m6(1.-dpy)
-  cm2y = f_m6(2.+dpy)
+  cm1y = f_m6(1.+dpy)
   cp2y = f_m6(2.-dpy)
-  cm3y = f_m6(3.+dpy)
+  cm2y = f_m6(2.+dpy)
   cp3y = f_m6(3.-dpy)
+  cm3y = f_m6(3.+dpy)
 
   tm%r0(im3,jm3) = tm%r0(im3,jm3) + cm3x * cm3y * weight
   tm%r0(im3,jm2) = tm%r0(im3,jm2) + cm3x * cm2y * weight
@@ -916,18 +915,18 @@ e( 0,+2) =   66.0_f64/14400.0_f64
 e(+1,+2) =   26.0_f64/14400.0_f64
 e(+2,+2) =    1.0_f64/14400.0_f64
 
-allocate(ehx(0:nx,0:ny))
-allocate(ehy(0:nx,0:ny))
-allocate(bhz(0:nx,0:ny))
+allocate(ehx(0:nx-1,0:ny-1))
+allocate(ehy(0:nx-1,0:ny-1))
+allocate(bhz(0:nx-1,0:ny-1))
 
-do j = 0, ny
+do j = 0, ny-1
 
   jm2 = modulo(j-2,ny)
   jm1 = modulo(j-1,ny)
   jp1 = modulo(j+1,ny)
   jp2 = modulo(j+2,ny)
 
-  do i = 0, nx
+  do i = 0, nx-1
 
      im2 = modulo(i-2,nx)
      im1 = modulo(i-1,nx)
@@ -1014,6 +1013,9 @@ do j = 0, ny
   end do
 end do
 
+print*, sum(abs(ehx)), sum(abs(tm1%ex(0:nx-1,0:ny-1)))
+print*, sum(abs(ehy)), sum(abs(tm1%ey(0:nx-1,0:ny-1)))
+print*, sum(abs(bhz)), sum(abs(tm1%bz(0:nx-1,0:ny-1)))
 
 do k=1,nbpart
 
