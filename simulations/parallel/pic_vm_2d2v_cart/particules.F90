@@ -345,7 +345,6 @@ end subroutine plasma
 
 function f_m4( x )
 sll_real32, intent(in) :: x
-sll_real32, parameter  :: pi = 3.1415926535897932384626433832795
 sll_real32             :: f_m4
 
 if ( x < 1. ) then
@@ -707,5 +706,152 @@ end do
 tm%r0 = tm%r0 / (dx*dy)
 
 end subroutine calcul_rho_m3
+
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+!> M6 function 
+!> Quintic spline
+!>               |  (3-q)^5-6(2-q)^5+15(1-q)^5  for 0 <= q < 1
+!> M6(x) = 1/120 |  (3-q)^5-6(2-q)^5            for 1 <= q < 2
+!>               |  (3-q)^5                     for 2 <= q < 3
+!>               |  0                           for q >= 3
+
+function f_m6( q )
+sll_real32, intent(in) :: q
+sll_real32             :: f_m6
+
+if ( q < 1. ) then
+  f_m6 = (3.-q)**5-6.*(2.-q)**5+15.*(1.-q)**5
+else if ( q >= 1. .and. q < 2. ) then
+  f_m6 = (3.-q)**5-6.*(2.-q)**5
+else if ( q >= 2. .and. q < 3. ) then
+  f_m6 = (3.-q)**5
+else
+  f_m6 = 0.0
+end if
+
+f_m6 = f_m6 / 120.0
+
+return
+end function f_m6
+
+subroutine calcul_rho_m6( ele, tm )
+
+type(particle)       :: ele
+type(tm_mesh_fields) :: tm
+
+sll_int32  :: i, j, k
+sll_int32  :: im1, im2, im3, ip1, ip2, ip3
+sll_int32  :: jm1, jm2, jm3, jp1, jp2, jp3
+sll_real32 :: dpx, dpy
+sll_real32 :: cx, cm1x, cm2x, cm3x, cp1x, cp2x, cp3x
+sll_real32 :: cy, cm1y, cm2y, cm3y, cp1y, cp2y, cp3y
+sll_real64 :: weight, rho_total
+
+tm%r0 = 0.0_f64
+
+do k = 1, nbpart
+
+  i      = ele%idx(k)
+  j      = ele%idy(k)
+  dpx    = ele%dpx(k)
+  dpy    = ele%dpy(k)
+  weight = ele%p(k)
+
+  im3 = modulo(i-3,nx)
+  im2 = modulo(i-2,nx)
+  im1 = modulo(i-1,nx)
+  ip1 = modulo(i+1,nx)
+  ip2 = modulo(i+2,nx)
+  ip3 = modulo(i+3,nx)
+  jm3 = modulo(j-3,ny)
+  jm2 = modulo(j-2,ny)
+  jm1 = modulo(j-1,ny)
+  jp1 = modulo(j+1,ny)
+  jp2 = modulo(j+2,ny)
+  jp3 = modulo(j+3,ny)
+
+  cm3x = f_m6(3.+dpx)
+  cp3x = f_m6(3.-dpx)
+  cm2x = f_m6(2.+dpx)
+  cp2x = f_m6(2.-dpx)
+  cm1x = f_m6(1.+dpx)
+  cp1x = f_m6(1.-dpx)
+  cx   = f_m6(dpx)
+  cy   = f_m6(dpy)
+  cm1y = f_m6(1.+dpy)
+  cp1y = f_m6(1.-dpy)
+  cm2y = f_m6(2.+dpy)
+  cp2y = f_m6(2.-dpy)
+  cm3y = f_m6(3.+dpy)
+  cp3y = f_m6(3.-dpy)
+
+  tm%r0(im3,jm3) = tm%r0(im3,jm3) + cm3x * cm3y * weight
+  tm%r0(im3,jm2) = tm%r0(im3,jm2) + cm3x * cm2y * weight
+  tm%r0(im3,jm1) = tm%r0(im3,jm1) + cm3x * cm1y * weight
+  tm%r0(im3,j  ) = tm%r0(im3,j  ) + cm3x * cy   * weight
+  tm%r0(im3,jp1) = tm%r0(im3,jp1) + cm3x * cp1y * weight
+  tm%r0(im3,jp2) = tm%r0(im3,jp2) + cm3x * cp2y * weight
+  tm%r0(im3,jp3) = tm%r0(im3,jp3) + cm3x * cp3y * weight
+
+  tm%r0(im2,jm3) = tm%r0(im2,jm3) + cm2x * cm3y * weight
+  tm%r0(im2,jm2) = tm%r0(im2,jm2) + cm2x * cm2y * weight
+  tm%r0(im2,jm1) = tm%r0(im2,jm1) + cm2x * cm1y * weight
+  tm%r0(im2,j  ) = tm%r0(im2,j  ) + cm2x * cy   * weight
+  tm%r0(im2,jp1) = tm%r0(im2,jp1) + cm2x * cp1y * weight
+  tm%r0(im2,jp2) = tm%r0(im2,jp2) + cm2x * cp2y * weight
+  tm%r0(im2,jp3) = tm%r0(im2,jp3) + cm2x * cp3y * weight
+
+  tm%r0(im1,jm3) = tm%r0(im1,jm3) + cm1x * cm3y * weight
+  tm%r0(im1,jm2) = tm%r0(im1,jm2) + cm1x * cm2y * weight
+  tm%r0(im1,jm1) = tm%r0(im1,jm1) + cm1x * cm1y * weight
+  tm%r0(im1,j  ) = tm%r0(im1,j  ) + cm1x * cy   * weight
+  tm%r0(im1,jp1) = tm%r0(im1,jp1) + cm1x * cp1y * weight
+  tm%r0(im1,jp2) = tm%r0(im1,jp2) + cm1x * cp2y * weight
+  tm%r0(im1,jp3) = tm%r0(im1,jp3) + cm1x * cp3y * weight
+
+  tm%r0(i  ,jm3) = tm%r0(i  ,jm3) + cx   * cm3y * weight
+  tm%r0(i  ,jm2) = tm%r0(i  ,jm2) + cx   * cm2y * weight
+  tm%r0(i  ,jm1) = tm%r0(i  ,jm1) + cx   * cm1y * weight
+  tm%r0(i  ,j  ) = tm%r0(i  ,j  ) + cx   * cy   * weight
+  tm%r0(i  ,jp1) = tm%r0(i  ,jp1) + cx   * cp1y * weight
+  tm%r0(i  ,jp2) = tm%r0(i  ,jp2) + cx   * cp2y * weight
+  tm%r0(i  ,jp3) = tm%r0(i  ,jp3) + cx   * cp3y * weight
+
+  tm%r0(ip1,jm3) = tm%r0(ip1,jm3) + cp1x * cm3y * weight
+  tm%r0(ip1,jm2) = tm%r0(ip1,jm2) + cp1x * cm2y * weight
+  tm%r0(ip1,jm1) = tm%r0(ip1,jm1) + cp1x * cm1y * weight
+  tm%r0(ip1,j  ) = tm%r0(ip1,j  ) + cp1x * cy   * weight
+  tm%r0(ip1,jp1) = tm%r0(ip1,jp1) + cp1x * cp1y * weight
+  tm%r0(ip1,jp2) = tm%r0(ip1,jp2) + cp1x * cp2y * weight
+  tm%r0(ip1,jp3) = tm%r0(ip1,jp3) + cp1x * cp3y * weight
+
+  tm%r0(ip2,jm3) = tm%r0(ip2,jm3) + cp2x * cm3y * weight
+  tm%r0(ip2,jm2) = tm%r0(ip2,jm2) + cp2x * cm2y * weight
+  tm%r0(ip2,jm1) = tm%r0(ip2,jm1) + cp2x * cm1y * weight
+  tm%r0(ip2,j  ) = tm%r0(ip2,j  ) + cp2x * cy   * weight
+  tm%r0(ip2,jp1) = tm%r0(ip2,jp1) + cp2x * cp1y * weight
+  tm%r0(ip2,jp2) = tm%r0(ip2,jp2) + cp2x * cp2y * weight
+  tm%r0(ip2,jp3) = tm%r0(ip2,jp3) + cp2x * cp3y * weight
+
+  tm%r0(ip3,jm3) = tm%r0(ip3,jm3) + cp3x * cm3y * weight
+  tm%r0(ip3,jm2) = tm%r0(ip3,jm2) + cp3x * cm2y * weight
+  tm%r0(ip3,jm1) = tm%r0(ip3,jm1) + cp3x * cm1y * weight
+  tm%r0(ip3,j  ) = tm%r0(ip3,j  ) + cp3x * cy   * weight
+  tm%r0(ip3,jp1) = tm%r0(ip3,jp1) + cp3x * cp1y * weight
+  tm%r0(ip3,jp2) = tm%r0(ip3,jp2) + cp3x * cp2y * weight
+  tm%r0(ip3,jp3) = tm%r0(ip3,jp3) + cp3x * cp3y * weight
+
+end do
+
+tm%r0(:,ny)  = tm%r0(:,0)
+tm%r0(nx,:)  = tm%r0(0,:)
+
+tm%r0 = tm%r0 / (dx*dy)
+
+rho_total = sum(tm%r0(0:nx-1,0:ny-1))*dx*dy
+print*,'rho total',rho_total
+tm%r0 = tm%r0 - rho_total/dimx/dimy
+
+end subroutine calcul_rho_m6
 
 end module particules
