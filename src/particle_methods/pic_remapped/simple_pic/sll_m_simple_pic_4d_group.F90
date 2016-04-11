@@ -19,8 +19,9 @@
 
 !> @author MCP ALH
 
-!> @brief Module for groups of particles of type sll_t_simple_pic_4d_particle <!--
-!> [[file:simple_pic_4d_particle.F90::sll_t_simple_pic_4d_particle]] -->
+!> @brief Module for groups of particles of type sll_t_simple_pic_4d_particle
+
+! [[file:sll_m_simple_pic_4d_particle.F90::sll_t_simple_pic_4d_particle]] -->
 
 module sll_m_simple_pic_4d_group
 
@@ -46,7 +47,7 @@ module sll_m_simple_pic_4d_group
 
   use sll_m_remapped_pic_utilities, only: &
     sll_s_apply_periodic_bc_on_cartesian_mesh_2d, &
-    sll_f_is_in_domain_2d
+    sll_f_x_is_in_domain_2d
 
   use sll_m_simple_pic_4d_particle, only: &
     sll_t_simple_pic_4d_particle
@@ -63,7 +64,7 @@ module sll_m_simple_pic_4d_group
 
   !> Group of sll_m_simple_pic_4d_particle::sll_t_simple_pic_4d_particle
 
-  ! [[file:simple_pic_4d_particle.F90::sll_t_simple_pic_4d_particle]]
+  ! <<sll_t_simple_pic_4d_group>> [[file:sll_m_simple_pic_4d_particle.F90::sll_t_simple_pic_4d_group]]  
   
   type, extends(sll_c_remapped_particle_group) :: sll_t_simple_pic_4d_group
 
@@ -317,9 +318,15 @@ contains
 
 
   !----------------------------------------------------------------------------
-   subroutine simple_pic_4d_initializer( self, initial_density_identifier, rand_seed, rank, world_size )
+   subroutine simple_pic_4d_initializer( self,    &
+      initial_density_identifier,                 &
+      target_total_charge, enforce_total_charge,  &
+      rand_seed, rank, world_size                 &
+    )
     class( sll_t_simple_pic_4d_group ), intent( inout ) :: self
     sll_int32                       , intent( in    ) :: initial_density_identifier
+    sll_real64,                       intent( in )    :: target_total_charge
+    logical,                          intent( in )    :: enforce_total_charge
     sll_int32, dimension(:)         , intent( in ), optional :: rand_seed
     sll_int32                       , intent( in ), optional :: rank, world_size
     !sll_int32                       :: ierr
@@ -332,6 +339,8 @@ contains
       self,                                                     &
       self%space_mesh_2d,                                       &
       self%number_particles,                                    &
+      target_total_charge,                                      &
+      enforce_total_charge,                                     &
       rand_seed, rank, world_size                               &
     )
    return
@@ -341,10 +350,11 @@ contains
    end subroutine simple_pic_4d_initializer
 
 
-  subroutine simple_pic_4d_deposit_charge_2d( self, charge_accumulator, target_total_charge )
+  subroutine simple_pic_4d_deposit_charge_2d( self, charge_accumulator, target_total_charge, enforce_total_charge )
     class( sll_t_simple_pic_4d_group ),           intent( inout )  :: self
     type( sll_t_charge_accumulator_2d ), pointer, intent( inout ) :: charge_accumulator
-    sll_real64,                                 intent(in), optional :: target_total_charge             ! for a check (if present)
+    sll_real64,                                 intent(in)      :: target_total_charge
+    logical,                                    intent(in)      :: enforce_total_charge   !< here, do a check if true
 
     type( sll_t_charge_accumulator_cell_2d ), pointer             :: charge_accumulator_cell
     type(sll_t_simple_pic_4d_particle), pointer :: particle
@@ -368,7 +378,7 @@ contains
       charge_accumulator_cell => charge_accumulator%q_acc(i_cell)
 
       xy_part = self%get_x( i_part )  ! x and y
-      if( sll_f_is_in_domain_2d(    xy_part(1), xy_part(2),         &
+      if( sll_f_x_is_in_domain_2d(    xy_part(1), xy_part(2),         &
                                 self%space_mesh_2d,             &
                                 self%domain_is_periodic(1),   &
                                 self%domain_is_periodic(2) ))then
@@ -384,22 +394,26 @@ contains
         stop
       end if
 
-      if( present(target_total_charge) )then
-        if( abs( deposited_charge - target_total_charge ) > 0.0000001 * abs(target_total_charge) )then
-           print*, "Warning (8756537654) in [simple_pic_4d_deposit_charge_2d]: deposited_charge and target_total_charge differ"
-           print*, "Warning (8756537654) deposited_charge    = ", deposited_charge
-           print*, "Warning (8756537654) target_total_charge = ", target_total_charge
-        end if
-      end if
-
     end do
+
+    if( enforce_total_charge )then
+      if( abs( deposited_charge - target_total_charge ) > 0.0000001 * abs(target_total_charge) )then
+         print*, "Warning (8756537654) in [simple_pic_4d_deposit_charge_2d]: deposited_charge and target_total_charge differ"
+         print*, "Warning (8756537654) deposited_charge    = ", deposited_charge
+         print*, "Warning (8756537654) target_total_charge = ", target_total_charge
+         print *,"self%number_particles=",self%number_particles
+         print *,"particle_charge*self%number_particles=",particle_charge*self%number_particles
+      end if
+    end if
 
   end subroutine simple_pic_4d_deposit_charge_2d
 
   !----------------------------------------------------------------------------
-  subroutine simple_pic_4d_remap(self)
+  subroutine simple_pic_4d_remap(self, target_total_charge, enforce_total_charge)
 
     class( sll_t_simple_pic_4d_group ),   intent( inout ) :: self
+    sll_real64,                         intent( in )    :: target_total_charge
+    logical,                            intent( in )    :: enforce_total_charge
 
     print*, " ------------ ------------ ------------ ------------ ------------ ------------ ------------ ------------ ------------"
     print*, " WARNING (765764768675) -- remap routine called for a group of simple_pic_4d particles has no effect...              "
@@ -409,17 +423,22 @@ contains
   end subroutine simple_pic_4d_remap
 
   !----------------------------------------------------------------------------
-  subroutine simple_pic_4d_visualize_f_slice_x_vx(self, array_name, iplot)
-
+  ! <<simple_pic_4d_visualize_f_slice_x_vx>>
+  
+  subroutine simple_pic_4d_visualize_f_slice_x_vx(self, array_name, plot_np_x, plot_np_y, plot_np_vx, plot_np_vy, iplot)
+    use sll_m_working_precision
     class( sll_t_simple_pic_4d_group ),   intent( inout ) :: self
-    character(len=*),                   intent(in)      :: array_name !< field name
-    sll_int32,                          intent(in)      :: iplot      !< plot counter
-    !character(len=4)                                    :: cplot
+    character(len=*),                   intent(in)      :: array_name   !< field name
+    sll_int32,                          intent(in)      :: plot_np_x    !< nb of points in the x  plotting grid (see comment above)
+    sll_int32,                          intent(in)      :: plot_np_y    !< nb of points in the y  plotting grid (see comment above)
+    sll_int32,                          intent(in)      :: plot_np_vx   !< nb of points in the vx plotting grid (see comment above)
+    sll_int32,                          intent(in)      :: plot_np_vy   !< nb of points in the vy plotting grid (see comment above)
+    sll_int32,                          intent(in)      :: iplot        !< plot counter
 
     print*, " ------------ ------------ ------------ ------------ ------------ ------------ ------------ ------------ ------------"
     print*, " WARNING (956542375763) -- this function (simple_pic_4d_visualize_f_slice_x_vx) does nothing, need to be implemented!"
     print*, " ------------ ------------ ------------ ------------ ------------ ------------ ------------ ------------ ------------"
-    print*, len(array_name), iplot, storage_size(self)
+    print*, len(array_name), plot_np_x, plot_np_y, plot_np_vx, plot_np_vy, iplot, storage_size(self)
 
   end subroutine simple_pic_4d_visualize_f_slice_x_vx
 

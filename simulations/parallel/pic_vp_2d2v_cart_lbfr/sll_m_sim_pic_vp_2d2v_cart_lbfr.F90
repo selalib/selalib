@@ -1,6 +1,6 @@
 !> @ingroup particle_methods
 !> @author MCP ALH
-!> @brief Generic simulation algorithms for PIC particles
+!> @brief Generic simulation algorithms for standard (basic) PIC and PIC_LBFR methods
 
 !> @details Generic simulation algorithm for simple PIC particles of type ::sll_m_simple_pic_4d_group <!--
 !> [[selalib:src/particle_methods/particle_types/simple_pic_4d_group.F90::sll_m_simple_pic_4d_group]] --> and LTPIC
@@ -16,7 +16,7 @@
 ! [[selalib:doc/build/html/doxygen/html/namespacesll__simulation__4d__vp__generic__pic__cartesian__module.html]]
 ! produced by [[elisp:(compile "cd ${SELALIB}/build && make doc")]])
 
-module sll_m_sim_pic_vp_2d2v_cart_remapped
+module sll_m_sim_pic_vp_2d2v_cart_lbfr
 
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_memory.h"
@@ -41,12 +41,12 @@ module sll_m_sim_pic_vp_2d2v_cart_remapped
     sll_s_ascii_file_create
 
 
-  use sll_m_bsl_lt_pic_4d_group, only: &
-    sll_t_bsl_lt_pic_4d_group, &
-    sll_f_bsl_lt_pic_4d_group_new
+  use sll_m_pic_lbfr_4d_group, only: &
+    sll_t_pic_lbfr_4d_group, &
+    sll_f_pic_lbfr_4d_group_new
   use sll_m_pic_utilities
 
-  use sll_m_bsl_lt_pic_4d_utilities, only: &
+  use sll_m_pic_lbfr_4d_utilities, only: &
     sll_s_get_poisson_cell_index, &
     sll_s_global_to_cell_offset_extended
 
@@ -124,7 +124,8 @@ module sll_m_sim_pic_vp_2d2v_cart_remapped
      !> the abstract particle group
      
      ! <<particle_group>> of type [[file:~/selalib/src/particle_methods/sll_remapped_pic_base.F90::sll_c_remapped_particle_group]]
-     
+
+     ! todo: instead use the abstract class sll_c_particle_group_base
      class(sll_c_remapped_particle_group),  pointer     :: particle_group
 
      !> @name Physics/numerical parameters
@@ -165,7 +166,7 @@ module sll_m_sim_pic_vp_2d2v_cart_remapped
      ! [[file:~/selalib/src/pic_accumulators/sll_m_accumulators.F90::sll_t_charge_accumulator_2d]]
      type(sll_t_charge_accumulator_2d),     dimension(:), pointer     :: charge_accumulator
      type(sll_t_electric_field_accumulator),                  pointer     :: E_accumulator
-     logical :: use_lt_pic_scheme        ! if false then use pic scheme
+     logical :: use_pic_lbfr_scheme        ! if false then use pic scheme
      type(sll_t_charge_accumulator_2d_cs_ptr), dimension(:), pointer  :: q_accumulator_CS
      type(sll_t_electric_field_accumulator_cs), pointer :: E_accumulator_CS
      sll_real64, dimension(:,:), pointer :: rho
@@ -256,7 +257,7 @@ contains
     sll_real64  :: THERM_SPEED
     sll_real64  :: SPECIES_CHARGE, SPECIES_MASS, ALPHA
     sll_int32   :: run_nb
-    logical     :: UseLtPicScheme
+    logical     :: use_pic_lbfr_scheme
     logical     :: DOMAIN_IS_X_PERIODIC, DOMAIN_IS_Y_PERIODIC
     sll_int32   :: NC_X,  NC_Y
     sll_real64  :: XMIN, KX_LANDAU, XMAX, YMIN, YMAX
@@ -276,7 +277,6 @@ contains
     sll_int32   :: remapping_sparse_grid_max_level_y
     sll_int32   :: remapping_sparse_grid_max_level_vx
     sll_int32   :: remapping_sparse_grid_max_level_vy
-    sll_int32   :: deposition_particles_type
     sll_int32   :: deposition_particles_pos_type
     sll_int32   :: deposition_particles_move_type
     sll_int32   :: number_deposition_particles
@@ -302,7 +302,7 @@ contains
     ! <<simple_pic_particle_group>>
     ! [[selalib:src/particle_methods/particle_types/simple_pic_4d_group.F90::sll_t_simple_pic_4d_group]]
     type(sll_t_simple_pic_4d_group),      pointer     :: simple_pic_particle_group
-    type(sll_t_bsl_lt_pic_4d_group),      pointer     :: bsl_lt_pic_particle_group
+    type(sll_t_pic_lbfr_4d_group),      pointer     :: pic_lbfr_particle_group
 
     type(sll_t_charge_accumulator_2d),    pointer :: charge_accumulator
 
@@ -320,7 +320,7 @@ contains
                                     SPECIES_CHARGE,         &
                                     SPECIES_MASS,           &
                                     ALPHA,                  &
-                                    UseLtPicScheme,         &
+                                    use_pic_lbfr_scheme,         &
                                     run_nb
 
     namelist /elec_params/          er, psi, omega_r, omega_i
@@ -339,7 +339,7 @@ contains
     ! discretization of the remapped f
     !   -> remapping period, type of interpolation structure and polynomial degree
     !   -> size of the remapping grid / sparse grid
-    namelist /lt_pic_remap_params/  remap_period,                       &
+    namelist /pic_lbfr_remap_params/  remap_period,                       &
                                     remap_f_type,                       &
                                     remap_degree,                       &
                                     remapping_grid_vx_min,              &   ! note: the x-y domain is given by the Poisson grid
@@ -358,7 +358,10 @@ contains
 
     ! discretization of the deposited f
     !   -> number of deposition particles
-    namelist /lt_pic_deposition_params/deposition_particles_type,               &
+    !   -> deposition_particles_pos_type:     0 = sampled (and resampled) on a structured grid,     1 = unstructured (eg random)
+    !   -> deposition_particles_move_type:    0 = new particles are created at each step,           1 = move until next remap step
+
+    namelist /pic_lbfr_deposition_params/                                       &
                                     deposition_particles_pos_type,              &
                                     deposition_particles_move_type,             &
                                     number_deposition_particles,                &
@@ -372,7 +375,7 @@ contains
     !   -> number of markers to be pushed forward
     !   -> size of the cells where the flow is linearized (the flow grid)
     !      note: the bounds of the flow grid are the same as those of the remap grid
-    namelist /lt_pic_markers_params/flow_markers_type,                  &
+    namelist /pic_lbfr_markers_params/flow_markers_type,                  &
                                     number_markers_x,                   &
                                     number_markers_y,                   &
                                     number_markers_vx,                  &
@@ -397,10 +400,10 @@ contains
     read(input_file, sim_params)
     read(input_file, elec_params)
     read(input_file, poisson_grid_params)
-    if( UseLtPicScheme )then
-        read(input_file, lt_pic_remap_params)
-        read(input_file, lt_pic_deposition_params)
-        read(input_file, lt_pic_markers_params)
+    if( use_pic_lbfr_scheme )then
+        read(input_file, pic_lbfr_remap_params)
+        read(input_file, pic_lbfr_deposition_params)
+        read(input_file, pic_lbfr_markers_params)
     else
         read(input_file, simple_pic_params)
     end if
@@ -412,7 +415,7 @@ contains
     print*, 'sim%world_size=',sim%world_size, ' sim%my_rank=', sim%my_rank
 
     XMAX = (2._f64*sll_p_pi/KX_LANDAU)
-    sim%use_lt_pic_scheme = UseLtPicScheme
+    sim%use_pic_lbfr_scheme = use_pic_lbfr_scheme
     sim%run_nb = run_nb
 
     sim%thermal_speed_ions = THERM_SPEED
@@ -437,17 +440,17 @@ contains
     print *, "[simulation] constructing the particle group..."
 
     ! construct [[particle_group]]
-    if( sim%use_lt_pic_scheme )then
+    if( sim%use_pic_lbfr_scheme )then
 
 
-      ! construct [[bsl_lt_pic_particle_group]]
+      ! construct [[pic_lbfr_particle_group]]
       particle_group_id = 1
       remapping_sparse_grid_max_levels(1) = remapping_sparse_grid_max_level_x
       remapping_sparse_grid_max_levels(2) = remapping_sparse_grid_max_level_y
       remapping_sparse_grid_max_levels(3) = remapping_sparse_grid_max_level_vx
       remapping_sparse_grid_max_levels(4) = remapping_sparse_grid_max_level_vy
 
-      bsl_lt_pic_particle_group => sll_f_bsl_lt_pic_4d_group_new( &
+      pic_lbfr_particle_group => sll_f_pic_lbfr_4d_group_new( &
         SPECIES_CHARGE,                             &
         SPECIES_MASS,                               &
         particle_group_id,                          &
@@ -464,7 +467,6 @@ contains
         remapping_cart_grid_number_cells_vx,        &   ! for splines
         remapping_cart_grid_number_cells_vy,        &   ! for splines
         remapping_sparse_grid_max_levels,           &   ! for the sparse grid: for now, same level in each dimension
-        deposition_particles_type,                  &
         deposition_particles_pos_type,              &
         deposition_particles_move_type,             &
         number_deposition_particles,                &   ! (in a previous implementation this was only a lower bound)
@@ -484,8 +486,8 @@ contains
         flow_grid_number_cells_vy,                  &
         sim%mesh_2d )
 
-      ! here, [[particle_group]] will contain a reference to a bsl_lt_pic group
-      sim%particle_group => bsl_lt_pic_particle_group
+      ! here, [[particle_group]] will contain a reference to a pic_lbfr group
+      sim%particle_group => pic_lbfr_particle_group
       sim%number_deposition_particles = number_deposition_particles
 
 
@@ -509,7 +511,7 @@ contains
 
     end if
 
-    sim%number_particles = sim%particle_group%number_particles    ! with bsl_lt_pic this is actually the number of markers
+    sim%number_particles = sim%particle_group%number_particles    ! with pic_lbfr this is actually the number of markers
 
     sim%domain_is_x_periodic = DOMAIN_IS_X_PERIODIC
     sim%domain_is_y_periodic = DOMAIN_IS_Y_PERIODIC
@@ -1028,7 +1030,7 @@ contains
       !  ------
       !  ------------------------------------------------------------------
 
-      if (sim%use_lt_pic_scheme .and. sim%my_rank == 0 .and. mod(it+1, sim%remap_period)==0 ) then
+      if (sim%use_pic_lbfr_scheme .and. sim%my_rank == 0 .and. mod(it+1, sim%remap_period)==0 ) then
         ! note: condition on rank == 0 needs to be revised for the actual parallel version...
 
         if( this_is_the_last_time_loop )then
@@ -1135,13 +1137,13 @@ contains
     !    endif
     !#endif
 
-    ! ALH - Time statistics. The number of deposits is computed separately to take the number of LTP BSL virtual
+    ! ALH - Time statistics. The number of deposits is computed separately to take the number of LBFR virtual
     ! particles into account.
     
     loop_time=sll_f_time_elapsed_since(loop_time_mark)
     write(*,'(A,ES8.2,A)') 'sim stats: ',1 / loop_time * sim%num_iterations * sim%number_particles,' pushes/sec '
-    if(sim%use_lt_pic_scheme)then
-       write(*,'(A,ES8.2,A)') 'lt_pic stats: ',                                     &
+    if(sim%use_pic_lbfr_scheme)then
+       write(*,'(A,ES8.2,A)') 'pic_lbfr stats: ',                                     &
             1 / deposit_time * sim%num_iterations * sim%number_deposition_particles,    &
             ' deposits/sec'
     end if
@@ -1221,4 +1223,4 @@ contains
     ee = ee * dx * dy    
   end subroutine electric_energy
 
-end module sll_m_sim_pic_vp_2d2v_cart_remapped
+end module sll_m_sim_pic_vp_2d2v_cart_lbfr

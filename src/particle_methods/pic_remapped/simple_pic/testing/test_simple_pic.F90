@@ -2,13 +2,14 @@
 
   !> @brief Unit test for particles of type \ref sll_m_simple_pic_4d_particle::sll_t_simple_pic_4d_particle
 
-  ! [[file:simple_pic_4d_particle.F90::sll_t_simple_pic_4d_particle]]
+  ! [[file:../sll_m_simple_pic_4d_particle.F90::sll_simple_pic_4d_particle]]
 
 program simple_pic_4d_group_tester
 
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_memory.h"
 #include "sll_working_precision.h"
+#include "sll_assert.h"
 
   use sll_m_cartesian_meshes, only: &
     sll_f_new_cartesian_mesh_2d, &
@@ -21,7 +22,7 @@ program simple_pic_4d_group_tester
   implicit none
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
-! [[selalib:src/meshes/sll_m_cartesian_meshes.F90::sll_t_cartesian_mesh_2d]]
+! [[selalib:src/mesh/meshes/sll_m_cartesian_meshes.F90::sll_cartesian_mesh_2d]]
 type(sll_t_cartesian_mesh_2d),    pointer     :: mesh_2d
 type(sll_t_simple_pic_4d_group),  pointer     :: simple_pic_particle_group
 
