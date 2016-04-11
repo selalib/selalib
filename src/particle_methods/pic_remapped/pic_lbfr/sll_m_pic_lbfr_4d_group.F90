@@ -100,8 +100,6 @@ module sll_m_pic_lbfr_4d_group
     SLL_PIC_LBFR_SET_WEIGHTS_ON_DEPOSITION_PARTICLES, &
     SLL_PIC_LBFR_LANDAU_F0,  &
     SLL_PIC_LBFR_HAT_F0,  &
-    SLL_PIC_LBFR_BASIC,  &
-    SLL_PIC_LBFR_FLEXIBLE,  &
     SLL_PIC_LBFR_STRUCTURED,  &
     SLL_PIC_LBFR_UNSTRUCTURED ,  &
     SLL_PIC_LBFR_FIXED,  &
@@ -126,11 +124,7 @@ module sll_m_pic_lbfr_4d_group
   sll_int32, parameter :: SLL_PIC_LBFR_LANDAU_F0 = 0
   sll_int32, parameter :: SLL_PIC_LBFR_HAT_F0 = 1
 
-  ! types of deposition particles
-  sll_int32, parameter :: SLL_PIC_LBFR_BASIC = 0
-  sll_int32, parameter :: SLL_PIC_LBFR_FLEXIBLE = 1
-
-  ! types of deposition particles positions  //  and of flow markers
+  ! types of deposition particles positions  //  also used for flow markers
   sll_int32, parameter :: SLL_PIC_LBFR_STRUCTURED = 0
   sll_int32, parameter :: SLL_PIC_LBFR_UNSTRUCTURED  = 1
 
@@ -183,18 +177,16 @@ module sll_m_pic_lbfr_4d_group
 
     !> @name The deposition particles (will be created on the fly in each cell of the flow_grid, when depositing the charge)
     !> @{
-    sll_int32                                 :: deposition_particles_type       !< basic (=first implementation) or flexible (new)
     sll_int32                                 :: deposition_particles_pos_type   !< structured  or  unstructured (random)
     sll_int32                                 :: deposition_particles_move_type  !< fixed (new at each step) or pushed (until remap)
     type(sll_t_cartesian_mesh_4d), pointer    :: deposition_particles_grid                 !< used if type = struct_grid
     sll_int32                                 :: number_deposition_particles        !< number of deposition particles
     sll_int32                                 :: number_moving_deposition_particles !< number of pushed deposition particles
-    sll_real64, dimension(:,:), allocatable   :: deposition_particles_eta           !< used for if type = flexible
-    sll_real64, dimension(:), allocatable     :: deposition_particles_weight        !< used for if type = flexible (weight = charge)
+    sll_real64, dimension(:,:), allocatable   :: deposition_particles_eta
+    sll_real64, dimension(:), allocatable     :: deposition_particles_weight        !< (weight = charge)
     !> @}
 
     !> This is how the deposition particles are used, depending on their type:
-    !> if type = flexible, we allow deposition particles to be :
     !>  - move_type = fixed (always on the same grid, structured or not) or pushed (until remapping step)
     !>  - pos_type = structured or unstructured (random), when reset
     !>
@@ -203,10 +195,8 @@ module sll_m_pic_lbfr_4d_group
     !> if move_type = pushed,
     !>    - positions and weights of deposition particles are reset in the remapping routine (called at remapping step)
     !>      in particular, computing the weights can be done with direct interpolation (no pic_lbfr reconstruction)
-    !>
-    !> The "basic" type corresponds to fixed and structured deposition particles, first implemented.
-    !> In this case, the deposition particles are not stored but only computed inside the "write_f_or_deposit" routine
 
+!    todo: check deposition scenario for deposition_particles
 
     !> @name General parameters for the interpolation of the remapped density f
     !> @{
@@ -447,7 +437,7 @@ contains
       end if
 
     else if( i >= self%number_flow_markers + 1 .and. i <= self%number_flow_markers + self%number_moving_deposition_particles )then
-      ! then the particle is a (flexible, pushed) deposition particle
+      ! then the particle is a (pushed) deposition particle
 
       ! get vx
       r(1) = self%deposition_particles_eta(i - self%number_flow_markers, 3)
@@ -607,9 +597,8 @@ contains
 
     else if( i >= self%number_flow_markers + 1 .and. i <= self%number_flow_markers + self%number_moving_deposition_particles )then
 
-      ! then the particle is a (pushed, flexible) deposition particle
+      ! then the particle is a (pushed) deposition particle
       SLL_ASSERT( self%deposition_particles_move_type == SLL_PIC_LBFR_PUSHED )
-      SLL_ASSERT( self%deposition_particles_type == SLL_PIC_LBFR_FLEXIBLE )
       SLL_ASSERT( self%number_moving_deposition_particles == self%number_deposition_particles )
 
       ! (maybe use a structure closer to the simple_pic particles, cell-based ?)
@@ -666,9 +655,8 @@ contains
     else if( i >= self%number_flow_markers + 1 .and. i <= self%number_flow_markers + self%number_moving_deposition_particles )then
       ! then we set the physical coordinates of a deposition particle
 
-      ! then the particle is a (pushed, flexible) deposition particle
+      ! then the particle is a (pushed) deposition particle
       SLL_ASSERT( self%deposition_particles_move_type == SLL_PIC_LBFR_PUSHED )
-      SLL_ASSERT( self%deposition_particles_type == SLL_PIC_LBFR_FLEXIBLE )
       SLL_ASSERT( self%number_moving_deposition_particles == self%number_deposition_particles )
 
       self%deposition_particles_eta(i - self%number_flow_markers, 3) = x(1)
@@ -760,8 +748,6 @@ contains
     sll_real64                                      :: rdn(4)
     sll_real64                                      :: eta_part(4)
 
-    SLL_ASSERT( self%deposition_particles_type == SLL_PIC_LBFR_FLEXIBLE )
-
     if( self%deposition_particles_pos_type == SLL_PIC_LBFR_UNSTRUCTURED )then
 
       ! uses a quasi-random (Sobol) sequence
@@ -836,9 +822,6 @@ contains
 
     scenario = SLL_PIC_LBFR_SET_WEIGHTS_ON_DEPOSITION_PARTICLES
 
-    ! for basic deposition particles, the reconstruction is always done inside the write_f_on_grid routine
-    SLL_ASSERT( self%deposition_particles_type == SLL_PIC_LBFR_FLEXIBLE )
-
     ! for pushed deposition particles, the reconstruction is always done at the remapping step, using a direct interpolation
     SLL_ASSERT( self%deposition_particles_move_type == SLL_PIC_LBFR_FIXED )
 
@@ -874,9 +857,6 @@ contains
     sll_real64    :: deposition_particle_charge_factor
     sll_real64    :: point_charge, total_computed_charge
     sll_real64    :: charge_correction_factor
-
-    ! for basic deposition particles, the reconstruction is always done inside the write_f_on_grid routine
-    SLL_ASSERT( self%deposition_particles_type == SLL_PIC_LBFR_FLEXIBLE )
 
     ! for fixed deposition particles, the reconstruction is done at each time step using a pic_lbfr reconstruction
     SLL_ASSERT( self%deposition_particles_move_type == SLL_PIC_LBFR_PUSHED )
@@ -924,9 +904,6 @@ contains
     logical,                                    intent(in)      :: enforce_total_charge
 
     type(sll_t_charge_accumulator_cell_2d), pointer :: charge_accumulator_cell
-    type(sll_t_cartesian_mesh_4d),     pointer  :: void_grid_4d        ! make this argument optional ?
-    sll_real64, dimension(:,:),      pointer  :: void_array_2d       ! make this argument optional ?
-    sll_int32     :: scenario
 
     sll_int32  :: i_cell_x
     sll_int32  :: i_cell_y
@@ -939,76 +916,54 @@ contains
     sll_real64 :: x_part
     sll_real64 :: y_part
 
+    ! for deposition particles of "fixed" type, we first re-initialize their positions and weights
+    if( self%deposition_particles_move_type == SLL_PIC_LBFR_FIXED )then
+      call self%reset_deposition_particles_coordinates()
+      call self%reset_deposition_particles_weights_with_bsl_reconstruction(target_total_charge,enforce_total_charge)
+    end if
 
-    if( self%deposition_particles_type == SLL_PIC_LBFR_BASIC )then
-      ! then we compute new weights on the deposition grid, as follows
-      nullify(void_grid_4d)
-      nullify(void_array_2d)
-      scenario = SLL_PIC_LBFR_DEPOSIT_F
-      call sll_s_reset_charge_accumulator_to_zero ( charge_accumulator )
+    do i_part = 1, self%number_deposition_particles
 
-      call self%pic_lbfr_4d_write_f_on_grid_or_deposit(charge_accumulator,                                &
-                                                         scenario,                                          &
-                                                         void_grid_4d,                                      &
-                                                         void_array_2d,                                     &
-                                                         target_total_charge,                               &
-                                                         enforce_total_charge                               &
-                                                         )
+      particle_charge = self%deposition_particles_weight(i_part)
+      x_part = self%deposition_particles_eta(i_part, 1)
+      y_part = self%deposition_particles_eta(i_part, 2)
 
-    else
-      SLL_ASSERT( self%deposition_particles_type == SLL_PIC_LBFR_FLEXIBLE )
+      ! todo: use the interface function for the computation of the Poisson cell index? (but we need to return the cell_offset)
 
-      ! then we deposit the charge carried by the deposition particles with a quite standard technique
+      ! find poisson (x-)cell containing this deposition particle, and relative position in the cell
+      tmp = ( x_part - self%space_mesh_2d%eta1_min ) / self%space_mesh_2d%delta_eta1
+      i_cell_x = int( tmp ) + 1
+      dx = tmp - (i_cell_x - 1)  ! x-offset in cell (between 0 and 1)
 
-      ! but first: for flexible deposition particles of "fixed" type, we re-initialize their positions and weights
-      if( self%deposition_particles_move_type == SLL_PIC_LBFR_FIXED )then
-        call self%reset_deposition_particles_coordinates()
-        call self%reset_deposition_particles_weights_with_bsl_reconstruction(target_total_charge,enforce_total_charge)
+      ! find poisson (y-)cell containing this node, seen as a deposition particle, and relative position in the cell
+      tmp = ( y_part - self%space_mesh_2d%eta2_min ) / self%space_mesh_2d%delta_eta2
+      i_cell_y = int( tmp ) + 1
+      dy = tmp - (i_cell_y - 1)  ! y-offset in cell (between 0 and 1)
+
+      ! set the proper accumulator cell for the deposition
+      i_cell = i_cell_x + (i_cell_y - 1) * self%space_mesh_2d%num_cells1   !  (see global_to_cell_offset)
+
+      charge_accumulator_cell => charge_accumulator%q_acc(i_cell)
+
+      if( sll_f_x_is_in_domain_2d(    x_part, y_part,                 &
+                                self%space_mesh_2d,             &
+                                self%domain_is_periodic(1),     &
+                                self%domain_is_periodic(2) ))then
+
+        charge_accumulator_cell%q_sw = charge_accumulator_cell%q_sw + particle_charge * (1.0_f64 - dx) * (1.0_f64 - dy)
+        charge_accumulator_cell%q_se = charge_accumulator_cell%q_se + particle_charge *            dx  * (1.0_f64 - dy)
+        charge_accumulator_cell%q_nw = charge_accumulator_cell%q_nw + particle_charge * (1.0_f64 - dx) *            dy
+        charge_accumulator_cell%q_ne = charge_accumulator_cell%q_ne + particle_charge *            dx  *            dy
+        ! counter ???    deposited_charge = deposited_charge + particle_charge
+
+      else
+        ! particle not in domain (should store the reference for later processing)
+        print*, "Error (09864543254786875): for the moment every particle should be in the (periodic) 2d domain..."
+        stop
       end if
 
-      do i_part = 1, self%number_deposition_particles
+    end do
 
-        particle_charge = self%deposition_particles_weight(i_part)
-        x_part = self%deposition_particles_eta(i_part, 1)
-        y_part = self%deposition_particles_eta(i_part, 2)
-
-        ! todo: use the interface function for the computation of the Poisson cell index? (but we need to return the cell_offset)
-
-        ! find poisson (x-)cell containing this deposition particle, and relative position in the cell
-        tmp = ( x_part - self%space_mesh_2d%eta1_min ) / self%space_mesh_2d%delta_eta1
-        i_cell_x = int( tmp ) + 1
-        dx = tmp - (i_cell_x - 1)  ! x-offset in cell (between 0 and 1)
-
-        ! find poisson (y-)cell containing this node, seen as a deposition particle, and relative position in the cell
-        tmp = ( y_part - self%space_mesh_2d%eta2_min ) / self%space_mesh_2d%delta_eta2
-        i_cell_y = int( tmp ) + 1
-        dy = tmp - (i_cell_y - 1)  ! y-offset in cell (between 0 and 1)
-
-        ! set the proper accumulator cell for the deposition
-        i_cell = i_cell_x + (i_cell_y - 1) * self%space_mesh_2d%num_cells1   !  (see global_to_cell_offset)
-
-        charge_accumulator_cell => charge_accumulator%q_acc(i_cell)
-
-        if( sll_f_x_is_in_domain_2d(    x_part, y_part,                 &
-                                  self%space_mesh_2d,             &
-                                  self%domain_is_periodic(1),     &
-                                  self%domain_is_periodic(2) ))then
-
-          charge_accumulator_cell%q_sw = charge_accumulator_cell%q_sw + particle_charge * (1.0_f64 - dx) * (1.0_f64 - dy)
-          charge_accumulator_cell%q_se = charge_accumulator_cell%q_se + particle_charge *            dx  * (1.0_f64 - dy)
-          charge_accumulator_cell%q_nw = charge_accumulator_cell%q_nw + particle_charge * (1.0_f64 - dx) *            dy
-          charge_accumulator_cell%q_ne = charge_accumulator_cell%q_ne + particle_charge *            dx  *            dy
-          ! counter ???    deposited_charge = deposited_charge + particle_charge
-
-        else
-          ! particle not in domain (should store the reference for later processing)
-          print*, "Error (09864543254786875): for the moment every particle should be in the (periodic) 2d domain..."
-          stop
-        end if
-
-      end do
-
-    end if
   end subroutine pic_lbfr_4d_deposit_charge_2d
 
 
@@ -1157,7 +1112,6 @@ contains
         remapping_cart_grid_number_cells_vx,        &   ! for splines
         remapping_cart_grid_number_cells_vy,        &   ! for splines
         remapping_sparse_grid_max_levels,           &   ! for the sparse grid: for now, same level in each dimension
-        deposition_particles_type,                  &
         deposition_particles_pos_type,              &
         deposition_particles_move_type,             &
         number_deposition_particles,                &   ! (in a previous implementation this was only a lower bound)
@@ -1196,7 +1150,6 @@ contains
     sll_int32,                intent(in)  :: remapping_cart_grid_number_cells_vx
     sll_int32,                intent(in)  :: remapping_cart_grid_number_cells_vy
     sll_int32,  dimension(4), intent(in)  :: remapping_sparse_grid_max_levels
-    sll_int32,                intent(in)  :: deposition_particles_type
     sll_int32,                intent(in)  :: deposition_particles_pos_type
     sll_int32,                intent(in)  :: deposition_particles_move_type
     sll_int32,                intent(in)  :: number_deposition_particles
@@ -1495,20 +1448,10 @@ contains
 
     !> D. discretization of the deposited f -- uses deposition particles which can be of several types (see comments on top of file)
 
-    res%deposition_particles_type = deposition_particles_type
+    res%deposition_particles_pos_type  = deposition_particles_pos_type
+    res%deposition_particles_move_type = deposition_particles_move_type
 
-    if( res%deposition_particles_type == SLL_PIC_LBFR_BASIC )then
-      res%deposition_particles_pos_type = SLL_PIC_LBFR_STRUCTURED
-      res%deposition_particles_move_type = SLL_PIC_LBFR_FIXED
-      ! Note: results should be the same as with FLEXIBLE particles of type STRUCTURED + FIXED,
-      ! however BASIC particles are created on the fly (during deposition) and not stored
-    else
-      res%deposition_particles_pos_type  = deposition_particles_pos_type
-      res%deposition_particles_move_type = deposition_particles_move_type
-    end if
-
-    use_deposition_particles_grid = ( res%deposition_particles_type == SLL_PIC_LBFR_BASIC   &
-                                      .or. res%deposition_particles_pos_type == SLL_PIC_LBFR_STRUCTURED )
+    use_deposition_particles_grid = (res%deposition_particles_pos_type == SLL_PIC_LBFR_STRUCTURED)
 
     derive_deposition_particles_grid_from_other_parameters = .false.
 
@@ -1625,35 +1568,26 @@ contains
 
     end if
 
-    if( res%deposition_particles_type == SLL_PIC_LBFR_FLEXIBLE )then
+    ! Deposition particles will have their weights and coordinates stored in the arrays initialized below
+    !     they may be transported with the flow (like sdt particles) and re-initialized on remapping steps
+    !     or stay on the grid and have new weights computed at each time step
 
-      ! Flexible deposition particles will have their weights and coordinates stored in the arrays initialized below
-      !     they may be transported with the flow (like sdt particles) and re-initialized on remapping steps
-      !     or stay on the grid and have new weights computed at each time step
-
-      if( res%deposition_particles_pos_type == SLL_PIC_LBFR_STRUCTURED )then
-        res%number_deposition_particles        = effective_nb_deposition_particles_on_grid
-      else
-        SLL_ASSERT( res%deposition_particles_pos_type == SLL_PIC_LBFR_UNSTRUCTURED )
-        res%number_deposition_particles        = number_deposition_particles
-      end if
-
-      if( res%deposition_particles_move_type == SLL_PIC_LBFR_FIXED )then
-        res%number_moving_deposition_particles = 0
-      else
-        SLL_ASSERT( res%deposition_particles_move_type == SLL_PIC_LBFR_PUSHED )
-        res%number_moving_deposition_particles = res%number_deposition_particles
-      end if
-
-      SLL_ALLOCATE( res%deposition_particles_eta(res%number_deposition_particles, 4), ierr )
-      SLL_ALLOCATE( res%deposition_particles_weight(res%number_deposition_particles), ierr )
-
+    if( res%deposition_particles_pos_type == SLL_PIC_LBFR_STRUCTURED )then
+      res%number_deposition_particles        = effective_nb_deposition_particles_on_grid
     else
-       SLL_ASSERT( res%deposition_particles_type == SLL_PIC_LBFR_BASIC )
-
-       res%number_deposition_particles        = number_deposition_particles
-       res%number_moving_deposition_particles = 0
+      SLL_ASSERT( res%deposition_particles_pos_type == SLL_PIC_LBFR_UNSTRUCTURED )
+      res%number_deposition_particles        = number_deposition_particles
     end if
+
+    if( res%deposition_particles_move_type == SLL_PIC_LBFR_FIXED )then
+      res%number_moving_deposition_particles = 0
+    else
+      SLL_ASSERT( res%deposition_particles_move_type == SLL_PIC_LBFR_PUSHED )
+      res%number_moving_deposition_particles = res%number_deposition_particles
+    end if
+
+    SLL_ALLOCATE( res%deposition_particles_eta(res%number_deposition_particles, 4), ierr )
+    SLL_ALLOCATE( res%deposition_particles_weight(res%number_deposition_particles), ierr )
 
     SLL_ASSERT( res%number_deposition_particles >= 0 )
     SLL_ASSERT( res%number_moving_deposition_particles*(res%number_moving_deposition_particles-res%number_deposition_particles)==0 )
@@ -1723,8 +1657,7 @@ contains
     end if
 
     !> C. if deposition particles are pushed, we initialize them now -- this requires that the remapping tool is initialized
-    if( self%deposition_particles_type == SLL_PIC_LBFR_FLEXIBLE     &
-        .and. self%deposition_particles_move_type == SLL_PIC_LBFR_PUSHED )then
+    if( self%deposition_particles_move_type == SLL_PIC_LBFR_PUSHED )then
       print *, "pic_lbfr_4d_initializer -- step C: initialize the deposition cells: "
       print *, "pic_lbfr_4d_initializer -- (C) will create ", self%number_deposition_particles, "deposition_particles..."
       ! if deposition particles are fixed, then they are initialized at each time step, in the deposition routine
@@ -3502,8 +3435,7 @@ contains
     end if
 
     !> C. if deposition particles are pushed, we remap them now
-    if( self%deposition_particles_type == SLL_PIC_LBFR_FLEXIBLE     &
-        .and. self%deposition_particles_move_type == SLL_PIC_LBFR_PUSHED )then
+    if( self%deposition_particles_move_type == SLL_PIC_LBFR_PUSHED )then
       print *, "pic_lbfr_4d_remap -- step C"
       print *, "pic_lbfr_4d_remap -- (C) will reset ", self%number_deposition_particles, "deposition_particles..."
       ! if deposition particles are fixed, then they are initialized at each time step, in the deposition routine
@@ -3520,7 +3452,7 @@ contains
   !> compute new interpolation coefficients so that the remapped_f is an approximation of the current f
   !> and
   !> reset the markers on the initial grid
-  subroutine pic_lbfr_4d_remap( self, target_total_charge, enforce_total_charge )
+  subroutine pic_lbfr_4d_remap( self, target_total_charge, enforce_total_charge )    ! todo remove and use resample
     class(sll_t_pic_lbfr_4d_group),   intent( inout ) :: self
     sll_real64,                       intent( in )    :: target_total_charge
     logical,                          intent( in )    :: enforce_total_charge
@@ -3539,8 +3471,7 @@ contains
     end if
 
     !> C. if deposition particles are pushed, we remap them now
-    if( self%deposition_particles_type == SLL_PIC_LBFR_FLEXIBLE     &
-        .and. self%deposition_particles_move_type == SLL_PIC_LBFR_PUSHED )then
+    if( self%deposition_particles_move_type == SLL_PIC_LBFR_PUSHED )then
       print *, "pic_lbfr_4d_remap -- step C"
       print *, "pic_lbfr_4d_remap -- (C) will reset ", self%number_deposition_particles, "deposition_particles..."
       ! if deposition particles are fixed, then they are initialized at each time step, in the deposition routine
@@ -3887,9 +3818,8 @@ contains
     debug_count = 0
 
     if( scenario == SLL_PIC_LBFR_SET_WEIGHTS_ON_DEPOSITION_PARTICLES )then
-        ! then the deposition particles should be of flexible and fixed type
+        ! then the deposition particles should be of fixed type
         ! (indeed in the pushed type the weights are set after remapping with a simple interpolation, no PIC_LBFR reconstruction)
-        SLL_ASSERT( p_group%deposition_particles_type == SLL_PIC_LBFR_FLEXIBLE )
         SLL_ASSERT( p_group%deposition_particles_move_type == SLL_PIC_LBFR_FIXED )
     end if
 
@@ -4003,7 +3933,6 @@ contains
 
       else if( scenario == SLL_PIC_LBFR_SET_WEIGHTS_ON_DEPOSITION_PARTICLES )then
 
-        SLL_ASSERT( p_group%deposition_particles_type == SLL_PIC_LBFR_FLEXIBLE )
         SLL_ASSERT( p_group%deposition_particles_move_type == SLL_PIC_LBFR_FIXED )
 
         nodes_number = p_group%number_deposition_particles
