@@ -1,7 +1,7 @@
 !**************************************************************
 !  Copyright INRIA
 !  Authors : 
-!     ???
+!     MCP ALH
 !
 !  This code SeLaLib (for Semi-Lagrangian-Library) 
 !  is a parallel library for simulating the plasma turbulence 
@@ -19,9 +19,16 @@
 
 !> @author MCP ALH
 
-!> @brief Module for groups of particles of type sll_t_bsl_lt_pic_4d_particle
+!> @brief Module for groups of particles and markers for pic methods with linearized-backward-flow (lbf) resamplings
 
-module sll_m_bsl_lt_pic_4d_group
+!todo: derive type from Katharina's class
+!todo: create new resampler structure
+!todo: initialize with the remapping (done already?)
+!todo: other simplifications?
+
+
+
+module sll_m_pic_lbfr_4d_group
 
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_assert.h"
@@ -54,10 +61,10 @@ module sll_m_bsl_lt_pic_4d_group
     sll_s_get_inverse_matrix_with_given_size, &
     sll_s_get_4d_cell_containing_point
 
-  use sll_m_bsl_lt_pic_4d_particle, only: &
-    sll_t_bsl_lt_pic_4d_particle
+  use sll_m_pic_lbfr_4d_marker, only: &
+    sll_t_pic_lbfr_4d_marker
 
-  use sll_m_bsl_lt_pic_4d_utilities, only: &
+  use sll_m_pic_lbfr_4d_utilities, only: &
     sll_t_int_list_element, &
     sll_t_int_list_element_ptr, &
     sll_t_marker_list_element, &
@@ -83,56 +90,49 @@ module sll_m_bsl_lt_pic_4d_group
   implicit none
 
   public :: &
-    SLL_BSL_LT_PIC_REMAP_WITH_SPLINES,  &
-    SLL_BSL_LT_PIC_REMAP_WITH_SPARSE_GRIDS,  &
-    SLL_BSL_LT_PIC_DEPOSIT_F,  &
-    SLL_BSL_LT_PIC_REMAP_F,  &
-    SLL_BSL_LT_PIC_WRITE_F_ON_GIVEN_GRID, &
-    SLL_BSL_LT_PIC_SET_WEIGHTS_ON_DEPOSITION_PARTICLES, &
-    SLL_BSL_LT_PIC_LANDAU_F0,  &
-    SLL_BSL_LT_PIC_HAT_F0,  &
-    SLL_BSL_LT_PIC_BASIC,  &
-    SLL_BSL_LT_PIC_FLEXIBLE,  &
-    SLL_BSL_LT_PIC_STRUCTURED,  &
-    SLL_BSL_LT_PIC_UNSTRUCTURED ,  &
-    SLL_BSL_LT_PIC_FIXED,  &
-    SLL_BSL_LT_PIC_PUSHED,  &
-    sll_t_bsl_lt_pic_4d_group, &
-    sll_f_bsl_lt_pic_4d_group_new, &
+    SLL_PIC_LBFR_REMAP_WITH_SPLINES,  &
+    SLL_PIC_LBFR_REMAP_WITH_SPARSE_GRIDS,  &
+    !    SLL_PIC_LBFR_DEPOSIT_F,  &
+    SLL_PIC_LBFR_REMAPPING_GRID,  &
+    SLL_PIC_LBFR_GIVEN_GRID, &
+    SLL_PIC_LBFR_DEPOSITION_PARTICLES, &
+    SLL_PIC_LBFR_LANDAU_F0,  &
+    SLL_PIC_LBFR_HAT_F0,  &
+    SLL_PIC_LBFR_STRUCTURED,  &
+    SLL_PIC_LBFR_UNSTRUCTURED ,  &
+    SLL_PIC_LBFR_FIXED,  &
+    SLL_PIC_LBFR_PUSHED,  &
+    sll_t_pic_lbfr_4d_group, &
+    sll_f_pic_lbfr_4d_group_new, &
     sll_o_delete
 
   private
 
   ! types of interpolation for the remapped f
-  sll_int32, parameter :: SLL_BSL_LT_PIC_REMAP_WITH_SPLINES = 0
-  sll_int32, parameter :: SLL_BSL_LT_PIC_REMAP_WITH_SPARSE_GRIDS = 1
+  sll_int32, parameter :: SLL_PIC_LBFR_REMAP_WITH_SPLINES = 0
+  sll_int32, parameter :: SLL_PIC_LBFR_REMAP_WITH_SPARSE_GRIDS = 1
 
-  ! possible scenarios for the reconstruction routine
-  sll_int32, parameter :: SLL_BSL_LT_PIC_DEPOSIT_F = 0
-  sll_int32, parameter :: SLL_BSL_LT_PIC_REMAP_F = 1
-  sll_int32, parameter :: SLL_BSL_LT_PIC_WRITE_F_ON_GIVEN_GRID = 2
-  sll_int32, parameter :: SLL_BSL_LT_PIC_SET_WEIGHTS_ON_DEPOSITION_PARTICLES = 3
+  ! possible values for the parameter reconstruction_set_type in the reconstruction routine
+  sll_int32, parameter :: SLL_PIC_LBFR_REMAPPING_GRID = 1
+  sll_int32, parameter :: SLL_PIC_LBFR_GIVEN_GRID = 2
+  sll_int32, parameter :: SLL_PIC_LBFR_DEPOSITION_PARTICLES = 3
 
   ! possible densities for f0
-  sll_int32, parameter :: SLL_BSL_LT_PIC_LANDAU_F0 = 0
-  sll_int32, parameter :: SLL_BSL_LT_PIC_HAT_F0 = 1
+  sll_int32, parameter :: SLL_PIC_LBFR_LANDAU_F0 = 0
+  sll_int32, parameter :: SLL_PIC_LBFR_HAT_F0 = 1
 
-  ! types of deposition particles
-  sll_int32, parameter :: SLL_BSL_LT_PIC_BASIC = 0
-  sll_int32, parameter :: SLL_BSL_LT_PIC_FLEXIBLE = 1
-
-  ! types of deposition particles positions  //  and of flow markers
-  sll_int32, parameter :: SLL_BSL_LT_PIC_STRUCTURED = 0
-  sll_int32, parameter :: SLL_BSL_LT_PIC_UNSTRUCTURED  = 1
+  ! types of deposition particles positions  //  also used for flow markers
+  sll_int32, parameter :: SLL_PIC_LBFR_STRUCTURED = 0
+  sll_int32, parameter :: SLL_PIC_LBFR_UNSTRUCTURED  = 1
 
   ! types of deposition particles movement
-  sll_int32, parameter :: SLL_BSL_LT_PIC_FIXED = 0
-  sll_int32, parameter :: SLL_BSL_LT_PIC_PUSHED = 1
+  sll_int32, parameter :: SLL_PIC_LBFR_FIXED = 0
+  sll_int32, parameter :: SLL_PIC_LBFR_PUSHED = 1
 
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
-  !> Group of @ref sll_t_bsl_lt_pic_4d_particle
-  type, extends(sll_c_remapped_particle_group) :: sll_t_bsl_lt_pic_4d_group
+  !> Group of @ref sll_t_pic_lbfr_4d_marker
+  type, extends(sll_c_remapped_particle_group) :: sll_t_pic_lbfr_4d_group
 
    !> @name The markers (particles pushed forward, carry no weights) -- structured case 
    !> @{
@@ -144,7 +144,7 @@ module sll_m_bsl_lt_pic_4d_group
     sll_int32                                                   :: number_flow_markers_vy
     sll_int32                                                   :: number_struct_flow_markers
     type(sll_t_cartesian_mesh_4d), pointer                      :: initial_markers_grid
-    type(sll_t_bsl_lt_pic_4d_particle),   dimension(:), pointer :: struct_markers_list
+    type(sll_t_pic_lbfr_4d_marker),   dimension(:), pointer :: struct_markers_list
     ! When using unstructured flow markers, we store their indices in chained lists attached to the flow cells
     sll_int32                                                   :: nb_unstruct_markers_per_cell
     sll_int32                                                   :: max_nb_unstruct_markers
@@ -174,18 +174,16 @@ module sll_m_bsl_lt_pic_4d_group
 
     !> @name The deposition particles (will be created on the fly in each cell of the flow_grid, when depositing the charge)
     !> @{
-    sll_int32                                 :: deposition_particles_type       !< basic (=first implementation) or flexible (new)
     sll_int32                                 :: deposition_particles_pos_type   !< structured  or  unstructured (random)
     sll_int32                                 :: deposition_particles_move_type  !< fixed (new at each step) or pushed (until remap)
     type(sll_t_cartesian_mesh_4d), pointer    :: deposition_particles_grid                 !< used if type = struct_grid
     sll_int32                                 :: number_deposition_particles        !< number of deposition particles
     sll_int32                                 :: number_moving_deposition_particles !< number of pushed deposition particles
-    sll_real64, dimension(:,:), allocatable   :: deposition_particles_eta           !< used for if type = flexible
-    sll_real64, dimension(:), allocatable     :: deposition_particles_weight        !< used for if type = flexible (weight = charge)
+    sll_real64, dimension(:,:), allocatable   :: deposition_particles_eta
+    sll_real64, dimension(:), allocatable     :: deposition_particles_weight        !< (weight = charge)
     !> @}
 
     !> This is how the deposition particles are used, depending on their type:
-    !> if type = flexible, we allow deposition particles to be :
     !>  - move_type = fixed (always on the same grid, structured or not) or pushed (until remapping step)
     !>  - pos_type = structured or unstructured (random), when reset
     !>
@@ -193,11 +191,7 @@ module sll_m_bsl_lt_pic_4d_group
     !>    - positions and weights of deposition particles are reset in the deposition routine (called at each time step)
     !> if move_type = pushed,
     !>    - positions and weights of deposition particles are reset in the remapping routine (called at remapping step)
-    !>      in particular, computing the weights can be done with direct interpolation (no bsl_lt_pic reconstruction)
-    !>
-    !> The "basic" type corresponds to fixed and structured deposition particles, first implemented.
-    !> In this case, the deposition particles are not stored but only computed inside the "write_f_or_deposit" routine
-
+    !>      in particular, computing the weights can be done with direct interpolation (no pic_lbfr reconstruction)
 
     !> @name General parameters for the interpolation of the remapped density f
     !> @{
@@ -248,59 +242,59 @@ module sll_m_bsl_lt_pic_4d_group
 
     !> @name Getters
     !> @{
-    procedure :: get_x          => bsl_lt_pic_4d_get_x
-    procedure :: get_v          => bsl_lt_pic_4d_get_v
-    procedure :: get_charge     => bsl_lt_pic_4d_get_charge
-    procedure :: get_mass       => bsl_lt_pic_4d_get_mass
-    procedure :: get_cell_index => bsl_lt_pic_4d_get_cell_index
+    procedure :: get_x          => pic_lbfr_4d_get_x
+    procedure :: get_v          => pic_lbfr_4d_get_v
+    procedure :: get_charge     => pic_lbfr_4d_get_charge
+    procedure :: get_mass       => pic_lbfr_4d_get_mass
+    procedure :: get_cell_index => pic_lbfr_4d_get_cell_index
     !> @}
     
     !> @name Setters
     !> @{
-    procedure :: set_x                      => bsl_lt_pic_4d_set_x
-    procedure :: set_v                      => bsl_lt_pic_4d_set_v
+    procedure :: set_x                      => pic_lbfr_4d_set_x
+    procedure :: set_v                      => pic_lbfr_4d_set_v
 
     ! todo: use only one function with particle index as optional parameter?
-    procedure :: set_common_weight          => bsl_lt_pic_4d_set_common_weight     ! not to be called for this class
-    procedure :: set_particle_weight        => bsl_lt_pic_4d_set_particle_weight
+    procedure :: set_common_weight          => pic_lbfr_4d_set_common_weight     ! not to be called for this class
+    procedure :: set_particle_weight        => pic_lbfr_4d_set_particle_weight
     !> @}
     
     !> @name Initializers
     !> @{
-    procedure :: set_landau_parameters      =>  bsl_lt_pic_4d_set_landau_parameters
-    procedure :: set_hat_f0_parameters      =>  bsl_lt_pic_4d_set_hat_f0_parameters
-    procedure :: initializer                =>  bsl_lt_pic_4d_initializer
+    procedure :: set_landau_parameters      =>  pic_lbfr_4d_set_landau_parameters
+    procedure :: set_hat_f0_parameters      =>  pic_lbfr_4d_set_hat_f0_parameters
+    procedure :: initializer                =>  pic_lbfr_4d_initializer
     !> @}
     
-    procedure :: deposit_charge_2d          => bsl_lt_pic_4d_deposit_charge_2d
-    procedure :: remap                      => bsl_lt_pic_4d_remap
-    procedure :: visualize_f_slice_x_vx     => bsl_lt_pic_4d_visualize_f_slice_x_vx
+    procedure :: deposit_charge_2d          => pic_lbfr_4d_deposit_charge_2d
+    procedure :: remap                      => pic_lbfr_4d_remap
+    procedure :: visualize_f_slice_x_vx     => pic_lbfr_4d_visualize_f_slice_x_vx
 
     procedure :: remapping_cart_grid_number_nodes_x
     procedure :: remapping_cart_grid_number_nodes_y
     procedure :: remapping_cart_grid_number_nodes_vx
     procedure :: remapping_cart_grid_number_nodes_vy
 
-    procedure :: bsl_lt_pic_4d_write_hat_density_on_remapping_grid        !> this evaluates an analytic f0
-    procedure :: bsl_lt_pic_4d_write_landau_density_on_remapping_grid     !> this evaluates an analytic f0
-    procedure :: bsl_lt_pic_4d_remap_f       !> this evaluates f with the bs_lt_pic method and compute the new interpolation coefs
+    procedure :: pic_lbfr_4d_write_hat_density_on_remapping_grid        !> this evaluates an analytic f0
+    procedure :: pic_lbfr_4d_write_landau_density_on_remapping_grid     !> this evaluates an analytic f0
+    procedure :: pic_lbfr_4d_remap_f       !> this evaluates f with the bs_lt_pic method and compute the new interpolation coefs
 
-!    procedure :: bsl_lt_pic_4d_compute_new_remapped_f_coefficients
-    procedure :: bsl_lt_pic_4d_compute_new_spline_coefs
+!    procedure :: pic_lbfr_4d_compute_new_remapped_f_coefficients
+    procedure :: pic_lbfr_4d_compute_new_spline_coefs
 
-    procedure :: bsl_lt_pic_4d_reset_markers_position
-    procedure :: bsl_lt_pic_4d_set_markers_connectivity
+    procedure :: pic_lbfr_4d_reset_markers_position
+    procedure :: pic_lbfr_4d_set_markers_connectivity
 
-    procedure :: bsl_lt_pic_4d_initialize_unstruct_markers         !> creates quasi-random distribution of unstructured markers
-    procedure :: bsl_lt_pic_4d_prepare_unstruct_markers_for_flow_jacobians  !> build simplexes of relevant markers in each flow cell
+    procedure :: pic_lbfr_4d_initialize_unstruct_markers         !> creates quasi-random distribution of unstructured markers
+    procedure :: pic_lbfr_4d_prepare_unstruct_markers_for_flow_jacobians  !> build simplexes of relevant markers in each flow cell
 
     procedure :: reset_deposition_particles_coordinates
     procedure :: reset_deposition_particles_weights_with_bsl_reconstruction
     procedure :: reset_deposition_particles_weights_with_direct_interpolation
     procedure :: get_deposition_particle_charge_factor
 
-    procedure :: bsl_lt_pic_4d_write_f_on_grid_or_deposit
-    procedure :: bsl_lt_pic_4d_interpolate_value_of_remapped_f
+    procedure :: pic_lbfr_4d_reconstruct_f
+    procedure :: pic_lbfr_4d_interpolate_value_of_remapped_f
 
     procedure :: update_flow_cell_lists_with_new_marker_position
 
@@ -311,20 +305,20 @@ module sll_m_bsl_lt_pic_4d_group
     procedure :: anisotropic_flow_grid_distance
     procedure :: periodic_correction
 
-  end type sll_t_bsl_lt_pic_4d_group
+  end type sll_t_pic_lbfr_4d_group
 
   interface sll_o_delete
-     module procedure sll_bsl_lt_pic_4d_group_delete
+     module procedure sll_pic_lbfr_4d_group_delete
   end interface sll_o_delete
 
 
   !! MCP (July 16) -- this is to make the subroutine external, in a separate file, but does not work yet --
 
 !  interface
-!    subroutine bsl_lt_pic_4d_initializer( self, initial_density_identifier, rand_seed, rank, world_size )
+!    subroutine pic_lbfr_4d_initializer( self, initial_density_identifier, rand_seed, rank, world_size )
 !    use sll_m_working_precision
-!    import sll_t_bsl_lt_pic_4d_group
-!    class( sll_t_bsl_lt_pic_4d_group ), intent( inout ) :: self
+!    import sll_t_pic_lbfr_4d_group
+!    class( sll_t_pic_lbfr_4d_group ), intent( inout ) :: self
 !    sll_int32                       , intent( in    ) :: initial_density_identifier
 !    sll_int32, dimension(:)         , intent( in ), optional :: rand_seed
 !    sll_int32                       , intent( in ), optional :: rank, world_size
@@ -333,31 +327,31 @@ module sll_m_bsl_lt_pic_4d_group
 !    !    call self%initializer_landau_f0 (              &
 !    !      self%thermal_speed, self%alpha, self%k_landau )        ! -> these parameters should be members of the initializer object
 !
-!    end subroutine bsl_lt_pic_4d_initializer
+!    end subroutine pic_lbfr_4d_initializer
 !  end interface
 
 contains
 
   !----------------------------------------------------------------------------
-  pure function bsl_lt_pic_4d_get_charge( self, i ) result( r )
-    class( sll_t_bsl_lt_pic_4d_group ), intent( in ) :: self
+  pure function pic_lbfr_4d_get_charge( self, i ) result( r )
+    class( sll_t_pic_lbfr_4d_group ), intent( in ) :: self
     sll_int32                       , intent( in ) :: i
     sll_real64 :: r
 
     r = self%species%q * self%struct_markers_list(i)%weight
 
-  end function bsl_lt_pic_4d_get_charge
+  end function pic_lbfr_4d_get_charge
 
 
   !----------------------------------------------------------------------------
-  pure function bsl_lt_pic_4d_get_mass( self, i ) result( r )
-    class( sll_t_bsl_lt_pic_4d_group ), intent( in ) :: self
+  pure function pic_lbfr_4d_get_mass( self, i ) result( r )
+    class( sll_t_pic_lbfr_4d_group ), intent( in ) :: self
     sll_int32                       , intent( in ) :: i
     sll_real64 :: r
 
     r = self%species%m * self%struct_markers_list(i)%weight
 
-  end function bsl_lt_pic_4d_get_mass
+  end function pic_lbfr_4d_get_mass
 
 
   !----------------------------------------------------------------------------------------------------------------------------
@@ -365,8 +359,8 @@ contains
   !   1) either a flow marker (for i = 1, ... self%number_flow_markers)
   !   2) or a deposition particle (for i = self%number_flow_markers+1, ... self%number_moving_deposition_particles)
 
-  pure function bsl_lt_pic_4d_get_x( self, i ) result( r )
-    class( sll_t_bsl_lt_pic_4d_group ), intent( in ) :: self
+  pure function pic_lbfr_4d_get_x( self, i ) result( r )
+    class( sll_t_pic_lbfr_4d_group ), intent( in ) :: self
     sll_int32                       , intent( in ) :: i
     sll_real64 :: r(3)
 
@@ -379,7 +373,7 @@ contains
     if( i >= 1 .and. i <= self%number_flow_markers )then
       ! then the particle is a flow marker
 
-      if( self%flow_markers_type == SLL_BSL_LT_PIC_STRUCTURED )then
+      if( self%flow_markers_type == SLL_PIC_LBFR_STRUCTURED )then
         ! get x
         r(1) = self%space_mesh_2d%eta1_min + &
                self%space_mesh_2d%delta_eta1*(                            &
@@ -388,7 +382,7 @@ contains
         r(2) = self%space_mesh_2d%eta2_min + self%space_mesh_2d%delta_eta2*( &
                real(self%struct_markers_list(i)%offset_y + self%struct_markers_list(i)%i_cell_y - 1, f64)      )
       else
-        ! then self%flow_markers_type == SLL_BSL_LT_PIC_UNSTRUCTURED
+        ! then self%flow_markers_type == SLL_PIC_LBFR_UNSTRUCTURED
         r(1) = self%unstruct_markers_eta(i, 1)
         r(2) = self%unstruct_markers_eta(i, 2)
       end if
@@ -402,7 +396,7 @@ contains
 
     r(3) = 0.0_f64
 
-  end function bsl_lt_pic_4d_get_x
+  end function pic_lbfr_4d_get_x
 
 
   !----------------------------------------------------------------------------------------------------------------------------
@@ -410,8 +404,8 @@ contains
   !   1) either a flow marker (for i = 1, ... self%number_flow_markers)
   !   2) or a deposition particle (for i = self%number_flow_markers+1, ... self%number_moving_deposition_particles)
 
-  pure function bsl_lt_pic_4d_get_v( self, i ) result( r )
-    class( sll_t_bsl_lt_pic_4d_group ), intent( in ) :: self
+  pure function pic_lbfr_4d_get_v( self, i ) result( r )
+    class( sll_t_pic_lbfr_4d_group ), intent( in ) :: self
     sll_int32                       , intent( in ) :: i
     sll_real64 :: r(3)
 
@@ -424,13 +418,13 @@ contains
     if( i >= 1 .and. i <= self%number_flow_markers )then
       ! then the particle is a flow marker
 
-      if( self%flow_markers_type == SLL_BSL_LT_PIC_STRUCTURED )then
+      if( self%flow_markers_type == SLL_PIC_LBFR_STRUCTURED )then
         ! get vx
         r(1) = self%struct_markers_list(i)%vx
         ! get vy
         r(2) = self%struct_markers_list(i)%vy
       else
-        ! then self%flow_markers_type == SLL_BSL_LT_PIC_UNSTRUCTURED
+        ! then self%flow_markers_type == SLL_PIC_LBFR_UNSTRUCTURED
         ! get vx
         r(1) = self%unstruct_markers_eta(i, 3)
         ! get vy
@@ -438,7 +432,7 @@ contains
       end if
 
     else if( i >= self%number_flow_markers + 1 .and. i <= self%number_flow_markers + self%number_moving_deposition_particles )then
-      ! then the particle is a (flexible, pushed) deposition particle
+      ! then the particle is a (pushed) deposition particle
 
       ! get vx
       r(1) = self%deposition_particles_eta(i - self%number_flow_markers, 3)
@@ -449,7 +443,7 @@ contains
 
     r(3) = 0.0_f64
 
-  end function bsl_lt_pic_4d_get_v
+  end function pic_lbfr_4d_get_v
 
 
   !----------------------------------------------------------------------------------------------------------------------------
@@ -461,8 +455,8 @@ contains
   !
   ! note: almost the same function in the simple_pic_4d group -- maybe use the same function?
 
-  pure function bsl_lt_pic_4d_get_cell_index(self, i) result(i_out)
-    class(sll_t_bsl_lt_pic_4d_group),  intent( in )   ::  self
+  pure function pic_lbfr_4d_get_cell_index(self, i) result(i_out)
+    class(sll_t_pic_lbfr_4d_group),  intent( in )   ::  self
     sll_int32,                      intent( in )    ::  i       !> particle index
     sll_int32                                       ::  i_out   !> cell index
     sll_int32  ::  i_cell_x, i_cell_y
@@ -482,12 +476,12 @@ contains
       ! then the particle is a flow marker
 
       use_x_and_y_part = .true.
-      if( self%flow_markers_type == SLL_BSL_LT_PIC_STRUCTURED )then
+      if( self%flow_markers_type == SLL_PIC_LBFR_STRUCTURED )then
         i_cell_x    = self%struct_markers_list(i)%i_cell_x
         i_cell_y    = self%struct_markers_list(i)%i_cell_y
         use_x_and_y_part = .false.
       else
-        ! then self%flow_markers_type == SLL_BSL_LT_PIC_UNSTRUCTURED
+        ! then self%flow_markers_type == SLL_PIC_LBFR_UNSTRUCTURED
         x_part = self%unstruct_markers_eta(i, 1)
         y_part = self%unstruct_markers_eta(i, 2)
       end if
@@ -515,7 +509,7 @@ contains
     num_cells_y = self%space_mesh_2d%num_cells2
     i_out = 1 + modulo(i_cell_x - 1,  num_cells_x) + modulo(i_cell_y - 1,  num_cells_y) * num_cells_x   ! often denoted i_cell
 
-  end function bsl_lt_pic_4d_get_cell_index
+  end function pic_lbfr_4d_get_cell_index
 
 
 
@@ -534,13 +528,13 @@ contains
   !
   ! same function in the simple_pic_4d group -- (possible to use the same function?)
 
-  subroutine bsl_lt_pic_4d_set_x( self, i, x )
-    class( sll_t_bsl_lt_pic_4d_group ), intent( inout ) :: self
+  subroutine pic_lbfr_4d_set_x( self, i, x )
+    class( sll_t_pic_lbfr_4d_group ), intent( inout ) :: self
     sll_int32                       , intent( in    ) :: i
     sll_real64                      , intent( in    ) :: x(3)
 
     type(sll_t_cartesian_mesh_2d),      pointer :: space_mesh_2d
-    type(sll_t_bsl_lt_pic_4d_particle), pointer :: particle
+    type(sll_t_pic_lbfr_4d_marker), pointer :: particle
     sll_int32                :: i_cell_x, i_cell_y
     sll_real32               :: offset_x, offset_y
     sll_real64               :: temp
@@ -557,9 +551,8 @@ contains
 
     if( i >= 1 .and. i <= self%number_flow_markers )then
       ! then we set the physical coordinates of a flow marker
-      ! (maybe change the name of the structure sll_bsl_lt_pic_4d_particle -> sll_bsl_lt_pic_4d_flow_marker ?)
 
-      if( self%flow_markers_type == SLL_BSL_LT_PIC_STRUCTURED )then
+      if( self%flow_markers_type == SLL_PIC_LBFR_STRUCTURED )then
         space_mesh_2d => self%space_mesh_2d
         particle => self%struct_markers_list(i)
 
@@ -581,7 +574,7 @@ contains
         particle%offset_x = offset_x
         particle%offset_y = offset_y
       else
-        ! then self%flow_markers_type == SLL_BSL_LT_PIC_UNSTRUCTURED
+        ! then self%flow_markers_type == SLL_PIC_LBFR_UNSTRUCTURED
 
         ! we also need to update the flow cell's lists:
         ! store previous flow cell index
@@ -599,9 +592,8 @@ contains
 
     else if( i >= self%number_flow_markers + 1 .and. i <= self%number_flow_markers + self%number_moving_deposition_particles )then
 
-      ! then the particle is a (pushed, flexible) deposition particle
-      SLL_ASSERT( self%deposition_particles_move_type == SLL_BSL_LT_PIC_PUSHED )
-      SLL_ASSERT( self%deposition_particles_type == SLL_BSL_LT_PIC_FLEXIBLE )
+      ! then the particle is a (pushed) deposition particle
+      SLL_ASSERT( self%deposition_particles_move_type == SLL_PIC_LBFR_PUSHED )
       SLL_ASSERT( self%number_moving_deposition_particles == self%number_deposition_particles )
 
       ! (maybe use a structure closer to the simple_pic particles, cell-based ?)
@@ -611,7 +603,7 @@ contains
     end if
 
 
-  end subroutine bsl_lt_pic_4d_set_x
+  end subroutine pic_lbfr_4d_set_x
 
 
   !----------------------------------------------------------------------------
@@ -619,12 +611,12 @@ contains
   !   1) either a flow marker (for i = 1, ... self%number_flow_markers)
   !   2) or a deposition particle (for i = self%number_flow_markers+1, ... self%number_moving_deposition_particles)
 
- subroutine bsl_lt_pic_4d_set_v( self, i, x )
-    class( sll_t_bsl_lt_pic_4d_group ), intent( inout ) :: self
+ subroutine pic_lbfr_4d_set_v( self, i, x )
+    class( sll_t_pic_lbfr_4d_group ), intent( inout ) :: self
     sll_int32                       , intent( in    ) :: i
     sll_real64                      , intent( in    ) :: x(3)  !> this is the velocity, but argument name in abstract interface is x
 
-    type(sll_t_bsl_lt_pic_4d_particle), pointer :: particle
+    type(sll_t_pic_lbfr_4d_marker), pointer :: particle
     sll_real64, dimension(4) :: eta_marker
     sll_int32  :: old_j_x, old_j_y, old_j_vx, old_j_vy
     logical    :: marker_is_outside
@@ -633,15 +625,13 @@ contains
 
     if( i >= 1 .and. i <= self%number_flow_markers )then
       ! then we set the velocity coordinates of a flow marker
-      ! (maybe change the name of the structure sll_bsl_lt_pic_4d_particle -> sll_bsl_lt_pic_4d_flow_marker ?)
 
-
-      if( self%flow_markers_type == SLL_BSL_LT_PIC_STRUCTURED )then
+      if( self%flow_markers_type == SLL_PIC_LBFR_STRUCTURED )then
         particle => self%struct_markers_list(i)
         particle%vx = x(1)
         particle%vy = x(2)
       else
-        ! then self%flow_markers_type == SLL_BSL_LT_PIC_UNSTRUCTURED
+        ! then self%flow_markers_type == SLL_PIC_LBFR_UNSTRUCTURED
 
         ! we also need to update the flow cell's lists:
         ! store previous flow cell index
@@ -660,9 +650,8 @@ contains
     else if( i >= self%number_flow_markers + 1 .and. i <= self%number_flow_markers + self%number_moving_deposition_particles )then
       ! then we set the physical coordinates of a deposition particle
 
-      ! then the particle is a (pushed, flexible) deposition particle
-      SLL_ASSERT( self%deposition_particles_move_type == SLL_BSL_LT_PIC_PUSHED )
-      SLL_ASSERT( self%deposition_particles_type == SLL_BSL_LT_PIC_FLEXIBLE )
+      ! then the particle is a (pushed) deposition particle
+      SLL_ASSERT( self%deposition_particles_move_type == SLL_PIC_LBFR_PUSHED )
       SLL_ASSERT( self%number_moving_deposition_particles == self%number_deposition_particles )
 
       self%deposition_particles_eta(i - self%number_flow_markers, 3) = x(1)
@@ -670,35 +659,35 @@ contains
 
     end if
 
-  end subroutine bsl_lt_pic_4d_set_v
+  end subroutine pic_lbfr_4d_set_v
 
 
   !----------------------------------------------------------------------------
-  subroutine bsl_lt_pic_4d_set_common_weight( self, s )
-    class( sll_t_bsl_lt_pic_4d_group ), intent( inout ) :: self
+  subroutine pic_lbfr_4d_set_common_weight( self, s )
+    class( sll_t_pic_lbfr_4d_group ), intent( inout ) :: self
     sll_real64                      , intent( in    ) :: s
 
-    print*, "Error (9O8657864) -- this subroutine is not implemented for sll_t_bsl_lt_pic_4d_group objects", s, storage_size(self)
+    print*, "Error (9O8657864) -- this subroutine is not implemented for sll_t_pic_lbfr_4d_group objects", s, storage_size(self)
     stop
 
-  end subroutine bsl_lt_pic_4d_set_common_weight
+  end subroutine pic_lbfr_4d_set_common_weight
 
 
   !----------------------------------------------------------------------------
-  subroutine bsl_lt_pic_4d_set_particle_weight( self, i, s )
-    class( sll_t_bsl_lt_pic_4d_group ), intent( inout ) :: self
+  subroutine pic_lbfr_4d_set_particle_weight( self, i, s )
+    class( sll_t_pic_lbfr_4d_group ), intent( inout ) :: self
     sll_int32                       , intent( in    ) :: i
     sll_real64                      , intent( in    ) :: s
 
-    print*, "Error (97658758) -- this subroutine is not implemented for sll_t_bsl_lt_pic_4d_group objects", i, s, storage_size(self)
+    print*, "Error (97658758) -- this subroutine is not implemented for sll_t_pic_lbfr_4d_group objects", i, s, storage_size(self)
     stop
 
-  end subroutine bsl_lt_pic_4d_set_particle_weight
+  end subroutine pic_lbfr_4d_set_particle_weight
 
 
   !----------------------------------------------------------------------------
-  subroutine bsl_lt_pic_4d_set_landau_parameters( self, thermal_speed, alpha, k_landau )
-    class( sll_t_bsl_lt_pic_4d_group ), intent( inout ) :: self
+  subroutine pic_lbfr_4d_set_landau_parameters( self, thermal_speed, alpha, k_landau )
+    class( sll_t_pic_lbfr_4d_group ), intent( inout ) :: self
     sll_real64                      , intent( in    ) :: thermal_speed
     sll_real64                      , intent( in    ) :: alpha
     sll_real64                      , intent( in    ) :: k_landau
@@ -707,12 +696,12 @@ contains
     self%alpha = alpha
     self%k_landau = k_landau
 
-  end subroutine bsl_lt_pic_4d_set_landau_parameters
+  end subroutine pic_lbfr_4d_set_landau_parameters
 
 
 !----------------------------------------------------------------------------
-  subroutine bsl_lt_pic_4d_set_hat_f0_parameters( self, x0, y0, vx0, vy0, r_x, r_y, r_vx, r_vy, basis_height, shift )
-    class(sll_t_bsl_lt_pic_4d_group), intent(inout)   :: self
+  subroutine pic_lbfr_4d_set_hat_f0_parameters( self, x0, y0, vx0, vy0, r_x, r_y, r_vx, r_vy, basis_height, shift )
+    class(sll_t_pic_lbfr_4d_group), intent(inout)   :: self
     sll_real64,                     intent(in)      :: x0
     sll_real64,                     intent(in)      :: y0
     sll_real64,                     intent(in)      :: vx0
@@ -735,7 +724,7 @@ contains
     self%hat_f0_basis_height = basis_height
     self%hat_f0_shift = shift
 
-  end subroutine bsl_lt_pic_4d_set_hat_f0_parameters
+  end subroutine pic_lbfr_4d_set_hat_f0_parameters
 
 
   ! <<reset_deposition_particles_coordinates>>
@@ -744,7 +733,7 @@ contains
   !> This subroutine places the deposition particles with the sepcified method. It does not compute the weights.
   !> The weights are computed in an external call to the 'write_f_on_grid_or_deposit' subroutine
   subroutine reset_deposition_particles_coordinates(self, rank)
-    class(sll_t_bsl_lt_pic_4d_group), intent(inout)   :: self
+    class(sll_t_pic_lbfr_4d_group), intent(inout)   :: self
     sll_int32, intent(in), optional                 :: rank
     sll_int32                                       :: this_rank
     sll_int32                                       :: i_x, i_y, i_vx, i_vy
@@ -754,9 +743,7 @@ contains
     sll_real64                                      :: rdn(4)
     sll_real64                                      :: eta_part(4)
 
-    SLL_ASSERT( self%deposition_particles_type == SLL_BSL_LT_PIC_FLEXIBLE )
-
-    if( self%deposition_particles_pos_type == SLL_BSL_LT_PIC_UNSTRUCTURED )then
+    if( self%deposition_particles_pos_type == SLL_PIC_LBFR_UNSTRUCTURED )then
 
       ! uses a quasi-random (Sobol) sequence
       ! initial value of the seed (it is incremented by one in the call to i8_sobol)
@@ -780,7 +767,7 @@ contains
 
     else
 
-      SLL_ASSERT( self%deposition_particles_pos_type == SLL_BSL_LT_PIC_STRUCTURED )
+      SLL_ASSERT( self%deposition_particles_pos_type == SLL_PIC_LBFR_STRUCTURED )
 
       ! fill in the grid of deposition particles (in every dimension we use the end nodes, even with periodic boundaries)
       i_part = 0
@@ -808,44 +795,38 @@ contains
 
   !----------------------------------------------------------------------------------
   ! do not change the position of the deposition particles, but compute (and set)
-  ! their weights using the BSL_LT_PIC reconstruction
+  ! their weights using the PIC_LBFR reconstruction
 
   subroutine reset_deposition_particles_weights_with_bsl_reconstruction(    &
       self,                             &
       target_total_charge,              &
       enforce_total_charge              &
   )
-    class( sll_t_bsl_lt_pic_4d_group ),           intent( inout ) :: self
+    class( sll_t_pic_lbfr_4d_group ),           intent( inout ) :: self
     sll_real64,                                 intent( in )    :: target_total_charge
     logical,                                    intent( in )    :: enforce_total_charge
-    type(sll_t_charge_accumulator_2d),  pointer :: void_charge_accumulator
     type(sll_t_cartesian_mesh_4d),      pointer :: void_grid_4d
     sll_real64, dimension(:,:),       pointer :: void_array_2d
 
-    sll_int32     :: scenario
+    sll_int32     :: reconstruction_set_type
 
-    nullify(void_charge_accumulator)
     nullify(void_grid_4d)
     nullify(void_array_2d)
 
-    scenario = SLL_BSL_LT_PIC_SET_WEIGHTS_ON_DEPOSITION_PARTICLES
-
-    ! for basic deposition particles, the reconstruction is always done inside the write_f_on_grid routine
-    SLL_ASSERT( self%deposition_particles_type == SLL_BSL_LT_PIC_FLEXIBLE )
+    reconstruction_set_type = SLL_PIC_LBFR_DEPOSITION_PARTICLES
 
     ! for pushed deposition particles, the reconstruction is always done at the remapping step, using a direct interpolation
-    SLL_ASSERT( self%deposition_particles_move_type == SLL_BSL_LT_PIC_FIXED )
+    SLL_ASSERT( self%deposition_particles_move_type == SLL_PIC_LBFR_FIXED )
 
     ! reset the weights of the deposition particles, because maybe not every deposition particle weight will be set
     self%deposition_particles_weight = 0.0d0
 
-    call self%bsl_lt_pic_4d_write_f_on_grid_or_deposit(void_charge_accumulator,             &
-                                                          scenario,                         &
-                                                          void_grid_4d,                     &
-                                                          void_array_2d,                    &
-                                                          target_total_charge,              &
-                                                          enforce_total_charge              &
-                                                          )
+    call self%pic_lbfr_4d_reconstruct_f( reconstruction_set_type,          &
+                                              void_grid_4d,                     &
+                                              void_array_2d,                    &
+                                              target_total_charge,              &
+                                              enforce_total_charge              &
+                                              )
 
   end subroutine reset_deposition_particles_weights_with_bsl_reconstruction
 
@@ -860,7 +841,7 @@ contains
       target_total_charge,              &
       enforce_total_charge              &
   )
-    class( sll_t_bsl_lt_pic_4d_group ),           intent( inout ) :: self
+    class( sll_t_pic_lbfr_4d_group ),           intent( inout ) :: self
     sll_real64,                                 intent( in )    :: target_total_charge
     logical,                                    intent( in )    :: enforce_total_charge
     sll_real64    :: eta(4)
@@ -869,11 +850,8 @@ contains
     sll_real64    :: point_charge, total_computed_charge
     sll_real64    :: charge_correction_factor
 
-    ! for basic deposition particles, the reconstruction is always done inside the write_f_on_grid routine
-    SLL_ASSERT( self%deposition_particles_type == SLL_BSL_LT_PIC_FLEXIBLE )
-
-    ! for fixed deposition particles, the reconstruction is done at each time step using a bsl_lt_pic reconstruction
-    SLL_ASSERT( self%deposition_particles_move_type == SLL_BSL_LT_PIC_PUSHED )
+    ! for fixed deposition particles, the reconstruction is done at each time step using a pic_lbfr reconstruction
+    SLL_ASSERT( self%deposition_particles_move_type == SLL_PIC_LBFR_PUSHED )
 
     ! reset the weights of the deposition particles, because maybe not every deposition particle weight will be set
     self%deposition_particles_weight = 0.0d0
@@ -882,7 +860,7 @@ contains
     total_computed_charge = 0.0d0
     do i_part = 1, self%number_deposition_particles
       eta = self%deposition_particles_eta(i_part, :)
-      point_charge = deposition_particle_charge_factor * self%bsl_lt_pic_4d_interpolate_value_of_remapped_f(eta)
+      point_charge = deposition_particle_charge_factor * self%pic_lbfr_4d_interpolate_value_of_remapped_f(eta)
       self%deposition_particles_weight(i_part) = point_charge
       total_computed_charge = total_computed_charge + point_charge
     end do
@@ -909,18 +887,15 @@ contains
 
 
   !----------------------------------------------------------------------------
-  ! deposit charge carried by the bsl_lt_pic_4d particles on a 2d mesh
+  ! deposit charge carried by the pic_lbfr_4d particles on a 2d mesh
 
-  subroutine bsl_lt_pic_4d_deposit_charge_2d( self, charge_accumulator, target_total_charge, enforce_total_charge)
-    class( sll_t_bsl_lt_pic_4d_group ),           intent( inout ) :: self
+  subroutine pic_lbfr_4d_deposit_charge_2d( self, charge_accumulator, target_total_charge, enforce_total_charge)
+    class( sll_t_pic_lbfr_4d_group ),           intent( inout ) :: self
     type( sll_t_charge_accumulator_2d ), pointer, intent( inout ) :: charge_accumulator
     sll_real64,                                 intent(in)      :: target_total_charge
     logical,                                    intent(in)      :: enforce_total_charge
 
     type(sll_t_charge_accumulator_cell_2d), pointer :: charge_accumulator_cell
-    type(sll_t_cartesian_mesh_4d),     pointer  :: void_grid_4d        ! make this argument optional ?
-    sll_real64, dimension(:,:),      pointer  :: void_array_2d       ! make this argument optional ?
-    sll_int32     :: scenario
 
     sll_int32  :: i_cell_x
     sll_int32  :: i_cell_y
@@ -933,87 +908,65 @@ contains
     sll_real64 :: x_part
     sll_real64 :: y_part
 
+    ! for deposition particles of "fixed" type, we first re-initialize their positions and weights
+    if( self%deposition_particles_move_type == SLL_PIC_LBFR_FIXED )then
+      call self%reset_deposition_particles_coordinates()
+      call self%reset_deposition_particles_weights_with_bsl_reconstruction(target_total_charge,enforce_total_charge)
+    end if
 
-    if( self%deposition_particles_type == SLL_BSL_LT_PIC_BASIC )then
-      ! then we compute new weights on the deposition grid, as follows
-      nullify(void_grid_4d)
-      nullify(void_array_2d)
-      scenario = SLL_BSL_LT_PIC_DEPOSIT_F
-      call sll_s_reset_charge_accumulator_to_zero ( charge_accumulator )
+    do i_part = 1, self%number_deposition_particles
 
-      call self%bsl_lt_pic_4d_write_f_on_grid_or_deposit(charge_accumulator,                                &
-                                                         scenario,                                          &
-                                                         void_grid_4d,                                      &
-                                                         void_array_2d,                                     &
-                                                         target_total_charge,                               &
-                                                         enforce_total_charge                               &
-                                                         )
+      particle_charge = self%deposition_particles_weight(i_part)
+      x_part = self%deposition_particles_eta(i_part, 1)
+      y_part = self%deposition_particles_eta(i_part, 2)
 
-    else
-      SLL_ASSERT( self%deposition_particles_type == SLL_BSL_LT_PIC_FLEXIBLE )
+      ! todo: use the interface function for the computation of the Poisson cell index? (but we need to return the cell_offset)
 
-      ! then we deposit the charge carried by the deposition particles with a quite standard technique
+      ! find poisson (x-)cell containing this deposition particle, and relative position in the cell
+      tmp = ( x_part - self%space_mesh_2d%eta1_min ) / self%space_mesh_2d%delta_eta1
+      i_cell_x = int( tmp ) + 1
+      dx = tmp - (i_cell_x - 1)  ! x-offset in cell (between 0 and 1)
 
-      ! but first: for flexible deposition particles of "fixed" type, we re-initialize their positions and weights
-      if( self%deposition_particles_move_type == SLL_BSL_LT_PIC_FIXED )then
-        call self%reset_deposition_particles_coordinates()
-        call self%reset_deposition_particles_weights_with_bsl_reconstruction(target_total_charge,enforce_total_charge)
+      ! find poisson (y-)cell containing this node, seen as a deposition particle, and relative position in the cell
+      tmp = ( y_part - self%space_mesh_2d%eta2_min ) / self%space_mesh_2d%delta_eta2
+      i_cell_y = int( tmp ) + 1
+      dy = tmp - (i_cell_y - 1)  ! y-offset in cell (between 0 and 1)
+
+      ! set the proper accumulator cell for the deposition
+      i_cell = i_cell_x + (i_cell_y - 1) * self%space_mesh_2d%num_cells1   !  (see global_to_cell_offset)
+
+      charge_accumulator_cell => charge_accumulator%q_acc(i_cell)
+
+      if( sll_f_x_is_in_domain_2d(    x_part, y_part,                 &
+                                self%space_mesh_2d,             &
+                                self%domain_is_periodic(1),     &
+                                self%domain_is_periodic(2) ))then
+
+        charge_accumulator_cell%q_sw = charge_accumulator_cell%q_sw + particle_charge * (1.0_f64 - dx) * (1.0_f64 - dy)
+        charge_accumulator_cell%q_se = charge_accumulator_cell%q_se + particle_charge *            dx  * (1.0_f64 - dy)
+        charge_accumulator_cell%q_nw = charge_accumulator_cell%q_nw + particle_charge * (1.0_f64 - dx) *            dy
+        charge_accumulator_cell%q_ne = charge_accumulator_cell%q_ne + particle_charge *            dx  *            dy
+        ! counter ???    deposited_charge = deposited_charge + particle_charge
+
+      else
+        ! particle not in domain (should store the reference for later processing)
+        print*, "Error (09864543254786875): for the moment every particle should be in the (periodic) 2d domain..."
+        stop
       end if
 
-      do i_part = 1, self%number_deposition_particles
+    end do
 
-        particle_charge = self%deposition_particles_weight(i_part)
-        x_part = self%deposition_particles_eta(i_part, 1)
-        y_part = self%deposition_particles_eta(i_part, 2)
-
-        ! todo: use the interface function for the computation of the Poisson cell index? (but we need to return the cell_offset)
-
-        ! find poisson (x-)cell containing this deposition particle, and relative position in the cell
-        tmp = ( x_part - self%space_mesh_2d%eta1_min ) / self%space_mesh_2d%delta_eta1
-        i_cell_x = int( tmp ) + 1
-        dx = tmp - (i_cell_x - 1)  ! x-offset in cell (between 0 and 1)
-
-        ! find poisson (y-)cell containing this node, seen as a deposition particle, and relative position in the cell
-        tmp = ( y_part - self%space_mesh_2d%eta2_min ) / self%space_mesh_2d%delta_eta2
-        i_cell_y = int( tmp ) + 1
-        dy = tmp - (i_cell_y - 1)  ! y-offset in cell (between 0 and 1)
-
-        ! set the proper accumulator cell for the deposition
-        i_cell = i_cell_x + (i_cell_y - 1) * self%space_mesh_2d%num_cells1   !  (see global_to_cell_offset)
-
-        charge_accumulator_cell => charge_accumulator%q_acc(i_cell)
-
-        if( sll_f_x_is_in_domain_2d(    x_part, y_part,                 &
-                                  self%space_mesh_2d,             &
-                                  self%domain_is_periodic(1),     &
-                                  self%domain_is_periodic(2) ))then
-
-          charge_accumulator_cell%q_sw = charge_accumulator_cell%q_sw + particle_charge * (1.0_f64 - dx) * (1.0_f64 - dy)
-          charge_accumulator_cell%q_se = charge_accumulator_cell%q_se + particle_charge *            dx  * (1.0_f64 - dy)
-          charge_accumulator_cell%q_nw = charge_accumulator_cell%q_nw + particle_charge * (1.0_f64 - dx) *            dy
-          charge_accumulator_cell%q_ne = charge_accumulator_cell%q_ne + particle_charge *            dx  *            dy
-          ! counter ???    deposited_charge = deposited_charge + particle_charge
-
-        else
-          ! particle not in domain (should store the reference for later processing)
-          print*, "Error (09864543254786875): for the moment every particle should be in the (periodic) 2d domain..."
-          stop
-        end if
-
-      end do
-
-    end if
-  end subroutine bsl_lt_pic_4d_deposit_charge_2d
+  end subroutine pic_lbfr_4d_deposit_charge_2d
 
 
-  !> bsl_lt_pic_4d_visualize_f_slice_x_vx  plots an approximation of  f_x_vx = \int \int f(x,y,v_x,v_y) d y d v_y
+  !> pic_lbfr_4d_visualize_f_slice_x_vx  plots an approximation of  f_x_vx = \int \int f(x,y,v_x,v_y) d y d v_y
   !>   - the plot is done on a 2d grid, but uses a 4d grid to evaluate f
   !>   - grid dimensions: we give the number of points, and the boundaries are given by the remapping domain
   !>   - calls sll_o_gnuplot_2d to write the data file
 
-  subroutine bsl_lt_pic_4d_visualize_f_slice_x_vx(self, array_name, plot_np_x, plot_np_y, plot_np_vx, plot_np_vy, iplot)
+  subroutine pic_lbfr_4d_visualize_f_slice_x_vx(self, array_name, plot_np_x, plot_np_y, plot_np_vx, plot_np_vy, iplot)
 
-    class( sll_t_bsl_lt_pic_4d_group ),   intent( inout ) :: self
+    class( sll_t_pic_lbfr_4d_group ),   intent( inout ) :: self
     character(len=*),                   intent(in)      :: array_name   !< field name
     sll_int32,                          intent(in)      :: plot_np_x    !< nb of points in the x  plotting grid (see comment above)
     sll_int32,                          intent(in)      :: plot_np_y    !< nb of points in the y  plotting grid (see comment above)
@@ -1025,14 +978,10 @@ contains
 
     sll_real64, dimension(:,:),       pointer :: x_vx_grid_values
     type(sll_t_cartesian_mesh_4d),      pointer :: plotting_grid_4d
-    type(sll_t_charge_accumulator_2d),  pointer :: void_charge_accumulator
-    sll_int32     :: scenario
+    sll_int32     :: reconstruction_set_type
     sll_real64    :: dummy_total_charge
     logical       :: enforce_total_charge
 
-    nullify(void_charge_accumulator)
-
-    !    print *, " plot A"
 
     SLL_ALLOCATE( x_vx_grid_values(plot_np_x, plot_np_vx), ierr)
 
@@ -1050,17 +999,16 @@ contains
                                               self%remapping_grid_eta_max(4)  &
                                             )
 
-    scenario = SLL_BSL_LT_PIC_WRITE_F_ON_GIVEN_GRID
+    reconstruction_set_type = SLL_PIC_LBFR_GIVEN_GRID
     dummy_total_charge = 0.0_f64
     enforce_total_charge = .false.
 
-    call self%bsl_lt_pic_4d_write_f_on_grid_or_deposit(void_charge_accumulator,   &
-                                                       scenario,                  &
-                                                       plotting_grid_4d,          &
-                                                       x_vx_grid_values,          &
-                                                       dummy_total_charge,        &
-                                                       enforce_total_charge       &
-                                                       )
+    call self%pic_lbfr_4d_reconstruct_f(  reconstruction_set_type,   &
+                                               plotting_grid_4d,          &
+                                               x_vx_grid_values,          &
+                                               dummy_total_charge,        &
+                                               enforce_total_charge       &
+                                               )
 
     ! print *, "plot T"
 
@@ -1075,10 +1023,10 @@ contains
                         iplot,                          &
                         ierr )
 
-  end subroutine bsl_lt_pic_4d_visualize_f_slice_x_vx
+  end subroutine pic_lbfr_4d_visualize_f_slice_x_vx
 
   function remapping_cart_grid_number_nodes_x(p_group) result(val)
-    class(sll_t_bsl_lt_pic_4d_group), intent(in)  :: p_group
+    class(sll_t_pic_lbfr_4d_group), intent(in)  :: p_group
     sll_int32                                  :: val
 
     if( p_group%domain_is_periodic(1) )then
@@ -1089,7 +1037,7 @@ contains
   end function
 
   function remapping_cart_grid_number_nodes_y(p_group) result(val)
-    class(sll_t_bsl_lt_pic_4d_group), intent(in)  :: p_group
+    class(sll_t_pic_lbfr_4d_group), intent(in)  :: p_group
     sll_int32                                  :: val
 
     if( p_group%domain_is_periodic(2) )then
@@ -1100,21 +1048,21 @@ contains
   end function
 
   function remapping_cart_grid_number_nodes_vx(p_group) result(val)
-    class(sll_t_bsl_lt_pic_4d_group), intent(in)  :: p_group
+    class(sll_t_pic_lbfr_4d_group), intent(in)  :: p_group
     sll_int32                                  :: val
 
     val = p_group%remapping_cart_grid_number_cells_vx + 1
   end function
 
   function remapping_cart_grid_number_nodes_vy(p_group) result(val)
-    class(sll_t_bsl_lt_pic_4d_group), intent(in)  :: p_group
+    class(sll_t_pic_lbfr_4d_group), intent(in)  :: p_group
     sll_int32                                  :: val
 
     val = p_group%remapping_cart_grid_number_cells_vy + 1
   end function
 
   function get_deposition_particle_charge_factor(p_group) result(val)
-    class(sll_t_bsl_lt_pic_4d_group), intent(in)  :: p_group
+    class(sll_t_pic_lbfr_4d_group), intent(in)  :: p_group
     sll_real64 :: val
 
     sll_int32  :: nodes_number
@@ -1133,8 +1081,8 @@ contains
 
   !----------------------------------------------------------------------------
   ! Constructor
-  !> @brief Constructor for a group of bsl_lt_pic_4d particles
-  function sll_f_bsl_lt_pic_4d_group_new(             &
+  !> @brief Constructor for a group of pic_lbfr_4d particles
+  function sll_f_pic_lbfr_4d_group_new(             &
         species_charge,                             &
         species_mass,                               &
         particle_group_id,                          &
@@ -1151,7 +1099,6 @@ contains
         remapping_cart_grid_number_cells_vx,        &   ! for splines
         remapping_cart_grid_number_cells_vy,        &   ! for splines
         remapping_sparse_grid_max_levels,           &   ! for the sparse grid: for now, same level in each dimension
-        deposition_particles_type,                  &
         deposition_particles_pos_type,              &
         deposition_particles_move_type,             &
         number_deposition_particles,                &   ! (in a previous implementation this was only a lower bound)
@@ -1171,7 +1118,7 @@ contains
         flow_grid_number_cells_vy,                  &
         space_mesh_2d ) result(res)
 
-    type( sll_t_bsl_lt_pic_4d_group ), pointer :: res
+    type( sll_t_pic_lbfr_4d_group ), pointer :: res
 
     sll_real64,               intent(in)  :: species_charge
     sll_real64,               intent(in)  :: species_mass
@@ -1190,7 +1137,6 @@ contains
     sll_int32,                intent(in)  :: remapping_cart_grid_number_cells_vx
     sll_int32,                intent(in)  :: remapping_cart_grid_number_cells_vy
     sll_int32,  dimension(4), intent(in)  :: remapping_sparse_grid_max_levels
-    sll_int32,                intent(in)  :: deposition_particles_type
     sll_int32,                intent(in)  :: deposition_particles_pos_type
     sll_int32,                intent(in)  :: deposition_particles_move_type
     sll_int32,                intent(in)  :: number_deposition_particles
@@ -1218,7 +1164,7 @@ contains
     sll_int32               :: number_cells_initial_markers_grid_vy
 
     sll_int32               :: ierr
-    character(len=*), parameter :: this_fun_name = "sll_f_bsl_lt_pic_4d_group_new"
+    character(len=*), parameter :: this_fun_name = "sll_f_pic_lbfr_4d_group_new"
     character(len=128)      :: err_msg
 
     sll_int32  :: effective_nb_deposition_particles_x
@@ -1305,7 +1251,7 @@ contains
 
     res%flow_markers_type = flow_markers_type
 
-    if( res%flow_markers_type == SLL_BSL_LT_PIC_STRUCTURED )then
+    if( res%flow_markers_type == SLL_PIC_LBFR_STRUCTURED )then
       !> A.2.a list of marker coordinates (pushed forward)
       res%number_flow_markers_x  = number_flow_markers_x
       res%number_flow_markers_y  = number_flow_markers_y
@@ -1350,7 +1296,7 @@ contains
 
     else
 
-      SLL_ASSERT( res%flow_markers_type == SLL_BSL_LT_PIC_UNSTRUCTURED )
+      SLL_ASSERT( res%flow_markers_type == SLL_PIC_LBFR_UNSTRUCTURED )
 
       !>      A.3.a initialize parameters of unstructured flow markers
 
@@ -1417,7 +1363,7 @@ contains
     res%remapped_f_interpolation_type = remap_f_type
     res%remapped_f_interpolation_degree = remap_degree
 
-    if( res%remapped_f_interpolation_type == SLL_BSL_LT_PIC_REMAP_WITH_SPLINES )then
+    if( res%remapped_f_interpolation_type == SLL_PIC_LBFR_REMAP_WITH_SPLINES )then
 
       ! C.1 interpolator for splines
 
@@ -1462,7 +1408,7 @@ contains
       call sll_s_test_error_code(ierr, 'Memory allocation Failure.', __FILE__, __LINE__)
 
 
-    else if( res%remapped_f_interpolation_type == SLL_BSL_LT_PIC_REMAP_WITH_SPARSE_GRIDS )then
+    else if( res%remapped_f_interpolation_type == SLL_PIC_LBFR_REMAP_WITH_SPARSE_GRIDS )then
       ! C.2 interpolator for sparse grids
 
       ! C.2.a  sparse remapping grid
@@ -1489,20 +1435,10 @@ contains
 
     !> D. discretization of the deposited f -- uses deposition particles which can be of several types (see comments on top of file)
 
-    res%deposition_particles_type = deposition_particles_type
+    res%deposition_particles_pos_type  = deposition_particles_pos_type
+    res%deposition_particles_move_type = deposition_particles_move_type
 
-    if( res%deposition_particles_type == SLL_BSL_LT_PIC_BASIC )then
-      res%deposition_particles_pos_type = SLL_BSL_LT_PIC_STRUCTURED
-      res%deposition_particles_move_type = SLL_BSL_LT_PIC_FIXED
-      ! Note: results should be the same as with FLEXIBLE particles of type STRUCTURED + FIXED,
-      ! however BASIC particles are created on the fly (during deposition) and not stored
-    else
-      res%deposition_particles_pos_type  = deposition_particles_pos_type
-      res%deposition_particles_move_type = deposition_particles_move_type
-    end if
-
-    use_deposition_particles_grid = ( res%deposition_particles_type == SLL_BSL_LT_PIC_BASIC   &
-                                      .or. res%deposition_particles_pos_type == SLL_BSL_LT_PIC_STRUCTURED )
+    use_deposition_particles_grid = (res%deposition_particles_pos_type == SLL_PIC_LBFR_STRUCTURED)
 
     derive_deposition_particles_grid_from_other_parameters = .false.
 
@@ -1514,7 +1450,7 @@ contains
 
         ! this is how the deposition grid was created before January 17, 2016, just kept for memory (discard at some point)
         ! here we need parameters of a struct grid for the flow markers
-        SLL_ASSERT( res%flow_markers_type == SLL_BSL_LT_PIC_STRUCTURED )
+        SLL_ASSERT( res%flow_markers_type == SLL_PIC_LBFR_STRUCTURED )
 
         ! In this implementation, we create the grid of deposition particles with the following properties:
         !
@@ -1619,35 +1555,26 @@ contains
 
     end if
 
-    if( res%deposition_particles_type == SLL_BSL_LT_PIC_FLEXIBLE )then
+    ! Deposition particles will have their weights and coordinates stored in the arrays initialized below
+    !     they may be transported with the flow (like sdt particles) and re-initialized on remapping steps
+    !     or stay on the grid and have new weights computed at each time step
 
-      ! Flexible deposition particles will have their weights and coordinates stored in the arrays initialized below
-      !     they may be transported with the flow (like sdt particles) and re-initialized on remapping steps
-      !     or stay on the grid and have new weights computed at each time step
-
-      if( res%deposition_particles_pos_type == SLL_BSL_LT_PIC_STRUCTURED )then
-        res%number_deposition_particles        = effective_nb_deposition_particles_on_grid
-      else
-        SLL_ASSERT( res%deposition_particles_pos_type == SLL_BSL_LT_PIC_UNSTRUCTURED )
-        res%number_deposition_particles        = number_deposition_particles
-      end if
-
-      if( res%deposition_particles_move_type == SLL_BSL_LT_PIC_FIXED )then
-        res%number_moving_deposition_particles = 0
-      else
-        SLL_ASSERT( res%deposition_particles_move_type == SLL_BSL_LT_PIC_PUSHED )
-        res%number_moving_deposition_particles = res%number_deposition_particles
-      end if
-
-      SLL_ALLOCATE( res%deposition_particles_eta(res%number_deposition_particles, 4), ierr )
-      SLL_ALLOCATE( res%deposition_particles_weight(res%number_deposition_particles), ierr )
-
+    if( res%deposition_particles_pos_type == SLL_PIC_LBFR_STRUCTURED )then
+      res%number_deposition_particles        = effective_nb_deposition_particles_on_grid
     else
-       SLL_ASSERT( res%deposition_particles_type == SLL_BSL_LT_PIC_BASIC )
-
-       res%number_deposition_particles        = number_deposition_particles
-       res%number_moving_deposition_particles = 0
+      SLL_ASSERT( res%deposition_particles_pos_type == SLL_PIC_LBFR_UNSTRUCTURED )
+      res%number_deposition_particles        = number_deposition_particles
     end if
+
+    if( res%deposition_particles_move_type == SLL_PIC_LBFR_FIXED )then
+      res%number_moving_deposition_particles = 0
+    else
+      SLL_ASSERT( res%deposition_particles_move_type == SLL_PIC_LBFR_PUSHED )
+      res%number_moving_deposition_particles = res%number_deposition_particles
+    end if
+
+    SLL_ALLOCATE( res%deposition_particles_eta(res%number_deposition_particles, 4), ierr )
+    SLL_ALLOCATE( res%deposition_particles_weight(res%number_deposition_particles), ierr )
 
     SLL_ASSERT( res%number_deposition_particles >= 0 )
     SLL_ASSERT( res%number_moving_deposition_particles*(res%number_moving_deposition_particles-res%number_deposition_particles)==0 )
@@ -1660,19 +1587,19 @@ contains
     !      SLL_ERROR( this_fun_name, err_msg )
     !    end if
 
-  end function sll_f_bsl_lt_pic_4d_group_new
+  end function sll_f_pic_lbfr_4d_group_new
 
 
   !> initializes the interpolation coefficients for f0 on the remapping grid, and the flow markers
   !> Note: since no interpolations are needed in the evaluation of f0, the arrays of interpolation coefficients can be used
   !> to store the nodal values of f0 (in the remapping routines this is not possible)
-  subroutine bsl_lt_pic_4d_initializer( self, &
+  subroutine pic_lbfr_4d_initializer( self, &
         initial_density_identifier,           &
         target_total_charge,                  &
         enforce_total_charge, &
         rand_seed, rank, world_size )
 
-    class( sll_t_bsl_lt_pic_4d_group ), intent( inout ) :: self
+    class( sll_t_pic_lbfr_4d_group ), intent( inout ) :: self
     sll_int32                       , intent( in    ) :: initial_density_identifier
     sll_real64,                       intent( in )    :: target_total_charge
     logical,                          intent( in )    :: enforce_total_charge
@@ -1681,46 +1608,45 @@ contains
 
     !> A. initialize the remapping tool:
     !>    - A.1  write the nodal values of f0 on the arrays of interpolation coefs
-    print *, "bsl_lt_pic_4d_initializer -- step A: initialize the remapping tool"
-    if( initial_density_identifier == SLL_BSL_LT_PIC_LANDAU_F0 )then
-      call self%bsl_lt_pic_4d_write_landau_density_on_remapping_grid( self%thermal_speed, self%alpha, self%k_landau )
-    else if( initial_density_identifier == SLL_BSL_LT_PIC_HAT_F0 )then
-      call self%bsl_lt_pic_4d_write_hat_density_on_remapping_grid(                              &
+    print *, "pic_lbfr_4d_initializer -- step A: initialize the remapping tool"
+    if( initial_density_identifier == SLL_PIC_LBFR_LANDAU_F0 )then
+      call self%pic_lbfr_4d_write_landau_density_on_remapping_grid( self%thermal_speed, self%alpha, self%k_landau )
+    else if( initial_density_identifier == SLL_PIC_LBFR_HAT_F0 )then
+      call self%pic_lbfr_4d_write_hat_density_on_remapping_grid(                              &
                       self%hat_f0_x0, self%hat_f0_y0, self%hat_f0_vx0, self%hat_f0_vy0,         &
                       self%hat_f0_r_x, self%hat_f0_r_y, self%hat_f0_r_vx, self%hat_f0_r_vy,     &
                                                                    self%hat_f0_basis_height, self%hat_f0_shift)
     else
-      SLL_ERROR( "bsl_lt_pic_4d_initializer", "wrong value for initial_density_identifier" )
+      SLL_ERROR( "pic_lbfr_4d_initializer", "wrong value for initial_density_identifier" )
     end if
 
     !>    - A.2  compute the interpolation coefs for remapped_f (using the nodal values stored in the arrays of interpolation coefs)
 
-    if( self%remapped_f_interpolation_type == SLL_BSL_LT_PIC_REMAP_WITH_SPLINES )then
-      call self%bsl_lt_pic_4d_compute_new_spline_coefs()
-    else if( self%remapped_f_interpolation_type == SLL_BSL_LT_PIC_REMAP_WITH_SPARSE_GRIDS )then
+    if( self%remapped_f_interpolation_type == SLL_PIC_LBFR_REMAP_WITH_SPLINES )then
+      call self%pic_lbfr_4d_compute_new_spline_coefs()
+    else if( self%remapped_f_interpolation_type == SLL_PIC_LBFR_REMAP_WITH_SPARSE_GRIDS )then
       call self%sparse_grid_interpolator%compute_hierarchical_surplus(      &
                 self%remapped_f_sparse_grid_coefficients                    &
            )
     else
-      SLL_ERROR( "bsl_lt_pic_4d_initializer", "wrong value for remapped_f_interpolation_type" )
+      SLL_ERROR( "pic_lbfr_4d_initializer", "wrong value for remapped_f_interpolation_type" )
     end if
 
     !> B. initialize the (flow) markers
-    print *, "bsl_lt_pic_4d_initializer -- step B: initialize the flow markers"
-    if( self%flow_markers_type == SLL_BSL_LT_PIC_STRUCTURED )then
-      call self%bsl_lt_pic_4d_reset_markers_position()
-      call self%bsl_lt_pic_4d_set_markers_connectivity()
+    print *, "pic_lbfr_4d_initializer -- step B: initialize the flow markers"
+    if( self%flow_markers_type == SLL_PIC_LBFR_STRUCTURED )then
+      call self%pic_lbfr_4d_reset_markers_position()
+      call self%pic_lbfr_4d_set_markers_connectivity()
     else
-      SLL_ASSERT( self%flow_markers_type == SLL_BSL_LT_PIC_UNSTRUCTURED )
-      call self%bsl_lt_pic_4d_initialize_unstruct_markers()
-      call self%bsl_lt_pic_4d_prepare_unstruct_markers_for_flow_jacobians()
+      SLL_ASSERT( self%flow_markers_type == SLL_PIC_LBFR_UNSTRUCTURED )
+      call self%pic_lbfr_4d_initialize_unstruct_markers()
+      call self%pic_lbfr_4d_prepare_unstruct_markers_for_flow_jacobians()
     end if
 
     !> C. if deposition particles are pushed, we initialize them now -- this requires that the remapping tool is initialized
-    if( self%deposition_particles_type == SLL_BSL_LT_PIC_FLEXIBLE     &
-        .and. self%deposition_particles_move_type == SLL_BSL_LT_PIC_PUSHED )then
-      print *, "bsl_lt_pic_4d_initializer -- step C: initialize the deposition cells: "
-      print *, "bsl_lt_pic_4d_initializer -- (C) will create ", self%number_deposition_particles, "deposition_particles..."
+    if( self%deposition_particles_move_type == SLL_PIC_LBFR_PUSHED )then
+      print *, "pic_lbfr_4d_initializer -- step C: initialize the deposition cells: "
+      print *, "pic_lbfr_4d_initializer -- (C) will create ", self%number_deposition_particles, "deposition_particles..."
       ! if deposition particles are fixed, then they are initialized at each time step, in the deposition routine
       if(present(rank))then
         call self%reset_deposition_particles_coordinates(rank)
@@ -1739,15 +1665,15 @@ contains
     SLL_ASSERT(present(world_size))
     SLL_ASSERT(present(rand_seed))
 
-  end subroutine bsl_lt_pic_4d_initializer
+  end subroutine pic_lbfr_4d_initializer
 
 
-  subroutine bsl_lt_pic_4d_write_landau_density_on_remapping_grid(    &
+  subroutine pic_lbfr_4d_write_landau_density_on_remapping_grid(    &
               p_group,                              &
               thermal_speed, alpha, k_landau        &
               )
 
-    class(sll_t_bsl_lt_pic_4d_group), intent(inout)    :: p_group
+    class(sll_t_pic_lbfr_4d_group), intent(inout)    :: p_group
     sll_real64, intent(in)                          :: thermal_speed, alpha, k_landau
 
     sll_int32 :: j
@@ -1783,9 +1709,9 @@ contains
     one_over_two_pi = 1./(2*sll_p_pi)
 
 
-    ! print*, "bsl_lt_pic_4d_write_landau_density_on_remapping_grid -- a "
+    ! print*, "pic_lbfr_4d_write_landau_density_on_remapping_grid -- a "
 
-    if( p_group%remapped_f_interpolation_type == SLL_BSL_LT_PIC_REMAP_WITH_SPLINES )then
+    if( p_group%remapped_f_interpolation_type == SLL_PIC_LBFR_REMAP_WITH_SPLINES )then
 
       number_nodes_x  = p_group%remapping_cart_grid_number_nodes_x()
       number_nodes_y  = p_group%remapping_cart_grid_number_nodes_y()
@@ -1809,7 +1735,7 @@ contains
       SLL_ASSERT( size(p_group%remapped_f_splines_coefficients,3) == number_nodes_vx )
       SLL_ASSERT( size(p_group%remapped_f_splines_coefficients,4) == number_nodes_vy )
 
-      ! print*, "bsl_lt_pic_4d_write_landau_density_on_remapping_grid -- assert ok "
+      ! print*, "pic_lbfr_4d_write_landau_density_on_remapping_grid -- assert ok "
 
       do j_x = 1, number_nodes_x
         x_j = x_min + (j_x-1) * h_x
@@ -1837,33 +1763,33 @@ contains
 
     else
 
-      !      print*, "bsl_lt_pic_4d_write_landau_density_on_remapping_grid -- b"
+      !      print*, "pic_lbfr_4d_write_landau_density_on_remapping_grid -- b"
       !      print*, p_group%remapped_f_interpolation_type
-      !      print*, "bsl_lt_pic_4d_write_landau_density_on_remapping_grid -- c"
+      !      print*, "pic_lbfr_4d_write_landau_density_on_remapping_grid -- c"
       !      print*, p_group%sparse_grid_interpolator%size_basis
       !      print*, size(p_group%remapped_f_sparse_grid_coefficients,1)
-      !      print*, "bsl_lt_pic_4d_write_landau_density_on_remapping_grid -- d"
-      SLL_ASSERT( p_group%remapped_f_interpolation_type == SLL_BSL_LT_PIC_REMAP_WITH_SPARSE_GRIDS )
+      !      print*, "pic_lbfr_4d_write_landau_density_on_remapping_grid -- d"
+      SLL_ASSERT( p_group%remapped_f_interpolation_type == SLL_PIC_LBFR_REMAP_WITH_SPARSE_GRIDS )
       SLL_ASSERT( size(p_group%remapped_f_sparse_grid_coefficients,1) == p_group%sparse_grid_interpolator%size_basis )
 
-      !      print*, "bsl_lt_pic_4d_write_landau_density_on_remapping_grid -- WARNING DEBUG 1908987987876768687687568765876986987 "
-      !      print*, "bsl_lt_pic_4d_write_landau_density_on_remapping_grid -- WARNING --- INITIALIZING WITH 1 ------------------- "
-      !      print*, "bsl_lt_pic_4d_write_landau_density_on_remapping_grid -- WARNING DEBUG 1908987987876768687687568765876986987 "
-      !      print*, "bsl_lt_pic_4d_write_landau_density_on_remapping_grid -- WARNING --- INITIALIZING WITH 1 ------------------- "
-      !      print*, "bsl_lt_pic_4d_write_landau_density_on_remapping_grid -- WARNING DEBUG 1908987987876768687687568765876986987 "
-      !      print*, "bsl_lt_pic_4d_write_landau_density_on_remapping_grid -- WARNING --- INITIALIZING WITH 1 ------------------- "
-      !      print*, "bsl_lt_pic_4d_write_landau_density_on_remapping_grid -- WARNING DEBUG 1908987987876768687687568765876986987 "
-      !      print*, "bsl_lt_pic_4d_write_landau_density_on_remapping_grid -- WARNING --- INITIALIZING WITH 1 ------------------- "
-      !      print*, "bsl_lt_pic_4d_write_landau_density_on_remapping_grid -- WARNING DEBUG 1908987987876768687687568765876986987 "
-      !      print*, "bsl_lt_pic_4d_write_landau_density_on_remapping_grid -- WARNING --- INITIALIZING WITH 1 ------------------- "
-      !      print*, "bsl_lt_pic_4d_write_landau_density_on_remapping_grid -- WARNING DEBUG 1908987987876768687687568765876986987 "
-      !      print*, "bsl_lt_pic_4d_write_landau_density_on_remapping_grid -- WARNING --- INITIALIZING WITH 1 ------------------- "
-      !      print*, "bsl_lt_pic_4d_write_landau_density_on_remapping_grid -- WARNING DEBUG 1908987987876768687687568765876986987 "
-      !      print*, "bsl_lt_pic_4d_write_landau_density_on_remapping_grid -- WARNING --- INITIALIZING WITH 1 ------------------- "
-      !      print*, "bsl_lt_pic_4d_write_landau_density_on_remapping_grid -- WARNING DEBUG 1908987987876768687687568765876986987 "
-      !      print*, "bsl_lt_pic_4d_write_landau_density_on_remapping_grid -- WARNING --- INITIALIZING WITH 1 ------------------- "
-      !      print*, "bsl_lt_pic_4d_write_landau_density_on_remapping_grid -- WARNING DEBUG 1908987987876768687687568765876986987 "
-      !      print*, "bsl_lt_pic_4d_write_landau_density_on_remapping_grid -- WARNING --- INITIALIZING WITH 1 ------------------- "
+      !      print*, "pic_lbfr_4d_write_landau_density_on_remapping_grid -- WARNING DEBUG 1908987987876768687687568765876986987 "
+      !      print*, "pic_lbfr_4d_write_landau_density_on_remapping_grid -- WARNING --- INITIALIZING WITH 1 ------------------- "
+      !      print*, "pic_lbfr_4d_write_landau_density_on_remapping_grid -- WARNING DEBUG 1908987987876768687687568765876986987 "
+      !      print*, "pic_lbfr_4d_write_landau_density_on_remapping_grid -- WARNING --- INITIALIZING WITH 1 ------------------- "
+      !      print*, "pic_lbfr_4d_write_landau_density_on_remapping_grid -- WARNING DEBUG 1908987987876768687687568765876986987 "
+      !      print*, "pic_lbfr_4d_write_landau_density_on_remapping_grid -- WARNING --- INITIALIZING WITH 1 ------------------- "
+      !      print*, "pic_lbfr_4d_write_landau_density_on_remapping_grid -- WARNING DEBUG 1908987987876768687687568765876986987 "
+      !      print*, "pic_lbfr_4d_write_landau_density_on_remapping_grid -- WARNING --- INITIALIZING WITH 1 ------------------- "
+      !      print*, "pic_lbfr_4d_write_landau_density_on_remapping_grid -- WARNING DEBUG 1908987987876768687687568765876986987 "
+      !      print*, "pic_lbfr_4d_write_landau_density_on_remapping_grid -- WARNING --- INITIALIZING WITH 1 ------------------- "
+      !      print*, "pic_lbfr_4d_write_landau_density_on_remapping_grid -- WARNING DEBUG 1908987987876768687687568765876986987 "
+      !      print*, "pic_lbfr_4d_write_landau_density_on_remapping_grid -- WARNING --- INITIALIZING WITH 1 ------------------- "
+      !      print*, "pic_lbfr_4d_write_landau_density_on_remapping_grid -- WARNING DEBUG 1908987987876768687687568765876986987 "
+      !      print*, "pic_lbfr_4d_write_landau_density_on_remapping_grid -- WARNING --- INITIALIZING WITH 1 ------------------- "
+      !      print*, "pic_lbfr_4d_write_landau_density_on_remapping_grid -- WARNING DEBUG 1908987987876768687687568765876986987 "
+      !      print*, "pic_lbfr_4d_write_landau_density_on_remapping_grid -- WARNING --- INITIALIZING WITH 1 ------------------- "
+      !      print*, "pic_lbfr_4d_write_landau_density_on_remapping_grid -- WARNING DEBUG 1908987987876768687687568765876986987 "
+      !      print*, "pic_lbfr_4d_write_landau_density_on_remapping_grid -- WARNING --- INITIALIZING WITH 1 ------------------- "
 
       do j=1, p_group%sparse_grid_interpolator%size_basis
           x_j  = p_group%sparse_grid_interpolator%hierarchy(j)%coordinate(1)
@@ -1882,18 +1808,18 @@ contains
       end do
 
 
-      !      print*, "bsl_lt_pic_4d_write_landau_density_on_remapping_grid -- DEBUG 09890908987876988097986 "
-      !      print*, "bsl_lt_pic_4d_write_landau_density_on_remapping_grid -- DEBUG 09890908987876988097986 "
-      !      print*, "bsl_lt_pic_4d_write_landau_density_on_remapping_grid -- DEBUG 09890908987876988097986 "
-      !      print*, "bsl_lt_pic_4d_write_landau_density_on_remapping_grid -- DEBUG 09890908987876988097986 "
-      !      print*, "bsl_lt_pic_4d_write_landau_density_on_remapping_grid -- DEBUG 09890908987876988097986 "
-      !      print*, "bsl_lt_pic_4d_write_landau_density_on_remapping_grid -- DEBUG 09890908987876988097986 "
-      !      print*, "bsl_lt_pic_4d_write_landau_density_on_remapping_grid -- DEBUG 09890908987876988097986 "
-      !      print*, "bsl_lt_pic_4d_write_landau_density_on_remapping_grid -- DEBUG 09890908987876988097986 "
-      !      print*, "bsl_lt_pic_4d_write_landau_density_on_remapping_grid -- DEBUG 09890908987876988097986 "
-      !      print*, "bsl_lt_pic_4d_write_landau_density_on_remapping_grid -- DEBUG 09890908987876988097986 "
-      !      print*, "bsl_lt_pic_4d_write_landau_density_on_remapping_grid -- DEBUG 09890908987876988097986 "
-      !      print*, "bsl_lt_pic_4d_write_landau_density_on_remapping_grid -- DEBUG 09890908987876988097986 "
+      !      print*, "pic_lbfr_4d_write_landau_density_on_remapping_grid -- DEBUG 09890908987876988097986 "
+      !      print*, "pic_lbfr_4d_write_landau_density_on_remapping_grid -- DEBUG 09890908987876988097986 "
+      !      print*, "pic_lbfr_4d_write_landau_density_on_remapping_grid -- DEBUG 09890908987876988097986 "
+      !      print*, "pic_lbfr_4d_write_landau_density_on_remapping_grid -- DEBUG 09890908987876988097986 "
+      !      print*, "pic_lbfr_4d_write_landau_density_on_remapping_grid -- DEBUG 09890908987876988097986 "
+      !      print*, "pic_lbfr_4d_write_landau_density_on_remapping_grid -- DEBUG 09890908987876988097986 "
+      !      print*, "pic_lbfr_4d_write_landau_density_on_remapping_grid -- DEBUG 09890908987876988097986 "
+      !      print*, "pic_lbfr_4d_write_landau_density_on_remapping_grid -- DEBUG 09890908987876988097986 "
+      !      print*, "pic_lbfr_4d_write_landau_density_on_remapping_grid -- DEBUG 09890908987876988097986 "
+      !      print*, "pic_lbfr_4d_write_landau_density_on_remapping_grid -- DEBUG 09890908987876988097986 "
+      !      print*, "pic_lbfr_4d_write_landau_density_on_remapping_grid -- DEBUG 09890908987876988097986 "
+      !      print*, "pic_lbfr_4d_write_landau_density_on_remapping_grid -- DEBUG 09890908987876988097986 "
       !
       !      number_nodes_x  = 50
       !      number_nodes_y  = 1
@@ -1939,19 +1865,19 @@ contains
       !        end do
       !      end do
       !
-      !      print*, "bsl_lt_pic_4d_write_landau_density_on_remapping_grid -- CHECKING TOTAL DENSITY:  ", total_density
+      !      print*, "pic_lbfr_4d_write_landau_density_on_remapping_grid -- CHECKING TOTAL DENSITY:  ", total_density
 
     end if
 
-  end subroutine bsl_lt_pic_4d_write_landau_density_on_remapping_grid
+  end subroutine pic_lbfr_4d_write_landau_density_on_remapping_grid
 
 
-  !  subroutine bsl_lt_pic_4d_write_landau_density_on_sparse_grid(    &
+  !  subroutine pic_lbfr_4d_write_landau_density_on_sparse_grid(    &
   !              p_group,                              &
   !              thermal_speed, alpha, k_landau        &
   !              )
   !
-  !    class(sll_t_bsl_lt_pic_4d_group), intent(inout)   :: p_group
+  !    class(sll_t_pic_lbfr_4d_group), intent(inout)   :: p_group
   !    sll_real64, intent(in)                          :: thermal_speed, alpha, k_landau
   !
   !    sll_int32 :: j
@@ -1979,18 +1905,18 @@ contains
   !        p_group%remapped_f_sparse_grid_coefficients(j) = one_over_two_pi * f_x * f_vx * f_vy
   !    end do
   !
-  !  end subroutine bsl_lt_pic_4d_write_landau_density_on_sparse_grid
+  !  end subroutine pic_lbfr_4d_write_landau_density_on_sparse_grid
 
 
-  ! <<bsl_lt_pic_4d_write_hat_density_on_remapping_grid>>
-  subroutine bsl_lt_pic_4d_write_hat_density_on_remapping_grid ( &
+  ! <<pic_lbfr_4d_write_hat_density_on_remapping_grid>>
+  subroutine pic_lbfr_4d_write_hat_density_on_remapping_grid ( &
         p_group,                &
         x0, y0, vx0, vy0,       &
         r_x, r_y, r_vx, r_vy,   &
         basis_height, shift &
       )
 
-    class(sll_t_bsl_lt_pic_4d_group), intent(inout)     :: p_group
+    class(sll_t_pic_lbfr_4d_group), intent(inout)     :: p_group
     sll_real64, intent(in)                            :: x0, y0, vx0, vy0
     sll_real64, intent(in)                            :: r_x, r_y, r_vx, r_vy
     sll_real64, intent(in)                            :: basis_height, shift
@@ -2017,7 +1943,7 @@ contains
     sll_real64 :: vx_j
     sll_real64 :: vy_j
 
-    if( p_group%remapped_f_interpolation_type == SLL_BSL_LT_PIC_REMAP_WITH_SPLINES )then
+    if( p_group%remapped_f_interpolation_type == SLL_PIC_LBFR_REMAP_WITH_SPLINES )then
 
       number_nodes_x  = p_group%remapping_cart_grid_number_nodes_x()
       number_nodes_y  = p_group%remapping_cart_grid_number_nodes_y()
@@ -2059,7 +1985,7 @@ contains
 
     else
 
-      SLL_ASSERT( p_group%remapped_f_interpolation_type == SLL_BSL_LT_PIC_REMAP_WITH_SPARSE_GRIDS )
+      SLL_ASSERT( p_group%remapped_f_interpolation_type == SLL_PIC_LBFR_REMAP_WITH_SPARSE_GRIDS )
 
       do j=1, p_group%sparse_grid_interpolator%size_basis
         x_j  = p_group%sparse_grid_interpolator%hierarchy(j)%coordinate(1)
@@ -2075,17 +2001,17 @@ contains
 
     end if
 
-  end subroutine bsl_lt_pic_4d_write_hat_density_on_remapping_grid
+  end subroutine pic_lbfr_4d_write_hat_density_on_remapping_grid
 
 
-  !  subroutine bsl_lt_pic_4d_write_hat_density_on_remap_grid ( &
+  !  subroutine pic_lbfr_4d_write_hat_density_on_remap_grid ( &
   !        p_group,                &
   !        x0, y0, vx0, vy0,       &
   !        r_x, r_y, r_vx, r_vy,   &
   !        basis_height, hat_shift &
   !      )
   !
-  !    class(sll_t_bsl_lt_pic_4d_group), intent(inout)       :: p_group
+  !    class(sll_t_pic_lbfr_4d_group), intent(inout)       :: p_group
   !    sll_real64, intent(in)                          :: x0, y0, vx0, vy0
   !    sll_real64, intent(in)                          :: r_x, r_y, r_vx, r_vy
   !    sll_real64, intent(in)                          :: basis_height, hat_shift
@@ -2151,17 +2077,17 @@ contains
   !      x_j = x_j + h_parts_x
   !    end do
   !
-  !  end subroutine bsl_lt_pic_4d_write_hat_density_on_remap_grid
+  !  end subroutine pic_lbfr_4d_write_hat_density_on_remap_grid
 
 
 
   !> compute the spline coefficients for the function values stored in the cartesian remapping grid
   !> nodal values are either given in the array nodal_values_on_remapping_cart_grid (if present),
   !> or stored in the array remapped_f_splines_coefficients
-  subroutine bsl_lt_pic_4d_compute_new_spline_coefs( &
+  subroutine pic_lbfr_4d_compute_new_spline_coefs( &
               p_group, nodal_values_on_remapping_cart_grid )
 
-    class(sll_t_bsl_lt_pic_4d_group),       intent(inout) :: p_group
+    class(sll_t_pic_lbfr_4d_group),       intent(inout) :: p_group
     sll_real64, dimension(:,:,:,:),   target,    intent( in ),  optional  :: nodal_values_on_remapping_cart_grid
     sll_real64, dimension(:,:,:,:),   allocatable, target   :: tmp_nodal_values
     sll_real64, dimension(:,:,:,:),   pointer       :: tmp_nodal_values_ptr
@@ -2216,7 +2142,7 @@ contains
 
     d_vol = h_x * h_y * h_vx * h_vy
 
-    SLL_ASSERT( p_group%remapped_f_interpolation_type == SLL_BSL_LT_PIC_REMAP_WITH_SPLINES )
+    SLL_ASSERT( p_group%remapped_f_interpolation_type == SLL_PIC_LBFR_REMAP_WITH_SPLINES )
 
     if( present(nodal_values_on_remapping_cart_grid) )then
       SLL_ASSERT( size(nodal_values_on_remapping_cart_grid,1) == number_nodes_x  )
@@ -2303,12 +2229,12 @@ contains
       end do
     end if
 
-  end subroutine bsl_lt_pic_4d_compute_new_spline_coefs
+  end subroutine pic_lbfr_4d_compute_new_spline_coefs
 
 
   !> set the connectivity arrays so that every marker knows its neighbors on the initial (cartesian) grid
-  subroutine bsl_lt_pic_4d_set_markers_connectivity( p_group )
-    class(sll_t_bsl_lt_pic_4d_group),intent(inout) :: p_group
+  subroutine pic_lbfr_4d_set_markers_connectivity( p_group )
+    class(sll_t_pic_lbfr_4d_group),intent(inout) :: p_group
 
     sll_int32  :: k
     sll_int32  :: k_ngb
@@ -2451,12 +2377,12 @@ contains
       end do
     end do
 
-  end subroutine bsl_lt_pic_4d_set_markers_connectivity
+  end subroutine pic_lbfr_4d_set_markers_connectivity
 
 
   !> initialize the markers on the initial (markers) grid
-  subroutine bsl_lt_pic_4d_initialize_unstruct_markers( p_group )
-    class(sll_t_bsl_lt_pic_4d_group),intent(inout) :: p_group
+  subroutine pic_lbfr_4d_initialize_unstruct_markers( p_group )
+    class(sll_t_pic_lbfr_4d_group),intent(inout) :: p_group
 
     type(sll_t_int_list_element),  pointer   :: new_int_list_element, head
     sll_real64, dimension(4) :: flow_cell_eta_min
@@ -2529,7 +2455,7 @@ contains
     ! initialize the linked list of outside markers
     nullify(p_group%unstruct_markers_outside_flow_grid)
 
-  end subroutine bsl_lt_pic_4d_initialize_unstruct_markers
+  end subroutine pic_lbfr_4d_initialize_unstruct_markers
 
   ! ------------------------------------------------------------------------------------------------------------------------------
   !> prepare a relevant set of 5 (D+1) markers to be able to later compute the flow Jacobian matrix in each cell
@@ -2558,8 +2484,8 @@ contains
   !> p_group%flow_grid%delta_eta3 = p_group%flow_grid_a3 * p_group%flow_grid_h
   !> p_group%flow_grid%delta_eta4 = p_group%flow_grid_a4 * p_group%flow_grid_h
 
-  subroutine bsl_lt_pic_4d_prepare_unstruct_markers_for_flow_jacobians( p_group )
-    class(sll_t_bsl_lt_pic_4d_group),intent(inout) :: p_group
+  subroutine pic_lbfr_4d_prepare_unstruct_markers_for_flow_jacobians( p_group )
+    class(sll_t_pic_lbfr_4d_group),intent(inout) :: p_group
 
 
     type(sll_t_int_list_element),       pointer           :: list_of_marker_indices_to_be_discarded
@@ -2604,7 +2530,7 @@ contains
 
     local_verbose = .false.
 
-    SLL_ASSERT( p_group%flow_markers_type == SLL_BSL_LT_PIC_UNSTRUCTURED )
+    SLL_ASSERT( p_group%flow_markers_type == SLL_PIC_LBFR_UNSTRUCTURED )
 
     ! list of markers that will be temporary stored for removal
     nullify( list_of_marker_indices_to_be_discarded )
@@ -3018,7 +2944,7 @@ contains
       end do
     end do
 
-  end subroutine bsl_lt_pic_4d_prepare_unstruct_markers_for_flow_jacobians
+  end subroutine pic_lbfr_4d_prepare_unstruct_markers_for_flow_jacobians
 
   ! ------------------------------------------------------------------------------------------------------------------------
   ! This subroutine updates the list of markers in the flow cells ('unstruct_markers_in_flow_cell') given a marker
@@ -3029,7 +2955,7 @@ contains
                                                              i_marker,  &
                                                              old_j_x, old_j_y, old_j_vx, old_j_vy, &
                                                              new_j_x, new_j_y, new_j_vx, new_j_vy)
-    class(sll_t_bsl_lt_pic_4d_group), intent(inout) :: p_group
+    class(sll_t_pic_lbfr_4d_group), intent(inout) :: p_group
     sll_int32,                      intent(in)  :: i_marker
     sll_int32,                      intent(in)  :: old_j_x, old_j_y, old_j_vx, old_j_vy
     sll_int32,                      intent(in), optional  :: new_j_x, new_j_y, new_j_vx, new_j_vy
@@ -3148,7 +3074,7 @@ contains
   !
   ! To do so we proceed as follows:
   !   1.  we find the marker that is closest from the cell center, and its group of relevant neighbors with positions x^1, .. x^5
-  !       (they have been prepared in the subroutine bsl_lt_pic_4d_prepare_unstruct_markers_for_flow_jacobians)
+  !       (they have been prepared in the subroutine pic_lbfr_4d_prepare_unstruct_markers_for_flow_jacobians)
   !   2.  then we define the forward Jacobian matrix: J = (J_{l,m})_{l,m = 1, .. 4} by the relations
   !           J (hat x^{r+1} - hat x^1) = x^{r+1} - x^1     for   r = 1, .. 4
   !       where x^r is the position of the r-th relevant marker at the current time
@@ -3173,7 +3099,7 @@ contains
                       d41, d42, d43, d44                            &
                    )
 
-    class(sll_t_bsl_lt_pic_4d_group),intent(inout) :: p_group
+    class(sll_t_pic_lbfr_4d_group),intent(inout) :: p_group
     sll_int32,  intent(in)  :: j_x, j_y, j_vx, j_vy                 !< indices of the flow cell
     sll_real64, intent(in)  :: mesh_period_x
     sll_real64, intent(in)  :: mesh_period_y
@@ -3216,7 +3142,7 @@ contains
     domain_is_x_periodic = p_group%domain_is_periodic(1)
     domain_is_y_periodic = p_group%domain_is_periodic(2)
 
-    SLL_ASSERT( p_group%flow_markers_type == SLL_BSL_LT_PIC_UNSTRUCTURED )
+    SLL_ASSERT( p_group%flow_markers_type == SLL_PIC_LBFR_UNSTRUCTURED )
 
     flow_cell_eta_min(1) = p_group%flow_grid%eta1_min + (j_x-1) * p_group%flow_grid%delta_eta1
     flow_cell_eta_max(1) = p_group%flow_grid%eta1_min + (j_x)   * p_group%flow_grid%delta_eta1
@@ -3368,7 +3294,7 @@ contains
   end subroutine get_deformation_matrix_from_unstruct_markers_in_cell
 
   function anisotropic_flow_grid_scalar_product(p_group, eta_a, eta_b) result(val)
-    class(sll_t_bsl_lt_pic_4d_group), intent(inout) :: p_group
+    class(sll_t_pic_lbfr_4d_group), intent(inout) :: p_group
     sll_real64, dimension(4),       intent(in)    :: eta_a
     sll_real64, dimension(4),       intent(in)    :: eta_b
     sll_real64                                    :: val
@@ -3381,7 +3307,7 @@ contains
   end function
 
   function anisotropic_flow_grid_distance(p_group, eta_a, eta_b) result(val)
-    class(sll_t_bsl_lt_pic_4d_group), intent(inout) :: p_group
+    class(sll_t_pic_lbfr_4d_group), intent(inout) :: p_group
     sll_real64, dimension(4),       intent(in)    :: eta_a
     sll_real64, dimension(4),       intent(in)    :: eta_b
     sll_real64                                    :: val
@@ -3392,8 +3318,8 @@ contains
 
 
   !> reset the structured markers on the initial (markers) grid
-  subroutine bsl_lt_pic_4d_reset_markers_position( p_group )
-    class(sll_t_bsl_lt_pic_4d_group),intent(inout) :: p_group
+  subroutine pic_lbfr_4d_reset_markers_position( p_group )
+    class(sll_t_pic_lbfr_4d_group),intent(inout) :: p_group
 
     sll_int32 :: k
     sll_int32 :: k_check
@@ -3420,7 +3346,7 @@ contains
     sll_real64 :: vx_j
     sll_real64 :: vy_j
 
-    SLL_ASSERT( p_group%flow_markers_type == SLL_BSL_LT_PIC_STRUCTURED )
+    SLL_ASSERT( p_group%flow_markers_type == SLL_PIC_LBFR_STRUCTURED )
 
     number_flow_markers_x  = p_group%number_flow_markers_x
     number_flow_markers_y  = p_group%number_flow_markers_y
@@ -3470,35 +3396,35 @@ contains
       end do
     end do
 
-  end subroutine bsl_lt_pic_4d_reset_markers_position
+  end subroutine pic_lbfr_4d_reset_markers_position
 
 
   !> compute new interpolation coefficients so that the remapped_f is an approximation of the current f
   !> and
   !> reset the markers on the initial grid
-  subroutine bsl_lt_pic_4d_remap( self, target_total_charge, enforce_total_charge )
-    class(sll_t_bsl_lt_pic_4d_group),   intent( inout ) :: self
+  subroutine pic_lbfr_4d_resample( self, target_total_charge, enforce_total_charge, initial_step )
+    class(sll_t_pic_lbfr_4d_group),   intent( inout ) :: self
     sll_real64,                       intent( in )    :: target_total_charge
     logical,                          intent( in )    :: enforce_total_charge
+    logical,                          intent( in )    :: initial_step
 
-    !> A. write the nodal values of the remapped_f (evaluated with the bsl_lt_pic method) and compute the new interpolation coefs
-    print *, "bsl_lt_pic_4d_remap -- step A"
-    call self%bsl_lt_pic_4d_remap_f()
+    !> A. write the nodal values of the remapped_f (evaluated with the pic_lbfr method) and compute the new interpolation coefs
+    print *, "pic_lbfr_4d_remap -- step A"
+    call self%pic_lbfr_4d_remap_f()
 
     !> B. and reset the (flow) markers on the initial (cartesian) grid -- no need to reset their connectivity
-    print *, "bsl_lt_pic_4d_remap -- step B"
-    if( self%flow_markers_type == SLL_BSL_LT_PIC_STRUCTURED )then
-      call self%bsl_lt_pic_4d_reset_markers_position()
+    print *, "pic_lbfr_4d_remap -- step B"
+    if( self%flow_markers_type == SLL_PIC_LBFR_STRUCTURED )then
+      call self%pic_lbfr_4d_reset_markers_position()
     else
-      SLL_ASSERT( self%flow_markers_type == SLL_BSL_LT_PIC_UNSTRUCTURED )
-      call self%bsl_lt_pic_4d_prepare_unstruct_markers_for_flow_jacobians()
+      SLL_ASSERT( self%flow_markers_type == SLL_PIC_LBFR_UNSTRUCTURED )
+      call self%pic_lbfr_4d_prepare_unstruct_markers_for_flow_jacobians()
     end if
 
     !> C. if deposition particles are pushed, we remap them now
-    if( self%deposition_particles_type == SLL_BSL_LT_PIC_FLEXIBLE     &
-        .and. self%deposition_particles_move_type == SLL_BSL_LT_PIC_PUSHED )then
-      print *, "bsl_lt_pic_4d_remap -- step C"
-      print *, "bsl_lt_pic_4d_remap -- (C) will reset ", self%number_deposition_particles, "deposition_particles..."
+    if( self%deposition_particles_move_type == SLL_PIC_LBFR_PUSHED )then
+      print *, "pic_lbfr_4d_remap -- step C"
+      print *, "pic_lbfr_4d_remap -- (C) will reset ", self%number_deposition_particles, "deposition_particles..."
       ! if deposition particles are fixed, then they are initialized at each time step, in the deposition routine
       call self%reset_deposition_particles_coordinates()
 
@@ -3507,66 +3433,99 @@ contains
       call self%reset_deposition_particles_weights_with_direct_interpolation( target_total_charge, enforce_total_charge )
     end if
 
-  end subroutine bsl_lt_pic_4d_remap
+  end subroutine pic_lbfr_4d_resample
+
+
+  !> compute new interpolation coefficients so that the remapped_f is an approximation of the current f
+  !> and
+  !> reset the markers on the initial grid
+  subroutine pic_lbfr_4d_remap( self, target_total_charge, enforce_total_charge )    ! todo remove and use resample
+    class(sll_t_pic_lbfr_4d_group),   intent( inout ) :: self
+    sll_real64,                       intent( in )    :: target_total_charge
+    logical,                          intent( in )    :: enforce_total_charge
+
+    !> A. write the nodal values of the remapped_f (evaluated with the pic_lbfr method) and compute the new interpolation coefs
+    print *, "pic_lbfr_4d_remap -- step A"
+    call self%pic_lbfr_4d_remap_f()
+
+    !> B. and reset the (flow) markers on the initial (cartesian) grid -- no need to reset their connectivity
+    print *, "pic_lbfr_4d_remap -- step B"
+    if( self%flow_markers_type == SLL_PIC_LBFR_STRUCTURED )then
+      call self%pic_lbfr_4d_reset_markers_position()
+    else
+      SLL_ASSERT( self%flow_markers_type == SLL_PIC_LBFR_UNSTRUCTURED )
+      call self%pic_lbfr_4d_prepare_unstruct_markers_for_flow_jacobians()
+    end if
+
+    !> C. if deposition particles are pushed, we remap them now
+    if( self%deposition_particles_move_type == SLL_PIC_LBFR_PUSHED )then
+      print *, "pic_lbfr_4d_remap -- step C"
+      print *, "pic_lbfr_4d_remap -- (C) will reset ", self%number_deposition_particles, "deposition_particles..."
+      ! if deposition particles are fixed, then they are initialized at each time step, in the deposition routine
+      call self%reset_deposition_particles_coordinates()
+
+      ! since the remapping tool has been reset, computing the weights can be done with straightforward interpolation (flow = Id)
+      ! [[reset_deposition_particles_weights_with_direct_interpolation]]
+      call self%reset_deposition_particles_weights_with_direct_interpolation( target_total_charge, enforce_total_charge )
+    end if
+
+  end subroutine pic_lbfr_4d_remap
 
 
 
-  ! <<bsl_lt_pic_4d_remap_f>> <<ALH>> reconstructs f (with the bsl_lt_pic approach) on the remapping grid,
+  ! <<pic_lbfr_4d_remap_f>> <<ALH>> reconstructs f (with the pic_lbfr approach) on the remapping grid,
   ! and compute the new interpolation coefficients
 
-  subroutine bsl_lt_pic_4d_remap_f( p_group )
+  subroutine pic_lbfr_4d_remap_f( p_group )
 
-    class(sll_t_bsl_lt_pic_4d_group),intent(inout) :: p_group
+    class(sll_t_pic_lbfr_4d_group),intent(inout) :: p_group
 
-    type(sll_t_charge_accumulator_2d),pointer :: void_charge_accumulator
     type(sll_t_cartesian_mesh_4d),    pointer :: void_grid_4d
     sll_real64, dimension(:,:),     pointer :: void_array_2d
 
     sll_real64    :: dummy_total_charge
     logical       :: enforce_total_charge
-    sll_int32     :: scenario
+    sll_int32     :: reconstruction_set_type
 
-    nullify(void_charge_accumulator)
     nullify(void_grid_4d)
     nullify(void_array_2d)
 
-    scenario = SLL_BSL_LT_PIC_REMAP_F
+    reconstruction_set_type = SLL_PIC_LBFR_REMAPPING_GRID
     dummy_total_charge = 0.0_f64
     enforce_total_charge = .false.
 
     ! (no need to distinguish between sparse grid or spline remapping here, this is done inside the function below)
-    call p_group%bsl_lt_pic_4d_write_f_on_grid_or_deposit(void_charge_accumulator,          &
-                                                          scenario,                         &
-                                                          void_grid_4d,                     &
-                                                          void_array_2d,                    &
-                                                          dummy_total_charge,               &
-                                                          enforce_total_charge              &
-                                                          )
+    call p_group%pic_lbfr_4d_reconstruct_f(reconstruction_set_type,          &
+                                                void_grid_4d,                     &
+                                                void_array_2d,                    &
+                                                dummy_total_charge,               &
+                                                enforce_total_charge              &
+                                                )
 
-  end subroutine bsl_lt_pic_4d_remap_f
+  end subroutine pic_lbfr_4d_remap_f
 
-  ! <<bsl_lt_pic_4d_interpolate_value_of_remapped_f>>
+  ! <<pic_lbfr_4d_interpolate_value_of_remapped_f>>
   
   !> separate interpolation routine for the remapped f
-  function bsl_lt_pic_4d_interpolate_value_of_remapped_f ( p_group, eta ) result(val)
-    class(sll_t_bsl_lt_pic_4d_group), intent(inout)  :: p_group
+  function pic_lbfr_4d_interpolate_value_of_remapped_f ( p_group, eta ) result(val)
+    class(sll_t_pic_lbfr_4d_group), intent(inout)  :: p_group
     sll_real64, dimension(4),       intent(in)  :: eta           !< Position where to interpolate
     sll_real64                                  :: val
 
-    if( p_group%remapped_f_interpolation_type == SLL_BSL_LT_PIC_REMAP_WITH_SPLINES )then
+    if( p_group%remapped_f_interpolation_type == SLL_PIC_LBFR_REMAP_WITH_SPLINES )then
 
-      SLL_ERROR("bsl_lt_pic_4d_interpolate_value_of_remapped_f", "this part not implemented yet")
+      SLL_ERROR("pic_lbfr_4d_interpolate_value_of_remapped_f", "this part not implemented yet")
 
       ! write it here the spline interpolation ? or use existing modules in Selalib ?
 
-    else if( p_group%remapped_f_interpolation_type == SLL_BSL_LT_PIC_REMAP_WITH_SPARSE_GRIDS )then
+    else if( p_group%remapped_f_interpolation_type == SLL_PIC_LBFR_REMAP_WITH_SPARSE_GRIDS )then
 
        ! <<sparse_grid_interpolate_value>>
       val = p_group%sparse_grid_interpolator%interpolate_from_interpolant_value(p_group%remapped_f_sparse_grid_coefficients, eta)
 
     else
 
-      SLL_ERROR("bsl_lt_pic_4d_interpolate_value_of_remapped_f", "wrong value for p_group%remapped_f_interpolation_type")
+      SLL_ERROR("pic_lbfr_4d_interpolate_value_of_remapped_f", "wrong value for p_group%remapped_f_interpolation_type")
 
     end if
   end function
@@ -3605,76 +3564,41 @@ contains
 
 
 
-  !> new version of the write_f_on_grid_or_deposit routine, with call to separate interpolation routine for the remapped f
+  !> pic_lbfr_4d_reconstruct_f reconstruct point values of f using a bsl approximation based on linearized backward flows (lbf)
 
-  ! todo: update the description below
-  ! <<bsl_lt_pic_4d_write_f_on_grid_or_deposit>> <<ALH>> has two scenarios:
-  !  - 1.  the "write f" scenario:
-  !        write the density on the (phase-space) remapping grid, using the method described
-  !        in the "BSL-remapping" notes (version of december 2, 2014)
+  ! <<pic_lbfr_4d_reconstruct_f>> <<ALH>> reconstructs values of f on different grids, depending on reconstruction_set_type:
   !
-  !        -- this function should be a faster alternative to [[bsl_lt_pic_4d_write_f_on_remapping_grid]] --
+  ! SLL_PIC_LBFR_REMAPPING_GRID  -- may be a sparse grid or a cartesian grid, depending on remapped_f_interpolation_type
+  ! todo: change code so that reconstructed values are written in a specific array, used outside this routine to compute remapped coefs
+  ! (in previous code this corresponds to the case scenario == SLL_PIC_LBFR_REMAP_F)
   !
-  !        Note: the (x,y)-projection of the remapping grid may be larger than the "Poisson" 2d mesh associated with the
-  !        particle group (in particular if the (x,y) domain is not periodic)
-  !
-  !  - 2.  the "deposition" scenario:
-  !        deposit the charge on the Poisson cells given in the given charge_accumulator_2d object
-  !
-  !  In every case, this routine computes (approximated) values of the density f(t_n) on 'virtual' nodes (sometimes called
-  !  'virtual particles') located on a cartesian grid of the 4d phase-space.
-  !  For different reasons, these virtual nodes are gathered in 'virtual' cells, and the given arguments
-  !  n_virtual_x, n_virtual_y, n_virtual_vx, n_virtual_vy is the number of virtual nodes per virtual cell, in every dimension
-  !
-  !  -> in the "write f" scenario, these virtual nodes are in fact the nodes of a given grid -- either the remapping one,
-  !     or some given grid -- hence they are not really virtual.
-  !     On the contrary the virtual cells are really virtual, in the sense that they are just a way to gather the computations
-  !
-  !  -> in the "deposition" scenario, the virtual nodes are really virtual: they correspond to temporary particles which
-  !     are deposited with a standard PIC procedure. And the virtual cells are "half-virtual" in the sense that their (x,y)
-  !     projection coincides with the cells of the Poisson mesh, whereas in the velocity dimensions they are created to gather
-  !     the computations, just as in the "remapping" scenario
-  !
-  !     In particular, taking a larger value for n_virtual has the following effect:
-  !     -> in the  "write f" scenario, larger virtual cells will be used to compute the approximated values of f(t_n) on the
-  !        nodes of the (remapping or given) grid. This will speed-up the code and is morally ok if the characteristic flow
-  !        is smooth
-  !     -> in the "deposition" scenario, finer grids of virtual point particles will be (temporarily) created and
-  !        deposited. This will slow down the code and is morally required if the density f(t_n) is not locally smooth
-  !
-  !  - Note: in the "write f" scenario, the grid is known through:
-  !        the number of grid points (not cells) in every dimension
-  !        and the max and min coordinates of these points, in every dimension
-  !
-  !  - target_total_charge is an argument that is given to make the deposition method conservative
-  !    (note: it may be used also in the 'write_f' scenario, but one has to define what conservative means in this case)
-  !
-  !  Note: This routine is an evolution from sll_lt_pic_4d_write_bsl_f_on_remap_grid (which will be eventually discarded)
+  ! SLL_PIC_LBFR_GIVEN_GRID
+  ! (in previous code this corresponds to the case scenario == SLL_PIC_LBFR_WRITE_F_ON_GIVEN_GRID)
 
+  ! SLL_PIC_DEPOSITION_PARTICLES
+  ! (in previous code this corresponds to the case scenario == SLL_PIC_LBFR_SET_WEIGHTS_ON_DEPOSITION_PARTICLES)
 
-  subroutine bsl_lt_pic_4d_write_f_on_grid_or_deposit(p_group,                    &
-                                                      charge_accumulator,         &
-                                                      scenario,                   &
-                                                      given_grid_4d,              &
-                                                      given_array_2d,             &
-                                                      target_total_charge,        &
-                                                      enforce_total_charge       &
-                                                      )
+  ! note: this function is an evolution from write_f_or_deposit in the previous implementation called bsl_lt_pic
 
-    class(sll_t_bsl_lt_pic_4d_group),         intent(inout) :: p_group          !> particle group (with markers and remapping grid)
-    type(sll_t_charge_accumulator_2d), pointer, intent(inout) :: charge_accumulator
-    sll_int32,                                intent(in)    :: scenario
-    type(sll_t_cartesian_mesh_4d),     pointer, intent(in)    :: given_grid_4d
+  subroutine pic_lbfr_4d_reconstruct_f( p_group,                    &
+                                        reconstruction_set_type,    &
+                                        given_grid_4d,              &
+                                        given_array_2d,             &
+                                        target_total_charge,        &
+                                        enforce_total_charge        &
+                                        )
+
+    class(sll_t_pic_lbfr_4d_group),         intent(inout)   :: p_group          !> particle group (with markers and remapping grid)
+    sll_int32,                                intent(in)    :: reconstruction_set_type
+    type(sll_t_cartesian_mesh_4d),     pointer, intent(in)  :: given_grid_4d
     sll_real64, dimension(:,:),      pointer, intent(inout) :: given_array_2d   ! assumed in x, vx for now
     sll_real64,                               intent(in)    :: target_total_charge
     logical,                                  intent(in)    :: enforce_total_charge
 
-    type(sll_t_charge_accumulator_cell_2d),  pointer :: charge_accumulator_cell
-
     sll_real64 :: deposited_charge
     sll_real64 :: charge_correction_factor
 
-    logical :: create_deposition_particles_on_a_grid
+!    logical :: create_deposition_particles_on_a_grid
     logical :: reconstruct_f_on_g_grid
 
     ! index of marker closest to the center of each flow cell
@@ -3711,8 +3635,6 @@ contains
     sll_int32  :: node_index
 
     sll_int32  :: k_marker_closest_to_first_corner
-
-    sll_real64 :: deposition_dvol
 
     ! <<g>> cartesian grid pointer to the remapping grid
     type(sll_t_cartesian_mesh_4d),pointer :: g
@@ -3773,9 +3695,6 @@ contains
     sll_real64 :: closest_marker_distance_to_first_corner
     sll_real64 :: marker_distance_to_first_corner
 
-    ! working space
-    sll_real64 :: tmp, tmp1, tmp2
-
     sll_real64 :: mesh_period_x
     sll_real64 :: mesh_period_y
 
@@ -3804,7 +3723,6 @@ contains
     sll_real64 :: cell_offset_y
 
     sll_real64 :: deposition_particle_charge_factor
-    sll_real64 :: phase_space_volume
 
     sll_int32  :: nodes_number
     sll_real64 :: reconstructed_f_value
@@ -3823,9 +3741,6 @@ contains
     sll_real64 :: vy_t0_to_vyk_t0
 
     sll_int32  :: ierr
-    sll_int32  :: i_cell_x
-    sll_int32  :: i_cell_y
-    sll_int32  :: i_cell
 
     ! temporary workspace
     sll_real64 :: x_aux
@@ -3833,20 +3748,13 @@ contains
     sll_real64 :: vx_aux
     sll_real64 :: vy_aux
 
-    sll_real64 :: debug_charge
-    sll_int32  :: debug_count
-
 
     ! --- end of declarations!
 
-    debug_charge = 0.0_f64
-    debug_count = 0
-
-    if( scenario == SLL_BSL_LT_PIC_SET_WEIGHTS_ON_DEPOSITION_PARTICLES )then
-        ! then the deposition particles should be of flexible and fixed type
-        ! (indeed in the pushed type the weights are set after remapping with a simple interpolation, no BSL_LT_PIC reconstruction)
-        SLL_ASSERT( p_group%deposition_particles_type == SLL_BSL_LT_PIC_FLEXIBLE )
-        SLL_ASSERT( p_group%deposition_particles_move_type == SLL_BSL_LT_PIC_FIXED )
+    if( reconstruction_set_type == SLL_PIC_LBFR_DEPOSITION_PARTICLES )then
+        ! then the deposition particles should be of fixed type
+        ! (indeed in the pushed type the weights are set after remapping with a simple interpolation, no PIC_LBFR reconstruction)
+        SLL_ASSERT( p_group%deposition_particles_move_type == SLL_PIC_LBFR_FIXED )
     end if
 
     ! getting the parameters of the flow grid
@@ -3875,39 +3783,10 @@ contains
 
     deposited_charge = 0.0_f64
 
-    !> A.  preparation of the point sets where f will be reconstructed, depending on the different scenarios
-    if( scenario == SLL_BSL_LT_PIC_DEPOSIT_F )then
+    !> A.  preparation of the point sets where f will be reconstructed, depending on the different cases
 
-      ! choose between cartesian grid or random bunches of deposition (=virtual) particles
-      create_deposition_particles_on_a_grid = .true.
-
-      if( create_deposition_particles_on_a_grid )then
-
-        reconstruct_f_on_g_grid = .true.
-        g => p_group%deposition_particles_grid
-
-        ! the boundary nodes of the deposition grid are inside the domain, even with periodic boundary conditions
-        g_num_points_x  = g%num_cells1 + 1
-        g_num_points_y  = g%num_cells2 + 1
-        g_num_points_vx = g%num_cells3 + 1
-        g_num_points_vy = g%num_cells4 + 1
-
-
-      else
-
-        ! the deposition particles will be created to deposit their charge but not stored in memory
-        !        number_of_deposition_particles_per_flow_cell = number_deposition_particles / (  flow_grid_num_cells_x    &
-  !                                                                                               * flow_grid_num_cells_y    &
-    !                                                                                             * flow_grid_num_cells_vx   &
-    !                                                                                             * flow_grid_num_cells_vy )
-
-        SLL_ASSERT( .not. reconstruct_f_on_g_grid )
-        SLL_ERROR("bsl_lt_pic_4d_write_f_on_grid_or_deposit", " this part not implemented yet...")
-
-      end if
-
-    else if(  scenario == SLL_BSL_LT_PIC_REMAP_F                                                  &
-              .and. p_group%remapped_f_interpolation_type == SLL_BSL_LT_PIC_REMAP_WITH_SPLINES    &
+    if(  reconstruction_set_type == SLL_PIC_LBFR_REMAPPING_GRID                                                  &
+              .and. p_group%remapped_f_interpolation_type == SLL_PIC_LBFR_REMAP_WITH_SPLINES    &
       )then
 
       ! with splines, the remapping grid is cartesian
@@ -3924,12 +3803,18 @@ contains
       SLL_ALLOCATE(tmp_f_values_on_remapping_cart_grid(g_num_points_x, g_num_points_y, g_num_points_vx, g_num_points_vy), ierr)
       tmp_f_values_on_remapping_cart_grid = 0.0_f64
 
-    else if( (scenario == SLL_BSL_LT_PIC_SET_WEIGHTS_ON_DEPOSITION_PARTICLES)   &
-        .or.                                                                    &
-        (scenario == SLL_BSL_LT_PIC_REMAP_F .and. p_group%remapped_f_interpolation_type == SLL_BSL_LT_PIC_REMAP_WITH_SPARSE_GRIDS) &
+    else if(  &
+        (reconstruction_set_type == SLL_PIC_LBFR_DEPOSITION_PARTICLES)                              &
+        .or.                                                                                        &
+        (reconstruction_set_type == SLL_PIC_LBFR_REMAPPING_GRID                                     &
+          .and. p_group%remapped_f_interpolation_type == SLL_PIC_LBFR_REMAP_WITH_SPARSE_GRIDS)      &
       )then
 
-      ! common preparation step for sparse grid remapping and weights computing for unstructured cloud of deposition particles
+      ! common preparation step for sparse grid remapping and weights computation
+      ! (the latter being on a possibly unstructured cloud of deposition particles)
+
+      reconstruct_f_on_g_grid = .false.
+
       ! => prepare the array of linked lists that will store the node indices contained in the flow cells (one list per cell)
       allocate(nodes_in_flow_cell(flow_grid_num_cells_x,   &
                                   flow_grid_num_cells_y,   &
@@ -3949,18 +3834,18 @@ contains
       end do
 
 
-      if( scenario == SLL_BSL_LT_PIC_REMAP_F )then
-        SLL_ASSERT( p_group%remapped_f_interpolation_type == SLL_BSL_LT_PIC_REMAP_WITH_SPARSE_GRIDS )
+      if( reconstruction_set_type == SLL_PIC_LBFR_REMAPPING_GRID )then
+        SLL_ASSERT( p_group%remapped_f_interpolation_type == SLL_PIC_LBFR_REMAP_WITH_SPARSE_GRIDS )
         nodes_number = p_group%sparse_grid_interpolator%size_basis
 
         ! allocate temp array to store the nodal values of the remapped f, since sparse grids coefficients are needed in the process
         SLL_ALLOCATE(tmp_f_values_on_remapping_sparse_grid(p_group%sparse_grid_interpolator%size_basis), ierr)
         tmp_f_values_on_remapping_sparse_grid = 0.0_f64
 
-      else if( scenario == SLL_BSL_LT_PIC_SET_WEIGHTS_ON_DEPOSITION_PARTICLES )then
+      else
 
-        SLL_ASSERT( p_group%deposition_particles_type == SLL_BSL_LT_PIC_FLEXIBLE )
-        SLL_ASSERT( p_group%deposition_particles_move_type == SLL_BSL_LT_PIC_FIXED )
+        SLL_ASSERT( reconstruction_set_type == SLL_PIC_LBFR_DEPOSITION_PARTICLES )
+        SLL_ASSERT( p_group%deposition_particles_move_type == SLL_PIC_LBFR_FIXED )
 
         nodes_number = p_group%number_deposition_particles
         deposition_particle_charge_factor = p_group%get_deposition_particle_charge_factor()
@@ -3971,13 +3856,13 @@ contains
       do node_index = 1, nodes_number
 
         ! get node coordinates:
-        if( scenario == SLL_BSL_LT_PIC_REMAP_F )then
+        if( reconstruction_set_type == SLL_PIC_LBFR_REMAPPING_GRID )then
           x = p_group%sparse_grid_interpolator%hierarchy(node_index)%coordinate(1)
           y = p_group%sparse_grid_interpolator%hierarchy(node_index)%coordinate(2)
           vx = p_group%sparse_grid_interpolator%hierarchy(node_index)%coordinate(3)
           vy = p_group%sparse_grid_interpolator%hierarchy(node_index)%coordinate(4)
 
-        else if( scenario == SLL_BSL_LT_PIC_SET_WEIGHTS_ON_DEPOSITION_PARTICLES )then
+        else if( reconstruction_set_type == SLL_PIC_LBFR_DEPOSITION_PARTICLES )then
           x = p_group%deposition_particles_eta(node_index, 1)
           y = p_group%deposition_particles_eta(node_index, 2)
           vx = p_group%deposition_particles_eta(node_index, 3)
@@ -4016,7 +3901,7 @@ contains
 
       SLL_ASSERT( .not. reconstruct_f_on_g_grid )
 
-    else if( scenario == SLL_BSL_LT_PIC_WRITE_F_ON_GIVEN_GRID )then
+    else if( reconstruction_set_type == SLL_PIC_LBFR_GIVEN_GRID )then
 
       ! then use the given 4d grid and write values in given (x, vx for now) array given_array_2d
       reconstruct_f_on_g_grid = .true.
@@ -4034,7 +3919,7 @@ contains
 
     else
 
-      SLL_ERROR("bsl_lt_pic_4d_write_f_on_grid_or_deposit", "unknown value for parameter scenario")
+      SLL_ERROR("pic_lbfr_4d_reconstruct_f", "unknown value for parameter reconstruction_set_type")
 
     end if
 
@@ -4057,16 +3942,13 @@ contains
       g_grid_vx_min = g%eta3_min
       g_grid_vy_min = g%eta4_min
 
-      if( scenario == SLL_BSL_LT_PIC_DEPOSIT_F )then
-        deposition_dvol = h_g_grid_x * h_g_grid_y * h_g_grid_vx * h_g_grid_vy
-      end if
     end if
 
     !> B. Preparatory work for the linearization of the flow on the flow cells -- in the case of structured markers
     !>    - find out the closest marker to each cell center,
     !>      by looping over all markers and noting which flow cell contains it.
     !>      (The leftmost flow cell in each dimension may not be complete.)
-    if( p_group%flow_markers_type == SLL_BSL_LT_PIC_STRUCTURED )then
+    if( p_group%flow_markers_type == SLL_PIC_LBFR_STRUCTURED )then
       SLL_ALLOCATE(closest_marker(flow_grid_num_cells_x,flow_grid_num_cells_y,flow_grid_num_cells_vx,flow_grid_num_cells_vy),ierr)
       closest_marker(:,:,:,:) = 0
 
@@ -4141,7 +4023,7 @@ contains
     !>   - C.1 linearize the flow using the position of the markers
     !>   - C.2 find the relevant points where f should be reconstructed
     !>   - C.3 reconstruct f on these points (using the affine backward flow and the interpolation tool for the remapped_f)
-    !>   - C.4 write the resulting f value or deposit the deposition particle just created (depending on the scenario)
+    !>   - C.4 write the resulting f value on the proper place
 
     ! <<loop_on_flow_cells>> [[file:~/mcp/maltpic/ltpic-bsl.tex::algo:pic-vr:loop_over_all_cells]]
 
@@ -4170,9 +4052,9 @@ contains
     markers_vx_min   = p_group%initial_markers_grid%eta3_min
     markers_vy_min   = p_group%initial_markers_grid%eta4_min
 
-    if( (scenario == SLL_BSL_LT_PIC_REMAP_F)                              &
+    if( (reconstruction_set_type == SLL_PIC_LBFR_REMAPPING_GRID)                              &
                 .and.                                                     &
-                (p_group%remapped_f_interpolation_type == SLL_BSL_LT_PIC_REMAP_WITH_SPARSE_GRIDS) )then
+                (p_group%remapped_f_interpolation_type == SLL_PIC_LBFR_REMAP_WITH_SPARSE_GRIDS) )then
       node_counter = 0
     end if
 
@@ -4181,7 +4063,7 @@ contains
         do j_vx = 1,flow_grid_num_cells_vx
           do j_vy = 1,flow_grid_num_cells_vy
 
-            if( p_group%flow_markers_type == SLL_BSL_LT_PIC_STRUCTURED )then
+            if( p_group%flow_markers_type == SLL_PIC_LBFR_STRUCTURED )then
               ! [[file:~/mcp/maltpic/ltpic-bsl.tex::algo:pic-vr:find_closest_real_particle]] Find the marker
               ! which is closest to the flow cell center.  Note: speed-wise, it may be necessary to find a way not to scan
               ! all the markers for every cell.  We avoid scanning all the markers for each cell by using the
@@ -4258,7 +4140,7 @@ contains
 
             else
               ! unstructured flow markers
-              SLL_ASSERT( p_group%flow_markers_type == SLL_BSL_LT_PIC_UNSTRUCTURED )
+              SLL_ASSERT( p_group%flow_markers_type == SLL_PIC_LBFR_UNSTRUCTURED )
 
               ! using the lists of markers and relevant markers in cells, compute:
               !   - the current coordinates of the marker closest from cell center: x_k, y_k, vx_k, vy_k
@@ -4290,11 +4172,11 @@ contains
             !>    - C.2.a first we treat the case of [remapping with a sparse grid]
             !>            or [computing the weights of a cloud of deposition particles]: nodes are stored in linked lists
 
-            if( ( (scenario == SLL_BSL_LT_PIC_REMAP_F)                                                    &
+            if( ( (reconstruction_set_type == SLL_PIC_LBFR_REMAPPING_GRID)                              &
                   .and.                                                                                   &
-                  (p_group%remapped_f_interpolation_type == SLL_BSL_LT_PIC_REMAP_WITH_SPARSE_GRIDS) )     &
+                  (p_group%remapped_f_interpolation_type == SLL_PIC_LBFR_REMAP_WITH_SPARSE_GRIDS) )     &
                 .or.                                                                                      &
-                  (scenario == SLL_BSL_LT_PIC_SET_WEIGHTS_ON_DEPOSITION_PARTICLES)                        &
+                  (reconstruction_set_type == SLL_PIC_LBFR_DEPOSITION_PARTICLES)                        &
               )then
 
               SLL_ASSERT( .not. reconstruct_f_on_g_grid )
@@ -4305,13 +4187,13 @@ contains
                 node_index = new_int_list_element%value
 
                 ! here we reconstruct f on the sparse grid nodes
-                if( scenario == SLL_BSL_LT_PIC_REMAP_F )then
+                if( reconstruction_set_type == SLL_PIC_LBFR_REMAPPING_GRID )then
                   x  = p_group%sparse_grid_interpolator%hierarchy(node_index)%coordinate(1)
                   y  = p_group%sparse_grid_interpolator%hierarchy(node_index)%coordinate(2)
                   vx = p_group%sparse_grid_interpolator%hierarchy(node_index)%coordinate(3)
                   vy = p_group%sparse_grid_interpolator%hierarchy(node_index)%coordinate(4)
                 else
-                  SLL_ASSERT( scenario == SLL_BSL_LT_PIC_SET_WEIGHTS_ON_DEPOSITION_PARTICLES )
+                  SLL_ASSERT( reconstruction_set_type == SLL_PIC_LBFR_DEPOSITION_PARTICLES )
                   x  = p_group%deposition_particles_eta(node_index, 1)
                   y  = p_group%deposition_particles_eta(node_index, 2)
                   vx = p_group%deposition_particles_eta(node_index, 3)
@@ -4344,13 +4226,13 @@ contains
                 eta(4) = vy_t0
 
                 ! interpolation here may use sparse grid or splines, depending on the method chosen for p_group
-                reconstructed_f_value = p_group%bsl_lt_pic_4d_interpolate_value_of_remapped_f(eta)
+                reconstructed_f_value = p_group%pic_lbfr_4d_interpolate_value_of_remapped_f(eta)
 
                 ! here we store a nodal value but later this array will indeed store sparse grid coefficients
-                if( scenario == SLL_BSL_LT_PIC_REMAP_F )then
+                if( reconstruction_set_type == SLL_PIC_LBFR_REMAPPING_GRID )then
                   tmp_f_values_on_remapping_sparse_grid(node_index) = reconstructed_f_value
                 else
-                  SLL_ASSERT( scenario == SLL_BSL_LT_PIC_SET_WEIGHTS_ON_DEPOSITION_PARTICLES )
+                  SLL_ASSERT( reconstruction_set_type == SLL_PIC_LBFR_DEPOSITION_PARTICLES )
                   reconstructed_charge = reconstructed_f_value * deposition_particle_charge_factor
                   p_group%deposition_particles_weight(node_index) = reconstructed_charge
                   deposited_charge = deposited_charge + reconstructed_charge
@@ -4382,38 +4264,16 @@ contains
 
               end do
 
-            !>    - C.2.b next we treat the case of a deposition scenario
-
-            else if( (scenario == SLL_BSL_LT_PIC_DEPOSIT_F) .and. (.not. create_deposition_particles_on_a_grid) )then
-
-              SLL_ASSERT( .not. reconstruct_f_on_g_grid )
-
-              SLL_ERROR("bsl_lt_pic_4d_write_f_on_grid_or_deposit", "this part not implemented yet")
-
-              ! here we should
-              !         - create a bunch of random deposition particles within this flow cell,
-              !         - then for each deposition particle:
-              !         - reconstruct the value of f there to get their charge
-              !         - and deposit these charges on the accumulator cells
-
-            !>    - C.2.c finally we treat the case of a remapping with splines or writing on a given grid
+            !>    - C.2.b next we treat the case of a remapping with splines or writing on a given grid
             !>      (in both cases the nodes are on the g grid constructed above)
 
-            else if( (scenario == SLL_BSL_LT_PIC_WRITE_F_ON_GIVEN_GRID)                                       &
+            else if( (reconstruction_set_type == SLL_PIC_LBFR_GIVEN_GRID)                                      &
                      .or.                                                                                     &
-                     ( (scenario == SLL_BSL_LT_PIC_REMAP_F)                                                   &
-                       .and. (p_group%remapped_f_interpolation_type == SLL_BSL_LT_PIC_REMAP_WITH_SPLINES ) )  &
-                     .or.                                                                                     &
-                     ( (scenario == SLL_BSL_LT_PIC_DEPOSIT_F)                                 &
-                       .and. create_deposition_particles_on_a_grid ) &
+                     ( (reconstruction_set_type == SLL_PIC_LBFR_REMAPPING_GRID)                              &
+                       .and. (p_group%remapped_f_interpolation_type == SLL_PIC_LBFR_REMAP_WITH_SPLINES ) )  &
                        )then
 
               SLL_ASSERT( reconstruct_f_on_g_grid )
-
-              !              if( (scenario == SLL_BSL_LT_PIC_DEPOSIT_F)                                 &
-              !                       .and. create_deposition_particles_on_a_grid )then
-              !                print *, "-- DEBUG CHECK 876475645"
-              !              end if
 
               ! Now we loop over grid points inside this flow cell:
               !
@@ -4452,14 +4312,6 @@ contains
                 d3_x = d31 * x_to_xk
                 d4_x = d41 * x_to_xk
 
-                if( scenario == SLL_BSL_LT_PIC_DEPOSIT_F )then
-                  ! find poisson (x-)cell containing this node, seen as a deposition particle, and relative position in the cell
-                  tmp = ( x - p_group%space_mesh_2d%eta1_min ) / p_group%space_mesh_2d%delta_eta1
-                  i_cell_x = int( tmp ) + 1
-                  cell_offset_x = tmp - (i_cell_x-1)  ! between 0 and 1
-
-                end if
-
                 do i_y = i_min_y, i_max_y
                   y = g_grid_y_min + (i_y-1)*h_g_grid_y
                   y_to_yk = y - y_k
@@ -4467,18 +4319,6 @@ contains
                   d2_y = d22 * y_to_yk
                   d3_y = d32 * y_to_yk
                   d4_y = d42 * y_to_yk
-
-                  if( scenario == SLL_BSL_LT_PIC_DEPOSIT_F )then
-                    ! find poisson (y-)cell containing this node, seen as a deposition particle, and relative position in the cell
-                    tmp = ( y - p_group%space_mesh_2d%eta2_min ) / p_group%space_mesh_2d%delta_eta2
-                    i_cell_y = int( tmp ) + 1
-                    cell_offset_y = tmp - (i_cell_y-1)  ! between 0 and 1
-
-                    ! set the proper accumulator cell for the deposition
-                    i_cell = i_cell_x + (i_cell_y-1) * p_group%space_mesh_2d%num_cells1   !  (see global_to_cell_offset)
-                    charge_accumulator_cell => charge_accumulator%q_acc(i_cell)
-
-                  end if
 
                   do i_vx = i_min_vx, i_max_vx
                     vx = g_grid_vx_min + (i_vx-1)*h_g_grid_vx
@@ -4520,88 +4360,48 @@ contains
                       eta(4) = vy_t0
 
                       ! interpolation here may use sparse grid or splines, depending on the method chosen for p_group
-                      reconstructed_f_value = p_group%bsl_lt_pic_4d_interpolate_value_of_remapped_f(eta)
+                      reconstructed_f_value = p_group%pic_lbfr_4d_interpolate_value_of_remapped_f(eta)
 
                       ! [DEBUG]
                       if( .false. )then
-                        if( scenario == SLL_BSL_LT_PIC_DEPOSIT_F )then
-                          SLL_ASSERT( create_deposition_particles_on_a_grid )
-                          print *, " -- DEBUG CHECK  --  8755648765  --  reconstructed_f_value = ", reconstructed_f_value
-                        end if
-                      end if
-
-                      ! [DEBUG]
-                      if( .false. )then
-                        if( scenario == SLL_BSL_LT_PIC_WRITE_F_ON_GIVEN_GRID )then
+                        if( reconstruction_set_type == SLL_PIC_LBFR_GIVEN_GRID )then
                           print*, "[WRITE ON GIVEN GRID]    reconstructing "
                           print*, "on:                       eta = ", eta
                           print*, "value:  reconstructed_f_value = ", reconstructed_f_value
                         end if
                       end if
 
+                      !> C.4  write the reconstructed value at proper place
+
                       if( reconstructed_f_value /= 0 )then
 
-                        if( scenario == SLL_BSL_LT_PIC_DEPOSIT_F )then
+                        if( reconstruction_set_type == SLL_PIC_LBFR_REMAPPING_GRID )then
 
-                          SLL_ASSERT( create_deposition_particles_on_a_grid )
+                          SLL_ASSERT( p_group%remapped_f_interpolation_type == SLL_PIC_LBFR_REMAP_WITH_SPLINES )
 
-                          reconstructed_charge = reconstructed_f_value * deposition_dvol * p_group%species%q
+                          SLL_ASSERT(i_x  <= p_group%remapping_cart_grid_number_nodes_x())
+                          SLL_ASSERT(i_y  <= p_group%remapping_cart_grid_number_nodes_y())
+                          SLL_ASSERT(i_vx <= p_group%remapping_cart_grid_number_nodes_vx())
+                          SLL_ASSERT(i_vy <= p_group%remapping_cart_grid_number_nodes_vy())
 
-                          debug_count = debug_count + 1
-                          debug_charge = debug_charge + deposition_dvol * p_group%species%q
+                          ! store the nodal value on the temporary array
+                          tmp_f_values_on_remapping_cart_grid(i_x,i_y,i_vx,i_vy) = reconstructed_f_value
 
-                          if( .false. )then
-                            print *, "[DEBUG] -- [deposit with] ", reconstructed_f_value * deposition_dvol * p_group%species%q
-                            print *, "[DEBUG] -- reconstructed_charge = ", reconstructed_charge
-                          end if
-                          tmp1 = (1.0_f64 - cell_offset_x)
-                          tmp2 = (1.0_f64 - cell_offset_y)
+                        else if( reconstruction_set_type == SLL_PIC_LBFR_GIVEN_GRID )then
 
-                          charge_accumulator_cell%q_sw = charge_accumulator_cell%q_sw             &
-                                  + reconstructed_charge * tmp1 * tmp2
+                          SLL_ASSERT( i_x  <= size(given_array_2d,1) )
+                          SLL_ASSERT( i_vx <= size(given_array_2d,2) )
 
-                          charge_accumulator_cell%q_se = charge_accumulator_cell%q_se             &
-                                  + reconstructed_charge *  cell_offset_x * tmp2
-
-                          charge_accumulator_cell%q_nw = charge_accumulator_cell%q_nw             &
-                                  + reconstructed_charge * tmp1 *  cell_offset_y
-
-                          charge_accumulator_cell%q_ne = charge_accumulator_cell%q_ne             &
-                                  + reconstructed_charge *  cell_offset_x *  cell_offset_y
-
-                          ! count the total charge
-                          deposited_charge = deposited_charge + reconstructed_charge
+                          given_array_2d(i_x,i_vx) = given_array_2d(i_x,i_vx)         &
+                                  + reconstructed_f_value * h_g_grid_y * h_g_grid_vy
 
                         else
 
-                          if( scenario == SLL_BSL_LT_PIC_REMAP_F )then
+                          SLL_ERROR("pic_lbfr_4d_reconstruct_f", "ahem... you should not be reading this :)")
 
-                            SLL_ASSERT( p_group%remapped_f_interpolation_type == SLL_BSL_LT_PIC_REMAP_WITH_SPLINES )
-
-                            SLL_ASSERT(i_x  <= p_group%remapping_cart_grid_number_nodes_x())
-                            SLL_ASSERT(i_y  <= p_group%remapping_cart_grid_number_nodes_y())
-                            SLL_ASSERT(i_vx <= p_group%remapping_cart_grid_number_nodes_vx())
-                            SLL_ASSERT(i_vy <= p_group%remapping_cart_grid_number_nodes_vy())
-
-                            ! store the nodal value on the temporary array
-                            tmp_f_values_on_remapping_cart_grid(i_x,i_y,i_vx,i_vy) = reconstructed_f_value
-
-                          else if( scenario == SLL_BSL_LT_PIC_WRITE_F_ON_GIVEN_GRID )then
-
-                            SLL_ASSERT( i_x  <= size(given_array_2d,1) )
-                            SLL_ASSERT( i_vx <= size(given_array_2d,2) )
-
-                            given_array_2d(i_x,i_vx) = given_array_2d(i_x,i_vx)         &
-                                    + reconstructed_f_value * h_g_grid_y * h_g_grid_vy
-
-                          else
-
-                            SLL_ERROR("bsl_lt_pic_4d_write_f_on_grid_or_deposit", "ahem... you should not be reading this :)")
-
-                          end if
                         end if
                       else
-                        print *, "654654535466545434564 -- ZERO VALUE !"
+                        print *, "Warning -- 654654535466545434564 -- just reconstructed a Zero value"
                       end if
                     ! this is the end of the (fourfold) loop on the grid nodes
                     end do
@@ -4609,7 +4409,7 @@ contains
                 end do
               end do
             else
-              SLL_ERROR("bsl_lt_pic_4d_write_f_on_grid_or_deposit", "broken test on scenarios -- you should not be reading this :)")
+              SLL_ERROR("pic_lbfr_4d_reconstruct_f", "broken test on reconstruction_set_type: you should not be reading this")
             end if
           ! and this is the end of (fourfold) loop on the flow cells
           end do
@@ -4617,15 +4417,17 @@ contains
       end do
     end do
 
-    !> in the remapping case, last step is to compute the new remapping coefs from the nodal values on the remapping grid
-    if( scenario == SLL_BSL_LT_PIC_REMAP_F )then
+    ! todo: put this last step in a different routine, since this involves no reconstruction and needs to be called at initial step
 
-      if( p_group%remapped_f_interpolation_type == SLL_BSL_LT_PIC_REMAP_WITH_SPLINES )then
+    !> in the remapping case, last step is to compute the new remapping coefs from the nodal values on the remapping grid
+    if( reconstruction_set_type == SLL_PIC_LBFR_REMAPPING_GRID )then
+
+      if( p_group%remapped_f_interpolation_type == SLL_PIC_LBFR_REMAP_WITH_SPLINES )then
 
         ! computing the new spline coefs
-        call p_group%bsl_lt_pic_4d_compute_new_spline_coefs( tmp_f_values_on_remapping_cart_grid )
+        call p_group%pic_lbfr_4d_compute_new_spline_coefs( tmp_f_values_on_remapping_cart_grid )
 
-      else if( p_group%remapped_f_interpolation_type == SLL_BSL_LT_PIC_REMAP_WITH_SPARSE_GRIDS )then
+      else if( p_group%remapped_f_interpolation_type == SLL_PIC_LBFR_REMAP_WITH_SPARSE_GRIDS )then
 
         ! computing the new sparse grid (hierarchical) coefs
         call p_group%sparse_grid_interpolator%compute_hierarchical_surplus(   &
@@ -4660,24 +4462,7 @@ contains
         print *, "[Enforcing charge]: target_total_charge, deposited_charge, charge_correction_factor = ", &
           target_total_charge, deposited_charge, charge_correction_factor
 
-        if( scenario == SLL_BSL_LT_PIC_DEPOSIT_F )then
-
-          ! correcting the charge deposited on the Poisson cells
-          do i_cell_x = 1, p_group%space_mesh_2d%num_cells1
-            do i_cell_y = 1, p_group%space_mesh_2d%num_cells2
-
-              ! index of the Poisson cell
-              i_cell = i_cell_x + (i_cell_y-1) * p_group%space_mesh_2d%num_cells1
-              charge_accumulator_cell => charge_accumulator%q_acc(i_cell)
-              charge_accumulator_cell%q_sw = charge_accumulator_cell%q_sw * charge_correction_factor
-              charge_accumulator_cell%q_se = charge_accumulator_cell%q_se * charge_correction_factor
-              charge_accumulator_cell%q_nw = charge_accumulator_cell%q_nw * charge_correction_factor
-              charge_accumulator_cell%q_ne = charge_accumulator_cell%q_ne * charge_correction_factor
-
-            end do
-          end do
-
-        else if( scenario == SLL_BSL_LT_PIC_SET_WEIGHTS_ON_DEPOSITION_PARTICLES )then
+        if( reconstruction_set_type == SLL_PIC_LBFR_DEPOSITION_PARTICLES )then
 
           ! correcting the charge carried by the deposition particles
           do node_index = 1, p_group%number_deposition_particles
@@ -4690,7 +4475,7 @@ contains
       end if
     end if
 
-  end subroutine bsl_lt_pic_4d_write_f_on_grid_or_deposit
+  end subroutine pic_lbfr_4d_reconstruct_f
 
 
 
@@ -4703,7 +4488,7 @@ contains
     sll_real64 :: dim_t0
     sll_int32 :: neighbour
 
-    type(sll_t_bsl_lt_pic_4d_particle), dimension(:), pointer,intent(in) :: p_list
+    type(sll_t_pic_lbfr_4d_marker), dimension(:), pointer,intent(in) :: p_list
 
     !sll_int32 :: ngb_dim_right_index
     !sll_int32 :: ngb_dim_left_index
@@ -4782,7 +4567,7 @@ contains
           SLL_ASSERT(.false.)
        end select
 
-       ! The convention in [[bsl_lt_pic_4d_compute_new_particles]] is that if there is no neighbour then a neighbour
+       ! The convention in [[pic_lbfr_4d_compute_new_particles]] is that if there is no neighbour then a neighbour
        ! index is equal to the particle index
 
        if(neighbour/=kprime) then
@@ -4835,7 +4620,7 @@ contains
                         d41,d42,d43,d44         &
                         )
 
-        class(sll_t_bsl_lt_pic_4d_group),intent(inout) :: p_group
+        class(sll_t_pic_lbfr_4d_group),intent(inout) :: p_group
         sll_int32, intent(in) :: k
 
         sll_real64, intent(in)  :: mesh_period_x
@@ -5259,7 +5044,7 @@ end subroutine get_ltp_deformation_matrix
 ! puts the point (x,y) back into the computational domain if periodic in x or y (or both)
 ! otherwise, does nothing
 subroutine periodic_correction(p_group, x, y)
-    class(sll_t_bsl_lt_pic_4d_group),  intent(in)    :: p_group
+    class(sll_t_pic_lbfr_4d_group),  intent(in)    :: p_group
     sll_real64, intent(inout) :: x
     sll_real64, intent(inout) :: y
     type(sll_t_cartesian_mesh_2d), pointer :: mesh
@@ -5283,18 +5068,18 @@ subroutine periodic_correction(p_group, x, y)
 
   !----------------------------------------------------------------------------
   ! Destructor
-  subroutine sll_bsl_lt_pic_4d_group_delete(particle_group)     !todo: use proper delete terminology
-    class(sll_t_bsl_lt_pic_4d_group), pointer :: particle_group
+  subroutine sll_pic_lbfr_4d_group_delete(particle_group)     !todo: use proper delete terminology
+    class(sll_t_pic_lbfr_4d_group), pointer :: particle_group
     sll_int32 :: ierr
 
     if(.not. associated(particle_group) ) then
-       print *, 'sll_bsl_lt_pic_4d_group_delete(): ERROR (9087987578996), passed group was not associated.'
+       print *, 'sll_pic_lbfr_4d_group_delete(): ERROR (9087987578996), passed group was not associated.'
     end if
     SLL_DEALLOCATE(particle_group%struct_markers_list, ierr)
     SLL_DEALLOCATE(particle_group%space_mesh_2d, ierr)
     SLL_DEALLOCATE(particle_group, ierr)
 
-  end subroutine sll_bsl_lt_pic_4d_group_delete
+  end subroutine sll_pic_lbfr_4d_group_delete
 
 
-end module sll_m_bsl_lt_pic_4d_group
+end module sll_m_pic_lbfr_4d_group

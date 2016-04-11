@@ -16,7 +16,7 @@
 !**************************************************************
 
 !> @file
-!> @brief Unit test for initialization and remapping of bsl_lt_pic_4d particles
+!> @brief Unit test for initialization and remapping of pic_lbfr_4d particles
 
 ! Goal of this test: Start from a particle distribution initialized from a pw affine
 ! hat function and move it along an affine flow.
@@ -24,7 +24,7 @@
 
 ! todo: finish the unit test (some functions not written), and add the test in CMakeLists
 
-program test_bsl_lt_pic_4d
+program test_pic_lbfr_4d
 
   ! [[file:../working_precision/sll_m_working_precision.h]]
 
@@ -34,16 +34,17 @@ program test_bsl_lt_pic_4d
 #include "sll_memory.h"
 #include "sll_working_precision.h"
 
-  use sll_m_bsl_lt_pic_4d_group, only: &
-    SLL_BSL_LT_PIC_BASIC,  &
-    SLL_BSL_LT_PIC_HAT_F0, &
-    SLL_BSL_LT_PIC_REMAP_WITH_SPARSE_GRIDS, &
-    SLL_BSL_LT_PIC_REMAP_WITH_SPLINES,  &
-    SLL_BSL_LT_PIC_STRUCTURED,  &
-    sll_t_bsl_lt_pic_4d_group, &
-    sll_f_bsl_lt_pic_4d_group_new
+  use sll_m_pic_lbfr_4d_group, only: &
+    SLL_PIC_LBFR_STRUCTURED, &
+    SLL_PIC_LBFR_PUSHED, &
+    SLL_PIC_LBFR_HAT_F0, &
+    SLL_PIC_LBFR_REMAP_WITH_SPARSE_GRIDS, &
+    SLL_PIC_LBFR_REMAP_WITH_SPLINES,  &
+    SLL_PIC_LBFR_STRUCTURED,  &
+    sll_t_pic_lbfr_4d_group, &
+    sll_f_pic_lbfr_4d_group_new
 
-  use sll_m_bsl_lt_pic_4d_utilities, only: &
+  use sll_m_pic_lbfr_4d_utilities, only: &
     sll_f_eval_hat_function
 
   use sll_m_cartesian_meshes, only: &
@@ -126,7 +127,7 @@ program test_bsl_lt_pic_4d
 #define PLOT_CST_DIM4 4
 #define X4_PLOT_CST 0._f64
 
-  type(sll_t_bsl_lt_pic_4d_group),        pointer     :: p_group
+  type(sll_t_pic_lbfr_4d_group),        pointer     :: p_group
   type(sll_t_cartesian_mesh_2d),          pointer     :: mesh_2d
 
   character(5)      :: ncx_name, ncy_name
@@ -173,7 +174,6 @@ program test_bsl_lt_pic_4d
   sll_int32 :: plot_np_vx
   sll_int32 :: plot_np_vy
 
-  sll_int32 :: deposition_particles_type
   sll_int32 :: deposition_particles_pos_type
   sll_int32 :: deposition_particles_move_type
   sll_int32 :: number_deposition_particles
@@ -222,7 +222,7 @@ program test_bsl_lt_pic_4d
   mesh_2d =>  sll_f_new_cartesian_mesh_2d( NC_X, NC_Y, X_MIN, X_MAX, Y_MIN, Y_MAX )
 
   if( DEBUG_MODE )then
-    print*, "[test_bsl_lt_pic_4d - DEBUG] -- AA"
+    print*, "[test_pic_lbfr_4d - DEBUG] -- AA"
   end if
 
   remapping_sparse_grid_max_levels(1) = REMAP_SPARSE_GRID_LEVEL_X
@@ -230,24 +230,23 @@ program test_bsl_lt_pic_4d
   remapping_sparse_grid_max_levels(3) = REMAP_SPARSE_GRID_LEVEL_VX
   remapping_sparse_grid_max_levels(4) = REMAP_SPARSE_GRID_LEVEL_VY
 
-  deposition_particles_type = SLL_BSL_LT_PIC_BASIC
-  deposition_particles_pos_type = -1      ! not used with BASIC deposition particles
-  deposition_particles_move_type = -1     ! not used with BASIC deposition particles
-  number_deposition_particles = -1     ! not used with BASIC deposition particles
+  deposition_particles_pos_type = SLL_PIC_LBFR_STRUCTURED
+  deposition_particles_move_type = SLL_PIC_LBFR_PUSHED
+  number_deposition_particles = 1000
   nb_deposition_particles_per_cell_x = 2
   nb_deposition_particles_per_cell_y = 2
   nb_deposition_particles_vx = 50
   nb_deposition_particles_vy = 50
 
-  flow_markers_type = SLL_BSL_LT_PIC_STRUCTURED
+  flow_markers_type = SLL_PIC_LBFR_STRUCTURED
 
-  p_group => sll_f_bsl_lt_pic_4d_group_new(             &
+  p_group => sll_f_pic_lbfr_4d_group_new(             &
         SPECIES_CHARGE,                               &
         SPECIES_MASS,                                 &
         particle_group_id,                            &
         DOMAIN_IS_X_PERIODIC,                         &
         DOMAIN_IS_Y_PERIODIC,                         &
-        SLL_BSL_LT_PIC_REMAP_WITH_SPARSE_GRIDS,       &       !! other option is SLL_BSL_LT_PIC_REMAP_WITH_SPLINES
+        SLL_PIC_LBFR_REMAP_WITH_SPARSE_GRIDS,       &       !! other option is SLL_PIC_LBFR_REMAP_WITH_SPLINES
         REMAP_DEGREE,                                 &
         REMAP_GRID_VX_MIN,                            &
         REMAP_GRID_VX_MAX,                            &
@@ -258,7 +257,6 @@ program test_bsl_lt_pic_4d
         REMAP_NC_VX,                                  &
         REMAP_NC_VY,                                  &
         remapping_sparse_grid_max_levels,             &
-        deposition_particles_type,                    &
         deposition_particles_pos_type,                &
         deposition_particles_move_type,               &
         number_deposition_particles,                  &
@@ -297,26 +295,26 @@ program test_bsl_lt_pic_4d
   enforce_total_charge = .false.
 
   if( DEBUG_MODE )then
-    print*, "[test_bsl_lt_pic_4d - DEBUG] -- AA B"
+    print*, "[test_pic_lbfr_4d - DEBUG] -- AA B"
   end if
 
   ! This initializes the particles [[?? file:../pic_particle_initializers/lt_pic_4d_init.F90::sll_lt_pic_4d_init_hat_f]]
 
   call p_group%set_hat_f0_parameters( x0, y0, vx0, vy0, r_x, r_y, r_vx, r_vy, basis_height, shift )
-    !  bsl_lt_pic_4d_set_hat_f0_parameters( x0, y0, vx0, vy0, r_x, r_y, r_vx, r_vy, basis_height, shift )
+    !  pic_lbfr_4d_set_hat_f0_parameters( x0, y0, vx0, vy0, r_x, r_y, r_vx, r_vy, basis_height, shift )
 
   if( DEBUG_MODE )then
-    print*, "[test_bsl_lt_pic_4d - DEBUG] -- AA C"
+    print*, "[test_pic_lbfr_4d - DEBUG] -- AA C"
   end if
 
-  call p_group%initializer( SLL_BSL_LT_PIC_HAT_F0, target_total_charge, enforce_total_charge )
-!  call p_group%bsl_lt_pic_4d_initializer( SLL_BSL_LT_PIC_HAT_F0 )
+  call p_group%initializer( SLL_PIC_LBFR_HAT_F0, target_total_charge, enforce_total_charge )
+!  call p_group%pic_lbfr_4d_initializer( SLL_PIC_LBFR_HAT_F0 )
 
   print *, "plotting initial f slice in gnuplot format "
   call p_group%visualize_f_slice_x_vx("f_initial", plot_np_x, plot_np_y, plot_np_vx, plot_np_vy, 1)
 
   if( DEBUG_MODE )then
-    print*, "[test_bsl_lt_pic_4d - DEBUG] -- AA D"
+    print*, "[test_pic_lbfr_4d - DEBUG] -- AA D"
   end if
 
 
@@ -329,7 +327,7 @@ program test_bsl_lt_pic_4d
   write(70,*) "# x_j, y_j, vx_j, vy_j, f_j, f_target, abs( f_j - f_target )"
 
   error = 0.0_f64
-  if( p_group%remapped_f_interpolation_type == SLL_BSL_LT_PIC_REMAP_WITH_SPLINES )then
+  if( p_group%remapped_f_interpolation_type == SLL_PIC_LBFR_REMAP_WITH_SPLINES )then
 
     number_nodes_x  = p_group%remapping_cart_grid_number_nodes_x()
     number_nodes_y  = p_group%remapping_cart_grid_number_nodes_y()
@@ -377,13 +375,13 @@ program test_bsl_lt_pic_4d
   else
 
     if( DEBUG_MODE )then
-      print*, "[test_bsl_lt_pic_4d - DEBUG] -- AA  12"
+      print*, "[test_pic_lbfr_4d - DEBUG] -- AA  12"
     end if
 
-    SLL_ASSERT( p_group%remapped_f_interpolation_type == SLL_BSL_LT_PIC_REMAP_WITH_SPARSE_GRIDS )
+    SLL_ASSERT( p_group%remapped_f_interpolation_type == SLL_PIC_LBFR_REMAP_WITH_SPARSE_GRIDS )
 
     if( DEBUG_MODE )then
-      print*, "[test_bsl_lt_pic_4d - DEBUG] -- AA  24"
+      print*, "[test_pic_lbfr_4d - DEBUG] -- AA  24"
     end if
 
     evaluate_error_on_sparse_grid = .false.
@@ -392,7 +390,7 @@ program test_bsl_lt_pic_4d
 
       do j=1, p_group%sparse_grid_interpolator%size_basis
 
-          f_j = p_group%bsl_lt_pic_4d_interpolate_value_of_remapped_f( p_group%sparse_grid_interpolator%hierarchy(j)%coordinate )
+          f_j = p_group%pic_lbfr_4d_interpolate_value_of_remapped_f( p_group%sparse_grid_interpolator%hierarchy(j)%coordinate )
 
           x_j  = p_group%sparse_grid_interpolator%hierarchy(j)%coordinate(1)
           y_j  = p_group%sparse_grid_interpolator%hierarchy(j)%coordinate(2)
@@ -441,7 +439,7 @@ program test_bsl_lt_pic_4d
               eta(3) = vx_j
               eta(4) = vy_j
 
-              f_j = p_group%bsl_lt_pic_4d_interpolate_value_of_remapped_f( eta )
+              f_j = p_group%pic_lbfr_4d_interpolate_value_of_remapped_f( eta )
 
               SLL_ASSERT( sll_f_x_is_in_domain_2d( x_j, y_j, p_group%space_mesh_2d,  DOMAIN_IS_X_PERIODIC, DOMAIN_IS_Y_PERIODIC ) )
 
@@ -465,7 +463,7 @@ program test_bsl_lt_pic_4d
 
 
   if( DEBUG_MODE )then
-    print*, "[test_bsl_lt_pic_4d - DEBUG] -- AA 56"
+    print*, "[test_pic_lbfr_4d - DEBUG] -- AA 56"
   end if
 
 
@@ -528,7 +526,7 @@ program test_bsl_lt_pic_4d
 
   call sll_s_set_time_mark(remapstart)
   if(remap_type == 'ltp') then
-    print*, "[test_bsl_lt_pic_4d]  Error (875454367554242): ltp remapping not implemented yet, stop."
+    print*, "[test_pic_lbfr_4d]  Error (875454367554242): ltp remapping not implemented yet, stop."
     stop
     print*, "[lt_pic_4d_init_tester]  OLD VERSION: calling sll_lt_pic_4d_write_f_on_remap_grid..."
     ! OLD: call sll_lt_pic_4d_write_f_on_remap_grid( p_group )
@@ -560,7 +558,7 @@ program test_bsl_lt_pic_4d
   write(80,*) "# x_j, y_j, vx_j, vy_j, f_j, f_target, abs( f_j - f_target )"
 
   error = 0.0_f64
-  if( p_group%remapped_f_interpolation_type == SLL_BSL_LT_PIC_REMAP_WITH_SPLINES )then
+  if( p_group%remapped_f_interpolation_type == SLL_PIC_LBFR_REMAP_WITH_SPLINES )then
 
     number_nodes_x  = p_group%remapping_cart_grid_number_nodes_x()
     number_nodes_y  = p_group%remapping_cart_grid_number_nodes_y()
@@ -593,7 +591,7 @@ program test_bsl_lt_pic_4d
             vy_j = vy_min + (j_vy-1) * h_vy
 
             if( DEBUG_MODE )then
-              print*, "[test_bsl_lt_pic_4d - DEBUG] -- AA -- ddd"
+              print*, "[test_pic_lbfr_4d - DEBUG] -- AA -- ddd"
             end if
 
             f_j = real( p_group%remapped_f_splines_coefficients(j_x,j_y,j_vx,j_vy)/d_vol ,f64)
@@ -618,25 +616,25 @@ program test_bsl_lt_pic_4d
   else
 
     if( DEBUG_MODE )then
-      print*, "[test_bsl_lt_pic_4d - DEBUG] -- SG -- 1"
+      print*, "[test_pic_lbfr_4d - DEBUG] -- SG -- 1"
     end if
 
-    SLL_ASSERT( p_group%remapped_f_interpolation_type == SLL_BSL_LT_PIC_REMAP_WITH_SPARSE_GRIDS )
+    SLL_ASSERT( p_group%remapped_f_interpolation_type == SLL_PIC_LBFR_REMAP_WITH_SPARSE_GRIDS )
 
     if( DEBUG_MODE )then
-      print*, "[test_bsl_lt_pic_4d - DEBUG] -- SG -- 2"
+      print*, "[test_pic_lbfr_4d - DEBUG] -- SG -- 2"
     end if
 
     do j=1, p_group%sparse_grid_interpolator%size_basis
 
         if( DEBUG_MODE )then
-          print*, "[test_bsl_lt_pic_4d - DEBUG] -- SG -- 3a - j =", j
+          print*, "[test_pic_lbfr_4d - DEBUG] -- SG -- 3a - j =", j
         end if
 
-        f_j = p_group%bsl_lt_pic_4d_interpolate_value_of_remapped_f( p_group%sparse_grid_interpolator%hierarchy(j)%coordinate )
+        f_j = p_group%pic_lbfr_4d_interpolate_value_of_remapped_f( p_group%sparse_grid_interpolator%hierarchy(j)%coordinate )
 
         if( DEBUG_MODE )then
-          print*, "[test_bsl_lt_pic_4d - DEBUG] -- SG -- 3b - f_j =", f_j
+          print*, "[test_pic_lbfr_4d - DEBUG] -- SG -- 3b - f_j =", f_j
         end if
 
         x_j  = p_group%sparse_grid_interpolator%hierarchy(j)%coordinate(1)
@@ -659,7 +657,7 @@ program test_bsl_lt_pic_4d
         write(80,*) x_j, y_j, vx_j, vy_j,  f_j, f_target, abs( f_j - f_target )
 
         if( DEBUG_MODE )then
-          print*, "[test_bsl_lt_pic_4d - DEBUG] -- SG -- 3c - j, f_target =", j, f_target
+          print*, "[test_pic_lbfr_4d - DEBUG] -- SG -- 3c - j, f_target =", j, f_target
         end if
 
     end do
@@ -781,4 +779,4 @@ contains
 
   end subroutine sll_s_test_backward_push
 
-end program test_bsl_lt_pic_4d
+end program test_pic_lbfr_4d

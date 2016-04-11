@@ -15,7 +15,7 @@
 !  "http://www.cecill.info". 
 !**************************************************************
 
-module sll_m_bsl_lt_pic_4d_utilities
+module sll_m_pic_lbfr_4d_utilities
 
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_assert.h"
@@ -457,4 +457,4 @@ contains
                                                  * max(0._f64, 1. - inv_r_vy*abs(vy-vy0) )
   end function sll_f_eval_hat_function
 
-end module  sll_m_bsl_lt_pic_4d_utilities
+end module  sll_m_pic_lbfr_4d_utilities

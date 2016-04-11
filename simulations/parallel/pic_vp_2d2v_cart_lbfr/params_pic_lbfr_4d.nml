@@ -6,7 +6,7 @@
         SPECIES_CHARGE      = -1.0
         SPECIES_MASS        = 1.0
         ALPHA  = 0.5                   ! amplitude of initial perturbation
-        UseLtPicScheme = .true.         ! pour utiliser du PIC standard ou bien du LTPIC-BSL
+        use_pic_lbfr_scheme = .true.   ! choose between standard PIC or PIC-LBFR
         run_nb = 1
 /
 
@@ -29,7 +29,7 @@
         DOMAIN_IS_Y_PERIODIC = .true.
 /
 
-&lt_pic_remap_params
+&pic_lbfr_remap_params
     remap_period        = 10
     remap_f_type        = 1         !  0 = splines, 1 = sparse grid -- find a better way to specify this
     remap_degree        = 3
@@ -47,9 +47,8 @@
     remapping_sparse_grid_max_level_vy = 7                 ! for the sparse grid
 /
 
-&lt_pic_deposition_params
-    deposition_particles_type = 1           ! 0 = basic (first implementation), 1 = flexible (new, able to change type)
-    deposition_particles_pos_type = 0       ! 0 = on a structured grid,   1 = unstructured (random)
+&pic_lbfr_deposition_params
+    deposition_particles_pos_type = 0       ! 0 = initialized (and resampled) on a structured grid, 1 = unstructured (random)
     deposition_particles_move_type = 0      ! 0 = new particles are created at each step,  1 = they move until next remap step
     number_deposition_particles = 50000     ! used for unstructured deposition particles
     nb_deposition_particles_per_cell_x = 2  ! used for structured deposition particles
@@ -58,7 +57,7 @@
     nb_deposition_particles_vy = 5          ! used for structured deposition particles
 /
 
-&lt_pic_markers_params
+&pic_lbfr_markers_params
     flow_markers_type = 0         ! 0 = structured (markers remapped on a cartesian grid),     1 = unstructured
     number_markers_x  = 100       ! for structured markers (defines the cartesian grid where they are remapped)
     number_markers_y  = 20

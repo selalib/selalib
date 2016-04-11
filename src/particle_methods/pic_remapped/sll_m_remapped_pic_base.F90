@@ -8,8 +8,8 @@ module sll_m_remapped_pic_base
 #include "sll_memory.h"
 #include "sll_working_precision.h"
 
-  use sll_m_accumulators, only: &
-    sll_t_charge_accumulator_2d
+!  use sll_m_accumulators, only: &
+!    sll_t_charge_accumulator_2d
 
   implicit none
 
@@ -75,7 +75,7 @@ module sll_m_remapped_pic_base
     procedure( init              ),  deferred :: initializer
 
     ! Remapping
-    procedure( no_arg ), deferred :: remap
+    procedure( rem ), deferred :: remap
 
     ! Visualize
     procedure( vis ),  deferred :: visualize_f_slice_x_vx
@@ -150,14 +150,29 @@ module sll_m_remapped_pic_base
 
   !----------------------------------------------------------------------------
   abstract interface
-   subroutine init( self, initial_density_identifier, rand_seed, rank, world_size)
+   subroutine init( self, initial_density_identifier, target_total_charge, enforce_total_charge, rand_seed, rank, world_size)
     use sll_m_working_precision
     import sll_c_remapped_particle_group
     class( sll_c_remapped_particle_group ), intent( inout ) :: self
     sll_int32                       , intent( in    ) :: initial_density_identifier
+    sll_real64,                       intent( in )    :: target_total_charge
+    logical,                          intent( in )    :: enforce_total_charge
     sll_int32, dimension(:)         , intent( in ), optional :: rand_seed
     sll_int32                       , intent( in ), optional :: rank, world_size
+
    end subroutine init
+  end interface
+
+  !----------------------------------------------------------------------------
+  abstract interface
+   subroutine rem( self, target_total_charge, enforce_total_charge )
+    use sll_m_working_precision
+    import sll_c_remapped_particle_group
+    class( sll_c_remapped_particle_group ), intent( inout ) :: self
+    sll_real64,                       intent( in )    :: target_total_charge
+    logical,                          intent( in )    :: enforce_total_charge
+
+   end subroutine rem
   end interface
 
   !----------------------------------------------------------------------------
@@ -172,11 +187,16 @@ module sll_m_remapped_pic_base
 
   !----------------------------------------------------------------------------
   abstract interface
-   subroutine vis( self, array_name, iplot )
+   !> plots a 2d slice, using a 4d computational grid
+   subroutine vis(self, array_name, plot_np_x, plot_np_y, plot_np_vx, plot_np_vy, iplot)
     use sll_m_working_precision
     import sll_c_remapped_particle_group
     class( sll_c_remapped_particle_group ), intent( inout ) :: self
     character(len=*),                   intent(in)      :: array_name   !< field name
+    sll_int32,                          intent(in)      :: plot_np_x    !< nb of points in the x  plotting grid (see comment above)
+    sll_int32,                          intent(in)      :: plot_np_y    !< nb of points in the y  plotting grid (see comment above)
+    sll_int32,                          intent(in)      :: plot_np_vx   !< nb of points in the vx plotting grid (see comment above)
+    sll_int32,                          intent(in)      :: plot_np_vy   !< nb of points in the vy plotting grid (see comment above)
     sll_int32,                          intent(in)      :: iplot        !< plot counter
 
    end subroutine vis
@@ -195,18 +215,41 @@ module sll_m_remapped_pic_base
    end subroutine set_landau_params
   end interface
 
+  !----------------------------------------------------------------------------
+  abstract interface
+   subroutine set_hat_f0_params( self, x0, y0, vx0, vy0, r_x, r_y, r_vx, r_vy, basis_height, shift )
+    use sll_m_working_precision
+    import sll_c_remapped_particle_group
+    class( sll_c_remapped_particle_group ), intent( inout ) :: self
+    sll_real64,                     intent(in)      :: x0
+    sll_real64,                     intent(in)      :: y0
+    sll_real64,                     intent(in)      :: vx0
+    sll_real64,                     intent(in)      :: vy0
+    sll_real64,                     intent(in)      :: r_x
+    sll_real64,                     intent(in)      :: r_y
+    sll_real64,                     intent(in)      :: r_vx
+    sll_real64,                     intent(in)      :: r_vy
+    sll_real64,                     intent(in)      :: basis_height
+    sll_real64,                     intent(in)      :: shift
+
+   end subroutine set_hat_f0_params
+  end interface
+
 
   !----------------------------------------------------------------------------
   abstract interface
-   subroutine dep_charge_2d( self, charge_accumulator, target_total_charge )
+   subroutine dep_charge_2d( self, charge_accumulator, target_total_charge, enforce_total_charge )
     use sll_m_working_precision
-    import sll_c_remapped_particle_group, sll_t_charge_accumulator_2d
-    class( sll_c_remapped_particle_group ),           intent( inout ) :: self
+    !#include "sll_accumulators.h"
+    use sll_m_accumulators, only: &
+        sll_t_charge_accumulator_2d
+    import sll_c_remapped_particle_group
+    class( sll_c_remapped_particle_group ),     intent( inout ) :: self
     type( sll_t_charge_accumulator_2d ), pointer, intent( inout ) :: charge_accumulator
-    sll_real64,                                 intent(in), optional :: target_total_charge
+    sll_real64,                                 intent(in)      :: target_total_charge
+    logical,                                    intent(in)      :: enforce_total_charge
    end subroutine dep_charge_2d
   end interface
-
 
 !>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 contains
