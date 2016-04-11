@@ -21,8 +21,6 @@
 
 !> @brief Module for groups of particles and markers for pic methods with linearized-backward-flow (lbf) resamplings
 
-
-!todo: use only flexible deposition particles
 !todo: derive type from Katharina's class
 !todo: create new resampler structure
 !todo: initialize with the remapping (done already?)
@@ -94,10 +92,10 @@ module sll_m_pic_lbfr_4d_group
   public :: &
     SLL_PIC_LBFR_REMAP_WITH_SPLINES,  &
     SLL_PIC_LBFR_REMAP_WITH_SPARSE_GRIDS,  &
-    SLL_PIC_LBFR_DEPOSIT_F,  &
-    SLL_PIC_LBFR_REMAP_F,  &
-    SLL_PIC_LBFR_WRITE_F_ON_GIVEN_GRID, &
-    SLL_PIC_LBFR_SET_WEIGHTS_ON_DEPOSITION_PARTICLES, &
+    !    SLL_PIC_LBFR_DEPOSIT_F,  &
+    SLL_PIC_LBFR_REMAPPING_GRID,  &
+    SLL_PIC_LBFR_GIVEN_GRID, &
+    SLL_PIC_LBFR_DEPOSITION_PARTICLES, &
     SLL_PIC_LBFR_LANDAU_F0,  &
     SLL_PIC_LBFR_HAT_F0,  &
     SLL_PIC_LBFR_STRUCTURED,  &
@@ -114,11 +112,10 @@ module sll_m_pic_lbfr_4d_group
   sll_int32, parameter :: SLL_PIC_LBFR_REMAP_WITH_SPLINES = 0
   sll_int32, parameter :: SLL_PIC_LBFR_REMAP_WITH_SPARSE_GRIDS = 1
 
-  ! possible scenarios for the reconstruction routine
-  sll_int32, parameter :: SLL_PIC_LBFR_DEPOSIT_F = 0
-  sll_int32, parameter :: SLL_PIC_LBFR_REMAP_F = 1
-  sll_int32, parameter :: SLL_PIC_LBFR_WRITE_F_ON_GIVEN_GRID = 2
-  sll_int32, parameter :: SLL_PIC_LBFR_SET_WEIGHTS_ON_DEPOSITION_PARTICLES = 3
+  ! possible values for the parameter reconstruction_set_type in the reconstruction routine
+  sll_int32, parameter :: SLL_PIC_LBFR_REMAPPING_GRID = 1
+  sll_int32, parameter :: SLL_PIC_LBFR_GIVEN_GRID = 2
+  sll_int32, parameter :: SLL_PIC_LBFR_DEPOSITION_PARTICLES = 3
 
   ! possible densities for f0
   sll_int32, parameter :: SLL_PIC_LBFR_LANDAU_F0 = 0
@@ -195,8 +192,6 @@ module sll_m_pic_lbfr_4d_group
     !> if move_type = pushed,
     !>    - positions and weights of deposition particles are reset in the remapping routine (called at remapping step)
     !>      in particular, computing the weights can be done with direct interpolation (no pic_lbfr reconstruction)
-
-!    todo: check deposition scenario for deposition_particles
 
     !> @name General parameters for the interpolation of the remapped density f
     !> @{
@@ -298,7 +293,7 @@ module sll_m_pic_lbfr_4d_group
     procedure :: reset_deposition_particles_weights_with_direct_interpolation
     procedure :: get_deposition_particle_charge_factor
 
-    procedure :: pic_lbfr_4d_write_f_on_grid_or_deposit
+    procedure :: pic_lbfr_4d_reconstruct_f
     procedure :: pic_lbfr_4d_interpolate_value_of_remapped_f
 
     procedure :: update_flow_cell_lists_with_new_marker_position
@@ -810,17 +805,15 @@ contains
     class( sll_t_pic_lbfr_4d_group ),           intent( inout ) :: self
     sll_real64,                                 intent( in )    :: target_total_charge
     logical,                                    intent( in )    :: enforce_total_charge
-    type(sll_t_charge_accumulator_2d),  pointer :: void_charge_accumulator
     type(sll_t_cartesian_mesh_4d),      pointer :: void_grid_4d
     sll_real64, dimension(:,:),       pointer :: void_array_2d
 
-    sll_int32     :: scenario
+    sll_int32     :: reconstruction_set_type
 
-    nullify(void_charge_accumulator)
     nullify(void_grid_4d)
     nullify(void_array_2d)
 
-    scenario = SLL_PIC_LBFR_SET_WEIGHTS_ON_DEPOSITION_PARTICLES
+    reconstruction_set_type = SLL_PIC_LBFR_DEPOSITION_PARTICLES
 
     ! for pushed deposition particles, the reconstruction is always done at the remapping step, using a direct interpolation
     SLL_ASSERT( self%deposition_particles_move_type == SLL_PIC_LBFR_FIXED )
@@ -828,13 +821,12 @@ contains
     ! reset the weights of the deposition particles, because maybe not every deposition particle weight will be set
     self%deposition_particles_weight = 0.0d0
 
-    call self%pic_lbfr_4d_write_f_on_grid_or_deposit(void_charge_accumulator,             &
-                                                          scenario,                         &
-                                                          void_grid_4d,                     &
-                                                          void_array_2d,                    &
-                                                          target_total_charge,              &
-                                                          enforce_total_charge              &
-                                                          )
+    call self%pic_lbfr_4d_reconstruct_f( reconstruction_set_type,          &
+                                              void_grid_4d,                     &
+                                              void_array_2d,                    &
+                                              target_total_charge,              &
+                                              enforce_total_charge              &
+                                              )
 
   end subroutine reset_deposition_particles_weights_with_bsl_reconstruction
 
@@ -986,14 +978,10 @@ contains
 
     sll_real64, dimension(:,:),       pointer :: x_vx_grid_values
     type(sll_t_cartesian_mesh_4d),      pointer :: plotting_grid_4d
-    type(sll_t_charge_accumulator_2d),  pointer :: void_charge_accumulator
-    sll_int32     :: scenario
+    sll_int32     :: reconstruction_set_type
     sll_real64    :: dummy_total_charge
     logical       :: enforce_total_charge
 
-    nullify(void_charge_accumulator)
-
-    !    print *, " plot A"
 
     SLL_ALLOCATE( x_vx_grid_values(plot_np_x, plot_np_vx), ierr)
 
@@ -1011,17 +999,16 @@ contains
                                               self%remapping_grid_eta_max(4)  &
                                             )
 
-    scenario = SLL_PIC_LBFR_WRITE_F_ON_GIVEN_GRID
+    reconstruction_set_type = SLL_PIC_LBFR_GIVEN_GRID
     dummy_total_charge = 0.0_f64
     enforce_total_charge = .false.
 
-    call self%pic_lbfr_4d_write_f_on_grid_or_deposit(void_charge_accumulator,   &
-                                                       scenario,                  &
-                                                       plotting_grid_4d,          &
-                                                       x_vx_grid_values,          &
-                                                       dummy_total_charge,        &
-                                                       enforce_total_charge       &
-                                                       )
+    call self%pic_lbfr_4d_reconstruct_f(  reconstruction_set_type,   &
+                                               plotting_grid_4d,          &
+                                               x_vx_grid_values,          &
+                                               dummy_total_charge,        &
+                                               enforce_total_charge       &
+                                               )
 
     ! print *, "plot T"
 
@@ -3493,30 +3480,27 @@ contains
 
     class(sll_t_pic_lbfr_4d_group),intent(inout) :: p_group
 
-    type(sll_t_charge_accumulator_2d),pointer :: void_charge_accumulator
     type(sll_t_cartesian_mesh_4d),    pointer :: void_grid_4d
     sll_real64, dimension(:,:),     pointer :: void_array_2d
 
     sll_real64    :: dummy_total_charge
     logical       :: enforce_total_charge
-    sll_int32     :: scenario
+    sll_int32     :: reconstruction_set_type
 
-    nullify(void_charge_accumulator)
     nullify(void_grid_4d)
     nullify(void_array_2d)
 
-    scenario = SLL_PIC_LBFR_REMAP_F
+    reconstruction_set_type = SLL_PIC_LBFR_REMAPPING_GRID
     dummy_total_charge = 0.0_f64
     enforce_total_charge = .false.
 
     ! (no need to distinguish between sparse grid or spline remapping here, this is done inside the function below)
-    call p_group%pic_lbfr_4d_write_f_on_grid_or_deposit(void_charge_accumulator,          &
-                                                          scenario,                         &
-                                                          void_grid_4d,                     &
-                                                          void_array_2d,                    &
-                                                          dummy_total_charge,               &
-                                                          enforce_total_charge              &
-                                                          )
+    call p_group%pic_lbfr_4d_reconstruct_f(reconstruction_set_type,          &
+                                                void_grid_4d,                     &
+                                                void_array_2d,                    &
+                                                dummy_total_charge,               &
+                                                enforce_total_charge              &
+                                                )
 
   end subroutine pic_lbfr_4d_remap_f
 
@@ -3580,76 +3564,41 @@ contains
 
 
 
-  !> new version of the write_f_on_grid_or_deposit routine, with call to separate interpolation routine for the remapped f
+  !> pic_lbfr_4d_reconstruct_f reconstruct point values of f using a bsl approximation based on linearized backward flows (lbf)
 
-  ! todo: update the description below
-  ! <<pic_lbfr_4d_write_f_on_grid_or_deposit>> <<ALH>> has two scenarios:
-  !  - 1.  the "write f" scenario:
-  !        write the density on the (phase-space) remapping grid, using the method described
-  !        in the "BSL-remapping" notes (version of december 2, 2014)
+  ! <<pic_lbfr_4d_reconstruct_f>> <<ALH>> reconstructs values of f on different grids, depending on reconstruction_set_type:
   !
-  !        -- this function should be a faster alternative to [[pic_lbfr_4d_write_f_on_remapping_grid]] --
+  ! SLL_PIC_LBFR_REMAPPING_GRID  -- may be a sparse grid or a cartesian grid, depending on remapped_f_interpolation_type
+  ! todo: change code so that reconstructed values are written in a specific array, used outside this routine to compute remapped coefs
+  ! (in previous code this corresponds to the case scenario == SLL_PIC_LBFR_REMAP_F)
   !
-  !        Note: the (x,y)-projection of the remapping grid may be larger than the "Poisson" 2d mesh associated with the
-  !        particle group (in particular if the (x,y) domain is not periodic)
-  !
-  !  - 2.  the "deposition" scenario:
-  !        deposit the charge on the Poisson cells given in the given charge_accumulator_2d object
-  !
-  !  In every case, this routine computes (approximated) values of the density f(t_n) on 'virtual' nodes (sometimes called
-  !  'virtual particles') located on a cartesian grid of the 4d phase-space.
-  !  For different reasons, these virtual nodes are gathered in 'virtual' cells, and the given arguments
-  !  n_virtual_x, n_virtual_y, n_virtual_vx, n_virtual_vy is the number of virtual nodes per virtual cell, in every dimension
-  !
-  !  -> in the "write f" scenario, these virtual nodes are in fact the nodes of a given grid -- either the remapping one,
-  !     or some given grid -- hence they are not really virtual.
-  !     On the contrary the virtual cells are really virtual, in the sense that they are just a way to gather the computations
-  !
-  !  -> in the "deposition" scenario, the virtual nodes are really virtual: they correspond to temporary particles which
-  !     are deposited with a standard PIC procedure. And the virtual cells are "half-virtual" in the sense that their (x,y)
-  !     projection coincides with the cells of the Poisson mesh, whereas in the velocity dimensions they are created to gather
-  !     the computations, just as in the "remapping" scenario
-  !
-  !     In particular, taking a larger value for n_virtual has the following effect:
-  !     -> in the  "write f" scenario, larger virtual cells will be used to compute the approximated values of f(t_n) on the
-  !        nodes of the (remapping or given) grid. This will speed-up the code and is morally ok if the characteristic flow
-  !        is smooth
-  !     -> in the "deposition" scenario, finer grids of virtual point particles will be (temporarily) created and
-  !        deposited. This will slow down the code and is morally required if the density f(t_n) is not locally smooth
-  !
-  !  - Note: in the "write f" scenario, the grid is known through:
-  !        the number of grid points (not cells) in every dimension
-  !        and the max and min coordinates of these points, in every dimension
-  !
-  !  - target_total_charge is an argument that is given to make the deposition method conservative
-  !    (note: it may be used also in the 'write_f' scenario, but one has to define what conservative means in this case)
-  !
-  !  Note: This routine is an evolution from sll_lt_pic_4d_write_bsl_f_on_remap_grid (which will be eventually discarded)
+  ! SLL_PIC_LBFR_GIVEN_GRID
+  ! (in previous code this corresponds to the case scenario == SLL_PIC_LBFR_WRITE_F_ON_GIVEN_GRID)
 
+  ! SLL_PIC_DEPOSITION_PARTICLES
+  ! (in previous code this corresponds to the case scenario == SLL_PIC_LBFR_SET_WEIGHTS_ON_DEPOSITION_PARTICLES)
 
-  subroutine pic_lbfr_4d_write_f_on_grid_or_deposit(p_group,                    &
-                                                      charge_accumulator,         &
-                                                      scenario,                   &
-                                                      given_grid_4d,              &
-                                                      given_array_2d,             &
-                                                      target_total_charge,        &
-                                                      enforce_total_charge       &
-                                                      )
+  ! note: this function is an evolution from write_f_or_deposit in the previous implementation called bsl_lt_pic
 
-    class(sll_t_pic_lbfr_4d_group),         intent(inout) :: p_group          !> particle group (with markers and remapping grid)
-    type(sll_t_charge_accumulator_2d), pointer, intent(inout) :: charge_accumulator
-    sll_int32,                                intent(in)    :: scenario
-    type(sll_t_cartesian_mesh_4d),     pointer, intent(in)    :: given_grid_4d
+  subroutine pic_lbfr_4d_reconstruct_f( p_group,                    &
+                                        reconstruction_set_type,    &
+                                        given_grid_4d,              &
+                                        given_array_2d,             &
+                                        target_total_charge,        &
+                                        enforce_total_charge        &
+                                        )
+
+    class(sll_t_pic_lbfr_4d_group),         intent(inout)   :: p_group          !> particle group (with markers and remapping grid)
+    sll_int32,                                intent(in)    :: reconstruction_set_type
+    type(sll_t_cartesian_mesh_4d),     pointer, intent(in)  :: given_grid_4d
     sll_real64, dimension(:,:),      pointer, intent(inout) :: given_array_2d   ! assumed in x, vx for now
     sll_real64,                               intent(in)    :: target_total_charge
     logical,                                  intent(in)    :: enforce_total_charge
 
-    type(sll_t_charge_accumulator_cell_2d),  pointer :: charge_accumulator_cell
-
     sll_real64 :: deposited_charge
     sll_real64 :: charge_correction_factor
 
-    logical :: create_deposition_particles_on_a_grid
+!    logical :: create_deposition_particles_on_a_grid
     logical :: reconstruct_f_on_g_grid
 
     ! index of marker closest to the center of each flow cell
@@ -3686,8 +3635,6 @@ contains
     sll_int32  :: node_index
 
     sll_int32  :: k_marker_closest_to_first_corner
-
-    sll_real64 :: deposition_dvol
 
     ! <<g>> cartesian grid pointer to the remapping grid
     type(sll_t_cartesian_mesh_4d),pointer :: g
@@ -3748,9 +3695,6 @@ contains
     sll_real64 :: closest_marker_distance_to_first_corner
     sll_real64 :: marker_distance_to_first_corner
 
-    ! working space
-    sll_real64 :: tmp, tmp1, tmp2
-
     sll_real64 :: mesh_period_x
     sll_real64 :: mesh_period_y
 
@@ -3779,7 +3723,6 @@ contains
     sll_real64 :: cell_offset_y
 
     sll_real64 :: deposition_particle_charge_factor
-    sll_real64 :: phase_space_volume
 
     sll_int32  :: nodes_number
     sll_real64 :: reconstructed_f_value
@@ -3798,9 +3741,6 @@ contains
     sll_real64 :: vy_t0_to_vyk_t0
 
     sll_int32  :: ierr
-    sll_int32  :: i_cell_x
-    sll_int32  :: i_cell_y
-    sll_int32  :: i_cell
 
     ! temporary workspace
     sll_real64 :: x_aux
@@ -3808,16 +3748,10 @@ contains
     sll_real64 :: vx_aux
     sll_real64 :: vy_aux
 
-    sll_real64 :: debug_charge
-    sll_int32  :: debug_count
-
 
     ! --- end of declarations!
 
-    debug_charge = 0.0_f64
-    debug_count = 0
-
-    if( scenario == SLL_PIC_LBFR_SET_WEIGHTS_ON_DEPOSITION_PARTICLES )then
+    if( reconstruction_set_type == SLL_PIC_LBFR_DEPOSITION_PARTICLES )then
         ! then the deposition particles should be of fixed type
         ! (indeed in the pushed type the weights are set after remapping with a simple interpolation, no PIC_LBFR reconstruction)
         SLL_ASSERT( p_group%deposition_particles_move_type == SLL_PIC_LBFR_FIXED )
@@ -3849,38 +3783,9 @@ contains
 
     deposited_charge = 0.0_f64
 
-    !> A.  preparation of the point sets where f will be reconstructed, depending on the different scenarios
-    if( scenario == SLL_PIC_LBFR_DEPOSIT_F )then
+    !> A.  preparation of the point sets where f will be reconstructed, depending on the different cases
 
-      ! choose between cartesian grid or random bunches of deposition (=virtual) particles
-      create_deposition_particles_on_a_grid = .true.
-
-      if( create_deposition_particles_on_a_grid )then
-
-        reconstruct_f_on_g_grid = .true.
-        g => p_group%deposition_particles_grid
-
-        ! the boundary nodes of the deposition grid are inside the domain, even with periodic boundary conditions
-        g_num_points_x  = g%num_cells1 + 1
-        g_num_points_y  = g%num_cells2 + 1
-        g_num_points_vx = g%num_cells3 + 1
-        g_num_points_vy = g%num_cells4 + 1
-
-
-      else
-
-        ! the deposition particles will be created to deposit their charge but not stored in memory
-        !        number_of_deposition_particles_per_flow_cell = number_deposition_particles / (  flow_grid_num_cells_x    &
-  !                                                                                               * flow_grid_num_cells_y    &
-    !                                                                                             * flow_grid_num_cells_vx   &
-    !                                                                                             * flow_grid_num_cells_vy )
-
-        SLL_ASSERT( .not. reconstruct_f_on_g_grid )
-        SLL_ERROR("pic_lbfr_4d_write_f_on_grid_or_deposit", " this part not implemented yet...")
-
-      end if
-
-    else if(  scenario == SLL_PIC_LBFR_REMAP_F                                                  &
+    if(  reconstruction_set_type == SLL_PIC_LBFR_REMAPPING_GRID                                                  &
               .and. p_group%remapped_f_interpolation_type == SLL_PIC_LBFR_REMAP_WITH_SPLINES    &
       )then
 
@@ -3898,12 +3803,18 @@ contains
       SLL_ALLOCATE(tmp_f_values_on_remapping_cart_grid(g_num_points_x, g_num_points_y, g_num_points_vx, g_num_points_vy), ierr)
       tmp_f_values_on_remapping_cart_grid = 0.0_f64
 
-    else if( (scenario == SLL_PIC_LBFR_SET_WEIGHTS_ON_DEPOSITION_PARTICLES)   &
-        .or.                                                                    &
-        (scenario == SLL_PIC_LBFR_REMAP_F .and. p_group%remapped_f_interpolation_type == SLL_PIC_LBFR_REMAP_WITH_SPARSE_GRIDS) &
+    else if(  &
+        (reconstruction_set_type == SLL_PIC_LBFR_DEPOSITION_PARTICLES)                              &
+        .or.                                                                                        &
+        (reconstruction_set_type == SLL_PIC_LBFR_REMAPPING_GRID                                     &
+          .and. p_group%remapped_f_interpolation_type == SLL_PIC_LBFR_REMAP_WITH_SPARSE_GRIDS)      &
       )then
 
-      ! common preparation step for sparse grid remapping and weights computing for unstructured cloud of deposition particles
+      ! common preparation step for sparse grid remapping and weights computation
+      ! (the latter being on a possibly unstructured cloud of deposition particles)
+
+      reconstruct_f_on_g_grid = .false.
+
       ! => prepare the array of linked lists that will store the node indices contained in the flow cells (one list per cell)
       allocate(nodes_in_flow_cell(flow_grid_num_cells_x,   &
                                   flow_grid_num_cells_y,   &
@@ -3923,7 +3834,7 @@ contains
       end do
 
 
-      if( scenario == SLL_PIC_LBFR_REMAP_F )then
+      if( reconstruction_set_type == SLL_PIC_LBFR_REMAPPING_GRID )then
         SLL_ASSERT( p_group%remapped_f_interpolation_type == SLL_PIC_LBFR_REMAP_WITH_SPARSE_GRIDS )
         nodes_number = p_group%sparse_grid_interpolator%size_basis
 
@@ -3931,8 +3842,9 @@ contains
         SLL_ALLOCATE(tmp_f_values_on_remapping_sparse_grid(p_group%sparse_grid_interpolator%size_basis), ierr)
         tmp_f_values_on_remapping_sparse_grid = 0.0_f64
 
-      else if( scenario == SLL_PIC_LBFR_SET_WEIGHTS_ON_DEPOSITION_PARTICLES )then
+      else
 
+        SLL_ASSERT( reconstruction_set_type == SLL_PIC_LBFR_DEPOSITION_PARTICLES )
         SLL_ASSERT( p_group%deposition_particles_move_type == SLL_PIC_LBFR_FIXED )
 
         nodes_number = p_group%number_deposition_particles
@@ -3944,13 +3856,13 @@ contains
       do node_index = 1, nodes_number
 
         ! get node coordinates:
-        if( scenario == SLL_PIC_LBFR_REMAP_F )then
+        if( reconstruction_set_type == SLL_PIC_LBFR_REMAPPING_GRID )then
           x = p_group%sparse_grid_interpolator%hierarchy(node_index)%coordinate(1)
           y = p_group%sparse_grid_interpolator%hierarchy(node_index)%coordinate(2)
           vx = p_group%sparse_grid_interpolator%hierarchy(node_index)%coordinate(3)
           vy = p_group%sparse_grid_interpolator%hierarchy(node_index)%coordinate(4)
 
-        else if( scenario == SLL_PIC_LBFR_SET_WEIGHTS_ON_DEPOSITION_PARTICLES )then
+        else if( reconstruction_set_type == SLL_PIC_LBFR_DEPOSITION_PARTICLES )then
           x = p_group%deposition_particles_eta(node_index, 1)
           y = p_group%deposition_particles_eta(node_index, 2)
           vx = p_group%deposition_particles_eta(node_index, 3)
@@ -3989,7 +3901,7 @@ contains
 
       SLL_ASSERT( .not. reconstruct_f_on_g_grid )
 
-    else if( scenario == SLL_PIC_LBFR_WRITE_F_ON_GIVEN_GRID )then
+    else if( reconstruction_set_type == SLL_PIC_LBFR_GIVEN_GRID )then
 
       ! then use the given 4d grid and write values in given (x, vx for now) array given_array_2d
       reconstruct_f_on_g_grid = .true.
@@ -4007,7 +3919,7 @@ contains
 
     else
 
-      SLL_ERROR("pic_lbfr_4d_write_f_on_grid_or_deposit", "unknown value for parameter scenario")
+      SLL_ERROR("pic_lbfr_4d_reconstruct_f", "unknown value for parameter reconstruction_set_type")
 
     end if
 
@@ -4030,9 +3942,6 @@ contains
       g_grid_vx_min = g%eta3_min
       g_grid_vy_min = g%eta4_min
 
-      if( scenario == SLL_PIC_LBFR_DEPOSIT_F )then
-        deposition_dvol = h_g_grid_x * h_g_grid_y * h_g_grid_vx * h_g_grid_vy
-      end if
     end if
 
     !> B. Preparatory work for the linearization of the flow on the flow cells -- in the case of structured markers
@@ -4114,7 +4023,7 @@ contains
     !>   - C.1 linearize the flow using the position of the markers
     !>   - C.2 find the relevant points where f should be reconstructed
     !>   - C.3 reconstruct f on these points (using the affine backward flow and the interpolation tool for the remapped_f)
-    !>   - C.4 write the resulting f value or deposit the deposition particle just created (depending on the scenario)
+    !>   - C.4 write the resulting f value on the proper place
 
     ! <<loop_on_flow_cells>> [[file:~/mcp/maltpic/ltpic-bsl.tex::algo:pic-vr:loop_over_all_cells]]
 
@@ -4143,7 +4052,7 @@ contains
     markers_vx_min   = p_group%initial_markers_grid%eta3_min
     markers_vy_min   = p_group%initial_markers_grid%eta4_min
 
-    if( (scenario == SLL_PIC_LBFR_REMAP_F)                              &
+    if( (reconstruction_set_type == SLL_PIC_LBFR_REMAPPING_GRID)                              &
                 .and.                                                     &
                 (p_group%remapped_f_interpolation_type == SLL_PIC_LBFR_REMAP_WITH_SPARSE_GRIDS) )then
       node_counter = 0
@@ -4263,11 +4172,11 @@ contains
             !>    - C.2.a first we treat the case of [remapping with a sparse grid]
             !>            or [computing the weights of a cloud of deposition particles]: nodes are stored in linked lists
 
-            if( ( (scenario == SLL_PIC_LBFR_REMAP_F)                                                    &
+            if( ( (reconstruction_set_type == SLL_PIC_LBFR_REMAPPING_GRID)                              &
                   .and.                                                                                   &
                   (p_group%remapped_f_interpolation_type == SLL_PIC_LBFR_REMAP_WITH_SPARSE_GRIDS) )     &
                 .or.                                                                                      &
-                  (scenario == SLL_PIC_LBFR_SET_WEIGHTS_ON_DEPOSITION_PARTICLES)                        &
+                  (reconstruction_set_type == SLL_PIC_LBFR_DEPOSITION_PARTICLES)                        &
               )then
 
               SLL_ASSERT( .not. reconstruct_f_on_g_grid )
@@ -4278,13 +4187,13 @@ contains
                 node_index = new_int_list_element%value
 
                 ! here we reconstruct f on the sparse grid nodes
-                if( scenario == SLL_PIC_LBFR_REMAP_F )then
+                if( reconstruction_set_type == SLL_PIC_LBFR_REMAPPING_GRID )then
                   x  = p_group%sparse_grid_interpolator%hierarchy(node_index)%coordinate(1)
                   y  = p_group%sparse_grid_interpolator%hierarchy(node_index)%coordinate(2)
                   vx = p_group%sparse_grid_interpolator%hierarchy(node_index)%coordinate(3)
                   vy = p_group%sparse_grid_interpolator%hierarchy(node_index)%coordinate(4)
                 else
-                  SLL_ASSERT( scenario == SLL_PIC_LBFR_SET_WEIGHTS_ON_DEPOSITION_PARTICLES )
+                  SLL_ASSERT( reconstruction_set_type == SLL_PIC_LBFR_DEPOSITION_PARTICLES )
                   x  = p_group%deposition_particles_eta(node_index, 1)
                   y  = p_group%deposition_particles_eta(node_index, 2)
                   vx = p_group%deposition_particles_eta(node_index, 3)
@@ -4320,10 +4229,10 @@ contains
                 reconstructed_f_value = p_group%pic_lbfr_4d_interpolate_value_of_remapped_f(eta)
 
                 ! here we store a nodal value but later this array will indeed store sparse grid coefficients
-                if( scenario == SLL_PIC_LBFR_REMAP_F )then
+                if( reconstruction_set_type == SLL_PIC_LBFR_REMAPPING_GRID )then
                   tmp_f_values_on_remapping_sparse_grid(node_index) = reconstructed_f_value
                 else
-                  SLL_ASSERT( scenario == SLL_PIC_LBFR_SET_WEIGHTS_ON_DEPOSITION_PARTICLES )
+                  SLL_ASSERT( reconstruction_set_type == SLL_PIC_LBFR_DEPOSITION_PARTICLES )
                   reconstructed_charge = reconstructed_f_value * deposition_particle_charge_factor
                   p_group%deposition_particles_weight(node_index) = reconstructed_charge
                   deposited_charge = deposited_charge + reconstructed_charge
@@ -4355,38 +4264,16 @@ contains
 
               end do
 
-            !>    - C.2.b next we treat the case of a deposition scenario
-
-            else if( (scenario == SLL_PIC_LBFR_DEPOSIT_F) .and. (.not. create_deposition_particles_on_a_grid) )then
-
-              SLL_ASSERT( .not. reconstruct_f_on_g_grid )
-
-              SLL_ERROR("pic_lbfr_4d_write_f_on_grid_or_deposit", "this part not implemented yet")
-
-              ! here we should
-              !         - create a bunch of random deposition particles within this flow cell,
-              !         - then for each deposition particle:
-              !         - reconstruct the value of f there to get their charge
-              !         - and deposit these charges on the accumulator cells
-
-            !>    - C.2.c finally we treat the case of a remapping with splines or writing on a given grid
+            !>    - C.2.b next we treat the case of a remapping with splines or writing on a given grid
             !>      (in both cases the nodes are on the g grid constructed above)
 
-            else if( (scenario == SLL_PIC_LBFR_WRITE_F_ON_GIVEN_GRID)                                       &
+            else if( (reconstruction_set_type == SLL_PIC_LBFR_GIVEN_GRID)                                      &
                      .or.                                                                                     &
-                     ( (scenario == SLL_PIC_LBFR_REMAP_F)                                                   &
+                     ( (reconstruction_set_type == SLL_PIC_LBFR_REMAPPING_GRID)                              &
                        .and. (p_group%remapped_f_interpolation_type == SLL_PIC_LBFR_REMAP_WITH_SPLINES ) )  &
-                     .or.                                                                                     &
-                     ( (scenario == SLL_PIC_LBFR_DEPOSIT_F)                                 &
-                       .and. create_deposition_particles_on_a_grid ) &
                        )then
 
               SLL_ASSERT( reconstruct_f_on_g_grid )
-
-              !              if( (scenario == SLL_PIC_LBFR_DEPOSIT_F)                                 &
-              !                       .and. create_deposition_particles_on_a_grid )then
-              !                print *, "-- DEBUG CHECK 876475645"
-              !              end if
 
               ! Now we loop over grid points inside this flow cell:
               !
@@ -4425,14 +4312,6 @@ contains
                 d3_x = d31 * x_to_xk
                 d4_x = d41 * x_to_xk
 
-                if( scenario == SLL_PIC_LBFR_DEPOSIT_F )then
-                  ! find poisson (x-)cell containing this node, seen as a deposition particle, and relative position in the cell
-                  tmp = ( x - p_group%space_mesh_2d%eta1_min ) / p_group%space_mesh_2d%delta_eta1
-                  i_cell_x = int( tmp ) + 1
-                  cell_offset_x = tmp - (i_cell_x-1)  ! between 0 and 1
-
-                end if
-
                 do i_y = i_min_y, i_max_y
                   y = g_grid_y_min + (i_y-1)*h_g_grid_y
                   y_to_yk = y - y_k
@@ -4440,18 +4319,6 @@ contains
                   d2_y = d22 * y_to_yk
                   d3_y = d32 * y_to_yk
                   d4_y = d42 * y_to_yk
-
-                  if( scenario == SLL_PIC_LBFR_DEPOSIT_F )then
-                    ! find poisson (y-)cell containing this node, seen as a deposition particle, and relative position in the cell
-                    tmp = ( y - p_group%space_mesh_2d%eta2_min ) / p_group%space_mesh_2d%delta_eta2
-                    i_cell_y = int( tmp ) + 1
-                    cell_offset_y = tmp - (i_cell_y-1)  ! between 0 and 1
-
-                    ! set the proper accumulator cell for the deposition
-                    i_cell = i_cell_x + (i_cell_y-1) * p_group%space_mesh_2d%num_cells1   !  (see global_to_cell_offset)
-                    charge_accumulator_cell => charge_accumulator%q_acc(i_cell)
-
-                  end if
 
                   do i_vx = i_min_vx, i_max_vx
                     vx = g_grid_vx_min + (i_vx-1)*h_g_grid_vx
@@ -4497,84 +4364,44 @@ contains
 
                       ! [DEBUG]
                       if( .false. )then
-                        if( scenario == SLL_PIC_LBFR_DEPOSIT_F )then
-                          SLL_ASSERT( create_deposition_particles_on_a_grid )
-                          print *, " -- DEBUG CHECK  --  8755648765  --  reconstructed_f_value = ", reconstructed_f_value
-                        end if
-                      end if
-
-                      ! [DEBUG]
-                      if( .false. )then
-                        if( scenario == SLL_PIC_LBFR_WRITE_F_ON_GIVEN_GRID )then
+                        if( reconstruction_set_type == SLL_PIC_LBFR_GIVEN_GRID )then
                           print*, "[WRITE ON GIVEN GRID]    reconstructing "
                           print*, "on:                       eta = ", eta
                           print*, "value:  reconstructed_f_value = ", reconstructed_f_value
                         end if
                       end if
 
+                      !> C.4  write the reconstructed value at proper place
+
                       if( reconstructed_f_value /= 0 )then
 
-                        if( scenario == SLL_PIC_LBFR_DEPOSIT_F )then
+                        if( reconstruction_set_type == SLL_PIC_LBFR_REMAPPING_GRID )then
 
-                          SLL_ASSERT( create_deposition_particles_on_a_grid )
+                          SLL_ASSERT( p_group%remapped_f_interpolation_type == SLL_PIC_LBFR_REMAP_WITH_SPLINES )
 
-                          reconstructed_charge = reconstructed_f_value * deposition_dvol * p_group%species%q
+                          SLL_ASSERT(i_x  <= p_group%remapping_cart_grid_number_nodes_x())
+                          SLL_ASSERT(i_y  <= p_group%remapping_cart_grid_number_nodes_y())
+                          SLL_ASSERT(i_vx <= p_group%remapping_cart_grid_number_nodes_vx())
+                          SLL_ASSERT(i_vy <= p_group%remapping_cart_grid_number_nodes_vy())
 
-                          debug_count = debug_count + 1
-                          debug_charge = debug_charge + deposition_dvol * p_group%species%q
+                          ! store the nodal value on the temporary array
+                          tmp_f_values_on_remapping_cart_grid(i_x,i_y,i_vx,i_vy) = reconstructed_f_value
 
-                          if( .false. )then
-                            print *, "[DEBUG] -- [deposit with] ", reconstructed_f_value * deposition_dvol * p_group%species%q
-                            print *, "[DEBUG] -- reconstructed_charge = ", reconstructed_charge
-                          end if
-                          tmp1 = (1.0_f64 - cell_offset_x)
-                          tmp2 = (1.0_f64 - cell_offset_y)
+                        else if( reconstruction_set_type == SLL_PIC_LBFR_GIVEN_GRID )then
 
-                          charge_accumulator_cell%q_sw = charge_accumulator_cell%q_sw             &
-                                  + reconstructed_charge * tmp1 * tmp2
+                          SLL_ASSERT( i_x  <= size(given_array_2d,1) )
+                          SLL_ASSERT( i_vx <= size(given_array_2d,2) )
 
-                          charge_accumulator_cell%q_se = charge_accumulator_cell%q_se             &
-                                  + reconstructed_charge *  cell_offset_x * tmp2
-
-                          charge_accumulator_cell%q_nw = charge_accumulator_cell%q_nw             &
-                                  + reconstructed_charge * tmp1 *  cell_offset_y
-
-                          charge_accumulator_cell%q_ne = charge_accumulator_cell%q_ne             &
-                                  + reconstructed_charge *  cell_offset_x *  cell_offset_y
-
-                          ! count the total charge
-                          deposited_charge = deposited_charge + reconstructed_charge
+                          given_array_2d(i_x,i_vx) = given_array_2d(i_x,i_vx)         &
+                                  + reconstructed_f_value * h_g_grid_y * h_g_grid_vy
 
                         else
 
-                          if( scenario == SLL_PIC_LBFR_REMAP_F )then
+                          SLL_ERROR("pic_lbfr_4d_reconstruct_f", "ahem... you should not be reading this :)")
 
-                            SLL_ASSERT( p_group%remapped_f_interpolation_type == SLL_PIC_LBFR_REMAP_WITH_SPLINES )
-
-                            SLL_ASSERT(i_x  <= p_group%remapping_cart_grid_number_nodes_x())
-                            SLL_ASSERT(i_y  <= p_group%remapping_cart_grid_number_nodes_y())
-                            SLL_ASSERT(i_vx <= p_group%remapping_cart_grid_number_nodes_vx())
-                            SLL_ASSERT(i_vy <= p_group%remapping_cart_grid_number_nodes_vy())
-
-                            ! store the nodal value on the temporary array
-                            tmp_f_values_on_remapping_cart_grid(i_x,i_y,i_vx,i_vy) = reconstructed_f_value
-
-                          else if( scenario == SLL_PIC_LBFR_WRITE_F_ON_GIVEN_GRID )then
-
-                            SLL_ASSERT( i_x  <= size(given_array_2d,1) )
-                            SLL_ASSERT( i_vx <= size(given_array_2d,2) )
-
-                            given_array_2d(i_x,i_vx) = given_array_2d(i_x,i_vx)         &
-                                    + reconstructed_f_value * h_g_grid_y * h_g_grid_vy
-
-                          else
-
-                            SLL_ERROR("pic_lbfr_4d_write_f_on_grid_or_deposit", "ahem... you should not be reading this :)")
-
-                          end if
                         end if
                       else
-                        print *, "654654535466545434564 -- ZERO VALUE !"
+                        print *, "Warning -- 654654535466545434564 -- just reconstructed a Zero value"
                       end if
                     ! this is the end of the (fourfold) loop on the grid nodes
                     end do
@@ -4582,7 +4409,7 @@ contains
                 end do
               end do
             else
-              SLL_ERROR("pic_lbfr_4d_write_f_on_grid_or_deposit", "broken test on scenarios -- you should not be reading this :)")
+              SLL_ERROR("pic_lbfr_4d_reconstruct_f", "broken test on reconstruction_set_type: you should not be reading this")
             end if
           ! and this is the end of (fourfold) loop on the flow cells
           end do
@@ -4590,8 +4417,10 @@ contains
       end do
     end do
 
+    ! todo: put this last step in a different routine, since this involves no reconstruction and needs to be called at initial step
+
     !> in the remapping case, last step is to compute the new remapping coefs from the nodal values on the remapping grid
-    if( scenario == SLL_PIC_LBFR_REMAP_F )then
+    if( reconstruction_set_type == SLL_PIC_LBFR_REMAPPING_GRID )then
 
       if( p_group%remapped_f_interpolation_type == SLL_PIC_LBFR_REMAP_WITH_SPLINES )then
 
@@ -4633,24 +4462,7 @@ contains
         print *, "[Enforcing charge]: target_total_charge, deposited_charge, charge_correction_factor = ", &
           target_total_charge, deposited_charge, charge_correction_factor
 
-        if( scenario == SLL_PIC_LBFR_DEPOSIT_F )then
-
-          ! correcting the charge deposited on the Poisson cells
-          do i_cell_x = 1, p_group%space_mesh_2d%num_cells1
-            do i_cell_y = 1, p_group%space_mesh_2d%num_cells2
-
-              ! index of the Poisson cell
-              i_cell = i_cell_x + (i_cell_y-1) * p_group%space_mesh_2d%num_cells1
-              charge_accumulator_cell => charge_accumulator%q_acc(i_cell)
-              charge_accumulator_cell%q_sw = charge_accumulator_cell%q_sw * charge_correction_factor
-              charge_accumulator_cell%q_se = charge_accumulator_cell%q_se * charge_correction_factor
-              charge_accumulator_cell%q_nw = charge_accumulator_cell%q_nw * charge_correction_factor
-              charge_accumulator_cell%q_ne = charge_accumulator_cell%q_ne * charge_correction_factor
-
-            end do
-          end do
-
-        else if( scenario == SLL_PIC_LBFR_SET_WEIGHTS_ON_DEPOSITION_PARTICLES )then
+        if( reconstruction_set_type == SLL_PIC_LBFR_DEPOSITION_PARTICLES )then
 
           ! correcting the charge carried by the deposition particles
           do node_index = 1, p_group%number_deposition_particles
@@ -4663,7 +4475,7 @@ contains
       end if
     end if
 
-  end subroutine pic_lbfr_4d_write_f_on_grid_or_deposit
+  end subroutine pic_lbfr_4d_reconstruct_f
 
 
 
