@@ -35,7 +35,8 @@ program test_pic_lbfr_4d
 #include "sll_working_precision.h"
 
   use sll_m_pic_lbfr_4d_group, only: &
-    SLL_PIC_LBFR_BASIC,  &
+    SLL_PIC_LBFR_STRUCTURED, &
+    SLL_PIC_LBFR_PUSHED, &
     SLL_PIC_LBFR_HAT_F0, &
     SLL_PIC_LBFR_REMAP_WITH_SPARSE_GRIDS, &
     SLL_PIC_LBFR_REMAP_WITH_SPLINES,  &
@@ -173,7 +174,6 @@ program test_pic_lbfr_4d
   sll_int32 :: plot_np_vx
   sll_int32 :: plot_np_vy
 
-  sll_int32 :: deposition_particles_type
   sll_int32 :: deposition_particles_pos_type
   sll_int32 :: deposition_particles_move_type
   sll_int32 :: number_deposition_particles
@@ -230,10 +230,9 @@ program test_pic_lbfr_4d
   remapping_sparse_grid_max_levels(3) = REMAP_SPARSE_GRID_LEVEL_VX
   remapping_sparse_grid_max_levels(4) = REMAP_SPARSE_GRID_LEVEL_VY
 
-  deposition_particles_type = SLL_PIC_LBFR_BASIC
-  deposition_particles_pos_type = -1      ! not used with BASIC deposition particles
-  deposition_particles_move_type = -1     ! not used with BASIC deposition particles
-  number_deposition_particles = -1     ! not used with BASIC deposition particles
+  deposition_particles_pos_type = SLL_PIC_LBFR_STRUCTURED
+  deposition_particles_move_type = SLL_PIC_LBFR_PUSHED
+  number_deposition_particles = 1000
   nb_deposition_particles_per_cell_x = 2
   nb_deposition_particles_per_cell_y = 2
   nb_deposition_particles_vx = 50
@@ -258,7 +257,6 @@ program test_pic_lbfr_4d
         REMAP_NC_VX,                                  &
         REMAP_NC_VY,                                  &
         remapping_sparse_grid_max_levels,             &
-        deposition_particles_type,                    &
         deposition_particles_pos_type,                &
         deposition_particles_move_type,               &
         number_deposition_particles,                  &
