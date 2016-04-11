@@ -68,7 +68,7 @@
 #define SLL_GET_CHARGE_ACC_VALUE(acc,i,j,slot) \
  acc%q_acc(i+(j-1)*acc%mesh%num_cells1)%slot
 
-  ! added by Martin
+  ! <<SLL_INTERPOLATE_FIELD_EXTENDED>> added by Martin
   ! this macro must be used for LTPIC particles (since icell not stored directly in particle)
   ! the keyword EXTENDED is to match other macro names written for arbitrary icell_x and icell_y values in LTPIC particles
 

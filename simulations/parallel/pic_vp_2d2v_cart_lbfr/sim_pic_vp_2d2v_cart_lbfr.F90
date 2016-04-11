@@ -1,16 +1,16 @@
-! Main test program for
+! Main test program for [update]
 ! [[file:simulation_4d_vp_generic_pic_cartesian.F90::sll_m_sim_4d_vp_generic_pic_cartesian]]
 
 !> @ingroup particle_methods
 
 !> @author MCP ALH
 
-!> @brief Unit test for ::sll_m_sim_4d_vp_generic_pic_cartesian
+!> @brief simulation program for the pic_lbfr method
 
 ! Program listed by Doxygen as part of the particle_methods in
 ! [[selalib:doc/build/html/doxygen/html/group__particle__methods.html]]
 
-program sim_pic_vp_2d2v_cart_remapped
+program sim_pic_vp_2d2v_cart_lbfr
 
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_working_precision.h"
@@ -22,7 +22,7 @@ program sim_pic_vp_2d2v_cart_remapped
     sll_s_halt_collective, &
     sll_v_world_collective
 
-  use sll_m_sim_pic_vp_2d2v_cart_remapped, only: &
+  use sll_m_sim_pic_vp_2d2v_cart_lbfr, only: &
     sll_t_simulation_4d_vp_generic_pic_cartesian
 
   use sll_m_timer, only: &
@@ -51,7 +51,7 @@ program sim_pic_vp_2d2v_cart_remapped
   if (rank==0) then
     print*, size, 'mpi nodes X', sim%number_particles, 'particles', &
          sim%mesh_2d%num_cells1, 'X',sim%mesh_2d%num_cells2,'cells'
-    if( sim%use_lt_pic_scheme )then
+    if( sim%use_pic_lbfr_scheme )then
       print*, (real(size,f64)/real(sim%mesh_2d%num_cells1 * sim%mesh_2d%num_cells2,f64)) &
            * real(sim%number_particles,f64), 'pushed particles per cell'
 
@@ -73,4 +73,4 @@ program sim_pic_vp_2d2v_cart_remapped
   call sll_s_halt_collective()
 
   ! call sim%delete()
-end program sim_pic_vp_2d2v_cart_remapped
+end program sim_pic_vp_2d2v_cart_lbfr

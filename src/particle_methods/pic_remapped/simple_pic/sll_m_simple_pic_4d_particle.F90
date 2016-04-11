@@ -26,14 +26,17 @@
 !> @details Mainly useful to compare against more advanced models. A group of sll_t_simple_pic_4d_particle
 !> is a @ref sll_simple_pic_4d_group
 
-! [[sll_t_simple_pic_4d_particle]]
-! [[selalib:src/particle_methods/particle_types/simple_pic_4d_group.F90::sll_simple_pic_4d_group]]
+! [[sll_simple_pic_4d_particle]]
+! [[file:sll_m_simple_pic_4d_group.F90::sll_simple_pic_4d_group]]
 
 module sll_m_simple_pic_4d_particle
 
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_memory.h"
 #include "sll_working_precision.h"
+#include "sll_assert.h"
+
+  use sll_m_cartesian_meshes
 
   implicit none
 
