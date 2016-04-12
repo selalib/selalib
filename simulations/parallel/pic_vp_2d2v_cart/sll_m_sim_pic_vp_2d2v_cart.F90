@@ -24,13 +24,13 @@ module sll_m_sim_pic_vp_2d2v_cart
   use sll_m_control_variate, only: &
     sll_t_control_variate
 
-  use sll_m_kernel_smoother_base, only: &
+  use sll_m_particle_mesh_coupling_base, only: &
     sll_p_collocation, &
-    sll_c_kernel_smoother
+    sll_c_particle_mesh_coupling
 
-  use sll_m_kernel_smoother_spline_2d, only: &
-    sll_t_kernel_smoother_spline_2d, &
-    sll_s_new_kernel_smoother_spline_2d_ptr
+  use sll_m_particle_mesh_coupling_spline_2d, only: &
+    sll_t_particle_mesh_coupling_spline_2d, &
+    sll_s_new_particle_mesh_coupling_spline_2d_ptr
 
   use sll_m_operator_splitting_pic_vp_2d2v, only: &
     sll_t_operator_splitting_pic_vp_2d2v
@@ -85,7 +85,7 @@ module sll_m_sim_pic_vp_2d2v_cart
      type(sll_t_cartesian_mesh_2d), pointer    :: mesh  ! [[selalib:src/meshes/sll_m_cartesian_meshes.F90::sll_t_cartesian_mesh_2d]]
 
      ! Abstract kernel smoother
-     class(sll_c_kernel_smoother), pointer :: kernel_smoother
+     class(sll_c_particle_mesh_coupling), pointer :: kernel_smoother
 
      ! Poisson solver
      class(sll_c_poisson_2d_base), pointer :: poisson_solver 
@@ -220,7 +220,7 @@ contains
     ! Initialize the kernel smoother
     domain(:,1) = [sim%mesh%eta1_min, sim%mesh%eta2_min]
     domain(:,2) = [sim%mesh%eta1_max, sim%mesh%eta2_max]
-    call sll_s_new_kernel_smoother_spline_2d_ptr(sim%kernel_smoother, &
+    call sll_s_new_particle_mesh_coupling_spline_2d_ptr(sim%kernel_smoother, &
          domain, [sim%mesh%num_cells1, sim%mesh%num_cells2], sim%n_particles, &
          sim%degree_smoother, sll_p_collocation)
 
