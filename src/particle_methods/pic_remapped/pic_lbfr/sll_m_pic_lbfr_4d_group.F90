@@ -21,11 +21,12 @@
 
 !> @brief Module for groups of particles and markers for pic methods with linearized-backward-flow (lbf) resamplings
 
-!todo: derive type from Katharina's class
+!todo: remove basic deposition particles [DONE]
+!todo: simplify write_f_or_deposit to only recontruct f -> new name is reconstruct_f  [DONE]
+!todo: derive type from Katharina's abstract class : sll_c_particle_group_base
 !todo: create new resampler structure
 !todo: initialize with the remapping (done already?)
 !todo: other simplifications?
-
 
 
 module sll_m_pic_lbfr_4d_group
