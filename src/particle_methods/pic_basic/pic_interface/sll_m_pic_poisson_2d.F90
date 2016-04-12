@@ -9,8 +9,8 @@ module sll_m_pic_poisson_2d
 
   use sll_m_pic_poisson_base, only : &
        sll_c_pic_poisson
-  use sll_m_kernel_smoother_base, only : &
-       sll_c_kernel_smoother
+  use sll_m_particle_mesh_coupling_base, only : &
+       sll_c_particle_mesh_coupling
   use sll_m_poisson_2d_base, only : &
        sll_c_poisson_2d_base, sll_i_function_of_position
   use sll_m_collective, only : &
@@ -32,7 +32,7 @@ module sll_m_pic_poisson_2d
      sll_int32 :: no_gridpts(2)
      sll_int32 :: no_dofs
 
-     class(sll_c_kernel_smoother), pointer :: kernel     !< Kernel smoother taking care of charge deposition and field evaluation
+     class(sll_c_particle_mesh_coupling), pointer :: kernel     !< Kernel smoother taking care of charge deposition and field evaluation
      class(sll_c_poisson_2d_base), pointer :: poisson !< Poisson solver
      sll_real64, allocatable               :: rho_dofs(:) !< Coefficients of expansion of rho (MPI global version)
      sll_real64, allocatable               :: rho_dofs_local(:) !< Coefficients of expansion of rho (MPI local version)
@@ -210,7 +210,7 @@ contains
     class( sll_t_pic_poisson_2d),           intent(out) :: self
     sll_int32,                              intent(in)  :: no_gridpts(2)
     class( sll_c_poisson_2d_base), pointer, intent(in)  :: poisson
-    class( sll_c_kernel_smoother), pointer, intent(in)  :: kernel !< kernel smoother object
+    class( sll_c_particle_mesh_coupling), pointer, intent(in)  :: kernel !< kernel smoother object
 
     !local variables
     sll_int32 :: ierr
@@ -268,7 +268,7 @@ contains
     class( sll_c_pic_poisson),     pointer, intent(out) :: pic_poisson
     sll_int32,                              intent(in)  :: no_gridpts(2)
     class( sll_c_poisson_2d_base), pointer, intent(in)  :: poisson
-    class( sll_c_kernel_smoother), pointer, intent(in)  :: kernel !< kernel smoother object
+    class( sll_c_particle_mesh_coupling), pointer, intent(in)  :: kernel !< kernel smoother object
 
     !local variables
     sll_int32 :: ierr
