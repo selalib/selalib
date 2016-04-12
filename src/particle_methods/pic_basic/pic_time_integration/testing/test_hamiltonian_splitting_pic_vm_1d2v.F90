@@ -20,13 +20,13 @@ program test_hamiltonian_splitting_pic_1d2v_vm
   use sll_m_hamiltonian_splitting_pic_vm_1d2v, only: &
     sll_t_hamiltonian_splitting_pic_vm_1d2v
 
-  use sll_m_kernel_smoother_base, only: &
+  use sll_m_particle_mesh_coupling_base, only: &
     sll_p_galerkin, &
-    sll_c_kernel_smoother
+    sll_c_particle_mesh_coupling
 
-  use sll_m_kernel_smoother_spline_1d, only: &
-    sll_t_kernel_smoother_spline_1d, &
-    sll_s_new_kernel_smoother_spline_1d_ptr
+  use sll_m_particle_mesh_coupling_spline_1d, only: &
+    sll_t_particle_mesh_coupling_spline_1d, &
+    sll_s_new_particle_mesh_coupling_spline_1d_ptr
 
   use sll_m_maxwell_1d_base, only: &
     sll_c_maxwell_1d_base
@@ -59,8 +59,8 @@ program test_hamiltonian_splitting_pic_1d2v_vm
   sll_real64, pointer :: rho(:), rho_local(:)
 
   ! Abstract kernel smoothers
-  class(sll_c_kernel_smoother), pointer :: kernel_smoother_0     
-  class(sll_c_kernel_smoother), pointer :: kernel_smoother_1
+  class(sll_c_particle_mesh_coupling), pointer :: kernel_smoother_0     
+  class(sll_c_particle_mesh_coupling), pointer :: kernel_smoother_1
   
   ! Maxwell solver 
   ! Abstract 
@@ -142,10 +142,10 @@ program test_hamiltonian_splitting_pic_1d2v_vm
   call particle_group%set_common_weight (1.0_f64)
 
   ! Initialize kernel smoother    
-  call sll_s_new_kernel_smoother_spline_1d_ptr(kernel_smoother_1, &
+  call sll_s_new_particle_mesh_coupling_spline_1d_ptr(kernel_smoother_1, &
        domain(1:2), [num_cells], &
        n_particles, degree_smoother-1, sll_p_galerkin) 
-  call sll_s_new_kernel_smoother_spline_1d_ptr(kernel_smoother_0, &
+  call sll_s_new_particle_mesh_coupling_spline_1d_ptr(kernel_smoother_0, &
        domain(1:2), [num_cells], &
        n_particles, degree_smoother, sll_p_galerkin) 
   
