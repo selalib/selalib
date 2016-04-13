@@ -45,7 +45,7 @@ module sll_m_pic_resamplers
 
     contains
 
-      procedure :: pic_4d_resampling
+      procedure :: resample_particle_group
 
   end type sll_t_pic_4d_resampler
 
@@ -53,7 +53,7 @@ module sll_m_pic_resamplers
 contains
 
 
-  subroutine pic_4d_resampling( &
+  subroutine resample_particle_group( &
           self, &
           particle_group,   &
           target_total_charge,  &     !< total charge to be conserved
@@ -81,7 +81,7 @@ contains
       SLL_ERROR("pic_4d_resampling", "resampling procedure should not be called for this type of particle group")
     end select
 
-  end subroutine pic_4d_resampling
+  end subroutine resample_particle_group
 
 
 end module  sll_m_pic_resamplers

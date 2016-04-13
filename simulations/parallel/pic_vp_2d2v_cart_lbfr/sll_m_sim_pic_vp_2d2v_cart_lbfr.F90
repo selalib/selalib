@@ -1037,6 +1037,7 @@ contains
           print *, "skip remapping step (last loop)"
         else
           print *, "remapping f..."
+          call pic_resampler%resample
           call sim%particle_group%remap(sim%target_total_charge, enforce_total_charge)
         end if
 
