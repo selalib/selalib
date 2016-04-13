@@ -88,6 +88,9 @@ module sll_m_sim_pic_vp_2d2v_cart_lbfr
     sll_t_simple_pic_4d_group, &
     sll_f_simple_pic_4d_group_new
 
+  use sll_m_pic_resamplers, only: &
+    sll_t_pic_resampler
+
   use sll_m_timer, only: &
     sll_s_set_time_mark, &
     sll_f_time_elapsed_since, &
@@ -162,11 +165,14 @@ module sll_m_sim_pic_vp_2d2v_cart_lbfr
      !> called q_accumulator in Sever simulation
      type(sll_t_charge_accumulator_2d_ptr), dimension(:), pointer     :: q_accumulator_ptr
 
+     type(sll_t_pic_resampler), pointer                               :: pic_resampler
+
      !> uses sll_m_accumulators::sll_t_charge_accumulator_2d
      ! [[file:~/selalib/src/pic_accumulators/sll_m_accumulators.F90::sll_t_charge_accumulator_2d]]
      type(sll_t_charge_accumulator_2d),     dimension(:), pointer     :: charge_accumulator
      type(sll_t_electric_field_accumulator),                  pointer     :: E_accumulator
      logical :: use_pic_lbfr_scheme        ! if false then use pic scheme
+     logical :: use_resamplings
      type(sll_t_charge_accumulator_2d_cs_ptr), dimension(:), pointer  :: q_accumulator_CS
      type(sll_t_electric_field_accumulator_cs), pointer :: E_accumulator_CS
      sll_real64, dimension(:,:), pointer :: rho
@@ -416,6 +422,7 @@ contains
 
     XMAX = (2._f64*sll_p_pi/KX_LANDAU)
     sim%use_pic_lbfr_scheme = use_pic_lbfr_scheme
+    sim%use_resamplings = sim%use_pic_lbfr_scheme
     sim%run_nb = run_nb
 
     sim%thermal_speed_ions = THERM_SPEED
@@ -424,18 +431,21 @@ contains
     sim%dt = dt
     sim%num_iterations = number_iterations
     sim%plot_period = plot_period
-    sim%remap_period = remap_period
     sim%elec_params = (/KX_LANDAU, ALPHA, er, psi, omega_r, omega_i /)
     
     sim%mesh_2d =>  sll_f_new_cartesian_mesh_2d( NC_X, NC_Y, &
                                            XMIN, XMAX, YMIN, YMAX )
 
     sim%poisson => sll_f_new_poisson_2d_periodic( sim%mesh_2d%eta1_min,    &
-                                              sim%mesh_2d%eta1_max,    &
-                                              sim%mesh_2d%num_cells1,  &
-                                              sim%mesh_2d%eta2_min,    &
-                                              sim%mesh_2d%eta2_max,    &
-                                              sim%mesh_2d%num_cells2   )
+                                                  sim%mesh_2d%eta1_max,    &
+                                                  sim%mesh_2d%num_cells1,  &
+                                                  sim%mesh_2d%eta2_min,    &
+                                                  sim%mesh_2d%eta2_max,    &
+                                                  sim%mesh_2d%num_cells2   )
+    if( sim%use_resamplings )then
+      SLL_ALLOCATE( sim%pic_resampler, ierr )
+      sim%remap_period = remap_period
+    end if
 
     print *, "[simulation] constructing the particle group..."
 
@@ -1030,17 +1040,13 @@ contains
       !  ------
       !  ------------------------------------------------------------------
 
-      if (sim%use_pic_lbfr_scheme .and. sim%my_rank == 0 .and. mod(it+1, sim%remap_period)==0 ) then
-        ! note: condition on rank == 0 needs to be revised for the actual parallel version...
-
-        if( this_is_the_last_time_loop )then
-          print *, "skip remapping step (last loop)"
-        else
-          print *, "remapping f..."
-          call pic_resampler%resample
-          call sim%particle_group%remap(sim%target_total_charge, enforce_total_charge)
-        end if
-
+      if( sim%use_resamplings   &
+          .and. (sim%my_rank == 0)  &   ! note: condition on rank == 0 needs to be verified for the actual parallel version...
+          .and. (modulo(it+1, sim%remap_period) == 0 )  &
+          .and. (.not. this_is_the_last_time_loop)  &
+        )then
+        print *, "Resample the particles..."
+        call sim%pic_resampler%resample_particle_group(sim%particle_group, sim%target_total_charge, enforce_total_charge)
       end if
 
       if (sim%my_rank == 0 .and. mod(it, sim%plot_period)==0 ) then
