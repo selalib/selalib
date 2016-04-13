@@ -57,6 +57,10 @@ module sll_m_pic_lbfr_4d_group
     sll_c_remapped_particle_group, &
     sll_f_temp_species_new
 
+  use sll_m_particle_group_base, only: &
+    sll_c_particle_group_base, &
+    sll_t_species
+
   use sll_m_remapped_pic_utilities, only:  &
     sll_f_x_is_in_domain_2d, &
     sll_s_get_inverse_matrix_with_given_size, &
