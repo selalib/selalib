@@ -1,4 +1,4 @@
-# <<<<BSL-LT-PIC_Library>>>> [[file:.]]
+# <<<<PIC-LBFR_Library>>>> [[file:.]]
 
 ADD_LIBRARY( sll_bsl_lt_pic_4d_particle STATIC sll_m_bsl_lt_pic_4d_particle.F90)
 TARGET_LINK_LIBRARIES( sll_bsl_lt_pic_4d_particle sll_working_precision sll_memory)

@@ -1,0 +1,23 @@
+# List of files not to index in [[file:index.org]]
+# ================================================
+# 
+# Written by Antoine Le Hyaric [[http://www.ljll.math.upmc.fr/lehyaric]]
+# 
+# [[elisp:(alh-set-keywords)]] ([[file:~/.emacs::alh-set-keywords]])
+# emacs-keywords brief="List of files not to index in [[file:index.org]]" conf start=15/10/2014 written
+
+/build/
+\.orig$
+~$
+~/
+\.git/
+\.flb$
+
+# Local Variables:
+# mode:conf
+# ispell-local-dictionary:"british"
+# coding:utf-8
+# eval:(flyspell-prog-mode)
+# eval:(outline-minor-mode)
+# End:
+# LocalWords: emacs
