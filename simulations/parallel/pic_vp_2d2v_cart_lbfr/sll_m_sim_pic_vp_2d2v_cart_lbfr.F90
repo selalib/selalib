@@ -40,10 +40,10 @@ module sll_m_sim_pic_vp_2d2v_cart_lbfr
   use sll_m_ascii_io, only: &
     sll_s_ascii_file_create
 
-
   use sll_m_pic_lbfr_4d_group, only: &
     sll_t_pic_lbfr_4d_group, &
     sll_f_pic_lbfr_4d_group_new
+
   use sll_m_pic_utilities
 
   use sll_m_pic_lbfr_4d_utilities, only: &
@@ -74,9 +74,16 @@ module sll_m_sim_pic_vp_2d2v_cart_lbfr
     sll_f_new_poisson_2d_periodic, &
     sll_t_poisson_2d_periodic
 
-  use sll_m_remapped_pic_base, only: &
-    sll_c_remapped_particle_group
+  !use sll_m_remapped_pic_base, only: &
+  !  sll_c_remapped_particle_group
 
+  use sll_m_particle_group_base, only: &
+    sll_c_particle_group_base
+
+  use sll_m_particle_group_2d2v, only: &
+    sll_t_particle_group_2d2v
+
+  !todo: these utilities should be put somewhere else, not linked with remapped pic
   use sll_m_remapped_pic_utilities, only: &
     sll_s_apply_periodic_bc_on_cartesian_mesh_2d, &
     sll_f_x_is_in_domain_2d
@@ -84,12 +91,21 @@ module sll_m_sim_pic_vp_2d2v_cart_lbfr
   use sll_m_sim_base, only: &
     sll_c_simulation_base_class
 
-  use sll_m_simple_pic_4d_group, only: &
-    sll_t_simple_pic_4d_group, &
-    sll_f_simple_pic_4d_group_new
+  !  use sll_m_simple_pic_4d_group, only: &
+  !    sll_t_simple_pic_4d_group, &
+  !    sll_f_simple_pic_4d_group_new
+
+  use sll_m_pic_depositers, only: &
+    sll_t_pic_depositer
+
+  use sll_m_pic_initializers, only: &
+    sll_t_pic_initializer
 
   use sll_m_pic_resamplers, only: &
     sll_t_pic_resampler
+
+  use sll_m_pic_visualizers, only: &
+    sll_t_pic_visualizer
 
   use sll_m_timer, only: &
     sll_s_set_time_mark, &
@@ -125,11 +141,9 @@ module sll_m_sim_pic_vp_2d2v_cart_lbfr
   type, extends(sll_c_simulation_base_class) :: sll_t_simulation_4d_vp_generic_pic_cartesian
 
      !> the abstract particle group
-     
-     ! <<particle_group>> of type [[file:~/selalib/src/particle_methods/sll_remapped_pic_base.F90::sll_c_remapped_particle_group]]
 
-     ! todo: instead use the abstract class sll_c_particle_group_base
-     class(sll_c_remapped_particle_group),  pointer     :: particle_group
+     ! <<particle_group>> of type [[file:~/selalib/src/particle_methods/sll_remapped_pic_base.F90::sll_c_remapped_particle_group]]
+     class(sll_c_particle_group_base),  pointer     :: particle_group
 
      !> @name Physics/numerical parameters
      !> @{
@@ -138,7 +152,7 @@ module sll_m_sim_pic_vp_2d2v_cart_lbfr
      sll_real64 :: dt
 
      !> Total number of iteration
-     sll_int32  :: num_iterations
+     sll_int32  :: n_iterations
 
      !> Plot period in terms of number of iterations
      sll_int32  :: plot_period
@@ -151,8 +165,8 @@ module sll_m_sim_pic_vp_2d2v_cart_lbfr
      sll_real64 :: thermal_speed_ions
      sll_real64 :: target_total_charge
 
-     sll_int32  :: number_particles
-     sll_int32  :: number_deposition_particles
+     sll_int32  :: n_particles
+     sll_int32  :: n_deposition_particles
      logical :: domain_is_x_periodic
      logical :: domain_is_y_periodic
      sll_real64, dimension(1:6) :: elec_params
@@ -165,7 +179,10 @@ module sll_m_sim_pic_vp_2d2v_cart_lbfr
      !> called q_accumulator in Sever simulation
      type(sll_t_charge_accumulator_2d_ptr), dimension(:), pointer     :: q_accumulator_ptr
 
-     type(sll_t_pic_resampler), pointer                               :: pic_resampler
+     type(sll_t_pic_depositer),   pointer                               :: pic_depositer
+     type(sll_t_pic_initializer), pointer                               :: pic_initializer
+     type(sll_t_pic_resampler),   pointer                               :: pic_resampler
+     type(sll_t_pic_visualizer),  pointer                               :: pic_visualizer
 
      !> uses sll_m_accumulators::sll_t_charge_accumulator_2d
      ! [[file:~/selalib/src/pic_accumulators/sll_m_accumulators.F90::sll_t_charge_accumulator_2d]]
@@ -234,7 +251,7 @@ contains
 
     ! Loop over all particles. Do not display all particles for a clearer picture. AAA_ALH_HERE try with less particles.
     
-    do k = 1,sim%number_particles,1000
+    do k = 1,sim%n_particles,1000
 
        ! reference to [[particle_group]] of type
        ! [[file:~/selalib/src/particle_methods/sll_pic_base.F90::sll_c_remapped_particle_group]]
@@ -258,8 +275,8 @@ contains
     sll_int32   :: ierr
     sll_int32   :: j
     sll_real64  :: dt
-    sll_int32   :: number_iterations, plot_period, remap_period
-    sll_int32   :: NUM_PARTICLES!, PARTICLE_ARRAY_SIZE
+    sll_int32   :: n_iterations, plot_period, remap_period
+    sll_int32   :: N_PARTICLES!, PARTICLE_ARRAY_SIZE
     sll_real64  :: THERM_SPEED
     sll_real64  :: SPECIES_CHARGE, SPECIES_MASS, ALPHA
     sll_int32   :: run_nb
@@ -275,39 +292,39 @@ contains
     sll_real64  :: remapping_grid_vx_max
     sll_real64  :: remapping_grid_vy_min
     sll_real64  :: remapping_grid_vy_max
-    sll_int32   :: remapping_cart_grid_number_cells_x
-    sll_int32   :: remapping_cart_grid_number_cells_y
-    sll_int32   :: remapping_cart_grid_number_cells_vx
-    sll_int32   :: remapping_cart_grid_number_cells_vy
+    sll_int32   :: remapping_cart_grid_n_cells_x
+    sll_int32   :: remapping_cart_grid_n_cells_y
+    sll_int32   :: remapping_cart_grid_n_cells_vx
+    sll_int32   :: remapping_cart_grid_n_cells_vy
     sll_int32   :: remapping_sparse_grid_max_level_x
     sll_int32   :: remapping_sparse_grid_max_level_y
     sll_int32   :: remapping_sparse_grid_max_level_vx
     sll_int32   :: remapping_sparse_grid_max_level_vy
     sll_int32   :: deposition_particles_pos_type
     sll_int32   :: deposition_particles_move_type
-    sll_int32   :: number_deposition_particles
-    sll_int32   :: nb_deposition_particles_per_cell_x
-    sll_int32   :: nb_deposition_particles_per_cell_y
-    sll_int32   :: nb_deposition_particles_vx
-    sll_int32   :: nb_deposition_particles_vy
+    sll_int32   :: n_deposition_particles
+    sll_int32   :: n_deposition_particles_per_cell_x
+    sll_int32   :: n_deposition_particles_per_cell_y
+    sll_int32   :: n_deposition_particles_vx
+    sll_int32   :: n_deposition_particles_vy
     sll_int32   :: flow_markers_type
-    sll_int32   :: number_markers_x
-    sll_int32   :: number_markers_y
-    sll_int32   :: number_markers_vx
-    sll_int32   :: number_markers_vy
-    sll_int32   :: nb_unstruct_markers_per_cell
-    sll_int32   :: flow_grid_number_cells_x
-    sll_int32   :: flow_grid_number_cells_y
-    sll_int32   :: flow_grid_number_cells_vx
-    sll_int32   :: flow_grid_number_cells_vy
+    sll_int32   :: n_markers_x
+    sll_int32   :: n_markers_y
+    sll_int32   :: n_markers_vx
+    sll_int32   :: n_markers_vy
+    sll_int32   :: n_unstruct_markers_per_cell
+    sll_int32   :: flow_grid_n_cells_x
+    sll_int32   :: flow_grid_n_cells_y
+    sll_int32   :: flow_grid_n_cells_vx
+    sll_int32   :: flow_grid_n_cells_vy
 
     sll_int32   :: initial_density_identifier
 
     sll_int32, dimension(4)   :: remapping_sparse_grid_max_levels
 
-    ! <<simple_pic_particle_group>>
-    ! [[selalib:src/particle_methods/particle_types/simple_pic_4d_group.F90::sll_t_simple_pic_4d_group]]
-    type(sll_t_simple_pic_4d_group),      pointer     :: simple_pic_particle_group
+    ! simple pic written by Katharina sll_t_particle_group_2d2v
+    !    type(sll_t_particle_group_2d2v)  :: pic_simple_particle_group
+    type(sll_t_particle_group_2d2v),    pointer     :: pic_simple_particle_group
     type(sll_t_pic_lbfr_4d_group),      pointer     :: pic_lbfr_particle_group
 
     type(sll_t_charge_accumulator_2d),    pointer :: charge_accumulator
@@ -321,7 +338,7 @@ contains
     !> The generic simulation reads all parameters for both simple and ltpic options from the same file
     namelist /sim_params/           THERM_SPEED,            &
                                     dt,                     &
-                                    number_iterations,      &
+                                    n_iterations,           &
                                     plot_period,            &
                                     SPECIES_CHARGE,         &
                                     SPECIES_MASS,           &
@@ -334,8 +351,6 @@ contains
     ! cartesian grid for the Poisson solver      [previous name was grid_dims]
     namelist /poisson_grid_params/  NC_X, NC_Y, XMIN, KX_LANDAU, YMIN, YMAX, &
                                     DOMAIN_IS_X_PERIODIC, DOMAIN_IS_Y_PERIODIC
-
-    ! MCP put new parameters here on monday nov 9 -- todo: remove this line once the new parameters are used consistently
 
     ! there are 3 sets of parameters:
     !   - one for the discretization of the remapped f,
@@ -352,10 +367,10 @@ contains
                                     remapping_grid_vx_max,              &
                                     remapping_grid_vy_min,              &
                                     remapping_grid_vy_max,              &
-                                    remapping_cart_grid_number_cells_x,          &   ! for splines
-                                    remapping_cart_grid_number_cells_y,          &   ! for splines
-                                    remapping_cart_grid_number_cells_vx,         &   ! for splines
-                                    remapping_cart_grid_number_cells_vy,         &   ! for splines
+                                    remapping_cart_grid_n_cells_x,          &   ! for splines
+                                    remapping_cart_grid_n_cells_y,          &   ! for splines
+                                    remapping_cart_grid_n_cells_vx,         &   ! for splines
+                                    remapping_cart_grid_n_cells_vy,         &   ! for splines
                                     remapping_sparse_grid_max_level_x,           &   ! for the sparse grid
                                     remapping_sparse_grid_max_level_y,           &   ! for the sparse grid
                                     remapping_sparse_grid_max_level_vx,          &   ! for the sparse grid
@@ -370,29 +385,29 @@ contains
     namelist /pic_lbfr_deposition_params/                                       &
                                     deposition_particles_pos_type,              &
                                     deposition_particles_move_type,             &
-                                    number_deposition_particles,                &
-                                    nb_deposition_particles_per_cell_x,         &
-                                    nb_deposition_particles_per_cell_y,         &
-                                    nb_deposition_particles_vx,                 &
-                                    nb_deposition_particles_vy
+                                    n_deposition_particles,                     &
+                                    n_deposition_particles_per_cell_x,         &
+                                    n_deposition_particles_per_cell_y,         &
+                                    n_deposition_particles_vx,                 &
+                                    n_deposition_particles_vy
 
 
     ! discretization of the flow:
     !   -> number of markers to be pushed forward
     !   -> size of the cells where the flow is linearized (the flow grid)
     !      note: the bounds of the flow grid are the same as those of the remap grid
-    namelist /pic_lbfr_markers_params/flow_markers_type,                  &
-                                    number_markers_x,                   &
-                                    number_markers_y,                   &
-                                    number_markers_vx,                  &
-                                    number_markers_vy,                  &
-                                    nb_unstruct_markers_per_cell,       &
-                                    flow_grid_number_cells_x,           &
-                                    flow_grid_number_cells_y,           &
-                                    flow_grid_number_cells_vx,          &
-                                    flow_grid_number_cells_vy
+    namelist /pic_lbfr_markers_params/flow_markers_type,                &
+                                    n_markers_x,                        &
+                                    n_markers_y,                        &
+                                    n_markers_vx,                       &
+                                    n_markers_vy,                       &
+                                    n_unstruct_markers_per_cell,       &
+                                    flow_grid_n_cells_x,                &
+                                    flow_grid_n_cells_y,                &
+                                    flow_grid_n_cells_vx,               &
+                                    flow_grid_n_cells_vy
 
-    namelist /simple_pic_params/    NUM_PARTICLES
+    namelist /pic_simple_params/    N_PARTICLES
 
     ! print *, "AA0"
 
@@ -411,7 +426,7 @@ contains
         read(input_file, pic_lbfr_deposition_params)
         read(input_file, pic_lbfr_markers_params)
     else
-        read(input_file, simple_pic_params)
+        read(input_file, pic_simple_params)
     end if
     close(input_file)
 
@@ -429,7 +444,7 @@ contains
     sim%total_density = 1._f64 * (XMAX - XMIN) * (YMAX - YMIN)
 
     sim%dt = dt
-    sim%num_iterations = number_iterations
+    sim%n_iterations = n_iterations
     sim%plot_period = plot_period
     sim%elec_params = (/KX_LANDAU, ALPHA, er, psi, omega_r, omega_i /)
     
@@ -442,10 +457,15 @@ contains
                                                   sim%mesh_2d%eta2_min,    &
                                                   sim%mesh_2d%eta2_max,    &
                                                   sim%mesh_2d%num_cells2   )
+    SLL_ALLOCATE( sim%pic_depositer, ierr )
+    SLL_ALLOCATE( sim%pic_initializer, ierr )
+
     if( sim%use_resamplings )then
       SLL_ALLOCATE( sim%pic_resampler, ierr )
       sim%remap_period = remap_period
     end if
+
+    SLL_ALLOCATE( sim%pic_visualizer, ierr )
 
     print *, "[simulation] constructing the particle group..."
 
@@ -472,63 +492,69 @@ contains
         remapping_grid_vx_max,                      &
         remapping_grid_vy_min,                      &
         remapping_grid_vy_max,                      &
-        remapping_cart_grid_number_cells_x,         &   ! for splines
-        remapping_cart_grid_number_cells_y,         &   ! for splines
-        remapping_cart_grid_number_cells_vx,        &   ! for splines
-        remapping_cart_grid_number_cells_vy,        &   ! for splines
+        remapping_cart_grid_n_cells_x,         &   ! for splines
+        remapping_cart_grid_n_cells_y,         &   ! for splines
+        remapping_cart_grid_n_cells_vx,        &   ! for splines
+        remapping_cart_grid_n_cells_vy,        &   ! for splines
         remapping_sparse_grid_max_levels,           &   ! for the sparse grid: for now, same level in each dimension
         deposition_particles_pos_type,              &
         deposition_particles_move_type,             &
-        number_deposition_particles,                &   ! (in a previous implementation this was only a lower bound)
-        nb_deposition_particles_per_cell_x,         &
-        nb_deposition_particles_per_cell_y,         &
-        nb_deposition_particles_vx,                 &
-        nb_deposition_particles_vy,                 &
+        n_deposition_particles,                &   ! (in a previous implementation this was only a lower bound)
+        n_deposition_particles_per_cell_x,         &
+        n_deposition_particles_per_cell_y,         &
+        n_deposition_particles_vx,                 &
+        n_deposition_particles_vy,                 &
         flow_markers_type,                          &
-        number_markers_x,                           &
-        number_markers_y,                           &
-        number_markers_vx,                          &
-        number_markers_vy,                          &
-        nb_unstruct_markers_per_cell,               &
-        flow_grid_number_cells_x,                   &
-        flow_grid_number_cells_y,                   &
-        flow_grid_number_cells_vx,                  &
-        flow_grid_number_cells_vy,                  &
+        n_markers_x,                           &
+        n_markers_y,                           &
+        n_markers_vx,                          &
+        n_markers_vy,                          &
+        n_unstruct_markers_per_cell,               &
+        flow_grid_n_cells_x,                   &
+        flow_grid_n_cells_y,                   &
+        flow_grid_n_cells_vx,                  &
+        flow_grid_n_cells_vy,                  &
         sim%mesh_2d )
 
       ! here, [[particle_group]] will contain a reference to a pic_lbfr group
       sim%particle_group => pic_lbfr_particle_group
-      sim%number_deposition_particles = number_deposition_particles
+      sim%n_deposition_particles = n_deposition_particles
 
 
     else
 
-      ! construct [[simple_pic_particle_group]]
+      ! construct [[pic_simple_particle_group]]
       particle_group_id = 0
 
-      simple_pic_particle_group => sll_f_simple_pic_4d_group_new(     &
-            SPECIES_CHARGE,                                             &
-            SPECIES_MASS,                                               &
-            particle_group_id,                                          &
-            DOMAIN_IS_X_PERIODIC,                                       &
-            DOMAIN_IS_Y_PERIODIC,                                       &
-            NUM_PARTICLES,                                              &
-            sim%mesh_2d )
+      SLL_ALLOCATE( pic_simple_particle_group, ierr)
+
+      call pic_simple_particle_group%init(N_PARTICLES, N_PARTICLES, SPECIES_CHARGE, SPECIES_MASS, 1)
+
+      ! previous version using sll_t_simple_pic_4d_group
+      !
+      !      pic_simple_particle_group => ******     sll_f_simple_pic_4d_group_new(     &
+      !            SPECIES_CHARGE,                                             &
+      !            SPECIES_MASS,                                               &
+      !            particle_group_id,                                          &
+      !            DOMAIN_IS_X_PERIODIC,                                       &
+      !            DOMAIN_IS_Y_PERIODIC,                                       &
+      !            N_PARTICLES,                                                &
+      !            sim%mesh_2d )
 
       ! here [[particle_group]] will contain a reference to a simple pic group
-      sim%particle_group => simple_pic_particle_group
-      sim%number_deposition_particles = NUM_PARTICLES
+      sim%particle_group => pic_simple_particle_group
+      sim%n_deposition_particles = N_PARTICLES
 
     end if
 
-    sim%number_particles = sim%particle_group%number_particles    ! with pic_lbfr this is actually the number of markers
+    sim%n_particles = sim%particle_group%n_particles    ! with pic_lbfr this is actually the number of markers
 
     sim%domain_is_x_periodic = DOMAIN_IS_X_PERIODIC
     sim%domain_is_y_periodic = DOMAIN_IS_Y_PERIODIC
 
     ! initialization of the particle group
-    ! todo: should we write a structure for the initialization?
-    call sim%particle_group%set_landau_parameters( sim%thermal_speed_ions, ALPHA, KX_LANDAU )
+    call sim%pic_initializer%set_landau_parameters( sim%particle_group, sim%thermal_speed_ions, ALPHA, KX_LANDAU )
+    !    call sim%particle_group%set_landau_parameters( sim%thermal_speed_ions, ALPHA, KX_LANDAU )
 
     rand_seed_size = 10
     call random_seed (SIZE=rand_seed_size)
@@ -543,8 +569,15 @@ contains
     sim%target_total_charge = SPECIES_CHARGE * 1._f64 * (XMAX - XMIN) * (YMAX - YMIN)
     enforce_total_charge = .false.
 
-    call sim%particle_group%initializer( initial_density_identifier, sim%target_total_charge, enforce_total_charge, &
-                                         rand_seed, sim%my_rank, sim%world_size )
+    call sim%pic_initializer%initialize_particle_group( &
+      sim%particle_group, &
+      initial_density_identifier, &
+      sim%target_total_charge,  &
+      enforce_total_charge  &
+    )
+
+    ! call sim%particle_group%initializer( initial_density_identifier, sim%target_total_charge, enforce_total_charge, &
+    !                                      rand_seed, sim%my_rank, sim%world_size )
     SLL_DEALLOCATE_ARRAY(rand_seed, ierr)
 
     sim%n_threads = 1
@@ -560,7 +593,14 @@ contains
 
     charge_accumulator => sim%q_accumulator_ptr(thread_id+1)%q
 
-    call sim%particle_group%deposit_charge_2d( charge_accumulator, sim%target_total_charge, enforce_total_charge )
+    call sim%pic_depositer%charge_deposit_particle_group( &
+      sim%particle_group, &
+      charge_accumulator, &
+      sim%target_total_charge, &
+      enforce_total_charge &
+    )
+
+    !    call sim%particle_group%deposit_charge_2d( charge_accumulator, sim%target_total_charge, enforce_total_charge )
 
     !! -- --  First charge deposition [end]  -- --
 
@@ -644,7 +684,7 @@ contains
     ncy = sim%mesh_2d%num_cells2
     n_threads = sim%n_threads
     thread_id = 0
-    save_nb = sim%num_iterations/10
+    save_nb = sim%n_iterations/10
 
     SLL_ALLOCATE( rho1d_send(1:(ncx+1)*(ncy+1)),    ierr)
     SLL_ALLOCATE( rho1d_receive(1:(ncx+1)*(ncy+1)), ierr)
@@ -655,8 +695,8 @@ contains
     SLL_ALLOCATE(phi(1:ncx+1, 1:ncy+1), ierr)
     SLL_ALLOCATE(diag_energy(1:save_nb, 1:5), ierr)
     SLL_ALLOCATE(diag_TOTmoment(1:save_nb), ierr)
-    SLL_ALLOCATE(diag_TOTenergy(0:sim%num_iterations-1), ierr)
-    SLL_ALLOCATE(diag_AccMem(0:sim%num_iterations-1, 1:2), ierr)
+    SLL_ALLOCATE(diag_TOTenergy(0:sim%n_iterations-1), ierr)
+    SLL_ALLOCATE(diag_AccMem(0:sim%n_iterations-1, 1:2), ierr)
 
     sort_nb = 10
     dt = sim%dt
@@ -759,7 +799,7 @@ contains
          ncy, sim%mesh_2d%eta1_max, sim%mesh_2d%eta2_max )
     bors = 0.0_f64
 
-    do k = 1, sim%number_particles
+    do k = 1, sim%n_particles
 
        !> This simulation does not have access to the particles (because they may be of different incompatible types
        !> like "ltpic" or "simple") so we use the standard interface defined in
@@ -770,7 +810,7 @@ contains
        bors = bors + coords(1)**2 + coords(2)**2
     enddo
     diag_TOTenergy(0) = bors * 0.5_f64*(sim%mesh_2d%eta1_max - sim%mesh_2d%eta1_min)  &
-         * (sim%mesh_2d%eta2_max - sim%mesh_2d%eta2_min)/( sim%world_size*sim%number_particles)  &
+         * (sim%mesh_2d%eta2_max - sim%mesh_2d%eta2_min)/( sim%world_size*sim%n_particles)  &
          + tot_ee * 0.5_f64
 
     !! -- --  diagnostics [end]  -- --
@@ -781,7 +821,7 @@ contains
     call sll_s_reset_field_accumulator_to_zero( sim%E_accumulator )
     call sll_s_accumulate_field( sim%E1, sim%E2, sim%E_accumulator )
 
-    do k = 1, sim%number_particles
+    do k = 1, sim%n_particles
 
       ! particle position
       coords=sim%particle_group%get_x(k) ! [[selalib:src/particle_methods/sll_pic_base.F90::get_v]]
@@ -844,10 +884,10 @@ contains
     ! First snapshot at time 0 [[particles_snapshot]]
     ! AAA_ALH_TODO call particles_snapshot(0.0_8,sim)
     
-    do it = 0, sim%num_iterations-1
+    do it = 0, sim%n_iterations-1
 
-       print *, "BEGIN one loop in time, it+1 = ", it+1, " / ", sim%num_iterations
-       this_is_the_last_time_loop = (it == sim%num_iterations-1)
+       print *, "BEGIN one loop in time, it+1 = ", it+1, " / ", sim%n_iterations
+       this_is_the_last_time_loop = (it == sim%n_iterations-1)
 
        !! -- --  <<diagnostics>> (computing energy) [begin]  -- --
 
@@ -893,7 +933,7 @@ contains
 
       !! -- --  particle loop -- --
 
-      do k = 1, sim%number_particles
+      do k = 1, sim%n_particles
 
          ! -- --  v-push [begin]  -- --
          !> #### v-push
@@ -962,7 +1002,14 @@ contains
       ! [[file:~/selalib/src/particle_methods/sll_pic_base.F90::deposit_charge_2d]]
       enforce_total_charge = .false.
       charge_accumulator => sim%q_accumulator_ptr(thread_id+1)%q
-      call sim%particle_group%deposit_charge_2d( charge_accumulator, sim%target_total_charge, enforce_total_charge )
+
+      call sim%pic_depositer%charge_deposit_particle_group( &
+        sim%particle_group, &
+        charge_accumulator, &
+        sim%target_total_charge, &
+        enforce_total_charge &
+      )
+      ! call sim%particle_group%deposit_charge_2d( charge_accumulator, sim%target_total_charge, enforce_total_charge )
 
       deposit_time=deposit_time+sll_f_time_elapsed_since(deposit_time_mark)
 
@@ -1017,7 +1064,7 @@ contains
 
       if (sim%my_rank == 0 .and. mod(it, sim%plot_period)==0 ) then
 
-        print *, "plotting f slice in gnuplot format for iteration # it = ", it, " / ", sim%num_iterations
+        print *, "plotting f slice in gnuplot format for iteration # it = ", it, " / ", sim%n_iterations
         plot_np_x  = 50
         plot_np_y  = 3
         plot_np_vx = 20
@@ -1030,7 +1077,17 @@ contains
         ! - [[selalib:src/particle_methods/pic_remapped/simple_pic/sll_m_simple_pic_4d_group.F90::simple_pic_4d_visualize_f_slice_x_vx]]
 
         write (field_name, "(A12,I4.4)") 'f_slice_run=', sim%run_nb
-        call sim%particle_group%visualize_f_slice_x_vx(trim(field_name), plot_np_x, plot_np_y, plot_np_vx, plot_np_vy, it+1)
+        call sim%pic_visualizer%visualize_particle_group( &
+          sim%particle_group, &
+          trim(field_name), &
+          plot_np_x, &
+          plot_np_y, &
+          plot_np_vx, &
+          plot_np_vy, &
+          it+1  &
+        )
+
+        ! call sim%particle_group%visualize_f_slice_x_vx(trim(field_name), plot_np_x, plot_np_y, plot_np_vx, plot_np_vy, it+1)
 
       end if
 
@@ -1051,7 +1108,7 @@ contains
 
       if (sim%my_rank == 0 .and. mod(it, sim%plot_period)==0 ) then
 
-        print *, "writing Ex, Ey  in gnuplot format for iteration # it = ", it, " / ", sim%num_iterations, &
+        print *, "writing Ex, Ey  in gnuplot format for iteration # it = ", it, " / ", sim%n_iterations, &
                " # plot = ",it+1
         write (field_name, "(A7,I4.4)") 'Ex_run=', sim%run_nb
         call sll_o_gnuplot_2d(xmin, sim%mesh_2d%eta1_max, ncx+1, ymin,            &
@@ -1076,7 +1133,7 @@ contains
         call sll_s_accumulate_field( sim%E1, sim%E2, sim%E_accumulator )
         some_val = 0.0_f64
 
-        do k = 1, sim%number_particles
+        do k = 1, sim%n_particles
 
              ! particle position
              coords=sim%particle_group%get_x(k)
@@ -1110,7 +1167,7 @@ contains
         call electric_energy( tot_ee, sim%E1, sim%E2, ncx, &
            ncy, sim%mesh_2d%eta1_max, sim%mesh_2d%eta2_max )
         diag_TOTenergy(it) = some_val* 0.5_f64 *(sim%mesh_2d%eta1_max - sim%mesh_2d%eta1_min) * &
-           (sim%mesh_2d%eta2_max - sim%mesh_2d%eta2_min)/( sim%world_size*sim%number_particles)  &
+           (sim%mesh_2d%eta2_max - sim%mesh_2d%eta2_min)/( sim%world_size*sim%n_particles)  &
            + tot_ee * 0.5_f64
 
        !! -- --  diagnostics [end]  -- --
@@ -1134,10 +1191,10 @@ contains
     !       close(65)
     !       open(93,file='time_parts_sec_omp.dat',position='append')
     !       write(93,*) '# Nb of threads  ||  time (sec)  ||  average pushes/sec'
-    !       write(93,*) sim%n_threads, time-t2, int(sim%num_iterations,i64)*int(sim%number_particles,i64)/(time-t2)
+    !       write(93,*) sim%n_threads, time-t2, int(sim%n_iterations,i64)*int(sim%n_particles,i64)/(time-t2)
     !       close(93)
     !       open(65,file='Energie_totale_standPush.dat')
-    !       do it=0,sim%num_iterations-1
+    !       do it=0,sim%n_iterations-1
     !          write(65,*) it*dt,  diag_TOTenergy(it), (diag_TOTenergy(it)-diag_TOTenergy(0))/diag_TOTenergy(0)
     !       enddo
     !       close(65)
@@ -1148,10 +1205,10 @@ contains
     ! particles into account.
     
     loop_time=sll_f_time_elapsed_since(loop_time_mark)
-    write(*,'(A,ES8.2,A)') 'sim stats: ',1 / loop_time * sim%num_iterations * sim%number_particles,' pushes/sec '
+    write(*,'(A,ES8.2,A)') 'sim stats: ',1 / loop_time * sim%n_iterations * sim%n_particles,' pushes/sec '
     if(sim%use_pic_lbfr_scheme)then
        write(*,'(A,ES8.2,A)') 'pic_lbfr stats: ',                                     &
-            1 / deposit_time * sim%num_iterations * sim%number_deposition_particles,    &
+            1 / deposit_time * sim%n_iterations * sim%n_deposition_particles,    &
             ' deposits/sec'
     end if
 

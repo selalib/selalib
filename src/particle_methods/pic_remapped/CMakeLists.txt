@@ -1,4 +1,4 @@
-ADD_LIBRARY( sll_remapped_pic STATIC        # todo: rename library as sll_pic_resampled
+ADD_LIBRARY( sll_remapped_pic STATIC        # todo: rename library as sll_pic_resampled ?
   sll_m_remapped_pic_base.F90
   )
 
@@ -13,5 +13,8 @@ if( MPI_ENABLED )
   add_subdirectory( simple_pic )
   add_subdirectory( remapped_pic_utilities )
   add_subdirectory( pic_resamplers )
+  add_subdirectory( pic_depositers )
+  add_subdirectory( pic_initializers )
+  add_subdirectory( pic_visualizers )
 endif( MPI_ENABLED )
 
