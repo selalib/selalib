@@ -16,7 +16,7 @@
 !**************************************************************
 
 
-module sll_m_pic_resamplers
+module sll_m_pic_visualizers
 
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_assert.h"
@@ -33,58 +33,57 @@ module sll_m_pic_resamplers
   implicit none
 
   public :: &
-    sll_t_pic_resampler
+    sll_t_pic_visualizer
 
   private
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 
-  type sll_t_pic_resampler
+  type sll_t_pic_visualizer
 
       !   no member fields for the moment
 
     contains
 
-      procedure :: resample_particle_group
+      procedure :: visualize_particle_group
 
-  end type sll_t_pic_resampler
+  end type sll_t_pic_visualizer
 
 
 contains
 
 
-  subroutine resample_particle_group( &
+  subroutine visualize_particle_group( &
           self, &
           particle_group,   &
-          target_total_charge,  &     !< total charge to be conserved
-          enforce_total_charge )      !< whether charge must be conserved
+          array_name,   &
+          plot_np_x,  &
+          plot_np_y,  &
+          plot_np_vx,   &
+          plot_np_vy,   &
+          iplot )
 
-    class(sll_t_pic_resampler),                intent( inout )        :: self
+    class(sll_t_pic_visualizer),               intent( inout )        :: self
     class(sll_c_particle_group_base), pointer, intent( inout )        :: particle_group
-    sll_real64,                                intent( in ), optional :: target_total_charge
-    logical,                                   intent( in ), optional :: enforce_total_charge
-    sll_real64 :: aux_target_total_charge
-    logical    :: aux_enforce_total_charge
+    character(len=*),                   intent(in)      :: array_name   !< field name
+    sll_int32,                          intent(in)      :: plot_np_x    !< nb of points in the x  plotting grid (see comment above)
+    sll_int32,                          intent(in)      :: plot_np_y    !< nb of points in the y  plotting grid (see comment above)
+    sll_int32,                          intent(in)      :: plot_np_vx   !< nb of points in the vx plotting grid (see comment above)
+    sll_int32,                          intent(in)      :: plot_np_vy   !< nb of points in the vy plotting grid (see comment above)
+    sll_int32,                          intent(in)      :: iplot        !< plot counter
 
     select type ( particle_group )
 
     type is ( sll_t_pic_lbfr_4d_group )
-      if( present(target_total_charge) )then
-        SLL_ASSERT( present(enforce_total_charge) )
-        aux_enforce_total_charge = enforce_total_charge
-        aux_target_total_charge = target_total_charge
-      else
-        aux_enforce_total_charge = .false.    ! default: does not enforce charge conservation
-        aux_target_total_charge = 0._f64           ! value does not matter then
-      end if
-      call particle_group%resample( aux_target_total_charge, aux_enforce_total_charge )
+
+      call particle_group%pic_lbfr_4d_visualize_f_slice_x_vx(array_name, plot_np_x, plot_np_y, plot_np_vx, plot_np_vy, iplot)
 
     class default
-      SLL_ERROR("resample_particle_group", "resampling procedure should not be called for this type of particle group")
+      SLL_ERROR("visualize_particle_group", "procedure not implemented for this type of particle group")
 
     end select
 
-  end subroutine resample_particle_group
+  end subroutine visualize_particle_group
 
 
-end module  sll_m_pic_resamplers
+end module  sll_m_pic_visualizers

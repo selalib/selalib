@@ -49,17 +49,17 @@ program sim_pic_vp_2d2v_cart_lbfr
   call sim%init_from_file(trim(filename))
 
   if (rank==0) then
-    print*, size, 'mpi nodes X', sim%number_particles, 'particles', &
+    print*, size, 'mpi nodes X', sim%n_particles, 'particles', &
          sim%mesh_2d%num_cells1, 'X',sim%mesh_2d%num_cells2,'cells'
     if( sim%use_pic_lbfr_scheme )then
       print*, (real(size,f64)/real(sim%mesh_2d%num_cells1 * sim%mesh_2d%num_cells2,f64)) &
-           * real(sim%number_particles,f64), 'pushed particles per cell'
+           * real(sim%n_particles,f64), 'pushed particles per cell'
 
       print*, (real(size,f64)/real(sim%mesh_2d%num_cells1 * sim%mesh_2d%num_cells2,f64)) &
-           * real(sim%number_deposition_particles,f64), 'deposition particles per cell'
+           * real(sim%n_deposition_particles,f64), 'deposition particles per cell'
     else
       print*, (real(size,f64)/real(sim%mesh_2d%num_cells1 * sim%mesh_2d%num_cells2,f64)) &
-           * real(sim%number_particles,f64), 'particles per cell'
+           * real(sim%n_particles,f64), 'particles per cell'
     end if
   endif
 

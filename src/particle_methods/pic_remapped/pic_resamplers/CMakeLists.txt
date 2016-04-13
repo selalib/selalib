@@ -5,6 +5,6 @@ ADD_LIBRARY( sll_pic_resamplers STATIC
 TARGET_LINK_LIBRARIES( sll_pic_resamplers
   #  sll_memory
   sll_assert
-  #  sll_meshes
-  #  sll_remapped_pic
+  sll_pic_interface
+  sll_pic_lbfr
   )
