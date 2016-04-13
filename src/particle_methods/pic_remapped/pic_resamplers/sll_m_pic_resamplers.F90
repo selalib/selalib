@@ -33,13 +33,13 @@ module sll_m_pic_resamplers
   implicit none
 
   public :: &
-    sll_t_pic_4d_resampler
+    sll_t_pic_resampler
 
   private
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 
-  type sll_t_pic_4d_resampler
+  type sll_t_pic_resampler
 
       !   no member fields for the moment
 
@@ -47,7 +47,7 @@ module sll_m_pic_resamplers
 
       procedure :: resample_particle_group
 
-  end type sll_t_pic_4d_resampler
+  end type sll_t_pic_resampler
 
 
 contains
@@ -59,14 +59,15 @@ contains
           target_total_charge,  &     !< total charge to be conserved
           enforce_total_charge )      !< whether charge must be conserved
 
-    class(sll_t_pic_4d_resampler),                  intent( inout )         :: self
-    class(sll_c_remapped_particle_group),  pointer, intent( inout )         :: particle_group
-    sll_real64,                                     intent( in ), optional  :: target_total_charge
-    logical,                                        intent( in ), optional  :: enforce_total_charge
-    sll_real64  :: aux_target_total_charge
-    logical     :: aux_enforce_total_charge
+    class(sll_t_pic_resampler),                    intent( inout )        :: self
+    class(sll_c_remapped_particle_group), pointer, intent( inout )        :: particle_group
+    sll_real64,                                    intent( in ), optional :: target_total_charge
+    logical,                                       intent( in ), optional :: enforce_total_charge
+    sll_real64 :: aux_target_total_charge
+    logical    :: aux_enforce_total_charge
 
     select type ( particle_group )
+
     type is ( sll_t_pic_lbfr_4d_group )
       if( present(target_total_charge) )then
         SLL_ASSERT( present(enforce_total_charge) )
@@ -77,8 +78,10 @@ contains
         aux_target_total_charge = 0._f64           ! value does not matter then
       end if
       call particle_group%remap( aux_target_total_charge, aux_enforce_total_charge )
+
     class default
       SLL_ERROR("pic_4d_resampling", "resampling procedure should not be called for this type of particle group")
+
     end select
 
   end subroutine resample_particle_group
