@@ -22,8 +22,8 @@ ADD_EXECUTABLE( test_pic_lbfr_4d test_pic_lbfr_4d.F90 )
 TARGET_LINK_LIBRARIES( test_pic_lbfr_4d
   sll_timer
   sll_assert
-  sll_remapped_pic
   sll_pic_lbfr
+  sll_remapped_pic
   )
 
 ADD_TEST( NAME pic_lbfr_4d COMMAND test_pic_lbfr_4d )
