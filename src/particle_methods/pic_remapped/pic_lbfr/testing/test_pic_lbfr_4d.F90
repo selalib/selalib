@@ -76,7 +76,7 @@ program test_pic_lbfr_4d
 #define NUM_MARKERS_VX 10_i32
 #define NUM_MARKERS_VY 10_i32
 
-#define NB_UNSTRUCT_MARKERS_PER_CELL 7
+#define N_UNSTRUCT_MARKERS_PER_CELL 7
 
 #define REMAP_NC_X   20_i32
 #define REMAP_NC_Y   20_i32
@@ -128,17 +128,17 @@ program test_pic_lbfr_4d
 #define X4_PLOT_CST 0._f64
 
   type(sll_t_pic_lbfr_4d_group),        pointer     :: p_group
-  type(sll_t_cartesian_mesh_2d),          pointer     :: mesh_2d
+  type(sll_t_cartesian_mesh_2d),        pointer     :: mesh_2d
 
   character(5)      :: ncx_name, ncy_name
 
   sll_int32 :: k
   sll_int32 :: j
   sll_int32 :: j_x, j_y, j_vx, j_vy
-  sll_int32 :: number_nodes_x
-  sll_int32 :: number_nodes_y
-  sll_int32 :: number_nodes_vx
-  sll_int32 :: number_nodes_vy
+  sll_int32 :: n_nodes_x
+  sll_int32 :: n_nodes_y
+  sll_int32 :: n_nodes_vx
+  sll_int32 :: n_nodes_vy
   sll_real64 :: error, tolerance, f_target
   sll_real64 :: f_j
   sll_real64 :: h_x
@@ -176,11 +176,11 @@ program test_pic_lbfr_4d
 
   sll_int32 :: deposition_particles_pos_type
   sll_int32 :: deposition_particles_move_type
-  sll_int32 :: number_deposition_particles
-  sll_int32 :: nb_deposition_particles_per_cell_x
-  sll_int32 :: nb_deposition_particles_per_cell_y
-  sll_int32 :: nb_deposition_particles_vx
-  sll_int32 :: nb_deposition_particles_vy
+  sll_int32 :: n_deposition_particles
+  sll_int32 :: n_deposition_particles_per_cell_x
+  sll_int32 :: n_deposition_particles_per_cell_y
+  sll_int32 :: n_deposition_particles_vx
+  sll_int32 :: n_deposition_particles_vy
 
   sll_int32 :: flow_markers_type
 
@@ -232,11 +232,11 @@ program test_pic_lbfr_4d
 
   deposition_particles_pos_type = SLL_PIC_LBFR_STRUCTURED
   deposition_particles_move_type = SLL_PIC_LBFR_PUSHED
-  number_deposition_particles = 1000
-  nb_deposition_particles_per_cell_x = 2
-  nb_deposition_particles_per_cell_y = 2
-  nb_deposition_particles_vx = 50
-  nb_deposition_particles_vy = 50
+  n_deposition_particles = 1000
+  n_deposition_particles_per_cell_x = 2
+  n_deposition_particles_per_cell_y = 2
+  n_deposition_particles_vx = 50
+  n_deposition_particles_vy = 50
 
   flow_markers_type = SLL_PIC_LBFR_STRUCTURED
 
@@ -259,17 +259,17 @@ program test_pic_lbfr_4d
         remapping_sparse_grid_max_levels,             &
         deposition_particles_pos_type,                &
         deposition_particles_move_type,               &
-        number_deposition_particles,                  &
-        nb_deposition_particles_per_cell_x,           &
-        nb_deposition_particles_per_cell_y,           &
-        nb_deposition_particles_vx,                   &
-        nb_deposition_particles_vy,                   &
+        n_deposition_particles,                  &
+        n_deposition_particles_per_cell_x,           &
+        n_deposition_particles_per_cell_y,           &
+        n_deposition_particles_vx,                   &
+        n_deposition_particles_vy,                   &
         flow_markers_type,                            &
         NUM_MARKERS_X,                                &
         NUM_MARKERS_Y,                                &
         NUM_MARKERS_VX,                               &
         NUM_MARKERS_VY,                               &
-        NB_UNSTRUCT_MARKERS_PER_CELL,                 &
+        N_UNSTRUCT_MARKERS_PER_CELL,                 &
         int(NUM_MARKERS_X/2),                         &
         int(NUM_MARKERS_Y/2),                         &
         int(NUM_MARKERS_VX/2),                        &
@@ -301,17 +301,17 @@ program test_pic_lbfr_4d
   ! This initializes the particles [[?? file:../pic_particle_initializers/lt_pic_4d_init.F90::sll_lt_pic_4d_init_hat_f]]
 
   call p_group%set_hat_f0_parameters( x0, y0, vx0, vy0, r_x, r_y, r_vx, r_vy, basis_height, shift )
-    !  pic_lbfr_4d_set_hat_f0_parameters( x0, y0, vx0, vy0, r_x, r_y, r_vx, r_vy, basis_height, shift )
 
   if( DEBUG_MODE )then
     print*, "[test_pic_lbfr_4d - DEBUG] -- AA C"
   end if
 
   call p_group%initializer( SLL_PIC_LBFR_HAT_F0, target_total_charge, enforce_total_charge )
-!  call p_group%pic_lbfr_4d_initializer( SLL_PIC_LBFR_HAT_F0 )
+
 
   print *, "plotting initial f slice in gnuplot format "
-  call p_group%visualize_f_slice_x_vx("f_initial", plot_np_x, plot_np_y, plot_np_vx, plot_np_vy, 1)
+
+  call p_group%pic_lbfr_4d_visualize_f_slice_x_vx( "f_initial", plot_np_x, plot_np_y, plot_np_vx, plot_np_vy, 1 )
 
   if( DEBUG_MODE )then
     print*, "[test_pic_lbfr_4d - DEBUG] -- AA D"
@@ -329,10 +329,10 @@ program test_pic_lbfr_4d
   error = 0.0_f64
   if( p_group%remapped_f_interpolation_type == SLL_PIC_LBFR_REMAP_WITH_SPLINES )then
 
-    number_nodes_x  = p_group%remapping_cart_grid_number_nodes_x()
-    number_nodes_y  = p_group%remapping_cart_grid_number_nodes_y()
-    number_nodes_vx = p_group%remapping_cart_grid_number_nodes_vx()
-    number_nodes_vy = p_group%remapping_cart_grid_number_nodes_vy()
+    n_nodes_x  = p_group%remapping_cart_grid_n_nodes_x()
+    n_nodes_y  = p_group%remapping_cart_grid_n_nodes_y()
+    n_nodes_vx = p_group%remapping_cart_grid_n_nodes_vx()
+    n_nodes_vy = p_group%remapping_cart_grid_n_nodes_vy()
 
     h_x    = p_group%remapping_cart_grid%delta_eta1
     h_y    = p_group%remapping_cart_grid%delta_eta2
@@ -347,16 +347,16 @@ program test_pic_lbfr_4d
     d_vol = h_x * h_y * h_vx * h_vy
 
 
-    do j_x = 1, number_nodes_x
+    do j_x = 1, n_nodes_x
       x_j = x_min + (j_x-1) * h_x
 
-      do j_y = 1, number_nodes_y
+      do j_y = 1, n_nodes_y
         y_j = y_min + (j_y-1) * h_y
 
-        do j_vx = 1, number_nodes_vx
+        do j_vx = 1, n_nodes_vx
           vx_j = vx_min + (j_vx-1) * h_vx
 
-          do j_vy = 1, number_nodes_vy
+          do j_vy = 1, n_nodes_vy
             vy_j = vy_min + (j_vy-1) * h_vy
 
             f_j = real( p_group%remapped_f_splines_coefficients(j_x,j_y,j_vx,j_vy)/d_vol ,f64)
@@ -407,31 +407,31 @@ program test_pic_lbfr_4d
 
     else
 
-      number_nodes_x  = plot_np_x - 1
-      number_nodes_y  = plot_np_y - 1
-      number_nodes_vx = plot_np_vx - 1
-      number_nodes_vy = plot_np_vy - 1
+      n_nodes_x  = plot_np_x - 1
+      n_nodes_y  = plot_np_y - 1
+      n_nodes_vx = plot_np_vx - 1
+      n_nodes_vy = plot_np_vy - 1
 
       x_min    = p_group%remapping_grid_eta_min(1)
       y_min    = p_group%remapping_grid_eta_min(2)
       vx_min   = p_group%remapping_grid_eta_min(3)
       vy_min   = p_group%remapping_grid_eta_min(4)
 
-      h_x    = (p_group%remapping_grid_eta_max(1) - x_min)  / number_nodes_x
-      h_y    = (p_group%remapping_grid_eta_max(2) - y_min)  / number_nodes_y
-      h_vx   = (p_group%remapping_grid_eta_max(3) - vx_min) / number_nodes_vx
-      h_vy   = (p_group%remapping_grid_eta_max(4) - vy_min) / number_nodes_vy
+      h_x    = (p_group%remapping_grid_eta_max(1) - x_min)  / n_nodes_x
+      h_y    = (p_group%remapping_grid_eta_max(2) - y_min)  / n_nodes_y
+      h_vx   = (p_group%remapping_grid_eta_max(3) - vx_min) / n_nodes_vx
+      h_vy   = (p_group%remapping_grid_eta_max(4) - vy_min) / n_nodes_vy
 
-      do j_x = 1, number_nodes_x
+      do j_x = 1, n_nodes_x
         x_j = x_min + (j_x-1) * h_x
 
-        do j_y = 1, number_nodes_y
+        do j_y = 1, n_nodes_y
           y_j = y_min + (j_y-1) * h_y
 
-          do j_vx = 1, number_nodes_vx
+          do j_vx = 1, n_nodes_vx
             vx_j = vx_min + (j_vx-1) * h_vx
 
-            do j_vy = 1, number_nodes_vy
+            do j_vy = 1, n_nodes_vy
               vy_j = vy_min + (j_vy-1) * h_vy
 
               eta(1) = x_j
@@ -473,7 +473,7 @@ program test_pic_lbfr_4d
 
   ! loop over all particles (taken from [[file:../simulation/simulation_4d_vp_lt_pic_cartesian.F90]])
 
-  do k = 1, p_group%number_particles
+  do k = 1, p_group%n_particles
 
      ! -- --  push the k-th particle [begin]  -- --
 
@@ -519,8 +519,7 @@ program test_pic_lbfr_4d
   end if
 
   print *, "plotting transported f slice in gnuplot format "
-  call p_group%visualize_f_slice_x_vx("f_transported", plot_np_x, plot_np_y, plot_np_vx, plot_np_vy, 1)
-
+  call p_group%pic_lbfr_4d_visualize_f_slice_x_vx( "f_transported", plot_np_x, plot_np_y, plot_np_vx, plot_np_vy, 1 )
 
   ! D --- remap the particle group to get the values of transported f on the remapping grid
 
@@ -533,20 +532,21 @@ program test_pic_lbfr_4d
 
   else if (remap_type == 'bsl_ltp') then
     ! remap with [[??? file:lt_pic_4d_utilities.F90::sll_lt_pic_4d_write_bsl_f_on_remap_grid]]
-    call p_group%remap(target_total_charge, enforce_total_charge)
+    call p_group%resample( target_total_charge, enforce_total_charge )
+
   else
     print*, 'ERROR (code=656536756757657): option is ltp (WARNING: not implemented yet) or bsl_ltp'
     stop
   end if
 
   print *, "plotting remapped f slice in gnuplot format "
-  call p_group%visualize_f_slice_x_vx("f_remapped", plot_np_x, plot_np_y, plot_np_vx, plot_np_vy, 1)
+  call p_group%pic_lbfr_4d_visualize_f_slice_x_vx( "f_remapped", plot_np_x, plot_np_y, plot_np_vx, plot_np_vy, 1 )
 
   remaptime = sll_f_time_elapsed_since(remapstart)
 
   ! formats at [[http://www.cs.mtu.edu/~shene/COURSES/cs201/NOTES/chap05/format.html]]
   write(*,'(A,A,ES8.2,A,A,ES8.2,A)') trim(remap_type),' remap time = ',remaptime,' sec',&
-       ' ie ',p_group%number_particles/remaptime,' remapped-ptc/sec'
+       ' ie ',p_group%n_particles/remaptime,' remapped-ptc/sec'
 
 
 
@@ -560,10 +560,10 @@ program test_pic_lbfr_4d
   error = 0.0_f64
   if( p_group%remapped_f_interpolation_type == SLL_PIC_LBFR_REMAP_WITH_SPLINES )then
 
-    number_nodes_x  = p_group%remapping_cart_grid_number_nodes_x()
-    number_nodes_y  = p_group%remapping_cart_grid_number_nodes_y()
-    number_nodes_vx = p_group%remapping_cart_grid_number_nodes_vx()
-    number_nodes_vy = p_group%remapping_cart_grid_number_nodes_vy()
+    n_nodes_x  = p_group%remapping_cart_grid_n_nodes_x()
+    n_nodes_y  = p_group%remapping_cart_grid_n_nodes_y()
+    n_nodes_vx = p_group%remapping_cart_grid_n_nodes_vx()
+    n_nodes_vy = p_group%remapping_cart_grid_n_nodes_vy()
 
     h_x    = p_group%remapping_cart_grid%delta_eta1
     h_y    = p_group%remapping_cart_grid%delta_eta2
@@ -578,16 +578,16 @@ program test_pic_lbfr_4d
     d_vol = h_x * h_y * h_vx * h_vy
 
 
-    do j_x = 1, number_nodes_x
+    do j_x = 1, n_nodes_x
       x_j = x_min + (j_x-1) * h_x
 
-      do j_y = 1, number_nodes_y
+      do j_y = 1, n_nodes_y
         y_j = y_min + (j_y-1) * h_y
 
-        do j_vx = 1, number_nodes_vx
+        do j_vx = 1, n_nodes_vx
           vx_j = vx_min + (j_vx-1) * h_vx
 
-          do j_vy = 1, number_nodes_vy
+          do j_vy = 1, n_nodes_vy
             vy_j = vy_min + (j_vy-1) * h_vy
 
             if( DEBUG_MODE )then
@@ -691,7 +691,7 @@ program test_pic_lbfr_4d
   write(ncx_name,'(i3)') NC_X
   write(ncy_name,'(i3)') NC_Y
   open(83,file='positions_and_speeds_'//trim(adjustl(ncx_name))//'x'//trim(adjustl(ncy_name))//'.dat')
-  do k = 1, p_group%number_particles
+  do k = 1, p_group%n_particles
      coords = p_group%get_x(k)
      x_k = coords(1)
      y_k = coords(2)
