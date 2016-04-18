@@ -3,13 +3,9 @@ program bspline_2d_dirichlet
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_working_precision.h"
 
-  use sll_m_boundary_condition_descriptors, only: &
-    sll_p_hermite
+  use sll_m_boundary_condition_descriptors, only: sll_p_hermite
 
-  use sll_m_bspline_interpolator_2d, only: &
-    sll_f_new_bspline_interpolator_2d, &
-    sll_t_bspline_interpolator_2d, &
-    sll_o_delete
+  use sll_m_bspline_interpolator_2d
 
   use sll_m_constants, only: &
     sll_p_pi
@@ -127,7 +123,7 @@ else
   print *, 'FAILED'
 end if
 
-call sll_o_delete(interpolator)
+call sll_s_bspline_interpolator_2d_free(interpolator)
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 contains
