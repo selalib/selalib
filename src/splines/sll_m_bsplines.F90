@@ -740,10 +740,6 @@ subroutine sll_s_compute_bspline_2d(self, gtau, &
 
 end subroutine sll_s_compute_bspline_2d
 
-subroutine free_bspline_2D( spline )
-  type(sll_t_bspline_interpolation_2d) :: spline
-end subroutine free_bspline_2D 
-
 subroutine sll_s_interpolate_array_values_2d(self, n1, n2, x1, x2, y )
 
 type(sll_t_bspline_interpolation_2d) :: self
