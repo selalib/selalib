@@ -5724,9 +5724,15 @@ print *, 'remap 2d complex:'
   !> them factors of two as well.
   !> @param [in] num_procs Number of processors to be distributed
   !> @param [out] decomp_procs Number of processors along dimension one, two, three
-  subroutine sll_s_factorize_in_three_powers_of_two( num_procs, decomp_procs )
+  subroutine sll_s_factorize_in_three_powers_of_two( &
+       num_procs, &
+       decomp_procs_1, &
+       decomp_procs_2, &
+       decomp_procs_3 )
     sll_int32, intent(in)  :: num_procs
-    sll_int32, intent(out) :: decomp_procs(3)
+    sll_int32, intent(out) :: decomp_procs_1
+    sll_int32, intent(out) :: decomp_procs_2
+    sll_int32, intent(out) :: decomp_procs_3
 
     sll_int32  :: exponent
     sll_int32  :: tmpi
@@ -5735,28 +5741,28 @@ print *, 'remap 2d complex:'
     exponent = int(log(real(num_procs))/log(2.0))
     if( (exponent > 0) .and. divisible_by_three(exponent) ) then
        tmpi = exponent/3
-       decomp_procs(1) = 2**tmpi
-       decomp_procs(2) = 2**tmpi
-       decomp_procs(3) = 2**tmpi
+       decomp_procs_1 = 2**tmpi
+       decomp_procs_2 = 2**tmpi
+       decomp_procs_3 = 2**tmpi
     else
        if( exponent == 0 ) then
-          decomp_procs(1)   = 1
-          decomp_procs(2)   = 1
-          decomp_procs(3)   = 1
+          decomp_procs_1   = 1
+          decomp_procs_2   = 1
+          decomp_procs_3   = 1
        else if( exponent == 1 ) then
-          decomp_procs(1)   = 2
-          decomp_procs(2)   = 1
-          decomp_procs(3)   = 1
+          decomp_procs_1   = 2
+          decomp_procs_2   = 1
+          decomp_procs_3   = 1
        else if( divisible_by_three(exponent-1) ) then
           tmpi = (exponent-1)/3
-          decomp_procs(1)   = 2**tmpi
-          decomp_procs(2)   = 2**tmpi
-          decomp_procs(3)   = 2**(tmpi+1)
+          decomp_procs_1   = 2**tmpi
+          decomp_procs_2   = 2**tmpi
+          decomp_procs_3   = 2**(tmpi+1)
        else if( divisible_by_three(exponent+1) ) then
           tmpi = (exponent+1)/3
-          decomp_procs(1)   = 2**tmpi
-          decomp_procs(2)   = 2**tmpi
-          decomp_procs(3)   = 2**(tmpi-1)
+          decomp_procs_1   = 2**tmpi
+          decomp_procs_2   = 2**tmpi
+          decomp_procs_3   = 2**(tmpi-1)
        end if
     end if
   end subroutine sll_s_factorize_in_three_powers_of_two
