@@ -61,6 +61,7 @@ module sll_m_sim_bsl_dk_3d1v_curv
     sll_o_apply_remap_3d, &
     sll_o_apply_remap_4d, &
     sll_o_compute_local_sizes, &
+    sll_s_factorize_in_two_powers_of_two, &
     sll_o_initialize_layout_with_distributed_array, &
     sll_t_layout_3d, &
     sll_t_layout_4d, &
@@ -867,27 +868,10 @@ contains
     ! even if the power of 2 is odd. This should 
     ! be packaged in some sort of routine and set up 
     ! at initialization time.
-    sim%power2 = int(log(real(sim%world_size))/log(2.0))
-
-    !--> special case N = 1, so power2 = 0
-    if(sim%power2 == 0) then
-       nproc_x1 = 1
-       nproc_x2 = 1
-       nproc_x3 = 1
-       nproc_x4 = 1
-    end if
-    
-    if(sll_f_is_even(sim%power2)) then
-       nproc_x1 = 2**(sim%power2/2)
-       nproc_x2 = 2**(sim%power2/2)
-       nproc_x3 = 1
-       nproc_x4 = 1
-    else 
-       nproc_x1 = 2**((sim%power2-1)/2)
-       nproc_x2 = 2**((sim%power2+1)/2)
-       nproc_x3 = 1
-       nproc_x4 = 1
-    end if
+    call sll_s_factorize_in_two_powers_of_two &
+         ( sim%world_size, nproc_x1, nproc_x2 )
+    nproc_x3 = 1
+    nproc_x4 = 1
 
     !--> Initialization of parallel layout of f4d in (x1,x2) directions
     !-->  (x1,x2) : parallelized layout
@@ -1113,24 +1097,10 @@ contains
     sll_int32 :: nproc_x3
     type(sll_t_cartesian_mesh_1d), pointer :: logical_mesh1d
 
-    ! layout for sequential operations in (x1,x2) 
-    sim%power2 = int(log(real(sim%world_size))/log(2.0))
-    !--> special case N = 1, so power2 = 0
-    if(sim%power2 == 0) then
-       nproc_x1 = 1
-       nproc_x2 = 1
-       nproc_x3 = 1
-    end if
-    
-    if(sll_f_is_even(sim%power2)) then
-       nproc_x1 = 2**(sim%power2/2)
-       nproc_x2 = 2**(sim%power2/2)
-       nproc_x3 = 1
-    else 
-       nproc_x1 = 2**((sim%power2-1)/2)
-       nproc_x2 = 2**((sim%power2+1)/2)
-       nproc_x3 = 1
-    end if
+
+    call sll_s_factorize_in_two_powers_of_two&
+         ( sim%world_size, nproc_x1, nproc_x2 )
+    nproc_x3 = 1
 
     !--> Initialization of rho3d_seqx3 and phi3d_seqx3
     !-->  (x1,x2) : parallelized layout
