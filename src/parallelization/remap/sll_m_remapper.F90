@@ -58,6 +58,8 @@ module sll_m_remapper
     sll_o_apply_remap_5d, &
     sll_o_apply_remap_6d, &
     sll_o_compute_local_sizes, &
+    sll_s_factorize_in_three_powers_of_two, &
+    sll_s_factorize_in_two_powers_of_two, &
     sll_o_get_layout_collective, &
     sll_o_get_layout_global_size_j, &
     sll_o_get_layout_global_size_k, &
@@ -74,6 +76,9 @@ module sll_m_remapper
     sll_o_get_layout_m_min, &
     sll_o_get_layout_n_max, &
     sll_o_get_layout_n_min, &
+    sll_o_get_layout_local_sizes, &
+    sll_o_get_layout_min_indices, &
+    sll_o_get_layout_max_indices, &
     sll_o_global_to_local, &
     sll_o_initialize_layout_with_distributed_array, &
     sll_t_layout_2d, &
@@ -164,6 +169,7 @@ module sll_m_remapper
      sll_int32, private :: m_min, m_max
      sll_int32, private :: n_min, n_max
   end type box_6D
+
 
   
   !> @brief Information on a collective and an
@@ -328,6 +334,21 @@ MAKE_REMAP_POINTER_CONTAINER( sll_t_remap_plan_4d_real64_ptr, sll_t_remap_plan_4
   MAKE_REMAP_PLAN(remap_plan_6D_int32, sll_t_layout_6d, box_6D, sll_int32)
   MAKE_REMAP_PLAN(sll_t_remap_plan_6d_real64, sll_t_layout_6d, box_6D, sll_real64)
   MAKE_REMAP_PLAN(remap_plan_6D_comp64, sll_t_layout_6d, box_6D, sll_comp64)
+
+  !> Get corner indices
+  interface sll_o_get_layout_min_indices
+     module procedure get_layout_min_indices_6d
+  end interface sll_o_get_layout_min_indices
+
+  !> Get corner indices
+  interface sll_o_get_layout_max_indices
+     module procedure get_layout_max_indices_6d
+  end interface sll_o_get_layout_max_indices
+
+  !> Get local sizes
+  interface sll_o_get_layout_local_sizes
+     module procedure get_layout_local_sizes_6d
+  end interface sll_o_get_layout_local_sizes
 
   !> Get corner index
   interface sll_o_get_layout_i_min
@@ -5662,5 +5683,161 @@ print *, 'remap 2d complex:'
      close(44)
 
   end subroutine write_to_file
+
+!------------------------------------------------------------------------------!
+  ! Procedures to find decomposition of 
+
+  !> Helper function checking if number is divisible by two
+  function divisible_by_two( num )
+    logical :: divisible_by_two
+    sll_int32, intent(in) :: num
+    if(modulo(num,2) == 0) then
+       divisible_by_two = .true.
+    else
+       divisible_by_two = .false.
+    end if
+  end function divisible_by_two
+  
+  !> Helper function checking if number is divisible by three
+  function divisible_by_three( num )
+    logical :: divisible_by_three
+    sll_int32, intent(in) :: num
+    if(modulo(num,3) == 0) then
+       divisible_by_three = .true.
+    else
+       divisible_by_three = .false.
+    end if
+  end function divisible_by_three
+
+  !> @brief helper function to find proper partitioning of processors for 3D array
+  !> @details given a number that is a power of two, we decompose it in 3 factors 
+  !> intended to be as close to each other as possible, while still keeping
+  !> them factors of two as well.
+  !> @param [in] num_procs Number of processors to be distributed
+  !> @param [out] decomp_procs Number of processors along dimension one, two, three
+  subroutine sll_s_factorize_in_three_powers_of_two( &
+       num_procs, &
+       decomp_procs_1, &
+       decomp_procs_2, &
+       decomp_procs_3 )
+    sll_int32, intent(in)  :: num_procs
+    sll_int32, intent(out) :: decomp_procs_1
+    sll_int32, intent(out) :: decomp_procs_2
+    sll_int32, intent(out) :: decomp_procs_3
+
+    sll_int32  :: exponent
+    sll_int32  :: tmpi
+
+    SLL_ASSERT( sll_f_is_power_of_two(int(num_procs,f64)) )
+    exponent = int(log(real(num_procs))/log(2.0))
+    if( (exponent > 0) .and. divisible_by_three(exponent) ) then
+       tmpi = exponent/3
+       decomp_procs_1 = 2**tmpi
+       decomp_procs_2 = 2**tmpi
+       decomp_procs_3 = 2**tmpi
+    else
+       if( exponent == 0 ) then
+          decomp_procs_1   = 1
+          decomp_procs_2   = 1
+          decomp_procs_3   = 1
+       else if( exponent == 1 ) then
+          decomp_procs_1   = 2
+          decomp_procs_2   = 1
+          decomp_procs_3   = 1
+       else if( divisible_by_three(exponent-1) ) then
+          tmpi = (exponent-1)/3
+          decomp_procs_1   = 2**tmpi
+          decomp_procs_2   = 2**tmpi
+          decomp_procs_3   = 2**(tmpi+1)
+       else if( divisible_by_three(exponent+1) ) then
+          tmpi = (exponent+1)/3
+          decomp_procs_1   = 2**tmpi
+          decomp_procs_2   = 2**tmpi
+          decomp_procs_3   = 2**(tmpi-1)
+       end if
+    end if
+  end subroutine sll_s_factorize_in_three_powers_of_two
+
+
+  !> @brief helper function to find proper partitioning of processors for 2D array
+  !> @details given a number that is a power of two, we decompose it in 2 factors 
+  !> intended to be as close to each other as possible, while still keeping
+  !> them factors of two as well.
+  !> @param [in] num_procs Number of processors to be distributed
+  !> @param [out] f1 Number of processors along dimension one
+  !> @param [out] f2 Number of processors along dimension two
+  subroutine sll_s_factorize_in_two_powers_of_two( num_procs, f1, f2 )
+    sll_int32, intent(in)  :: num_procs
+    sll_int32, intent(out) :: f1
+    sll_int32, intent(out) :: f2
+    sll_int32  :: exponent
+    sll_int32  :: tmpi
+
+    SLL_ASSERT( sll_f_is_power_of_two(int(num_procs,f64)) )
+    exponent = int(log(real(num_procs))/log(2.0))
+    if( (exponent > 0) .and. divisible_by_two(exponent) ) then
+       tmpi = exponent/2
+       f1 = 2**tmpi
+       f2 = 2**tmpi
+    else
+       if( exponent == 0 ) then
+          f1   = 1
+          f2   = 1
+       else 
+          tmpi = (exponent-1)/2
+          f1   = 2**((exponent-1)/2)
+          f2   = 2**((exponent+1)/2)
+       end if
+    end if
+  end subroutine sll_s_factorize_in_two_powers_of_two
+
+
+  ! Array getter functions to simplify 6d computations
+  !< Getter function for first index on current processor for each dimension
+  subroutine get_layout_min_indices_6d(layout, mpi_rank, indices)
+    type(sll_t_layout_6D), intent(in) :: layout !< layout object
+    sll_int32,       intent(in) :: mpi_rank !< mpi rank of processor
+    sll_int32,       intent(out):: indices(6) !< first index local to processor
+
+    indices(1) = layout%boxes(mpi_rank)%i_min
+    indices(2) = layout%boxes(mpi_rank)%j_min
+    indices(3) = layout%boxes(mpi_rank)%k_min
+    indices(4) = layout%boxes(mpi_rank)%l_min
+    indices(5) = layout%boxes(mpi_rank)%m_min
+    indices(6) = layout%boxes(mpi_rank)%n_min
+
+  end subroutine get_layout_min_indices_6d
+
+  !< Getter function for last index on current processor for each dimension
+  subroutine get_layout_max_indices_6d(layout, mpi_rank, indices)
+    type(sll_t_layout_6d), intent(in) :: layout !< layout object
+    sll_int32,       intent(in) :: mpi_rank !< mpi rank of processor
+    sll_int32,       intent(out):: indices(6) !< first index local to processor
+
+    indices(1) = layout%boxes(mpi_rank)%i_max
+    indices(2) = layout%boxes(mpi_rank)%j_max
+    indices(3) = layout%boxes(mpi_rank)%k_max
+    indices(4) = layout%boxes(mpi_rank)%l_max
+    indices(5) = layout%boxes(mpi_rank)%m_max
+    indices(6) = layout%boxes(mpi_rank)%n_max
+
+  end subroutine get_layout_max_indices_6d
+
+  !< Getter function for local sizes on processor
+  subroutine get_layout_local_sizes_6d(layout, mpi_rank, local_sizes)
+    type(sll_t_layout_6d), intent(in) :: layout !< layout object
+    sll_int32,       intent(in) :: mpi_rank !< mpi rank of processor
+    sll_int32,       intent(out):: local_sizes(6) !< first index local to processor
+
+    sll_int32 :: indices_min(6)
+
+    call get_layout_min_indices_6d(layout, mpi_rank, indices_min)
+    call get_layout_max_indices_6d(layout, mpi_rank, local_sizes)
+    local_sizes = local_sizes - indices_min + 1
+
+
+  end subroutine get_layout_local_sizes_6d
+
+
 
 end module sll_m_remapper
