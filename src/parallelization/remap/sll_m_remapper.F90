@@ -88,7 +88,6 @@ module sll_m_remapper
     sll_t_layout_4d_ptr, &
     sll_t_layout_5d, &
     sll_t_layout_6d, &
-    sll_t_remap_decomposition, &
     sll_o_local_to_global, &
     sll_f_new_layout_2d, &
     sll_f_new_layout_2d_from_layout_4d, &
@@ -171,14 +170,6 @@ module sll_m_remapper
      sll_int32, private :: n_min, n_max
   end type box_6D
 
-  !> Type holding information about remap decomposition of the domain
-  type :: sll_t_remap_decomposition
-     sll_int32 :: num_procs(6)   !< Number of processors
-     sll_int32 :: local_sizes(6) !< Local sizes of array 
-     sll_int32 :: indices_min(6) !< First index local to this domain
-     sll_int32 :: indices_max(6) !< Last index local to this domain
-
-  end type sll_t_remap_decomposition
 
   
   !> @brief Information on a collective and an
