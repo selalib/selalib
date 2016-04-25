@@ -16,7 +16,7 @@
 !**************************************************************
 
 
-module sll_m_pic_visualizers
+module sll_m_pic_visualizer_interface
 
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_assert.h"
@@ -33,13 +33,13 @@ module sll_m_pic_visualizers
   implicit none
 
   public :: &
-    sll_t_pic_visualizer
+    sll_t_pic_visualizer_interface
 
   private
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 
-  type sll_t_pic_visualizer
+  type sll_t_pic_visualizer_interface
 
       !   no member fields for the moment
 
@@ -47,7 +47,7 @@ module sll_m_pic_visualizers
 
       procedure :: visualize_particle_group
 
-  end type sll_t_pic_visualizer
+  end type sll_t_pic_visualizer_interface
 
 
 contains
@@ -63,14 +63,14 @@ contains
           plot_np_vy,   &
           iplot )
 
-    class(sll_t_pic_visualizer),               intent( inout )        :: self
-    class(sll_c_particle_group_base), pointer, intent( inout )        :: particle_group
-    character(len=*),                   intent(in)      :: array_name   !< field name
-    sll_int32,                          intent(in)      :: plot_np_x    !< nb of points in the x  plotting grid (see comment above)
-    sll_int32,                          intent(in)      :: plot_np_y    !< nb of points in the y  plotting grid (see comment above)
-    sll_int32,                          intent(in)      :: plot_np_vx   !< nb of points in the vx plotting grid (see comment above)
-    sll_int32,                          intent(in)      :: plot_np_vy   !< nb of points in the vy plotting grid (see comment above)
-    sll_int32,                          intent(in)      :: iplot        !< plot counter
+    class(sll_t_pic_visualizer_interface),     intent( inout ) :: self
+    class(sll_c_particle_group_base), pointer, intent( inout ) :: particle_group
+    character(len=*),                          intent(in)      :: array_name        !< field name
+    sll_int32,                                 intent(in)      :: plot_np_x         !< nb of points in the x  plotting grid
+    sll_int32,                                 intent(in)      :: plot_np_y         !< nb of points in the y  plotting grid
+    sll_int32,                                 intent(in)      :: plot_np_vx        !< nb of points in the vx plotting grid
+    sll_int32,                                 intent(in)      :: plot_np_vy        !< nb of points in the vy plotting grid
+    sll_int32,                                 intent(in)      :: iplot             !< plot counter
 
     select type ( particle_group )
 
@@ -86,4 +86,4 @@ contains
   end subroutine visualize_particle_group
 
 
-end module  sll_m_pic_visualizers
+end module  sll_m_pic_visualizer_interface
