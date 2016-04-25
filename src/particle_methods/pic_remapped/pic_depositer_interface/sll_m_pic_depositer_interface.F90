@@ -16,7 +16,7 @@
 !**************************************************************
 
 
-module sll_m_pic_resamplers
+module sll_m_pic_depositer_interface
 
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_assert.h"
@@ -30,39 +30,47 @@ module sll_m_pic_resamplers
   use sll_m_pic_lbfr_4d_group, only: &
     sll_t_pic_lbfr_4d_group
 
+  use sll_m_accumulators, only: &
+    sll_t_charge_accumulator_cell_2d, &
+    sll_s_reset_charge_accumulator_to_zero, &
+    sll_t_charge_accumulator_2d
+
+
   implicit none
 
   public :: &
-    sll_t_pic_resampler
+    sll_t_pic_depositer_interface
 
   private
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 
-  type sll_t_pic_resampler
+  type sll_t_pic_depositer_interface
 
       !   no member fields for the moment
 
     contains
 
-      procedure :: resample_particle_group
+      procedure :: charge_deposit_particle_group
 
-  end type sll_t_pic_resampler
+  end type sll_t_pic_depositer_interface
 
 
 contains
 
 
-  subroutine resample_particle_group( &
+  subroutine charge_deposit_particle_group( &
           self, &
           particle_group,   &
+          charge_accumulator,   &
           target_total_charge,  &     !< total charge to be conserved
           enforce_total_charge )      !< whether charge must be conserved
 
-    class(sll_t_pic_resampler),                intent( inout )        :: self
-    class(sll_c_particle_group_base), pointer, intent( inout )        :: particle_group
-    sll_real64,                                intent( in ), optional :: target_total_charge
-    logical,                                   intent( in ), optional :: enforce_total_charge
+    class(sll_t_pic_depositer_interface),         intent( inout )        :: self
+    class(sll_c_particle_group_base),    pointer, intent( inout )        :: particle_group
+    type( sll_t_charge_accumulator_2d ), pointer, intent( inout )        :: charge_accumulator
+    sll_real64,                                   intent( in ), optional :: target_total_charge
+    logical,                                      intent( in ), optional :: enforce_total_charge
     sll_real64 :: aux_target_total_charge
     logical    :: aux_enforce_total_charge
 
@@ -77,14 +85,15 @@ contains
         aux_enforce_total_charge = .false.    ! default: does not enforce charge conservation
         aux_target_total_charge = 0._f64           ! value does not matter then
       end if
-      call particle_group%resample( aux_target_total_charge, aux_enforce_total_charge )
+
+      call particle_group%deposit_charge_2d( charge_accumulator, aux_target_total_charge, aux_enforce_total_charge )
 
     class default
-      SLL_ERROR("resample_particle_group", "resampling procedure should not be called for this type of particle group")
+      SLL_ERROR("charge_deposit_particle_group", "deposition procedure not implemented for this type of particle group")
 
     end select
 
-  end subroutine resample_particle_group
+  end subroutine charge_deposit_particle_group
 
 
-end module  sll_m_pic_resamplers
+end module  sll_m_pic_depositer_interface

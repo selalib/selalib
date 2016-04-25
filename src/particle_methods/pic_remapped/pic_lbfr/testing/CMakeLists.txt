@@ -23,6 +23,8 @@ TARGET_LINK_LIBRARIES( test_pic_lbfr_4d
   sll_timer
   sll_assert
   sll_pic_lbfr
+  sll_initial_density_parameters
+  sll_particle_sampling_interface
   sll_remapped_pic
   )
 

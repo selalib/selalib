@@ -22,6 +22,7 @@ TARGET_LINK_LIBRARIES( sll_pic_lbfr
   sll_pic_lbfr_4d_marker
   sll_remapped_pic
   sll_remapped_pic_utilities
+  sll_initial_density_parameters
   # sll_pic_accumulators
   sll_sparse_grid
   sll_pic_opt2d_accumulators
