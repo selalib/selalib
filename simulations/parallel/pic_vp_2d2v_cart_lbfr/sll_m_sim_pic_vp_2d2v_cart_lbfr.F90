@@ -95,17 +95,26 @@ module sll_m_sim_pic_vp_2d2v_cart_lbfr
   !    sll_t_simple_pic_4d_group, &
   !    sll_f_simple_pic_4d_group_new
 
-  use sll_m_pic_depositers, only: &
-    sll_t_pic_depositer
+  use sll_m_initial_density_parameters, only: &
+    sll_t_initial_density_parameters, &
+    sll_p_landau_density_2d2v
 
-  use sll_m_pic_initializers, only: &
-    sll_t_pic_initializer
+  use sll_m_particle_sampling_interface, only : &
+    sll_s_sample_particle_group, &
+    sll_s_resample_particle_group, &
+    sll_p_deterministic_sampling
 
-  use sll_m_pic_resamplers, only: &
-    sll_t_pic_resampler
+  use sll_m_pic_depositer_interface, only: &
+    sll_t_pic_depositer_interface
 
-  use sll_m_pic_visualizers, only: &
-    sll_t_pic_visualizer
+!  use sll_m_pic_initializer_interface, only: &
+!    sll_t_pic_initializer_interface
+
+!  use sll_m_pic_resampler_interface, only: &
+!    sll_t_pic_resampler_interface
+
+  use sll_m_pic_visualizer_interface, only: &
+    sll_t_pic_visualizer_interface
 
   use sll_m_timer, only: &
     sll_s_set_time_mark, &
@@ -179,10 +188,10 @@ module sll_m_sim_pic_vp_2d2v_cart_lbfr
      !> called q_accumulator in Sever simulation
      type(sll_t_charge_accumulator_2d_ptr), dimension(:), pointer     :: q_accumulator_ptr
 
-     type(sll_t_pic_depositer),   pointer                               :: pic_depositer
-     type(sll_t_pic_initializer), pointer                               :: pic_initializer
-     type(sll_t_pic_resampler),   pointer                               :: pic_resampler
-     type(sll_t_pic_visualizer),  pointer                               :: pic_visualizer
+     type(sll_t_pic_depositer_interface),   pointer                               :: pic_depositer_interface
+!     type(sll_t_pic_initializer_interface), pointer                               :: pic_initializer_interface
+!     type(sll_t_pic_resampler_interface),   pointer                               :: pic_resampler_interface
+     type(sll_t_pic_visualizer_interface),  pointer                               :: pic_visualizer_interface
 
      !> uses sll_m_accumulators::sll_t_charge_accumulator_2d
      ! [[file:~/selalib/src/pic_accumulators/sll_m_accumulators.F90::sll_t_charge_accumulator_2d]]
@@ -264,6 +273,9 @@ contains
     close(fileid)
   end subroutine particles_snapshot
 
+
+  ! ------------------------------------------------------------------------------------------------------------------------
+
   !> redefines sll_c_simulation_base_class::init_from_file <!--
   !> [[selalib:src/simulations/simulation_base_class.F90::init_from_file]] -->
 
@@ -271,6 +283,11 @@ contains
     intrinsic :: trim
     class(sll_t_simulation_4d_vp_generic_pic_cartesian), intent(inout) :: sim
     character(len=*), intent(in)                          :: filename
+
+    type(sll_t_initial_density_parameters)  :: initial_density_parameters
+    sll_real64 :: landau_param(2)
+    sll_real64 :: thermal_velocity(2)
+
     sll_int32   :: IO_stat
     sll_int32   :: ierr
     sll_int32   :: j
@@ -457,15 +474,15 @@ contains
                                                   sim%mesh_2d%eta2_min,    &
                                                   sim%mesh_2d%eta2_max,    &
                                                   sim%mesh_2d%num_cells2   )
-    SLL_ALLOCATE( sim%pic_depositer, ierr )
-    SLL_ALLOCATE( sim%pic_initializer, ierr )
+    SLL_ALLOCATE( sim%pic_depositer_interface, ierr )
+    SLL_ALLOCATE( sim%pic_visualizer_interface, ierr )
 
-    if( sim%use_resamplings )then
-      SLL_ALLOCATE( sim%pic_resampler, ierr )
-      sim%remap_period = remap_period
-    end if
+    !    SLL_ALLOCATE( sim%pic_initializer_interface, ierr )
+    !    if( sim%use_resamplings )then
+    !      SLL_ALLOCATE( sim%pic_resampler_interface, ierr )
+    !      sim%remap_period = remap_period
+    !    end if
 
-    SLL_ALLOCATE( sim%pic_visualizer, ierr )
 
     print *, "[simulation] constructing the particle group..."
 
@@ -552,9 +569,21 @@ contains
     sim%domain_is_x_periodic = DOMAIN_IS_X_PERIODIC
     sim%domain_is_y_periodic = DOMAIN_IS_Y_PERIODIC
 
-    ! initialization of the particle group
-    call sim%pic_initializer%set_landau_parameters( sim%particle_group, sim%thermal_speed_ions, ALPHA, KX_LANDAU )
-    !    call sim%particle_group%set_landau_parameters( sim%thermal_speed_ions, ALPHA, KX_LANDAU )
+    ! initial sampling of the particle group
+    landau_param = [ALPHA, KX_LANDAU]
+    thermal_velocity = sim%thermal_speed_ions
+
+    call initial_density_parameters%set_landau_2d2v_parameters(  &
+        landau_param, &
+        thermal_velocity,  &
+        sim%mesh_2d%eta1_min, &
+        sim%mesh_2d%eta1_max, &
+        sim%mesh_2d%eta2_min, &
+        sim%mesh_2d%eta2_max )
+
+    ! previously:
+    ! call sim%pic_initializer_interface%set_landau_parameters( sim%particle_group, sim%thermal_speed_ions, ALPHA, KX_LANDAU )
+    ! call sim%particle_group%set_landau_parameters( sim%thermal_speed_ions, ALPHA, KX_LANDAU )
 
     rand_seed_size = 10
     call random_seed (SIZE=rand_seed_size)
@@ -569,12 +598,17 @@ contains
     sim%target_total_charge = SPECIES_CHARGE * 1._f64 * (XMAX - XMIN) * (YMAX - YMIN)
     enforce_total_charge = .false.
 
-    call sim%pic_initializer%initialize_particle_group( &
-      sim%particle_group, &
-      initial_density_identifier, &
-      sim%target_total_charge,  &
-      enforce_total_charge  &
-    )
+    call sll_s_sample_particle_group(   &
+      sim%particle_group,   &
+      sampling_strategy=sll_p_deterministic_sampling, &
+      initial_density_parameters=initial_density_parameters )
+
+    !    call sim%pic_initializer_interface%initialize_particle_group( &
+    !      sim%particle_group, &
+    !      initial_density_identifier, &
+    !      sim%target_total_charge,  &
+    !      enforce_total_charge  &
+    !    )
 
     ! call sim%particle_group%initializer( initial_density_identifier, sim%target_total_charge, enforce_total_charge, &
     !                                      rand_seed, sim%my_rank, sim%world_size )
@@ -593,7 +627,7 @@ contains
 
     charge_accumulator => sim%q_accumulator_ptr(thread_id+1)%q
 
-    call sim%pic_depositer%charge_deposit_particle_group( &
+    call sim%pic_depositer_interface%charge_deposit_particle_group( &
       sim%particle_group, &
       charge_accumulator, &
       sim%target_total_charge, &
@@ -1003,7 +1037,7 @@ contains
       enforce_total_charge = .false.
       charge_accumulator => sim%q_accumulator_ptr(thread_id+1)%q
 
-      call sim%pic_depositer%charge_deposit_particle_group( &
+      call sim%pic_depositer_interface%charge_deposit_particle_group( &
         sim%particle_group, &
         charge_accumulator, &
         sim%target_total_charge, &
@@ -1077,7 +1111,7 @@ contains
         ! - [[selalib:src/particle_methods/pic_remapped/simple_pic/sll_m_simple_pic_4d_group.F90::simple_pic_4d_visualize_f_slice_x_vx]]
 
         write (field_name, "(A12,I4.4)") 'f_slice_run=', sim%run_nb
-        call sim%pic_visualizer%visualize_particle_group( &
+        call sim%pic_visualizer_interface%visualize_particle_group( &
           sim%particle_group, &
           trim(field_name), &
           plot_np_x, &
@@ -1103,7 +1137,11 @@ contains
           .and. (.not. this_is_the_last_time_loop)  &
         )then
         print *, "Resample the particles..."
-        call sim%pic_resampler%resample_particle_group(sim%particle_group, sim%target_total_charge, enforce_total_charge)
+        !todo: use conservative option
+        call sll_s_resample_particle_group( sim%particle_group )
+
+        ! previous
+        ! call sim%pic_resampler_interface%resample_particle_group(sim%particle_group, sim%target_total_charge, enforce_total_charge)
       end if
 
       if (sim%my_rank == 0 .and. mod(it, sim%plot_period)==0 ) then
