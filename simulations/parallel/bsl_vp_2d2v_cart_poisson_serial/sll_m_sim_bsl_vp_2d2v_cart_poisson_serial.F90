@@ -88,6 +88,7 @@ module sll_m_sim_bsl_vp_2d2v_cart_poisson_serial
   use sll_m_remapper, only: &
     sll_o_apply_remap_4d, &
     sll_o_compute_local_sizes, &
+    sll_s_factorize_in_two_powers_of_two, &
     sll_o_initialize_layout_with_distributed_array, &
     sll_t_layout_2d, &
     sll_t_layout_4d, &
@@ -701,7 +702,6 @@ contains
     type(sll_t_layout_4d), pointer :: sequential_x3x4
     type(sll_t_layout_2d), pointer :: layout2d_par_x1x2
     type(sll_t_layout_2d), pointer :: layout2d_par_x3x4
-    sll_int32 :: power2
     sll_real64 :: delta1
     sll_real64 :: delta2
     sll_real64 :: delta3
@@ -772,26 +772,13 @@ contains
     sequential_x3x4  => sll_f_new_layout_4d( sll_v_world_collective )
     layout2d_par_x1x2 => sll_f_new_layout_2d( sll_v_world_collective )
     layout2d_par_x3x4 => sll_f_new_layout_2d( sll_v_world_collective )
-    
-    power2 = int(log(real(world_size))/log(2.0))
-    ! special case N = 1, so power2 = 0
-    if(power2 == 0) then
-       nproc_x1 = 1
-       nproc_x2 = 1
-       nproc_x3 = 1
-       nproc_x4 = 1
-    end if    
-    if(sll_f_is_even(power2)) then
-       nproc_x1 = 2**(power2/2)
-       nproc_x2 = 2**(power2/2)
-       nproc_x3 = 1
-       nproc_x4 = 1
-    else 
-       nproc_x1 = 2**((power2-1)/2)
-       nproc_x2 = 2**((power2+1)/2)
-       nproc_x3 = 1
-       nproc_x4 = 1
-    end if
+
+    ! Processor layout
+    call sll_s_factorize_in_two_powers_of_two &
+         ( world_size, nproc_x1, nproc_x2 )    
+    nproc_x3 = 1
+    nproc_x4 = 1
+
 
     call sll_o_initialize_layout_with_distributed_array( &
          nc_x1+1, & 
