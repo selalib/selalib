@@ -161,6 +161,8 @@ module sll_m_sim_bsl_gk_3d1v_polar_one_mu
     sll_o_apply_remap_3d, &
     sll_o_apply_remap_4d, &
     sll_o_compute_local_sizes, &
+    sll_s_factorize_in_three_powers_of_two, &
+    sll_s_factorize_in_two_powers_of_two, &
     sll_o_initialize_layout_with_distributed_array, &
     sll_t_layout_3d, &
     sll_t_layout_4d, &
@@ -215,7 +217,6 @@ module sll_m_sim_bsl_gk_3d1v_polar_one_mu
      ! Parallel environment parameters
      sll_int32  :: world_size
      sll_int32  :: my_rank
-     sll_int32  :: power2 ! 2^power2 = number of processes available
      ! Processor mesh sizes
      sll_int32  :: nproc_x1
      sll_int32  :: nproc_x2
@@ -1907,9 +1908,6 @@ subroutine gyroaverage_phi_dk( sim )
     sim%nproc_x3 = sim%world_size
     sim%nproc_x4 = 1
    
-    
-    
-    sim%power2 = int(log(real(sim%world_size))/log(2.0))
 
     !--> Initialization of parallel layout of f4d in (x3,x4) directions
     !-->  (x1,x2) : sequential
@@ -1948,12 +1946,11 @@ subroutine gyroaverage_phi_dk( sim )
     !--> Initialization of parallel layout of f4d in (x1,x2,x4) directions
     !-->  (x1,x2,x4) : parallelized layout
     !-->  (x3) : sequential
-    
-    sim%nproc_x1 = 2**(sim%power2/3)
-    sim%nproc_x2 = 2**(sim%power2/3)
+    call sll_s_factorize_in_three_powers_of_two &
+         ( sim%world_size, &
+         sim%nproc_x1, sim%nproc_x2, sim%nproc_x4 )
     sim%nproc_x3 = 1
-    sim%nproc_x4 = 2**(sim%power2-2*(sim%power2/3))
-     
+    
 
     sim%layout4d_seqx3  => sll_f_new_layout_4d( sll_v_world_collective )
     call sll_o_initialize_layout_with_distributed_array( &
@@ -2103,28 +2100,14 @@ subroutine gyroaverage_phi_dk( sim )
     sll_int32 :: nproc3d_x3
 
 
-    ! layout for sequential operations in x3 
-    sim%power2 = int(log(real(sim%world_size))/log(2.0))
-    !--> special case N = 1, so power2 = 0
-    if(sim%power2 == 0) then
-       sim%nproc_x1 = 1
-       sim%nproc_x2 = 1
-       sim%nproc_x3 = 1
-       sim%nproc_x4 = 1
-    end if
-    
-    if(sll_f_is_even(sim%power2)) then
-       sim%nproc_x1 = 1
-       sim%nproc_x2 = 1
-       sim%nproc_x3 = 2**(sim%power2/2)
-       sim%nproc_x4 = 2**(sim%power2/2)
-    else 
-       sim%nproc_x1 = 1
-       sim%nproc_x2 = 1
-       sim%nproc_x3 = 2**((sim%power2-1)/2)
-       sim%nproc_x4 = 2**((sim%power2+1)/2)
-    end if
-
+    ! layout 
+    call sll_s_factorize_in_two_powers_of_two &
+         ( sim%world_size, &
+         sim%nproc_x3, &
+         sim%nproc_x4 )
+    sim%nproc_x1 = 1
+    sim%nproc_x2 = 1
+  
     !--> Initialization of rho3d_x1x2 and phi3d_x1x2
     !-->  (x1,x2) : sequential
     !-->  x3 : parallelized layout    
