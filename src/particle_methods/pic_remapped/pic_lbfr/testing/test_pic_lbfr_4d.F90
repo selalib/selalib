@@ -63,6 +63,18 @@ program test_pic_lbfr_4d
     sll_f_time_elapsed_since, &
     sll_t_time_mark
 
+  use sll_m_particle_group_base, only: &
+    sll_c_particle_group_base
+
+  use sll_m_initial_density_parameters, only: &
+    sll_t_initial_density_parameters, &
+    sll_p_hat_density_2d2v
+
+  use sll_m_particle_sampling_interface, only : &
+    sll_s_sample_particle_group, &
+    sll_s_resample_particle_group, &
+    sll_p_deterministic_sampling
+
   implicit none
 
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -127,8 +139,11 @@ program test_pic_lbfr_4d
 #define PLOT_CST_DIM4 4
 #define X4_PLOT_CST 0._f64
 
-  type(sll_t_pic_lbfr_4d_group),        pointer     :: p_group
-  type(sll_t_cartesian_mesh_2d),        pointer     :: mesh_2d
+  class(sll_c_particle_group_base),      pointer    :: particle_group
+  class(sll_t_pic_lbfr_4d_group),        pointer    :: particle_lbfr_group
+  type(sll_t_cartesian_mesh_2d),         pointer    :: mesh_2d
+
+  type(sll_t_initial_density_parameters)  :: initial_density_parameters
 
   character(5)      :: ncx_name, ncy_name
 
@@ -204,6 +219,7 @@ program test_pic_lbfr_4d
   logical       :: enforce_total_charge
 
   logical :: DEBUG_MODE
+  logical :: check_property
 
   ! --- end of declarations
 
@@ -240,7 +256,7 @@ program test_pic_lbfr_4d
 
   flow_markers_type = SLL_PIC_LBFR_STRUCTURED
 
-  p_group => sll_f_pic_lbfr_4d_group_new(             &
+  particle_lbfr_group => sll_f_pic_lbfr_4d_group_new( &
         SPECIES_CHARGE,                               &
         SPECIES_MASS,                                 &
         particle_group_id,                            &
@@ -276,6 +292,8 @@ program test_pic_lbfr_4d
         int(NUM_MARKERS_VY/2),                        &
         mesh_2d )
 
+  particle_group => particle_lbfr_group  ! abstract class pointer for polymorphism purpose
+
   ! MCP: parameters for f_target (a hat function, with given centers and radius in every dimension)
   x0    =  0.5 * (X_MAX +X_MIN )
   y0    =  0.5 * (Y_MAX +Y_MIN )
@@ -298,20 +316,35 @@ program test_pic_lbfr_4d
     print*, "[test_pic_lbfr_4d - DEBUG] -- AA B"
   end if
 
-  ! This initializes the particles [[?? file:../pic_particle_initializers/lt_pic_4d_init.F90::sll_lt_pic_4d_init_hat_f]]
+  ! This initializes the particles [[?? file:../pic_particle_initializers/lt_pic_4d_init.F90::sll_lt_pic_4d_init_hat_f]] [to update]
+  call initial_density_parameters%set_hat_density_2d2v_parameters(   &
+    x0, &
+    y0, &
+    vx0, &
+    vy0, &
+    r_x, &
+    r_y, &
+    r_vx, &
+    r_vy, &
+    basis_height, &
+    shift )
 
-  call p_group%set_hat_f0_parameters( x0, y0, vx0, vy0, r_x, r_y, r_vx, r_vy, basis_height, shift )
+  ! call particle_lbfr_group%set_hat_f0_parameters( x0, y0, vx0, vy0, r_x, r_y, r_vx, r_vy, basis_height, shift )
 
   if( DEBUG_MODE )then
     print*, "[test_pic_lbfr_4d - DEBUG] -- AA C"
   end if
 
-  call p_group%initializer( SLL_PIC_LBFR_HAT_F0, target_total_charge, enforce_total_charge )
+  call sll_s_sample_particle_group( &
+    particle_group,   &
+    sampling_strategy=sll_p_deterministic_sampling, &
+    initial_density_parameters=initial_density_parameters )
 
+  ! call p_group%initializer( SLL_PIC_LBFR_HAT_F0, target_total_charge, enforce_total_charge )
 
   print *, "plotting initial f slice in gnuplot format "
 
-  call p_group%pic_lbfr_4d_visualize_f_slice_x_vx( "f_initial", plot_np_x, plot_np_y, plot_np_vx, plot_np_vy, 1 )
+  call particle_lbfr_group%pic_lbfr_4d_visualize_f_slice_x_vx( "f_initial", plot_np_x, plot_np_y, plot_np_vx, plot_np_vy, 1 )
 
   if( DEBUG_MODE )then
     print*, "[test_pic_lbfr_4d - DEBUG] -- AA D"
@@ -327,22 +360,22 @@ program test_pic_lbfr_4d
   write(70,*) "# x_j, y_j, vx_j, vy_j, f_j, f_target, abs( f_j - f_target )"
 
   error = 0.0_f64
-  if( p_group%remapped_f_interpolation_type == SLL_PIC_LBFR_REMAP_WITH_SPLINES )then
+  if( particle_lbfr_group%remapped_f_interpolation_type == SLL_PIC_LBFR_REMAP_WITH_SPLINES )then
 
-    n_nodes_x  = p_group%remapping_cart_grid_n_nodes_x()
-    n_nodes_y  = p_group%remapping_cart_grid_n_nodes_y()
-    n_nodes_vx = p_group%remapping_cart_grid_n_nodes_vx()
-    n_nodes_vy = p_group%remapping_cart_grid_n_nodes_vy()
+    n_nodes_x  = particle_lbfr_group%remapping_cart_grid_n_nodes_x()
+    n_nodes_y  = particle_lbfr_group%remapping_cart_grid_n_nodes_y()
+    n_nodes_vx = particle_lbfr_group%remapping_cart_grid_n_nodes_vx()
+    n_nodes_vy = particle_lbfr_group%remapping_cart_grid_n_nodes_vy()
 
-    h_x    = p_group%remapping_cart_grid%delta_eta1
-    h_y    = p_group%remapping_cart_grid%delta_eta2
-    h_vx   = p_group%remapping_cart_grid%delta_eta3
-    h_vy   = p_group%remapping_cart_grid%delta_eta4
+    h_x    = particle_lbfr_group%remapping_cart_grid%delta_eta1
+    h_y    = particle_lbfr_group%remapping_cart_grid%delta_eta2
+    h_vx   = particle_lbfr_group%remapping_cart_grid%delta_eta3
+    h_vy   = particle_lbfr_group%remapping_cart_grid%delta_eta4
 
-    x_min    = p_group%remapping_cart_grid%eta1_min
-    y_min    = p_group%remapping_cart_grid%eta2_min
-    vx_min   = p_group%remapping_cart_grid%eta3_min
-    vy_min   = p_group%remapping_cart_grid%eta4_min
+    x_min    = particle_lbfr_group%remapping_cart_grid%eta1_min
+    y_min    = particle_lbfr_group%remapping_cart_grid%eta2_min
+    vx_min   = particle_lbfr_group%remapping_cart_grid%eta3_min
+    vy_min   = particle_lbfr_group%remapping_cart_grid%eta4_min
 
     d_vol = h_x * h_y * h_vx * h_vy
 
@@ -359,9 +392,13 @@ program test_pic_lbfr_4d
           do j_vy = 1, n_nodes_vy
             vy_j = vy_min + (j_vy-1) * h_vy
 
-            f_j = real( p_group%remapped_f_splines_coefficients(j_x,j_y,j_vx,j_vy)/d_vol ,f64)
+            f_j = real( particle_lbfr_group%remapped_f_splines_coefficients(j_x,j_y,j_vx,j_vy)/d_vol ,f64)
 
-            SLL_ASSERT( sll_f_x_is_in_domain_2d( x_j, y_j, p_group%space_mesh_2d,  DOMAIN_IS_X_PERIODIC, DOMAIN_IS_Y_PERIODIC ) )
+            if( DEBUG_MODE )then
+              check_property = sll_f_x_is_in_domain_2d( x_j, y_j, particle_lbfr_group%space_mesh_2d, &
+                  DOMAIN_IS_X_PERIODIC, DOMAIN_IS_Y_PERIODIC )
+              SLL_ASSERT( check_property )
+            end if
 
             f_target = sll_f_eval_hat_function(x0,y0,vx0,vy0,r_x,r_y,r_vx,r_vy, basis_height, shift, x_j, y_j, vx_j, vy_j)
             error = max( error, abs( f_j - f_target ) )
@@ -378,7 +415,7 @@ program test_pic_lbfr_4d
       print*, "[test_pic_lbfr_4d - DEBUG] -- AA  12"
     end if
 
-    SLL_ASSERT( p_group%remapped_f_interpolation_type == SLL_PIC_LBFR_REMAP_WITH_SPARSE_GRIDS )
+    SLL_ASSERT( particle_lbfr_group%remapped_f_interpolation_type == SLL_PIC_LBFR_REMAP_WITH_SPARSE_GRIDS )
 
     if( DEBUG_MODE )then
       print*, "[test_pic_lbfr_4d - DEBUG] -- AA  24"
@@ -388,16 +425,21 @@ program test_pic_lbfr_4d
 
     if( evaluate_error_on_sparse_grid )then
 
-      do j=1, p_group%sparse_grid_interpolator%size_basis
+      do j=1, particle_lbfr_group%sparse_grid_interpolator%size_basis
 
-          f_j = p_group%pic_lbfr_4d_interpolate_value_of_remapped_f( p_group%sparse_grid_interpolator%hierarchy(j)%coordinate )
+          f_j = particle_lbfr_group%pic_lbfr_4d_interpolate_value_of_remapped_f( &
+                  particle_lbfr_group%sparse_grid_interpolator%hierarchy(j)%coordinate )
 
-          x_j  = p_group%sparse_grid_interpolator%hierarchy(j)%coordinate(1)
-          y_j  = p_group%sparse_grid_interpolator%hierarchy(j)%coordinate(2)
-          vx_j = p_group%sparse_grid_interpolator%hierarchy(j)%coordinate(3)
-          vy_j = p_group%sparse_grid_interpolator%hierarchy(j)%coordinate(4)
+          x_j  = particle_lbfr_group%sparse_grid_interpolator%hierarchy(j)%coordinate(1)
+          y_j  = particle_lbfr_group%sparse_grid_interpolator%hierarchy(j)%coordinate(2)
+          vx_j = particle_lbfr_group%sparse_grid_interpolator%hierarchy(j)%coordinate(3)
+          vy_j = particle_lbfr_group%sparse_grid_interpolator%hierarchy(j)%coordinate(4)
 
-          SLL_ASSERT( sll_f_x_is_in_domain_2d( x_j, y_j, p_group%space_mesh_2d, DOMAIN_IS_X_PERIODIC, DOMAIN_IS_Y_PERIODIC ) )
+          if( DEBUG_MODE )then
+          check_property = ( sll_f_x_is_in_domain_2d( x_j, y_j, particle_lbfr_group%space_mesh_2d, &
+              DOMAIN_IS_X_PERIODIC, DOMAIN_IS_Y_PERIODIC ) )
+          SLL_ASSERT( check_property )
+          end if
 
           f_target = sll_f_eval_hat_function(x0,y0,vx0,vy0,r_x,r_y,r_vx,r_vy, basis_height, shift, x_j, y_j, vx_j, vy_j)
           error = max( error, abs( f_j - f_target ) )
@@ -412,15 +454,15 @@ program test_pic_lbfr_4d
       n_nodes_vx = plot_np_vx - 1
       n_nodes_vy = plot_np_vy - 1
 
-      x_min    = p_group%remapping_grid_eta_min(1)
-      y_min    = p_group%remapping_grid_eta_min(2)
-      vx_min   = p_group%remapping_grid_eta_min(3)
-      vy_min   = p_group%remapping_grid_eta_min(4)
+      x_min    = particle_lbfr_group%remapping_grid_eta_min(1)
+      y_min    = particle_lbfr_group%remapping_grid_eta_min(2)
+      vx_min   = particle_lbfr_group%remapping_grid_eta_min(3)
+      vy_min   = particle_lbfr_group%remapping_grid_eta_min(4)
 
-      h_x    = (p_group%remapping_grid_eta_max(1) - x_min)  / n_nodes_x
-      h_y    = (p_group%remapping_grid_eta_max(2) - y_min)  / n_nodes_y
-      h_vx   = (p_group%remapping_grid_eta_max(3) - vx_min) / n_nodes_vx
-      h_vy   = (p_group%remapping_grid_eta_max(4) - vy_min) / n_nodes_vy
+      h_x    = (particle_lbfr_group%remapping_grid_eta_max(1) - x_min)  / n_nodes_x
+      h_y    = (particle_lbfr_group%remapping_grid_eta_max(2) - y_min)  / n_nodes_y
+      h_vx   = (particle_lbfr_group%remapping_grid_eta_max(3) - vx_min) / n_nodes_vx
+      h_vy   = (particle_lbfr_group%remapping_grid_eta_max(4) - vy_min) / n_nodes_vy
 
       do j_x = 1, n_nodes_x
         x_j = x_min + (j_x-1) * h_x
@@ -439,9 +481,9 @@ program test_pic_lbfr_4d
               eta(3) = vx_j
               eta(4) = vy_j
 
-              f_j = p_group%pic_lbfr_4d_interpolate_value_of_remapped_f( eta )
+              f_j = particle_lbfr_group%pic_lbfr_4d_interpolate_value_of_remapped_f( eta )
 
-              SLL_ASSERT( sll_f_x_is_in_domain_2d( x_j, y_j, p_group%space_mesh_2d,  DOMAIN_IS_X_PERIODIC, DOMAIN_IS_Y_PERIODIC ) )
+              SLL_ASSERT( sll_f_x_is_in_domain_2d( x_j, y_j, particle_lbfr_group%space_mesh_2d,  DOMAIN_IS_X_PERIODIC, DOMAIN_IS_Y_PERIODIC ) )
 
               f_target = sll_f_eval_hat_function(x0,y0,vx0,vy0,r_x,r_y,r_vx,r_vy, basis_height, shift, x_j, y_j, vx_j, vy_j)
               error = max( error, abs( f_j - f_target ) )
@@ -473,40 +515,41 @@ program test_pic_lbfr_4d
 
   ! loop over all particles (taken from [[file:../simulation/simulation_4d_vp_lt_pic_cartesian.F90]])
 
-  do k = 1, p_group%n_particles
+  do k = 1, particle_lbfr_group%n_particles
 
      ! -- --  push the k-th particle [begin]  -- --
 
      ! get particle position
-     coords = p_group%get_x(k) ! [[selalib:src/particle_methods/pic_remapped/sll_m_remapped_pic_base.F90::get_v]]
+     coords = particle_lbfr_group%get_x(k) ! [[selalib:src/particle_methods/pic_remapped/sll_m_remapped_pic_base.F90::get_v]]
      x_k = coords(1)
      y_k = coords(2)
 
      ! get particle speed
-     coords = p_group%get_v(k) ! [[selalib:src/particle_methods/pic_remapped/sll_m_remapped_pic_base.F90::get_v]]
+     coords = particle_lbfr_group%get_v(k) ! [[selalib:src/particle_methods/pic_remapped/sll_m_remapped_pic_base.F90::get_v]]
      vx_k = coords(1)
      vy_k = coords(2)
 
      ! Flow is cte + A*(x,y,vx,vy), where det A = 1, cf [[test_forward_push]]
      call test_forward_push(x_k, y_k, vx_k, vy_k, new_x_k, new_y_k, new_vx_k, new_vy_k)
 
-     if( .not. sll_f_x_is_in_domain_2d( new_x_k, new_y_k, p_group%space_mesh_2d, DOMAIN_IS_X_PERIODIC, DOMAIN_IS_Y_PERIODIC ) )then
+     if( .not. sll_f_x_is_in_domain_2d( new_x_k, new_y_k, particle_lbfr_group%space_mesh_2d, &
+        DOMAIN_IS_X_PERIODIC, DOMAIN_IS_Y_PERIODIC ) )then
         !! -- -- put outside particles back in domain
         ! [[selalib:src/particle_methods/pic_remapped/remapped_pic_utilities/sll_m_remapped_pic_utilities.F90::apply_periodic_bc_on_cartesian_mesh_2d]]
-        call sll_s_apply_periodic_bc_on_cartesian_mesh_2d( p_group%space_mesh_2d, new_x_k, new_y_k)
+        call sll_s_apply_periodic_bc_on_cartesian_mesh_2d( particle_lbfr_group%space_mesh_2d, new_x_k, new_y_k)
      end if
 
      ! set particle position
      coords(1) = new_x_k
      coords(2) = new_y_k
      coords(3) = 0.0_f64
-     call p_group%set_x(k, coords)
+     call particle_lbfr_group%set_x(k, coords)
 
      ! set particle speed
      coords(1) = new_vx_k
      coords(2) = new_vy_k
      coords(3) = 0.0_f64
-     call p_group%set_v(k, coords)
+     call particle_lbfr_group%set_v(k, coords)
 
   end do
 
@@ -519,7 +562,7 @@ program test_pic_lbfr_4d
   end if
 
   print *, "plotting transported f slice in gnuplot format "
-  call p_group%pic_lbfr_4d_visualize_f_slice_x_vx( "f_transported", plot_np_x, plot_np_y, plot_np_vx, plot_np_vy, 1 )
+  call particle_lbfr_group%pic_lbfr_4d_visualize_f_slice_x_vx( "f_transported", plot_np_x, plot_np_y, plot_np_vx, plot_np_vy, 1 )
 
   ! D --- remap the particle group to get the values of transported f on the remapping grid
 
@@ -528,11 +571,13 @@ program test_pic_lbfr_4d
     print*, "[test_pic_lbfr_4d]  Error (875454367554242): ltp remapping not implemented yet, stop."
     stop
     print*, "[lt_pic_4d_init_tester]  OLD VERSION: calling sll_lt_pic_4d_write_f_on_remap_grid..."
-    ! OLD: call sll_lt_pic_4d_write_f_on_remap_grid( p_group )
+    ! OLD: call sll_lt_pic_4d_write_f_on_remap_grid( particle_lbfr_group )
 
   else if (remap_type == 'bsl_ltp') then
-    ! remap with [[??? file:lt_pic_4d_utilities.F90::sll_lt_pic_4d_write_bsl_f_on_remap_grid]]
-    call p_group%resample( target_total_charge, enforce_total_charge )
+    ! remap with [[??? file:lt_pic_4d_utilities.F90::sll_lt_pic_4d_write_bsl_f_on_remap_grid]]  [to update]
+
+    call sll_s_resample_particle_group( particle_group )
+    !    call p_group%resample( target_total_charge, enforce_total_charge )
 
   else
     print*, 'ERROR (code=656536756757657): option is ltp (WARNING: not implemented yet) or bsl_ltp'
@@ -540,13 +585,13 @@ program test_pic_lbfr_4d
   end if
 
   print *, "plotting remapped f slice in gnuplot format "
-  call p_group%pic_lbfr_4d_visualize_f_slice_x_vx( "f_remapped", plot_np_x, plot_np_y, plot_np_vx, plot_np_vy, 1 )
+  call particle_lbfr_group%pic_lbfr_4d_visualize_f_slice_x_vx( "f_remapped", plot_np_x, plot_np_y, plot_np_vx, plot_np_vy, 1 )
 
   remaptime = sll_f_time_elapsed_since(remapstart)
 
   ! formats at [[http://www.cs.mtu.edu/~shene/COURSES/cs201/NOTES/chap05/format.html]]
   write(*,'(A,A,ES8.2,A,A,ES8.2,A)') trim(remap_type),' remap time = ',remaptime,' sec',&
-       ' ie ',p_group%n_particles/remaptime,' remapped-ptc/sec'
+       ' ie ',particle_lbfr_group%n_particles/remaptime,' remapped-ptc/sec'
 
 
 
@@ -558,22 +603,22 @@ program test_pic_lbfr_4d
   write(80,*) "# x_j, y_j, vx_j, vy_j, f_j, f_target, abs( f_j - f_target )"
 
   error = 0.0_f64
-  if( p_group%remapped_f_interpolation_type == SLL_PIC_LBFR_REMAP_WITH_SPLINES )then
+  if( particle_lbfr_group%remapped_f_interpolation_type == SLL_PIC_LBFR_REMAP_WITH_SPLINES )then
 
-    n_nodes_x  = p_group%remapping_cart_grid_n_nodes_x()
-    n_nodes_y  = p_group%remapping_cart_grid_n_nodes_y()
-    n_nodes_vx = p_group%remapping_cart_grid_n_nodes_vx()
-    n_nodes_vy = p_group%remapping_cart_grid_n_nodes_vy()
+    n_nodes_x  = particle_lbfr_group%remapping_cart_grid_n_nodes_x()
+    n_nodes_y  = particle_lbfr_group%remapping_cart_grid_n_nodes_y()
+    n_nodes_vx = particle_lbfr_group%remapping_cart_grid_n_nodes_vx()
+    n_nodes_vy = particle_lbfr_group%remapping_cart_grid_n_nodes_vy()
 
-    h_x    = p_group%remapping_cart_grid%delta_eta1
-    h_y    = p_group%remapping_cart_grid%delta_eta2
-    h_vx   = p_group%remapping_cart_grid%delta_eta3
-    h_vy   = p_group%remapping_cart_grid%delta_eta4
+    h_x    = particle_lbfr_group%remapping_cart_grid%delta_eta1
+    h_y    = particle_lbfr_group%remapping_cart_grid%delta_eta2
+    h_vx   = particle_lbfr_group%remapping_cart_grid%delta_eta3
+    h_vy   = particle_lbfr_group%remapping_cart_grid%delta_eta4
 
-    x_min    = p_group%remapping_cart_grid%eta1_min
-    y_min    = p_group%remapping_cart_grid%eta2_min
-    vx_min   = p_group%remapping_cart_grid%eta3_min
-    vy_min   = p_group%remapping_cart_grid%eta4_min
+    x_min    = particle_lbfr_group%remapping_cart_grid%eta1_min
+    y_min    = particle_lbfr_group%remapping_cart_grid%eta2_min
+    vx_min   = particle_lbfr_group%remapping_cart_grid%eta3_min
+    vy_min   = particle_lbfr_group%remapping_cart_grid%eta4_min
 
     d_vol = h_x * h_y * h_vx * h_vy
 
@@ -594,14 +639,14 @@ program test_pic_lbfr_4d
               print*, "[test_pic_lbfr_4d - DEBUG] -- AA -- ddd"
             end if
 
-            f_j = real( p_group%remapped_f_splines_coefficients(j_x,j_y,j_vx,j_vy)/d_vol ,f64)
+            f_j = real( particle_lbfr_group%remapped_f_splines_coefficients(j_x,j_y,j_vx,j_vy)/d_vol ,f64)
             call sll_s_test_backward_push(x_j, y_j, vx_j, vy_j, new_x, new_y, new_vx, new_vy)
 
-            if( .not. sll_f_x_is_in_domain_2d( new_x, new_y, p_group%space_mesh_2d,   &
+            if( .not. sll_f_x_is_in_domain_2d( new_x, new_y, particle_lbfr_group%space_mesh_2d,   &
                                          DOMAIN_IS_X_PERIODIC, DOMAIN_IS_Y_PERIODIC ) &
                  ) then
               !! -- -- put outside particles back in domain
-              call sll_s_apply_periodic_bc_on_cartesian_mesh_2d( p_group%space_mesh_2d, new_x, new_y)
+              call sll_s_apply_periodic_bc_on_cartesian_mesh_2d( particle_lbfr_group%space_mesh_2d, new_x, new_y)
             end if
 
             f_target = sll_f_eval_hat_function(x0,y0,vx0,vy0,r_x,r_y,r_vx,r_vy, basis_height, shift, new_x, new_y, new_vx, new_vy)
@@ -619,35 +664,36 @@ program test_pic_lbfr_4d
       print*, "[test_pic_lbfr_4d - DEBUG] -- SG -- 1"
     end if
 
-    SLL_ASSERT( p_group%remapped_f_interpolation_type == SLL_PIC_LBFR_REMAP_WITH_SPARSE_GRIDS )
+    SLL_ASSERT( particle_lbfr_group%remapped_f_interpolation_type == SLL_PIC_LBFR_REMAP_WITH_SPARSE_GRIDS )
 
     if( DEBUG_MODE )then
       print*, "[test_pic_lbfr_4d - DEBUG] -- SG -- 2"
     end if
 
-    do j=1, p_group%sparse_grid_interpolator%size_basis
+    do j=1, particle_lbfr_group%sparse_grid_interpolator%size_basis
 
         if( DEBUG_MODE )then
           print*, "[test_pic_lbfr_4d - DEBUG] -- SG -- 3a - j =", j
         end if
 
-        f_j = p_group%pic_lbfr_4d_interpolate_value_of_remapped_f( p_group%sparse_grid_interpolator%hierarchy(j)%coordinate )
+        f_j = particle_lbfr_group%pic_lbfr_4d_interpolate_value_of_remapped_f( &
+                  particle_lbfr_group%sparse_grid_interpolator%hierarchy(j)%coordinate )
 
         if( DEBUG_MODE )then
           print*, "[test_pic_lbfr_4d - DEBUG] -- SG -- 3b - f_j =", f_j
         end if
 
-        x_j  = p_group%sparse_grid_interpolator%hierarchy(j)%coordinate(1)
-        y_j  = p_group%sparse_grid_interpolator%hierarchy(j)%coordinate(2)
-        vx_j = p_group%sparse_grid_interpolator%hierarchy(j)%coordinate(3)
-        vy_j = p_group%sparse_grid_interpolator%hierarchy(j)%coordinate(4)
+        x_j  = particle_lbfr_group%sparse_grid_interpolator%hierarchy(j)%coordinate(1)
+        y_j  = particle_lbfr_group%sparse_grid_interpolator%hierarchy(j)%coordinate(2)
+        vx_j = particle_lbfr_group%sparse_grid_interpolator%hierarchy(j)%coordinate(3)
+        vy_j = particle_lbfr_group%sparse_grid_interpolator%hierarchy(j)%coordinate(4)
         call sll_s_test_backward_push(x_j, y_j, vx_j, vy_j, new_x, new_y, new_vx, new_vy)
 
-        if( .not. sll_f_x_is_in_domain_2d( new_x, new_y, p_group%space_mesh_2d,   &
+        if( .not. sll_f_x_is_in_domain_2d( new_x, new_y, particle_lbfr_group%space_mesh_2d,   &
                                      DOMAIN_IS_X_PERIODIC, DOMAIN_IS_Y_PERIODIC ) &
              ) then
           !! -- -- put outside particles back in domain
-          call sll_s_apply_periodic_bc_on_cartesian_mesh_2d( p_group%space_mesh_2d, new_x, new_y)
+          call sll_s_apply_periodic_bc_on_cartesian_mesh_2d( particle_lbfr_group%space_mesh_2d, new_x, new_y)
         end if
 
 
@@ -684,19 +730,19 @@ program test_pic_lbfr_4d
     !    X3_PLOT_CST,      &
     !    X4_PLOT_CST,      &
     !    plotting_mesh_2d, &
-    !    p_group    &
+    !    particle_lbfr_group    &
     !    )
 
 
   write(ncx_name,'(i3)') NC_X
   write(ncy_name,'(i3)') NC_Y
   open(83,file='positions_and_speeds_'//trim(adjustl(ncx_name))//'x'//trim(adjustl(ncy_name))//'.dat')
-  do k = 1, p_group%n_particles
-     coords = p_group%get_x(k)
+  do k = 1, particle_lbfr_group%n_particles
+     coords = particle_lbfr_group%get_x(k)
      x_k = coords(1)
      y_k = coords(2)
 
-     coords = p_group%get_v(k)
+     coords = particle_lbfr_group%get_v(k)
      vx_k = coords(1)
      vy_k = coords(2)
 
