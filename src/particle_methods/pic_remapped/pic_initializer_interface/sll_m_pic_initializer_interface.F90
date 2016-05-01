@@ -16,7 +16,7 @@
 !**************************************************************
 
 
-module sll_m_pic_initializers
+module sll_m_pic_initializer_interface
 
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_assert.h"
@@ -33,13 +33,13 @@ module sll_m_pic_initializers
   implicit none
 
   public :: &
-    sll_t_pic_initializer
+    sll_t_pic_initializer_interface
 
   private
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 
-  type sll_t_pic_initializer
+  type sll_t_pic_initializer_interface
 
       !   no member fields for the moment
 
@@ -49,7 +49,7 @@ module sll_m_pic_initializers
       procedure :: set_landau_parameters
       procedure :: set_hat_f0_parameters
 
-  end type sll_t_pic_initializer
+  end type sll_t_pic_initializer_interface
 
 
 contains
@@ -63,7 +63,7 @@ contains
           enforce_total_charge  &  !< whether charge must be conserved
           )
 
-    class(sll_t_pic_initializer),               intent( inout )        :: self
+    class(sll_t_pic_initializer_interface),     intent( inout )        :: self
     class(sll_c_particle_group_base), pointer,  intent( inout )        :: particle_group
     sll_int32,                                  intent( in    )        :: initial_density_identifier
     sll_real64,                                 intent( in ), optional :: target_total_charge
@@ -102,7 +102,7 @@ contains
           thermal_speed, alpha, k_landau &
           )
 
-    class(sll_t_pic_initializer),               intent( inout )        :: self
+    class(sll_t_pic_initializer_interface),     intent( inout )        :: self
     class(sll_c_particle_group_base), pointer,  intent( inout )        :: particle_group
     sll_real64,                                 intent( in    )        :: thermal_speed
     sll_real64,                                 intent( in    )        :: alpha
@@ -126,7 +126,7 @@ contains
           x0, y0, vx0, vy0, r_x, r_y, r_vx, r_vy, basis_height, shift &
           )
 
-    class(sll_t_pic_initializer),                 intent( inout )        :: self
+    class(sll_t_pic_initializer_interface),       intent( inout )        :: self
     class(sll_c_particle_group_base), pointer,    intent( inout )        :: particle_group
     sll_real64,                                   intent( in    )        :: x0
     sll_real64,                                   intent( in    )        :: y0
@@ -151,4 +151,4 @@ contains
 
   end subroutine set_hat_f0_parameters
 
-end module  sll_m_pic_initializers
+end module  sll_m_pic_initializer_interface
