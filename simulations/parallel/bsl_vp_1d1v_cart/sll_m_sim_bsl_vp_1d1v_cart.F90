@@ -1020,7 +1020,7 @@ contains
         sim%tR             = 0.0_f64
         sim%turn_drive_off = .false.
         sim%Edrmax         = 0.0_f64
-        sim%omegadr        = 0.0_f64
+        sim%omegadr        = 1.0_f64
 
       case default
         err_msg = '#drive_type '//drive_type//' not implemented'
@@ -1412,7 +1412,7 @@ contains
                MPI_SUM,              &
                j_glob )
 
-          sim%Edrmax = - sum(j_glob) / real(np_x1,f64)
+          sim%Edrmax = sum(j_glob) / real(np_x1,f64)
           print*, 'Edrmax', sim%Edrmax
 
           istep = 0
