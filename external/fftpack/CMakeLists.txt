@@ -17,8 +17,13 @@ ADD_LIBRARY(dfftpack STATIC ${DFFTPACK_SRCS})
 SET(FFTPACK_LIBRARIES dfftpack)
 INSTALL(TARGETS dfftpack ARCHIVE DESTINATION lib)
 
+# New version of FFTPACK (this will substitute old 'dfftpack')
 ADD_LIBRARY(fftpack5 STATIC fftpack5.f90)
 
+# Every external library should be installed (otherwise 'package' does not work)
+INSTALL(TARGETS fftpack5 ARCHIVE DESTINATION lib)
+
+# CTest
 IF(BUILD_TESTING)
   ADD_EXECUTABLE(test_fftpack5 fftpack5_prb.f90)
   TARGET_LINK_LIBRARIES(test_fftpack5 fftpack5)
