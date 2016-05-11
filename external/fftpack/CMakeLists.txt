@@ -16,3 +16,10 @@ SET(DFFTPACK_SRCS zfftb.f cfftb1.f zfftf.f cfftf1.f zffti.f cffti1.f
 ADD_LIBRARY(dfftpack STATIC ${DFFTPACK_SRCS})
 SET(FFTPACK_LIBRARIES dfftpack)
 INSTALL(TARGETS dfftpack ARCHIVE DESTINATION lib)
+
+ADD_LIBRARY(fftpack5 STATIC fftpack5.f90)
+
+IF(BUILD_TESTING)
+  ADD_EXECUTABLE(test_fftpack5 fftpack5_prb.f90)
+  TARGET_LINK_LIBRARIES(test_fftpack5 fftpack5)
+ENDIF(BUILD_TESTING)
