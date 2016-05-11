@@ -78,8 +78,7 @@ message( STATUS "COMPILER: \"${FC}\"" )
 # Extract file paths of all libraries
 set( libpaths )
 foreach( lib ${SLL_LIBS} )
-  get_target_property( libpath ${lib} FILE_LOCATION )
-  list( APPEND libpaths ${libpath} )
+  list( APPEND libpaths $<TARGET_FILE:${lib}> )
 endforeach()
 
 # CMake custom command: repackage SeLaLib into single archive "libselalib.a"
