@@ -171,6 +171,7 @@ module sll_m_sim_bsl_vp_1d1v_cart
   implicit none
 
   public :: &
+    sll_s_change_equilibrium_function_vp2d_par_cart, &
     sll_s_change_initial_function_vp2d_par_cart, &
     sll_s_delete_vp2d_par_cart, &
     sll_f_new_vp2d_par_cart, &
@@ -310,7 +311,7 @@ contains
   end subroutine sll_s_change_initial_function_vp2d_par_cart
 
   !ES enable externally defined equilibrium function  
-  subroutine change_equilibrium_function_vp2d_par_cart( sim,        &
+  subroutine sll_s_change_equilibrium_function_vp2d_par_cart( sim,        &
                                                         equil_func, &
                                                         params,     &
                                                         num_params)
@@ -345,7 +346,7 @@ contains
       sim%equil_func_params(i) = params(i)
     enddo
     
-  end subroutine change_equilibrium_function_vp2d_par_cart
+  end subroutine sll_s_change_equilibrium_function_vp2d_par_cart
 
   subroutine init_vp2d_par_cart( sim, filename, num_run )
 
