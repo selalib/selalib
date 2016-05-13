@@ -1,8 +1,8 @@
 !> @defgroup particle_types sll_particle_types
 !> @brief
-!> Library implementing particle types for pic_basic.
+!> Create particle types.
+!> @author Katharina Kormann, IPP
 !> @details
 !> ...
 !>
-!> @author Katharina Kormann, IPP
 !> @todo implement control variates

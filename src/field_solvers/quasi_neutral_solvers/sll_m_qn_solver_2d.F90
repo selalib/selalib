@@ -1,11 +1,5 @@
-
-!***************************************************************************
-!
-! Selalib 2012     
-! Module: sll_qns2d_angular_spect_method_seq.F90
-!
 !> @brief 
-!> Selalib 2D (r, theta) quasi-neutral solver with angular spectral method
+!> quasi-neutral solver with angular spectral method
 !> Start date: April 10, 2012
 !> Last modification: May 04, 2012
 !   
