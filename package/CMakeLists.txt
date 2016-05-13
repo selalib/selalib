@@ -11,7 +11,10 @@ foreach( lib ${library_targets} )
   if( ${lib} MATCHES "sll_[a-zA-Z0-9]" )
     list( APPEND SLL_LIBS ${lib} )
   else()
-    list( APPEND SLL_EXT ${lib} )
+    get_target_property( libpath ${lib} SOURCE_DIR )
+    if( libpath MATCHES "${CMAKE_SOURCE_DIR}/external" )
+      list( APPEND SLL_EXT ${lib} )
+    endif()
   endif()
 endforeach()
 
@@ -72,14 +75,18 @@ message( STATUS "COMPILER: \"${FC}\"" )
 
 #===============================================================================
 
+# Extract file paths of all libraries
+set( libpaths )
+foreach( lib ${SLL_LIBS} )
+  list( APPEND libpaths $<TARGET_FILE:${lib}> )
+endforeach()
+
 # CMake custom command: repackage SeLaLib into single archive "libselalib.a"
 # NOTE: Command does not run if file is newer than its dependencies
-# TODO: this can be handled entirely by CMake
 set( SLL_LIB "${CMAKE_CURRENT_BINARY_DIR}/libselalib.a" )
 add_custom_command( OUTPUT ${SLL_LIB}
   DEPENDS ${SLL_LIBS}
-  COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/make_package.py
-  WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
+  COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/make_package.py ${SLL_LIB} ${libpaths}
   COMMENT "Repackage all static libraries into a single archive: 'libselalib.a'"
   VERBATIM )
 
