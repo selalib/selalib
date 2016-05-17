@@ -149,7 +149,6 @@ character(len=*), intent(in)    :: mesh_name   !< mesh name
 sll_real64, intent(in)          :: array(:,:)  !< data array
 character(len=*), intent(in)    :: array_name  !< array name (hdf5 dataset)
 sll_int32, intent(out)          :: error       !< error code
-sll_int32                       :: file_id     !< hdf5 file unit number
 sll_int32                       :: npoints_x1  !< x nodes number
 sll_int32                       :: npoints_x2  !< y nodes number
 sll_int32, intent(in), optional :: xmffile_id  !< xmf file unit number
@@ -157,6 +156,8 @@ character(len=4), optional      :: center      !< "Node" or "Cell"
 
 #ifndef NOHDF5
 integer(hid_t) :: hfile_id
+#else
+sll_int32                       :: file_id     !< hdf5 file unit number
 #endif
 
 
@@ -200,7 +201,6 @@ character(len=*), intent(in)    :: mesh_name    !< mesh name
 sll_real64, intent(in)          :: array(:,:,:) !< data array
 character(len=*), intent(in)    :: array_name   !< hdf5 dataset name
 sll_int32, intent(out)          :: error        !< error code
-sll_int32                       :: file_id      !< hdf5 file unit number
 sll_int32, intent(in), optional :: xmffile_id   !< xmf file unit number
 character(len=4), optional      :: center       !< "Node" or "Cell"
 sll_int32                       :: npoints_x1   !< x nodes number
@@ -209,6 +209,8 @@ sll_int32                       :: npoints_x3   !< z nodes number
     
 #ifndef NOHDF5
 integer(hid_t) :: hfile_id
+#else
+sll_int32                       :: file_id      !< hdf5 file unit number
 #endif
 
 npoints_x1 = size(array,1)
