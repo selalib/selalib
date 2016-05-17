@@ -121,6 +121,7 @@ module sll_m_sim_bsl_dk_3d1v_polar_field_aligned
   use sll_m_gnuplot, only: &
     sll_o_gnuplot_1d
 
+  use hdf5, only: hid_t
   use sll_m_hdf5_io_serial, only: &
     sll_o_hdf5_file_close, &
     sll_o_hdf5_file_create, &
@@ -2600,7 +2601,8 @@ contains
 
     sll_real64, allocatable :: x2(:,:), x3(:,:)
     sll_int32               :: i, j, nnodes_x2, nnodes_x3
-    sll_int32               :: file_id, error
+    sll_int32               :: error
+    integer(hid_t)          :: file_id
 
     nnodes_x2 = mesh_x2%num_cells+1
     nnodes_x3 = mesh_x3%num_cells+1
