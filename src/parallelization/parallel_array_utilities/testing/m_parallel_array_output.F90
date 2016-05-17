@@ -66,7 +66,7 @@ subroutine write_mesh_4d(mesh)
 
   type(sll_t_cartesian_mesh_4d), intent(in) :: mesh
   sll_int32                               :: error
-  integer(hid_t)                          :: file_id
+  integer(hid_t)                          :: file_id=-1
   sll_real64, dimension(:), allocatable   :: eta1
   sll_real64, dimension(:), allocatable   :: eta2
   sll_real64, dimension(:), allocatable   :: eta3
