@@ -103,9 +103,10 @@ tx => sll_f_new_coordinate_transformation_2d_analytic( &
 
 mesh_4d => mx * mv
 
-if (prank == MPI_MASTER) call sll_o_display(mesh_4d)
-
-call write_mesh_4d(mesh_4d)
+if (prank == MPI_MASTER) then
+  call sll_o_display(mesh_4d)
+  call write_mesh_4d(mesh_4d)
+end if
 
 !Layout for plotting
 layout => sll_f_new_layout_4d( sll_v_world_collective )
