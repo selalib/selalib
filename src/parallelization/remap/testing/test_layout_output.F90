@@ -22,6 +22,7 @@ program test_layout_output
 #include "sll_working_precision.h"
 
   use hdf5, only: &
+    hid_t, &
     hsize_t, &
     hssize_t
 
@@ -86,6 +87,7 @@ program test_layout_output
   sll_real64                                :: tcpu2
 
   sll_int32                                 :: file_id
+  integer(hid_t)                            :: hfile_id
  
   character(len=9), parameter               :: filename = "layout.h5"
 
@@ -143,9 +145,9 @@ program test_layout_output
   offset(3) = int(sll_o_get_layout_k_min( layout, myrank ) - 1,HSIZE_T)
 
   comm   = sll_v_world_collective%comm
-  call sll_o_hdf5_file_create('layout3d.h5',comm,file_id,error)
-  call sll_o_hdf5_write_array(file_id,dims,offset,dble(array),'array',error)
-  call sll_o_hdf5_file_close(file_id,error)
+  call sll_o_hdf5_file_create('layout3d.h5',comm,hfile_id,error)
+  call sll_o_hdf5_write_array(hfile_id,dims,offset,dble(array),'array',error)
+  call sll_o_hdf5_file_close(hfile_id,error)
 
   call sll_o_delete( layout )
   SLL_DEALLOCATE_ARRAY(array, error)
