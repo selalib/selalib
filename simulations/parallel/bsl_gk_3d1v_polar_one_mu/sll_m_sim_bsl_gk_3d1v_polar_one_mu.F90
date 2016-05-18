@@ -116,6 +116,7 @@ module sll_m_sim_bsl_gk_3d1v_polar_one_mu
   use sll_m_gyroaverage_2d_polar_splines_solver, only: &
     sll_f_new_gyroaverage_2d_polar_splines_solver
 
+  use hdf5, only: hid_t
   use sll_m_hdf5_io_serial, only: &
     sll_o_hdf5_file_close, &
     sll_o_hdf5_file_create, &
@@ -1129,7 +1130,7 @@ contains
     class(sll_t_simulation_4d_drift_kinetic_polar_one_mu), intent(inout) :: sim
     !--> For initial profile HDF5 saving
     integer                      :: file_err
-    sll_int32                    :: file_id
+    integer(hid_t)               :: hfile_id
     character(len=12), parameter :: filename_prof = "init_prof.h5"
     sll_real64,dimension(:,:,:,:), allocatable :: f4d_store
     sll_int32 :: loc4d_sz_x1
@@ -1156,11 +1157,11 @@ contains
 
     !*** Saving of the radial profiles in HDF5 file ***
     if (sll_f_get_collective_rank(sll_v_world_collective)==0) then
-      call sll_o_hdf5_file_create(filename_prof,file_id,file_err)
-      call sll_o_hdf5_write_array_1d(file_id,sim%n0_r,'n0_r',file_err)
-      call sll_o_hdf5_write_array_1d(file_id,sim%Ti_r,'Ti_r',file_err)
-      call sll_o_hdf5_write_array_1d(file_id,sim%Te_r,'Te_r',file_err)
-      call sll_o_hdf5_file_close(file_id,file_err)
+      call sll_o_hdf5_file_create(filename_prof,hfile_id,file_err)
+      call sll_o_hdf5_write_array_1d(hfile_id,sim%n0_r,'n0_r',file_err)
+      call sll_o_hdf5_write_array_1d(hfile_id,sim%Ti_r,'Ti_r',file_err)
+      call sll_o_hdf5_write_array_1d(hfile_id,sim%Te_r,'Te_r',file_err)
+      call sll_o_hdf5_file_close(hfile_id,file_err)
       
       ierr = 1
       call sll_o_gnuplot_1d(sim%n0_r,'n0_r_init',ierr)
@@ -2753,8 +2754,10 @@ end subroutine solve_bilaplacian_polar
   !---------------------------------------------------
   subroutine plot_f_polar(iplot,f,m_x1,m_x2)
     use sll_m_xdmf
+    use hdf5, only: hid_t
     use sll_m_hdf5_io_serial
     sll_int32 :: file_id
+    integer(hid_t) :: hfile_id
     sll_int32 :: error
     sll_real64, dimension(:,:), allocatable :: x1
     sll_real64, dimension(:,:), allocatable :: x2
@@ -2796,12 +2799,12 @@ end subroutine solve_bilaplacian_polar
           x2(i,j) = r*sin(theta)
         end do
       end do
-      call sll_o_hdf5_file_create("polar_mesh-x1.h5",file_id,error)
-      call sll_o_hdf5_write_array(file_id,x1,"/x1",error)
-      call sll_o_hdf5_file_close(file_id, error)
-      call sll_o_hdf5_file_create("polar_mesh-x2.h5",file_id,error)
-      call sll_o_hdf5_write_array(file_id,x2,"/x2",error)
-      call sll_o_hdf5_file_close(file_id, error)
+      call sll_o_hdf5_file_create("polar_mesh-x1.h5",hfile_id,error)
+      call sll_o_hdf5_write_array(hfile_id,x1,"/x1",error)
+      call sll_o_hdf5_file_close(hfile_id, error)
+      call sll_o_hdf5_file_create("polar_mesh-x2.h5",hfile_id,error)
+      call sll_o_hdf5_write_array(hfile_id,x2,"/x2",error)
+      call sll_o_hdf5_file_close(hfile_id, error)
       deallocate(x1)
       deallocate(x2)
 
