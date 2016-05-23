@@ -3,7 +3,10 @@
 !> @brief Simulation of 2d2v Vlasov-Poisson with several PIC methods (including the resampled pic_lbfr),
 !>  periodic boundary conditions and Landau initial values along x1 only.
 
-module sll_m_sim_pic_vp_2d2v_cart_lbfr_new    ! todo: eventually discard the 'new' suffix to replace existing lbfr simulation
+! MCP: I am writing this simulation from Katharina's simulation, to add the pic_lbfr particles.
+! todo: eventually discard the 'new' suffix to replace existing lbfr simulation
+
+module sll_m_sim_pic_vp_2d2v_cart_lbfr_new
 
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_memory.h"
