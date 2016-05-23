@@ -1,8 +1,8 @@
 !> @defgroup particle_initializers sll_particle_initializers
 !> @brief
-!> Library implementing various routines for particle initialization.
+!> Various routines for particle initialization.
+!> @author Katharina Kormann, IPP
 !> @details
 !> ...
 !>
-!> @author Katharina Kormann, IPP
 !> @todo Needs to be generalized, unified and we need unit tests.

@@ -13,8 +13,7 @@ IF(MPI_ENABLED)
 
   ADD_LIBRARY(sll_distribution_function STATIC 
                  ${DISTRIBUTION_SOURCES_LIBRARY}
-                 sll_m_distribution_function_initializer_4d.F90
-                 sll_m_distribution_function_6d_initializer.F90)
+                 sll_m_distribution_function_initializer_4d.F90)
   
   TARGET_LINK_LIBRARIES(sll_distribution_function sll_coordinate_transformations
                                                   sll_meshes
