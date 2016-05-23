@@ -50,6 +50,7 @@ module sll_m_sim_bsl_dk_3d1v_curv
     sll_f_new_general_elliptic_solver, &
     sll_o_solve
 
+  use hdf5, only: hid_t
   use sll_m_hdf5_io_serial, only: &
     sll_o_hdf5_file_close, &
     sll_o_hdf5_file_create, &
@@ -61,6 +62,7 @@ module sll_m_sim_bsl_dk_3d1v_curv
     sll_o_apply_remap_3d, &
     sll_o_apply_remap_4d, &
     sll_o_compute_local_sizes, &
+    sll_s_factorize_in_two_powers_of_two, &
     sll_o_initialize_layout_with_distributed_array, &
     sll_t_layout_3d, &
     sll_t_layout_4d, &
@@ -867,27 +869,10 @@ contains
     ! even if the power of 2 is odd. This should 
     ! be packaged in some sort of routine and set up 
     ! at initialization time.
-    sim%power2 = int(log(real(sim%world_size))/log(2.0))
-
-    !--> special case N = 1, so power2 = 0
-    if(sim%power2 == 0) then
-       nproc_x1 = 1
-       nproc_x2 = 1
-       nproc_x3 = 1
-       nproc_x4 = 1
-    end if
-    
-    if(sll_f_is_even(sim%power2)) then
-       nproc_x1 = 2**(sim%power2/2)
-       nproc_x2 = 2**(sim%power2/2)
-       nproc_x3 = 1
-       nproc_x4 = 1
-    else 
-       nproc_x1 = 2**((sim%power2-1)/2)
-       nproc_x2 = 2**((sim%power2+1)/2)
-       nproc_x3 = 1
-       nproc_x4 = 1
-    end if
+    call sll_s_factorize_in_two_powers_of_two &
+         ( sim%world_size, nproc_x1, nproc_x2 )
+    nproc_x3 = 1
+    nproc_x4 = 1
 
     !--> Initialization of parallel layout of f4d in (x1,x2) directions
     !-->  (x1,x2) : parallelized layout
@@ -1113,24 +1098,10 @@ contains
     sll_int32 :: nproc_x3
     type(sll_t_cartesian_mesh_1d), pointer :: logical_mesh1d
 
-    ! layout for sequential operations in (x1,x2) 
-    sim%power2 = int(log(real(sim%world_size))/log(2.0))
-    !--> special case N = 1, so power2 = 0
-    if(sim%power2 == 0) then
-       nproc_x1 = 1
-       nproc_x2 = 1
-       nproc_x3 = 1
-    end if
-    
-    if(sll_f_is_even(sim%power2)) then
-       nproc_x1 = 2**(sim%power2/2)
-       nproc_x2 = 2**(sim%power2/2)
-       nproc_x3 = 1
-    else 
-       nproc_x1 = 2**((sim%power2-1)/2)
-       nproc_x2 = 2**((sim%power2+1)/2)
-       nproc_x3 = 1
-    end if
+
+    call sll_s_factorize_in_two_powers_of_two&
+         ( sim%world_size, nproc_x1, nproc_x2 )
+    nproc_x3 = 1
 
     !--> Initialization of rho3d_seqx3 and phi3d_seqx3
     !-->  (x1,x2) : parallelized layout
@@ -2121,7 +2092,7 @@ contains
 
     !--> For initial equilibrium state HDF5 saving
     integer                      :: file_err
-    sll_int32                    :: file_id
+    integer(hid_t)               :: file_id
     character(len=13), parameter :: filename_prof = "init_state.h5"
 
     if (sim%my_rank.eq.0) then
@@ -2172,7 +2143,7 @@ contains
 
     !--> For initial profile HDF5 saving
     integer             :: file_err
-    sll_int32           :: file_id
+    integer(hid_t)      :: file_id
     character(len=80)   :: filename_HDF5
     character(20), save :: numfmt = "'_d',i5.5"
     
@@ -2263,7 +2234,7 @@ contains
     
     !--> For conservation law HDF5 saving
     integer             :: file_err
-    sll_int32           :: file_id
+    integer(hid_t)      :: file_id
     character(len=20), parameter :: filename_CL = "conservation_laws.h5"
 
   

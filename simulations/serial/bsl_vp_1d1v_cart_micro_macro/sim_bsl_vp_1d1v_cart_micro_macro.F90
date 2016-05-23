@@ -26,6 +26,7 @@ program sim_bsl_vp_1d1v_cart_micro_macro
     sll_f_new_cubic_spline_1d, &
     sll_t_cubic_spline_1d
 
+  use hdf5, only: hid_t
   use sll_m_hdf5_io_serial, only: &
     sll_o_hdf5_file_close, &
     sll_o_hdf5_file_create, &
@@ -104,6 +105,7 @@ program sim_bsl_vp_1d1v_cart_micro_macro
   !type(sll_time_mark) :: time0 
   !sll_real64 :: time1
   sll_int32  :: error, file_id
+  integer(hid_t) :: hfile_id
   character(len=4) :: cstep
   !character(len=32) :: dsetname
 
@@ -644,9 +646,9 @@ program sim_bsl_vp_1d1v_cart_micro_macro
         print*, 'iteration: ', istep
         !call write_scalar_field_2d(f) 
         call sll_s_int2string(istep,cstep)
-        call sll_o_hdf5_file_create("f"//cstep//".h5",file_id,error)
-        call sll_o_hdf5_write_array(file_id,f,"f",error)
-        call sll_o_hdf5_file_close(file_id, error)
+        call sll_o_hdf5_file_create("f"//cstep//".h5",hfile_id,error)
+        call sll_o_hdf5_write_array(hfile_id,f,"f",error)
+        call sll_o_hdf5_file_close(hfile_id, error)
      end if
 
 #ifdef __OPENMP
@@ -657,11 +659,11 @@ program sim_bsl_vp_1d1v_cart_micro_macro
      print *,'ITERATION',istep
 
   call sll_s_int2string(istep,cstep)
-  call sll_o_hdf5_file_create("ff"//cstep//".h5",file_id,error)
-  call sll_o_hdf5_write_array(file_id,ff,"ff",error)
-  call sll_o_hdf5_write_array(file_id,ff1,"ff1",error)
-  call sll_o_hdf5_write_array(file_id,fg,"fg",error)
-  call sll_o_hdf5_file_close(file_id, error)
+  call sll_o_hdf5_file_create("ff"//cstep//".h5",hfile_id,error)
+  call sll_o_hdf5_write_array(hfile_id,ff,"ff",error)
+  call sll_o_hdf5_write_array(hfile_id,ff1,"ff1",error)
+  call sll_o_hdf5_write_array(hfile_id,fg,"fg",error)
+  call sll_o_hdf5_file_close(hfile_id, error)
   end do
 
   !compute fg on the fine mesh -> ff1 (for diagnostic)
