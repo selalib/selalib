@@ -24,8 +24,8 @@
 !todo: remove basic deposition particles [DONE]
 !todo: simplify write_f_or_deposit to only recontruct f -> new name is reconstruct_f  [DONE]
 !todo: create new resampler structure [DONE]
-!todo: derive type from Katharina's abstract class : sll_c_particle_group_base
-!todo: initialize with the remapping (done already?)
+!todo: derive type from Katharina's abstract class : sll_c_particle_group_base [DONE]
+!todo: initialize with the same function as remapping [DONE]
 !todo: other simplifications?
 
 module sll_m_pic_lbfr_4d_group
