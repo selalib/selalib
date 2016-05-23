@@ -1,6 +1,6 @@
    !> @defgroup maxwell_solvers sll_maxwell_solvers
 !> @brief 
-!> Library to solve Maxwell system in 2D and 3D
+!> Maxwell solvers in 2D and 3D
 !> @details
 !>
 !> - Fortran modules

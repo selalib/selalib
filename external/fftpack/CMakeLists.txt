@@ -16,3 +16,5 @@ SET(DFFTPACK_SRCS zfftb.f cfftb1.f zfftf.f cfftf1.f zffti.f cffti1.f
 ADD_LIBRARY(dfftpack STATIC ${DFFTPACK_SRCS})
 SET(FFTPACK_LIBRARIES dfftpack)
 INSTALL(TARGETS dfftpack ARCHIVE DESTINATION lib)
+
+

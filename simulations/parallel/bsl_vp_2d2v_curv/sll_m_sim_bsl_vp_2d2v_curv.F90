@@ -48,6 +48,7 @@ module sll_m_sim_bsl_vp_2d2v_curv
     sll_o_apply_remap_2d, &
     sll_o_apply_remap_4d, &
     sll_o_compute_local_sizes, &
+    sll_s_factorize_in_two_powers_of_two, &
     sll_o_initialize_layout_with_distributed_array, &
     sll_t_layout_2d, &
     sll_t_layout_4d, &
@@ -85,7 +86,6 @@ module sll_m_sim_bsl_vp_2d2v_curv
      ! Parallel environment parameters
      sll_int32  :: world_size
      sll_int32  :: my_rank
-     sll_int32  :: power2 ! 2^power2 = number of processes available
      ! Processor mesh sizes
      sll_int32  :: nproc_x1
      sll_int32  :: nproc_x2
@@ -319,27 +319,10 @@ contains
     ! layout for sequential operations in x3 and x4. Make an even split for
     ! x1 and x2, or as close as even if the power of 2 is odd. This should 
     ! be packaged in some sort of routine and set up at initialization time.
-    sim%power2 = int(log(real(sim%world_size))/log(2.0))
-
-    ! special case N = 1, so power2 = 0
-    if(sim%power2 == 0) then
-       sim%nproc_x1 = 1
-       sim%nproc_x2 = 1
-       sim%nproc_x3 = 1
-       sim%nproc_x4 = 1
-    end if
-    
-    if(sll_f_is_even(sim%power2)) then
-       sim%nproc_x1 = 2**(sim%power2/2)
-       sim%nproc_x2 = 2**(sim%power2/2)
-       sim%nproc_x3 = 1
-       sim%nproc_x4 = 1
-    else 
-       sim%nproc_x1 = 2**((sim%power2-1)/2)
-       sim%nproc_x2 = 2**((sim%power2+1)/2)
-       sim%nproc_x3 = 1
-       sim%nproc_x4 = 1
-    end if
+    call sll_s_factorize_in_two_powers_of_two &
+         ( sim%world_size, sim%nproc_x1, sim%nproc_x2 )
+    sim%nproc_x3 = 1
+    sim%nproc_x4 = 1
     
     nc_x1 = sim%mesh2d_x%num_cells1
     nc_x2 = sim%mesh2d_x%num_cells2
