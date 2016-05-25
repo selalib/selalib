@@ -316,8 +316,7 @@ subroutine sll_gnuplot_corect_2d(xmin, xmax, nx,    &
   else
     inquire( file=array_name//'.gnu', exist=file_exists)
     if (.not. file_exists) then
-      SLL_ERROR("sll_gnuplot_corect_2d","The gnu file does not exist, perharps &
-      & you did not call this suboutine with iplot=1 for the first plot")
+      SLL_ERROR("sll_gnuplot_corect_2d", "The gnu file does not exist, perharps you did not call this suboutine with iplot=1 for the first plot")
     end if
     ! A pre-existing ASCII file will be appended
     gnu_status = 'old'
