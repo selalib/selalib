@@ -53,6 +53,7 @@ ELSEIF(Fortran_COMPILER_NAME MATCHES ifort)
 
   SET(CMAKE_Fortran_FLAGS_RELEASE "-nowarn -O3 -xHost -ip -fpic")
   SET(CMAKE_Fortran_FLAGS_DEBUG   "-g -O0 -check all,noarg_temp_created -fpe0 -traceback -ftrapuv -fpic")
+  SET(CMAKE_SHARED_LIBRARY_LINK_Fortran_FLAGS "-shared-intel")
 
 ELSEIF(Fortran_COMPILER MATCHES "IBM")
 
