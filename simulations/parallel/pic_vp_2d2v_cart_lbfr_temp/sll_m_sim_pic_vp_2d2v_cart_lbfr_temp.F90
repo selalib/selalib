@@ -730,7 +730,7 @@ contains
     plot_np_y  = 3
     plot_np_vx = 20
     plot_np_vy = 5
-    call plotting_params_2d%set_params( &
+    call plotting_params_2d%reset_params( &
         trim(field_name), &
         plot_np_x, &
         plot_np_y, &

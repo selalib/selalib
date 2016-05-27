@@ -473,7 +473,7 @@ contains
     plot_np_y  = 2
     plot_np_vx = 100
     plot_np_vy = 2
-    call plotting_params_2d%set_params( &
+    call plotting_params_2d%reset_params( &
         'f_slice', &
         plot_np_x, &
         plot_np_y, &
@@ -489,10 +489,11 @@ contains
        ! particle resampling (conditional)
        if( (sim%particle_type == sll_p_lbfr_particles) .and. (modulo(j-1, sim%resample_period) == 0 ) )then
 
-         print *, "-- plotting f slice in gnuplot format before resampling..."
-         call sll_s_visualize_particle_group( sim%particle_group, plotting_params_2d, j)
-
          if( j > 1 )then
+           print *, "-- plotting f slice in gnuplot format before resampling..."
+           call sll_s_visualize_particle_group( sim%particle_group, plotting_params_2d, j)
+
+
            print *, "-- particle resampling with deterministic LBF method..."
            call sll_s_resample_particle_group( sim%particle_group )
            print*, "-- resampling done."
