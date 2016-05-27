@@ -34,9 +34,9 @@
     remapping_cart_grid_n_cells_vx = 20            ! for splines
     remapping_cart_grid_n_cells_vy = 6             ! for splines
     remapping_sparse_grid_max_level_x = 10               ! for the sparse grid
-    remapping_sparse_grid_max_level_y = 9               ! for the sparse grid
+    remapping_sparse_grid_max_level_y = 7               ! for the sparse grid
     remapping_sparse_grid_max_level_vx = 10              ! for the sparse grid
-    remapping_sparse_grid_max_level_vy = 9              ! for the sparse grid
+    remapping_sparse_grid_max_level_vy = 7              ! for the sparse grid
 /
 
 &pic_lbfr_deposition_params
@@ -44,17 +44,17 @@
     deposition_particles_move_type = 1      ! 0 = new particles are created at each step,  1 = they move until next remap step
     n_deposition_particles = 50000          ! for unstructured deposition particles
     n_deposition_particles_per_cell_x = 4   ! for structured deposition particles
-    n_deposition_particles_per_cell_y = 4   ! for structured deposition particles
+    n_deposition_particles_per_cell_y = 2   ! for structured deposition particles
     n_deposition_particles_vx = 4           ! for structured deposition particles
-    n_deposition_particles_vy = 4           ! for structured deposition particles
+    n_deposition_particles_vy = 2           ! for structured deposition particles
 /
 
 &pic_lbfr_markers_params
     flow_markers_type = 0         ! 0 = structured (markers remapped on a cartesian grid),     1 = unstructured
     n_flow_markers_x  = 100       ! for structured markers (defines the cartesian grid where they are remapped)
-    n_flow_markers_y  = 50
+    n_flow_markers_y  = 20
     n_flow_markers_vx = 60
-    n_flow_markers_vy = 50
+    n_flow_markers_vy = 10
     n_unstruct_markers_per_cell  = 7   ! for unstructured flow markers
     flow_grid_n_cells_x = 50   ! the cartesian flow grid defines the cells where the flow is linearized
     flow_grid_n_cells_y = 10   ! (it is also used with the unstructured flow markers)
