@@ -344,7 +344,7 @@ program test_pic_lbfr_4d
 
   print *, "plotting initial f slice in gnuplot format "
 
-  call plotting_params_2d%set_params( &
+  call plotting_params_2d%reset_params( &
       'f_initial', &
       plot_np_x, &
       plot_np_y, &
@@ -574,7 +574,7 @@ program test_pic_lbfr_4d
   end if
 
   print *, "plotting transported f slice in gnuplot format "
-  call plotting_params_2d%set_params( &
+  call plotting_params_2d%reset_params( &
       'f_transported', &
       plot_np_x, &
       plot_np_y, &
@@ -604,7 +604,7 @@ program test_pic_lbfr_4d
   end if
 
   print *, "plotting remapped f slice in gnuplot format "
-  call plotting_params_2d%set_params( &
+  call plotting_params_2d%reset_params( &
       'f_remapped', &
       plot_np_x, &
       plot_np_y, &

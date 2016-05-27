@@ -98,12 +98,13 @@ module sll_m_pic_lbfr_4d_group
 
   implicit none
 
+  ! todo: rename exposed parameters using sll_p_ prefix (eg, SLL_PIC_LBFR_GIVEN_GRID  ->  sll_p_pic_lbfr_given_grid)
   public :: &
     SLL_PIC_LBFR_REMAP_WITH_SPLINES,  &
     SLL_PIC_LBFR_REMAP_WITH_SPARSE_GRIDS,  &
     !    SLL_PIC_LBFR_DEPOSIT_F,  &
     SLL_PIC_LBFR_REMAPPING_GRID,  &
-    SLL_PIC_LBFR_GIVEN_GRID, &
+    SLL_PIC_LBFR_GIVEN_GRID, &        ! -> sll_p_pic_lbfr_given_grid, and so on
     SLL_PIC_LBFR_DEPOSITION_PARTICLES, &
     SLL_PIC_LBFR_LANDAU_F0,  &
     SLL_PIC_LBFR_HAT_F0,  &
@@ -1549,9 +1550,6 @@ contains
                                                dummy_total_charge,        &
                                                enforce_total_charge       &
                                                )
-
-    print *, " [DEBUG 98097986987868785648] -- array_name: " , array_name
-    print *, " [DEBUG 98097986987868785648] -- iplot: " , iplot
 
     call sll_o_gnuplot_2d(self%remapping_grid_eta_min(1), &
                         self%remapping_grid_eta_max(1), &
@@ -4131,7 +4129,7 @@ contains
                                         enforce_total_charge        &
                                         )
 
-    class(sll_t_pic_lbfr_4d_group),         intent(inout)   :: self          !> particle group (with markers and remapping grid)
+    class(sll_t_pic_lbfr_4d_group),           intent(inout)   :: self          !> particle group (with markers and remapping grid)
     sll_int32,                                intent(in)    :: reconstruction_set_type
     type(sll_t_cartesian_mesh_4d),   pointer, intent(in)    :: given_grid_4d
     sll_real64, dimension(:,:),      pointer, intent(inout) :: given_array_2d   ! assumed in x, vx for now
