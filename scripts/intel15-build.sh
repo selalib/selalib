@@ -1,6 +1,6 @@
 #!/bin/bash
-source /opt/intel16/bin/compilervars.sh intel64 -platform linux
-source /opt/intel16/mkl/bin/mklvars.sh intel64
+source /opt/intel15/bin/compilervars.sh intel64 -platform linux
+source /opt/intel15/mkl/bin/mklvars.sh intel64
 export FC=ifort
 export CC=icc
 export CXX=icpc
