@@ -53,12 +53,10 @@ module sll_m_particle_visualization_interface
   type sll_t_plotting_params_2d
       character(len=256) :: field_name        !< may need to be trimmed when used
       sll_int32          :: plot_count
-      sll_int32          :: plot_np_x         !< nb of points in the x  plotting grid  todo: rename plot_np_1
-      sll_int32          :: plot_np_y         !< nb of points in the y  plotting grid  todo: discard, really use slices
-      sll_int32          :: plot_np_vx        !< nb of points in the vx plotting grid  todo: rename plot_np_2
-      sll_int32          :: plot_np_vy        !< nb of points in the vy plotting grid  todo: discard, really use slices
-      sll_real64         :: slice_y           ! todo: use this
-      sll_real64         :: slice_vy          ! todo: use this
+      sll_int32          :: plot_np_x         !< nb of points in the x  plotting grid
+      sll_int32          :: plot_np_vx        !< nb of points in the vx plotting grid
+      sll_real64         :: slice_y           ! position of the slice in y dimension
+      sll_real64         :: slice_vy          ! position of the slice in vy dimension
     contains
       procedure :: reset_params
   end type sll_t_plotting_params_2d
@@ -68,22 +66,22 @@ contains
   subroutine reset_params(self, &
           field_name,   &
           plot_np_x,  &
-          plot_np_y,  &
           plot_np_vx,   &
-          plot_np_vy  &
+          slice_y, &
+          slice_vy &
     )
     class(sll_t_plotting_params_2d),  intent( inout )      :: self
     character(len=*),                 intent( in    )      :: field_name
-    sll_int32,                        intent( in    )      :: plot_np_x         !< nb of points in the x  plotting grid
-    sll_int32,                        intent( in    )      :: plot_np_y         !< nb of points in the y  plotting grid
-    sll_int32,                        intent( in    )      :: plot_np_vx        !< nb of points in the vx plotting grid
-    sll_int32,                        intent( in    )      :: plot_np_vy        !< nb of points in the vy plotting grid
+    sll_int32,                        intent( in    )      :: plot_np_x
+    sll_int32,                        intent( in    )      :: plot_np_vx
+    sll_real64,                       intent( in    )      :: slice_y
+    sll_real64,                       intent( in    )      :: slice_vy
 
     self%field_name = trim(field_name)
     self%plot_np_x  = plot_np_x
-    self%plot_np_y  = plot_np_y
     self%plot_np_vx = plot_np_vx
-    self%plot_np_vy = plot_np_vy
+    self%slice_y = slice_y
+    self%slice_vy = slice_vy
     self%plot_count = 0
 
   end subroutine
@@ -112,20 +110,24 @@ contains
     type is ( sll_t_pic_lbfr_4d_group )
 
     SLL_ALLOCATE( x_vx_grid_values(plotting_params_2d%plot_np_x, plotting_params_2d%plot_np_vx), ierr)
+    SLL_ASSERT( plotting_params_2d%slice_y  >= particle_group%remapping_grid_eta_min(2) )
+    SLL_ASSERT( plotting_params_2d%slice_y  <  particle_group%remapping_grid_eta_max(2) )
+    SLL_ASSERT( plotting_params_2d%slice_vy >= particle_group%remapping_grid_eta_min(4) )
+    SLL_ASSERT( plotting_params_2d%slice_vy <  particle_group%remapping_grid_eta_max(4) )
 
     plotting_grid_4d => sll_f_new_cartesian_mesh_4d(  &
         plotting_params_2d%plot_np_x  - 1,  &
-        plotting_params_2d%plot_np_y  - 1,  &
+        1,  &
         plotting_params_2d%plot_np_vx - 1,  &
-        plotting_params_2d%plot_np_vy - 1,  &
+        1,  &
         particle_group%remapping_grid_eta_min(1), &
         particle_group%remapping_grid_eta_max(1), &
-        particle_group%remapping_grid_eta_min(2), &
-        particle_group%remapping_grid_eta_max(2), &
+        plotting_params_2d%slice_y, &
+        particle_group%remapping_grid_eta_max(2), &   ! max value along y does not matter, only the minimum one is used
         particle_group%remapping_grid_eta_min(3), &
         particle_group%remapping_grid_eta_max(3), &
-        particle_group%remapping_grid_eta_min(4), &
-        particle_group%remapping_grid_eta_max(4)  &
+        plotting_params_2d%slice_vy, &
+        particle_group%remapping_grid_eta_max(4)  &   ! max value along vy does not matter, only the minimum one is used
     )
 
     reconstruction_set_type = SLL_PIC_LBFR_GIVEN_GRID
@@ -169,7 +171,7 @@ contains
         iplot,      &
         ierr   &
         )
-        ! todo: use this: force_keep_gnu_file=.true. )        ! do not replace existing file, no matter what iplot is
+        ! todo: use this: force_keep_gnu_file=.true. )     ! optional argument do avoid replacing existing file even if iplot=1
 
     plotting_params_2d%plot_count = plotting_params_2d%plot_count + 1
 
