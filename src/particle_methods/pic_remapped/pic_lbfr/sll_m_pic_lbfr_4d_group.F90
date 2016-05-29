@@ -4215,6 +4215,15 @@ contains
     sll_real64 :: flow_grid_vx_min
     sll_real64 :: flow_grid_vy_min
 
+    sll_int32  :: j_x_min
+    sll_int32  :: j_x_max
+    sll_int32  :: j_y_min
+    sll_int32  :: j_y_max
+    sll_int32  :: j_vx_min
+    sll_int32  :: j_vx_max
+    sll_int32  :: j_vy_min
+    sll_int32  :: j_vy_max
+
     ! the markers are initially distributed on a cartesian grid, then pushed forward to represent (and approximate) the flow
     ! cf [[file:~/mcp/maltpic/ltpic-bsl.tex::h_parts_x]]
 
@@ -4238,6 +4247,13 @@ contains
 
     sll_real64 :: mesh_period_x
     sll_real64 :: mesh_period_y
+
+    sll_real64 :: slice_y
+    sll_real64 :: slice_vy
+    sll_real64 :: flow_cell_y_min
+    sll_real64 :: flow_cell_y_max
+    sll_real64 :: flow_cell_vy_min
+    sll_real64 :: flow_cell_vy_max
 
     ! results from [[get_ltp_deformation_matrix]]
 
@@ -4599,10 +4615,43 @@ contains
       node_counter = 0
     end if
 
-    do j_x = 1, flow_grid_num_cells_x
-      do j_y = 1, flow_grid_num_cells_y
-        do j_vx = 1,flow_grid_num_cells_vx
-          do j_vy = 1,flow_grid_num_cells_vy
+    if( reconstruction_set_type == SLL_PIC_LBFR_GIVEN_GRID )then
+      slice_y  = g%eta2_min
+      slice_vy = g%eta4_min
+    end if
+
+    ! loop over flow cells
+    j_x_min = 1
+    j_x_max = flow_grid_num_cells_x
+    j_y_min = 1
+    j_y_max = flow_grid_num_cells_y
+    j_vx_min = 1
+    j_vx_max = flow_grid_num_cells_vx
+    j_vy_min = 1
+    j_vy_max = flow_grid_num_cells_vy
+
+    if( reconstruction_set_type == SLL_PIC_LBFR_GIVEN_GRID )then
+      ! for the moment the given grid is a 2D grid in x,vx space
+      ! so we reconstruct on a slice, using a single grid point along y and vy corresponding to the first point
+      ! of the 4d plotting grid in these dimensions, ie with y=g%eta2_min, vy=g%eta4_min
+
+      slice_y = g%eta2_min
+      j_y_min = int(ceiling( (slice_y - flow_grid_y_min)/h_flow_grid_y) )
+      j_y_min = max(j_y_min, 1)
+      j_y_min = min(j_y_min, flow_grid_num_cells_y)
+      j_y_max = j_y_min
+
+      slice_vy = g%eta4_min
+      j_vy_min = int(ceiling( (slice_vy - flow_grid_vy_min)/h_flow_grid_vy) )
+      j_vy_min = max(j_vy_min, 1)
+      j_vy_min = min(j_vy_min, flow_grid_num_cells_vy)
+      j_vy_max = j_vy_min
+    end if
+
+    do j_x = j_x_min, j_x_max
+      do j_y = j_y_min, j_y_max
+        do j_vx = j_vx_min, j_vx_max
+          do j_vy = j_vy_min, j_vy_max
 
             if( self%flow_markers_type == SLL_PIC_LBFR_STRUCTURED )then
               ! [[file:~/mcp/maltpic/ltpic-bsl.tex::algo:pic-vr:find_closest_real_particle]] Find the marker
@@ -4845,6 +4894,16 @@ contains
               i_max_vx = min(i_max_vx, g_num_points_vx)
               i_max_vy = min(i_max_vy, g_num_points_vy)
 
+              if( reconstruction_set_type == SLL_PIC_LBFR_GIVEN_GRID )then
+                ! for the moment the given grid is a 2D grid in x,vx space
+                ! ie: we reconstruct on a slice, using only one grid point along y and vy
+                !     (corresponding to the first point of the 4d plotting grid in these dimensions)
+                i_min_y = 1
+                i_max_y = 1
+                i_min_vy = 1
+                i_max_vy = 1
+              end if
+
               do i_x = i_min_x, i_max_x
                 x = g_grid_x_min + (i_x-1)*h_g_grid_x
                 x_to_xk = x - x_k
@@ -4935,8 +4994,13 @@ contains
                           SLL_ASSERT( i_x  <= size(given_array_2d,1) )
                           SLL_ASSERT( i_vx <= size(given_array_2d,2) )
 
-                          given_array_2d(i_x,i_vx) = given_array_2d(i_x,i_vx)         &
-                                  + reconstructed_f_value * h_g_grid_y * h_g_grid_vy
+                          if( abs(given_array_2d(i_x,i_vx)) > 0.0001 )then
+                            print *, "Warning -- 987698666999979979 -- stored value should be zero"
+                            print *, "given_array_2d(i_x,i_vx) = ", given_array_2d(i_x,i_vx)
+                            print *, "i_x, i_vx = ", i_x, i_vx
+                            print *, "i_y, i_vy = ", i_y, i_vy
+                          end if
+                          given_array_2d(i_x,i_vx) = reconstructed_f_value
 
                         else
 

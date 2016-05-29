@@ -440,11 +440,10 @@ contains
 
     type(sll_t_initial_density_parameters)  :: initial_density_parameters  ! for the initial particle sampling
     type(sll_t_plotting_params_2d)          :: plotting_params_2d
-    character(len=1024) :: field_name
     sll_int32 :: plot_np_x    !< nb of points in the x  plotting grid for a (x,vx) plot
-    sll_int32 :: plot_np_y    !< nb of points in the y  plotting grid for a (x,vx) plot
     sll_int32 :: plot_np_vx   !< nb of points in the vx plotting grid for a (x,vx) plot
-    sll_int32 :: plot_np_vy   !< nb of points in the vy plotting grid for a (x,vx) plot
+    sll_real64 :: slice_y
+    sll_real64 :: slice_vy
 
     ! Loop variables
     sll_int32  :: j, ierr
@@ -470,15 +469,17 @@ contains
         initial_density_parameters=initial_density_parameters )
 
     plot_np_x  = 100
-    plot_np_y  = 2
     plot_np_vx = 100
-    plot_np_vy = 2
+    slice_y  = 0.0_f64
+    slice_vy  = 0.0_f64
+
     call plotting_params_2d%reset_params( &
         'f_slice', &
         plot_np_x, &
-        plot_np_y, &
         plot_np_vx, &
-        plot_np_vy )
+        slice_y, &
+        slice_vy &
+        )
 
     ! Time loop
     print*, 'Time loop'

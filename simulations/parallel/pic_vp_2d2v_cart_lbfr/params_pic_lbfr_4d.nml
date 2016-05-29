@@ -34,9 +34,9 @@
     remapping_cart_grid_n_cells_vx = 20            ! for splines
     remapping_cart_grid_n_cells_vy = 6             ! for splines
     remapping_sparse_grid_max_level_x = 10               ! for the sparse grid
-    remapping_sparse_grid_max_level_y = 7               ! for the sparse grid
+    remapping_sparse_grid_max_level_y = 6               ! for the sparse grid
     remapping_sparse_grid_max_level_vx = 10              ! for the sparse grid
-    remapping_sparse_grid_max_level_vy = 7              ! for the sparse grid
+    remapping_sparse_grid_max_level_vy = 6              ! for the sparse grid
 /
 
 &pic_lbfr_deposition_params
@@ -44,9 +44,9 @@
     deposition_particles_move_type = 1      ! 0 = new particles are created at each step,  1 = they move until next remap step
     n_deposition_particles = 50000          ! for unstructured deposition particles
     n_deposition_particles_per_cell_x = 4   ! for structured deposition particles
-    n_deposition_particles_per_cell_y = 2   ! for structured deposition particles
+    n_deposition_particles_per_cell_y = 3   ! for structured deposition particles
     n_deposition_particles_vx = 4           ! for structured deposition particles
-    n_deposition_particles_vy = 2           ! for structured deposition particles
+    n_deposition_particles_vy = 3           ! for structured deposition particles
 /
 
 &pic_lbfr_markers_params
