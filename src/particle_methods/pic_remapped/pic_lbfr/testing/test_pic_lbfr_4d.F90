@@ -188,10 +188,10 @@ program test_pic_lbfr_4d
   sll_real64 :: basis_height
 
   type(sll_t_plotting_params_2d)          :: plotting_params_2d
-  sll_int32 :: plot_np_x
-  sll_int32 :: plot_np_y
-  sll_int32 :: plot_np_vx
-  sll_int32 :: plot_np_vy
+  sll_int32  :: plot_np_x
+  sll_int32  :: plot_np_vx
+  sll_real64 :: slice_y
+  sll_real64 :: slice_vy
 
   sll_int32 :: deposition_particles_pos_type
   sll_int32 :: deposition_particles_move_type
@@ -230,9 +230,9 @@ program test_pic_lbfr_4d
   DEBUG_MODE = .false.
 
   plot_np_x  = 21
-  plot_np_y  = 10
   plot_np_vx = 21
-  plot_np_vy = 10
+  slice_y  = 0.0_f64
+  slice_vy = 0.0_f64
 
   open(82,file='error_test_lt_pic_init4D.dat')
 
@@ -347,11 +347,10 @@ program test_pic_lbfr_4d
   call plotting_params_2d%reset_params( &
       'f_initial', &
       plot_np_x, &
-      plot_np_y, &
       plot_np_vx, &
-      plot_np_vy )
+      slice_y, &
+      slice_vy )
   call sll_s_visualize_particle_group( particle_group, plotting_params_2d, 1)
-  !  call particle_lbfr_group%pic_lbfr_4d_visualize_f_slice_x_vx( "f_initial", plot_np_x, plot_np_y, plot_np_vx, plot_np_vy, 1 )
 
   if( DEBUG_MODE )then
     print*, "[test_pic_lbfr_4d - DEBUG] -- AA D"
@@ -461,9 +460,9 @@ program test_pic_lbfr_4d
       else
 
         n_nodes_x  = plot_np_x - 1
-        n_nodes_y  = plot_np_y - 1
+        n_nodes_y  = 1
         n_nodes_vx = plot_np_vx - 1
-        n_nodes_vy = plot_np_vy - 1
+        n_nodes_vy = 1
 
         x_min    = particle_group%remapping_grid_eta_min(1)
         y_min    = particle_group%remapping_grid_eta_min(2)
@@ -577,11 +576,10 @@ program test_pic_lbfr_4d
   call plotting_params_2d%reset_params( &
       'f_transported', &
       plot_np_x, &
-      plot_np_y, &
       plot_np_vx, &
-      plot_np_vy )
+      slice_y, &
+      slice_vy )
   call sll_s_visualize_particle_group( particle_group, plotting_params_2d, 1)
-  !  call particle_lbfr_group%pic_lbfr_4d_visualize_f_slice_x_vx( "f_transported", plot_np_x, plot_np_y, plot_np_vx, plot_np_vy, 1 )
 
   ! D --- remap the particle group to get the values of transported f on the remapping grid
 
@@ -607,11 +605,10 @@ program test_pic_lbfr_4d
   call plotting_params_2d%reset_params( &
       'f_remapped', &
       plot_np_x, &
-      plot_np_y, &
       plot_np_vx, &
-      plot_np_vy )
+      slice_y, &
+      slice_vy )
   call sll_s_visualize_particle_group( particle_group, plotting_params_2d, 1)
-  ! call particle_lbfr_group%pic_lbfr_4d_visualize_f_slice_x_vx( "f_remapped", plot_np_x, plot_np_y, plot_np_vx, plot_np_vy, 1 )
 
   remaptime = sll_f_time_elapsed_since(remapstart)
 

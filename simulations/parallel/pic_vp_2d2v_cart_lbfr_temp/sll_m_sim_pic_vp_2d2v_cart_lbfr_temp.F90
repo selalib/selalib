@@ -673,10 +673,10 @@ contains
     ! visualization
     character(len=1024) :: field_name
     type(sll_t_plotting_params_2d)  :: plotting_params_2d
-    sll_int32 :: plot_np_x    !< nb of points in the x  plotting grid for a (x,vx) plot
-    sll_int32 :: plot_np_y    !< nb of points in the y  plotting grid for a (x,vx) plot
-    sll_int32 :: plot_np_vx   !< nb of points in the vx plotting grid for a (x,vx) plot
-    sll_int32 :: plot_np_vy   !< nb of points in the vy plotting grid for a (x,vx) plot
+    sll_int32  :: plot_np_x    !< nb of points in the x  plotting grid for a (x,vx) plot
+    sll_int32  :: plot_np_vx    !< nb of points in the y  plotting grid for a (x,vx) plot
+    sll_real64 :: slice_y
+    sll_real64 :: slice_vy
 
     type(sll_t_charge_accumulator_2d),    pointer :: charge_accumulator
     sll_int32 :: sort_nb
@@ -727,15 +727,15 @@ contains
 
     write (field_name, "(A12,I4.4)") 'f_slice_run=', sim%run_nb
     plot_np_x  = 50
-    plot_np_y  = 3
     plot_np_vx = 20
-    plot_np_vy = 5
+    slice_y = 0.0_f64
+    slice_vy = 0.0_f64
     call plotting_params_2d%reset_params( &
         trim(field_name), &
         plot_np_x, &
-        plot_np_y, &
         plot_np_vx, &
-        plot_np_vy )
+        slice_y, &
+        slice_vy )
 
     !  ----------------------------------------------------------------------------------------------------
     !> ## Time loop initialisation
