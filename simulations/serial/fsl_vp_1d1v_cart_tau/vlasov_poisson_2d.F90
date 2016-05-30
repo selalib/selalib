@@ -1,5 +1,5 @@
 
-program test_deposit_cubic_splines
+program fsl_vp_1d1v_ua_scheme
 #include "sll_working_precision.h"
 #include "sll_assert.h"
 #include "sll_memory.h"
@@ -10,7 +10,6 @@ use sll_m_boundary_condition_descriptors
 use sll_m_fft
 use sll_m_gnuplot
 use sll_m_xdmf
-use sll_m_cubic_splines
 
 !$ use omp_lib
 
@@ -936,5 +935,5 @@ function a( tau, example )
 
 end function 
 
-end program test_deposit_cubic_splines
+end program fsl_vp_1d1v_ua_scheme
 
