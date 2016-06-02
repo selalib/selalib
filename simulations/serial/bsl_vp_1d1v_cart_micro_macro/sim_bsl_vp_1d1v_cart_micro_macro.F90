@@ -104,7 +104,7 @@ program sim_bsl_vp_1d1v_cart_micro_macro
   !sll_int32  :: ipiece_size_x, ipiece_size_v
   !type(sll_time_mark) :: time0 
   !sll_real64 :: time1
-  sll_int32  :: error, file_id
+  sll_int32  :: error!, file_id
   integer(hid_t) :: hfile_id
   character(len=4) :: cstep
   !character(len=32) :: dsetname

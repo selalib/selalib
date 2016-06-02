@@ -57,7 +57,7 @@ program test_adv_2d
   sll_int32 :: i
   sll_int32 :: j
   sll_real64 :: dt
-  sll_int32 :: file_id
+  !sll_int32 :: file_id
   integer(hid_t) :: hfile_id
   character(len=20) :: filename
   sll_real64 :: x1_min
