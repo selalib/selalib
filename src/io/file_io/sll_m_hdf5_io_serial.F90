@@ -354,7 +354,7 @@ contains
     integer(hid_t)               :: dataset_id
     integer(hid_t)               :: dataspace_id
   
-    array_dim=len(string)
+    array_dim=int(len(string),hsize_t)
   
     call H5Screate_simple_f(1,array_dim,dataspace_id,error)
     SLL_ASSERT(error==0)
@@ -385,7 +385,7 @@ contains
     character(len=:), allocatable :: content
        
   
-   open(newunit = fileid, file=filename,&
+    open(newunit = fileid, file=filename,&
             form='UNFORMATTED',access='STREAM', iostat=error)
     
     !get size of file
@@ -395,31 +395,27 @@ contains
        ! Allocate memory
        allocate( character(len=filesize) :: content )
        ! read the filein one string
-        read(fileid,pos=1,iostat=error) content 
-               if (error==0) then
-	            !try to read more in case not everything was read
-	            read(fileid,pos=filesize+1,iostat=error) content
-	            if (.not. IS_IOSTAT_END(error)) &
-	                write(*,*) "ERROR: file ", filename, "was not completely read."
-	        else
-	            write(*,*) 'ERROR reading file: ', filename
-	        end if
+       read(fileid,pos=1,iostat=error) content 
+       if (error==0) then
+         !try to read more in case not everything was read
+         read(fileid,pos=filesize+1,iostat=error) content
+         if (.not. IS_IOSTAT_END(error)) &
+           write(*,*) "ERROR: file ", filename, "was not completely read."
+         else
+           write(*,*) 'ERROR reading file: ', filename
+         end if
 
-! 	        close(fileid, iostat=error)
-	    else
-	        write(*,*) 'Error getting size of file: ', filename
-	    end if
+! 	 close(fileid, iostat=error)
+       else
+         write(*,*) 'Error getting size of file: ', filename
+       end if
    close(fileid)
-   
-  
   
    call sll_hdf5_ser_write_char_array&
            (h5file_id, content, dsetname, error)
    
   
   end subroutine sll_hdf5_ser_write_file  
-  
-  
   
 
 !Gysela functions that can be useful for future
