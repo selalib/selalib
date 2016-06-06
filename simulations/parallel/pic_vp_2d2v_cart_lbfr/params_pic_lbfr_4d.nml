@@ -1,71 +1,63 @@
 &sim_params
-        THERM_SPEED         = 1.0
-        dt                  =  0.1
-        number_iterations   = 10
-        plot_period         = 20
-        SPECIES_CHARGE      = -1.0
-        SPECIES_MASS        = 1.0
-        ALPHA  = 0.5                   ! amplitude of initial perturbation
-        use_pic_lbfr_scheme = .true.   ! choose between standard PIC or PIC-LBFR
-        run_nb = 1
+        delta_t = 0.1
+        n_time_steps = 100
+        alpha = 0.1
+        n_mode = 1
+        thermal_v1 = 1.0
+        thermal_v2 = 1.0
 /
 
-! parametres physiques pour la solution exacte du modele lineaire
-&elec_params
-        er      = 0.3677
-        psi     = 0.536245
-        omega_r = 1.4156
-        omega_i = -0.1533
+&pic_poisson_params
+        ng_x1 = 32
+        ng_x2 = 32
+        x1_min = 0.0
+        x2_min = 0.0
+        x1_max = 12.5663706144
+        x2_max = 12.5663706144
+        degree_smoother = 1
 /
 
-&poisson_grid_params
-        NC_X = 32                       !  number of cells
-        NC_Y = 16                       !  number of cells
-        XMIN   = 0.0
-        KX_LANDAU = 0.5                 ! will determine XMAX = 2*pi / KX_LANDAU
-        YMIN   = 0.0
-        YMAX   = 1.0
-        DOMAIN_IS_X_PERIODIC = .true.
-        DOMAIN_IS_Y_PERIODIC = .true.
+&particle_method
+        particle_type_str = "SLL_LBFR_PARTICLES"
 /
 
 &pic_lbfr_remap_params
     remap_period        = 10
-    remap_f_type        = 1         !  0 = splines, 1 = sparse grid -- find a better way to specify this
+    remap_f_type        = 1                 !  0 = splines, 1 = sparse grid -- find a better way to specify this
     remap_degree        = 3
     remapping_grid_vx_min = -5.0            ! note: the x-y domain is given by the Poisson grid
     remapping_grid_vx_max =  5.0
     remapping_grid_vy_min = -5.0
     remapping_grid_vy_max =  5.0
-    remapping_cart_grid_number_cells_x  = 50            ! for splines
-    remapping_cart_grid_number_cells_y  = 10            ! for splines
-    remapping_cart_grid_number_cells_vx = 20            ! for splines
-    remapping_cart_grid_number_cells_vy = 6             ! for splines
-    remapping_sparse_grid_max_level_x = 9                ! for the sparse grid
-    remapping_sparse_grid_max_level_y = 7                 ! for the sparse grid
-    remapping_sparse_grid_max_level_vx = 9                 ! for the sparse grid
-    remapping_sparse_grid_max_level_vy = 7                 ! for the sparse grid
+    remapping_cart_grid_n_cells_x  = 50            ! for splines
+    remapping_cart_grid_n_cells_y  = 10            ! for splines
+    remapping_cart_grid_n_cells_vx = 20            ! for splines
+    remapping_cart_grid_n_cells_vy = 6             ! for splines
+    remapping_sparse_grid_max_level_x = 10               ! for the sparse grid
+    remapping_sparse_grid_max_level_y = 6               ! for the sparse grid
+    remapping_sparse_grid_max_level_vx = 10              ! for the sparse grid
+    remapping_sparse_grid_max_level_vy = 6              ! for the sparse grid
 /
 
 &pic_lbfr_deposition_params
     deposition_particles_pos_type = 0       ! 0 = initialized (and resampled) on a structured grid, 1 = unstructured (random)
-    deposition_particles_move_type = 0      ! 0 = new particles are created at each step,  1 = they move until next remap step
-    number_deposition_particles = 50000     ! used for unstructured deposition particles
-    nb_deposition_particles_per_cell_x = 2  ! used for structured deposition particles
-    nb_deposition_particles_per_cell_y = 2  ! used for structured deposition particles
-    nb_deposition_particles_vx = 5         ! used for structured deposition particles
-    nb_deposition_particles_vy = 5          ! used for structured deposition particles
+    deposition_particles_move_type = 1      ! 0 = new particles are created at each step,  1 = they move until next remap step
+    n_deposition_particles = 50000          ! for unstructured deposition particles
+    n_deposition_particles_per_cell_x = 4   ! for structured deposition particles
+    n_deposition_particles_per_cell_y = 3   ! for structured deposition particles
+    n_deposition_particles_vx = 4           ! for structured deposition particles
+    n_deposition_particles_vy = 3           ! for structured deposition particles
 /
 
 &pic_lbfr_markers_params
     flow_markers_type = 0         ! 0 = structured (markers remapped on a cartesian grid),     1 = unstructured
-    number_markers_x  = 100       ! for structured markers (defines the cartesian grid where they are remapped)
-    number_markers_y  = 20
-    number_markers_vx = 60
-    number_markers_vy = 10
-    nb_unstruct_markers_per_cell  = 7   ! for unstructured flow markers
-    flow_grid_number_cells_x = 50   ! the cartesian flow grid defines the cells where the flow is linearized
-    flow_grid_number_cells_y = 10   ! (it is also used with the unstructured flow markers)
-    flow_grid_number_cells_vx = 30
-    flow_grid_number_cells_vy = 8
+    n_flow_markers_x  = 100       ! for structured markers (defines the cartesian grid where they are remapped)
+    n_flow_markers_y  = 20
+    n_flow_markers_vx = 60
+    n_flow_markers_vy = 10
+    n_unstruct_markers_per_cell  = 7   ! for unstructured flow markers
+    flow_grid_n_cells_x = 50   ! the cartesian flow grid defines the cells where the flow is linearized
+    flow_grid_n_cells_y = 10   ! (it is also used with the unstructured flow markers)
+    flow_grid_n_cells_vx = 30
+    flow_grid_n_cells_vy = 8
 /

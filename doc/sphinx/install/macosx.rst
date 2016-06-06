@@ -49,8 +49,3 @@ If you want to run tests that use nurbs ::
 	$ sudo port install python34
 	$ sudo port select --set python python34
 
-A special options file is available in selalib/cmake directory ::
-
-	$ mkdir selalib/build
-	$ cd selalib/build
-	$ cmake ../ -DOPTIONS_FILE=../../cmake/macports_update_2014.cmake 
