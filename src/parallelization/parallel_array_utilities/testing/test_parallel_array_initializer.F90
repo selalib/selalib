@@ -15,6 +15,7 @@ program unit_test_initializers_4d
 
   use sll_m_collective, only: &
     sll_s_boot_collective, &
+    sll_s_halt_collective, &
     sll_f_get_collective_rank, &
     sll_f_get_collective_size, &
     sll_v_world_collective
@@ -102,9 +103,10 @@ tx => sll_f_new_coordinate_transformation_2d_analytic( &
 
 mesh_4d => mx * mv
 
-if (prank == MPI_MASTER) call sll_o_display(mesh_4d)
-
-call write_mesh_4d(mesh_4d)
+if (prank == MPI_MASTER) then
+  call sll_o_display(mesh_4d)
+  call write_mesh_4d(mesh_4d)
+end if
 
 !Layout for plotting
 layout => sll_f_new_layout_4d( sll_v_world_collective )
@@ -153,6 +155,8 @@ end do
 call write_xmf_file(mesh_4d, f, layout, iplot=1)
 
 print *, 'PASSED'
+
+call sll_s_halt_collective()
 
 contains
 

@@ -1,7 +1,7 @@
 !> @defgroup file_io sll_file_io
 !> @author Pierre Navaro
 !> @brief 
-!> Library to create files readable by visualization softwares.
+!> Create files readable by visualization softwares.
 !> @details
 !> External links:
 !> <table>
