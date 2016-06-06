@@ -854,16 +854,11 @@ contains !************************** Operations **************************
     sll_int32                              :: ierr
     ! FIXME: Argument checking
     call sll_check_collective_ptr( col )
-    call MPI_BARRIER( col%comm, ierr )
-    call sll_s_test_mpi_error( ierr, &
-         'sll_collective_allgather_int(): MPI_BARRIER()' )
     call MPI_ALLGATHER( send_buf(:), send_sz, MPI_INTEGER, &
                         recv_buf(:), recv_sz, MPI_INTEGER, col%comm, ierr )
     call sll_s_test_mpi_error( ierr, &
          'sll_collective_allgather_int(): MPI_ALLGATHER()' )
-    call MPI_BARRIER( col%comm, ierr )
-    call sll_s_test_mpi_error( ierr, &
-         'sll_collective_allgather_int(): MPI_BARRIER()' )
+
   end subroutine
 
   subroutine sll_collective_allgather_real64( &
@@ -881,17 +876,12 @@ contains !************************** Operations **************************
     sll_int32                               :: ierr
     ! FIXME: Argument checking
     call sll_check_collective_ptr( col )
-    call MPI_BARRIER( col%comm, ierr )
-    call sll_s_test_mpi_error( ierr, &
-         'sll_collective_allgather_int(): MPI_BARRIER()' )
     call MPI_ALLGATHER( send_buf(:), send_sz, MPI_REAL8, &
                         recv_buf(:), recv_sz, MPI_REAL8, &
                         col%comm, ierr )
     call sll_s_test_mpi_error( ierr, &
          'sll_collective_allgather_int(): MPI_ALLGATHER()' )
-    call MPI_BARRIER( col%comm, ierr )
-    call sll_s_test_mpi_error( ierr, &
-         'sll_collective_allgather_int(): MPI_BARRIER()' )
+
   end subroutine sll_collective_allgather_real64
 
 
@@ -1061,7 +1051,6 @@ contains !************************** Operations **************************
     sll_int32                             :: ierr
     ! FIXME: ARG CHECKING!
     call sll_check_collective_ptr( col )
-    call MPI_BARRIER( col%comm, ierr )
     call MPI_ALLREDUCE( &
       send_buf, &
       rec_buf, &
@@ -1093,7 +1082,6 @@ contains !************************** Operations **************************
     sll_int32                             :: ierr
     ! FIXME: ARG CHECKING!
     call sll_check_collective_ptr( col )
-    call MPI_BARRIER( col%comm, ierr )
     call MPI_ALLREDUCE( &
       send_buf, &
       rec_buf, &
@@ -1124,7 +1112,6 @@ contains !************************** Operations **************************
     sll_int32                             :: ierr
     ! FIXME: ARG CHECKING!
     call sll_check_collective_ptr( col )
-    call MPI_BARRIER( col%comm, ierr )
     call MPI_ALLREDUCE( &
       send_buf, &
       rec_buf, &
@@ -1148,7 +1135,6 @@ contains !************************** Operations **************************
     sll_int32                             :: ierr
     ! FIXME: ARG CHECKING!
     call sll_check_collective_ptr( col )
-    call MPI_BARRIER( col%comm, ierr )
     call MPI_ALLREDUCE( &
       send_buf, &
       rec_buf, &
@@ -1180,7 +1166,6 @@ contains !************************** Operations **************************
     sll_int32                             :: ierr
     ! FIXME: ARG CHECKING!
     call sll_check_collective_ptr( col )
-    call MPI_BARRIER( col%comm, ierr )
     call MPI_ALLREDUCE( &
       send_buf, &
       rec_buf, &
@@ -1211,12 +1196,10 @@ contains !************************** Operations **************************
     sll_int32                             :: ierr
     ! FIXME: MORE ARG CHECKING!
     call sll_check_collective_ptr( col )
-    call MPI_BARRIER( col%comm, ierr )
     call MPI_ALLREDUCE( send_buf, rec_buf, count, MPI_LOGICAL, op, &
          col%comm, ierr )
     call sll_s_test_mpi_error( ierr, &
          'sll_s_collective_allreduce_logical(): MPI_ALLREDUCE()' )
-    call MPI_BARRIER( col%comm, ierr )
   end subroutine sll_s_collective_allreduce_logical
 
   !> @brief Reduces integer values on all processes to a single value
@@ -1385,16 +1368,11 @@ contains !************************** Operations **************************
     sll_int32                            :: ierr
     call sll_check_collective_ptr( col )
     ! FIXME: MORE ARG CHECKING
-    call MPI_BARRIER( col%comm, ierr )
-    call sll_s_test_mpi_error( ierr, &
-         'sll_s_collective_alltoall_int(): MPI_BARRIER()' )
     call MPI_ALLTOALL( send_buf, send_count, MPI_INTEGER, &
                        recv_buf, recv_count, MPI_INTEGER, col%comm, ierr )
     call sll_s_test_mpi_error( ierr, &
          'sll_s_collective_alltoall_int(): MPI_ALLTOALLV()' )
-    call MPI_BARRIER( col%comm, ierr )
-    call sll_s_test_mpi_error( ierr, &
-         'sll_s_collective_alltoall_int(): MPI_BARRIER()' )
+
   end subroutine sll_s_collective_alltoall_int
 
   subroutine sll_collective_alltoall_double( send_buf, send_count, &
@@ -1407,17 +1385,11 @@ contains !************************** Operations **************************
     sll_int32                             :: ierr
     call sll_check_collective_ptr( col )
     ! FIXME: MORE ARG CHECKING
-    call MPI_BARRIER( col%comm, ierr )
-    call sll_s_test_mpi_error( ierr, &
-         'sll_collective_alltoall_double(): MPI_BARRIER()' )
     call MPI_ALLTOALL( send_buf, send_count, MPI_DOUBLE_PRECISION, &
                        recv_buf, recv_count, MPI_DOUBLE_PRECISION, &
                        col%comm, ierr )
     call sll_s_test_mpi_error( ierr, &
          'sll_collective_alltoall_double(): MPI_ALLTOALL()' )
-    call MPI_BARRIER( col%comm, ierr )
-    call sll_s_test_mpi_error( ierr, &
-         'sll_collective_alltoall_double(): MPI_BARRIER()' )
   end subroutine sll_collective_alltoall_double
 
   subroutine sll_collective_alltoall_complex_double( send_buf, send_count, &
@@ -1430,17 +1402,12 @@ contains !************************** Operations **************************
     sll_int32                             :: ierr
     call sll_check_collective_ptr( col )
     ! FIXME: MORE ARG CHECKING
-    call MPI_BARRIER( col%comm, ierr )
-    call sll_s_test_mpi_error( ierr, &
-         'sll_collective_alltoall_complex_double(): MPI_BARRIER()' )
     call MPI_ALLTOALL( send_buf, send_count, MPI_DOUBLE_COMPLEX, &
                        recv_buf, recv_count, MPI_DOUBLE_COMPLEX, &
                        col%comm, ierr )
     call sll_s_test_mpi_error( ierr, &
          'sll_collective_alltoall_complex_double(): MPI_ALLTOALL()' )
-    call MPI_BARRIER( col%comm, ierr )
-    call sll_s_test_mpi_error( ierr, &
-         'sll_collective_alltoall_complex_double(): MPI_BARRIER()' )
+
   end subroutine sll_collective_alltoall_complex_double
 
 
@@ -1479,17 +1446,12 @@ contains !************************** Operations **************************
     sll_int32                            :: ierr
     ! FIXME: ARG CHECKING!
     call sll_check_collective_ptr( col )
-    call MPI_BARRIER( col%comm, ierr )
-    call sll_s_test_mpi_error( ierr, &
-         'sll_s_collective_alltoallv_real(): MPI_BARRIER()' )
     call MPI_ALLTOALLV( send_buf, send_cnts, send_displs, MPI_REAL, &
                         recv_buf, recv_cnts, recv_displs, MPI_REAL, &
                         col%comm, ierr )
     call sll_s_test_mpi_error( ierr, &
          'sll_s_collective_alltoallv_real(): MPI_ALLTOALLV()' )
-    call MPI_BARRIER( col%comm, ierr )
-    call sll_s_test_mpi_error( ierr, &
-         'sll_s_collective_alltoallv_real(): MPI_BARRIER()' )
+
   end subroutine sll_s_collective_alltoallv_real
 
   subroutine sll_s_collective_alltoallv_double( send_buf, send_cnts, &
@@ -1506,9 +1468,6 @@ contains !************************** Operations **************************
     sll_int32                             :: ierr
     ! FIXME: ARG CHECKING!
     call sll_check_collective_ptr( col )
-    call MPI_BARRIER( col%comm, ierr )
-    call sll_s_test_mpi_error( ierr, &
-         'sll_s_collective_alltoallv_double(): MPI_BARRIER()' )
     call MPI_ALLTOALLV( send_buf, send_cnts, send_displs, &
                         MPI_DOUBLE_PRECISION, &
                         recv_buf, recv_cnts, recv_displs, &
@@ -1516,9 +1475,7 @@ contains !************************** Operations **************************
                         col%comm, ierr )
     call sll_s_test_mpi_error( ierr, &
          'sll_s_collective_alltoallv_double(): MPI_ALLTOALLV()' )
-    call MPI_BARRIER( col%comm, ierr )
-    call sll_s_test_mpi_error( ierr, &
-         'sll_s_collective_alltoallv_double(): MPI_BARRIER()' )
+
   end subroutine sll_s_collective_alltoallv_double
 
   subroutine sll_collective_alltoallV_complex_double( send_buf, send_cnts, &
@@ -1535,9 +1492,6 @@ contains !************************** Operations **************************
     sll_int32                             :: ierr
     ! FIXME: ARG CHECKING!
     call sll_check_collective_ptr( col )
-    call MPI_BARRIER( col%comm, ierr )
-    call sll_s_test_mpi_error( ierr, &
-         'sll_collective_alltoallV_complex_double(): MPI_BARRIER()' )
     call MPI_ALLTOALLV( send_buf, send_cnts, send_displs, &
                         MPI_DOUBLE_COMPLEX, &
                         recv_buf, recv_cnts, recv_displs, &
@@ -1545,9 +1499,7 @@ contains !************************** Operations **************************
                         col%comm, ierr )
     call sll_s_test_mpi_error( ierr, &
          'sll_collective_alltoallV_complex_double(): MPI_ALLTOALLV()' )
-    call MPI_BARRIER( col%comm, ierr )
-    call sll_s_test_mpi_error( ierr, &
-         'sll_collective_alltoallV_complex_double(): MPI_BARRIER()' )
+
   end subroutine sll_collective_alltoallV_complex_double
 
 
@@ -1585,15 +1537,12 @@ contains !************************** Operations **************************
     sll_int32                           :: ierr
     ! FIXME: ARG CHECKING!
     call sll_check_collective_ptr( col )
-    call MPI_BARRIER( col%comm, ierr )
-    call sll_s_test_mpi_error( ierr, &
-         'sll_s_collective_alltoallv_int(): MPI_BARRIER()' )
     call MPI_ALLTOALLV( send_buf(:), send_cnts(:), send_displs(:), MPI_INTEGER,&
          recv_buf(:), recv_cnts(:), recv_displs(:), MPI_INTEGER,&
          col%comm, ierr )
     call sll_s_test_mpi_error( ierr, &
          'sll_s_collective_alltoallv_int(): MPI_ALLTOALLV()' )
-    call MPI_BARRIER( col%comm, ierr )
+
  end subroutine sll_s_collective_alltoallv_int
 
 !
@@ -1619,9 +1568,6 @@ contains !************************** Operations **************************
 
     ! FIXME: ARG CHECKING!
     call sll_check_collective_ptr( col )
-    call MPI_BARRIER( col%comm, ierr )
-    call sll_s_test_mpi_error( ierr, &
-         'sll_s_collective_alltoallv_int(): MPI_BARRIER()' )
 
     size_comm = sll_f_get_collective_size(col)
     SLL_ASSERT( sendcnts_size .eq. size_comm )
@@ -1654,7 +1600,6 @@ contains !************************** Operations **************************
                        col%comm, ierr )
     call sll_s_test_mpi_error( ierr, &
          'sll_s_collective_alltoallv_int(): MPI_ALLTOALLV()' )
-    call MPI_BARRIER( col%comm, ierr )
     SLL_DEALLOCATE_ARRAY(recv_displs,ierr)
     SLL_DEALLOCATE_ARRAY(send_displs,ierr)
     SLL_DEALLOCATE_ARRAY(recv_cnts,ierr)

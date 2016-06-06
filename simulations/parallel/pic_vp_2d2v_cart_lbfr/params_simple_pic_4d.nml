@@ -1,36 +1,28 @@
 &sim_params
-        THERM_SPEED         = 1.0
-        dt                  =  0.1
-        number_iterations   = 120
-        plot_period         = 20
-        SPECIES_CHARGE      = -1.0
-        SPECIES_MASS        = 1.0
-        ALPHA  = 0.05                    ! amplitude of initial perturbation
-        use_pic_lbfr_scheme = .false.    ! choose between standard PIC or PIC-LBFR
-        run_nb = 2
+        delta_t = 0.1
+        n_time_steps = 100
+        alpha = 0.1
+        n_mode = 1
+        thermal_v1 = 1.0
+        thermal_v2 = 1.0
 /
 
-
-! parametres physiques pour la solution exacte du modele lineaire
-&elec_params
-        er      = 0.3677
-        psi     = 0.536245
-        omega_r = 1.4156
-        omega_i = -0.1533
+&pic_poisson_params
+        ng_x1 = 32
+        ng_x2 = 32
+        x1_min = 0.0
+        x2_min = 0.0
+        x1_max = 12.5663706144
+        x2_max = 12.5663706144
+        degree_smoother = 1
 /
 
-&poisson_grid_params
-        NC_X = 64                       !  Poisson grid // voir l'influence
-        NC_Y = 16                       !  Poisson grid // voir l'influence
-        XMIN   = 0.0
-        KX_LANDAU = 0.5
-        YMIN   = 0.0
-        YMAX   = 1.0
-        DOMAIN_IS_X_PERIODIC = .true.
-        DOMAIN_IS_Y_PERIODIC = .true.
+&particle_method
+        particle_type_str = "SLL_SIMPLE_PARTICLES"
 /
-
 
 &simple_pic_params
-    NUM_PARTICLES       = 240000    ! <-- garder pour la classe abstraite
+        init_case_str = "SLL_INIT_SOBOL"
+        n_particles = 100000
+        with_control_variate = .FALSE.
 /

@@ -4,7 +4,7 @@
 !! @authors Marco Restelli - <marco.restelli@gmail.com>
 !!
 !! @brief 
-!! Library for writing simulation output data in the form of an XDMF database.
+!! Write simulation output data in the form of an XDMF database.
 !! 
 !! @details
 !! Typically, an XDMF database is composed of a sequence of time dependent

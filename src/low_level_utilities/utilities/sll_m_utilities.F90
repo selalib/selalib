@@ -170,24 +170,19 @@ contains
   !> Convert an integer < 9999 to a 4 characters string
   subroutine sll_s_int2string( istep, cstep )
     integer         , intent(in ) :: istep   !< input integer
-    character(len=4), intent(out) :: cstep   !< output string
+    character(len=*), intent(out) :: cstep   !< output string
 
-    character(len=1) :: aa, bb, cc, dd
-    integer          :: kk1, kk2, kk3, kk4
+    integer          :: l
+    character(len=8) :: str_fmt
 
-    if ( istep >= 0 .and. istep < 10000) then
-       kk1 = istep/1000
-       aa  = char(kk1 + 48)
-       kk2 = (istep - kk1*1000)/100
-       bb  = char(kk2 + 48)
-       kk3 = (istep - (kk1*1000) - (kk2*100))/10
-       cc  = char(kk3 + 48)
-       kk4 = (istep - (kk1*1000) - (kk2*100) - (kk3*10))/1
-       dd  = char(kk4 + 48)
-       cstep = aa//bb//cc//dd
+    l = len(cstep)
+
+    if ( istep >= 0  .and. istep < 10**l) then
+       str_fmt="(I0"//char(l+48)//"."//char(l+48)//")"
+       write(cstep,str_fmt) istep
     else
-       SLL_WARNING( 'sll_s_int2string', 'index is negative or greater than 9999' )
-       print*, 'index =', istep
+       SLL_WARNING( 'sll_s_int2string', 'index is negative or too big' )
+       print*, 'index =', istep, ' cstep length = ', l
        cstep = 'xxxx'
     end if
 
