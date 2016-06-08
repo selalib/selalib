@@ -21,7 +21,8 @@
 
 !> @brief Module for groups of particles for particle methods with linearized-backward-flow (lbf) resamplings
 
-! <<<<Optimized_LBF>>>> Same method as [[file:../pic_lbfr]] which much less options to allow for more optimizations
+! <<<<particle_lbf_group>>>> AAA_ALH_HERE Same method as [[file:../pic_lbfr/sll_m_pic_lbfr_4d_group.F90]] which much less options to allow
+! for more optimizations
 
 module sll_m_particle_group_lbf_2d2v
 

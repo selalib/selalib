@@ -38,7 +38,7 @@
      [[shell:mkdir -p simple_pic.out]]
      [[elisp:(compile "cd simple_pic.out && ${SELALIB}/build/bin/sim_pic_vp_2d2v_cart_remapped ../params_simple_pic_4d.nml")]]
      [[shell:gnuplot -e "plot 'lt_pic.out/logE_standPush.dat' w l,'simple_pic.out/logE_standPush.dat' w l" --persist]]
-     AAA_ALH_HERE
+     AAA_ALH_TODO
 *** Autres graphes
 -- pour representer les points reconstruits ou bien les points de f_target dont la vitesse est donnee
 
