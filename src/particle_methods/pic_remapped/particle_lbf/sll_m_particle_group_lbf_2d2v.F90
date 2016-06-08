@@ -50,7 +50,7 @@ module sll_m_particle_group_lbf_2d2v
 
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
-  !> Group of @ref sll_t_pic_lbfr_4d_marker
+  !> Group of @ref sll_t_particle_lbf_4d_marker
   type, extends(sll_c_particle_group_base) :: sll_t_particle_group_lbf_2d2v
 
    !> @name The particles
@@ -81,16 +81,16 @@ module sll_m_particle_group_lbf_2d2v
 
     !> @name Getters
     !> @{
-    procedure :: get_x          => pic_lbfr_4d_get_x  ! verifier nomenclature chez Katharina
-    procedure :: get_v          => pic_lbfr_4d_get_v
-    procedure :: get_charge     => pic_lbfr_4d_get_charge
-    procedure :: get_mass       => pic_lbfr_4d_get_mass
+    procedure :: get_x          => particle_lbf_4d_get_x      ! [[function%20particle_lbf_4d_get_x]]
+    procedure :: get_v          => particle_lbf_4d_get_v      ! [[function%20particle_lbf_4d_get_v]]
+    procedure :: get_charge     => particle_lbf_4d_get_charge ! [[function%20particle_lbf_4d_get_charge]]
+    procedure :: get_mass       => particle_lbf_4d_get_mass   ! [[function%20particle_lbf_4d_get_mass]]
     !> @}
     
     !> @name Setters
     !> @{
-    procedure :: set_x              => pic_lbfr_4d_set_x
-    procedure :: set_v              => pic_lbfr_4d_set_v
+    procedure :: set_x              => particle_lbf_4d_set_x
+    procedure :: set_v              => particle_lbf_4d_set_v
     !> @}
 
     !> @name Sampling and resampling
@@ -98,30 +98,79 @@ module sll_m_particle_group_lbf_2d2v
     procedure :: resample
     !> @}
 
-    procedure :: pic_lbfr_4d_write_hat_density_on_remapping_grid        !> this evaluates an analytic f0
-    procedure :: pic_lbfr_4d_write_landau_density_on_remapping_grid     !> this evaluates an analytic f0
+    procedure :: particle_lbf_4d_write_hat_density_on_remapping_grid        !> this evaluates an analytic f0
+    procedure :: particle_lbf_4d_write_landau_density_on_remapping_grid     !> this evaluates an analytic f0
 
     !todo: fusionner
-    procedure :: pic_lbfr_4d_reset_markers_position
+    procedure :: particle_lbf_4d_reset_markers_position
     procedure :: reset_deposition_particles_coordinates
     procedure :: reset_deposition_particles_weights_with_direct_interpolation
 
-    procedure :: pic_lbfr_4d_set_markers_connectivity
+    procedure :: particle_lbf_4d_set_markers_connectivity
 
-    procedure :: pic_lbfr_4d_reconstruct_f
-    procedure :: pic_lbfr_4d_interpolate_value_of_remapped_f
+    procedure :: particle_lbf_4d_reconstruct_f
+    procedure :: particle_lbf_4d_interpolate_value_of_remapped_f
 
     procedure :: get_ltp_deformation_matrix                           !> the local bwd flow using structured flow markers
 
     ! Initializer
-    procedure :: init => initialize_pic_lbfr_4d_group   !> Initialization function
-    procedure :: free => delete_pic_lbfr_4d_group       !> Destructor
+    procedure :: init => initialize_particle_lbf_4d_group   !> Initialization function
+    procedure :: free => delete_particle_lbf_4d_group       !> Destructor
 
   end type sll_t_particle_group_lbf_2d2v
 
-
 contains
 
+  ! gets the physical coordinates of a 'particle'.  Simpler version of
+  ! [[file:~/sllrzg/src/particle_methods/pic_remapped/pic_lbfr/sll_m_pic_lbfr_4d_group.F90::function%20pic_lbfr_4d_get_x]]
+  
+  pure function particle_lbf_4d_get_x( self, i ) result( r )
+    ! AAA_ALH_TODO
+  end function particle_lbf_4d_get_x
+
+  ! Simpler version of
+  ! [[file:~/sllrzg/src/particle_methods/pic_remapped/pic_lbfr/sll_m_pic_lbfr_4d_group.F90::function%20pic_lbfr_4d_get_v]]
+  
+  ! AAA_ALH_TODO procedure :: get_v          => particle_lbf_4d_get_v
+
+  ! Simpler version of
+  ! [[file:~/sllrzg/src/particle_methods/pic_remapped/pic_lbfr/sll_m_pic_lbfr_4d_group.F90::function%20pic_lbfr_4d_get_charge]]
+  
+  ! AAA_ALH_TODO procedure :: get_charge     => particle_lbf_4d_get_charge
+  
+  ! Simpler version of
+  ! [[file:~/sllrzg/src/particle_methods/pic_remapped/pic_lbfr/sll_m_pic_lbfr_4d_group.F90::function%20pic_lbfr_4d_get_mass]]
+  
+  ! AAA_ALH_TODO procedure :: get_mass       => particle_lbf_4d_get_mass
+  
+  ! Simpler version of
+  ! [[file:~/sllrzg/src/particle_methods/pic_remapped/pic_lbfr/sll_m_pic_lbfr_4d_group.F90::subroutine%20pic_lbfr_4d_set_x]]
+  
+  ! AAA_ALH_TODO procedure :: set_x              => particle_lbf_4d_set_x
+  
+  ! Simpler version of
+  ! [[file:~/sllrzg/src/particle_methods/pic_remapped/pic_lbfr/sll_m_pic_lbfr_4d_group.F90::subroutine%20pic_lbfr_4d_set_v]]
+  
+  ! AAA_ALH_TODO procedure :: set_v              => particle_lbf_4d_set_v
+  
+  ! AAA_ALH_TODO procedure :: resample
+  ! AAA_ALH_TODO procedure :: particle_lbf_4d_write_hat_density_on_remapping_grid        !> this evaluates an analytic f0
+  ! AAA_ALH_TODO procedure :: particle_lbf_4d_write_landau_density_on_remapping_grid     !> this evaluates an analytic f0
+  
+  ! AAA_ALH_TODO fusionner
+  !procedure :: particle_lbf_4d_reset_markers_position
+  !procedure :: reset_deposition_particles_coordinates
+  !procedure :: reset_deposition_particles_weights_with_direct_interpolation
+
+  ! AAA_ALH_TODO procedure :: particle_lbf_4d_set_markers_connectivity
+
+  ! AAA_ALH_TODO procedure :: particle_lbf_4d_reconstruct_f
+  ! AAA_ALH_TODO procedure :: particle_lbf_4d_interpolate_value_of_remapped_f
+
+  ! AAA_ALH_TODO procedure :: get_ltp_deformation_matrix                           !> the local bwd flow using structured flow markers
+
+  ! AAA_ALH_TODO procedure :: init => initialize_particle_lbf_4d_group   !> Initialization function
+  ! AAA_ALH_TODO procedure :: free => delete_particle_lbf_4d_group       !> Destructor
 
 
 end module sll_m_particle_group_lbf_2d2v
