@@ -6,11 +6,11 @@
 #+STARTUP: showeverything
 
 * <<Entry_points>>
-  [[BSL-LT-PIC_Simulation]] [[HERE]] [[Optimized_LBF]] [[PIC-LBFR_Library]] [[pic_remapped_documentation]] [[README]] [[test_4dsg_for_remapped_pic]] [[test_bsl_lt_pic_4d]]
-  [[test_pic_lbfr_4d]]
+  [[BSL-LT-PIC_Simulation]] [[HERE]] [[particle_lbf_group]] [[particle_lbf_library]] [[PIC-LBFR_Library]] [[pic_remapped_documentation]] [[README]]
+  [[test_4dsg_for_remapped_pic]] [[test_bsl_lt_pic_4d]] [[test_pic_lbfr_4d]]
 * <<Reference>>
-  [[BSL-LT-PIC_Simulation]] [[Optimized_LBF]] [[PIC-LBFR_Library]] [[pic_remapped_documentation]] [[README]] [[test_4dsg_for_remapped_pic]] [[test_bsl_lt_pic_4d]]
-  [[test_pic_lbfr_4d]] [[TODO]]
+  [[BSL-LT-PIC_Simulation]] [[particle_lbf_group]] [[particle_lbf_library]] [[PIC-LBFR_Library]] [[pic_remapped_documentation]] [[README]]
+  [[test_4dsg_for_remapped_pic]] [[test_bsl_lt_pic_4d]] [[test_pic_lbfr_4d]] [[TODO]]
 * <<Alphabetical_list>> [[A]] [[B]] [[C]] [[D]] [[E]] [[F]] [[G]] [[H]] [[I]] [[L]] [[M]] [[N]] [[O]] [[P]] [[R]] [[S]] [[T]] [[U]]
 ** <<A>>
 *** <<ALH>>
@@ -18,6 +18,7 @@
 	[[file:../../../src/particle_methods/pic_remapped/bsl_lt_pic/sll_m_bsl_lt_pic_4d_group.F90::03611][../../../src/particle_methods/pic_remapped/bsl_lt_pic/sll_m_bsl_lt_pic_4d_group.F90]]
 	[[file:../../../src/particle_methods/pic_remapped/bsl_lt_pic/sll_m_bsl_lt_pic_4d_group.F90::04697][../../../src/particle_methods/pic_remapped/bsl_lt_pic/sll_m_bsl_lt_pic_4d_group.F90]]
 	[[file:../../../src/particle_methods/pic_remapped/bsl_lt_pic/testing/test_4dsg_for_remapped_pic.F90::00020][../../../src/particle_methods/pic_remapped/bsl_lt_pic/testing/test_4dsg_for_remapped_pic.F90]]
+	[[file:../../../src/particle_methods/pic_remapped/particle_lbf/testing/test_4dsg_for_pic_lbfr.F90::00020][../../../src/particle_methods/pic_remapped/particle_lbf/testing/test_4dsg_for_pic_lbfr.F90]]
 	[[file:../../../src/particle_methods/pic_remapped/pic_lbfr/sll_m_pic_lbfr_4d_group.F90::04017][../../../src/particle_methods/pic_remapped/pic_lbfr/sll_m_pic_lbfr_4d_group.F90]]
 	[[file:../../../src/particle_methods/pic_remapped/pic_lbfr/sll_m_pic_lbfr_4d_group.F90::04110][../../../src/particle_methods/pic_remapped/pic_lbfr/sll_m_pic_lbfr_4d_group.F90]]
 	[[file:../../../src/particle_methods/pic_remapped/pic_lbfr/sll_m_pic_lbfr_4d_group.F90::05081][../../../src/particle_methods/pic_remapped/pic_lbfr/sll_m_pic_lbfr_4d_group.F90]]
@@ -60,6 +61,8 @@
 *** <<f>>
 	[[file:../../../src/particle_methods/pic_remapped/bsl_lt_pic/testing/test_4dsg_for_remapped_pic.F90::00055][../../../src/particle_methods/pic_remapped/bsl_lt_pic/testing/test_4dsg_for_remapped_pic.F90]]
 		[[file:../../../src/particle_methods/pic_remapped/bsl_lt_pic/testing/test_4dsg_for_remapped_pic.F90::00086][../../../src/particle_methods/pic_remapped/bsl_lt_pic/testing/test_4dsg_for_remapped_pic.F90]]
+	[[file:../../../src/particle_methods/pic_remapped/particle_lbf/testing/test_4dsg_for_pic_lbfr.F90::00057][../../../src/particle_methods/pic_remapped/particle_lbf/testing/test_4dsg_for_pic_lbfr.F90]]
+		[[file:../../../src/particle_methods/pic_remapped/particle_lbf/testing/test_4dsg_for_pic_lbfr.F90::00088][../../../src/particle_methods/pic_remapped/particle_lbf/testing/test_4dsg_for_pic_lbfr.F90]]
 	[[file:../../../src/particle_methods/pic_remapped/pic_lbfr/testing/test_4dsg_for_pic_lbfr.F90::00055][../../../src/particle_methods/pic_remapped/pic_lbfr/testing/test_4dsg_for_pic_lbfr.F90]]
 		[[file:../../../src/particle_methods/pic_remapped/pic_lbfr/testing/test_4dsg_for_pic_lbfr.F90::00086][../../../src/particle_methods/pic_remapped/pic_lbfr/testing/test_4dsg_for_pic_lbfr.F90]]
 *** <<File_info>>
@@ -87,17 +90,16 @@
 		[[file:README::00016][README]]
 ** <<H>>
 *** <<HERE>>
-	[[file:../pic_vp_2d2v_cart_lbfr_temp/README::00041][../pic_vp_2d2v_cart_lbfr_temp/README]]
-	[[file:../pic_vp_2d2v_cart_lbfr_temp/sll_m_sim_pic_vp_2d2v_cart_lbfr_temp.F90::00254][../pic_vp_2d2v_cart_lbfr_temp/sll_m_sim_pic_vp_2d2v_cart_lbfr_temp.F90]]
-	[[file:../pic_vp_2d2v_cart_remapped/README::00041][../pic_vp_2d2v_cart_remapped/README]]
-	[[file:../pic_vp_2d2v_cart_remapped/sll_m_sim_pic_vp_2d2v_cart_remapped.F90::00228][../pic_vp_2d2v_cart_remapped/sll_m_sim_pic_vp_2d2v_cart_remapped.F90]]
+	[[file:../../../src/particle_methods/pic_remapped/particle_lbf/sll_m_particle_group_lbf_2d2v.F90::00024][../../../src/particle_methods/pic_remapped/particle_lbf/sll_m_particle_group_lbf_2d2v.F90]]
 	[[file:README::00042][README]]
 ** <<I>>
 *** <<interp>>
 	[[file:../../../src/particle_methods/pic_remapped/bsl_lt_pic/testing/test_4dsg_for_remapped_pic.F90::00049][../../../src/particle_methods/pic_remapped/bsl_lt_pic/testing/test_4dsg_for_remapped_pic.F90]]
+	[[file:../../../src/particle_methods/pic_remapped/particle_lbf/testing/test_4dsg_for_pic_lbfr.F90::00051][../../../src/particle_methods/pic_remapped/particle_lbf/testing/test_4dsg_for_pic_lbfr.F90]]
 	[[file:../../../src/particle_methods/pic_remapped/pic_lbfr/testing/test_4dsg_for_pic_lbfr.F90::00049][../../../src/particle_methods/pic_remapped/pic_lbfr/testing/test_4dsg_for_pic_lbfr.F90]]
 *** <<interpolate_value>>
 	[[file:../../../src/particle_methods/pic_remapped/bsl_lt_pic/testing/test_4dsg_for_remapped_pic.F90::00112][../../../src/particle_methods/pic_remapped/bsl_lt_pic/testing/test_4dsg_for_remapped_pic.F90]]
+	[[file:../../../src/particle_methods/pic_remapped/particle_lbf/testing/test_4dsg_for_pic_lbfr.F90::00114][../../../src/particle_methods/pic_remapped/particle_lbf/testing/test_4dsg_for_pic_lbfr.F90]]
 	[[file:../../../src/particle_methods/pic_remapped/pic_lbfr/testing/test_4dsg_for_pic_lbfr.F90::00112][../../../src/particle_methods/pic_remapped/pic_lbfr/testing/test_4dsg_for_pic_lbfr.F90]]
 ** <<L>>
 *** <<logE_run>>
@@ -128,8 +130,6 @@
 *** <<onestep>>
 	[[file:../../../src/particle_methods/pic_remapped/bsl_lt_pic/sll_m_bsl_lt_pic_4d_group.F90::04697][../../../src/particle_methods/pic_remapped/bsl_lt_pic/sll_m_bsl_lt_pic_4d_group.F90]]
 	[[file:../../../src/particle_methods/pic_remapped/pic_lbfr/sll_m_pic_lbfr_4d_group.F90::05081][../../../src/particle_methods/pic_remapped/pic_lbfr/sll_m_pic_lbfr_4d_group.F90]]
-*** <<Optimized_LBF>>
-	_ref_ [[file:../../../src/particle_methods/pic_remapped/particle_lbf/sll_m_particle_group_lbf_2d2v.F90::00024][../../../src/particle_methods/pic_remapped/particle_lbf/sll_m_particle_group_lbf_2d2v.F90]]
 ** <<P>>
 *** <<particles_snapshot>>
 	[[file:../pic_vp_2d2v_cart_lbfr_temp/sll_m_sim_pic_vp_2d2v_cart_lbfr_temp.F90::00218][../pic_vp_2d2v_cart_lbfr_temp/sll_m_sim_pic_vp_2d2v_cart_lbfr_temp.F90]]
@@ -141,6 +141,10 @@
 		[[file:../pic_vp_2d2v_cart_lbfr_temp/sll_m_sim_pic_vp_2d2v_cart_lbfr_temp.F90::00540][../pic_vp_2d2v_cart_lbfr_temp/sll_m_sim_pic_vp_2d2v_cart_lbfr_temp.F90]]
 	[[file:../pic_vp_2d2v_cart_remapped/sll_m_sim_pic_vp_2d2v_cart_remapped.F90::00126][../pic_vp_2d2v_cart_remapped/sll_m_sim_pic_vp_2d2v_cart_remapped.F90]]
 		[[file:../pic_vp_2d2v_cart_remapped/sll_m_sim_pic_vp_2d2v_cart_remapped.F90::00506][../pic_vp_2d2v_cart_remapped/sll_m_sim_pic_vp_2d2v_cart_remapped.F90]]
+*** <<particle_lbf_group>>
+	_ref_ [[file:../../../src/particle_methods/pic_remapped/particle_lbf/sll_m_particle_group_lbf_2d2v.F90::00024][../../../src/particle_methods/pic_remapped/particle_lbf/sll_m_particle_group_lbf_2d2v.F90]]
+*** <<particle_lbf_library>>
+	_ref_ [[file:../../../src/particle_methods/pic_remapped/particle_lbf/CMakeLists.txt::00009][../../../src/particle_methods/pic_remapped/particle_lbf/CMakeLists.txt]]
 *** <<perf>>
 	[[file:../pic_vp_2d2v_cart_lbfr_temp/README::00055][../pic_vp_2d2v_cart_lbfr_temp/README]]
 		[[file:../pic_vp_2d2v_cart_lbfr_temp/README::00017][../pic_vp_2d2v_cart_lbfr_temp/README]]
@@ -150,7 +154,6 @@
 		[[file:README::00018][README]]
 *** <<PIC-LBFR_Library>>
 	[[file:../../../src/particle_methods/pic_remapped/bsl_lt_pic/CMakeLists.txt::00001][../../../src/particle_methods/pic_remapped/bsl_lt_pic/CMakeLists.txt]]
-	[[file:../../../src/particle_methods/pic_remapped/particle_lbf/CMakeLists.txt::00001][../../../src/particle_methods/pic_remapped/particle_lbf/CMakeLists.txt]]
 	[[file:../../../src/particle_methods/pic_remapped/pic_lbfr/CMakeLists.txt::00001][../../../src/particle_methods/pic_remapped/pic_lbfr/CMakeLists.txt]]
 *** <<pic_lbfr_4d_interpolate_value_of_remapped_f>>
 	[[file:../../../src/particle_methods/pic_remapped/pic_lbfr/sll_m_pic_lbfr_4d_group.F90::04048][../../../src/particle_methods/pic_remapped/pic_lbfr/sll_m_pic_lbfr_4d_group.F90]]
@@ -169,6 +172,7 @@
 ** <<R>>
 *** <<randompoint>>
 	[[file:../../../src/particle_methods/pic_remapped/bsl_lt_pic/testing/test_4dsg_for_remapped_pic.F90::00147][../../../src/particle_methods/pic_remapped/bsl_lt_pic/testing/test_4dsg_for_remapped_pic.F90]]
+	[[file:../../../src/particle_methods/pic_remapped/particle_lbf/testing/test_4dsg_for_pic_lbfr.F90::00149][../../../src/particle_methods/pic_remapped/particle_lbf/testing/test_4dsg_for_pic_lbfr.F90]]
 	[[file:../../../src/particle_methods/pic_remapped/pic_lbfr/testing/test_4dsg_for_pic_lbfr.F90::00147][../../../src/particle_methods/pic_remapped/pic_lbfr/testing/test_4dsg_for_pic_lbfr.F90]]
 *** <<README>>
 	_ref_ [[file:README::00010][README]]
@@ -203,6 +207,8 @@
 	[[file:../../../src/particle_methods/pic_remapped/bsl_lt_pic/sll_m_bsl_lt_pic_4d_utilities.F90::00237][../../../src/particle_methods/pic_remapped/bsl_lt_pic/sll_m_bsl_lt_pic_4d_utilities.F90]]
 	[[file:../../../src/particle_methods/pic_remapped/pic_lbfr/sll_m_pic_lbfr_4d_utilities.F90::00237][../../../src/particle_methods/pic_remapped/pic_lbfr/sll_m_pic_lbfr_4d_utilities.F90]]
 *** <<SLL_INTERPOLATE_FIELD_EXTENDED>>
+	[[file:../../../build/include/sll_accumulators.h::00071][../../../build/include/sll_accumulators.h]]
+		[[file:../../../build/include/sll_accumulators.h::00084][../../../build/include/sll_accumulators.h]]
 	[[file:../../../src/particle_methods/pic_opt2d/pic_opt2d_accumulators/sll_accumulators.h::00071][../../../src/particle_methods/pic_opt2d/pic_opt2d_accumulators/sll_accumulators.h]]
 		[[file:../../../src/particle_methods/pic_opt2d/pic_opt2d_accumulators/sll_accumulators.h::00084][../../../src/particle_methods/pic_opt2d/pic_opt2d_accumulators/sll_accumulators.h]]
 *** <<sll_s_apply_periodic_bc_on_cartesian_mesh_2d>>
@@ -228,27 +234,39 @@
 *** <<testfunction>>
 	[[file:../../../src/particle_methods/pic_remapped/bsl_lt_pic/testing/test_4dsg_for_remapped_pic.F90::00138][../../../src/particle_methods/pic_remapped/bsl_lt_pic/testing/test_4dsg_for_remapped_pic.F90]]
 		[[file:../../../src/particle_methods/pic_remapped/bsl_lt_pic/testing/test_4dsg_for_remapped_pic.F90::00092][../../../src/particle_methods/pic_remapped/bsl_lt_pic/testing/test_4dsg_for_remapped_pic.F90]]
+	[[file:../../../src/particle_methods/pic_remapped/particle_lbf/testing/test_4dsg_for_pic_lbfr.F90::00140][../../../src/particle_methods/pic_remapped/particle_lbf/testing/test_4dsg_for_pic_lbfr.F90]]
+		[[file:../../../src/particle_methods/pic_remapped/particle_lbf/testing/test_4dsg_for_pic_lbfr.F90::00094][../../../src/particle_methods/pic_remapped/particle_lbf/testing/test_4dsg_for_pic_lbfr.F90]]
 	[[file:../../../src/particle_methods/pic_remapped/pic_lbfr/testing/test_4dsg_for_pic_lbfr.F90::00138][../../../src/particle_methods/pic_remapped/pic_lbfr/testing/test_4dsg_for_pic_lbfr.F90]]
 		[[file:../../../src/particle_methods/pic_remapped/pic_lbfr/testing/test_4dsg_for_pic_lbfr.F90::00092][../../../src/particle_methods/pic_remapped/pic_lbfr/testing/test_4dsg_for_pic_lbfr.F90]]
 *** <<test_4dsg_for_pic_lbfr>>
+	[[file:../../../src/particle_methods/pic_remapped/particle_lbf/testing/CMakeLists.txt::00035][../../../src/particle_methods/pic_remapped/particle_lbf/testing/CMakeLists.txt]]
 	[[file:../../../src/particle_methods/pic_remapped/pic_lbfr/testing/CMakeLists.txt::00035][../../../src/particle_methods/pic_remapped/pic_lbfr/testing/CMakeLists.txt]]
 *** <<test_4dsg_for_remapped_pic>>
 	[[file:../../../src/particle_methods/pic_remapped/bsl_lt_pic/testing/CMakeLists.txt::00032][../../../src/particle_methods/pic_remapped/bsl_lt_pic/testing/CMakeLists.txt]]
 		[[file:../../../src/particle_methods/pic_remapped/bsl_lt_pic/testing/test_4dsg_for_remapped_pic.F90::00022][../../../src/particle_methods/pic_remapped/bsl_lt_pic/testing/test_4dsg_for_remapped_pic.F90]]
 	[[file:../../../src/particle_methods/pic_remapped/bsl_lt_pic/testing/test_4dsg_for_remapped_pic.F90::00018][../../../src/particle_methods/pic_remapped/bsl_lt_pic/testing/test_4dsg_for_remapped_pic.F90]]
+	[[file:../../../src/particle_methods/pic_remapped/particle_lbf/testing/test_4dsg_for_pic_lbfr.F90::00018][../../../src/particle_methods/pic_remapped/particle_lbf/testing/test_4dsg_for_pic_lbfr.F90]]
 	[[file:../../../src/particle_methods/pic_remapped/pic_lbfr/testing/test_4dsg_for_pic_lbfr.F90::00018][../../../src/particle_methods/pic_remapped/pic_lbfr/testing/test_4dsg_for_pic_lbfr.F90]]
 *** <<test_bsl_lt_pic_4d>>
 	_ref_ [[file:../../../src/particle_methods/pic_remapped/bsl_lt_pic/testing/CMakeLists.txt::00019][../../../src/particle_methods/pic_remapped/bsl_lt_pic/testing/CMakeLists.txt]]
 *** <<test_forward_push>>
 	[[file:../../../src/particle_methods/pic_remapped/bsl_lt_pic/testing/test_bsl_lt_pic_4d.F90::00741][../../../src/particle_methods/pic_remapped/bsl_lt_pic/testing/test_bsl_lt_pic_4d.F90]]
 		[[file:../../../src/particle_methods/pic_remapped/bsl_lt_pic/testing/test_bsl_lt_pic_4d.F90::00492][../../../src/particle_methods/pic_remapped/bsl_lt_pic/testing/test_bsl_lt_pic_4d.F90]]
+	[[file:../../../src/particle_methods/pic_remapped/particle_lbf/testing/test_pic_lbfr_4d.F90::00817][../../../src/particle_methods/pic_remapped/particle_lbf/testing/test_pic_lbfr_4d.F90]]
+		[[file:../../../src/particle_methods/pic_remapped/particle_lbf/testing/test_pic_lbfr_4d.F90::00543][../../../src/particle_methods/pic_remapped/particle_lbf/testing/test_pic_lbfr_4d.F90]]
 	[[file:../../../src/particle_methods/pic_remapped/pic_lbfr/testing/test_pic_lbfr_4d.F90::00817][../../../src/particle_methods/pic_remapped/pic_lbfr/testing/test_pic_lbfr_4d.F90]]
 		[[file:../../../src/particle_methods/pic_remapped/pic_lbfr/testing/test_pic_lbfr_4d.F90::00543][../../../src/particle_methods/pic_remapped/pic_lbfr/testing/test_pic_lbfr_4d.F90]]
 *** <<test_pic_lbfr_4d>>
-	_ref_ [[file:../../../src/particle_methods/pic_remapped/pic_lbfr/testing/CMakeLists.txt::00019][../../../src/particle_methods/pic_remapped/pic_lbfr/testing/CMakeLists.txt]]
+	[[file:../../../src/particle_methods/pic_remapped/particle_lbf/testing/CMakeLists.txt::00019][../../../src/particle_methods/pic_remapped/particle_lbf/testing/CMakeLists.txt]]
+	[[file:../../../src/particle_methods/pic_remapped/pic_lbfr/testing/CMakeLists.txt::00019][../../../src/particle_methods/pic_remapped/pic_lbfr/testing/CMakeLists.txt]]
 *** <<TODO>>
+	[[file:../../../src/particle_methods/pic_remapped/particle_lbf/testing/test_4dsg_for_pic_lbfr.F90::00022][../../../src/particle_methods/pic_remapped/particle_lbf/testing/test_4dsg_for_pic_lbfr.F90]]
+	[[file:../pic_vp_2d2v_cart_lbfr_temp/README::00041][../pic_vp_2d2v_cart_lbfr_temp/README]]
+	[[file:../pic_vp_2d2v_cart_lbfr_temp/sll_m_sim_pic_vp_2d2v_cart_lbfr_temp.F90::00254][../pic_vp_2d2v_cart_lbfr_temp/sll_m_sim_pic_vp_2d2v_cart_lbfr_temp.F90]]
 	[[file:../pic_vp_2d2v_cart_lbfr_temp/sll_m_sim_pic_vp_2d2v_cart_lbfr_temp.F90::00912][../pic_vp_2d2v_cart_lbfr_temp/sll_m_sim_pic_vp_2d2v_cart_lbfr_temp.F90]]
 	[[file:../pic_vp_2d2v_cart_lbfr_temp/sll_m_sim_pic_vp_2d2v_cart_lbfr_temp.F90::01190][../pic_vp_2d2v_cart_lbfr_temp/sll_m_sim_pic_vp_2d2v_cart_lbfr_temp.F90]]
+	[[file:../pic_vp_2d2v_cart_remapped/README::00041][../pic_vp_2d2v_cart_remapped/README]]
+	[[file:../pic_vp_2d2v_cart_remapped/sll_m_sim_pic_vp_2d2v_cart_remapped.F90::00228][../pic_vp_2d2v_cart_remapped/sll_m_sim_pic_vp_2d2v_cart_remapped.F90]]
 	[[file:../pic_vp_2d2v_cart_remapped/sll_m_sim_pic_vp_2d2v_cart_remapped.F90::00833][../pic_vp_2d2v_cart_remapped/sll_m_sim_pic_vp_2d2v_cart_remapped.F90]]
 	[[file:../pic_vp_2d2v_cart_remapped/sll_m_sim_pic_vp_2d2v_cart_remapped.F90::01110][../pic_vp_2d2v_cart_remapped/sll_m_sim_pic_vp_2d2v_cart_remapped.F90]]
 ** <<U>>
@@ -258,19 +276,11 @@
 * <<Implicit links>>
 ** [[file:../../../src/particle_methods/pic_remapped/bsl_lt_pic/sll_m_bsl_lt_pic_4d_group.F90]]
 	[[file:../../../src/particle_methods/pic_remapped/bsl_lt_pic/sll_m_bsl_lt_pic_4d_group.F90::3616][line 3616]] unknown [[../../../src/particle_methods/pic_remapped/bsl_lt_pic/sll_m_bsl_lt_pic_4d_group.F90::bsl_lt_pic_4d_write_f_on_remapping_grid]] ([[bsl_lt_pic_4d_write_f_on_remapping_grid][find here]], [[elisp:(grep "emacsfind -r bsl_lt_pic_4d_write_f_on_remapping_grid")][find anywhere]])
-	[[file:../../../src/particle_methods/pic_remapped/bsl_lt_pic/sll_m_bsl_lt_pic_4d_group.F90::3737][line 3737]] unknown [[/home/alh/mcp/maltpic/ltpic-bsl.tex::N*]] ([[N*][find here]], [[elisp:(grep "emacsfind -r N*")][find anywhere]])
-	[[file:../../../src/particle_methods/pic_remapped/bsl_lt_pic/sll_m_bsl_lt_pic_4d_group.F90::3756][line 3756]] unknown [[/home/alh/mcp/maltpic/ltpic-bsl.tex::h_parts_x]] ([[h_parts_x][find here]], [[elisp:(grep "emacsfind -r h_parts_x")][find anywhere]])
 	[[file:../../../src/particle_methods/pic_remapped/bsl_lt_pic/sll_m_bsl_lt_pic_4d_group.F90::4084][line 4084]] unknown [[../../../src/particle_methods/pic_remapped/pic_particle_types/lt_pic_4d_group.F90::number_particles]] ([[number_particles][find here]], [[elisp:(grep "emacsfind -r number_particles")][find anywhere]])
-	[[file:../../../src/particle_methods/pic_remapped/bsl_lt_pic/sll_m_bsl_lt_pic_4d_group.F90::4146][line 4146]] unknown [[/home/alh/mcp/maltpic/ltpic-bsl.tex::algo:pic-vr:loop_over_all_cells]] ([[algo:pic-vr:loop_over_all_cells][find here]], [[elisp:(grep "emacsfind -r algo:pic-vr:loop_over_all_cells")][find anywhere]])
 	[[file:../../../src/particle_methods/pic_remapped/bsl_lt_pic/sll_m_bsl_lt_pic_4d_group.F90::4162][line 4162]] unknown [[../../../src/particle_methods/pic_remapped/bsl_lt_pic/sll_m_bsl_lt_pic_4d_group.F90::write_f_on_remap_grid-h_parts_x]] ([[write_f_on_remap_grid-h_parts_x][find here]], [[elisp:(grep "emacsfind -r write_f_on_remap_grid-h_parts_x")][find anywhere]])
-	[[file:../../../src/particle_methods/pic_remapped/bsl_lt_pic/sll_m_bsl_lt_pic_4d_group.F90::4185][line 4185]] unknown [[/home/alh/mcp/maltpic/ltpic-bsl.tex::algo:pic-vr:find_closest_real_particle]] ([[algo:pic-vr:find_closest_real_particle][find here]], [[elisp:(grep "emacsfind -r algo:pic-vr:find_closest_real_particle")][find anywhere]])
 	[[file:../../../src/particle_methods/pic_remapped/bsl_lt_pic/sll_m_bsl_lt_pic_4d_group.F90::4188][line 4188]] unknown [[../../../src/particle_methods/pic_remapped/bsl_lt_pic/sll_m_bsl_lt_pic_4d_group.F90::closest_marker]] ([[closest_marker][find here]], [[elisp:(grep "emacsfind -r closest_marker")][find anywhere]])
-	[[file:../../../src/particle_methods/pic_remapped/bsl_lt_pic/sll_m_bsl_lt_pic_4d_group.F90::4227][line 4227]] unknown [[/home/alh/mcp/maltpic/ltpic-bsl.tex::hat-bz*]] ([[hat-bz*][find here]], [[elisp:(grep "emacsfind -r hat-bz*")][find anywhere]])
 	[[file:../../../src/particle_methods/pic_remapped/bsl_lt_pic/sll_m_bsl_lt_pic_4d_group.F90::4229][line 4229]] unknown [[../../../src/particle_methods/pic_remapped/bsl_lt_pic/sll_m_bsl_lt_pic_4d_group.F90::sll_lt_pic_4d_write_f_on_remap_grid-get_ltp_deformation_matrix]] ([[sll_lt_pic_4d_write_f_on_remap_grid-get_ltp_deformation_matrix][find here]], [[elisp:(grep "emacsfind -r sll_lt_pic_4d_write_f_on_remap_grid-get_ltp_deformation_matrix")][find anywhere]])
 	[[file:../../../src/particle_methods/pic_remapped/bsl_lt_pic/sll_m_bsl_lt_pic_4d_group.F90::4247][line 4247]] unknown [[../../../src/particle_methods/pic_remapped/bsl_lt_pic/sll_m_bsl_lt_pic_4d_group.F90::sll_s_get_initial_position_on_cartesian_grid_from_marker_index]] ([[sll_s_get_initial_position_on_cartesian_grid_from_marker_index][find here]], [[elisp:(grep "emacsfind -r sll_s_get_initial_position_on_cartesian_grid_from_marker_index")][find anywhere]])
-	[[file:../../../src/particle_methods/pic_remapped/bsl_lt_pic/sll_m_bsl_lt_pic_4d_group.F90::4282][line 4282]] unknown [[/home/alh/mcp/maltpic/ltpic-bsl.tex::algo:pic-vr:find_f0_for_each_virtual_particle]] ([[algo:pic-vr:find_f0_for_each_virtual_particle][find here]], [[elisp:(grep "emacsfind -r algo:pic-vr:find_f0_for_each_virtual_particle")][find anywhere]])
-	[[file:../../../src/particle_methods/pic_remapped/bsl_lt_pic/sll_m_bsl_lt_pic_4d_group.F90::4284][line 4284]] unknown [[/home/alh/mcp/maltpic/ltpic-bsl.tex::BSL_remapping_algo]] ([[BSL_remapping_algo][find here]], [[elisp:(grep "emacsfind -r BSL_remapping_algo")][find anywhere]])
-	[[file:../../../src/particle_methods/pic_remapped/bsl_lt_pic/sll_m_bsl_lt_pic_4d_group.F90::4285][line 4285]] unknown [[/home/alh/mcp/maltpic/ltpic-bsl.tex::algo:pic-vr:create_virtual_particles]] ([[algo:pic-vr:create_virtual_particles][find here]], [[elisp:(grep "emacsfind -r algo:pic-vr:create_virtual_particles")][find anywhere]])
 	[[file:../../../src/particle_methods/pic_remapped/bsl_lt_pic/sll_m_bsl_lt_pic_4d_group.F90::4697][line 4697]] unknown [[../../../src/particle_methods/pic_remapped/bsl_lt_pic/sll_m_bsl_lt_pic_4d_group.F90::ONESTEPMACRO]] ([[ONESTEPMACRO][find here]], [[elisp:(grep "emacsfind -r ONESTEPMACRO")][find anywhere]])
 	[[file:../../../src/particle_methods/pic_remapped/bsl_lt_pic/sll_m_bsl_lt_pic_4d_group.F90::4785][line 4785]] unknown [[../../../src/particle_methods/pic_remapped/bsl_lt_pic/sll_m_bsl_lt_pic_4d_group.F90::bsl_lt_pic_4d_compute_new_particles]] ([[bsl_lt_pic_4d_compute_new_particles][find here]], [[elisp:(grep "emacsfind -r bsl_lt_pic_4d_compute_new_particles")][find anywhere]])
 ** [[file:../../../src/particle_methods/pic_remapped/bsl_lt_pic/testing/test_4dsg_for_remapped_pic.F90]]
@@ -290,12 +300,27 @@
 	[[file:../../../src/particle_methods/pic_remapped/bsl_lt_pic/testing/test_bsl_lt_pic_4d.F90::497][line 497]] unknown [[/home/alh/sllrzg/selalib:src/particle_methods/pic_remapped/remapped_pic_utilities/sll_m_remapped_pic_utilities.F90::apply_periodic_bc_on_cartesian_mesh_2d]] ([[apply_periodic_bc_on_cartesian_mesh_2d][find here]], [[elisp:(grep "emacsfind -r apply_periodic_bc_on_cartesian_mesh_2d")][find anywhere]])
 	[[file:../../../src/particle_methods/pic_remapped/bsl_lt_pic/testing/test_bsl_lt_pic_4d.F90::672][line 672]] unknown [[/home/alh/sllrzg/selalib:src/data_structures/fields/sll_m_array_plotting.F90::write_projection_2d]] ([[write_projection_2d][find here]], [[elisp:(grep "emacsfind -r write_projection_2d")][find anywhere]])
 	[[file:../../../src/particle_methods/pic_remapped/bsl_lt_pic/testing/test_bsl_lt_pic_4d.F90::673][line 673]] unknown [[/home/alh/sllrzg/selalib:src/data_structures/fields/testing/test_plot_array_4d.F90::write_projection_2d]] ([[write_projection_2d][find here]], [[elisp:(grep "emacsfind -r write_projection_2d")][find anywhere]])
+** [[file:../../../src/particle_methods/pic_remapped/particle_lbf/testing/test_4dsg_for_pic_lbfr.F90]]
+	[[file:../../../src/particle_methods/pic_remapped/particle_lbf/testing/test_4dsg_for_pic_lbfr.F90::24][line 24]] unknown [[../../../src/particle_methods/pic_remapped/particle_lbf/testing/CMakeLists.txt::test_4dsg_for_remapped_pic]] ([[test_4dsg_for_remapped_pic][find here]], [[elisp:(grep "emacsfind -r test_4dsg_for_remapped_pic")][find anywhere]])
+	[[file:../../../src/particle_methods/pic_remapped/particle_lbf/testing/test_4dsg_for_pic_lbfr.F90::67][line 67]] unknown [[../../../src/particle_methods/pic_remapped/particle_lbf/testing/test_4dsg_for_pic_lbfr.F90::eta_max]] ([[eta_max][find here]], [[elisp:(grep "emacsfind -r eta_max")][find anywhere]])
+	[[file:../../../src/particle_methods/pic_remapped/particle_lbf/testing/test_4dsg_for_pic_lbfr.F90::67][line 67]] unknown [[../../../src/particle_methods/pic_remapped/particle_lbf/testing/test_4dsg_for_pic_lbfr.F90::eta_min]] ([[eta_min][find here]], [[elisp:(grep "emacsfind -r eta_min")][find anywhere]])
+	[[file:../../../src/particle_methods/pic_remapped/particle_lbf/testing/test_4dsg_for_pic_lbfr.F90::73][line 73]] unknown [[../../../src/particle_methods/pic_remapped/particle_lbf/testing/test_4dsg_for_pic_lbfr.F90::levels]] ([[levels][find here]], [[elisp:(grep "emacsfind -r levels")][find anywhere]])
+	[[file:../../../src/particle_methods/pic_remapped/particle_lbf/testing/test_4dsg_for_pic_lbfr.F90::80][line 80]] unknown [[../../../src/particle_methods/pic_remapped/particle_lbf/testing/test_4dsg_for_pic_lbfr.F90::order]] ([[order][find here]], [[elisp:(grep "emacsfind -r order")][find anywhere]])
+	[[file:../../../src/particle_methods/pic_remapped/particle_lbf/testing/test_4dsg_for_pic_lbfr.F90::125][line 125]] unknown [[../../../src/particle_methods/pic_remapped/particle_lbf/testing/test_4dsg_for_pic_lbfr.F90::tunable]] ([[tunable][find here]], [[elisp:(grep "emacsfind -r tunable")][find anywhere]])
 ** [[file:../../../src/particle_methods/pic_remapped/pic_lbfr/sll_m_pic_lbfr_4d_group.F90]]
+	[[file:../../../src/particle_methods/pic_remapped/pic_lbfr/sll_m_pic_lbfr_4d_group.F90::4200][line 4200]] unknown [[/home/alh/mcp/maltpic/ltpic-bsl.tex::N*]] ([[N*][find here]], [[elisp:(grep "emacsfind -r N*")][find anywhere]])
+	[[file:../../../src/particle_methods/pic_remapped/pic_lbfr/sll_m_pic_lbfr_4d_group.F90::4228][line 4228]] unknown [[/home/alh/mcp/maltpic/ltpic-bsl.tex::h_parts_x]] ([[h_parts_x][find here]], [[elisp:(grep "emacsfind -r h_parts_x")][find anywhere]])
 	[[file:../../../src/particle_methods/pic_remapped/pic_lbfr/sll_m_pic_lbfr_4d_group.F90::4523][line 4523]] unknown [[../../../src/particle_methods/pic_remapped/pic_particle_types/lt_pic_4d_group.F90::n_particles]] ([[n_particles][find here]], [[elisp:(grep "emacsfind -r n_particles")][find anywhere]])
+	[[file:../../../src/particle_methods/pic_remapped/pic_lbfr/sll_m_pic_lbfr_4d_group.F90::4585][line 4585]] unknown [[/home/alh/mcp/maltpic/ltpic-bsl.tex::algo:pic-vr:loop_over_all_cells]] ([[algo:pic-vr:loop_over_all_cells][find here]], [[elisp:(grep "emacsfind -r algo:pic-vr:loop_over_all_cells")][find anywhere]])
 	[[file:../../../src/particle_methods/pic_remapped/pic_lbfr/sll_m_pic_lbfr_4d_group.F90::4601][line 4601]] unknown [[../../../src/particle_methods/pic_remapped/pic_lbfr/sll_m_pic_lbfr_4d_group.F90::write_f_on_remap_grid-h_parts_x]] ([[write_f_on_remap_grid-h_parts_x][find here]], [[elisp:(grep "emacsfind -r write_f_on_remap_grid-h_parts_x")][find anywhere]])
+	[[file:../../../src/particle_methods/pic_remapped/pic_lbfr/sll_m_pic_lbfr_4d_group.F90::4657][line 4657]] unknown [[/home/alh/mcp/maltpic/ltpic-bsl.tex::algo:pic-vr:find_closest_real_particle]] ([[algo:pic-vr:find_closest_real_particle][find here]], [[elisp:(grep "emacsfind -r algo:pic-vr:find_closest_real_particle")][find anywhere]])
 	[[file:../../../src/particle_methods/pic_remapped/pic_lbfr/sll_m_pic_lbfr_4d_group.F90::4660][line 4660]] unknown [[../../../src/particle_methods/pic_remapped/pic_lbfr/sll_m_pic_lbfr_4d_group.F90::closest_marker]] ([[closest_marker][find here]], [[elisp:(grep "emacsfind -r closest_marker")][find anywhere]])
+	[[file:../../../src/particle_methods/pic_remapped/pic_lbfr/sll_m_pic_lbfr_4d_group.F90::4699][line 4699]] unknown [[/home/alh/mcp/maltpic/ltpic-bsl.tex::hat-bz*]] ([[hat-bz*][find here]], [[elisp:(grep "emacsfind -r hat-bz*")][find anywhere]])
 	[[file:../../../src/particle_methods/pic_remapped/pic_lbfr/sll_m_pic_lbfr_4d_group.F90::4701][line 4701]] unknown [[../../../src/particle_methods/pic_remapped/pic_lbfr/sll_m_pic_lbfr_4d_group.F90::sll_lt_pic_4d_write_f_on_remap_grid-get_ltp_deformation_matrix]] ([[sll_lt_pic_4d_write_f_on_remap_grid-get_ltp_deformation_matrix][find here]], [[elisp:(grep "emacsfind -r sll_lt_pic_4d_write_f_on_remap_grid-get_ltp_deformation_matrix")][find anywhere]])
 	[[file:../../../src/particle_methods/pic_remapped/pic_lbfr/sll_m_pic_lbfr_4d_group.F90::4719][line 4719]] unknown [[../../../src/particle_methods/pic_remapped/pic_lbfr/sll_m_pic_lbfr_4d_group.F90::sll_s_get_initial_position_on_cartesian_grid_from_marker_index]] ([[sll_s_get_initial_position_on_cartesian_grid_from_marker_index][find here]], [[elisp:(grep "emacsfind -r sll_s_get_initial_position_on_cartesian_grid_from_marker_index")][find anywhere]])
+	[[file:../../../src/particle_methods/pic_remapped/pic_lbfr/sll_m_pic_lbfr_4d_group.F90::4754][line 4754]] unknown [[/home/alh/mcp/maltpic/ltpic-bsl.tex::algo:pic-vr:find_f0_for_each_virtual_particle]] ([[algo:pic-vr:find_f0_for_each_virtual_particle][find here]], [[elisp:(grep "emacsfind -r algo:pic-vr:find_f0_for_each_virtual_particle")][find anywhere]])
+	[[file:../../../src/particle_methods/pic_remapped/pic_lbfr/sll_m_pic_lbfr_4d_group.F90::4756][line 4756]] unknown [[/home/alh/mcp/maltpic/ltpic-bsl.tex::BSL_remapping_algo]] ([[BSL_remapping_algo][find here]], [[elisp:(grep "emacsfind -r BSL_remapping_algo")][find anywhere]])
+	[[file:../../../src/particle_methods/pic_remapped/pic_lbfr/sll_m_pic_lbfr_4d_group.F90::4757][line 4757]] unknown [[/home/alh/mcp/maltpic/ltpic-bsl.tex::algo:pic-vr:create_virtual_particles]] ([[algo:pic-vr:create_virtual_particles][find here]], [[elisp:(grep "emacsfind -r algo:pic-vr:create_virtual_particles")][find anywhere]])
 	[[file:../../../src/particle_methods/pic_remapped/pic_lbfr/sll_m_pic_lbfr_4d_group.F90::5081][line 5081]] unknown [[../../../src/particle_methods/pic_remapped/pic_lbfr/sll_m_pic_lbfr_4d_group.F90::ONESTEPMACRO]] ([[ONESTEPMACRO][find here]], [[elisp:(grep "emacsfind -r ONESTEPMACRO")][find anywhere]])
 	[[file:../../../src/particle_methods/pic_remapped/pic_lbfr/sll_m_pic_lbfr_4d_group.F90::5169][line 5169]] unknown [[../../../src/particle_methods/pic_remapped/pic_lbfr/sll_m_pic_lbfr_4d_group.F90::pic_lbfr_4d_compute_new_particles]] ([[pic_lbfr_4d_compute_new_particles][find here]], [[elisp:(grep "emacsfind -r pic_lbfr_4d_compute_new_particles")][find anywhere]])
 ** [[file:../../../src/particle_methods/pic_remapped/pic_lbfr/testing/test_4dsg_for_pic_lbfr.F90]]
@@ -311,7 +336,6 @@
 	[[file:../../../src/particle_methods/pic_remapped/simple_pic/sll_m_simple_pic_4d_particle.F90::29][line 29]] unknown [[../../../src/particle_methods/pic_remapped/simple_pic/sll_m_simple_pic_4d_particle.F90::sll_simple_pic_4d_particle]] ([[sll_simple_pic_4d_particle][find here]], [[elisp:(grep "emacsfind -r sll_simple_pic_4d_particle")][find anywhere]])
 	[[file:../../../src/particle_methods/pic_remapped/simple_pic/sll_m_simple_pic_4d_particle.F90::30][line 30]] unknown [[../../../src/particle_methods/pic_remapped/simple_pic/sll_m_simple_pic_4d_group.F90::sll_simple_pic_4d_group]] ([[sll_simple_pic_4d_group][find here]], [[elisp:(grep "emacsfind -r sll_simple_pic_4d_group")][find anywhere]])
 ** [[file:../../../src/particle_methods/pic_remapped/simple_pic/testing/test_simple_pic.F90]]
-	[[file:../../../src/particle_methods/pic_remapped/simple_pic/testing/test_simple_pic.F90::5][line 5]] unknown [[../../../src/particle_methods/pic_remapped/simple_pic/sll_m_simple_pic_4d_particle.F90::sll_simple_pic_4d_particle]] ([[sll_simple_pic_4d_particle][find here]], [[elisp:(grep "emacsfind -r sll_simple_pic_4d_particle")][find anywhere]])
 	[[file:../../../src/particle_methods/pic_remapped/simple_pic/testing/test_simple_pic.F90::25][line 25]] unknown [[/home/alh/sllrzg/selalib:src/mesh/meshes/sll_m_cartesian_meshes.F90::sll_cartesian_mesh_2d]] ([[sll_cartesian_mesh_2d][find here]], [[elisp:(grep "emacsfind -r sll_cartesian_mesh_2d")][find anywhere]])
 ** [[file:../pic_vp_2d2v_cart/sll_m_sim_pic_vp_2d2v_cart.F90]]
 	[[file:../pic_vp_2d2v_cart/sll_m_sim_pic_vp_2d2v_cart.F90::85][line 85]] unknown [[/home/alh/sllrzg/selalib:src/meshes/sll_m_cartesian_meshes.F90::sll_t_cartesian_mesh_2d]] ([[sll_t_cartesian_mesh_2d][find here]], [[elisp:(grep "emacsfind -r sll_t_cartesian_mesh_2d")][find anywhere]])
@@ -392,6 +416,9 @@
 ** 	in [[file:src/particle_methods/pic_remapped/bsl_lt_pic/testing/test_4dsg_for_remapped_pic.F90]]
 		[[~/selalib/src/add_ons/sparse_grid/sll_m_sparse_grid_interpolator.F90::subroutine%20compute_hierarchical_surplus]] (at [[file:src/particle_methods/pic_remapped/bsl_lt_pic/testing/test_4dsg_for_remapped_pic.F90::102][line 102]])
 		[[~/selalib/src/add_ons/sparse_grid/sll_m_sparse_grid_4d.F90::function%20interpolate_value]] (at [[file:src/particle_methods/pic_remapped/bsl_lt_pic/testing/test_4dsg_for_remapped_pic.F90::112][line 112]])
+** 	in [[file:src/particle_methods/pic_remapped/particle_lbf/testing/test_4dsg_for_pic_lbfr.F90]]
+		[[~/selalib/src/add_ons/sparse_grid/sll_m_sparse_grid_interpolator.F90::subroutine%20compute_hierarchical_surplus]] (at [[file:src/particle_methods/pic_remapped/particle_lbf/testing/test_4dsg_for_pic_lbfr.F90::104][line 104]])
+		[[~/selalib/src/add_ons/sparse_grid/sll_m_sparse_grid_4d.F90::function%20interpolate_value]] (at [[file:src/particle_methods/pic_remapped/particle_lbf/testing/test_4dsg_for_pic_lbfr.F90::114][line 114]])
 ** 	in [[file:src/particle_methods/pic_remapped/pic_lbfr/sll_m_pic_lbfr_4d_group.F90]]
 		[[~/mcp/maltpic/ltpic-bsl.tex::N*]] (at [[file:src/particle_methods/pic_remapped/pic_lbfr/sll_m_pic_lbfr_4d_group.F90::4200][line 4200]])
 		[[~/mcp/maltpic/ltpic-bsl.tex::h_parts_x]] (at [[file:src/particle_methods/pic_remapped/pic_lbfr/sll_m_pic_lbfr_4d_group.F90::4201][line 4201]])
