@@ -126,6 +126,44 @@ contains
   
   pure function particle_lbf_4d_get_x( self, i ) result( r )
     ! AAA_ALH_TODO
+
+    class( sll_t_pic_lbfr_4d_group ), intent( in ) :: self
+    sll_int32                       , intent( in ) :: i
+    sll_real64 :: r(3)
+
+    if( i < 1 .or. i > self%n_flow_markers + self%n_moving_deposition_particles )then
+      ! returning an error would be nice but this is not possible in a pure function
+      r = 1d30
+      return
+    end if
+
+    if( i >= 1 .and. i <= self%n_flow_markers )then
+      ! then the particle is a flow marker
+
+      if( self%flow_markers_type == SLL_PIC_LBFR_STRUCTURED )then
+        ! get x
+        r(1) = self%space_mesh_2d%eta1_min + &
+               self%space_mesh_2d%delta_eta1*(                            &
+               real(self%struct_markers_list(i)%offset_x + self%struct_markers_list(i)%i_cell_x - 1, f64)      )
+        ! get y
+        r(2) = self%space_mesh_2d%eta2_min + self%space_mesh_2d%delta_eta2*( &
+               real(self%struct_markers_list(i)%offset_y + self%struct_markers_list(i)%i_cell_y - 1, f64)      )
+      else
+        ! then self%flow_markers_type == SLL_PIC_LBFR_UNSTRUCTURED
+        r(1) = self%unstruct_markers_eta(i, 1)
+        r(2) = self%unstruct_markers_eta(i, 2)
+      end if
+
+    else if( i >= self%n_flow_markers + 1 .and. i <= self%n_flow_markers + self%n_moving_deposition_particles )then
+
+      r(1) = self%deposition_particles_eta(i - self%n_flow_markers, 1)
+      r(2) = self%deposition_particles_eta(i - self%n_flow_markers, 2)
+
+    end if
+
+    r(3) = 0.0_f64
+
+
   end function particle_lbf_4d_get_x
 
   ! Simpler version of
