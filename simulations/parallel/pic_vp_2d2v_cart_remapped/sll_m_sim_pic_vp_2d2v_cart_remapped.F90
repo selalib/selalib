@@ -225,7 +225,7 @@ contains
     write(fileid,*) 'set size ratio -1'
     write(fileid,*) 'plot "-" using 1:2:3:4 with vectors'
 
-    ! Loop over all particles. Do not display all particles for a clearer picture. AAA_ALH_HERE try with less particles.
+    ! Loop over all particles. Do not display all particles for a clearer picture. AAA_ALH_TODO try with less particles.
     
     do k = 1,sim%number_particles,1000
 
