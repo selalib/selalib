@@ -1,5 +1,6 @@
-!Mar 1st 2016 two-scale solver
-!2nd order scheme and initial data
+!NKS-two-scale solver for 4d VP
+!2nd order EWI scheme
+!two-scale E
 program test_pic2d
 #include "sll_working_precision.h"
 #include "sll_memory.h"
@@ -17,25 +18,22 @@ implicit none
 type(tm_mesh_fields) :: f
 type(particle)       :: p
 
-!-----added----
 type(sll_t_fft) :: PlnF, PlnB
-integer(4)  ,parameter :: Ntau=16,npp=120000
-real(8)  :: xt(2,0:Ntau-1),xu(2,npp),vu(2,npp),h(2,0:Ntau-1,npp),w(2,0:Ntau-1,npp)
-real(8)  :: xxt(2),xuh(2,npp),vuh(2,npp),hh(2,0:Ntau-1,npp),wh(2,0:Ntau-1,npp)
-complex(8) :: temp(2,0:Ntau-1),gn(2,0:Ntau-1,npp),gntilde(2,0:Ntau-1,npp)
-real(8)  :: ep,dtau,tau(0:Ntau-1),ltau(0:Ntau-1),Et(2,0:Ntau-1,npp),aux(2,npp),auxpx(2,npp)
-!real(8),  allocatable :: elec(:)
-complex(8) :: g(2,0:Ntau-1),gtilde(2,0:Ntau-1),fn(2,0:Ntau-1),ftilde(2,0:Ntau-1),xtemp(2)
-complex(8) :: temp5th(2,0:Ntau-1),temp5th1(2,0:Ntau-1),temp4th(2,0:Ntau-1),temp4th1(2,0:Ntau-1)
-complex(8) ::  dtw(2,0:Ntau-1),dth(2,0:Ntau-1),dtx2(2)
-!----end added--
+integer(4)  ,parameter :: Ntau=32,npp=204800
+real(8)  :: xxt(2)
+real(8)  :: ep,dtau,tau(0:Ntau-1),ltau(0:Ntau-1),auxpx(2,npp)
+complex(8) :: pl(0:ntau-1),ql(0:ntau-1),gp(2,0:Ntau-1,npp),gm(2,0:Ntau-1,npp),wp(2,npp),wm(2,npp)
+complex(8) ::  xtemp1(2,0:ntau-1,npp),xtemp2(2,0:ntau-1,npp),Et(2,0:ntau-1,npp)
+complex(8) :: temp(2,0:Ntau-1),temptilde(2,0:Ntau-1),up(2,0:ntau-1,npp),um(2,0:ntau-1,npp)
+complex(8) :: vp(2,npp),vm(2,npp),z(2),fex(0:64,0:32,0:ntau-1),fey(0:64,0:32,0:ntau-1)
+complex(8) :: up0(2,0:ntau-1,npp),um0(2,0:ntau-1,npp)
+!real(8),  allocatable :: energy(:)
 
 sll_real64 :: time
 sll_real64 :: xmin
 sll_real64 :: xmax
 sll_real64 :: ymin
 sll_real64 :: ymax
-
 sll_int32  :: istep
 sll_int32  :: iplot
 sll_int32  :: iargc
@@ -62,772 +60,503 @@ call readin( trim(argv) )
 SLL_CLEAR_ALLOCATE(f%ex(0:nx,0:ny), error)
 SLL_CLEAR_ALLOCATE(f%ey(0:nx,0:ny), error)
 SLL_CLEAR_ALLOCATE(f%bz(0:nx,0:ny), error)
-SLL_CLEAR_ALLOCATE(f%r0(0:nx,0:ny), error) 
+SLL_CLEAR_ALLOCATE(f%r0(0:nx,0:ny), error)
+!allocate (energy(0:nstep))
 
 time  = 0.d0
-iplot = 0
 
-!---added---
-ep=0.5d0/1.0d0
+ep=0.1d0/1.0d0
 dtau=2.0d0*sll_p_pi/ntau
-call sll_s_fft_init_c2c_1d(PlnF,Ntau,g(1,:),gtilde(1,:),sll_p_fft_FORWARD,optimization=sll_p_FFT_MEASURE)
-call sll_s_fft_init_c2c_1d(PlnB,Ntau,g(1,:),gtilde(1,:),sll_p_FFT_BACKWARD,optimization=sll_p_FFT_MEASURE)
-!PlnF= fftw_plan_dft_1d(Ntau,g(1,:),gtilde(1,:),FFTW_FORWARD,FFTW_MEASURE+FFTW_UNALIGNED)
-!PlnB= fftw_plan_dft_1d(Ntau,g(1,:),gtilde(1,:),FFTW_BACKWARD,FFTW_MEASURE+FFTW_UNALIGNED)
+call sll_s_fft_init_c2c_1d(PlnF,Ntau,temp(1,:),temptilde(1,:),sll_p_fft_FORWARD,optimization=sll_p_FFT_MEASURE)
+call sll_s_fft_init_c2c_1d(PlnB,Ntau,temp(1,:),temptilde(1,:),sll_p_FFT_BACKWARD,optimization=sll_p_FFT_MEASURE)
 m=ntau/2
 ltau=(/ (n, n=0,m-1), (n, n=-m,-1 )/)
+pl(0)=dt
+ql(0)=dt**2/2.0d0
+do i=1,Ntau-1
+    pl(i) =2.0d0*ep**2*sll_p_i1*(exp(-sll_p_i1*ltau(i)*dt/2.0d0/ep**2)-1.0d0)/ltau(i)
+    ql(i)=2.0d0*ep**2*(2.0d0*ep**2*(1.0d0-exp(-sll_p_i1*ltau(i)*dt/2.0d0/ep**2))-sll_p_i1*ltau(i)*dt)/ltau(i)**2
+enddo
 do i=0,Ntau-1
   tau(i) =i*dtau
 enddo
-!--end added--
-
-!if( nstep > nstepmax ) nstep = nstepmax
-
-
-!********************************************************************
-
-istep = 1
 
 do i=0,nx
   aux1 = alpha/kx * sin(kx*i*dx)
   aux2 = alpha * cos(kx*i*dx)
   do j=0,ny
     f%ex(i,j) = aux1
-    f%r0(i,j) = aux2!+dsin(ky*j*dy)+1.0d0
-    !f%ey(i,j) = -dcos(ky*j*dy)/ky
+    f%r0(i,j) = aux2+dsin(ky*j*dy)
+    f%ey(i,j) = -dcos(ky*j*dy)/ky!0.0d0!
   enddo
 enddo
       
 xmin = 0.0_f64; xmax = dimx
 ymin = 0.0_f64; ymax = dimy
 
-call plasma( p ) 
+call plasma( p )
+print"('ep = ', g15.3)", ep
 print"('nbpart = ', g15.3)", nbpart
 print"('dt = ', g15.3)", dt
-call calcul_rho( p, f )
-
-!gnuplot -p rho.gnu (to plot the initial rho)
-!call sll_o_gnuplot_2d(xmin, xmax, nx+1, &
-!                      ymin, ymax, ny+1, &
-!                      f%r0, 'rho', 1, error)
-
 poisson => sll_f_new_poisson_2d_periodic(xmin,xmax,nx,ymin,ymax,ny)
-call poisson%compute_e_from_rho( f%ex, f%ey, f%r0)
+!call calcul_rho_m6( p, f )
+!call poisson%compute_e_from_rho( f%ex, f%ey, f%r0)
+!call calcul_energy(p,f,energy(0))
 
-!gnuplot -p ex.gnu (to plot the initial ex field)
-!call sll_o_gnuplot_2d(xmin, xmax, nx+1, &
-!                      ymin, ymax, ny+1, &
-!                      f%ex, 'ex', 1, error)
-call interpol_eb( f, p )
-!----------prepared initial data-----
-!--3rd order--
-!aux(1,:)=p%epx
-!aux(2,:)=p%epy
-!auxpx(1,:)=p%dpx+xmin+p%idx*dx
-!auxpx(2,:)=p%dpy+ymin+p%idy*dy
-!xu(1,:)=auxpx(1,:)+ep*p%vpy
-!xu(2,:)=auxpx(2,:)-ep*p%vpx
-!do n=0,Ntau-1
-!    h(1,n,:)=ep*(dsin(tau(n))*p%vpx-dcos(tau(n))*p%vpy)
-!    h(2,n,:)=ep*(dsin(tau(n))*p%vpy+dcos(tau(n))*p%vpx)
-!enddo
-!do n=0,Ntau-1
-!    do m=1,nbpart
-!        xt=xu(:,m)+h(:,n,m)
-!        call apply_bc()
-!        p%idx(m) = floor((xt(1)-xmin)/dimx*nx)
-!        p%dpx(m) = real(xt(1)-xmin- p%idx(m)*dx, f32)
-!        p%idy(m) = floor((xt(2)-ymin)/dimy*ny)
-!        p%dpy(m) = real(xt(2)-ymin- p%idy(m)*dy, f32)
-!    enddo
-!    call interpol_eb( f, p )
-!    Et(1,n,:)=p%epx
-!    Et(2,n,:)=p%epy
-!enddo
-!do m=1,nbpart
-!    do n=0,Ntau-1
-!        g(1,n)=-dsin(tau(n))*Et(2,n,m)+dcos(tau(n))*Et(1,n,m)
-!        g(2,n)=dsin(tau(n))*Et(1,n,m)+dcos(tau(n))*Et(2,n,m)
-!    enddo
-!    call sll_s_fft_exec_c2c_1d(PlnF, g(1,:), gtilde(1,:))
-!    call sll_s_fft_exec_c2c_1d(PlnF, g(2,:), gtilde(2,:))
-!    do n=1,Ntau-1
-!        gtilde(:,n)=-sll_p_i1*gtilde(:,n)/ltau(n)/Ntau
-!    enddo
-!    gtilde(:,0)=0.0d0
-!    call sll_s_fft_exec_c2c_1d(PlnB, gtilde(1,:), g(1,:))
-!    call sll_s_fft_exec_c2c_1d(PlnB, gtilde(2,:), g(2,:)) !g=L^-1(I-Pi)exp(-J*tau)E(X_1st,0)
-!!    vu(1,m)=p%vpx(m)-ep*g(1,0)
-!!    vu(2,m)=p%vpy(m)-ep*g(2,0)
-!!    w(:,:,m)=ep*g
-!    do n=0,Ntau-1
-!        h(1,n,m)=h(1,n,m)-ep**2*(dsin(tau(n))*aux(2,m)+dcos(tau(n))*aux(1,m))
-!        h(2,n,m)=h(2,n,m)-ep**2*(-dsin(tau(n))*aux(1,m)+dcos(tau(n))*aux(2,m))
-!    enddo
-!    xu(:,m)=auxpx(:,m)-h(:,0,m)
-!    Et(1,:,m)=xu(1,m)+h(1,:,m)
-!    Et(2,:,m)=xu(2,m)+h(2,:,m) !X_2nd
-!    do n=0,Ntau-1
-!        h(1,n,m)=ep*(dsin(tau(n))*p%vpx(m)-dcos(tau(n))*p%vpy(m))-ep**2*(dsin(tau(n))*g(1,0)-dcos(tau(n))*g(2,0))
-!        h(2,n,m)=ep*(dsin(tau(n))*p%vpy(m)+dcos(tau(n))*p%vpx(m))-ep**2*(dsin(tau(n))*g(2,0)+dcos(tau(n))*g(1,0))
-!    enddo
-!    do n=0,Ntau-1
-!        fn(1,n)=dsin(tau(n))*g(2,n)+dcos(tau(n))*g(1,n)
-!        fn(2,n)=-dsin(tau(n))*g(1,n)+dcos(tau(n))*g(2,n)
-!    enddo
-!    call sll_s_fft_exec_c2c_1d(PlnF, fn(1,:), gtilde(1,:))
-!    call sll_s_fft_exec_c2c_1d(PlnF, fn(2,:), gtilde(2,:))
-!    do n=1,Ntau-1
-!        gtilde(:,n)=-sll_p_i1*gtilde(:,n)/ltau(n)/Ntau
-!    enddo
-!    gtilde(:,0)=0.0d0
-!    call sll_s_fft_exec_c2c_1d(PlnB, gtilde(1,:), fn(1,:))
-!    call sll_s_fft_exec_c2c_1d(PlnB, gtilde(2,:), fn(2,:)) !L^-1(I-Pi)exp(J*tau)g(tau)
-!    h(:,:,m)=h(:,:,m)+ep**2*fn
-!!    do n=0,Ntau-1
-!!        g(1,n)=alpha*dcos(kx*auxpx(1,m))*dcos(tau(n))*(dsin(tau(n))*p%vpx(m)-dcos(tau(n))*p%vpy(m))
-!!        g(2,n)=alpha*dcos(kx*auxpx(1,m))*dsin(tau(n))*(dsin(tau(n))*p%vpx(m)-dcos(tau(n))*p%vpy(m))!e^{-tauJ}dxE(x,0)Av_0
-!!    enddo
-!!    call sll_s_fft_exec_c2c_1d(PlnF, g(1,:), gtilde(1,:))
-!!    call sll_s_fft_exec_c2c_1d(PlnF, g(2,:), gtilde(2,:))
-!    do n=0,Ntau-1
-!        h(1,n,m)=h(1,n,m)+ep**3*alpha*dcos(kx*auxpx(1,m))*(dsin(tau(n))*p%vpx(m)-dcos(tau(n))*p%vpy(m))/2.0d0
-!        h(2,n,m)=h(2,n,m)+ep**3*alpha*dcos(kx*auxpx(1,m))*(dsin(tau(n))*p%vpy(m)+dcos(tau(n))*p%vpx(m))/2.0d0  ! oringial
-!!        h(1,n,m)=h(1,n,m)+ep**3*(alpha*dcos(kx*auxpx(1,m))+dsin(auxpx(2,m)))*(dsin(tau(n))*p%vpx(m)-dcos(tau(n))*p%vpy(m))/2.0d0 !(5.38)
-!!        h(2,n,m)=h(2,n,m)+ep**3*(alpha*dcos(kx*auxpx(1,m))+dsin(auxpx(2,m)))*(dsin(tau(n))*p%vpy(m)+dcos(tau(n))*p%vpx(m))/2.0d0
-!    enddo
-!    xu(:,m)=auxpx(:,m)-h(:,0,m)
-!    do n=0,Ntau-1   ! here involves derivatives: dx_E
-!        w(1,n,m)=ep**3*(alpha*dcos(tau(n))*dcos(kx*auxpx(1,m))*aux(2,m))
-!        w(2,n,m)=ep**3*(alpha*dsin(tau(n))*dcos(kx*auxpx(1,m))*aux(2,m))
-!    enddo
-!enddo
-!do n=0,Ntau-1
-!    do m=1,nbpart
-!        xt=Et(:,n,m)
-!        call apply_bc()
-!        p%idx(m) = floor((xt(1)-xmin)/dimx*nx)
-!        p%dpx(m) = real(xt(1)-xmin- p%idx(m)*dx, f32)
-!        p%idy(m) = floor((xt(2)-ymin)/dimy*ny)
-!        p%dpy(m) = real(xt(2)-ymin- p%idy(m)*dy, f32)
-!    enddo
-!    call interpol_eb( f, p )
-!    Et(1,n,:)=p%epx
-!    Et(2,n,:)=p%epy
-!enddo
-!do m=1,nbpart
-!    do n=0,Ntau-1
-!        g(1,n)=-dsin(tau(n))*Et(2,n,m)+dcos(tau(n))*Et(1,n,m)
-!        g(2,n)=dsin(tau(n))*Et(1,n,m)+dcos(tau(n))*Et(2,n,m)
-!    enddo
-!    call sll_s_fft_exec_c2c_1d(PlnF, g(1,:), gtilde(1,:))
-!    call sll_s_fft_exec_c2c_1d(PlnF, g(2,:), gtilde(2,:))
-!    do n=1,Ntau-1
-!        gtilde(:,n)=-sll_p_i1*gtilde(:,n)/ltau(n)/Ntau
-!    enddo
-!    gtilde(:,0)=0.0d0
-!    call sll_s_fft_exec_c2c_1d(PlnB, gtilde(1,:), g(1,:))
-!    call sll_s_fft_exec_c2c_1d(PlnB, gtilde(2,:), g(2,:)) !g_2nd
-!    w(:,:,m)=w(:,:,m)+ep*g
-!    vu(1,m)=p%vpx(m)-w(1,0,m)
-!    vu(2,m)=p%vpy(m)-w(2,0,m)
-!enddo
-!!    !!call dtEsolver()!dtE(x_0,0)==0
-!!--end 3rd order--
-!--5th order--
-aux(1,:)=p%epx
-aux(2,:)=p%epy
-auxpx(1,:)=p%dpx+p%idx*dx
-auxpx(2,:)=p%dpy+p%idy*dy
-xu(1,:)=auxpx(1,:)+ep*p%vpy
-xu(2,:)=auxpx(2,:)-ep*p%vpx
-do n=0,Ntau-1
-h(1,n,:)=ep*(dsin(tau(n))*p%vpx-dcos(tau(n))*p%vpy)
-h(2,n,:)=ep*(dsin(tau(n))*p%vpy+dcos(tau(n))*p%vpx)
+auxpx(1,:)=(p%dpx+p%idx)*dx
+auxpx(2,:)=(p%dpy+p%idy)*dy
+wp(1,:)=2.0d0*(auxpx(1,:)+ep*p%vpy)
+wp(2,:)=2.0d0*(auxpx(2,:)-ep*p%vpx)
+wm(1,:)=-2.0d0*ep*p%vpy
+wm(2,:)=2.0d0*ep*p%vpx
+do n=0,ntau-1
+    xtemp1(1,n,:)=dcos(tau(n))*wp(1,:)-dsin(tau(n))*wp(2,:)
+    xtemp1(2,n,:)=dsin(tau(n))*wp(1,:)+dcos(tau(n))*wp(2,:)
+    xtemp2(1,n,:)=dcos(tau(n))*wm(1,:)+dsin(tau(n))*wm(2,:)
+    xtemp2(2,n,:)=-dsin(tau(n))*wm(1,:)+dcos(tau(n))*wm(2,:)
 enddo
-!do n=0,Ntau-1
-!    do m=1,nbpart
-!        xt=xu(:,m)+h(:,n,m)
-!        call apply_bc()
-!        p%idx(m) = floor((xt(1)-xmin)/dimx*nx)
-!        p%dpx(m) = real(xt(1)-xmin- p%idx(m)*dx, f32)
-!        p%idy(m) = floor((xt(2)-ymin)/dimy*ny)
-!        p%dpy(m) = real(xt(2)-ymin- p%idy(m)*dy, f32)
-!    enddo
-!    call interpol_eb( f, p )
-!    Et(1,n,:)=p%epx
-!    Et(2,n,:)=p%epy !E(X_1st,0)
-!enddo
-do m=1,nbpart
-    do n=0,Ntau-1
-        xt(:,n)=xu(:,m)+h(:,n,m)
-        Et(1,n,m)=alpha/kx*dsin(kx*xt(1,n))
-        Et(2,n,m)=0.0d0
-        g(1,n)=-dsin(tau(n))*Et(2,n,m)+dcos(tau(n))*Et(1,n,m)
-        g(2,n)=dsin(tau(n))*Et(1,n,m)+dcos(tau(n))*Et(2,n,m)
+xtemp1=(xtemp1+xtemp2)/2.0d0
+do n=0,ntau-1
+    xtemp2(1,n,:)=dcos(tau(n))*xtemp1(1,n,:)+dsin(tau(n))*xtemp1(2,n,:)
+    xtemp2(2,n,:)=-dsin(tau(n))*xtemp1(1,n,:)+dcos(tau(n))*xtemp1(2,n,:)
+    do m=1,nbpart
+        xxt=dreal(xtemp2(:,n,m))
+        call apply_bc()
+        p%idx(m) = floor(xxt(1)/dimx*nx)
+        p%dpx(m) = real(xxt(1)/dx- p%idx(m), f64)
+        p%idy(m) = floor(xxt(2)/dimy*ny)
+        p%dpy(m) = real(xxt(2)/dy- p%idy(m), f64)
     enddo
-    call sll_s_fft_exec_c2c_1d(PlnF, g(1,:), gtilde(1,:))
-    call sll_s_fft_exec_c2c_1d(PlnF, g(2,:), gtilde(2,:))
-    do n=0,Ntau-1
-        temp4th(1,n)=dsin(tau(n))*gtilde(1,0)/Ntau-dcos(tau(n))*gtilde(2,0)/Ntau
-        temp4th(2,n)=dcos(tau(n))*gtilde(1,0)/Ntau+dsin(tau(n))*gtilde(2,0)/Ntau!APie^{-Jtau}E(X_1st,0)
-    enddo
-    do n=1,Ntau-1
-        gtilde(:,n)=-sll_p_i1*gtilde(:,n)/ltau(n)/Ntau
-    enddo
-    gtilde(:,0)=0.0d0
-    call sll_s_fft_exec_c2c_1d(PlnB, gtilde(1,:), g(1,:))
-    call sll_s_fft_exec_c2c_1d(PlnB, gtilde(2,:), g(2,:)) !g=L^-1(I-Pi)exp(-J*tau)E(X_1st,0)
-    do n=0,Ntau-1
-        temp4th1(1,n)=dsin(tau(n))*g(2,n)+dcos(tau(n))*g(1,n)
-        temp4th1(2,n)=-dsin(tau(n))*g(1,n)+dcos(tau(n))*g(2,n)
-    enddo
-    call sll_s_fft_exec_c2c_1d(PlnF, temp4th1(1,:), temp(1,:))
-    call sll_s_fft_exec_c2c_1d(PlnF, temp4th1(2,:), temp(2,:))
-    do n=0,Ntau-1
-        temp4th(:,n)=temp4th(:,n)+temp(:,0)/Ntau
-    enddo
-    do n=0,Ntau-1
-        temp4th1(1,n)=alpha*dcos(kx*xt(1,n))*temp4th(1,n)
-        temp4th1(2,n)=0.0d0
-        temp4th(1,n)=-dsin(tau(n))*temp4th1(2,n)+dcos(tau(n))*temp4th1(1,n)
-        temp4th(2,n)=dsin(tau(n))*temp4th1(1,n)+dcos(tau(n))*temp4th1(2,n)
-    enddo
-    call sll_s_fft_exec_c2c_1d(PlnF, temp4th(1,:), temp(1,:))
-    call sll_s_fft_exec_c2c_1d(PlnF, temp4th(2,:), temp(2,:))
-    do n=0,Ntau-1
-        dth(1,n)=-ep**4*(dsin(tau(n))*temp(1,0)/Ntau-dcos(tau(n))*temp(2,0)/Ntau)
-        dth(2,n)=-ep**4*(dcos(tau(n))*temp(1,0)/Ntau+dsin(tau(n))*temp(2,0)/Ntau)!O(eps^4) in h_5
-    enddo
-    do n=1,Ntau-1
-        temp4th1(:,n)=-sll_p_i1*temp(:,n)/ltau(n)/Ntau
-    enddo
-    temp4th1(:,0)=0.0d0
-    call sll_s_fft_exec_c2c_1d(PlnB, temp4th1(1,:), temp5th(1,:))
-    call sll_s_fft_exec_c2c_1d(PlnB, temp4th1(2,:), temp5th(2,:))
-    do n=0,Ntau-1
-        temp5th1(1,n)=dsin(tau(n))*temp5th(2,n)+dcos(tau(n))*temp5th(1,n)
-        temp5th1(2,n)=-dsin(tau(n))*temp5th(1,n)+dcos(tau(n))*temp5th(2,n)
-    enddo
-    call sll_s_fft_exec_c2c_1d(PlnF, temp5th1(1,:), temp5th(1,:))
-    call sll_s_fft_exec_c2c_1d(PlnF, temp5th1(2,:), temp5th(2,:))
-    do n=1,Ntau-1
-        temp5th1(:,n)=-temp5th(:,n)/(ltau(n))**2/Ntau
-    enddo
-    temp5th1(:,0)=0.0d0
-    call sll_s_fft_exec_c2c_1d(PlnB, temp5th1(1,:), temp5th(1,:))
-    call sll_s_fft_exec_c2c_1d(PlnB, temp5th1(2,:), temp5th(2,:))!O(eps^3) in h_5
-    dth=dth-ep**4*temp5th
-    do n=1,Ntau-1
-        temp(:,n)=-temp(:,n)/(ltau(n))**2/Ntau
-    enddo
-    temp(:,0)=0.0d0
-    call sll_s_fft_exec_c2c_1d(PlnB, temp(1,:), temp4th(1,:))
-    call sll_s_fft_exec_c2c_1d(PlnB, temp(2,:), temp4th(2,:))! O(eps^3) in w_4
-    do n=0,Ntau-1
-        h(1,n,m)=h(1,n,m)-ep**2*(dsin(tau(n))*aux(2,m)+dcos(tau(n))*aux(1,m))
-        h(2,n,m)=h(2,n,m)-ep**2*(-dsin(tau(n))*aux(1,m)+dcos(tau(n))*aux(2,m))
-    enddo
-    xu(:,m)=auxpx(:,m)-h(:,0,m)
-    do n=0,Ntau-1
-        xt(:,n)=xu(:,m)+h(:,n,m)!X_2nd
-        Et(1,n,m)=alpha/kx*dsin(kx*xt(1,n))
-        Et(2,n,m)=0.0d0
-    enddo
-   do n=0,Ntau-1
-        h(1,n,m)=ep*(dsin(tau(n))*p%vpx(m)-dcos(tau(n))*p%vpy(m))-ep**2*(dsin(tau(n))*g(1,0)-dcos(tau(n))*g(2,0))
-        h(2,n,m)=ep*(dsin(tau(n))*p%vpy(m)+dcos(tau(n))*p%vpx(m))-ep**2*(dsin(tau(n))*g(2,0)+dcos(tau(n))*g(1,0))
-    enddo
-    do n=0,Ntau-1
-        fn(1,n)=dsin(tau(n))*g(2,n)+dcos(tau(n))*g(1,n)
-        fn(2,n)=-dsin(tau(n))*g(1,n)+dcos(tau(n))*g(2,n)
-    enddo
-    call sll_s_fft_exec_c2c_1d(PlnF, fn(1,:), gtilde(1,:))
-    call sll_s_fft_exec_c2c_1d(PlnF, fn(2,:), gtilde(2,:))
-    do n=1,Ntau-1
-        gtilde(:,n)=-sll_p_i1*gtilde(:,n)/ltau(n)/Ntau
-    enddo
-    gtilde(:,0)=0.0d0
-    call sll_s_fft_exec_c2c_1d(PlnB, gtilde(1,:), fn(1,:))
-    call sll_s_fft_exec_c2c_1d(PlnB, gtilde(2,:), fn(2,:)) !L^-1(I-Pi)exp(J*tau)g(tau)
-    h(:,:,m)=h(:,:,m)+ep**2*fn
-    do n=0,Ntau-1
-        h(1,n,m)=h(1,n,m)+ep**3*alpha*dcos(kx*auxpx(1,m))*(dsin(tau(n))*p%vpx(m)-dcos(tau(n))*p%vpy(m))/2.0d0
-        h(2,n,m)=h(2,n,m)+ep**3*alpha*dcos(kx*auxpx(1,m))*(dsin(tau(n))*p%vpy(m)+dcos(tau(n))*p%vpx(m))/2.0d0  ! h_3
-    enddo
-    xu(:,m)=auxpx(:,m)-h(:,0,m)
-    do n=0,Ntau-1   ! here involves derivatives: dx_E
-        w(1,n,m)=ep**3*(alpha*dcos(tau(n))*dcos(kx*auxpx(1,m))*aux(2,m))
-        w(2,n,m)=ep**3*(alpha*dsin(tau(n))*dcos(kx*auxpx(1,m))*aux(2,m))
-    enddo
-!enddo
-!do n=0,Ntau-1
-!    do m=1,nbpart
-!        xt=Et(:,n,m)
-!        call apply_bc()
-!        p%idx(m) = floor((xt(1)-xmin)/dimx*nx)
-!        p%dpx(m) = real(xt(1)-xmin- p%idx(m)*dx, f32)
-!        p%idy(m) = floor((xt(2)-ymin)/dimy*ny)
-!        p%dpy(m) = real(xt(2)-ymin- p%idy(m)*dy, f32)
-!    enddo
-!    call interpol_eb( f, p )
-!    Et(1,n,:)=p%epx !E(X_2nd,0)
-!    Et(2,n,:)=p%epy
-!enddo
-!do m=1,nbpart
-    do n=0,Ntau-1
-        g(1,n)=-dsin(tau(n))*Et(2,n,m)+dcos(tau(n))*Et(1,n,m)
-        g(2,n)=dsin(tau(n))*Et(1,n,m)+dcos(tau(n))*Et(2,n,m)
-    enddo
-    call sll_s_fft_exec_c2c_1d(PlnF, g(1,:), gtilde(1,:))
-    call sll_s_fft_exec_c2c_1d(PlnF, g(2,:), gtilde(2,:))
-    do n=0,Ntau-1
-        dtw(1,n)=(dsin(tau(n))*gtilde(1,0)-dcos(tau(n))*gtilde(2,0))/Ntau
-        dtw(2,n)=(dsin(tau(n))*gtilde(2,0)+dcos(tau(n))*gtilde(1,0))/Ntau
-        temp4th1(1,n)=(dsin(tau(n))*gtilde(2,0)+dcos(tau(n))*gtilde(1,0))/Ntau
-        temp4th1(2,n)=(-dsin(tau(n))*gtilde(1,0)+dcos(tau(n))*gtilde(2,0))/Ntau
-    enddo
-    do n=1,Ntau-1
-        gtilde(:,n)=-sll_p_i1*gtilde(:,n)/ltau(n)/Ntau
-    enddo
-    gtilde(:,0)=0.0d0
-    call sll_s_fft_exec_c2c_1d(PlnB, gtilde(1,:), g(1,:))
-    call sll_s_fft_exec_c2c_1d(PlnB, gtilde(2,:), g(2,:)) !g_2nd
-    w(:,:,m)=w(:,:,m)+ep*g  !w_3
-    vu(1,m)=p%vpx(m)-w(1,0,m)
-    vu(2,m)=p%vpy(m)-w(2,0,m)
-    do n=0,Ntau-1
-        temp5th(1,n)=dsin(tau(n))*g(2,n)+dcos(tau(n))*g(1,n)
-        temp5th(2,n)=-dsin(tau(n))*g(1,n)+dcos(tau(n))*g(2,n)
-    enddo
-    call sll_s_fft_exec_c2c_1d(PlnF, temp5th(1,:), temp5th1(1,:))
-    call sll_s_fft_exec_c2c_1d(PlnF, temp5th(2,:), temp5th1(2,:))
-    dtx2(1)=temp5th1(1,0)/Ntau! changed here!----
-    dtx2(2)=temp5th1(2,0)/Ntau
-    do n=0,Ntau-1
-        temp5th(1,n)=alpha*dcos(kx*xt(1,n))*(dtw(1,n)+dtx2(1))! changed here!----
-        temp5th(2,n)=0.0d0! changed here!----
-    enddo
-    do n=0,Ntau-1
-        temp5th1(1,n)=-dsin(tau(n))*temp5th(2,n)+dcos(tau(n))*temp5th(1,n)
-        temp5th1(2,n)=dsin(tau(n))*temp5th(1,n)+dcos(tau(n))*temp5th(2,n)
-    enddo
-    call sll_s_fft_exec_c2c_1d(PlnF,temp5th1(1,:), temp5th(1,:))
-    call sll_s_fft_exec_c2c_1d(PlnF, temp5th1(2,:), temp5th(2,:))
-    do n=1,Ntau-1
-        temp5th(:,n)=-temp5th(:,n)/(ltau(n))**2/Ntau
-    enddo
-    temp5th(:,0)=0.0d0
-    call sll_s_fft_exec_c2c_1d(PlnB,temp5th(1,:), temp5th1(1,:))
-    call sll_s_fft_exec_c2c_1d(PlnB, temp5th(2,:), temp5th1(2,:))
-    dtw=-ep**3*temp5th1
-!    dtx2(2)=-(2.0d0*E(2)-E(1)+0.0d0*E(1)/2.0d0)! need change here!----
-!    dtx2(1)=-2.0d0*E(1)+E(2)+0.0d0*E(2)/2.0d0! need change here!----
-!    temp5th(1,1)=2.0d0*dtx2(1)+dtx2(2)! need change here!----
-!    temp5th(2,1)=2.0d0*dtx2(2)+dtx2(1)! need change here!----
-    do n=0,Ntau-1
-        temp5th1(1,n)=dcos(tau(n))*temp5th(2,1)+dsin(tau(n))*temp5th(1,1)
-        temp5th1(2,n)=-dcos(tau(n))*temp5th(1,1)+dsin(tau(n))*temp5th(2,1)
-    enddo
-    dtw(:,:)=dtw(:,:)!-ep**5*temp5th1  !-ep^2L^-1d_tw
-    do n=0,Ntau-1
-        xt(:,n)=xu(:,m)+h(:,n,m) !X_3
-    enddo
-    h(:,:,m)=(ep**2)*temp4th1
-    temp4th1=w(:,:,m)
-    w(:,:,m)=-(ep**3)*temp4th
-!enddo
-!do n=0,Ntau-1
-!    do m=1,nbpart
-!        xt=Et(:,n,m)
-!        call apply_bc()
-!        p%idx(m) = floor((xt(1)-xmin)/dimx*nx)
-!        p%dpx(m) = real(xt(1)-xmin- p%idx(m)*dx, f32)
-!        p%idy(m) = floor((xt(2)-ymin)/dimy*ny)
-!        p%dpy(m) = real(xt(2)-ymin- p%idy(m)*dy, f32)
-!    enddo
-!    call interpol_eb( f, p )
-!    Et(1,n,:)=p%epx !E(X_3,0)
-!    Et(2,n,:)=p%epy
-!enddo
-!do m=1,nbpart
-    do n=0,Ntau-1
-        Et(1,n,m)=alpha/kx*dsin(kx*xt(1,n)) !E(X_3,0)
-        Et(2,n,m)=0.0d0
-    enddo
-    do n=0,Ntau-1
-        h(1,n,m)=h(1,n,m)+ep*(-dcos(tau(n))*p%vpy(m)+dsin(tau(n))*p%vpx(m))
-        h(2,n,m)=h(2,n,m)+ep*(dcos(tau(n))*p%vpx(m)+dsin(tau(n))*p%vpy(m))
-    enddo
-    do n=0,Ntau-1
-        temp(1,n)=-dsin(tau(n))*Et(2,n,m)+dcos(tau(n))*Et(2,n,m)
-        temp(2,n)=dsin(tau(n))*Et(1,n,m)+dcos(tau(n))*Et(2,n,m)
-    enddo
-    call sll_s_fft_exec_c2c_1d(PlnF, temp(1,:), gtilde(1,:))
-    call sll_s_fft_exec_c2c_1d(PlnF, temp(2,:), gtilde(2,:))
-    do n=0,Ntau-1
-        dth(1,n)=dth(1,n)+ep**2/Ntau*(dsin(tau(n))*gtilde(2,0)+dcos(tau(n))*gtilde(1,0))
-        dth(2,n)=dth(2,n)+ep**2/Ntau*(dcos(tau(n))*gtilde(2,0)-dsin(tau(n))*gtilde(1,0))!O(eps^2) in h_5
-    enddo
-    do n=1,Ntau-1
-        gtilde(:,n)=-sll_p_i1*gtilde(:,n)/ltau(n)/Ntau
-    enddo
-    gtilde(:,0)=0.0d0
-    call sll_s_fft_exec_c2c_1d(PlnB, gtilde(1,:), g(1,:))
-    call sll_s_fft_exec_c2c_1d(PlnB, gtilde(2,:), g(2,:))
-    w(:,:,m)=w(:,:,m)+ep*g
-    vu(1,m)=p%vpx(m)-w(1,0,m)
-    vu(2,m)=p%vpy(m)-w(2,0,m)
-    do n=0,Ntau-1
-        temp(1,n)=dsin(tau(n))*temp4th1(2,n)+dcos(tau(n))*temp4th1(1,n)
-        temp(2,n)=-dsin(tau(n))*temp4th1(1,n)+dcos(tau(n))*temp4th1(2,n)
-    enddo
-    call sll_s_fft_exec_c2c_1d(PlnF, temp(1,:), gtilde(1,:))
-    call sll_s_fft_exec_c2c_1d(PlnF, temp(2,:), gtilde(2,:))
-    do n=1,Ntau-1
-        gtilde(:,n)=-sll_p_i1*gtilde(:,n)/ltau(n)/Ntau
-    enddo
-    gtilde(:,0)=0.0d0
-    call sll_s_fft_exec_c2c_1d(PlnB, gtilde(1,:), g(1,:))
-    call sll_s_fft_exec_c2c_1d(PlnB, gtilde(2,:), g(2,:))
-    h(:,:,m)=h(:,:,m)+ep*g
-    xu(:,m)=auxpx(:,m)-h(:,0,m)
-    do n=0,Ntau-1
-        xt(:,n)=xu(:,m)+h(:,n,m) !X_4
-    enddo
-!enddo
-!do n=0,Ntau-1
-!    do m=1,nbpart
-!        xt=Et(:,n,m)
-!        call apply_bc()
-!        p%idx(m) = floor((xt(1)-xmin)/dimx*nx)
-!        p%dpx(m) = real(xt(1)-xmin- p%idx(m)*dx, f32)
-!        p%idy(m) = floor((xt(2)-ymin)/dimy*ny)
-!        p%dpy(m) = real(xt(2)-ymin- p%idy(m)*dy, f32)
-!    enddo
-!    call interpol_eb( f, p )
-!    Et(1,n,:)=p%epx !E(X_4,0)
-!    Et(2,n,:)=p%epy
-!enddo
-!do m=1,nbpart
-    do n=0,Ntau-1
-        Et(1,n,m)=alpha/kx*dsin(kx*xt(1,n)) !E(X_4,0)
-        Et(2,n,m)=0.0d0
-    enddo
-    do n=0,Ntau-1
-        temp(1,n)=-dsin(tau(n))*Et(2,n,m)+dcos(tau(n))*Et(1,n,m)
-        temp(2,n)=dsin(tau(n))*Et(1,n,m)+dcos(tau(n))*Et(2,n,m)
-    enddo
-    call sll_s_fft_exec_c2c_1d(PlnF, temp(1,:), gtilde(1,:))
-    call sll_s_fft_exec_c2c_1d(PlnF, temp(2,:), gtilde(2,:))
-    do n=1,Ntau-1
-        gtilde(:,n)=-sll_p_i1*gtilde(:,n)/ltau(n)/Ntau
-    enddo
-    gtilde(:,0)=0.0d0
-    call sll_s_fft_exec_c2c_1d(PlnB, gtilde(1,:), g(1,:))
-    call sll_s_fft_exec_c2c_1d(PlnB, gtilde(2,:), g(2,:))
-    temp4th=w(:,:,m)   !w_4
-    w(:,:,m)=ep*g+dtw !w_5
-    do n=0,Ntau-1
-        h(1,n,m)=(dsin(tau(n))*p%vpx(m)-dcos(tau(n))*p%vpy(m))*ep
-        h(2,n,m)=(dsin(tau(n))*p%vpy(m)+dcos(tau(n))*p%vpx(m))*ep
-    enddo
-    do n=0,Ntau-1
-        temp4th1(1,n)=dsin(tau(n))*temp4th(2,n)+dcos(tau(n))*temp4th(1,n)
-        temp4th1(2,n)=-dsin(tau(n))*temp4th(1,n)+dcos(tau(n))*temp4th(2,n)
-    enddo
-    call sll_s_fft_exec_c2c_1d(PlnF, temp4th1(1,:), gtilde(1,:))
-    call sll_s_fft_exec_c2c_1d(PlnF, temp4th1(2,:), gtilde(2,:))
-    do n=1,Ntau-1
-        gtilde(:,n)=-sll_p_i1*gtilde(:,n)/ltau(n)/Ntau
-    enddo
-    gtilde(:,0)=0.0d0
-    call sll_s_fft_exec_c2c_1d(PlnB, gtilde(1,:), g(1,:))
-    call sll_s_fft_exec_c2c_1d(PlnB, gtilde(2,:), g(2,:))
-    h(:,:,m)=h(:,:,m)+ep*g+dth
-    xu(:,m)=auxpx(:,m)-h(:,0,m)
-    vu(1,m)=p%vpx(m)-w(1,0,m)
-    vu(2,m)=p%vpy(m)-w(2,0,m)
+    call interpol_eb_m6( f, p )
+    Et(1,n,:)=p%epx !g(0,tau,w(0))
+    Et(2,n,:)=p%epy
 enddo
-!--end 5th order--
-!-------end of preparation-----
-
-!allocate (elec(nstep))
-do istep = 1, nstep
-!    !---ode solver 1st order scheme
-!    time = time + dt
-!    do m=1,nbpart
-!        do n=0,Ntau-1
-!            gn(1,n,m)=(dcos(tau(n))*w(1,n,m)+dsin(tau(n))*w(2,n,m))/ep
-!            gn(2,n,m)=(dcos(tau(n))*w(2,n,m)-dsin(tau(n))*w(1,n,m))/ep
-!        enddo
-!        call sll_s_fft_exec_c2c_1d(PlnF, gn(1,:,m), gntilde(1,:,m))
-!        call sll_s_fft_exec_c2c_1d(PlnF, gn(2,:,m), gntilde(2,:,m))
-!        xu(:,m)=xu(:,m)+dt*dreal(gntilde(:,0,m))/Ntau!update \underline X
-!    enddo
-!    do n=0,Ntau-1
-!        do m=1,nbpart
-!            xt=xu(:,m)+h(:,n,m)
-!            call apply_bc()
-!            p%idx(m) = floor((xt(1)-xmin)/dimx*nx)
-!            p%dpx(m) = real(xt(1)-xmin- p%idx(m)*dx, f32)
-!            p%idy(m) = floor((xt(2)-ymin)/dimy*ny)
-!            p%dpy(m) = real(xt(2)-ymin- p%idy(m)*dy, f32)
-!        enddo
-!        call interpol_eb( f, p )
-!        Et(1,n,:)=p%epx
-!        Et(2,n,:)=p%epy
-!    enddo
-!    do m=1,nbpart
-!        do n=0,Ntau-1
-!            fn(1,n)=dcos(tau(n))*Et(1,n,m)-dsin(tau(n))*Et(2,n,m)
-!            fn(2,n)=dcos(tau(n))*Et(2,n,m)+dsin(tau(n))*Et(1,n,m)
-!        enddo
-!        call sll_s_fft_exec_c2c_1d(PlnF, fn(1,:), ftilde(1,:))
-!        call sll_s_fft_exec_c2c_1d(PlnF, fn(2,:), ftilde(2,:))
-!        vu(:,m)=vu(:,m)+dt/ep*dreal(ftilde(:,0))/Ntau
-!        do n=0,Ntau-1
-!            g(1,n)=gn(1,n,m)-gntilde(1,0,m)/Ntau+(dcos(tau(n))*vu(1,m)+dsin(tau(n))*vu(2,m))/ep
-!            g(2,n)=gn(2,n,m)-gntilde(2,0,m)/Ntau+(dcos(tau(n))*vu(2,m)-dsin(tau(n))*vu(1,m))/ep
-!            g(:,n)=g(:,n)*dt+h(:,n,m)
-!        enddo
-!        call sll_s_fft_exec_c2c_1d(PlnF, g(1,:), gtilde(1,:))
-!        call sll_s_fft_exec_c2c_1d(PlnF, g(2,:), gtilde(2,:))
-!        do n=0,Ntau-1
-!            gtilde(:,n)=gtilde(:,n)/(1.0d0+sll_p_i1*ltau(n)*dt/ep**2)/Ntau
-!        enddo
-!        call sll_s_fft_exec_c2c_1d(PlnB, gtilde(1,:),temp(1,:))
-!        call sll_s_fft_exec_c2c_1d(PlnB, gtilde(2,:), temp(2,:))
-!        h(:,:,m)=dreal(temp)
-!        do n=0,Ntau-1
-!            fn(:,n)=(fn(:,n)-ftilde(:,0)/Ntau)*ep*dt+w(:,n,m)*ep**2
-!        enddo
-!        call sll_s_fft_exec_c2c_1d(PlnF, fn(1,:), ftilde(1,:))
-!        call sll_s_fft_exec_c2c_1d(PlnF, fn(2,:), ftilde(2,:))
-!        do n=0,Ntau-1
-!            ftilde(:,n)=ftilde(:,n)/(ep**2+sll_p_i1*ltau(n)*dt)/Ntau
-!        enddo
-!        call sll_s_fft_exec_c2c_1d(PlnB, ftilde(1,:), temp(1,:))
-!        call sll_s_fft_exec_c2c_1d(PlnB, ftilde(2,:), temp(2,:))
-!        w(:,:,m)=dreal(temp)
-!    enddo
-!    do m=1,nbpart
-!        g(1,:)=xu(1,m)+h(1,:,m)
-!        g(2,:)=xu(2,m)+h(2,:,m)
-!        call sll_s_fft_exec_c2c_1d(PlnF, g(1,:),gtilde(1,:))
-!        call sll_s_fft_exec_c2c_1d(PlnF, g(2,:),gtilde(2,:))
-!        xtemp=0.0d0
-!        do n=0,ntau-1
-!            xtemp=xtemp+gtilde(:,n)/Ntau*cdexp(sll_p_i1*ltau(n)*time/ep**2)
-!        enddo
-!        xt=dreal(xtemp)
-!        call apply_bc()
-!        p%idx(m) = floor((xt(1)-xmin)/dimx*nx)
-!        p%dpx(m) = real(xt(1) -xmin- p%idx(m)*dx, f32)
-!        p%idy(m) = floor((xt(2)-ymin)/dimy*ny)
-!        p%dpy(m) = real(xt(2) -ymin- p%idy(m)*dy, f32)
-!    enddo
-!    !---end 1st solver
-
-    !---ode solver 2nd order scheme
-    time = time + dt/2.0d0
-    do m=1,nbpart
-        do n=0,Ntau-1
-            gn(1,n,m)=(dcos(tau(n))*w(1,n,m)+dsin(tau(n))*w(2,n,m))/ep
-            gn(2,n,m)=(dcos(tau(n))*w(2,n,m)-dsin(tau(n))*w(1,n,m))/ep
-        enddo
-        call sll_s_fft_exec_c2c_1d(PlnF, gn(1,:,m), gntilde(1,:,m))
-        call sll_s_fft_exec_c2c_1d(PlnF, gn(2,:,m), gntilde(2,:,m))
-        xuh(:,m)=xu(:,m)+dt/2.0d0*dreal(gntilde(:,0,m))/Ntau! \underline X^n+1/2
+do m=1,npp
+    xtemp1(1,:,m)=2.0d0*Et(2,:,m)
+    xtemp1(2,:,m)=-2.0d0*Et(1,:,m)!g_+
+    call sll_s_fft_exec_c2c_1d(PlnF, xtemp1(1,:,m), temptilde(1,:))
+    call sll_s_fft_exec_c2c_1d(PlnF, xtemp1(2,:,m), temptilde(2,:))
+    do n=1,Ntau-1
+        temptilde(:,n)=-sll_p_i1*temptilde(:,n)/ltau(n)/Ntau
     enddo
-    do n=0,Ntau-1
-        do m=1,nbpart
-            xxt=xuh(:,m)+h(:,n,m)
-            call apply_bc()
-            p%idx(m) = floor((xxt(1)-xmin)/dimx*nx)
-            p%dpx(m) = real(xxt(1)-xmin- p%idx(m)*dx, f32)
-            p%idy(m) = floor((xxt(2)-ymin)/dimy*ny)
-            p%dpy(m) = real(xxt(2)-ymin- p%idy(m)*dy, f32)
-        enddo
-        call interpol_eb( f, p )
-        Et(1,n,:)=p%epx
-        Et(2,n,:)=p%epy
+    temptilde(:,0)=0.0d0
+    call sll_s_fft_exec_c2c_1d(PlnB, temptilde(1,:), temp(1,:))
+    call sll_s_fft_exec_c2c_1d(PlnB, temptilde(2,:), temp(2,:))!AF+
+    up(1,:,m)=wp(1,m)+2.0d0*ep**2*(temp(1,:)-temp(1,0))
+    up(2,:,m)=wp(2,m)+2.0d0*ep**2*(temp(2,:)-temp(2,0))!1st ini data of U_+
+    !---
+    do n=0,ntau-1
+        xtemp2(1,n,m)=-2.0d0*(dsin(2.0d0*tau(n))*Et(1,n,m)+dcos(2.0d0*tau(n))*Et(2,n,m))
+        xtemp2(2,n,m)=2.0d0*(-dsin(2.0d0*tau(n))*Et(2,n,m)+dcos(2.0d0*tau(n))*Et(1,n,m))!g_-
     enddo
-    do m=1,nbpart
-        do n=0,Ntau-1
-            fn(1,n)=dcos(tau(n))*Et(1,n,m)-dsin(tau(n))*Et(2,n,m)
-            fn(2,n)=dcos(tau(n))*Et(2,n,m)+dsin(tau(n))*Et(1,n,m)
-        enddo
-        call sll_s_fft_exec_c2c_1d(PlnF, fn(1,:), ftilde(1,:))
-        call sll_s_fft_exec_c2c_1d(PlnF, fn(2,:), ftilde(2,:))
-        vuh(:,m)=vu(:,m)+dt/2.0d0/ep*dreal(ftilde(:,0))/Ntau ! \underline Y^n+1/2
-        do n=0,Ntau-1
-            g(1,n)=gn(1,n,m)-gntilde(1,0,m)/Ntau+(dcos(tau(n))*vuh(1,m)+dsin(tau(n))*vuh(2,m))/ep
-            g(2,n)=gn(2,n,m)-gntilde(2,0,m)/Ntau+(dcos(tau(n))*vuh(2,m)-dsin(tau(n))*vuh(1,m))/ep
-            g(:,n)=g(:,n)*dt/2.0d0+h(:,n,m)
-        enddo
-        call sll_s_fft_exec_c2c_1d(PlnF, g(1,:), gtilde(1,:))
-        call sll_s_fft_exec_c2c_1d(PlnF, g(2,:), gtilde(2,:))
-        do n=0,Ntau-1
-            gtilde(:,n)=gtilde(:,n)/(1.0d0+sll_p_i1*ltau(n)*dt/2.0d0/ep**2)/Ntau
-        enddo
-        call sll_s_fft_exec_c2c_1d(PlnB, gtilde(1,:),temp(1,:))
-        call sll_s_fft_exec_c2c_1d(PlnB, gtilde(2,:), temp(2,:))
-        hh(:,:,m)=dreal(temp)! h^n+1/2
-        do n=0,Ntau-1
-            fn(:,n)=(fn(:,n)-ftilde(:,0)/Ntau)*ep*dt/2.0d0+w(:,n,m)*ep**2
-        enddo
-        call sll_s_fft_exec_c2c_1d(PlnF, fn(1,:), ftilde(1,:))
-        call sll_s_fft_exec_c2c_1d(PlnF, fn(2,:), ftilde(2,:))
-        do n=0,Ntau-1
-            ftilde(:,n)=ftilde(:,n)/(ep**2+sll_p_i1*ltau(n)*dt/2.0d0)/Ntau
-        enddo
-        call sll_s_fft_exec_c2c_1d(PlnB, ftilde(1,:), temp(1,:))
-        call sll_s_fft_exec_c2c_1d(PlnB, ftilde(2,:), temp(2,:))
-        wh(:,:,m)=dreal(temp)! w^n+1/2
+    call sll_s_fft_exec_c2c_1d(PlnF, xtemp2(1,:,m), temptilde(1,:))
+    call sll_s_fft_exec_c2c_1d(PlnF, xtemp2(2,:,m), temptilde(2,:))
+    do n=1,Ntau-1
+        temptilde(:,n)=-sll_p_i1*temptilde(:,n)/ltau(n)/Ntau
     enddo
+    temptilde(:,0)=0.0d0
+    call sll_s_fft_exec_c2c_1d(PlnB, temptilde(1,:), temp(1,:))
+    call sll_s_fft_exec_c2c_1d(PlnB, temptilde(2,:), temp(2,:))!AF-
+    um(1,:,m)=wm(1,m)+2.0d0*ep**2*(temp(1,:)-temp(1,0))
+    um(2,:,m)=wm(2,m)+2.0d0*ep**2*(temp(2,:)-temp(2,0))!1st ini data of U_-
+enddo
+!--corrected more initial data
+do n=0,ntau-1
+    xtemp1(1,n,:)=dcos(tau(n))*up(1,n,:)-dsin(tau(n))*up(2,n,:)!v_+ 2scaled
+    xtemp1(2,n,:)=dcos(tau(n))*up(2,n,:)+dsin(tau(n))*up(1,n,:)
+    xtemp2(1,n,:)=dcos(tau(n))*um(1,n,:)+dsin(tau(n))*um(2,n,:)!v_- 2scaled
+    xtemp2(2,n,:)=dcos(tau(n))*um(2,n,:)-dsin(tau(n))*um(1,n,:)
+    xtemp1(:,n,:)=(xtemp1(:,n,:)+xtemp2(:,n,:))/2.0d0!z 2scaled
+    xtemp2(1,n,:)=dcos(tau(n))*xtemp1(1,n,:)+dsin(tau(n))*xtemp1(2,n,:)!x 2scaled
+    xtemp2(2,n,:)=dcos(tau(n))*xtemp1(2,n,:)-dsin(tau(n))*xtemp1(1,n,:)
     do m=1,nbpart
-        g(1,:)=xuh(1,m)+hh(1,:,m)
-        g(2,:)=xuh(2,m)+hh(2,:,m)
-        call sll_s_fft_exec_c2c_1d(PlnF, g(1,:),gtilde(1,:))
-        call sll_s_fft_exec_c2c_1d(PlnF, g(2,:),gtilde(2,:))
-        xtemp=0.0d0
-        do n=0,ntau-1
-            xtemp=xtemp+gtilde(:,n)/Ntau*cdexp(sll_p_i1*ltau(n)*time/ep**2)
-        enddo
-        xxt=dreal(xtemp)
+        xxt=dreal(xtemp2(:,n,m))
         call apply_bc()
-        p%idx(m) = floor((xxt(1)-xmin)/dimx*nx)
-        p%dpx(m) = real(xxt(1) -xmin- p%idx(m)*dx, f32)
-        p%idy(m) = floor((xxt(2)-ymin)/dimy*ny)
-        p%dpy(m) = real(xxt(2) -ymin- p%idy(m)*dy, f32)
+        p%idx(m) = floor(xxt(1)/dimx*nx)
+        p%dpx(m) = real(xxt(1)/dx- p%idx(m), f64)
+        p%idy(m) = floor(xxt(2)/dimy*ny)
+        p%dpy(m) = real(xxt(2)/dy- p%idy(m), f64)
     enddo
-    call calcul_rho( p, f )
-    call poisson%compute_e_from_rho( f%ex, f%ey, f%r0) !E^n+1/2
-    do m=1,nbpart
-        do n=0,Ntau-1
-            gn(1,n,m)=(dcos(tau(n))*wh(1,n,m)+dsin(tau(n))*wh(2,n,m))/ep
-            gn(2,n,m)=(dcos(tau(n))*wh(2,n,m)-dsin(tau(n))*wh(1,n,m))/ep
-        enddo
-        call sll_s_fft_exec_c2c_1d(PlnF, gn(1,:,m), gntilde(1,:,m))
-        call sll_s_fft_exec_c2c_1d(PlnF, gn(2,:,m), gntilde(2,:,m))
-        xuh(:,m)=xu(:,m)+dt*dreal(gntilde(:,0,m))/Ntau! \underline X^n+1
-    enddo
-    do n=0,Ntau-1
-        do m=1,nbpart
-            xxt=(xuh(:,m)+xu(:,m))/2.0d0+hh(:,n,m)
-            call apply_bc()
-            p%idx(m) = floor((xxt(1))/dimx*nx)
-            p%dpx(m) = real(xxt(1)- p%idx(m)*dx, f32)
-            p%idy(m) = floor((xxt(2))/dimy*ny)
-            p%dpy(m) = real(xxt(2)- p%idy(m)*dy, f32)
-        enddo
-        call interpol_eb( f, p )
-        Et(1,n,:)=p%epx
-        Et(2,n,:)=p%epy
-    enddo
-    xu=xuh
-    do m=1,nbpart
-        do n=0,Ntau-1
-            fn(1,n)=dcos(tau(n))*Et(1,n,m)-dsin(tau(n))*Et(2,n,m)
-            fn(2,n)=dcos(tau(n))*Et(2,n,m)+dsin(tau(n))*Et(1,n,m)
-        enddo
-        call sll_s_fft_exec_c2c_1d(PlnF, fn(1,:), ftilde(1,:))
-        call sll_s_fft_exec_c2c_1d(PlnF, fn(2,:), ftilde(2,:))
-        vuh(:,m)=vu(:,m)+dt/ep*dreal(ftilde(:,0))/Ntau ! \underline Y^n+1
-        aux(:,m)=vuh(:,m)
-        vuh(:,m)=(vuh(:,m)+vu(:,m))/2.0d0
-        vu(:,m)=aux(:,m)
-        do n=0,Ntau-1
-            g(1,n)=gn(1,n,m)-gntilde(1,0,m)/Ntau+(dcos(tau(n))*vuh(1,m)+dsin(tau(n))*vuh(2,m))/ep
-            g(2,n)=gn(2,n,m)-gntilde(2,0,m)/Ntau+(dcos(tau(n))*vuh(2,m)-dsin(tau(n))*vuh(1,m))/ep
-            g(:,n)=g(:,n)*dt
-        enddo
-        call sll_s_fft_exec_c2c_1d(PlnF, g(1,:), gtilde(1,:))
-        call sll_s_fft_exec_c2c_1d(PlnF, g(2,:), gtilde(2,:))
-        gn(:,:,1)=h(:,:,m)
-        call sll_s_fft_exec_c2c_1d(PlnF, gn(1,:,1), temp(1,:))
-        call sll_s_fft_exec_c2c_1d(PlnF, gn(2,:,1), temp(2,:))
-        do n=0,Ntau-1
-            gtilde(:,n)=(gtilde(:,n)+temp(:,n)*(1.0d0-sll_p_i1*ltau(n)*dt/2.0d0/ep**2)) &
-            /(1.0d0+sll_p_i1*ltau(n)*dt/2.0d0/ep**2)/Ntau
-        enddo
-        call sll_s_fft_exec_c2c_1d(PlnB, gtilde(1,:),temp(1,:))
-        call sll_s_fft_exec_c2c_1d(PlnB, gtilde(2,:), temp(2,:))
-        h(:,:,m)=dreal(temp)! h^n+1
-        do n=0,Ntau-1
-            fn(:,n)=(fn(:,n)-ftilde(:,0)/Ntau)*ep*dt
-        enddo
-        call sll_s_fft_exec_c2c_1d(PlnF, fn(1,:), ftilde(1,:))
-        call sll_s_fft_exec_c2c_1d(PlnF, fn(2,:), ftilde(2,:))
-        gn(:,:,1)=w(:,:,m)
-        call sll_s_fft_exec_c2c_1d(PlnF, gn(1,:,1), temp(1,:))
-        call sll_s_fft_exec_c2c_1d(PlnF, gn(2,:,1), temp(2,:))
-        do n=0,Ntau-1
-            ftilde(:,n)=(ftilde(:,n)+temp(:,n)*(ep**2-sll_p_i1*ltau(n)*dt/2.0d0))   &
-            /(ep**2+sll_p_i1*ltau(n)*dt/2.0d0)/Ntau
-        enddo
-        call sll_s_fft_exec_c2c_1d(PlnB, ftilde(1,:), temp(1,:))
-        call sll_s_fft_exec_c2c_1d(PlnB, ftilde(2,:), temp(2,:))
-        w(:,:,m)=dreal(temp)! w^n+1
-    enddo
-    time = time + dt/2.0d0
-    do m=1,nbpart
-        g(1,:)=xu(1,m)+h(1,:,m)
-        g(2,:)=xu(2,m)+h(2,:,m)
-        call sll_s_fft_exec_c2c_1d(PlnF, g(1,:),gtilde(1,:))
-        call sll_s_fft_exec_c2c_1d(PlnF, g(2,:),gtilde(2,:))
-        xtemp=0.0d0
-        do n=0,ntau-1
-            xtemp=xtemp+gtilde(:,n)/Ntau*cdexp(sll_p_i1*ltau(n)*time/ep**2)
-        enddo
-        xxt=dreal(xtemp)
-        call apply_bc()
-        p%idx(m) = floor((xxt(1)-xmin)/dimx*nx)
-        p%dpx(m) = real(xxt(1) -xmin- p%idx(m)*dx, f32)
-        p%idy(m) = floor((xxt(2)-ymin)/dimy*ny)
-        p%dpy(m) = real(xxt(2) -ymin- p%idy(m)*dy, f32)
-    enddo
-    !---end 2nd solver
-    call calcul_rho( p, f )
+    call calcul_rho_m6( p, f )
     call poisson%compute_e_from_rho( f%ex, f%ey, f%r0)
-    !call maximumvalue()
-    !call modeE( f, istep, time )
-    !write(*,"('istep = ', i6, ' time = ',g15.3)", advance='no') istep, time
+    fex(:,:,n)=f%ex
+    fey(:,:,n)=f%ey!E_1st(0,x)
 enddo
+do n=0,ntau-1
+    xtemp1(1,n,:)=dcos(tau(n))*up(1,n,:)-dsin(tau(n))*up(2,n,:)
+    xtemp1(2,n,:)=dsin(tau(n))*up(1,n,:)+dcos(tau(n))*up(2,n,:)
+    xtemp2(1,n,:)=dcos(tau(n))*um(1,n,:)+dsin(tau(n))*um(2,n,:)
+    xtemp2(2,n,:)=-dsin(tau(n))*um(1,n,:)+dcos(tau(n))*um(2,n,:)
+enddo
+xtemp1=(xtemp1+xtemp2)/2.0d0
+do n=0,ntau-1
+    xtemp2(1,n,:)=dcos(tau(n))*xtemp1(1,n,:)+dsin(tau(n))*xtemp1(2,n,:)
+    xtemp2(2,n,:)=-dsin(tau(n))*xtemp1(1,n,:)+dcos(tau(n))*xtemp1(2,n,:)
+    do m=1,nbpart
+        xxt=dreal(xtemp2(:,n,m))
+        call apply_bc()
+        p%idx(m) = floor(xxt(1)/dimx*nx)
+        p%dpx(m) = real(xxt(1)/dx- p%idx(m), f64)
+        p%idy(m) = floor(xxt(2)/dimy*ny)
+        p%dpy(m) = real(xxt(2)/dy- p%idy(m), f64)
+    enddo
+    f%ex=fex(:,:,n)
+    f%ey=fey(:,:,n)
+    call interpol_eb_m6( f, p )
+    Et(1,n,:)=p%epx !g_1st(0,tau,U_1st(0))
+    Et(2,n,:)=p%epy
+enddo
+do m=1,npp
+    xtemp1(1,:,m)=2.0d0*Et(2,:,m)
+    xtemp1(2,:,m)=-2.0d0*Et(1,:,m)!g_+
+    call sll_s_fft_exec_c2c_1d(PlnF, xtemp1(1,:,m), temptilde(1,:))
+    call sll_s_fft_exec_c2c_1d(PlnF, xtemp1(2,:,m), temptilde(2,:))
+    up0(:,0,m)=temptilde(:,0)/ntau!Pi g_+
+    do n=1,Ntau-1
+        temptilde(:,n)=-sll_p_i1*temptilde(:,n)/ltau(n)/Ntau
+    enddo
+    temptilde(:,0)=0.0d0
+    call sll_s_fft_exec_c2c_1d(PlnB, temptilde(1,:), temp(1,:))
+    call sll_s_fft_exec_c2c_1d(PlnB, temptilde(2,:), temp(2,:))!AF+
+    up(1,:,m)=wp(1,m)+2.0d0*ep**2*(temp(1,:)-temp(1,0))
+    up(2,:,m)=wp(2,m)+2.0d0*ep**2*(temp(2,:)-temp(2,0))!3rd ini data of U_+
+    !---
+    do n=0,ntau-1
+        xtemp2(1,n,m)=-2.0d0*(dsin(2.0d0*tau(n))*Et(1,n,m)+dcos(2.0d0*tau(n))*Et(2,n,m))
+        xtemp2(2,n,m)=2.0d0*(-dsin(2.0d0*tau(n))*Et(2,n,m)+dcos(2.0d0*tau(n))*Et(1,n,m))!g_-
+    enddo
+    call sll_s_fft_exec_c2c_1d(PlnF, xtemp2(1,:,m), temptilde(1,:))
+    call sll_s_fft_exec_c2c_1d(PlnF, xtemp2(2,:,m), temptilde(2,:))
+    um0(:,0,m)=temptilde(:,0)/ntau!Pi g_-
+    do n=1,Ntau-1
+        temptilde(:,n)=-sll_p_i1*temptilde(:,n)/ltau(n)/Ntau
+    enddo
+    temptilde(:,0)=0.0d0
+    call sll_s_fft_exec_c2c_1d(PlnB, temptilde(1,:), temp(1,:))
+    call sll_s_fft_exec_c2c_1d(PlnB, temptilde(2,:), temp(2,:))!AF-
+    um(1,:,m)=wm(1,m)+2.0d0*ep**2*(temp(1,:)-temp(1,0))
+    um(2,:,m)=wm(2,m)+2.0d0*ep**2*(temp(2,:)-temp(2,0))!3rd ini data of U_-
+enddo
+
+do n=0,ntau-1
+    xtemp1(1,n,:)=dcos(tau(n))*up(1,n,:)-dsin(tau(n))*up(2,n,:)!v_+ 2scaled
+    xtemp1(2,n,:)=dcos(tau(n))*up(2,n,:)+dsin(tau(n))*up(1,n,:)
+    xtemp2(1,n,:)=dcos(tau(n))*um(1,n,:)+dsin(tau(n))*um(2,n,:)!v_- 2scaled
+    xtemp2(2,n,:)=dcos(tau(n))*um(2,n,:)-dsin(tau(n))*um(1,n,:)
+    xtemp1(:,n,:)=(xtemp1(:,n,:)+xtemp2(:,n,:))/2.0d0!z 2scaled
+    xtemp2(1,n,:)=dcos(tau(n))*xtemp1(1,n,:)+dsin(tau(n))*xtemp1(2,n,:)!x 2scaled
+    xtemp2(2,n,:)=dcos(tau(n))*xtemp1(2,n,:)-dsin(tau(n))*xtemp1(1,n,:)
+    do m=1,nbpart
+        xxt=dreal(xtemp2(:,n,m))
+        call apply_bc()
+        p%idx(m) = floor(xxt(1)/dimx*nx)
+        p%dpx(m) = real(xxt(1)/dx- p%idx(m), f64)
+        p%idy(m) = floor(xxt(2)/dimy*ny)
+        p%dpy(m) = real(xxt(2)/dy- p%idy(m), f64)
+    enddo
+    call calcul_rho_m6( p, f )
+    call poisson%compute_e_from_rho( f%ex, f%ey, f%r0)
+    fex(:,:,n)=f%ex
+    fey(:,:,n)=f%ey!E_4(0,x)
+enddo
+
+!--time iteration---
+time=dt
+do n=0,ntau-1
+    xtemp1(1,n,:)=dcos(tau(n))*up(1,n,:)-dsin(tau(n))*up(2,n,:)
+    xtemp1(2,n,:)=dsin(tau(n))*up(1,n,:)+dcos(tau(n))*up(2,n,:)
+    xtemp2(1,n,:)=dcos(tau(n))*um(1,n,:)+dsin(tau(n))*um(2,n,:)
+    xtemp2(2,n,:)=-dsin(tau(n))*um(1,n,:)+dcos(tau(n))*um(2,n,:)
+enddo
+xtemp1=(xtemp1+xtemp2)/2.0d0
+do n=0,ntau-1
+    xtemp2(1,n,:)=dcos(tau(n))*xtemp1(1,n,:)+dsin(tau(n))*xtemp1(2,n,:)
+    xtemp2(2,n,:)=-dsin(tau(n))*xtemp1(1,n,:)+dcos(tau(n))*xtemp1(2,n,:)
+    do m=1,nbpart
+        xxt=dreal(xtemp2(:,n,m))
+        call apply_bc()
+        p%idx(m) = floor(xxt(1)/dimx*nx)
+        p%dpx(m) = real(xxt(1)/dx- p%idx(m), f64)
+        p%idy(m) = floor(xxt(2)/dimy*ny)
+        p%dpy(m) = real(xxt(2)/dy- p%idy(m), f64)
+    enddo
+    f%ex=fex(:,:,n)
+    f%ey=fey(:,:,n)
+    call interpol_eb_m6( f, p )
+    Et(1,n,:)=p%epx !g_3rd(0,tau,U_3rd(0))
+    Et(2,n,:)=p%epy
+enddo
+do m=1,npp
+    temp(1,:)=2.0d0*Et(2,:,m)
+    temp(2,:)=-2.0d0*Et(1,:,m)
+    call sll_s_fft_exec_c2c_1d(PlnF, temp(1,:), temptilde(1,:))
+    call sll_s_fft_exec_c2c_1d(PlnF, temp(2,:), temptilde(2,:))
+    xtemp1(:,:,m)=temptilde/ntau!g_+tilde(t=0)
+    !---
+    do n=0,ntau-1
+        temp(1,n)=-2.0d0*(dsin(2.0d0*tau(n))*Et(1,n,m)+dcos(2.0d0*tau(n))*Et(2,n,m))
+        temp(2,n)=2.0d0*(-dsin(2.0d0*tau(n))*Et(2,n,m)+dcos(2.0d0*tau(n))*Et(1,n,m))
+    enddo
+    call sll_s_fft_exec_c2c_1d(PlnF, temp(1,:), temptilde(1,:))
+    call sll_s_fft_exec_c2c_1d(PlnF, temp(2,:), temptilde(2,:))
+    xtemp2(:,:,m)=temptilde/ntau!g_-tilde(t=0)
+enddo
+do m=1,npp
+    call sll_s_fft_exec_c2c_1d(PlnF, up(1,:,m), temptilde(1,:))
+    call sll_s_fft_exec_c2c_1d(PlnF, up(2,:,m), temptilde(2,:))
+    do n=0,ntau-1
+        temp(:,n)=exp(-sll_p_i1*ltau(n)*dt/2.0d0/ep**2)*temptilde(:,n)/ntau+pl(n)*xtemp1(:,n,m)!utilde_+^1,predict
+    enddo
+    call sll_s_fft_exec_c2c_1d(PlnB, temp(1,:), up0(1,:,m))!u_+(t1),predict
+    call sll_s_fft_exec_c2c_1d(PlnB, temp(2,:), up0(2,:,m))
+    call sll_s_fft_exec_c2c_1d(PlnF, um(1,:,m), temptilde(1,:))
+    call sll_s_fft_exec_c2c_1d(PlnF, um(2,:,m), temptilde(2,:))
+    do n=0,ntau-1
+        temp(:,n)=exp(-sll_p_i1*ltau(n)*dt/2.0d0/ep**2)*temptilde(:,n)/ntau+pl(n)*xtemp2(:,n,m)!utilde_-^1,predict
+    enddo
+    call sll_s_fft_exec_c2c_1d(PlnB, temp(1,:), um0(1,:,m))!u_-(t1),predict
+    call sll_s_fft_exec_c2c_1d(PlnB, temp(2,:), um0(2,:,m))
+enddo
+gp=xtemp1
+gm=xtemp2
+do n=0,ntau-1
+    xtemp1(1,n,:)=dcos(tau(n))*up0(1,n,:)-dsin(tau(n))*up0(2,n,:)!v_+ 2scaled
+    xtemp1(2,n,:)=dcos(tau(n))*up0(2,n,:)+dsin(tau(n))*up0(1,n,:)
+    xtemp2(1,n,:)=dcos(tau(n))*um0(1,n,:)+dsin(tau(n))*um0(2,n,:)!v_- 2scaled
+    xtemp2(2,n,:)=dcos(tau(n))*um0(2,n,:)-dsin(tau(n))*um0(1,n,:)
+    xtemp1(:,n,:)=(xtemp1(:,n,:)+xtemp2(:,n,:))/2.0d0!z 2scaled
+    xtemp2(1,n,:)=dcos(tau(n))*xtemp1(1,n,:)+dsin(tau(n))*xtemp1(2,n,:)!x 2scaled
+    xtemp2(2,n,:)=dcos(tau(n))*xtemp1(2,n,:)-dsin(tau(n))*xtemp1(1,n,:)
+    do m=1,nbpart
+        xxt=dreal(xtemp2(:,n,m))
+        call apply_bc()
+        p%idx(m) = floor(xxt(1)/dimx*nx)
+        p%dpx(m) = real(xxt(1)/dx- p%idx(m), f64)
+        p%idy(m) = floor(xxt(2)/dimy*ny)
+        p%dpy(m) = real(xxt(2)/dy- p%idy(m), f64)
+    enddo
+    call calcul_rho_m6( p, f )
+    call poisson%compute_e_from_rho( f%ex, f%ey, f%r0)
+    fex(:,:,n)=f%ex
+    fey(:,:,n)=f%ey!prediction
+enddo
+!--correction--
+do n=0,ntau-1
+    xtemp1(1,n,:)=dcos(tau(n))*up0(1,n,:)-dsin(tau(n))*up0(2,n,:)
+    xtemp1(2,n,:)=dsin(tau(n))*up0(1,n,:)+dcos(tau(n))*up0(2,n,:)
+    xtemp2(1,n,:)=dcos(tau(n))*um0(1,n,:)+dsin(tau(n))*um0(2,n,:)
+    xtemp2(2,n,:)=-dsin(tau(n))*um0(1,n,:)+dcos(tau(n))*um0(2,n,:)
+enddo
+xtemp1=(xtemp1+xtemp2)/2.0d0
+do n=0,ntau-1
+    xtemp2(1,n,:)=dcos(tau(n))*xtemp1(1,n,:)+dsin(tau(n))*xtemp1(2,n,:)
+    xtemp2(2,n,:)=-dsin(tau(n))*xtemp1(1,n,:)+dcos(tau(n))*xtemp1(2,n,:)
+    do m=1,nbpart
+        xxt=dreal(xtemp2(:,n,m))
+        call apply_bc()
+        p%idx(m) = floor(xxt(1)/dimx*nx)
+        p%dpx(m) = real(xxt(1)/dx- p%idx(m), f64)
+        p%idy(m) = floor(xxt(2)/dimy*ny)
+        p%dpy(m) = real(xxt(2)/dy- p%idy(m), f64)
+    enddo
+    f%ex=fex(:,:,n)
+    f%ey=fey(:,:,n)
+    call interpol_eb_m6( f, p )
+    Et(1,n,:)=p%epx !g(t1,tau,U(t1))
+    Et(2,n,:)=p%epy
+enddo
+do m=1,npp
+    temp(1,:)=2.0d0*Et(2,:,m)
+    temp(2,:)=-2.0d0*Et(1,:,m)
+    call sll_s_fft_exec_c2c_1d(PlnF, temp(1,:), temptilde(1,:))
+    call sll_s_fft_exec_c2c_1d(PlnF, temp(2,:), temptilde(2,:))
+    xtemp1(:,:,m)=temptilde/ntau!g_+tilde(t1) predict
+    !---
+    do n=0,ntau-1
+        temp(1,n)=-2.0d0*(dsin(2.0d0*tau(n))*Et(1,n,m)+dcos(2.0d0*tau(n))*Et(2,n,m))
+        temp(2,n)=2.0d0*(-dsin(2.0d0*tau(n))*Et(2,n,m)+dcos(2.0d0*tau(n))*Et(1,n,m))
+    enddo
+    call sll_s_fft_exec_c2c_1d(PlnF, temp(1,:), temptilde(1,:))
+    call sll_s_fft_exec_c2c_1d(PlnF, temp(2,:), temptilde(2,:))
+    xtemp2(:,:,m)=temptilde/ntau!g_-tilde(t1) predict
+enddo
+do m=1,npp
+    call sll_s_fft_exec_c2c_1d(PlnF, up(1,:,m), temptilde(1,:))
+    call sll_s_fft_exec_c2c_1d(PlnF, up(2,:,m), temptilde(2,:))
+    do n=0,ntau-1
+        temp(:,n)=exp(-sll_p_i1*ltau(n)*dt/2.0d0/ep**2)*temptilde(:,n)/ntau+pl(n)*xtemp1(:,n,m) &
+                    +ql(n)*(xtemp1(:,n,m)-gp(:,n,m))/dt
+    enddo
+    call sll_s_fft_exec_c2c_1d(PlnB, temp(1,:), up(1,:,m))!u_+(t1)
+    call sll_s_fft_exec_c2c_1d(PlnB, temp(2,:), up(2,:,m))
+    call sll_s_fft_exec_c2c_1d(PlnF, um(1,:,m), temptilde(1,:))
+    call sll_s_fft_exec_c2c_1d(PlnF, um(2,:,m), temptilde(2,:))
+    do n=0,ntau-1
+        temp(:,n)=exp(-sll_p_i1*ltau(n)*dt/2.0d0/ep**2)*temptilde(:,n)/ntau+pl(n)*xtemp2(:,n,m) &
+                    +ql(n)*(xtemp2(:,n,m)-gm(:,n,m))/dt
+    enddo
+    call sll_s_fft_exec_c2c_1d(PlnB, temp(1,:), um(1,:,m))!u_-(t1)
+    call sll_s_fft_exec_c2c_1d(PlnB, temp(2,:), um(2,:,m))
+enddo
+do n=0,ntau-1
+    xtemp1(1,n,:)=dcos(tau(n))*up(1,n,:)-dsin(tau(n))*up(2,n,:)!v_+ 2scaled
+    xtemp1(2,n,:)=dcos(tau(n))*up(2,n,:)+dsin(tau(n))*up(1,n,:)
+    xtemp2(1,n,:)=dcos(tau(n))*um(1,n,:)+dsin(tau(n))*um(2,n,:)!v_- 2scaled
+    xtemp2(2,n,:)=dcos(tau(n))*um(2,n,:)-dsin(tau(n))*um(1,n,:)
+    xtemp1(:,n,:)=(xtemp1(:,n,:)+xtemp2(:,n,:))/2.0d0!z 2scaled
+    xtemp2(1,n,:)=dcos(tau(n))*xtemp1(1,n,:)+dsin(tau(n))*xtemp1(2,n,:)!x 2scaled
+    xtemp2(2,n,:)=dcos(tau(n))*xtemp1(2,n,:)-dsin(tau(n))*xtemp1(1,n,:)
+    do m=1,nbpart
+        xxt=dreal(xtemp2(:,n,m))
+        call apply_bc()
+        p%idx(m) = floor(xxt(1)/dimx*nx)
+        p%dpx(m) = real(xxt(1)/dx- p%idx(m), f64)
+        p%idy(m) = floor(xxt(2)/dimy*ny)
+        p%dpy(m) = real(xxt(2)/dy- p%idy(m), f64)
+    enddo
+    call calcul_rho_m6( p, f )
+    call poisson%compute_e_from_rho( f%ex, f%ey, f%r0)
+    fex(:,:,n)=f%ex
+    fey(:,:,n)=f%ey
+enddo
+!--for energy
+!call energyuse()
+!call calcul_energy(p,f,energy(1))
+!--end for energy
+
+do istep = 2, nstep
+    do n=0,ntau-1
+        xtemp1(1,n,:)=dcos(tau(n))*up(1,n,:)-dsin(tau(n))*up(2,n,:)
+        xtemp1(2,n,:)=dsin(tau(n))*up(1,n,:)+dcos(tau(n))*up(2,n,:)
+        xtemp2(1,n,:)=dcos(tau(n))*um(1,n,:)+dsin(tau(n))*um(2,n,:)
+        xtemp2(2,n,:)=-dsin(tau(n))*um(1,n,:)+dcos(tau(n))*um(2,n,:)
+    enddo
+    xtemp1=(xtemp1+xtemp2)/2.0d0
+    do n=0,ntau-1
+        xtemp2(1,n,:)=dcos(tau(n))*xtemp1(1,n,:)+dsin(tau(n))*xtemp1(2,n,:)
+        xtemp2(2,n,:)=-dsin(tau(n))*xtemp1(1,n,:)+dcos(tau(n))*xtemp1(2,n,:)
+        do m=1,nbpart
+            xxt=dreal(xtemp2(:,n,m))
+            call apply_bc()
+            p%idx(m) = floor(xxt(1)/dimx*nx)
+            p%dpx(m) = real(xxt(1)/dx- p%idx(m), f64)
+            p%idy(m) = floor(xxt(2)/dimy*ny)
+            p%dpy(m) = real(xxt(2)/dy- p%idy(m), f64)
+        enddo
+        f%ex=fex(:,:,n)
+        f%ey=fey(:,:,n)
+        call interpol_eb_m6( f, p )
+        Et(1,n,:)=p%epx !g(tn)
+        Et(2,n,:)=p%epy
+    enddo
+    do m=1,npp
+        temp(1,:)=2.0d0*Et(2,:,m)
+        temp(2,:)=-2.0d0*Et(1,:,m)
+        call sll_s_fft_exec_c2c_1d(PlnF, temp(1,:), temptilde(1,:))
+        call sll_s_fft_exec_c2c_1d(PlnF, temp(2,:), temptilde(2,:))
+        xtemp1(:,:,m)=temptilde/ntau!g_+tilde(tn)
+        !---
+        do n=0,ntau-1
+            temp(1,n)=-2.0d0*(dsin(2.0d0*tau(n))*Et(1,n,m)+dcos(2.0d0*tau(n))*Et(2,n,m))
+            temp(2,n)=2.0d0*(-dsin(2.0d0*tau(n))*Et(2,n,m)+dcos(2.0d0*tau(n))*Et(1,n,m))
+        enddo
+        call sll_s_fft_exec_c2c_1d(PlnF, temp(1,:), temptilde(1,:))
+        call sll_s_fft_exec_c2c_1d(PlnF, temp(2,:), temptilde(2,:))
+        xtemp2(:,:,m)=temptilde/ntau!g_-tilde(tn)
+    enddo
+    do m=1,npp
+        call sll_s_fft_exec_c2c_1d(PlnF, up(1,:,m), temptilde(1,:))
+        call sll_s_fft_exec_c2c_1d(PlnF, up(2,:,m), temptilde(2,:))
+        do n=0,ntau-1
+            temp(:,n)=exp(-sll_p_i1*ltau(n)*dt/2.0d0/ep**2)*temptilde(:,n)/ntau+pl(n)*xtemp1(:,n,m) &
+                        +ql(n)*(xtemp1(:,n,m)-gp(:,n,m))/dt
+        enddo
+        call sll_s_fft_exec_c2c_1d(PlnB, temp(1,:), up(1,:,m))!u_+(tn)
+        call sll_s_fft_exec_c2c_1d(PlnB, temp(2,:), up(2,:,m))
+        call sll_s_fft_exec_c2c_1d(PlnF, um(1,:,m), temptilde(1,:))
+        call sll_s_fft_exec_c2c_1d(PlnF, um(2,:,m), temptilde(2,:))
+        do n=0,ntau-1
+            temp(:,n)=exp(-sll_p_i1*ltau(n)*dt/2.0d0/ep**2)*temptilde(:,n)/ntau+pl(n)*xtemp2(:,n,m) &
+                        +ql(n)*(xtemp2(:,n,m)-gm(:,n,m))/dt
+        enddo
+        call sll_s_fft_exec_c2c_1d(PlnB, temp(1,:), um(1,:,m))!u_-(tn)
+        call sll_s_fft_exec_c2c_1d(PlnB, temp(2,:), um(2,:,m))
+    enddo
+    gp=xtemp1
+    gm=xtemp2
+    !--updata E--
+    time=dt*istep
+    do n=0,ntau-1
+        xtemp1(1,n,:)=dcos(tau(n))*up(1,n,:)-dsin(tau(n))*up(2,n,:)!v_+ 2scaled
+        xtemp1(2,n,:)=dcos(tau(n))*up(2,n,:)+dsin(tau(n))*up(1,n,:)
+        xtemp2(1,n,:)=dcos(tau(n))*um(1,n,:)+dsin(tau(n))*um(2,n,:)!v_- 2scaled
+        xtemp2(2,n,:)=dcos(tau(n))*um(2,n,:)-dsin(tau(n))*um(1,n,:)
+        xtemp1(:,n,:)=(xtemp1(:,n,:)+xtemp2(:,n,:))/2.0d0!z 2scaled
+        xtemp2(1,n,:)=dcos(tau(n))*xtemp1(1,n,:)+dsin(tau(n))*xtemp1(2,n,:)!x 2scaled
+        xtemp2(2,n,:)=dcos(tau(n))*xtemp1(2,n,:)-dsin(tau(n))*xtemp1(1,n,:)
+        do m=1,nbpart
+            xxt=dreal(xtemp2(:,n,m))
+            call apply_bc()
+            p%idx(m) = floor(xxt(1)/dimx*nx)
+            p%dpx(m) = real(xxt(1)/dx- p%idx(m), f64)
+            p%idy(m) = floor(xxt(2)/dimy*ny)
+            p%dpy(m) = real(xxt(2)/dy- p%idy(m), f64)
+        enddo
+        call calcul_rho_m6( p, f )
+        call poisson%compute_e_from_rho( f%ex, f%ey, f%r0)
+        fex(:,:,n)=f%ex
+        fey(:,:,n)=f%ey
+    enddo
+    !--for energy
+!    call energyuse()
+!    call calcul_energy(p,f,energy(istep))
+    !--end for energy
+enddo
+do m=1,npp
+    call sll_s_fft_exec_c2c_1d(PlnF, up(1,:,m),temptilde(1,:))
+    call sll_s_fft_exec_c2c_1d(PlnF, up(2,:,m),temptilde(2,:))
+    wp(:,m)=0.0d0
+    do n=0,ntau-1
+        wp(:,m)=wp(:,m)+temptilde(:,n)/Ntau*cdexp(sll_p_i1*ltau(n)*time/2.0d0/ep**2)
+    enddo
+    call sll_s_fft_exec_c2c_1d(PlnF, um(1,:,m),temptilde(1,:))
+    call sll_s_fft_exec_c2c_1d(PlnF, um(2,:,m),temptilde(2,:))
+    wm(:,m)=0.0d0
+    do n=0,ntau-1
+        wm(:,m)=wm(:,m)+temptilde(:,n)/Ntau*cdexp(sll_p_i1*ltau(n)*time/2.0d0/ep**2)
+    enddo
+    vp(1,m)=dcos(time/2.0d0/ep**2)*wp(1,m)-dsin(time/2.0d0/ep**2)*wp(2,m)
+    vp(2,m)=dcos(time/2.0d0/ep**2)*wp(2,m)+dsin(time/2.0d0/ep**2)*wp(1,m)
+    vm(1,m)=dcos(time/2.0d0/ep**2)*wm(1,m)+dsin(time/2.0d0/ep**2)*wm(2,m)
+    vm(2,m)=dcos(time/2.0d0/ep**2)*wm(2,m)-dsin(time/2.0d0/ep**2)*wm(1,m)
+    z=(vp(:,m)+vm(:,m))/2.0d0
+    xxt(1)=dreal(dcos(time/2.0d0/ep**2)*z(1)+dsin(time/2.0d0/ep**2)*z(2))
+    xxt(2)=dreal(dcos(time/2.0d0/ep**2)*z(2)-dsin(time/2.0d0/ep**2)*z(1))
+    call apply_bc()
+    p%idx(m) = floor(xxt(1)/dimx*nx)
+    p%dpx(m) = real(xxt(1)/dx- p%idx(m), f64)
+    p%idy(m) = floor(xxt(2)/dimy*ny)
+    p%dpy(m) = real(xxt(2)/dy- p%idy(m), f64)
+enddo
+call calcul_rho_m6( p, f )
 call sll_s_fft_free(PlnF)
 call sll_s_fft_free(PlnB)
-!call cpu_time(t1)
-!print"('CPU time = ', g15.3)", t1-t0
-!print*,'PASSED'
 
-!open(unit=850,file='fh.dat')
-!do i=1,nstep
-!write(850,*)elec(i)!fh_fsl(i,j)!  , !eta2feet(i,j),eta1feet(i,j),
+
+open(unit=851,file='fh64.dat')
+!do n=0,nstep
+!write(851,*)energy(n)
 !enddo
-!close(850)
-open(unit=851,file='fh1.dat')
+!deallocate (energy)
 do i=1,nx
 do j=1,ny
-write(851,*)f%r0(i,j)!fh_fsl(i,j)!  , !eta2feet(i,j),eta1feet(i,j),
+write(851,*)f%r0(i,j)
 enddo
 enddo
 close(851)
 
-!deallocate (elec)
 
 contains
-
-!subroutine maximumvalue()
-!elec(istep)=0.0d0
-!do i=1,nx
-!    do j=1,ny
-!        if (dabs(f%ex(i,j))>elec(istep)) then
-!        elec(istep)=dabs(f%ex(i,j))
-!        endif
-!    enddo
-!enddo
-!end subroutine maximumvalue
 
 subroutine apply_bc()
 do while ( xxt(1) > xmax )
@@ -844,4 +573,318 @@ xxt(2) = xxt(2)  + dimy
 enddo
 end subroutine apply_bc
 
+subroutine energyuse()
+do m=1,npp
+    call sll_s_fft_exec_c2c_1d(PlnF, up(1,:,m),temptilde(1,:))
+    call sll_s_fft_exec_c2c_1d(PlnF, up(2,:,m),temptilde(2,:))
+    wp(:,m)=0.0d0
+    do n=0,ntau-1
+        wp(:,m)=wp(:,m)+temptilde(:,n)/Ntau*cdexp(sll_p_i1*ltau(n)*time/2.0d0/ep**2)
+    enddo
+    call sll_s_fft_exec_c2c_1d(PlnF, um(1,:,m),temptilde(1,:))
+    call sll_s_fft_exec_c2c_1d(PlnF, um(2,:,m),temptilde(2,:))
+    wm(:,m)=0.0d0
+    do n=0,ntau-1
+        wm(:,m)=wm(:,m)+temptilde(:,n)/Ntau*cdexp(sll_p_i1*ltau(n)*time/2.0d0/ep**2)
+    enddo
+    vp(1,m)=dcos(time/2.0d0/ep**2)*wp(1,m)-dsin(time/2.0d0/ep**2)*wp(2,m)
+    vp(2,m)=dcos(time/2.0d0/ep**2)*wp(2,m)+dsin(time/2.0d0/ep**2)*wp(1,m)
+    vm(1,m)=dcos(time/2.0d0/ep**2)*wm(1,m)+dsin(time/2.0d0/ep**2)*wm(2,m)
+    vm(2,m)=dcos(time/2.0d0/ep**2)*wm(2,m)-dsin(time/2.0d0/ep**2)*wm(1,m)
+    z=(vp(:,m)+vm(:,m))/2.0d0
+    xxt(1)=dreal(dcos(time/2.0d0/ep**2)*z(1)+dsin(time/2.0d0/ep**2)*z(2))
+    xxt(2)=dreal(dcos(time/2.0d0/ep**2)*z(2)-dsin(time/2.0d0/ep**2)*z(1))
+    call apply_bc()
+    p%idx(m) = floor(xxt(1)/dimx*nx)
+    p%dpx(m) = real(xxt(1)/dx- p%idx(m), f64)
+    p%idy(m) = floor(xxt(2)/dimy*ny)
+    p%dpy(m) = real(xxt(2)/dy- p%idy(m), f64)
+    p%vpx(m)=(dsin(time/2.0d0/ep**2)*vm(1,m)+dcos(time/2.0d0/ep**2)*vm(2,m))/2.0d0/ep
+    p%vpy(m)=-(-dsin(time/2.0d0/ep**2)*vm(2,m)+dcos(time/2.0d0/ep**2)*vm(1,m))/2.0d0/ep
+enddo
+call calcul_rho_m6( p, f )
+call poisson%compute_e_from_rho( f%ex, f%ey, f%r0)
+end subroutine energyuse
+
+
 end program test_pic2d
+
+!subroutine morecorrection4th(ep,ntau,tau,npp,up,um,xtemp1)
+!use sll_m_poisson_2d_base
+!use sll_m_poisson_2d_periodic
+!use particules
+!use sll_m_fft
+!use sll_m_poisson_2d_base
+!use sll_m_poisson_2d_periodic
+!use sll_m_constants
+!implicit none
+!
+!type(tm_mesh_fields) :: f
+!type(particle)       :: p
+!
+!type(sll_t_fft) :: PlFx, PlBx,PlFy, PlBy,PlnF,PlnB
+!integer(4),intent(in)    :: Npp,Ntau
+!complex(8),intent(in) :: up(2,0:ntau-1,npp),um(2,0:ntau-1,npp)
+!real(8),intent(in) :: ep,tau(0:ntau-1)
+!complex(8),intent(out) :: xtemp1(2,0:ntau-1,npp)
+!integer(4)  :: n,m,l,kl
+!real(8) :: ltau(0:Ntau-1),lx(0:119),ly(0:9),xxt(2)
+!complex(8) :: tempx(0:119),tempy(0:9),temptau(0:ntau-1),tautilde(0:ntau-1),rhot(0:120,0:10,0:ntau-1)
+!complex(8) :: temp(0:120,0:10,0:ntau-1)
+!complex(8) :: xtemp(2,0:ntau-1,npp),xtemp2(2,0:ntau-1,npp),dxE(0:119,0:9),dyE(0:119,0:9)
+!class(sll_c_poisson_2d_base), pointer :: poisson
+!sll_int32  :: error
+!ny=10
+!nx=120
+!m=ntau/2
+!ltau=(/ (n, n=0,m-1), (n, n=-m,-1 )/)
+!m=nx/2
+!lx=(/ (n, n=0,m-1), (n, n=-m,-1 )/)
+!m=ny/2
+!ly=(/ (n, n=0,m-1), (n, n=-m,-1 )/)
+!SLL_CLEAR_ALLOCATE(f%ex(0:nx,0:ny), error)
+!SLL_CLEAR_ALLOCATE(f%ey(0:nx,0:ny), error)
+!SLL_CLEAR_ALLOCATE(f%r0(0:nx,0:ny), error)
+!call sll_s_fft_init_c2c_1d(PlnF,Ntau,temptau,tautilde,sll_p_fft_FORWARD,optimization=sll_p_FFT_MEASURE)
+!call sll_s_fft_init_c2c_1d(PlnB,Ntau,tautilde,temptau,sll_p_fft_BACKWARD,optimization=sll_p_FFT_MEASURE)
+!call sll_s_fft_init_c2c_1d(PlFx,Nx,dxE(:,1),tempx,sll_p_fft_FORWARD,optimization=sll_p_FFT_MEASURE)
+!call sll_s_fft_init_c2c_1d(PlBx,Nx,dxE(:,1),tempx,sll_p_FFT_BACKWARD,optimization=sll_p_FFT_MEASURE)
+!call sll_s_fft_init_c2c_1d(PlFy,Ny,dxE(1,:),tempy,sll_p_fft_FORWARD,optimization=sll_p_FFT_MEASURE)
+!call sll_s_fft_init_c2c_1d(PlBy,Ny,dxE(1,:),tempy,sll_p_FFT_BACKWARD,optimization=sll_p_FFT_MEASURE)
+!poisson => sll_f_new_poisson_2d_periodic(0.0d0,dimx,nx,0.0d0,dimy,ny)
+!call plasma( p )
+!
+!do n=0,ntau-1
+!    xtemp1(1,n,:)=dcos(tau(n))*up(1,n,:)-dsin(tau(n))*up(2,n,:)!v_+ 2scaled
+!    xtemp1(2,n,:)=dcos(tau(n))*up(2,n,:)+dsin(tau(n))*up(1,n,:)
+!    xtemp2(1,n,:)=dcos(tau(n))*um(1,n,:)+dsin(tau(n))*um(2,n,:)!v_- 2scaled
+!    xtemp2(2,n,:)=dcos(tau(n))*um(2,n,:)-dsin(tau(n))*um(1,n,:)
+!
+!!    xtemp(1,n,:)=(dcos(tau(n))*xtemp2(2,n,:)+dsin(tau(n))*xtemp2(1,n,:))/2.0d0/ep!y 2scaled
+!!    xtemp(2,n,:)=-(dcos(tau(n))*xtemp2(1,n,:)-dsin(tau(n))*xtemp2(2,n,:))/2.0d0/ep
+!
+!    xtemp1(:,n,:)=(xtemp1(:,n,:)+xtemp2(:,n,:))/2.0d0!z 2scaled
+!    xtemp2(1,n,:)=dcos(tau(n))*xtemp1(1,n,:)+dsin(tau(n))*xtemp1(2,n,:)!x 2scaled
+!    xtemp2(2,n,:)=dcos(tau(n))*xtemp1(2,n,:)-dsin(tau(n))*xtemp1(1,n,:)
+!    do m=1,nbpart
+!!        p%vpx(m)=xtemp(1,n,m)
+!!        p%vpy(m)=xtemp(2,n,m)
+!        xxt=dreal(xtemp2(:,n,m))
+!        call apply_bc()
+!        p%idx(m) = floor(xxt(1)/dimx*nx)
+!        p%dpx(m) = real(xxt(1)/dx- p%idx(m), f64)
+!        p%idy(m) = floor(xxt(2)/dimy*ny)
+!        p%dpy(m) = real(xxt(2)/dy- p%idy(m), f64)
+!    enddo
+!    call calcul_energy( p, f, 0.0d0*tau(n)) !changes made to f%rho,ex,ey
+!    dxE=f%ex(0:nx-1,0:ny-1)
+!    dyE=f%ey(0:nx-1,0:ny-1)
+!    call calcul_rho_m6( p, f )
+!    rhot(:,:,n)=f%r0
+!    do l=0,ny-1
+!        call sll_s_fft_exec_c2c_1d(PlFx, dxE(:,l), tempx)
+!        do m=0,nx-1
+!            tempx(m)=tempx(m)*sll_p_i1*lx(m)/Nx
+!        enddo
+!        call sll_s_fft_exec_c2c_1d(PlBx, tempx,dxE(:,l))
+!    enddo
+!    do l=0,nx-1
+!        call sll_s_fft_exec_c2c_1d(PlFy, dyE(l,:), tempy)
+!        do m=0,ny-1
+!            tempy(m)=tempy(m)*sll_p_i1*ly(m)/Ny
+!        enddo
+!        call sll_s_fft_exec_c2c_1d(PlBy, tempy,dyE(l,:))
+!    enddo
+!    temp(0:nx-1,0:ny-1,n)=-(dxE+dyE)/ep
+!enddo
+!do l=0,nx-1
+!    do m=0,ny-1
+!        temptau=rhot(l,m,:)
+!        call sll_s_fft_exec_c2c_1d(PlnF, temptau, tautilde)
+!        do kl=0,Ntau-1
+!            tautilde(kl)=tautilde(kl)*sll_p_i1*ltau(kl)/Ntau
+!        enddo
+!        call sll_s_fft_exec_c2c_1d(PlnB, tautilde, temptau)
+!        rhot(l,m,:)=-temptau/2.0d0/ep**2+temp(l,m,:)!final dt\rho
+!    enddo
+!enddo
+!rhot(0:nx-1,ny,:)  = rhot(0:nx-1,0,:)
+!rhot(nx,0:ny-1,:)  = rhot(0,0:ny-1,:)
+!rhot(nx,ny,:)= rhot(0,0,:)
+!
+!do n=0,ntau-1
+!    xtemp1(1,n,:)=dcos(tau(n))*up(1,n,:)-dsin(tau(n))*up(2,n,:)
+!    xtemp1(2,n,:)=dsin(tau(n))*up(1,n,:)+dcos(tau(n))*up(2,n,:)
+!    xtemp2(1,n,:)=dcos(tau(n))*um(1,n,:)+dsin(tau(n))*um(2,n,:)
+!    xtemp2(2,n,:)=-dsin(tau(n))*um(1,n,:)+dcos(tau(n))*um(2,n,:)
+!enddo
+!xtemp1=(xtemp1+xtemp2)/2.0d0
+!do n=0,ntau-1
+!    xtemp2(1,n,:)=dcos(tau(n))*xtemp1(1,n,:)+dsin(tau(n))*xtemp1(2,n,:)
+!    xtemp2(2,n,:)=-dsin(tau(n))*xtemp1(1,n,:)+dcos(tau(n))*xtemp1(2,n,:)
+!    do m=1,nbpart
+!        xxt=dreal(xtemp2(:,n,m))
+!        call apply_bc()
+!        p%idx(m) = floor(xxt(1)/dimx*nx)
+!        p%dpx(m) = real(xxt(1)/dx- p%idx(m), f64)
+!        p%idy(m) = floor(xxt(2)/dimy*ny)
+!        p%dpy(m) = real(xxt(2)/dy- p%idy(m), f64)
+!    enddo
+!    f%r0=rhot(:,:,n)
+!    call poisson%compute_e_from_rho( f%ex, f%ey, f%r0)
+!    call interpol_eb_m6( f, p )
+!    xtemp1(1,n,:)=p%epx !g_t(0,tau,U_3(0))
+!    xtemp1(2,n,:)=p%epy
+!enddo
+!
+!call sll_s_fft_free(PlnF)
+!call sll_s_fft_free(PlnB)
+!call sll_s_fft_free(PlFx)
+!call sll_s_fft_free(PlBx)
+!call sll_s_fft_free(PlFy)
+!call sll_s_fft_free(PlBy)
+!
+!contains
+!
+!subroutine apply_bc()
+!do while ( xxt(1) > dimx)
+!xxt(1) = xxt(1) - dimx
+!enddo
+!do while ( xxt(1) < 0.0d0 )
+!xxt(1)= xxt(1) + dimx
+!enddo
+!do while ( xxt(2) > dimy )
+!xxt(2)  = xxt(2)  - dimy
+!enddo
+!do while ( xxt(2)  < 0.0d0 )
+!xxt(2) = xxt(2)  + dimy
+!enddo
+!end subroutine apply_bc
+!end subroutine morecorrection4th
+
+
+!!--more correction--
+!do n=0,ntau-1
+!    xtemp1(1,n,:)=dcos(tau(n))*up(1,n,:)-dsin(tau(n))*up(2,n,:)
+!    xtemp1(2,n,:)=dsin(tau(n))*up(1,n,:)+dcos(tau(n))*up(2,n,:)
+!    xtemp2(1,n,:)=dcos(tau(n))*um(1,n,:)+dsin(tau(n))*um(2,n,:)
+!    xtemp2(2,n,:)=-dsin(tau(n))*um(1,n,:)+dcos(tau(n))*um(2,n,:)
+!enddo
+!xtemp1=(xtemp1+xtemp2)/2.0d0
+!do n=0,ntau-1
+!    xtemp2(1,n,:)=dcos(tau(n))*xtemp1(1,n,:)+dsin(tau(n))*xtemp1(2,n,:)
+!    xtemp2(2,n,:)=-dsin(tau(n))*xtemp1(1,n,:)+dcos(tau(n))*xtemp1(2,n,:)
+!    do m=1,nbpart
+!    xxt=dreal(xtemp2(:,n,m))
+!    call apply_bc()
+!    p%idx(m) = floor(xxt(1)/dimx*nx)
+!    p%dpx(m) = real(xxt(1)/dx- p%idx(m), f64)
+!    p%idy(m) = floor(xxt(2)/dimy*ny)
+!    p%dpy(m) = real(xxt(2)/dy- p%idy(m), f64)
+!    enddo
+!    f%ex=fex(:,:,n)
+!    f%ey=fey(:,:,n)
+!    call interpol_eb_m6( f, p )
+!    Et(1,n,:)=p%epx !g_3(0,tau,U_3(0))
+!    Et(2,n,:)=p%epy
+!enddo
+!do m=1,npp
+!    xtemp1(1,:,m)=2.0d0*Et(2,:,m)
+!    xtemp1(2,:,m)=-2.0d0*Et(1,:,m)!g_+
+!    call sll_s_fft_exec_c2c_1d(PlnF, xtemp1(1,:,m), temptilde(1,:))
+!    call sll_s_fft_exec_c2c_1d(PlnF, xtemp1(2,:,m), temptilde(2,:))
+!    do n=1,Ntau-1
+!    temptilde(:,n)=-sll_p_i1*temptilde(:,n)/ltau(n)/Ntau
+!    enddo
+!    temptilde(:,0)=0.0d0
+!    call sll_s_fft_exec_c2c_1d(PlnB, temptilde(1,:), temp(1,:))
+!    call sll_s_fft_exec_c2c_1d(PlnB, temptilde(2,:), temp(2,:))!AF+
+!    up(1,:,m)=wp(1,m)+2.0d0*ep**2*(temp(1,:)-temp(1,0))
+!    up(2,:,m)=wp(2,m)+2.0d0*ep**2*(temp(2,:)-temp(2,0))!4 ini data of U_+
+!    !---
+!    do n=0,ntau-1
+!        xtemp2(1,n,m)=-2.0d0*(dsin(2.0d0*tau(n))*Et(1,n,m)+dcos(2.0d0*tau(n))*Et(2,n,m))
+!        xtemp2(2,n,m)=2.0d0*(-dsin(2.0d0*tau(n))*Et(2,n,m)+dcos(2.0d0*tau(n))*Et(1,n,m))!g_-
+!    enddo
+!    call sll_s_fft_exec_c2c_1d(PlnF, xtemp2(1,:,m), temptilde(1,:))
+!    call sll_s_fft_exec_c2c_1d(PlnF, xtemp2(2,:,m), temptilde(2,:))
+!    do n=1,Ntau-1
+!    temptilde(:,n)=-sll_p_i1*temptilde(:,n)/ltau(n)/Ntau
+!    enddo
+!    temptilde(:,0)=0.0d0
+!    call sll_s_fft_exec_c2c_1d(PlnB, temptilde(1,:), temp(1,:))
+!    call sll_s_fft_exec_c2c_1d(PlnB, temptilde(2,:), temp(2,:))!AF-
+!    um(1,:,m)=wm(1,m)+2.0d0*ep**2*(temp(1,:)-temp(1,0))
+!    um(2,:,m)=wm(2,m)+2.0d0*ep**2*(temp(2,:)-temp(2,0))!4 ini data of U_-
+!enddo
+!!------
+!do n=0,ntau-1
+!    xtemp1(1,n,:)=dcos(tau(n))*up(1,n,:)-dsin(tau(n))*up(2,n,:)!v_+ 2scaled
+!    xtemp1(2,n,:)=dcos(tau(n))*up(2,n,:)+dsin(tau(n))*up(1,n,:)
+!    xtemp2(1,n,:)=dcos(tau(n))*um(1,n,:)+dsin(tau(n))*um(2,n,:)!v_- 2scaled
+!    xtemp2(2,n,:)=dcos(tau(n))*um(2,n,:)-dsin(tau(n))*um(1,n,:)
+!    xtemp1(:,n,:)=(xtemp1(:,n,:)+xtemp2(:,n,:))/2.0d0!z 2scaled
+!    xtemp2(1,n,:)=dcos(tau(n))*xtemp1(1,n,:)+dsin(tau(n))*xtemp1(2,n,:)!x 2scaled
+!    xtemp2(2,n,:)=dcos(tau(n))*xtemp1(2,n,:)-dsin(tau(n))*xtemp1(1,n,:)
+!    do m=1,nbpart
+!    xxt=dreal(xtemp2(:,n,m))
+!    call apply_bc()
+!    p%idx(m) = floor(xxt(1)/dimx*nx)
+!    p%dpx(m) = real(xxt(1)/dx- p%idx(m), f64)
+!    p%idy(m) = floor(xxt(2)/dimy*ny)
+!    p%dpy(m) = real(xxt(2)/dy- p%idy(m), f64)
+!    enddo
+!    call calcul_rho_m6( p, f )
+!    call poisson%compute_e_from_rho( f%ex, f%ey, f%r0)
+!    fex(:,:,n)=f%ex
+!    fey(:,:,n)=f%ey!E_4(0,x)
+!enddo
+
+!----not working--4th order correction, adding derivative----
+!call morecorrection4th(ep,ntau,tau,npp,up,um,gp)!xtemp1 store \partial_t g(0,tau,U_3)
+!!gp=0.0d0
+!do n=0,ntau-1
+!    xtemp1(1,n,:)=dcos(tau(n))*up0(1,0,:)-dsin(tau(n))*up0(2,0,:)
+!    xtemp1(2,n,:)=dsin(tau(n))*up0(1,0,:)+dcos(tau(n))*up0(2,0,:)
+!    xtemp2(1,n,:)=dcos(tau(n))*um0(1,0,:)+dsin(tau(n))*um0(2,0,:)
+!    xtemp2(2,n,:)=-dsin(tau(n))*um0(1,0,:)+dcos(tau(n))*um0(2,0,:)
+!enddo
+!xtemp1=(xtemp1+xtemp2)/2.0d0
+!do n=0,ntau-1
+!    xtemp2(1,n,:)=dcos(tau(n))*xtemp1(1,n,:)+dsin(tau(n))*xtemp1(2,n,:)
+!    xtemp2(2,n,:)=-dsin(tau(n))*xtemp1(1,n,:)+dcos(tau(n))*xtemp1(2,n,:)
+!    do  m=1,npp
+!        Et(1,n,m)=alpha*dcos(kx*dreal(xtemp2(1,n,m)))
+!        Et(2,n,m)=0.0d0
+!    enddo
+!enddo
+!do m=1,npp
+!    xtemp1(1,:,m)=2.0d0*(Et(2,:,m)+gp(2,:,m))
+!    xtemp1(2,:,m)=-2.0d0*(Et(1,:,m)+gp(1,:,m))!(dtF+dUFPiF) g_+
+!    call sll_s_fft_exec_c2c_1d(PlnF, xtemp1(1,:,m), temptilde(1,:))
+!    call sll_s_fft_exec_c2c_1d(PlnF, xtemp1(2,:,m), temptilde(2,:))
+!    do n=1,Ntau-1
+!        temptilde(:,n)=-temptilde(:,n)/ltau(n)**2/Ntau
+!    enddo
+!    temptilde(:,0)=0.0d0
+!    call sll_s_fft_exec_c2c_1d(PlnB, temptilde(1,:), up0(1,:,m))
+!    call sll_s_fft_exec_c2c_1d(PlnB, temptilde(2,:), up0(2,:,m))!A^2F+
+!    do n=0,ntau-1
+!        xtemp2(1,n,m)=-2.0d0*(dsin(2.0d0*tau(n))*(Et(1,n,m)+gp(1,n,m))+dcos(2.0d0*tau(n))*(Et(2,n,m)+gp(2,n,m)))
+!        xtemp2(2,n,m)=2.0d0*(-dsin(2.0d0*tau(n))*(Et(2,n,m)+gp(2,n,m))+dcos(2.0d0*tau(n))*(Et(1,n,m)+gp(1,n,m)))!g_-
+!    enddo
+!    call sll_s_fft_exec_c2c_1d(PlnF, xtemp2(1,:,m), temptilde(1,:))
+!    call sll_s_fft_exec_c2c_1d(PlnF, xtemp2(2,:,m), temptilde(2,:))
+!    do n=1,Ntau-1
+!        temptilde(:,n)=-temptilde(:,n)/ltau(n)**2/Ntau
+!    enddo
+!    temptilde(:,0)=0.0d0
+!    call sll_s_fft_exec_c2c_1d(PlnB, temptilde(1,:), um0(1,:,m))
+!    call sll_s_fft_exec_c2c_1d(PlnB, temptilde(2,:), um0(2,:,m))!AF-
+!enddo
+!do n=0,ntau-1
+!    up(:,n,:)=up(:,n,:)-4.0d0*ep**4*(up0(:,n,:)-up0(:,0,:))
+!    um(:,n,:)=um(:,n,:)-4.0d0*ep**4*(um0(:,n,:)-um0(:,0,:))
+!enddo
+!--------
+
