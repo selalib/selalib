@@ -9,8 +9,8 @@ use quietstart
 implicit none
 
 type particle
-  sll_real32, pointer :: dpx(:)
-  sll_real32, pointer :: dpy(:)
+  sll_real64, pointer :: dpx(:)
+  sll_real64, pointer :: dpy(:)
   sll_int32 , pointer :: idx(:)
   sll_int32 , pointer :: idy(:)
   sll_real64, pointer :: vpx(:)
@@ -32,8 +32,8 @@ type(tm_mesh_fields) :: tm1
 sll_real32 :: a1, a2, a3, a4
 sll_int32  :: k
 sll_int32  :: i, j
-sll_real32 :: dpx
-sll_real32 :: dpy
+sll_real64 :: dpx
+sll_real64 :: dpy
 
 ! i,j+1_________i+1,j+1
 !  |     |        |
@@ -67,143 +67,7 @@ end do
 
 end subroutine interpol_eb
 
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
-subroutine avancee_vitesse( ele )
-
-type (particle) :: ele
-sll_real64 :: dum, u2
-sll_real64 :: tantheta, sintheta
-sll_real64 :: gamma
-sll_int32  :: k
-
-do k = 1, nbpart
-
-   !*** Changement de variable u = gamma*vit
-
-   if( relativ ) then
-
-      u2  = ele%vpx(k)*ele%vpx(k) &
-          + ele%vpy(k)*ele%vpy(k)
-      if ( u2 >= csq ) then
-         print*,'Erreur : u2 >= c2 dans le calcul de la vitesse'
-         print*,'k = ',k,' vx = ',ele%vpx(k),' vy = ',ele%vpy(k)
-         stop
-      else
-         gamma = 1./sqrt( 1. - u2/csq )
-      endif
-
-      ele%vpx(k) = gamma*ele%vpx(k)
-      ele%vpy(k) = gamma*ele%vpy(k)
-
-   else
-
-      gamma=1.0_f64
-
-   end if
-
-
-   !*** Separation des effets electriques et magnetiques
-
-   !*** On ajoute la moitie de l'effet champ electrique E
-
-   dum = 0.5 * dt * q_sur_m
-   ele%vpx(k) = ele%vpx(k) + dum*(ele%epx(k)+exext)
-   ele%vpy(k) = ele%vpy(k) + dum*(ele%epy(k)+eyext)
-
-   !*** Algorithme de Buneman pour les effets magnetiques
-
-   tantheta = dum * (ele%bpz(k)+bzext) / gamma
-   sintheta = 2.0 * tantheta / ( 1. + tantheta*tantheta)
-
-   ele%vpx(k) = ele%vpx(k) + ele%vpy(k)*tantheta
-   ele%vpy(k) = ele%vpy(k) - ele%vpx(k)*sintheta
-   ele%vpx(k) = ele%vpx(k) + ele%vpy(k)*tantheta
-
-   !*** Autre moitie de l'effet du champ electrique E
-
-   ele%vpx(k) = ele%vpx(k) + dum*(ele%epx(k)+exext)
-   ele%vpy(k) = ele%vpy(k) + dum*(ele%epy(k)+eyext)
-
-   !*** On repasse a la vitesse (changement de variable inverse)
-
-   if( relativ ) then
-
-      u2 =   ele%vpx(k)*ele%vpx(k) &
-           + ele%vpy(k)*ele%vpy(k)
-
-      gamma = sqrt( 1. + u2/csq )
-
-      ele%vpx(k) = ele%vpx(k) / gamma
-      ele%vpy(k) = ele%vpy(k) / gamma
-
-   end if
-
-end do
-
-end subroutine avancee_vitesse
-
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-
-subroutine avancee_part( ele, coef )  !Avancee de coef * dt
-
-type(particle) :: ele
-sll_real64 :: coef
-sll_int32  :: k
-sll_real64 :: ppx
-sll_real64 :: ppy
-
-do k=1,nbpart
-
-  ppx = (ele%idx(k)+ele%dpx(k))*dx + ele%vpx(k)*dt*coef
-  ppy = (ele%idy(k)+ele%dpy(k))*dy + ele%vpy(k)*dt*coef
-
-  if (bcname == 'period') then
-
-    if( ppx >= dimx ) then
-      ppx = ppx - dimx
-    else if( ppx < 0.d0 ) then
-      ppx = ppx + dimx
-    end if
-
-    if( ppy >= dimy ) then
-      ppy = ppy - dimy
-    else if( ppy < 0.d0 ) then
-      ppy = ppy + dimy
-    end if
-
-  end if
-
-  ele%idx(k) = floor(ppx/dimx*nx)
-  ele%idy(k) = floor(ppy/dimy*ny)
-  ele%dpx(k) = real(ppx/dx - ele%idx(k), f32)
-  ele%dpy(k) = real(ppy/dy - ele%idy(k), f32)
-
-end do
-
-if (bcname /= 'period') then
-  k = 1
-  do while ( k <= nbpart )
-    if (      ele%idx(k) < 0 .or. ele%idx(k) >= nx      &
-         .or. ele%idy(k) < 0 .or. ele%idy(k) >= ny ) then
-
-        ele%dpx(k) = ele%dpx(nbpart)
-        ele%dpy(k) = ele%dpy(nbpart)
-        ele%vpx(k) = ele%vpx(nbpart)
-        ele%vpy(k) = ele%vpy(nbpart)
-        ele%p(k)   = ele%p(nbpart)
-        ele%idx(k) = ele%idx(nbpart)
-        ele%idy(k) = ele%idy(nbpart)
-        nbpart = nbpart - 1
-    if (nbpart == 0) stop 'no more particle'
-    else
-      k = k + 1
-    end if
-  end do
-
-end if
-
-end subroutine avancee_part
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
@@ -215,8 +79,8 @@ sll_real64 :: a1, a2, a3, a4, weight
 sll_real64 :: rho_total
 sll_int32  :: k
 sll_int32  :: i, j
-sll_real32 :: dpx
-sll_real32 :: dpy
+sll_real64 :: dpx
+sll_real64 :: dpy
 
 tm%r0 = 0.d0
 
@@ -261,7 +125,7 @@ if (bcname == 'period') then
 end if
 
 rho_total = sum(tm%r0(1:nx,1:ny))*dx*dy
-print*,'rho total',rho_total
+!print*,'rho total',rho_total
 ! Neutralisation du milieu
 tm%r0 = tm%r0 - rho_total/dimx/dimy
 
@@ -278,7 +142,7 @@ sll_int32  :: k, error
 eps = 1.d-12
 
 vth =  1.0_f64
-nbpart =200000 !100*(nx)*(ny)
+nbpart =204800
 n = 1.d0/nbpart
 
 SLL_ALLOCATE(ele%dpx(nbpart),error)
@@ -298,16 +162,16 @@ do k=0,nbpart-1
 
   theta = trinary_reversing( k ) * 2.0_f64 * pi
 
-  a = 0.0_f64; b = dimx ! 2*pi/kx
-  R = bit_reversing( k )
-  call dichotomie_x(a,b,R,eps)
-  ppx = a
-  ppy = dimy * penta_reversing( k )
-
-  ele%idx(k+1) = floor(ppx/dimx*nx)
-  ele%idy(k+1) = floor(ppy/dimy*ny)
-  ele%dpx(k+1) = real(ppx/dx - ele%idx(k+1), f32)
-  ele%dpy(k+1) = real(ppy/dx - ele%idy(k+1), f32)
+!  a = 0.0_f64; b = dimx ! 2*pi/kx
+!  R = bit_reversing( k )
+!  call dichotomie_x(a,b,R,eps)
+!  ppx = a
+!  ppy = dimy * penta_reversing( k )
+!
+!  ele%idx(k+1) = floor(ppx/dimx*nx)
+!  ele%idy(k+1) = floor(ppy/dimy*ny)
+!  ele%dpx(k+1) = real(ppx/dx - ele%idx(k+1), f64)
+!  ele%dpy(k+1) = real(ppy/dy - ele%idy(k+1), f64)
   ele%vpx(k+1) = speed * cos(theta)
   ele%vpy(k+1) = speed * sin(theta)
 
@@ -316,24 +180,24 @@ do k=0,nbpart-1
 enddo
 
 !--add by me: rejection sampling--
-!k=1
-!do while (k<=nbpart)
-!    call random_number(xi)
-!    xi=dimx*xi
-!    call random_number(yi)
-!    yi=dimy*yi
-!    call random_number(zi)
-!    zi=2.0d0+alpha
-!    temm=1.0d0+dsin(yi)+alpha*dcos(kx*xi)
-!    if (temm>=zi) then
-!        ele%idx(k) = floor(xi/dimx*nx)
-!        ele%idy(k) = floor(yi/dimy*ny)
-!        ele%dpx(k) = real(xi/dx - ele%idx(k), f32)
-!        ele%dpy(k) = real(yi/dx - ele%idy(k), f32)
-!        k=k+1
-!    endif
-!enddo
-
+k=1
+do while (k<=nbpart)
+    call random_number(xi)
+    xi=dimx*xi
+    call random_number(yi)
+    yi=dimy*yi
+    call random_number(zi)
+    zi=(2.0d0+alpha)*zi
+    temm=1.0d0+dsin(yi)+alpha*dcos(kx*xi)
+    if (temm>=zi) then
+        ele%idx(k) = floor(xi/dimx*nx)
+        ele%idy(k) = floor(yi/dimy*ny)
+        ele%dpx(k) = real(xi/dx - ele%idx(k), f64)
+        ele%dpy(k) = real(yi/dy - ele%idy(k), f64)
+        k=k+1
+    endif
+enddo
+print*,'PASSED'
 end subroutine plasma
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -716,20 +580,20 @@ end subroutine calcul_rho_m3
 !>               |  0                           for q >= 3
 
 function f_m6( q )
-sll_real32, intent(in) :: q
-sll_real32             :: f_m6
+sll_real64, intent(in) :: q
+sll_real64             :: f_m6
 
-if ( q < 1. ) then
-  f_m6 = (3.-q)**5-6.*(2.-q)**5+15.*(1.-q)**5
-else if ( q >= 1. .and. q < 2. ) then
-  f_m6 = (3.-q)**5-6.*(2.-q)**5
-else if ( q >= 2. .and. q < 3. ) then
-  f_m6 = (3.-q)**5
+if ( q < 1.0d0 ) then
+  f_m6 = (3.0d0-q)**5-6.0d0*(2.0d0-q)**5+15.0d0*(1.0d0-q)**5
+else if ( q >= 1.0d0 .and. q < 2.0d0 ) then
+  f_m6 = (3.0d0-q)**5-6.0d0*(2.0d0-q)**5
+else if ( q >= 2.0d0 .and. q < 3.0d0 ) then
+  f_m6 = (3.0d0-q)**5
 else
-  f_m6 = 0.0
+  f_m6 = 0.0d0
 end if
 
-f_m6 = f_m6 / 120.0
+f_m6 = f_m6 / 120.0d0
 
 return
 end function f_m6
@@ -742,9 +606,9 @@ type(tm_mesh_fields) :: tm
 sll_int32  :: i, j, k
 sll_int32  :: im1, im2, im3, ip1, ip2, ip3
 sll_int32  :: jm1, jm2, jm3, jp1, jp2, jp3
-sll_real32 :: dpx, dpy
-sll_real32 :: cx, cm1x, cm2x, cm3x, cp1x, cp2x, cp3x
-sll_real32 :: cy, cm1y, cm2y, cm3y, cp1y, cp2y, cp3y
+sll_real64 :: dpx, dpy
+sll_real64 :: cx, cm1x, cm2x, cm3x, cp1x, cp2x, cp3x
+sll_real64 :: cy, cm1y, cm2y, cm3y, cp1y, cp2y, cp3y
 sll_real64 :: weight, rho_total
 
 tm%r0 = 0.0_f64
@@ -770,20 +634,20 @@ do k = 1, nbpart
   jp2 = modulo(j+2,ny)
   jp3 = modulo(j+3,ny)
 
-  cm3x = f_m6(3.+dpx)
-  cp3x = f_m6(3.-dpx)
-  cm2x = f_m6(2.+dpx)
-  cp2x = f_m6(2.-dpx)
-  cm1x = f_m6(1.+dpx)
-  cp1x = f_m6(1.-dpx)
+  cm3x = f_m6(3.0d0+dpx)
+  cp3x = f_m6(3.0d0-dpx)
+  cm2x = f_m6(2.0d0+dpx)
+  cp2x = f_m6(2.0d0-dpx)
+  cm1x = f_m6(1.0d0+dpx)
+  cp1x = f_m6(1.0d0-dpx)
   cx   = f_m6(dpx)
   cy   = f_m6(dpy)
-  cp1y = f_m6(1.-dpy)
-  cm1y = f_m6(1.+dpy)
-  cp2y = f_m6(2.-dpy)
-  cm2y = f_m6(2.+dpy)
-  cp3y = f_m6(3.-dpy)
-  cm3y = f_m6(3.+dpy)
+  cp1y = f_m6(1.0d0-dpy)
+  cm1y = f_m6(1.0d0+dpy)
+  cp2y = f_m6(2.0d0-dpy)
+  cm2y = f_m6(2.0d0+dpy)
+  cp3y = f_m6(3.0d0-dpy)
+  cm3y = f_m6(3.0d0+dpy)
 
   tm%r0(im3,jm3) = tm%r0(im3,jm3) + cm3x * cm3y * weight
   tm%r0(im3,jm2) = tm%r0(im3,jm2) + cm3x * cm2y * weight
@@ -850,7 +714,7 @@ tm%r0(nx,ny)      = tm%r0(0,0)
 tm%r0 = tm%r0 / (dx*dy)
 
 rho_total = sum(tm%r0(0:nx-1,0:ny-1))*dx*dy
-print*,'rho total',rho_total
+!print*,'rho total',rho_total
 tm%r0 = tm%r0 - rho_total/dimx/dimy
 
 end subroutine calcul_rho_m6
@@ -863,27 +727,27 @@ sll_int32            :: k
 sll_int32            :: i, j
 sll_int32            :: im1, im2, im3, ip1, ip2, ip3
 sll_int32            :: jm1, jm2, jm3, jp1, jp2, jp3
-sll_real32           :: dpx
-sll_real32           :: dpy
-sll_real32           :: cm3x
-sll_real32           :: cp3x
-sll_real32           :: cm2x
-sll_real32           :: cp2x
-sll_real32           :: cm1x
-sll_real32           :: cp1x
-sll_real32           :: cx
-sll_real32           :: cy
-sll_real32           :: cm3y
-sll_real32           :: cp3y
-sll_real32           :: cm2y
-sll_real32           :: cp2y
-sll_real32           :: cm1y
-sll_real32           :: cp1y
+sll_real64           :: dpx
+sll_real64           :: dpy
+sll_real64           :: cm3x
+sll_real64           :: cp3x
+sll_real64           :: cm2x
+sll_real64           :: cp2x
+sll_real64           :: cm1x
+sll_real64           :: cp1x
+sll_real64           :: cx
+sll_real64           :: cy
+sll_real64           :: cm3y
+sll_real64           :: cp3y
+sll_real64           :: cm2y
+sll_real64           :: cp2y
+sll_real64           :: cm1y
+sll_real64           :: cp1y
 sll_real64           :: e(-2:2,-2:2)
 
 sll_real64, allocatable :: ehx(:,:)
 sll_real64, allocatable :: ehy(:,:)
-sll_real64, allocatable :: bhz(:,:)
+!sll_real64, allocatable :: bhz(:,:)
 
 e(-2,-2) =    1.0_f64/14400.0_f64
 e(-1,-2) =   26.0_f64/14400.0_f64
@@ -917,16 +781,16 @@ e(+2,+2) =    1.0_f64/14400.0_f64
 
 allocate(ehx(0:nx-1,0:ny-1))
 allocate(ehy(0:nx-1,0:ny-1))
-allocate(bhz(0:nx-1,0:ny-1))
+!allocate(bhz(0:nx-1,0:ny-1))
 
-do j = 0, ny-1
+do j = 0,ny-1
 
   jm2 = modulo(j-2,ny)
   jm1 = modulo(j-1,ny)
   jp1 = modulo(j+1,ny)
   jp2 = modulo(j+2,ny)
 
-  do i = 0, nx-1
+  do i = 0,nx-1
 
      im2 = modulo(i-2,nx)
      im1 = modulo(i-1,nx)
@@ -985,42 +849,44 @@ do j = 0, ny-1
               + e(+2,+1)*tm1%ey(ip2,jp1) &
               + e(+2,+2)*tm1%ey(ip2,jp2)
 
-     bhz(i,j) = e(-2,-2)*tm1%bz(im2,jm2) & 
-              + e(-2,-1)*tm1%bz(im2,jm1) & 
-              + e(-2, 0)*tm1%bz(im2,j  ) &
-              + e(-2,+1)*tm1%bz(im2,jp1) &
-              + e(-2,+2)*tm1%bz(im2,jp2) &
-              + e(-1,-2)*tm1%bz(im1,jm2) & 
-              + e(-1,-1)*tm1%bz(im1,jm1) & 
-              + e(-1, 0)*tm1%bz(im1,j  ) &
-              + e(-1,+1)*tm1%bz(im1,jp1) &
-              + e(-1,+2)*tm1%bz(im1,jp2) &
-              + e( 0,-2)*tm1%bz(  i,jm2) &
-              + e( 0,-1)*tm1%bz(  i,jm1) &
-              + e( 0, 0)*tm1%bz(  i,j  ) &
-              + e( 0,+1)*tm1%bz(  i,jp1) &
-              + e( 0,+2)*tm1%bz(  i,jp2) &
-              + e(+1,-2)*tm1%bz(ip1,jm2) &
-              + e(+1,-1)*tm1%bz(ip1,jm1) &
-              + e(+1, 0)*tm1%bz(ip1,j  ) &
-              + e(+1,+1)*tm1%bz(ip1,jp1) &
-              + e(+1,+2)*tm1%bz(ip1,jp2) &
-              + e(+2,-2)*tm1%bz(ip2,jm2) &
-              + e(+2,-1)*tm1%bz(ip2,jm1) &
-              + e(+2, 0)*tm1%bz(ip2,j  ) &
-              + e(+2,+1)*tm1%bz(ip2,jp1) &
-              + e(+2,+2)*tm1%bz(ip2,jp2)
+     !bhz(i,j) = e(-2,-2)*tm1%bz(im2,jm2) &
+!              + e(-2,-1)*tm1%bz(im2,jm1) & 
+!              + e(-2, 0)*tm1%bz(im2,j  ) &
+!              + e(-2,+1)*tm1%bz(im2,jp1) &
+!              + e(-2,+2)*tm1%bz(im2,jp2) &
+!              + e(-1,-2)*tm1%bz(im1,jm2) & 
+!              + e(-1,-1)*tm1%bz(im1,jm1) & 
+!              + e(-1, 0)*tm1%bz(im1,j  ) &
+!              + e(-1,+1)*tm1%bz(im1,jp1) &
+!              + e(-1,+2)*tm1%bz(im1,jp2) &
+!              + e( 0,-2)*tm1%bz(  i,jm2) &
+!              + e( 0,-1)*tm1%bz(  i,jm1) &
+!              + e( 0, 0)*tm1%bz(  i,j  ) &
+!              + e( 0,+1)*tm1%bz(  i,jp1) &
+!              + e( 0,+2)*tm1%bz(  i,jp2) &
+!              + e(+1,-2)*tm1%bz(ip1,jm2) &
+!              + e(+1,-1)*tm1%bz(ip1,jm1) &
+!              + e(+1, 0)*tm1%bz(ip1,j  ) &
+!              + e(+1,+1)*tm1%bz(ip1,jp1) &
+!              + e(+1,+2)*tm1%bz(ip1,jp2) &
+!              + e(+2,-2)*tm1%bz(ip2,jm2) &
+!              + e(+2,-1)*tm1%bz(ip2,jm1) &
+!              + e(+2, 0)*tm1%bz(ip2,j  ) &
+!              + e(+2,+1)*tm1%bz(ip2,jp1) &
+!              + e(+2,+2)*tm1%bz(ip2,jp2)
   end do
 end do
 
-print*, sum(abs(ehx)), sum(abs(tm1%ex(0:nx-1,0:ny-1)))
-print*, sum(abs(ehy)), sum(abs(tm1%ey(0:nx-1,0:ny-1)))
-print*, sum(abs(bhz)), sum(abs(tm1%bz(0:nx-1,0:ny-1)))
+!print*, sum(abs(ehx)), sum(abs(tm1%ex(0:nx-1,0:ny-1)))
+!print*, sum(abs(ehy)), sum(abs(tm1%ey(0:nx-1,0:ny-1)))
+!print*, sum(abs(bhz)), sum(abs(tm1%bz(0:nx-1,0:ny-1)))
 
 do k=1,nbpart
 
    i   = ele%idx(k)
    j   = ele%idy(k)
+    i=modulo(i,nx)
+    j=modulo(j,ny)
 
    im3 = modulo(i-3,nx)
    im2 = modulo(i-2,nx)
@@ -1038,20 +904,20 @@ do k=1,nbpart
    dpx = ele%dpx(k)
    dpy = ele%dpy(k)
 
-   cm3x = f_m6(3.+dpx)
-   cp3x = f_m6(3.-dpx)
-   cm2x = f_m6(2.+dpx)
-   cp2x = f_m6(2.-dpx)
-   cm1x = f_m6(1.+dpx)
-   cp1x = f_m6(1.-dpx)
+   cm3x = f_m6(3.0d0+dpx)
+   cp3x = f_m6(3.0d0-dpx)
+   cm2x = f_m6(2.0d0+dpx)
+   cp2x = f_m6(2.0d0-dpx)
+   cm1x = f_m6(1.0d0+dpx)
+   cp1x = f_m6(1.0d0-dpx)
    cx   = f_m6(dpx)
    cy   = f_m6(dpy)
-   cm3y = f_m6(3.+dpy)
-   cp3y = f_m6(3.-dpy)
-   cm2y = f_m6(2.+dpy)
-   cp2y = f_m6(2.-dpy)
-   cm1y = f_m6(1.+dpy)
-   cp1y = f_m6(1.-dpy)
+   cm3y = f_m6(3.0d0+dpy)
+   cp3y = f_m6(3.0d0-dpy)
+   cm2y = f_m6(2.0d0+dpy)
+   cp2y = f_m6(2.0d0-dpy)
+   cm1y = f_m6(1.0d0+dpy)
+   cp1y = f_m6(1.0d0-dpy)
 
    ele%epx(k) =                                 &
    &             + cm3x * cm3y * ehx(im3,jm3)   &
@@ -1155,63 +1021,431 @@ do k=1,nbpart
    &             + cp3x * cp2y * ehy(ip3,jp2)   &
    &             + cp3x * cp3y * ehy(ip3,jp3) 
 
-   ele%bpz(k) =                                 &
-   &             + cm3x * cm3y * bhz(im3,jm3)   &
-   &             + cm3x * cm2y * bhz(im3,jm2)   &
-   &             + cm3x * cm1y * bhz(im3,jm1)   &
-   &             + cm3x * cy   * bhz(im3,j  )   &
-   &             + cm3x * cp1y * bhz(im3,jp1)   &
-   &             + cm3x * cp2y * bhz(im3,jp2)   &
-   &             + cm3x * cp3y * bhz(im3,jp3)   &
-   &             + cm2x * cm3y * bhz(im2,jm3)   &
-   &             + cm2x * cm2y * bhz(im2,jm2)   &
-   &             + cm2x * cm1y * bhz(im2,jm1)   &
-   &             + cm2x * cy   * bhz(im2,j  )   &
-   &             + cm2x * cp1y * bhz(im2,jp1)   &
-   &             + cm2x * cp2y * bhz(im2,jp2)   &
-   &             + cm2x * cp3y * bhz(im2,jp3)   &
-   &             + cm1x * cm3y * bhz(im1,jm3)   &
-   &             + cm1x * cm2y * bhz(im1,jm2)   &
-   &             + cm1x * cm1y * bhz(im1,jm1)   &
-   &             + cm1x * cy   * bhz(im1,j  )   &
-   &             + cm1x * cp1y * bhz(im1,jp1)   &
-   &             + cm1x * cp2y * bhz(im1,jp2)   &
-   &             + cm1x * cp3y * bhz(im1,jp3)   &
-   &             + cx   * cm3y * bhz(i  ,jm3)   &
-   &             + cx   * cm2y * bhz(i  ,jm2)   &
-   &             + cx   * cm1y * bhz(i  ,jm1)   &
-   &             + cx   * cy   * bhz(i  ,j  )   &
-   &             + cx   * cp1y * bhz(i  ,jp1)   &
-   &             + cx   * cp2y * bhz(i  ,jp2)   &
-   &             + cx   * cp3y * bhz(i  ,jp3)   &
-   &             + cp1x * cm3y * bhz(ip1,jm3)   &
-   &             + cp1x * cm2y * bhz(ip1,jm2)   &
-   &             + cp1x * cm1y * bhz(ip1,jm1)   &
-   &             + cp1x * cy   * bhz(ip1,j  )   &
-   &             + cp1x * cp1y * bhz(ip1,jp1)   &
-   &             + cp1x * cp2y * bhz(ip1,jp2)   &
-   &             + cp1x * cp3y * bhz(ip1,jp3)   &
-   &             + cp2x * cm3y * bhz(ip2,jm3)   &
-   &             + cp2x * cm2y * bhz(ip2,jm2)   &
-   &             + cp2x * cm1y * bhz(ip2,jm1)   &
-   &             + cp2x * cy   * bhz(ip2,j  )   &
-   &             + cp2x * cp1y * bhz(ip2,jp1)   &
-   &             + cp2x * cp2y * bhz(ip2,jp2)   &
-   &             + cp2x * cp3y * bhz(ip2,jp3)   &
-   &             + cp3x * cm3y * bhz(ip3,jm3)   &
-   &             + cp3x * cm2y * bhz(ip3,jm2)   &
-   &             + cp3x * cm1y * bhz(ip3,jm1)   &
-   &             + cp3x * cy   * bhz(ip3,j  )   &
-   &             + cp3x * cp1y * bhz(ip3,jp1)   &
-   &             + cp3x * cp2y * bhz(ip3,jp2)   &
-   &             + cp3x * cp3y * bhz(ip3,jp3) 
+!   ele%bpz(k) =                                 &
+!   &             + cm3x * cm3y * bhz(im3,jm3)   &
+!   &             + cm3x * cm2y * bhz(im3,jm2)   &
+!   &             + cm3x * cm1y * bhz(im3,jm1)   &
+!   &             + cm3x * cy   * bhz(im3,j  )   &
+!   &             + cm3x * cp1y * bhz(im3,jp1)   &
+!   &             + cm3x * cp2y * bhz(im3,jp2)   &
+!   &             + cm3x * cp3y * bhz(im3,jp3)   &
+!   &             + cm2x * cm3y * bhz(im2,jm3)   &
+!   &             + cm2x * cm2y * bhz(im2,jm2)   &
+!   &             + cm2x * cm1y * bhz(im2,jm1)   &
+!   &             + cm2x * cy   * bhz(im2,j  )   &
+!   &             + cm2x * cp1y * bhz(im2,jp1)   &
+!   &             + cm2x * cp2y * bhz(im2,jp2)   &
+!   &             + cm2x * cp3y * bhz(im2,jp3)   &
+!   &             + cm1x * cm3y * bhz(im1,jm3)   &
+!   &             + cm1x * cm2y * bhz(im1,jm2)   &
+!   &             + cm1x * cm1y * bhz(im1,jm1)   &
+!   &             + cm1x * cy   * bhz(im1,j  )   &
+!   &             + cm1x * cp1y * bhz(im1,jp1)   &
+!   &             + cm1x * cp2y * bhz(im1,jp2)   &
+!   &             + cm1x * cp3y * bhz(im1,jp3)   &
+!   &             + cx   * cm3y * bhz(i  ,jm3)   &
+!   &             + cx   * cm2y * bhz(i  ,jm2)   &
+!   &             + cx   * cm1y * bhz(i  ,jm1)   &
+!   &             + cx   * cy   * bhz(i  ,j  )   &
+!   &             + cx   * cp1y * bhz(i  ,jp1)   &
+!   &             + cx   * cp2y * bhz(i  ,jp2)   &
+!   &             + cx   * cp3y * bhz(i  ,jp3)   &
+!   &             + cp1x * cm3y * bhz(ip1,jm3)   &
+!   &             + cp1x * cm2y * bhz(ip1,jm2)   &
+!   &             + cp1x * cm1y * bhz(ip1,jm1)   &
+!   &             + cp1x * cy   * bhz(ip1,j  )   &
+!   &             + cp1x * cp1y * bhz(ip1,jp1)   &
+!   &             + cp1x * cp2y * bhz(ip1,jp2)   &
+!   &             + cp1x * cp3y * bhz(ip1,jp3)   &
+!   &             + cp2x * cm3y * bhz(ip2,jm3)   &
+!   &             + cp2x * cm2y * bhz(ip2,jm2)   &
+!   &             + cp2x * cm1y * bhz(ip2,jm1)   &
+!   &             + cp2x * cy   * bhz(ip2,j  )   &
+!   &             + cp2x * cp1y * bhz(ip2,jp1)   &
+!   &             + cp2x * cp2y * bhz(ip2,jp2)   &
+!   &             + cp2x * cp3y * bhz(ip2,jp3)   &
+!   &             + cp3x * cm3y * bhz(ip3,jm3)   &
+!   &             + cp3x * cm2y * bhz(ip3,jm2)   &
+!   &             + cp3x * cm1y * bhz(ip3,jm1)   &
+!   &             + cp3x * cy   * bhz(ip3,j  )   &
+!   &             + cp3x * cp1y * bhz(ip3,jp1)   &
+!   &             + cp3x * cp2y * bhz(ip3,jp2)   &
+!   &             + cp3x * cp3y * bhz(ip3,jp3) 
 
 end do
 
 deallocate(ehx)
 deallocate(ehy)
-deallocate(bhz)
+!deallocate(bhz)
 
 end subroutine interpol_eb_m6
+
+subroutine calcul_energy( ele, tm, energy)
+
+type(particle)       :: ele
+type(tm_mesh_fields) :: tm
+
+sll_int32  :: i, j, k
+sll_int32  :: im1, im2, im3, ip1, ip2, ip3
+sll_int32  :: jm1, jm2, jm3, jp1, jp2, jp3
+sll_real64 :: dpx, dpy
+sll_real64 :: cx, cm1x, cm2x, cm3x, cp1x, cp2x, cp3x
+sll_real64 :: cy, cm1y, cm2y, cm3y, cp1y, cp2y, cp3y
+sll_real64 :: weight, rho_total,velocity
+real(8), intent(out)    :: energy
+tm%r0 = 0.0_f64
+
+do k = 1, nbpart
+
+velocity=(ele%vpx(k))**2+(ele%vpy(k))**2!dcos(t)*ele%vpx(k)+dsin(t)*ele%vpy(k)!
+
+i      = ele%idx(k)
+j      = ele%idy(k)
+dpx    = ele%dpx(k)
+dpy    = ele%dpy(k)
+weight = ele%p(k)
+
+im3 = modulo(i-3,nx)
+im2 = modulo(i-2,nx)
+im1 = modulo(i-1,nx)
+ip1 = modulo(i+1,nx)
+ip2 = modulo(i+2,nx)
+ip3 = modulo(i+3,nx)
+jm3 = modulo(j-3,ny)
+jm2 = modulo(j-2,ny)
+jm1 = modulo(j-1,ny)
+jp1 = modulo(j+1,ny)
+jp2 = modulo(j+2,ny)
+jp3 = modulo(j+3,ny)
+
+cm3x = f_m6(3.0d0+dpx)
+cp3x = f_m6(3.0d0-dpx)
+cm2x = f_m6(2.0d0+dpx)
+cp2x = f_m6(2.0d0-dpx)
+cm1x = f_m6(1.0d0+dpx)
+cp1x = f_m6(1.0d0-dpx)
+cx   = f_m6(dpx)
+cy   = f_m6(dpy)
+cp1y = f_m6(1.0d0-dpy)
+cm1y = f_m6(1.0d0+dpy)
+cp2y = f_m6(2.0d0-dpy)
+cm2y = f_m6(2.0d0+dpy)
+cp3y = f_m6(3.0d0-dpy)
+cm3y = f_m6(3.0d0+dpy)
+
+tm%r0(im3,jm3) = tm%r0(im3,jm3) + cm3x * cm3y * weight*velocity
+tm%r0(im3,jm2) = tm%r0(im3,jm2) + cm3x * cm2y * weight*velocity
+tm%r0(im3,jm1) = tm%r0(im3,jm1) + cm3x * cm1y * weight*velocity
+tm%r0(im3,j  ) = tm%r0(im3,j  ) + cm3x * cy   * weight*velocity
+tm%r0(im3,jp1) = tm%r0(im3,jp1) + cm3x * cp1y * weight*velocity
+tm%r0(im3,jp2) = tm%r0(im3,jp2) + cm3x * cp2y * weight*velocity
+tm%r0(im3,jp3) = tm%r0(im3,jp3) + cm3x * cp3y * weight*velocity
+
+tm%r0(im2,jm3) = tm%r0(im2,jm3) + cm2x * cm3y * weight*velocity
+tm%r0(im2,jm2) = tm%r0(im2,jm2) + cm2x * cm2y * weight*velocity
+tm%r0(im2,jm1) = tm%r0(im2,jm1) + cm2x * cm1y * weight*velocity
+tm%r0(im2,j  ) = tm%r0(im2,j  ) + cm2x * cy   * weight*velocity
+tm%r0(im2,jp1) = tm%r0(im2,jp1) + cm2x * cp1y * weight*velocity
+tm%r0(im2,jp2) = tm%r0(im2,jp2) + cm2x * cp2y * weight*velocity
+tm%r0(im2,jp3) = tm%r0(im2,jp3) + cm2x * cp3y * weight*velocity
+
+tm%r0(im1,jm3) = tm%r0(im1,jm3) + cm1x * cm3y * weight*velocity
+tm%r0(im1,jm2) = tm%r0(im1,jm2) + cm1x * cm2y * weight*velocity
+tm%r0(im1,jm1) = tm%r0(im1,jm1) + cm1x * cm1y * weight*velocity
+tm%r0(im1,j  ) = tm%r0(im1,j  ) + cm1x * cy   * weight*velocity
+tm%r0(im1,jp1) = tm%r0(im1,jp1) + cm1x * cp1y * weight*velocity
+tm%r0(im1,jp2) = tm%r0(im1,jp2) + cm1x * cp2y * weight*velocity
+tm%r0(im1,jp3) = tm%r0(im1,jp3) + cm1x * cp3y * weight*velocity
+
+tm%r0(i  ,jm3) = tm%r0(i  ,jm3) + cx   * cm3y * weight*velocity
+tm%r0(i  ,jm2) = tm%r0(i  ,jm2) + cx   * cm2y * weight*velocity
+tm%r0(i  ,jm1) = tm%r0(i  ,jm1) + cx   * cm1y * weight*velocity
+tm%r0(i  ,j  ) = tm%r0(i  ,j  ) + cx   * cy   * weight*velocity
+tm%r0(i  ,jp1) = tm%r0(i  ,jp1) + cx   * cp1y * weight*velocity
+tm%r0(i  ,jp2) = tm%r0(i  ,jp2) + cx   * cp2y * weight*velocity
+tm%r0(i  ,jp3) = tm%r0(i  ,jp3) + cx   * cp3y * weight*velocity
+
+tm%r0(ip1,jm3) = tm%r0(ip1,jm3) + cp1x * cm3y * weight*velocity
+tm%r0(ip1,jm2) = tm%r0(ip1,jm2) + cp1x * cm2y * weight*velocity
+tm%r0(ip1,jm1) = tm%r0(ip1,jm1) + cp1x * cm1y * weight*velocity
+tm%r0(ip1,j  ) = tm%r0(ip1,j  ) + cp1x * cy   * weight*velocity
+tm%r0(ip1,jp1) = tm%r0(ip1,jp1) + cp1x * cp1y * weight*velocity
+tm%r0(ip1,jp2) = tm%r0(ip1,jp2) + cp1x * cp2y * weight*velocity
+tm%r0(ip1,jp3) = tm%r0(ip1,jp3) + cp1x * cp3y * weight*velocity
+
+tm%r0(ip2,jm3) = tm%r0(ip2,jm3) + cp2x * cm3y * weight*velocity
+tm%r0(ip2,jm2) = tm%r0(ip2,jm2) + cp2x * cm2y * weight*velocity
+tm%r0(ip2,jm1) = tm%r0(ip2,jm1) + cp2x * cm1y * weight*velocity
+tm%r0(ip2,j  ) = tm%r0(ip2,j  ) + cp2x * cy   * weight*velocity
+tm%r0(ip2,jp1) = tm%r0(ip2,jp1) + cp2x * cp1y * weight*velocity
+tm%r0(ip2,jp2) = tm%r0(ip2,jp2) + cp2x * cp2y * weight*velocity
+tm%r0(ip2,jp3) = tm%r0(ip2,jp3) + cp2x * cp3y * weight*velocity
+
+tm%r0(ip3,jm3) = tm%r0(ip3,jm3) + cp3x * cm3y * weight*velocity
+tm%r0(ip3,jm2) = tm%r0(ip3,jm2) + cp3x * cm2y * weight*velocity
+tm%r0(ip3,jm1) = tm%r0(ip3,jm1) + cp3x * cm1y * weight*velocity
+tm%r0(ip3,j  ) = tm%r0(ip3,j  ) + cp3x * cy   * weight*velocity
+tm%r0(ip3,jp1) = tm%r0(ip3,jp1) + cp3x * cp1y * weight*velocity
+tm%r0(ip3,jp2) = tm%r0(ip3,jp2) + cp3x * cp2y * weight*velocity
+tm%r0(ip3,jp3) = tm%r0(ip3,jp3) + cp3x * cp3y * weight*velocity
+
+end do
+
+tm%r0(0:nx-1,ny)  = tm%r0(0:nx-1,0)
+tm%r0(nx,0:ny-1)  = tm%r0(0,0:ny-1)
+tm%r0(nx,ny)      = tm%r0(0,0)
+
+!tm%ex= tm%r0 / (dx*dy)
+
+energy = sum(tm%r0(0:nx,0:ny))/2.0d0
+do i=0,nx
+do j=0,ny
+energy=energy+(tm%ex(i,j)**2+tm%ey(i,j)**2)*dx*dy/2.0d0
+enddo
+enddo
+!tm%r0 = 0.0_f64
+!
+!do k = 1, nbpart
+!
+!velocity=dcos(t)*ele%vpy(k)-dsin(t)*ele%vpx(k)
+!
+!i      = ele%idx(k)
+!j      = ele%idy(k)
+!dpx    = ele%dpx(k)
+!dpy    = ele%dpy(k)
+!weight = ele%p(k)
+!
+!im3 = modulo(i-3,nx)
+!im2 = modulo(i-2,nx)
+!im1 = modulo(i-1,nx)
+!ip1 = modulo(i+1,nx)
+!ip2 = modulo(i+2,nx)
+!ip3 = modulo(i+3,nx)
+!jm3 = modulo(j-3,ny)
+!jm2 = modulo(j-2,ny)
+!jm1 = modulo(j-1,ny)
+!jp1 = modulo(j+1,ny)
+!jp2 = modulo(j+2,ny)
+!jp3 = modulo(j+3,ny)
+!
+!cm3x = f_m6(3.0d0+dpx)
+!cp3x = f_m6(3.0d0-dpx)
+!cm2x = f_m6(2.0d0+dpx)
+!cp2x = f_m6(2.0d0-dpx)
+!cm1x = f_m6(1.0d0+dpx)
+!cp1x = f_m6(1.0d0-dpx)
+!cx   = f_m6(dpx)
+!cy   = f_m6(dpy)
+!cp1y = f_m6(1.0d0-dpy)
+!cm1y = f_m6(1.0d0+dpy)
+!cp2y = f_m6(2.0d0-dpy)
+!cm2y = f_m6(2.0d0+dpy)
+!cp3y = f_m6(3.0d0-dpy)
+!cm3y = f_m6(3.0d0+dpy)
+!
+!tm%r0(im3,jm3) = tm%r0(im3,jm3) + cm3x * cm3y * weight*velocity
+!tm%r0(im3,jm2) = tm%r0(im3,jm2) + cm3x * cm2y * weight*velocity
+!tm%r0(im3,jm1) = tm%r0(im3,jm1) + cm3x * cm1y * weight*velocity
+!tm%r0(im3,j  ) = tm%r0(im3,j  ) + cm3x * cy   * weight*velocity
+!tm%r0(im3,jp1) = tm%r0(im3,jp1) + cm3x * cp1y * weight*velocity
+!tm%r0(im3,jp2) = tm%r0(im3,jp2) + cm3x * cp2y * weight*velocity
+!tm%r0(im3,jp3) = tm%r0(im3,jp3) + cm3x * cp3y * weight*velocity
+!
+!tm%r0(im2,jm3) = tm%r0(im2,jm3) + cm2x * cm3y * weight*velocity
+!tm%r0(im2,jm2) = tm%r0(im2,jm2) + cm2x * cm2y * weight*velocity
+!tm%r0(im2,jm1) = tm%r0(im2,jm1) + cm2x * cm1y * weight*velocity
+!tm%r0(im2,j  ) = tm%r0(im2,j  ) + cm2x * cy   * weight*velocity
+!tm%r0(im2,jp1) = tm%r0(im2,jp1) + cm2x * cp1y * weight*velocity
+!tm%r0(im2,jp2) = tm%r0(im2,jp2) + cm2x * cp2y * weight*velocity
+!tm%r0(im2,jp3) = tm%r0(im2,jp3) + cm2x * cp3y * weight*velocity
+!
+!tm%r0(im1,jm3) = tm%r0(im1,jm3) + cm1x * cm3y * weight*velocity
+!tm%r0(im1,jm2) = tm%r0(im1,jm2) + cm1x * cm2y * weight*velocity
+!tm%r0(im1,jm1) = tm%r0(im1,jm1) + cm1x * cm1y * weight*velocity
+!tm%r0(im1,j  ) = tm%r0(im1,j  ) + cm1x * cy   * weight*velocity
+!tm%r0(im1,jp1) = tm%r0(im1,jp1) + cm1x * cp1y * weight*velocity
+!tm%r0(im1,jp2) = tm%r0(im1,jp2) + cm1x * cp2y * weight*velocity
+!tm%r0(im1,jp3) = tm%r0(im1,jp3) + cm1x * cp3y * weight*velocity
+!
+!tm%r0(i  ,jm3) = tm%r0(i  ,jm3) + cx   * cm3y * weight*velocity
+!tm%r0(i  ,jm2) = tm%r0(i  ,jm2) + cx   * cm2y * weight*velocity
+!tm%r0(i  ,jm1) = tm%r0(i  ,jm1) + cx   * cm1y * weight*velocity
+!tm%r0(i  ,j  ) = tm%r0(i  ,j  ) + cx   * cy   * weight*velocity
+!tm%r0(i  ,jp1) = tm%r0(i  ,jp1) + cx   * cp1y * weight*velocity
+!tm%r0(i  ,jp2) = tm%r0(i  ,jp2) + cx   * cp2y * weight*velocity
+!tm%r0(i  ,jp3) = tm%r0(i  ,jp3) + cx   * cp3y * weight*velocity
+!
+!tm%r0(ip1,jm3) = tm%r0(ip1,jm3) + cp1x * cm3y * weight*velocity
+!tm%r0(ip1,jm2) = tm%r0(ip1,jm2) + cp1x * cm2y * weight*velocity
+!tm%r0(ip1,jm1) = tm%r0(ip1,jm1) + cp1x * cm1y * weight*velocity
+!tm%r0(ip1,j  ) = tm%r0(ip1,j  ) + cp1x * cy   * weight*velocity
+!tm%r0(ip1,jp1) = tm%r0(ip1,jp1) + cp1x * cp1y * weight*velocity
+!tm%r0(ip1,jp2) = tm%r0(ip1,jp2) + cp1x * cp2y * weight*velocity
+!tm%r0(ip1,jp3) = tm%r0(ip1,jp3) + cp1x * cp3y * weight*velocity
+!
+!tm%r0(ip2,jm3) = tm%r0(ip2,jm3) + cp2x * cm3y * weight*velocity
+!tm%r0(ip2,jm2) = tm%r0(ip2,jm2) + cp2x * cm2y * weight*velocity
+!tm%r0(ip2,jm1) = tm%r0(ip2,jm1) + cp2x * cm1y * weight*velocity
+!tm%r0(ip2,j  ) = tm%r0(ip2,j  ) + cp2x * cy   * weight*velocity
+!tm%r0(ip2,jp1) = tm%r0(ip2,jp1) + cp2x * cp1y * weight*velocity
+!tm%r0(ip2,jp2) = tm%r0(ip2,jp2) + cp2x * cp2y * weight*velocity
+!tm%r0(ip2,jp3) = tm%r0(ip2,jp3) + cp2x * cp3y * weight*velocity
+!
+!tm%r0(ip3,jm3) = tm%r0(ip3,jm3) + cp3x * cm3y * weight*velocity
+!tm%r0(ip3,jm2) = tm%r0(ip3,jm2) + cp3x * cm2y * weight*velocity
+!tm%r0(ip3,jm1) = tm%r0(ip3,jm1) + cp3x * cm1y * weight*velocity
+!tm%r0(ip3,j  ) = tm%r0(ip3,j  ) + cp3x * cy   * weight*velocity
+!tm%r0(ip3,jp1) = tm%r0(ip3,jp1) + cp3x * cp1y * weight*velocity
+!tm%r0(ip3,jp2) = tm%r0(ip3,jp2) + cp3x * cp2y * weight*velocity
+!tm%r0(ip3,jp3) = tm%r0(ip3,jp3) + cp3x * cp3y * weight*velocity
+!
+!end do
+!
+!tm%r0(0:nx-1,ny)  = tm%r0(0:nx-1,0)
+!tm%r0(nx,0:ny-1)  = tm%r0(0,0:ny-1)
+!tm%r0(nx,ny)      = tm%r0(0,0)
+!
+!tm%ey= tm%r0 / (dx*dy)
+
+end subroutine calcul_energy
+
+
+subroutine calcul_momentum( ele, momentum)
+
+type(particle)       :: ele
+
+sll_int32  :: i, j, k,nv
+sll_int32  :: im1, im2, im3, ip1, ip2, ip3
+sll_int32  :: jm1, jm2, jm3, jp1, jp2, jp3
+sll_real64 :: dpx, dpy, hv
+sll_real64 :: cx, cm1x, cm2x, cm3x, cp1x, cp2x, cp3x
+sll_real64 :: cy, cm1y, cm2y, cm3y, cp1y, cp2y, cp3y
+sll_real64 :: weight
+real(8), intent(inout)   :: momentum(0:64,0:64)
+
+nv=64
+hv=8.0d0/64.0d0
+momentum=0.0d0
+
+do k = 1, nbpart
+    do while ( ele%vpx(k) > 4.0d0 )
+    ele%vpx(k) = ele%vpx(k) - 4.0d0
+    enddo
+    do while ( ele%vpx(k) < -4.0d0 )
+    ele%vpx(k) = ele%vpx(k) + 4.0d0
+    enddo
+    do while ( ele%vpy(k) > 4.0d0 )
+    ele%vpy(k) = ele%vpy(k) - 4.0d0
+    enddo
+    do while ( ele%vpy(k) < -4.0d0 )
+    ele%vpy(k) = ele%vpy(k) + 4.0d0
+    enddo
+    ele%idx(k) = floor((ele%vpx(k)+4.0d0)/8.0d0*nv)
+    ele%vpx(k) = real((ele%vpx(k)+4.0d0)/hv- ele%idx(k), f64)
+    ele%idy(k) = floor((ele%vpy(k)+4.0d0)/8.0d0*nv)
+    ele%vpy(k) = real((ele%vpy(k)+4.0d0)/hv- ele%idy(k), f64)
+enddo
+
+do k = 1, nbpart
+
+i      = ele%idx(k)
+j      = ele%idy(k)
+dpx    = ele%vpx(k)
+dpy    = ele%vpy(k)
+weight = ele%p(k)
+
+im3 = modulo(i-3,nv)
+im2 = modulo(i-2,nv)
+im1 = modulo(i-1,nv)
+ip1 = modulo(i+1,nv)
+ip2 = modulo(i+2,nv)
+ip3 = modulo(i+3,nv)
+jm3 = modulo(j-3,nv)
+jm2 = modulo(j-2,nv)
+jm1 = modulo(j-1,nv)
+jp1 = modulo(j+1,nv)
+jp2 = modulo(j+2,nv)
+jp3 = modulo(j+3,nv)
+
+cm3x = f_m6(3.0d0+dpx)
+cp3x = f_m6(3.0d0-dpx)
+cm2x = f_m6(2.0d0+dpx)
+cp2x = f_m6(2.0d0-dpx)
+cm1x = f_m6(1.0d0+dpx)
+cp1x = f_m6(1.0d0-dpx)
+cx   = f_m6(dpx)
+cy   = f_m6(dpy)
+cp1y = f_m6(1.0d0-dpy)
+cm1y = f_m6(1.0d0+dpy)
+cp2y = f_m6(2.0d0-dpy)
+cm2y = f_m6(2.0d0+dpy)
+cp3y = f_m6(3.0d0-dpy)
+cm3y = f_m6(3.0d0+dpy)
+
+momentum(im3,jm3) = momentum(im3,jm3) + cm3x * cm3y * weight
+momentum(im3,jm2) = momentum(im3,jm2) + cm3x * cm2y * weight
+momentum(im3,jm1) = momentum(im3,jm1) + cm3x * cm1y * weight
+momentum(im3,j  ) = momentum(im3,j  ) + cm3x * cy   * weight
+momentum(im3,jp1) = momentum(im3,jp1) + cm3x * cp1y * weight
+momentum(im3,jp2) = momentum(im3,jp2) + cm3x * cp2y * weight
+momentum(im3,jp3) = momentum(im3,jp3) + cm3x * cp3y * weight
+
+momentum(im2,jm3) = momentum(im2,jm3) + cm2x * cm3y * weight
+momentum(im2,jm2) = momentum(im2,jm2) + cm2x * cm2y * weight
+momentum(im2,jm1) = momentum(im2,jm1) + cm2x * cm1y * weight
+momentum(im2,j  ) = momentum(im2,j  ) + cm2x * cy   * weight
+momentum(im2,jp1) = momentum(im2,jp1) + cm2x * cp1y * weight
+momentum(im2,jp2) = momentum(im2,jp2) + cm2x * cp2y * weight
+momentum(im2,jp3) = momentum(im2,jp3) + cm2x * cp3y * weight
+
+momentum(im1,jm3) = momentum(im1,jm3) + cm1x * cm3y * weight
+momentum(im1,jm2) = momentum(im1,jm2) + cm1x * cm2y * weight
+momentum(im1,jm1) = momentum(im1,jm1) + cm1x * cm1y * weight
+momentum(im1,j  ) = momentum(im1,j  ) + cm1x * cy   * weight
+momentum(im1,jp1) = momentum(im1,jp1) + cm1x * cp1y * weight
+momentum(im1,jp2) = momentum(im1,jp2) + cm1x * cp2y * weight
+momentum(im1,jp3) = momentum(im1,jp3) + cm1x * cp3y * weight
+
+momentum(i  ,jm3) = momentum(i  ,jm3) + cx   * cm3y * weight
+momentum(i  ,jm2) = momentum(i  ,jm2) + cx   * cm2y * weight
+momentum(i  ,jm1) = momentum(i  ,jm1) + cx   * cm1y * weight
+momentum(i  ,j  ) = momentum(i  ,j  ) + cx   * cy   * weight
+momentum(i  ,jp1) = momentum(i  ,jp1) + cx   * cp1y * weight
+momentum(i  ,jp2) = momentum(i  ,jp2) + cx   * cp2y * weight
+momentum(i  ,jp3) = momentum(i  ,jp3) + cx   * cp3y * weight
+
+momentum(ip1,jm3) = momentum(ip1,jm3) + cp1x * cm3y * weight
+momentum(ip1,jm2) = momentum(ip1,jm2) + cp1x * cm2y * weight
+momentum(ip1,jm1) = momentum(ip1,jm1) + cp1x * cm1y * weight
+momentum(ip1,j  ) = momentum(ip1,j  ) + cp1x * cy   * weight
+momentum(ip1,jp1) = momentum(ip1,jp1) + cp1x * cp1y * weight
+momentum(ip1,jp2) = momentum(ip1,jp2) + cp1x * cp2y * weight
+momentum(ip1,jp3) = momentum(ip1,jp3) + cp1x * cp3y * weight
+
+momentum(ip2,jm3) = momentum(ip2,jm3) + cp2x * cm3y * weight
+momentum(ip2,jm2) = momentum(ip2,jm2) + cp2x * cm2y * weight
+momentum(ip2,jm1) = momentum(ip2,jm1) + cp2x * cm1y * weight
+momentum(ip2,j  ) = momentum(ip2,j  ) + cp2x * cy   * weight
+momentum(ip2,jp1) = momentum(ip2,jp1) + cp2x * cp1y * weight
+momentum(ip2,jp2) = momentum(ip2,jp2) + cp2x * cp2y * weight
+momentum(ip2,jp3) = momentum(ip2,jp3) + cp2x * cp3y * weight
+
+momentum(ip3,jm3) = momentum(ip3,jm3) + cp3x * cm3y * weight
+momentum(ip3,jm2) = momentum(ip3,jm2) + cp3x * cm2y * weight
+momentum(ip3,jm1) = momentum(ip3,jm1) + cp3x * cm1y * weight
+momentum(ip3,j  ) = momentum(ip3,j  ) + cp3x * cy   * weight
+momentum(ip3,jp1) = momentum(ip3,jp1) + cp3x * cp1y * weight
+momentum(ip3,jp2) = momentum(ip3,jp2) + cp3x * cp2y * weight
+momentum(ip3,jp3) = momentum(ip3,jp3) + cp3x * cp3y * weight
+
+end do
+
+momentum(0:nv-1,nv)  = momentum(0:nv-1,0)
+momentum(nv,0:nv-1)  = momentum(0,0:nv-1)
+momentum(nv,nv)      = momentum(0,0)
+
+momentum = momentum / (hv**2)
+
+end subroutine calcul_momentum
 
 end module particules
