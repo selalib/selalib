@@ -1,18 +1,6 @@
-! This file is read by doxygen software
-! Change it to match with your library
-! http://www.stack.nl/~dimitri/doxygen/manual/docblocks.html#fortranblocks
-! To see the documentation, remove the line containing your directory 
-! in file Doxyfile.in (line 691) if it is excluded. 
-! Type 'make doc' in build directory.
-! To check the results, open : 
-! selalib/doc/build/html/doxygen/html/defgroup time_solvers.html 
-! The following lines will be read by doxygen to generate documentation:
-
-
-
 !> @defgroup operator_splitting sll_operator_splitting 
 !> @brief 
-!> The sll_t_operator_splitting library implements operator splitting methods
+!> Operator splitting methods
 !> @author Selalib team <br>
 !> Contact: Eric Sonnendr&uuml;cker
 !> @details
@@ -41,17 +29,7 @@
 !> Composition of more that two operators can be reduce to the composition ot two
 !> operators by taking there first order composition and its adjoint (See (HLW) section II.5)
 !>
-!> <b> Headers file available </b>
-!>  - no header files
-!>
-! !> <b> Modules available </b>
-! !>  List fortran module available
-! !>  - sll_m_time_splitting
-! !>  - sll_m_operator_splitting
-!>
-!> <b> How to use it </b>
-! !> - Header file : \code #include 'sll_time_solvers.h' \endcode
-!> - Link with   <code>-lsll_%s</code>
-!> - Add <code> use sll_m_operator_splitting </code>
-!>
+!> <b> Modules available </b>
+!>  - sll_m_time_splitting
+!>  - sll_m_operator_splitting
 

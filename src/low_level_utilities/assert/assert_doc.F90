@@ -1,11 +1,13 @@
 !> @defgroup assert sll_assert
 !!
 !! @authors
-!! Selalib team <br>
+!! Edwin Chacon-Golcher <br>
 !! Contact: Yaman Güçlü - <yaman.guclu@gmail.com>
 !!
 !! @brief
-!! Provides macro `SLL_ASSERT(x)`
+!! Provides macro for assertion
+!! @details
+!! - `SLL_ASSERT(x)`
 !!
 !! <h4> Header files available </h4>
 !!  + *sll_m_assert.h*

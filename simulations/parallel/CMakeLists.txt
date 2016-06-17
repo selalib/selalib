@@ -27,7 +27,6 @@ if( HDF5_ENABLED AND HDF5_IS_PARALLEL AND HDF5_PARALLEL_ENABLED )
     add_subdirectory( bsl_vp_2d2v_curv                         )
 
     ## Vlasov-Poisson 3Dx3D
-    add_subdirectory( bsl_vp_3d3v_cart                         )
     add_subdirectory( bsl_vp_3d3v_cart_sparsegrid              )
 
     ## Guiding-Center 2D

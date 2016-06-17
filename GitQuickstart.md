@@ -20,7 +20,7 @@ Check configuration with:
 
 Clone the repository:
 ~~~
- git clone git@gitlab.mpcdf.mpg.de:selalib/selalib.git
+ git clone git@gitlab.mpcdf.mpg.de:clapp/selalib.git
  cd selalib/
 ~~~
 
