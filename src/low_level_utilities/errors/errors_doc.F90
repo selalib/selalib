@@ -1,9 +1,13 @@
 !> @defgroup errors sll_errors
 !!
-!! @authors Yaman Güçlü - <yaman.guclu@gmail.com>
+!! @author Yaman Güçlü - <yaman.guclu@gmail.com>
 !!
 !! @brief
-!! Provides macros `SLL_ERROR(fun,msg)` and `SLL_WARNING(fun,msg)`
+!! Provides macros for warnings and errors.
+!!
+!! @details
+!! - `SLL_ERROR(fun,msg)` 
+!! - `SLL_WARNING(fun,msg)`
 !!
 !! <h4> Header files available </h4>
 !!  + *sll_m_errors.h*

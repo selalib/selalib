@@ -60,3 +60,12 @@ fedora-mpich:
   tags:
     - fedora
     - mpich
+
+intel-impi:
+  stage: ctest
+  script:
+    - "scripts/intel16-build.sh"
+  only:
+    - develop
+  tags:
+    - intel

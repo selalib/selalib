@@ -1,14 +1,11 @@
 $list_parameters 
 eta_min      = -4d0
 eta_max      =  4d0
-n            = 512
+n            = 128
 k            = 0.01d0
 eps          = 0.01d0
 final_time   = 10.d0
-plot_enabled = .true.
+plot_enabled = .false.
 example      = 3
 ntau         = 32
-v_0          = 0.1d0
-n_0          = 4
-r_m          = 1.85d0
 $end
