@@ -1,4 +1,4 @@
-# <<<<PIC-LBFR_Library>>>> [[file:.]]
+# <<<<pic_lbfr_library>>>> [[file:.]]
 
 ADD_LIBRARY( sll_pic_lbfr_4d_marker STATIC
   sll_m_pic_lbfr_4d_marker.F90)
