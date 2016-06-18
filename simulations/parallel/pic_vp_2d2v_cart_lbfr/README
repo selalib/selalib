@@ -1,13 +1,13 @@
-# Summary of commands for BSL-LT-PIC compilation  [file to update]
+# Summary of commands for compilation  [file to update]
 # ==============================================
 # 
 # MCP and ALH
 # 
 #+STARTUP: showeverything
 # [[elisp:(alh-set-keywords)]] ([[file:~/.emacs::alh-set-keywords]])
-# emacs-keywords authors="MCP and ALH" brief="Summary of commands for BSL-LT-PIC compilation" org start=26/10/15
+# emacs-keywords authors="MCP and ALH" brief="Summary of commands for compilation" org start=26/10/15
 
-# <<<<README>>>> <<<<BSL-LT-PIC_Simulation>>>> [[elisp:(startup-persistent-process "rox-filer")]] uses
+# <<<README_pic_vp_2d2v_cart_lbfr>>> [[elisp:(startup-persistent-process "rox-filer")]] uses
 # [[[selalib:src/particle_methods/pic_remapped/bsl_lt_pic/CMakeLists.txt::BSL-LT-PIC_Library]]]
 
 * [[file:.][Files]]
