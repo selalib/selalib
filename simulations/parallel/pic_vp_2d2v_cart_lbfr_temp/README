@@ -7,7 +7,7 @@
 # [[elisp:(alh-set-keywords)]] ([[file:~/.emacs::alh-set-keywords]])
 # emacs-keywords authors="MCP and ALH" brief="Summary of commands for BSL-LT-PIC compilation" org start=26/10/15
 
-# <<<<pic_vp_2d2v_cart_lbfr_temp>>>> [[file:.]] uses [[[selalib:src/particle_methods/pic_remapped/bsl_lt_pic/CMakeLists.txt::BSL-LT-PIC_Library]]]
+# <<<pic_vp_2d2v_cart_lbfr_temp>>> [[file:.]] uses [[[selalib:src/particle_methods/pic_remapped/bsl_lt_pic/CMakeLists.txt::BSL-LT-PIC_Library]]]
 
 * [[file:.][Files]]
 * Doxygen [[elisp:(compile "cd ${SELALIB}/build && make doc")][build]], [[selalib:doc/build/html/doxygen/html/index.html][index]]
