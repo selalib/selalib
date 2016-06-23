@@ -93,6 +93,7 @@ module sll_m_sim_bsl_ad_2d0v_cart
   use sll_m_gnuplot, only: &
     sll_o_gnuplot_1d
 
+  use hdf5, only: hid_t
   use sll_m_hdf5_io_serial, only: &
     sll_o_hdf5_file_close, &
     sll_o_hdf5_file_create, &
@@ -985,6 +986,7 @@ contains
 
     ! Local variables declarations
     sll_int32 :: file_id
+    integer(hid_t) :: hfile_id
     sll_int32 :: error
     sll_real64, dimension(:,:), allocatable :: x1
     sll_real64, dimension(:,:), allocatable :: x2
@@ -1020,12 +1022,12 @@ contains
           x2(i,j) = x2_min+real(j-1,f64)*dx2
         end do
       end do
-      call sll_o_hdf5_file_create("cartesian_mesh-x1.h5",file_id,error)
-      call sll_o_hdf5_write_array(file_id,x1,"/x1",error)
-      call sll_o_hdf5_file_close(file_id, error)
-      call sll_o_hdf5_file_create("cartesian_mesh-x2.h5",file_id,error)
-      call sll_o_hdf5_write_array(file_id,x2,"/x2",error)
-      call sll_o_hdf5_file_close(file_id, error)
+      call sll_o_hdf5_file_create("cartesian_mesh-x1.h5",hfile_id,error)
+      call sll_o_hdf5_write_array(hfile_id,x1,"/x1",error)
+      call sll_o_hdf5_file_close(hfile_id, error)
+      call sll_o_hdf5_file_create("cartesian_mesh-x2.h5",hfile_id,error)
+      call sll_o_hdf5_write_array(hfile_id,x2,"/x2",error)
+      call sll_o_hdf5_file_close(hfile_id, error)
       deallocate(x1)
       deallocate(x2)
 

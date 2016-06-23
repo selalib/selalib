@@ -28,6 +28,8 @@ program test_const_coef_adv_2d
     sll_s_do_split_steps, &
     sll_p_strang_tvt
 
+  use hdf5, only: hid_t
+
   implicit none
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #define N1 50
@@ -39,13 +41,15 @@ program test_const_coef_adv_2d
   sll_real64 :: x_1, x_2
   sll_int32 :: i, j
   sll_real64 :: dt
-  sll_int32 :: ierr, file_id
+  sll_int32 :: ierr!, file_id
   character(len=20) :: filename
 
   type(sll_t_cubic_spline_interpolator_1d), target  :: interp_eta1
   type(sll_t_cubic_spline_interpolator_1d), target  :: interp_eta2
   class(sll_c_interpolator_1d), pointer :: interp_eta1_ptr
   class(sll_c_interpolator_1d), pointer :: interp_eta2_ptr
+
+  integer(hid_t) :: hfile_id
 
   ! initialize interpolator
   call interp_eta1%initialize( N1, XMIN, XMAX, sll_p_periodic )
@@ -73,8 +77,8 @@ program test_const_coef_adv_2d
 
   ! save results
   filename = "data.h5"
-  call sll_o_hdf5_file_create(filename, file_id, ierr)
-  call sll_o_hdf5_write_array_2d(file_id, data, "data", ierr)
-  call sll_o_hdf5_file_close(file_id, ierr)
+  call sll_o_hdf5_file_create(filename, hfile_id, ierr)
+  call sll_o_hdf5_write_array_2d(hfile_id, data, "data", ierr)
+  call sll_o_hdf5_file_close(hfile_id, ierr)
   
 end program test_const_coef_adv_2d
