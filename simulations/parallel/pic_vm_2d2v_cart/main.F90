@@ -15,37 +15,57 @@ use sll_m_constants
 
 implicit none
 
-type(tm_mesh_fields) :: f
-type(particle)       :: p
+type(tm_mesh_fields)  :: f
+type(particle)        :: p
 
-type(sll_t_fft) :: PlnF, PlnB
-integer(4)  ,parameter :: Ntau=32,npp=204800
-real(8)  :: xxt(2)
-real(8)  :: ep,dtau,tau(0:Ntau-1),ltau(0:Ntau-1),auxpx(2,npp)
-complex(8) :: pl(0:ntau-1),ql(0:ntau-1),gp(2,0:Ntau-1,npp),gm(2,0:Ntau-1,npp),wp(2,npp),wm(2,npp)
-complex(8) ::  xtemp1(2,0:ntau-1,npp),xtemp2(2,0:ntau-1,npp),Et(2,0:ntau-1,npp)
-complex(8) :: temp(2,0:Ntau-1),temptilde(2,0:Ntau-1),up(2,0:ntau-1,npp),um(2,0:ntau-1,npp)
-complex(8) :: vp(2,npp),vm(2,npp),z(2),fex(0:64,0:32,0:ntau-1),fey(0:64,0:32,0:ntau-1)
-complex(8) :: up0(2,0:ntau-1,npp),um0(2,0:ntau-1,npp)
-!real(8),  allocatable :: energy(:)
+type(sll_t_fft)       :: PlnF
+type(sll_t_fft)       :: PlnB
+integer(4), parameter :: Ntau=32
+integer(4), parameter :: npp=204800
+real(8)               :: xxt(2)
+real(8)               :: ep
+real(8)               :: dtau
+real(8)               :: tau(0:Ntau-1)
+real(8)               :: ltau(0:Ntau-1)
+real(8)               :: auxpx(2,npp)
+complex(8)            :: pl(0:ntau-1)
+complex(8)            :: ql(0:ntau-1)
+complex(8)            :: gp(2,0:Ntau-1,npp)
+complex(8)            :: gm(2,0:Ntau-1,npp)
+complex(8)            :: wp(2,npp)
+complex(8)            :: wm(2,npp)
+complex(8)            :: xtemp1(2,0:ntau-1,npp)
+complex(8)            :: xtemp2(2,0:ntau-1,npp)
+complex(8)            :: Et(2,0:ntau-1,npp)
+complex(8)            :: temp(2,0:Ntau-1)
+complex(8)            :: temptilde(2,0:Ntau-1)
+complex(8)            :: up(2,0:ntau-1,npp)
+complex(8)            :: um(2,0:ntau-1,npp)
+complex(8)            :: vp(2,npp)
+complex(8)            :: vm(2,npp)
+complex(8)            :: z(2)
+complex(8)            :: fex(0:64,0:32,0:ntau-1)
+complex(8)            :: fey(0:64,0:32,0:ntau-1)
+complex(8)            :: up0(2,0:ntau-1,npp)
+complex(8)            :: um0(2,0:ntau-1,npp)
 
-sll_real64 :: time
-sll_real64 :: xmin
-sll_real64 :: xmax
-sll_real64 :: ymin
-sll_real64 :: ymax
-sll_int32  :: istep
-sll_int32  :: iplot
-sll_int32  :: iargc
-sll_int32  :: n,m
-sll_int32  :: i
-sll_int32  :: j
-sll_int32  :: error
+sll_real64            :: time
+sll_real64            :: xmin
+sll_real64            :: xmax
+sll_real64            :: ymin
+sll_real64            :: ymax
+sll_int32             :: istep
+sll_int32             :: iplot
+sll_int32             :: iargc
+sll_int32             :: n,m
+sll_int32             :: i
+sll_int32             :: j
+sll_int32             :: error
 
-sll_real64 :: aux1, aux2
-sll_real64 :: t1
+sll_real64            :: aux1, aux2
+sll_real64            :: t1
 
-character(len=272) :: argv
+character(len=272)    :: argv
 class(sll_c_poisson_2d_base), pointer :: poisson
 
 n = iargc()
@@ -61,14 +81,13 @@ SLL_CLEAR_ALLOCATE(f%ex(0:nx,0:ny), error)
 SLL_CLEAR_ALLOCATE(f%ey(0:nx,0:ny), error)
 SLL_CLEAR_ALLOCATE(f%bz(0:nx,0:ny), error)
 SLL_CLEAR_ALLOCATE(f%r0(0:nx,0:ny), error)
-!allocate (energy(0:nstep))
 
 time  = 0.d0
 
 ep=0.1d0/1.0d0
 dtau=2.0d0*sll_p_pi/ntau
-call sll_s_fft_init_c2c_1d(PlnF,Ntau,temp(1,:),temptilde(1,:),sll_p_fft_FORWARD,optimization=sll_p_FFT_MEASURE)
-call sll_s_fft_init_c2c_1d(PlnB,Ntau,temp(1,:),temptilde(1,:),sll_p_FFT_BACKWARD,optimization=sll_p_FFT_MEASURE)
+call sll_s_fft_init_c2c_1d(PlnF,Ntau,temp(1,:),temptilde(1,:),sll_p_fft_forward,optimization=sll_p_fft_measure)
+call sll_s_fft_init_c2c_1d(PlnB,Ntau,temp(1,:),temptilde(1,:),sll_p_fft_backward,optimization=sll_p_fft_measure)
 m=ntau/2
 ltau=(/ (n, n=0,m-1), (n, n=-m,-1 )/)
 pl(0)=dt
