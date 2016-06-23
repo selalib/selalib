@@ -5,6 +5,7 @@ program test_interpolation_m4
 
 use zone, only: readin, dimx, dimy, dx, dy
 use particules
+use particules_m6
 use sll_m_gnuplot
 use sll_m_poisson_2d_base
 use sll_m_poisson_2d_periodic
