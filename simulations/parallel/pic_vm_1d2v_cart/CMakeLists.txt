@@ -1,3 +1,5 @@
+if( FULL_FORTRAN2003 )
+
 set(    SIM_NAME pic_vm_1d2v_cart             )
 set(   TEST_NAME "sim_${SIM_NAME}"            )
 set(  EXECUTABLE "${TEST_NAME}"               )
@@ -21,3 +23,5 @@ if(BUILD_TESTING)
   set_tests_properties( ${TEST_NAME} PROPERTIES PASS_REGULAR_EXPRESSION "PASSED"
     TIMEOUT 5 )
 endif(BUILD_TESTING)
+
+endif( FULL_FORTRAN2003 )

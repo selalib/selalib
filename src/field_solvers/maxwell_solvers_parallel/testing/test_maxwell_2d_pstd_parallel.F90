@@ -9,7 +9,7 @@ program test_maxwell_2d_periodic_cart_par
 #include "sll_working_precision.h"
 
   use hdf5, only: &
-    hsize_t
+    hsize_t, hid_t
 
   use iso_fortran_env, only: &
     output_unit
@@ -239,23 +239,24 @@ contains
     integer(HSIZE_T), dimension(1:2) :: global_dims
     sll_int32                        :: error
     sll_int32                        :: file_id
+    integer(HID_T)                   :: hfile_id
     integer(HSIZE_T), dimension(1:2) :: offset
 
     global_dims(:) = (/ int(ncx,HSIZE_T),int(ncy,HSIZE_T) /)
 
     call sll_o_hdf5_file_create(file_name//'.h5',sll_v_world_collective%comm, &
-                              file_id,error)
+                              hfile_id,error)
     offset(1) = int(sll_o_get_layout_i_min(layout_y,prank) - 1,HSIZE_T)
     offset(2) = int(sll_o_get_layout_j_min(layout_y,prank) - 1,HSIZE_T)
-    call sll_o_hdf5_write_array(file_id,global_dims,offset, &
+    call sll_o_hdf5_write_array(hfile_id,global_dims,offset, &
                               ex,'ex_values',error)
     offset(1) = int(sll_o_get_layout_i_min(layout_x,prank) - 1,HSIZE_T)
     offset(2) = int(sll_o_get_layout_j_min(layout_x,prank) - 1,HSIZE_T)
-    call sll_o_hdf5_write_array(file_id,global_dims,offset, &
+    call sll_o_hdf5_write_array(hfile_id,global_dims,offset, &
                               ey,'ey_values',error)
-    call sll_o_hdf5_write_array(file_id,global_dims,offset, &
+    call sll_o_hdf5_write_array(hfile_id,global_dims,offset, &
                               hz,'hz_values',error)
-    call sll_o_hdf5_file_close(file_id,error)
+    call sll_o_hdf5_file_close(hfile_id,error)
 
     if (prank == MPI_MASTER) then
 
