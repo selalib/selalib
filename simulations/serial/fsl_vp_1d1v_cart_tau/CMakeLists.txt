@@ -1,2 +1,2 @@
 ADD_EXECUTABLE(fsl_vp_1d1v_cart_tau vlasov_poisson_2d.F90)
-TARGET_LINK_LIBRARIES(fsl_vp_1d1v_cart_tau sll_splines sll_fft )
+TARGET_LINK_LIBRARIES(fsl_vp_1d1v_cart_tau sll_interpolators sll_fft )
