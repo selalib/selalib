@@ -28,7 +28,7 @@ allocate(y(0:nx,0:ny))
 
 npm = 5
 
-pi = 4.0_f64 * atan(1.)
+pi = 4.0_f64 * atan(1._f64)
 
 xmin = 0.0_f64; xmax = 1.0_f64
 ymin = 0.0_f64; ymax = 1.0_f64
@@ -36,13 +36,13 @@ ymin = 0.0_f64; ymax = 1.0_f64
 dimx = xmax - xmin
 dimy = ymax - ymin
 
-dx = dimx / nx
-dy = dimy / ny
+dx = dimx / real(nx,f64)
+dy = dimy / real(ny,f64)
 
 do j = 0, ny
   do i = 0, nx
-    x(i,j) = i*dx    
-    y(i,j) = j*dx    
+    x(i,j) = real(i,f64)*dx    
+    y(i,j) = real(j,f64)*dx    
   end do
 end do
 
@@ -74,10 +74,10 @@ do l = 1, npm
  k = k+1
  p%idx(k) = i
  p%idy(k) = j
- xp = (i+p%dpx(k))*dx 
- yp = (j+p%dpy(k))*dy 
+ xp = (real(i,f64)+p%dpx(k))*dx 
+ yp = (real(j,f64)+p%dpy(k))*dy 
 
- p%p(k) = (1.+cos(2.*pi*xp)*sin(2.*pi*yp)) / real(nbpart,f64)
+ p%p(k) = (1._f64+cos(2._f64*pi*xp)*sin(2._f64*pi*yp)) / real(nbpart,f64)
 
  write(10,*) xp, yp, p%p(k)
 
@@ -89,7 +89,7 @@ print*, 'rho total ', sum(p%p)
 
 print*, 'compute rho'
 call calcul_rho( p, f )
-print*, 'rho error ', sum(abs(f%r0-cos(2*pi*x)*sin(2*pi*y)))/(nx*ny)
+print*, 'rho error ', sum(abs(f%r0-cos(2*pi*x)*sin(2*pi*y)))/real(nx*ny,f64)
 
 !gnuplot -p rho.gnu (to plot the initial rho)
 call sll_o_gnuplot_2d(xmin, xmax, nx+1, &
@@ -98,7 +98,7 @@ call sll_o_gnuplot_2d(xmin, xmax, nx+1, &
 
 print*, 'compute rho M4'
 call calcul_rho_m4( p, f )
-print*, 'rho error ', sum(abs(f%r0-cos(2*pi*x)*sin(2*pi*y)))/(nx*ny)
+print*, 'rho error ', sum(abs(f%r0-cos(2*pi*x)*sin(2*pi*y)))/real(nx*ny,f64)
 !gnuplot -p rho_m4.gnu (to plot the initial rho)
 call sll_o_gnuplot_2d(xmin, xmax, nx+1, &
                       ymin, ymax, ny+1, &
@@ -106,7 +106,7 @@ call sll_o_gnuplot_2d(xmin, xmax, nx+1, &
 
 print*, 'compute rho M6'
 call calcul_rho_m6( p, f )
-print*, 'rho error ', sum(abs(f%r0-cos(2*pi*x)*sin(2*pi*y)))/(nx*ny)
+print*, 'rho error ', sum(abs(f%r0-cos(2*pi*x)*sin(2*pi*y)))/real(nx*ny,f64)
 !gnuplot -p rho_m6.gnu (to plot the initial rho)
 call sll_o_gnuplot_2d(xmin, xmax, nx+1, &
                       ymin, ymax, ny+1, &
@@ -119,8 +119,8 @@ call poisson%compute_e_from_rho( f%ex(0:nx,0:ny), &
 do j = 0, ny
 do i = 0, nx
 
- xp = xmin + i*dx 
- yp = ymin + j*dy
+ xp = xmin + real(i,f64)*dx 
+ yp = ymin + real(j,f64)*dy
 
  write(11,*) sngl(xp), sngl(yp), &
    sngl(f%ex(i,j)), sngl(f%ey(i,j)), sngl(f%bz(i,j))
@@ -134,8 +134,8 @@ call interpol_eb_m6( f, p )
 do j = 0, ny
 do i = 0, nx
 
- xp = xmin + i*dx
- yp = ymin + j*dy
+ xp = xmin + real(i,f64)*dx
+ yp = ymin + real(j,f64)*dy
 
  write(12,*) sngl(xp), sngl(yp), &
    sngl(f%ex(i,j)), sngl(f%ey(i,j)), sngl(f%bz(i,j))

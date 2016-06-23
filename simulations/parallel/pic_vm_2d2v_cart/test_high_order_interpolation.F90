@@ -80,8 +80,6 @@ program test_high_order_interpolation
      call particle_group%set_v(i_part, xi)
   end do
 
-
-
   ! Initialize the kernel
   call kernel%init &
        (domain, [n_cells, n_cells], &
@@ -95,16 +93,16 @@ program test_high_order_interpolation
   ! Reference values of the shape factors
   index_grid(1,:) = [-2, 1, 1, 5]
   index_grid(2,:) = [-3, -3, -3, -3]
-  values_grid(:,1,1) = [ 2.0833333333333332E-002_f64,  &
-                         0.47916666666666663_f64,      &
-                         0.47916666666666663_f64,      &
+  values_grid(:,1,1) = [ 2.0833333333333332E-002_f64, &
+                         0.47916666666666663_f64,     &
+                         0.47916666666666663_f64,     &
                          2.0833333333333332E-002_f64]
   values_grid(:,1,3) = values_grid(:,1,1)
   values_grid(:,1,4) = values_grid(:,1,1)
-  values_grid(:,1,2) = [7.0312500000000000E-002_f64,  &
-                        0.61197916666666663_f64,      &
-                        0.31510416666666663_f64,      &
-                        2.6041666666666665E-003_f64 ]
+  values_grid(:,1,2) = [ 7.0312500000000000E-002_f64, &
+                         0.6119791666666666_f64,      &
+                         0.3151041666666666_f64,      &
+                         2.6041666666666665E-003_f64 ]
   values_grid(1,2,:) = 0.0_f64
   values_grid(2,2,:) = 1.0_f64/6.0_f64
   values_grid(3,2,:) = 2.0_f64/3.0_f64
@@ -135,7 +133,7 @@ program test_high_order_interpolation
   rho_dofs_ref = rho_dofs_ref  *&
        real(n_cells**2,f64)/volume/real(n_particles, f64)
   error = maxval(abs(rho_dofs-rho_dofs_ref))
-  if (error > 1.e-14) then
+  if (error > 1.d-14) then
      passed = .FALSE.
      print*, 'Error in procedure add_charge.'
   end if
@@ -164,7 +162,7 @@ program test_high_order_interpolation
   end do
 
   error = maxval(abs(particle_values-particle_values_ref))
-  if (error > 1.e-14) then
+  if (error > 1.d-14) then
      passed = .FALSE.
      print*, 'Error in procedure evaluate_field_single.'
   end if
