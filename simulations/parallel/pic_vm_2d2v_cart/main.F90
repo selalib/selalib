@@ -26,29 +26,30 @@ integer(4), parameter :: npp=204800
 real(8)               :: xxt(2)
 real(8)               :: ep
 real(8)               :: dtau
-real(8)               :: tau(0:Ntau-1)
-real(8)               :: ltau(0:Ntau-1)
-real(8)               :: auxpx(2,npp)
-complex(8)            :: pl(0:ntau-1)
-complex(8)            :: ql(0:ntau-1)
-complex(8)            :: gp(2,0:Ntau-1,npp)
-complex(8)            :: gm(2,0:Ntau-1,npp)
-complex(8)            :: wp(2,npp)
-complex(8)            :: wm(2,npp)
-complex(8)            :: xtemp1(2,0:ntau-1,npp)
-complex(8)            :: xtemp2(2,0:ntau-1,npp)
-complex(8)            :: Et(2,0:ntau-1,npp)
-complex(8)            :: temp(2,0:Ntau-1)
-complex(8)            :: temptilde(2,0:Ntau-1)
-complex(8)            :: up(2,0:ntau-1,npp)
-complex(8)            :: um(2,0:ntau-1,npp)
-complex(8)            :: vp(2,npp)
-complex(8)            :: vm(2,npp)
-complex(8)            :: z(2)
-complex(8)            :: fex(0:64,0:32,0:ntau-1)
-complex(8)            :: fey(0:64,0:32,0:ntau-1)
-complex(8)            :: up0(2,0:ntau-1,npp)
-complex(8)            :: um0(2,0:ntau-1,npp)
+
+real(8)    , allocatable:: tau(:)
+real(8)    , allocatable:: ltau(:)
+real(8)    , allocatable:: auxpx(:,:)
+complex(8) , allocatable:: pl(:)
+complex(8) , allocatable:: ql(:)
+complex(8) , allocatable:: gp(:,:,:)
+complex(8) , allocatable:: gm(:,:,:)
+complex(8) , allocatable:: wp(:,:)
+complex(8) , allocatable:: wm(:,:)
+complex(8) , allocatable:: xtemp1(:,:,:)
+complex(8) , allocatable:: xtemp2(:,:,:)
+complex(8) , allocatable:: Et(:,:,:)
+complex(8) , allocatable:: temp(:,:)
+complex(8) , allocatable:: temptilde(:,:)
+complex(8) , allocatable:: up(:,:,:)
+complex(8) , allocatable:: um(:,:,:)
+complex(8) , allocatable:: vp(:,:)
+complex(8) , allocatable:: vm(:,:)
+complex(8) , allocatable:: z(:)
+complex(8) , allocatable:: fex(:,:,:)
+complex(8) , allocatable:: fey(:,:,:)
+complex(8) , allocatable:: up0(:,:,:)
+complex(8) , allocatable:: um0(:,:,:)
 
 sll_real64            :: time
 sll_real64            :: xmin
@@ -85,6 +86,30 @@ do i = 1, n
 end do
 
 call readin( trim(argv) )
+
+SLL_ALLOCATE(tau(0:Ntau-1), error)
+SLL_ALLOCATE(ltau(0:Ntau-1), error)
+SLL_ALLOCATE(auxpx(2,npp), error)
+SLL_ALLOCATE(pl(0:ntau-1), error)
+SLL_ALLOCATE(ql(0:ntau-1), error)
+SLL_ALLOCATE(gp(2,0:Ntau-1,npp), error)
+SLL_ALLOCATE(gm(2,0:Ntau-1,npp), error)
+SLL_ALLOCATE(wp(2,npp), error)
+SLL_ALLOCATE(wm(2,npp), error)
+SLL_ALLOCATE(xtemp1(2,0:ntau-1,npp), error)
+SLL_ALLOCATE(xtemp2(2,0:ntau-1,npp), error)
+SLL_ALLOCATE(Et(2,0:ntau-1,npp), error)
+SLL_ALLOCATE(temp(2,0:Ntau-1), error)
+SLL_ALLOCATE(temptilde(2,0:Ntau-1), error)
+SLL_ALLOCATE(up(2,0:ntau-1,npp), error)
+SLL_ALLOCATE(um(2,0:ntau-1,npp), error)
+SLL_ALLOCATE(vp(2,npp), error)
+SLL_ALLOCATE(vm(2,npp), error)
+SLL_ALLOCATE(z(2), error)
+SLL_ALLOCATE(fex(0:64,0:32,0:ntau-1), error)
+SLL_ALLOCATE(fey(0:64,0:32,0:ntau-1), error)
+SLL_ALLOCATE(up0(2,0:ntau-1,npp), error)
+SLL_ALLOCATE(um0(2,0:ntau-1,npp), error)
 
 SLL_CLEAR_ALLOCATE(f%ex(0:nx,0:ny), error)
 SLL_CLEAR_ALLOCATE(f%ey(0:nx,0:ny), error)
@@ -673,45 +698,6 @@ subroutine apply_bc()
     xxt(2) = xxt(2)  + dimy
   enddo
 end subroutine apply_bc
-
-subroutine energyuse()
-
-  cost = dcos(0.5_f64*time/ep**2)
-  sint = dsin(0.5_f64*time/ep**2)
-  
-  do m=1,npp
-    call sll_s_fft_exec_c2c_1d(PlnF, up(1,:,m),temptilde(1,:))
-    call sll_s_fft_exec_c2c_1d(PlnF, up(2,:,m),temptilde(2,:))
-    wp(:,m)=0.0d0
-    do n=0,ntau-1
-      wp(:,m)=wp(:,m)+temptilde(:,n)/Ntau*cdexp(sll_p_i1*ltau(n)*time*0.5d0/ep**2)
-    enddo
-    call sll_s_fft_exec_c2c_1d(PlnF, um(1,:,m),temptilde(1,:))
-    call sll_s_fft_exec_c2c_1d(PlnF, um(2,:,m),temptilde(2,:))
-    wm(:,m)=0.0d0
-    do n=0,ntau-1
-      wm(:,m)=wm(:,m)+temptilde(:,n)/Ntau*cdexp(sll_p_i1*ltau(n)*time*0.5d0/ep**2)
-    enddo
-    vp(1,m) = cost*wp(1,m) - sint*wp(2,m)
-    vp(2,m) = cost*wp(2,m) + sint*wp(1,m)
-    vm(1,m) = cost*wm(1,m) + sint*wm(2,m)
-    vm(2,m) = cost*wm(2,m) - sint*wm(1,m)
-    z       = 0.5d0*(vp(:,m)+vm(:,m))
-    xxt(1)  = dreal(cost*z(1)+sint*z(2))
-    xxt(2)  = dreal(cost*z(2)-sint*z(1))
-    call apply_bc()
-    p%idx(m) = floor(xxt(1)/dimx*nx)
-    p%dpx(m) = real(xxt(1)/dx- p%idx(m), f64)
-    p%idy(m) = floor(xxt(2)/dimy*ny)
-    p%dpy(m) = real(xxt(2)/dy- p%idy(m), f64)
-    p%vpx(m) =  ( sint*vm(1,m)+cost*vm(2,m))*0.5d0/ep
-    p%vpy(m) = -(-sint*vm(2,m)+cost*vm(1,m))*0.5d0/ep
-  enddo
-  
-  call calcul_rho_m6( p, f )
-  call poisson%compute_e_from_rho( f%ex, f%ey, f%r0)
-
-end subroutine energyuse
 
 end program test_pic2d
 
