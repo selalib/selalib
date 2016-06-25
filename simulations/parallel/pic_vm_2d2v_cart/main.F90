@@ -29,7 +29,6 @@ real(8)               :: dtau
 
 real(8)    , allocatable:: tau(:)
 real(8)    , allocatable:: ltau(:)
-real(8)    , allocatable:: auxpx(:,:)
 complex(8) , allocatable:: pl(:)
 complex(8) , allocatable:: ql(:)
 complex(8) , allocatable:: gp(:,:,:)
@@ -89,7 +88,6 @@ call readin( trim(argv) )
 
 SLL_ALLOCATE(tau(0:Ntau-1), error)
 SLL_ALLOCATE(ltau(0:Ntau-1), error)
-SLL_ALLOCATE(auxpx(2,npp), error)
 SLL_ALLOCATE(pl(0:ntau-1), error)
 SLL_ALLOCATE(ql(0:ntau-1), error)
 SLL_ALLOCATE(gp(2,0:Ntau-1,npp), error)
@@ -155,29 +153,21 @@ print"('nbpart = ', g15.3)", nbpart
 print"('dt = ', g15.3)", dt
 poisson => sll_f_new_poisson_2d_periodic(xmin,xmax,nx,ymin,ymax,ny)
 
-auxpx(1,:)=(p%dpx+p%idx)*dx
-auxpx(2,:)=(p%dpy+p%idy)*dy
-wp(1,:)=2.0d0*(auxpx(1,:)+ep*p%vpy)
-wp(2,:)=2.0d0*(auxpx(2,:)-ep*p%vpx)
-wm(1,:)=-2.0d0*ep*p%vpy
-wm(2,:)=2.0d0*ep*p%vpx
+wp(1,:) =   2.0d0*((p%dpx+p%idx)*dx+ep*p%vpy)
+wp(2,:) =   2.0d0*((p%dpy+p%idy)*dy-ep*p%vpx)
+wm(1,:) = - 2.0d0*ep*p%vpy
+wm(2,:) =   2.0d0*ep*p%vpx
 
 do n=0,ntau-1
   cost = cos(tau(n))
   sint = sin(tau(n))
-  xtemp1(1,n,:)=cost*wp(1,:)-sint*wp(2,:)
-  xtemp1(2,n,:)=sint*wp(1,:)+cost*wp(2,:)
-  xtemp2(1,n,:)=cost*wm(1,:)+sint*wm(2,:)
-  xtemp2(2,n,:)=-sint*wm(1,:)+cost*wm(2,:)
-enddo
-
-xtemp1=(xtemp1+xtemp2)/2.0d0
-
-do n=0,ntau-1
-  cost = cos(tau(n))
-  sint = sin(tau(n))
-  xtemp2(1,n,:)=cost*xtemp1(1,n,:)+sint*xtemp1(2,n,:)
-  xtemp2(2,n,:)=-sint*xtemp1(1,n,:)+cost*xtemp1(2,n,:)
+  xtemp1(1,n,:) =  cost*wp(1,:)-sint*wp(2,:)
+  xtemp1(2,n,:) =  sint*wp(1,:)+cost*wp(2,:)
+  xtemp2(1,n,:) =  cost*wm(1,:)+sint*wm(2,:)
+  xtemp2(2,n,:) = -sint*wm(1,:)+cost*wm(2,:)
+  xtemp1(:,n,:) =  0.5_f64*(xtemp1(:,n,:)+xtemp2(:,n,:))
+  xtemp2(1,n,:) =  cost*xtemp1(1,n,:)+sint*xtemp1(2,n,:)
+  xtemp2(2,n,:) = -sint*xtemp1(1,n,:)+cost*xtemp1(2,n,:)
   do m=1,nbpart
     xxt=dreal(xtemp2(:,n,m))
     call apply_bc()
@@ -258,19 +248,13 @@ enddo
 do n=0,ntau-1
   cost = cos(tau(n))
   sint = sin(tau(n))
-  xtemp1(1,n,:)=cost*up(1,n,:)-sint*up(2,n,:)
-  xtemp1(2,n,:)=sint*up(1,n,:)+cost*up(2,n,:)
-  xtemp2(1,n,:)=cost*um(1,n,:)+sint*um(2,n,:)
-  xtemp2(2,n,:)=-sint*um(1,n,:)+cost*um(2,n,:)
-enddo
-
-xtemp1=(xtemp1+xtemp2)/2.0d0
-
-do n=0,ntau-1
-  cost = cos(tau(n))
-  sint = sin(tau(n))
-  xtemp2(1,n,:)=cost*xtemp1(1,n,:)+sint*xtemp1(2,n,:)
-  xtemp2(2,n,:)=-sint*xtemp1(1,n,:)+cost*xtemp1(2,n,:)
+  xtemp1(1,n,:) =   cost*up(1,n,:)-sint*up(2,n,:)
+  xtemp1(2,n,:) =   sint*up(1,n,:)+cost*up(2,n,:)
+  xtemp2(1,n,:) =   cost*um(1,n,:)+sint*um(2,n,:)
+  xtemp2(2,n,:) = - sint*um(1,n,:)+cost*um(2,n,:)
+  xtemp1(:,n,:) = 0.5_f64*(xtemp1(:,n,:)+xtemp2(:,n,:))
+  xtemp2(1,n,:) =   cost*xtemp1(1,n,:)+sint*xtemp1(2,n,:)
+  xtemp2(2,n,:) = - sint*xtemp1(1,n,:)+cost*xtemp1(2,n,:)
   do m=1,nbpart
     xxt=dreal(xtemp2(:,n,m))
     call apply_bc()
@@ -354,13 +338,9 @@ do n=0,ntau-1
   xtemp1(2,n,:) =  sint*up(1,n,:) + cost*up(2,n,:)
   xtemp2(1,n,:) =  cost*um(1,n,:) + sint*um(2,n,:)
   xtemp2(2,n,:) = -sint*um(1,n,:) + cost*um(2,n,:)
-enddo
-xtemp1=(xtemp1+xtemp2)/2.0d0
-do n=0,ntau-1
-  cost = cos(tau(n))
-  sint = sin(tau(n))
-  xtemp2(1,n,:)=cost*xtemp1(1,n,:)+sint*xtemp1(2,n,:)
-  xtemp2(2,n,:)=-sint*xtemp1(1,n,:)+cost*xtemp1(2,n,:)
+  xtemp1(:,n,:) =  0.5_f64*(xtemp1(:,n,:)+xtemp2(:,n,:))
+  xtemp2(1,n,:) =  cost*xtemp1(1,n,:)+sint*xtemp1(2,n,:)
+  xtemp2(2,n,:) = -sint*xtemp1(1,n,:)+cost*xtemp1(2,n,:)
   do m=1,nbpart
     xxt=dreal(xtemp2(:,n,m))
     call apply_bc()
@@ -444,13 +424,9 @@ do n=0,ntau-1
   xtemp1(2,n,:) =  sint*up0(1,n,:) + cost*up0(2,n,:)
   xtemp2(1,n,:) =  cost*um0(1,n,:) + sint*um0(2,n,:)
   xtemp2(2,n,:) = -sint*um0(1,n,:) + cost*um0(2,n,:)
-enddo
-xtemp1=(xtemp1+xtemp2)/2.0d0
-do n=0,ntau-1
-  cost = cos(tau(n))
-  sint = sin(tau(n))
-  xtemp2(1,n,:)=cost*xtemp1(1,n,:)+sint*xtemp1(2,n,:)
-  xtemp2(2,n,:)=-sint*xtemp1(1,n,:)+cost*xtemp1(2,n,:)
+  xtemp1(:,n,:) = 0.5_f64*(xtemp1(:,n,:)+xtemp2(:,n,:))
+  xtemp2(1,n,:) =  cost*xtemp1(1,n,:)+sint*xtemp1(2,n,:)
+  xtemp2(2,n,:) = -sint*xtemp1(1,n,:)+cost*xtemp1(2,n,:)
   do m=1,nbpart
     xxt=dreal(xtemp2(:,n,m))
     call apply_bc()
@@ -536,12 +512,8 @@ do istep = 2, nstep
     xtemp1(2,n,:)= sint*up(1,n,:)+cost*up(2,n,:)
     xtemp2(1,n,:)= cost*um(1,n,:)+sint*um(2,n,:)
     xtemp2(2,n,:)=-sint*um(1,n,:)+cost*um(2,n,:)
-  enddo
-  xtemp1=(xtemp1+xtemp2)/2.0d0
-  do n=0,ntau-1
-    cost = cos(tau(n))
-    sint = sin(tau(n))
-    xtemp2(1,n,:)=cost*xtemp1(1,n,:)+sint*xtemp1(2,n,:)
+    xtemp1(:,n,:)= 0.5_f64*(xtemp1(:,n,:)+xtemp2(:,n,:))
+    xtemp2(1,n,:)= cost*xtemp1(1,n,:)+sint*xtemp1(2,n,:)
     xtemp2(2,n,:)=-sint*xtemp1(1,n,:)+cost*xtemp1(2,n,:)
     do m=1,nbpart
       xxt=dreal(xtemp2(:,n,m))
