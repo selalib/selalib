@@ -27,9 +27,9 @@ sll_real64             :: f_m6
 
 if ( q < 1.0d0 ) then
   f_m6 = (3.0d0-q)**5-6.0d0*(2.0d0-q)**5+15.0d0*(1.0d0-q)**5
-else if ( q < 2.0d0 ) then
+else if ( q >= 1.0d0 .and. q < 2.0d0 ) then
   f_m6 = (3.0d0-q)**5-6.0d0*(2.0d0-q)**5
-else if ( q < 3.0d0 ) then
+else if ( q >= 2.0d0 .and. q < 3.0d0 ) then
   f_m6 = (3.0d0-q)**5
 else
   f_m6 = 0.0d0
