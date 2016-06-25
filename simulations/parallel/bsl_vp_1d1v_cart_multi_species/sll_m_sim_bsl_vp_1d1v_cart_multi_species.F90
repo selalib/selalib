@@ -42,6 +42,11 @@ module sll_m_sim_bsl_vp_1d1v_cart_multi_species
     sll_s_ascii_file_close, &
     sll_s_ascii_file_create
 
+  use sll_m_binary_io, only: &
+    sll_s_binary_file_close, &
+    sll_s_binary_file_create, &
+    sll_s_binary_write_array_1d
+  
   use sll_m_cartesian_meshes, only: &
     sll_o_get_node_positions, &
     sll_f_new_cartesian_mesh_1d, &
@@ -915,6 +920,8 @@ sll_int32  :: split_istep
 sll_real64 :: time
 sll_real64 :: t_step
 sll_real64 :: time_init
+
+sll_int32 :: file_id
  
 logical :: split_T
 
@@ -953,18 +960,38 @@ if (istep == 1) then
   if (sim%driven) call compute_e_app(sim,time_init)
 
   if (mpi_master) then
+     
+     call sll_s_binary_file_create("x_sp1.bdat", file_id, ierr)
+     call sll_s_binary_write_array_1d(file_id,sim%sp(1)%x1_array,ierr)
+     call sll_s_binary_file_close(file_id,ierr)        
+     call sll_s_binary_file_create("x_sp2.bdat", file_id, ierr)
+     call sll_s_binary_write_array_1d(file_id,sim%sp(2)%x1_array,ierr)
+     call sll_s_binary_file_close(file_id,ierr)                             
+     call sll_s_binary_file_create("v_sp1.bdat", file_id, ierr)
+     call sll_s_binary_write_array_1d(file_id,sim%sp(1)%x2_array,ierr)
+     call sll_s_binary_file_close(file_id,ierr)                   
+     call sll_s_binary_file_create("v_sp2.bdat", file_id, ierr)
+     call sll_s_binary_write_array_1d(file_id,sim%sp(2)%x2_array,ierr)
+     call sll_s_binary_file_close(file_id,ierr)
+     call sll_s_ascii_file_create('thdiag.dat' , sim%th_diag_id, ierr)
+     !call sll_s_ascii_file_create('rhotote.dat', sim%rhotote_id, ierr)
+     !call sll_s_ascii_file_create('rhototi.dat', sim%rhototi_id, ierr)
+     !call sll_s_ascii_file_create('efield.dat' , sim%efield_id , ierr)
 
-    call sll_s_ascii_file_create('thdiag.dat' , sim%th_diag_id, ierr)
-    call sll_s_ascii_file_create('rhotote.dat', sim%rhotote_id, ierr)
-    call sll_s_ascii_file_create('rhototi.dat', sim%rhototi_id, ierr)
-    call sll_s_ascii_file_create('efield.dat' , sim%efield_id , ierr)
+     !write(sim%rhototi_id,*) sim%sp(1)%x1_array
+     !write(sim%rhotote_id,*) sim%sp(1)%x1_array
+     !write(sim%efield_id,*)  sim%sp(1)%x1_array
 
-    write(sim%rhototi_id,*) sim%sp(1)%x1_array
-    write(sim%rhotote_id,*) sim%sp(1)%x1_array
-    write(sim%efield_id,*)  sim%sp(1)%x1_array
+     call sll_s_binary_file_create('rhotote.bdat', sim%rhotote_id, ierr)
+     call sll_s_binary_file_create('rhototi.bdat', sim%rhototi_id, ierr)
+     call sll_s_binary_file_create('efield.bdat', sim%efield_id, ierr)
 
-    print *,'#step=',0,time_init,'iplot=',sim%iplot
-
+     call sll_s_binary_write_array_1d(sim%efield_id, sim%efield, ierr)
+     call sll_s_binary_write_array_1d(sim%rhotote_id, sim%sp(1)%rho, ierr)
+     call sll_s_binary_write_array_1d(sim%rhototi_id, sim%sp(2)%rho, ierr)
+     
+     print *,'#step=',0,time_init,'iplot=',sim%iplot
+     
   endif
 
 endif
@@ -1049,9 +1076,9 @@ end if
 if (istep == sim%num_iterations) then
   if(mpi_master)then
     call sll_s_ascii_file_close(sim%th_diag_id,ierr) 
-    call sll_s_ascii_file_close(sim%efield_id,ierr)
-    call sll_s_ascii_file_close(sim%rhotote_id,ierr)
-    call sll_s_ascii_file_close(sim%rhototi_id,ierr)
+    call sll_s_binary_file_close(sim%efield_id,ierr)
+    call sll_s_binary_file_close(sim%rhotote_id,ierr)
+    call sll_s_binary_file_close(sim%rhototi_id,ierr)
   endif
   print*, " 176.00010668708197, 820.34117552361215 "
   print"(2f20.14)", sum(sim%sp(1)%f_x1), sum(sim%sp(2)%f_x1)
@@ -1110,6 +1137,7 @@ sll_real64 :: time
 sll_real64 :: potential_energy
 sll_int32  :: i, k
 sll_int32  :: nc_x1
+sll_int32  :: ierr
 
 nb_mode = sim%nb_mode
 nc_x1 = sim%sp(1)%mesh2d%num_cells1
@@ -1152,10 +1180,13 @@ write(sim%th_diag_id,'(2g20.12)') &
      sim%sp(1)%f_hat_x2(nb_mode+1), &
      sim%sp(2)%f_hat_x2(nb_mode+1)
 
-write(sim%efield_id,*)  sim%efield
-write(sim%rhotote_id,*) sim%sp(1)%rho
-write(sim%rhototi_id,*) sim%sp(2)%rho
+!write(sim%efield_id,*)  sim%efield
+!write(sim%rhotote_id,*) sim%sp(1)%rho
+!write(sim%rhototi_id,*) sim%sp(2)%rho
 
+call sll_s_binary_write_array_1d(sim%efield_id, sim%efield, ierr)
+call sll_s_binary_write_array_1d(sim%rhotote_id, sim%sp(1)%rho, ierr)
+call sll_s_binary_write_array_1d(sim%rhototi_id, sim%sp(2)%rho, ierr)
 end subroutine write_time_history
 
 end module sll_m_sim_bsl_vp_1d1v_cart_multi_species
