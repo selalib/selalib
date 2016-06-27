@@ -34,7 +34,8 @@ complex(8) , allocatable:: pl(:)
 complex(8) , allocatable:: ql(:)
 complex(8) , allocatable:: gp(:,:,:)
 complex(8) , allocatable:: gm(:,:,:)
-complex(8) , allocatable:: wp(:,:)
+complex(8) , allocatable:: wp1(:)
+complex(8) , allocatable:: wp2(:)
 complex(8) , allocatable:: wm(:,:)
 complex(8) , allocatable:: xtmp1(:,:,:)
 complex(8) , allocatable:: xtmp2(:,:,:)
@@ -60,7 +61,6 @@ sll_real64            :: xmax
 sll_real64            :: ymin
 sll_real64            :: ymax
 sll_int32             :: istep
-sll_int32             :: iplot
 sll_int32             :: iargc
 sll_int32             :: n,m
 sll_int32             :: i
@@ -68,7 +68,6 @@ sll_int32             :: j
 sll_int32             :: error
 
 sll_real64            :: aux1, aux2
-sll_real64            :: t1
 sll_real64            :: s, dum
 
 real    :: start_time, stop_time
@@ -96,7 +95,8 @@ SLL_ALLOCATE(pl(0:ntau-1), error)
 SLL_ALLOCATE(ql(0:ntau-1), error)
 SLL_ALLOCATE(gp(2,0:Ntau-1,npp), error)
 SLL_ALLOCATE(gm(2,0:Ntau-1,npp), error)
-SLL_ALLOCATE(wp(2,npp), error)
+SLL_ALLOCATE(wp1(npp), error)
+SLL_ALLOCATE(wp2(npp), error)
 SLL_ALLOCATE(wm(2,npp), error)
 SLL_ALLOCATE(xtmp1(2,0:ntau-1,npp), error)
 SLL_ALLOCATE(xtmp2(2,0:ntau-1,npp), error)
@@ -159,8 +159,8 @@ print"('nbpart = ', g15.3)", nbpart
 print"('dt = ', g15.3)", dt
 poisson => sll_f_new_poisson_2d_periodic(xmin,xmax,nx,ymin,ymax,ny)
 
-wp(1,:) =   2.0d0*((p%dpx+p%idx)*dx+ep*p%vpy)
-wp(2,:) =   2.0d0*((p%dpy+p%idy)*dy-ep*p%vpx)
+wp1(:) =   2.0d0*((p%dpx+p%idx)*dx+ep*p%vpy)
+wp2(:) =   2.0d0*((p%dpy+p%idy)*dy-ep*p%vpx)
 wm(1,:) = - 2.0d0*ep*p%vpy
 wm(2,:) =   2.0d0*ep*p%vpx
 
@@ -168,8 +168,8 @@ do n=0,ntau-1
   cost = cos(tau(n))
   sint = sin(tau(n))
   do m=1,nbpart
-    utmp = 0.5_f64*(cost*wp(1,m)-sint*wp(2,m)+cost*wm(1,m)+sint*wm(2,m))
-    vtmp = 0.5_f64*(sint*wp(1,m)+cost*wp(2,m)-sint*wm(1,m)+cost*wm(2,m))
+    utmp = 0.5_f64*(cost*wp1(m)-sint*wp2(m)+cost*wm(1,m)+sint*wm(2,m))
+    vtmp = 0.5_f64*(sint*wp1(m)+cost*wp2(m)-sint*wm(1,m)+cost*wm(2,m))
     xxt(1)=real( cost*utmp+sint*vtmp)
     xxt(2)=real(-sint*utmp+cost*vtmp)
     call apply_bc()
@@ -199,8 +199,8 @@ do m=1,npp
   temp2(0)=0.0d0
   call sll_s_fft_exec_c2c_1d(PlnB, temp1, temp1)
   call sll_s_fft_exec_c2c_1d(PlnB, temp2, temp2)!AF+
-  up(1,:,m)=wp(1,m)+2.0d0*epsq*(temp1-temp1(0))
-  up(2,:,m)=wp(2,m)+2.0d0*epsq*(temp2-temp2(0))!1st ini data of U_+
+  up(1,:,m)=wp1(m)+2.0d0*epsq*(temp1-temp1(0))
+  up(2,:,m)=wp2(m)+2.0d0*epsq*(temp2-temp2(0))!1st ini data of U_+
   !---
   do n=0,ntau-1
     cost = cos(2.0d0*tau(n))
@@ -283,8 +283,8 @@ do m=1,npp
   temp2(0)=0.0d0
   call sll_s_fft_exec_c2c_1d(PlnB, temp1, temp1)
   call sll_s_fft_exec_c2c_1d(PlnB, temp2, temp2)!AF+
-  up(1,:,m)=wp(1,m)+2.0d0*epsq*(temp1-temp1(0))
-  up(2,:,m)=wp(2,m)+2.0d0*epsq*(temp2-temp2(0))!3rd ini data of U_+
+  up(1,:,m)=wp1(m)+2.0d0*epsq*(temp1-temp1(0))
+  up(2,:,m)=wp2(m)+2.0d0*epsq*(temp2-temp2(0))!3rd ini data of U_+
   !---
   do n=0,ntau-1
     cost = cos(2d0*tau(n))
@@ -609,20 +609,21 @@ sint = sin(0.5_f64*time/epsq)
 do m=1,npp
   call sll_s_fft_exec_c2c_1d(PlnF, up(1,:,m),temp1)
   call sll_s_fft_exec_c2c_1d(PlnF, up(2,:,m),temp2)
-  wp(:,m)=0.0d0
+  wp1(m) = sll_p_i0
+  wp2(m) = sll_p_i0
   do n=0,ntau-1
-    wp(1,m)=wp(1,m)+temp1(n)/Ntau*exp(sll_p_i1*ltau(n)*time*0.5d0/epsq)
-    wp(2,m)=wp(2,m)+temp2(n)/Ntau*exp(sll_p_i1*ltau(n)*time*0.5d0/epsq)
+    wp1(m)=wp1(m)+temp1(n)/Ntau*exp(sll_p_i1*ltau(n)*time*0.5d0/epsq)
+    wp2(m)=wp2(m)+temp2(n)/Ntau*exp(sll_p_i1*ltau(n)*time*0.5d0/epsq)
   enddo
   call sll_s_fft_exec_c2c_1d(PlnF, um(1,:,m),temp1)
   call sll_s_fft_exec_c2c_1d(PlnF, um(2,:,m),temp2)
-  wm(:,m)=0.0d0
+  wm(:,m) = sll_p_i0
   do n=0,ntau-1
     wm(1,m)=wm(1,m)+temp1(n)/Ntau*exp(sll_p_i1*ltau(n)*time*0.5d0/epsq)
     wm(2,m)=wm(2,m)+temp2(n)/Ntau*exp(sll_p_i1*ltau(n)*time*0.5d0/epsq)
   enddo
-  utmp   = 0.5_f64*(cost*wp(1,m)-sint*wp(2,m)+cost*wm(1,m)+sint*wm(2,m))
-  vtmp   = 0.5_f64*(cost*wp(2,m)+sint*wp(1,m)+cost*wm(2,m)-sint*wm(1,m))
+  utmp   = 0.5_f64*(cost*wp1(m)-sint*wp2(m)+cost*wm(1,m)+sint*wm(2,m))
+  vtmp   = 0.5_f64*(cost*wp2(m)+sint*wp1(m)+cost*wm(2,m)-sint*wm(1,m))
   xxt(1) = real(cost*utmp+sint*vtmp)
   xxt(2) = real(cost*vtmp-sint*utmp)
   call apply_bc()
