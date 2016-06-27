@@ -29,32 +29,33 @@ real(8)               :: ep
 real(8)               :: epsq
 real(8)               :: dtau
 
-real(8)    , allocatable:: tau(:)
-real(8)    , allocatable:: ltau(:)
-complex(8) , allocatable:: iltau(:)
-complex(8) , allocatable:: pl(:)
-complex(8) , allocatable:: ql(:)
-complex(8) , allocatable:: gp1(:,:)
-complex(8) , allocatable:: gp2(:,:)
-complex(8) , allocatable:: gm1(:,:)
-complex(8) , allocatable:: gm2(:,:)
-complex(8) , allocatable:: wp1(:)
-complex(8) , allocatable:: wp2(:)
-complex(8) , allocatable:: wm1(:)
-complex(8) , allocatable:: wm2(:)
-complex(8) , allocatable:: xt1(:,:)
-complex(8) , allocatable:: xt2(:,:)
-complex(8) , allocatable:: Et(:,:,:)
-complex(8) , allocatable:: temp1(:)
-complex(8) , allocatable:: temp2(:)
-complex(8) , allocatable:: z(:)
-complex(8) , allocatable:: fex(:,:,:)
-complex(8) , allocatable:: fey(:,:,:)
+real(8)    , allocatable :: tau(:)
+real(8)    , allocatable :: ltau(:)
+complex(8) , allocatable :: iltau(:)
+complex(8) , allocatable :: eiltau(:)
+complex(8) , allocatable :: pl(:)
+complex(8) , allocatable :: ql(:)
+complex(8) , allocatable :: gp1(:,:)
+complex(8) , allocatable :: gp2(:,:)
+complex(8) , allocatable :: gm1(:,:)
+complex(8) , allocatable :: gm2(:,:)
+complex(8) , allocatable :: wp1(:)
+complex(8) , allocatable :: wp2(:)
+complex(8) , allocatable :: wm1(:)
+complex(8) , allocatable :: wm2(:)
+complex(8) , allocatable :: xt1(:,:)
+complex(8) , allocatable :: xt2(:,:)
+complex(8) , allocatable :: Et(:,:,:)
+complex(8) , allocatable :: temp1(:)
+complex(8) , allocatable :: temp2(:)
+complex(8) , allocatable :: z(:)
+complex(8) , allocatable :: fex(:,:,:)
+complex(8) , allocatable :: fey(:,:,:)
 
-complex(8) , allocatable:: up(:,:,:)
-complex(8) , allocatable:: um(:,:,:)
-complex(8) , allocatable:: up0(:,:,:)
-complex(8) , allocatable:: um0(:,:,:)
+complex(8) , allocatable :: up(:,:,:)
+complex(8) , allocatable :: um(:,:,:)
+complex(8) , allocatable :: up0(:,:,:)
+complex(8) , allocatable :: um0(:,:,:)
 
 complex(8) :: utmp
 complex(8) :: vtmp
@@ -96,6 +97,7 @@ call readin( trim(argv) )
 SLL_ALLOCATE(tau(0:Ntau-1),           error)
 SLL_ALLOCATE(ltau(0:Ntau-1),          error)
 SLL_ALLOCATE(iltau(0:Ntau-1),         error)
+SLL_ALLOCATE(eiltau(0:Ntau-1),         error)
 SLL_ALLOCATE(pl(0:ntau-1),            error)
 SLL_ALLOCATE(ql(0:ntau-1),            error)
 SLL_ALLOCATE(wp1(npp),                error)
@@ -126,23 +128,24 @@ SLL_CLEAR_ALLOCATE(f%ey(0:nx,0:ny),   error)
 SLL_CLEAR_ALLOCATE(f%bz(0:nx,0:ny),   error)
 SLL_CLEAR_ALLOCATE(f%r0(0:nx,0:ny),   error)
 
-time  = 0.d0
+time  = 0._f64
 
-ep    = 0.1d0/1.0d0
+ep    = 0.1_f64/1._f64
 epsq  = ep * ep
-dtau  = 2.0d0*sll_p_pi/ntau
+dtau  = 2._f64*sll_p_pi/ntau
 call sll_s_fft_init_c2c_1d(fw,Ntau,temp1,temp1,sll_p_fft_forward)
 call sll_s_fft_init_c2c_1d(bw,Ntau,temp1,temp1,sll_p_fft_backward)
 m=ntau/2
 ltau=(/ (n, n=0,m-1), (n, n=-m,-1 )/)
-iltau = sll_p_i1 * cmplx(ltau,0.0_f64)
+iltau = 0.5_f64 * sll_p_i1 * cmplx(ltau,0.0_f64) / epsq
+eiltau = exp(-iltau*dt)
 
 pl(0)=dt
-ql(0)=dt**2/2.0d0
+ql(0)=dt**2/2._f64
 do i=1,Ntau-1
-  pl(i)=2.0d0*epsq*sll_p_i1*(exp(-iltau(i)*dt/2.0d0/epsq)-1.0d0)/ltau(i)
-  ql(i)=2.0d0*epsq*(2.0d0*epsq*(1.0d0-exp(-iltau(i)*dt/2.0d0/epsq)) &
-                    -iltau(i)*dt)/ltau(i)**2
+  pl(i)=2._f64*epsq*sll_p_i1*(exp(-iltau(i)*dt)-1.0_f64)/ltau(i)
+  ql(i)=2._f64*epsq*(2.0_f64*epsq*(1.0_f64-exp(-iltau(i)*dt)) &
+                    -2.0_f64*epsq*iltau(i)*dt)/ltau(i)**2
 enddo
 do i=0,Ntau-1
   tau(i) =i*dtau
@@ -154,7 +157,7 @@ do i=0,nx
   do j=0,ny
     f%ex(i,j) = aux1
     f%r0(i,j) = aux2+sin(ky*j*dy)
-    f%ey(i,j) = -cos(ky*j*dy)/ky!0.0d0!
+    f%ey(i,j) = -cos(ky*j*dy)/ky!0._f64!
   enddo
 enddo
       
@@ -167,10 +170,10 @@ print"('nbpart = ', g15.3)", nbpart
 print"('dt = ', g15.3)", dt
 poisson => sll_f_new_poisson_2d_periodic(xmin,xmax,nx,ymin,ymax,ny)
 
-wp1(:) =   2.0d0*((p%dpx+p%idx)*dx+ep*p%vpy)
-wp2(:) =   2.0d0*((p%dpy+p%idy)*dy-ep*p%vpx)
-wm1(:) = - 2.0d0*ep*p%vpy
-wm2(:) =   2.0d0*ep*p%vpx
+wp1(:) =   2._f64*((p%dpx+p%idx)*dx+ep*p%vpy)
+wp2(:) =   2._f64*((p%dpy+p%idy)*dy-ep*p%vpx)
+wm1(:) = - 2._f64*ep*p%vpy
+wm2(:) =   2._f64*ep*p%vpx
 
 do n=0,ntau-1
   cost = cos(tau(n))
@@ -187,14 +190,14 @@ do n=0,ntau-1
     p%dpy(m) = real(xxt(2)/dy- p%idy(m), f64)
   enddo
   call interpol_eb_m6( f, p )
-  Et(:,n,1) = p%epx !g(0,tau,w(0))
-  Et(:,n,2) = p%epy
+  Et(:,n,1) = cmplx(p%epx,0.0,f64) !g(0,tau,w(0))
+  Et(:,n,2) = cmplx(p%epy,0.0,f64)
 enddo
 
 do m=1,npp
 
-  temp1= 2.0d0*Et(m,:,2)
-  temp2=-2.0d0*Et(m,:,1)!g_+
+  temp1= 2._f64*Et(m,:,2)
+  temp2=-2._f64*Et(m,:,1)!g_+
   call sll_s_fft_exec_c2c_1d(fw, temp1, temp1)
   call sll_s_fft_exec_c2c_1d(fw, temp2, temp2)
 
@@ -203,18 +206,18 @@ do m=1,npp
     temp2(n)=-sll_p_i1*temp2(n)/ltau(n)/Ntau
   enddo
 
-  temp1(0)=0.0d0
-  temp2(0)=0.0d0
+  temp1(0)=0._f64
+  temp2(0)=0._f64
   call sll_s_fft_exec_c2c_1d(bw, temp1, temp1)
   call sll_s_fft_exec_c2c_1d(bw, temp2, temp2)!AF+
-  up(:,m,1)=wp1(m)+2.0d0*epsq*(temp1-temp1(0))
-  up(:,m,2)=wp2(m)+2.0d0*epsq*(temp2-temp2(0))!1st ini data of U_+
+  up(:,m,1)=wp1(m)+2._f64*epsq*(temp1-temp1(0))
+  up(:,m,2)=wp2(m)+2._f64*epsq*(temp2-temp2(0))!1st ini data of U_+
   !---
   do n=0,ntau-1
-    cost = cos(2.0d0*tau(n))
-    sint = sin(2.0d0*tau(n))
-    temp1(n)=-2.0d0*( sin(2.0d0*tau(n))*Et(m,n,1)+cos(2.0d0*tau(n))*Et(m,n,2))
-    temp2(n)= 2.0d0*(-sin(2.0d0*tau(n))*Et(m,n,2)+cos(2.0d0*tau(n))*Et(m,n,1))!g_-
+    cost = cos(2._f64*tau(n))
+    sint = sin(2._f64*tau(n))
+    temp1(n)=-2._f64*( sin(2.0_f64*tau(n))*Et(m,n,1)+cos(2.0_f64*tau(n))*Et(m,n,2))
+    temp2(n)= 2._f64*(-sin(2.0_f64*tau(n))*Et(m,n,2)+cos(2.0_f64*tau(n))*Et(m,n,1))!g_-
   enddo
   call sll_s_fft_exec_c2c_1d(fw, temp1, temp1)
   call sll_s_fft_exec_c2c_1d(fw, temp2, temp2)
@@ -222,12 +225,12 @@ do m=1,npp
     temp1(n)=-sll_p_i1*temp1(n)/ltau(n)/Ntau
     temp2(n)=-sll_p_i1*temp2(n)/ltau(n)/Ntau
   enddo
-  temp1(0)=0.0d0
-  temp2(0)=0.0d0
+  temp1(0)=0._f64
+  temp2(0)=0._f64
   call sll_s_fft_exec_c2c_1d(bw, temp1, temp1)
   call sll_s_fft_exec_c2c_1d(bw, temp2, temp2)!AF-
-  um(:,m,1)=wm1(m)+2.0d0*epsq*(temp1-temp1(0))
-  um(:,m,2)=wm2(m)+2.0d0*epsq*(temp2-temp2(0))!1st ini data of U_-
+  um(:,m,1)=wm1(m)+2._f64*epsq*(temp1-temp1(0))
+  um(:,m,2)=wm2(m)+2._f64*epsq*(temp2-temp2(0))!1st ini data of U_-
 enddo
 
 !--corrected more initial data
@@ -250,8 +253,8 @@ do n=0,ntau-1
 
   call calcul_rho_m6( p, f )
   call poisson%compute_e_from_rho( f%ex, f%ey, f%r0)
-  fex(:,:,n)=f%ex
-  fey(:,:,n)=f%ey!E_1st(0,x)
+  fex(:,:,n)= cmplx(f%ex,0.0,f64)
+  fey(:,:,n)= cmplx(f%ey,0.0,f64)!E_1st(0,x)
 
 enddo
 
@@ -269,16 +272,16 @@ do n=0,ntau-1
     p%idy(m) = floor(xxt(2)/dimy*ny)
     p%dpy(m) = real(xxt(2)/dy- p%idy(m), f64)
   enddo
-  f%ex=fex(:,:,n)
-  f%ey=fey(:,:,n)
+  f%ex= real(fex(:,:,n))
+  f%ey= real(fey(:,:,n))
   call interpol_eb_m6( f, p )
-  Et(:,n,1)=p%epx !g_1st(0,tau,U_1st(0))
-  Et(:,n,2)=p%epy
+  Et(:,n,1)= cmplx(p%epx,0.0,f64) !g_1st(0,tau,U_1st(0))
+  Et(:,n,2)= cmplx(p%epy,0.0,f64)
 enddo
 
 do m=1,npp
-  temp1= 2.0d0*Et(m,:,2)
-  temp2=-2.0d0*Et(m,:,1)!g_+
+  temp1= 2._f64*Et(m,:,2)
+  temp2=-2._f64*Et(m,:,1)!g_+
   call sll_s_fft_exec_c2c_1d(fw, temp1, temp1)
   call sll_s_fft_exec_c2c_1d(fw, temp2, temp2)
   up0(0,m,1)=temp1(0)/ntau!Pi g_+
@@ -287,18 +290,18 @@ do m=1,npp
     temp1(n)=-sll_p_i1*temp1(n)/ltau(n)/Ntau
     temp2(n)=-sll_p_i1*temp2(n)/ltau(n)/Ntau
   enddo
-  temp1(0)=0.0d0
-  temp2(0)=0.0d0
+  temp1(0)=0._f64
+  temp2(0)=0._f64
   call sll_s_fft_exec_c2c_1d(bw, temp1, temp1)
   call sll_s_fft_exec_c2c_1d(bw, temp2, temp2)!AF+
-  up(:,m,1)=wp1(m)+2.0d0*epsq*(temp1-temp1(0))
-  up(:,m,2)=wp2(m)+2.0d0*epsq*(temp2-temp2(0))!3rd ini data of U_+
+  up(:,m,1)=wp1(m)+2._f64*epsq*(temp1-temp1(0))
+  up(:,m,2)=wp2(m)+2._f64*epsq*(temp2-temp2(0))!3rd ini data of U_+
   !---
   do n=0,ntau-1
-    cost = cos(2d0*tau(n))
-    sint = sin(2d0*tau(n))
-    temp1(n)=-2.0d0*(sint*Et(m,n,1)+cost*Et(m,n,2))
-    temp2(n)=2.0d0*(-sint*Et(m,n,2)+cost*Et(m,n,1))!g_-
+    cost = cos(2_f64*tau(n))
+    sint = sin(2_f64*tau(n))
+    temp1(n)=-2._f64*(sint*Et(m,n,1)+cost*Et(m,n,2))
+    temp2(n)=2._f64*(-sint*Et(m,n,2)+cost*Et(m,n,1))!g_-
   enddo
   call sll_s_fft_exec_c2c_1d(fw, temp1, temp1)
   call sll_s_fft_exec_c2c_1d(fw, temp2, temp2)
@@ -308,12 +311,12 @@ do m=1,npp
     temp1(n)=-sll_p_i1*temp1(n)/ltau(n)/Ntau
     temp2(n)=-sll_p_i1*temp2(n)/ltau(n)/Ntau
   enddo
-  temp1(0)=0.0d0
-  temp2(0)=0.0d0
+  temp1(0)=0._f64
+  temp2(0)=0._f64
   call sll_s_fft_exec_c2c_1d(bw, temp1, temp1)
   call sll_s_fft_exec_c2c_1d(bw, temp2, temp2)!AF-
-  um(:,m,1)=wm1(m)+2.0d0*epsq*(temp1-temp1(0))
-  um(:,m,2)=wm2(m)+2.0d0*epsq*(temp2-temp2(0))!3rd ini data of U_-
+  um(:,m,1)=wm1(m)+2._f64*epsq*(temp1-temp1(0))
+  um(:,m,2)=wm2(m)+2._f64*epsq*(temp2-temp2(0))!3rd ini data of U_-
 
 enddo
 
@@ -333,8 +336,8 @@ do n=0,ntau-1
   enddo
   call calcul_rho_m6( p, f )
   call poisson%compute_e_from_rho( f%ex, f%ey, f%r0)
-  fex(:,:,n)=f%ex
-  fey(:,:,n)=f%ey!E_4(0,x)
+  fex(:,:,n)= cmplx(f%ex,0.0,f64)
+  fey(:,:,n)= cmplx(f%ey,0.0,f64)!E_4(0,x)
 enddo
 
 !--time iteration---
@@ -353,26 +356,26 @@ do n=0,ntau-1
     p%idy(m) = floor(xxt(2)/dimy*ny)
     p%dpy(m) = real(xxt(2)/dy- p%idy(m), f64)
   enddo
-  f%ex=fex(:,:,n)
-  f%ey=fey(:,:,n)
+  f%ex= real(fex(:,:,n))
+  f%ey= real(fey(:,:,n))
   call interpol_eb_m6( f, p )
-  Et(:,n,1)=p%epx !g_3rd(0,tau,U_3rd(0))
-  Et(:,n,2)=p%epy
+  Et(:,n,1)= cmplx(p%epx,0.0,f64) !g_3rd(0,tau,U_3rd(0))
+  Et(:,n,2)= cmplx(p%epy,0.0,f64)
 enddo
 
 do m=1,npp
-  temp1= 2.0d0*Et(m,:,2)
-  temp2=-2.0d0*Et(m,:,1)
+  temp1= 2._f64*Et(m,:,2)
+  temp2=-2._f64*Et(m,:,1)
   call sll_s_fft_exec_c2c_1d(fw, temp1, temp1)
   call sll_s_fft_exec_c2c_1d(fw, temp2, temp2)
   xt1(:,1)=temp1/ntau!g_+tilde(t=0)
   xt1(:,2)=temp2/ntau!g_+tilde(t=0)
   !---
   do n=0,ntau-1
-    cost = cos(2d0*tau(n))
-    sint = sin(2d0*tau(n))
-    temp1(n)=-2.0d0*(sint*Et(m,n,1)+cost*Et(m,n,2))
-    temp2(n)=2.0d0*(-sint*Et(m,n,2)+cost*Et(m,n,1))
+    cost = cos(2_f64*tau(n))
+    sint = sin(2_f64*tau(n))
+    temp1(n)=-2._f64*(sint*Et(m,n,1)+cost*Et(m,n,2))
+    temp2(n)=2._f64*(-sint*Et(m,n,2)+cost*Et(m,n,1))
   enddo
   call sll_s_fft_exec_c2c_1d(fw, temp1, temp1)
   call sll_s_fft_exec_c2c_1d(fw, temp2, temp2)
@@ -382,9 +385,9 @@ do m=1,npp
   call sll_s_fft_exec_c2c_1d(fw, up(:,m,1), temp1)
   call sll_s_fft_exec_c2c_1d(fw, up(:,m,2), temp2)
   do n=0,ntau-1
-    temp1(n)=exp(-iltau(n)*dt*0.5d0/epsq)*temp1(n)/ntau &
+    temp1(n)=exp(-iltau(n)*dt)*temp1(n)/ntau &
              +pl(n)*xt1(n,1)!utilde_+^1,predict
-    temp2(n)=exp(-iltau(n)*dt*0.5d0/epsq)*temp2(n)/ntau &
+    temp2(n)=exp(-iltau(n)*dt)*temp2(n)/ntau &
              +pl(n)*xt1(n,2)!utilde_+^1,predict
   enddo
   call sll_s_fft_exec_c2c_1d(bw, temp1, up0(:,m,1))!u_+(t1),predict
@@ -392,9 +395,9 @@ do m=1,npp
   call sll_s_fft_exec_c2c_1d(fw, um(:,m,1), temp1)
   call sll_s_fft_exec_c2c_1d(fw, um(:,m,2), temp2)
   do n=0,ntau-1
-    temp1(n)=exp(-iltau(n)*dt*0.5d0/epsq)*temp1(n)/ntau &
+    temp1(n)=exp(-iltau(n)*dt)*temp1(n)/ntau &
             +pl(n)*xt2(n,1)!utilde_-^1,predict
-    temp2(n)=exp(-iltau(n)*dt*0.5d0/epsq)*temp2(n)/ntau &
+    temp2(n)=exp(-iltau(n)*dt)*temp2(n)/ntau &
             +pl(n)*xt2(n,2)!utilde_-^1,predict
   enddo
   call sll_s_fft_exec_c2c_1d(bw, temp1, um0(:,m,1))!u_-(t1),predict
@@ -442,27 +445,27 @@ do n=0,ntau-1
     p%idy(m) = floor(xxt(2)/dimy*ny)
     p%dpy(m) = real(xxt(2)/dy- p%idy(m), f64)
   enddo
-  f%ex=fex(:,:,n)
-  f%ey=fey(:,:,n)
+  f%ex= real(fex(:,:,n))
+  f%ey= real(fey(:,:,n))
   call interpol_eb_m6( f, p )
-  Et(:,n,1)=p%epx !g(t1,tau,U(t1))
-  Et(:,n,2)=p%epy
+  Et(:,n,1)= cmplx(p%epx,0.0,f64) !g(t1,tau,U(t1))
+  Et(:,n,2)= cmplx(p%epy,0.0,f64)
 enddo
 
 do m=1,npp
 
-  temp1 =  2.0d0*Et(m,:,2)
-  temp2 = -2.0d0*Et(m,:,1)
+  temp1 =  2._f64*Et(m,:,2)
+  temp2 = -2._f64*Et(m,:,1)
   call sll_s_fft_exec_c2c_1d(fw, temp1, temp1)
   call sll_s_fft_exec_c2c_1d(fw, temp2, temp2)
   xt1(:,1)=temp1/ntau!g_+tilde(t1) predict
   xt1(:,2)=temp2/ntau!g_+tilde(t1) predict
   !---
   do n=0,ntau-1
-    cost = cos(2d0*tau(n))
-    sint = sin(2d0*tau(n))
-    temp1(n) = - 2.0d0*( sint*Et(m,n,1)+cost*Et(m,n,2))
-    temp2(n) =   2.0d0*(-sint*Et(m,n,2)+cost*Et(m,n,1))
+    cost = cos(2_f64*tau(n))
+    sint = sin(2_f64*tau(n))
+    temp1(n) = - 2._f64*( sint*Et(m,n,1)+cost*Et(m,n,2))
+    temp2(n) =   2._f64*(-sint*Et(m,n,2)+cost*Et(m,n,1))
   enddo
 
   call sll_s_fft_exec_c2c_1d(fw, temp1, temp1)
@@ -475,9 +478,9 @@ do m=1,npp
   call sll_s_fft_exec_c2c_1d(fw, up(:,m,2), temp2)
 
   do n=0,ntau-1
-    temp1(n)=exp(-iltau(n)*dt*0.5d0/epsq)*temp1(n)/ntau &
+    temp1(n)=exp(-iltau(n)*dt)*temp1(n)/ntau &
              +pl(n)*xt1(n,1)+ql(n)*(xt1(n,1)-gp1(n,m))/dt
-    temp2(n)=exp(-iltau(n)*dt*0.5d0/epsq)*temp2(n)/ntau &
+    temp2(n)=exp(-iltau(n)*dt)*temp2(n)/ntau &
              +pl(n)*xt1(n,2)+ql(n)*(xt1(n,2)-gp2(n,m))/dt
   enddo
   call sll_s_fft_exec_c2c_1d(bw, temp1, up(:,m,1))!u_+(t1)
@@ -485,9 +488,9 @@ do m=1,npp
   call sll_s_fft_exec_c2c_1d(fw, um(:,m,1), temp1)
   call sll_s_fft_exec_c2c_1d(fw, um(:,m,2), temp2)
   do n=0,ntau-1
-    temp1(n)=exp(-iltau(n)*dt*0.5d0/epsq)*temp1(n)/ntau &
+    temp1(n)=exp(-iltau(n)*dt)*temp1(n)/ntau &
              +pl(n)*xt2(n,1)+ql(n)*(xt2(n,1)-gm1(n,m))/dt
-    temp2(n)=exp(-iltau(n)*dt*0.5d0/epsq)*temp2(n)/ntau &
+    temp2(n)=exp(-iltau(n)*dt)*temp2(n)/ntau &
              +pl(n)*xt2(n,2)+ql(n)*(xt2(n,2)-gm2(n,m))/dt
   enddo
   call sll_s_fft_exec_c2c_1d(bw, temp1, um(:,m,1))!u_-(t1)
@@ -511,8 +514,8 @@ do n=0,ntau-1
   enddo
   call calcul_rho_m6( p, f )
   call poisson%compute_e_from_rho( f%ex, f%ey, f%r0)
-  fex(:,:,n)=f%ex
-  fey(:,:,n)=f%ey
+  fex(:,:,n)= cmplx(f%ex,0.0,f64)
+  fey(:,:,n)= cmplx(f%ey,0.0,f64)
 enddo
 
 !*** Loop over time ***
@@ -533,26 +536,26 @@ do istep = 2, nstep
       p%idy(m) = floor(xxt(2)/dimy*ny)
       p%dpy(m) = real(xxt(2)/dy- p%idy(m), f64)
     enddo
-    f%ex=fex(:,:,n)
-    f%ey=fey(:,:,n)
+    f%ex= real(fex(:,:,n))
+    f%ey= real(fey(:,:,n))
     call interpol_eb_m6( f, p )
-    Et(:,n,1)=p%epx 
-    Et(:,n,2)=p%epy
+    Et(:,n,1)= cmplx(p%epx, 0.0, f64) 
+    Et(:,n,2)= cmplx(p%epy, 0.0, f64)
   enddo
 
   do m=1,npp
-    temp1=  2.0d0*Et(m,:,2)
-    temp2= -2.0d0*Et(m,:,1)
+    temp1=  2._f64*Et(m,:,2)
+    temp2= -2._f64*Et(m,:,1)
     call sll_s_fft_exec_c2c_1d(fw, temp1, temp1)
     call sll_s_fft_exec_c2c_1d(fw, temp2, temp2)
     xt1(:,1)=temp1/ntau
     xt1(:,2)=temp2/ntau
     !---
     do n=0,ntau-1
-      cost = cos(2d0*tau(n))
-      sint = sin(2d0*tau(n))
-      temp1(n) = -2.0d0*( sint*Et(m,n,1)+cost*Et(m,n,2))
-      temp2(n) =  2.0d0*(-sint*Et(m,n,2)+cost*Et(m,n,1))
+      cost = cos(2_f64*tau(n))
+      sint = sin(2_f64*tau(n))
+      temp1(n) = -2._f64*( sint*Et(m,n,1)+cost*Et(m,n,2))
+      temp2(n) =  2._f64*(-sint*Et(m,n,2)+cost*Et(m,n,1))
     enddo
     call sll_s_fft_exec_c2c_1d(fw, temp1, temp1)
     call sll_s_fft_exec_c2c_1d(fw, temp2, temp2)
@@ -562,9 +565,9 @@ do istep = 2, nstep
     call sll_s_fft_exec_c2c_1d(fw, up(:,m,1), temp1)
     call sll_s_fft_exec_c2c_1d(fw, up(:,m,2), temp2)
     do n=0,ntau-1
-      temp1(n)= exp(-iltau(n)*dt*0.5d0/epsq)*temp1(n)/ntau &
+      temp1(n)= exp(-iltau(n)*dt)*temp1(n)/ntau &
                + pl(n)*xt1(n,1)+ql(n)*(xt1(n,1)-gp1(n,m))/dt
-      temp2(n)= exp(-iltau(n)*dt*0.5d0/epsq)*temp2(n)/ntau &
+      temp2(n)= exp(-iltau(n)*dt)*temp2(n)/ntau &
                + pl(n)*xt1(n,2)+ql(n)*(xt1(n,2)-gp2(n,m))/dt
     enddo
     call sll_s_fft_exec_c2c_1d(bw, temp1, up(:,m,1))
@@ -572,9 +575,9 @@ do istep = 2, nstep
     call sll_s_fft_exec_c2c_1d(fw, um(:,m,1), temp1)
     call sll_s_fft_exec_c2c_1d(fw, um(:,m,2), temp2)
     do n=0,ntau-1
-      temp1(n)=exp(-iltau(n)*dt*0.5d0/epsq)*temp1(n)/ntau &
+      temp1(n)=exp(-iltau(n)*dt)*temp1(n)/ntau &
                +pl(n)*xt2(n,1)+ql(n)*(xt2(n,1)-gm1(n,m))/dt
-      temp2(n)=exp(-iltau(n)*dt*0.5d0/epsq)*temp2(n)/ntau &
+      temp2(n)=exp(-iltau(n)*dt)*temp2(n)/ntau &
                +pl(n)*xt2(n,2)+ql(n)*(xt2(n,2)-gm2(n,m))/dt
     enddo
     call sll_s_fft_exec_c2c_1d(bw, temp1, um(:,m,1))
@@ -606,8 +609,8 @@ do istep = 2, nstep
     enddo
     call calcul_rho_m6( p, f )
     call poisson%compute_e_from_rho( f%ex, f%ey, f%r0)
-    fex(:,:,n)=f%ex
-    fey(:,:,n)=f%ey
+    fex(:,:,n) = cmplx(f%ex,0.0,f64)
+    fey(:,:,n) = cmplx(f%ey,0.0,f64)
   enddo
 
 enddo
@@ -623,16 +626,16 @@ do m=1,npp
   wp1(m) = sll_p_i0
   wp2(m) = sll_p_i0
   do n=0,ntau-1
-    wp1(m)=wp1(m)+temp1(n)/Ntau*exp(iltau(n)*time*0.5d0/epsq)
-    wp2(m)=wp2(m)+temp2(n)/Ntau*exp(iltau(n)*time*0.5d0/epsq)
+    wp1(m)=wp1(m)+temp1(n)/Ntau*exp(iltau(n)*time)
+    wp2(m)=wp2(m)+temp2(n)/Ntau*exp(iltau(n)*time)
   enddo
   call sll_s_fft_exec_c2c_1d(fw, um(:,m,1),temp1)
   call sll_s_fft_exec_c2c_1d(fw, um(:,m,2),temp2)
   wm1(m) = sll_p_i0
   wm2(m) = sll_p_i0
   do n=0,ntau-1
-    wm1(m)=wm1(m)+temp1(n)/Ntau*exp(iltau(n)*time*0.5d0/epsq)
-    wm2(m)=wm2(m)+temp2(n)/Ntau*exp(iltau(n)*time*0.5d0/epsq)
+    wm1(m)=wm1(m)+temp1(n)/Ntau*exp(iltau(n)*time)
+    wm2(m)=wm2(m)+temp2(n)/Ntau*exp(iltau(n)*time)
   enddo
   utmp   = 0.5_f64*(cost*wp1(m)-sint*wp2(m)+cost*wm1(m)+sint*wm2(m))
   vtmp   = 0.5_f64*(cost*wp2(m)+sint*wp1(m)+cost*wm2(m)-sint*wm1(m))
