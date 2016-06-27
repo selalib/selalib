@@ -100,7 +100,7 @@ SLL_ALLOCATE(wp(2,npp), error)
 SLL_ALLOCATE(wm(2,npp), error)
 SLL_ALLOCATE(xtmp1(2,0:ntau-1,npp), error)
 SLL_ALLOCATE(xtmp2(2,0:ntau-1,npp), error)
-SLL_ALLOCATE(Et(2,0:ntau-1,npp), error)
+SLL_ALLOCATE(Et(npp,0:ntau-1,2), error)
 SLL_ALLOCATE(temp1(0:Ntau-1), error)
 SLL_ALLOCATE(temp2(0:Ntau-1), error)
 SLL_ALLOCATE(up(2,0:ntau-1,npp), error)
@@ -179,14 +179,14 @@ do n=0,ntau-1
     p%dpy(m) = real(xxt(2)/dy- p%idy(m), f64)
   enddo
   call interpol_eb_m6( f, p )
-  Et(1,n,:)=p%epx !g(0,tau,w(0))
-  Et(2,n,:)=p%epy
+  Et(:,n,1)=p%epx !g(0,tau,w(0))
+  Et(:,n,2)=p%epy
 enddo
 
 do m=1,npp
 
-  temp1(:)=2.0d0*Et(2,:,m)
-  temp2(:)=-2.0d0*Et(1,:,m)!g_+
+  temp1(:)= 2.0d0*Et(m,:,2)
+  temp2(:)=-2.0d0*Et(m,:,1)!g_+
   call sll_s_fft_exec_c2c_1d(PlnF, temp1(:), temp1(:))
   call sll_s_fft_exec_c2c_1d(PlnF, temp2(:), temp2(:))
 
@@ -205,8 +205,8 @@ do m=1,npp
   do n=0,ntau-1
     cost = cos(2.0d0*tau(n))
     sint = sin(2.0d0*tau(n))
-    temp1(n)=-2.0d0*( dsin(2.0d0*tau(n))*Et(1,n,m)+dcos(2.0d0*tau(n))*Et(2,n,m))
-    temp2(n)= 2.0d0*(-dsin(2.0d0*tau(n))*Et(2,n,m)+dcos(2.0d0*tau(n))*Et(1,n,m))!g_-
+    temp1(n)=-2.0d0*( dsin(2.0d0*tau(n))*Et(m,n,1)+dcos(2.0d0*tau(n))*Et(m,n,2))
+    temp2(n)= 2.0d0*(-dsin(2.0d0*tau(n))*Et(m,n,2)+dcos(2.0d0*tau(n))*Et(m,n,1))!g_-
   enddo
   call sll_s_fft_exec_c2c_1d(PlnF, temp1(:), temp1(:))
   call sll_s_fft_exec_c2c_1d(PlnF, temp2(:), temp2(:))
@@ -264,13 +264,13 @@ do n=0,ntau-1
   f%ex=fex(:,:,n)
   f%ey=fey(:,:,n)
   call interpol_eb_m6( f, p )
-  Et(1,n,:)=p%epx !g_1st(0,tau,U_1st(0))
-  Et(2,n,:)=p%epy
+  Et(:,n,1)=p%epx !g_1st(0,tau,U_1st(0))
+  Et(:,n,2)=p%epy
 enddo
 
 do m=1,npp
-  temp1(:)=2.0d0*Et(2,:,m)
-  temp2(:)=-2.0d0*Et(1,:,m)!g_+
+  temp1(:)= 2.0d0*Et(m,:,2)
+  temp2(:)=-2.0d0*Et(m,:,1)!g_+
   call sll_s_fft_exec_c2c_1d(PlnF, temp1(:), temp1(:))
   call sll_s_fft_exec_c2c_1d(PlnF, temp2(:), temp2(:))
   up0(1,0,m)=temp1(0)/ntau!Pi g_+
@@ -289,8 +289,8 @@ do m=1,npp
   do n=0,ntau-1
     cost = cos(2d0*tau(n))
     sint = sin(2d0*tau(n))
-    temp1(n)=-2.0d0*(sint*Et(1,n,m)+cost*Et(2,n,m))
-    temp2(n)=2.0d0*(-sint*Et(2,n,m)+cost*Et(1,n,m))!g_-
+    temp1(n)=-2.0d0*(sint*Et(m,n,1)+cost*Et(m,n,2))
+    temp2(n)=2.0d0*(-sint*Et(m,n,2)+cost*Et(m,n,1))!g_-
   enddo
   call sll_s_fft_exec_c2c_1d(PlnF, temp1(:), temp1(:))
   call sll_s_fft_exec_c2c_1d(PlnF, temp2(:), temp2(:))
@@ -348,13 +348,13 @@ do n=0,ntau-1
   f%ex=fex(:,:,n)
   f%ey=fey(:,:,n)
   call interpol_eb_m6( f, p )
-  Et(1,n,:)=p%epx !g_3rd(0,tau,U_3rd(0))
-  Et(2,n,:)=p%epy
+  Et(:,n,1)=p%epx !g_3rd(0,tau,U_3rd(0))
+  Et(:,n,2)=p%epy
 enddo
 
 do m=1,npp
-  temp1(:)=2.0d0*Et(2,:,m)
-  temp2(:)=-2.0d0*Et(1,:,m)
+  temp1(:)= 2.0d0*Et(m,:,2)
+  temp2(:)=-2.0d0*Et(m,:,1)
   call sll_s_fft_exec_c2c_1d(PlnF, temp1(:), temp1(:))
   call sll_s_fft_exec_c2c_1d(PlnF, temp2(:), temp2(:))
   xtmp1(1,:,m)=temp1/ntau!g_+tilde(t=0)
@@ -363,8 +363,8 @@ do m=1,npp
   do n=0,ntau-1
     cost = cos(2d0*tau(n))
     sint = sin(2d0*tau(n))
-    temp1(n)=-2.0d0*(sint*Et(1,n,m)+cost*Et(2,n,m))
-    temp2(n)=2.0d0*(-sint*Et(2,n,m)+cost*Et(1,n,m))
+    temp1(n)=-2.0d0*(sint*Et(m,n,1)+cost*Et(m,n,2))
+    temp2(n)=2.0d0*(-sint*Et(m,n,2)+cost*Et(m,n,1))
   enddo
   call sll_s_fft_exec_c2c_1d(PlnF, temp1(:), temp1(:))
   call sll_s_fft_exec_c2c_1d(PlnF, temp2(:), temp2(:))
@@ -434,12 +434,12 @@ do n=0,ntau-1
   f%ex=fex(:,:,n)
   f%ey=fey(:,:,n)
   call interpol_eb_m6( f, p )
-  Et(1,n,:)=p%epx !g(t1,tau,U(t1))
-  Et(2,n,:)=p%epy
+  Et(:,n,1)=p%epx !g(t1,tau,U(t1))
+  Et(:,n,2)=p%epy
 enddo
 do m=1,npp
-  temp1(:)=2.0d0*Et(2,:,m)
-  temp2(:)=-2.0d0*Et(1,:,m)
+  temp1(:)= 2.0d0*Et(m,:,2)
+  temp2(:)=-2.0d0*Et(m,:,1)
   call sll_s_fft_exec_c2c_1d(PlnF, temp1(:), temp1(:))
   call sll_s_fft_exec_c2c_1d(PlnF, temp2(:), temp2(:))
   xtmp1(1,:,m)=temp1/ntau!g_+tilde(t1) predict
@@ -448,8 +448,8 @@ do m=1,npp
   do n=0,ntau-1
     cost = cos(2d0*tau(n))
     sint = sin(2d0*tau(n))
-    temp1(n)=-2.0d0*(sint*Et(1,n,m)+cost*Et(2,n,m))
-    temp2(n)=2.0d0*(-sint*Et(2,n,m)+cost*Et(1,n,m))
+    temp1(n)=-2.0d0*(sint*Et(m,n,1)+cost*Et(m,n,2))
+    temp2(n)=2.0d0*(-sint*Et(m,n,2)+cost*Et(m,n,1))
   enddo
   call sll_s_fft_exec_c2c_1d(PlnF, temp1(:), temp1(:))
   call sll_s_fft_exec_c2c_1d(PlnF, temp2(:), temp2(:))
@@ -525,13 +525,13 @@ do istep = 2, nstep
     f%ex=fex(:,:,n)
     f%ey=fey(:,:,n)
     call interpol_eb_m6( f, p )
-    Et(1,n,:)=p%epx 
-    Et(2,n,:)=p%epy
+    Et(:,n,1)=p%epx 
+    Et(:,n,2)=p%epy
   enddo
 
   do m=1,npp
-    temp1(:)=  2.0d0*Et(2,:,m)
-    temp2(:)= -2.0d0*Et(1,:,m)
+    temp1(:)=  2.0d0*Et(m,:,2)
+    temp2(:)= -2.0d0*Et(m,:,1)
     call sll_s_fft_exec_c2c_1d(PlnF, temp1(:), temp1(:))
     call sll_s_fft_exec_c2c_1d(PlnF, temp2(:), temp2(:))
     xtmp1(1,:,m)=temp1/ntau
@@ -540,8 +540,8 @@ do istep = 2, nstep
     do n=0,ntau-1
       cost = cos(2d0*tau(n))
       sint = sin(2d0*tau(n))
-      temp1(n) = -2.0d0*( sint*Et(1,n,m)+cost*Et(2,n,m))
-      temp2(n) =  2.0d0*(-sint*Et(2,n,m)+cost*Et(1,n,m))
+      temp1(n) = -2.0d0*( sint*Et(m,n,1)+cost*Et(m,n,2))
+      temp2(n) =  2.0d0*(-sint*Et(m,n,2)+cost*Et(m,n,1))
     enddo
     call sll_s_fft_exec_c2c_1d(PlnF, temp1(:), temp1(:))
     call sll_s_fft_exec_c2c_1d(PlnF, temp2(:), temp2(:))
