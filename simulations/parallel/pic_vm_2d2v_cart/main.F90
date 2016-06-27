@@ -133,11 +133,15 @@ time  = 0._f64
 ep    = 0.1_f64/1._f64
 epsq  = ep * ep
 dtau  = 2._f64*sll_p_pi/ntau
+
+!$OMP CRITICAL
 call sll_s_fft_init_c2c_1d(fw,Ntau,temp1,temp1,sll_p_fft_forward)
 call sll_s_fft_init_c2c_1d(bw,Ntau,temp1,temp1,sll_p_fft_backward)
-m=ntau/2
-ltau=(/ (n, n=0,m-1), (n, n=-m,-1 )/)
-iltau = 0.5_f64 * sll_p_i1 * cmplx(ltau,0.0_f64) / epsq
+!$OMP END CRITICAL
+
+m = ntau/2
+ltau   =(/ (n, n=0,m-1), (n, n=-m,-1 )/)
+iltau  = 0.5_f64 * sll_p_i1 * cmplx(ltau,0.0_f64) / epsq
 eiltau = exp(-iltau*dt) /ntau
 
 pl(0)=dt
@@ -170,10 +174,10 @@ print"('nbpart = ', g15.3)", nbpart
 print"('dt = ', g15.3)", dt
 poisson => sll_f_new_poisson_2d_periodic(xmin,xmax,nx,ymin,ymax,ny)
 
-wp1(:) =   2._f64*((p%dpx+p%idx)*dx+ep*p%vpy)
-wp2(:) =   2._f64*((p%dpy+p%idy)*dy-ep*p%vpx)
-wm1(:) = - 2._f64*ep*p%vpy
-wm2(:) =   2._f64*ep*p%vpx
+wp1(:) = cmplx(  2._f64*((p%dpx+p%idx)*dx+ep*p%vpy),0.0,f64)
+wp2(:) = cmplx(  2._f64*((p%dpy+p%idy)*dy-ep*p%vpx),0.0,f64)
+wm1(:) = cmplx(- 2._f64*ep*p%vpy,0.0,f64)
+wm2(:) = cmplx(  2._f64*ep*p%vpx,0.0,f64)
 
 do n=0,ntau-1
   cost = cos(tau(n))
@@ -206,18 +210,18 @@ do m=1,npp
     temp2(n)=-sll_p_i1*temp2(n)/ltau(n)/Ntau
   enddo
 
-  temp1(0)=0._f64
-  temp2(0)=0._f64
+  temp1(0)= sll_p_i0
+  temp2(0)= sll_p_i0
   call sll_s_fft_exec_c2c_1d(bw, temp1, temp1)
   call sll_s_fft_exec_c2c_1d(bw, temp2, temp2)!AF+
   up(:,m,1)=wp1(m)+2._f64*epsq*(temp1-temp1(0))
   up(:,m,2)=wp2(m)+2._f64*epsq*(temp2-temp2(0))!1st ini data of U_+
   !---
   do n=0,ntau-1
-    cost = cos(2._f64*tau(n))
-    sint = sin(2._f64*tau(n))
-    temp1(n)=-2._f64*( sin(2.0_f64*tau(n))*Et(m,n,1)+cos(2.0_f64*tau(n))*Et(m,n,2))
-    temp2(n)= 2._f64*(-sin(2.0_f64*tau(n))*Et(m,n,2)+cos(2.0_f64*tau(n))*Et(m,n,1))!g_-
+    cost = cos(2.0_f64*tau(n)) ! not the same dtau
+    sint = sin(2.0_f64*tau(n))
+    temp1(n)=-2._f64*( sint*Et(m,n,1)+cost*Et(m,n,2))
+    temp2(n)= 2._f64*(-sint*Et(m,n,2)+cost*Et(m,n,1))!g_-
   enddo
   call sll_s_fft_exec_c2c_1d(fw, temp1, temp1)
   call sll_s_fft_exec_c2c_1d(fw, temp2, temp2)
@@ -225,8 +229,8 @@ do m=1,npp
     temp1(n)=-sll_p_i1*temp1(n)/ltau(n)/Ntau
     temp2(n)=-sll_p_i1*temp2(n)/ltau(n)/Ntau
   enddo
-  temp1(0)=0._f64
-  temp2(0)=0._f64
+  temp1(0)=sll_p_i0
+  temp2(0)=sll_p_i0
   call sll_s_fft_exec_c2c_1d(bw, temp1, temp1)
   call sll_s_fft_exec_c2c_1d(bw, temp2, temp2)!AF-
   um(:,m,1)=wm1(m)+2._f64*epsq*(temp1-temp1(0))
@@ -290,8 +294,8 @@ do m=1,npp
     temp1(n)=-sll_p_i1*temp1(n)/ltau(n)/Ntau
     temp2(n)=-sll_p_i1*temp2(n)/ltau(n)/Ntau
   enddo
-  temp1(0)=0._f64
-  temp2(0)=0._f64
+  temp1(0)=sll_p_i0
+  temp2(0)=sll_p_i0
   call sll_s_fft_exec_c2c_1d(bw, temp1, temp1)
   call sll_s_fft_exec_c2c_1d(bw, temp2, temp2)!AF+
   up(:,m,1)=wp1(m)+2._f64*epsq*(temp1-temp1(0))
@@ -311,8 +315,8 @@ do m=1,npp
     temp1(n)=-sll_p_i1*temp1(n)/ltau(n)/Ntau
     temp2(n)=-sll_p_i1*temp2(n)/ltau(n)/Ntau
   enddo
-  temp1(0)=0._f64
-  temp2(0)=0._f64
+  temp1(0)=sll_p_i0
+  temp2(0)=sll_p_i0
   call sll_s_fft_exec_c2c_1d(bw, temp1, temp1)
   call sll_s_fft_exec_c2c_1d(bw, temp2, temp2)!AF-
   um(:,m,1)=wm1(m)+2._f64*epsq*(temp1-temp1(0))
