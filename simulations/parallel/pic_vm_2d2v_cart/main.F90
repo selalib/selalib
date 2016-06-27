@@ -55,7 +55,6 @@ sll_real64            :: xmax
 sll_real64            :: ymin
 sll_real64            :: ymax
 sll_int32             :: istep
-sll_int32             :: iplot
 sll_int32             :: iargc
 sll_int32             :: n,m
 sll_int32             :: i
@@ -63,7 +62,6 @@ sll_int32             :: j
 sll_int32             :: error
 
 sll_real64            :: aux1, aux2
-sll_real64            :: t1
 sll_real64            :: s, dum
 
 real    :: start_time, stop_time
@@ -175,8 +173,8 @@ do n=0,ntau-1
     p%dpy(m) = real(xxt(2)/dy- p%idy(m), f64)
   enddo
   call interpol_eb_m6( f, p )
-  Et(1,n,:)=p%epx !g(0,tau,w(0))
-  Et(2,n,:)=p%epy
+  Et(1,n,:)= cmplx(p%epx,0.0,f64) !g(0,tau,w(0))
+  Et(2,n,:)= cmplx(p%epy,0.0,f64)
 enddo
 
 do m=1,npp
@@ -238,8 +236,8 @@ do n=0,ntau-1
 
   call calcul_rho_m6( p, f )
   call poisson%compute_e_from_rho( f%ex, f%ey, f%r0)
-  fex(:,:,n)=f%ex
-  fey(:,:,n)=f%ey!E_1st(0,x)
+  fex(:,:,n)= real(f%ex)
+  fey(:,:,n)= real(f%ey)!E_1st(0,x)
 
 enddo
 
@@ -264,8 +262,8 @@ do n=0,ntau-1
   f%ex=fex(:,:,n)
   f%ey=fey(:,:,n)
   call interpol_eb_m6( f, p )
-  Et(1,n,:)=p%epx !g_1st(0,tau,U_1st(0))
-  Et(2,n,:)=p%epy
+  Et(1,n,:) = cmplx(p%epx,0.0,f64) !g_1st(0,tau,U_1st(0))
+  Et(2,n,:) = cmplx(p%epy,0.0,f64)
 enddo
 
 do m=1,npp
@@ -323,8 +321,8 @@ do n=0,ntau-1
   enddo
   call calcul_rho_m6( p, f )
   call poisson%compute_e_from_rho( f%ex, f%ey, f%r0)
-  fex(:,:,n)=f%ex
-  fey(:,:,n)=f%ey!E_4(0,x)
+  fex(:,:,n)= cmplx(f%ex,0.0,f64)
+  fey(:,:,n)= cmplx(f%ey,0.0,f64)!E_4(0,x)
 enddo
 
 !--time iteration---
@@ -347,11 +345,11 @@ do n=0,ntau-1
     p%idy(m) = floor(xxt(2)/dimy*ny)
     p%dpy(m) = real(xxt(2)/dy- p%idy(m), f64)
   enddo
-  f%ex=fex(:,:,n)
-  f%ey=fey(:,:,n)
+  f%ex= real(fex(:,:,n))
+  f%ey= real(fey(:,:,n))
   call interpol_eb_m6( f, p )
-  Et(1,n,:)=p%epx !g_3rd(0,tau,U_3rd(0))
-  Et(2,n,:)=p%epy
+  Et(1,n,:)= cmplx(p%epx,0.0,f64) !g_3rd(0,tau,U_3rd(0))
+  Et(2,n,:)= cmplx(p%epy,0.0,f64)
 enddo
 
 do m=1,npp
@@ -413,8 +411,8 @@ do n=0,ntau-1
   enddo
   call calcul_rho_m6( p, f )
   call poisson%compute_e_from_rho( f%ex, f%ey, f%r0)
-  fex(:,:,n)=f%ex
-  fey(:,:,n)=f%ey!prediction
+  fex(:,:,n)= cmplx(f%ex,0.0,f64)
+  fey(:,:,n)= cmplx(f%ey,0.0,f64)!prediction
 enddo
 !--correction--
 do n=0,ntau-1
@@ -435,11 +433,11 @@ do n=0,ntau-1
     p%idy(m) = floor(xxt(2)/dimy*ny)
     p%dpy(m) = real(xxt(2)/dy- p%idy(m), f64)
   enddo
-  f%ex=fex(:,:,n)
-  f%ey=fey(:,:,n)
+  f%ex= real(fex(:,:,n))
+  f%ey= real(fey(:,:,n))
   call interpol_eb_m6( f, p )
-  Et(1,n,:)=p%epx !g(t1,tau,U(t1))
-  Et(2,n,:)=p%epy
+  Et(1,n,:)= cmplx(p%epx, 0.0, f64) !g(t1,tau,U(t1))
+  Et(2,n,:)= cmplx(p%epy, 0.0, f64)
 enddo
 do m=1,npp
   temp(1,:)=2.0d0*Et(2,:,m)
@@ -500,8 +498,8 @@ do n=0,ntau-1
   enddo
   call calcul_rho_m6( p, f )
   call poisson%compute_e_from_rho( f%ex, f%ey, f%r0)
-  fex(:,:,n)=f%ex
-  fey(:,:,n)=f%ey
+  fex(:,:,n)=cmplx(f%ex,0.0,f64)
+  fey(:,:,n)=cmplx(f%ey,0.0,f64)
 enddo
 
 do istep = 2, nstep
@@ -523,11 +521,11 @@ do istep = 2, nstep
       p%idy(m) = floor(xxt(2)/dimy*ny)
       p%dpy(m) = real(xxt(2)/dy- p%idy(m), f64)
     enddo
-    f%ex=fex(:,:,n)
-    f%ey=fey(:,:,n)
+    f%ex= real(fex(:,:,n))
+    f%ey= real(fey(:,:,n))
     call interpol_eb_m6( f, p )
-    Et(1,n,:)=p%epx 
-    Et(2,n,:)=p%epy
+    Et(1,n,:) = cmplx(p%epx,0.0,f64)
+    Et(2,n,:) = cmplx(p%epy,0.0,f64)
   enddo
   do m=1,npp
     temp(1,:)=2.0d0*Et(2,:,m)
@@ -591,8 +589,8 @@ do istep = 2, nstep
     enddo
     call calcul_rho_m6( p, f )
     call poisson%compute_e_from_rho( f%ex, f%ey, f%r0)
-    fex(:,:,n)=f%ex
-    fey(:,:,n)=f%ey
+    fex(:,:,n)=cmplx(f%ex,0.0,f64)
+    fey(:,:,n)=cmplx(f%ey,0.0,f64)
   enddo
 enddo
 
