@@ -43,13 +43,14 @@ complex(8) , allocatable:: xtmp2(:,:,:)
 complex(8) , allocatable:: Et(:,:,:)
 complex(8) , allocatable:: temp1(:)
 complex(8) , allocatable:: temp2(:)
-complex(8) , allocatable:: up(:,:,:)
-complex(8) , allocatable:: um(:,:,:)
 complex(8) , allocatable:: vp(:,:)
 complex(8) , allocatable:: vm(:,:)
 complex(8) , allocatable:: z(:)
 complex(8) , allocatable:: fex(:,:,:)
 complex(8) , allocatable:: fey(:,:,:)
+
+complex(8) , allocatable:: up(:,:,:)
+complex(8) , allocatable:: um(:,:,:)
 complex(8) , allocatable:: up0(:,:,:)
 complex(8) , allocatable:: um0(:,:,:)
 
@@ -90,45 +91,43 @@ end do
 
 call readin( trim(argv) )
 
-SLL_ALLOCATE(tau(0:Ntau-1), error)
-SLL_ALLOCATE(ltau(0:Ntau-1), error)
-SLL_ALLOCATE(pl(0:ntau-1), error)
-SLL_ALLOCATE(ql(0:ntau-1), error)
-SLL_ALLOCATE(gp(2,0:Ntau-1,npp), error)
-SLL_ALLOCATE(gm(2,0:Ntau-1,npp), error)
-SLL_ALLOCATE(wp1(npp), error)
-SLL_ALLOCATE(wp2(npp), error)
-SLL_ALLOCATE(wm1(npp), error)
-SLL_ALLOCATE(wm2(npp), error)
-SLL_ALLOCATE(xtmp1(2,0:ntau-1,npp), error)
-SLL_ALLOCATE(xtmp2(2,0:ntau-1,npp), error)
-SLL_ALLOCATE(Et(npp,0:ntau-1,2), error)
-SLL_ALLOCATE(temp1(0:Ntau-1), error)
-SLL_ALLOCATE(temp2(0:Ntau-1), error)
-SLL_ALLOCATE(up(2,0:ntau-1,npp), error)
-SLL_ALLOCATE(um(2,0:ntau-1,npp), error)
-SLL_ALLOCATE(vp(2,npp), error)
-SLL_ALLOCATE(vm(2,npp), error)
-SLL_ALLOCATE(z(2), error)
+SLL_ALLOCATE(tau(0:Ntau-1),           error)
+SLL_ALLOCATE(ltau(0:Ntau-1),          error)
+SLL_ALLOCATE(pl(0:ntau-1),            error)
+SLL_ALLOCATE(ql(0:ntau-1),            error)
+SLL_ALLOCATE(gp(2,0:Ntau-1,npp),      error)
+SLL_ALLOCATE(gm(2,0:Ntau-1,npp),      error)
+SLL_ALLOCATE(wp1(npp),                error)
+SLL_ALLOCATE(wp2(npp),                error)
+SLL_ALLOCATE(wm1(npp),                error)
+SLL_ALLOCATE(wm2(npp),                error)
+SLL_ALLOCATE(xtmp1(2,0:ntau-1,npp),   error)
+SLL_ALLOCATE(xtmp2(2,0:ntau-1,npp),   error)
+SLL_ALLOCATE(Et(npp,0:ntau-1,2),      error)
+SLL_ALLOCATE(temp1(0:Ntau-1),         error)
+SLL_ALLOCATE(temp2(0:Ntau-1),         error)
+SLL_ALLOCATE(up(2,0:ntau-1,npp),      error)
+SLL_ALLOCATE(um(2,0:ntau-1,npp),      error)
+SLL_ALLOCATE(vp(2,npp),               error)
+SLL_ALLOCATE(vm(2,npp),               error)
+SLL_ALLOCATE(z(2),                    error)
 SLL_ALLOCATE(fex(0:64,0:32,0:ntau-1), error)
 SLL_ALLOCATE(fey(0:64,0:32,0:ntau-1), error)
-SLL_ALLOCATE(up0(2,0:ntau-1,npp), error)
-SLL_ALLOCATE(um0(2,0:ntau-1,npp), error)
+SLL_ALLOCATE(up0(npp,0:ntau-1,2),     error)
+SLL_ALLOCATE(um0(npp,0:ntau-1,2),     error)
 
-SLL_CLEAR_ALLOCATE(f%ex(0:nx,0:ny), error)
-SLL_CLEAR_ALLOCATE(f%ey(0:nx,0:ny), error)
-SLL_CLEAR_ALLOCATE(f%bz(0:nx,0:ny), error)
-SLL_CLEAR_ALLOCATE(f%r0(0:nx,0:ny), error)
+SLL_CLEAR_ALLOCATE(f%ex(0:nx,0:ny),   error)
+SLL_CLEAR_ALLOCATE(f%ey(0:nx,0:ny),   error)
+SLL_CLEAR_ALLOCATE(f%bz(0:nx,0:ny),   error)
+SLL_CLEAR_ALLOCATE(f%r0(0:nx,0:ny),   error)
 
 time  = 0.d0
 
 ep    = 0.1d0/1.0d0
 epsq  = ep * ep
 dtau  = 2.0d0*sll_p_pi/ntau
-call sll_s_fft_init_c2c_1d(fw,Ntau,temp1, &
-  temp1,sll_p_fft_forward,optimization=sll_p_fft_measure)
-call sll_s_fft_init_c2c_1d(bw,Ntau,temp1, &
-  temp1,sll_p_fft_backward,optimization=sll_p_fft_measure)
+call sll_s_fft_init_c2c_1d(fw,Ntau,temp1,temp1,sll_p_fft_forward)
+call sll_s_fft_init_c2c_1d(bw,Ntau,temp1,temp1,sll_p_fft_backward)
 m=ntau/2
 ltau=(/ (n, n=0,m-1), (n, n=-m,-1 )/)
 pl(0)=dt
@@ -170,10 +169,10 @@ do n=0,ntau-1
   cost = cos(tau(n))
   sint = sin(tau(n))
   do m=1,nbpart
-    utmp = 0.5_f64*(cost*wp1(m)-sint*wp2(m)+cost*wm1(m)+sint*wm2(m))
-    vtmp = 0.5_f64*(sint*wp1(m)+cost*wp2(m)-sint*wm1(m)+cost*wm2(m))
-    xxt(1)=real( cost*utmp+sint*vtmp)
-    xxt(2)=real(-sint*utmp+cost*vtmp)
+    utmp   = 0.5_f64*(cost*wp1(m)-sint*wp2(m)+cost*wm1(m)+sint*wm2(m))
+    vtmp   = 0.5_f64*(sint*wp1(m)+cost*wp2(m)-sint*wm1(m)+cost*wm2(m))
+    xxt(1) = real( cost*utmp+sint*vtmp)
+    xxt(2) = real(-sint*utmp+cost*vtmp)
     call apply_bc()
     p%idx(m) = floor(xxt(1)/dimx*nx)
     p%dpx(m) = real(xxt(1)/dx- p%idx(m), f64)
@@ -207,8 +206,8 @@ do m=1,npp
   do n=0,ntau-1
     cost = cos(2.0d0*tau(n))
     sint = sin(2.0d0*tau(n))
-    temp1(n)=-2.0d0*( dsin(2.0d0*tau(n))*Et(m,n,1)+dcos(2.0d0*tau(n))*Et(m,n,2))
-    temp2(n)= 2.0d0*(-dsin(2.0d0*tau(n))*Et(m,n,2)+dcos(2.0d0*tau(n))*Et(m,n,1))!g_-
+    temp1(n)=-2.0d0*( sin(2.0d0*tau(n))*Et(m,n,1)+cos(2.0d0*tau(n))*Et(m,n,2))
+    temp2(n)= 2.0d0*(-sin(2.0d0*tau(n))*Et(m,n,2)+cos(2.0d0*tau(n))*Et(m,n,1))!g_-
   enddo
   call sll_s_fft_exec_c2c_1d(fw, temp1, temp1)
   call sll_s_fft_exec_c2c_1d(fw, temp2, temp2)
@@ -275,8 +274,8 @@ do m=1,npp
   temp2=-2.0d0*Et(m,:,1)!g_+
   call sll_s_fft_exec_c2c_1d(fw, temp1, temp1)
   call sll_s_fft_exec_c2c_1d(fw, temp2, temp2)
-  up0(1,0,m)=temp1(0)/ntau!Pi g_+
-  up0(2,0,m)=temp2(0)/ntau!Pi g_+
+  up0(m,0,1)=temp1(0)/ntau!Pi g_+
+  up0(m,0,2)=temp2(0)/ntau!Pi g_+
   do n=1,Ntau-1
     temp1(n)=-sll_p_i1*temp1(n)/ltau(n)/Ntau
     temp2(n)=-sll_p_i1*temp2(n)/ltau(n)/Ntau
@@ -296,8 +295,8 @@ do m=1,npp
   enddo
   call sll_s_fft_exec_c2c_1d(fw, temp1, temp1)
   call sll_s_fft_exec_c2c_1d(fw, temp2, temp2)
-  um0(1,0,m)=temp1(0)/ntau!Pi g_-
-  um0(2,0,m)=temp2(0)/ntau!Pi g_-
+  um0(m,0,1)=temp1(0)/ntau!Pi g_-
+  um0(m,0,2)=temp2(0)/ntau!Pi g_-
   do n=1,Ntau-1
     temp1(n)=-sll_p_i1*temp1(n)/ltau(n)/Ntau
     temp2(n)=-sll_p_i1*temp2(n)/ltau(n)/Ntau
@@ -383,8 +382,8 @@ do m=1,npp
     temp2(n)=exp(-sll_p_i1*ltau(n)*dt*0.5d0/epsq)*temp2(n)/ntau &
              +pl(n)*xtmp1(2,n,m)!utilde_+^1,predict
   enddo
-  call sll_s_fft_exec_c2c_1d(bw, temp1, up0(1,:,m))!u_+(t1),predict
-  call sll_s_fft_exec_c2c_1d(bw, temp2, up0(2,:,m))
+  call sll_s_fft_exec_c2c_1d(bw, temp1, up0(m,:,1))!u_+(t1),predict
+  call sll_s_fft_exec_c2c_1d(bw, temp2, up0(m,:,2))
   call sll_s_fft_exec_c2c_1d(fw, um(1,:,m), temp1)
   call sll_s_fft_exec_c2c_1d(fw, um(2,:,m), temp2)
   do n=0,ntau-1
@@ -393,8 +392,8 @@ do m=1,npp
     temp2(n)=exp(-sll_p_i1*ltau(n)*dt*0.5d0/epsq)*temp2(n)/ntau &
              +pl(n)*xtmp2(2,n,m)!utilde_-^1,predict
   enddo
-  call sll_s_fft_exec_c2c_1d(bw, temp1, um0(1,:,m))!u_-(t1),predict
-  call sll_s_fft_exec_c2c_1d(bw, temp2, um0(2,:,m))
+  call sll_s_fft_exec_c2c_1d(bw, temp1, um0(m,:,1))!u_-(t1),predict
+  call sll_s_fft_exec_c2c_1d(bw, temp2, um0(m,:,2))
 enddo
 
 gp=xtmp1
@@ -403,8 +402,8 @@ do n=0,ntau-1
   cost = cos(tau(n))
   sint = sin(tau(n))
   do m=1,nbpart
-    utmp = 0.5_f64*(cost*up0(1,n,m)-sint*up0(2,n,m)+cost*um0(1,n,m)+sint*um0(2,n,m))
-    vtmp = 0.5_f64*(sint*up0(1,n,m)+cost*up0(2,n,m)-sint*um0(1,n,m)+cost*um0(2,n,m))
+    utmp = 0.5_f64*(cost*up0(m,n,1)-sint*up0(m,n,2)+cost*um0(m,n,1)+sint*um0(m,n,2))
+    vtmp = 0.5_f64*(sint*up0(m,n,1)+cost*up0(m,n,2)-sint*um0(m,n,1)+cost*um0(m,n,2))
     xxt(1)=real( cost*utmp+sint*vtmp)
     xxt(2)=real(-sint*utmp+cost*vtmp)
     call apply_bc()
@@ -423,8 +422,8 @@ do n=0,ntau-1
   cost = cos(tau(n))
   sint = sin(tau(n))
   do m=1,nbpart
-    utmp = 0.5_f64*(cost*up0(1,n,m)-sint*up0(2,n,m)+cost*um0(1,n,m)+sint*um0(2,n,m))
-    vtmp = 0.5_f64*(sint*up0(1,n,m)+cost*up0(2,n,m)-sint*um0(1,n,m)+cost*um0(2,n,m))
+    utmp = 0.5_f64*(cost*up0(m,n,1)-sint*up0(m,n,2)+cost*um0(m,n,1)+sint*um0(m,n,2))
+    vtmp = 0.5_f64*(sint*up0(m,n,1)+cost*up0(m,n,2)-sint*um0(m,n,1)+cost*um0(m,n,2))
     xxt(1)=real( cost*utmp+sint*vtmp)
     xxt(2)=real(-sint*utmp+cost*vtmp)
     call apply_bc()
