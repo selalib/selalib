@@ -15,7 +15,6 @@ use sll_m_xdmf
 
 implicit none
 
-sll_comp64, parameter :: sll_p_i0      = (0.0_f64, 0.0_f64)
 sll_int32             :: n             = 128
 sll_int32             :: ntau          = 32
 sll_real64            :: final_time    = 0.4_f64
