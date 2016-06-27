@@ -31,6 +31,7 @@ real(8)               :: dtau
 
 real(8)    , allocatable:: tau(:)
 real(8)    , allocatable:: ltau(:)
+complex(8) , allocatable:: iltau(:)
 complex(8) , allocatable:: pl(:)
 complex(8) , allocatable:: ql(:)
 complex(8) , allocatable:: gp1(:,:)
@@ -94,6 +95,7 @@ call readin( trim(argv) )
 
 SLL_ALLOCATE(tau(0:Ntau-1),           error)
 SLL_ALLOCATE(ltau(0:Ntau-1),          error)
+SLL_ALLOCATE(iltau(0:Ntau-1),         error)
 SLL_ALLOCATE(pl(0:ntau-1),            error)
 SLL_ALLOCATE(ql(0:ntau-1),            error)
 SLL_ALLOCATE(wp1(npp),                error)
@@ -133,12 +135,14 @@ call sll_s_fft_init_c2c_1d(fw,Ntau,temp1,temp1,sll_p_fft_forward)
 call sll_s_fft_init_c2c_1d(bw,Ntau,temp1,temp1,sll_p_fft_backward)
 m=ntau/2
 ltau=(/ (n, n=0,m-1), (n, n=-m,-1 )/)
+iltau = sll_p_i1 * cmplx(ltau,0.0_f64)
+
 pl(0)=dt
 ql(0)=dt**2/2.0d0
 do i=1,Ntau-1
-  pl(i)=2.0d0*epsq*sll_p_i1*(exp(-sll_p_i1*ltau(i)*dt/2.0d0/epsq)-1.0d0)/ltau(i)
-  ql(i)=2.0d0*epsq*(2.0d0*epsq*(1.0d0-exp(-sll_p_i1*ltau(i)*dt/2.0d0/epsq)) &
-                    -sll_p_i1*ltau(i)*dt)/ltau(i)**2
+  pl(i)=2.0d0*epsq*sll_p_i1*(exp(-iltau(i)*dt/2.0d0/epsq)-1.0d0)/ltau(i)
+  ql(i)=2.0d0*epsq*(2.0d0*epsq*(1.0d0-exp(-iltau(i)*dt/2.0d0/epsq)) &
+                    -iltau(i)*dt)/ltau(i)**2
 enddo
 do i=0,Ntau-1
   tau(i) =i*dtau
@@ -183,8 +187,8 @@ do n=0,ntau-1
     p%dpy(m) = real(xxt(2)/dy- p%idy(m), f64)
   enddo
   call interpol_eb_m6( f, p )
-  Et(:,n,1)=p%epx !g(0,tau,w(0))
-  Et(:,n,2)=p%epy
+  Et(:,n,1) = p%epx !g(0,tau,w(0))
+  Et(:,n,2) = p%epy
 enddo
 
 do m=1,npp
@@ -378,9 +382,9 @@ do m=1,npp
   call sll_s_fft_exec_c2c_1d(fw, up(:,m,1), temp1)
   call sll_s_fft_exec_c2c_1d(fw, up(:,m,2), temp2)
   do n=0,ntau-1
-    temp1(n)=exp(-sll_p_i1*ltau(n)*dt*0.5d0/epsq)*temp1(n)/ntau &
+    temp1(n)=exp(-iltau(n)*dt*0.5d0/epsq)*temp1(n)/ntau &
              +pl(n)*xt1(n,1)!utilde_+^1,predict
-    temp2(n)=exp(-sll_p_i1*ltau(n)*dt*0.5d0/epsq)*temp2(n)/ntau &
+    temp2(n)=exp(-iltau(n)*dt*0.5d0/epsq)*temp2(n)/ntau &
              +pl(n)*xt1(n,2)!utilde_+^1,predict
   enddo
   call sll_s_fft_exec_c2c_1d(bw, temp1, up0(:,m,1))!u_+(t1),predict
@@ -388,9 +392,9 @@ do m=1,npp
   call sll_s_fft_exec_c2c_1d(fw, um(:,m,1), temp1)
   call sll_s_fft_exec_c2c_1d(fw, um(:,m,2), temp2)
   do n=0,ntau-1
-    temp1(n)=exp(-sll_p_i1*ltau(n)*dt*0.5d0/epsq)*temp1(n)/ntau &
+    temp1(n)=exp(-iltau(n)*dt*0.5d0/epsq)*temp1(n)/ntau &
             +pl(n)*xt2(n,1)!utilde_-^1,predict
-    temp2(n)=exp(-sll_p_i1*ltau(n)*dt*0.5d0/epsq)*temp2(n)/ntau &
+    temp2(n)=exp(-iltau(n)*dt*0.5d0/epsq)*temp2(n)/ntau &
             +pl(n)*xt2(n,2)!utilde_-^1,predict
   enddo
   call sll_s_fft_exec_c2c_1d(bw, temp1, um0(:,m,1))!u_-(t1),predict
@@ -471,9 +475,9 @@ do m=1,npp
   call sll_s_fft_exec_c2c_1d(fw, up(:,m,2), temp2)
 
   do n=0,ntau-1
-    temp1(n)=exp(-sll_p_i1*ltau(n)*dt*0.5d0/epsq)*temp1(n)/ntau &
+    temp1(n)=exp(-iltau(n)*dt*0.5d0/epsq)*temp1(n)/ntau &
              +pl(n)*xt1(n,1)+ql(n)*(xt1(n,1)-gp1(n,m))/dt
-    temp2(n)=exp(-sll_p_i1*ltau(n)*dt*0.5d0/epsq)*temp2(n)/ntau &
+    temp2(n)=exp(-iltau(n)*dt*0.5d0/epsq)*temp2(n)/ntau &
              +pl(n)*xt1(n,2)+ql(n)*(xt1(n,2)-gp2(n,m))/dt
   enddo
   call sll_s_fft_exec_c2c_1d(bw, temp1, up(:,m,1))!u_+(t1)
@@ -481,9 +485,9 @@ do m=1,npp
   call sll_s_fft_exec_c2c_1d(fw, um(:,m,1), temp1)
   call sll_s_fft_exec_c2c_1d(fw, um(:,m,2), temp2)
   do n=0,ntau-1
-    temp1(n)=exp(-sll_p_i1*ltau(n)*dt*0.5d0/epsq)*temp1(n)/ntau &
+    temp1(n)=exp(-iltau(n)*dt*0.5d0/epsq)*temp1(n)/ntau &
              +pl(n)*xt2(n,1)+ql(n)*(xt2(n,1)-gm1(n,m))/dt
-    temp2(n)=exp(-sll_p_i1*ltau(n)*dt*0.5d0/epsq)*temp2(n)/ntau &
+    temp2(n)=exp(-iltau(n)*dt*0.5d0/epsq)*temp2(n)/ntau &
              +pl(n)*xt2(n,2)+ql(n)*(xt2(n,2)-gm2(n,m))/dt
   enddo
   call sll_s_fft_exec_c2c_1d(bw, temp1, um(:,m,1))!u_-(t1)
@@ -558,9 +562,9 @@ do istep = 2, nstep
     call sll_s_fft_exec_c2c_1d(fw, up(:,m,1), temp1)
     call sll_s_fft_exec_c2c_1d(fw, up(:,m,2), temp2)
     do n=0,ntau-1
-      temp1(n)= exp(-sll_p_i1*ltau(n)*dt*0.5d0/epsq)*temp1(n)/ntau &
+      temp1(n)= exp(-iltau(n)*dt*0.5d0/epsq)*temp1(n)/ntau &
                + pl(n)*xt1(n,1)+ql(n)*(xt1(n,1)-gp1(n,m))/dt
-      temp2(n)= exp(-sll_p_i1*ltau(n)*dt*0.5d0/epsq)*temp2(n)/ntau &
+      temp2(n)= exp(-iltau(n)*dt*0.5d0/epsq)*temp2(n)/ntau &
                + pl(n)*xt1(n,2)+ql(n)*(xt1(n,2)-gp2(n,m))/dt
     enddo
     call sll_s_fft_exec_c2c_1d(bw, temp1, up(:,m,1))
@@ -568,9 +572,9 @@ do istep = 2, nstep
     call sll_s_fft_exec_c2c_1d(fw, um(:,m,1), temp1)
     call sll_s_fft_exec_c2c_1d(fw, um(:,m,2), temp2)
     do n=0,ntau-1
-      temp1(n)=exp(-sll_p_i1*ltau(n)*dt*0.5d0/epsq)*temp1(n)/ntau &
+      temp1(n)=exp(-iltau(n)*dt*0.5d0/epsq)*temp1(n)/ntau &
                +pl(n)*xt2(n,1)+ql(n)*(xt2(n,1)-gm1(n,m))/dt
-      temp2(n)=exp(-sll_p_i1*ltau(n)*dt*0.5d0/epsq)*temp2(n)/ntau &
+      temp2(n)=exp(-iltau(n)*dt*0.5d0/epsq)*temp2(n)/ntau &
                +pl(n)*xt2(n,2)+ql(n)*(xt2(n,2)-gm2(n,m))/dt
     enddo
     call sll_s_fft_exec_c2c_1d(bw, temp1, um(:,m,1))
@@ -619,16 +623,16 @@ do m=1,npp
   wp1(m) = sll_p_i0
   wp2(m) = sll_p_i0
   do n=0,ntau-1
-    wp1(m)=wp1(m)+temp1(n)/Ntau*exp(sll_p_i1*ltau(n)*time*0.5d0/epsq)
-    wp2(m)=wp2(m)+temp2(n)/Ntau*exp(sll_p_i1*ltau(n)*time*0.5d0/epsq)
+    wp1(m)=wp1(m)+temp1(n)/Ntau*exp(iltau(n)*time*0.5d0/epsq)
+    wp2(m)=wp2(m)+temp2(n)/Ntau*exp(iltau(n)*time*0.5d0/epsq)
   enddo
   call sll_s_fft_exec_c2c_1d(fw, um(:,m,1),temp1)
   call sll_s_fft_exec_c2c_1d(fw, um(:,m,2),temp2)
   wm1(m) = sll_p_i0
   wm2(m) = sll_p_i0
   do n=0,ntau-1
-    wm1(m)=wm1(m)+temp1(n)/Ntau*exp(sll_p_i1*ltau(n)*time*0.5d0/epsq)
-    wm2(m)=wm2(m)+temp2(n)/Ntau*exp(sll_p_i1*ltau(n)*time*0.5d0/epsq)
+    wm1(m)=wm1(m)+temp1(n)/Ntau*exp(iltau(n)*time*0.5d0/epsq)
+    wm2(m)=wm2(m)+temp2(n)/Ntau*exp(iltau(n)*time*0.5d0/epsq)
   enddo
   utmp   = 0.5_f64*(cost*wp1(m)-sint*wp2(m)+cost*wm1(m)+sint*wm2(m))
   vtmp   = 0.5_f64*(cost*wp2(m)+sint*wp1(m)+cost*wm2(m)-sint*wm1(m))
