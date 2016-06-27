@@ -43,8 +43,6 @@ complex(8) , allocatable:: xtmp2(:,:,:)
 complex(8) , allocatable:: Et(:,:,:)
 complex(8) , allocatable:: temp1(:)
 complex(8) , allocatable:: temp2(:)
-complex(8) , allocatable:: vp(:,:)
-complex(8) , allocatable:: vm(:,:)
 complex(8) , allocatable:: z(:)
 complex(8) , allocatable:: fex(:,:,:)
 complex(8) , allocatable:: fey(:,:,:)
@@ -106,15 +104,13 @@ SLL_ALLOCATE(xtmp2(2,0:ntau-1,npp),   error)
 SLL_ALLOCATE(Et(npp,0:ntau-1,2),      error)
 SLL_ALLOCATE(temp1(0:Ntau-1),         error)
 SLL_ALLOCATE(temp2(0:Ntau-1),         error)
-SLL_ALLOCATE(up(2,0:ntau-1,npp),      error)
-SLL_ALLOCATE(um(2,0:ntau-1,npp),      error)
-SLL_ALLOCATE(vp(2,npp),               error)
-SLL_ALLOCATE(vm(2,npp),               error)
+SLL_ALLOCATE(up(0:ntau-1,npp,2),      error)
+SLL_ALLOCATE(um(0:ntau-1,npp,2),      error)
+SLL_ALLOCATE(up0(0:ntau-1,npp,2),     error)
+SLL_ALLOCATE(um0(0:ntau-1,npp,2),     error)
 SLL_ALLOCATE(z(2),                    error)
 SLL_ALLOCATE(fex(0:64,0:32,0:ntau-1), error)
 SLL_ALLOCATE(fey(0:64,0:32,0:ntau-1), error)
-SLL_ALLOCATE(up0(npp,0:ntau-1,2),     error)
-SLL_ALLOCATE(um0(npp,0:ntau-1,2),     error)
 
 SLL_CLEAR_ALLOCATE(f%ex(0:nx,0:ny),   error)
 SLL_CLEAR_ALLOCATE(f%ey(0:nx,0:ny),   error)
@@ -200,8 +196,8 @@ do m=1,npp
   temp2(0)=0.0d0
   call sll_s_fft_exec_c2c_1d(bw, temp1, temp1)
   call sll_s_fft_exec_c2c_1d(bw, temp2, temp2)!AF+
-  up(1,:,m)=wp1(m)+2.0d0*epsq*(temp1-temp1(0))
-  up(2,:,m)=wp2(m)+2.0d0*epsq*(temp2-temp2(0))!1st ini data of U_+
+  up(:,m,1)=wp1(m)+2.0d0*epsq*(temp1-temp1(0))
+  up(:,m,2)=wp2(m)+2.0d0*epsq*(temp2-temp2(0))!1st ini data of U_+
   !---
   do n=0,ntau-1
     cost = cos(2.0d0*tau(n))
@@ -219,8 +215,8 @@ do m=1,npp
   temp2(0)=0.0d0
   call sll_s_fft_exec_c2c_1d(bw, temp1, temp1)
   call sll_s_fft_exec_c2c_1d(bw, temp2, temp2)!AF-
-  um(1,:,m)=wm1(m)+2.0d0*epsq*(temp1-temp1(0))
-  um(2,:,m)=wm2(m)+2.0d0*epsq*(temp2-temp2(0))!1st ini data of U_-
+  um(:,m,1)=wm1(m)+2.0d0*epsq*(temp1-temp1(0))
+  um(:,m,2)=wm2(m)+2.0d0*epsq*(temp2-temp2(0))!1st ini data of U_-
 enddo
 
 !--corrected more initial data
@@ -230,8 +226,8 @@ do n=0,ntau-1
   sint = sin(tau(n))
 
   do m=1,nbpart
-    utmp = 0.5_f64*(cost*up(1,n,m)-sint*up(2,n,m)+cost*um(1,n,m)+sint*um(2,n,m))
-    vtmp = 0.5_f64*(sint*up(1,n,m)+cost*up(2,n,m)-sint*um(1,n,m)+cost*um(2,n,m))
+    utmp = 0.5_f64*(cost*up(n,m,1)-sint*up(n,m,2)+cost*um(n,m,1)+sint*um(n,m,2))
+    vtmp = 0.5_f64*(sint*up(n,m,1)+cost*up(n,m,2)-sint*um(n,m,1)+cost*um(n,m,2))
     xxt(1)=real( cost*utmp+sint*vtmp)
     xxt(2)=real(-sint*utmp+cost*vtmp)
     call apply_bc()
@@ -252,8 +248,8 @@ do n=0,ntau-1
   cost = cos(tau(n))
   sint = sin(tau(n))
   do m=1,nbpart
-    utmp = 0.5_f64*(cost*up(1,n,m)-sint*up(2,n,m)+cost*um(1,n,m)+sint*um(2,n,m))
-    vtmp = 0.5_f64*(sint*up(1,n,m)+cost*up(2,n,m)-sint*um(1,n,m)+cost*um(2,n,m))
+    utmp = 0.5_f64*(cost*up(n,m,1)-sint*up(n,m,2)+cost*um(n,m,1)+sint*um(n,m,2))
+    vtmp = 0.5_f64*(sint*up(n,m,1)+cost*up(n,m,2)-sint*um(n,m,1)+cost*um(n,m,2))
     xxt(1)=real( cost*utmp+sint*vtmp)
     xxt(2)=real(-sint*utmp+cost*vtmp)
     call apply_bc()
@@ -274,8 +270,8 @@ do m=1,npp
   temp2=-2.0d0*Et(m,:,1)!g_+
   call sll_s_fft_exec_c2c_1d(fw, temp1, temp1)
   call sll_s_fft_exec_c2c_1d(fw, temp2, temp2)
-  up0(m,0,1)=temp1(0)/ntau!Pi g_+
-  up0(m,0,2)=temp2(0)/ntau!Pi g_+
+  up0(0,m,1)=temp1(0)/ntau!Pi g_+
+  up0(0,m,2)=temp2(0)/ntau!Pi g_+
   do n=1,Ntau-1
     temp1(n)=-sll_p_i1*temp1(n)/ltau(n)/Ntau
     temp2(n)=-sll_p_i1*temp2(n)/ltau(n)/Ntau
@@ -284,8 +280,8 @@ do m=1,npp
   temp2(0)=0.0d0
   call sll_s_fft_exec_c2c_1d(bw, temp1, temp1)
   call sll_s_fft_exec_c2c_1d(bw, temp2, temp2)!AF+
-  up(1,:,m)=wp1(m)+2.0d0*epsq*(temp1-temp1(0))
-  up(2,:,m)=wp2(m)+2.0d0*epsq*(temp2-temp2(0))!3rd ini data of U_+
+  up(:,m,1)=wp1(m)+2.0d0*epsq*(temp1-temp1(0))
+  up(:,m,2)=wp2(m)+2.0d0*epsq*(temp2-temp2(0))!3rd ini data of U_+
   !---
   do n=0,ntau-1
     cost = cos(2d0*tau(n))
@@ -295,8 +291,8 @@ do m=1,npp
   enddo
   call sll_s_fft_exec_c2c_1d(fw, temp1, temp1)
   call sll_s_fft_exec_c2c_1d(fw, temp2, temp2)
-  um0(m,0,1)=temp1(0)/ntau!Pi g_-
-  um0(m,0,2)=temp2(0)/ntau!Pi g_-
+  um0(0,m,1)=temp1(0)/ntau!Pi g_-
+  um0(0,m,2)=temp2(0)/ntau!Pi g_-
   do n=1,Ntau-1
     temp1(n)=-sll_p_i1*temp1(n)/ltau(n)/Ntau
     temp2(n)=-sll_p_i1*temp2(n)/ltau(n)/Ntau
@@ -305,8 +301,8 @@ do m=1,npp
   temp2(0)=0.0d0
   call sll_s_fft_exec_c2c_1d(bw, temp1, temp1)
   call sll_s_fft_exec_c2c_1d(bw, temp2, temp2)!AF-
-  um(1,:,m)=wm1(m)+2.0d0*epsq*(temp1-temp1(0))
-  um(2,:,m)=wm2(m)+2.0d0*epsq*(temp2-temp2(0))!3rd ini data of U_-
+  um(:,m,1)=wm1(m)+2.0d0*epsq*(temp1-temp1(0))
+  um(:,m,2)=wm2(m)+2.0d0*epsq*(temp2-temp2(0))!3rd ini data of U_-
 
 enddo
 
@@ -314,8 +310,8 @@ do n=0,ntau-1
   cost = cos(tau(n))
   sint = sin(tau(n))
   do m=1,nbpart
-    utmp = 0.5_f64*(cost*up(1,n,m)-sint*up(2,n,m)+cost*um(1,n,m)+sint*um(2,n,m))
-    vtmp = 0.5_f64*(sint*up(1,n,m)+cost*up(2,n,m)-sint*um(1,n,m)+cost*um(2,n,m))
+    utmp = 0.5_f64*(cost*up(n,m,1)-sint*up(n,m,2)+cost*um(n,m,1)+sint*um(n,m,2))
+    vtmp = 0.5_f64*(sint*up(n,m,1)+cost*up(n,m,2)-sint*um(n,m,1)+cost*um(n,m,2))
     xxt(1)=real( cost*utmp+sint*vtmp)
     xxt(2)=real(-sint*utmp+cost*vtmp)
     call apply_bc()
@@ -336,8 +332,8 @@ do n=0,ntau-1
   cost = cos(tau(n))
   sint = sin(tau(n))
   do m=1,nbpart
-    utmp = 0.5_f64*(cost*up(1,n,m)-sint*up(2,n,m)+cost*um(1,n,m)+sint*um(2,n,m))
-    vtmp = 0.5_f64*(sint*up(1,n,m)+cost*up(2,n,m)-sint*um(1,n,m)+cost*um(2,n,m))
+    utmp = 0.5_f64*(cost*up(n,m,1)-sint*up(n,m,2)+cost*um(n,m,1)+sint*um(n,m,2))
+    vtmp = 0.5_f64*(sint*up(n,m,1)+cost*up(n,m,2)-sint*um(n,m,1)+cost*um(n,m,2))
     xxt(1)=real( cost*utmp+sint*vtmp)
     xxt(2)=real(-sint*utmp+cost*vtmp)
     call apply_bc()
@@ -374,26 +370,26 @@ do m=1,npp
 enddo
 
 do m=1,npp
-  call sll_s_fft_exec_c2c_1d(fw, up(1,:,m), temp1)
-  call sll_s_fft_exec_c2c_1d(fw, up(2,:,m), temp2)
+  call sll_s_fft_exec_c2c_1d(fw, up(:,m,1), temp1)
+  call sll_s_fft_exec_c2c_1d(fw, up(:,m,2), temp2)
   do n=0,ntau-1
     temp1(n)=exp(-sll_p_i1*ltau(n)*dt*0.5d0/epsq)*temp1(n)/ntau &
              +pl(n)*xtmp1(1,n,m)!utilde_+^1,predict
     temp2(n)=exp(-sll_p_i1*ltau(n)*dt*0.5d0/epsq)*temp2(n)/ntau &
              +pl(n)*xtmp1(2,n,m)!utilde_+^1,predict
   enddo
-  call sll_s_fft_exec_c2c_1d(bw, temp1, up0(m,:,1))!u_+(t1),predict
-  call sll_s_fft_exec_c2c_1d(bw, temp2, up0(m,:,2))
-  call sll_s_fft_exec_c2c_1d(fw, um(1,:,m), temp1)
-  call sll_s_fft_exec_c2c_1d(fw, um(2,:,m), temp2)
+  call sll_s_fft_exec_c2c_1d(bw, temp1, up0(:,m,1))!u_+(t1),predict
+  call sll_s_fft_exec_c2c_1d(bw, temp2, up0(:,m,2))
+  call sll_s_fft_exec_c2c_1d(fw, um(:,m,1), temp1)
+  call sll_s_fft_exec_c2c_1d(fw, um(:,m,2), temp2)
   do n=0,ntau-1
     temp1(n)=exp(-sll_p_i1*ltau(n)*dt*0.5d0/epsq)*temp1(n)/ntau &
             +pl(n)*xtmp2(1,n,m)!utilde_-^1,predict
     temp2(n)=exp(-sll_p_i1*ltau(n)*dt*0.5d0/epsq)*temp2(n)/ntau &
              +pl(n)*xtmp2(2,n,m)!utilde_-^1,predict
   enddo
-  call sll_s_fft_exec_c2c_1d(bw, temp1, um0(m,:,1))!u_-(t1),predict
-  call sll_s_fft_exec_c2c_1d(bw, temp2, um0(m,:,2))
+  call sll_s_fft_exec_c2c_1d(bw, temp1, um0(:,m,1))!u_-(t1),predict
+  call sll_s_fft_exec_c2c_1d(bw, temp2, um0(:,m,2))
 enddo
 
 gp=xtmp1
@@ -402,8 +398,8 @@ do n=0,ntau-1
   cost = cos(tau(n))
   sint = sin(tau(n))
   do m=1,nbpart
-    utmp = 0.5_f64*(cost*up0(m,n,1)-sint*up0(m,n,2)+cost*um0(m,n,1)+sint*um0(m,n,2))
-    vtmp = 0.5_f64*(sint*up0(m,n,1)+cost*up0(m,n,2)-sint*um0(m,n,1)+cost*um0(m,n,2))
+    utmp = 0.5_f64*(cost*up0(n,m,1)-sint*up0(n,m,2)+cost*um0(n,m,1)+sint*um0(n,m,2))
+    vtmp = 0.5_f64*(sint*up0(n,m,1)+cost*up0(n,m,2)-sint*um0(n,m,1)+cost*um0(n,m,2))
     xxt(1)=real( cost*utmp+sint*vtmp)
     xxt(2)=real(-sint*utmp+cost*vtmp)
     call apply_bc()
@@ -422,8 +418,8 @@ do n=0,ntau-1
   cost = cos(tau(n))
   sint = sin(tau(n))
   do m=1,nbpart
-    utmp = 0.5_f64*(cost*up0(m,n,1)-sint*up0(m,n,2)+cost*um0(m,n,1)+sint*um0(m,n,2))
-    vtmp = 0.5_f64*(sint*up0(m,n,1)+cost*up0(m,n,2)-sint*um0(m,n,1)+cost*um0(m,n,2))
+    utmp = 0.5_f64*(cost*up0(n,m,1)-sint*up0(n,m,2)+cost*um0(n,m,1)+sint*um0(n,m,2))
+    vtmp = 0.5_f64*(sint*up0(n,m,1)+cost*up0(n,m,2)-sint*um0(n,m,1)+cost*um0(n,m,2))
     xxt(1)=real( cost*utmp+sint*vtmp)
     xxt(2)=real(-sint*utmp+cost*vtmp)
     call apply_bc()
@@ -459,8 +455,8 @@ do m=1,npp
 enddo
 
 do m=1,npp
-  call sll_s_fft_exec_c2c_1d(fw, up(1,:,m), temp1)
-  call sll_s_fft_exec_c2c_1d(fw, up(2,:,m), temp2)
+  call sll_s_fft_exec_c2c_1d(fw, up(:,m,1), temp1)
+  call sll_s_fft_exec_c2c_1d(fw, up(:,m,2), temp2)
   do n=0,ntau-1
     temp1(n)=exp(-sll_p_i1*ltau(n)*dt*0.5d0/epsq)*temp1(n)/ntau &
              +pl(n)*xtmp1(1,n,m) &
@@ -469,10 +465,10 @@ do m=1,npp
              +pl(n)*xtmp1(2,n,m) &
              +ql(n)*(xtmp1(2,n,m)-gp(2,n,m))/dt
   enddo
-  call sll_s_fft_exec_c2c_1d(bw, temp1, up(1,:,m))!u_+(t1)
-  call sll_s_fft_exec_c2c_1d(bw, temp2, up(2,:,m))
-  call sll_s_fft_exec_c2c_1d(fw, um(1,:,m), temp1)
-  call sll_s_fft_exec_c2c_1d(fw, um(2,:,m), temp2)
+  call sll_s_fft_exec_c2c_1d(bw, temp1, up(:,m,1))!u_+(t1)
+  call sll_s_fft_exec_c2c_1d(bw, temp2, up(:,m,2))
+  call sll_s_fft_exec_c2c_1d(fw, um(:,m,1), temp1)
+  call sll_s_fft_exec_c2c_1d(fw, um(:,m,2), temp2)
   do n=0,ntau-1
     temp1(n)=exp(-sll_p_i1*ltau(n)*dt*0.5d0/epsq)*temp1(n)/ntau &
              +pl(n)*xtmp2(1,n,m) &
@@ -481,16 +477,16 @@ do m=1,npp
              +pl(n)*xtmp2(2,n,m) &
              +ql(n)*(xtmp2(2,n,m)-gm(2,n,m))/dt
   enddo
-  call sll_s_fft_exec_c2c_1d(bw, temp1, um(1,:,m))!u_-(t1)
-  call sll_s_fft_exec_c2c_1d(bw, temp2, um(2,:,m))
+  call sll_s_fft_exec_c2c_1d(bw, temp1, um(:,m,1))!u_-(t1)
+  call sll_s_fft_exec_c2c_1d(bw, temp2, um(:,m,2))
 enddo
 
 do n=0,ntau-1
   cost = cos(tau(n))
   sint = sin(tau(n))
   do m=1,nbpart
-    utmp = 0.5_f64*(cost*up(1,n,m)-sint*up(2,n,m)+cost*um(1,n,m)+sint*um(2,n,m))
-    vtmp = 0.5_f64*(sint*up(1,n,m)+cost*up(2,n,m)-sint*um(1,n,m)+cost*um(2,n,m))
+    utmp = 0.5_f64*(cost*up(n,m,1)-sint*up(n,m,2)+cost*um(n,m,1)+sint*um(n,m,2))
+    vtmp = 0.5_f64*(sint*up(n,m,1)+cost*up(n,m,2)-sint*um(n,m,1)+cost*um(n,m,2))
     xxt(1)=real( cost*utmp+sint*vtmp)
     xxt(2)=real(-sint*utmp+cost*vtmp)
     call apply_bc()
@@ -513,8 +509,8 @@ do istep = 2, nstep
     cost = cos(tau(n))
     sint = sin(tau(n))
     do m=1,nbpart
-      utmp = 0.5_f64*(cost*up(1,n,m)-sint*up(2,n,m)+cost*um(1,n,m)+sint*um(2,n,m))
-      vtmp = 0.5_f64*(sint*up(1,n,m)+cost*up(2,n,m)-sint*um(1,n,m)+cost*um(2,n,m))
+      utmp = 0.5_f64*(cost*up(n,m,1)-sint*up(n,m,2)+cost*um(n,m,1)+sint*um(n,m,2))
+      vtmp = 0.5_f64*(sint*up(n,m,1)+cost*up(n,m,2)-sint*um(n,m,1)+cost*um(n,m,2))
       xxt(1)=real( cost*utmp+sint*vtmp)
       xxt(2)=real(-sint*utmp+cost*vtmp)
       call apply_bc()
@@ -551,8 +547,8 @@ do istep = 2, nstep
   enddo
 
   do m=1,npp
-    call sll_s_fft_exec_c2c_1d(fw, up(1,:,m), temp1)
-    call sll_s_fft_exec_c2c_1d(fw, up(2,:,m), temp2)
+    call sll_s_fft_exec_c2c_1d(fw, up(:,m,1), temp1)
+    call sll_s_fft_exec_c2c_1d(fw, up(:,m,2), temp2)
     do n=0,ntau-1
       temp1(n)= exp(-sll_p_i1*ltau(n)*dt*0.5d0/epsq)*temp1(n)/ntau &
                + pl(n)*xtmp1(1,n,m) &
@@ -561,10 +557,10 @@ do istep = 2, nstep
                + pl(n)*xtmp1(2,n,m) &
                + ql(n)*(xtmp1(2,n,m)-gp(2,n,m))/dt
     enddo
-    call sll_s_fft_exec_c2c_1d(bw, temp1, up(1,:,m))
-    call sll_s_fft_exec_c2c_1d(bw, temp2, up(2,:,m))
-    call sll_s_fft_exec_c2c_1d(fw, um(1,:,m), temp1)
-    call sll_s_fft_exec_c2c_1d(fw, um(2,:,m), temp2)
+    call sll_s_fft_exec_c2c_1d(bw, temp1, up(:,m,1))
+    call sll_s_fft_exec_c2c_1d(bw, temp2, up(:,m,2))
+    call sll_s_fft_exec_c2c_1d(fw, um(:,m,1), temp1)
+    call sll_s_fft_exec_c2c_1d(fw, um(:,m,2), temp2)
     do n=0,ntau-1
       temp1(n)=exp(-sll_p_i1*ltau(n)*dt*0.5d0/epsq)*temp1(n)/ntau &
                +pl(n)*xtmp2(1,n,m) &
@@ -573,8 +569,8 @@ do istep = 2, nstep
                +pl(n)*xtmp2(2,n,m) &
                +ql(n)*(xtmp2(2,n,m)-gm(2,n,m))/dt
     enddo
-    call sll_s_fft_exec_c2c_1d(bw, temp1, um(1,:,m))
-    call sll_s_fft_exec_c2c_1d(bw, temp2, um(2,:,m))
+    call sll_s_fft_exec_c2c_1d(bw, temp1, um(:,m,1))
+    call sll_s_fft_exec_c2c_1d(bw, temp2, um(:,m,2))
   enddo
   gp=xtmp1
   gm=xtmp2
@@ -584,8 +580,8 @@ do istep = 2, nstep
     cost = cos(tau(n))
     sint = sin(tau(n))
     do m=1,nbpart
-      utmp = 0.5_f64*(cost*up(1,n,m)-sint*up(2,n,m)+cost*um(1,n,m)+sint*um(2,n,m))
-      vtmp = 0.5_f64*(sint*up(1,n,m)+cost*up(2,n,m)-sint*um(1,n,m)+cost*um(2,n,m))
+      utmp = 0.5_f64*(cost*up(n,m,1)-sint*up(n,m,2)+cost*um(n,m,1)+sint*um(n,m,2))
+      vtmp = 0.5_f64*(sint*up(n,m,1)+cost*up(n,m,2)-sint*um(n,m,1)+cost*um(n,m,2))
       xxt(1)=real( cost*utmp+sint*vtmp)
       xxt(2)=real(-sint*utmp+cost*vtmp)
       call apply_bc()
@@ -608,16 +604,16 @@ cost = cos(0.5_f64*time/epsq)
 sint = sin(0.5_f64*time/epsq)
 
 do m=1,npp
-  call sll_s_fft_exec_c2c_1d(fw, up(1,:,m),temp1)
-  call sll_s_fft_exec_c2c_1d(fw, up(2,:,m),temp2)
+  call sll_s_fft_exec_c2c_1d(fw, up(:,m,1),temp1)
+  call sll_s_fft_exec_c2c_1d(fw, up(:,m,2),temp2)
   wp1(m) = sll_p_i0
   wp2(m) = sll_p_i0
   do n=0,ntau-1
     wp1(m)=wp1(m)+temp1(n)/Ntau*exp(sll_p_i1*ltau(n)*time*0.5d0/epsq)
     wp2(m)=wp2(m)+temp2(n)/Ntau*exp(sll_p_i1*ltau(n)*time*0.5d0/epsq)
   enddo
-  call sll_s_fft_exec_c2c_1d(fw, um(1,:,m),temp1)
-  call sll_s_fft_exec_c2c_1d(fw, um(2,:,m),temp2)
+  call sll_s_fft_exec_c2c_1d(fw, um(:,m,1),temp1)
+  call sll_s_fft_exec_c2c_1d(fw, um(:,m,2),temp2)
   wm1(m) = sll_p_i0
   wm2(m) = sll_p_i0
   do n=0,ntau-1
