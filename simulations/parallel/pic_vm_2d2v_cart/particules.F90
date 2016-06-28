@@ -21,6 +21,11 @@ type particle
   sll_real64, pointer :: p(:)
 end type particle
 
+sll_real64, allocatable, private :: ehx(:,:)
+sll_real64, allocatable, private :: ehy(:,:)
+sll_real64, allocatable, private :: bhz(:,:)
+
+
 CONTAINS
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -182,22 +187,22 @@ enddo
 !--add by me: rejection sampling--
 k=1
 do while (k<=nbpart)
-    call random_number(xi)
-    xi=dimx*xi
-    call random_number(yi)
-    yi=dimy*yi
-    call random_number(zi)
-    zi=(2.0d0+alpha)*zi
-    temm=1.0d0+dsin(yi)+alpha*dcos(kx*xi)
-    if (temm>=zi) then
-        ele%idx(k) = floor(xi/dimx*nx)
-        ele%idy(k) = floor(yi/dimy*ny)
-        ele%dpx(k) = real(xi/dx - ele%idx(k), f64)
-        ele%dpy(k) = real(yi/dy - ele%idy(k), f64)
-        k=k+1
-    endif
+  call random_number(xi)
+  xi=dimx*xi
+  call random_number(yi)
+  yi=dimy*yi
+  call random_number(zi)
+  zi=(2.0d0+alpha)*zi
+  temm=1.0d0+dsin(yi)+alpha*dcos(kx*xi)
+  if (temm>=zi) then
+    ele%idx(k) = floor(xi/dimx*nx)
+    ele%idy(k) = floor(yi/dimy*ny)
+    ele%dpx(k) = real(xi/dx - ele%idx(k), f64)
+    ele%dpy(k) = real(yi/dy - ele%idy(k), f64)
+    k=k+1
+  endif
 enddo
-print*,'PASSED'
+
 end subroutine plasma
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -246,10 +251,6 @@ sll_real32           :: cm1y
 sll_real32           :: cp1y
 sll_real64           :: e(-1:1,-1:1)
 
-sll_real64, allocatable :: ehx(:,:)
-sll_real64, allocatable :: ehy(:,:)
-sll_real64, allocatable :: bhz(:,:)
-
 e(-1,-1) =  1.0_f64/36.0_f64
 e( 0,-1) =  4.0_f64/36.0_f64
 e(+1,-1) =  1.0_f64/36.0_f64
@@ -260,9 +261,9 @@ e(-1,+1) =  1.0_f64/36.0_f64
 e( 0,+1) =  4.0_f64/36.0_f64
 e(+1,+1) =  1.0_f64/36.0_f64
 
-allocate(ehx(0:nx-1,0:ny-1))
-allocate(ehy(0:nx-1,0:ny-1))
-allocate(bhz(0:nx-1,0:ny-1))
+if (.not. allocated(ehx)) allocate(ehx(0:nx-1,0:ny-1))
+if (.not. allocated(ehy)) allocate(ehy(0:nx-1,0:ny-1))
+if (.not. allocated(bhz)) allocate(bhz(0:nx-1,0:ny-1))
 
 do j = 0, ny
   jm1 = modulo(j-1,ny)
@@ -416,16 +417,7 @@ do k=1,nbpart
 
 end do
 
-!tm1%ex = ehx
-!tm1%ey = ehy
-!tm1%bz = bhz
-
-deallocate(ehx)
-deallocate(ehy)
-deallocate(bhz)
-
 end subroutine interpol_eb_m4
-
 
 subroutine calcul_rho_m4( ele, tm )
 
