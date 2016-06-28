@@ -7,7 +7,6 @@ $donnees
   cfl      = 0.9 		!nombre de Courant-Friedrich-Levy
   tfinal   = 1.0  	!temps final
   idiag    = 10    	!frequence des sorties graphiques
-  bcname   = "period"	!type de conditions limites
   exext    = 0.		!champ electrique exterieur suivant x
   eyext    = 0.	 	!champ electriaue exterieur suivant y
   bzext    = 0.		!champ magnetique exterieur
