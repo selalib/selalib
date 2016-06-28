@@ -2,36 +2,35 @@ module zone
 #include "sll_working_precision.h"
 use sll_m_working_precision
 
-type tm_mesh_fields
-   sll_real64, dimension(:,:), pointer :: ex
-   sll_real64, dimension(:,:), pointer :: ey
-   sll_real64, dimension(:,:), pointer :: bz
-   sll_real64, dimension(:,:), pointer :: r0
+private
+
+type, public :: tm_mesh_fields
+  sll_real64, dimension(:,:), pointer :: ex
+  sll_real64, dimension(:,:), pointer :: ey
+  sll_real64, dimension(:,:), pointer :: bz
+  sll_real64, dimension(:,:), pointer :: r0
 end type tm_mesh_fields
 
+sll_real64, public :: pi 
 
 logical :: relativ 
 
-sll_real64 :: pi 
+sll_int32,  public :: nx         ! Number of cells along x
+sll_int32,  public :: ny         ! Number of cells along y
+sll_int32,  public :: nstep      ! Time step number
+sll_int32,  public :: nbpart     ! Number of particles
+sll_real64, public :: dimx       ! Domain length along x
+sll_real64, public :: dimy       ! Domain length along y
+sll_real64, public :: dx         ! dimx / nx
+sll_real64, public :: dy         ! dimy / ny
+sll_real64, public :: dt         ! Time step
+sll_real64, public :: alpha      ! Perturbation amplitude
+sll_real64, public :: kx         ! Perturbation wave number along x
+sll_real64, public :: ky         ! Perturbation wave number along y
+sll_real64, public :: poids      ! Size of particle
 
-character(len=6) :: bcname = 'period' 
-
-sll_int32  :: nx         ! Number of cells along x
-sll_int32  :: ny         ! Number of cells along y
-sll_real64 :: dimx       ! Domain length along x
-sll_real64 :: dimy       ! Domain length along y
-sll_real64 :: dx         ! dimx / nx
-sll_real64 :: dy         ! dimy / ny
-
-sll_int32  :: nstep      ! Time step number
 sll_int32  :: nstepmax   ! Time step number (max)
 sll_int32  :: idiag      ! Diagnostic interval
-sll_int32  :: nbpart     ! Number of particles
-
-sll_real64 :: dt         ! Time step
-sll_real64 :: alpha      ! Perturbation amplitude
-sll_real64 :: kx         ! Perturbation wave number along x
-sll_real64 :: ky         ! Perturbation wave number along y
 sll_real64 :: c          ! Speed of light
 sll_real64 :: csq        ! c * c
 sll_real64 :: e0         ! Electric conductivity
@@ -43,8 +42,9 @@ sll_real64 :: eyext      ! External electric field (y)
 sll_real64 :: bzext      ! External magnetic field
 sll_real64 :: charge     ! Particle charge
 sll_real64 :: masse      ! Particle mass
-sll_real64 :: poids      ! Size of particle
 sll_real64 :: q_sur_m    ! charge / mass
+
+public readin
 
 contains
 
@@ -64,7 +64,6 @@ namelist/donnees/ dimx,  & !dimensions du domaine
                 tfinal,  & !duree maxi
               nstepmax,  & !nbre d'iterations maxi
                  idiag,  & !frequence des diagnostics
-                bcname,  & !type de conditions limites
                  exext,  & !champ electrique exterieur
                  eyext,  & !champ electrique exterieur
                  bzext,  & !champ magnetique exterieur
@@ -85,7 +84,6 @@ ny       = 10            ! nombre de pts suivant y
 cfl      = 0.9_f64       ! nombre de Courant-Friedrich-Levy
 tfinal   = 10.0_f64      ! temps final
 idiag    = 10            ! frequence des sorties graphiques
-bcname   = "period"      ! type de conditions limites
 exext    = 0.0_f64       ! champ electrique exterieur suivant x
 eyext    = 0.0_f64       ! champ electrique exterieur suivant y
 bzext    = 0.0_f64       ! champ magnetique exterieur

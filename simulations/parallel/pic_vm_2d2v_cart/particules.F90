@@ -118,16 +118,14 @@ end do
 
 tm%r0 = tm%r0 / (dx*dy)
 
-if (bcname == 'period') then
-  do i=0,nx
-    tm%r0(i,0)  = tm%r0(i,0) + tm%r0(i,ny)
-    tm%r0(i,ny) = tm%r0(i,0)
-  end do
-  do j=0,ny
-    tm%r0(0,j)  = tm%r0(0,j) + tm%r0(nx,j)
-    tm%r0(nx,j) = tm%r0(0,j)
-  end do
-end if
+do i=0,nx
+  tm%r0(i,0)  = tm%r0(i,0) + tm%r0(i,ny)
+  tm%r0(i,ny) = tm%r0(i,0)
+end do
+do j=0,ny
+  tm%r0(0,j)  = tm%r0(0,j) + tm%r0(nx,j)
+  tm%r0(nx,j) = tm%r0(0,j)
+end do
 
 rho_total = sum(tm%r0(1:nx,1:ny))*dx*dy
 !print*,'rho total',rho_total

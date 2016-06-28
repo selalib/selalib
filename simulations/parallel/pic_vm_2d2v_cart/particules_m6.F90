@@ -28,17 +28,12 @@ function f_m6( q )
 sll_real64, intent(in) :: q
 sll_real64             :: f_m6
 
-if ( q < 1.0d0 ) then
-  f_m6 = (3.0d0-q)**5-6.0d0*(2.0d0-q)**5+15.0d0*(1.0d0-q)**5
-else if ( q >= 1.0d0 .and. q < 2.0d0 ) then
-  f_m6 = (3.0d0-q)**5-6.0d0*(2.0d0-q)**5
-else if ( q >= 2.0d0 .and. q < 3.0d0 ) then
-  f_m6 = (3.0d0-q)**5
-else
-  f_m6 = 0.0d0
-end if
+f_m6 = 0.0d0
+if ( q < 3.0d0 ) f_m6 = (3.0d0-q)**5
+if ( q < 2.0d0 ) f_m6 = f_m6 - 6.0d0*(2.0d0-q)**5
+if ( q < 1.0d0 ) f_m6 = f_m6 + 15.0d0*(1.0d0-q)**5
 
-f_m6 = f_m6 / 120.0d0
+f_m6 = f_m6 * 0.008333333333333333_f64 !/ 120.0d0
 
 return
 end function f_m6
@@ -189,6 +184,59 @@ sll_real64           :: cm1y
 sll_real64           :: cp1y
 sll_real64           :: e(-2:2,-2:2)
 
+sll_real64           :: cm3x_cm3y
+sll_real64           :: cm3x_cm2y
+sll_real64           :: cm3x_cm1y
+sll_real64           :: cm3x_cy  
+sll_real64           :: cm3x_cp1y
+sll_real64           :: cm3x_cp2y
+sll_real64           :: cm3x_cp3y
+sll_real64           :: cm2x_cm3y
+sll_real64           :: cm2x_cm2y
+sll_real64           :: cm2x_cm1y
+sll_real64           :: cm2x_cy  
+sll_real64           :: cm2x_cp1y
+sll_real64           :: cm2x_cp2y
+sll_real64           :: cm2x_cp3y
+sll_real64           :: cm1x_cm3y
+sll_real64           :: cm1x_cm2y
+sll_real64           :: cm1x_cm1y
+sll_real64           :: cm1x_cy  
+sll_real64           :: cm1x_cp1y
+sll_real64           :: cm1x_cp2y
+sll_real64           :: cm1x_cp3y
+sll_real64           :: cx_cm3y  
+sll_real64           :: cx_cm2y  
+sll_real64           :: cx_cm1y  
+sll_real64           :: cx_cy    
+sll_real64           :: cx_cp1y  
+sll_real64           :: cx_cp2y  
+sll_real64           :: cx_cp3y  
+sll_real64           :: cp1x_cm3y
+sll_real64           :: cp1x_cm2y
+sll_real64           :: cp1x_cm1y
+sll_real64           :: cp1x_cy  
+sll_real64           :: cp1x_cp1y
+sll_real64           :: cp1x_cp2y
+sll_real64           :: cp1x_cp3y
+sll_real64           :: cp2x_cm3y
+sll_real64           :: cp2x_cm2y
+sll_real64           :: cp2x_cm1y
+sll_real64           :: cp2x_cy  
+sll_real64           :: cp2x_cp1y
+sll_real64           :: cp2x_cp2y
+sll_real64           :: cp2x_cp3y
+sll_real64           :: cp3x_cm3y
+sll_real64           :: cp3x_cm2y
+sll_real64           :: cp3x_cm1y
+sll_real64           :: cp3x_cy  
+sll_real64           :: cp3x_cp1y
+sll_real64           :: cp3x_cp2y
+sll_real64           :: cp3x_cp3y
+
+
+
+
 
 e(-2,-2) =    1.0_f64/14400.0_f64
 e(-1,-2) =   26.0_f64/14400.0_f64
@@ -296,8 +344,6 @@ do k=1,nbpart
 
    i   = ele%idx(k)
    j   = ele%idy(k)
-    i=modulo(i,nx)
-    j=modulo(j,ny)
 
    im3 = modulo(i-3,nx)
    im2 = modulo(i-2,nx)
@@ -330,107 +376,158 @@ do k=1,nbpart
    cm1y = f_m6(1.0d0+dpy)
    cp1y = f_m6(1.0d0-dpy)
 
-   ele%epx(k) =                                 &
-   &             + cm3x * cm3y * ehx(im3,jm3)   &
-   &             + cm3x * cm2y * ehx(im3,jm2)   &
-   &             + cm3x * cm1y * ehx(im3,jm1)   &
-   &             + cm3x * cy   * ehx(im3,j  )   &
-   &             + cm3x * cp1y * ehx(im3,jp1)   &
-   &             + cm3x * cp2y * ehx(im3,jp2)   &
-   &             + cm3x * cp3y * ehx(im3,jp3)   &
-   &             + cm2x * cm3y * ehx(im2,jm3)   &
-   &             + cm2x * cm2y * ehx(im2,jm2)   &
-   &             + cm2x * cm1y * ehx(im2,jm1)   &
-   &             + cm2x * cy   * ehx(im2,j  )   &
-   &             + cm2x * cp1y * ehx(im2,jp1)   &
-   &             + cm2x * cp2y * ehx(im2,jp2)   &
-   &             + cm2x * cp3y * ehx(im2,jp3)   &
-   &             + cm1x * cm3y * ehx(im1,jm3)   &
-   &             + cm1x * cm2y * ehx(im1,jm2)   &
-   &             + cm1x * cm1y * ehx(im1,jm1)   &
-   &             + cm1x * cy   * ehx(im1,j  )   &
-   &             + cm1x * cp1y * ehx(im1,jp1)   &
-   &             + cm1x * cp2y * ehx(im1,jp2)   &
-   &             + cm1x * cp3y * ehx(im1,jp3)   &
-   &             + cx   * cm3y * ehx(i  ,jm3)   &
-   &             + cx   * cm2y * ehx(i  ,jm2)   &
-   &             + cx   * cm1y * ehx(i  ,jm1)   &
-   &             + cx   * cy   * ehx(i  ,j  )   &
-   &             + cx   * cp1y * ehx(i  ,jp1)   &
-   &             + cx   * cp2y * ehx(i  ,jp2)   &
-   &             + cx   * cp3y * ehx(i  ,jp3)   &
-   &             + cp1x * cm3y * ehx(ip1,jm3)   &
-   &             + cp1x * cm2y * ehx(ip1,jm2)   &
-   &             + cp1x * cm1y * ehx(ip1,jm1)   &
-   &             + cp1x * cy   * ehx(ip1,j  )   &
-   &             + cp1x * cp1y * ehx(ip1,jp1)   &
-   &             + cp1x * cp2y * ehx(ip1,jp2)   &
-   &             + cp1x * cp3y * ehx(ip1,jp3)   &
-   &             + cp2x * cm3y * ehx(ip2,jm3)   &
-   &             + cp2x * cm2y * ehx(ip2,jm2)   &
-   &             + cp2x * cm1y * ehx(ip2,jm1)   &
-   &             + cp2x * cy   * ehx(ip2,j  )   &
-   &             + cp2x * cp1y * ehx(ip2,jp1)   &
-   &             + cp2x * cp2y * ehx(ip2,jp2)   &
-   &             + cp2x * cp3y * ehx(ip2,jp3)   &
-   &             + cp3x * cm3y * ehx(ip3,jm3)   &
-   &             + cp3x * cm2y * ehx(ip3,jm2)   &
-   &             + cp3x * cm1y * ehx(ip3,jm1)   &
-   &             + cp3x * cy   * ehx(ip3,j  )   &
-   &             + cp3x * cp1y * ehx(ip3,jp1)   &
-   &             + cp3x * cp2y * ehx(ip3,jp2)   &
-   &             + cp3x * cp3y * ehx(ip3,jp3) 
+   cm3x_cm3y = cm3x * cm3y 
+   cm3x_cm2y = cm3x * cm2y 
+   cm3x_cm1y = cm3x * cm1y 
+   cm3x_cy   = cm3x * cy   
+   cm3x_cp1y = cm3x * cp1y 
+   cm3x_cp2y = cm3x * cp2y 
+   cm3x_cp3y = cm3x * cp3y 
+   cm2x_cm3y = cm2x * cm3y 
+   cm2x_cm2y = cm2x * cm2y 
+   cm2x_cm1y = cm2x * cm1y 
+   cm2x_cy   = cm2x * cy   
+   cm2x_cp1y = cm2x * cp1y 
+   cm2x_cp2y = cm2x * cp2y 
+   cm2x_cp3y = cm2x * cp3y 
+   cm1x_cm3y = cm1x * cm3y 
+   cm1x_cm2y = cm1x * cm2y 
+   cm1x_cm1y = cm1x * cm1y 
+   cm1x_cy   = cm1x * cy   
+   cm1x_cp1y = cm1x * cp1y 
+   cm1x_cp2y = cm1x * cp2y 
+   cm1x_cp3y = cm1x * cp3y 
+   cx_cm3y   = cx   * cm3y 
+   cx_cm2y   = cx   * cm2y 
+   cx_cm1y   = cx   * cm1y 
+   cx_cy     = cx   * cy   
+   cx_cp1y   = cx   * cp1y 
+   cx_cp2y   = cx   * cp2y 
+   cx_cp3y   = cx   * cp3y 
+   cp1x_cm3y = cp1x * cm3y 
+   cp1x_cm2y = cp1x * cm2y 
+   cp1x_cm1y = cp1x * cm1y 
+   cp1x_cy   = cp1x * cy   
+   cp1x_cp1y = cp1x * cp1y 
+   cp1x_cp2y = cp1x * cp2y 
+   cp1x_cp3y = cp1x * cp3y 
+   cp2x_cm3y = cp2x * cm3y 
+   cp2x_cm2y = cp2x * cm2y 
+   cp2x_cm1y = cp2x * cm1y 
+   cp2x_cy   = cp2x * cy   
+   cp2x_cp1y = cp2x * cp1y 
+   cp2x_cp2y = cp2x * cp2y 
+   cp2x_cp3y = cp2x * cp3y 
+   cp3x_cm3y = cp3x * cm3y 
+   cp3x_cm2y = cp3x * cm2y 
+   cp3x_cm1y = cp3x * cm1y 
+   cp3x_cy   = cp3x * cy   
+   cp3x_cp1y = cp3x * cp1y 
+   cp3x_cp2y = cp3x * cp2y 
+   cp3x_cp3y = cp3x * cp3y
 
-   ele%epy(k) =                                 &
-   &             + cm3x * cm3y * ehy(im3,jm3)   &
-   &             + cm3x * cm2y * ehy(im3,jm2)   &
-   &             + cm3x * cm1y * ehy(im3,jm1)   &
-   &             + cm3x * cy   * ehy(im3,j  )   &
-   &             + cm3x * cp1y * ehy(im3,jp1)   &
-   &             + cm3x * cp2y * ehy(im3,jp2)   &
-   &             + cm3x * cp3y * ehy(im3,jp3)   &
-   &             + cm2x * cm3y * ehy(im2,jm3)   &
-   &             + cm2x * cm2y * ehy(im2,jm2)   &
-   &             + cm2x * cm1y * ehy(im2,jm1)   &
-   &             + cm2x * cy   * ehy(im2,j  )   &
-   &             + cm2x * cp1y * ehy(im2,jp1)   &
-   &             + cm2x * cp2y * ehy(im2,jp2)   &
-   &             + cm2x * cp3y * ehy(im2,jp3)   &
-   &             + cm1x * cm3y * ehy(im1,jm3)   &
-   &             + cm1x * cm2y * ehy(im1,jm2)   &
-   &             + cm1x * cm1y * ehy(im1,jm1)   &
-   &             + cm1x * cy   * ehy(im1,j  )   &
-   &             + cm1x * cp1y * ehy(im1,jp1)   &
-   &             + cm1x * cp2y * ehy(im1,jp2)   &
-   &             + cm1x * cp3y * ehy(im1,jp3)   &
-   &             + cx   * cm3y * ehy(i  ,jm3)   &
-   &             + cx   * cm2y * ehy(i  ,jm2)   &
-   &             + cx   * cm1y * ehy(i  ,jm1)   &
-   &             + cx   * cy   * ehy(i  ,j  )   &
-   &             + cx   * cp1y * ehy(i  ,jp1)   &
-   &             + cx   * cp2y * ehy(i  ,jp2)   &
-   &             + cx   * cp3y * ehy(i  ,jp3)   &
-   &             + cp1x * cm3y * ehy(ip1,jm3)   &
-   &             + cp1x * cm2y * ehy(ip1,jm2)   &
-   &             + cp1x * cm1y * ehy(ip1,jm1)   &
-   &             + cp1x * cy   * ehy(ip1,j  )   &
-   &             + cp1x * cp1y * ehy(ip1,jp1)   &
-   &             + cp1x * cp2y * ehy(ip1,jp2)   &
-   &             + cp1x * cp3y * ehy(ip1,jp3)   &
-   &             + cp2x * cm3y * ehy(ip2,jm3)   &
-   &             + cp2x * cm2y * ehy(ip2,jm2)   &
-   &             + cp2x * cm1y * ehy(ip2,jm1)   &
-   &             + cp2x * cy   * ehy(ip2,j  )   &
-   &             + cp2x * cp1y * ehy(ip2,jp1)   &
-   &             + cp2x * cp2y * ehy(ip2,jp2)   &
-   &             + cp2x * cp3y * ehy(ip2,jp3)   &
-   &             + cp3x * cm3y * ehy(ip3,jm3)   &
-   &             + cp3x * cm2y * ehy(ip3,jm2)   &
-   &             + cp3x * cm1y * ehy(ip3,jm1)   &
-   &             + cp3x * cy   * ehy(ip3,j  )   &
-   &             + cp3x * cp1y * ehy(ip3,jp1)   &
-   &             + cp3x * cp2y * ehy(ip3,jp2)   &
-   &             + cp3x * cp3y * ehy(ip3,jp3) 
+
+   ele%epx(k) =                               &
+   &             + cm3x_cm3y * ehx(im3,jm3)   &
+   &             + cm3x_cm2y * ehx(im3,jm2)   &
+   &             + cm3x_cm1y * ehx(im3,jm1)   &
+   &             + cm3x_cy   * ehx(im3,j  )   &
+   &             + cm3x_cp1y * ehx(im3,jp1)   &
+   &             + cm3x_cp2y * ehx(im3,jp2)   &
+   &             + cm3x_cp3y * ehx(im3,jp3)   &
+   &             + cm2x_cm3y * ehx(im2,jm3)   &
+   &             + cm2x_cm2y * ehx(im2,jm2)   &
+   &             + cm2x_cm1y * ehx(im2,jm1)   &
+   &             + cm2x_cy   * ehx(im2,j  )   &
+   &             + cm2x_cp1y * ehx(im2,jp1)   &
+   &             + cm2x_cp2y * ehx(im2,jp2)   &
+   &             + cm2x_cp3y * ehx(im2,jp3)   &
+   &             + cm1x_cm3y * ehx(im1,jm3)   &
+   &             + cm1x_cm2y * ehx(im1,jm2)   &
+   &             + cm1x_cm1y * ehx(im1,jm1)   &
+   &             + cm1x_cy   * ehx(im1,j  )   &
+   &             + cm1x_cp1y * ehx(im1,jp1)   &
+   &             + cm1x_cp2y * ehx(im1,jp2)   &
+   &             + cm1x_cp3y * ehx(im1,jp3)   &
+   &             + cx_cm3y   * ehx(i  ,jm3)   &
+   &             + cx_cm2y   * ehx(i  ,jm2)   &
+   &             + cx_cm1y   * ehx(i  ,jm1)   &
+   &             + cx_cy     * ehx(i  ,j  )   &
+   &             + cx_cp1y   * ehx(i  ,jp1)   &
+   &             + cx_cp2y   * ehx(i  ,jp2)   &
+   &             + cx_cp3y   * ehx(i  ,jp3)   &
+   &             + cp1x_cm3y * ehx(ip1,jm3)   &
+   &             + cp1x_cm2y * ehx(ip1,jm2)   &
+   &             + cp1x_cm1y * ehx(ip1,jm1)   &
+   &             + cp1x_cy   * ehx(ip1,j  )   &
+   &             + cp1x_cp1y * ehx(ip1,jp1)   &
+   &             + cp1x_cp2y * ehx(ip1,jp2)   &
+   &             + cp1x_cp3y * ehx(ip1,jp3)   &
+   &             + cp2x_cm3y * ehx(ip2,jm3)   &
+   &             + cp2x_cm2y * ehx(ip2,jm2)   &
+   &             + cp2x_cm1y * ehx(ip2,jm1)   &
+   &             + cp2x_cy   * ehx(ip2,j  )   &
+   &             + cp2x_cp1y * ehx(ip2,jp1)   &
+   &             + cp2x_cp2y * ehx(ip2,jp2)   &
+   &             + cp2x_cp3y * ehx(ip2,jp3)   &
+   &             + cp3x_cm3y * ehx(ip3,jm3)   &
+   &             + cp3x_cm2y * ehx(ip3,jm2)   &
+   &             + cp3x_cm1y * ehx(ip3,jm1)   &
+   &             + cp3x_cy   * ehx(ip3,j  )   &
+   &             + cp3x_cp1y * ehx(ip3,jp1)   &
+   &             + cp3x_cp2y * ehx(ip3,jp2)   &
+   &             + cp3x_cp3y * ehx(ip3,jp3) 
+
+   ele%epy(k) =                               &
+   &             + cm3x_cm3y * ehy(im3,jm3)   &
+   &             + cm3x_cm2y * ehy(im3,jm2)   &
+   &             + cm3x_cm1y * ehy(im3,jm1)   &
+   &             + cm3x_cy   * ehy(im3,j  )   &
+   &             + cm3x_cp1y * ehy(im3,jp1)   &
+   &             + cm3x_cp2y * ehy(im3,jp2)   &
+   &             + cm3x_cp3y * ehy(im3,jp3)   &
+   &             + cm2x_cm3y * ehy(im2,jm3)   &
+   &             + cm2x_cm2y * ehy(im2,jm2)   &
+   &             + cm2x_cm1y * ehy(im2,jm1)   &
+   &             + cm2x_cy   * ehy(im2,j  )   &
+   &             + cm2x_cp1y * ehy(im2,jp1)   &
+   &             + cm2x_cp2y * ehy(im2,jp2)   &
+   &             + cm2x_cp3y * ehy(im2,jp3)   &
+   &             + cm1x_cm3y * ehy(im1,jm3)   &
+   &             + cm1x_cm2y * ehy(im1,jm2)   &
+   &             + cm1x_cm1y * ehy(im1,jm1)   &
+   &             + cm1x_cy   * ehy(im1,j  )   &
+   &             + cm1x_cp1y * ehy(im1,jp1)   &
+   &             + cm1x_cp2y * ehy(im1,jp2)   &
+   &             + cm1x_cp3y * ehy(im1,jp3)   &
+   &             + cx_cm3y   * ehy(i  ,jm3)   &
+   &             + cx_cm2y   * ehy(i  ,jm2)   &
+   &             + cx_cm1y   * ehy(i  ,jm1)   &
+   &             + cx_cy     * ehy(i  ,j  )   &
+   &             + cx_cp1y   * ehy(i  ,jp1)   &
+   &             + cx_cp2y   * ehy(i  ,jp2)   &
+   &             + cx_cp3y   * ehy(i  ,jp3)   &
+   &             + cp1x_cm3y * ehy(ip1,jm3)   &
+   &             + cp1x_cm2y * ehy(ip1,jm2)   &
+   &             + cp1x_cm1y * ehy(ip1,jm1)   &
+   &             + cp1x_cy   * ehy(ip1,j  )   &
+   &             + cp1x_cp1y * ehy(ip1,jp1)   &
+   &             + cp1x_cp2y * ehy(ip1,jp2)   &
+   &             + cp1x_cp3y * ehy(ip1,jp3)   &
+   &             + cp2x_cm3y * ehy(ip2,jm3)   &
+   &             + cp2x_cm2y * ehy(ip2,jm2)   &
+   &             + cp2x_cm1y * ehy(ip2,jm1)   &
+   &             + cp2x_cy   * ehy(ip2,j  )   &
+   &             + cp2x_cp1y * ehy(ip2,jp1)   &
+   &             + cp2x_cp2y * ehy(ip2,jp2)   &
+   &             + cp2x_cp3y * ehy(ip2,jp3)   &
+   &             + cp3x_cm3y * ehy(ip3,jm3)   &
+   &             + cp3x_cm2y * ehy(ip3,jm2)   &
+   &             + cp3x_cm1y * ehy(ip3,jm1)   &
+   &             + cp3x_cy   * ehy(ip3,j  )   &
+   &             + cp3x_cp1y * ehy(ip3,jp1)   &
+   &             + cp3x_cp2y * ehy(ip3,jp2)   &
+   &             + cp3x_cp3y * ehy(ip3,jp3) 
 
 end do
 
