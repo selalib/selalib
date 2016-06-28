@@ -29,33 +29,33 @@ real(8)               :: ep
 real(8)               :: epsq
 real(8)               :: dtau
 
-real(8)    , allocatable :: tau(:)
-real(8)    , allocatable :: ltau(:)
-complex(8) , allocatable :: iltau(:)
+real(8)    , allocatable :: tau   (:)
+real(8)    , allocatable :: ltau  (:)
+complex(8) , allocatable :: iltau (:)
 complex(8) , allocatable :: eiltau(:)
-complex(8) , allocatable :: pl(:)
-complex(8) , allocatable :: ql(:)
-complex(8) , allocatable :: gp1(:,:)
-complex(8) , allocatable :: gp2(:,:)
-complex(8) , allocatable :: gm1(:,:)
-complex(8) , allocatable :: gm2(:,:)
-complex(8) , allocatable :: wp1(:)
-complex(8) , allocatable :: wp2(:)
-complex(8) , allocatable :: wm1(:)
-complex(8) , allocatable :: wm2(:)
-complex(8) , allocatable :: xt1(:,:)
-complex(8) , allocatable :: xt2(:,:)
-complex(8) , allocatable :: Et(:,:,:)
-complex(8) , allocatable :: temp1(:)
-complex(8) , allocatable :: temp2(:)
-complex(8) , allocatable :: z(:)
-complex(8) , allocatable :: fex(:,:,:)
-complex(8) , allocatable :: fey(:,:,:)
+complex(8) , allocatable :: pl    (:)
+complex(8) , allocatable :: ql    (:)
+complex(8) , allocatable :: gp1   (:,:)
+complex(8) , allocatable :: gp2   (:,:)
+complex(8) , allocatable :: gm1   (:,:)
+complex(8) , allocatable :: gm2   (:,:)
+complex(8) , allocatable :: wp1   (:)
+complex(8) , allocatable :: wp2   (:)
+complex(8) , allocatable :: wm1   (:)
+complex(8) , allocatable :: wm2   (:)
+complex(8) , allocatable :: xt1   (:,:)
+complex(8) , allocatable :: xt2   (:,:)
+complex(8) , allocatable :: Et    (:,:,:)
+complex(8) , allocatable :: temp1 (:)
+complex(8) , allocatable :: temp2 (:)
+complex(8) , allocatable :: z     (:)
+complex(8) , allocatable :: fex   (:,:,:)
+complex(8) , allocatable :: fey   (:,:,:)
 
-complex(8) , allocatable :: up(:,:,:)
-complex(8) , allocatable :: um(:,:,:)
-complex(8) , allocatable :: up0(:,:,:)
-complex(8) , allocatable :: um0(:,:,:)
+complex(8) , allocatable :: up    (:,:,:)
+complex(8) , allocatable :: um    (:,:,:)
+complex(8) , allocatable :: up0   (:,:,:)
+complex(8) , allocatable :: um0   (:,:,:)
 
 complex(8) :: utmp
 complex(8) :: vtmp
@@ -78,7 +78,7 @@ sll_real64            :: s, dum
 real    :: start_time, stop_time
 integer :: dat_file_id, ref_file_id
 logical :: file_exists
-real(8) :: cost, sint
+complex(8) :: cost, sint
 
 
 character(len=272)    :: argv
@@ -97,7 +97,7 @@ call readin( trim(argv) )
 SLL_ALLOCATE(tau(0:Ntau-1),           error)
 SLL_ALLOCATE(ltau(0:Ntau-1),          error)
 SLL_ALLOCATE(iltau(0:Ntau-1),         error)
-SLL_ALLOCATE(eiltau(0:Ntau-1),         error)
+SLL_ALLOCATE(eiltau(0:Ntau-1),        error)
 SLL_ALLOCATE(pl(0:ntau-1),            error)
 SLL_ALLOCATE(ql(0:ntau-1),            error)
 SLL_ALLOCATE(wp1(npp),                error)
@@ -105,8 +105,6 @@ SLL_ALLOCATE(wp2(npp),                error)
 SLL_ALLOCATE(wm1(npp),                error)
 SLL_ALLOCATE(wm2(npp),                error)
 SLL_ALLOCATE(Et(npp,0:ntau-1,2),      error)
-SLL_ALLOCATE(temp1(0:Ntau-1),         error)
-SLL_ALLOCATE(temp2(0:Ntau-1),         error)
 
 SLL_ALLOCATE(gp1(0:Ntau-1,npp),       error)
 SLL_ALLOCATE(gp2(0:Ntau-1,npp),       error)
@@ -134,10 +132,6 @@ ep    = 0.1_f64/1._f64
 epsq  = ep * ep
 dtau  = 2._f64*sll_p_pi/ntau
 
-!$OMP CRITICAL
-call sll_s_fft_init_c2c_1d(fw,Ntau,temp1,temp1,sll_p_fft_forward)
-call sll_s_fft_init_c2c_1d(bw,Ntau,temp1,temp1,sll_p_fft_backward)
-!$OMP END CRITICAL
 
 m = ntau/2
 ltau   =(/ (n, n=0,m-1), (n, n=-m,-1 )/)
@@ -180,8 +174,8 @@ wm1(:) = cmplx(- 2._f64*ep*p%vpy,0.0,f64)
 wm2(:) = cmplx(  2._f64*ep*p%vpx,0.0,f64)
 
 do n=0,ntau-1
-  cost = cos(tau(n))
-  sint = sin(tau(n))
+  cost = cmplx(cos(tau(n)), 0.0, f64)
+  sint = cmplx(sin(tau(n)), 0.0, f64)
   do m=1,nbpart
     utmp   = 0.5_f64*(cost*wp1(m)-sint*wp2(m)+cost*wm1(m)+sint*wm2(m))
     vtmp   = 0.5_f64*(sint*wp1(m)+cost*wp2(m)-sint*wm1(m)+cost*wm2(m))
@@ -198,6 +192,16 @@ do n=0,ntau-1
   Et(:,n,2) = cmplx(p%epy,0.0,f64)
 enddo
 
+!!$OMP PARALLEL DEFAULT(SHARED)  &
+!!$OMP PRIVATE(fw, bw, temp1,temp2)
+!!$OMP CRITICAL
+SLL_ALLOCATE(temp1(0:Ntau-1),         error)
+SLL_ALLOCATE(temp2(0:Ntau-1),         error)
+call sll_s_fft_init_c2c_1d(fw,Ntau,temp1,temp1,sll_p_fft_forward)
+call sll_s_fft_init_c2c_1d(bw,Ntau,temp1,temp1,sll_p_fft_backward)
+!!$OMP END CRITICAL
+!!$OMP END PARALLEL
+!
 do m=1,npp
 
   temp1= 2._f64*Et(m,:,2)
@@ -218,8 +222,8 @@ do m=1,npp
   up(:,m,2)=wp2(m)+2._f64*epsq*(temp2-temp2(0))!1st ini data of U_+
   !---
   do n=0,ntau-1
-    cost = cos(2.0_f64*tau(n)) ! not the same dtau
-    sint = sin(2.0_f64*tau(n))
+    cost = cmplx(cos(2.0_f64*tau(n)), 0.0, f64) ! not the same dtau
+    sint = cmplx(sin(2.0_f64*tau(n)), 0.0, f64)
     temp1(n)=-2._f64*( sint*Et(m,n,1)+cost*Et(m,n,2))
     temp2(n)= 2._f64*(-sint*Et(m,n,2)+cost*Et(m,n,1))!g_-
   enddo
@@ -240,8 +244,9 @@ enddo
 !--corrected more initial data
 
 do n=0,ntau-1
-  cost = cos(tau(n))
-  sint = sin(tau(n))
+
+  cost = cmplx(cos(tau(n)), 0.0, f64)
+  sint = cmplx(sin(tau(n)), 0.0, f64)
 
   do m=1,nbpart
     utmp = 0.5_f64*(cost*up(n,m,1)-sint*up(n,m,2)+cost*um(n,m,1)+sint*um(n,m,2))
@@ -263,8 +268,8 @@ do n=0,ntau-1
 enddo
 
 do n=0,ntau-1
-  cost = cos(tau(n))
-  sint = sin(tau(n))
+  cost = cmplx(cos(tau(n)), 0.0, f64)
+  sint = cmplx(sin(tau(n)), 0.0, f64)
   do m=1,nbpart
     utmp = 0.5_f64*(cost*up(n,m,1)-sint*up(n,m,2)+cost*um(n,m,1)+sint*um(n,m,2))
     vtmp = 0.5_f64*(sint*up(n,m,1)+cost*up(n,m,2)-sint*um(n,m,1)+cost*um(n,m,2))
@@ -302,8 +307,8 @@ do m=1,npp
   up(:,m,2)=wp2(m)+2._f64*epsq*(temp2-temp2(0))!3rd ini data of U_+
   !---
   do n=0,ntau-1
-    cost = cos(2_f64*tau(n))
-    sint = sin(2_f64*tau(n))
+    cost = cmplx(cos(2_f64*tau(n)), 0.0, f64)
+    sint = cmplx(sin(2_f64*tau(n)), 0.0, f64)
     temp1(n)=-2._f64*(sint*Et(m,n,1)+cost*Et(m,n,2))
     temp2(n)=2._f64*(-sint*Et(m,n,2)+cost*Et(m,n,1))!g_-
   enddo
@@ -325,8 +330,8 @@ do m=1,npp
 enddo
 
 do n=0,ntau-1
-  cost = cos(tau(n))
-  sint = sin(tau(n))
+  cost = cmplx(cos(tau(n)),0.0, f64)
+  sint = cmplx(sin(tau(n)),0.0, f64)
   do m=1,nbpart
     utmp = 0.5_f64*(cost*up(n,m,1)-sint*up(n,m,2)+cost*um(n,m,1)+sint*um(n,m,2))
     vtmp = 0.5_f64*(sint*up(n,m,1)+cost*up(n,m,2)-sint*um(n,m,1)+cost*um(n,m,2))
@@ -347,8 +352,8 @@ enddo
 !--time iteration---
 time=dt
 do n=0,ntau-1
-  cost = cos(tau(n))
-  sint = sin(tau(n))
+  cost = cmplx(cos(tau(n)), 0.0, f64)
+  sint = cmplx(sin(tau(n)), 0.0, f64)
   do m=1,nbpart
     utmp = 0.5_f64*(cost*up(n,m,1)-sint*up(n,m,2)+cost*um(n,m,1)+sint*um(n,m,2))
     vtmp = 0.5_f64*(sint*up(n,m,1)+cost*up(n,m,2)-sint*um(n,m,1)+cost*um(n,m,2))
@@ -376,8 +381,8 @@ do m=1,npp
   xt1(:,2)=temp2/ntau!g_+tilde(t=0)
   !---
   do n=0,ntau-1
-    cost = cos(2_f64*tau(n))
-    sint = sin(2_f64*tau(n))
+    cost = cmplx(cos(2_f64*tau(n)),0.0, f64)
+    sint = cmplx(sin(2_f64*tau(n)),0.0, f64)
     temp1(n)=-2._f64*(sint*Et(m,n,1)+cost*Et(m,n,2))
     temp2(n)=2._f64*(-sint*Et(m,n,2)+cost*Et(m,n,1))
   enddo
@@ -412,8 +417,8 @@ enddo
 
 
 do n= 0,ntau-1
-  cost = cos(tau(n))
-  sint = sin(tau(n))
+  cost = cmplx(cos(tau(n)),0.0,f64)
+  sint = cmplx(sin(tau(n)),0.0,f64)
   do m=1,nbpart
     utmp = 0.5_f64*(cost*up0(n,m,1)-sint*up0(n,m,2)+cost*um0(n,m,1)+sint*um0(n,m,2))
     vtmp = 0.5_f64*(sint*up0(n,m,1)+cost*up0(n,m,2)-sint*um0(n,m,1)+cost*um0(n,m,2))
@@ -432,8 +437,8 @@ do n= 0,ntau-1
 enddo
 !--correction--
 do n=0,ntau-1
-  cost = cos(tau(n))
-  sint = sin(tau(n))
+  cost = cmplx(cos(tau(n)),0.0,f64)
+  sint = cmplx(sin(tau(n)),0.0,f64)
   do m=1,nbpart
     utmp = 0.5_f64*(cost*up0(n,m,1)-sint*up0(n,m,2)+cost*um0(n,m,1)+sint*um0(n,m,2))
     vtmp = 0.5_f64*(sint*up0(n,m,1)+cost*up0(n,m,2)-sint*um0(n,m,1)+cost*um0(n,m,2))
@@ -462,8 +467,8 @@ do m=1,npp
   xt1(:,2)=temp2/ntau!g_+tilde(t1) predict
   !---
   do n=0,ntau-1
-    cost = cos(2_f64*tau(n))
-    sint = sin(2_f64*tau(n))
+    cost = cmplx(cos(2_f64*tau(n)),0.0,f64)
+    sint = cmplx(sin(2_f64*tau(n)),0.0,f64)
     temp1(n) = - 2._f64*( sint*Et(m,n,1)+cost*Et(m,n,2))
     temp2(n) =   2._f64*(-sint*Et(m,n,2)+cost*Et(m,n,1))
   enddo
@@ -495,8 +500,8 @@ do m=1,npp
 enddo
 
 do n=0,ntau-1
-  cost = cos(tau(n))
-  sint = sin(tau(n))
+  cost = cmplx(cos(tau(n)),0.0,f64)
+  sint = cmplx(sin(tau(n)),0.0,f64)
   do m=1,nbpart
     utmp = 0.5_f64*(cost*up(n,m,1)-sint*up(n,m,2)+cost*um(n,m,1)+sint*um(n,m,2))
     vtmp = 0.5_f64*(sint*up(n,m,1)+cost*up(n,m,2)-sint*um(n,m,1)+cost*um(n,m,2))
@@ -519,8 +524,8 @@ enddo
 do istep = 2, nstep
 
   do n=0,ntau-1
-    cost = cos(tau(n))
-    sint = sin(tau(n))
+    cost = cmplx(cos(tau(n)),0.0,f64)
+    sint = cmplx(sin(tau(n)),0.0,f64)
     do m=1,nbpart
       utmp = 0.5_f64*(cost*up(n,m,1)-sint*up(n,m,2)+cost*um(n,m,1)+sint*um(n,m,2))
       vtmp = 0.5_f64*(sint*up(n,m,1)+cost*up(n,m,2)-sint*um(n,m,1)+cost*um(n,m,2))
@@ -548,8 +553,8 @@ do istep = 2, nstep
     xt1(:,2)=temp2/ntau
     !---
     do n=0,ntau-1
-      cost = cos(2_f64*tau(n))
-      sint = sin(2_f64*tau(n))
+      cost = cmplx(cos(2_f64*tau(n)),0.0,f64)
+      sint = cmplx(sin(2_f64*tau(n)),0.0,f64)
       temp1(n) = -2._f64*( sint*Et(m,n,1)+cost*Et(m,n,2))
       temp2(n) =  2._f64*(-sint*Et(m,n,2)+cost*Et(m,n,1))
     enddo
@@ -586,8 +591,8 @@ do istep = 2, nstep
   !--updata E--
   time=dt*istep
   do n=0,ntau-1
-    cost = cos(tau(n))
-    sint = sin(tau(n))
+    cost = cmplx(cos(tau(n)),0.0,f64)
+    sint = cmplx(sin(tau(n)),0.0,f64)
     do m=1,nbpart
       utmp = 0.5_f64*(cost*up(n,m,1)-sint*up(n,m,2)+cost*um(n,m,1)+sint*um(n,m,2))
       vtmp = 0.5_f64*(sint*up(n,m,1)+cost*up(n,m,2)-sint*um(n,m,1)+cost*um(n,m,2))
@@ -609,8 +614,8 @@ enddo
 
 !*** Next time step ***
 
-cost = cos(0.5_f64*time/epsq)
-sint = sin(0.5_f64*time/epsq)
+cost = cmplx(cos(0.5_f64*time/epsq),0.0,f64)
+sint = cmplx(sin(0.5_f64*time/epsq),0.0,f64)
 
 do m=1,npp
   call sll_s_fft_exec_c2c_1d(fw, up(:,m,1),temp1)
