@@ -94,7 +94,7 @@ e0       = 1.0_f64       ! permittivite du vide
 relativ  = .false.       ! relativistic pusher or not
 
 
-pi = 4.0_f64 * atan(1.)
+pi = 4.0_f64 * atan(1.0_f64)
 
 write(*,*) " Input file name :"// filename
 open(93,file=filename,status='old')
