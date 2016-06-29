@@ -128,8 +128,6 @@ do j=0,ny
 end do
 
 rho_total = sum(tm%r0(1:nx,1:ny))*dx*dy
-!print*,'rho total',rho_total
-! Neutralisation du milieu
 tm%r0 = tm%r0 - rho_total/dimx/dimy
 
 end subroutine calcul_rho
@@ -142,11 +140,11 @@ sll_real64 :: a, b, eps, R,temm,xi,yi,zi
 sll_real64 :: ppx, ppy
 sll_int32  :: k, error
 
-eps = 1.d-12
-
-vth =  1.0_f64
-nbpart =204800
-n = 1.d0/nbpart
+eps    = 1.d-12
+vth    = 1.0_f64
+nbpart = 204800
+n      = 1.0_f64/nbpart
+pi     = 4.0_f64 * atan(1.0_f64)
 
 SLL_ALLOCATE(ele%dpx(nbpart),error)
 SLL_ALLOCATE(ele%dpy(nbpart),error)
