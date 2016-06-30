@@ -10,9 +10,10 @@ This simulation is a Landau damping case solved with a PIC method.
 to run the code in build directory
 - Copy the data file
 
-$ selalib/simulations/parallel/pic_vm_2d2v_cart/input/data.nml
+$ selalib/simulations/parallel/pic_vp_2d2v_cart_tau/input/data.nml
 
 - Run with the command
 
-$ ./bin/sim_pic_vm_2d2v_cart data.nml
+$ mpirun -np 4 ./bin/sim_pic_vp_2d2v_cart_tau data.nml
 
+ntau is fixed to 32 which is the max for processors count.
