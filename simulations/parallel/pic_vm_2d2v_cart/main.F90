@@ -90,19 +90,21 @@ integer :: l1, l2, ll
 complex(8), allocatable :: et1_loc(:,:), et2_loc(:,:)
 complex(8), allocatable :: fex_loc(:,:,:), fey_loc(:,:,:)
 
-n = iargc()
-if (n == 0) stop 'Usage: ./bin/test_pic2d fichier-de-donnees.nml'
-do i = 1, n
-  call getarg( i, argv)
-  write(*,'(i2, 1x, a)') i, argv
-end do
-
 call init_mpi(prank, psize)
 if (prank == 0 ) master = .true.
 
 if (master) then
+
+  n = iargc()
+  if (n == 0) stop 'Usage: ./bin/test_pic2d fichier-de-donnees.nml'
+  do i = 1, n
+    call getarg( i, argv)
+    write(*,'(i2, 1x, a)') i, argv
+  end do
+
   call readin( trim(argv) )
   call cpu_time(start_time)
+
 end if
 
 call mpi_global_master() !Brodcast global values
@@ -176,9 +178,13 @@ xmin = 0.0_f64; xmax = dimx
 ymin = 0.0_f64; ymax = dimy
 
 call plasma( p )
-print"('ep = ', g15.3)", ep
-print"('nbpart = ', g15.3)", nbpart
-print"('dt = ', g15.3)", dt
+
+if (master) then
+  print"('ep = ', g15.3)", ep
+  print"('nbpart = ', g15.3)", nbpart
+  print"('dt = ', g15.3)", dt
+endif
+
 poisson => sll_f_new_poisson_2d_periodic(xmin,xmax,nx,ymin,ymax,ny)
 
 wp1(:) = cmplx(  2._f64*((p%dpx+p%idx)*dx+ep*p%vpy),0.0,f64)
@@ -186,11 +192,25 @@ wp2(:) = cmplx(  2._f64*((p%dpy+p%idy)*dy-ep*p%vpx),0.0,f64)
 wm1(:) = cmplx(- 2._f64*ep*p%vpy,0.0,f64)
 wm2(:) = cmplx(  2._f64*ep*p%vpx,0.0,f64)
 
-l1 = prank*ntau/psize
-l2 = (prank+1)*ntau/psize-1
-ll = l2-l1+1
+if (mod(ntau,psize) == 0) then
+
+  l1 = prank*ntau/psize
+  l2 = (prank+1)*ntau/psize-1
+  ll = l2-l1+1
+
+else
+  
+  if (master) then
+    print*, "Remainder of the division of Ntau by Nprocs must be zero." 
+  end if
+
+  call finish_mpi()
+  stop
+
+end if
 
 print*, prank, psize, l1, l2, ll
+
 allocate(et1_loc(npp,l1:l2))
 allocate(et2_loc(npp,l1:l2))
 allocate(fex_loc(0:nx,0:ny,l1:l2))
@@ -228,6 +248,7 @@ SLL_ALLOCATE(temp1(0:Ntau-1),         error)
 SLL_ALLOCATE(temp2(0:Ntau-1),         error)
 call sll_s_fft_init_c2c_1d(fw,Ntau,temp1,temp1,sll_p_fft_forward)
 call sll_s_fft_init_c2c_1d(bw,Ntau,temp1,temp1,sll_p_fft_backward)
+
 do m=1,npp
 
   temp1= 2._f64*Et2(m,:)
@@ -752,8 +773,8 @@ do m=1,npp
 enddo
 
 call calcul_rho_m6( p, f )
-call sll_s_fft_free(fw)
-call sll_s_fft_free(bw)
+
+call MPI_BARRIER(MPI_COMM_WORLD,code)
 
 if (master) then
 
@@ -770,7 +791,7 @@ if (master) then
       enddo
       read(ref_file_id,*)
     enddo
-    print *, "CPU time:", stop_time - start_time, "seconds"
+    print *, "CPU time:", stop_time - start_time, "seconds, error = ", s
   else
     open(newunit=dat_file_id,file='fh64.dat')
     do i=1,nx
@@ -780,7 +801,7 @@ if (master) then
       write(dat_file_id,*)
     enddo
     close(851)
-    print *, "CPU time:", stop_time - start_time, "seconds, error = ", s
+    print *, "CPU time:", stop_time - start_time, "seconds"
   endif
   
 
@@ -788,6 +809,8 @@ end if
 
 deallocate(et1_loc)
 deallocate(et2_loc)
+call sll_s_fft_free(fw)
+call sll_s_fft_free(bw)
 
 call finish_mpi()
 
