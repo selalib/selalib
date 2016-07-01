@@ -3,9 +3,9 @@
 # ---
 # Example script to build selalib on MPCDF systems (Draco, Hydra, Linux clusters).
 #
-# By default, this script needs to be run from the ./scripts/ folder in the
-# git checkout to be able to correctly determine the source location.  If you
-# want to run it from elsewhere, please set SLL_BASE accordingly (see below).
+# Copy this script to your build folder and run it to compile selalib.
+# Note that you need to reset SLL_BASE if your source folder has a different 
+# name.
 #
 # 2016, khr@mpcdf.mpg.de
 # ---
@@ -18,13 +18,7 @@ BUILD_TYPE="Release"
 #BUILD_TYPE="Debug"
 
 # select the build directory
-if [ x"$USER" != x"khr" ]; then
-    # default: home directory
-    BUILD_DIR=$HOME/selalib/obj
-else
-    # /tmp gives the best performance
-    BUILD_DIR=/tmp/$USER/selalib/obj
-fi
+BUILD_DIR=`pwd`
 
 # add custom preprocessor macros (e.g. toggle 32 bit halos)
 #MACROS="-DUSE_HALO_REAL32"
@@ -32,8 +26,7 @@ fi
 # number of processors to be used for a parallel build
 JMAKE=16
 # automatically determine the absolute location of the selalib source tree
-SLL_BASE=`pwd`/../
-SLL_BASE=`readlink -f $SLL_BASE`
+SLL_BASE=$HOME/selalib
 
 
 # --- machine-dependent modules and optimization flags
