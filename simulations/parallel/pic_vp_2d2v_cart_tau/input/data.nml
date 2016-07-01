@@ -1,13 +1,12 @@
 $donnees 
-  nstepmax = 2000		!nbre d'iterations maxi
+  nstepmax = 20000		!nbre d'iterations maxi
   dimx     = 1.
   dimy     = 1.       	!dimensions du domaine 
-  nx       = 120		!nombre de pts suivant x
-  ny       = 10   	!nombre de pts suivant y
+  nx       = 64		!nombre de pts suivant x
+  ny       = 32   	!nombre de pts suivant y
   cfl      = 0.9 		!nombre de Courant-Friedrich-Levy
-  tfinal   = 10.0   	!temps final
+  tfinal   = 1.0  	!temps final
   idiag    = 10    	!frequence des sorties graphiques
-  bcname   = "period"	!type de conditions limites
   exext    = 0.		!champ electrique exterieur suivant x
   eyext    = 0.	 	!champ electriaue exterieur suivant y
   bzext    = 0.		!champ magnetique exterieur
