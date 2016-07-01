@@ -773,8 +773,8 @@ if (master) then
     wm1(m) = sll_p_i0
     wm2(m) = sll_p_i0
     do n=0,ntau-1
-      wm1(m)=wm1(m)+temp1(n)/ntau*exp(iltau(n)*time)
-      wm2(m)=wm2(m)+temp2(n)/ntau*exp(iltau(n)*time)
+      wm1(m)=wm1(m)+temp1(n)/real(ntau,f64)*exp(iltau(n)*time)
+      wm2(m)=wm2(m)+temp2(n)/real(ntau,f64)*exp(iltau(n)*time)
     enddo
     utmp   = 0.5_f64*(cost*wp1(m)-sint*wp2(m)+cost*wm1(m)+sint*wm2(m))
     vtmp   = 0.5_f64*(cost*wp2(m)+sint*wp1(m)+cost*wm2(m)-sint*wm1(m))
