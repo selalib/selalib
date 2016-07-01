@@ -1,11 +1,11 @@
 #!/bin/bash
 
 # ---
-# Example script to build selalib on MPCDF systems (Hydra, Linux clusters).
+# Example script to build selalib on MPCDF systems (Draco, Hydra, Linux clusters).
 #
-# Copy this script to your build folder and run it to compile selalib.
-# Note that you need to reset SLL_BASE if your source folder has a different 
-# name.
+# By default, this script needs to be run from the ./scripts/ folder in the
+# git checkout to be able to correctly determine the source location.  If you
+# want to run it from elsewhere, please set SLL_BASE accordingly (see below).
 #
 # 2016, khr@mpcdf.mpg.de
 # ---
@@ -14,37 +14,69 @@
 # --- OPTIONS ---
 DO_CONF=true
 DO_BUILD=true
-BUILD_DIR=`pwd`
 BUILD_TYPE="Release"
 #BUILD_TYPE="Debug"
-# --- optimization flags that override the CMAKE Fortran Release defaults ---
-INTEL_OPT_FLAGS="-O3 -ip -fpic -xSSE4.2 -nowarn"
-# --- add custom preprocessor macros (here: toggle 32 bit halos)
+
+# select the build directory
+if [ x"$USER" != x"khr" ]; then
+    # default: home directory
+    BUILD_DIR=$HOME/selalib/obj
+else
+    # /tmp gives the best performance
+    BUILD_DIR=/tmp/$USER/selalib/obj
+fi
+
+# add custom preprocessor macros (e.g. toggle 32 bit halos)
 #MACROS="-DUSE_HALO_REAL32"
+
 # number of processors to be used for a parallel build
 JMAKE=16
-# --- automatically determine the absolute location of the selalib source tree
-SLL_BASE=$HOME/selalib
-#SLL_BASE=`readlink -f $SLL_BASE`
+# automatically determine the absolute location of the selalib source tree
+SLL_BASE=`pwd`/../
+SLL_BASE=`readlink -f $SLL_BASE`
 
 
-# --- load environment modules
+# --- machine-dependent modules and optimization flags
 source /etc/profile.d/modules.sh
 module purge
 # ---
-module load intel/15.0
-module load mkl/11.3
-if [ x"$CLUSTER" != x"" ]; then
-  # on any Linux cluster, we have Intel MPI in the impi module
-  module load impi/5.0.3
+if [ x"$CLUSTER" == x"DRACO" ]; then
+    module load intel/16.0
+    module load mkl/11.3
+    module load impi/5.1.3
+    module load fftw
+    module load hdf5-mpi
+    module load cmake/3.5
+    module load anaconda/3
+    # --- optimization flags
+    INTEL_OPT_FLAGS="-O3 -xHost -nowarn -qopt-report"
 else
-  # whereas on Hydra, the module is labeled differently
-  module load mpi.intel/5.0.3
+    if [ x"$CLUSTER" != x"" ]; then
+      # on any Linux cluster, we have Intel MPI in the impi module
+      module load intel/16.0
+      module load mkl/11.3
+      module load impi/5.1.3
+      module load fftw
+      module load hdf5-mpi
+      module load cmake/3.2
+      module load anaconda/3
+      # --- optimization flags
+      #INTEL_OPT_FLAGS="-O3 -xSSE4.2 -nowarn -qopt-report"
+      INTEL_OPT_FLAGS="-O3 -xAVX -nowarn -qopt-report"
+    else
+      # whereas on Hydra, the module is labeled differently
+      module load intel/16.0
+      module load mkl/11.3
+      module load mpi.intel/5.1.3
+      module load fftw
+      module load hdf5-mpi
+      module load cmake/3.2
+      module load anaconda/3
+      # --- optimization flags
+      #INTEL_OPT_FLAGS="-O3 -xSSE4.2 -nowarn -qopt-report"
+      INTEL_OPT_FLAGS="-O3 -xAVX -nowarn -qopt-report"
+    fi
 fi
-module load fftw
-module load hdf5-mpi
-module load cmake/3.2
-module load python33/python
 # ---
 module list
 
