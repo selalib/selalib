@@ -24,7 +24,7 @@ program sim_pic_vp_2d2v_cart_lbfr
 
   use sll_m_sim_pic_vp_2d2v_cart_lbfr, only: &
     sll_t_sim_pic_vp_2d2v_cart_lbfr, &
-    sll_p_lbfr_particles
+    sll_p_lbf_particles_old
 
   use sll_m_timer, only: &
     sll_s_set_time_mark, &
@@ -52,7 +52,7 @@ program sim_pic_vp_2d2v_cart_lbfr
   if (rank==0) then
     print*, size, 'mpi nodes X', sim%n_particles, 'particles', &
          sim%mesh%num_cells1, 'X',sim%mesh%num_cells2,'cells'
-    if( sim%particle_type == sll_p_lbfr_particles )then
+    if( sim%particle_type == sll_p_lbf_particles_old )then
       print*, (real(size,f64)/real(sim%mesh%num_cells1 * sim%mesh%num_cells2,f64)) &
            * real(sim%n_particles,f64), 'pushed particles (flow markers and deposition particles) per cell'
     else
