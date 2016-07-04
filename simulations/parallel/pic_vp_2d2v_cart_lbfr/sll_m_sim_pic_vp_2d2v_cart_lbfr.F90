@@ -46,10 +46,11 @@ module sll_m_sim_pic_vp_2d2v_cart_lbfr
     sll_s_new_particle_group_2d2v_ptr, &
     sll_t_particle_group_2d2v
 
-  use sll_m_pic_lbfr_4d_group, only: &    ! todo: change name: pic_lbfr_4d_group -> pic_lbfr_group_2d2v ??
+  use sll_m_pic_lbfr_4d_group, only: &    ! keeping this particle group for validation but should be discarded eventually
     sll_s_new_pic_lbfr_4d_group_ptr
 
-    !    sll_t_pic_lbfr_4d_group               ! do we need to import that ?
+  use sll_m_particle_group_2d2v_lbf, only: &
+    sll_s_new_particle_group_2d2v_lbf_ptr
 
   use sll_m_initial_density_parameters, only: &
     sll_t_initial_density_parameters
@@ -89,13 +90,15 @@ module sll_m_sim_pic_vp_2d2v_cart_lbfr
   public :: &
     sll_t_sim_pic_vp_2d2v_cart_lbfr, &
     sll_p_simple_particles,   &
-    sll_p_lbfr_particles
+    sll_p_lbf_particles,  &
+    sll_p_lbf_particles_old
 
   private
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
   sll_int32, parameter :: sll_p_simple_particles=0
-  sll_int32, parameter :: sll_p_lbfr_particles=1
+  sll_int32, parameter :: sll_p_lbf_particles=1
+  sll_int32, parameter :: sll_p_lbf_particles_old=2
 
   type, extends(sll_c_simulation_base_class) :: sll_t_sim_pic_vp_2d2v_cart_lbfr
 
@@ -173,21 +176,35 @@ contains
     character(len=256) :: init_case_str
     logical     :: with_control_variate
 
-    logical   :: DOMAIN_IS_X_PERIODIC   ! needed for the LBF particles
-    logical   :: DOMAIN_IS_Y_PERIODIC   ! needed for the LBF particles
+    logical   :: domain_is_x_periodic   ! needed for the LBF particles
+    logical   :: domain_is_y_periodic   ! needed for the LBF particles
 
     sll_int32 :: input_file ! unit for nml file
     sll_int32 :: io_stat, ierr
     sll_real64, pointer :: control_variate_parameter(:)
     sll_real64 :: domain(2,2)
 
+    ! parameters for the lbf particle group
+    sll_int32   :: n_particles_x
+    sll_int32   :: n_particles_y
+    sll_int32   :: n_particles_vx
+    sll_int32   :: n_particles_vy
     sll_int32   :: remap_period
-    sll_int32   :: remap_f_type
     sll_int32   :: remap_degree
+    sll_real64  :: remapping_grid_x_min
+    sll_real64  :: remapping_grid_x_max
+    sll_real64  :: remapping_grid_y_min
+    sll_real64  :: remapping_grid_y_max
     sll_real64  :: remapping_grid_vx_min
     sll_real64  :: remapping_grid_vx_max
     sll_real64  :: remapping_grid_vy_min
     sll_real64  :: remapping_grid_vy_max
+    sll_int32,  dimension(4)  :: remapping_sparse_grid_max_levels
+    sll_real64, dimension(4)  :: remapping_grid_eta_min
+    sll_real64, dimension(4)  :: remapping_grid_eta_max
+
+    ! additional parameters for the old lbf particle group
+    sll_int32   :: remap_f_type
     sll_int32   :: remapping_cart_grid_n_cells_x
     sll_int32   :: remapping_cart_grid_n_cells_y
     sll_int32   :: remapping_cart_grid_n_cells_vx
@@ -196,7 +213,6 @@ contains
     sll_int32   :: remapping_sparse_grid_max_level_y
     sll_int32   :: remapping_sparse_grid_max_level_vx
     sll_int32   :: remapping_sparse_grid_max_level_vy
-    sll_int32, dimension(4) :: remapping_sparse_grid_max_levels
     sll_int32   :: deposition_particles_pos_type
     sll_int32   :: deposition_particles_move_type
     sll_int32   :: n_deposition_particles
@@ -223,7 +239,8 @@ contains
 
     namelist /simple_pic_params/  init_case_str, n_particles, with_control_variate
 
-    ! parameters for pic with lbf resamplings: we have 3 sets of parameters
+
+    ! OLD parameters for pic with lbf resamplings: we have 3 sets of parameters  -------------------------------------------------
     !   - one for the discretization of the remapped f,
     !   - one for the discretization of the deposited f
     !   - one for the discretization of the flow
@@ -231,7 +248,7 @@ contains
     ! discretization of the remapped f
     !   -> remapping period, type of interpolation structure and polynomial degree
     !   -> size of the remapping grid / sparse grid
-    namelist /pic_lbfr_remap_params/    &
+    namelist /pic_lbf_remap_params_old/    &
                                   remap_period,                    &
                                   remap_f_type,                       &
                                   remap_degree,                       &
@@ -251,7 +268,7 @@ contains
     ! discretization of the deposited f
     !   -> deposition_particles_pos_type:     0 = sampled (and resampled) on a structured grid,     1 = unstructured (eg random)
     !   -> deposition_particles_move_type:    0 = new particles are created at each step,           1 = move until next remap step
-    namelist /pic_lbfr_deposition_params/                             &
+    namelist /pic_lbf_deposition_params_old/                             &
                                   deposition_particles_pos_type,      &     ! structured grid (0) or unstructured (1)
                                   deposition_particles_move_type,     &     ! fixed (0) or pushed (1)
                                   n_deposition_particles,             &     ! for unstructured deposition particles
@@ -264,7 +281,7 @@ contains
     !   -> number of markers to be pushed forward
     !   -> size of the cells where the flow is linearized (the flow grid)
     !      note: the bounds of the flow grid are the same as those of the remap grid
-    namelist /pic_lbfr_markers_params/flow_markers_type,              &
+    namelist /pic_lbf_markers_params_old/flow_markers_type,              &
                                   n_flow_markers_x,                   &
                                   n_flow_markers_y,                   &
                                   n_flow_markers_vx,                  &
@@ -274,6 +291,34 @@ contains
                                   flow_grid_n_cells_y,                &
                                   flow_grid_n_cells_vx,               &
                                   flow_grid_n_cells_vy
+
+
+    ! NEW parameters for pic with lbf resamplings: we have 2 sets of parameters  -------------------------------------------------
+
+    ! remapping (sparse grid) parameters
+    namelist /pic_lbf_remap_params/    &
+                                  remap_period,                       &
+                                  remap_degree,                       &
+                                  remapping_grid_x_min,               &
+                                  remapping_grid_x_max,               &
+                                  remapping_grid_y_min,               &
+                                  remapping_grid_y_max,               &
+                                  remapping_grid_vx_min,              &
+                                  remapping_grid_vx_max,              &
+                                  remapping_grid_vy_min,              &
+                                  remapping_grid_vy_max,              &
+                                  remapping_sparse_grid_max_level_x,  &
+                                  remapping_sparse_grid_max_level_y,  &
+                                  remapping_sparse_grid_max_level_vx, &
+                                  remapping_sparse_grid_max_level_vy
+
+    ! particle parameters (initially located on a 4d cartesian grid) used to approximate the charge and the flow
+    namelist /pic_lbf_particles_params/                               &
+                                  n_particles_x,                      &
+                                  n_particles_y,                      &
+                                  n_particles_vx,                     &
+                                  n_particles_vy
+
 
     ! Read parameters from file
     open(newunit = input_file, file=trim(filename), IOStat=io_stat)
@@ -292,11 +337,16 @@ contains
        sim%particle_type = sll_p_simple_particles
        read(input_file, simple_pic_params)
 
-    case("SLL_LBFR_PARTICLES")
-       sim%particle_type = sll_p_lbfr_particles
-       read(input_file, pic_lbfr_remap_params)
-       read(input_file, pic_lbfr_deposition_params)
-       read(input_file, pic_lbfr_markers_params)
+    case("SLL_LBF_PARTICLES_OLD")
+       sim%particle_type = sll_p_lbf_particles_old
+       read(input_file, pic_lbf_remap_params_old)
+       read(input_file, pic_lbf_deposition_params_old)
+       read(input_file, pic_lbf_markers_params_old)
+
+    case("SLL_LBF_PARTICLES")
+       sim%particle_type = sll_p_lbf_particles
+       read(input_file, pic_lbf_remap_params)
+       read(input_file, pic_lbf_particles_params)
 
     case default
        SLL_ERROR('sll_m_sim_pic_vp_2d2v_cart_lbfr%init_pic_2d2v', 'particle_type' // particle_type_str // ' not implemented.')
@@ -345,57 +395,94 @@ contains
          print*, '#init case ', init_case_str, ' not implemented (for simple particles).'
       end select
 
-    case( sll_p_lbfr_particles )
-       sim%no_weights = 1   ! no control variate with pic_lbfr for the moment
-       sim%init_case = sll_p_deterministic_sampling
-       DOMAIN_IS_X_PERIODIC = .true.
-       DOMAIN_IS_Y_PERIODIC = .true.
-       remapping_sparse_grid_max_levels(1) = remapping_sparse_grid_max_level_x
-       remapping_sparse_grid_max_levels(2) = remapping_sparse_grid_max_level_y
-       remapping_sparse_grid_max_levels(3) = remapping_sparse_grid_max_level_vx
-       remapping_sparse_grid_max_levels(4) = remapping_sparse_grid_max_level_vy
-       sim%resample_period = remap_period
-       call sll_s_new_pic_lbfr_4d_group_ptr &
-          (sim%particle_group,                   &
-          species_charge,                        &
-          species_mass,                          &
-          DOMAIN_IS_X_PERIODIC,                  &
-          DOMAIN_IS_Y_PERIODIC,                  &
-          remap_f_type,                          &
-          remap_degree,                          &
-          remapping_grid_vx_min,                 &
-          remapping_grid_vx_max,                 &
-          remapping_grid_vy_min,                 &
-          remapping_grid_vy_max,                 &
-          remapping_cart_grid_n_cells_x,         &   ! for splines
-          remapping_cart_grid_n_cells_y,         &   ! for splines
-          remapping_cart_grid_n_cells_vx,        &   ! for splines
-          remapping_cart_grid_n_cells_vy,        &   ! for splines
-          remapping_sparse_grid_max_levels,      &   ! for the sparse grid
-          deposition_particles_pos_type,         &
-          deposition_particles_move_type,        &
-          n_deposition_particles,                &    ! todo: really needed ???
-          n_deposition_particles_per_cell_x,     &
-          n_deposition_particles_per_cell_y,     &
-          n_deposition_particles_vx,             &
-          n_deposition_particles_vy,             &
-          flow_markers_type,                     &
-          n_flow_markers_x,                      &
-          n_flow_markers_y,                      &
-          n_flow_markers_vx,                     &
-          n_flow_markers_vy,                     &
-          n_unstruct_markers_per_cell,           &
-          flow_grid_n_cells_x,                   &
-          flow_grid_n_cells_y,                   &
-          flow_grid_n_cells_vx,                  &
-          flow_grid_n_cells_vy,                  &
-          sim%mesh )
+    case( sll_p_lbf_particles )
+      sim%no_weights = 1   ! no control variate for the moment
+      sim%init_case = sll_p_deterministic_sampling
+      domain_is_x_periodic = .true.
+      domain_is_y_periodic = .true.
+      remapping_grid_eta_min(1) = remapping_grid_x_min
+      remapping_grid_eta_min(2) = remapping_grid_y_min
+      remapping_grid_eta_min(3) = remapping_grid_vx_min
+      remapping_grid_eta_min(4) = remapping_grid_vy_min
+      remapping_grid_eta_max(1) = remapping_grid_x_max
+      remapping_grid_eta_max(2) = remapping_grid_y_max
+      remapping_grid_eta_max(3) = remapping_grid_vx_max
+      remapping_grid_eta_max(4) = remapping_grid_vy_max
+      remapping_sparse_grid_max_levels(1) = remapping_sparse_grid_max_level_x
+      remapping_sparse_grid_max_levels(2) = remapping_sparse_grid_max_level_y
+      remapping_sparse_grid_max_levels(3) = remapping_sparse_grid_max_level_vx
+      remapping_sparse_grid_max_levels(4) = remapping_sparse_grid_max_level_vy
+      sim%resample_period = remap_period
+      call sll_s_new_particle_group_2d2v_lbf_ptr( &
+          sim%particle_group, &
+          species_charge,    &
+          species_mass,      &
+          domain_is_x_periodic,    &
+          domain_is_y_periodic,    &
+          remap_degree,    &
+          remapping_grid_eta_min, &
+          remapping_grid_eta_max, &
+          remapping_sparse_grid_max_levels, &
+          n_particles_x,  &
+          n_particles_y,  &
+          n_particles_vx, &
+          n_particles_vy &
+      )
+      SLL_ASSERT( sim%world_size == 1 )
+      sim%n_particles = sim%particle_group%n_particles
+      sim%n_total_particles = sim%n_particles * sim%world_size
 
-       SLL_ASSERT( sim%world_size == 1 )
-       sim%n_particles = sim%particle_group%n_particles    ! with pic_lbfr this is the nb of flow markers and deposition particles
-       sim%n_total_particles = sim%n_particles * sim%world_size
+    case( sll_p_lbf_particles_old )
+      sim%no_weights = 1   ! no control variate with pic_lbfr for the moment
+      sim%init_case = sll_p_deterministic_sampling
+      domain_is_x_periodic = .true.
+      domain_is_y_periodic = .true.
+      remapping_sparse_grid_max_levels(1) = remapping_sparse_grid_max_level_x
+      remapping_sparse_grid_max_levels(2) = remapping_sparse_grid_max_level_y
+      remapping_sparse_grid_max_levels(3) = remapping_sparse_grid_max_level_vx
+      remapping_sparse_grid_max_levels(4) = remapping_sparse_grid_max_level_vy
+      sim%resample_period = remap_period
+      call sll_s_new_pic_lbfr_4d_group_ptr &
+        (sim%particle_group,                   &
+        species_charge,                        &
+        species_mass,                          &
+        domain_is_x_periodic,                  &
+        domain_is_y_periodic,                  &
+        remap_f_type,                          &
+        remap_degree,                          &
+        remapping_grid_vx_min,                 &
+        remapping_grid_vx_max,                 &
+        remapping_grid_vy_min,                 &
+        remapping_grid_vy_max,                 &
+        remapping_cart_grid_n_cells_x,         &   ! for splines
+        remapping_cart_grid_n_cells_y,         &   ! for splines
+        remapping_cart_grid_n_cells_vx,        &   ! for splines
+        remapping_cart_grid_n_cells_vy,        &   ! for splines
+        remapping_sparse_grid_max_levels,      &   ! for the sparse grid
+        deposition_particles_pos_type,         &
+        deposition_particles_move_type,        &
+        n_deposition_particles,                &    ! todo: really needed ???
+        n_deposition_particles_per_cell_x,     &
+        n_deposition_particles_per_cell_y,     &
+        n_deposition_particles_vx,             &
+        n_deposition_particles_vy,             &
+        flow_markers_type,                     &
+        n_flow_markers_x,                      &
+        n_flow_markers_y,                      &
+        n_flow_markers_vx,                     &
+        n_flow_markers_vy,                     &
+        n_unstruct_markers_per_cell,           &
+        flow_grid_n_cells_x,                   &
+        flow_grid_n_cells_y,                   &
+        flow_grid_n_cells_vx,                  &
+        flow_grid_n_cells_vy,                  &
+        sim%mesh )
+
+      SLL_ASSERT( sim%world_size == 1 )
+      sim%n_particles = sim%particle_group%n_particles    ! with pic_lbfr this is the nb of flow markers and deposition particles
+      sim%n_total_particles = sim%n_particles * sim%world_size
     case default
-       SLL_ERROR('sll_m_sim_pic_vp_2d2v_cart_lbfr%init_pic_2d2v', 'this particle_type is not implemented.')
+      SLL_ERROR('sll_m_sim_pic_vp_2d2v_cart_lbfr%init_pic_2d2v', 'this particle_type is not implemented.')
     end select
     
     ! Initialize control variate
@@ -488,7 +575,8 @@ contains
        print*, 'time step ', j, '/', sim%n_time_steps, ' ... '
 
        ! particle resampling (conditional)
-       if( (sim%particle_type == sll_p_lbfr_particles) .and. (modulo(j-1, sim%resample_period) == 0 ) )then
+       if( (sim%particle_type == sll_p_lbf_particles .or. sim%particle_type == sll_p_lbf_particles_old )  &
+           .and. (modulo(j-1, sim%resample_period) == 0 ) )then
 
          if( j > 1 )then
            print *, "-- plotting f slice in gnuplot format before resampling..."

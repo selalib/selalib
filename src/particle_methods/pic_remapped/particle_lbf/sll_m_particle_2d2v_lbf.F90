@@ -21,7 +21,7 @@
 
 !> @brief particles used for linearized-backward-flow (lbf) resamplings on cartesian grids
 
-module sll_m_particle_lbf_2d2v
+module sll_m_particle_2d2v_lbf
 
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_memory.h"
@@ -30,16 +30,16 @@ module sll_m_particle_lbf_2d2v
   implicit none
 
   public :: &
-    sll_t_particle_lbf_2d2v
+    sll_t_particle_2d2v_lbf
 
   private
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
-  ! <<sll_t_particle_lbf_2d2v>>
-  type :: sll_t_particle_lbf_2d2v
+  ! <<sll_t_particle_2d2v_lbf>>
+  type :: sll_t_particle_2d2v_lbf
 
     sll_real64, dimension(4) :: eta
-    sll_real64               :: weight   !> charge = species_charge * weight
+    sll_real64, dimension(1) :: weights   !> charge = species_charge * weights(1) -- only one weight for the moment
 
     !> @name indices of logical neighbors (= the neighbors on the cartesian grid)
     !> @{
@@ -53,6 +53,6 @@ module sll_m_particle_lbf_2d2v
     sll_int32  :: ngb_vyright_index
     !> @}
 
-  end type sll_t_particle_lbf_2d2v
+  end type sll_t_particle_2d2v_lbf
 
-end module sll_m_particle_lbf_2d2v
+end module sll_m_particle_2d2v_lbf
