@@ -153,9 +153,10 @@ contains
         iostat  = ierr )
 
       ! Write Gnuplot instructions for plotting f, then close file
-      write(file_id,*) "set view 0,0"
-      write(file_id,*) "set pm3d"
-      write(file_id,*) "set hid"
+      write(file_id,*) '# run this script with $ gnuplot ' // trim(plotting_params_2d%field_name) // '.gnu' // ' -persist'
+      write(file_id,*) 'set view 0,0'
+      write(file_id,*) 'set pm3d'
+      write(file_id,*) 'set hid'
       close(file_id)
     end if
 
