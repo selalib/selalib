@@ -11,7 +11,6 @@
 
 ADD_LIBRARY( sll_pic_remapped_lbf STATIC
   sll_m_particle_lbf_utilities.F90
-  sll_m_particle_2d2v_lbf.F90
   sll_m_particle_group_2d2v_lbf.F90
   )
 
