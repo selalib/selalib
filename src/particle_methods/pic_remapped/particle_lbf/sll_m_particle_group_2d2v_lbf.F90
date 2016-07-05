@@ -86,7 +86,9 @@ module sll_m_particle_group_2d2v_lbf
     sll_int32                                                   :: n_particles_y
     sll_int32                                                   :: n_particles_vx
     sll_int32                                                   :: n_particles_vy
-    type(sll_t_particle_2d2v_lbf),   dimension(:), allocatable  :: particles_list     ! name was: struct_markers_list
+    logical       :: debug_use_array
+    type(sll_t_particle_2d2v_lbf),   dimension(:), allocatable  :: particles_list     ! todo: remove
+    sll_real64, allocatable                                     :: particle_array(:,:) !< array of particles
     sll_real64                                                  :: common_weight      ! not needed for now -> put in base class?
     !> @}
 
@@ -155,6 +157,7 @@ module sll_m_particle_group_2d2v_lbf
 
     procedure :: interpolate_value_of_remapped_f
     procedure :: get_ltp_deformation_matrix              !> FD approx of local bwd flow Jacobian matrix
+    procedure :: get_neighbor_index
 
   end type sll_t_particle_group_2d2v_lbf
 
@@ -171,7 +174,11 @@ contains
     sll_real64 :: r(3)  !< first two components hold the value of the particle position
 
     r = 1.0_f64
-    r(1:2) = self%particles_list(i)%eta(1:2)
+    if( self%debug_use_array )then
+      r(1:2) = self%particle_array(1:2, i)
+    else
+      r(1:2) = self%particles_list(i)%eta(1:2)
+    end if
 
   end function get_x_2d2v_lbf
 
@@ -183,7 +190,11 @@ contains
     sll_real64 :: r(3)  !< first two components hold the value of the particle velocity
 
     r = 1.0_f64
-    r(1:2) = self%particles_list(i)%eta(3:4)
+    if( self%debug_use_array )then
+      r(1:2) = self%particle_array(3:4, i)
+    else
+      r(1:2) = self%particles_list(i)%eta(3:4)
+    end if
 
   end function get_v_2d2v_lbf
 
@@ -201,7 +212,11 @@ contains
 
     i_wi = 1
     if(present(i_weight)) i_wi = i_weight   !< particles in this class have only one weight so i_weight is not needed
-    r = self%species%q * self%particles_list(i)%weights(i_wi) * self%common_weight
+    if( self%debug_use_array )then
+      r = self%species%q  * self%particle_array(4+i_wi, i) * self%common_weight
+    else
+      r = self%species%q * self%particles_list(i)%weights(i_wi) * self%common_weight
+    end if
 
   end function get_charge_2d2v_lbf
 
@@ -218,7 +233,11 @@ contains
 
     i_wi = 1
     if(present(i_weight)) i_wi = i_weight
-    r = self%species%m * self%particles_list(i)%weights(i_wi) * self%common_weight
+    if( self%debug_use_array )then
+      r = self%species%m  * self%particle_array(4+i_wi, i) * self%common_weight
+    else
+      r = self%species%m * self%particles_list(i)%weights(i_wi) * self%common_weight
+    end if
 
   end function get_mass_2d2v_lbf
 
@@ -230,7 +249,11 @@ contains
     sll_int32                             , intent( in ) :: i !< no. of the particle
     sll_real64 :: r(self%n_weights) !< particle weight(s)
 
-    r = self%particles_list(i)%weights(1:self%n_weights)
+    if( self%debug_use_array )then
+      r = self%particle_array(5:4+self%n_weights, i)
+    else
+      r = self%particles_list(i)%weights(1:self%n_weights)
+    end if
 
   end function get_weights_2d2v_lbf
 
@@ -243,7 +266,11 @@ contains
     sll_int32                         , intent( in )      :: i      !< particle index
     sll_real64                        , intent( in )      :: x(3)   !< components 1 and 2 hold the particle position to be set
 
-    self%particles_list(i)%eta(1:2) = x(1:2)
+    if( self%debug_use_array )then
+      self%particle_array(1:2, i) = x(1:2)
+    else
+      self%particles_list(i)%eta(1:2) = x(1:2)
+    end if
 
   end subroutine set_x_2d2v_lbf
 
@@ -254,7 +281,11 @@ contains
     sll_int32                             , intent( in )    :: i      !< particle index
     sll_real64                            , intent( in )    :: x(3)   !< component 1 and 2 hold the particle velocity to be set
 
-    self%particles_list(i)%eta(3:4) = x(1:2)
+    if( self%debug_use_array )then
+      self%particle_array(3:4, i) = x(1:2)
+    else
+      self%particles_list(i)%eta(3:4) = x(1:2)
+    end if
 
   end subroutine set_v_2d2v_lbf
 
@@ -265,7 +296,11 @@ contains
     sll_int32                             , intent( in )      :: i      !< particle index
     sll_real64                            , intent( in )      :: x(self%n_weights) !< particle weight(s) to be set
 
-    self%particles_list(i)%weights(1:self%n_weights) = x
+    if( self%debug_use_array )then
+      self%particle_array(5:4+self%n_weights, i) = x
+    else
+      self%particles_list(i)%weights(1:self%n_weights) = x
+    end if
 
   end subroutine set_weights_2d2v_lbf
 
@@ -295,7 +330,8 @@ contains
     n_particles_x,  &
     n_particles_y,  &
     n_particles_vx, &
-    n_particles_vy &
+    n_particles_vy, &
+    n_weights   &
   )
 
     class( sll_t_particle_group_2d2v_lbf ), intent( inout ) :: self  !< particle group
@@ -312,12 +348,18 @@ contains
     sll_int32,                intent(in)  :: n_particles_y
     sll_int32,                intent(in)  :: n_particles_vx
     sll_int32,                intent(in)  :: n_particles_vy
+    sll_int32,                intent(in)  :: n_weights      !< number of weights per particle (only 1 for now)
 
     character(len=*), parameter :: this_fun_name = "initialize_particle_group_2d2v_lbf"
     sll_int32               :: ierr
     character(len=128)      :: err_msg
 
     print*, "[", this_fun_name, "] - initializing the particle group... "
+
+
+    self%debug_use_array = .false.
+    print*, "[", this_fun_name, "] - DEBUG --DEBUG --DEBUG --DEBUG --DEBUG --- self%debug_use_array = ", self%debug_use_array
+
     self%domain_is_periodic(1) = domain_is_x_periodic
     self%domain_is_periodic(2) = domain_is_y_periodic
 
@@ -328,7 +370,7 @@ contains
     self%n_particles = n_particles_x * n_particles_y * n_particles_vx * n_particles_vy
     self%n_total_particles = self%n_particles   ! sequential runs for now
     print*, "[", this_fun_name, "] - AA"
-    self%n_weights = 1    ! one weight per particle for now
+    self%n_weights = n_weights    ! one weight per particle for now
 
     !> create the species object for this particle group
     allocate(self%species, stat=ierr)
@@ -340,7 +382,11 @@ contains
 
     print*, "[", this_fun_name, "] - AA B"
 
-    SLL_ALLOCATE( self%particles_list(self%n_particles), ierr )
+    if( self%debug_use_array )then
+      SLL_ALLOCATE( self%particle_array(4+n_weights, self%n_particles), ierr)
+    else
+      SLL_ALLOCATE( self%particles_list(self%n_particles), ierr )
+    end if
     SLL_ASSERT( ierr == 0)
     print*, "[", this_fun_name, "] - AC"
 
@@ -416,10 +462,12 @@ contains
     sll_int32,                intent(in)  :: n_particles_vx
     sll_int32,                intent(in)  :: n_particles_vy
 
-    sll_int32                                                    :: ierr
+    sll_int32 :: ierr
+    sll_int32 :: n_weights
 
     print*, ' 1- aaa '
     SLL_ALLOCATE( sll_t_particle_group_2d2v_lbf :: particle_group, ierr)
+    n_weights = 1
 
     select type( particle_group )
     type is ( sll_t_particle_group_2d2v_lbf )
@@ -436,7 +484,8 @@ contains
         n_particles_x,  &
         n_particles_y,  &
         n_particles_vx, &
-        n_particles_vy &
+        n_particles_vy, &
+        n_weights &
       )
       print*, ' 1- aaa C '
     end select
@@ -447,7 +496,11 @@ contains
   subroutine delete_particle_group_2d2v_lbf( self )
     class( sll_t_particle_group_2d2v_lbf ), intent( inout ) :: self  !< particle group
 
-    deallocate(self%particles_list)
+    if( self%debug_use_array )then
+      deallocate(self%particle_array)
+    else
+      deallocate(self%particles_list)
+    end if
     deallocate(self%remapped_f_sparse_grid_coefficients)
     deallocate(self%tmp_f_values_on_remapping_sparse_grid)
 
@@ -513,7 +566,7 @@ contains
     !> B. reset the particles on the cartesian grid
     print *, "particle_group_2d2v_lbf%resample -- step B"
     call self%reset_particles_positions
-    if( initial_step )then
+    if( initial_step .and. (.not. self%debug_use_array) )then
       call self%set_particles_connectivity
     end if
       ! since the remapping tool has been reset, computing the weights can be done with straightforward interpolation (flow = Id)
@@ -731,6 +784,8 @@ contains
     SLL_ALLOCATE(particles_indices(self%n_particles_x, self%n_particles_y, self%n_particles_vx, self%n_particles_vy),ierr)
     particles_indices(:,:,:,:) = 0
 
+    SLL_ASSERT( .not. self%debug_use_array )
+
     k_check = 0
     do j_x = 1, self%n_particles_x
       do j_y = 1, self%n_particles_y
@@ -822,6 +877,113 @@ contains
 
   end subroutine set_particles_connectivity
 
+  !> returns the index of the specified particle neighbor (defines the particle connectivity)
+  function get_neighbor_index( self, k, dim, dir ) result(k_ngb)
+    class(sll_t_particle_group_2d2v_lbf),intent(inout) :: self
+
+    sll_int32, intent(in)  :: k     !< particle index
+    sll_int32, intent(in)  :: dim   !< neighbor dimension
+    sll_int32, intent(in)  :: dir   !< neighbor direction (-1: left, 1:right)
+    sll_int32  :: k_ngb   !< neighbor particle index
+
+    sll_int32  :: j_x
+    sll_int32  :: j_y
+    sll_int32  :: j_vx
+    sll_int32  :: j_vy
+    sll_int32  :: j_ngb
+
+    call sll_s_convert_1d_index_to_4d( &
+      j_x, j_y, j_vx, j_vy,        &
+      k, &
+      self%n_particles_x, self%n_particles_y,  &
+      self%n_particles_vx, self%n_particles_vy  &
+    )
+
+    select case( dim )
+      case( 1 )
+        j_ngb = j_x + dir
+        ! correct neighbor index if out of bounds
+        if(j_ngb < 1 .or. j_ngb > self%n_particles_x )then
+          if( self%domain_is_periodic(1) )then
+            j_ngb = modulo(j_ngb-1, self%n_particles_x)+1
+          else
+            SLL_ASSERT( (j_x == 1 .and. dir == -1) .or. (j_x == self%n_particles_x .and. dir == 1) )
+            k_ngb = k ! no neighbor, return the index itself
+            return
+            SLL_ERROR( "get_neighbor_index", "CHECK 1 -- should not be here")
+          end if
+        end if
+        call sll_s_convert_4d_index_to_1d(  &
+            k_ngb, &
+            j_ngb, j_y, j_vx, j_vy, &
+            self%n_particles_x, self%n_particles_y,  &
+            self%n_particles_vx, self%n_particles_vy  &
+        )
+        return
+
+      case( 2 )
+        j_ngb = j_y + dir
+        ! correct neighbor index if out of bounds
+        if(j_ngb < 1 .or. j_ngb > self%n_particles_y )then
+          if( self%domain_is_periodic(2) )then
+            j_ngb = modulo(j_ngb-1, self%n_particles_y)+1
+          else
+            SLL_ASSERT( (j_y == 1 .and. dir == -1) .or. (j_y == self%n_particles_y .and. dir == 1) )
+            k_ngb = k ! no neighbor, return the index itself
+            return
+            SLL_ERROR( "get_neighbor_index", "CHECK 2 -- should not be here")
+          end if
+        end if
+        call sll_s_convert_4d_index_to_1d(  &
+            k_ngb, &
+            j_x, j_ngb, j_vx, j_vy, &
+            self%n_particles_x, self%n_particles_y,  &
+            self%n_particles_vx, self%n_particles_vy  &
+        )
+        return
+
+      case( 3 )
+        j_ngb = j_vx + dir
+        ! correct neighbor index if out of bounds
+        if(j_ngb < 1 .or. j_ngb > self%n_particles_vx )then
+          ! no periodicity along vx
+          SLL_ASSERT( (j_vx == 1 .and. dir == -1) .or. (j_vx == self%n_particles_vx .and. dir == 1) )
+          k_ngb = k ! no neighbor, return the index itself
+          return
+          SLL_ERROR( "get_neighbor_index", "CHECK 3 -- should not be here")
+        end if
+        call sll_s_convert_4d_index_to_1d(  &
+            k_ngb, &
+            j_x, j_y, j_ngb, j_vy, &
+            self%n_particles_x, self%n_particles_y,  &
+            self%n_particles_vx, self%n_particles_vy  &
+        )
+        return
+
+      case( 4 )
+        j_ngb = j_vy + dir
+        ! correct neighbor index if out of bounds
+        if(j_ngb < 1 .or. j_ngb > self%n_particles_vy )then
+          ! no periodicity along vy
+          SLL_ASSERT( (j_vy == 1 .and. dir == -1) .or. (j_vy == self%n_particles_vy .and. dir == 1) )
+          k_ngb = k ! no neighbor, return the index itself
+          return
+          SLL_ERROR( "get_neighbor_index", "CHECK 4 -- should not be here")
+        end if
+        call sll_s_convert_4d_index_to_1d(  &
+            k_ngb, &
+            j_x, j_y, j_vx, j_ngb, &
+            self%n_particles_x, self%n_particles_y,  &
+            self%n_particles_vx, self%n_particles_vy  &
+        )
+        return
+
+      case default
+          SLL_ERROR("get_neighbor_index", "wrong value for dim")
+    end select
+
+  end function
+
   !----------------------------------------------------------------------------------
   ! do not change the position of the deposition particles, but compute (and set)
   ! their weights using a direct interpolation with the remapping tool
@@ -851,9 +1013,17 @@ contains
     particle_density_factor = phase_space_volume / self%n_particles
     total_computed_density = 0.0d0
     do i_part = 1, self%n_particles
-      eta = self%particles_list(i_part)%eta
+      if( self%debug_use_array )then
+        eta = self%particle_array(1:4, i_part)
+      else
+        eta = self%particles_list(i_part)%eta
+      end if
       point_density = particle_density_factor * self%interpolate_value_of_remapped_f(eta)
-      self%particles_list(i_part)%weights(1) = point_density
+      if( self%debug_use_array )then
+        self%particle_array(5, i_part) = point_density   ! 5 is the first weight index
+      else
+        self%particles_list(i_part)%weights(1) = point_density
+      end if
       total_computed_density = total_computed_density + point_density
     end do
 
@@ -869,8 +1039,13 @@ contains
         print *, "   ...   target_total_charge, total_computed_charge, charge_correction_factor = ", &
             target_total_charge, total_computed_charge, charge_correction_factor
 
+        ! todo: try with    self%particle_array(5, :) = self%particle_array(5, :) * charge_correction_factor
         do i_part = 1, self%n_particles
-          self%particles_list(i_part)%weights(1) = self%particles_list(i_part)%weights(1) * charge_correction_factor
+          if( self%debug_use_array )then
+            self%particle_array(5, i_part) = self%particle_array(5, i_part) * charge_correction_factor ! 5 is the first weight index
+          else
+            self%particles_list(i_part)%weights(1) = self%particles_list(i_part)%weights(1) * charge_correction_factor
+          end if
         end do
       end if
     end if
@@ -1715,6 +1890,14 @@ contains
         sll_real64  :: j41,j42,j43,j44
         sll_real64  :: factor, det_J, inv_det_J
 
+        ! for clarity:
+        sll_int32, parameter :: dim_x  = 1
+        sll_int32, parameter :: dim_y  = 2
+        sll_int32, parameter :: dim_vx = 3
+        sll_int32, parameter :: dim_vy = 4
+        sll_int32, parameter :: left_ngb  = -1
+        sll_int32, parameter :: right_ngb =  1
+
         logical domain_is_x_periodic
         logical domain_is_y_periodic
 
@@ -1736,7 +1919,11 @@ contains
         ! ------   d/d_x terms
         factor = 1./(2*h_particles_x)
 
-        k_ngb  = self%particles_list(k)%ngb_xright_index
+        if( self%debug_use_array )then
+          k_ngb = self%get_neighbor_index(k, dim_x, right_ngb)
+        else
+          k_ngb = self%particles_list(k)%ngb_xright_index
+        end if
         if( k_ngb == k )then
            ! no right neighbor is available, use a non-centered finite difference
            factor = 2*factor
@@ -1759,7 +1946,11 @@ contains
         end if
 
 
-        k_ngb  = self%particles_list(k)%ngb_xleft_index
+        if( self%debug_use_array )then
+          k_ngb = self%get_neighbor_index(k, dim_x, left_ngb)
+        else
+          k_ngb  = self%particles_list(k)%ngb_xleft_index
+        end if
         if( k_ngb == k )then
            ! no left neighbor is available, use a non-centered finite difference
            factor = 2*factor
@@ -1789,7 +1980,11 @@ contains
         ! ------   d/d_y terms
         factor = 1./(2*h_particles_y)
 
-        k_ngb  = self%particles_list(k)%ngb_yright_index
+        if( self%debug_use_array )then
+          k_ngb = self%get_neighbor_index(k, dim_y, right_ngb)
+        else
+          k_ngb  = self%particles_list(k)%ngb_yright_index
+        end if
         if( k_ngb == k )then
            ! no right neighbor is available, use a non-centered finite difference
            factor = 2*factor
@@ -1811,7 +2006,11 @@ contains
             if( domain_is_y_periodic .and. y_k_right > y_k + 0.5*mesh_period_y ) y_k_right = y_k_right - mesh_period_y
         end if
 
-        k_ngb  = self%particles_list(k)%ngb_yleft_index
+        if( self%debug_use_array )then
+          k_ngb = self%get_neighbor_index(k, dim_y, left_ngb)
+        else
+          k_ngb  = self%particles_list(k)%ngb_yleft_index
+        end if
         if( k_ngb == k )then
            ! no left neighbor is available, use a non-centered finite difference
            factor = 2*factor
@@ -1842,7 +2041,11 @@ contains
         ! ------   d/d_vx terms
         factor = 1./(2*h_particles_vx)
 
-        k_ngb  = self%particles_list(k)%ngb_vxright_index
+        if( self%debug_use_array )then
+          k_ngb = self%get_neighbor_index(k, dim_vx, right_ngb)
+        else
+          k_ngb  = self%particles_list(k)%ngb_vxright_index
+        end if
         if( k_ngb == k )then
            ! no right neighbor is available, use a non-centered finite difference
            factor = 2*factor
@@ -1864,7 +2067,11 @@ contains
             if( domain_is_y_periodic .and. y_k_right > y_k + 0.5*mesh_period_y ) y_k_right = y_k_right - mesh_period_y
         end if
 
-        k_ngb  = self%particles_list(k)%ngb_vxleft_index
+        if( self%debug_use_array )then
+          k_ngb = self%get_neighbor_index(k, dim_vx, left_ngb)
+        else
+          k_ngb  = self%particles_list(k)%ngb_vxleft_index
+        end if
         if( k_ngb == k )then
             ! no left neighbor is available, use a non-centered finite difference
             factor = 2*factor
@@ -1895,7 +2102,11 @@ contains
         ! ------   d/d_vy terms
         factor = 1./(2*h_particles_vy)
 
-        k_ngb  = self%particles_list(k)%ngb_vyright_index
+        if( self%debug_use_array )then
+          k_ngb = self%get_neighbor_index(k, dim_vy, right_ngb)
+        else
+          k_ngb  = self%particles_list(k)%ngb_vyright_index
+        end if
         if( k_ngb == k )then
            ! no right neighbor is available, use a non-centered finite difference
            factor = 2*factor
@@ -1917,7 +2128,11 @@ contains
             if( domain_is_y_periodic .and. y_k_right > y_k + 0.5*mesh_period_y ) y_k_right = y_k_right - mesh_period_y
         end if
 
-        k_ngb  = self%particles_list(k)%ngb_vyleft_index
+        if( self%debug_use_array )then
+          k_ngb = self%get_neighbor_index(k, dim_vy, left_ngb)
+        else
+          k_ngb  = self%particles_list(k)%ngb_vyleft_index
+        end if
         if( k_ngb == k )then
             ! no left neighbor is available, use a non-centered finite difference
             factor = 2*factor

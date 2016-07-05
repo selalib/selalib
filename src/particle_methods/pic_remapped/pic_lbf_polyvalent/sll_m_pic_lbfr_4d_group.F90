@@ -902,7 +902,6 @@ contains
   !   1) either a flow marker (for i = 1, ... self%n_flow_markers)
   !   2) or a deposition particle (for i = self%n_flow_markers+1, ... self%n_moving_deposition_particles)
 
-  
   pure function pic_lbfr_4d_get_x( self, i ) result( r )
     class( sll_t_pic_lbfr_4d_group ), intent( in ) :: self
     sll_int32                       , intent( in ) :: i
