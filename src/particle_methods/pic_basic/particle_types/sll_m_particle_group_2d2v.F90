@@ -214,7 +214,7 @@ contains
     sll_int32                             , intent( in ) :: i !< no. of the particle
     sll_real64 :: r(self%n_weights) !< particle mass(es)
 
-    r = self%species%m * self%particle_array(5:4+self%n_weights, i)
+    r = self%particle_array(5:4+self%n_weights, i)
 
   end function get_weights_2d2v
 
