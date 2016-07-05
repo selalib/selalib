@@ -317,6 +317,7 @@ contains
     sll_int32               :: ierr
     character(len=128)      :: err_msg
 
+    print*, "[", this_fun_name, "] - initializing the particle group... "
     self%domain_is_periodic(1) = domain_is_x_periodic
     self%domain_is_periodic(2) = domain_is_y_periodic
 
@@ -326,17 +327,22 @@ contains
     self%n_particles_vy = n_particles_vy
     self%n_particles = n_particles_x * n_particles_y * n_particles_vx * n_particles_vy
     self%n_total_particles = self%n_particles   ! sequential runs for now
-
+    print*, "[", this_fun_name, "] - AA"
     self%n_weights = 1    ! one weight per particle for now
-
-    call self%species%init( species_charge, species_mass )
 
     !> create the species object for this particle group
     allocate(self%species, stat=ierr)
     SLL_ASSERT( ierr == 0)
 
+    call self%species%init( species_charge, species_mass )
+    print*, "[", this_fun_name, "] - Ab"
+
+
+    print*, "[", this_fun_name, "] - AA B"
+
     SLL_ALLOCATE( self%particles_list(self%n_particles), ierr )
     SLL_ASSERT( ierr == 0)
+    print*, "[", this_fun_name, "] - AC"
 
     !> A. discretization of the flow:
     !>    the flow grid is the 4d cartesian grid where the backward flow is linearized
@@ -355,6 +361,7 @@ contains
       remapping_grid_eta_min(4), &
       remapping_grid_eta_max(4) )
 
+    print*, "[", this_fun_name, "] - AA D"
     !> B. discretization of the remapped f, with sparse grids
     self%remapped_f_interpolation_degree = remap_degree
 
@@ -411,10 +418,12 @@ contains
 
     sll_int32                                                    :: ierr
 
+    print*, ' 1- aaa '
     SLL_ALLOCATE( sll_t_particle_group_2d2v_lbf :: particle_group, ierr)
 
     select type( particle_group )
     type is ( sll_t_particle_group_2d2v_lbf )
+      print*, ' 1- aaa B '
       call particle_group%init( &
         species_charge,    &
         species_mass,      &
@@ -429,6 +438,7 @@ contains
         n_particles_vx, &
         n_particles_vy &
       )
+      print*, ' 1- aaa C '
     end select
 
   end subroutine sll_s_new_particle_group_2d2v_lbf_ptr
@@ -831,6 +841,9 @@ contains
     sll_real64    :: total_computed_charge
     sll_real64    :: charge_correction_factor
 
+    ! set the particle group common_weight to 1 (will be a factor of each particle weight)
+    call self%set_common_weight(1.0_f64)
+
     phase_space_volume =    (self%lbf_grid%eta4_max - self%lbf_grid%eta4_min)    &
                           * (self%lbf_grid%eta3_max - self%lbf_grid%eta3_min)    &
                           * (self%lbf_grid%eta2_max - self%lbf_grid%eta2_min)    &
@@ -1088,6 +1101,24 @@ contains
 
     !> A.  preparation of the point sets where f will be reconstructed, depending on the cases
     if( reconstruction_set_type == sll_p_lbf_remapping_grid )then
+
+      ! => prepare the array of linked lists that will store the node indices contained in the flow cells (one list per cell)
+      allocate(nodes_in_flow_cell(flow_grid_num_cells_x,   &
+                                  flow_grid_num_cells_y,   &
+                                  flow_grid_num_cells_vx,  &
+                                  flow_grid_num_cells_vy)  &
+             , stat=ierr)
+      call sll_s_test_error_code(ierr, 'Memory allocation Failure.', __FILE__, __LINE__)
+
+      do j_x = 1, flow_grid_num_cells_x
+        do j_y = 1, flow_grid_num_cells_y
+          do j_vx = 1, flow_grid_num_cells_vx
+            do j_vy = 1, flow_grid_num_cells_vy
+              nullify(nodes_in_flow_cell(j_x,j_y,j_vx,j_vy)%pointed_element)
+            end do
+          end do
+        end do
+      end do
 
       nodes_number = self%sparse_grid_interpolator%size_basis
       SLL_ASSERT( size(self%tmp_f_values_on_remapping_sparse_grid,1) == nodes_number )
