@@ -573,13 +573,15 @@ contains
        if( (sim%particle_type == sll_p_lbf_particles .or. sim%particle_type == sll_p_lbf_particles_old )  &
            .and. (modulo(nt-1, sim%resample_period) == 0 ) )then
 
-         print *, "-- plotting f slice in gnuplot format before resampling..."
+         print *, "-- plotting f slice in gnuplot format..."
          call sll_s_visualize_particle_group( sim%particle_group, plotting_params_2d, nt)
+         print*, "-- plotting done."
 
-
-         print *, "-- particle resampling with deterministic LBF method..."
-         call sll_s_resample_particle_group( sim%particle_group )
-         print*, "-- resampling done."
+         if( nt > 1 )then
+           print *, "-- particle resampling with deterministic LBF method..."
+           call sll_s_resample_particle_group( sim%particle_group )
+           print*, "-- resampling done."
+         end if
 
        end if
 
