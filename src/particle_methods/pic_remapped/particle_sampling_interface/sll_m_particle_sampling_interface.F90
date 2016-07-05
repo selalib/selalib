@@ -194,7 +194,17 @@ contains
 
     select type ( particle_group )
 
-    type is ( sll_t_pic_lbfr_4d_group )
+    type is ( sll_t_pic_lbfr_4d_group )  !! this class should be eventually discarded
+      if( present(conservative_sampling_parameters) )then
+        enforce_total_charge = .true.
+        target_total_charge = conservative_sampling_parameters%total_charge
+      else
+        enforce_total_charge = .false.    ! no charge conservation
+        target_total_charge = 0._f64      ! value does not matter then
+      end if
+      call particle_group%resample( target_total_charge, enforce_total_charge )
+
+    type is ( sll_t_particle_group_2d2v_lbf )
       if( present(conservative_sampling_parameters) )then
         enforce_total_charge = .true.
         target_total_charge = conservative_sampling_parameters%total_charge

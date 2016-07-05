@@ -191,10 +191,6 @@ contains
     sll_int32   :: n_particles_vy
     sll_int32   :: remap_period
     sll_int32   :: remap_degree
-    sll_real64  :: remapping_grid_x_min
-    sll_real64  :: remapping_grid_x_max
-    sll_real64  :: remapping_grid_y_min
-    sll_real64  :: remapping_grid_y_max
     sll_real64  :: remapping_grid_vx_min
     sll_real64  :: remapping_grid_vx_max
     sll_real64  :: remapping_grid_vy_min
@@ -299,10 +295,6 @@ contains
     namelist /pic_lbf_remap_params/    &
                                   remap_period,                       &
                                   remap_degree,                       &
-                                  remapping_grid_x_min,               &
-                                  remapping_grid_x_max,               &
-                                  remapping_grid_y_min,               &
-                                  remapping_grid_y_max,               &
                                   remapping_grid_vx_min,              &
                                   remapping_grid_vx_max,              &
                                   remapping_grid_vy_min,              &
@@ -396,16 +388,17 @@ contains
       end select
 
     case( sll_p_lbf_particles )
+      print*, '111'
       sim%no_weights = 1   ! no control variate for the moment
       sim%init_case = sll_p_deterministic_sampling
       domain_is_x_periodic = .true.
       domain_is_y_periodic = .true.
-      remapping_grid_eta_min(1) = remapping_grid_x_min
-      remapping_grid_eta_min(2) = remapping_grid_y_min
+      remapping_grid_eta_min(1) = x1_min
+      remapping_grid_eta_min(2) = x2_min
       remapping_grid_eta_min(3) = remapping_grid_vx_min
       remapping_grid_eta_min(4) = remapping_grid_vy_min
-      remapping_grid_eta_max(1) = remapping_grid_x_max
-      remapping_grid_eta_max(2) = remapping_grid_y_max
+      remapping_grid_eta_max(1) = x1_max
+      remapping_grid_eta_max(2) = x2_max
       remapping_grid_eta_max(3) = remapping_grid_vx_max
       remapping_grid_eta_max(4) = remapping_grid_vy_max
       remapping_sparse_grid_max_levels(1) = remapping_sparse_grid_max_level_x
@@ -413,6 +406,7 @@ contains
       remapping_sparse_grid_max_levels(3) = remapping_sparse_grid_max_level_vx
       remapping_sparse_grid_max_levels(4) = remapping_sparse_grid_max_level_vy
       sim%resample_period = remap_period
+      print*, '1112'
       call sll_s_new_particle_group_2d2v_lbf_ptr( &
           sim%particle_group, &
           species_charge,    &
@@ -428,6 +422,7 @@ contains
           n_particles_vx, &
           n_particles_vy &
       )
+      print*, '11 6'
       SLL_ASSERT( sim%world_size == 1 )
       sim%n_particles = sim%particle_group%n_particles
       sim%n_total_particles = sim%n_particles * sim%world_size
@@ -533,7 +528,7 @@ contains
     sll_real64 :: slice_vy
 
     ! Loop variables
-    sll_int32  :: j, ierr
+    sll_int32  :: nt, ierr
     sll_real64 :: eenergy
     sll_int32  :: th_diag_id
 
@@ -570,23 +565,21 @@ contains
 
     ! Time loop
     print*, 'Time loop'
-    do j=1, sim%n_time_steps
+    do nt=1, sim%n_time_steps
 
-       print*, 'time step ', j, '/', sim%n_time_steps, ' ... '
+       print*, 'time step ', nt, '/', sim%n_time_steps, ' ... '
 
        ! particle resampling (conditional)
        if( (sim%particle_type == sll_p_lbf_particles .or. sim%particle_type == sll_p_lbf_particles_old )  &
-           .and. (modulo(j-1, sim%resample_period) == 0 ) )then
+           .and. (modulo(nt-1, sim%resample_period) == 0 ) )then
 
-         if( j > 1 )then
-           print *, "-- plotting f slice in gnuplot format before resampling..."
-           call sll_s_visualize_particle_group( sim%particle_group, plotting_params_2d, j)
+         print *, "-- plotting f slice in gnuplot format before resampling..."
+         call sll_s_visualize_particle_group( sim%particle_group, plotting_params_2d, nt)
 
 
-           print *, "-- particle resampling with deterministic LBF method..."
-           call sll_s_resample_particle_group( sim%particle_group )
-           print*, "-- resampling done."
-         end if
+         print *, "-- particle resampling with deterministic LBF method..."
+         call sll_s_resample_particle_group( sim%particle_group )
+         print*, "-- resampling done."
 
        end if
 
@@ -597,7 +590,7 @@ contains
        if (sim%rank == 0) then
           eenergy = sim%pic_poisson%compute_field_energy(1)
           print*, "-- diagnostics: electric energy = ", eenergy
-          write(th_diag_id,'(f12.5,2g20.12)' ) real(j,f64)*sim%delta_t,  eenergy
+          write(th_diag_id,'(f12.5,2g20.12)' ) real(nt,f64)*sim%delta_t,  eenergy
        end if
 
     end do
