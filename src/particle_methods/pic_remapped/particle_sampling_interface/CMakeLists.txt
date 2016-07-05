@@ -17,5 +17,6 @@ TARGET_LINK_LIBRARIES( sll_particle_sampling_interface
   sll_pic_interface
   sll_initial_density_parameters
   sll_pic_lbfr
+  sll_pic_remapped_lbf
   )
 
