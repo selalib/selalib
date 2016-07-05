@@ -7,5 +7,6 @@ TARGET_LINK_LIBRARIES( sll_particle_visualization_interface
   sll_pic_interface
   sll_meshes
   sll_pic_lbfr
+  sll_pic_remapped_lbf
   sll_file_io
   )
