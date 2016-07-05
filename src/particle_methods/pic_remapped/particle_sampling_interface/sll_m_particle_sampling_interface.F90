@@ -37,6 +37,9 @@ module sll_m_particle_sampling_interface
   use sll_m_pic_lbfr_4d_group, only: &
     sll_t_pic_lbfr_4d_group
 
+  use sll_m_particle_group_2d2v_lbf, only: &
+    sll_t_particle_group_2d2v_lbf
+
   use sll_m_initial_density_parameters, only: &
     sll_t_initial_density_parameters, &
     sll_p_landau_density_2d2v
@@ -145,7 +148,17 @@ contains
     elseif (sampling_strategy == sll_p_deterministic_sampling) then
     select type ( particle_group )
 
-      type is ( sll_t_pic_lbfr_4d_group )
+      type is ( sll_t_pic_lbfr_4d_group )   !! this class should be eventually discarded
+        if( present(conservative_sampling_parameters) )then
+          enforce_total_charge = .true.
+          target_total_charge = conservative_sampling_parameters%total_charge
+        else
+          enforce_total_charge = .false.    ! no charge conservation
+          target_total_charge = 0._f64      ! value does not matter then
+        end if
+        call particle_group%resample( target_total_charge, enforce_total_charge, initial_density_parameters )
+
+      type is ( sll_t_particle_group_2d2v_lbf )
         if( present(conservative_sampling_parameters) )then
           enforce_total_charge = .true.
           target_total_charge = conservative_sampling_parameters%total_charge
