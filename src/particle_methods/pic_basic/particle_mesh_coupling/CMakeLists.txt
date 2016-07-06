@@ -6,7 +6,7 @@ TARGET_LINK_LIBRARIES( sll_particle_mesh_coupling
   sll_memory
   sll_assert
   sll_pic_interface
-  sll_particle_types
+  sll_particle_groups
   sll_splines
   )
 
