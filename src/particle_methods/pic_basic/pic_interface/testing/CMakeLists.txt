@@ -1,12 +1,12 @@
 ADD_EXECUTABLE( test_control_variate test_control_variate.F90)
-TARGET_LINK_LIBRARIES( test_control_variate sll_pic_interface sll_particle_types)
+TARGET_LINK_LIBRARIES( test_control_variate sll_pic_interface sll_particle_groups)
 
 ADD_TEST( NAME control_variate COMMAND test_control_variate)
 SET_TESTS_PROPERTIES(control_variate PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
 
 
 ADD_EXECUTABLE( test_particle_initializer test_particle_initializer.F90)
-TARGET_LINK_LIBRARIES( test_particle_initializer sll_pic_interface sll_particle_types)
+TARGET_LINK_LIBRARIES( test_particle_initializer sll_pic_interface sll_particle_groups)
 
 ADD_TEST( NAME particle_initializer COMMAND test_particle_initializer)
 SET_TESTS_PROPERTIES(particle_initializer PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")

@@ -1,4 +1,4 @@
 add_subdirectory(pic_interface)
-add_subdirectory(particle_types)
+add_subdirectory(particle_groups)
 add_subdirectory(particle_mesh_coupling)
 add_subdirectory(pic_time_integration)
