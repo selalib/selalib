@@ -144,138 +144,6 @@ contains
 
   end subroutine
 
-  !> sll_f_pic_shape(degree, x, y, vx, vy, inv_hx, inv_hy, inv_hvx, inv_hvy)
-  !! computes the value of the 4d B-spline particle shape (no particle transformation here)
-  !!
-  !! note:
-  !!  - inv_hx, inv_hy, inv_hvx, inv_hvy are the inverse
-  !!    of the inter-particle distances (hx, hy, hvx, hvy) on the initial (or remapping) grid
-  !!
-  !!  - x, y, vx, vy are phase-space coordinates relative to the particle center
-  !!    and they are not scaled: for instance if degree = 1 (resp. if degree = 3),
-  !!    and |x| >= hx (resp. |x| >= 2*hx), then sll_f_pic_shape returns 0
-  !!    (and similarly for y, vx, vy)
-
-  !function sll_f_pic_shape( &
-  !  degree,             &
-  !  x, y, vx, vy,       &
-  !  inv_hx, inv_hy, inv_hvx, inv_hvy   &
-  !  ) &
-  !  result(shape)
-  !
-  !  sll_int32 :: degree
-  !  sll_real64 :: x, y, vx, vy
-  !  sll_real64 :: inv_hx, inv_hy, inv_hvx, inv_hvy
-  !  sll_real64 :: shape
-  !!    sll_int32 :: nc_eta2
-  !!    sll_int32 :: ierr
-  !
-  !  ! uses [[sll_b_spline]]
-  !  shape =   inv_hx  * sll_b_spline(degree,inv_hx  * x ) &
-  !          * inv_hy  * sll_b_spline(degree,inv_hy  * y ) &
-  !          * inv_hvx * sll_b_spline(degree,inv_hvx * vx) &
-  !          * inv_hvy * sll_b_spline(degree,inv_hvy * vy)
-  !end function sll_f_pic_shape
-
-
-  !> added by MCP
-  !! 4d-reference B-spline shape function (independent of the grid resolution), function support is [-part_cp, part_cp]^4
-  !! with part_cp = (degree +1)/2
-  !function sll_ref_pic_shape( &
-  !  degree,     &
-  !  x,y,vx,vy &
-  !  ) &
-  !  result(ref_shape)
-  !
-  !  sll_int32 :: degree
-  !  sll_real64 :: x, y, vx, vy
-  !  sll_real64 :: ref_shape
-  !!    sll_int32 :: nc_eta2
-  !!    sll_int32 :: ierr
-  !
-  !  ref_shape = sll_b_spline(degree,x) * sll_b_spline(degree,y) * sll_b_spline(degree,vx) * sll_b_spline(degree, vy)
-  !end function sll_ref_pic_shape
-
-
-  ! added by MCP
-  ! <<sll_b_spline>>
-  ! univariate centered (and reference, ie independent of the grid resolution) B-splines. Support is ( -(degree+1)/2, (degree+1)/2 )
-  !function sll_b_spline( &
-  !  degree, &
-  !  x       &
-  !  ) &
-  !  result(res)
-  !  sll_int32 :: degree
-  !  sll_real64 :: x
-  !  sll_real64 :: x_aux
-  !  sll_real64 :: res
-  !
-  !  res = 0.0_f64
-  !  if ( degree == 1 ) then
-  !      ! pw affine spline
-  !     if ( x <= -1 .or. x >= 1 ) then
-  !          return
-  !      end if
-  !      if ( x < 0 ) then
-  !          res = x+1.0_f64
-  !          return
-  !      end if
-  !      res = 1.0_f64-x
-  !      return
-  !  end if
-  !  if ( degree == 3 ) then
-  !      x_aux = x+2
-  !      if ( x_aux <= 0 .or. x_aux >= 4 ) then
-  !          return
-  !      end if
-  !      if ( x_aux < 1 ) then
-  !          res = 0.16666666666666666*(x_aux**3)
-  !          return
-  !      end if
-  !      if ( x_aux < 2 ) then
-  !          res = 0.6666666666666666 - 2.*x_aux + 2.*(x_aux**2) - 0.5*(x_aux**3)
-  !          return
-  !      end if
-  !      if ( x_aux < 3 ) then
-  !          res = -7.333333333333333 + 10.*x_aux - 4.*(x_aux**2) + 0.5*(x_aux**3)
-  !          return
-  !      end if
-  !      res = 10.66666666666666 - 8.*x_aux + 2.*(x_aux**2) - 0.16666666666666666*(x_aux**3)
-  !      return
-  !  end if
-  !  if ( degree == 5 ) then
-  !      x_aux = x+3
-  !      if ( x_aux <= 0 .or. x_aux >= 6 ) then
-  !          res = 0.0_f64
-  !          return
-  !      end if
-  !      if ( x_aux < 1 ) then
-  !          res = 0.00833333333333333*(x_aux**5)
-  !          return
-  !      end if
-  !      if ( x_aux < 2 ) then
-  !          res = -0.0416666666667 *(x_aux**5) + 0.25 *(x_aux**4) - 0.5 *(x_aux**3) + 0.5 *(x_aux**2) - 0.25 *(x_aux) + 0.05
-  !          return
-  !      end if
-  !      if ( x_aux < 3 ) then
-  !          res = 0.0833333333333 *(x_aux**5) - 1.0 *(x_aux**4) + 4.5 *(x_aux**3) - 9.5 *(x_aux**2) + 9.75 *(x_aux) - 3.95
-  !          return
-  !      end if
-  !      if ( x_aux < 4 ) then
-  !          res = -0.0833333333333 *(x_aux**5) + 1.5 *(x_aux**4) - 10.5 *(x_aux**3) + 35.5 *(x_aux**2) - 57.75 *(x_aux) + 36.55
-  !          return
-  !      end if
-  !      if ( x_aux < 5 ) then
-  !          res = 0.0416666666667 *(x_aux**5) - 1.0 *(x_aux**4) + 9.5 *(x_aux**3) - 44.5 *(x_aux**2) + 102.25 *(x_aux) - 91.45
-  !          return
-  !      end if
-  !      res = -0.008333333333333333 * ((x_aux-6.)**5)
-  !      return
-  !  end if
-  !  print *, 'sll_b_spline(): ERROR, invalid value of argument degree ', degree
-  !  STOP
-  !  return
-  !end function sll_b_spline
 
   subroutine sll_s_apply_periodic_bc_x( mesh, x)
 
@@ -346,9 +214,9 @@ contains
     inv_r_vy = 1./r_vy
 
     sll_f_eval_hat_function = basis_height + shift * max(0._f64, 1. - inv_r_x*abs(x-x0) )             &
-                                                 * max(0._f64, 1. - inv_r_y*abs(y-y0) )             &
-                                                 * max(0._f64, 1. - inv_r_vx*abs(vx-vx0) )          &
-                                                 * max(0._f64, 1. - inv_r_vy*abs(vy-vy0) )
+                                                   * max(0._f64, 1. - inv_r_y*abs(y-y0) )             &
+                                                   * max(0._f64, 1. - inv_r_vx*abs(vx-vx0) )          &
+                                                   * max(0._f64, 1. - inv_r_vy*abs(vy-vy0) )
   end function sll_f_eval_hat_function
 
 end module  sll_m_particle_lbf_utilities

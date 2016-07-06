@@ -1,4 +1,4 @@
-set(    SIM_NAME pic_vp_2d2v_cart_remapped    )
+set(    SIM_NAME pic_vp_2d2v_cart_lbf    )
 set(   TEST_NAME "sim_${SIM_NAME}"            )
 set(  EXECUTABLE "${TEST_NAME}"               )
 set( INSTALL_DIR "${INSTALL_DIR}/${SIM_NAME}" )
