@@ -14,9 +14,9 @@
 !  "http://www.cecill.info". 
 !**************************************************************
 !> @author
-!> Michel Mehrenberger (mehrenbe@math.unistra.fr)
+!> Michel Mehrenberger
 !> Edwin Chacon Golcher
-!> Yaman Güçlü (yaman.guclu@gmail.com)
+!> Yaman Güçlü
 !> @brief 
 !> Simulation class to solve drift kinetic equation in polar coordinates
 !> (3d space (x1=r,x2=theta,x3=z) 1d velocity (x4=v))
