@@ -1,6 +1,6 @@
 !**************************************************************
 !  Copyright INRIA
-!  Authors : MCP,ALH
+!  Authors :
 !     CALVI project team
 !  
 !  This code SeLaLib (for Semi-Lagrangian-Library) 
@@ -23,8 +23,8 @@ module sll_m_particle_visualization_interface
 
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_assert.h"
-#include "sll_memory.h"
 #include "sll_errors.h"
+#include "sll_memory.h"
 #include "sll_working_precision.h"
 
   use sll_m_cartesian_meshes, only: &
@@ -34,9 +34,9 @@ module sll_m_particle_visualization_interface
   use sll_m_particle_group_base, only: &
     sll_c_particle_group_base
 
-  use sll_m_pic_lbfr_4d_group, only: &
-    sll_t_pic_lbfr_4d_group,  &
-    SLL_PIC_LBFR_GIVEN_GRID
+  !  use sll_m_pic_lbfr_4d_group, only: &
+  !    sll_t_pic_lbfr_4d_group,  &
+  !    SLL_PIC_LBFR_GIVEN_GRID
 
   use sll_m_particle_group_2d2v_lbf, only: &
     sll_t_particle_group_2d2v_lbf
@@ -112,74 +112,74 @@ contains
 
     select type ( particle_group )
 
-    type is ( sll_t_pic_lbfr_4d_group ) !! this class should be eventually discarded
-
-    SLL_ALLOCATE( x_vx_grid_values(plotting_params_2d%plot_np_x, plotting_params_2d%plot_np_vx), ierr)
-    SLL_ASSERT( plotting_params_2d%slice_y  >= particle_group%remapping_grid_eta_min(2) )
-    SLL_ASSERT( plotting_params_2d%slice_y  <  particle_group%remapping_grid_eta_max(2) )
-    SLL_ASSERT( plotting_params_2d%slice_vy >= particle_group%remapping_grid_eta_min(4) )
-    SLL_ASSERT( plotting_params_2d%slice_vy <  particle_group%remapping_grid_eta_max(4) )
-
-    plotting_grid_4d => sll_f_new_cartesian_mesh_4d(  &
-        plotting_params_2d%plot_np_x  - 1,  &
-        1,  &
-        plotting_params_2d%plot_np_vx - 1,  &
-        1,  &
-        particle_group%remapping_grid_eta_min(1), &
-        particle_group%remapping_grid_eta_max(1), &
-        plotting_params_2d%slice_y, &
-        particle_group%remapping_grid_eta_max(2), &   ! max value along y does not matter, only the minimum one is used
-        particle_group%remapping_grid_eta_min(3), &
-        particle_group%remapping_grid_eta_max(3), &
-        plotting_params_2d%slice_vy, &
-        particle_group%remapping_grid_eta_max(4)  &   ! max value along vy does not matter, only the minimum one is used
-    )
-
-    reconstruction_set_type = SLL_PIC_LBFR_GIVEN_GRID
-    dummy_total_charge = 0.0_f64
-    enforce_total_charge = .false.
-
-    call particle_group%pic_lbfr_4d_reconstruct_f(  &
-        reconstruction_set_type,   &
-        plotting_grid_4d,          &
-        x_vx_grid_values,          &
-        dummy_total_charge,        &
-        enforce_total_charge       &
-    )
-
-    if( plotting_params_2d%plot_count == 0 )then
-
-      ! Open Gnuplot script file: a new ASCII file will be created (replaced if already existing)
-      open( file= trim(plotting_params_2d%field_name)//'.gnu', &
-        status  = 'replace',   &
-        form    = 'formatted', &
-        position= 'append',    &
-        newunit = file_id,     &
-        iostat  = ierr )
-
-      ! Write Gnuplot instructions for plotting f, then close file
-      write(file_id,*) '# run this script with $ gnuplot ' // trim(plotting_params_2d%field_name) // '.gnu' // ' -persist'
-      write(file_id,*) 'set view 0,0'
-      write(file_id,*) 'set pm3d'
-      write(file_id,*) 'set hid'
-      close(file_id)
-    end if
-
-    call sll_o_gnuplot_2d(  &
-        particle_group%remapping_grid_eta_min(1), &
-        particle_group%remapping_grid_eta_max(1), &
-        plotting_params_2d%plot_np_x,   &                ! (note: this is indeed the nb of plotted points, not 'cells')
-        particle_group%remapping_grid_eta_min(3), &
-        particle_group%remapping_grid_eta_max(3), &
-        plotting_params_2d%plot_np_vx,  &                ! (same comment)
-        x_vx_grid_values,   &
-        trim(plotting_params_2d%field_name),  &
-        iplot,      &
-        ierr   &
-        )
-        ! todo: use this: force_keep_gnu_file=.true. )     ! optional argument do avoid replacing existing file even if iplot=1
-
-    plotting_params_2d%plot_count = plotting_params_2d%plot_count + 1
+    !    type is ( sll_t_pic_lbfr_4d_group ) !! this class should be eventually discarded
+    !
+    !    SLL_ALLOCATE( x_vx_grid_values(plotting_params_2d%plot_np_x, plotting_params_2d%plot_np_vx), ierr)
+    !    SLL_ASSERT( plotting_params_2d%slice_y  >= particle_group%remapping_grid_eta_min(2) )
+    !    SLL_ASSERT( plotting_params_2d%slice_y  <  particle_group%remapping_grid_eta_max(2) )
+    !    SLL_ASSERT( plotting_params_2d%slice_vy >= particle_group%remapping_grid_eta_min(4) )
+    !    SLL_ASSERT( plotting_params_2d%slice_vy <  particle_group%remapping_grid_eta_max(4) )
+    !
+    !    plotting_grid_4d => sll_f_new_cartesian_mesh_4d(  &
+    !        plotting_params_2d%plot_np_x  - 1,  &
+    !        1,  &
+    !        plotting_params_2d%plot_np_vx - 1,  &
+    !        1,  &
+    !        particle_group%remapping_grid_eta_min(1), &
+    !        particle_group%remapping_grid_eta_max(1), &
+    !        plotting_params_2d%slice_y, &
+    !        particle_group%remapping_grid_eta_max(2), &   ! max value along y does not matter, only the minimum one is used
+    !        particle_group%remapping_grid_eta_min(3), &
+    !        particle_group%remapping_grid_eta_max(3), &
+    !        plotting_params_2d%slice_vy, &
+    !        particle_group%remapping_grid_eta_max(4)  &   ! max value along vy does not matter, only the minimum one is used
+    !    )
+    !
+    !    reconstruction_set_type = SLL_PIC_LBFR_GIVEN_GRID
+    !    dummy_total_charge = 0.0_f64
+    !    enforce_total_charge = .false.
+    !
+    !    call particle_group%pic_lbfr_4d_reconstruct_f(  &
+    !        reconstruction_set_type,   &
+    !        plotting_grid_4d,          &
+    !        x_vx_grid_values,          &
+    !        dummy_total_charge,        &
+    !        enforce_total_charge       &
+    !    )
+    !
+    !    if( plotting_params_2d%plot_count == 0 )then
+    !
+    !      ! Open Gnuplot script file: a new ASCII file will be created (replaced if already existing)
+    !      open( file= trim(plotting_params_2d%field_name)//'.gnu', &
+    !        status  = 'replace',   &
+    !        form    = 'formatted', &
+    !        position= 'append',    &
+    !        newunit = file_id,     &
+    !        iostat  = ierr )
+    !
+    !      ! Write Gnuplot instructions for plotting f, then close file
+    !      write(file_id,*) '# run this script with $ gnuplot ' // trim(plotting_params_2d%field_name) // '.gnu' // ' -persist'
+    !      write(file_id,*) 'set view 0,0'
+    !      write(file_id,*) 'set pm3d'
+    !      write(file_id,*) 'set hid'
+    !      close(file_id)
+    !    end if
+    !
+    !    call sll_o_gnuplot_2d(  &
+    !        particle_group%remapping_grid_eta_min(1), &
+    !        particle_group%remapping_grid_eta_max(1), &
+    !        plotting_params_2d%plot_np_x,   &                ! (note: this is indeed the nb of plotted points, not 'cells')
+    !        particle_group%remapping_grid_eta_min(3), &
+    !        particle_group%remapping_grid_eta_max(3), &
+    !        plotting_params_2d%plot_np_vx,  &                ! (same comment)
+    !        x_vx_grid_values,   &
+    !        trim(plotting_params_2d%field_name),  &
+    !        iplot,      &
+    !        ierr   &
+    !        )
+    !        ! todo: use this: force_keep_gnu_file=.true. )     ! optional argument do avoid replacing existing file even if iplot=1
+    !
+    !    plotting_params_2d%plot_count = plotting_params_2d%plot_count + 1
 
     type is ( sll_t_particle_group_2d2v_lbf )
 
