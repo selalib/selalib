@@ -34,9 +34,6 @@ module sll_m_particle_sampling_interface
     sll_s_particle_initialize_random_landau_2d2v, &
     sll_s_particle_initialize_sobol_landau_2d2v
 
-  !  use sll_m_pic_lbfr_4d_group, only: &
-  !    sll_t_pic_lbfr_4d_group
-
   use sll_m_particle_group_2d2v_lbf, only: &
     sll_t_particle_group_2d2v_lbf
 
@@ -148,16 +145,6 @@ contains
     elseif (sampling_strategy == sll_p_deterministic_sampling) then
     select type ( particle_group )
 
-      !      type is ( sll_t_pic_lbfr_4d_group )   !! this class should be eventually discarded
-      !        if( present(conservative_sampling_parameters) )then
-      !          enforce_total_charge = .true.
-      !          target_total_charge = conservative_sampling_parameters%total_charge
-      !        else
-      !          enforce_total_charge = .false.    ! no charge conservation
-      !          target_total_charge = 0._f64      ! value does not matter then
-      !        end if
-      !        call particle_group%resample( target_total_charge, enforce_total_charge, initial_density_parameters )
-
       type is ( sll_t_particle_group_2d2v_lbf )
         if( present(conservative_sampling_parameters) )then
           enforce_total_charge = .true.
@@ -193,16 +180,6 @@ contains
     logical    :: enforce_total_charge
 
     select type ( particle_group )
-
-    !    type is ( sll_t_pic_lbfr_4d_group )  !! this class should be eventually discarded
-    !      if( present(conservative_sampling_parameters) )then
-    !        enforce_total_charge = .true.
-    !        target_total_charge = conservative_sampling_parameters%total_charge
-    !      else
-    !        enforce_total_charge = .false.    ! no charge conservation
-    !        target_total_charge = 0._f64      ! value does not matter then
-    !      end if
-    !      call particle_group%resample( target_total_charge, enforce_total_charge )
 
     type is ( sll_t_particle_group_2d2v_lbf )
       if( present(conservative_sampling_parameters) )then

@@ -325,22 +325,15 @@ contains
     self%n_particles_vy = n_particles_vy
     self%n_particles = n_particles_x * n_particles_y * n_particles_vx * n_particles_vy
     self%n_total_particles = self%n_particles   ! sequential runs for now
-    print*, "[", this_fun_name, "] - AA"
     self%n_weights = n_weights    ! one weight per particle for now
 
     !> create the species object for this particle group
     allocate(self%species, stat=ierr)
     SLL_ASSERT( ierr == 0)
-
     call self%species%init( species_charge, species_mass )
-    print*, "[", this_fun_name, "] - Ab"
-
-
-    print*, "[", this_fun_name, "] - AA B"
 
     SLL_ALLOCATE( self%particle_array(4+n_weights, self%n_particles), ierr)
     SLL_ASSERT( ierr == 0)
-    print*, "[", this_fun_name, "] - AC"
 
     !> A. discretization of the flow:
     !>    the flow grid is the 4d cartesian grid where the backward flow is linearized
@@ -359,7 +352,6 @@ contains
       remapping_grid_eta_min(4), &
       remapping_grid_eta_max(4) )
 
-    print*, "[", this_fun_name, "] - AA D"
     !> B. discretization of the remapped f, with sparse grids
     self%remapped_f_interpolation_degree = remap_degree
 
@@ -374,7 +366,7 @@ contains
                   remapping_grid_eta_max    &
                   )
 
-    ! C.2.b  array of sparse grid coefficients for remapped_f
+    ! C.  array of sparse grid coefficients for remapped_f
     SLL_ALLOCATE( self%remapped_f_sparse_grid_coefficients(self%sparse_grid_interpolator%size_basis), ierr )
     self%remapped_f_sparse_grid_coefficients = 0.0_f64
 
@@ -417,13 +409,11 @@ contains
     sll_int32 :: ierr
     sll_int32 :: n_weights
 
-    print*, ' 1- aaa '
     SLL_ALLOCATE( sll_t_particle_group_2d2v_lbf :: particle_group, ierr)
     n_weights = 1
 
     select type( particle_group )
     type is ( sll_t_particle_group_2d2v_lbf )
-      print*, ' 1- aaa B '
       call particle_group%init( &
         species_charge,    &
         species_mass,      &
@@ -439,7 +429,6 @@ contains
         n_particles_vy, &
         n_weights &
       )
-      print*, ' 1- aaa C '
     end select
 
   end subroutine sll_s_new_particle_group_2d2v_lbf_ptr
@@ -472,7 +461,7 @@ contains
     initial_step = present(init_f_params)
 
     !> A. write the nodal values of the target density f, then compute the new interpolation coefs
-    print *, "particle_group_2d2v_lbf%resample -- step A"
+    print *, "particle_group_2d2v_lbf%resample -- step A (LBF approximation of transported density on remapping grid)"
 
     !>    - A.1  write the nodal values of f on the arrays of interpolation coefs
     if( initial_step )then
@@ -512,7 +501,7 @@ contains
     self%remapped_f_sparse_grid_coefficients = self%tmp_f_values_on_remapping_sparse_grid
 
     !> B. reset the particles on the cartesian grid
-    print *, "particle_group_2d2v_lbf%resample -- step B"
+    print *, "particle_group_2d2v_lbf%resample -- step B (deterministic resampling of particles using the remapped density)"
     call self%reset_particles_positions
     ! since the remapping tool has been reset, computing the weights can be done with straightforward interpolation (flow = Id)
     call self%reset_particles_weights_with_direct_interpolation( target_total_charge, enforce_total_charge )
@@ -1975,7 +1964,7 @@ contains
               - j14 * j21 * j32 * j43 &
               - j14 * j22 * j33 * j41 &
               - j14 * j23 * j31 * j42
-        !print*,'det  =',det
+
         inv_det_J = 1./det_J
 
         d11 = j22 * j33 * j44 &
