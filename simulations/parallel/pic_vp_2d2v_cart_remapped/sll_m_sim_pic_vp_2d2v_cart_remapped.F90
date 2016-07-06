@@ -1,3 +1,6 @@
+
+!!!! OBSOLETE SIMULATION, SHOULD BE REMOVED
+
 !> @ingroup particle_methods
 !> @author MCP ALH
 !> @brief Generic simulation algorithms for PIC particles

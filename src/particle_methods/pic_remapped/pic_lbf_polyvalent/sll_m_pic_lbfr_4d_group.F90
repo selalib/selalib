@@ -902,7 +902,6 @@ contains
   !   1) either a flow marker (for i = 1, ... self%n_flow_markers)
   !   2) or a deposition particle (for i = self%n_flow_markers+1, ... self%n_moving_deposition_particles)
 
-  
   pure function pic_lbfr_4d_get_x( self, i ) result( r )
     class( sll_t_pic_lbfr_4d_group ), intent( in ) :: self
     sll_int32                       , intent( in ) :: i
@@ -1502,6 +1501,9 @@ contains
 
 
   !> pic_lbfr_4d_visualize_f_slice_x_vx  plots an approximation of  f_x_vx = \int \int f(x,y,v_x,v_y) d y d v_y
+
+  !> todo: discard this routine and use only the visualization interface
+
   !>   - the plot is done on a 2d grid, but uses a 4d grid to evaluate f
   !>   - grid dimensions: we give the number of points, and the boundaries are given by the remapping domain
   !>   - calls sll_o_gnuplot_2d to write the data file
