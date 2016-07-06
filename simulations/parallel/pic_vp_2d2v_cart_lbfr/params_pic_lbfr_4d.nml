@@ -18,10 +18,10 @@
 /
 
 &particle_method
-        particle_type_str = "SLL_LBFR_PARTICLES"
+        particle_type_str = "SLL_LBF_PARTICLES_OLD"
 /
 
-&pic_lbfr_remap_params
+&pic_lbf_remap_params_old
     remap_period        = 10
     remap_f_type        = 1                 !  0 = splines, 1 = sparse grid -- find a better way to specify this
     remap_degree        = 3
@@ -39,7 +39,7 @@
     remapping_sparse_grid_max_level_vy = 6              ! for the sparse grid
 /
 
-&pic_lbfr_deposition_params
+&pic_lbf_deposition_params_old
     deposition_particles_pos_type = 0       ! 0 = initialized (and resampled) on a structured grid, 1 = unstructured (random)
     deposition_particles_move_type = 1      ! 0 = new particles are created at each step,  1 = they move until next remap step
     n_deposition_particles = 50000          ! for unstructured deposition particles
@@ -49,7 +49,7 @@
     n_deposition_particles_vy = 3           ! for structured deposition particles
 /
 
-&pic_lbfr_markers_params
+&pic_lbf_markers_params_old
     flow_markers_type = 0         ! 0 = structured (markers remapped on a cartesian grid),     1 = unstructured
     n_flow_markers_x  = 100       ! for structured markers (defines the cartesian grid where they are remapped)
     n_flow_markers_y  = 20
@@ -61,3 +61,4 @@
     flow_grid_n_cells_vx = 30
     flow_grid_n_cells_vy = 8
 /
+
