@@ -11,7 +11,7 @@ TARGET_LINK_LIBRARIES(test_interpolation_m4 pic_vp_2d2v_cart_tau)
 ADD_EXECUTABLE(test_high_order_interpolation test_high_order_interpolation.F90)
 TARGET_LINK_LIBRARIES(test_high_order_interpolation pic_vp_2d2v_cart_tau
                                                     sll_particle_mesh_coupling
-                                                    sll_particle_types)
+                                                    sll_particle_groups)
 
 #SET(ARGS "${CMAKE_CURRENT_SOURCE_DIR}/input/data.nml")
 #ADD_TEST(NAME test_pic2d COMMAND ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/test_pic2d ${ARGS})
