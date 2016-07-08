@@ -1,4 +1,4 @@
-!> @ingroup pic_interface
+!> @ingroup pic_weights
 !> @author Katharina Kormann, IPP
 !> @brief Control variate
 !> @details This base class gives an abstract interface to the basic functions for accumulation of charge and current densities as well as the evaluation of a function at particle positions.

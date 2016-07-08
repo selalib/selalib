@@ -1,6 +1,6 @@
-!> @ingroup particle_types
+!> @ingroup particle_groups
 !> @author Katharina Kormann, IPP
-!> @brief Simple particle group type for 2d2v.
+!> @brief Simple particle group group for 2d2v.
 !> @details ...
 module sll_m_particle_group_2d2v
 

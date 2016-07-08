@@ -1,4 +1,6 @@
-add_subdirectory(pic_interface)
-add_subdirectory(particle_types)
+add_subdirectory(pic_weights)
+add_subdirectory(particle_groups)
+add_subdirectory(pic_sampling)
 add_subdirectory(particle_mesh_coupling)
+add_subdirectory(pic_field_solvers)
 add_subdirectory(pic_time_integration)
