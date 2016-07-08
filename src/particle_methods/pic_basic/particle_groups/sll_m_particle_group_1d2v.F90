@@ -1,4 +1,4 @@
-!> @ingroup particle_types
+!> @ingroup particle_groups
 !> @author Katharina Kormann, IPP
 !> @brief Simple particle group type for 1d2v.
 !> @details ...
