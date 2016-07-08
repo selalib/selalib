@@ -1,4 +1,5 @@
 ADD_LIBRARY(sll_particle_mesh_coupling STATIC 
+  sll_m_particle_mesh_coupling_base.F90
   sll_m_particle_mesh_coupling_spline_1d.F90
   sll_m_particle_mesh_coupling_spline_2d.F90)
 
