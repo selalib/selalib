@@ -60,7 +60,8 @@ module sll_m_particle_group_base
 
     ! Getters ( for chunk of particles )
     ! All chunk-getters are calling the single versions by default
-    ! We use pointers to avoid copying. Note that no setters are necessary since we use pointers to access the values
+    ! We use pointers to avoid copying. Note that no setters are necessary since we use pointers to access the values.
+    ! For chunks, only one chget_x is provided this gives the coordinates in the format that the positions are stored. 
     procedure                           :: chget_x
     procedure                           :: chget_v
     procedure                           :: chget_weights
