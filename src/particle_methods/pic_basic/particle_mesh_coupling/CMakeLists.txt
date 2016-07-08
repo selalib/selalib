@@ -6,10 +6,9 @@ ADD_LIBRARY(sll_particle_mesh_coupling STATIC
 TARGET_LINK_LIBRARIES( sll_particle_mesh_coupling
   sll_memory
   sll_assert
-  sll_pic_interface
   sll_particle_groups
   sll_splines
-  )
+  sll_quadrature)
 
 
 # Tests

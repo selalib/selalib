@@ -1,4 +1,4 @@
-!> @ingroup pic_interface
+!> @ingroup particle_mesh_coupling
 !> @author Katharina Kormann, IPP
 !> @brief Base class for kernel smoothers for accumulation and field evaluation in PIC.
 !> @details This base class gives an abstract interface to the basic functions for accumulation of charge and current densities as well as the evaluation of a function at particle positions.
