@@ -35,9 +35,9 @@
 /
 
 &pic_lbf_particles_params
-    n_particles_x  = 100
-    n_particles_y  = 10
+    n_particles_x  = 60
+    n_particles_y  = 8
     n_particles_vx  = 60
-    n_particles_vy  = 10
+    n_particles_vy  = 8
 /
 
