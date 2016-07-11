@@ -295,20 +295,20 @@ subroutine sll_gnuplot_corect_2d(xmin, xmax, nx,    &
   character(len=*), intent(in)  :: array_name
   sll_int32,        intent(in)  :: iplot
   sll_int32,        intent(out) :: error
-
+  
   sll_int32        :: file_id
   sll_int32        :: i, j
   sll_real64       :: dx, dy, x, y
   character(len=4) :: fin
   character(len=8) :: gnu_status
   logical          :: file_exists
-
+  
   ! Check that plot index is strictly positive
   SLL_ASSERT( iplot > 0 )
 
   ! Convert plot index to string
   call sll_s_int2string( iplot, fin )
-
+  
   ! Determine Gnuplot file status
   if (iplot == 1) then
     ! A new ASCII file will be created (replaced if already existing)
@@ -316,8 +316,7 @@ subroutine sll_gnuplot_corect_2d(xmin, xmax, nx,    &
   else
     inquire( file=array_name//'.gnu', exist=file_exists)
     if (.not. file_exists) then
-      SLL_ERROR("sll_gnuplot_corect_2d","The gnu file does not exist, perharps &
-      & you did not call this suboutine with iplot=1 for the first plot")
+      SLL_ERROR("sll_gnuplot_corect_2d", "The gnu file does not exist, perharps you did not call this suboutine with iplot=1 for the first plot")
     end if
     ! A pre-existing ASCII file will be appended
     gnu_status = 'old'

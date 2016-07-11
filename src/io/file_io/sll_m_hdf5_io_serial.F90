@@ -44,6 +44,7 @@ module sll_m_hdf5_io_serial
     h5screate_simple_f, &
     h5t_native_double, &
     h5t_native_integer, &
+    H5T_NATIVE_CHARACTER, &
     hid_t, &
     hsize_t
 
@@ -56,8 +57,8 @@ module sll_m_hdf5_io_serial
     sll_o_hdf5_write_array, &
     sll_o_hdf5_write_array_1d, &
     sll_o_hdf5_write_array_2d, &
-    sll_o_hdf5_write_array_3d
-
+    sll_o_hdf5_write_array_3d, &
+    sll_o_hdf5_write_file
   private
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
@@ -90,6 +91,7 @@ module sll_m_hdf5_io_serial
      module procedure sll_hdf5_ser_write_int_array_1d
      module procedure sll_hdf5_ser_write_int_array_2d
      module procedure sll_hdf5_ser_write_int_array_3d
+     module procedure sll_hdf5_ser_write_char_array
   end interface
 
   !> Interface to write a 1d array in HDF5 file format
@@ -108,6 +110,10 @@ module sll_m_hdf5_io_serial
   interface sll_o_hdf5_write_array_3d
      module procedure sll_hdf5_ser_write_dble_array_3d
      module procedure sll_hdf5_ser_write_int_array_3d
+  end interface
+  
+  interface sll_o_hdf5_write_file
+     module procedure sll_hdf5_ser_write_file
   end interface
 
 contains
@@ -338,6 +344,79 @@ contains
     call H5Dclose_f(dataset_id,error)
     SLL_ASSERT(error==0)
   end subroutine sll_hdf5_ser_write_dble_array_3d
+  
+  subroutine sll_hdf5_ser_write_char_array(file_id,string,dsetname, error)
+    integer(hid_t)  , intent(in) :: file_id      !< file unit number
+    character(len=*), intent(in) :: dsetname     !< hdf5 dataset name
+    sll_int32, intent(out)       :: error        !< error code
+    character(len=*), intent(in) :: string !< data string
+    integer(hsize_t)             :: array_dim(1)
+    integer(hid_t)               :: dataset_id
+    integer(hid_t)               :: dataspace_id
+  
+    array_dim=int(len(string),hsize_t)
+  
+    call H5Screate_simple_f(1,array_dim,dataspace_id,error)
+    SLL_ASSERT(error==0)
+    call H5Dcreate_f(file_id,                                            &
+                     dsetname,                                           &
+                     H5T_NATIVE_CHARACTER,                               &
+                     dataspace_id,                                       &
+                     dataset_id,                                         &
+                     error)
+    SLL_ASSERT(error==0)
+    call H5Dwrite_f(dataset_id,H5T_NATIVE_CHARACTER,string,array_dim,error)
+    SLL_ASSERT(error==0)
+    call H5Sclose_f(dataspace_id,error)
+    SLL_ASSERT(error==0)
+    call H5Dclose_f(dataset_id,error)
+    SLL_ASSERT(error==0)
+  
+  end subroutine sll_hdf5_ser_write_char_array
+  
+  
+  !< Reads a complete from filename and stores it into the hdf5 data structure
+  subroutine sll_hdf5_ser_write_file(h5file_id,filename,dsetname, error)
+    integer(hid_t)  , intent(in) :: h5file_id      !< file unit number
+    character(len=*), intent(in) :: dsetname     !< hdf5 dataset name
+    sll_int32, intent(out)       :: error        !< error code
+    character(len=*), intent(in) :: filename !< 
+    sll_int32 :: fileid, filesize
+    character(len=:), allocatable :: content
+       
+  
+    open(newunit = fileid, file=filename,&
+            form='UNFORMATTED',access='STREAM', iostat=error)
+    
+    !get size of file
+    inquire(file=filename, size=filesize)
+     if (filesize>0) then
+ 
+       ! Allocate memory
+       allocate( character(len=filesize) :: content )
+       ! read the filein one string
+       read(fileid,pos=1,iostat=error) content 
+       if (error==0) then
+         !try to read more in case not everything was read
+         read(fileid,pos=filesize+1,iostat=error) content
+         if (.not. IS_IOSTAT_END(error)) &
+           write(*,*) "ERROR: file ", filename, "was not completely read."
+         else
+           write(*,*) 'ERROR reading file: ', filename
+         end if
+
+! 	 close(fileid, iostat=error)
+       else
+         write(*,*) 'Error getting size of file: ', filename
+       end if
+   close(fileid)
+  
+   call sll_hdf5_ser_write_char_array&
+           (h5file_id, content, dsetname, error)
+   
+  
+  end subroutine sll_hdf5_ser_write_file  
+  
 
 !Gysela functions that can be useful for future
 !  ! HDF5 saving for an integer
