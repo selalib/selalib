@@ -41,7 +41,7 @@ program test_const_coef_adv_2d
   sll_real64 :: x_1, x_2
   sll_int32 :: i, j
   sll_real64 :: dt
-  sll_int32 :: ierr, file_id
+  sll_int32 :: ierr!, file_id
   character(len=20) :: filename
 
   type(sll_t_cubic_spline_interpolator_1d), target  :: interp_eta1
