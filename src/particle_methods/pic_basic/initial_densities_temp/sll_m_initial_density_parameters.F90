@@ -22,9 +22,6 @@
 module sll_m_initial_density_parameters
 
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-!#include "sll_assert.h"
-!#include "sll_errors.h"
-!#include "sll_memory.h"
 #include "sll_working_precision.h"
 
   implicit none
