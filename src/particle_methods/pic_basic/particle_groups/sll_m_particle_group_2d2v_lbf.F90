@@ -312,7 +312,6 @@ contains
 
     character(len=*), parameter :: this_fun_name = "initialize_particle_group_2d2v_lbf"
     sll_int32               :: ierr
-    character(len=128)      :: err_msg
 
     print*, "[", this_fun_name, "] - initializing the particle group... "
 
@@ -523,22 +522,6 @@ contains
     sll_real64, intent(in)                           :: thermal_speed, alpha, kx_landau
 
     sll_int32 :: j
-    sll_int32 :: j_x
-    sll_int32 :: j_y
-    sll_int32 :: j_vx
-    sll_int32 :: j_vy
-    sll_int32 :: n_nodes_x
-    sll_int32 :: n_nodes_y
-    sll_int32 :: n_nodes_vx
-    sll_int32 :: n_nodes_vy
-    sll_real64 :: h_x
-    sll_real64 :: h_y
-    sll_real64 :: h_vx
-    sll_real64 :: h_vy
-    sll_real64 :: x_min
-    sll_real64 :: y_min
-    sll_real64 :: vx_min
-    sll_real64 :: vy_min
     sll_real64 :: x_j
     sll_real64 :: vx_j
     sll_real64 :: vy_j
@@ -583,22 +566,6 @@ contains
     sll_real64, intent(in)                            :: basis_height, shift
 
     sll_int32 :: j
-    sll_int32 :: j_x
-    sll_int32 :: j_y
-    sll_int32 :: j_vx
-    sll_int32 :: j_vy
-    sll_int32 :: n_nodes_x
-    sll_int32 :: n_nodes_y
-    sll_int32 :: n_nodes_vx
-    sll_int32 :: n_nodes_vy
-    sll_real64 :: h_x
-    sll_real64 :: h_y
-    sll_real64 :: h_vx
-    sll_real64 :: h_vy
-    sll_real64 :: x_min
-    sll_real64 :: y_min
-    sll_real64 :: vx_min
-    sll_real64 :: vy_min
     sll_real64 :: x_j
     sll_real64 :: y_j
     sll_real64 :: vx_j
@@ -1034,11 +1001,8 @@ contains
     sll_real64 :: d3_x, d3_y, d3_vx, d3_vy
     sll_real64 :: d4_x, d4_y, d4_vx, d4_vy
 
-    sll_real64 :: deposition_particle_weight_factor
-
     sll_int32  :: nodes_number
     sll_real64 :: reconstructed_f_value
-    sll_real64 :: reconstructed_charge
 
     ! coordinates of a reconstruction point at time 0, absolute
     sll_real64 :: x_t0

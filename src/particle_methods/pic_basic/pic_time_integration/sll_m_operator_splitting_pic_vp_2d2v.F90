@@ -154,18 +154,13 @@ contains
     sll_real64 :: xi(3)
     sll_real64 :: wi
 
-    sll_real64 :: debug_count
-    debug_count = 0
-    print *, "charge_deposition_vp_2d2v -- debug-count"
     ! Assemble right-hand-side
     call this%pic_poisson%reset()
     do i_part = 1, this%particle_group%n_particles
        xi = this%particle_group%get_x(i_part)
        wi = this%particle_group%get_charge(i_part, this%i_weight)
-       debug_count = debug_count + wi
        call this%pic_poisson%add_charge(xi(1:2), wi)
     end do
-    print *, "charge_deposition_vp_2d2v -- debug-count: total charge deposited: ", debug_count
   end subroutine charge_deposition_vp_2d2v
 
 
