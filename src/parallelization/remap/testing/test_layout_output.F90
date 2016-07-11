@@ -86,7 +86,7 @@ program test_layout_output
   sll_real64                                :: tcpu1
   sll_real64                                :: tcpu2
 
-  sll_int32                                 :: file_id
+  !sll_int32                                 :: file_id
   integer(hid_t)                            :: hfile_id
  
   character(len=9), parameter               :: filename = "layout.h5"

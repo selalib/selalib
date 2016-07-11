@@ -57,14 +57,13 @@ if( HDF5_ENABLED AND HDF5_IS_PARALLEL AND HDF5_PARALLEL_ENABLED )
     ## Vlasov-Maxwell 1Dx2D
     add_subdirectory( pic_vm_1d2v_cart                         )
 
-    ## Vlasov-Maxwell 2Dx2D
-    ADD_SUBDIRECTORY( pic_vm_2d2v_cart                         )
 
     ## Vlasov-Poisson 2Dx2D
     add_subdirectory( pic_vp_2d2v_cart                         )
     add_subdirectory( pic_vp_2d2v_cart_optim                   )
     add_subdirectory( pic_vp_2d2v_cart_optim_push              )
     add_subdirectory( pic_vp_2d2v_cart_lbf                     )
+    add_subdirectory( pic_vp_2d2v_cart_tau                     )
 
     ## Vlasov-Poisson NDxND
     add_subdirectory( pif_vp_ndnv_cart                         )
