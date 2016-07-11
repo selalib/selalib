@@ -68,31 +68,6 @@
 #define SLL_GET_CHARGE_ACC_VALUE(acc,i,j,slot) \
  acc%q_acc(i+(j-1)*acc%mesh%num_cells1)%slot
 
-  ! <<SLL_INTERPOLATE_FIELD_EXTENDED>> added by Martin
-  ! this macro must be used for LTPIC particles (since icell not stored directly in particle)
-  ! the keyword EXTENDED is to match other macro names written for arbitrary icell_x and icell_y values in LTPIC particles
-
-#define SLL_INTERPOLATE_FIELD_EXTENDED(part_Ex, part_Ey, cell_E, p, tmp3, tmp4, icell) \
-  do; \
-    tmp3 = (1.0_f64 - p%dx); \
-    tmp4 = (1.0_f64 - p%dy); \
-    part_Ex = p%dx*p%dy*cell_E(icell)%Ex_ne + tmp3*p%dy*cell_E(icell)%Ex_nw + p%dx*tmp4*cell_E(icell)%Ex_se + tmp3*tmp4*cell_E(icell)%Ex_sw; \
-    part_Ey = p%dx*p%dy*cell_E(icell)%Ey_ne + tmp3*p%dy*cell_E(icell)%Ey_nw + p%dx*tmp4*cell_E(icell)%Ey_se + tmp3*tmp4*cell_E(icell)%Ey_sw; \
-    exit; \
- end do
-
-  !> same as [[SLL_INTERPOLATE_FIELD_EXTENDED]] where the reference to a
-  !> specific particle has been replaced only by the data that we need
-  !> to extract from it, ie dx and dy
-#define SLL_INTERPOLATE_FIELD_IN_CELL(part_Ex, part_Ey, cell_E, dx, dy, tmp3, tmp4, icell)	\
-  do; \
-    tmp3 = (1.0_f32 - dx); \
-    tmp4 = (1.0_f32 - dy); \
-    part_Ex = dx*dy*cell_E(icell)%Ex_ne + tmp3*dy*cell_E(icell)%Ex_nw + dx*tmp4*cell_E(icell)%Ex_se + tmp3*tmp4*cell_E(icell)%Ex_sw; \
-    part_Ey = dx*dy*cell_E(icell)%Ey_ne + tmp3*dy*cell_E(icell)%Ey_nw + dx*tmp4*cell_E(icell)%Ey_se + tmp3*tmp4*cell_E(icell)%Ey_sw; \
-    exit; \
- end do
-
 #define SLL_INTERPOLATE_FIELD(part_Ex, part_Ey, cell_E, p, tmp3, tmp4) \
   do; \
     tmp3 = (1.0_f32 - p%dx); \
