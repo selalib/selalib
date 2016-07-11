@@ -1,0 +1,43 @@
+&sim_params
+        delta_t = 0.1
+        n_time_steps = 100
+        alpha = 0.1
+        n_mode = 1
+        thermal_v1 = 1.0
+        thermal_v2 = 1.0
+/
+
+&pic_poisson_params
+        ng_x1 = 32
+        ng_x2 = 32
+        x1_min = 0.0
+        x2_min = 0.0
+        x1_max = 12.5663706144
+        x2_max = 12.5663706144
+        degree_smoother = 1
+/
+
+&particle_method
+        particle_type_str = "SLL_LBF_PARTICLES"
+/
+
+&pic_lbf_remap_params
+    remap_period        = 10
+    remap_degree        = 3
+    remapping_grid_vx_min = -5.0            ! note: the x-y domain is given by the Poisson grid
+    remapping_grid_vx_max =  5.0
+    remapping_grid_vy_min = -5.0
+    remapping_grid_vy_max =  5.0
+    remapping_sparse_grid_max_level_x = 10               ! for the sparse grid
+    remapping_sparse_grid_max_level_y = 6               ! for the sparse grid
+    remapping_sparse_grid_max_level_vx = 10              ! for the sparse grid
+    remapping_sparse_grid_max_level_vy = 6              ! for the sparse grid
+/
+
+&pic_lbf_particles_params
+    n_particles_x  = 60
+    n_particles_y  = 8
+    n_particles_vx  = 60
+    n_particles_vy  = 8
+/
+
