@@ -1,4 +1,4 @@
-!> @ingroup particle_initializers
+!> @ingroup pic_sampling
 !> @author Katharina Kormann
 !> @brief Particle initializer class with various functions to initialize a particle.
 !> @details ...
