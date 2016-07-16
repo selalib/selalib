@@ -1,4 +1,4 @@
-!> @ingroup pic_interface
+!> @ingroup pic_field_solvers
 !> @author Katharina Kormann, IPP
 !> @brief Factory method for Poisson solver for particle methods in 2d build from 2d Poisson solver and a kernel smoother.
 !> @details 

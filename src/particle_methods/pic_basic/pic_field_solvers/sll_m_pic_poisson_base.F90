@@ -1,4 +1,4 @@
-!> @ingroup pic_interface
+!> @ingroup pic_field_solvers
 !> @author Katharina Kormann, IPP
 !> @brief Base class for Poisson solver for particle methods.
 !> @details This base class gives an abstract interface to the basic functions for accumulation of charge  as well as the evaluation of a function at particle positions.
