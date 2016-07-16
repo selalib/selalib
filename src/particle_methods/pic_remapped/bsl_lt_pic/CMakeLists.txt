@@ -11,7 +11,7 @@ TARGET_LINK_LIBRARIES( sll_bsl_lt_pic
   sll_memory
   sll_assert
   sll_meshes
-  sll_pic_interface
+  sll_particle_groups
   sll_bsl_lt_pic_4d_particle
   sll_remapped_pic
   sll_remapped_pic_utilities
