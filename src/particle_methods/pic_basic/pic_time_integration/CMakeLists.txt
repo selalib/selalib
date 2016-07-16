@@ -6,8 +6,10 @@ TARGET_LINK_LIBRARIES( sll_pic_time_integration
   sll_memory
   sll_assert
   sll_splitting_methods
-  sll_pic_interface
+  sll_particle_groups
+  sll_pic_weights
   sll_particle_mesh_coupling
+  sll_pic_field_solvers
   sll_poisson_solvers
   sll_maxwell_solvers
   sll_collective
