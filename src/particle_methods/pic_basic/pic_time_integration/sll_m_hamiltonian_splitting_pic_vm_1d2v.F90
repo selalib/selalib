@@ -2,6 +2,7 @@
 !> @author Katharina Kormann, IPP
 !> @brief Particle pusher based on Hamiltonian splitting for 1d2v Vlasov-Poisson.
 !> @details MPI parallelization by domain cloning. Periodic boundaries. Spline DoFs numerated by the point the spline starts.
+!> Reference: Kraus, Kormann, Sonnendrücker, Morrison: GEMPIC: Geometric ElectroMagnetic Particle-In-Cell Methods
 module sll_m_hamiltonian_splitting_pic_vm_1d2v
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_assert.h"
@@ -85,28 +86,14 @@ contains
     sll_int32 :: i_step
 
     do i_step = 1, number_steps
-       !B
-       !E
-       !Hp2
-       !Hp1
-       !Hp2
-       !E
-       !B
-!!$       call self%operatorHB(0.5_f64*dt)
-!!$       call self%operatorHE(0.5_f64*dt)
-!!$       call self%operatorHp2(0.5_f64*dt)
-!!$       call self%operatorHp1(dt)
-!!$       call self%operatorHp2(0.5_f64*dt)
-!!$       call self%operatorHE(0.5_f64*dt)
-!!$       call self%operatorHB(0.5_f64*dt)
-!!$       
-       call self%operatorHp1(0.5_f64*dt)
-       call self%operatorHp2(0.5_f64*dt)
-       call self%operatorHE(0.5_f64*dt)
-       call self%operatorHB(dt)
+       call self%operatorHB(0.5_f64*dt)
        call self%operatorHE(0.5_f64*dt)
        call self%operatorHp2(0.5_f64*dt)
-       call self%operatorHp1(0.5_f64*dt)
+       call self%operatorHp1(dt)
+       call self%operatorHp2(0.5_f64*dt)
+       call self%operatorHE(0.5_f64*dt)
+       call self%operatorHB(0.5_f64*dt)
+       
     end do
 
   end subroutine strang_splitting_pic_vm_1d2v
