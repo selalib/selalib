@@ -67,7 +67,6 @@ module sll_m_hamiltonian_splitting_pic_vm_1d2v
      procedure :: lie_splitting => lie_splitting_pic_vm_1d2v !> Lie splitting propagator
      procedure :: lie_splitting_back => lie_splitting_back_pic_vm_1d2v !> Lie splitting propagator
      procedure :: strang_splitting => strang_splitting_pic_vm_1d2v !> Strang splitting propagator
-     !procedure :: splitting_fourth => splitting_fourth_pic_vm_1d2v !> Fourst order splitting
 
      procedure :: init => initialize_pic_vm_1d2v !> Initialize the type
      procedure :: free => delete_pic_vm_1d2v !> Finalization
@@ -116,7 +115,7 @@ contains
 
   end subroutine lie_splitting_pic_vm_1d2v
 
-!> Lie splitting
+  !> Lie splitting (oposite ordering)
   subroutine lie_splitting_back_pic_vm_1d2v(self,dt, number_steps)
     class(sll_t_hamiltonian_splitting_pic_vm_1d2v), intent(inout) :: self !< time splitting object 
     sll_real64,                                     intent(in)    :: dt   !< time step
