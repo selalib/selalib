@@ -26,7 +26,9 @@ module sll_m_particle_initializer
     sll_s_particle_initialize_random_landau_symmetric_1d2v, &
     sll_s_particle_initialize_sobol_landau_1d2v, &
     sll_s_particle_initialize_sobol_landau_2d2v, &
-    sll_s_particle_initialize_sobol_landau_symmetric_1d2v
+    sll_s_particle_initialize_sobol_landau_symmetric_1d2v, &
+    sll_s_particle_initialize_sobol_streaming_weibel_symmetric_1d2v, &
+    sll_s_particle_initialize_twogaussian_sobol_symmetric_1d2v
 
   private
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -34,6 +36,97 @@ module sll_m_particle_initializer
 
 
 contains
+
+    !> Initialize of a 1d2v particle group with Sobol pseudorandom numbers. Maxwellian distribution of V, cosine perturbation along x, equal weights. Symmetry around 0 for v and mirrored around center of domain in x.
+  subroutine sll_s_particle_initialize_twogaussian_sobol_symmetric_1d2v(&
+       particle_group, &
+       landau_param, &
+       xmin, &
+       Lx, &
+       velocity_params, &
+       rnd_seed)
+    class(sll_c_particle_group_base),  intent(inout)            :: particle_group
+    sll_real64,                        intent(in)               :: landau_param(2) !< parameter defining the perturbation: landau_param(1)*cos(landau_param(2)*x1)
+    sll_real64,                        intent(in)               :: xmin !< lower bound of the domain
+    sll_real64,                        intent(in)               :: Lx !< length of the domain.
+    sll_real64,                        intent(in)               :: velocity_params(2,5)
+    sll_int64,                         intent(inout)            :: rnd_seed !< Random seed.
+    !sll_int32,                         intent(inout)            :: rnd_seed_rnf !< Random seed for random numbers
+
+    sll_real64                                                  :: x(3),v(3)
+    sll_int32                                                   :: i_part
+    sll_int32                                                   :: i_v
+    sll_real64                                                  :: rdn(5)
+    sll_real64                                                  :: wi
+    sll_int32                                                   :: ip
+    sll_real64                                                  :: rnd_no
+    
+
+    x = 0.0_f64
+    v = 0.0_f64
+
+    ! Set random seed.
+    !call random_seed (put=rnd_seed_rnd)
+
+    if (modulo(particle_group%n_particles,8) .NE. 0) then
+       SLL_ERROR('sll_s_particle_initialize_random_landau_symmetric_1d2v', 'particle number not multiple of 8')
+    end if
+
+    ! 1/Np in common weight
+    call particle_group%set_common_weight &
+         (1.0_f64/real(particle_group%n_total_particles, f64))
+
+    do i_part = 1, particle_group%n_particles
+       ip = modulo(i_part, 8)
+       if ( ip == 1) then
+          ! Generate Sobol numbers on [0,1]
+          call sll_s_i8_sobol( int(4,8), rnd_seed, rdn(1:4) )
+          rdn(5) = rdn(4)
+          
+          ! Transform rdn to the interval
+          x(1) = xmin + Lx * rdn(1)
+          ! Landau perturbation for position 
+          wi = (1.0_f64 + landau_param(1)*cos(landau_param(2)*x(1)))*Lx
+
+          ! Maxwellian distribution of the temperature
+          do i_v = 1,2
+             call sll_s_normal_cdf_inv( rdn(i_v+1), 0.0_f64, 1.0_f64, &
+                  v(i_v))
+          end do
+          do i_v = 1,2
+             rnd_no = rdn(3+i_v)
+             if ( rnd_no < velocity_params(i_v,1) ) then
+                v(i_v) = v(i_v) * velocity_params(i_v,3) + velocity_params(i_v,2)
+             else
+                v(i_v) = v(i_v) * velocity_params(i_v,5) + velocity_params(i_v,4)
+             end if
+          end do
+       elseif ( ip == 5) then
+          x(1) = Lx - x(1) + 2.0_f64*xmin
+       elseif ( modulo(ip,2) == 0 ) then
+          if ( rdn(5) < velocity_params(2,1) ) then
+             v(2) = -v(2) + 2.0_f64 * velocity_params(2,2)
+          else
+             v(2) = -v(2) + 2.0_f64 * velocity_params(2,4)
+          end if
+       else
+          if ( rdn(4) < velocity_params(1,1) ) then
+             v(1) = -v(1) + 2.0_f64 * velocity_params(1,2)
+          else
+             v(1) = -v(1) + 2.0_f64 * velocity_params(1,4)
+          end if
+       end if
+
+       ! Copy the generated numbers to the particle
+       call particle_group%set_x(i_part, x)
+       call particle_group%set_v(i_part, v)
+       ! Set weights.
+       call particle_group%set_weights(i_part, &
+            [wi])
+    end do
+
+  end subroutine sll_s_particle_initialize_twogaussian_sobol_symmetric_1d2v
+
 
 
 !> Initialize of a 1d2v particle group with Sobol pseudorandom numbers. Maxwellian distribution of V, cosine perturbation along x, equal weights.
@@ -161,6 +254,95 @@ contains
 
 
   end subroutine sll_s_particle_initialize_sobol_landau_symmetric_1d2v
+
+!> Initialize of a 1d2v particle group with Sobol pseudorandom numbers. Maxwellian distribution of V, cosine perturbation along x, equal weights. Symmetry around 0 for v and mirrored around center of domain in x.
+  subroutine sll_s_particle_initialize_sobol_streaming_weibel_symmetric_1d2v(&
+       particle_group, &
+       landau_param, &
+       xmin, &
+       Lx, &
+       thermal_velocity, &
+       streaming_weibel_param, &
+       rnd_seed)
+    class(sll_c_particle_group_base),  intent(inout)            :: particle_group
+    sll_real64,                        intent(in)               :: landau_param(2) !< parameter defining the perturbation: landau_param(1)*cos(landau_param(2)*x1)
+    sll_real64,                        intent(in)               :: xmin !< lower bound of the domain
+    sll_real64,                        intent(in)               :: Lx !< length of the domain.
+    sll_real64,                        intent(in)               :: thermal_velocity(2) !< Value of the thermal velocity along each dimension.
+    sll_real64,                        intent(in)               :: streaming_weibel_param(3)
+    sll_int64,                         intent(inout)            :: rnd_seed !< Random seed.
+    !sll_int32,                         intent(inout)            :: rnd_seed_rnf !< Random seed for random numbers
+
+    sll_real64                                                  :: x(3),v(3)
+    sll_int32                                                   :: i_part
+    sll_int32                                                   :: i_v
+    sll_real64                                                  :: rdn(4)
+    sll_real64                                                  :: wi
+    sll_int32                                                   :: ip
+    sll_real64                                                  :: rnd_no
+    
+
+    x = 0.0_f64
+    v = 0.0_f64
+
+    ! Set random seed.
+    !call random_seed (put=rnd_seed_rnd)
+
+    if (modulo(particle_group%n_particles,8) .NE. 0) then
+       SLL_ERROR('sll_s_particle_initialize_random_landau_symmetric_1d2v', 'particle number not multiple of 8')
+    end if
+
+    ! 1/Np in common weight
+    call particle_group%set_common_weight &
+         (1.0_f64/real(particle_group%n_total_particles, f64))
+
+    do i_part = 1, particle_group%n_particles
+       ip = modulo(i_part, 8)
+       if ( ip == 1) then
+          ! Generate Sobol numbers on [0,1]
+          call sll_s_i8_sobol( int(4,8), rnd_seed, rdn)
+
+          ! Transform rdn to the interval
+          x(1) = xmin + Lx * rdn(1)
+          ! Landau perturbation for position 
+          wi = (1.0_f64 + landau_param(1)*cos(landau_param(2)*x(1)))*Lx
+
+          ! Maxwellian distribution of the temperature
+          do i_v = 1,2
+             call sll_s_normal_cdf_inv( rdn(i_v+1), 0.0_f64, 1.0_f64, &
+                  v(i_v))
+             v(i_v) = v(i_v)*(thermal_velocity(i_v))
+          end do
+          !call random_number(rnd_no)
+          rnd_no = rdn(4)
+          if ( rnd_no < streaming_weibel_param(1) ) then
+             v(2) = v(2) + streaming_weibel_param(2)
+          else
+             v(2) = v(2) + streaming_weibel_param(3)
+          end if
+       elseif ( ip == 5) then
+          x(1) = Lx - x(1) + 2.0_f64*xmin
+       elseif ( modulo(ip,2) == 0 ) then
+          if ( rnd_no < streaming_weibel_param(1) ) then
+             v(2) = -v(2) + 2.0_f64 * streaming_weibel_param(2)
+          else
+             v(2) = -v(2) + 2.0_f64 * streaming_weibel_param(3)
+          end if
+       else
+          v(1) = - v(1)
+       end if
+
+       ! Copy the generated numbers to the particle
+       call particle_group%set_x(i_part, x)
+       call particle_group%set_v(i_part, v)
+       ! Set weights.
+       call particle_group%set_weights(i_part, &
+            [wi])
+    end do
+
+
+  end subroutine sll_s_particle_initialize_sobol_streaming_weibel_symmetric_1d2v
+  
 
 !> Initialize of a 1d2v particle group with Sobol pseudorandom numbers. Maxwellian distribution of V, cosine perturbation along x, equal weights.
   subroutine sll_s_particle_initialize_random_landau_1d2v(&
