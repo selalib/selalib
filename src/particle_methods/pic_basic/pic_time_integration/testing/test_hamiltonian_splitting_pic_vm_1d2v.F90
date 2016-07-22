@@ -1,5 +1,6 @@
 ! TODO: Use input from file to initialize and compare
-
+! Unit test for symplectic splitting
+! author: Katharina Kormann, IPP
 program test_hamiltonian_splitting_pic_1d2v_vm
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_memory.h"
