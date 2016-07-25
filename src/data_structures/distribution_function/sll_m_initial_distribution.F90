@@ -1,6 +1,7 @@
 module sll_m_initial_distribution
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_working_precision.h"
+#include "sll_errors.h"
 
   use sll_m_constants, only : &
        sll_p_twopi
@@ -9,9 +10,12 @@ module sll_m_initial_distribution
   
   public :: sll_p_sumcos_onegaussian, &
        sll_p_cossum_onegaussian, &
+       sll_p_sumcos_twogaussian, &
+       sll_p_cossum_twogaussian, &
        sll_c_distribution_params, &
        sll_t_cos_gaussian, &
-       sll_s_initial_distribution_new
+       sll_s_initial_distribution_new, &
+       sll_s_initial_distribution_new_descriptor
   
   private
   !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -190,34 +194,81 @@ contains
 
 
   subroutine  sll_s_initial_distribution_new( distribution, dims, file_id, params )
+    character(len=*), intent( in    ) :: distribution !< descriptor of the test case
+    sll_int32, intent( in    ) :: dims(2) !< number of spatial and velocity dimensions
+    sll_int32, intent( in    ) :: file_id    !< nml-file with parameters in unified format
+    class(sll_c_distribution_params), allocatable, intent(   out ) ::  params    !< real array specifying the parameters for the given test case in the predefined order.
+    
+    select case( distribution )
+    case( "sumcos_onegaussian" )
+       allocate( sll_t_cos_gaussian :: params )
+       params%dims = dims
+       select type( params )
+       type is( sll_t_cos_gaussian )
+          call sumcos_onegaussian_init( file_id, params )
+       end select
+    case( "cossum_onegaussian" )
+       allocate( sll_t_cos_gaussian :: params )
+       params%dims = dims
+       select type( params )
+       type is( sll_t_cos_gaussian )
+          call cossum_onegaussian_init( file_id, params )
+       end select
+    case( "cossum_twogaussian" )
+       allocate( sll_t_cos_gaussian :: params )
+       params%dims = dims
+       select type( params )
+       type is( sll_t_cos_gaussian )
+          call cossum_twogaussian_init( file_id, params )
+       end select
+    case( "sumcos_twogaussian" )
+       allocate( sll_t_cos_gaussian :: params )
+       params%dims = dims
+       select type( params )
+       type is( sll_t_cos_gaussian )
+          call sumcos_twogaussian_init( file_id, params )
+       end select
+    case default
+       SLL_ERROR('Initial distribution not implemented.','sll_s_initial_distribution_new')
+    end select
+    
+    
+  end subroutine sll_s_initial_distribution_new
+
+       
+
+  subroutine  sll_s_initial_distribution_new_descriptor( distribution, dims, file_id, params )
     sll_int32, intent( in    ) :: distribution !< descriptor of the test case
     sll_int32, intent( in    ) :: dims(2) !< number of spatial and velocity dimensions
     sll_int32, intent( in    ) :: file_id    !< nml-file with parameters in unified format
     class(sll_c_distribution_params), allocatable, intent(   out ) ::  params    !< real array specifying the parameters for the given test case in the predefined order.
     
     
-    params%dims = dims
     select case( distribution )
     case( sll_p_sumcos_onegaussian )
        allocate( sll_t_cos_gaussian :: params )
+       params%dims = dims
        select type( params )
        type is( sll_t_cos_gaussian )
           call sumcos_onegaussian_init( file_id, params )
        end select
     case( sll_p_cossum_onegaussian )
        allocate( sll_t_cos_gaussian :: params )
+       params%dims = dims
        select type( params )
        type is( sll_t_cos_gaussian )
           call cossum_onegaussian_init( file_id, params )
        end select
     case( sll_p_cossum_twogaussian )
        allocate( sll_t_cos_gaussian :: params )
+       params%dims = dims
        select type( params )
        type is( sll_t_cos_gaussian )
           call cossum_twogaussian_init( file_id, params )
        end select
     case( sll_p_sumcos_twogaussian )
        allocate( sll_t_cos_gaussian :: params )
+       params%dims = dims
        select type( params )
        type is( sll_t_cos_gaussian )
           call sumcos_twogaussian_init( file_id, params )
@@ -225,7 +276,7 @@ contains
     end select
     
     
-  end subroutine sll_s_initial_distribution_new
+  end subroutine sll_s_initial_distribution_new_descriptor
 
 
   subroutine sumcos_onegaussian_init( file_id, params )
@@ -251,6 +302,7 @@ contains
     allocate( params%delta(1) )
 
     params%n_cos = params%dims(1)
+    params%n_gaussians = 1
     params%kx = 0.0_f64
     do j=1, params%dims(1)
        params%kx(:,j) = kx(j)
@@ -291,6 +343,7 @@ contains
     allocate( params%delta(1) )
 
     params%n_cos = 1
+    params%n_gaussians = 1
     params%kx(:,1) = kx
     params%alpha = alpha
     params%v_thermal(:,1) = v_thermal
@@ -323,12 +376,14 @@ contains
     read(file_id, cossum_twogaussian)
 
     allocate( params%kx(params%dims(1),1) )
+    allocate( params%alpha( 1 ) )
     allocate( params%v_thermal(params%dims(2),2) )
     allocate( params%v_mean(params%dims(2),2) )
     allocate( params%normal(2) )
     allocate( params%delta(2) )
-
+    
     params%n_cos = 1
+    params%n_gaussians = 2
     params%kx(:,1) = kx
     params%alpha = alpha
     params%v_thermal(:,1) = v_thermal_1
@@ -372,6 +427,7 @@ contains
     allocate( params%delta(2) )
 
     params%n_cos = params%dims(1)
+    params%n_gaussians = 2
     params%kx = 0.0_f64
     do j=1, params%dims(1)
        params%kx(:,j) = kx(j)
