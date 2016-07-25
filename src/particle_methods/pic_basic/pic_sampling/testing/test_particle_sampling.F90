@@ -28,7 +28,7 @@ program test_particle_sampling
   sll_real64                                   :: Lx !< length of the domain.
   sll_int32                                    :: n_particles      
   sll_int32                                    :: j, k
-  sll_real64                                   :: mean_ref(3), sigma_ref(3), delta(2)
+  sll_real64                                   :: mean_ref(3), sigma_ref(3)
 
   n_particles = 80000
 
