@@ -37,6 +37,10 @@ module sll_m_sim_pic_vm_1d2v_cart
   use sll_m_hamiltonian_splitting_pic_vm_1d2v_boris, only: &
        sll_t_hamiltonian_splitting_pic_vm_1d2v_boris
 
+  use sll_m_initial_distribution, only : &
+       sll_c_distribution_params, &
+       sll_s_initial_distribution_new
+  
   use sll_m_io_utilities, only : &
     sll_s_read_data_real_array, &
     sll_s_concatenate_filename_and_path
@@ -60,16 +64,15 @@ module sll_m_sim_pic_vm_1d2v_cart
     sll_t_particle_group_1d2v
 
   use sll_m_particle_group_base, only: &
-    sll_c_particle_group_base
+       sll_c_particle_group_base
 
-  use sll_m_particle_initializer, only: &
-    sll_s_particle_initialize_random_landau_1d2v, &
-    sll_s_particle_initialize_sobol_landau_1d2v, &
-    sll_s_particle_initialize_random_landau_symmetric_1d2v, &
-    sll_s_particle_initialize_sobol_landau_symmetric_1d2v, &
-    sll_s_particle_initialize_sobol_streaming_weibel_symmetric_1d2v, &
-    sll_s_particle_initialize_twogaussian_sobol_symmetric_1d2v
-
+  use sll_m_particle_sampling, only: &
+       sll_t_particle_sampling, &
+       sll_p_particle_sampling_sobol_symmetric, &
+       sll_p_particle_sampling_sobol, &      
+       sll_p_particle_sampling_random_symmetric, &
+       sll_p_particle_sampling_random
+  
   use sll_m_sim_base, only: &
     sll_c_simulation_base_class
 
@@ -93,11 +96,6 @@ module sll_m_sim_pic_vm_1d2v_cart
 
   private
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-
-  sll_int32, parameter :: sll_p_init_random=0
-  sll_int32, parameter :: sll_p_init_sobol=1
-  sll_int32, parameter :: sll_p_init_random_sym=2
-  sll_int32, parameter :: sll_p_init_sobol_sym=3
 
   sll_int32, parameter :: sll_p_splitting_symplectic = 0
   sll_int32, parameter :: sll_p_splitting_boris = 1
@@ -141,12 +139,11 @@ module sll_m_sim_pic_vm_1d2v_cart
      sll_real64, allocatable :: fields_grid(:,:)
      
      ! Physical parameters
-     sll_real64 :: landau_param(2) ! (1+landau_param(1)*cos(landau_param(2)*x1)
-     sll_real64 :: velocity_params(2,5)
-     
+     class(sll_c_distribution_params), allocatable :: params
      sll_real64 :: beta
-     sll_real64 :: thermal_velocity(2) !
      sll_real64 :: domain(3) ! x_min, x_max, Lx
+     type(sll_t_particle_sampling) :: sampler
+
      
      ! Simulation parameters
      sll_real64 :: delta_t
@@ -162,8 +159,6 @@ module sll_m_sim_pic_vm_1d2v_cart
      sll_int32  :: world_size
      
      ! Case definitions
-     sll_int32  :: init_case
-     sll_int32  :: test_case
      sll_int32  :: initial_bfield
      
      ! For ctest
@@ -186,16 +181,13 @@ contains
 
     sll_int32   :: io_stat
     sll_int32   :: n_time_steps
-    sll_real64  :: delta_t, alpha, n_mode, beta
-    sll_real64  :: sig1, sig2
-    sll_real64  :: portion1, mu11, sig11, mu12, sig12
-    sll_real64  :: portion2, mu21, sig21, mu22, sig22
+    sll_real64  :: delta_t,  beta
     sll_int32   :: ng_x
     sll_real64  :: x1_min, x1_max
     sll_int32   :: n_particles!, degree_smoother
-    character(len=256)   :: init_case
+    character(len=256)   :: sampling_case
     character(len=256)   :: splitting_case
-    character(len=256)   :: test_case
+    character(len=256)   :: initial_distrib
     character(len=256)   :: initial_bfield
     sll_int32   :: spline_degree 
 
@@ -203,13 +195,11 @@ contains
     sll_int32   :: ierr, j
     
 
-    namelist /sim_params/         delta_t, n_time_steps, alpha, n_mode, beta, test_case, initial_bfield
-    namelist /twogaussian_params/ portion1, mu11, sig11, mu12, sig12, portion2, mu21, sig21, mu22, sig22
-    namelist /onegaussian_params/ sig1, sig2
+    namelist /sim_params/         delta_t, n_time_steps, beta, initial_distrib, initial_bfield
     
     namelist /grid_dims/          ng_x, x1_min, x1_max
 
-    namelist /pic_params/         n_particles, init_case, splitting_case, spline_degree!, degree_smoother
+    namelist /pic_params/         n_particles, sampling_case, splitting_case, spline_degree
 
     ! Read parameters from file
     open(newunit = input_file, file=trim(filename), IOStat=io_stat)
@@ -220,24 +210,7 @@ contains
 
     read(input_file, sim_params)
 
-    select case (test_case )
-    case( "onegaussian" )
-       sim%test_case = sll_p_onegaussian
-       read(input_file, onegaussian_params)
-       sim%thermal_velocity = [ sig1, sig2 ]
-    case( "twogaussian")
-       sim%test_case = sll_p_twogaussian
-       read(input_file, twogaussian_params)
-       SLL_ASSERT( portion1 <= 1.0_f64 )
-       SLL_ASSERT( portion1 >= 0.0_f64 )
-       SLL_ASSERT( portion2 <= 1.0_f64 )
-       SLL_ASSERT( portion2 >= 0.0_f64 )
-       
-       sim%velocity_params(1,:) = [portion1, mu11, sig11, mu12, sig12]
-       sim%velocity_params(2,:) = [portion2, mu21, sig21, mu22, sig22]
-    case default
-       print*, '#test case ', test_case, ' not implemented.'
-    end select
+    call sll_s_initial_distribution_new( trim(initial_distrib), [1,2], input_file, sim%params )
        
     read(input_file, grid_dims)
     read(input_file, pic_params)
@@ -250,7 +223,6 @@ contains
     ! Copy the read parameters into the simulation parameters
     sim%delta_t = delta_t
     sim%n_time_steps = n_time_steps
-    sim%landau_param = [alpha, n_mode*2.0_f64 * sll_p_pi/(x1_max - x1_min)]
 
     sim%beta = beta
 
@@ -273,23 +245,23 @@ contains
     sim%n_total_particles = sim%n_particles * sim%world_size
     sim%degree_smoother = spline_degree
     
-    select case(init_case)
-    case("SLL_INIT_RANDOM")
-       sim%init_case = sll_p_init_random
-    case("SLL_INIT_SOBOL")
-       sim%init_case = sll_p_init_sobol
-    case("SLL_INIT_RANDOM_SYM")
-       sim%init_case = sll_p_init_random_sym
-    case("SLL_INIT_SOBOL_SYM")
-       sim%init_case = sll_p_init_sobol_sym
+    select case(sampling_case)
+    case("particle_sampling_random")
+       call sim%sampler%init( sll_p_particle_sampling_random, [1,2], sim%n_particles, sim%rank  )
+    case("particle_sampling_sobol")     
+       call sim%sampler%init( sll_p_particle_sampling_sobol, [1,2], sim%n_particles, sim%rank  )
+    case("particle_sampling_random_symmetric")
+       call sim%sampler%init( sll_p_particle_sampling_random_symmetric, [1,2], sim%n_particles, sim%rank  )
+    case("particle_sampling_sobol_symmetric")
+       call sim%sampler%init( sll_p_particle_sampling_sobol_symmetric, [1,2], sim%n_particles, sim%rank  )
     case default
-       print*, '#init case ', init_case, ' not implemented.'
+       print*, '#sampling_case ', sampling_case, ' not implemented.'
     end select
 
     select case(splitting_case)
-    case("SLL_SPLITTING_SYMPLECTIC")
+    case("splitting_symplectic")
        sim%splitting_case = sll_p_splitting_symplectic
-    case("SLL_SPLITTING_BORIS")
+    case("splitting_boris")
        sim%splitting_case = sll_p_splitting_boris
     case default
        print*, '#splitting case ', splitting_case, ' not implemented.'
@@ -360,9 +332,6 @@ contains
     class(sll_t_sim_pic_vm_1d2v_cart), intent(inout) :: sim
 
     ! Local variables
-    sll_int32, allocatable :: rnd_seed(:)
-    sll_int32 :: rnd_seed_size
-    sll_int64 :: sobol_seed
     sll_int32 :: j, ierr, i_part
     sll_real64, allocatable :: rho(:), rho_local(:)
     sll_int32 :: th_diag_id, dfield_id, efield_id, bfield_id
@@ -380,63 +349,8 @@ contains
        call sll_s_ascii_file_create('bfield.dat', bfield_id, ierr)
     end if
 
-    if ( sim%test_case == sll_p_onegaussian ) then
-       if (sim%init_case == sll_p_init_random) then
-          ! Set the seed for the random initialization
-          call random_seed(size=rnd_seed_size)
-          SLL_ALLOCATE(rnd_seed(rnd_seed_size), j)
-          do j=1, rnd_seed_size
-             rnd_seed(j) = (-1)**j*(100 + 15*j)*(2*sim%rank + 1)
-          end do
-          
-          ! Initialize position and velocity of the particles.
-          ! Random initialization
-          call sll_s_particle_initialize_random_landau_1d2v &
-               (sim%particle_group, sim%landau_param, &
-               sim%domain(1) , &
-               sim%domain(3), &
-               sim%thermal_velocity, rnd_seed)
-       elseif (sim%init_case == sll_p_init_random_sym) then
-          ! Set the seed for the random initialization
-          call random_seed(size=rnd_seed_size)
-          SLL_ALLOCATE(rnd_seed(rnd_seed_size), j)
-          do j=1, rnd_seed_size
-             rnd_seed(j) = (-1)**j*(100 + 15*j)*(2*sim%rank + 1)
-          end do
-          
-          ! Initialize position and velocity of the particles.
-          ! Random initialization
-          call sll_s_particle_initialize_random_landau_symmetric_1d2v &
-               (sim%particle_group, sim%landau_param, &
-               sim%domain(1) , &
-               sim%domain(3), &
-               sim%thermal_velocity, rnd_seed)
-       elseif (sim%init_case == sll_p_init_sobol) then
-          sobol_seed = int(10 + sim%rank*sim%particle_group%n_particles/8, 8)
-          ! Pseudorandom initialization with sobol numbers
-          call sll_s_particle_initialize_sobol_landau_1d2v(sim%particle_group, &
-               sim%landau_param, sim%domain(1),sim%domain(3), &
-               sim%thermal_velocity, sobol_seed)
-       elseif (sim%init_case == sll_p_init_sobol_sym) then
-          sobol_seed = int(10 + sim%rank*sim%particle_group%n_particles/8, 8)
-          ! Pseudorandom initialization with sobol numbers
-          call sll_s_particle_initialize_sobol_landau_symmetric_1d2v(sim%particle_group, &
-               sim%landau_param, sim%domain(1),sim%domain(3), &
-               sim%thermal_velocity, sobol_seed)
-       end if
-    else
-       if ( sim%init_case == sll_p_init_sobol_sym ) then
-          sobol_seed = int(10 + sim%rank*sim%particle_group%n_particles/8, 8)
-          call sll_s_particle_initialize_twogaussian_sobol_symmetric_1d2v(&
-               sim%particle_group, &
-               sim%landau_param, sim%domain(1),sim%domain(3), &
-               sim%velocity_params, sobol_seed)
-       else
-          SLL_ERROR("run_pic_vm_1d2v_cart","init_case not implemented for twogaussian case.")
-       end if
-    end if
+    call sim%sampler%sample( sim%particle_group, sim%params, sim%domain(1:1), sim%domain(3:3) )
 
-    
     ! Set the initial fields
     SLL_ALLOCATE(rho_local(sim%n_gcells), ierr)
     SLL_ALLOCATE(rho(sim%n_gcells), ierr)
@@ -584,6 +498,10 @@ contains
     deallocate(sim%kernel_smoother_1)
 
     deallocate(sim%fields_grid)
+
+    call sim%params%free()
+    deallocate(sim%params)
+    call sim%sampler%free()
 
   end subroutine delete_pic_vm_1d2v
 
