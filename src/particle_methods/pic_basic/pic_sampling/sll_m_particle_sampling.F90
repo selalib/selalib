@@ -25,8 +25,6 @@ module sll_m_particle_sampling
   implicit none
 
   public :: &
-       sll_s_particle_sampling_random_gaussian_cos_weights, &
-       sll_s_particle_sampling_sobol_gaussian_cos_weights, &
        sll_t_particle_sampling, &
        sll_p_particle_sampling_random, &
        sll_p_particle_sampling_sobol, &
@@ -148,19 +146,23 @@ contains
   subroutine sample_particle_sampling( self, particle_group, params, xmin, Lx )
     class( sll_t_particle_sampling ), intent( inout ) :: self !< particle sampling object
     class(sll_c_particle_group_base), target, intent(inout)        :: particle_group
-    class( sll_t_cos_gaussian ),  target,     intent( in )      :: params
+    class( sll_c_distribution_params ),  target,     intent( in )      :: params
     sll_real64,                        intent(in)               :: xmin(:) !< lower bound of the domain
     sll_real64,                        intent(in)               :: Lx(:) !< length of the domain.
 
-    if( self%symmetric .eqv. .false. ) then
-       call sample_particle_sampling_all( self, particle_group, params, xmin, Lx )
-    else
-       if ( params%dims(1) == 1 .and. params%dims(2) == 2 ) then
-          call sample_particle_sampling_sym_1d2v( self, particle_group, params, xmin, Lx )
+    select type( params )
+    type is( sll_t_cos_gaussian)
+    
+       if( self%symmetric .eqv. .false. ) then
+          call sample_particle_sampling_all( self, particle_group, params, xmin, Lx )
        else
-          SLL_ERROR("sample_particle_sampling", "symmetric sampling not implemented for given dimension")
+          if ( params%dims(1) == 1 .and. params%dims(2) == 2 ) then
+             call sample_particle_sampling_sym_1d2v( self, particle_group, params, xmin, Lx )
+          else
+             SLL_ERROR("sample_particle_sampling", "symmetric sampling not implemented for given dimension")
+          end if
        end if
-    end if
+    end select
     
   end subroutine sample_particle_sampling
 
@@ -178,11 +180,17 @@ contains
     sll_real64, allocatable                            :: rdn(:)
     sll_real64                                         :: wi(1)
     sll_real64                                         :: rnd_no
+    sll_real64                                         :: delta(params%n_gaussians)
 
     n_rnds = 0
     if ( params%n_gaussians > 1 ) then
        n_rnds = 1
     end if
+
+    do i_v=1,params%n_gaussians
+       delta(i_v) = sum(params%delta(1:i_v))
+    end do
+    
     
     n_rnds = n_rnds+params%dims(1)+params%dims(2)
     allocate( rdn(params%dims(1)+params%dims(2)+1) )
@@ -219,7 +227,7 @@ contains
        ! For multiple Gaussian, draw which one to take
        rnd_no = rdn(params%dims(1)+params%dims(2)+1)
        i_gauss = 1
-       do while( rnd_no > params%delta(i_gauss) )
+       do while( rnd_no > delta(i_gauss) )
           i_gauss = i_gauss+1
        end do
        v(1:params%dims(2)) = v(1:params%dims(2)) * params%v_thermal(:,i_gauss) + params%v_mean(:,i_gauss)
@@ -252,11 +260,16 @@ subroutine sample_particle_sampling_sym_1d2v( self, particle_group, params, xmin
     sll_real64                                         :: wi(1)
     sll_real64                                         :: rnd_no
     sll_int32                                          :: ip, i_gauss
+    sll_real64                                         :: delta(params%n_gaussians)
 
     n_rnds = 0
     if ( params%n_gaussians > 1 ) then
        n_rnds = 1
     end if
+
+    do i_v=1,params%n_gaussians
+       delta(i_v) = sum(params%delta(1:i_v))
+    end do
     
     n_rnds = n_rnds+params%dims(1)+params%dims(2)
     allocate( rdn(params%dims(1)+params%dims(2)+1) )
@@ -295,13 +308,13 @@ subroutine sample_particle_sampling_sym_1d2v( self, particle_group, params, xmin
           ! For multiple Gaussian, draw which one to take
           rnd_no = rdn(params%dims(1)+params%dims(2)+1)
           i_gauss = 1
-          do while( rnd_no > params%delta(i_gauss) )
+          do while( rnd_no > delta(i_gauss) )
              i_gauss = i_gauss+1
           end do
           v(1:params%dims(2)) = v(1:params%dims(2)) * params%v_thermal(:,i_gauss) + params%v_mean(:,i_gauss)
        elseif ( ip == 5 ) then
           x(1) = Lx(1) - x(1) + 2.0_f64*xmin(1)
-       elseif (modulo(ip,2) == 0 ) then
+       elseif ( modulo(ip,2) == 0 ) then
           v(1) = -v(1) + 2.0_f64*params%v_mean(1,i_gauss)
        else          
           v(2) = -v(2) + 2.0_f64*params%v_mean(2,i_gauss)
