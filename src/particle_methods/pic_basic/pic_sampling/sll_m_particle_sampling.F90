@@ -34,10 +34,10 @@ module sll_m_particle_sampling
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
   !> Descriptors for particle sampling (initialization works with string same as descriptor but without sll_p)
-  sll_int32, parameter :: sll_p_particle_sampling_random = 0
-  sll_int32, parameter :: sll_p_particle_sampling_sobol = 1
-  sll_int32, parameter :: sll_p_particle_sampling_random_symmetric = 2
-  sll_int32, parameter :: sll_p_particle_sampling_sobol_symmetric = 3
+  sll_int32, parameter :: sll_p_particle_sampling_random = 0  !< sample random numbers (sample distribution given by params%evalv )
+  sll_int32, parameter :: sll_p_particle_sampling_sobol = 1    !< sample Sobol numbers (sample distribution given by params%evalv )
+  sll_int32, parameter :: sll_p_particle_sampling_random_symmetric = 2 !< sample random numbers, antithetic (sample distribution given by params%evalv )
+  sll_int32, parameter :: sll_p_particle_sampling_sobol_symmetric = 3  !< sample Sobol numbers, antithetic (sample distribution given by params%evalv ) 
 
   ! Internal parameter to distinguish how to draw
   sll_int32, parameter :: sll_p_random_numbers = 0 !< draw random numbers
