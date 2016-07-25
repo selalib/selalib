@@ -67,11 +67,7 @@ module sll_m_sim_pic_vm_1d2v_cart
        sll_c_particle_group_base
 
   use sll_m_particle_sampling, only: &
-       sll_t_particle_sampling, &
-       sll_p_particle_sampling_sobol_symmetric, &
-       sll_p_particle_sampling_sobol, &      
-       sll_p_particle_sampling_random_symmetric, &
-       sll_p_particle_sampling_random
+       sll_t_particle_sampling
   
   use sll_m_sim_base, only: &
     sll_c_simulation_base_class
@@ -244,19 +240,8 @@ contains
     sim%n_particles = n_particles/sim%world_size
     sim%n_total_particles = sim%n_particles * sim%world_size
     sim%degree_smoother = spline_degree
-    
-    select case(sampling_case)
-    case("particle_sampling_random")
-       call sim%sampler%init( sll_p_particle_sampling_random, [1,2], sim%n_particles, sim%rank  )
-    case("particle_sampling_sobol")     
-       call sim%sampler%init( sll_p_particle_sampling_sobol, [1,2], sim%n_particles, sim%rank  )
-    case("particle_sampling_random_symmetric")
-       call sim%sampler%init( sll_p_particle_sampling_random_symmetric, [1,2], sim%n_particles, sim%rank  )
-    case("particle_sampling_sobol_symmetric")
-       call sim%sampler%init( sll_p_particle_sampling_sobol_symmetric, [1,2], sim%n_particles, sim%rank  )
-    case default
-       print*, '#sampling_case ', sampling_case, ' not implemented.'
-    end select
+
+    call sim%sampler%init( trim(sampling_case), [1,2], sim%n_particles, sim%rank)
 
     select case(splitting_case)
     case("splitting_symplectic")
