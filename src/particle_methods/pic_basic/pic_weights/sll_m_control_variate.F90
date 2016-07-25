@@ -8,6 +8,9 @@ module sll_m_control_variate
 #include "sll_working_precision.h"
 #include "sll_memory.h"
 
+  use sll_m_initial_distribution, only : &
+       sll_c_distribution_params
+
   implicit none
   private
 
@@ -16,9 +19,10 @@ module sll_m_control_variate
   !> Control variate object
   type, public :: sll_t_control_variate
 
-     sll_real64, pointer :: control_variate_parameters(:) => null()
+     sll_real64, pointer :: control_variate_parameters(:) => null() !< Here parameters for the control variate funtion can be stored in an array
+     class(sll_c_distribution_params), pointer :: control_variate_distribution_params => null() !< Pointer to an initial distribution on which the control variate function can be based.
 
-     procedure(sll_i_control_variate), pointer :: control_variate => null()
+     procedure(sll_i_control_variate), pointer :: control_variate => null() !< function pointer to control variate function
 
    contains
 
@@ -61,23 +65,28 @@ module sll_m_control_variate
     end function update_df_weight
 
     !> Initialization
-    subroutine init_control_variate( self, control_function, parameters ) 
+    subroutine init_control_variate( self, control_function, parameters, distribution_params ) 
       class(sll_t_control_variate), intent(out) :: self !< Control variate object
       procedure(sll_i_control_variate) :: control_function !< Function defining the control variate
-      sll_real64, pointer, intent(in) :: parameters(:) !< Parameter values needed in control variate function
+      sll_real64, target,optional,  intent(in) :: parameters(:) !< Parameter values needed in control variate function
+      class(sll_c_distribution_params), target, optional, intent(in) :: distribution_params
 
       self%control_variate => control_function
       
       self%control_variate_parameters => parameters
+      
+      self%control_variate_distribution_params => distribution_params
 
       
     end subroutine init_control_variate
+
 
     !> Destructor
     subroutine free_control_variate( self ) 
       class(sll_t_control_variate), intent(inout) :: self !< Control variate object
      
       self%control_variate_parameters => null()
+      self%control_variate_distribution_params => null()
 
     end subroutine free_control_variate
 
