@@ -17,7 +17,8 @@ program test_particle_sampling
   use sll_m_particle_group_base, only: &
     sll_c_particle_group_base
 
-  use sll_m_particle_sampling
+  use sll_m_particle_sampling, only : &
+       sll_t_particle_sampling
   
   implicit none
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -66,16 +67,16 @@ program test_particle_sampling
 
   ! Landau
   print*, 'Sobol'
-  call test( sll_p_particle_sampling_sobol, [1,2], particle_group,  &
+  call test( "particle_sampling_sobol", [1,2], particle_group,  &
        1d2/sqrt(real(n_particles,f64)) )
   print*, 'Sobol symmetric'
-  call test( sll_p_particle_sampling_sobol_symmetric, [1,2], particle_group, &
+  call test( "particle_sampling_sobol_symmetric", [1,2], particle_group, &
        1d-12)
   print*, 'Random'
-  call test( sll_p_particle_sampling_random, [1,2], particle_group,  &
+  call test( "particle_sampling_random", [1,2], particle_group,  &
        1d2/sqrt(real(n_particles,f64)) )
   print*, 'Random symmetric'
-  call test( sll_p_particle_sampling_random_symmetric, [1,2], particle_group, &
+  call test( "particle_sampling_random_symmetric", [1,2], particle_group, &
        1d-12)
    
   
@@ -128,10 +129,10 @@ program test_particle_sampling
   
   ! TSI
   print*, 'Sobol'
-  call test( sll_p_particle_sampling_sobol, [1,2], particle_group,  &
+  call test( "particle_sampling_sobol", [1,2], particle_group,  &
        1d2/sqrt(real(n_particles,f64)) )
   print*, 'Sobol symmetric'
-  call test( sll_p_particle_sampling_sobol_symmetric, [1,2], particle_group, &
+  call test( "particle_sampling_sobol_symmetric", [1,2], particle_group, &
        1d2/sqrt(real(n_particles,f64)) )
 
   ! If we never stop due to tolerance not met, the test passed.
@@ -145,7 +146,7 @@ contains
 
 
  subroutine test( sampling_type, dims, particle_group, tolerance )
-   sll_int32, intent( in    ) :: sampling_type
+   character(len=*), intent( in    ) :: sampling_type
    sll_int32, intent( in    ) :: dims(2)
    class( sll_c_particle_group_base ), intent( inout ) :: particle_group
    sll_real64, intent( in   ) :: tolerance

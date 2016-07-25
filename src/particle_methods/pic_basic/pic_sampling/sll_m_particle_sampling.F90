@@ -89,10 +89,10 @@ contains
     
   subroutine init_particle_sampling( self, sampling_type, dims, n_particles_local, rank )
     class( sll_t_particle_sampling ), intent( out ) :: self !< particle sampling object
-    sll_int32,                         intent(in )              :: sampling_type !< sampling_type
-    sll_int32,                         intent( in )             :: dims(:)
-    sll_int32,                         intent(inout )           :: n_particles_local !< number of particles on processor
-    sll_int32, optional,               intent(in )              :: rank !< optional argument to set random seed dependent on processor rank
+    character(len=*),                 intent(in )              :: sampling_type !< sampling_type
+    sll_int32,                        intent( in )             :: dims(:)
+    sll_int32,                        intent(inout )           :: n_particles_local !< number of particles on processor
+    sll_int32, optional,              intent(in )              :: rank !< optional argument to set random seed dependent on processor rank
 
     ! local
     sll_int32 :: prank
@@ -102,17 +102,17 @@ contains
     prank = 0
     if( present(rank)) prank = rank
 
-    select case( sampling_type )
-    case( sll_p_particle_sampling_random )
+    select case( trim(sampling_type) )
+    case( "particle_sampling_random" )
        self%symmetric = .false.
        self%random_numbers = sll_p_random_numbers
-    case( sll_p_particle_sampling_sobol )
+    case( "particle_sampling_sobol" )
        self%symmetric = .false.
        self%random_numbers = sll_p_sobol_numbers       
-    case( sll_p_particle_sampling_random_symmetric )
+    case( "particle_sampling_random_symmetric" )
        self%symmetric = .true.
        self%random_numbers = sll_p_random_numbers
-    case( sll_p_particle_sampling_sobol_symmetric )
+    case( "particle_sampling_sobol_symmetric" )
        self%symmetric = .true.
        self%random_numbers = sll_p_sobol_numbers
     case default
