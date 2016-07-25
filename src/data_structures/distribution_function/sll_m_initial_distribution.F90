@@ -315,7 +315,7 @@ contains
     params%normal = 1.0_f64/(sll_p_twopi**(0.5_f64*real(params%dims(2),f64))*&
          product(params%v_thermal(:,1)))
 
-    params%delta(1) = 0.0_f64
+    params%delta(1) = 1.0_f64
     
   end subroutine sumcos_onegaussian_init
 
@@ -351,7 +351,7 @@ contains
 
     params%normal = 1.0_f64/(sll_p_twopi**(0.5_f64*real(params%dims(2),f64))*&
          product(params%v_thermal(:,1)))
-    params%delta(1) = 0.0_f64
+    params%delta(1) = 1.0_f64
     
   end subroutine cossum_onegaussian_init
   
