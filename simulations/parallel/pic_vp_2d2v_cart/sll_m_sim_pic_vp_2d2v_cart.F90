@@ -290,11 +290,10 @@ contains
 
 !!! Part for ctest
     if (sim%rank == 0) then
-       if (abs(eenergy - 3.0503207170668825_f64) < 1d-13) then
+       if (abs(eenergy - 3.0503207170271787_f64) < 1d-13) then
           sim%ctest_passed = .true.
        end if
     end if
-
     
 
   end subroutine run_pic_2d2v
