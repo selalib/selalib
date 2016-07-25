@@ -1,3 +1,7 @@
+!> @ingroup distribution_function
+!> @author Katharina Kormann
+!> @brief Parameters to define common initial distributions
+!> @details ...
 module sll_m_initial_distribution
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_working_precision.h"
@@ -20,40 +24,40 @@ module sll_m_initial_distribution
   private
   !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
   ! Descriptors for various distributions
-  sll_int32, parameter :: sll_p_sumcos_onegaussian = 0
-  sll_int32, parameter :: sll_p_cossum_onegaussian = 1
-  sll_int32, parameter :: sll_p_sumcos_twogaussian = 2
-  sll_int32, parameter :: sll_p_cossum_twogaussian = 3
+  sll_int32, parameter :: sll_p_sumcos_onegaussian = 0 !< Descriptor for (1+\sum cos( kx * x_i))*exp(-0.5(v-v_mean)**2/v_thermal**2)
+  sll_int32, parameter :: sll_p_cossum_onegaussian = 1 !< Descriptor for (1+cos( \sum kx_i * x_i))*exp(-0.5(v-v_mean)**2/v_thermal**2)
+  sll_int32, parameter :: sll_p_sumcos_twogaussian = 2 !< as sll_p_sumcos_onegaussian but with sum of two Gaussians
+  sll_int32, parameter :: sll_p_cossum_twogaussian = 3 !< as sll_p_sumcos_onegaussian but with sum of two Gaussians
 
   !> Abstract data type for parameters of initial distribution
   type, abstract :: sll_c_distribution_params
      sll_int32 :: dims(2) !< Number of spatial and velocity dimensions
 
    contains
-     procedure( signature_eval ), deferred :: eval
-     procedure( signature_evalx), deferred :: evalx
-     procedure( signature_evalv), deferred :: evalv
-     procedure( signature_empty), deferred :: free
+     procedure( signature_eval ), deferred :: eval   !< Evaluate the distribution function
+     procedure( signature_evalx), deferred :: evalx  !< Evaluate the charge density
+     procedure( signature_evalv), deferred :: evalv  !< Evaluate the v-dependence (integrated over x)
+     procedure( signature_empty), deferred :: free   !< Destructor
 
   end type sll_c_distribution_params
 
-  !> 
+  !> Data type for distribution function with (multiple) Gaussians in v and one plus cosine perturbations in x.
   type, extends(sll_c_distribution_params) :: sll_t_cos_gaussian
-     sll_real64, allocatable :: kx(:,:)
-     sll_real64, allocatable :: alpha(:)
-     sll_real64, allocatable :: v_thermal(:,:)
-     sll_real64, allocatable :: v_mean(:,:)
-     sll_real64, allocatable :: delta(:)
-     sll_real64, allocatable :: normal(:)
-     sll_int32               :: n_gaussians
-     sll_int32               :: n_cos
+     sll_real64, allocatable :: kx(:,:)  !< values of the wave numbers (first index dimension, second index for multiple cosines)
+     sll_real64, allocatable :: alpha(:) !< strength of perturbations
+     sll_real64, allocatable :: v_thermal(:,:) !< variance of the Gaussian ( first index velocity dimension, second index multiple Gaussians)
+     sll_real64, allocatable :: v_mean(:,:)    !< mean value of the Gaussian ( first index velocity dimension, second index multiple Gaussians)
+     sll_real64, allocatable :: delta(:) !< Portion of each Gaussian
+     sll_real64, allocatable :: normal(:) !< Normalization constant of each Gaussian
+     sll_int32               :: n_gaussians !< Number of Gaussians
+     sll_int32               :: n_cos !< Number of cosines
 
    contains
-     procedure :: eval => sll_f_cos_gaussian
-     procedure :: free => free_cos_gaussian
-     procedure :: evalx => sll_f_cos
-     procedure :: evalv => sll_f_gaussian
-     procedure :: init => cos_gaussian_init
+     procedure :: eval => sll_f_cos_gaussian !< Evaluate the distribution function
+     procedure :: free => free_cos_gaussian  !< Descructor
+     procedure :: evalx => sll_f_cos         !< Evaluate the charge density
+     procedure :: evalv => sll_f_gaussian    !< Evaluate the v-dependence (integrated over x)
+     procedure :: init => cos_gaussian_init  !< Initialization
      
   end type sll_t_cos_gaussian
 
@@ -100,6 +104,10 @@ module sll_m_initial_distribution
   end interface
 contains
 
+!------------------------------------------------------------------------------- 
+! Define the procedures of the type sll_t_cos_gaussian
+!-------------------------------------------------------------------------------
+  
   function sll_f_cos_gaussian( self, x, v ) result( fval )
     class( sll_t_cos_gaussian ) :: self
     sll_real64 :: x(:)
@@ -193,6 +201,11 @@ contains
   end subroutine cos_gaussian_init
 
 
+  
+  !------------------------------------------------------------------------------- 
+  ! Factory function with specific functions called depending on chosen distribution type
+  !-------------------------------------------------------------------------------
+  !> Factory function for sll_c_distribution_params, parameters read form input file
   subroutine  sll_s_initial_distribution_new( distribution, dims, file_id, params )
     character(len=*), intent( in    ) :: distribution !< descriptor of the test case
     sll_int32, intent( in    ) :: dims(2) !< number of spatial and velocity dimensions
@@ -236,7 +249,7 @@ contains
   end subroutine sll_s_initial_distribution_new
 
        
-
+  !> Factory function for sll_c_distribution_params, parameters read form input file. Version build upon descriptors
   subroutine  sll_s_initial_distribution_new_descriptor( distribution, dims, file_id, params )
     sll_int32, intent( in    ) :: distribution !< descriptor of the test case
     sll_int32, intent( in    ) :: dims(2) !< number of spatial and velocity dimensions
