@@ -24,12 +24,11 @@ program test_particle_sampling
 
   class(sll_c_particle_group_base), allocatable:: particle_group
   type(sll_t_cos_gaussian)                     :: params
-  type(sll_t_particle_sampling)                :: sampling
   sll_real64                                   :: xmin !< lower bound of the domain
   sll_real64                                   :: Lx !< length of the domain.
   sll_int32                                    :: n_particles      
-  sll_int32                                    :: i_part, j, k
-  sll_real64                                   :: xi(3), mean(3), sigma(3), mean_ref(3), sigma_ref(3), delta(2)
+  sll_int32                                    :: j, k
+  sll_real64                                   :: mean_ref(3), sigma_ref(3), delta(2)
 
   n_particles = 80000
 
@@ -107,7 +106,7 @@ program test_particle_sampling
   params%v_mean(:,1) = 0.0_f64
   params%v_mean(:,2) = 1.0_f64
   params%delta(1)  = 0.7_f64
-  params%delta(2) = 1.0_f64
+  params%delta(2) = 0.3_f64
   params%normal(1) = 1.0_f64/(sll_p_twopi**(0.5_f64*real(params%dims(2),f64))*&
        product(params%v_thermal(:,1)))
   params%normal(2) = 1.0_f64/(sll_p_twopi**(0.5_f64*real(params%dims(2),f64))*&
@@ -115,16 +114,14 @@ program test_particle_sampling
 
   
   mean_ref = [Lx*0.5_f64+xmin, 0.3_f64, 0.3_f64]
-  sigma_ref = [Lx**2/12.0_f64, 1.48_f64, 1.48_f64]!params%v_thermal(1,1)**2, params%v_thermal(2,1)**2 ]
   sigma_ref(1) = Lx**2/12.0_f64
-  delta = [params%delta(1), 1.0_f64 - params%delta(1)]
   
   do j=1,2
      sigma_ref(j+1) = - (params%delta(1)*params%v_mean(j,1)+&
           (params%delta(2)-params%delta(1))*params%v_mean(j,2))**2
      do k=1,2
         sigma_ref(j+1) = sigma_ref(j+1) + &
-             delta(k) * (params%v_thermal(j,k)**2+params%v_mean(j,k)**2)
+             params%delta(k) * (params%v_thermal(j,k)**2+params%v_mean(j,k)**2)
      end do
           
   end do
