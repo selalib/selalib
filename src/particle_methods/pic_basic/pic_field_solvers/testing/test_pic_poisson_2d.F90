@@ -13,8 +13,6 @@ program test_pic_poisson_2d
   use sll_m_particle_group_base, only: &
     sll_c_particle_group_base
 
-  use sll_m_particle_initializer
-
   use sll_m_pic_poisson_base, only : &
     sll_c_pic_poisson
 
