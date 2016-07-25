@@ -73,9 +73,9 @@ module sll_m_control_variate
 
       self%control_variate => control_function
       
-      self%control_variate_parameters => parameters
+      if (present(parameters)) self%control_variate_parameters => parameters
       
-      self%control_variate_distribution_params => distribution_params
+      if (present(distribution_params)) self%control_variate_distribution_params => distribution_params
 
       
     end subroutine init_control_variate
