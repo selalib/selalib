@@ -300,6 +300,9 @@ contains
     deallocate(sim%kernel_smoother)
     call sim%control_variate%free()
     deallocate(sim%control_variate)
+    call sim%sampler%free()
+    call sim%params%free()
+    deallocate(sim%params)
 
   end subroutine delete_pic_2d2v
 
