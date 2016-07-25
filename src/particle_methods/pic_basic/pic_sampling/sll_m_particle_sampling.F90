@@ -9,6 +9,9 @@ module sll_m_particle_sampling
 #include "sll_assert.h"
 #include "sll_working_precision.h"
 
+  use sll_m_control_variate, only : &
+       sll_t_control_variate
+
   use sll_m_initial_distribution, only: &
        sll_c_distribution_params, &
        sll_t_cos_gaussian
@@ -69,6 +72,7 @@ module sll_m_particle_sampling
    contains
      procedure :: init => init_particle_sampling
      procedure :: sample => sample_particle_sampling
+     procedure :: sample_cv => sample_cv_particle_sampling
      procedure :: free => free_particle_sampling
 
   end type sll_t_particle_sampling
@@ -142,6 +146,41 @@ contains
     
   end subroutine init_particle_sampling
 
+  subroutine sample_cv_particle_sampling( self, particle_group, params, xmin, Lx, control_variate, time )
+    class( sll_t_particle_sampling ), intent( inout ) :: self !< particle sampling object
+    class(sll_c_particle_group_base), target, intent(inout)        :: particle_group
+    class( sll_c_distribution_params ),  target,     intent( in )      :: params
+    sll_real64,                        intent(in)               :: xmin(:) !< lower bound of the domain
+    sll_real64,                        intent(in)               :: Lx(:) !< length of the domain.
+    class(sll_t_control_variate),      intent(in)               :: control_variate
+    sll_real64, optional,              intent(in)               :: time
+
+    sll_real64 :: vi(3), xi(3), wi(particle_group%n_weights)
+    sll_int32  :: i_part
+    sll_real64 :: time0
+
+    time0 = 0.0_f64
+    if( present(time) ) time0 = time
+
+    
+    ! First sample the particles and set weights for full f
+    call self%sample( particle_group, params, xmin, Lx )
+
+    ! Fill wi(2) with value of initial distribution at initial positions (g0)
+    ! and wi(3) with the delta f weights
+    do i_part = 1, particle_group%n_particles
+       xi = particle_group%get_x( i_part )
+       vi = particle_group%get_v( i_part )
+       wi = particle_group%get_weights( i_part )
+       ! TODO: Distinguish here between different initial sampling distributions
+       wi(2) = params%evalv( vi(1:params%dims(2)) )/product(Lx)
+       wi(3) = control_variate%update_df_weight( xi, vi, time0, wi(1), wi(2) )
+       call particle_group%set_weights( i_part, wi )
+    end do
+    
+
+  end subroutine sample_cv_particle_sampling
+  
 
   subroutine sample_particle_sampling( self, particle_group, params, xmin, Lx )
     class( sll_t_particle_sampling ), intent( inout ) :: self !< particle sampling object
@@ -178,7 +217,7 @@ contains
     sll_int32                                          :: i_part
     sll_int32                                          :: i_v, i_gauss
     sll_real64, allocatable                            :: rdn(:)
-    sll_real64                                         :: wi(1)
+    sll_real64                                         :: wi(particle_group%n_weights)
     sll_real64                                         :: rnd_no
     sll_real64                                         :: delta(params%n_gaussians)
 
