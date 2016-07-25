@@ -28,69 +28,52 @@ module sll_m_particle_sampling
   implicit none
 
   public :: &
-       sll_t_particle_sampling, &
-       sll_p_particle_sampling_random, &
-       sll_p_particle_sampling_sobol, &
-       sll_p_particle_sampling_random_symmetric, &
-       sll_p_particle_sampling_sobol_symmetric
+       sll_t_particle_sampling
 
   private
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
+  !> Descriptors for particle sampling (initialization works with string same as descriptor but without sll_p)
   sll_int32, parameter :: sll_p_particle_sampling_random = 0
   sll_int32, parameter :: sll_p_particle_sampling_sobol = 1
   sll_int32, parameter :: sll_p_particle_sampling_random_symmetric = 2
   sll_int32, parameter :: sll_p_particle_sampling_sobol_symmetric = 3
 
-  sll_int32, parameter :: sll_p_random_numbers = 0
-  sll_int32, parameter :: sll_p_sobol_numbers = 1
+  ! Internal parameter to distinguish how to draw
+  sll_int32, parameter :: sll_p_random_numbers = 0 !< draw random numbers
+  sll_int32, parameter :: sll_p_sobol_numbers = 1 !< draw sobol numbers
 
-!!$  type, abstract :: sll_c_number_generator
-!!$     logical :: symmetric
-!!$
-!!$   contains
-!!$     procedure(signature_get), deferred :: get_numbers
-!!$
-!!$     
-!!$  end type sll_c_number_generator
-!!$
-!!$  type, extends(sll_c_number_generator) :: sll_t_number_generator_random
-!!$     sll_int32, allocatable :: seed(:)
-!!$
-!!$   contains
-!!$     procedure :: init => init_random
-!!$     procedure :: get_numbers => get_random
-!!$
-!!$  end type sll_t_number_generator_random
-
+  !> Data type for particle sampling
   type :: sll_t_particle_sampling
-     logical :: symmetric
-     sll_int32               :: random_numbers
-     sll_int32,  allocatable :: random_seed(:)
-     sll_int64               :: sobol_seed
+     logical :: symmetric !< If true, antithetic sampling is applied
+     sll_int32               :: random_numbers !< How to draw (currently random or Sobol) defined by descriptors
+     sll_int32,  allocatable :: random_seed(:) !< seed for random numbers
+     sll_int64               :: sobol_seed     !< seed for Sobol numbers
 
    contains
-     procedure :: init => init_particle_sampling
-     procedure :: sample => sample_particle_sampling
-     procedure :: sample_cv => sample_cv_particle_sampling
-     procedure :: free => free_particle_sampling
+     procedure :: init => init_particle_sampling !> Initializer
+     procedure :: sample => sample_particle_sampling !> Sample particles
+     procedure :: sample_cv => sample_cv_particle_sampling !> Sample particles and set delta f weights
+     procedure :: free => free_particle_sampling !> Destructor
 
   end type sll_t_particle_sampling
   
 
 contains
 
+  !> Descructor
   subroutine free_particle_sampling( self )
     class( sll_t_particle_sampling ), intent( inout ) :: self !< particle sampling object
 
     if (allocated(self%random_seed)) deallocate( self%random_seed )
     
   end subroutine free_particle_sampling
-    
+
+  !> Initializer
   subroutine init_particle_sampling( self, sampling_type, dims, n_particles_local, rank )
     class( sll_t_particle_sampling ), intent( out ) :: self !< particle sampling object
     character(len=*),                 intent(in )              :: sampling_type !< sampling_type
-    sll_int32,                        intent( in )             :: dims(:)
+    sll_int32,                        intent( in )             :: dims(:) !< \a dims(1) number of spatial dimensions, \a dims(2) number of velocity dimensions
     sll_int32,                        intent(inout )           :: n_particles_local !< number of particles on processor
     sll_int32, optional,              intent(in )              :: rank !< optional argument to set random seed dependent on processor rank
 
@@ -146,14 +129,16 @@ contains
     
   end subroutine init_particle_sampling
 
+  !> Sample with control variate (we assume that the particle weights are given in the following order:
+  !> (full f weight, value of initial distribution at time 0, delta f weights)
   subroutine sample_cv_particle_sampling( self, particle_group, params, xmin, Lx, control_variate, time )
     class( sll_t_particle_sampling ), intent( inout ) :: self !< particle sampling object
-    class(sll_c_particle_group_base), target, intent(inout)        :: particle_group
-    class( sll_c_distribution_params ),  target,     intent( in )      :: params
+    class(sll_c_particle_group_base), target, intent(inout)        :: particle_group !< particle group
+    class( sll_c_distribution_params ),  target,     intent( in )      :: params !< parameters for initial distribution
     sll_real64,                        intent(in)               :: xmin(:) !< lower bound of the domain
     sll_real64,                        intent(in)               :: Lx(:) !< length of the domain.
-    class(sll_t_control_variate),      intent(in)               :: control_variate
-    sll_real64, optional,              intent(in)               :: time
+    class(sll_t_control_variate),      intent(in)               :: control_variate !< PIC control variate
+    sll_real64, optional,              intent(in)               :: time !< initial time (default: 0)
 
     sll_real64 :: vi(3), xi(3), wi(particle_group%n_weights)
     sll_int32  :: i_part
@@ -181,11 +166,11 @@ contains
 
   end subroutine sample_cv_particle_sampling
   
-
+  !> Sample from distribution defined by \a params
   subroutine sample_particle_sampling( self, particle_group, params, xmin, Lx )
     class( sll_t_particle_sampling ), intent( inout ) :: self !< particle sampling object
-    class(sll_c_particle_group_base), target, intent(inout)        :: particle_group
-    class( sll_c_distribution_params ),  target,     intent( in )      :: params
+    class(sll_c_particle_group_base), target, intent(inout)        :: particle_group !< particle group
+    class( sll_c_distribution_params ),  target,     intent( in )      :: params !< parameters for initial distribution
     sll_real64,                        intent(in)               :: xmin(:) !< lower bound of the domain
     sll_real64,                        intent(in)               :: Lx(:) !< length of the domain.
 
@@ -205,6 +190,7 @@ contains
     
   end subroutine sample_particle_sampling
 
+  !> Helper function for pure sampling
   subroutine sample_particle_sampling_all( self,  particle_group, params, xmin, Lx )
     type( sll_t_particle_sampling ), intent( inout ) :: self !< particle sampling object
     class(sll_c_particle_group_base), target, intent(inout)        :: particle_group
@@ -284,7 +270,8 @@ contains
 
   end subroutine sample_particle_sampling_all
 
-subroutine sample_particle_sampling_sym_1d2v( self, particle_group, params, xmin, Lx )
+  !> Helper function for antithetic sampling in 1d2v
+  subroutine sample_particle_sampling_sym_1d2v( self, particle_group, params, xmin, Lx )
     type( sll_t_particle_sampling ), intent( inout ) :: self !< particle sampling object
     class(sll_c_particle_group_base), target, intent(inout)        :: particle_group
     class( sll_t_cos_gaussian ),  target,     intent( in )      :: params
@@ -370,149 +357,5 @@ subroutine sample_particle_sampling_sym_1d2v( self, particle_group, params, xmin
 
   end subroutine sample_particle_sampling_sym_1d2v
   
-
-  ! From here old
-
-  subroutine sll_s_particle_sampling_sobol_gaussian_cos_weights( &
-       particle_group, &
-       params, &
-       xmin, &
-       Lx, &
-       seed )
-    class(sll_c_particle_group_base),  intent(inout)            :: particle_group
-    class( sll_t_cos_gaussian ),       intent( in )             :: params
-    sll_real64,                        intent(in)               :: xmin(:) !< lower bound of the domain
-    sll_real64,                        intent(in)               :: Lx(:) !< length of the domain.
-    sll_int64,                         intent(inout)            :: seed !< Random seed.
-
-
-    sll_int32 :: n_rnds
-    sll_real64                                         :: x(3),v(3)
-    sll_int32                                          :: i_part
-    sll_int32                                          :: i_v
-    sll_real64, allocatable                            :: rdn(:)
-    sll_real64                                         :: wi
-    sll_real64                                         :: rnd_no
-
-    n_rnds = 0
-    if ( params%n_gaussians > 1 ) then
-       n_rnds = 1
-    end if
-    
-    n_rnds = n_rnds+params%dims(1)+params%dims(2)
-    allocate( rdn(params%dims(1)+params%dims(2)+1) )
-    rdn = 0.0_f64
-    
-    ! 1/Np in common weight
-    call particle_group%set_common_weight &
-         (1.0_f64/real(particle_group%n_total_particles, f64))
-    
-
-    do i_part = 1, particle_group%n_particles
-       ! Generate Sobol numbers on [0,1]
-       call sll_s_i8_sobol( int(n_rnds,8), seed, rdn(1:n_rnds))
-
-       ! Transform rdn to the interval
-       x(1:params%dims(1)) = xmin + Lx * rdn(1:params%dims(1))
-
-       ! Set weight according to value of perturbation
-       wi = params%evalx(x(1:params%dims(1)))*product(Lx)
-
-       ! Maxwellian distribution of the temperature
-       do i_v = 1,params%dims(2)
-          call sll_s_normal_cdf_inv( rdn(i_v+params%dims(1)), 0.0_f64, 1.0_f64, &
-               v(i_v))
-       end do
-       ! For multiple Gaussian, draw which one to take
-       rnd_no = rdn(params%dims(1)+params%dims(2)+1)
-       i_v = 1
-       do while( rnd_no > params%delta(i_v) )
-          i_v = i_v+1
-       end do
-       v(1:params%dims(2)) = v(1:params%dims(2)) * params%v_thermal(:,i_v) + params%v_mean(:,i_v)
-       
-       ! Copy the generated numbers to the particle
-       call particle_group%set_x(i_part, x)
-       call particle_group%set_v(i_part, v)
-       ! Set weights.
-       call particle_group%set_weights(i_part, &
-            [wi])
-       
-    end do
-    
-  end subroutine sll_s_particle_sampling_sobol_gaussian_cos_weights
-
-  subroutine sll_s_particle_sampling_random_gaussian_cos_weights( &
-       particle_group, &
-       params, &
-       xmin, &
-       Lx, &
-       seed )
-    class(sll_c_particle_group_base),  intent(inout)            :: particle_group
-    class( sll_t_cos_gaussian ),       intent( in )             :: params
-    sll_real64,                        intent(in)               :: xmin(:) !< lower bound of the domain
-    sll_real64,                        intent(in)               :: Lx(:) !< length of the domain.
-    sll_int32,                         intent(inout)            :: seed(:) !< Random seed.
-
-
-    sll_int32 :: n_rnds
-    sll_real64                                         :: x(3),v(3)
-    sll_int32                                          :: i_part
-    sll_int32                                          :: i_v
-    sll_real64, allocatable                            :: rdn(:)
-    sll_real64                                         :: wi
-    sll_real64                                         :: rnd_no
-
-
-    ! Set random seed
-    call random_seed(put=seed)
-    
-    n_rnds = 0
-    if ( params%n_gaussians > 1 ) then
-       n_rnds = 1
-    end if
-    
-    n_rnds = n_rnds+params%dims(1)+params%dims(2)
-    allocate( rdn(params%dims(1)+params%dims(2)+1) )
-    rdn = 0.0_f64
-    
-    ! 1/Np in common weight
-    call particle_group%set_common_weight &
-         (1.0_f64/real(particle_group%n_total_particles, f64))
-    
-
-    do i_part = 1, particle_group%n_particles
-       ! Generate Sobol numbers on [0,1]
-       call random_number( rdn(1:n_rnds))
-
-       ! Transform rdn to the interval
-       x(1:params%dims(1)) = xmin + Lx * rdn(1:params%dims(1))
-
-       ! Set weight according to value of perturbation
-       wi = params%evalx(x(1:params%dims(1)))*product(Lx)
-
-       ! Maxwellian distribution of the temperature
-       do i_v = 1,params%dims(2)
-          call sll_s_normal_cdf_inv( rdn(i_v+params%dims(1)), 0.0_f64, 1.0_f64, &
-               v(i_v))
-       end do
-       ! For multiple Gaussian, draw which one to take
-       rnd_no = rdn(params%dims(1)+params%dims(2)+1)
-       i_v = 1
-       do while( rnd_no > params%delta(i_v) )
-          i_v = i_v+1
-       end do
-       v(1:params%dims(2)) = v(1:params%dims(2)) * params%v_thermal(:,i_v) + params%v_mean(:,i_v)
-       
-       ! Copy the generated numbers to the particle
-       call particle_group%set_x(i_part, x)
-       call particle_group%set_v(i_part, v)
-       ! Set weights.
-       call particle_group%set_weights(i_part, &
-            [wi])
-       
-    end do
-    
-  end subroutine sll_s_particle_sampling_random_gaussian_cos_weights
 
 end module sll_m_particle_sampling
