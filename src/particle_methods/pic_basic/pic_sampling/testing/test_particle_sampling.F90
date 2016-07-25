@@ -1,3 +1,6 @@
+! Test the particle sampling module
+! author: Katharina Kormann, IPP
+
 program test_particle_sampling
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_memory.h"
