@@ -7,10 +7,6 @@ module sll_m_bsplines
 #include "sll_memory.h"
 #include "sll_working_precision.h"
 
-! use F77_deboor, only: &
-!   banfac, &
-!   banslv
-
   use sll_m_boundary_condition_descriptors, only: &
     sll_p_periodic
 
@@ -82,11 +78,11 @@ type :: sll_t_bspline_2d
 
   type(sll_t_bspline_1d), pointer :: bs1
   type(sll_t_bspline_1d), pointer :: bs2
-  sll_real64,           pointer :: bcoef(:,:)
-  sll_real64,           pointer :: x1_min_slopes(:) => null() 
-  sll_real64,           pointer :: x1_max_slopes(:) => null()
-  sll_real64,           pointer :: x2_min_slopes(:) => null()
-  sll_real64,           pointer :: x2_max_slopes(:) => null()
+  sll_real64,             pointer :: bcoef(:,:)
+  sll_real64,             pointer :: x1_min_slopes(:) => null() 
+  sll_real64,             pointer :: x1_max_slopes(:) => null()
+  sll_real64,             pointer :: x2_min_slopes(:) => null()
+  sll_real64,             pointer :: x2_max_slopes(:) => null()
 
 end type sll_t_bspline_2d
 
