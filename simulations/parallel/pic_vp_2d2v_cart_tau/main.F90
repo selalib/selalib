@@ -149,8 +149,8 @@ epsq  = ep * ep
 dtau  = 2._f64*sll_p_pi/ntau
 
 m = ntau/2
-ltau   =(/ (n, n=0,m-1), (n, n=-m,-1 )/)
-iltau  = 0.5_f64 * sll_p_i1 * cmplx(ltau,0.0_f64) / epsq
+ltau   =(/ (real(n,f64), n=0,m-1), (real(n,f64), n=-m,-1 )/)
+iltau  = cmplx(0.5,0.0,f64) * sll_p_i1 * cmplx(ltau,0.0,f64) / epsq
 eiltau = exp(-iltau*dt) / ntau
 
 pl(0)=dt
@@ -765,16 +765,16 @@ if (master) then
     wp1(m) = sll_p_i0
     wp2(m) = sll_p_i0
     do n=0,ntau-1
-      wp1(m)=wp1(m)+temp1(n)/real(ntau,f64)*exp(iltau(n)*time)
-      wp2(m)=wp2(m)+temp2(n)/real(ntau,f64)*exp(iltau(n)*time)
+      wp1(m)=wp1(m)+temp1(n)/cmplx(ntau,0.0,f64)*exp(iltau(n)*time)
+      wp2(m)=wp2(m)+temp2(n)/cmplx(ntau,0.0,f64)*exp(iltau(n)*time)
     enddo
     call sll_s_fft_exec_c2c_1d(fw, um(:,m,1),temp1)
     call sll_s_fft_exec_c2c_1d(fw, um(:,m,2),temp2)
     wm1(m) = sll_p_i0
     wm2(m) = sll_p_i0
     do n=0,ntau-1
-      wm1(m)=wm1(m)+temp1(n)/real(ntau,f64)*exp(iltau(n)*time)
-      wm2(m)=wm2(m)+temp2(n)/real(ntau,f64)*exp(iltau(n)*time)
+      wm1(m)=wm1(m)+temp1(n)/cmplx(ntau,0.0,f64)*exp(iltau(n)*time)
+      wm2(m)=wm2(m)+temp2(n)/cmplx(ntau,0.0,f64)*exp(iltau(n)*time)
     enddo
     utmp   = 0.5_f64*(cost*wp1(m)-sint*wp2(m)+cost*wm1(m)+sint*wm2(m))
     vtmp   = 0.5_f64*(cost*wp2(m)+sint*wp1(m)+cost*wm2(m)-sint*wm1(m))
