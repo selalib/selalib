@@ -150,15 +150,15 @@ dtau  = 2._f64*sll_p_pi/ntau
 
 m = ntau/2
 ltau   =(/ (real(n,f64), n=0,m-1), (real(n,f64), n=-m,-1 )/)
-iltau  = cmplx(0.5,0.0,f64) * sll_p_i1 * cmplx(ltau,0.0,f64) / epsq
-eiltau = exp(-iltau*dt) / ntau
+iltau  = cmplx(0.5,0.0,f64) * sll_p_i1 * cmplx(ltau,0.0,f64) / cmplx(epsq,0.0,f64)
+eiltau = exp(-iltau*dt) / cmplx(ntau,0.0,f64)
 
-pl(0)=dt
-ql(0)=dt**2/2._f64
+pl(0)=cmplx(dt,0.0,f64)
+ql(0)=pl(0)**2/2._f64
 do i=1,ntau-1
-  pl(i)=2._f64*epsq*sll_p_i1*(exp(-iltau(i)*dt)-1.0_f64)/ltau(i)
-  ql(i)=2._f64*epsq*(2.0_f64*epsq*(1.0_f64-exp(-iltau(i)*dt)) &
-                    -2.0_f64*epsq*iltau(i)*dt)/ltau(i)**2
+  pl(i)=cmplx(2._f64*epsq,0.0,f64)*sll_p_i1*(exp(-iltau(i)*dt)-sll_p_i0)/cmplx(ltau(i),0.0,f64)
+  ql(i)=cmplx(2._f64*epsq,0.0,f64)*(cmplx(2.0_f64*epsq,0.0,f64)*(sll_p_i0-exp(-iltau(i)*dt)) &
+                    -cmplx(2.0_f64*epsq,0.0,f64)*iltau(i)*cmplx(dt,0.0,f64))/cmplx(ltau(i)**2,0.0,f64)
 enddo
 do i=0,ntau-1
   tau(i) =i*dtau
