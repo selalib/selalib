@@ -133,7 +133,7 @@ module sll_m_sim_pic_vm_1d2v_cart
      sll_real64, allocatable :: fields_grid(:,:)
      
      ! Physical parameters
-     class(sll_c_distribution_params), allocatable :: params
+     class(sll_c_distribution_params), allocatable :: init_distrib_params
      sll_real64 :: beta
      sll_real64 :: domain(3) ! x_min, x_max, Lx
      type(sll_t_particle_sampling) :: sampler
@@ -204,7 +204,7 @@ contains
 
     read(input_file, sim_params)
 
-    call sll_s_initial_distribution_new( trim(initial_distrib), [1,2], input_file, sim%params )
+    call sll_s_initial_distribution_new( trim(initial_distrib), [1,2], input_file, sim%init_distrib_params )
        
     read(input_file, grid_dims)
     read(input_file, pic_params)
@@ -332,7 +332,7 @@ contains
        call sll_s_ascii_file_create('bfield.dat', bfield_id, ierr)
     end if
 
-    call sim%sampler%sample( sim%particle_group, sim%params, sim%domain(1:1), sim%domain(3:3) )
+    call sim%sampler%sample( sim%particle_group, sim%init_distrib_params, sim%domain(1:1), sim%domain(3:3) )
 
     ! Set the initial fields
     SLL_ALLOCATE(rho_local(sim%n_gcells), ierr)
@@ -483,8 +483,8 @@ contains
 
     deallocate(sim%fields_grid)
 
-    call sim%params%free()
-    deallocate(sim%params)
+    call sim%init_distrib_params%free()
+    deallocate(sim%init_distrib_params)
     call sim%sampler%free()
 
   end subroutine delete_pic_vm_1d2v
