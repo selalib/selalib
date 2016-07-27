@@ -38,8 +38,11 @@ type(sll_t_bspline_2d), pointer :: bspline_2d
 
 sll_real64 :: t0, t1, t2
 
-bspline_2d => sll_f_new_bspline_2d( nx, kx-1, 1.0_f64, nx*1.0_f64, sll_p_periodic, &
-                              ny, ky-1, 1.0_f64, ny*1.0_f64, sll_p_periodic  )
+bspline_2d => sll_f_new_bspline_2d( &
+  nx, kx-1, 1.0_f64, nx*1.0_f64,    &
+  sll_p_periodic, sll_p_periodic,   &
+  ny, ky-1, 1.0_f64, ny*1.0_f64,    &
+  sll_p_periodic, sll_p_periodic    )
 
 ! set up data points and knots in x, interpolate between knots by parabolic 
 ! splines, using not-a-knot end condition
@@ -105,7 +108,7 @@ contains
     sll_real64 :: y
     sll_real64 :: g
     
-    g = max(x-0.5_f64*nx,0.0_f64)**2 + max(y-0.5_f64*ny,0.0_f64)*3.0
+    g = max(x-0.5_f64*nx,0.0_f64)**2 + max(y-0.5_f64*ny,0.0_f64)*3.0_f64
   
   end function g
 

@@ -90,13 +90,14 @@ subroutine test_process_1d(bc_type)
   SLL_ALLOCATE(gtau(n),ierr)
   SLL_ALLOCATE(htau(n),ierr)
   
-  h = 1.0_f64/(n-1)
+  h = 1.0_f64/real(n-1,f64)
   do i = 1, n
-    x(i) = (i-1)*h
+    x(i) = real(i-1,f64)*h
   end do
 
   if (bc_type == sll_p_periodic) print*, "Periodic Bspline"
-  bspline_1d => sll_f_new_bspline_1d( n, d, tau_min, tau_max, bc_type)
+  bspline_1d => sll_f_new_bspline_1d( n, d, tau_min, tau_max, &
+                                      bc_type, bc_type)
   print*, 'bspline_1d allocated'
   
   gtau = cos(2*sll_p_pi*bspline_1d%tau)
@@ -187,8 +188,10 @@ subroutine test_process_2d(bc1_type, bc2_type)
   sll_real64, parameter   :: x2_min = 0.0_f64
   sll_real64, parameter   :: x2_max = 1.0_f64
   
-  bspline_2d => sll_f_new_bspline_2d( n1, d, x1_min, x1_max, bc1_type, &
-                                n2, d, x2_min, x2_max, bc2_type  )
+  bspline_2d => sll_f_new_bspline_2d( n1, d, x1_min, x1_max, &
+                                      bc1_type, bc1_type,    &
+                                      n2, d, x2_min, x2_max, &
+                                      bc2_type, bc2_type  )
   print*, 'bspline_2d allocated'
 
   allocate(ftau(n1,n2), gtau(n1,n2))
@@ -281,9 +284,9 @@ subroutine test_process_2d(bc1_type, bc2_type)
   print*, "----------------------------------------------------------"
   print*, "ERRORS USING POINT VALUE FUNCTION ------------------------"
   print*, "----------------------------------------------------------"
-  print*, " values                             : ", err1/(n1*n2)
-  print*, " x1 derivatives                     : ", err2/(n1*n2)
-  print*, " x2 derivatives                     : ", err3/(n1*n2)
+  print*, " values                             : ", err1/real(n1*n2,f64)
+  print*, " x1 derivatives                     : ", err2/real(n1*n2,f64)
+  print*, " x2 derivatives                     : ", err3/real(n1*n2,f64)
   print*, "----------------------------------------------------------"
   print*, "CPU TIME USING POINT VALUE FUCNTION ----------------------"
   print*, "----------------------------------------------------------"
