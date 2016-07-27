@@ -204,24 +204,24 @@ contains
     eta2_max_slopes )
 
     class(sll_t_bspline_interpolator_2d), intent(inout) :: interpolator
-    sll_int32,  intent(in)                              :: npts1
-    sll_int32,  intent(in)                              :: npts2
-    sll_real64, intent(in)                              :: eta1_min
-    sll_real64, intent(in)                              :: eta1_max
-    sll_real64, intent(in)                              :: eta2_min
-    sll_real64, intent(in)                              :: eta2_max
-    sll_int32,  intent(in)                              :: spline_degree1
-    sll_int32,  intent(in)                              :: spline_degree2
-    sll_int32,  intent(in),              optional       :: eta1_bc_type
-    sll_int32,  intent(in),              optional       :: eta2_bc_type
-    sll_real64, intent(in),              optional       :: const_eta1_min_slope
-    sll_real64, intent(in),              optional       :: const_eta1_max_slope
-    sll_real64, intent(in),              optional       :: const_eta2_min_slope
-    sll_real64, intent(in),              optional       :: const_eta2_max_slope
-    sll_real64, dimension(:),intent(in), optional       :: eta1_min_slopes
-    sll_real64, dimension(:),intent(in), optional       :: eta1_max_slopes
-    sll_real64, dimension(:),intent(in), optional       :: eta2_min_slopes
-    sll_real64, dimension(:),intent(in), optional       :: eta2_max_slopes
+    sll_int32,  intent(in)                            :: npts1
+    sll_int32,  intent(in)                            :: npts2
+    sll_real64, intent(in)                            :: eta1_min
+    sll_real64, intent(in)                            :: eta1_max
+    sll_real64, intent(in)                            :: eta2_min
+    sll_real64, intent(in)                            :: eta2_max
+    sll_int32,  intent(in)                            :: spline_degree1
+    sll_int32,  intent(in)                            :: spline_degree2
+    sll_int32,  intent(in),              optional     :: eta1_bc_type
+    sll_int32,  intent(in),              optional     :: eta2_bc_type
+    sll_real64, intent(in),              optional     :: const_eta1_min_slope
+    sll_real64, intent(in),              optional     :: const_eta1_max_slope
+    sll_real64, intent(in),              optional     :: const_eta2_min_slope
+    sll_real64, intent(in),              optional     :: const_eta2_max_slope
+    sll_real64, dimension(:),intent(in), optional     :: eta1_min_slopes
+    sll_real64, dimension(:),intent(in), optional     :: eta1_max_slopes
+    sll_real64, dimension(:),intent(in), optional     :: eta2_min_slopes
+    sll_real64, dimension(:),intent(in), optional     :: eta2_max_slopes
 
     interpolator%npts1    = npts1
     interpolator%npts2    = npts2
@@ -234,12 +234,10 @@ contains
          eta1_min,                         &
          eta1_max,                         &
          eta1_bc_type,                     &
-         eta1_bc_type,                     &
          npts2,                            &
          spline_degree2,                   &
          eta2_min,                         &
          eta2_max,                         &
-         eta2_bc_type,                     &
          eta2_bc_type,                     &
          const_eta1_min_slope,             &
          const_eta1_max_slope,             &
@@ -315,7 +313,7 @@ contains
 
   end function
 
-  subroutine spline_interpolate2d(this,            &
+  subroutine spline_interpolate2d(this,              &
                                 num_points1,       &
                                 num_points2,       &
                                 data_in,           &
@@ -323,13 +321,13 @@ contains
                                 eta2,              &
                                 data_out) 
 
-    class(sll_t_bspline_interpolator_2d), intent(in) :: this
-    sll_int32,                            intent(in) :: num_points1
-    sll_int32,                            intent(in) :: num_points2
-    sll_real64, dimension(:,:),           intent(in) :: eta1
-    sll_real64, dimension(:,:),           intent(in) :: eta2
-    sll_real64, dimension(:,:),           intent(in) :: data_in
-    sll_real64,                           intent(out):: data_out(num_points1,num_points2)
+    class(sll_t_bspline_interpolator_2d),  intent(in) :: this
+    sll_int32,  intent(in)                          :: num_points1
+    sll_int32,  intent(in)                          :: num_points2
+    sll_real64, dimension(:,:),          intent(in) :: eta1
+    sll_real64, dimension(:,:),          intent(in) :: eta2
+    sll_real64, dimension(:,:),          intent(in) :: data_in
+    sll_real64,                          intent(out):: data_out(num_points1,num_points2)
 
     sll_int32 :: i
     sll_int32 :: j
@@ -385,8 +383,8 @@ contains
        
        do j = 1, num_points2
           do i = 1, num_points1
-             eta1 = eta1_min + real(i-1,f64)*delta_eta1
-             eta2 = eta2_min + real(j-1,f64)*delta_eta2
+             eta1 = eta1_min + (i-1)*delta_eta1
+             eta2 = eta2_min + (j-1)*delta_eta2
              eta1 = eta1_min + &
                   modulo(eta1-eta1_min+alpha1(i,j),eta1_max-eta1_min)
              eta2 = eta2_min + &
@@ -400,8 +398,8 @@ contains
        
        do j = 1, num_points2
           do i = 1, num_points1
-             eta1 = eta1_min + real(i-1,f64)*delta_eta1 + alpha1(i,j)
-             eta2 = eta2_min + real(j-1,f64)*delta_eta2 + alpha2(i,j)
+             eta1 = eta1_min + (i-1)*delta_eta1 + alpha1(i,j)
+             eta2 = eta2_min + (j-1)*delta_eta2 + alpha2(i,j)
              eta1 = min(eta1,eta1_max)
              eta2 = min(eta2,eta2_max)
              eta1 = max(eta1,eta1_min)
@@ -415,8 +413,8 @@ contains
 
        do j = 1, num_points2
           do i = 1, num_points1
-             eta1 = eta1_min + real(i-1,f64)*delta_eta1 + alpha1(i,j)
-             eta2 = eta2_min + real(j-1,f64)*delta_eta2 + alpha2(i,j)
+             eta1 = eta1_min + (i-1)*delta_eta1 + alpha1(i,j)
+             eta2 = eta2_min + (j-1)*delta_eta2 + alpha2(i,j)
              SLL_ASSERT(eta1_min <= eta1 .and. eta1 <= eta1_max)
              SLL_ASSERT(eta2_min <= eta2 .and. eta2 <= eta2_max)
              data_out(i,j) = this%interpolate_from_interpolant_value(eta1,eta2)
