@@ -1,24 +1,10 @@
-! This file is read by doxygen software
-! Change it to match with your library
-! http://www.stack.nl/~dimitri/doxygen/manual/docblocks.html#fortranblocks
-! To see the documentation, remove the line containing your directory 
-! in file Doxyfile.in (line 691) if it is excluded. 
-! Type 'make doc' in build directory.
-! To check the results, open : 
-! selalib/doc/build/html/doxygen/html/defgroup advections.html 
-! The following lines will be read by doxygen to generate documentation:
-
-
 !> @defgroup advection sll_advection 
 !> @brief 
-!> Description of advection library (72 characters)
-!> @author Selalib team (Michel, Pierre,...)
-!> You can add a contact, do not put your email to prevent spam.
+!> Solve advection equation
+!> @authors Michel Mehrenberger, Pierre Navaro
+!
 !> @details
-!> Long description of  advection, you can add some references or math equations.
 !> 
-!> advection/advection_doc.F90
-!>  -> solves advection equation
 !>  sll_advection_1d_base.F90
 !>  -> new suggested name: sll_c_advection_1d.F90
 !>  -> solves advection equation in 1d
@@ -91,23 +77,4 @@
 !>  -> may be put in simulations
 !>  -> or can still live here
 !>  -> as basic examples    
-!>
-!> <b> Headers file available </b>
-!>  - sll_advection.h
-!>
-!> <b> Modules available </b>
-!>  List fortran module available
-!>  - sll_advection
-!>
-!> <b> How to use it </b>
-!> - Header file : \code #include 'sll_advection.h' \endcode
-!> - Link with   <code>-lsll_%s</code>
-!> - Add <code> use sll_advection </code>
-!>
-!> <b> Examples </b>
-!> -Add some fortran lines to explain how ti use the library
-!> \code
-!> call initialize(my_type, arg_1, arg_2)
-!> call solve(my_type, your_result)
-!> \endcode
 !>

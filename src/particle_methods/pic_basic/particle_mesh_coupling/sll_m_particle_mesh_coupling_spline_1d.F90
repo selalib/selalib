@@ -1,4 +1,4 @@
-!> @ingroup kernel_smoother
+!> @ingroup particle_mesh_coupling
 !> @author Katharina Kormann, IPP
 !> @brief Kernel smoother for 2d with splines of arbitrary degree placed on a uniform mesh.
 !> @details Spline with index i starts at point i

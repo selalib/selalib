@@ -2538,8 +2538,10 @@ subroutine compute_field_from_phi_2d_fd_curvilinear(phi,mesh_2d,transformation,A
   !---------------------------------------------------
   subroutine plot_f_curvilinear(iplot,f,mesh_2d,transf)
     use sll_m_xdmf
+    use hdf5, only: hid_t
     use sll_m_hdf5_io_serial
     sll_int32 :: file_id
+    integer(hid_t) :: hfile_id
     sll_int32 :: error
     sll_real64, dimension(:,:), allocatable :: x1
     sll_real64, dimension(:,:), allocatable :: x2
@@ -2583,12 +2585,12 @@ subroutine compute_field_from_phi_2d_fd_curvilinear(phi,mesh_2d,transformation,A
           x2(i,j) = transf%x2(eta1,eta2)
         end do
       end do
-      call sll_o_hdf5_file_create("curvilinear_mesh-x1.h5",file_id,error)
-      call sll_o_hdf5_write_array(file_id,x1,"/x1",error)
-      call sll_o_hdf5_file_close(file_id, error)
-      call sll_o_hdf5_file_create("curvilinear_mesh-x2.h5",file_id,error)
-      call sll_o_hdf5_write_array(file_id,x2,"/x2",error)
-      call sll_o_hdf5_file_close(file_id, error)
+      call sll_o_hdf5_file_create("curvilinear_mesh-x1.h5",hfile_id,error)
+      call sll_o_hdf5_write_array(hfile_id,x1,"/x1",error)
+      call sll_o_hdf5_file_close(hfile_id, error)
+      call sll_o_hdf5_file_create("curvilinear_mesh-x2.h5",hfile_id,error)
+      call sll_o_hdf5_write_array(hfile_id,x2,"/x2",error)
+      call sll_o_hdf5_file_close(hfile_id, error)
       deallocate(x1)
       deallocate(x2)
 
@@ -2605,8 +2607,10 @@ subroutine compute_field_from_phi_2d_fd_curvilinear(phi,mesh_2d,transformation,A
 
   subroutine plot_phi_curvilinear(iplot,f,mesh_2d,transf)
     use sll_m_xdmf
+    use hdf5, only: hid_t
     use sll_m_hdf5_io_serial
     sll_int32 :: file_id
+    integer(hid_t) :: hfile_id
     sll_int32 :: error
     sll_real64, dimension(:,:), allocatable :: x1
     sll_real64, dimension(:,:), allocatable :: x2
@@ -2650,12 +2654,12 @@ subroutine compute_field_from_phi_2d_fd_curvilinear(phi,mesh_2d,transformation,A
           x2(i,j) = transf%x2(eta1,eta2)
         end do
       end do
-      call sll_o_hdf5_file_create("curvilinear_mesh-x1.h5",file_id,error)
-      call sll_o_hdf5_write_array(file_id,x1,"/x1",error)
-      call sll_o_hdf5_file_close(file_id, error)
-      call sll_o_hdf5_file_create("curvilinear_mesh-x2.h5",file_id,error)
-      call sll_o_hdf5_write_array(file_id,x2,"/x2",error)
-      call sll_o_hdf5_file_close(file_id, error)
+      call sll_o_hdf5_file_create("curvilinear_mesh-x1.h5",hfile_id,error)
+      call sll_o_hdf5_write_array(hfile_id,x1,"/x1",error)
+      call sll_o_hdf5_file_close(hfile_id, error)
+      call sll_o_hdf5_file_create("curvilinear_mesh-x2.h5",hfile_id,error)
+      call sll_o_hdf5_write_array(hfile_id,x2,"/x2",error)
+      call sll_o_hdf5_file_close(hfile_id, error)
       deallocate(x1)
       deallocate(x2)
 
