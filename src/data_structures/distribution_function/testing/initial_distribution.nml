@@ -1,4 +1,4 @@
-&cossum_twogaussian
+&sum_twogaussian
         kx = 0.5 0.5
         alpha = 0.01
         v_thermal_1 = 1.0 2.0
