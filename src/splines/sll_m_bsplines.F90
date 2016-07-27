@@ -52,7 +52,8 @@ type :: sll_t_bspline_1d
   sll_real64, pointer       :: t(:)
   sll_real64, pointer       :: q(:)
   sll_real64, pointer       :: bcoef(:)
-  sll_int32                 :: bc_type
+  sll_int32                 :: bc_l
+  sll_int32                 :: bc_r
   sll_real64, pointer       :: a(:,:)
   sll_real64, pointer       :: dbiatx(:,:)
   sll_real64                :: length
@@ -105,21 +106,25 @@ contains
 !> to be interpolated.
 !> @param[in] xmax Maximum value of the abscissae where the data are meant 
 !> to be interpolated.
-!> @param[in] bc_type A boundary condition specifier. Must be one of the
+!> @param[in] bc_l A boundary condition specifier (left side). Must be one of the
+!> symbols defined in the SLL_BOUNDARY_CONDITION_DESCRIPTORS module.
+!> @param[in] bc_r A boundary condition specifier (right side). Must be one of the
 !> symbols defined in the SLL_BOUNDARY_CONDITION_DESCRIPTORS module.
 !> @param[in] sl OPTIONAL: The value of the slope at xmin, for use in the case
 !> of hermite boundary conditions.
 !> @param[in] sr OPTIONAL: The value of the slope at xmin, for use in the case
 !> of hermite boundary conditions.
 !> @return a pointer to a heap-allocated cubic spline object.
-function sll_f_new_bspline_1d( num_points, degree, xmin, xmax, bc_type, sl, sr )
+function sll_f_new_bspline_1d( num_points, degree, xmin, xmax, &
+                bc_l, bc_r, sl, sr )
 
   type(sll_t_bspline_1d), pointer    :: sll_f_new_bspline_1d
   sll_int32,  intent(in)           :: num_points
   sll_int32,  intent(in)           :: degree
   sll_real64, intent(in)           :: xmin
   sll_real64, intent(in)           :: xmax
-  sll_int32,  intent(in)           :: bc_type
+  sll_int32,  intent(in)           :: bc_l
+  sll_int32,  intent(in)           :: bc_r
   sll_real64, intent(in), optional :: sl
   sll_real64, intent(in), optional :: sr
 
@@ -137,19 +142,22 @@ function sll_f_new_bspline_1d( num_points, degree, xmin, xmax, bc_type, sl, sr )
 
   SLL_ALLOCATE(sll_f_new_bspline_1d%a(k,k), ierr)
 
-  sll_f_new_bspline_1d%bc_type = bc_type
+  sll_f_new_bspline_1d%bc_l    = bc_l
+  sll_f_new_bspline_1d%bc_r    = bc_r
   sll_f_new_bspline_1d%n       = num_points
   sll_f_new_bspline_1d%k       = degree+1
   sll_f_new_bspline_1d%length  = xmax - xmin
 
-  delta = sll_f_new_bspline_1d%length / (n-1)
+  delta = sll_f_new_bspline_1d%length / real(n-1,f64)
 
   SLL_ALLOCATE(sll_f_new_bspline_1d%tau(n), ierr)
   do i = 1, n
-    sll_f_new_bspline_1d%tau(i) = xmin + (i-1) * delta
+    sll_f_new_bspline_1d%tau(i) = xmin + real(i-1,f64) * delta
   end do
 
-  if ( bc_type == sll_p_periodic) then
+  if ( bc_l == sll_p_periodic) then
+
+    SLL_ASSERT( bc_r == sll_p_periodic )
 
     SLL_ALLOCATE(sll_f_new_bspline_1d%t(n+k), ierr)
     SLL_ALLOCATE(sll_f_new_bspline_1d%bcoef(n),  ierr)
@@ -162,8 +170,9 @@ function sll_f_new_bspline_1d( num_points, degree, xmin, xmax, bc_type, sl, sr )
       end do
     else
       do i = k+1, n
-        sll_f_new_bspline_1d%t(i) = 0.5*(sll_f_new_bspline_1d%tau(i  -(k-1)/2) &
-                                  +sll_f_new_bspline_1d%tau(i-1-(k-1)/2))
+        sll_f_new_bspline_1d%t(i) = 0.5_f64*( &
+                 sll_f_new_bspline_1d%tau(i  -(k-1)/2) &
+                +sll_f_new_bspline_1d%tau(i-1-(k-1)/2))
       end do
     end if
     sll_f_new_bspline_1d%t(n+1:n+k) = xmax
@@ -192,7 +201,8 @@ function sll_f_new_bspline_1d( num_points, degree, xmin, xmax, bc_type, sl, sr )
       sll_f_new_bspline_1d%t(k+1:n+m) = sll_f_new_bspline_1d%tau(2:n-1)
     else
       do i = k+1, n+m
-        sll_f_new_bspline_1d%t(i) = 0.5*(sll_f_new_bspline_1d%tau(i-k)+ &
+        sll_f_new_bspline_1d%t(i) = 0.5_f64* &
+                                  (sll_f_new_bspline_1d%tau(i-k)+ &
                                    sll_f_new_bspline_1d%tau(i-k+1))
       end do
     end if
@@ -235,22 +245,24 @@ end function sll_f_new_bspline_1d
 !> @param[in] sr2 OPTIONAL: The value of the slope at xmin, for use in the case
 !> of hermite boundary conditions.
 !> @return a pointer to a heap-allocated cubic spline object.
-function sll_f_new_bspline_2d( nx1, degree1, x1_min, x1_max, bc1, &
-                         nx2, degree2, x2_min, x2_max, bc2, &
-                         sl1, sr1, sl2, sr2  )
+function sll_f_new_bspline_2d( nx1, degree1,                 &
+                               x1_min, x1_max, bc1_l, bc1_r, &
+                               nx2, degree2,                 &
+                               x2_min, x2_max, bc2_l, bc2_r, &
+                               sl1, sr1, sl2, sr2  )
 
-  type(sll_t_bspline_2d), pointer    :: sll_f_new_bspline_2d
+  type(sll_t_bspline_2d), pointer  :: sll_f_new_bspline_2d
 
   sll_int32,  intent(in)           :: nx1
   sll_int32,  intent(in)           :: degree1
   sll_real64, intent(in)           :: x1_min
   sll_real64, intent(in)           :: x1_max
-  sll_int32,  intent(in)           :: bc1
+  sll_int32,  intent(in)           :: bc1_l, bc1_r
   sll_int32,  intent(in)           :: nx2
   sll_int32,  intent(in)           :: degree2
   sll_real64, intent(in)           :: x2_min
   sll_real64, intent(in)           :: x2_max
-  sll_int32,  intent(in)           :: bc2
+  sll_int32,  intent(in)           :: bc2_l, bc2_r
   sll_real64, intent(in), optional :: sl1
   sll_real64, intent(in), optional :: sr1
   sll_real64, intent(in), optional :: sl2
@@ -267,15 +279,19 @@ function sll_f_new_bspline_2d( nx1, degree1, x1_min, x1_max, bc1, &
   SLL_ALLOCATE(sll_f_new_bspline_2d%x2_max_slopes(1:nx1), ierr)
 
   if (present(sl1) .and. present(sr1)) then
-    sll_f_new_bspline_2d%bs1 => sll_f_new_bspline_1d(nx1,degree1,x1_min,x1_max,bc1,sl1,sr1)
+    sll_f_new_bspline_2d%bs1 => sll_f_new_bspline_1d(nx1,degree1, &
+            x1_min,x1_max,bc1_l,bc1_r,sl1,sr1)
   else
-    sll_f_new_bspline_2d%bs1 => sll_f_new_bspline_1d(nx1,degree1,x1_min,x1_max,bc1)
+    sll_f_new_bspline_2d%bs1 => sll_f_new_bspline_1d(nx1,degree1, &
+            x1_min,x1_max,bc1_l,bc1_r)
   end if
 
   if (present(sl1) .and. present(sr1)) then
-    sll_f_new_bspline_2d%bs2 => sll_f_new_bspline_1d(nx2,degree2,x2_min,x2_max,bc2,sl2,sr2)
+    sll_f_new_bspline_2d%bs2 => sll_f_new_bspline_1d(nx2,degree2, &
+            x2_min,x2_max,bc2_l,bc2_r,sl2,sr2)
   else
-    sll_f_new_bspline_2d%bs2 => sll_f_new_bspline_1d(nx2,degree2,x2_min,x2_max,bc2)
+    sll_f_new_bspline_2d%bs2 => sll_f_new_bspline_1d(nx2,degree2, &
+            x2_min,x2_max,bc2_l,bc2_r)
   end if
 
   n1 = size(sll_f_new_bspline_2d%bs1%bcoef)
@@ -292,7 +308,7 @@ end function sll_f_new_bspline_2d
 
 subroutine build_system_with_derivative(this)
 
-  type(sll_t_bspline_1d)    :: this 
+  type(sll_t_bspline_1d)  :: this 
 
   sll_real64              :: taui
   sll_int32               :: kpkm2
@@ -306,7 +322,7 @@ subroutine build_system_with_derivative(this)
   sll_int32               :: jj
   sll_int32               :: l
   sll_int32, parameter    :: m=2
-  type(sll_t_deboor_type)       :: db
+  type(sll_t_deboor_type) :: db
   
   n = this%n
   k = this%k
@@ -375,7 +391,7 @@ end subroutine build_system_with_derivative
 
 subroutine build_system_periodic(this)
 
-  type(sll_t_bspline_1d)    :: this 
+  type(sll_t_bspline_1d)  :: this 
 
   sll_real64              :: taui
   sll_int32               :: kpkm2
@@ -387,7 +403,7 @@ subroutine build_system_periodic(this)
   sll_int32               :: j
   sll_int32               :: jj
   sll_int32               :: ilp1mx
-  type(sll_t_deboor_type)       :: db
+  type(sll_t_deboor_type) :: db
   
   !PN Warning:
   !PN The system built for periodic boundary conditions is wrong
@@ -462,12 +478,12 @@ end subroutine build_system_periodic
 !    LC: QA1.A647.v27.
 subroutine sll_s_compute_bspline_1d(this, gtau, slope_min, slope_max)
 
-  type(sll_t_bspline_1d)   :: this 
+  type(sll_t_bspline_1d) :: this 
   sll_real64, intent(in) :: gtau(:)
   sll_real64, optional   :: slope_min
   sll_real64, optional   :: slope_max
 
-  if ( this%bc_type == sll_p_periodic) then
+  if ( this%bc_l == sll_p_periodic) then
     call build_system_periodic(this)
   else
     call build_system_with_derivative(this)
@@ -484,20 +500,20 @@ end subroutine sll_s_compute_bspline_1d
 subroutine compute_bspline_2d_with_constant_slopes(this, gtau, &
   sl1_l, sl1_r, sl2_l, sl2_r)
 
-  type(sll_t_bspline_2d)    :: this 
+  type(sll_t_bspline_2d)  :: this 
   sll_real64, intent(in)  :: gtau(:,:)
   sll_real64, optional    :: sl1_l
   sll_real64, optional    :: sl1_r
   sll_real64, optional    :: sl2_l
   sll_real64, optional    :: sl2_r
 
-  if ( this%bs1%bc_type == sll_p_periodic) then
+  if ( this%bs1%bc_l == sll_p_periodic) then
     call build_system_periodic(this%bs1)
   else
     call build_system_with_derivative(this%bs1)
   end if
 
-  if ( this%bs2%bc_type == sll_p_periodic) then
+  if ( this%bs2%bc_l == sll_p_periodic) then
     call build_system_periodic(this%bs2)
   else
     call build_system_with_derivative(this%bs2)
@@ -515,20 +531,20 @@ end subroutine compute_bspline_2d_with_constant_slopes
 subroutine compute_bspline_2d_with_variable_slopes(this, gtau, &
   sl1_l, sl1_r, sl2_l, sl2_r)
 
-  type(sll_t_bspline_2d)    :: this 
+  type(sll_t_bspline_2d)  :: this 
   sll_real64, intent(in)  :: gtau(:,:)
   sll_real64, intent(in)  :: sl1_l(:)
   sll_real64, intent(in)  :: sl1_r(:)
   sll_real64, intent(in)  :: sl2_l(:)
   sll_real64, intent(in)  :: sl2_r(:)
 
-  if ( this%bs1%bc_type == sll_p_periodic) then
+  if ( this%bs1%bc_l == sll_p_periodic) then
     call build_system_periodic(this%bs1)
   else
     call build_system_with_derivative(this%bs1)
   end if
 
-  if ( this%bs2%bc_type == sll_p_periodic) then
+  if ( this%bs2%bc_l == sll_p_periodic) then
     call build_system_periodic(this%bs2)
   else
     call build_system_with_derivative(this%bs2)
@@ -556,7 +572,7 @@ end subroutine compute_bspline_2d_with_variable_slopes
 !> the beginning to build the linear system.
 subroutine update_bspline_2d(this, gtau, sl1_l, sl1_r, sl2_l, sl2_r)
 
-  type(sll_t_bspline_2d)    :: this 
+  type(sll_t_bspline_2d)  :: this 
   sll_real64, intent(in)  :: gtau(:,:)
   sll_real64, optional    :: sl1_l
   sll_real64, optional    :: sl1_r
@@ -570,8 +586,8 @@ subroutine update_bspline_2d(this, gtau, sl1_l, sl1_r, sl2_l, sl2_r)
   sll_int32               :: j
   sll_int32               :: n1
   sll_int32               :: n2
-  sll_int32               :: bc1
-  sll_int32               :: bc2
+  sll_int32               :: bc1_l, bc1_r
+  sll_int32               :: bc2_l, bc2_r
   sll_int32               :: ierr
 
   sll_int32               :: m1
@@ -579,10 +595,12 @@ subroutine update_bspline_2d(this, gtau, sl1_l, sl1_r, sl2_l, sl2_r)
   n1 = this%bs1%n
   n2 = this%bs2%n
 
-  bc1 = this%bs1%bc_type
-  bc2 = this%bs2%bc_type
+  bc1_l = this%bs1%bc_l
+  bc1_r = this%bs1%bc_r
+  bc2_l = this%bs2%bc_l
+  bc2_r = this%bs2%bc_r
 
-  if ( bc1 == sll_p_periodic ) then
+  if ( bc1_l == sll_p_periodic ) then
     m1 = 0
   else
     m1 = 2
@@ -624,7 +642,7 @@ end subroutine update_bspline_2d
 !> use this routine.
 subroutine sll_s_update_bspline_1d(this, gtau, slope_min, slope_max)
 
-  type(sll_t_bspline_1d)    :: this 
+  type(sll_t_bspline_1d)  :: this 
   sll_real64, intent(in)  :: gtau(:)
   sll_real64, optional    :: slope_min
   sll_real64, optional    :: slope_max
@@ -640,7 +658,7 @@ subroutine sll_s_update_bspline_1d(this, gtau, slope_min, slope_max)
 
   SLL_ASSERT(size(gtau) == n)
 
-  if (this%bc_type == sll_p_periodic) then
+  if (this%bc_l == sll_p_periodic) then
 
     this%bcoef = gtau
     call banslv ( this%q, k+k-1, n, k-1, k-1, this%bcoef )
@@ -709,7 +727,7 @@ function sll_f_interpolate_value_1d( this, x) result(y)
   k = this%k
   n = this%n  
 
-  if (this%bc_type == sll_p_periodic) then
+  if (this%bc_l == sll_p_periodic) then
     nmk = n+k
   else
     nmk = n+m+k
@@ -816,7 +834,7 @@ end subroutine sll_s_interpolate_array_derivatives_1d
 
 subroutine interpolate_array_derivatives_1d_aux( this, n, x, y, jderiv)
 
-  type(sll_t_bspline_1d)    :: this 
+  type(sll_t_bspline_1d)  :: this 
   sll_int32,  intent(in)  :: n
   sll_real64, intent(in)  :: x(n)
   sll_real64, intent(out) :: y(n)
@@ -843,7 +861,7 @@ subroutine interpolate_array_derivatives_1d_aux( this, n, x, y, jderiv)
   
   k = this%k
 
-  if (this%bc_type == sll_p_periodic) then
+  if (this%bc_l == sll_p_periodic) then
     nmk = n+k
   else
     nmk = n+m+k
@@ -924,7 +942,7 @@ subroutine interpolate_array_derivatives_1d_aux( this, n, x, y, jderiv)
     do j = 1, jderiv
       jlo = k - j
       do jj = 1, k - j
-        aj(jj) = ((aj(jj+1)-aj(jj))/(dl(jlo)+dr(jj)))*(k-j)
+        aj(jj) = ((aj(jj+1)-aj(jj))/(dl(jlo)+dr(jj)))*real(k-j,f64)
         jlo = jlo - 1
       end do
     end do
@@ -950,7 +968,7 @@ end subroutine interpolate_array_derivatives_1d_aux
 
 function sll_f_interpolate_derivative_1d( this, x) result(y)
 
-  type(sll_t_bspline_1d)    :: this 
+  type(sll_t_bspline_1d)  :: this 
   sll_real64, intent(in)  :: x
   sll_real64              :: y
   
@@ -967,12 +985,12 @@ function sll_f_interpolate_derivative_1d( this, x) result(y)
   sll_int32               :: nmk
   sll_int32,  parameter   :: m = 2
   sll_int32,  parameter   :: jderiv = 1
-  type(sll_t_deboor_type)       :: db
+  type(sll_t_deboor_type) :: db
   
   k = this%k
   n = this%n
 
-  if (this%bc_type == sll_p_periodic) then
+  if (this%bc_l == sll_p_periodic) then
     nmk = n+k
   else
     nmk = n+m+k
@@ -1044,7 +1062,7 @@ function sll_f_interpolate_derivative_1d( this, x) result(y)
     ilo = k - j
     do jj = 1, k - j
       this%aj(jj) = ((this%aj(jj+1)-this%aj(jj)) &
-                    /(this%dl(ilo)+this%dr(jj)))*(k-j)
+                    /(this%dl(ilo)+this%dr(jj)))*real(k-j,f64)
       ilo = ilo-1
     end do
   end do
@@ -1110,7 +1128,7 @@ sll_real64              :: xi
 sll_real64              :: xj
 sll_real64, pointer     :: tx(:)
 sll_real64, pointer     :: ty(:)
-type(sll_t_deboor_type)       :: db
+type(sll_t_deboor_type) :: db
 
 nx   =  this%bs1%n
 ny   =  this%bs2%n
@@ -1123,12 +1141,12 @@ ky   =  this%bs2%k
 tx   => this%bs1%t
 ty   => this%bs2%t
 
-if (this%bs1%bc_type == sll_p_periodic) then
+if (this%bs1%bc_l == sll_p_periodic) then
   nmkx = nx+kx
 else
   nmkx = nx+kx+2
 end if
-if (this%bs2%bc_type == sll_p_periodic) then
+if (this%bs2%bc_l == sll_p_periodic) then
   nmky = ny+ky
 else
   nmky = ny+ky+2
@@ -1188,7 +1206,8 @@ do j=1,n2
       do jjj = 1, ideriv
         llo = kx - jjj
         do kkk = 1, kx - jjj
-          ajx(kkk) = ((ajx(kkk+1)-ajx(kkk))/(dlx(llo)+drx(kkk)))*(kx-jjj)
+          ajx(kkk) = ((ajx(kkk+1)-ajx(kkk))/(dlx(llo)+drx(kkk))) &
+                     *real(kx-jjj,f64)
           llo = llo-1
         end do
       end do
@@ -1239,7 +1258,8 @@ do j=1,n2
     do jjj = 1, jderiv
       llo = ky - jjj
       do kkk = 1, ky - jjj
-        ajy(kkk) = ((ajy(kkk+1)-ajy(kkk))/(dly(llo)+dry(kkk)))*(ky-jjj)
+        ajy(kkk) = ((ajy(kkk+1)-ajy(kkk))/(dly(llo)+dry(kkk))) &
+                   *real(ky-jjj,f64)
         llo = llo-1
       end do
     end do
@@ -1300,12 +1320,12 @@ ty   => this%bs2%t
 allocate(work(size(this%bs1%bcoef)))
 work = 0.0_f64
 
-if (this%bs1%bc_type == sll_p_periodic) then
+if (this%bs1%bc_l == sll_p_periodic) then
   nmkx = nx+kx
 else
   nmkx = nx+kx+2
 end if
-if (this%bs1%bc_type == sll_p_periodic) then
+if (this%bs1%bc_l == sll_p_periodic) then
   nmky = ny+ky
 else
   nmky = ny+ky+2
@@ -1352,7 +1372,7 @@ do jj=1,ky
     llo = kx - jjj
     do kkk = 1, kx - jjj
       this%bs1%aj(kkk) = ((this%bs1%aj(kkk+1)-this%bs1%aj(kkk)) &
-        /(this%bs1%dl(llo)+this%bs1%dr(kkk)))*(kx-jjj)
+        /(this%bs1%dl(llo)+this%bs1%dr(kkk)))*real(kx-jjj,f64)
       llo = llo-1
     end do
   end do
@@ -1408,7 +1428,7 @@ do jjj = 1, jderiv
   llo = ky - jjj
   do kkk = 1, ky - jjj
     this%bs2%aj(kkk) = ((this%bs2%aj(kkk+1)-this%bs2%aj(kkk)) &
-      /(this%bs2%dl(llo)+this%bs2%dr(kkk)))*(ky-jjj)
+      /(this%bs2%dl(llo)+this%bs2%dr(kkk)))*real(ky-jjj,f64)
     llo = llo-1
   end do
 end do
