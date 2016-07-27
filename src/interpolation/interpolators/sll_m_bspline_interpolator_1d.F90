@@ -45,6 +45,7 @@ module sll_m_bspline_interpolator_1d
 
   public :: &
     sll_t_bspline_interpolator_1d, &
+    sll_s_set_values_at_boundary1d, &
     sll_o_delete
 
   private
@@ -53,7 +54,7 @@ module sll_m_bspline_interpolator_1d
 !> Class for arbitrary degree spline 1d interpolator
 type, extends(sll_c_interpolator_1d) :: sll_t_bspline_interpolator_1d
 
-  type(sll_t_bspline_interpolation_1d), pointer :: bspline    !< bspline data
+  type(sll_t_bspline_interpolation_1d) :: bspline    !< bspline data
   sll_int32                     :: num_pts
   sll_int32                     :: spl_deg
   sll_real64                    :: eta_min
@@ -136,7 +137,6 @@ function new_bspline_interpolator_1d( &
   eta_max,                            &
   spl_deg,                            &
   bc_type,                            &
-  spline_bc_type,                     &
   bc_l,                               &
   bc_r) result(interpolator)
 
@@ -147,7 +147,6 @@ sll_real64, intent(in) :: eta_min
 sll_real64, intent(in) :: eta_max
 sll_int32,  intent(in) :: bc_type
 sll_int32,  intent(in) :: spl_deg
-sll_int32,  optional   :: spline_bc_type
 sll_real64, optional   :: bc_l(:)
 sll_real64, optional   :: bc_r(:)
 
@@ -164,19 +163,10 @@ if ( present(bc_l) .and. present(bc_r) ) then
                                      eta_max,  &
                                      spl_deg,  &
                                      bc_type,  &
-                                     spline_bc_type,  &
+                                     bc_type,  &
                                      bc_l,  &
                                      bc_r)
 
-else if (present(spline_bc_type)) then
-
-  call initialize_bs1d_interpolator( interpolator,  &
-                                     num_pts,  &
-                                     eta_min,  &
-                                     eta_max,  &
-                                     spl_deg,  &
-                                     bc_type,  &
-                                     spline_bc_type)
 else
 
   call initialize_bs1d_interpolator( interpolator,  &
@@ -184,6 +174,7 @@ else
                                      eta_min,  &
                                      eta_max,  &
                                      spl_deg,  &
+                                     bc_type,  &
                                      bc_type)
 
 end if
@@ -202,13 +193,13 @@ end function new_bspline_interpolator_1d
 !> @param[out] interpolator the type sll_t_bspline_interpolator_1d
 
 subroutine initialize_bs1d_interpolator( interpolator,  &
-                                         num_pts,  &
-                                         eta_min,  &
-                                         eta_max,  &
-                                         spl_deg,  &
-                                         bc_type,  &
-                                         spline_bc_type,  &
-                                         bc_l,  &
+                                         num_pts,       &
+                                         eta_min,       &
+                                         eta_max,       &
+                                         bc_type_l,     &
+                                         bc_type_r,     &
+                                         spl_deg,       &
+                                         bc_l,          &
                                          bc_r)
 
 class(sll_t_bspline_interpolator_1d), intent(inout) :: interpolator
@@ -216,9 +207,9 @@ class(sll_t_bspline_interpolator_1d), intent(inout) :: interpolator
 sll_int32,       intent(in) :: num_pts
 sll_real64,      intent(in) :: eta_min
 sll_real64,      intent(in) :: eta_max
+sll_int32,       intent(in) :: bc_type_l
+sll_int32,       intent(in) :: bc_type_r
 sll_int32,       intent(in) :: spl_deg
-sll_int32,       intent(in) :: bc_type
-sll_int32,       optional   :: spline_bc_type
 sll_real64,      optional   :: bc_l(:)
 sll_real64,      optional   :: bc_r(:)
 
@@ -234,19 +225,9 @@ if (present(bc_l) .and. present(bc_r)) then
                                           spl_deg, &
                                           eta_min, &
                                           eta_max, &
-                                          bc_type, &
-                                          spline_bc_type, &
-                                          bc_l, &
-                                          bc_r)
-elseif (present(spline_bc_type)) then 
-
-   call sll_s_bspline_interpolation_1d_init(interpolator%bspline, &
-                                          num_pts, &
-                                          spl_deg, &
-                                          eta_min, &
-                                          eta_max, &
-                                          bc_type, &
-                                          spline_bc_type)
+                                          bc_type_l, &
+                                          bc_left=bc_l, &
+                                          bc_right=bc_r)
 else
 
    call sll_s_bspline_interpolation_1d_init(interpolator%bspline, &
@@ -254,7 +235,7 @@ else
                                           spl_deg, &
                                           eta_min, &
                                           eta_max, &
-                                          bc_type)
+                                          bc_type_l)
 end if
 
 end subroutine initialize_bs1d_interpolator
@@ -267,40 +248,40 @@ end subroutine initialize_bs1d_interpolator
 !> @param[in]  slope_l contains the value in the left for derivative
 !> @param[in]  slope_r contains the value in the right for derivative
 !> @param[out] interpolator the type sll_t_bspline_interpolator_1d
-subroutine set_values_at_boundary1d( interpolator, &
-                                     value_l, &
-                                     value_r, &
-                                     slope_l, &
-                                     slope_r)
+subroutine sll_s_set_values_at_boundary1d( interpolator, &
+                                     value_left, &
+                                     value_right, &
+                                     slope_left, &
+                                     slope_right)
 
 class(sll_t_bspline_interpolator_1d), intent(inout) :: interpolator
 
-sll_real64, intent(in), optional :: value_l
-sll_real64, intent(in), optional :: value_r
-sll_real64, intent(in), optional :: slope_l
-sll_real64, intent(in), optional :: slope_r
+sll_real64, intent(in), optional :: value_left
+sll_real64, intent(in), optional :: value_right
+sll_real64, intent(in), optional :: slope_left
+sll_real64, intent(in), optional :: slope_right
 
-if (present(value_l)) then
-  interpolator%value_l = value_l
+if (present(value_left)) then
+  interpolator%value_l = value_left
   interpolator%compute_value_l = .false.
 end if
 
-if (present(value_r)) then
-  interpolator%value_r = value_r
+if (present(value_right)) then
+  interpolator%value_r = value_right
   interpolator%compute_value_r = .false.
 end if
 
-if (present(slope_l)) then
-  interpolator%slope_l = slope_l
+if (present(slope_left)) then
+  interpolator%slope_l = slope_left
   interpolator%compute_slope_l = .false.
 end if
 
-if (present(slope_r)) then
-  interpolator%slope_r = slope_r
+if (present(slope_right)) then
+  interpolator%slope_r = slope_right
   interpolator%compute_slope_r = .false.
 end if
 
-end subroutine set_values_at_boundary1d
+end subroutine sll_s_set_values_at_boundary1d
 
 !> @brief computing the coefficients spline with a given
 !>  data_array 1D cooresponding at the values of a function
@@ -455,7 +436,7 @@ sll_real64, dimension(:),           intent(in) :: data
 sll_real64, intent(in)                         :: alpha
 sll_real64, dimension(num_pts),intent(out)              :: output_array
 
-output_array = -1000000._f64*alpha*data*this%spl_deg
+output_array = -1000000._f64*alpha*data*real(this%spl_deg,f64)
 stop 'interpolate_1d_array_disp_bs1d: not implemented.'
 
 end subroutine interpolate_1d_array_disp_bs1d
