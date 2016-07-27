@@ -316,7 +316,7 @@ contains
 
     ! Local variables
     sll_int32 :: j, ierr, i_part
-    sll_real64, allocatable :: rho(:), rho_local(:)
+    sll_real64, allocatable :: rho(:), rho_local(:), efield_poisson(:)
     sll_int32 :: th_diag_id, dfield_id, efield_id, bfield_id
 
     sll_real64 :: wi(1)
@@ -337,6 +337,7 @@ contains
     ! Set the initial fields
     SLL_ALLOCATE(rho_local(sim%n_gcells), ierr)
     SLL_ALLOCATE(rho(sim%n_gcells), ierr)
+    SLL_ALLOCATE(efield_poisson(sim%n_gcells), ierr)
 
     ! Efield 1 by Poisson
     call solve_poisson( sim%particle_group, sim%kernel_smoother_0, sim%maxwell_solver, rho_local, rho, sim%efield_dofs(:,1) )
@@ -361,13 +362,13 @@ contains
 
     ! End field initialization
 
-    call solve_poisson( sim%particle_group, sim%kernel_smoother_0, sim%maxwell_solver, rho_local, rho, rho_local )
+    call solve_poisson( sim%particle_group, sim%kernel_smoother_0, sim%maxwell_solver, rho_local, rho, efield_poisson )
     ! Diagnostics
     call sll_s_time_history_diagnostics_pic_vm_1d2v( &
          sim%particle_group, sim%maxwell_solver, &
          sim%kernel_smoother_0, sim%kernel_smoother_1, 0.0_f64, &
          sim%degree_smoother, sim%efield_dofs, sim%bfield_dofs, &
-         sim%rank, th_diag_id, sim%efield_dofs_n, rho_local, rho)
+         sim%rank, th_diag_id, sim%efield_dofs_n, efield_poisson, rho)
 
     if (sim%rank == 0 ) then
        call sll_s_set_time_mark(start_loop )
@@ -381,12 +382,12 @@ contains
        call sim%propagator%strang_splitting(sim%delta_t,1)
 
        ! Diagnostics
-       call solve_poisson( sim%particle_group, sim%kernel_smoother_0, sim%maxwell_solver, rho_local, rho, rho_local )
+       call solve_poisson( sim%particle_group, sim%kernel_smoother_0, sim%maxwell_solver, rho_local, rho, efield_poisson )
        call sll_s_time_history_diagnostics_pic_vm_1d2v( &
          sim%particle_group, sim%maxwell_solver, &
          sim%kernel_smoother_0, sim%kernel_smoother_1,  sim%delta_t*real(j,f64), &
          sim%degree_smoother, sim%efield_dofs, sim%bfield_dofs, &
-         sim%rank, th_diag_id, sim%efield_dofs_n, rho_local, rho)
+         sim%rank, th_diag_id, sim%efield_dofs_n, efield_poisson, rho)
 
     end do
 
