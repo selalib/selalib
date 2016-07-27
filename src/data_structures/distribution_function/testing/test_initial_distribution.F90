@@ -29,24 +29,24 @@ program test_initial_distribution
   ! Evaluate params
   xi = [0.1_f64, 2.5_f64]
   vi = [-1.2_f64, 0.5_f64]
-  val = params%eval( xi, vi )
+  val = params%eval_xv_density( xi, vi )
   val_ref = 1.0711384771936658E-003_f64
   if ( abs(val-val_ref) > 1E-13_f64 ) then
-     print*, 'Error in %eval', val-val_ref
+     print*, 'Error in %eval_xv_density', val-val_ref
      print*, 'FAILED.'
      stop
   end if
-  val = params%evalx( xi )
+  val = params%eval_x_density( xi )
   val_ref = 1.0026749882862458_f64
   if ( abs(val-val_ref) > 1E-13_f64 ) then
-     print*, 'Error in %evalx', val-val_ref
+     print*, 'Error in %eval_x_density', val-val_ref
      print*, 'FAILED.'
      stop
   end if
-    val = params%evalv( vi )
+    val = params%eval_v_density( vi )
   val_ref = 1.0682808384643529E-003_f64
   if ( abs(val-val_ref) > 1E-13_f64 ) then
-     print*, 'Error in %evalv', val-val_ref
+     print*, 'Error in %eval_v_density', val-val_ref
      print*, 'FAILED.'
      stop
   end if

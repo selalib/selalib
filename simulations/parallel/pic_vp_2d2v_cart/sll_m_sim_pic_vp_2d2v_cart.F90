@@ -317,7 +317,8 @@ contains
     sll_real64               :: sll_f_control_variate
 
 
-    sll_f_control_variate = this%control_variate_distribution_params%evalv( vi(1:2) )
+    sll_f_control_variate = &
+         this%control_variate_distribution_params%eval_v_density( vi(1:2) )
 
 
   end function control_variate_equi
