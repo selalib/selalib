@@ -70,6 +70,8 @@ module sll_m_maxwell_1d_fem
      procedure :: &
           L2norm_squared => L2norm_squared_1d_fem
      procedure :: &
+          inner_product => inner_product_1d_fem
+     procedure :: &
           L2projection => L2projection_1d_fem
      procedure :: &
           free => free_1d_fem
@@ -294,6 +296,31 @@ contains
      r = r*self%delta_x
 
    end function L2norm_squared_1d_fem
+
+   function inner_product_1d_fem( self, coefs1_dofs, coefs2_dofs, degree ) result (r)
+     class(sll_t_maxwell_1d_fem) :: self !< Maxwell solver object
+     sll_real64 :: coefs1_dofs(:) !< Coefficient for each DoF
+     sll_real64 :: coefs2_dofs(:) !< Coefficient for each DoF
+     sll_int32  :: degree !< Specify the degree of the basis functions
+     sll_real64 :: r !< Result: squared L2 norm
+
+     ! Multiply coefficients by mass matrix (use diagonalization FFT and mass matrix eigenvalues)
+     if (degree == self%s_deg_0 ) then
+
+        call solve_circulant(self, self%eig_mass0, coefs2_dofs, self%work)
+
+     elseif (degree == self%s_deg_1) then
+
+        call solve_circulant(self, self%eig_mass1, coefs2_dofs, self%work)
+
+     end if
+     ! Multiply by the coefficients from the left (inner product)
+     r = sum(coefs1_dofs*self%work)
+     ! Scale by delt_x
+     r = r*self%delta_x
+     
+   end function inner_product_1d_fem
+   
 
    subroutine init_1d_fem( self, domain, n_dofs, s_deg_0 )
      class(sll_t_maxwell_1d_fem), intent(out) :: self !< solver object
