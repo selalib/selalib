@@ -11,7 +11,7 @@ program test_particle_sampling
        sll_p_twopi
 
   use sll_m_initial_distribution, only: &
-       sll_t_cos_gaussian
+       sll_t_params_cos_gaussian
   
   use sll_m_particle_group_1d2v, only: &
     sll_s_new_particle_group_1d2v, &
@@ -27,7 +27,7 @@ program test_particle_sampling
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
   class(sll_c_particle_group_base), allocatable:: particle_group
-  type(sll_t_cos_gaussian)                     :: params
+  type(sll_t_params_cos_gaussian)                     :: params
   sll_real64                                   :: xmin !< lower bound of the domain
   sll_real64                                   :: Lx !< length of the domain.
   sll_int32                                    :: n_particles      

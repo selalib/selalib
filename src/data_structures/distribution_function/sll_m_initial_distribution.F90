@@ -17,7 +17,7 @@ module sll_m_initial_distribution
        sll_p_sumcos_twogaussian, &
        sll_p_cossum_twogaussian, &
        sll_c_distribution_params, &
-       sll_t_cos_gaussian, &
+       sll_t_params_cos_gaussian, &
        sll_s_initial_distribution_new, &
        sll_s_initial_distribution_new_descriptor
   
@@ -42,7 +42,7 @@ module sll_m_initial_distribution
   end type sll_c_distribution_params
 
   !> Data type for distribution function with (multiple) Gaussians in v and one plus cosine perturbations in x.
-  type, extends(sll_c_distribution_params) :: sll_t_cos_gaussian
+  type, extends(sll_c_distribution_params) :: sll_t_params_cos_gaussian
      sll_real64, allocatable :: kx(:,:)  !< values of the wave numbers (first index dimension, second index for multiple cosines)
      sll_real64, allocatable :: alpha(:) !< strength of perturbations
      sll_real64, allocatable :: v_thermal(:,:) !< variance of the Gaussian ( first index velocity dimension, second index multiple Gaussians)
@@ -59,7 +59,7 @@ module sll_m_initial_distribution
      procedure :: eval_v_density => sll_f_gaussian    !< Evaluate the v-dependence (integrated over x)
      procedure :: init => cos_gaussian_init  !< Initialization
      
-  end type sll_t_cos_gaussian
+  end type sll_t_params_cos_gaussian
 
   abstract interface
      subroutine signature_empty( self )
@@ -105,11 +105,11 @@ module sll_m_initial_distribution
 contains
 
 !------------------------------------------------------------------------------- 
-! Define the procedures of the type sll_t_cos_gaussian
+! Define the procedures of the type sll_t_params_cos_gaussian
 !-------------------------------------------------------------------------------
   
   function sll_f_cos_gaussian( self, x, v ) result( fval )
-    class( sll_t_cos_gaussian ) :: self
+    class( sll_t_params_cos_gaussian ) :: self
     sll_real64 :: x(:)
     sll_real64 :: v(:)
     sll_real64 :: fval
@@ -133,7 +133,7 @@ contains
   end function sll_f_cos_gaussian
 
   function sll_f_cos( self, x ) result( fval )
-    class( sll_t_cos_gaussian ) :: self
+    class( sll_t_params_cos_gaussian ) :: self
     sll_real64 :: x(:)
     sll_real64 :: fval
 
@@ -147,7 +147,7 @@ contains
   end function sll_f_cos
   
   function sll_f_gaussian( self, v ) result( fval )
-    class( sll_t_cos_gaussian ) :: self
+    class( sll_t_params_cos_gaussian ) :: self
     sll_real64 :: v(:)
     sll_real64 :: fval
 
@@ -162,7 +162,7 @@ contains
   end function sll_f_gaussian
   
   subroutine free_cos_gaussian( self )
-    class( sll_t_cos_gaussian ), intent( inout ) :: self
+    class( sll_t_params_cos_gaussian ), intent( inout ) :: self
 
 
     if (allocated(self%kx)) deallocate(self%kx)
@@ -176,7 +176,7 @@ contains
 
 
   subroutine cos_gaussian_init( self, descriptor, dims, file_id )
-    class( sll_t_cos_gaussian ), intent( out ) :: self
+    class( sll_t_params_cos_gaussian ), intent( out ) :: self
     sll_int32, intent( in    ) :: descriptor !< descriptor of the test case
     sll_int32, intent( in    ) :: dims(2) !< number of spatial and velocity dimensions
     sll_int32, intent( in    ) :: file_id    !< nml-file with parameters in unified format
@@ -214,31 +214,31 @@ contains
     
     select case( distribution )
     case( "sumcos_onegaussian" )
-       allocate( sll_t_cos_gaussian :: params )
+       allocate( sll_t_params_cos_gaussian :: params )
        params%dims = dims
        select type( params )
-       type is( sll_t_cos_gaussian )
+       type is( sll_t_params_cos_gaussian )
           call sumcos_onegaussian_init( file_id, params )
        end select
     case( "cossum_onegaussian" )
-       allocate( sll_t_cos_gaussian :: params )
+       allocate( sll_t_params_cos_gaussian :: params )
        params%dims = dims
        select type( params )
-       type is( sll_t_cos_gaussian )
+       type is( sll_t_params_cos_gaussian )
           call cossum_onegaussian_init( file_id, params )
        end select
     case( "cossum_twogaussian" )
-       allocate( sll_t_cos_gaussian :: params )
+       allocate( sll_t_params_cos_gaussian :: params )
        params%dims = dims
        select type( params )
-       type is( sll_t_cos_gaussian )
+       type is( sll_t_params_cos_gaussian )
           call cossum_twogaussian_init( file_id, params )
        end select
     case( "sumcos_twogaussian" )
-       allocate( sll_t_cos_gaussian :: params )
+       allocate( sll_t_params_cos_gaussian :: params )
        params%dims = dims
        select type( params )
-       type is( sll_t_cos_gaussian )
+       type is( sll_t_params_cos_gaussian )
           call sumcos_twogaussian_init( file_id, params )
        end select
     case default
@@ -259,31 +259,31 @@ contains
     
     select case( distribution )
     case( sll_p_sumcos_onegaussian )
-       allocate( sll_t_cos_gaussian :: params )
+       allocate( sll_t_params_cos_gaussian :: params )
        params%dims = dims
        select type( params )
-       type is( sll_t_cos_gaussian )
+       type is( sll_t_params_cos_gaussian )
           call sumcos_onegaussian_init( file_id, params )
        end select
     case( sll_p_cossum_onegaussian )
-       allocate( sll_t_cos_gaussian :: params )
+       allocate( sll_t_params_cos_gaussian :: params )
        params%dims = dims
        select type( params )
-       type is( sll_t_cos_gaussian )
+       type is( sll_t_params_cos_gaussian )
           call cossum_onegaussian_init( file_id, params )
        end select
     case( sll_p_cossum_twogaussian )
-       allocate( sll_t_cos_gaussian :: params )
+       allocate( sll_t_params_cos_gaussian :: params )
        params%dims = dims
        select type( params )
-       type is( sll_t_cos_gaussian )
+       type is( sll_t_params_cos_gaussian )
           call cossum_twogaussian_init( file_id, params )
        end select
     case( sll_p_sumcos_twogaussian )
-       allocate( sll_t_cos_gaussian :: params )
+       allocate( sll_t_params_cos_gaussian :: params )
        params%dims = dims
        select type( params )
-       type is( sll_t_cos_gaussian )
+       type is( sll_t_params_cos_gaussian )
           call sumcos_twogaussian_init( file_id, params )
        end select
     end select
@@ -294,7 +294,7 @@ contains
 
   subroutine sumcos_onegaussian_init( file_id, params )
     sll_int32, intent( in ) :: file_id
-    type( sll_t_cos_gaussian ), intent( inout ) :: params
+    type( sll_t_params_cos_gaussian ), intent( inout ) :: params
 
     ! local variables
     sll_real64 :: kx(params%dims(1))
@@ -336,7 +336,7 @@ contains
 
   subroutine cossum_onegaussian_init( file_id, params )
     sll_int32, intent( in ) :: file_id
-    type( sll_t_cos_gaussian ), intent( inout ) :: params
+    type( sll_t_params_cos_gaussian ), intent( inout ) :: params
 
     ! local variables
     sll_real64 :: kx(params%dims(1))
@@ -371,7 +371,7 @@ contains
   
   subroutine cossum_twogaussian_init( file_id, params )
     sll_int32, intent( in ) :: file_id
-    type( sll_t_cos_gaussian ), intent( inout ) :: params
+    type( sll_t_params_cos_gaussian ), intent( inout ) :: params
 
     ! local variables
     sll_real64 :: kx(params%dims(1))
@@ -416,7 +416,7 @@ contains
 
    subroutine sumcos_twogaussian_init( file_id, params )
     sll_int32, intent( in ) :: file_id
-    type( sll_t_cos_gaussian ), intent( inout ) :: params
+    type( sll_t_params_cos_gaussian ), intent( inout ) :: params
 
     ! local variables
     sll_real64 :: kx(params%dims(1))
