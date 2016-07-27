@@ -39,10 +39,12 @@ module sll_m_maxwell_1d_base
      procedure(norm_squared), deferred :: &
           L2norm_squared !< Square of the L2norm
      procedure(update_dofs_function), deferred :: &
-            L2projection !< L2 projection
+          L2projection !< L2 projection
      procedure(empty), deferred :: &
           free !< destructor
-
+     procedure(signature_inner_product), deferred :: &
+          inner_product
+     
   end type sll_c_maxwell_1d_base
 
 !---------------------------------------------------------------------------!
@@ -64,6 +66,19 @@ module sll_m_maxwell_1d_base
        sll_int32                                      :: degree !< Degree of the basis function used for whcih the DoF-coefficients are given.
        sll_real64                                     :: r
      end function norm_squared
+  end interface
+
+  !---------------------------------------------------------------------------!
+  abstract interface
+     function signature_inner_product(self, coefs1_dofs, coefs2_dofs, degree) result( r )
+       use sll_m_working_precision
+       import sll_c_maxwell_1d_base
+       class( sll_c_maxwell_1d_base)                    :: self !< Maxwell solver object.
+       sll_real64                                     :: coefs1_dofs(:) !< Values of the coefficient vectors for each DoF
+       sll_real64                                     :: coefs2_dofs(:) !< Values of the coefficient vectors for each Do
+       sll_int32                                      :: degree !< Degree of the basis function used for whcih the DoF-coefficients are given.
+       sll_real64                                     :: r
+     end function signature_inner_product
   end interface
 
 !---------------------------------------------------------------------------!
