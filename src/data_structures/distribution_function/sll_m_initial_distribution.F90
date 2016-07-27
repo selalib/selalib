@@ -34,9 +34,9 @@ module sll_m_initial_distribution
      sll_int32 :: dims(2) !< Number of spatial and velocity dimensions
 
    contains
-     procedure( signature_eval ), deferred :: eval   !< Evaluate the distribution function
-     procedure( signature_evalx), deferred :: evalx  !< Evaluate the charge density
-     procedure( signature_evalv), deferred :: evalv  !< Evaluate the v-dependence (integrated over x)
+     procedure( signature_eval ), deferred :: eval_xv_density   !< Evaluate the distribution function
+     procedure( signature_evalx), deferred :: eval_x_density  !< Evaluate the charge density
+     procedure( signature_evalv), deferred :: eval_v_density  !< Evaluate the v-dependence (integrated over x)
      procedure( signature_empty), deferred :: free   !< Destructor
 
   end type sll_c_distribution_params
@@ -53,10 +53,10 @@ module sll_m_initial_distribution
      sll_int32               :: n_cos !< Number of cosines
 
    contains
-     procedure :: eval => sll_f_cos_gaussian !< Evaluate the distribution function
+     procedure :: eval_xv_density => sll_f_cos_gaussian !< Evaluate the distribution function
      procedure :: free => free_cos_gaussian  !< Descructor
-     procedure :: evalx => sll_f_cos         !< Evaluate the charge density
-     procedure :: evalv => sll_f_gaussian    !< Evaluate the v-dependence (integrated over x)
+     procedure :: eval_x_density => sll_f_cos         !< Evaluate the charge density
+     procedure :: eval_v_density => sll_f_gaussian    !< Evaluate the v-dependence (integrated over x)
      procedure :: init => cos_gaussian_init  !< Initialization
      
   end type sll_t_cos_gaussian
