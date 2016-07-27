@@ -34,10 +34,10 @@ module sll_m_particle_sampling
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
   !> Descriptors for particle sampling (initialization works with string same as descriptor but without sll_p)
-  sll_int32, parameter :: sll_p_particle_sampling_random = 0  !< sample random numbers (sample distribution given by params%evalv )
-  sll_int32, parameter :: sll_p_particle_sampling_sobol = 1    !< sample Sobol numbers (sample distribution given by params%evalv )
-  sll_int32, parameter :: sll_p_particle_sampling_random_symmetric = 2 !< sample random numbers, antithetic (sample distribution given by params%evalv )
-  sll_int32, parameter :: sll_p_particle_sampling_sobol_symmetric = 3  !< sample Sobol numbers, antithetic (sample distribution given by params%evalv ) 
+  sll_int32, parameter :: sll_p_particle_sampling_random = 0  !< sample random numbers (sample distribution given by params%eval_v_density )
+  sll_int32, parameter :: sll_p_particle_sampling_sobol = 1    !< sample Sobol numbers (sample distribution given by params%eval_v_density )
+  sll_int32, parameter :: sll_p_particle_sampling_random_symmetric = 2 !< sample random numbers, antithetic (sample distribution given by params%eval_v_density )
+  sll_int32, parameter :: sll_p_particle_sampling_sobol_symmetric = 3  !< sample Sobol numbers, antithetic (sample distribution given by params%eval_v_density ) 
 
   ! Internal parameter to distinguish how to draw
   sll_int32, parameter :: sll_p_random_numbers = 0 !< draw random numbers
@@ -158,7 +158,7 @@ contains
        vi = particle_group%get_v( i_part )
        wi = particle_group%get_weights( i_part )
        ! TODO: Distinguish here between different initial sampling distributions
-       wi(2) = params%evalv( vi(1:params%dims(2)) )/product(Lx)
+       wi(2) = params%eval_v_density( vi(1:params%dims(2)) )/product(Lx)
        wi(3) = control_variate%update_df_weight( xi, vi, time0, wi(1), wi(2) )
        call particle_group%set_weights( i_part, wi )
     end do
@@ -242,7 +242,7 @@ contains
        x(1:params%dims(1)) = xmin + Lx * rdn(1:params%dims(1))
 
        ! Set weight according to value of perturbation
-       wi(1) = params%evalx(x(1:params%dims(1)))*product(Lx)
+       wi(1) = params%eval_x_density(x(1:params%dims(1)))*product(Lx)
 
        ! Maxwellian distribution of the temperature
        do i_v = 1,params%dims(2)
@@ -324,7 +324,7 @@ contains
           x(1:params%dims(1)) = xmin + Lx * rdn(1:params%dims(1))
           
           ! Set weight according to value of perturbation
-          wi(1) = params%evalx(x(1:params%dims(1)))*product(Lx)
+          wi(1) = params%eval_x_density(x(1:params%dims(1)))*product(Lx)
           
           ! Maxwellian distribution of the temperature
           do i_v = 1,params%dims(2)
