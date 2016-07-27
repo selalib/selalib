@@ -104,7 +104,7 @@ module sll_m_sim_pic_vp_2d2v_cart
      sll_int32  :: no_weights
      
      ! Physical parameters
-     class(sll_c_distribution_params), allocatable :: params
+     class(sll_c_distribution_params), allocatable :: init_distrib_params
      type(sll_t_particle_sampling) :: sampler
      
      ! Simulation parameters
@@ -166,7 +166,7 @@ contains
 
     read(input_file, sim_params)
     read(input_file, grid_dims)
-    call sll_s_initial_distribution_new( trim(initial_distrib), [2,2], input_file, sim%params )
+    call sll_s_initial_distribution_new( trim(initial_distrib), [2,2], input_file, sim%init_distrib_params )
     read(input_file, pic_params)
     
     close (input_file)
@@ -201,7 +201,7 @@ contains
     ! Initialize control variate
     allocate(sim%control_variate)
     call sim%control_variate%init(control_variate_equi, &
-         distribution_params=sim%params)
+         distribution_params=sim%init_distrib_params)
 
 
 
@@ -250,10 +250,10 @@ contains
     end if
 
     if (sim%no_weights == 1 ) then
-       call sim%sampler%sample ( sim%particle_group, sim%params, [sim%mesh%eta1_min, sim%mesh%eta2_min] , &
+       call sim%sampler%sample ( sim%particle_group, sim%init_distrib_params, [sim%mesh%eta1_min, sim%mesh%eta2_min] , &
             [sim%mesh%eta1_max - sim%mesh%eta1_min, sim%mesh%eta2_max -sim%mesh%eta2_min] )
     elseif ( sim%no_weights == 3 ) then
-       call sim%sampler%sample_cv ( sim%particle_group, sim%params, [sim%mesh%eta1_min, sim%mesh%eta2_min] , &
+       call sim%sampler%sample_cv ( sim%particle_group, sim%init_distrib_params, [sim%mesh%eta1_min, sim%mesh%eta2_min] , &
             [sim%mesh%eta1_max - sim%mesh%eta1_min, sim%mesh%eta2_max -sim%mesh%eta2_min], sim%control_variate )
     end if
 
@@ -301,8 +301,8 @@ contains
     call sim%control_variate%free()
     deallocate(sim%control_variate)
     call sim%sampler%free()
-    call sim%params%free()
-    deallocate(sim%params)
+    call sim%init_distrib_params%free()
+    deallocate(sim%init_distrib_params)
 
   end subroutine delete_pic_2d2v
 
