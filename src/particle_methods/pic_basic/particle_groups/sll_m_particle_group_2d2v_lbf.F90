@@ -40,10 +40,13 @@ module sll_m_particle_group_2d2v_lbf
   use sll_m_constants, only: &
     sll_p_pi
 
-  use sll_m_initial_density_parameters, only: &
-    sll_t_initial_density_parameters, &
-    sll_p_landau_density_2d2v, &
-    sll_p_hat_density_2d2v
+  !  use sll_m_initial_density_parameters, only: &
+  !    sll_t_initial_density_parameters, &
+  !    sll_p_landau_density_2d2v, &
+  !    sll_p_hat_density_2d2v
+
+  use sll_m_initial_distribution, only: &
+     sll_c_distribution_params
 
   use sll_m_sparse_grid_4d, only: &
     sll_t_sparse_grid_interpolator_4d
@@ -137,8 +140,10 @@ module sll_m_particle_group_2d2v_lbf
 
     !> @name Sampling and resampling
     !> @{
-    procedure :: write_hat_density_on_remapping_grid        !> this evaluates an analytic f0
-    procedure :: write_landau_density_on_remapping_grid     !> this evaluates an analytic f0
+    !    procedure :: write_hat_density_on_remapping_grid        !> this evaluates an analytic f0
+    !    procedure :: write_landau_density_on_remapping_grid     !> this evaluates an analytic f0
+    !
+    procedure :: write_known_density_on_remapping_grid     !> this evaluates some known distribution
     procedure :: reset_particles_positions
     procedure :: reset_particles_weights_with_direct_interpolation
     procedure :: reconstruct_f_lbf
@@ -451,7 +456,8 @@ contains
     class(sll_t_particle_group_2d2v_lbf),   intent( inout ) :: self
     sll_real64,                       intent( in )    :: target_total_charge
     logical,                          intent( in )    :: enforce_total_charge
-    class(sll_t_initial_density_parameters),  intent( in ), optional  :: init_f_params   ! < use for initial sampling
+    ! class(sll_t_initial_density_parameters),  intent( in ), optional  :: init_f_params   ! < use for initial sampling
+    class(sll_c_distribution_params), intent( in ), optional  :: init_f_params   ! < use for initial sampling
     sll_int32, dimension(:)         , intent( in ), optional :: rand_seed
     sll_int32                       , intent( in ), optional :: rank, world_size
 
@@ -465,30 +471,32 @@ contains
     !>    - A.1  write the nodal values of f on the arrays of interpolation coefs
     if( initial_step )then
       ! write initial density f0 on remapping grid
-      if( init_f_params%f0_type == sll_p_landau_density_2d2v )then
+      call self%write_initial_density_on_remapping_grid(init_f_params)
 
-        ! then init_f_params%landau_param = [alpha, kx_landau]
-        call self%write_landau_density_on_remapping_grid( &
-            init_f_params%thermal_velocity(1), &
-            init_f_params%landau_param(1), &
-            init_f_params%landau_param(2) )
-        !todo: check why not all parameters from init_f_params are used. Check consistency with katharina's f0
-
-      else if( init_f_params%f0_type == sll_p_hat_density_2d2v )then
-        call self%write_hat_density_on_remapping_grid(                              &
-            init_f_params%hat_f0_x0,  &
-            init_f_params%hat_f0_y0,  &
-            init_f_params%hat_f0_vx0, &
-            init_f_params%hat_f0_vy0, &
-            init_f_params%hat_f0_r_x, &
-            init_f_params%hat_f0_r_y, &
-            init_f_params%hat_f0_r_vx,  &
-            init_f_params%hat_f0_r_vy,  &
-            init_f_params%hat_f0_basis_height,  &
-            init_f_params%hat_f0_shift )
-      else
-        SLL_ERROR( "particle_group_2d2v_lbf%resample", "wrong value for initial_density_identifier" )
-      end if
+      !  if( init_f_params%f0_type == sll_p_landau_density_2d2v )then
+      !
+      !    ! then init_f_params%landau_param = [alpha, kx_landau]
+      !    call self%write_landau_density_on_remapping_grid( &
+      !        init_f_params%thermal_velocity(1), &
+      !        init_f_params%landau_param(1), &
+      !        init_f_params%landau_param(2) )
+      !    !todo: check why not all parameters from init_f_params are used. Check consistency with katharina's f0
+      !
+      !  else if( init_f_params%f0_type == sll_p_hat_density_2d2v )then
+      !    call self%write_hat_density_on_remapping_grid(                              &
+      !        init_f_params%hat_f0_x0,  &
+      !        init_f_params%hat_f0_y0,  &
+      !        init_f_params%hat_f0_vx0, &
+      !        init_f_params%hat_f0_vy0, &
+      !        init_f_params%hat_f0_r_x, &
+      !        init_f_params%hat_f0_r_y, &
+      !        init_f_params%hat_f0_r_vx,  &
+      !        init_f_params%hat_f0_r_vy,  &
+      !        init_f_params%hat_f0_basis_height,  &
+      !        init_f_params%hat_f0_shift )
+      !  else
+      !    SLL_ERROR( "particle_group_2d2v_lbf%resample", "wrong value for initial_density_identifier" )
+      !  end if
 
     else
       ! reconstruct transported density fn on remapping grid with the lbf method
@@ -513,80 +521,103 @@ contains
   end subroutine resample
 
 
-  subroutine write_landau_density_on_remapping_grid(    &
-      self,                              &
-      thermal_speed, alpha, kx_landau       &
-      )
+  subroutine write_known_density_on_remapping_grid(    &
+      self,        &
+      distribution_params       &
+    )
 
-    class(sll_t_particle_group_2d2v_lbf), intent(inout)    :: self
-    sll_real64, intent(in)                           :: thermal_speed, alpha, kx_landau
+    class(sll_t_particle_group_2d2v_lbf), intent(inout) :: self
+    class(sll_c_distribution_params),     intent(in)    :: distribution_params
 
     sll_int32 :: j
-    sll_real64 :: x_j
-    sll_real64 :: vx_j
-    sll_real64 :: vy_j
-
-    sll_real64 :: f_x
-    sll_real64 :: f_vx
-    sll_real64 :: f_vy
-    sll_real64 :: one_over_thermal_velocity
-    sll_real64 :: one_over_two_pi
-
-    one_over_thermal_velocity = 1./thermal_speed
-    one_over_two_pi = 1./(2*sll_p_pi)
+    sll_real64 :: x_j(1:2)
+    sll_real64 :: v_j(1:2)
 
     SLL_ASSERT( size(self%tmp_f_values_on_remapping_sparse_grid,1) == self%sparse_grid_interpolator%size_basis )
     self%tmp_f_values_on_remapping_sparse_grid = 0.0_f64
 
     do j=1, self%sparse_grid_interpolator%size_basis
-        x_j  = self%sparse_grid_interpolator%hierarchy(j)%coordinate(1)
-        vx_j = self%sparse_grid_interpolator%hierarchy(j)%coordinate(3)
-        vy_j = self%sparse_grid_interpolator%hierarchy(j)%coordinate(4)
-
-        f_x = 1._f64 + alpha * cos(kx_landau * x_j)
-        f_vx = one_over_thermal_velocity * exp(-0.5*(vx_j * one_over_thermal_velocity)**2)
-        f_vy = one_over_thermal_velocity * exp(-0.5*(vy_j * one_over_thermal_velocity)**2)
-
-        self%tmp_f_values_on_remapping_sparse_grid(j) = one_over_two_pi * f_x * f_vx * f_vy
+        x_j = self%sparse_grid_interpolator%hierarchy(j)%coordinate(1:2)  ! here the 2d position
+        v_j = self%sparse_grid_interpolator%hierarchy(j)%coordinate(3:4)
+        self%tmp_f_values_on_remapping_sparse_grid(j) = distribution_params%eval( x_j, v_j )
     end do
 
-  end subroutine write_landau_density_on_remapping_grid
+  end subroutine write_known_density_on_remapping_grid
+
+  !  subroutine write_landau_density_on_remapping_grid(    &
+  !      self,                              &
+  !      thermal_speed, alpha, kx_landau       &
+  !      )
+  !
+  !    class(sll_t_particle_group_2d2v_lbf), intent(inout)    :: self
+  !    sll_real64, intent(in)                           :: thermal_speed, alpha, kx_landau
+  !
+  !    sll_int32 :: j
+  !    sll_real64 :: x_j
+  !    sll_real64 :: vx_j
+  !    sll_real64 :: vy_j
+  !
+  !    sll_real64 :: f_x
+  !    sll_real64 :: f_vx
+  !    sll_real64 :: f_vy
+  !    sll_real64 :: one_over_thermal_velocity
+  !    sll_real64 :: one_over_two_pi
+  !
+  !    one_over_thermal_velocity = 1./thermal_speed
+  !    one_over_two_pi = 1./(2*sll_p_pi)
+  !
+  !    SLL_ASSERT( size(self%tmp_f_values_on_remapping_sparse_grid,1) == self%sparse_grid_interpolator%size_basis )
+  !    self%tmp_f_values_on_remapping_sparse_grid = 0.0_f64
+  !
+  !    do j=1, self%sparse_grid_interpolator%size_basis
+  !        x_j  = self%sparse_grid_interpolator%hierarchy(j)%coordinate(1)
+  !        vx_j = self%sparse_grid_interpolator%hierarchy(j)%coordinate(3)
+  !        vy_j = self%sparse_grid_interpolator%hierarchy(j)%coordinate(4)
+  !
+  !        f_x = 1._f64 + alpha * cos(kx_landau * x_j)
+  !        f_vx = one_over_thermal_velocity * exp(-0.5*(vx_j * one_over_thermal_velocity)**2)
+  !        f_vy = one_over_thermal_velocity * exp(-0.5*(vy_j * one_over_thermal_velocity)**2)
+  !
+  !        self%tmp_f_values_on_remapping_sparse_grid(j) = one_over_two_pi * f_x * f_vx * f_vy
+  !    end do
+  !
+  !  end subroutine write_landau_density_on_remapping_grid
 
 
-  subroutine write_hat_density_on_remapping_grid ( &
-        self,        &
-        x0, y0, vx0, vy0,       &
-        r_x, r_y, r_vx, r_vy,   &
-        basis_height, shift &
-      )
-
-    class(sll_t_particle_group_2d2v_lbf), intent(inout)  :: self
-    sll_real64, intent(in)                            :: x0, y0, vx0, vy0
-    sll_real64, intent(in)                            :: r_x, r_y, r_vx, r_vy
-    sll_real64, intent(in)                            :: basis_height, shift
-
-    sll_int32 :: j
-    sll_real64 :: x_j
-    sll_real64 :: y_j
-    sll_real64 :: vx_j
-    sll_real64 :: vy_j
-
-    SLL_ASSERT( size(self%tmp_f_values_on_remapping_sparse_grid,1) == self%sparse_grid_interpolator%size_basis )
-    self%tmp_f_values_on_remapping_sparse_grid = 0.0_f64
-
-    do j=1, self%sparse_grid_interpolator%size_basis
-      x_j  = self%sparse_grid_interpolator%hierarchy(j)%coordinate(1)
-      y_j  = self%sparse_grid_interpolator%hierarchy(j)%coordinate(2)
-      vx_j = self%sparse_grid_interpolator%hierarchy(j)%coordinate(3)
-      vy_j = self%sparse_grid_interpolator%hierarchy(j)%coordinate(4)
-
-      ! here we store a nodal value but later this array will indeed store sparse grid coefficients
-      self%tmp_f_values_on_remapping_sparse_grid(j) = sll_f_eval_hat_function(x0,y0,vx0,vy0,r_x,r_y,r_vx,r_vy,      &
-                                                           basis_height, shift,                                     &
-                                                           x_j, y_j, vx_j, vy_j)
-    end do
-
-  end subroutine write_hat_density_on_remapping_grid
+  !  subroutine write_hat_density_on_remapping_grid ( &
+  !        self,        &
+  !        x0, y0, vx0, vy0,       &
+  !        r_x, r_y, r_vx, r_vy,   &
+  !        basis_height, shift &
+  !      )
+  !
+  !    class(sll_t_particle_group_2d2v_lbf), intent(inout)  :: self
+  !    sll_real64, intent(in)                            :: x0, y0, vx0, vy0
+  !    sll_real64, intent(in)                            :: r_x, r_y, r_vx, r_vy
+  !    sll_real64, intent(in)                            :: basis_height, shift
+  !
+  !    sll_int32 :: j
+  !    sll_real64 :: x_j
+  !    sll_real64 :: y_j
+  !    sll_real64 :: vx_j
+  !    sll_real64 :: vy_j
+  !
+  !    SLL_ASSERT( size(self%tmp_f_values_on_remapping_sparse_grid,1) == self%sparse_grid_interpolator%size_basis )
+  !    self%tmp_f_values_on_remapping_sparse_grid = 0.0_f64
+  !
+  !    do j=1, self%sparse_grid_interpolator%size_basis
+  !      x_j  = self%sparse_grid_interpolator%hierarchy(j)%coordinate(1)
+  !      y_j  = self%sparse_grid_interpolator%hierarchy(j)%coordinate(2)
+  !      vx_j = self%sparse_grid_interpolator%hierarchy(j)%coordinate(3)
+  !      vy_j = self%sparse_grid_interpolator%hierarchy(j)%coordinate(4)
+  !
+  !      ! here we store a nodal value but later this array will indeed store sparse grid coefficients
+  !      self%tmp_f_values_on_remapping_sparse_grid(j) = sll_f_eval_hat_function(x0,y0,vx0,vy0,r_x,r_y,r_vx,r_vy,      &
+  !                                                           basis_height, shift,                                     &
+  !                                                           x_j, y_j, vx_j, vy_j)
+  !    end do
+  !
+  !  end subroutine write_hat_density_on_remapping_grid
 
   !> reset the particles on the initial (cartesian) grid
   !> -- for simplicity we use the flow grid here
