@@ -211,38 +211,29 @@ contains
     sll_int32, intent( in    ) :: dims(2) !< number of spatial and velocity dimensions
     sll_int32, intent( in    ) :: file_id    !< nml-file with parameters in unified format
     class(sll_c_distribution_params), allocatable, intent(   out ) ::  params    !< real array specifying the parameters for the given test case in the predefined order.
+
+    sll_int32 :: descriptor
     
     select case( distribution )
     case( "sumcos_onegaussian" )
        allocate( sll_t_params_cos_gaussian :: params )
-       params%dims = dims
-       select type( params )
-       type is( sll_t_params_cos_gaussian )
-          call sumcos_onegaussian_init( file_id, params )
-       end select
+       descriptor = sll_p_sumcos_onegaussian
     case( "cossum_onegaussian" )
        allocate( sll_t_params_cos_gaussian :: params )
-       params%dims = dims
-       select type( params )
-       type is( sll_t_params_cos_gaussian )
-          call cossum_onegaussian_init( file_id, params )
-       end select
+       descriptor = sll_p_cossum_onegaussian
     case( "cossum_twogaussian" )
        allocate( sll_t_params_cos_gaussian :: params )
-       params%dims = dims
-       select type( params )
-       type is( sll_t_params_cos_gaussian )
-          call cossum_twogaussian_init( file_id, params )
-       end select
+       descriptor = sll_p_cossum_twogaussian
     case( "sumcos_twogaussian" )
        allocate( sll_t_params_cos_gaussian :: params )
-       params%dims = dims
-       select type( params )
-       type is( sll_t_params_cos_gaussian )
-          call sumcos_twogaussian_init( file_id, params )
-       end select
+       descriptor = sll_p_sumcos_twogaussian
     case default
        SLL_ERROR('Initial distribution not implemented.','sll_s_initial_distribution_new')
+    end select
+
+    select type( params )
+    type is( sll_t_params_cos_gaussian )
+       call params%init( descriptor, dims, file_id )
     end select
     
     
@@ -260,34 +251,20 @@ contains
     select case( distribution )
     case( sll_p_sumcos_onegaussian )
        allocate( sll_t_params_cos_gaussian :: params )
-       params%dims = dims
-       select type( params )
-       type is( sll_t_params_cos_gaussian )
-          call sumcos_onegaussian_init( file_id, params )
-       end select
     case( sll_p_cossum_onegaussian )
        allocate( sll_t_params_cos_gaussian :: params )
-       params%dims = dims
-       select type( params )
-       type is( sll_t_params_cos_gaussian )
-          call cossum_onegaussian_init( file_id, params )
-       end select
     case( sll_p_cossum_twogaussian )
        allocate( sll_t_params_cos_gaussian :: params )
-       params%dims = dims
-       select type( params )
-       type is( sll_t_params_cos_gaussian )
-          call cossum_twogaussian_init( file_id, params )
-       end select
     case( sll_p_sumcos_twogaussian )
        allocate( sll_t_params_cos_gaussian :: params )
-       params%dims = dims
-       select type( params )
-       type is( sll_t_params_cos_gaussian )
-          call sumcos_twogaussian_init( file_id, params )
-       end select
+    case default
+       SLL_ERROR('Initial distribution not implemented.','sll_s_initial_distribution_new')
     end select
     
+    select type( params )
+    type is( sll_t_params_cos_gaussian )
+       call params%init( distribution, dims, file_id )
+    end select
     
   end subroutine sll_s_initial_distribution_new_descriptor
 
