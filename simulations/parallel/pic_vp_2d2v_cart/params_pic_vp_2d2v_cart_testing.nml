@@ -1,10 +1,7 @@
 &sim_params
         delta_t = 0.1
         n_time_steps = 2
-        alpha = 0.1
-        n_mode = 1
-        thermal_v1 = 1.0
-        thermal_v2 = 1.0
+        initial_distrib = "cossum_onegaussian"
 /
 
 &grid_dims
@@ -12,13 +9,20 @@
         ng_x2 = 32
         x1_min = 0.0
         x2_min = 0.0
-        x1_max = 12.5663706144
-        x2_max = 12.5663706144
+        x1_max = 12.566370614359172
+        x2_max = 12.566370614359172
+/
+
+&cossum_onegaussian
+        kx = 0.5 0.0
+        alpha = 0.1
+	v_thermal = 1.0 1.0
+	v_mean = 0.0 0.0
 /
 
 &pic_params
-        init_case = "SLL_INIT_SOBOL"
         n_particles = 10000
         degree_smoother = 3
-        with_control_variate = .FALSE.
+        sampling_case = "particle_sampling_sobol"
+        with_control_variate = .false.
 /
