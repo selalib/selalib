@@ -14,7 +14,7 @@ module sll_m_particle_sampling
 
   use sll_m_initial_distribution, only: &
        sll_c_distribution_params, &
-       sll_t_cos_gaussian
+       sll_t_params_cos_gaussian
   
   use sll_m_particle_group_base, only: &
     sll_c_particle_group_base
@@ -175,7 +175,7 @@ contains
     sll_real64,                        intent(in)               :: Lx(:) !< length of the domain.
 
     select type( params )
-    type is( sll_t_cos_gaussian)
+    type is( sll_t_params_cos_gaussian)
     
        if( self%symmetric .eqv. .false. ) then
           call sample_particle_sampling_all( self, particle_group, params, xmin, Lx )
@@ -194,7 +194,7 @@ contains
   subroutine sample_particle_sampling_all( self,  particle_group, params, xmin, Lx )
     type( sll_t_particle_sampling ), intent( inout ) :: self !< particle sampling object
     class(sll_c_particle_group_base), target, intent(inout)        :: particle_group
-    class( sll_t_cos_gaussian ),  target,     intent( in )      :: params
+    class( sll_t_params_cos_gaussian ),  target,     intent( in )      :: params
     sll_real64,                        intent(in)               :: xmin(:) !< lower bound of the domain
     sll_real64,                        intent(in)               :: Lx(:) !< length of the domain.
 
@@ -274,7 +274,7 @@ contains
   subroutine sample_particle_sampling_sym_1d2v( self, particle_group, params, xmin, Lx )
     type( sll_t_particle_sampling ), intent( inout ) :: self !< particle sampling object
     class(sll_c_particle_group_base), target, intent(inout)        :: particle_group
-    class( sll_t_cos_gaussian ),  target,     intent( in )      :: params
+    class( sll_t_params_cos_gaussian ),  target,     intent( in )      :: params
     sll_real64,                        intent(in)               :: xmin(:) !< lower bound of the domain
     sll_real64,                        intent(in)               :: Lx(:) !< length of the domain.
 
