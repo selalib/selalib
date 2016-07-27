@@ -1,6 +1,6 @@
 !> @defgroup particle_pushers sll_particle_pushers
 !> @brief
-!> Library implementing various kinds of particle pushers for pic_basic.
+!> Various kinds of particle pushers.
 !> @details
 !> ...
 !>

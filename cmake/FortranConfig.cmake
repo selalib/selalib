@@ -24,7 +24,7 @@ ELSEIF (CMAKE_Fortran_COMPILER_ID MATCHES PGI)
 ELSE()
 
   EXEC_PROGRAM(${CMAKE_Fortran_COMPILER} ARGS "--version" OUTPUT_VARIABLE source_path)
-  STRING(REGEX MATCH "[4-5]\\.[0-9]\\.[0-9]" Fortran_COMPILER_VERSION ${source_path})
+  STRING(REGEX MATCH "[4-6]\\.[0-9]\\.[0-9]" Fortran_COMPILER_VERSION ${source_path})
 
 ENDIF()
 
@@ -33,7 +33,10 @@ MESSAGE(STATUS "Fortran ${Fortran_COMPILER_NAME}-${Fortran_COMPILER_VERSION}")
 IF(Fortran_COMPILER_NAME MATCHES gfortran)
 
   ADD_DEFINITIONS(-DGFORTRAN)
-  SET(CMAKE_Fortran_FLAGS_RELEASE "-w -ffree-line-length-none -fall-intrinsics -O3 -fPIC")
+  SET(CMAKE_Fortran_FLAGS_RELEASE "-w -ffree-line-length-none -fall-intrinsics -O3 -fPIC -march=native ")
+  IF(APPLE)
+    SET(CMAKE_Fortran_FLAGS_RELEASE "${CMAKE_Fortran_FLAGS_RELEASE} -mno-avx")
+  ENDIF(APPLE)
   SET(CMAKE_Fortran_FLAGS_DEBUG "-g -O0 -Wall -cpp -ffree-line-length-none -std=f2008 -pedantic -Wconversion -Wconversion-extra -Wintrinsics-std -fcheck=array-temps,bounds,do,pointer,recursion -fall-intrinsics -finit-real=snan -finit-integer=-9999 -fbounds-check -fbacktrace -ffpe-trap=invalid,zero,overflow -fcheck-array-temporaries")
 
   SET(UNUSED_FUNCTION_WARNING_ENABLED OFF CACHE BOOL "Add -Wunused-function flag to gfortran")
@@ -50,6 +53,7 @@ ELSEIF(Fortran_COMPILER_NAME MATCHES ifort)
 
   SET(CMAKE_Fortran_FLAGS_RELEASE "-nowarn -O3 -xHost -ip -fpic")
   SET(CMAKE_Fortran_FLAGS_DEBUG   "-g -O0 -check all,noarg_temp_created -fpe0 -traceback -ftrapuv -fpic")
+  SET(CMAKE_SHARED_LIBRARY_LINK_Fortran_FLAGS "-shared-intel")
 
 ELSEIF(Fortran_COMPILER MATCHES "IBM")
 
