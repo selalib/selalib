@@ -1,5 +1,5 @@
-ADD_EXECUTABLE( test_particle_initializer test_particle_initializer.F90)
-TARGET_LINK_LIBRARIES( test_particle_initializer sll_pic_sampling sll_particle_groups)
+ADD_EXECUTABLE( test_particle_sampling test_particle_sampling.F90)
+TARGET_LINK_LIBRARIES( test_particle_sampling sll_pic_sampling sll_particle_groups)
 
-ADD_TEST( NAME particle_initializer COMMAND test_particle_initializer)
-SET_TESTS_PROPERTIES(particle_initializer PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
+ADD_TEST( NAME particle_sampling COMMAND test_particle_sampling)
+SET_TESTS_PROPERTIES(particle_sampling PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")

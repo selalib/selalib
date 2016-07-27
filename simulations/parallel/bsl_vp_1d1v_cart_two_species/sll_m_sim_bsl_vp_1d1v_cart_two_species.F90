@@ -1385,7 +1385,7 @@ contains
     
     
 
-    iplot = 1
+    iplot = 0
 
     nb_mode = sim%nb_mode
     time_init = sim%time_init
