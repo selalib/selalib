@@ -42,15 +42,14 @@ module sll_m_sim_pic_vp_2d2v_cart_lbf
   use sll_m_operator_splitting_pic_vp_2d2v, only: &
     sll_t_operator_splitting_pic_vp_2d2v
 
+  use sll_m_particle_group_base, only: &
+    sll_c_particle_group_base
+
   use sll_m_particle_group_2d2v, only: &
-    sll_s_new_particle_group_2d2v_ptr, &
-    sll_t_particle_group_2d2v
+    sll_s_new_particle_group_2d2v_ptr
 
   use sll_m_particle_group_2d2v_lbf, only: &
     sll_s_new_particle_group_2d2v_lbf_ptr
-
-  !  use sll_m_initial_density_parameters, only: &
-  !    sll_t_initial_density_parameters
 
   use sll_m_initial_distribution, only : &
        sll_c_distribution_params, &
@@ -66,9 +65,6 @@ module sll_m_sim_pic_vp_2d2v_cart_lbf
 
   use sll_m_particle_sampling, only : &
        sll_t_particle_sampling
-
-  use sll_m_particle_group_base, only: &
-    sll_c_particle_group_base
 
   use sll_m_pic_poisson_base, only : &
     sll_c_pic_poisson
@@ -310,10 +306,6 @@ contains
       call sll_s_new_particle_group_2d2v_ptr&
            (sim%particle_group, sim%n_particles, &
            sim%n_total_particles, species_charge, species_mass, sim%no_weights)
-
-      call sll_s_new_particle_group_2d2v_ptr&
-         (sim%particle_group, sim%n_particles, &
-         sim%n_total_particles, species_charge, species_mass, sim%no_weights)
 
     case( sll_p_lbf_particles )
 
