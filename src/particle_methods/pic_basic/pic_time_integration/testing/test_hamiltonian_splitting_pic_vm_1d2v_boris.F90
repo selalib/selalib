@@ -226,7 +226,6 @@ program test_hamiltonian_splitting_pic_1d2v_vm
        1.0239154844069209_f64,       0.92782406399041817_f64,    &
        1.0265970800925086_f64,       0.99441071503466349_f64   ],&
        [num_cells, 2])
-  !efield_ref = 0.0_f64
 
   error = maxval(abs(efield-efield_ref))  
   if (error > eqv_tol ) then
