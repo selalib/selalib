@@ -108,12 +108,13 @@ program test_particle_visualization_interface
   dim_x = 2
   dim_v = 2
   ! file must have a namelist of the form
-  !   /cossum_onegaussian/ kx, alpha, v_thermal, v_mean
+  !   /cos_onegaussian/ kx, alpha, v_thermal, v_mean
   ! with
   !   sll_real64 :: kx(dim_x)
   !   sll_real64 :: alpha
   !   sll_real64 :: v_thermal(dim_v)
   !   sll_real64 :: v_mean(dim_v)
+  ! -->> see module sll_m_initial_distribution for details
   call sll_s_concatenate_filename_and_path( "distribution_for_the_test.nml", __FILE__,&
        filename)
   open(newunit = file_id, file=trim(filename), IOStat=io_stat)
