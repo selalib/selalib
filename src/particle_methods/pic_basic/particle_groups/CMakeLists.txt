@@ -14,7 +14,6 @@ TARGET_LINK_LIBRARIES( sll_particle_groups
   sll_constants
   # sll_pic_interface
   sll_meshes
-  sll_initial_densities_temp
   sll_sparse_grid
   )
 
