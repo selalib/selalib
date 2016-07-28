@@ -14,7 +14,7 @@ ubuntu-mpich:
     - mpich
     
 mavericks-openmpi:
-  stage: ctest
+  stage: build
   script: 
     - "scripts/selalib-ci.sh"
   only:
