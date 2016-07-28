@@ -2,14 +2,15 @@ stages:
   - ctest
   
 ubuntu-openmpi:
-  stage: ctest
-  script: 
-    - "scripts/selalib-ci.sh"
-  only:
-    - develop
-  tags:
-    - ubuntu
-    - openmpi
+    tags:
+        - ubuntu
+        - openmpi
+    stage: ctest
+    script: 
+        - "scripts/selalib-ci.sh"
+    only:
+        - develop
+  
 
 ubuntu-mpich:
   stage: ctest
