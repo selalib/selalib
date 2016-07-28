@@ -46,17 +46,6 @@ module sll_m_particle_group_2d2v_lbf
   use sll_m_sparse_grid_4d, only: &
     sll_t_sparse_grid_interpolator_4d
 
-  use sll_m_particle_lbf_utilities, only: &
-    sll_t_int_list_element, &
-    sll_t_int_list_element_ptr, &
-    sll_f_add_element_in_int_list, &
-    sll_s_convert_4d_index_to_1d, &
-    sll_s_convert_1d_index_to_4d, &
-    sll_s_update_closest_particle_arrays, &
-    sll_s_get_1d_cell_containing_point
-
-    ! sll_f_eval_hat_function, &
-
   implicit none
 
   public :: &
@@ -70,6 +59,18 @@ module sll_m_particle_group_2d2v_lbf
   !> possible values for the parameter reconstruction_set_type in the reconstruction routine
   sll_int32, parameter :: sll_p_lbf_remapping_grid = 1
   sll_int32, parameter :: sll_p_lbf_given_grid = 2
+
+  !> linked lists of integers, used in some of the module routines
+  type sll_t_int_list_element
+    sll_int32 :: value
+    type(sll_t_int_list_element), pointer :: next
+  end type sll_t_int_list_element
+
+  !> a pointer type is needed for arrays of lists
+  type sll_t_int_list_element_ptr
+    type(sll_t_int_list_element), pointer :: pointed_element
+  end type sll_t_int_list_element_ptr
+
 
   !> Group of @ref sll_t_particle_group_2d2v_lbf
   type, extends(sll_c_particle_group_base) :: sll_t_particle_group_2d2v_lbf
@@ -594,7 +595,7 @@ contains
             vy_j = vy_min + (j_vy-0.5) * h_vy
 
             k_check = k_check + 1
-            call sll_s_convert_4d_index_to_1d( &
+            call convert_4d_index_to_1d( &
               k,  &
               j_x, j_y, j_vx, j_vy,  &
               self%n_particles_x, self%n_particles_y, self%n_particles_vx, self%n_particles_vy  &
@@ -632,7 +633,7 @@ contains
     sll_int32  :: j_vy
     sll_int32  :: j_ngb
 
-    call sll_s_convert_1d_index_to_4d( &
+    call convert_1d_index_to_4d( &
       j_x, j_y, j_vx, j_vy,        &
       k, &
       self%n_particles_x, self%n_particles_y,  &
@@ -653,7 +654,7 @@ contains
             SLL_ERROR( "get_neighbor_index", "CHECK 1 -- should not be here")
           end if
         end if
-        call sll_s_convert_4d_index_to_1d(  &
+        call convert_4d_index_to_1d(  &
             k_ngb, &
             j_ngb, j_y, j_vx, j_vy, &
             self%n_particles_x, self%n_particles_y,  &
@@ -674,7 +675,7 @@ contains
             SLL_ERROR( "get_neighbor_index", "CHECK 2 -- should not be here")
           end if
         end if
-        call sll_s_convert_4d_index_to_1d(  &
+        call convert_4d_index_to_1d(  &
             k_ngb, &
             j_x, j_ngb, j_vx, j_vy, &
             self%n_particles_x, self%n_particles_y,  &
@@ -692,7 +693,7 @@ contains
           return
           SLL_ERROR( "get_neighbor_index", "CHECK 3 -- should not be here")
         end if
-        call sll_s_convert_4d_index_to_1d(  &
+        call convert_4d_index_to_1d(  &
             k_ngb, &
             j_x, j_y, j_ngb, j_vy, &
             self%n_particles_x, self%n_particles_y,  &
@@ -710,7 +711,7 @@ contains
           return
           SLL_ERROR( "get_neighbor_index", "CHECK 4 -- should not be here")
         end if
-        call sll_s_convert_4d_index_to_1d(  &
+        call convert_4d_index_to_1d(  &
             k_ngb, &
             j_x, j_y, j_vx, j_ngb, &
             self%n_particles_x, self%n_particles_y,  &
@@ -805,7 +806,7 @@ contains
             vx = coords(1) ;                                                                                            \
             vy = coords(2) ;                                                                                            \
             call periodic_correction(self,x,y) ;                                                                     \
-            call sll_s_update_closest_particle_arrays(k_neighbor,                                                       \
+            call update_closest_particle_arrays(k_neighbor,                                                       \
                 x - self%lbf_grid%eta1_min, y - self%lbf_grid%eta2_min, vx - self%lbf_grid%eta3_min, vy - self%lbf_grid%eta4_min, \
                 j_x, j_y, j_vx, j_vy,                                                   \
                 h_flow_grid_x,                                                          \
@@ -1032,10 +1033,10 @@ contains
         vy = self%sparse_grid_interpolator%hierarchy(node_index)%coordinate(4)
 
         !> find the index (j_x,j_y,j_vx,j_vy) of the flow cell containing this node (same piece of code as below)
-        call sll_s_get_1d_cell_containing_point(j_x,  x,  flow_grid_x_min,  h_flow_grid_x )
-        call sll_s_get_1d_cell_containing_point(j_y,  y,  flow_grid_y_min,  h_flow_grid_y )
-        call sll_s_get_1d_cell_containing_point(j_vx, vx, flow_grid_vx_min, h_flow_grid_vx)
-        call sll_s_get_1d_cell_containing_point(j_vy, vy, flow_grid_vy_min, h_flow_grid_vy)
+        call get_1d_cell_containing_point(j_x,  x,  flow_grid_x_min,  h_flow_grid_x )
+        call get_1d_cell_containing_point(j_y,  y,  flow_grid_y_min,  h_flow_grid_y )
+        call get_1d_cell_containing_point(j_vx, vx, flow_grid_vx_min, h_flow_grid_vx)
+        call get_1d_cell_containing_point(j_vy, vy, flow_grid_vy_min, h_flow_grid_vy)
 
         !> discard if flow cell is off-bounds
         if(  j_x  >= flow_grid_j_x_min  .and. j_x  <= flow_grid_j_x_max  .and. &
@@ -1065,24 +1066,24 @@ contains
       g => given_grid_4d
 
       !> if the given grid is strictly contained in the lbf grid, we can reduce the number of flow cells where f is reconstructed
-      call sll_s_get_1d_cell_containing_point( j_tmp, g%eta1_min, flow_grid_x_min, h_flow_grid_x )
+      call get_1d_cell_containing_point( j_tmp, g%eta1_min, flow_grid_x_min, h_flow_grid_x )
       flow_grid_j_x_min = max(flow_grid_j_x_min, j_tmp)
-      call sll_s_get_1d_cell_containing_point( j_tmp, g%eta1_max, flow_grid_x_min, h_flow_grid_x )
+      call get_1d_cell_containing_point( j_tmp, g%eta1_max, flow_grid_x_min, h_flow_grid_x )
       flow_grid_j_x_max = min(flow_grid_j_x_max, j_tmp)
 
-      call sll_s_get_1d_cell_containing_point( j_tmp, g%eta2_min, flow_grid_y_min, h_flow_grid_y )
+      call get_1d_cell_containing_point( j_tmp, g%eta2_min, flow_grid_y_min, h_flow_grid_y )
       flow_grid_j_y_min = max(flow_grid_j_y_min, j_tmp)
-      call sll_s_get_1d_cell_containing_point( j_tmp, g%eta2_max, flow_grid_y_min, h_flow_grid_y )
+      call get_1d_cell_containing_point( j_tmp, g%eta2_max, flow_grid_y_min, h_flow_grid_y )
       flow_grid_j_y_max = min(flow_grid_j_y_max, j_tmp)
 
-      call sll_s_get_1d_cell_containing_point( j_tmp, g%eta3_min, flow_grid_vx_min, h_flow_grid_vx )
+      call get_1d_cell_containing_point( j_tmp, g%eta3_min, flow_grid_vx_min, h_flow_grid_vx )
       flow_grid_j_vx_min = max(flow_grid_j_vx_min, j_tmp)
-      call sll_s_get_1d_cell_containing_point( j_tmp, g%eta3_max, flow_grid_vx_min, h_flow_grid_vx )
+      call get_1d_cell_containing_point( j_tmp, g%eta3_max, flow_grid_vx_min, h_flow_grid_vx )
       flow_grid_j_vx_max = min(flow_grid_j_vx_max, j_tmp)
 
-      call sll_s_get_1d_cell_containing_point( j_tmp, g%eta4_min, flow_grid_vy_min, h_flow_grid_vy )
+      call get_1d_cell_containing_point( j_tmp, g%eta4_min, flow_grid_vy_min, h_flow_grid_vy )
       flow_grid_j_vy_min = max(flow_grid_j_vy_min, j_tmp)
-      call sll_s_get_1d_cell_containing_point( j_tmp, g%eta4_max, flow_grid_vy_min, h_flow_grid_vy )
+      call get_1d_cell_containing_point( j_tmp, g%eta4_max, flow_grid_vy_min, h_flow_grid_vy )
       flow_grid_j_vy_max = min(flow_grid_j_vy_max, j_tmp)
 
       g_num_points_x = g%num_cells1
@@ -1142,10 +1143,10 @@ contains
       vy_k = coords(2)
 
       !> which flow cell is this particle in?
-      call sll_s_get_1d_cell_containing_point(j_x, x_k,  flow_grid_x_min,  h_flow_grid_x )
-      call sll_s_get_1d_cell_containing_point(j_y, y_k,  flow_grid_y_min,  h_flow_grid_y )
-      call sll_s_get_1d_cell_containing_point(j_vx, vx_k, flow_grid_vx_min, h_flow_grid_vx)
-      call sll_s_get_1d_cell_containing_point(j_vy, vy_k, flow_grid_vy_min, h_flow_grid_vy)
+      call get_1d_cell_containing_point(j_x, x_k,  flow_grid_x_min,  h_flow_grid_x )
+      call get_1d_cell_containing_point(j_y, y_k,  flow_grid_y_min,  h_flow_grid_y )
+      call get_1d_cell_containing_point(j_vx, vx_k, flow_grid_vx_min, h_flow_grid_vx)
+      call get_1d_cell_containing_point(j_vy, vy_k, flow_grid_vy_min, h_flow_grid_vy)
 
       !> discard this particle if off-bounds
       if(  j_x  >= flow_grid_j_x_min  .and. j_x  <= flow_grid_j_x_max  .and. &
@@ -1153,7 +1154,7 @@ contains
            j_vx >= flow_grid_j_vx_min .and. j_vx <= flow_grid_j_vx_max .and. &
            j_vy >= flow_grid_j_vy_min .and. j_vy <= flow_grid_j_vy_max )then
 
-        call sll_s_update_closest_particle_arrays(  &
+        call update_closest_particle_arrays(  &
           k,  &
           x_k  - flow_grid_x_min, &
           y_k  - flow_grid_y_min, &
@@ -1268,7 +1269,7 @@ contains
                  )
 
             !> Find position of particle k at time 0
-            call sll_s_convert_1d_index_to_4d(  &
+            call convert_1d_index_to_4d(  &
               m_x,m_y,m_vx,m_vy, &
               k, &
               self%n_particles_x, self%n_particles_y,  &
@@ -1545,9 +1546,13 @@ contains
 
   !> get_ltp_deformation_matrix ------------------------------------------------------------------------------------------------
   !> Compute the coefficients of the particle 'deformation' matrix
-  !> which approximates the Jacobian matrix of the exact backward flow
+  !> which actually approximates the Jacobian matrix of the exact backward flow
   !> (defined between the current time and that of the particle initialization -- or the last particle remapping)
   !> at the current particle position.
+  !>
+  !> Note: the 'deformation matrix' terminology comes from the LTP method, but with the lbf reconstruction method
+  !> we are not deforming particles anymore. This matrix is just used as the approximate backward Jacobian matrix
+  !>
   !> It is computed in two steps:
   !>    * first we compute a finite-difference approximation of the forward Jacobian matrix by using the fact that the
   !>      initial (or remapped) particles were located on a cartesian grid in phase space. Specifically, the entries of
@@ -2009,7 +2014,7 @@ contains
             - j13 * j22 * j31
         d44 = inv_det_J * d44
 
-end subroutine get_ltp_deformation_matrix
+  end subroutine get_ltp_deformation_matrix
 
   !> periodic_correction -------------------------------------------------------------------------------------------------------
   !> puts the point (x,y) back into the computational domain if periodic in x or y (or both) otherwise, does nothing
@@ -2032,5 +2037,128 @@ end subroutine get_ltp_deformation_matrix
     end if
   end subroutine periodic_correction
 
+  !> sll_f_add_element_in_int_list ---------------------------------------------------------------------------------------------
+  !> list management
+  function sll_f_add_element_in_int_list(head, new_element) result( new_list )
+    type( sll_t_int_list_element ), pointer :: head, new_element
+    type( sll_t_int_list_element ), pointer :: new_list
+    new_element%next => head
+    new_list => new_element
+  end function
+
+  !> convert_4d_index_to_1d ----------------------------------------------------------------------------------------------------
+  !> given the 4d index of a node on a cartesian grid, returns its 1d index in some assumed order
+  !> see inverse function  convert_1d_index_to_4d
+  subroutine convert_4d_index_to_1d(  &
+    k, &
+    j_x, j_y, j_vx, j_vy,  &
+    n_parts_x, n_parts_y, n_parts_vx, n_parts_vy   &
+  )
+    sll_int32, intent(out):: k
+    sll_int32, intent(in) :: j_x
+    sll_int32, intent(in) :: j_y
+    sll_int32, intent(in) :: j_vx
+    sll_int32, intent(in) :: j_vy
+    sll_int32, intent(in) :: n_parts_x
+    sll_int32, intent(in) :: n_parts_y
+    sll_int32, intent(in) :: n_parts_vx
+    sll_int32, intent(in) :: n_parts_vy
+
+    if(         j_x <= 0  .or. j_x > n_parts_x      &
+        .or.    j_y <= 0  .or. j_y > n_parts_y      &
+        .or.    j_vx <= 0 .or. j_vx > n_parts_vx    &
+        .or.    j_vy <= 0 .or. j_vy > n_parts_vy  )then
+        k = 0
+    else
+        k = 1+ (j_vy-1) + (j_vx-1) * n_parts_vy + (j_y-1) * n_parts_vy * n_parts_vx + (j_x-1) * n_parts_vy * n_parts_vx * n_parts_y
+    end if
+
+    SLL_ASSERT( k <= n_parts_x * n_parts_y * n_parts_vx * n_parts_vy )
+  end subroutine
+
+  !> convert_1d_index_to_4d ----------------------------------------------------------------------------------------------------
+  !> given the 1d index of a node on a cartesian grid (with some assumed order), returns its 4d index
+  !> see inverse function  convert_4d_index_to_1d
+  subroutine convert_1d_index_to_4d(  &
+    j_x, j_y, j_vx, j_vy,  &
+    k, &
+    n_parts_x, n_parts_y, n_parts_vx, n_parts_vy  &
+  )
+    sll_int32, intent(out) :: j_x
+    sll_int32, intent(out) :: j_y
+    sll_int32, intent(out) :: j_vx
+    sll_int32, intent(out) :: j_vy
+    sll_int32, intent(in) :: k
+    sll_int32, intent(in) :: n_parts_x
+    sll_int32, intent(in) :: n_parts_y
+    sll_int32, intent(in) :: n_parts_vx
+    sll_int32, intent(in) :: n_parts_vy
+    sll_int32              :: k_aux
+
+    k_aux = k-1
+    !> here, k_aux = (j_vy-1) + (j_vx-1) * n_parts_vy + (j_y-1) * n_parts_vy * n_parts_vx + (j_x-1) * n_parts_vy * n_parts_vx * n_parts_y
+    j_vy = mod(k_aux, n_parts_vy) + 1
+
+    k_aux = (k_aux - (j_vy-1)) / n_parts_vy
+    !> here, k_aux = (j_vx-1) + (j_y-1) * n_parts_vx + (j_x-1) * n_parts_vx * n_parts_y
+    j_vx = mod(k_aux, n_parts_vx) + 1
+
+    k_aux = (k_aux - (j_vx-1)) / n_parts_vx
+    !> here, k_aux = (j_y-1) + (j_x-1) * n_parts_y
+    j_y = mod(k_aux, n_parts_y) + 1
+
+    k_aux = (k_aux - (j_y-1)) / n_parts_y
+    !> here, k_aux = (j_x-1)
+    j_x = k_aux + 1
+
+    SLL_ASSERT(j_x <= n_parts_x)
+  end subroutine
+
+  !> get_1d_cell_containing_point ----------------------------------------------------------------------------------------------
+  !> elementary function to compute the index j of the 1d cell containing a point x, ie
+  !>    x_min + (j-1)*h <= x < x_min + j*h
+  !> bounds check should be performed outside this routine
+  subroutine get_1d_cell_containing_point( j, x, x_min, h )
+    sll_int32,  intent(out) :: j
+    sll_real64, intent(in)  :: x
+    sll_real64, intent(in)  :: x_min
+    sll_real64, intent(in)  :: h
+
+    j = int( (x - x_min) / h ) + 1
+  end subroutine
+
+  !> update_closest_particle_arrays --------------------------------------------------------------------------------------------
+  !> update the arrays closest_particle and closest_particle_distance with the index of the given particle
+  !> if closer to what had been stored up to now.
+  subroutine update_closest_particle_arrays(k_part,    &
+                                            x_aux, y_aux, vx_aux, vy_aux,   &
+                                            i, j, l, m,                     &
+                                            h_cell_x, h_cell_y, h_cell_vx, h_cell_vy,   &
+                                            closest_particle,               &
+                                            closest_particle_distance)
+
+      sll_int32, intent(in) :: k_part
+      sll_int32, intent(in) :: i, j, l, m
+      sll_real64, intent(in) :: x_aux     !<  x_particle - flow_grid_x_min
+      sll_real64, intent(in) :: y_aux     !<  idem
+      sll_real64, intent(in) :: vx_aux    !<  idem
+      sll_real64, intent(in) :: vy_aux    !<  idem
+      sll_real64, intent(in) :: h_cell_x, h_cell_y, h_cell_vx, h_cell_vy
+      sll_int32,  dimension(:,:,:,:), intent(inout)  :: closest_particle
+      sll_real64, dimension(:,:,:,:), intent(inout)  :: closest_particle_distance
+      sll_real64 :: square_dist_to_cell_center
+
+      square_dist_to_cell_center = (x_aux  - (i + 0.5) * h_cell_x )**2.    &
+                                 + (y_aux  - (j + 0.5) * h_cell_y )**2.    &
+                                 + (vx_aux - (l + 0.5) * h_cell_vx )**2.    &
+                                 + (vy_aux - (m + 0.5) * h_cell_vy )**2.
+
+      !> if new particle is closer to center, keep the new one
+      if(closest_particle(i,j,l,m) == 0 .or. square_dist_to_cell_center < closest_particle_distance(i,j,l,m)) then
+         closest_particle(i,j,l,m) = k_part
+         closest_particle_distance(i,j,l,m) = square_dist_to_cell_center
+      end if
+
+  end subroutine update_closest_particle_arrays
 
 end module sll_m_particle_group_2d2v_lbf
