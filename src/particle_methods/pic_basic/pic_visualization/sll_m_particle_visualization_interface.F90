@@ -167,6 +167,8 @@ contains
       close(file_id)
     end if
 
+    ! todo: avoid gnuplot triggering an error if iplot <= 0
+
     call sll_o_gnuplot_2d(  &
         particle_group%lbf_grid%eta1_min, &
         particle_group%lbf_grid%eta1_max, &
