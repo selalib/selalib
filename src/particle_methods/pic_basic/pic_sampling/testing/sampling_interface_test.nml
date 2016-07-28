@@ -1,0 +1,7 @@
+&cossum_onegaussian
+    kx = 0.5 0.0
+    alpha = 0.1
+  	v_thermal = 1.0 1.0
+	  v_mean = 0.0 0.0
+/
+
