@@ -62,13 +62,13 @@ intel-impi:
   tags:
     - intel
     
-ubuntu-openmpi:
-  tags:
-    - ubuntu
-    - openmpi
-  stage: build
-  script: 
-    - "scripts/selalib-ci.sh"
-  only:
-    - develop
+#ubuntu-openmpi:
+#  tags:
+#    - ubuntu
+#    - openmpi
+#  stage: build
+#  script: 
+#    - "scripts/selalib-ci.sh"
+#  only:
+#    - develop
   
