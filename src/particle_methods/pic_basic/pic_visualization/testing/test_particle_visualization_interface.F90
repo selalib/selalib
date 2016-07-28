@@ -69,6 +69,9 @@ program test_particle_visualization_interface
   sll_int32 :: io_stat
   logical    :: fail
 
+  ! Note: the initialization and sampling of the lbf particle group here is copied from the test test_particle_sampling_interface
+  ! in the pic_sampling library
+
   charge = -1.0_f64
   mass = 1.0_f64
 
@@ -128,8 +131,7 @@ program test_particle_visualization_interface
       distribution_params = distribution_params &
   )
 
-
-  ! now testing the visualization interface
+  ! ok now we test the visualization interface
   plot_np_x  = 10
   plot_np_vx = 10
   slice_y  = 0.0_f64
