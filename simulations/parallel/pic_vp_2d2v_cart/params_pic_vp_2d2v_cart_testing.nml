@@ -13,7 +13,7 @@
         x2_max = 12.566370614359172
 /
 
-&cossum_onegaussian
+&cos_onegaussian
         kx = 0.5 0.0
         alpha = 0.1
 	v_thermal = 1.0 1.0
