@@ -135,7 +135,7 @@ contains
     )
     reconstruct_f_on_last_node(1) = .true.
     reconstruct_f_on_last_node(2) = .false.
-    reconstruct_f_on_last_node(1) = .true.
+    reconstruct_f_on_last_node(3) = .true.
     reconstruct_f_on_last_node(4) = .false.
 
     dummy_total_charge = 0.0_f64
