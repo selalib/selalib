@@ -37,30 +37,30 @@ module sll_m_particle_sampling_interface
     sll_t_particle_group_2d2v_lbf
 
   use sll_m_initial_distribution, only : &
-       sll_c_distribution_params, &
+       sll_c_distribution_params
 
   implicit none
 
   public :: &
-    sll_t_conservative_sampling_parameters, &
+    sll_t_conservative_sampling_params, &
     sll_s_sample_particle_group, &
-    sll_s_resample_particle_group, &
+    sll_s_resample_particle_group
 
   private
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
   !> type used to enforce some conservation properties in the sampling -- (there may be more than just one scalar)
-  type sll_t_conservative_sampling_parameters
+  type sll_t_conservative_sampling_params
       sll_real64 :: total_charge      !< total charge to be conserved
     contains
       procedure :: set_total_charge
-  end type sll_t_conservative_sampling_parameters
+  end type sll_t_conservative_sampling_params
 
 
 contains
 
   subroutine set_total_charge(self, target_total_charge)
-    class(sll_t_conservative_sampling_parameters),  intent( inout )         :: self
+    class(sll_t_conservative_sampling_params),  intent( inout )         :: self
     sll_real64,                                     intent( in ), optional  :: target_total_charge
     self%total_charge = target_total_charge
   end subroutine
@@ -72,16 +72,16 @@ contains
           particle_group,   &
           initial_distribution_params, &
           random_sampler, &
-          conservative_sampling_parameters, &
+          conservative_sampling_params, &
           xmin, &
           Lx )
 
-    class(sll_c_particle_group_base),    pointer,  intent( inout )        :: particle_group
-    class(sll_c_distribution_params),              intent( in )           :: initial_distribution_params
-    type(sll_t_particle_sampling),                 intent( in ), optional :: random_sampler   !< must have been initialized before
-    class(sll_t_conservative_sampling_parameters), intent( in ), optional :: conservative_sampling_parameters
-    sll_real64,                                    intent( in ), optional :: xmin(:)  !< lower bound of the domain
-    sll_real64,                                    intent( in ), optional :: Lx(:)    !< length of the domain.
+    class(sll_c_particle_group_base), pointer,  intent( inout )        :: particle_group
+    class(sll_c_distribution_params),           intent( in )           :: initial_distribution_params
+    type(sll_t_particle_sampling),              intent( inout ), optional :: random_sampler   !< must have been initialized before
+    class(sll_t_conservative_sampling_params),  intent( in ), optional :: conservative_sampling_params
+    sll_real64,                                 intent( in ), optional :: xmin(:)  !< lower bound of the domain
+    sll_real64,                                 intent( in ), optional :: Lx(:)    !< length of the domain.
 
     sll_real64 :: target_total_charge
     logical    :: enforce_total_charge
@@ -91,9 +91,9 @@ contains
       type is ( sll_t_particle_group_2d2v_lbf )
 
         !> default sampling strategy for lbf particles is type-bound deterministic, no use of (optional) random_sampler object
-        if( present(conservative_sampling_parameters) )then
+        if( present(conservative_sampling_params) )then
           enforce_total_charge = .true.
-          target_total_charge = conservative_sampling_parameters%total_charge
+          target_total_charge = conservative_sampling_params%total_charge
         else
           enforce_total_charge = .false.    ! no charge conservation
           target_total_charge = 0._f64      ! value does not matter then
@@ -117,19 +117,19 @@ contains
   !> resampling interface
   subroutine sll_s_resample_particle_group( &
           particle_group,   &
-          conservative_sampling_parameters )      !< whether charge must be conserved
+          conservative_sampling_params )      !< whether charge must be conserved
 
     class(sll_c_particle_group_base),    pointer, intent( inout )         :: particle_group
-    class(sll_t_conservative_sampling_parameters), intent( in ), optional :: conservative_sampling_parameters
+    class(sll_t_conservative_sampling_params), intent( in ), optional :: conservative_sampling_params
     sll_real64 :: target_total_charge
     logical    :: enforce_total_charge
 
     select type ( particle_group )
 
     type is ( sll_t_particle_group_2d2v_lbf )
-      if( present(conservative_sampling_parameters) )then
+      if( present(conservative_sampling_params) )then
         enforce_total_charge = .true.
-        target_total_charge = conservative_sampling_parameters%total_charge
+        target_total_charge = conservative_sampling_params%total_charge
       else
         enforce_total_charge = .false.    ! no charge conservation
         target_total_charge = 0._f64      ! value does not matter then
