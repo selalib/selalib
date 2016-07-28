@@ -40,11 +40,6 @@ module sll_m_particle_group_2d2v_lbf
   use sll_m_constants, only: &
     sll_p_pi
 
-  !  use sll_m_initial_density_parameters, only: &
-  !    sll_t_initial_density_parameters, &
-  !    sll_p_landau_density_2d2v, &
-  !    sll_p_hat_density_2d2v
-
   use sll_m_initial_distribution, only: &
      sll_c_distribution_params
 
@@ -71,7 +66,7 @@ module sll_m_particle_group_2d2v_lbf
 
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
-  ! possible values for the parameter reconstruction_set_type in the reconstruction routine
+  !> possible values for the parameter reconstruction_set_type in the reconstruction routine
   sll_int32, parameter :: sll_p_lbf_remapping_grid = 1
   sll_int32, parameter :: sll_p_lbf_given_grid = 2
 
@@ -85,19 +80,17 @@ module sll_m_particle_group_2d2v_lbf
     sll_int32                                                   :: n_particles_vx
     sll_int32                                                   :: n_particles_vy
     sll_real64, allocatable                                     :: particle_array(:,:) !< array of particles
-    sll_real64                                                  :: common_weight      ! not needed for now -> put in base class?
+    sll_real64                                                  :: common_weight      !< not needed for now -> put in base class?
     !> @}
 
     !> @name The lbf grid
     !> @{
-    !   for simplicity, this grid is used to
-    !   - define the backward linearized flow
-    !   - and sample and resample the particles (with one particle at center of each cell)
-    !   - hence its domain is also that of the sparse grid
+    !>   for simplicity, this grid is used to
+    !>   - define the backward linearized flow
+    !>   - and sample and resample the particles (with one particle at center of each cell)
+    !>   - hence its domain is also that of the sparse grid
     type(sll_t_cartesian_mesh_4d), pointer           :: lbf_grid
     logical                                          :: domain_is_periodic(2)
-    !    sll_real64, dimension(4)                         :: remapping_grid_eta_min
-    !    sll_real64, dimension(4)                         :: remapping_grid_eta_max
     !> @}
 
 
@@ -108,11 +101,6 @@ module sll_m_particle_group_2d2v_lbf
     sll_int32,  dimension(4)                         :: sparse_grid_max_levels
     sll_real64, dimension(:), allocatable            :: remapped_f_sparse_grid_coefficients
     sll_real64, dimension(:), allocatable            :: tmp_f_values_on_remapping_sparse_grid   !< used only during remapping
-    !> @}
-
-    !> @name The flow grid (4d cartesian grid where the backward flow is linearized)
-    !> @{
-    !    type(sll_t_cartesian_mesh_4d), pointer  :: lbf_grid
     !> @}
 
   contains
@@ -134,7 +122,7 @@ module sll_m_particle_group_2d2v_lbf
     procedure :: set_common_weight  => set_common_weight_2d2v_lbf   !> Set the common weight for the particles
     !> @}
 
-    ! Initializer
+    !> Initializer and destructor
     procedure :: init => initialize_particle_group_2d2v_lbf   !> Initialization function
     procedure :: free => delete_particle_group_2d2v_lbf       !> Destructor
 
@@ -143,28 +131,29 @@ module sll_m_particle_group_2d2v_lbf
     !    procedure :: write_hat_density_on_remapping_grid        !> this evaluates an analytic f0
     !    procedure :: write_landau_density_on_remapping_grid     !> this evaluates an analytic f0
     !
-    procedure :: write_known_density_on_remapping_grid     !> this evaluates some known distribution
-    procedure :: reset_particles_positions
-    procedure :: reset_particles_weights_with_direct_interpolation
-    procedure :: reconstruct_f_lbf
-    procedure :: reconstruct_f_lbf_on_remapping_grid
-    procedure :: reconstruct_f_lbf_on_given_grid
+    procedure, private :: write_known_density_on_remapping_grid     !> this evaluates some known distribution
+    procedure, private :: reset_particles_positions
+    procedure, private :: reset_particles_weights_with_direct_interpolation
+    procedure, private :: reconstruct_f_lbf
+    procedure, private :: reconstruct_f_lbf_on_remapping_grid
+    procedure, private :: reconstruct_f_lbf_on_given_grid
+    procedure :: sample
     procedure :: resample
     !> @}
 
-    procedure :: interpolate_value_of_remapped_f
-    procedure :: get_ltp_deformation_matrix              !> FD approx of local bwd flow Jacobian matrix
-    procedure :: get_neighbor_index
+    procedure, private :: interpolate_value_of_remapped_f
+    procedure, private :: get_ltp_deformation_matrix              !> FD approx of local bwd flow Jacobian matrix
+    procedure, private :: get_neighbor_index
 
   end type sll_t_particle_group_2d2v_lbf
 
 
 contains
 
-  ! Getters -------------------------------------------------------------------------------------------------------------------
+  !> Getters -------------------------------------------------------------------------------------------------------------------
 
   !----------------------------------------------------------------------------------------------------------------------------
-  ! Get the physical coordinates of a particle
+  !> Get the physical coordinates of a particle
   pure function get_x_2d2v_lbf( self, i ) result( r )
     class( sll_t_particle_group_2d2v_lbf ), intent( in ) :: self  !< particle group
     sll_int32                             , intent( in ) :: i     !< particle index
@@ -176,7 +165,7 @@ contains
   end function get_x_2d2v_lbf
 
   !----------------------------------------------------------------------------------------------------------------------------
-  ! Get the velocity of a particle
+  !> Get the velocity of a particle
   pure function get_v_2d2v_lbf( self, i ) result( r )
     class( sll_t_particle_group_2d2v_lbf ), intent( in ) :: self  !< particle group
     sll_int32                             , intent( in ) :: i     !< particle index
@@ -234,7 +223,7 @@ contains
 
   end function get_weights_2d2v_lbf
 
-  ! Setters -------------------------------------------------------------------------------------------------------------------
+  !> Setters -------------------------------------------------------------------------------------------------------------------
 
   !----------------------------------------------------------------------!
   !> Set the position of a particle
@@ -280,7 +269,7 @@ contains
   end subroutine set_common_weight_2d2v_lbf
 
 
-  ! Initializer ----------------------------------------------------------------------------------------------------------------
+  !> Initializer ---------------------------------------------------------------------------------------------------------------
   !> Initialize particle group
   subroutine initialize_particle_group_2d2v_lbf  (  &
     self,            &
@@ -328,8 +317,8 @@ contains
     self%n_particles_vx = n_particles_vx
     self%n_particles_vy = n_particles_vy
     self%n_particles = n_particles_x * n_particles_y * n_particles_vx * n_particles_vy
-    self%n_total_particles = self%n_particles   ! sequential runs for now
-    self%n_weights = n_weights    ! one weight per particle for now
+    self%n_total_particles = self%n_particles   !< sequential runs for now
+    self%n_weights = n_weights    !< one weight per particle for now
 
     !> create the species object for this particle group
     allocate(self%species, stat=ierr)
@@ -365,21 +354,21 @@ contains
                   self%sparse_grid_max_levels,   &
                   self%remapped_f_interpolation_degree,   &
                   self%remapped_f_interpolation_degree+1,    &
-                  0,    &                                         ! interpolation_type for the sparse grid (splines or Lagrange)
+                  0,    &                                     !< interpolation_type for the sparse grid (splines or Lagrange)
                   remapping_grid_eta_min,    &
                   remapping_grid_eta_max    &
                   )
 
-    ! C.  array of sparse grid coefficients for remapped_f
+    !> C.  array of sparse grid coefficients for remapped_f
     SLL_ALLOCATE( self%remapped_f_sparse_grid_coefficients(self%sparse_grid_interpolator%size_basis), ierr )
     self%remapped_f_sparse_grid_coefficients = 0.0_f64
 
-    ! this array is to store temporary values of remapped f, while those of previously remapped f still needed
+    !> this array is to store temporary values of remapped f, while those of previously remapped f still needed
     SLL_ALLOCATE( self%tmp_f_values_on_remapping_sparse_grid(self%sparse_grid_interpolator%size_basis), ierr)
 
   end subroutine initialize_particle_group_2d2v_lbf
 
-  !----------------------------------------------------------------------!
+  !-----------------------------------------------------------------------------------------------------------------------------
   !> Constructor for abstract type
   subroutine sll_s_new_particle_group_2d2v_lbf_ptr(&
       particle_group, &
@@ -437,7 +426,7 @@ contains
 
   end subroutine sll_s_new_particle_group_2d2v_lbf_ptr
 
-  ! Destructor -----------------------------------------------------------------------------------------------------------------
+  !> Destructor ----------------------------------------------------------------------------------------------------------------
   subroutine delete_particle_group_2d2v_lbf( self )
     class( sll_t_particle_group_2d2v_lbf ), intent( inout ) :: self  !< particle group
 
@@ -447,16 +436,41 @@ contains
 
   end subroutine
 
+  !> ---------------------------------------------------------------------------------------------------------------------------
+  !> Below this line are functions specific to the lbf particles with resampling -----------------------------------------------
 
-  !> sample and resample ------------------------------------------------------------------------------------------------------
-  !>  compute new interpolation coefficients so that the remapped_f is an approximation of the target density f
-  !> and
-  !>  (re)set the particles on the initial grid
+
+
+  !> sample (layer for resample procedure) -------------------------------------------------------------------------------------
+  !> this routine essentially does 2 things:
+  !>  * locates the particles on an initial cartesian grid,
+  !>  * computes interpolation (sparse grid) coefficients to approximate the initial distribution
+  subroutine sample( self, target_total_charge, enforce_total_charge, init_f_params, rand_seed, rank, world_size )
+    class(sll_t_particle_group_2d2v_lbf),   intent( inout ) :: self
+    sll_real64,                       intent( in )    :: target_total_charge
+    logical,                          intent( in )    :: enforce_total_charge
+    class(sll_c_distribution_params), intent( in )    :: init_f_params               !< parameters of the initial distribution
+    sll_int32, dimension(:)         , intent( in ), optional :: rand_seed
+    sll_int32                       , intent( in ), optional :: rank, world_size
+
+    if( present(rand_seed) )then
+      SLL_ASSERT( present( rank ) )
+      SLL_ASSERT( present( world_size ) )
+      call self%resample( target_total_charge, enforce_total_charge, init_f_params, rand_seed, rank, world_size )
+    else
+      call self%resample( target_total_charge, enforce_total_charge, init_f_params )
+    end if
+  end subroutine
+
+  !> resample (and sample) -----------------------------------------------------------------------------------------------------
+  !> this routine essentially does 2 things:
+  !>  * (re)set the particles on the initial grid
+  !>  * computes new interpolation (sparse grid) coefficients so that the remapped_f is an approximation of the target density f
+  !>    -- note: if not initial step (true remap), the evaluation of the transported f relies on the lbf method
   subroutine resample( self, target_total_charge, enforce_total_charge, init_f_params, rand_seed, rank, world_size )
     class(sll_t_particle_group_2d2v_lbf),   intent( inout ) :: self
     sll_real64,                       intent( in )    :: target_total_charge
     logical,                          intent( in )    :: enforce_total_charge
-    ! class(sll_t_initial_density_parameters),  intent( in ), optional  :: init_f_params   ! < use for initial sampling
     class(sll_c_distribution_params), intent( in ), optional  :: init_f_params   ! < use for initial sampling
     sll_int32, dimension(:)         , intent( in ), optional :: rand_seed
     sll_int32                       , intent( in ), optional :: rank, world_size
@@ -470,36 +484,11 @@ contains
 
     !>    - A.1  write the nodal values of f on the arrays of interpolation coefs
     if( initial_step )then
-      ! write initial density f0 on remapping grid
+      !> write initial density f0 on remapping grid
       call self%write_initial_density_on_remapping_grid(init_f_params)
 
-      !  if( init_f_params%f0_type == sll_p_landau_density_2d2v )then
-      !
-      !    ! then init_f_params%landau_param = [alpha, kx_landau]
-      !    call self%write_landau_density_on_remapping_grid( &
-      !        init_f_params%thermal_velocity(1), &
-      !        init_f_params%landau_param(1), &
-      !        init_f_params%landau_param(2) )
-      !    !todo: check why not all parameters from init_f_params are used. Check consistency with katharina's f0
-      !
-      !  else if( init_f_params%f0_type == sll_p_hat_density_2d2v )then
-      !    call self%write_hat_density_on_remapping_grid(                              &
-      !        init_f_params%hat_f0_x0,  &
-      !        init_f_params%hat_f0_y0,  &
-      !        init_f_params%hat_f0_vx0, &
-      !        init_f_params%hat_f0_vy0, &
-      !        init_f_params%hat_f0_r_x, &
-      !        init_f_params%hat_f0_r_y, &
-      !        init_f_params%hat_f0_r_vx,  &
-      !        init_f_params%hat_f0_r_vy,  &
-      !        init_f_params%hat_f0_basis_height,  &
-      !        init_f_params%hat_f0_shift )
-      !  else
-      !    SLL_ERROR( "particle_group_2d2v_lbf%resample", "wrong value for initial_density_identifier" )
-      !  end if
-
     else
-      ! reconstruct transported density fn on remapping grid with the lbf method
+      !> reconstruct transported density fn on remapping grid with the lbf method
       call self%reconstruct_f_lbf_on_remapping_grid()
     end if
 
@@ -510,17 +499,19 @@ contains
     !> B. reset the particles on the cartesian grid
     print *, "particle_group_2d2v_lbf%resample -- step B (deterministic resampling of particles using the remapped density)"
     call self%reset_particles_positions
-    ! since the remapping tool has been reset, computing the weights can be done with straightforward interpolation (flow = Id)
+    !> since the remapping tool has been reset, computing the weights can be done with straightforward interpolation (flow = Id)
     call self%reset_particles_weights_with_direct_interpolation( target_total_charge, enforce_total_charge )
 
-    ! to prevent warnings
+    !> not needed for now, but prevents warnings
     if(present(rank))then
       SLL_ASSERT(present(world_size))
       SLL_ASSERT(present(rand_seed))
     end if
+
   end subroutine resample
 
-
+  !> write_known_density_on_remapping_grid -------------------------------------------------------------------------------------
+  !> this routine writes a given distribution on the interpolation (sparse grid) nodes to further approximate it
   subroutine write_known_density_on_remapping_grid(    &
       self,        &
       distribution_params       &
@@ -537,91 +528,18 @@ contains
     self%tmp_f_values_on_remapping_sparse_grid = 0.0_f64
 
     do j=1, self%sparse_grid_interpolator%size_basis
-        x_j = self%sparse_grid_interpolator%hierarchy(j)%coordinate(1:2)  ! here the 2d position
+        x_j = self%sparse_grid_interpolator%hierarchy(j)%coordinate(1:2)  !< here the 2d position
         v_j = self%sparse_grid_interpolator%hierarchy(j)%coordinate(3:4)
-        self%tmp_f_values_on_remapping_sparse_grid(j) = distribution_params%eval( x_j, v_j )
+        self%tmp_f_values_on_remapping_sparse_grid(j) = distribution_params%eval_xv_density( x_j, v_j )
     end do
 
   end subroutine write_known_density_on_remapping_grid
 
-  !  subroutine write_landau_density_on_remapping_grid(    &
-  !      self,                              &
-  !      thermal_speed, alpha, kx_landau       &
-  !      )
-  !
-  !    class(sll_t_particle_group_2d2v_lbf), intent(inout)    :: self
-  !    sll_real64, intent(in)                           :: thermal_speed, alpha, kx_landau
-  !
-  !    sll_int32 :: j
-  !    sll_real64 :: x_j
-  !    sll_real64 :: vx_j
-  !    sll_real64 :: vy_j
-  !
-  !    sll_real64 :: f_x
-  !    sll_real64 :: f_vx
-  !    sll_real64 :: f_vy
-  !    sll_real64 :: one_over_thermal_velocity
-  !    sll_real64 :: one_over_two_pi
-  !
-  !    one_over_thermal_velocity = 1./thermal_speed
-  !    one_over_two_pi = 1./(2*sll_p_pi)
-  !
-  !    SLL_ASSERT( size(self%tmp_f_values_on_remapping_sparse_grid,1) == self%sparse_grid_interpolator%size_basis )
-  !    self%tmp_f_values_on_remapping_sparse_grid = 0.0_f64
-  !
-  !    do j=1, self%sparse_grid_interpolator%size_basis
-  !        x_j  = self%sparse_grid_interpolator%hierarchy(j)%coordinate(1)
-  !        vx_j = self%sparse_grid_interpolator%hierarchy(j)%coordinate(3)
-  !        vy_j = self%sparse_grid_interpolator%hierarchy(j)%coordinate(4)
-  !
-  !        f_x = 1._f64 + alpha * cos(kx_landau * x_j)
-  !        f_vx = one_over_thermal_velocity * exp(-0.5*(vx_j * one_over_thermal_velocity)**2)
-  !        f_vy = one_over_thermal_velocity * exp(-0.5*(vy_j * one_over_thermal_velocity)**2)
-  !
-  !        self%tmp_f_values_on_remapping_sparse_grid(j) = one_over_two_pi * f_x * f_vx * f_vy
-  !    end do
-  !
-  !  end subroutine write_landau_density_on_remapping_grid
 
-
-  !  subroutine write_hat_density_on_remapping_grid ( &
-  !        self,        &
-  !        x0, y0, vx0, vy0,       &
-  !        r_x, r_y, r_vx, r_vy,   &
-  !        basis_height, shift &
-  !      )
-  !
-  !    class(sll_t_particle_group_2d2v_lbf), intent(inout)  :: self
-  !    sll_real64, intent(in)                            :: x0, y0, vx0, vy0
-  !    sll_real64, intent(in)                            :: r_x, r_y, r_vx, r_vy
-  !    sll_real64, intent(in)                            :: basis_height, shift
-  !
-  !    sll_int32 :: j
-  !    sll_real64 :: x_j
-  !    sll_real64 :: y_j
-  !    sll_real64 :: vx_j
-  !    sll_real64 :: vy_j
-  !
-  !    SLL_ASSERT( size(self%tmp_f_values_on_remapping_sparse_grid,1) == self%sparse_grid_interpolator%size_basis )
-  !    self%tmp_f_values_on_remapping_sparse_grid = 0.0_f64
-  !
-  !    do j=1, self%sparse_grid_interpolator%size_basis
-  !      x_j  = self%sparse_grid_interpolator%hierarchy(j)%coordinate(1)
-  !      y_j  = self%sparse_grid_interpolator%hierarchy(j)%coordinate(2)
-  !      vx_j = self%sparse_grid_interpolator%hierarchy(j)%coordinate(3)
-  !      vy_j = self%sparse_grid_interpolator%hierarchy(j)%coordinate(4)
-  !
-  !      ! here we store a nodal value but later this array will indeed store sparse grid coefficients
-  !      self%tmp_f_values_on_remapping_sparse_grid(j) = sll_f_eval_hat_function(x0,y0,vx0,vy0,r_x,r_y,r_vx,r_vy,      &
-  !                                                           basis_height, shift,                                     &
-  !                                                           x_j, y_j, vx_j, vy_j)
-  !    end do
-  !
-  !  end subroutine write_hat_density_on_remapping_grid
-
+  !> reset_particles_positions -------------------------------------------------------------------------------------------------
   !> reset the particles on the initial (cartesian) grid
-  !> -- for simplicity we use the flow grid here
-  !> -- particles will be located at the center of each cell
+  !> -- we use the (multi-purpose) lbf grid
+  !> -- NOTE: particles will be located at the center of each cell (to avoid a particular treatment of periodic domains)
   subroutine reset_particles_positions( self )
     class(sll_t_particle_group_2d2v_lbf),intent(inout) :: self
 
@@ -697,6 +615,7 @@ contains
 
   end subroutine reset_particles_positions
 
+  !> get_neighbor_index --------------------------------------------------------------------------------------------------------
   !> returns the index of the specified particle neighbor (defines the particle connectivity)
   function get_neighbor_index( self, k, dim, dir ) result(k_ngb)
     class(sll_t_particle_group_2d2v_lbf),intent(inout) :: self
@@ -804,9 +723,9 @@ contains
 
   end function
 
-  !----------------------------------------------------------------------------------
-  ! do not change the position of the deposition particles, but compute (and set)
-  ! their weights using a direct interpolation with the remapping tool
+  !> reset_particles_weights_with_direct_interpolation -------------------------------------------------------------------------
+  !> compute (and set) the particle weights using a direct interpolation (here, sparse grid)
+  !> -- does not change the position of the deposition particles
   subroutine reset_particles_weights_with_direct_interpolation(  &
       self,                             &
       target_total_charge,              &
@@ -823,7 +742,7 @@ contains
     sll_real64    :: total_computed_charge
     sll_real64    :: charge_correction_factor
 
-    ! set the particle group common_weight to 1 (will be a factor of each particle weight)
+    !> set the particle group common_weight to 1 (will be a factor of each particle weight)
     call self%set_common_weight(1.0_f64)
 
     phase_space_volume =    (self%lbf_grid%eta4_max - self%lbf_grid%eta4_min)    &
@@ -835,7 +754,7 @@ contains
     do i_part = 1, self%n_particles
       eta = self%particle_array(1:4, i_part)
       point_density = particle_density_factor * self%interpolate_value_of_remapped_f(eta)
-      self%particle_array(5, i_part) = point_density   ! 5 is the first weight index
+      self%particle_array(5, i_part) = point_density   !> 5 is the first weight index
       total_computed_density = total_computed_density + point_density
     end do
 
@@ -853,15 +772,16 @@ contains
 
         ! todo: try with    self%particle_array(5, :) = self%particle_array(5, :) * charge_correction_factor
         do i_part = 1, self%n_particles
-          self%particle_array(5, i_part) = self%particle_array(5, i_part) * charge_correction_factor ! 5 is the first weight index
+          self%particle_array(5, i_part) = self%particle_array(5, i_part) * charge_correction_factor !> 5 is the first weight index
         end do
       end if
     end if
 
   end subroutine reset_particles_weights_with_direct_interpolation
 
-  !> separate interpolation routine for the remapped f
-  !>  -- assuming only sparse grid discretization of the remapped f
+  !> interpolate_value_of_remapped_f -------------------------------------------------------------------------------------------
+  !> computes the value of the (last) remapped density f using the interpolation tool
+  !>  -- for now, assuming only sparse grid interpolation
   function interpolate_value_of_remapped_f ( self, eta ) result(val)
     class(sll_t_particle_group_2d2v_lbf), intent(inout)  :: self
     sll_real64, dimension(4),       intent(in)  :: eta           !< Position where to interpolate
@@ -871,7 +791,7 @@ contains
 
   end function
 
-
+  !> macro for the lbf approximation of a transported density (reconstruct_f_lbf) below ----------------------------------------
 #define UPDATE_CLOSEST_PARTICLE_ARRAYS_USING_NEIGHBOR_CELLS(djx,djy,djvx,djvy)                                            \
     do;                                                                                                                 \
         k_neighbor = closest_particle(j_x+(djx), j_y+(djy), j_vx+(djvx), j_vy+(djvy));                                    \
@@ -904,7 +824,7 @@ contains
   !> reconstruct_f_lbf  ----------------------------------------------------------------------------------------------------------
   !> reconstruct point values of the transported f using a bsl approximation based on linearized backward flows (lbf)
   !> values are reconstructed on different grids, depending on reconstruction_set_type:
-  !>  - sll_p_lbf_remapping_grid: a sparse grid for the moment
+  !>  - sll_p_lbf_remapping_grid: the remapping grid (for now, a sparse grid)
   !>  - sll_p_lbf_given_grid: a 4d cartesian grid
 
   subroutine reconstruct_f_lbf( &
@@ -927,21 +847,19 @@ contains
     sll_real64 :: deposited_charge
     sll_real64 :: charge_correction_factor
 
-    !    logical :: reconstruct_f_on_g_grid
-
-    ! index of particle closest to the center of each flow cell
+    !> index of particle closest to the center of each flow cell
     sll_int32,          dimension(:,:,:,:), allocatable     :: closest_particle
     sll_real64,         dimension(:,:,:,:), allocatable     :: closest_particle_distance
 
-    ! array of integer linked lists (declared below) useful when remapping on sparse grids
-    ! (can also simplify the code when remapping on cartesian grids which do not match with the flow cells? but maybe too costly)
+    !> array of integer linked lists (declared below) useful when remapping on sparse grids
+    !> (can also simplify the code when remapping on cartesian grids which do not match with the flow cells? but maybe too costly)
     type(sll_t_int_list_element_ptr), dimension(:,:,:,:), allocatable     :: nodes_in_flow_cell
     type(sll_t_int_list_element),     pointer                             :: new_int_list_element, head
 
     sll_int32  :: k ! particle index
     sll_int32  :: k_neighbor
-    sll_int32  :: i_x, i_y, i_vx, i_vy  ! grid node indices
-    sll_int32  :: j_x, j_y, j_vx, j_vy  ! flow cell indices
+    sll_int32  :: i_x, i_y, i_vx, i_vy  !< grid node indices
+    sll_int32  :: j_x, j_y, j_vx, j_vy  !< flow cell indices
     sll_int32  :: m_x, m_y, m_vx, m_vy
     sll_int32  :: j_tmp
 
@@ -958,7 +876,7 @@ contains
     sll_int32  :: node_index
     sll_int32  :: k_particle_closest_to_first_corner
 
-    ! <<g>> cartesian grid pointer to the remapping grid
+    !> <<g>> cartesian grid pointer to the remapping grid
     type(sll_t_cartesian_mesh_4d),pointer :: g
 
     sll_int32  :: g_num_points_x
@@ -976,7 +894,7 @@ contains
     sll_real64 :: h_g_grid_vx
     sll_real64 :: h_g_grid_vy
 
-    ! the flow cells are the cells where the flow will be linearized
+    !> the flow cells are the cells where the flow will be linearized
     sll_real64 :: h_flow_grid_x
     sll_real64 :: h_flow_grid_y
     sll_real64 :: h_flow_grid_vx
@@ -1012,16 +930,16 @@ contains
     sll_real64 :: mesh_period_x
     sll_real64 :: mesh_period_y
 
-    ! results from [[get_ltp_deformation_matrix]]
-    sll_real64 :: d11,d12,d13,d14 ! coefs of matrix D (backward Jacobian)
+    !> results from [[get_ltp_deformation_matrix]]
+    sll_real64 :: d11,d12,d13,d14 !< coefs of matrix D (backward Jacobian)
     sll_real64 :: d21,d22,d23,d24
     sll_real64 :: d31,d32,d33,d34
     sll_real64 :: d41,d42,d43,d44
 
     sll_real64, dimension(3)  :: coords
-    sll_real64, dimension(4)  :: eta        !> coordinates in the logical (cartesian) 4d space
+    sll_real64, dimension(4)  :: eta        !< coordinates in the logical (cartesian) 4d space
 
-    ! coordinates of particle k at time n and time 0
+    !> coordinates of particle k at time n and time 0
     sll_real64 :: x_k,y_k,vx_k,vy_k
     sll_real64 :: x_k_t0,y_k_t0,vx_k_t0,vy_k_t0
 
@@ -1035,13 +953,13 @@ contains
     sll_int32  :: nodes_number
     sll_real64 :: reconstructed_f_value
 
-    ! coordinates of a reconstruction point at time 0, absolute
+    !> coordinates of a reconstruction point at time 0, absolute
     sll_real64 :: x_t0
     sll_real64 :: y_t0
     sll_real64 :: vx_t0
     sll_real64 :: vy_t0
 
-    ! coordinates of a reconstruction point at time 0, relative to the nearby reference particle (= closest to cell center)
+    !> coordinates of a reconstruction point at time 0, relative to the nearby reference particle (= closest to cell center)
     sll_real64 :: x_t0_to_xk_t0
     sll_real64 :: y_t0_to_yk_t0
     sll_real64 :: vx_t0_to_vxk_t0
@@ -1049,8 +967,7 @@ contains
 
     sll_int32  :: ierr
 
-
-    ! getting the parameters of the flow grid (where the bwd flow is linearized)
+    !> getting the parameters of the flow grid (where the bwd flow is linearized)
     flow_grid_x_min    = self%lbf_grid%eta1_min
     flow_grid_y_min    = self%lbf_grid%eta2_min
     flow_grid_vx_min   = self%lbf_grid%eta3_min
@@ -1066,8 +983,8 @@ contains
     flow_grid_num_cells_vx = self%lbf_grid%num_cells3
     flow_grid_num_cells_vy = self%lbf_grid%num_cells4
 
-    ! reconstruction will be done through local linearization of the bwd flow in flow cells.
-    ! these flow cells are defined by the lbf_grid but we may not need all of them (if reconstructing f on a given grid, see below)
+    !> reconstruction will be done through local linearization of the bwd flow in flow cells.
+    !> these flow cells are defined by the lbf_grid but we may not need all of them (if reconstructing f on a given grid, see below)
     flow_grid_j_x_min = 1
     flow_grid_j_x_max = flow_grid_num_cells_x
     flow_grid_j_y_min = 1
@@ -1082,7 +999,7 @@ contains
     !> A.  preparation of the point sets where f will be reconstructed, depending on the cases
     if( reconstruction_set_type == sll_p_lbf_remapping_grid )then
 
-      ! => prepare the array of linked lists that will store the node indices contained in the flow cells (one list per cell)
+      !> => prepare the array of linked lists that will store the node indices contained in the flow cells (one list per cell)
       allocate(nodes_in_flow_cell(flow_grid_num_cells_x,   &
                                   flow_grid_num_cells_y,   &
                                   flow_grid_num_cells_vx,  &
@@ -1104,28 +1021,28 @@ contains
       SLL_ASSERT( size(self%tmp_f_values_on_remapping_sparse_grid,1) == nodes_number )
       self%tmp_f_values_on_remapping_sparse_grid = 0.0_f64
 
-      ! then loop to store the sparse grid node indices in linked lists corresponding to the flow cells that contain them
+      !> then loop to store the sparse grid node indices in linked lists corresponding to the flow cells that contain them
       do node_index = 1, nodes_number
 
-        ! get node coordinates:
+        !> get node coordinates:
         x = self%sparse_grid_interpolator%hierarchy(node_index)%coordinate(1)
         y = self%sparse_grid_interpolator%hierarchy(node_index)%coordinate(2)
         vx = self%sparse_grid_interpolator%hierarchy(node_index)%coordinate(3)
         vy = self%sparse_grid_interpolator%hierarchy(node_index)%coordinate(4)
 
-        ! find the index (j_x,j_y,j_vx,j_vy) of the flow cell containing this node (same piece of code as below)
+        !> find the index (j_x,j_y,j_vx,j_vy) of the flow cell containing this node (same piece of code as below)
         call sll_s_get_1d_cell_containing_point(j_x,  x,  flow_grid_x_min,  h_flow_grid_x )
         call sll_s_get_1d_cell_containing_point(j_y,  y,  flow_grid_y_min,  h_flow_grid_y )
         call sll_s_get_1d_cell_containing_point(j_vx, vx, flow_grid_vx_min, h_flow_grid_vx)
         call sll_s_get_1d_cell_containing_point(j_vy, vy, flow_grid_vy_min, h_flow_grid_vy)
 
-        ! discard if flow cell is off-bounds
+        !> discard if flow cell is off-bounds
         if(  j_x  >= flow_grid_j_x_min  .and. j_x  <= flow_grid_j_x_max  .and. &
              j_y  >= flow_grid_j_y_min  .and. j_y  <= flow_grid_j_y_max  .and. &
              j_vx >= flow_grid_j_vx_min .and. j_vx <= flow_grid_j_vx_max .and. &
              j_vy >= flow_grid_j_vy_min .and. j_vy <= flow_grid_j_vy_max  )then
 
-          ! increment the proper linked list
+          !> increment the proper linked list
           SLL_ALLOCATE( new_int_list_element, ierr )
           new_int_list_element%value = node_index
           head => nodes_in_flow_cell(j_x,j_y,j_vx,j_vy)%pointed_element
@@ -1143,10 +1060,10 @@ contains
     else
       SLL_ASSERT( reconstruction_set_type == sll_p_lbf_given_grid )
 
-      ! then use the given 4d grid and write values in given array
+      !> then use the given 4d grid and write values in given array
       g => given_grid_4d
 
-      ! if the given grid is strictly contained in the lbf grid, we can reduce the number of flow cells where f is reconstructed
+      !> if the given grid is strictly contained in the lbf grid, we can reduce the number of flow cells where f is reconstructed
       call sll_s_get_1d_cell_containing_point( j_tmp, g%eta1_min, flow_grid_x_min, h_flow_grid_x )
       flow_grid_j_x_min = max(flow_grid_j_x_min, j_tmp)
       call sll_s_get_1d_cell_containing_point( j_tmp, g%eta1_max, flow_grid_x_min, h_flow_grid_x )
@@ -1215,7 +1132,7 @@ contains
 
     do k=1, self%n_particles
 
-      ! find absolute (x_k,y_k,vx_k,vy_k) coordinates for k-th particle.
+      !> find absolute (x_k,y_k,vx_k,vy_k) coordinates for k-th particle.
       coords = self%get_x(k)
       x_k = coords(1)
       y_k = coords(2)
@@ -1223,13 +1140,13 @@ contains
       vx_k = coords(1)
       vy_k = coords(2)
 
-      ! which flow cell is this particle in?
+      !> which flow cell is this particle in?
       call sll_s_get_1d_cell_containing_point(j_x, x_k,  flow_grid_x_min,  h_flow_grid_x )
       call sll_s_get_1d_cell_containing_point(j_y, y_k,  flow_grid_y_min,  h_flow_grid_y )
       call sll_s_get_1d_cell_containing_point(j_vx, vx_k, flow_grid_vx_min, h_flow_grid_vx)
       call sll_s_get_1d_cell_containing_point(j_vy, vy_k, flow_grid_vy_min, h_flow_grid_vy)
 
-      ! discard this particle if off-bounds
+      !> discard this particle if off-bounds
       if(  j_x  >= flow_grid_j_x_min  .and. j_x  <= flow_grid_j_x_max  .and. &
            j_y  >= flow_grid_j_y_min  .and. j_y  <= flow_grid_j_y_max  .and. &
            j_vx >= flow_grid_j_vx_min .and. j_vx <= flow_grid_j_vx_max .and. &
@@ -1276,14 +1193,14 @@ contains
     !>   - C.4 write the resulting f value on the proper place
 
     if(self%domain_is_periodic(1)) then
-      ! here the domain corresponds to the Poisson mesh
+      !> here the domain corresponds to the Poisson mesh
       mesh_period_x = self%lbf_grid%eta1_max - self%lbf_grid%eta1_min
     else
       mesh_period_x = 0.0_f64
     end if
 
     if(self%domain_is_periodic(2)) then
-      ! here the domain corresponds to the Poisson mesh
+      !> here the domain corresponds to the Poisson mesh
       mesh_period_y = self%lbf_grid%eta2_max - self%lbf_grid%eta2_min
     else
       mesh_period_y = 0.0_f64
@@ -1294,7 +1211,7 @@ contains
         do j_vx = flow_grid_j_vx_min, flow_grid_j_vx_max
           do j_vy = flow_grid_j_vy_min, flow_grid_j_vy_max
 
-            ! Find the particle which is closest to the cell center -- and if we do not have it yet, look on the neighboring cells
+            !> Find the particle which is closest to the cell center -- and if we do not have it yet, look on the neighboring cells
             k = closest_particle(j_x,j_y,j_vx,j_vy)
 
             if(k == 0) then
@@ -1332,7 +1249,7 @@ contains
 
             !>   - C.1 linearize the flow using the position of the particles
 
-            ! In this flow cell we will use the k-th backward flow, requires the deformation matrix of the k-th particle
+            !> In this flow cell we will use the k-th backward flow, requires the deformation matrix of the k-th particle
 
             call self%get_ltp_deformation_matrix (       &
                  k,                                         &
@@ -1349,14 +1266,14 @@ contains
                  d41,d42,d43,d44                            &
                  )
 
-            ! Find position of particle k at time 0
+            !> Find position of particle k at time 0
             call sll_s_convert_1d_index_to_4d(  &
               m_x,m_y,m_vx,m_vy, &
               k, &
               self%n_particles_x, self%n_particles_y,  &
               self%n_particles_vx, self%n_particles_vy  &
             )
-            ! initially the particles are on the center of the lbf cells (also the flow grid)
+            !> initially the particles are on the center of the lbf cells (also the flow grid)
             x_k_t0  = flow_grid_x_min  + (m_x-0.5)  * h_flow_grid_x
             y_k_t0  = flow_grid_y_min  + (m_y-0.5)  * h_flow_grid_y
             vx_k_t0 = flow_grid_vx_min + (m_vx-0.5) * h_flow_grid_vx
@@ -1379,13 +1296,13 @@ contains
                 vx = self%sparse_grid_interpolator%hierarchy(node_index)%coordinate(3)
                 vy = self%sparse_grid_interpolator%hierarchy(node_index)%coordinate(4)
 
-                ! node coordinates relative to current particle position
+                !> node coordinates relative to current particle position
                 x_to_xk   = x - x_k
                 y_to_yk   = y - y_k
                 vx_to_vxk = vx - vx_k
                 vy_to_vyk = vy - vy_k
 
-                ! find z_t0 = (x_t0, y_t0, vx_t0, vy_t0), the position of the node at time = 0 using the affine bwd flow
+                !> find z_t0 = (x_t0, y_t0, vx_t0, vy_t0), the position of the node at time = 0 using the affine bwd flow
                 x_t0_to_xk_t0   = d11 * x_to_xk + d12 * y_to_yk + d13 * vx_to_vxk + d14 * vy_to_vyk
                 y_t0_to_yk_t0   = d21 * x_to_xk + d22 * y_to_yk + d23 * vx_to_vxk + d24 * vy_to_vyk
                 vx_t0_to_vxk_t0 = d31 * x_to_xk + d32 * y_to_yk + d33 * vx_to_vxk + d34 * vy_to_vyk
@@ -1396,16 +1313,16 @@ contains
                 vx_t0 = vx_t0_to_vxk_t0 + vx_k_t0
                 vy_t0 = vy_t0_to_vyk_t0 + vy_k_t0
 
-                ! put back z_t0 inside domain (if needed) to enforce periodic boundary conditions
+                !> put back z_t0 inside domain (if needed) to enforce periodic boundary conditions
                 call periodic_correction(self,x_t0,y_t0)
 
-                ! now (x_t0, y_t0, vx_t0, vy_t0) is the (approx) position of the node at time t=0
+                !> now (x_t0, y_t0, vx_t0, vy_t0) is the (approx) position of the node at time t=0
                 eta(1) = x_t0
                 eta(2) = y_t0
                 eta(3) = vx_t0
                 eta(4) = vy_t0
 
-                ! interpolate and store nodal value on ad-hoc array
+                !> interpolate and store nodal value on ad-hoc array
                 reconstructed_f_value = self%interpolate_value_of_remapped_f(eta)
                 self%tmp_f_values_on_remapping_sparse_grid(node_index) = reconstructed_f_value
 
@@ -1419,14 +1336,14 @@ contains
             else
               SLL_ASSERT( reconstruction_set_type == sll_p_lbf_given_grid )
 
-              ! loop over the grid points inside this flow cell:
-              !
-              ! points in the grid are of the form  d(i) = g_grid_d_min + (i-1) * h_g_grid_d,   i = 1, .. g_num_points_d
-              ! (with  d = x, y, vx or vy  and  g_num_points_d = g_num_cells_d  or  g_num_cells_d+1  , depending on the periodicity)
-              ! and this flow cell has the form     [flow_grid_d_min + (j-1) * h_flow_grid_d, flow_grid_d_min + j * h_flow_grid_d[
-              ! so eta_d(i) is in this flow cell if  i_min <= i <= i_max
-              ! where i_min = ceiling( (flow_grid_min - g_grid_d_min + (j-1)*h_flow_grid_d)/h_g_grid_d + 1 )
-              ! and   i_max = ceiling( (flow_grid_min - g_grid_d_min + (j)  *h_flow_grid_d)/h_g_grid_d + 1 ) - 1
+              !> loop over the grid points inside this flow cell:
+              !>
+              !> points in the grid are of the form  d(i) = g_grid_d_min + (i-1) * h_g_grid_d,   i = 1, .. g_num_points_d
+              !> (with  d = x, y, vx or vy  and  g_num_points_d = g_num_cells_d  or  g_num_cells_d+1 , depending on the periodicity)
+              !> and this flow cell has the form     [flow_grid_d_min + (j-1) * h_flow_grid_d, flow_grid_d_min + j * h_flow_grid_d[
+              !> so eta_d(i) is in this flow cell if  i_min <= i <= i_max
+              !> where i_min = ceiling( (flow_grid_min - g_grid_d_min + (j-1)*h_flow_grid_d)/h_g_grid_d + 1 )
+              !> and   i_max = ceiling( (flow_grid_min - g_grid_d_min + (j)  *h_flow_grid_d)/h_g_grid_d + 1 ) - 1
 
               i_min_x  = int(ceiling( (flow_grid_x_min  - g_grid_x_min  + (j_x-1)  * h_flow_grid_x) / h_g_grid_x + 1  ))
               i_min_y  = int(ceiling( (flow_grid_y_min  - g_grid_y_min  + (j_y-1)  * h_flow_grid_y) / h_g_grid_y + 1  ))
@@ -1494,16 +1411,16 @@ contains
                       vx_t0 = vx_t0_to_vxk_t0 + vx_k_t0
                       vy_t0 = vy_t0_to_vyk_t0 + vy_k_t0
 
-                      ! put back z_t0 inside domain (if needed) to enforce periodic boundary conditions
+                      !> put back z_t0 inside domain (if needed) to enforce periodic boundary conditions
                       call periodic_correction(self,x_t0,y_t0)
 
-                      ! now (x_t0, y_t0, vx_t0, vy_t0) is the (approx) position of the node z_i at time t=0
+                      !> now (x_t0, y_t0, vx_t0, vy_t0) is the (approx) position of the node z_i at time t=0
                       eta(1) = x_t0
                       eta(2) = y_t0
                       eta(3) = vx_t0
                       eta(4) = vy_t0
 
-                      ! interpolation here may use sparse grid or splines, depending on the method chosen for self
+                      !> interpolation here may use sparse grid or splines, depending on the method chosen for self
                       reconstructed_f_value = self%interpolate_value_of_remapped_f(eta)
 
                       ! [DEBUG]
@@ -1534,13 +1451,13 @@ contains
                       else
                         print *, "Warning -- 654654535466545434564 -- just reconstructed a Zero value"
                       end if
-                    ! this is the end of the (fourfold) loop on the grid nodes
+                    !> this is the end of the (fourfold) loop on the grid nodes
                     end do
                   end do
                 end do
               end do
             end if
-          ! and this is the end of (fourfold) loop on the flow cells
+          !> and this is the end of (fourfold) loop on the flow cells
           end do
         end do
       end do
@@ -1570,8 +1487,8 @@ contains
 
   end subroutine reconstruct_f_lbf
 
-
-  !> interface function for reconstructing f on the remapping grid
+  !> reconstruct_f_lbf_on_remapping_grid ---------------------------------------------------------------------------------------
+  !> layer for reconstruct_f_lbf, when reconstructing f on the remapping grid
   subroutine reconstruct_f_lbf_on_remapping_grid( self )
     class(sll_t_particle_group_2d2v_lbf),     intent(inout) :: self          !> particle group
     type(sll_t_cartesian_mesh_4d),   pointer  :: void_grid_4d
@@ -1597,7 +1514,8 @@ contains
   end subroutine reconstruct_f_lbf_on_remapping_grid
 
 
-  !> interface function for reconstructing f on a given grid
+  !> reconstruct_f_lbf_on_remapping_grid ---------------------------------------------------------------------------------------
+  !> layer for reconstruct_f_lbf, when reconstructing f on a given grid
   subroutine reconstruct_f_lbf_on_given_grid( &
     self,    &
     given_grid_4d,   &
@@ -1624,29 +1542,29 @@ contains
   end subroutine reconstruct_f_lbf_on_given_grid
 
 
-  ! <<get_ltp_deformation_matrix>>
+  !> get_ltp_deformation_matrix ------------------------------------------------------------------------------------------------
   !> Compute the coefficients of the particle 'deformation' matrix
-  !! which approximates the Jacobian matrix of the exact backward flow
-  !! (defined between the current time and that of the particle initialization -- or the last particle remapping)
-  !! at the current particle position.
-  !! It is computed in two steps:
-  !!    * first we compute a finite-difference approximation of the forward Jacobian matrix by using the fact that the
-  !!      initial (or remapped) particles were located on a cartesian grid in phase space. Specifically, the entries of
-  !!      the forward Jacobian matrix (say, (J^n_k)_xy = d(F^n_x)/dy (z^0_k) -- with z is the phase space coordinate)
-  !!      are approximated by finite differences: here, by  DF / 2*h_y
-  !!      with DF = F^n_x(z^0_k + (0,h_y,0,0)) - F^n_x(z^0_k - (0,h_y,0,0))
-  !!    * then we invert that approximated forward Jacobian matrix
-  !!
-  !! Note: when computing finite differences in a periodic dimension (say x), one must be careful since two values of F_x
-  !!    can be close in the periodic interval but distant by almost L_x in the (stored) [0,L_x[ representation.
-  !!    To account for this (frequent) phenomenon we do the following:
-  !!    when the difference DF (see example above) is larger than L_x/2, we make it smaller by adding +/- L_x to it.
-  !!    Note that here we could very well be making the slope smaller than what it should actually be: indeed if the function
-  !!    F^n_x is having a steep slope at z^0_k which adds one (or several) periods L_x to DF then our modification will
-  !!    artificially lower the slope. But this is impossible to prevent in full generality (indeed: a steep slope crossing the
-  !!    0 or L_x value will be lowered anyway in the [0,L_x[ representation) and should not be frequent (indeed it only happens
-  !!    when F^n_x has high derivatives and the particle grid is coarse, which will lead to bad approximations anyhow).
-
+  !> which approximates the Jacobian matrix of the exact backward flow
+  !> (defined between the current time and that of the particle initialization -- or the last particle remapping)
+  !> at the current particle position.
+  !> It is computed in two steps:
+  !>    * first we compute a finite-difference approximation of the forward Jacobian matrix by using the fact that the
+  !>      initial (or remapped) particles were located on a cartesian grid in phase space. Specifically, the entries of
+  !>      the forward Jacobian matrix (say, (J^n_k)_xy = d(F^n_x)/dy (z^0_k) -- with z is the phase space coordinate)
+  !>      are approximated by finite differences: here, by  DF / 2*h_y
+  !>      with DF = F^n_x(z^0_k + (0,h_y,0,0)) - F^n_x(z^0_k - (0,h_y,0,0))
+  !>    * then we invert that approximated forward Jacobian matrix
+  !>
+  !> Note: when computing finite differences in a periodic dimension (say x), one must be careful since two values of F_x
+  !>    can be close in the periodic interval but distant by almost L_x in the (stored) [0,L_x[ representation.
+  !>    To account for this (frequent) phenomenon we do the following:
+  !>    when the difference DF (see example above) is larger than L_x/2, we make it smaller by adding +/- L_x to it.
+  !>    Note that here we could very well be making the slope smaller than what it should actually be: indeed if the function
+  !>    F^n_x is having a steep slope at z^0_k which adds one (or several) periods L_x to DF then our modification will
+  !>    artificially lower the slope. But this is impossible to prevent in full generality (indeed: a steep slope crossing the
+  !>    0 or L_x value will be lowered anyway in the [0,L_x[ representation) and should not be frequent (indeed it only happens
+  !>    when F^n_x has high derivatives and the particle grid is coarse, which will lead to bad approximations anyhow).
+  !  <<get_ltp_deformation_matrix>>
   subroutine get_ltp_deformation_matrix (       &
                         self,                &
                         k,                      &
@@ -1675,9 +1593,9 @@ contains
         sll_real64, intent(in)  :: h_particles_vx
         sll_real64, intent(in)  :: h_particles_vy
 
-        sll_real64, intent(out) :: x_k, y_k         ! particle center in physical space
-        sll_real64, intent(out) :: vx_k, vy_k       ! particle center in velocity space
-        sll_real64, intent(out) :: d11,d12,d13,d14  ! coefs of matrix D (backward Jacobian)
+        sll_real64, intent(out) :: x_k, y_k         !< particle center in physical space
+        sll_real64, intent(out) :: vx_k, vy_k       !< particle center in velocity space
+        sll_real64, intent(out) :: d11,d12,d13,d14  !< coefs of matrix D (backward Jacobian)
         sll_real64, intent(out) :: d21,d22,d23,d24
         sll_real64, intent(out) :: d31,d32,d33,d34
         sll_real64, intent(out) :: d41,d42,d43,d44
@@ -1689,7 +1607,7 @@ contains
         sll_real64  :: vy_k_left, vy_k_right
         sll_real64, dimension(3)  :: coords
 
-        sll_real64  :: j11,j12,j13,j14   ! coefs of matrix J = D^-1 (forward Jacobian)
+        sll_real64  :: j11,j12,j13,j14   !< coefs of matrix J = D^-1 (forward Jacobian)
         sll_real64  :: j21,j22,j23,j24
         sll_real64  :: j31,j32,j33,j34
         sll_real64  :: j41,j42,j43,j44
@@ -1719,14 +1637,14 @@ contains
         vx_k = coords(1)
         vy_k = coords(2)
 
-        ! Compute the forward Jacobian matrix J_k
+        !> Compute the forward Jacobian matrix J_k
 
-        ! ------   d/d_x terms
+        !> ------   d/d_x terms
         factor = 1./(2*h_particles_x)
 
         k_ngb = self%get_neighbor_index(k, dim_x, right_ngb)
         if( k_ngb == k )then
-           ! no right neighbor is available, use a non-centered finite difference
+           !> no right neighbor is available, use a non-centered finite difference
            factor = 2*factor
            x_k_right   = x_k
            y_k_right   = y_k
@@ -1749,7 +1667,7 @@ contains
 
         k_ngb = self%get_neighbor_index(k, dim_x, left_ngb)
         if( k_ngb == k )then
-           ! no left neighbor is available, use a non-centered finite difference
+           !> no left neighbor is available, use a non-centered finite difference
            factor = 2*factor
            x_k_left   = x_k
            y_k_left   = y_k
@@ -1774,12 +1692,12 @@ contains
            j31 = factor * ( vx_k_right - vx_k_left )
            j41 = factor * ( vy_k_right - vy_k_left )
 
-        ! ------   d/d_y terms
+        !> ------   d/d_y terms
         factor = 1./(2*h_particles_y)
 
         k_ngb = self%get_neighbor_index(k, dim_y, right_ngb)
         if( k_ngb == k )then
-           ! no right neighbor is available, use a non-centered finite difference
+           !> no right neighbor is available, use a non-centered finite difference
            factor = 2*factor
            x_k_right   = x_k
            y_k_right   = y_k
@@ -1801,7 +1719,7 @@ contains
 
         k_ngb = self%get_neighbor_index(k, dim_y, left_ngb)
         if( k_ngb == k )then
-           ! no left neighbor is available, use a non-centered finite difference
+           !> no left neighbor is available, use a non-centered finite difference
            factor = 2*factor
            x_k_left   = x_k
            y_k_left   = y_k
@@ -1827,12 +1745,12 @@ contains
            j42 = factor * ( vy_k_right - vy_k_left )
 
 
-        ! ------   d/d_vx terms
+        !> ------   d/d_vx terms
         factor = 1./(2*h_particles_vx)
 
         k_ngb = self%get_neighbor_index(k, dim_vx, right_ngb)
         if( k_ngb == k )then
-           ! no right neighbor is available, use a non-centered finite difference
+           !> no right neighbor is available, use a non-centered finite difference
            factor = 2*factor
            x_k_right   = x_k
            y_k_right   = y_k
@@ -1854,7 +1772,7 @@ contains
 
         k_ngb = self%get_neighbor_index(k, dim_vx, left_ngb)
         if( k_ngb == k )then
-            ! no left neighbor is available, use a non-centered finite difference
+            !> no left neighbor is available, use a non-centered finite difference
             factor = 2*factor
             x_k_left   = x_k
             y_k_left   = y_k
@@ -1880,12 +1798,12 @@ contains
            j43 = factor * ( vy_k_right - vy_k_left )
 
 
-        ! ------   d/d_vy terms
+        !> ------   d/d_vy terms
         factor = 1./(2*h_particles_vy)
 
         k_ngb = self%get_neighbor_index(k, dim_vy, right_ngb)
         if( k_ngb == k )then
-           ! no right neighbor is available, use a non-centered finite difference
+           !> no right neighbor is available, use a non-centered finite difference
            factor = 2*factor
            x_k_right   = x_k
            y_k_right   = y_k
@@ -1907,7 +1825,7 @@ contains
 
         k_ngb = self%get_neighbor_index(k, dim_vy, left_ngb)
         if( k_ngb == k )then
-            ! no left neighbor is available, use a non-centered finite difference
+            !> no left neighbor is available, use a non-centered finite difference
             factor = 2*factor
             x_k_left   = x_k
             y_k_left   = y_k
@@ -1933,7 +1851,7 @@ contains
            j44 = factor * ( vy_k_right - vy_k_left )
 
 
-           ! Compute D_k the inverse of J_k
+           !> Compute D_k the inverse of J_k
 
         det_J = j11 * j22 * j33 * j44 &
               + j11 * j23 * j34 * j42 &
@@ -2092,8 +2010,8 @@ contains
 
 end subroutine get_ltp_deformation_matrix
 
-  ! puts the point (x,y) back into the computational domain if periodic in x or y (or both)
-  ! otherwise, does nothing
+  !> periodic_correction -------------------------------------------------------------------------------------------------------
+  !> puts the point (x,y) back into the computational domain if periodic in x or y (or both) otherwise, does nothing
   subroutine periodic_correction(p_group, x, y)
     class(sll_t_particle_group_2d2v_lbf),  intent(in)    :: p_group
     sll_real64, intent(inout) :: x
