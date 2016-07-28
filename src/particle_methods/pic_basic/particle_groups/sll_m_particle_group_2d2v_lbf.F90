@@ -50,11 +50,12 @@ module sll_m_particle_group_2d2v_lbf
     sll_t_int_list_element, &
     sll_t_int_list_element_ptr, &
     sll_f_add_element_in_int_list, &
-    sll_f_eval_hat_function, &
     sll_s_convert_4d_index_to_1d, &
     sll_s_convert_1d_index_to_4d, &
     sll_s_update_closest_particle_arrays, &
     sll_s_get_1d_cell_containing_point
+
+    ! sll_f_eval_hat_function, &
 
   implicit none
 
@@ -485,7 +486,7 @@ contains
     !>    - A.1  write the nodal values of f on the arrays of interpolation coefs
     if( initial_step )then
       !> write initial density f0 on remapping grid
-      call self%write_initial_density_on_remapping_grid(init_f_params)
+      call self%write_known_density_on_remapping_grid(init_f_params)
 
     else
       !> reconstruct transported density fn on remapping grid with the lbf method

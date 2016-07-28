@@ -7,7 +7,6 @@ TARGET_LINK_LIBRARIES( sll_pic_sampling
   sll_errors
   sll_working_precision
   sll_particle_groups
-  sll_initial_densities_temp
   sobol
   prob
   sll_distribution_function)
