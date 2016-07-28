@@ -1,5 +1,4 @@
 add_subdirectory(pic_weights)
-add_subdirectory(initial_densities_temp)
 add_subdirectory(particle_groups)
 add_subdirectory(pic_sampling)
 add_subdirectory(visualization_interface)
