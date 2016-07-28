@@ -9,5 +9,6 @@ ADD_TEST( NAME distribution_function COMMAND test_distribution_function )
 ADD_EXECUTABLE( test_initial_distribution test_initial_distribution.F90)
 TARGET_LINK_LIBRARIES( test_initial_distribution sll_distribution_function sll_xdmf_io)
 
-ADD_TEST( NAME initial_distribution COMMAND test_initial_distribution)
+SET( NML_FILE ${CMAKE_CURRENT_SOURCE_DIR}/initial_distribution.nml )
+ADD_TEST( NAME initial_distribution COMMAND test_initial_distribution ${NML_FILE})
 SET_TESTS_PROPERTIES(initial_distribution PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")

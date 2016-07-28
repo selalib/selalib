@@ -33,6 +33,7 @@ program test_particle_sampling_interface
   character(len=256) :: distribution_str
   character(len=256) :: filename
   sll_int32  :: file_id
+  logical    :: file_exists
 
   ! parameters of the lbf particle group
   logical :: domain_is_x_periodic
@@ -90,6 +91,32 @@ program test_particle_sampling_interface
   distribution_str = "cossum_onegaussian"
   dim_x = 2
   dim_v = 2
+
+  !----------------------------------------------------------------------------
+  ! PARSE INPUT
+  !----------------------------------------------------------------------------
+
+  ! Check that input argument was given
+  !------------------------------------
+  if (command_argument_count() /= 1 ) then
+    write(*,*) "ERROR: exactly 1 input argument is required"
+    stop
+  end if
+
+  ! Read name of reference file from input argument
+  !------------------------------------------------
+  call get_command_argument( 1, filename )
+
+  ! Check that file exists    
+  !-----------------------
+  inquire( file=trim( filename ), exist=file_exists )
+  if (.not. file_exists) then
+    write(*,*) &
+      "ERROR: reference file '"//trim( filename )//"' does not exist"
+    stop
+  end if
+
+  
   ! file must have a namelist of the form
   !   /cos_onegaussian/ kx, alpha, v_thermal, v_mean
   ! with
@@ -98,8 +125,6 @@ program test_particle_sampling_interface
   !   sll_real64 :: v_thermal(dim_v)
   !   sll_real64 :: v_mean(dim_v)
   ! -->> see module sll_m_initial_distribution for details
-  call sll_s_concatenate_filename_and_path( "sampling_interface_test.nml", __FILE__,&
-       filename)
   open(newunit = file_id, file=trim(filename), IOStat=io_stat)
   if (io_stat /= 0) then
     print*, 'test_particle_sampling_interface failed to open file ', filename

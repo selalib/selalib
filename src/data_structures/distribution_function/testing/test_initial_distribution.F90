@@ -18,10 +18,32 @@ program test_initial_distribution
   sll_int32                                     :: file_id
   character(len=256)                            :: filename
   sll_real64                                    :: xi(2), vi(2), val, val_ref
+  logical                                       :: file_exists
+  
+  !----------------------------------------------------------------------------
+  ! PARSE INPUT
+  !----------------------------------------------------------------------------
 
+  ! Check that input argument was given
+  !------------------------------------
+  if (command_argument_count() /= 1 ) then
+    write(*,*) "ERROR: exactly 1 input argument is required"
+    stop
+  end if
 
-  call sll_s_concatenate_filename_and_path( "initial_distribution.nml", __FILE__,&
-       filename)
+  ! Read name of reference file from input argument
+  !------------------------------------------------
+  call get_command_argument( 1, filename )
+
+  ! Check that file exists    
+  !-----------------------
+  inquire( file=trim( filename ), exist=file_exists )
+  if (.not. file_exists) then
+    write(*,*) &
+      "ERROR: reference file '"//trim( filename )//"' does not exist"
+    stop
+  end if
+
   open(newunit=file_id, file=trim(filename))
   call sll_s_initial_distribution_new( "cossum_twogaussian", [2,2], file_id, params )
   close(file_id)
