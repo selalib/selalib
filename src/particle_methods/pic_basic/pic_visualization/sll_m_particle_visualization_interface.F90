@@ -95,8 +95,6 @@ contains
     class(sll_t_plotting_params_2d),           intent( inout ) :: plotting_params_2d
     sll_int32,                                 intent( in    ) :: iplot             !< plot counter
 
-    ! sll_real64, dimension(:,:),       pointer :: x_vx_grid_values
-    sll_real64, dimension(:,:),                pointer         :: x_vx_grid_values  !< point values of f on the x_vx grid
     sll_real64, dimension(:,:,:,:),            pointer         :: grid_values_4d    !< point values of f on the 4d grid
     type(sll_t_cartesian_mesh_4d),             pointer         :: plotting_grid_4d
     sll_int32     :: reconstruction_set_type

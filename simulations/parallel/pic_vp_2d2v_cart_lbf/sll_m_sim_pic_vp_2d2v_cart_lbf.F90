@@ -181,7 +181,7 @@ contains
     logical   :: domain_is_y_periodic   ! needed for the LBF particles
 
     sll_int32 :: input_file ! unit for nml file
-    sll_int32 :: io_stat, ierr
+    sll_int32 :: io_stat
     sll_real64 :: domain(2,2)
 
     ! parameters for the lbf particle group
