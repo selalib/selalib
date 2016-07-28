@@ -1,16 +1,16 @@
 ! Main test program for
-! [[file:simulation_4d_vp_generic_pic_cartesian.F90::sll_m_sim_4d_vp_generic_pic_cartesian]]
+! [[file:simulation_4d_vp_generic_pic_cartesian.F90::sll_m_sim_4d_vp_generic_pic_cartesian]]    [link to update]
 
 !> @ingroup particle_methods
 
 !> @author MCP ALH
 
-!> @brief Unit test for ::sll_m_sim_4d_vp_generic_pic_cartesian
+!> @brief simulation program for the pic_lbf method
 
 ! Program listed by Doxygen as part of the particle_methods in
 ! [[selalib:doc/build/html/doxygen/html/group__particle__methods.html]]
 
-program sim_pic_vp_2d2v_cart_remapped
+program sim_pic_vp_2d2v_cart_lbf
 
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_working_precision.h"
@@ -22,8 +22,8 @@ program sim_pic_vp_2d2v_cart_remapped
     sll_s_halt_collective, &
     sll_v_world_collective
 
-  use sll_m_sim_pic_vp_2d2v_cart_remapped, only: &
-    sll_t_simulation_4d_vp_generic_pic_cartesian
+  use sll_m_sim_pic_vp_2d2v_cart_lbf, only: &
+    sll_t_sim_pic_vp_2d2v_cart_lbf
 
   use sll_m_timer, only: &
     sll_s_set_time_mark, &
@@ -33,7 +33,7 @@ program sim_pic_vp_2d2v_cart_remapped
   implicit none
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
-  type(sll_t_simulation_4d_vp_generic_pic_cartesian) :: sim
+  type(sll_t_sim_pic_vp_2d2v_cart_lbf) :: sim
   character(len=256)                          :: filename
   integer                                     :: rank, size
   type(sll_t_time_mark)  ::  t1
@@ -49,18 +49,10 @@ program sim_pic_vp_2d2v_cart_remapped
   call sim%init_from_file(trim(filename))
 
   if (rank==0) then
-    print*, size, 'mpi nodes X', sim%number_particles, 'particles', &
-         sim%mesh_2d%num_cells1, 'X',sim%mesh_2d%num_cells2,'cells'
-    if( sim%use_lt_pic_scheme )then
-      print*, (real(size,f64)/real(sim%mesh_2d%num_cells1 * sim%mesh_2d%num_cells2,f64)) &
-           * real(sim%number_particles,f64), 'transport markers (pushed particles) per cell'
-
-      print*, (real(size,f64)/real(sim%mesh_2d%num_cells1 * sim%mesh_2d%num_cells2,f64)) &
-           * real(sim%virtual_particle_number,f64), 'virtual particles (deposited particles) per cell'
-    else
-      print*, (real(size,f64)/real(sim%mesh_2d%num_cells1 * sim%mesh_2d%num_cells2,f64)) &
-           * real(sim%number_particles,f64), 'particles per cell'
-    end if
+    print*, size, 'mpi nodes X', sim%n_particles, 'particles', &
+         sim%mesh%num_cells1, 'X',sim%mesh%num_cells2,'cells'
+    print*, (real(size,f64)/real(sim%mesh%num_cells1 * sim%mesh%num_cells2,f64)) &
+         * real(sim%n_particles,f64), 'particles per cell'
   endif
 
   call sim%run()
@@ -73,4 +65,4 @@ program sim_pic_vp_2d2v_cart_remapped
   call sll_s_halt_collective()
 
   ! call sim%delete()
-end program sim_pic_vp_2d2v_cart_remapped
+end program sim_pic_vp_2d2v_cart_lbf
