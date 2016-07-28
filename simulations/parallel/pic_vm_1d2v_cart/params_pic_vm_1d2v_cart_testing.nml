@@ -6,7 +6,7 @@
         initial_bfield = "cos"
 /
 
-&cossum_onegaussian
+&cos_onegaussian
         kx = 1.25
         alpha = 0.0
         v_thermal = 0.2  0.005773502691896

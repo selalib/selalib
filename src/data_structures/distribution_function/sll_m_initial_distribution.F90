@@ -184,17 +184,62 @@ contains
     self%dims = dims
     select case( descriptor )
     case( sll_p_sumcos_onegaussian )
-       call sumcos_onegaussian_init( file_id, self )
-       
+       select case( self%dims(1) )
+       case (1)
+          select case (self%dims(2) )
+          case(1)
+             call sumcos_onegaussian_init_1d1v( file_id, self )
+          case(2)
+             call sumcos_onegaussian_init_1d2v( file_id, self )
+          end select
+       case(2)
+          call sumcos_onegaussian_init_2d2v( file_id, self )
+       case(3)
+          call sumcos_onegaussian_init_3d3v( file_id, self )
+       end select
     case( sll_p_cossum_onegaussian )
-       call cossum_onegaussian_init( file_id, self )
+       select case( self%dims(1) )
+       case (1)
+          select case (self%dims(2) )
+          case(1)
+             call cossum_onegaussian_init_1d1v( file_id, self )
+          case(2)
+             call cossum_onegaussian_init_1d2v( file_id, self )
+          end select
+       case(2)
+          call cossum_onegaussian_init_2d2v( file_id, self )
+       case(3)
+          call cossum_onegaussian_init_3d3v( file_id, self )
+       end select
        
     case( sll_p_cossum_twogaussian )
-       call cossum_twogaussian_init( file_id, self )
-       
+       select case( self%dims(1) )
+       case (1)
+          select case (self%dims(2) )
+          case(1)
+             call cossum_twogaussian_init_1d1v( file_id, self )
+          case(2)
+             call cossum_twogaussian_init_1d2v( file_id, self )
+          end select
+       case(2)
+          call cossum_twogaussian_init_2d2v( file_id, self )
+       case(3)
+          call cossum_twogaussian_init_3d3v( file_id, self )
+       end select
     case( sll_p_sumcos_twogaussian )
-       call sumcos_twogaussian_init( file_id, self )
-       
+       select case( self%dims(1) )
+       case (1)
+          select case (self%dims(2) )
+          case(1)
+             call sumcos_twogaussian_init_1d1v( file_id, self )
+          case(2)
+             call sumcos_twogaussian_init_1d2v( file_id, self )
+          end select
+       case(2)
+          call sumcos_twogaussian_init_2d2v( file_id, self )
+       case(3)
+          call sumcos_twogaussian_init_3d3v( file_id, self )
+       end select
     end select
     
 
@@ -211,38 +256,29 @@ contains
     sll_int32, intent( in    ) :: dims(2) !< number of spatial and velocity dimensions
     sll_int32, intent( in    ) :: file_id    !< nml-file with parameters in unified format
     class(sll_c_distribution_params), allocatable, intent(   out ) ::  params    !< real array specifying the parameters for the given test case in the predefined order.
+
+    sll_int32 :: descriptor
     
     select case( distribution )
     case( "sumcos_onegaussian" )
        allocate( sll_t_params_cos_gaussian :: params )
-       params%dims = dims
-       select type( params )
-       type is( sll_t_params_cos_gaussian )
-          call sumcos_onegaussian_init( file_id, params )
-       end select
+       descriptor = sll_p_sumcos_onegaussian
     case( "cossum_onegaussian" )
        allocate( sll_t_params_cos_gaussian :: params )
-       params%dims = dims
-       select type( params )
-       type is( sll_t_params_cos_gaussian )
-          call cossum_onegaussian_init( file_id, params )
-       end select
+       descriptor = sll_p_cossum_onegaussian
     case( "cossum_twogaussian" )
        allocate( sll_t_params_cos_gaussian :: params )
-       params%dims = dims
-       select type( params )
-       type is( sll_t_params_cos_gaussian )
-          call cossum_twogaussian_init( file_id, params )
-       end select
+       descriptor = sll_p_cossum_twogaussian
     case( "sumcos_twogaussian" )
        allocate( sll_t_params_cos_gaussian :: params )
-       params%dims = dims
-       select type( params )
-       type is( sll_t_params_cos_gaussian )
-          call sumcos_twogaussian_init( file_id, params )
-       end select
+       descriptor = sll_p_sumcos_twogaussian
     case default
        SLL_ERROR('Initial distribution not implemented.','sll_s_initial_distribution_new')
+    end select
+
+    select type( params )
+    type is( sll_t_params_cos_gaussian )
+       call params%init( descriptor, dims, file_id )
     end select
     
     
@@ -260,206 +296,103 @@ contains
     select case( distribution )
     case( sll_p_sumcos_onegaussian )
        allocate( sll_t_params_cos_gaussian :: params )
-       params%dims = dims
-       select type( params )
-       type is( sll_t_params_cos_gaussian )
-          call sumcos_onegaussian_init( file_id, params )
-       end select
     case( sll_p_cossum_onegaussian )
        allocate( sll_t_params_cos_gaussian :: params )
-       params%dims = dims
-       select type( params )
-       type is( sll_t_params_cos_gaussian )
-          call cossum_onegaussian_init( file_id, params )
-       end select
     case( sll_p_cossum_twogaussian )
        allocate( sll_t_params_cos_gaussian :: params )
-       params%dims = dims
-       select type( params )
-       type is( sll_t_params_cos_gaussian )
-          call cossum_twogaussian_init( file_id, params )
-       end select
     case( sll_p_sumcos_twogaussian )
        allocate( sll_t_params_cos_gaussian :: params )
-       params%dims = dims
-       select type( params )
-       type is( sll_t_params_cos_gaussian )
-          call sumcos_twogaussian_init( file_id, params )
-       end select
+    case default
+       SLL_ERROR('Initial distribution not implemented.','sll_s_initial_distribution_new')
     end select
     
+    select type( params )
+    type is( sll_t_params_cos_gaussian )
+       call params%init( distribution, dims, file_id )
+    end select
     
   end subroutine sll_s_initial_distribution_new_descriptor
 
 
-  subroutine sumcos_onegaussian_init( file_id, params )
-    sll_int32, intent( in ) :: file_id
-    type( sll_t_params_cos_gaussian ), intent( inout ) :: params
-
-    ! local variables
-    sll_real64 :: kx(params%dims(1))
-    sll_real64 :: alpha(params%dims(1))
-    sll_real64 :: v_thermal(params%dims(2))
-    sll_real64 :: v_mean(params%dims(2))
-    sll_int32  :: j
-    
-    namelist /sumcos_onegaussian/ kx, alpha, v_thermal, v_mean
-    
-    read(file_id, sumcos_onegaussian)
-
-    allocate( params%kx(params%dims(1),params%dims(1)) )
-    allocate( params%alpha(params%dims(1)) )
-    allocate( params%v_thermal(params%dims(2),1) )
-    allocate( params%v_mean(params%dims(2),1) )
-    allocate( params%normal(1) )
-    allocate( params%delta(1) )
-
-    params%n_cos = params%dims(1)
-    params%n_gaussians = 1
-    params%kx = 0.0_f64
-    do j=1, params%dims(1)
-       params%kx(:,j) = kx(j)
-    end do
-    params%alpha = alpha
-    params%v_thermal(:,1) = v_thermal
-    params%v_mean(:,1) = v_mean
-
-    
-    params%normal = 1.0_f64/(sll_p_twopi**(0.5_f64*real(params%dims(2),f64))*&
-         product(params%v_thermal(:,1)))
-
-    params%delta(1) = 1.0_f64
-    
-  end subroutine sumcos_onegaussian_init
-
-
-
-  subroutine cossum_onegaussian_init( file_id, params )
-    sll_int32, intent( in ) :: file_id
-    type( sll_t_params_cos_gaussian ), intent( inout ) :: params
-
-    ! local variables
-    sll_real64 :: kx(params%dims(1))
-    sll_real64 :: alpha
-    sll_real64 :: v_thermal(params%dims(2))
-    sll_real64 :: v_mean(params%dims(2))
-    
-    namelist /cossum_onegaussian/ kx, alpha, v_thermal, v_mean
-    
-    read(file_id, cossum_onegaussian)
-    
-    allocate( params%kx(params%dims(1),1) )
-    allocate( params%alpha( 1 ) )
-    allocate( params%v_thermal(params%dims(2),1) )
-    allocate( params%v_mean(params%dims(2),1) )
-    allocate( params%normal(1) )
-    allocate( params%delta(1) )
-
-    params%n_cos = 1
-    params%n_gaussians = 1
-    params%kx(:,1) = kx
-    params%alpha = alpha
-    params%v_thermal(:,1) = v_thermal
-    params%v_mean (:,1) = v_mean
-
-    params%normal = 1.0_f64/(sll_p_twopi**(0.5_f64*real(params%dims(2),f64))*&
-         product(params%v_thermal(:,1)))
-    params%delta(1) = 1.0_f64
-    
-  end subroutine cossum_onegaussian_init
+! Since assumed shape arrays are not allowed in namelists, we need to define a separate function for each combination of dimensions in x and v. We use a macro to avoid code dublication.
   
+#define MAKE_COS_ONEGAUSSIAN_INIT( fname, dimx, dimv, dimalpha )\
+  subroutine fname( file_id, params );\
+    sll_int32, intent( in ) :: file_id;\
+    type( sll_t_params_cos_gaussian ), intent( inout ) :: params; \
+    sll_real64 :: kx(dimx); \
+    sll_real64 :: alpha(dimalpha); \
+    sll_real64 :: v_thermal(dimv); \
+    sll_real64 :: v_mean(dimv); \
+    sll_int32  :: j; \
+    namelist /cos_onegaussian/ kx, alpha, v_thermal, v_mean; \
+    params%n_cos = dimalpha;
+!-----------------------------------------------------------------
+
+MAKE_COS_ONEGAUSSIAN_INIT( cossum_onegaussian_init_1d1v, 1, 1, 1 )
+#include "sll_k_make_cos_onegaussian_init.F90"   
+    
+MAKE_COS_ONEGAUSSIAN_INIT( cossum_onegaussian_init_1d2v, 1, 2, 1 )
+#include "sll_k_make_cos_onegaussian_init.F90"
+
+MAKE_COS_ONEGAUSSIAN_INIT( cossum_onegaussian_init_2d2v, 2, 2, 1 )
+#include "sll_k_make_cos_onegaussian_init.F90" 
+
+MAKE_COS_ONEGAUSSIAN_INIT( cossum_onegaussian_init_3d3v, 3, 3, 1 )
+#include "sll_k_make_cos_onegaussian_init.F90" 
+
+MAKE_COS_ONEGAUSSIAN_INIT( sumcos_onegaussian_init_1d1v, 1, 1, 1 )
+#include "sll_k_make_cos_onegaussian_init.F90"   
+    
+MAKE_COS_ONEGAUSSIAN_INIT( sumcos_onegaussian_init_1d2v, 1, 2, 1 )
+#include "sll_k_make_cos_onegaussian_init.F90"
+
+MAKE_COS_ONEGAUSSIAN_INIT( sumcos_onegaussian_init_2d2v, 2, 2, 2 )
+#include "sll_k_make_cos_onegaussian_init.F90" 
+
+MAKE_COS_ONEGAUSSIAN_INIT( sumcos_onegaussian_init_3d3v, 3, 3, 3 )
+#include "sll_k_make_cos_onegaussian_init.F90"
+
+
+#define MAKE_COS_TWOGAUSSIAN_INIT( fname, dimx, dimv, dimalpha ) \
+  subroutine fname( file_id, params ); \
+    sll_int32, intent( in ) :: file_id; \
+    type( sll_t_params_cos_gaussian ), intent( inout ) :: params; \
+    sll_real64 :: kx(dimx); \
+    sll_real64 :: alpha(dimalpha); \
+    sll_real64 :: v_thermal_1(dimv); \
+    sll_real64 :: v_mean_1(dimv); \
+    sll_real64 :: v_thermal_2(dimv); \
+    sll_real64 :: v_mean_2(dimv); \
+    sll_real64 :: delta; \
+    sll_int32  :: j; \
+    namelist /sum_twogaussian/ kx, alpha, v_thermal_1, v_mean_1, v_thermal_2, v_mean_2, delta; \
+    params%n_cos = dimalpha;
+    !-------------------------------
   
-  subroutine cossum_twogaussian_init( file_id, params )
-    sll_int32, intent( in ) :: file_id
-    type( sll_t_params_cos_gaussian ), intent( inout ) :: params
-
-    ! local variables
-    sll_real64 :: kx(params%dims(1))
-    sll_real64 :: alpha
-    sll_real64 :: v_thermal_1(params%dims(2))
-    sll_real64 :: v_mean_1(params%dims(2))
-    sll_real64 :: v_thermal_2(params%dims(2))
-    sll_real64 :: v_mean_2(params%dims(2))
-    sll_real64 :: delta
-
-    sll_int32  :: j
+MAKE_COS_TWOGAUSSIAN_INIT( cossum_twogaussian_init_1d1v, 1, 1, 1 )
+#include "sll_k_make_cos_twogaussian_init.F90"   
     
-    namelist /cossum_twogaussian/ kx, alpha, v_thermal_1, v_mean_1, v_thermal_2, v_mean_2, delta
+MAKE_COS_TWOGAUSSIAN_INIT( cossum_twogaussian_init_1d2v, 1, 2, 1 )
+#include "sll_k_make_cos_twogaussian_init.F90"
+
+MAKE_COS_TWOGAUSSIAN_INIT( cossum_twogaussian_init_2d2v, 2, 2, 1 )
+#include "sll_k_make_cos_twogaussian_init.F90" 
+
+MAKE_COS_TWOGAUSSIAN_INIT( cossum_twogaussian_init_3d3v, 3, 3, 1 )
+#include "sll_k_make_cos_twogaussian_init.F90" 
+
+MAKE_COS_TWOGAUSSIAN_INIT( sumcos_twogaussian_init_1d1v, 1, 1, 1 )
+#include "sll_k_make_cos_twogaussian_init.F90"   
     
-    read(file_id, cossum_twogaussian)
+MAKE_COS_TWOGAUSSIAN_INIT( sumcos_twogaussian_init_1d2v, 1, 2, 1 )
+#include "sll_k_make_cos_twogaussian_init.F90"
 
-    allocate( params%kx(params%dims(1),1) )
-    allocate( params%alpha( 1 ) )
-    allocate( params%v_thermal(params%dims(2),2) )
-    allocate( params%v_mean(params%dims(2),2) )
-    allocate( params%normal(2) )
-    allocate( params%delta(2) )
-    
-    params%n_cos = 1
-    params%n_gaussians = 2
-    params%kx(:,1) = kx
-    params%alpha = alpha
-    params%v_thermal(:,1) = v_thermal_1
-    params%v_mean(:,1) = v_mean_1
-    params%v_thermal(:,2) = v_thermal_2
-    params%v_mean(:,2) = v_mean_2
-    params%delta(1) = delta
-    params%delta(2) = 1.0_f64 - delta
+MAKE_COS_TWOGAUSSIAN_INIT( sumcos_twogaussian_init_2d2v, 2, 2, 2 )
+#include "sll_k_make_cos_twogaussian_init.F90" 
 
-    do j=1,2
-       params%normal(j) = 1.0_f64/(sll_p_twopi**(0.5_f64*real(params%dims(2),f64))*&
-            product(params%v_thermal(:,j)))
+MAKE_COS_TWOGAUSSIAN_INIT( sumcos_twogaussian_init_3d3v, 3, 3, 3 )
+#include "sll_k_make_cos_twogaussian_init.F90"
 
-    end do
-    
-  end subroutine cossum_twogaussian_init
-
-   subroutine sumcos_twogaussian_init( file_id, params )
-    sll_int32, intent( in ) :: file_id
-    type( sll_t_params_cos_gaussian ), intent( inout ) :: params
-
-    ! local variables
-    sll_real64 :: kx(params%dims(1))
-    sll_real64 :: alpha(params%dims(1))
-    sll_real64 :: v_thermal_1(params%dims(2))
-    sll_real64 :: v_mean_1(params%dims(2))
-    sll_real64 :: v_thermal_2(params%dims(2))
-    sll_real64 :: v_mean_2(params%dims(2))
-    sll_real64 :: delta
-
-    sll_int32  :: j
-    
-    namelist /cossum_twogaussian/ kx, alpha, v_thermal_1, v_mean_1, v_thermal_2, v_mean_2, delta
-    
-    read(file_id, cossum_twogaussian)
-
-    allocate( params%kx(params%dims(1),params%dims(1)) )
-    allocate( params%v_thermal(params%dims(2),2) )
-    allocate( params%v_mean(params%dims(2),2) )
-    allocate( params%normal(2) )
-    allocate( params%delta(2) )
-
-    params%n_cos = params%dims(1)
-    params%n_gaussians = 2
-    params%kx = 0.0_f64
-    do j=1, params%dims(1)
-       params%kx(:,j) = kx(j)
-    end do
-    params%alpha = alpha
-    params%v_thermal(:,1) = v_thermal_1
-    params%v_mean(:,1) = v_mean_1
-    params%v_thermal(:,2) = v_thermal_2
-    params%v_mean(:,2) = v_mean_2
-    params%delta(1) = delta
-    params%delta(2) = 1.0_f64 - delta
-
-    do j=1,2
-       params%normal(j) = 1.0_f64/(sll_p_twopi**(0.5_f64*real(params%dims(2),f64))*&
-            product(params%v_thermal(:,j)))
-
-    end do
-    
-  end subroutine sumcos_twogaussian_init
-  
 
 end module sll_m_initial_distribution
