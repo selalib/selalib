@@ -97,7 +97,6 @@ contains
 
     sll_real64, dimension(:,:,:,:),            pointer         :: grid_values_4d    !< point values of f on the 4d grid
     type(sll_t_cartesian_mesh_4d),             pointer         :: plotting_grid_4d
-    sll_int32     :: reconstruction_set_type
     sll_real64    :: dummy_total_charge
     logical       :: enforce_total_charge
     logical       :: reconstruct_f_on_last_node(4)
