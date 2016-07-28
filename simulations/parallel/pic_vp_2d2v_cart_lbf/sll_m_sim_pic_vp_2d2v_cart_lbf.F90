@@ -49,8 +49,12 @@ module sll_m_sim_pic_vp_2d2v_cart_lbf
   use sll_m_particle_group_2d2v_lbf, only: &
     sll_s_new_particle_group_2d2v_lbf_ptr
 
-  use sll_m_initial_density_parameters, only: &
-    sll_t_initial_density_parameters
+  !  use sll_m_initial_density_parameters, only: &
+  !    sll_t_initial_density_parameters
+
+  use sll_m_initial_distribution, only : &
+       sll_c_distribution_params, &
+       sll_s_initial_distribution_new
 
   use sll_m_particle_visualization_interface, only : &
     sll_t_plotting_params_2d, &
@@ -58,10 +62,10 @@ module sll_m_sim_pic_vp_2d2v_cart_lbf
 
   use sll_m_particle_sampling_interface, only : &
     sll_s_sample_particle_group, &
-    sll_s_resample_particle_group, &
-    sll_p_random_sampling, &
-    sll_p_sobol_sampling, &
-    sll_p_deterministic_sampling
+    sll_s_resample_particle_group
+
+  use sll_m_particle_sampling, only : &
+       sll_t_particle_sampling
 
   use sll_m_particle_group_base, only: &
     sll_c_particle_group_base
@@ -123,9 +127,11 @@ module sll_m_sim_pic_vp_2d2v_cart_lbf
      sll_int32  :: no_weights
      
      ! Physical parameters
-     sll_real64 :: landau_param(2) ! (1+landau_param(1)*cos(landau_param(2)*x1) 
-     sll_real64 :: thermal_velocity(2) ! 
-     
+     class(sll_c_distribution_params), allocatable :: init_distrib_params
+
+     ! Particle sampling (for random sampling of simple particles)
+     type(sll_t_particle_sampling) :: sampler
+
      ! Simulation parameters
      sll_real64 :: delta_t
      sll_int32  :: n_time_steps
@@ -134,7 +140,7 @@ module sll_m_sim_pic_vp_2d2v_cart_lbf
      sll_int32  :: n_total_particles
      sll_int32  :: degree_smoother
      sll_int32  :: particle_type
-     sll_int32  :: init_case
+     !     sll_int32  :: init_case
 
      ! Parameters for MPI
      sll_int32  :: rank
@@ -160,15 +166,19 @@ contains
     character(len=*),                  intent(in)    :: filename
 
     sll_int32   :: n_time_steps
-    sll_real64  :: delta_t, alpha, n_mode, thermal_v1, thermal_v2
+    sll_real64  :: delta_t !, alpha, n_mode, thermal_v1, thermal_v2
     sll_real64  :: species_charge
     sll_real64  :: species_mass
 
     sll_int32   :: ng_x1, ng_x2
     sll_real64  :: x1_min, x1_max, x2_min, x2_max
     sll_int32   :: n_particles, degree_smoother
-    character(len=256) :: particle_type_str
-    character(len=256) :: init_case_str
+    character(len=256) :: particle_type_str  ! simple (std) pic, or deterministic particles with lbf resampling
+    ! character(len=256) :: init_case_str
+
+    character(len=256) :: initial_distrib
+    character(len=256) :: sampling_case
+
     logical     :: with_control_variate
 
     logical   :: domain_is_x_periodic   ! needed for the LBF particles
@@ -176,7 +186,6 @@ contains
 
     sll_int32 :: input_file ! unit for nml file
     sll_int32 :: io_stat, ierr
-    sll_real64, pointer :: control_variate_parameter(:)
     sll_real64 :: domain(2,2)
 
     ! parameters for the lbf particle group
@@ -198,16 +207,23 @@ contains
     sll_real64, dimension(4)  :: remapping_grid_eta_min
     sll_real64, dimension(4)  :: remapping_grid_eta_max
 
-    namelist /sim_params/         delta_t, n_time_steps, alpha, n_mode, thermal_v1, thermal_v2
-    
-    namelist /pic_poisson_params/ ng_x1, ng_x2, x1_min, x2_min, x1_max, x2_max, degree_smoother   ! previous name was grid_dims
+    ! this namelist should follows std terminology
+    namelist /sim_params/         delta_t, n_time_steps, initial_distrib
 
-    namelist /particle_method/         particle_type_str
+    ! this namelist should follows std terminology
+    namelist /grid_dims/          ng_x1, ng_x2, x1_min, x2_min, x1_max, x2_max
 
-    namelist /simple_pic_params/  init_case_str, n_particles, with_control_variate
+    ! this namelist should follows std terminology
+    namelist /pic_params/         n_particles, degree_smoother, sampling_case, with_control_variate   ! for the 'simple' pic method
 
-    ! parameters for pic with lbf resamplings: we have 2 sets of parameters  -------------------------------------------------
+    ! namelist specific to particle polymorphism
+    namelist /particle_method/    particle_type_str
 
+              !     namelist /sim_params/         delta_t, n_time_steps, alpha, n_mode, thermal_v1, thermal_v2
+              ! namelist /pic_poisson_params/ ng_x1, ng_x2, x1_min, x2_min, x1_max, x2_max, degree_smoother   ! previous name was grid_dims
+              ! namelist /simple_pic_params/  init_case_str, n_particles, with_control_variate
+
+    ! namelist specific to lbf particles: 2 sets of parameters  -------------------------------------------------
     ! 1. remapping (sparse grid) parameters
     namelist /pic_lbf_remap_params/    &
                                   remap_period,                       &
@@ -220,7 +236,6 @@ contains
                                   remapping_sparse_grid_max_level_y,  &
                                   remapping_sparse_grid_max_level_vx, &
                                   remapping_sparse_grid_max_level_vy
-
     ! 2. particle parameters (initially located on a 4d cartesian grid) used to approximate the charge and the flow
     namelist /pic_lbf_particles_params/                               &
                                   n_particles_x,                      &
@@ -236,14 +251,15 @@ contains
     end if
 
     read(input_file, sim_params)
-    read(input_file, pic_poisson_params)
-    read(input_file, particle_method)
+    read(input_file, grid_dims)
+    call sll_s_initial_distribution_new( trim(initial_distrib), [2,2], input_file, sim%init_distrib_params )
+    read(input_file, pic_params)
 
+    read(input_file, particle_method)
     select case(particle_type_str)
 
     case("SLL_SIMPLE_PARTICLES")
        sim%particle_type = sll_p_simple_particles
-       read(input_file, simple_pic_params)
 
     case("SLL_LBF_PARTICLES")
        sim%particle_type = sll_p_lbf_particles
@@ -264,8 +280,8 @@ contains
 
     sim%delta_t = delta_t
     sim%n_time_steps = n_time_steps
-    sim%landau_param = [alpha, n_mode*2.0_f64 * sll_p_pi/(x1_max - x1_min)]
-    sim%thermal_velocity = [thermal_v1, thermal_v2]
+        !    sim%landau_param = [alpha, n_mode*2.0_f64 * sll_p_pi/(x1_max - x1_min)]
+        !     sim%thermal_velocity = [thermal_v1, thermal_v2]
 
     sim%mesh => sll_f_new_cartesian_mesh_2d( ng_x1, ng_x2, &
          x1_min, x1_max, x2_min, x2_max)
@@ -276,30 +292,32 @@ contains
     select case(sim%particle_type)
 
     case( sll_p_simple_particles )
-       if (with_control_variate .EQV. .TRUE.) then
-          sim%no_weights = 3
-       else
-          sim%no_weights = 1
-       end if
-       sim%n_particles = n_particles/sim%world_size
-       sim%n_total_particles = sim%n_particles * sim%world_size
 
-       call sll_s_new_particle_group_2d2v_ptr&
-          (sim%particle_group, sim%n_particles, &
-          sim%n_total_particles, species_charge, species_mass, sim%no_weights)
+      ! here we follow Katharina's initialization in sll_m_sim_pic_vp_2d2v_cart
 
-      select case(init_case_str)
-      case("SLL_INIT_RANDOM")
-         sim%init_case = sll_p_random_sampling
-      case("SLL_INIT_SOBOL")
-         sim%init_case = sll_p_sobol_sampling
-      case default
-         print*, '#init case ', init_case_str, ' not implemented (for simple particles).'
-      end select
+      call sim%sampler%init( trim(sampling_case),  [2,2], sim%n_particles, sim%rank  )
+
+      sim%n_particles = n_particles/sim%world_size
+      sim%n_total_particles = sim%n_particles * sim%world_size
+
+      if (with_control_variate .EQV. .TRUE.) then
+         sim%no_weights = 3
+      else
+         sim%no_weights = 1
+      end if
+
+      ! Initialize the particles
+      call sll_s_new_particle_group_2d2v_ptr&
+           (sim%particle_group, sim%n_particles, &
+           sim%n_total_particles, species_charge, species_mass, sim%no_weights)
+
+      call sll_s_new_particle_group_2d2v_ptr&
+         (sim%particle_group, sim%n_particles, &
+         sim%n_total_particles, species_charge, species_mass, sim%no_weights)
 
     case( sll_p_lbf_particles )
-      sim%no_weights = 1   ! no control variate for the moment
-      sim%init_case = sll_p_deterministic_sampling
+
+      sim%no_weights = 1   ! no control variate for the moment with lbf particles
       domain_is_x_periodic = .true.
       domain_is_y_periodic = .true.
       remapping_grid_eta_min(1) = x1_min
@@ -337,13 +355,11 @@ contains
     case default
       SLL_ERROR('sll_m_sim_pic_vp_2d2v_cart_lbf%init_pic_2d2v', 'this particle_type is not implemented.')
     end select
-    
+
     ! Initialize control variate
-    SLL_ALLOCATE(control_variate_parameter(2), ierr)
-    control_variate_parameter = sim%thermal_velocity
     allocate(sim%control_variate)
     call sim%control_variate%init(control_variate_equi, &
-         control_variate_parameter)
+         distribution_params=sim%init_distrib_params)
 
     ! Initialize the field solver
     sim%poisson_solver => sll_f_new_poisson_2d_periodic( &
@@ -366,6 +382,7 @@ contains
     if (sim%no_weights == 1) then
        call sim%propagator%init(sim%pic_poisson, sim%particle_group)
     elseif (sim%no_weights == 3) then
+       SLL_ASSERT( sim%particle_type == sll_p_simple_particles )
        call sim%propagator%init( &
             sim%pic_poisson, sim%particle_group, sim%control_variate, 3)
     end if
@@ -377,8 +394,6 @@ contains
 
   subroutine run_pic_2d2v (sim)
     class(sll_t_sim_pic_vp_2d2v_cart_lbf), intent(inout) :: sim
-
-    type(sll_t_initial_density_parameters)  :: initial_density_parameters  ! for the initial particle sampling
     type(sll_t_plotting_params_2d)          :: plotting_params_2d
     sll_int32 :: plot_np_x    !< nb of points in the x  plotting grid for a (x,vx) plot
     sll_int32 :: plot_np_vx   !< nb of points in the vx plotting grid for a (x,vx) plot
@@ -394,19 +409,14 @@ contains
        call sll_s_ascii_file_create('thdiag.dat', th_diag_id, ierr)
     end if
 
-    ! initial sampling of the particle group
-    call initial_density_parameters%set_landau_2d2v_parameters(  &
-        sim%landau_param, &
-        sim%thermal_velocity,  &
-        sim%mesh%eta1_min, &
-        sim%mesh%eta1_max, &
-        sim%mesh%eta2_min, &
-        sim%mesh%eta2_max )
-
-    call sll_s_sample_particle_group(   &
+    call sll_s_sample_particle_group( &
         sim%particle_group,   &
-        sampling_strategy=sim%init_case, &
-        initial_density_parameters=initial_density_parameters )
+        distribution_params = sim%init_distrib_params, &
+        random_sampler = sim%sampler, &
+        nb_weights = sim%no_weights, &
+        control_variate = sim%control_variate, &
+        xmin = [sim%mesh%eta1_min, sim%mesh%eta2_min], &
+        Lx = [sim%mesh%eta1_max - sim%mesh%eta1_min, sim%mesh%eta2_max -sim%mesh%eta2_min] )
 
     plot_np_x  = 100
     plot_np_vx = 100
@@ -483,11 +493,16 @@ contains
     deallocate(sim%kernel_smoother)
     call sim%control_variate%free()
     deallocate(sim%control_variate)
+    call sim%sampler%free()
+    call sim%init_distrib_params%free()
+    deallocate(sim%init_distrib_params)
 
   end subroutine delete_pic_2d2v
 
 !------------------------------------------------------------------------------!
 
+  ! copied from Katharina's simulation:
+  ! As a control variate, we use the equilibrium (v part of the initial distribution)
   function control_variate_equi( this, xi, vi, time) result(sll_f_control_variate)
     class(sll_t_control_variate) :: this
     sll_real64, optional,  intent( in ) :: xi(:) !< particle position
@@ -495,14 +510,10 @@ contains
     sll_real64, optional,  intent( in ) :: time  !< current time
     sll_real64               :: sll_f_control_variate
 
-
-    sll_f_control_variate = exp(-0.5_f64*&
-         ((vi(1)/this%control_variate_parameters(1))**2+&
-         (vi(2)/this%control_variate_parameters(2))**2))/&
-         (2.0_f64*sll_p_pi*product(this%control_variate_parameters))
+    sll_f_control_variate = &
+         this%control_variate_distribution_params%eval_v_density( vi(1:2) )
 
   end function control_variate_equi
-
 
 
 end module sll_m_sim_pic_vp_2d2v_cart_lbf

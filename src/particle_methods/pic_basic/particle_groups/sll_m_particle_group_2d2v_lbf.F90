@@ -137,7 +137,7 @@ module sll_m_particle_group_2d2v_lbf
     procedure, private :: reset_particles_weights_with_direct_interpolation
     procedure, private :: reconstruct_f_lbf
     procedure, private :: reconstruct_f_lbf_on_remapping_grid
-    procedure, private :: reconstruct_f_lbf_on_given_grid
+    procedure :: reconstruct_f_lbf_on_given_grid
     procedure :: sample
     procedure :: resample
     !> @}
