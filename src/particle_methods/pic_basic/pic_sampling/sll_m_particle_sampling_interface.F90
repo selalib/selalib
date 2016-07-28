@@ -39,6 +39,9 @@ module sll_m_particle_sampling_interface
   use sll_m_initial_distribution, only : &
        sll_c_distribution_params
 
+  use sll_m_control_variate, only : &
+       sll_t_control_variate
+
   implicit none
 
   public :: &
@@ -70,15 +73,19 @@ contains
   !> sampling interface
   subroutine sll_s_sample_particle_group( &
           particle_group,   &
-          initial_distribution_params, &
+          distribution_params, &
           random_sampler, &
+          nb_weights, &
+          control_variate, &
           conservative_sampling_params, &
           xmin, &
           Lx )
 
     class(sll_c_particle_group_base), pointer,  intent( inout )        :: particle_group
-    class(sll_c_distribution_params),           intent( in )           :: initial_distribution_params
-    type(sll_t_particle_sampling),              intent( inout ), optional :: random_sampler   !< must have been initialized before
+    class(sll_c_distribution_params),           intent( in )           :: distribution_params
+    type(sll_t_particle_sampling),              intent( inout ), optional :: random_sampler   !< if to be used, must be initialized
+    sll_int32,                                  intent( in ), optional :: nb_weights
+    class(sll_t_control_variate),               intent( in ), optional :: control_variate  !< PIC control variate
     class(sll_t_conservative_sampling_params),  intent( in ), optional :: conservative_sampling_params
     sll_real64,                                 intent( in ), optional :: xmin(:)  !< lower bound of the domain
     sll_real64,                                 intent( in ), optional :: Lx(:)    !< length of the domain.
@@ -98,7 +105,7 @@ contains
           enforce_total_charge = .false.    ! no charge conservation
           target_total_charge = 0._f64      ! value does not matter then
         end if
-        call particle_group%sample( target_total_charge, enforce_total_charge, initial_distribution_params )
+        call particle_group%sample( target_total_charge, enforce_total_charge, distribution_params )
 
       class default
 
@@ -106,7 +113,17 @@ contains
         SLL_ASSERT( present( random_sampler ) )
         SLL_ASSERT( present( xmin ) )
         SLL_ASSERT( present( Lx ) )
-        call random_sampler%sample( particle_group, initial_distribution_params, xmin, Lx )
+        call random_sampler%sample( particle_group, distribution_params, xmin, Lx )
+
+
+        if (nb_weights == 1 ) then
+           call random_sampler%sample ( particle_group, distribution_params, xmin, Lx )
+        elseif ( nb_weights == 3 ) then
+           SLL_ASSERT( present( control_variate ) )
+           call random_sampler%sample_cv ( particle_group, distribution_params, xmin, Lx, control_variate )
+        else
+           SLL_ERROR("sll_s_sample_particle_group", "random sampling interface not implemented for this nb of weights")
+        end if
 
       end select
 
