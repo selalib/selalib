@@ -1,18 +1,16 @@
-FILE(GLOB SOLVER_FILES ${CMAKE_CURRENT_SOURCE_DIR} "*.nml")
-FILE(COPY ${SOLVER_FILES} DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
 
 SET(SPIGA_LIBRARIES
-spi_utilities 
-spi_numbering 
-spi_bspline 
+spi_mapping
 spi_poisson 
+spi_bspline 
 spi_pde 
 spi_fem 
+spi_numbering 
 spi_field 
 spi_space 
 spi_basis 
-spi_mapping
 spi_mesh 
+spi_utilities 
 spi_parameters 
 spi_global)
 
@@ -47,7 +45,9 @@ TARGET_LINK_LIBRARIES(test_spiga_poisson_2d_periodic
 	${SPIGA_LIBRARIES} ${DISCO_LIBRARIES} ${PLAF_LIBRARIES})
 
 SET(PARAMETERS_FILE "parameters_2d.nml")
-SET(SOLVER_FILE    "solver_mgmres_nullspace.nml" )
+SET(SOLVER_FILE     "solver_mgmres_nullspace.nml" )
+FILE(COPY ${PARAMETERS_FILE} DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
+FILE(COPY ${SOLVER_FILE}     DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
 
 ADD_TEST(NAME test_spiga_poisson_2d_periodic 
 	COMMAND test_spiga_poisson_2d_periodic ${PARAMETERS_FILE} ${SOLVER_FILE})
