@@ -73,7 +73,6 @@ program test_hamiltonian_splitting_pic_1d2v_vm
   sll_int32  :: num_cells
   sll_real64 :: delta_t
   sll_int32  :: degree_smoother
-  sll_int64  :: rnd_seed
 
   ! Helper 
   sll_int32  :: i_part
@@ -95,7 +94,6 @@ program test_hamiltonian_splitting_pic_1d2v_vm
   delta_t = 0.1_f64
   degree_smoother = 3
   passed = .TRUE.
-  rnd_seed = 10
 
   domain = [eta_min, eta_max, eta_max - eta_min]
 
