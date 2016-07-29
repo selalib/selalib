@@ -21,14 +21,18 @@ if( HDF5_ENABLED AND HDF5_IS_PARALLEL AND HDF5_PARALLEL_ENABLED )
     ## Vlasov-Poisson 2Dx2D
     add_subdirectory( bsl_vp_2d2v_cart                         )
     add_subdirectory( bsl_vp_2d2v_cart_poisson_serial          )
-    add_subdirectory( bsl_vp_2d2v_cart_sparsegrid              )
+    if (NOT (FFT_LIB STREQUAL "SLLFFT"))
+      add_subdirectory( bsl_vp_2d2v_cart_sparsegrid              )
+    endif()
     add_subdirectory( bsl_vp_2d2v_cart_multipatch              )
     add_subdirectory( bsl_vp_2d2v_polar                        )
     add_subdirectory( bsl_vp_2d2v_curv                         )
 
     ## Vlasov-Poisson 3Dx3D
-    add_subdirectory( bsl_vp_3d3v_cart_sparsegrid              )
-
+    if (NOT (FFT_LIB STREQUAL "SLLFFT"))
+      add_subdirectory( bsl_vp_3d3v_cart_sparsegrid              )
+    endif()
+    
     ## Guiding-Center 2D
     add_subdirectory( bsl_gc_2d0v_curv )
 
@@ -62,7 +66,9 @@ if( HDF5_ENABLED AND HDF5_IS_PARALLEL AND HDF5_PARALLEL_ENABLED )
     add_subdirectory( pic_vp_2d2v_cart                         )
     add_subdirectory( pic_vp_2d2v_cart_optim                   )
     add_subdirectory( pic_vp_2d2v_cart_optim_push              )
-    add_subdirectory( pic_vp_2d2v_cart_remapped                )
+    if (NOT (FFT_LIB STREQUAL "SLLFFT"))
+      add_subdirectory( pic_vp_2d2v_cart_lbf                     )
+    endif()
     add_subdirectory( pic_vp_2d2v_cart_tau                     )
 
     ## Vlasov-Poisson NDxND
