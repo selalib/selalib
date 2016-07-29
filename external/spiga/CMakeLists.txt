@@ -41,6 +41,7 @@ plf_lapack )
 
 LINK_DIRECTORIES(${CMAKE_BINARY_DIR}/lib)
 ADD_EXECUTABLE(test_spiga_poisson_2d_periodic test_poisson_2d_periodic.F90)
+ADD_DEPENDENCIES(test_spiga_poisson_2d_periodic spiga)
 TARGET_LINK_LIBRARIES(test_spiga_poisson_2d_periodic
 	${SPIGA_LIBRARIES} ${DISCO_LIBRARIES} ${PLAF_LIBRARIES})
 
