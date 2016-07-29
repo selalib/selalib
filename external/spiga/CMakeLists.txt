@@ -46,7 +46,7 @@ ADD_EXECUTABLE(test_spiga_poisson_2d_periodic test_poisson_2d_periodic.F90)
 TARGET_LINK_LIBRARIES(test_spiga_poisson_2d_periodic
 	${SPIGA_LIBRARIES} ${DISCO_LIBRARIES} ${PLAF_LIBRARIES})
 
-SET(PARAMETERS_FILE "${CMAKE_CURRENT_BINARY_DIR}/data/parameters_2d.nml")
+SET(PARAMETERS_FILE "parameters_2d.nml")
 SET(SOLVER_FILE    "solver_mgmres_nullspace.nml" )
 
 ADD_TEST(NAME test_spiga_poisson_2d_periodic 
