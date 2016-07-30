@@ -14,6 +14,9 @@
 !  circulated by CEA, CNRS and INRIA at the following URL
 !  "http://www.cecill.info". 
 !**************************************************************
+!> Initialization of particles in 2d+2v: the Landau damping case
+!>
+!>\author: S. Hirstoaga
 
 module sll_m_particle_initializers_4d
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -31,13 +34,17 @@ module sll_m_particle_initializers_4d
   use sll_m_gaussian, only: &
     sll_s_gaussian_deviate_2d
 
+ use sll_m_hammersley, only: &
+       sll_f_suite_hamm
+
   use sll_m_particle_group_4d, only: &
     sll_t_particle_group_4d
 
   implicit none
 
   public :: &
-    sll_s_initial_particles_4d
+       sll_s_initial_random_particles_4d, &
+       sll_s_initial_hammersley_particles_4d
 
   private
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -49,7 +56,10 @@ module sll_m_particle_initializers_4d
 
 contains
 
-  subroutine sll_s_initial_particles_4d( &
+!> Initialize particles in a 2d 2v phase space using random generators.
+!> The Landau damping case with a perturbation in a single direction
+!> of the physical space.
+  subroutine sll_s_initial_random_particles_4d( &
               thermal_speed, alpha, k, &
               m2d,                     &
               num_particles,           &
@@ -83,6 +93,7 @@ contains
        weight = real((m2d%eta1_max - m2d%eta1_min) * &
             (m2d%eta2_max - m2d%eta2_min),f32)/real(num_particles,f32)
     endif
+! Each MPI node initialize 'num_particles' particles in the phase space
 
     rdx = 1._f64/m2d%delta_eta1
     rdy = 1._f64/m2d%delta_eta2
@@ -103,15 +114,14 @@ contains
     j=1
     ii=1
     !Rejection sampling for the function x --> 1+alpha*cos(k*x)
-!Each MPI node initialize 'num_particles' particles in phys space and velocity
     do while ( j <= num_particles )
        call random_number(x)
 !!$       x = vandercorput(ii,3,2)! suite_hamm(ii,3)!
 !!$       ii = ii+1
        x = (m2d%eta1_max - xmin)*x + xmin
        call random_number(y)
-       y = (1._f64+alpha)*y! 2._f64 * y 
-       if (eval_landau(alpha, k, x) >= y ) then
+       y = (1._f64+alpha)*y
+       if (sll_f_eval_landau1d(alpha, k, x) >= y ) then
           call random_number(y)
           y = (m2d%eta2_max - ymin)*y + ymin
 !!$          y = (m2d%eta2_max - ymin)*vandercorput(j,5,3) + ymin! suite_hamm(j,2)
@@ -133,8 +143,114 @@ contains
 
     return
     SLL_ASSERT(present(rank))
-  end subroutine sll_s_initial_particles_4d
+  end subroutine sll_s_initial_random_particles_4d
 
+
+!> Initialize particles in a 2d 2v phase space using pseudo-random generators.
+!> The Landau damping case with a perturbation in a single direction
+!> of the physical space.
+  subroutine sll_s_initial_hammersley_particles_4d( &
+              thermal_speed, alpha, k, &
+              m2d,                     &
+              num_particles,           &
+              p_group,                 &
+              rand_seed, rank, worldsize )
+    sll_real64, intent(in) :: thermal_speed, alpha, k
+    type(sll_t_cartesian_mesh_2d), intent(in) :: m2d
+    sll_int32, intent(in)  :: num_particles
+    type(sll_t_particle_group_4d), pointer, intent(inout) :: p_group
+    sll_int32  :: j, ll
+    sll_int32  :: ncx, ic_x,ic_y
+    sll_real64 :: x, y, vx, vy
+    sll_real64 :: xmin, ymin, rdx, rdy
+    sll_real32 :: weight
+    sll_real32 :: off_x, off_y
+    sll_real64 :: tmp1, tmp2
+    sll_int32, dimension(:), intent(in), optional  :: rand_seed
+    sll_int32, optional  :: rank, worldsize
+    sll_real64, dimension(:), allocatable :: pos_x, pos_y
+    sll_int32  :: ierr
+    sll_real64 :: nu
+    if ( present(rand_seed) ) then
+       call random_seed (put=rand_seed)
+    endif
+
+    if( present(worldsize) ) then
+       weight = real((m2d%eta1_max - m2d%eta1_min) * &
+            (m2d%eta2_max - m2d%eta2_min),f32)/real(worldsize*num_particles,f32)
+    else
+       weight = real((m2d%eta1_max - m2d%eta1_min) * &
+            (m2d%eta2_max - m2d%eta2_min),f32)/real(num_particles,f32)
+    endif
+! Each MPI node initialize 'num_particles' particles in the phase space
+    SLL_ALLOCATE(pos_x(1:num_particles), ierr)
+    SLL_ALLOCATE(pos_y(1:num_particles), ierr)
+
+    rdx = 1._f64/m2d%delta_eta1
+    rdy = 1._f64/m2d%delta_eta2
+    xmin = m2d%eta1_min
+    ymin = m2d%eta2_min
+    ncx  = m2d%num_cells1
+
+    !Rejection sampling for the function x --> 1+alpha*cos(k*x)
+    ll = 0
+!    do j=1,num_particles+ll
+!       do
+!          x = sll_f_suite_hamm(j,3)
+!          x = (m2d%eta1_max - xmin)*x + xmin
+!          call random_number(y)
+!          y = y * (1._f64+alpha)
+!          if (sll_f_eval_landau1d(alpha, k, x) >= y) then
+!             pos_x(j) = x
+!             pos_y(j) = sll_f_suite_hamm(j,2) 
+!             pos_y(j) = (m2d%eta2_max - ymin) * pos_y(j) + ymin
+!             exit
+!          else
+!             ll = ll + 1
+!             exit
+!          endif
+!       enddo
+!    enddo
+! -------------------------------------------------
+! Need to fix that !!!!!
+    j = 1
+    do while ( j <= num_particles+ll )
+       x =  sll_f_suite_hamm(j,3)
+       x = (m2d%eta1_max - xmin) * x + xmin
+       call random_number(y)
+       y = (1._f64 + alpha) * y
+       if (sll_f_eval_landau1d(alpha, k, x) >= y ) then
+          pos_x(j-ll) = x
+          pos_y(j-ll) = sll_f_suite_hamm(j,2) *(m2d%eta2_max - ymin) +ymin
+          j = j + 1
+       else
+          ll = ll + 1 
+          j  = j  + 1
+       endif
+    enddo
+    print*, 'le nb d echecs=', ll
+    open(91,file='Particuleinitiale.dat')
+    do j=1,num_particles 
+       nu = sqrt(-2._f64*log(1._f64-(real(j,f64)-0.5_f64)/real(num_particles,f64)))
+       vx = nu * cos(sll_f_suite_hamm(j,2) * 2._f64*sll_p_pi)
+       vy = nu * sin(sll_f_suite_hamm(j,2) * 2._f64*sll_p_pi)
+       vx = vx*thermal_speed
+       vy = vy*thermal_speed
+       SET_PARTICLE_VALUES(p_group%p_list(j),pos_x(j),pos_y(j),vx,vy,weight,xmin,ymin,ncx,ic_x,ic_y,off_x,off_y,rdx,rdy,tmp1,tmp2)
+       write(91,*) j, pos_x(j),pos_y(j), vx, vy
+    enddo  
+    close(91)
+    SLL_DEALLOCATE_ARRAY(pos_x, ierr)
+    SLL_DEALLOCATE_ARRAY(pos_y, ierr)
+
+    return
+    SLL_ASSERT(present(rank))
+  end subroutine sll_s_initial_hammersley_particles_4d
+
+
+
+!> The Landau damping case with a perturbation in BOTH directions
+!> of the physical space.
   subroutine sll_initial_particles_4d_L2d( &
               thermal_speed, alpha, &
               kx, ky, m2d,                     &
@@ -198,7 +314,7 @@ contains
        y = (m2d%eta2_max - ymin)*y + ymin
        call random_number(z)
        z = (1._f64+alpha)*z
-       if (eval_landau2d(alpha, kx, x, ky, y) >= z ) then
+       if (sll_f_eval_landau2d(alpha, kx, x, ky, y) >= z ) then
           call sll_s_gaussian_deviate_2d(val)
           vx = val(1)*thermal_speed
           vy = val(2)*thermal_speed
@@ -218,16 +334,16 @@ contains
   end subroutine sll_initial_particles_4d_L2d
 
 
-  function eval_landau(alp, kx, x)
+  function sll_f_eval_landau1d(alp, kx, x)
     sll_real64 :: alp, kx, x
-    sll_real64 :: eval_landau
-    eval_landau = 1._f64 + alp * cos(kx * x)
-  end function eval_landau
+    sll_real64 :: sll_f_eval_landau1d
+    sll_f_eval_landau1d = 1._f64 + alp * cos(kx * x)
+  end function sll_f_eval_landau1d
 
-  function eval_landau2d(alp, kx, x, ky, y)
+  function sll_f_eval_landau2d(alp, kx, x, ky, y)
     sll_real64 :: alp, kx, x, ky, y
-    sll_real64 :: eval_landau2d
-    eval_landau2d = 1._f64 + alp * cos(kx * x)*cos(ky * y)
-  end function eval_landau2d
+    sll_real64 :: sll_f_eval_landau2d
+    sll_f_eval_landau2d = 1._f64 + alp * cos(kx * x)*cos(ky * y)
+  end function sll_f_eval_landau2d
 
 end module sll_m_particle_initializers_4d
