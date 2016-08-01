@@ -109,7 +109,7 @@ set( SLL_EXT  ${SLL_EXT}  CACHE INTERNAL "List of built-in external libraries" )
 set( SLL_DEPS ${SLL_DEPS} CACHE INTERNAL "List of external dependencies" )
 
 # Find header files
-file( GLOB_RECURSE SLL_MACROS ${PROJECT_SOURCE_DIR}/sll_*.h )
+file( GLOB_RECURSE SLL_MACROS ${PROJECT_SOURCE_DIR}/src/sll_*.h )
 
 # Installation (library, headers, mod files)
 install( FILES ${SLL_LIB}    DESTINATION lib )
