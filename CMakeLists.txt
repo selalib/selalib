@@ -90,6 +90,7 @@ INCLUDE(FFTConfig)
 INCLUDE(LapackConfig)
 INCLUDE(DoxygenConfig)
 INCLUDE(PreprocessorTarget)
+INCLUDE(CLAPP_framework)
 
 IF(MPI_ENABLED)
   INCLUDE(MPIConfig)
