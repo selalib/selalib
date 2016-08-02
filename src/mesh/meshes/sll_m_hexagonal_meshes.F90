@@ -1537,7 +1537,7 @@ contains
   !> @param[IN] y real the y-coordinate of point to be mapped
   !> @param[OUT] x_new real the x-coordinate of mapped point
   !> @param[OUT] y_new real the y-coordinate of mapped point
-  subroutine hex_to_aligned_pt(mesh, ind, transf, x_new, y_new)
+  recursive subroutine hex_to_aligned_pt(mesh, ind, transf, x_new, y_new)
     class(sll_t_hex_mesh_2d), intent(in)  :: mesh
     sll_int32,              intent(in)  :: ind
     character(len=*),       intent(in)  :: transf
