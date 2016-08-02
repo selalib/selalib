@@ -32,6 +32,7 @@ module sll_m_constants
     sll_p_mass, &
     sll_p_epsilon_0, &
     sll_p_g, &
+    sll_p_i0, &
     sll_p_i1, &
     sll_p_kb, &
     sll_p_kx, &
@@ -82,5 +83,8 @@ sll_real64, parameter :: sll_p_kb = 1.3806488e-23_f64
 
 !> @param Complex number i=sqrt(-1)
 sll_comp64, parameter :: sll_p_i1 = cmplx(0.0_f64, 1.0_f64, kind=f64)
+
+!> @param Complex number i=sqrt(-1)
+sll_comp64, parameter :: sll_p_i0 = (0.0_f64, 0.0_f64)
 
 end module sll_m_constants

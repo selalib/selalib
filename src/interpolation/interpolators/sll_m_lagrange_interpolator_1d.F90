@@ -20,6 +20,7 @@ module sll_m_lagrange_interpolator_1d
   use sll_m_lagrange_fast, only : &
     sll_s_interpolate_array_disp_lagrange_fixed_no_bc, &
     sll_s_interpolate_array_disp_lagrange_fixed_periodic, &
+    sll_s_interpolate_array_disp_lagrange_fixed_periodic_last, &
     sll_s_interpolate_array_disp_lagrange_fixed_halo_cells
 
   use sll_m_lagrange_interpolation_1d, only: &
@@ -31,7 +32,9 @@ module sll_m_lagrange_interpolator_1d
   implicit none
 
   public :: &
-    sll_t_lagrange_interpolator_1d
+    sll_t_lagrange_interpolator_1d, &
+    sll_p_lagrange_centered, &
+    sll_p_lagrange_fixed
 
   private
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -124,6 +127,8 @@ subroutine initialize_li1d_interpolator(interpolator,num_points,xmin,xmax,bc_typ
        SLL_ERROR('interpolate_array_disp_li1d', 'Interval selection not implemented.')
     end select
 
+    interpolator%bc_type = bc_type
+
 end subroutine
 
 function new_lagrange_interpolator_1d( &
@@ -179,7 +184,11 @@ subroutine interpolate_array_disp_li1d(this, num_pts, data, alpha, output_array)
   case (sll_p_lagrange_fixed)
      select case (this%bc_type)
      case (sll_p_periodic)
-        call sll_s_interpolate_array_disp_lagrange_fixed_periodic(data, output_array, alpha/this%lagrange%deta, this%stencil_width)
+        if (this%lagrange%periodic_last == 0) then
+           call sll_s_interpolate_array_disp_lagrange_fixed_periodic(data, output_array, alpha/this%lagrange%deta, this%stencil_width)
+        else
+           call sll_s_interpolate_array_disp_lagrange_fixed_periodic_last(data,  output_array, alpha/this%lagrange%deta, this%stencil_width)
+        end if
      case (sll_p_one_sided)
         call sll_s_interpolate_array_disp_lagrange_fixed_no_bc(data, output_array, alpha/this%lagrange%deta, this%stencil_width)
      case (sll_p_halo)

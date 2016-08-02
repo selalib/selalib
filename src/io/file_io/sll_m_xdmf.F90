@@ -47,6 +47,7 @@ module sll_m_xdmf
     sll_o_binary_write_array
 
 #else
+  use hdf5, only: hid_t
   use sll_m_hdf5_io_serial, only: &
     sll_o_hdf5_file_close, &
     sll_o_hdf5_file_create, &
@@ -148,11 +149,17 @@ character(len=*), intent(in)    :: mesh_name   !< mesh name
 sll_real64, intent(in)          :: array(:,:)  !< data array
 character(len=*), intent(in)    :: array_name  !< array name (hdf5 dataset)
 sll_int32, intent(out)          :: error       !< error code
-sll_int32                       :: file_id     !< hdf5 file unit number
 sll_int32                       :: npoints_x1  !< x nodes number
 sll_int32                       :: npoints_x2  !< y nodes number
 sll_int32, intent(in), optional :: xmffile_id  !< xmf file unit number
 character(len=4), optional      :: center      !< "Node" or "Cell"
+
+#ifndef NOHDF5
+integer(hid_t) :: hfile_id
+#else
+sll_int32                       :: file_id     !< hdf5 file unit number
+#endif
+
 
 npoints_x1 = size(array,1)
 npoints_x2 = size(array,2)
@@ -164,9 +171,9 @@ call sll_o_binary_write_array(file_id,array,error)
 call sll_s_binary_file_close(file_id,error)
 #else
 call sll_o_hdf5_file_create(trim(mesh_name)//"-"//trim(array_name)//".h5", &
-                          file_id,error)
-call sll_o_hdf5_write_array(file_id,array,"/"//trim(array_name),error)
-call sll_o_hdf5_file_close(file_id, error)
+                          hfile_id,error)
+call sll_o_hdf5_write_array(hfile_id,array,"/"//trim(array_name),error)
+call sll_o_hdf5_file_close(hfile_id, error)
 #endif
 
 if ( present(xmffile_id) .and. present(center)) then
@@ -194,13 +201,18 @@ character(len=*), intent(in)    :: mesh_name    !< mesh name
 sll_real64, intent(in)          :: array(:,:,:) !< data array
 character(len=*), intent(in)    :: array_name   !< hdf5 dataset name
 sll_int32, intent(out)          :: error        !< error code
-sll_int32                       :: file_id      !< hdf5 file unit number
 sll_int32, intent(in), optional :: xmffile_id   !< xmf file unit number
 character(len=4), optional      :: center       !< "Node" or "Cell"
 sll_int32                       :: npoints_x1   !< x nodes number
 sll_int32                       :: npoints_x2   !< y nodes number
 sll_int32                       :: npoints_x3   !< z nodes number
     
+#ifndef NOHDF5
+integer(hid_t) :: hfile_id
+#else
+sll_int32                       :: file_id      !< hdf5 file unit number
+#endif
+
 npoints_x1 = size(array,1)
 npoints_x2 = size(array,2)
 npoints_x3 = size(array,3)
@@ -212,9 +224,9 @@ call sll_o_binary_write_array(file_id,array,error)
 call sll_s_binary_file_close(file_id,error)
 #else
 call sll_o_hdf5_file_create(trim(mesh_name)//"-"//trim(array_name)//".h5", &
-                          file_id,error)
-call sll_o_hdf5_write_array(file_id,array,"/"//trim(array_name),error)
-call sll_o_hdf5_file_close(file_id, error)
+                          hfile_id,error)
+call sll_o_hdf5_write_array(hfile_id,array,"/"//trim(array_name),error)
+call sll_o_hdf5_file_close(hfile_id, error)
 #endif
 
 if ( present(xmffile_id) .and. present(center)) then
@@ -269,7 +281,7 @@ sll_int32       , optional   :: iplot       !< plot index
 
 character(len=4)             :: cplot     
 #ifndef NOHDF5
-sll_int32                    :: hfile_id    !< h5 file unit number
+integer(hid_t)               :: hfile_id    !< h5 file unit number
 #endif
     
 nx1 = size(array,1)
@@ -359,7 +371,7 @@ sll_int32       , optional   :: iplot       !< plot index
 
 character(len=4)             :: cplot
 #ifndef NOHDF5
-sll_int32                    :: hfile_id    !< h5 file unit number
+integer(hid_t)               :: hfile_id    !< h5 file unit number
 #endif
     
 nx1 = size(array,1)
@@ -422,7 +434,8 @@ subroutine sll_s_xdmf_rect2d_nodes( file_name,   &
                                     eta1,        &
                                     eta2,        &
                                     file_format, &
-                                    iplot        ) 
+                                    iplot,       & 
+                                    time         ) 
 
 sll_real64, intent(in)       :: array(:,:) !< data array
 sll_real64, intent(in)       :: eta1(:)    !< x data
@@ -434,11 +447,12 @@ sll_int32                    :: file_id    !< xmf file unit number
 sll_int32                    :: nx1        !< x nodes number
 sll_int32                    :: nx2        !< y nodes number
 character(len=4), optional   :: file_format!< file format "HDF5" or "Binary"
-sll_int32, optional          :: iplot      !< plot index
+sll_int32,  optional         :: iplot      !< plot index
+sll_real64, optional         :: time       !< time
 sll_int32                    :: i, j
 character(len=4)             :: cplot
 #ifndef NOHDF5
-sll_int32                    :: hfile_id    !< h5 file unit number
+integer(hid_t)               :: hfile_id    !< h5 file unit number
 #endif
     
 nx1 = size(array,1)
@@ -454,6 +468,9 @@ else
   call sll_s_xml_file_create(file_name//".xmf",file_id,error)
 end if
 write(file_id,"(a)")"<Grid Name='mesh' GridType='Uniform'>"
+if (present(time)) then
+  write(file_id,"(a,f12.6,a)") "<Time Value='",time,"'/>"
+end if
 write(file_id,"(a,2i5,a)")"<Topology TopologyType='2DRectMesh' NumberOfElements='", &
                           nx2,nx1,"'/>"
 write(file_id,"(a)")"<Geometry GeometryType='VXVY'>"
@@ -522,7 +539,7 @@ character(len=4), optional   :: file_format  !< file format "HDF5" or "Binary"
 sll_int32       , optional   :: iplot        !< plot index
 sll_int32                    :: i, j, k
 #ifndef NOHDF5
-sll_int32                    :: hfile_id    !< h5 file unit number
+integer(hid_t)               :: hfile_id    !< h5 file unit number
 #endif
 character(len=4)             :: cplot
     
@@ -612,7 +629,7 @@ character(len=4), optional   :: file_format !< file format "HDF5" or "Binary"
 sll_int32,        optional   :: iplot       !< plot index
 character(len=4)             :: cplot 
 #ifndef NOHDF5
-sll_int32                    :: hfile_id    !< h5 file unit number
+integer(hid_t)               :: hfile_id    !< h5 file unit number
 #endif
 
 nx1 = size(array,1)
@@ -744,7 +761,7 @@ sll_int32       , optional   :: iplot         !< plot index
 
 character(len=4)             :: cplot         
 #ifndef NOHDF5
-sll_int32                    :: hfile_id    !< h5 file unit number
+integer(hid_t)               :: hfile_id    !< h5 file unit number
 #endif
 
 nx1 = size(array,1)
@@ -894,6 +911,10 @@ subroutine sll_s_plot_f_cartesian( iplot,      &
   sll_int32                               :: i
   sll_int32                               :: j
   character(len=4)                        :: cplot
+
+#ifndef NOHDF5
+integer(hid_t) :: hfile_id
+#endif
   
   SLL_ASSERT(iplot > 0)
   if (iplot == 1) then
@@ -908,12 +929,12 @@ subroutine sll_s_plot_f_cartesian( iplot,      &
     end do
 
 #ifndef NOHDF5
-    call sll_o_hdf5_file_create("cartesian_mesh-x1.h5",file_id,error)
-    call sll_o_hdf5_write_array(file_id,x1,"/x1",error)
-    call sll_o_hdf5_file_close(file_id, error)
-    call sll_o_hdf5_file_create("cartesian_mesh-x2.h5",file_id,error)
-    call sll_o_hdf5_write_array(file_id,x2,"/x2",error)
-    call sll_o_hdf5_file_close(file_id, error)
+    call sll_o_hdf5_file_create("cartesian_mesh-x1.h5",hfile_id,error)
+    call sll_o_hdf5_write_array(hfile_id,x1,"/x1",error)
+    call sll_o_hdf5_file_close(hfile_id, error)
+    call sll_o_hdf5_file_create("cartesian_mesh-x2.h5",hfile_id,error)
+    call sll_o_hdf5_write_array(hfile_id,x2,"/x2",error)
+    call sll_o_hdf5_file_close(hfile_id, error)
 #endif
 
     deallocate(x1)
@@ -972,20 +993,23 @@ subroutine sll_s_plot_f( &
   sll_int32 :: file_id
   sll_int32 :: ierr
   character(len=4) :: cplot
+
+#ifndef NOHDF5
+  integer(hid_t) :: hfile_id
   
   if (present(x1).and.present(x2)) then
 
 
-#ifndef NOHDF5
-    call sll_o_hdf5_file_create(trim(mesh_name)//"-x1.h5",file_id,ierr)
-    call sll_o_hdf5_write_array(file_id,x1,"/x1",ierr)
-    call sll_o_hdf5_file_close(file_id, ierr)
-    call sll_o_hdf5_file_create(trim(mesh_name)//"-x2.h5",file_id,ierr)
-    call sll_o_hdf5_write_array(file_id,x2,"/x2",ierr)
-    call sll_o_hdf5_file_close(file_id, ierr)
-#endif
+    call sll_o_hdf5_file_create(trim(mesh_name)//"-x1.h5",hfile_id,ierr)
+    call sll_o_hdf5_write_array(hfile_id,x1,"/x1",ierr)
+    call sll_o_hdf5_file_close(hfile_id, ierr)
+    call sll_o_hdf5_file_create(trim(mesh_name)//"-x2.h5",hfile_id,ierr)
+    call sll_o_hdf5_write_array(hfile_id,x2,"/x2",ierr)
+    call sll_o_hdf5_file_close(hfile_id, ierr)
 
   end if
+
+#endif
 
   call sll_s_int2string(iplot,cplot)
   call sll_o_xdmf_open( &

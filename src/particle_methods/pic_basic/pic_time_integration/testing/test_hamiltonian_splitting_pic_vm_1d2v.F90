@@ -1,5 +1,6 @@
 ! TODO: Use input from file to initialize and compare
-
+! Unit test for symplectic splitting
+! author: Katharina Kormann, IPP
 program test_hamiltonian_splitting_pic_1d2v_vm
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_memory.h"
@@ -20,13 +21,13 @@ program test_hamiltonian_splitting_pic_1d2v_vm
   use sll_m_hamiltonian_splitting_pic_vm_1d2v, only: &
     sll_t_hamiltonian_splitting_pic_vm_1d2v
 
-  use sll_m_kernel_smoother_base, only: &
+  use sll_m_particle_mesh_coupling_base, only: &
     sll_p_galerkin, &
-    sll_c_kernel_smoother
+    sll_c_particle_mesh_coupling
 
-  use sll_m_kernel_smoother_spline_1d, only: &
-    sll_t_kernel_smoother_spline_1d, &
-    sll_s_new_kernel_smoother_spline_1d_ptr
+  use sll_m_particle_mesh_coupling_spline_1d, only: &
+    sll_t_particle_mesh_coupling_spline_1d, &
+    sll_s_new_particle_mesh_coupling_spline_1d_ptr
 
   use sll_m_maxwell_1d_base, only: &
     sll_c_maxwell_1d_base
@@ -39,9 +40,6 @@ program test_hamiltonian_splitting_pic_1d2v_vm
 
   use sll_m_particle_group_base, only: &
     sll_c_particle_group_base
-
-  use sll_m_particle_initializer, only: &
-    sll_s_particle_initialize_sobol_landau_1d2v
 
   implicit none
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -59,8 +57,8 @@ program test_hamiltonian_splitting_pic_1d2v_vm
   sll_real64, pointer :: rho(:), rho_local(:)
 
   ! Abstract kernel smoothers
-  class(sll_c_kernel_smoother), pointer :: kernel_smoother_0     
-  class(sll_c_kernel_smoother), pointer :: kernel_smoother_1
+  class(sll_c_particle_mesh_coupling), pointer :: kernel_smoother_0     
+  class(sll_c_particle_mesh_coupling), pointer :: kernel_smoother_1
   
   ! Maxwell solver 
   ! Abstract 
@@ -142,10 +140,10 @@ program test_hamiltonian_splitting_pic_1d2v_vm
   call particle_group%set_common_weight (1.0_f64)
 
   ! Initialize kernel smoother    
-  call sll_s_new_kernel_smoother_spline_1d_ptr(kernel_smoother_1, &
+  call sll_s_new_particle_mesh_coupling_spline_1d_ptr(kernel_smoother_1, &
        domain(1:2), [num_cells], &
        n_particles, degree_smoother-1, sll_p_galerkin) 
-  call sll_s_new_kernel_smoother_spline_1d_ptr(kernel_smoother_0, &
+  call sll_s_new_particle_mesh_coupling_spline_1d_ptr(kernel_smoother_0, &
        domain(1:2), [num_cells], &
        n_particles, degree_smoother, sll_p_galerkin) 
   
@@ -317,13 +315,13 @@ program test_hamiltonian_splitting_pic_1d2v_vm
        0.99163866889590213_f64,        1.0359265946162064_f64, &
        0.96576229888372844_f64,        1.0213195333087741_f64 ];
 
-  efield_ref = reshape([ 0.32668967300827889_f64,       0.21111816665325256 _f64, &
+  efield_ref = reshape([ 0.32668967300827889_f64,  0.21111816665325256_f64, &
        -3.2797353014133206_f64,       0.93182059869704992_f64, &
        2.4099520529926513_f64,      -0.54074935301675420_f64, &
        -6.6508143734355582E-002_f64,  -4.4526750013638647_f64, &
        2.7314012140039408_f64,        2.4952249586987651_f64, &
        1.2896538770270727_f64,        0.45428428470806997_f64, &
-       1.9372031866314203_f64,        1.2380946765497305 _f64, &
+       1.9372031866314203_f64,        1.2380946765497305_f64, &
        0.83732795515227731_f64,        1.0244885213955153_f64, &
        1.1187987978241094_f64,       0.68789307296286761_f64, &
        1.0938576576751671_f64,       0.85201507883794003_f64 ], [num_cells,2]);

@@ -153,6 +153,24 @@ module sll_m_cartesian_meshes
      procedure, pass(mesh) :: delete => delete_cartesian_mesh_4d
   end type sll_t_cartesian_mesh_4d
 
+
+  !> 6D cartesian mesh 
+  type, public :: sll_t_cartesian_mesh_6d
+     sll_int32  :: num_cells(6)  !< number of cells in each direction
+     sll_real64 :: eta_min(6)    !< minimum value of eta along each direction
+     sll_real64 :: eta_max(6)    !< maximum value of eta along each direction
+     sll_real64 :: delta_eta(6)  !< cell spacing along each direction
+     sll_real64 :: volume        !< volume of the domain
+     sll_real64 :: volume_eta123 !< volume of the domain spanned by first three components
+     sll_real64 :: volume_eta456 !< volume of the domain spanned by last three components
+     
+   contains
+     procedure :: initialize => initialize_cartesian_mesh_6d
+     procedure :: display => display_cartesian_mesh_6d
+     procedure :: delete => delete_cartesian_mesh_6d
+  end type sll_t_cartesian_mesh_6d
+
+
   !> @brief Deallocates memory for the cartesian mesh. 
   !> @param mesh pointer to a sll_cartesian_mesh_*d object.
   interface sll_o_delete
@@ -1090,6 +1108,8 @@ function eta1_node_3d(mesh, i1, i2, i3) result(res)
                                          mesh%eta4_max,  &
                                          mesh%delta_eta4
   end subroutine display_cartesian_mesh_4d
+
+
   
   !> @brief deallocates memory for the 1D cartesian mesh. Recommended access 
   !> through the generic interface delete( mesh ).
@@ -1262,6 +1282,80 @@ function eta1_node_3d(mesh, i1, i2, i3) result(res)
   endfunction period_cartesian_mesh_1d   
   
   
+  ! 6D procedures
+
+
+  !> @brief initialize a 6D cartesian mesh
+  !> @param [inout] mesh sll_cartesian_mesh_6d object
+  !> @param [in] num_cells array with number of cells along each dimension
+  !> @param [in] eta_min array with minimal value of eta along each dimension
+  !> @param [in] eta_max array with maximal value of eta along each dimension
+  subroutine initialize_cartesian_mesh_6d( &
+       this, &
+       num_cells, &
+       eta_min, &
+       eta_max)
+    class(sll_t_cartesian_mesh_6d), intent(inout) :: this
+    sll_int32,                   intent(in)    :: num_cells(6)
+    sll_real64,                  intent(in)    :: eta_min(6)    
+    sll_real64,                  intent(in)    :: eta_max(6)
+    
+    this%num_cells = num_cells
+    this%eta_min = eta_min
+    this%eta_max = eta_max
+
+    this%delta_eta = (eta_max-eta_min)/num_cells
+    
+    this%volume_eta123 = product(this%delta_eta(1:3))
+    this%volume_eta456 = product(this%delta_eta(4:6))
+    this%volume = this%volume_eta123 * this%volume_eta456
+
+
+  end subroutine initialize_cartesian_mesh_6d
+
+
+
+  !> @brief display contents of a 6d cartesian mesh. Recommended access through
+  !> the generic interface sll_display( mesh ).
+  !> @param mesh pointer to a sll_cartesian_mesh_6d object.
+  subroutine display_cartesian_mesh_6d(mesh)
+    class(sll_t_cartesian_mesh_6d), intent(in) :: mesh
+
+    write(*,"(/,(a))") '6D mesh : num_cell eta_min      eta_max       delta_eta'
+    write(*,"(10x,(i4,1x),3(g13.3,1x))") mesh%num_cells(1), &
+                                         mesh%eta_min(1),  &
+                                         mesh%eta_max(1),  &
+                                         mesh%delta_eta(1)
+    write(*,"(10x,(i4,1x),3(g13.3,1x))") mesh%num_cells(2), &
+                                         mesh%eta_min(2),  &
+                                         mesh%eta_max(2),  &
+                                         mesh%delta_eta(2)
+    write(*,"(10x,(i4,1x),3(g13.3,1x))") mesh%num_cells(3), &
+                                         mesh%eta_min(3),  &
+                                         mesh%eta_max(3),  &
+                                         mesh%delta_eta(3)
+    write(*,"(10x,(i4,1x),3(g13.3,1x))") mesh%num_cells(4), &
+                                         mesh%eta_min(4),  &
+                                         mesh%eta_max(4),  &
+                                         mesh%delta_eta(4)
+    write(*,"(10x,(i4,1x),3(g13.3,1x))") mesh%num_cells(5), &
+                                         mesh%eta_min(5),  &
+                                         mesh%eta_max(5),  &
+                                         mesh%delta_eta(5)
+    write(*,"(10x,(i4,1x),3(g13.3,1x))") mesh%num_cells(6), &
+                                         mesh%eta_min(6),  &
+                                         mesh%eta_max(6),  &
+                                         mesh%delta_eta(6)
+  end subroutine display_cartesian_mesh_6d
+
+  !> @brief destructor of 6D cartesian mesh
+  !> @param [inout] mesh sll_cartesian_mesh_6d object
+  subroutine delete_cartesian_mesh_6d(this)
+    class(sll_t_cartesian_mesh_6d), intent(inout) :: this
+    
+
+  end subroutine delete_cartesian_mesh_6d
+
   
   
 #undef TEST_PRESENCE_AND_ASSIGN_VAL

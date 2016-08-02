@@ -14,6 +14,7 @@ module sll_m_lagrange_fast
 
   public :: sll_s_interpolate_array_disp_lagrange_fixed_no_bc, &
        sll_s_interpolate_array_disp_lagrange_fixed_periodic, &
+       sll_s_interpolate_array_disp_lagrange_fixed_periodic_last, &
        sll_s_interpolate_array_disp_lagrange_fixed_halo_cells
 
   private
@@ -433,19 +434,50 @@ contains
         fp(1) = lagr_3pt(fi(n), fi(1), fi(2), p)
         call lagr_3pt_vec(fi, fp, p)
         fp(n) = lagr_3pt(fi(n-1), fi(n), fi(1), p)
-
       case(5)
         fp(1) = lagr_5pt(fi(n-1), fi(n), fi(1), fi(2), fi(3), p)
         fp(2) = lagr_5pt(fi(n), fi(1), fi(2), fi(3), fi(4), p)
         call lagr_5pt_vec(fi, fp, p)
         fp(n-1) = lagr_5pt(fi(n-3), fi(n-2), fi(n-1), fi(n), fi(1), p)
         fp(n) = lagr_5pt(fi(n-2), fi(n-1), fi(n), fi(1), fi(2), p)
-
       case default
         write(*,*) "Lagrange stencil not implemented."
     end select
   end subroutine sll_s_interpolate_array_disp_lagrange_fixed_periodic
 
+
+!------------------------------------------------------------------------------!
+  !> @brief Lagrange interpolation, periodic boundary conditions, first value repeated at the end
+  !> @param [in]  fi(:)      input array of length n+1
+  !> @param [out] fp(:)      output array of length n+1
+  !> @param [in]  p          offset in units of dx (best interpolation result for p close to zero, about [-1,1], but not a requirement)
+  !> @param [in]  stencil    number of points in fi used for interpolation (currently possible values 3,5)
+  subroutine sll_s_interpolate_array_disp_lagrange_fixed_periodic_last(fi, fp, p, stencil)
+    implicit none
+    sll_real64, intent(in)   :: fi(:)
+    sll_real64, intent(out)  :: fp(:)
+    sll_real64, intent(in)   :: p
+    sll_int32,  intent(in)   :: stencil
+
+    sll_int32 :: n
+    n = size(fi)-1
+
+    select case (stencil)
+
+      case(3)
+        fp(1) = lagr_3pt(fi(n), fi(1), fi(2), p)
+        call lagr_3pt_vec(fi, fp, p)
+        fp(n+1) = fp(1)
+      case(5)
+        fp(1) = lagr_5pt(fi(n-1), fi(n), fi(1), fi(2), fi(3), p)
+        fp(2) = lagr_5pt(fi(n), fi(1), fi(2), fi(3), fi(4), p)
+        call lagr_5pt_vec(fi, fp, p)
+        fp(n) = lagr_5pt(fi(n-2), fi(n-1), fi(n), fi(1), fi(2), p)
+        fp(n+1) = fp(1)
+      case default
+        write(*,*) "Lagrange stencil not implemented."
+    end select
+  end subroutine sll_s_interpolate_array_disp_lagrange_fixed_periodic_last
 
 
 !------------------------------------------------------------------------------!

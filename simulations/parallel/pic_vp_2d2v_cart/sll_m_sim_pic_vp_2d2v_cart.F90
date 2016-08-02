@@ -24,13 +24,17 @@ module sll_m_sim_pic_vp_2d2v_cart
   use sll_m_control_variate, only: &
     sll_t_control_variate
 
-  use sll_m_kernel_smoother_base, only: &
-    sll_p_collocation, &
-    sll_c_kernel_smoother
+  use sll_m_initial_distribution, only : &
+       sll_c_distribution_params, &
+       sll_s_initial_distribution_new
 
-  use sll_m_kernel_smoother_spline_2d, only: &
-    sll_t_kernel_smoother_spline_2d, &
-    sll_s_new_kernel_smoother_spline_2d_ptr
+  use sll_m_particle_mesh_coupling_base, only: &
+    sll_p_collocation, &
+    sll_c_particle_mesh_coupling
+
+  use sll_m_particle_mesh_coupling_spline_2d, only: &
+    sll_t_particle_mesh_coupling_spline_2d, &
+    sll_s_new_particle_mesh_coupling_spline_2d_ptr
 
   use sll_m_operator_splitting_pic_vp_2d2v, only: &
     sll_t_operator_splitting_pic_vp_2d2v
@@ -41,11 +45,10 @@ module sll_m_sim_pic_vp_2d2v_cart
 
   use sll_m_particle_group_base, only: &
     sll_c_particle_group_base
-
-  use sll_m_particle_initializer, only: &
-    sll_s_particle_initialize_random_landau_2d2v, &
-    sll_s_particle_initialize_sobol_landau_2d2v
-
+  
+  use sll_m_particle_sampling, only : &
+       sll_t_particle_sampling
+  
   use sll_m_pic_poisson_base, only : &
     sll_c_pic_poisson
 
@@ -60,7 +63,7 @@ module sll_m_sim_pic_vp_2d2v_cart
     sll_c_poisson_2d_base
 
   use sll_m_sim_base, only: &
-    sll_c_simulation_base_class
+       sll_c_simulation_base_class
 
   implicit none
 
@@ -85,7 +88,7 @@ module sll_m_sim_pic_vp_2d2v_cart
      type(sll_t_cartesian_mesh_2d), pointer    :: mesh  ! [[selalib:src/meshes/sll_m_cartesian_meshes.F90::sll_t_cartesian_mesh_2d]]
 
      ! Abstract kernel smoother
-     class(sll_c_kernel_smoother), pointer :: kernel_smoother
+     class(sll_c_particle_mesh_coupling), pointer :: kernel_smoother
 
      ! Poisson solver
      class(sll_c_poisson_2d_base), pointer :: poisson_solver 
@@ -101,8 +104,8 @@ module sll_m_sim_pic_vp_2d2v_cart
      sll_int32  :: no_weights
      
      ! Physical parameters
-     sll_real64 :: landau_param(2) ! (1+landau_param(1)*cos(landau_param(2)*x1) 
-     sll_real64 :: thermal_velocity(2) ! 
+     class(sll_c_distribution_params), allocatable :: init_distrib_params
+     type(sll_t_particle_sampling) :: sampler
      
      ! Simulation parameters
      sll_real64 :: delta_t
@@ -110,7 +113,6 @@ module sll_m_sim_pic_vp_2d2v_cart
      sll_int32  :: n_particles
      sll_int32  :: n_total_particles
      sll_int32  :: degree_smoother
-     sll_int32  :: init_case
      
      ! Parameters for MPI
      sll_int32  :: rank
@@ -136,24 +138,24 @@ contains
     character(len=*),                  intent(in)    :: filename
 
     sll_int32   :: n_time_steps
-    sll_real64  :: delta_t, alpha, n_mode, thermal_v1, thermal_v2
+    sll_real64  :: delta_t
     sll_int32   :: ng_x1, ng_x2
     sll_real64  :: x1_min, x1_max, x2_min, x2_max
     sll_int32   :: n_particles, degree_smoother
-    character(len=256) :: init_case
+    character(len=256) :: initial_distrib
+    character(len=256) :: sampling_case
     logical     :: with_control_variate
 
     sll_int32 :: input_file ! unit for nml file
-    sll_int32 :: io_stat, ierr
-    sll_real64, pointer :: control_variate_parameter(:)
+    sll_int32 :: io_stat
     sll_real64 :: domain(2,2)
     
 
-    namelist /sim_params/         delta_t, n_time_steps, alpha, n_mode, thermal_v1, thermal_v2
+    namelist /sim_params/         delta_t, n_time_steps, initial_distrib
     
     namelist /grid_dims/          ng_x1, ng_x2, x1_min, x2_min, x1_max, x2_max
 
-    namelist /pic_params/         init_case, n_particles, degree_smoother, with_control_variate
+    namelist /pic_params/         n_particles, degree_smoother, sampling_case, with_control_variate
 
     ! Read parameters from file
     open(newunit = input_file, file=trim(filename), IOStat=io_stat)
@@ -164,7 +166,9 @@ contains
 
     read(input_file, sim_params)
     read(input_file, grid_dims)
+    call sll_s_initial_distribution_new( trim(initial_distrib), [2,2], input_file, sim%init_distrib_params )
     read(input_file, pic_params)
+    
     close (input_file)
 
     sim%world_size = sll_f_get_collective_size(sll_v_world_collective)
@@ -172,8 +176,6 @@ contains
 
     sim%delta_t = delta_t
     sim%n_time_steps = n_time_steps
-    sim%landau_param = [alpha, n_mode*2.0_f64 * sll_p_pi/(x1_max - x1_min)]
-    sim%thermal_velocity = [thermal_v1, thermal_v2]
 
     sim%mesh => sll_f_new_cartesian_mesh_2d( ng_x1, ng_x2, &
          x1_min, x1_max, x2_min, x2_max)
@@ -181,15 +183,8 @@ contains
     sim%n_particles = n_particles/sim%world_size
     sim%n_total_particles = sim%n_particles * sim%world_size
     sim%degree_smoother = degree_smoother
-    
-    select case(init_case)
-    case("SLL_INIT_RANDOM")
-       sim%init_case = SLL_INIT_RANDOM
-    case("SLL_INIT_SOBOL")
-       sim%init_case = SLL_INIT_SOBOL
-    case default
-       print*, '#init case ', init_case, ' not implemented.'
-    end select
+
+    call sim%sampler%init( trim(sampling_case),  [2,2], sim%n_particles, sim%rank  )
 
     if (with_control_variate .EQV. .TRUE.) then
        sim%no_weights = 3
@@ -204,11 +199,9 @@ contains
     
     
     ! Initialize control variate
-    SLL_ALLOCATE(control_variate_parameter(2), ierr)
-    control_variate_parameter = sim%thermal_velocity
     allocate(sim%control_variate)
     call sim%control_variate%init(control_variate_equi, &
-         control_variate_parameter)
+         distribution_params=sim%init_distrib_params)
 
 
 
@@ -220,7 +213,7 @@ contains
     ! Initialize the kernel smoother
     domain(:,1) = [sim%mesh%eta1_min, sim%mesh%eta2_min]
     domain(:,2) = [sim%mesh%eta1_max, sim%mesh%eta2_max]
-    call sll_s_new_kernel_smoother_spline_2d_ptr(sim%kernel_smoother, &
+    call sll_s_new_particle_mesh_coupling_spline_2d_ptr(sim%kernel_smoother, &
          domain, [sim%mesh%num_cells1, sim%mesh%num_cells2], sim%n_particles, &
          sim%degree_smoother, sll_p_collocation)
 
@@ -246,11 +239,8 @@ contains
   subroutine run_pic_2d2v (sim)
     class(sll_t_sim_pic_vp_2d2v_cart), intent(inout) :: sim
 
-    ! Loop variables
-    sll_int32, allocatable :: rnd_seed(:)
+    ! Local variables
     sll_int32 :: j, ierr
-    sll_int32 :: rnd_seed_size
-    sll_int64 :: sobol_seed
     sll_real64 :: eenergy
     sll_int32 :: th_diag_id
 
@@ -259,32 +249,13 @@ contains
        call sll_s_ascii_file_create('thdiag.dat', th_diag_id, ierr)
     end if
 
-
-    if (sim%init_case == SLL_INIT_RANDOM) then
-       ! Set the seed for the random initialization
-       call random_seed(size=rnd_seed_size)
-       SLL_ALLOCATE(rnd_seed(rnd_seed_size), j)
-       do j=1, rnd_seed_size
-          rnd_seed(j) = (-1)**j*(100 + 15*j)*(2*sim%rank + 1)
-       end do
-
-       ! Initialize position and velocity of the particles.
-       ! Random initialization
-       call sll_s_particle_initialize_random_landau_2d2v &
-            (sim%particle_group, sim%landau_param, &
-            [sim%mesh%eta1_min, sim%mesh%eta2_min] , &
-            [sim%mesh%eta1_max - sim%mesh%eta1_min, sim%mesh%eta2_max -sim%mesh%eta2_min], &
-            sim%thermal_velocity, rnd_seed)
-    elseif (sim%init_case == SLL_INIT_SOBOL) then
-       sobol_seed = int(10 + sim%rank*sim%particle_group%n_particles, 8)
-       ! Pseudorandom initialization with sobol numbers
-       call sll_s_particle_initialize_sobol_landau_2d2v(sim%particle_group, &
-            sim%landau_param,  [sim%mesh%eta1_min, sim%mesh%eta2_min] , &
-            [sim%mesh%eta1_max - sim%mesh%eta1_min, &
-            sim%mesh%eta2_max -sim%mesh%eta2_min], &
-            sim%thermal_velocity, sobol_seed)
+    if (sim%no_weights == 1 ) then
+       call sim%sampler%sample ( sim%particle_group, sim%init_distrib_params, [sim%mesh%eta1_min, sim%mesh%eta2_min] , &
+            [sim%mesh%eta1_max - sim%mesh%eta1_min, sim%mesh%eta2_max -sim%mesh%eta2_min] )
+    elseif ( sim%no_weights == 3 ) then
+       call sim%sampler%sample_cv ( sim%particle_group, sim%init_distrib_params, [sim%mesh%eta1_min, sim%mesh%eta2_min] , &
+            [sim%mesh%eta1_max - sim%mesh%eta1_min, sim%mesh%eta2_max -sim%mesh%eta2_min], sim%control_variate )
     end if
-
 
     print*, 'Time loop'
     ! Time loop
@@ -304,11 +275,10 @@ contains
 
 !!! Part for ctest
     if (sim%rank == 0) then
-       if (abs(eenergy - 3.0503207170668825_f64) < 1d-13) then
+       if (abs(eenergy - 3.0503207170271787_f64) < 1d-13) then
           sim%ctest_passed = .true.
        end if
     end if
-
     
 
   end subroutine run_pic_2d2v
@@ -330,11 +300,15 @@ contains
     deallocate(sim%kernel_smoother)
     call sim%control_variate%free()
     deallocate(sim%control_variate)
+    call sim%sampler%free()
+    call sim%init_distrib_params%free()
+    deallocate(sim%init_distrib_params)
 
   end subroutine delete_pic_2d2v
 
 !------------------------------------------------------------------------------!
 
+  !> As a control variate, we use the equilibrium (v part of the initial distribution)
   function control_variate_equi( this, xi, vi, time) result(sll_f_control_variate)
     class(sll_t_control_variate) :: this
     sll_real64, optional,  intent( in ) :: xi(:) !< particle position
@@ -343,13 +317,11 @@ contains
     sll_real64               :: sll_f_control_variate
 
 
-    sll_f_control_variate = exp(-0.5_f64*&
-         ((vi(1)/this%control_variate_parameters(1))**2+&
-         (vi(2)/this%control_variate_parameters(2))**2))/&
-         (2.0_f64*sll_p_pi*product(this%control_variate_parameters))
+    sll_f_control_variate = &
+         this%control_variate_distribution_params%eval_v_density( vi(1:2) )
+
 
   end function control_variate_equi
-
 
 
 end module sll_m_sim_pic_vp_2d2v_cart
