@@ -115,6 +115,15 @@ function( collect_library_name _name )
 endfunction()
 
 #==============================================================================
+# FUNCTION: store_current_dir
+#==============================================================================
+# Add property to target: directory with the currently processed CMakeLists.txt
+function( store_current_dir _name )
+  set_target_properties( ${_name} PROPERTIES
+    SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR} )
+endfunction()
+
+#==============================================================================
 # FUNCTION: add_library
 #==============================================================================
 # We override the add_library built in function.
@@ -122,6 +131,7 @@ function( add_library _name )
   _add_library( ${_name} ${ARGN} ) # Call the original function
   collect_library_name( ${_name} ) # Store library name in proper list
   collect_source_info ( ${_name} ) # Create a list of source files
+  store_current_dir   ( ${_name} ) # Store current directory in target property
 endfunction()
 
 #==============================================================================

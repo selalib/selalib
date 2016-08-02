@@ -27,7 +27,7 @@ message( STATUS "MPI_LIB = ${MPI_LIB}" )
 #-------------------------------------------------------------------------------
 if( ${MPI_LIB} STREQUAL "impi" )
   set( INTEL_MPI_INFO $ENV{I_MPI_ROOT} )
-  string( REGEX MATCH "impi/([0-9]+)\\.([0-9]+)\\.([0-9]+)" INTEL_MPI_VERSION ${INTEL_MPI_INFO} )
+  string( REGEX MATCH "impi[_/]?([0-9]+)\\.([0-9]+)\\.([0-9]+)" INTEL_MPI_VERSION ${INTEL_MPI_INFO} )
   message( STATUS ${CMAKE_MATCH_0} )
   math( EXPR INTEL_MPI_VERSION
     "${CMAKE_MATCH_1}*10000 + ${CMAKE_MATCH_2}*100 + ${CMAKE_MATCH_3}" )
@@ -138,4 +138,5 @@ endif()
 #-------------------------------------------------------------------------------
 # ADD LIBRARY
 #-------------------------------------------------------------------------------
+set(CMAKE_Fortran_COMPILER ${MPI_Fortran_COMPILER})
 add_library( sll_mpi STATIC sll_mpi.F90 )

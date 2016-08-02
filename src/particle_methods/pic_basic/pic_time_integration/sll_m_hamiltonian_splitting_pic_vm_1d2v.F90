@@ -2,6 +2,7 @@
 !> @author Katharina Kormann, IPP
 !> @brief Particle pusher based on Hamiltonian splitting for 1d2v Vlasov-Poisson.
 !> @details MPI parallelization by domain cloning. Periodic boundaries. Spline DoFs numerated by the point the spline starts.
+!> Reference: Kraus, Kormann, Sonnendrücker, Morrison: GEMPIC: Geometric ElectroMagnetic Particle-In-Cell Methods
 module sll_m_hamiltonian_splitting_pic_vm_1d2v
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_assert.h"
@@ -15,8 +16,8 @@ module sll_m_hamiltonian_splitting_pic_vm_1d2v
   use sll_m_hamiltonian_splitting_base, only: &
     sll_c_hamiltonian_splitting_base
 
-  use sll_m_kernel_smoother_base, only: &
-    sll_c_kernel_smoother
+  use sll_m_particle_mesh_coupling_base, only: &
+    sll_c_particle_mesh_coupling
 
   use sll_m_maxwell_1d_base, only: &
     sll_c_maxwell_1d_base
@@ -25,7 +26,7 @@ module sll_m_hamiltonian_splitting_pic_vm_1d2v
     sll_c_particle_group_base
 
   use sll_mpi, only: &
-    mpi_sum
+       mpi_sum
 
   implicit none
 
@@ -40,8 +41,8 @@ module sll_m_hamiltonian_splitting_pic_vm_1d2v
   !> Hamiltonian splitting type for Vlasov-Maxwell 1d2v
   type, extends(sll_c_hamiltonian_splitting_base) :: sll_t_hamiltonian_splitting_pic_vm_1d2v
      class(sll_c_maxwell_1d_base), pointer :: maxwell_solver      !< Maxwell solver
-     class(sll_c_kernel_smoother), pointer :: kernel_smoother_0  !< Kernel smoother (order p+1)
-     class(sll_c_kernel_smoother), pointer :: kernel_smoother_1  !< Kernel smoother (order p)
+     class(sll_c_particle_mesh_coupling), pointer :: kernel_smoother_0  !< Kernel smoother (order p+1)
+     class(sll_c_particle_mesh_coupling), pointer :: kernel_smoother_1  !< Kernel smoother (order p)
      class(sll_c_particle_group_base), pointer  :: particle_group    !< Particle group
 
      sll_int32 :: spline_degree !< Degree of the spline for j,B. Here 3.
@@ -64,6 +65,7 @@ module sll_m_hamiltonian_splitting_pic_vm_1d2v
      procedure :: operatorHE => operatorHE_pic_vm_1d2v  !> Operator for H_E part
      procedure :: operatorHB => operatorHB_pic_vm_1d2v  !> Operator for H_B part
      procedure :: lie_splitting => lie_splitting_pic_vm_1d2v !> Lie splitting propagator
+     procedure :: lie_splitting_back => lie_splitting_back_pic_vm_1d2v !> Lie splitting propagator
      procedure :: strang_splitting => strang_splitting_pic_vm_1d2v !> Strang splitting propagator
 
      procedure :: init => initialize_pic_vm_1d2v !> Initialize the type
@@ -72,7 +74,8 @@ module sll_m_hamiltonian_splitting_pic_vm_1d2v
   end type sll_t_hamiltonian_splitting_pic_vm_1d2v
 
 contains
-
+  
+  
   !> Strang splitting
   subroutine strang_splitting_pic_vm_1d2v(self,dt, number_steps)
     class(sll_t_hamiltonian_splitting_pic_vm_1d2v), intent(inout) :: self !< time splitting object 
@@ -82,13 +85,14 @@ contains
     sll_int32 :: i_step
 
     do i_step = 1, number_steps
-       call self%operatorHp1(0.5_f64*dt)
-       call self%operatorHp2(0.5_f64*dt)
-       call self%operatorHE(0.5_f64*dt)
-       call self%operatorHB(dt)
+       call self%operatorHB(0.5_f64*dt)
        call self%operatorHE(0.5_f64*dt)
        call self%operatorHp2(0.5_f64*dt)
-       call self%operatorHp1(0.5_f64*dt)
+       call self%operatorHp1(dt)
+       call self%operatorHp2(0.5_f64*dt)
+       call self%operatorHE(0.5_f64*dt)
+       call self%operatorHB(0.5_f64*dt)
+       
     end do
 
   end subroutine strang_splitting_pic_vm_1d2v
@@ -101,14 +105,33 @@ contains
 
     sll_int32 :: i_step
 
-    do i_step = 1, number_steps
-       call self%operatorHp1(dt)
-       call self%operatorHp2(dt)
+    do i_step = 1,number_steps
        call self%operatorHE(dt)
        call self%operatorHB(dt)
+       call self%operatorHp1(dt)
+       call self%operatorHp2(dt)
     end do
 
+
   end subroutine lie_splitting_pic_vm_1d2v
+
+  !> Lie splitting (oposite ordering)
+  subroutine lie_splitting_back_pic_vm_1d2v(self,dt, number_steps)
+    class(sll_t_hamiltonian_splitting_pic_vm_1d2v), intent(inout) :: self !< time splitting object 
+    sll_real64,                                     intent(in)    :: dt   !< time step
+    sll_int32,                                      intent(in)    :: number_steps !< number of time steps
+
+    sll_int32 :: i_step
+
+    do i_step = 1,number_steps
+       call self%operatorHp2(dt)
+       call self%operatorHp1(dt)
+       call self%operatorHB(dt)
+       call self%operatorHE(dt)
+    end do
+
+  end subroutine lie_splitting_back_pic_vm_1d2v
+  
 
   !---------------------------------------------------------------------------!
   !> Push Hp1: Equations to solve are
@@ -126,8 +149,7 @@ contains
     sll_real64 :: x_new(3), vi(3), wi(1), x_old(3)
     sll_int32  :: n_cells
     sll_real64 :: qoverm
-
-
+ 
     n_cells = self%kernel_smoother_0%n_dofs
 
     ! Here we have to accumulate j and integrate over the time interval.
@@ -158,6 +180,9 @@ contains
 
        call self%kernel_smoother_1%add_current_update_v( x_old, x_new, wi(1), qoverm, &
             self%bfield_dofs, vi, self%j_dofs_local(:,1))
+       ! Accumulate rho for Poisson diagnostics
+       call self%kernel_smoother_0%add_charge( x_new, wi(1), &
+            self%j_dofs_local(:,2))
       
        x_new(1) = modulo(x_new(1), self%Lx)
        call self%particle_group%set_x(i_part, x_new)
@@ -173,8 +198,6 @@ contains
 
     ! Update the electric field.
     call self%maxwell_solver%compute_E_from_j(self%j_dofs(:,1), 1, self%efield_dofs(:,1))
-
-
 
  end subroutine operatorHp1_pic_vm_1d2v
 
@@ -232,7 +255,6 @@ contains
 
     call self%maxwell_solver%compute_E_from_j(self%j_dofs(:,2), 2, self%efield_dofs(:,2))
     
-
   end subroutine operatorHp2_pic_vm_1d2v
   
   !---------------------------------------------------------------------------!
@@ -250,7 +272,6 @@ contains
     sll_real64 :: v_new(3), xi(3)
     sll_real64 :: efield(2)
     sll_real64 :: qm
-
 
     qm = self%particle_group%species%q_over_m();
     ! V_new = V_old + dt * E
@@ -270,8 +291,7 @@ contains
     ! Update bfield
     call self%maxwell_solver%compute_B_from_E( &
          dt, self%efield_dofs(:,2), self%bfield_dofs)
-    
-
+        
   end subroutine operatorHE_pic_vm_1d2v
   
 
@@ -284,12 +304,11 @@ contains
   subroutine operatorHB_pic_vm_1d2v(self, dt)
     class(sll_t_hamiltonian_splitting_pic_vm_1d2v), intent(inout) :: self !< time splitting object 
     sll_real64,                                     intent(in)    :: dt   !< time step
-    
-    ! Update efield2
+
+      ! Update efield2
     call self%maxwell_solver%compute_E_from_B(&
          dt, self%bfield_dofs, self%efield_dofs(:,2))
-    
-
+      
   end subroutine operatorHB_pic_vm_1d2v
 
 
@@ -307,8 +326,8 @@ contains
        Lx) 
     class(sll_t_hamiltonian_splitting_pic_vm_1d2v), intent(out) :: self !< time splitting object 
     class(sll_c_maxwell_1d_base), pointer,          intent(in)  :: maxwell_solver      !< Maxwell solver
-    class(sll_c_kernel_smoother), pointer,          intent(in)  :: kernel_smoother_0  !< Kernel smoother
-    class(sll_c_kernel_smoother), pointer,          intent(in)  :: kernel_smoother_1  !< Kernel smoother
+    class(sll_c_particle_mesh_coupling), pointer,          intent(in)  :: kernel_smoother_0  !< Kernel smoother
+    class(sll_c_particle_mesh_coupling), pointer,          intent(in)  :: kernel_smoother_1  !< Kernel smoother
     class(sll_c_particle_group_base), pointer,      intent(in)  :: particle_group !< Particle group
     sll_real64, pointer,                            intent(in)  :: efield_dofs(:,:) !< array for the coefficients of the efields 
     sll_real64, pointer,                            intent(in)  :: bfield_dofs(:) !< array for the coefficients of the bfield
@@ -375,8 +394,8 @@ contains
        Lx) 
     class(sll_c_hamiltonian_splitting_base), allocatable, intent(out) :: splitting !< time splitting object 
     class(sll_c_maxwell_1d_base), pointer,                intent(in)  :: maxwell_solver      !< Maxwell solver
-    class(sll_c_kernel_smoother), pointer,                intent(in)  :: kernel_smoother_0  !< Kernel smoother
-    class(sll_c_kernel_smoother), pointer,                intent(in)  :: kernel_smoother_1  !< Kernel smoother
+    class(sll_c_particle_mesh_coupling), pointer,                intent(in)  :: kernel_smoother_0  !< Kernel smoother
+    class(sll_c_particle_mesh_coupling), pointer,                intent(in)  :: kernel_smoother_1  !< Kernel smoother
     class(sll_c_particle_group_base),pointer,             intent(in)  :: particle_group !< Particle group
     sll_real64, pointer,                                  intent(in)  :: efield_dofs(:,:) !< array for the coefficients of the efields 
     sll_real64, pointer,                                  intent(in)  :: bfield_dofs(:) !< array for the coefficients of the bfield
@@ -417,8 +436,8 @@ contains
        Lx) 
     class(sll_c_hamiltonian_splitting_base), pointer, intent(out) :: splitting !< time splitting object 
     class(sll_c_maxwell_1d_base), pointer,            intent(in)  :: maxwell_solver      !< Maxwell solver
-    class(sll_c_kernel_smoother), pointer,            intent(in)  :: kernel_smoother_0  !< Kernel smoother
-    class(sll_c_kernel_smoother), pointer,            intent(in)  :: kernel_smoother_1  !< Kernel smoother
+    class(sll_c_particle_mesh_coupling), pointer,            intent(in)  :: kernel_smoother_0  !< Kernel smoother
+    class(sll_c_particle_mesh_coupling), pointer,            intent(in)  :: kernel_smoother_1  !< Kernel smoother
     class(sll_c_particle_group_base),pointer,         intent(in)  :: particle_group !< Particle group
     sll_real64, pointer,                              intent(in)  :: efield_dofs(:,:) !< array for the coefficients of the efields 
     sll_real64, pointer,                              intent(in)  :: bfield_dofs(:) !< array for the coefficients of the bfield
@@ -444,5 +463,6 @@ contains
     end select
 
   end subroutine sll_s_new_hamiltonian_splitting_pic_vm_1d2v_ptr
+
 
 end module sll_m_hamiltonian_splitting_pic_vm_1d2v

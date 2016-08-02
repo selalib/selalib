@@ -2,6 +2,13 @@ SET(HDF5_ROOT $ENV{HDF5_ROOT} CACHE PATH "HDF5 location")
 
 IF(NOT HDF5_FOUND AND HDF5_ENABLED)
 
+   IF (MPI_Fortran_LIBRARIES)
+     LIST(GET MPI_Fortran_LIBRARIES 0 HEAD) 
+     GET_FILENAME_COMPONENT(MPI_LIB_ROOT ${HEAD} PATH)
+   ELSE()
+     SET(MPI_LIB_ROOT "")
+   ENDIF()
+
    SET(HDF5_PATHS ${MPI_Fortran_INCLUDE_PATH}
                   $ENV{HDF5_HOME}
                   ${HDF5_ROOT} 
@@ -15,10 +22,6 @@ IF(NOT HDF5_FOUND AND HDF5_ENABLED)
                   /usr 
                   /usr/include/hdf5/openmpi
                   /usr/include/hdf5/mpich
-                  /usr/include/openmpi-x86_64 
-                  /usr/include/mpich2-x86_64 
-                  /usr/lib64/mpich2 
-                  /usr/lib64/openmpi 
                   /usr/local 
                   /opt/local)
 
@@ -33,20 +36,20 @@ IF(NOT HDF5_FOUND AND HDF5_ENABLED)
    DOC "PATH to hdf5.mod")
 
    FIND_LIBRARY(HDF5_C_LIBRARY NAMES libhdf5.a hdf5_openmpi hdf5_mpich hdf5
-   HINTS ${HDF5_PATHS} $ENV{HDF5_LIBRARYDIR} $ENV{HDF5_LIB_DIR}
+   HINTS ${MPI_LIB_ROOT} ${HDF5_PATHS} $ENV{HDF5_LIBRARYDIR} $ENV{HDF5_LIB_DIR}
    PATH_SUFFIXES lib hdf5/lib lib/x86_64-linux-gnu
    DOC "PATH TO libhdf5")
 
    FIND_LIBRARY(HDF5_FORTRAN_LIBRARY 
    NAMES libhdf5_fortran.a hdf5_openmpi_fortran hdf5_mpich_fortran hdf5_fortran
-   HINTS ${HDF5_PATHS} $ENV{HDF5_LIBRARYDIR} $ENV{HDF5_LIB_DIR}
+   HINTS ${MPI_LIB_ROOT} ${HDF5_PATHS} $ENV{HDF5_LIBRARYDIR} $ENV{HDF5_LIB_DIR}
    PATH_SUFFIXES lib hdf5/lib lib/x86_64-linux-gnu
    DOC "PATH TO libhdf5_fortran")
 
    FIND_LIBRARY(ZLIB_LIBRARIES NAMES z sz
                 HINTS ${HDF5_PATHS} 
 	          PATH_SUFFIXES lib hdf5/lib
-                  ENV${SZIP_LIB}
+                ENV${SZIP_LIB}
 	          DOC "PATH TO zip library")
 
    SET(HDF5_LIBRARIES ${HDF5_FORTRAN_LIBRARY} ${HDF5_C_LIBRARY} ${ZLIB_LIBRARIES})
@@ -154,3 +157,7 @@ IF(HDF5_ENABLED AND HDF5_IS_PARALLEL)
    ENDIF(MPI_ENABLED)
 ENDIF(HDF5_ENABLED AND HDF5_IS_PARALLEL)
 
+MARK_AS_ADVANCED(HDF5_FORTRAN_LIBRARY
+	           HDF5_C_LIBRARY
+                 HDF5_INCLUDE_DIR
+                 HDF5_INCLUDE_DIR_FORTRAN)
