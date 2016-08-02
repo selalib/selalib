@@ -904,12 +904,12 @@ end subroutine triangle_area
     ! Definition of reference triangle, such that:
     !    |
     !    1  3
-    !    |  |  \
+    !    |  | \
     !    |  |   \
-    !    |  |    \
-    !    |  |     \
-    !    |  | _____\
-    !    0  1      2
+    !    |  |     X 2
+    !    |  |   /   
+    !    |  | /
+    !    0  1     
     !    |
     !    +--0-----1-->
     ref_pts(:,1) = (/ 0._f64, 0.0_f64 /)
