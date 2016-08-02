@@ -16,7 +16,6 @@ Contents:
 .. toctree::
    :maxdepth: 2
 
-   Installation <install/index>
    Developer Page <developer/getting_started>
    Building Tool <developer/cmake_guide>
    Documentation Tool <developer/doxygen_guide>

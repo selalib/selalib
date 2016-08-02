@@ -66,7 +66,7 @@ subroutine write_mesh_4d(mesh)
 
   type(sll_t_cartesian_mesh_4d), intent(in) :: mesh
   sll_int32                               :: error
-  sll_int32                               :: file_id
+  integer(hid_t)                          :: file_id
   sll_real64, dimension(:), allocatable   :: eta1
   sll_real64, dimension(:), allocatable   :: eta2
   sll_real64, dimension(:), allocatable   :: eta3
@@ -202,10 +202,10 @@ end subroutine write_attribute
 subroutine write_fx1x2(f, layout, cplot)
 
   sll_real64, dimension(:,:,:,:)          :: f
-  type(sll_t_layout_4d), pointer                :: layout
+  type(sll_t_layout_4d), pointer          :: layout
   character(len=*)                        :: cplot
   sll_int32                               :: error
-  sll_int32                               :: file_id
+  integer(hid_t)                          :: file_id
   sll_int32                               :: prank
   sll_int32                               :: comm
   sll_real64, dimension(:,:), pointer     :: fij
@@ -239,10 +239,10 @@ end subroutine write_fx1x2
 subroutine write_fx1x3(f, layout, cplot)
 
   sll_real64, dimension(:,:,:,:)          :: f
-  type(sll_t_layout_4d), pointer                :: layout
+  type(sll_t_layout_4d), pointer          :: layout
   character(len=*)                        :: cplot
   sll_int32                               :: error
-  sll_int32                               :: file_id
+  integer(hid_t)                          :: file_id
   sll_real64, dimension(:,:), pointer     :: fik
   sll_int32                               :: prank
   sll_int32                               :: comm
@@ -276,7 +276,7 @@ end subroutine write_fx1x3
 subroutine write_fx2x4(f, layout, cplot)
 
   sll_real64, dimension(:,:,:,:)          :: f
-  type(sll_t_layout_4d), pointer                :: layout
+  type(sll_t_layout_4d), pointer          :: layout
   character(len=*)                        :: cplot
   integer(HID_T)                          :: pfile_id
   integer(HSSIZE_T)                       :: offset(2)
