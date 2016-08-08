@@ -9,6 +9,7 @@
 module sll_m_periodic_interpolator_1d
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_memory.h"
+#include "sll_errors.h"
 #include "sll_working_precision.h"
 
   use sll_m_interpolators_1d_base, only: &
@@ -165,19 +166,18 @@ contains  ! ****************************************************************
   subroutine compute_interpolants_per1d( interpolator, data_array,&
        eta_coords, &
        size_eta_coords)
-
     class(sll_t_periodic_interpolator_1d), intent(inout) :: interpolator
-    sll_real64, dimension(:), intent(in)               :: data_array
-    sll_real64, dimension(:), intent(in),optional  :: eta_coords
-    sll_int32, intent(in),optional                 :: size_eta_coords
+    sll_real64, dimension(:), intent(in)           :: data_array
+    sll_real64, dimension(:), intent(in), optional :: eta_coords
+    sll_int32,                intent(in), optional :: size_eta_coords
+
     print*, 'compute_interpolants_per1d:', &
          ' not implemented for periodic interpolation'
-    if(present(eta_coords))then
-      print *,'eta_coords present but not used'
-    endif
-    if(present(size_eta_coords))then
-      print *,'size_eta_coords present but not used'
-    endif
+
+    if(present(eta_coords) .or. present(size_eta_coords)) then
+       SLL_ERROR( 'compute_interpolants_per1d', 'This case is not yet implemented' )
+    end if
+
     print *,maxval(data_array)
     print *,interpolator%num_points
     stop
