@@ -310,21 +310,21 @@ end subroutine interpolate_array_derivatives_li1d
     stop
   end subroutine interpolate_array_li1d
 
-    subroutine compute_interpolants_li1d( interpolator, data_array,&
+  subroutine compute_interpolants_li1d( interpolator, data_array,&
          eta_coords, &
          size_eta_coords)
-      class(sll_t_lagrange_interpolator_1d), intent(inout) :: interpolator
-    sll_real64, dimension(:), intent(in)               :: data_array
-    sll_real64, dimension(:), intent(in),optional  :: eta_coords
-    sll_int32, intent(in),optional                 :: size_eta_coords
+    class(sll_t_lagrange_interpolator_1d), intent(inout) :: interpolator
+    sll_real64, dimension(:), intent(in)           :: data_array
+    sll_real64, dimension(:), intent(in), optional :: eta_coords
+    sll_int32,                intent(in), optional :: size_eta_coords
+
     print*, 'compute_interpolants_li1d:', &
          ' not implemented for lagrange interpolation'
-    if(present(eta_coords))then
-      print *,'eta_coords present but not used'
-    endif
-    if(present(size_eta_coords))then
-      print *,'size_eta_coords present but not used'
-    endif
+
+    if(present(eta_coords) .or. present(size_eta_coords)) then
+       SLL_ERROR( 'compute_interpolants_li1d', 'This case is not yet implemented' )
+    end if
+
     print *,maxval(data_array)
     print *,interpolator%bc_type
     stop

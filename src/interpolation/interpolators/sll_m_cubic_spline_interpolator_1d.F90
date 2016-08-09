@@ -27,6 +27,7 @@ module sll_m_cubic_spline_interpolator_1d
 
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_assert.h"
+#include "sll_errors.h"
 #include "sll_memory.h"
 #include "sll_working_precision.h"
 
@@ -223,17 +224,16 @@ contains  ! ****************************************************************
        eta_coords, &
        size_eta_coords)
     class(sll_t_cubic_spline_interpolator_1d), intent(inout) :: interpolator
-    sll_real64, dimension(:), intent(in)               :: data_array
-    sll_real64, dimension(:), intent(in),optional  :: eta_coords
-    sll_int32, intent(in),optional                 :: size_eta_coords
+    sll_real64, dimension(:), intent(in)           :: data_array
+    sll_real64, dimension(:), intent(in), optional :: eta_coords
+    sll_int32,                intent(in), optional :: size_eta_coords
+
+    if(present(eta_coords) .or. present(size_eta_coords)) then
+       SLL_ERROR( 'compute_interpolants_cs1d', 'This case is not yet implemented' )
+    end if
+
     call sll_s_compute_cubic_spline_1d( data_array, interpolator%spline )
 
-    if(present(eta_coords))then
-      !print *,'#warning eta_coords not taken into account'
-    endif
-    if(present(size_eta_coords))then
-      !print *,'#warning size_eta_coords not taken into account'
-    endif
   end subroutine compute_interpolants_cs1d
 
   ! Alternative implementation for the function meant to interpolate a
