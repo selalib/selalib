@@ -44,6 +44,7 @@ module sll_m_bspline_interpolator_1d
   implicit none
 
   public :: &
+    sll_f_new_bspline_interpolator_1d, &
     sll_t_bspline_interpolator_1d, &
     sll_s_set_values_at_boundary1d, &
     sll_o_delete
@@ -126,12 +127,12 @@ end subroutine delete_bs1d_interpolator
 !> @param[in] num_pts the number of points
 !> @param[in] eta_min the minimun
 !> @param[in] eta_max the maximun
-!> @param[in] bc_l  the boundary condition at left
-!> @param[in] bc_r the boundary condition at right
 !> @param[in] spl_deg the degree of B-spline
+!> @param[in] bc_type the boundary condition (periodic or not)
+!> @param[in] bc_l    the boundary condition at left
+!> @param[in] bc_r    the boundary condition at right
 !> @return the type interpolator arbitrary degree splines 1d
-
-function new_bspline_interpolator_1d( &
+function sll_f_new_bspline_interpolator_1d( &
   num_pts,                            &
   eta_min,                            &
   eta_max,                            &
@@ -180,7 +181,7 @@ else
 end if
                                            
 
-end function new_bspline_interpolator_1d
+end function sll_f_new_bspline_interpolator_1d
 
 !> @brief Initialization of interpolator arbitrary degree splines 1d.
 !> @details To have the interpolator arbitrary degree splines 1d
@@ -196,9 +197,9 @@ subroutine initialize_bs1d_interpolator( interpolator,  &
                                          num_pts,       &
                                          eta_min,       &
                                          eta_max,       &
+                                         spl_deg,       &
                                          bc_type_l,     &
                                          bc_type_r,     &
-                                         spl_deg,       &
                                          bc_l,          &
                                          bc_r)
 
@@ -207,9 +208,9 @@ class(sll_t_bspline_interpolator_1d), intent(inout) :: interpolator
 sll_int32,       intent(in) :: num_pts
 sll_real64,      intent(in) :: eta_min
 sll_real64,      intent(in) :: eta_max
+sll_int32,       intent(in) :: spl_deg
 sll_int32,       intent(in) :: bc_type_l
 sll_int32,       intent(in) :: bc_type_r
-sll_int32,       intent(in) :: spl_deg
 sll_real64,      optional   :: bc_l(:)
 sll_real64,      optional   :: bc_r(:)
 
