@@ -359,24 +359,39 @@ contains
     SLL_ASSERT(size(output1,2)>=Npts2)
     SLL_ASSERT(size(output2,1)>=Npts1)
     SLL_ASSERT(size(output2,2)>=Npts2)
-    
-    call charac%A1_interp_x1x2%compute_interpolants( &
-      A1, &
-      input1, &
-      Npts1, &
-      input2, &
-      Npts2)
-    call charac%A2_interp_x1x2%compute_interpolants( &
-      A2, &
-      input1, &
-      Npts1, &
-      input2, &
-      Npts2)
+
+    ! [YG: 8 Aug 2016]
+    ! Optional arguments 'eta_coords[1|2]=input[1|2]' and
+    ! 'size_eta_coords[1|2]=Npts[1|2]' not passed because:
+    !  1. most interpolators do not implement such an option
+    !  2. 'input[1|2]' is (usually) the same mesh used to initialize the interpolator
+    call charac%A1_interp_x1x2%compute_interpolants( A1 )
+    call charac%A2_interp_x1x2%compute_interpolants( A2 )
+!    call charac%A1_interp_x1x2%compute_interpolants( &
+!      A1, &
+!      input1, &
+!      Npts1, &
+!      input2, &
+!      Npts2)
+!    call charac%A2_interp_x1x2%compute_interpolants( &
+!      A2, &
+!      input1, &
+!      Npts1, &
+!      input2, &
+!      Npts2)
+
     do j=1,charac%Npts2
 
-      call charac%A1_interp_x1%compute_interpolants( A1(:,j), input1, charac%Npts1 )
-      call charac%A2_interp_x1%compute_interpolants( A2(:,j), input1, charac%Npts1 )
-      
+      ! [YG: 8 Aug 2016]
+      ! Optional arguments 'eta_coords=input' and 'size_eta_coords=Npts'
+      ! not passed because:
+      !  1. most interpolators do not implement such an option
+      !  2. 'input' is (usually) the same mesh used to initialize the interpolator
+      call charac%A1_interp_x1%compute_interpolants( A1(:,j) )
+      call charac%A2_interp_x1%compute_interpolants( A2(:,j) )
+!      call charac%A1_interp_x1%compute_interpolants( A1(:,j), input1, charac%Npts1 )
+!      call charac%A2_interp_x1%compute_interpolants( A2(:,j), input1, charac%Npts1 )
+
       do i=1,charac%Npts1
         !We start from X(t_{n+1}) = x_i, Y(t_{n+1})=y_j
         !and look for X(t_n) = Xn, Y(t_n) = Yn

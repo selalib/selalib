@@ -200,7 +200,7 @@ contains
       dt, &
       input, &
       output)
-            
+
     class(trapezoid_1d_charac_computer) :: charac
     sll_real64, dimension(:), intent(in) :: A
     sll_real64, intent(in) :: dt
@@ -214,18 +214,26 @@ contains
     sll_int32 :: Npts
     sll_real64 :: eta_min
     sll_real64 :: eta_max
-    
+
     Npts = charac%Npts
     eta_min = charac%eta_min
     eta_max = charac%eta_max
-    
+
     SLL_ASSERT(size(A)>=Npts)
     SLL_ASSERT(size(input)>=Npts)
     SLL_ASSERT(size(output)>=Npts)
-    call charac%A_interp%compute_interpolants( &
-      A, &
-      input, &
-      Npts)
+
+    ! [YG: 8 Aug 2016]
+    ! Optional arguments 'eta_coords=input' and 'size_eta_coords=Npts'
+    ! not passed because:
+    !  1. most interpolators do not implement such an option
+    !  2. 'input' is (usually) the same mesh used to initialize the interpolator
+    call charac%A_interp%compute_interpolants( A )
+!    call charac%A_interp%compute_interpolants( &
+!      A, &
+!      input, &
+!      Npts)
+
     do j=1,Npts
         !We start from Y(t_{n+1})=y_j
         !and look for Y(t_n) = Yn
@@ -263,6 +271,4 @@ contains
 
 
 
-  
-  
 end module sll_m_characteristics_1d_trapezoid
