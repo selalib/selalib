@@ -1,0 +1,21 @@
+set( CLAPP OFF CACHE BOOL "Use SELALIB within the CLAPP framework" )
+set( CLAPP_DIR ${CMAKE_INSTALL_PREFIX} )
+
+# Convenience macro: find another library in the CLAPP framework
+macro( find_clapp_library _NAME )
+  find_package( ${_NAME} QUIET HINTS ${CLAPP_DIR}/cmake )
+  if( ${_NAME}_FOUND )
+    set( CLAPP_${_NAME} ON CACHE BOOL "Use pre-installed CLAPP/${_NAME} library" )
+  endif()
+  mark_as_advanced( ${_NAME}_DIR )
+endmacro( find_clapp_library )
+
+# Find all libraries in framework (assuming they have been installed)
+if( CLAPP )
+  find_clapp_library( CLAPPIO )
+  find_clapp_library( PLAF    )
+  find_clapp_library( SPL     )
+  find_clapp_library( DISCO   )
+  find_clapp_library( FEMA    )
+  find_clapp_library( SPIGA   )
+endif()

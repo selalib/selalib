@@ -23,6 +23,7 @@
 module sll_m_cubic_spline_interpolator_2d
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_assert.h"
+#include "sll_errors.h"
 #include "sll_memory.h"
 #include "sll_working_precision.h"
 
@@ -260,24 +261,19 @@ contains
        eta2_coords, &
        size_eta2_coords )
     class(sll_t_cubic_spline_interpolator_2d), intent(inout) :: interpolator
-    sll_real64, dimension(:,:), intent(in) :: data_array
-    sll_real64, dimension(:), intent(in),optional   :: eta1_coords
-    sll_real64, dimension(:), intent(in),optional   :: eta2_coords
-    sll_int32, intent(in), optional                 :: size_eta1_coords
-    sll_int32, intent(in),optional                  :: size_eta2_coords
-    if(present(eta1_coords))then
-      !print *,'#Warning eta1_coords not used'
-    endif
-    if(present(eta2_coords))then
-      !print *,'#Warning eta2_coords not used'
-    endif
-    if(present(size_eta1_coords))then
-      !print *,'#Warning size_eta1_coords not used'
-    endif
-    if(present(size_eta2_coords))then
-      !print *,'#Warning size_eta2_coords not used'
-    endif    
+    sll_real64, dimension(:,:), intent(in)           :: data_array
+    sll_real64, dimension(:),   intent(in), optional :: eta1_coords
+    sll_real64, dimension(:),   intent(in), optional :: eta2_coords
+    sll_int32,                  intent(in), optional :: size_eta1_coords
+    sll_int32,                  intent(in), optional :: size_eta2_coords
+
+    if(present(eta1_coords) .or. present(eta2_coords) &
+      .or. present(size_eta1_coords) .or. present(size_eta2_coords)) then
+       SLL_ERROR( 'compute_interpolants_cs2d', 'This case is not yet implemented' )
+    end if
+
     call sll_s_compute_cubic_spline_2d( data_array, interpolator%spline )
+
   end subroutine
 
   function interpolate_value_cs2d( interpolator, eta1, eta2 ) result(val)
