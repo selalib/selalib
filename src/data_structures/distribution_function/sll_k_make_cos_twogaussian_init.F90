@@ -1,4 +1,4 @@
-    read(file_id, sum_twogaussian)
+    read(file_id, cos_twogaussian)
 
     allocate( params%alpha(params%n_cos) );    
     allocate( params%kx(params%dims(1),params%n_cos) )
