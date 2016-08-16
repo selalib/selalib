@@ -366,7 +366,7 @@ MAKE_COS_ONEGAUSSIAN_INIT( sumcos_onegaussian_init_3d3v, 3, 3, 3 )
     sll_real64 :: v_mean_2(dimv); \
     sll_real64 :: delta; \
     sll_int32  :: j; \
-    namelist /sum_twogaussian/ kx, alpha, v_thermal_1, v_mean_1, v_thermal_2, v_mean_2, delta; \
+    namelist /cos_twogaussian/ kx, alpha, v_thermal_1, v_mean_1, v_thermal_2, v_mean_2, delta; \
     params%n_cos = dimalpha;
     !-------------------------------
   

@@ -68,10 +68,10 @@ end type sll_c_interpolator_1d
           size_eta_coords)
        use sll_m_working_precision
        import :: sll_c_interpolator_1d
-       class(sll_c_interpolator_1d), intent(inout)        :: interpolator !< interpolator object
-       sll_real64,                      intent(in)           :: data_array(:)   !< data at the grid points
-       sll_int32,                       intent(in),optional  :: size_eta_coords !< number of coordinates given
-       sll_real64,                      intent(in),optional  :: eta_coords(:)   !< coordinates for which to compute the intepolant (optional argument for local interpolants)
+       class(sll_c_interpolator_1d), intent(inout)        :: interpolator    !< interpolator object
+       sll_real64,                   intent(in)           :: data_array(:)   !< data at the grid points
+       sll_real64,                   intent(in), optional :: eta_coords(:)   !< coordinates for which to compute the intepolant (optional argument for local interpolants)
+       sll_int32,                    intent(in), optional :: size_eta_coords !< number of coordinates given
      end subroutine interpolator_1d_interpolant
   end interface
 
