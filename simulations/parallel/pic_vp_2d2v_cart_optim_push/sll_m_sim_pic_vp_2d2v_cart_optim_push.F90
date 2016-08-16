@@ -215,6 +215,10 @@ contains
     pa_gr => sim%part_group
 !!$    call sll_initial_particles_4d_L2d( sim%thermal_speed_parts, & 
 !!$                                   ALPHA, KX, KY, sim%m2d,     &
+!
+!  --------------------------------------------------------------------
+
+!    call sll_s_initial_random_particles_4d( &
     call sll_s_initial_hammersley_particles_4d( &
                                sim%thermal_speed_parts, & 
                                ALPHA, KX, sim%m2d,     &
