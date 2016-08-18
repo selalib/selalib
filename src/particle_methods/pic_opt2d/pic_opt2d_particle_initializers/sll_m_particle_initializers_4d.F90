@@ -14,8 +14,8 @@
 !  circulated by CEA, CNRS and INRIA at the following URL
 !  "http://www.cecill.info". 
 !**************************************************************
-!> Initialization of particles in 2d+2v: the Landau damping case
-!> Rejection sampling for the function x --> 1 + alpha*cos(k*x)
+!> @brief Initialization of particles in 2d+2v: the Landau damping case
+!> @details Rejection sampling for the perturbation function x --> 1 + alpha*cos(k*x)
 
 !>\author: S. Hirstoaga
 
@@ -61,11 +61,13 @@ contains
 !> The Landau damping case with a perturbation in a single direction
 !> of the physical space.
   subroutine sll_s_initial_random_particles_4d( &
-              thermal_speed, alpha, k, &
-              m2d,                     &
-              num_particles,           &
-              p_group,                 &
-              rand_seed, rank, worldsize )
+              thermal_speed,           &
+              alpha, k,                &!< the perturbation's parameters
+              m2d,                     &!< the mesh of the physical space
+              num_particles,           &!< the number of particles distributed over a single rank
+              p_group,                 &!< the particle group
+              rand_seed,               &!< the random seed used by the rank
+              rank, worldsize )         !< when using more than 1 process
     sll_real64, intent(in) :: thermal_speed, alpha, k
     type(sll_t_cartesian_mesh_2d), intent(in) :: m2d
     sll_int32, intent(in)  :: num_particles
@@ -74,8 +76,8 @@ contains
     sll_int32  :: ncx, ic_x,ic_y
     sll_real64 :: x, y, vx, vy
     sll_real64 :: xmin, ymin, rdx, rdy
-    sll_real32 :: weight!  sll_real64 :: weight!
-    sll_real32 :: off_x,off_y!  sll_real64 :: off_x,off_y
+    sll_real32 :: weight
+    sll_real32 :: off_x,off_y
     sll_real64 :: tmp1, tmp2
     sll_int32, dimension(:), intent(in), optional  :: rand_seed
     sll_int32, optional  :: rank, worldsize
@@ -132,7 +134,7 @@ contains
 !> The Landau damping case with a perturbation in a single direction
 !> of the physical space.
   subroutine sll_s_initial_hammersley_particles_4d( &
-              thermal_speed, alpha, k, &
+              thermal_speed, alpha, k, &!< the same as for the random routine
               m2d,                     &
               num_particles,           &
               p_group,                 &
@@ -209,16 +211,16 @@ contains
   end subroutine sll_s_initial_hammersley_particles_4d
 
 
-
-!   T O  C L E A N !!!
 !> The Landau damping case with a perturbation in BOTH directions
-!> of the physical space.
+!> of the physical space: (x,y) --> 1 + alpha*cos(kx * x)*cos(ky * y)
   subroutine sll_initial_particles_4d_L2d( &
-              thermal_speed, alpha, &
-              kx, ky, m2d,                     &
-              num_particles,           &
-              p_group,                 &
-              rand_seed, rank, worldsize )
+              thermal_speed,    &
+              alpha, kx, ky,    &!< the perturbation's parameters
+              m2d,              &!< the mesh in (x,y)
+              num_particles,    &!< the number of particles over a single process
+              p_group,          &!< the particle group
+              rand_seed,        &!< the random seed used by the process
+              rank, worldsize   )!< when using more than 1 process
     sll_real64, intent(in) :: thermal_speed, alpha
     sll_real64, intent(in) :: kx, ky
     type(sll_t_cartesian_mesh_2d), intent(in) :: m2d
@@ -228,13 +230,11 @@ contains
     sll_int32  :: ncx, ic_x,ic_y
     sll_real64 :: x, y, vx, vy,  z
     sll_real64 :: xmin, ymin, rdx, rdy
-    sll_real32 :: weight!  sll_real64 :: weight!
-    sll_real32 :: off_x,off_y!  sll_real64 :: off_x,off_y
+    sll_real32 :: weight
+    sll_real32 :: off_x, off_y
     sll_real64 :: tmp1, tmp2
     sll_int32, dimension(:), intent(in), optional  :: rand_seed
     sll_int32, optional  :: rank, worldsize
-    !character(len=8)  :: rank_name
-    !character(len=40) :: nomfile
     sll_real64 :: val(1:2)
 
     if ( present(rand_seed) ) then
@@ -255,19 +255,8 @@ contains
     ymin = m2d%eta2_min
     ncx  = m2d%num_cells1
 
-!!$    if(present(rank)) then
-!!$       write(rank_name,'(i8)') rank
-!!$    else
-!!$       rank_name = '00000000'
-!!$    end if
-!!$    nomfile='initialparts_'//trim(adjustl(rank_name))//'.dat'
-!!$    open(90, file=nomfile)
-!!$
-!!$    write(90,*) '#  POSITIONS in 2d    |||    VELOCITIES in 2d'
-
     j=1
     ii=1
-    !Rejection sampling 
     ll = 0
     do while ( j <= num_particles )
        call random_number(x)
@@ -280,15 +269,12 @@ contains
           call sll_s_gaussian_deviate_2d(val)
           vx = val(1)*thermal_speed
           vy = val(2)*thermal_speed
-          !if (j<=50000) write(90,*) x, y, vx, vy 
           SET_PARTICLE_VALUES(p_group%p_list(j),x,y,vx,vy,weight,xmin,ymin,ncx,ic_x,ic_y,off_x,off_y,rdx,rdy,tmp1,tmp2)
           j = j + 1          
        else
           ll=ll+1
        endif
     end do
-    print*, 'nb d echecs', ll
-    !close(90)
 
    return
    SLL_ASSERT(present(rank))
