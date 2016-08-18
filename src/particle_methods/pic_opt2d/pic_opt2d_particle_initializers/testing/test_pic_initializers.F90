@@ -25,7 +25,8 @@ program test_pic_initializers
     sll_s_initial_particles_2d
 
   use sll_m_particle_initializers_4d, only: &
-    sll_s_initial_random_particles_4d
+    sll_s_initial_random_particles_4d, &
+    sll_s_initial_hammersley_particles_4d
 
   implicit none
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -44,20 +45,29 @@ program test_pic_initializers
 #define YMAX 1._f64
 #define QoverM 1._f64
   
-  type(sll_t_particle_group_4d), pointer :: init_group
+  type(sll_t_particle_group_4d), pointer :: init_group_random
+  type(sll_t_particle_group_4d), pointer :: init_group_hamm
   type(sll_t_particle_group_2d), pointer :: init_group_GC
   type(sll_t_cartesian_mesh_2d),   pointer :: m2d
 
   m2d =>  sll_f_new_cartesian_mesh_2d( NC_X, NC_Y, &
        XMIN, XMAX, YMIN, YMAX )
 
-  init_group => sll_f_new_particle_4d_group( &
+  init_group_random => sll_f_new_particle_4d_group( &
+       NUM_PARTICLES, &
+       PARTICLE_ARRAY_SIZE, &
+       GUARD_SIZE, QoverM, m2d )
+
+  init_group_hamm => sll_f_new_particle_4d_group( &
        NUM_PARTICLES, &
        PARTICLE_ARRAY_SIZE, &
        GUARD_SIZE, QoverM, m2d )
 
   call sll_s_initial_random_particles_4d(THERM_SPEED, &
-        ALPHA, KX, m2d, NUM_PARTICLES, init_group )
+        ALPHA, KX, m2d, NUM_PARTICLES, init_group_random )
+
+  call sll_s_initial_hammersley_particles_4d(THERM_SPEED, &
+        ALPHA, KX, m2d, NUM_PARTICLES, init_group_hamm )
 
   init_group_GC => sll_f_new_particle_2d_group( &
        NUM_PARTICLES, &
@@ -66,7 +76,8 @@ program test_pic_initializers
   call sll_s_initial_particles_2d( ALPHA, &
        KX, m2d, NUM_PARTICLES, init_group_GC )
   
-  call sll_o_delete( init_group )
+  call sll_o_delete( init_group_random )
+  call sll_o_delete( init_group_hamm )
   call sll_o_delete( m2d )
   print*, "PASSED"
 

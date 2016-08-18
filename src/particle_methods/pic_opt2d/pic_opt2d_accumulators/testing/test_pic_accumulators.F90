@@ -26,7 +26,8 @@ program test_pic_accumulators
     sll_t_particle_group_4d
 
   use sll_m_particle_initializers_4d, only: &
-    sll_s_initial_random_particles_4d
+    sll_s_initial_random_particles_4d, &
+    sll_s_initial_hammersley_particles_4d
 
   implicit none
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -59,6 +60,10 @@ program test_pic_accumulators
        GUARD_SIZE, QoverM, m2d )
 
   call sll_s_initial_random_particles_4d(THERM_SPEED, &
+        ALPHA, KX, m2d, &
+        NUM_PARTICLES, part_group )
+
+  call sll_s_initial_hammersley_particles_4d(THERM_SPEED, &
         ALPHA, KX, m2d, &
         NUM_PARTICLES, part_group )
 
