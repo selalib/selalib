@@ -41,10 +41,11 @@ plf_lapack )
 
 LINK_DIRECTORIES(${CMAKE_BINARY_DIR}/lib)
 ADD_EXECUTABLE(test_spiga_poisson_2d_periodic test_poisson_2d_periodic.F90)
+ADD_DEPENDENCIES(test_spiga_poisson_2d_periodic spiga)
 TARGET_LINK_LIBRARIES(test_spiga_poisson_2d_periodic
 	${SPIGA_LIBRARIES} ${DISCO_LIBRARIES} ${PLAF_LIBRARIES})
 
-SET(PARAMETERS_FILE "${CMAKE_CURRENT_BINARY_DIR}/src/spiga/fortran/src/pde/tests/data/parameters_2d.nml")
+SET(PARAMETERS_FILE "parameters_2d.nml")
 SET(SOLVER_FILE     "solver_mgmres_nullspace.nml" )
 FILE(COPY ${PARAMETERS_FILE} DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
 FILE(COPY ${SOLVER_FILE}     DESTINATION ${CMAKE_CURRENT_BINARY_DIR})

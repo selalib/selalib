@@ -106,18 +106,20 @@ program test_hamiltonian_splitting_pic_1d2v_vm
   call particle_group%set_common_weight (1.0_f64)
 
 
-  SLL_ALLOCATE(particle_info_ref(4,n_particles), i_part)
+  SLL_ALLOCATE(particle_info_ref(4, n_particles), i_part)
   particle_info_ref = 0.0_f64
-  particle_info_ref = reshape([11.780972450961723_f64,        5.4977871437821380_f64,       -1.5341205443525459_f64,       0.15731068461017067_f64,       0.15731068461017067_f64,       -1.5341205443525459_f64,        6.8636759376074723_f64,        5.7026946767517002_f64   ], [n_particles, 4])
+  particle_info_ref = reshape( [11.780972450961723_f64,       -1.5341205443525459_f64,       0.15731068461017067_f64,        6.8636759376074723_f64,        5.4977871437821380_f64,       0.15731068461017067_f64,       -1.5341205443525459_f64,        5.7026946767517002_f64],[4,n_particles])
+  
+
 
   ! Initialize particles from particle_info_ref
   xi = 0.0_f64
   do i_part =1, n_particles
-     xi(1) = particle_info_ref(i_part, 1) 
+     xi(1) = particle_info_ref(1, i_part)
      call particle_group%set_x(i_part, xi)
-     xi(1:2) = particle_info_ref(i_part, 2:3)
+     xi(1:2) = particle_info_ref(2:3, i_part)
      call particle_group%set_v(i_part, xi)
-     xi(1) = particle_info_ref(i_part, 4)
+     xi(1) = particle_info_ref(4, i_part)
      call particle_group%set_weights(i_part, xi(1))
   end do
   
