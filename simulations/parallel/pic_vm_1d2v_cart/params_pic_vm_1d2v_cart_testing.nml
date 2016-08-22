@@ -1,12 +1,17 @@
 &sim_params
         delta_t = 0.05
         n_time_steps = 2
-        alpha = 0.0
-        n_mode = 1
-        thermal_v = 0.02
-        T_r = 12.0
         beta = 0.0001
+        initial_distrib = "cossum_onegaussian"
+        initial_bfield = "cos"
 /
+
+&cos_onegaussian
+        kx = 1.25
+        alpha = 0.0
+        v_thermal = 0.2  0.005773502691896
+        v_mean = 0.0 0.0
+/      
 
 &grid_dims
         ng_x = 32
@@ -16,7 +21,7 @@
 
 &pic_params
         n_particles = 100000
-        init_case = "SLL_INIT_SOBOL_SYM"
-        splitting_case = "SLL_SPLITTING_SYMPLECTIC"     
+        sampling_case = "particle_sampling_sobol_symmetric"
+        splitting_case = "splitting_symplectic"     
         spline_degree = 3
 /
