@@ -1,6 +1,11 @@
 add_library( characteristics_1d_test_helper OBJECT
   m_characteristics_1d_test_helper.F90 )
 
+add_dependencies( characteristics_1d_test_helper
+  sll_characteristics
+  sll_constants
+  sll_working_precision )
+
   MACRO( CHARACTERISTICS_TEST TEST_NAME )
     SET( EXECUTABLE test_${TEST_NAME} )
     ADD_EXECUTABLE( ${EXECUTABLE} test_${TEST_NAME}.F90 
