@@ -229,7 +229,6 @@ contains
     real(wp),                                      intent(in) :: t
     real(wp) :: eta
 
-    real(wp) :: k1, k2, k3
     ! Exact solution (periodic on [0,2pi])
     associate( c => self%c, b => self%b )
       eta = 2.0_wp*atan( b/c*tan( atan( (1.0_wp+c*tan( 0.5_wp*eta0 ))/b ) &
