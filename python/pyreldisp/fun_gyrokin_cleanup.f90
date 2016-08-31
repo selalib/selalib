@@ -189,7 +189,7 @@ CONTAINS
 
   !---------------------------------------------------------
   subroutine det2(res1, res2)
-    ! Ap doit être la matrice des dérivées des termes de A
+    ! Ap doit Ãªtre la matrice des dÃ©rivÃ©es des termes de A
     ! Ap est diagonale dans notre cas
 
     complex (kind=dp) :: res1, res2
