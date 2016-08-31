@@ -1,5 +1,5 @@
 import numpy as np
-from zealpy_gyrokin_anal import zealpy_gyrokin_anal
+from zealpy_gyrokin_cleanup_anal import zealpy_gyrokin_cleanup_anal
 import matplotlib.pyplot as mpp
 from pylab import *
 
@@ -14,19 +14,19 @@ rhomax       = 1.
 minor_radius = 14.5
 aspect_ratio = 16.53849335 #16.5
 #--> For analytical density and temperature profiles definition 
-kappaTi      = 66.
-kappaTe      = 66.
-kappan       = 13.2
-deltarTi     = 0.1
-deltarTe     = 0.1
-deltarn      = 0.2
+kappaTi  = 66.
+kappaTe  = 66.
+kappan   = 13.2
+deltarTi = 0.1
+deltarTe = 0.1
+deltarn  = 0.2
 #--> Choice of the box where zeros will be search
-xmin         = -1.
-xmax         = 1.
-ymin         = 0.0001
-ymax         = 0.01 #0.1
+xmin = -1.
+xmax = 1.
+ymin = 0.0001
+ymax = 0.01 #0.1
 iota = 0
-B0 = -1.
+B0   = -1.
 #------------------------------------------------------------
 # Normalization to obtain the same profiles than in GYSELA
 #------------------------------------------------------------
@@ -50,7 +50,7 @@ iota     = iota/R0
 #------------------------------------------------------------
 #--> Constructor for using dispersion relation for 
 #-->   gyrokinetic with analytic n and T profiles
-zp     = zealpy_gyrokin_anal(Zi=Zi,
+zp     = zealpy_gyrokin_cleanup_anal(Zi=Zi,
                     NNr=NNr,rmin=rmin,Lr=Lr,
                     invLTi=invLTi,deltarTi=deltarTi,
                     invLTe=invLTe,deltarTe=deltarTe,
@@ -93,7 +93,7 @@ while ( (mm_choice != '') | (nn_choice != '') ) :
         #-----> Rescaling of the eigenvector to get phi from phi
         rmesh = zp.params.dic['rmesh']
         n0    = zp.params.dic['n0']
-        phi_eigvect = zp.function_input_module.vecteur[:,0] / \
+        phi_eigvect = zp.function_input_module.vector[:,0] / \
             np.sqrt(rmesh*n0)
 
         #--> Figure 1: zeros of dispersion relation

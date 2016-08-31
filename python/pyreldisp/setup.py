@@ -48,9 +48,10 @@ zeal_files_list2 = map(lambda x: zeal_dir+x,zeal_files_list2)
 #----------------------------------------------------------------------
 reldisp_files_list = 'PlasmaFunctions.f90'
 pyreldisp_dic={}
-pyreldisp_dic['landau']  = [reldisp_files_list,'fun_landau.f90']
-pyreldisp_dic['BOT']     = [reldisp_files_list,'fun_BOT.f90']
-pyreldisp_dic['gyrokin'] = [reldisp_files_list,'fun_gyrokin.f90']
+pyreldisp_dic['landau'         ]=[reldisp_files_list,'fun_landau.f90'         ]
+pyreldisp_dic['BOT'            ]=[reldisp_files_list,'fun_BOT.f90'            ]
+pyreldisp_dic['gyrokin'        ]=[reldisp_files_list,'fun_gyrokin.f90'        ]
+pyreldisp_dic['gyrokin_cleanup']=[reldisp_files_list,'fun_gyrokin_cleanup.f90']
 
 
 #----------------------------------------------------------------------
