@@ -1,4 +1,4 @@
-!-----------------------------------------------------------------------
+!-------------------------------------------------------------------------------
 !**BEGIN PROLOGUE Function_Input_Module 
 !**DATE WRITTEN   1999/06/01  (year/month/day)
 !**AUTHORS
@@ -30,7 +30,7 @@
 !  approximations for the zeros. 
 !
 !**END PROLOGUE Function_Input_Module
-!-----------------------------------------------------------------------
+!-------------------------------------------------------------------------------
 !
 !  Modified to add plasma dispersion functions for 
 !    4D drift-kinetic cylindrical case
@@ -38,36 +38,37 @@
 !
 !  - Eric Sonnendrucker: 2008/12/11
 !  - Modified by Virginie Grandgirard: 2013/12/11
-!-----------------------------------------------------------------------
+!-------------------------------------------------------------------------------
 
-MODULE Function_Input_Module
+module function_input_module
 
-  use Precision_Module
+  use precision_module
 
   implicit none
 
   integer, parameter :: max=61
-  double precision :: ordre_grandeur = 1
+  double precision   :: ordre_grandeur = 1
   complex (kind=dp), allocatable :: vector(:,:)
-  !---------------------------------------------------------------------
-  !**ACCESSIBILITY
-  !
+
   public
 
-  !---------------------------------------------------------------------
-  !  If ICON = 3 or 4 (as specified in Zeal_Input_Module), then specify 
-  !  the values of NEWTONZ and NEWTONF.
-  !  These variables are used as follows. The modified Newton's method,
-  !  which takes into account the multiplicity of a zero and converges
-  !  quadratically, is used to refine the calculated approximations for
-  !  the zeros. The iteration stops if
-  !    - the relative distance between two successive approximations is
-  !      at most NEWTONZ
-  !  or
-  !    - the absolute value of the function at the last approximation is
-  !      at most NEWTONF
-  !  or if a maximum number of iterations is exceeded.
+  !-----------------------------------------------------------------------------
+  ! If ICON = 3 or 4 (as specified in Zeal_Input_Module), then specify 
+  ! the values of NEWTONZ and NEWTONF.
+  ! These variables are used as follows. The modified Newton's method,
+  ! which takes into account the multiplicity of a zero and converges
+  ! quadratically, is used to refine the calculated approximations for
+  ! the zeros.
   !
+  ! The iteration stops if:
+  ! the relative distance between two successive approximations is
+  ! at most NEWTONZ
+  ! or
+  ! the absolute value of the function at the last approximation is
+  ! at most NEWTONF
+  ! or
+  ! if a maximum number of iterations is exceeded.
+  !-----------------------------------------------------------------------------
   real (kind=dp) :: NEWTONZ = 5.0E-08_DP
   real (kind=dp) :: NEWTONF = 1.0E-14_DP
   real (kind=dp) :: PI = 3.1415926535897931_DP
@@ -77,198 +78,228 @@ MODULE Function_Input_Module
   real (kind=dp) :: dr
   real (kind=dp) :: B0
 
-  real (kind=dp), allocatable :: Ti(:)
-  real (kind=dp), allocatable :: dlogTi(:)
-  real (kind=dp), allocatable :: Te(:)
-  real (kind=dp), allocatable :: dlogn0(:)
+  real (kind=dp), allocatable :: Ti     (:)
+  real (kind=dp), allocatable :: dlogTi (:)
+  real (kind=dp), allocatable :: Te     (:)
+  real (kind=dp), allocatable :: dlogn0 (:)
   real (kind=dp), allocatable :: ddlogn0(:)
-  real (kind=dp), allocatable :: rmesh(:)
+  real (kind=dp), allocatable :: rmesh  (:)
 
   real (kind=dp), allocatable :: btheta(:)
-  real (kind=dp), allocatable :: bz(:)
+  real (kind=dp), allocatable :: bz    (:)
 
   ! matrix of operator
   complex (kind=dp), allocatable :: A(:,:) 
   ! derivative of A (diagonal)
   complex (kind=dp), allocatable :: Ap(:)   
 
-contains
+  contains
 
+
+  !-----------------------------------------------------------------------------
+  ! Define the function F and its derivative DF.
+  !-----------------------------------------------------------------------------
   subroutine FDF(omega,F,DF)
-    !-------------------------------------------------------------
-    !**PURPOSE
-    !  Define the function F and its derivative DF.
-    !-------------------------------------------------------------
+
     complex (kind=dp), intent(in   ) :: omega
     complex (kind=dp), intent(  out) :: F, DF
-    complex (kind=dp)                :: res1, res2
+    complex (kind=dp)                :: D, Dprime
 
-    call Matrice(omega)
-    call Dmatrice(omega)
-    call det2(res1, res2)
-    F  = res1/ordre_grandeur
-    DF = res2/ordre_grandeur
+    call matrix(omega)
+    call matrix_derivative(omega)
+    call det2(D, Dprime)
+    F  = D     /ordre_grandeur
+    DF = Dprime/ordre_grandeur
 
   end subroutine FDF
 
 
-  !-------------------------------------------------------------------- 
-  subroutine matrice(omega)
-    ! Fill in terms of matrix A for given value of omega
-    ! A is tridiagonal and band stored : 
-    !       A(1,j) is the upper diagonal term in column j
-    !       A(2,j) is the diagonal term in column j
-    !       A(3,j) is the lower diagonal term in column j
-    !-----------------------------------------------------
+  !-----------------------------------------------------------------------------
+  !
+  !-----------------------------------------------------------------------------
+  subroutine integral(omega,r,int)
+    
+    complex (kind=dp), intent(in   ) :: omega
+    integer          , intent(in   ) :: r
+    complex (kind=dp), intent(  out) :: int
+    complex (kind=dp)                :: zeta, dzeta, rho
+    real    (kind=dp)                :: kstar
+
+    kstar = (kpar*bz(r)+(ktheta*btheta(r)/rmesh(r)))*sqrt(2.0_dp*Ti(r))
+    rho   = omega/kstar
+
+    call FriedConte(rho,zeta,dzeta)
+
+    int = (1+rho*zeta)/Ti(r) & 
+          -ktheta/(rmesh(r)*B0*kstar)*((dlogn0(r)-0.5_DP*dlogTi(r))*zeta &
+                                       +dlogTi(r)*rho*(1+rho*zeta))
+    return
+
+  end subroutine integral
+
+
+  !-----------------------------------------------------------------------------
+  ! A is the tridiagonal matrix of equation (35) of
+  ! D. Coulette, N. Besse / Journal of Computational Physics 248 (2013) 1-32
+  !
+  ! A is filled for a given value of \omega as follows:
+  ! A(1,i) is the upper diagonal term in column i
+  ! A(2,i) is the       diagonal term in column i
+  ! A(3,i) is the lower diagonal term in column i 
+  !-----------------------------------------------------------------------------
+  subroutine matrix(omega)
+
     complex (kind=dp), intent(in) :: omega
-    complex (kind=dp)             :: zeta, dzeta, rho
-    real    (kind=dp)             :: kpar_modif
-    integer                       :: i,j
+    complex (kind=dp)             :: zeta, dzeta, int
+    integer                       :: i
     
     do i = 1, NNr 
-      kpar_modif = (kpar*bz(i)+(ktheta*btheta(i)/rmesh(i)))*sqrt(2.0_dp*Ti(i))
-      rho = omega/(kpar_modif)
-      call FriedConte(rho,zeta,dzeta)
-      A(2,i) = 2._dp+ dr*dr*( (ktheta**2-0.25_dp)/rmesh(i)**2 &
-        !+ 1._dp/(Zi*Te(i)) + 0.5_dp*(0.5_dp*dlogn0(i)**2 &
-        + 1._dp/Te(i) + 0.5_dp*(0.5_dp*dlogn0(i)**2 &
-        + dlogn0(i)/rmesh(i) + ddlogn0(i)) &
-        + ( (1+rho*zeta)/Ti(i) &
-        - ktheta/(rmesh(i)*B0*kpar_modif) &
-        *((dlogn0(i)-0.5_DP*dlogTi(i))*zeta &
-        + dlogTi(i)*rho*(1+rho*zeta))))
+
+      call integral(omega,i,int)
+
+      A(2,i) = 2._dp+dr**2 &
+               *((ktheta**2-0.25_dp)/rmesh(i)**2+1._dp/Te(i) &
+                 +0.5_dp*(0.5_dp*dlogn0(i)**2 &
+                          + dlogn0(i)/rmesh(i)+ddlogn0(i))+int)
       A(1,i) = -1.0_dp
       A(3,i) = -1.0_dp
-    end do
-  end subroutine matrice
 
-
-  !---------------------------------------------------------
-  subroutine Dmatrice(omega)
-    ! Compute Ap the term to term derivative of matrice A
-    ! Ap is a diagonal matrix
-    !----------------------------------------
-    complex (kind=dp), intent(in) :: omega
-
-    integer  i, j
-    complex (kind=dp) :: zeta, dzeta, rho
-    real (kind=dp) :: kpar_modif
-    do i = 1, NNr  
-      kpar_modif = (kpar*bz(i)+(ktheta*btheta(i)/rmesh(i)))*sqrt(2.0_dp*Ti(i))
-      rho = omega/(kpar_modif)
-      call FriedConte(rho,zeta,dzeta)
-      Ap(i) = dr*dr* &
-        ((zeta+rho*dzeta)/Ti(i) - &
-        ktheta/(B0*rmesh(i)*kpar_modif) * &
-        (dlogn0(i)*dzeta + dlogTi(i) * &
-        (1._dp+2._dp*rho*zeta+(rho**2-0.5_dp)*dzeta))) / &
-        (kpar_modif)
-    end do
-  end subroutine Dmatrice
-
-
-  !---------------------------------------------
-!  subroutine det(res)
-!    complex (kind=dp) ::res
-!    complex (kind=dp) :: b, c,temp
-!    integer :: i, j
-!
-!    b = 1
-!    c = A(2,1)
-!    do i = 2, NNr-1
-!       temp = c
-!       c = (A(2,i))*c - A(1,i)*A(3,i-1)*b
-!       b = temp
-!    end do
-!
-!    res = c
-!    return
-!  end subroutine det
-
-
-   !---------------------------------------------------------
-!  subroutine det2(res1, res2)
-!    ! Ap doit être la matrice des dérivées des termes de A
-!    ! Ap est diagonale dans notre cas
-!
-!    complex (kind=dp) :: res1, res2
-!    complex (kind=dp) :: b1, c1,temp1, b2, c2, temp2, c3, d1
-!    integer :: i, j
-!
-!    b1 = 1
-!    c1 = A(2,1)
-!    b2 = 0
-!    c2 = Ap(1)
-!    do i = 2, NNr-1
-!       temp1 = c1
-!       temp2 = c2
-!       c1 = A(2,i)*c1 - A(1,i)*A(3,i-1)*b1
-!       ! Ap est diagonale
-!       c2 = Ap(i)*temp1 + A(2,i)*c2 - A(1,i)*A(3,i-1)*b2
-!  
-!       d1 = b1
-!       b1 = temp1
-!       b2 = temp2
-!
-!    end do
-!    res2 = c2
-!    res1 = c1
-!    return
-!  end subroutine det2
-
-
-  ! Implement equations (36) and (37) of
-  ! D. Coulette, N. Besse / Journal of Computational Physics 248 (2013) 1-32
-  subroutine det2(res1, res2)
-
-    complex (kind=dp) :: res1, res2
-    complex (kind=dp) :: D, Dp, D_tmp1, D_tmp2, Dp_tmp1, Dp_tmp2
-    integer :: i
-
-    D_tmp1=A(2,1)
-    D_tmp2=1
-    Dp_tmp1=Ap(1)
-    Dp_tmp2=0
-    do i=2,NNr-1
-      D=A(2,i)*D_tmp1-D_tmp2
-      Dp=Ap(i)*D_tmp1+A(2,i)*Dp_tmp1-Dp_tmp2
-
-      D_tmp2=D_tmp1
-      D_tmp1=D
-      Dp_tmp2=Dp_tmp1
-      Dp_tmp1=Dp
     enddo
 
-    res1 = D
-    res2 = Dp
+  end subroutine matrix
+
+
+  !-----------------------------------------------------------------------------
+  ! Ap is the element-wise derivative of A with respect to \omega.
+  ! The only non-vanishing derivatives are on the diagonal elements.
+  !-----------------------------------------------------------------------------
+  subroutine matrix_derivative(omega)
+
+    complex (kind=dp), intent(in) :: omega
+    complex (kind=dp)             :: zeta, dzeta, rho
+    real    (kind=dp)             :: kstar
+    integer                       :: i
+
+    do i = 1, NNr  
+
+      kstar = (kpar*bz(i)+(ktheta*btheta(i)/rmesh(i)))*sqrt(2.0_dp*Ti(i))
+      rho   = omega/kstar
+
+      call FriedConte(rho,zeta,dzeta)
+
+      Ap(i) = dr*dr* &
+        ((zeta+rho*dzeta)/Ti(i) - &
+        ktheta/(B0*rmesh(i)*kstar) * &
+        (dlogn0(i)*dzeta + dlogTi(i) * &
+        (1._dp+2._dp*rho*zeta+(rho**2-0.5_dp)*dzeta)))/kstar
+
+    enddo
+
+  end subroutine matrix_derivative
+
+
+  !-----------------------------------------------------------------------------
+  ! Implement equation (36) of
+  ! D. Coulette, N. Besse / Journal of Computational Physics 248 (2013) 1-32
+  !
+  ! At step i:
+  ! D       is D_{i  }(\omega) of equation (36);
+  ! D_temp1 is D_{i-1}(\omega) of equation (36);
+  ! D_temp2 is D_{i-2}(\omega) of equation (36).
+  !-----------------------------------------------------------------------------
+  subroutine det(D)
+
+    complex (kind=dp) :: D, D_temp1, D_temp2
+    integer           :: i
+
+    D_temp1 = A(2,1)
+    D_temp2 = 1
+
+    do i = 2, NNr-1
+
+      D = A(2,i)*D_temp1-D_temp2
+
+      D_temp2 = D_temp1
+      D_temp1 = D
+
+    enddo
+
     return
+
+  end subroutine det
+
+
+  !-----------------------------------------------------------------------------
+  ! Implement equations (36) and (37) of
+  ! D. Coulette, N. Besse / Journal of Computational Physics 248 (2013) 1-32
+  !
+  ! At step i:
+  ! D        is  D_{i  }(\omega) of equation (36);
+  ! D_temp1  is  D_{i-1}(\omega) of equation (36);
+  ! D_temp2  is  D_{i-2}(\omega) of equation (36);
+  ! Dprime   is D'_{i  }(\omega) of equation (37);
+  ! Dp_temp1 is D'_{i-1}(\omega) of equation (37);
+  ! Dp_temp2 is D'_{i-2}(\omega) of equation (37);
+  !-----------------------------------------------------------------------------
+  subroutine det2(D, Dprime)
+
+    complex (kind=dp) :: D, D_temp1, D_temp2
+    complex (kind=dp) :: Dprime, Dp_temp1, Dp_temp2
+    integer           :: i
+
+    D_temp1  = A(2,1)
+    D_temp2  = 1
+    Dp_temp1 = Ap(1)
+    Dp_temp2 = 0
+
+    do i = 2, NNr-1
+
+      D  = A(2,i)*D_temp1-D_temp2
+      Dprime = Ap(i)*D_temp1+A(2,i)*Dp_temp1-Dp_temp2
+
+      D_temp2  = D_temp1
+      D_temp1  = D
+      Dp_temp2 = Dp_temp1
+      Dp_temp1 = Dprime
+
+    enddo
+
+    return
+
   end subroutine det2
 
 
-  !---------------------------------------------------------
+  !-----------------------------------------------------------------------------
   subroutine init
-   !complex (kind=dp) :: res, omega
-    complex (kind=dp) :: res1, res2, omega
-    real (kind=dp) :: tab(20)
-    integer :: i
 
-    if (.not.allocated(A)) allocate(A(3,NNr))
-    if (.not.allocated(Ap)) allocate(Ap(NNr))
+    complex (kind=dp) :: D, omega
+    real    (kind=dp) :: tab(20)
+    integer           :: i
+
+    if (.not.allocated(A) ) allocate(A (3,NNr))
+    if (.not.allocated(Ap)) allocate(Ap(NNr  ))
 
     do i = 1, 20
+
        omega = cmplx(-1+i*0.1,0.0)
-       call matrice(omega)
-       call det2(res1,res2)
-       tab(i) = real(res1)
-    end do
+       call matrix(omega)
+       call det(D)
+       tab(i) = real(D)
+
+    enddo
+
     ordre_grandeur = maxval(tab)
+
   end subroutine init
 
 
-  !---------------------------------------------------
+  !-----------------------------------------------------------------------------
+  ! Compute the eigenvector of A corresponding to the eigenvalue \omega
+  ! by singular value decomposition (SVD) of A.
+  !-----------------------------------------------------------------------------
   subroutine kernel(omega)
+
     complex (kind=dp), intent(in) :: omega
-    complex (kind=dp)             :: res1,res2
     complex (kind=dp)             :: pt    (NNr,NNr)
     complex (kind=dp)             :: Q     (NNr,NNr)
     complex (kind=dp)             :: C     (NNr,NNr)
@@ -280,7 +311,7 @@ contains
     real    (kind=dp)             :: EE    (NNr    )
     integer                       :: i, infosub, j, ii
     
-    call Matrice(omega)
+    call matrix(omega)
 
     call zgbbrd('B',NNr,NNr,0,1,1,A,3,D,E,Q,NNr,PT,NNr,C,NNr,work,rwork,infosub)
     if (infosub .NE. 0) then
@@ -291,7 +322,7 @@ contains
 
     do i = 1 , NNr-1
        EE(i) = E(i)
-    end do
+    enddo
 
     call zbdsqr('U',NNr,NNr,NNr,0,D,EE,PT,NNr,Q,NNr,C,1,rrwork,infosub)
     if (infosub .NE. 0) then
@@ -304,7 +335,7 @@ contains
     ii = 0
     do while(D(NNr-ii).lt.1.e-10)
        ii=ii+1
-    end do
+    enddo
     print '(a,i0,/)', 'Dimension of kernel = ', ii
     print '(a,f16.14,a,f16.14,a)', &
           'omega = ', real(omega), '+', imag(omega), 'j'
@@ -318,20 +349,20 @@ contains
           do j = 1, ii
              vector(i,j) = PT(NNr - ii + j,i)
              ! print*,'vect propre ',i,vector(i,j)
-          end do
-       end do
-    end if
+          enddo
+       enddo
+    endif
+
   end subroutine kernel
 
 
-  !-------------------------------------------------------------------
+  !-----------------------------------------------------------------------------
+  ! Given a rectangular region specified by LV and H (see the module
+  ! Zeal_Input_Module), decide whether the function is analytic
+  ! inside this region or not.
+  !-----------------------------------------------------------------------------
   FUNCTION VALREG(LV,H)
-    !------------------------------------------------------------------
-    !**PURPOSE
-    !  Given a rectangular region specified by LV and H (cf. the module
-    !   Zeal_Input_Module), decide whether the function is analytic 
-    !   inside this region or not.
-    !-------------------------------------------------------------------
+ 
     LOGICAL VALREG
     REAL(KIND=DP), INTENT(IN) :: LV(2), H(2)
 
@@ -342,5 +373,4 @@ contains
     !   VALREG = .NOT. ( LV(2)*(LV(2)+H(2)) <= ZERO .AND. LV(1) <= ZERO )
   END FUNCTION VALREG
 
-END MODULE Function_Input_Module
-
+end module function_input_module
