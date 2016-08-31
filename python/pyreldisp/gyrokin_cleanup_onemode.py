@@ -4,6 +4,11 @@ import numpy as np
 import matplotlib.pyplot as plt
 from zealpy_gyrokin_cleanup_anal import zealpy_gyrokin_cleanup_anal
 
+try :
+    raw_input
+except NameError:
+    raw_input = input
+
 #------------------------------------
 # INPUT DATAS (defined as GYSELA)
 #------------------------------------
