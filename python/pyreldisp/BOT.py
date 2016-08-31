@@ -1,3 +1,4 @@
+from __future__ import print_function
 from zealpy_BOT import zealpy_BOT
 from pylab import *
 import numpy as np
@@ -21,9 +22,9 @@ for kmode in arange(0.5,0.0,-.1):
         l0ld   = 18.0)
     zp.get_zeros(xmin,xmax,ymin,ymax)
 
-    print 'mode:', kmode 
-    print 'zero with largest imaginary part:', \
-        zp.zeros[argmax(imag(zp.zeros))]
+    print( 'mode:', kmode )
+    print( 'zero with largest imaginary part:', \
+        zp.zeros[argmax(imag(zp.zeros))] )
 
     plot(np.real(zp.zeros),np.imag(zp.zeros),'.',label='k='+str(kmode))
     axis([-1.,1.,-1.,1.])
@@ -35,4 +36,7 @@ if ( (rcParams['backend']=='TkAgg') or
      (rcParams['backend']=='WXAgg') ):
     show()
 
-raw_input("Press enter") 
+try:
+    raw_input("Press enter")
+except NameError:
+    input("Press enter")
