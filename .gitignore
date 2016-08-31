@@ -8,6 +8,7 @@
 *~
 *.kate-swp
 .unison
+\#*\#
 
 # Local port index file for MacPorts
 Portindex*
@@ -35,8 +36,9 @@ Portindex*
 # PyCharm files
 .idea/
 
-# Python bytecode
+# Python junk (bytecode, egg-info)
 *.pyc
+*.egg-info
 
 # Automatic documentation
 /doc/build/
