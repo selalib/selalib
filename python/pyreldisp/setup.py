@@ -10,6 +10,8 @@
 #
 # Rk: The compiler options are defined in the file
 #       setup.cfg
+#
+# YG: File is now compatible with Python3 (2016-08-31)
 #********************************************************
 from numpy.distutils.core import setup, Extension
 import sys
@@ -25,14 +27,13 @@ if sys.platform=='darwin':
 #---> Define the list of files which must be compiled in 
 #      the repository zeal_dir containing the ZEAL package
 #----------------------------------------------------------------------
-zeal_dir = 'zeal_src/'
+zeal_dir = 'zeal_src'
 zeal_files_list1=['prec.f90','error.f90', 'zeal_input.f90']
 zeal_files_list2=['math_tools.f90','integr_input.f90', 'quad.f90',
                   'zeros.f90','split.f90','refine.f90', 
                   'zeal4py.f90','dqag.f', 'dqagx.f', 'wofz.f']
-zeal_files_list1 = map(lambda x: zeal_dir+x,zeal_files_list1)
-zeal_files_list2 = map(lambda x: zeal_dir+x,zeal_files_list2)
-
+zeal_files_list1 = [os.path.join( zeal_dir, x ) for x in zeal_files_list1]
+zeal_files_list2 = [os.path.join( zeal_dir, x ) for x in zeal_files_list2]
 
 #----------------------------------------------------------------------
 #---> Define the list of files dedicated to the
