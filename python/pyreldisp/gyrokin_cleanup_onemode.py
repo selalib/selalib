@@ -142,9 +142,6 @@ while mm_choice and nn_choice:
         fig.show()
         ifig += 1
 
-        #---> Display figures at screen
-        if plt.rcParams['backend'] in ['TkAgg','WXAgg']:
-            plt.show()
     else:
         print( '---> BECAREFUL: Zeros not found for (m,n) = (%d,%d)\n' % (mm,nn) )
 
@@ -154,3 +151,4 @@ while mm_choice and nn_choice:
     nn_choice = raw_input( 'Toroidal mode n = ' )
 
 raw_input( "\nPress enter to quit:\n" )
+plt.close('all')
