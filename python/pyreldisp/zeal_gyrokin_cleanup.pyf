@@ -8,7 +8,8 @@ python module zealpy_gyrokin_cleanup_ ! in
     !--> Module function_input_module  
     interface
        module function_input_module 
-         real*8  :: kpar, ktheta
+         real*8  :: kzeta, ktheta
+         integer :: Zi
          integer :: NNr
          real*8  :: dr
          real*8  :: B0

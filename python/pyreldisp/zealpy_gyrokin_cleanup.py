@@ -13,7 +13,7 @@ class zealpy_gyrokin_cleanup(zealpy):
         super(zealpy_gyrokin_cleanup,self).__init__()
         self.setup_pymodule(zealpy_gyrokin_cleanup_)
 
-        required_params={'kpar'    : float,
+        required_params={'kzeta'   : float,
                          'ktheta'  : float,
                          'Zi'      : int,
                          'NNr'     : int,
@@ -49,9 +49,9 @@ class zealpy_gyrokin_cleanup(zealpy):
     #-------------------------------------------------------------
     # Initialize the dispersion relation
     #-------------------------------------------------------------
-    def init_rel_disp(self,kpar,ktheta):
+    def init_rel_disp(self,kzeta,ktheta):
         #--> Fill the different parameters required in fun_gyrokin_cleanup.f90
-        self.params.set_value('kpar',kpar)
+        self.params.set_value('kzeta',kzeta)
         self.params.set_value('ktheta',ktheta)
         
         #--> Fill fortran variable
