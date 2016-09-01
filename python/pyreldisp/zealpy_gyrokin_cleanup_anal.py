@@ -28,7 +28,7 @@ class zealpy_gyrokin_cleanup_anal(zealpy_gyrokin_cleanup):
         Lr   = self.param_anal.get_value('Lr')
         iota   = self.param_anal.get_value('iota')
         B0   = self.param_anal.get_value('B0')
-        super(zealpy_gyrokin_cleanup_anal,self).__init__(Zi,NNr,rmin,Lr,B0)    
+        super(zealpy_gyrokin_cleanup_anal,self).__init__(Zi,NNr,rmin,Lr,B0)
 
         #--> Compute the analytic profiles
         dr    = self.params.get_value('dr')

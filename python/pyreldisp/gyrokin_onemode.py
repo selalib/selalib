@@ -25,7 +25,7 @@ xmin         = -1.
 xmax         = 1.
 ymin         = 0.0001
 ymax         = 0.01 #0.1
-iota = 0
+iota = 0.8
 B0 = -1.
 #------------------------------------------------------------
 # Normalization to obtain the same profiles than in GYSELA
