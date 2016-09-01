@@ -73,7 +73,8 @@ module function_input_module
   real (kind=dp) :: NEWTONF = 1.0E-14_DP
   real (kind=dp) :: PI = 3.1415926535897931_DP
 
-  real (kind=dp) :: kpar, ktheta
+  integer        :: Zi
+  real (kind=dp) :: kzeta, ktheta
   integer        :: NNr
   real (kind=dp) :: dr
   real (kind=dp) :: B0
@@ -103,7 +104,8 @@ module function_input_module
 
     complex (kind=dp), intent(in   ) :: omega
     complex (kind=dp), intent(  out) :: F, DF
-    complex (kind=dp)                :: D, Dprime
+
+    complex (kind=dp) :: D, Dprime
 
     call matrix(omega)
     call matrix_derivative(omega)
@@ -122,10 +124,11 @@ module function_input_module
     complex (kind=dp), intent(in   ) :: omega
     integer          , intent(in   ) :: r
     complex (kind=dp), intent(  out) :: int
-    complex (kind=dp)                :: zeta, dzeta, rho
-    real    (kind=dp)                :: kstar
 
-    kstar = (kpar*bz(r)+(ktheta*btheta(r)/rmesh(r)))*sqrt(2.0_dp*Ti(r))
+    complex (kind=dp) :: zeta, dzeta, rho
+    real    (kind=dp) :: kstar
+
+    kstar = (kzeta*bz(r)+(ktheta*btheta(r)/rmesh(r)))*sqrt(2.0_dp*Ti(r))
     rho   = omega/kstar
 
     call FriedConte(rho,zeta,dzeta)
@@ -133,8 +136,6 @@ module function_input_module
     int = (1+rho*zeta)/Ti(r) & 
           -ktheta/(rmesh(r)*B0*kstar)*((dlogn0(r)-0.5_DP*dlogTi(r))*zeta &
                                        +dlogTi(r)*rho*(1+rho*zeta))
-    return
-
   end subroutine integral
 
 
@@ -150,15 +151,16 @@ module function_input_module
   subroutine matrix(omega)
 
     complex (kind=dp), intent(in) :: omega
-    complex (kind=dp)             :: zeta, dzeta, int
-    integer                       :: i
+
+    complex (kind=dp) :: zeta, dzeta, int
+    integer           :: i
     
     do i = 1, NNr 
 
       call integral(omega,i,int)
 
       A(2,i) = 2._dp+dr**2 &
-               *((ktheta**2-0.25_dp)/rmesh(i)**2+1._dp/Te(i) &
+               *((ktheta**2-0.25_dp)/rmesh(i)**2+1._dp/(Zi*Te(i)) &
                  +0.5_dp*(0.5_dp*dlogn0(i)**2 &
                           + dlogn0(i)/rmesh(i)+ddlogn0(i))+int)
       A(1,i) = -1.0_dp
@@ -176,23 +178,22 @@ module function_input_module
   subroutine matrix_derivative(omega)
 
     complex (kind=dp), intent(in) :: omega
-    complex (kind=dp)             :: zeta, dzeta, rho
-    real    (kind=dp)             :: kstar
-    integer                       :: i
+
+    complex (kind=dp) :: zeta, dzeta, rho
+    real    (kind=dp) :: kstar
+    integer           :: i
 
     do i = 1, NNr  
 
-      kstar = (kpar*bz(i)+(ktheta*btheta(i)/rmesh(i)))*sqrt(2.0_dp*Ti(i))
+      kstar = (kzeta*bz(i)+(ktheta*btheta(i)/rmesh(i)))*sqrt(2.0_dp*Ti(i))
       rho   = omega/kstar
 
       call FriedConte(rho,zeta,dzeta)
 
-      Ap(i) = dr*dr* &
-        ((zeta+rho*dzeta)/Ti(i) - &
-        ktheta/(B0*rmesh(i)*kstar) * &
-        (dlogn0(i)*dzeta + dlogTi(i) * &
-        (1._dp+2._dp*rho*zeta+(rho**2-0.5_dp)*dzeta)))/kstar
-
+      Ap(i) = dr*dr &
+              *((zeta+rho*dzeta)/Ti(i)-ktheta/(B0*rmesh(i)*kstar) &
+                *(dlogn0(i)*dzeta+dlogTi(i) &
+                  *(1._dp+2._dp*rho*zeta+(rho**2-0.5_dp)*dzeta)))/kstar
     enddo
 
   end subroutine matrix_derivative
@@ -203,28 +204,28 @@ module function_input_module
   ! D. Coulette, N. Besse / Journal of Computational Physics 248 (2013) 1-32
   !
   ! At step i:
-  ! D       is D_{i  }(\omega) of equation (36);
-  ! D_temp1 is D_{i-1}(\omega) of equation (36);
-  ! D_temp2 is D_{i-2}(\omega) of equation (36).
+  ! D     is D_{i  }(\omega) of equation (36);
+  ! D_im1 is D_{i-1}(\omega) of equation (36);
+  ! D_im2 is D_{i-2}(\omega) of equation (36).
   !-----------------------------------------------------------------------------
   subroutine det(D)
 
-    complex (kind=dp) :: D, D_temp1, D_temp2
+    complex (kind=dp), intent(out) :: D
+
+    complex (kind=dp) :: D_im1, D_im2
     integer           :: i
 
-    D_temp1 = A(2,1)
-    D_temp2 = 1
+    D_im1 = A(2,1)
+    D_im2 = 1
 
     do i = 2, NNr-1
 
-      D = A(2,i)*D_temp1-D_temp2
+      D = A(2,i)*D_im1-D_im2
 
-      D_temp2 = D_temp1
-      D_temp1 = D
+      D_im2 = D_im1
+      D_im1 = D
 
     enddo
-
-    return
 
   end subroutine det
 
@@ -234,37 +235,37 @@ module function_input_module
   ! D. Coulette, N. Besse / Journal of Computational Physics 248 (2013) 1-32
   !
   ! At step i:
-  ! D        is  D_{i  }(\omega) of equation (36);
-  ! D_temp1  is  D_{i-1}(\omega) of equation (36);
-  ! D_temp2  is  D_{i-2}(\omega) of equation (36);
-  ! Dprime   is D'_{i  }(\omega) of equation (37);
-  ! Dp_temp1 is D'_{i-1}(\omega) of equation (37);
-  ! Dp_temp2 is D'_{i-2}(\omega) of equation (37);
+  ! D     is  D_{i  }(\omega) of equation (36);
+  ! D_im1 is  D_{i-1}(\omega) of equation (36);
+  ! D_im2 is  D_{i-2}(\omega) of equation (36);
+  ! Dprime     is D'_{i  }(\omega) of equation (37);
+  ! Dprime_im1 is D'_{i-1}(\omega) of equation (37);
+  ! Dprime_im2 is D'_{i-2}(\omega) of equation (37);
   !-----------------------------------------------------------------------------
   subroutine det2(D, Dprime)
 
-    complex (kind=dp) :: D, D_temp1, D_temp2
-    complex (kind=dp) :: Dprime, Dp_temp1, Dp_temp2
+    complex (kind=dp), intent(out) :: D, Dprime
+    
+    complex (kind=dp) :: D_im1, D_im2
+    complex (kind=dp) :: Dprime_im1, Dprime_im2
     integer           :: i
 
-    D_temp1  = A(2,1)
-    D_temp2  = 1
-    Dp_temp1 = Ap(1)
-    Dp_temp2 = 0
+    D_im1 = A(2,1)
+    D_im2 = 1
+    Dprime_im1 = Ap(1)
+    Dprime_im2 = 0
 
     do i = 2, NNr-1
 
-      D  = A(2,i)*D_temp1-D_temp2
-      Dprime = Ap(i)*D_temp1+A(2,i)*Dp_temp1-Dp_temp2
+      D      = A(2,i)*D_im1-D_im2
+      Dprime = Ap(i)*D_im1+A(2,i)*Dprime_im1-Dprime_im2
 
-      D_temp2  = D_temp1
-      D_temp1  = D
-      Dp_temp2 = Dp_temp1
-      Dp_temp1 = Dprime
+      D_im2 = D_im1
+      D_im1 = D
+      Dprime_im2 = Dprime_im1
+      Dprime_im1 = Dprime
 
     enddo
-
-    return
 
   end subroutine det2
 
@@ -280,12 +281,10 @@ module function_input_module
     if (.not.allocated(Ap)) allocate(Ap(NNr  ))
 
     do i = 1, 20
-
-       omega = cmplx(-1+i*0.1,0.0)
-       call matrix(omega)
-       call det(D)
-       tab(i) = real(D)
-
+      omega = cmplx(-1+i*0.1,0.0)
+      call matrix(omega)
+      call det(D)
+      tab(i) = real(D)
     enddo
 
     ordre_grandeur = maxval(tab)
@@ -296,61 +295,63 @@ module function_input_module
   !-----------------------------------------------------------------------------
   ! Compute the eigenvector of A corresponding to the eigenvalue \omega
   ! by singular value decomposition (SVD) of A.
+  !
+  ! Use zgbbrd and zbdsqr subroutines from LAPACK.
   !-----------------------------------------------------------------------------
   subroutine kernel(omega)
 
     complex (kind=dp), intent(in) :: omega
-    complex (kind=dp)             :: pt    (NNr,NNr)
-    complex (kind=dp)             :: Q     (NNr,NNr)
-    complex (kind=dp)             :: C     (NNr,NNr)
-    complex (kind=dp)             :: work  (NNr    )
-    real    (kind=dp)             :: D     (NNr    )
-    real    (kind=dp)             :: E     (NNr-1  )
-    real    (kind=dp)             :: rwork (NNr    )
-    real    (kind=dp)             :: rrwork(4*NNr  )
-    real    (kind=dp)             :: EE    (NNr    )
-    integer                       :: i, infosub, j, ii
+
+    complex (kind=dp) :: PT    (NNr,NNr)
+    complex (kind=dp) :: Q     (NNr,NNr)
+    complex (kind=dp) :: C     (NNr,NNr)
+    complex (kind=dp) :: WORK  (NNr    )
+    real    (kind=dp) :: D     (NNr    )
+    real    (kind=dp) :: E     (NNr-1  )
+    real    (kind=dp) :: RWORK (NNr    )
+    real    (kind=dp) :: RRWORK(4*NNr  )
+    integer           :: i, j, ii, INFO
     
     call matrix(omega)
 
-    call zgbbrd('B',NNr,NNr,0,1,1,A,3,D,E,Q,NNr,PT,NNr,C,NNr,work,rwork,infosub)
-    if (infosub .NE. 0) then
-       print*, 'zeal failed because there is an error in the compute &
-               &of singular value decomposition'
-       stop
+    call zgbbrd('B',NNr,NNr,0,1,1,A,3,D,E,Q,NNr,PT,NNr,C,NNr,WORK,RWORK,INFO)
+    if ( INFO .ne. 0 ) then
+      write(*,'(a)') 'zeal failed because there is an error in the compute &
+                     &of singular value decomposition'
+      stop
     end if
 
-    do i = 1 , NNr-1
-       EE(i) = E(i)
-    enddo
-
-    call zbdsqr('U',NNr,NNr,NNr,0,D,EE,PT,NNr,Q,NNr,C,1,rrwork,infosub)
-    if (infosub .NE. 0) then
-       print*, 'zeal failed because there is an error in the compute &
-               &of singular value decomposition'
-       stop
+    call zbdsqr('U',NNr,NNr,NNr,0,D,E,PT,NNr,Q,NNr,C,1,RRWORK,INFO)
+    if ( INFO .ne. 0 ) then
+      write(*,'(a)') 'zeal failed because there is an error in the compute &
+                     &of singular value decomposition'
+      stop
     end if
+
     ! Singular values are given in D in decreasing order, so
     ! the kernel corresponds to the last singular values.
     ii = 0
-    do while(D(NNr-ii).lt.1.e-10)
-       ii=ii+1
+    do while ( D(NNr-ii) .lt. 1.e-10 )
+      ii = ii+1
     enddo
-    print '(a,i0,/)', 'Dimension of kernel = ', ii
-    print '(a,f16.14,a,f16.14,a)', &
-          'omega = ', real(omega), '+', imag(omega), 'j'
-   !print*, 'omega =', omega
-    if (ii.eq. 0) then
-       print*, 'zealpy failed because A(', omega, ') has 0-dimensional kernel'
-    else
-       if (.not.allocated(vector)) allocate(vector(NNr, ii))
 
-       do i = 1, NNr
-          do j = 1, ii
-             vector(i,j) = PT(NNr - ii + j,i)
-             ! print*,'vect propre ',i,vector(i,j)
-          enddo
-       enddo
+    write (*,'(a,i0)') 'Dimension of kernel = ', ii
+    write (*,'(a,f16.14,a,f16.14,a)') &
+      'omega = (', real(omega), '+', imag(omega), 'j)'
+
+    if (ii .eq. 0) then
+      write(*,'(a,f16.14,f16.14,a)') 'zealpy failed because A(', omega, ') &
+                                     &has 0-dimensional kernel'
+      stop
+    else
+      if (.not.allocated(vector)) allocate(vector(NNr, ii))
+
+      do i = 1, NNr
+        do j = 1, ii
+          vector(i,j) = PT(NNr-ii+j, i)
+          ! print*,'vect propre ',i,vector(i,j)
+        enddo
+      enddo
     endif
 
   end subroutine kernel
@@ -361,16 +362,17 @@ module function_input_module
   ! Zeal_Input_Module), decide whether the function is analytic
   ! inside this region or not.
   !-----------------------------------------------------------------------------
-  FUNCTION VALREG(LV,H)
- 
-    LOGICAL VALREG
-    REAL(KIND=DP), INTENT(IN) :: LV(2), H(2)
+  function valreg(lv,h)
 
-    VALREG = .TRUE.
+    logical valreg
+    real (kind=dp), intent(in) :: lv(2), h(2)
+
+    valreg = .true.
     !  The following statement can be used for functions that have a
     !  branch cut along the non-positive real axis.
     !
-    !   VALREG = .NOT. ( LV(2)*(LV(2)+H(2)) <= ZERO .AND. LV(1) <= ZERO )
-  END FUNCTION VALREG
+    !   valreg = .not. ( lv(2)*(lv(2)+h(2)) <= zero .and. lv(1) <= zero )
+
+  end function valreg
 
 end module function_input_module
