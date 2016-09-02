@@ -50,7 +50,8 @@ program test_pic_initializers
   type(sll_t_particle_group_2d), pointer :: init_group_GC
   type(sll_t_cartesian_mesh_2d), pointer :: m2d
   sll_real64 :: mean_ref(1:2), stddev_ref(1:2)
-    
+  logical    :: fail
+  
   m2d =>  sll_f_new_cartesian_mesh_2d( NC_X, NC_Y, &
        XMIN, XMAX, YMIN, YMAX )
 
@@ -90,7 +91,12 @@ program test_pic_initializers
   call sll_o_delete( init_group_GC )
   call sll_o_delete( m2d )
 
-  print*, "PASSED"
+  fail = .false.
+  if (fail .eqv. .false.) then
+     print*, "PASSED"
+  else 
+     print*, "FAILED"
+  endif
 
 contains
 
