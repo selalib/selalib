@@ -2,6 +2,7 @@ from __future__ import print_function
 
 import numpy as np
 import matplotlib.pyplot as plt
+from collections                 import OrderedDict
 from zealpy_gyrokin_cleanup_anal import zealpy_gyrokin_cleanup_anal
 
 try :
@@ -14,7 +15,7 @@ except NameError:
 #-------------------------------------------------------------------------------
 Zi = 1
 #--> For geometry definition
-NNr          = 1000
+NNr          = 100
 rhomin       = 0.006896551724 #0.00001
 rhomax       = 1.
 minor_radius = 14.5
@@ -52,86 +53,39 @@ iota     = iota/R0
 
 #--> Print geometry and equilibrium parameters
 
-print( '\nGeometry:\n' )
+def print_params():
 
-def print_func( name, val ):
-    print( '{:8s} = {:.14g}'.format( name, val ) )
- 
-print_func( 'R0'  , R0   )
-print_func( 'rmin', rmin )
-print_func( 'rmax', rmax )
-print_func( 'Lr'  , Lr   )
-print_func( 'Lz'  , Lz   )
+    print( '\nGeometry:\n' )
 
-print( '\nEquilibrium:\n' )
-print_func( 'deltarTi', deltarTi )
-print_func( 'deltarTe', deltarTe )
-print_func( 'deltarn0', deltarn0 )
-print_func( 'invLTi'  , invLTi   )
-print_func( 'invLTe'  , invLTe   )
-print_func( 'invLn0'  , invLn0   )
-print_func( 'iota/R0' , iota     )
-print_func( 'B0'      , B0       )
+    def print_func( name, val ):
+        print( '{:8s} = {:.14g}'.format( name, val ) )
+     
+    print_func( 'R0'  , R0   )
+    print_func( 'rmin', rmin )
+    print_func( 'rmax', rmax )
+    print_func( 'Lr'  , Lr   )
+    print_func( 'Lz'  , Lz   )
+
+    print( '\nEquilibrium:\n' )
+    print_func( 'deltarTi', deltarTi )
+    print_func( 'deltarTe', deltarTe )
+    print_func( 'deltarn0', deltarn0 )
+    print_func( 'invLTi'  , invLTi   )
+    print_func( 'invLTe'  , invLTe   )
+    print_func( 'invLn0'  , invLn0   )
+    print_func( 'iota/R0' , iota     )
+    print_func( 'B0'      , B0       )
 
 #-------------------------------------------------------------------------------
 # Dispersion relation solving
 #-------------------------------------------------------------------------------
-#--> Constructor for using dispersion relation for 
-#--> gyrokinetics with analytic n and T profiles
-zp = zealpy_gyrokin_cleanup_anal( Zi=Zi, NNr=NNr, rmin=rmin, Lr=Lr,
-                                  invLTi=invLTi,deltarTi=deltarTi,
-                                  invLTe=invLTe,deltarTe=deltarTe,
-                                  invLn0=invLn0,deltarn0=deltarn0,
-                                  iota=iota, B0=B0 )
-
-rmesh = zp.params.dic['rmesh']
-Ti    = zp.params.dic['Ti']
-Te    = zp.params.dic['Te']
-n0    = zp.params.dic['n0']
-
-#--> Plot equilibrium radial profiles of Ti, Te and n0
-
-#--> Figure 1, Plot 1: equilibrium radial profile of Ti
-ifig = 1
-fig = plt.figure( ifig )
-ax  = fig.add_subplot( 1,3,1 )
-ax.plot( rmesh, Ti  )
-ax.set_title( 'Equilibrium ion temperature profile' )
-ax.set_xlabel( 'r' )
-ax.grid()
-fig.show()
-
-#--> Figure 1, Plot 2: equilibrium radial profile of Te
-fig = plt.figure( ifig )
-ax  = fig.add_subplot( 1,3,2 )
-ax.plot( rmesh, Te )
-ax.set_title( 'Equilibrium electron temperature profile' )
-ax.set_xlabel( 'r' )
-ax.grid()
-fig.show()
-
-#--> Figure 1, Plot 3: equilibrium radial profile of n0
-fig = plt.figure( ifig )
-ax  = fig.add_subplot( 1,3,3 )
-ax.plot( rmesh, n0 )
-ax.set_title( 'Equilibrium density profile (not normalized)' )
-ax.set_xlabel( 'r' )
-ax.grid()
-fig.show()
-
-#--> Choice of the mode (m,n)
-print( '\n-----------------' )
-mm_choice = raw_input( 'Poloidal mode m = ' )
-nn_choice = raw_input( 'Toroidal mode n = ' )
-
-while mm_choice and nn_choice:
+def analyse_mode( zp, mm, nn, verbose=False ):
+    zp.mm    = mm
+    zp.nn    = nn
     zp.zeros = []
-    mm  = int(mm_choice)
-    nn  = int(nn_choice)
 
-    print( '\nSearch zeros of mode (m,n) = (%d,%d)\n'% (mm,nn) )
-    kzeta   = float(nn) * 2*np.pi/Lz
     ktheta  = float(mm)
+    kzeta   = float(nn) * 2*np.pi/Lz
 
     #--> Initialisation of the dispersion relation for (m,n) mode
     zp.init_rel_disp( ktheta=ktheta, kzeta=kzeta )
@@ -142,50 +96,215 @@ while mm_choice and nn_choice:
     #--> Select the most unstable modes
     if len(zp.zeros) != 0:
         imag_zeros   = np.imag( zp.zeros )
-        mostunstable = zp.zeros[np.argmax(imag_zeros)]
-        print( 'All zeros found:' )
-        print( *zp.zeros, sep='\n', end='\n\n' )
-        print( 'Zero with largest imaginary part: ')
-        print( 'omega =', mostunstable, '\n' )
-        
+        zp.mostunstable = zp.zeros[np.argmax(imag_zeros)]
+        if verbose:
+            print( 'All zeros found:' )
+            print( *zp.zeros, sep='\n', end='\n\n' )
+            print( 'Zero with largest imaginary part: ')
+            print( 'omega =', zp.mostunstable, '\n' )
+
         #--> Computation of the eigenvector (phi) corresponding
         #--> to the most unstable mode
-        zp.function_input_module.kernel( mostunstable )
+        zp.function_input_module.kernel( zp.mostunstable )
         #--> Rescaling of the eigenvector to get phi from phi
-        phi_eigvect = zp.function_input_module.vector[:,0] / np.sqrt( rmesh*n0 )
+        rmesh = zp.params.dic['rmesh']
+        n0    = zp.params.dic['n0']
+        zp.phi_eigvect = zp.function_input_module.vector[:,0] / np.sqrt( rmesh*n0 )
 
-        #--> Figure 2, Plot 1: zeros of dispersion relation
-        ifig += 1
-        fig = plt.figure( ifig )
-        ax  = fig.add_subplot( 1,2,1 )
-        ax.plot( np.real(zp.zeros), np.imag(zp.zeros), '.',
-                  label = r'$m={}$, $n={}$'.format( mm, nn ) )
-        ax.axis( [xmin,xmax,ymin,ymax] )
-        ax.set_title( 'Zeros of dispersion relation' )
-        ax.set_xlabel( r'Re($\omega$)', size=14 )
-        ax.set_ylabel( r'Im($\omega$)', size=14, rotation='horizontal' )
-        ax.legend()
-        ax.grid()
-        fig.show()
-        
-        #--> Figure 2, Plot 2: radial profile of the most unstable mode
-        fig = plt.figure( ifig )
-        ax  = fig.add_subplot( 1,2,2 )
-        ax.plot( rmesh, abs(phi_eigvect) )
-        ax.set_title(
-          r'Profile of most unstable mode: $\omega={:.6g}$'.format( mostunstable ) )
-        ax.set_xlabel( 'r' )
-        ax.grid()
-        fig.show()
-        
     else:
-        print( '---> BECAREFUL <---' )
-        print( 'Zeros not found for  (m,n) = (%d,%d)\n' % (mm,nn) )
-        
-    #--> Choice of the mode (m,n)
-    print( '\n-----------------' )
-    mm_choice = raw_input( 'Poloidal mode m = ' )
-    nn_choice = raw_input( 'Toroidal mode n = ' )
+        if verbose:
+            print( '---> BECAREFUL <---' )
+            print( 'Zeros not found for  (m,n) = (%d,%d)\n' % (mm,nn) )
 
-raw_input( "\nPress enter to quit:\n" )
-plt.close('all')
+#-------------------------------------------------------------------------------
+# Dispersion relation solving
+#-------------------------------------------------------------------------------
+
+def manual_scan( zp ):
+    zeros_dict = OrderedDict()
+    while True:
+        #--> Choice of the mode (m,n)
+        print( '\n-----------------' )
+        mm_choice = raw_input( 'Poloidal mode m = ' )
+        nn_choice = raw_input( 'Toroidal mode n = ' )
+        print()
+        if mm_choice and nn_choice:
+            mm = int(mm_choice)
+            nn = int(nn_choice)
+            analyse_mode( zp, mm, nn, verbose=True )
+            zeros_dict[(mm,nn)] = np.array( zp.zeros )
+        else:
+            break
+    return zeros_dict
+
+
+def automatic_scan( zp, mm_list, nn_list ):
+    zeros_dict = OrderedDict()
+    for nn in nn_list:
+        for mm in mm_list:
+            print( '\n-----------------' )
+            print( 'Poloidal mode m = %d' % mm )
+            print( 'Toroidal mode n = %d' % nn )
+            print()
+            analyse_mode( zp, mm, nn, verbose=True )
+            zeros_dict[(mm,nn)] = np.array( zp.zeros )
+    return zeros_dict
+
+
+def find_most_unstable_mode( zp, zeros_dict ):
+
+    max_mode = (None,None)
+    max_real = 0.0
+    max_imag = 0.0
+    for (mm,nn), zeros in zeros_dict.items():
+        max_imag_loc = max( zeros.imag ) 
+        if max_imag_loc > max_imag:
+            max_mode = (mm,nn)
+            max_real = zeros.real[np.argmax(zeros.imag)]
+            max_imag = max_imag_loc
+
+# mostunstable_dict = { (mm,nn): zeros[np.argmax(zeros.imag)] \
+#         for (mm,nn),zeros in zeros_dict.items() }
+
+    return max_mode
+
+
+#===============================================================================
+# PLOTS
+#===============================================================================
+
+def plot_profiles( axes, zp ):
+
+    rmesh = zp.params.dic['rmesh']
+    Ti = zp.params.dic['Ti']
+    Te = zp.params.dic['Te']
+    n0 = zp.params.dic['n0']
+
+    axes[0].plot( rmesh, Ti  )
+    axes[0].set_title( 'Equilibrium ion temperature profile' )
+    axes[1].plot( rmesh, Te )
+    axes[1].set_title( 'Equilibrium electron temperature profile' )
+    axes[2].plot( rmesh, n0 )
+    axes[2].set_title( 'Equilibrium density profile (not normalized)' )
+    for ax in axes:
+        ax.set_xlabel('r')
+        ax.grid()
+
+
+def plot_zeros( ax, zeros_dict ):
+
+    for (mm,nn), zeros in zeros_dict.items():
+        ax.plot( zeros.real, zeros.imag, '.',
+                      label = r'$m={}$, $n={}$'.format( mm, nn ) )
+
+    ax.axis( [xmin,xmax,ymin,ymax] )
+    ax.set_title( 'Zeros of dispersion relation' )
+    ax.set_xlabel( r'Re($\omega$)', size=14 )
+    ax.set_ylabel( r'Im($\omega$)', size=14, rotation='horizontal' )
+    ax.legend()
+    ax.grid()
+
+
+def plot_mode( ax, zp ):
+    ax.plot( zp.params.dic['rmesh'], abs( zp.phi_eigvect ) )
+    ax.set_title(
+      r'Profile of most unstable mode ({},{}): $\omega={:.6g}$' \
+              .format( zp.mm, zp.nn, zp.mostunstable ) )
+    ax.set_xlabel( 'r' )
+    ax.grid()
+
+
+#==============================================================================
+# PARSER
+#==============================================================================
+
+def parse_input():
+
+  import argparse, sys
+
+  parser = argparse.ArgumentParser (
+      prog        = 'python3 '+ sys.argv[0],
+      description = 'Compute growth rates for ITG instability in screw-pinch.',
+      epilog      = ' ',
+      formatter_class = argparse.ArgumentDefaultsHelpFormatter,
+      )
+
+  subparsers = parser.add_subparsers( dest='scan', help='' )
+
+  # 'Manual' modality
+  parser_a = subparsers.add_parser( 'manual', help='use manual input' )
+
+  # 'Automatic' modality
+  parser_b = subparsers.add_parser( 'auto', help='use automatic scan' )
+  parser_b.add_argument( '-m', '--m_range',
+          type     = int,
+          nargs    = 2,
+          required = True,
+          metavar  = ('MIN','MAX'),
+          help     = 'range for m mode (along theta)' )
+
+  parser_b.add_argument( '-n', '--n_range',
+          type     = int,
+          nargs    = 2,
+          required = True,
+          metavar  = ('MIN','MAX'),
+          help     = 'range for n mode (along z)' )
+
+  return parser.parse_args()
+
+
+#===============================================================================
+# MAIN
+#===============================================================================
+def main():
+
+    args = parse_input()
+    print( args )
+
+    print_params()
+
+    #--> Constructor for using dispersion relation for 
+    #--> gyrokinetics with analytic n and T profiles
+    zp = zealpy_gyrokin_cleanup_anal( Zi=Zi, NNr=NNr, rmin=rmin, Lr=Lr,
+                                      invLTi=invLTi,deltarTi=deltarTi,
+                                      invLTe=invLTe,deltarTe=deltarTe,
+                                      invLn0=invLn0,deltarn0=deltarn0,
+                                      iota=iota, B0=B0 )
+
+    #--> Figure 1: Plot equilibrium radial profiles of Ti, Te and n0
+    fig, axes = plt.subplots( nrows=1, ncols=3, sharex=True )
+    plot_profiles( axes, zp )
+    fig.show()
+
+    if args.scan == 'manual':
+        zeros_dict = manual_scan( zp )
+    elif args.scan == 'auto':
+        m_min, m_max = args.m_range
+        n_min, n_max = args.n_range
+        mm_list = range( m_min, m_max+1 )
+        nn_list = range( n_min, n_max+1 )
+        zeros_dict = automatic_scan( zp, mm_list, nn_list )
+    else:
+        raise ValueError( args.scan )
+
+    mm, nn = find_most_unstable_mode( zp, zeros_dict )
+    analyse_mode( zp, mm, nn )
+
+    #--> Figure 2, Plot 0: zeros of dispersion relation
+    #--> Figure 2, Plot 1: radial profile of the most unstable mode
+    fig2, axes2 = plt.subplots( nrows=1, ncols=2 )
+    plot_zeros( axes2[0], zeros_dict )
+    plot_mode ( axes2[1], zp )
+    fig2.show()
+
+    # Wait for enter for stopping execution
+    msg = '\nPress ENTER to quit'
+    try:
+        raw_input( msg )
+    except NameError:
+        input( msg )
+    plt.close('all')
+
+
+if __name__ == '__main__':
+    main()
