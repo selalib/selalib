@@ -62,26 +62,27 @@ contains
 !> of the physical space.
   subroutine sll_s_initial_random_particles_4d( &
               thermal_speed,           &
-              alpha, k,                &!< the perturbation's parameters
-              m2d,                     &!< the mesh of the physical space
-              num_particles,           &!< the number of particles distributed over a single rank
-              p_group,                 &!< the particle group
-              rand_seed,               &!< the random seed used by the rank
-              rank, worldsize )         !< when using more than 1 process
-    sll_real64, intent(in) :: thermal_speed, alpha, k
-    type(sll_t_cartesian_mesh_2d), intent(in) :: m2d
-    sll_int32, intent(in)  :: num_particles
-    type(sll_t_particle_group_4d), pointer, intent(inout) :: p_group
+              alpha, k,                &
+              m2d,                     &
+              num_particles,           &
+              p_group,                 &
+              rand_seed,               &
+              rank, worldsize )         
+    sll_real64, intent(in) :: thermal_speed
+    sll_real64, intent(in) :: alpha, k!< the perturbation's parameters
+    type(sll_t_cartesian_mesh_2d), intent(in) :: m2d!< the mesh of the physical space
+    sll_int32, intent(in)  :: num_particles!< the number of particles distributed over a single rank
+    sll_int32, dimension(:), intent(in), optional  :: rand_seed!< the random seed used by the rank
+    sll_int32, optional  :: rank, worldsize!< when using more than 1 process
+    type(sll_t_particle_group_4d), pointer, intent(inout) :: p_group!< the particle group
     sll_int32  :: j
     sll_int32  :: ncx, ic_x,ic_y
-    sll_real64 :: x, y, vx, vy
+    sll_real64 :: x, y, vx, vy, z
     sll_real64 :: xmin, ymin, rdx, rdy
     sll_real32 :: weight
     sll_real32 :: off_x,off_y
     sll_real64 :: tmp1, tmp2
-    sll_int32, dimension(:), intent(in), optional  :: rand_seed
-    sll_int32, optional  :: rank, worldsize
-    sll_real64 :: yo, nu, fdx! val(1:2)
+    sll_real64 :: yo, nu, fdx, val(1:2)
 
     if ( present(rand_seed) ) then
        call random_seed (put=rand_seed)
@@ -89,7 +90,7 @@ contains
 
     if( present(worldsize) ) then
        weight = real((m2d%eta1_max - m2d%eta1_min) * &
-            (m2d%eta2_max - m2d%eta2_min),f32)/real(worldsize*num_particles,f32)
+            (m2d%eta2_max - m2d%eta2_min),f32)/( real(worldsize,f32)*real(num_particles,f32) )
     else
        weight = real((m2d%eta1_max - m2d%eta1_min) * &
             (m2d%eta2_max - m2d%eta2_min),f32)/real(num_particles,f32)
@@ -111,8 +112,8 @@ contains
        if (sll_f_eval_landau1d(alpha, k, x) >= fdx ) then
           call random_number(y)
           y = (m2d%eta2_max - ymin)*y + ymin
-          nu = thermal_speed*sqrt( -2._f64*log(1.0_f64 - &
-               (real(j,f64)-0.5_f64)/real(num_particles,f64)) )
+          call random_number(z)
+          nu = thermal_speed*sqrt(-2._f64*log(1.0_f64 - z))
           call random_number(yo)
           vx = nu * cos(yo * 2.0_f64*sll_p_pi)
           vy = nu * sin(yo * 2.0_f64*sll_p_pi)
@@ -134,12 +135,13 @@ contains
 !> The Landau damping case with a perturbation in a single direction
 !> of the physical space.
   subroutine sll_s_initial_hammersley_particles_4d( &
-              thermal_speed, alpha, k, &!< the same as for the random routine
+              thermal_speed, alpha, k, &
               m2d,                     &
               num_particles,           &
               p_group,                 &
               rand_seed, rank, worldsize )
-    sll_real64, intent(in) :: thermal_speed, alpha, k
+    sll_real64, intent(in) :: thermal_speed
+    sll_real64, intent(in) :: alpha, k     !< the same as for the random subroutine
     type(sll_t_cartesian_mesh_2d), intent(in) :: m2d
     sll_int32, intent(in)  :: num_particles
     type(sll_t_particle_group_4d), pointer, intent(inout) :: p_group
@@ -162,7 +164,7 @@ contains
 
     if( present(worldsize) ) then
        weight = real((m2d%eta1_max - m2d%eta1_min) * &
-            (m2d%eta2_max - m2d%eta2_min),f32)/real(worldsize*num_particles,f32)
+            (m2d%eta2_max - m2d%eta2_min),f32)/( real(worldsize,f32)*real(num_particles,f32) )
     else
        weight = real((m2d%eta1_max - m2d%eta1_min) * &
             (m2d%eta2_max - m2d%eta2_min),f32)/real(num_particles,f32)
@@ -213,19 +215,21 @@ contains
 
 !> The Landau damping case with a perturbation in BOTH directions
 !> of the physical space: (x,y) --> 1 + alpha*cos(kx * x)*cos(ky * y)
-  subroutine sll_initial_particles_4d_L2d( &
+  subroutine sll_s_initial_random_particles_4d_Landau2d( &
               thermal_speed,    &
-              alpha, kx, ky,    &!< the perturbation's parameters
-              m2d,              &!< the mesh in (x,y)
-              num_particles,    &!< the number of particles over a single process
-              p_group,          &!< the particle group
-              rand_seed,        &!< the random seed used by the process
-              rank, worldsize   )!< when using more than 1 process
-    sll_real64, intent(in) :: thermal_speed, alpha
-    sll_real64, intent(in) :: kx, ky
-    type(sll_t_cartesian_mesh_2d), intent(in) :: m2d
-    sll_int32, intent(in)  :: num_particles
-    type(sll_t_particle_group_4d), pointer, intent(inout) :: p_group
+              alpha, kx, ky,    &
+              m2d,              &
+              num_particles,    &
+              p_group,          &
+              rand_seed,        &
+              rank, worldsize   )
+    sll_real64, intent(in) :: thermal_speed
+    sll_real64, intent(in) :: alpha, kx, ky!< the perturbation's parameters
+    type(sll_t_cartesian_mesh_2d), intent(in) :: m2d!< the mesh in (x,y)
+    sll_int32, intent(in)  :: num_particles!< the number of particles over a single process
+    sll_int32, dimension(:), intent(in), optional  :: rand_seed!< the random seed used by the process
+    sll_int32, optional  :: rank, worldsize!< when using more than 1 process
+    type(sll_t_particle_group_4d), pointer, intent(inout) :: p_group!< the particle group
     sll_int32  :: j, ii, ll
     sll_int32  :: ncx, ic_x,ic_y
     sll_real64 :: x, y, vx, vy,  z
@@ -233,8 +237,6 @@ contains
     sll_real32 :: weight
     sll_real32 :: off_x, off_y
     sll_real64 :: tmp1, tmp2
-    sll_int32, dimension(:), intent(in), optional  :: rand_seed
-    sll_int32, optional  :: rank, worldsize
     sll_real64 :: val(1:2)
 
     if ( present(rand_seed) ) then
@@ -243,7 +245,7 @@ contains
 
     if( present(worldsize) ) then
        weight = real((m2d%eta1_max - m2d%eta1_min) * &
-            (m2d%eta2_max - m2d%eta2_min),f32)/real(worldsize*num_particles,f32)
+            (m2d%eta2_max - m2d%eta2_min),f32)/( real(worldsize,f32)*real(num_particles,f32) )
     else
        weight = real((m2d%eta1_max - m2d%eta1_min) * &
             (m2d%eta2_max - m2d%eta2_min),f32)/real(num_particles,f32)
@@ -279,7 +281,7 @@ contains
    return
    SLL_ASSERT(present(rank))
 
-  end subroutine sll_initial_particles_4d_L2d
+ end subroutine sll_s_initial_random_particles_4d_Landau2d
 
 
   function sll_f_eval_landau1d(alp, kx, x)

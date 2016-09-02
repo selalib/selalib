@@ -218,8 +218,8 @@ contains
 !
 !  --------------------------------------------------------------------
 
-!    call sll_s_initial_random_particles_4d( &
-    call sll_s_initial_hammersley_particles_4d( &
+!    call sll_s_initial_hammersley_particles_4d( &
+    call sll_s_initial_random_particles_4d( &
                                sim%thermal_speed_parts, & 
                                ALPHA, KX, sim%m2d,     &
                                sim%parts_number,        &
