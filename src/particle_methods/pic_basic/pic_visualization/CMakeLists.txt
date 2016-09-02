@@ -7,8 +7,6 @@ TARGET_LINK_LIBRARIES( sll_pic_visualization
   sll_errors
   sll_memory
   sll_working_precision
-  # sll_pic_interface
-  # sll_particle_types
   sll_particle_groups
   sll_meshes
   sll_file_io
