@@ -8,23 +8,23 @@ python module zealpy_gyrokin_cleanup_ ! in
     !--> Module function_input_module  
     interface
        module function_input_module 
-         real*8  :: kzeta, ktheta
          integer :: Zi
+         real*8  :: kzeta, ktheta
          integer :: NNr
          real*8  :: dr
          real*8  :: B0
-         real*8 allocatable :: Ti(:)
-         real*8 allocatable :: Te(:)
-         real*8 allocatable :: dlogTi(:)
-         real*8 allocatable :: dlogn0(:)
+         real*8 allocatable :: Ti     (:)
+         real*8 allocatable :: dlogTi (:)
+         real*8 allocatable :: Te     (:)
+         real*8 allocatable :: dlogn0 (:)
          real*8 allocatable :: ddlogn0(:)
-         real*8 allocatable :: rmesh(:)
-         real*8 allocatable :: btheta(:)
-         real*8 allocatable :: bz(:)
+         real*8 allocatable :: rmesh  (:)
+         real*8 allocatable :: btheta (:)
+         real*8 allocatable :: bz     (:)
 
-         !--> Arrays required for all cases
-         double complex allocatable :: vector(:,:)
+         !--> Variables required for all cases
          double precision :: ordre_grandeur
+         double complex allocatable :: vector(:,:)
 
          subroutine init
          end subroutine init
