@@ -32,12 +32,45 @@
 !**END PROLOGUE Function_Input_Module
 !-------------------------------------------------------------------------------
 !
-!  Modified to add plasma dispersion functions for 
-!    4D drift-kinetic cylindrical case
-!   based on the complex error function. 
+!  Modified to add plasma dispersion functions for 4D drift-kinetic cylindrical
+!  case based on the complex error function. 
 !
 !  - Eric Sonnendrucker: 2008/12/11
 !  - Modified by Virginie Grandgirard: 2013/12/11
+!  - Modified by Yaman Gü¢lü and Edoardo Zoni: 2016/08
+!
+!  The equation solved is the quasi-neutrality equation
+!
+!  ((-1/(r*n0))*d/dr(r*n0*d/dr)+m**2/r**2+1/Ti+I)phi=0,
+!
+!  where phi=phi(omega,r) is the Laplace transform of the Fourier coefficient
+!  of the field for a given mode (m,n). The integral I=I(omega,r) can be
+!  expressed analytically in terms of the plasma dispersion function Z:
+!
+!  I=(1+rho*Z(rho))/Ti-m/(r*B0*kstar)
+!    *((dlogn0(r)-0.5_DP*dlogTi(r))*Z(rho)+dlogTi(r)*rho*(1+rho*Z(rho))),
+!
+!  with rho:=omega/kstar. The above equation is solved via the replacement
+!  psi:=sqrt(r*n0)*phi. The resulting "Schroedinger-type" equation is
+!
+!  (-d**2/dr**2+m**2/r**2+1/Ti+1/(sqrt(r*n0))*d**2/dr**2(sqrt(r*n0))+I)psi = 0.
+!
+!  The discrete problem E(omega)psi=0, resulting from the discretization
+!  of the above radial differential operator on a uniform grid, is solved
+!  through two steps:
+!
+!  1) solve the dispersion equation D(omega)=det(E(omega))=0;
+!  2) find the matching eigenvector by singular value decomposition of E(omega).
+!
+!  For references, see:
+!
+!  1) sections 2.3.1 and 3.3 of
+!     D. Coulette, N. Besse / Journal of Computational Physics 248 (2013) 1-32;
+!
+!  2) appendix B of
+!     Latu, Mehrenberger, Gü¢lü, Ottaviani, Sonnendrücker /
+!     Field-aligned interpolation for semi-Lagrangian gyrokinetic simulations
+!     (submitted on May 9, 2016).  
 !-------------------------------------------------------------------------------
 
 module function_input_module
@@ -92,7 +125,7 @@ module function_input_module
   ! matrix of operator
   complex (kind=dp), allocatable :: A(:,:) 
   ! derivative of A (diagonal)
-  complex (kind=dp), allocatable :: Ap(:)   
+  complex (kind=dp), allocatable :: Aprime(:)   
 
   contains
 
@@ -117,7 +150,7 @@ module function_input_module
 
 
   !-----------------------------------------------------------------------------
-  !
+  ! Compute the integral I calling the plasma dispersion function
   !-----------------------------------------------------------------------------
   subroutine integral(omega,r,int)
     
@@ -172,7 +205,7 @@ module function_input_module
 
 
   !-----------------------------------------------------------------------------
-  ! Ap is the element-wise derivative of A with respect to \omega.
+  ! Aprime is the element-wise derivative of A with respect to \omega.
   ! The only non-vanishing derivatives are on the diagonal elements.
   !-----------------------------------------------------------------------------
   subroutine matrix_derivative(omega)
@@ -190,10 +223,10 @@ module function_input_module
 
       call FriedConte(rho,zeta,dzeta)
 
-      Ap(i) = dr*dr &
-              *((zeta+rho*dzeta)/Ti(i)-ktheta/(B0*rmesh(i)*kstar) &
-                *(dlogn0(i)*dzeta+dlogTi(i) &
-                  *(1._dp+2._dp*rho*zeta+(rho**2-0.5_dp)*dzeta)))/kstar
+      Aprime(i) = dr*dr &
+                  *((zeta+rho*dzeta)/Ti(i)-ktheta/(B0*rmesh(i)*kstar) &
+                    *(dlogn0(i)*dzeta+dlogTi(i) &
+                      *(1._dp+2._dp*rho*zeta+(rho**2-0.5_dp)*dzeta)))/kstar
     enddo
 
   end subroutine matrix_derivative
@@ -252,13 +285,13 @@ module function_input_module
 
     D_im1 = A(2,1)
     D_im2 = 1
-    Dprime_im1 = Ap(1)
+    Dprime_im1 = Aprime(1)
     Dprime_im2 = 0
 
     do i = 2, NNr-1
 
       D      = A(2,i)*D_im1-D_im2
-      Dprime = Ap(i)*D_im1+A(2,i)*Dprime_im1-Dprime_im2
+      Dprime = Aprime(i)*D_im1+A(2,i)*Dprime_im1-Dprime_im2
 
       D_im2 = D_im1
       D_im1 = D
@@ -278,7 +311,7 @@ module function_input_module
     integer           :: i
 
     if (.not.allocated(A) ) allocate(A (3,NNr))
-    if (.not.allocated(Ap)) allocate(Ap(NNr  ))
+    if (.not.allocated(Aprime)) allocate(Aprime(NNr  ))
 
     do i = 1, 20
       omega = cmplx(-1+i*0.1,0.0)
@@ -310,7 +343,8 @@ module function_input_module
     real    (kind=dp) :: E     (NNr-1  )
     real    (kind=dp) :: RWORK (NNr    )
     real    (kind=dp) :: RRWORK(4*NNr  )
-    integer           :: i, j, ii, INFO
+    integer           :: i, j
+    integer           :: dim_kernel, INFO
     
     call matrix(omega)
 
@@ -321,6 +355,9 @@ module function_input_module
       stop
     end if
 
+    ! Previous call was
+    ! call zbdsqr('U',NNr,NNr,NNr,0,D,EE,PT,NNr,Q,NNr,C,1,RRWORK,INFO)
+    ! with EE of dimension NNr: wrong dimension for zbdsqr subroutine.
     call zbdsqr('U',NNr,NNr,NNr,0,D,E,PT,NNr,Q,NNr,C,1,RRWORK,INFO)
     if ( INFO .ne. 0 ) then
       write(*,'(a)') 'zeal failed because there is an error in the compute &
@@ -330,25 +367,25 @@ module function_input_module
 
     ! Singular values are given in D in decreasing order, so
     ! the kernel corresponds to the last singular values.
-    ii = 0
-    do while ( D(NNr-ii) .lt. 1.e-10 )
-      ii = ii+1
+    dim_kernel = 0
+    do while ( D(NNr-dim_kernel) .lt. 1.e-10 )
+      dim_kernel = dim_kernel+1
     enddo
 
-    write (*,'(a,i0)') 'Dimension of kernel = ', ii
+    write (*,'(a,i0)') 'Dimension of kernel = ', dim_kernel
     write (*,'(a,f16.14,a,f16.14,a)') &
       'omega = (', real(omega), '+', imag(omega), 'j)'
 
-    if (ii .eq. 0) then
+    if (dim_kernel .eq. 0) then
       write(*,'(a,f16.14,f16.14,a)') 'zealpy failed because A(', omega, ') &
                                      &has 0-dimensional kernel'
       stop
     else
-      if (.not.allocated(vector)) allocate(vector(NNr, ii))
+      if (.not.allocated(vector)) allocate(vector(NNr, dim_kernel))
 
       do i = 1, NNr
-        do j = 1, ii
-          vector(i,j) = PT(NNr-ii+j, i)
+        do j = 1, dim_kernel
+          vector(i,j) = PT(NNr-dim_kernel+j, i)
           ! print*,'vect propre ',i,vector(i,j)
         enddo
       enddo
@@ -362,16 +399,16 @@ module function_input_module
   ! Zeal_Input_Module), decide whether the function is analytic
   ! inside this region or not.
   !-----------------------------------------------------------------------------
-  function valreg(lv,h)
+  function valreg(LV,H)
 
     logical valreg
-    real (kind=dp), intent(in) :: lv(2), h(2)
+    real (kind=dp), intent(in) :: LV(2), H(2)
 
     valreg = .true.
     !  The following statement can be used for functions that have a
     !  branch cut along the non-positive real axis.
     !
-    !   valreg = .not. ( lv(2)*(lv(2)+h(2)) <= zero .and. lv(1) <= zero )
+    !   valreg = .not. ( LV(2)*(LV(2)+H(2)) <= zero .and. LV(1) <= zero )
 
   end function valreg
 
