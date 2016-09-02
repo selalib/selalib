@@ -50,8 +50,10 @@ program test_pic_initializers
   type(sll_t_particle_group_2d), pointer :: init_group_GC
   type(sll_t_cartesian_mesh_2d), pointer :: m2d
   sll_real64 :: mean_ref(1:2), stddev_ref(1:2)
-  logical    :: fail
-  
+  logical    :: passed
+
+  passed = .true.
+
   m2d =>  sll_f_new_cartesian_mesh_2d( NC_X, NC_Y, &
        XMIN, XMAX, YMIN, YMAX )
 
@@ -67,13 +69,13 @@ program test_pic_initializers
 
   mean_ref   = [0._f64, 0._f64]! the 2d Gaussian for velocity
   stddev_ref = [1._f64, 1._f64]!  
-
-  print*, 'the Random initialization' 
+  
+!  print*, 'the Random initialization for the Landau damping' 
   call sll_s_initial_random_particles_4d(THERM_SPEED, &
         ALPHA, KX, m2d, NUM_PARTICLES, init_group_random )
   call test_mean_stddev(init_group_random, 3._f64/sqrt(real(NUM_PARTICLES,f64)))
 
-  print*, 'the HAMMERSLEY initialization' 
+!  print*, 'the HAMMERSLEY initialization for the Landau damping' 
   call sll_s_initial_hammersley_particles_4d(THERM_SPEED, &
         ALPHA, KX, m2d, NUM_PARTICLES, init_group_hamm )
   call test_mean_stddev(init_group_hamm, 3._f64/sqrt(real(NUM_PARTICLES,f64)))
@@ -91,11 +93,12 @@ program test_pic_initializers
   call sll_o_delete( init_group_GC )
   call sll_o_delete( m2d )
 
-  fail = .false.
-  if (fail .eqv. .false.) then
+
+  if ( passed .eqv. .true.) then
      print*, "PASSED"
   else 
      print*, "FAILED"
+     stop
   endif
 
 contains
@@ -116,7 +119,8 @@ contains
 
     out = mean - mean_ref
     if ( (abs(out(1)) > tolerance) .or. (abs(out(2)) > tolerance) ) then
-       print*, 'FAILED'
+       passed = .false.
+       print*, 'Error in the expected value of the sampling'
     endif
 
    stddev = 0._f64
