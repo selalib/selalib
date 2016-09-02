@@ -36,6 +36,7 @@ xmax         = 1.
 ymin         = 0.0001
 ymax         = 0.1
 iota = 0.001
+B0   = -1.
 
 #------------------------------------------------------------
 # Normalization to obtain the same profiles than in GYSELA
@@ -65,7 +66,7 @@ zp = zealpy_gyrokin_anal(
     NNr=NNr,rmin=rmin,Lr=Lr,
     invLTi=invLTi,deltarTi=deltarTi,
     invLTe=invLTe,deltarTe=deltarTe,
-    invLn0=invLn,deltarn0=deltarn,iota=iota)
+    invLn0=invLn,deltarn0=deltarn,iota=iota,B0=B0)
 
 nb_mm = mm_max - mm_min + 1
 nb_nn = nn_max - nn_min + 1
