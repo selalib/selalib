@@ -22,7 +22,7 @@ aspect_ratio = 16.53849335 #16.5
 #--> For analytical density and temperature profiles definition 
 kappaTi  = 66.
 kappaTe  = 66.
-kappan   = 13.2
+kappan0  = 13.2
 deltarTi = 0.1
 deltarTe = 0.1
 deltarn0 = 0.2
@@ -47,29 +47,31 @@ deltarTe = deltarTe*Lr
 deltarn0 = deltarn0*Lr
 invLTi   = kappaTi/R0
 invLTe   = kappaTe/R0
-invLn0   = kappan/R0
+invLn0   = kappan0/R0
 iota     = iota/R0
 
 #--> Print geometry and equilibrium parameters
 
-print( '\nGeometry/equilibrium parameters:\n' )
+print( '\nGeometry:\n' )
 
 def print_func( name, val ):
     print( '{:8s} = {:.14g}'.format( name, val ) )
  
-print_func( 'R0'  , R0 )
+print_func( 'R0'  , R0   )
 print_func( 'rmin', rmin )
 print_func( 'rmax', rmax )
-print_func( 'Lr'  , Lr )
-print_func( 'Lz'  , Lz )
+print_func( 'Lr'  , Lr   )
+print_func( 'Lz'  , Lz   )
+
+print( '\nEquilibrium:\n' )
 print_func( 'deltarTi', deltarTi )
 print_func( 'deltarTe', deltarTe )
 print_func( 'deltarn0', deltarn0 )
-print_func( 'invLTi'  , invLTi )
-print_func( 'invLTe'  , invLTe )
-print_func( 'invLn0'  , invLn0 )
-print_func( 'iota/R0' , iota )
-print_func( 'B0'  , B0 )
+print_func( 'invLTi'  , invLTi   )
+print_func( 'invLTe'  , invLTe   )
+print_func( 'invLn0'  , invLn0   )
+print_func( 'iota/R0' , iota     )
+print_func( 'B0'      , B0       )
 
 #-------------------------------------------------------------------------------
 # Dispersion relation solving
@@ -177,8 +179,9 @@ while mm_choice and nn_choice:
         fig.show()
         
     else:
-        print( '---> BECAREFUL: Zeros not found for (m,n) = (%d,%d)\n' % (mm,nn) )
-
+        print( '---> BECAREFUL <---' )
+        print( 'Zeros not found for  (m,n) = (%d,%d)\n' % (mm,nn) )
+        
     #--> Choice of the mode (m,n)
     print( '\n-----------------' )
     mm_choice = raw_input( 'Poloidal mode m = ' )
