@@ -325,7 +325,7 @@ contains
   subroutine chget_x( self, chunk, x )
     class(sll_c_particle_group_base), intent ( in ) :: self !< particle group object
     sll_int32,            intent ( in ) :: chunk(1:2)    !< particle number range
-    sll_int32, pointer,    intent( out ) :: x(:,:)     !< x of particle chunk
+    sll_real64, pointer,    intent( out ) :: x(:,:)     !< x of particle chunk
 
     sll_int32 :: i
     
@@ -339,7 +339,7 @@ contains
   subroutine chget_v( self, chunk, v )
     class(sll_c_particle_group_base), intent ( in ) :: self !< particle group object
     sll_int32,            intent ( in ) :: chunk(1:2)    !< particle number range
-    sll_int32, pointer,    intent( out ) :: v(:,:)     !< v of particle chunk
+    sll_real64, pointer,    intent( out ) :: v(:,:)     !< v of particle chunk
 
     sll_int32 :: i
     
@@ -353,7 +353,7 @@ contains
   subroutine chget_weights( self, chunk, weights )
     class(sll_c_particle_group_base), intent ( in ) :: self !< particle group object
     sll_int32,            intent ( in ) :: chunk(1:2)    !< particle number range
-    sll_int32, pointer,    intent( out ) :: weights(:,:)     !< x of particle chunk
+    sll_real64, pointer,    intent( out ) :: weights(:,:)     !< x of particle chunk
 
     sll_int32 :: i
     
