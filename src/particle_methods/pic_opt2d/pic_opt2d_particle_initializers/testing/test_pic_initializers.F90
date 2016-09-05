@@ -70,12 +70,12 @@ program test_pic_initializers
   mean_ref   = [0._f64, 0._f64]! the 2d Gaussian for velocity
   stddev_ref = [1._f64, 1._f64]!  
   
-!  print*, 'the Random initialization for the Landau damping' 
+  print*, 'the Random initialization for the Landau damping' 
   call sll_s_initial_random_particles_4d(THERM_SPEED, &
         ALPHA, KX, m2d, NUM_PARTICLES, init_group_random )
   call test_mean_stddev(init_group_random, 3._f64/sqrt(real(NUM_PARTICLES,f64)))
 
-!  print*, 'the HAMMERSLEY initialization for the Landau damping' 
+  print*, 'the HAMMERSLEY initialization for the Landau damping' 
   call sll_s_initial_hammersley_particles_4d(THERM_SPEED, &
         ALPHA, KX, m2d, NUM_PARTICLES, init_group_hamm )
   call test_mean_stddev(init_group_hamm, 3._f64/sqrt(real(NUM_PARTICLES,f64)))
@@ -98,7 +98,6 @@ program test_pic_initializers
      print*, "PASSED"
   else 
      print*, "FAILED"
-     stop
   endif
 
 contains
