@@ -82,7 +82,7 @@ contains
     sll_real32 :: weight
     sll_real32 :: off_x,off_y
     sll_real64 :: tmp1, tmp2
-    sll_real64 :: yo, nu, fdx, val(1:2)
+    sll_real64 :: yo, nu, fdx
 
     if ( present(rand_seed) ) then
        call random_seed (put=rand_seed)
@@ -223,7 +223,7 @@ contains
               p_group,          &
               rand_seed,        &
               rank, worldsize   )
-    sll_real64, intent(in) :: thermal_speed
+    sll_real64, intent(in) :: thermal_speed !< sigma of Gaussian distribution
     sll_real64, intent(in) :: alpha, kx, ky!< the perturbation's parameters
     type(sll_t_cartesian_mesh_2d), intent(in) :: m2d!< the mesh in (x,y)
     sll_int32, intent(in)  :: num_particles!< the number of particles over a single process
