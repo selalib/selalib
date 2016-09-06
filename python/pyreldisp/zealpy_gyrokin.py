@@ -1,17 +1,17 @@
 import sys
 import numpy as np
 
-import zealpy_gyrokin_cleanup_
-from zealpy import zealpy
+import zealpy_gyrokin_
+from zealpy           import zealpy
 from pyreldisp_params import params, pyreldisp_exception
 
 #-------------------------------------------------------------------------------
 # Class 'zealpy_gyrokin_cleanup'
 #-------------------------------------------------------------------------------
-class zealpy_gyrokin_cleanup(zealpy):
-    def __init__(self,Zi,NNr,rmin,Lr,B0):
-        super(zealpy_gyrokin_cleanup,self).__init__()
-        self.setup_pymodule(zealpy_gyrokin_cleanup_)
+class zealpy_gyrokin( zealpy ):
+    def __init__( self, Zi, NNr, rmin, Lr, B0 ):
+        super( zealpy_gyrokin, self ).__init__()
+        self.setup_pymodule( zealpy_gyrokin_ )
 
         required_params={'kzeta'   : float,
                          'ktheta'  : float,
@@ -30,7 +30,7 @@ class zealpy_gyrokin_cleanup(zealpy):
                          'ordre_grandeur' : int,
                          'B0' : float }
 
-        self.params = params(required_params)
+        self.params = params( required_params )
         self.params.set_value('ordre_grandeur',1)
 
         # Initialize the charge

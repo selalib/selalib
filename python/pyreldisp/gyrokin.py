@@ -2,8 +2,8 @@ from __future__ import print_function
 
 import numpy as np
 import matplotlib.pyplot as plt
-from collections import OrderedDict
-from zealpy_gyrokin_cleanup_anal import zealpy_gyrokin_cleanup_anal
+from collections             import OrderedDict
+from zealpy_gyrokin_analytic import zealpy_gyrokin_analytic
 
 try :
     raw_input
@@ -279,11 +279,11 @@ def main():
 
     # Constructor for drift-kinetic dispersion relation
     # with analytic temperature and density profiles
-    zp = zealpy_gyrokin_cleanup_anal( Zi=Zi,NNr=NNr,rmin=rmin,Lr=Lr,R0=R0,
-                                      invLTi=invLTi,deltarTi=deltarTi,
-                                      invLTe=invLTe,deltarTe=deltarTe,
-                                      invLn0=invLn0,deltarn0=deltarn0,
-                                      B0=B0, iota=iota )
+    zp = zealpy_gyrokin_analytic( Zi=Zi, NNr=NNr, rmin=rmin, Lr=Lr, R0=R0,
+                                  invLTi=invLTi, deltarTi=deltarTi,
+                                  invLTe=invLTe, deltarTe=deltarTe,
+                                  invLn0=invLn0, deltarn0=deltarn0,
+                                  B0=B0, iota=iota )
 
     if args.scan == 'manual':
         zeros_dict = manual_scan( zp )

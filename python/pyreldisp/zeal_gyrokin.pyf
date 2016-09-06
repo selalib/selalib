@@ -1,7 +1,7 @@
 !    -*- f90 -*-
 ! Note: the context of this file is case sensitive.
 
-python module zealpy_gyrokin_cleanup_ ! in 
+python module zealpy_gyrokin_
     !********************************************************
     ! INTERFACES REQUIRED FOR GYROKIN CASE
     !********************************************************
