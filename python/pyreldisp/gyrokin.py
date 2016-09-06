@@ -127,7 +127,7 @@ def analyse_mode( zp, mm, nn, verbose=False ):
     else:
         if verbose:
             print( '---> BECAREFUL <---' )
-            print( 'Zeros not found for  (m,n) = (%d,%d)\n' % (mm,nn) )
+            print( 'Zeros not found for  (m,n) = (%d,%d)' % (mm,nn) )
 
 
 def manual_scan( zp ):
@@ -168,11 +168,12 @@ def find_most_unstable_mode( zp, zeros_dict ):
     max_real = 0.0
     max_imag = 0.0
     for (mm,nn), zeros in zeros_dict.items():
-        max_imag_loc = max( zeros.imag ) 
-        if max_imag_loc > max_imag:
-            max_mode = (mm,nn)
-            max_real = zeros.real[np.argmax(zeros.imag)]
-            max_imag = max_imag_loc
+        if (zeros_dict[(mm,nn)].size):
+           max_imag_loc = max( zeros.imag ) 
+           if max_imag_loc > max_imag:
+              max_mode = (mm,nn)
+              max_real = zeros.real[np.argmax(zeros.imag)]
+              max_imag = max_imag_loc
 
     return max_mode
 
@@ -202,8 +203,9 @@ def plot_profiles( axes, zp ):
 def plot_zeros( ax, zeros_dict ):
 
     for (mm,nn), zeros in zeros_dict.items():
-        ax.plot( zeros.real, zeros.imag, '.',
-                      label = r'$m={}$, $n={}$'.format( mm, nn ) )
+        if (zeros_dict[(mm,nn)].size):
+           ax.plot( zeros.real, zeros.imag, '.',
+                    label = r'$(m,n)=({},{})$'.format( mm, nn ) )
 
     ax.axis( [xmin,xmax,ymin,ymax] )
     ax.set_title( 'Zeros of dispersion relation' )
@@ -214,11 +216,12 @@ def plot_zeros( ax, zeros_dict ):
 
 
 def plot_mode( ax, zp ):
-    ax.plot( zp.params.dic['rmesh'], abs( zp.phi_eigvect ) )
-    ax.set_title(
-      r'Profile of most unstable mode ({},{}): $\omega={:.6g}$' \
-              .format( zp.mm, zp.nn, zp.mostunstable ) )
+    ax.plot( zp.params.dic['rmesh'], abs( zp.phi_eigvect ), 
+             label = r'$(m,n)=({},{})$'.format( zp.mm, zp.nn ) + '\n' + 
+                     r'$\omega={:.6g}$'.format( zp.mostunstable ) )
+    ax.set_title( 'Profile of the most unstable mode' )
     ax.set_xlabel( 'r' )
+    ax.legend()
     ax.grid()
 
 
@@ -295,31 +298,33 @@ def main():
         zeros_dict = automatic_scan( zp, mm_list, nn_list )
     else:
         raise ValueError( args.scan )
+    
+    if zeros_dict:
+        mm, nn = find_most_unstable_mode( zp, zeros_dict )
+        if mm and nn:
+            print( '----------------------------------' )
+            print( 'Results for the most unstable mode (m,n)=(%d,%d): \n' % (mm,nn) )
+            analyse_mode( zp, mm, nn )
+            print()
 
-    mm, nn = find_most_unstable_mode( zp, zeros_dict )
-    print( '----------------------------------' )
-    print( 'Results for the most unstable mode (m,n)=(%d,%d): \n' % (mm,nn) )
-    analyse_mode( zp, mm, nn )
+            # Plot equilibrium radial profiles of Ti, Te and n0
+            fig1, axes1 = plt.subplots( nrows=1, ncols=3, sharex=True )
+            plot_profiles( axes1, zp )
+            fig1.show()
 
-    # Plot equilibrium radial profiles of Ti, Te and n0
-    fig1, axes1 = plt.subplots( nrows=1, ncols=3, sharex=True )
-    plot_profiles( axes1, zp )
-    fig1.show()
-
-    # Plot zeros of dispersion relation and 
-    # radial profile of the most unstable mode
-    fig2, axes2 = plt.subplots( nrows=1, ncols=2 )
-    plot_zeros( axes2[0], zeros_dict )
-    plot_mode ( axes2[1], zp )
-    fig2.show()
+            # Plot zeros of dispersion relation and 
+            # radial profile of the most unstable mode
+            fig2, axes2 = plt.subplots( nrows=1, ncols=2 )
+            plot_zeros( axes2[0], zeros_dict )
+            plot_mode ( axes2[1], zp )
+            fig2.show()
 
     # Wait for ENTER for stopping execution
-    msg = '\nPress ENTER to quit'
+    msg = 'Press ENTER to quit'
     try:
         raw_input( msg )
     except NameError:
         input( msg )
-    plt.close('all')
 
 
 if __name__ == '__main__':
