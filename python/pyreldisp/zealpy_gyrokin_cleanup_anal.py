@@ -1,5 +1,6 @@
 import sys
 import numpy as np
+from types            import FunctionType
 from zealpy_gyrokin_cleanup import zealpy_gyrokin_cleanup
 from pyreldisp_params import params, pyreldisp_exception
 
@@ -19,7 +20,8 @@ class zealpy_gyrokin_cleanup_anal(zealpy_gyrokin_cleanup):
                          'deltarTe': float,
                          'invLn0'  : float,
                          'deltarn0': float,
-                         'B0'      : float }
+                         'B0'      : float,
+                         'iota'    : FunctionType }
 
         self.param_anal = params(required_params,anal_arg)
         Zi   = self.param_anal.get_value('Zi')
@@ -28,6 +30,7 @@ class zealpy_gyrokin_cleanup_anal(zealpy_gyrokin_cleanup):
         Lr   = self.param_anal.get_value('Lr')
         R0   = self.param_anal.get_value('R0')
         B0   = self.param_anal.get_value('B0')
+        iota = self.param_anal.get_value('iota')
         super(zealpy_gyrokin_cleanup_anal,self).__init__(Zi,NNr,rmin,Lr,B0)
 
         # Compute the analytic profiles
@@ -47,7 +50,7 @@ class zealpy_gyrokin_cleanup_anal(zealpy_gyrokin_cleanup):
         [Te,dlogTe] = compute_Te_dlogTe_anal( rmesh, rpeak, invLTe, deltarTe )
         [n0,dlogn0,ddlogn0] = compute_n0_dlogn0_anal(
                               rmesh, rpeak, invLn0, deltarn0)
-        [btheta,bz] = compute_b_anal( rmesh, R0 )
+        [btheta,bz] = compute_b_anal( rmesh, iota( rmesh ), R0 )
 
         Zi = self.param_anal.get_value('Zi')
         self.params.set_value('Zi',Zi)
@@ -98,13 +101,12 @@ def compute_n0_dlogn0_anal(rmesh,rpeak,invLn0,deltarn0):
     return [n0,dlogn0,ddlogn0]
 
 #-------------------------------------------------------------------------------
-# Compute xi(r), btheta(r) and bz(r)
+# Compute btheta(r) and bz(r)
 #-------------------------------------------------------------------------------
-def compute_b_anal(rmesh,R0):
+def compute_b_anal( rmesh, iota, R0 ):
 
-    iota   = 0.0*rmesh+0.8
     xi     = iota*rmesh/R0
-    btheta = xi/np.sqrt(1.0+xi**2)
-    bz     = 1.0/np.sqrt(1.0+xi**2)   
+    btheta = xi /np.sqrt(1.0+xi**2)
+    bz     = 1.0/np.sqrt(1.0+xi**2)
 
     return [btheta,bz]
