@@ -53,7 +53,7 @@
 !  with rho:=omega/kstar. The above equation is solved via the replacement
 !  psi:=sqrt(r*n0)*phi. The resulting "Schroedinger-type" equation is
 !
-!  (-d**2/dr**2+m**2/r**2+1/Ti+1/(sqrt(r*n0))*d**2/dr**2(sqrt(r*n0))+I)psi = 0.
+!  (-d**2/dr**2+m**2/r**2+1/Ti+1/(sqrt(r*n0))*d**2/dr**2(sqrt(r*n0))+I)psi=0.
 !
 !  The discrete problem E(omega)psi=0, resulting from the discretization
 !  of the above radial differential operator on a uniform grid, is solved
@@ -373,8 +373,8 @@ module function_input_module
     enddo
 
     write (*,'(a,i0)') 'Dimension of kernel = ', dim_kernel
-    write (*,'(a,f16.14,a,f16.14,a)') &
-      'omega = (', real(omega), '+', imag(omega), 'j)'
+    write (*,'(a,f20.18,a,f20.18,a)') &
+          'omega = (', real(omega), '+', imag(omega), 'j)'
 
     if (dim_kernel .eq. 0) then
       write(*,'(a,f16.14,f16.14,a)') 'zealpy failed because A(', omega, ') &
