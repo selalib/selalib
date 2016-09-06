@@ -16,25 +16,39 @@ except NameError:
 
 # Input data defined as GYSELA
 Zi = 1
+
 # Geometry
-NNr          = 100
+#---------
 rhomin       = 0.006896551724 #0.00001
 rhomax       = 1.
 minor_radius = 14.5
 aspect_ratio = 16.53849335 #16.5
-# Analytic density and temperature profiles 
+
+# Magnetic field
+#---------------
+# B0     : Magnetic field at axis of cylinder
+# iota(r): Radial profile of rotational transform
+B0   = -1.
+iota = lambda r: 0.8
+
+# Numerical parameters
+#---------------------
+# NNr                  : Number of cells in radial direction
+# [xmin,xmax,ymin,ymax]: Box in complex plane where zeros will be searched
+NNr  = 100
+xmin = -1.
+xmax = 1.
+ymin = 0.0001
+ymax = 0.01 #0.1
+
+# Analytic density and temperature profiles
+#------------------------------------------
 kappaTi  = 66.
 kappaTe  = 66.
 kappan0  = 13.2
 deltarTi = 0.1
 deltarTe = 0.1
 deltarn0 = 0.2
-# Box in complex plane where zeros will be searched
-xmin = -1.
-xmax = 1.
-ymin = 0.0001
-ymax = 0.01 #0.1
-B0   = -1.
 
 # Normalization to obtain the same profiles of GYSELA
 R0   = minor_radius*aspect_ratio
@@ -160,9 +174,6 @@ def find_most_unstable_mode( zp, zeros_dict ):
             max_real = zeros.real[np.argmax(zeros.imag)]
             max_imag = max_imag_loc
 
-    # mostunstable_dict = { (mm,nn): zeros[np.argmax(zeros.imag)] \
-    #                       for (mm,nn),zeros in zeros_dict.items() }
-
     return max_mode
 
 
@@ -271,7 +282,8 @@ def main():
     zp = zealpy_gyrokin_cleanup_anal( Zi=Zi,NNr=NNr,rmin=rmin,Lr=Lr,R0=R0,
                                       invLTi=invLTi,deltarTi=deltarTi,
                                       invLTe=invLTe,deltarTe=deltarTe,
-                                      invLn0=invLn0,deltarn0=deltarn0,B0=B0 )
+                                      invLn0=invLn0,deltarn0=deltarn0,
+                                      B0=B0, iota=iota )
 
     if args.scan == 'manual':
         zeros_dict = manual_scan( zp )
