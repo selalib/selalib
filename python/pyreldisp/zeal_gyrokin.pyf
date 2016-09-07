@@ -23,7 +23,7 @@ python module zealpy_gyrokin_
          real*8 allocatable :: bz     (:)
 
          !--> Variables required for all cases
-         double precision :: ordre_grandeur
+         double precision :: order_magnitude
          double complex allocatable :: vector(:,:)
 
          subroutine init

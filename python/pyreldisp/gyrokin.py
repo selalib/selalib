@@ -127,7 +127,7 @@ def analyse_mode( zp, mm, nn, verbose=False ):
     else:
         if verbose:
             print( '---> BECAREFUL <---' )
-            print( 'Zeros not found for  (m,n) = (%d,%d)' % (mm,nn) )
+            print( 'Zeros not found for (m,n) = (%d,%d)' % (mm,nn) )
 
 
 def manual_scan( zp ):
@@ -325,6 +325,7 @@ def main():
         raw_input( msg )
     except NameError:
         input( msg )
+    plt.close('all')
 
 
 if __name__ == '__main__':
