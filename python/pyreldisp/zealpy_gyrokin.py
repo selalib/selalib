@@ -27,11 +27,11 @@ class zealpy_gyrokin( zealpy ):
                          'ddlogn0' : np.ndarray,
                          'btheta'  : np.ndarray,
                          'bz'      : np.ndarray,
-                         'ordre_grandeur' : int,
+                         'order_magnitude' : int,
                          'B0' : float }
 
         self.params = params( required_params )
-        self.params.set_value('ordre_grandeur',1)
+        self.params.set_value('order_magnitude',1)
 
         # Initialize the charge
         self.params.set_value('Zi',Zi)

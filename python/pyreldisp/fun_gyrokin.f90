@@ -80,7 +80,7 @@ module function_input_module
   implicit none
 
   integer, parameter :: max=61
-  double precision   :: ordre_grandeur = 1
+  double precision   :: order_magnitude = 1
   complex (kind=dp), allocatable :: vector(:,:)
 
   public
@@ -143,8 +143,8 @@ module function_input_module
     call matrix(omega)
     call matrix_derivative(omega)
     call det2(D, Dprime)
-    F  = D     /ordre_grandeur
-    DF = Dprime/ordre_grandeur
+    F  = D     /order_magnitude
+    DF = Dprime/order_magnitude
 
   end subroutine FDF
 
@@ -320,7 +320,7 @@ module function_input_module
       tab(i) = real(D)
     enddo
 
-    ordre_grandeur = maxval(tab)
+    order_magnitude = maxval(tab)
 
   end subroutine init
 
@@ -360,7 +360,7 @@ module function_input_module
     ! with EE of dimension NNr: wrong dimension for zbdsqr subroutine.
     call zbdsqr('U',NNr,NNr,NNr,0,D,E,PT,NNr,Q,NNr,C,1,RRWORK,INFO)
     if ( INFO .ne. 0 ) then
-      write(*,'(a)') 'zeal failed because there is an error in the compute &
+      write(*,'(a)') 'Zeal failed because there is an error in the compute &
                      &of singular value decomposition'
       stop
     end if
@@ -377,8 +377,8 @@ module function_input_module
           'omega = (', real(omega), '+', imag(omega), 'j)'
 
     if (dim_kernel .eq. 0) then
-      write(*,'(a,f16.14,f16.14,a)') 'zealpy failed because A(', omega, ') &
-                                     &has 0-dimensional kernel'
+      write(*,'(/,a,f20.18,a,f20.18,a,/,a,/)') 'Zealpy failed because A(', &
+           real(omega), '+', imag(omega), 'j)', 'has 0-dimensional kernel.'
       stop
     else
       if (.not.allocated(vector)) allocate(vector(NNr, dim_kernel))

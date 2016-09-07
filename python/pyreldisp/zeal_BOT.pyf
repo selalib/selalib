@@ -16,8 +16,8 @@ python module zealpy_BOT_ ! in
          real*8  :: l0ld
 
          !--> Arrays required for all cases
-         double complex allocatable, dimension(:,:) :: vecteur
-         double precision :: ordre_grandeur
+         double complex allocatable, dimension(:,:) :: vector
+         double precision :: order_magnitude
     end interface
 
 
