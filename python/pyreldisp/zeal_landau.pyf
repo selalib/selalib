@@ -11,8 +11,8 @@ python module zealpy_landau_ ! in
          real*8  :: kmode
 
          !--> Arrays required for all cases
-         double complex allocatable, dimension(:,:) :: vecteur
-         double precision :: ordre_grandeur
+         double complex allocatable, dimension(:,:) :: vector
+         double precision :: order_magnitude
        end module function_input_module
     end interface
 
