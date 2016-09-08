@@ -39,8 +39,8 @@ class zealpy(object):
         #-->  example for one variable:
         #-->   self.function_input_module.Ti = self.params.dic['Ti']  
         for param_key in self.params.dic.keys():
-            exec "self.function_input_module.%s = " \
-                "self.params.dic['%s']"%(param_key,param_key)        
+            exec( "self.function_input_module.%s = " \
+                  "self.params.dic['%s']"%(param_key,param_key) )
     #end def fill_fortran_var
 
 
@@ -52,8 +52,8 @@ class zealpy(object):
         # check for overflow at xmin,ymin
         fout = self.math_tools_module.check_overflow(xmin+1j*ymin)
         if abs(fout)>1.0e300:
-            print 'zealpy has failed due to overflow' 
-            print 'Try using a larger value of ymin'
+            print( 'zealpy has failed due to overflow' )
+            print( 'Try using a larger value of ymin'  )
             sys.exit()
             global zeros
         self.zeal_input_module.lv=[xmin,ymin]
@@ -64,7 +64,7 @@ class zealpy(object):
         # ZEAL failed try again with refined box
         if self.zout.fail:
             if self.zout.information == 0 :
-                print 'Improper input parameters'
+                print( 'Improper input parameters' )
                 sys.exit()
             if self.zout.information == 2 :
                 self.split_module.trap1()
@@ -82,16 +82,16 @@ class zealpy(object):
                             if self.zout.information == 2 :
                                 self.split_module.trap1()
                                 if self.split_module.fail1:
-                                    print 'zealpy has failed due to the zeros are too close on the lower edge'
-                                    print 'Try using larger value of ymin or smaller box'
+                                    print( 'zealpy has failed due to the zeros are too close on the lower edge' )
+                                    print( 'Try using larger value of ymin or smaller box' )
                                     sys.exit()
                                 else:
-                                    print 'zealpy has failed because there is a zero on the lower edge'
-                                    print 'Try using larger value of ymin or smaller box'
+                                    print( 'zealpy has failed because there is a zero on the lower edge' )
+                                    print( 'Try using larger value of ymin or smaller box' )
                                     sys.exit()
                             else :
-                                print 'zealpy has failed because there is a zero on the lower edge'
-                                print 'Try using larger value of ymin or smaller box'
+                                print( 'zealpy has failed because there is a zero on the lower edge' )
+                                print( 'Try using larger value of ymin or smaller box' )
                                 sys.exit()
                         else:
                             if not(self.zout.fzeros == None):
@@ -115,16 +115,16 @@ class zealpy(object):
                             if self.zout.information == 2 :
                                 self.split_module.trap2()
                                 if self.split_module.fail2:
-                                    print 'zealpy has failed due to the zeros are too close on the right edge'
-                                    print 'Try using smaller box'
+                                    print( 'zealpy has failed due to the zeros are too close on the right edge' )
+                                    print( 'Try using smaller box' )
                                     sys.exit()
                                 else:
-                                    print 'zealpy has failed because there is a zero on the right edge'
-                                    print 'Try using smaller box'
+                                    print( 'zealpy has failed because there is a zero on the right edge' )
+                                    print( 'Try using smaller box' )
                                     sys.exit()
                             else :
-                                print 'zealpy has failed because there is a zero on the right edge'
-                                print 'Try using larger value of ymin or smaller box'
+                                print( 'zealpy has failed because there is a zero on the right edge' )
+                                print( 'Try using larger value of ymin or smaller box' )
                                 sys.exit()
                         else:
                             if not(self.zout.fzeros == None):
@@ -148,16 +148,16 @@ class zealpy(object):
                             if self.zout.information == 2 :
                                 self.split_module.trap3()
                                 if self.split_module.fail3:
-                                    print 'zealpy has failed due to the zeros are too close on the upper edge'
-                                    print 'Try using smaller box'
+                                    print( 'zealpy has failed due to the zeros are too close on the upper edge' )
+                                    print( 'Try using smaller box' )
                                     sys.exit()
                                 else:
-                                    print 'zealpy has failed because there is a zero on the upper edge'
-                                    print 'Try using smaller box'
+                                    print( 'zealpy has failed because there is a zero on the upper edge' )
+                                    print( 'Try using smaller box' )
                                     sys.exit()
                             else :
-                                print 'zealpy has failed because there is a zero on the upper edge'
-                                print 'Try using smaller box'
+                                print( 'zealpy has failed because there is a zero on the upper edge' )
+                                print( 'Try using smaller box' )
                                 sys.exit()
                         else:
                             if not(self.zout.fzeros == None):
@@ -181,16 +181,16 @@ class zealpy(object):
                             if self.zout.information == 2 :
                                 self.split_module.trap4()
                                 if self.split_module.fail4:
-                                    print 'zealpy has failed due to the zeros are too close on the left edge'
-                                    print 'Try using larger value of xmin or smaller box'
+                                    print( 'zealpy has failed due to the zeros are too close on the left edge' )
+                                    print( 'Try using larger value of xmin or smaller box' )
                                     sys.exit()
                                 else:
-                                    print 'zealpy has failed because there is a zero on the left edge'
-                                    print 'Try using larger value of xmin or smaller box'
+                                    print( 'zealpy has failed because there is a zero on the left edge' )
+                                    print( 'Try using larger value of xmin or smaller box' )
                                     sys.exit()
                             else :
-                                print 'zealpy has failed because there is a zero on the left edge'
-                                print 'Try using larger value of xmin or smaller box'
+                                print( 'zealpy has failed because there is a zero on the left edge' )
+                                print( 'Try using larger value of xmin or smaller box' )
                                 sys.exit()
                         else:
                             if not(self.zout.fzeros == None):
@@ -205,7 +205,7 @@ class zealpy(object):
                                     else:
                                         self.zeros=self.zeros+self.zout.zeros.tolist()
                 else:
-                    print 'Zealpy has failed because the procedure for the calculation of the total number of zeros has failed'
+                    print( 'Zealpy has failed because the procedure for the calculation of the total number of zeros has failed' )
                     sys.exit()
                 
                 
@@ -234,7 +234,7 @@ class zealpy(object):
                             self.zeal_input_module.h = h
                             self.zout.zeal()
                             if self.zout.fail:
-                                print 'Zealpy has failed because the procedure for the isolation of the zeros has failed'
+                                print( 'Zealpy has failed because the procedure for the isolation of the zeros has failed' )
                                 sys.exit()
                             else:
                                 if not(self.zout.fzeros == None):
@@ -289,10 +289,10 @@ class zealpy(object):
                                 self.zeros=self.zeros+self.zout.zeros.tolist()
                 
             if self.zout.information == 4:
-                print 'Zealpy has failed because the procedure for the computation of the zeros has failed'
+                print( 'Zealpy has failed because the procedure for the computation of the zeros has failed' )
                 sys.exit()
         else:
-            if not(self.zout.fzeros == None):
+            if self.zout.fzeros is not None:
                 if (self.zout.totalnumber > 0):
                     #   print xmin,xmax,ymin,ymax, max(abs(self.zout.fzeros))
                     if (max(abs(self.zout.fzeros)) > 1.0e-10):
