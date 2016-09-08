@@ -235,8 +235,11 @@ def parse_input():
 
   parser = argparse.ArgumentParser (
       prog        = 'python3 '+ sys.argv[0],
-      description = 'Compute growth rates for ITG instability in \
-                     4D screw pinch model in cylindrical geometry.',
+      description = 'Compute growth rates for ITG instability in the 4D        \
+                     drift-kinetic screw-pinch cylindrical model.              \
+                     The user must provide one of the following two arguments: \
+                     "manual" or "auto -m m_min m_max -n n_min n_max".         \
+                     See below for explanation.',
       epilog      = ' ',
       formatter_class = argparse.ArgumentDefaultsHelpFormatter )
 
@@ -244,28 +247,31 @@ def parse_input():
   
   # 'Manual' scan
   parser_a = subparsers.add_parser( 'manual',
-                                    help='scan poloidal and toroidal modes \
-                                          manually inserted by the user.' )
+                                    help='With the "manual" option, the user   \
+                                          gives the poloidal and toroidal      \
+                                          modes m and n manually from the      \
+                                          terminal. Enter empty input to quit.')
 
   # 'Automatic' scan
   parser_b = subparsers.add_parser( 'auto',
-                                    help='scan poloidal and toroidal modes     \
-                                          automatically within the range given \
-                                          by the user.                         \
-                                          Type auto -h for more help.' )
+                                    help='With the "auto -m m_min m_max -n     \
+                                          n_min n_max" option, the scan is     \
+                                          over all modes (m,n) with m in       \
+                                          [m_min,m_max] and n in [n_min,n_max].\
+                                          Type "auto -h" for more help.' )
   parser_b.add_argument( '-m', '--m_range',
           type     = int,
           nargs    = 2,
           required = True,
           metavar  = ('m_min','m_max'),
-          help     = 'range for m mode (along theta)' )
+          help     = 'Range for poloidal mode m (along theta).' )
 
   parser_b.add_argument( '-n', '--n_range',
           type     = int,
           nargs    = 2,
           required = True,
           metavar  = ('n_min','n_max'),
-          help     = 'range for n mode (along zeta )' )
+          help     = 'Range for toroidal mode n (along zeta ).' )
 
   return parser.parse_args()
 
@@ -305,6 +311,10 @@ def main():
             print( '----------------------------------' )
             print( 'Results for the most unstable mode (m,n)=(%d,%d): \n' % (mm,nn) )
             analyse_mode( zp, mm, nn )
+            print()
+            print( 'HINT: To improve the accuracy of the results, increase \n \
+     the number of cells NNr in the radial direction: \n \
+     change it directly in the Python script "gyrokin.py".' )
             print()
 
             # Plot equilibrium radial profiles of Ti, Te and n0

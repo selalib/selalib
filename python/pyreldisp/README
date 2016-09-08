@@ -144,14 +144,19 @@
 	  In this case, the scan is over all modes (m,n) with 
 	  m in [m_min,m_max] and n in [n_min,n_max].
 
-  REMARK: To run a Python script, several ways are possible:
+     REMARK: Type "python3 gyrokin.py -h" to get some terminal help.
 
-          a) Open a Python interface by typing "python" and:
-             >> "execfile('landau.py')" or >> "%run landau.py";
+     REMARK: For the current values of the parameters, typical values where
+             zeros can be found are: m=15, n=-11,-10,-9 and nearby.
 
-          b) Type directly: "python3 landau.py";
+  To run a Python script, several ways are possible:
 
-          c) Type directly: "ipython3 landau.py".
+  a) Open a Python interface by typing "python" and:
+     >> "execfile('landau.py')" or >> "%run landau.py";
+
+  b) Type directly: "python3 landau.py";
+
+  c) Type directly: "ipython3 landau.py".
 
   B. Creating new cases
      ------------------
