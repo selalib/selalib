@@ -1,6 +1,6 @@
 ********************************************************************************
 *  File: README
-*  Date: 2013-12-11
+*  Date: Sep 8, 2016
 *
 *  README for PYRELDISP package
 *
@@ -11,37 +11,37 @@
 *   - Michel Mehrenberger  : mehrenbe@math.unistra.fr
 ********************************************************************************
 
---------------------------------------------------------------------------------
-Contents
---------------------------------------------------------------------------------
 
+  Contents
+  --------
+
+  * Package Description
+    -------------------
+    A. Licence information
+    B. General description
+
+  * Building the Code
+    -----------------
+    A. Preliminaries
+    B. Compiling
+
+  * Running the Code
+    ----------------
+    A. Running existing cases
+    B. Creating new cases
+
+
+********************************************************************************
 * Package Description
-  -------------------
+********************************************************************************
+
   A. Licence information
-  B. General description
-
-* Building the Code
-  -----------------
-  A. Preliminaries
-  B. Compiling
-
-* Running the Code
-  ----------------
-  A. Running existing cases
-  B. Creating new cases
-
-
-********************************************************************************
-* Package Description
-********************************************************************************
-
-  A. Licence information 
      -------------------
 
-  The PYRELDISP package is based on the ZEAL package 
-  that can be downloaded from the Computer Physics 
-  Communications Program Library at
-    http://cpc.cs.qub.ac.uk/summaries/ADKW_v1_0.html
+  The PYRELDISP package is based on the ZEAL package that can be downloaded
+  from the Computer Physics Communications Program Library at
+  http://cpc.cs.qub.ac.uk/summaries/ADKW_v1_0.html
+
   The reference is :
     P. Kravanja, M. Van Barel, O. Ragos, M.N. Vrahatis, 
     F.A. Zafiropoulos,
@@ -49,19 +49,18 @@ Contents
           of analytic functions.
     Comput. Phys. Commun. 124 (2000) 212.
 
-
   B. General description
      -------------------
   
   The PYRELDISP package provided a Python interface to calculate 
-  for given dispersion relation several informations as:
-    - frequency and growth rate of the modes,
-    - most unstable modes,
+  for given dispersion relation information as:
+    - frequency and growth rate of the modes;
+    - most unstable modes;
     - eigenvector profiles.
   In this first release the dispersion relations treated are the one
   associated to:
-    - landau 1D problem,
-    - bump-on-tail case,
+    - landau 1D problem;
+    - bump-on-tail case;
     - 4D drift-kinetic screw-pinch cylindrical case.
 
 
@@ -73,38 +72,46 @@ Contents
      -------------
 
   The PYRELDISP repository contains:
-    - a directory zeal_src/: containing the Fortran sources of ZEAL package,
-    - Python scripts,
+    - a directory zeal_src/: containing the Fortran sources of ZEAL package;
+    - Python scripts;
     - .pyf files for interface between Fortran and Python
       (f2py is used to create this interface between both languages).
 
-  REMARK: On an ubuntu Linux, you could install the following
+  REMARK: On an Ubuntu Linux, you could install the following
           packages in order to be ready to use this software: 
-	    apt-get install gfortran
-	    apt-get install python-scipy 
-     	    apt-get install python-dev
-      	    apt-get install python-matplotlib
-      	    apt-get install python-tk
-      	    apt-get install libatlas-base-dev
+	    "apt-get install gfortran"
+	    "apt-get install python-scipy" 
+     	    "apt-get install python-dev"
+      	    "apt-get install python-matplotlib"
+      	    "apt-get install python-tk"
+      	    "apt-get install libatlas-base-dev"
+  
+	  We suggest to upgrade the current version of Python packages
+	  like numpy, scipy and matplotlib through the installer program pip
+	  (install with "apt-get install python3-pip" if you do not have it):
+ 	    "pip3 install --upgrade numpy"
+	    "pip3 install --upgrade scipy"
+	    "pip3 install --upgrade matplotlib"
 
+	  The Linear Algebra PACKage LAPACK is also needed.
 
   B. Compiling
      ---------
 
   The PYRELDISP package can be installed as follows:
 
-    1) Edit the 'setup.cfg' file and providing 
-       the needed compiler and libraries information (LAPACK is needed)
+  1) Edit the 'setup.cfg' file and providing 
+     the needed compiler and libraries information
 
-       The following information should typically be provided:
-         - Fortran compilers: 'f77exec', 'f90exec' 
-         - Name of the lapack library: 'libraries'
+     The following information should typically be provided:
+       - Fortran compilers: 'f77exec', 'f90exec' 
+       - Name of the lapack library: 'libraries'
 
-    2) Type the Python(3) command: "python(3) setup.py install" 
+  2) Type the Python command: "python3 setup.py install" 
 
-    REMARK: The compiling is done in a directory 'build/'.
-            If you want to recompile do not forget to delete it:
-	    "rm -rf build/ ; python(3) setup.py install"  
+  REMARK: The compiling is done in a directory 'build/'.
+          If you want to recompile do not forget to delete it:
+          "rm -rf build/ ; python3 setup.py install"
 
 
 ********************************************************************************
@@ -113,83 +120,95 @@ Contents
 
   A. Running existing cases
      ----------------------
-    
-    Three different cases are currently available
 
-      1) For Landau dispersion relation ('landau' extension used),
-         run Python script 'landau.py'
-	
-      2) For Bump-On-Tail dispersion relation ('BOT' extension used),
-         run Python script 'BOT.py'
-     
-      3) For gyrokinetic dispersion relation ('gyrokin' extension used)
-         (REMARK: Corresponds to the 4D drift-kinetic screw-pinch 
-	          cylindrical case at the moment),
-         run Python script 'gyrokin.py' (REMARK: Use -h flag to get help)
- 
-      REMARK: To run a Python script, several ways are possible:
-                a) Open a Python interface by typing "python" and:
-                   >> execfile('landau.py') or >> %run landau.py
-                b) Type directly: "python(3) landau.py"
-                c) Type directly: "ipython landau.py"
+  Three different cases are currently available:
 
+  1) For Landau dispersion relation ('landau' extension used):
+     run Python script 'landau.py';
+
+  2) For Bump-On-Tail dispersion relation ('BOT' extension used):
+     run Python script 'BOT.py';
+
+  3) For gyrokinetic dispersion relation ('gyrokin' extension used)
+     (4D drift-kinetic screw-pinch cylindrical case at the moment):
+     run Python script 'gyrokin.py'. This case requires some input:
+
+     3.1) Manual scan: run "python3 gyrokin.py manual"
+
+          In this case, the user gives the poloidal and toroidal modes 
+	  m and n manually from the terminal;
+
+     3.2) Automatic scan:
+     	  run "python3 gyrokin.py auto -m m_min m_max -n n_min n_max"
+
+	  In this case, the scan is over all modes (m,n) with 
+	  m in [m_min,m_max] and n in [n_min,n_max].
+
+  REMARK: To run a Python script, several ways are possible:
+
+          a) Open a Python interface by typing "python" and:
+             >> "execfile('landau.py')" or >> "%run landau.py";
+
+          b) Type directly: "python3 landau.py";
+
+          c) Type directly: "ipython3 landau.py".
 
   B. Creating new cases
      ------------------
-  
+
   For the following, let us called 'newcase' the new case that we want to add. 
 
   To be able to treat a new dispersion relation associated to 'newcase',
   you need:
- 
-    1) To create at least the following files:    
-      
-       1.1) 'fun_newcase.f90': which contains the definition of the
+
+  1) To create at least the following files:    
+
+     1.1) 'fun_newcase.f90': which contains the definition of the
                                dispersion relation.
-    
-            BECAREFUL: for this file you have to respect the following rules:
+
+          BECAREFUL: for this file you have to respect the following rules:
                        - The name of the module must be 'Function_Input_Module'
                        - This module must contain the subroutine 'FDF' 
                          which correspond to the routine giving the
-    	                 expression of the dispersion relation and 
-    	                 its first derivative
+                         expression of the dispersion relation and 
+   	                 its first derivative
                        - The function VALREG (always the same duplicated)
-	        
-            SEE 'fun_BOT.py' as example.
-                                
-       1.2) 'zeal_newcase.pyf': which describes the interface for f2py.
 
-            BECAREFUL: this file must contains:
-	               - The interface for the module 'function_input_module'
+          SEE 'fun_BOT.py' as example.
+
+     1.2) 'zeal_newcase.pyf': which describes the interface for f2py.
+
+          BECAREFUL: this file must contains:
+                       - The interface for the module 'function_input_module'
 	               - Some common interfaces to all cases for the modules:
 	                 'zout','zeal_input_module','split_module' 
-           
-            SEE 'zeal_BOT.pyf as example.
-   
-    2) To add the fact that you are going to create a new Python 
-       library 'zealpy_newcase_.so'. 
-       
-       BECAREFUL: this must be done by editing and modifing the setup file
-                  'setup.py' and adding the name of your new case 
-                  in the 'pyreldisp_dic' directionary with a list 
-	          of the associated files which must be compiled.
 
-       EXAMPLE: pyreldisp_dic['newcase'] = ['fun_newcase.f90']
+          SEE 'zeal_BOT.pyf as example.
 
-    3) To recompile the PYRELDISP package. For this,
-         - delete the repository 'build/': "rm -r build"
-         - type "python setup.py install"
-      
-    4) To add Python scripts, as follows:
+  2) To add the fact that you are going to create a new Python 
+     library 'zealpy_newcase_.so'. 
 
-       4.1) 'newcase.py': main script which contains the call to 
-            the zealpy_newcase_.so library.
-	    
-	    SEE 'BOT.py as example.
+     BECAREFUL: this must be done by editing and modifing the setup file
+                'setup.py' and adding the name of your new case 
+                in the 'pyreldisp_dic' directionary with a list 
+	        of the associated files which must be compiled.
 
-       4.2) 'zealpy_newcase.py': which defines the class 'zealpy_newcase'
-     
-            BECAREFUL: this class must inherit from the class 'zealpy',
-	               to be able to use the method 'get_zeros'
-         
-	    SEE 'zealpy_BOT.py as example.
+     EXAMPLE: pyreldisp_dic['newcase'] = ['fun_newcase.f90']
+
+  3) To recompile the PYRELDISP package. For this,
+       - delete the repository 'build/': "rm -r build"
+       - type "python setup.py install"
+
+  4) To add Python scripts, as follows:
+
+     4.1) 'newcase.py': main script which contains the call to 
+          the zealpy_newcase_.so library.
+
+	  SEE 'BOT.py as example.
+
+     4.2) 'zealpy_newcase.py': which defines the class 'zealpy_newcase'
+
+          BECAREFUL: this class must inherit from the class 'zealpy',
+	             to be able to use the method 'get_zeros'
+
+	  SEE 'zealpy_BOT.py as example.
