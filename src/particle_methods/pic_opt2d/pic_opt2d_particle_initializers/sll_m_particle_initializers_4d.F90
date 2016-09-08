@@ -68,7 +68,7 @@ contains
               p_group,                 &
               rand_seed,               &
               rank, worldsize )         
-    sll_real64, intent(in) :: thermal_speed
+    sll_real64, intent(in) :: thermal_speed! < sigma of Gaussian distribution
     sll_real64, intent(in) :: alpha, k!< the perturbation's parameters
     type(sll_t_cartesian_mesh_2d), intent(in) :: m2d!< the mesh of the physical space
     sll_int32, intent(in)  :: num_particles!< the number of particles distributed over a single rank
@@ -117,9 +117,6 @@ contains
           call random_number(yo)
           vx = nu * cos(yo * 2.0_f64*sll_p_pi)
           vy = nu * sin(yo * 2.0_f64*sll_p_pi)
-!!$          call sll_s_gaussian_deviate_2d(val)
-!!$          vx = val(1)*thermal_speed
-!!$          vy = val(2)*thermal_speed
           SET_PARTICLE_VALUES(p_group%p_list(j),x,y,vx,vy,weight,xmin,ymin,ncx,ic_x,ic_y,off_x,off_y,rdx,rdy,tmp1,tmp2)
           j = j + 1          
        endif
@@ -230,8 +227,7 @@ contains
     sll_int32, dimension(:), intent(in), optional  :: rand_seed!< the random seed used by the process
     sll_int32, optional  :: rank, worldsize!< when using more than 1 process
     type(sll_t_particle_group_4d), pointer, intent(inout) :: p_group!< the particle group
-    sll_int32  :: j, ii, ll
-    sll_int32  :: ncx, ic_x,ic_y
+    sll_int32  :: j, ncx, ic_x, ic_y
     sll_real64 :: x, y, vx, vy,  z
     sll_real64 :: xmin, ymin, rdx, rdy
     sll_real32 :: weight
@@ -258,8 +254,6 @@ contains
     ncx  = m2d%num_cells1
 
     j=1
-    ii=1
-    ll = 0
     do while ( j <= num_particles )
        call random_number(x)
        x = (m2d%eta1_max - xmin)*x + xmin
@@ -273,8 +267,6 @@ contains
           vy = val(2)*thermal_speed
           SET_PARTICLE_VALUES(p_group%p_list(j),x,y,vx,vy,weight,xmin,ymin,ncx,ic_x,ic_y,off_x,off_y,rdx,rdy,tmp1,tmp2)
           j = j + 1          
-       else
-          ll=ll+1
        endif
     end do
 
