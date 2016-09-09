@@ -22,10 +22,7 @@ type(particle)        :: p
 
 type(sll_t_fft)       :: fw
 type(sll_t_fft)       :: bw
-integer(4), parameter :: Ntau=32
-integer(4), parameter :: npp=204800
 real(8)               :: xxt(2)
-real(8)               :: ep
 real(8)               :: epsq
 real(8)               :: dtau
 
@@ -76,9 +73,9 @@ sll_int32             :: error
 sll_real64            :: aux1, aux2
 sll_real64            :: s, dum
 
-real    :: start_time, stop_time
-integer :: dat_file_id, ref_file_id
-logical :: file_exists
+real       :: start_time, stop_time
+integer    :: dat_file_id, ref_file_id
+logical    :: file_exists
 complex(8) :: cost, sint
 
 character(len=272)    :: argv
@@ -109,27 +106,27 @@ end if
 
 call mpi_global_master() !Brodcast global values
 
-SLL_ALLOCATE(tau(0:Ntau-1),           error)
-SLL_ALLOCATE(ltau(0:Ntau-1),          error)
-SLL_ALLOCATE(iltau(0:Ntau-1),         error)
-SLL_ALLOCATE(eiltau(0:Ntau-1),        error)
+SLL_ALLOCATE(tau(0:ntau-1),           error)
+SLL_ALLOCATE(ltau(0:ntau-1),          error)
+SLL_ALLOCATE(iltau(0:ntau-1),         error)
+SLL_ALLOCATE(eiltau(0:ntau-1),        error)
 SLL_ALLOCATE(pl(0:ntau-1),            error)
 SLL_ALLOCATE(ql(0:ntau-1),            error)
-SLL_ALLOCATE(wp1(npp),                error)
-SLL_ALLOCATE(wp2(npp),                error)
-SLL_ALLOCATE(wm1(npp),                error)
-SLL_ALLOCATE(wm2(npp),                error)
-SLL_ALLOCATE(Et1(npp,0:ntau-1),       error)
-SLL_ALLOCATE(Et2(npp,0:ntau-1),       error)
+SLL_ALLOCATE(wp1(nbpart),             error)
+SLL_ALLOCATE(wp2(nbpart),             error)
+SLL_ALLOCATE(wm1(nbpart),             error)
+SLL_ALLOCATE(wm2(nbpart),             error)
+SLL_ALLOCATE(Et1(nbpart,0:ntau-1),    error)
+SLL_ALLOCATE(Et2(nbpart,0:ntau-1),    error)
 
-SLL_ALLOCATE(gp1(0:Ntau-1,npp),       error)
-SLL_ALLOCATE(gp2(0:Ntau-1,npp),       error)
-SLL_ALLOCATE(gm1(0:Ntau-1,npp),       error)
-SLL_ALLOCATE(gm2(0:Ntau-1,npp),       error)
-SLL_ALLOCATE(up(0:ntau-1,npp,2),      error)
-SLL_ALLOCATE(um(0:ntau-1,npp,2),      error)
-SLL_ALLOCATE(up0(0:ntau-1,npp,2),     error)
-SLL_ALLOCATE(um0(0:ntau-1,npp,2),     error)
+SLL_ALLOCATE(gp1(0:ntau-1,nbpart),    error)
+SLL_ALLOCATE(gp2(0:ntau-1,nbpart),    error)
+SLL_ALLOCATE(gm1(0:ntau-1,nbpart),    error)
+SLL_ALLOCATE(gm2(0:ntau-1,nbpart),    error)
+SLL_ALLOCATE(up(0:ntau-1,nbpart,2),   error)
+SLL_ALLOCATE(um(0:ntau-1,nbpart,2),   error)
+SLL_ALLOCATE(up0(0:ntau-1,nbpart,2),  error)
+SLL_ALLOCATE(um0(0:ntau-1,nbpart,2),  error)
 SLL_ALLOCATE(xt1(0:ntau-1,2),         error)
 SLL_ALLOCATE(xt2(0:ntau-1,2),         error)
 
@@ -142,25 +139,24 @@ SLL_CLEAR_ALLOCATE(f%ey(0:nx,0:ny),   error)
 SLL_CLEAR_ALLOCATE(f%bz(0:nx,0:ny),   error)
 SLL_CLEAR_ALLOCATE(f%r0(0:nx,0:ny),   error)
 
-time  = 0._f64
+time   = 0._f64
 
-ep    = 0.1_f64/1._f64
-epsq  = ep * ep
-dtau  = 2._f64*sll_p_pi/ntau
+epsq   = ep * ep
+dtau   = 2._f64*sll_p_pi/ntau
 
-m = ntau/2
+m      = ntau/2
 ltau   =(/ (n, n=0,m-1), (n, n=-m,-1 )/)
 iltau  = 0.5_f64 * sll_p_i1 * cmplx(ltau,0.0_f64) / epsq
 eiltau = exp(-iltau*dt) /ntau
 
 pl(0)=dt
 ql(0)=dt**2/2._f64
-do i=1,Ntau-1
+do i=1,ntau-1
   pl(i)=2._f64*epsq*sll_p_i1*(exp(-iltau(i)*dt)-1.0_f64)/ltau(i)
   ql(i)=2._f64*epsq*(2.0_f64*epsq*(1.0_f64-exp(-iltau(i)*dt)) &
                     -2.0_f64*epsq*iltau(i)*dt)/ltau(i)**2
 enddo
-do i=0,Ntau-1
+do i=0,ntau-1
   tau(i) =i*dtau
 enddo
 
@@ -201,7 +197,7 @@ if (mod(ntau,psize) == 0) then
 else
   
   if (master) then
-    print*, "Remainder of the division of Ntau by Nprocs must be zero." 
+    print*, "Remainder of the division of ntau by Nprocs must be zero." 
   end if
 
   call finish_mpi()
@@ -211,8 +207,8 @@ end if
 
 print*, prank, psize, l1, l2, ll
 
-allocate(et1_loc(npp,l1:l2))
-allocate(et2_loc(npp,l1:l2))
+allocate(et1_loc(nbpart,l1:l2))
+allocate(et2_loc(nbpart,l1:l2))
 allocate(fex_loc(0:nx,0:ny,l1:l2))
 allocate(fey_loc(0:nx,0:ny,l1:l2))
 
@@ -237,28 +233,28 @@ do n = l1, l2
 
 enddo
 
-call MPI_ALLGATHER(et1_loc,npp*ll,MPI_DOUBLE_COMPLEX, &
-                   Et1,npp*ll,MPI_DOUBLE_COMPLEX,MPI_COMM_WORLD,code)
-call MPI_ALLGATHER(et2_loc,npp*ll,MPI_DOUBLE_COMPLEX, &
-                   Et2,npp*ll,MPI_DOUBLE_COMPLEX,MPI_COMM_WORLD,code)
+call MPI_ALLGATHER(et1_loc,nbpart*ll,MPI_DOUBLE_COMPLEX, &
+                   Et1,nbpart*ll,MPI_DOUBLE_COMPLEX,MPI_COMM_WORLD,code)
+call MPI_ALLGATHER(et2_loc,nbpart*ll,MPI_DOUBLE_COMPLEX, &
+                   Et2,nbpart*ll,MPI_DOUBLE_COMPLEX,MPI_COMM_WORLD,code)
 
 
 
-SLL_ALLOCATE(temp1(0:Ntau-1),         error)
-SLL_ALLOCATE(temp2(0:Ntau-1),         error)
-call sll_s_fft_init_c2c_1d(fw,Ntau,temp1,temp1,sll_p_fft_forward)
-call sll_s_fft_init_c2c_1d(bw,Ntau,temp1,temp1,sll_p_fft_backward)
+SLL_ALLOCATE(temp1(0:ntau-1),         error)
+SLL_ALLOCATE(temp2(0:ntau-1),         error)
+call sll_s_fft_init_c2c_1d(fw,ntau,temp1,temp1,sll_p_fft_forward)
+call sll_s_fft_init_c2c_1d(bw,ntau,temp1,temp1,sll_p_fft_backward)
 
-do m=1,npp
+do m=1,nbpart
 
   temp1= 2._f64*Et2(m,:)
   temp2=-2._f64*Et1(m,:)!g_+
   call sll_s_fft_exec_c2c_1d(fw, temp1, temp1)
   call sll_s_fft_exec_c2c_1d(fw, temp2, temp2)
 
-  do n=1,Ntau-1
-    temp1(n)=-sll_p_i1*temp1(n)/ltau(n)/Ntau
-    temp2(n)=-sll_p_i1*temp2(n)/ltau(n)/Ntau
+  do n=1,ntau-1
+    temp1(n)=-sll_p_i1*temp1(n)/ltau(n)/ntau
+    temp2(n)=-sll_p_i1*temp2(n)/ltau(n)/ntau
   enddo
 
   temp1(0)= sll_p_i0
@@ -276,9 +272,9 @@ do m=1,npp
   enddo
   call sll_s_fft_exec_c2c_1d(fw, temp1, temp1)
   call sll_s_fft_exec_c2c_1d(fw, temp2, temp2)
-  do n=1,Ntau-1
-    temp1(n)=-sll_p_i1*temp1(n)/ltau(n)/Ntau
-    temp2(n)=-sll_p_i1*temp2(n)/ltau(n)/Ntau
+  do n=1,ntau-1
+    temp1(n)=-sll_p_i1*temp1(n)/ltau(n)/ntau
+    temp2(n)=-sll_p_i1*temp2(n)/ltau(n)/ntau
   enddo
   temp1(0)=sll_p_i0
   temp2(0)=sll_p_i0
@@ -346,21 +342,21 @@ do n=l1,l2
   Et2_loc(:,n)= cmplx(p%epy,0.0,f64)
 enddo
 
-call MPI_ALLGATHER(et1_loc,npp*ll,MPI_DOUBLE_COMPLEX, &
-                   Et1,npp*ll,MPI_DOUBLE_COMPLEX,MPI_COMM_WORLD,code)
-call MPI_ALLGATHER(et2_loc,npp*ll,MPI_DOUBLE_COMPLEX, &
-                   Et2,npp*ll,MPI_DOUBLE_COMPLEX,MPI_COMM_WORLD,code)
+call MPI_ALLGATHER(et1_loc,nbpart*ll,MPI_DOUBLE_COMPLEX, &
+                   Et1,nbpart*ll,MPI_DOUBLE_COMPLEX,MPI_COMM_WORLD,code)
+call MPI_ALLGATHER(et2_loc,nbpart*ll,MPI_DOUBLE_COMPLEX, &
+                   Et2,nbpart*ll,MPI_DOUBLE_COMPLEX,MPI_COMM_WORLD,code)
 
-do m=1,npp
+do m=1,nbpart
   temp1= 2._f64*Et2(m,:)
   temp2=-2._f64*Et1(m,:)!g_+
   call sll_s_fft_exec_c2c_1d(fw, temp1, temp1)
   call sll_s_fft_exec_c2c_1d(fw, temp2, temp2)
   up0(0,m,1)=temp1(0)/ntau!Pi g_+
   up0(0,m,2)=temp2(0)/ntau!Pi g_+
-  do n=1,Ntau-1
-    temp1(n)=-sll_p_i1*temp1(n)/ltau(n)/Ntau
-    temp2(n)=-sll_p_i1*temp2(n)/ltau(n)/Ntau
+  do n=1,ntau-1
+    temp1(n)=-sll_p_i1*temp1(n)/ltau(n)/ntau
+    temp2(n)=-sll_p_i1*temp2(n)/ltau(n)/ntau
   enddo
   temp1(0)=sll_p_i0
   temp2(0)=sll_p_i0
@@ -379,9 +375,9 @@ do m=1,npp
   call sll_s_fft_exec_c2c_1d(fw, temp2, temp2)
   um0(0,m,1)=temp1(0)/ntau!Pi g_-
   um0(0,m,2)=temp2(0)/ntau!Pi g_-
-  do n=1,Ntau-1
-    temp1(n)=-sll_p_i1*temp1(n)/ltau(n)/Ntau
-    temp2(n)=-sll_p_i1*temp2(n)/ltau(n)/Ntau
+  do n=1,ntau-1
+    temp1(n)=-sll_p_i1*temp1(n)/ltau(n)/ntau
+    temp2(n)=-sll_p_i1*temp2(n)/ltau(n)/ntau
   enddo
   temp1(0)=sll_p_i0
   temp2(0)=sll_p_i0
@@ -446,12 +442,12 @@ do n=l1,l2
   Et2_loc(:,n)= cmplx(p%epy,0.0,f64)
 enddo
 
-call MPI_ALLGATHER(et1_loc,npp*ll,MPI_DOUBLE_COMPLEX, &
-                   Et1,npp*ll,MPI_DOUBLE_COMPLEX,MPI_COMM_WORLD,code)
-call MPI_ALLGATHER(et2_loc,npp*ll,MPI_DOUBLE_COMPLEX, &
-                   Et2,npp*ll,MPI_DOUBLE_COMPLEX,MPI_COMM_WORLD,code)
+call MPI_ALLGATHER(et1_loc,nbpart*ll,MPI_DOUBLE_COMPLEX, &
+                   Et1,nbpart*ll,MPI_DOUBLE_COMPLEX,MPI_COMM_WORLD,code)
+call MPI_ALLGATHER(et2_loc,nbpart*ll,MPI_DOUBLE_COMPLEX, &
+                   Et2,nbpart*ll,MPI_DOUBLE_COMPLEX,MPI_COMM_WORLD,code)
 
-do m=1,npp
+do m=1,nbpart
   temp1= 2._f64*Et2(m,:)
   temp2=-2._f64*Et1(m,:)
   call sll_s_fft_exec_c2c_1d(fw, temp1, temp1)
@@ -547,12 +543,12 @@ do n=l1,l2
   Et2_loc(:,n)= cmplx(p%epy,0.0,f64)
 enddo
 
-call MPI_ALLGATHER(et1_loc,npp*ll,MPI_DOUBLE_COMPLEX, &
-                   Et1,npp*ll,MPI_DOUBLE_COMPLEX,MPI_COMM_WORLD,code)
-call MPI_ALLGATHER(et2_loc,npp*ll,MPI_DOUBLE_COMPLEX, &
-                   Et2,npp*ll,MPI_DOUBLE_COMPLEX,MPI_COMM_WORLD,code)
+call MPI_ALLGATHER(et1_loc,nbpart*ll,MPI_DOUBLE_COMPLEX, &
+                   Et1,nbpart*ll,MPI_DOUBLE_COMPLEX,MPI_COMM_WORLD,code)
+call MPI_ALLGATHER(et2_loc,nbpart*ll,MPI_DOUBLE_COMPLEX, &
+                   Et2,nbpart*ll,MPI_DOUBLE_COMPLEX,MPI_COMM_WORLD,code)
 
-do m=1,npp
+do m=1,nbpart
 
   temp1 =  2._f64*Et2(m,:)
   temp2 = -2._f64*Et1(m,:)
@@ -652,12 +648,12 @@ do istep = 2, nstep
     Et2_loc(:,n)= cmplx(p%epy, 0.0, f64)
   enddo
 
-  call MPI_ALLGATHER(et1_loc,npp*ll,MPI_DOUBLE_COMPLEX, &
-                     Et1,npp*ll,MPI_DOUBLE_COMPLEX,MPI_COMM_WORLD,code)
-  call MPI_ALLGATHER(et2_loc,npp*ll,MPI_DOUBLE_COMPLEX, &
-                     Et2,npp*ll,MPI_DOUBLE_COMPLEX,MPI_COMM_WORLD,code)
+  call MPI_ALLGATHER(et1_loc,nbpart*ll,MPI_DOUBLE_COMPLEX, &
+                     Et1,nbpart*ll,MPI_DOUBLE_COMPLEX,MPI_COMM_WORLD,code)
+  call MPI_ALLGATHER(et2_loc,nbpart*ll,MPI_DOUBLE_COMPLEX, &
+                     Et2,nbpart*ll,MPI_DOUBLE_COMPLEX,MPI_COMM_WORLD,code)
 
-  do m=1,npp
+  do m=1,nbpart
     temp1=  2._f64*Et2(m,:)
     temp2= -2._f64*Et1(m,:)
     call sll_s_fft_exec_c2c_1d(fw, temp1, temp1)
@@ -758,22 +754,22 @@ enddo
 cost = cmplx(cos(0.5_f64*time/epsq),0.0,f64)
 sint = cmplx(sin(0.5_f64*time/epsq),0.0,f64)
 
-do m=1,npp
+do m=1,nbpart
   call sll_s_fft_exec_c2c_1d(fw, up(:,m,1),temp1)
   call sll_s_fft_exec_c2c_1d(fw, up(:,m,2),temp2)
   wp1(m) = sll_p_i0
   wp2(m) = sll_p_i0
   do n=0,ntau-1
-    wp1(m)=wp1(m)+temp1(n)/Ntau*exp(iltau(n)*time)
-    wp2(m)=wp2(m)+temp2(n)/Ntau*exp(iltau(n)*time)
+    wp1(m)=wp1(m)+temp1(n)/ntau*exp(iltau(n)*time)
+    wp2(m)=wp2(m)+temp2(n)/ntau*exp(iltau(n)*time)
   enddo
   call sll_s_fft_exec_c2c_1d(fw, um(:,m,1),temp1)
   call sll_s_fft_exec_c2c_1d(fw, um(:,m,2),temp2)
   wm1(m) = sll_p_i0
   wm2(m) = sll_p_i0
   do n=0,ntau-1
-    wm1(m)=wm1(m)+temp1(n)/Ntau*exp(iltau(n)*time)
-    wm2(m)=wm2(m)+temp2(n)/Ntau*exp(iltau(n)*time)
+    wm1(m)=wm1(m)+temp1(n)/ntau*exp(iltau(n)*time)
+    wm2(m)=wm2(m)+temp2(n)/ntau*exp(iltau(n)*time)
   enddo
   utmp   = 0.5_f64*(cost*wp1(m)-sint*wp2(m)+cost*wm1(m)+sint*wm2(m))
   vtmp   = 0.5_f64*(cost*wp2(m)+sint*wp1(m)+cost*wm2(m)-sint*wm1(m))
