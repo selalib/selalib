@@ -17,14 +17,16 @@ use mpi_module
 
 implicit none
 
-type(tm_mesh_fields)  :: f
-type(particle)        :: p
+type(tm_mesh_fields)    :: f
+type(particle)          :: p
 
-type(sll_t_fft)       :: fw
-type(sll_t_fft)       :: bw
-real(8)               :: xxt(2)
-real(8)               :: epsq
-real(8)               :: dtau
+type(sll_t_fft)         :: fw
+type(sll_t_fft)         :: bw
+type(sll_t_fft)         :: fft2d
+sll_comp64, allocatable :: phi(:,:)
+real(8)                 :: xxt(2)
+real(8)                 :: epsq
+real(8)                 :: dtau
 
 real(8)    , allocatable :: tau   (:)
 real(8)    , allocatable :: ltau  (:)
@@ -244,6 +246,9 @@ SLL_ALLOCATE(temp1(0:ntau-1),         error)
 SLL_ALLOCATE(temp2(0:ntau-1),         error)
 call sll_s_fft_init_c2c_1d(fw,ntau,temp1,temp1,sll_p_fft_forward)
 call sll_s_fft_init_c2c_1d(bw,ntau,temp1,temp1,sll_p_fft_backward)
+
+SLL_ALLOCATE(phi(nx/2+1,ny),          error)
+call sll_s_fft_init_r2c_2d(fft2d,nx,ny,f%r0(0:nx-1,0:ny-1),phi)
 
 do m=1,nbpart
 
@@ -732,18 +737,20 @@ do istep = 2, nstep
                      MPI_COMM_WORLD,code)
 
   if (master) then
-    open(10, file='energyp.dat', position='append')
-    if (istep==2) rewind(10)
-    write(10,*) time, sum(f%ex*f%ex+f%ey*f%ey)
-    write(*,*) istep, time
-    close(10)
+
+     open(10, file='energy.dat', position='append')
+     if (istep==2) rewind(10)
+     write(10,"(2g15.7)") time, sum(f%ex*f%ex+f%ey*f%ey)
+     close(10)
+    !call energyuse()
   end if
-  do iproc=0, psize-1
-    if (iproc == prank) then
-      print *, ' Rank ', iproc, sum(fex*fex+fey*fey)
-    end if
-    call MPI_Barrier(MPI_COMM_WORLD, code)
-  enddo
+
+  !do iproc=0, psize-1
+  !  if (iproc == prank) then
+  !    print *, ' Rank ', iproc, sum(fex*fex+fey*fey)
+  !  end if
+  !  call MPI_Barrier(MPI_COMM_WORLD, code)
+  !enddo
 
 enddo
 
@@ -755,6 +762,7 @@ cost = cmplx(cos(0.5_f64*time/epsq),0.0,f64)
 sint = cmplx(sin(0.5_f64*time/epsq),0.0,f64)
 
 do m=1,nbpart
+
   call sll_s_fft_exec_c2c_1d(fw, up(:,m,1),temp1)
   call sll_s_fft_exec_c2c_1d(fw, up(:,m,2),temp2)
   wp1(m) = sll_p_i0
@@ -780,6 +788,7 @@ do m=1,nbpart
   p%dpx(m) = real(xxt(1)/dx- p%idx(m), f64)
   p%idy(m) = floor(xxt(2)/dimy*ny)
   p%dpy(m) = real(xxt(2)/dy- p%idy(m), f64)
+
 enddo
 
 call calcul_rho_m6( p, f )
@@ -840,6 +849,58 @@ subroutine apply_bc()
     xxt(2) = xxt(2)  + dimy
   enddo
 end subroutine apply_bc
+
+subroutine energyuse()
+
+  sll_comp64 :: wm(2), wp(2), vp(2), vm(2), z(2)
+  sll_real64 :: energy_p, energy_e, xi
+
+  do m=1,nbpart
+    call sll_s_fft_exec_c2c_1d(fw, up(:,m,1),temp1)
+    call sll_s_fft_exec_c2c_1d(fw, up(:,m,2),temp2)
+    wp(:)=sll_p_i0
+    do n=0,ntau-1
+      wp(1)=wp(1)+temp1(n)/ntau*exp(sll_p_i1*ltau(n)*time/2.0d0/ep**2)
+      wp(2)=wp(2)+temp1(n)/ntau*exp(sll_p_i1*ltau(n)*time/2.0d0/ep**2)
+    enddo
+    call sll_s_fft_exec_c2c_1d(fw, um(:,m,1),temp1)
+    call sll_s_fft_exec_c2c_1d(fw, um(:,m,2),temp2)
+    wm(:)=sll_p_i0
+    do n=0,ntau-1
+      wm(1)=wm(1)+temp1(n)/ntau*exp(sll_p_i1*ltau(n)*time/2.0d0/ep**2)
+      wm(2)=wm(2)+temp2(n)/ntau*exp(sll_p_i1*ltau(n)*time/2.0d0/ep**2)
+    enddo
+    vp(1)=cos(time/2.0d0/ep**2)*wp(1)-sin(time/2.0d0/ep**2)*wp(2)
+    vp(2)=cos(time/2.0d0/ep**2)*wp(2)+sin(time/2.0d0/ep**2)*wp(1)
+    vm(1)=cos(time/2.0d0/ep**2)*wm(1)+sin(time/2.0d0/ep**2)*wm(2)
+    vm(2)=cos(time/2.0d0/ep**2)*wm(2)-sin(time/2.0d0/ep**2)*wm(1)
+    z=(vp(:)+vm(:))/2.0d0
+    xxt(1)=dreal(cos(time/2.0d0/ep**2)*z(1)+sin(time/2.0d0/ep**2)*z(2))
+    xxt(2)=dreal(cos(time/2.0d0/ep**2)*z(2)-sin(time/2.0d0/ep**2)*z(1))
+    call apply_bc()
+    p%idx(m) = floor(xxt(1)/dimx*nx)
+    p%dpx(m) = real(xxt(1)/dx- p%idx(m), f64)
+    p%idy(m) = floor(xxt(2)/dimy*ny)
+    p%dpy(m) = real(xxt(2)/dy- p%idy(m), f64)
+    p%vpx(m)= ( sin(time/2.0d0/ep**2)*vm(1)+cos(time/2.0d0/ep**2)*vm(2))/2.0d0/ep
+    p%vpy(m)=-(-sin(time/2.0d0/ep**2)*vm(2)+cos(time/2.0d0/ep**2)*vm(1))/2.0d0/ep
+  enddo
+
+  call calcul_rho_m6( p, f )
+  call sll_s_fft_exec_r2c_2d(fft2d,f%r0(0:nx-1,0:ny-1),phi)
+  call poisson%compute_e_from_rho( f%ex, f%ey, f%r0)
+
+  energy_p = 0.5_f64*sum(p%p*(p%vpx*p%vpx+p%vpy*p%vpy))
+  energy_e = 0.5_f64*sum(f%ex*f%ex+f%ey*f%ey)
+  xi       = real(sum(phi*conjg(phi))*dx*dy)
+
+  open(10, file='energy.dat', position='append')
+  if (istep==2) rewind(10)
+  write(10,"(5g15.7)") time, energy_p, energy_e, energy_p+energy_e, xi
+  write(*,"(5g15.7)") time, energy_p, energy_e, energy_p+energy_e, xi
+  close(10)
+
+end subroutine energyuse
 
 end program test_pic2d
 
