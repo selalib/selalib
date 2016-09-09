@@ -22,7 +22,7 @@ type(particle)        :: p
 
 type(sll_t_fft)       :: fw
 type(sll_t_fft)       :: bw
-integer(4), parameter :: ntau=32
+integer(4), parameter :: Ntau=32
 integer(4), parameter :: npp=204800
 real(8)               :: xxt(2)
 real(8)               :: ep
@@ -109,10 +109,10 @@ end if
 
 call mpi_global_master() !Brodcast global values
 
-SLL_ALLOCATE(tau(0:ntau-1),           error)
-SLL_ALLOCATE(ltau(0:ntau-1),          error)
-SLL_ALLOCATE(iltau(0:ntau-1),         error)
-SLL_ALLOCATE(eiltau(0:ntau-1),        error)
+SLL_ALLOCATE(tau(0:Ntau-1),           error)
+SLL_ALLOCATE(ltau(0:Ntau-1),          error)
+SLL_ALLOCATE(iltau(0:Ntau-1),         error)
+SLL_ALLOCATE(eiltau(0:Ntau-1),        error)
 SLL_ALLOCATE(pl(0:ntau-1),            error)
 SLL_ALLOCATE(ql(0:ntau-1),            error)
 SLL_ALLOCATE(wp1(npp),                error)
@@ -122,10 +122,10 @@ SLL_ALLOCATE(wm2(npp),                error)
 SLL_ALLOCATE(Et1(npp,0:ntau-1),       error)
 SLL_ALLOCATE(Et2(npp,0:ntau-1),       error)
 
-SLL_ALLOCATE(gp1(0:ntau-1,npp),       error)
-SLL_ALLOCATE(gp2(0:ntau-1,npp),       error)
-SLL_ALLOCATE(gm1(0:ntau-1,npp),       error)
-SLL_ALLOCATE(gm2(0:ntau-1,npp),       error)
+SLL_ALLOCATE(gp1(0:Ntau-1,npp),       error)
+SLL_ALLOCATE(gp2(0:Ntau-1,npp),       error)
+SLL_ALLOCATE(gm1(0:Ntau-1,npp),       error)
+SLL_ALLOCATE(gm2(0:Ntau-1,npp),       error)
 SLL_ALLOCATE(up(0:ntau-1,npp,2),      error)
 SLL_ALLOCATE(um(0:ntau-1,npp,2),      error)
 SLL_ALLOCATE(up0(0:ntau-1,npp,2),     error)
@@ -149,18 +149,18 @@ epsq  = ep * ep
 dtau  = 2._f64*sll_p_pi/ntau
 
 m = ntau/2
-ltau   =(/ (real(n,f64), n=0,m-1), (real(n,f64), n=-m,-1 )/)
-iltau  = cmplx(0.5,0.0,f64) * sll_p_i1 * cmplx(ltau,0.0,f64) / cmplx(epsq,0.0,f64)
-eiltau = exp(-iltau*dt) / cmplx(ntau,0.0,f64)
+ltau   =(/ (n, n=0,m-1), (n, n=-m,-1 )/)
+iltau  = 0.5_f64 * sll_p_i1 * cmplx(ltau,0.0_f64) / epsq
+eiltau = exp(-iltau*dt) /ntau
 
-pl(0)=cmplx(dt,0.0,f64)
-ql(0)=pl(0)**2/2._f64
-do i=1,ntau-1
-  pl(i)=cmplx(2._f64*epsq,0.0,f64)*sll_p_i1*(exp(-iltau(i)*dt)-sll_p_i0)/cmplx(ltau(i),0.0,f64)
-  ql(i)=cmplx(2._f64*epsq,0.0,f64)*(cmplx(2.0_f64*epsq,0.0,f64)*(sll_p_i0-exp(-iltau(i)*dt)) &
-                    -cmplx(2.0_f64*epsq,0.0,f64)*iltau(i)*cmplx(dt,0.0,f64))/cmplx(ltau(i)**2,0.0,f64)
+pl(0)=dt
+ql(0)=dt**2/2._f64
+do i=1,Ntau-1
+  pl(i)=2._f64*epsq*sll_p_i1*(exp(-iltau(i)*dt)-1.0_f64)/ltau(i)
+  ql(i)=2._f64*epsq*(2.0_f64*epsq*(1.0_f64-exp(-iltau(i)*dt)) &
+                    -2.0_f64*epsq*iltau(i)*dt)/ltau(i)**2
 enddo
-do i=0,ntau-1
+do i=0,Ntau-1
   tau(i) =i*dtau
 enddo
 
@@ -201,7 +201,7 @@ if (mod(ntau,psize) == 0) then
 else
   
   if (master) then
-    print*, "Remainder of the division of ntau by Nprocs must be zero." 
+    print*, "Remainder of the division of Ntau by Nprocs must be zero." 
   end if
 
   call finish_mpi()
@@ -244,10 +244,10 @@ call MPI_ALLGATHER(et2_loc,npp*ll,MPI_DOUBLE_COMPLEX, &
 
 
 
-SLL_ALLOCATE(temp1(0:ntau-1),         error)
-SLL_ALLOCATE(temp2(0:ntau-1),         error)
-call sll_s_fft_init_c2c_1d(fw,ntau,temp1,temp1,sll_p_fft_forward)
-call sll_s_fft_init_c2c_1d(bw,ntau,temp1,temp1,sll_p_fft_backward)
+SLL_ALLOCATE(temp1(0:Ntau-1),         error)
+SLL_ALLOCATE(temp2(0:Ntau-1),         error)
+call sll_s_fft_init_c2c_1d(fw,Ntau,temp1,temp1,sll_p_fft_forward)
+call sll_s_fft_init_c2c_1d(bw,Ntau,temp1,temp1,sll_p_fft_backward)
 
 do m=1,npp
 
@@ -256,9 +256,9 @@ do m=1,npp
   call sll_s_fft_exec_c2c_1d(fw, temp1, temp1)
   call sll_s_fft_exec_c2c_1d(fw, temp2, temp2)
 
-  do n=1,ntau-1
-    temp1(n)=-sll_p_i1*temp1(n)/ltau(n)/ntau
-    temp2(n)=-sll_p_i1*temp2(n)/ltau(n)/ntau
+  do n=1,Ntau-1
+    temp1(n)=-sll_p_i1*temp1(n)/ltau(n)/Ntau
+    temp2(n)=-sll_p_i1*temp2(n)/ltau(n)/Ntau
   enddo
 
   temp1(0)= sll_p_i0
@@ -276,9 +276,9 @@ do m=1,npp
   enddo
   call sll_s_fft_exec_c2c_1d(fw, temp1, temp1)
   call sll_s_fft_exec_c2c_1d(fw, temp2, temp2)
-  do n=1,ntau-1
-    temp1(n)=-sll_p_i1*temp1(n)/ltau(n)/ntau
-    temp2(n)=-sll_p_i1*temp2(n)/ltau(n)/ntau
+  do n=1,Ntau-1
+    temp1(n)=-sll_p_i1*temp1(n)/ltau(n)/Ntau
+    temp2(n)=-sll_p_i1*temp2(n)/ltau(n)/Ntau
   enddo
   temp1(0)=sll_p_i0
   temp2(0)=sll_p_i0
@@ -358,9 +358,9 @@ do m=1,npp
   call sll_s_fft_exec_c2c_1d(fw, temp2, temp2)
   up0(0,m,1)=temp1(0)/ntau!Pi g_+
   up0(0,m,2)=temp2(0)/ntau!Pi g_+
-  do n=1,ntau-1
-    temp1(n)=-sll_p_i1*temp1(n)/ltau(n)/ntau
-    temp2(n)=-sll_p_i1*temp2(n)/ltau(n)/ntau
+  do n=1,Ntau-1
+    temp1(n)=-sll_p_i1*temp1(n)/ltau(n)/Ntau
+    temp2(n)=-sll_p_i1*temp2(n)/ltau(n)/Ntau
   enddo
   temp1(0)=sll_p_i0
   temp2(0)=sll_p_i0
@@ -379,9 +379,9 @@ do m=1,npp
   call sll_s_fft_exec_c2c_1d(fw, temp2, temp2)
   um0(0,m,1)=temp1(0)/ntau!Pi g_-
   um0(0,m,2)=temp2(0)/ntau!Pi g_-
-  do n=1,ntau-1
-    temp1(n)=-sll_p_i1*temp1(n)/ltau(n)/ntau
-    temp2(n)=-sll_p_i1*temp2(n)/ltau(n)/ntau
+  do n=1,Ntau-1
+    temp1(n)=-sll_p_i1*temp1(n)/ltau(n)/Ntau
+    temp2(n)=-sll_p_i1*temp2(n)/ltau(n)/Ntau
   enddo
   temp1(0)=sll_p_i0
   temp2(0)=sll_p_i0
@@ -556,13 +556,11 @@ do m=1,npp
 
   temp1 =  2._f64*Et2(m,:)
   temp2 = -2._f64*Et1(m,:)
-
   call sll_s_fft_exec_c2c_1d(fw, temp1, temp1)
   call sll_s_fft_exec_c2c_1d(fw, temp2, temp2)
-
   xt1(:,1)=temp1/ntau!g_+tilde(t1) predict
   xt1(:,2)=temp2/ntau!g_+tilde(t1) predict
-
+  !---
   do n=0,ntau-1
     cost = cmplx(cos(2_f64*tau(n)),0.0,f64)
     sint = cmplx(sin(2_f64*tau(n)),0.0,f64)
@@ -583,17 +581,14 @@ do m=1,npp
     temp1(n)=eiltau(n)*temp1(n)+pl(n)*xt1(n,1)+ql(n)*(xt1(n,1)-gp1(n,m))/dt
     temp2(n)=eiltau(n)*temp2(n)+pl(n)*xt1(n,2)+ql(n)*(xt1(n,2)-gp2(n,m))/dt
   enddo
-
   call sll_s_fft_exec_c2c_1d(bw, temp1, up(:,m,1))!u_+(t1)
   call sll_s_fft_exec_c2c_1d(bw, temp2, up(:,m,2))
   call sll_s_fft_exec_c2c_1d(fw, um(:,m,1), temp1)
   call sll_s_fft_exec_c2c_1d(fw, um(:,m,2), temp2)
-
   do n=0,ntau-1
     temp1(n)=eiltau(n)*temp1(n)+pl(n)*xt2(n,1)+ql(n)*(xt2(n,1)-gm1(n,m))/dt
     temp2(n)=eiltau(n)*temp2(n)+pl(n)*xt2(n,2)+ql(n)*(xt2(n,2)-gm2(n,m))/dt
   enddo
-
   call sll_s_fft_exec_c2c_1d(bw, temp1, um(:,m,1))!u_-(t1)
   call sll_s_fft_exec_c2c_1d(bw, temp2, um(:,m,2))
 
@@ -740,7 +735,13 @@ do istep = 2, nstep
                      fey,(nx+1)*(ny+1)*ll,MPI_DOUBLE_COMPLEX,     &
                      MPI_COMM_WORLD,code)
 
-  if (master) write(*,*) istep, time
+  if (master) then
+    open(10, file='energyp.dat', position='append')
+    if (istep==2) rewind(10)
+    write(10,*) time, sum(f%ex*f%ex+f%ey*f%ey)
+    write(*,*) istep, time
+    close(10)
+  end if
   do iproc=0, psize-1
     if (iproc == prank) then
       print *, ' Rank ', iproc, sum(fex*fex+fey*fey)
@@ -754,41 +755,42 @@ enddo
 !*** Next time step ***
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
-if (master) then
+cost = cmplx(cos(0.5_f64*time/epsq),0.0,f64)
+sint = cmplx(sin(0.5_f64*time/epsq),0.0,f64)
 
-  cost = cmplx(cos(0.5_f64*time/epsq),0.0,f64)
-  sint = cmplx(sin(0.5_f64*time/epsq),0.0,f64)
-  
-  do m=1,npp
-    call sll_s_fft_exec_c2c_1d(fw, up(:,m,1),temp1)
-    call sll_s_fft_exec_c2c_1d(fw, up(:,m,2),temp2)
-    wp1(m) = sll_p_i0
-    wp2(m) = sll_p_i0
-    do n=0,ntau-1
-      wp1(m)=wp1(m)+temp1(n)/cmplx(ntau,0.0,f64)*exp(iltau(n)*time)
-      wp2(m)=wp2(m)+temp2(n)/cmplx(ntau,0.0,f64)*exp(iltau(n)*time)
-    enddo
-    call sll_s_fft_exec_c2c_1d(fw, um(:,m,1),temp1)
-    call sll_s_fft_exec_c2c_1d(fw, um(:,m,2),temp2)
-    wm1(m) = sll_p_i0
-    wm2(m) = sll_p_i0
-    do n=0,ntau-1
-      wm1(m)=wm1(m)+temp1(n)/cmplx(ntau,0.0,f64)*exp(iltau(n)*time)
-      wm2(m)=wm2(m)+temp2(n)/cmplx(ntau,0.0,f64)*exp(iltau(n)*time)
-    enddo
-    utmp   = 0.5_f64*(cost*wp1(m)-sint*wp2(m)+cost*wm1(m)+sint*wm2(m))
-    vtmp   = 0.5_f64*(cost*wp2(m)+sint*wp1(m)+cost*wm2(m)-sint*wm1(m))
-    xxt(1) = real(cost*utmp+sint*vtmp)
-    xxt(2) = real(cost*vtmp-sint*utmp)
-    call apply_bc()
-    p%idx(m) = floor(xxt(1)/dimx*nx)
-    p%dpx(m) = real(xxt(1)/dx- p%idx(m), f64)
-    p%idy(m) = floor(xxt(2)/dimy*ny)
-    p%dpy(m) = real(xxt(2)/dy- p%idy(m), f64)
+do m=1,npp
+  call sll_s_fft_exec_c2c_1d(fw, up(:,m,1),temp1)
+  call sll_s_fft_exec_c2c_1d(fw, up(:,m,2),temp2)
+  wp1(m) = sll_p_i0
+  wp2(m) = sll_p_i0
+  do n=0,ntau-1
+    wp1(m)=wp1(m)+temp1(n)/Ntau*exp(iltau(n)*time)
+    wp2(m)=wp2(m)+temp2(n)/Ntau*exp(iltau(n)*time)
   enddo
-  
-  call calcul_rho_m6( p, f )
+  call sll_s_fft_exec_c2c_1d(fw, um(:,m,1),temp1)
+  call sll_s_fft_exec_c2c_1d(fw, um(:,m,2),temp2)
+  wm1(m) = sll_p_i0
+  wm2(m) = sll_p_i0
+  do n=0,ntau-1
+    wm1(m)=wm1(m)+temp1(n)/Ntau*exp(iltau(n)*time)
+    wm2(m)=wm2(m)+temp2(n)/Ntau*exp(iltau(n)*time)
+  enddo
+  utmp   = 0.5_f64*(cost*wp1(m)-sint*wp2(m)+cost*wm1(m)+sint*wm2(m))
+  vtmp   = 0.5_f64*(cost*wp2(m)+sint*wp1(m)+cost*wm2(m)-sint*wm1(m))
+  xxt(1) = real(cost*utmp+sint*vtmp)
+  xxt(2) = real(cost*vtmp-sint*utmp)
+  call apply_bc()
+  p%idx(m) = floor(xxt(1)/dimx*nx)
+  p%dpx(m) = real(xxt(1)/dx- p%idx(m), f64)
+  p%idy(m) = floor(xxt(2)/dimy*ny)
+  p%dpy(m) = real(xxt(2)/dy- p%idy(m), f64)
+enddo
 
+call calcul_rho_m6( p, f )
+
+call MPI_BARRIER(MPI_COMM_WORLD,code)
+
+if (master) then
 
   call cpu_time(stop_time)
   
@@ -816,6 +818,7 @@ if (master) then
     print *, "CPU time:", stop_time - start_time, "seconds"
   endif
   
+
 end if
 
 deallocate(et1_loc)
@@ -832,13 +835,13 @@ subroutine apply_bc()
     xxt(1) = xxt(1) - dimx
   enddo
   do while ( xxt(1) < xmin )
-    xxt(1) = xxt(1) + dimx
+    xxt(1)= xxt(1) + dimx
   enddo
   do while ( xxt(2) > ymax )
-    xxt(2) = xxt(2) - dimy
+    xxt(2)  = xxt(2)  - dimy
   enddo
-  do while ( xxt(2) < ymin )
-    xxt(2) = xxt(2) + dimy
+  do while ( xxt(2)  < ymin )
+    xxt(2) = xxt(2)  + dimy
   enddo
 end subroutine apply_bc
 
