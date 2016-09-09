@@ -28,6 +28,8 @@ sll_real64, public :: alpha      ! Perturbation amplitude
 sll_real64, public :: kx         ! Perturbation wave number along x
 sll_real64, public :: ky         ! Perturbation wave number along y
 sll_real64, public :: poids      ! Size of particle
+sll_int32,  public :: ntau
+sll_real64, public :: ep
 
 sll_int32  :: nstepmax   ! Time step number (max)
 sll_int32  :: idiag      ! Diagnostic interval
@@ -71,7 +73,13 @@ namelist/donnees/ dimx,  & !dimensions du domaine
                  masse,  & !masse d'une macroparticule
                      c,  & !vitesse de la lumiere
                     e0,  & !permittivite du vide
-               relativ     !calcul relativiste de la vitesse
+               relativ,  & !calcul relativiste de la vitesse
+                  ntau,  & !nuber of tau iterations
+                    ep,  & !epsilon
+                nbpart,  & !number of particles
+                    kx,  & !wave number along x
+                    ky,  & !wave number along y
+                 alpha     !amplitude of perturbation
 
 !*** Initialisation des valeurs pas default
 
@@ -92,6 +100,12 @@ masse    = 1.0_f64       ! masse d'une macro particule
 c        = 8.0_f64       ! vitesse de la lumiere
 e0       = 1.0_f64       ! permittivite du vide
 relativ  = .false.       ! relativistic pusher or not
+ntau     = 32
+nbpart   = 204800   
+ep       = 0.1_f64/1._f64
+alpha    = 0.05d0  !original it's 0.10_f64
+kx       = 0.50_f64
+ky       = 1.0d0   !original it's 0.0_f64
 
 
 pi = 4.0_f64 * atan(1.0_f64)
@@ -105,9 +119,6 @@ csq     = c*c
 q_sur_m = charge / masse
 poids   = charge
 
-alpha = 0.05d0  !original it's 0.10_f64
-kx    = 0.50_f64
-ky    = 1.0d0   !original it's 0.0_f64
 dimx  = 2*pi/kx
 dimy  = 2*pi/ky  ! original it's 1
 poids = dimx * dimy ! car int(f0) = dimx*dimy
@@ -116,7 +127,6 @@ dx = dimx / nx
 dy = dimy / ny
 
 dt=1.0d-1/1.0d0
-!dt = cfl  / sqrt (1./(dx*dx)+1./(dy*dy)) / c
 
 nstep = floor(tfinal/dt)
 
