@@ -705,7 +705,7 @@ do istep = 2, nstep
 
   enddo
 
-  !--updata E--
+  !--update E--
   time=dt*istep
   do n=l1,l2
     cost = cmplx(cos(tau(n)),0.0,f64)
@@ -740,17 +740,17 @@ do istep = 2, nstep
 
      open(10, file='energy.dat', position='append')
      if (istep==2) rewind(10)
-     write(10,"(2g15.7)") time, sum(f%ex*f%ex+f%ey*f%ey)
+     write(10,"(2g15.7)") time, 0.5*log(sum(fex(:,:,0)**2+fey(:,:,0)))
      close(10)
     !call energyuse()
   end if
 
-  !do iproc=0, psize-1
-  !  if (iproc == prank) then
-  !    print *, ' Rank ', iproc, sum(fex*fex+fey*fey)
-  !  end if
-  !  call MPI_Barrier(MPI_COMM_WORLD, code)
-  !enddo
+  do iproc=0, psize-1
+    if (iproc == prank) then
+      print *, ' Rank ', iproc, istep, time
+    end if
+    call MPI_Barrier(MPI_COMM_WORLD, code)
+  enddo
 
 enddo
 
@@ -882,8 +882,8 @@ subroutine energyuse()
     p%dpx(m) = real(xxt(1)/dx- p%idx(m), f64)
     p%idy(m) = floor(xxt(2)/dimy*ny)
     p%dpy(m) = real(xxt(2)/dy- p%idy(m), f64)
-    p%vpx(m)= ( sin(time/2.0d0/ep**2)*vm(1)+cos(time/2.0d0/ep**2)*vm(2))/2.0d0/ep
-    p%vpy(m)=-(-sin(time/2.0d0/ep**2)*vm(2)+cos(time/2.0d0/ep**2)*vm(1))/2.0d0/ep
+    p%vpx(m) = ( sin(time/2.0d0/ep**2)*vm(1)+cos(time/2.0d0/ep**2)*vm(2))/2.0d0/ep
+    p%vpy(m) =-(-sin(time/2.0d0/ep**2)*vm(2)+cos(time/2.0d0/ep**2)*vm(1))/2.0d0/ep
   enddo
 
   call calcul_rho_m6( p, f )

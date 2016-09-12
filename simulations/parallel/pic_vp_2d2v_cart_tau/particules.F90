@@ -29,6 +29,63 @@ sll_real64, allocatable, private :: bhz(:,:)
 CONTAINS
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+subroutine plasma( ele )
+
+type (particle) :: ele
+sll_real64 :: speed, theta, vth, n
+sll_real64 :: xi, yi, zi
+sll_real64 :: a, b, eps, R,temm, z(3)
+sll_real64 :: ppx, ppy
+sll_int32  :: k, error
+
+eps    = 1.d-12
+vth    = 1.0_f64
+nbpart = 204800
+n      = 1.0_f64/nbpart
+pi     = 4.0_f64 * atan(1.0_f64)
+
+SLL_ALLOCATE(ele%dpx(nbpart),error)
+SLL_ALLOCATE(ele%dpy(nbpart),error)
+SLL_ALLOCATE(ele%idx(nbpart),error)
+SLL_ALLOCATE(ele%idy(nbpart),error)
+SLL_ALLOCATE(ele%vpx(nbpart),error)
+SLL_ALLOCATE(ele%vpy(nbpart),error)
+SLL_ALLOCATE(ele%epx(nbpart),error)
+SLL_ALLOCATE(ele%epy(nbpart),error)
+SLL_ALLOCATE(ele%bpz(nbpart),error)
+SLL_ALLOCATE(ele%p(nbpart),error)
+
+do k=0,nbpart-1
+
+  speed = vth * sqrt(-2.0_f64 * log( (k+0.5)*n ))
+
+  theta = trinary_reversing( k ) * 2.0_f64 * pi
+
+  ele%vpx(k+1) = speed * cos(theta)
+  ele%vpy(k+1) = speed * sin(theta)
+
+  ele%p(k+1) = poids * n
+
+enddo
+
+!--add by me: rejection sampling--
+k=1
+do while (k<=nbpart)
+  call random_number(z)
+  xi   = dimx*z(1)
+  yi   = dimy*z(2)
+  zi   = (2.0_f64+alpha)*z(3)
+  temm = 1.0_f64+sin(yi)+alpha*cos(kx*xi)
+  if (temm>=zi) then
+    ele%idx(k) = floor(xi/dimx*nx)
+    ele%idy(k) = floor(yi/dimy*ny)
+    ele%dpx(k) = real(xi/dx - ele%idx(k), f64)
+    ele%dpy(k) = real(yi/dy - ele%idy(k), f64)
+    k=k+1
+  endif
+enddo
+
+end subroutine plasma
 
 subroutine interpol_eb( tm1, ele )
 
@@ -132,74 +189,6 @@ tm%r0 = tm%r0 - rho_total/dimx/dimy
 
 end subroutine calcul_rho
 
-subroutine plasma( ele )
-
-type (particle) :: ele
-sll_real64 :: speed, theta, vth, n
-sll_real64 :: a, b, eps, R,temm,xi,yi,zi
-sll_real64 :: ppx, ppy
-sll_int32  :: k, error
-
-eps    = 1.d-12
-vth    = 1.0_f64
-nbpart = 204800
-n      = 1.0_f64/nbpart
-pi     = 4.0_f64 * atan(1.0_f64)
-
-SLL_ALLOCATE(ele%dpx(nbpart),error)
-SLL_ALLOCATE(ele%dpy(nbpart),error)
-SLL_ALLOCATE(ele%idx(nbpart),error)
-SLL_ALLOCATE(ele%idy(nbpart),error)
-SLL_ALLOCATE(ele%vpx(nbpart),error)
-SLL_ALLOCATE(ele%vpy(nbpart),error)
-SLL_ALLOCATE(ele%epx(nbpart),error)
-SLL_ALLOCATE(ele%epy(nbpart),error)
-SLL_ALLOCATE(ele%bpz(nbpart),error)
-SLL_ALLOCATE(ele%p(nbpart),error)
-
-do k=0,nbpart-1
-
-  speed = vth * sqrt(-2.0_f64 * log( (k+0.5)*n ))
-
-  theta = trinary_reversing( k ) * 2.0_f64 * pi
-
-!  a = 0.0_f64; b = dimx ! 2*pi/kx
-!  R = bit_reversing( k )
-!  call dichotomie_x(a,b,R,eps)
-!  ppx = a
-!  ppy = dimy * penta_reversing( k )
-!
-!  ele%idx(k+1) = floor(ppx/dimx*nx)
-!  ele%idy(k+1) = floor(ppy/dimy*ny)
-!  ele%dpx(k+1) = real(ppx/dx - ele%idx(k+1), f64)
-!  ele%dpy(k+1) = real(ppy/dy - ele%idy(k+1), f64)
-  ele%vpx(k+1) = speed * cos(theta)
-  ele%vpy(k+1) = speed * sin(theta)
-
-  ele%p(k+1) = poids * n
-
-enddo
-
-!--add by me: rejection sampling--
-k=1
-do while (k<=nbpart)
-  call random_number(xi)
-  xi=dimx*xi
-  call random_number(yi)
-  yi=dimy*yi
-  call random_number(zi)
-  zi=(2.0d0+alpha)*zi
-  temm=1.0d0+dsin(yi)+alpha*dcos(kx*xi)
-  if (temm>=zi) then
-    ele%idx(k) = floor(xi/dimx*nx)
-    ele%idy(k) = floor(yi/dimy*ny)
-    ele%dpx(k) = real(xi/dx - ele%idx(k), f64)
-    ele%dpy(k) = real(yi/dy - ele%idy(k), f64)
-    k=k+1
-  endif
-enddo
-
-end subroutine plasma
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 !> M4 function from Monhagan (SPH method)
