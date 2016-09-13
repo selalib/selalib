@@ -34,13 +34,14 @@ subroutine plasma( ele )
 type (particle) :: ele
 sll_real64 :: speed, theta, vth, n
 sll_real64 :: xi, yi, zi
-sll_real64 :: eps, temm, z(3)
+sll_real64 :: a, b, eps, R,temm, z(3)
+sll_real64 :: ppx, ppy
 sll_int32  :: k, error
 
 eps    = 1.d-12
 vth    = 1.0_f64
 nbpart = 204800
-n      = 1.0_f64/real(nbpart,f64)
+n      = 1.0_f64/nbpart
 pi     = 4.0_f64 * atan(1.0_f64)
 
 SLL_ALLOCATE(ele%dpx(nbpart),error)
@@ -78,8 +79,8 @@ do while (k<=nbpart)
   if (temm>=zi) then
     ele%idx(k) = floor(xi/dimx*nx)
     ele%idy(k) = floor(yi/dimy*ny)
-    ele%dpx(k) = xi/dx - real(ele%idx(k), f64)
-    ele%dpy(k) = yi/dy - real(ele%idy(k), f64)
+    ele%dpx(k) = real(xi/dx - ele%idx(k), f64)
+    ele%dpy(k) = real(yi/dy - ele%idy(k), f64)
     k=k+1
   endif
 enddo
