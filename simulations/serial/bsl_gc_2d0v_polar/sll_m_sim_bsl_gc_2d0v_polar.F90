@@ -1145,6 +1145,8 @@ contains
   subroutine plot_f_polar(iplot,f,mesh_2d)
     use sll_m_xdmf
     use sll_m_hdf5_io_serial
+    use hdf5, only:hid_t
+    integer(hid_t) :: hfile_id
     sll_int32 :: file_id
     sll_int32 :: error
     sll_real64, dimension(:,:), allocatable :: x1
@@ -1187,12 +1189,12 @@ contains
           x2(i,j) = r*sin(theta)
         end do
       end do
-      call sll_o_hdf5_file_create("polar_mesh-x1.h5",file_id,error)
-      call sll_o_hdf5_write_array(file_id,x1,"/x1",error)
-      call sll_o_hdf5_file_close(file_id, error)
-      call sll_o_hdf5_file_create("polar_mesh-x2.h5",file_id,error)
-      call sll_o_hdf5_write_array(file_id,x2,"/x2",error)
-      call sll_o_hdf5_file_close(file_id, error)
+      call sll_o_hdf5_file_create("polar_mesh-x1.h5",hfile_id,error)
+      call sll_o_hdf5_write_array(hfile_id,x1,"/x1",error)
+      call sll_o_hdf5_file_close(hfile_id, error)
+      call sll_o_hdf5_file_create("polar_mesh-x2.h5",hfile_id,error)
+      call sll_o_hdf5_write_array(hfile_id,x2,"/x2",error)
+      call sll_o_hdf5_file_close(hfile_id, error)
       deallocate(x1)
       deallocate(x2)
 

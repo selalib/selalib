@@ -1,5 +1,6 @@
 ! TODO: Use input from file to initialize and compare
-
+! Unit test for symplectic splitting
+! author: Katharina Kormann, IPP
 program test_hamiltonian_splitting_pic_1d2v_vm
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_memory.h"
@@ -39,9 +40,6 @@ program test_hamiltonian_splitting_pic_1d2v_vm
 
   use sll_m_particle_group_base, only: &
     sll_c_particle_group_base
-
-  use sll_m_particle_initializer, only: &
-    sll_s_particle_initialize_sobol_landau_1d2v
 
   implicit none
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++

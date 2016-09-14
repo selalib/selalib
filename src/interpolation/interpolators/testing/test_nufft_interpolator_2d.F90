@@ -64,6 +64,7 @@ interp2d => nufft2d
 
 SLL_ALLOCATE(f(1:nc_eta1+1,1:nc_eta2+1),error)
 SLL_ALLOCATE(g(1:nc_eta1+1,1:nc_eta2+1),error)
+SLL_ALLOCATE(h(1:nc_eta1+1,1:nc_eta2+1),error)
 SLL_ALLOCATE(x(1:nc_eta1+1,1:nc_eta2+1),error)
 SLL_ALLOCATE(y(1:nc_eta1+1,1:nc_eta2+1),error)
 
