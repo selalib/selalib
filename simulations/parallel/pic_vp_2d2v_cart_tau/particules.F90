@@ -1,10 +1,10 @@
 ! new definition of dpx,dpy
 ! cubic spline basis
-module particules
+module m_particules
 #include "sll_working_precision.h"
 #include "sll_memory.h"
-use zone
-use quietstart
+use m_zone
+use m_quietstart
 
 implicit none
 
@@ -42,7 +42,6 @@ eps    = 1.d-12
 vth    = 1.0_f64
 nbpart = 204800
 n      = 1.0_f64/nbpart
-pi     = 4.0_f64 * atan(1.0_f64)
 
 SLL_ALLOCATE(ele%dpx(nbpart),error)
 SLL_ALLOCATE(ele%dpy(nbpart),error)
@@ -548,4 +547,4 @@ tm%r0 = tm%r0 / (dx*dy)
 
 end subroutine calcul_rho_m3
 
-end module particules
+end module m_particules

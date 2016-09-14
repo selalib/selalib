@@ -6,14 +6,13 @@ program test_pic2d
 #include "sll_memory.h"
 #include "sll_errors.h"
 
-use zone
-use particules
-use diagno
+use m_zone
+use m_particules, only: particle, plasma
 use sll_m_fft
 use sll_m_poisson_2d_base
 use sll_m_poisson_2d_periodic
 use sll_m_constants
-use particules_m6, only: calcul_rho_m6, interpol_eb_m6
+use m_particules_m6, only: calcul_rho_m6, interpol_eb_m6
 use mpi_module
 
 implicit none
@@ -66,7 +65,7 @@ sll_real64            :: xmin
 sll_real64            :: xmax
 sll_real64            :: ymin
 sll_real64            :: ymax
-sll_int32             :: istep
+sll_int32             :: istep=1
 sll_int32             :: iargc
 sll_int32             :: n,m
 sll_int32             :: i
@@ -631,6 +630,7 @@ call MPI_ALLGATHER(fey_loc,(nx+1)*(ny+1)*ll,MPI_DOUBLE_COMPLEX, &
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 !*** Loop over time ***
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+call energy_use()
 
 do istep = 2, nstep
 
@@ -856,9 +856,10 @@ call calcul_rho_m6( p, f )
 call poisson%compute_e_from_rho( f%ex, f%ey, f%r0)
 
 open(10, file='energy.dat', position='append')
-if (istep==2) rewind(10)
-write(10,"(3g15.7)") time, energy_fourier_mode_xy(1,1,f%ex,f%ey), &
-                     energy_fourier_mode_xy(1,1,real(fex(:,:,0)),real(fey(:,:,0))) 
+if (istep==1) rewind(10)
+write(10,"(3g15.7)") time, 0.5*log(sum(f%ex*f%ex)), 0.5*log(sum(f%ey*f%ey))
+!write(10,"(3g15.7)") time, energy_fourier_mode_xy(1,1,f%ex,f%ey), &
+!                     energy_fourier_mode_xy(1,1,real(fex(:,:,0)),real(fey(:,:,0))) 
 
 close(10)
 

@@ -1,6 +1,6 @@
-module m_quietstart
+module quietstart
 #include "sll_working_precision.h"
-use m_zone
+use zone
 
 implicit none
 
@@ -142,4 +142,4 @@ end subroutine dichotomie_x
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
-end module m_quietstart
+end module quietstart
