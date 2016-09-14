@@ -50,6 +50,7 @@ module sll_m_sim_bsl_dk_3d1v_curv
     sll_f_new_general_elliptic_solver, &
     sll_o_solve
 
+  use hdf5, only: hid_t
   use sll_m_hdf5_io_serial, only: &
     sll_o_hdf5_file_close, &
     sll_o_hdf5_file_create, &
@@ -2091,7 +2092,7 @@ contains
 
     !--> For initial equilibrium state HDF5 saving
     integer                      :: file_err
-    sll_int32                    :: file_id
+    integer(hid_t)               :: file_id
     character(len=13), parameter :: filename_prof = "init_state.h5"
 
     if (sim%my_rank.eq.0) then
@@ -2142,7 +2143,7 @@ contains
 
     !--> For initial profile HDF5 saving
     integer             :: file_err
-    sll_int32           :: file_id
+    integer(hid_t)      :: file_id
     character(len=80)   :: filename_HDF5
     character(20), save :: numfmt = "'_d',i5.5"
     
@@ -2233,7 +2234,7 @@ contains
     
     !--> For conservation law HDF5 saving
     integer             :: file_err
-    sll_int32           :: file_id
+    integer(hid_t)      :: file_id
     character(len=20), parameter :: filename_CL = "conservation_laws.h5"
 
   

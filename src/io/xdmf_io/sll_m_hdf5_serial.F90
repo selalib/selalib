@@ -17,6 +17,7 @@ module sll_m_hdf5_serial
 #include "sll_errors.h"
 #include "sll_working_precision.h"
 
+  use hdf5, only: hid_t
   use sll_m_hdf5_io_serial, only: &
     sll_o_hdf5_file_close, &
     sll_o_hdf5_file_create, &
@@ -39,7 +40,7 @@ module sll_m_hdf5_serial
   type :: sll_t_hdf5_serial
 
     character(len=maxlen) :: filename = ""  !< file name
-    integer               :: file_id  = -1  !< unit number
+    integer(hid_t)        :: file_id  = -1  !< unit number
     logical               :: is_open  = .false.
 
   contains

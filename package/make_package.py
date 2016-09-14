@@ -10,7 +10,7 @@ Modules required
 #
 # Author: Yaman Güçlü, Jan 2016 - IPP Garching
 #
-# Last revision: 10 May 2016
+# Last revision: 2 Jun 2016
 #
 from __future__ import print_function
 
@@ -36,12 +36,12 @@ def make_package( input_libraries, output_package ):
 
     # Extract all object files into temporary directory
     for lib in input_libraries:
-        command = "ar -x " + lib
+        command = 'ar -x "{:s}"'.format( lib )
         exit_status = os.system( command )
         assert exit_status == 0
 
     # Repackage all object files into a single archive (static library)
-    command = "ar -qc {:s} *.o".format( PKG_NAME )
+    command = 'ar -qc "{:s}" *.o'.format( PKG_NAME )
     exit_status = os.system( command )
     assert exit_status == 0
 
