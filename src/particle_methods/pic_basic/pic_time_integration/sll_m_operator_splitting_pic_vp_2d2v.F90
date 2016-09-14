@@ -154,7 +154,6 @@ contains
     sll_real64 :: xi(3)
     sll_real64 :: wi
 
-
     ! Assemble right-hand-side
     call this%pic_poisson%reset()
     do i_part = 1, this%particle_group%n_particles
@@ -162,7 +161,6 @@ contains
        wi = this%particle_group%get_charge(i_part, this%i_weight)
        call this%pic_poisson%add_charge(xi(1:2), wi)
     end do
-
   end subroutine charge_deposition_vp_2d2v
 
 

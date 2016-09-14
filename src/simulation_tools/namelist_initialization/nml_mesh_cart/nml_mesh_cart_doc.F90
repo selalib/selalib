@@ -1,7 +1,6 @@
 !> @defgroup nml_mesh_cart sll_nml_mesh_cart
 !> @brief
-!> Library to deal with initialization of cartesian mesh
-!> from namelist
+!> Initialize of cartesian mesh from namelist
 !> <br>
 !> @details
 !> We propose a uniform way of initializing cartesian meshes

@@ -32,6 +32,7 @@ module sll_m_constants
     sll_p_mass, &
     sll_p_epsilon_0, &
     sll_p_g, &
+    sll_p_i0, &
     sll_p_i1, &
     sll_p_kb, &
     sll_p_kx, &
