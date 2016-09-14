@@ -415,7 +415,7 @@ contains
     
     select case (self%bc_type)
     case(sll_p_periodic)
-       self%bcoef = gtau
+       self%bcoef = gtau(1:self%n)
        call schur_complement_slv ( self%schur, self%n, self%deg/2, self%q,  self%bcoef )
     case (sll_p_greville)
        self%bcoef = gtau
