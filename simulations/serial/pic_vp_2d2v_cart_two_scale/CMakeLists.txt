@@ -1,0 +1,5 @@
+ADD_LIBRARY(pic_vp_2d2v_cart_two_scale STATIC zone.F90 quietstart.F90 particules.F90 )
+TARGET_LINK_LIBRARIES(pic_vp_2d2v_cart_two_scale sll_poisson_solvers)
+
+ADD_EXECUTABLE(sim_pic_vp_2d2v_cart_two_scale main.F90)
+TARGET_LINK_LIBRARIES(sim_pic_vp_2d2v_cart_two_scale pic_vp_2d2v_cart_two_scale)

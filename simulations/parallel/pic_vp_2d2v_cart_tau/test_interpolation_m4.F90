@@ -3,9 +3,9 @@ program test_interpolation_m4
 #include "sll_memory.h"
 #include "sll_assert.h"
 
-use zone, only: readin, dimx, dimy, dx, dy
-use particules
-use particules_m6
+use m_zone, only: readin, dimx, dimy, dx, dy
+use m_particules
+use m_particules_m6
 use sll_m_gnuplot
 use sll_m_poisson_2d_base
 use sll_m_poisson_2d_periodic
