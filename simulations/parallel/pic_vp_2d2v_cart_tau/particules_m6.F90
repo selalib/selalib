@@ -1,8 +1,9 @@
-module particules_m6
+module m_particules_m6
 #include "sll_working_precision.h"
 #include "sll_memory.h"
 
-use particules
+use m_zone, only: tm_mesh_fields, nx, ny, nbpart, dx, dy, dimx, dimy 
+use m_particules, only: particle
 
 implicit none
 
@@ -533,4 +534,4 @@ end do
 
 end subroutine interpol_eb_m6
 
-end module particules_m6
+end module m_particules_m6

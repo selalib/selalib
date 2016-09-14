@@ -43,3 +43,4 @@ endif(HDF5_ENABLED)
 # Examples that do not extend 'sll_c_simulation_base_class'
 add_subdirectory( bsl_examples )
 add_subdirectory( fsl_examples )
+add_subdirectory( pic_vp_2d2v_cart_two_scale )

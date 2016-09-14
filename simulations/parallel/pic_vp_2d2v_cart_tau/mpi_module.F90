@@ -3,7 +3,7 @@
 module mpi_module 
 
 use mpi
-use zone
+use m_zone
 
 implicit none
 

@@ -1,0 +1,19 @@
+$donnees 
+  nstepmax = 20000		!nbre d'iterations maxi
+  dimx     = 1.
+  dimy     = 1.       	!dimensions du domaine 
+  nx       = 64		!nombre de pts suivant x
+  ny       = 32   	!nombre de pts suivant y
+  cfl      = 0.9 		!nombre de Courant-Friedrich-Levy
+  tfinal   = 1.0  	!temps final
+  idiag    = 10    	!frequence des sorties graphiques
+  bcname   = "period"	!type de conditions limites
+  exext    = 0.		!champ electrique exterieur suivant x
+  eyext    = 0.	 	!champ electriaue exterieur suivant y
+  bzext    = 0.		!champ magnetique exterieur
+  charge   = 1.d0       !charge d'une macro particule
+  masse    = 1.d0       !masse d'une macro particule
+  c        = 8.	 	!vitesse de la lumiere
+  e0       = 1.         !permittivite du vide
+  relativ  = .false.
+$end
