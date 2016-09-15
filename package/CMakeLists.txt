@@ -109,7 +109,7 @@ set( SLL_EXT  ${SLL_EXT}  CACHE INTERNAL "List of built-in external libraries" )
 set( SLL_DEPS ${SLL_DEPS} CACHE INTERNAL "List of external dependencies" )
 
 # Find header files
-file( GLOB_RECURSE SLL_MACROS ${PROJECT_SOURCE_DIR}/sll_*.h )
+file( GLOB_RECURSE SLL_MACROS ${PROJECT_SOURCE_DIR}/src/sll_*.h )
 
 # Installation (library, headers, mod files)
 install( FILES ${SLL_LIB}    DESTINATION lib )
@@ -142,9 +142,9 @@ file( APPEND ${filepath} "\nSLL_INCLUDE_PATH = \$\(SLL_ROOT\)/include/selalib\n"
 file( APPEND ${filepath} "\nFC = ${FC}\n" )
 
 # Installation
-install( CODE "file(MAKE_DIRECTORY ${CMAKE_INSTALL_PREFIX}/pkg_info/selalib)" )
-install( FILES makefile_template DESTINATION pkg_info/selalib )
-install( FILES ${filepath}       DESTINATION pkg_info/selalib )
+install( CODE "file(MAKE_DIRECTORY ${CMAKE_INSTALL_PREFIX}/cmake/selalib)" )
+install( FILES makefile_template DESTINATION cmake/selalib )
+install( FILES ${filepath}       DESTINATION cmake/selalib )
 
 #===============================================================================
 # Print SELALIBConfig.cmake for external use with cmake
@@ -179,5 +179,5 @@ file( APPEND ${filepath} "\nset( SELALIB_INCLUDE_PATH  \${SELALIB_DIR}/include/s
 file( APPEND ${filepath} "\ninclude_directories( \${SELALIB_INCLUDE_PATH} )\n" )
 
 # Installation
-install( CODE "file(MAKE_DIRECTORY ${CMAKE_INSTALL_PREFIX})" )
-install( FILES ${filepath} DESTINATION ${CMAKE_INSTALL_PREFIX} )
+install( CODE "file(MAKE_DIRECTORY ${CMAKE_INSTALL_PREFIX}/cmake)" )
+install( FILES ${filepath} DESTINATION ${CMAKE_INSTALL_PREFIX}/cmake )

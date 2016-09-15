@@ -37,15 +37,15 @@ module sll_m_particle_initializers_2d
   implicit none
 
   public :: &
-    sll_s_initial_particles_2d, &
-    sll_s_initial_particles_2d_kh
+    sll_s_initial_random_particles_2d, &
+    sll_s_initial_random_particles_2d_kh
 
   private
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
   
 contains
 
-  subroutine sll_s_initial_particles_2d_kh( &
+  subroutine sll_s_initial_random_particles_2d_kh( &
               alpha, kx, &
               m2d,                     &
               num_particles,           &
@@ -103,7 +103,7 @@ contains
        y = (m2d%eta2_max - ymin)*y + ymin
        call random_number(z)
        z = (2.0_f64 + 2.0_f64*alpha) * z
-       if (eval_KH(alpha, kx, x, y) >= z ) then
+       if (sll_f_eval_KH(alpha, kx, x, y) >= z ) then
 !          write(90,*) x, y
           SET_2DPARTICLE_VALUES(p_group%p_list(j),x,y,weight,xmin,ymin,ncx,ic_x,ic_y,off_x,off_y,rdx,rdy,tmp1,tmp2)
           j = j + 1          
@@ -113,11 +113,11 @@ contains
      return
      SLL_ASSERT(present(rank))
 
-  end subroutine sll_s_initial_particles_2d_kh
+   end subroutine sll_s_initial_random_particles_2d_kh
 
 
 
-   subroutine sll_s_initial_particles_2d( &
+   subroutine sll_s_initial_random_particles_2d( &
                alpha, k, &
                m2d,                     &
                num_particles,           &
@@ -135,8 +135,6 @@ contains
      sll_real64 :: tmp1, tmp2
      sll_int32, dimension(:), intent(in), optional  :: rand_seed
      sll_int32, optional  :: rank, worldsize
-!!$     character(len=8)  :: rank_name
-!!$     character(len=40) :: nomfile
 
      if ( present(rand_seed) ) then
         call random_seed (put=rand_seed)
@@ -157,50 +155,38 @@ contains
      ymin = m2d%eta2_min
      ncx  = m2d%num_cells1
  
-!!$     if(present(rank)) then
-!!$        write(rank_name,'(i8)') rank
-!!$     else
-!!$        rank_name = '00000000'
-!!$     end if
-!!$     nomfile='initialparts_'//trim(adjustl(rank_name))//'.dat'
-!!$     open(90, file=nomfile)
-!!$ 
-!!$     write(90,*) '#  POSITIONS in 2d'
-     
      j=1
-     !Rejection sampling for the function x --> 1+alpha*cos(k*x)
      do while ( j <= num_particles )
         call random_number(x)
         x = (m2d%eta1_max - xmin)*x + xmin
         call random_number(y)
-        y = 2._f64 * y
-        if (eval_landau(alpha, k, x) >= y ) then
-           y = (m2d%eta2_max - ymin)*sll_f_suite_hamm(j,3) + ymin
-!!$           write(90,*) x, y
+        y = (1._f64+alpha)*y
+        if (sll_f_eval_landau(alpha, k, x) >= y ) then
+           call random_number(y)
+           y = (m2d%eta2_max - ymin)*y + ymin
            SET_2DPARTICLE_VALUES(p_group%p_list(j),x,y,weight,xmin,ymin,ncx,ic_x,ic_y,off_x,off_y,rdx,rdy,tmp1,tmp2)
            j = j + 1          
         endif
      end do
-!!$    close(90)
  
      return
      SLL_ASSERT(present(rank))
-   end subroutine sll_s_initial_particles_2d
+   end subroutine sll_s_initial_random_particles_2d
 
 
-  function eval_landau(alp, kx, x)
-    sll_real64 :: alp, kx, x
-    sll_real64 :: eval_landau
+   function sll_f_eval_landau(alp, kx, x)
+     sll_real64 :: alp, kx, x
+     sll_real64 :: sll_f_eval_landau
 
-    eval_landau = 1._f64 + alp * cos(kx * x)
-  end function eval_landau
+     sll_f_eval_landau = 1._f64 + alp * cos(kx * x)
+   end function sll_f_eval_landau
 
-  function eval_KH(alp, kx, x, y)
-    sll_real64 :: x,y, alp, kx
-    sll_real64 :: eval_KH
-    
-    eval_KH = 1.0_f64 + alp + sin(y) + alp*cos(kx*x)
-  end function eval_KH
+   function sll_f_eval_KH(alp, kx, x, y)
+     sll_real64 :: x,y, alp, kx
+     sll_real64 :: sll_f_eval_KH
+     
+     sll_f_eval_KH = 1.0_f64 + alp + sin(y) + alp*cos(kx*x)
+  end function sll_f_eval_KH
 
 
 end module sll_m_particle_initializers_2d
