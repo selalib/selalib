@@ -83,7 +83,9 @@ module sll_m_particle_group_base
 
 !    ! Getters for the whole group
 !    procedure( get_all_coords), deferred :: get_all_x
-!    procedure( get_all_coords), deferred :: get_all_v
+    !    procedure( get_all_coords), deferred :: get_all_v
+
+    procedure                           :: print !< Prints out the particle array in some form (for debugging, by default nothing is printed out)
 
   end type sll_c_particle_group_base
 
@@ -323,7 +325,7 @@ contains
   subroutine chget_x( self, chunk, x )
     class(sll_c_particle_group_base), intent ( in ) :: self !< particle group object
     sll_int32,            intent ( in ) :: chunk(1:2)    !< particle number range
-    sll_int32, pointer,    intent( out ) :: x(:,:)     !< x of particle chunk
+    sll_real64, pointer,    intent( out ) :: x(:,:)     !< x of particle chunk
 
     sll_int32 :: i
     
@@ -337,7 +339,7 @@ contains
   subroutine chget_v( self, chunk, v )
     class(sll_c_particle_group_base), intent ( in ) :: self !< particle group object
     sll_int32,            intent ( in ) :: chunk(1:2)    !< particle number range
-    sll_int32, pointer,    intent( out ) :: v(:,:)     !< v of particle chunk
+    sll_real64, pointer,    intent( out ) :: v(:,:)     !< v of particle chunk
 
     sll_int32 :: i
     
@@ -351,7 +353,7 @@ contains
   subroutine chget_weights( self, chunk, weights )
     class(sll_c_particle_group_base), intent ( in ) :: self !< particle group object
     sll_int32,            intent ( in ) :: chunk(1:2)    !< particle number range
-    sll_int32, pointer,    intent( out ) :: weights(:,:)     !< x of particle chunk
+    sll_real64, pointer,    intent( out ) :: weights(:,:)     !< x of particle chunk
 
     sll_int32 :: i
     
@@ -403,6 +405,12 @@ contains
 
   end subroutine chget_patch
 
+  !> Dummy print function ( can be overwritten to print for debugging )
+  subroutine print( self, filename )
+    class(sll_c_particle_group_base), intent ( in ) :: self !< particle group object
+    character(len=*), intent(in) :: filename
+
+  end subroutine print
 
   
   !----------------------------------------------------------------------------!
@@ -460,5 +468,6 @@ contains
     ind1d = ind3d(1) + (ind3d(2)-1) * num_pts(1) + (ind3d(3)-1)* num_pts(1)*num_pts(2)
 
   end function sll_f_index_3dto1d
+
 
 end module sll_m_particle_group_base

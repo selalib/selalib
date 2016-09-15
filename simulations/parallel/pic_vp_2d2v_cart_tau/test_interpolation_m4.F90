@@ -3,17 +3,16 @@ program test_interpolation_m4
 #include "sll_memory.h"
 #include "sll_assert.h"
 
-use zone, only: readin, dimx, dimy, dx, dy
-use particules
-use particules_m6
+use m_zone, only: readin, dimx, dimy, dx, dy
+use m_particules
 use sll_m_gnuplot
 use sll_m_poisson_2d_base
 use sll_m_poisson_2d_periodic
 
 implicit none
 
-type(tm_mesh_fields) :: f
-type(particle)       :: p
+type(mesh_fields)                     :: f
+type(particle)                        :: p
 class(sll_c_poisson_2d_base), pointer :: poisson
 
 sll_int32  :: npm
@@ -49,7 +48,6 @@ end do
 
 SLL_CLEAR_ALLOCATE(f%ex(0:nx,0:ny), error)
 SLL_CLEAR_ALLOCATE(f%ey(0:nx,0:ny), error)
-SLL_CLEAR_ALLOCATE(f%bz(0:nx,0:ny), error)
 SLL_CLEAR_ALLOCATE(f%r0(0:nx,0:ny), error) 
 
 print*, 'initialize particles '
@@ -61,7 +59,6 @@ SLL_ALLOCATE(p%idx(nbpart),error)
 SLL_ALLOCATE(p%idy(nbpart),error)
 SLL_ALLOCATE(p%epx(nbpart),error)
 SLL_ALLOCATE(p%epy(nbpart),error)
-SLL_ALLOCATE(p%bpz(nbpart),error)
 SLL_ALLOCATE(p%p(nbpart),error)
 
 call random_number(p%dpx)
@@ -123,8 +120,7 @@ do i = 0, nx
  xp = xmin + real(i,f64)*dx 
  yp = ymin + real(j,f64)*dy
 
- write(11,*) sngl(xp), sngl(yp), &
-   sngl(f%ex(i,j)), sngl(f%ey(i,j)), sngl(f%bz(i,j))
+ write(11,*) sngl(xp), sngl(yp), sngl(f%ex(i,j)), sngl(f%ey(i,j))
 
 end do
 write(11,*) 
@@ -138,8 +134,7 @@ do i = 0, nx
  xp = xmin + real(i,f64)*dx
  yp = ymin + real(j,f64)*dy
 
- write(12,*) sngl(xp), sngl(yp), &
-   sngl(f%ex(i,j)), sngl(f%ey(i,j)), sngl(f%bz(i,j))
+ write(12,*) sngl(xp), sngl(yp), sngl(f%ex(i,j)), sngl(f%ey(i,j))
 
 end do
 write(12,*) 
