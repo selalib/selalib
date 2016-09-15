@@ -6,18 +6,17 @@ program test_pic2d
 #include "sll_memory.h"
 #include "sll_errors.h"
 
+use mpi
 use m_zone
-use m_particules, only: particle, plasma
+use m_particules, only: particle, plasma, calcul_rho_m6, interpol_eb_m6
 use sll_m_fft
 use sll_m_poisson_2d_base
 use sll_m_poisson_2d_periodic
 use sll_m_constants
-use m_particules_m6, only: calcul_rho_m6, interpol_eb_m6
-use mpi_module
 
 implicit none
 
-type(tm_mesh_fields)    :: f
+type(mesh_fields)       :: f
 type(particle)          :: p
 
 type(sll_t_fft)         :: fw
@@ -138,7 +137,6 @@ SLL_ALLOCATE(fey(0:nx,0:ny,0:ntau-1), error)
 
 SLL_CLEAR_ALLOCATE(f%ex(0:nx,0:ny),   error)
 SLL_CLEAR_ALLOCATE(f%ey(0:nx,0:ny),   error)
-SLL_CLEAR_ALLOCATE(f%bz(0:nx,0:ny),   error)
 SLL_CLEAR_ALLOCATE(f%r0(0:nx,0:ny),   error)
 
 time   = 0._f64
@@ -630,7 +628,7 @@ call MPI_ALLGATHER(fey_loc,(nx+1)*(ny+1)*ll,MPI_DOUBLE_COMPLEX, &
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 !*** Loop over time ***
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-call energy_use()
+if (master) call energy_use()
 
 do istep = 2, nstep
 
@@ -735,14 +733,12 @@ do istep = 2, nstep
     fey_loc(:,:,n) = cmplx(f%ey,0.0,f64)
   enddo
 
-  
   call MPI_ALLGATHER(fex_loc,(nx+1)*(ny+1)*ll,MPI_DOUBLE_COMPLEX, &
                      fex,(nx+1)*(ny+1)*ll,MPI_DOUBLE_COMPLEX,     &
                      MPI_COMM_WORLD,code)
   call MPI_ALLGATHER(fey_loc,(nx+1)*(ny+1)*ll,MPI_DOUBLE_COMPLEX, &
                      fey,(nx+1)*(ny+1)*ll,MPI_DOUBLE_COMPLEX,     &
                      MPI_COMM_WORLD,code)
-
 
   do iproc=0, psize-1
     if (iproc == prank) then
@@ -857,10 +853,7 @@ call poisson%compute_e_from_rho( f%ex, f%ey, f%r0)
 
 open(10, file='energy.dat', position='append')
 if (istep==1) rewind(10)
-write(10,"(3g15.7)") time, 0.5*log(sum(f%ex*f%ex)), 0.5*log(sum(f%ey*f%ey))
-!write(10,"(3g15.7)") time, energy_fourier_mode_xy(1,1,f%ex,f%ey), &
-!                     energy_fourier_mode_xy(1,1,real(fex(:,:,0)),real(fey(:,:,0))) 
-
+write(10,"(2g15.7)") time, energy_fourier_mode_xy(1,1,f%ex,f%ey)
 close(10)
 
 
@@ -880,44 +873,33 @@ end subroutine energy_use
 !> @param[in] ey the electric field on the y-axis.
 !> @param[in] d the direction in which to compute the Fourier mode.
 !> @return    the Fourier mode of the electric field.
-function fourier_mode_xy(mode_x, mode_y, ex, ey, d)
+function fourier_mode_xy(mode_x, mode_y, ex, ey)
 
 sll_int32,  intent(in) :: mode_x
 sll_int32,  intent(in) :: mode_y
 sll_real64, intent(in) :: ex(:,:)
 sll_real64, intent(in) :: ey(:,:)
-sll_real64, intent(in) :: d(1:2)
 sll_real64             :: fourier_mode_xy
 
 sll_int32  :: i, j
 sll_real64 :: term1, term2
-sll_real64 :: sqr_norm_d
-
-sqr_norm_d = sqrt(real(mode_x*mode_x+mode_y*mode_y))
-if (sqr_norm_d < epsilon(sqr_norm_d)) then
-  SLL_ERROR("pic_vp_2d2v_cart_tau", 'd is not a proper direction.')
-end if
 
 term1 = 0._f64
-do j = 1, ny
-   do i = 1, nx
-      term1 = term1 + (d(1) * ex(i, j) + d(2) * ey(i, j)) *         &
-        cos(real(mode_x * (i-1),f64) * sll_p_twopi / real(nx,f64) + &
-            real(mode_y * (j-1),f64) * sll_p_twopi / real(ny,f64))
-   enddo
-enddo
-term1 = term1**2
 term2 = 0._f64
 do j = 1, ny
    do i = 1, nx
-      term2 = term2 + (d(1) * ex(i, j) + d(2) * ey(i, j)) *         &
-        sin(real(mode_x * (i-1),f64) * sll_p_twopi / real(nx,f64) + &
-            real(mode_y * (j-1),f64) * sll_p_twopi / real(ny,f64))
+      term1 = term1 + ex(i,j) *         &
+        cos(real(mode_x*(i-1),f64) * kx * dx + &
+            real(mode_y*(j-1),f64) * ky * dy)
+      term2 = term2 + ey(i,j) *         &
+        sin(real(mode_x*(i-1),f64) * kx *dx + &
+            real(mode_y*(j-1),f64) * ky *dy)
    enddo
 enddo
-term2 = term2**2
-fourier_mode_xy = sqrt(2._f64 * dx * dy * (term1 + term2) / &
-    (sqr_norm_d * real(nx * ny, f64)))
+term1 = (term1*dx*dy)**2
+term2 = (term2*dx*dy)**2
+
+fourier_mode_xy = term1+term2
 
 end function fourier_mode_xy
 
@@ -938,9 +920,9 @@ sll_real64, intent(in) :: ey(:,:)
 
 sll_real64 :: energy_fourier_mode_xy
 
-energy_fourier_mode_xy = sqrt( &
-  fourier_mode_xy(mode_x, mode_y, ex, ey, (/ 1._f64, 0._f64 /)**2) + &
-  fourier_mode_xy(mode_x, mode_y, ex, ey, (/ 0._f64, 1._f64 /)**2))
+energy_fourier_mode_xy = log(sqrt( &
+  fourier_mode_xy(mode_x, mode_y, ex, ey)&
++ fourier_mode_xy(mode_x, mode_y, ex, ey))/(dimx*dimy))
 
 end function energy_fourier_mode_xy
 
