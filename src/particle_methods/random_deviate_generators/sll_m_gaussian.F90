@@ -17,12 +17,13 @@ module sll_m_gaussian
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 contains 
-
-  !>Returns a value of random variable following the Gaussian probability 
-  !>density with zero mean and unit variance, using standart function "random" 
-  !>as the source of uniform deviates.
   !>\author Sever Hirstoaga
   !>\date created: 2012-05-31
+
+  !> Returns a value of a random variable in ONE dimension
+  !> following the Gaussian probability density
+  !> with zero mean and unit variance, using random generator
+  !> for the uniform deviates.
   function sll_f_gaussian_deviate()
     sll_real64 :: sll_f_gaussian_deviate
 
@@ -48,10 +49,13 @@ contains
        g_stored=.true.
     endif
   end function sll_f_gaussian_deviate
+
   
-  subroutine sll_s_gaussian_deviate_2d(res)! a normally
-!   distributed deviate with zero mean and unit variance, using
-!   random as the source of uniform deviates  !!!!!
+  !> Returns a value of a random variable in TWO dimensions
+  !> following the Gaussian probability density
+  !> with zero mean and unit variance, using random generator
+  !> for the uniform deviates.
+  subroutine sll_s_gaussian_deviate_2d(res)
     implicit none
     sll_real64,intent(out) :: res(1:2)
     sll_real64 :: rsq, v1, v2

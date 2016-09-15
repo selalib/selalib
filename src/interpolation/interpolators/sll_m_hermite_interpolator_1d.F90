@@ -6,6 +6,7 @@
 module sll_m_hermite_interpolator_1d
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_assert.h"
+#include "sll_errors.h"
 #include "sll_memory.h"
 #include "sll_working_precision.h"
 
@@ -172,17 +173,16 @@ contains  !**********************************************************
     eta_coords, &
     size_eta_coords)
     class(sll_hermite_interpolator_1d), intent(inout) :: interpolator
-    sll_real64, dimension(:), intent(in) :: data_array
-    sll_real64, dimension(:), intent(in),optional   :: eta_coords
-    sll_int32, intent(in), optional                 :: size_eta_coords
+    sll_real64, dimension(:), intent(in)           :: data_array
+    sll_real64, dimension(:), intent(in), optional :: eta_coords
+    sll_int32,                intent(in), optional :: size_eta_coords
 
-    if(present(eta_coords))then
-      !print *,'#Warning eta_coords not used'
-    endif
-    if(present(size_eta_coords))then
-      !print *,'#Warning size_eta_coords not used'
-    endif
+    if(present(eta_coords) .or. present(size_eta_coords)) then
+       SLL_ERROR( 'wrap_compute_interpolants_hermite_1d', 'This case is not yet implemented' )
+    end if
+
     call sll_s_compute_interpolants_hermite_1d( interpolator%hermite, data_array )
+
   end subroutine wrap_compute_interpolants_hermite_1d
   
   function wrap_interpolate_value_hermite_1d( interpolator, eta1 ) result(val)
