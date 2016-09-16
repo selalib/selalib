@@ -18,6 +18,7 @@ if (NOT (FFT_LIB STREQUAL "SLLFFT"))
      sll_m_particle_group_2d2v_lbf.F90)
    SET( PARTICLE_GROUP_DEPS
      ${PARTICLE_GROUP_DEPS}
+     sll_distribution_function
      sll_sparse_grid)
 endif()   
 
