@@ -14,6 +14,7 @@ use sll_m_poisson_2d_base
 use sll_m_poisson_2d_periodic
 use sll_m_constants
 use sll_m_xdmf
+use sll_m_pic_visu
 
 implicit none
 
@@ -195,9 +196,9 @@ if (master) then
   print"('tfinal     = ',  g15.3)", tfinal
   print"('int(rho)   = ',  g15.3)", sum(p%p)
   print"('int(|E|)   = ',  g15.3)", sqrt(sum(f%ex*f%ex+f%ey*f%ey)*dx*dy)
-  open(10, file='energy.dat')
+  open(10, file='energy.dat', position='append')
   rewind(10)
-  write(10,"(3g15.7)") time, energy_fourier_mode_xy(1,1,f%ex,f%ey), sum(abs(f%r0))
+  write(10,*)'# time, phi(1,1), RMS'
   close(10)
 end if
 
@@ -786,24 +787,28 @@ call finish_mpi()
 contains
 
 subroutine apply_bc()
-  do while ( xxt(1) > xmax )
-    xxt(1) = xxt(1) - dimx
-  enddo
-  do while ( xxt(1) < xmin )
-    xxt(1)= xxt(1) + dimx
-  enddo
-  do while ( xxt(2) > ymax )
-    xxt(2)  = xxt(2)  - dimy
-  enddo
-  do while ( xxt(2)  < ymin )
-    xxt(2) = xxt(2)  + dimy
-  enddo
+
+do while ( xxt(1) > xmax )
+  xxt(1) = xxt(1) - dimx
+enddo
+do while ( xxt(1) < xmin )
+  xxt(1)= xxt(1) + dimx
+enddo
+do while ( xxt(2) > ymax )
+  xxt(2)  = xxt(2)  - dimy
+enddo
+do while ( xxt(2)  < ymin )
+  xxt(2) = xxt(2)  + dimy
+enddo
+
 end subroutine apply_bc
 
 subroutine energy_use()
+
 sll_comp64 :: vp(2), vm(2), z(2), wp(2), wm(2)
 sll_real64 :: energy_e, energy_p
 sll_comp64 :: cost, sint
+sll_real64 :: rms
 
 cost = cmplx(cos(0.5_f64*time/epsq),0.0,f64)
 sint = cmplx(sin(0.5_f64*time/epsq),0.0,f64)
@@ -844,17 +849,30 @@ enddo
 call calcul_rho_m6( p, f )
 call poisson%compute_e_from_rho( f%ex, f%ey, f%r0)
 
+rms = 0.0_f64
+do j = 1, ny
+  do i = 1, nx
+    rms = rms + f%r0(i,j)*(real(i-1,f64)*dx)**2
+  end do
+end do
+rms = sqrt(rms*dx*dy)
+
 open(10, file='energy.dat', position='append')
-write(10,"(3g15.7)") time, energy_fourier_mode_xy(1,1,f%ex,f%ey), sum(f%r0)
+write(10,"(3g15.7)") time, energy_fourier_mode_xy(1,1,f%ex,f%ey), rms
 close(10)
+
 if (plot) then
   energy_p = 0.5_f64*sum(p%p*(p%vpx*p%vpx+p%vpy*p%vpy))
   energy_e = 0.5_f64*sum(f%ex(0:nx-1,0:ny-1)*f%ex(0:nx-1,0:ny-1)         &
                         +f%ey(0:nx-1,0:ny-1)*f%ey(0:nx-1,0:ny-1))*dx*dy
-  write(*,"('istep =',i5,' - ',3g15.7)") istep, time,    &
-  energy_fourier_mode_xy(1,1,f%ex,f%ey), energy_p+energy_e
+  write(*,"('istep =',i5,' - ',4g15.7)") istep, time,    &
+  energy_fourier_mode_xy(1,1,f%ex,f%ey), energy_p+energy_e, rms
   call sll_s_xdmf_corect2d_nodes( 'rho', f%r0, 'rho', &
     0.0_f64, dx, 0.0_f64, dy, 'HDF5', istep, time) 
+  call sll_s_distribution_xdmf('df', p%vpx, p%vpy, p%p, &
+                             -3.0_f64, 3.0_f64, 100,     &
+                             -3.0_f64, 3.0_f64, 100, istep)
+
 end if
 
 end subroutine energy_use
@@ -889,7 +907,7 @@ do j = 1, ny
    enddo
 enddo
 
-fourier_mode_xy = (tx*dx*dy)**2+(ty*dx*dy)**2
+fourier_mode_xy = ((tx*dx*dy)**2+(ty*dx*dy)**2)/real(nx*ny,f64)
 
 end function fourier_mode_xy
 

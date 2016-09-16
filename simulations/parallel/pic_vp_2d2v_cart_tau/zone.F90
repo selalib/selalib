@@ -100,12 +100,17 @@ end subroutine readin
 subroutine init_mpi( prank , psize)
 integer :: prank
 integer :: psize
+integer :: iproc
 
 call MPI_INIT(code)
 call MPI_COMM_RANK(MPI_COMM_WORLD,prank,code)
 call MPI_COMM_SIZE(MPI_COMM_WORLD,psize,code)
-print*, ' Hello from mpi proc number ',prank, ' of ', psize
-call MPI_BARRIER(MPI_COMM_WORLD,code)
+do iproc=0, psize-1
+  if (iproc == prank) then
+    print*, ' Hello from mpi proc number ',prank, ' of ', psize
+  end if
+  call MPI_Barrier(MPI_COMM_WORLD, code)
+enddo
 
 end subroutine init_mpi
 
