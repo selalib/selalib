@@ -1,5 +1,25 @@
-### UNIFORMLY ACCURATE PARTICLE-IN-CELL METHOD FOR HIGHLY OSCILLATORY VLASOV-POISSON EQUATION
+## UNIFORMLY ACCURATE PARTICLE-IN-CELL METHOD FOR HIGHLY OSCILLATORY VLASOV-POISSON EQUATION
 
+
+### AllGO instructions
+
+If you run the application in [allgo](http://allgo.inria.fr) be warn that the duration time could be very long if you use a lot of particles.
+
+#### Inputs
+You should upload one file for each job. A text data file:
+
+ - with a [fortran namelist](https://gcc.gnu.org/onlinedocs/gfortran/Extensions-to-namelist.html) inside.
+ - the filename extension must be .txt
+
+You will find some instructions to create your data file below.
+
+#### Parameters
+
+The filename parameter should be the name of your input file. 
+
+ie. for an input file called data.txt, the filename parameter should be : "data.txt"
+
+#### General information
 This simulation is the code for the paper
 
 *Uniformly accurate particle-in-cell method for the long time
@@ -22,17 +42,18 @@ formulation of the characteristics, with the introduction of an
 additional periodic variable.
 
 If you get [the selalib software](http://selalib.gforge.inria.fr) you can run the
-code in your build directory.
-- Copy the data file
-~~~
-$ selalib/simulations/parallel/pic_vp_2d2v_cart_tau/data.txt
-~~~
+code in your build directory. Copy the data file:
+
+<pre><code>$ selalib/simulations/parallel/pic_vp_2d2v_cart_tau/data.txt
+</code></pre>
+
 or create one following instructions below.
 
 - Run with the command
-~~~
-$ mpirun -np 4 ./bin/sim_pic_vp_2d2v_cart_tau data.txt
-~~~
+
+<pre><code>$ mpirun -np 4 ./bin/sim_pic_vp_2d2v_cart_tau data.txt
+</code></pre>
+
 ntau value is the max for processors count.
 
 You get the first fourier modes of energy in file energy.dat
@@ -53,8 +74,7 @@ You can run the numerical experiments changing the following parameters:
 - `plot`     : (plot rho and df) (.true. or .false.)
 
 The data file 'data.txt' is a fortran namelist, here an example:
-~~~
-$donnees
+<pre><code>$donnees
   nstepmax = 10000
   nx       = 64
   ny       = 32
@@ -68,8 +88,4 @@ $donnees
   dt       = 0.1
   plot     = .false.
 $end
-~~~
-
-To run the application in [allgo](http://allgo.inria.fr) upload your file 'data.txt' and
-add the file name as parameter 'data.txt'. Warning, if you put a lot particles the simulation
-can ellapse a long time.
+</code></pre>
