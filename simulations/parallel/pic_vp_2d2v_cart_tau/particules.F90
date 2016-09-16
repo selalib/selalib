@@ -28,13 +28,11 @@ subroutine plasma( ele )
 type (particle) :: ele
 sll_real64 :: speed, theta, vth, n
 sll_real64 :: xi, yi, zi
-sll_real64 :: a, b, eps, R,temm, z(3)
-sll_real64 :: ppx, ppy
+sll_real64 :: temm, z(3)
 sll_int32  :: k, error
 
-eps    = 1.d-12
 vth    = 1.0_f64
-n      = 1.0_f64/nbpart
+n      = 1.0_f64/real(nbpart,f64) ! int(f(t=0,x,v)) = dimx*dimy
 
 SLL_ALLOCATE(ele%dpx(nbpart),error)
 SLL_ALLOCATE(ele%dpy(nbpart),error)
@@ -50,24 +48,24 @@ do k=0,nbpart-1
 
   speed = vth * sqrt(-2.0_f64 * log( (k+0.5)*n ))
 
-  theta = trinary_reversing( k ) * 2.0_f64 * pi
+  theta = trinary_reversing( k ) * 2.0_f64 *  sll_p_pi
 
   ele%vpx(k+1) = speed * cos(theta)
   ele%vpy(k+1) = speed * sin(theta)
 
-  ele%p(k+1) = dimx * dimy * n
+  ele%p(k+1)   = dimx * dimy * n
 
 enddo
 
-!--add by me: rejection sampling--
-k=1
+!--add by Xiaofei : rejection sampling--
+k = 1
 do while (k<=nbpart)
   call random_number(z)
   xi   = dimx*z(1)
   yi   = dimy*z(2)
   zi   = (2.0_f64+alpha)*z(3)
   temm = 1.0_f64+sin(yi)+alpha*cos(kx*xi)
-  if (temm>=zi) then
+  if (temm >= zi) then
     ele%idx(k) = floor(xi/dimx*nx)
     ele%idy(k) = floor(yi/dimy*ny)
     ele%dpx(k) = real(xi/dx - ele%idx(k), f64)
@@ -385,6 +383,7 @@ do k = 1, nbpart
 
 end do
 
+!periodic boundary conditions
 f%r0(0:nx-1,ny)  = f%r0(0:nx-1,0)
 f%r0(nx,0:ny-1)  = f%r0(0,0:ny-1)
 f%r0(nx,ny)      = f%r0(0,0)
@@ -594,6 +593,7 @@ tm%r0(nx,ny)      = tm%r0(0,0)
 tm%r0 = tm%r0 / (dx*dy)
 
 rho_total = sum(tm%r0(0:nx-1,0:ny-1))*dx*dy
+!print*, 'rho_total=', rho_total
 tm%r0 = tm%r0 - rho_total/dimx/dimy
 
 end subroutine calcul_rho_m6
