@@ -11,7 +11,8 @@ You should upload one file for each job. A text data file:
  - with a [fortran namelist](https://gcc.gnu.org/onlinedocs/gfortran/Extensions-to-namelist.html) inside.
  - the filename extension must be .txt
 
-You will find some instructions to create your data file below.
+You will find some instructions to create your data file below. There is an example in
+[Demo](https://allgo.inria.fr/webapps/136#demo).
 
 #### Parameters
 
@@ -23,7 +24,7 @@ ie. for an input file called data.txt, the filename parameter should be : "data.
 This simulation is the code for the paper
 
 *Uniformly accurate particle-in-cell method for the long time
-  two-dimensional Valsov-Poisson equation with strong magnetic field*
+  two-dimensional Vlasov-Poisson equation with strong magnetic field*
 
 by
 Nicolas Crouseilles, Mohammed Lemou, Florian Mehats and Xiaofei Zhao
@@ -46,8 +47,6 @@ code in your build directory. Copy the data file:
 
 <pre><code>$ selalib/simulations/parallel/pic_vp_2d2v_cart_tau/data.txt
 </code></pre>
-
-or create one following instructions below.
 
 - Run with the command
 
@@ -73,7 +72,7 @@ You can run the numerical experiments changing the following parameters:
 - `dt`       : time step.
 - `plot`     : (plot rho and df) (.true. or .false.)
 
-The data file 'data.txt' is a fortran namelist, here an example:
+The data file 'data.txt' must be a fortran namelist, here an example:
 <pre><code>$donnees
   nstepmax = 10000
   nx       = 64
