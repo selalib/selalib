@@ -1,13 +1,14 @@
 $donnees 
-  nstepmax = 10000	!nbre d'iterations maxi
-  nx       = 64		!nombre de pts suivant x
-  ny       = 32   	!nombre de pts suivant y
-  tfinal   = 100.0  	!temps final
+  nstepmax = 10000
+  nx       = 64	
+  ny       = 32
+  tfinal   = 100.0
   ntau     = 16
-  nbpart   = 102400
-  ep       = 0.005d0
-  alpha    = 0.001d0  
-  kx       = 0.4d0
-  ky       = 1.0d0   
-  dt       = 0.1d0
+  npm      = 100
+  ep       = 0.005
+  alpha    = 0.02  
+  kx       = 0.5
+  ky       = 1.0   
+  dt       = 0.1
+  plot     = .true.
 $end
