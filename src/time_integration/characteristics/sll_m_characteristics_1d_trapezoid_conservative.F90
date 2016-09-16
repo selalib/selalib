@@ -192,7 +192,7 @@ contains
       dt, &
       input, &
       output)
-            
+
     class(trapezoid_conservative_1d_charac_computer) :: charac
     sll_real64, dimension(:), intent(in) :: A
     sll_real64, intent(in) :: dt
@@ -209,20 +209,26 @@ contains
     sll_real64 :: eta_max
     sll_real64 :: output_min
     sll_real64 :: output_max
-    
+
     Npts = charac%Npts
     eta_min = charac%eta_min
     eta_max = charac%eta_max
-    
+
     SLL_ASSERT(size(A)>=Npts)
     SLL_ASSERT(size(input)>=Npts)
     SLL_ASSERT(size(output)>=Npts)
-    
-    
-    call charac%A_interp%compute_interpolants( &
-      A, &
-      input, &
-      Npts)
+
+    ! [YG: 8 Aug 2016]
+    ! Optional arguments 'eta_coords=input' and 'size_eta_coords=Npts'
+    ! not passed because:
+    !  1. most interpolators do not implement such an option
+    !  2. 'input' is (usually) the same mesh used to initialize the interpolator
+    call charac%A_interp%compute_interpolants( A )
+!    call charac%A_interp%compute_interpolants( &
+!      A, &
+!      input, &
+!      Npts)
+
     do j=1,Npts-1
         !We start from Y(t_{n+1})=y_j
         !and look for Y(t_n) = Yn
@@ -264,22 +270,16 @@ contains
         print *,'#bad value for charac%bc_type'
         stop
     end select
-    
+
     output(Npts) = 0.5_f64*(output(Npts-1)+output_max)
-    
+
     do i=Npts-1,2,-1
       output(i) = 0.5_f64*(output(i)+output(i-1))
     enddo
     output(1) = 0.5_f64*(output(1)+output_min)
 
-    
-    
-    
-      
   end subroutine compute_trapezoid_conservative_1d_charac
 
 
 
-  
-  
 end module sll_m_characteristics_1d_trapezoid_conservative
