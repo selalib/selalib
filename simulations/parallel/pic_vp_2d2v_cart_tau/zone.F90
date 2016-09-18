@@ -78,7 +78,7 @@ ky       = 1.0_f64
 dt       = 0.1_f64
 plot     = .false.
 
-write(*,*) " Input file name :"// filename
+write(*,"(a)") "Input file name :"// filename
 open(93,file=filename,status='old')
 read(93,donnees) 
 close(93)
@@ -105,12 +105,6 @@ integer :: iproc
 call MPI_INIT(code)
 call MPI_COMM_RANK(MPI_COMM_WORLD,prank,code)
 call MPI_COMM_SIZE(MPI_COMM_WORLD,psize,code)
-do iproc=0, psize-1
-  if (iproc == prank) then
-    print*, ' Hello from mpi proc number ',prank, ' of ', psize
-  end if
-  call MPI_Barrier(MPI_COMM_WORLD, code)
-enddo
 
 end subroutine init_mpi
 
