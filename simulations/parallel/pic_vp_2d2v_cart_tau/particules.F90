@@ -76,7 +76,7 @@ enddo
 
 end subroutine plasma
 
-subroutine interpol_eb( f, ele )
+subroutine interpol_eb_cic( f, ele )
 
 type(particle)    :: ele
 type(mesh_fields) :: f
@@ -114,22 +114,22 @@ do k=1,nbpart
 
 end do
 
-end subroutine interpol_eb
+end subroutine interpol_eb_cic
 
 
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
-subroutine calcul_rho( ele, f )
+subroutine calcul_rho_cic( ele, f )
 
 type(particle)    :: ele
 type(mesh_fields) :: f
-sll_real64 :: a1, a2, a3, a4, weight
-sll_real64 :: rho_total
-sll_int32  :: k
-sll_int32  :: i, j
-sll_real64 :: dpx
-sll_real64 :: dpy
+sll_real64        :: a1, a2, a3, a4, weight
+sll_real64        :: rho_total
+sll_int32         :: k
+sll_int32         :: i, j
+sll_real64        :: dpx
+sll_real64        :: dpy
 
 f%r0 = 0.d0
 
@@ -144,15 +144,15 @@ f%r0 = 0.d0
 
 do k=1,nbpart
 
-  i      = ele%idx(k)
-  j      = ele%idy(k)
-  dpx    = ele%dpx(k)
-  dpy    = ele%dpy(k)
-  weight = ele%p(k)
-  a1  = (1.0-dpx) * (1.0-dpy) * weight
-  a2  = (dpx)     * (1.0-dpy) * weight
-  a3  = (dpx)     * (dpy)     * weight
-  a4  = (1.0-dpx) * (dpy)     * weight
+  i             = ele%idx(k)
+  j             = ele%idy(k)
+  dpx           = ele%dpx(k)
+  dpy           = ele%dpy(k)
+  weight        = ele%p(k)
+  a1            = (1.0_f64-dpx) * (1.0_f64-dpy) * weight
+  a2            = (dpx)         * (1.0_f64-dpy) * weight
+  a3            = (dpx)         * (dpy)         * weight
+  a4            = (1.0_f64-dpx) * (dpy)         * weight
   f%r0(i,j)     = f%r0(i,j)     + a1
   f%r0(i+1,j)   = f%r0(i+1,j)   + a2
   f%r0(i+1,j+1) = f%r0(i+1,j+1) + a3
@@ -162,19 +162,14 @@ end do
 
 f%r0 = f%r0 / (dx*dy)
 
-do i=0,nx
-  f%r0(i,0)  = f%r0(i,0) + f%r0(i,ny)
-  f%r0(i,ny) = f%r0(i,0)
-end do
-do j=0,ny
-  f%r0(0,j)  = f%r0(0,j) + f%r0(nx,j)
-  f%r0(nx,j) = f%r0(0,j)
-end do
-
-rho_total = sum(f%r0(1:nx,1:ny))*dx*dy
+rho_total = sum(f%r0(0:nx-1,0:ny-1))*dx*dy
 f%r0 = f%r0 - rho_total/dimx/dimy
 
-end subroutine calcul_rho
+f%r0(0:nx-1,ny)  = f%r0(0:nx-1,0)
+f%r0(nx,0:ny-1)  = f%r0(0,0:ny-1)
+f%r0(nx,ny)      = f%r0(0,0)
+
+end subroutine calcul_rho_cic
 
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -384,15 +379,15 @@ do k = 1, nbpart
 end do
 
 !periodic boundary conditions
-f%r0(0:nx-1,ny)  = f%r0(0:nx-1,0)
-f%r0(nx,0:ny-1)  = f%r0(0,0:ny-1)
-f%r0(nx,ny)      = f%r0(0,0)
 
 f%r0 = f%r0 / (dx*dy)
 
 rho_total = sum(f%r0(0:nx-1,0:ny-1))*dx*dy
-print*,'rho total',rho_total
 f%r0 = f%r0 - rho_total/dimx/dimy
+
+f%r0(0:nx-1,ny)  = f%r0(0:nx-1,0)
+f%r0(nx,0:ny-1)  = f%r0(0,0:ny-1)
+f%r0(nx,ny)      = f%r0(0,0)
 
 end subroutine calcul_rho_m4
 
@@ -420,7 +415,7 @@ type(mesh_fields) :: f
 
 sll_int32  :: i, j, k
 sll_real32 :: dpx, dpy
-sll_real64 :: weight
+sll_real64 :: weight, rho_total
 sll_real32 :: c1x, c_1x, c2x
 sll_real32 :: c1y, c_1y, c2y
 
@@ -449,7 +444,13 @@ do k = 1, nbpart
 
 end do
 
+!periodic boundary conditions
 f%r0 = f%r0 / (dx*dy)
+rho_total = sum(f%r0(0:nx-1,0:ny-1))*dx*dy
+f%r0 = f%r0 - rho_total/dimx/dimy
+f%r0(0:nx-1,ny)  = f%r0(0:nx-1,0)
+f%r0(nx,0:ny-1)  = f%r0(0,0:ny-1)
+f%r0(nx,ny)      = f%r0(0,0)
 
 end subroutine calcul_rho_m3
 
@@ -586,15 +587,15 @@ do k = 1, nbpart
 
 end do
 
-tm%r0(0:nx-1,ny)  = tm%r0(0:nx-1,0)
-tm%r0(nx,0:ny-1)  = tm%r0(0,0:ny-1)
-tm%r0(nx,ny)      = tm%r0(0,0)
 
 tm%r0 = tm%r0 / (dx*dy)
 
 rho_total = sum(tm%r0(0:nx-1,0:ny-1))*dx*dy
-!print*, 'rho_total=', rho_total
 tm%r0 = tm%r0 - rho_total/dimx/dimy
+
+tm%r0(0:nx-1,ny)  = tm%r0(0:nx-1,0)
+tm%r0(nx,0:ny-1)  = tm%r0(0,0:ny-1)
+tm%r0(nx,ny)      = tm%r0(0,0)
 
 end subroutine calcul_rho_m6
 
