@@ -24,7 +24,7 @@ ELSEIF (CMAKE_Fortran_COMPILER_ID MATCHES PGI)
 ELSE()
 
   EXEC_PROGRAM(${CMAKE_Fortran_COMPILER} ARGS "--version" OUTPUT_VARIABLE source_path)
-  STRING(REGEX MATCH "[4-6]\\.[0-9]\\.[0-9]" Fortran_COMPILER_VERSION ${source_path})
+  STRING(REGEX MATCH "[4-7]\\.[0-9]\\.[0-9]" Fortran_COMPILER_VERSION ${source_path})
 
 ENDIF()
 
