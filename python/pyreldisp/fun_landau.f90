@@ -45,8 +45,8 @@ MODULE Function_Input_Module
 
   IMPLICIT NONE
   integer, parameter :: max=61
-  double precision :: ordre_grandeur = 1
-  complex(kind=dp), dimension(:,:), allocatable :: vecteur
+  double precision :: order_magnitude = 1
+  complex(kind=dp), dimension(:,:), allocatable :: vector
   !---------------------------------------------------------------------
   !**ACCESSIBILITY
   !

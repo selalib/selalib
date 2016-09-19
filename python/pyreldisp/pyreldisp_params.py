@@ -70,26 +70,26 @@ class params(object):
     #-----------------------------------------------------
     def is_valid(self,param):
         if param not in self.dic:
-            print 'Param %s not in parameter set, parameter available: %s'%(param,self.dic.keys()) 
+            print( 'Param %s not in parameter set, parameter available: %s'%(param,self.dic.keys()) )
             return False
         return self.is_valid_entry(param,self.dic[param])
 
     def is_valid_entry(self,param,val):
         if param not in self.required_params:
-            print 'Param %s not in parameter set, parameter available: %s'%(param,self.required_params.keys()) 
+            print( 'Param %s not in parameter set, parameter available: %s'%(param,self.required_params.keys()) )
             return False
         required_type = self.required_params[param]
         if not isinstance(val,required_type):
-            print 'Param %s is of type %s but %s required'%(param,type(val),required_type)
+            print( 'Param %s is of type %s but %s required'%(param,type(val),required_type) )
             return False
         if required_type == int and val == self.non_assigned_int:
-            print 'Param %s not initialized or wrong type'%param
+            print( 'Param %s not initialized or wrong type'%param )
             return False
         if required_type == float and val == self.non_assigned_real:
-            print 'Param %s not initialized or wrong type'%param
+            print( 'Param %s not initialized or wrong type'%param )
             return False
         if required_type == np.ndarray and np.size(val) == 0:
-            print 'Param %s not initialized or wrong type'%param
+            print( 'Param %s not initialized or wrong type'%param )
             return False
 
         return True
@@ -105,18 +105,18 @@ class test_params(unittest.TestCase):
   def are_dic_equal(self,a,b):
     for k in a:
       if k not in b:
-        print 'not equal because of k ',(k)
+        print( 'not equal because of k ',(k) )
         return False
       if a[k] != b[k]:
-        print 'not equal because of val[%s]= %s and %s ',(k,a[k],b[k])
+        print( 'not equal because of val[%s]= %s and %s ',(k,a[k],b[k]) )
         return False
 
     for k in b:
       if k not in a:
-        print 'not equal because of k ',(k)
+        print( 'not equal because of k ',(k) )
         return False
       if a[k] != b[k]:
-        print 'not equal because of val[%s]= %s and %s ',(k,a[k],b[k])
+        print( 'not equal because of val[%s]= %s and %s ',(k,a[k],b[k]) )
         return False
 
     return True  
