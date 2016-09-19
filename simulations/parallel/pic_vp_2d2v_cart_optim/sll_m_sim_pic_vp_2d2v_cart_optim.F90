@@ -54,7 +54,7 @@ module sll_m_sim_pic_vp_2d2v_cart_optim
     sll_t_particle_group_4d
 
   use sll_m_particle_initializers_4d, only: &
-    sll_s_initial_particles_4d
+    sll_s_initial_random_particles_4d
 
   use sll_m_particle_representations, only: &
     sll_t_particle_4d, &
@@ -214,7 +214,7 @@ contains
     enddo
 
     pa_gr => sim%part_group
-    call sll_s_initial_particles_4d( sim%thermal_speed_parts, & 
+    call sll_s_initial_random_particles_4d( sim%thermal_speed_parts, & 
                                    ALPHA, KX, sim%m2d,     &
                                    sim%parts_number,        &
                                    pa_gr, &
