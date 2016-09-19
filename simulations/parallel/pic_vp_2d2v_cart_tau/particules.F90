@@ -590,12 +590,12 @@ end do
 
 tm%r0 = tm%r0 / (dx*dy)
 
-rho_total = sum(tm%r0(0:nx-1,0:ny-1))*dx*dy
-tm%r0 = tm%r0 - rho_total/dimx/dimy
-
 tm%r0(0:nx-1,ny)  = tm%r0(0:nx-1,0)
 tm%r0(nx,0:ny-1)  = tm%r0(0,0:ny-1)
 tm%r0(nx,ny)      = tm%r0(0,0)
+
+rho_total = sum(tm%r0)*dx*dy
+tm%r0 = tm%r0 - rho_total/dimx/dimy
 
 end subroutine calcul_rho_m6
 
