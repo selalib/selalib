@@ -190,10 +190,6 @@ if (master) then
   print"('dx, dy     = ', 2f12.5)", dx, dy
   print"('nstep      = ',  i12  )", nstep
   print"('tfinal     = ',  f12.5)", tfinal
-  open(10, file='energy.dat', position='append')
-  rewind(10)
-  write(10,*)'# time, phi(1,1), RMS'
-  close(10)
 end if
 
 wp1(:) = cmplx(  2._f64*((p%dpx+p%idx)*dx+ep*p%vpy),0.0,f64)
@@ -220,7 +216,6 @@ else
   end if
 
   call finish_mpi()
-  stop
 
 end if
 
@@ -836,12 +831,13 @@ call poisson%compute_e_from_rho( f%ex, f%ey, f%r0)
 rms = 0.0_f64
 do j = 1, ny
   do i = 1, nx
-    rms = rms + f%r0(i,j)*(real(i-1,f64)*dx)**2
+    rms = rms + abs(f%r0(i,j))*(real(i-1,f64)*dx)**2
   end do
 end do
 rms = sqrt(rms*dx*dy)
 
 open(10, file='energy.dat', position='append')
+if (istep == 1) rewind(10)
 write(10,"(3g15.7)") time, energy_fourier_mode_xy(1,1,f%ex,f%ey), rms
 close(10)
 
