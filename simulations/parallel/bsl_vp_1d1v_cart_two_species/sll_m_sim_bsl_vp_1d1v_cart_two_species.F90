@@ -31,6 +31,10 @@ module sll_m_sim_bsl_vp_1d1v_cart_two_species
 #include "sll_memory.h"
 #include "sll_working_precision.h"
 
+  use sll_m_advection_1d_ampere, only: &
+    sll_t_ampere_1d_advector_ptr, &
+    sll_f_new_ampere_1d_advector
+
   use sll_m_advection_1d_base, only: &
     sll_t_advection_1d_base_ptr
 
@@ -82,6 +86,8 @@ module sll_m_sim_bsl_vp_1d1v_cart_two_species
     sll_p_pi
 
   use sll_m_fft, only: &
+    sll_s_fft_exec_c2r_1d, &
+    sll_s_fft_exec_r2c_1d, &
     sll_s_fft_exec_r2r_1d, &
     sll_p_fft_forward, &
     sll_f_fft_get_mode_r2c_1d, &
@@ -246,6 +252,13 @@ module sll_m_sim_bsl_vp_1d1v_cart_two_species
    type(sll_t_advection_1d_base_ptr), dimension(:), pointer :: advect_x1_sp2
    type(sll_t_advection_1d_base_ptr), dimension(:), pointer :: advect_x2_sp1
    type(sll_t_advection_1d_base_ptr), dimension(:), pointer :: advect_x2_sp2
+
+   ! For Vlasov-Ampere
+   type(sll_t_ampere_1d_advector_ptr),    dimension(:), pointer :: advect_ampere_x1_sp1
+   type(sll_t_ampere_1d_advector_ptr),    dimension(:), pointer :: advect_ampere_x1_sp2
+   logical :: vlasov_ampere = .false.
+   
+   
    sll_int32 :: advection_form_x2_sp1
    sll_int32 :: advection_form_x2_sp2
    sll_real64 :: factor_x1
@@ -919,6 +932,8 @@ contains
     SLL_ALLOCATE(sim%advect_x2_sp1(num_threads),ierr)
     SLL_ALLOCATE(sim%advect_x1_sp2(num_threads),ierr)
     SLL_ALLOCATE(sim%advect_x2_sp2(num_threads),ierr)
+    SLL_ALLOCATE(sim%advect_ampere_x1_sp1(num_threads),ierr)
+    SLL_ALLOCATE(sim%advect_ampere_x1_sp2(num_threads),ierr)
 
     tid = 1
 !#ifdef _OPENMP
@@ -943,6 +958,22 @@ contains
           sll_p_lagrange, & 
           order_x1_sp1)
 
+     case("SLL_VLASOV_AMPERE")
+
+        sim%vlasov_ampere = .true.
+        print*,'########################'
+        print*,'# Vlasov-Ampere scheme #'
+        print*,'########################'
+        SLL_ALLOCATE(sim%advect_ampere_x1_sp2(num_threads),ierr)
+        !$OMP PARALLEL DEFAULT(SHARED) &
+        !$OMP PRIVATE(tid)
+        !$ tid = omp_get_thread_num()+1
+        sim%advect_ampere_x1_sp1(tid)%ptr => sll_f_new_ampere_1d_advector( &
+             num_cells_x1, &
+             x1_min,       &
+             x1_max )
+        !$OMP END PARALLEL
+        
 !     case("SLL_BSL_0INFLOW") ! BSL advection with no inflow BC
 !        sim%advect_x1_sp1(tid)%ptr => new_BSL_1d_advector_0inflow(&
 !             num_cells_x1+1, &
@@ -983,6 +1014,23 @@ contains
           sll_p_lagrange, & 
           order_x1_sp2)
 
+     case("SLL_VLASOV_AMPERE")
+
+        sim%vlasov_ampere = .true.
+        print*,'########################'
+        print*,'# Vlasov-Ampere scheme #'
+        print*,'########################'
+        SLL_ALLOCATE(sim%advect_ampere_x1_sp2(num_threads),ierr)
+        !$OMP PARALLEL DEFAULT(SHARED) &
+        !$OMP PRIVATE(tid)
+        !$ tid = omp_get_thread_num()+1
+        sim%advect_ampere_x1_sp2(tid)%ptr => sll_f_new_ampere_1d_advector( &
+             num_cells_x1, &
+             x1_min,       &
+             x1_max )
+        !$OMP END PARALLEL
+
+        
 !     case("SLL_BSL_0INFLOW") ! BSL advection with no inflow BC
 !        sim%advect_x1_sp2(tid)%ptr => new_BSL_1d_advector_0inflow(&
 !             num_cells_x1+1, &
@@ -1285,6 +1333,7 @@ contains
     sll_real64,dimension(:,:),pointer :: f_x1_sp1,f_x2_sp1,f_x1_init_sp1
     sll_real64,dimension(:,:),pointer :: f_x1_sp2,f_x2_sp2,f_x1_init_sp2
     sll_real64,dimension(:),pointer :: rho_sp1,rho_sp2,efield,e_app,rho_loc_sp1,rho_loc_sp2
+    sll_comp64, dimension(:),   pointer :: rk_loc
     !sll_real64 :: qel(1),qel_loc(1)
     !sll_real64, dimension(:), allocatable :: rho_split
     !sll_real64, dimension(:), allocatable :: rho_full
@@ -1309,7 +1358,7 @@ contains
     sll_real64, dimension(:,:), pointer     :: f1d_omp_sp2
     sll_real64, dimension(:,:), pointer     :: f1d_omp_in_sp2
     sll_real64, dimension(:,:), pointer     :: f1d_omp_out_sp2
-    sll_int32 :: np_x1,np_x2_sp1,np_x2_sp2
+    sll_int32 :: np_x1,np_x2_sp1,np_x2_sp2, nc_x1
     sll_int32 :: nproc_x1,nproc_x2
     sll_int32 :: global_indices_sp1(2)
     sll_int32 :: global_indices_sp2(2)
@@ -1482,6 +1531,7 @@ contains
     SLL_ALLOCATE(rho_sp2(np_x1),ierr)
     SLL_ALLOCATE(rho_loc_sp1(np_x1),ierr)
     SLL_ALLOCATE(rho_loc_sp2(np_x1),ierr)
+    SLL_ALLOCATE(rk_loc((np_x1-1)/2+1), ierr)
     SLL_ALLOCATE(efield(np_x1),ierr)
     SLL_ALLOCATE(e_app(np_x1),ierr)
     e_app = 0._f64
@@ -1825,8 +1875,116 @@ contains
       t_step = real(istep-1,f64)
       do split_istep=1,sim%split%nb_split_step
         if(split_T) then
-          !! T ADVECTION 
-          tid=1          
+           !! T ADVECTION 
+           tid=1
+
+           if (sim%vlasov_ampere) then
+
+              nc_x1 = np_x1-1
+              sim%advect_ampere_x1_sp1(tid)%ptr%r1 = cmplx(0.0,0.0,kind=f64)
+              sim%advect_ampere_x1_sp2(tid)%ptr%r1 = cmplx(0.0,0.0,kind=f64)
+              do i_omp = 1, local_size_x2_sp1
+                 ig_omp = i_omp+global_indices_sp1(2)-1
+                 alpha_omp = sim%factor_x1*node_positions_x2_sp1(ig_omp) * sim%split%split_step(split_istep) 
+                 f1d_omp_in_sp1(1:np_x1,tid) = f_x1_sp1(1:np_x1,i_omp)
+                 
+                 sim%advect_ampere_x1_sp1(tid)%ptr%d_dx = f1d_omp_in_sp1(1:nc_x1,tid)
+                 call sll_s_fft_exec_r2c_1d(sim%advect_ampere_x1_sp1(tid)%ptr%fwx,  &
+                      sim%advect_ampere_x1_sp1(tid)%ptr%d_dx, &
+                      sim%advect_ampere_x1_sp1(tid)%ptr%fk)
+                 do i = 2, nc_x1/2+1
+                   sim%advect_ampere_x1_sp1(tid)%ptr%fk(i) = &
+                      sim%advect_ampere_x1_sp1(tid)%ptr%fk(i) & 
+                      * cmplx(cos(sim%advect_ampere_x1_sp1(tid)%ptr%kx(i)*alpha_omp), &
+                             -sin(sim%advect_ampere_x1_sp1(tid)%ptr%kx(i)*alpha_omp), &
+                              kind=f64)
+                 end do
+               
+                 sim%advect_ampere_x1_sp1(tid)%ptr%r1(2:nc_x1/2+1) = &
+                      sim%advect_ampere_x1_sp1(tid)%ptr%r1(2:nc_x1/2+1) &
+                    + sim%advect_ampere_x1_sp1(tid)%ptr%fk(2:nc_x1/2+1) &
+                    * sim%integration_weight_sp1(ig_omp)
+               
+                 call sll_s_fft_exec_c2r_1d(sim%advect_ampere_x1_sp1(tid)%ptr%bwx, &
+                      sim%advect_ampere_x1_sp1(tid)%ptr%fk,  &
+                      sim%advect_ampere_x1_sp1(tid)%ptr%d_dx)
+               
+                 f1d_omp_out_sp1(1:nc_x1,tid) = sim%advect_ampere_x1_sp1(tid)%ptr%d_dx/nc_x1
+                 f1d_omp_out_sp1(np_x1,  tid) = f1d_omp_out_sp1(1, tid) 
+                 
+                 f_x1_sp1(1:np_x1,i_omp)=f1d_omp_out_sp1(1:np_x1,tid)
+              end do
+
+              do i_omp = 1,local_size_x2_sp2
+                 ig_omp = i_omp+global_indices_sp2(2)-1   
+                 alpha_omp = sim%factor_x1*node_positions_x2_sp2(ig_omp) * sim%split%split_step(split_istep) 
+                 f1d_omp_in_sp2(1:np_x1,tid) = f_x1_sp2(1:np_x1,i_omp)
+
+                 sim%advect_ampere_x1_sp2(tid)%ptr%d_dx = f1d_omp_in_sp2(1:nc_x1,tid)
+                 call sll_s_fft_exec_r2c_1d(sim%advect_ampere_x1_sp2(tid)%ptr%fwx,  &
+                      sim%advect_ampere_x1_sp2(tid)%ptr%d_dx, &
+                      sim%advect_ampere_x1_sp2(tid)%ptr%fk)
+                 do i = 2, nc_x1/2+1
+                   sim%advect_ampere_x1_sp2(tid)%ptr%fk(i) = &
+                      sim%advect_ampere_x1_sp2(tid)%ptr%fk(i) & 
+                      * cmplx(cos(sim%advect_ampere_x1_sp2(tid)%ptr%kx(i)*alpha_omp), &
+                             -sin(sim%advect_ampere_x1_sp2(tid)%ptr%kx(i)*alpha_omp), &
+                              kind=f64)
+                 end do
+
+                 sim%advect_ampere_x1_sp2(tid)%ptr%r1(2:nc_x1/2+1) = &
+                      sim%advect_ampere_x1_sp2(tid)%ptr%r1(2:nc_x1/2+1) &
+                    + sim%advect_ampere_x1_sp2(tid)%ptr%fk(2:nc_x1/2+1) &
+                    * sim%integration_weight_sp2(ig_omp)
+                 call sll_s_fft_exec_c2r_1d(sim%advect_ampere_x1_sp2(tid)%ptr%bwx, &
+                      sim%advect_ampere_x1_sp2(tid)%ptr%fk,  &
+                      sim%advect_ampere_x1_sp2(tid)%ptr%d_dx)
+               
+                 f1d_omp_out_sp2(1:nc_x1,tid) = sim%advect_ampere_x1_sp2(tid)%ptr%d_dx/nc_x1
+                 f1d_omp_out_sp2(np_x1,  tid) = f1d_omp_out_sp2(1, tid) 
+
+                 f_x1_sp2(1:np_x1,i_omp)=f1d_omp_out_sp2(1:np_x1,tid)
+                 
+              end do
+              t_step = t_step+sim%split%split_step(split_istep)
+
+              rk_loc = cmplx(0.0,0.0,kind=f64)
+               do i = 2, nc_x1/2+1
+                 do tid = 1, sim%num_threads
+                    rk_loc(i) = rk_loc(i) - sim%advect_ampere_x1_sp1(tid)%ptr%r1(i) + &
+                         sim%advect_ampere_x1_sp2(tid)%ptr%r1(i)
+                 end do
+               end do
+               
+               !$OMP END PARALLEL
+
+               call sll_o_collective_allreduce( sll_v_world_collective, &
+                    rk_loc,                                         &
+                    nc_x1/2+1,                                      &
+                    MPI_SUM,                                        &
+                    sim%advect_ampere_x1_sp1(1)%ptr%r1 )
+               
+               sim%advect_ampere_x1_sp1(1)%ptr%d_dx = efield(1:nc_x1)
+               
+               call sll_s_fft_exec_r2c_1d(sim%advect_ampere_x1_sp1(1)%ptr%fwx,  &
+                    sim%advect_ampere_x1_sp1(1)%ptr%d_dx, &
+                    sim%advect_ampere_x1_sp1(1)%ptr%ek)
+               
+               do i = 2, nc_x1/2+1
+                 sim%advect_ampere_x1_sp1(1)%ptr%ek(i) =  &
+                    - sim%advect_ampere_x1_sp1(1)%ptr%r1(i) &
+                    * (sim%mesh2d_sp1%eta1_max-sim%mesh2d_sp1%eta1_min) &
+                    / cmplx(0.,2.0_f64*sll_p_pi*(i-1),kind=f64)
+               end do
+               
+               call sll_s_fft_exec_c2r_1d(sim%advect_ampere_x1_sp1(1)%ptr%bwx, &
+                    sim%advect_ampere_x1_sp1(1)%ptr%ek,  &
+                    efield)
+               
+               efield(1:nc_x1) = efield(1:nc_x1) / nc_x1
+               efield(np_x1) = efield(1)
+           else
+           
 !#ifdef _OPENMP
 !!$OMP PARALLEL DEFAULT(SHARED) &
 !!$OMP PRIVATE(i_omp,ig_omp,alpha_omp,tid) 
@@ -1910,7 +2068,9 @@ contains
           !sim%mixt_bc(1) = sim%mixt_bc(1) - 0.5_f64*qel(1)*sim%dt
 
           call sim%poisson%compute_E_from_rho( efield, rho_sp2-rho_sp1 )
-          
+
+       end if
+       
           t_step = t_step+sim%split%split_step(split_istep)
           
           if(sim%driven)then
