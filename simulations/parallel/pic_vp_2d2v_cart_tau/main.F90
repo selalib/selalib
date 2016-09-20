@@ -80,6 +80,7 @@ real       :: start_time, stop_time
 integer    :: dat_file_id, ref_file_id
 logical    :: file_exists
 complex(8) :: cost, sint
+real(8)    :: energy0
 
 character(len=272)    :: argv
 class(sll_c_poisson_2d_base), pointer :: poisson
@@ -158,16 +159,6 @@ do i=0,ntau-1
   tau(i) =i*dtau
 enddo
 
-do i=0,nx
-  aux1 = alpha/kx * sin(kx*i*dx)
-  aux2 = alpha * cos(kx*i*dx)
-  do j=0,ny
-    f%ex(i,j) = aux1
-    f%r0(i,j) = aux2+sin(ky*j*dy)
-    f%ey(i,j) = -cos(ky*j*dy)/ky!0._f64!
-  enddo
-enddo
-      
 xmin = 0.0_f64; xmax = dimx
 ymin = 0.0_f64; ymax = dimy
 
@@ -190,6 +181,10 @@ if (master) then
   print"('dx, dy     = ', 2f12.5)", dx, dy
   print"('nstep      = ',  i12  )", nstep
   print"('tfinal     = ',  f12.5)", tfinal
+  energy0 = 0.5_f64*sum(p%p*(p%vpx*p%vpx+p%vpy*p%vpy))                  &
+          + 0.5_f64*sum(f%ex(0:nx-1,0:ny-1)*f%ex(0:nx-1,0:ny-1)         &
+                        +f%ey(0:nx-1,0:ny-1)*f%ey(0:nx-1,0:ny-1))*dx*dy
+  print"('energy     = ',  f12.5)", energy0
 end if
 
 wp1(:) = cmplx(  2._f64*((p%dpx+p%idx)*dx+ep*p%vpy),0.0,f64)
@@ -826,27 +821,32 @@ do m=1,nbpart
 enddo
 
 call calcul_rho_m6( p, f )
-call poisson%compute_e_from_rho( f%ex, f%ey, f%r0)
 
 rms = 0.0_f64
-do j = 1, ny
-  do i = 1, nx
-    rms = rms + abs(f%r0(i,j))*(real(i-1,f64)*dx)**2
+do j = 0, ny-1
+  do i = 0, nx-1
+    rms = rms + (real(i,f64)*dx)**2*f%r0(i,j)
   end do
 end do
 rms = sqrt(rms*dx*dy)
+call poisson%compute_e_from_rho( f%ex, f%ey, f%r0)
+
 
 open(10, file='energy.dat', position='append')
 if (istep == 1) rewind(10)
-write(10,"(3g15.7)") time, energy_fourier_mode_xy(1,1,f%ex,f%ey), rms
+write(10,"(6g15.7)") time, &
+  energy_fourier_mode_xy(1,1,f%ex(0:nx-1,0:ny-1), &
+  f%ey(0:nx-1,0:ny-1)),                           &
+  (energy_p+energy_e)/energy0, rms, sum(f%r0(0:nx-1,0:ny-1))
 close(10)
 
 if (plot) then
   energy_p = 0.5_f64*sum(p%p*(p%vpx*p%vpx+p%vpy*p%vpy))
   energy_e = 0.5_f64*sum(f%ex(0:nx-1,0:ny-1)*f%ex(0:nx-1,0:ny-1)         &
                         +f%ey(0:nx-1,0:ny-1)*f%ey(0:nx-1,0:ny-1))*dx*dy
-  write(*,"('istep =',i5,' - ',4g15.7)") istep, time,    &
-  energy_fourier_mode_xy(1,1,f%ex,f%ey), energy_p+energy_e, rms
+  write(*,"('istep =',i5,' - ',5g15.7)") istep, time,    &
+  energy_fourier_mode_xy(1,1,f%ex,f%ey), (energy_p+energy_e)/energy0, &
+  rms, sum(f%r0(0:nx-1,0:ny-1))
   call sll_s_xdmf_corect2d_nodes( 'rho', f%r0, 'rho', &
     0.0_f64, dx, 0.0_f64, dy, 'HDF5', istep, time) 
   call sll_s_distribution_xdmf('df', p%vpx, p%vpy, p%p, &
@@ -878,8 +878,8 @@ sll_real64 :: tx, ty
 
 tx = 0._f64
 ty = 0._f64
-do j = 1, ny
-   do i = 1, nx
+do j = 1, size(e,2)
+   do i = 1, size(e,1)
       tx = tx + e(i,j) * cos(real(mode_x*(i-1),f64)*kx*dx + &
                              real(mode_y*(j-1),f64)*ky*dy)
       ty = ty + e(i,j) * sin(real(mode_x*(i-1),f64)*kx*dx + &
@@ -887,7 +887,7 @@ do j = 1, ny
    enddo
 enddo
 
-fourier_mode_xy = ((tx*dx*dy)**2+(ty*dx*dy)**2)/real(nx*ny,f64)
+fourier_mode_xy = ((tx*dx*dy)**2+(ty*dx*dy)**2)/(dimx*dimy)
 
 end function fourier_mode_xy
 
