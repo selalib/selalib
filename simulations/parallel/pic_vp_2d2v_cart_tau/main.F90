@@ -831,7 +831,6 @@ end do
 rms = sqrt(rms*dx*dy)
 call poisson%compute_e_from_rho( f%ex, f%ey, f%r0)
 
-
 open(10, file='energy.dat', position='append')
 if (istep == 1) rewind(10)
 write(10,"(6g15.7)") time, &

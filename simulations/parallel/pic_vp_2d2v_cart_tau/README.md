@@ -1,3 +1,5 @@
+
+![alt text](http://selalib.gforge.inria.fr/_static/selalib.png)
 ## UNIFORMLY ACCURATE PARTICLE-IN-CELL METHOD FOR HIGHLY OSCILLATORY VLASOV-POISSON EQUATION
 
 
@@ -88,3 +90,5 @@ The data file 'data.txt' must be a fortran namelist, here an example:
   plot     = .false.
 $end
 </code></pre>
+
+![alt text](http://selalib.gforge.inria.fr/_static/ua_equations.pdf)
