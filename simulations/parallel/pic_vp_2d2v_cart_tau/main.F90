@@ -18,15 +18,14 @@ use sll_m_pic_visu
 
 implicit none
 
-type(mesh_fields)       :: f
-type(particle)          :: p
+type(mesh_fields)        :: f
+type(particle)           :: p
 
-type(sll_t_fft)         :: fw
-type(sll_t_fft)         :: bw
-type(sll_t_fft)         :: fft2d
-sll_real64              :: xxt(2)
-sll_real64              :: epsq
-sll_real64              :: dtau
+type(sll_t_fft)          :: fw
+type(sll_t_fft)          :: bw
+sll_real64               :: xxt(2)
+sll_real64               :: epsq
+sll_real64               :: dtau
 
 sll_real64 , allocatable :: tau   (:)
 sll_real64 , allocatable :: ltau  (:)
@@ -135,12 +134,12 @@ SLL_CLEAR_ALLOCATE(f%r0(0:nx,0:ny),   error)
 time   = 0._f64
 
 epsq   = ep * ep
-dtau   = 2._f64*sll_p_pi/ntau
+dtau   = 2._f64*sll_p_pi/real(ntau,f64)
 
 m      = ntau/2
-ltau   =(/ (n, n=0,m-1), (n, n=-m,-1 )/)
-iltau  = 0.5_f64 * sll_p_i1 * cmplx(ltau,0.0_f64) / epsq
-eiltau = exp(-iltau*dt) /ntau
+ltau   = [sll_real64 :: (real(n,f64), n=0,m-1), (real(n,f64), n=-m,-1 )]
+iltau  = 0.5_f64 * sll_p_i1 * ltau / epsq
+eiltau = exp(-iltau*dt) / real(ntau,f64)
 
 pl(0)=dt
 ql(0)=dt**2/2._f64
@@ -181,10 +180,10 @@ if (master) then
   print"('energy     = ',  f12.5)", energy0
 end if
 
-wp1(:) = cmplx(  2._f64*((p%dpx+p%idx)*dx+ep*p%vpy),0.0,f64)
-wp2(:) = cmplx(  2._f64*((p%dpy+p%idy)*dy-ep*p%vpx),0.0,f64)
-wm1(:) = cmplx(- 2._f64*ep*p%vpy,0.0,f64)
-wm2(:) = cmplx(  2._f64*ep*p%vpx,0.0,f64)
+wp1(:) = 2._f64*((p%dpx+p%idx)*dx+ep*p%vpy)
+wp2(:) = 2._f64*((p%dpy+p%idy)*dy-ep*p%vpx)
+wm1(:) = - 2._f64*ep*p%vpy
+wm2(:) =   2._f64*ep*p%vpx
 
 if (mod(ntau,psize) == 0) then
 
@@ -229,8 +228,8 @@ do n = l1, l2
     p%dpy(m) = real(xxt(2)/dy- p%idy(m), f64)
   enddo
   call interpol_eb_m6( f, p )
-  et1_loc(:,n) = cmplx(p%epx,0.0,f64) !g(0,tau,w(0))
-  et2_loc(:,n) = cmplx(p%epy,0.0,f64)
+  et1_loc(:,n) = p%epx !g(0,tau,w(0))
+  et2_loc(:,n) = p%epy
 
 enddo
 
@@ -306,8 +305,8 @@ do n=l1,l2
 
   call calcul_rho_m6( p, f )
   call poisson%compute_e_from_rho( f%ex, f%ey, f%r0)
-  fex_loc(:,:,n)= cmplx(f%ex,0.0,f64)
-  fey_loc(:,:,n)= cmplx(f%ey,0.0,f64)!E_1st(0,x)
+  fex_loc(:,:,n)= f%ex
+  fey_loc(:,:,n)= f%ey!E_1st(0,x)
 
 enddo
 
@@ -337,8 +336,8 @@ do n=l1,l2
   f%ex= real(fex(:,:,n))
   f%ey= real(fey(:,:,n))
   call interpol_eb_m6( f, p )
-  Et1_loc(:,n)= cmplx(p%epx,0.0,f64) !g_1st(0,tau,U_1st(0))
-  Et2_loc(:,n)= cmplx(p%epy,0.0,f64)
+  Et1_loc(:,n)= p%epx !g_1st(0,tau,U_1st(0))
+  Et2_loc(:,n)= p%epy
 enddo
 
 call MPI_ALLGATHER(et1_loc,nbpart*ll,MPI_DOUBLE_COMPLEX, &
@@ -405,8 +404,8 @@ do n=l1,l2
   enddo
   call calcul_rho_m6( p, f )
   call poisson%compute_e_from_rho( f%ex, f%ey, f%r0)
-  fex_loc(:,:,n)= cmplx(f%ex,0.0,f64)
-  fey_loc(:,:,n)= cmplx(f%ey,0.0,f64)!E_4(0,x)
+  fex_loc(:,:,n)= f%ex
+  fey_loc(:,:,n)= f%ey!E_4(0,x)
 enddo
 
 call MPI_ALLGATHER(fex_loc,(nx+1)*(ny+1)*ll,MPI_DOUBLE_COMPLEX, &
@@ -437,8 +436,8 @@ do n=l1,l2
   f%ex= real(fex(:,:,n))
   f%ey= real(fey(:,:,n))
   call interpol_eb_m6( f, p )
-  Et1_loc(:,n)= cmplx(p%epx,0.0,f64) !g_3rd(0,tau,U_3rd(0))
-  Et2_loc(:,n)= cmplx(p%epy,0.0,f64)
+  Et1_loc(:,n)= p%epx !g_3rd(0,tau,U_3rd(0))
+  Et2_loc(:,n)= p%epy
 enddo
 
 call MPI_ALLGATHER(et1_loc,nbpart*ll,MPI_DOUBLE_COMPLEX, &
@@ -508,8 +507,8 @@ do n= l1,l2
   enddo
   call calcul_rho_m6( p, f )
   call poisson%compute_e_from_rho( f%ex, f%ey, f%r0)
-  fex_loc(:,:,n)=cmplx(f%ex,0.0,f64)
-  fey_loc(:,:,n)=cmplx(f%ey,0.0,f64)!prediction
+  fex_loc(:,:,n)=f%ex
+  fey_loc(:,:,n)=f%ey!prediction
 enddo
 
 call MPI_ALLGATHER(fex_loc,(nx+1)*(ny+1)*ll,MPI_DOUBLE_COMPLEX, &
@@ -538,8 +537,8 @@ do n=l1,l2
   f%ex= real(fex(:,:,n))
   f%ey= real(fey(:,:,n))
   call interpol_eb_m6( f, p )
-  Et1_loc(:,n)= cmplx(p%epx,0.0,f64) !g(t1,tau,U(t1))
-  Et2_loc(:,n)= cmplx(p%epy,0.0,f64)
+  Et1_loc(:,n)= p%epx !g(t1,tau,U(t1))
+  Et2_loc(:,n)= p%epy
 enddo
 
 call MPI_ALLGATHER(et1_loc,nbpart*ll,MPI_DOUBLE_COMPLEX, &
@@ -607,8 +606,8 @@ do n=l1,l2
   enddo
   call calcul_rho_m6( p, f )
   call poisson%compute_e_from_rho( f%ex, f%ey, f%r0)
-  fex_loc(:,:,n)= cmplx(f%ex,0.0,f64)
-  fey_loc(:,:,n)= cmplx(f%ey,0.0,f64)
+  fex_loc(:,:,n)= f%ex
+  fey_loc(:,:,n)= f%ey
 enddo
 
 call MPI_ALLGATHER(fex_loc,(nx+1)*(ny+1)*ll,MPI_DOUBLE_COMPLEX, &
@@ -644,8 +643,8 @@ do istep = 2, nstep
     f%ex = real(fex(:,:,n))
     f%ey = real(fey(:,:,n))
     call interpol_eb_m6( f, p )
-    Et1_loc(:,n)= cmplx(p%epx, 0.0, f64) 
-    Et2_loc(:,n)= cmplx(p%epy, 0.0, f64)
+    Et1_loc(:,n)= p%epx 
+    Et2_loc(:,n)= p%epy
   enddo
 
   call MPI_ALLGATHER(et1_loc,nbpart*ll,MPI_DOUBLE_COMPLEX, &
@@ -722,8 +721,8 @@ do istep = 2, nstep
     enddo
     call calcul_rho_m6( p, f )
     call poisson%compute_e_from_rho( f%ex, f%ey, f%r0)
-    fex_loc(:,:,n) = cmplx(f%ex,0.0,f64)
-    fey_loc(:,:,n) = cmplx(f%ey,0.0,f64)
+    fex_loc(:,:,n) = f%ex
+    fey_loc(:,:,n) = f%ey
   enddo
 
   call MPI_ALLGATHER(fex_loc,(nx+1)*(ny+1)*ll,MPI_DOUBLE_COMPLEX, &
