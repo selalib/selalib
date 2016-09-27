@@ -24,7 +24,6 @@ type(particle)          :: p
 type(sll_t_fft)         :: fw
 type(sll_t_fft)         :: bw
 type(sll_t_fft)         :: fft2d
-sll_comp64, allocatable :: phi(:,:)
 sll_real64              :: xxt(2)
 sll_real64              :: epsq
 sll_real64              :: dtau
@@ -244,9 +243,6 @@ SLL_ALLOCATE(temp1(0:ntau-1),         error)
 SLL_ALLOCATE(temp2(0:ntau-1),         error)
 call sll_s_fft_init_c2c_1d(fw,ntau,temp1,temp1,sll_p_fft_forward)
 call sll_s_fft_init_c2c_1d(bw,ntau,temp1,temp1,sll_p_fft_backward)
-
-SLL_ALLOCATE(phi(nx/2+1,ny),          error)
-call sll_s_fft_init_r2c_2d(fft2d,nx,ny,f%r0(0:nx-1,0:ny-1),phi)
 
 do m=1,nbpart
 
