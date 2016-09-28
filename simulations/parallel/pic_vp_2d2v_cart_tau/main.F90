@@ -772,7 +772,7 @@ subroutine energy_use()
 sll_comp64 :: vp(2), vm(2), z(2), wp(2), wm(2)
 sll_real64 :: energy_e, energy_p
 sll_real64 :: cost, sint
-sll_real64 :: rms, f_mode
+sll_real64 :: rms, f_mode, mass
 
 cost = cos(0.5_f64*time/epsq)
 sint = sin(0.5_f64*time/epsq)
@@ -819,22 +819,30 @@ do j = 0, ny-1
   end do
 end do
 rms = sqrt(rms*dx*dy)
+
 call poisson%compute_e_from_rho( f%ex, f%ey, f%r0)
+
 energy_p = 0.5_f64*sum(p%p*(p%vpx*p%vpx+p%vpy*p%vpy))
+
 energy_e = 0.5_f64*sum(f%ex(0:nx-1,0:ny-1)*f%ex(0:nx-1,0:ny-1)         &
                       +f%ey(0:nx-1,0:ny-1)*f%ey(0:nx-1,0:ny-1))*dx*dy
+
 f_mode   =  energy_fourier_mode_xy(1,1,f%ex(0:nx-1,0:ny-1),f%ey(0:nx-1,0:ny-1))
 
+mass     = sum(f%r0(0:nx-1,0:ny-1))*dx*dy
+
 open(10, file='energy.dat', position='append')
-if (istep == 1) rewind(10)
-write(10,"(5g15.7)") time, f_mode, &
-  (energy_p+energy_e)/energy0, rms, sum(f%r0(0:nx-1,0:ny-1))
+if (istep == 1) then
+  rewind(10)
+  write(10,"(a)") '# time, first fourier modes, relative energy, rms, mass'
+end if
+write(10,"(5g15.7)") time, f_mode, (energy_p+energy_e)/energy0, rms, mass
 close(10)
 
 if (plot) then
-  write(*,"('istep =',i5,' - ',5g15.7)") istep, time,    &
+  write(*,"('istep =',i5,' : ',5g15.7)") istep, time,    &
     f_mode, (energy_p+energy_e)/energy0, &
-    rms, sum(f%r0(0:nx-1,0:ny-1))
+    rms, mass
 
   call sll_s_xdmf_corect2d_nodes( 'rho', f%r0, 'rho', &
     0.0_f64, dx, 0.0_f64, dy, 'HDF5', istep, time) 
