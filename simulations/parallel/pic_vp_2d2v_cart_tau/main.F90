@@ -838,17 +838,17 @@ if (istep == 1) then
 end if
 write(10,"(5g15.7)") time, f_mode, (energy_p+energy_e)/energy0, rms, mass
 close(10)
-
-if (plot) then
-  write(*,"('istep =',i5,' : ',5g15.7)") istep, time,    &
+write(*,"('istep =',i5,' : ',5g15.7)") istep, time,    &
     f_mode, (energy_p+energy_e)/energy0, &
     rms, mass
+
+if (plot) then
 
   call sll_s_xdmf_corect2d_nodes( 'rho', f%r0, 'rho', &
     0.0_f64, dx, 0.0_f64, dy, 'HDF5', istep, time) 
   call sll_s_distribution_xdmf('df', p%vpx, p%vpy, p%p, &
-                             -3.0_f64, 3.0_f64, 100,     &
-                             -3.0_f64, 3.0_f64, 100, istep)
+                             -5.0_f64, 5.0_f64, 100,     &
+                             -5.0_f64, 5.0_f64, 100, istep)
 
 end if
 
