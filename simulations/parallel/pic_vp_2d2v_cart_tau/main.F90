@@ -805,8 +805,8 @@ do m=1,nbpart
   p%dpx(m) = real(xxt(1)/dx- p%idx(m), f64)
   p%idy(m) = floor(xxt(2)/dimy*ny)
   p%dpy(m) = real(xxt(2)/dy- p%idy(m), f64)
-  p%vpx(m) = 0.5_f64 * (sint*vm(1)+cost*vm(2))/ep
-  p%vpy(m) =-0.5_f64 *(-sint*vm(2)+cost*vm(1))/ep
+  p%vpx(m) = 0.5_f64 * real( sint*vm(1)+cost*vm(2),f64)/ep
+  p%vpy(m) =-0.5_f64 * real(-sint*vm(2)+cost*vm(1),f64)/ep
 
 enddo
 
@@ -818,7 +818,11 @@ do j = 0, ny-1
     rms = rms + (real(i,f64)*dx)**2*f%r0(i,j)
   end do
 end do
-rms = sqrt(rms*dx*dy)
+if (rms >= 0.0_f64) then
+  rms = sqrt(rms*dx*dy)
+else
+  rms = 0.0_f64
+end if
 
 call poisson%compute_e_from_rho( f%ex, f%ey, f%r0)
 
