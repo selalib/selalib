@@ -1,27 +1,41 @@
-!------------------------------------------------------------------
-! computes the Fried and Conte plasma dispersion function
-! Z(z) = i * sqrt(pi) * w(z) = i * sqrt(pi) * exp(-z**2)*erfc(-i*z)
-!      with erfc(z)= 1 - erf(z)
-! Eric Sonnendrucker 2008/12/13
-!------------------------------------------------------------------
-subroutine FriedConte(z,zeta,dzeta)
-  double complex, intent(in)  :: z
-  double complex, intent(out) :: zeta
-  double complex, intent(out) :: dzeta
+module plasma_functions
 
-  double precision :: sqrtpi   ! square root of pi
-  double precision :: xi,yi,u,v
-  integer          :: iflag
+  use precision_module, only: dp
 
-  sqrtpi = 1.7724538509055159
+  interface
+    subroutine wofz(xi,yi,u,v,flag)
+      use precision_module, only: dp
+      real(dp), intent(in   ) :: xi,yi
+      real(dp), intent(  out) :: u,v
+      logical , intent(  out) :: flag
+    end subroutine wofz
+  end interface
 
-  xi = real(z)
-  yi = imag(z)
+contains
 
-  call wofz(xi,yi,u,v,iflag)
+  !-----------------------------------------------------------------------------
+  ! Computes the Fried and Conte plasma dispersion function
+  !
+  ! Z(z)=i*sqrt(pi)*exp(-z**2)*(1-erf(-i*z))
+  !
+  ! Eric Sonnendrucker 2008/12/13
+  ! Modified by Yaman Gü¢lü and Edoardo Zoni: 2016/09
+  !-----------------------------------------------------------------------------
+  subroutine FriedConte(z,zeta,dzeta)
 
-  zeta  = dcmplx(-sqrtpi*v,sqrtpi*u)
-  dzeta = -2.0d0*(1+z*zeta)
+    complex(dp), intent(in   ) :: z
+    complex(dp), intent(  out) :: zeta
+    complex(dp), intent(  out) :: dzeta
 
-  return
-end subroutine FriedConte
+    real(dp), parameter :: sqrtpi = 1.7724538509055159_dp
+    real(dp) :: u,v
+    logical  :: flag
+
+    call wofz(xi=real(z),yi=imag(z),u=u,v=v,flag=flag)
+
+    zeta  = cmplx(-sqrtpi*v,sqrtpi*u,kind=dp)
+    dzeta = -2.0_dp*(1.0_dp+z*zeta)
+
+  end subroutine FriedConte
+
+end module plasma_functions
