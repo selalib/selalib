@@ -25,7 +25,7 @@
 !
 !  This modules is basically composed of the subroutine APPROXIMATE,
 !  which is used to approximate the zeros that exist inside a given box
-!  as well as to find their multiplicities. It also conatains the
+!  as well as to find their multiplicities. It also contains the
 !  subroutine INPROD which calculates inner products of FOPs and the
 !  function FQUAD which is an interface to QUADPACK.
 !
@@ -130,8 +130,11 @@ CONTAINS
      ALLOCATE(FOPS(NUMBER,NUMBER))
      ALLOCATE(G(NUMBER,NUMBER))
      ALLOCATE(G1(NUMBER,NUMBER))
-     FOPS = ZERO; G = ZERO; G1 = ZERO
-     FOPS(1,1) = MU; G(1,1) = NUMBER
+     FOPS = CMPLX(ZERO,KIND=DP)
+     G    = CMPLX(ZERO,KIND=DP)
+     G1   = CMPLX(ZERO,KIND=DP)
+     FOPS(1,1) = MU
+     G(1,1) = CMPLX(NUMBER,KIND=DP)
 
      R = 1; T = 0
      TAKE_REGULAR = .TRUE.
@@ -346,12 +349,12 @@ CONTAINS
 !  We start by calculating the first NUMBERDISTINCT ordinary moments.
 !
      ALLOCATE(ORDMOM(NUMBERDISTINCT))
-     ORDMOM(1) = NUMBER
+     ORDMOM(1) = CMPLX(NUMBER,KIND=DP)
      IF ( NUMBERDISTINCT .GT. 1 ) THEN
        ORDMOM(2) = NUMBER*MU
        DO J = 3, NUMBERDISTINCT
          DEG1 = J-1
-         POLY1 = ZERO
+         POLY1 = CMPLX(ZERO,KIND=DP)
          DEG2 = 0
          CALL INPROD(POINT,STEP,POLY1,DEG1,POLY2,DEG2,IP,ACCPARAM)
          IF ( INFO .EQ. 4 ) RETURN
@@ -474,7 +477,7 @@ CONTAINS
      QUAD_STEP = STEP
 
      QUAD_DEGREE = DEG1 + DEG2
-     QUAD_POLY = 0.0_DP
+     QUAD_POLY = CMPLX(0.0_DP,KIND=DP)
      DO J = 1, DEG1
        QUAD_POLY(J) = POLY1(J)
      END DO
@@ -547,23 +550,23 @@ CONTAINS
      COMPLEX(KIND=DP) :: TWOPII, DELTA, Z0, Z, F, DF, POLY, RESULT
      
 
-     TWOPII = 8.0_DP*ATAN(ONE)*I
+     TWOPII = CMPLX(8.0_DP*ATAN(ONE),KIND=DP)*I
 
-     IF ( QUAD_SIDE .EQ. 1 ) DELTA = QUAD_STEP(1)
-     IF ( QUAD_SIDE .EQ. 2 ) DELTA = I*QUAD_STEP(2)
-     IF ( QUAD_SIDE .EQ. 3 ) DELTA = -QUAD_STEP(1)
-     IF ( QUAD_SIDE .EQ. 4 ) DELTA = -I*QUAD_STEP(2) 
+     IF ( QUAD_SIDE .EQ. 1 ) DELTA = CMPLX( QUAD_STEP(1),         ZERO, KIND=DP )
+     IF ( QUAD_SIDE .EQ. 2 ) DELTA = CMPLX(         ZERO, QUAD_STEP(2), KIND=DP )
+     IF ( QUAD_SIDE .EQ. 3 ) DELTA = CMPLX(-QUAD_STEP(1),         ZERO, KIND=DP )
+     IF ( QUAD_SIDE .EQ. 4 ) DELTA = CMPLX(         ZERO,-QUAD_STEP(2), KIND=DP ) 
     
-     Z0 = CMPLX(QUAD_POINT(1),QUAD_POINT(2),DP)
+     Z0 = CMPLX(QUAD_POINT(1),QUAD_POINT(2),KIND=DP)
      IF ( QUAD_SIDE .EQ. 1 ) Z = Z0 + T*QUAD_STEP(1)
      IF ( QUAD_SIDE .EQ. 2 ) Z = Z0 + QUAD_STEP(1) + I*T*QUAD_STEP(2)
      IF ( QUAD_SIDE .EQ. 3 ) &
-       Z = Z0 + CMPLX(QUAD_STEP(1),QUAD_STEP(2),DP)-T*QUAD_STEP(1)
+       Z = Z0 + CMPLX( (1.0_dp-T)*QUAD_STEP(1), QUAD_STEP(2), KIND=DP )
      IF ( QUAD_SIDE .EQ. 4 ) Z = Z0 + I*QUAD_STEP(2) - I*T*QUAD_STEP(2)
 
      CALL FDF(Z,F,DF)
 
-     POLY = ONE 
+     POLY = CMPLX(ONE,KIND=DP)
      DO K = 1, QUAD_DEGREE 
        POLY = POLY*(Z - QUAD_POLY(K))
      END DO
