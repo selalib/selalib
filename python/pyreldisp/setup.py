@@ -47,7 +47,7 @@ zeal_files_list2 = [os.path.join( zeal_dir, x ) for x in zeal_files_list2]
 #       a list of the associated files which must be compiled.
 #      Ex: pyreldisp_dic['newcase'] = ['fun_newcase.f90']  
 #----------------------------------------------------------------------
-reldisp_files_list = 'PlasmaFunctions.f90'
+reldisp_files_list = 'plasma_functions.f90'
 pyreldisp_dic={}
 pyreldisp_dic['landau'         ]=[reldisp_files_list,'fun_landau.f90'         ]
 pyreldisp_dic['BOT'            ]=[reldisp_files_list,'fun_BOT.f90'            ]
