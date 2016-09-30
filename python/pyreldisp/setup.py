@@ -20,7 +20,7 @@ import os
 
 extra_link_args=[]
 if sys.platform=='darwin':
-    extra_link_args=['-framework','veclib']
+    extra_link_args=['-framework','Accelerate']
 
 
 #----------------------------------------------------------------------
