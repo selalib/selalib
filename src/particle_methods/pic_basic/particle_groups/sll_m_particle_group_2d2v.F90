@@ -102,7 +102,7 @@ contains
        charge, &
        mass, &
        n_weights)
-    class( sll_c_particle_group_base ),  pointer, intent( out )  :: particle_group
+    class( sll_c_particle_group_base ),  pointer, intent( out )  :: particle_group !< abstract particle group
     sll_int32                                   , intent( in )   :: n_particles !< number of particles local to the processor
     sll_int32                                   , intent( in )   :: n_total_particles !< number of particles in total simulation
     sll_real64                                  , intent( in )   :: charge !< charge of the particle species
@@ -130,7 +130,7 @@ contains
        charge, &
        mass, &
        n_weights)
-    class( sll_c_particle_group_base ),  allocatable, intent( out )   :: particle_group
+    class( sll_c_particle_group_base ),  allocatable, intent( out )   :: particle_group !< abstract particle group
     sll_int32                                       , intent( in )    :: n_particles !< number of particles local to the processor
     sll_int32                                       , intent( in )    :: n_total_particles !< number of particles in total simulation
     sll_real64                                      , intent( in )    :: charge !< charge of the particle species
