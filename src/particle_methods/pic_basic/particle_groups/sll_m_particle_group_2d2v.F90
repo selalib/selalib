@@ -47,6 +47,8 @@ contains
     procedure :: init => initialize_particle_group_2d2v  !> Initialization function
     procedure :: free => delete_particle_group_2d2v !> Destructor
 
+    
+    procedure :: print => print_particle_group_2d2v !> print particle array to file
 
 end type sll_t_particle_group_2d2v
 
@@ -261,6 +263,19 @@ contains
 
   end subroutine set_common_weight_2d2v
 
+  
+  !----------------------------------------------------------------------!
+  !> Print particle array to file
+  subroutine print_particle_group_2d2v(self, filename)
+    class( sll_t_particle_group_2d2v ), intent(in) :: self !< particle group
+    character(len=*), intent(in) :: filename !< name of output file 
+    sll_int32 :: file_id
+
+    open(newunit=file_id,file=filename)
+    write(file_id,*) self%particle_array
+    close(file_id)
+    
+  end subroutine print_particle_group_2d2v
 
   
 end module sll_m_particle_group_2d2v

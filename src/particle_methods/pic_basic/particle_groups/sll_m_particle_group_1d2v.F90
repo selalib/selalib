@@ -47,7 +47,7 @@ contains
     procedure :: init => initialize_particle_group_1d2v !> Initialization function
     procedure :: free => delete_particle_group_1d2v !> Destructor
 
-    procedure :: print => print_particle_group_1d2v !> print out particle array
+    procedure :: print => print_particle_group_1d2v !> print particle array to file
    
  end type sll_t_particle_group_1d2v
 
@@ -267,10 +267,10 @@ contains
 
 
   !----------------------------------------------------------------------!
-  !> Print particle array
+  !> Print particle array to file
   subroutine print_particle_group_1d2v(self, filename)
     class( sll_t_particle_group_1d2v ), intent(in) :: self !< particle group
-    character(len=*), intent(in) :: filename !< name of particle group
+    character(len=*), intent(in) :: filename !< name of output file
     sll_int32 :: file_id
 
     open(newunit=file_id,file=filename)

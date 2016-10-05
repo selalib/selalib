@@ -47,7 +47,7 @@ contains
     procedure :: init => initialize_particle_group_3d1v !> Initialization function
     procedure :: free => delete_particle_group_3d1v !> Destructor
 
-    procedure :: print => print_particle_group_3d1v !> print out particle array
+    procedure :: print => print_particle_group_3d1v !> print particle array to file
    
  end type sll_t_particle_group_3d1v
 
@@ -262,10 +262,10 @@ pure function get_x_3d1v(self,i) result(r)
 
 
   !----------------------------------------------------------------------!
-  !> Print particle array
+  !> Print particle array to file
   subroutine print_particle_group_3d1v(self, filename)
     class( sll_t_particle_group_3d1v ), intent(in) :: self !< particle group
-    character(len=*), intent(in) :: filename !<name of particle group
+    character(len=*), intent(in) :: filename !<name of output file
     sll_int32 :: file_id
 
     open(newunit=file_id,file=filename)
