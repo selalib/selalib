@@ -1,7 +1,9 @@
 SET( PARTICLE_GROUP_SRCS
   sll_m_particle_group_base.F90
+  sll_m_particle_group_3d1v.F90
   sll_m_particle_group_2d2v.F90 
-  sll_m_particle_group_1d2v.F90)
+  sll_m_particle_group_1d2v.F90
+  sll_m_particle_group_1d1v.F90)
 
 SET( PARTICLE_GROUP_DEPS
    sll_assert
