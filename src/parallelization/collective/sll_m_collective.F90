@@ -305,6 +305,7 @@ module sll_m_collective
   interface sll_o_collective_allreduce
      module procedure sll_s_collective_allreduce_real32, &
                       sll_collective_allreduce_real64, &
+                      sll_collective_allreduce_real64_2darray, &
                       sll_s_collective_allreduce_logical, &
                       sll_collective_allreduce_comp64, &
                       sll_collective_allreduce_comp32, &
@@ -1094,6 +1095,38 @@ contains !************************** Operations **************************
       ierr, &
       'sll_collective_allreduce_real64(): MPI_ALLREDUCE()' )
   end subroutine sll_collective_allreduce_real64
+
+  !> @brief Combines real values from all processes and
+  !!        distributes the result back to all processes
+  !> @param[in] col wrapper around the communicator
+  !> @param[in] send_buf starting address of send buffer
+  !> @param[in] count number of elements in send buffer
+  !> @param[in] op operation
+  !> @param[out] rec_buf starting address of receive buffer
+  subroutine sll_collective_allreduce_real64_2darray( col, send_buf, count, op, &
+       rec_buf )
+    type(sll_t_collective_t), pointer       :: col
+    sll_real64, dimension(:,:), intent(in)  :: send_buf ! what would change...
+    sll_int32, intent(in)                 :: count
+    sll_int32, intent(in)                :: op
+    sll_real64, dimension(:,:), intent(out) :: rec_buf  ! would also change
+    sll_int32                             :: ierr
+    ! FIXME: ARG CHECKING!
+    call sll_check_collective_ptr( col )
+    call MPI_BARRIER( col%comm, ierr )
+    call MPI_ALLREDUCE( &
+      send_buf, &
+      rec_buf, &
+      count, &
+      MPI_DOUBLE_PRECISION, &
+      op, &
+      col%comm, &
+      ierr )
+    call sll_s_test_mpi_error( &
+      ierr, &
+      'sll_collective_allreduce_real64(): MPI_ALLREDUCE()' )
+  end subroutine sll_collective_allreduce_real64_2darray
+  
 
   !> @brief Combines complex values from all processes and
   !!        distributes the result back to all processes
