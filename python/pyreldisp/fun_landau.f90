@@ -41,11 +41,13 @@
 !-----------------------------------------------------------------------
 
 MODULE Function_Input_Module
-  USE Precision_Module
+  
+  use Precision_Module
+  use plasma_functions, only: FriedConte
 
   IMPLICIT NONE
   integer, parameter :: max=61
-  double precision :: order_magnitude = 1
+  double precision :: order_magnitude = 1.0_dp
   complex(kind=dp), dimension(:,:), allocatable :: vector
   !---------------------------------------------------------------------
   !**ACCESSIBILITY
@@ -87,9 +89,9 @@ CONTAINS
     COMPLEX(KIND=DP) :: zeta, dzeta
 
     call FriedConte(omega/(sqrt(2.0_dp)*kmode),zeta,dzeta) 
-    F= 1._dp-(1._dp/(2._dp*kmode**2))*dzeta
-    DF= 1._dp/(sqrt(2._dp)*kmode**3) * &
-      (zeta+omega/(sqrt(2._dp)*kmode)*dzeta)
+    F= 1.0_dp-(1.0_dp/(2.0_dp*kmode**2))*dzeta
+    DF= 1.0_dp/(sqrt(2.0_dp)*kmode**3) * &
+      (zeta+omega/(sqrt(2.0_dp)*kmode)*dzeta)
   END SUBROUTINE FDF
 
 
