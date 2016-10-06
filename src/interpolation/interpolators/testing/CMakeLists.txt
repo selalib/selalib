@@ -1,7 +1,7 @@
 SLL_TEST( cubic_spline_interpolator_1d sll_interpolators )
 SLL_TEST( cubic_spline_interpolator_2d sll_interpolators )
 SLL_TEST( arbitrary_degree_spline_interpolator_1d sll_interpolators sll_file_io )
-SLL_TEST( arbitrary_degree_spline_interpolator_2d sll_interpolators sll_file_io )
+#SLL_TEST( arbitrary_degree_spline_interpolator_2d sll_interpolators sll_file_io )
 SLL_TEST( periodic_interpolator_1d sll_interpolators )
 SLL_TEST( arbitrary_degree_spline_1d_periodic  sll_interpolators )
 SLL_TEST( arbitrary_degree_spline_1d_dirichlet sll_interpolators )
