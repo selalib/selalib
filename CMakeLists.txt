@@ -96,6 +96,7 @@ IF(MPI_ENABLED)
   INCLUDE(MPIConfig)
   INCLUDE(ProcessorCount)
   INCLUDE(POEConfig)
+  INCLUDE(SLURMConfig)
 ENDIF()
 
 INCLUDE(CTest)
