@@ -25,9 +25,11 @@ ADD_DEPENDENCIES(test_spiga_poisson_2d_periodic spiga_lib)
 TARGET_LINK_LIBRARIES(test_spiga_poisson_2d_periodic ${SPIGA_LIBRARIES} )
 
 SET(PARAMETERS_FILE "parameters_2d.nml")
-SET(SOLVER_FILE     "solver_mgmres_nullspace.nml" )
+SET(SOLVER_FILE1    "solver_driver.nml" )
+SET(SOLVER_FILE2    "solver_mgmres_nullspace.nml" )
 FILE(COPY ${PARAMETERS_FILE} DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
-FILE(COPY ${SOLVER_FILE}     DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
+FILE(COPY ${SOLVER_FILE1}    DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
+FILE(COPY ${SOLVER_FILE2}    DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
 
 ADD_TEST(NAME test_spiga_poisson_2d_periodic 
-	COMMAND test_spiga_poisson_2d_periodic ${PARAMETERS_FILE} ${SOLVER_FILE})
+	COMMAND test_spiga_poisson_2d_periodic ${PARAMETERS_FILE} ${SOLVER_FILE1})
