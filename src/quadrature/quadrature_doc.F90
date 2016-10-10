@@ -11,9 +11,9 @@
 
 !!         
 
-!> @defgroup integration sll_integration 
+!> @defgroup quadrature sll_quadrature 
 !> @brief 
-!> Integrate a function.
+!> Implementation of various quadrature rules for integration of a function.
 !> @authors Edwin Chacon-Golcher, Laura Mendoza and Pierre Navaro.
 !! @details 
 !> This module aims at providing a single interface to the process of 
@@ -22,7 +22,7 @@
 !!   - Gauss-Lobatto points and weights
 !!
 !> <b> How to use it </b>
-!> - Link with   <code>-lsll_integration</code>
+!> - Link with   <code>-lsll_quadrature</code>
 !> - Add <code> use sll_m_gauss_legendre_integration </code>
 !> - Add <code> use sll_m_gauss_lobatto_integration </code>
 !>

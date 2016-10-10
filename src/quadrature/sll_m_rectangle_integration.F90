@@ -1,4 +1,4 @@
-!> @ingroup integration
+!> @ingroup quadrature
 !> @brief 
 !> Rectangle integration
 !> @details
