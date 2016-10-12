@@ -152,10 +152,10 @@ contains
 
     ! ... save the matrix in the mm format
     write (label, "(A5,I1)") "proc-", pde % ptr_ddm % i_current_color
-    filename = "output/" // trim(label) // "_poisson_2d_periodic_matrix.mm"
+    filename = trim(label) // "_poisson_2d_periodic_matrix.mm"
     call pde % matrix % export(filename)
 
-    filename = "output/" // trim(label) // "_poisson_2d_periodic_rhs.txt"
+    filename = trim(label) // "_poisson_2d_periodic_rhs.txt"
     call pde % rhs % export (filename, i_format=plf_vector_format_txt)
     ! ...
 
@@ -163,7 +163,7 @@ contains
     call pde % solve()
     write (label, "(A5,I1)") "proc-", pde % ptr_ddm % i_current_color
 
-    filename = "output/" // trim(label) // "_poisson_2d_periodic_field.nml"
+    filename = trim(label) // "_poisson_2d_periodic_field.nml"
     call pde % ptr_field % export (filename)
     ! ...
 
