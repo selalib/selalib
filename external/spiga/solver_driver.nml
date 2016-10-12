@@ -1,0 +1,6 @@
+&linear_solver
+
+SOLVER_NAME="mgmres"
+SOLVER_FILENAME="solver_mgmres_nullspace.nml",
+
+/

@@ -76,11 +76,12 @@
 module function_input_module
 
   use precision_module
+  use plasma_functions, only: FriedConte
 
   implicit none
 
   integer, parameter :: max=61
-  double precision   :: order_magnitude = 1
+  double precision   :: order_magnitude = 1.0_dp
   complex (kind=dp), allocatable :: vector(:,:)
 
   public
@@ -185,7 +186,7 @@ module function_input_module
 
     complex (kind=dp), intent(in) :: omega
 
-    complex (kind=dp) :: zeta, dzeta, int
+    complex (kind=dp) :: int
     integer           :: i
     
     do i = 1, NNr 
@@ -196,8 +197,8 @@ module function_input_module
                *((ktheta**2-0.25_dp)/rmesh(i)**2+1._dp/(Zi*Te(i)) &
                  +0.5_dp*(0.5_dp*dlogn0(i)**2 &
                           + dlogn0(i)/rmesh(i)+ddlogn0(i))+int)
-      A(1,i) = -1.0_dp
-      A(3,i) = -1.0_dp
+      A(1,i) = cmplx(-1.0_dp,kind=dp)
+      A(3,i) = cmplx(-1.0_dp,kind=dp)
 
     enddo
 
@@ -249,7 +250,7 @@ module function_input_module
     integer           :: i
 
     D_im1 = A(2,1)
-    D_im2 = 1
+    D_im2 = cmplx(1.0_dp,kind=dp)
 
     do i = 2, NNr-1
 
@@ -284,9 +285,9 @@ module function_input_module
     integer           :: i
 
     D_im1 = A(2,1)
-    D_im2 = 1
+    D_im2 = cmplx(1.0_dp,kind=dp)
     Dprime_im1 = Aprime(1)
-    Dprime_im2 = 0
+    Dprime_im2 = cmplx(0.0_dp,kind=dp)
 
     do i = 2, NNr-1
 
@@ -308,16 +309,16 @@ module function_input_module
 
     complex (kind=dp) :: D, omega
     real    (kind=dp) :: tab(20)
-    integer           :: i
+    integer           :: j
 
     if (.not.allocated(A) ) allocate(A (3,NNr))
     if (.not.allocated(Aprime)) allocate(Aprime(NNr  ))
 
-    do i = 1, 20
-      omega = cmplx(-1+i*0.1,0.0)
+    do j = 1, 20
+      omega = cmplx(-1.0_dp+j*0.1_dp,kind=dp)
       call matrix(omega)
       call det(D)
-      tab(i) = real(D)
+      tab(j) = real(D)
     enddo
 
     order_magnitude = maxval(tab)
