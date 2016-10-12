@@ -41,11 +41,13 @@
 !-----------------------------------------------------------------------
 
 MODULE Function_Input_Module
-  USE Precision_Module
+
+  use Precision_Module
+  use plasma_functions, only: FriedConte
 
   IMPLICIT NONE
   integer, parameter :: max=61
-  double precision :: order_magnitude = 1
+  double precision :: order_magnitude = 1.0_dp
   complex(kind=dp), dimension(:,:), allocatable :: vector
   !-------------------------------------------------------------------
   !**ACCESSIBILITY
@@ -97,18 +99,17 @@ CONTAINS
     COMPLEX(KIND=DP) :: rho
     COMPLEX(KIND=DP) :: rho1
     COMPLEX(KIND=DP) :: z1
-    REAL(KIND=DP)    :: omegati, omegani, tau, eta
 
     z1   = omega/(sqrt(2.0_dp)*kmode) ! z is the input omega
-    rho  = 1.0D0/kbT*z1
-    rho1 = 1.0D0/sigmab*(z1-v0/sqrt(2.0D0))
+    rho  = 1.0_dp/kbT*z1
+    rho1 = 1.0_dp/sigmab*(z1-v0/sqrt(2.0_dp))
     call FriedConte(rho,zfunc,dzfunc)
     call FriedConte(rho1,zfunc1,dzfunc1)
-    F  = 1.0D0/(l0ld*l0ld)*kmode**2+(1.0D0/(kbT**2)*(1.0D0+rho*zfunc) + &
-      a_bump/(sigmab**2)*(1.0D0+rho1*zfunc1))/(1+a_bump) 
+    F  = 1.0_dp/(l0ld*l0ld)*kmode**2+(1.0_dp/(kbT**2)*(1.0_dp+rho*zfunc) + &
+      a_bump/(sigmab**2)*(1.0_dp+rho1*zfunc1))/(1.0_dp+a_bump) 
     DF = (zfunc/(sqrt(2.0_dp)*kmode) + z1*dzfunc/(sqrt(2.0_dp)*kmode) + &
       a_bump/(sigmab**2)* (zfunc1/(sqrt(2.0_dp)*sigmab*kmode) + &
-      rho1*dzfunc1/(sqrt(2.0_dp)*sigmab*kmode)))/(1+a_bump)
+      rho1*dzfunc1/(sqrt(2.0_dp)*sigmab*kmode)))/(1.0_dp+a_bump)
   END SUBROUTINE FDF
 
 
