@@ -69,7 +69,6 @@ if( HDF5_ENABLED AND HDF5_IS_PARALLEL AND HDF5_PARALLEL_ENABLED )
     if (NOT (FFT_LIB STREQUAL "SLLFFT"))
       add_subdirectory( pic_vp_2d2v_cart_lbf                     )
     endif()
-    add_subdirectory( pic_vp_2d2v_cart_tau                     )
 
     ## Vlasov-Poisson NDxND
     add_subdirectory( pif_vp_ndnv_cart                         )
