@@ -1,6 +1,6 @@
 Directory structure
 ===================
-   test_2d_vp_cartesian         -- executable (simulation)
+   sim_bsl_vp_1d1v_cart         -- executable (simulation)
    VPpostprocessing_drive_KEEN  -- executable (postprocessing for KEEN test)
    vp_plots.py                  -- Python script for visualization of KEEN data
    vpsim2d_cartesian_input.nml  -- input file #1: Landau damping
@@ -20,7 +20,7 @@ HOWTO
      $ cd run
 
 1. Run parallel simulation within directory
-     $ mpirun -np 4 ../test_2d_vp_cartesian ../vpsim2d_cartesian_input
+     $ mpirun -np 4 ../sim_bsl_vp_1d1v_cart ../vpsim2d_cartesian_input
 
 2. Run included gnuplot script
      $ gnuplot --persist ../vpsim2d_cartesian.gnu
@@ -30,7 +30,7 @@ HOWTO
 HOWTO - KEEN
 ============
 1. Run KEEN wave simulation within directory
-     $ mpirun -np 4 ../test_2d_vp_cartesian ../vpsim2d_cartesian_keen
+     $ mpirun -np 4 ../sim_bsl_vp_1d1v_cart ../vpsim2d_cartesian_keen
 
 2. Run KEEN wave post-processing script
      $ ../VPpostprocessing_drive_KEEN .
