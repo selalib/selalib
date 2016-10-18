@@ -96,6 +96,7 @@ IF(MPI_ENABLED)
   INCLUDE(MPIConfig)
   INCLUDE(ProcessorCount)
   INCLUDE(POEConfig)
+  INCLUDE(SLURMConfig)
 ENDIF()
 
 INCLUDE(CTest)
@@ -140,6 +141,8 @@ ENDIF()
 IF(BUILD_SPRNG)
   INCLUDE(BuildSPRNG)
 ENDIF()
+
+add_subdirectory(thirdparty)
 
 MESSAGE(STATUS "############################################################")
 MESSAGE(STATUS "####")
