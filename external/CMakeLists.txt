@@ -73,6 +73,6 @@ IF(CLAPP_FRAMEWORK)
 
    ADD_DEPENDENCIES(spiga_lib fema_lib)
 
-   ADD_SUBDIRECTORY(spiga)
+   ADD_SUBDIRECTORY(clapp)
 
 ENDIF()
