@@ -263,7 +263,8 @@ subroutine sll_s_xdmf_corect2d_nodes( file_name,  &
                                       eta2_min,   &
                                       delta_eta2, &
                                       file_format,&
-                                      iplot       ) 
+                                      iplot,      & 
+                                      time        ) 
 
 sll_real64, intent(in)       :: array(:,:)  !< data array
 character(len=*), intent(in) :: file_name   !< xmf file name
@@ -278,6 +279,7 @@ sll_int32                    :: nx1         !< x nodes number
 sll_int32                    :: nx2         !< y nodes number
 character(len=4), optional   :: file_format !< "HDF5" or "Binary"
 sll_int32       , optional   :: iplot       !< plot index
+sll_real64      , optional   :: time        !< time value
 
 character(len=4)             :: cplot     
 #ifndef NOHDF5
@@ -295,6 +297,9 @@ else
 end if
 
 write(file_id,"(a)")"<Grid Name='mesh' GridType='Uniform'>"
+if (present(time)) then
+  write(file_id,"(a,f12.6,a)") "<Time Value='",time,"'/>"
+end if
 write(file_id,"(a,2i5,a)")"<Topology TopologyType='2DCoRectMesh' NumberOfElements='", &
                           nx2,nx1,"'/>"
 write(file_id,"(a)")"<Geometry GeometryType='ORIGIN_DXDY'>"

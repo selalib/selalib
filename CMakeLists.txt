@@ -142,6 +142,8 @@ IF(BUILD_SPRNG)
   INCLUDE(BuildSPRNG)
 ENDIF()
 
+add_subdirectory(thirdparty)
+
 MESSAGE(STATUS "############################################################")
 MESSAGE(STATUS "####")
 MESSAGE(STATUS "#### CMAKE_BUILD_TYPE:${CMAKE_BUILD_TYPE}")

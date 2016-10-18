@@ -1,0 +1,14 @@
+$donnees 
+  nstepmax = 10000
+  nx       = 64	
+  ny       = 32
+  tfinal   = 20.0
+  ntau     = 8
+  npm      = 10
+  ep       = 0.005
+  alpha    = 0.02  
+  kx       = 0.5
+  ky       = 1.0   
+  dt       = 0.1
+  plot     = .false.
+$end
