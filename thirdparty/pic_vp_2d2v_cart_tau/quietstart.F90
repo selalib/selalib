@@ -1,6 +1,7 @@
-module quietstart
+module m_quietstart
 #include "sll_working_precision.h"
-use zone
+use m_zone
+use sll_m_constants
 
 implicit none
 
@@ -125,10 +126,10 @@ sll_real64 :: eps
 sll_real64 :: x
 sll_real64 :: D
 
-D = ( kx*a + alpha * sin(kx*a) ) / (2*pi)
+D = ( kx*a + alpha * sin(kx*a) ) / (2*sll_p_pi)
 do while ( D<R-eps .or. D>R+eps )
   x = (a+b)/2
-  D = ( kx*x + alpha * sin(kx*x) ) / (2*pi)
+  D = ( kx*x + alpha * sin(kx*x) ) / (2*sll_p_pi)
   if ( D<R-eps ) then
     a = x
   else if ( D>R+eps ) then 
@@ -142,4 +143,4 @@ end subroutine dichotomie_x
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
-end module quietstart
+end module m_quietstart
