@@ -4,7 +4,7 @@ Getting Started
 =================
 
 To download the developer version you need to use GIT.
-The latest development version of SeLaLib is tracked in the 'prototype-devel' branch.
+The latest development version of SeLaLib is tracked in the 'master' branch.
 
 Documentation for Git is available `here <http://git-scm.com/>`_.
 
@@ -42,7 +42,7 @@ Display all branches with::
 
 Create the local branch and merge the remote branch:: 
 
- git checkout prototype-devel 
+ git checkout master
 
 More information available on document `An overview of GIT A short tutorial for SELALIB developers <https://gforge.inria.fr/docman/view.php/3042/7642/selalib_coding_guidelines.pdf>`_ by Edwin Chacon-Golcher.
 
