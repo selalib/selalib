@@ -1,3 +1,2 @@
-ADD_EXECUTABLE(pif_fieldsolver_test  pif_fieldsolver_test.F90)
-TARGET_LINK_LIBRARIES(pif_fieldsolver_test sll_pif
-					      sll_timer)
+ADD_EXECUTABLE(pif_fieldsolver  test_pif_fieldsolver.F90)
+TARGET_LINK_LIBRARIES(pif_fieldsolver sll_pif sll_timer)

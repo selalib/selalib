@@ -1,4 +1,4 @@
-!> @ingroup integration
+!> @ingroup quadrature
 !> @brief
 !> Gauss-Legendre integration
 !> @details
