@@ -30,7 +30,7 @@ program test_poisson_1d_hmf
   sll_real64  :: eta1_min, eta2_min
   sll_real64  :: eta1_max, eta2_max
   sll_real64  :: delta_eta1, delta_eta2
-  sll_real64  :: x, v
+  sll_real64  :: x, v, e
   sll_int32   :: error
   sll_int32   :: i, j
   sll_real64, parameter :: alpha = 0.000119_f64
@@ -76,10 +76,10 @@ program test_poisson_1d_hmf
     write(11,*) x, ex(i), ex_exact(i)
   end do
 
-  print*,'   error=',maxval(abs(ex-ex_exact))
+  e=maxval(abs(ex-ex_exact))
+  if (e > 1.e-3) stop 'FAILED'
+  print*, 'error=', e
 
-  if (error > 1.e-14) stop 'FAILED'
- 
   poisson_class => sll_f_new_poisson_1d_hmf( eta1_min, &
                                                   eta1_max, &
                                                   nc_eta1   )
@@ -91,10 +91,11 @@ program test_poisson_1d_hmf
 
   call poisson_class%compute_e_from_rho( ex, rho )
 
-  print*,'   error=',maxval(abs(ex-ex_exact))
+  e=maxval(abs(ex-ex_exact))
 
-  if (error > 1.e-14) stop 'FAILED'
+  if (e > 1.e-3) stop 'FAILED'
 
+  print*, 'error=', e
   print*, '#PASSED'
 
 end program test_poisson_1d_hmf
