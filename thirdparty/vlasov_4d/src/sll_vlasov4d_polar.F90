@@ -21,15 +21,18 @@ module sll_vlasov4d_polar
 #include "sll_working_precision.h"
 #include "sll_memory.h"
 #include "sll_assert.h"
-#include "sll_cartesian_meshes.h"
-#include "sll_coordinate_transformations.h"
 
-use sll_collective
-use sll_module_interpolators_1d_base
-use sll_module_interpolators_2d_base
-use sll_remapper
+use sll_m_collective
+use sll_m_interpolators_1d_base
+use sll_m_interpolators_2d_base
+use sll_m_remapper
 use sll_vlasov4d_base
-use sll_gnuplot_parallel
+use sll_m_gnuplot_parallel
+use sll_m_cartesian_meshes
+use sll_m_common_coordinate_transformations
+use sll_m_coordinate_transformation_2d_base
+use sll_m_coordinate_transformations_2d
+use sll_m_cubic_spline_interpolator_2d
 
 implicit none
 
@@ -37,13 +40,13 @@ implicit none
 type, public, extends(vlasov4d_base) :: vlasov4d_polar
   
  sll_int32  :: nc_x1, nc_x2, nc_x3, nc_x4 !< Mesh parameters
- class(sll_coordinate_transformation_2d_base), pointer :: transfx !< transformation
+ class(sll_c_coordinate_transformation_2d_base), pointer :: transfx !< transformation
  sll_real64, dimension(:,:), pointer :: proj_f_x1x2 !< f projection to x1x2
  sll_real64, dimension(:,:), pointer :: proj_f_x3x4 !< f projection to x3x4
 
- class(sll_interpolator_2d_base), pointer :: interp_x1x2 !< interpolator 2d in xy
- class(sll_interpolator_1d_base), pointer :: interp_x3   !< interpolator 1d in vx
- class(sll_interpolator_1d_base), pointer :: interp_x4   !< interpolator 1d in vx
+ class(sll_c_interpolator_2d), pointer :: interp_x1x2 !< interpolator 2d in xy
+ class(sll_c_interpolator_1d), pointer :: interp_x3   !< interpolator 1d in vx
+ class(sll_c_interpolator_1d), pointer :: interp_x4   !< interpolator 1d in vx
 
  sll_real64, dimension(:),     pointer :: params   !< function initializer parameters
  sll_real64, dimension(:,:),   pointer :: x1       !< x1 mesh mapped coordinates
@@ -55,10 +58,10 @@ type, public, extends(vlasov4d_base) :: vlasov4d_polar
  sll_real64, dimension(:,:,:), pointer :: efields_x2
 
 
- type(layout_2D), pointer :: layout_x1 ! sequential in r direction
- type(layout_2D), pointer :: layout_x2 ! sequential in theta direction
- type(remap_plan_2D_real64), pointer :: rmp_x1x2   !< remap r->theta 
- type(remap_plan_2D_real64), pointer :: rmp_x2x1   !< remap theta->r
+ type(sll_t_layout_2d), pointer :: layout_x1 ! sequential in r direction
+ type(sll_t_layout_2d), pointer :: layout_x2 ! sequential in theta direction
+ type(sll_t_remap_plan_2D_real64), pointer :: rmp_x1x2   !< remap r->theta 
+ type(sll_t_remap_plan_2D_real64), pointer :: rmp_x2x1   !< remap theta->r
 
 end type vlasov4d_polar
 
@@ -85,12 +88,12 @@ subroutine initialize_vp4d_polar( this,        &
 
   type(vlasov4d_polar), intent(inout)     :: this
 
-  class(sll_interpolator_2d_base), target :: interp_x1x2
-  class(sll_interpolator_1d_base), target :: interp_x3
-  class(sll_interpolator_1d_base), target :: interp_x4
+  class(sll_c_interpolator_2d), target :: interp_x1x2
+  class(sll_c_interpolator_1d), target :: interp_x3
+  class(sll_c_interpolator_1d), target :: interp_x4
 
-  psize = sll_get_collective_size(sll_world_collective)
-  prank = sll_get_collective_rank(sll_world_collective)
+  psize = sll_f_get_collective_size(sll_v_world_collective)
+  prank = sll_f_get_collective_rank(sll_v_world_collective)
 
   this%interp_x1x2 => interp_x1x2
   this%interp_x3   => interp_x3
@@ -98,98 +101,98 @@ subroutine initialize_vp4d_polar( this,        &
 
   this%transposed = .false.
 
-  this%layout_x => new_layout_4D( sll_world_collective )        
+  this%layout_x => sll_f_new_layout_4d( sll_v_world_collective )        
 
-  call initialize_layout_with_distributed_array( &
+  call sll_o_initialize_layout_with_distributed_array( &
             this%nc_eta1+1, this%nc_eta2+1, this%nc_eta3+1, this%nc_eta4+1,    &
             1,1,int(psize,4),1,this%layout_x)
 
-  if ( prank == MPI_MASTER ) call sll_view_lims( this%layout_x )
+  if ( prank == MPI_MASTER ) call sll_o_view_lims( this%layout_x )
   call flush(6)
 
-  call compute_local_sizes(this%layout_x, &
+  call sll_o_compute_local_sizes(this%layout_x, &
                               loc_sz_x1,loc_sz_x2,loc_sz_x3,loc_sz_x4)        
   SLL_CLEAR_ALLOCATE(this%f(1:loc_sz_x1,1:loc_sz_x2,1:loc_sz_x3,1:loc_sz_x4),error)
 
-  this%layout_v => new_layout_4D( sll_world_collective )
-  call initialize_layout_with_distributed_array( &
+  this%layout_v => sll_f_new_layout_4d( sll_v_world_collective )
+  call sll_o_initialize_layout_with_distributed_array( &
               this%nc_eta1+1, this%nc_eta2+1, this%nc_eta3+1, this%nc_eta4+1,    &
               int(psize,4),1,1,1,this%layout_v)
 
-  if ( prank == MPI_MASTER ) call sll_view_lims( this%layout_v )
+  if ( prank == MPI_MASTER ) call sll_o_view_lims( this%layout_v )
   call flush(6)
 
-  call compute_local_sizes(this%layout_v, &
+  call sll_o_compute_local_sizes(this%layout_v, &
                               loc_sz_x1,loc_sz_x2,loc_sz_x3,loc_sz_x4)        
   SLL_CLEAR_ALLOCATE(this%ft(1:loc_sz_x1,1:loc_sz_x2,1:loc_sz_x3,1:loc_sz_x4),error)
 
-  this%x_to_v => new_remap_plan( this%layout_x, this%layout_v, this%f)     
-  this%v_to_x => new_remap_plan( this%layout_v, this%layout_x, this%ft)     
+  this%x_to_v => sll_o_new_remap_plan( this%layout_x, this%layout_v, this%f)     
+  this%v_to_x => sll_o_new_remap_plan( this%layout_v, this%layout_x, this%ft)     
   
-  this%transfx => new_coordinate_transformation_2d_analytic( &
+  this%transfx => sll_f_new_coordinate_transformation_2d_analytic( &
        "analytic_polar_transformation", &
        this%geomx, &
-       polar_x1, &
-       polar_x2, &
-       polar_jac11, &
-       polar_jac12, &
-       polar_jac21, &
-       polar_jac22, (/0.0_f64/) )
+       sll_f_polar_x1, &
+       sll_f_polar_x2, &
+       sll_f_polar_jac11, &
+       sll_f_polar_jac12, &
+       sll_f_polar_jac21, &
+       sll_f_polar_jac22, (/0.0_f64/) )
 
   this%nc_x1 = this%geomx%num_cells1
   this%nc_x2 = this%geomx%num_cells2
   this%nc_x3 = this%geomv%num_cells1
   this%nc_x4 = this%geomv%num_cells2
 
-  call compute_local_sizes( this%layout_x, &
+  call sll_o_compute_local_sizes( this%layout_x, &
          loc_sz_x1, loc_sz_x2, loc_sz_x3, loc_sz_x4 )
 
   SLL_ALLOCATE(this%proj_f_x3x4(loc_sz_x3,loc_sz_x4),error)
 
-  call compute_local_sizes( this%layout_v, &
+  call sll_o_compute_local_sizes( this%layout_v, &
          loc_sz_x1, loc_sz_x2, loc_sz_x3, loc_sz_x4 )
 
   SLL_ALLOCATE(this%proj_f_x1x2(loc_sz_x1,loc_sz_x2),error)
     
-  this%layout_x1 => new_layout_2D( sll_world_collective )
+  this%layout_x1 => sll_f_new_layout_2d( sll_v_world_collective )
 
-  call initialize_layout_with_distributed_array( this%nc_x1+1, &
+  call sll_o_initialize_layout_with_distributed_array( this%nc_x1+1, &
                                                     this%nc_x2+1, &
                                                     1,            &
                                                     psize,        &
                                                     this%layout_x1 )
 
-  call compute_local_sizes(this%layout_x1, loc_sz_x1, loc_sz_x2)
+  call sll_o_compute_local_sizes(this%layout_x1, loc_sz_x1, loc_sz_x2)
 
   SLL_CLEAR_ALLOCATE(this%phi_x1(1:loc_sz_x1,1:loc_sz_x2),error)
   SLL_CLEAR_ALLOCATE(this%efields_x1(1:loc_sz_x1,1:loc_sz_x2,2),error)
 
-  this%layout_x2 => new_layout_2D( sll_world_collective )
+  this%layout_x2 => sll_f_new_layout_2d( sll_v_world_collective )
 
-  call initialize_layout_with_distributed_array( this%nc_x1+1, &
+  call sll_o_initialize_layout_with_distributed_array( this%nc_x1+1, &
                                                     this%nc_x2+1, &
                                                     psize,       &
                                                     1,           &
                                                     this%layout_x2 )
 
-  call compute_local_sizes(this%layout_x2, loc_sz_x1, loc_sz_x2)
+  call sll_o_compute_local_sizes(this%layout_x2, loc_sz_x1, loc_sz_x2)
 
   SLL_CLEAR_ALLOCATE(this%rho(1:loc_sz_x1,1:loc_sz_x2),error)
   SLL_CLEAR_ALLOCATE(this%phi_x2(1:loc_sz_x1,1:loc_sz_x2),error)
   SLL_CLEAR_ALLOCATE(this%efields_x2(1:loc_sz_x1,1:loc_sz_x2,2),error)
 
-  this%rmp_x1x2 => new_remap_plan(this%layout_x1, this%layout_x2, this%phi_x1)
-  this%rmp_x2x1 => new_remap_plan(this%layout_x2, this%layout_x1, this%phi_x2)
+  this%rmp_x1x2 => sll_o_new_remap_plan(this%layout_x1, this%layout_x2, this%phi_x1)
+  this%rmp_x2x1 => sll_o_new_remap_plan(this%layout_x2, this%layout_x1, this%phi_x2)
 
   SLL_CLEAR_ALLOCATE(this%x1(1:loc_sz_x1,1:loc_sz_x2),error)
   SLL_CLEAR_ALLOCATE(this%x2(1:loc_sz_x1,1:loc_sz_x2),error)
 
-  call sll_view_lims( this%layout_x2 )
+  call sll_o_view_lims( this%layout_x2 )
 
   do j=1,loc_sz_x2
      do i=1,loc_sz_x1
 
-        global_indices(1:2) = local_to_global(this%layout_x2,(/i,j/))
+        global_indices(1:2) = sll_o_local_to_global(this%layout_x2,(/i,j/))
         this%x1(i,j) = this%transfx%x1_at_node(global_indices(1),global_indices(2))
         this%x2(i,j) = this%transfx%x2_at_node(global_indices(1),global_indices(2))
 
@@ -206,7 +209,7 @@ subroutine initialize_vp4d_polar( this,        &
     class(vlasov4d_polar) :: this
     sll_real64, intent(in) :: deltat
 
-    call compute_local_sizes( this%layout_x, &
+    call sll_o_compute_local_sizes( this%layout_x, &
          loc_sz_x1, loc_sz_x2, loc_sz_x3, loc_sz_x4 )
 
     do l=1,loc_sz_x4
@@ -214,7 +217,7 @@ subroutine initialize_vp4d_polar( this,        &
           call this%interp_x1x2%compute_interpolants(this%f(:,:,k,l))
           do j=1,loc_sz_x2
              do i=1,loc_sz_x1
-                global_indices = local_to_global(this%layout_x,(/i,j,k,l/))
+                global_indices = sll_o_local_to_global(this%layout_x,(/i,j,k,l/))
                 gi = global_indices(1)
                 gj = global_indices(2)
                 gk = global_indices(3)
@@ -242,8 +245,7 @@ subroutine initialize_vp4d_polar( this,        &
                    eta2 = eta2+this%eta2_min-this%eta2_max
                 end if
                 
-                this%f(i,j,k,l) = this%interp_x1x2%interpolate_value(eta1,eta2)
-
+                this%f(i,j,k,l) = this%interp_x1x2%interpolate_from_interpolant_value( eta1, eta2)
              end do
           end do
        end do
@@ -259,13 +261,13 @@ subroutine initialize_vp4d_polar( this,        &
     sll_real64, intent(in) :: deltat
     sll_real64 :: ex, ey
 
-    call compute_local_sizes( this%layout_v, &
+    call sll_o_compute_local_sizes( this%layout_v, &
             loc_sz_x1, loc_sz_x2, loc_sz_x3, loc_sz_x4 ) 
 
     do l=1,loc_sz_x4
        do j=1,loc_sz_x2
           do i=1,loc_sz_x1
-             global_indices = local_to_global( this%layout_v, (/i,j,1,1/))
+             global_indices = sll_o_local_to_global( this%layout_v, (/i,j,1,1/))
              eta1   =  this%eta1_min + (global_indices(1)-1)*this%delta_eta1
              eta2   =  this%eta2_min + (global_indices(2)-1)*this%delta_eta2
              inv_j  =  this%transfx%inverse_jacobian_matrix(eta1,eta2)
@@ -273,7 +275,7 @@ subroutine initialize_vp4d_polar( this,        &
              ex     =  this%efields_x2(i,j,1)
              ey     =  this%efields_x2(i,j,2)
              alpha3 = -deltat*(inv_j(1,1)*ex + inv_j(2,1)*ey)
-             this%ft(i,j,:,l) = this%interp_x3%interpolate_array_disp( &
+             call this%interp_x3%interpolate_array_disp_inplace( &
                                    loc_sz_x3, this%ft(i,j,:,l), alpha3 )
           end do
        end do
@@ -289,20 +291,20 @@ subroutine initialize_vp4d_polar( this,        &
     sll_real64, intent(in) :: deltat
     sll_real64 :: ex, ey
 
-    call compute_local_sizes( this%layout_v, &
+    call sll_o_compute_local_sizes( this%layout_v, &
          loc_sz_x1, loc_sz_x2, loc_sz_x3, loc_sz_x4 ) 
 
     do j=1,loc_sz_x2
        do i=1,loc_sz_x1
           do k=1,loc_sz_x3
-             global_indices = local_to_global( this%layout_v, (/i,j,1,1/))
+             global_indices = sll_o_local_to_global( this%layout_v, (/i,j,1,1/))
              eta1   =  this%eta1_min+(global_indices(1)-1)*this%delta_eta1
              eta2   =  this%eta2_min+(global_indices(2)-1)*this%delta_eta2
              inv_j  =  this%transfx%inverse_jacobian_matrix(eta1,eta2)
              ex     =  this%efields_x2(i,j,1)
              ey     =  this%efields_x2(i,j,2)
              alpha4 = -deltat*(inv_j(1,2)*ex + inv_j(2,2)*ey)
-             this%ft(i,j,k,:) = this%interp_x4%interpolate_array_disp( &
+             call this%interp_x4%interpolate_array_disp_inplace( &
                                    loc_sz_x4, this%ft(i,j,k,:), alpha4 )
           end do
        end do
@@ -316,7 +318,7 @@ subroutine initialize_vp4d_polar( this,        &
     class(vlasov4d_polar) :: this
 
 
-    call compute_local_sizes( this%layout_v, &
+    call sll_o_compute_local_sizes( this%layout_v, &
          loc_sz_x1, loc_sz_x2, loc_sz_x3, loc_sz_x4 )
 
     do i = 1, loc_sz_x1
@@ -335,7 +337,7 @@ subroutine initialize_vp4d_polar( this,        &
   subroutine plot_ft(this)
     class(vlasov4d_polar) :: this
 
-    call compute_local_sizes( this%layout_x, &
+    call sll_o_compute_local_sizes( this%layout_x, &
          loc_sz_x1, loc_sz_x2, loc_sz_x3, loc_sz_x4 )
 
     do l = 1, loc_sz_x4
@@ -362,10 +364,10 @@ subroutine initialize_vp4d_polar( this,        &
     SLL_DEALLOCATE( this%f, error )
     SLL_DEALLOCATE( this%ft, error )
 
-    call sll_delete( this%layout_x )
-    call sll_delete( this%layout_v )
-    call sll_delete( this%x_to_v )
-    call sll_delete( this%v_to_x )
+    call sll_o_delete( this%layout_x )
+    call sll_o_delete( this%layout_v )
+    call sll_o_delete( this%x_to_v )
+    call sll_o_delete( this%v_to_x )
 
   end subroutine delete_vp4d_par_polar
 
@@ -375,7 +377,7 @@ subroutine initialize_vp4d_polar( this,        &
 
     class(vlasov4d_polar) :: this
 
-    call compute_local_sizes(this%layout_v, &
+    call sll_o_compute_local_sizes(this%layout_v, &
                                 loc_sz_x1,            &
                                 loc_sz_x2,            &
                                 loc_sz_x3,            &
@@ -396,7 +398,7 @@ subroutine initialize_vp4d_polar( this,        &
 
     class(vlasov4d_polar) :: this
 
-    call compute_local_sizes(this%layout_x2, loc_sz_x1, loc_sz_x2)
+    call sll_o_compute_local_sizes(this%layout_x2, loc_sz_x1, loc_sz_x2)
 
     call sll_gnuplot_2d_parallel(this%x1, this%x2, this%rho, &
                                  'rho', itime, error)
@@ -409,7 +411,7 @@ subroutine initialize_vp4d_polar( this,        &
 
     class(vlasov4d_polar) :: this
 
-    call compute_local_sizes(this%layout_x2, loc_sz_x1, loc_sz_x2)
+    call sll_o_compute_local_sizes(this%layout_x2, loc_sz_x1, loc_sz_x2)
 
     call sll_gnuplot_2d_parallel(this%x1, this%x2, this%phi_x2, &
                                  'phi', itime, error)
@@ -439,7 +441,7 @@ subroutine initialize_vp4d_polar( this,        &
                                             - this%phi_x1(i-1,:))
     end do
 
-    call apply_remap_2D( this%rmp_x1x2, &
+    call sll_s_apply_remap_2D( this%rmp_x1x2, &
                          this%efields_x1(:,:,1), &
                          this%efields_x2(:,:,1) )
 
@@ -468,7 +470,7 @@ subroutine initialize_vp4d_polar( this,        &
                                               - this%phi_x2(:,j-1))
     end do
 
-    call apply_remap_2D( this%rmp_x2x1, &
+    call sll_s_apply_remap_2D( this%rmp_x2x1, &
                          this%efields_x2(:,:,2), &
                          this%efields_x1(:,:,2) )
 

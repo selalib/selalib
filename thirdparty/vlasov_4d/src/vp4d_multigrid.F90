@@ -17,7 +17,7 @@ program vp4d_multigrid
   type(sll_cubic_spline_interpolator_1d), target :: spl_x3
   type(sll_cubic_spline_interpolator_1d), target :: spl_x4
 
-  type(layout_2D), pointer                :: layout_mg
+  type(sll_t_layout_2d), pointer                :: layout_mg
 
   sll_real64, dimension(:,:), allocatable :: phi_local
   sll_real64, dimension(:,:), allocatable :: rho_local
@@ -71,11 +71,11 @@ program vp4d_multigrid
 
   integer(kind=MPI_ADDRESS_KIND) :: extent, begin
 
-  call sll_boot_collective()
+  call sll_s_boot_collective()
 
-  prank = sll_get_collective_rank(sll_world_collective)
-  psize = sll_get_collective_size(sll_world_collective)
-  comm  = sll_world_collective%comm
+  prank = sll_f_get_collective_rank(sll_v_world_collective)
+  psize = sll_f_get_collective_size(sll_v_world_collective)
+  comm  = sll_v_world_collective%comm
 
   tcpu1 = MPI_WTIME()
 
@@ -88,37 +88,37 @@ program vp4d_multigrid
   call spl_x1%initialize(vlasov%nc_eta1+1,  &
                          vlasov%eta1_min,   &
                          vlasov%eta1_max,   &
-                         SLL_PERIODIC)
+                         sll_p_periodic)
 
   call spl_x2%initialize(vlasov%nc_eta2+1,  &
                          vlasov%eta2_min,   &
                          vlasov%eta2_max,   &
-                         SLL_PERIODIC)
+                         sll_p_periodic)
 
   call spl_x3%initialize(vlasov%nc_eta3+1,  &
                          vlasov%eta3_min,   &
                          vlasov%eta3_max,   &
-                         SLL_PERIODIC)
+                         sll_p_periodic)
 
   call spl_x4%initialize(vlasov%nc_eta4+1,  &
                          vlasov%eta4_min,   &
                          vlasov%eta4_max,   &
-                         SLL_PERIODIC)
+                         sll_p_periodic)
 
   call initialize(vlasov,spl_x1,spl_x2,spl_x3,spl_x4,error)
 
-  call compute_local_sizes(vlasov%layout_x, &
+  call sll_o_compute_local_sizes(vlasov%layout_x, &
          loc_sz_i,loc_sz_j,loc_sz_k,loc_sz_l)        
 
-  kx  = 2_f64*sll_pi/(vlasov%eta1_max-vlasov%eta1_min)
-  ky  = 2_f64*sll_pi/(vlasov%eta2_max-vlasov%eta2_min)
+  kx  = 2_f64*sll_p_pi/(vlasov%eta1_max-vlasov%eta1_min)
+  ky  = 2_f64*sll_p_pi/(vlasov%eta2_max-vlasov%eta2_min)
     
   do l=1,loc_sz_l 
   do k=1,loc_sz_k
   do j=1,loc_sz_j
   do i=1,loc_sz_i
 
-     global_indices = local_to_global(vlasov%layout_x,(/i,j,k,l/)) 
+     global_indices = sll_o_local_to_global(vlasov%layout_x,(/i,j,k,l/)) 
      gi = global_indices(1)
      gj = global_indices(2)
      gk = global_indices(3)
@@ -169,9 +169,9 @@ program vp4d_multigrid
       call MPI_Barrier(MPI_COMM_WORLD, error)
   enddo
 
-  layout_mg => new_layout_2D( sll_world_collective )        
+  layout_mg => sll_f_new_layout_2d( sll_v_world_collective )        
 
-  call initialize_layout_with_distributed_array( vlasov%nc_eta1, &
+  call sll_o_initialize_layout_with_distributed_array( vlasov%nc_eta1, &
                                                  vlasov%nc_eta2, &
                                                  ncols,          &
                                                  nrows,          &
@@ -179,15 +179,15 @@ program vp4d_multigrid
   
   if ( prank == proot ) then
     print*, "Display layout for multigrid"
-    call sll_view_lims( layout_mg )
+    call sll_o_view_lims( layout_mg )
     !call write_to_file(layout_mg, 'mesh')
   end if
   call flush(6)
 
-  sx = get_layout_i_min(layout_mg, prank)
-  ex = get_layout_i_max(layout_mg, prank)
-  sy = get_layout_j_min(layout_mg, prank)
-  ey = get_layout_j_max(layout_mg, prank)
+  sx = sll_o_get_layout_i_min(layout_mg, prank)
+  ex = sll_o_get_layout_i_max(layout_mg, prank)
+  sy = sll_o_get_layout_j_min(layout_mg, prank)
+  ey = sll_o_get_layout_j_max(layout_mg, prank)
 
   call MPI_ALLREDUCE(ex-sx,loc_sz_x_min,1,MPI_INTEGER,MPI_MIN,comm2d,error)
   call MPI_ALLREDUCE(ex-sx,loc_sz_x_max,1,MPI_INTEGER,MPI_MAX,comm2d,error)
@@ -309,7 +309,7 @@ program vp4d_multigrid
   if (prank == MPI_MASTER) &
        write(*,"(//10x,' Wall time = ', G15.3, ' sec' )") (tcpu2-tcpu1)*psize
 
-  call sll_halt_collective()
+  call sll_s_halt_collective()
 
 contains
 
@@ -343,7 +343,7 @@ contains
       SLL_ASSERT(size(field,1) == vlasov%nc_eta1)
       SLL_ASSERT(size(field,2) == vlasov%nc_eta2)
       
-      call int2string(prank,crank)
+      call sll_s_int2string(prank,crank)
  
       call sll_gnuplot_2d(vlasov%eta1_min, &
                           vlasov%eta1_max, &
