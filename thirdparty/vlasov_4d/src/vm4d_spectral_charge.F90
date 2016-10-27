@@ -1,19 +1,20 @@
 program vm4d_spectral_charge
 
-#define MPI_MASTER 0
 #include "selalib-mpi.h"
 
 use init_functions
 use sll_vlasov4d_base
 use sll_vlasov4d_spectral_charge
+use sll_m_poisson_2d_periodic
+use sll_m_maxwell_2d_pstd
 
 implicit none
 
-type(sll_maxwell_2d_pstd)      :: maxwell
-type(poisson_2d_periodic)      :: poisson 
-type(vlasov4d_spectral_charge) :: vlasov4d 
+type(sll_t_maxwell_2d_pstd)     :: maxwell
+type(sll_t_poisson_2d_periodic_fft) :: poisson 
+type(vlasov4d_spectral_charge)  :: vlasov4d 
 
-type(sll_cubic_spline_interpolator_2d), target :: spl_x3x4
+type(sll_t_cubic_spline_interpolator_2d), target :: spl_x3x4
 
 sll_int32  :: iter 
 sll_real64 :: tcpu1, tcpu2, mass0
@@ -23,10 +24,10 @@ sll_int64  :: psize
 
 sll_int32  :: loc_sz_i, loc_sz_j, loc_sz_k, loc_sz_l
 
-call sll_boot_collective()
-prank = sll_get_collective_rank(sll_world_collective)
-psize = sll_get_collective_size(sll_world_collective)
-comm  = sll_world_collective%comm
+call sll_s_boot_collective()
+prank = sll_f_get_collective_rank(sll_v_world_collective)
+psize = sll_f_get_collective_size(sll_v_world_collective)
+comm  = sll_v_world_collective%comm
 
 tcpu1 = MPI_WTIME()
 if (prank == MPI_MASTER) then
@@ -39,7 +40,7 @@ call initlocal()
 call transposexv(vlasov4d)
 
 call compute_charge(vlasov4d)
-call solve(poisson,vlasov4d%ex,vlasov4d%ey,vlasov4d%rho)
+call sll_o_solve(poisson,vlasov4d%ex,vlasov4d%ey,vlasov4d%rho)
 
 vlasov4d%exn=vlasov4d%ex
 vlasov4d%eyn=vlasov4d%ey
@@ -107,7 +108,7 @@ do iter=1,vlasov4d%nbiter
       !compute rho^{n+1}
       call compute_charge(vlasov4d)
       !compute E^{n+1} via Poisson
-      call solve(poisson,vlasov4d%ex,vlasov4d%ey,vlasov4d%rho)
+      call sll_o_solve(poisson,vlasov4d%ex,vlasov4d%ey,vlasov4d%rho)
 
    endif
 
@@ -180,7 +181,7 @@ do iter=1,vlasov4d%nbiter
       call transposevx(vlasov4d)
 
       !compute E^{n+1} via Poisson
-      call solve(poisson,vlasov4d%ex,vlasov4d%ey,vlasov4d%rho)
+      call sll_o_solve(poisson,vlasov4d%ex,vlasov4d%ey,vlasov4d%rho)
 
       !print *,'verif charge conservation', &
       !             maxval(vlasov4d%exn-vlasov4d%ex), &
@@ -194,7 +195,7 @@ do iter=1,vlasov4d%nbiter
       call compute_charge(vlasov4d)
       call transposevx(vlasov4d)
       !compute E^{n+1} via Poisson
-      call solve(poisson,vlasov4d%ex,vlasov4d%ey,vlasov4d%rho)
+      call sll_o_solve(poisson,vlasov4d%ex,vlasov4d%ey,vlasov4d%rho)
    endif
 
    if (mod(iter,vlasov4d%fthdiag) == 0) then 
@@ -208,8 +209,8 @@ if (prank == MPI_MASTER) then
      write(*,"(//10x,' Wall time = ', G15.3, ' sec' )") (tcpu2-tcpu1)*psize
 end if
 
-call delete(poisson)
-call sll_halt_collective()
+!call sll_o_delete(poisson)
+call sll_s_halt_collective()
 
 print*,'PASSED'
 
@@ -230,32 +231,32 @@ subroutine initlocal()
   sll_int32, dimension(4) :: global_indices
   sll_int32 :: psize
 
-  prank = sll_get_collective_rank(sll_world_collective)
-  psize = sll_get_collective_size(sll_world_collective)
-  comm  = sll_world_collective%comm
+  prank = sll_f_get_collective_rank(sll_v_world_collective)
+  psize = sll_f_get_collective_size(sll_v_world_collective)
+  comm  = sll_v_world_collective%comm
 
   call read_input_file(vlasov4d)
 
   call spl_x3x4%initialize(vlasov4d%np_eta3, vlasov4d%np_eta4,   & 
                            vlasov4d%eta3_min, vlasov4d%eta3_max, &
                            vlasov4d%eta4_min, vlasov4d%eta4_max, &
-  &                        SLL_PERIODIC, SLL_PERIODIC)
+  &                        sll_p_periodic, sll_p_periodic)
 
 
   call initialize(vlasov4d,spl_x3x4,error)
 
-  call compute_local_sizes(vlasov4d%layout_x, &
+  call sll_o_compute_local_sizes(vlasov4d%layout_x, &
                            loc_sz_i,loc_sz_j,loc_sz_k,loc_sz_l)        
 
-  kx  = 2_f64*sll_pi/(vlasov4d%nc_eta1*vlasov4d%delta_eta1)
-  ky  = 2_f64*sll_pi/(vlasov4d%nc_eta2*vlasov4d%delta_eta2)
+  kx  = 2_f64*sll_p_pi/(vlasov4d%nc_eta1*vlasov4d%delta_eta1)
+  ky  = 2_f64*sll_p_pi/(vlasov4d%nc_eta2*vlasov4d%delta_eta2)
 
   do l=1,loc_sz_l 
      do k=1,loc_sz_k
         do j=1,loc_sz_j
            do i=1,loc_sz_i
               
-              global_indices = local_to_global(vlasov4d%layout_x,(/i,j,k,l/)) 
+              global_indices = sll_o_local_to_global(vlasov4d%layout_x,(/i,j,k,l/)) 
               gi = global_indices(1)
               gj = global_indices(2)
               gk = global_indices(3)
@@ -286,11 +287,11 @@ subroutine initlocal()
      end do
   end do
   
-  call sll_create(maxwell, &
+  call sll_s_init_maxwell_2d_pstd(maxwell, &
        vlasov4d%eta1_min, vlasov4d%eta1_max, vlasov4d%nc_eta1, &
        vlasov4d%eta2_min, vlasov4d%eta2_max, vlasov4d%nc_eta2, TE_POLARIZATION)
   
-  call initialize(poisson, &
+  call sll_o_initialize(poisson, &
        vlasov4d%eta1_min, vlasov4d%eta1_max, vlasov4d%nc_eta1, &
        vlasov4d%eta2_min, vlasov4d%eta2_max, vlasov4d%nc_eta2, error)
   
@@ -301,7 +302,7 @@ subroutine solve_ampere(dt)
 
   sll_real64, intent(in)    :: dt
   
-  call sll_solve_ampere(maxwell, vlasov4d%ex, vlasov4d%ey, &
+  call sll_s_solve_ampere_2d_pstd(maxwell, vlasov4d%ex, vlasov4d%ey, &
               vlasov4d%bzn, dt, vlasov4d%jx, vlasov4d%jy)
 
 end subroutine solve_ampere
@@ -310,7 +311,7 @@ subroutine solve_faraday(dt)
 
   sll_real64, intent(in)    :: dt
   
-  call sll_solve_faraday(maxwell, vlasov4d%exn, vlasov4d%eyn, vlasov4d%bz, dt)
+  call sll_s_solve_faraday_2d_pstd(maxwell, vlasov4d%exn, vlasov4d%eyn, vlasov4d%bz, dt)
   
 end subroutine solve_faraday
   
