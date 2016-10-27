@@ -1,36 +1,48 @@
 !
-! file: ex1.f90
+! this example implements the following 2d Poisson problem
+!              - u_xx - u_yy = (k1**2 +k2**2) * sin(k1 x) * sin(k2 y),  0 <= x,y <= 1
+!              u(0,.) = 0,  [face=1] 
+!              u(.,0) = 0,  [face=2] 
+!              u(1,.) = 0,  [face=3] 
+!              u(.,1) = 0,  [face=4] 
+! where k1 = 2.0, k2 = 2.0
 !
+! the Homogeneous Boundary condition is treated by removing the Dirichlet nodes (dof)
 !
 ! usage:
-!   > ./ex1
+!  ln -s $CLAPP_DIR/inputs/fema/2d/poisson/dirichlet_ex1 input
+!  bin/poisson_2d input/parameters_sim_1d1d.nml input/solver_driver.nml
 !
+! plot:
+!  python $CLAPP_DIR/scripts/disco/plot_field.py phi.nml mapping.nml
+! 
 ! authors:
 !   ahmed ratnani  - ratnaniahmed@gmail.com
 !
 
 ! ............................................
 program main
-use spl_m_mapping_2d
-use spl_m_mapping_gallery
+use dsc_m_space_abstract,       only: dsc_t_space_abstract
+use dsc_m_field_bspline_2d,     only: dsc_t_field_bspline_2d
 use jrk_m_global
-use jrk_m_assembler_1d1d
-use jrk_m_gallery_1d1d
-use dsc_m_space_abstract
-use dsc_m_field_abstract
-use plf_m_matrix_csr
-use plf_m_vector
-use plf_m_linear_solver_driver
-use jrk_m_context
-use jrk_m_context_utilities
-use plf_m_ddm_parameters
+use jrk_m_assembler_abstract,   only: jrk_t_assembler_abstract
+use jrk_m_assembler_1d1d,       only: jrk_t_assembler_1d1d
+use jrk_m_gallery_1d1d,         only: build_matrix_stiffness 
+use jrk_m_context,              only: jrk_t_context
+use jrk_m_context_utilities,    only: jrk_allocate_space
+use plf_m_ddm_parameters,       only: plf_t_ddm_parameters
+use plf_m_linear_solver_driver, only: plf_t_linear_solver_driver
+use plf_m_matrix_csr,           only: plf_t_matrix_csr
+use plf_m_vector,               only: plf_t_vector
+use spl_m_mapping_2d,           only: spl_t_mapping_2d
+use spl_m_mapping_gallery,      only: spl_mapping_bilinear
 
 implicit none
   integer :: i_err
   class(dsc_t_space_abstract), allocatable :: trial_space
   class(dsc_t_space_abstract), allocatable :: test_space
   type(jrk_t_assembler_1d1d), target :: assembler
-  type(dsc_t_field)          , target      :: phi
+  type(dsc_t_field_bspline_2d), target      :: phi
   type(jrk_t_context)        , target      :: context
   type(jrk_t_context)        , target      :: test_context
   type(plf_t_vector), target :: rhs
@@ -51,6 +63,9 @@ implicit none
   character(len=256)            :: filename_solver
   character(len=256)            :: filename_params
   logical                       :: file_exists, equal, empty
+  real(kind=plf_rk), parameter :: pi = 3.1415926535897931 
+  real(kind=plf_rk), parameter :: k1 = 2.0 * pi 
+  real(kind=plf_rk), parameter :: k2 = 2.0 * pi 
 
   ! ...
   call jrk_initialize(i_err)
@@ -282,9 +297,9 @@ contains
       norm_h1 = 0.0_plf_rk
       do i_point = 1, n_points
 
-        f_0 = 0.0_plf_rk
-        f_x = 0.0_plf_rk
-        f_y = 0.0_plf_rk
+        f_0 =      sin(k1 * self % arr_x (1, i_point)) * sin(k2 * self % arr_x (2, i_point))
+        f_x = k1 * cos(k1 * self % arr_x (1, i_point)) * sin(k2 * self % arr_x (2, i_point)) 
+        f_y = k2 * sin(k1 * self % arr_x (1, i_point)) * cos(k2 * self % arr_x (2, i_point)) 
 
         field_0 = self % field_values(1, 1, i_field, i_point) 
         field_x = self % field_values(1, 2, i_field, i_point) 
@@ -322,9 +337,6 @@ contains
     real(plf_rk) :: f_value
     real(plf_rk) :: vi_0 
     real(plf_rk) :: wvol 
-    real(kind=plf_rk), parameter :: pi = 3.1415926535897931 
-    real(kind=plf_rk), parameter :: k1 = 2.0 * pi 
-    real(kind=plf_rk), parameter :: k2 = 2.0 * pi 
     real(kind=plf_rk), dimension(self % n_points) :: f_values
 
     ! ...
@@ -336,7 +348,8 @@ contains
     ! ...
 
     ! ...
-    f_values = sin(k1 * self % arr_x (1, :)) &
+    f_values = (k1**2 + k2**2) &
+           & * sin(k1 * self % arr_x (1, :)) &
            & * sin(k2 * self % arr_x (2, :))
     ! ...
 
