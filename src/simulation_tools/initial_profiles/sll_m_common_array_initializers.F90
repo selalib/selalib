@@ -833,7 +833,7 @@ contains
             'be passed. params = [alpha, beta, m, epsilon]'
        stop
     end if
-    SLL_ASSERT(size(params)==5)
+    SLL_ASSERT(size(params)==4)
     alpha  = params(1)
     beta   = params(2)
     m      = params(3)
