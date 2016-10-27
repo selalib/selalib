@@ -18,9 +18,9 @@ use sll_m_interpolators_1d_base, only: &
   sll_c_interpolator_1d
 
 use sll_m_maxwell_2d_pstd, only: &
-  sll_o_create, &
+  sll_s_init_maxwell_2d_pstd, &
   sll_t_maxwell_2d_pstd, &
-  sll_o_solve_ampere
+  sll_s_solve_ampere_2d_pstd
 
 use sll_m_utilities, only: &
   sll_s_int2string
@@ -106,7 +106,7 @@ SLL_CLEAR_ALLOCATE(bz(1:nc_eta1+1,1:nc_eta2+1),error)
 SLL_CLEAR_ALLOCATE(jx(1:nc_eta1+1,1:nc_eta2+1),error)
 SLL_CLEAR_ALLOCATE(jy(1:nc_eta1+1,1:nc_eta2+1),error)
 
-call sll_o_create(maxwell, &
+call sll_s_init_maxwell_2d_pstd(maxwell, &
                 eta1_min, eta1_max, nc_eta1, &
                 eta2_min, eta2_max, nc_eta2, TE_POLARIZATION)
 
@@ -169,7 +169,7 @@ do i_step = 1, n_step !Loop over time
 
    call compute_current()
    bz = 0.0_f64
-   call sll_o_solve_ampere(maxwell, ex, ey, bz, delta_t, jx, jy)
+   call sll_s_solve_ampere_2d_pstd(maxwell, ex, ey, bz, delta_t, jx, jy)
 
    call online_plot() 
    if (i_step == 1 .or. mod(i_step, 10) == 0) then
