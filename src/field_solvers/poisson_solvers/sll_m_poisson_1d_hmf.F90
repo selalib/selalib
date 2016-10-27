@@ -56,7 +56,6 @@ module sll_m_poisson_1d_hmf
      sll_comp64             , pointer  :: rhok(:)   !< fft(rho)
      type(sll_t_fft)                   :: fw        !< forward fft plan
      type(sll_t_fft)                   :: bw        !< backward fft plan
-     sll_real64             , pointer  :: kernel(:)    !<  array to store rho
   end type sll_t_poisson_1d_hmf
 
   type,extends(sll_c_poisson_1d_base) :: sll_c_poisson_1d_hmf  
@@ -124,13 +123,6 @@ contains
 
     SLL_ALLOCATE(self%rhok(1:nc_eta1),error)
     SLL_ALLOCATE(self%tmp(1:nc_eta1),error)
-    SLL_ALLOCATE(self%kernel(1:nc_eta1),error)
-
-    do i = 0, nc_eta1
-       self%kernel = sll_p_pi * i / (eta1_max - eta1_min)
-    end do
-    self%kernel(1)  = 0.0_f64
-    self%kernel(3:) = 0.0_f64
 
     call sll_s_fft_init_r2c_1d(self%fw,nc_eta1,self%tmp,self%rhok)
     call sll_s_fft_init_c2r_1d(self%bw,nc_eta1,self%rhok,self%tmp)
@@ -148,9 +140,9 @@ contains
     self%tmp = rhs(1:self%nc_eta1)
     call sll_s_fft_exec_r2c_1d(self%fw, self%tmp, self%rhok)
 
-    self%rhok = self%rhok * (2.0_f64*sll_p_pi) / self%nc_eta1
-     
-    self%rhok = self%rhok * self%kernel * sll_p_i1
+    self%rhok(2)  = self%rhok(2) * sll_p_pi * sll_p_i1 ! We keep only one mode
+    self%rhok(1)  = 0.0_f64
+    self%rhok(3:) = 0.0_f64
 
     call sll_s_fft_exec_c2r_1d(self%bw, self%rhok, self%tmp)
 
