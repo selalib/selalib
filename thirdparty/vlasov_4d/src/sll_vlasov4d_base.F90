@@ -10,6 +10,8 @@ module sll_vlasov4d_base
  use sll_m_xml_io
  use init_functions
  use sll_m_collective
+ use sll_m_utilities
+ use mpi
 
  implicit none
  
@@ -25,11 +27,11 @@ module sll_vlasov4d_base
    type(sll_t_cartesian_mesh_2d), pointer   :: geomv
    sll_real64, dimension(:,:,:,:),  pointer :: f
    sll_real64, dimension(:,:,:,:),  pointer :: ft
-   type(layout_4D), pointer                 :: layout_x
-   type(layout_4D), pointer                 :: layout_v
-   type(layout_4D), pointer                 :: layout_p
-   type(remap_plan_4D_real64), pointer      :: x_to_v 
-   type(remap_plan_4D_real64), pointer      :: v_to_x
+   type(sll_t_layout_4D), pointer            :: layout_x
+   type(sll_t_layout_4D), pointer            :: layout_v
+   type(sll_t_layout_4D), pointer            :: layout_p
+   type(sll_t_remap_plan_4D_real64), pointer      :: x_to_v 
+   type(sll_t_remap_plan_4D_real64), pointer      :: v_to_x
    sll_real64, dimension(:,:), pointer      :: ex
    sll_real64, dimension(:,:), pointer      :: ey
    sll_real64, dimension(:,:), pointer      :: jx
@@ -110,8 +112,8 @@ contains
   namelist /algo_charge/ va, meth
   namelist /field_solvers/ poisson_type, maxwell_type
 
-  prank = sll_get_collective_rank(sll_v_world_collective)
-  psize = sll_get_collective_size(sll_v_world_collective)
+  prank = sll_f_get_collective_rank(sll_v_world_collective)
+  psize = sll_f_get_collective_size(sll_v_world_collective)
   comm  = sll_v_world_collective%comm
 
   va           = VA_VALIS
@@ -161,8 +163,8 @@ contains
   this%fdiag      = fdiag
   this%fthdiag    = fthdiag
 
-  this%geomx      => new_cartesian_mesh_2d(nx,ny,x0,x1,y0,y1)
-  this%geomv      => new_cartesian_mesh_2d(nvx,nvy,vx0,vx1,vy0,vy1)
+  this%geomx      => sll_f_new_cartesian_mesh_2d(nx,ny,x0,x1,y0,y1)
+  this%geomv      => sll_f_new_cartesian_mesh_2d(nvx,nvy,vx0,vx1,vy0,vy1)
 
   this%nc_eta1    = this%geomx%num_cells1
   this%nc_eta2    = this%geomx%num_cells2
@@ -217,10 +219,10 @@ contains
 
   endif
 
-  if (.not. is_power_of_two(int(psize,i64))) then     
+  if (.not. sll_f_is_power_of_two(int(psize,i64))) then     
      print *, 'This test needs to run in a number of processes which is ',&
           'a power of 2.'
-     call sll_halt_collective()
+     call sll_s_halt_collective()
      stop
   end if
 
@@ -241,46 +243,46 @@ contains
   sll_real64, dimension(:), allocatable :: eta3
   sll_real64, dimension(:), allocatable :: eta4
 
-  prank = sll_get_collective_rank(sll_v_world_collective)
-  psize = sll_get_collective_size(sll_v_world_collective)
+  prank = sll_f_get_collective_rank(sll_v_world_collective)
+  psize = sll_f_get_collective_size(sll_v_world_collective)
   comm  = sll_v_world_collective%comm
 
   error = 0
 
   this%transposed = .false.
 
-  this%layout_x => new_layout_4D( sll_world_collective )        
-  call initialize_layout_with_distributed_array( &
+  this%layout_x => sll_f_new_layout_4d( sll_v_world_collective )        
+  call sll_o_initialize_layout_with_distributed_array( &
              this%np_eta1, this%np_eta2, this%np_eta3, this%np_eta4,    &
              1,1,1,int(psize,4),this%layout_x)
 
-  if ( prank == MPI_MASTER ) call sll_view_lims( this%layout_x )
+  if ( prank == MPI_MASTER ) call sll_o_view_lims( this%layout_x )
   call flush(6)
 
-  call compute_local_sizes(this%layout_x, &
+  call sll_o_compute_local_sizes(this%layout_x, &
                               loc_sz_i,loc_sz_j,loc_sz_k,loc_sz_l)        
   SLL_CLEAR_ALLOCATE(this%f(1:loc_sz_i,1:loc_sz_j,1:loc_sz_k,1:loc_sz_l),ierr)
 
-  this%layout_v => new_layout_4D( sll_world_collective )
-  call initialize_layout_with_distributed_array( &
+  this%layout_v => sll_f_new_layout_4d( sll_v_world_collective )
+  call sll_o_initialize_layout_with_distributed_array( &
               this%np_eta1, this%np_eta2, this%np_eta3, this%np_eta4,    &
               1,int(psize,4),1,1,this%layout_v)
 
   !Layout for plotting
-  this%layout_p => new_layout_4D( sll_world_collective )
-  call initialize_layout_with_distributed_array( &
+  this%layout_p => sll_f_new_layout_4d( sll_v_world_collective )
+  call sll_o_initialize_layout_with_distributed_array( &
               this%nc_eta1, this%nc_eta2, this%nc_eta3, this%nc_eta4,    &
               1,1,1,int(psize,4),this%layout_p)
 
-  if ( prank == MPI_MASTER ) call sll_view_lims( this%layout_v )
+  if ( prank == MPI_MASTER ) call sll_o_view_lims( this%layout_v )
   call flush(6)
 
-  call compute_local_sizes(this%layout_v, &
+  call sll_o_compute_local_sizes(this%layout_v, &
                               loc_sz_i,loc_sz_j,loc_sz_k,loc_sz_l)        
   SLL_CLEAR_ALLOCATE(this%ft(1:loc_sz_i,1:loc_sz_j,1:loc_sz_k,1:loc_sz_l),ierr)
 
-  this%x_to_v => new_remap_plan( this%layout_x, this%layout_v, this%f)     
-  this%v_to_x => new_remap_plan( this%layout_v, this%layout_x, this%ft)     
+  this%x_to_v => sll_o_new_remap_plan( this%layout_x, this%layout_v, this%f)     
+  this%v_to_x => sll_o_new_remap_plan( this%layout_v, this%layout_x, this%ft)     
   
   if(prank == MPI_MASTER) then
 
@@ -306,18 +308,18 @@ contains
      end do
 
      print *,'Printing layout x: '
-     call sll_view_lims(this%layout_x)
+     call sll_o_view_lims(this%layout_x)
      print *,'Printing layout v: '
-     call sll_view_lims(this%layout_v)
+     call sll_o_view_lims(this%layout_v)
      print *,'Printing layout p (for plotting): '
-     call sll_view_lims(this%layout_p)
+     call sll_o_view_lims(this%layout_p)
 
-     call sll_hdf5_file_create("mesh4d.h5",file_id,error)
-     call sll_hdf5_write_array(file_id,eta1,"/x1",error)
-     call sll_hdf5_write_array(file_id,eta2,"/x2",error)
-     call sll_hdf5_write_array(file_id,eta3,"/x3",error)
-     call sll_hdf5_write_array(file_id,eta4,"/x4",error)
-     call sll_hdf5_file_close(file_id, error)
+     call sll_o_hdf5_file_create("mesh4d.h5",file_id,error)
+     call sll_o_hdf5_write_array(file_id,eta1,"/x1",error)
+     call sll_o_hdf5_write_array(file_id,eta2,"/x2",error)
+     call sll_o_hdf5_write_array(file_id,eta3,"/x3",error)
+     call sll_o_hdf5_write_array(file_id,eta4,"/x4",error)
+     call sll_o_hdf5_file_close(file_id, error)
 
   end if
 
@@ -334,9 +336,9 @@ contains
 
   class(vlasov4d_base),intent(inout) :: this
 
-  call sll_delete(this%layout_x)
-  call sll_delete(this%layout_v)
-  call sll_delete(this%layout_p)
+  call sll_o_delete(this%layout_x)
+  call sll_o_delete(this%layout_v)
+  call sll_o_delete(this%layout_p)
   SLL_DEALLOCATE_ARRAY(this%f, ierr)
   SLL_DEALLOCATE_ARRAY(this%ft, ierr)
 
@@ -355,20 +357,20 @@ contains
    dvxvy = this%delta_eta3*this%delta_eta4
 
    SLL_ASSERT(this%transposed)
-   call compute_local_sizes(this%layout_v, &
+   call sll_o_compute_local_sizes(this%layout_v, &
         loc_sz_i,loc_sz_j,loc_sz_k,loc_sz_l)        
    
    locrho(:,:) = 0.
    do j=1,loc_sz_j
    do i=1,loc_sz_i
-      global_indices = local_to_global(this%layout_v,(/i,j,1,1/)) 
+      global_indices = sll_o_local_to_global(this%layout_v,(/i,j,1,1/)) 
       gi = global_indices(1)
       gj = global_indices(2)
       locrho(gi,gj) = sum(this%ft(i,j,:,:))*dvxvy 
    end do
    end do
    this%rho(:,:) = 0.
-   comm  = sll_world_collective%comm
+   comm  = sll_v_world_collective%comm
    call mpi_barrier(comm,error)
    c=(this%np_eta1)*(this%np_eta2)
    call mpi_allreduce(locrho,this%rho,c,MPI_REAL8,MPI_SUM,comm,error)
@@ -389,14 +391,14 @@ contains
 
    dvxvy = this%delta_eta3*this%delta_eta4
    SLL_ASSERT(this%transposed)
-   call compute_local_sizes(this%layout_v,loc_sz_i,loc_sz_j,loc_sz_k,loc_sz_l)        
+   call sll_o_compute_local_sizes(this%layout_v,loc_sz_i,loc_sz_j,loc_sz_k,loc_sz_l)        
 
    locjx(:,:) = 0.; locjy(:,:) = 0.
    do l=1,loc_sz_l
    do k=1,loc_sz_k
    do j=1,loc_sz_j
    do i=1,loc_sz_i
-      global_indices = local_to_global(this%layout_v,(/i,j,k,l/)) 
+      global_indices = sll_o_local_to_global(this%layout_v,(/i,j,k,l/)) 
       gi = global_indices(1)
       gj = global_indices(2)
       gk = global_indices(3)
@@ -411,7 +413,7 @@ contains
    end do
 
    this%jx(:,:) = 0.; this%jy(:,:) = 0.
-   comm   = sll_world_collective%comm
+   comm   = sll_v_world_collective%comm
    call mpi_barrier(comm,error)
    c=(this%np_eta1)*(this%np_eta2)
    call mpi_allreduce(locjx,this%jx,c, MPI_REAL8,MPI_SUM,comm,error)
@@ -429,9 +431,9 @@ contains
    sll_int32 :: comm, error
    sll_real64 :: cell_volume
 
-   comm  = sll_world_collective%comm
-   prank = sll_get_collective_rank(sll_world_collective)
-   psize = sll_get_collective_size(sll_world_collective)
+   comm  = sll_v_world_collective%comm
+   prank = sll_f_get_collective_rank(sll_v_world_collective)
+   psize = sll_f_get_collective_size(sll_v_world_collective)
 
    aux    = 0.0
    auxloc = 0.0
@@ -457,7 +459,7 @@ contains
    class(vlasov4d_base),intent(inout) :: this
 
    SLL_ASSERT(.not. this%transposed)
-   call apply_remap_4D( this%x_to_v, this%f, this%ft )
+   call sll_o_apply_remap_4d( this%x_to_v, this%f, this%ft )
    this%transposed = .true.
 
  end subroutine transposexv
@@ -467,7 +469,7 @@ contains
    class(vlasov4d_base),intent(inout) :: this
 
    SLL_ASSERT(this%transposed)
-   call apply_remap_4D( this%v_to_x, this%ft, this%f )
+   call sll_o_apply_remap_4d( this%v_to_x, this%ft, this%f )
    this%transposed = .false.
 
  end subroutine transposevx
@@ -486,44 +488,44 @@ contains
   sll_int32                       :: file_id
   sll_int32                       :: nx1, nx2, nx3, nx4
 
-  call int2string(iplot,cplot)
+  call sll_s_int2string(iplot,cplot)
   call write_fx1x2(this,cplot)
   call write_fx1x3(this,cplot)
   call write_fx2x4(this,cplot)
   call write_fx3x4(this,cplot)
 
-  prank = sll_get_collective_rank(sll_world_collective)
+  prank = sll_f_get_collective_rank(sll_v_world_collective)
   if (prank == MPI_MASTER) then
 
      if(associated(this%ex)) then
-        call sll_hdf5_file_create('ex_'//cplot//".h5",file_id,error)
-        call sll_hdf5_write_array(file_id,this%ex,"/values",error)
-        call sll_hdf5_file_close(file_id, error)
+        call sll_o_hdf5_file_create('ex_'//cplot//".h5",file_id,error)
+        call sll_o_hdf5_write_array(file_id,this%ex,"/values",error)
+        call sll_o_hdf5_file_close(file_id, error)
      end if
      if(associated(this%ey)) then
-        call sll_hdf5_file_create('ey_'//cplot//".h5",file_id,error)
-        call sll_hdf5_write_array(file_id,this%ey,"/values",error)
-        call sll_hdf5_file_close(file_id, error)
+        call sll_o_hdf5_file_create('ey_'//cplot//".h5",file_id,error)
+        call sll_o_hdf5_write_array(file_id,this%ey,"/values",error)
+        call sll_o_hdf5_file_close(file_id, error)
      end if
      if(associated(this%rho)) then
-        call sll_hdf5_file_create('rho_'//cplot//".h5",file_id,error)
-        call sll_hdf5_write_array(file_id,this%rho,"/values",error)
-        call sll_hdf5_file_close(file_id, error)
+        call sll_o_hdf5_file_create('rho_'//cplot//".h5",file_id,error)
+        call sll_o_hdf5_write_array(file_id,this%rho,"/values",error)
+        call sll_o_hdf5_file_close(file_id, error)
      end if
      if(associated(this%jx)) then
-        call sll_hdf5_file_create('jx_'//cplot//".h5",file_id,error)
-        call sll_hdf5_write_array(file_id,this%jx,"/values",error)
-        call sll_hdf5_file_close(file_id, error)
+        call sll_o_hdf5_file_create('jx_'//cplot//".h5",file_id,error)
+        call sll_o_hdf5_write_array(file_id,this%jx,"/values",error)
+        call sll_o_hdf5_file_close(file_id, error)
      end if
      if(associated(this%jy)) then
-        call sll_hdf5_file_create('jy_'//cplot//".h5",file_id,error)
-        call sll_hdf5_write_array(file_id,this%jy,"/values",error)
-        call sll_hdf5_file_close(file_id, error)
+        call sll_o_hdf5_file_create('jy_'//cplot//".h5",file_id,error)
+        call sll_o_hdf5_write_array(file_id,this%jy,"/values",error)
+        call sll_o_hdf5_file_close(file_id, error)
      end if
      if(associated(this%bz)) then
-        call sll_hdf5_file_create('bz_'//cplot//".h5",file_id,error)
-        call sll_hdf5_write_array(file_id,this%bz,"/values",error)
-        call sll_hdf5_file_close(file_id, error)
+        call sll_o_hdf5_file_create('bz_'//cplot//".h5",file_id,error)
+        call sll_o_hdf5_write_array(file_id,this%bz,"/values",error)
+        call sll_o_hdf5_file_close(file_id, error)
      end if
 
      nx1 = this%np_eta1
@@ -531,7 +533,7 @@ contains
      nx3 = this%np_eta3
      nx4 = this%np_eta4
 
-     call sll_xml_file_create("fvalues_"//cplot//".xmf",file_id,error)
+     call sll_s_xml_file_create("fvalues_"//cplot//".xmf",file_id,error)
      call write_grid(this,file_id,nx1,nx2,"x1","x2",cplot)
      call write_grid(this,file_id,nx1,nx3,"x1","x3",cplot)
      call write_grid(this,file_id,nx2,nx4,"x2","x4",cplot)
@@ -617,9 +619,9 @@ contains
  sll_real64, dimension(:,:), pointer :: fij
  sll_real64                          :: sumloc
 
- prank = sll_get_collective_rank(sll_world_collective)
- comm  = sll_world_collective%comm
- call compute_local_sizes(this%layout_p,loc_sz_i,loc_sz_j,loc_sz_k,loc_sz_l)        
+ prank = sll_f_get_collective_rank(sll_v_world_collective)
+ comm  = sll_v_world_collective%comm
+ call sll_o_compute_local_sizes(this%layout_p,loc_sz_i,loc_sz_j,loc_sz_k,loc_sz_l)        
  SLL_CLEAR_ALLOCATE(fij(1:loc_sz_i,1:loc_sz_j),error)
  do j=1,loc_sz_j
     do i=1,loc_sz_i
@@ -628,9 +630,9 @@ contains
     end do
  end do
  if (prank == MPI_MASTER) then
-    call sll_hdf5_file_create('fx1x2_'//cplot//".h5",file_id,error)
-    call sll_hdf5_write_array(file_id,fij,"/values",error)
-    call sll_hdf5_file_close(file_id, error)
+    call sll_o_hdf5_file_create('fx1x2_'//cplot//".h5",file_id,error)
+    call sll_o_hdf5_write_array(file_id,fij,"/values",error)
+    call sll_o_hdf5_file_close(file_id, error)
  end if
  end subroutine write_fx1x2
 
@@ -645,9 +647,9 @@ contains
  sll_int32                           :: comm
  sll_real64                          :: sumloc
 
- prank = sll_get_collective_rank(sll_world_collective)
- comm  = sll_world_collective%comm
- call compute_local_sizes(this%layout_p,loc_sz_i,loc_sz_j,loc_sz_k,loc_sz_l)        
+ prank = sll_f_get_collective_rank(sll_v_world_collective)
+ comm  = sll_v_world_collective%comm
+ call sll_o_compute_local_sizes(this%layout_p,loc_sz_i,loc_sz_j,loc_sz_k,loc_sz_l)        
  SLL_CLEAR_ALLOCATE(fik(1:loc_sz_i,1:loc_sz_k),error)
  do k=1,loc_sz_k
     do i=1,loc_sz_i
@@ -656,9 +658,9 @@ contains
     end do
  end do
  if (prank == MPI_MASTER) then
-    call sll_hdf5_file_create('fx1x3_'//cplot//".h5",file_id,error)
-    call sll_hdf5_write_array(file_id,fik,"/values",error)
-    call sll_hdf5_file_close(file_id, error)
+    call sll_o_hdf5_file_create('fx1x3_'//cplot//".h5",file_id,error)
+    call sll_o_hdf5_write_array(file_id,fik,"/values",error)
+    call sll_o_hdf5_file_close(file_id, error)
  end if
  end subroutine write_fx1x3
 
@@ -674,8 +676,8 @@ contains
  sll_int32                           :: prank
  sll_real64, dimension(:,:), pointer :: fjl
 
- prank = sll_get_collective_rank(sll_world_collective)
- call compute_local_sizes(this%layout_p,loc_sz_i,loc_sz_j,loc_sz_k,loc_sz_l)        
+ prank = sll_f_get_collective_rank(sll_v_world_collective)
+ call sll_o_compute_local_sizes(this%layout_p,loc_sz_i,loc_sz_j,loc_sz_k,loc_sz_l)        
  SLL_CLEAR_ALLOCATE(fjl(1:loc_sz_j,1:loc_sz_l),error)
  do l=1,loc_sz_l
     do j=1,loc_sz_j
@@ -683,11 +685,11 @@ contains
     end do
  end do
  global_dims = (/this%nc_eta2,this%nc_eta4/)
- offset(1) = get_layout_j_min(this%layout_p,prank)-1
- offset(2) = get_layout_l_min(this%layout_p,prank)-1
- call sll_hdf5_file_create('fx2x4_'//cplot//".h5",MPI_COMM_WORLD,pfile_id,error)
- call sll_hdf5_write_array_2d(pfile_id,global_dims,offset,fjl,"/values",error)
- call sll_hdf5_file_close(pfile_id, error)
+ offset(1) = sll_o_get_layout_j_min(this%layout_p,prank)-1
+ offset(2) = sll_o_get_layout_l_min(this%layout_p,prank)-1
+ call sll_o_hdf5_file_create('fx2x4_'//cplot//".h5",MPI_COMM_WORLD,pfile_id,error)
+ call sll_o_hdf5_write_array(pfile_id,global_dims,offset,fjl,"/values",error)
+ call sll_o_hdf5_file_close(pfile_id, error)
 
  end subroutine write_fx2x4
 
@@ -703,8 +705,8 @@ contains
  sll_int32                           :: prank
  sll_real64, dimension(:,:), pointer :: fkl
 
- prank = sll_get_collective_rank(sll_world_collective)
- call compute_local_sizes(this%layout_p,loc_sz_i,loc_sz_j,loc_sz_k,loc_sz_l)        
+ prank = sll_f_get_collective_rank(sll_v_world_collective)
+ call sll_o_compute_local_sizes(this%layout_p,loc_sz_i,loc_sz_j,loc_sz_k,loc_sz_l)        
  SLL_CLEAR_ALLOCATE(fkl(1:loc_sz_k,1:loc_sz_l),error)
  do l=1,loc_sz_l
     do k=1,loc_sz_k
@@ -712,11 +714,11 @@ contains
     end do
  end do
  global_dims = (/this%nc_eta3,this%nc_eta4/)
- offset(1) = get_layout_k_min(this%layout_p,prank)-1
- offset(2) = get_layout_l_min(this%layout_p,prank)-1
- call sll_hdf5_file_create('fx3x4_'//cplot//".h5",MPI_COMM_WORLD,pfile_id,error)
- call sll_hdf5_write_array_2d(pfile_id,global_dims,offset,fkl,"/values",error)
- call sll_hdf5_file_close(pfile_id, error)
+ offset(1) = sll_o_get_layout_k_min(this%layout_p,prank)-1
+ offset(2) = sll_o_get_layout_l_min(this%layout_p,prank)-1
+ call sll_o_hdf5_file_create('fx3x4_'//cplot//".h5",MPI_COMM_WORLD,pfile_id,error)
+ call sll_o_hdf5_write_array(pfile_id,global_dims,offset,fkl,"/values",error)
+ call sll_o_hdf5_file_close(pfile_id, error)
 
  end subroutine write_fx3x4
 
@@ -728,5 +730,33 @@ contains
    call thdiag(this,nrj,time)
    
  end subroutine write_energy
+
+ subroutine initialize_file(idata, ithf)
+   integer :: idata, ithf
+   character(len=72) :: filename
+   integer :: IO_stat ! indicateur d'erreur
+
+   call getarg( 1, filename)
+
+   open(idata,file=trim(filename),IOStat=IO_stat)
+   if (IO_stat/=0) STOP "Miss argument file.nml"
+   open(ithf,file="thf.dat",IOStat=IO_stat)
+   if (IO_stat/=0) STOP "erreur d'ouverture du fichier thf.dat"
+ end subroutine initialize_file
+
+ subroutine time_history(ithf,desc,format,array)
+    integer       :: ithf
+    character(3)  :: desc
+    character(14) :: format
+    real(8), dimension(:) :: array
+
+    if (desc(1:3)=="thf") then
+       !print *,'array', array
+       write(ithf,format) array
+    else
+       write(*,*) desc," not recognized"
+    endif
+
+  end subroutine time_history
 
 end module sll_vlasov4d_base

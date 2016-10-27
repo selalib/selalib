@@ -1,10 +1,19 @@
-#include "sll_fftw.h"
 
 module sll_vlasov4d_spectral
+#include "sll_fftw.h"
+#include "sll_working_precision.h"
+#include "sll_assert.h"
+#include "sll_memory.h"
 
-#include "selalib-mpi.h"
 
+ use sll_m_fftw3
  use sll_vlasov4d_base
+ use sll_m_remapper
+ use sll_m_interpolators_1d_base
+ use sll_m_interpolators_2d_base
+ use sll_m_collective
+ use sll_m_constants
+ use iso_c_binding
 
  implicit none
  private
@@ -25,7 +34,7 @@ module sll_vlasov4d_spectral
    fftw_plan                                :: p_tmp_y
    fftw_comp, dimension(:),  pointer        :: tmp_x
    fftw_comp, dimension(:),  pointer        :: tmp_y
-   class(sll_interpolator_2d_base), pointer :: interp_x3x4
+   class(sll_c_interpolator_2d), pointer :: interp_x3x4
 
  end type vlasov4d_spectral
 
@@ -45,10 +54,10 @@ contains
 
  subroutine initialize_vlasov4d_spectral(this,interp_x3x4,error)
 
-  use sll_hdf5_io_serial
+  use sll_m_hdf5_io_serial
 
   class(vlasov4d_spectral),intent(inout)  :: this
-  class(sll_interpolator_2d_base), target :: interp_x3x4
+  class(sll_c_interpolator_2d), target :: interp_x3x4
   sll_int32                               :: error
 
   sll_real64 :: kx0, ky0
@@ -59,9 +68,9 @@ contains
 
   call initialize_vlasov4d_base(this)
 
-  prank = sll_get_collective_rank(sll_world_collective)
-  psize = sll_get_collective_size(sll_world_collective)
-  comm  = sll_world_collective%comm
+  prank = sll_f_get_collective_rank(sll_v_world_collective)
+  psize = sll_f_get_collective_size(sll_v_world_collective)
+  comm  = sll_v_world_collective%comm
 
   SLL_CLEAR_ALLOCATE(this%ex(1:this%np_eta1,1:this%np_eta2),error)
   SLL_CLEAR_ALLOCATE(this%ey(1:this%np_eta1,1:this%np_eta2),error)
@@ -85,8 +94,8 @@ contains
   SLL_CLEAR_ALLOCATE(this%kx(1:this%nc_eta1/2+1), error)
   SLL_CLEAR_ALLOCATE(this%ky(1:this%nc_eta2/2+1), error)
    
-  kx0 = 2._f64*sll_pi/(this%nc_eta1*this%delta_eta1)
-  ky0 = 2._f64*sll_pi/(this%nc_eta2*this%delta_eta2)
+  kx0 = 2._f64*sll_p_pi/(this%nc_eta1*this%delta_eta1)
+  ky0 = 2._f64*sll_p_pi/(this%nc_eta2*this%delta_eta2)
 
   do i=1,this%nc_eta1/2+1
      this%kx(i) = (i-1)*kx0
@@ -103,8 +112,8 @@ contains
 
   class(vlasov4d_spectral) :: this
 
-  call sll_delete(this%layout_x)
-  call sll_delete(this%layout_v)
+  call sll_o_delete(this%layout_x)
+  call sll_o_delete(this%layout_v)
   SLL_DEALLOCATE_ARRAY(this%f, ierr)
   SLL_DEALLOCATE_ARRAY(this%ft, ierr)
 
@@ -136,10 +145,10 @@ contains
   x3_min   = this%eta3_min
   delta_x3 = this%delta_eta3
 
-  call compute_local_sizes(this%layout_x,loc_sz_i,loc_sz_j,loc_sz_k,loc_sz_l)        
+  call sll_o_compute_local_sizes(this%layout_x,loc_sz_i,loc_sz_j,loc_sz_k,loc_sz_l)        
   do l=1,loc_sz_l
   do k=1,loc_sz_k
-     global_indices = local_to_global(this%layout_x,(/1,1,k,l/)) 
+     global_indices = sll_o_local_to_global(this%layout_x,(/1,1,k,l/)) 
      gk = global_indices(3)
      vx = (x3_min +(gk-1)*delta_x3)*dt
      do j=1,loc_sz_j
@@ -179,11 +188,11 @@ contains
   nc_x2    = this%nc_eta2
   x4_min   = this%eta4_min
   delta_x4 = this%delta_eta4
-  call compute_local_sizes(this%layout_x,loc_sz_i,loc_sz_j,loc_sz_k,loc_sz_l)
+  call sll_o_compute_local_sizes(this%layout_x,loc_sz_i,loc_sz_j,loc_sz_k,loc_sz_l)
 
   do l=1,loc_sz_l
 
-    global_indices = local_to_global(this%layout_x,(/1,1,1,l/)) 
+    global_indices = sll_o_local_to_global(this%layout_x,(/1,1,1,l/)) 
     gl = global_indices(4)
     vy = (x4_min +(gl-1)*delta_x4)*dt
 
@@ -231,7 +240,7 @@ contains
   delta_x4 = this%delta_eta4
 
   SLL_ASSERT(this%transposed) 
-  call compute_local_sizes(this%layout_v,loc_sz_i,loc_sz_j,loc_sz_k,loc_sz_l)
+  call sll_o_compute_local_sizes(this%layout_v,loc_sz_i,loc_sz_j,loc_sz_k,loc_sz_l)
 
   do i=1,loc_sz_i
   do j=1,loc_sz_j
@@ -239,7 +248,7 @@ contains
      do k=1,loc_sz_k
      do l=1,loc_sz_l
 
-        global_indices = local_to_global(this%layout_v,(/i,j,k,l/)) 
+        global_indices = sll_o_local_to_global(this%layout_v,(/i,j,k,l/)) 
         gi = global_indices(1)
         gj = global_indices(2)
         gk = global_indices(3)
@@ -256,8 +265,9 @@ contains
      end do
      end do
 
-     this%ft(i,j,:,:) = this%interp_x3x4%interpolate_array_disp(loc_sz_k,loc_sz_l, &
-                                                 this%ft(i,j,:,:),alpha_x,alpha_y)
+      call this%interp_x3x4%interpolate_array_disp(loc_sz_k,loc_sz_l, &
+                                      this%ft(i,j,:,:),alpha_x,alpha_y, &
+                                      this%ft(i,j,:,:))
   end do
   end do
 

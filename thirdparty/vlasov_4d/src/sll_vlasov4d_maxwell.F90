@@ -1,8 +1,12 @@
 module sll_vlasov4d_maxwell
-
-#include "selalib-mpi.h"
+#include "sll_working_precision.h"
+#include "sll_assert.h"
+#include "sll_memory.h"
 
  use sll_vlasov4d_base
+ use sll_m_remapper
+ use sll_m_interpolators_1d_base
+ use sll_m_interpolators_2d_base
 
  implicit none
  private
@@ -13,9 +17,9 @@ module sll_vlasov4d_maxwell
 
  type, public, extends(vlasov4d_base) :: vlasov4d_maxwell
 
-   class(sll_interpolator_1d_base), pointer :: interp_x1
-   class(sll_interpolator_1d_base), pointer :: interp_x2
-   class(sll_interpolator_2d_base), pointer :: interp_x3x4
+   class(sll_c_interpolator_1d), pointer :: interp_x1
+   class(sll_c_interpolator_1d), pointer :: interp_x2
+   class(sll_c_interpolator_2d), pointer :: interp_x3x4
 
  end type vlasov4d_maxwell
 
@@ -41,9 +45,9 @@ contains
                                         error )
 
   class(vlasov4d_maxwell),intent(inout)   :: this
-  class(sll_interpolator_1d_base), target :: interp_x1
-  class(sll_interpolator_1d_base), target :: interp_x2
-  class(sll_interpolator_2d_base), target :: interp_x3x4
+  class(sll_c_interpolator_1d), target :: interp_x1
+  class(sll_c_interpolator_1d), target :: interp_x2
+  class(sll_c_interpolator_2d), target :: interp_x3x4
   sll_int32                               :: error
 
   call initialize_vlasov4d_base(this)
@@ -66,8 +70,8 @@ contains
 
   class(vlasov4d_maxwell),intent(inout) :: this
 
-  call sll_delete(this%layout_x)
-  call sll_delete(this%layout_v)
+  call sll_o_delete(this%layout_x)
+  call sll_o_delete(this%layout_v)
   SLL_DEALLOCATE_ARRAY(this%f, ierr)
   SLL_DEALLOCATE_ARRAY(this%ft, ierr)
 
@@ -84,16 +88,16 @@ contains
   x3_min   = this%eta3_min
   delta_x3 = this%delta_eta3
 
-  call compute_local_sizes(this%layout_x, &
+  call sll_o_compute_local_sizes(this%layout_x, &
                               loc_sz_i,loc_sz_j,loc_sz_k,loc_sz_l)        
 
   do l=1,loc_sz_l
   do k=1,loc_sz_k
-     global_indices = local_to_global(this%layout_x,(/1,1,k,l/)) 
+     global_indices = sll_o_local_to_global(this%layout_x,(/1,1,k,l/)) 
      gk = global_indices(3)
      alpha = (x3_min +(gk-1)*delta_x3)*dt
      do j=1,loc_sz_j
-        this%f(:,j,k,l) = this%interp_x1%interpolate_array_disp(loc_sz_i, &
+        call this%interp_x1%interpolate_array_disp_inplace(loc_sz_i, &
                                                                 this%f(:,j,k,l), &
                                                                 alpha)
      end do
@@ -112,18 +116,18 @@ contains
 
   x4_min   = this%eta4_min
   delta_x4 = this%delta_eta4
-  call compute_local_sizes(this%layout_x, &
+  call sll_o_compute_local_sizes(this%layout_x, &
                               loc_sz_i,loc_sz_j,loc_sz_k,loc_sz_l)        
   do l=1,loc_sz_l
 
-    global_indices = local_to_global(this%layout_x,(/1,1,1,l/)) 
+    global_indices = sll_o_local_to_global(this%layout_x,(/1,1,1,l/)) 
     gl = global_indices(4)
     alpha = (x4_min +(gl-1)*delta_x4)*dt
 
     do k=1,loc_sz_k
     do i=1,loc_sz_i
 
-       this%f(i,:,k,l) = this%interp_x2%interpolate_array_disp(loc_sz_j, &
+       call this%interp_x2%interpolate_array_disp_inplace(loc_sz_j, &
                                                                this%f(i,:,k,l), &
                                                                alpha)
 
@@ -152,7 +156,7 @@ contains
   delta_x4 = this%delta_eta4
 
   SLL_ASSERT(this%transposed) 
-  call compute_local_sizes(this%layout_v, &
+  call sll_o_compute_local_sizes(this%layout_v, &
                               loc_sz_i,loc_sz_j,loc_sz_k,loc_sz_l)        
 
   do i=1,loc_sz_i
@@ -161,7 +165,7 @@ contains
      do k=1,loc_sz_k
      do l=1,loc_sz_l
 
-        global_indices = local_to_global(this%layout_v,(/i,j,k,l/)) 
+        global_indices = sll_o_local_to_global(this%layout_v,(/i,j,k,l/)) 
         gi = global_indices(1)
         gj = global_indices(2)
         gk = global_indices(3)
@@ -178,8 +182,9 @@ contains
      end do
      end do
 
-     this%ft(i,j,:,:) = this%interp_x3x4%interpolate_array_disp(loc_sz_k,loc_sz_l, &
-                                                 this%ft(i,j,:,:),alpha_x,alpha_y)
+     call this%interp_x3x4%interpolate_array_disp(loc_sz_k,loc_sz_l, &
+                                                 this%ft(i,j,:,:), &
+            alpha_x,alpha_y,this%ft(i,j,:,:) )
   end do
   end do
 
