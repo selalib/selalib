@@ -10,7 +10,7 @@ program vp4d
   implicit none
 
   type(vlasov4d_poisson)    :: vlasov4d 
-  type(poisson_2d_periodic) :: poisson 
+  type(sll_t_poisson_2d_periodic) :: poisson 
   type(sll_mudpack_solver)  :: poisson_mg
 
   type(sll_cubic_spline_interpolator_1d), target :: spl_x1
@@ -32,14 +32,14 @@ program vp4d
   sll_int32  :: global_indices(4)
   sll_real64 :: time
 
-  call sll_boot_collective()
+  call sll_s_boot_collective()
 
-  prank = sll_get_collective_rank(sll_world_collective)
-  psize = sll_get_collective_size(sll_world_collective)
-  comm  = sll_world_collective%comm
+  prank = sll_f_get_collective_rank(sll_v_world_collective)
+  psize = sll_f_get_collective_size(sll_v_world_collective)
+  comm  = sll_v_world_collective%comm
 
   tcpu1 = MPI_WTIME()
-  if (.not. is_power_of_two(psize)) then     
+  if (.not. sll_f_is_power_of_two(psize)) then     
      print *, 'This test needs to run in a number of processes which is ',&
           'a power of 2.'
      stop
@@ -53,38 +53,38 @@ program vp4d
   call spl_x1%initialize(vlasov4d%nc_eta1+1,  &
                          vlasov4d%eta1_min,   &
                          vlasov4d%eta1_max,   &
-                         SLL_PERIODIC)
+                         sll_p_periodic)
 
   call spl_x2%initialize(vlasov4d%nc_eta2+1,  &
                          vlasov4d%eta2_min,   &
                          vlasov4d%eta2_max,   &
-                         SLL_PERIODIC)
+                         sll_p_periodic)
 
   call spl_x3%initialize(vlasov4d%nc_eta3+1,  &
                          vlasov4d%eta3_min,   &
                          vlasov4d%eta3_max,   &
-                         SLL_PERIODIC)
+                         sll_p_periodic)
 
   call spl_x4%initialize(vlasov4d%nc_eta4+1,  &
                          vlasov4d%eta4_min,   &
                          vlasov4d%eta4_max,   &
-                         SLL_PERIODIC)
+                         sll_p_periodic)
 
   call initialize(vlasov4d,spl_x1,spl_x2,spl_x3,spl_x4,error)
 
-  call compute_local_sizes(vlasov4d%layout_x, &
+  call sll_o_compute_local_sizes(vlasov4d%layout_x, &
          loc_sz_i,loc_sz_j,loc_sz_k,loc_sz_l)        
 
 
-  kx  = 2_f64*sll_pi/(vlasov4d%eta1_max-vlasov4d%eta1_min)
-  ky  = 2_f64*sll_pi/(vlasov4d%eta2_max-vlasov4d%eta2_min)
+  kx  = 2_f64*sll_p_pi/(vlasov4d%eta1_max-vlasov4d%eta1_min)
+  ky  = 2_f64*sll_p_pi/(vlasov4d%eta2_max-vlasov4d%eta2_min)
     
   do l=1,loc_sz_l 
   do k=1,loc_sz_k
   do j=1,loc_sz_j
   do i=1,loc_sz_i
 
-     global_indices = local_to_global(vlasov4d%layout_x,(/i,j,k,l/)) 
+     global_indices = sll_o_local_to_global(vlasov4d%layout_x,(/i,j,k,l/)) 
      gi = global_indices(1)
      gj = global_indices(2)
      gk = global_indices(3)
@@ -166,10 +166,10 @@ program vp4d
   if (poisson_type == SPECTRAL) then
      call delete(poisson)
   else
-     call sll_delete(poisson_mg)
+     call sll_o_delete(poisson_mg)
   end if
 
-  call sll_halt_collective()
+  call sll_s_halt_collective()
 
 contains
 
