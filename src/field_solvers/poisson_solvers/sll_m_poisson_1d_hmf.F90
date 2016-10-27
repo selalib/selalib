@@ -16,10 +16,12 @@
 !> @ingroup poisson_solvers
 !> @author Pierre Navaro
 !> @brief
-!> Module to sll_o_solve Poisson equation for the HMF model 
+!> Module to solve Poisson equation for the HMF model 
 !> @details
 !> You could find more information in
+!>
 !> "On numerical Landau damping for splitting methods applied to the Vlasov-HMF model"
+!>
 !> by Erwan Faou, Romain Horsin and Frédéric Rousset.
 !> https://arxiv.org/abs/1510.06555
 module sll_m_poisson_1d_hmf
