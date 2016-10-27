@@ -72,9 +72,6 @@
     test_advection_2d_oblic
     sll_advection)
 
-  ADD_EXECUTABLE( test_lagrange test_lagrange.F90 )
-  TARGET_LINK_LIBRARIES( test_lagrange sll_advection )
-
   ADD_EXECUTABLE(
     test_advection_2d_tensor_product
     test_advection_2d_tensor_product.F90)
@@ -98,7 +95,6 @@
 
 #PN Test fails are commented out
   # Ctests
-  ADD_TEST( NAME lagrange                  COMMAND test_lagrange              )
   ADD_TEST( NAME advection_1d_periodic     COMMAND test_advection_1d_periodic )
   ADD_TEST( NAME advection_1d_non_uniform_cubic_splines
             COMMAND test_advection_1d_non_uniform_cubic_splines )
