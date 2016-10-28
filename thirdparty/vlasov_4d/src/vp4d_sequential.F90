@@ -3,12 +3,13 @@ program vp4d_sequential
 #include "sll_assert.h"
 #include "sll_working_precision.h"
 #include "sll_memory.h"
-#include "sll_poisson_solvers.h"
 
-use sll_constants
-use sll_module_interpolators_1d_base
-use sll_module_cubic_spline_interpolator_1d
-use sll_utilities, only: sll_s_int2string
+use sll_m_constants
+use sll_m_interpolators_1d_base
+use sll_m_cubic_spline_interpolator_1d
+use sll_m_utilities, only: sll_s_int2string
+use sll_m_boundary_condition_descriptors
+use sll_m_poisson_2d_periodic
 
 implicit none
   
@@ -36,17 +37,17 @@ sll_real64, dimension(:,:), allocatable :: ey
 sll_real64, dimension(:,:), allocatable :: phi
 sll_real64, dimension(:,:), allocatable :: rho
 
-type(sll_t_poisson_2d_periodic)  :: poisson
+type(sll_t_poisson_2d_periodic_fft)  :: poisson
 
 class(sll_c_interpolator_1d), pointer    :: interp_1
 class(sll_c_interpolator_1d), pointer    :: interp_2
 class(sll_c_interpolator_1d), pointer    :: interp_3
 class(sll_c_interpolator_1d), pointer    :: interp_4
 
-type(sll_cubic_spline_interpolator_1d), target  :: spl_eta1
-type(sll_cubic_spline_interpolator_1d), target  :: spl_eta2
-type(sll_cubic_spline_interpolator_1d), target  :: spl_eta3
-type(sll_cubic_spline_interpolator_1d), target  :: spl_eta4
+type(sll_t_cubic_spline_interpolator_1d), target  :: spl_eta1
+type(sll_t_cubic_spline_interpolator_1d), target  :: spl_eta2
+type(sll_t_cubic_spline_interpolator_1d), target  :: spl_eta3
+type(sll_t_cubic_spline_interpolator_1d), target  :: spl_eta4
 
 !Diagnostics and errors
 sll_int32                             :: error
@@ -80,7 +81,7 @@ SLL_ALLOCATE(ex(nc_eta1,nc_eta2),error)
 SLL_ALLOCATE(ey(nc_eta1,nc_eta2),error)
 
 
-call initialize(poisson, eta1_min, eta1_max, nc_eta1-1, &
+call sll_o_initialize(poisson, eta1_min, eta1_max, nc_eta1-1, &
                          eta2_min, eta2_max, nc_eta2-1, error)
 
 call spl_eta1%initialize(nc_eta1, eta1_min, eta1_max, sll_p_periodic )
@@ -129,7 +130,7 @@ do i_step = 1, n_step !Loop over time
    time  = time + 0.5 * delta_t
 
    call compute_rho()
-   call solve(poisson,ex,ey,rho,nrj(i_step))
+   call sll_o_solve(poisson,ex,ey,rho,nrj(i_step))
 
    call online_plot() 
 
@@ -197,7 +198,7 @@ subroutine advection_x1(dt)
    eta3 = eta3_min
    do i3 = 1, nc_eta3
    do i2 = 1, nc_eta2
-      f(:,i2,i3,i4) = interp_1%interpolate_array_disp_inplace(nc_eta1, &
+      call interp_1%interpolate_array_disp_inplace(nc_eta1, &
                       f(:,i2,i3,i4),dt*eta3)
    end do
    eta3 = eta3 + delta_eta3
@@ -215,7 +216,7 @@ subroutine advection_x2(dt)
    do i4 = 1, nc_eta4
    do i3 = 1, nc_eta3
    do i1 = 1, nc_eta1
-            f(i1,:,i3,i4) = interp_2%interpolate_array_disp_inplace(nc_eta2, &
+     call interp_2%interpolate_array_disp_inplace(nc_eta2, &
                             f(i1,:,i3,i4),dt*eta4)
    end do
    end do
@@ -231,7 +232,7 @@ subroutine advection_v1(dt)
    do i4 = 1, nc_eta4
    do i2 = 1, nc_eta2
    do i1 = 1, nc_eta1
-      f(i1,i2,:,i4) = interp_3%interpolate_array_disp_inplace(nc_eta3, &
+      call interp_3%interpolate_array_disp_inplace(nc_eta3, &
                       f(i1,i2,:,i4),ex(i1,i2)*dt)
    end do
    end do
@@ -246,7 +247,7 @@ subroutine advection_v2(dt)
    do i3 = 1, nc_eta3
    do i2 = 1, nc_eta2
    do i1 = 1, nc_eta1
-      f(i1,i2,i3,:) = interp_4%interpolate_array_disp_inplace(nc_eta4, &
+      call interp_4%interpolate_array_disp_inplace(nc_eta4, &
                       f(i1,i2,i3,:),ey(i1,i2)*dt)
    end do
    end do

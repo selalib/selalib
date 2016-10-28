@@ -1,5 +1,5 @@
 program vp4d_multigrid
-
+#include "sll_assert.h"
 #include "selalib-mpi.h"
 
   use sll_vlasov4d_base
@@ -12,10 +12,10 @@ program vp4d_multigrid
   type(vlasov4d_poisson)    :: vlasov 
   type(multigrid_2d)        :: poisson
 
-  type(sll_cubic_spline_interpolator_1d), target :: spl_x1
-  type(sll_cubic_spline_interpolator_1d), target :: spl_x2
-  type(sll_cubic_spline_interpolator_1d), target :: spl_x3
-  type(sll_cubic_spline_interpolator_1d), target :: spl_x4
+  type(sll_t_cubic_spline_interpolator_1d), target :: spl_x1
+  type(sll_t_cubic_spline_interpolator_1d), target :: spl_x2
+  type(sll_t_cubic_spline_interpolator_1d), target :: spl_x3
+  type(sll_t_cubic_spline_interpolator_1d), target :: spl_x4
 
   type(sll_t_layout_2d), pointer                :: layout_mg
 
@@ -321,7 +321,7 @@ contains
       SLL_ASSERT(size(field,1) == ex-sx+1)
       SLL_ASSERT(size(field,2) == ey-sy+1)
 
-      call sll_gnuplot_rect_2d_parallel((sx-1)*vlasov%delta_eta1, &
+      call sll_s_gnuplot_rect_2d_parallel((sx-1)*vlasov%delta_eta1, &
                                         vlasov%delta_eta1,        &
                                         (sy-1)*vlasov%delta_eta2, &
                                         vlasov%delta_eta2,        &
@@ -345,7 +345,7 @@ contains
       
       call sll_s_int2string(prank,crank)
  
-      call sll_gnuplot_2d(vlasov%eta1_min, &
+      call sll_o_gnuplot_2d(vlasov%eta1_min, &
                           vlasov%eta1_max, &
                           vlasov%nc_eta1,  &
                           vlasov%eta2_min, &
