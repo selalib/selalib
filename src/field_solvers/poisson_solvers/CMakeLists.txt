@@ -1,6 +1,7 @@
 
 SET(POISSON_SRCS sll_m_poisson_1d_base.F90
                  sll_m_poisson_1d_periodic.F90
+                 sll_m_poisson_1d_hmf.F90
                  sll_m_poisson_1d_polar.F90
                  sll_m_poisson_2d_polar.F90
                  sll_m_poisson_2d_base.F90
