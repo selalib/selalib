@@ -47,14 +47,6 @@ module sll_m_poisson_2d_mudpack_curvilinear
 #include "sll_memory.h"
 #include "sll_working_precision.h"
 
-! use F77_mudpack, only: &
-!   mud2, &
-!   mud24, &
-!   mud24cr, &
-!   mud24sp, &
-!   mud2cr, &
-!   mud2sp
-
   use sll_m_boundary_condition_descriptors, only: &
     sll_p_dirichlet, &
     sll_p_periodic
@@ -1259,7 +1251,7 @@ contains
 
 
   function l2norm_squarred_2d_mudpack(poisson, coefs_dofs) result(r)
-    class( poisson_2d_mudpack), intent(in)         :: poisson !< Poisson solver object.
+    class( poisson_2d_mudpack_curvilinear), intent(in)         :: poisson !< Poisson solver object.
     sll_real64 , intent(in)                                    :: coefs_dofs(:,:) !< Values of the coefficient vectors for each DoF
     sll_real64                                     :: r
     
@@ -1268,7 +1260,7 @@ contains
   end function l2norm_squarred_2d_mudpack
   
   subroutine compute_rhs_from_function_2d_mudpack(poisson, func, coefs_dofs)
-    class( poisson_2d_mudpack)                    :: poisson !< Maxwell solver object.
+    class( poisson_2d_mudpack_curvilinear)                    :: poisson !< Maxwell solver object.
     procedure(sll_i_function_of_position)          :: func !< Function to be projected.
     sll_real64, intent(out)                        :: coefs_dofs(:) !< Coefficients of the projection.
     
@@ -1277,7 +1269,7 @@ contains
   end subroutine compute_rhs_from_function_2d_mudpack
 
   subroutine delete_2d_mudpack(poisson)
-    class( poisson_2d_mudpack)                    :: poisson !< Maxwell solver object.
+    class( poisson_2d_mudpack_curvilinear)                    :: poisson !< Maxwell solver object.
     
   end subroutine delete_2d_mudpack
   
