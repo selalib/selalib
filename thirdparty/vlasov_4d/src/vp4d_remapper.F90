@@ -10,13 +10,13 @@ program vp4d
   implicit none
 
   type(vlasov4d_poisson)    :: vlasov4d 
-  type(sll_t_poisson_2d_periodic) :: poisson 
-  type(sll_mudpack_solver)  :: poisson_mg
+  type(sll_t_poisson_2d_periodic_fft) :: poisson 
+  type(sll_t_mudpack_solver)  :: poisson_mg
 
-  type(sll_cubic_spline_interpolator_1d), target :: spl_x1
-  type(sll_cubic_spline_interpolator_1d), target :: spl_x2
-  type(sll_cubic_spline_interpolator_1d), target :: spl_x3
-  type(sll_cubic_spline_interpolator_1d), target :: spl_x4
+  type(sll_t_cubic_spline_interpolator_1d), target :: spl_x1
+  type(sll_t_cubic_spline_interpolator_1d), target :: spl_x2
+  type(sll_t_cubic_spline_interpolator_1d), target :: spl_x3
+  type(sll_t_cubic_spline_interpolator_1d), target :: spl_x4
 
   sll_real64, dimension(:,:), allocatable :: phi
 
@@ -105,13 +105,13 @@ program vp4d
   end do
 
   if (poisson_type == SPECTRAL) then
-     call initialize(poisson, &
+     call sll_o_initialize(poisson, &
                   vlasov4d%eta1_min, vlasov4d%eta1_max, vlasov4d%nc_eta1, &
                   vlasov4d%eta2_min, vlasov4d%eta2_max, vlasov4d%nc_eta2, error)
   else
 
      SLL_CLEAR_ALLOCATE(phi(1:loc_sz_i,1:loc_sz_j),error)
-     call sll_create(poisson_mg, &
+     call sll_o_create(poisson_mg, &
                   vlasov4d%eta1_min, vlasov4d%eta1_max, vlasov4d%nc_eta1, &
                   vlasov4d%eta2_min, vlasov4d%eta2_max, vlasov4d%nc_eta2)
   end if
@@ -131,9 +131,9 @@ program vp4d
      call compute_charge(vlasov4d)
      
      if (poisson_type == SPECTRAL) then
-        call solve(poisson,vlasov4d%ex,vlasov4d%ey,vlasov4d%rho)
+        call sll_o_solve(poisson,vlasov4d%ex,vlasov4d%ey,vlasov4d%rho)
      else
-        call sll_solve(poisson_mg,phi,vlasov4d%rho,vlasov4d%ex,vlasov4d%ey)
+        call sll_o_solve(poisson_mg,phi,vlasov4d%rho,vlasov4d%ex,vlasov4d%ey)
      end if
 
      !call plot('rho')
@@ -164,7 +164,7 @@ program vp4d
        write(*,"(//10x,' Wall time = ', G15.3, ' sec' )") (tcpu2-tcpu1)*psize
 
   if (poisson_type == SPECTRAL) then
-     call delete(poisson)
+     !call delete(poisson)
   else
      call sll_o_delete(poisson_mg)
   end if
@@ -178,22 +178,22 @@ contains
 
    select case(fieldname)
    case('rho')
-     call sll_gnuplot_corect_2d(vlasov4d%eta1_min, vlasov4d%eta1_max, &
+     call sll_o_gnuplot_corect_2d(vlasov4d%eta1_min, vlasov4d%eta1_max, &
                                 vlasov4d%np_eta1, vlasov4d%eta2_min, &
                                 vlasov4d%eta2_max, vlasov4d%np_eta2, &
                                 vlasov4d%rho, fieldname, iter, error)  
    case('phi')
-     call sll_gnuplot_corect_2d(vlasov4d%eta1_min, vlasov4d%eta1_max, &
+     call sll_o_gnuplot_corect_2d(vlasov4d%eta1_min, vlasov4d%eta1_max, &
                                 vlasov4d%np_eta1, vlasov4d%eta2_min, &
                                 vlasov4d%eta2_max, vlasov4d%np_eta2, &
                                 phi, fieldname, iter, error)  
    case('ex')
-     call sll_gnuplot_corect_2d(vlasov4d%eta1_min, vlasov4d%eta1_max, &
+     call sll_o_gnuplot_corect_2d(vlasov4d%eta1_min, vlasov4d%eta1_max, &
                                 vlasov4d%np_eta1, vlasov4d%eta2_min, &
                                 vlasov4d%eta2_max, vlasov4d%np_eta2, &
                                 vlasov4d%ex, fieldname, iter, error)  
    case('ey')
-     call sll_gnuplot_corect_2d(vlasov4d%eta1_min, vlasov4d%eta1_max, &
+     call sll_o_gnuplot_corect_2d(vlasov4d%eta1_min, vlasov4d%eta1_max, &
                                 vlasov4d%np_eta1, vlasov4d%eta2_min, &
                                 vlasov4d%eta2_max, vlasov4d%np_eta2, &
                                 vlasov4d%ey, fieldname, iter, error)  
