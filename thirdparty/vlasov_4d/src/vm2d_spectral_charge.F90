@@ -10,7 +10,7 @@ use sll_vlasov4d_spectral_charge
 implicit none
 
 type(sll_t_maxwell_2d_pstd)      :: maxwell
-type(sll_t_poisson_2d_periodic)      :: poisson 
+type(sll_t_poisson_2d_periodic_fft)      :: poisson 
 type(vlasov4d_spectral_charge) :: vlasov4d 
 
 type(sll_t_cubic_spline_interpolator_2d), target :: spl_x3x4
@@ -39,7 +39,7 @@ call initlocal()
 call transposexv(vlasov4d)
 
 call compute_charge(vlasov4d)
-call solve(poisson,vlasov4d%ex,vlasov4d%ey,vlasov4d%rho)
+call sll_o_solve(poisson,vlasov4d%ex,vlasov4d%ey,vlasov4d%rho)
 
 vlasov4d%exn=vlasov4d%ex
 vlasov4d%eyn=vlasov4d%ey
@@ -107,7 +107,7 @@ do iter=1,vlasov4d%nbiter
       !compute rho^{n+1}
       call compute_charge(vlasov4d)
       !compute E^{n+1} via Poisson
-      call solve(poisson,vlasov4d%ex,vlasov4d%ey,vlasov4d%rho)
+      call sll_o_solve(poisson,vlasov4d%ex,vlasov4d%ey,vlasov4d%rho)
 
    endif
 
@@ -180,7 +180,7 @@ do iter=1,vlasov4d%nbiter
       call transposevx(vlasov4d)
 
       !compute E^{n+1} via Poisson
-      call solve(poisson,vlasov4d%ex,vlasov4d%ey,vlasov4d%rho)
+      call sll_o_solve(poisson,vlasov4d%ex,vlasov4d%ey,vlasov4d%rho)
 
       !print *,'verif charge conservation', &
       !             maxval(vlasov4d%exn-vlasov4d%ex), &
@@ -194,7 +194,7 @@ do iter=1,vlasov4d%nbiter
       call compute_charge(vlasov4d)
       call transposevx(vlasov4d)
       !compute E^{n+1} via Poisson
-      call solve(poisson,vlasov4d%ex,vlasov4d%ey,vlasov4d%rho)
+      call sll_o_solve(poisson,vlasov4d%ex,vlasov4d%ey,vlasov4d%rho)
    endif
 
    if (mod(iter,vlasov4d%fthdiag) == 0) then 
@@ -208,7 +208,7 @@ if (prank == MPI_MASTER) then
      write(*,"(//10x,' Wall time = ', G15.3, ' sec' )") (tcpu2-tcpu1)*psize
 end if
 
-call delete(poisson)
+!call sll_o_delete(poisson)
 call sll_s_halt_collective()
 
 print*,'PASSED'
@@ -286,11 +286,11 @@ subroutine initlocal()
      end do
   end do
   
-  call sll_create(maxwell, &
+  call sll_s_init_maxwell_2d_pstd(maxwell, &
        vlasov4d%eta1_min, vlasov4d%eta1_max, vlasov4d%nc_eta1, &
        vlasov4d%eta2_min, vlasov4d%eta2_max, vlasov4d%nc_eta2, TE_POLARIZATION)
   
-  call initialize(poisson, &
+  call sll_o_initialize(poisson, &
        vlasov4d%eta1_min, vlasov4d%eta1_max, vlasov4d%nc_eta1, &
        vlasov4d%eta2_min, vlasov4d%eta2_max, vlasov4d%nc_eta2, error)
   
@@ -301,7 +301,7 @@ subroutine solve_ampere(dt)
 
   sll_real64, intent(in)    :: dt
   
-  call sll_solve_ampere(maxwell, vlasov4d%ex, vlasov4d%ey, &
+  call sll_s_solve_ampere_2d_pstd(maxwell, vlasov4d%ex, vlasov4d%ey, &
               vlasov4d%bzn, dt, vlasov4d%jx, vlasov4d%jy)
 
 end subroutine solve_ampere
@@ -310,7 +310,7 @@ subroutine solve_faraday(dt)
 
   sll_real64, intent(in)    :: dt
   
-  call sll_solve_faraday(maxwell, vlasov4d%exn, vlasov4d%eyn, vlasov4d%bz, dt)
+  call sll_s_solve_faraday_2d_pstd(maxwell, vlasov4d%exn, vlasov4d%eyn, vlasov4d%bz, dt)
   
 end subroutine solve_faraday
   

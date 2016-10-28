@@ -4,7 +4,7 @@ program vp4d
 
   use sll_vlasov4d_base
   use sll_vlasov4d_poisson
-  use sll_mudpack
+  use sll_m_mudpack
   use init_functions
 
   implicit none
