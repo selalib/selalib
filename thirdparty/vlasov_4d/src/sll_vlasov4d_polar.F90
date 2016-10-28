@@ -327,7 +327,7 @@ subroutine initialize_vp4d_polar( this,        &
        end do
     end do
 
-    call sll_gnuplot_2d_parallel( this%x1, this%x2, this%proj_f_x1x2, &
+    call sll_o_gnuplot_2d_parallel( this%x1, this%x2, this%proj_f_x1x2, &
                                   "fxy", itime, error )
 
   end subroutine plot_f
@@ -346,7 +346,7 @@ subroutine initialize_vp4d_polar( this,        &
        end do
     end do
 
-    call sll_gnuplot_2d_parallel( &
+    call sll_o_gnuplot_2d_parallel( &
         this%eta3_min+(global_indices(1)-1)*this%delta_eta3, this%delta_eta3, &
         this%eta4_min+(global_indices(2)-1)*this%delta_eta4, this%delta_eta4, &
         size(this%proj_f_x3x4,1), size(this%proj_f_x3x4,2),                   & 
@@ -400,7 +400,7 @@ subroutine initialize_vp4d_polar( this,        &
 
     call sll_o_compute_local_sizes(this%layout_x2, loc_sz_x1, loc_sz_x2)
 
-    call sll_gnuplot_2d_parallel(this%x1, this%x2, this%rho, &
+    call sll_o_gnuplot_2d_parallel(this%x1, this%x2, this%rho, &
                                  'rho', itime, error)
 
   end subroutine plot_rho
@@ -413,7 +413,7 @@ subroutine initialize_vp4d_polar( this,        &
 
     call sll_o_compute_local_sizes(this%layout_x2, loc_sz_x1, loc_sz_x2)
 
-    call sll_gnuplot_2d_parallel(this%x1, this%x2, this%phi_x2, &
+    call sll_o_gnuplot_2d_parallel(this%x1, this%x2, this%phi_x2, &
                                  'phi', itime, error)
 
   end subroutine plot_phi
@@ -441,7 +441,7 @@ subroutine initialize_vp4d_polar( this,        &
                                             - this%phi_x1(i-1,:))
     end do
 
-    call sll_s_apply_remap_2D( this%rmp_x1x2, &
+    call sll_o_apply_remap_2D( this%rmp_x1x2, &
                          this%efields_x1(:,:,1), &
                          this%efields_x2(:,:,1) )
 
@@ -470,7 +470,7 @@ subroutine initialize_vp4d_polar( this,        &
                                               - this%phi_x2(:,j-1))
     end do
 
-    call sll_s_apply_remap_2D( this%rmp_x2x1, &
+    call sll_o_apply_remap_2D( this%rmp_x2x1, &
                          this%efields_x2(:,:,2), &
                          this%efields_x1(:,:,2) )
 
