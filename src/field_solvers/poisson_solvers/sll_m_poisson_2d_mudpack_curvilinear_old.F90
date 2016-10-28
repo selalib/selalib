@@ -652,17 +652,6 @@ contains
     
   end subroutine compute_phi_from_rho_2d_mudpack_curvilinear
 
-<<<<<<< HEAD:src/field_solvers/poisson_solvers/sll_m_poisson_2d_mudpack_curvilinear_solver_old.F90
-    ! solves E = -\nabla Phi in 2d
-!    subroutine compute_E_from_phi_2d_fft( poisson, phi, E1, E2 )
-!      class(sll_t_poisson_2d_fft_solver) :: poisson
-!      sll_real64,dimension(:,:),intent(in) :: phi
-!      sll_real64,dimension(:,:),intent(out) :: E1
-!      sll_real64,dimension(:,:),intent(out) :: E2
-!    end subroutine compute_E_from_phi_2d_fft
-
-=======
->>>>>>> develop:src/field_solvers/poisson_solvers/sll_m_poisson_2d_mudpack_curvilinear_old.F90
     ! solves E = -\nabla Phi with -\Delta phi = rho in 2d 
     subroutine compute_E_from_rho_2d_mudpack_curvilinear( poisson, E1, E2, rho )
       class(poisson_2d_mudpack_curvilinear_old) :: poisson
@@ -690,7 +679,7 @@ contains
 
 
   function l2norm_squarred_2d_mudpack_curvilinear(poisson, coefs_dofs) result(r)
-    class( poisson_2d_mudpack_curvilinear_solver), intent(in)  :: poisson !< Poisson solver object.
+    class( poisson_2d_mudpack_curvilinear_old), intent(in)  :: poisson !< Poisson solver object.
     sll_real64, intent(in)                                     :: coefs_dofs(:,:) !< Values of the coefficient vectors for each DoF
     sll_real64                                     :: r
     
@@ -699,7 +688,7 @@ contains
   end function l2norm_squarred_2d_mudpack_curvilinear
   
   subroutine compute_rhs_from_function_2d_mudpack_curvilinear(poisson, func, coefs_dofs)
-    class( poisson_2d_mudpack_curvilinear_solver)  :: poisson !< Poisson solver object.
+    class( poisson_2d_mudpack_curvilinear_old)  :: poisson !< Poisson solver object.
     procedure(sll_i_function_of_position)          :: func !< Function to be projected.
     sll_real64, intent(out)                        :: coefs_dofs(:) !< Coefficients of the projection.
     
@@ -708,7 +697,7 @@ contains
   end subroutine compute_rhs_from_function_2d_mudpack_curvilinear
   
   subroutine delete_2d_mudpack_curvilinear_solver(poisson)
-    class( poisson_2d_mudpack_curvilinear_solver)  :: poisson !< Poisson solver object.
+    class( poisson_2d_mudpack_curvilinear_old)  :: poisson !< Poisson solver object.
   
   end subroutine delete_2d_mudpack_curvilinear_solver
 
