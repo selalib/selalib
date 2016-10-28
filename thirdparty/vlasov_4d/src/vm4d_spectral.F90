@@ -6,11 +6,12 @@ program vm4d_spectral
   use init_functions
   use sll_vlasov4d_base
   use sll_vlasov4d_spectral
+  use sll_m_poisson_2d_periodic
 
   implicit none
 
   type(sll_t_maxwell_2d_pstd)     :: maxwell
-  type(sll_t_poisson_2d_periodic) :: poisson 
+  type(sll_t_poisson_2d_periodic_fft) :: poisson 
   type(vlasov4d_spectral)   :: vlasov4d 
 
   type(sll_t_cubic_spline_interpolator_2d), target :: spl_x3x4
@@ -35,7 +36,7 @@ program vm4d_spectral
 
   call transposexv(vlasov4d)
   call compute_charge(vlasov4d)
-  call solve(poisson,vlasov4d%ex,vlasov4d%ey,vlasov4d%rho)
+  call sll_o_solve(poisson,vlasov4d%ex,vlasov4d%ey,vlasov4d%rho)
   vlasov4d%bz = 0.0_f64
 
   call transposevx(vlasov4d)
@@ -52,7 +53,7 @@ program vm4d_spectral
 
      call compute_current(vlasov4d)
 
-     call sll_solve_ampere(maxwell, vlasov4d%ex, vlasov4d%ey, vlasov4d%bz, &
+     call sll_s_solve_ampere_2d_pstd(maxwell, vlasov4d%ex, vlasov4d%ey, vlasov4d%bz, &
                           vlasov4d%dt, vlasov4d%jx, vlasov4d%jy)
 
      call advection_x3x4(vlasov4d,vlasov4d%dt)
@@ -73,7 +74,7 @@ program vm4d_spectral
        write(*,"(//10x,' Wall time = ', G15.3, ' sec' )") (tcpu2-tcpu1)*psize
   end if
 
-  call delete(poisson)
+  !call delete(poisson)
   call sll_s_halt_collective()
 
   print*,'PASSED'
@@ -136,7 +137,7 @@ contains
     end do
     end do
 
-    call sll_create(maxwell, vlasov4d%eta1_min, &
+    call sll_s_init_maxwell_2d_pstd(maxwell, vlasov4d%eta1_min, &
                              vlasov4d%eta1_max, &
                              vlasov4d%nc_eta1,  &
                              vlasov4d%eta2_min, &
@@ -144,7 +145,7 @@ contains
                              vlasov4d%nc_eta2,  &
                              TE_POLARIZATION)
 
-    call initialize(poisson, vlasov4d%eta1_min, &
+    call sll_o_initialize(poisson, vlasov4d%eta1_min, &
                              vlasov4d%eta1_max, &
                              vlasov4d%nc_eta1,  &
                              vlasov4d%eta2_min, &
