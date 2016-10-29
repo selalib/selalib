@@ -4,6 +4,7 @@ IF(HDF5_ENABLED AND HDF5_IS_PARALLEL AND HDF5_PARALLEL_ENABLED AND MPI_ENABLED)
    ADD_LIBRARY(sll_multipatch
      STATIC sll_m_distribution_function_4d_multipatch.F90
             sll_m_cartesian_meshes_multipatch.F90
+            sll_m_coordinate_transformations_2d_nurbs.F90
             sll_m_coordinate_transformation_multipatch.F90
             sll_m_scalar_field_2d_multipatch.F90
             #connectivity_qn.f90
