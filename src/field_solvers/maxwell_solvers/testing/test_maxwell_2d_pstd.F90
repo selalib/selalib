@@ -12,10 +12,7 @@ program test_maxwell_2d_pstd
 
   use sll_m_constants, only: pi => sll_p_pi
 
-  use sll_m_maxwell_2d_pstd, only: &
-    sll_o_create, &
-    sll_t_maxwell_2d_pstd, &
-    sll_o_solve
+  use sll_m_maxwell_2d_pstd
 
   implicit none
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -93,7 +90,7 @@ SLL_ALLOCATE(hy(nc_eta1+1,nc_eta2+1), error)
 SLL_ALLOCATE(ez(nc_eta1+1,nc_eta2+1), error)
 SLL_ALLOCATE(ez_exact(nc_eta1+1,nc_eta2+1), error)
 
-call sll_o_create(maxwell_TM, eta1_min, eta1_max, nc_eta1, &
+call sll_s_init_maxwell_2d_pstd(maxwell_TM, eta1_min, eta1_max, nc_eta1, &
          eta2_min, eta2_max, nc_eta2, TM_POLARIZATION)
 
 SLL_ALLOCATE(ex(nc_eta1+1,nc_eta2+1), error)
@@ -101,7 +98,7 @@ SLL_ALLOCATE(ey(nc_eta1+1,nc_eta2+1), error)
 SLL_ALLOCATE(hz(nc_eta1+1,nc_eta2+1), error)
 SLL_ALLOCATE(hz_exact(nc_eta1+1,nc_eta2+1), error)
 
-call sll_o_create(maxwell_TE, eta1_min, eta1_max, nc_eta1, &
+call sll_s_init_maxwell_2d_pstd(maxwell_TE, eta1_min, eta1_max, nc_eta1, &
          eta2_min, eta2_max, nc_eta2, TE_POLARIZATION)
 
 
@@ -124,9 +121,9 @@ do istep = 1, nstep !*** Loop over time
    write(*,"(' time = ',g12.3,' sec')",advance="no") time
    write(*,"(' erreurs TM,TE = ',2g15.5)") err_tm, err_te
 
-   call sll_o_solve(maxwell_TM, hx, hy, ez, dt)
+   call sll_s_solve_maxwell_2d_pstd(maxwell_TM, hx, hy, ez, dt)
 
-   call sll_o_solve(maxwell_TE, ex, ey, hz, dt)
+   call sll_s_solve_maxwell_2d_pstd(maxwell_TE, ex, ey, hz, dt)
 
    time = time + 0.5_f64*dt
 
@@ -139,5 +136,8 @@ print*,'PASSED'
 DEALLOCATE(hx)
 DEALLOCATE(hy)
 DEALLOCATE(ez)
+
+call sll_s_free_maxwell_2d_pstd(maxwell_TE)
+call sll_s_free_maxwell_2d_pstd(maxwell_TM)
 
 end program test_maxwell_2d_pstd
