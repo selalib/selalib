@@ -965,14 +965,14 @@ contains
         print*,'# Vlasov-Ampere scheme #'
         print*,'########################'
         SLL_ALLOCATE(sim%advect_ampere_x1_sp2(num_threads),ierr)
-        !$OMP PARALLEL DEFAULT(SHARED) &
-        !$OMP PRIVATE(tid)
-        !$ tid = omp_get_thread_num()+1
+        !!$OMP PARALLEL DEFAULT(SHARED) &
+        !!$OMP PRIVATE(tid)
+        !!$ tid = omp_get_thread_num()+1
         sim%advect_ampere_x1_sp1(tid)%ptr => sll_f_new_ampere_1d_advector( &
              num_cells_x1, &
              x1_min,       &
              x1_max )
-        !$OMP END PARALLEL
+        !!$OMP END PARALLEL
         
 !     case("SLL_BSL_0INFLOW") ! BSL advection with no inflow BC
 !        sim%advect_x1_sp1(tid)%ptr => new_BSL_1d_advector_0inflow(&
@@ -1021,14 +1021,14 @@ contains
         print*,'# Vlasov-Ampere scheme #'
         print*,'########################'
         SLL_ALLOCATE(sim%advect_ampere_x1_sp2(num_threads),ierr)
-        !$OMP PARALLEL DEFAULT(SHARED) &
-        !$OMP PRIVATE(tid)
-        !$ tid = omp_get_thread_num()+1
+       !!$OMP PARALLEL DEFAULT(SHARED) &
+       !!$OMP PRIVATE(tid)
+        !!$ tid = omp_get_thread_num()+1
         sim%advect_ampere_x1_sp2(tid)%ptr => sll_f_new_ampere_1d_advector( &
              num_cells_x1, &
              x1_min,       &
              x1_max )
-        !$OMP END PARALLEL
+        !!$OMP END PARALLEL
 
         
 !     case("SLL_BSL_0INFLOW") ! BSL advection with no inflow BC
