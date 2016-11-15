@@ -1779,6 +1779,10 @@ contains
       write(rhototi_id,*) sim%x1_array
       write(rhotote_id,*) sim%x1_array
       write(efield_id,*) sim%x1_array
+
+      write(efield_id,*) efield
+      write(rhotote_id,*) rho_sp1
+      write(rhototi_id,*) rho_sp2
     endif
     
     
