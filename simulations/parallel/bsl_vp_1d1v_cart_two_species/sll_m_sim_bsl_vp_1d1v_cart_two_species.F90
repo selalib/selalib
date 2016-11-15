@@ -1960,7 +1960,7 @@ contains
                  end do
                end do
                
-               !$OMP END PARALLEL
+               !!$OMP END PARALLEL
 
                call sll_o_collective_allreduce( sll_v_world_collective, &
                     rk_loc,                                         &
