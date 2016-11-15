@@ -37,36 +37,7 @@ module sll_m_lagrange_interpolation
   
   integer, parameter :: SLL_SIZE_STENCIL_MAX = 30
   integer, parameter :: SLL_SIZE_STENCIL_MIN = -30
-!    
-  type :: finite_diff_1d_plan
-    sll_real64 ::   w(SLL_SIZE_STENCIL_MIN:SLL_SIZE_STENCIL_MIN) !< weights
-    sll_int32  ::   r,s       !< stencil
-    sll_int32  ::   bc_type   !< sll_p_periodic or sll_p_dirichlet     
-  end type finite_diff_1d_plan
-  
-  type hermite_base
-    integer :: dim
-  end type hermite_base
-  
-!  type, extends(hermite_base) :: hermite_c1
-!    sll_int32 :: p
-!    contains
-!      PROCEDURE, PASS :: interpole1d => hermite_interpolate1d_c1
-!  end type hermite_c1
-!
-!  type, extends(hermite_base) :: hermite_c0
-!    sll_int32 :: p
-!    contains
-!      PROCEDURE, PASS :: interpole1d => hermite_interpolate1d_c0
-!  end type hermite_c0
 
-
-  type  hermite !(interp_case,degree,bc_type)
-    sll_int32  :: interp_case
-    !integer, KIND ::interp_case,bc_type
-    !integer, LEN  :: degree
-  end type hermite
-  
   interface sll_o_weight_product_x1
      module procedure weight_product1d, &
        weight_product2d_x1
@@ -76,50 +47,7 @@ module sll_m_lagrange_interpolation
      module procedure weight_product2d_x1
   end interface
 
-
-!  interface initialize_interpolants_hermite
-!     module procedure initialize_interpolants_hermite1d, &
-!     	              initialize_interpolants_hermite2d
-!  end interface
-!
-!  interface compute_interpolants_hermite
-!     module procedure compute_interpolants_hermite1d, &
-!     	              compute_interpolants_hermite2d
-!  end interface
-!  
-!  interface hermite_interpolate1d
-!    module procedure hermite_interpolate1d_c0, hermite_interpolate1d_c1
-!  end interface hermite_interpolate1d
-
 contains
-
-!  
-!  subroutine hermite_interpolate1d_c0( hermite_c0_plan)
-!    class(hermite_c0) :: hermite_c0_plan
-!    
-!    print *,'hi' 
-!  end subroutine
-!
-!  subroutine hermite_interpolate1d_c1( hermite_c1_plan)
-!    class(hermite_c1) :: hermite_c1_plan
-!    
-!    print *,'ha' 
-!  end subroutine
-!  
-!  subroutine  hermite_interpolate2d(interp1,interp2)
-!    CLASS(hermite_base), pointer :: interp1,interp2
-!    
-!    
-!    !call hermite_interpolate1d(interp1)
-!    !call hermite_interpolate1d(interp2)
-!    
-!    print *,'ho'
-!    
-!  end subroutine
-!  
-  
-
-
 
   ! sll_f_lagrange_interpolate returns the value of y(x), using a Lagrange 
   ! interpolation based on the given array values of x(i) and y(x(i)).
@@ -164,28 +92,6 @@ contains
     sll_f_lagrange_interpolate = p(1)
   end function sll_f_lagrange_interpolate
 
-!  function new(bc_type,error) &
-!     result(this)
-!     type(finite_diff_1d_plan),pointer :: this     !< data structure
-!     sll_int32,intent(in)              :: bc_type  !< sll_p_periodic or sll_p_dirichlet 
-!     sll_int32, intent(out)            :: error    !< error code
-!
-!     SLL_ALLOCATE(this, error)
-!     this%bc_type = bc_type
-!     
-!     select case (bc_type)
-!       case (sll_p_periodic)
-!       case (sll_p_dirichlet)
-!       case default
-!         print *,'#bad value of bc_type in new function'
-!         print *,'#of finite_diff_1d_plan type', bc_type
-!         stop
-!     end select
-!     
-!  end function new 
-
-
-
 
   ! compute weights w for the derivatives 
   ! f'_j = sum_{k=r}^{s} w_kf_{j+k}
@@ -193,7 +99,6 @@ contains
   ! where d is the biggest possible
   ! we call it sometimes compact finite difference formula
   ! we suppose that r<=0 and s>=0
-     
   subroutine sll_s_compact_derivative_weight(w,r,s)
     integer,intent(in)::r,s
     sll_real64,intent(out)::w(r:s)
@@ -234,7 +139,6 @@ contains
       w(i)=tmp      
     enddo
 
-
     do i=1,s
       tmp=1._f64
       do j=r,i-1
@@ -264,42 +168,29 @@ contains
     enddo
     w(0)=-tmp
 
-    !print *,'w',w
-    !do ii=r,s
-    !  print *,ii,w(r+s-ii)
-    !enddo
-    !stop
-
-  
   end subroutine sll_s_compact_derivative_weight
-  
-  
+
+
   subroutine sll_s_compute_stencil_plus(p,r,s)
-    sll_int32,intent(in) :: p
-    sll_int32,intent(out) :: r,s
-    
+    sll_int32, intent(in ) :: p
+    sll_int32, intent(out) :: r,s
     r = -p/2
     s = (p+1)/2
-  
   end subroutine sll_s_compute_stencil_plus
 
+
   subroutine compute_stencil_minus(p,r,s)
-    sll_int32,intent(in) :: p
-    sll_int32,intent(out) :: r,s
-    
+    sll_int32, intent(in ) :: p
+    sll_int32, intent(out) :: r,s
     r = -(p+1)/2
     s = p/2
-  
   end subroutine compute_stencil_minus
 
-  
-  
 
   ! Makes the following operation
   ! fout(j) = sum_{k=r}^s w(k)fin(j+k),j=1..N+1
   ! we suppose periodic boundary conditions fin(j+N)=fin(j)
   ! and that fin(j) ar known j=1,..,N
-
   subroutine weight_product1d_per(fin,fout,N,w,r,s)
     sll_real64, dimension(:), intent(in)  :: fin
     sll_real64, dimension(:), intent(out) :: fout
@@ -332,7 +223,6 @@ contains
   ! we suppose natural boundary conditions fin(j)=fin(1), j<=1
   ! and fin(j)=fin(N+1) for j>=N+1
   ! and that fin(j) ar known j=1,..,N+1
-
   subroutine weight_product1d_nat(fin,fout,N,w,r,s)
     sll_real64, dimension(:), intent(in)  :: fin
     sll_real64, dimension(:), intent(out) :: fout
@@ -385,7 +275,6 @@ contains
 
 !the two following functions may be not useful
 
-  
   subroutine weight_product2d_x1(fin,fout,N,w,r,s,bc_type)
     sll_real64, dimension(:,:), intent(in)  :: fin
     sll_real64, dimension(:,:), intent(out) :: fout
@@ -400,6 +289,7 @@ contains
     enddo    
   
   end subroutine weight_product2d_x1
+
 
   subroutine weight_product2d_x2(fin,fout,N,w,r,s,bc_type)
     sll_real64, dimension(:,:), intent(in)  :: fin
@@ -426,8 +316,8 @@ contains
   
   end subroutine weight_product2d_x2
 
+
   subroutine compute_size_hermite1d(N,p,N_size,dim_size)
-    !sll_real64, dimension(:,:), pointer  :: initialize_interpolants_hermite1d
     sll_int32, intent(in) :: N
     sll_int32, intent(in) :: p
     sll_int32, intent(out) :: N_size
@@ -444,7 +334,6 @@ contains
   end subroutine compute_size_hermite1d
 
 
-  
   function initialize_interpolants_hermite1d(N,p)
     sll_real64, dimension(:,:), pointer  :: initialize_interpolants_hermite1d
     sll_int32, intent(in) :: N
@@ -457,7 +346,8 @@ contains
      
   end function initialize_interpolants_hermite1d
  
-   function initialize_interpolants_hermite2d(N,p)
+
+  function initialize_interpolants_hermite2d(N,p)
     sll_real64, dimension(:,:,:,:), pointer  :: initialize_interpolants_hermite2d
     sll_int32, intent(in) :: N(2)
     sll_int32, intent(in) :: p(2)
@@ -474,9 +364,7 @@ contains
      
   end function initialize_interpolants_hermite2d
 
- 
- 
-  
+
   subroutine compute_interpolants_hermite1d(fin,coef,N,p,bc_type)
     sll_real64, dimension(:), intent(in)  :: fin
     sll_real64, dimension(:,:), pointer :: coef
@@ -497,8 +385,6 @@ contains
     endif
     
   end subroutine compute_interpolants_hermite1d
-
-
 
 
   subroutine compute_interpolants_hermite2d(fin,coef,N,p,bc_type)
@@ -525,9 +411,7 @@ contains
     allocate(bufin_x2(N(2)+1))
     allocate(bufout_x2(dim_size(2),N_size(2)))
     
-    
     ! compute_interpolants in x2
-    
     do i=1,N(1)+1    
       bufin_x2(1:N(2)+1) = fin(i,1:N(2)+1)
       call compute_interpolants_hermite1d(bufin_x2,bufout_x2,N(2),p(2),bc_type(2))
@@ -537,7 +421,6 @@ contains
     enddo
 
     ! compute_interpolants in x1
-    
     do i=1,N_size(2)
       do j=1,dim_size(2)
         bufin_x1(1:N(1)+1) = coef(1,j,1:N(1)+1,i)  
@@ -547,15 +430,13 @@ contains
         enddo
       enddo        
     enddo
+
     deallocate(bufin_x1)
     deallocate(bufout_x1)
     deallocate(bufin_x2)
     deallocate(bufout_x2)
 
-     
   end subroutine compute_interpolants_hermite2d
-
-
 
 
 !  subroutine interpolate_hermite1d_c1(coef,N,i,x,fval)
@@ -576,7 +457,8 @@ contains
 !    fval=w(0)*coef(1,i)+w(1)*coef(1,i1)+w(2)*coef(2,i)+w(3)*coef(2,i1)
 !
 !  end subroutine interpolate_hermite1d_c1
-!
+
+
 !  subroutine interpolate_hermite1d_c0(coef,N,i,x,fval)
 !    sll_real64, dimension(:,:), pointer :: coef
 !    sll_int32, intent(in) :: N
@@ -596,6 +478,7 @@ contains
 !
 !  end subroutine interpolate_hermite1d_c0
 
+
 !  subroutine interpolate_hermite2d_c0_c1(coef,N,i,x,fval)
 !
 !    sll_real64, dimension(:,:,:,:), pointer :: coef
@@ -608,7 +491,6 @@ contains
 !    
 !
 !  end subroutine interpolate_hermite2d_c0_c1
-
 
 
 end module sll_m_lagrange_interpolation
