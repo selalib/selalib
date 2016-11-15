@@ -8,7 +8,8 @@ program test_particle_group_1d2v
     sll_s_new_particle_group_1d2v, &
     sll_s_new_particle_group_1d2v_ptr
 
-  use sll_m_particle_group_base
+  use sll_m_particle_group_base, only : &
+    sll_c_particle_group_base
 
   implicit none
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -46,32 +47,33 @@ program test_particle_group_1d2v
      call particle_group%set_weights(i_part, [real(i_part/n_particles, f64)])
   end do
 
-  fail = .FALSE.
+  fail = .false.
   i_part = 4
   x =  particle_group%get_x(i_part)
   if ( abs(x(1)- real(i_part,f64))> 1E-15) then
-     fail = .TRUE.
+     fail = .true.
   end if
   x = particle_group%get_v(i_part)
   if ( abs(x(1)- real(i_part,f64)**2)> 1E-15) then
-     fail = .TRUE.
+     fail = .true.
   end if
   x(1:1) = particle_group%get_charge(i_part)
   if ( abs(x(1)- charge*real(i_part/n_particles, f64))> 1E-15) then
-     fail = .TRUE.
+     fail = .true.
   end if
   x(1:1) = particle_group%get_mass(i_part)
   if ( abs(x(1)- mass*real(i_part/n_particles, f64))> 1E-15) then
-     fail = .TRUE.
+     fail = .true.
   end if
 
-  if (fail .EQV. .FALSE.) then
+  call particle_group%free()
+
+  if (fail .eqv. .false.) then
      print*, 'PASSED'
   else
      print*, 'FAILED'
      stop
   end if
 
-  call particle_group%free()
 
 end program test_particle_group_1d2v

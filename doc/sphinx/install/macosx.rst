@@ -38,11 +38,11 @@ Install dependencies with macports
 
 Install macports (http://www.macports.org/install.php) and ::
 
-	$ sudo port install gcc5 
+	$ sudo port install cmake git
 	$ sudo port install openmpi
 	$ sudo port install hdf5 +gfortran+openmpi
 	$ sudo port install fftw-3
-	$ sudo port install cmake git
+	$ sudo port install doxygen
 
 If you want to run tests that use nurbs ::
 

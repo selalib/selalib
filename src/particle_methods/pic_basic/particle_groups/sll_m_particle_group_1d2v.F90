@@ -47,7 +47,7 @@ contains
     procedure :: init => initialize_particle_group_1d2v !> Initialization function
     procedure :: free => delete_particle_group_1d2v !> Destructor
 
-    procedure :: print => print_particle_group_1d2v !> print out particle array
+    procedure :: print => print_particle_group_1d2v !> print particle array to file
    
  end type sll_t_particle_group_1d2v
 
@@ -57,7 +57,7 @@ contains
   !----------------------------------------------------------------------!
   !> Destructor
   subroutine delete_particle_group_1d2v(self)
-    class( sll_t_particle_group_1d2v ), intent(inout) :: self
+    class( sll_t_particle_group_1d2v ), intent(inout) :: self !< particle group
 
     deallocate(self%particle_array)
 
@@ -105,7 +105,7 @@ contains
        charge, &
        mass, &
        n_weights)
-    class( sll_c_particle_group_base ),  pointer, intent( out ) :: particle_group
+    class( sll_c_particle_group_base ),  pointer, intent( out ) :: particle_group !< abstract particle group
     sll_int32                                   , intent( in )  :: n_particles !< number of particles local to the processor
     sll_int32                                   , intent( in )  :: n_total_particles !< number of particles in total simulation
     sll_real64                                  , intent( in )  :: charge !< charge of the particle species
@@ -133,7 +133,7 @@ contains
        charge, &
        mass, &
        n_weights)
-    class( sll_c_particle_group_base ), allocatable,  intent( out ) :: particle_group
+    class( sll_c_particle_group_base ), allocatable,  intent( out ) :: particle_group !< abstract particle group
     sll_int32                                      ,  intent( in )  :: n_particles !< number of particles local to the processor
     sll_int32                                      , intent( in )   :: n_total_particles !< number of particles in total simulation
     sll_real64                                     , intent( in )   :: charge !< charge of the particle species
@@ -267,10 +267,10 @@ contains
 
 
   !----------------------------------------------------------------------!
-  !> Print particle array
+  !> Print particle array to file
   subroutine print_particle_group_1d2v(self, filename)
-    class( sll_t_particle_group_1d2v ), intent(in) :: self
-    character(len=*), intent(in) :: filename
+    class( sll_t_particle_group_1d2v ), intent(in) :: self !< particle group
+    character(len=*), intent(in) :: filename !< name of output file
     sll_int32 :: file_id
 
     open(newunit=file_id,file=filename)
