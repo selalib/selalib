@@ -11,7 +11,7 @@ SET_TESTS_PROPERTIES( io_serial_blocks PROPERTIES FAIL_REGULAR_EXPRESSION "NOT P
 
 ADD_MPI_TEST( hdf5_io_parallel test_hdf5_io_parallel ${PROCS} ${ARGS} )
 SET_TESTS_PROPERTIES( hdf5_io_parallel PROPERTIES
-  PASS_REGULAR_EXPRESSION "PASSED"
+  FAIL_REGULAR_EXPRESSION "ERROR"
   TIMEOUT 10 )
 
 #ADD_EXECUTABLE(test_io_xdmf_parallel test_xdmf_parallel.F90)
