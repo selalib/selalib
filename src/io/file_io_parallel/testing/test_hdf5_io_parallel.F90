@@ -1,3 +1,8 @@
+!
+!> @ingroup file_io_parallel
+!> @brief   Test parallel write/read for 2D array of double precision floats
+!> @author  Yaman Güçlü, IPP Garching
+!
 program test_hdf5_io_parallel
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_errors.h"

@@ -16,8 +16,9 @@
 !**************************************************************
 
 !> @ingroup file_io_parallel
-!> @brief
-!> Parallel version of sll_hdf5_io
+!> @brief   Parallel version of sll_hdf5_io
+!> @author  Pierre Navaro, INRIA
+!> @author  Yaman Güçlü, IPP Garching
 !> @details
 !> With HDF5 you can store several datasets in a single file.
 !> - HDF5 file (http://www.hdfgroup.org/HDF5/)
@@ -201,7 +202,7 @@ contains
     sll_int32        , intent(  out) :: error
 
 #define  DATATYPE  H5T_NATIVE_DOUBLE
-#include "sll_k_hdf5_write_array.f90"
+#include "sll_k_hdf5_write_array.F90"
 
   end subroutine sll_hdf5_par_write_dble_array_1d
 
@@ -222,7 +223,7 @@ contains
     sll_int32        , intent(  out) :: error
 
 #define  DATATYPE  H5T_NATIVE_DOUBLE
-#include "sll_k_hdf5_write_array.f90"
+#include "sll_k_hdf5_write_array.F90"
 
   end subroutine sll_hdf5_par_write_dble_array_2d
 
@@ -243,7 +244,7 @@ contains
     sll_int32        , intent(  out) :: error
 
 #define  DATATYPE  H5T_NATIVE_DOUBLE
-#include "sll_k_hdf5_write_array.f90"
+#include "sll_k_hdf5_write_array.F90"
 
   end subroutine sll_hdf5_par_write_dble_array_3d
 
@@ -264,7 +265,7 @@ contains
     sll_int32        , intent(  out) :: error
 
 #define  DATATYPE  H5T_NATIVE_DOUBLE
-#include "sll_k_hdf5_write_array.f90"
+#include "sll_k_hdf5_write_array.F90"
 
   end subroutine sll_hdf5_par_write_dble_array_4d
 
@@ -285,7 +286,7 @@ contains
     sll_int32        , intent(  out) :: error
 
 #define  DATATYPE  H5T_NATIVE_DOUBLE
-#include "sll_k_hdf5_write_array.f90"
+#include "sll_k_hdf5_write_array.F90"
 
   end subroutine sll_hdf5_par_write_dble_array_5d
 
@@ -306,7 +307,7 @@ contains
     sll_int32        , intent(  out) :: error
 
 #define  DATATYPE  H5T_NATIVE_DOUBLE
-#include "sll_k_hdf5_write_array.f90"
+#include "sll_k_hdf5_write_array.F90"
 
   end subroutine sll_hdf5_par_write_dble_array_6d
 
@@ -325,7 +326,7 @@ contains
     sll_int32        , intent(  out) :: error
 
 #define  DATATYPE  H5T_NATIVE_DOUBLE
-#include "sll_k_hdf5_read_array.f90"
+#include "sll_k_hdf5_read_array.F90"
 
   end subroutine sll_hdf5_par_read_dble_array_1d
 
@@ -344,7 +345,7 @@ contains
     sll_int32        , intent(  out) :: error
 
 #define  DATATYPE  H5T_NATIVE_DOUBLE
-#include "sll_k_hdf5_read_array.f90"
+#include "sll_k_hdf5_read_array.F90"
 
   end subroutine sll_hdf5_par_read_dble_array_2d
 
@@ -363,7 +364,7 @@ contains
     sll_int32        , intent(  out) :: error
 
 #define  DATATYPE  H5T_NATIVE_DOUBLE
-#include "sll_k_hdf5_read_array.f90"
+#include "sll_k_hdf5_read_array.F90"
 
   end subroutine sll_hdf5_par_read_dble_array_3d
 
@@ -382,7 +383,7 @@ contains
     sll_int32        , intent(  out) :: error
 
 #define  DATATYPE  H5T_NATIVE_DOUBLE
-#include "sll_k_hdf5_read_array.f90"
+#include "sll_k_hdf5_read_array.F90"
 
   end subroutine sll_hdf5_par_read_dble_array_4d
 
@@ -401,7 +402,7 @@ contains
     sll_int32        , intent(  out) :: error
 
 #define  DATATYPE  H5T_NATIVE_DOUBLE
-#include "sll_k_hdf5_read_array.f90"
+#include "sll_k_hdf5_read_array.F90"
 
   end subroutine sll_hdf5_par_read_dble_array_5d
 
@@ -420,7 +421,7 @@ contains
     sll_int32        , intent(  out) :: error
 
 #define  DATATYPE  H5T_NATIVE_DOUBLE
-#include "sll_k_hdf5_read_array.f90"
+#include "sll_k_hdf5_read_array.F90"
 
   end subroutine sll_hdf5_par_read_dble_array_6d
 
