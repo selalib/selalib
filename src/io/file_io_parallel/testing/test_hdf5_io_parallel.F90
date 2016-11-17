@@ -6,8 +6,10 @@ program test_hdf5_io_parallel
 
   use sll_m_hdf5_io_parallel, only: &
     sll_o_hdf5_file_create, &
-    sll_o_hdf5_file_close, &
-    sll_o_hdf5_write_array
+    sll_o_hdf5_file_close,  &
+    sll_o_hdf5_file_open,  &
+    sll_o_hdf5_write_array, &
+    sll_o_hdf5_read_array
 
   use sll_mpi, only: &
     mpi_comm_world, &
@@ -38,9 +40,11 @@ program test_hdf5_io_parallel
   ! SELALIB variables
   integer(i32) :: fid
   integer(i32) :: ferror
-  real(f64), allocatable :: a(:,:) ! Local data to write
+  real(f64), allocatable :: a(:,:) !  Local data to write
+  real(f64), allocatable :: b(:,:) ! Global data to read
   character(len=*), parameter :: fname = "test_hdf5_io_parallel.h5" ! File name
   character(len=*), parameter :: dsetname = "real_array"         ! Dataset name
+  integer :: i, j
   
   pcomm = mpi_comm_world
   pinfo = mpi_info_null
@@ -113,10 +117,30 @@ program test_hdf5_io_parallel
   call sll_o_hdf5_file_close( fid, ferror )
   SLL_ASSERT( ferror == 0 )
 
-  ! TODO: check correctness of output file
-  if (prank == 0) then
-    print *, "PASSED"
-  end if
+  ! Allocate memory for reading data from file
+  allocate( b(block(1),block(2)) )
+  b(:,:) = -1.0_f64
+
+  ! Read file in parallel
+!    call sll_o_hdf5_file_open( fname, pcomm, fid, ferror )
+  call sll_o_hdf5_file_open( fid, fname, pcomm, ferror ) !TODO: fix input order
+  call sll_o_hdf5_read_array( &
+    file_id     = fid, &
+    global_size = int( dset_dims,  hsize_t ), &
+    offset      = int( offset, hssize_t ), &
+    array       = b, &
+    dsetname    = dsetname, &
+    error       = ferror )
+  call sll_o_hdf5_file_close( fid, ferror )
+
+  ! Check correctness of file
+  do i = 1, block(1)
+    do j = 1, block(2)
+      if (a(i,j) /= b(i,j)) then
+        print *, "ERROR"
+      end if
+    end do
+  end do
 
   ! Turn off parallel environment
   call mpi_finalize( perror )
