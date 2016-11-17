@@ -1,10 +1,18 @@
 ADD_EXECUTABLE(test_io_serial_blocks test_serial_blocks.F90)
 TARGET_LINK_LIBRARIES(test_io_serial_blocks sll_file_io_parallel )
 
+ADD_EXECUTABLE( test_hdf5_io_parallel test_hdf5_io_parallel.F90)
+TARGET_LINK_LIBRARIES( test_hdf5_io_parallel sll_file_io_parallel )
+
 SET(ARGS " ")
 SET(PROCS  4)
 ADD_MPI_TEST( io_serial_blocks test_io_serial_blocks ${PROCS} ${ARGS} )
 SET_TESTS_PROPERTIES( io_serial_blocks PROPERTIES FAIL_REGULAR_EXPRESSION "NOT PASS" )
+
+ADD_MPI_TEST( hdf5_io_parallel test_hdf5_io_parallel ${PROCS} ${ARGS} )
+SET_TESTS_PROPERTIES( hdf5_io_parallel PROPERTIES
+  PASS_REGULAR_EXPRESSION "PASSED"
+  TIMEOUT 10 )
 
 #ADD_EXECUTABLE(test_io_xdmf_parallel test_xdmf_parallel.F90)
 #TARGET_LINK_LIBRARIES(test_io_xdmf_parallel sll_file_io_parallel )
