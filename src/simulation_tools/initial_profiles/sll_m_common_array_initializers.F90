@@ -10,6 +10,7 @@ module sll_m_common_array_initializers
   implicit none
 
   public :: &
+    sll_f_hmf_initializer_2d, &
     sll_f_beam_initializer_2d, &
     sll_f_bump_on_tail_initializer_2d, &
     sll_f_constant_time_initializer_1d, &
@@ -809,9 +810,40 @@ contains
   end function sll_f_beam_initializer_2d
 
 
-  
-  
-  
+  !> @brief
+  !> Function to intialize distribution function for the Vlasov-HMF model
+  !> @details
+  !>
+  !> "On numerical Landau damping for splitting methods applied to the Vlasov-HMF model"
+  !> 
+  !> by Erwan Faou, Romain Horsin and Frédéric Rousset.
+  !> https://arxiv.org/abs/1510.06555
+  function sll_f_hmf_initializer_2d( x, vx, params ) result(res)
+
+    sll_real64 :: res
+    sll_real64, intent(in) :: x
+    sll_real64, intent(in) :: vx
+
+    sll_real64, dimension(:), intent(in), optional :: params
+    sll_real64 :: alpha, beta
+    sll_real64 :: m, eps
+
+    if( .not. present(params) ) then
+       print *, '#sll_f_hmf_initializer_2d, error: the params array must ', &
+            'be passed. params = [alpha, beta, m, epsilon]'
+       stop
+    end if
+    SLL_ASSERT(size(params)==4)
+    alpha  = params(1)
+    beta   = params(2)
+    m      = params(3)
+    eps    = params(4)
+
+    res = alpha 
+    res = res * exp(-beta*((vx*vx)*0.5_f64 - m * cos(x))) 
+    res = res * (1.0_f64 + eps * cos(x))
+
+  end function sll_f_hmf_initializer_2d
   
 
 

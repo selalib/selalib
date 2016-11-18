@@ -1,0 +1,13 @@
+&ASSEMBLY
+  ID=        11,
+ /
+&DDM
+  DDM_NAME="tensor",
+  DDM_FILENAME="./parameters_tensor_2d.nml",
+/
+&DISCRETIZATION
+  NAME_1="bspline",
+  FILENAME_1="./parameters_bspline_periodic.nml",
+  NAME_2="bspline",
+  FILENAME_2="./parameters_bspline_periodic.nml",
+ /

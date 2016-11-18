@@ -1,4 +1,4 @@
-!> @ingroup integration
+!> @ingroup quadrature
 !> @author Laura S. Mendoza
 !> @brief Fekete quadrature rules for a triangle
 !> @details
