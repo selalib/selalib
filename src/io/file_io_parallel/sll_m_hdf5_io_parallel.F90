@@ -192,7 +192,7 @@ contains
   !> - Close dataset and dataspace
   !-----------------------------------------------------------------------------
   subroutine sll_hdf5_par_write_dble_array_1d( &
-      file_id, global_size, offset, array, dsetname, error )
+      file_id, global_size, offset, array, dsetname, error, chunk_dims )
     integer, parameter               :: dspace_dims = 1
     integer(   hid_t), intent(in   ) :: file_id
     integer( hsize_t), intent(in   ) :: global_size(dspace_dims)
@@ -200,6 +200,7 @@ contains
     sll_real64       , intent(in   ) :: array(:)
     character(len=*) , intent(in   ) :: dsetname
     sll_int32        , intent(  out) :: error
+    integer( hsize_t), intent(in   ), optional :: chunk_dims(dspace_dims)
 
 #define  DATATYPE  H5T_NATIVE_DOUBLE
 #include "sll_k_hdf5_write_array.F90"
@@ -213,7 +214,7 @@ contains
   !> - Close dataset and dataspace
   !-----------------------------------------------------------------------------
   subroutine sll_hdf5_par_write_dble_array_2d( &
-      file_id, global_size, offset, array, dsetname, error )
+      file_id, global_size, offset, array, dsetname, error, chunk_dims )
     integer, parameter               :: dspace_dims = 2
     integer(   hid_t), intent(in   ) :: file_id
     integer( hsize_t), intent(in   ) :: global_size(dspace_dims)
@@ -221,6 +222,7 @@ contains
     sll_real64       , intent(in   ) :: array(:,:)
     character(len=*) , intent(in   ) :: dsetname
     sll_int32        , intent(  out) :: error
+    integer( hsize_t), intent(in   ), optional :: chunk_dims(dspace_dims)
 
 #define  DATATYPE  H5T_NATIVE_DOUBLE
 #include "sll_k_hdf5_write_array.F90"
@@ -234,7 +236,7 @@ contains
   !> - Close dataset and dataspace
   !-----------------------------------------------------------------------------
   subroutine sll_hdf5_par_write_dble_array_3d( &
-      file_id, global_size, offset, array, dsetname, error )
+      file_id, global_size, offset, array, dsetname, error, chunk_dims )
     integer, parameter               :: dspace_dims = 3
     integer(   hid_t), intent(in   ) :: file_id
     integer( hsize_t), intent(in   ) :: global_size(dspace_dims)
@@ -242,6 +244,7 @@ contains
     sll_real64       , intent(in   ) :: array(:,:,:)
     character(len=*) , intent(in   ) :: dsetname
     sll_int32        , intent(  out) :: error
+    integer( hsize_t), intent(in   ), optional :: chunk_dims(dspace_dims)
 
 #define  DATATYPE  H5T_NATIVE_DOUBLE
 #include "sll_k_hdf5_write_array.F90"
@@ -255,7 +258,7 @@ contains
   !> - Close dataset and dataspace
   !-----------------------------------------------------------------------------
   subroutine sll_hdf5_par_write_dble_array_4d( &
-      file_id, global_size, offset, array, dsetname, error )
+      file_id, global_size, offset, array, dsetname, error, chunk_dims )
     integer, parameter               :: dspace_dims = 4
     integer(   hid_t), intent(in   ) :: file_id
     integer( hsize_t), intent(in   ) :: global_size(dspace_dims)
@@ -263,6 +266,7 @@ contains
     sll_real64       , intent(in   ) :: array(:,:,:,:)
     character(len=*) , intent(in   ) :: dsetname
     sll_int32        , intent(  out) :: error
+    integer( hsize_t), intent(in   ), optional :: chunk_dims(dspace_dims)
 
 #define  DATATYPE  H5T_NATIVE_DOUBLE
 #include "sll_k_hdf5_write_array.F90"
@@ -276,7 +280,7 @@ contains
   !> - Close dataset and dataspace
   !-----------------------------------------------------------------------------
   subroutine sll_hdf5_par_write_dble_array_5d( &
-      file_id, global_size, offset, array, dsetname, error )
+      file_id, global_size, offset, array, dsetname, error, chunk_dims )
     integer, parameter               :: dspace_dims = 5
     integer(   hid_t), intent(in   ) :: file_id
     integer( hsize_t), intent(in   ) :: global_size(dspace_dims)
@@ -284,6 +288,7 @@ contains
     sll_real64       , intent(in   ) :: array(:,:,:,:,:)
     character(len=*) , intent(in   ) :: dsetname
     sll_int32        , intent(  out) :: error
+    integer( hsize_t), intent(in   ), optional :: chunk_dims(dspace_dims)
 
 #define  DATATYPE  H5T_NATIVE_DOUBLE
 #include "sll_k_hdf5_write_array.F90"
@@ -297,7 +302,7 @@ contains
   !> - Close dataset and dataspace
   !-----------------------------------------------------------------------------
   subroutine sll_hdf5_par_write_dble_array_6d( &
-      file_id, global_size, offset, array, dsetname, error )
+      file_id, global_size, offset, array, dsetname, error, chunk_dims )
     integer, parameter               :: dspace_dims = 6
     integer(   hid_t), intent(in   ) :: file_id
     integer( hsize_t), intent(in   ) :: global_size(dspace_dims)
@@ -305,6 +310,7 @@ contains
     sll_real64       , intent(in   ) :: array(:,:,:,:,:,:)
     character(len=*) , intent(in   ) :: dsetname
     sll_int32        , intent(  out) :: error
+    integer( hsize_t), intent(in   ), optional :: chunk_dims(dspace_dims)
 
 #define  DATATYPE  H5T_NATIVE_DOUBLE
 #include "sll_k_hdf5_write_array.F90"
