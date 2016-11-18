@@ -44,10 +44,6 @@ program unit_test_2d
     sll_t_coordinate_transformation_2d_discrete, &
     sll_o_delete
 
-  use sll_m_coordinate_transformations_2d_nurbs, only: &
-    sll_t_coordinate_transformation_2d_nurbs, &
-    sll_o_delete
-
   use sll_m_cubic_spline_interpolator_2d, only: &
     sll_t_cubic_spline_interpolator_2d
 
@@ -59,7 +55,6 @@ program unit_test_2d
   type(sll_t_cartesian_mesh_2d), pointer :: mesh
   type(sll_t_coordinate_transformation_2d_analytic) :: t_a    ! analytic transf
   type(sll_t_coordinate_transformation_2d_discrete) :: t_d    ! discrete transf
-  type(sll_t_coordinate_transformation_2d_nurbs)    :: t_n    ! nurbs transf
   type(sll_t_coordinate_transformation_2d_analytic), pointer :: t_a_ptr !test
   ! for the discrete case...
   type(sll_t_cubic_spline_interpolator_2d)   :: x1_interp
@@ -74,13 +69,6 @@ program unit_test_2d
   sll_real64 :: eta1, eta2, h1, h2, delta, acc, acc1
   sll_real64 :: node, node_a, node_d, interp, val_a
   sll_real64, dimension(2) :: params   ! for the polar transformation
-  sll_real64 :: val_approx1,val_approx2,val_exacte1,val_exacte2,val_exacte1_bis,val_exacte2_bis
-  logical    :: l_exists
-  sll_real64, dimension(2,2) :: val_approx_jac
-  sll_real64 :: j11,j12,j21,j22,val_jac_approx
-  sll_real64 :: j11_bis,j12_bis,j21_bis,j22_bis,jac,jac_bis
-  sll_real64, dimension(4) :: param1
-  sll_real64, dimension(10):: param2
 
 #define RMIN 0.1_f64
 #define RMAX 1.0_f64
@@ -173,8 +161,8 @@ program unit_test_2d
         acc1    = acc1 + abs(node_a-val_a)
      end do
   end do
-  print *, 'Average error in nodes, x1 transformation = ', acc/(NPTS1*NPTS2)
-  print *, 'Average error in nodes, x2 transformation = ', acc1/(NPTS1*NPTS2)
+  print *, 'Average error in nodes, x1 transformation = ', acc /real(NPTS1*NPTS2,f64)
+  print *, 'Average error in nodes, x2 transformation = ', acc1/real(NPTS1*NPTS2,f64)
 
   call t_a%write_to_file()
   !call t_a%write_to_file(sll_p_io_mtv)
@@ -250,8 +238,8 @@ program unit_test_2d
         acc1     = acc1 + abs(node_a-node_d)
      end do
   end do
-  print *, 'Average error in nodes, x1 transformation = ', acc/(NPTS1*NPTS2)
-  print *, 'Average error in nodes, x2 transformation = ', acc1/(NPTS1*NPTS2)
+  print *, 'Average error in nodes, x1 transformation = ', acc/real(NPTS1*NPTS2,f64)
+  print *, 'Average error in nodes, x2 transformation = ', acc1/real(NPTS1*NPTS2,f64)
 
   print *, 'Compare the values of the jacobian at the nodes, resulting from ',&
        'calls to map_2d_jacobian_node() and jacobian_2D(map, eta1, eta2)'
@@ -286,67 +274,6 @@ program unit_test_2d
   call sll_o_delete(t_d)
 
   print *, 'deleted transformations'
-
-  ! *************************************************************************
-  !
-  ! Test of the initialization from a file of the discrete transformation.
-  !
-  ! *************************************************************************
-
-  print *, 'Test of initialization from file for a nurbs transformation:'
-
-  inquire(file="domain_patch0.nml", exist=l_exists)
-
-  if (l_exists) then
-     call t_n%read_from_file("domain_patch0.nml")
-     !t_n%mesh => sll_f_new_cartesian_mesh_2d(64,64 )
-     call t_n%write_to_file()
-
-     param1 = (/ 0.05_f64,0.05_f64,1.0_f64,1.0_f64 /)
-     param2 = (/ 0.05_f64,0.05_f64,0.0_f64,1.0_f64,-1.0_f64,1.0_f64,0.0_f64,1.0_f64,-1.0_f64,1.0_f64 /)
-     do i = 1,mesh%num_cells1+1
-        do j = 1,mesh%num_cells2+1
-
-           eta1 = t_n%mesh%eta1_node(i,j)
-           eta2 = t_n%mesh%eta2_node(i,j)
-           val_approx1 = t_n%x1(eta1,eta2)
-           val_approx2 = t_n%x2(eta1,eta2)
-           val_exacte1 = 2.0_f64*sll_f_sinprod_x1(eta1,eta2,param1)-1.0_f64
-           val_exacte2 = 2.0_f64*sll_f_sinprod_x2(eta1,eta2,param1)-1.0_f64
-           val_exacte1_bis = sll_f_sinprod_gen_x1(eta1,eta2,param2)
-           val_exacte2_bis = sll_f_sinprod_gen_x2(eta1,eta2,param2)
-
-          ! print*, 'diff values composante eta1 ', abs(val_approx1-val_exacte1) , val_exacte1, val_exacte1_bis,val_approx1
-          ! print*, 'diff values composante eta2 ', abs(val_approx2-val_exacte2) , val_exacte2, val_exacte2_bis,val_approx2 
-
-           val_approx_jac = t_n%jacobian_matrix(eta1,eta2)
-           val_jac_approx = t_n%jacobian(eta1,eta2)
-           j11 = 2.0_f64*sll_f_sinprod_jac11(eta1,eta2,param1)
-           j12 = 2.0_f64*sll_f_sinprod_jac12(eta1,eta2,param1)
-           j21 = 2.0_f64*sll_f_sinprod_jac21(eta1,eta2,param1)
-           j22 = 2.0_f64*sll_f_sinprod_jac22(eta1,eta2,param1)
-           jac = 2.0_f64*2.0_f64*sll_f_sinprod_jac(eta1,eta2,param1)
-           j11_bis = sll_f_sinprod_gen_jac11(eta1,eta2,param2)
-           j12_bis = sll_f_sinprod_gen_jac12(eta1,eta2,param2)
-           j21_bis = sll_f_sinprod_gen_jac21(eta1,eta2,param2)
-           j22_bis = sll_f_sinprod_gen_jac22(eta1,eta2,param2)
-           jac_bis = sll_f_sinprod_gen_jac  (eta1,eta2,param2)
-          ! print*, 'Jacobian values composante j11 ', abs(val_approx_jac(1,1)-j11),j11,j11_bis, val_approx_jac(1,1) 
-          ! print*, 'Jacobian values composante j12 ', abs(val_approx_jac(1,2)-j12),j12,j12_bis, val_approx_jac(1,2) 
-          ! print*, 'Jacobian values composante j21 ', abs(val_approx_jac(2,1)-j21),j21,j21_bis, val_approx_jac(2,1) 
-          ! print*, 'Jacobian values composante j22 ', abs(val_approx_jac(2,2)-j22),j22,j22_bis, val_approx_jac(2,2)
-          ! print*, 'Jacobian values', abs(jac- val_jac_approx),jac, jac_bis, val_jac_approx
-        end do
-     end do
-
-     print*, 'label t_n', t_n%label
-
-     call sll_o_delete(t_n)
-     !call write_to_file(t_d)
-  else
-     print *, 'nml file is missing '
-  end if
-  print *, 'reached end of unit test'
 
   ! apply some more relaxed criterion for the jacobian
   if( acc/real(NPTS1*NPTS2,f64) .lt. 3.0e-5 ) then
