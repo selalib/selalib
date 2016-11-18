@@ -29,8 +29,13 @@ SLL_ASSERT(error==0)
 call h5pcreate_f( H5P_DATASET_CREATE_F, plist_id, error )
 SLL_ASSERT(error==0)
 
-!    call h5pset_chunk_f( plist_id, rank, block, error )
-!    SLL_ASSERT(error==0)
+!
+! If required, use chunked layout
+!
+if( present( chunk_dims ) ) then
+  call h5pset_chunk_f( plist_id, rank, chunk_dims, error )
+  SLL_ASSERT(error==0)
+end if
 
 call h5dcreate_f( file_id, dsetname, DATATYPE, filespace, &
                   dset_id, error, plist_id )
