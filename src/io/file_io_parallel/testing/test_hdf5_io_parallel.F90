@@ -25,6 +25,7 @@ program test_hdf5_io_parallel
     mpi_finalize
 
   use hdf5, only: &
+    hid_t, &
     hsize_t, &
     hssize_t
 
@@ -43,8 +44,8 @@ program test_hdf5_io_parallel
   integer :: psize, prank
 
   ! SELALIB variables
-  integer(i32) :: fid
-  integer(i32) :: ferror
+  integer(hid_t) :: fid
+  integer(i32)   :: ferror
   real(f64), allocatable :: a(:,:) !  Local data to write
   real(f64), allocatable :: b(:,:) ! Global data to read
   character(len=*), parameter :: fname = "test_hdf5_io_parallel.h5" ! File name
