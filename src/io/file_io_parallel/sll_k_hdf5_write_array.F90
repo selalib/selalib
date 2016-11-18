@@ -4,15 +4,20 @@ integer(HID_T)   :: memspace
 integer(HID_T)   :: filespace
 integer(HSIZE_T) :: dimsfi(dspace_dims)
 integer(HSIZE_T) :: block (dspace_dims)
+integer(HSIZE_T) :: start (dspace_dims)
 integer(HSIZE_T) :: count (dspace_dims)
 integer(HSIZE_T) :: stride(dspace_dims)
-integer          :: rank, i
+integer          :: rank
 
+! Basic dataset parameters
 rank   = dspace_dims
-dimsfi = global_size
-block  = [(int(size(array,i),HSIZE_T), i=1,rank)]
 count  = 1
 stride = 1
+
+! Integer kind type conversions
+dimsfi = int(  global_size, HSIZE_T )
+block  = int( shape(array), HSIZE_T )
+start  = int(       offset, HSIZE_T )
 
 !
 ! Create dataspaces ('file space' and 'memory space').
@@ -37,7 +42,7 @@ if( present( chunk_dims ) ) then
   SLL_ASSERT(error==0)
 end if
 
-call h5dcreate_f( file_id, dsetname, DATATYPE, filespace, &
+call h5dcreate_f( handle%file_id, dsetname, DATATYPE, filespace, &
                   dset_id, error, plist_id )
 SLL_ASSERT(error==0)
 
@@ -57,7 +62,7 @@ call h5dget_space_f( dset_id, filespace, error )
 SLL_ASSERT(error==0)
 
 call h5sselect_hyperslab_f( filespace, H5S_SELECT_SET_F, &
-                            offset, count, error, stride, block )
+                            start, count, error, stride, block )
 SLL_ASSERT(error==0)
 
 !

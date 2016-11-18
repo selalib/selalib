@@ -21,11 +21,10 @@ program test_io_parallel
     sll_s_gnuplot_rect_2d_parallel
 
   use sll_m_hdf5_io_parallel, only: &
+    sll_t_hdf5_handle,      &
     sll_o_hdf5_file_create, &
+    sll_o_hdf5_file_close,  &
     sll_o_hdf5_write_array
-
-  use sll_m_hdf5_io_serial, only: &
-    sll_o_hdf5_file_close
 
   use sll_m_remapper, only: &
     sll_o_compute_local_sizes, &
@@ -60,13 +59,6 @@ program test_io_parallel
     mpi_thread_single, &
     mpi_wtime
 
-#ifndef NOHDF5
-  use hdf5, only: &
-    hid_t, &
-    hsize_t, &
-    hssize_t
-
-#endif
   implicit none
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
@@ -134,25 +126,25 @@ contains
   sll_int32                :: npi, npj
   sll_int32                :: gi, gj
  
-  sll_int32, dimension(2)  :: global_indices
+  sll_int32                      :: global_indices(2)
   type(sll_t_layout_2d), pointer :: layout
   
   real(8), dimension(:,:), allocatable :: xdata, ydata, zdata
-  sll_int32      :: xml_id
+  sll_int32               :: xml_id
   sll_int32, parameter    :: nx = 64
   sll_int32, parameter    :: ny = 32
 #ifndef NOHDF5
-  integer(HID_T) :: file_id
-  integer(HSIZE_T), dimension(2) :: datadims = (/int(nx,HSIZE_T),int(ny,HSIZE_T)/)
-  integer(HSSIZE_T), dimension(2) :: offset 
+  type(sll_t_hdf5_handle) :: file_id
+  integer(i64)            :: datadims(2) = int( [nx,ny], i64 )
+  integer(i64)            :: offset(2)
 #else
-  sll_int32, dimension(2) :: offset 
+  sll_int32               :: offset(2)
 #endif
   character(len=4) :: prefix = "mesh"
   
   layout => sll_f_new_layout_2d( sll_v_world_collective )        
 
-  call two_power_rand_factorization(colsz, npi, npj)
+  call two_power_rand_factorization( colsz, npi, npj )
   
   if( myrank .eq. 0 ) then
      print *, '2d layout configuration: ', npi, npj
@@ -161,9 +153,9 @@ contains
   call sll_o_initialize_layout_with_distributed_array( &
        nx, ny, npi, npj, layout )
        
-  call sll_s_collective_barrier(sll_v_world_collective)
+  call sll_s_collective_barrier( sll_v_world_collective )
   
-  call sll_o_compute_local_sizes( layout, mx, my)        
+  call sll_o_compute_local_sizes( layout, mx, my )        
   
   SLL_ALLOCATE(xdata(mx,my),error)
   SLL_ALLOCATE(ydata(mx,my),error)
@@ -171,7 +163,7 @@ contains
   
   do j = 1, my
      do i = 1, mx
-        global_indices =  sll_o_local_to_global( layout, (/i, j/) )
+        global_indices =  sll_o_local_to_global( layout, [i, j] )
         gi = global_indices(1)
         gj = global_indices(2)
         xdata(i,j) = real(myrank,f64) !float(gi-1)!/(nx-1)
@@ -179,20 +171,23 @@ contains
         zdata(i,j) = (myrank+1) * xdata(i,j) * ydata(i,j)
      end do
   end do
-  
+ 
 #ifdef NOHDF5
-#define HSSIZE_T i32
+#define SIZE_T i32
+#else
+#define SIZE_T i64
 #endif
-  offset(1) =  int(sll_o_get_layout_i_min( layout, myrank ) - 1, HSSIZE_T)
-  offset(2) =  int(sll_o_get_layout_j_min( layout, myrank ) - 1, HSSIZE_T)
+
+  offset(1) = int( sll_o_get_layout_i_min( layout, myrank )-1, SIZE_T )
+  offset(2) = int( sll_o_get_layout_j_min( layout, myrank )-1, SIZE_T )
 
   !Gnuplot output
-  call sll_s_gnuplot_rect_2d_parallel(dble(offset(1)), dble(1), &
-                                    dble(offset(2)), dble(1), &
-                                    mx, my, &
-                                    zdata, "rect_mesh", 1, error)  
+  call sll_s_gnuplot_rect_2d_parallel( dble(offset(1)), dble(1), &
+                                       dble(offset(2)), dble(1), &
+                                       mx, my, &
+                                       zdata, "rect_mesh", 1, error )
 
-  call sll_s_gnuplot_curv_2d_parallel(xdata, ydata, zdata, "curv_mesh", 1, error)  
+  call sll_s_gnuplot_curv_2d_parallel( xdata, ydata, zdata, "curv_mesh", 1, error )  
   
   
 #ifndef NOHDF5
@@ -210,18 +205,18 @@ contains
 
   !Begin low level version
 
-  call sll_o_hdf5_file_create(xfile,comm,file_id, error)
-  call sll_o_hdf5_write_array(file_id,datadims,offset,xdata,xdset,error)
-  call sll_o_hdf5_file_close(file_id,error)
+  call sll_o_hdf5_file_create( xfile, comm, file_id, error )
+  call sll_o_hdf5_write_array( file_id, datadims, offset, xdata, xdset, error )
+  call sll_o_hdf5_file_close ( file_id, error )
 
   
-  call sll_o_hdf5_file_create(yfile,comm,file_id,error)
-  call sll_o_hdf5_write_array(file_id,datadims,offset,ydata,ydset,error)
-  call sll_o_hdf5_file_close(file_id,error)
+  call sll_o_hdf5_file_create( yfile, comm, file_id, error )
+  call sll_o_hdf5_write_array( file_id, datadims, offset, ydata, ydset, error )
+  call sll_o_hdf5_file_close ( file_id, error )
   
-  call sll_o_hdf5_file_create(zfile,comm,file_id,error)
-  call sll_o_hdf5_write_array(file_id,datadims,offset,zdata,zdset,error)
-  call sll_o_hdf5_file_close(file_id,error)
+  call sll_o_hdf5_file_create( zfile, comm, file_id, error )
+  call sll_o_hdf5_write_array( file_id, datadims, offset, zdata, zdset, error )
+  call sll_o_hdf5_file_close ( file_id, error )
 
   if (myrank == 0) then
   
@@ -253,31 +248,30 @@ contains
   ! Take a 3D array of dimensions ni*nj*nk
   ! ni, nj, nk: global sizes
   ! Local sizes
-  sll_int32                                   :: loc_sz_i_init
-  sll_int32                                   :: loc_sz_j_init
-  sll_int32                                   :: loc_sz_k_init
+  sll_int32                      :: loc_sz_i_init
+  sll_int32                      :: loc_sz_j_init
+  sll_int32                      :: loc_sz_k_init
 
   ! the process mesh
-  sll_int32                                   :: npi
-  sll_int32                                   :: npj
-  sll_int32                                   :: npk
-  sll_int32                                 :: gi, gj, gk
+  sll_int32                      :: npi
+  sll_int32                      :: npj
+  sll_int32                      :: npk
+  sll_int32                      :: gi, gj, gk
 
-  type(sll_t_layout_3d), pointer                  :: layout
+  type(sll_t_layout_3d), pointer :: layout
 
-  sll_int32, dimension(3)                   :: global_indices
+  sll_int32                      :: global_indices(3)
 
-  sll_int32      :: xml_id
-  sll_int32, PARAMETER :: rank = 3
-  sll_int32 , parameter                       :: ni = 32
-  sll_int32 , parameter                       :: nj = 64
-  sll_int32 , parameter                       :: nk = 128
+  sll_int32                      :: xml_id
+  sll_int32, parameter           :: ni = 32
+  sll_int32, parameter           :: nj = 64
+  sll_int32, parameter           :: nk = 128
 #ifndef NOHDF5
-  integer(HID_T) :: file_id       ! File identifier 
-  integer(HSIZE_T), dimension(3) :: datadims = (/int(ni,HSIZE_T),int(nj,HSIZE_T),int(nk,HSIZE_T)/) ! Dataset dimensions.
-  integer(HSSIZE_T), dimension(rank) :: offset 
+  type(sll_t_hdf5_handle) :: file_id       ! File identifier 
+  integer(i64)            :: datadims(3) = int( [ni,nj,nk], i64 ) ! Dataset dimensions.
+  integer(i64)            :: offset(3)
 #else
-  sll_int32, dimension(rank) :: offset 
+  sll_int32               :: offset(3)
 #endif
 
 
@@ -307,7 +301,7 @@ contains
   do k=1,loc_sz_k_init
      do j=1,loc_sz_j_init 
         do i=1,loc_sz_i_init
-           global_indices =  sll_o_local_to_global( layout, (/i, j, k/) )
+           global_indices =  sll_o_local_to_global( layout, [i,j,k] )
            gi = global_indices(1)
            gj = global_indices(2)
            gk = global_indices(3)
@@ -320,12 +314,14 @@ contains
   enddo
 
 #ifdef NOHDF5
-#define HSSIZE_T i32
+#define SIZE_T i32
+#else
+#define SIZE_T i64
 #endif
 
-  offset(1) = int(sll_o_get_layout_i_min( layout, myrank ) - 1, HSSIZE_T)
-  offset(2) = int(sll_o_get_layout_j_min( layout, myrank ) - 1, HSSIZE_T)
-  offset(3) = int(sll_o_get_layout_k_min( layout, myrank ) - 1, HSSIZE_T)
+  offset(1) = int( sll_o_get_layout_i_min( layout, myrank )-1, SIZE_T )
+  offset(2) = int( sll_o_get_layout_j_min( layout, myrank )-1, SIZE_T )
+  offset(3) = int( sll_o_get_layout_k_min( layout, myrank )-1, SIZE_T )
 
 #ifndef NOHDF5
 
@@ -339,21 +335,21 @@ contains
 
   !End high level version
 
-  call sll_o_hdf5_file_create('layout3d-x.h5',comm,file_id,error)
-  call sll_o_hdf5_write_array(file_id,datadims,offset,xdata,'x',error)
-  call sll_o_hdf5_file_close(file_id, error)
+  call sll_o_hdf5_file_create( 'layout3d-x.h5', comm, file_id, error )
+  call sll_o_hdf5_write_array( file_id, datadims, offset, xdata, 'x', error )
+  call sll_o_hdf5_file_close ( file_id, error )
 
-  call sll_o_hdf5_file_create('layout3d-y.h5',comm,file_id, error)
-  call sll_o_hdf5_write_array(file_id,datadims,offset,ydata,'y',error)
-  call sll_o_hdf5_file_close(file_id, error)
+  call sll_o_hdf5_file_create( 'layout3d-y.h5', comm, file_id, error )
+  call sll_o_hdf5_write_array( file_id, datadims, offset, ydata, 'y', error )
+  call sll_o_hdf5_file_close ( file_id, error )
 
-  call sll_o_hdf5_file_create('layout3d-z.h5',comm,file_id, error)
-  call sll_o_hdf5_write_array(file_id,datadims,offset,zdata,'z',error)
-  call sll_o_hdf5_file_close(file_id, error)
+  call sll_o_hdf5_file_create( 'layout3d-z.h5', comm,file_id, error )
+  call sll_o_hdf5_write_array( file_id, datadims, offset, zdata, 'z', error )
+  call sll_o_hdf5_file_close ( file_id, error )
 
-  call sll_o_hdf5_file_create('layout3d.h5',comm,file_id, error)
-  call sll_o_hdf5_write_array(file_id,datadims,offset,local_array,'array',error)
-  call sll_o_hdf5_file_close(file_id,error)
+  call sll_o_hdf5_file_create( 'layout3d.h5', comm, file_id, error )
+  call sll_o_hdf5_write_array( file_id, datadims, offset, local_array, 'array', error )
+  call sll_o_hdf5_file_close ( file_id, error )
 
   if (myrank == 0) then
      call sll_s_xml_file_create("layout3d.xmf",xml_id,error)

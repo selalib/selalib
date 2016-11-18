@@ -10,9 +10,10 @@ program test_hdf5_io_parallel
 #include "sll_working_precision.h"
 
   use sll_m_hdf5_io_parallel, only: &
+    sll_t_hdf5_handle,      &
     sll_o_hdf5_file_create, &
     sll_o_hdf5_file_close,  &
-    sll_o_hdf5_file_open,  &
+    sll_o_hdf5_file_open,   &
     sll_o_hdf5_write_array, &
     sll_o_hdf5_read_array
 
@@ -24,15 +25,10 @@ program test_hdf5_io_parallel
     mpi_comm_rank, &
     mpi_finalize
 
-  use hdf5, only: &
-    hid_t, &
-    hsize_t, &
-    hssize_t
-
   implicit none
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
-  ! HDF5 variables (to be converted into 'hsize_t' and 'hssize_t')
+  ! HDF5 variables (to be converted into long integers)
   integer :: dset_dims(2) ! Dataset dimensions in the file (global)
 !  integer :: chnk_dims(2) ! Chunk dimensions (global)
   integer :: block (2)    ! Dimensions of local array
@@ -44,10 +40,10 @@ program test_hdf5_io_parallel
   integer :: psize, prank
 
   ! SELALIB variables
-  integer(hid_t) :: fid
-  integer(i32)   :: ferror
-  real(f64), allocatable :: a(:,:) !  Local data to write
-  real(f64), allocatable :: b(:,:) ! Global data to read
+  type(sll_t_hdf5_handle) :: fid
+  integer                 :: ferror
+  real(f64), allocatable  :: a(:,:) !  Local data to write
+  real(f64), allocatable  :: b(:,:) ! Global data to read
   character(len=*), parameter :: fname = "test_hdf5_io_parallel.h5" ! File name
   character(len=*), parameter :: dsetname = "real_array"         ! Dataset name
   integer :: i, j
@@ -111,9 +107,9 @@ program test_hdf5_io_parallel
 
   ! Parallel write array to file
   call sll_o_hdf5_write_array( &
-    file_id     = fid, &
-    global_size = int( dset_dims,  hsize_t ), &
-    offset      = int(    offset, hssize_t ), &
+    handle      = fid, &
+    global_size = int( dset_dims, i64 ), &
+    offset      = int(    offset, i64 ), &
     array       = a, &
     dsetname    = dsetname, &
     error       = ferror )
@@ -128,12 +124,11 @@ program test_hdf5_io_parallel
   b(:,:) = -1.0_f64
 
   ! Read file in parallel
-!    call sll_o_hdf5_file_open( fname, pcomm, fid, ferror )
-  call sll_o_hdf5_file_open( fid, fname, pcomm, ferror ) !TODO: fix input order
+  call sll_o_hdf5_file_open( fname, pcomm, fid, ferror )
   call sll_o_hdf5_read_array( &
-    file_id     = fid, &
-    global_size = int( dset_dims,  hsize_t ), &
-    offset      = int( offset, hssize_t ), &
+    handle      = fid, &
+    global_size = int( dset_dims, i64 ), &
+    offset      = int( offset   , i64 ), &
     array       = b, &
     dsetname    = dsetname, &
     error       = ferror )
