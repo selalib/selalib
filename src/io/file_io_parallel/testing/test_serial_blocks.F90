@@ -7,9 +7,9 @@ program test_serial_blocks
     hsize_t
 
   use sll_m_hdf5_io_serial, only: &
-    sll_o_hdf5_file_close, &
-    sll_o_hdf5_file_create, &
-    sll_o_hdf5_write_array
+    sll_s_hdf5_ser_file_create, &
+    sll_s_hdf5_ser_file_close, &
+    sll_o_hdf5_ser_write_array
 
   use sll_m_utilities, only: &
     sll_s_int2string, &
@@ -165,14 +165,14 @@ call sll_s_int2string(iplot,cplot)
 mesh_name  = trim(mesh_label)//my_proc//".h5"
 field_name = trim(field_label)//my_proc//"-"//cplot//".h5"
 
-call sll_o_hdf5_file_create(trim(mesh_name),file_id,error)
-call sll_o_hdf5_write_array(file_id,x(sx:ex,sy:ey),coordnames(1),error)
-call sll_o_hdf5_write_array(file_id,y(sx:ex,sy:ey),coordnames(2),error)
-call sll_o_hdf5_file_close(file_id, error)
+call sll_s_hdf5_ser_file_create( trim(mesh_name), file_id, error )
+call sll_o_hdf5_ser_write_array( file_id, x(sx:ex,sy:ey), coordnames(1), error )
+call sll_o_hdf5_ser_write_array( file_id, y(sx:ex,sy:ey), coordnames(2), error )
+call sll_s_hdf5_ser_file_close( file_id, error )
 
-call sll_o_hdf5_file_create(trim(field_name),file_id,error)
-call sll_o_hdf5_write_array(file_id,z(sx:ex,sy:ey),"/Z",error)
-call sll_o_hdf5_file_close(file_id, error)
+call sll_s_hdf5_ser_file_create( trim(field_name), file_id, error )
+call sll_o_hdf5_ser_write_array( file_id, z(sx:ex,sy:ey), "/Z", error )
+call sll_s_hdf5_ser_file_close( file_id, error )
 
 if (prank == 0) then
    open(xmf,file="all_domains"//cplot//".xmf")

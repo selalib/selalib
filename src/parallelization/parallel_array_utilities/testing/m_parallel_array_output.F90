@@ -40,9 +40,9 @@ module m_parallel_array_output
     hssize_t
 
   use sll_m_hdf5_io_serial, only: &
-    sll_o_hdf5_file_create, &
-    sll_o_hdf5_file_close,  &
-    sll_o_hdf5_write_array
+    sll_s_hdf5_ser_file_create, &
+    sll_s_hdf5_ser_file_close, &
+    sll_o_hdf5_ser_write_array
 
   use sll_m_hdf5_io_parallel, only: &
     sll_t_hdf5_handle,      &
@@ -97,12 +97,12 @@ subroutine write_mesh_4d(mesh)
   end do
  
 #ifndef NOHDF5
-  call sll_o_hdf5_file_create("mesh4d.h5",file_id,error)
-  call sll_o_hdf5_write_array(file_id,eta1,"/x1",error)
-  call sll_o_hdf5_write_array(file_id,eta2,"/x2",error)
-  call sll_o_hdf5_write_array(file_id,eta3,"/x3",error)
-  call sll_o_hdf5_write_array(file_id,eta4,"/x4",error)
-  call sll_o_hdf5_file_close(file_id, error)
+  call sll_s_hdf5_ser_file_create( "mesh4d.h5", file_id, error )
+  call sll_o_hdf5_ser_write_array( file_id, eta1, "/x1", error )
+  call sll_o_hdf5_ser_write_array( file_id, eta2, "/x2", error )
+  call sll_o_hdf5_ser_write_array( file_id, eta3, "/x3", error )
+  call sll_o_hdf5_ser_write_array( file_id, eta4, "/x4", error )
+  call sll_s_hdf5_ser_file_close( file_id, error )
 #endif
 
 end subroutine write_mesh_4d
@@ -230,9 +230,9 @@ subroutine write_fx1x2(f, layout, cplot)
   end do
 #ifndef NOHDF5
   if (prank == MPI_MASTER) then
-     call sll_o_hdf5_file_create('fx1x2_'//cplot//".h5",file_id,error)
-     call sll_o_hdf5_write_array(file_id,fij,"/values",error)
-     call sll_o_hdf5_file_close(file_id, error)
+     call sll_s_hdf5_ser_file_create( 'fx1x2_'//cplot//".h5", file_id, error )
+     call sll_o_hdf5_ser_write_array( file_id, fij, "/values", error )
+     call sll_s_hdf5_ser_file_close( file_id, error )
   end if
 #endif
 
@@ -267,9 +267,9 @@ subroutine write_fx1x3(f, layout, cplot)
   end do
 #ifndef NOHDF5
   if (prank == MPI_MASTER) then
-     call sll_o_hdf5_file_create('fx1x3_'//cplot//".h5",file_id,error)
-     call sll_o_hdf5_write_array(file_id,fik,"/values",error)
-     call sll_o_hdf5_file_close(file_id, error)
+     call sll_s_hdf5_ser_file_create( 'fx1x3_'//cplot//".h5", file_id, error )
+     call sll_o_hdf5_ser_write_array( file_id, fik, "/values", error )
+     call sll_s_hdf5_ser_file_close( file_id, error )
   end if
 #endif
 
@@ -310,7 +310,7 @@ subroutine write_fx2x4( f, layout, cplot )
   offset(2)      = int( sll_o_get_layout_l_min(layout,prank)-1, i64 )
 
 #ifndef NOHDF5
-  call sll_o_hdf5_file_create( 'fx2x4_'//cplot//".h5",comm, handle, error )
+  call sll_o_hdf5_file_create( 'fx2x4_'//cplot//".h5", comm, handle, error )
   call sll_o_hdf5_write_array( handle, global_dims, offset, fjl, "/values", error )
   call sll_o_hdf5_file_close ( handle, error )
 #endif

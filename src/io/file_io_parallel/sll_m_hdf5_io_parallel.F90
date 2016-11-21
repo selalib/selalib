@@ -61,7 +61,7 @@ module sll_m_hdf5_io_parallel
     hssize_t
 
   use sll_m_hdf5_io_serial, only: &
-    sll_o_hdf5_file_close
+    sll_s_hdf5_ser_file_close
 
   use sll_mpi, only: &
     mpi_info_null
@@ -186,7 +186,7 @@ contains
     type(sll_t_hdf5_handle), intent(in   ) :: handle   !< file unit number
     integer                , intent(  out) :: error    !< error code
 
-    call sll_o_hdf5_file_close( handle%file_id, error )
+    call sll_s_hdf5_ser_file_close( handle%file_id, error )
     SLL_ASSERT(error==0)
   end subroutine sll_hdf5_par_file_close
 

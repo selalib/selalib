@@ -19,10 +19,10 @@ module sll_m_hdf5_serial
 
   use hdf5, only: hid_t
   use sll_m_hdf5_io_serial, only: &
-    sll_o_hdf5_file_close, &
-    sll_o_hdf5_file_create, &
-    sll_o_hdf5_file_open, &
-    sll_o_hdf5_write_array
+    sll_s_hdf5_ser_file_create, &
+    sll_s_hdf5_ser_file_open, &
+    sll_s_hdf5_ser_file_close, &
+    sll_o_hdf5_ser_write_array
 
   implicit none
 
@@ -85,7 +85,7 @@ contains
     !integer                       :: file_id
     integer                       :: error
 
-    call sll_o_hdf5_file_create( self%filename, self%file_id, error )
+    call sll_s_hdf5_ser_file_create( self%filename, self%file_id, error )
 
     if (error /= 0) then
       SLL_ERROR( this_sub_name, "Cannot create HDF5 file "//trim(self%filename))
@@ -108,7 +108,7 @@ contains
       SLL_ERROR( this_sub_name, "File is already open")
     end if
 
-    call sll_o_hdf5_file_open( self%filename, self%file_id, error )
+    call sll_s_hdf5_ser_file_open( self%filename, self%file_id, error )
 
     if (error /= 0) then
       SLL_ERROR( this_sub_name, "Cannot open HDF5 file " // trim( self%filename ))
@@ -130,7 +130,7 @@ contains
       SLL_ERROR( this_sub_name, "File is already closed")
     end if
 
-    call sll_o_hdf5_file_close( self%file_id, error )
+    call sll_s_hdf5_ser_file_close( self%file_id, error )
 
     if (error /= 0) then
       SLL_ERROR( this_sub_name, "Cannot close HDF5 file " // trim( self%filename ))
@@ -166,7 +166,7 @@ contains
       SLL_ERROR( this_sub_name, "File is closed")
     end if
 
-    call sll_o_hdf5_write_array( self%file_id, array, dsetname, error )
+    call sll_o_hdf5_ser_write_array( self%file_id, array, dsetname, error )
 
     if (error /= 0) then
       SLL_ERROR( this_sub_name, "Cannot write to file " // trim( self%filename ))
@@ -188,7 +188,7 @@ contains
       SLL_ERROR( this_sub_name, "File is closed")
     end if
 
-    call sll_o_hdf5_write_array( self%file_id, array, dsetname, error )
+    call sll_o_hdf5_ser_write_array( self%file_id, array, dsetname, error )
 
     if (error /= 0) then
       SLL_ERROR( this_sub_name, "Cannot write to file " // trim( self%filename ))
@@ -210,7 +210,7 @@ contains
       SLL_ERROR( this_sub_name, "File is closed")
     end if
 
-    call sll_o_hdf5_write_array( self%file_id, array, dsetname, error )
+    call sll_o_hdf5_ser_write_array( self%file_id, array, dsetname, error )
 
     if (error /= 0) then
       SLL_ERROR( this_sub_name, "Cannot write to file " // trim( self%filename ))
@@ -232,7 +232,7 @@ contains
       SLL_ERROR( this_sub_name, "File is closed")
     end if
 
-    call sll_o_hdf5_write_array( self%file_id, array, dsetname, error )
+    call sll_o_hdf5_ser_write_array( self%file_id, array, dsetname, error )
 
     if (error /= 0) then
       SLL_ERROR( this_sub_name, "Cannot write to file " // trim( self%filename ))
@@ -254,7 +254,7 @@ contains
       SLL_ERROR( this_sub_name, "File is closed")
     end if
 
-    call sll_o_hdf5_write_array( self%file_id, array, dsetname, error )
+    call sll_o_hdf5_ser_write_array( self%file_id, array, dsetname, error )
 
     if (error /= 0) then
       SLL_ERROR( this_sub_name, "Cannot write to file " // trim( self%filename ))
@@ -276,7 +276,7 @@ contains
       SLL_ERROR( this_sub_name, "File is closed")
     end if
 
-    call sll_o_hdf5_write_array( self%file_id, array, dsetname, error )
+    call sll_o_hdf5_ser_write_array( self%file_id, array, dsetname, error )
 
     if (error /= 0) then
       SLL_ERROR( this_sub_name, "Cannot write to file " // trim( self%filename ))
