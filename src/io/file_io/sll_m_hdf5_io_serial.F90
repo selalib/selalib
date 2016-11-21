@@ -51,31 +51,13 @@ module sll_m_hdf5_io_serial
   implicit none
 
   public :: &
-    sll_o_hdf5_file_close, &
-    sll_o_hdf5_file_create, &
-    sll_o_hdf5_file_open, &
-    sll_o_hdf5_write_array, &
-    sll_o_hdf5_write_array_1d, &
-    sll_o_hdf5_write_array_2d, &
-    sll_o_hdf5_write_array_3d, &
-    sll_o_hdf5_write_file
+    sll_s_hdf5_ser_file_create, &
+    sll_s_hdf5_ser_file_open,   &
+    sll_s_hdf5_ser_file_close,  &
+    sll_o_hdf5_ser_write_array, &
+    sll_s_hdf5_ser_write_file
   private
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-
-  !> Create new HDF5 file
-  interface sll_o_hdf5_file_create
-    module procedure sll_hdf5_ser_file_create
-  end interface
-
-  !> Open existing HDF5 file
-  interface sll_o_hdf5_file_open
-    module procedure sll_hdf5_ser_file_open
-  end interface
-
-  !> Close HDF5 file
-  interface sll_o_hdf5_file_close
-    module procedure sll_hdf5_ser_file_close
-  end interface
 
   !> @brief 
   !> Write a nD array of float in double precision in a HDF5 file 
@@ -84,7 +66,7 @@ module sll_m_hdf5_io_serial
   !>\param[in]  array array
   !>\param[in]  dsetname dataset name
   !>\param[out] error dataset error code
-  interface sll_o_hdf5_write_array
+  interface sll_o_hdf5_ser_write_array
      module procedure sll_hdf5_ser_write_dble_array_1d
      module procedure sll_hdf5_ser_write_dble_array_2d
      module procedure sll_hdf5_ser_write_dble_array_3d
@@ -94,34 +76,12 @@ module sll_m_hdf5_io_serial
      module procedure sll_hdf5_ser_write_char_array
   end interface
 
-  !> Interface to write a 1d array in HDF5 file format
-  interface sll_o_hdf5_write_array_1d
-     module procedure sll_hdf5_ser_write_dble_array_1d
-     module procedure sll_hdf5_ser_write_int_array_1d
-  end interface
-
-  !> Interface to write a 2d array in HDF5 file format
-  interface sll_o_hdf5_write_array_2d
-     module procedure sll_hdf5_ser_write_dble_array_2d
-     module procedure sll_hdf5_ser_write_int_array_2d
-  end interface
-
-  !> Interface to write a 3d array in HDF5 file format
-  interface sll_o_hdf5_write_array_3d
-     module procedure sll_hdf5_ser_write_dble_array_3d
-     module procedure sll_hdf5_ser_write_int_array_3d
-  end interface
-  
-  interface sll_o_hdf5_write_file
-     module procedure sll_hdf5_ser_write_file
-  end interface
-
 contains
   
-!> @brief Create HDF5 file
+!> @brief Create new HDF5 file
 !> @details To use this subroutine HDF5_ENABLE should be set to ON 
 !> in CMake configuration
-  subroutine sll_hdf5_ser_file_create(filename,file_id,error)
+  subroutine sll_s_hdf5_ser_file_create(filename,file_id,error)
     character(len=*) , intent(in)  :: filename  !< file name
     integer(hid_t)   , intent(out) :: file_id   !< unit number
     integer,           intent(out) :: error     !< error code
@@ -130,10 +90,10 @@ contains
     SLL_ASSERT(error==0)
     call H5Fcreate_f(filename,H5F_ACC_TRUNC_F,file_id,error)
     SLL_ASSERT(error==0)
-  end subroutine sll_hdf5_ser_file_create
+  end subroutine sll_s_hdf5_ser_file_create
 
-  !> Open HDF5 file
-  subroutine sll_hdf5_ser_file_open(filename,file_id,error)
+  !> Open existing HDF5 file
+  subroutine sll_s_hdf5_ser_file_open(filename,file_id,error)
     character(len=*) , intent(in)  :: filename  !< file name
     integer(hid_t)   , intent(out) :: file_id   !< unit number
     integer,           intent(out) :: error     !< error code
@@ -142,10 +102,10 @@ contains
     SLL_ASSERT(error==0)
     call H5Fopen_f(filename,H5F_ACC_RDWR_F,file_id,error)
     SLL_ASSERT(error==0)
-  end subroutine sll_hdf5_ser_file_open
+  end subroutine sll_s_hdf5_ser_file_open
 
   !> Close HDF5 file
-  subroutine sll_hdf5_ser_file_close(file_id,error)
+  subroutine sll_s_hdf5_ser_file_close(file_id,error)
     integer(hid_t), intent(in)  :: file_id  !< file unit number
     integer,        intent(out) :: error    !< error code
 
@@ -157,7 +117,7 @@ contains
     call h5close_f(error)
     SLL_ASSERT(error==0)
 
-  end subroutine sll_hdf5_ser_file_close
+  end subroutine sll_s_hdf5_ser_file_close
 
   !> Write a 1d array of int32 in hdf5 file
   subroutine sll_hdf5_ser_write_int_array_1d(file_id,array,dsetname,error)
@@ -376,7 +336,7 @@ contains
   
   
   !< Reads a complete from filename and stores it into the hdf5 data structure
-  subroutine sll_hdf5_ser_write_file(h5file_id,filename,dsetname, error)
+  subroutine sll_s_hdf5_ser_write_file(h5file_id,filename,dsetname, error)
     integer(hid_t)  , intent(in) :: h5file_id      !< file unit number
     character(len=*), intent(in) :: dsetname     !< hdf5 dataset name
     sll_int32, intent(out)       :: error        !< error code
@@ -415,7 +375,7 @@ contains
            (h5file_id, content, dsetname, error)
    
   
-  end subroutine sll_hdf5_ser_write_file  
+  end subroutine sll_s_hdf5_ser_write_file  
   
 
 !Gysela functions that can be useful for future

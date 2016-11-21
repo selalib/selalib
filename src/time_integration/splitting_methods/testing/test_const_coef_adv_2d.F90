@@ -17,9 +17,9 @@ program test_const_coef_adv_2d
     sll_t_cubic_spline_interpolator_1d
 
   use sll_m_hdf5_io_serial, only: &
-    sll_o_hdf5_file_close, &
-    sll_o_hdf5_file_create, &
-    sll_o_hdf5_write_array_2d
+    sll_s_hdf5_ser_file_create, &
+    sll_s_hdf5_ser_file_close, &
+    sll_o_hdf5_ser_write_array
 
   use sll_m_interpolators_1d_base, only: &
     sll_c_interpolator_1d
@@ -77,8 +77,8 @@ program test_const_coef_adv_2d
 
   ! save results
   filename = "data.h5"
-  call sll_o_hdf5_file_create(filename, hfile_id, ierr)
-  call sll_o_hdf5_write_array_2d(hfile_id, data, "data", ierr)
-  call sll_o_hdf5_file_close(hfile_id, ierr)
+  call sll_s_hdf5_ser_file_create( filename, hfile_id, ierr )
+  call sll_o_hdf5_ser_write_array( hfile_id, data, "data", ierr )
+  call sll_s_hdf5_ser_file_close( hfile_id, ierr )
   
 end program test_const_coef_adv_2d
