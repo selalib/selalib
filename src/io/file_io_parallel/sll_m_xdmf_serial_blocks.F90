@@ -49,9 +49,9 @@ module sll_m_xdmf_serial_blocks
     hid_t
 
   use sll_m_hdf5_io_serial, only: &
-    sll_o_hdf5_file_close, &
-    sll_o_hdf5_file_create, &
-    sll_o_hdf5_write_array
+    sll_s_hdf5_ser_file_create, &
+    sll_s_hdf5_ser_file_close, &
+    sll_o_hdf5_ser_write_array
 
 #endif
   implicit none
@@ -105,10 +105,10 @@ contains
      call sll_s_xml_file_create(trim(prefix)//".xmf",xmf,error)
     end if
 #ifndef NOHDF5
-    call sll_o_hdf5_file_create(trim(prefix)//"-mesh-"//crank//".h5",h5file_id,error)
-    call sll_o_hdf5_write_array(h5file_id,x1,"/x1",error)
-    call sll_o_hdf5_write_array(h5file_id,x2,"/x2",error)
-    call sll_o_hdf5_file_close(h5file_id, error)
+    call sll_s_hdf5_ser_file_create(trim(prefix)//"-mesh-"//crank//".h5",h5file_id,error)
+    call sll_o_hdf5_ser_write_array( h5file_id, x1, "/x1", error )
+    call sll_o_hdf5_ser_write_array( h5file_id, x2, "/x2", error )
+    call sll_s_hdf5_ser_file_close( h5file_id, error )
 #endif
 
   end subroutine sll_s_xdmf_open_serial_blocks
@@ -142,9 +142,9 @@ contains
    call sll_s_int2string(prank,crank)
 
 #ifndef NOHDF5
-   call sll_o_hdf5_file_create(trim(prefix)//"-"//crank//".h5",file_id,error)
-   call sll_o_hdf5_write_array(file_id,array,"/"//trim(array_name),error)
-   call sll_o_hdf5_file_close(file_id, error)
+   call sll_s_hdf5_ser_file_create( trim(prefix)//"-"//crank//".h5", file_id, error )
+   call sll_o_hdf5_ser_write_array( file_id, array, "/"//trim(array_name), error )
+   call sll_s_hdf5_ser_file_close( file_id, error )
 #endif
 
    npts_x1 = size(array,1)
