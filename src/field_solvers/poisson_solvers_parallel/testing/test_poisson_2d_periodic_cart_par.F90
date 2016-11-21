@@ -4,10 +4,6 @@ program test_poisson_2d_periodic_cart_par
 #include "sll_memory.h"
 #include "sll_working_precision.h"
 
-  use hdf5, only: &
-    hid_t, &
-    hsize_t
-
   use iso_fortran_env, only: &
     output_unit
 
@@ -27,10 +23,9 @@ program test_poisson_2d_periodic_cart_par
     sll_s_gnuplot_rect_2d_parallel
 
   use sll_m_hdf5_io_parallel, only: &
+    sll_t_hdf5_handle,      &
     sll_o_hdf5_file_create, &
-    sll_o_hdf5_write_array
-
-  use sll_m_hdf5_io_serial, only: &
+    sll_o_hdf5_write_array, &
     sll_o_hdf5_file_close
 
   use sll_m_poisson_2d_periodic_cartesian_par, only: &
@@ -255,33 +250,34 @@ contains
     dataset_name, &
     layout )
 
-    character(len=*), intent(in)           :: filename
-    sll_int32, intent(in)                  :: n_pts1
-    sll_int32, intent(in)                  :: n_pts2
-    integer(HSIZE_T), dimension(1:2)       :: global_dims
-    sll_real64, dimension(:,:), intent(in) :: array
-    character(len=*), intent(in)           :: dataset_name
-    type(sll_t_layout_2d), pointer               :: layout
-    sll_int32                              :: error
-    integer(HID_T)                         :: file_id
-    integer(HSIZE_T), dimension(1:2)       :: offset
-    type(sll_t_collective_t), pointer        :: col
-    sll_int32                              :: myrank
-    sll_int32                              :: comm
+    character(len=*)     , intent(in) :: filename
+    sll_int32            , intent(in) :: n_pts1
+    sll_int32            , intent(in) :: n_pts2
+    sll_real64           , intent(in) :: array(:,:)
+    character(len=*)     , intent(in) :: dataset_name
+    type(sll_t_layout_2d), pointer    :: layout
+
+    type(sll_t_collective_t), pointer :: col
+    type(sll_t_hdf5_handle)           :: handle
+    integer(i64)                      :: global_dims(1:2)
+    integer(i64)                      :: offset(1:2)
+    sll_int32                         :: error
+    sll_int32                         :: myrank
+    sll_int32                         :: comm
 
     SLL_ASSERT( associated(layout) )
     col => sll_o_get_layout_collective( layout )
     myrank = sll_f_get_collective_rank( col )
-    global_dims(:) = [int(n_pts1,HSIZE_T),int(n_pts2,HSIZE_T)]
+    global_dims(:) = int( [n_pts1,n_pts2], i64 )
     
-    offset(1) = int(sll_o_get_layout_i_min( layout, myrank ) - 1, HSIZE_T)
-    offset(2) = int(sll_o_get_layout_j_min( layout, myrank ) - 1, HSIZE_T)
+    offset(1) = int( sll_o_get_layout_i_min( layout, myrank )-1, i64 )
+    offset(2) = int( sll_o_get_layout_j_min( layout, myrank )-1, i64 )
 
-    comm   = sll_v_world_collective%comm
-    call sll_o_hdf5_file_create(filename,comm,file_id,error)
-    call sll_o_hdf5_write_array(file_id,global_dims,offset, &
-                              array,dataset_name,error)
-    call sll_o_hdf5_file_close(file_id,error)
+    comm = sll_v_world_collective%comm
+    call sll_o_hdf5_file_create( filename, comm, handle, error )
+    call sll_o_hdf5_write_array( handle, global_dims, offset, &
+                              array, dataset_name, error )
+    call sll_o_hdf5_file_close( handle, error )
 
   end subroutine parallel_hdf5_write_array_2d
 

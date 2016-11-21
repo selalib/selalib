@@ -40,12 +40,14 @@ module m_parallel_array_output
     hssize_t
 
   use sll_m_hdf5_io_serial, only: &
-    sll_o_hdf5_file_close, &
     sll_o_hdf5_file_create, &
+    sll_o_hdf5_file_close,  &
     sll_o_hdf5_write_array
 
   use sll_m_hdf5_io_parallel, only: &
+    sll_t_hdf5_handle,      &
     sll_o_hdf5_file_create, &
+    sll_o_hdf5_file_close,  &
     sll_o_hdf5_write_array
 
 #endif
@@ -273,18 +275,20 @@ subroutine write_fx1x3(f, layout, cplot)
 
 end subroutine write_fx1x3
 
-subroutine write_fx2x4(f, layout, cplot)
 
-  sll_real64, dimension(:,:,:,:)          :: f
-  type(sll_t_layout_4d), pointer          :: layout
-  character(len=*)                        :: cplot
-  integer(HID_T)                          :: pfile_id
-  integer(HSSIZE_T)                       :: offset(2)
-  integer(HSIZE_T)                        :: global_dims(2)
-  sll_int32                               :: error
-  sll_int32                               :: prank
-  sll_int32                               :: comm
-  sll_real64, dimension(:,:), pointer     :: fjl
+subroutine write_fx2x4( f, layout, cplot )
+
+  sll_real64           , intent(in) :: f(:,:,:,:)
+  type(sll_t_layout_4d), pointer    :: layout
+  character(len=*)     , intent(in) :: cplot
+
+  type(sll_t_hdf5_handle) :: handle
+  integer(i64)            :: offset(2)
+  integer(i64)            :: global_dims(2)
+  sll_int32               :: error
+  sll_int32               :: prank
+  sll_int32               :: comm
+  sll_real64, pointer     :: fjl(:,:)
 
   sll_int32 :: j, l
   sll_int32 :: loc_sz_i, loc_sz_j, loc_sz_k, loc_sz_l
@@ -300,36 +304,33 @@ subroutine write_fx2x4(f, layout, cplot)
      end do
   end do
 
-#ifdef NOHDF5
-#define HSIZE_T  i32
-#define HSSIZE_T i32
-#endif
-
-  global_dims(1) = int(sll_o_get_layout_global_size_j(layout),HSIZE_T)
-  global_dims(2) = int(sll_o_get_layout_global_size_l(layout),HSIZE_T)
-  offset(1) = int(sll_o_get_layout_j_min(layout,prank)-1,HSSIZE_T)
-  offset(2) = int(sll_o_get_layout_l_min(layout,prank)-1,HSSIZE_T)
+  global_dims(1) = int( sll_o_get_layout_global_size_j(layout), i64 )
+  global_dims(2) = int( sll_o_get_layout_global_size_l(layout), i64 )
+  offset(1)      = int( sll_o_get_layout_j_min(layout,prank)-1, i64 )
+  offset(2)      = int( sll_o_get_layout_l_min(layout,prank)-1, i64 )
 
 #ifndef NOHDF5
-  call sll_o_hdf5_file_create('fx2x4_'//cplot//".h5",comm,pfile_id,error)
-  call sll_o_hdf5_write_array(pfile_id,global_dims,offset,fjl,"/values",error)
-  call sll_o_hdf5_file_close(pfile_id, error)
+  call sll_o_hdf5_file_create( 'fx2x4_'//cplot//".h5",comm, handle, error )
+  call sll_o_hdf5_write_array( handle, global_dims, offset, fjl, "/values", error )
+  call sll_o_hdf5_file_close ( handle, error )
 #endif
 
 end subroutine write_fx2x4
 
-subroutine write_fx3x4(f, layout, cplot)
 
-  sll_real64, dimension(:,:,:,:)          :: f
-  Type(sll_t_layout_4d), pointer                :: layout
-  character(len=*)                        :: cplot
-  integer(HID_T)                          :: pfile_id
-  integer(HSSIZE_T)                       :: offset(2)
-  integer(HSIZE_T)                        :: global_dims(2)
-  sll_int32                               :: error
-  sll_int32                               :: prank
-  sll_int32                               :: comm
-  sll_real64, dimension(:,:), pointer     :: fkl
+subroutine write_fx3x4( f, layout, cplot )
+
+  sll_real64           , intent(in) :: f(:,:,:,:)
+  type(sll_t_layout_4d), pointer    :: layout
+  character(len=*)     , intent(in) :: cplot
+
+  type(sll_t_hdf5_handle) :: handle
+  integer(i64)            :: offset(2)
+  integer(i64)            :: global_dims(2)
+  sll_int32               :: error
+  sll_int32               :: prank
+  sll_int32               :: comm
+  sll_real64, pointer     :: fkl(:,:)
 
   sll_int32 :: k, l
   sll_int32 :: loc_sz_i, loc_sz_j, loc_sz_k, loc_sz_l
@@ -344,15 +345,16 @@ subroutine write_fx3x4(f, layout, cplot)
         fkl(k,l) = sum(f(:,:,k,l))
      end do
   end do
-  global_dims(1) = int(sll_o_get_layout_global_size_k(layout), HSIZE_T)
-  global_dims(2) = int(sll_o_get_layout_global_size_l(layout), HSIZE_T)
-  offset(1) = int(sll_o_get_layout_k_min(layout,prank)-1,i64)
-  offset(2) = int(sll_o_get_layout_l_min(layout,prank)-1,i64)
+
+  global_dims(1) = int( sll_o_get_layout_global_size_k(layout), i64 )
+  global_dims(2) = int( sll_o_get_layout_global_size_l(layout), i64 )
+  offset(1)      = int( sll_o_get_layout_k_min(layout,prank)-1, i64 )
+  offset(2)      = int( sll_o_get_layout_l_min(layout,prank)-1, i64 )
 
 #ifndef NOHDF5
-  call sll_o_hdf5_file_create('fx3x4_'//cplot//".h5",comm,pfile_id,error)
-  call sll_o_hdf5_write_array(pfile_id,global_dims,offset,fkl,"/values",error)
-  call sll_o_hdf5_file_close(pfile_id, error)
+  call sll_o_hdf5_file_create( 'fx3x4_'//cplot//".h5", comm, handle, error )
+  call sll_o_hdf5_write_array( handle, global_dims, offset, fkl, "/values", error )
+  call sll_o_hdf5_file_close ( handle, error )
 #endif
 
 end subroutine write_fx3x4
