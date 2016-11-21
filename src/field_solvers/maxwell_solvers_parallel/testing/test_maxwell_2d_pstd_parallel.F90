@@ -8,9 +8,6 @@ program test_maxwell_2d_periodic_cart_par
 #include "sll_memory.h"
 #include "sll_working_precision.h"
 
-  use hdf5, only: &
-    hsize_t, hid_t
-
   use iso_fortran_env, only: &
     output_unit
 
@@ -25,8 +22,9 @@ program test_maxwell_2d_periodic_cart_par
     sll_p_pi
 
   use sll_m_hdf5_io_parallel, only: &
-    sll_o_hdf5_file_close, &
+    sll_t_hdf5_handle,      &
     sll_o_hdf5_file_create, &
+    sll_o_hdf5_file_close,  &
     sll_o_hdf5_write_array
 
   use sll_m_maxwell_2d_periodic_cartesian_par, only: &
@@ -234,33 +232,33 @@ contains
 
   !> Experimental interface for an hdf5 array writer in parallel
   subroutine write_fields_2d( file_name )
+    character(len=*), intent(in) :: file_name
 
-    character(len=*), intent(in)     :: file_name
-    integer(HSIZE_T), dimension(1:2) :: global_dims
-    sll_int32                        :: error
-    sll_int32                        :: file_id
-    integer(HID_T)                   :: hfile_id
-    integer(HSIZE_T), dimension(1:2) :: offset
+    integer(i64)            :: global_dims(1:2)
+    integer(i64)            :: offset(1:2)
+    sll_int32               :: error
+    sll_int32               :: file_id
+    type(sll_t_hdf5_handle) :: handle
 
-    global_dims(:) = (/ int(ncx,HSIZE_T),int(ncy,HSIZE_T) /)
+    global_dims(:) = int( [ncx,ncy], i64 )
 
-    call sll_o_hdf5_file_create(file_name//'.h5',sll_v_world_collective%comm, &
-                              hfile_id,error)
-    offset(1) = int(sll_o_get_layout_i_min(layout_y,prank) - 1,HSIZE_T)
-    offset(2) = int(sll_o_get_layout_j_min(layout_y,prank) - 1,HSIZE_T)
-    call sll_o_hdf5_write_array(hfile_id,global_dims,offset, &
-                              ex,'ex_values',error)
-    offset(1) = int(sll_o_get_layout_i_min(layout_x,prank) - 1,HSIZE_T)
-    offset(2) = int(sll_o_get_layout_j_min(layout_x,prank) - 1,HSIZE_T)
-    call sll_o_hdf5_write_array(hfile_id,global_dims,offset, &
-                              ey,'ey_values',error)
-    call sll_o_hdf5_write_array(hfile_id,global_dims,offset, &
-                              hz,'hz_values',error)
-    call sll_o_hdf5_file_close(hfile_id,error)
+    call sll_o_hdf5_file_create( file_name//'.h5', sll_v_world_collective%comm, &
+                              handle, error )
+    offset(1) = int( sll_o_get_layout_i_min(layout_y,prank)-1, i64 )
+    offset(2) = int( sll_o_get_layout_j_min(layout_y,prank)-1, i64 )
+    call sll_o_hdf5_write_array( handle, global_dims, offset, &
+                              ex, 'ex_values', error)
+    offset(1) = int( sll_o_get_layout_i_min(layout_x,prank)-1, i64 )
+    offset(2) = int( sll_o_get_layout_j_min(layout_x,prank)-1, i64 )
+    call sll_o_hdf5_write_array( handle, global_dims, offset, &
+                              ey, 'ey_values', error )
+    call sll_o_hdf5_write_array( handle, global_dims, offset, &
+                              hz, 'hz_values', error )
+    call sll_o_hdf5_file_close( handle, error )
 
     if (prank == MPI_MASTER) then
 
-       call sll_s_xml_file_create(file_name//".xmf",file_id,error)
+       call sll_s_xml_file_create( file_name//".xmf", file_id, error )
        write(file_id,"(a)")"<Grid Name='mesh' GridType='Uniform'>"
        write(file_id,"(a,2i5,a)") &
           "<Topology TopologyType='2DCoRectMesh' NumberOfElements='", &
@@ -298,7 +296,7 @@ contains
        write(file_id,"(a)") file_name//".h5:/hz_values"
        write(file_id,"(a)")"</DataItem>"
        write(file_id,"(a)")"</Attribute>"
-       call sll_s_xml_file_close(file_id,error)
+       call sll_s_xml_file_close( file_id, error )
 
     end if
 
