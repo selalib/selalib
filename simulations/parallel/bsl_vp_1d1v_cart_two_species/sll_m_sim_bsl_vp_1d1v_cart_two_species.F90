@@ -93,9 +93,9 @@ module sll_m_sim_bsl_vp_1d1v_cart_two_species
 
   use hdf5, only: hid_t
   use sll_m_hdf5_io_serial, only: &
-    sll_o_hdf5_file_close, &
-    sll_o_hdf5_file_create, &
-    sll_o_hdf5_write_array
+    sll_s_hdf5_ser_file_create, &
+    sll_s_hdf5_ser_file_close, &
+    sll_o_hdf5_ser_write_array
 
   use sll_m_parallel_array_initializer, only: &
     sll_o_2d_parallel_array_initializer_cartesian
@@ -2381,12 +2381,12 @@ contains
           x2(i,j) = node_positions_x2(j) !x2_min+real(j-1,f32)*dx2
         end do
      end do
-      call sll_o_hdf5_file_create("cartesian_mesh_"//trim(spec_name)//"-x1.h5",hfile_id,error)
-      call sll_o_hdf5_write_array(hfile_id,x1,"/x1",error)
-      call sll_o_hdf5_file_close(hfile_id, error)
-      call sll_o_hdf5_file_create("cartesian_mesh_"//trim(spec_name)//"-x2.h5",hfile_id,error)
-      call sll_o_hdf5_write_array(hfile_id,x2,"/x2",error)
-      call sll_o_hdf5_file_close(hfile_id, error)
+      call sll_s_hdf5_ser_file_create("cartesian_mesh_"//trim(spec_name)//"-x1.h5",hfile_id,error)
+      call sll_o_hdf5_ser_write_array(hfile_id,x1,"/x1",error)
+      call sll_s_hdf5_ser_file_close(hfile_id, error)
+      call sll_s_hdf5_ser_file_create("cartesian_mesh_"//trim(spec_name)//"-x2.h5",hfile_id,error)
+      call sll_o_hdf5_ser_write_array(hfile_id,x2,"/x2",error)
+      call sll_s_hdf5_ser_file_close(hfile_id, error)
       deallocate(x1)
       deallocate(x2)
 
