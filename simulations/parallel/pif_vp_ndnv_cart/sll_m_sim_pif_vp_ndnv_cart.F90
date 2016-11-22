@@ -8,9 +8,6 @@ module sll_m_sim_pif_vp_ndnv_cart
 #include "sll_memory.h"
 #include "sll_working_precision.h"
 
-  use hdf5, only: &
-    hid_t
-
   use sll_m_collective, only: &
     sll_s_collective_barrier, &
     sll_o_collective_globalsum, &
@@ -29,6 +26,7 @@ module sll_m_sim_pif_vp_ndnv_cart
     sll_t_vlasovpoisson_sim
 
   use sll_m_hdf5_io_serial, only: &
+    sll_t_hdf5_ser_handle, &
     sll_s_hdf5_ser_file_create, &
     sll_s_hdf5_ser_file_close, &
     sll_o_hdf5_ser_write_array
@@ -379,7 +377,7 @@ subroutine run_generalvp_pif(sim)
   class(sll_t_simulation_general_vlasov_poisson_pif), intent(inout) :: sim
   sll_int32 ::ierr , idx, tstep, phi_file_id
   character(len=4) :: timestr
-  integer(hid_t) :: hdata_id    !< HDF5 data file for each timestep
+  type(sll_t_hdf5_ser_handle) :: hdata_id !< HDF5 data file for each timestep
 
 call sll_s_collective_barrier(sll_v_world_collective)
  !really global variables

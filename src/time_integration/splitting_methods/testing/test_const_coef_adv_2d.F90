@@ -17,6 +17,7 @@ program test_const_coef_adv_2d
     sll_t_cubic_spline_interpolator_1d
 
   use sll_m_hdf5_io_serial, only: &
+    sll_t_hdf5_ser_handle, &
     sll_s_hdf5_ser_file_create, &
     sll_s_hdf5_ser_file_close, &
     sll_o_hdf5_ser_write_array
@@ -27,8 +28,6 @@ program test_const_coef_adv_2d
   use sll_m_operator_splitting, only: &
     sll_s_do_split_steps, &
     sll_p_strang_tvt
-
-  use hdf5, only: hid_t
 
   implicit none
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -49,7 +48,7 @@ program test_const_coef_adv_2d
   class(sll_c_interpolator_1d), pointer :: interp_eta1_ptr
   class(sll_c_interpolator_1d), pointer :: interp_eta2_ptr
 
-  integer(hid_t) :: hfile_id
+  type(sll_t_hdf5_ser_handle) :: hfile_id
 
   ! initialize interpolator
   call interp_eta1%initialize( N1, XMIN, XMAX, sll_p_periodic )

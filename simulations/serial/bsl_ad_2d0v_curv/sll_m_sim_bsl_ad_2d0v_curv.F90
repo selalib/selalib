@@ -127,6 +127,7 @@ module sll_m_sim_bsl_ad_2d0v_curv
     sll_f_new_cubic_spline_interpolator_2d
 
   use sll_m_hdf5_io_serial, only: &
+    sll_t_hdf5_ser_handle, &
     sll_s_hdf5_ser_file_create, &
     sll_s_hdf5_ser_file_close, &
     sll_o_hdf5_ser_write_array
@@ -1965,9 +1966,6 @@ contains
     n1, &
     n2, &
     transf)
-    use sll_m_xdmf
-    use hdf5, only: hid_t
-    use sll_m_hdf5_io_serial
     character(len=*), intent(in) :: filename  !< file name
     sll_int32, intent(in) :: iplot
     sll_real64, dimension(:,:), intent(in) :: f
@@ -1976,8 +1974,9 @@ contains
     sll_int32, intent(in) :: n1
     sll_int32, intent(in) :: n2
     class(sll_c_coordinate_transformation_2d_base), pointer :: transf    
+
     sll_int32 :: file_id
-    integer(hid_t) :: hfile_id
+    type(sll_t_hdf5_ser_handle) :: hfile_id
     sll_int32 :: error
     sll_real64, dimension(:,:), allocatable :: x1
     sll_real64, dimension(:,:), allocatable :: x2
@@ -2051,21 +2050,19 @@ contains
 !*********************
 
   subroutine plot_visit_curvilinear(iplot,f,mesh_2d,transf,file_name)
-    use sll_m_xdmf
-    use hdf5, only: hid_t
-    use sll_m_hdf5_io_serial
-    integer(hid_t) :: hfile_id
+    sll_int32, intent(in)               :: iplot
+    type(sll_t_cartesian_mesh_2d), pointer :: mesh_2d
+    class(sll_c_coordinate_transformation_2d_base), pointer :: transf
+    character(len=*),  intent(in)      :: file_name
+
+    type(sll_t_hdf5_ser_handle) :: hfile_id
     sll_int32 :: file_id
     sll_int32 :: error
     sll_real64, dimension(:,:), allocatable :: x1
     sll_real64, dimension(:,:), allocatable :: x2
     sll_int32 :: i, j
-    sll_int32, intent(in)               :: iplot
-     character(len=*),  intent(in)      :: file_name
     character(len=4)                    :: cplot
     sll_int32             :: nnodes_x1, nnodes_x2
-    type(sll_t_cartesian_mesh_2d), pointer :: mesh_2d
-    class(sll_c_coordinate_transformation_2d_base), pointer :: transf
     sll_real64, dimension(:,:), intent(in) :: f
     sll_real64 :: eta1
     sll_real64 :: eta2
