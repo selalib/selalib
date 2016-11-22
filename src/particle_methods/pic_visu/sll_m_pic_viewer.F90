@@ -46,24 +46,27 @@ use sll_m_pic_visu, only: &
 
 #ifndef NOHDF5
 
-use hdf5, only: hid_t
-
 use sll_m_hdf5_io_serial, only: &
+  sll_t_hdf5_ser_handle, &
   sll_s_hdf5_ser_file_create, &
   sll_s_hdf5_ser_file_close, &
   sll_o_hdf5_ser_write_array
 
 #endif
 
-use sll_m_xml_io
-
+use sll_m_xml_io, only:  &
+  sll_s_xml_file_create, &
+  sll_s_xml_file_close,  &
+  sll_o_xml_field
 
 implicit none
 
-public sll_f_new_pic_viewer_2d, &
-       sll_o_pic_viewer_write
+public :: &
+  sll_f_new_pic_viewer_2d, &
+  sll_o_pic_viewer_write
 
 private
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 type, public :: sll_t_pic_viewer_2d
 
@@ -127,7 +130,7 @@ contains
     character(len=4)                      :: cplot
 
 #ifndef NOHDF5
-    integer(hid_t) :: hfile_id  
+    type(sll_t_hdf5_ser_handle) :: hfile_id
 #endif
 
     call sll_s_int2string(iplot, cplot)
@@ -167,7 +170,7 @@ contains
     character(len=4)                      :: cplot
 
 #ifndef NOHDF5
-    integer(hid_t) :: hfile_id  
+    type(sll_t_hdf5_ser_handle) :: hfile_id
 #endif
 
     call sll_s_int2string(iplot, cplot)
@@ -210,7 +213,7 @@ contains
     character(len=4)                      :: cplot
 
 #ifndef NOHDF5
-    integer(hid_t) :: hfile_id  
+    type(sll_t_hdf5_ser_handle) :: hfile_id
 #endif
 
     nx = viewer%mesh%num_cells1

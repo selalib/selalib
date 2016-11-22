@@ -82,6 +82,7 @@ module sll_m_sim_bsl_gc_2d0v_polar
     sll_p_es_gauss_legendre
 
   use sll_m_hdf5_io_serial, only: &
+    sll_t_hdf5_ser_handle, &
     sll_s_hdf5_ser_file_create, &
     sll_s_hdf5_ser_file_close, &
     sll_o_hdf5_ser_write_array
@@ -1143,20 +1144,18 @@ contains
   ! Save the mesh structure
   !---------------------------------------------------
   subroutine plot_f_polar(iplot,f,mesh_2d)
-    use sll_m_xdmf
-    use sll_m_hdf5_io_serial
-    use hdf5, only:hid_t
-    integer(hid_t) :: hfile_id
+    sll_int32, intent(in) :: iplot
+    sll_real64, dimension(:,:), intent(in) :: f
+    type(sll_t_cartesian_mesh_2d), pointer :: mesh_2d
+
+    type(sll_t_hdf5_ser_handle) :: hfile_id
     sll_int32 :: file_id
     sll_int32 :: error
     sll_real64, dimension(:,:), allocatable :: x1
     sll_real64, dimension(:,:), allocatable :: x2
     sll_int32 :: i, j
-    sll_int32, intent(in) :: iplot
     character(len=4)      :: cplot
     sll_int32             :: nnodes_x1, nnodes_x2
-    type(sll_t_cartesian_mesh_2d), pointer :: mesh_2d
-    sll_real64, dimension(:,:), intent(in) :: f
     sll_real64 :: r
     sll_real64 :: theta
     sll_real64 :: rmin

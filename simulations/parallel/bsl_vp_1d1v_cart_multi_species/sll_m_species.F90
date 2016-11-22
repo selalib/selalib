@@ -45,8 +45,8 @@ module sll_m_species
   use sll_m_gnuplot, only: &
     sll_o_gnuplot_1d
 
-  use hdf5, only: hid_t
   use sll_m_hdf5_io_serial, only: &
+    sll_t_hdf5_ser_handle, &
     sll_s_hdf5_ser_file_create, &
     sll_s_hdf5_ser_file_close, &
     sll_o_hdf5_ser_write_array
@@ -496,7 +496,7 @@ sll_int32,                  intent(in) :: iplot
 sll_real64, dimension(:,:), intent(in) :: f
 
 sll_int32                               :: file_id
-integer(hid_t)                          :: hfile_id
+type(sll_t_hdf5_ser_handle)             :: hfile_id
 sll_int32                               :: error
 sll_real64, dimension(:,:), allocatable :: x1
 sll_real64, dimension(:,:), allocatable :: x2

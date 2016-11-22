@@ -32,10 +32,8 @@ program test_io
     sll_s_xml_file_create
 
 #ifndef NOHDF5
-  use hdf5, only: &
-    hid_t
-
   use sll_m_hdf5_io_serial, only: &
+    sll_t_hdf5_ser_handle, &
     sll_s_hdf5_ser_file_create, &
     sll_s_hdf5_ser_file_close, &
     sll_o_hdf5_ser_write_array
@@ -68,7 +66,7 @@ sll_int32 :: iplot            !< plot counter
 character(len=4) :: cplot     !< plot counter
 
 #ifndef NOHDF5
-integer(hid_t) :: hfile_id    !< file unit number
+type(sll_t_hdf5_ser_handle) :: hfile_id  !< HDF5 file handle
 #endif
 
 sll_int32 :: nnodes_x1, nnodes_x2

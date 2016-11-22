@@ -50,8 +50,8 @@ module sll_m_sim_bsl_dk_3d1v_curv
     sll_f_new_general_elliptic_solver, &
     sll_o_solve
 
-  use hdf5, only: hid_t
   use sll_m_hdf5_io_serial, only: &
+    sll_t_hdf5_ser_handle, &
     sll_s_hdf5_ser_file_create, &
     sll_s_hdf5_ser_file_close, &
     sll_o_hdf5_ser_write_array
@@ -2090,7 +2090,7 @@ contains
 
     !--> For initial equilibrium state HDF5 saving
     integer                      :: file_err
-    integer(hid_t)               :: file_id
+    type(sll_t_hdf5_ser_handle)  :: file_id
     character(len=13), parameter :: filename_prof = "init_state.h5"
 
     if (sim%my_rank.eq.0) then
@@ -2128,11 +2128,8 @@ contains
   !--------------------------------------------------------------
 
   subroutine writeHDF5_cross_section_diag( sim,diag_num )
-   ! use sll_m_collective
-    use sll_m_hdf5_io_serial, only: sll_s_hdf5_ser_file_create, &
-      sll_o_hdf5_ser_write_array, sll_s_hdf5_ser_file_close
     class(sll_t_simulation_4d_dk_hybrid), intent(inout) :: sim
-    sll_int32                         , intent(in)    :: diag_num
+    sll_int32                           , intent(in)    :: diag_num
 
     sll_int32  :: ix1_diag, ix2_diag
     sll_int32  :: ix3_diag, ivpar_diag
@@ -2140,10 +2137,10 @@ contains
     sll_real64, dimension(1) :: iter_time_tmp
 
     !--> For initial profile HDF5 saving
-    integer             :: file_err
-    integer(hid_t)      :: file_id
-    character(len=80)   :: filename_HDF5
-    character(20), save :: numfmt = "'_d',i5.5"
+    integer                     :: file_err
+    type(sll_t_hdf5_ser_handle) :: file_id
+    character(len=80)           :: filename_HDF5
+    character(20), save         :: numfmt = "'_d',i5.5"
     
     ix1_diag   = int(sim%Neta1/2)
     ix2_diag   = int(sim%Neta2/3)
@@ -2231,8 +2228,8 @@ contains
     sll_real64 :: dum
     
     !--> For conservation law HDF5 saving
-    integer             :: file_err
-    integer(hid_t)      :: file_id
+    integer                      :: file_err
+    type(sll_t_hdf5_ser_handle)  :: file_id
     character(len=20), parameter :: filename_CL = "conservation_laws.h5"
 
   
