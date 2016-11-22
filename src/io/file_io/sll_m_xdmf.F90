@@ -848,7 +848,7 @@ if(present(file_format) .and. file_format == "HDF5") then
     write(file_id,"(a)")array_name//".h5:/node_values"
   end if
 
-   call sll_o_hdf5_ser_write_array( hfile_id, array," /node_values", error )
+   call sll_o_hdf5_ser_write_array( hfile_id, array, "/node_values", error )
    call sll_s_hdf5_ser_file_close( hfile_id, error )
 
 else
