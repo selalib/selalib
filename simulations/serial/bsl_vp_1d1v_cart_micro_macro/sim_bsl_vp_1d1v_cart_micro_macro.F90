@@ -26,8 +26,8 @@ program sim_bsl_vp_1d1v_cart_micro_macro
     sll_f_new_cubic_spline_1d, &
     sll_t_cubic_spline_1d
 
-  use hdf5, only: hid_t
   use sll_m_hdf5_io_serial, only: &
+    sll_t_hdf5_ser_handle, &
     sll_s_hdf5_ser_file_create, &
     sll_s_hdf5_ser_file_close, &
     sll_o_hdf5_ser_write_array
@@ -105,7 +105,7 @@ program sim_bsl_vp_1d1v_cart_micro_macro
   !type(sll_time_mark) :: time0 
   !sll_real64 :: time1
   sll_int32  :: error!, file_id
-  integer(hid_t) :: hfile_id
+  type(sll_t_hdf5_ser_handle) :: hfile_id
   character(len=4) :: cstep
   !character(len=32) :: dsetname
 

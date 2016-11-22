@@ -34,14 +34,10 @@ module m_parallel_array_output
     mpi_sum
 
 #ifndef NOHDF5
-  use hdf5, only: &
-    hid_t, &
-    hsize_t, &
-    hssize_t
-
   use sll_m_hdf5_io_serial, only: &
+    sll_t_hdf5_ser_handle,      &
     sll_s_hdf5_ser_file_create, &
-    sll_s_hdf5_ser_file_close, &
+    sll_s_hdf5_ser_file_close,  &
     sll_o_hdf5_ser_write_array
 
   use sll_m_hdf5_io_parallel, only: &
@@ -68,7 +64,7 @@ subroutine write_mesh_4d(mesh)
 
   type(sll_t_cartesian_mesh_4d), intent(in) :: mesh
   sll_int32                               :: error
-  integer(hid_t)                          :: file_id
+  type(sll_t_hdf5_ser_handle)             :: file_id
   sll_real64, dimension(:), allocatable   :: eta1
   sll_real64, dimension(:), allocatable   :: eta2
   sll_real64, dimension(:), allocatable   :: eta3
@@ -207,7 +203,7 @@ subroutine write_fx1x2(f, layout, cplot)
   type(sll_t_layout_4d), pointer          :: layout
   character(len=*)                        :: cplot
   sll_int32                               :: error
-  integer(hid_t)                          :: file_id
+  type(sll_t_hdf5_ser_handle)             :: file_id
   sll_int32                               :: prank
   sll_int32                               :: comm
   sll_real64, dimension(:,:), pointer     :: fij
@@ -244,7 +240,7 @@ subroutine write_fx1x3(f, layout, cplot)
   type(sll_t_layout_4d), pointer          :: layout
   character(len=*)                        :: cplot
   sll_int32                               :: error
-  integer(hid_t)                          :: file_id
+  type(sll_t_hdf5_ser_handle)             :: file_id
   sll_real64, dimension(:,:), pointer     :: fik
   sll_int32                               :: prank
   sll_int32                               :: comm

@@ -41,6 +41,7 @@ module sll_m_sim_bsl_vp_2d2v_cart_multipatch
     sll_o_solve_mp
 
   use sll_m_hdf5_io_serial, only: &
+    sll_t_hdf5_ser_handle, &
     sll_s_hdf5_ser_file_create, &
     sll_s_hdf5_ser_file_close, &
     sll_o_hdf5_ser_write_array
@@ -1315,10 +1316,6 @@ contains
 
  !----------------------------------------------------
   subroutine writeHDF5_diag_qns( sim )
-   ! use sll_m_collective
-    use hdf5, only: hid_t
-    use sll_m_hdf5_io_serial, only: sll_s_hdf5_ser_file_create, &
-      sll_o_hdf5_ser_write_array, sll_s_hdf5_ser_file_close
     class(sll_t_simulation_4d_qns_general_multipatch), intent(inout) :: sim
 
     sll_int32 :: ix1_diag, ix2_diag
@@ -1338,10 +1335,10 @@ contains
     sll_real64, dimension(sim%count_save_diag + 1) :: diag_relative_error_nrj_tot_result
     
     !--> For initial profile HDF5 saving
-    integer             :: file_err
-    integer(hid_t)      :: hfile_id
-    character(len=80)   :: filename_HDF5
-    character(20), save :: numfmt = "'_d',i5.5"
+    integer                     :: file_err
+    type(sll_t_hdf5_ser_handle) :: hfile_id
+    character(len=80)           :: filename_HDF5
+    character(20), save         :: numfmt = "'_d',i5.5"
     
 !!$    ix1_diag   = int(sim%nc_x1/2)
 !!$    ix2_diag   = int(sim%nc_x2/3)

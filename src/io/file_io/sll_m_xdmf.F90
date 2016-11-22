@@ -47,8 +47,8 @@ module sll_m_xdmf
     sll_o_binary_write_array
 
 #else
-  use hdf5, only: hid_t
   use sll_m_hdf5_io_serial, only: &
+    sll_t_hdf5_ser_handle,      &
     sll_s_hdf5_ser_file_create, &
     sll_s_hdf5_ser_file_close, &
     sll_o_hdf5_ser_write_array
@@ -155,7 +155,7 @@ sll_int32, intent(in), optional :: xmffile_id  !< xmf file unit number
 character(len=4), optional      :: center      !< "Node" or "Cell"
 
 #ifndef NOHDF5
-integer(hid_t) :: hfile_id
+type(sll_t_hdf5_ser_handle)     :: hfile_id
 #else
 sll_int32                       :: file_id     !< hdf5 file unit number
 #endif
@@ -171,7 +171,7 @@ call sll_o_binary_write_array(file_id,array,error)
 call sll_s_binary_file_close(file_id,error)
 #else
 call sll_s_hdf5_ser_file_create( trim(mesh_name)//"-"//trim(array_name)//".h5", &
-                          hfile_id, error )
+                           hfile_id, error )
 call sll_o_hdf5_ser_write_array( hfile_id, array, "/"//trim(array_name), error )
 call sll_s_hdf5_ser_file_close( hfile_id, error )
 #endif
@@ -208,7 +208,7 @@ sll_int32                       :: npoints_x2   !< y nodes number
 sll_int32                       :: npoints_x3   !< z nodes number
     
 #ifndef NOHDF5
-integer(hid_t) :: hfile_id
+type(sll_t_hdf5_ser_handle)     :: hfile_id
 #else
 sll_int32                       :: file_id      !< hdf5 file unit number
 #endif
@@ -224,7 +224,7 @@ call sll_o_binary_write_array(file_id,array,error)
 call sll_s_binary_file_close(file_id,error)
 #else
 call sll_s_hdf5_ser_file_create( trim(mesh_name)//"-"//trim(array_name)//".h5", &
-                          hfile_id, error )
+                           hfile_id, error )
 call sll_o_hdf5_ser_write_array( hfile_id, array, "/"//trim(array_name), error )
 call sll_s_hdf5_ser_file_close( hfile_id, error )
 #endif
@@ -283,7 +283,7 @@ sll_real64      , optional   :: time        !< time value
 
 character(len=4)             :: cplot     
 #ifndef NOHDF5
-integer(hid_t)               :: hfile_id    !< h5 file unit number
+type(sll_t_hdf5_ser_handle)  :: hfile_id      !< hdf5 file handle
 #endif
     
 nx1 = size(array,1)
@@ -376,7 +376,7 @@ sll_int32       , optional   :: iplot       !< plot index
 
 character(len=4)             :: cplot
 #ifndef NOHDF5
-integer(hid_t)               :: hfile_id    !< h5 file unit number
+type(sll_t_hdf5_ser_handle)  :: hfile_id      !< hdf5 file handle
 #endif
     
 nx1 = size(array,1)
@@ -457,7 +457,7 @@ sll_real64, optional         :: time       !< time
 sll_int32                    :: i, j
 character(len=4)             :: cplot
 #ifndef NOHDF5
-integer(hid_t)               :: hfile_id    !< h5 file unit number
+type(sll_t_hdf5_ser_handle)  :: hfile_id      !< hdf5 file handle
 #endif
     
 nx1 = size(array,1)
@@ -544,7 +544,7 @@ character(len=4), optional   :: file_format  !< file format "HDF5" or "Binary"
 sll_int32       , optional   :: iplot        !< plot index
 sll_int32                    :: i, j, k
 #ifndef NOHDF5
-integer(hid_t)               :: hfile_id    !< h5 file unit number
+type(sll_t_hdf5_ser_handle)  :: hfile_id      !< hdf5 file handle
 #endif
 character(len=4)             :: cplot
     
@@ -634,7 +634,7 @@ character(len=4), optional   :: file_format !< file format "HDF5" or "Binary"
 sll_int32,        optional   :: iplot       !< plot index
 character(len=4)             :: cplot 
 #ifndef NOHDF5
-integer(hid_t)               :: hfile_id    !< h5 file unit number
+type(sll_t_hdf5_ser_handle)  :: hfile_id      !< hdf5 file handle
 #endif
 
 nx1 = size(array,1)
@@ -766,7 +766,7 @@ sll_int32       , optional   :: iplot         !< plot index
 
 character(len=4)             :: cplot         
 #ifndef NOHDF5
-integer(hid_t)               :: hfile_id    !< h5 file unit number
+type(sll_t_hdf5_ser_handle)  :: hfile_id      !< hdf5 file handle
 #endif
 
 nx1 = size(array,1)
@@ -918,7 +918,7 @@ subroutine sll_s_plot_f_cartesian( iplot,      &
   character(len=4)                        :: cplot
 
 #ifndef NOHDF5
-integer(hid_t) :: hfile_id
+type(sll_t_hdf5_ser_handle)  :: hfile_id      !< hdf5 file handle
 #endif
   
   SLL_ASSERT(iplot > 0)
@@ -1000,7 +1000,7 @@ subroutine sll_s_plot_f( &
   character(len=4) :: cplot
 
 #ifndef NOHDF5
-  integer(hid_t) :: hfile_id
+  type(sll_t_hdf5_ser_handle)  :: hfile_id      !< hdf5 file handle
   
   if (present(x1).and.present(x2)) then
 
