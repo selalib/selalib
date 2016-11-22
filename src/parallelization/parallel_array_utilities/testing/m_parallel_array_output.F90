@@ -45,10 +45,10 @@ module m_parallel_array_output
     sll_o_hdf5_ser_write_array
 
   use sll_m_hdf5_io_parallel, only: &
-    sll_t_hdf5_handle,      &
-    sll_o_hdf5_file_create, &
-    sll_o_hdf5_file_close,  &
-    sll_o_hdf5_write_array
+    sll_t_hdf5_par_handle,      &
+    sll_s_hdf5_par_file_create, &
+    sll_s_hdf5_par_file_close,  &
+    sll_o_hdf5_par_write_array
 
 #endif
   implicit none
@@ -282,7 +282,7 @@ subroutine write_fx2x4( f, layout, cplot )
   type(sll_t_layout_4d), pointer    :: layout
   character(len=*)     , intent(in) :: cplot
 
-  type(sll_t_hdf5_handle) :: handle
+  type(sll_t_hdf5_par_handle) :: handle
   integer(i64)            :: offset(2)
   integer(i64)            :: global_dims(2)
   sll_int32               :: error
@@ -310,9 +310,9 @@ subroutine write_fx2x4( f, layout, cplot )
   offset(2)      = int( sll_o_get_layout_l_min(layout,prank)-1, i64 )
 
 #ifndef NOHDF5
-  call sll_o_hdf5_file_create( 'fx2x4_'//cplot//".h5", comm, handle, error )
-  call sll_o_hdf5_write_array( handle, global_dims, offset, fjl, "/values", error )
-  call sll_o_hdf5_file_close ( handle, error )
+  call sll_s_hdf5_par_file_create( 'fx2x4_'//cplot//".h5", comm, handle, error )
+  call sll_o_hdf5_par_write_array( handle, global_dims, offset, fjl, "/values", error )
+  call sll_s_hdf5_par_file_close ( handle, error )
 #endif
 
 end subroutine write_fx2x4
@@ -324,7 +324,7 @@ subroutine write_fx3x4( f, layout, cplot )
   type(sll_t_layout_4d), pointer    :: layout
   character(len=*)     , intent(in) :: cplot
 
-  type(sll_t_hdf5_handle) :: handle
+  type(sll_t_hdf5_par_handle) :: handle
   integer(i64)            :: offset(2)
   integer(i64)            :: global_dims(2)
   sll_int32               :: error
@@ -352,9 +352,9 @@ subroutine write_fx3x4( f, layout, cplot )
   offset(2)      = int( sll_o_get_layout_l_min(layout,prank)-1, i64 )
 
 #ifndef NOHDF5
-  call sll_o_hdf5_file_create( 'fx3x4_'//cplot//".h5", comm, handle, error )
-  call sll_o_hdf5_write_array( handle, global_dims, offset, fkl, "/values", error )
-  call sll_o_hdf5_file_close ( handle, error )
+  call sll_s_hdf5_par_file_create( 'fx3x4_'//cplot//".h5", comm, handle, error )
+  call sll_o_hdf5_par_write_array( handle, global_dims, offset, fkl, "/values", error )
+  call sll_s_hdf5_par_file_close ( handle, error )
 #endif
 
 end subroutine write_fx3x4

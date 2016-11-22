@@ -69,38 +69,23 @@ module sll_m_hdf5_io_parallel
   implicit none
 
   public :: &
-    sll_t_hdf5_handle,      &
-    sll_o_hdf5_file_create, &
-    sll_o_hdf5_file_open,   &
-    sll_o_hdf5_file_close,  &
-    sll_o_hdf5_write_array, &
-    sll_o_hdf5_read_array
+    sll_t_hdf5_par_handle,      &
+    sll_s_hdf5_par_file_create, &
+    sll_s_hdf5_par_file_open,   &
+    sll_s_hdf5_par_file_close,  &
+    sll_o_hdf5_par_write_array, &
+    sll_o_hdf5_par_read_array
 
   private
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
   !> Opaque object around HDF5 file id
-  type :: sll_t_hdf5_handle
+  type :: sll_t_hdf5_par_handle
     integer(hid_t), private :: file_id
   end type
 
-  !> Create new HDF5 file
-  interface sll_o_hdf5_file_create
-    module procedure sll_hdf5_par_file_create
-  end interface
-
-  !> Open existing HDF5 file
-  interface sll_o_hdf5_file_open
-    module procedure sll_hdf5_par_file_open
-  end interface
-
-  !> Close HDF5 file
-  interface sll_o_hdf5_file_close
-    module procedure sll_hdf5_par_file_close
-  end interface
-
-  !> Write array in HDF5 file
-  interface sll_o_hdf5_write_array
+  !> Write array into HDF5 file
+  interface sll_o_hdf5_par_write_array
      module procedure sll_hdf5_par_write_dble_array_1d
      module procedure sll_hdf5_par_write_dble_array_2d
      module procedure sll_hdf5_par_write_dble_array_3d
@@ -109,15 +94,15 @@ module sll_m_hdf5_io_parallel
      module procedure sll_hdf5_par_write_dble_array_6d
   end interface
 
-  !> Read array form HDF5 file
-  interface sll_o_hdf5_read_array
+  !> Read array from HDF5 file
+  interface sll_o_hdf5_par_read_array
      module procedure sll_hdf5_par_read_dble_array_1d
      module procedure sll_hdf5_par_read_dble_array_2d
      module procedure sll_hdf5_par_read_dble_array_3d
      module procedure sll_hdf5_par_read_dble_array_4d
      module procedure sll_hdf5_par_read_dble_array_5d
      module procedure sll_hdf5_par_read_dble_array_6d
-  end interface sll_o_hdf5_read_array
+  end interface sll_o_hdf5_par_read_array
 
 contains
 
@@ -126,12 +111,12 @@ contains
   !>    - Initialize fortran interface
   !>    - Create a new file using default properties
   !-----------------------------------------------------------------------------
-  subroutine sll_hdf5_par_file_create( filename, comm, handle, error )
+  subroutine sll_s_hdf5_par_file_create( filename, comm, handle, error )
 
-    character(len=*)       , intent(in   ) :: filename   !< file name
-    integer                , intent(in   ) :: comm       !< MPI comm
-    type(sll_t_hdf5_handle), intent(  out) :: handle     !< file handle
-    integer                , intent(  out) :: error      !< error code
+    character(len=*)           , intent(in   ) :: filename   !< file name
+    integer                    , intent(in   ) :: comm       !< MPI comm
+    type(sll_t_hdf5_par_handle), intent(  out) :: handle     !< file handle
+    integer                    , intent(  out) :: error      !< error code
 
     integer(hid_t) :: plist_id
     integer        :: info
@@ -148,19 +133,19 @@ contains
     call h5pclose_f(plist_id, error)
     SLL_ASSERT(error==0)
 
-  end subroutine sll_hdf5_par_file_create
+  end subroutine sll_s_hdf5_par_file_create
 
   !-----------------------------------------------------------------------------
   !> Open HDF5 file
   !>    - Initialize fortran interface
   !>    - Open a HDF5 file
   !-----------------------------------------------------------------------------
-  subroutine sll_hdf5_par_file_open( filename, comm, handle, error )
+  subroutine sll_s_hdf5_par_file_open( filename, comm, handle, error )
 
-    character(len=*)       , intent(in   ) :: filename   !< file name
-    integer                , intent(in   ) :: comm       !< error code
-    type(sll_t_hdf5_handle), intent(  out) :: handle     !< file handle
-    integer                , intent(  out) :: error      !< error code
+    character(len=*)           , intent(in   ) :: filename   !< file name
+    integer                    , intent(in   ) :: comm       !< error code
+    type(sll_t_hdf5_par_handle), intent(  out) :: handle     !< file handle
+    integer                    , intent(  out) :: error      !< error code
 
     integer(hid_t) :: plist_id
     integer        :: info
@@ -177,18 +162,18 @@ contains
     call h5pclose_f(plist_id, error)
     SLL_ASSERT(error==0)
 
-  end subroutine sll_hdf5_par_file_open
+  end subroutine sll_s_hdf5_par_file_open
 
   !-----------------------------------------------------------------------------
   !> Close HDF5 file
   !-----------------------------------------------------------------------------
-  subroutine sll_hdf5_par_file_close( handle, error )
-    type(sll_t_hdf5_handle), intent(in   ) :: handle   !< file unit number
-    integer                , intent(  out) :: error    !< error code
+  subroutine sll_s_hdf5_par_file_close( handle, error )
+    type(sll_t_hdf5_par_handle), intent(in   ) :: handle   !< file unit number
+    integer                    , intent(  out) :: error    !< error code
 
     call sll_s_hdf5_ser_file_close( handle%file_id, error )
     SLL_ASSERT(error==0)
-  end subroutine sll_hdf5_par_file_close
+  end subroutine sll_s_hdf5_par_file_close
 
   !-----------------------------------------------------------------------------
   !> Write a 1D array of float in double precision in a HDF5 file
@@ -199,16 +184,16 @@ contains
   subroutine sll_hdf5_par_write_dble_array_1d( &
       handle, global_size, offset, array, dsetname, error, chunk_dims )
     integer, parameter                     :: dspace_dims = 1
-    type(sll_t_hdf5_handle), intent(in   ) :: handle
-    integer(i64)           , intent(in   ) :: global_size(dspace_dims)
-    integer(i64)           , intent(in   ) :: offset     (dspace_dims)
-    sll_real64             , intent(in   ) :: array(:)
-    character(len=*)       , intent(in   ) :: dsetname
-    integer                , intent(  out) :: error
-    integer(i64), optional , intent(in   ) :: chunk_dims(dspace_dims)
+    type(sll_t_hdf5_par_handle), intent(in   ) :: handle
+    integer(i64)               , intent(in   ) :: global_size(dspace_dims)
+    integer(i64)               , intent(in   ) :: offset     (dspace_dims)
+    sll_real64                 , intent(in   ) :: array(:)
+    character(len=*)           , intent(in   ) :: dsetname
+    integer                    , intent(  out) :: error
+    integer(i64),     optional , intent(in   ) :: chunk_dims(dspace_dims)
 
 #define  DATATYPE  H5T_NATIVE_DOUBLE
-#include "sll_k_hdf5_write_array.F90"
+#include "sll_k_hdf5_par_write_array.F90"
 
   end subroutine sll_hdf5_par_write_dble_array_1d
 
@@ -221,16 +206,16 @@ contains
   subroutine sll_hdf5_par_write_dble_array_2d( &
       handle, global_size, offset, array, dsetname, error, chunk_dims )
     integer, parameter                     :: dspace_dims = 2
-    type(sll_t_hdf5_handle), intent(in   ) :: handle
-    integer(i64)           , intent(in   ) :: global_size(dspace_dims)
-    integer(i64)           , intent(in   ) :: offset     (dspace_dims)
-    sll_real64             , intent(in   ) :: array(:,:)
-    character(len=*)       , intent(in   ) :: dsetname
-    integer                , intent(  out) :: error
-    integer(i64), optional , intent(in   ) :: chunk_dims(dspace_dims)
+    type(sll_t_hdf5_par_handle), intent(in   ) :: handle
+    integer(i64)               , intent(in   ) :: global_size(dspace_dims)
+    integer(i64)               , intent(in   ) :: offset     (dspace_dims)
+    sll_real64                 , intent(in   ) :: array(:,:)
+    character(len=*)           , intent(in   ) :: dsetname
+    integer                    , intent(  out) :: error
+    integer(i64),     optional , intent(in   ) :: chunk_dims(dspace_dims)
 
 #define  DATATYPE  H5T_NATIVE_DOUBLE
-#include "sll_k_hdf5_write_array.F90"
+#include "sll_k_hdf5_par_write_array.F90"
 
   end subroutine sll_hdf5_par_write_dble_array_2d
 
@@ -243,16 +228,16 @@ contains
   subroutine sll_hdf5_par_write_dble_array_3d( &
       handle, global_size, offset, array, dsetname, error, chunk_dims )
     integer, parameter                     :: dspace_dims = 3
-    type(sll_t_hdf5_handle), intent(in   ) :: handle
-    integer(i64)           , intent(in   ) :: global_size(dspace_dims)
-    integer(i64)           , intent(in   ) :: offset     (dspace_dims)
-    sll_real64             , intent(in   ) :: array(:,:,:)
-    character(len=*)       , intent(in   ) :: dsetname
-    integer                , intent(  out) :: error
-    integer(i64), optional , intent(in   ) :: chunk_dims(dspace_dims)
+    type(sll_t_hdf5_par_handle), intent(in   ) :: handle
+    integer(i64)               , intent(in   ) :: global_size(dspace_dims)
+    integer(i64)               , intent(in   ) :: offset     (dspace_dims)
+    sll_real64                 , intent(in   ) :: array(:,:,:)
+    character(len=*)           , intent(in   ) :: dsetname
+    integer                    , intent(  out) :: error
+    integer(i64),     optional , intent(in   ) :: chunk_dims(dspace_dims)
 
 #define  DATATYPE  H5T_NATIVE_DOUBLE
-#include "sll_k_hdf5_write_array.F90"
+#include "sll_k_hdf5_par_write_array.F90"
 
   end subroutine sll_hdf5_par_write_dble_array_3d
 
@@ -265,16 +250,16 @@ contains
   subroutine sll_hdf5_par_write_dble_array_4d( &
       handle, global_size, offset, array, dsetname, error, chunk_dims )
     integer, parameter                     :: dspace_dims = 4
-    type(sll_t_hdf5_handle), intent(in   ) :: handle
-    integer(i64)           , intent(in   ) :: global_size(dspace_dims)
-    integer(i64)           , intent(in   ) :: offset     (dspace_dims)
-    sll_real64             , intent(in   ) :: array(:,:,:,:)
-    character(len=*)       , intent(in   ) :: dsetname
-    integer                , intent(  out) :: error
-    integer(i64), optional , intent(in   ) :: chunk_dims(dspace_dims)
+    type(sll_t_hdf5_par_handle), intent(in   ) :: handle
+    integer(i64)               , intent(in   ) :: global_size(dspace_dims)
+    integer(i64)               , intent(in   ) :: offset     (dspace_dims)
+    sll_real64                 , intent(in   ) :: array(:,:,:,:)
+    character(len=*)           , intent(in   ) :: dsetname
+    integer                    , intent(  out) :: error
+    integer(i64),     optional , intent(in   ) :: chunk_dims(dspace_dims)
 
 #define  DATATYPE  H5T_NATIVE_DOUBLE
-#include "sll_k_hdf5_write_array.F90"
+#include "sll_k_hdf5_par_write_array.F90"
 
   end subroutine sll_hdf5_par_write_dble_array_4d
 
@@ -287,16 +272,16 @@ contains
   subroutine sll_hdf5_par_write_dble_array_5d( &
       handle, global_size, offset, array, dsetname, error, chunk_dims )
     integer, parameter                     :: dspace_dims = 5
-    type(sll_t_hdf5_handle), intent(in   ) :: handle
-    integer(i64)           , intent(in   ) :: global_size(dspace_dims)
-    integer(i64)           , intent(in   ) :: offset     (dspace_dims)
-    sll_real64             , intent(in   ) :: array(:,:,:,:,:)
-    character(len=*)       , intent(in   ) :: dsetname
-    integer                , intent(  out) :: error
-    integer(i64), optional , intent(in   ) :: chunk_dims(dspace_dims)
+    type(sll_t_hdf5_par_handle), intent(in   ) :: handle
+    integer(i64)               , intent(in   ) :: global_size(dspace_dims)
+    integer(i64)               , intent(in   ) :: offset     (dspace_dims)
+    sll_real64                 , intent(in   ) :: array(:,:,:,:,:)
+    character(len=*)           , intent(in   ) :: dsetname
+    integer                    , intent(  out) :: error
+    integer(i64),     optional , intent(in   ) :: chunk_dims(dspace_dims)
 
 #define  DATATYPE  H5T_NATIVE_DOUBLE
-#include "sll_k_hdf5_write_array.F90"
+#include "sll_k_hdf5_par_write_array.F90"
 
   end subroutine sll_hdf5_par_write_dble_array_5d
 
@@ -309,16 +294,16 @@ contains
   subroutine sll_hdf5_par_write_dble_array_6d( &
       handle, global_size, offset, array, dsetname, error, chunk_dims )
     integer, parameter                     :: dspace_dims = 6
-    type(sll_t_hdf5_handle), intent(in   ) :: handle
-    integer(i64)           , intent(in   ) :: global_size(dspace_dims)
-    integer(i64)           , intent(in   ) :: offset     (dspace_dims)
-    sll_real64             , intent(in   ) :: array(:,:,:,:,:,:)
-    character(len=*)       , intent(in   ) :: dsetname
-    integer                , intent(  out) :: error
-    integer(i64), optional , intent(in   ) :: chunk_dims(dspace_dims)
+    type(sll_t_hdf5_par_handle), intent(in   ) :: handle
+    integer(i64)               , intent(in   ) :: global_size(dspace_dims)
+    integer(i64)               , intent(in   ) :: offset     (dspace_dims)
+    sll_real64                 , intent(in   ) :: array(:,:,:,:,:,:)
+    character(len=*)           , intent(in   ) :: dsetname
+    integer                    , intent(  out) :: error
+    integer(i64),     optional , intent(in   ) :: chunk_dims(dspace_dims)
 
 #define  DATATYPE  H5T_NATIVE_DOUBLE
-#include "sll_k_hdf5_write_array.F90"
+#include "sll_k_hdf5_par_write_array.F90"
 
   end subroutine sll_hdf5_par_write_dble_array_6d
 
@@ -329,15 +314,15 @@ contains
   subroutine sll_hdf5_par_read_dble_array_1d( &
       handle, global_size, offset, array, dsetname, error )
     integer, parameter                     :: dspace_dims = 1
-    type(sll_t_hdf5_handle), intent(in   ) :: handle
-    integer(i64)           , intent(in   ) :: global_size(dspace_dims)
-    integer(i64)           , intent(in   ) :: offset(dspace_dims)
-    sll_real64             , intent(  out) :: array(:)
-    character(len=*)       , intent(in   ) :: dsetname
-    integer                , intent(  out) :: error
+    type(sll_t_hdf5_par_handle), intent(in   ) :: handle
+    integer(i64)               , intent(in   ) :: global_size(dspace_dims)
+    integer(i64)               , intent(in   ) :: offset(dspace_dims)
+    sll_real64                 , intent(  out) :: array(:)
+    character(len=*)           , intent(in   ) :: dsetname
+    integer                    , intent(  out) :: error
 
 #define  DATATYPE  H5T_NATIVE_DOUBLE
-#include "sll_k_hdf5_read_array.F90"
+#include "sll_k_hdf5_par_read_array.F90"
 
   end subroutine sll_hdf5_par_read_dble_array_1d
 
@@ -348,15 +333,15 @@ contains
   subroutine sll_hdf5_par_read_dble_array_2d( &
       handle, global_size, offset, array, dsetname, error )
     integer, parameter                     :: dspace_dims = 2
-    type(sll_t_hdf5_handle), intent(in   ) :: handle
-    integer(i64)           , intent(in   ) :: global_size(dspace_dims)
-    integer(i64)           , intent(in   ) :: offset(dspace_dims)
-    sll_real64             , intent(  out) :: array(:,:)
-    character(len=*)       , intent(in   ) :: dsetname
-    integer                , intent(  out) :: error
+    type(sll_t_hdf5_par_handle), intent(in   ) :: handle
+    integer(i64)               , intent(in   ) :: global_size(dspace_dims)
+    integer(i64)               , intent(in   ) :: offset(dspace_dims)
+    sll_real64                 , intent(  out) :: array(:,:)
+    character(len=*)           , intent(in   ) :: dsetname
+    integer                    , intent(  out) :: error
 
 #define  DATATYPE  H5T_NATIVE_DOUBLE
-#include "sll_k_hdf5_read_array.F90"
+#include "sll_k_hdf5_par_read_array.F90"
 
   end subroutine sll_hdf5_par_read_dble_array_2d
 
@@ -367,15 +352,15 @@ contains
   subroutine sll_hdf5_par_read_dble_array_3d( &
       handle, global_size, offset, array, dsetname, error )
     integer, parameter                     :: dspace_dims = 3
-    type(sll_t_hdf5_handle), intent(in   ) :: handle
-    integer(i64)           , intent(in   ) :: global_size(dspace_dims)
-    integer(i64)           , intent(in   ) :: offset(dspace_dims)
-    sll_real64             , intent(  out) :: array(:,:,:)
-    character(len=*)       , intent(in   ) :: dsetname
-    integer                , intent(  out) :: error
+    type(sll_t_hdf5_par_handle), intent(in   ) :: handle
+    integer(i64)               , intent(in   ) :: global_size(dspace_dims)
+    integer(i64)               , intent(in   ) :: offset(dspace_dims)
+    sll_real64                 , intent(  out) :: array(:,:,:)
+    character(len=*)           , intent(in   ) :: dsetname
+    integer                    , intent(  out) :: error
 
 #define  DATATYPE  H5T_NATIVE_DOUBLE
-#include "sll_k_hdf5_read_array.F90"
+#include "sll_k_hdf5_par_read_array.F90"
 
   end subroutine sll_hdf5_par_read_dble_array_3d
 
@@ -386,15 +371,15 @@ contains
   subroutine sll_hdf5_par_read_dble_array_4d( &
       handle, global_size, offset, array, dsetname, error )
     integer, parameter                     :: dspace_dims = 4
-    type(sll_t_hdf5_handle), intent(in   ) :: handle
-    integer(i64)           , intent(in   ) :: global_size(dspace_dims)
-    integer(i64)           , intent(in   ) :: offset(dspace_dims)
-    sll_real64             , intent(  out) :: array(:,:,:,:)
-    character(len=*)       , intent(in   ) :: dsetname
-    integer                , intent(  out) :: error
+    type(sll_t_hdf5_par_handle), intent(in   ) :: handle
+    integer(i64)               , intent(in   ) :: global_size(dspace_dims)
+    integer(i64)               , intent(in   ) :: offset(dspace_dims)
+    sll_real64                 , intent(  out) :: array(:,:,:,:)
+    character(len=*)           , intent(in   ) :: dsetname
+    integer                    , intent(  out) :: error
 
 #define  DATATYPE  H5T_NATIVE_DOUBLE
-#include "sll_k_hdf5_read_array.F90"
+#include "sll_k_hdf5_par_read_array.F90"
 
   end subroutine sll_hdf5_par_read_dble_array_4d
 
@@ -405,15 +390,15 @@ contains
   subroutine sll_hdf5_par_read_dble_array_5d( &
       handle, global_size, offset, array, dsetname, error )
     integer, parameter                     :: dspace_dims = 5
-    type(sll_t_hdf5_handle), intent(in   ) :: handle
-    integer(i64)           , intent(in   ) :: global_size(dspace_dims)
-    integer(i64)           , intent(in   ) :: offset(dspace_dims)
-    sll_real64             , intent(  out) :: array(:,:,:,:,:)
-    character(len=*)       , intent(in   ) :: dsetname
-    integer                , intent(  out) :: error
+    type(sll_t_hdf5_par_handle), intent(in   ) :: handle
+    integer(i64)               , intent(in   ) :: global_size(dspace_dims)
+    integer(i64)               , intent(in   ) :: offset(dspace_dims)
+    sll_real64                 , intent(  out) :: array(:,:,:,:,:)
+    character(len=*)           , intent(in   ) :: dsetname
+    integer                    , intent(  out) :: error
 
 #define  DATATYPE  H5T_NATIVE_DOUBLE
-#include "sll_k_hdf5_read_array.F90"
+#include "sll_k_hdf5_par_read_array.F90"
 
   end subroutine sll_hdf5_par_read_dble_array_5d
 
@@ -424,15 +409,15 @@ contains
   subroutine sll_hdf5_par_read_dble_array_6d( &
       handle, global_size, offset, array, dsetname, error )
     integer, parameter                     :: dspace_dims = 6
-    type(sll_t_hdf5_handle), intent(in   ) :: handle
-    integer(i64)           , intent(in   ) :: global_size(dspace_dims)
-    integer(i64)           , intent(in   ) :: offset(dspace_dims)
-    sll_real64             , intent(  out) :: array(:,:,:,:,:,:)
-    character(len=*)       , intent(in   ) :: dsetname
-    integer                , intent(  out) :: error
+    type(sll_t_hdf5_par_handle), intent(in   ) :: handle
+    integer(i64)               , intent(in   ) :: global_size(dspace_dims)
+    integer(i64)               , intent(in   ) :: offset(dspace_dims)
+    sll_real64                 , intent(  out) :: array(:,:,:,:,:,:)
+    character(len=*)           , intent(in   ) :: dsetname
+    integer                    , intent(  out) :: error
 
 #define  DATATYPE  H5T_NATIVE_DOUBLE
-#include "sll_k_hdf5_read_array.F90"
+#include "sll_k_hdf5_par_read_array.F90"
 
   end subroutine sll_hdf5_par_read_dble_array_6d
 
