@@ -22,10 +22,10 @@ program test_maxwell_2d_periodic_cart_par
     sll_p_pi
 
   use sll_m_hdf5_io_parallel, only: &
-    sll_t_hdf5_handle,      &
-    sll_o_hdf5_file_create, &
-    sll_o_hdf5_file_close,  &
-    sll_o_hdf5_write_array
+    sll_t_hdf5_par_handle,      &
+    sll_s_hdf5_par_file_create, &
+    sll_s_hdf5_par_file_close,  &
+    sll_o_hdf5_par_write_array
 
   use sll_m_maxwell_2d_periodic_cartesian_par, only: &
     sll_s_ampere_te, &
@@ -238,23 +238,23 @@ contains
     integer(i64)            :: offset(1:2)
     sll_int32               :: error
     sll_int32               :: file_id
-    type(sll_t_hdf5_handle) :: handle
+    type(sll_t_hdf5_par_handle) :: handle
 
     global_dims(:) = int( [ncx,ncy], i64 )
 
-    call sll_o_hdf5_file_create( file_name//'.h5', sll_v_world_collective%comm, &
+    call sll_s_hdf5_par_file_create( file_name//'.h5', sll_v_world_collective%comm, &
                               handle, error )
     offset(1) = int( sll_o_get_layout_i_min(layout_y,prank)-1, i64 )
     offset(2) = int( sll_o_get_layout_j_min(layout_y,prank)-1, i64 )
-    call sll_o_hdf5_write_array( handle, global_dims, offset, &
+    call sll_o_hdf5_par_write_array( handle, global_dims, offset, &
                               ex, 'ex_values', error)
     offset(1) = int( sll_o_get_layout_i_min(layout_x,prank)-1, i64 )
     offset(2) = int( sll_o_get_layout_j_min(layout_x,prank)-1, i64 )
-    call sll_o_hdf5_write_array( handle, global_dims, offset, &
+    call sll_o_hdf5_par_write_array( handle, global_dims, offset, &
                               ey, 'ey_values', error )
-    call sll_o_hdf5_write_array( handle, global_dims, offset, &
+    call sll_o_hdf5_par_write_array( handle, global_dims, offset, &
                               hz, 'hz_values', error )
-    call sll_o_hdf5_file_close( handle, error )
+    call sll_s_hdf5_par_file_close( handle, error )
 
     if (prank == MPI_MASTER) then
 
