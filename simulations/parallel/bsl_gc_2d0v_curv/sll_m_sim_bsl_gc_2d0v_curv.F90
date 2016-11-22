@@ -135,9 +135,9 @@ module sll_m_sim_bsl_gc_2d0v_curv
     sll_p_es_gauss_legendre
 
   use sll_m_hdf5_io_serial, only: &
-    sll_o_hdf5_file_close, &
-    sll_o_hdf5_file_create, &
-    sll_o_hdf5_write_array
+    sll_s_hdf5_ser_file_create, &
+    sll_s_hdf5_ser_file_close, &
+    sll_o_hdf5_ser_write_array
 
   use sll_m_hermite_interpolation_1d, only: &
     sll_p_hermite_1d_c0
@@ -2585,12 +2585,12 @@ subroutine compute_field_from_phi_2d_fd_curvilinear(phi,mesh_2d,transformation,A
           x2(i,j) = transf%x2(eta1,eta2)
         end do
       end do
-      call sll_o_hdf5_file_create("curvilinear_mesh-x1.h5",hfile_id,error)
-      call sll_o_hdf5_write_array(hfile_id,x1,"/x1",error)
-      call sll_o_hdf5_file_close(hfile_id, error)
-      call sll_o_hdf5_file_create("curvilinear_mesh-x2.h5",hfile_id,error)
-      call sll_o_hdf5_write_array(hfile_id,x2,"/x2",error)
-      call sll_o_hdf5_file_close(hfile_id, error)
+      call sll_s_hdf5_ser_file_create("curvilinear_mesh-x1.h5",hfile_id,error)
+      call sll_o_hdf5_ser_write_array(hfile_id,x1,"/x1",error)
+      call sll_s_hdf5_ser_file_close(hfile_id, error)
+      call sll_s_hdf5_ser_file_create("curvilinear_mesh-x2.h5",hfile_id,error)
+      call sll_o_hdf5_ser_write_array(hfile_id,x2,"/x2",error)
+      call sll_s_hdf5_ser_file_close(hfile_id, error)
       deallocate(x1)
       deallocate(x2)
 
@@ -2654,12 +2654,12 @@ subroutine compute_field_from_phi_2d_fd_curvilinear(phi,mesh_2d,transformation,A
           x2(i,j) = transf%x2(eta1,eta2)
         end do
       end do
-      call sll_o_hdf5_file_create("curvilinear_mesh-x1.h5",hfile_id,error)
-      call sll_o_hdf5_write_array(hfile_id,x1,"/x1",error)
-      call sll_o_hdf5_file_close(hfile_id, error)
-      call sll_o_hdf5_file_create("curvilinear_mesh-x2.h5",hfile_id,error)
-      call sll_o_hdf5_write_array(hfile_id,x2,"/x2",error)
-      call sll_o_hdf5_file_close(hfile_id, error)
+      call sll_s_hdf5_ser_file_create("curvilinear_mesh-x1.h5",hfile_id,error)
+      call sll_o_hdf5_ser_write_array(hfile_id,x1,"/x1",error)
+      call sll_s_hdf5_ser_file_close(hfile_id, error)
+      call sll_s_hdf5_ser_file_create("curvilinear_mesh-x2.h5",hfile_id,error)
+      call sll_o_hdf5_ser_write_array(hfile_id,x2,"/x2",error)
+      call sll_s_hdf5_ser_file_close(hfile_id, error)
       deallocate(x1)
       deallocate(x2)
 
