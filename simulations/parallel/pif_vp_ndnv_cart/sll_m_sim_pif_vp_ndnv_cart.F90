@@ -29,9 +29,9 @@ module sll_m_sim_pif_vp_ndnv_cart
     sll_t_vlasovpoisson_sim
 
   use sll_m_hdf5_io_serial, only: &
-    sll_o_hdf5_file_close, &
-    sll_o_hdf5_file_create, &
-    sll_o_hdf5_write_array
+    sll_s_hdf5_ser_file_create, &
+    sll_s_hdf5_ser_file_close, &
+    sll_o_hdf5_ser_write_array
 
   use sll_m_moment_matching, only: &
     sll_s_match_moment_1d_weight_linear_real64
@@ -508,10 +508,10 @@ do tstep=1,sim%tsteps
   if (sim%coll_rank==0) then
    if (sim%WRITE_PHI==1) then
    call sll_s_int2string(sim%tstep, timestr)
-   call sll_o_hdf5_file_create(trim(sim%prefix)//'_data_'//timestr//'.h5',hdata_id,ierr)
-   call sll_o_hdf5_write_array(hdata_id,abs(sim%solution),"/phi",ierr)
-   call sll_o_hdf5_write_array(hdata_id,abs(sim%rhs),"/rho",ierr)
-   call sll_o_hdf5_file_close(hdata_id, ierr)
+   call sll_s_hdf5_ser_file_create(trim(sim%prefix)//'_data_'//timestr//'.h5',hdata_id,ierr)
+   call sll_o_hdf5_ser_write_array(hdata_id,abs(sim%solution),"/phi",ierr)
+   call sll_o_hdf5_ser_write_array(hdata_id,abs(sim%rhs),"/rho",ierr)
+   call sll_s_hdf5_ser_file_close(hdata_id, ierr)
    endif
   endif
   

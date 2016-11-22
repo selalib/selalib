@@ -28,9 +28,9 @@ program sim_bsl_vp_1d1v_cart_micro_macro
 
   use hdf5, only: hid_t
   use sll_m_hdf5_io_serial, only: &
-    sll_o_hdf5_file_close, &
-    sll_o_hdf5_file_create, &
-    sll_o_hdf5_write_array
+    sll_s_hdf5_ser_file_create, &
+    sll_s_hdf5_ser_file_close, &
+    sll_o_hdf5_ser_write_array
 
   use sll_m_interpolators_1d_base, only: &
     sll_c_interpolator_1d
@@ -646,9 +646,9 @@ program sim_bsl_vp_1d1v_cart_micro_macro
         print*, 'iteration: ', istep
         !call write_scalar_field_2d(f) 
         call sll_s_int2string(istep,cstep)
-        call sll_o_hdf5_file_create("f"//cstep//".h5",hfile_id,error)
-        call sll_o_hdf5_write_array(hfile_id,f,"f",error)
-        call sll_o_hdf5_file_close(hfile_id, error)
+        call sll_s_hdf5_ser_file_create("f"//cstep//".h5",hfile_id,error)
+        call sll_o_hdf5_ser_write_array(hfile_id,f,"f",error)
+        call sll_s_hdf5_ser_file_close(hfile_id, error)
      end if
 
 #ifdef __OPENMP
@@ -659,11 +659,11 @@ program sim_bsl_vp_1d1v_cart_micro_macro
      print *,'ITERATION',istep
 
   call sll_s_int2string(istep,cstep)
-  call sll_o_hdf5_file_create("ff"//cstep//".h5",hfile_id,error)
-  call sll_o_hdf5_write_array(hfile_id,ff,"ff",error)
-  call sll_o_hdf5_write_array(hfile_id,ff1,"ff1",error)
-  call sll_o_hdf5_write_array(hfile_id,fg,"fg",error)
-  call sll_o_hdf5_file_close(hfile_id, error)
+  call sll_s_hdf5_ser_file_create("ff"//cstep//".h5",hfile_id,error)
+  call sll_o_hdf5_ser_write_array(hfile_id,ff,"ff",error)
+  call sll_o_hdf5_ser_write_array(hfile_id,ff1,"ff1",error)
+  call sll_o_hdf5_ser_write_array(hfile_id,fg,"fg",error)
+  call sll_s_hdf5_ser_file_close(hfile_id, error)
   end do
 
   !compute fg on the fine mesh -> ff1 (for diagnostic)
