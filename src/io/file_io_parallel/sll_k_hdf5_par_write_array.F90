@@ -1,12 +1,12 @@
-integer(HID_T)   :: plist_id
-integer(HID_T)   :: dset_id
-integer(HID_T)   :: memspace
-integer(HID_T)   :: filespace
-integer(HSIZE_T) :: dimsfi(dspace_dims)
-integer(HSIZE_T) :: block (dspace_dims)
-integer(HSIZE_T) :: start (dspace_dims)
-integer(HSIZE_T) :: count (dspace_dims)
-integer(HSIZE_T) :: stride(dspace_dims)
+integer(hid_t)   :: plist_id
+integer(hid_t)   :: dset_id
+integer(hid_t)   :: memspace
+integer(hid_t)   :: filespace
+integer(hsize_t) :: dimsfi(dspace_dims)
+integer(hsize_t) :: block (dspace_dims)
+integer(hsize_t) :: start (dspace_dims)
+integer(hsize_t) :: count (dspace_dims)
+integer(hsize_t) :: stride(dspace_dims)
 integer          :: rank
 
 ! Basic dataset parameters
@@ -15,9 +15,9 @@ count  = 1
 stride = 1
 
 ! Integer kind type conversions
-dimsfi = int(  global_size, HSIZE_T )
-block  = int( shape(array), HSIZE_T )
-start  = int(       offset, HSIZE_T )
+dimsfi = int(  global_size, hsize_t )
+block  = int( shape(array), hsize_t )
+start  = int(       offset, hsize_t )
 
 !
 ! Create dataspaces ('file space' and 'memory space').
@@ -31,7 +31,7 @@ SLL_ASSERT(error==0)
 !
 ! Create dataset.
 !
-call h5pcreate_f( H5P_DATASET_CREATE_F, plist_id, error )
+call h5pcreate_f( h5p_dataset_create_f, plist_id, error )
 SLL_ASSERT(error==0)
 
 !
@@ -61,7 +61,7 @@ SLL_ASSERT(error==0)
 call h5dget_space_f( dset_id, filespace, error )
 SLL_ASSERT(error==0)
 
-call h5sselect_hyperslab_f( filespace, H5S_SELECT_SET_F, &
+call h5sselect_hyperslab_f( filespace, h5s_select_set_f, &
                             start, count, error, stride, block )
 SLL_ASSERT(error==0)
 
@@ -71,10 +71,10 @@ SLL_ASSERT(error==0)
 !
 ! Create property list for collective dataset write
 !
-call h5pcreate_f( H5P_DATASET_XFER_F, plist_id, error )
+call h5pcreate_f( h5p_dataset_xfer_f, plist_id, error )
 SLL_ASSERT(error==0)
 
-call h5pset_dxpl_mpio_f( plist_id, H5FD_MPIO_COLLECTIVE_F, error )
+call h5pset_dxpl_mpio_f( plist_id, h5fd_mpio_collective_f, error )
 SLL_ASSERT(error==0)
 
 !
