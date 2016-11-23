@@ -83,39 +83,72 @@ module sll_m_hdf5_io_parallel
     integer(hid_t), private :: file_id
   end type
 
-  !> Write array into HDF5 file
+  !-----------------------------------------------------------------------------
+  !> @brief
+  !> Collectively write distributed nD array into HDF5 file
+  !>
+  !> @detail
+  !> Write distributed nD Fortran array of real(f64) or integer(i32) into HDF5 file
+  !> Each process writes its own data block into a global HDF5 dataset
+  !>
+  !> @param[in]  handle       parallel file handle
+  !> @param[in]  global_size  global shape of distributed nD array
+  !> @param[in]  offset       offset of local data block within global array
+  !> @param[in]  array        local data block (nD array) written by one process
+  !> @param[in]  dsetname     HDF5 dataset name
+  !> @param[out] error        HDF5 error code
+  !> @param[in]  chunk_dims   shape of HDF5 chunks (CHUNKED storage layout)
+  !-----------------------------------------------------------------------------
   interface sll_o_hdf5_par_write_array
-     module procedure sll_hdf5_par_write_dble_array_1d
-     module procedure sll_hdf5_par_write_dble_array_2d
-     module procedure sll_hdf5_par_write_dble_array_3d
-     module procedure sll_hdf5_par_write_dble_array_4d
-     module procedure sll_hdf5_par_write_dble_array_5d
-     module procedure sll_hdf5_par_write_dble_array_6d
+    module procedure sll_hdf5_par_write_dble_array_1d
+    module procedure sll_hdf5_par_write_dble_array_2d
+    module procedure sll_hdf5_par_write_dble_array_3d
+    module procedure sll_hdf5_par_write_dble_array_4d
+    module procedure sll_hdf5_par_write_dble_array_5d
+    module procedure sll_hdf5_par_write_dble_array_6d
   end interface
 
-  !> Read array from HDF5 file
+  !-----------------------------------------------------------------------------
+  !> @brief
+  !> Collectively read distributed nD array from HDF5 file
+  !>
+  !> @detail
+  !> Read distributed nD Fortran array of real(f64) or integer(i32) from HDF5 file
+  !> Each process reads its own data block from a global HDF5 dataset
+  !>
+  !> @param[in]  handle       parallel file handle
+  !> @param[in]  global_size  global shape of distributed nD array
+  !> @param[in]  offset       offset of local data block within global array
+  !> @param[out] array        local data block (nD array) read by one process
+  !> @param[in]  dsetname     HDF5 dataset name
+  !> @param[out] error        HDF5 error code
+  !-----------------------------------------------------------------------------
   interface sll_o_hdf5_par_read_array
-     module procedure sll_hdf5_par_read_dble_array_1d
-     module procedure sll_hdf5_par_read_dble_array_2d
-     module procedure sll_hdf5_par_read_dble_array_3d
-     module procedure sll_hdf5_par_read_dble_array_4d
-     module procedure sll_hdf5_par_read_dble_array_5d
-     module procedure sll_hdf5_par_read_dble_array_6d
+    module procedure sll_hdf5_par_read_dble_array_1d
+    module procedure sll_hdf5_par_read_dble_array_2d
+    module procedure sll_hdf5_par_read_dble_array_3d
+    module procedure sll_hdf5_par_read_dble_array_4d
+    module procedure sll_hdf5_par_read_dble_array_5d
+    module procedure sll_hdf5_par_read_dble_array_6d
   end interface sll_o_hdf5_par_read_array
 
 contains
 
   !-----------------------------------------------------------------------------
-  !> Create HDF5 file
+  !> Create new HDF5 file
   !>    - Initialize fortran interface
   !>    - Create a new file using default properties
+  !>
+  !> @param[in]  filename  file name
+  !> @param[in]  comm      MPI communicator
+  !> @param[out] handle    parallel file handle
+  !> @param[out] error     HDF5 error code
   !-----------------------------------------------------------------------------
   subroutine sll_s_hdf5_par_file_create( filename, comm, handle, error )
-
-    character(len=*)           , intent(in   ) :: filename   !< file name
-    integer                    , intent(in   ) :: comm       !< MPI comm
-    type(sll_t_hdf5_par_handle), intent(  out) :: handle     !< file handle
-    integer                    , intent(  out) :: error      !< error code
+    character(len=*)           , intent(in   ) :: filename
+    integer                    , intent(in   ) :: comm
+    type(sll_t_hdf5_par_handle), intent(  out) :: handle
+    integer                    , intent(  out) :: error
 
     integer(hid_t) :: plist_id
     integer        :: info
@@ -135,16 +168,20 @@ contains
   end subroutine sll_s_hdf5_par_file_create
 
   !-----------------------------------------------------------------------------
-  !> Open HDF5 file
+  !> Open existing HDF5 file
   !>    - Initialize fortran interface
   !>    - Open a HDF5 file
+  !>
+  !> @param[in]  filename  file name
+  !> @param[in]  comm      MPI communicator
+  !> @param[out] handle    parallel file handle
+  !> @param[out] error     HDF5 error code
   !-----------------------------------------------------------------------------
   subroutine sll_s_hdf5_par_file_open( filename, comm, handle, error )
-
-    character(len=*)           , intent(in   ) :: filename   !< file name
-    integer                    , intent(in   ) :: comm       !< error code
-    type(sll_t_hdf5_par_handle), intent(  out) :: handle     !< file handle
-    integer                    , intent(  out) :: error      !< error code
+    character(len=*)           , intent(in   ) :: filename
+    integer                    , intent(in   ) :: comm
+    type(sll_t_hdf5_par_handle), intent(  out) :: handle
+    integer                    , intent(  out) :: error
 
     integer(hid_t) :: plist_id
     integer        :: info
@@ -164,11 +201,14 @@ contains
   end subroutine sll_s_hdf5_par_file_open
 
   !-----------------------------------------------------------------------------
-  !> Close HDF5 file
+  !> Close existing HDF5 file
+  !>
+  !> @param[in]  handle  parallel file handle
+  !> @param[out] error   HDF5 error code
   !-----------------------------------------------------------------------------
   subroutine sll_s_hdf5_par_file_close( handle, error )
-    type(sll_t_hdf5_par_handle), intent(in   ) :: handle   !< file handle
-    integer                    , intent(  out) :: error    !< error code
+    type(sll_t_hdf5_par_handle), intent(in   ) :: handle
+    integer                    , intent(  out) :: error
 
     call h5fclose_f( handle%file_id, error ) ! Close property list and file
     SLL_ASSERT(error==0)
@@ -177,10 +217,7 @@ contains
   end subroutine sll_s_hdf5_par_file_close
 
   !-----------------------------------------------------------------------------
-  !> Write a 1D array of float in double precision in a HDF5 file
-  !> - Create a dataspace with 1 dimensions
-  !> - Write the dataset
-  !> - Close dataset and dataspace
+  !> Write 1D array of double precision floats into HDF5 file
   !-----------------------------------------------------------------------------
   subroutine sll_hdf5_par_write_dble_array_1d( &
       handle, global_size, offset, array, dsetname, error, chunk_dims )
@@ -188,21 +225,19 @@ contains
     type(sll_t_hdf5_par_handle), intent(in   ) :: handle
     integer(i64)               , intent(in   ) :: global_size(dspace_dims)
     integer(i64)               , intent(in   ) :: offset     (dspace_dims)
-    sll_real64                 , intent(in   ) :: array(:)
+    real(f64)                  , intent(in   ) :: array(:)
     character(len=*)           , intent(in   ) :: dsetname
     integer                    , intent(  out) :: error
     integer(i64),     optional , intent(in   ) :: chunk_dims(dspace_dims)
 
 #define  DATATYPE  H5T_NATIVE_DOUBLE
 #include "sll_k_hdf5_par_write_array.F90"
+#undef   DATATYPE
 
   end subroutine sll_hdf5_par_write_dble_array_1d
 
   !-----------------------------------------------------------------------------
-  !> Write a 2D array of float in double precision in a HDF5 file
-  !> - Create a dataspace with 2 dimensions
-  !> - Write the dataset
-  !> - Close dataset and dataspace
+  !> Write 2D array of double precision floats into HDF5 file
   !-----------------------------------------------------------------------------
   subroutine sll_hdf5_par_write_dble_array_2d( &
       handle, global_size, offset, array, dsetname, error, chunk_dims )
@@ -210,21 +245,19 @@ contains
     type(sll_t_hdf5_par_handle), intent(in   ) :: handle
     integer(i64)               , intent(in   ) :: global_size(dspace_dims)
     integer(i64)               , intent(in   ) :: offset     (dspace_dims)
-    sll_real64                 , intent(in   ) :: array(:,:)
+    real(f64)                  , intent(in   ) :: array(:,:)
     character(len=*)           , intent(in   ) :: dsetname
     integer                    , intent(  out) :: error
     integer(i64),     optional , intent(in   ) :: chunk_dims(dspace_dims)
 
 #define  DATATYPE  H5T_NATIVE_DOUBLE
 #include "sll_k_hdf5_par_write_array.F90"
+#undef   DATATYPE
 
   end subroutine sll_hdf5_par_write_dble_array_2d
 
   !-----------------------------------------------------------------------------
-  !> Write a 3D array of float in double precision in a HDF5 file
-  !> - Create a dataspace with 3 dimensions
-  !> - Write the dataset
-  !> - Close dataset and dataspace
+  !> Write 3D array of double precision floats into HDF5 file
   !-----------------------------------------------------------------------------
   subroutine sll_hdf5_par_write_dble_array_3d( &
       handle, global_size, offset, array, dsetname, error, chunk_dims )
@@ -232,21 +265,19 @@ contains
     type(sll_t_hdf5_par_handle), intent(in   ) :: handle
     integer(i64)               , intent(in   ) :: global_size(dspace_dims)
     integer(i64)               , intent(in   ) :: offset     (dspace_dims)
-    sll_real64                 , intent(in   ) :: array(:,:,:)
+    real(f64)                  , intent(in   ) :: array(:,:,:)
     character(len=*)           , intent(in   ) :: dsetname
     integer                    , intent(  out) :: error
     integer(i64),     optional , intent(in   ) :: chunk_dims(dspace_dims)
 
 #define  DATATYPE  H5T_NATIVE_DOUBLE
 #include "sll_k_hdf5_par_write_array.F90"
+#undef   DATATYPE
 
   end subroutine sll_hdf5_par_write_dble_array_3d
 
   !-----------------------------------------------------------------------------
-  !> Write a 4D array of float in double precision in a HDF5 file
-  !> - Create a dataspace with 4 dimensions
-  !> - Write the dataset
-  !> - Close dataset and dataspace
+  !> Write 4D array of double precision floats into HDF5 file
   !-----------------------------------------------------------------------------
   subroutine sll_hdf5_par_write_dble_array_4d( &
       handle, global_size, offset, array, dsetname, error, chunk_dims )
@@ -254,21 +285,19 @@ contains
     type(sll_t_hdf5_par_handle), intent(in   ) :: handle
     integer(i64)               , intent(in   ) :: global_size(dspace_dims)
     integer(i64)               , intent(in   ) :: offset     (dspace_dims)
-    sll_real64                 , intent(in   ) :: array(:,:,:,:)
+    real(f64)                  , intent(in   ) :: array(:,:,:,:)
     character(len=*)           , intent(in   ) :: dsetname
     integer                    , intent(  out) :: error
     integer(i64),     optional , intent(in   ) :: chunk_dims(dspace_dims)
 
 #define  DATATYPE  H5T_NATIVE_DOUBLE
 #include "sll_k_hdf5_par_write_array.F90"
+#undef   DATATYPE
 
   end subroutine sll_hdf5_par_write_dble_array_4d
 
   !-----------------------------------------------------------------------------
-  !> Write a 5D array of float in double precision in a HDF5 file
-  !> - Create a dataspace with 5 dimensions
-  !> - Write the dataset
-  !> - Close dataset and dataspace
+  !> Write 5D array of double precision floats into HDF5 file
   !-----------------------------------------------------------------------------
   subroutine sll_hdf5_par_write_dble_array_5d( &
       handle, global_size, offset, array, dsetname, error, chunk_dims )
@@ -276,21 +305,19 @@ contains
     type(sll_t_hdf5_par_handle), intent(in   ) :: handle
     integer(i64)               , intent(in   ) :: global_size(dspace_dims)
     integer(i64)               , intent(in   ) :: offset     (dspace_dims)
-    sll_real64                 , intent(in   ) :: array(:,:,:,:,:)
+    real(f64)                  , intent(in   ) :: array(:,:,:,:,:)
     character(len=*)           , intent(in   ) :: dsetname
     integer                    , intent(  out) :: error
     integer(i64),     optional , intent(in   ) :: chunk_dims(dspace_dims)
 
 #define  DATATYPE  H5T_NATIVE_DOUBLE
 #include "sll_k_hdf5_par_write_array.F90"
+#undef   DATATYPE
 
   end subroutine sll_hdf5_par_write_dble_array_5d
 
   !-----------------------------------------------------------------------------
-  !> Write a 6D array of float in double precision in a HDF5 file
-  !> - Create a dataspace with 6 dimensions
-  !> - Write the dataset
-  !> - Close dataset and dataspace
+  !> Write 6D array of double precision floats into HDF5 file
   !-----------------------------------------------------------------------------
   subroutine sll_hdf5_par_write_dble_array_6d( &
       handle, global_size, offset, array, dsetname, error, chunk_dims )
@@ -298,19 +325,19 @@ contains
     type(sll_t_hdf5_par_handle), intent(in   ) :: handle
     integer(i64)               , intent(in   ) :: global_size(dspace_dims)
     integer(i64)               , intent(in   ) :: offset     (dspace_dims)
-    sll_real64                 , intent(in   ) :: array(:,:,:,:,:,:)
+    real(f64)                  , intent(in   ) :: array(:,:,:,:,:,:)
     character(len=*)           , intent(in   ) :: dsetname
     integer                    , intent(  out) :: error
     integer(i64),     optional , intent(in   ) :: chunk_dims(dspace_dims)
 
 #define  DATATYPE  H5T_NATIVE_DOUBLE
 #include "sll_k_hdf5_par_write_array.F90"
+#undef   DATATYPE
 
   end subroutine sll_hdf5_par_write_dble_array_6d
 
   !-----------------------------------------------------------------------------
-  !> Read from a 1D array of float in double precision from a HDF5 file
-  !> into a 1D array
+  !> Read 1D array of double precision floats from HDF5 file
   !-----------------------------------------------------------------------------
   subroutine sll_hdf5_par_read_dble_array_1d( &
       handle, global_size, offset, array, dsetname, error )
@@ -318,18 +345,18 @@ contains
     type(sll_t_hdf5_par_handle), intent(in   ) :: handle
     integer(i64)               , intent(in   ) :: global_size(dspace_dims)
     integer(i64)               , intent(in   ) :: offset(dspace_dims)
-    sll_real64                 , intent(  out) :: array(:)
+    real(f64)                  , intent(  out) :: array(:)
     character(len=*)           , intent(in   ) :: dsetname
     integer                    , intent(  out) :: error
 
 #define  DATATYPE  H5T_NATIVE_DOUBLE
 #include "sll_k_hdf5_par_read_array.F90"
+#undef   DATATYPE
 
   end subroutine sll_hdf5_par_read_dble_array_1d
 
   !-----------------------------------------------------------------------------
-  !> Read from a 2D array of float in double precision from a HDF5 file
-  !> into a 2D array
+  !> Read 2D array of double precision floats from HDF5 file
   !-----------------------------------------------------------------------------
   subroutine sll_hdf5_par_read_dble_array_2d( &
       handle, global_size, offset, array, dsetname, error )
@@ -337,18 +364,18 @@ contains
     type(sll_t_hdf5_par_handle), intent(in   ) :: handle
     integer(i64)               , intent(in   ) :: global_size(dspace_dims)
     integer(i64)               , intent(in   ) :: offset(dspace_dims)
-    sll_real64                 , intent(  out) :: array(:,:)
+    real(f64)                  , intent(  out) :: array(:,:)
     character(len=*)           , intent(in   ) :: dsetname
     integer                    , intent(  out) :: error
 
 #define  DATATYPE  H5T_NATIVE_DOUBLE
 #include "sll_k_hdf5_par_read_array.F90"
+#undef   DATATYPE
 
   end subroutine sll_hdf5_par_read_dble_array_2d
 
   !-----------------------------------------------------------------------------
-  !> Read from a 3D array of float in double precision from a HDF5 file
-  !> into a 3D array
+  !> Read 3D array of double precision floats from HDF5 file
   !-----------------------------------------------------------------------------
   subroutine sll_hdf5_par_read_dble_array_3d( &
       handle, global_size, offset, array, dsetname, error )
@@ -356,18 +383,18 @@ contains
     type(sll_t_hdf5_par_handle), intent(in   ) :: handle
     integer(i64)               , intent(in   ) :: global_size(dspace_dims)
     integer(i64)               , intent(in   ) :: offset(dspace_dims)
-    sll_real64                 , intent(  out) :: array(:,:,:)
+    real(f64)                  , intent(  out) :: array(:,:,:)
     character(len=*)           , intent(in   ) :: dsetname
     integer                    , intent(  out) :: error
 
 #define  DATATYPE  H5T_NATIVE_DOUBLE
 #include "sll_k_hdf5_par_read_array.F90"
+#undef   DATATYPE
 
   end subroutine sll_hdf5_par_read_dble_array_3d
 
   !-----------------------------------------------------------------------------
-  !> Read from a 4D array of float in double precision from a HDF5 file
-  !> into a 4D array
+  !> Read 4D array of double precision floats from HDF5 file
   !-----------------------------------------------------------------------------
   subroutine sll_hdf5_par_read_dble_array_4d( &
       handle, global_size, offset, array, dsetname, error )
@@ -375,18 +402,18 @@ contains
     type(sll_t_hdf5_par_handle), intent(in   ) :: handle
     integer(i64)               , intent(in   ) :: global_size(dspace_dims)
     integer(i64)               , intent(in   ) :: offset(dspace_dims)
-    sll_real64                 , intent(  out) :: array(:,:,:,:)
+    real(f64)                  , intent(  out) :: array(:,:,:,:)
     character(len=*)           , intent(in   ) :: dsetname
     integer                    , intent(  out) :: error
 
 #define  DATATYPE  H5T_NATIVE_DOUBLE
 #include "sll_k_hdf5_par_read_array.F90"
+#undef   DATATYPE
 
   end subroutine sll_hdf5_par_read_dble_array_4d
 
   !-----------------------------------------------------------------------------
-  !> Read from a 5D array of float in double precision from a HDF5 file
-  !> into a 5D array
+  !> Read 5D array of double precision floats from HDF5 file
   !-----------------------------------------------------------------------------
   subroutine sll_hdf5_par_read_dble_array_5d( &
       handle, global_size, offset, array, dsetname, error )
@@ -394,18 +421,18 @@ contains
     type(sll_t_hdf5_par_handle), intent(in   ) :: handle
     integer(i64)               , intent(in   ) :: global_size(dspace_dims)
     integer(i64)               , intent(in   ) :: offset(dspace_dims)
-    sll_real64                 , intent(  out) :: array(:,:,:,:,:)
+    real(f64)                  , intent(  out) :: array(:,:,:,:,:)
     character(len=*)           , intent(in   ) :: dsetname
     integer                    , intent(  out) :: error
 
 #define  DATATYPE  H5T_NATIVE_DOUBLE
 #include "sll_k_hdf5_par_read_array.F90"
+#undef   DATATYPE
 
   end subroutine sll_hdf5_par_read_dble_array_5d
 
   !-----------------------------------------------------------------------------
-  !> Read from a 6D array of float in double precision from a HDF5 file
-  !> into a 6D array
+  !> Read 6D array of double precision floats from HDF5 file
   !-----------------------------------------------------------------------------
   subroutine sll_hdf5_par_read_dble_array_6d( &
       handle, global_size, offset, array, dsetname, error )
@@ -413,53 +440,17 @@ contains
     type(sll_t_hdf5_par_handle), intent(in   ) :: handle
     integer(i64)               , intent(in   ) :: global_size(dspace_dims)
     integer(i64)               , intent(in   ) :: offset(dspace_dims)
-    sll_real64                 , intent(  out) :: array(:,:,:,:,:,:)
+    real(f64)                  , intent(  out) :: array(:,:,:,:,:,:)
     character(len=*)           , intent(in   ) :: dsetname
     integer                    , intent(  out) :: error
 
 #define  DATATYPE  H5T_NATIVE_DOUBLE
 #include "sll_k_hdf5_par_read_array.F90"
+#undef   DATATYPE
 
   end subroutine sll_hdf5_par_read_dble_array_6d
 
 
-
-!Gysela functions that can be useful for future
-!  ! HDF5 saving for an integer
-!  subroutine HDF5_integer_saving(file_id,int,dsetname)
-!  ! HDF5 saving for a real double
-!  subroutine HDF5_real_saving(file_id,rd,dsetname)
-!  ! HDF5 saving for a 1D array of integer
-!  subroutine HDF5_array1D_saving_int(file_id,array1D,dim1,dsetname)
-!  ! gzip HDF5 saving for a 1D array of real*4
-!  subroutine HDF5_array1D_saving_r4(file_id,array1D,dim1,dsetname)
-!  ! gzip HDF5 saving for a 1D array of real*8
-!  subroutine HDF5_array1D_saving(file_id,array1D,dim1,dsetname)
-!  ! gzip HDF5 saving for a 2D array double
-!  subroutine HDF5_array2D_saving(file_id,array2D,dim1,dim2,dsetname)
-!  ! gzip HDF5 saving for a 3D array double
-!  subroutine HDF5_array3D_saving(file_id,array3D,dim1,dim2,dim3,dsetname)
-!  ! gzip HDF5 saving for a 4D array
-!  subroutine HDF5_array4D_saving(file_id,array4d,dim1,dim2,dim3,dim4,dsetname)
-!  ! gzip HDF5 saving for a 5D array
-!  subroutine HDF5_array5D_saving(file_id,array5d,dim1,dim2,dim3,dim4,dim5,dsetname)
-!  
-!  ! HDF5 reading for an integer 
-!  subroutine HDF5_integer_reading(file_id,itg,dsetname)
-!  ! HDF5 reading for a real double
-!  subroutine HDF5_real_reading(file_id,rd,dsetname)
-!  ! HDF5 reading for an array 1D double
-!  subroutine HDF5_array1D_reading(file_id,array1D,dsetname)
-!  ! HDF5 reading for an array 2DS double
-!  subroutine HDF5_array2D_reading(file_id,array2D,dsetname)
-!  ! HDF5 reading for an array 3D double
-!  subroutine HDF5_array3D_reading(file_id,array3D,dsetname)
-!  ! HDF5 reading for an array 4D
-!  subroutine HDF5_array4D_reading(file_id,array4D,dsetname,error)
-!  ! HDF5 reading for an array 5D
-!  subroutine HDF5_array5D_reading(file_id,array5D,dsetname)
-
 #endif
 
 end module sll_m_hdf5_io_parallel
-
