@@ -95,6 +95,9 @@
  SLL_DEALLOCATE_ARRAY( lowest_color, ierr )
  SLL_DEALLOCATE_ARRAY( colors, ierr )
  SLL_DEALLOCATE_ARRAY( colors_copy, ierr )
+ 
+ is_uniform_local = .true.
+ 
  exchange_size_s = plan%send_counts(0)
  do i=0,new_col_sz-1
     if(plan%send_counts(i) .eq. exchange_size_s) then
