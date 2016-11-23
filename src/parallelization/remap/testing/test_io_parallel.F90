@@ -21,10 +21,10 @@ program test_io_parallel
     sll_s_gnuplot_rect_2d_parallel
 
   use sll_m_hdf5_io_parallel, only: &
-    sll_t_hdf5_handle,      &
-    sll_o_hdf5_file_create, &
-    sll_o_hdf5_file_close,  &
-    sll_o_hdf5_write_array
+    sll_t_hdf5_par_handle,      &
+    sll_s_hdf5_par_file_create, &
+    sll_s_hdf5_par_file_close,  &
+    sll_o_hdf5_par_write_array
 
   use sll_m_remapper, only: &
     sll_o_compute_local_sizes, &
@@ -134,7 +134,7 @@ contains
   sll_int32, parameter    :: nx = 64
   sll_int32, parameter    :: ny = 32
 #ifndef NOHDF5
-  type(sll_t_hdf5_handle) :: file_id
+  type(sll_t_hdf5_par_handle) :: file_id
   integer(i64)            :: datadims(2) = int( [nx,ny], i64 )
   integer(i64)            :: offset(2)
 #else
@@ -205,18 +205,18 @@ contains
 
   !Begin low level version
 
-  call sll_o_hdf5_file_create( xfile, comm, file_id, error )
-  call sll_o_hdf5_write_array( file_id, datadims, offset, xdata, xdset, error )
-  call sll_o_hdf5_file_close ( file_id, error )
+  call sll_s_hdf5_par_file_create( xfile, comm, file_id, error )
+  call sll_o_hdf5_par_write_array( file_id, datadims, offset, xdata, xdset, error )
+  call sll_s_hdf5_par_file_close ( file_id, error )
 
   
-  call sll_o_hdf5_file_create( yfile, comm, file_id, error )
-  call sll_o_hdf5_write_array( file_id, datadims, offset, ydata, ydset, error )
-  call sll_o_hdf5_file_close ( file_id, error )
+  call sll_s_hdf5_par_file_create( yfile, comm, file_id, error )
+  call sll_o_hdf5_par_write_array( file_id, datadims, offset, ydata, ydset, error )
+  call sll_s_hdf5_par_file_close ( file_id, error )
   
-  call sll_o_hdf5_file_create( zfile, comm, file_id, error )
-  call sll_o_hdf5_write_array( file_id, datadims, offset, zdata, zdset, error )
-  call sll_o_hdf5_file_close ( file_id, error )
+  call sll_s_hdf5_par_file_create( zfile, comm, file_id, error )
+  call sll_o_hdf5_par_write_array( file_id, datadims, offset, zdata, zdset, error )
+  call sll_s_hdf5_par_file_close ( file_id, error )
 
   if (myrank == 0) then
   
@@ -267,7 +267,7 @@ contains
   sll_int32, parameter           :: nj = 64
   sll_int32, parameter           :: nk = 128
 #ifndef NOHDF5
-  type(sll_t_hdf5_handle) :: file_id       ! File identifier 
+  type(sll_t_hdf5_par_handle) :: file_id       ! File identifier 
   integer(i64)            :: datadims(3) = int( [ni,nj,nk], i64 ) ! Dataset dimensions.
   integer(i64)            :: offset(3)
 #else
@@ -335,21 +335,21 @@ contains
 
   !End high level version
 
-  call sll_o_hdf5_file_create( 'layout3d-x.h5', comm, file_id, error )
-  call sll_o_hdf5_write_array( file_id, datadims, offset, xdata, 'x', error )
-  call sll_o_hdf5_file_close ( file_id, error )
+  call sll_s_hdf5_par_file_create( 'layout3d-x.h5', comm, file_id, error )
+  call sll_o_hdf5_par_write_array( file_id, datadims, offset, xdata, 'x', error )
+  call sll_s_hdf5_par_file_close ( file_id, error )
 
-  call sll_o_hdf5_file_create( 'layout3d-y.h5', comm, file_id, error )
-  call sll_o_hdf5_write_array( file_id, datadims, offset, ydata, 'y', error )
-  call sll_o_hdf5_file_close ( file_id, error )
+  call sll_s_hdf5_par_file_create( 'layout3d-y.h5', comm, file_id, error )
+  call sll_o_hdf5_par_write_array( file_id, datadims, offset, ydata, 'y', error )
+  call sll_s_hdf5_par_file_close ( file_id, error )
 
-  call sll_o_hdf5_file_create( 'layout3d-z.h5', comm,file_id, error )
-  call sll_o_hdf5_write_array( file_id, datadims, offset, zdata, 'z', error )
-  call sll_o_hdf5_file_close ( file_id, error )
+  call sll_s_hdf5_par_file_create( 'layout3d-z.h5', comm,file_id, error )
+  call sll_o_hdf5_par_write_array( file_id, datadims, offset, zdata, 'z', error )
+  call sll_s_hdf5_par_file_close ( file_id, error )
 
-  call sll_o_hdf5_file_create( 'layout3d.h5', comm, file_id, error )
-  call sll_o_hdf5_write_array( file_id, datadims, offset, local_array, 'array', error )
-  call sll_o_hdf5_file_close ( file_id, error )
+  call sll_s_hdf5_par_file_create( 'layout3d.h5', comm, file_id, error )
+  call sll_o_hdf5_par_write_array( file_id, datadims, offset, local_array, 'array', error )
+  call sll_s_hdf5_par_file_close ( file_id, error )
 
   if (myrank == 0) then
      call sll_s_xml_file_create("layout3d.xmf",xml_id,error)
