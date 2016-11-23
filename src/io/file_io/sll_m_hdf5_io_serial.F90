@@ -16,6 +16,8 @@
 !> @ingroup file_io
 !> @brief
 !> Implements the functions to write hdf5 file to store heavy data.
+!> @author  Pierre Navaro, INRIA
+!> @author  Yaman Güçlü, IPP Garching
 !> @details
 !> With HDF5 you can store several datasets in a single file.
 !> @note 
@@ -66,13 +68,15 @@ module sll_m_hdf5_io_serial
     integer(hid_t), private :: file_id
   end type
 
-  !> @brief 
-  !> Write a nD array of float in double precision in a HDF5 file 
+  !-----------------------------------------------------------------------------
+  !> @brief
+  !> Write nD array of double precision floats or integers into HDF5 file
   !>
-  !>\param[in]  file_id file unit number
-  !>\param[in]  array array
-  !>\param[in]  dsetname dataset name
-  !>\param[out] error dataset error code
+  !> @param[in]  handle    file handle
+  !> @param[in]  array     multi-dimensional array
+  !> @param[in]  dsetname  HDF5 dataset name
+  !> @param[out] error     HDF5 error code
+  !-----------------------------------------------------------------------------
   interface sll_o_hdf5_ser_write_array
      module procedure sll_hdf5_ser_write_dble_array_1d
      module procedure sll_hdf5_ser_write_dble_array_2d
@@ -80,7 +84,6 @@ module sll_m_hdf5_io_serial
      module procedure sll_hdf5_ser_write_int_array_1d
      module procedure sll_hdf5_ser_write_int_array_2d
      module procedure sll_hdf5_ser_write_int_array_3d
-     module procedure sll_hdf5_ser_write_char_array
   end interface
 
 contains
@@ -89,6 +92,10 @@ contains
   !> @brief Create new HDF5 file
   !> @details To use this subroutine HDF5_ENABLE should be set to ON 
   !> in CMake configuration
+  !>
+  !> @param[in]  filename  file name
+  !> @param[out] handle    file handle
+  !> @param[out] error     HDF5 error code
   !-----------------------------------------------------------------------------
   subroutine sll_s_hdf5_ser_file_create( filename, handle, error )
     character(len=*)           , intent(in   ) :: filename  !< file name
@@ -103,6 +110,10 @@ contains
 
   !-----------------------------------------------------------------------------
   !> Open existing HDF5 file
+  !>
+  !> @param[in]  filename  file name
+  !> @param[out] handle    file handle
+  !> @param[out] error     HDF5 error code
   !-----------------------------------------------------------------------------
   subroutine sll_s_hdf5_ser_file_open( filename, handle, error )
     character(len=*)           , intent(in   ) :: filename  !< file name
@@ -116,11 +127,14 @@ contains
   end subroutine sll_s_hdf5_ser_file_open
 
   !-----------------------------------------------------------------------------
-  !> Close HDF5 file
+  !> Close existing HDF5 file
+  !>
+  !> @param[in]  handle  file handle
+  !> @param[out] error   HDF5 error code
   !-----------------------------------------------------------------------------
   subroutine sll_s_hdf5_ser_file_close( handle, error )
-    type(sll_t_hdf5_ser_handle), intent(in   ) :: handle    !< file handle
-    integer                    , intent(  out) :: error     !< error code
+    type(sll_t_hdf5_ser_handle), intent(in   ) :: handle
+    integer                    , intent(  out) :: error
 
     call h5fclose_f( handle%file_id, error ) ! Close property list and file
     SLL_ASSERT(error==0)
@@ -129,22 +143,23 @@ contains
   end subroutine sll_s_hdf5_ser_file_close
 
   !-----------------------------------------------------------------------------
-  !> Write a 1d array of int32 in hdf5 file
+  !> Write 1D array of int32 into HDF5 file
   !-----------------------------------------------------------------------------
   subroutine sll_hdf5_ser_write_int_array_1d( handle, array, dsetname, error )
     integer, parameter                         :: rank = 1
-    type(sll_t_hdf5_ser_handle), intent(in   ) :: handle    !< file handle
-    integer(i32)               , intent(in   ) :: array(:)  !< data array
-    character(len=*)           , intent(in   ) :: dsetname  !< hdf5 dataset name
-    integer                    , intent(  out) :: error     !< error code
+    type(sll_t_hdf5_ser_handle), intent(in   ) :: handle
+    integer(i32)               , intent(in   ) :: array(:)
+    character(len=*)           , intent(in   ) :: dsetname
+    integer                    , intent(  out) :: error
 
 #define  DATATYPE  H5T_NATIVE_INTEGER
 #include "sll_k_hdf5_ser_write_array.F90"
+#undef   DATATYPE
 
   end subroutine sll_hdf5_ser_write_int_array_1d
 
   !-----------------------------------------------------------------------------
-  !> Write a 2d array of int32 in hdf5 file
+  !> Write 2D array of int32 into HDF5 file
   !-----------------------------------------------------------------------------
   subroutine sll_hdf5_ser_write_int_array_2d( handle, array, dsetname, error )
     integer, parameter                         :: rank = 2
@@ -155,11 +170,12 @@ contains
 
 #define  DATATYPE  H5T_NATIVE_INTEGER
 #include "sll_k_hdf5_ser_write_array.F90"
+#undef   DATATYPE
 
   end subroutine sll_hdf5_ser_write_int_array_2d
 
   !-----------------------------------------------------------------------------
-  !> Write a 3d array of int32 in hdf5 file
+  !> Write 3D array of int32 into HDF5 file
   !-----------------------------------------------------------------------------
   subroutine sll_hdf5_ser_write_int_array_3d( handle, array, dsetname, error )
     integer, parameter                         :: rank = 3
@@ -170,11 +186,12 @@ contains
 
 #define  DATATYPE  H5T_NATIVE_INTEGER
 #include "sll_k_hdf5_ser_write_array.F90"
+#undef   DATATYPE
 
   end subroutine sll_hdf5_ser_write_int_array_3d
 
   !-----------------------------------------------------------------------------
-  !> Write a 1d array of float64 in hdf5 file
+  !> Write 1D array of float64 into HDF5 file
   !-----------------------------------------------------------------------------
   subroutine sll_hdf5_ser_write_dble_array_1d( handle, array, dsetname, error )
     integer, parameter                         :: rank = 1
@@ -183,17 +200,14 @@ contains
     character(len=*)           , intent(in   ) :: dsetname
     integer                    , intent(  out) :: error
 
-#ifdef   DATATYPE
-#undef   DATATYPE
-#endif
-
 #define  DATATYPE  H5T_NATIVE_DOUBLE
 #include "sll_k_hdf5_ser_write_array.F90"
+#undef   DATATYPE
 
   end subroutine sll_hdf5_ser_write_dble_array_1d
 
   !-----------------------------------------------------------------------------
-  !> Write a 2d array of float64 in hdf5 file
+  !> Write 2D array of float64 into HDF5 file
   !-----------------------------------------------------------------------------
   subroutine sll_hdf5_ser_write_dble_array_2d( handle, array, dsetname, error )
     integer, parameter                         :: rank = 2
@@ -204,11 +218,12 @@ contains
 
 #define  DATATYPE  H5T_NATIVE_DOUBLE
 #include "sll_k_hdf5_ser_write_array.F90"
+#undef   DATATYPE
 
   end subroutine sll_hdf5_ser_write_dble_array_2d
 
   !-----------------------------------------------------------------------------
-  !> Write a 3d array of float64 in hdf5 file
+  !> Write 3D array of float64 into HDF5 file
   !-----------------------------------------------------------------------------
   subroutine sll_hdf5_ser_write_dble_array_3d( handle, array, dsetname, error )
     integer, parameter                         :: rank = 3
@@ -219,17 +234,23 @@ contains
 
 #define  DATATYPE  H5T_NATIVE_DOUBLE
 #include "sll_k_hdf5_ser_write_array.F90"
+#undef   DATATYPE
 
   end subroutine sll_hdf5_ser_write_dble_array_3d
   
   !-----------------------------------------------------------------------------
   !> Write Fortran string to HDF5 file as 1D array of characters
+  !>
+  !> @param[in]  handle    file handle
+  !> @param[in]  string    data string
+  !> @param[in]  dsetname  HDF5 dataset name
+  !> @param[out] error     HDF5 error code
   !-----------------------------------------------------------------------------
   subroutine sll_hdf5_ser_write_char_array( handle, string, dsetname, error )
-    type(sll_t_hdf5_ser_handle), intent(in   ) :: handle   !< file handle
-    character(len=*)           , intent(in   ) :: string   !< data string
-    character(len=*)           , intent(in   ) :: dsetname !< hdf5 dataset name
-    sll_int32                  , intent(  out) :: error    !< error code
+    type(sll_t_hdf5_ser_handle), intent(in   ) :: handle
+    character(len=*)           , intent(in   ) :: string
+    character(len=*)           , intent(in   ) :: dsetname
+    integer                    , intent(  out) :: error
 
     integer(hsize_t) :: array_dim(1)
     integer(hid_t)   :: dataset_id
@@ -261,15 +282,20 @@ contains
   end subroutine sll_hdf5_ser_write_char_array
 
   !-----------------------------------------------------------------------------
-  !< Read complete file to string and store it into hdf5 data structure
+  !> Read complete file to string and store it into HDF5 data structure
+  !>
+  !> @param[in]  handle    file handle
+  !> @param[in]  filename  name of file to be copied
+  !> @param[in]  dsetname  HDF5 dataset name
+  !> @param[out] error     HDF5 error code
   !-----------------------------------------------------------------------------
   subroutine sll_s_hdf5_ser_write_file( handle, filename, dsetname, error )
-    type(sll_t_hdf5_ser_handle), intent(in   ) :: handle   !< file handle
-    character(len=*)           , intent(in   ) :: filename !< file to copy
-    character(len=*)           , intent(in   ) :: dsetname !< hdf5 dataset name
-    sll_int32                  , intent(  out) :: error    !< error code
+    type(sll_t_hdf5_ser_handle), intent(in   ) :: handle
+    character(len=*)           , intent(in   ) :: filename
+    character(len=*)           , intent(in   ) :: dsetname
+    integer                    , intent(  out) :: error
 
-    sll_int32                     :: fileid, filesize
+    integer                       :: fileid, filesize
     character(len=:), allocatable :: content
        
     open( newunit=fileid, file=filename,&
@@ -277,69 +303,33 @@ contains
 
     !get size of file
     inquire( file=filename, size=filesize )
-     if (filesize>0) then
- 
-       ! Allocate memory
-       allocate( character(len=filesize) :: content )
+      if (filesize>0) then
 
-       ! Read the whole file into one string
-       read( fileid, pos=1, iostat=error ) content 
+        ! Allocate memory
+        allocate( character(len=filesize) :: content )
 
-       if (error==0) then
-         !try to read more in case not everything was read
-         read( fileid, pos=filesize+1, iostat=error ) content
-         if (.not. IS_IOSTAT_END(error)) then
-           write(*,*) "ERROR: file ", filename, "was not completely read."
-         end if
-       else
-         write(*,*) 'ERROR reading file: ', filename
-       end if
+        ! Read the whole file into one string
+        read( fileid, pos=1, iostat=error ) content 
 
-     else
-       write(*,*) 'Error getting size of file: ', filename
-     end if
+        if (error==0) then
+          !try to read more in case not everything was read
+          read( fileid, pos=filesize+1, iostat=error ) content
+          if (.not. IS_IOSTAT_END(error)) then
+            write(*,*) "ERROR: file ", filename, "was not completely read."
+          end if
+        else
+          write(*,*) 'ERROR reading file: ', filename
+        end if
 
-   close( fileid )
+      else
+        write(*,*) 'Error getting size of file: ', filename
+      end if
 
-   call sll_hdf5_ser_write_char_array( handle, content, dsetname, error )
+    close( fileid )
+    call sll_hdf5_ser_write_char_array( handle, content, dsetname, error )
 
   end subroutine sll_s_hdf5_ser_write_file  
   
-
-!Gysela functions that can be useful for future
-!  ! HDF5 saving for an integer
-!  subroutine HDF5_integer_saving(file_id,int,dsetname)
-!  ! HDF5 saving for a real double
-!  subroutine HDF5_real_saving(file_id,rd,dsetname)
-!  ! HDF5 saving for a 1D array of integer
-!  subroutine HDF5_array1D_saving_int(file_id,array1D,dim1,dsetname)
-!  ! gzip HDF5 saving for a 1D array of real*4
-!  subroutine HDF5_array1D_saving_r4(file_id,array1D,dim1,dsetname)
-!  ! gzip HDF5 saving for a 1D array of real*8
-!  subroutine HDF5_array1D_saving(file_id,array1D,dim1,dsetname)
-!  ! gzip HDF5 saving for a 2D array double
-!  subroutine HDF5_array2D_saving(file_id,array2D,dim1,dim2,dsetname)
-!  ! gzip HDF5 saving for a 3D array double
-!  subroutine HDF5_array3D_saving(file_id,array3D,dim1,dim2,dim3,dsetname)
-!  ! gzip HDF5 saving for a 4D array
-!  subroutine HDF5_array4D_saving(file_id,array4d,dim1,dim2,dim3,dim4,dsetname)
-!  ! gzip HDF5 saving for a 5D array
-!  subroutine HDF5_array5D_saving(file_id,array5d,dim1,dim2,dim3,dim4,dim5,dsetname)
-!  
-!  ! HDF5 reading for an integer 
-!  subroutine HDF5_integer_reading(file_id,itg,dsetname)
-!  ! HDF5 reading for a real double
-!  subroutine HDF5_real_reading(file_id,rd,dsetname)
-!  ! HDF5 reading for an array 1D double
-!  subroutine HDF5_array1D_reading(file_id,array1D,dsetname)
-!  ! HDF5 reading for an array 2DS double
-!  subroutine HDF5_array2D_reading(file_id,array2D,dsetname)
-!  ! HDF5 reading for an array 3D double
-!  subroutine HDF5_array3D_reading(file_id,array3D,dsetname)
-!  ! HDF5 reading for an array 4D
-!  subroutine HDF5_array4D_reading(file_id,array4D,dsetname,error)
-!  ! HDF5 reading for an array 5D
-!  subroutine HDF5_array5D_reading(file_id,array5D,dsetname)
 
 #endif
 
