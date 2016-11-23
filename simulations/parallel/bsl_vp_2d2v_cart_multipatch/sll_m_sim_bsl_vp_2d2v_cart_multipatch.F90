@@ -41,10 +41,10 @@ module sll_m_sim_bsl_vp_2d2v_cart_multipatch
     sll_o_solve_mp
 
   use sll_m_hdf5_io_serial, only: &
-    sll_o_hdf5_file_close, &
-    sll_o_hdf5_file_create, &
-    sll_o_hdf5_write_array_1d, &
-    sll_o_hdf5_write_array_2d
+    sll_t_hdf5_ser_handle, &
+    sll_s_hdf5_ser_file_create, &
+    sll_s_hdf5_ser_file_close, &
+    sll_o_hdf5_ser_write_array
 
   use sll_m_remapper, only: &
     sll_t_layout_2d, &
@@ -1316,10 +1316,6 @@ contains
 
  !----------------------------------------------------
   subroutine writeHDF5_diag_qns( sim )
-   ! use sll_m_collective
-    use hdf5, only: hid_t
-    use sll_m_hdf5_io_serial, only: sll_o_hdf5_file_create, &
-      sll_o_hdf5_write_array_1d, sll_o_hdf5_file_close
     class(sll_t_simulation_4d_qns_general_multipatch), intent(inout) :: sim
 
     sll_int32 :: ix1_diag, ix2_diag
@@ -1339,10 +1335,10 @@ contains
     sll_real64, dimension(sim%count_save_diag + 1) :: diag_relative_error_nrj_tot_result
     
     !--> For initial profile HDF5 saving
-    integer             :: file_err
-    integer(hid_t)      :: hfile_id
-    character(len=80)   :: filename_HDF5
-    character(20), save :: numfmt = "'_d',i5.5"
+    integer                     :: file_err
+    type(sll_t_hdf5_ser_handle) :: hfile_id
+    character(len=80)           :: filename_HDF5
+    character(20), save         :: numfmt = "'_d',i5.5"
     
 !!$    ix1_diag   = int(sim%nc_x1/2)
 !!$    ix2_diag   = int(sim%nc_x2/3)
@@ -1436,34 +1432,34 @@ contains
 
     if (sim%my_rank.eq.0) then
       print*,'--> Save HDF5 file: ',filename_HDF5
-      call sll_o_hdf5_file_create(filename_HDF5,hfile_id,file_err)
-      call sll_o_hdf5_write_array_2d(hfile_id, &
+      call sll_s_hdf5_ser_file_create(filename_HDF5,hfile_id,file_err)
+      call sll_o_hdf5_ser_write_array(hfile_id, &
         sim%f_x1x2(:,:,iv1_diag,iv2_diag),'f2d_xy',file_err)
-      call sll_o_hdf5_write_array_2d(hfile_id, &
+      call sll_o_hdf5_ser_write_array(hfile_id, &
         sim%f_x3x4(ix1_diag,ix2_diag,:,:),'f2d_v1v2',file_err)
-      call sll_o_hdf5_write_array_1d(hfile_id,&
+      call sll_o_hdf5_ser_write_array(hfile_id,&
                           diag_nrj_kin_result(:),'nrj_kin',file_err)
-      call sll_o_hdf5_write_array_1d(hfile_id,&
+      call sll_o_hdf5_ser_write_array(hfile_id,&
                           diag_nrj_pot_result(:),'nrj_pot',file_err)
-      call sll_o_hdf5_write_array_1d(hfile_id,&
+      call sll_o_hdf5_ser_write_array(hfile_id,&
                           diag_nrj_tot_result(:),'nrj_tot',file_err)
-      call sll_o_hdf5_write_array_1d(hfile_id,&
+      call sll_o_hdf5_ser_write_array(hfile_id,&
                           diag_relative_error_nrj_tot_result(:),&
                           'relative_error_nrj_tot',file_err)
-      call sll_o_hdf5_write_array_1d(hfile_id,&
+      call sll_o_hdf5_ser_write_array(hfile_id,&
                           diag_masse_result(:),&
                           'masse',file_err)
-      call sll_o_hdf5_write_array_1d(hfile_id,&
+      call sll_o_hdf5_ser_write_array(hfile_id,&
                           diag_norm_L1_result(:),'L1_norm',file_err)
-      call sll_o_hdf5_write_array_1d(hfile_id,&
+      call sll_o_hdf5_ser_write_array(hfile_id,&
                           diag_norm_L2_result(:),'L2_norm',file_err)
-      call sll_o_hdf5_write_array_1d(hfile_id,&
+      call sll_o_hdf5_ser_write_array(hfile_id,&
                           diag_norm_Linf_result(:),'Linf_norm',file_err)
-      call sll_o_hdf5_write_array_1d(hfile_id,&
+      call sll_o_hdf5_ser_write_array(hfile_id,&
                           diag_entropy_kin_result(:),'entropy_kin',file_err)
-      ! call sll_o_hdf5_write_array_2d(hfile_id,sim%point_x(:,:),'X_coord',file_err)
-      ! call sll_o_hdf5_write_array_2d(hfile_id,sim%point_y(:,:),'Y_coord',file_err)
-      call sll_o_hdf5_file_close(hfile_id,file_err)
+      ! call sll_o_hdf5_ser_write_array(hfile_id,sim%point_x(:,:),'X_coord',file_err)
+      ! call sll_o_hdf5_ser_write_array(hfile_id,sim%point_y(:,:),'Y_coord',file_err)
+      call sll_s_hdf5_ser_file_close(hfile_id,file_err)
       
     end if
     sim%count_save_diag = sim%count_save_diag + 1
