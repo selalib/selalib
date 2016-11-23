@@ -23,10 +23,10 @@ module sll_m_sim_bsl_vp_2d2v_cart
     sll_t_simple_cartesian_4d_mesh
 
   use sll_m_hdf5_io_parallel, only: &
-    sll_t_hdf5_handle,      &
-    sll_o_hdf5_file_create, &
-    sll_o_hdf5_file_close,  &
-    sll_o_hdf5_write_array
+    sll_t_hdf5_par_handle,      &
+    sll_s_hdf5_par_file_create, &
+    sll_s_hdf5_par_file_close,  &
+    sll_o_hdf5_par_write_array
 
   use sll_m_interpolators_1d_base, only: &
     sll_c_interpolator_1d
@@ -1063,7 +1063,7 @@ contains
     sll_real64 :: delta_x4 
 
     sll_int32                  :: xml_file_id
-    type(sll_t_hdf5_handle)    :: hdf_file_id
+    type(sll_t_hdf5_par_handle)    :: hdf_file_id
     integer(i64), dimension(2) :: array_dims 
     integer(i64), dimension(2) :: offset 
 
@@ -1115,11 +1115,11 @@ contains
              end do
           end do
        
-          call sll_o_hdf5_file_create("mesh_x"//c_layout//"_seq.h5",&
+          call sll_s_hdf5_par_file_create("mesh_x"//c_layout//"_seq.h5",&
           sll_v_world_collective%comm, hdf_file_id, error )
-          call sll_o_hdf5_write_array( hdf_file_id, array_dims, offset, x1, "x1", error )
-          call sll_o_hdf5_write_array( hdf_file_id, array_dims, offset, x2, "x2", error )
-          call sll_o_hdf5_file_close ( hdf_file_id, error)
+          call sll_o_hdf5_par_write_array( hdf_file_id, array_dims, offset, x1, "x1", error )
+          call sll_o_hdf5_par_write_array( hdf_file_id, array_dims, offset, x2, "x2", error )
+          call sll_s_hdf5_par_file_close ( hdf_file_id, error)
 
           deallocate(x1)
           deallocate(x2)
@@ -1129,23 +1129,23 @@ contains
        call sll_s_int2string(itime, ctime)
        c_layout = char(i_layout+48)
 
-       call sll_o_hdf5_file_create( "fields_x"//c_layout//"-"//ctime//".h5", &
+       call sll_s_hdf5_par_file_create( "fields_x"//c_layout//"-"//ctime//".h5", &
                                  sll_v_world_collective%comm, &
                                  hdf_file_id, error)
 
        if (i_layout == 1) then
-          call sll_o_hdf5_write_array( hdf_file_id, array_dims, offset, sim%rho_x1, &
+          call sll_o_hdf5_par_write_array( hdf_file_id, array_dims, offset, sim%rho_x1, &
                                     "rho_x"//c_layout, error )
-          call sll_o_hdf5_write_array( hdf_file_id, array_dims, offset, sim%phi_x1, &
+          call sll_o_hdf5_par_write_array( hdf_file_id, array_dims, offset, sim%phi_x1, &
                                     "phi_x"//c_layout, error )
        else
-          call sll_o_hdf5_write_array( hdf_file_id, array_dims, offset, sim%rho_x2, &
+          call sll_o_hdf5_par_write_array( hdf_file_id, array_dims, offset, sim%rho_x2, &
                                     "rho_x"//c_layout, error )
-          call sll_o_hdf5_write_array( hdf_file_id, array_dims, offset, sim%phi_x2, &
+          call sll_o_hdf5_par_write_array( hdf_file_id, array_dims, offset, sim%phi_x2, &
                                     "phi_x"//c_layout, error )
        end if
 
-       call sll_o_hdf5_file_close( hdf_file_id,error )
+       call sll_s_hdf5_par_file_close( hdf_file_id,error )
    
        if (my_rank == 0) then
           

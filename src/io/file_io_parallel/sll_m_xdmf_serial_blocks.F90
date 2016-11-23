@@ -45,13 +45,11 @@ module sll_m_xdmf_serial_blocks
     mpi_status_size
 
 #ifndef NOHDF5
-  use hdf5, only: &
-    hid_t
-
   use sll_m_hdf5_io_serial, only: &
-    sll_o_hdf5_file_close, &
-    sll_o_hdf5_file_create, &
-    sll_o_hdf5_write_array
+    sll_t_hdf5_ser_handle, &
+    sll_s_hdf5_ser_file_create, &
+    sll_s_hdf5_ser_file_close, &
+    sll_o_hdf5_ser_write_array
 
 #endif
   implicit none
@@ -96,7 +94,7 @@ contains
     sll_int32                    :: prank   !< processor number id
     character(len=4)             :: crank
 #ifndef NOHDF5
-    integer(HID_T)               :: h5file_id
+    type(sll_t_hdf5_ser_handle)  :: h5file_id  !< hdf5 file handle
 #endif
     
     call MPI_COMM_RANK(MPI_COMM_WORLD,prank,error)
@@ -105,10 +103,10 @@ contains
      call sll_s_xml_file_create(trim(prefix)//".xmf",xmf,error)
     end if
 #ifndef NOHDF5
-    call sll_o_hdf5_file_create(trim(prefix)//"-mesh-"//crank//".h5",h5file_id,error)
-    call sll_o_hdf5_write_array(h5file_id,x1,"/x1",error)
-    call sll_o_hdf5_write_array(h5file_id,x2,"/x2",error)
-    call sll_o_hdf5_file_close(h5file_id, error)
+    call sll_s_hdf5_ser_file_create(trim(prefix)//"-mesh-"//crank//".h5",h5file_id,error)
+    call sll_o_hdf5_ser_write_array( h5file_id, x1, "/x1", error )
+    call sll_o_hdf5_ser_write_array( h5file_id, x2, "/x2", error )
+    call sll_s_hdf5_ser_file_close( h5file_id, error )
 #endif
 
   end subroutine sll_s_xdmf_open_serial_blocks
@@ -123,7 +121,7 @@ contains
    sll_real64, intent(in)          :: array(:,:) !< data array
    character(len=*), intent(in)    :: array_name !< name of the field
 #ifndef NOHDF5
-   integer(HID_T)                  :: file_id    !< data file unit number
+   type(sll_t_hdf5_ser_handle)     :: h5file_id  !< hdf5 file handle
 #endif
    sll_int32                       :: npts_x1    !< nodes number x
    sll_int32                       :: npts_x2    !< nodes number y
@@ -142,9 +140,9 @@ contains
    call sll_s_int2string(prank,crank)
 
 #ifndef NOHDF5
-   call sll_o_hdf5_file_create(trim(prefix)//"-"//crank//".h5",file_id,error)
-   call sll_o_hdf5_write_array(file_id,array,"/"//trim(array_name),error)
-   call sll_o_hdf5_file_close(file_id, error)
+   call sll_s_hdf5_ser_file_create( trim(prefix)//"-"//crank//".h5", h5file_id, error )
+   call sll_o_hdf5_ser_write_array( h5file_id, array, "/"//trim(array_name), error )
+   call sll_s_hdf5_ser_file_close( h5file_id, error )
 #endif
 
    npts_x1 = size(array,1)

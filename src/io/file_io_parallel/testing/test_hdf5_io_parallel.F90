@@ -10,12 +10,12 @@ program test_hdf5_io_parallel
 #include "sll_working_precision.h"
 
   use sll_m_hdf5_io_parallel, only: &
-    sll_t_hdf5_handle,      &
-    sll_o_hdf5_file_create, &
-    sll_o_hdf5_file_close,  &
-    sll_o_hdf5_file_open,   &
-    sll_o_hdf5_write_array, &
-    sll_o_hdf5_read_array
+    sll_t_hdf5_par_handle,      &
+    sll_s_hdf5_par_file_create, &
+    sll_s_hdf5_par_file_close,  &
+    sll_s_hdf5_par_file_open,   &
+    sll_o_hdf5_par_write_array, &
+    sll_o_hdf5_par_read_array
 
   use sll_mpi, only: &
     mpi_comm_world, &
@@ -40,7 +40,7 @@ program test_hdf5_io_parallel
   integer :: psize, prank
 
   ! SELALIB variables
-  type(sll_t_hdf5_handle) :: fid
+  type(sll_t_hdf5_par_handle) :: fid
   integer                 :: ferror
   real(f64), allocatable  :: a(:,:) !  Local data to write
   real(f64), allocatable  :: b(:,:) ! Global data to read
@@ -102,11 +102,11 @@ program test_hdf5_io_parallel
   a(:,:) = real( prank, f64 )
 
   ! Create parallel HDF5 file
-  call sll_o_hdf5_file_create( fname, pcomm, fid, ferror )
+  call sll_s_hdf5_par_file_create( fname, pcomm, fid, ferror )
   SLL_ASSERT( ferror == 0 )
 
   ! Parallel write array to file
-  call sll_o_hdf5_write_array( &
+  call sll_o_hdf5_par_write_array( &
     handle      = fid, &
     global_size = int( dset_dims, i64 ), &
     offset      = int(    offset, i64 ), &
@@ -116,7 +116,7 @@ program test_hdf5_io_parallel
   SLL_ASSERT( ferror == 0 )
 
   ! Close file
-  call sll_o_hdf5_file_close( fid, ferror )
+  call sll_s_hdf5_par_file_close( fid, ferror )
   SLL_ASSERT( ferror == 0 )
 
   ! Allocate memory for reading data from file
@@ -124,15 +124,15 @@ program test_hdf5_io_parallel
   b(:,:) = -1.0_f64
 
   ! Read file in parallel
-  call sll_o_hdf5_file_open( fname, pcomm, fid, ferror )
-  call sll_o_hdf5_read_array( &
+  call sll_s_hdf5_par_file_open( fname, pcomm, fid, ferror )
+  call sll_o_hdf5_par_read_array( &
     handle      = fid, &
     global_size = int( dset_dims, i64 ), &
     offset      = int( offset   , i64 ), &
     array       = b, &
     dsetname    = dsetname, &
     error       = ferror )
-  call sll_o_hdf5_file_close( fid, ferror )
+  call sll_s_hdf5_par_file_close( fid, ferror )
 
   ! Check correctness of file
   do i = 1, block(1)

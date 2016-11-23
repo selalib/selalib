@@ -50,13 +50,11 @@ module sll_m_sim_bsl_dk_3d1v_curv
     sll_f_new_general_elliptic_solver, &
     sll_o_solve
 
-  use hdf5, only: hid_t
   use sll_m_hdf5_io_serial, only: &
-    sll_o_hdf5_file_close, &
-    sll_o_hdf5_file_create, &
-    sll_o_hdf5_write_array_1d, &
-    sll_o_hdf5_write_array_2d, &
-    sll_o_hdf5_write_array_3d
+    sll_t_hdf5_ser_handle, &
+    sll_s_hdf5_ser_file_create, &
+    sll_s_hdf5_ser_file_close, &
+    sll_o_hdf5_ser_write_array
 
   use sll_m_remapper, only: &
     sll_o_apply_remap_3d, &
@@ -2085,36 +2083,36 @@ contains
   !------------------------------------------------------------
   subroutine writeHDF5_equilibrium_state( sim )
 
-    use sll_m_hdf5_io_serial, only: sll_o_hdf5_file_create, &
-        sll_o_hdf5_write_array_1d, sll_o_hdf5_file_close
+    use sll_m_hdf5_io_serial, only: sll_s_hdf5_ser_file_create, &
+        sll_o_hdf5_ser_write_array, sll_s_hdf5_ser_file_close
 
     type(sll_t_simulation_4d_dk_hybrid), intent(inout) :: sim
 
     !--> For initial equilibrium state HDF5 saving
     integer                      :: file_err
-    integer(hid_t)               :: file_id
+    type(sll_t_hdf5_ser_handle)  :: file_id
     character(len=13), parameter :: filename_prof = "init_state.h5"
 
     if (sim%my_rank.eq.0) then
-      call sll_o_hdf5_file_create(filename_prof,file_id,file_err)
+      call sll_s_hdf5_ser_file_create(filename_prof,file_id,file_err)
       !--> Saving of the 1D radial profiles of 
       !-->  temperatures and density
-      call sll_o_hdf5_write_array_1d(file_id,sim%r_grid,'r_grid',file_err)
-      call sll_o_hdf5_write_array_1d(file_id,sim%n0_r,'n0_r',file_err)
-      call sll_o_hdf5_write_array_1d(file_id,sim%Ti_r,'Ti_r',file_err)
-      call sll_o_hdf5_write_array_1d(file_id,sim%Te_r,'Te_r',file_err)
+      call sll_o_hdf5_ser_write_array(file_id,sim%r_grid,'r_grid',file_err)
+      call sll_o_hdf5_ser_write_array(file_id,sim%n0_r,'n0_r',file_err)
+      call sll_o_hdf5_ser_write_array(file_id,sim%Ti_r,'Ti_r',file_err)
+      call sll_o_hdf5_ser_write_array(file_id,sim%Te_r,'Te_r',file_err)
 
       !--> Saving of the 2D (x,y) profiles of 
       !-->  temperatures and density
-      call sll_o_hdf5_write_array_2d(file_id,sim%xgrid_2d,'xgrid_2d',file_err)
-      call sll_o_hdf5_write_array_2d(file_id,sim%ygrid_2d,'ygrid_2d',file_err)
-      call sll_o_hdf5_write_array_2d(file_id,sim%n0_xy,'n0_xy',file_err)
-      call sll_o_hdf5_write_array_2d(file_id,sim%Ti_xy,'Ti_xy',file_err)
-      call sll_o_hdf5_write_array_2d(file_id,sim%Te_xy,'Te_xy',file_err)
-      call sll_o_hdf5_write_array_2d(file_id,sim%B_xy,'B_xy',file_err)
+      call sll_o_hdf5_ser_write_array(file_id,sim%xgrid_2d,'xgrid_2d',file_err)
+      call sll_o_hdf5_ser_write_array(file_id,sim%ygrid_2d,'ygrid_2d',file_err)
+      call sll_o_hdf5_ser_write_array(file_id,sim%n0_xy,'n0_xy',file_err)
+      call sll_o_hdf5_ser_write_array(file_id,sim%Ti_xy,'Ti_xy',file_err)
+      call sll_o_hdf5_ser_write_array(file_id,sim%Te_xy,'Te_xy',file_err)
+      call sll_o_hdf5_ser_write_array(file_id,sim%B_xy,'B_xy',file_err)
       !---> Saving of the 3D equilibrium function feq(x,y,vpar)
-      call sll_o_hdf5_write_array_3d(file_id,sim%feq_xyvpar,'feq_xyvpar',file_err)
-      call sll_o_hdf5_file_close(file_id,file_err)
+      call sll_o_hdf5_ser_write_array(file_id,sim%feq_xyvpar,'feq_xyvpar',file_err)
+      call sll_s_hdf5_ser_file_close(file_id,file_err)
     end if
 
   end subroutine writeHDF5_equilibrium_state
@@ -2130,11 +2128,8 @@ contains
   !--------------------------------------------------------------
 
   subroutine writeHDF5_cross_section_diag( sim,diag_num )
-   ! use sll_m_collective
-    use sll_m_hdf5_io_serial, only: sll_o_hdf5_file_create, &
-      sll_o_hdf5_write_array_1d, sll_o_hdf5_file_close
     class(sll_t_simulation_4d_dk_hybrid), intent(inout) :: sim
-    sll_int32                         , intent(in)    :: diag_num
+    sll_int32                           , intent(in)    :: diag_num
 
     sll_int32  :: ix1_diag, ix2_diag
     sll_int32  :: ix3_diag, ivpar_diag
@@ -2142,10 +2137,10 @@ contains
     sll_real64, dimension(1) :: iter_time_tmp
 
     !--> For initial profile HDF5 saving
-    integer             :: file_err
-    integer(hid_t)      :: file_id
-    character(len=80)   :: filename_HDF5
-    character(20), save :: numfmt = "'_d',i5.5"
+    integer                     :: file_err
+    type(sll_t_hdf5_ser_handle) :: file_id
+    character(len=80)           :: filename_HDF5
+    character(20), save         :: numfmt = "'_d',i5.5"
     
     ix1_diag   = int(sim%Neta1/2)
     ix2_diag   = int(sim%Neta2/3)
@@ -2157,46 +2152,46 @@ contains
 
     if (sim%my_rank.eq.0) then
       print*,'--> Save HDF5 file: ',filename_HDF5
-      call sll_o_hdf5_file_create(filename_HDF5,file_id,file_err)
+      call sll_s_hdf5_ser_file_create(filename_HDF5,file_id,file_err)
       !---> Time
       iter_time_tmp = sim%iter_time
-      call sll_o_hdf5_write_array_1d(file_id, &
+      call sll_o_hdf5_ser_write_array(file_id, &
         iter_time_tmp,'time_diag',file_err)
       !---> Mesh 1D
-      call sll_o_hdf5_write_array_1d(file_id, &
+      call sll_o_hdf5_ser_write_array(file_id, &
         sim%eta1_grid,'eta1_grid',file_err)
-      call sll_o_hdf5_write_array_1d(file_id, &
+      call sll_o_hdf5_ser_write_array(file_id, &
         sim%eta2_grid,'eta2_grid',file_err)
-      call sll_o_hdf5_write_array_1d(file_id, &
+      call sll_o_hdf5_ser_write_array(file_id, &
         sim%eta3_grid,'eta3_grid',file_err)
-      call sll_o_hdf5_write_array_1d(file_id, &
+      call sll_o_hdf5_ser_write_array(file_id, &
         sim%vpar_grid,'vpar_grid',file_err)
       !---> Mesh 2D
-      call sll_o_hdf5_write_array_2d(file_id, &
+      call sll_o_hdf5_ser_write_array(file_id, &
         sim%xgrid_2d,'xgrid_2d',file_err)
-      call sll_o_hdf5_write_array_2d(file_id, &
+      call sll_o_hdf5_ser_write_array(file_id, &
         sim%ygrid_2d,'ygrid_2d',file_err)
       !---> RHS of QN equation
-      call sll_o_hdf5_write_array_2d(file_id, &
+      call sll_o_hdf5_ser_write_array(file_id, &
         sim%rho3d_seqx1x2(:,:,ix3_diag),'rho2d_xy',file_err)
       !---> Electrostatic potential
-      call sll_o_hdf5_write_array_2d(file_id, &
+      call sll_o_hdf5_ser_write_array(file_id, &
         sim%Phi3d_seqx1x2(:,:,ix3_diag),'phi2d_xy',file_err)
       !---> Electric field
-      call sll_o_hdf5_write_array_2d(file_id, &
+      call sll_o_hdf5_ser_write_array(file_id, &
         sim%E3d_eta1_seqx1x2(:,:,ix3_diag),'E2d_eta1_xy',file_err)
-      call sll_o_hdf5_write_array_2d(file_id, &
+      call sll_o_hdf5_ser_write_array(file_id, &
         sim%E3d_eta2_seqx1x2(:,:,ix3_diag),'E2d_eta2_xy',file_err)
-      call sll_o_hdf5_write_array_2d(file_id, &
+      call sll_o_hdf5_ser_write_array(file_id, &
         sim%E3d_x1_seqx1x2(:,:,ix3_diag),'E2d_x1_xy',file_err)
-      call sll_o_hdf5_write_array_2d(file_id, &
+      call sll_o_hdf5_ser_write_array(file_id, &
         sim%E3d_x2_seqx1x2(:,:,ix3_diag),'E2d_x2_xy',file_err)
       !---> Distribution function
-      call sll_o_hdf5_write_array_2d(file_id, &
+      call sll_o_hdf5_ser_write_array(file_id, &
         sim%f4d_seqx1x2(:,:,ix3_diag,ivpar_diag),'f2d_xy',file_err)
-      call sll_o_hdf5_write_array_2d(file_id, &
+      call sll_o_hdf5_ser_write_array(file_id, &
         sim%f4d_seqx3x4(ix1_diag,ix2_diag,:,:),'f2d_zvpar',file_err)
-      call sll_o_hdf5_file_close(file_id,file_err)
+      call sll_s_hdf5_ser_file_close(file_id,file_err)
     end if
 
   end subroutine writeHDF5_cross_section_diag
@@ -2207,8 +2202,8 @@ contains
   !----------------------------------------------------
   subroutine writeHDF5_conservation_laws( sim,nb_diag_tmp )
 
-    use sll_m_hdf5_io_serial, only: sll_o_hdf5_file_create, &
-      sll_o_hdf5_write_array_1d, sll_o_hdf5_file_close
+    use sll_m_hdf5_io_serial, only: sll_s_hdf5_ser_file_create, &
+      sll_o_hdf5_ser_write_array, sll_s_hdf5_ser_file_close
 
     class(sll_t_simulation_4d_dk_hybrid), intent(inout) :: sim
     sll_int32,intent(in)  :: nb_diag_tmp
@@ -2233,8 +2228,8 @@ contains
     sll_real64 :: dum
     
     !--> For conservation law HDF5 saving
-    integer             :: file_err
-    integer(hid_t)      :: file_id
+    integer                      :: file_err
+    type(sll_t_hdf5_ser_handle)  :: file_id
     character(len=20), parameter :: filename_CL = "conservation_laws.h5"
 
   
@@ -2353,34 +2348,34 @@ contains
     
     if (sim%my_rank.eq.0) then
        print*,'--> Save HDF5 file: ',filename_CL
-       call sll_o_hdf5_file_create(filename_CL,file_id,file_err)
-       call sll_o_hdf5_write_array_1d(file_id,&
+       call sll_s_hdf5_ser_file_create(filename_CL,file_id,file_err)
+       call sll_o_hdf5_ser_write_array(file_id,&
             sim%time_evol(1:nb_diag_tmp),'time_evol',file_err)
-       call sll_o_hdf5_write_array_1d(file_id,&
+       call sll_o_hdf5_ser_write_array(file_id,&
             diag_nrj_kin_tmp(:),'nrj_kin',file_err)
-       call sll_o_hdf5_write_array_1d(file_id,&
+       call sll_o_hdf5_ser_write_array(file_id,&
             diag_nrj_pot_tmp(:),'nrj_pot',file_err)
-       call sll_o_hdf5_write_array_1d(file_id,&
+       call sll_o_hdf5_ser_write_array(file_id,&
             diag_nrj_tot_tmp(:),'nrj_tot',file_err)
-       call sll_o_hdf5_write_array_1d(file_id,&
+       call sll_o_hdf5_ser_write_array(file_id,&
             diag_relative_error_nrj_tot_tmp(:),&
             'relative_error_nrj_tot',file_err)
-       call sll_o_hdf5_write_array_1d(file_id,&
+       call sll_o_hdf5_ser_write_array(file_id,&
             diag_heat_flux_tmp(:),'heat_flux',file_err)
-       call sll_o_hdf5_write_array_1d(file_id,&
+       call sll_o_hdf5_ser_write_array(file_id,&
             diag_mass_tmp(:),&
             'mass',file_err)
-       call sll_o_hdf5_write_array_1d(file_id,&
+       call sll_o_hdf5_ser_write_array(file_id,&
             diag_norm_L1_tmp(:),'L1_norm',file_err)
-       call sll_o_hdf5_write_array_1d(file_id,&
+       call sll_o_hdf5_ser_write_array(file_id,&
             diag_norm_L2_tmp(:),'L2_norm',file_err)
-       call sll_o_hdf5_write_array_1d(file_id,&
+       call sll_o_hdf5_ser_write_array(file_id,&
             diag_norm_Linf_tmp(:),'Linf_norm',file_err)
-       call sll_o_hdf5_write_array_1d(file_id,&
+       call sll_o_hdf5_ser_write_array(file_id,&
             diag_entropy_kin_tmp(:),'entropy_kin',file_err)
-       call sll_o_hdf5_write_array_1d(file_id,&
+       call sll_o_hdf5_ser_write_array(file_id,&
             diag_phisquare_tmp(:),'phisquare',file_err)
-       call sll_o_hdf5_file_close(file_id,file_err)
+       call sll_s_hdf5_ser_file_close(file_id,file_err)
     end if
 
     SLL_DEALLOCATE(diag_mass_tmp,ierr)
