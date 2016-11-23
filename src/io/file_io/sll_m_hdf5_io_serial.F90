@@ -33,6 +33,8 @@ module sll_m_hdf5_io_serial
     h5close_f, &
     h5dclose_f, &
     h5dcreate_f, &
+    h5dopen_f, &
+    h5dread_f, &
     h5dwrite_f, &
     h5f_acc_rdonly_f, &
     h5f_acc_rdwr_f, &
@@ -58,6 +60,7 @@ module sll_m_hdf5_io_serial
     sll_s_hdf5_ser_file_open,   &
     sll_s_hdf5_ser_file_close,  &
     sll_o_hdf5_ser_write_array, &
+    sll_o_hdf5_ser_read_array,  &
     sll_s_hdf5_ser_write_file
 
   private
@@ -84,6 +87,21 @@ module sll_m_hdf5_io_serial
      module procedure sll_hdf5_ser_write_int_array_1d
      module procedure sll_hdf5_ser_write_int_array_2d
      module procedure sll_hdf5_ser_write_int_array_3d
+  end interface
+
+  !-----------------------------------------------------------------------------
+  !> @brief
+  !> Read nD array of double precision floats or integers from HDF5 file
+  !>
+  !> @param[in]  handle    file handle
+  !> @param[out] array     multi-dimensional array
+  !> @param[in]  dsetname  HDF5 dataset name
+  !> @param[out] error     HDF5 error code
+  !-----------------------------------------------------------------------------
+  interface sll_o_hdf5_ser_read_array
+    module procedure sll_hdf5_ser_read_dble_array_1d
+    module procedure sll_hdf5_ser_read_dble_array_2d
+    module procedure sll_hdf5_ser_read_dble_array_3d
   end interface
 
 contains
@@ -237,7 +255,55 @@ contains
 #undef   DATATYPE
 
   end subroutine sll_hdf5_ser_write_dble_array_3d
-  
+
+  !-----------------------------------------------------------------------------
+  !> Read 1D array of float64 from HDF5 file
+  !-----------------------------------------------------------------------------
+  subroutine sll_hdf5_ser_read_dble_array_1d( handle, array, dsetname, error )
+    integer, parameter                         :: rank = 1
+    type(sll_t_hdf5_ser_handle), intent(in   ) :: handle
+    real(f64)                  , intent(  out) :: array(:)
+    character(len=*)           , intent(in   ) :: dsetname
+    integer                    , intent(  out) :: error
+
+#define  DATATYPE  H5T_NATIVE_DOUBLE
+#include "sll_k_hdf5_ser_read_array.F90"
+#undef   DATATYPE
+
+  end subroutine sll_hdf5_ser_read_dble_array_1d
+
+  !-----------------------------------------------------------------------------
+  !> Read 2D array of float64 from HDF5 file
+  !-----------------------------------------------------------------------------
+  subroutine sll_hdf5_ser_read_dble_array_2d( handle, array, dsetname, error )
+    integer, parameter                         :: rank = 2
+    type(sll_t_hdf5_ser_handle), intent(in   ) :: handle
+    real(f64)                  , intent(  out) :: array(:,:)
+    character(len=*)           , intent(in   ) :: dsetname
+    integer                    , intent(  out) :: error
+
+#define  DATATYPE  H5T_NATIVE_DOUBLE
+#include "sll_k_hdf5_ser_read_array.F90"
+#undef   DATATYPE
+
+  end subroutine sll_hdf5_ser_read_dble_array_2d
+
+  !-----------------------------------------------------------------------------
+  !> Read 3D array of float64 from HDF5 file
+  !-----------------------------------------------------------------------------
+  subroutine sll_hdf5_ser_read_dble_array_3d( handle, array, dsetname, error )
+    integer, parameter                         :: rank = 3
+    type(sll_t_hdf5_ser_handle), intent(in   ) :: handle
+    real(f64)                  , intent(  out) :: array(:,:,:)
+    character(len=*)           , intent(in   ) :: dsetname
+    integer                    , intent(  out) :: error
+
+#define  DATATYPE  H5T_NATIVE_DOUBLE
+#include "sll_k_hdf5_ser_read_array.F90"
+#undef   DATATYPE
+
+  end subroutine sll_hdf5_ser_read_dble_array_3d
+
   !-----------------------------------------------------------------------------
   !> Write Fortran string to HDF5 file as 1D array of characters
   !>
