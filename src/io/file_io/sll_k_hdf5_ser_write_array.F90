@@ -1,8 +1,8 @@
-integer(HSIZE_T) :: array_dims(rank)
-integer(HID_T)   :: dataset_id
-integer(HID_T)   :: dataspace_id
+integer(hsize_t) :: array_dims(rank)
+integer(hid_t)   :: dataset_id
+integer(hid_t)   :: dataspace_id
 
-array_dims = int( shape(array), HSIZE_T )
+array_dims = int( shape(array), hsize_t )
 
 ! Create dataspace
 call h5screate_simple_f( rank, array_dims, dataspace_id, error )
