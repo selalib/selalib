@@ -101,12 +101,11 @@ module sll_m_sim_bsl_dk_3d1v_polar
     sll_o_gnuplot_1d, &
     sll_o_gnuplot_2d
 
-  use hdf5, only: hid_t
   use sll_m_hdf5_io_serial, only: &
-    sll_o_hdf5_file_close, &
-    sll_o_hdf5_file_create, &
-    sll_o_hdf5_write_array, &
-    sll_o_hdf5_write_array_1d
+    sll_t_hdf5_ser_handle, &
+    sll_s_hdf5_ser_file_create, &
+    sll_s_hdf5_ser_file_close, &
+    sll_o_hdf5_ser_write_array
 
   use sll_m_interpolators_1d_base, only: &
     sll_c_interpolator_1d
@@ -844,7 +843,7 @@ contains
     class(sll_t_simulation_4d_drift_kinetic_polar), intent(inout) :: sim
     !--> For initial profile HDF5 saving
     integer                      :: file_err
-    integer(hid_t)               :: hfile_id
+    type(sll_t_hdf5_ser_handle)  :: hfile_id
     character(len=12), parameter :: filename_prof = "init_prof.h5"
     sll_real64,dimension(:,:,:,:), allocatable :: f4d_store
     sll_int32 :: loc4d_sz_x1
@@ -876,11 +875,11 @@ contains
 
     !*** Saving of the radial profiles in HDF5 file ***
     if (sll_f_get_collective_rank(sll_v_world_collective)==0) then
-      call sll_o_hdf5_file_create(filename_prof,hfile_id,file_err)
-      call sll_o_hdf5_write_array_1d(hfile_id,sim%n0_r,'n0_r',file_err)
-      call sll_o_hdf5_write_array_1d(hfile_id,sim%Ti_r,'Ti_r',file_err)
-      call sll_o_hdf5_write_array_1d(hfile_id,sim%Te_r,'Te_r',file_err)
-      call sll_o_hdf5_file_close(hfile_id,file_err)
+      call sll_s_hdf5_ser_file_create(filename_prof,hfile_id,file_err)
+      call sll_o_hdf5_ser_write_array(hfile_id,sim%n0_r,'n0_r',file_err)
+      call sll_o_hdf5_ser_write_array(hfile_id,sim%Ti_r,'Ti_r',file_err)
+      call sll_o_hdf5_ser_write_array(hfile_id,sim%Te_r,'Te_r',file_err)
+      call sll_s_hdf5_ser_file_close(hfile_id,file_err)
       
       ierr = 1
       call sll_o_gnuplot_1d(sim%n0_r,'n0_r_init',ierr)
@@ -1933,21 +1932,19 @@ contains
   ! Save the mesh structure
   !---------------------------------------------------
   subroutine plot_f_polar(iplot,f,m_x1,m_x2)
-    use sll_m_xdmf
-    use hdf5, only: hid_t
-    use sll_m_hdf5_io_serial
+    sll_int32, intent(in) :: iplot
+    sll_real64, dimension(:,:), intent(in) :: f
+    type(sll_t_cartesian_mesh_1d), pointer :: m_x1
+    type(sll_t_cartesian_mesh_1d), pointer :: m_x2
+
     sll_int32 :: file_id
-    integer(hid_t) :: hfile_id
+    type(sll_t_hdf5_ser_handle)  :: hfile_id
     sll_int32 :: error
     sll_real64, dimension(:,:), allocatable :: x1
     sll_real64, dimension(:,:), allocatable :: x2
     sll_int32 :: i, j
-    sll_int32, intent(in) :: iplot
     character(len=4)      :: cplot
     sll_int32             :: nnodes_x1, nnodes_x2
-    type(sll_t_cartesian_mesh_1d), pointer :: m_x1
-    type(sll_t_cartesian_mesh_1d), pointer :: m_x2
-    sll_real64, dimension(:,:), intent(in) :: f
     sll_real64 :: r
     sll_real64 :: theta
     sll_real64 :: rmin
@@ -1979,12 +1976,12 @@ contains
           x2(i,j) = r*sin(theta)
         end do
       end do
-      call sll_o_hdf5_file_create("polar_mesh-x1.h5",hfile_id,error)
-      call sll_o_hdf5_write_array(hfile_id,x1,"/x1",error)
-      call sll_o_hdf5_file_close(hfile_id, error)
-      call sll_o_hdf5_file_create("polar_mesh-x2.h5",hfile_id,error)
-      call sll_o_hdf5_write_array(hfile_id,x2,"/x2",error)
-      call sll_o_hdf5_file_close(hfile_id, error)
+      call sll_s_hdf5_ser_file_create("polar_mesh-x1.h5",hfile_id,error)
+      call sll_o_hdf5_ser_write_array(hfile_id,x1,"/x1",error)
+      call sll_s_hdf5_ser_file_close(hfile_id, error)
+      call sll_s_hdf5_ser_file_create("polar_mesh-x2.h5",hfile_id,error)
+      call sll_o_hdf5_ser_write_array(hfile_id,x2,"/x2",error)
+      call sll_s_hdf5_ser_file_close(hfile_id, error)
       deallocate(x1)
       deallocate(x2)
 
