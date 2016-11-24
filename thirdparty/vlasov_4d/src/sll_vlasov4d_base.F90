@@ -237,7 +237,7 @@ contains
   sll_int32                             :: psize
   sll_int32                             :: prank
   sll_int32                             :: comm
-  sll_int32                             :: file_id
+  type(sll_t_hdf5_ser_handle)           :: file_id
   sll_real64, dimension(:), allocatable :: eta1
   sll_real64, dimension(:), allocatable :: eta2
   sll_real64, dimension(:), allocatable :: eta3
@@ -314,12 +314,12 @@ contains
      print *,'Printing layout p (for plotting): '
      call sll_o_view_lims(this%layout_p)
 
-     call sll_o_hdf5_file_create("mesh4d.h5",file_id,error)
-     call sll_o_hdf5_write_array(file_id,eta1,"/x1",error)
-     call sll_o_hdf5_write_array(file_id,eta2,"/x2",error)
-     call sll_o_hdf5_write_array(file_id,eta3,"/x3",error)
-     call sll_o_hdf5_write_array(file_id,eta4,"/x4",error)
-     call sll_o_hdf5_file_close(file_id, error)
+     call sll_s_hdf5_ser_file_create("mesh4d.h5",file_id,error)
+     call sll_o_hdf5_ser_write_array(file_id,eta1,"/x1",error)
+     call sll_o_hdf5_ser_write_array(file_id,eta2,"/x2",error)
+     call sll_o_hdf5_ser_write_array(file_id,eta3,"/x3",error)
+     call sll_o_hdf5_ser_write_array(file_id,eta4,"/x4",error)
+     call sll_s_hdf5_ser_file_close(file_id, error)
 
   end if
 
@@ -485,7 +485,8 @@ contains
   character(len=4)                :: cplot
   sll_int32                       :: prank
   sll_int32, parameter            :: one = 1
-  sll_int32                       :: file_id
+  type(sll_t_hdf5_ser_handle)     :: file_id
+  sll_int32                       :: xml_id
   sll_int32                       :: nx1, nx2, nx3, nx4
 
   call sll_s_int2string(iplot,cplot)
@@ -498,34 +499,34 @@ contains
   if (prank == MPI_MASTER) then
 
      if(associated(this%ex)) then
-        call sll_o_hdf5_file_create('ex_'//cplot//".h5",file_id,error)
-        call sll_o_hdf5_write_array(file_id,this%ex,"/values",error)
-        call sll_o_hdf5_file_close(file_id, error)
+        call sll_s_hdf5_ser_file_create('ex_'//cplot//".h5",file_id,error)
+        call sll_o_hdf5_ser_write_array(file_id,this%ex,"/values",error)
+        call sll_s_hdf5_ser_file_close(file_id, error)
      end if
      if(associated(this%ey)) then
-        call sll_o_hdf5_file_create('ey_'//cplot//".h5",file_id,error)
-        call sll_o_hdf5_write_array(file_id,this%ey,"/values",error)
-        call sll_o_hdf5_file_close(file_id, error)
+        call sll_s_hdf5_ser_file_create('ey_'//cplot//".h5",file_id,error)
+        call sll_o_hdf5_ser_write_array(file_id,this%ey,"/values",error)
+        call sll_s_hdf5_ser_file_close(file_id, error)
      end if
      if(associated(this%rho)) then
-        call sll_o_hdf5_file_create('rho_'//cplot//".h5",file_id,error)
-        call sll_o_hdf5_write_array(file_id,this%rho,"/values",error)
-        call sll_o_hdf5_file_close(file_id, error)
+        call sll_s_hdf5_ser_file_create('rho_'//cplot//".h5",file_id,error)
+        call sll_o_hdf5_ser_write_array(file_id,this%rho,"/values",error)
+        call sll_s_hdf5_ser_file_close(file_id, error)
      end if
      if(associated(this%jx)) then
-        call sll_o_hdf5_file_create('jx_'//cplot//".h5",file_id,error)
-        call sll_o_hdf5_write_array(file_id,this%jx,"/values",error)
-        call sll_o_hdf5_file_close(file_id, error)
+        call sll_s_hdf5_ser_file_create('jx_'//cplot//".h5",file_id,error)
+        call sll_o_hdf5_ser_write_array(file_id,this%jx,"/values",error)
+        call sll_s_hdf5_ser_file_close(file_id, error)
      end if
      if(associated(this%jy)) then
-        call sll_o_hdf5_file_create('jy_'//cplot//".h5",file_id,error)
-        call sll_o_hdf5_write_array(file_id,this%jy,"/values",error)
-        call sll_o_hdf5_file_close(file_id, error)
+        call sll_s_hdf5_ser_file_create('jy_'//cplot//".h5",file_id,error)
+        call sll_o_hdf5_ser_write_array(file_id,this%jy,"/values",error)
+        call sll_s_hdf5_ser_file_close(file_id, error)
      end if
      if(associated(this%bz)) then
-        call sll_o_hdf5_file_create('bz_'//cplot//".h5",file_id,error)
-        call sll_o_hdf5_write_array(file_id,this%bz,"/values",error)
-        call sll_o_hdf5_file_close(file_id, error)
+        call sll_s_hdf5_ser_file_create('bz_'//cplot//".h5",file_id,error)
+        call sll_o_hdf5_ser_write_array(file_id,this%bz,"/values",error)
+        call sll_s_hdf5_ser_file_close(file_id, error)
      end if
 
      nx1 = this%np_eta1
@@ -533,14 +534,14 @@ contains
      nx3 = this%np_eta3
      nx4 = this%np_eta4
 
-     call sll_s_xml_file_create("fvalues_"//cplot//".xmf",file_id,error)
-     call write_grid(this,file_id,nx1,nx2,"x1","x2",cplot)
-     call write_grid(this,file_id,nx1,nx3,"x1","x3",cplot)
-     call write_grid(this,file_id,nx2,nx4,"x2","x4",cplot)
-     call write_grid(this,file_id,nx3,nx4,"x3","x4",cplot)
-     write(file_id,"(a)")"</Domain>"
-     write(file_id,"(a)")"</Xdmf>"
-     close(file_id)
+     call sll_s_xml_file_create("fvalues_"//cplot//".xmf",xml_id,error)
+     call write_grid(this,xml_id,nx1,nx2,"x1","x2",cplot)
+     call write_grid(this,xml_id,nx1,nx3,"x1","x3",cplot)
+     call write_grid(this,xml_id,nx2,nx4,"x2","x4",cplot)
+     call write_grid(this,xml_id,nx3,nx4,"x3","x4",cplot)
+     write(xml_id,"(a)")"</Domain>"
+     write(xml_id,"(a)")"</Xdmf>"
+     close(xml_id)
 
   endif
 
@@ -613,7 +614,7 @@ contains
  class(vlasov4d_base),intent(in)     :: this
  character(len=*)                    :: cplot
  sll_int32                           :: error
- sll_int32                           :: file_id
+ type(sll_t_hdf5_ser_handle)         :: file_id
  sll_int32                           :: prank
  sll_int32                           :: comm
  sll_real64, dimension(:,:), pointer :: fij
@@ -630,9 +631,9 @@ contains
     end do
  end do
  if (prank == MPI_MASTER) then
-    call sll_o_hdf5_file_create('fx1x2_'//cplot//".h5",file_id,error)
-    call sll_o_hdf5_write_array(file_id,fij,"/values",error)
-    call sll_o_hdf5_file_close(file_id, error)
+    call sll_s_hdf5_ser_file_create('fx1x2_'//cplot//".h5",file_id,error)
+    call sll_o_hdf5_ser_write_array(file_id,fij,"/values",error)
+    call sll_s_hdf5_ser_file_close(file_id, error)
  end if
  end subroutine write_fx1x2
 
@@ -641,7 +642,7 @@ contains
  class(vlasov4d_base),intent(in)     :: this
  character(len=*)                    :: cplot
  sll_int32                           :: error
- sll_int32                           :: file_id
+ type(sll_t_hdf5_ser_handle)         :: file_id
  sll_real64, dimension(:,:), pointer :: fik
  sll_int32                           :: prank
  sll_int32                           :: comm
@@ -658,9 +659,9 @@ contains
     end do
  end do
  if (prank == MPI_MASTER) then
-    call sll_o_hdf5_file_create('fx1x3_'//cplot//".h5",file_id,error)
-    call sll_o_hdf5_write_array(file_id,fik,"/values",error)
-    call sll_o_hdf5_file_close(file_id, error)
+    call sll_s_hdf5_ser_file_create('fx1x3_'//cplot//".h5",file_id,error)
+    call sll_o_hdf5_ser_write_array(file_id,fik,"/values",error)
+    call sll_s_hdf5_ser_file_close(file_id, error)
  end if
  end subroutine write_fx1x3
 
@@ -669,7 +670,7 @@ contains
  use sll_m_hdf5_io_parallel
  class(vlasov4d_base),intent(in)     :: this
  character(len=*)                    :: cplot
- integer(HID_T)                      :: pfile_id
+ type(sll_t_hdf5_par_handle)         :: pfile_id
  integer(HSSIZE_T)                   :: offset(2)
  integer(HSIZE_T)                    :: global_dims(2)
  sll_int32                           :: error
@@ -687,9 +688,9 @@ contains
  global_dims = (/this%nc_eta2,this%nc_eta4/)
  offset(1) = sll_o_get_layout_j_min(this%layout_p,prank)-1
  offset(2) = sll_o_get_layout_l_min(this%layout_p,prank)-1
- call sll_o_hdf5_file_create('fx2x4_'//cplot//".h5",MPI_COMM_WORLD,pfile_id,error)
- call sll_o_hdf5_write_array(pfile_id,global_dims,offset,fjl,"/values",error)
- call sll_o_hdf5_file_close(pfile_id, error)
+ call sll_s_hdf5_par_file_create('fx2x4_'//cplot//".h5",MPI_COMM_WORLD,pfile_id,error)
+ call sll_o_hdf5_par_write_array(pfile_id,global_dims,offset,fjl,"/values",error)
+ call sll_s_hdf5_par_file_close(pfile_id, error)
 
  end subroutine write_fx2x4
 
@@ -698,7 +699,7 @@ contains
  use sll_m_hdf5_io_parallel
  class(vlasov4d_base),intent(in)     :: this
  character(len=*)                    :: cplot
- integer(HID_T)                      :: pfile_id
+ type(sll_t_hdf5_par_handle)         :: pfile_id
  integer(HSSIZE_T)                   :: offset(2)
  integer(HSIZE_T)                    :: global_dims(2)
  sll_int32                           :: error
@@ -716,9 +717,9 @@ contains
  global_dims = (/this%nc_eta3,this%nc_eta4/)
  offset(1) = sll_o_get_layout_k_min(this%layout_p,prank)-1
  offset(2) = sll_o_get_layout_l_min(this%layout_p,prank)-1
- call sll_o_hdf5_file_create('fx3x4_'//cplot//".h5",MPI_COMM_WORLD,pfile_id,error)
- call sll_o_hdf5_write_array(pfile_id,global_dims,offset,fkl,"/values",error)
- call sll_o_hdf5_file_close(pfile_id, error)
+ call sll_s_hdf5_par_file_create('fx3x4_'//cplot//".h5",MPI_COMM_WORLD,pfile_id,error)
+ call sll_o_hdf5_par_write_array(pfile_id,global_dims,offset,fkl,"/values",error)
+ call sll_s_hdf5_par_file_close(pfile_id, error)
 
  end subroutine write_fx3x4
 
