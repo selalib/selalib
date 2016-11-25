@@ -192,64 +192,13 @@ if (mod(ntau,psize) == 0) then
   l2 = (prank+1)*ntau/psize-1
   ll = l2-l1+1
   do iproc=0, psize-1
-    if (iproc == prank) then
-      print *, ' Rank ', iproc, l1, l2, ll
-   call calcul_rho_m6( p, f )
-
-rms = 0.0_f64
-do j = 0, ny-1
-  do i = 0, nx-1
-    rms = rms + (real(i,f64)*dx)**2*f%r0(i,j)
-  end do
-end do
-if (rms >= 0.0_f64) then
-  rms = sqrt(rms*dx*dy)
-else
-  rms = 0.0_f64
-end if
-
-call poisson%compute_e_from_rho( f%ex, f%ey, f%r0)
-
-energy_p = 0.5_f64*sum(p%p*(p%vpx*p%vpx+p%vpy*p%vpy))
-
-energy_e = 0.5_f64*sum(f%ex(0:nx-1,0:ny-1)*f%ex(0:nx-1,0:ny-1)         &
-                      +f%ey(0:nx-1,0:ny-1)*f%ey(0:nx-1,0:ny-1))*dx*dy
-
-f_mode   =  energy_fourier_mode_xy(1,1,f%ex(0:nx-1,0:ny-1),f%ey(0:nx-1,0:ny-1))
-
-mass     = sum(f%r0(0:nx-1,0:ny-1))*dx*dy
-
-if (master) then 
-  open(10, file='energy.dat', position='append')
-  if (istep == 1) then
-    rewind(10)
-    write(10,"(a)") '# time, first fourier modes, relative energy, rms, mass'
-  end if
-  write(10,"(5g15.7)") time, f_mode, (energy_p+energy_e)/energy0, rms, mass
-  close(10)
-  write(*,"('istep =',i5,' : ',5g15.7)") istep, time,    &
-      f_mode, (energy_p+energy_e)/energy0, &
-      rms, mass
-  
-  if (plot) then
-  
-    call sll_s_xdmf_corect2d_nodes( 'rho', f%r0, 'rho', &
-      0.0_f64, dx, 0.0_f64, dy, 'HDF5', istep, time) 
-    call sll_s_distribution_xdmf('df', p%vpx, p%vpy, p%p, &
-                               -5.0_f64, 5.0_f64, 100,     &
-                               -5.0_f64, 5.0_f64, 100, istep)
-  
-  end if
-end if
- end if
+    if (iproc == prank) print *, ' Rank ', iproc, l1, l2, ll
     call MPI_Barrier(MPI_COMM_WORLD, code)
   enddo
 
 else
   
-  if (master) then
-    print*, "Remainder of the division of ntau by Nprocs must be zero." 
-  end if
+  if (master) print*, "Division remainder of ntau by Nprocs must be zero." 
 
   call finish_mpi()
 
@@ -295,7 +244,6 @@ f_mode   =  energy_fourier_mode_xy(1,1,f%ex(0:nx-1,0:ny-1),f%ey(0:nx-1,0:ny-1))
 mass     = sum(f%r0(0:nx-1,0:ny-1))*dx*dy
 
 if (master) then 
-  istep = 1
   open(10, file='energy.dat')
   rewind(10)
   write(10,"(a)") '# time, first fourier modes, relative energy, rms, mass'
@@ -317,17 +265,16 @@ if (master) then
 
 end if
 
-call particles_initialization()
+call particles_preparation()
 
-do istep = 2, nstep
+do while( time < tfinal )
 
-  if ( time > rtime) then
+  if ( istep == floor(rtime/dt)) then
 
-    rtime = rtime + reset
-    print*, time, rtime, reset
     print*, " *** Initialize particles *** "
     call energy_use( time - (rtime-reset))
-    call particles_initialization()
+    rtime = rtime + reset
+    call particles_preparation()
 
   end if
 
@@ -341,7 +288,7 @@ do istep = 2, nstep
                      -sint*um(n,m,1)+cost*um(n,m,2))
       xxt(1)=real( cost*utmp+sint*vtmp)
       xxt(2)=real(-sint*utmp+cost*vtmp)
-      call apply_bc()
+      call apply_bc(xxt)
       p%idx(m) = floor(xxt(1)/dimx*nx)
       p%dpx(m) = real(xxt(1)/dx- p%idx(m), f64)
       p%idy(m) = floor(xxt(2)/dimy*ny)
@@ -419,7 +366,7 @@ do istep = 2, nstep
                      -sint*um(n,m,1)+cost*um(n,m,2))
       xxt(1)=real( cost*utmp+sint*vtmp)
       xxt(2)=real(-sint*utmp+cost*vtmp)
-      call apply_bc()
+      call apply_bc(xxt)
       p%idx(m) = floor(xxt(1)/dimx*nx)
       p%dpx(m) = real(xxt(1)/dx- p%idx(m), f64)
       p%idy(m) = floor(xxt(2)/dimy*ny)
@@ -438,53 +385,59 @@ do istep = 2, nstep
                      fey,(nx+1)*(ny+1)*ll,MPI_DOUBLE_COMPLEX,     &
                      MPI_COMM_WORLD,code)
 
-  call calcul_rho_m6( p, f )
+  istep = istep + 1
 
-  rms = 0.0_f64
-  do j = 0, ny-1
-    do i = 0, nx-1
-     rms = rms + (real(i,f64)*dx)**2*f%r0(i,j)
-    end do
-  end do
-  if (rms >= 0.0_f64) then
-    rms = sqrt(rms*dx*dy)
-  else
-    rms = 0.0_f64
-  end if
-  
+  call energy_use(time)
+  call calcul_rho_m6( p, f )
   call poisson%compute_e_from_rho( f%ex, f%ey, f%r0)
-  
-  energy_p = 0.5_f64*sum(p%p*(p%vpx*p%vpx+p%vpy*p%vpy))
-  
-  energy_e = 0.5_f64*sum(f%ex(0:nx-1,0:ny-1)*f%ex(0:nx-1,0:ny-1)         &
-                     +f%ey(0:nx-1,0:ny-1)*f%ey(0:nx-1,0:ny-1))*dx*dy
-  
-  f_mode   =  energy_fourier_mode_xy(1,1,f%ex(0:nx-1,0:ny-1),f%ey(0:nx-1,0:ny-1))
-  
-  mass     = sum(f%r0(0:nx-1,0:ny-1))*dx*dy
-  
+
   if (master) then 
+
+    rms = 0.0_f64
+    do j = 0, ny-1
+      do i = 0, nx-1
+       rms = rms + (real(i,f64)*dx)**2*f%r0(i,j)
+      end do
+    end do
+    if (rms >= 0.0_f64) then
+      rms = sqrt(rms*dx*dy)
+    else
+      rms = 0.0_f64
+    end if
+    
+    energy_p = 0.5_f64*sum(p%p*(p%vpx*p%vpx+p%vpy*p%vpy))
+    
+    energy_e = 0.5_f64*sum(f%ex(0:nx-1,0:ny-1)*f%ex(0:nx-1,0:ny-1)         &
+                       +f%ey(0:nx-1,0:ny-1)*f%ey(0:nx-1,0:ny-1))*dx*dy
+    
+    f_mode   =  energy_fourier_mode_xy(1,1,f%ex(0:nx-1,0:ny-1),f%ey(0:nx-1,0:ny-1))
+    
+    mass     = sum(f%r0(0:nx-1,0:ny-1))*dx*dy
+    
     open(10, file='energy.dat', position='append')
     write(10,"(5g15.7)") time, f_mode, (energy_p+energy_e)/energy0, rms, mass
     close(10)
     write(*,"('istep =',i5,' : ',5g15.7)") istep, time,    &
        f_mode, (energy_p+energy_e)/energy0, &
        rms, mass
-    
+     
     if (plot) then
     
-     call sll_s_xdmf_corect2d_nodes( 'rho', f%r0, 'rho', &
-       0.0_f64, dx, 0.0_f64, dy, 'HDF5', istep, time) 
-     call sll_s_distribution_xdmf('df', p%vpx, p%vpy, p%p, &
-                                -5.0_f64, 5.0_f64, 100,     &
-                                -5.0_f64, 5.0_f64, 100, istep)
-    
+       call sll_s_xdmf_corect2d_nodes( 'rho', f%r0, 'rho', &
+         0.0_f64, dx, 0.0_f64, dy, 'HDF5', istep, time) 
+       call sll_s_distribution_xdmf('df', p%vpx, p%vpy, p%p, &
+                                  -5.0_f64, 5.0_f64, 100,     &
+                                  -5.0_f64, 5.0_f64, 100, istep)
+      
     end if
+
   end if
 
-enddo
+
+enddo !*** Next time step ***
 
 call MPI_BARRIER(MPI_COMM_WORLD,code)
+
 if (master) then
   call cpu_time(stop_time)
   print *, "CPU time:", stop_time - start_time, "seconds"
@@ -497,11 +450,8 @@ call finish_mpi()
 
 contains
 
-subroutine particles_initialization()
+subroutine particles_preparation()
 
-  call calcul_rho_m6( p, f )
-  call poisson%compute_e_from_rho( f%ex, f%ey, f%r0)
-  
   wp1(:) = 2._f64*((p%dpx+p%idx)*dx+ep*p%vpy)
   wp2(:) = 2._f64*((p%dpy+p%idy)*dy-ep*p%vpx)
   wm1(:) = - 2._f64*ep*p%vpy
@@ -516,7 +466,7 @@ subroutine particles_initialization()
       vtmp   = 0.5_f64*(sint*wp1(m)+cost*wp2(m)-sint*wm1(m)+cost*wm2(m))
       xxt(1) = real( cost*utmp+sint*vtmp)
       xxt(2) = real(-sint*utmp+cost*vtmp)
-      call apply_bc()
+      call apply_bc(xxt)
       p%idx(m) = floor(xxt(1)/dimx*nx)
       p%dpx(m) = real(xxt(1)/dx- p%idx(m), f64)
       p%idy(m) = floor(xxt(2)/dimy*ny)
@@ -538,6 +488,7 @@ subroutine particles_initialization()
   
     temp1= 2._f64*Et2(m,:)
     temp2=-2._f64*Et1(m,:)!g_+
+
     call sll_s_fft_exec_c2c_1d(fw, temp1, temp1)
     call sll_s_fft_exec_c2c_1d(fw, temp2, temp2)
   
@@ -548,19 +499,25 @@ subroutine particles_initialization()
   
     temp1(0)= sll_p_i0
     temp2(0)= sll_p_i0
+
     call sll_s_fft_exec_c2c_1d(bw, temp1, temp1)
     call sll_s_fft_exec_c2c_1d(bw, temp2, temp2)!AF+
+
     up(:,m,1)=wp1(m)+2._f64*epsq*(temp1-temp1(0))
     up(:,m,2)=wp2(m)+2._f64*epsq*(temp2-temp2(0))!1st ini data of U_+
+
     !---
+
     do n=0,ntau-1
       cost = cos(2.0_f64*tau(n)) ! not the same dtau
       sint = sin(2.0_f64*tau(n))
       temp1(n)=-2._f64*( sint*Et1(m,n)+cost*Et2(m,n))
       temp2(n)= 2._f64*(-sint*Et2(m,n)+cost*Et1(m,n))!g_-
     enddo
+
     call sll_s_fft_exec_c2c_1d(fw, temp1, temp1)
     call sll_s_fft_exec_c2c_1d(fw, temp2, temp2)
+
     do n=1,ntau-1
       temp1(n)=-sll_p_i1*temp1(n)/ltau(n)/ntau
       temp2(n)=-sll_p_i1*temp2(n)/ltau(n)/ntau
@@ -587,7 +544,7 @@ subroutine particles_initialization()
                      -sint*um(n,m,1)+cost*um(n,m,2))
       xxt(1)=real( cost*utmp+sint*vtmp)
       xxt(2)=real(-sint*utmp+cost*vtmp)
-      call apply_bc()
+      call apply_bc(xxt)
       p%idx(m) = floor(xxt(1)/dimx*nx)
       p%dpx(m) = real(xxt(1)/dx- p%idx(m), f64)
       p%idy(m) = floor(xxt(2)/dimy*ny)
@@ -618,7 +575,7 @@ subroutine particles_initialization()
                      -sint*um(n,m,1)+cost*um(n,m,2))
       xxt(1)=real( cost*utmp+sint*vtmp)
       xxt(2)=real(-sint*utmp+cost*vtmp)
-      call apply_bc()
+      call apply_bc(xxt)
       p%idx(m) = floor(xxt(1)/dimx*nx)
       p%dpx(m) = real(xxt(1)/dx- p%idx(m), f64)
       p%idy(m) = floor(xxt(2)/dimy*ny)
@@ -687,7 +644,7 @@ subroutine particles_initialization()
                      -sint*um(n,m,1)+cost*um(n,m,2))
       xxt(1)=real( cost*utmp+sint*vtmp)
       xxt(2)=real(-sint*utmp+cost*vtmp)
-      call apply_bc()
+      call apply_bc(xxt)
       p%idx(m) = floor(xxt(1)/dimx*nx)
       p%dpx(m) = real(xxt(1)/dx- p%idx(m), f64)
       p%idy(m) = floor(xxt(2)/dimy*ny)
@@ -718,7 +675,7 @@ subroutine particles_initialization()
                      -sint*um(n,m,1)+cost*um(n,m,2))
       xxt(1)=real( cost*utmp+sint*vtmp)
       xxt(2)=real(-sint*utmp+cost*vtmp)
-      call apply_bc()
+      call apply_bc(xxt)
       p%idx(m) = floor(xxt(1)/dimx*nx)
       p%dpx(m) = real(xxt(1)/dx- p%idx(m), f64)
       p%idy(m) = floor(xxt(2)/dimy*ny)
@@ -790,7 +747,7 @@ subroutine particles_initialization()
                      -sint*um0(n,m,1)+cost*um0(n,m,2))
       xxt(1)=real( cost*utmp+sint*vtmp)
       xxt(2)=real(-sint*utmp+cost*vtmp)
-      call apply_bc()
+      call apply_bc(xxt)
       p%idx(m) = floor(xxt(1)/dimx*nx)
       p%dpx(m) = real(xxt(1)/dx- p%idx(m), f64)
       p%idy(m) = floor(xxt(2)/dimy*ny)
@@ -819,7 +776,7 @@ subroutine particles_initialization()
                      -sint*um0(n,m,1)+cost*um0(n,m,2))
       xxt(1)=real( cost*utmp+sint*vtmp)
       xxt(2)=real(-sint*utmp+cost*vtmp)
-      call apply_bc()
+      call apply_bc(xxt)
       p%idx(m) = floor(xxt(1)/dimx*nx)
       p%dpx(m) = real(xxt(1)/dx- p%idx(m), f64)
       p%idy(m) = floor(xxt(2)/dimy*ny)
@@ -889,7 +846,7 @@ subroutine particles_initialization()
                      -sint*um(n,m,1)+cost*um(n,m,2))
       xxt(1)=real( cost*utmp+sint*vtmp)
       xxt(2)=real(-sint*utmp+cost*vtmp)
-      call apply_bc()
+      call apply_bc(xxt)
       p%idx(m) = floor(xxt(1)/dimx*nx)
       p%dpx(m) = real(xxt(1)/dx- p%idx(m), f64)
       p%idy(m) = floor(xxt(2)/dimy*ny)
@@ -908,67 +865,71 @@ subroutine particles_initialization()
                      fey,(nx+1)*(ny+1)*ll,MPI_DOUBLE_COMPLEX,     &
                      MPI_COMM_WORLD,code)
 
-end subroutine particles_initialization
+end subroutine particles_preparation
 
 
-subroutine apply_bc()
+subroutine apply_bc(xxt)
 
-do while ( xxt(1) > xmax )
-  xxt(1) = xxt(1) - dimx
-enddo
-do while ( xxt(1) < xmin )
-  xxt(1)= xxt(1) + dimx
-enddo
-do while ( xxt(2) > ymax )
-  xxt(2)  = xxt(2)  - dimy
-enddo
-do while ( xxt(2)  < ymin )
-  xxt(2) = xxt(2)  + dimy
-enddo
+  sll_real64 :: xxt(2)
+  
+  do while ( xxt(1) > xmax )
+    xxt(1) = xxt(1) - dimx
+  enddo
+  do while ( xxt(1) < xmin )
+    xxt(1)= xxt(1) + dimx
+  enddo
+  do while ( xxt(2) > ymax )
+    xxt(2)  = xxt(2)  - dimy
+  enddo
+  do while ( xxt(2)  < ymin )
+    xxt(2) = xxt(2)  + dimy
+  enddo
 
 end subroutine apply_bc
 
 subroutine energy_use(stime)
 
-sll_comp64 :: vp(2), vm(2), z(2), wp(2), wm(2)
-sll_real64 :: cost, sint
-sll_real64 :: stime
-
-cost = cos(0.5_f64*stime/epsq)
-sint = sin(0.5_f64*stime/epsq)
-
-do m=1,nbpart
-
-  call sll_s_fft_exec_c2c_1d(fw, up(:,m,1),temp1)
-  call sll_s_fft_exec_c2c_1d(fw, up(:,m,2),temp2)
-  wp = sll_p_i0
-  do n=0,ntau-1
-    wp(1)=wp(1)+temp1(n)/ntau*exp(iltau(n)*stime)
-    wp(2)=wp(2)+temp2(n)/ntau*exp(iltau(n)*stime)
+  sll_real64, intent(in) :: stime
+  
+  sll_comp64 :: vp(2), vm(2), z(2), wp(2), wm(2)
+  sll_real64 :: cost, sint, xxt(2)
+  sll_int32  :: m, n
+  
+  cost = cos(0.5_f64*stime/epsq)
+  sint = sin(0.5_f64*stime/epsq)
+  
+  do m=1,nbpart
+  
+    call sll_s_fft_exec_c2c_1d(fw, up(:,m,1),temp1)
+    call sll_s_fft_exec_c2c_1d(fw, up(:,m,2),temp2)
+    wp = sll_p_i0
+    do n=0,ntau-1
+      wp(1)=wp(1)+temp1(n)/ntau*exp(iltau(n)*stime)
+      wp(2)=wp(2)+temp2(n)/ntau*exp(iltau(n)*stime)
+    enddo
+    call sll_s_fft_exec_c2c_1d(fw, um(:,m,1),temp1)
+    call sll_s_fft_exec_c2c_1d(fw, um(:,m,2),temp2)
+    wm = sll_p_i0
+    do n=0,ntau-1
+      wm(1)=wm(1)+temp1(n)/ntau*exp(iltau(n)*stime)
+      wm(2)=wm(2)+temp2(n)/ntau*exp(iltau(n)*stime)
+    enddo
+    vp(1)=cost*wp(1)-sint*wp(2)
+    vp(2)=cost*wp(2)+sint*wp(1)
+    vm(1)=cost*wm(1)+sint*wm(2)
+    vm(2)=cost*wm(2)-sint*wm(1)
+    z  =  0.5_f64*(vp+vm)
+    xxt(1)=real(cost*z(1)+sint*z(2))
+    xxt(2)=real(cost*z(2)-sint*z(1))
+    call apply_bc(xxt)
+    p%idx(m) = floor(xxt(1)/dimx*nx)
+    p%dpx(m) = real(xxt(1)/dx- p%idx(m), f64)
+    p%idy(m) = floor(xxt(2)/dimy*ny)
+    p%dpy(m) = real(xxt(2)/dy- p%idy(m), f64)
+    p%vpx(m) = 0.5_f64 * real( sint*vm(1)+cost*vm(2),f64)/ep
+    p%vpy(m) =-0.5_f64 * real(-sint*vm(2)+cost*vm(1),f64)/ep
+  
   enddo
-  call sll_s_fft_exec_c2c_1d(fw, um(:,m,1),temp1)
-  call sll_s_fft_exec_c2c_1d(fw, um(:,m,2),temp2)
-  wm = sll_p_i0
-  do n=0,ntau-1
-    wm(1)=wm(1)+temp1(n)/ntau*exp(iltau(n)*stime)
-    wm(2)=wm(2)+temp2(n)/ntau*exp(iltau(n)*stime)
-  enddo
-  vp(1)=cost*wp(1)-sint*wp(2)
-  vp(2)=cost*wp(2)+sint*wp(1)
-  vm(1)=cost*wm(1)+sint*wm(2)
-  vm(2)=cost*wm(2)-sint*wm(1)
-  z  =  0.5_f64*(vp+vm)
-  xxt(1)=real(cost*z(1)+sint*z(2))
-  xxt(2)=real(cost*z(2)-sint*z(1))
-  call apply_bc()
-  p%idx(m) = floor(xxt(1)/dimx*nx)
-  p%dpx(m) = real(xxt(1)/dx- p%idx(m), f64)
-  p%idy(m) = floor(xxt(2)/dimy*ny)
-  p%dpy(m) = real(xxt(2)/dy- p%idy(m), f64)
-  p%vpx(m) = 0.5_f64 * real( sint*vm(1)+cost*vm(2),f64)/ep
-  p%vpy(m) =-0.5_f64 * real(-sint*vm(2)+cost*vm(1),f64)/ep
-
-enddo
 
 end subroutine energy_use
 
@@ -983,26 +944,26 @@ end subroutine energy_use
 !> @return    the Fourier mode of the electric field.
 function fourier_mode_xy(mode_x, mode_y, e)
 
-sll_int32,  intent(in) :: mode_x
-sll_int32,  intent(in) :: mode_y
-sll_real64, intent(in) :: e(:,:)
-sll_real64             :: fourier_mode_xy
-
-sll_int32  :: i, j
-sll_real64 :: tx, ty
-
-tx = 0._f64
-ty = 0._f64
-do j = 1, size(e,2)
-  do i = 1, size(e,1)
-    tx = tx + e(i,j) * cos(real(mode_x*(i-1),f64)*kx*dx + &
-                           real(mode_y*(j-1),f64)*ky*dy)
-    ty = ty + e(i,j) * sin(real(mode_x*(i-1),f64)*kx*dx + &
-                           real(mode_y*(j-1),f64)*ky*dy)
+  sll_int32,  intent(in) :: mode_x
+  sll_int32,  intent(in) :: mode_y
+  sll_real64, intent(in) :: e(:,:)
+  sll_real64             :: fourier_mode_xy
+  
+  sll_int32  :: i, j
+  sll_real64 :: tx, ty
+  
+  tx = 0._f64
+  ty = 0._f64
+  do j = 1, size(e,2)
+    do i = 1, size(e,1)
+      tx = tx + e(i,j) * cos(real(mode_x*(i-1),f64)*kx*dx + &
+                             real(mode_y*(j-1),f64)*ky*dy)
+      ty = ty + e(i,j) * sin(real(mode_x*(i-1),f64)*kx*dx + &
+                             real(mode_y*(j-1),f64)*ky*dy)
+    enddo
   enddo
-enddo
-
-fourier_mode_xy = ((tx*dx*dy)**2+(ty*dx*dy)**2)/(dimx*dimy)
+  
+  fourier_mode_xy = ((tx*dx*dy)**2+(ty*dx*dy)**2)/(dimx*dimy)
 
 end function fourier_mode_xy
 
@@ -1016,16 +977,16 @@ end function fourier_mode_xy
 !> @return    the energy of the Fourier mode of the electric field.
 function energy_fourier_mode_xy( mode_x, mode_y, ex, ey)
 
-sll_int32,  intent(in) :: mode_x
-sll_int32,  intent(in) :: mode_y
-sll_real64, intent(in) :: ex(:,:)
-sll_real64, intent(in) :: ey(:,:)
-
-sll_real64 :: energy_fourier_mode_xy
-
-energy_fourier_mode_xy = &
-  log(sqrt( fourier_mode_xy(mode_x, mode_y, ex) &
-           +fourier_mode_xy(mode_x, mode_y, ey)))
+  sll_int32,  intent(in) :: mode_x
+  sll_int32,  intent(in) :: mode_y
+  sll_real64, intent(in) :: ex(:,:)
+  sll_real64, intent(in) :: ey(:,:)
+  
+  sll_real64 :: energy_fourier_mode_xy
+  
+  energy_fourier_mode_xy = &
+    log(sqrt( fourier_mode_xy(mode_x, mode_y, ex) &
+             +fourier_mode_xy(mode_x, mode_y, ey)))
 
 end function energy_fourier_mode_xy
 

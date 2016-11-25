@@ -95,6 +95,7 @@ dy = dimy / ny
 nbpart = npm * nx * ny
 
 nstep = min(floor(tfinal/dt),nstepmax)
+tfinal = (nstep-1) * dt
 
 end subroutine readin
 
@@ -140,6 +141,7 @@ call MPI_BCAST(ky,    1,MPI_REAL8  ,0,MPI_COMM_WORLD,code)
 call MPI_BCAST(dt,    1,MPI_REAL8  ,0,MPI_COMM_WORLD,code)
 call MPI_BCAST(ep,    1,MPI_REAL8  ,0,MPI_COMM_WORLD,code)
 call MPI_BCAST(reset, 1,MPI_REAL8  ,0,MPI_COMM_WORLD,code)
+call MPI_BCAST(tfinal,1,MPI_REAL8  ,0,MPI_COMM_WORLD,code)
 
 end subroutine mpi_global_master
 
