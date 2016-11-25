@@ -23,10 +23,10 @@ program test_poisson_2d_periodic_cart_par
     sll_s_gnuplot_rect_2d_parallel
 
   use sll_m_hdf5_io_parallel, only: &
-    sll_t_hdf5_handle,      &
-    sll_o_hdf5_file_create, &
-    sll_o_hdf5_write_array, &
-    sll_o_hdf5_file_close
+    sll_t_hdf5_par_handle,      &
+    sll_s_hdf5_par_file_create, &
+    sll_o_hdf5_par_write_array, &
+    sll_s_hdf5_par_file_close
 
   use sll_m_poisson_2d_periodic_cartesian_par, only: &
     sll_s_delete_poisson_2d_periodic_plan_cartesian_par, &
@@ -258,7 +258,7 @@ contains
     type(sll_t_layout_2d), pointer    :: layout
 
     type(sll_t_collective_t), pointer :: col
-    type(sll_t_hdf5_handle)           :: handle
+    type(sll_t_hdf5_par_handle)           :: handle
     integer(i64)                      :: global_dims(1:2)
     integer(i64)                      :: offset(1:2)
     sll_int32                         :: error
@@ -274,10 +274,10 @@ contains
     offset(2) = int( sll_o_get_layout_j_min( layout, myrank )-1, i64 )
 
     comm = sll_v_world_collective%comm
-    call sll_o_hdf5_file_create( filename, comm, handle, error )
-    call sll_o_hdf5_write_array( handle, global_dims, offset, &
+    call sll_s_hdf5_par_file_create( filename, comm, handle, error )
+    call sll_o_hdf5_par_write_array( handle, global_dims, offset, &
                               array, dataset_name, error )
-    call sll_o_hdf5_file_close( handle, error )
+    call sll_s_hdf5_par_file_close( handle, error )
 
   end subroutine parallel_hdf5_write_array_2d
 
