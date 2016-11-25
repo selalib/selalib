@@ -43,10 +43,10 @@ module sll_m_xdmf_parallel
 
 #ifndef NOHDF5
   use sll_m_hdf5_io_parallel, only: &
-    sll_t_hdf5_handle,      &
-    sll_o_hdf5_file_create, &
-    sll_o_hdf5_file_close,  &
-    sll_o_hdf5_write_array
+    sll_t_hdf5_par_handle,      &
+    sll_s_hdf5_par_file_create, &
+    sll_s_hdf5_par_file_close,  &
+    sll_o_hdf5_par_write_array
 
 #endif
   implicit none
@@ -144,7 +144,7 @@ contains
     sll_int32       , intent(in   ), optional :: xmffile_id !< xml file unit number
     character(len=4), intent(in   ), optional :: center     !< "Node" or "Cell"
 
-    type(sll_t_hdf5_handle) :: handle         !< data file unit number
+    type(sll_t_hdf5_par_handle) :: handle         !< data file unit number
     sll_int32               :: npoints_x1     !< nodes number x
     sll_int32               :: npoints_x2     !< nodes number y
     sll_int32               :: prank
@@ -152,11 +152,11 @@ contains
 
 #ifndef NOHDF5
     comm   = sll_v_world_collective%comm
-    call sll_o_hdf5_file_create( trim(mesh_name)//"-"//trim(array_name)//".h5", &
+    call sll_s_hdf5_par_file_create( trim(mesh_name)//"-"//trim(array_name)//".h5", &
                               comm, handle, error )
-    call sll_o_hdf5_write_array( handle, global_dims, offset, &
+    call sll_o_hdf5_par_write_array( handle, global_dims, offset, &
                               array, "/"//trim(array_name), error )
-    call sll_o_hdf5_file_close( handle, error )
+    call sll_s_hdf5_par_file_close( handle, error )
 #endif
 
     prank = sll_f_get_collective_rank( sll_v_world_collective )
@@ -196,7 +196,7 @@ contains
     sll_int32       , intent(in   ), optional :: xmffile_id !< xml file unit number
     character(len=4), intent(in   ), optional :: center     !< "Node" or "Cell"
 
-    type(sll_t_hdf5_handle) :: handle         !< data file unit number
+    type(sll_t_hdf5_par_handle) :: handle         !< data file unit number
     sll_int32               :: npoints_x1     !< nodes number x
     sll_int32               :: npoints_x2     !< nodes number y
     sll_int32               :: npoints_x3     !< nodes number z
@@ -205,11 +205,11 @@ contains
     
     comm   = sll_v_world_collective%comm
 #ifndef NOHDF5
-    call sll_o_hdf5_file_create( trim(mesh_name)//"-"//trim(array_name)//".h5", &
+    call sll_s_hdf5_par_file_create( trim(mesh_name)//"-"//trim(array_name)//".h5", &
                              comm, handle, error )
-    call sll_o_hdf5_write_array( handle, global_dims, offset, array, &
+    call sll_o_hdf5_par_write_array( handle, global_dims, offset, array, &
                               "/"//trim(array_name), error )
-    call sll_o_hdf5_file_close( handle, error )
+    call sll_s_hdf5_par_file_close( handle, error )
 #endif
 
     prank = sll_f_get_collective_rank( sll_v_world_collective )
