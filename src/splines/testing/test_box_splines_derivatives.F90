@@ -151,6 +151,8 @@ program test_box_splines_derivatives
   call sll_s_write_field_hex_mesh_xmf(mesh, dxf2, "der1_boxspline2")
   call sll_s_write_field_hex_mesh_xmf(mesh, dyf2, "der2_boxspline2")
 
+  SLL_DEALLOCATE_ARRAY(dist, ierr)
+
   SLL_DEALLOCATE_ARRAY(f, ierr)
   SLL_DEALLOCATE_ARRAY(dxf, ierr)
   SLL_DEALLOCATE_ARRAY(dyf, ierr)
