@@ -1573,17 +1573,17 @@ MAKE_GET_SLOT_FUNCTION(get_x2_delta_cs2d,sll_t_cubic_spline_2d,x2_delta,sll_real
        SLL_ALLOCATE(sll_f_new_cubic_spline_2d%x1_min_slopes_coeffs(0:num_pts_x2+2),ierr)
        SLL_ALLOCATE(sll_f_new_cubic_spline_2d%x1_max_slopes_coeffs(0:num_pts_x2+2),ierr)
 
-       ! Set the values of the slopes at x1_min     
-       FILL_SLOPES(const_slope_x1_min,x1_min_slopes,num_pts_x2,x1_min_slopes,compute_slopes_x1_min)
+       ! Set the values of the slopes at x1_min
+       FILL_SLOPES(const_slope_x1_min, x1_min_slopes, num_pts_x2, x1_min_slopes, compute_slopes_x1_min)
 
        ! Set the values of the slopes at x1_max
-       FILL_SLOPES(const_slope_x1_max,x1_max_slopes,num_pts_x2,x1_max_slopes,compute_slopes_x1_max)
+       FILL_SLOPES(const_slope_x1_max, x1_max_slopes, num_pts_x2, x1_max_slopes, compute_slopes_x1_max)
 
-       ! Set the values of the slopes at x2_min     
-       FILL_SLOPES(const_slope_x2_min,x2_min_slopes,num_pts_x1,x2_min_slopes,compute_slopes_x2_min)
+       ! Set the values of the slopes at x2_min
+       FILL_SLOPES(const_slope_x2_min, x2_min_slopes, num_pts_x1, x2_min_slopes, compute_slopes_x2_min)
 
        ! Set the values of the slopes at x2_max
-       FILL_SLOPES(const_slope_x2_max,x2_max_slopes,num_pts_x1,x2_max_slopes,compute_slopes_x2_max)
+       FILL_SLOPES(const_slope_x2_max, x2_max_slopes, num_pts_x1, x2_max_slopes, compute_slopes_x2_max)
 
     case default
        print *, 'ERROR: sll_f_new_cubic_spline_2d(): ', &
@@ -1672,20 +1672,20 @@ MAKE_GET_SLOT_FUNCTION(get_x2_delta_cs2d,sll_t_cubic_spline_2d,x2_delta,sll_real
 
     if( .not. associated(spline) ) then
        ! FIXME: THROW ERROR
-       print *, 'ERROR: compute_spline_2D_prdc_prdc(): ', &
+       print *, 'ERROR: compute_spline_2D_hrmt_prdc(): ', &
             'uninitialized spline object passed as argument. Exiting... '
        STOP
     end if
     if( (size(data,1) .lt. spline%num_pts_x1 ) ) then
        ! FIXME: THROW ERROR
-       print *, 'ERROR: compute_spline_2D_prdc_prdc(): '
+       print *, 'ERROR: compute_spline_2D_hrmt_prdc(): '
        write (*,'(a, i8, a, i8)') 'spline object needs data of size >= ', &
             spline%num_pts_x1, ' . Passed size: ', size(data,1)
        STOP
     end if
     if( (size(data,2) .lt. spline%num_pts_x2 ) ) then
        ! FIXME: THROW ERROR
-       print *, 'ERROR: compute_spline_2D_prdc_prdc(): '
+       print *, 'ERROR: compute_spline_2D_hrmt_prdc(): '
        write (*,'(a, i8, a, i8)') 'spline object needs data of size >= ', &
             spline%num_pts_x2, ' . Passed size: ', size(data,2)
        STOP
@@ -1787,20 +1787,20 @@ MAKE_GET_SLOT_FUNCTION(get_x2_delta_cs2d,sll_t_cubic_spline_2d,x2_delta,sll_real
 
     if( .not. associated(spline) ) then
        ! FIXME: THROW ERROR
-       print *, 'ERROR: compute_spline_2D_prdc_prdc(): ', &
+       print *, 'ERROR: compute_spline_2D_prdc_hrmt(): ', &
             'uninitialized spline object passed as argument. Exiting... '
        STOP
     end if
     if( (size(data,1) .lt. spline%num_pts_x1 ) ) then
        ! FIXME: THROW ERROR
-       print *, 'ERROR: compute_spline_2D_prdc_prdc(): '
+       print *, 'ERROR: compute_spline_2D_prdc_hrmt(): '
        write (*,'(a, i8, a, i8)') 'spline object needs data of size >= ', &
             spline%num_pts_x1, ' . Passed size: ', size(data,1)
        STOP
     end if
     if( (size(data,2) .lt. spline%num_pts_x2 ) ) then
        ! FIXME: THROW ERROR
-       print *, 'ERROR: compute_spline_2D_prdc_prdc(): '
+       print *, 'ERROR: compute_spline_2D_prdc_hrmt(): '
        write (*,'(a, i8, a, i8)') 'spline object needs data of size >= ', &
             spline%num_pts_x2, ' . Passed size: ', size(data,2)
        STOP
