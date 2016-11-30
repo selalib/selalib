@@ -1884,7 +1884,6 @@ contains
 
            if (sim%vlasov_ampere) then
 
-              print*, 'VA'
               nc_x1 = np_x1-1
               sim%advect_ampere_x1_sp1(tid)%ptr%r1 = cmplx(0.0,0.0,kind=f64)
               sim%advect_ampere_x1_sp2(tid)%ptr%r1 = cmplx(0.0,0.0,kind=f64)
@@ -1984,9 +1983,8 @@ contains
                     sim%advect_ampere_x1_sp1(1)%ptr%ek)
                
                do i = 2, nc_x1/2+1
-                 sim%advect_ampere_x1_sp1(1)%ptr%ek(i) =  &
-                      (- sim%advect_ampere_x1_sp1(1)%ptr%r1(i) &
-                      + sim%advect_ampere_x1_sp2(1)%ptr%r1(i)) &
+                  sim%advect_ampere_x1_sp1(1)%ptr%ek(i) =  &
+                      sim%advect_ampere_x1_sp1(1)%ptr%r1(i) &
                     * (sim%mesh2d_sp1%eta1_max-sim%mesh2d_sp1%eta1_min) &
                     / cmplx(0.,2.0_f64*sll_p_pi*(i-1),kind=f64)
                end do
