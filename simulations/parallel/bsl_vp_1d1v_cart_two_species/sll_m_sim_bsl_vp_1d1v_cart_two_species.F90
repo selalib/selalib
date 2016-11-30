@@ -1884,12 +1884,14 @@ contains
 
            if (sim%vlasov_ampere) then
 
+              print*, 'VA'
               nc_x1 = np_x1-1
               sim%advect_ampere_x1_sp1(tid)%ptr%r1 = cmplx(0.0,0.0,kind=f64)
               sim%advect_ampere_x1_sp2(tid)%ptr%r1 = cmplx(0.0,0.0,kind=f64)
               do i_omp = 1, local_size_x2_sp1
                  ig_omp = i_omp+global_indices_sp1(2)-1
-                 alpha_omp = sim%factor_x1*node_positions_x2_sp1(ig_omp) * sim%split%split_step(split_istep) 
+                 alpha_omp = sim%factor_x1*node_positions_x2_sp1(ig_omp) * sim%split%split_step(split_istep) *&
+                      sim%dt
                  f1d_omp_in_sp1(1:np_x1,tid) = f_x1_sp1(1:np_x1,i_omp)
                  
                  sim%advect_ampere_x1_sp1(tid)%ptr%d_dx = f1d_omp_in_sp1(1:nc_x1,tid)
@@ -1921,7 +1923,8 @@ contains
 
               do i_omp = 1,local_size_x2_sp2
                  ig_omp = i_omp+global_indices_sp2(2)-1   
-                 alpha_omp = sim%factor_x1*node_positions_x2_sp2(ig_omp) * sim%split%split_step(split_istep) 
+                 alpha_omp = sim%factor_x1*node_positions_x2_sp2(ig_omp) * sim%split%split_step(split_istep)  *&
+                      sim%dt
                  f1d_omp_in_sp2(1:np_x1,tid) = f_x1_sp2(1:np_x1,i_omp)
 
                  sim%advect_ampere_x1_sp2(tid)%ptr%d_dx = f1d_omp_in_sp2(1:nc_x1,tid)
@@ -1967,6 +1970,12 @@ contains
                     nc_x1/2+1,                                      &
                     MPI_SUM,                                        &
                     sim%advect_ampere_x1_sp1(1)%ptr%r1 )
+
+               call sll_o_collective_allreduce( sll_v_world_collective, &
+                    rk_loc,                                         &
+                    nc_x1/2+1,                                      &
+                    MPI_SUM,                                        &
+                    sim%advect_ampere_x1_sp2(1)%ptr%r1 )
                
                sim%advect_ampere_x1_sp1(1)%ptr%d_dx = efield(1:nc_x1)
                
@@ -1976,7 +1985,8 @@ contains
                
                do i = 2, nc_x1/2+1
                  sim%advect_ampere_x1_sp1(1)%ptr%ek(i) =  &
-                    - sim%advect_ampere_x1_sp1(1)%ptr%r1(i) &
+                      (- sim%advect_ampere_x1_sp1(1)%ptr%r1(i) &
+                      + sim%advect_ampere_x1_sp2(1)%ptr%r1(i)) &
                     * (sim%mesh2d_sp1%eta1_max-sim%mesh2d_sp1%eta1_min) &
                     / cmplx(0.,2.0_f64*sll_p_pi*(i-1),kind=f64)
                end do
