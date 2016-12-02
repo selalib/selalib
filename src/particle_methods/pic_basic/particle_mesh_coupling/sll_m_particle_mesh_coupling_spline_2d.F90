@@ -6,6 +6,7 @@ module sll_m_particle_mesh_coupling_spline_2d
 
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_assert.h"
+#include "sll_errors.h"
 #include "sll_memory.h"
 #include "sll_working_precision.h"
 
@@ -20,6 +21,8 @@ module sll_m_particle_mesh_coupling_spline_2d
   use sll_m_particle_group_base, only: &
     sll_c_particle_group_base
 
+  use sll_m_splines_pp
+
   implicit none
 
   public :: &
@@ -32,7 +35,7 @@ module sll_m_particle_mesh_coupling_spline_2d
  
   !>  Spline kernel smoother in 2d.
   type, extends(sll_c_particle_mesh_coupling) :: sll_t_particle_mesh_coupling_spline_2d
-
+     type(sll_t_spline_pp_2d) spline_pp
      ! Information about the 2d mesh
      sll_real64 :: delta_x(2)  !< Value of grid spacing along both directions.
      sll_real64 :: domain(2,2) !< Definition of the domain: domain(1,1) = x1_min, domain(2,1) = x2_min,  domain(1,2) = x1_max, domain(2,2) = x2_max
@@ -52,10 +55,13 @@ module sll_m_particle_mesh_coupling_spline_2d
    contains
      procedure :: compute_shape_factor_spline_2d !> Compute the shape factor
      procedure :: add_charge => add_charge_single_spline_2d !> Accumulate the density
+     procedure :: add_charge_pp => add_charge_single_spline_pp_2d !> Accumulate the density
      !procedure :: accumulate_j_from_klimontovich => accumulate_j_from_klimontovich_spline_2d !> Accumulate a component of the current density
+     procedure :: evaluate_pp => evaluate_field_single_spline_pp_2d
      procedure :: evaluate => evaluate_field_single_spline_2d !> Evaluate the spline with given coefficients
      procedure :: evaluate_multiple => evaluate_multiple_spline_2d
      procedure :: add_current_update_v => add_current_update_v_spline_2d
+     procedure :: add_current_update_v_pp => add_current_update_v_spline_pp_2d
      procedure :: init => init_spline_2d
      procedure :: free => free_spline_2d
 
@@ -85,6 +91,40 @@ contains
     !self%spline_val(1:self%n_span,2) = sll_f_uniform_b_splines_at_x(self%spline_degree, xi(2))
 
   end subroutine compute_shape_factor_spline_2d
+  
+ !---------------------------------------------------------------------------!
+  !> Add charge of single particle
+  subroutine add_charge_single_spline_pp_2d(self, position, marker_charge, rho_dofs)
+    class( sll_t_particle_mesh_coupling_spline_2d), intent(inout) :: self !< kernel smoother object
+    sll_real64,                              intent( in )  :: position(self%dim) !< Particle position
+    sll_real64,                              intent( in )  :: marker_charge !< Particle weight times charge
+    sll_real64,                              intent(inout) :: rho_dofs(self%n_dofs ) !< spline coefficient of accumulated density
+    
+    !local variables
+    sll_real64 :: xi(2)
+    sll_int32  :: indices(2)
+    sll_int32 :: i1, i2, index2d
+    sll_int32 :: index1d(2)
+   
+    xi(1:2) = (position(1:2) - self%domain(:,1)) /self%delta_x
+    indices = floor(xi(1:2))+1
+    xi(1:2) = xi(1:2) - real(indices -1,f64)
+    indices =  indices - self%spline_degree
+    
+    call sll_s_spline_pp_horner_m_2d(self%spline_pp, self%spline_val,[self%spline_degree,self%spline_degree], xi)
+
+    do i1 = 1, self%n_span
+       index1d(1) = indices(1)+i1-2
+       do i2 = 1, self%n_span
+          index1d(2) = indices(2)+i2-2
+          index2d = index_1dto2d_column_major(self,index1d)
+          rho_dofs(index2d) = rho_dofs(index2d) +&
+               ( marker_charge* self%scaling * &
+               self%spline_val(i1,1) * self%spline_val(i2,2))
+       end do
+    end do
+
+  end subroutine add_charge_single_spline_pp_2d
 
   !---------------------------------------------------------------------------!
   !> Add charge of single particle
@@ -114,7 +154,6 @@ contains
 
   end subroutine add_charge_single_spline_2d
 
-
  !---------------------------------------------------------------------------!
   !> Add current and update v for single particle
   subroutine add_current_update_v_spline_2d (self, position_old, position_new, marker_charge, qoverm, bfield_dofs, vi, j_dofs)
@@ -130,6 +169,22 @@ contains
     print*, 'add_current_update_v_spline_2d not implemented.'
 
   end subroutine add_current_update_v_spline_2d
+
+ !---------------------------------------------------------------------------!
+  !> Add current and update v for single particle
+  subroutine add_current_update_v_spline_pp_2d (self, position_old, position_new, marker_charge, qoverm, bfield_dofs, vi, j_dofs)
+    class(sll_t_particle_mesh_coupling_spline_2d), intent(inout) :: self !< kernel smoother object
+    sll_real64,                             intent(in) :: position_old(self%dim) !< Position at time t
+    sll_real64,                             intent(in) :: position_new(self%dim) !< Position at time t+\Delta t
+    sll_real64,                             intent(in) :: marker_charge !< Particle weight time charge
+    sll_real64,                             intent(in) :: qoverm !< Charge over mass ratio
+    sll_real64,                             intent(in) :: bfield_dofs(self%n_dofs) !< Coefficient of B-field expansion
+    sll_real64,                             intent(inout) :: vi(:) !< Velocity of the particle
+    sll_real64,                             intent(inout) :: j_dofs(self%n_dofs) !< Coefficient of current expansion
+
+    print*, 'add_current_update_v_spline_pp_2d not implemented.'
+
+  end subroutine add_current_update_v_spline_pp_2d
 
 !!$  !---------------------------------------------------------------------------!
 !!$  subroutine accumulate_j_from_klimontovich_spline_2d(self, particle_group,&
@@ -175,6 +230,27 @@ contains
   
 
   !---------------------------------------------------------------------------!
+  !> Evaluate field at at position \a position using horner scheme
+  subroutine evaluate_field_single_spline_pp_2d(self, position, field_dofs_pp, field_value)
+    class( sll_t_particle_mesh_coupling_spline_2d), intent(inout)  :: self !< kernel smoother object    
+    sll_real64,                              intent( in )   :: position(self%dim) !< Position where to evaluate
+    sll_real64,                              intent(in)     :: field_dofs_pp(:,:) !< Degrees of freedom in kernel representation.
+    sll_real64,                              intent(out)    :: field_value !< Value of the field
+       
+    !local variables
+    sll_real64 :: xi(2)
+    sll_int32  :: indices(2)
+   
+    xi(1:2) = (position(1:2) - self%domain(:,1)) /self%delta_x
+    indices = floor(xi(1:2))+1
+    xi(1:2) = xi(1:2) - real(indices -1,f64)
+     
+    field_value = sll_f_spline_pp_horner_2d([self%spline_degree,self%spline_degree], field_dofs_pp, xi, indices,self%n_grid)
+        
+  end subroutine evaluate_field_single_spline_pp_2d
+   
+
+   !---------------------------------------------------------------------------!
   !> Evaluate field with given dofs at position \a position
   subroutine evaluate_field_single_spline_2d(self, position, field_dofs, field_value)
     class( sll_t_particle_mesh_coupling_spline_2d), intent(inout)  :: self !< kernel smoother object    
@@ -241,12 +317,13 @@ contains
 
   !-------------------------------------------------------------------------------------------
   !> Destructor
-    subroutine free_spline_2d(self)
+  subroutine free_spline_2d(self)
     class (sll_t_particle_mesh_coupling_spline_2d), intent( inout ) :: self !< Kernel smoother object 
-
+    deallocate(self%n_grid)
     deallocate(self%spline_val)
     
-
+    call sll_s_spline_pp_free_2d(self%spline_pp)
+    
   end subroutine free_spline_2d
 
 
@@ -290,6 +367,8 @@ contains
 
     allocate( self%spline_val(self%n_span, 2), stat = ierr)
     SLL_ASSERT( ierr == 0)
+    
+    call sll_s_spline_pp_init_2d(self%spline_pp,[spline_degree,spline_degree],n_grid)
 
   end subroutine init_spline_2d
 
