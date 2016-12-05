@@ -7,7 +7,8 @@ ADD_LIBRARY( sll_splines STATIC
   sll_m_box_splines.F90
   sll_m_cubic_non_uniform_splines.F90
   #sll_m_deboor_splines_2d.F90
-  sll_m_deboor_splines_1d.F90 )
+  sll_m_deboor_splines_1d.F90 
+  sll_m_splines_pp.F90)
 
 TARGET_LINK_LIBRARIES( sll_splines
   sll_linear_solvers
