@@ -1,0 +1,48 @@
+***************************************************************************
+*       README FILE FOR sim_2d_ad_hexagonal DIRECTORY
+*                     author  : Laura Mendoza
+*                     modified: 27 October 2016
+***************************************************************************
+
+Directory structure
+===================
+   README                -- info (this file)
+   sim_bsl_ad_2d0v_hex   -- executable
+   sim2d_hex.nml         -- input namelist file
+   run/                  -- directory
+
+Description
+===========
+Using the SL scheme we solve the advection simulation on a hexagonal mesh
+(regular equilateral triangle lattice with hexagonal shape).
+Two simulations for the advection on a hexagonal mesh are available:
+
+    1. Constant advection
+    2. Circular advection
+
+HOWTO
+=====
+0. Compile the SeLaLib library: Run the following command in the
+   build directory of the librairy
+     $ make install
+   Follow the path were the simulation was written.
+
+1. Create "run/" directory and move to it
+     $ mkdir run
+     $ cp sim2d_hex.nml run/
+     $ cd run
+     ( Optional: change the input file to your liking )
+
+2. Run simulation(s) within directory
+     $ ../sim_bsl_ad_2d0v_hex sim2d_hex.nml
+
+   You can also run the simulation without an input file
+
+
+3. Open *.xmf database with Visit (*) to visualize density over time
+
+
+3. Plot diagnostics using gnuplot and *.dat files
+
+
+(*) Make sure that the Xdmf plugin is installed!
