@@ -55,3 +55,25 @@ SET_TESTS_PROPERTIES( arbitrary_degree_splines PROPERTIES
 ADD_EXECUTABLE( test_box_splines_derivatives test_box_splines_derivatives.F90 )
 TARGET_LINK_LIBRARIES( test_box_splines_derivatives sll_splines )
 
+
+# Splines_pp...........................................
+ADD_EXECUTABLE( test_splines_pp_1d test_splines_pp_1d.F90 )
+TARGET_LINK_LIBRARIES( test_splines_pp_1d sll_splines )
+#...........................................
+ADD_EXECUTABLE( test_splines_pp_2d test_splines_pp_2d.F90 )
+TARGET_LINK_LIBRARIES( test_splines_pp_2d sll_splines )
+#...........................................
+ADD_EXECUTABLE( test_splines_pp_3d test_splines_pp_3d.F90 )
+TARGET_LINK_LIBRARIES( test_splines_pp_3d sll_splines )
+
+# Ctests
+ADD_TEST( NAME splines_pp_1d COMMAND test_splines_pp_1d)
+ADD_TEST( NAME splines_pp_2d COMMAND test_splines_pp_2d) 
+ADD_TEST( NAME splines_pp_3d COMMAND test_splines_pp_3d) 
+SET_TESTS_PROPERTIES( splines_pp_1d PROPERTIES
+                      PASS_REGULAR_EXPRESSION "PASSED" )
+SET_TESTS_PROPERTIES( splines_pp_2d PROPERTIES
+                      PASS_REGULAR_EXPRESSION "PASSED" )
+SET_TESTS_PROPERTIES( splines_pp_3d PROPERTIES
+                      PASS_REGULAR_EXPRESSION "PASSED" )
+#...........................................
