@@ -76,7 +76,9 @@ real       :: start_time, stop_time
 sll_real64 :: cost, sint
 sll_real64 :: energy0
 
-character(len=272)    :: argv
+character(len=272)                    :: argv
+character(len=8)                      :: date
+character(len=10)                     :: dtime
 class(sll_c_poisson_2d_base), pointer :: poisson
 
 logical :: master = .false.
@@ -166,26 +168,6 @@ poisson => sll_f_new_poisson_2d_periodic(xmin,xmax,nx,ymin,ymax,ny)
 call calcul_rho_m6( p, f )
 call poisson%compute_e_from_rho( f%ex, f%ey, f%r0)
 
-if (master) then
-  print"('epsilon    = ',  f12.5)", ep
-  print"('nbpart     = ',  i12  )", nbpart
-  print"('dt         = ',  f12.5)", dt
-  print"('kx,ky      = ', 2f12.5)", kx, ky
-  print"('alpha      = ',  f12.5)", alpha
-  print"('ntau       = ',  i12  )", ntau
-  print"('lx, ly     = ', 2f12.5)", dimx, dimy
-  print"('nx, ny     = ', 2i12  )", nx, ny
-  print"('dx, dy     = ', 2f12.5)", dx, dy
-  print"('nstep      = ',  i12  )", nstep
-  print"('tfinal     = ',  f12.5)", tfinal
-  print"('reset      = ',  f12.5)", reset
-  energy0 = 0.5_f64*sum(p%p*(p%vpx*p%vpx+p%vpy*p%vpy))                  &
-          + 0.5_f64*sum(f%ex(0:nx-1,0:ny-1)*f%ex(0:nx-1,0:ny-1)         &
-                        +f%ey(0:nx-1,0:ny-1)*f%ey(0:nx-1,0:ny-1))*dx*dy
-  print"('energy     = ',  f12.5)", energy0
-end if
-
-
 if (mod(ntau,psize) == 0) then
 
   l1 = prank*ntau/psize
@@ -244,14 +226,37 @@ f_mode   =  energy_fourier_mode_xy(1,1,f%ex(0:nx-1,0:ny-1),f%ey(0:nx-1,0:ny-1))
 mass     = sum(f%r0(0:nx-1,0:ny-1))*dx*dy
 
 if (master) then 
-  open(10, file='energy.dat')
+
+  energy0 = energy_p + energy_e
+
+  call date_and_time(DATE=date,TIME=dtime)
+  print '(a,2x,a,2x,a)', date, dtime(1:6)
+  open(10, file='energy-'//date//'-'//dtime(1:6)//'.dat')
   rewind(10)
+  write(10,"('# epsilon    = ',  f12.5)") ep
+  write(10,"('# nbpart     = ',  i12  )") nbpart
+  write(10,"('# dt         = ',  f12.5)") dt
+  write(10,"('# kx,ky      = ', 2f12.5)") kx, ky
+  write(10,"('# alpha      = ',  f12.5)") alpha
+  write(10,"('# ntau       = ',  i12  )") ntau
+  write(10,"('# lx, ly     = ', 2f12.5)") dimx, dimy
+  write(10,"('# nx, ny     = ', 2i12  )") nx, ny
+  write(10,"('# dx, dy     = ', 2f12.5)") dx, dy
+  write(10,"('# nstep      = ',  i12  )") nstep
+  write(10,"('# tfinal     = ',  f12.5)") tfinal
+  write(10,"('# reset      = ',  f12.5)") reset
+  write(10,"('# energy     = ',  f12.5)") energy0
   write(10,"(a)") '# time, first fourier modes, relative energy, rms, mass'
   write(10,"(5g15.7)") time, f_mode, (energy_p+energy_e)/energy0, rms, mass
   close(10)
-  write(*,"('istep =',i5,' : ',5g15.7)") istep, time,    &
-      f_mode, (energy_p+energy_e)/energy0, &
-      rms, mass
+
+  write(*,"('istep =',i5,' : ',5g15.7)")   &
+     istep,                                &
+     time,                                 &
+     f_mode,                               &
+     (energy_p+energy_e)/energy0,          &
+     rms,                                  &
+     mass
   
   if (plot) then
   
@@ -414,7 +419,7 @@ do while( time < tfinal )
     
     mass     = sum(f%r0(0:nx-1,0:ny-1))*dx*dy
     
-    open(10, file='energy.dat', position='append')
+    open(10, file='energy-'//date//'-'//dtime(1:6)//'.dat', position='append')
     write(10,"(5g15.7)") time, f_mode, (energy_p+energy_e)/energy0, rms, mass
     close(10)
     write(*,"('istep =',i5,' : ',5g15.7)") istep, time,    &
