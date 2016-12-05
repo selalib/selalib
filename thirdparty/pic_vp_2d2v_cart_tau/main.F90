@@ -70,6 +70,7 @@ sll_int32  :: n,m
 sll_int32  :: i
 sll_int32  :: j
 sll_int32  :: error
+sll_real64 :: rtime
 
 real       :: start_time, stop_time
 sll_real64 :: cost, sint
@@ -86,7 +87,11 @@ sll_comp64, allocatable :: et2_loc(:,:)
 sll_comp64, allocatable :: fex_loc(:,:,:)
 sll_comp64, allocatable :: fey_loc(:,:,:)
 
+sll_real64 :: energy_e, energy_p
+sll_real64 :: rms, f_mode, mass
+
 call init_mpi(prank, psize)
+
 if (prank == 0 ) master = .true.
 
 if (master) then
@@ -131,7 +136,6 @@ SLL_CLEAR_ALLOCATE(f%ex(0:nx,0:ny),   error)
 SLL_CLEAR_ALLOCATE(f%ey(0:nx,0:ny),   error)
 SLL_CLEAR_ALLOCATE(f%r0(0:nx,0:ny),   error)
 
-time   = 0._f64
 
 epsq   = ep * ep
 dtau   = 2._f64*sll_p_pi/real(ntau,f64)
@@ -174,16 +178,13 @@ if (master) then
   print"('dx, dy     = ', 2f12.5)", dx, dy
   print"('nstep      = ',  i12  )", nstep
   print"('tfinal     = ',  f12.5)", tfinal
+  print"('reset      = ',  f12.5)", reset
   energy0 = 0.5_f64*sum(p%p*(p%vpx*p%vpx+p%vpy*p%vpy))                  &
           + 0.5_f64*sum(f%ex(0:nx-1,0:ny-1)*f%ex(0:nx-1,0:ny-1)         &
                         +f%ey(0:nx-1,0:ny-1)*f%ey(0:nx-1,0:ny-1))*dx*dy
   print"('energy     = ',  f12.5)", energy0
 end if
 
-wp1(:) = 2._f64*((p%dpx+p%idx)*dx+ep*p%vpy)
-wp2(:) = 2._f64*((p%dpy+p%idy)*dy-ep*p%vpx)
-wm1(:) = - 2._f64*ep*p%vpy
-wm2(:) =   2._f64*ep*p%vpx
 
 if (mod(ntau,psize) == 0) then
 
@@ -191,17 +192,13 @@ if (mod(ntau,psize) == 0) then
   l2 = (prank+1)*ntau/psize-1
   ll = l2-l1+1
   do iproc=0, psize-1
-    if (iproc == prank) then
-      print *, ' Rank ', iproc, l1, l2, ll
-    end if
+    if (iproc == prank) print *, ' Rank ', iproc, l1, l2, ll
     call MPI_Barrier(MPI_COMM_WORLD, code)
   enddo
 
 else
   
-  if (master) then
-    print*, "Remainder of the division of ntau by Nprocs must be zero." 
-  end if
+  if (master) print*, "Division remainder of ntau by Nprocs must be zero." 
 
   call finish_mpi()
 
@@ -212,417 +209,74 @@ allocate(et2_loc(nbpart,l1:l2))
 allocate(fex_loc(0:nx,0:ny,l1:l2))
 allocate(fey_loc(0:nx,0:ny,l1:l2))
 
-do n = l1, l2
-
-  cost = cos(tau(n))
-  sint = sin(tau(n))
-  do m=1,nbpart
-    utmp   = 0.5_f64*(cost*wp1(m)-sint*wp2(m)+cost*wm1(m)+sint*wm2(m))
-    vtmp   = 0.5_f64*(sint*wp1(m)+cost*wp2(m)-sint*wm1(m)+cost*wm2(m))
-    xxt(1) = real( cost*utmp+sint*vtmp)
-    xxt(2) = real(-sint*utmp+cost*vtmp)
-    call apply_bc()
-    p%idx(m) = floor(xxt(1)/dimx*nx)
-    p%dpx(m) = real(xxt(1)/dx- p%idx(m), f64)
-    p%idy(m) = floor(xxt(2)/dimy*ny)
-    p%dpy(m) = real(xxt(2)/dy- p%idy(m), f64)
-  enddo
-  call interpol_eb_m6( f, p )
-  et1_loc(:,n) = p%epx !g(0,tau,w(0))
-  et2_loc(:,n) = p%epy
-
-enddo
-
-call MPI_ALLGATHER(et1_loc,nbpart*ll,MPI_DOUBLE_COMPLEX, &
-                   Et1,nbpart*ll,MPI_DOUBLE_COMPLEX,MPI_COMM_WORLD,code)
-call MPI_ALLGATHER(et2_loc,nbpart*ll,MPI_DOUBLE_COMPLEX, &
-                   Et2,nbpart*ll,MPI_DOUBLE_COMPLEX,MPI_COMM_WORLD,code)
-
 SLL_ALLOCATE(temp1(0:ntau-1),         error)
 SLL_ALLOCATE(temp2(0:ntau-1),         error)
 call sll_s_fft_init_c2c_1d(fw,ntau,temp1,temp1,sll_p_fft_forward)
 call sll_s_fft_init_c2c_1d(bw,ntau,temp1,temp1,sll_p_fft_backward)
 
-do m=1,nbpart
-
-  temp1= 2._f64*Et2(m,:)
-  temp2=-2._f64*Et1(m,:)!g_+
-  call sll_s_fft_exec_c2c_1d(fw, temp1, temp1)
-  call sll_s_fft_exec_c2c_1d(fw, temp2, temp2)
-
-  do n=1,ntau-1
-    temp1(n)=-sll_p_i1*temp1(n)/ltau(n)/ntau
-    temp2(n)=-sll_p_i1*temp2(n)/ltau(n)/ntau
-  enddo
-
-  temp1(0)= sll_p_i0
-  temp2(0)= sll_p_i0
-  call sll_s_fft_exec_c2c_1d(bw, temp1, temp1)
-  call sll_s_fft_exec_c2c_1d(bw, temp2, temp2)!AF+
-  up(:,m,1)=wp1(m)+2._f64*epsq*(temp1-temp1(0))
-  up(:,m,2)=wp2(m)+2._f64*epsq*(temp2-temp2(0))!1st ini data of U_+
-  !---
-  do n=0,ntau-1
-    cost = cos(2.0_f64*tau(n)) ! not the same dtau
-    sint = sin(2.0_f64*tau(n))
-    temp1(n)=-2._f64*( sint*Et1(m,n)+cost*Et2(m,n))
-    temp2(n)= 2._f64*(-sint*Et2(m,n)+cost*Et1(m,n))!g_-
-  enddo
-  call sll_s_fft_exec_c2c_1d(fw, temp1, temp1)
-  call sll_s_fft_exec_c2c_1d(fw, temp2, temp2)
-  do n=1,ntau-1
-    temp1(n)=-sll_p_i1*temp1(n)/ltau(n)/ntau
-    temp2(n)=-sll_p_i1*temp2(n)/ltau(n)/ntau
-  enddo
-  temp1(0)=sll_p_i0
-  temp2(0)=sll_p_i0
-  call sll_s_fft_exec_c2c_1d(bw, temp1, temp1)
-  call sll_s_fft_exec_c2c_1d(bw, temp2, temp2)!AF-
-  um(:,m,1)=wm1(m)+2._f64*epsq*(temp1-temp1(0))
-  um(:,m,2)=wm2(m)+2._f64*epsq*(temp2-temp2(0))!1st ini data of U_-
-enddo
-
-!--corrected more initial data
-
-do n=l1,l2
-
-  cost = cos(tau(n))
-  sint = sin(tau(n))
-
-  do m=1,nbpart
-    utmp = 0.5_f64*(cost*up(n,m,1)-sint*up(n,m,2) &
-                   +cost*um(n,m,1)+sint*um(n,m,2))
-    vtmp = 0.5_f64*(sint*up(n,m,1)+cost*up(n,m,2) &
-                   -sint*um(n,m,1)+cost*um(n,m,2))
-    xxt(1)=real( cost*utmp+sint*vtmp)
-    xxt(2)=real(-sint*utmp+cost*vtmp)
-    call apply_bc()
-    p%idx(m) = floor(xxt(1)/dimx*nx)
-    p%dpx(m) = real(xxt(1)/dx- p%idx(m), f64)
-    p%idy(m) = floor(xxt(2)/dimy*ny)
-    p%dpy(m) = real(xxt(2)/dy- p%idy(m), f64)
-  enddo
-
-  call calcul_rho_m6( p, f )
-  call poisson%compute_e_from_rho( f%ex, f%ey, f%r0)
-  fex_loc(:,:,n)= f%ex
-  fey_loc(:,:,n)= f%ey!E_1st(0,x)
-
-enddo
-
-call MPI_ALLGATHER(fex_loc,(nx+1)*(ny+1)*ll,MPI_DOUBLE_COMPLEX, &
-                   fex,(nx+1)*(ny+1)*ll,MPI_DOUBLE_COMPLEX,     &
-                   MPI_COMM_WORLD,code)
-call MPI_ALLGATHER(fey_loc,(nx+1)*(ny+1)*ll,MPI_DOUBLE_COMPLEX, &
-                   fey,(nx+1)*(ny+1)*ll,MPI_DOUBLE_COMPLEX,     &
-                   MPI_COMM_WORLD,code)
-
-do n=l1,l2
-  cost = cos(tau(n))
-  sint = sin(tau(n))
-  do m=1,nbpart
-    utmp = 0.5_f64*(cost*up(n,m,1)-sint*up(n,m,2) &
-                   +cost*um(n,m,1)+sint*um(n,m,2))
-    vtmp = 0.5_f64*(sint*up(n,m,1)+cost*up(n,m,2) &
-                   -sint*um(n,m,1)+cost*um(n,m,2))
-    xxt(1)=real( cost*utmp+sint*vtmp)
-    xxt(2)=real(-sint*utmp+cost*vtmp)
-    call apply_bc()
-    p%idx(m) = floor(xxt(1)/dimx*nx)
-    p%dpx(m) = real(xxt(1)/dx- p%idx(m), f64)
-    p%idy(m) = floor(xxt(2)/dimy*ny)
-    p%dpy(m) = real(xxt(2)/dy- p%idy(m), f64)
-  enddo
-  f%ex= real(fex(:,:,n))
-  f%ey= real(fey(:,:,n))
-  call interpol_eb_m6( f, p )
-  Et1_loc(:,n)= p%epx !g_1st(0,tau,U_1st(0))
-  Et2_loc(:,n)= p%epy
-enddo
-
-call MPI_ALLGATHER(et1_loc,nbpart*ll,MPI_DOUBLE_COMPLEX, &
-                   Et1,nbpart*ll,MPI_DOUBLE_COMPLEX,MPI_COMM_WORLD,code)
-call MPI_ALLGATHER(et2_loc,nbpart*ll,MPI_DOUBLE_COMPLEX, &
-                   Et2,nbpart*ll,MPI_DOUBLE_COMPLEX,MPI_COMM_WORLD,code)
-
-do m=1,nbpart
-  temp1= 2._f64*Et2(m,:)
-  temp2=-2._f64*Et1(m,:)!g_+
-  call sll_s_fft_exec_c2c_1d(fw, temp1, temp1)
-  call sll_s_fft_exec_c2c_1d(fw, temp2, temp2)
-  up0(0,m,1)=temp1(0)/ntau!Pi g_+
-  up0(0,m,2)=temp2(0)/ntau!Pi g_+
-  do n=1,ntau-1
-    temp1(n)=-sll_p_i1*temp1(n)/ltau(n)/ntau
-    temp2(n)=-sll_p_i1*temp2(n)/ltau(n)/ntau
-  enddo
-  temp1(0)=sll_p_i0
-  temp2(0)=sll_p_i0
-  call sll_s_fft_exec_c2c_1d(bw, temp1, temp1)
-  call sll_s_fft_exec_c2c_1d(bw, temp2, temp2)!AF+
-  up(:,m,1)=wp1(m)+2._f64*epsq*(temp1-temp1(0))
-  up(:,m,2)=wp2(m)+2._f64*epsq*(temp2-temp2(0))!3rd ini data of U_+
-  !---
-  do n=0,ntau-1
-    cost = cos(2.0_f64*tau(n))
-    sint = sin(2.0_f64*tau(n))
-    temp1(n)=-2._f64*(sint*Et1(m,n)+cost*Et2(m,n))
-    temp2(n)=2._f64*(-sint*Et2(m,n)+cost*Et1(m,n))!g_-
-  enddo
-  call sll_s_fft_exec_c2c_1d(fw, temp1, temp1)
-  call sll_s_fft_exec_c2c_1d(fw, temp2, temp2)
-  um0(0,m,1)=temp1(0)/ntau!Pi g_-
-  um0(0,m,2)=temp2(0)/ntau!Pi g_-
-  do n=1,ntau-1
-    temp1(n)=-sll_p_i1*temp1(n)/ltau(n)/ntau
-    temp2(n)=-sll_p_i1*temp2(n)/ltau(n)/ntau
-  enddo
-  temp1(0)=sll_p_i0
-  temp2(0)=sll_p_i0
-  call sll_s_fft_exec_c2c_1d(bw, temp1, temp1)
-  call sll_s_fft_exec_c2c_1d(bw, temp2, temp2)!AF-
-  um(:,m,1)=wm1(m)+2._f64*epsq*(temp1-temp1(0))
-  um(:,m,2)=wm2(m)+2._f64*epsq*(temp2-temp2(0))!3rd ini data of U_-
-
-enddo
-
-do n=l1,l2
-  cost = cos(tau(n))
-  sint = sin(tau(n))
-  do m=1,nbpart
-    utmp = 0.5_f64*(cost*up(n,m,1)-sint*up(n,m,2) &
-                   +cost*um(n,m,1)+sint*um(n,m,2))
-    vtmp = 0.5_f64*(sint*up(n,m,1)+cost*up(n,m,2) &
-                   -sint*um(n,m,1)+cost*um(n,m,2))
-    xxt(1)=real( cost*utmp+sint*vtmp)
-    xxt(2)=real(-sint*utmp+cost*vtmp)
-    call apply_bc()
-    p%idx(m) = floor(xxt(1)/dimx*nx)
-    p%dpx(m) = real(xxt(1)/dx- p%idx(m), f64)
-    p%idy(m) = floor(xxt(2)/dimy*ny)
-    p%dpy(m) = real(xxt(2)/dy- p%idy(m), f64)
-  enddo
-  call calcul_rho_m6( p, f )
-  call poisson%compute_e_from_rho( f%ex, f%ey, f%r0)
-  fex_loc(:,:,n)= f%ex
-  fey_loc(:,:,n)= f%ey!E_4(0,x)
-enddo
-
-call MPI_ALLGATHER(fex_loc,(nx+1)*(ny+1)*ll,MPI_DOUBLE_COMPLEX, &
-                   fex,(nx+1)*(ny+1)*ll,MPI_DOUBLE_COMPLEX,     &
-                   MPI_COMM_WORLD,code)
-call MPI_ALLGATHER(fey_loc,(nx+1)*(ny+1)*ll,MPI_DOUBLE_COMPLEX, &
-                   fey,(nx+1)*(ny+1)*ll,MPI_DOUBLE_COMPLEX,     &
-                   MPI_COMM_WORLD,code)
-
-!--time iteration---
-time=dt
-do n=l1,l2
-  cost = cos(tau(n))
-  sint = sin(tau(n))
-  do m=1,nbpart
-    utmp = 0.5_f64*(cost*up(n,m,1)-sint*up(n,m,2) &
-                   +cost*um(n,m,1)+sint*um(n,m,2))
-    vtmp = 0.5_f64*(sint*up(n,m,1)+cost*up(n,m,2) &
-                   -sint*um(n,m,1)+cost*um(n,m,2))
-    xxt(1)=real( cost*utmp+sint*vtmp)
-    xxt(2)=real(-sint*utmp+cost*vtmp)
-    call apply_bc()
-    p%idx(m) = floor(xxt(1)/dimx*nx)
-    p%dpx(m) = real(xxt(1)/dx- p%idx(m), f64)
-    p%idy(m) = floor(xxt(2)/dimy*ny)
-    p%dpy(m) = real(xxt(2)/dy- p%idy(m), f64)
-  enddo
-  f%ex= real(fex(:,:,n))
-  f%ey= real(fey(:,:,n))
-  call interpol_eb_m6( f, p )
-  Et1_loc(:,n)= p%epx !g_3rd(0,tau,U_3rd(0))
-  Et2_loc(:,n)= p%epy
-enddo
-
-call MPI_ALLGATHER(et1_loc,nbpart*ll,MPI_DOUBLE_COMPLEX, &
-                   Et1,nbpart*ll,MPI_DOUBLE_COMPLEX,MPI_COMM_WORLD,code)
-call MPI_ALLGATHER(et2_loc,nbpart*ll,MPI_DOUBLE_COMPLEX, &
-                   Et2,nbpart*ll,MPI_DOUBLE_COMPLEX,MPI_COMM_WORLD,code)
-
-do m=1,nbpart
-  temp1= 2._f64*Et2(m,:)
-  temp2=-2._f64*Et1(m,:)
-  call sll_s_fft_exec_c2c_1d(fw, temp1, temp1)
-  call sll_s_fft_exec_c2c_1d(fw, temp2, temp2)
-  xt1(:,1)=temp1/ntau!g_+tilde(t=0)
-  xt1(:,2)=temp2/ntau!g_+tilde(t=0)
-  !---
-  do n=0,ntau-1
-    cost = cos(2.0_f64*tau(n))
-    sint = sin(2.0_f64*tau(n))
-    temp1(n)=-2.0_f64*( sint*Et1(m,n)+cost*Et2(m,n))
-    temp2(n)= 2.0_f64*(-sint*Et2(m,n)+cost*Et1(m,n))
-  enddo
-  call sll_s_fft_exec_c2c_1d(fw, temp1, temp1)
-  call sll_s_fft_exec_c2c_1d(fw, temp2, temp2)
-  xt2(:,1)=temp1/ntau!g_-tilde(t=0)
-  xt2(:,2)=temp2/ntau!g_-tilde(t=0)
-
-  call sll_s_fft_exec_c2c_1d(fw, up(:,m,1), temp1)
-  call sll_s_fft_exec_c2c_1d(fw, up(:,m,2), temp2)
-  do n=0,ntau-1
-    temp1(n)=eiltau(n)*temp1(n)+pl(n)*xt1(n,1)!utilde_+^1,predict
-    temp2(n)=eiltau(n)*temp2(n)+pl(n)*xt1(n,2)!utilde_+^1,predict
-  enddo
-  call sll_s_fft_exec_c2c_1d(bw, temp1, up0(:,m,1))!u_+(t1),predict
-  call sll_s_fft_exec_c2c_1d(bw, temp2, up0(:,m,2))
-  call sll_s_fft_exec_c2c_1d(fw, um(:,m,1), temp1)
-  call sll_s_fft_exec_c2c_1d(fw, um(:,m,2), temp2)
-  do n=0,ntau-1
-    temp1(n)=eiltau(n)*temp1(n)+pl(n)*xt2(n,1)!utilde_-^1,predict
-    temp2(n)=eiltau(n)*temp2(n)+pl(n)*xt2(n,2)!utilde_-^1,predict
-  enddo
-  call sll_s_fft_exec_c2c_1d(bw, temp1, um0(:,m,1))!u_-(t1),predict
-  call sll_s_fft_exec_c2c_1d(bw, temp2, um0(:,m,2))
-
-  gp1(:,m) = xt1(:,1)
-  gp2(:,m) = xt1(:,2)
-  gm1(:,m) = xt2(:,1)
-  gm2(:,m) = xt2(:,2)
-
-enddo
-
-
-do n= l1,l2
-  cost = cos(tau(n))
-  sint = sin(tau(n))
-  do m=1,nbpart
-    utmp = 0.5_f64*(cost*up0(n,m,1)-sint*up0(n,m,2) &
-                   +cost*um0(n,m,1)+sint*um0(n,m,2))
-    vtmp = 0.5_f64*(sint*up0(n,m,1)+cost*up0(n,m,2) &
-                   -sint*um0(n,m,1)+cost*um0(n,m,2))
-    xxt(1)=real( cost*utmp+sint*vtmp)
-    xxt(2)=real(-sint*utmp+cost*vtmp)
-    call apply_bc()
-    p%idx(m) = floor(xxt(1)/dimx*nx)
-    p%dpx(m) = real(xxt(1)/dx- p%idx(m), f64)
-    p%idy(m) = floor(xxt(2)/dimy*ny)
-    p%dpy(m) = real(xxt(2)/dy- p%idy(m), f64)
-  enddo
-  call calcul_rho_m6( p, f )
-  call poisson%compute_e_from_rho( f%ex, f%ey, f%r0)
-  fex_loc(:,:,n)=f%ex
-  fey_loc(:,:,n)=f%ey!prediction
-enddo
-
-call MPI_ALLGATHER(fex_loc,(nx+1)*(ny+1)*ll,MPI_DOUBLE_COMPLEX, &
-                   fex,(nx+1)*(ny+1)*ll,MPI_DOUBLE_COMPLEX,     &
-                   MPI_COMM_WORLD,code)
-call MPI_ALLGATHER(fey_loc,(nx+1)*(ny+1)*ll,MPI_DOUBLE_COMPLEX, &
-                   fey,(nx+1)*(ny+1)*ll,MPI_DOUBLE_COMPLEX,     &
-                   MPI_COMM_WORLD,code)
-!--correction--
-do n=l1,l2
-  cost = cos(tau(n))
-  sint = sin(tau(n))
-  do m=1,nbpart
-    utmp = 0.5_f64*(cost*up0(n,m,1)-sint*up0(n,m,2) &
-                   +cost*um0(n,m,1)+sint*um0(n,m,2))
-    vtmp = 0.5_f64*(sint*up0(n,m,1)+cost*up0(n,m,2) &
-                   -sint*um0(n,m,1)+cost*um0(n,m,2))
-    xxt(1)=real( cost*utmp+sint*vtmp)
-    xxt(2)=real(-sint*utmp+cost*vtmp)
-    call apply_bc()
-    p%idx(m) = floor(xxt(1)/dimx*nx)
-    p%dpx(m) = real(xxt(1)/dx- p%idx(m), f64)
-    p%idy(m) = floor(xxt(2)/dimy*ny)
-    p%dpy(m) = real(xxt(2)/dy- p%idy(m), f64)
-  enddo
-  f%ex= real(fex(:,:,n))
-  f%ey= real(fey(:,:,n))
-  call interpol_eb_m6( f, p )
-  Et1_loc(:,n)= p%epx !g(t1,tau,U(t1))
-  Et2_loc(:,n)= p%epy
-enddo
-
-call MPI_ALLGATHER(et1_loc,nbpart*ll,MPI_DOUBLE_COMPLEX, &
-                   Et1,nbpart*ll,MPI_DOUBLE_COMPLEX,MPI_COMM_WORLD,code)
-call MPI_ALLGATHER(et2_loc,nbpart*ll,MPI_DOUBLE_COMPLEX, &
-                   Et2,nbpart*ll,MPI_DOUBLE_COMPLEX,MPI_COMM_WORLD,code)
-
-do m=1,nbpart
-
-  temp1 =  2._f64*Et2(m,:)
-  temp2 = -2._f64*Et1(m,:)
-  call sll_s_fft_exec_c2c_1d(fw, temp1, temp1)
-  call sll_s_fft_exec_c2c_1d(fw, temp2, temp2)
-  xt1(:,1)=temp1/ntau!g_+tilde(t1) predict
-  xt1(:,2)=temp2/ntau!g_+tilde(t1) predict
-  !---
-  do n=0,ntau-1
-    cost = cos(2_f64*tau(n))
-    sint = sin(2_f64*tau(n))
-    temp1(n) = - 2._f64*( sint*Et1(m,n)+cost*Et2(m,n))
-    temp2(n) =   2._f64*(-sint*Et2(m,n)+cost*Et1(m,n))
-  enddo
-
-  call sll_s_fft_exec_c2c_1d(fw, temp1, temp1)
-  call sll_s_fft_exec_c2c_1d(fw, temp2, temp2)
-
-  xt2(:,1)=temp1/ntau!g_-tilde(t1) predict
-  xt2(:,2)=temp2/ntau!g_-tilde(t1) predict
-
-  call sll_s_fft_exec_c2c_1d(fw, up(:,m,1), temp1)
-  call sll_s_fft_exec_c2c_1d(fw, up(:,m,2), temp2)
-
-  do n=0,ntau-1
-    temp1(n)=eiltau(n)*temp1(n)+pl(n)*xt1(n,1)+ql(n)*(xt1(n,1)-gp1(n,m))/dt
-    temp2(n)=eiltau(n)*temp2(n)+pl(n)*xt1(n,2)+ql(n)*(xt1(n,2)-gp2(n,m))/dt
-  enddo
-  call sll_s_fft_exec_c2c_1d(bw, temp1, up(:,m,1))!u_+(t1)
-  call sll_s_fft_exec_c2c_1d(bw, temp2, up(:,m,2))
-  call sll_s_fft_exec_c2c_1d(fw, um(:,m,1), temp1)
-  call sll_s_fft_exec_c2c_1d(fw, um(:,m,2), temp2)
-  do n=0,ntau-1
-    temp1(n)=eiltau(n)*temp1(n)+pl(n)*xt2(n,1)+ql(n)*(xt2(n,1)-gm1(n,m))/dt
-    temp2(n)=eiltau(n)*temp2(n)+pl(n)*xt2(n,2)+ql(n)*(xt2(n,2)-gm2(n,m))/dt
-  enddo
-  call sll_s_fft_exec_c2c_1d(bw, temp1, um(:,m,1))!u_-(t1)
-  call sll_s_fft_exec_c2c_1d(bw, temp2, um(:,m,2))
-
-enddo
-
-do n=l1,l2
-  cost = cos(tau(n))
-  sint = sin(tau(n))
-  do m=1,nbpart
-    utmp = 0.5_f64*(cost*up(n,m,1)-sint*up(n,m,2) &
-                   +cost*um(n,m,1)+sint*um(n,m,2))
-    vtmp = 0.5_f64*(sint*up(n,m,1)+cost*up(n,m,2) &
-                   -sint*um(n,m,1)+cost*um(n,m,2))
-    xxt(1)=real( cost*utmp+sint*vtmp)
-    xxt(2)=real(-sint*utmp+cost*vtmp)
-    call apply_bc()
-    p%idx(m) = floor(xxt(1)/dimx*nx)
-    p%dpx(m) = real(xxt(1)/dx- p%idx(m), f64)
-    p%idy(m) = floor(xxt(2)/dimy*ny)
-    p%dpy(m) = real(xxt(2)/dy- p%idy(m), f64)
-  enddo
-  call calcul_rho_m6( p, f )
-  call poisson%compute_e_from_rho( f%ex, f%ey, f%r0)
-  fex_loc(:,:,n)= f%ex
-  fey_loc(:,:,n)= f%ey
-enddo
-
-call MPI_ALLGATHER(fex_loc,(nx+1)*(ny+1)*ll,MPI_DOUBLE_COMPLEX, &
-                   fex,(nx+1)*(ny+1)*ll,MPI_DOUBLE_COMPLEX,     &
-                   MPI_COMM_WORLD,code)
-call MPI_ALLGATHER(fey_loc,(nx+1)*(ny+1)*ll,MPI_DOUBLE_COMPLEX, &
-                   fey,(nx+1)*(ny+1)*ll,MPI_DOUBLE_COMPLEX,     &
-                   MPI_COMM_WORLD,code)
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 !*** Loop over time ***
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-if (master) call energy_use()
 
-do istep = 2, nstep
+time   = 0._f64
+rtime  = reset
+
+rms = 0.0_f64
+do j = 0, ny-1
+  do i = 0, nx-1
+    rms = rms + (real(i,f64)*dx)**2*f%r0(i,j)
+  end do
+end do
+if (rms >= 0.0_f64) then
+  rms = sqrt(rms*dx*dy)
+else
+  rms = 0.0_f64
+end if
+
+energy_p = 0.5_f64*sum(p%p*(p%vpx*p%vpx+p%vpy*p%vpy))
+
+energy_e = 0.5_f64*sum(f%ex(0:nx-1,0:ny-1)*f%ex(0:nx-1,0:ny-1)         &
+                      +f%ey(0:nx-1,0:ny-1)*f%ey(0:nx-1,0:ny-1))*dx*dy
+
+f_mode   =  energy_fourier_mode_xy(1,1,f%ex(0:nx-1,0:ny-1),f%ey(0:nx-1,0:ny-1))
+
+mass     = sum(f%r0(0:nx-1,0:ny-1))*dx*dy
+
+if (master) then 
+  open(10, file='energy.dat')
+  rewind(10)
+  write(10,"(a)") '# time, first fourier modes, relative energy, rms, mass'
+  write(10,"(5g15.7)") time, f_mode, (energy_p+energy_e)/energy0, rms, mass
+  close(10)
+  write(*,"('istep =',i5,' : ',5g15.7)") istep, time,    &
+      f_mode, (energy_p+energy_e)/energy0, &
+      rms, mass
+  
+  if (plot) then
+  
+    call sll_s_xdmf_corect2d_nodes( 'rho', f%r0, 'rho', &
+      0.0_f64, dx, 0.0_f64, dy, 'HDF5', istep, time) 
+    call sll_s_distribution_xdmf('df', p%vpx, p%vpy, p%p, &
+                               -5.0_f64, 5.0_f64, 100,     &
+                               -5.0_f64, 5.0_f64, 100, istep)
+  
+  end if
+
+end if
+
+call particles_preparation()
+
+do while( time < tfinal )
+
+  if ( istep == floor(rtime/dt)) then
+
+    print*, " *** Initialize particles *** "
+    call energy_use( time - (rtime-reset))
+    rtime = rtime + reset
+    call particles_preparation()
+
+  end if
 
   do n=l1,l2
     cost = cos(tau(n))
@@ -634,7 +288,7 @@ do istep = 2, nstep
                      -sint*um(n,m,1)+cost*um(n,m,2))
       xxt(1)=real( cost*utmp+sint*vtmp)
       xxt(2)=real(-sint*utmp+cost*vtmp)
-      call apply_bc()
+      call apply_bc(xxt)
       p%idx(m) = floor(xxt(1)/dimx*nx)
       p%dpx(m) = real(xxt(1)/dx- p%idx(m), f64)
       p%idy(m) = floor(xxt(2)/dimy*ny)
@@ -702,7 +356,6 @@ do istep = 2, nstep
   !--update E--
   time = time + dt
 
-
   do n=l1,l2
     cost = cos(tau(n))
     sint = sin(tau(n))
@@ -713,7 +366,7 @@ do istep = 2, nstep
                      -sint*um(n,m,1)+cost*um(n,m,2))
       xxt(1)=real( cost*utmp+sint*vtmp)
       xxt(2)=real(-sint*utmp+cost*vtmp)
-      call apply_bc()
+      call apply_bc(xxt)
       p%idx(m) = floor(xxt(1)/dimx*nx)
       p%dpx(m) = real(xxt(1)/dx- p%idx(m), f64)
       p%idy(m) = floor(xxt(2)/dimy*ny)
@@ -732,12 +385,59 @@ do istep = 2, nstep
                      fey,(nx+1)*(ny+1)*ll,MPI_DOUBLE_COMPLEX,     &
                      MPI_COMM_WORLD,code)
 
+  istep = istep + 1
 
-  if (master) call energy_use()
+  call energy_use(time)
+  call calcul_rho_m6( p, f )
+  call poisson%compute_e_from_rho( f%ex, f%ey, f%r0)
 
-enddo
+  if (master) then 
+
+    rms = 0.0_f64
+    do j = 0, ny-1
+      do i = 0, nx-1
+       rms = rms + (real(i,f64)*dx)**2*f%r0(i,j)
+      end do
+    end do
+    if (rms >= 0.0_f64) then
+      rms = sqrt(rms*dx*dy)
+    else
+      rms = 0.0_f64
+    end if
+    
+    energy_p = 0.5_f64*sum(p%p*(p%vpx*p%vpx+p%vpy*p%vpy))
+    
+    energy_e = 0.5_f64*sum(f%ex(0:nx-1,0:ny-1)*f%ex(0:nx-1,0:ny-1)         &
+                       +f%ey(0:nx-1,0:ny-1)*f%ey(0:nx-1,0:ny-1))*dx*dy
+    
+    f_mode   =  energy_fourier_mode_xy(1,1,f%ex(0:nx-1,0:ny-1),f%ey(0:nx-1,0:ny-1))
+    
+    mass     = sum(f%r0(0:nx-1,0:ny-1))*dx*dy
+    
+    open(10, file='energy.dat', position='append')
+    write(10,"(5g15.7)") time, f_mode, (energy_p+energy_e)/energy0, rms, mass
+    close(10)
+    write(*,"('istep =',i5,' : ',5g15.7)") istep, time,    &
+       f_mode, (energy_p+energy_e)/energy0, &
+       rms, mass
+     
+    if (plot) then
+    
+       call sll_s_xdmf_corect2d_nodes( 'rho', f%r0, 'rho', &
+         0.0_f64, dx, 0.0_f64, dy, 'HDF5', istep, time) 
+       call sll_s_distribution_xdmf('df', p%vpx, p%vpy, p%p, &
+                                  -5.0_f64, 5.0_f64, 100,     &
+                                  -5.0_f64, 5.0_f64, 100, istep)
+      
+    end if
+
+  end if
+
+
+enddo !*** Next time step ***
 
 call MPI_BARRIER(MPI_COMM_WORLD,code)
+
 if (master) then
   call cpu_time(stop_time)
   print *, "CPU time:", stop_time - start_time, "seconds"
@@ -750,111 +450,486 @@ call finish_mpi()
 
 contains
 
-subroutine apply_bc()
+subroutine particles_preparation()
 
-do while ( xxt(1) > xmax )
-  xxt(1) = xxt(1) - dimx
-enddo
-do while ( xxt(1) < xmin )
-  xxt(1)= xxt(1) + dimx
-enddo
-do while ( xxt(2) > ymax )
-  xxt(2)  = xxt(2)  - dimy
-enddo
-do while ( xxt(2)  < ymin )
-  xxt(2) = xxt(2)  + dimy
-enddo
+  wp1(:) = 2._f64*((p%dpx+p%idx)*dx+ep*p%vpy)
+  wp2(:) = 2._f64*((p%dpy+p%idy)*dy-ep*p%vpx)
+  wm1(:) = - 2._f64*ep*p%vpy
+  wm2(:) =   2._f64*ep*p%vpx
+  
+  do n = l1, l2
+  
+    cost = cos(tau(n))
+    sint = sin(tau(n))
+    do m=1,nbpart
+      utmp   = 0.5_f64*(cost*wp1(m)-sint*wp2(m)+cost*wm1(m)+sint*wm2(m))
+      vtmp   = 0.5_f64*(sint*wp1(m)+cost*wp2(m)-sint*wm1(m)+cost*wm2(m))
+      xxt(1) = real( cost*utmp+sint*vtmp)
+      xxt(2) = real(-sint*utmp+cost*vtmp)
+      call apply_bc(xxt)
+      p%idx(m) = floor(xxt(1)/dimx*nx)
+      p%dpx(m) = real(xxt(1)/dx- p%idx(m), f64)
+      p%idy(m) = floor(xxt(2)/dimy*ny)
+      p%dpy(m) = real(xxt(2)/dy- p%idy(m), f64)
+    enddo
+    call interpol_eb_m6( f, p )
+    et1_loc(:,n) = p%epx !g(0,tau,w(0))
+    et2_loc(:,n) = p%epy
+  
+  enddo
+  
+  call MPI_ALLGATHER(et1_loc,nbpart*ll,MPI_DOUBLE_COMPLEX, &
+                     Et1,nbpart*ll,MPI_DOUBLE_COMPLEX,MPI_COMM_WORLD,code)
+  call MPI_ALLGATHER(et2_loc,nbpart*ll,MPI_DOUBLE_COMPLEX, &
+                     Et2,nbpart*ll,MPI_DOUBLE_COMPLEX,MPI_COMM_WORLD,code)
+  
+  
+  do m=1,nbpart
+  
+    temp1= 2._f64*Et2(m,:)
+    temp2=-2._f64*Et1(m,:)!g_+
+
+    call sll_s_fft_exec_c2c_1d(fw, temp1, temp1)
+    call sll_s_fft_exec_c2c_1d(fw, temp2, temp2)
+  
+    do n=1,ntau-1
+      temp1(n)=-sll_p_i1*temp1(n)/ltau(n)/ntau
+      temp2(n)=-sll_p_i1*temp2(n)/ltau(n)/ntau
+    enddo
+  
+    temp1(0)= sll_p_i0
+    temp2(0)= sll_p_i0
+
+    call sll_s_fft_exec_c2c_1d(bw, temp1, temp1)
+    call sll_s_fft_exec_c2c_1d(bw, temp2, temp2)!AF+
+
+    up(:,m,1)=wp1(m)+2._f64*epsq*(temp1-temp1(0))
+    up(:,m,2)=wp2(m)+2._f64*epsq*(temp2-temp2(0))!1st ini data of U_+
+
+    !---
+
+    do n=0,ntau-1
+      cost = cos(2.0_f64*tau(n)) ! not the same dtau
+      sint = sin(2.0_f64*tau(n))
+      temp1(n)=-2._f64*( sint*Et1(m,n)+cost*Et2(m,n))
+      temp2(n)= 2._f64*(-sint*Et2(m,n)+cost*Et1(m,n))!g_-
+    enddo
+
+    call sll_s_fft_exec_c2c_1d(fw, temp1, temp1)
+    call sll_s_fft_exec_c2c_1d(fw, temp2, temp2)
+
+    do n=1,ntau-1
+      temp1(n)=-sll_p_i1*temp1(n)/ltau(n)/ntau
+      temp2(n)=-sll_p_i1*temp2(n)/ltau(n)/ntau
+    enddo
+    temp1(0)=sll_p_i0
+    temp2(0)=sll_p_i0
+    call sll_s_fft_exec_c2c_1d(bw, temp1, temp1)
+    call sll_s_fft_exec_c2c_1d(bw, temp2, temp2)!AF-
+    um(:,m,1)=wm1(m)+2._f64*epsq*(temp1-temp1(0))
+    um(:,m,2)=wm2(m)+2._f64*epsq*(temp2-temp2(0))!1st ini data of U_-
+  enddo
+  
+  !--corrected more initial data
+  
+  do n=l1,l2
+  
+    cost = cos(tau(n))
+    sint = sin(tau(n))
+  
+    do m=1,nbpart
+      utmp = 0.5_f64*(cost*up(n,m,1)-sint*up(n,m,2) &
+                     +cost*um(n,m,1)+sint*um(n,m,2))
+      vtmp = 0.5_f64*(sint*up(n,m,1)+cost*up(n,m,2) &
+                     -sint*um(n,m,1)+cost*um(n,m,2))
+      xxt(1)=real( cost*utmp+sint*vtmp)
+      xxt(2)=real(-sint*utmp+cost*vtmp)
+      call apply_bc(xxt)
+      p%idx(m) = floor(xxt(1)/dimx*nx)
+      p%dpx(m) = real(xxt(1)/dx- p%idx(m), f64)
+      p%idy(m) = floor(xxt(2)/dimy*ny)
+      p%dpy(m) = real(xxt(2)/dy- p%idy(m), f64)
+    enddo
+  
+    call calcul_rho_m6( p, f )
+    call poisson%compute_e_from_rho( f%ex, f%ey, f%r0)
+    fex_loc(:,:,n)= f%ex
+    fey_loc(:,:,n)= f%ey!E_1st(0,x)
+  
+  enddo
+  
+  call MPI_ALLGATHER(fex_loc,(nx+1)*(ny+1)*ll,MPI_DOUBLE_COMPLEX, &
+                     fex,(nx+1)*(ny+1)*ll,MPI_DOUBLE_COMPLEX,     &
+                     MPI_COMM_WORLD,code)
+  call MPI_ALLGATHER(fey_loc,(nx+1)*(ny+1)*ll,MPI_DOUBLE_COMPLEX, &
+                     fey,(nx+1)*(ny+1)*ll,MPI_DOUBLE_COMPLEX,     &
+                     MPI_COMM_WORLD,code)
+  
+  do n=l1,l2
+    cost = cos(tau(n))
+    sint = sin(tau(n))
+    do m=1,nbpart
+      utmp = 0.5_f64*(cost*up(n,m,1)-sint*up(n,m,2) &
+                     +cost*um(n,m,1)+sint*um(n,m,2))
+      vtmp = 0.5_f64*(sint*up(n,m,1)+cost*up(n,m,2) &
+                     -sint*um(n,m,1)+cost*um(n,m,2))
+      xxt(1)=real( cost*utmp+sint*vtmp)
+      xxt(2)=real(-sint*utmp+cost*vtmp)
+      call apply_bc(xxt)
+      p%idx(m) = floor(xxt(1)/dimx*nx)
+      p%dpx(m) = real(xxt(1)/dx- p%idx(m), f64)
+      p%idy(m) = floor(xxt(2)/dimy*ny)
+      p%dpy(m) = real(xxt(2)/dy- p%idy(m), f64)
+    enddo
+    f%ex= real(fex(:,:,n))
+    f%ey= real(fey(:,:,n))
+    call interpol_eb_m6( f, p )
+    Et1_loc(:,n)= p%epx !g_1st(0,tau,U_1st(0))
+    Et2_loc(:,n)= p%epy
+  enddo
+  
+  call MPI_ALLGATHER(et1_loc,nbpart*ll,MPI_DOUBLE_COMPLEX, &
+                     Et1,nbpart*ll,MPI_DOUBLE_COMPLEX,MPI_COMM_WORLD,code)
+  call MPI_ALLGATHER(et2_loc,nbpart*ll,MPI_DOUBLE_COMPLEX, &
+                     Et2,nbpart*ll,MPI_DOUBLE_COMPLEX,MPI_COMM_WORLD,code)
+  
+  do m=1,nbpart
+    temp1= 2._f64*Et2(m,:)
+    temp2=-2._f64*Et1(m,:)!g_+
+    call sll_s_fft_exec_c2c_1d(fw, temp1, temp1)
+    call sll_s_fft_exec_c2c_1d(fw, temp2, temp2)
+    up0(0,m,1)=temp1(0)/ntau!Pi g_+
+    up0(0,m,2)=temp2(0)/ntau!Pi g_+
+    do n=1,ntau-1
+      temp1(n)=-sll_p_i1*temp1(n)/ltau(n)/ntau
+      temp2(n)=-sll_p_i1*temp2(n)/ltau(n)/ntau
+    enddo
+    temp1(0)=sll_p_i0
+    temp2(0)=sll_p_i0
+    call sll_s_fft_exec_c2c_1d(bw, temp1, temp1)
+    call sll_s_fft_exec_c2c_1d(bw, temp2, temp2)!AF+
+    up(:,m,1)=wp1(m)+2._f64*epsq*(temp1-temp1(0))
+    up(:,m,2)=wp2(m)+2._f64*epsq*(temp2-temp2(0))!3rd ini data of U_+
+    !---
+    do n=0,ntau-1
+      cost = cos(2.0_f64*tau(n))
+      sint = sin(2.0_f64*tau(n))
+      temp1(n)=-2._f64*(sint*Et1(m,n)+cost*Et2(m,n))
+      temp2(n)=2._f64*(-sint*Et2(m,n)+cost*Et1(m,n))!g_-
+    enddo
+    call sll_s_fft_exec_c2c_1d(fw, temp1, temp1)
+    call sll_s_fft_exec_c2c_1d(fw, temp2, temp2)
+    um0(0,m,1)=temp1(0)/ntau!Pi g_-
+    um0(0,m,2)=temp2(0)/ntau!Pi g_-
+    do n=1,ntau-1
+      temp1(n)=-sll_p_i1*temp1(n)/ltau(n)/ntau
+      temp2(n)=-sll_p_i1*temp2(n)/ltau(n)/ntau
+    enddo
+    temp1(0)=sll_p_i0
+    temp2(0)=sll_p_i0
+    call sll_s_fft_exec_c2c_1d(bw, temp1, temp1)
+    call sll_s_fft_exec_c2c_1d(bw, temp2, temp2)!AF-
+    um(:,m,1)=wm1(m)+2._f64*epsq*(temp1-temp1(0))
+    um(:,m,2)=wm2(m)+2._f64*epsq*(temp2-temp2(0))!3rd ini data of U_-
+  
+  enddo
+  
+  do n=l1,l2
+    cost = cos(tau(n))
+    sint = sin(tau(n))
+    do m=1,nbpart
+      utmp = 0.5_f64*(cost*up(n,m,1)-sint*up(n,m,2) &
+                     +cost*um(n,m,1)+sint*um(n,m,2))
+      vtmp = 0.5_f64*(sint*up(n,m,1)+cost*up(n,m,2) &
+                     -sint*um(n,m,1)+cost*um(n,m,2))
+      xxt(1)=real( cost*utmp+sint*vtmp)
+      xxt(2)=real(-sint*utmp+cost*vtmp)
+      call apply_bc(xxt)
+      p%idx(m) = floor(xxt(1)/dimx*nx)
+      p%dpx(m) = real(xxt(1)/dx- p%idx(m), f64)
+      p%idy(m) = floor(xxt(2)/dimy*ny)
+      p%dpy(m) = real(xxt(2)/dy- p%idy(m), f64)
+    enddo
+    call calcul_rho_m6( p, f )
+    call poisson%compute_e_from_rho( f%ex, f%ey, f%r0)
+    fex_loc(:,:,n)= f%ex
+    fey_loc(:,:,n)= f%ey!E_4(0,x)
+  enddo
+  
+  call MPI_ALLGATHER(fex_loc,(nx+1)*(ny+1)*ll,MPI_DOUBLE_COMPLEX, &
+                     fex,(nx+1)*(ny+1)*ll,MPI_DOUBLE_COMPLEX,     &
+                     MPI_COMM_WORLD,code)
+  call MPI_ALLGATHER(fey_loc,(nx+1)*(ny+1)*ll,MPI_DOUBLE_COMPLEX, &
+                     fey,(nx+1)*(ny+1)*ll,MPI_DOUBLE_COMPLEX,     &
+                     MPI_COMM_WORLD,code)
+  
+  !--time iteration---
+  time=time+dt
+  do n=l1,l2
+    cost = cos(tau(n))
+    sint = sin(tau(n))
+    do m=1,nbpart
+      utmp = 0.5_f64*(cost*up(n,m,1)-sint*up(n,m,2) &
+                     +cost*um(n,m,1)+sint*um(n,m,2))
+      vtmp = 0.5_f64*(sint*up(n,m,1)+cost*up(n,m,2) &
+                     -sint*um(n,m,1)+cost*um(n,m,2))
+      xxt(1)=real( cost*utmp+sint*vtmp)
+      xxt(2)=real(-sint*utmp+cost*vtmp)
+      call apply_bc(xxt)
+      p%idx(m) = floor(xxt(1)/dimx*nx)
+      p%dpx(m) = real(xxt(1)/dx- p%idx(m), f64)
+      p%idy(m) = floor(xxt(2)/dimy*ny)
+      p%dpy(m) = real(xxt(2)/dy- p%idy(m), f64)
+    enddo
+    f%ex= real(fex(:,:,n))
+    f%ey= real(fey(:,:,n))
+    call interpol_eb_m6( f, p )
+    Et1_loc(:,n)= p%epx !g_3rd(0,tau,U_3rd(0))
+    Et2_loc(:,n)= p%epy
+  enddo
+  
+  call MPI_ALLGATHER(et1_loc,nbpart*ll,MPI_DOUBLE_COMPLEX, &
+                     Et1,nbpart*ll,MPI_DOUBLE_COMPLEX,MPI_COMM_WORLD,code)
+  call MPI_ALLGATHER(et2_loc,nbpart*ll,MPI_DOUBLE_COMPLEX, &
+                     Et2,nbpart*ll,MPI_DOUBLE_COMPLEX,MPI_COMM_WORLD,code)
+  
+  do m=1,nbpart
+    temp1= 2._f64*Et2(m,:)
+    temp2=-2._f64*Et1(m,:)
+    call sll_s_fft_exec_c2c_1d(fw, temp1, temp1)
+    call sll_s_fft_exec_c2c_1d(fw, temp2, temp2)
+    xt1(:,1)=temp1/ntau!g_+tilde(t=0)
+    xt1(:,2)=temp2/ntau!g_+tilde(t=0)
+    !---
+    do n=0,ntau-1
+      cost = cos(2.0_f64*tau(n))
+      sint = sin(2.0_f64*tau(n))
+      temp1(n)=-2.0_f64*( sint*Et1(m,n)+cost*Et2(m,n))
+      temp2(n)= 2.0_f64*(-sint*Et2(m,n)+cost*Et1(m,n))
+    enddo
+    call sll_s_fft_exec_c2c_1d(fw, temp1, temp1)
+    call sll_s_fft_exec_c2c_1d(fw, temp2, temp2)
+    xt2(:,1)=temp1/ntau!g_-tilde(t=0)
+    xt2(:,2)=temp2/ntau!g_-tilde(t=0)
+  
+    call sll_s_fft_exec_c2c_1d(fw, up(:,m,1), temp1)
+    call sll_s_fft_exec_c2c_1d(fw, up(:,m,2), temp2)
+    do n=0,ntau-1
+      temp1(n)=eiltau(n)*temp1(n)+pl(n)*xt1(n,1)!utilde_+^1,predict
+      temp2(n)=eiltau(n)*temp2(n)+pl(n)*xt1(n,2)!utilde_+^1,predict
+    enddo
+    call sll_s_fft_exec_c2c_1d(bw, temp1, up0(:,m,1))!u_+(t1),predict
+    call sll_s_fft_exec_c2c_1d(bw, temp2, up0(:,m,2))
+    call sll_s_fft_exec_c2c_1d(fw, um(:,m,1), temp1)
+    call sll_s_fft_exec_c2c_1d(fw, um(:,m,2), temp2)
+    do n=0,ntau-1
+      temp1(n)=eiltau(n)*temp1(n)+pl(n)*xt2(n,1)!utilde_-^1,predict
+      temp2(n)=eiltau(n)*temp2(n)+pl(n)*xt2(n,2)!utilde_-^1,predict
+    enddo
+    call sll_s_fft_exec_c2c_1d(bw, temp1, um0(:,m,1))!u_-(t1),predict
+    call sll_s_fft_exec_c2c_1d(bw, temp2, um0(:,m,2))
+  
+    gp1(:,m) = xt1(:,1)
+    gp2(:,m) = xt1(:,2)
+    gm1(:,m) = xt2(:,1)
+    gm2(:,m) = xt2(:,2)
+  
+  enddo
+  
+  
+  do n= l1,l2
+    cost = cos(tau(n))
+    sint = sin(tau(n))
+    do m=1,nbpart
+      utmp = 0.5_f64*(cost*up0(n,m,1)-sint*up0(n,m,2) &
+                     +cost*um0(n,m,1)+sint*um0(n,m,2))
+      vtmp = 0.5_f64*(sint*up0(n,m,1)+cost*up0(n,m,2) &
+                     -sint*um0(n,m,1)+cost*um0(n,m,2))
+      xxt(1)=real( cost*utmp+sint*vtmp)
+      xxt(2)=real(-sint*utmp+cost*vtmp)
+      call apply_bc(xxt)
+      p%idx(m) = floor(xxt(1)/dimx*nx)
+      p%dpx(m) = real(xxt(1)/dx- p%idx(m), f64)
+      p%idy(m) = floor(xxt(2)/dimy*ny)
+      p%dpy(m) = real(xxt(2)/dy- p%idy(m), f64)
+    enddo
+    call calcul_rho_m6( p, f )
+    call poisson%compute_e_from_rho( f%ex, f%ey, f%r0)
+    fex_loc(:,:,n)=f%ex
+    fey_loc(:,:,n)=f%ey!prediction
+  enddo
+  
+  call MPI_ALLGATHER(fex_loc,(nx+1)*(ny+1)*ll,MPI_DOUBLE_COMPLEX, &
+                     fex,(nx+1)*(ny+1)*ll,MPI_DOUBLE_COMPLEX,     &
+                     MPI_COMM_WORLD,code)
+  call MPI_ALLGATHER(fey_loc,(nx+1)*(ny+1)*ll,MPI_DOUBLE_COMPLEX, &
+                     fey,(nx+1)*(ny+1)*ll,MPI_DOUBLE_COMPLEX,     &
+                     MPI_COMM_WORLD,code)
+  !--correction--
+  do n=l1,l2
+    cost = cos(tau(n))
+    sint = sin(tau(n))
+    do m=1,nbpart
+      utmp = 0.5_f64*(cost*up0(n,m,1)-sint*up0(n,m,2) &
+                     +cost*um0(n,m,1)+sint*um0(n,m,2))
+      vtmp = 0.5_f64*(sint*up0(n,m,1)+cost*up0(n,m,2) &
+                     -sint*um0(n,m,1)+cost*um0(n,m,2))
+      xxt(1)=real( cost*utmp+sint*vtmp)
+      xxt(2)=real(-sint*utmp+cost*vtmp)
+      call apply_bc(xxt)
+      p%idx(m) = floor(xxt(1)/dimx*nx)
+      p%dpx(m) = real(xxt(1)/dx- p%idx(m), f64)
+      p%idy(m) = floor(xxt(2)/dimy*ny)
+      p%dpy(m) = real(xxt(2)/dy- p%idy(m), f64)
+    enddo
+    f%ex= real(fex(:,:,n))
+    f%ey= real(fey(:,:,n))
+    call interpol_eb_m6( f, p )
+    Et1_loc(:,n)= p%epx !g(t1,tau,U(t1))
+    Et2_loc(:,n)= p%epy
+  enddo
+  
+  call MPI_ALLGATHER(et1_loc,nbpart*ll,MPI_DOUBLE_COMPLEX, &
+                     Et1,nbpart*ll,MPI_DOUBLE_COMPLEX,MPI_COMM_WORLD,code)
+  call MPI_ALLGATHER(et2_loc,nbpart*ll,MPI_DOUBLE_COMPLEX, &
+                     Et2,nbpart*ll,MPI_DOUBLE_COMPLEX,MPI_COMM_WORLD,code)
+  
+  do m=1,nbpart
+  
+    temp1 =  2._f64*Et2(m,:)
+    temp2 = -2._f64*Et1(m,:)
+    call sll_s_fft_exec_c2c_1d(fw, temp1, temp1)
+    call sll_s_fft_exec_c2c_1d(fw, temp2, temp2)
+    xt1(:,1)=temp1/ntau!g_+tilde(t1) predict
+    xt1(:,2)=temp2/ntau!g_+tilde(t1) predict
+    !---
+    do n=0,ntau-1
+      cost = cos(2_f64*tau(n))
+      sint = sin(2_f64*tau(n))
+      temp1(n) = - 2._f64*( sint*Et1(m,n)+cost*Et2(m,n))
+      temp2(n) =   2._f64*(-sint*Et2(m,n)+cost*Et1(m,n))
+    enddo
+  
+    call sll_s_fft_exec_c2c_1d(fw, temp1, temp1)
+    call sll_s_fft_exec_c2c_1d(fw, temp2, temp2)
+  
+    xt2(:,1)=temp1/ntau!g_-tilde(t1) predict
+    xt2(:,2)=temp2/ntau!g_-tilde(t1) predict
+  
+    call sll_s_fft_exec_c2c_1d(fw, up(:,m,1), temp1)
+    call sll_s_fft_exec_c2c_1d(fw, up(:,m,2), temp2)
+  
+    do n=0,ntau-1
+      temp1(n)=eiltau(n)*temp1(n)+pl(n)*xt1(n,1)+ql(n)*(xt1(n,1)-gp1(n,m))/dt
+      temp2(n)=eiltau(n)*temp2(n)+pl(n)*xt1(n,2)+ql(n)*(xt1(n,2)-gp2(n,m))/dt
+    enddo
+    call sll_s_fft_exec_c2c_1d(bw, temp1, up(:,m,1))!u_+(t1)
+    call sll_s_fft_exec_c2c_1d(bw, temp2, up(:,m,2))
+    call sll_s_fft_exec_c2c_1d(fw, um(:,m,1), temp1)
+    call sll_s_fft_exec_c2c_1d(fw, um(:,m,2), temp2)
+    do n=0,ntau-1
+      temp1(n)=eiltau(n)*temp1(n)+pl(n)*xt2(n,1)+ql(n)*(xt2(n,1)-gm1(n,m))/dt
+      temp2(n)=eiltau(n)*temp2(n)+pl(n)*xt2(n,2)+ql(n)*(xt2(n,2)-gm2(n,m))/dt
+    enddo
+    call sll_s_fft_exec_c2c_1d(bw, temp1, um(:,m,1))!u_-(t1)
+    call sll_s_fft_exec_c2c_1d(bw, temp2, um(:,m,2))
+  
+  enddo
+  
+  do n=l1,l2
+    cost = cos(tau(n))
+    sint = sin(tau(n))
+    do m=1,nbpart
+      utmp = 0.5_f64*(cost*up(n,m,1)-sint*up(n,m,2) &
+                     +cost*um(n,m,1)+sint*um(n,m,2))
+      vtmp = 0.5_f64*(sint*up(n,m,1)+cost*up(n,m,2) &
+                     -sint*um(n,m,1)+cost*um(n,m,2))
+      xxt(1)=real( cost*utmp+sint*vtmp)
+      xxt(2)=real(-sint*utmp+cost*vtmp)
+      call apply_bc(xxt)
+      p%idx(m) = floor(xxt(1)/dimx*nx)
+      p%dpx(m) = real(xxt(1)/dx- p%idx(m), f64)
+      p%idy(m) = floor(xxt(2)/dimy*ny)
+      p%dpy(m) = real(xxt(2)/dy- p%idy(m), f64)
+    enddo
+    call calcul_rho_m6( p, f )
+    call poisson%compute_e_from_rho( f%ex, f%ey, f%r0)
+    fex_loc(:,:,n)= f%ex
+    fey_loc(:,:,n)= f%ey
+  enddo
+  
+  call MPI_ALLGATHER(fex_loc,(nx+1)*(ny+1)*ll,MPI_DOUBLE_COMPLEX, &
+                     fex,(nx+1)*(ny+1)*ll,MPI_DOUBLE_COMPLEX,     &
+                     MPI_COMM_WORLD,code)
+  call MPI_ALLGATHER(fey_loc,(nx+1)*(ny+1)*ll,MPI_DOUBLE_COMPLEX, &
+                     fey,(nx+1)*(ny+1)*ll,MPI_DOUBLE_COMPLEX,     &
+                     MPI_COMM_WORLD,code)
+
+end subroutine particles_preparation
+
+
+subroutine apply_bc(xxt)
+
+  sll_real64 :: xxt(2)
+  
+  do while ( xxt(1) > xmax )
+    xxt(1) = xxt(1) - dimx
+  enddo
+  do while ( xxt(1) < xmin )
+    xxt(1)= xxt(1) + dimx
+  enddo
+  do while ( xxt(2) > ymax )
+    xxt(2)  = xxt(2)  - dimy
+  enddo
+  do while ( xxt(2)  < ymin )
+    xxt(2) = xxt(2)  + dimy
+  enddo
 
 end subroutine apply_bc
 
-subroutine energy_use()
+subroutine energy_use(stime)
 
-sll_comp64 :: vp(2), vm(2), z(2), wp(2), wm(2)
-sll_real64 :: energy_e, energy_p
-sll_real64 :: cost, sint
-sll_real64 :: rms, f_mode, mass
-
-cost = cos(0.5_f64*time/epsq)
-sint = sin(0.5_f64*time/epsq)
-
-do m=1,nbpart
-
-  call sll_s_fft_exec_c2c_1d(fw, up(:,m,1),temp1)
-  call sll_s_fft_exec_c2c_1d(fw, up(:,m,2),temp2)
-  wp = sll_p_i0
-  do n=0,ntau-1
-    wp(1)=wp(1)+temp1(n)/ntau*exp(iltau(n)*time)
-    wp(2)=wp(2)+temp2(n)/ntau*exp(iltau(n)*time)
+  sll_real64, intent(in) :: stime
+  
+  sll_comp64 :: vp(2), vm(2), z(2), wp(2), wm(2)
+  sll_real64 :: cost, sint, xxt(2)
+  sll_int32  :: m, n
+  
+  cost = cos(0.5_f64*stime/epsq)
+  sint = sin(0.5_f64*stime/epsq)
+  
+  do m=1,nbpart
+  
+    call sll_s_fft_exec_c2c_1d(fw, up(:,m,1),temp1)
+    call sll_s_fft_exec_c2c_1d(fw, up(:,m,2),temp2)
+    wp = sll_p_i0
+    do n=0,ntau-1
+      wp(1)=wp(1)+temp1(n)/ntau*exp(iltau(n)*stime)
+      wp(2)=wp(2)+temp2(n)/ntau*exp(iltau(n)*stime)
+    enddo
+    call sll_s_fft_exec_c2c_1d(fw, um(:,m,1),temp1)
+    call sll_s_fft_exec_c2c_1d(fw, um(:,m,2),temp2)
+    wm = sll_p_i0
+    do n=0,ntau-1
+      wm(1)=wm(1)+temp1(n)/ntau*exp(iltau(n)*stime)
+      wm(2)=wm(2)+temp2(n)/ntau*exp(iltau(n)*stime)
+    enddo
+    vp(1)=cost*wp(1)-sint*wp(2)
+    vp(2)=cost*wp(2)+sint*wp(1)
+    vm(1)=cost*wm(1)+sint*wm(2)
+    vm(2)=cost*wm(2)-sint*wm(1)
+    z  =  0.5_f64*(vp+vm)
+    xxt(1)=real(cost*z(1)+sint*z(2))
+    xxt(2)=real(cost*z(2)-sint*z(1))
+    call apply_bc(xxt)
+    p%idx(m) = floor(xxt(1)/dimx*nx)
+    p%dpx(m) = real(xxt(1)/dx- p%idx(m), f64)
+    p%idy(m) = floor(xxt(2)/dimy*ny)
+    p%dpy(m) = real(xxt(2)/dy- p%idy(m), f64)
+    p%vpx(m) = 0.5_f64 * real( sint*vm(1)+cost*vm(2),f64)/ep
+    p%vpy(m) =-0.5_f64 * real(-sint*vm(2)+cost*vm(1),f64)/ep
+  
   enddo
-  call sll_s_fft_exec_c2c_1d(fw, um(:,m,1),temp1)
-  call sll_s_fft_exec_c2c_1d(fw, um(:,m,2),temp2)
-  wm = sll_p_i0
-  do n=0,ntau-1
-    wm(1)=wm(1)+temp1(n)/ntau*exp(iltau(n)*time)
-    wm(2)=wm(2)+temp2(n)/ntau*exp(iltau(n)*time)
-  enddo
-  vp(1)=cost*wp(1)-sint*wp(2)
-  vp(2)=cost*wp(2)+sint*wp(1)
-  vm(1)=cost*wm(1)+sint*wm(2)
-  vm(2)=cost*wm(2)-sint*wm(1)
-  z  =  0.5_f64*(vp+vm)
-  xxt(1)=real(cost*z(1)+sint*z(2))
-  xxt(2)=real(cost*z(2)-sint*z(1))
-  call apply_bc()
-  p%idx(m) = floor(xxt(1)/dimx*nx)
-  p%dpx(m) = real(xxt(1)/dx- p%idx(m), f64)
-  p%idy(m) = floor(xxt(2)/dimy*ny)
-  p%dpy(m) = real(xxt(2)/dy- p%idy(m), f64)
-  p%vpx(m) = 0.5_f64 * real( sint*vm(1)+cost*vm(2),f64)/ep
-  p%vpy(m) =-0.5_f64 * real(-sint*vm(2)+cost*vm(1),f64)/ep
-
-enddo
-
-call calcul_rho_m6( p, f )
-
-rms = 0.0_f64
-do j = 0, ny-1
-  do i = 0, nx-1
-    rms = rms + (real(i,f64)*dx)**2*f%r0(i,j)
-  end do
-end do
-if (rms >= 0.0_f64) then
-  rms = sqrt(rms*dx*dy)
-else
-  rms = 0.0_f64
-end if
-
-call poisson%compute_e_from_rho( f%ex, f%ey, f%r0)
-
-energy_p = 0.5_f64*sum(p%p*(p%vpx*p%vpx+p%vpy*p%vpy))
-
-energy_e = 0.5_f64*sum(f%ex(0:nx-1,0:ny-1)*f%ex(0:nx-1,0:ny-1)         &
-                      +f%ey(0:nx-1,0:ny-1)*f%ey(0:nx-1,0:ny-1))*dx*dy
-
-f_mode   =  energy_fourier_mode_xy(1,1,f%ex(0:nx-1,0:ny-1),f%ey(0:nx-1,0:ny-1))
-
-mass     = sum(f%r0(0:nx-1,0:ny-1))*dx*dy
-
-open(10, file='energy.dat', position='append')
-if (istep == 1) then
-  rewind(10)
-  write(10,"(a)") '# time, first fourier modes, relative energy, rms, mass'
-end if
-write(10,"(5g15.7)") time, f_mode, (energy_p+energy_e)/energy0, rms, mass
-close(10)
-write(*,"('istep =',i5,' : ',5g15.7)") istep, time,    &
-    f_mode, (energy_p+energy_e)/energy0, &
-    rms, mass
-
-if (plot) then
-
-  call sll_s_xdmf_corect2d_nodes( 'rho', f%r0, 'rho', &
-    0.0_f64, dx, 0.0_f64, dy, 'HDF5', istep, time) 
-  call sll_s_distribution_xdmf('df', p%vpx, p%vpy, p%p, &
-                             -5.0_f64, 5.0_f64, 100,     &
-                             -5.0_f64, 5.0_f64, 100, istep)
-
-end if
 
 end subroutine energy_use
 
@@ -869,26 +944,26 @@ end subroutine energy_use
 !> @return    the Fourier mode of the electric field.
 function fourier_mode_xy(mode_x, mode_y, e)
 
-sll_int32,  intent(in) :: mode_x
-sll_int32,  intent(in) :: mode_y
-sll_real64, intent(in) :: e(:,:)
-sll_real64             :: fourier_mode_xy
-
-sll_int32  :: i, j
-sll_real64 :: tx, ty
-
-tx = 0._f64
-ty = 0._f64
-do j = 1, size(e,2)
-  do i = 1, size(e,1)
-    tx = tx + e(i,j) * cos(real(mode_x*(i-1),f64)*kx*dx + &
-                           real(mode_y*(j-1),f64)*ky*dy)
-    ty = ty + e(i,j) * sin(real(mode_x*(i-1),f64)*kx*dx + &
-                           real(mode_y*(j-1),f64)*ky*dy)
+  sll_int32,  intent(in) :: mode_x
+  sll_int32,  intent(in) :: mode_y
+  sll_real64, intent(in) :: e(:,:)
+  sll_real64             :: fourier_mode_xy
+  
+  sll_int32  :: i, j
+  sll_real64 :: tx, ty
+  
+  tx = 0._f64
+  ty = 0._f64
+  do j = 1, size(e,2)
+    do i = 1, size(e,1)
+      tx = tx + e(i,j) * cos(real(mode_x*(i-1),f64)*kx*dx + &
+                             real(mode_y*(j-1),f64)*ky*dy)
+      ty = ty + e(i,j) * sin(real(mode_x*(i-1),f64)*kx*dx + &
+                             real(mode_y*(j-1),f64)*ky*dy)
+    enddo
   enddo
-enddo
-
-fourier_mode_xy = ((tx*dx*dy)**2+(ty*dx*dy)**2)/(dimx*dimy)
+  
+  fourier_mode_xy = ((tx*dx*dy)**2+(ty*dx*dy)**2)/(dimx*dimy)
 
 end function fourier_mode_xy
 
@@ -902,16 +977,16 @@ end function fourier_mode_xy
 !> @return    the energy of the Fourier mode of the electric field.
 function energy_fourier_mode_xy( mode_x, mode_y, ex, ey)
 
-sll_int32,  intent(in) :: mode_x
-sll_int32,  intent(in) :: mode_y
-sll_real64, intent(in) :: ex(:,:)
-sll_real64, intent(in) :: ey(:,:)
-
-sll_real64 :: energy_fourier_mode_xy
-
-energy_fourier_mode_xy = &
-  log(sqrt( fourier_mode_xy(mode_x, mode_y, ex) &
-           +fourier_mode_xy(mode_x, mode_y, ey)))
+  sll_int32,  intent(in) :: mode_x
+  sll_int32,  intent(in) :: mode_y
+  sll_real64, intent(in) :: ex(:,:)
+  sll_real64, intent(in) :: ey(:,:)
+  
+  sll_real64 :: energy_fourier_mode_xy
+  
+  energy_fourier_mode_xy = &
+    log(sqrt( fourier_mode_xy(mode_x, mode_y, ex) &
+             +fourier_mode_xy(mode_x, mode_y, ey)))
 
 end function energy_fourier_mode_xy
 

@@ -46,24 +46,27 @@ use sll_m_pic_visu, only: &
 
 #ifndef NOHDF5
 
-use hdf5, only: hid_t
-
 use sll_m_hdf5_io_serial, only: &
-  sll_o_hdf5_file_close, &
-  sll_o_hdf5_file_create, &
-  sll_o_hdf5_write_array
+  sll_t_hdf5_ser_handle, &
+  sll_s_hdf5_ser_file_create, &
+  sll_s_hdf5_ser_file_close, &
+  sll_o_hdf5_ser_write_array
 
 #endif
 
-use sll_m_xml_io
-
+use sll_m_xml_io, only:  &
+  sll_s_xml_file_create, &
+  sll_s_xml_file_close,  &
+  sll_o_xml_field
 
 implicit none
 
-public sll_f_new_pic_viewer_2d, &
-       sll_o_pic_viewer_write
+public :: &
+  sll_f_new_pic_viewer_2d, &
+  sll_o_pic_viewer_write
 
 private
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 type, public :: sll_t_pic_viewer_2d
 
@@ -127,7 +130,7 @@ contains
     character(len=4)                      :: cplot
 
 #ifndef NOHDF5
-    integer(hid_t) :: hfile_id  
+    type(sll_t_hdf5_ser_handle) :: hfile_id
 #endif
 
     call sll_s_int2string(iplot, cplot)
@@ -142,9 +145,9 @@ contains
 
     !Write the heavy data
 #ifndef NOHDF5
-    call sll_o_hdf5_file_create(trim(viewer%label)//cplot//".h5",hfile_id,error)
-    call sll_o_hdf5_write_array(hfile_id,field,"/fp",error)
-    call sll_o_hdf5_file_close(hfile_id, error)
+    call sll_s_hdf5_ser_file_create( trim(viewer%label)//cplot//".h5", hfile_id, error )
+    call sll_o_hdf5_ser_write_array( hfile_id, field, "/fp", error )
+    call sll_s_hdf5_ser_file_close( hfile_id, error )
 #endif
 
   end subroutine write_2d_field
@@ -167,7 +170,7 @@ contains
     character(len=4)                      :: cplot
 
 #ifndef NOHDF5
-    integer(hid_t) :: hfile_id  
+    type(sll_t_hdf5_ser_handle) :: hfile_id
 #endif
 
     call sll_s_int2string(iplot, cplot)
@@ -184,11 +187,11 @@ contains
     call sll_s_xml_file_close( file_id, error)
 
 #ifndef NOHDF5
-    call sll_o_hdf5_file_create(trim(viewer%label)//cplot//".h5",hfile_id,error)
-    call sll_o_hdf5_write_array(hfile_id,xp,"/xp",error)
-    call sll_o_hdf5_write_array(hfile_id,yp,"/yp",error)
-    call sll_o_hdf5_write_array(hfile_id,op,"/op",error)
-    call sll_o_hdf5_file_close(hfile_id, error)
+    call sll_s_hdf5_ser_file_create( trim(viewer%label)//cplot//".h5", hfile_id, error )
+    call sll_o_hdf5_ser_write_array( hfile_id, xp, "/xp", error )
+    call sll_o_hdf5_ser_write_array( hfile_id, yp, "/yp", error )
+    call sll_o_hdf5_ser_write_array( hfile_id, op, "/op", error )
+    call sll_s_hdf5_ser_file_close( hfile_id, error )
 #endif
 
   end subroutine write_2d_particles
@@ -210,7 +213,7 @@ contains
     character(len=4)                      :: cplot
 
 #ifndef NOHDF5
-    integer(hid_t) :: hfile_id  
+    type(sll_t_hdf5_ser_handle) :: hfile_id
 #endif
 
     nx = viewer%mesh%num_cells1
@@ -229,12 +232,12 @@ contains
     call sll_s_xml_file_close( file_id, error)
 
 #ifndef NOHDF5
-    call sll_o_hdf5_file_create(trim(viewer%label)//cplot//".h5",hfile_id,error)
-    call sll_o_hdf5_write_array(hfile_id,xp,"/xp",error)
-    call sll_o_hdf5_write_array(hfile_id,yp,"/yp",error)
-    call sll_o_hdf5_write_array(hfile_id,op,"/op",error)
-    call sll_o_hdf5_write_array(hfile_id,fp,"/fp",error)
-    call sll_o_hdf5_file_close(hfile_id, error)
+    call sll_s_hdf5_ser_file_create( trim(viewer%label)//cplot//".h5", hfile_id, error )
+    call sll_o_hdf5_ser_write_array( hfile_id, xp, "/xp", error )
+    call sll_o_hdf5_ser_write_array( hfile_id, yp, "/yp", error )
+    call sll_o_hdf5_ser_write_array( hfile_id, op, "/op", error )
+    call sll_o_hdf5_ser_write_array( hfile_id, fp, "/fp", error )
+    call sll_s_hdf5_ser_file_close( hfile_id, error )
 #endif
 
   end subroutine write_2d_field_and_particles
