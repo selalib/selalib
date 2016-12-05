@@ -1020,6 +1020,7 @@ contains
         print*,'########################'
         print*,'# Vlasov-Ampere scheme #'
         print*,'########################'
+        print*, 'THIS OPTION DOES NOT WORK.'
         SLL_ALLOCATE(sim%advect_ampere_x1_sp2(num_threads),ierr)
        !!$OMP PARALLEL DEFAULT(SHARED) &
        !!$OMP PRIVATE(tid)
@@ -1984,6 +1985,7 @@ contains
                
                do i = 2, nc_x1/2+1
                   sim%advect_ampere_x1_sp1(1)%ptr%ek(i) =  &
+                       sim%advect_ampere_x1_sp1(1)%ptr%ek(i) +
                       sim%advect_ampere_x1_sp1(1)%ptr%r1(i) &
                     * (sim%mesh2d_sp1%eta1_max-sim%mesh2d_sp1%eta1_min) &
                     / cmplx(0.,2.0_f64*sll_p_pi*(i-1),kind=f64)
