@@ -19,8 +19,8 @@ program unit_test_2d
   implicit none
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
-#define NPTS1 65 
-#define NPTS2 65 
+#define NPTS1 30 
+#define NPTS2 30 
 
   !type(sll_t_cubic_spline_interpolator_2d) :: cs2d
   class(sll_c_interpolator_2d), pointer :: cs2d
@@ -29,7 +29,7 @@ program unit_test_2d
   sll_real64, dimension(:), allocatable      :: x1_eta1_max
   sll_real64, dimension(2) :: params ! for the transformation
   sll_int32  :: i, j
-  sll_real64 :: eta1, eta2, h1, h2, acc, acc1, acc2, node_val, ref, deriv1_val 
+  sll_real64 :: eta1, eta2, acc, acc1, acc2, node_val, ref, deriv1_val 
   sll_real64 :: deriv2_val
 
 #define RMIN 0.1_f64
@@ -38,30 +38,27 @@ program unit_test_2d
   params(:) = (/RMIN,RMAX/)
 
   print *,  'filling out discrete arrays for x1 '
-  h1 = 1.0_f64/real(NPTS1-1,f64)
-  h2 = 1.0_f64/real(NPTS2-1,f64)
-  print *, 'h1 = ', h1
-  print *, 'h2 = ', h2
+
   allocate(x1(NPTS1,NPTS2))
   allocate(x1_eta1_min(NPTS2))
   allocate(x1_eta1_max(NPTS2))
 
-  do j=0,NPTS2-1
-     do i=0,NPTS1-1
-        eta1          = real(i,f64)*h1
-        eta2          = real(j,f64)*h2
-        x1(i+1,j+1)   = x1_polar_f(eta1,eta2,params) 
+  do j=1,NPTS2
+     do i=1,NPTS1
+        eta1          = real(i-1,f64)/real(NPTS1-1,f64)
+        eta2          = real(j-1,f64)/real(NPTS2-1,f64)
+        x1(i,j)       =  0._f64!x1_polar_f(eta1,eta2,params) 
      end do
   end do
-  print *, 'eta1, eta2 = ', real(NPTS1-1,f64)*h1, real(NPTS2-1,f64)*h2
-  print *, 'x1_polar_f(eta1=1, eta2=1) = ', x1_polar_f(1.0_f64,1.0_f64,params)
+
+
   ! Fill out the transformation's slopes at the borders
   do j=0,NPTS2-1
      eta1           = 0.0_f64
-     eta2           = real(j,f64)*h2
-     x1_eta1_min(j+1) = deriv_x1_polar_f_eta1(eta1,eta2,params)
+     eta2           = real(j,f64)/real(NPTS2, f64)
+     x1_eta1_min(j+1) = 0._f64!deriv_x1_polar_f_eta1(eta1,eta2,params)
      eta1           = 1.0_f64
-     x1_eta1_max(j+1) = deriv_x1_polar_f_eta1(eta1,eta2,params)
+     x1_eta1_max(j+1) = 0._f64!deriv_x1_polar_f_eta1(eta1,eta2,params)
   end do
 
   ! Test the 2D transformation:
@@ -76,41 +73,30 @@ program unit_test_2d
        0.0_f64, &
        1.0_f64, &
        sll_p_hermite, &
-       sll_p_periodic, &
+       sll_p_hermite, &
        eta1_min_slopes=x1_eta1_min, &
        eta1_max_slopes=x1_eta1_max )
-  
-  
-!  call cs2d%initialize( &
-!       NPTS1, &
-!       NPTS2, &
-!       0.0_f64, &
-!       1.0_f64, &
-!       0.0_f64, &
-!       1.0_f64, &
-!       sll_p_hermite, &
-!       sll_p_periodic, &
-!       eta1_min_slopes=x1_eta1_min, &
-!       eta1_max_slopes=x1_eta1_max )
 
   call cs2d%compute_interpolants(x1)
+
   print *, 'Compare the values of the transformation at the nodes: '
   acc  = 0.0_f64
   acc1 = 0.0_f64
   acc2 = 0.0_f64
-  do j=0,NPTS2-1
-     do i=0,NPTS1-1
-        eta1       = real(i,f64)*h1
-        eta2       = real(j,f64)*h2
+  do j=1,NPTS2
+     do i=1,NPTS1
+        eta1       = real(i-1,f64)/real(NPTS1, f64)
+        eta2       = real(j-1,f64)/real(NPTS2, f64)
         node_val   = cs2d%interpolate_from_interpolant_value(eta1,eta2)
-        ref        = x1_polar_f(eta1,eta2,params)
+        ref        = 0._f64!x1_polar_f(eta1,eta2,params)
         acc        = acc + abs(node_val-ref)
-        deriv1_val = cs2d%interpolate_from_interpolant_derivative_eta1(eta1,eta2)
-        ref        = deriv_x1_polar_f_eta1(eta1,eta2,params)
-        acc1       = acc1 + abs(deriv1_val-ref)
-        deriv2_val = cs2d%interpolate_from_interpolant_derivative_eta2(eta1,eta2)
-        ref        = deriv_x1_polar_f_eta2(eta1,eta2,params)
-        acc2       = acc2 + abs(deriv2_val-ref)
+        ! print *, i, j, "interpolated val =", node_val
+        ! deriv1_val = cs2d%interpolate_from_interpolant_derivative_eta1(eta1,eta2)
+        ! ref        = deriv_x1_polar_f_eta1(eta1,eta2,params)
+        ! acc1       = acc1 + abs(deriv1_val-ref)
+        ! deriv2_val = cs2d%interpolate_from_interpolant_derivative_eta2(eta1,eta2)
+        ! ref        = deriv_x1_polar_f_eta2(eta1,eta2,params)
+        ! acc2       = acc2 + abs(deriv2_val-ref)
      end do
   end do
   print *, 'Average error in nodes, x1 transformation = ', acc/real(NPTS1*NPTS2,f64)
@@ -140,7 +126,8 @@ subroutine test_interpolator_2d()
      xx2(i,j) = 2.*sll_p_pi*real(j-1,f64)/real(NPTS2-1,f64)
   end do
   end do
-  data_in = cos(xx1)*sin(xx2)
+  data_in = exp(-xx1*100._f64)!cos(xx1)*sin(xx2)
+  print *, "data in =", data_in
 
   do j = 1, NPTS2
   do i = 1, NPTS1
@@ -150,7 +137,7 @@ subroutine test_interpolator_2d()
   end do
   call interp%interpolate_array(NPTS1, NPTS2, data_in, xx1, xx2, data_out)
 
-  print*, " error = ", maxval(abs(data_out-cos(xx1)*sin(xx2)))
+  print*, " error = ", data_out!maxval(abs(data_out-cos(xx1)*sin(xx2)))
 end subroutine test_interpolator_2d
 
   function deriv_x1_polar_f_eta1( eta1, eta2, params )
