@@ -41,10 +41,13 @@ program test_box_splines_derivatives
   ! Variables for the test:
   type(sll_t_hex_mesh_2d),   pointer   :: mesh
   type(sll_t_box_spline_2d), pointer   :: spline
-  sll_int32,  parameter :: max_deg = 5
+  sll_int32,  parameter :: max_deg = 2
   sll_real64, parameter :: criterion = 1.0e-14_f64
   sll_int32    :: ierr
   sll_int32    :: num_cells
+  sll_int32    :: num_cells_max
+  sll_int32    :: num_cells_min
+  sll_int32    :: num_cells_step
   sll_int32    :: degree
   sll_int32    :: rule
   sll_int32    :: i
@@ -74,7 +77,10 @@ program test_box_splines_derivatives
 
   print *, "  Test will be made on the following mesh:"
   ! Mesh initialization
-  num_cells = 20
+  num_cells_max = 80
+  num_cells_min = 20
+  num_cells_step = 20
+  do num_cells = num_cells_min, num_cells_max, num_cells_step
   mesh => sll_f_new_hex_mesh_2d(num_cells, 0._f64, 0._f64, radius = 2._f64)
   call mesh%display()
 
@@ -109,7 +115,8 @@ program test_box_splines_derivatives
         x1 = mesh%global_to_x1(i)
         x2 = mesh%global_to_x2(i)
         if (i .lt. 3*(num_cells-4)*(num_cells-5)+1) then
-           call random_number(randnum)
+           !call random_number(randnum)
+           randnum = 0._f64
            x1p = x1 - randnum/num_cells
            x2p = x2 - randnum/num_cells
            ! Interpolation on mesh points computation:
@@ -160,7 +167,7 @@ program test_box_splines_derivatives
   SLL_DEALLOCATE_ARRAY(f2, ierr)
   SLL_DEALLOCATE_ARRAY(dxf2, ierr)
   SLL_DEALLOCATE_ARRAY(dyf2, ierr)
-
+end do
 
   ! ! Computing non null splines on one cell:
   ! SLL_ALLOCATE(splines_on_support(degree*degree*3),ierr)

@@ -5,14 +5,15 @@
 set( INSTALL_DIR "${INSTALL_DIR}/serial" )
 
 if(HDF5_ENABLED)
-  
+
   # Semi Lagrangian method
-  
+
   ## advection
   add_subdirectory( bsl_ad_2d0v_cart                          )
   add_subdirectory( bsl_ad_2d0v_polar_rot                     )
-  add_subdirectory( bsl_ad_2d0v_curv                          )  
+  add_subdirectory( bsl_ad_2d0v_curv                          )
   add_subdirectory( bsl_ad_2d0v_hex_rot                       )
+  add_subdirectory( bsl_ad_2d0v_hex                           )
   add_subdirectory( fsl_ad_2d0v_polar                         )
   add_subdirectory( fsl_ad_2d0v_curv                          )
 
