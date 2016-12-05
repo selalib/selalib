@@ -915,6 +915,7 @@ contains
       print*,'########################'
       print*,'# Vlasov-Ampere scheme #'
       print*,'########################'
+      print*, 'THIS OPTION DOES NOT WORK.'
       SLL_ALLOCATE(sim%advect_ampere_x1(num_threads),ierr)
       tid = 1
       !$OMP PARALLEL DEFAULT(SHARED) &
@@ -1564,7 +1565,7 @@ contains
                
                
                do i = 2, nc_x1/2+1
-                 sim%advect_ampere_x1(1)%ptr%ek(i) =  &
+                 sim%advect_ampere_x1(1)%ptr%ek(i) = sim%advect_ampere_x1(1)%ptr%ek(i) &
                     - sim%advect_ampere_x1(1)%ptr%r1(i) &
                     * (sim%mesh2d%eta1_max-sim%mesh2d%eta1_min) &
                     / cmplx(0.,2.0_f64*sll_p_pi*(i-1),kind=f64)
@@ -1816,7 +1817,6 @@ contains
              enddo
 
              write(th_diag_id,'(1g25.15)') f_hat_x2(nb_mode+1)
-
              call sll_s_binary_write_array_1d(efield_id,efield(1:np_x1-1),ierr)
              call sll_s_binary_write_array_1d(rhotot_id,rho(1:np_x1-1),ierr)
              call sll_s_binary_write_array_0d(t_id,time,ierr)
