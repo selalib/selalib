@@ -6,7 +6,7 @@ module sll_vlasov4d_spectral
 #include "sll_memory.h"
 
 
- use sll_m_fftw3
+ use sll_m_fft
  use sll_vlasov4d_base
  use sll_m_remapper
  use sll_m_interpolators_1d_base
@@ -26,14 +26,12 @@ module sll_vlasov4d_spectral
    sll_real64, dimension(:),   allocatable  :: d_dy
    sll_real64, dimension(:),   allocatable  :: kx
    sll_real64, dimension(:),   allocatable  :: ky
-   fftw_plan                                :: fwx
-   fftw_plan                                :: fwy
-   fftw_plan                                :: bwx
-   fftw_plan                                :: bwy
-   fftw_plan                                :: p_tmp_x
-   fftw_plan                                :: p_tmp_y
-   fftw_comp, dimension(:),  pointer        :: tmp_x
-   fftw_comp, dimension(:),  pointer        :: tmp_y
+   type(sll_t_fft)                          :: fwx
+   type(sll_t_fft)                          :: fwy
+   type(sll_t_fft)                          :: bwx
+   type(sll_t_fft)                          :: bwy
+   sll_comp64, dimension(:),  pointer       :: tmp_x
+   sll_comp64, dimension(:),  pointer       :: tmp_y
    class(sll_c_interpolator_2d), pointer :: interp_x3x4
 
  end type vlasov4d_spectral
@@ -61,7 +59,6 @@ contains
   sll_int32                               :: error
 
   sll_real64 :: kx0, ky0
-  fftw_int   :: sz_tmp_x, sz_tmp_y
   sll_int32  :: psize, prank, comm
 
   this%interp_x3x4 => interp_x3x4
@@ -81,21 +78,21 @@ contains
   SLL_CLEAR_ALLOCATE(this%jx(1:this%np_eta1,1:this%np_eta2),error)
   SLL_CLEAR_ALLOCATE(this%jy(1:this%np_eta1,1:this%np_eta2),error)
 
-  FFTW_ALLOCATE(this%tmp_x,this%nc_eta1/2+1,sz_tmp_x,this%p_tmp_x)
-  FFTW_ALLOCATE(this%tmp_y,this%nc_eta2/2+1,sz_tmp_y,this%p_tmp_y)
+  SLL_ALLOCATE(this%tmp_x(1:this%nc_eta1/2+1), error)
+  SLL_ALLOCATE(this%tmp_y(1:this%nc_eta2/2+1), error)
   SLL_CLEAR_ALLOCATE(this%d_dx(1:this%nc_eta1),error)
   SLL_CLEAR_ALLOCATE(this%d_dy(1:this%nc_eta2),error)
 
-  NEW_FFTW_PLAN_R2C_1D(this%fwx,this%nc_eta1,this%d_dx,this%tmp_x) 
-  NEW_FFTW_PLAN_C2R_1D(this%bwx,this%nc_eta1,this%tmp_x,this%d_dx) 
-  NEW_FFTW_PLAN_R2C_1D(this%fwy,this%nc_eta2,this%d_dy,this%tmp_y) 
-  NEW_FFTW_PLAN_C2R_1D(this%bwy,this%nc_eta2,this%tmp_y,this%d_dy) 
+  call sll_s_fft_init_r2c_1d(this%fwx,this%nc_eta1,this%d_dx,this%tmp_x) 
+  call sll_s_fft_init_r2c_1d(this%fwy,this%nc_eta2,this%d_dy,this%tmp_y) 
+  call sll_s_fft_init_c2r_1d(this%bwx,this%nc_eta1,this%tmp_x,this%d_dx) 
+  call sll_s_fft_init_c2r_1d(this%bwy,this%nc_eta2,this%tmp_y,this%d_dy) 
 
   SLL_CLEAR_ALLOCATE(this%kx(1:this%nc_eta1/2+1), error)
   SLL_CLEAR_ALLOCATE(this%ky(1:this%nc_eta2/2+1), error)
    
-  kx0 = 2._f64*sll_p_pi/(this%nc_eta1*this%delta_eta1)
-  ky0 = 2._f64*sll_p_pi/(this%nc_eta2*this%delta_eta2)
+  kx0 = 2._f64*sll_p_pi/real(this%nc_eta1*this%delta_eta1,f64)
+  ky0 = 2._f64*sll_p_pi/real(this%nc_eta2*this%delta_eta2,f64)
 
   do i=1,this%nc_eta1/2+1
      this%kx(i) = (i-1)*kx0
@@ -117,15 +114,10 @@ contains
   SLL_DEALLOCATE_ARRAY(this%f, ierr)
   SLL_DEALLOCATE_ARRAY(this%ft, ierr)
 
-#ifdef FFTW_F2003
-  if (c_associated(this%p_tmp_x)) call fftw_free(this%p_tmp_x)
-  if (c_associated(this%p_tmp_y)) call fftw_free(this%p_tmp_y)
-#endif
-
-  call fftw_destroy_plan(this%fwx)
-  call fftw_destroy_plan(this%fwy)
-  call fftw_destroy_plan(this%bwx)
-  call fftw_destroy_plan(this%bwy)
+  call sll_s_fft_free(this%fwx)
+  call sll_s_fft_free(this%fwy)
+  call sll_s_fft_free(this%bwx)
+  call sll_s_fft_free(this%bwy)
 
  end subroutine free_vlasov4d_spectral
 
@@ -152,9 +144,9 @@ contains
      gk = global_indices(3)
      vx = (x3_min +(gk-1)*delta_x3)*dt
      do j=1,loc_sz_j
-        call fftw_execute_dft_r2c(this%fwx, this%f(1:nc_x1,j,k,l),this%tmp_x)
+        call sll_s_fft_exec_r2c_1d(this%fwx, this%f(1:nc_x1,j,k,l),this%tmp_x)
         this%tmp_x = this%tmp_x*exp(-cmplx(0.0_f64,this%kx,kind=f64)*vx)
-        call fftw_execute_dft_c2r(this%bwx, this%tmp_x, this%d_dx)
+        call sll_s_fft_exec_c2r_1d(this%bwx, this%tmp_x, this%d_dx)
         this%f(1:nc_x1,j,k,l)= this%d_dx / nc_x1
      end do
   end do
@@ -198,9 +190,9 @@ contains
 
     do k=1,loc_sz_k
     do i=1,loc_sz_i
-       call fftw_execute_dft_r2c(this%fwy, this%f(i,1:nc_x2,k,l), this%tmp_y)
+       call sll_s_fft_exec_r2c_1d(this%fwy, this%f(i,1:nc_x2,k,l), this%tmp_y)
        this%tmp_y = this%tmp_y*exp(-cmplx(0.0_f64,this%ky,kind=f64)*vy)
-       call fftw_execute_dft_c2r(this%bwy, this%tmp_y, this%d_dy)
+       call sll_s_fft_exec_c2r_1d(this%bwy, this%tmp_y, this%d_dy)
        this%f(i,1:nc_x2,k,l) = this%d_dy / nc_x2
     end do
     end do
@@ -257,8 +249,8 @@ contains
         py = x4_min+(gl-1)*delta_x4
         ctheta = cos(this%bz(gi,gj)*dt)
         stheta = sin(this%bz(gi,gj)*dt)
-        depvx  = 0.5*dt*this%ex(gi,gj)
-        depvy  = 0.5*dt*this%ey(gi,gj)
+        depvx  = 0.5_f64*dt*this%ex(gi,gj)
+        depvy  = 0.5_f64*dt*this%ey(gi,gj)
         alpha_x(k,l) = - (px - (depvx+(px+depvx)*ctheta-(py+depvy)*stheta))
         alpha_y(k,l) = - (py - (depvy+(px+depvx)*stheta+(py+depvy)*ctheta))
 
