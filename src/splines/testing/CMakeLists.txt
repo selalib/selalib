@@ -58,13 +58,13 @@ TARGET_LINK_LIBRARIES( test_box_splines_derivatives sll_splines )
 
 # Splines_pp...........................................
 ADD_EXECUTABLE( test_splines_pp_1d test_splines_pp_1d.F90 )
-TARGET_LINK_LIBRARIES( test_splines_pp_1d sll_splines )
+TARGET_LINK_LIBRARIES( test_splines_pp_1d sll_splines sll_interpolators )
 #...........................................
 ADD_EXECUTABLE( test_splines_pp_2d test_splines_pp_2d.F90 )
-TARGET_LINK_LIBRARIES( test_splines_pp_2d sll_splines )
+TARGET_LINK_LIBRARIES( test_splines_pp_2d sll_splines sll_interpolators )
 #...........................................
 ADD_EXECUTABLE( test_splines_pp_3d test_splines_pp_3d.F90 )
-TARGET_LINK_LIBRARIES( test_splines_pp_3d sll_splines )
+TARGET_LINK_LIBRARIES( test_splines_pp_3d sll_splines sll_interpolators )
 
 # Ctests
 ADD_TEST( NAME splines_pp_1d COMMAND test_splines_pp_1d)
