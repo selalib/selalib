@@ -16,7 +16,7 @@
 !**************************************************************
 !> @author Pierre Navaro
 !> @brief 
-!> Simulation class to sll_o_solve vlasov poisson system in polar coordinates
+!> Simulation class to sll_s_poisson_2d_polar_par_solve vlasov poisson system in polar coordinates
 !> (2d space 2d phase)
 !> @details
 !> Example of use in test program 
@@ -84,9 +84,9 @@ module sll_m_sim_bsl_vp_2d2v_polar
     sll_o_4d_parallel_array_initializer
 
   use sll_m_poisson_polar_parallel, only: &
-    sll_t_poisson_polar, &
-    sll_o_initialize, &
-    sll_o_solve
+    sll_t_poisson_2d_polar_par, &
+    sll_s_poisson_2d_polar_par_init, &
+    sll_s_poisson_2d_polar_par_solve
 
   use sll_m_remapper, only: &
     sll_o_apply_remap_2d, &
@@ -158,7 +158,7 @@ type, extends(sll_c_simulation_base_class) :: sll_t_simulation_4d_vp_polar
  sll_real64, dimension(:,:,:), pointer :: efields_x2
 
 
- type(sll_t_poisson_polar)  :: poisson   ! Poisson solver in polar coordinates
+ type(sll_t_poisson_2d_polar_par)  :: poisson   ! Poisson solver in polar coordinates
  type(sll_t_layout_2d), pointer :: layout_x1 ! sequential in r direction
  type(sll_t_layout_2d), pointer :: layout_x2 ! sequential in theta direction
  type(sll_t_remap_plan_2d_real64), pointer :: rmp_x1x2   !< remap r->theta 
@@ -372,7 +372,7 @@ contains
     SLL_CLEAR_ALLOCATE(sim%phi_x2(1:loc_sz_x1,1:loc_sz_x2),error)
     SLL_CLEAR_ALLOCATE(sim%efields_x2(1:loc_sz_x1,1:loc_sz_x2,2),error)
 
-    call sll_o_initialize( sim%poisson,   &
+    call sll_s_poisson_2d_polar_par_init( sim%poisson,   &
                      sim%layout_x1, &
                      sim%layout_x2, &
                      eta1_min,      &
@@ -414,7 +414,7 @@ contains
 
        call plot_rho(sim)
 
-       call sll_o_solve(sim%poisson, sim%rho, sim%phi_x2)
+       call sll_s_poisson_2d_polar_par_solve(sim%poisson, sim%rho, sim%phi_x2)
 
        call plot_phi(sim)
 
