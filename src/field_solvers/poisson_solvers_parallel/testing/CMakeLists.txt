@@ -6,8 +6,8 @@ TARGET_LINK_LIBRARIES( test_poisson_3d_periodic_par sll_poisson_parallel )
 ADD_EXECUTABLE( test_poisson_2d_per_cart_par test_poisson_2d_periodic_cart_par.F90 )
 TARGET_LINK_LIBRARIES( test_poisson_2d_per_cart_par sll_poisson_parallel )
 
-ADD_EXECUTABLE( test_poisson_polar_parallel test_poisson_polar_parallel.F90 )
-TARGET_LINK_LIBRARIES( test_poisson_polar_parallel sll_poisson_parallel )
+ADD_EXECUTABLE( test_poisson_2d_polar_par test_poisson_2d_polar_par.F90 )
+TARGET_LINK_LIBRARIES( test_poisson_2d_polar_par sll_poisson_parallel )
 
 ADD_EXECUTABLE( test_poisson_2d_polar_parallel_solver test_poisson_2d_polar_parallel_solver.F90 )
 TARGET_LINK_LIBRARIES( test_poisson_2d_polar_parallel_solver sll_poisson_parallel )
