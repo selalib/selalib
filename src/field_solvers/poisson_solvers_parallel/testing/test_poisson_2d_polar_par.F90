@@ -22,7 +22,7 @@ program test_poisson_polar_parallel
   use sll_m_gnuplot_parallel, only: &
     sll_o_gnuplot_2d_parallel
 
-  use sll_m_poisson_polar_parallel, only: &
+  use sll_m_poisson_2d_polar_par, only: &
     sll_t_poisson_2d_polar_par, &
     sll_s_poisson_2d_polar_par_init, &
     sll_s_poisson_2d_polar_par_solve

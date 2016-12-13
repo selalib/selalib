@@ -34,7 +34,7 @@ module sll_m_poisson_2d_polar_parallel_solver
     sll_c_poisson_2d_base, &
     sll_i_function_of_position
 
-  use sll_m_poisson_polar_parallel, only: &
+  use sll_m_poisson_2d_polar_par, only: &
     sll_f_poisson_2d_polar_par_new, &
     sll_t_poisson_2d_polar_par, &
     sll_s_poisson_2d_polar_par_solve

@@ -19,7 +19,7 @@
 !> @par Contact
 !>      Yaman Güçlü, IPP Garching
 !> Module to sll_o_solve Poisson equation on polar mesh using FFT transform
-module sll_m_poisson_polar_parallel
+module sll_m_poisson_2d_polar_par
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_memory.h"
 #include "sll_working_precision.h"
@@ -421,4 +421,4 @@ contains
 
   end subroutine verify_argument_sizes_par
 
-end module sll_m_poisson_polar_parallel
+end module sll_m_poisson_2d_polar_par
