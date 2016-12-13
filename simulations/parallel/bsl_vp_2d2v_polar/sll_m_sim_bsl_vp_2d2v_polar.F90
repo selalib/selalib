@@ -83,7 +83,7 @@ module sll_m_sim_bsl_vp_2d2v_polar
   use sll_m_parallel_array_initializer, only: &
     sll_o_4d_parallel_array_initializer
 
-  use sll_m_poisson_polar_parallel, only: &
+  use sll_m_poisson_2d_polar_par, only: &
     sll_t_poisson_2d_polar_par, &
     sll_s_poisson_2d_polar_par_init, &
     sll_s_poisson_2d_polar_par_solve
