@@ -23,9 +23,9 @@ program test_poisson_polar_parallel
     sll_o_gnuplot_2d_parallel
 
   use sll_m_poisson_polar_parallel, only: &
-    sll_o_initialize, &
-    sll_t_poisson_polar, &
-    sll_s_solve_poisson_polar
+    sll_t_poisson_2d_polar_par, &
+    sll_s_poisson_2d_polar_par_init, &
+    sll_s_poisson_2d_polar_par_solve
 
   use sll_m_remapper, only: &
     sll_o_compute_local_sizes, &
@@ -38,7 +38,7 @@ program test_poisson_polar_parallel
   implicit none
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
-type(sll_t_poisson_polar) :: poisson
+type(sll_t_poisson_2d_polar_par) :: poisson
 sll_real64, dimension(:,:), allocatable :: rhs
 sll_real64, dimension(:,:), allocatable :: phi
 sll_real64, dimension(:,:), allocatable :: phi_cos
@@ -140,7 +140,7 @@ do j=1,na_loc
    end do
 end do
 
-call sll_o_initialize( poisson,   &
+call sll_s_poisson_2d_polar_par_init( poisson,   &
                  layout_r,      &
                  layout_a,      &
                  r_min,         &
@@ -156,7 +156,7 @@ do i =1,nr_loc
    end do
 end do
 
-call sll_s_solve_poisson_polar(poisson, rhs, phi)
+call sll_s_poisson_2d_polar_par_solve(poisson, rhs, phi)
 
 call sll_o_gnuplot_2d_parallel(x, y, phi_sin, 'phi_sin',  1, error)
 call sll_o_gnuplot_2d_parallel(x, y, phi,     'solution', 1, error)

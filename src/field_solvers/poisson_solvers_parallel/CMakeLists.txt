@@ -7,8 +7,7 @@ IF(HDF5_ENABLED AND HDF5_IS_PARALLEL AND HDF5_PARALLEL_ENABLED)
   SET( POISSON_PARALLEL_SRCS
     sll_m_poisson_polar_parallel.F90 
     sll_m_poisson_3d_periodic_par.F90 
-    sll_m_poisson_2d_periodic_cartesian_par.F90
-    sll_m_quasi_neutral_3d_solver.F90 )
+    sll_m_poisson_2d_periodic_cartesian_par.F90 )
 
   SET( POISSON_PARALLEL_SRCS ${POISSON_PARALLEL_SRCS} 
     sll_m_poisson_2d_polar_parallel_solver.F90 )
