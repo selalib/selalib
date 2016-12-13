@@ -35,9 +35,9 @@ module sll_m_poisson_2d_polar_parallel_solver
     sll_i_function_of_position
 
   use sll_m_poisson_polar_parallel, only: &
-    sll_f_new_poisson_polar, &
-    sll_t_poisson_polar, &
-    sll_s_solve_poisson_polar
+    sll_f_poisson_2d_polar_par_new, &
+    sll_t_poisson_2d_polar_par, &
+    sll_s_poisson_2d_polar_par_solve
 
   use sll_m_remapper, only: &
     sll_t_layout_2d
@@ -55,7 +55,7 @@ module sll_m_poisson_2d_polar_parallel_solver
 
   type,extends(sll_c_poisson_2d_base) :: poisson_2d_polar_parallel_solver     
   
-  type(sll_t_poisson_polar), pointer :: poiss
+  type(sll_t_poisson_2d_polar_par), pointer :: poiss
   sll_int32 :: poisson_case
   sll_real64,dimension(:), pointer :: dlog_density
   sll_real64,dimension(:), pointer :: inv_Te
@@ -167,7 +167,7 @@ contains
     
     select case(poisson%poisson_case)
       case (SLL_POISSON_CLASSIC)
-         poisson%poiss => sll_f_new_poisson_polar( &
+         poisson%poiss => sll_f_poisson_2d_polar_par_new( &
           layout_r, &
           layout_a, &
           eta1_min, &
@@ -198,7 +198,7 @@ contains
         endif
         poisson%dlog_density(1:nc_eta1+1)=dlog_density(1:nc_eta1+1)
         poisson%inv_Te(1:nc_eta1+1)=inv_Te(1:nc_eta1+1)
-        poisson%poiss => sll_f_new_poisson_polar( &
+        poisson%poiss => sll_f_poisson_2d_polar_par_new( &
           layout_r, &
           layout_a, &
           eta1_min, &
@@ -206,9 +206,7 @@ contains
           nc_eta1, &
           nc_eta2, &
           bc(1), &
-          bc(2), &
-          poisson%dlog_density, &
-          poisson%inv_Te)
+          bc(2) )
       case default
         print *,'#bad value of poisson_case=', poisson%poisson_case
         print *,'#not implemented'
@@ -223,13 +221,13 @@ contains
     sll_real64,dimension(:,:),intent(in) :: rho
     sll_real64,dimension(:,:),intent(out) :: phi
     
-    call sll_s_solve_poisson_polar(poisson%poiss,rho,phi)
+    call sll_s_poisson_2d_polar_par_solve(poisson%poiss,rho,phi)
     
 !    select case(poisson%poisson_case)
 !      case (SLL_POISSON_CLASSIC)
 !        call poisson_solve_polar(poisson%poiss,rho,phi)            
 !      case (SLL_POISSON_DRIFT_KINETIC)    
-!        call sll_s_solve_poisson_polar(poisson%poiss,rho,phi)
+!        call sll_s_poisson_2d_polar_par_solve(poisson%poiss,rho,phi)
 !      case default
 !        print *,'#bad value of poisson_case=', poisson%poisson_case
 !        print *,'#not implemented'
