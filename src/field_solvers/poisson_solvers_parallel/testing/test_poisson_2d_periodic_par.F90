@@ -28,13 +28,13 @@ program test_poisson_2d_periodic_cart_par
     sll_o_hdf5_par_write_array, &
     sll_s_hdf5_par_file_close
 
-  use sll_m_poisson_2d_periodic_cartesian_par, only: &
-    sll_s_delete_poisson_2d_periodic_plan_cartesian_par, &
-    sll_f_new_poisson_2d_periodic_plan_cartesian_par, &
-    sll_f_new_poisson_2d_periodic_plan_cartesian_par_alt, &
-    sll_t_poisson_2d_periodic_plan_cartesian_par, &
-    sll_s_solve_poisson_2d_periodic_cartesian_par, &
-    sll_s_solve_poisson_2d_periodic_cartesian_par_alt
+  use sll_m_poisson_2d_periodic_par, only: &
+    sll_t_poisson_2d_periodic_par, &
+    sll_f_poisson_2d_periodic_par_new, &
+    sll_f_poisson_2d_periodic_par_new_alt, &
+    sll_s_poisson_2d_periodic_par_solve, &
+    sll_s_poisson_2d_periodic_par_solve_alt, &
+    sll_s_poisson_2d_periodic_par_free
 
   use sll_m_remapper, only: &
     sll_o_compute_local_sizes, &
@@ -53,8 +53,8 @@ program test_poisson_2d_periodic_cart_par
   implicit none
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
-  type (sll_t_poisson_2d_periodic_plan_cartesian_par), pointer :: plan
-  type (sll_t_poisson_2d_periodic_plan_cartesian_par), pointer :: plan_alt
+  type (sll_t_poisson_2d_periodic_par), pointer :: plan
+  type (sll_t_poisson_2d_periodic_par), pointer :: plan_alt
 
   sll_int32                               :: ncx, ncy
   sll_int32                               :: nx_loc, ny_loc
@@ -109,7 +109,7 @@ program test_poisson_2d_periodic_cart_par
   call sll_o_initialize_layout_with_distributed_array( ncx, ncy, &
        nprocx, nprocy, layout_alt )
 
-  plan_alt => sll_f_new_poisson_2d_periodic_plan_cartesian_par_alt(&
+  plan_alt => sll_f_poisson_2d_periodic_par_new_alt(&
        layout_alt, ncx, ncy, Lx, Ly)
 
   call sll_o_compute_local_sizes( layout_alt, nx_loc, ny_loc )
@@ -135,7 +135,7 @@ program test_poisson_2d_periodic_cart_par
   call parallel_hdf5_write_array_2d( 'q_density.h5', &
      ncx, ncy, rho,  'rho', layout_alt)
 
-  call sll_s_solve_poisson_2d_periodic_cartesian_par_alt(plan_alt, rho, phi)
+  call sll_s_poisson_2d_periodic_par_solve_alt(plan_alt, rho, phi)
 
   call parallel_hdf5_write_array_2d( 'phi_analytical.h5', &
      ncx, ncy, phi_an, 'phi_an', layout_alt)
@@ -160,7 +160,7 @@ program test_poisson_2d_periodic_cart_par
   SLL_DEALLOCATE_ARRAY(rho,    error)
   SLL_DEALLOCATE_ARRAY(phi_an, error)
 
-  call sll_s_delete_poisson_2d_periodic_plan_cartesian_par(plan_alt)
+  call sll_s_poisson_2d_periodic_par_free(plan_alt)
 
 !#########FIRST VERSION WITH LAST PERIODIC POINT ADDED #########################
 
@@ -171,7 +171,7 @@ program test_poisson_2d_periodic_cart_par
   call sll_o_initialize_layout_with_distributed_array( ncx+1, ncy+1, &
        nprocx, nprocy, layout_x )
 
-  plan => sll_f_new_poisson_2d_periodic_plan_cartesian_par(&
+  plan => sll_f_poisson_2d_periodic_par_new(&
        layout_x, ncx, ncy, Lx, Ly)
 
   call sll_o_compute_local_sizes( layout_x, nx_loc, ny_loc )
@@ -194,7 +194,7 @@ program test_poisson_2d_periodic_cart_par
      end do
   end do
 
-  call sll_s_solve_poisson_2d_periodic_cartesian_par(plan, rho, phi)
+  call sll_s_poisson_2d_periodic_par_solve(plan, rho, phi)
 
   offset(1) =  sll_o_get_layout_i_min( layout_x, myrank ) - 1
   offset(2) =  sll_o_get_layout_j_min( layout_x, myrank ) - 1
@@ -235,7 +235,7 @@ program test_poisson_2d_periodic_cart_par
      endif
   endif
 
-  call sll_s_delete_poisson_2d_periodic_plan_cartesian_par(plan)
+  call sll_s_poisson_2d_periodic_par_free(plan)
 
   call sll_s_halt_collective()
 
