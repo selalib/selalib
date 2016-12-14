@@ -14,7 +14,7 @@
 !> which may be an in-place operation, needs to be treated as a 4D array
 !> in order to remap it appropriately with the 4D distribution function.
 !> There might be ways around this, like using 'reshape'...
-module sll_m_poisson_2d_periodic_cartesian_par
+module sll_m_poisson_2d_periodic_par
 
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_memory.h"
@@ -54,12 +54,12 @@ module sll_m_poisson_2d_periodic_cartesian_par
   implicit none
 
   public :: &
-    sll_s_delete_poisson_2d_periodic_plan_cartesian_par, &
-    sll_f_new_poisson_2d_periodic_plan_cartesian_par, &
-    sll_f_new_poisson_2d_periodic_plan_cartesian_par_alt, &
-    sll_t_poisson_2d_periodic_plan_cartesian_par, &
-    sll_s_solve_poisson_2d_periodic_cartesian_par, &
-    sll_s_solve_poisson_2d_periodic_cartesian_par_alt
+    sll_t_poisson_2d_periodic_par, &
+    sll_f_poisson_2d_periodic_par_new, &
+    sll_f_poisson_2d_periodic_par_new_alt, &
+    sll_s_poisson_2d_periodic_par_solve, &
+    sll_s_poisson_2d_periodic_par_solve_alt, &
+    sll_s_poisson_2d_periodic_par_free
 
   private
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -67,7 +67,7 @@ module sll_m_poisson_2d_periodic_cartesian_par
   !> Structure to store data from Poisson solver. This
   !> solver is parallel on structured cartesian mesh. Numerical method
   !> uses FFT transforms.
-  type sll_t_poisson_2d_periodic_plan_cartesian_par
+  type sll_t_poisson_2d_periodic_par
      sll_int32                           :: ncx    !< number of cells  
      sll_int32                           :: ncy    !< number of cells
      sll_real64                          :: Lx     !< domain length 
@@ -88,7 +88,7 @@ module sll_m_poisson_2d_periodic_cartesian_par
      sll_comp64, dimension(:),   pointer :: fft_y_1d_array !< 1d array for sliced fft in y
      type(sll_t_remap_plan_2d_comp64), pointer :: rmp_xy !< remap to transpose from x to y
      type(sll_t_remap_plan_2d_comp64), pointer :: rmp_yx !< remap to transpose from y to x
-  end type sll_t_poisson_2d_periodic_plan_cartesian_par
+  end type sll_t_poisson_2d_periodic_par
 
 contains
 
@@ -96,14 +96,14 @@ contains
   !> individual arguments. We should consider passing the 'simple geometry'
   !> object that we have for the cartesian cases.
   !> @return
-  function sll_f_new_poisson_2d_periodic_plan_cartesian_par( &
+  function sll_f_poisson_2d_periodic_par_new( &
     start_layout, &   
     ncx, &            
     ncy, &            
     Lx, &    
     Ly ) result(plan)
 
-    type (sll_t_poisson_2d_periodic_plan_cartesian_par), pointer :: plan
+    type (sll_t_poisson_2d_periodic_par), pointer :: plan
     type(sll_t_layout_2d), pointer         :: start_layout !< First layout
     sll_int32                        :: ncx          !< number of cells in x
     sll_int32                        :: ncy          !< number of cells in y
@@ -213,7 +213,7 @@ contains
      sll_o_new_remap_plan(plan%layout_seq_x1, plan%layout_seq_x2, plan%fft_x_array)
     plan%rmp_yx => &
      sll_o_new_remap_plan(plan%layout_seq_x2, plan%layout_seq_x1, plan%fft_y_array)
-  end function sll_f_new_poisson_2d_periodic_plan_cartesian_par
+  end function sll_f_poisson_2d_periodic_par_new
 
 
   !> Presently, this function receives the geometric information as 
@@ -222,14 +222,14 @@ contains
   !> consider the last point in the problem, the arrays involved and the layout
   !> that represents them should also not include this last point
   !> @return
-  function sll_f_new_poisson_2d_periodic_plan_cartesian_par_alt( &
+  function sll_f_poisson_2d_periodic_par_new_alt( &
     start_layout, &   
     ncx, &            
     ncy, &            
     Lx, &    
     Ly ) result(plan)
 
-    type (sll_t_poisson_2d_periodic_plan_cartesian_par), pointer :: plan
+    type (sll_t_poisson_2d_periodic_par), pointer :: plan
     type(sll_t_layout_2d), pointer         :: start_layout !< First layout
     sll_int32                        :: ncx          !< number of cells in x
     sll_int32                        :: ncy          !< number of cells in y
@@ -337,14 +337,14 @@ contains
      sll_o_new_remap_plan(plan%layout_seq_x1, plan%layout_seq_x2, plan%fft_x_array)
     plan%rmp_yx => &
      sll_o_new_remap_plan(plan%layout_seq_x2, plan%layout_seq_x1, plan%fft_y_array)
-  end function sll_f_new_poisson_2d_periodic_plan_cartesian_par_alt
+  end function sll_f_poisson_2d_periodic_par_new_alt
 
 
 
   !> Note that the equation that is solved is: \f$ \Delta \phi = \rho \f$
   !> Thus the user is responsible for giving the proper sign to the source term.
-  subroutine sll_s_solve_poisson_2d_periodic_cartesian_par(plan, rho, phi)
-    type (sll_t_poisson_2d_periodic_plan_cartesian_par), pointer :: plan !< self object
+  subroutine sll_s_poisson_2d_periodic_par_solve(plan, rho, phi)
+    type (sll_t_poisson_2d_periodic_par), pointer :: plan !< self object
     sll_real64, dimension(:,:)        :: rho      !< charge density
     sll_real64, dimension(:,:)        :: phi      !< electric potential
     sll_int32                         :: ncx      !< global size
@@ -465,14 +465,14 @@ contains
 
     phi(1:npx_loc,1:npy_loc) = real(plan%fft_x_array(1:npx_loc,1:npy_loc),f64)
 
-  end subroutine sll_s_solve_poisson_2d_periodic_cartesian_par
+  end subroutine sll_s_poisson_2d_periodic_par_solve
 
   !> Note that the equation that is solved is: \f$ \Delta \phi = \rho \f$
   !> Thus the user is responsible for giving the proper sign to the source term.
   !> The 'alt' version of this function considers only a domain that does not
   !> include the last, periodic, point
-  subroutine sll_s_solve_poisson_2d_periodic_cartesian_par_alt(plan, rho, phi)
-    type (sll_t_poisson_2d_periodic_plan_cartesian_par), pointer :: plan !< self object
+  subroutine sll_s_poisson_2d_periodic_par_solve_alt(plan, rho, phi)
+    type (sll_t_poisson_2d_periodic_par), pointer :: plan !< self object
     sll_real64, dimension(:,:)        :: rho      !< charge density
     sll_real64, dimension(:,:)        :: phi      !< electric potential
     sll_int32                         :: ncx      !< global size
@@ -571,14 +571,14 @@ contains
     call sll_s_fft_exec_c2c_2d(plan%px_inv, plan%fft_x_array, plan%fft_x_array)
 
     phi(1:npx_loc,1:npy_loc) = real(plan%fft_x_array(1:npx_loc,1:npy_loc),f64)
-  end subroutine sll_s_solve_poisson_2d_periodic_cartesian_par_alt
+  end subroutine sll_s_poisson_2d_periodic_par_solve_alt
 
 
 
 
 !> Delete the Poisson solver object
-  subroutine sll_s_delete_poisson_2d_periodic_plan_cartesian_par(plan)
-    type (sll_t_poisson_2d_periodic_plan_cartesian_par), pointer :: plan
+  subroutine sll_s_poisson_2d_periodic_par_free(plan)
+    type (sll_t_poisson_2d_periodic_par), pointer :: plan
     sll_int32                                              :: ierr
 
     if( .not. associated(plan) ) then
@@ -600,7 +600,7 @@ contains
     call sll_o_delete( plan%rmp_xy )
     call sll_o_delete( plan%rmp_yx )
     SLL_DEALLOCATE(plan, ierr)
-  end subroutine sll_s_delete_poisson_2d_periodic_plan_cartesian_par
+  end subroutine sll_s_poisson_2d_periodic_par_free
 
 !> Check that arrays match layout properties
   subroutine verify_argument_sizes_par(layout, rho, phi)
@@ -617,7 +617,7 @@ contains
     call sll_o_compute_local_sizes( layout, nx, ny )
     ! Verify the first direction
     if ( nx /= size(rho,1) ) then
-       print*, 'ERROR: sll_s_solve_poisson_2d_periodic_cartesian_par()', &
+       print*, 'ERROR: sll_s_poisson_2d_periodic_par_solve()', &
             'size of rho does not match expected size. ', &
             'Expected size according to layout = ', nx, 'Received size = ',&
             size(rho,1)
@@ -625,7 +625,7 @@ contains
        stop
     end if
     if ( nx /= size(phi,1) ) then
-       print*, 'ERROR: sll_s_solve_poisson_2d_periodic_cartesian_par()', &
+       print*, 'ERROR: sll_s_poisson_2d_periodic_par_solve()', &
             'size of phi does not match expected size. ', &
             'Expected size according to layout = ', nx, 'Received size = ',&
             size(phi,1)
@@ -634,7 +634,7 @@ contains
     end if
     ! Verify the second direction
     if ( ny /= size(rho,2) ) then
-       print*, 'ERROR: sll_s_solve_poisson_2d_periodic_cartesian_par()', &
+       print*, 'ERROR: sll_s_poisson_2d_periodic_par_solve()', &
             'size of rho does not match expected size. ', &
             'Expected size according to layout = ', ny, 'Received size = ',&
             size(rho,2)
@@ -642,7 +642,7 @@ contains
        stop
     end if
     if ( ny /= size(phi,2) ) then
-       print*, 'ERROR: sll_s_solve_poisson_2d_periodic_cartesian_par()', &
+       print*, 'ERROR: sll_s_poisson_2d_periodic_par_solve()', &
             'size of phi does not match expected size. ', &
             'Expected size according to layout = ', ny, 'Received size = ',&
             size(phi,2)
@@ -652,4 +652,4 @@ contains
   end subroutine verify_argument_sizes_par
 
 
-end module sll_m_poisson_2d_periodic_cartesian_par
+end module sll_m_poisson_2d_periodic_par
