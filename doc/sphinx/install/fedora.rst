@@ -7,23 +7,23 @@ Install dependencies on FEDORA
 
 Install source code manager ::
 
- $ sudo yum install git-all
+ $ sudo dnf install git-all
 
 Install build tools ::
 
- $ sudo yum install cmake
+ $ sudo dnf install cmake
 
 Install compilers ::
 
- $ sudo yum install gcc-gfortran
+ $ sudo dnf install gcc-gfortran
 
 Install libraries (MPI, HDF5, FFTW3, LAPACK) ::
 
- $ sudo yum install hdf5-openmpi-devel openmpi-devel fftw-devel
+ $ sudo dnf install hdf5-openmpi-devel openmpi-devel fftw-devel
 
 Install software for documentation::
 
- $ sudo yum install doxygen texlive-latex
+ $ sudo dnf install doxygen texlive-latex
 
 Don't forget to load the mpi module ::
 
