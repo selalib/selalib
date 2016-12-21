@@ -56,7 +56,7 @@ program test_qn_solver_2d_polar_par
   ! TEST #1: solver should be exact
   nr  = 256
   nth =  32
-  tol = 1.0e-14_f64
+  tol = 1.0e-11_f64
   call test_dirichlet_zero_error( comm, nr, nth, error_norm )
 
   ! Write relative error norm (global) to standard output
@@ -111,7 +111,7 @@ contains
     test_case%rmin                = 1.0_f64
     test_case%rmax                = 10.0_f64
     test_case%adiabatic_electrons = .true.
-    test_case%use_zonal_flow      = .false.
+    test_case%use_zonal_flow      = .true.
     test_case%epsilon_0           = 1.0_f64
     test_case%bc_rmin             = sll_p_dirichlet
     test_case%bc_rmax             = sll_p_dirichlet
@@ -214,7 +214,6 @@ contains
 
     sll_int32               :: np
     sll_int32               :: my_rank
-    sll_int32               :: ierr
     sll_real64              :: send_buf(1)
     sll_real64, allocatable :: recv_buf(:)
 
