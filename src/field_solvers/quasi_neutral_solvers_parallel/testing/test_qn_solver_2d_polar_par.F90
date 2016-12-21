@@ -72,12 +72,13 @@ contains
     type(sll_t_layout_2d), pointer :: layout_a
 
     ! Define test case
-    test_case%rmin           = 1.0_f64
-    test_case%rmax           = 10.0_f64
-    test_case%use_zonal_flow = .false.
-    test_case%epsilon_0      = 1.0_f64
-    test_case%bc_rmin        = sll_p_dirichlet
-    test_case%bc_rmax        = sll_p_dirichlet
+    test_case%rmin                = 1.0_f64
+    test_case%rmax                = 10.0_f64
+    test_case%adiabatic_electrons = .true.
+    test_case%use_zonal_flow      = .false.
+    test_case%epsilon_0           = 1.0_f64
+    test_case%bc_rmin             = sll_p_dirichlet
+    test_case%bc_rmax             = sll_p_dirichlet
 
     ! Computational grid
     nr  = 256
