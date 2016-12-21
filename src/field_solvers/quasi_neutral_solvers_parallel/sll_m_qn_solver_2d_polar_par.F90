@@ -278,14 +278,14 @@ contains
         end if
 
         inv_r    = 1.0_f64 / (rmin + (i-1)*dr)
-        d1(-1:1) = [0.5_f64, 0.0_f64, -0.5_f64] * inv_r * inv_dr
-        d2(-1:1) = [0.5_f64*(g(i-1)+g(i))/g(i), -2.0_f64, 0.5_f64*(g(i)+g(i+1))/g(i)] * inv_dr**2 
+        d1(-1:1) = [-0.5_f64, 0.0_f64, 0.5_f64] * inv_dr
+        d2(-1:1) = [0.5_f64*(g(i-1)+g(i))/g(i), -2.0_f64, 0.5_f64*(g(i)+g(i+1))/g(i)] * inv_dr**2
 
         end associate
 
-        solver%mat(3*(i-1)  ,j) = -d2( 1) -d1( 1)
-        solver%mat(3*(i-1)-1,j) = -d2( 0)         + (k*inv_r)**2 + c
-        solver%mat(3*(i-1)-2,j) = -d2(-1) -d1(-1)
+        solver%mat(3*(i-1)  ,j) = -d2( 1) -d1( 1)*inv_r
+        solver%mat(3*(i-1)-1,j) = -d2( 0) -d1( 0)*inv_r  + (k*inv_r)**2 + c
+        solver%mat(3*(i-1)-2,j) = -d2(-1) -d1(-1)*inv_r
       end do
 
       ! Set boundary condition at rmin
