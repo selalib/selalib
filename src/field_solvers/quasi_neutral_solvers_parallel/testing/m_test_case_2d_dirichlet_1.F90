@@ -13,6 +13,10 @@ module m_test_case_2d_dirichlet_1
 
   type, extends(c_test_case_qn_solver_2d_polar) :: t_test_dirichlet_zero_error
 
+    ! Angular profile is cos(k*(th-th0))
+    sll_int32 , private :: k   = 3
+    sll_real64, private :: th0 = 0.3_f64
+
   contains
     ! 1D input profiles
     procedure :: rho_m0          => f_test__rho_m0
@@ -73,8 +77,9 @@ contains
     class(t_test_dirichlet_zero_error), intent(in) :: self
     sll_real64                        , intent(in) :: r
     sll_real64 :: val
-    associate( rmean => 0.5_f64*(self%rmax+self%rmin) )
-      val = 0.01_f64 * (1.0_f64 + exp( (r-rmean)**2 / 0.5_f64**2 ))
+    associate( rmean => 0.5_f64*(self%rmax+self%rmin), &
+               width => 0.1_f64*(self%rmax-self%rmin) )
+      val = 0.01_f64 * (1.0_f64 + exp( -(r-rmean)**2/width**2 ))
     end associate
   end function f_test__lambda
 
@@ -85,7 +90,10 @@ contains
     sll_real64                        , intent(in) :: r
     sll_real64                        , intent(in) :: th
     sll_real64 :: val
+
     val = (self%rmax-r)*(r-self%rmin)
+    val = val * cos( self%k*(th-self%th0) )
+
   end function f_test__phi_ex
 
 
@@ -94,7 +102,10 @@ contains
     sll_real64                        , intent(in) :: r
     sll_real64                        , intent(in) :: th
     sll_real64 :: val
+
     val = -2.0_f64*r+self%rmin+self%rmax
+    val = val * cos( self%k*(th-self%th0) )
+
   end function f_test__phi_ex_diff1_r
 
 
@@ -103,7 +114,9 @@ contains
     sll_real64                        , intent(in) :: r
     sll_real64                        , intent(in) :: th
     sll_real64 :: val
-    val = -2.0_f64
+
+    val = -2.0_f64 * cos( self%k*(th-self%th0) )
+
   end function f_test__phi_ex_diff2_r
 
 
@@ -112,7 +125,9 @@ contains
     sll_real64                        , intent(in) :: r
     sll_real64                        , intent(in) :: th
     sll_real64 :: val
-    val = 0.0_f64
+
+    val = self%phi_ex( r, th ) * (-self%k**2)
+
   end function f_test__phi_ex_diff2_th
 
 
