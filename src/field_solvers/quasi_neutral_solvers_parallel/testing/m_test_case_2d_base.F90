@@ -29,6 +29,7 @@ private
     procedure( i_func_1d_real ), deferred :: lambda
     ! 2D manufactured solution
     procedure( i_func_2d_real ), deferred :: phi_ex
+    procedure( i_func_2d_real ), deferred :: phi_ex_avg_th
     procedure( i_func_2d_real ), deferred :: phi_ex_diff1_r
     procedure( i_func_2d_real ), deferred :: phi_ex_diff2_r
     procedure( i_func_2d_real ), deferred :: phi_ex_diff2_th
@@ -73,6 +74,7 @@ contains
 
     sll_real64 :: g
     sll_real64 :: dg_dr
+    sll_real64 :: dphi
 
     associate( rho_m0         => self%rho_m0        ( r ), &
                rho_m0_diff1_r => self%rho_m0_diff1_r( r ), &
@@ -91,7 +93,12 @@ contains
            + g/r**2       * self%phi_ex_diff2_th( r, th )
 
     if (self%adiabatic_electrons) then
-      rho_c1 = rho_c1 - self%phi_ex( r, th ) / self%lambda( r )**2
+      if (self%use_zonal_flow) then
+        dphi = self%phi_ex( r, th ) - self%phi_ex_avg_th( r, th )
+      else
+        dphi = self%phi_ex( r, th )
+      end if
+      rho_c1 = rho_c1 - dphi / self%lambda( r )**2
     end if
 
     rho_c1 = -self%epsilon_0 * rho_c1
