@@ -79,9 +79,10 @@ contains
                b_magn_diff1_r => self%b_magn_diff1_r( r ) )
 
       ! Utility function: g(r) = rho_m0 / (B^2 epsilon_0)
-      g     =  rho_m0 / (b_magn * self%epsilon_0)
-      dg_dr = (rho_m0_diff1_r * b_magn - rho_m0 * b_magn_diff1_r) &
-                                               / (b_magn**2 * self%epsilon_0)
+      g     =  rho_m0 / (b_magn**2 * self%epsilon_0)
+      dg_dr = (rho_m0_diff1_r * b_magn**2 &
+        - rho_m0 * 2.0_f64 * b_magn * b_magn_diff1_r) &
+        / (b_magn**4 * self%epsilon_0)
     end associate
 
     rho_c1 = - g            * self%phi_ex_diff2_r ( r, th ) &
