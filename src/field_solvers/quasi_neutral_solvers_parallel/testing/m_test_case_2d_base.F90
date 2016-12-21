@@ -14,6 +14,7 @@ private
 
     sll_real64 :: rmin
     sll_real64 :: rmax
+    logical    :: adiabatic_electrons
     logical    :: use_zonal_flow
     sll_real64 :: epsilon_0
     sll_int32  :: bc_rmin
@@ -85,12 +86,15 @@ contains
         / (b_magn**4 * self%epsilon_0)
     end associate
 
-    rho_c1 = - g            * self%phi_ex_diff2_r ( r, th ) &
-             -(g/r + dg_dr) * self%phi_ex_diff1_r ( r, th ) &
-             - g/r**2       * self%phi_ex_diff2_th( r, th ) &
-             + self%phi_ex( r, th ) / self%lambda( r )**2
+    rho_c1 = g            * self%phi_ex_diff2_r ( r, th ) &
+           +(g/r + dg_dr) * self%phi_ex_diff1_r ( r, th ) &
+           + g/r**2       * self%phi_ex_diff2_th( r, th )
 
-    rho_c1 = rho_c1 * self%epsilon_0
+    if (self%adiabatic_electrons) then
+      rho_c1 = rho_c1 - self%phi_ex( r, th ) / self%lambda( r )**2
+    end if
+
+    rho_c1 = -self%epsilon_0 * rho_c1
 
   end function f_test_case__rhs
 
