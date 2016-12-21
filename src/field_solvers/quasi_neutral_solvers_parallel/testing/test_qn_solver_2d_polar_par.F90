@@ -22,9 +22,12 @@ program test_qn_solver_2d_polar_par
     sll_p_neumann_mode_0
 
   use sll_m_collective, only: &
+    sll_t_collective_t, &
     sll_s_boot_collective, &
     sll_f_get_collective_rank, &
     sll_f_get_collective_size, &
+    sll_o_collective_gather, &
+    sll_o_collective_bcast, &
     sll_s_collective_barrier, &
     sll_s_halt_collective, &
     sll_v_world_collective
@@ -39,23 +42,56 @@ program test_qn_solver_2d_polar_par
   implicit none
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
-  call test_dirichlet_zero_error()
+  type(sll_t_collective_t), pointer :: comm
+  sll_int32  :: my_rank
+  sll_int32  :: nr
+  sll_int32  :: nth
+  sll_real64 :: error_norm
+  sll_real64 :: tol
+
+  call sll_s_boot_collective()
+  comm => sll_v_world_collective
+  my_rank = sll_f_get_collective_rank( comm )
+
+  ! TEST #1: solver should be exact
+  nr  = 256
+  nth =  32
+  tol = 1.0e-14_f64
+  call test_dirichlet_zero_error( comm, nr, nth, error_norm )
+
+  ! Write relative error norm (global) to standard output
+  if (my_rank == 0) then
+    write(*,"(a,e11.3)") "Relative L_inf norm of error = ", error_norm
+    write(*,"(a,e11.3)") "Tolerance                    = ", tol
+    if (error_norm <= tol) then
+      write(*,*) "PASSED"
+    end if
+  end if
+
+  ! TODO: test 'neumann' and 'neumann-mode-zero' boundary conditions
+  ! TODO: run convergence analysis on a more difficult test-case
+
+  call sll_s_halt_collective()
 
 !<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 contains
 !<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
-  subroutine test_dirichlet_zero_error()
+  subroutine test_dirichlet_zero_error( comm, nr, nth, error_norm )
+    type(sll_t_collective_t), pointer       :: comm
+    sll_int32               , intent(in   ) :: nr
+    sll_int32               , intent(in   ) :: nth
+    sll_real64              , intent(  out) :: error_norm
 
     type(sll_t_qn_solver_2d_polar_par) :: solver
     type(t_test_dirichlet_zero_error)  :: test_case
+    sll_real64                         :: max_phi
+    sll_real64                         :: max_err
 
-    sll_int32  :: nr, nth
     sll_real64 ::  r,  th
     sll_real64 :: dr, dth
     sll_int32  :: i, j
     sll_int32  :: num_proc
-    sll_int32  :: my_rank
     sll_int32  :: loc_sz_r(2)
     sll_int32  :: loc_sz_a(2)
     sll_int32  :: glob_idx(2)
@@ -81,17 +117,14 @@ contains
     test_case%bc_rmax             = sll_p_dirichlet
 
     ! Computational grid
-    nr  = 256
-    nth = 32
     dr  = (test_case%rmax - test_case%rmin) / nr
     dth = 2.0_f64*sll_p_pi / nth
 
-    call sll_s_boot_collective()
-
-    num_proc = sll_f_get_collective_size(sll_v_world_collective)  
+    ! Get number of available processes
+    num_proc = sll_f_get_collective_size( comm )
 
     ! Create 2D layout sequential in r (distributed along theta)
-    layout_r => sll_f_new_layout_2d( sll_v_world_collective )
+    layout_r => sll_f_new_layout_2d( comm )
     call sll_o_initialize_layout_with_distributed_array( &
       nr+1, & 
       nth , & 
@@ -100,7 +133,7 @@ contains
       layout_r )
 
     ! Create 2D layout sequential in theta (distributed along r)
-    layout_a => sll_f_new_layout_2d( sll_v_world_collective )
+    layout_a => sll_f_new_layout_2d( comm )
     call sll_o_initialize_layout_with_distributed_array( &
       nr+1, & 
       nth , & 
@@ -117,6 +150,7 @@ contains
     allocate( phi_ex(loc_sz_a(1),loc_sz_a(2)) )
     allocate( phi   (loc_sz_a(1),loc_sz_a(2)) )
 
+    ! Load analytical solution and rhs
     do j = 1, loc_sz_a(2)
       th = (j-1)*dth
       do i = 1, loc_sz_a(1)
@@ -128,11 +162,11 @@ contains
     end do
     phi(:,:) = 0.0_f64
 
-    ! Allocate 1D radial profiles (needed by solver)
+    ! Allocate and load 1D radial profiles (needed by solver)
     allocate( rho_m0(nr+1) )
     allocate( b_magn(nr+1) )
     allocate( lambda(nr+1) )
-
+    !
     do i = 1, nr+1
       r = test_case%rmin + (i-1)*dr
       rho_m0(i) = test_case%rho_m0( r )
@@ -140,6 +174,7 @@ contains
       lambda(i) = test_case%lambda( r )
     end do
 
+    ! Initialize parallel solver
     call sll_s_qn_solver_2d_polar_par_init( solver, &
       layout_r = layout_r, &
       layout_a = layout_a, &
@@ -155,21 +190,63 @@ contains
       bc_rmin        = test_case%bc_rmin , &
       bc_rmax        = test_case%bc_rmax )
 
+    ! Compute numerical phi for a given rhs
     call sll_s_qn_solver_2d_polar_par_solve( solver, rhs, phi )
 
-    my_rank = sll_f_get_collective_rank( sll_v_world_collective )
-    do i = 0, num_proc-1
-      if (i == my_rank) then
-        write(*,"(a,i0)") "processor # ", my_rank
-        write(*,"(a,e15.5)") "max error = ", maxval(abs( phi-phi_ex ))
-        write(*,*)
-        flush( output_unit )
-      end if
-      call sll_s_collective_barrier( sll_v_world_collective )
-    end do
+    ! Compute (local) maximum norms of phi_ex and error
+    max_phi = maxval(abs( phi_ex ))
+    max_err = maxval(abs( phi_ex-phi ))
 
-    call sll_s_halt_collective()
+    ! Exchange norms across processes to obtain global norms
+    call s_compute_collective_max( comm, max_phi )
+    call s_compute_collective_max( comm, max_err )
+
+    ! Global relative error in maximum norm
+    error_norm = max_err / max_phi
 
   end subroutine test_dirichlet_zero_error
+
+
+  !-----------------------------------------------------------------------------
+  subroutine s_compute_collective_max( comm, v )
+    type(sll_t_collective_t), pointer       :: comm
+    sll_real64              , intent(inout) :: v
+
+    sll_int32               :: np
+    sll_int32               :: my_rank
+    sll_int32               :: ierr
+    sll_real64              :: send_buf(1)
+    sll_real64, allocatable :: recv_buf(:)
+
+    ! Get information about parallel job
+    np      = sll_f_get_collective_size( comm )
+    my_rank = sll_f_get_collective_rank( comm )
+
+    ! Write in/out variable to sender buffer
+    send_buf(1) = v
+
+    ! [ROOT only] Prepare receiver buffer
+    if (my_rank == 0) then
+      allocate( recv_buf(np) )
+    end if
+
+    ! Send v values to ROOT
+    call sll_o_collective_gather( comm, send_buf, 1, 0, recv_buf )
+
+    ! [ROOT only] Compute maximum of v values and prepare send buffer
+    if (my_rank == 0) then
+      send_buf(1) = maxval( recv_buf(:) )
+      deallocate( recv_buf )
+    end if
+
+    ! Send maximum to all processes
+    call sll_o_collective_bcast( comm, send_buf, 1, 0 )
+
+    ! Write result to in/out variable
+    v = send_buf(1)
+
+  end subroutine s_compute_collective_max
+  !-----------------------------------------------------------------------------
+
 
 end program test_qn_solver_2d_polar_par
