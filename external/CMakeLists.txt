@@ -8,7 +8,21 @@ IF(BUILD_MUDPACK)
   ADD_SUBDIRECTORY(mudpack)
 ENDIF(BUILD_MUDPACK)
 
+SET(BUILD_HDF5         OFF CACHE BOOL "Download and build the HDF5 library")
 SET(CLAPP_FRAMEWORK    OFF CACHE BOOL "Build the CLAPP framework")
+
+IF(BUILD_HDF5)
+
+  INCLUDE(ExternalProject)
+  FIND_PACKAGE(MPI REQUIRED CXX)
+  EXTERNALPROJECT_ADD( hdf5
+     URL  https://support.hdfgroup.org/ftp/HDF5/current18/src/hdf5-1.8.18.tar
+     SOURCE_DIR ${CMAKE_BINARY_DIR}/hdf5
+     BINARY_DIR ${CMAKE_BINARY_DIR}/hdf5
+     CONFIGURE_COMMAND ${CMAKE_BINARY_DIR}/hdf5/configure --enable-fortran --prefix=${CMAKE_BINARY_DIR} --enable-parallel CXX=${MPI_CXX_COMPILER} CC=${MPI_C_COMPILER} FC=${MPI_Fortran_COMPILER}
+  )
+
+ENDIF(BUILD_HDF5)
 
 IF(CLAPP_FRAMEWORK)
 
