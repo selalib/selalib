@@ -309,8 +309,7 @@ MAKE_GET_SLOT_FUNCTION(get_x2_delta_cs2d,sll_t_cubic_spline_2d,x2_delta,sll_real
 !               'end ifin the case of periodic boundary conditions. ', &
 !               'Exiting program...'
 !          STOP 'sll_f_new_cubic_spline_1d'
-         SLL_WARNING('sll_f_new_cubic_spline_1d&
-         ','values of sl and sr are not taken into account')
+	   SLL_WARNING('sll_f_new_cubic_spline_1d','values of sl and sr are not taken into account')
        else
           ! Assign some value, but this value should never be used in the
           ! periodic case anyway.
@@ -1394,9 +1393,7 @@ MAKE_GET_SLOT_FUNCTION(get_x2_delta_cs2d,sll_t_cubic_spline_2d,x2_delta,sll_real
 !               'slopes in the case of doubly periodic boundary conditions.', &
 !               'Exiting program...'
 !          STOP 'sll_f_new_cubic_spline_2d'
-          SLL_WARNING('sll_f_new_cubic_spline_2d&
-         ','values of slopes are not taken into account&
-         as we are in periodic-periodic')
+	    SLL_WARNING('sll_f_new_cubic_spline_2d','values of slopes are not taken into account as we are in periodic-periodic')
        else
           sll_f_new_cubic_spline_2d%x1_min_slopes => null()
           sll_f_new_cubic_spline_2d%x1_max_slopes => null()
@@ -1417,9 +1414,7 @@ MAKE_GET_SLOT_FUNCTION(get_x2_delta_cs2d,sll_t_cubic_spline_2d,x2_delta,sll_real
 !               'boundary conditions.', &
 !               'Exiting program...'
 !          STOP 'sll_f_new_cubic_spline_2d'
-         SLL_WARNING('sll_f_new_cubic_spline_2d&
-         ','values of slopes in x2 are not taken into account&
-         as we are periodic in x2')
+         SLL_WARNING('sll_f_new_cubic_spline_2d','values of slopes in x2 are not taken into account as we are periodic in x2')
 
        end if
        if( present(const_slope_x1_min) .and. present(x1_min_slopes) ) then
@@ -1494,9 +1489,7 @@ MAKE_GET_SLOT_FUNCTION(get_x2_delta_cs2d,sll_t_cubic_spline_2d,x2_delta,sll_real
                'boundary conditions.', &
                'Exiting program...'
           STOP 'sll_f_new_cubic_spline_2d'
-         SLL_WARNING('sll_f_new_cubic_spline_2d&
-         ','values of slopes in x1 are not taken into account&
-         as we are periodic in x1')
+         SLL_WARNING('sll_f_new_cubic_spline_2d','values of slopes in x1 are not taken into account as we are periodic in x1')
 
        end if
        if( present(const_slope_x2_min) .and. present(x2_min_slopes) ) then
