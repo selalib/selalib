@@ -25,12 +25,12 @@ module sll_m_meshes_base
   !> @brief 2D logical mesh
   type, abstract :: sll_c_mesh_2d_base
    contains
-     procedure(get_geometry_2d), deferred, pass(mesh) :: eta1_node
-     procedure(get_geometry_2d), deferred, pass(mesh) :: eta2_node
-     procedure(get_geometry_2d_one_arg), deferred, pass(mesh) :: eta1_cell_one_arg
-     procedure(get_geometry_2d), deferred, pass(mesh) :: eta1_cell_two_arg
-     procedure(get_geometry_2d_one_arg), deferred, pass(mesh) :: eta2_cell_one_arg
-     procedure(get_geometry_2d), deferred, pass(mesh) :: eta2_cell_two_arg
+     procedure(get_geometry_2d), deferred, pass :: eta1_node
+     procedure(get_geometry_2d), deferred, pass :: eta2_node
+     procedure(get_geometry_2d_one_arg), deferred, pass :: eta1_cell_one_arg
+     procedure(get_geometry_2d), deferred, pass :: eta1_cell_two_arg
+     procedure(get_geometry_2d_one_arg), deferred, pass :: eta2_cell_one_arg
+     procedure(get_geometry_2d), deferred, pass :: eta2_cell_two_arg
      procedure(display_mesh_2d), deferred, pass :: display
      procedure(delete_mesh_2d),  deferred, pass :: delete
      generic, public :: eta1_cell => eta1_cell_one_arg, &
@@ -42,12 +42,12 @@ module sll_m_meshes_base
   !> @brief 3D logical mesh
   type, abstract:: sll_c_mesh_3d_base
    contains
-     procedure(get_geometry_3d), deferred, pass(mesh) :: eta1_node
-     procedure(get_geometry_3d), deferred, pass(mesh) :: eta2_node
-     procedure(get_geometry_3d), deferred, pass(mesh) :: eta3_node
-     procedure(get_geometry_3d), deferred, pass(mesh) :: eta1_cell
-     procedure(get_geometry_3d), deferred, pass(mesh) :: eta2_cell
-     procedure(get_geometry_3d), deferred, pass(mesh) :: eta3_cell
+     procedure(get_geometry_3d), deferred, pass :: eta1_node
+     procedure(get_geometry_3d), deferred, pass :: eta2_node
+     procedure(get_geometry_3d), deferred, pass :: eta3_node
+     procedure(get_geometry_3d), deferred, pass :: eta1_cell
+     procedure(get_geometry_3d), deferred, pass :: eta2_cell
+     procedure(get_geometry_3d), deferred, pass :: eta3_cell
      procedure(display_mesh_3d), deferred, pass :: display
      procedure(delete_mesh_3d),  deferred, pass :: delete
   end type sll_c_mesh_3d_base
@@ -55,16 +55,16 @@ module sll_m_meshes_base
   !> @brief 4D logical mesh
   type, abstract :: sll_mesh_4d_base
    contains
-     procedure(get_geometry_4d), deferred, pass(mesh) :: eta1_node
-     procedure(get_geometry_4d), deferred, pass(mesh) :: eta2_node
-     procedure(get_geometry_4d), deferred, pass(mesh) :: eta3_node
-     procedure(get_geometry_4d), deferred, pass(mesh) :: eta4_node
-     procedure(get_geometry_4d), deferred, pass(mesh) :: eta1_cell
-     procedure(get_geometry_4d), deferred, pass(mesh) :: eta2_cell
-     procedure(get_geometry_4d), deferred, pass(mesh) :: eta3_cell
-     procedure(get_geometry_4d), deferred, pass(mesh) :: eta4_cell
+     procedure(get_geometry_4d), deferred, pass :: eta1_node
+     procedure(get_geometry_4d), deferred, pass :: eta2_node
+     procedure(get_geometry_4d), deferred, pass :: eta3_node
+     procedure(get_geometry_4d), deferred, pass :: eta4_node
+     procedure(get_geometry_4d), deferred, pass :: eta1_cell
+     procedure(get_geometry_4d), deferred, pass :: eta2_cell
+     procedure(get_geometry_4d), deferred, pass :: eta3_cell
+     procedure(get_geometry_4d), deferred, pass :: eta4_cell
      procedure(display_mesh_4d), deferred, pass :: display
-     procedure(delete_mesh_4d),  deferred, pass  :: delete
+     procedure(delete_mesh_4d),  deferred, pass :: delete
   end type sll_mesh_4d_base
 
 
