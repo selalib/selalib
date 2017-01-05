@@ -231,7 +231,7 @@ MAKE_GET_SLOT_FUNCTION(get_delta_cs1d,   sll_t_cubic_spline_1d, delta,sll_real64
 
 MAKE_GET_SLOT_FUNCTION(get_x1_min_cs2d,  sll_t_cubic_spline_2d, x1_min, sll_real64)
 MAKE_GET_SLOT_FUNCTION(get_x1_max_cs2d,  sll_t_cubic_spline_2d, x1_max, sll_real64)
-!MAKE_GET_SLOT_FUNCTION(get_x2_min_cs2d,  sll_t_cubic_spline_2d, x2_min, sll_real64)
+MAKE_GET_SLOT_FUNCTION(get_x2_min_cs2d,  sll_t_cubic_spline_2d, x2_min, sll_real64)
 MAKE_GET_SLOT_FUNCTION(get_x2_max_cs2d,  sll_t_cubic_spline_2d, x2_max, sll_real64)
 MAKE_GET_SLOT_FUNCTION(get_x1_delta_cs2d,sll_t_cubic_spline_2d,x1_delta,sll_real64)
 MAKE_GET_SLOT_FUNCTION(get_x2_delta_cs2d,sll_t_cubic_spline_2d,x2_delta,sll_real64)

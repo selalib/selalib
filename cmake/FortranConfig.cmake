@@ -29,9 +29,10 @@ ELSEIF (CMAKE_Fortran_COMPILER_ID MATCHES PGI)
 
   EXEC_PROGRAM(${CMAKE_Fortran_COMPILER} ARGS "--version" OUTPUT_VARIABLE source_path)
   STRING(REGEX MATCH "1[0-9]\\.[0-9][0-9]\\-[0-9]" Fortran_COMPILER_VERSION ${source_path})
-  SET(CMAKE_Fortran_FLAGS_DEBUG "-Mbounds -O0 -g")
-  SET(CMAKE_Fortran_FLAGS_RELEASE "-acc -Minfo=accel -fast ")
+  SET(CMAKE_Fortran_FLAGS_DEBUG "-Mextend -Mbounds -O0 -g")
+  SET(CMAKE_Fortran_FLAGS_RELEASE "-Mextend -acc -Minfo=accel -fast ")
   SET(FULL_FORTRAN2003 TRUE)
+  INCLUDE(PGIConfig)
 
 ELSEIF (CMAKE_Fortran_COMPILER_ID MATCHES IBM)
 
