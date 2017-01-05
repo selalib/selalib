@@ -134,3 +134,9 @@ src/add_ons/multipatch/testing/CAID_coordinate_transformations/circle_mp5_pts12/
 src/add_ons/multipatch/testing/CAID_coordinate_transformations/circle_mp5_pts12/circle_mp5_pts12_local_to_global_patch0.nml
 src/add_ons/multipatch/testing/CAID_coordinate_transformations/circle_mp5_pts12/circle_mp5_pts12_local_indices_patch0.nml
 src/add_ons/multipatch/testing/CAID_coordinate_transformations/circle_mp5_pts12/circle_mp5_pts12_local_indices_patch4.nml
+
+src/interfaces/mpi/mpi_errors.txt
+
+src/interfaces/mpi/external_auto.F90
+
+src/splines/sll_m_cubic_splines_pgi.F90

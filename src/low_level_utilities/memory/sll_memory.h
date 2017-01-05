@@ -1,6 +1,8 @@
 #ifndef _sll_memory_h_
 #define _sll_memory_h_
 
+/*
+
 !**************************************************************
 !  Copyright INRIA
 !  Authors : 
@@ -68,6 +70,7 @@
   ! -ffree-line-length-none
   !
   ! *************************************************************************
+*/
  
 use sll_m_memory, only : sll_s_test_error_code
 
@@ -93,6 +96,7 @@ use sll_m_memory, only : sll_s_test_error_code
   SLL_ALLOCATE(arry_name_and_lims, error_var)             \
   SLL_INIT_ARRAY(arry_name_and_lims, 0.0_8) 
 
+/*
   ! **************************************************************************
   ! IMPLEMENTATION NOTES FOR sll_m_memory.h:
   !
@@ -139,6 +143,7 @@ use sll_m_memory, only : sll_s_test_error_code
   ! manually.
   !
   ! **************************************************************************
+*/
 
 #endif
  

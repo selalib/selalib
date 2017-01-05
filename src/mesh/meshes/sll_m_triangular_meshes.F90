@@ -919,7 +919,9 @@ write(iout,"(//10x,'Nb d''elements internes     : ',i10/    &
 
 return
 80 continue
+#ifndef __PGI
 SLL_ERROR( 'Read from file', 'Input file  '//maafil//'  not found.' )
+#endif
 
 end subroutine sll_s_read_from_file
 
