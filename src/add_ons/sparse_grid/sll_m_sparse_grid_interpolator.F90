@@ -1314,7 +1314,10 @@ subroutine integrate_trapezoidal( interpolator,data_in,val)
   val = val*interpolator%volume
 end subroutine integrate_trapezoidal
 
-!!!! Trapezoidal integrator on sparse grid working with the semi-hierarchical surplus (hierarchical in (d-1) dimensions, nodal along one dimension). Note this functions should usually not be used since it is only working if the maximum number of levels along the nodal dimension is the maximum total levels
+!Trapezoidal integrator on sparse grid working with the semi-hierarchical
+!surplus (hierarchical in (d-1) dimensions, nodal along one dimension). Note
+!this functions should usually not be used since it is only working if the
+!maximum number of levels along the nodal dimension is the maximum total levels
 subroutine integrate_trapezoidal2( interpolator,dorder,data_in,val)
   class(sll_t_sparse_grid_interpolator), intent(inout) :: interpolator
   sll_real64,intent(inout) :: val

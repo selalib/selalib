@@ -56,7 +56,11 @@ contains
 
   end function interpolate_from_interpolant_value
 
-!> Interpolation function for interpolation at (constantly) displaced grid points; displacement only in dimension dim. It is another implementation of the base-class function "interpolate_disp". The advantage is that we can not revisit nodes as we do in the recursive dimension-independently-programmed version.
+!> Interpolation function for interpolation at (constantly) displaced grid
+!> points; displacement only in dimension dim. It is another implementation of the
+!> base-class function "interpolate_disp". The advantage is that we can not
+!> revisit nodes as we do in the recursive dimension-independently-programmed
+!> version.
   subroutine interpolate_const_disp(interpolator,dorder,displacement,data_in, data_out,hiera)
     class(sll_t_sparse_grid_interpolator_4d), intent(inout) :: interpolator !< Sparse grid object
     sll_real64, dimension(:), intent(inout) :: data_in !< Values of the hierarchical surplus on input.
@@ -125,12 +129,16 @@ contains
 end subroutine Interpolate_const_disp
 
 
-!> Functionality: Interpolates the function values for a displacement on in dimension (periodic b.c. i.e. dimension 1 or 2) where the displacement is allowed to be non-constant in one other dimension (Dirichlet b.c. i.e. dimension 3 or 3).
+!> Functionality: Interpolates the function values for a displacement on in
+!> dimension (periodic b.c. i.e. dimension 1 or 2) where the displacement is
+!> allowed to be non-constant in one other dimension (Dirichlet b.c. i.e.
+!> dimension 3 or 3).
 subroutine interpolate_disp_nconst_in_1d(interpolator,displacement,dorder,data_in, data_out)
   class(sll_t_sparse_grid_interpolator_4d), intent(inout) :: interpolator !< sparse grid object
   sll_real64, dimension(:), intent(inout) :: data_in !< hierarchical surplus of the present function
   sll_real64, dimension(:), intent(out) :: data_out !< value of the displaced function
-  sll_int32, dimension(:), intent(in) :: dorder !< dorder: Ordering of the dimensions. dorder(1) (=1 or 2) gives the dimension where we want to displace, dorder(2) (=3 or 4) gives the dimension of which the displacement is dependent. dorder(3) = 1 or 2 not dorder(1) and dorder(4) = 3 or 4 not dorder(2).
+  sll_int32, dimension(:), intent(in) :: dorder 
+  !< dorder: Ordering of the dimensions. dorder(1) (=1 or 2) gives the dimension where we want to displace, dorder(2) (=3 or 4) gives the dimension of which the displacement is dependent. dorder(3) = 1 or 2 not dorder(1) and dorder(4) = 3 or 4 not dorder(2).
   sll_real64,dimension(:), intent(in) ::displacement !< Vector containing the values of the displacement (in hierarchical order, one dimensional)
   sll_int32 :: i1,i2,i3,i4,k2,k3,k4,counter,j, index_parent,index_parent_old
   sll_int32, dimension(4) :: l, no,ind_order
@@ -757,7 +765,11 @@ end subroutine Interpolate_disp_nconst_in_2d
     call  interpolator%initialize_sg( levels, order, interpolation,&
     interpolation_type, eta_min, eta_max);
 
+#ifdef __PGI
+    allocate(interpolator%index(0:interpolator%levels(1),0:interpolator%levels(2),0:interpolator%levels(3),0:interpolator%levels(4)))
+#else
     SLL_ALLOCATE(interpolator%index(0:interpolator%levels(1),0:interpolator%levels(2),0:interpolator%levels(3),0:interpolator%levels(4)),ierr)
+#endif
 
     ! Set the hierarchy of the grid
     counter = 1

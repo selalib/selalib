@@ -284,17 +284,18 @@ contains
     type(sll_t_coordinate_transformation_2d_analytic), pointer :: &
          sll_f_new_coordinate_transformation_2d_analytic
     character(len=*), intent(in)                  :: label
-    type(sll_t_cartesian_mesh_2d), pointer :: mesh_2d
-    procedure(sll_i_transformation_func_nopass)            :: x1_func
-    procedure(sll_i_transformation_func_nopass)            :: x2_func
-    procedure(sll_i_transformation_func_nopass)            :: j11_func
-    procedure(sll_i_transformation_func_nopass)            :: j12_func
-    procedure(sll_i_transformation_func_nopass)            :: j21_func
-    procedure(sll_i_transformation_func_nopass)            :: j22_func
-    sll_real64, dimension(:), intent(in) :: params
-    sll_int32 :: ierr
+    type(sll_t_cartesian_mesh_2d), pointer        :: mesh_2d
+    procedure(sll_i_transformation_func_nopass)   :: x1_func
+    procedure(sll_i_transformation_func_nopass)   :: x2_func
+    procedure(sll_i_transformation_func_nopass)   :: j11_func
+    procedure(sll_i_transformation_func_nopass)   :: j12_func
+    procedure(sll_i_transformation_func_nopass)   :: j21_func
+    procedure(sll_i_transformation_func_nopass)   :: j22_func
+    sll_real64, dimension(:), intent(in)          :: params
+    sll_int32                                     :: ierr
 
     SLL_ALLOCATE(sll_f_new_coordinate_transformation_2d_analytic, ierr)
+
     call initialize_coord_transf_2d_analytic( &
          sll_f_new_coordinate_transformation_2d_analytic, &
          label,          &
@@ -306,6 +307,7 @@ contains
          j21_func,       &
          j22_func,       &
          params )
+
   end function sll_f_new_coordinate_transformation_2d_analytic
 
   subroutine initialize_coord_transf_2d_analytic( &
@@ -322,14 +324,14 @@ contains
 
     class(sll_t_coordinate_transformation_2d_analytic), intent(inout) :: &
          transf
-    character(len=*), intent(in)                     :: label
-    procedure(sll_i_transformation_func_nopass)            :: x1_func
-    procedure(sll_i_transformation_func_nopass)            :: x2_func
-    procedure(sll_i_transformation_func_nopass)            :: j11_func
-    procedure(sll_i_transformation_func_nopass)            :: j12_func
-    procedure(sll_i_transformation_func_nopass)            :: j21_func
-    procedure(sll_i_transformation_func_nopass)            :: j22_func
-    type(sll_t_cartesian_mesh_2d), pointer               :: mesh_2d
+    character(len=*), intent(in)                   :: label
+    procedure(sll_i_transformation_func_nopass)    :: x1_func
+    procedure(sll_i_transformation_func_nopass)    :: x2_func
+    procedure(sll_i_transformation_func_nopass)    :: j11_func
+    procedure(sll_i_transformation_func_nopass)    :: j12_func
+    procedure(sll_i_transformation_func_nopass)    :: j21_func
+    procedure(sll_i_transformation_func_nopass)    :: j22_func
+    type(sll_t_cartesian_mesh_2d), pointer         :: mesh_2d
     sll_real64, dimension(:), intent(in), optional :: params
     sll_int32  :: ierr
 
