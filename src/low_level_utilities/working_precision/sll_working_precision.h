@@ -1,6 +1,8 @@
 #ifndef _SLL_WORKING_PRECISION_
 #define _SLL_WORKING_PRECISION_
 
+/*
+
 !**************************************************************
 !  Copyright INRIA
 !  Authors : 
@@ -35,19 +37,22 @@
   ! _f32, and _f64 for the moment.
 
   ! These are left without qualification and meant as the 'user' type
+
+*/
+
 #define sll_int    integer(kind=i32)
 #define sll_real   real(kind=f64)
 
-  ! Selalib's standard aliases:
 
-  ! Integer types:
+/*  ! Selalib's standard aliases: */
+/*  ! Integer types: */
 #define sll_int32  integer(kind=i32)
 #define sll_int64  integer(kind=i64)
-  ! Floating point types:
+/*  ! Floating point types: */
 #define sll_real32 real(kind=f32)
 #define sll_real64 real(kind=f64)
   
-  ! Complex types
+/*  ! Complex types */
 #define sll_comp32 complex(kind=f32)
 #define sll_comp64 complex(kind=f64)
 

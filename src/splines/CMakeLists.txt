@@ -1,4 +1,4 @@
-SET( SPLINE_FILES
+SET( SPLINES_FILES
   sll_m_quintic_splines.F90
   sll_m_bsplines.F90
   sll_m_arbitrary_degree_splines.F90
