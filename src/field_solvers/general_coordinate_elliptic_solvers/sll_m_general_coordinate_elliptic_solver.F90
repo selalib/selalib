@@ -373,8 +373,7 @@ case (sll_p_es_gauss_lobatto)
   SLL_ALLOCATE(es%gauss_pts1(2,spline_degree1+2),ierr)
   es%gauss_pts1 = sll_f_gauss_lobatto_points_and_weights(spline_degree1+2)
 case default
-  SLL_ERROR('initialize_general_elliptic_solver&
-  &','unknown type of gauss points in the direction 1')
+  SLL_ERROR('initialize_general_elliptic_solver','unknown type of gauss points in the direction 1')
 end select
    
 select case(quadrature_type2)
@@ -385,8 +384,7 @@ case (sll_p_es_gauss_lobatto)
   SLL_ALLOCATE(es%gauss_pts2(2,spline_degree2+2),ierr)
   es%gauss_pts2(:,:) = sll_f_gauss_lobatto_points_and_weights(spline_degree2+2)
 case default
-  SLL_ERROR('initialize_general_elliptic_solver&
-  &','unknown type of gauss points in the direction 2')
+  SLL_ERROR('initialize_general_elliptic_solver','unknown type of gauss points in the direction 2')
 end select
 
 !PN : Gauss points positions and weights are computed in [-1:1] interval
@@ -673,8 +671,7 @@ if (err>1.e-8) then
   print *,dbs1
   print *,'#err=',err
   flush( output_unit )
-  SLL_ERROR('initialize_general_elliptic_solver&
-  &','v_splines1_check and es%v_splines1 differ')
+  SLL_ERROR('initialize_general_elliptic_solver','v_splines1_check and es%v_splines1 differ')
 endif
 
 do j = 1, es%num_cells2
@@ -2058,9 +2055,11 @@ subroutine compute_local_to_global_splines_indices( &
     if(.not.(present(bc_indices1) &
       .and.present(bc_indices2)) )then
       
-      SLL_ERROR('compute_local_to_global_splines_indices&
-      &', 'bc_indices1 and bc_indices2 should be present&
-      & as it is not the case for local/global_spline_indices')
+#ifndef __PGI
+      SLL_ERROR('compute_local_to_global_splines_indices', 'bc_indices1 and bc_indices2 should be present as it is not the case for local/global_spline_indices')
+#else
+      SLL_ERROR('compute_local_to_global_splines_indices', 'bc_indices1 and bc_indices2 should be present')
+#endif
       
     else  
       call compute_local_to_global_splines_indices_from_bc_indices( &
@@ -2203,63 +2202,53 @@ subroutine compute_non_zero_splines_and_deriv_at_cell_points( &
   if(num_cells<1)then
     print *,'#num_cells=',num_cells
     flush( output_unit )
-    SLL_ERROR('compute_non_zero_splines_and_deriv_at_cell_points&
-    &','Problem with num_cells')
+    SLL_ERROR('compute_non_zero_splines_and_deriv_at_cell_points','Problem with num_cells')
   endif
   if(degree<0)then
     print *,'#degree=',degree
     flush( output_unit )
-    SLL_ERROR('compute_non_zero_splines_and_deriv_at_cell_points&
-    &','Problem with degree')
+    SLL_ERROR('compute_non_zero_splines_and_deriv_at_cell_points','Problem with degree')
   endif
   if(num_cell_points<1)then
     print *,'#num_cell_points=',num_cell_points
     flush( output_unit )
-    SLL_ERROR('compute_non_zero_splines_and_deriv_at_cell_points&
-    &','Problem with num_cell_points')
+    SLL_ERROR('compute_non_zero_splines_and_deriv_at_cell_points','Problem with num_cell_points')
   endif
   if(minval(cell_points)<0.)then
     print *,'#minval(cell_points)=',minval(cell_points)
     flush( output_unit )
-    SLL_ERROR('compute_non_zero_splines_and_deriv_at_cell_points&
-    &','Problem with minval(cell_points)')
+    SLL_ERROR('compute_non_zero_splines_and_deriv_at_cell_points','Problem with minval(cell_points)')
   endif
   if(maxval(cell_points)>=1.)then
     print *,'#maxval(cell_points)=',maxval(cell_points)
     flush( output_unit )
-    SLL_ERROR('compute_non_zero_splines_and_deriv_at_cell_points&
-    &','Problem with maxval(cell_points)')
+    SLL_ERROR('compute_non_zero_splines_and_deriv_at_cell_points','Problem with maxval(cell_points)')
   endif
   
   if(size(knots)<num_cells+2*degree+1)then
     print *,'#size(knots)=',size(knots)
     flush( output_unit )
-    SLL_ERROR('compute_non_zero_splines_and_deriv_at_cell_points&
-    &','Problem with knots')
+    SLL_ERROR('compute_non_zero_splines_and_deriv_at_cell_points','Problem with knots')
   endif
   if(size(v_splines,1)<2)then
     print *,'#size(v_splines,1)=',size(v_splines,1),2
     flush( output_unit )
-    SLL_ERROR('compute_non_zero_splines_and_deriv_at_cell_points&
-    &','Problem with size of v_splines')
+    SLL_ERROR('compute_non_zero_splines_and_deriv_at_cell_points','Problem with size of v_splines')
   endif
   if(size(v_splines,2)<degree+1)then
     print *,'#size(v_splines,2)=',size(v_splines,2),degree+1
     flush( output_unit )
-    SLL_ERROR('compute_non_zero_splines_and_deriv_at_cell_points&
-    &','Problem with size of v_splines')
+    SLL_ERROR('compute_non_zero_splines_and_deriv_at_cell_points','Problem with size of v_splines')
   endif
   if(size(v_splines,3)<num_cell_points)then
     print *,'#size(v_splines,3)=',size(v_splines,3),num_cell_points
     flush( output_unit )
-    SLL_ERROR('compute_non_zero_splines_and_deriv_at_cell_points&
-    &','Problem with size of v_splines')
+    SLL_ERROR('compute_non_zero_splines_and_deriv_at_cell_points','Problem with size of v_splines')
   endif
   if(size(v_splines,4)<num_cells)then
     print *,'#size(v_splines,4)=',size(v_splines,4),num_cells
     flush( output_unit )
-    SLL_ERROR('compute_non_zero_splines_and_deriv_at_cell_points&
-    &','Problem with size of v_splines')
+    SLL_ERROR('compute_non_zero_splines_and_deriv_at_cell_points','Problem with size of v_splines')
   endif
   
   SLL_ALLOCATE(dbiatx(degree+1,2),ierr)
@@ -2313,57 +2302,48 @@ subroutine compute_non_zero_splines_at_cell_points( &
   if(num_cells<1)then
     print *,'#num_cells=',num_cells
     flush( output_unit )
-    SLL_ERROR('compute_non_zero_splines_and_deriv_at_cell_points&
-    &','Problem with num_cells')
+    SLL_ERROR('compute_non_zero_splines_and_deriv_at_cell_points','Problem with num_cells')
   endif
   if(degree<0)then
     print *,'#degree=',degree
     flush( output_unit )
-    SLL_ERROR('compute_non_zero_splines_and_deriv_at_cell_points&
-    &','Problem with degree')
+    SLL_ERROR('compute_non_zero_splines_and_deriv_at_cell_points','Problem with degree')
   endif
   if(num_cell_points<1)then
     print *,'#num_cell_points=',num_cell_points
     flush( output_unit )
-    SLL_ERROR('compute_non_zero_splines_and_deriv_at_cell_points&
-    &','Problem with num_cell_points')
+    SLL_ERROR('compute_non_zero_splines_and_deriv_at_cell_points','Problem with num_cell_points')
   endif
   if(minval(cell_points)<0.)then
     print *,'#minval(cell_points)=',minval(cell_points)
     flush( output_unit )
-    SLL_ERROR('compute_non_zero_splines_and_deriv_at_cell_points&
-    &','Problem with minval(cell_points)')
+    SLL_ERROR('compute_non_zero_splines_and_deriv_at_cell_points','Problem with minval(cell_points)')
   endif
   if(maxval(cell_points)>=1.)then
     print *,'#maxval(cell_points)=',maxval(cell_points)
     flush( output_unit )
-    SLL_ERROR('compute_non_zero_splines_and_deriv_at_cell_points&
-    &','Problem with maxval(cell_points)')
+    SLL_ERROR('compute_non_zero_splines_and_deriv_at_cell_points','Problem with maxval(cell_points)')
   endif
   
   if(size(knots)<num_cells+2*degree+1)then
     print *,'#size(knots)=',size(knots)
     flush( output_unit )
-    SLL_ERROR('compute_non_zero_splines_and_deriv_at_cell_points&
-    &','Problem with knots')
+    SLL_ERROR('compute_non_zero_splines_and_deriv_at_cell_points','Problem with knots')
   endif
   if(size(v_splines,1)<degree+1)then
     print *,'#size(v_splines,1)=',size(v_splines,1),degree+1
     flush( output_unit )
-    SLL_ERROR('compute_non_zero_splines_and_deriv_at_cell_points&
-    &','Problem with size of v_splines')
+    SLL_ERROR('compute_non_zero_splines_and_deriv_at_cell_points','Problem with size of v_splines')
   endif
   if(size(v_splines,2)<num_cell_points)then
     print *,'#size(v_splines,2)=',size(v_splines,2),num_cell_points
     flush( output_unit )
-    SLL_ERROR('compute_non_zero_splines_and_deriv_at_cell_points&
-    &','Problem with size of v_splines')
+    SLL_ERROR('compute_non_zero_splines_and_deriv_at_cell_points','Problem with size of v_splines')
   endif
   if(size(v_splines,3)<num_cells)then
     print *,'#size(v_splines,3)=',size(v_splines,3),num_cells
     flush( output_unit )
-    SLL_ERROR('compute_non_zero_splines_and_deriv_at_cell_points&
-    &','Problem with size of v_splines')
+    SLL_ERROR('compute_non_zero_splines_and_deriv_at_cell_points','Problem with size of v_splines')
   endif
   
   SLL_ALLOCATE(dbiatx(degree+1),ierr)
@@ -2598,9 +2578,8 @@ if(es%use_cubic_splines)then
     rhs_bc1, &
     rhs_bc2)
   else
-    SLL_ERROR('sll_s_initialize_general_elliptic_solver_prototype&
-    &','provide rhs_bc1 and rhs_bc2')
-  endif  
+    SLL_ERROR('sll_s_initialize_general_elliptic_solver_prototype','provide rhs_bc1 and rhs_bc2')
+  endif
 endif
 
 if(present(rho_degree1))then
@@ -2748,8 +2727,7 @@ case (sll_p_es_gauss_lobatto)
   SLL_ALLOCATE(es%gauss_pts1(2,spline_degree1+2),ierr)
   es%gauss_pts1 = sll_f_gauss_lobatto_points_and_weights(spline_degree1+2)
 case default
-  SLL_ERROR('initialize_general_elliptic_solver&
-  &','unknown type of gauss points in the direction 1')
+  SLL_ERROR('initialize_general_elliptic_solver','unknown type of gauss points in the direction 1')
 end select
    
 select case(quadrature_type2)
@@ -2760,8 +2738,7 @@ case (sll_p_es_gauss_lobatto)
   SLL_ALLOCATE(es%gauss_pts2(2,spline_degree2+2),ierr)
   es%gauss_pts2(:,:) = sll_f_gauss_lobatto_points_and_weights(spline_degree2+2)
 case default
-  SLL_ERROR('initialize_general_elliptic_solver&
-  &','unknown type of gauss points in the direction 2')
+  SLL_ERROR('initialize_general_elliptic_solver','unknown type of gauss points in the direction 2')
 end select
 
 !PN : Gauss points positions and weights are computed in [-1:1] interval
@@ -3557,8 +3534,7 @@ else
       end do
     end do
   else
-    SLL_ERROR('sll_s_solve_general_coordinates_elliptic_eq_prototype&
-    &','rho_field should be given')
+    SLL_ERROR('sll_s_solve_general_coordinates_elliptic_eq_prototype','rho_field should be given')
   endif  
 endif
 
@@ -3813,36 +3789,30 @@ subroutine compute_values_at_knots( &
   
   if(size(knots1)<num_cells1+2*degree1+1)then
     print *,'#size(knots1)=',size(knots1)
-    SLL_ERROR('compute_values_at_knots&
-    &','bad value of size(knots1)')
+    SLL_ERROR('compute_values_at_knots','bad value of size(knots1)')
   endif
   if(size(knots2)<num_cells2+2*degree2+1)then
     print *,'#size(knots2)=',size(knots2)
-    SLL_ERROR('compute_values_at_knots&
-    &','bad value of size(knots2)')
+    SLL_ERROR('compute_values_at_knots','bad value of size(knots2)')
   endif
 
   if(size(input,1)<num_cells1+degree1)then
     print *,'#size(input,1)=',size(input,1)
-    SLL_ERROR('compute_values_at_knots&
-    &','bad value of size(input,1)')
+    SLL_ERROR('compute_values_at_knots','bad value of size(input,1)')
   endif
   if(size(input,2)<num_cells2+degree2)then
     print *,'#size(input,2)=',size(input,2)
-    SLL_ERROR('compute_values_at_knots&
-    &','bad value of size(input,2)')
+    SLL_ERROR('compute_values_at_knots','bad value of size(input,2)')
   endif
 
   if(size(output,1)<num_cells1+1)then
     print *,'#size(output,1)=',size(output,1)
-    SLL_ERROR('compute_values_at_knots&
-    &','bad value of size(output,1)')
+    SLL_ERROR('compute_values_at_knots','bad value of size(output,1)')
   endif
 
   if(size(output,2)<num_cells2+1)then
     print *,'#size(output,2)=',size(output,2)
-    SLL_ERROR('compute_values_at_knots&
-    &','bad value of size(output,2)')
+    SLL_ERROR('compute_values_at_knots','bad value of size(output,2)')
   endif
 
   SLL_ALLOCATE(tmp(num_cells1+1,num_cells2+degree2),ierr)
