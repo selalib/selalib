@@ -140,3 +140,5 @@ src/interfaces/mpi/mpi_errors.txt
 src/interfaces/mpi/external_auto.F90
 
 src/splines/sll_m_cubic_splines_pgi.F90
+
+src/quadrature/sll_m_gauss_legendre_integration_pgi.F90

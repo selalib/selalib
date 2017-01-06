@@ -73,9 +73,6 @@ ENDIF()
 
 IF(FFTW_FOUND)
 
-   # this include_directories is commented because we use 
-   # target_include_directories in fft interface (PN)
-   #INCLUDE_DIRECTORIES(${FFTW_INCLUDE_DIRS})
    MESSAGE(STATUS "FFTW_INCLUDE_DIRS:${FFTW_INCLUDE_DIRS}")
    MESSAGE(STATUS "FFTW_LIBRARIES:${FFTW_LIBRARIES}")
    MARK_AS_ADVANCED( FFTW_INCLUDE_DIRS FFTW_LIBRARIES)

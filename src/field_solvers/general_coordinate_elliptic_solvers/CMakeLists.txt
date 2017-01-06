@@ -4,6 +4,8 @@ ADD_LIBRARY( sll_general_coordinate_elliptic_solvers STATIC
              sll_m_lobalap.F90
              sll_m_general_coordinate_elliptic_solver.F90 )
 
+TARGET_INCLUDE_DIRECTORIES(sll_general_coordinate_elliptic_solvers BEFORE PRIVATE ${HDF5_INCLUDE_DIR_FORTRAN})
+
 TARGET_LINK_LIBRARIES( sll_general_coordinate_elliptic_solvers
                        sll_sparse_matrix 
                        sll_fields
