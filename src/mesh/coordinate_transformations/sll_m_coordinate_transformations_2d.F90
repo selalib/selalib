@@ -83,6 +83,15 @@ module sll_m_coordinate_transformations_2d
 
   private
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+  abstract interface
+     function j_matrix_f_nopass ( eta1, eta2, params ) result(val)
+       use sll_m_working_precision
+       sll_real64, dimension(2,2)   :: val
+       sll_real64   :: eta1
+       sll_real64   :: eta2
+       sll_real64, dimension(:), optional, intent(in) :: params
+     end function j_matrix_f_nopass
+  end interface
   
 !> Analytic transformation
   type, extends(sll_c_coordinate_transformation_2d_base):: &
@@ -99,8 +108,7 @@ module sll_m_coordinate_transformations_2d
      !> PLEASE ADD DOCUMENTATION
      procedure(sll_i_transformation_func_nopass), pointer, nopass :: x2_func  ! user
      !> PLEASE ADD DOCUMENTATION
-     procedure(two_arg_message_passing_func_analyt), pointer, pass :: &
-          jacobian_func
+     procedure(two_arg_message_passing_func_analyt), pointer, pass :: jacobian_func
      !> PLEASE ADD DOCUMENTATION
      procedure(j_matrix_f_nopass), pointer, nopass :: jacobian_matrix_function
      !> PLEASE ADD DOCUMENTATION
@@ -209,16 +217,8 @@ module sll_m_coordinate_transformations_2d
 
 #ifndef DOXYGEN_SHOULD_SKIP_THIS
 
-  abstract interface
-     function j_matrix_f_nopass ( eta1, eta2, params ) result(val)
-       use sll_m_working_precision
-       sll_real64, dimension(2,2)   :: val
-       sll_real64   :: eta1
-       sll_real64   :: eta2
-       sll_real64, dimension(:), optional, intent(in) :: params
-     end function j_matrix_f_nopass
-  end interface
 
+#ifndef __PGI
    abstract interface
       function two_arg_message_passing_func_discr( transf, eta1, eta2 )
         use sll_m_working_precision
@@ -240,6 +240,7 @@ module sll_m_coordinate_transformations_2d
         sll_real64, intent(in)          :: eta2
       end function two_arg_message_passing_func_analyt
    end interface
+#endif /* __PGI */
 
 #endif /* DOXYGEN_SHOULD_SKIP_THIS */
 
@@ -351,7 +352,9 @@ contains
     transf%j_matrix(1,2)%f => j12_func
     transf%j_matrix(2,1)%f => j21_func
     transf%j_matrix(2,2)%f => j22_func
+#ifndef __PGI
     transf%jacobian_func   => jacobian_2d_analytic
+#endif
     
   end subroutine initialize_coord_transf_2d_analytic
 
@@ -363,7 +366,9 @@ contains
     end if
     nullify( transf%x1_func )
     nullify( transf%x2_func )
+#ifndef __PGI
     nullify( transf%jacobian_func )
+#endif
     nullify( transf%jacobian_matrix_function )
   end subroutine delete_transformation_2d_analytic
 
