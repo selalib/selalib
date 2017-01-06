@@ -62,7 +62,11 @@ contains
   end function interpolate_from_interpolant_value
 
 
-!> Interpolation function for interpolation at (constantly) displaced grid points; displacement only in dimension dim. It is another implementation of the base-class function "interpolate_disp". The advantage is that we can not revisit nodes as we do in the recursive dimension-independently-programmed version.
+!> Interpolation function for interpolation at (constantly) displaced grid
+!> points; displacement only in dimension dim. It is another implementation of the
+!> base-class function "interpolate_disp". The advantage is that we can not
+!> revisit nodes as we do in the recursive dimension-independently-programmed
+!> version.
   subroutine interpolate_const_disp(interpolator,dorder,displacement,data_in, data_out,hiera)
     class(sll_t_sparse_grid_interpolator_3d), intent(inout) :: interpolator !< sparse grid object
   sll_real64, dimension(:), intent(inout) :: data_in !< hierarchical surplus
@@ -419,12 +423,18 @@ end subroutine interpolate_array_disp_sgfft
     class(sll_t_sparse_grid_interpolator_3d), intent(inout) :: interpolator !< sparse grid object
     sll_real64, dimension(:), intent(in)              :: eta_min !< \a eta_min defines the lower bound of the domain
     sll_real64, dimension(:),  intent(in)             :: eta_max !< \a eta_max defines the upper bound of the domain
-    sll_int32, dimension(:),intent(in)                :: levels !< \a levels defines the maximum level in the sparse grid for each direction
+    sll_int32, dimension(:),intent(in)                :: levels 
+    !< \a levels defines the maximum level in the sparse grid for each direction
     sll_int32, intent(in)                             :: order !< \a order of the sparse grid functions
     sll_int32, intent(in)                             :: interpolation !< order of the interpolator
     sll_int32, intent(in)                             :: interpolation_type !< Choose spline (\a interpolation_type = 0) or Lagrange (\a interpolation_type = 1) interpolation for the 1D interpolators if not traditional sparse grid interpolation is used.
-    sll_int32, intent(in)                             :: modified !< \a modified defines if we have a traditional sparse grid for \a modified = 0 (then the l_1 norm of the levels is bounded by max(\a levels) ) or if the boundary is sparsified for \a modified = 1 (then the l_1 norm of the levels is bounded by max(\a levels)+1 )
-    sll_int32, intent(in)                             :: boundary !< \a boundary defines the boundary conditions: define 0 for periodic boundary conditions and 1 for zero inflow boundaries
+    sll_int32, intent(in)                             :: modified 
+    !< \a modified defines if we have a traditional sparse grid for \a modified
+    !< = 0 (then the l_1 norm of the levels is bounded by max(\a levels) ) or if the
+    !< boundary is sparsified for \a modified = 1 (then the l_1 norm of the levels is
+    !< bounded by max(\a levels)+1 )
+    sll_int32, intent(in)                             :: boundary 
+    !< \a boundary defines the boundary conditions: define 0 for periodic boundary conditions and 1 for zero inflow boundaries
 
     sll_int32                                     :: i,j, k1,k2,k3,l1,l2,l3,l,counter
     sll_int32                                     :: ierr, no1, no2, no3
@@ -487,7 +497,11 @@ end subroutine interpolate_array_disp_sgfft
     call  interpolator%initialize_sg(levels, order, interpolation,&
     interpolation_type, eta_min, eta_max);
 
+#ifdef __PGI
+    allocate(interpolator%index(0:interpolator%levels(1),0:interpolator%levels(2),0:interpolator%levels(3)))
+#else
     SLL_ALLOCATE(interpolator%index(0:interpolator%levels(1),0:interpolator%levels(2),0:interpolator%levels(3)),ierr)
+#endif
 
     ! Set the hierarchy of the grid
     counter = 1

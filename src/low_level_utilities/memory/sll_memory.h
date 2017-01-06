@@ -79,11 +79,26 @@ use sll_m_memory, only : sll_s_test_error_code
   call sll_s_test_error_code(error_var, 'Memory allocation Failure.', __FILE__, \
   __LINE__);
 
+#ifdef __PGI
+
+#define SLL_DEALLOCATE(ptr, error_var) deallocate(ptr, stat=error_var); nullify(ptr);
+
+#define SLL_CLEAR_ALLOCATE(arry_name_and_lims, error_var) \
+allocate(arry_name_and_lims); arry_name_and_lims=0.0_8
+
+#else
+
 #define SLL_DEALLOCATE(ptr, error_var)  \
   deallocate(ptr, stat=error_var);      \
   call sll_s_test_error_code(error_var, 'Error in memory deallocation.', __FILE__,\
   __LINE__); \
   nullify(ptr);
+
+#define SLL_CLEAR_ALLOCATE(arry_name_and_lims, error_var) \
+  SLL_ALLOCATE(arry_name_and_lims, error_var)             \
+  SLL_INIT_ARRAY(arry_name_and_lims, 0.0_8) 
+
+#endif /* __PGI */
 
 #define SLL_DEALLOCATE_ARRAY(array, error_var) \
   deallocate(array, stat=error_var);           \
@@ -92,9 +107,6 @@ use sll_m_memory, only : sll_s_test_error_code
 
 #define SLL_INIT_ARRAY(arry,val) arry = val;
 
-#define SLL_CLEAR_ALLOCATE(arry_name_and_lims, error_var) \
-  SLL_ALLOCATE(arry_name_and_lims, error_var)             \
-  SLL_INIT_ARRAY(arry_name_and_lims, 0.0_8) 
 
 /*
   ! **************************************************************************

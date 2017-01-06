@@ -99,7 +99,10 @@ end subroutine interpolate_array_disp_sgfft
     sll_int32, intent(in)                         :: order !< \a order of the sparse grid functions
     sll_int32, intent(in)                         :: interpolation !< order of the interpolator
     sll_int32, intent(in)                         :: interpolation_type !< Choose spline (\a interpolation_type = 0) or Lagrange (\a interpolation_type = 1) interpolation for the 1D interpolators if not traditional sparse grid interpolation is used.
-    sll_int32, intent(in)                         :: modified !< \a modified defines if we have a traditional sparse grid for \a modified = 0 (then the l_1 norm of the levels is bounded by max(\a levels) ) or if the boundary is sparsified for \a modified = 1 (then the l_1 norm of the levels is bounded by max(\a levels)+1 )
+    sll_int32, intent(in)                         :: modified 
+    !< \a modified defines if we have a traditional sparse grid for \a modified = 0 
+    !< (then the l_1 norm of the levels is bounded by max(\a levels) ) or if 
+    !< the boundary is sparsified for \a modified = 1 (then the l_1 norm of the levels is bounded by max(\a levels)+1 )
     sll_int32, intent(in)                         :: boundary !< \a boundary defines the boundary conditions: define 0 for periodic boundary conditions and 1 for zero inflow boundaries
 
     sll_int32                                     :: i,j,k1,k2,l1,l2,l,counter
@@ -580,7 +583,11 @@ end function interpolate_value_sg
 
 
 
-!> Interpolation function for interpolation at (constantly) displaced grid points; displacement only in dimension dim. It is another implementation of the base-class function "interpolate_disp". The advantage is that we can not revisit nodes as we do in the recursive dimension-independently-programmed version.
+!> Interpolation function for interpolation at (constantly) displaced grid
+!> points; displacement only in dimension dim. It is another implementation of the
+!> base-class function "interpolate_disp". The advantage is that we can not
+!> revisit nodes as we do in the recursive dimension-independently-programmed
+!> version.
   subroutine interpolate_const_disp(interpolator,dorder,displacement,data_in, data_out,hiera)
     class(sll_t_sparse_grid_interpolator_2d), intent(inout) :: interpolator !< sparse grid object
     sll_int32, dimension(:), intent(in) :: dorder !< \a dorder(1) gives the dimension along which to displace the points, \a dorder(2) the other dimension
@@ -636,12 +643,20 @@ end subroutine Interpolate_const_disp
 
 
 
-!> Functionality: Interpolates the function values for a displacement on in dimension (periodic b.c. i.e. dimension 1 or 2) where the displacement is allowed to be non-constant in one other dimension (Dirichlet b.c. i.e. dimension 3 or 3).
+!> Functionality: Interpolates the function values for a displacement on in
+!> dimension (periodic b.c. i.e. dimension 1 or 2) where the displacement is
+!> allowed to be non-constant in one other dimension (Dirichlet b.c. i.e.
+!> dimension 3 or 3).
+
 subroutine interpolate_disp_nconst_in_1d(interpolator,displacement,dorder,data_in, data_out)
   class(sll_t_sparse_grid_interpolator_2d), intent(inout) :: interpolator !< Sparse grid object
   sll_real64, dimension(:), intent(inout) :: data_in !< hierarchical surplus of the present function
   sll_real64, dimension(:), intent(out) :: data_out !< values of the displaced function
-  sll_int32, dimension(:), intent(in) :: dorder !< Ordering of the dimensions. dorder(1) (=1 or 2) gives the dimension where we want to displace, dorder(2) (=3 or 4) gives the dimension of which the displacement is dependent. dorder(3) = 1 or 2 not dorder(1) and dorder(4) = 3 or 4 not dorder(2).
+  sll_int32, dimension(:), intent(in) :: dorder 
+  !< Ordering of the dimensions. dorder(1) (=1 or 2) gives the dimension where
+  !< we want to displace, dorder(2) (=3 or 4) gives the dimension of which the
+  !< displacement is dependent. dorder(3) = 1 or 2 not dorder(1) and dorder(4) = 3
+  !< or 4 not dorder(2).
   sll_real64,dimension(:), intent(in) ::displacement !< Vector containing the values of the displacement (in hierarchical order, one dimensional)
 
   sll_int32 :: i1,i2,k2,counter,j, index_parent,index_parent_old
