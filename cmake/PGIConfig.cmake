@@ -20,7 +20,7 @@ IF(CMAKE_Fortran_COMPILER_ID MATCHES PGI)
   ENDFUNCTION(CUT_LONG_LINES)
   
   CUT_LONG_LINES(src/splines/sll_m_cubic_splines)
-# CUT_LONG_LINES(integration/gauss_legendre)
+  CUT_LONG_LINES(src/quadrature/sll_m_gauss_legendre_integration)
 # CUT_LONG_LINES(fft/sllfft/sll_fft)
 # CUT_LONG_LINES(pic_utilities/sll_pic_utilities)
 # CUT_LONG_LINES(pic_utilities/unit_test_particle_sort)
