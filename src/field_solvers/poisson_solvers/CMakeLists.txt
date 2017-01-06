@@ -24,6 +24,9 @@ ENDIF(BUILD_MUDPACK)
 
 
 ADD_LIBRARY( sll_poisson_solvers STATIC ${POISSON_SRCS} )
+
+TARGET_INCLUDE_DIRECTORIES(sll_poisson_solvers BEFORE PRIVATE ${HDF5_INCLUDE_DIR_FORTRAN})
+
 TARGET_LINK_LIBRARIES( sll_poisson_solvers
   sll_general_coordinate_elliptic_solvers 
   sll_meshes

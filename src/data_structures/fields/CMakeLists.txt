@@ -6,6 +6,8 @@ ADD_LIBRARY(sll_fields STATIC
             sll_m_scalar_field_2d.F90
             sll_m_dg_fields.F90)
 
+TARGET_INCLUDE_DIRECTORIES(sll_fields BEFORE PRIVATE ${HDF5_INCLUDE_DIR_FORTRAN})
+
 TARGET_LINK_LIBRARIES(sll_fields
                       sll_coordinate_transformations
                       sll_meshes
