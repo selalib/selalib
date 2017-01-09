@@ -21,7 +21,7 @@ IF(CMAKE_Fortran_COMPILER_ID MATCHES PGI)
   
   CUT_LONG_LINES(src/splines/sll_m_cubic_splines)
   CUT_LONG_LINES(src/quadrature/sll_m_gauss_legendre_integration)
-# CUT_LONG_LINES(fft/sllfft/sll_fft)
+  CUT_LONG_LINES(src/add_ons/multipatch/sll_m_cartesian_meshes_multipatch)
 # CUT_LONG_LINES(pic_utilities/sll_pic_utilities)
 # CUT_LONG_LINES(pic_utilities/unit_test_particle_sort)
 # CUT_LONG_LINES(pic_particle_initializers/sll_particle_init2D)

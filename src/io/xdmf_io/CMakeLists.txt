@@ -5,6 +5,7 @@ SET( XDMF_SRC ${XDMF_SRC} sll_m_hdf5_serial.F90 )
 SET( XDMF_DEP sll_file_io )
 
 ADD_LIBRARY( sll_xdmf_io STATIC ${XDMF_SRC} )
+TARGET_INCLUDE_DIRECTORIES(sll_xdmf_io BEFORE PRIVATE ${HDF5_INCLUDE_DIR_FORTRAN})
 TARGET_LINK_LIBRARIES( sll_xdmf_io ${XDMF_DEP} )
 
 # Tests

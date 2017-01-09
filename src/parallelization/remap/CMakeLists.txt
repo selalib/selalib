@@ -1,6 +1,29 @@
-ADD_LIBRARY( sll_remap STATIC sll_m_remapper.F90 )
-TARGET_LINK_LIBRARIES( sll_remap sll_collective sll_utilities ) 
+IF(PGI)
 
+  FIND_PROGRAM(PYTHON_EXECUTABLE NAMES python)
+  FIND_PROGRAM(CPP_EXECUTABLE NAMES cpp)
+  SET(PREPROCESS_SCRIPT "${CMAKE_SOURCE_DIR}/python/cut_long_lines.py")
+  
+  SET(_FILE sll_m_remapper)
+  MESSAGE(STATUS "Cut long lines of file ${_FILE}.F90")
+
+  EXECUTE_PROCESS(COMMAND ${CPP_EXECUTABLE} "-Iinclude" "-I${CMAKE_CURRENT_SOURCE_DIR}" "-E" "-w" "-P" 
+                     WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
+                     INPUT_FILE "${CMAKE_CURRENT_SOURCE_DIR}/${_FILE}.F90"
+                     OUTPUT_FILE "${CMAKE_CURRENT_SOURCE_DIR}/${_FILE}_pgi.F90")
+
+  EXECUTE_PROCESS(COMMAND ${PYTHON_EXECUTABLE} ${PREPROCESS_SCRIPT} 
+                  WORKING_DIRECTORY ${CMAKE_SOURCE_DIR})
+
+  ADD_LIBRARY( sll_remap STATIC sll_m_remapper_pgi.F90 )
+
+ELSE(PGI)
+
+  ADD_LIBRARY( sll_remap STATIC sll_m_remapper.F90 )
+
+ENDIF(PGI)
+
+TARGET_LINK_LIBRARIES( sll_remap sll_collective sll_utilities ) 
 
 IF(BUILD_TESTING)
   ADD_SUBDIRECTORY(testing)
