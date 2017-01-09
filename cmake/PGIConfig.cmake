@@ -25,6 +25,7 @@ IF(CMAKE_Fortran_COMPILER_ID MATCHES PGI)
   CUT_LONG_LINES(src/field_solvers/maxwell_solvers/sll_m_maxwell_2d_pstd)
   CUT_LONG_LINES(src/field_solvers/maxwell_solvers/sll_m_maxwell_3d_pstd)
   CUT_LONG_LINES(src/field_solvers/maxwell_solvers_parallel/sll_m_maxwell_2d_periodic_cartesian_par)
-
+  CUT_LONG_LINES(src/particle_methods/pic_opt2d/pic_opt2d_particle_initializers/sll_m_particle_initializers_2d)
+  CUT_LONG_LINES(src/particle_methods/pic_opt2d/pic_opt2d_particle_initializers/sll_m_particle_initializers_4d)
 
 ENDIF(CMAKE_Fortran_COMPILER_ID MATCHES PGI)
