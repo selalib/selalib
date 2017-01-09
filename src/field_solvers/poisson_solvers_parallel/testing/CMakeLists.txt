@@ -4,6 +4,7 @@ ADD_EXECUTABLE( test_poisson_3d_periodic_par test_poisson_3d_periodic_par.F90 )
 TARGET_LINK_LIBRARIES( test_poisson_3d_periodic_par sll_poisson_parallel )
 
 ADD_EXECUTABLE( test_poisson_2d_per_cart_par test_poisson_2d_periodic_cart_par.F90 )
+TARGET_INCLUDE_DIRECTORIES(test_poisson_2d_per_cart_par BEFORE PRIVATE ${HDF5_INCLUDE_DIR_FORTRAN})
 TARGET_LINK_LIBRARIES( test_poisson_2d_per_cart_par sll_poisson_parallel )
 
 ADD_EXECUTABLE( test_poisson_polar_parallel test_poisson_polar_parallel.F90 )
