@@ -1,3 +1,73 @@
+module lobalap_analytic_helper_functions
+
+contains
+
+  real(8) function f_cos( r, theta )
+
+    real(8) :: r
+    real(8) :: theta
+
+    f_cos = (r-R_MIN)*(r-R_MAX)*cos(N*theta)*r
+
+  end function f_cos
+
+  real(8) function f_four( x, y)
+    real(8) :: x, y
+#ifdef DEBUG
+    real(8) :: dummy
+    dummy = x+y
+#endif
+    f_four = -4._8
+
+  end function f_four
+
+  real(8) function f_sin( r, theta )
+
+    real(8) :: r
+    real(8) :: theta
+
+    f_sin = (r-R_MIN)*(r-R_MAX)*sin(N*theta)*r
+
+  end function f_sin
+
+  real(8) function lap_f_cos( r, theta )
+
+    !sage: assume(r>=1)
+    !sage: assume(r<=2)
+    !sage: phi = (r-R_MIN)*(r-R_MAX)*r*cos(n*theta)
+    !sage: diff(r*diff(phi,r),r)/r + diff(phi,theta,theta)/(r*r)
+
+    real(8) :: r
+    real(8) :: theta
+
+    lap_f_cos = -(r-R_MAX)*(r-R_MIN)*N*N*cos(N*theta)/r &
+            + ((r-R_MAX)*(r-R_MIN)*cos(N*theta)  &
+            + (r-R_MAX)*r*cos(N*theta) + (r-R_MIN)*r*cos(N*theta) &
+            + 2.0_8*((r-R_MAX)*cos(N*theta) + (r-R_MIN)*cos(N*theta) &
+            + r*cos(N*theta))*r)/r
+
+  end function lap_f_cos
+
+  real(8) function lap_f_sin( r, theta)
+
+    !sage: assume(r>=1)
+    !sage: assume(r<=2)
+    !sage: phi = (r-R_MIN)*(r-R_MAX)*r*sin(n*theta)
+    !sage: diff(r*diff(phi,r),r)/r + diff(phi,theta,theta)/(r*r)
+
+    real(8) :: r
+    real(8) :: theta
+   
+    lap_f_sin = -(r-R_MAX)*(r-R_MIN)*N*N*sin(N*theta)/r &
+          + ((r-R_MAX)*(r-R_MIN)*sin(N*theta) &
+          + (r-R_MAX)*r*sin(N*theta) + (r-R_MIN)*r*sin(N*theta) &
+          + 2.0_8*((r-R_MAX)*sin(N*theta) + (r-R_MIN)*sin(N*theta)  &
+          + r*sin(N*theta))*r)/r
+
+  end function lap_f_sin
+
+end module lobalap_analytic_helper_functions
+
 program test_lobalap
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_working_precision.h"
@@ -31,6 +101,8 @@ program test_lobalap
     sll_o_create, &
     sll_o_solve, &
     sll_o_delete
+
+  use lobalap_analytic_helper_functions
 
   implicit none
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -105,70 +177,5 @@ program test_lobalap
   call dg_ex%write_to_file('ex')
   call dg_ey%write_to_file('ey')
 
-contains
-
-  real(8) function f_cos( r, theta )
-
-    real(8) :: r
-    real(8) :: theta
-
-    f_cos = (r-R_MIN)*(r-R_MAX)*cos(N*theta)*r
-
-  end function f_cos
-
-  real(8) function f_four( x, y)
-    real(8) :: x, y
-#ifdef DEBUG
-    real(8) :: dummy
-    dummy = x+y
-#endif
-    f_four = -4._8
-
-  end function f_four
-
-  real(8) function f_sin( r, theta )
-
-    real(8) :: r
-    real(8) :: theta
-
-    f_sin = (r-R_MIN)*(r-R_MAX)*sin(N*theta)*r
-
-  end function f_sin
-
-  real(8) function lap_f_cos( r, theta )
-
-    !sage: assume(r>=1)
-    !sage: assume(r<=2)
-    !sage: phi = (r-R_MIN)*(r-R_MAX)*r*cos(n*theta)
-    !sage: diff(r*diff(phi,r),r)/r + diff(phi,theta,theta)/(r*r)
-
-    real(8) :: r
-    real(8) :: theta
-
-    lap_f_cos = -(r-R_MAX)*(r-R_MIN)*N*N*cos(N*theta)/r &
-            + ((r-R_MAX)*(r-R_MIN)*cos(N*theta)  &
-            + (r-R_MAX)*r*cos(N*theta) + (r-R_MIN)*r*cos(N*theta) &
-            + 2.0_8*((r-R_MAX)*cos(N*theta) + (r-R_MIN)*cos(N*theta) &
-            + r*cos(N*theta))*r)/r
-
-  end function lap_f_cos
-
-  real(8) function lap_f_sin( r, theta)
-
-    !sage: assume(r>=1)
-    !sage: assume(r<=2)
-    !sage: phi = (r-R_MIN)*(r-R_MAX)*r*sin(n*theta)
-    !sage: diff(r*diff(phi,r),r)/r + diff(phi,theta,theta)/(r*r)
-
-    real(8) :: r
-    real(8) :: theta
-   
-    lap_f_sin = -(r-R_MAX)*(r-R_MIN)*N*N*sin(N*theta)/r &
-          + ((r-R_MAX)*(r-R_MIN)*sin(N*theta) &
-          + (r-R_MAX)*r*sin(N*theta) + (r-R_MIN)*r*sin(N*theta) &
-          + 2.0_8*((r-R_MAX)*sin(N*theta) + (r-R_MIN)*sin(N*theta)  &
-          + r*sin(N*theta))*r)/r
-
-  end function lap_f_sin
-
 end program test_lobalap
+
