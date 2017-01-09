@@ -8,9 +8,15 @@ if( HDF5_ENABLED AND HDF5_IS_PARALLEL )
   set( CMAKE_Fortran_COMPILER ${MPI_Fortran_COMPILER} )
 endif( HDF5_ENABLED AND HDF5_IS_PARALLEL )
 
-add_library( sll_pic_opt2d_initializers STATIC 
-  sll_m_particle_initializers_4d.F90 
-  sll_m_particle_initializers_2d.F90 )
+IF(PGI)
+  add_library( sll_pic_opt2d_initializers STATIC 
+    sll_m_particle_initializers_4d_pgi.F90 
+    sll_m_particle_initializers_2d_pgi.F90 )
+ELSE(PGI)
+  add_library( sll_pic_opt2d_initializers STATIC 
+    sll_m_particle_initializers_4d.F90 
+    sll_m_particle_initializers_2d.F90 )
+ENDIF(PGI)
 
 target_link_libraries( sll_pic_opt2d_initializers
   sll_pic_opt2d_particles
