@@ -1,3 +1,4 @@
+/*
 !**************************************************************
 !  Copyright INRIA
 !  Authors : 
@@ -14,6 +15,7 @@
 !  circulated by CEA, CNRS and INRIA at the following URL
 !  "http://www.cecill.info". 
 !**************************************************************
+*/
 
 
 
@@ -730,7 +732,7 @@ contains  !******************************************************************
   ! not be discounted easily.
   ! 
   ! One thing learned from this is that the macros called from inside a
-  ! macro like this (like SLL_ALLOCATE), don't need the semicolon, as they
+  ! macro like this (like /* SLL_ALLOCATE */), don't need the semicolon, as they
   ! already have one themselves... it might be a good idea to remove the
   ! semicolon from the last line of all macros, so that they don't introduce
   ! this type of inconsistencies...
@@ -2533,10 +2535,10 @@ MAKE_REMAP_OPTIMIZER( optimize_remap_plan_6D_comp64, remap_plan_6D_comp64, box_6
     sb           => plan%send_buffer
     rb           => plan%recv_buffer
 
-!!$    SLL_ALLOCATE(sdispi(0:col_sz-1), ierr)
-!!$    SLL_ALLOCATE(rdispi(0:col_sz-1), ierr)
-!!$    SLL_ALLOCATE(scntsi(0:col_sz-1), ierr)
-!!$    SLL_ALLOCATE(rcntsi(0:col_sz-1), ierr)
+!!$ /*   SLL_ALLOCATE(sdispi(0:col_sz-1), ierr) */
+!!$ /*   SLL_ALLOCATE(rdispi(0:col_sz-1), ierr) */
+!!$ /*   SLL_ALLOCATE(scntsi(0:col_sz-1), ierr) */
+!!$ /*   SLL_ALLOCATE(rcntsi(0:col_sz-1), ierr) */
 
     ! Translate the amounts into integers
 !!$#if 1
@@ -2675,10 +2677,10 @@ MAKE_REMAP_OPTIMIZER( optimize_remap_plan_6D_comp64, remap_plan_6D_comp64, box_6
        end if
     end do
 !!$    ! And why weren't these arrays part of the plan anyway??
-!!$    SLL_DEALLOCATE_ARRAY(sdispi, ierr)
-!!$    SLL_DEALLOCATE_ARRAY(rdispi, ierr)
-!!$    SLL_DEALLOCATE_ARRAY(scntsi, ierr)
-!!$    SLL_DEALLOCATE_ARRAY(rcntsi, ierr)
+!!$    /* SLL_DEALLOCATE_ARRAY(sdispi, ierr) */
+!!$    /* SLL_DEALLOCATE_ARRAY(rdispi, ierr) */
+!!$    /* SLL_DEALLOCATE_ARRAY(scntsi, ierr) */
+!!$    /* SLL_DEALLOCATE_ARRAY(rcntsi, ierr) */
   end subroutine apply_remap_2D_double
 
   subroutine apply_remap_2D_complex( plan, data_in, data_out )
