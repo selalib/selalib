@@ -40,8 +40,6 @@ IF(MPI_ENABLED)
                  ${DISTRIBUTION_SOURCES_LIBRARY}
                  sll_m_distribution_function_initializer_4d.F90)
   
-  TARGET_INCLUDE_DIRECTORIES(sll_distribution_function BEFORE PUBLIC ${HDF5_INCLUDE_DIR_FORTRAN})
-
   TARGET_LINK_LIBRARIES(sll_distribution_function sll_coordinate_transformations
                                                   sll_meshes
                                                   sll_file_io
