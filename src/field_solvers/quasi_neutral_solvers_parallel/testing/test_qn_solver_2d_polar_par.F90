@@ -13,6 +13,9 @@ program test_qn_solver_2d_polar_par
     sll_s_qn_solver_2d_polar_par_init, &
     sll_s_qn_solver_2d_polar_par_solve
 
+  use m_test_case_2d_base, only: &
+    c_test_case_qn_solver_2d_polar
+
   use m_test_case_2d_dirichlet_1, only: &
     t_test_dirichlet_zero_error
 
@@ -42,6 +45,7 @@ program test_qn_solver_2d_polar_par
   implicit none
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
+  type(t_test_dirichlet_zero_error) :: test_case_1
   type(sll_t_collective_t), pointer :: comm
   sll_int32  :: my_rank
   sll_int32  :: nr
@@ -53,11 +57,23 @@ program test_qn_solver_2d_polar_par
   comm => sll_v_world_collective
   my_rank = sll_f_get_collective_rank( comm )
 
+  !-----------------------------------------------------------------------------
   ! TEST #1: solver should be exact
+  !-----------------------------------------------------------------------------
   nr  = 256
   nth =  32
   tol = 1.0e-11_f64
-  call test_dirichlet_zero_error( comm, nr, nth, error_norm )
+
+  ! Define test case
+  test_case_1%rmin                = 1.0_f64
+  test_case_1%rmax                = 10.0_f64
+  test_case_1%adiabatic_electrons = .true.
+  test_case_1%use_zonal_flow      = .true.
+  test_case_1%epsilon_0           = 1.0_f64
+  test_case_1%bc_rmin             = sll_p_dirichlet
+  test_case_1%bc_rmax             = sll_p_dirichlet
+
+  call run_test( comm, test_case_1, nr, nth, error_norm )
 
   ! Write relative error norm (global) to standard output
   if (my_rank == 0) then
@@ -67,6 +83,7 @@ program test_qn_solver_2d_polar_par
       write(*,*) "PASSED"
     end if
   end if
+  !-----------------------------------------------------------------------------
 
   ! TODO: test 'neumann' and 'neumann-mode-zero' boundary conditions
   ! TODO: run convergence analysis on a more difficult test-case
@@ -77,14 +94,14 @@ program test_qn_solver_2d_polar_par
 contains
 !<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
-  subroutine test_dirichlet_zero_error( comm, nr, nth, error_norm )
-    type(sll_t_collective_t), pointer       :: comm
-    sll_int32               , intent(in   ) :: nr
-    sll_int32               , intent(in   ) :: nth
-    sll_real64              , intent(  out) :: error_norm
+  subroutine run_test( comm, test_case, nr, nth, error_norm )
+    type(sll_t_collective_t)             , pointer       :: comm
+    class(c_test_case_qn_solver_2d_polar), intent(in   ) :: test_case
+    sll_int32                            , intent(in   ) :: nr
+    sll_int32                            , intent(in   ) :: nth
+    sll_real64                           , intent(  out) :: error_norm
 
     type(sll_t_qn_solver_2d_polar_par) :: solver
-    type(t_test_dirichlet_zero_error)  :: test_case
     sll_real64                         :: max_phi
     sll_real64                         :: max_err
 
@@ -106,15 +123,6 @@ contains
 
     type(sll_t_layout_2d), pointer :: layout_r
     type(sll_t_layout_2d), pointer :: layout_a
-
-    ! Define test case
-    test_case%rmin                = 1.0_f64
-    test_case%rmax                = 10.0_f64
-    test_case%adiabatic_electrons = .true.
-    test_case%use_zonal_flow      = .true.
-    test_case%epsilon_0           = 1.0_f64
-    test_case%bc_rmin             = sll_p_dirichlet
-    test_case%bc_rmax             = sll_p_dirichlet
 
     ! Computational grid
     dr  = (test_case%rmax - test_case%rmin) / nr
@@ -204,7 +212,7 @@ contains
     ! Global relative error in maximum norm
     error_norm = max_err / max_phi
 
-  end subroutine test_dirichlet_zero_error
+  end subroutine run_test
 
 
   !-----------------------------------------------------------------------------
