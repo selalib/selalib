@@ -2,7 +2,7 @@ ADD_EXECUTABLE( test_particle_visualization_interface test_particle_visualizatio
 TARGET_LINK_LIBRARIES( test_particle_visualization_interface
   sll_pic_visualization
   sll_pic_sampling
-  sll_particle_groups
+  sll_pic_weights
   sll_xdmf_io
   )
 
