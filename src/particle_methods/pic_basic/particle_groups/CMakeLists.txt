@@ -15,13 +15,12 @@ SET( PARTICLE_GROUP_DEPS
    )
 
 if (NOT (FFT_LIB STREQUAL "SLLFFT"))
-   SET( PARTICLE_GROUP_SRCS
-     ${PARTICLE_GROUP_SRCS}
-     sll_m_particle_group_2d2v_lbf.F90)
-   SET( PARTICLE_GROUP_DEPS
-     ${PARTICLE_GROUP_DEPS}
-     sll_distribution_function
-     sll_sparse_grid)
+   if(PGI)
+     LIST( APPEND PARTICLE_GROUP_SRCS sll_m_particle_group_2d2v_lbf_pgi.F90)
+   else(PGI)
+     LIST( APPEND PARTICLE_GROUP_SRCS sll_m_particle_group_2d2v_lbf.F90)
+   endif(PGI)
+   LIST( APPEND PARTICLE_GROUP_DEPS sll_distribution_function sll_sparse_grid)
 endif()   
 
 ADD_LIBRARY(sll_particle_groups STATIC
