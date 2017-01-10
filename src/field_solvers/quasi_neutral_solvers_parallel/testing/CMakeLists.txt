@@ -22,6 +22,7 @@ IF(MPI_ENABLED AND HDF5_PARALLEL_ENABLED AND HDF5_IS_PARALLEL )
   add_executable( test_qn_solver_2d_polar_par
     test_qn_solver_2d_polar_par.F90
     m_test_case_2d_dirichlet_1.F90
+    m_test_case_2d_neumann_mode0.F90
     m_test_case_2d_base.F90 )
   target_link_libraries( test_qn_solver_2d_polar_par
     sll_quasi_neutral_solvers_parallel )

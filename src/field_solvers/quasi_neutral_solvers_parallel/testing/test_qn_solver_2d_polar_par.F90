@@ -19,6 +19,9 @@ program test_qn_solver_2d_polar_par
   use m_test_case_2d_dirichlet_1, only: &
     t_test_dirichlet_zero_error
 
+  use m_test_case_2d_neumann_mode0, only: &
+    t_test_neumann_mode0_zero_error
+
   use sll_m_boundary_condition_descriptors, only: &
     sll_p_dirichlet, &
     sll_p_neumann, &
@@ -45,7 +48,10 @@ program test_qn_solver_2d_polar_par
   implicit none
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
-  type(t_test_dirichlet_zero_error) :: test_case_1
+  type(t_test_dirichlet_zero_error) :: test_case_dirichlet
+  type(t_test_neumann_mode0_zero_error) :: test_case_neumann_mode0
+
+  ! For MPI
   type(sll_t_collective_t), pointer :: comm
   sll_int32  :: my_rank
   sll_int32  :: nr
@@ -53,40 +59,80 @@ program test_qn_solver_2d_polar_par
   sll_real64 :: error_norm
   sll_real64 :: tol
 
+  logical :: success
+
   call sll_s_boot_collective()
   comm => sll_v_world_collective
   my_rank = sll_f_get_collective_rank( comm )
 
+  success = .true.
+
   !-----------------------------------------------------------------------------
-  ! TEST #1: solver should be exact
+  ! TEST #1: Dirichlet, solver should be exact
   !-----------------------------------------------------------------------------
   nr  = 256
-  nth =  32
+  nth = 32
   tol = 1.0e-11_f64
 
   ! Define test case
-  test_case_1%rmin                = 1.0_f64
-  test_case_1%rmax                = 10.0_f64
-  test_case_1%adiabatic_electrons = .true.
-  test_case_1%use_zonal_flow      = .true.
-  test_case_1%epsilon_0           = 1.0_f64
-  test_case_1%bc_rmin             = sll_p_dirichlet
-  test_case_1%bc_rmax             = sll_p_dirichlet
+  test_case_dirichlet%rmin                = 1.0_f64
+  test_case_dirichlet%rmax                = 10.0_f64
+  test_case_dirichlet%adiabatic_electrons = .true.
+  test_case_dirichlet%use_zonal_flow      = .true.
+  test_case_dirichlet%epsilon_0           = 1.0_f64
+  test_case_dirichlet%bc_rmin             = sll_p_dirichlet
+  test_case_dirichlet%bc_rmax             = sll_p_dirichlet
 
-  call run_test( comm, test_case_1, nr, nth, error_norm )
+  call run_test( comm, test_case_dirichlet, nr, nth, error_norm )
 
   ! Write relative error norm (global) to standard output
   if (my_rank == 0) then
+    write(*,"(/a)") "--- TEST 1 --- Homogeneous Dirichlet"
     write(*,"(a,e11.3)") "Relative L_inf norm of error = ", error_norm
     write(*,"(a,e11.3)") "Tolerance                    = ", tol
-    if (error_norm <= tol) then
-      write(*,*) "PASSED"
+    if (error_norm > tol) then
+      success = .false.
+      write(*,"(a)") "!!! FAILED !!!"
     end if
   end if
-  !-----------------------------------------------------------------------------
 
-  ! TODO: test 'neumann' and 'neumann-mode-zero' boundary conditions
+  !-----------------------------------------------------------------------------
+  ! TEST #2: Neumann mode 0, solver should be exact
+  !-----------------------------------------------------------------------------
+  nr  = 256
+  nth = 32
+  tol = 1.0e-11_f64
+
+  ! Define test case
+  test_case_neumann_mode0%rmin                = 1.0_f64
+  test_case_neumann_mode0%rmax                = 10.0_f64
+  test_case_neumann_mode0%adiabatic_electrons = .true.
+  test_case_neumann_mode0%use_zonal_flow      = .false.
+  test_case_neumann_mode0%epsilon_0           = 1.0_f64
+  test_case_neumann_mode0%bc_rmin             = sll_p_neumann_mode_0
+  test_case_neumann_mode0%bc_rmax             = sll_p_dirichlet
+
+  call run_test( comm, test_case_neumann_mode0, nr, nth, error_norm )
+
+  ! Write relative error norm (global) to standard output
+  if (my_rank == 0) then
+    write(*,"(/a)") "--- TEST 2 --- Dirichlet / Neumann mode 0"
+    write(*,"(a,e11.3)") "Relative L_inf norm of error = ", error_norm
+    write(*,"(a,e11.3)") "Tolerance                    = ", tol
+    if (error_norm > tol) then
+      success = .false.
+      write(*,"(a/)") "!!! FAILED !!!"
+    end if
+  end if
+
   ! TODO: run convergence analysis on a more difficult test-case
+
+  ! Check if test passed
+  if (my_rank == 0) then
+    if(success) then
+       write(*,"(a)") "PASSED"
+    endif
+  endif
 
   call sll_s_halt_collective()
 
