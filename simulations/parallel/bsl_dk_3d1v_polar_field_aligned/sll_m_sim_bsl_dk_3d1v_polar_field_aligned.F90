@@ -137,12 +137,6 @@ module sll_m_sim_bsl_dk_3d1v_polar_field_aligned
     sll_p_lagrange, &
     sll_p_spline
 
-  use sll_m_poisson_2d_base, only: &
-    sll_c_poisson_2d_base
-
-  use sll_m_poisson_3d_base, only: &
-    sll_c_poisson_3d_base
-
   use sll_m_qn_solver_3d_polar_par, only: &
     sll_t_qn_solver_3d_polar_par, &
     sll_s_qn_solver_3d_polar_par_init, &
