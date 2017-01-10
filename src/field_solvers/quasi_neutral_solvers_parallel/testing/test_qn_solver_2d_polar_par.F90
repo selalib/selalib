@@ -87,7 +87,7 @@ program test_qn_solver_2d_polar_par
 
   ! Write relative error norm (global) to standard output
   if (my_rank == 0) then
-    write(*,"(/a)") "--- TEST 1 --- Homogeneous Dirichlet"
+    write(*,"(/a)") "--- TEST 1 ---"
     write(*,"(a,e11.3)") "Relative L_inf norm of error = ", error_norm
     write(*,"(a,e11.3)") "Tolerance                    = ", tol
     if (error_norm > tol) then
@@ -116,7 +116,7 @@ program test_qn_solver_2d_polar_par
 
   ! Write relative error norm (global) to standard output
   if (my_rank == 0) then
-    write(*,"(/a)") "--- TEST 2 --- Dirichlet / Neumann mode 0"
+    write(*,"(/a)") "--- TEST 2 ---"
     write(*,"(a,e11.3)") "Relative L_inf norm of error = ", error_norm
     write(*,"(a,e11.3)") "Tolerance                    = ", tol
     if (error_norm > tol) then
@@ -130,7 +130,7 @@ program test_qn_solver_2d_polar_par
   ! Check if test passed
   if (my_rank == 0) then
     if(success) then
-       write(*,"(a)") "PASSED"
+       write(*,"(/a/)") "--- PASSED ---"
     endif
   endif
 

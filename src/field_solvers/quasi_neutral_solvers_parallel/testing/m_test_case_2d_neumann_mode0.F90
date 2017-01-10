@@ -14,15 +14,13 @@ module m_test_case_2d_neumann_mode0
   type, extends(c_test_case_qn_solver_2d_polar) :: t_test_neumann_mode0_zero_error
 
     !---------------------------------------------------------------------------
-    ! Q(r) + R(r)\Theta(\theta)
+    ! \phi(r,th) = a*Q(r) + b*cos(m*(th-th0))*R(r)
     !
-    ! Q(r) = q2*r^2 + q1*r + q0
-    ! R(r) = -(r-rmin)(r-rmax)
-    ! \Theta(\theta) = a + b*cos(m*(th-th0))
+    ! Q(r) = (rmax-r)(r+rmax-2rmin)/(rmax-rmin)^2
+    ! R(r) = 4(rmax-r)(r-rmin)/(rmax-rmin)^2
     !---------------------------------------------------------------------------
-    sll_real64, private :: q2 = 1.0_f64
-    sll_real64, private :: a = 1.0_f64
-    sll_real64, private :: b = 0.1_f64
+    sll_real64, private :: a = 0.0001_f64
+    sll_real64, private :: b = 1000.0_f64
     sll_real64, private :: th0 = 0.3_f64
     sll_int32,  private :: m = 3
 
@@ -111,14 +109,14 @@ contains
     sll_real64, intent(in) :: r
     sll_real64, intent(in) :: th
     sll_real64 :: val
-    
-    sll_real64 :: q1, q0
 
-    q1 = -2.0_f64*self%q2*self%rmin+(self%rmin-self%rmax)*self%a
-    q0 = -self%q2*self%rmax**2-q1*self%rmax
+    associate( rmin => self%rmin, rmax => self%rmax, &
+               a => self%a, b => self%b, m => self%m, th0 => self%th0 )
 
-    val = self%q2*r**2+q1*r+q0 &
-          -(r-self%rmin)*(r-self%rmax)*(self%a+self%b*cos( self%m*(th-self%th0) ))
+      val = a*(rmax-r)*(r+rmax-2.0_f64*rmin)/(rmax-rmin)**2 &
+            +b*cos(m*(th-th0))*4.0_f64*(rmax-r)*(r-rmin)/(rmax-rmin)**2
+
+    end associate
 
   end function f_test__phi_ex
 
@@ -128,12 +126,11 @@ contains
     sll_real64, intent(in) :: th
     sll_real64 :: val
 
-    sll_real64 :: q1, q0
+    associate( rmin => self%rmin, rmax => self%rmax, a => self%a )
 
-    q1 = -2.0_f64*self%q2*self%rmin+(self%rmin-self%rmax)*self%a
-    q0 = -self%q2*self%rmax**2-q1*self%rmax
+      val = a*(rmax-r)*(r+rmax-2.0_f64*rmin)/(rmax-rmin)**2
 
-    val = self%q2*r**2+q1*r+q0-(r-self%rmin)*(r-self%rmax)*self%a
+    end associate
 
   end function f_test__phi_ex_avg_th
 
@@ -142,13 +139,14 @@ contains
     sll_real64, intent(in) :: r
     sll_real64, intent(in) :: th
     sll_real64 :: val
-    
-    sll_real64 :: q1
 
-    q1 = -2.0_f64*self%q2*self%rmin+(self%rmin-self%rmax)*self%a
+    associate( rmin => self%rmin, rmax => self%rmax, &
+               a => self%a, b => self%b, m => self%m, th0 => self%th0 )
 
-    val = 2.0_f64*self%q2*r+q1 &
-          -(2.0_f64*r-self%rmin-self%rmax)*(self%a+self%b*cos( self%m*(th-self%th0) ))
+      val = a*2.0_f64*(rmin-r)/(rmax-rmin)**2 &
+            +b*cos(m*(th-th0))*4.0_f64*(-2.0_f64*r+rmin+rmax)/(rmax-rmin)**2
+
+    end associate
 
   end function f_test__phi_ex_diff1_r
 
@@ -158,7 +156,12 @@ contains
     sll_real64, intent(in) :: th
     sll_real64 :: val
 
-    val = 2.0_f64*self%q2-2.0_f64*(self%a+self%b*cos( self%m*(th-self%th0) ))
+    associate( rmin => self%rmin, rmax => self%rmax, &
+               a => self%a, b => self%b, m => self%m, th0 => self%th0 )
+
+      val = -a*2.0_f64/(rmax-rmin)**2-b*cos(m*(th-th0))*8.0_f64/(rmax-rmin)**2
+
+    end associate
 
   end function f_test__phi_ex_diff2_r
 
@@ -168,8 +171,12 @@ contains
     sll_real64, intent(in) :: th
     sll_real64 :: val
 
-    val = -(r-self%rmin)*(r-self%rmax) &
-          *(-real( self%m**2,f64 )*self%b*cos( self%m*(th-self%th0) ))
+    associate( rmin => self%rmin, rmax => self%rmax, &
+               b => self%b, m => self%m, th0 => self%th0 )
+
+      val = -b*real(m**2,f64)*cos(m*(th-th0))*4.0_f64*(rmax-r)*(r-rmin)/(rmax-rmin)**2
+
+    end associate
 
   end function f_test__phi_ex_diff2_th
 
