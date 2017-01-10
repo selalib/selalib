@@ -19,10 +19,10 @@ module m_test_case_2d_neumann_mode0
     ! Q(r) = (rmax-r)(r+rmax-2rmin)/(rmax-rmin)^2
     ! R(r) = 4(rmax-r)(r-rmin)/(rmax-rmin)^2
     !---------------------------------------------------------------------------
-    sll_real64, private :: a = 0.0001_f64
-    sll_real64, private :: b = 1000.0_f64
+    sll_real64, private :: a   = 0.1_f64
+    sll_real64, private :: b   = 1.0_f64
     sll_real64, private :: th0 = 0.3_f64
-    sll_int32,  private :: m = 3
+    sll_int32,  private :: m   = 3
 
   contains
     ! 1D input profiles
