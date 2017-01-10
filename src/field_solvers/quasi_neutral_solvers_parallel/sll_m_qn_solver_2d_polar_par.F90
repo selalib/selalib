@@ -26,7 +26,7 @@
 !> The general equation is of the form
 !>
 !> -\nabla_\perp \cdot ( \rho_{m,0}/(B^2 \epsilon_0) \nabla_\perp \phi )
-!> + (\phi - \chi \langle\phi\rangle) / \lambda
+!> + (\phi - \chi \langle\phi\rangle) / \lambda^2
 !> = \rho_{c,1} / \epsilon_0,
 !>
 !> where
@@ -51,7 +51,7 @@
 !> In 2D polar geometry we solve
 !>
 !> -\partial_r ( g \partial_r \phi ) - \frac{g}{r} \partial_r \phi
-!> -\frac{g}{r^2} \partial_\theta \phi + (\phi-\langle\phi\rangle) / \lambda
+!> -\frac{g}{r^2} \partial_\theta \phi + (\phi-\langle\phi\rangle) / \lambda^2
 !> = \rho_{c,1} / \epsilon_0,
 !>
 !> where $g = \rho_{m,0}/(B^2 \epsilon_0)$ and we assume that
@@ -145,36 +145,34 @@ contains
 
   !> Initialize the solver
   subroutine sll_s_qn_solver_2d_polar_par_init( solver, &
-      layout_r, &
-      layout_a, &
-      rmin  , &
-      rmax  , &
-      nr    , &
-      ntheta, &
+      layout_r      , &
+      layout_a      , &
+      rmin          , &
+      rmax          , &
+      nr            , &
+      ntheta        , &
       rho_m0        , &
       b_magn        , &
       lambda        , &
       use_zonal_flow, &
       epsilon_0     , &
-      bc_rmin, &
+      bc_rmin       , &
       bc_rmax )
 
     type(sll_t_qn_solver_2d_polar_par), intent(inout) :: solver   !< Poisson solver class
-    type(sll_t_layout_2d)             , pointer       :: layout_r !< sequential in r direction
-    type(sll_t_layout_2d)             , pointer       :: layout_a !< sequential in theta direction
-    sll_real64, intent(in)    :: rmin     !< rmin
-    sll_real64, intent(in)    :: rmax     !< rmax
-    sll_int32 , intent(in)    :: nr       !< number of cells radial
-    sll_int32 , intent(in)    :: ntheta   !< number of cells angular
-
-    sll_real64          , intent(in) :: rho_m0(:)      !< radial profile: total mass density of equilibrium
-    sll_real64          , intent(in) :: b_magn(:)      !< radial profile: intensity of magnetic field
-    sll_real64, optional, intent(in) :: lambda(:)      !< radial profile: electron Debye length
-    logical   , optional, intent(in) :: use_zonal_flow !< if .false. set flux average to zero
-    sll_real64, optional, intent(in) :: epsilon_0      !< override default: vacuum permittivity
-
-    sll_int32, optional            :: bc_rmin  !< radial boundary conditions
-    sll_int32, optional            :: bc_rmax  !< radial boundary conditions
+    type(sll_t_layout_2d), pointer    :: layout_r       !< sequential in r direction
+    type(sll_t_layout_2d), pointer    :: layout_a       !< sequential in theta direction
+    sll_real64           , intent(in) :: rmin           !< rmin
+    sll_real64           , intent(in) :: rmax           !< rmax
+    sll_int32            , intent(in) :: nr             !< number of cells radial
+    sll_int32            , intent(in) :: ntheta         !< number of cells angular
+    sll_real64           , intent(in) :: rho_m0(:)      !< radial profile: total mass density of equilibrium
+    sll_real64           , intent(in) :: b_magn(:)      !< radial profile: intensity of magnetic field
+    sll_real64,  optional, intent(in) :: lambda(:)      !< radial profile: electron Debye length
+    logical   ,  optional, intent(in) :: use_zonal_flow !< if .false. set flux average to zero
+    sll_real64,  optional, intent(in) :: epsilon_0      !< override default: vacuum permittivity
+    sll_int32,   optional, intent(in) :: bc_rmin        !< radial boundary conditions
+    sll_int32,   optional, intent(in) :: bc_rmax        !< radial boundary conditions
 
     sll_real64              :: inv_r
     sll_real64              :: inv_dr
