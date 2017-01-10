@@ -1,4 +1,5 @@
 import os
+import textwrap
 
 warn_message = """
 !!------------------------------------------------------------------------------
@@ -29,7 +30,21 @@ def recursive_replace(root, pattern, replace) :
     if pattern in text:
      open(path,'w').write(text.replace(pattern,replace))
 
+def insert_newlines(root, every):
+ for directory, subdirs, names in os.walk(root):
+  for name in names:
+   if name[-8:] == "_pgi.F90":
+    path = os.path.join(directory, name)
+    text = '\n'
+    for line in open(path):
+      if( len(line) > every):
+        text += ' & \n'.join(textwrap.wrap(line, 72))+'\n'
+      else:
+        text += line
+    open(path,'w').write(text)
 
-prepend_warn_message('.')
+
 recursive_replace('.','#','!')
 recursive_replace('.',';','\n')
+insert_newlines('.', every=240)
+prepend_warn_message('.')

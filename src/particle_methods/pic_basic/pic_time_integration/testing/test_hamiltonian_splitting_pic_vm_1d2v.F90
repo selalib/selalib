@@ -124,7 +124,11 @@ program test_hamiltonian_splitting_pic_1d2v_vm
 
   SLL_ALLOCATE(particle_info_ref(n_particles,4), i_part)
   particle_info_ref = 0.0_f64
-  particle_info_ref = reshape([11.780972450961723_f64,        5.4977871437821380_f64,       -1.5341205443525459_f64,       0.15731068461017067_f64,       0.15731068461017067_f64,       -1.5341205443525459_f64,        6.8636759376074723_f64,        5.7026946767517002_f64   ], [n_particles, 4])
+  particle_info_ref = reshape([11.780972450961723_f64,        &
+5.4977871437821380_f64,       -1.5341205443525459_f64,       &
+0.15731068461017067_f64,       0.15731068461017067_f64,       &
+-1.5341205443525459_f64,        6.8636759376074723_f64,        &
+5.7026946767517002_f64   ], [n_particles, 4])
 
   ! Initialize particles from particle_info_ref
   xi = 0.0_f64
@@ -190,7 +194,11 @@ program test_hamiltonian_splitting_pic_1d2v_vm
 
   ! Compare to reference
   ! Particle information after operatorV application 
-  particle_info_ref = reshape([  11.627560396526469_f64,        5.5135182122431550_f64,       -1.5341205443525459_f64,       0.15731068461017067_f64,       0.31072273904542569_f64,       -1.5498516128135633_f64,        6.8636759376074723_f64,        5.7026946767517002_f64    ], [n_particles, 4])
+  particle_info_ref = reshape([  11.627560396526469_f64,        &
+5.5135182122431550_f64,       -1.5341205443525459_f64,       &
+0.15731068461017067_f64,       0.31072273904542569_f64,       &
+-1.5498516128135633_f64,        6.8636759376074723_f64,        &
+5.7026946767517002_f64    ], [n_particles, 4])
   ! Compare computed values to reference values
   do i_part=1,n_particles
      xi = particle_group%get_x(i_part)
@@ -217,7 +225,11 @@ program test_hamiltonian_splitting_pic_1d2v_vm
 
   ! Compare to reference
   ! Particle information after operatorV application 
-  particle_info_ref = reshape([ 11.627560396526469_f64,        5.5135182122431550_f64,       -1.5030482704480033_f64,        2.3255233288143329D-003,  0.31072273904542569_f64,       -1.5498516128135633_f64,        6.8636759376074723_f64,        5.7026946767517002_f64   ], [n_particles, 4])
+  particle_info_ref = reshape([ 11.627560396526469_f64,        &
+5.5135182122431550_f64,       -1.5030482704480033_f64,       &
+ 2.3255233288143329D-003,  0.31072273904542569_f64,       &
+-1.5498516128135633_f64,        6.8636759376074723_f64,   &
+     5.7026946767517002_f64   ], [n_particles, 4])
   ! Compare computed values to reference values
     do i_part=1,n_particles
      xi = particle_group%get_x(i_part)
@@ -246,7 +258,11 @@ program test_hamiltonian_splitting_pic_1d2v_vm
 
   ! Compare to reference
   ! Particle information after operatorV application 
-  particle_info_ref = reshape([    11.627560396526469_f64,        5.5135182122431550_f64,       -1.4311461960364338_f64,       2.7611337138493959E-002_f64,  0.39511488788223620_f64,       -1.3903131848268702_f64,        6.8636759376074723_f64,        5.7026946767517002_f64    ], [n_particles, 4])
+  particle_info_ref = reshape([    11.627560396526469_f64,  &
+      5.5135182122431550_f64,       -1.4311461960364338_f64,&
+       2.7611337138493959E-002_f64,  0.39511488788223620_f64,  &
+     -1.3903131848268702_f64,        6.8636759376074723_f64,   &
+     5.7026946767517002_f64    ], [n_particles, 4])
   ! Compare computed values to reference values
     do i_part=1,n_particles
      xi = particle_group%get_x(i_part)
@@ -279,7 +295,11 @@ program test_hamiltonian_splitting_pic_1d2v_vm
 
   ! Compare to reference
   ! Particle information after operatorV application 
-  particle_info_ref = reshape([   11.627560396526469_f64,        5.5135182122431550_f64,       -1.4311461960364338_f64,       2.7611337138493959E-002_f64,  0.39511488788223620_f64,       -1.3903131848268702_f64,       6.8636759376074723_f64,        5.7026946767517002_f64      ], [n_particles, 4])
+  particle_info_ref = reshape([   11.627560396526469_f64,    &
+    5.5135182122431550_f64,       -1.4311461960364338_f64,   &
+    2.7611337138493959E-002_f64,  0.39511488788223620_f64,    &
+   -1.3903131848268702_f64,       6.8636759376074723_f64,     &
+   5.7026946767517002_f64      ], [n_particles, 4])
   ! Compare computed values to reference values
     do i_part=1,n_particles
      xi = particle_group%get_x(i_part)
