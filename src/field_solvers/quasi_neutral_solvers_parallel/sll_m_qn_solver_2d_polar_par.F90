@@ -345,9 +345,9 @@ contains
 
   !=============================================================================
   !> Solve the quasi-neutrality equation and get the electrostatic potential
-  subroutine sll_s_qn_solver_2d_polar_par_solve( solver, rhs, phi )
+  subroutine sll_s_qn_solver_2d_polar_par_solve( solver, rho, phi )
     type(sll_t_qn_solver_2d_polar_par) , intent(inout) :: solver   !< Solver object
-    sll_real64                         , intent(in   ) :: rhs(:,:) !< Charge density
+    sll_real64                         , intent(in   ) :: rho(:,:) !< Charge density
     sll_real64                         , intent(  out) :: phi(:,:) !< Potential
 
     sll_int32  :: nr, ntheta, bc(2)
@@ -359,11 +359,11 @@ contains
     bc     = solver%bc
 
     ! Consistency check: rho and phi must be given in layout sequential in theta
-    call verify_argument_sizes_par( solver%layout_a, rhs )
+    call verify_argument_sizes_par( solver%layout_a, rho )
     call verify_argument_sizes_par( solver%layout_a, phi )
 
     ! Copy charge into 2D complex array
-    solver%f_a(:,:) = cmplx( rhs, 0.0_f64, kind=f64 )
+    solver%f_a(:,:) = cmplx( rho, 0.0_f64, kind=f64 )
 
     ! For each r_i, compute FFT of rho(r_i,theta) to obtain \hat{rho}(r_i,k)
     do i = 1, ubound( solver%f_a, 1 )
@@ -481,7 +481,7 @@ contains
     do i=1,2
        if ( (n(i)/=size(array,i))) then
           print*, 'ERROR: solve_poisson_polar_parallel()', &
-               'size of either rhs or phi does not match expected size. '
+               'size of either rho or phi does not match expected size. '
           if (i==1) then
              print*, 'solve_poisson_polar_parallel(): ', &
                   'mismatch in direction r'
