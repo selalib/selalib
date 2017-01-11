@@ -204,11 +204,13 @@ contains
       if (bc(1) == sll_p_dirichlet) then ! Dirichlet
         solver%mat(1,j) = 0.0_f64
       else if (bc(1) == sll_p_neumann) then ! Neumann
-        solver%mat(2,j) = solver%mat(2,j) + solver%mat(1,j)
+        solver%mat(3,j) = solver%mat(3,j) -  one_third  * solver%mat(1,j)
+        solver%mat(2,j) = solver%mat(2,j) + four_thirds * solver%mat(1,j)
         solver%mat(1,j) = 0.0_f64
       else if (bc(1) == sll_p_neumann_mode_0) then 
         if (k == 0) then ! Neumann for mode zero
-          solver%mat(2,j) = solver%mat(2,j) + solver%mat(1,j)
+          solver%mat(3,j) = solver%mat(3,j) -  one_third  * solver%mat(1,j)
+          solver%mat(2,j) = solver%mat(2,j) + four_thirds * solver%mat(1,j)
           solver%mat(1,j) = 0.0_f64
         else             ! Dirichlet for other modes
           solver%mat(1,j) = 0.0_f64
@@ -220,11 +222,13 @@ contains
       if (bc(2) == sll_p_dirichlet) then ! Dirichlet
         solver%mat(last,j) = 0.0_f64
       else if (bc(2) == sll_p_neumann) then ! Neumann
-        solver%mat(last-1,j) = solver%mat(last-1,j) + solver%mat(last,j)
+        solver%mat(last-2,j) = solver%mat(last-2,j) -  one_third  *solver%mat(last,j)
+        solver%mat(last-1,j) = solver%mat(last-1,j) + four_thirds *solver%mat(last,j)
         solver%mat(last  ,j) = 0.0_f64
       else if (bc(2) == sll_p_neumann_mode_0) then 
         if (k == 0) then ! Neumann for mode zero
-          solver%mat(last-1,j) = solver%mat(last-1,j) + solver%mat(last,j)
+          solver%mat(last-2,j) = solver%mat(last-2,j) -  one_third  *solver%mat(last,j)
+          solver%mat(last-1,j) = solver%mat(last-1,j) + four_thirds *solver%mat(last,j)
           solver%mat(last  ,j) = 0.0_f64
         else             ! Dirichlet for other modes
           solver%mat(last,j) = 0.0_f64
@@ -310,10 +314,10 @@ contains
       if (bc(1) == sll_p_dirichlet) then ! Dirichlet
         solver%phik(1) = (0.0_f64, 0.0_f64)
       else if (bc(1) == sll_p_neumann) then ! Neumann
-        solver%phik(1) = solver%phik(2)
+        solver%phik(1) = four_thirds*solver%phik(2) - one_third*solver%phik(3)
       else if (bc(1) == sll_p_neumann_mode_0) then 
         if (k==0) then ! Neumann for mode zero
-          solver%phik(1) = solver%phik(2)
+          solver%phik(1) = four_thirds*solver%phik(2) - one_third*solver%phik(3)
         else           ! Dirichlet for other modes
           solver%phik(1) = (0.0_f64, 0.0_f64)
         endif
@@ -322,11 +326,11 @@ contains
       ! Boundary condition at rmax
       if (bc(2) == sll_p_dirichlet) then ! Dirichlet
         solver%phik(nr+1) = (0.0_f64, 0.0_f64)
-      else if (bc(2) == sll_p_neumann) then
-        solver%phik(nr+1) = solver%phik(nr) ! Neumann
+      else if (bc(2) == sll_p_neumann) then ! Neumann
+        solver%phik(nr+1) = four_thirds*solver%phik(nr) - one_third*solver%phik(nr-1)
       else if (bc(2) == sll_p_neumann_mode_0) then 
         if(k==0) then ! Neumann for mode zero
-          solver%phik(nr+1) = solver%phik(nr)
+          solver%phik(nr+1) = four_thirds*solver%phik(nr) - one_third*solver%phik(nr-1)
         else          ! Dirichlet for other modes
           solver%phik(nr+1) = (0.0_f64, 0.0_f64)
         endif
