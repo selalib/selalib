@@ -1,3 +1,11 @@
+!> @ingroup quasi_neutral_solvers
+!> @author  Yaman Güçlü, IPP Garching
+!> @author  Edoardo Zoni, IPP Garching
+!>
+!> @details
+!> 3D wrapper around 2D solver in polar coordinates,
+!> with simple cycle over third direction
+
 module sll_m_qn_solver_3d_polar_par
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_assert.h"
