@@ -15,7 +15,7 @@
 !  "http://www.cecill.info". 
 !**************************************************************
 
-!> @ingroup poisson_solvers
+!> @ingroup quasi_neutral_solvers
 !> @author  Yaman Güçlü, IPP Garching
 !> @author  Edoardo Zoni, IPP Garching
 !>
