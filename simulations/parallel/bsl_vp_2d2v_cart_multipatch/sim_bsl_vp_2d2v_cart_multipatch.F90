@@ -1,3 +1,68 @@
+module sim_bsl_vp_2d2v_cart_multipatch_helper
+#include "sll_working_precision.h"
+
+contains
+  
+  function func_one( eta1, eta2, params ) result(res)
+    sll_real64, intent(in) :: eta1
+    sll_real64, intent(in) :: eta2
+    sll_real64, dimension(:), intent(in) :: params
+    sll_real64 :: res
+    res = 1.0_8
+  end function func_one
+  
+  function func_minus_one( eta1, eta2, params ) result(res)
+    sll_real64, intent(in) :: eta1
+    sll_real64, intent(in) :: eta2
+    sll_real64, dimension(:), intent(in) :: params
+    sll_real64 :: res
+    res = -1.0_8
+  end function func_minus_one
+  
+  function func_zero( eta1, eta2, params ) result(res)
+    sll_real64, intent(in) :: eta1
+    sll_real64, intent(in) :: eta2
+    sll_real64, dimension(:), intent(in) :: params
+    sll_real64 :: res
+    res = 0.0_8
+  end function func_zero
+  
+  
+  function func_epsi( eta1, eta2, params ) result(res)
+    sll_real64, intent(in) :: eta1
+    sll_real64, intent(in) :: eta2
+    sll_real64, dimension(:), intent(in) :: params
+    sll_real64 :: res
+    res = 0.00001_8
+  end function func_epsi
+  
+  function electric_field_ext_1(x,y,params) result(res)
+    sll_real64, intent(in) :: x
+    sll_real64, intent(in) :: y
+    sll_real64, dimension(:), intent(in) :: params
+    sll_real64 :: res
+    res = params(1)*x
+  end function electric_field_ext_1
+  
+  
+  function electric_field_ext_2(x,y,params) result(res)
+    sll_real64, intent(in) :: x
+    sll_real64, intent(in) :: y
+    sll_real64, dimension(:), intent(in) :: params
+    sll_real64 :: res
+    res = params(2)*y
+  end function electric_field_ext_2
+  
+end module sim_bsl_vp_2d2v_cart_multipatch_helper
+
+
+! External functions used as parameters in the above unit test:
+
+
+
+
+
+  
 ! Sample computation with the following characteristics:
 ! - vlasov-poisson
 ! - 4D: x, y, vx, vy (or x1, x2, x3, x4) with an arbitrary coordinate 
@@ -33,6 +98,8 @@ program sim_bsl_vp_2d2v_cart_multipatch
     sll_s_initialize_4d_qns_gen_mp, &
     sll_s_run_4d_qns_general_mp, &
     sll_t_simulation_4d_qns_general_multipatch
+
+  use sim_bsl_vp_2d2v_cart_multipatch_helper
 
   implicit none
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -166,65 +233,5 @@ program sim_bsl_vp_2d2v_cart_multipatch
   !call delete(simulation)
   !call delete(transformation_x)
 
-contains
-  
-  function func_one( eta1, eta2, params ) result(res)
-    sll_real64, intent(in) :: eta1
-    sll_real64, intent(in) :: eta2
-    sll_real64, dimension(:), intent(in) :: params
-    sll_real64 :: res
-    res = 1.0_8
-  end function func_one
-  
-  function func_minus_one( eta1, eta2, params ) result(res)
-    sll_real64, intent(in) :: eta1
-    sll_real64, intent(in) :: eta2
-    sll_real64, dimension(:), intent(in) :: params
-    sll_real64 :: res
-    res = -1.0_8
-  end function func_minus_one
-  
-  function func_zero( eta1, eta2, params ) result(res)
-    sll_real64, intent(in) :: eta1
-    sll_real64, intent(in) :: eta2
-    sll_real64, dimension(:), intent(in) :: params
-    sll_real64 :: res
-    res = 0.0_8
-  end function func_zero
-  
-  
-  function func_epsi( eta1, eta2, params ) result(res)
-    sll_real64, intent(in) :: eta1
-    sll_real64, intent(in) :: eta2
-    sll_real64, dimension(:), intent(in) :: params
-    sll_real64 :: res
-    res = 0.00001_8
-  end function func_epsi
-  
-  function electric_field_ext_1(x,y,params) result(res)
-    sll_real64, intent(in) :: x
-    sll_real64, intent(in) :: y
-    sll_real64, dimension(:), intent(in) :: params
-    sll_real64 :: res
-    res = params(1)*x
-  end function electric_field_ext_1
-  
-  
-  function electric_field_ext_2(x,y,params) result(res)
-    sll_real64, intent(in) :: x
-    sll_real64, intent(in) :: y
-    sll_real64, dimension(:), intent(in) :: params
-    sll_real64 :: res
-    res = params(2)*y
-  end function electric_field_ext_2
-  
-
 end program sim_bsl_vp_2d2v_cart_multipatch
 
-! External functions used as parameters in the above unit test:
-
-
-
-
-
-  

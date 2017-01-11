@@ -15,6 +15,7 @@ program unit_test_2d
     sll_v_world_collective
 
   use sll_m_common_array_initializers, only: &
+    sll_i_scalar_initializer_4d, &
     sll_f_landau_initializer_4d
 
   use sll_m_constants, only: &
@@ -37,6 +38,8 @@ program unit_test_2d
   use sll_m_utilities, only: &
     sll_f_is_even
 
+
+
   implicit none
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
@@ -52,6 +55,8 @@ program unit_test_2d
   sll_int32 :: nproc_factor2
   sll_real64, dimension(5) :: landau_params
   type(sll_t_cartesian_mesh_2d), pointer :: meshv
+  procedure(sll_i_scalar_initializer_4d), pointer        :: init_function
+
 
   call sll_s_boot_collective()
   rank = sll_f_get_collective_rank(sll_v_world_collective)
@@ -98,7 +103,8 @@ program unit_test_2d
   f_mp => sll_f_new_distribution_function_4d_multipatch( sll_v_world_collective, &
        t_mp, meshv, nproc_factor1, nproc_factor2 )
 
-  call f_mp%initialize( sll_f_landau_initializer_4d, landau_params )
+  init_function => sll_f_landau_initializer_4d
+  call f_mp%initialize( init_function, landau_params )
 
   call sll_s_compute_charge_density_multipatch( f_mp, rho_mp )
 

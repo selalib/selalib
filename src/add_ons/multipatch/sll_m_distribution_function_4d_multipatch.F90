@@ -290,7 +290,7 @@ contains
        init_func, &
        init_func_params )
     class(sll_t_distribution_function_4d_multipatch), intent(inout) :: df
-    procedure(sll_i_scalar_initializer_4d)        :: init_func
+    procedure(sll_i_scalar_initializer_4d), pointer        :: init_func
     sll_real64, dimension(:), optional          :: init_func_params
     sll_int32 :: num_patches
     sll_int32 :: i

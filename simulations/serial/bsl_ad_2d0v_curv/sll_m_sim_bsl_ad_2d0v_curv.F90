@@ -45,6 +45,7 @@ module sll_m_sim_bsl_ad_2d0v_curv
     operator(*)
 
   use sll_m_characteristics_1d_base, only: &
+    sll_i_signature_process_outside_point_1d, &
     sll_c_characteristics_1d_base
 
   use sll_m_characteristics_1d_explicit_euler, only: &
@@ -224,8 +225,8 @@ module sll_m_sim_bsl_ad_2d0v_curv
    procedure(sll_i_scalar_initializer_2d), nopass, pointer :: init_func
    sll_real64, dimension(:), pointer :: params
    !set boundary functions for characteristics
-   procedure(sll_i_signature_process_outside_point), nopass, pointer :: process_outside_point1_func
-   procedure(sll_i_signature_process_outside_point), nopass, pointer :: process_outside_point2_func
+   procedure(sll_i_signature_process_outside_point_1d), nopass, pointer :: process_outside_point1_func
+   procedure(sll_i_signature_process_outside_point_1d), nopass, pointer :: process_outside_point2_func
    
       
     !advector
