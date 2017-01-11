@@ -7,6 +7,7 @@ file( GLOB INPUT_FILES "*.nml"         )
 file( GLOB   POST_PROC "*.dat" "*.gnu" )
 
 add_executable( ${EXECUTABLE} sll_m_sim_${SIM_NAME}.F90 ${TEST_NAME}.F90 )
+target_include_directories(${EXECUTABLE} BEFORE PRIVATE ${HDF5_INCLUDE_DIR_FORTRAN})
 target_link_libraries( ${EXECUTABLE} ${SLL_LIB} ${SLL_EXT} ${SLL_DEPS} )
 
 install( TARGETS ${EXECUTABLE}                     DESTINATION ${INSTALL_DIR} )

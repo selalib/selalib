@@ -150,11 +150,11 @@ contains
        func_params)
 
     type(sll_t_layout_2d), pointer                    :: layout
-    sll_real64, dimension(:), intent(in) :: x1_array
-    sll_real64, dimension(:), intent(in) :: x2_array
-    sll_real64, dimension(:,:), intent(out) :: array
-    procedure(sll_i_scalar_initializer_2d)        :: func
-    sll_real64, dimension(:), optional          :: func_params
+    sll_real64, dimension(:), intent(in)              :: x1_array
+    sll_real64, dimension(:), intent(in)              :: x2_array
+    sll_real64, dimension(:,:), intent(out)           :: array
+    procedure(sll_i_scalar_initializer_2d), pointer   :: func
+    sll_real64, dimension(:), optional                :: func_params
 
 
     sll_int32  :: i
