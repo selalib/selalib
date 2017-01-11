@@ -27,6 +27,7 @@
 module sll_m_poisson_2d_polar_par
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_assert.h"
+#include "sll_errors.h"
 #include "sll_working_precision.h"
 
   use sll_m_boundary_condition_descriptors, only: &
@@ -98,9 +99,13 @@ module sll_m_poisson_2d_polar_par
 
   end type sll_t_poisson_2d_polar_par
 
+  ! Allowed boundary conditions
+  sll_int32, parameter :: bc_opts(3) = &
+    [sll_p_dirichlet, sll_p_neumann, sll_p_neumann_mode_0]
+
   ! Local parameters
-  sll_real64, parameter, private ::  one_third  = 1.0_f64 / 3.0_f64
-  sll_real64, parameter, private :: four_thirds = 4.0_f64 / 3.0_f64
+  sll_real64, parameter ::  one_third  = 1.0_f64 / 3.0_f64
+  sll_real64, parameter :: four_thirds = 4.0_f64 / 3.0_f64
 
 !<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 contains
@@ -125,9 +130,11 @@ contains
     sll_real64           , intent(in) :: rmax     !< rmax
     sll_int32            , intent(in) :: nr       !< number of cells radial
     sll_int32            , intent(in) :: ntheta   !< number of cells angular
-    sll_int32,   optional, intent(in) :: bc_rmin  !< radial boundary conditions
-    sll_int32,   optional, intent(in) :: bc_rmax  !< radial boundary conditions
+    sll_int32            , intent(in) :: bc_rmin  !< boundary condition at r_min
+    sll_int32            , intent(in) :: bc_rmax  !< boundary condition at r_max
 
+    character(len=*), parameter :: this_sub_name = &
+                                               'sll_s_poisson_2d_polar_par_init'
     sll_real64              :: dr
     sll_real64              :: inv_r
     sll_real64              :: inv_dr
@@ -140,12 +147,17 @@ contains
     sll_int32               :: last
     sll_int32               :: glob_idx(2)
 
-    if (present(bc_rmin) .and. present(bc_rmax)) then
+    ! Consistency check: boundary conditions must be one of three options
+    if( any( bc_rmin == bc_opts ) ) then
       bc(1) = bc_rmin
+    else
+      SLL_ERROR( this_sub_name, 'Unrecognized boundary condition at r_min' )
+    end if
+    !
+    if( any( bc_rmax == bc_opts ) ) then
       bc(2) = bc_rmax
     else
-      bc(1) = -1
-      bc(2) = -1
+      SLL_ERROR( this_sub_name, 'Unrecognized boundary condition at r_max' )
     end if
 
     ! Consistency check: global size of 2D layouts must be (nr+1,ntheta)
