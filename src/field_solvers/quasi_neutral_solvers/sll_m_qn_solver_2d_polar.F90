@@ -286,9 +286,9 @@ contains
 
   !=============================================================================
   !> Solve the quasi-neutrality equation and get the electrostatic potential
-  subroutine sll_s_qn_solver_2d_polar_solve( solver, rhs, phi )
+  subroutine sll_s_qn_solver_2d_polar_solve( solver, rho, phi )
     type(sll_t_qn_solver_2d_polar) , intent(inout) :: solver   !< Solver object
-    sll_real64                     , intent(in   ) :: rhs(:,:) !< Charge density
+    sll_real64                     , intent(in   ) :: rho(:,:) !< Charge density
     sll_real64                     , intent(  out) :: phi(:,:) !< Potential
 
     sll_int32  :: nr, ntheta, bc(2)
@@ -299,11 +299,11 @@ contains
     bc     = solver%bc
 
     ! Consistency check: 'rho' and 'phi' have shape defined at initialization
-    SLL_ASSERT( all( shape(rhs) == [nr+1,ntheta] ) )
+    SLL_ASSERT( all( shape(rho) == [nr+1,ntheta] ) )
     SLL_ASSERT( all( shape(phi) == [nr+1,ntheta] ) )
 
     ! Initialize 2D complex array for FFTs along theta and FD solver along r
-    solver%work(:,:) = cmplx( rhs, 0.0_f64, kind=f64 )
+    solver%work(:,:) = cmplx( rho, 0.0_f64, kind=f64 )
 
     ! For each r_i, compute FFT of rho(r_i,theta) to obtain \hat{rho}(r_i,k)
     do i = 1, nr+1
