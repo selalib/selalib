@@ -60,6 +60,7 @@
 module sll_m_qn_solver_2d_polar_par
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_assert.h"
+#include "sll_errors.h"
 #include "sll_working_precision.h"
 
   use sll_m_constants, only: &
@@ -136,9 +137,13 @@ module sll_m_qn_solver_2d_polar_par
 
   end type sll_t_qn_solver_2d_polar_par
 
+  ! Allowed boundary conditions
+  sll_int32, parameter :: bc_opts(3) = &
+    [sll_p_dirichlet, sll_p_neumann, sll_p_neumann_mode_0]
+
   ! Local parameters
-  sll_real64, parameter, private ::  one_third  = 1.0_f64 / 3.0_f64
-  sll_real64, parameter, private :: four_thirds = 4.0_f64 / 3.0_f64
+  sll_real64, parameter ::  one_third  = 1.0_f64 / 3.0_f64
+  sll_real64, parameter :: four_thirds = 4.0_f64 / 3.0_f64
 
 !<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 contains
@@ -152,13 +157,13 @@ contains
       rmax          , &
       nr            , &
       ntheta        , &
+      bc_rmin       , &
+      bc_rmax       , &
       rho_m0        , &
       b_magn        , &
       lambda        , &
       use_zonal_flow, &
-      epsilon_0     , &
-      bc_rmin       , &
-      bc_rmax )
+      epsilon_0 )
 
     type(sll_t_qn_solver_2d_polar_par), intent(out) :: solver !< solver object
     type(sll_t_layout_2d), pointer    :: layout_r       !< layout sequential in r direction
@@ -167,13 +172,15 @@ contains
     sll_real64           , intent(in) :: rmax           !< rmax
     sll_int32            , intent(in) :: nr             !< number of cells radial
     sll_int32            , intent(in) :: ntheta         !< number of cells angular
+    sll_int32            , intent(in) :: bc_rmin        !< boundary condition at r_min
+    sll_int32            , intent(in) :: bc_rmax        !< boundary condition at r_max
     sll_real64           , intent(in) :: rho_m0(:)      !< radial profile: total mass density of equilibrium
     sll_real64           , intent(in) :: b_magn(:)      !< radial profile: intensity of magnetic field
     sll_real64,  optional, intent(in) :: lambda(:)      !< radial profile: electron Debye length
     logical   ,  optional, intent(in) :: use_zonal_flow !< if .false. set flux average to zero
     sll_real64,  optional, intent(in) :: epsilon_0      !< override default: vacuum permittivity
-    sll_int32,   optional, intent(in) :: bc_rmin        !< radial boundary conditions
-    sll_int32,   optional, intent(in) :: bc_rmax        !< radial boundary conditions
+
+    character(len=*), parameter :: this_sub_name = 'sll_s_qn_solver_2d_polar_par_init'
 
     sll_real64              :: dr
     sll_real64              :: inv_r
@@ -191,19 +198,17 @@ contains
     sll_int32               :: loc_sz_a(2) ! local shape of layout_a
     sll_int32               :: glob_idx(2) ! global indices
 
-    ! Override vacuum permittivity in SI units
-    if (present( epsilon_0 )) then
-      solver%epsilon_0 = epsilon_0
-    else
-      solver%epsilon_0 = sll_p_epsilon_0
-    end if
-
-    if (present(bc_rmin) .and. present(bc_rmax)) then
+    ! Consistency check: boundary conditions must be one of three options
+    if( any( bc_rmin == bc_opts ) ) then
       bc(1) = bc_rmin
+    else
+      SLL_ERROR( this_sub_name, 'Unrecognized boundary condition at r_min' )
+    end if
+    !
+    if( any( bc_rmax == bc_opts ) ) then
       bc(2) = bc_rmax
     else
-      bc(1) = -1
-      bc(2) = -1
+      SLL_ERROR( this_sub_name, 'Unrecognized boundary condition at r_max' )
     end if
 
     ! Consistency check: global size of 2D layouts must be (nr+1,ntheta)
@@ -220,6 +225,13 @@ contains
     ! Consistency check: layout_r sequential in r, layout_a sequential in theta
     SLL_ASSERT( loc_sz_r(1) == nr+1   )
     SLL_ASSERT( loc_sz_a(2) == ntheta )
+
+    ! Override vacuum permittivity in SI units
+    if (present( epsilon_0 )) then
+      solver%epsilon_0 = epsilon_0
+    else
+      solver%epsilon_0 = sll_p_epsilon_0
+    end if
 
     ! Store global information in solver
     solver%rmin     =  rmin
