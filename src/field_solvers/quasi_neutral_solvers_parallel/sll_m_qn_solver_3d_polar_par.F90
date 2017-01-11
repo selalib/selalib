@@ -44,13 +44,13 @@ contains
       rmax          , &
       nr            , &
       ntheta        , &
+      bc_rmin       , &
+      bc_rmax       , &
       rho_m0        , &
       b_magn        , &
       lambda        , &
       use_zonal_flow, &
-      epsilon_0     , &
-      bc_rmin       , &
-      bc_rmax )
+      epsilon_0 )
 
     type(sll_t_qn_solver_3d_polar_par), intent(inout) :: solver   !< Poisson solver class
     type(sll_t_layout_2d), pointer    :: layout_r       !< sequential in r direction
@@ -59,13 +59,13 @@ contains
     sll_real64           , intent(in) :: rmax           !< rmax
     sll_int32            , intent(in) :: nr             !< number of cells radial
     sll_int32            , intent(in) :: ntheta         !< number of cells angular
+    sll_int32            , intent(in) :: bc_rmin        !< boundary condition at r_min
+    sll_int32            , intent(in) :: bc_rmax        !< boundary condition at r_max
     sll_real64           , intent(in) :: rho_m0(:)      !< radial profile: total mass density of equilibrium
     sll_real64           , intent(in) :: b_magn(:)      !< radial profile: intensity of magnetic field
     sll_real64,  optional, intent(in) :: lambda(:)      !< radial profile: electron Debye length
     logical   ,  optional, intent(in) :: use_zonal_flow !< if .false. set flux average to zero
     sll_real64,  optional, intent(in) :: epsilon_0      !< override default: vacuum permittivity
-    sll_int32 ,  optional, intent(in) :: bc_rmin        !< radial boundary conditions
-    sll_int32 ,  optional, intent(in) :: bc_rmax        !< radial boundary conditions
 
     ! Initialize the 2D solver
     call sll_s_qn_solver_2d_polar_par_init( solver%solver_2d, &
@@ -75,13 +75,13 @@ contains
       rmax          , &
       nr            , &
       ntheta        , &
+      bc_rmin       , &
+      bc_rmax       , &
       rho_m0        , &
       b_magn        , &
       lambda        , &
       use_zonal_flow, &
-      epsilon_0     , &
-      bc_rmin       , &
-      bc_rmax )
+      epsilon_0 )
 
   end subroutine sll_s_qn_solver_3d_polar_par_init
 
