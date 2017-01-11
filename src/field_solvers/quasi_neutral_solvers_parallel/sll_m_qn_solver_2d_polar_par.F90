@@ -183,12 +183,13 @@ contains
     sll_real64              :: d2(-1:+1)
 
     sll_comp64, allocatable :: buf(:)
-    sll_int32               :: loc_sz_r(2) ! sequential in r direction
-    sll_int32               :: loc_sz_a(2) ! sequential in theta direction
     sll_int32               :: i, j, k
     sll_int32               :: bc(2)
     sll_int32               :: last
-    sll_int32               :: glob_idx(2)
+
+    sll_int32               :: loc_sz_r(2) ! local shape of layout_r
+    sll_int32               :: loc_sz_a(2) ! local shape of layout_a
+    sll_int32               :: glob_idx(2) ! global indices
 
     ! Override vacuum permittivity in SI units
     if (present( epsilon_0 )) then
@@ -349,14 +350,12 @@ contains
     sll_real64                         , intent(in   ) :: rhs(:,:) !< Charge density
     sll_real64                         , intent(  out) :: phi(:,:) !< Potential
 
-    sll_real64 :: rmin
     sll_int32  :: nr, ntheta, bc(2)
     sll_int32  :: i, j, k
     sll_int32  :: glob_idx(2)
 
     nr     = solver%nr
     ntheta = solver%nt
-    rmin   = solver%rmin
     bc     = solver%bc
 
     ! Consistency check: rho and phi must be given in layout sequential in theta

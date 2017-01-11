@@ -103,17 +103,17 @@ module sll_m_qn_solver_2d_polar
    sll_int32               :: bc(2)    !< Boundary conditions options
    sll_real64              :: epsilon_0!< Vacuum permittivity (user may override)
    sll_real64, allocatable :: g   (:)  !< g(r) = \rho_{m,0}/(B^2\epsilon_0)
+
+   type(sll_t_fft)         :: fw       !< Forward FFT plan
+   type(sll_t_fft)         :: bw       !< Inverse FFT plan
    sll_comp64, allocatable :: work(:,:)!< 2D work array needed for transposition
-   sll_comp64, allocatable :: fk  (:)  !< RHS for fft
-   sll_comp64, allocatable :: phik(:)  !< Potential fft
+   sll_comp64, allocatable :: fk  (:)  !< k-th Fourier mode of rho
+   sll_comp64, allocatable :: phik(:)  !< k-th Fourier mode of phi
    sll_real64, allocatable :: mat (:,:)!< Tridiagonal matrix (one for each k)
    sll_real64, allocatable :: cts (:)  !< Lapack coefficients
    sll_int32 , allocatable :: ipiv(:)  !< Lapack pivot indices
-   type(sll_t_fft)         :: fw       !< Forward FFT plan
-   type(sll_t_fft)         :: bw       !< Inverse FFT plan
 
   end type sll_t_qn_solver_2d_polar
-
 
   ! Local parameters
   sll_real64, parameter, private ::  one_third  = 1.0_f64 / 3.0_f64
@@ -137,7 +137,7 @@ contains
       bc_rmin       , &
       bc_rmax )
 
-    type(sll_t_qn_solver_2d_polar), intent(inout) :: solver !< Poisson solver class
+    type(sll_t_qn_solver_2d_polar), intent(out) :: solver !< Poisson solver class
     sll_real64           , intent(in) :: rmin           !< rmin
     sll_real64           , intent(in) :: rmax           !< rmax
     sll_int32            , intent(in) :: nr             !< number of cells radial
@@ -150,6 +150,7 @@ contains
     sll_int32,   optional, intent(in) :: bc_rmin        !< radial boundary conditions
     sll_int32,   optional, intent(in) :: bc_rmax        !< radial boundary conditions
 
+    sll_real64              :: dr
     sll_real64              :: inv_r
     sll_real64              :: inv_dr
     sll_real64              :: c
@@ -157,9 +158,7 @@ contains
     sll_real64              :: d2(-1:+1)
 
     sll_comp64, allocatable :: buf(:)
-    sll_real64              :: dr
-    sll_int32               :: k
-    sll_int32               :: i, j 
+    sll_int32               :: i, j, k
     sll_int32               :: bc(2)
     sll_int32               :: last
 
@@ -288,7 +287,7 @@ contains
   !=============================================================================
   !> Solve the quasi-neutrality equation and get the electrostatic potential
   subroutine sll_s_qn_solver_2d_polar_solve( solver, rhs, phi )
-    type(sll_t_qn_solver_2d_polar) , intent(inout) :: solver   !< solver
+    type(sll_t_qn_solver_2d_polar) , intent(inout) :: solver   !< Solver object
     sll_real64                     , intent(in   ) :: rhs(:,:) !< Charge density
     sll_real64                     , intent(  out) :: phi(:,:) !< Potential
 
@@ -299,6 +298,7 @@ contains
     ntheta = solver%nt
     bc     = solver%bc
 
+    ! Consistency check: 'rho' and 'phi' have shape defined at initialization
     SLL_ASSERT( all( shape(rhs) == [nr+1,ntheta] ) )
     SLL_ASSERT( all( shape(phi) == [nr+1,ntheta] ) )
 
