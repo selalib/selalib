@@ -54,10 +54,9 @@ program test_poisson_polar_parallel
   sll_int32 :: global(2)
   sll_int32 :: gi, gj
   sll_int32 :: i, j
-  sll_int32 :: nc_r, nr
-  sll_int32 :: nc_a, na
-  sll_real64 :: rmin, rmax, delta_r
-  sll_real64 :: amin, amax, delta_a
+  sll_int32 :: nr, na
+  sll_real64 :: rmin, rmax
+  sll_real64 :: delta_r, delta_a
   sll_int32 :: error
   sll_int32 :: psize
   sll_int32 :: prank
@@ -71,15 +70,12 @@ program test_poisson_polar_parallel
   rmin   = 1.0_f64
   rmax   = 2.0_f64
 
-  amin   = 0.0_f64
-  amax   = 2.0_f64 * sll_p_pi
+  ! Number of cells along r and theta
+  nr = 32 !256
+  na = 64 !1024
 
-  nc_r    = 32 !256
-  nc_a    = 64 !1024
-  nr      = nc_r+1
-  na      = nc_a+1
-  delta_r = (rmax-rmin)/real( nr-1, f64 )
-  delta_a = 2.0_f64*sll_p_pi/real( na-1, f64 )
+  delta_r = (rmax-rmin)/real( nr, f64 )
+  delta_a = 2.0_f64*sll_p_pi/real( na, f64 )
 
   !Boot parallel environment
   call sll_s_boot_collective()
@@ -90,9 +86,8 @@ program test_poisson_polar_parallel
   layout_r => sll_f_new_layout_2d( sll_v_world_collective )
   layout_a => sll_f_new_layout_2d( sll_v_world_collective )
 
-  call sll_o_initialize_layout_with_distributed_array( nr,na,1,psize,layout_r )
-
-  call sll_o_initialize_layout_with_distributed_array( nr,na,psize,1,layout_a )
+  call sll_o_initialize_layout_with_distributed_array( nr+1, na, 1, psize, layout_r )
+  call sll_o_initialize_layout_with_distributed_array( nr+1, na, psize, 1, layout_a )
 
   flush( output_unit )
 
@@ -140,23 +135,35 @@ program test_poisson_polar_parallel
        layout_a = layout_a, &
        rmin = rmin, &
        rmax = rmax, &
-       nr = nc_r, &
-       ntheta = nc_a, &
+       nr     = nr, &
+       ntheta = na, &
        bc_rmin = sll_p_dirichlet, &
        bc_rmax = sll_p_dirichlet )
 
+  ! Test with sin
+  !--------------
   do i= 1, nr_loc
      do j = 1, na_loc
        rhs(i,j) = -rhs_sin( r(i), a(j) )
      end do
   end do
-
   call sll_s_poisson_2d_polar_par_solve(poisson, rhs, phi)
-
-  call sll_o_gnuplot_2d_parallel( x, y, phi_sin, 'phi_sin',  1, error )
-  call sll_o_gnuplot_2d_parallel( x, y, phi, 'solution', 1, error )
-
+  call sll_o_gnuplot_2d_parallel( x, y, phi_sin, 'phi_sin_ex',  1, error )
+  call sll_o_gnuplot_2d_parallel( x, y, phi    , 'phi_sin'    , 1, error )
   call error_max( phi, phi_sin, 1e-4_f64 )
+
+  ! Test with cos
+  !--------------
+  do i= 1, nr_loc
+     do j = 1, na_loc
+       rhs(i,j) = -rhs_cos( r(i), a(j) )
+     end do
+  end do
+  call sll_s_poisson_2d_polar_par_solve(poisson, rhs, phi)
+  call sll_o_gnuplot_2d_parallel( x, y, phi_cos, 'phi_cos_ex',  1, error )
+  call sll_o_gnuplot_2d_parallel( x, y, phi    , 'phi_cos'    , 1, error )
+  call error_max( phi, phi_cos, 1e-4_f64 )
+
   call sll_s_halt_collective()
 
 contains
@@ -174,6 +181,8 @@ contains
     else
       write(*,'(a)') 'PASSED'
     end if
+
+    print *, maxloc( abs( phi-phi_exact ) )
 
   end subroutine error_max
 

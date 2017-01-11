@@ -59,7 +59,7 @@
 
 module sll_m_qn_solver_2d_polar_par
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-#include "sll_memory.h"
+#include "sll_assert.h"
 #include "sll_working_precision.h"
 
   use sll_m_constants, only: &
@@ -84,12 +84,14 @@ module sll_m_qn_solver_2d_polar_par
     sll_s_fft_free
 
   use sll_m_remapper, only: &
-    sll_o_apply_remap_2d, &
-    sll_o_compute_local_sizes, &
     sll_t_layout_2d, &
+    sll_o_compute_local_sizes, &
+    sll_o_get_layout_global_size_i, &
+    sll_o_get_layout_global_size_j, &
     sll_o_local_to_global, &
+    sll_t_remap_plan_2d_comp64, &
     sll_o_new_remap_plan, &
-    sll_t_remap_plan_2d_comp64
+    sll_o_apply_remap_2d
 
   use sll_m_tridiagonal, only: &
     sll_s_setup_cyclic_tridiag, &
@@ -111,29 +113,28 @@ module sll_m_qn_solver_2d_polar_par
 
    sll_real64              :: rmin     !< Min value of r coordinate
    sll_real64              :: rmax     !< Max value of r coordinate
-   sll_real64              :: dr       !< Step size along r
-   sll_int32               :: nr       !< Number of nodes along r
-   sll_int32               :: nt       !< Number of nodes along theta
+   sll_int32               :: nr       !< Number of cells along r
+   sll_int32               :: nt       !< Number of cells along theta
    sll_int32               :: bc(2)    !< Boundary conditions options
+   sll_real64              :: epsilon_0!< Vacuum permittivity (user may override)
+   sll_real64, allocatable :: g(:)     !< g(r) = \rho_{m,0}/(B^2\epsilon_0)
+
    type(sll_t_fft)         :: fw       !< Forward FFT plan
    type(sll_t_fft)         :: bw       !< Inverse FFT plan
-   sll_comp64, allocatable :: f_r(:,:) !< 2D array sequential in r
-   sll_comp64, allocatable :: f_a(:,:) !< 2D array sequential in theta
-   sll_comp64, allocatable :: fk  (:)  !< RHS for fft
-   sll_comp64, allocatable :: phik(:)  !< Potential fft
+   sll_comp64, allocatable :: f_r (:,:)!< 2D array sequential in r
+   sll_comp64, allocatable :: f_a (:,:)!< 2D array sequential in theta
+   sll_comp64, allocatable :: fk  (:)  !< k-th Fourier mode of rho
+   sll_comp64, allocatable :: phik(:)  !< k-th Fourier mode of phi
    sll_real64, allocatable :: mat (:,:)!< Tridiagonal matrix (one for each k)
    sll_real64, allocatable :: cts (:)  !< Lapack coefficients
    sll_int32 , allocatable :: ipiv(:)  !< Lapack pivot indices
+
    type(sll_t_layout_2d)           , pointer :: layout_r !< layout sequential in r
    type(sll_t_layout_2d)           , pointer :: layout_a !< layout sequential in theta
    type(sll_t_remap_plan_2d_comp64), pointer :: rmp_ra   !< remap r->theta 
    type(sll_t_remap_plan_2d_comp64), pointer :: rmp_ar   !< remap theta->r
 
-   sll_real64, allocatable :: g(:)     !< g(r) = \rho_{m,0}/(B^2\epsilon_0)
-   sll_real64              :: epsilon_0
-
   end type sll_t_qn_solver_2d_polar_par
-
 
   ! Local parameters
   sll_real64, parameter, private ::  one_third  = 1.0_f64 / 3.0_f64
@@ -159,9 +160,9 @@ contains
       bc_rmin       , &
       bc_rmax )
 
-    type(sll_t_qn_solver_2d_polar_par), intent(inout) :: solver   !< Poisson solver class
-    type(sll_t_layout_2d), pointer    :: layout_r       !< sequential in r direction
-    type(sll_t_layout_2d), pointer    :: layout_a       !< sequential in theta direction
+    type(sll_t_qn_solver_2d_polar_par), intent(out) :: solver !< solver object
+    type(sll_t_layout_2d), pointer    :: layout_r       !< layout sequential in r direction
+    type(sll_t_layout_2d), pointer    :: layout_a       !< layout sequential in theta direction
     sll_real64           , intent(in) :: rmin           !< rmin
     sll_real64           , intent(in) :: rmax           !< rmax
     sll_int32            , intent(in) :: nr             !< number of cells radial
@@ -174,6 +175,7 @@ contains
     sll_int32,   optional, intent(in) :: bc_rmin        !< radial boundary conditions
     sll_int32,   optional, intent(in) :: bc_rmax        !< radial boundary conditions
 
+    sll_real64              :: dr
     sll_real64              :: inv_r
     sll_real64              :: inv_dr
     sll_real64              :: c
@@ -183,9 +185,7 @@ contains
     sll_comp64, allocatable :: buf(:)
     sll_int32               :: loc_sz_r(2) ! sequential in r direction
     sll_int32               :: loc_sz_a(2) ! sequential in theta direction
-    sll_real64              :: dr
-    sll_int32               :: k
-    sll_int32               :: i, j 
+    sll_int32               :: i, j, k
     sll_int32               :: bc(2)
     sll_int32               :: last
     sll_int32               :: glob_idx(2)
@@ -205,33 +205,37 @@ contains
       bc(2) = -1
     end if
 
-    dr     = (rmax-rmin)/nr
-    inv_dr = 1.0_f64 / dr
+    ! Consistency check: global size of 2D layouts must be (nr+1,ntheta)
+    SLL_ASSERT( sll_o_get_layout_global_size_i( layout_r ) == nr+1   )
+    SLL_ASSERT( sll_o_get_layout_global_size_j( layout_r ) == ntheta )
+    !
+    SLL_ASSERT( sll_o_get_layout_global_size_i( layout_a ) == nr+1   )
+    SLL_ASSERT( sll_o_get_layout_global_size_j( layout_a ) == ntheta )
 
     ! Compute local size of 2D arrays in the two layouts
     call sll_o_compute_local_sizes( layout_r, loc_sz_r(1), loc_sz_r(2) )
     call sll_o_compute_local_sizes( layout_a, loc_sz_a(1), loc_sz_a(2) )
 
-    !
-    allocate( solver%g(nr+1) )
-    solver%g(:) = rho_m0(:) / (b_magn(:)**2 * solver%epsilon_0)
+    ! Consistency check: layout_r sequential in r, layout_a sequential in theta
+    SLL_ASSERT( loc_sz_r(1) == nr+1   )
+    SLL_ASSERT( loc_sz_a(2) == ntheta )
+
+    ! Store global information in solver
+    solver%rmin     =  rmin
+    solver%rmax     =  rmax
+    solver%nr       =  nr
+    solver%nt       =  ntheta
+    solver%bc(:)    =  bc(:)
+    solver%layout_a => layout_a
+    solver%layout_r => layout_r
 
     ! Allocate arrays global in r
+    allocate( solver%g   (nr+1) )
     allocate( solver%fk  (nr+1) )
     allocate( solver%phik(nr+1) )
     allocate( solver%mat((nr-1)*3,loc_sz_r(2)) ) ! for each k, matrix depends on r
     allocate( solver%cts((nr-1)*7) )
     allocate( solver%ipiv(nr-1) )
-
-    ! Store global information in solver
-    solver%rmin     =  rmin
-    solver%rmax     =  rmax
-    solver%dr       =  dr
-    solver%nr       =  nr
-    solver%nt       =  ntheta
-    solver%bc       =  bc
-    solver%layout_a => layout_a
-    solver%layout_r => layout_r
 
     ! Array for FFTs in theta-direction
     allocate( solver%f_a (loc_sz_a(1), loc_sz_a(2)) )
@@ -241,7 +245,7 @@ contains
     allocate( solver%f_r (loc_sz_r(1), loc_sz_r(2)) )
     solver%f_r(:,:) = (0.0_f64, 0.0_f64)
 
-    ! Remap objects between two layouts
+    ! Remap objects between two layouts (for transposing between f_r and f_a)
     solver%rmp_ra => sll_o_new_remap_plan( solver%layout_r, solver%layout_a, solver%f_r )
     solver%rmp_ar => sll_o_new_remap_plan( solver%layout_a, solver%layout_r, solver%f_a )
 
@@ -250,6 +254,13 @@ contains
     call sll_s_fft_init_c2c_1d( solver%fw, ntheta, buf, buf, sll_p_fft_forward, normalized=.true. )
     call sll_s_fft_init_c2c_1d( solver%bw, ntheta, buf, buf, sll_p_fft_backward )
     deallocate( buf )
+
+    ! Store non-dimensional coefficient g(r) = \rho(r) / (B(r)^2 \epsilon_0)
+    solver%g(:) = rho_m0(:) / (b_magn(:)**2 * solver%epsilon_0)
+
+    ! Precompute convenient parameters
+    dr     = (rmax-rmin)/nr
+    inv_dr = 1.0_f64 / dr
 
     ! Store matrix coefficients into solver%mat
     ! Cycle over k_j
@@ -334,11 +345,11 @@ contains
   !=============================================================================
   !> Solve the quasi-neutrality equation and get the electrostatic potential
   subroutine sll_s_qn_solver_2d_polar_par_solve( solver, rhs, phi )
-    type(sll_t_qn_solver_2d_polar_par) , intent(inout) :: solver   !< solver
+    type(sll_t_qn_solver_2d_polar_par) , intent(inout) :: solver   !< Solver object
     sll_real64                         , intent(in   ) :: rhs(:,:) !< Charge density
     sll_real64                         , intent(  out) :: phi(:,:) !< Potential
 
-    sll_real64 :: rmin, dr
+    sll_real64 :: rmin
     sll_int32  :: nr, ntheta, bc(2)
     sll_int32  :: i, j, k
     sll_int32  :: glob_idx(2)
@@ -346,11 +357,14 @@ contains
     nr     = solver%nr
     ntheta = solver%nt
     rmin   = solver%rmin
-    dr     = solver%dr
     bc     = solver%bc
 
+    ! Consistency check: rho and phi must be given in layout sequential in theta
     call verify_argument_sizes_par( solver%layout_a, rhs )
-    solver%f_a(:,:) = cmplx( rhs, 0.0_f64, kind=f64)
+    call verify_argument_sizes_par( solver%layout_a, phi )
+
+    ! Copy charge into 2D complex array
+    solver%f_a(:,:) = cmplx( rhs, 0.0_f64, kind=f64 )
 
     ! For each r_i, compute FFT of rho(r_i,theta) to obtain \hat{rho}(r_i,k)
     do i = 1, ubound( solver%f_a, 1 )
@@ -442,7 +456,7 @@ contains
 
     deallocate( solver%rmp_ra )
     deallocate( solver%rmp_ar )
- 
+
     solver%layout_r => null()
     solver%layout_a => null()
     solver%rmp_ra   => null()
