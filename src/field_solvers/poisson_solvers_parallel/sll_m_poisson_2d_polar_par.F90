@@ -58,7 +58,6 @@ module sll_m_poisson_2d_polar_par
 
   public :: &
     sll_t_poisson_2d_polar_par, &
-    sll_f_poisson_2d_polar_par_new, &
     sll_s_poisson_2d_polar_par_init, &
     sll_s_poisson_2d_polar_par_solve
 
@@ -90,50 +89,13 @@ module sll_m_poisson_2d_polar_par
 
   end type sll_t_poisson_2d_polar_par
 
+  ! Local parameters
+  sll_real64, parameter, private ::  one_third  = 1.0_f64 / 3.0_f64
+  sll_real64, parameter, private :: four_thirds = 4.0_f64 / 3.0_f64
+
 !<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 contains
 !<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
-
-  !> new: wrapper of sll_o_initialize
-  function sll_f_poisson_2d_polar_par_new( &
-    layout_r, &
-    layout_a, &
-    rmin, &
-    rmax, &
-    nr, &
-    ntheta, &
-    bc_rmin, &
-    bc_rmax ) &
-    result(solver)
-
-    type(sll_t_poisson_2d_polar_par), pointer :: solver     !< Poisson solver class
-    type(sll_t_layout_2d)    , pointer :: layout_r !< sequential in r direction
-    type(sll_t_layout_2d)    , pointer :: layout_a !< sequential in theta direction
-    sll_real64                         :: rmin    !< rmin
-    sll_real64                         :: rmax    !< rmax
-    sll_int32                          :: nr      !< number of cells radial
-    sll_int32                          :: ntheta  !< number of cells angular
-    sll_int32, optional                :: bc_rmin !< radial boundary conditions
-    sll_int32, optional                :: bc_rmax !< radial boundary conditions
-    
-    !local variables
-    sll_int32 :: ierr
-    
-    SLL_ALLOCATE(solver,ierr)
-   
-    call sll_s_poisson_2d_polar_par_init( &
-      solver, &
-      layout_r, &
-      layout_a, &
-      rmin, &
-      rmax, &
-      nr, &
-      ntheta, &
-      bc_rmin, &
-      bc_rmax )
-
-  end function sll_f_poisson_2d_polar_par_new
-
 
   !=============================================================================
   !> sll_o_initialize the Poisson solver in polar coordinates
