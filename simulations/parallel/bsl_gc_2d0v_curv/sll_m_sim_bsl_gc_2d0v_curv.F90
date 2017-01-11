@@ -2846,14 +2846,12 @@ subroutine sll_DSG( eta1_min,eta1_max, eta2_min,eta2_max,n_eta1,n_eta2, f )
     if(size(input,1)<Npts1)then
       print *,'size(input,1)=',size(input,1)
       print *,'Npts1=',Npts1
-      SLL_ERROR('compute_integral_trapezoid_2d&
-      &','bad size1')
+      SLL_ERROR('compute_integral_trapezoid_2d','bad size1')
     endif
     if(size(input,2)<Npts2)then
       print *,'size(input,2)=',size(input,2)
       print *,'Npts2=',Npts2
-      SLL_ERROR('compute_integral_trapezoid_2d&
-      &','bad size2')
+      SLL_ERROR('compute_integral_trapezoid_2d','bad size2')
     endif
 
     SLL_ALLOCATE(array(Npts2),ierr)    

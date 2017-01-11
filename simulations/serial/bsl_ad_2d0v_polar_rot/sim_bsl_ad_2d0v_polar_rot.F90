@@ -208,8 +208,7 @@ program sim_bsl_ad_2d0v_polar_rot
     endif
     open(unit = input_file, file=trim(input_filename_loc),IOStat=IO_stat)
      if( IO_stat /= 0 ) then
-       SLL_ERROR('rotation_2d_hexagonal_hermite, &
-       &','can not open file')
+       SLL_ERROR('rotation_2d_hexagonal_hermite,','can not open file')
      end if
      print *,'#initialization with filename:'
      print *,'#',trim(input_filename_loc)
