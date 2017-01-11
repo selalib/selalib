@@ -118,9 +118,6 @@ contains
     sll_real64 ::  r,  th
     sll_real64 :: dr, dth
     sll_int32  :: i, j
-    sll_int32  :: loc_sz_r(2)
-    sll_int32  :: loc_sz_a(2)
-    sll_int32  :: glob_idx(2)
 
     sll_real64, allocatable :: rhs   (:,:)
     sll_real64, allocatable :: phi_ex(:,:)
