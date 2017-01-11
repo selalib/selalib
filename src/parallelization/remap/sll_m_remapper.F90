@@ -61,6 +61,7 @@ module sll_m_remapper
     sll_s_factorize_in_three_powers_of_two, &
     sll_s_factorize_in_two_powers_of_two, &
     sll_o_get_layout_collective, &
+    sll_o_get_layout_global_size_i, &
     sll_o_get_layout_global_size_j, &
     sll_o_get_layout_global_size_k, &
     sll_o_get_layout_global_size_l, &
@@ -537,14 +538,14 @@ MAKE_REMAP_POINTER_CONTAINER( sll_t_remap_plan_4d_real64_ptr, sll_t_remap_plan_4
    end interface
 
    !> Get global size
-   interface get_layout_global_size_i
+   interface sll_o_get_layout_global_size_i
       module procedure &
            get_layout_2d_global_size_1, &
            get_layout_3d_global_size_1, &
            get_layout_4d_global_size_1, &
            get_layout_5d_global_size_1, &
            get_layout_6d_global_size_1
-   end interface get_layout_global_size_i
+   end interface sll_o_get_layout_global_size_i
 
    !> Get global size
    interface sll_o_get_layout_global_size_j

@@ -16,12 +16,15 @@
 !**************************************************************
 
 !> @ingroup poisson_solvers
-!> @par Contact
-!>      Yaman Güçlü, IPP Garching
-!> Module to sll_o_solve Poisson equation on polar mesh using FFT transform
+!> @author  Yaman Güçlü, IPP Garching
+!> @author  Edoardo Zoni, IPP Garching
+!>
+!> Module to solve the Poisson equation on a 2D polar mesh using FFT transforms
+!> in theta and 2nd order finite differences in r
+
 module sll_m_poisson_2d_polar_par
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-#include "sll_memory.h"
+#include "sll_assert.h"
 #include "sll_working_precision.h"
 
   use sll_m_boundary_condition_descriptors, only: &
@@ -35,20 +38,22 @@ module sll_m_poisson_2d_polar_par
     sll_v_world_collective
 
   use sll_m_fft, only: &
-    sll_s_fft_exec_c2c_1d, &
-    sll_p_fft_backward, &
-    sll_s_fft_free, &
+    sll_t_fft, &
     sll_p_fft_forward, &
+    sll_p_fft_backward, &
     sll_s_fft_init_c2c_1d, &
-    sll_t_fft
+    sll_s_fft_exec_c2c_1d, &
+    sll_s_fft_free
 
   use sll_m_remapper, only: &
-    sll_o_apply_remap_2d, &
-    sll_o_compute_local_sizes, &
     sll_t_layout_2d, &
+    sll_o_compute_local_sizes, &
+    sll_o_get_layout_global_size_i, &
+    sll_o_get_layout_global_size_j, &
     sll_o_local_to_global, &
+    sll_t_remap_plan_2d_comp64, &
     sll_o_new_remap_plan, &
-    sll_t_remap_plan_2d_comp64
+    sll_o_apply_remap_2d
 
   use sll_m_tridiagonal, only: &
     sll_s_setup_cyclic_tridiag, &
@@ -59,7 +64,8 @@ module sll_m_poisson_2d_polar_par
   public :: &
     sll_t_poisson_2d_polar_par, &
     sll_s_poisson_2d_polar_par_init, &
-    sll_s_poisson_2d_polar_par_solve
+    sll_s_poisson_2d_polar_par_solve, &
+    sll_s_poisson_2d_polar_par_free
 
   private
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -67,21 +73,22 @@ module sll_m_poisson_2d_polar_par
   !> Class for the Poisson solver in polar coordinate
   type sll_t_poisson_2d_polar_par
 
-   sll_real64              :: rmin     !< left corner of r dimension
-   sll_real64              :: rmax     !< right corner of r dimension
-   sll_real64              :: dr       !< step size along r
-   sll_int32               :: nr       !< number of nodes along r
-   sll_int32               :: nt       !< number of nodes along theta
-   sll_int32               :: bc(2)    !< boundary conditions options
+   sll_real64              :: rmin     !< Min value of r coordinate
+   sll_real64              :: rmax     !< Max value of r coordinate
+   sll_int32               :: nr       !< Number of cells along r
+   sll_int32               :: nt       !< Number of cells along theta
+   sll_int32               :: bc(2)    !< Boundary conditions options
+
    type(sll_t_fft)         :: fw       !< Forward FFT plan
    type(sll_t_fft)         :: bw       !< Inverse FFT plan
-   sll_comp64, allocatable :: f_r(:,:) !< 2D array sequential in r
-   sll_comp64, allocatable :: f_a(:,:) !< 2D array sequential in theta
-   sll_comp64, allocatable :: fk  (:)  !< RHSf fft
-   sll_comp64, allocatable :: phik(:)  !< Potential fft
+   sll_comp64, allocatable :: f_r (:,:)!< 2D array sequential in r
+   sll_comp64, allocatable :: f_a (:,:)!< 2D array sequential in theta
+   sll_comp64, allocatable :: fk  (:)  !< k-th Fourier mode of rho
+   sll_comp64, allocatable :: phik(:)  !< k-th Fourier mode of phi
    sll_real64, allocatable :: mat (:,:)!< Tridiagonal matrix (one for each k)
    sll_real64, allocatable :: cts (:)  !< Lapack coefficients
    sll_int32 , allocatable :: ipiv(:)  !< Lapack pivot indices
+
    type(sll_t_layout_2d)           , pointer :: layout_r !< layout sequential in r
    type(sll_t_layout_2d)           , pointer :: layout_a !< layout sequential in theta
    type(sll_t_remap_plan_2d_comp64), pointer :: rmp_ra   !< remap r->theta 
@@ -102,30 +109,31 @@ contains
   subroutine sll_s_poisson_2d_polar_par_init( solver, &
       layout_r, &
       layout_a, &
-      rmin, &
-      rmax, &
-      nr, &
-      ntheta, &
-      bc_rmin, &
+      rmin    , &
+      rmax    , &
+      nr      , &
+      ntheta  , &
+      bc_rmin , &
       bc_rmax )
 
-    type(sll_t_poisson_2d_polar_par)      :: solver   !< Poisson solver class
-    type(sll_t_layout_2d), pointer :: layout_r !< sequential in r direction
-    type(sll_t_layout_2d), pointer :: layout_a !< sequential in theta direction
-    sll_real64                     :: rmin     !< rmin
-    sll_real64                     :: rmax     !< rmax
-    sll_int32                      :: nr       !< number of cells radial
-    sll_int32                      :: ntheta   !< number of cells angular
-    sll_int32, optional            :: bc_rmin  !< radial boundary conditions
-    sll_int32, optional            :: bc_rmax  !< radial boundary conditions
+    type(sll_t_poisson_2d_polar_par), intent(out) :: solver !< solver object
+    type(sll_t_layout_2d), pointer    :: layout_r !< layout sequential in r direction
+    type(sll_t_layout_2d), pointer    :: layout_a !< layout sequential in theta direction
+    sll_real64           , intent(in) :: rmin     !< rmin
+    sll_real64           , intent(in) :: rmax     !< rmax
+    sll_int32            , intent(in) :: nr       !< number of cells radial
+    sll_int32            , intent(in) :: ntheta   !< number of cells angular
+    sll_int32,   optional, intent(in) :: bc_rmin  !< radial boundary conditions
+    sll_int32,   optional, intent(in) :: bc_rmax  !< radial boundary conditions
+
+    sll_real64              :: dr
+    sll_real64              :: inv_r
+    sll_real64              :: inv_dr
 
     sll_comp64, allocatable :: buf(:)
     sll_int32               :: loc_sz_r(2) ! sequential in r direction
     sll_int32               :: loc_sz_a(2) ! sequential in theta direction
-    sll_real64              :: r
-    sll_real64              :: dr
-    sll_int32               :: k
-    sll_int32               :: i, j 
+    sll_int32               :: i, j, k
     sll_int32               :: bc(2)
     sll_int32               :: last
     sll_int32               :: glob_idx(2)
@@ -138,11 +146,29 @@ contains
       bc(2) = -1
     end if
 
-    dr = (rmax-rmin)/nr
+    ! Consistency check: global size of 2D layouts must be (nr+1,ntheta)
+    SLL_ASSERT( sll_o_get_layout_global_size_i( layout_r ) == nr+1   )
+    SLL_ASSERT( sll_o_get_layout_global_size_j( layout_r ) == ntheta )
+    !
+    SLL_ASSERT( sll_o_get_layout_global_size_i( layout_a ) == nr+1   )
+    SLL_ASSERT( sll_o_get_layout_global_size_j( layout_a ) == ntheta )
 
     ! Compute local size of 2D arrays in the two layouts
     call sll_o_compute_local_sizes( layout_r, loc_sz_r(1), loc_sz_r(2) )
     call sll_o_compute_local_sizes( layout_a, loc_sz_a(1), loc_sz_a(2) )
+
+    ! Consistency check: layout_r sequential in r, layout_a sequential in theta
+    SLL_ASSERT( loc_sz_r(1) == nr+1   )
+    SLL_ASSERT( loc_sz_a(2) == ntheta )
+
+    ! Store global information in solver
+    solver%rmin     =  rmin
+    solver%rmax     =  rmax
+    solver%nr       =  nr
+    solver%nt       =  ntheta
+    solver%bc(:)    =  bc(:)
+    solver%layout_a => layout_a
+    solver%layout_r => layout_r
 
     ! Allocate arrays global in r
     allocate( solver%fk  (nr+1) )
@@ -150,16 +176,6 @@ contains
     allocate( solver%mat((nr-1)*3,loc_sz_r(2)) ) ! for each k, matrix depends on r
     allocate( solver%cts((nr-1)*7) )
     allocate( solver%ipiv(nr-1) )
-
-    ! Store global information in solver
-    solver%rmin     =  rmin
-    solver%rmax     =  rmax
-    solver%dr       =  dr
-    solver%nr       =  nr
-    solver%nt       =  ntheta
-    solver%bc       =  bc
-    solver%layout_a => layout_a
-    solver%layout_r => layout_r
 
     ! Array for FFTs in theta-direction
     allocate( solver%f_a (loc_sz_a(1), loc_sz_a(2)) )
@@ -169,7 +185,7 @@ contains
     allocate( solver%f_r (loc_sz_r(1), loc_sz_r(2)) )
     solver%f_r(:,:) = (0.0_f64, 0.0_f64)
 
-    ! Remap objects between two layouts
+    ! Remap objects between two layouts (for transposing between f_r and f_a)
     solver%rmp_ra => sll_o_new_remap_plan( solver%layout_r, solver%layout_a, solver%f_r )
     solver%rmp_ar => sll_o_new_remap_plan( solver%layout_a, solver%layout_r, solver%f_a )
 
@@ -178,6 +194,10 @@ contains
     call sll_s_fft_init_c2c_1d( solver%fw, ntheta, buf, buf, sll_p_fft_forward, normalized=.true. )
     call sll_s_fft_init_c2c_1d( solver%bw, ntheta, buf, buf, sll_p_fft_backward )
     deallocate( buf )
+
+    ! Precompute convenient parameters
+    dr = (rmax-rmin)/nr
+    inv_dr = 1.0_f64/dr
 
     ! Store matrix coefficients into solver%mat
     ! Cycle over k_j
@@ -194,10 +214,10 @@ contains
 
       ! Compute matrix coefficients for a given k_j
       do i = 2, nr
-        r = rmin + (i-1)*dr
-        solver%mat(3*(i-1)  ,j) = -1.0_f64/dr**2 - 1.0_f64/(2.0_f64*dr*r)
-        solver%mat(3*(i-1)-1,j) =  2.0_f64/dr**2 + (k/r)**2
-        solver%mat(3*(i-1)-2,j) = -1.0_f64/dr**2 + 1.0_f64/(2.0_f64*dr*r)
+        inv_r = 1.0_f64 / (rmin + (i-1)*dr)
+        solver%mat(3*(i-1)  ,j) =        -inv_dr**2 - 0.5_f64*inv_dr*inv_r
+        solver%mat(3*(i-1)-1,j) = 2.0_f64*inv_dr**2 + (k*inv_r)**2
+        solver%mat(3*(i-1)-2,j) =        -inv_dr**2 + 0.5_f64*inv_dr*inv_r
       end do
 
       ! Set boundary condition at rmin
@@ -241,34 +261,13 @@ contains
 
 
   !=============================================================================
-  !>delete a sll_t_poisson_2d_polar_par object
-  subroutine delete_poisson_polar( solver )
-    type(sll_t_poisson_2d_polar_par), pointer :: solver !< Poisson solver object
-
-    sll_int32 :: err
-
-    if (associated(solver)) then
-       call sll_s_fft_free(solver%fw)
-       call sll_s_fft_free(solver%bw)
-       SLL_DEALLOCATE_ARRAY(solver%fk,err)
-       SLL_DEALLOCATE_ARRAY(solver%phik,err)
-       SLL_DEALLOCATE_ARRAY(solver%mat,err)
-       SLL_DEALLOCATE_ARRAY(solver%cts,err)
-       SLL_DEALLOCATE_ARRAY(solver%ipiv,err)
-       SLL_DEALLOCATE(solver,err)
-    end if
-
-  end subroutine delete_poisson_polar
-
-
-  !=============================================================================
-  !> sll_o_solve the Poisson equation and get the potential
+  !> Solve the Poisson equation and get the electrostatic potential
   subroutine sll_s_poisson_2d_polar_par_solve( solver, rhs, phi )
-    type(sll_t_poisson_2d_polar_par) , intent(inout) :: solver !< Poisson solver object
-    sll_real64, dimension(:,:), intent(in   ) :: rhs    !< Charge density
-    sll_real64, dimension(:,:), intent(  out) :: phi    !< Potential
+    type(sll_t_poisson_2d_polar_par) , intent(inout) :: solver   !< Solver object
+    sll_real64                       , intent(in   ) :: rhs(:,:) !< Charge density
+    sll_real64                       , intent(  out) :: phi(:,:) !< Potential
 
-    sll_real64 :: rmin, dr
+    sll_real64 :: rmin
     sll_int32  :: nr, ntheta, bc(2)
     sll_int32  :: i, j, k
     sll_int32  :: glob_idx(2)
@@ -276,11 +275,14 @@ contains
     nr     = solver%nr
     ntheta = solver%nt
     rmin   = solver%rmin
-    dr     = solver%dr
     bc     = solver%bc
 
+    ! Consistency check: rho and phi must be given in layout sequential in theta
     call verify_argument_sizes_par( solver%layout_a, rhs )
-    solver%f_a(:,:) = cmplx(rhs, 0_f64, kind=f64)
+    call verify_argument_sizes_par( solver%layout_a, phi )
+
+    ! Copy charge into 2D complex array
+    solver%f_a(:,:) = cmplx( rhs, 0.0_f64, kind=f64 )
 
     ! For each r_i, compute FFT of rho(r_i,theta) to obtain \hat{rho}(r_i,k)
     do i = 1, ubound( solver%f_a, 1 )
@@ -343,8 +345,7 @@ contains
 
     ! Redistribute \hat{phi}(r_i,k_j) into layout global in k
     call sll_o_apply_remap_2d( solver%rmp_ra, solver%f_r, solver%f_a )
-    call verify_argument_sizes_par( solver%layout_a, phi )
-    
+
     ! For each r_i, compute inverse FFT of \hat{phi}(r_i,k) to obtain phi(r_i,theta)
     do i = 1, ubound( solver%f_a, 1 )
       call sll_s_fft_exec_c2c_1d( solver%bw, solver%f_a(i,:), solver%f_a(i,:) )
@@ -352,6 +353,33 @@ contains
     end do
 
   end subroutine sll_s_poisson_2d_polar_par_solve
+
+
+  !=============================================================================
+  !> Delete contents (local storage) of Poisson's solver
+  subroutine sll_s_poisson_2d_polar_par_free( solver )
+    type(sll_t_poisson_2d_polar_par) , intent(inout) :: solver
+
+    call sll_s_fft_free( solver%fw )
+    call sll_s_fft_free( solver%bw )
+
+    deallocate( solver%f_r  )
+    deallocate( solver%f_a  )
+    deallocate( solver%fk   )
+    deallocate( solver%phik )
+    deallocate( solver%mat  )
+    deallocate( solver%cts  )
+    deallocate( solver%ipiv )
+
+    deallocate( solver%rmp_ra )
+    deallocate( solver%rmp_ar )
+
+    solver%layout_r => null()
+    solver%layout_a => null()
+    solver%rmp_ra   => null()
+    solver%rmp_ar   => null()
+
+  end subroutine sll_s_poisson_2d_polar_par_free
 
 
   !=============================================================================
