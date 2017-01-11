@@ -342,12 +342,20 @@ contains
 
     ! Write first line (only line if element is empty)
     if(na>0)then
+#ifdef __PGI
+      write(fid,'(99(a))') &
+#else
       write(fid,'(*(a))') &
+#endif
         repeat( ' ', indent )//'<'//trim( self%name ), & ! element name
         (' '//self%attributes(i)%to_string(), i=1,na), & ! attributes
         trim( closing )                                  ! closing tag
     else
+#ifdef __PGI
+      write(fid,'(99(a))') &
+#else
       write(fid,'(*(a))') &
+#endif
         repeat( ' ', indent )//'<'//trim( self%name ), & ! element name
         trim( closing )                                  ! closing tag
     endif
