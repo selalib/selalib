@@ -38,7 +38,7 @@ module sll_m_fdistribu4d_dk
     sll_f_interpolate_from_interpolant_value, &
     sll_f_interpolate_value_2d, &
     sll_f_new_cubic_spline_1d, &
-    sll_f_new_cubic_spline_2d, &
+    sll_s_init_cubic_spline_2d, &
     sll_t_cubic_spline_1d, &
     sll_t_cubic_spline_2d, &
     sll_o_delete
@@ -372,7 +372,8 @@ module sll_m_fdistribu4d_dk
     Npt1   = size(xgrid_2d,1)
     Npt2   = size(xgrid_2d,2)
 
-    sp2d_rtheta => sll_f_new_cubic_spline_2d(Npt1,Npt2, &
+    call sll_s_init_cubic_spline_2d( sp2d_rtheta, &
+      Npt1,Npt2, &
       r_grid(1),r_grid(Nr), &
       theta_grid(1),theta_grid(Ntheta), &
       sll_p_hermite,sll_p_periodic)

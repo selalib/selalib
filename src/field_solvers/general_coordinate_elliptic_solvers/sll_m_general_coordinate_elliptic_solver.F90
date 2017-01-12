@@ -48,7 +48,7 @@ use sll_m_boundary_condition_descriptors, only: &
 use sll_m_cubic_splines, only:     &
   sll_s_compute_cubic_spline_2d,   &
   sll_s_get_coeff_cubic_spline_2d, &
-  sll_f_new_cubic_spline_2d,       &
+  sll_s_init_cubic_spline_2d,       &
   sll_t_cubic_spline_2d
 
 use sll_m_deboor_splines_1d, only: &
@@ -2568,7 +2568,7 @@ endif
 
 if(es%use_cubic_splines)then
   if(present(rhs_bc1) .and. present(rhs_bc2))then
-  es%cubic_spline => sll_f_new_cubic_spline_2d( &
+  call sll_s_init_cubic_spline_2d( es%cubic_spline, &
     num_cells1+1, &
     num_cells2+1, &
     eta1_min, &
