@@ -19,7 +19,7 @@ program test_cubic_splines
     sll_f_interpolate_x1_derivative_2d, &
     sll_f_interpolate_x2_derivative_2d, &
     sll_f_new_cubic_spline_1d, &
-    sll_f_new_cubic_spline_2d, &
+    sll_s_init_cubic_spline_2d, &
     sll_t_cubic_spline_1d, &
     sll_t_cubic_spline_2d, &
     sll_o_delete
@@ -189,13 +189,13 @@ contains
     
     if (bc == 0) then ! periodic-periodic
        print*, 'Cubic spline 2d, periodic-periodic:'
-       sp2 => sll_f_new_cubic_spline_2d( np1+1, np2+1, &
+       call sll_s_init_cubic_spline_2d( sp2, np1+1, np2+1, &
             xmin, xmax, &
             ymin, ymax, &
             sll_p_periodic, sll_p_periodic)
     elseif (bc == 1) then ! periodic-Hermite
        print*, 'Cubic spline 2d, periodic-periodic:'
-       sp2 => sll_f_new_cubic_spline_2d( np1+1, np2+1, &
+       call sll_s_init_cubic_spline_2d( sp2, np1+1, np2+1, &
             xmin, xmax, &
             ymin, ymax, &
             sll_p_periodic, sll_p_hermite, &
@@ -203,14 +203,14 @@ contains
             x2_max_slopes = deriv_y(:,1) )
     elseif(bc == 2) then ! Hermite-periodic
        print*, 'Cubic spline 2d, periodic-periodic:'
-       sp2 => sll_f_new_cubic_spline_2d( np1+1, np2+1, &
+       call sll_s_init_cubic_spline_2d( sp2, np1+1, np2+1, &
             xmin, xmax, &
             ymin, ymax, &
             sll_p_hermite, sll_p_periodic, &
             x1_min_slopes = deriv_x(1,:), &
             x1_max_slopes = deriv_x(1,:) )
     elseif( bc == 3 ) then ! Hermite-Hermite
-       sp2 => sll_f_new_cubic_spline_2d( np1+1, np2+1, &
+       call sll_s_init_cubic_spline_2d( sp2, np1+1, np2+1, &
             xmin, xmax, &
             ymin, ymax, &
             sll_p_hermite, sll_p_hermite, &

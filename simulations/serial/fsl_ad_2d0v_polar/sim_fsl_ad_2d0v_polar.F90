@@ -14,7 +14,7 @@ program sim_fsl_ad_2d0v_polar
     sll_s_compute_cubic_spline_2d, &
     sll_s_deposit_value_2d, &
     sll_f_interpolate_value_2d, &
-    sll_f_new_cubic_spline_2d, &
+    sll_s_init_cubic_spline_2d, &
     sll_t_cubic_spline_2d
 
   implicit none
@@ -82,22 +82,22 @@ program sim_fsl_ad_2d0v_polar
   SLL_ALLOCATE(diag(10,0:nb_step), err)
 	
   ! creation spline 
-  spl_bsl => sll_f_new_cubic_spline_2d(Nr+1, Ntheta+1, &
+  call sll_s_init_cubic_spline_2d(spl_bsl, Nr+1, Ntheta+1, &
     rmin, rmax, &
     0._f64, 2._f64*sll_p_pi, &
     sll_p_hermite, sll_p_periodic,&
     const_slope_x1_min = 0._f64,const_slope_x1_max = 0._f64)
-  spl_bsl_nc => sll_f_new_cubic_spline_2d(Nr+1, Ntheta+1, &
+  call sll_s_init_cubic_spline_2d(spl_bsl_nc, Nr+1, Ntheta+1, &
     rmin, rmax, &
     0._f64, 2._f64*sll_p_pi, &
     sll_p_hermite, sll_p_periodic,&
     const_slope_x1_min = 0._f64,const_slope_x1_max = 0._f64)
-  spl_fsl => sll_f_new_cubic_spline_2d(Nr+1, Ntheta+1, &
+  call sll_s_init_cubic_spline_2d(spl_fsl, Nr+1, Ntheta+1, &
     rmin, rmax, &
     0._f64, 2._f64*sll_p_pi, &
     sll_p_hermite, sll_p_periodic,&
     const_slope_x1_min = 0._f64,const_slope_x1_max = 0._f64)
-  spl_fsl_nc => sll_f_new_cubic_spline_2d(Nr+1, Ntheta+1, &
+  call sll_s_init_cubic_spline_2d(spl_fsl_nc, Nr+1, Ntheta+1, &
     rmin, rmax, &
     0._f64, 2._f64*sll_p_pi, &
     sll_p_hermite, sll_p_periodic,&
