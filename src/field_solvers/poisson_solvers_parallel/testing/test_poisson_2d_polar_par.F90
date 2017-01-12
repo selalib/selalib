@@ -1,230 +1,304 @@
-program test_poisson_polar_parallel
+program test_poisson_2d_polar_par
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-#include "sll_memory.h"
 #include "sll_working_precision.h"
 
   use iso_fortran_env, only: &
     output_unit
 
-  use sll_m_boundary_condition_descriptors, only: &
-    sll_p_dirichlet
-
-  use sll_m_collective, only: &
-    sll_s_boot_collective, &
-    sll_f_get_collective_rank, &
-    sll_f_get_collective_size, &
-    sll_s_halt_collective, &
-    sll_v_world_collective
-
   use sll_m_constants, only: &
     sll_p_pi
-
-  use sll_m_gnuplot_parallel, only: &
-    sll_o_gnuplot_2d_parallel
 
   use sll_m_poisson_2d_polar_par, only: &
     sll_t_poisson_2d_polar_par, &
     sll_s_poisson_2d_polar_par_init, &
     sll_s_poisson_2d_polar_par_solve
 
+  use m_test_case_poisson_2d_base, only: &
+    c_test_case_poisson_2d_polar
+
+  use m_test_case_poisson_2d_dirichlet, only: &
+    t_test_dirichlet_zero_error, &
+    t_test_dirichlet
+
+  use m_test_case_poisson_2d_neumann_mode0, only: &
+    t_test_neumann_mode0_zero_error
+
+  use sll_m_boundary_condition_descriptors, only: &
+    sll_p_dirichlet, &
+    sll_p_neumann, &
+    sll_p_neumann_mode_0
+
+  use sll_m_collective, only: &
+    sll_t_collective_t, &
+    sll_s_boot_collective, &
+    sll_f_get_collective_rank, &
+    sll_f_get_collective_size, &
+    sll_o_collective_gather, &
+    sll_o_collective_bcast, &
+    sll_s_collective_barrier, &
+    sll_s_halt_collective, &
+    sll_v_world_collective
+
   use sll_m_remapper, only: &
-    sll_o_compute_local_sizes, &
     sll_o_initialize_layout_with_distributed_array, &
-    sll_t_layout_2d, &
+    sll_o_compute_local_sizes, &
     sll_o_local_to_global, &
     sll_f_new_layout_2d, &
-    sll_o_view_lims
+    sll_t_layout_2d
 
   implicit none
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
-  type(sll_t_poisson_2d_polar_par) :: poisson
-  sll_real64, allocatable :: rhs(:,:)
-  sll_real64, allocatable :: phi(:,:)
-  sll_real64, allocatable :: phi_cos(:,:)
-  sll_real64, allocatable :: phi_sin(:,:)
-  sll_real64, allocatable :: r(:)
-  sll_real64, allocatable :: a(:)
-  sll_real64, allocatable :: x(:,:)
-  sll_real64, allocatable :: y(:,:)
+  type(t_test_dirichlet_zero_error) :: test_case_dirichlet_zero_error
+  type(t_test_dirichlet) :: test_case_dirichlet
+  type(t_test_neumann_mode0_zero_error) :: test_case_neumann_mode0_zero_error
 
-  type(sll_t_layout_2d), pointer :: layout_r ! sequential in r direction
-  type(sll_t_layout_2d), pointer :: layout_a ! sequential in theta direction
+  ! For MPI
+  type(sll_t_collective_t), pointer :: comm
+  sll_int32  :: my_rank
+  sll_int32  :: nr
+  sll_int32  :: nth
+  sll_real64 :: error_norm
+  sll_real64 :: tol
 
-  sll_int32 :: global(2)
-  sll_int32 :: gi, gj
-  sll_int32 :: i, j
-  sll_int32 :: nr, na
-  sll_real64 :: rmin, rmax
-  sll_real64 :: delta_r, delta_a
-  sll_int32 :: error
-  sll_int32 :: psize
-  sll_int32 :: prank
-  sll_int32 :: nr_loc
-  sll_int32 :: na_loc
+  logical :: success
 
-  sll_int32, parameter  :: n = 4
-
-  write(*,'(a)') 'Testing the 2D Poisson solver in polar coordinates'
-
-  rmin   = 1.0_f64
-  rmax   = 2.0_f64
-
-  ! Number of cells along r and theta
-  nr = 32 !256
-  na = 64 !1024
-
-  delta_r = (rmax-rmin)/real( nr, f64 )
-  delta_a = 2.0_f64*sll_p_pi/real( na, f64 )
-
-  !Boot parallel environment
   call sll_s_boot_collective()
+  comm => sll_v_world_collective
+  my_rank = sll_f_get_collective_rank( comm )
 
-  psize = sll_f_get_collective_size(sll_v_world_collective)
-  prank = sll_f_get_collective_rank(sll_v_world_collective)
+  success = .true.
 
-  layout_r => sll_f_new_layout_2d( sll_v_world_collective )
-  layout_a => sll_f_new_layout_2d( sll_v_world_collective )
+  !=============================================================================
+  ! TEST #1: Dirichlet, solver should be exact
+  !=============================================================================
+  nr  = 64
+  nth = 32
+  tol = 1.0e-11_f64
 
-  call sll_o_initialize_layout_with_distributed_array( nr+1, na, 1, psize, layout_r )
-  call sll_o_initialize_layout_with_distributed_array( nr+1, na, psize, 1, layout_a )
+  ! Define test case
+  test_case_dirichlet_zero_error%rmin = 1.0_f64
+  test_case_dirichlet_zero_error%rmax = 2.0_f64
+  test_case_dirichlet_zero_error%bc_rmin = sll_p_dirichlet
+  test_case_dirichlet_zero_error%bc_rmax = sll_p_dirichlet
 
-  flush( output_unit )
+  call run_test( comm, test_case_dirichlet_zero_error, nr, nth, error_norm )
 
-  if (prank == 0) then
-    call sll_o_view_lims(layout_a)
-    call sll_o_view_lims(layout_a)
+  ! Write relative error norm (global) to standard output
+  if (my_rank == 0) then
+    write(*,"(/a)") "--- TEST 1 ---"
+    write(*,"(a,e11.3)") "Relative L_inf norm of error = ", error_norm
+    write(*,"(a,e11.3)") "Tolerance                    = ", tol
+    if (error_norm > tol) then
+      success = .false.
+      write(*,"(a)") "!!! FAILED !!!"
+    end if
   end if
 
-  flush( output_unit )
+  !=============================================================================
+  ! TEST #2: Dirichlet, cubic profile
+  !=============================================================================
+  nr  = 64
+  nth = 32
+  tol = 1.0e-4_f64
 
-  call sll_o_compute_local_sizes( layout_a, nr_loc, na_loc )
+  ! Define test case
+  test_case_dirichlet%rmin = 1.0_f64
+  test_case_dirichlet%rmax = 2.0_f64
+  test_case_dirichlet%bc_rmin = sll_p_dirichlet
+  test_case_dirichlet%bc_rmax = sll_p_dirichlet
 
-  allocate( rhs(1:nr_loc,1:na_loc) )
-  allocate( phi(1:nr_loc,1:na_loc) )
-  allocate( phi_cos(1:nr_loc,1:na_loc) )
-  allocate( phi_sin(1:nr_loc,1:na_loc) )
-  allocate( r(1:nr_loc) )
-  allocate( a(1:na_loc) )
-  allocate( x(1:nr_loc,1:na_loc) )
-  allocate( y(1:nr_loc,1:na_loc) )
+  call run_test( comm, test_case_dirichlet, nr, nth, error_norm )
 
-  do i = 1, nr_loc
-    global = sll_o_local_to_global( layout_a, (/i, 1/))
-    gi = global(1)
-    r(i) = rmin+(gi-1)*delta_r
-  end do
+  ! Write relative error norm (global) to standard output
+  if (my_rank == 0) then
+    write(*,"(/a)") "--- TEST 2 ---"
+    write(*,"(a,e11.3)") "Relative L_inf norm of error = ", error_norm
+    write(*,"(a,e11.3)") "Tolerance                    = ", tol
+    if (error_norm > tol) then
+      success = .false.
+      write(*,"(a)") "!!! FAILED !!!"
+    end if
+ end if
 
-  do j = 1, na_loc
-    global = sll_o_local_to_global( layout_a, (/1, j/))
-    gj = global(2)
-    a(j) = (gj-1)*delta_a
-  end do
+  !=============================================================================
+  ! TEST #3: Neumann mode 0, solver should be exact
+  !=============================================================================
+  nr  = 64
+  nth = 32
+  tol = 1.0e-11_f64
 
-  do j=1,na_loc
-     do i=1,nr_loc
-       phi_cos(i,j) = (r(i)-rmin)*(r(i)-rmax)*cos(n*a(j))*r(i)
-       phi_sin(i,j) = (r(i)-rmin)*(r(i)-rmax)*sin(n*a(j))*r(i)
-       x(i,j) = r(i)*cos(a(j))
-       y(i,j) = r(i)*sin(a(j))
-     end do
-  end do
+  ! Define test case
+  test_case_neumann_mode0_zero_error%rmin = 1.0_f64
+  test_case_neumann_mode0_zero_error%rmax = 2.0_f64
+  test_case_neumann_mode0_zero_error%bc_rmin = sll_p_neumann_mode_0
+  test_case_neumann_mode0_zero_error%bc_rmax = sll_p_dirichlet
 
-  call sll_s_poisson_2d_polar_par_init( solver = poisson, &
-       layout_r = layout_r, &
-       layout_a = layout_a, &
-       rmin = rmin, &
-       rmax = rmax, &
-       nr     = nr, &
-       ntheta = na, &
-       bc_rmin = sll_p_dirichlet, &
-       bc_rmax = sll_p_dirichlet )
+  call run_test( comm, test_case_neumann_mode0_zero_error, nr, nth, error_norm )
 
-  ! Test with sin
-  !--------------
-  do i= 1, nr_loc
-     do j = 1, na_loc
-       rhs(i,j) = -rhs_sin( r(i), a(j) )
-     end do
-  end do
-  call sll_s_poisson_2d_polar_par_solve(poisson, rhs, phi)
-  call sll_o_gnuplot_2d_parallel( x, y, phi_sin, 'phi_sin_ex',  1, error )
-  call sll_o_gnuplot_2d_parallel( x, y, phi    , 'phi_sin'    , 1, error )
-  call error_max( phi, phi_sin, 1e-4_f64 )
+  ! Write relative error norm (global) to standard output
+  if (my_rank == 0) then
+    write(*,"(/a)") "--- TEST 3 ---"
+    write(*,"(a,e11.3)") "Relative L_inf norm of error = ", error_norm
+    write(*,"(a,e11.3)") "Tolerance                    = ", tol
+    if (error_norm > tol) then
+      success = .false.
+      write(*,"(a/)") "!!! FAILED !!!"
+    end if
+  end if
 
-  ! Test with cos
-  !--------------
-  do i= 1, nr_loc
-     do j = 1, na_loc
-       rhs(i,j) = -rhs_cos( r(i), a(j) )
-     end do
-  end do
-  call sll_s_poisson_2d_polar_par_solve(poisson, rhs, phi)
-  call sll_o_gnuplot_2d_parallel( x, y, phi_cos, 'phi_cos_ex',  1, error )
-  call sll_o_gnuplot_2d_parallel( x, y, phi    , 'phi_cos'    , 1, error )
-  call error_max( phi, phi_cos, 1e-4_f64 )
+  ! Check if test passed
+  if (my_rank == 0) then
+    if(success) then
+       write(*,"(/a/)") "--- PASSED ---"
+    endif
+  endif
 
   call sll_s_halt_collective()
 
+!<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 contains
+!<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
-  subroutine error_max(phi, phi_exact, tolmax)
+  subroutine run_test( comm, test_case, nr, nth, error_norm )
+    type(sll_t_collective_t), pointer :: comm
+    class(c_test_case_poisson_2d_polar), intent(in) :: test_case
+    sll_int32, intent(in) :: nr
+    sll_int32, intent(in) :: nth
+    sll_real64, intent(out) :: error_norm
 
-    sll_real64, intent(in), dimension(:,:) :: phi
-    sll_real64, intent(in), dimension(:,:) :: phi_exact
-    sll_real64 :: errmax, tolmax
+    type(sll_t_poisson_2d_polar_par) :: solver
+    sll_real64 :: max_phi
+    sll_real64 :: max_err
 
-    errmax = maxval(abs(phi-phi_exact))
-    write(*,'(a,e10.3)') 'maximum error = ', errmax
-    if ( errmax > tolmax ) then
-      write(*,'(a)') 'FAILED'
-    else
-      write(*,'(a)') 'PASSED'
+    sll_real64 ::  r,  th
+    sll_real64 :: dr, dth
+    sll_int32 :: i, j
+    sll_int32 :: num_proc
+    sll_int32 :: loc_sz_r(2)
+    sll_int32 :: loc_sz_a(2)
+    sll_int32 :: glob_idx(2)
+
+    sll_real64, allocatable :: rhs   (:,:)
+    sll_real64, allocatable :: phi_ex(:,:)
+    sll_real64, allocatable :: phi   (:,:)
+
+    type(sll_t_layout_2d), pointer :: layout_r
+    type(sll_t_layout_2d), pointer :: layout_a
+
+    ! Computational grid
+    dr  = (test_case%rmax - test_case%rmin) / nr
+    dth = 2.0_f64*sll_p_pi / nth
+
+    ! Get number of available processes
+    num_proc = sll_f_get_collective_size( comm )
+
+    ! Create 2D layout sequential in r (distributed along theta)
+    layout_r => sll_f_new_layout_2d( comm )
+    call sll_o_initialize_layout_with_distributed_array( &
+      nr+1, &
+      nth , &
+      1, &
+      num_proc, &
+      layout_r )
+
+    ! Create 2D layout sequential in theta (distributed along r)
+    layout_a => sll_f_new_layout_2d( comm )
+    call sll_o_initialize_layout_with_distributed_array( &
+      nr+1, &
+      nth , &
+      num_proc, &
+      1, &
+      layout_a )
+
+    ! Compute local size of 2D arrays in the two layouts
+    call sll_o_compute_local_sizes( layout_r, loc_sz_r(1), loc_sz_r(2) )
+    call sll_o_compute_local_sizes( layout_a, loc_sz_a(1), loc_sz_a(2) )
+
+    ! Allocate 2D distributed arrays (rho, phi, phi_ex) with layout_a
+    allocate( rhs   (loc_sz_a(1),loc_sz_a(2)) )
+    allocate( phi_ex(loc_sz_a(1),loc_sz_a(2)) )
+    allocate( phi   (loc_sz_a(1),loc_sz_a(2)) )
+
+    ! Load analytical solution and rhs
+    do j = 1, loc_sz_a(2)
+      th = (j-1)*dth
+      do i = 1, loc_sz_a(1)
+        glob_idx(:) = sll_o_local_to_global( layout_a, [i,j] )
+        r = test_case%rmin + (glob_idx(1)-1)*dr
+        phi_ex(i,j) = test_case%phi_ex( r, th )
+        rhs   (i,j) = test_case%rhs   ( r, th )
+      end do
+    end do
+    phi(:,:) = 0.0_f64
+
+    ! Initialize parallel solver
+    call sll_s_poisson_2d_polar_par_init( solver, &
+      layout_r = layout_r, &
+      layout_a = layout_a, &
+      rmin     = test_case%rmin, &
+      rmax     = test_case%rmax, &
+      nr       = nr, &
+      ntheta   = nth, &
+      bc_rmin  = test_case%bc_rmin , &
+      bc_rmax  = test_case%bc_rmax )
+
+    ! Compute numerical phi for a given rhs
+    call sll_s_poisson_2d_polar_par_solve( solver, rhs, phi )
+
+    ! Compute (local) maximum norms of phi_ex and error
+    max_phi = maxval(abs( phi_ex ))
+    max_err = maxval(abs( phi_ex-phi ))
+
+    ! Exchange norms across processes to obtain global norms
+    call s_compute_collective_max( comm, max_phi )
+    call s_compute_collective_max( comm, max_err )
+
+    ! Global relative error in maximum norm
+    error_norm = max_err / max_phi
+
+  end subroutine run_test
+
+
+  !-----------------------------------------------------------------------------
+  subroutine s_compute_collective_max( comm, v )
+    type(sll_t_collective_t), pointer       :: comm
+    sll_real64              , intent(inout) :: v
+
+    sll_int32               :: np
+    sll_int32               :: my_rank
+    sll_real64              :: send_buf(1)
+    sll_real64, allocatable :: recv_buf(:)
+
+    ! Get information about parallel job
+    np      = sll_f_get_collective_size( comm )
+    my_rank = sll_f_get_collective_rank( comm )
+
+    ! Write in/out variable to sender buffer
+    send_buf(1) = v
+
+    ! [ROOT only] Prepare receiver buffer
+    if (my_rank == 0) then
+      allocate( recv_buf(np) )
     end if
 
-    print *, maxloc( abs( phi-phi_exact ) )
+    ! Send v values to ROOT
+    call sll_o_collective_gather( comm, send_buf, 1, 0, recv_buf )
 
-  end subroutine error_max
+    ! [ROOT only] Compute maximum of v values and prepare send buffer
+    if (my_rank == 0) then
+      send_buf(1) = maxval( recv_buf(:) )
+      deallocate( recv_buf )
+    end if
+
+    ! Send maximum to all processes
+    call sll_o_collective_bcast( comm, send_buf, 1, 0 )
+
+    ! Write result to in/out variable
+    v = send_buf(1)
+
+  end subroutine s_compute_collective_max
+  !-----------------------------------------------------------------------------
 
 
-  sll_real64 function rhs_cos( r, theta )
-
-    ! Assume r>=1 and r<=2
-    ! phi = r*(r-rmin)*(r-rmax)*cos(n*theta)
-    ! return: d2phi_dr + d1phi_dr/r + d2phi_dtheta/r^2
-
-    sll_real64 :: r, theta
-    sll_real64 :: d1phi_dr, d2phi_dr, d2phi_dtheta
-
-    d1phi_dr = cos(n*theta)*(3.0_f64*r**2-2.0_f64*(rmin+rmax)*r+rmin*rmax)
-    d2phi_dr = cos(n*theta)*(6.0_f64*r-2.0_f64*(rmin+rmax))
-    d2phi_dtheta = -r*(r-rmin)*(r-rmax)*n**2*cos(n*theta)
-
-    rhs_cos = d2phi_dr + d1phi_dr/r + d2phi_dtheta/r**2
-
-!    rhs_cos = - (r-rmax)*(r-rmin)*n**2*cos(n*theta)/r &
-!              + ((r-rmax)*(r-rmin)*cos(n*theta)  &
-!              + (r-rmax)*r*cos(n*theta) + (r-rmin)*r*cos(n*theta) &
-!              + 2.0_f64*((r-rmax)*cos(n*theta) + (r-rmin)*cos(n*theta) &
-!              + r*cos(n*theta))*r)/r
-
-  end function rhs_cos
-
-  sll_real64 function rhs_sin( r, theta)
-
-    ! Assume r>=1 and r<=2
-    ! phi = r*(r-rmin)*(r-rmax)*sin(n*theta)
-    ! return: d2phi_dr + d1phi_dr/r + d2phi_dtheta/r^2
-
-    sll_real64 :: r, theta
-    sll_real64 :: d1phi_dr, d2phi_dr, d2phi_dtheta
-
-    d1phi_dr = sin(n*theta)*(3.0_f64*r**2-2.0_f64*(rmin+rmax)*r+rmin*rmax)
-    d2phi_dr = sin(n*theta)*(6.0_f64*r-2.0_f64*(rmin+rmax))
-    d2phi_dtheta = -r*(r-rmin)*(r-rmax)*n**2*sin(n*theta)
-
-    rhs_sin = d2phi_dr + d1phi_dr/r + d2phi_dtheta/r**2
-
-  end function rhs_sin
-
-end program test_poisson_polar_parallel
+end program test_poisson_2d_polar_par
