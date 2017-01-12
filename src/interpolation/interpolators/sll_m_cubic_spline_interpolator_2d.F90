@@ -41,7 +41,7 @@ module sll_m_cubic_spline_interpolator_2d
     sll_f_interpolate_value_2d, &
     sll_f_interpolate_x1_derivative_2d, &
     sll_f_interpolate_x2_derivative_2d, &
-    sll_f_new_cubic_spline_2d, &
+    sll_s_init_cubic_spline_2d, &
     sll_t_cubic_spline_2d, &
     sll_o_delete
 
@@ -71,7 +71,7 @@ module sll_m_cubic_spline_interpolator_2d
     !> PLEASE ADD DOCUMENTATION
      sll_int32                           :: npts2
     !> PLEASE ADD DOCUMENTATION
-     type(sll_t_cubic_spline_2d), pointer  :: spline
+     type(sll_t_cubic_spline_2d), pointer :: spline
     !> PLEASE ADD DOCUMENTATION
      sll_int32                           :: bc_type1
     !> PLEASE ADD DOCUMENTATION
@@ -234,7 +234,8 @@ contains
     interpolator%npts2 = npts2
     interpolator%bc_type1 = eta1_bc_type
     interpolator%bc_type2 = eta2_bc_type
-    interpolator%spline => sll_f_new_cubic_spline_2d( &
+    call sll_s_init_cubic_spline_2d( &
+         interpolator%spline, &
          npts1, &
          npts2, &
          eta1_min, &

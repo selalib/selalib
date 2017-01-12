@@ -14,7 +14,7 @@ program sim_fsl_ad_2d0v_curv
     sll_s_compute_cubic_spline_2d, &
     sll_s_deposit_value_2d, &
     sll_f_interpolate_value_2d, &
-    sll_f_new_cubic_spline_2d, &
+    sll_s_init_cubic_spline_2d, &
     sll_t_cubic_spline_2d
 
   implicit none
@@ -186,19 +186,19 @@ program sim_fsl_ad_2d0v_curv
   SLL_ALLOCATE(diag(10,0:nb_step), err)
 	
   ! creation of the splines
-  spl_bsl => sll_f_new_cubic_spline_2d(Neta1+1, Neta2+1, &
+  call sll_s_init_cubic_spline_2d(spl_bsl, Neta1+1, Neta2+1, &
     eta1_min, eta1_max, &
     0._f64, 2._f64*sll_p_pi, &
     bc1_type, bc2_type)
-  spl_bsl_nc => sll_f_new_cubic_spline_2d(Neta1+1, Neta2+1, &
+  call sll_s_init_cubic_spline_2d(spl_bsl_nc, Neta1+1, Neta2+1, &
     eta1_min, eta1_max, &
     0._f64, 2._f64*sll_p_pi, &
     bc1_type, bc2_type)
-  spl_fsl => sll_f_new_cubic_spline_2d(Neta1+1, Neta2+1, &
+  call sll_s_init_cubic_spline_2d(spl_fsl, Neta1+1, Neta2+1, &
     eta1_min, eta1_max, &
     0._f64, 2._f64*sll_p_pi, &
     bc1_type, bc2_type)
-  spl_fsl_nc => sll_f_new_cubic_spline_2d(Neta1+1, Neta2+1, &
+  call sll_s_init_cubic_spline_2d(spl_fsl_nc, Neta1+1, Neta2+1, &
     eta1_min, eta1_max, &
     0._f64, 2._f64*sll_p_pi, &
     bc1_type, bc2_type)

@@ -227,24 +227,26 @@ call sll_s_fft_init_c2c_1d(fsl_bw, n,    tmp,    tmp,    sll_p_fft_backward)
 
 spl_1d => sll_f_new_cubic_spline_1d( n+1, eta_min, eta_max, sll_p_periodic )
 
-spl_2d_f => sll_f_new_cubic_spline_2d( n+1,            &
-                                       n+1,            &
-                                       eta_min,        &
-                                       eta_max,        &
-                                       eta_min,        &
-                                       eta_max,        &
-                                       sll_p_periodic, &
-                                       sll_p_periodic)
+call sll_s_init_cubic_spline_2d( spl_2d_f,       &
+                                 n+1,            &
+                                 n+1,            &
+                                 eta_min,        &
+                                 eta_max,        &
+                                 eta_min,        &
+                                 eta_max,        &
+                                 sll_p_periodic, &
+                                 sll_p_periodic)
 !$OMP MASTER
 print*,"# nthreads     = ", nt
-spl_2d => sll_f_new_cubic_spline_2d( n+1,            &
-                                     n+1,            &
-                                     eta_min,        &
-                                     eta_max,        &
-                                     eta_min,        &
-                                     eta_max,        &
-                                     sll_p_periodic, &
-                                     sll_p_periodic)
+call sll_s_init_cubic_spline_2d( spl_2d,         &
+                                 n+1,            &
+                                 n+1,            &
+                                 eta_min,        &
+                                 eta_max,        &
+                                 eta_min,        &
+                                 eta_max,        &
+                                 sll_p_periodic, &
+                                 sll_p_periodic)
 !$OMP END MASTER
 
 
