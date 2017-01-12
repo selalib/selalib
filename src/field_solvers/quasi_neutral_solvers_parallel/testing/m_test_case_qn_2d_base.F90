@@ -1,4 +1,4 @@
-module m_test_case_2d_base
+module m_test_case_qn_2d_base
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_working_precision.h"
 
@@ -106,4 +106,4 @@ contains
   end function f_test_case__rhs
 
   
-end module m_test_case_2d_base
+end module m_test_case_qn_2d_base
