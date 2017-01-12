@@ -140,12 +140,10 @@ module sll_m_sim_bsl_gk_3d1v_polar_one_mu
     sll_p_lagrange, &
     sll_p_spline
 
-  use sll_m_poisson_2d_base, only: &
-    sll_c_poisson_2d_base
-
-  use sll_m_poisson_2d_polar, only: &
-    sll_f_new_poisson_2d_polar, &
-    sll_p_poisson_drift_kinetic
+  use sll_m_qn_solver_2d_polar, only: &
+    sll_t_qn_solver_2d_polar, &
+    sll_s_qn_solver_2d_polar_init, &
+    sll_s_qn_solver_2d_polar_solve
 
   use sll_m_qn_2d_polar, only: &
     sll_s_initialize_mu_quadr_for_phi
@@ -336,8 +334,7 @@ module sll_m_sim_bsl_gk_3d1v_polar_one_mu
     class(sll_c_gyroaverage_2d_base), pointer :: gyroaverage
     class(sll_t_qn_2d_polar_splines_solver), pointer :: qn
 
-    class(sll_c_poisson_2d_base), pointer   :: poisson2d
-    class(sll_c_poisson_2d_base), pointer   :: poisson2d_mean
+    type(sll_t_qn_solver_2d_polar) :: poisson2d
 
 
     !for computing advection field from phi
@@ -708,23 +705,19 @@ contains
           tmp_r(i,1) = 1._f64/sim%Te_r(i)
         enddo  
         
-        sim%poisson2d_mean =>sll_f_new_poisson_2d_polar( &
-          sim%m_x1%eta_min, &
-          sim%m_x1%eta_max, &
-          sim%m_x1%num_cells, &
-          sim%m_x2%num_cells, &
-          poisson2d_BC)
+        call sll_s_qn_solver_2d_polar_init( sim%poisson2d, &
+          rmin = sim%m_x1%eta_min, &
+          rmax = sim%m_x1%eta_max, &
+          nr = sim%m_x1%num_cells, &
+          ntheta = sim%m_x2%num_cells, &
+          bc_rmin = poisson2d_BC(1), &
+          bc_rmax = poisson2d_BC(2), &
+          rho_m0 = sim%n0_r(:), &
+          b_magn = [(1.0_f64, i=1,sim%m_x1%num_cells+1)], &
+          lambda = sqrt( sim%Te_r(:)/sim%n0_r(:) ), &
+          use_zonal_flow = .false., &
+          epsilon_0 = 1.0_f64 )
 
-        sim%poisson2d =>sll_f_new_poisson_2d_polar( &
-          sim%m_x1%eta_min, &
-          sim%m_x1%eta_max, &
-          sim%m_x1%num_cells, &
-          sim%m_x2%num_cells, &
-          poisson2d_BC, &
-          dlog_density=sim%dlog_density_r, &
-          inv_Te=tmp_r(1:num_cells_x1+1,1), &
-          poisson_case=sll_p_poisson_drift_kinetic)
-          
       case default
         print *,'#bad poisson2d_case',poisson2d_case
         print *,'#not implemented'
@@ -2191,6 +2184,7 @@ subroutine gyroaverage_phi_dk( sim )
 
     
     select case (sim%QN_case)
+
       case (SLL_NO_QUASI_NEUTRAL)
       ! no quasi neutral solver as in CRPP-CONF-2001-069
         call sll_o_compute_local_sizes( &
@@ -2220,6 +2214,7 @@ subroutine gyroaverage_phi_dk( sim )
           sim%remap_plan_seqx3_to_seqx1x2, &
           sim%phi3d_seqx3, &
           sim%phi3d_seqx1x2 )  
+
       case (SLL_QUASI_NEUTRAL_WITHOUT_ZONAL_FLOW)
         call sll_o_compute_local_sizes( &
           sim%layout3d_seqx1x2, &
@@ -2230,25 +2225,33 @@ subroutine gyroaverage_phi_dk( sim )
         do iloc2=1, loc3d_sz_x2
           do iloc1=1, loc3d_sz_x1
             sim%phi3d_seqx1x2(iloc1,iloc2,:) = &
-              sim%rho3d_seqx1x2(iloc1,iloc2,:)/sim%n0_r(iloc1)-1._f64
+              sim%rho3d_seqx1x2(iloc1,iloc2,:) - sim%n0_r(iloc1)
           enddo
         enddo
+
         do iloc3=1, loc3d_sz_x3
-          call sim%poisson2d%compute_phi_from_rho( &
-            sim%phi3d_seqx1x2(:,:,iloc3), &
-            sim%phi3d_seqx1x2(:,:,iloc3) )
+           call sll_s_qn_solver_2d_polar_solve( sim%poisson2d, &
+             sim%phi3d_seqx1x2(:,1:loc3d_sz_x2-1,iloc3), &
+             sim%phi3d_seqx1x2(:,1:loc3d_sz_x2-1,iloc3) )
         enddo
+
+        ! Added to enforce periodic boundary conditions in theta
+        sim%phi3d_seqx1x2(:,loc3d_sz_x2,:) = sim%phi3d_seqx1x2(:,1,:)
+
         call sll_o_apply_remap_3d( &
           sim%remap_plan_seqx1x2_to_seqx3, &
           sim%phi3d_seqx1x2, &
           sim%phi3d_seqx3 )            
+
       case (SLL_QUASI_NEUTRAL_WITH_ZONAL_FLOW)
         print *,'#SLL_QUASI_NEUTRAL_WITH_ZONAL_FLOW'
         print *,'#not implemented yet '
         stop      
+
       case default
         print *,'#bad value for sim%QN_case'
         stop  
+
     end select        
   
   end subroutine solve_quasi_neutral
@@ -2270,6 +2273,7 @@ subroutine gyroaverage_phi_dk( sim )
     nc_x2 = sim%m_x2%num_cells
 
     select case (sim%QN_case)
+
       case (SLL_NO_QUASI_NEUTRAL)
       ! no quasi neutral solver as in CRPP-CONF-2001-069
         call sll_o_compute_local_sizes( &
@@ -2300,7 +2304,6 @@ subroutine gyroaverage_phi_dk( sim )
           sim%phi3d_seqx3, &
           sim%phi3d_seqx1x2 )  
           
-          
       case (SLL_QUASI_NEUTRAL_WITHOUT_ZONAL_FLOW)
         call sll_o_compute_local_sizes( &
           sim%layout3d_seqx1x2, &
@@ -2320,7 +2323,7 @@ subroutine gyroaverage_phi_dk( sim )
          do iloc2=1, loc3d_sz_x2
             do iloc1=1, loc3d_sz_x1
                sim%phi3d_seqx1x2(iloc1,iloc2,:) = &
-                    sim%rho3d_seqx1x2(iloc1,iloc2,:)/sim%n0_r(iloc1)-1._f64
+                    sim%rho3d_seqx1x2(iloc1,iloc2,:) - sim%n0_r(iloc1)
             enddo
          enddo
          
@@ -2338,33 +2341,29 @@ subroutine gyroaverage_phi_dk( sim )
         
         do iloc2=1, loc3d_sz_x2
           do iloc1=1, loc3d_sz_x1
-             sim%phi3d_seqx1x2(iloc1,iloc2,:) = &
-                  sim%rho3d_seqx1x2(iloc1,iloc2,:)/sim%n0_r(iloc1)
+             sim%phi3d_seqx1x2(iloc1,iloc2,:) = sim%rho3d_seqx1x2(iloc1,iloc2,:)
           enddo
        enddo
        
     case default
        print *,'#bad value for sim%delta_n_method'
        stop  
+
     end select
     
-    
-    
-    
-    
     do iloc3=1, loc3d_sz_x3
-       call sim%poisson2d%compute_phi_from_rho( &
-            sim%phi3d_seqx1x2(:,:,iloc3), &
-            sim%phi3d_seqx1x2(:,:,iloc3) )
+       call sll_s_qn_solver_2d_polar_solve( sim%poisson2d, &
+         sim%phi3d_seqx1x2(:,1:loc3d_sz_x2-1,iloc3), &
+         sim%phi3d_seqx1x2(:,1:loc3d_sz_x2-1,iloc3) )
     enddo
+
+    ! Added to enforce periodic boundary conditions in theta
+    sim%phi3d_seqx1x2(:,loc3d_sz_x2,:) = sim%phi3d_seqx1x2(:,1,:)
+
     call sll_o_apply_remap_3d( &
           sim%remap_plan_seqx1x2_to_seqx3, &
           sim%phi3d_seqx1x2, &
           sim%phi3d_seqx3 )
-          
-          
-          
-          
 
  case (SLL_QUASI_NEUTRAL_WITHOUT_ZONAL_FLOW_PADE_EPSILON)
  
