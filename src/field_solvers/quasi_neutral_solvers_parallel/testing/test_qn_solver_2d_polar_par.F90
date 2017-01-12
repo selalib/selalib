@@ -13,13 +13,13 @@ program test_qn_solver_2d_polar_par
     sll_s_qn_solver_2d_polar_par_init, &
     sll_s_qn_solver_2d_polar_par_solve
 
-  use m_test_case_2d_base, only: &
+  use m_test_case_qn_2d_base, only: &
     c_test_case_qn_solver_2d_polar
 
-  use m_test_case_2d_dirichlet_1, only: &
+  use m_test_case_qn_2d_dirichlet, only: &
     t_test_dirichlet_zero_error
 
-  use m_test_case_2d_neumann_mode0, only: &
+  use m_test_case_qn_2d_neumann_mode0, only: &
     t_test_neumann_mode0_zero_error
 
   use sll_m_boundary_condition_descriptors, only: &
@@ -78,7 +78,7 @@ program test_qn_solver_2d_polar_par
   test_case_dirichlet%rmin                = 1.0_f64
   test_case_dirichlet%rmax                = 10.0_f64
   test_case_dirichlet%adiabatic_electrons = .true.
-  test_case_dirichlet%use_zonal_flow      = .true.
+  test_case_dirichlet%use_zonal_flow      = .false.
   test_case_dirichlet%epsilon_0           = 1.0_f64
   test_case_dirichlet%bc_rmin             = sll_p_dirichlet
   test_case_dirichlet%bc_rmax             = sll_p_dirichlet
