@@ -87,7 +87,10 @@ program test_qn_solver_2d_polar_par
 
   ! Write relative error norm (global) to standard output
   if (my_rank == 0) then
-    write(*,"(/a)") "--- TEST 1 ---"
+    write(*,"(/a)") "--------------------------------------------------------"
+    write(*,"(a)")  "Homogeneous Dirichlet boundary conditions"
+    write(*,"(a)")  "phi(r,theta) = (rmax-r)(r-rmin)(a+cos(k(theta-theta_0)))"
+    write(*,"(a)")  "--------------------------------------------------------"
     write(*,"(a,e11.3)") "Relative L_inf norm of error = ", error_norm
     write(*,"(a,e11.3)") "Tolerance                    = ", tol
     if (error_norm > tol) then
@@ -116,7 +119,13 @@ program test_qn_solver_2d_polar_par
 
   ! Write relative error norm (global) to standard output
   if (my_rank == 0) then
-    write(*,"(/a)") "--- TEST 2 ---"
+    write(*,"(/a)") "-----------------------------------------------------------&
+                     &------------------------------------------------"
+    write(*,"(a)")  "Mixed Homogeneous Dirichlet / Neumann mode 0 boundary conditions"
+    write(*,"(a)")  "phi(r,th) = a(rmax-r)(r+rmax-2rmin)/(rmax-rmin)^2 &
+                     &+ 4(rmax-r)(r-rmin)/(rmax-rmin)^2*b*cos(k(theta-theta_0))"
+    write(*,"(a)")  "-----------------------------------------------------------&
+                     &------------------------------------------------"
     write(*,"(a,e11.3)") "Relative L_inf norm of error = ", error_norm
     write(*,"(a,e11.3)") "Tolerance                    = ", tol
     if (error_norm > tol) then
@@ -130,7 +139,7 @@ program test_qn_solver_2d_polar_par
   ! Check if test passed
   if (my_rank == 0) then
     if(success) then
-       write(*,"(/a/)") "--- PASSED ---"
+       write(*,"(/a/)") "PASSED"
     endif
   endif
 
