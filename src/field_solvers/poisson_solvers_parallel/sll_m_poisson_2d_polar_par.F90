@@ -309,7 +309,7 @@ contains
     call verify_argument_sizes_par( solver%layout_a, phi )
 
     ! Copy charge into 2D complex array
-    solver%f_a(:,:) = cmplx( rho, 0.0_f64, kind=f64 )
+    solver%f_a(:,:) = cmplx( rho(:,:), 0.0_f64, kind=f64 )
 
     ! For each r_i, compute FFT of rho(r_i,theta) to obtain \hat{rho}(r_i,k)
     do i = 1, ubound( solver%f_a, 1 )
