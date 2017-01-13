@@ -44,6 +44,7 @@ module sll_m_poisson_2d_polar_par
     sll_t_fft, &
     sll_p_fft_forward, &
     sll_p_fft_backward, &
+    sll_f_fft_allocate_aligned_complex, &
     sll_s_fft_init_c2c_1d, &
     sll_s_fft_exec_c2c_1d, &
     sll_s_fft_free
@@ -76,21 +77,22 @@ module sll_m_poisson_2d_polar_par
   !> Class for the Poisson solver in polar coordinate
   type sll_t_poisson_2d_polar_par
 
-   sll_real64              :: rmin     !< Min value of r coordinate
-   sll_real64              :: rmax     !< Max value of r coordinate
-   sll_int32               :: nr       !< Number of cells along r
-   sll_int32               :: nt       !< Number of cells along theta
-   sll_int32               :: bc(2)    !< Boundary conditions options
+   sll_real64              :: rmin      !< Min value of r coordinate
+   sll_real64              :: rmax      !< Max value of r coordinate
+   sll_int32               :: nr        !< Number of cells along r
+   sll_int32               :: nt        !< Number of cells along theta
+   sll_int32               :: bc(2)     !< Boundary conditions options
 
-   type(sll_t_fft)         :: fw       !< Forward FFT plan
-   type(sll_t_fft)         :: bw       !< Inverse FFT plan
-   sll_comp64, allocatable :: f_r (:,:)!< 2D array sequential in r
-   sll_comp64, allocatable :: f_a (:,:)!< 2D array sequential in theta
-   sll_comp64, allocatable :: fk  (:)  !< k-th Fourier mode of rho
-   sll_comp64, allocatable :: phik(:)  !< k-th Fourier mode of phi
-   sll_real64, allocatable :: mat (:,:)!< Tridiagonal matrix (one for each k)
-   sll_real64, allocatable :: cts (:)  !< Lapack coefficients
-   sll_int32 , allocatable :: ipiv(:)  !< Lapack pivot indices
+   type(sll_t_fft)         :: fw        !< Forward FFT plan
+   type(sll_t_fft)         :: bw        !< Inverse FFT plan
+   sll_comp64, allocatable :: f_r (:,:) !< 2D array sequential in r
+   sll_comp64, allocatable :: f_a (:,:) !< 2D array sequential in theta
+   sll_comp64, pointer     :: f_a_row(:)!< 1D slice (one row) of f_a, ALIGNED
+   sll_comp64, allocatable :: fk  (:)   !< k-th Fourier mode of rho
+   sll_comp64, allocatable :: phik(:)   !< k-th Fourier mode of phi
+   sll_real64, allocatable :: mat (:,:) !< Tridiagonal matrix (one for each k)
+   sll_real64, allocatable :: cts (:)   !< Lapack coefficients
+   sll_int32 , allocatable :: ipiv(:)   !< Lapack pivot indices
 
    type(sll_t_layout_2d)           , pointer :: layout_r !< layout sequential in r
    type(sll_t_layout_2d)           , pointer :: layout_a !< layout sequential in theta
@@ -135,17 +137,16 @@ contains
 
     character(len=*), parameter :: this_sub_name = &
                                                'sll_s_poisson_2d_polar_par_init'
-    sll_real64              :: dr
-    sll_real64              :: inv_r
-    sll_real64              :: inv_dr
+    sll_real64 :: dr
+    sll_real64 :: inv_r
+    sll_real64 :: inv_dr
 
-    sll_comp64, allocatable :: buf(:)
-    sll_int32               :: loc_sz_r(2) ! sequential in r direction
-    sll_int32               :: loc_sz_a(2) ! sequential in theta direction
-    sll_int32               :: i, j, k
-    sll_int32               :: bc(2)
-    sll_int32               :: last
-    sll_int32               :: glob_idx(2)
+    sll_int32  :: loc_sz_r(2) ! sequential in r direction
+    sll_int32  :: loc_sz_a(2) ! sequential in theta direction
+    sll_int32  :: i, j, k
+    sll_int32  :: bc(2)
+    sll_int32  :: last
+    sll_int32  :: glob_idx(2)
 
     ! Consistency check: boundary conditions must be one of three options
     if( any( bc_rmin == bc_opts ) ) then
@@ -203,11 +204,25 @@ contains
     solver%rmp_ra => sll_o_new_remap_plan( solver%layout_r, solver%layout_a, solver%f_r )
     solver%rmp_ar => sll_o_new_remap_plan( solver%layout_a, solver%layout_r, solver%f_a )
 
+    ! Allocate in ALIGNED fashion 1D array for storing one row of f_a
+    solver%f_a_row => sll_f_fft_allocate_aligned_complex( ntheta )
+
     ! Initialize plans for forward and backward FFTs
-    allocate( buf(ntheta) )
-    call sll_s_fft_init_c2c_1d( solver%fw, ntheta, buf, buf, sll_p_fft_forward, normalized=.true. )
-    call sll_s_fft_init_c2c_1d( solver%bw, ntheta, buf, buf, sll_p_fft_backward )
-    deallocate( buf )
+    call sll_s_fft_init_c2c_1d( solver%fw, &
+      ntheta             , &
+      solver%f_a_row(:)  , &
+      solver%f_a_row(:)  , &
+      sll_p_fft_forward  , &
+      aligned    = .true., &
+      normalized = .true. )
+
+    call sll_s_fft_init_c2c_1d( solver%bw, &
+      ntheta             , &
+      solver%f_a_row(:)  , &
+      solver%f_a_row(:)  , &
+      sll_p_fft_backward , &
+      aligned    = .true., &
+      normalized = .false. )
 
     ! Precompute convenient parameters
     dr = (rmax-rmin)/nr
@@ -298,7 +313,9 @@ contains
 
     ! For each r_i, compute FFT of rho(r_i,theta) to obtain \hat{rho}(r_i,k)
     do i = 1, ubound( solver%f_a, 1 )
-      call sll_s_fft_exec_c2c_1d( solver%fw, solver%f_a(i,:), solver%f_a(i,:) )
+      solver%f_a_row(:) = solver%f_a(i,:)
+      call sll_s_fft_exec_c2c_1d( solver%fw, solver%f_a_row(:), solver%f_a_row(:) )
+      solver%f_a(i,:) = solver%f_a_row(:)
     end do
 
     ! Remap \hat{rho}(k) to layout distributed in k (global in r) -> \hat{rho}_k(r)
@@ -360,8 +377,9 @@ contains
 
     ! For each r_i, compute inverse FFT of \hat{phi}(r_i,k) to obtain phi(r_i,theta)
     do i = 1, ubound( solver%f_a, 1 )
-      call sll_s_fft_exec_c2c_1d( solver%bw, solver%f_a(i,:), solver%f_a(i,:) )
-      phi(i,:) = real(solver%f_a(i,:))
+      solver%f_a_row(:) = solver%f_a(i,:)
+      call sll_s_fft_exec_c2c_1d( solver%bw, solver%f_a_row(:), solver%f_a_row(:) )
+      phi(i,:) = real( solver%f_a_row(:) )
     end do
 
   end subroutine sll_s_poisson_2d_polar_par_solve
@@ -377,6 +395,7 @@ contains
 
     deallocate( solver%f_r  )
     deallocate( solver%f_a  )
+    deallocate( solver%f_a_row )
     deallocate( solver%fk   )
     deallocate( solver%phik )
     deallocate( solver%mat  )
