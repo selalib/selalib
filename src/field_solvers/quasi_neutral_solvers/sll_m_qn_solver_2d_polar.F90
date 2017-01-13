@@ -75,6 +75,7 @@ module sll_m_qn_solver_2d_polar
     sll_t_fft, &
     sll_p_fft_forward, &
     sll_p_fft_backward, &
+    sll_f_fft_allocate_aligned_complex, &
     sll_s_fft_init_c2c_1d, &
     sll_s_fft_exec_c2c_1d, &
     sll_s_fft_free
@@ -107,7 +108,8 @@ module sll_m_qn_solver_2d_polar
 
    type(sll_t_fft)         :: fw       !< Forward FFT plan
    type(sll_t_fft)         :: bw       !< Inverse FFT plan
-   sll_comp64, allocatable :: work(:,:)!< 2D work array needed for transposition
+   sll_comp64, allocatable :: z   (:,:)!< 2D work array needed for transposition
+   sll_comp64, pointer     :: zrow(:)  !< 1D slice (one row) of z, ALIGNED
    sll_comp64, allocatable :: fk  (:)  !< k-th Fourier mode of rho
    sll_comp64, allocatable :: phik(:)  !< k-th Fourier mode of phi
    sll_real64, allocatable :: mat (:,:)!< Tridiagonal matrix (one for each k)
@@ -157,17 +159,16 @@ contains
 
     character(len=*), parameter :: this_sub_name = 'sll_s_qn_solver_2d_polar_init'
 
-    sll_real64              :: dr
-    sll_real64              :: inv_r
-    sll_real64              :: inv_dr
-    sll_real64              :: c
-    sll_real64              :: d1(-1:+1)
-    sll_real64              :: d2(-1:+1)
+    sll_real64 :: dr
+    sll_real64 :: inv_r
+    sll_real64 :: inv_dr
+    sll_real64 :: c
+    sll_real64 :: d1(-1:+1)
+    sll_real64 :: d2(-1:+1)
 
-    sll_comp64, allocatable :: buf(:)
-    sll_int32               :: i, j, k
-    sll_int32               :: bc(2)
-    sll_int32               :: last
+    sll_int32  :: i, j, k
+    sll_int32  :: bc(2)
+    sll_int32  :: last
 
     ! Consistency check: boundary conditions must be one of three options
     if( any( bc_rmin == bc_opts ) ) then
@@ -198,21 +199,35 @@ contains
 
     ! Allocate arrays
     allocate( solver%g   (nr+1) )
-    allocate( solver%work(nr+1,ntheta) )
+    allocate( solver%z   (nr+1,ntheta) )
     allocate( solver%fk  (nr+1) )
     allocate( solver%phik(nr+1) )
     allocate( solver%mat((nr-1)*3,ntheta) ) ! for each k, matrix depends on r
     allocate( solver%cts((nr-1)*7) )
     allocate( solver%ipiv(nr-1) )
 
-    ! Store non-dimensional coefficient g(r) = \rho(r) / (B(r)^2 \epsilon_0)
-    solver%g(:) = rho_m0(:) / (b_magn(:)**2 * solver%epsilon_0)
+    ! Allocate in ALIGNED fashion 1D array for storing one row of z
+    solver%zrow => sll_f_fft_allocate_aligned_complex( ntheta )
 
     ! Initialize plans for forward and backward FFTs
-    allocate( buf(ntheta) )
-    call sll_s_fft_init_c2c_1d( solver%fw, ntheta, buf, buf, sll_p_fft_forward, normalized=.true. )
-    call sll_s_fft_init_c2c_1d( solver%bw, ntheta, buf, buf, sll_p_fft_backward )
-    deallocate( buf )
+    call sll_s_fft_init_c2c_1d( solver%fw, &
+      ntheta             , &
+      solver%zrow(:)     , &
+      solver%zrow(:)     , &
+      sll_p_fft_forward  , &
+      aligned    = .true., &
+      normalized = .true. )
+
+    call sll_s_fft_init_c2c_1d( solver%bw, &
+      ntheta             , &
+      solver%zrow(:)     , &
+      solver%zrow(:)     , &
+      sll_p_fft_backward , &
+      aligned    = .true., &
+      normalized = .false. )
+
+    ! Store non-dimensional coefficient g(r) = \rho(r) / (B(r)^2 \epsilon_0)
+    solver%g(:) = rho_m0(:) / (b_magn(:)**2 * solver%epsilon_0)
 
     ! Precompute convenient parameters
     dr     = (rmax-rmin)/nr
@@ -315,11 +330,13 @@ contains
     SLL_ASSERT( all( shape(phi) == [nr+1,ntheta] ) )
 
     ! Initialize 2D complex array for FFTs along theta and FD solver along r
-    solver%work(:,:) = cmplx( rho, 0.0_f64, kind=f64 )
+    solver%z(:,:) = cmplx( rho(:,:), 0.0_f64, kind=f64 )
 
     ! For each r_i, compute FFT of rho(r_i,theta) to obtain \hat{rho}(r_i,k)
     do i = 1, nr+1
-      call sll_s_fft_exec_c2c_1d( solver%fw, solver%work(i,:), solver%work(i,:) )
+      solver%zrow(:) = solver%z(i,:)
+      call sll_s_fft_exec_c2c_1d( solver%fw, solver%zrow(:), solver%zrow(:) )
+      solver%z(i,:) = solver%zrow(:)
     end do
 
     ! Cycle over k_j
@@ -333,7 +350,7 @@ contains
       endif
 
       ! Copy 1D slice of \hat{rho} into separate array and divide it by (g*eps0)
-      solver%fk(:) = solver%work(:,j) / (solver%g(:) * solver%epsilon_0)
+      solver%fk(:) = solver%z(:,j) / (solver%g(:) * solver%epsilon_0)
 
       ! Solve tridiagonal system to obtain \hat{phi}_{k_j}(r) at internal points
       call sll_s_setup_cyclic_tridiag( solver%mat(:,j), nr-1, solver%cts, solver%ipiv )
@@ -367,14 +384,15 @@ contains
       endif
 
       ! Store \hat{phi}_{k_j}(r) into 1D slice of 2D array
-      solver%work(:,j) = solver%phik(:)
+      solver%z(:,j) = solver%phik(:)
 
     end do
 
     ! For each r_i, compute inverse FFT of \hat{phi}(r_i,k) to obtain phi(r_i,theta)
     do i = 1, nr+1
-      call sll_s_fft_exec_c2c_1d( solver%bw, solver%work(i,:), solver%work(i,:) )
-      phi(i,:) = real( solver%work(i,:) )
+      solver%zrow(:) = solver%z(i,:)
+      call sll_s_fft_exec_c2c_1d( solver%bw, solver%zrow(:), solver%zrow(:) )
+      phi(i,:) = real( solver%zrow(:) )
     end do
 
   end subroutine sll_s_qn_solver_2d_polar_solve
@@ -388,7 +406,8 @@ contains
     call sll_s_fft_free( solver%fw )
     call sll_s_fft_free( solver%bw )
 
-    deallocate( solver%work )
+    deallocate( solver%z    )
+    deallocate( solver%zrow )
     deallocate( solver%fk   )
     deallocate( solver%phik )
     deallocate( solver%mat  )
