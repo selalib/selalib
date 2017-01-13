@@ -14,7 +14,9 @@ module m_test_case_poisson_2d_dirichlet
 
   type, extends(c_test_case_poisson_2d_polar) :: t_test_dirichlet_zero_error
 
-    ! Angular profile is a+sin(k*(th-th0))
+    !---------------------------------------------------------------------------
+    ! \phi(r,th) = (r-rmin)(r-rmax)(a+sin(k(th-th0))
+    !---------------------------------------------------------------------------
     sll_real64, private :: a   = 0.1_f64
     sll_int32 , private :: k   = 3
     sll_real64, private :: th0 = 0.3_f64
@@ -30,7 +32,9 @@ module m_test_case_poisson_2d_dirichlet
 
   type, extends(c_test_case_poisson_2d_polar) :: t_test_dirichlet
 
-    ! Angular profile is a+sin(k*(th-th0))
+    !---------------------------------------------------------------------------
+    ! \phi(r,th) = r(r-rmin)(r-rmax)(a+sin(k(th-th0))
+    !---------------------------------------------------------------------------
     sll_real64, private :: a   = 0.1_f64
     sll_int32 , private :: k   = 3
     sll_real64, private :: th0 = 0.3_f64

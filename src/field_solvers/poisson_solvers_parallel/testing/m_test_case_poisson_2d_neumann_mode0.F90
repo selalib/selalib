@@ -14,10 +14,7 @@ module m_test_case_poisson_2d_neumann_mode0
   type, extends(c_test_case_poisson_2d_polar) :: t_test_neumann_mode0_zero_error
 
     !---------------------------------------------------------------------------
-    ! \phi(r,th) = a*Q(r) + b*sin(k*(th-th0))*R(r)
-    !
-    ! Q(r) = (r-rmax)(r+rmax-2rmin)
-    ! R(r) = (r-rmax)(r-rmin)
+    ! \phi(r,th) = a(r-rmax)(r+rmax-2rmin) + b(r-rmin)(r-rmax)sin(k(th-th0))
     !---------------------------------------------------------------------------
     sll_real64, private :: a   = 0.1_f64
     sll_real64, private :: b   = 1.0_f64
