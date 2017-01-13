@@ -50,7 +50,7 @@ program test_qn_solver_2d_polar
   test_case_dirichlet%rmin                = 1.0_f64
   test_case_dirichlet%rmax                = 10.0_f64
   test_case_dirichlet%adiabatic_electrons = .true.
-  test_case_dirichlet%use_zonal_flow      = .true.
+  test_case_dirichlet%use_zonal_flow      = .false.
   test_case_dirichlet%epsilon_0           = 1.0_f64
   test_case_dirichlet%bc_rmin             = sll_p_dirichlet
   test_case_dirichlet%bc_rmax             = sll_p_dirichlet
@@ -58,7 +58,10 @@ program test_qn_solver_2d_polar
   call run_test( test_case_dirichlet, nr, nth, error_norm )
 
   ! Write relative error norm (global) to standard output
-  write(*,"(/a)") "--- TEST 1 ---"
+  write(*,"(/a)") "--------------------------------------------------------"
+  write(*,"(a)")  "Homogeneous Dirichlet boundary conditions"
+  write(*,"(a)")  "phi(r,theta) = (rmax-r)(r-rmin)(a+cos(k(theta-theta_0)))"
+  write(*,"(a)")  "--------------------------------------------------------"
   write(*,"(a,e11.3)") "Relative L_inf norm of error = ", error_norm
   write(*,"(a,e11.3)") "Tolerance                    = ", tol
   if (error_norm > tol) then
@@ -85,7 +88,13 @@ program test_qn_solver_2d_polar
   call run_test( test_case_neumann_mode0, nr, nth, error_norm )
 
   ! Write relative error norm (global) to standard output
-  write(*,"(/a)") "--- TEST 2 ---"
+  write(*,"(/a)") "-----------------------------------------------------------&
+       &------------------------------------------------"
+  write(*,"(a)")  "Mixed Homogeneous Dirichlet / Neumann mode 0 boundary conditions"
+  write(*,"(a)")  "phi(r,th) = a(rmax-r)(r+rmax-2rmin)/(rmax-rmin)^2 &
+       &+ 4(rmax-r)(r-rmin)/(rmax-rmin)^2*b*cos(k(theta-theta_0))"
+  write(*,"(a)")  "-----------------------------------------------------------&
+       &------------------------------------------------"
   write(*,"(a,e11.3)") "Relative L_inf norm of error = ", error_norm
   write(*,"(a,e11.3)") "Tolerance                    = ", tol
   if (error_norm > tol) then
