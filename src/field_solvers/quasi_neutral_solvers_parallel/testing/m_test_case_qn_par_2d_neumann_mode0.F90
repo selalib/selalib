@@ -1,8 +1,8 @@
-module m_test_case_2d_neumann_mode0
+module m_test_case_qn_par_2d_neumann_mode0
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_working_precision.h"
 
-  use m_test_case_2d_base, only: c_test_case_qn_solver_2d_polar
+  use m_test_case_qn_par_2d_base, only: c_test_case_qn_solver_2d_polar
 
   implicit none
 
@@ -180,4 +180,4 @@ contains
 
   end function f_test__phi_ex_diff2_th
 
-end module m_test_case_2d_neumann_mode0
+end module m_test_case_qn_par_2d_neumann_mode0
