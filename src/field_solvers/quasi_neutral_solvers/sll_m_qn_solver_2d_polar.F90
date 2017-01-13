@@ -329,7 +329,7 @@ contains
     SLL_ASSERT( all( shape(rho) == [nr+1,ntheta] ) )
     SLL_ASSERT( all( shape(phi) == [nr+1,ntheta] ) )
 
-    ! Initialize 2D complex array for FFTs along theta and FD solver along r
+    ! Copy charge into 2D complex array
     solver%z(:,:) = cmplx( rho(:,:), 0.0_f64, kind=f64 )
 
     ! For each r_i, compute FFT of rho(r_i,theta) to obtain \hat{rho}(r_i,k)
