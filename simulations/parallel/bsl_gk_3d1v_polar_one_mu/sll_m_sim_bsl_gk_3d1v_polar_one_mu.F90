@@ -453,7 +453,6 @@ contains
     sll_int32               :: order_x3
     sll_int32               :: order_x4
     sll_int32               :: poisson2d_BC(2)
-    sll_real64, dimension(:,:), allocatable :: tmp_r
     sll_real64, dimension(:), allocatable :: lambda
     sll_int32 :: i
     sll_int32 :: ierr
@@ -700,10 +699,6 @@ contains
     
     select case (poisson2d_case)
       case ("POLAR_FFT")     
-        
-        do i=1,num_cells_x1+1
-          tmp_r(i,1) = 1._f64/sim%Te_r(i)
-        enddo  
         
         call sll_s_qn_solver_2d_polar_init( sim%poisson2d, &
           rmin = sim%m_x1%eta_min, &
