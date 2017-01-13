@@ -563,7 +563,6 @@ contains
     sim%deltarTe = deltarTe
     
     SLL_ALLOCATE(lambda(1:num_cells_x1+1),ierr)
-    SLL_ALLOCATE(tmp_r(num_cells_x1+1,2),ierr)
     sim%delta_f_method=delta_f_method
     
     select case (poisson2d_BC_rmin)
