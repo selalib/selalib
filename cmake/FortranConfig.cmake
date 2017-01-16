@@ -37,7 +37,14 @@ IF(Fortran_COMPILER_NAME MATCHES gfortran)
   IF(APPLE)
     SET(CMAKE_Fortran_FLAGS_RELEASE "${CMAKE_Fortran_FLAGS_RELEASE} -mno-avx")
   ENDIF(APPLE)
-  SET(CMAKE_Fortran_FLAGS_DEBUG "-g -O0 -Wall -cpp -ffree-line-length-none -std=f2008 -pedantic -Wconversion -Wconversion-extra -Wintrinsics-std -fcheck=array-temps,bounds,do,pointer,recursion -fall-intrinsics -finit-real=snan -finit-integer=-9999 -fbounds-check -fbacktrace -ffpe-trap=invalid,zero,overflow -fcheck-array-temporaries")
+  SET(CMAKE_Fortran_FLAGS_DEBUG "-g -O0 -Wall -cpp -ffree-line-length-none -std=f2008 -pedantic -Wconversion -Wconversion-extra -Wintrinsics-std -Wuninitialized -fcheck=array-temps,bounds,do,pointer,recursion -fall-intrinsics -fbounds-check -fbacktrace -ffpe-trap=invalid,zero,overflow -fcheck-array-temporaries")
+
+#-------------------------------------------------------------------------------
+# [YG] Old flags: real and integer variables were initialized with absurd
+# values, but compiler did not catch uninitialized variables of any type
+#-------------------------------------------------------------------------------
+#  SET(CMAKE_Fortran_FLAGS_DEBUG "-g -O0 -Wall -cpp -ffree-line-length-none -std=f2008 -pedantic -Wconversion -Wconversion-extra -Wintrinsics-std -fcheck=array-temps,bounds,do,pointer,recursion -fall-intrinsics -finit-real=snan -finit-integer=-9999 -fbounds-check -fbacktrace -ffpe-trap=invalid,zero,overflow -fcheck-array-temporaries")
+#-------------------------------------------------------------------------------
 
   SET(UNUSED_FUNCTION_WARNING_ENABLED OFF CACHE BOOL "Add -Wunused-function flag to gfortran")
   IF(NOT UNUSED_FUNCTION_WARNING_ENABLED)
