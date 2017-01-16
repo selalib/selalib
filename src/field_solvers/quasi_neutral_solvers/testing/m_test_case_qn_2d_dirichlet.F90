@@ -13,10 +13,13 @@ module m_test_case_qn_2d_dirichlet
 
   type, extends(c_test_case_qn_solver_2d_polar) :: t_test_dirichlet_zero_error
 
-    ! Angular profile is a+cos(k*(th-th0))
+    !---------------------------------------------------------------------------
+    ! \phi(r,th) = (r-rmax)(r-rmin)(a + b*cos(k(th-th0))
+    !---------------------------------------------------------------------------
     sll_real64, private :: a   = 0.1_f64
-    sll_int32 , private :: k   = 3
+    sll_real64, private :: b   = 1.6_f64
     sll_real64, private :: th0 = 0.3_f64
+    sll_int32,  private :: k   = 3
 
   contains
     ! 1D input profiles
@@ -38,7 +41,10 @@ module m_test_case_qn_2d_dirichlet
 contains
 !<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
-  ! 1D profiles
+  !=============================================================================
+  ! 1D PROFILES
+  !=============================================================================
+
   pure function f_test__rho_m0( self, r ) result( val )
     class(t_test_dirichlet_zero_error), intent(in) :: self
     sll_real64                        , intent(in) :: r
@@ -48,7 +54,7 @@ contains
     end associate
   end function f_test__rho_m0
 
-
+  !-----------------------------------------------------------------------------
   pure function f_test__rho_m0_diff1_r( self, r ) result( val )
     class(t_test_dirichlet_zero_error), intent(in) :: self
     sll_real64                        , intent(in) :: r
@@ -58,7 +64,7 @@ contains
     end associate
   end function f_test__rho_m0_diff1_r 
 
-
+  !-----------------------------------------------------------------------------
   pure function f_test__b_magn( self, r ) result( val )
     class(t_test_dirichlet_zero_error), intent(in) :: self
     sll_real64                        , intent(in) :: r
@@ -66,7 +72,7 @@ contains
     val = 1.0_f64
   end function f_test__b_magn
 
-
+  !-----------------------------------------------------------------------------
   pure function f_test__b_magn_diff1_r( self, r ) result( val )
     class(t_test_dirichlet_zero_error), intent(in) :: self
     sll_real64                        , intent(in) :: r
@@ -74,7 +80,7 @@ contains
     val = 0.0_f64
   end function f_test__b_magn_diff1_r
 
-
+  !-----------------------------------------------------------------------------
   pure function f_test__lambda( self, r ) result( val )
     class(t_test_dirichlet_zero_error), intent(in) :: self
     sll_real64                        , intent(in) :: r
@@ -85,64 +91,62 @@ contains
     end associate
   end function f_test__lambda
 
+  !=============================================================================
+  ! 2D MANUFACTURED SOLUTION
+  !=============================================================================
 
-  !-----------------------------------------------------------------------------
-  ! 2D manufactured solution
   pure function f_test__phi_ex( self, r, th ) result( val )
     class(t_test_dirichlet_zero_error), intent(in) :: self
     sll_real64                        , intent(in) :: r
     sll_real64                        , intent(in) :: th
     sll_real64 :: val
 
-    val = (self%rmax-r) * (r-self%rmin) * (self%a + cos( self%k*(th-self%th0) ))
+    val = (r-self%rmax)*(r-self%rmin)*(self%a+self%b*cos( self%k*(th-self%th0) ))
 
   end function f_test__phi_ex
 
-
+  !-----------------------------------------------------------------------------
   pure function f_test__phi_ex_avg_th( self, r, th ) result( val )
     class(t_test_dirichlet_zero_error), intent(in) :: self
     sll_real64                        , intent(in) :: r
     sll_real64                        , intent(in) :: th
     sll_real64 :: val
 
-    val = (self%rmax-r) * (r-self%rmin) * self%a
+    val = (r-self%rmax)*(r-self%rmin)*self%a
 
   end function f_test__phi_ex_avg_th
 
-
+  !-----------------------------------------------------------------------------
   pure function f_test__phi_ex_diff1_r( self, r, th ) result( val )
     class(t_test_dirichlet_zero_error), intent(in) :: self
     sll_real64                        , intent(in) :: r
     sll_real64                        , intent(in) :: th
     sll_real64 :: val
 
-    val = -2.0_f64*r + self%rmin + self%rmax
-    val = val * (self%a + cos( self%k*(th-self%th0) ))
+    val = (2.0_f64*r-self%rmin-self%rmax)*(self%a+self%b*cos( self%k*(th-self%th0) ))
 
   end function f_test__phi_ex_diff1_r
 
-
+  !-----------------------------------------------------------------------------
   pure function f_test__phi_ex_diff2_r( self, r, th ) result( val )
     class(t_test_dirichlet_zero_error), intent(in) :: self
     sll_real64                        , intent(in) :: r
     sll_real64                        , intent(in) :: th
     sll_real64 :: val
 
-    val = -2.0_f64 * (self%a + cos( self%k*(th-self%th0) ))
+    val = 2.0_f64*(self%a+self%b*cos( self%k*(th-self%th0) ))
 
   end function f_test__phi_ex_diff2_r
 
-
+  !-----------------------------------------------------------------------------
   pure function f_test__phi_ex_diff2_th( self, r, th ) result( val )
     class(t_test_dirichlet_zero_error), intent(in) :: self
     sll_real64                        , intent(in) :: r
     sll_real64                        , intent(in) :: th
     sll_real64 :: val
 
-    val = (self%rmax-r) * (r-self%rmin)
-    val = val * real( -self%k**2, f64 ) * cos( self%k*(th-self%th0) )
+    val = (r-self%rmax)*(r-self%rmin)*(-self%b*self%k**2*cos( self%k*(th-self%th0) ))
 
   end function f_test__phi_ex_diff2_th
-
 
 end module m_test_case_qn_2d_dirichlet

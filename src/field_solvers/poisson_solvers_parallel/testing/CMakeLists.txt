@@ -6,9 +6,13 @@ add_executable( test_poisson_2d_polar_par
   m_test_case_poisson_par_2d_neumann_mode0.F90 )
 target_link_libraries( test_poisson_2d_polar_par sll_poisson_solvers_parallel )
 
-ADD_MPI_TEST( poisson_2d_polar_par test_poisson_2d_polar_par ${PROCS} " " )
-set_tests_properties( poisson_2d_polar_par
-  PROPERTIES PASS_REGULAR_EXPRESSION "PASSED" TIMEOUT 20 )
+ADD_MPI_TEST( poisson_2d_polar_par_np1 test_poisson_2d_polar_par 1 " " )
+ADD_MPI_TEST( poisson_2d_polar_par_np4 test_poisson_2d_polar_par 4 " " )
+set_tests_properties(
+  poisson_2d_polar_par_np1
+  poisson_2d_polar_par_np4
+  PROPERTIES
+  PASS_REGULAR_EXPRESSION "PASSED" TIMEOUT 20 )
 
 
 if( HDF5_PARALLEL_ENABLED AND HDF5_IS_PARALLEL )
