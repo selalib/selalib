@@ -1,8 +1,8 @@
-module m_test_case_poisson_2d_neumann_mode0
+module m_test_case_poisson_par_2d_neumann_mode0
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_working_precision.h"
 
-  use m_test_case_poisson_2d_base, only: c_test_case_poisson_2d_polar
+  use m_test_case_poisson_par_2d_base, only: c_test_case_poisson_2d_polar
 
   implicit none
 
@@ -88,4 +88,4 @@ contains
 
   end function neumann_mode0_zero_error_phi_ex_d2th
 
-end module m_test_case_poisson_2d_neumann_mode0
+end module m_test_case_poisson_par_2d_neumann_mode0

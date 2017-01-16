@@ -1,4 +1,4 @@
-module m_test_case_poisson_2d_base
+module m_test_case_poisson_par_2d_base
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_working_precision.h"
 
@@ -59,4 +59,4 @@ contains
   end function f_test_case__rhs
 
   
-end module m_test_case_poisson_2d_base
+end module m_test_case_poisson_par_2d_base
