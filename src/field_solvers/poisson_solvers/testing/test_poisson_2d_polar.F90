@@ -2,9 +2,6 @@ program test_poisson_2d_polar
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_working_precision.h"
 
-  use iso_fortran_env, only: &
-    output_unit
-
   use sll_m_constants, only: &
     sll_p_pi
 
@@ -60,10 +57,10 @@ program test_poisson_2d_polar
   call run_test( test_case_dirichlet_zero_error, nr, nth, error_norm )
 
   ! Write relative error norm (global) to standard output
-  write(*,"(/a)") "-------------------------------------------------------"
+  write(*,"(/a)") "------------------------------------------------------------"
   write(*,"(a)")  "Homogeneous Dirichlet boundary conditions"
-  write(*,"(a)")  "phi(r,theta) = (r-rmin)(r-rmax)(a+sin(k(theta-theta_0))"
-  write(*,"(a)")  "-------------------------------------------------------"
+  write(*,"(a)")  "phi(r,theta) = (r-rmax)(r-rmin)(a + b*cos(k(theta-theta_0)))"
+  write(*,"(a)")  "------------------------------------------------------------"
   write(*,"(a,e11.3)") "Relative L_inf norm of error = ", error_norm
   write(*,"(a,e11.3)") "Tolerance                    = ", tol
   if (error_norm > tol) then
@@ -87,10 +84,10 @@ program test_poisson_2d_polar
   call run_test( test_case_dirichlet, nr, nth, error_norm )
 
   ! Write relative error norm (global) to standard output
-  write(*,"(/a)") "--------------------------------------------------------"
+  write(*,"(/a)") "-------------------------------------------------------------"
   write(*,"(a)")  "Homogeneous Dirichlet boundary conditions               "
-  write(*,"(a)")  "phi(r,theta) = r(r-rmin)(r-rmax)(a+sin(k(theta-theta_0))"
-  write(*,"(a)")  "--------------------------------------------------------"
+  write(*,"(a)")  "phi(r,theta) = r(r-rmax)(r-rmin)(a + b*cos(k(theta-theta_0)))"
+  write(*,"(a)")  "-------------------------------------------------------------"
   write(*,"(a,e11.3)") "Relative L_inf norm of error = ", error_norm
   write(*,"(a,e11.3)") "Tolerance                    = ", tol
   if (error_norm > tol) then
@@ -117,8 +114,8 @@ program test_poisson_2d_polar
   write(*,"(/a)") "-----------------------------------------------------------&
        &--------------------"
   write(*,"(a)")  "Mixed Homogeneous Dirichlet / Neumann mode 0 boundary conditions"
-  write(*,"(a)")  "phi(r,theta) = a(r-rmax)(r+rmax-2rmin) &
-       &+ b(r-rmin)(r-rmax)sin(k(theta-theta_0))"
+  write(*,"(a)")  "phi(r,theta) = a(r-rmax)(r-2rmin+rmax) &
+       &+ b(r-rmax)(r-rmin)cos(k(theta-theta_0))"
   write(*,"(a)")  "-----------------------------------------------------------&
        &--------------------"
   write(*,"(a,e11.3)") "Relative L_inf norm of error = ", error_norm
