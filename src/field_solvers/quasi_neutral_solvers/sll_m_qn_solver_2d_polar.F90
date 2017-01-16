@@ -343,7 +343,7 @@ contains
     do j = 1, ntheta
 
       ! Determine value of k_j (careful: ordering is not trivial)
-      if (k <= ntheta/2) then
+      if (j <= ntheta/2) then
         k = j-1
       else
         k = ntheta-(j-1)
