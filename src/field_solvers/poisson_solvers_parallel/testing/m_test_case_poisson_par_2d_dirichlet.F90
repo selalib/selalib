@@ -1,8 +1,8 @@
-module m_test_case_poisson_2d_dirichlet
+module m_test_case_poisson_par_2d_dirichlet
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_working_precision.h"
 
-  use m_test_case_poisson_2d_base, only: c_test_case_poisson_2d_polar
+  use m_test_case_poisson_par_2d_base, only: c_test_case_poisson_2d_polar
 
   implicit none
 
@@ -165,4 +165,4 @@ contains
 
   end function f_test__phi_ex_diff2_th
 
-end module m_test_case_poisson_2d_dirichlet
+end module m_test_case_poisson_par_2d_dirichlet
