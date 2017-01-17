@@ -17,15 +17,12 @@ program test_qn_solver_2d_polar_par
     c_test_case_qn_solver_2d_polar
 
   use m_test_case_qn_par_2d_dirichlet, only: &
-    t_test_dirichlet_zero_error
+    t_test_dirichlet_zero_error, &
+    sll_s_test_dirichlet_init
 
   use m_test_case_qn_par_2d_neumann_mode0, only: &
-    t_test_neumann_mode0_zero_error
-
-  use sll_m_boundary_condition_descriptors, only: &
-    sll_p_dirichlet, &
-    sll_p_neumann, &
-    sll_p_neumann_mode_0
+    t_test_neumann_mode0_zero_error, &
+    sll_s_test_neumann_mode0_init
 
   use sll_m_collective, only: &
     sll_t_collective_t, &
@@ -51,21 +48,22 @@ program test_qn_solver_2d_polar_par
   type(t_test_dirichlet_zero_error) :: test_case_dirichlet
   type(t_test_neumann_mode0_zero_error) :: test_case_neumann_mode0
 
-  ! For MPI
   type(sll_t_collective_t), pointer :: comm
   sll_int32  :: my_rank
-  sll_int32  :: nr
-  sll_int32  :: nth
-  sll_real64 :: error_norm
-  sll_real64 :: tol
+
+  sll_int32  :: nr, nth
+  sll_real64 :: rmin, rmax
+  logical    :: adiabatic_electrons
+  logical    :: use_zonal_flow
+  sll_real64 :: epsilon_0
+  sll_real64 :: error_norm, tol
 
   logical :: success
+  success = .true.
 
   call sll_s_boot_collective()
   comm => sll_v_world_collective
   my_rank = sll_f_get_collective_rank( comm )
-
-  success = .true.
 
   !-----------------------------------------------------------------------------
   ! TEST #1: Dirichlet, solver should be exact
@@ -74,15 +72,16 @@ program test_qn_solver_2d_polar_par
   nth = 32
   tol = 1.0e-11_f64
 
-  ! Define test case
-  test_case_dirichlet%rmin                = 1.0_f64
-  test_case_dirichlet%rmax                = 10.0_f64
-  test_case_dirichlet%adiabatic_electrons = .true.
-  test_case_dirichlet%use_zonal_flow      = .true.
-  test_case_dirichlet%epsilon_0           = 1.0_f64
-  test_case_dirichlet%bc_rmin             = sll_p_dirichlet
-  test_case_dirichlet%bc_rmax             = sll_p_dirichlet
+  ! Initialize test case
+  rmin                = 1.0_f64
+  rmax                = 10.0_f64
+  adiabatic_electrons = .true.
+  use_zonal_flow      = .true.
+  epsilon_0           = 1.0_f64
+  call sll_s_test_dirichlet_init( test_case_dirichlet, rmin, rmax, &
+    adiabatic_electrons, use_zonal_flow, epsilon_0 )
 
+  ! Run test case
   call run_test( comm, test_case_dirichlet, nr, nth, error_norm )
 
   ! Write relative error norm (global) to standard output
@@ -106,15 +105,16 @@ program test_qn_solver_2d_polar_par
   nth = 32
   tol = 1.0e-11_f64
 
-  ! Define test case
-  test_case_neumann_mode0%rmin                = 1.0_f64
-  test_case_neumann_mode0%rmax                = 10.0_f64
-  test_case_neumann_mode0%adiabatic_electrons = .true.
-  test_case_neumann_mode0%use_zonal_flow      = .true.
-  test_case_neumann_mode0%epsilon_0           = 1.0_f64
-  test_case_neumann_mode0%bc_rmin             = sll_p_neumann_mode_0
-  test_case_neumann_mode0%bc_rmax             = sll_p_dirichlet
+  ! Initialize test case
+  rmin                = 1.0_f64
+  rmax                = 10.0_f64
+  adiabatic_electrons = .true.
+  use_zonal_flow      = .true.
+  epsilon_0           = 1.0_f64
+  call sll_s_test_neumann_mode0_init( test_case_neumann_mode0, rmin, rmax, &
+    adiabatic_electrons, use_zonal_flow, epsilon_0 )
 
+  ! Run test case
   call run_test( comm, test_case_neumann_mode0, nr, nth, error_norm )
 
   ! Write relative error norm (global) to standard output
