@@ -190,10 +190,10 @@ contains
     do j = 1, ntheta
 
       ! Determine value of k_j (careful: ordering is not trivial)
-      if (j <= ntheta/2) then
+      if (j-1 <= ntheta/2) then
         k = j-1
       else
-        k = ntheta-(j-1)
+        k = j-1 - ntheta
       end if
 
       ! Compute matrix coefficients for a given k_j
@@ -276,10 +276,10 @@ contains
     do j = 1, ntheta
 
       ! Determine value of k_j (careful: ordering is not trivial)
-      if (j <= ntheta/2) then
+      if (j-1 <= ntheta/2) then
         k = j-1
       else
-        k = ntheta-(j-1)
+        k = j-1 - ntheta
       endif
 
       ! Copy 1D slice of \hat{rho} into separate array
