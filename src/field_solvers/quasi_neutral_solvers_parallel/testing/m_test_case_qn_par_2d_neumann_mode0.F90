@@ -2,11 +2,18 @@ module m_test_case_qn_par_2d_neumann_mode0
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_working_precision.h"
 
-  use m_test_case_qn_par_2d_base, only: c_test_case_qn_solver_2d_polar
+  use m_test_case_qn_par_2d_base, only: &
+    c_test_case_qn_solver_2d_polar
+
+  use sll_m_boundary_condition_descriptors, only: &
+    sll_p_dirichlet, &
+    sll_p_neumann_mode_0
 
   implicit none
 
-  public :: t_test_neumann_mode0_zero_error
+  public :: &
+    t_test_neumann_mode0_zero_error, &
+    sll_s_test_neumann_mode0_init
 
   private
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -16,10 +23,10 @@ module m_test_case_qn_par_2d_neumann_mode0
     !---------------------------------------------------------------------------
     ! \phi(r,th) = a(r-rmax)(r-2rmin+rmax) + b(r-rmax)(r-rmin)cos(k(th-th0))
     !---------------------------------------------------------------------------
-    sll_real64, private :: a   = 0.1_f64
-    sll_real64, private :: b   = 1.6_f64
-    sll_real64, private :: th0 = 0.3_f64
-    sll_int32,  private :: k   = 3
+    sll_real64 :: a   = 0.1_f64
+    sll_real64 :: b   = 1.6_f64
+    sll_real64 :: th0 = 0.3_f64
+    sll_int32  :: k   = 3
 
   contains
     ! 1D input profiles
@@ -40,6 +47,25 @@ module m_test_case_qn_par_2d_neumann_mode0
 !<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 contains
 !<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+
+  subroutine sll_s_test_neumann_mode0_init( self, rmin, rmax, &
+    adiabatic_electrons, use_zonal_flow, epsilon_0)
+    class(c_test_case_qn_solver_2d_polar), intent(inout) :: self
+    sll_real64, intent(in) :: rmin
+    sll_real64, intent(in) :: rmax
+    logical,    intent(in) :: adiabatic_electrons
+    logical,    intent(in) :: use_zonal_flow
+    sll_real64, intent(in) :: epsilon_0
+
+    self%rmin = rmin
+    self%rmax = rmax
+    self%adiabatic_electrons = adiabatic_electrons
+    self%use_zonal_flow = use_zonal_flow
+    self%epsilon_0 = epsilon_0
+    self%bc_rmin = sll_p_neumann_mode_0
+    self%bc_rmax = sll_p_dirichlet
+
+  end subroutine sll_s_test_neumann_mode0_init
 
   !=============================================================================
   ! 1D PROFILES
