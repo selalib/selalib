@@ -235,10 +235,10 @@ contains
       ! Determine value of k_j (careful: ordering is not trivial)
       glob_idx(:) = sll_o_local_to_global( solver%layout_r, [1,j] )
       k = glob_idx(2)
-      if (k <= ntheta/2) then
+      if (k-1 <= ntheta/2) then
         k = k-1
       else
-        k = ntheta-(k-1)
+        k = k-1 - ntheta
       end if
 
       ! Compute matrix coefficients for a given k_j
@@ -327,10 +327,10 @@ contains
       ! Determine value of k_j (careful: ordering is not trivial)
       glob_idx(:) = sll_o_local_to_global( solver%layout_r, [1,j] )
       k = glob_idx(2)
-      if (k <= ntheta/2) then
+      if (k-1 <= ntheta/2) then
         k = k-1
       else
-        k = ntheta-(k-1)
+        k = k-1 - ntheta
       endif
 
       ! Copy 1D slice of \hat{rho} into separate array
