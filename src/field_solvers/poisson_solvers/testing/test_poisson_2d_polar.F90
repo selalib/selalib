@@ -113,10 +113,10 @@ contains
 !<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
   subroutine run_test( test_case, nr, nth, error_norm )
-    class(c_test_case_poisson_2d_polar), intent(in) :: test_case
-    sll_int32, intent(in) :: nr
-    sll_int32, intent(in) :: nth
-    sll_real64, intent(out) :: error_norm
+    class(c_test_case_poisson_2d_polar), intent(in   ) :: test_case
+    sll_int32                          , intent(in   ) :: nr
+    sll_int32                          , intent(in   ) :: nth
+    sll_real64                         , intent(  out) :: error_norm
 
     type(sll_t_poisson_2d_polar) :: solver
     sll_real64 :: max_phi

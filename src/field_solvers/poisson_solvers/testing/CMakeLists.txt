@@ -1,3 +1,6 @@
+# Save .mod files locally (this does not pollute the main "modules" directory)
+SET(CMAKE_Fortran_MODULE_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}")
+
 ADD_EXECUTABLE( test_poisson_1d_polar test_poisson_1d_polar.F90 )
 TARGET_LINK_LIBRARIES( test_poisson_1d_polar sll_poisson_solvers )
 ADD_TEST( NAME poisson_1d_polar COMMAND test_poisson_1d_polar     )
