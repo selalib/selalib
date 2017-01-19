@@ -17,6 +17,52 @@
 !> @ingroup fft
 !> @author Katharina Kormann (IPP)
 !> @brief FFT interface for FFTW
+!> @details
+!!
+!!  #### Complex-to-Complex DFT (c2c) ####
+!!
+!!  The complex coefficients returned by the 'c2c' discrete Fourier transform
+!!  correspond to the interval \f$[0,2\pi)\f$, which is not symmetric with
+!!  respect to 0; nevertheless, because of the \f$2\pi\f$-periodicity of the
+!!  transform, the coefficients in \f$(\pi,2\pi)\f$ are identical to those
+!!  in \f$(-\pi,0)\f$.
+!!  Therefore, if we think in terms of positive and negative frequencies, the
+!!  \f$N\f$ complex coefficients returned by the 'c2c' transform are ordered as
+!!  \f[
+!!     \left[ c_0, c_1, c_2,..., c_{N/2}, c_{(-N+N/2+1)}, ..., c_{-2}, c_{-1} \right],
+!!  \f]
+!!  where the integer division is rounded down toward zero, so that
+!!  \f[
+!!     -N+N/2+1 = \begin{cases} -N/2+1 & \text{if $N$ is even},
+!!                           \\ -N/2   & \text{if $N$ is odd}.  \end{cases}
+!!  \f]
+!!
+!!  #### Real-to-Complex DFT (r2c) ####
+!!
+!!  If the input data to be transformed is real, then we know that the Fourier
+!!  transform has real and imaginary parts that are respectively symmetric and
+!!  anti-symmetric around 0; therefore all the necessary information is
+!!  contained in the interval \f$[0,\pi]\f$.
+!!  The 'r2c' discrete Fourier transform takes advantage of this by computing
+!!  only the \f$N/2+1\f$ complex Fourier coefficients
+!!  \f[
+!!     \left[ c_0, c_1, c_2, ..., c_{N/2} \right],
+!!  \f]
+!!  where \f$c_0\f$ has zero imaginary part, as well as \f$c_{N/2}\f$ if N is even.
+!!
+!!  #### Real-to-Real DFT (r2r) ####
+!!
+!!  When the input data array is real it is sometimes more convenient to store
+!!  the complex Fourier coefficients in a real output array of identical size.
+!!  The 'r2r' discrete Fourier transform provides this ability by using the
+!!  so-called 'halcomplex' format, where the \f$N/2+1\f$ complex Fourier
+!!  coefficients are given in the form of \f$N\f$ real values
+!!  \f[
+!!     \left[ r_0, r_1, r_2, ..., r_{N/2}, i_{(N+1)/2-1}, ..., i_{-2}, i_{-1} \right].
+!!  \f]
+!!  Here \f$r_k\f$ and \f$i_k\f$ are respectively the real and imaginary parts
+!!  of the complex coefficient \f$c_k\f$.
+
 module sll_m_fft
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_working_precision.h"
