@@ -15,22 +15,19 @@ program test_poisson_2d_polar
 
   use m_test_case_poisson_2d_dirichlet, only: &
     t_test_dirichlet_zero_error, &
-    t_test_dirichlet, &
-    sll_s_test_dirichlet_init
+    t_test_dirichlet
 
   use m_test_case_poisson_2d_neumann_mode0, only: &
-    t_test_neumann_mode0_zero_error, &
-    sll_s_test_neumann_mode0_init
+    t_test_neumann_mode0_zero_error
 
   implicit none
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
-  type(t_test_dirichlet_zero_error) :: test_case_dirichlet_zero_error
-  type(t_test_dirichlet) :: test_case_dirichlet
+  type(t_test_dirichlet_zero_error)     :: test_case_dirichlet_zero_error
+  type(t_test_dirichlet)                :: test_case_dirichlet
   type(t_test_neumann_mode0_zero_error) :: test_case_neumann_mode0_zero_error
 
   sll_int32  :: nr, nth
-  sll_real64 :: rmin, rmax
   sll_real64 :: error_norm, tol
 
   logical :: success
@@ -43,11 +40,6 @@ program test_poisson_2d_polar
   nr  = 64
   nth = 32
   tol = 1.0e-11_f64
-
-  ! Initialize test case
-  rmin = 1.0_f64
-  rmax = 2.0_f64
-  call sll_s_test_dirichlet_init( test_case_dirichlet_zero_error, rmin, rmax )
 
   ! Run test case
   call run_test( test_case_dirichlet_zero_error, nr, nth, error_norm )
@@ -71,11 +63,6 @@ program test_poisson_2d_polar
   nth = 32
   tol = 1.0e-4_f64
 
-  ! Initialize test case
-  rmin = 1.0_f64
-  rmax = 2.0_f64
-  call sll_s_test_dirichlet_init( test_case_dirichlet, rmin, rmax )
-
   ! Run test case
   call run_test( test_case_dirichlet, nr, nth, error_norm )
 
@@ -97,11 +84,6 @@ program test_poisson_2d_polar
   nr  = 64
   nth = 32
   tol = 1.0e-11_f64
-
-  ! Initialize test case
-  rmin = 1.0_f64
-  rmax = 2.0_f64
-  call sll_s_test_neumann_mode0_init( test_case_neumann_mode0_zero_error, rmin, rmax )
 
   ! Run test case
   call run_test( test_case_neumann_mode0_zero_error, nr, nth, error_norm )
@@ -140,16 +122,22 @@ contains
     sll_real64 :: max_phi
     sll_real64 :: max_err
 
+    sll_real64 :: rlim(2)
+    sll_int32  ::  bcs(2)
     sll_real64 ::  r,  th
     sll_real64 :: dr, dth
-    sll_int32 :: i, j
+    sll_int32  :: i, j
 
     sll_real64, allocatable :: rhs   (:,:)
     sll_real64, allocatable :: phi_ex(:,:)
     sll_real64, allocatable :: phi   (:,:)
 
+    ! Extract domain limits and boundary conditions
+    rlim(:) = test_case%get_rlim()
+    bcs (:) = test_case%get_bcs ()
+
     ! Computational grid
-    dr  = (test_case%rmax - test_case%rmin) / nr
+    dr  = (rlim(2)-rlim(1))/ nr
     dth = 2.0_f64*sll_p_pi / nth
 
     ! Allocate 2D distributed arrays (rho, phi, phi_ex) with layout_a
@@ -161,7 +149,7 @@ contains
     do j = 1, nth
       th = (j-1)*dth
       do i = 1, nr+1
-        r = test_case%rmin + (i-1)*dr
+        r = rlim(1) + (i-1)*dr
         phi_ex(i,j) = test_case%phi_ex( r, th )
         rhs   (i,j) = test_case%rhs   ( r, th )
       end do
@@ -170,12 +158,12 @@ contains
 
     ! Initialize parallel solver
     call sll_s_poisson_2d_polar_init( solver, &
-      rmin     = test_case%rmin, &
-      rmax     = test_case%rmax, &
+      rmin     = rlim(1), &
+      rmax     = rlim(2), &
       nr       = nr, &
       ntheta   = nth, &
-      bc_rmin  = test_case%bc_rmin , &
-      bc_rmax  = test_case%bc_rmax )
+      bc_rmin  = bcs(1), &
+      bc_rmax  = bcs(2) )
 
     ! Compute numerical phi for a given rhs
     call sll_s_poisson_2d_polar_solve( solver, rhs, phi )

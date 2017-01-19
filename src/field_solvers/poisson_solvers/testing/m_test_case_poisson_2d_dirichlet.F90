@@ -12,21 +12,41 @@ module m_test_case_poisson_2d_dirichlet
 
   public :: &
     t_test_dirichlet_zero_error, &
-    t_test_dirichlet, &
-    sll_s_test_dirichlet_init
+    t_test_dirichlet
 
   private
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
-  type, extends(c_test_case_poisson_2d_polar) :: t_test_dirichlet_zero_error
+  !-----------------------------------------------------------------------------
+  ! Dirichlet base class
+  !-----------------------------------------------------------------------------
+  type, extends(c_test_case_poisson_2d_polar), abstract :: c_test_dirichlet
+  
+    ! Boundary conditions (not overwritable)
+    sll_int32, private :: bc_rmin = sll_p_dirichlet
+    sll_int32, private :: bc_rmax = sll_p_dirichlet
 
-    !---------------------------------------------------------------------------
-    ! \phi(r,th) = (r-rmax)(r-rmin)(a + b*cos(k(th-th0))
-    !---------------------------------------------------------------------------
-    sll_real64 :: a   = 0.1_f64
-    sll_real64 :: b   = 1.6_f64
-    sll_real64 :: th0 = 0.3_f64
-    sll_int32  :: k   = 3
+    ! Default parameters (may be overwritten by user)
+    sll_real64 :: rmin = 1.0_f64
+    sll_real64 :: rmax = 2.0_f64
+    sll_real64 :: a    = 0.1_f64
+    sll_real64 :: b    = 1.6_f64
+    sll_real64 :: th0  = 0.3_f64
+    sll_int32  :: k    = 3
+
+  contains
+
+    ! Get domain limits and boundary conditions
+    procedure :: get_rlim => dirichlet_get_rlim
+    procedure :: get_bcs  => dirichlet_get_bcs
+
+  end type c_test_dirichlet
+
+  !-----------------------------------------------------------------------------
+  ! Test-case with expected zero numerical error (parabolic radial profile)
+  ! \phi(r,th) = (r-rmax)(r-rmin)(a + b*cos(k(th-th0))
+  !-----------------------------------------------------------------------------
+  type, extends(c_test_dirichlet) :: t_test_dirichlet_zero_error
 
   contains
     ! 2D manufactured solution
@@ -37,15 +57,11 @@ module m_test_case_poisson_2d_dirichlet
 
   end type t_test_dirichlet_zero_error
 
-  type, extends(c_test_case_poisson_2d_polar) :: t_test_dirichlet
-
-    !---------------------------------------------------------------------------
-    ! \phi(r,th) = r(r-rmax)(r-rmin)(a + b*cos(k(th-th0))
-    !---------------------------------------------------------------------------
-    sll_real64 :: a   = 0.1_f64
-    sll_real64 :: b   = 1.6_f64
-    sll_real64 :: th0 = 0.3_f64
-    sll_int32  :: k   = 3
+  !-----------------------------------------------------------------------------
+  ! Test-case with expected non-zero numerical error (cubic radial profile)
+  ! \phi(r,th) = r(r-rmax)(r-rmin)(a + b*cos(k(th-th0))
+  !-----------------------------------------------------------------------------
+  type, extends(c_test_dirichlet) :: t_test_dirichlet
 
   contains
     ! 2D manufactured solution
@@ -60,19 +76,34 @@ module m_test_case_poisson_2d_dirichlet
 contains
 !<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
-  subroutine sll_s_test_dirichlet_init( self, rmin, rmax )
-    class(c_test_case_poisson_2d_polar), intent(inout) :: self
-    sll_real64, intent(in) :: rmin
-    sll_real64, intent(in) :: rmax
+  !=============================================================================
+  ! Dirichlet base class
+  !=============================================================================
 
-    self%rmin = rmin
-    self%rmax = rmax
-    self%bc_rmin = sll_p_dirichlet
-    self%bc_rmax = sll_p_dirichlet
+  pure function dirichlet_get_rlim( self ) result( rlim )
+    class(c_test_dirichlet), intent(in) :: self
+    sll_real64 :: rlim(2)
 
-  end subroutine sll_s_test_dirichlet_init
+    rlim(1) = self%rmin
+    rlim(2) = self%rmax
+
+  end function dirichlet_get_rlim
 
   !-----------------------------------------------------------------------------
+  pure function dirichlet_get_bcs( self ) result( bcs )
+    class(c_test_dirichlet), intent(in) :: self
+    sll_int32 :: bcs(2)
+
+    bcs(1) = self%bc_rmin
+    bcs(2) = self%bc_rmax
+
+  end function dirichlet_get_bcs
+
+  !=============================================================================
+  ! Test-case with expected zero numerical error (parabolic radial profile)
+  ! \phi(r,th) = (r-rmax)(r-rmin)(a + b*cos(k(th-th0))
+  !=============================================================================
+
   pure function dirichlet_zero_error_phi_ex( self, r, th ) result( val )
     class(t_test_dirichlet_zero_error), intent(in) :: self
     sll_real64                        , intent(in) :: r
@@ -116,7 +147,10 @@ contains
 
   end function dirichlet_zero_error_phi_ex_d2th
 
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+  !=============================================================================
+  ! Test-case with expected non-zero numerical error (cubic radial profile)
+  ! \phi(r,th) = r(r-rmax)(r-rmin)(a + b*cos(k(th-th0))
+  !=============================================================================
 
   pure function dirichlet_phi_ex( self, r, th ) result( val )
     class(t_test_dirichlet), intent(in) :: self
