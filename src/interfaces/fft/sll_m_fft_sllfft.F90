@@ -1,3 +1,4 @@
+#ifndef DOXYGEN_SHOULD_SKIP_THIS
 !**************************************************************
 !  Copyright INRIA
 !  Authors :
@@ -21,7 +22,6 @@
 !> @details
 !> These functions do not depend on external library
 module sll_m_fft
-#ifndef DOXYGEN_SHOULD_SKIP_THIS
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_working_precision.h"
 #include "sll_assert.h"
