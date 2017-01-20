@@ -415,14 +415,14 @@ end do
 integral_solution       = sum(calculated)*h1*h2
 integral_exact_solution = sum(reference)*h1*h2
 
-call rho%delete()
-call c_field%delete()
-call a11_field_mat%delete()
-call a12_field_mat%delete()
-call a21_field_mat%delete()
-call b1_field_vect%delete()
-call b2_field_vect%delete()
-call a22_field_mat%delete()
+call rho%free()
+call c_field%free()
+call a11_field_mat%free()
+call a12_field_mat%free()
+call a21_field_mat%free()
+call b1_field_vect%free()
+call b2_field_vect%free()
+call a22_field_mat%free()
 call tau%delete()
 
 print"('integral solution       =',g15.3)", integral_solution
