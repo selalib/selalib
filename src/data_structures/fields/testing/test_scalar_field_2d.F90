@@ -68,10 +68,7 @@ program unit_test_2d
   type(sll_t_cartesian_mesh_2d), pointer                  :: mesh_2d
   class(sll_c_coordinate_transformation_2d_base), pointer :: T
 
-  class(sll_c_scalar_field_2d_base), pointer :: doubly_periodic
-  class(sll_c_scalar_field_2d_base), pointer :: periodic_dirichlet
-  class(sll_c_scalar_field_2d_base), pointer :: dirichlet_dirichlet
-  class(sll_c_scalar_field_2d_base), pointer :: dirichlet_periodic
+  class(sll_c_scalar_field_2d_base), pointer :: scalar_field
 
   type(sll_t_scalar_field_2d_analytic), target :: doubly_periodic_analytic
   type(sll_t_scalar_field_2d_analytic), target :: periodic_dirichlet_analytic
@@ -154,6 +151,8 @@ program unit_test_2d
        first_deriv_eta1=test_function_perper_der1,&
        first_deriv_eta2=test_function_perper_der2)
 
+  scalar_field => doubly_periodic_analytic
+
   print *, 'initialized field 2d'
   
   ! -------> compute error norm L2 and H1
@@ -163,9 +162,9 @@ program unit_test_2d
      do i=1,nc1+1
         eta1       = real(i-1,f64)*h1 + ETA1MIN
         eta2       = real(j-1,f64)*h2 + ETA2MIN
-        node_val   = doubly_periodic_analytic%value_at_point(eta1,eta2)
-        grad1_node_val = doubly_periodic_analytic%first_deriv_eta1_value_at_point(eta1, eta2)
-        grad2_node_val = doubly_periodic_analytic%first_deriv_eta2_value_at_point(eta1, eta2)
+        node_val   = scalar_field%value_at_point(eta1,eta2)
+        grad1_node_val = scalar_field%first_deriv_eta1_value_at_point(eta1, eta2)
+        grad2_node_val = scalar_field%first_deriv_eta2_value_at_point(eta1, eta2)
         ref        = test_function_perper(eta1,eta2,(/0.0_f64/))
         grad1ref   = test_function_perper_der1(eta1,eta2,(/0.0_f64/))
         grad2ref   = test_function_perper_der2(eta1,eta2,(/0.0_f64/))
@@ -186,10 +185,10 @@ program unit_test_2d
   end do
   
   ! -------> field visualization 
-  call doubly_periodic_analytic%write_to_file(1)
+  call scalar_field%write_to_file(1)
   
   ! -------> delete field
-  call doubly_periodic_analytic%free()
+  call scalar_field%free()
   
   ! --------------------------------------------------------------------------
   !   Test case periodic-dirichlet analytic
@@ -208,6 +207,7 @@ program unit_test_2d
        first_deriv_eta1=test_function_perdir_der1,&
        first_deriv_eta2=test_function_perdir_der2) 
 
+  scalar_field => periodic_dirichlet_analytic
   print *, 'initialized field 2d'
   
   ! -------> compute error norm L2 and H1
@@ -217,11 +217,11 @@ program unit_test_2d
      do i=1,nc1+1
         eta1       = real(i-1,f64)*h1 + ETA1MIN
         eta2       = real(j-1,f64)*h2 + ETA2MIN
-        node_val   = periodic_dirichlet_analytic%value_at_point(eta1,eta2)
-        grad1_node_val = periodic_dirichlet_analytic%first_deriv_eta1_value_at_point(&
+        node_val   = scalar_field%value_at_point(eta1,eta2)
+        grad1_node_val = scalar_field%first_deriv_eta1_value_at_point(&
                                                                               eta1, eta2)
         grad2_node_val = &
-             periodic_dirichlet_analytic%first_deriv_eta2_value_at_point(&
+             scalar_field%first_deriv_eta2_value_at_point(&
              eta1, eta2)
         ref        = test_function_perdir(eta1,eta2,(/0.0_f64/))
         grad1ref   = test_function_perdir_der1(eta1,eta2,(/0.0_f64/))
@@ -243,10 +243,10 @@ program unit_test_2d
   end do
 
   ! -------> field visualization
-   call periodic_dirichlet_analytic%write_to_file(1)
+   call scalar_field%write_to_file(1)
   
    ! -------> delete field
-  call periodic_dirichlet_analytic%free()
+  call scalar_field%free()
   
   ! --------------------------------------------------------------------------
   !   Test case dirichlet-periodic analytic
