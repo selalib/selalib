@@ -31,7 +31,6 @@ program test_poisson_2d_polar
   sll_real64 :: error_norm, tol
 
   logical :: success
-
   success = .true.
 
   !=============================================================================
