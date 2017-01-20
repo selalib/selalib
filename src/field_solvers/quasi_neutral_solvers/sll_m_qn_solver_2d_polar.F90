@@ -73,11 +73,12 @@ module sll_m_qn_solver_2d_polar
 
   use sll_m_fft, only: &
     sll_t_fft, &
-    sll_p_fft_forward, &
-    sll_p_fft_backward, &
     sll_f_fft_allocate_aligned_complex, &
-    sll_s_fft_init_c2c_1d, &
-    sll_s_fft_exec_c2c_1d, &
+    sll_f_fft_allocate_aligned_real, &
+    sll_s_fft_init_r2c_1d, &
+    sll_s_fft_init_c2r_1d, &
+    sll_s_fft_exec_r2c_1d, &
+    sll_s_fft_exec_c2r_1d, &
     sll_s_fft_free
 
   use sll_m_tridiagonal, only: &
@@ -109,9 +110,8 @@ module sll_m_qn_solver_2d_polar
    type(sll_t_fft)         :: fw       !< Forward FFT plan
    type(sll_t_fft)         :: bw       !< Inverse FFT plan
    sll_comp64, allocatable :: z   (:,:)!< 2D work array needed for transposition
-   sll_comp64, pointer     :: zrow(:)  !< 1D slice (one row) of z, ALIGNED
-   sll_comp64, allocatable :: fk  (:)  !< k-th Fourier mode of rho
-   sll_comp64, allocatable :: phik(:)  !< k-th Fourier mode of phi
+   sll_real64, pointer     :: temp_r(:) !< 1D work array, real
+   sll_comp64, pointer     :: temp_c(:) !< 1D work array, complex
    sll_real64, allocatable :: mat (:,:)!< Tridiagonal matrix (one for each k)
    sll_real64, allocatable :: cts (:)  !< Lapack coefficients
    sll_int32 , allocatable :: ipiv(:)  !< Lapack pivot indices
@@ -130,6 +130,7 @@ module sll_m_qn_solver_2d_polar
 contains
 !<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
+  !=============================================================================
   !> Initialize the solver
   subroutine sll_s_qn_solver_2d_polar_init( solver, &
       rmin          , &
@@ -166,19 +167,19 @@ contains
     sll_real64 :: d1(-1:+1)
     sll_real64 :: d2(-1:+1)
 
-    sll_int32  :: i, j, k
-    sll_int32  :: bc(2)
+    sll_int32  :: i, k
+    sll_int32  :: bck(2)
     sll_int32  :: last
 
     ! Consistency check: boundary conditions must be one of three options
     if( any( bc_rmin == bc_opts ) ) then
-      bc(1) = bc_rmin
+      solver%bc(1) = bc_rmin
     else
       SLL_ERROR( this_sub_name, 'Unrecognized boundary condition at r_min' )
     end if
     !
     if( any( bc_rmax == bc_opts ) ) then
-      bc(2) = bc_rmax
+      solver%bc(2) = bc_rmax
     else
       SLL_ERROR( this_sub_name, 'Unrecognized boundary condition at r_max' )
     end if
@@ -195,34 +196,30 @@ contains
     solver%rmax  = rmax
     solver%nr    = nr
     solver%nt    = ntheta
-    solver%bc(:) = bc(:)
 
     ! Allocate arrays
     allocate( solver%g   (nr+1) )
-    allocate( solver%z   (nr+1,ntheta) )
-    allocate( solver%fk  (nr+1) )
-    allocate( solver%phik(nr+1) )
-    allocate( solver%mat((nr-1)*3,ntheta) ) ! for each k, matrix depends on r
+    allocate( solver%z   (nr+1,0:ntheta/2) )
+    allocate( solver%mat((nr-1)*3,0:ntheta/2) ) ! for each k, matrix depends on r
     allocate( solver%cts((nr-1)*7) )
     allocate( solver%ipiv(nr-1) )
 
-    ! Allocate in ALIGNED fashion 1D array for storing one row of z
-    solver%zrow => sll_f_fft_allocate_aligned_complex( ntheta )
+    ! Allocate in ALIGNED fashion 1D work arrays for FFT
+    solver%temp_r => sll_f_fft_allocate_aligned_real   ( ntheta )
+    solver%temp_c => sll_f_fft_allocate_aligned_complex( ntheta/2+1 )
 
     ! Initialize plans for forward and backward FFTs
-    call sll_s_fft_init_c2c_1d( solver%fw, &
+    call sll_s_fft_init_r2c_1d( solver%fw, &
       ntheta             , &
-      solver%zrow(:)     , &
-      solver%zrow(:)     , &
-      sll_p_fft_forward  , &
+      solver%temp_r(:)   , &
+      solver%temp_c(:)   , &
       aligned    = .true., &
       normalized = .true. )
 
-    call sll_s_fft_init_c2c_1d( solver%bw, &
+    call sll_s_fft_init_c2r_1d( solver%bw, &
       ntheta             , &
-      solver%zrow(:)     , &
-      solver%zrow(:)     , &
-      sll_p_fft_backward , &
+      solver%temp_c(:)   , &
+      solver%temp_r(:)   , &
       aligned    = .true., &
       normalized = .false. )
 
@@ -234,15 +231,20 @@ contains
     inv_dr = 1.0_f64 / dr
 
     ! Store matrix coefficients into solver%mat
-    ! Cycle over k_j
-    do j = 1, ntheta
+    ! Cycle over k
+    do k = 0, ntheta/2
 
-      ! Determine value of k_j (careful: ordering is not trivial)
-      if (j-1 <= ntheta/2) then
-        k = j-1
-      else
-        k = j-1 - ntheta
-      end if
+      ! Compute boundary conditions type for mode k
+      bck(:) = solver%bc(:)
+      do i = 1, 2
+        if (bck(i) == sll_p_neumann_mode_0) then
+          if (k == 0) then
+            bck(i) = sll_p_neumann
+          else
+            bck(i) = sll_p_dirichlet
+          end if
+        end if
+      end do
 
       ! Compute matrix coefficients for a given k_j
       do i = 2, nr
@@ -266,45 +268,29 @@ contains
 
         end associate
 
-        solver%mat(3*(i-1)  ,j) = -d2( 1) -d1( 1)*inv_r
-        solver%mat(3*(i-1)-1,j) = -d2( 0) -d1( 0)*inv_r  + (k*inv_r)**2 + c
-        solver%mat(3*(i-1)-2,j) = -d2(-1) -d1(-1)*inv_r
+        solver%mat(3*(i-1)  ,k) = -d2( 1) -d1( 1)*inv_r
+        solver%mat(3*(i-1)-1,k) = -d2( 0) -d1( 0)*inv_r  + (k*inv_r)**2 + c
+        solver%mat(3*(i-1)-2,k) = -d2(-1) -d1(-1)*inv_r
       end do
 
       ! Set boundary condition at rmin
-      if (bc(1) == sll_p_dirichlet) then ! Dirichlet
-        solver%mat(1,j) = 0.0_f64
-      else if (bc(1) == sll_p_neumann) then ! Neumann
-        solver%mat(3,j) = solver%mat(3,j) -  one_third  * solver%mat(1,j)
-        solver%mat(2,j) = solver%mat(2,j) + four_thirds * solver%mat(1,j)
-        solver%mat(1,j) = 0.0_f64
-      else if (bc(1) == sll_p_neumann_mode_0) then 
-        if (k == 0) then ! Neumann for mode zero
-          solver%mat(3,j) = solver%mat(3,j) -  one_third  * solver%mat(1,j)
-          solver%mat(2,j) = solver%mat(2,j) + four_thirds * solver%mat(1,j)
-          solver%mat(1,j) = 0.0_f64
-        else             ! Dirichlet for other modes
-          solver%mat(1,j) = 0.0_f64
-        endif
-      endif
+      if (bck(1) == sll_p_dirichlet) then ! Dirichlet
+        solver%mat(1,k) = 0.0_f64
+      else if (bck(1) == sll_p_neumann) then ! Neumann
+        solver%mat(3,k) = solver%mat(3,k) -  one_third  * solver%mat(1,k)
+        solver%mat(2,k) = solver%mat(2,k) + four_thirds * solver%mat(1,k)
+        solver%mat(1,k) = 0.0_f64
+      end if
 
       ! Set boundary condition at rmax
       last = 3*(nr-1)
-      if (bc(2) == sll_p_dirichlet) then ! Dirichlet
-        solver%mat(last,j) = 0.0_f64
-      else if (bc(2) == sll_p_neumann) then ! Neumann
-        solver%mat(last-2,j) = solver%mat(last-2,j) -  one_third  *solver%mat(last,j)
-        solver%mat(last-1,j) = solver%mat(last-1,j) + four_thirds *solver%mat(last,j)
-        solver%mat(last  ,j) = 0.0_f64
-      else if (bc(2) == sll_p_neumann_mode_0) then 
-        if (k == 0) then ! Neumann for mode zero
-          solver%mat(last-2,j) = solver%mat(last-2,j) -  one_third  *solver%mat(last,j)
-          solver%mat(last-1,j) = solver%mat(last-1,j) + four_thirds *solver%mat(last,j)
-          solver%mat(last  ,j) = 0.0_f64
-        else             ! Dirichlet for other modes
-          solver%mat(last,j) = 0.0_f64
-        endif
-      endif
+      if (bck(2) == sll_p_dirichlet) then ! Dirichlet
+        solver%mat(last,k) = 0.0_f64
+      else if (bck(2) == sll_p_neumann) then ! Neumann
+        solver%mat(last-2,k) = solver%mat(last-2,k) -  one_third  *solver%mat(last,k)
+        solver%mat(last-1,k) = solver%mat(last-1,k) + four_thirds *solver%mat(last,k)
+        solver%mat(last  ,k) = 0.0_f64
+      end if
 
     end do
 
@@ -318,81 +304,73 @@ contains
     sll_real64                     , intent(in   ) :: rho(:,:) !< Charge density
     sll_real64                     , intent(  out) :: phi(:,:) !< Potential
 
-    sll_int32  :: nr, ntheta, bc(2)
-    sll_int32  :: i, j, k
+    sll_int32  :: nr, ntheta, bck(2)
+    sll_int32  :: i, k
 
     nr     = solver%nr
     ntheta = solver%nt
-    bc     = solver%bc
 
     ! Consistency check: 'rho' and 'phi' have shape defined at initialization
     SLL_ASSERT( all( shape(rho) == [nr+1,ntheta] ) )
     SLL_ASSERT( all( shape(phi) == [nr+1,ntheta] ) )
 
-    ! Copy charge into 2D complex array
-    solver%z(:,:) = cmplx( rho(:,:), 0.0_f64, kind=f64 )
-
     ! For each r_i, compute FFT of rho(r_i,theta) to obtain \hat{rho}(r_i,k)
     do i = 1, nr+1
-      solver%zrow(:) = solver%z(i,:)
-      call sll_s_fft_exec_c2c_1d( solver%fw, solver%zrow(:), solver%zrow(:) )
-      solver%z(i,:) = solver%zrow(:)
+      solver%temp_r(:) = rho(i,:)
+      call sll_s_fft_exec_r2c_1d( solver%fw, solver%temp_r(:), solver%temp_c(:) )
+      solver%z(i,:) = solver%temp_c(:)
     end do
 
-    ! Cycle over k_j
-    do j = 1, ntheta
+    ! Cycle over k
+    do k = 0, ntheta/2
 
-      ! Determine value of k_j (careful: ordering is not trivial)
-      if (j-1 <= ntheta/2) then
-        k = j-1
-      else
-        k = j-1 - ntheta
-      end if
-
-      ! Copy 1D slice of \hat{rho} into separate array and divide it by (g*eps0)
-      solver%fk(:) = solver%z(:,j) / (solver%g(:) * solver%epsilon_0)
+      ! rhok(r) is k-th Fourier mode of rho(r,theta)
+      ! phik(r) is k-th Fourier mode of phi(r,theta)
+      ! rhok is 1D contiguous slice (column) of solver%z
+      ! we will overwrite rhok with phik
+      associate( rhok => solver%z(:,k)/(solver%g(:)*solver%epsilon_0), &
+                 phik => solver%z(:,k) )
 
       ! Solve tridiagonal system to obtain \hat{phi}_{k_j}(r) at internal points
-      call sll_s_setup_cyclic_tridiag( solver%mat(:,j), nr-1, solver%cts, solver%ipiv )
-      call sll_o_solve_cyclic_tridiag( solver%cts, solver%ipiv, solver%fk(2:nr), &
-        nr-1, solver%phik(2:nr) )
+      call sll_s_setup_cyclic_tridiag( solver%mat(:,k), nr-1, solver%cts, solver%ipiv )
+      call sll_o_solve_cyclic_tridiag( solver%cts, solver%ipiv, rhok(2:nr), &
+        nr-1, phik(2:nr) )
+
+      ! Compute boundary conditions type for mode k
+      bck(:) = solver%bc(:)
+      do i = 1, 2
+        if (bck(i) == sll_p_neumann_mode_0) then
+          if (k == 0) then
+            bck(i) = sll_p_neumann
+          else
+            bck(i) = sll_p_dirichlet
+          end if
+        end if
+      end do
 
       ! Boundary condition at rmin
-      if (bc(1) == sll_p_dirichlet) then ! Dirichlet
-        solver%phik(1) = (0.0_f64, 0.0_f64)
-      else if (bc(1) == sll_p_neumann) then ! Neumann
-        solver%phik(1) = four_thirds*solver%phik(2) - one_third*solver%phik(3)
-      else if (bc(1) == sll_p_neumann_mode_0) then 
-        if (k==0) then ! Neumann for mode zero
-          solver%phik(1) = four_thirds*solver%phik(2) - one_third*solver%phik(3)
-        else           ! Dirichlet for other modes
-          solver%phik(1) = (0.0_f64, 0.0_f64)
-        endif
-      endif
+      if (bck(1) == sll_p_dirichlet) then ! Dirichlet
+        phik(1) = (0.0_f64, 0.0_f64)
+      else if (bck(1) == sll_p_neumann) then ! Neumann
+        phik(1) = four_thirds*phik(2) - one_third*phik(3)
+      end if
 
       ! Boundary condition at rmax
-      if (bc(2) == sll_p_dirichlet) then ! Dirichlet
-        solver%phik(nr+1) = (0.0_f64, 0.0_f64)
-      else if (bc(2) == sll_p_neumann) then ! Neumann
-        solver%phik(nr+1) = four_thirds*solver%phik(nr) - one_third*solver%phik(nr-1)
-      else if (bc(2) == sll_p_neumann_mode_0) then 
-        if(k==0) then ! Neumann for mode zero
-          solver%phik(nr+1) = four_thirds*solver%phik(nr) - one_third*solver%phik(nr-1)
-        else          ! Dirichlet for other modes
-          solver%phik(nr+1) = (0.0_f64, 0.0_f64)
-        endif
-      endif
+      if (bck(2) == sll_p_dirichlet) then ! Dirichlet
+        phik(nr+1) = (0.0_f64, 0.0_f64)
+      else if (bck(2) == sll_p_neumann) then ! Neumann
+        phik(nr+1) = four_thirds*phik(nr) - one_third*phik(nr-1)
+      end if
 
-      ! Store \hat{phi}_{k_j}(r) into 1D slice of 2D array
-      solver%z(:,j) = solver%phik(:)
+      end associate
 
     end do
 
     ! For each r_i, compute inverse FFT of \hat{phi}(r_i,k) to obtain phi(r_i,theta)
     do i = 1, nr+1
-      solver%zrow(:) = solver%z(i,:)
-      call sll_s_fft_exec_c2c_1d( solver%bw, solver%zrow(:), solver%zrow(:) )
-      phi(i,:) = real( solver%zrow(:) )
+      solver%temp_c(:) = solver%z(i,:)
+      call sll_s_fft_exec_c2r_1d( solver%bw, solver%temp_c(:), solver%temp_r(:) )
+      phi(i,:) = solver%temp_r(:)
     end do
 
   end subroutine sll_s_qn_solver_2d_polar_solve
@@ -406,10 +384,10 @@ contains
     call sll_s_fft_free( solver%fw )
     call sll_s_fft_free( solver%bw )
 
+    deallocate( solver%temp_r )
+    deallocate( solver%temp_c )
+
     deallocate( solver%z    )
-    deallocate( solver%zrow )
-    deallocate( solver%fk   )
-    deallocate( solver%phik )
     deallocate( solver%mat  )
     deallocate( solver%cts  )
     deallocate( solver%ipiv )
