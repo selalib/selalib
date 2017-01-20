@@ -14,12 +14,10 @@ program test_qn_solver_2d_polar
     c_test_case_qn_solver_2d_polar
 
   use m_test_case_qn_2d_dirichlet, only: &
-    t_test_dirichlet_zero_error, &
-    sll_s_test_dirichlet_init
+    t_test_dirichlet_zero_error
 
   use m_test_case_qn_2d_neumann_mode0, only: &
-    t_test_neumann_mode0_zero_error, &
-    sll_s_test_neumann_mode0_init
+    t_test_neumann_mode0_zero_error
 
   implicit none
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -28,10 +26,6 @@ program test_qn_solver_2d_polar
   type(t_test_neumann_mode0_zero_error) :: test_case_neumann_mode0
 
   sll_int32  :: nr, nth
-  sll_real64 :: rmin, rmax
-  logical    :: adiabatic_electrons
-  logical    :: use_zonal_flow
-  sll_real64 :: epsilon_0
   sll_real64 :: error_norm, tol
 
   logical :: success
@@ -44,16 +38,6 @@ program test_qn_solver_2d_polar
   nth = 32
   tol = 1.0e-11_f64
 
-  ! Initialize test case
-  rmin                = 1.0_f64
-  rmax                = 10.0_f64
-  adiabatic_electrons = .true.
-  use_zonal_flow      = .true.
-  epsilon_0           = 1.0_f64
-  call sll_s_test_dirichlet_init( test_case_dirichlet, rmin, rmax, &
-    adiabatic_electrons, use_zonal_flow, epsilon_0 )
-
-  ! Run test case
   call run_test( test_case_dirichlet, nr, nth, error_norm )
 
   ! Write relative error norm (global) to standard output
@@ -75,16 +59,6 @@ program test_qn_solver_2d_polar
   nth = 32
   tol = 1.0e-11_f64
 
-  ! Initialize test case
-  rmin                = 1.0_f64
-  rmax                = 10.0_f64
-  adiabatic_electrons = .true.
-  use_zonal_flow      = .true.
-  epsilon_0           = 1.0_f64
-  call sll_s_test_neumann_mode0_init( test_case_neumann_mode0, rmin, rmax, &
-    adiabatic_electrons, use_zonal_flow, epsilon_0 )
-
-  ! Run test case
   call run_test( test_case_neumann_mode0, nr, nth, error_norm )
 
   ! Write relative error norm (global) to standard output
@@ -125,6 +99,12 @@ contains
     sll_real64 :: dr, dth
     sll_int32  :: i, j
 
+    sll_real64 :: rlim(2)
+    sll_int32  :: bcs (2)
+    logical    :: adiabatic_electrons
+    logical    :: use_zonal_flow
+    sll_real64 :: epsilon_0
+
     sll_real64, allocatable :: rhs   (:,:)
     sll_real64, allocatable :: phi_ex(:,:)
     sll_real64, allocatable :: phi   (:,:)
@@ -133,8 +113,15 @@ contains
     sll_real64, allocatable :: b_magn(:)
     sll_real64, allocatable :: lambda(:)
 
+    ! Extract domain limits and boundary conditions
+    rlim(:) = test_case%get_rlim()
+    bcs (:) = test_case%get_bcs ()
+
+    ! Extract test-case parameters
+    call test_case%get_parameters( adiabatic_electrons, use_zonal_flow, epsilon_0 )
+
     ! Computational grid
-    dr  = (test_case%rmax - test_case%rmin) / nr
+    dr  = (rlim(2) - rlim(1)) / nr
     dth = 2.0_f64*sll_p_pi / nth
 
     ! Allocate 2D distributed arrays (rho, phi, phi_ex) with layout_a
@@ -146,7 +133,7 @@ contains
     do j = 1, nth
       th = (j-1)*dth
       do i = 1, nr+1
-        r = test_case%rmin + (i-1)*dr
+        r = rlim(1) + (i-1)*dr
         phi_ex(i,j) = test_case%phi_ex( r, th )
         rhs   (i,j) = test_case%rhs   ( r, th )
       end do
@@ -159,7 +146,7 @@ contains
     allocate( lambda(nr+1) )
     !
     do i = 1, nr+1
-      r = test_case%rmin + (i-1)*dr
+      r = rlim(1) + (i-1)*dr
       rho_m0(i) = test_case%rho_m0( r )
       b_magn(i) = test_case%b_magn( r )
       lambda(i) = test_case%lambda( r )
@@ -167,17 +154,17 @@ contains
 
     ! Initialize solver
     call sll_s_qn_solver_2d_polar_init( solver, &
-      rmin     = test_case%rmin, &
-      rmax     = test_case%rmax, &
-      nr       = nr, &
-      ntheta   = nth, &
-      rho_m0   = rho_m0, &
-      b_magn   = b_magn, &
-      lambda   = lambda, &
-      use_zonal_flow = test_case%use_zonal_flow, &
-      epsilon_0      = test_case%epsilon_0     , &
-      bc_rmin        = test_case%bc_rmin , &
-      bc_rmax        = test_case%bc_rmax )
+      rmin           = rlim(1), &
+      rmax           = rlim(2), &
+      nr             = nr, &
+      ntheta         = nth, &
+      rho_m0         = rho_m0, &
+      b_magn         = b_magn, &
+      lambda         = lambda, &
+      use_zonal_flow = use_zonal_flow, &
+      epsilon_0      = epsilon_0     , &
+      bc_rmin        = bcs(1), &
+      bc_rmax        = bcs(2) )
 
     ! Compute numerical phi for a given rhs
     call sll_s_qn_solver_2d_polar_solve( solver, rhs, phi )
