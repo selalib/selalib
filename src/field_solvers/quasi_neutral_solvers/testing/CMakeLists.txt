@@ -1,3 +1,6 @@
+# Save .mod files locally (this does not pollute the main "modules" directory)
+SET(CMAKE_Fortran_MODULE_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}")
+
 add_executable( test_qn_solver_2d_polar
   test_qn_solver_2d_polar.F90
   m_test_case_qn_2d_base.F90
