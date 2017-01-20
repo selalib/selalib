@@ -1452,7 +1452,7 @@ subroutine initialize_fields( bc_eta1_min, bc_eta1_max, bc_eta2_min, bc_eta2_max
     SPLINE_DEG1,                                     &
     SPLINE_DEG2 )
 
-  call sll_s_initialize_ad2d_interpolator(                 &
+  call sll_s_initialize_ad2d_interpolator(           &
     interp_2d_rhs,                                   &
     NUM_CELLS1+1,                                    &
     NUM_CELLS2+1,                                    &
@@ -1467,7 +1467,7 @@ subroutine initialize_fields( bc_eta1_min, bc_eta1_max, bc_eta2_min, bc_eta2_max
     SPLINE_DEG1,                                     &
     SPLINE_DEG2 )
 
-  phi => sll_f_new_scalar_field_2d_discrete(               &
+  phi => sll_f_new_scalar_field_2d_discrete(         &
     "phi_"//ccase,                                   &
     interp_2d,                                       &
     T,                                               &
@@ -1513,7 +1513,7 @@ integral_exact_solution = 0.0_f64
 
 call sll_s_set_time_mark(t_reference)
 
-call sll_o_create(       &
+call sll_o_create(     &
   es,                  &
   SPLINE_DEG1,         &
   SPLINE_DEG2,         &
