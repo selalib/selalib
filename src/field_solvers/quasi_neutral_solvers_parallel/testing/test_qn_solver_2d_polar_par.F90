@@ -13,14 +13,14 @@ program test_qn_solver_2d_polar_par
     sll_s_qn_solver_2d_polar_par_init, &
     sll_s_qn_solver_2d_polar_par_solve
 
-  use m_test_case_qn_par_2d_base, only: &
+  use m_test_case_qn_2d_base, only: &
     c_test_case_qn_solver_2d_polar
 
-  use m_test_case_qn_par_2d_dirichlet, only: &
+  use m_test_case_qn_2d_dirichlet, only: &
     t_test_dirichlet_zero_error, &
     sll_s_test_dirichlet_init
 
-  use m_test_case_qn_par_2d_neumann_mode0, only: &
+  use m_test_case_qn_2d_neumann_mode0, only: &
     t_test_neumann_mode0_zero_error, &
     sll_s_test_neumann_mode0_init
 
