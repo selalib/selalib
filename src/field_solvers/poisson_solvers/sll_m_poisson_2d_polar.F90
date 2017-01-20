@@ -123,8 +123,8 @@ contains
     sll_int32 , intent(in) :: bc_rmin  !< boundary condition at r_min
     sll_int32 , intent(in) :: bc_rmax  !< boundary condition at r_max
 
-    character(len=*), parameter :: this_sub_name = &
-                                               'sll_s_poisson_2d_polar_init'
+    character(len=*), parameter :: this_sub_name = 'sll_s_poisson_2d_polar_init'
+
     sll_real64 :: dr
     sll_real64 :: inv_r
     sll_real64 :: inv_dr
