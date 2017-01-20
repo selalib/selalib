@@ -49,7 +49,7 @@ contains
 !<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
   subroutine sll_s_test_neumann_mode0_init( self, rmin, rmax, &
-    adiabatic_electrons, use_zonal_flow, epsilon_0)
+    adiabatic_electrons, use_zonal_flow, epsilon_0 )
     class(c_test_case_qn_solver_2d_polar), intent(inout) :: self
     sll_real64, intent(in) :: rmin
     sll_real64, intent(in) :: rmax
