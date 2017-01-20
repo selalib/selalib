@@ -40,7 +40,6 @@ program test_poisson_2d_polar
   nth = 32
   tol = 1.0e-11_f64
 
-  ! Run test case
   call run_test( test_case_dirichlet_zero_error, nr, nth, error_norm )
 
   ! Write relative error norm (global) to standard output
@@ -62,7 +61,6 @@ program test_poisson_2d_polar
   nth = 32
   tol = 1.0e-4_f64
 
-  ! Run test case
   call run_test( test_case_dirichlet, nr, nth, error_norm )
 
   ! Write relative error norm (global) to standard output
@@ -84,7 +82,6 @@ program test_poisson_2d_polar
   nth = 32
   tol = 1.0e-11_f64
 
-  ! Run test case
   call run_test( test_case_neumann_mode0_zero_error, nr, nth, error_norm )
 
   ! Write relative error norm (global) to standard output

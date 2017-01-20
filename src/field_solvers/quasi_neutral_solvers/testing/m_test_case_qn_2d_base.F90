@@ -12,15 +12,11 @@ private
 
   type, abstract :: c_test_case_qn_solver_2d_polar
 
-    sll_real64 :: rmin
-    sll_real64 :: rmax
-    logical    :: adiabatic_electrons
-    logical    :: use_zonal_flow
-    sll_real64 :: epsilon_0
-    sll_int32  :: bc_rmin
-    sll_int32  :: bc_rmax
-
   contains
+    ! Get domain limits, boundary conditions and parameters
+    procedure( i_func_get_rlim ),       deferred :: get_rlim
+    procedure( i_func_get_bcs  ),       deferred :: get_bcs
+    procedure( i_subr_get_parameters ), deferred :: get_parameters
     ! 1D input profiles
     procedure( i_func_1d_real ), deferred :: rho_m0
     procedure( i_func_1d_real ), deferred :: rho_m0_diff1_r
@@ -40,6 +36,33 @@ private
 
   !-----------------------------------------------------------------------------
   abstract interface
+
+    ! Get domain limits
+    pure function i_func_get_rlim( self ) result( rlim )
+      use sll_m_working_precision
+      import c_test_case_qn_solver_2d_polar
+      class( c_test_case_qn_solver_2d_polar ), intent(in) :: self
+      sll_real64 :: rlim(2)
+    end function i_func_get_rlim
+
+    ! Get boundary conditions
+    pure function i_func_get_bcs( self ) result( bcs )
+      use sll_m_working_precision
+      import c_test_case_qn_solver_2d_polar
+      class( c_test_case_qn_solver_2d_polar ), intent(in) :: self
+      sll_int32 :: bcs(2)
+    end function i_func_get_bcs
+
+    ! Get parameters
+    pure subroutine i_subr_get_parameters( self, adiabatic_electrons, &
+                                           use_zonal_flow, epsilon_0 )
+      use sll_m_working_precision
+      import c_test_case_qn_solver_2d_polar
+      class( c_test_case_qn_solver_2d_polar ), intent(in) :: self
+      logical,    intent(out) :: adiabatic_electrons
+      logical,    intent(out) :: use_zonal_flow
+      sll_real64, intent(out) :: epsilon_0
+    end subroutine i_subr_get_parameters
 
     ! 1D radial profile, scalar real function
     pure function i_func_1d_real( self, r ) result( val )
@@ -76,24 +99,29 @@ contains
     sll_real64 :: dg_dr
     sll_real64 :: dphi
 
+    logical    :: adiabatic_electrons
+    logical    :: use_zonal_flow
+    sll_real64 :: epsilon_0
+
+    call self%get_parameters( adiabatic_electrons, use_zonal_flow, epsilon_0 )
+
     associate( rho_m0         => self%rho_m0        ( r ), &
                rho_m0_diff1_r => self%rho_m0_diff1_r( r ), &
                b_magn         => self%b_magn        ( r ), &
                b_magn_diff1_r => self%b_magn_diff1_r( r ) )
 
       ! Utility function: g(r) = rho_m0 / (B^2 epsilon_0)
-      g     =  rho_m0 / (b_magn**2 * self%epsilon_0)
+      g     =  rho_m0 / (b_magn**2 * epsilon_0)
       dg_dr = (rho_m0_diff1_r * b_magn**2 &
-        - rho_m0 * 2.0_f64 * b_magn * b_magn_diff1_r) &
-        / (b_magn**4 * self%epsilon_0)
+        - rho_m0 * 2.0_f64 * b_magn * b_magn_diff1_r) / (b_magn**4 * epsilon_0)
     end associate
 
     rho_c1 = g            * self%phi_ex_diff2_r ( r, th ) &
            +(g/r + dg_dr) * self%phi_ex_diff1_r ( r, th ) &
            + g/r**2       * self%phi_ex_diff2_th( r, th )
 
-    if (self%adiabatic_electrons) then
-      if (self%use_zonal_flow) then
+    if (adiabatic_electrons) then
+      if (use_zonal_flow) then
         dphi = self%phi_ex( r, th ) - self%phi_ex_avg_th( r, th )
       else
         dphi = self%phi_ex( r, th )
@@ -101,7 +129,7 @@ contains
       rho_c1 = rho_c1 - dphi / self%lambda( r )**2
     end if
 
-    rho_c1 = -self%epsilon_0 * rho_c1
+    rho_c1 = -epsilon_0 * rho_c1
 
   end function f_test_case__rhs
 
