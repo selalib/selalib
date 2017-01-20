@@ -130,18 +130,18 @@ contains
     sll_real64 :: inv_dr
 
     sll_int32  :: i, k
-    sll_int32  :: bc(2)
+    sll_int32  :: bck(2)
     sll_int32  :: last
 
     ! Consistency check: boundary conditions must be one of three options
     if( any( bc_rmin == bc_opts ) ) then
-      bc(1) = bc_rmin
+      solver%bc(1) = bc_rmin
     else
       SLL_ERROR( this_sub_name, 'Unrecognized boundary condition at r_min' )
     end if
     !
     if( any( bc_rmax == bc_opts ) ) then
-      bc(2) = bc_rmax
+      solver%bc(2) = bc_rmax
     else
       SLL_ERROR( this_sub_name, 'Unrecognized boundary condition at r_max' )
     end if
@@ -151,7 +151,6 @@ contains
     solver%rmax  =  rmax
     solver%nr    =  nr
     solver%nt    =  ntheta
-    solver%bc(:) =  bc(:)
 
     ! Allocate arrays global in r
     allocate( solver%z   (nr+1   ,0:ntheta/2) )
@@ -186,6 +185,18 @@ contains
     ! Cycle over k
     do k = 0, ntheta/2
 
+      ! Compute boundary conditions type for mode k
+      bck(:) = solver%bc(:)
+      do i = 1, 2
+        if (bck(i) == sll_p_neumann_mode_0) then
+          if (k == 0) then
+            bck(i) = sll_p_neumann
+          else
+            bck(i) = sll_p_dirichlet
+          end if
+        end if
+      end do
+
       ! Compute matrix coefficients for a given k_j
       do i = 2, nr
         inv_r = 1.0_f64 / (rmin + (i-1)*dr)
@@ -195,39 +206,23 @@ contains
       end do
 
       ! Set boundary condition at rmin
-      if (bc(1) == sll_p_dirichlet) then ! Dirichlet
+      if (bck(1) == sll_p_dirichlet) then ! Dirichlet
         solver%mat(1,k) = 0.0_f64
-      else if (bc(1) == sll_p_neumann) then ! Neumann
+      else if (bck(1) == sll_p_neumann) then ! Neumann
         solver%mat(3,k) = solver%mat(3,k) -  one_third  * solver%mat(1,k)
         solver%mat(2,k) = solver%mat(2,k) + four_thirds * solver%mat(1,k)
         solver%mat(1,k) = 0.0_f64
-      else if (bc(1) == sll_p_neumann_mode_0) then 
-        if (k == 0) then ! Neumann for mode zero
-          solver%mat(3,k) = solver%mat(3,k) -  one_third  * solver%mat(1,k)
-          solver%mat(2,k) = solver%mat(2,k) + four_thirds * solver%mat(1,k)
-          solver%mat(1,k) = 0.0_f64
-        else             ! Dirichlet for other modes
-          solver%mat(1,k) = 0.0_f64
-        endif
-      endif
+      end if
 
       ! Set boundary condition at rmax
       last = 3*(nr-1)
-      if (bc(2) == sll_p_dirichlet) then ! Dirichlet
+      if (bck(2) == sll_p_dirichlet) then ! Dirichlet
         solver%mat(last,k) = 0.0_f64
-      else if (bc(2) == sll_p_neumann) then ! Neumann
+      else if (bck(2) == sll_p_neumann) then ! Neumann
         solver%mat(last-2,k) = solver%mat(last-2,k) -  one_third  *solver%mat(last,k)
         solver%mat(last-1,k) = solver%mat(last-1,k) + four_thirds *solver%mat(last,k)
         solver%mat(last  ,k) = 0.0_f64
-      else if (bc(2) == sll_p_neumann_mode_0) then 
-        if (k == 0) then ! Neumann for mode zero
-          solver%mat(last-2,k) = solver%mat(last-2,k) -  one_third  *solver%mat(last,k)
-          solver%mat(last-1,k) = solver%mat(last-1,k) + four_thirds *solver%mat(last,k)
-          solver%mat(last  ,k) = 0.0_f64
-        else             ! Dirichlet for other modes
-          solver%mat(last,k) = 0.0_f64
-        endif
-      endif
+      end if
 
     end do
 
@@ -241,12 +236,11 @@ contains
     sll_real64                  , intent(in   ) :: rho(:,:) !< Charge density
     sll_real64                  , intent(  out) :: phi(:,:) !< Potential
 
-    sll_int32  :: nr, ntheta, bc(2)
+    sll_int32  :: nr, ntheta, bck(2)
     sll_int32  :: i, k
 
     nr     = solver%nr
     ntheta = solver%nt
-    bc     = solver%bc
 
     ! Consistency check: 'rho' and 'phi' have shape defined at initialization
     SLL_ASSERT( all( shape(rho) == [nr+1,ntheta] ) )
@@ -272,33 +266,34 @@ contains
       call sll_s_setup_cyclic_tridiag( solver%mat(:,k), nr-1, solver%cts, solver%ipiv )
       call sll_o_solve_cyclic_tridiag( solver%cts, solver%ipiv, rhok(2:nr), nr-1, phik(2:nr) )
 
+      ! Compute boundary conditions type for mode k
+      bck(:) = solver%bc(:)
+      do i = 1, 2
+        if (bck(i) == sll_p_neumann_mode_0) then
+          if (k == 0) then
+            bck(i) = sll_p_neumann
+          else
+            bck(i) = sll_p_dirichlet
+          end if
+        end if
+      end do
+
       ! Boundary condition at rmin
-      if (bc(1) == sll_p_dirichlet) then ! Dirichlet
+      if (bck(1) == sll_p_dirichlet) then ! Dirichlet
         phik(1) = (0.0_f64, 0.0_f64)
-      else if (bc(1) == sll_p_neumann) then ! Neumann
+      else if (bck(1) == sll_p_neumann) then ! Neumann
         phik(1) = four_thirds*phik(2) - one_third*phik(3)
-      else if (bc(1) == sll_p_neumann_mode_0) then 
-        if (k==0) then ! Neumann for mode zero
-          phik(1) = four_thirds*phik(2) - one_third*phik(3)
-        else           ! Dirichlet for other modes
-          phik(1) = (0.0_f64, 0.0_f64)
-        endif
-      endif
+      end if
 
       ! Boundary condition at rmax
-      if (bc(2) == sll_p_dirichlet) then ! Dirichlet
+      if (bck(2) == sll_p_dirichlet) then ! Dirichlet
         phik(nr+1) = (0.0_f64, 0.0_f64)
-      else if (bc(2) == sll_p_neumann) then ! Neumann
+      else if (bck(2) == sll_p_neumann) then ! Neumann
         phik(nr+1) = four_thirds*phik(nr) - one_third*phik(nr-1)
-      else if (bc(2) == sll_p_neumann_mode_0) then 
-        if(k==0) then ! Neumann for mode zero
-          phik(nr+1) = four_thirds*phik(nr) - one_third*phik(nr-1)
-        else          ! Dirichlet for other modes
-          phik(nr+1) = (0.0_f64, 0.0_f64)
-        endif
-      endif
+      end if
 
       end associate
+
     end do
 
     ! For each r_i, compute inverse FFT of \hat{phi}(r_i,k) to obtain phi(r_i,theta)
