@@ -19,10 +19,45 @@
 !> @author  Yaman Güçlü, IPP Garching
 !> @author  Edoardo Zoni, IPP Garching
 !>
-!> Module to solve the Poisson equation on a 2D polar mesh using FFT transforms
-!> in theta and 2nd order finite differences in r
+!> @details
+!> This module solves the Poisson equation \f$ -\nabla^2 \phi = \rho \f$
+!> (permittivity of free space \f$ \epsilon_0 = 1 \f$) on a 2D polar mesh with
+!> coordinates \f$ (r,\theta) \f$:
+!> \f[
+!> -\bigg(
+!> \frac{\partial^2}{\partial r^{2}}
+!> +\frac{1}{r}\frac{\partial}{\partial r}
+!> +\frac{1}{r^{2}}\frac{\partial^{2}}{\partial\theta^{2}}
+!> \bigg)\phi(r,\theta) = \rho(r,\theta).
+!> \f]
+!> The boundary conditions on \f$ \phi(r,\theta) \f$ are as follows:
+!> \f$ 2\pi \f$-periodicity along \f$ \theta \f$;
+!> Neumann mode 0 at \f$ r = r_\textrm{min} \f$:
+!> \f$ \partial_r \widehat{\phi}_0(r_\textrm{min}) = 0 \f$
+!> and \f$ \widehat{\phi}_k(r_\textrm{min})=0 \f$ for \f$ k\neq 0 \f$;
+!> homogeneous Dirichlet at \f$ r = r_\textrm{max} \f$:
+!> \f$ \phi(r_\textrm{max},\theta) = 0 \f$.
+!> Thanks to the linearity of the differential operator and the periodicity of
+!> the domain, a discrete Fourier transform (DFT) in \f$ \theta \f$ is applied
+!> to both sides of the above elliptic PDE. Then, each Fourier coefficient
+!> \f$ \widehat{\phi}_k(r) \f$ solves an independent 1D boundary value problem
+!> on \f$ [r_\textrm{min},r_\textrm{max}] \f$:
+!> \f[
+!> -\bigg(
+!> \frac{\partial^2}{\partial r^{2}}
+!> +\frac{1}{r}\frac{\partial}{\partial r}
+!> -\frac{k^{2}}{r^{2}}
+!> \bigg)\widehat{\phi}_k(r) = \widehat{\rho}_k(r).
+!> \f]
+!> Since \f$ \phi(r,\theta) \f$ is real, we have
+!> \f$ \widehat{\phi}_{-k}=\overline{\widehat{\phi}_k} \f$ for each
+!> \f$ k=-N_\theta/2,-N_\theta/2+1,\dots,-1,0,1,\dots,N_\theta/2-1,N_\theta/2\f$,
+!> where \f$ N_\theta\f$ is the number of cells along \f$ \theta \f$.
+!> Therefore, it is enough to consider only \f$ N_\theta/2+1 \f$ coefficients
+!> \f$ \widehat{\phi}_0, \dots, \widehat{\phi}_{N_\theta/2} \f$. For each mode
+!> \f$ k \f$, the resulting ODE is solved with a 2nd-order finite-difference
+!> collocation method.
 !>
-!> -\nabla^2 \phi = \rho
 
 module sll_m_poisson_2d_polar
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
