@@ -36,6 +36,7 @@ module sll_m_cartesian_meshes
     sll_f_new_cartesian_mesh_2d, &
     sll_f_new_cartesian_mesh_3d, &
     sll_f_new_cartesian_mesh_4d, &
+    sll_s_init_cartesian_mesh_2d, &
     operator(*), &
     sll_t_cartesian_mesh_1d, &
     sll_t_cartesian_mesh_2d, &
@@ -165,7 +166,7 @@ module sll_m_cartesian_meshes
      sll_real64 :: volume_eta456 !< volume of the domain spanned by last three components
      
    contains
-     procedure :: initialize => initialize_cartesian_mesh_6d
+     procedure :: init => sll_s_init_cartesian_mesh_6d
      procedure :: display => display_cartesian_mesh_6d
      procedure :: delete => delete_cartesian_mesh_6d
   end type sll_t_cartesian_mesh_6d
@@ -264,7 +265,7 @@ end if
     !sll_real64 :: delta
     sll_int32 :: ierr
     SLL_ALLOCATE(m, ierr)
-    call initialize_cartesian_mesh_1d( m, num_cells, eta_min, eta_max )
+    call sll_s_init_cartesian_mesh_1d( m, num_cells, eta_min, eta_max )
   end function sll_f_new_cartesian_mesh_1d
 
 
@@ -275,7 +276,7 @@ end if
   !> @param eta_max optional double precision value which represents the 
   !> maximum value of the eta1 parameter in the cartesian mesh.
   !> @param m is a pointer to the newly allocated object.
-  subroutine initialize_cartesian_mesh_1d( m, num_cells, eta_min, eta_max )
+  subroutine sll_s_init_cartesian_mesh_1d( m, num_cells, eta_min, eta_max )
     type(sll_t_cartesian_mesh_1d), pointer :: m
     sll_int32, intent(in)  :: num_cells
     sll_real64, optional, intent(in) :: eta_min
@@ -289,11 +290,11 @@ end if
     m%delta_eta   = (m%eta_max - m%eta_min)/real(num_cells,f64)
 
     if ( m%eta_max <= m%eta_min) then
-       print*,'ERROR, initialize_cartesian_mesh_1d(): ', &
+       print*,'ERROR, sll_s_init_cartesian_mesh_1d(): ', &
             'Problem to construct the mesh 1d '
        print*,'because eta_max <= eta_min'
     end if
-  end subroutine initialize_cartesian_mesh_1d
+  end subroutine sll_s_init_cartesian_mesh_1d
 
 
   !> Create a 2d mesh from two 1d meshes
@@ -440,7 +441,7 @@ end if
     sll_int32 :: ierr
 
     SLL_ALLOCATE(m, ierr)
-    call initialize_cartesian_mesh_2d( &
+    call sll_s_init_cartesian_mesh_2d( &
          m, &
          num_cells1, &
          num_cells2, &
@@ -464,7 +465,7 @@ end if
   !> @param eta2_max optional double precision value which represents the 
   !> maximum value of the eta1 parameter in the cartesian mesh, direction 2.
   !> @param m is a pointer to the newly allocated object.
-  subroutine initialize_cartesian_mesh_2d( &
+  subroutine sll_s_init_cartesian_mesh_2d( &
     m, & 
     num_cells1, &
     num_cells2, &
@@ -493,16 +494,16 @@ end if
     m%delta_eta2   = (m%eta2_max - m%eta2_min)/real(num_cells2,f64)
 
     if ( m%eta1_max <= m%eta1_min) then
-       print*,'ERROR, initialize_cartesian_mesh_2d(): ', &
+       print*,'ERROR, sll_s_init_cartesian_mesh_2d(): ', &
             'Problem to construct the mesh 2d '
        print*,'because eta1_max <= eta1_min'
     end if
     if ( m%eta2_max <= m%eta2_min) then
-       print*,'ERROR, initialize_cartesian_mesh_2d(): ', &
+       print*,'ERROR, sll_s_init_cartesian_mesh_2d(): ', &
             'Problem to construct the mesh 2d '
        print*,'because eta2_max <= eta2_min'
     end if
-  end subroutine initialize_cartesian_mesh_2d
+  end subroutine sll_s_init_cartesian_mesh_2d
 
 
 
@@ -1290,7 +1291,7 @@ function eta1_node_3d(mesh, i1, i2, i3) result(res)
   !> @param [in] num_cells array with number of cells along each dimension
   !> @param [in] eta_min array with minimal value of eta along each dimension
   !> @param [in] eta_max array with maximal value of eta along each dimension
-  subroutine initialize_cartesian_mesh_6d( &
+  subroutine sll_s_init_cartesian_mesh_6d( &
        this, &
        num_cells, &
        eta_min, &
@@ -1311,7 +1312,7 @@ function eta1_node_3d(mesh, i1, i2, i3) result(res)
     this%volume = this%volume_eta123 * this%volume_eta456
 
 
-  end subroutine initialize_cartesian_mesh_6d
+  end subroutine sll_s_init_cartesian_mesh_6d
 
 
 
