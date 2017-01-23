@@ -20,8 +20,7 @@ program test_maxwell_2d_discrete
 
   use sll_m_cartesian_meshes, only: &
     sll_f_new_cartesian_mesh_2d, &
-    sll_t_cartesian_mesh_2d, &
-    sll_o_new
+    sll_t_cartesian_mesh_2d
 
   use sll_m_common_coordinate_transformations, only: &
     sll_f_deriv1_jacobian_polar_f, &
@@ -48,9 +47,10 @@ program test_maxwell_2d_discrete
 
   use sll_m_maxwell_2d_diga, only: &
     sll_t_maxwell_2d_diga, &
-    sll_o_solve, &
+    sll_s_init_maxwell_2d_diga, &
+    sll_s_solve_maxwell_2d_diga, &
     sll_p_uncentered, &
-    sll_o_new
+    sll_f_new_maxwell_2d_diga
 
   implicit none
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -178,21 +178,21 @@ type(sll_t_dg_field_2d), pointer      :: bz_d, dz_d
 
   call tau_d%write_to_file()
 
-  maxwell_d => sll_o_new( tau_d, degree, TE_POLARIZATION, &
+  maxwell_d => sll_f_new_maxwell_2d_diga( tau_d, degree, TE_POLARIZATION, &
                         sll_p_periodic, sll_p_periodic,   &
                         sll_p_periodic, sll_p_periodic,   &
                         sll_p_uncentered )
 
-  ex_d  => sll_o_new(degree,tau_d) 
-  ey_d  => sll_o_new(degree,tau_d) 
-  bz_d  => sll_o_new(degree,tau_d,sol_bz) 
+  call ex_d%init(degree,tau_d) 
+  call ey_d%init(degree,tau_d) 
+  call bz_d%init(degree,tau_d,sol_bz) 
   call bz_d%write_to_file('bz_d')
   
-  dx_d  => sll_o_new(degree,tau_d) 
-  dy_d  => sll_o_new(degree,tau_d) 
-  dz_d  => sll_o_new(degree,tau_d) 
+  call dx_d%init(degree,tau_d) 
+  call dy_d%init(degree,tau_d) 
+  call dz_d%init(degree,tau_d) 
   
-  call sll_o_solve(maxwell_d, ex_d, ey_d, bz_d, dx_d, dy_d, dz_d)
+  call sll_s_solve_maxwell_2d_diga(maxwell_d, ex_d, ey_d, bz_d, dx_d, dy_d, dz_d)
   call dx_d%write_to_file('dx_d')
   call dy_d%write_to_file('dy_d')
 
@@ -210,23 +210,23 @@ type(sll_t_dg_field_2d), pointer      :: bz_d, dz_d
 
   call tau_a%write_to_file()
 
-  maxwell_a => sll_o_new( tau_a, degree, TE_POLARIZATION, &
+  maxwell_a => sll_f_new_maxwell_2d_diga( tau_a, degree, TE_POLARIZATION, &
                         sll_p_periodic, sll_p_periodic,   &
                         sll_p_periodic, sll_p_periodic,   &
                         sll_p_uncentered )
   
-  ex_a  => sll_o_new(degree,tau_a) 
+  call ex_a%init(degree,tau_a) 
   call ex_a%write_to_file('ex_a')
-  ey_a  => sll_o_new(degree,tau_a) 
+  call ey_a%init(degree,tau_a) 
   call ey_a%write_to_file('ey_a')
-  bz_a  => sll_o_new(degree,tau_a,sol_bz) 
+  call bz_a%init(degree,tau_a,sol_bz) 
   call bz_a%write_to_file('bz_a')
   
-  dx_a  => sll_o_new(degree,tau_a) 
-  dy_a  => sll_o_new(degree,tau_a) 
-  dz_a  => sll_o_new(degree,tau_a) 
+  call dx_a%init(degree,tau_a) 
+  call dy_a%init(degree,tau_a) 
+  call dz_a%init(degree,tau_a) 
 
-  call sll_o_solve(maxwell_a, ex_a, ey_a, bz_a, dx_a, dy_a, dz_a)
+  call sll_s_solve_maxwell_2d_diga(maxwell_a, ex_a, ey_a, bz_a, dx_a, dy_a, dz_a)
   call dx_a%write_to_file('dx_a')
   call dy_a%write_to_file('dy_a')
 
