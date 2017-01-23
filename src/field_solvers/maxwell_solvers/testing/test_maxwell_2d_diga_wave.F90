@@ -17,7 +17,7 @@ program test_maxwell_2d_diga_wave
     sll_p_silver_muller
 
   use sll_m_cartesian_meshes, only: &
-    sll_f_new_cartesian_mesh_2d, &
+    sll_s_init_cartesian_mesh_2d, &
     sll_t_cartesian_mesh_2d
 
   use sll_m_common_coordinate_transformations, only: &
@@ -88,14 +88,14 @@ program test_maxwell_2d_diga_wave
     sll_real64 :: eta2_max, eta2_min
     sll_real64 :: delta_eta1, delta_eta2
 
-    type(sll_t_cartesian_mesh_2d), pointer :: mesh
+    type(sll_t_cartesian_mesh_2d) :: mesh
     class(sll_c_coordinate_transformation_2d_base), pointer :: tau
 
     type(sll_t_maxwell_2d_diga)   :: maxwell_TE
 
-    type(sll_t_dg_field_2d), pointer :: ex, ex0, dx, sx
-    type(sll_t_dg_field_2d), pointer :: ey, ey0, dy, sy
-    type(sll_t_dg_field_2d), pointer :: bz, bz0, dz, sz
+    type(sll_t_dg_field_2d) :: ex, ex0, dx, sx
+    type(sll_t_dg_field_2d) :: ey, ey0, dy, sy
+    type(sll_t_dg_field_2d) :: bz, bz0, dz, sz
 
     sll_real64  :: time
     sll_int32   :: istep
@@ -104,7 +104,7 @@ program test_maxwell_2d_diga_wave
     sll_int32   :: itest
     !character(len=4) :: cstep
 
-    mesh => sll_f_new_cartesian_mesh_2d(nc_eta1, nc_eta2, &
+    call sll_s_init_cartesian_mesh_2d(mesh, nc_eta1, nc_eta2, &
         eta1_min=-5._f64, eta1_max=5._f64, &
         eta2_min=-5._f64, eta2_max=5._f64)
 
@@ -126,15 +126,16 @@ program test_maxwell_2d_diga_wave
             case(1)
    
                 print*, "Identity transformation";
-                tau => sll_f_new_coordinate_transformation_2d_analytic( &
-                    "identity_transformation",                 &
-                    mesh,                                      &
-                    sll_f_identity_x1,                               &
-                    sll_f_identity_x2,                               &
-                    sll_f_identity_jac11,                            &
-                    sll_f_identity_jac12,                            &
-                    sll_f_identity_jac21,                            &
-                    sll_f_identity_jac22,                            &
+                call sll_s_init_coordinate_transformation_2d_analytic( &
+                    tau,                                               &
+                    "identity_transformation",                         &
+                    mesh,                                              &
+                    sll_f_identity_x1,                                 &
+                    sll_f_identity_x2,                                 &
+                    sll_f_identity_jac11,                              &
+                    sll_f_identity_jac12,                              &
+                    sll_f_identity_jac21,                              &
+                    sll_f_identity_jac22,                              &
                     SLL_NULL_REAL64 )
       
             case(2)
@@ -144,18 +145,20 @@ program test_maxwell_2d_diga_wave
                 ! x1 = (b-a)*(cos(e)*eta1-sin(e)*eta2) + a
                 ! x2 = (d-c)*(sin(e)*eta1+cos(e)*eta2) + c
    
-                tau => sll_f_new_coordinate_transformation_2d_analytic( &
-                    "affine_transformation",                   &
-                    mesh,                                      &
-                    sll_f_affine_x1,                                 &
-                    sll_f_affine_x2,                                 &
-                    sll_f_affine_jac11,                              &
-                    sll_f_affine_jac12,                              &
-                    sll_f_affine_jac21,                              &
-                    sll_f_affine_jac22,                              &
-                    [0.0_f64,1.0_f64, &
-                    0.0_f64,1.0_f64, &
+                call sll_s_init_coordinate_transformation_2d_analytic( &
+                    tau,                                               &
+                    "affine_transformation",                           &
+                    mesh,                                              &
+                    sll_f_affine_x1,                                   &
+                    sll_f_affine_x2,                                   &
+                    sll_f_affine_jac11,                                &
+                    sll_f_affine_jac12,                                &
+                    sll_f_affine_jac21,                                &
+                    sll_f_affine_jac22,                                &
+                    [0.0_f64,1.0_f64,                                  &
+                    0.0_f64,1.0_f64,                                   &
                     0.25*sll_p_pi] )
+
             case(3)
       
                 print*, "Homography transformation"
@@ -173,17 +176,18 @@ program test_maxwell_2d_diga_wave
                 !  h = proportional scale factors x1 and x2 in function of x2.
          
    
-                tau => sll_f_new_coordinate_transformation_2d_analytic( &
-                    "homography_transformation",               &
-                    mesh,                                      &
-                    sll_f_homography_x1,                             &
-                    sll_f_homography_x2,                             &
-                    sll_f_homography_jac11,                          &
-                    sll_f_homography_jac12,                          &
-                    sll_f_homography_jac21,                          &
-                    sll_f_homography_jac22,                          &
-                    [ 01.0_f64,00.2_f64,00.0_f64, &
-                    -00.2_f64,01.0_f64,00.0_f64, &
+                call sll_s_init_coordinate_transformation_2d_analytic( &
+                    tau,                                               &
+                    "homography_transformation",                       &
+                    mesh,                                              &
+                    sll_f_homography_x1,                               &
+                    sll_f_homography_x2,                               &
+                    sll_f_homography_jac11,                            &
+                    sll_f_homography_jac12,                            &
+                    sll_f_homography_jac21,                            &
+                    sll_f_homography_jac22,                            &
+                    [ 01.0_f64,00.2_f64,00.0_f64,                      &
+                    -00.2_f64,01.0_f64,00.0_f64,                       &
                     00.0_f64,00.0_f64] )
       
             case(4)
