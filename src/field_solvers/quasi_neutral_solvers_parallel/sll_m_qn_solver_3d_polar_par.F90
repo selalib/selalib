@@ -3,8 +3,8 @@
 !> @author  Edoardo Zoni, IPP Garching
 !>
 !> @details
-!> 3D wrapper around 2D solver in polar coordinates,
-!> with simple cycle over third direction
+!> This module is a 3D wrapper around the 2D quasi-neutral solver in polar
+!> coordinates, with simple cycle over the 3rd direction.
 
 module sll_m_qn_solver_3d_polar_par
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
