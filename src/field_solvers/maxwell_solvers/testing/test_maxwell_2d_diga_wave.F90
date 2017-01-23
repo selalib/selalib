@@ -18,8 +18,7 @@ program test_maxwell_2d_diga_wave
 
   use sll_m_cartesian_meshes, only: &
     sll_f_new_cartesian_mesh_2d, &
-    sll_t_cartesian_mesh_2d, &
-    sll_o_new
+    sll_t_cartesian_mesh_2d
 
   use sll_m_common_coordinate_transformations, only: &
     sll_f_affine_jac11, &
@@ -65,12 +64,12 @@ program test_maxwell_2d_diga_wave
 
   use sll_m_dg_fields, only: &
     sll_t_dg_field_2d, &
-    sll_o_new
+    sll_f_new_dg_field_2d
 
   use sll_m_maxwell_2d_diga, only: &
-    sll_o_create, &
+    sll_s_init_maxwell_2d_diga, &
     sll_t_maxwell_2d_diga, &
-    sll_o_solve, &
+    sll_s_solve_maxwell_2d_diga, &
     sll_p_uncentered
 
   implicit none
@@ -234,26 +233,26 @@ program test_maxwell_2d_diga_wave
    
         time = 0.0_f64
    
-        ex  => sll_o_new(degree,tau)
-        ey  => sll_o_new(degree,tau)
-        bz  => sll_o_new(degree,tau,gaussian)
+        ex  => sll_f_new_dg_field_2d(degree,tau)
+        ey  => sll_f_new_dg_field_2d(degree,tau)
+        bz  => sll_f_new_dg_field_2d(degree,tau,gaussian)
    
-        ex0 => sll_o_new(degree,tau)
-        ey0 => sll_o_new(degree,tau)
-        bz0 => sll_o_new(degree,tau)
+        ex0 => sll_f_new_dg_field_2d(degree,tau)
+        ey0 => sll_f_new_dg_field_2d(degree,tau)
+        bz0 => sll_f_new_dg_field_2d(degree,tau)
    
-        dx  => sll_o_new(degree,tau)
-        dy  => sll_o_new(degree,tau)
-        dz  => sll_o_new(degree,tau)
+        dx  => sll_f_new_dg_field_2d(degree,tau)
+        dy  => sll_f_new_dg_field_2d(degree,tau)
+        dz  => sll_f_new_dg_field_2d(degree,tau)
    
-        sx  => sll_o_new(degree,tau)
-        sy  => sll_o_new(degree,tau)
-        sz  => sll_o_new(degree,tau)
+        sx  => sll_f_new_dg_field_2d(degree,tau)
+        sy  => sll_f_new_dg_field_2d(degree,tau)
+        sz  => sll_f_new_dg_field_2d(degree,tau)
    
         dt = cfl/sqrt(1./(delta_eta1/(degree+1))**2+1./(delta_eta2/(degree+1))**2)
         nstep = ceiling(15.0/dt)
    
-        call sll_o_create(maxwell_TE,        &
+        call sll_s_init_maxwell_2d_diga(maxwell_TE,        &
             tau,               &
             degree,            &
             TE_POLARIZATION,   &
@@ -269,20 +268,20 @@ program test_maxwell_2d_diga_wave
    
             call rksetup()
    
-            call sll_o_solve(maxwell_TE, ex, ey, bz, dx, dy, dz)
+            call sll_s_solve_maxwell_2d_diga(maxwell_TE, ex, ey, bz, dx, dy, dz)
    
             call accumulate(1._f64/6._f64)
             call rkstage(0.5_f64)
    
-            call sll_o_solve(maxwell_TE, ex, ey, bz, dx, dy, dz)
+            call sll_s_solve_maxwell_2d_diga(maxwell_TE, ex, ey, bz, dx, dy, dz)
             call accumulate(1._f64/3._f64)
             call rkstage(0.5_f64)
    
-            call sll_o_solve(maxwell_TE, ex, ey, bz, dx, dy, dz)
+            call sll_s_solve_maxwell_2d_diga(maxwell_TE, ex, ey, bz, dx, dy, dz)
             call accumulate(1._f64/3._f64)
             call rkstage(1.0_f64)
    
-            call sll_o_solve(maxwell_TE, ex, ey, bz, dx, dy, dz)
+            call sll_s_solve_maxwell_2d_diga(maxwell_TE, ex, ey, bz, dx, dy, dz)
             call accumulate(1._f64/6._f64)
    
             call rkstep()
