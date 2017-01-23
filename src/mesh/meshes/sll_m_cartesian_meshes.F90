@@ -277,7 +277,7 @@ end if
   !> maximum value of the eta1 parameter in the cartesian mesh.
   !> @param m is a pointer to the newly allocated object.
   subroutine sll_s_init_cartesian_mesh_1d( m, num_cells, eta_min, eta_max )
-    type(sll_t_cartesian_mesh_1d), pointer :: m
+    class(sll_t_cartesian_mesh_1d), intent(inout) :: m
     sll_int32, intent(in)  :: num_cells
     sll_real64, optional, intent(in) :: eta_min
     sll_real64, optional, intent(in) :: eta_max
@@ -474,7 +474,7 @@ end if
     eta2_min, &
     eta2_max )
 
-    type(sll_t_cartesian_mesh_2d), pointer :: m
+    class(sll_t_cartesian_mesh_2d), intent(inout) :: m
     sll_int32, intent(in)  :: num_cells1
     sll_int32, intent(in)  :: num_cells2
     sll_real64, optional, intent(in) :: eta1_min
