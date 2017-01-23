@@ -233,21 +233,21 @@ program test_maxwell_2d_diga_wave
    
         time = 0.0_f64
    
-        ex  => sll_f_new_dg_field_2d(degree,tau)
-        ey  => sll_f_new_dg_field_2d(degree,tau)
-        bz  => sll_f_new_dg_field_2d(degree,tau,gaussian)
+        call ex%init(degree,tau)
+        call ey%init(degree,tau)
+        call bz%init(degree,tau,gaussian)
    
-        ex0 => sll_f_new_dg_field_2d(degree,tau)
-        ey0 => sll_f_new_dg_field_2d(degree,tau)
-        bz0 => sll_f_new_dg_field_2d(degree,tau)
+        call ex0%init(degree,tau)
+        call ey0%init(degree,tau)
+        call bz0%init(degree,tau)
    
-        dx  => sll_f_new_dg_field_2d(degree,tau)
-        dy  => sll_f_new_dg_field_2d(degree,tau)
-        dz  => sll_f_new_dg_field_2d(degree,tau)
+        call dx%init(degree,tau)
+        call dy%init(degree,tau)
+        call dz%init(degree,tau)
    
-        sx  => sll_f_new_dg_field_2d(degree,tau)
-        sy  => sll_f_new_dg_field_2d(degree,tau)
-        sz  => sll_f_new_dg_field_2d(degree,tau)
+        call sx%init(degree,tau)
+        call sy%init(degree,tau)
+        call sz%init(degree,tau)
    
         dt = cfl/sqrt(1./(delta_eta1/(degree+1))**2+1./(delta_eta2/(degree+1))**2)
         nstep = ceiling(15.0/dt)
@@ -308,44 +308,44 @@ end do
 
 contains
 
-    subroutine rksetup()
+   subroutine rksetup()
 
-        sx%array = 0.0_f64
-        sy%array = 0.0_f64
-        sz%array = 0.0_f64
+      sx%array = 0.0_f64
+      sy%array = 0.0_f64
+      sz%array = 0.0_f64
 
-        ex0%array = ex%array
-        ey0%array = ey%array
-        bz0%array = bz%array
+      ex0%array = ex%array
+      ey0%array = ey%array
+      bz0%array = bz%array
 
-    end subroutine rksetup
+   end subroutine rksetup
 
-    subroutine rkstage(coef)
+   subroutine rkstage(coef)
 
-        sll_real64, intent(in) :: coef
+      sll_real64, intent(in) :: coef
 
-        ex%array = ex0%array + coef * dt * dx%array
-        ey%array = ey0%array + coef * dt * dy%array
-        bz%array = bz0%array + coef * dt * dz%array
+      ex%array = ex0%array + coef * dt * dx%array
+      ey%array = ey0%array + coef * dt * dy%array
+      bz%array = bz0%array + coef * dt * dz%array
 
-    end subroutine rkstage
+   end subroutine rkstage
 
-    subroutine accumulate(coef)
+   subroutine accumulate(coef)
 
-        sll_real64, intent(in) :: coef
+      sll_real64, intent(in) :: coef
 
-        sx%array = sx%array + coef * dx%array
-        sy%array = sy%array + coef * dy%array
-        sz%array = sz%array + coef * dz%array
+      sx%array = sx%array + coef * dx%array
+      sy%array = sy%array + coef * dy%array
+      sz%array = sz%array + coef * dz%array
 
-    end subroutine accumulate
+   end subroutine accumulate
 
-    subroutine rkstep()
+   subroutine rkstep()
 
-        ex%array = ex0%array + dt * sx%array
-        ey%array = ey0%array + dt * sy%array
-        bz%array = bz0%array + dt * sz%array
+      ex%array = ex0%array + dt * sx%array
+      ey%array = ey0%array + dt * sy%array
+      bz%array = bz0%array + dt * sz%array
 
-    end subroutine rkstep
+   end subroutine rkstep
 
 end program test_maxwell_2d_diga_wave

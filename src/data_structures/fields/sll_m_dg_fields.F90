@@ -54,7 +54,7 @@ contains
 
    procedure, pass :: init => sll_s_init_dg_field_2d
    procedure, pass :: write_to_file => write_dg_field_2d_to_file
-   procedure, pass :: set_value => initialize_dg_field_2d 
+   procedure, pass :: set_value => set_value_dg_field_2d 
 
 end type sll_t_dg_field_2d
 
@@ -67,7 +67,6 @@ end interface operator(+)
 interface operator(-)
   module procedure dg_field_sub
 end interface operator(-)
-
 
 sll_int32 :: error
 
@@ -98,7 +97,7 @@ subroutine sll_s_init_dg_field_2d( this, degree, tau, init_function )
 
   this%array = 0.0_f64
   if (present(init_function)) then
-     call initialize_dg_field_2d( this, init_function, 0.0_f64) 
+     call set_value_dg_field_2d( this, init_function, 0.0_f64) 
   end if
 
   this%tag = 0
@@ -133,7 +132,7 @@ function sll_f_new_dg_field_2d( degree, tau, init_function ) result (this)
 
   this%array = 0.0_f64
   if (present(init_function)) then
-     call initialize_dg_field_2d( this, init_function, 0.0_f64) 
+     call set_value_dg_field_2d( this, init_function, 0.0_f64) 
   end if
 
   this%tag = 0
@@ -141,7 +140,7 @@ function sll_f_new_dg_field_2d( degree, tau, init_function ) result (this)
 
 end function sll_f_new_dg_field_2d
 
-subroutine initialize_dg_field_2d( this, init_function, time) 
+subroutine set_value_dg_field_2d( this, init_function, time) 
 
   class(sll_t_dg_field_2d) :: this
   sll_real64, external     :: init_function
@@ -152,7 +151,6 @@ subroutine initialize_dg_field_2d( this, init_function, time)
   sll_int32                :: i, j, ii, jj
   
   SLL_ASSERT(associated(this%array))
-
 
   do j = 1, this%tau%mesh%num_cells2
   do i = 1, this%tau%mesh%num_cells1
@@ -170,7 +168,7 @@ subroutine initialize_dg_field_2d( this, init_function, time)
   end do
   end do
 
-end subroutine initialize_dg_field_2d
+end subroutine set_value_dg_field_2d
 
 subroutine write_dg_field_2d_to_file( this, field_name, file_format, time )
 
