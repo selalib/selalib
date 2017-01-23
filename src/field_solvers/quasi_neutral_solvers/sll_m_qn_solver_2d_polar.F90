@@ -20,42 +20,77 @@
 !> @author  Edoardo Zoni, IPP Garching
 !>
 !> @details
-!> Module to solve the quasi-neutrality equation on a 2D polar mesh using
-!> FFT transforms in theta and 2nd order finite differences in r
+!> This module solves the quasi-neutrality equation on a 2D polar mesh using the
+!> fast Fourier transform (FFT) in \f$ \theta \f$ and 2nd-order finite differences
+!> in \f$ r \f$.
 !>
-!> The general equation is of the form
+!> The general quasi-neutrality equation is of the form
+!> \f[
+!> -\nabla_\perp\cdot
+!> \bigg[\frac{\rho_{m0}}{\epsilon_0 B^2}\nabla_\perp\phi(r,\theta)\bigg]
+!> +\frac{1}{\lambda_D^2}\big[\phi(r,\theta)-\chi\langle\phi\rangle_f(r)\big]
+!> = \frac{1}{\epsilon_0}\rho_{c1}(r,\theta),
+!> \f]
+!> \f$ \phi(r,\theta) \f$ is the electrostatic potential,
+!> \f$ \langle\phi\rangle_f(r) \f$ is the flux-surface average of \f$ \phi(r,\theta) \f$,
+!> \f$ \rho_{c1}(r,\theta) \f$ is the charge perturbation density due to the
+!> kinetic species, \f$ \rho_{m0} \f$ is the equilibrium mass density,
+!> \f$ B \f$ is the intensity of the equilibrium background magnetic field,
+!> \f$ \epsilon_0 \f$ is the permittivity of free space and \f$ \lambda_D \f$ is
+!> the electron Debye length
+!> \f[
+!> \lambda_D\equiv\sqrt{\frac{\epsilon_0\kappa T_e}{q_e^{2}n_{e0}}}.
+!> \f]
+!> The equation in polar coordinates \f$ (r,\theta) \f$ reads
+!> \f[
+!> -\bigg[
+!> \frac{g}{r}\frac{\partial}{\partial r}
+!> +\frac{\partial}{\partial r}\bigg(g\frac{\partial}{\partial r}\bigg)
+!> +\frac{g}{r^2}\frac{\partial^2}{\partial\theta^2}
+!> \bigg]\phi(r,\theta)
+!> +\frac{1}{\lambda_D^2}\big[\phi(r,\theta)-\chi\langle\phi\rangle_f(r)\big]
+!> = \frac{1}{\epsilon_0}\rho_{c1}(r,\theta),
+!> \f]
+!> where \f$ g\equiv\rho_{m0}/\epsilon_0 B^{2} \f$ is assumed to be independent
+!> of \f$ \theta \f$. The boundary conditions on \f$ \phi(r,\theta) \f$ are as follows:
+!> \f$ 2\pi \f$-periodicity along \f$ \theta \f$;
+!> Neumann mode 0 at \f$ r = r_\textrm{min} \f$:
+!> \f$ \partial_r \widehat{\phi}_0(r_\textrm{min}) = 0 \f$
+!> and \f$ \widehat{\phi}_k(r_\textrm{min})=0 \f$ for \f$ k\neq 0 \f$;
+!> homogeneous Dirichlet at \f$ r = r_\textrm{max} \f$:
+!> \f$ \phi(r_\textrm{max},\theta) = 0 \f$.
 !>
-!> -\nabla_\perp \cdot ( \rho_{m,0}/(B^2 \epsilon_0) \nabla_\perp \phi )
-!> + (\phi - \chi \langle\phi\rangle) / \lambda^2
-!> = \rho_{c,1} / \epsilon_0,
+!> The following arguments are given by the user at initialization:
+!> \f$ \rho_{m0} \f$, \f$ B \f$, \f$ \lambda_D \f$, \f$ \epsilon_0 \f$ and the
+!> additional parameter \f$ \chi \f$ (default is \f$ \chi=1 \f$).
+!> If \f$ \lambda_D \f$ is not given to the solver, we assume
+!> \f$ 1/\lambda_D^2=0 \f$: the electrons form a kinetic species and their
+!> contribution goes into \f$ \rho_{c1} \f$.
 !>
-!> where
+!> Thanks to the linearity of the differential operator and the periodicity of
+!> the domain, a discrete Fourier transform (DFT) in \f$ \theta \f$ is applied
+!> to both sides of the above elliptic PDE. Then, each Fourier coefficient
+!> \f$ \widehat{\phi}_k(r) \f$ solves an independent 1D boundary value problem
+!> on \f$ [r_\textrm{min},r_\textrm{max}] \f$:
+!> \f[
+!> -\bigg[
+!> \frac{g}{r}\frac{\partial}{\partial r}
+!> +\frac{\partial}{\partial r}\bigg(g\frac{\partial}{\partial r}\bigg)
+!> -\frac{k^2}{r^2}g
+!> \bigg]\widehat{\phi}_k(r)
+!> +\frac{1}{\lambda_D^2}\big[\widehat{\phi}_k(r)
+!>                            -\chi\langle\phi\rangle_f(r)\delta_{k0}\big]
+!> = \frac{1}{\epsilon_0}\widehat{\rho}_{c1,k}(r),
+!> \f]
+!> Since \f$ \phi(r,\theta) \f$ is real, we have
+!> \f$ \widehat{\phi}_{-k}=\overline{\widehat{\phi}_k} \f$ for each
+!> \f$ k=-N_\theta/2,-N_\theta/2+1,\dots,-1,0,1,\dots,N_\theta/2-1,N_\theta/2\f$,
+!> where \f$ N_\theta\f$ is the number of cells along \f$ \theta \f$.
+!> Therefore, it is enough to consider only \f$ N_\theta/2+1 \f$ coefficients
+!> \f$ \widehat{\phi}_0, \dots, \widehat{\phi}_{N_\theta/2} \f$. For each mode
+!> \f$ k \f$, the resulting ODE is solved with a 2nd-order finite-difference
+!> collocation method.
 !>
-!> \phi                 is electrostatic potential 
-!> \langle\phi\rangle   is flux-average of \phi
-!> \rho_{c,1}           is charge density perturbation due to kinetic species
-
-!> The following terms are given by the user at initialization:
-!>
-!> \rho_{m,0}           is total mass density of equilibrium
-!> B                    is intensity of equilibrium magnetic field 
-!> \lambda              is electron Debye length of equilibrium
-!> \epsilon_0           is vacuum permittivity (= 4\pi if CGS is used)
-!>
-!> Note:
-!>
-!> \chi = 1 by default, but it can be set to 0
-!> If \lambda is not given to the solver, we assume 1/lambda=0: the electrons
-!> are treated kinetically and therefore their contribution is part of \rho;
-!>
-!> In 2D polar geometry we solve
-!>
-!> -\partial_r ( g \partial_r \phi ) - \frac{g}{r} \partial_r \phi
-!> -\frac{g}{r^2} \partial_\theta \phi + (\phi-\langle\phi\rangle) / \lambda^2
-!> = \rho_{c,1} / \epsilon_0,
-!>
-!> where $g = \rho_{m,0}/(B^2 \epsilon_0)$ and we assume that
-!> $g(r)$ and $\lambda(r)$ do not depend on theta.
 
 module sll_m_qn_solver_2d_polar
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
