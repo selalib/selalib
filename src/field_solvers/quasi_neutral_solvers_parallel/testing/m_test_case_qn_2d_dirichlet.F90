@@ -184,7 +184,11 @@ contains
     sll_real64                        , intent(in) :: th
     sll_real64 :: val
 
-    val = (r-self%rmax)*(r-self%rmin)*self%a
+    if (self%k == 0) then
+      val = (r-self%rmax)*(r-self%rmin)*(self%a+self%b)
+    else
+      val = (r-self%rmax)*(r-self%rmin)*self%a
+    end if
 
   end function f_test__phi_ex_avg_th
 
