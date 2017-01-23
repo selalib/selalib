@@ -83,6 +83,7 @@ module sll_m_qn_solver_2d_polar_par
     sll_f_fft_allocate_aligned_real, &
     sll_s_fft_init_r2r_1d, &
     sll_s_fft_exec_r2r_1d, &
+    sll_s_fft_get_k_list_r2r_1d, &
     sll_s_fft_free
 
   use sll_m_remapper, only: &
@@ -282,14 +283,7 @@ contains
 
     ! Determine global k_list
     allocate( k_list_glob( ntheta ) )
-    do j = 0, ntheta-1
-      if (j <= ntheta/2) then
-        k = j
-      else
-        k = ntheta-j
-      end if
-      k_list_glob(1+j) = k
-    end do
+    call sll_s_fft_get_k_list_r2r_1d( solver%fw, k_list_glob )
     ! Extract local k list
     allocate( solver%k_list(loc_sz_r(2)) )
     do j = 1, loc_sz_r(2)
