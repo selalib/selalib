@@ -15,9 +15,10 @@
 !  "http://www.cecill.info". 
 !**************************************************************
 
-!> @ingroup poisson_solvers
-!> @author  Yaman Güçlü, IPP Garching
-!> @author  Edoardo Zoni, IPP Garching
+!> @ingroup poisson_solvers_parallel
+!> @brief   Parallel Poisson solver on 2D polar mesh; uses FFTs along theta.
+!> @authors Yaman Güçlü, IPP Garching
+!> @authors Edoardo Zoni, IPP Garching
 !>
 !> @details
 !> This module solves the Poisson equation \f$ -\nabla^2 \phi = \rho \f$
@@ -158,9 +159,9 @@ module sll_m_poisson_2d_polar_par
   sll_real64, parameter ::  one_third  = 1.0_f64 / 3.0_f64
   sll_real64, parameter :: four_thirds = 4.0_f64 / 3.0_f64
 
-!<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 contains
-!<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
   !=============================================================================
   !> sll_o_initialize the Poisson solver in polar coordinates

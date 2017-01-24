@@ -16,8 +16,12 @@
 !**************************************************************
 
 !> @ingroup quasi_neutral_solvers
-!> @author  Yaman Güçlü, IPP Garching
-!> @author  Edoardo Zoni, IPP Garching
+!>
+!> @brief
+!> Serial quasi-neutrality solver on 2D polar mesh; uses FFTs along theta.
+!>
+!> @authors Yaman Güçlü, IPP Garching
+!> @authors Edoardo Zoni, IPP Garching
 !>
 !> @details
 !> This module solves the quasi-neutrality equation on a 2D polar mesh
@@ -165,9 +169,9 @@ module sll_m_qn_solver_2d_polar
   sll_real64, parameter ::  one_third  = 1.0_f64 / 3.0_f64
   sll_real64, parameter :: four_thirds = 4.0_f64 / 3.0_f64
 
-!<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 contains
-!<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
   !=============================================================================
   !> Initialize the solver
