@@ -1,6 +1,7 @@
-!> @ingroup quasi_neutral_solvers
-!> @author  Yaman Güçlü, IPP Garching
-!> @author  Edoardo Zoni, IPP Garching
+!> @ingroup quasi_neutral_solvers_parallel
+!> @brief   Parallel 3D quasi-neutrality solver on "extruded" 2D polar mesh.
+!> @authors Yaman Güçlü, IPP Garching
+!> @authors Edoardo Zoni, IPP Garching
 !>
 !> @details
 !> This module is a 3D wrapper around the 2D quasi-neutral solver in polar
