@@ -32,13 +32,13 @@
 !> The general quasi-neutrality equation is of the form
 !> \f[
 !> -\nabla_\perp\cdot
-!> \bigg[\frac{\rho_{m0}}{\epsilon_0 B^2}\nabla_\perp\phi(r,\theta)\bigg]
-!> +\frac{1}{\lambda_D^2}\big[\phi(r,\theta)-\chi\langle\phi\rangle_f(r)\big]
-!> = \frac{1}{\epsilon_0}\rho_{c1}(r,\theta),
+!> \bigg[\frac{\rho_{m0}}{\epsilon_0 B^2}\nabla_\perp\phi\bigg]
+!> +\frac{1}{\lambda_D^2}\big[\phi-\chi\langle\phi\rangle_f\big]
+!> = \frac{1}{\epsilon_0}\rho_{c1},
 !> \f]
-!> where \f$ \phi(r,\theta) \f$ is the electrostatic potential,
-!> \f$ \langle\phi\rangle_f(r) \f$ is the flux-surface average of \f$ \phi(r,\theta) \f$,
-!> \f$ \rho_{c1}(r,\theta) \f$ is the charge perturbation density due to the
+!> where \f$ \phi \f$ is the electrostatic potential,
+!> \f$ \langle\phi\rangle_f \f$ is the flux-surface average of \f$ \phi \f$,
+!> \f$ \rho_{c1} \f$ is the charge perturbation density due to the
 !> kinetic species, \f$ \rho_{m0} \f$ is the equilibrium mass density,
 !> \f$ B \f$ is the intensity of the equilibrium background magnetic field,
 !> \f$ \epsilon_0 \f$ is the permittivity of free space and \f$ \lambda_D \f$ is
@@ -53,25 +53,30 @@
 !> +\frac{\partial}{\partial r}\bigg(g\frac{\partial}{\partial r}\bigg)
 !> +\frac{g}{r^2}\frac{\partial^2}{\partial\theta^2}
 !> \bigg]\phi(r,\theta)
-!> +\frac{1}{\lambda_D^2}\big[\phi(r,\theta)-\chi\langle\phi\rangle_f(r)\big]
+!> +\frac{1}{\lambda_D^2}\big[\phi(r,\theta)-\chi\langle\phi\rangle_\theta(r)\big]
 !> = \frac{1}{\epsilon_0}\rho_{c1}(r,\theta),
 !> \f]
 !> where \f$ g\equiv\rho_{m0}/\epsilon_0 B^{2} \f$ is assumed to be independent
-!> of \f$ \theta \f$.
+!> of \f$ \theta \f$ and the flux-surface average is replaced by a simple average
+!> over \f$ \theta \f$.
 !>
 !> The boundary conditions (BCs) on \f$ \phi(r,\theta) \f$ are set as follows.
 !> \f$ \phi(r,\theta) \f$ is \f$ 2\pi\f$-periodic along \f$ \theta \f$ and the
-!> BCs along \f$ r \f$ can be chosen among the following types:
-!> - Homogeneous Dirichlet;
-!> - Homogeneous Neumann;
-!> - Homogeneous Neumann mode 0.
+!> BCs along \f$ r \f$ can be chosen among the following types
+!> (\f$ \overline{r} = r_\textrm{min} \f$ or \f$ \overline{r} = r_\textrm{max} \f$):
+!> - Homogeneous Dirichlet: \f$ \phi(\overline{r},\theta)=0\f$;
+!> - Homogeneous Neumann: \f$ \partial_r\phi(\overline{r},\theta)=0\f$;
+!> - Homogeneous Neumann mode 0:
+!>   \f$ \partial_r\widehat{\phi}_0(\overline{r})=0\f$ and
+!>   \f$ \widehat{\phi}_k(\overline{r})=0 \f$ for \f$ k\neq 0 \f$.
 !>
 !> The following arguments are given by the user at initialization:
 !> \f$ \rho_{m0} \f$, \f$ B \f$, \f$ \lambda_D \f$, \f$ \epsilon_0 \f$ and the
 !> additional parameter \f$ \chi \f$ (default is \f$ \chi=1 \f$).
 !> If \f$ \lambda_D \f$ is not given to the solver, we assume
 !> \f$ 1/\lambda_D^2=0 \f$: the electrons form a kinetic species and their
-!> contribution goes into \f$ \rho_{c1} \f$.
+!> contribution goes into \f$ \rho_{c1} \f$. If \f$ \epsilon_0 \f$ is not given
+!> to the solver, we assume \f$ \epsilon_0=1 \f$.
 !>
 !> Thanks to the linearity of the differential operator and the periodicity of
 !> the domain, a discrete Fourier transform (DFT) in \f$ \theta \f$ is applied
@@ -84,8 +89,7 @@
 !> +\frac{\partial}{\partial r}\bigg(g\frac{\partial}{\partial r}\bigg)
 !> -\frac{k^2}{r^2}g
 !> \bigg]\widehat{\phi}_k(r)
-!> +\frac{1}{\lambda_D^2}\big[\widehat{\phi}_k(r)
-!>                            -\chi\langle\phi\rangle_f(r)\delta_{k0}\big]
+!> +\frac{1}{\lambda_D^2}(1-\chi\,\delta_{k0})\widehat{\phi}_k(r)
 !> = \frac{1}{\epsilon_0}\widehat{\rho}_{c1,k}(r),
 !> \f]
 !> For each mode \f$ k \f$, the resulting ODE is solved with a 2nd-order

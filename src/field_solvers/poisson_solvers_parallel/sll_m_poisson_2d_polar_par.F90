@@ -38,10 +38,13 @@
 !>
 !> The boundary conditions (BCs) on \f$ \phi(r,\theta) \f$ are set as follows.
 !> \f$ \phi(r,\theta) \f$ is \f$ 2\pi\f$-periodic along \f$ \theta \f$ and the
-!> BCs along \f$ r \f$ can be chosen among the following types:
-!> - Homogeneous Dirichlet;
-!> - Homogeneous Neumann;
-!> - Homogeneous Neumann mode 0.
+!> BCs along \f$ r \f$ can be chosen among the following types
+!> (\f$ \overline{r} = r_\textrm{min} \f$ or \f$ \overline{r} = r_\textrm{max} \f$):
+!> - Homogeneous Dirichlet: \f$ \phi(\overline{r},\theta)=0\f$;
+!> - Homogeneous Neumann: \f$ \partial_r\phi(\overline{r},\theta)=0\f$;
+!> - Homogeneous Neumann mode 0:
+!>   \f$ \partial_r\widehat{\phi}_0(\overline{r})=0\f$ and
+!>   \f$ \widehat{\phi}_k(\overline{r})=0 \f$ for \f$ k\neq 0 \f$.
 !>
 !> Thanks to the linearity of the differential operator and the periodicity of
 !> the domain, a discrete Fourier transform (DFT) in \f$ \theta \f$ is applied
