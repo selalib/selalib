@@ -18,17 +18,18 @@
 !> @ingroup quasi_neutral_solvers_parallel
 !>
 !> @brief
-!> Parallel quasi-neutrality solver on 2D polar mesh; uses FFTs along theta.
+!> Parallel quasi-neutrality solver on 2D polar mesh; uses FFT in theta and
+!> 2nd-order FD in r.
 !>
 !> @authors Yaman Güçlü, IPP Garching
 !> @authors Edoardo Zoni, IPP Garching
 !>
 !> @details
-!> This module solves the quasi-neutrality equation on a 2D polar mesh
-!> \f$ (r,\theta) \in [r_\textrm{min},r_\textrm{max}]\times[0,2\pi) \f$ 
-!> using fast Fourier transforms (FFTs) in \f$ \theta \f$ and 2nd-order
-!> finite-difference methods in \f$ r \f$.
 !>
+!> #### Model equations ####
+!>
+!> This module solves the quasi-neutrality equation on a 2D polar mesh
+!> \f$ (r,\theta) \in [r_\textrm{min},r_\textrm{max}]\times[0,2\pi) \f$.
 !> The general quasi-neutrality equation is of the form
 !> \f[
 !> -\nabla_\perp\cdot
@@ -76,8 +77,13 @@
 !> If \f$ \lambda_D \f$ is not given to the solver, we assume
 !> \f$ 1/\lambda_D^2=0 \f$: the electrons form a kinetic species and their
 !> contribution goes into \f$ \rho_{c1} \f$. If \f$ \epsilon_0 \f$ is not given
-!> to the solver, we assume \f$ \epsilon_0=1 \f$.
+!> to the solver, we assume \f$ \epsilon_0=8.854187817\times10^{-12} [F/m]\f$
+!> according to the parameter \c sll_p_epsilon_0 in module sll_m_constants.
 !>
+!> #### Numerical methods ####
+!>
+!> This module uses fast Fourier transforms (FFTs) in \f$ \theta \f$ and a
+!> 2nd-order finite-difference method in \f$ r \f$.
 !> Thanks to the linearity of the differential operator and the periodicity of
 !> the domain, a discrete Fourier transform (DFT) in \f$ \theta \f$ is applied
 !> to both sides of the above elliptic PDE. Then, each Fourier coefficient
@@ -95,7 +101,8 @@
 !> For each mode \f$ k \f$, the resulting ODE is solved with a 2nd-order
 !> finite-difference collocation method.
 !>
-!> ##### Note on parallelization #####
+!> #### Parallelization ####
+!>
 !> - The user must provide two compatible 2D layouts:
 !>   - \c layout_a sequential in \f$ \theta \f$;
 !>   - \c layout_r sequential in \f$ r \f$;
@@ -110,6 +117,33 @@
 !>   of FFTW is used: this corresponds to DFTs of real input and complex-Hermitian
 !>   output in halfcomplex format.
 !>
+!> #### Usage example ####
+!>
+!> \code
+!> use sll_m_qn_solver_2d_polar_par, only: &
+!>   sll_t_qn_solver_2d_polar_par,         &
+!>   sll_s_qn_solver_2d_polar_par_init,    &
+!>   sll_s_qn_solver_2d_polar_par_solve,   &
+!>   sll_s_qn_solver_2d_polar_par_free
+!>
+!> use sll_m_remapper, only: &
+!>   sll_t_layout_2d
+!>
+!> ...
+!>
+!> type(sll_t_qn_solver_2d_polar_par) :: solver
+!> type(sll_t_layout_2d)              :: layout_a, layout_r
+!> real(f64), allocatable             :: rho(:,:), phi(:,:)
+!> real(f64), allocatable             :: rho_m0(:), b_magn(:), lambda(:)
+!> real(f64)                          :: rmin, rmax
+!> integer(i32)                       :: nr, ntheta, bc_rmin, bc_rmax
+!>
+!> ...
+!>
+!> call sll_s_qn_solver_2d_polar_par_init ( solver, layout_r, layout_a, rmin, rmax, nr, ntheta, bc_rmin, bc_rmax, rho_m0, b_magn, lambda, use_zonal_flow=.false., epsilon_0=1.0_f64 )
+!> call sll_s_qn_solver_2d_polar_par_solve( solver, rho, phi )
+!> call sll_s_qn_solver_2d_polar_par_free ( solver )
+!> \endcode
 
 module sll_m_qn_solver_2d_polar_par
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -168,23 +202,23 @@ module sll_m_qn_solver_2d_polar_par
   !> Class for the Poisson solver in polar coordinate
   type sll_t_qn_solver_2d_polar_par
 
-   sll_real64              :: rmin      !< Min value of r coordinate
-   sll_real64              :: rmax      !< Max value of r coordinate
-   sll_int32               :: nr        !< Number of cells along r
-   sll_int32               :: ntheta    !< Number of cells along theta
-   sll_int32               :: bc(2)     !< Boundary conditions options
-   sll_real64              :: epsilon_0 !< Vacuum permittivity (user may override)
-   sll_real64, allocatable :: g(:)      !< \f$ g(r) = \rho_{m,0}/(B^2\epsilon_0) \f$
+   real   (f64)              :: rmin      !< Min value of r coordinate
+   real   (f64)              :: rmax      !< Max value of r coordinate
+   integer(i32)              :: nr        !< Number of cells along r
+   integer(i32)              :: ntheta    !< Number of cells along theta
+   integer(i32)              :: bc(2)     !< Boundary conditions options
+   real   (f64)              :: epsilon_0 !< Vacuum permittivity (user may override)
+   real   (f64), allocatable :: g(:)      !< \f$ g(r) = \rho_{m,0}/(B^2\epsilon_0) \f$
 
-   type(sll_t_fft)         :: fw        !< Forward FFT plan
-   type(sll_t_fft)         :: bw        !< Inverse FFT plan
-   sll_real64, pointer     :: tmp (:)   !< 1D work array for FFT, real
-   sll_int32 , allocatable :: k_list(:)
-   sll_real64, allocatable :: z_r (:,:) !< 2D array sequential in r
-   sll_real64, pointer     :: z_a (:,:) !< 2D array sequential in theta
-   sll_real64, allocatable :: mat (:,:) !< Tridiagonal matrix (one for each k)
-   sll_real64, allocatable :: cts (:)   !< Lapack coefficients
-   sll_int32 , allocatable :: ipiv(:)   !< Lapack pivot indices
+   type(sll_t_fft)           :: fw        !< Forward FFT plan
+   type(sll_t_fft)           :: bw        !< Inverse FFT plan
+   real   (f64), pointer     :: tmp (:)   !< 1D work array for FFT, real
+   integer(i32), allocatable :: k_list(:) !< List of local k values
+   real   (f64), allocatable :: z_r (:,:) !< 2D array sequential in r
+   real   (f64), pointer     :: z_a (:,:) !< 2D array sequential in theta
+   real   (f64), allocatable :: mat (:,:) !< Tridiagonal matrix (one for each k)
+   real   (f64), allocatable :: cts (:)   !< Lapack coefficients
+   integer(i32), allocatable :: ipiv(:)   !< Lapack pivot indices
 
    type(sll_t_layout_2d)           , pointer :: layout_r !< layout sequential in r
    type(sll_t_layout_2d)           , pointer :: layout_a !< layout sequential in theta
@@ -194,12 +228,12 @@ module sll_m_qn_solver_2d_polar_par
   end type sll_t_qn_solver_2d_polar_par
 
   ! Allowed boundary conditions
-  sll_int32, parameter :: bc_opts(3) = &
+  integer(i32), parameter :: bc_opts(3) = &
     [sll_p_dirichlet, sll_p_neumann, sll_p_neumann_mode_0]
 
   ! Local parameters
-  sll_real64, parameter ::  one_third  = 1.0_f64 / 3.0_f64
-  sll_real64, parameter :: four_thirds = 4.0_f64 / 3.0_f64
+  real(f64), parameter ::  one_third  = 1.0_f64 / 3.0_f64
+  real(f64), parameter :: four_thirds = 4.0_f64 / 3.0_f64
 
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 contains
@@ -225,36 +259,36 @@ contains
     type(sll_t_qn_solver_2d_polar_par), intent(out) :: solver !< solver object
     type(sll_t_layout_2d), pointer    :: layout_r       !< layout sequential in r direction
     type(sll_t_layout_2d), pointer    :: layout_a       !< layout sequential in theta direction
-    sll_real64           , intent(in) :: rmin           !< rmin
-    sll_real64           , intent(in) :: rmax           !< rmax
-    sll_int32            , intent(in) :: nr             !< number of cells radial
-    sll_int32            , intent(in) :: ntheta         !< number of cells angular
-    sll_int32            , intent(in) :: bc_rmin        !< boundary condition at r_min
-    sll_int32            , intent(in) :: bc_rmax        !< boundary condition at r_max
-    sll_real64           , intent(in) :: rho_m0(:)      !< radial profile: total mass density of equilibrium
-    sll_real64           , intent(in) :: b_magn(:)      !< radial profile: intensity of magnetic field
-    sll_real64,  optional, intent(in) :: lambda(:)      !< radial profile: electron Debye length
-    logical   ,  optional, intent(in) :: use_zonal_flow !< if .false. set flux average to zero
-    sll_real64,  optional, intent(in) :: epsilon_0      !< override default: vacuum permittivity
+    real(f64)            , intent(in) :: rmin           !< rmin
+    real(f64)            , intent(in) :: rmax           !< rmax
+    integer(i32)         , intent(in) :: nr             !< number of cells radial
+    integer(i32)         , intent(in) :: ntheta         !< number of cells angular
+    integer(i32)         , intent(in) :: bc_rmin        !< boundary condition at r_min
+    integer(i32)         , intent(in) :: bc_rmax        !< boundary condition at r_max
+    real(f64)            , intent(in) :: rho_m0(:)      !< radial profile: total mass density of equilibrium
+    real(f64)            , intent(in) :: b_magn(:)      !< radial profile: intensity of magnetic field
+    real(f64),   optional, intent(in) :: lambda(:)      !< radial profile: electron Debye length
+    logical  ,   optional, intent(in) :: use_zonal_flow !< if .false. set flux average to zero
+    real(f64),   optional, intent(in) :: epsilon_0      !< override default: vacuum permittivity
 
     character(len=*), parameter :: this_sub_name = 'sll_s_qn_solver_2d_polar_par_init'
 
-    sll_real64 :: dr
-    sll_real64 :: inv_r
-    sll_real64 :: inv_dr
-    sll_real64 :: c
-    sll_real64 :: d1(-1:+1)
-    sll_real64 :: d2(-1:+1)
+    real(f64) :: dr
+    real(f64) :: inv_r
+    real(f64) :: inv_dr
+    real(f64) :: c
+    real(f64) :: d1(-1:+1)
+    real(f64) :: d2(-1:+1)
 
-    sll_int32  :: i, j, k
-    sll_int32  :: bck(2)
-    sll_int32  :: last
+    integer(i32) :: i, j, k
+    integer(i32) :: bck(2)
+    integer(i32) :: last
 
-    sll_int32  :: loc_sz_r(2) ! local shape of layout_r
-    sll_int32  :: loc_sz_a(2) ! local shape of layout_a
-    sll_int32  :: glob_idx(2) ! global indices
+    integer(i32) :: loc_sz_r(2) ! local shape of layout_r
+    integer(i32) :: loc_sz_a(2) ! local shape of layout_a
+    integer(i32) :: glob_idx(2) ! global indices
 
-    sll_int32, allocatable :: k_list_glob(:)
+    integer(i32), allocatable :: k_list_glob(:) ! global list of k values
 
     ! Consistency check: boundary conditions must be one of three options
     if( any( bc_rmin == bc_opts ) ) then
@@ -424,11 +458,11 @@ contains
   !> Solve the quasi-neutrality equation and get the electrostatic potential
   subroutine sll_s_qn_solver_2d_polar_par_solve( solver, rho, phi )
     type(sll_t_qn_solver_2d_polar_par) , intent(inout) :: solver   !< Solver object
-    sll_real64                         , intent(in   ) :: rho(:,:) !< Charge density
-    sll_real64, target                 , intent(  out) :: phi(:,:) !< Potential
+    real(f64)                          , intent(in   ) :: rho(:,:) !< Charge density
+    real(f64), target                  , intent(  out) :: phi(:,:) !< Potential
 
-    sll_int32  :: nr, ntheta, bck(2)
-    sll_int32  :: i, j, k
+    integer(i32) :: nr, ntheta, bck(2)
+    integer(i32) :: i, j, k
 
     nr     = solver%nr
     ntheta = solver%ntheta
@@ -540,10 +574,10 @@ contains
   !> Check if array sizes are compatble with the layout 
   subroutine verify_argument_sizes_par(layout, array)
 
-    type(sll_t_layout_2d), pointer       :: layout
-    sll_real64, dimension(:,:)     :: array
-    sll_int32,  dimension(2)       :: n ! nx_loc, ny_loc
-    sll_int32                      :: i
+    type(sll_t_layout_2d), pointer   :: layout
+    real(f64)   , dimension(:,:)     :: array
+    integer(i32), dimension(2)       :: n ! nx_loc, ny_loc
+    integer(i32)                     :: i
 
     ! Note that this checks for strict sizes, not an array being bigger
     ! than a certain size, but exactly a desired size... This may be a bit
