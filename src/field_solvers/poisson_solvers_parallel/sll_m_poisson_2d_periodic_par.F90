@@ -1,4 +1,4 @@
-!> @ingroup poisson_solvers
+!> @ingroup poisson_solvers_parallel
 !> @brief 
 !> Selalib periodic 2D poisson solver for cartesian coordinates.
 !   
