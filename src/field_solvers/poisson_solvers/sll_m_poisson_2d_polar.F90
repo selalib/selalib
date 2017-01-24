@@ -16,17 +16,19 @@
 !**************************************************************
 
 !> @ingroup  poisson_solvers
-!> @brief    Serial Poisson solver on 2D polar mesh; uses FFTs along theta.
+!> @brief
+!> Serial Poisson solver on 2D polar mesh; uses FFT in theta and 2nd-order FD in r.
+!>
 !> @authors  Yaman Güçlü, IPP Garching
 !> @authors  Edoardo Zoni, IPP Garching
 !>
 !> @details
+!>
+!> #### Model equations ####
+!>
 !> This module solves the Poisson equation \f$ -\nabla^2 \phi = \rho \f$
 !> (permittivity of free space \f$ \epsilon_0 = 1 \f$) on a 2D polar mesh
-!> \f$ (r,\theta) \in [r_\textrm{min},r_\textrm{max}]\times[0,2\pi) \f$
-!> using fast Fourier transforms (FFTs) in \f$ \theta \f$ and 2nd-order
-!> finite-difference methods in \f$ r \f$.
-!>
+!> \f$ (r,\theta) \in [r_\textrm{min},r_\textrm{max}]\times[0,2\pi) \f$.
 !> The Poisson equation in polar coordinates reads
 !> \f[
 !> -\bigg(
@@ -46,6 +48,10 @@
 !>   \f$ \partial_r\widehat{\phi}_0(\overline{r})=0\f$ and
 !>   \f$ \widehat{\phi}_k(\overline{r})=0 \f$ for \f$ k\neq 0 \f$.
 !>
+!> #### Numerical methods ####
+!>
+!> This module uses fast Fourier transforms (FFTs) in \f$ \theta \f$ and a
+!> 2nd-order finite-difference method in \f$ r \f$.
 !> Thanks to the linearity of the differential operator and the periodicity of
 !> the domain, a discrete Fourier transform (DFT) in \f$ \theta \f$ is applied
 !> to both sides of the above elliptic PDE. Then, each Fourier coefficient
@@ -69,6 +75,29 @@
 !> \f$ \widehat{\phi}_0, \dots, \widehat{\phi}_{N_\theta/2} \f$. For this purpose,
 !> the \c r2c and \c c2r interfaces of FFTW are used for the forward and backward
 !> FFTs, respectively.
+!>
+!> #### Usage example ####
+!>
+!> \code
+!> use sll_m_poisson_2d_polar, only: &
+!>   sll_t_poisson_2d_polar,         &
+!>   sll_s_poisson_2d_polar_init,    &
+!>   sll_s_poisson_2d_polar_solve,   &
+!>   sll_s_poisson_2d_polar_free
+!>
+!> ...
+!>
+!> type(sll_t_poisson_2d_polar) :: solver
+!> real(f64), allocatable       :: rho(:,:), phi(:,:)
+!> real(f64)                    :: rmin, rmax
+!> integer(i32)                 :: nr, ntheta, bc_rmin, bc_rmax
+!>
+!> ...
+!>
+!> call sll_s_poisson_2d_polar_init ( solver, rmin, rmax, nr, ntheta, bc_rmin, bc_rmax )
+!> call sll_s_poisson_2d_polar_solve( solver, rho, phi )
+!> call sll_s_poisson_2d_polar_free ( solver )
+!> \endcode
 
 module sll_m_poisson_2d_polar
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -114,20 +143,20 @@ module sll_m_poisson_2d_polar
   !> Class for the Poisson solver in polar coordinate
   type, extends(sll_c_poisson_2d_base) :: sll_t_poisson_2d_polar
 
-   sll_real64              :: rmin      !< Min value of r coordinate
-   sll_real64              :: rmax      !< Max value of r coordinate
-   sll_int32               :: nr        !< Number of cells along r
-   sll_int32               :: nt        !< Number of cells along theta
-   sll_int32               :: bc(2)     !< Boundary conditions options
+   real   (f64)              :: rmin      !< Min value of r coordinate
+   real   (f64)              :: rmax      !< Max value of r coordinate
+   integer(i32)              :: nr        !< Number of cells along r
+   integer(i32)              :: nt        !< Number of cells along theta
+   integer(i32)              :: bc(2)     !< Boundary conditions options
 
-   type(sll_t_fft)         :: fw        !< Forward FFT plan
-   type(sll_t_fft)         :: bw        !< Inverse FFT plan
-   sll_comp64, allocatable :: z   (:,:) !< 2D work array
-   sll_real64, pointer     :: temp_r(:) !< 1D work array, real
-   sll_comp64, pointer     :: temp_c(:) !< 1D work array, complex
-   sll_real64, allocatable :: mat (:,:) !< Tridiagonal matrix (one for each k)
-   sll_real64, allocatable :: cts (:)   !< Lapack coefficients
-   sll_int32 , allocatable :: ipiv(:)   !< Lapack pivot indices
+   type(sll_t_fft)           :: fw        !< Forward FFT plan
+   type(sll_t_fft)           :: bw        !< Inverse FFT plan
+   complex(f64), allocatable :: z   (:,:) !< 2D work array
+   complex(f64), pointer     :: temp_c(:) !< 1D work array, complex
+   real   (f64), pointer     :: temp_r(:) !< 1D work array, real
+   real   (f64), allocatable :: mat (:,:) !< Tridiagonal matrix (one for each k)
+   real   (f64), allocatable :: cts (:)   !< Lapack coefficients
+   integer(i32), allocatable :: ipiv(:)   !< Lapack pivot indices
 
   contains
 
@@ -140,12 +169,12 @@ module sll_m_poisson_2d_polar
   end type sll_t_poisson_2d_polar
 
   ! Allowed boundary conditions
-  sll_int32, parameter :: bc_opts(3) = &
+  integer(i32), parameter :: bc_opts(3) = &
     [sll_p_dirichlet, sll_p_neumann, sll_p_neumann_mode_0]
 
   ! Local parameters
-  sll_real64, parameter ::  one_third  = 1.0_f64 / 3.0_f64
-  sll_real64, parameter :: four_thirds = 4.0_f64 / 3.0_f64
+  real(f64), parameter ::  one_third  = 1.0_f64 / 3.0_f64
+  real(f64), parameter :: four_thirds = 4.0_f64 / 3.0_f64
 
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 contains
@@ -162,22 +191,22 @@ contains
       bc_rmax )
 
     type(sll_t_poisson_2d_polar), intent(out) :: solver !< solver object
-    sll_real64, intent(in) :: rmin     !< rmin
-    sll_real64, intent(in) :: rmax     !< rmax
-    sll_int32 , intent(in) :: nr       !< number of cells radial
-    sll_int32 , intent(in) :: ntheta   !< number of cells angular
-    sll_int32 , intent(in) :: bc_rmin  !< boundary condition at r_min
-    sll_int32 , intent(in) :: bc_rmax  !< boundary condition at r_max
+    real(f64)   , intent(in) :: rmin     !< rmin
+    real(f64)   , intent(in) :: rmax     !< rmax
+    integer(i32), intent(in) :: nr       !< number of cells radial
+    integer(i32), intent(in) :: ntheta   !< number of cells angular
+    integer(i32), intent(in) :: bc_rmin  !< boundary condition at r_min
+    integer(i32), intent(in) :: bc_rmax  !< boundary condition at r_max
 
     character(len=*), parameter :: this_sub_name = 'sll_s_poisson_2d_polar_init'
 
-    sll_real64 :: dr
-    sll_real64 :: inv_r
-    sll_real64 :: inv_dr
+    real(f64) :: dr
+    real(f64) :: inv_r
+    real(f64) :: inv_dr
 
-    sll_int32  :: i, k
-    sll_int32  :: bck(2)
-    sll_int32  :: last
+    integer(i32)  :: i, k
+    integer(i32)  :: bck(2)
+    integer(i32)  :: last
 
     ! Consistency check: boundary conditions must be one of three options
     if( any( bc_rmin == bc_opts ) ) then
@@ -279,11 +308,11 @@ contains
   !> Solve the Poisson equation and get the electrostatic potential
   subroutine sll_s_poisson_2d_polar_solve( solver, rho, phi )
     type(sll_t_poisson_2d_polar), intent(inout) :: solver   !< Solver object
-    sll_real64                  , intent(in   ) :: rho(:,:) !< Charge density
-    sll_real64                  , intent(  out) :: phi(:,:) !< Potential
+    real(f64)                   , intent(in   ) :: rho(:,:) !< Charge density
+    real(f64)                   , intent(  out) :: phi(:,:) !< Potential
 
-    sll_int32  :: nr, ntheta, bck(2)
-    sll_int32  :: i, k
+    integer(i32)  :: nr, ntheta, bck(2)
+    integer(i32)  :: i, k
 
     nr     = solver%nr
     ntheta = solver%nt
@@ -381,11 +410,11 @@ contains
      bc_r  ) &
    result( solver_ptr )
 
-    sll_real64, intent(in) :: rmin     !< rmin
-    sll_real64, intent(in) :: rmax     !< rmax
-    sll_int32 , intent(in) :: nr       !< number of cells radial
-    sll_int32 , intent(in) :: ntheta   !< number of cells angular
-    sll_int32 , intent(in) :: bc_r(2)  !< boundary conditions at [r_min,r_max]
+    real   (f64), intent(in) :: rmin     !< rmin
+    real   (f64), intent(in) :: rmax     !< rmax
+    integer(i32), intent(in) :: nr       !< number of cells radial
+    integer(i32), intent(in) :: ntheta   !< number of cells angular
+    integer(i32), intent(in) :: bc_r(2)  !< boundary conditions at [r_min,r_max]
 
     type(sll_t_poisson_2d_polar), pointer :: solver_ptr !< pointer to solver
 
@@ -404,8 +433,8 @@ contains
   !> OO interface: solve Poisson's equation
   subroutine s_compute_phi_from_rho( poisson, phi, rho )
     class(sll_t_poisson_2d_polar), target        :: poisson
-    sll_real64                   , intent(  out) :: phi(:,:)
-    sll_real64                   , intent(in   ) :: rho(:,:)
+    real(f64)                    , intent(  out) :: phi(:,:)
+    real(f64)                    , intent(in   ) :: rho(:,:)
 
     ! If last theta point is repeated, discard point and then manually apply
     ! periodic boundary conditions
@@ -426,9 +455,9 @@ contains
   !> OO interface: solve Poisson's equation and compute E field
   subroutine s_compute_E_from_rho( poisson, E1, E2, rho )
     class(sll_t_poisson_2d_polar)                :: poisson
-    sll_real64                   , intent(  out) ::  E1(:,:)
-    sll_real64                   , intent(  out) ::  E2(:,:)
-    sll_real64                   , intent(in   ) :: rho(:,:)
+    real(f64)                    , intent(  out) ::  E1(:,:)
+    real(f64)                    , intent(  out) ::  E2(:,:)
+    real(f64)                    , intent(in   ) :: rho(:,:)
     SLL_ERROR( 'sll_t_poisson_2d_polar % compute_E_from_rho', 'NOT IMPLEMENTED' )
   end subroutine s_compute_E_from_rho
 
@@ -436,8 +465,8 @@ contains
   !> OO interface: compute L2 norm squared of something (...)
   function f_l2norm_squared( poisson, coefs_dofs ) result( r )
     class(sll_t_poisson_2d_polar), intent(in) :: poisson
-    sll_real64                   , intent(in) :: coefs_dofs(:,:)
-    sll_real64 :: r
+    real(f64)                    , intent(in) :: coefs_dofs(:,:)
+    real(f64) :: r
     SLL_ERROR( 'sll_t_poisson_2d_polar % l2norm_squared', 'NOT IMPLEMENTED' )
     r = 0.0_f64
   end function f_l2norm_squared
@@ -447,7 +476,7 @@ contains
   subroutine s_compute_rhs_from_function( poisson, func, coefs_dofs )
     class(sll_t_poisson_2d_polar)                :: poisson
     procedure(sll_i_function_of_position)        :: func
-    sll_real64                   , intent(  out) :: coefs_dofs(:)
+    real(f64)                    , intent(  out) :: coefs_dofs(:)
     SLL_ERROR( 'sll_t_poisson_2d_polar % compute_rhs_from_function', 'NOT IMPLEMENTED' )
   end subroutine s_compute_rhs_from_function
 
