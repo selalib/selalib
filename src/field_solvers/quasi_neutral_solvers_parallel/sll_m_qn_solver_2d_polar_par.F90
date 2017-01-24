@@ -20,9 +20,10 @@
 !> @author  Edoardo Zoni, IPP Garching
 !>
 !> @details
-!> This module solves the quasi-neutrality equation on a 2D polar mesh using the
-!> fast Fourier transform (FFT) in \f$ \theta \f$ and 2nd-order finite differences
-!> in \f$ r \f$.
+!> This module solves the quasi-neutrality equation on a 2D polar mesh
+!> \f$ (r,\theta) \in [r_\textrm{min},r_\textrm{max}]\times[0,2\pi) \f$ 
+!> using fast Fourier transforms (FFTs) in \f$ \theta \f$ and 2nd-order
+!> finite-difference methods in \f$ r \f$.
 !>
 !> The general quasi-neutrality equation is of the form
 !> \f[
@@ -31,7 +32,7 @@
 !> +\frac{1}{\lambda_D^2}\big[\phi(r,\theta)-\chi\langle\phi\rangle_f(r)\big]
 !> = \frac{1}{\epsilon_0}\rho_{c1}(r,\theta),
 !> \f]
-!> \f$ \phi(r,\theta) \f$ is the electrostatic potential,
+!> where \f$ \phi(r,\theta) \f$ is the electrostatic potential,
 !> \f$ \langle\phi\rangle_f(r) \f$ is the flux-surface average of \f$ \phi(r,\theta) \f$,
 !> \f$ \rho_{c1}(r,\theta) \f$ is the charge perturbation density due to the
 !> kinetic species, \f$ \rho_{m0} \f$ is the equilibrium mass density,
@@ -41,7 +42,7 @@
 !> \f[
 !> \lambda_D\equiv\sqrt{\frac{\epsilon_0\kappa T_e}{q_e^{2}n_{e0}}}.
 !> \f]
-!> The equation in polar coordinates \f$ (r,\theta) \f$ reads
+!> The equation in polar coordinates reads
 !> \f[
 !> -\bigg[
 !> \frac{g}{r}\frac{\partial}{\partial r}
@@ -52,13 +53,14 @@
 !> = \frac{1}{\epsilon_0}\rho_{c1}(r,\theta),
 !> \f]
 !> where \f$ g\equiv\rho_{m0}/\epsilon_0 B^{2} \f$ is assumed to be independent
-!> of \f$ \theta \f$. The boundary conditions on \f$ \phi(r,\theta) \f$ are as follows:
-!> \f$ 2\pi \f$-periodicity along \f$ \theta \f$;
-!> Neumann mode 0 at \f$ r = r_\textrm{min} \f$:
-!> \f$ \partial_r \widehat{\phi}_0(r_\textrm{min}) = 0 \f$
-!> and \f$ \widehat{\phi}_k(r_\textrm{min})=0 \f$ for \f$ k\neq 0 \f$;
-!> homogeneous Dirichlet at \f$ r = r_\textrm{max} \f$:
-!> \f$ \phi(r_\textrm{max},\theta) = 0 \f$.
+!> of \f$ \theta \f$.
+!>
+!> The boundary conditions (BCs) on \f$ \phi(r,\theta) \f$ are set as follows.
+!> \f$ \phi(r,\theta) \f$ is \f$ 2\pi\f$-periodic along \f$ \theta \f$ and the
+!> BCs along \f$ r \f$ can be chosen among the following types:
+!> - Homogeneous Dirichlet;
+!> - Homogeneous Neumann;
+!> - Homogeneous Neumann mode 0.
 !>
 !> The following arguments are given by the user at initialization:
 !> \f$ \rho_{m0} \f$, \f$ B \f$, \f$ \lambda_D \f$, \f$ \epsilon_0 \f$ and the
@@ -84,6 +86,21 @@
 !> \f]
 !> For each mode \f$ k \f$, the resulting ODE is solved with a 2nd-order
 !> finite-difference collocation method.
+!>
+!> ##### Note on parallelization #####
+!> - The user must provide two compatible 2D layouts:
+!>   - \c layout_a sequential in \f$ \theta \f$;
+!>   - \c layout_r sequential in \f$ r \f$;
+!> - Input and output data are given in \c layout_a;
+!> - \c layout_r is only used internally;
+!> - FFTs are computed on one row of \c layout_a;
+!> - The linear solver (for each mode \f$ k \f$) works on one column of \c layout_r;
+!> - The maximum number of parallel solve is \f$ N_\theta \f$,
+!>   where \f$ N_\theta\f$ is the number of cells along \f$ \theta \f$.
+!>   Therefore, instead of working with \f$ N_\theta/2+1 \f$ Fourier modes, we
+!>   work with \f$ N_\theta \f$ real modes. For this purpose, the \c r2r interface
+!>   of FFTW is used: this corresponds to DFTs of real input and complex-Hermitian
+!>   output in halfcomplex format.
 !>
 
 module sll_m_qn_solver_2d_polar_par
@@ -149,14 +166,14 @@ module sll_m_qn_solver_2d_polar_par
    sll_int32               :: ntheta    !< Number of cells along theta
    sll_int32               :: bc(2)     !< Boundary conditions options
    sll_real64              :: epsilon_0 !< Vacuum permittivity (user may override)
-   sll_real64, allocatable :: g(:)      !< g(r) = \rho_{m,0}/(B^2\epsilon_0)
+   sll_real64, allocatable :: g(:)      !< \f$ g(r) = \rho_{m,0}/(B^2\epsilon_0) \f$
 
    type(sll_t_fft)         :: fw        !< Forward FFT plan
    type(sll_t_fft)         :: bw        !< Inverse FFT plan
-   sll_real64, pointer     :: tmp (:)    !< 1D work array for FFT, real
+   sll_real64, pointer     :: tmp (:)   !< 1D work array for FFT, real
    sll_int32 , allocatable :: k_list(:)
-   sll_real64, allocatable :: z_r (:,:)  !< 2D array sequential in r
-   sll_real64, pointer     :: z_a (:,:)  !< 2D array sequential in theta
+   sll_real64, allocatable :: z_r (:,:) !< 2D array sequential in r
+   sll_real64, pointer     :: z_a (:,:) !< 2D array sequential in theta
    sll_real64, allocatable :: mat (:,:) !< Tridiagonal matrix (one for each k)
    sll_real64, allocatable :: cts (:)   !< Lapack coefficients
    sll_int32 , allocatable :: ipiv(:)   !< Lapack pivot indices

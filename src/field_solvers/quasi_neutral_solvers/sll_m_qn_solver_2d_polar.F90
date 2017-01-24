@@ -20,9 +20,10 @@
 !> @author  Edoardo Zoni, IPP Garching
 !>
 !> @details
-!> This module solves the quasi-neutrality equation on a 2D polar mesh using the
-!> fast Fourier transform (FFT) in \f$ \theta \f$ and 2nd-order finite differences
-!> in \f$ r \f$.
+!> This module solves the quasi-neutrality equation on a 2D polar mesh
+!> \f$ (r,\theta) \in [r_\textrm{min},r_\textrm{max}]\times[0,2\pi) \f$ 
+!> using fast Fourier transforms (FFTs) in \f$ \theta \f$ and 2nd-order
+!> finite-difference methods in \f$ r \f$.
 !>
 !> The general quasi-neutrality equation is of the form
 !> \f[
@@ -31,7 +32,7 @@
 !> +\frac{1}{\lambda_D^2}\big[\phi(r,\theta)-\chi\langle\phi\rangle_f(r)\big]
 !> = \frac{1}{\epsilon_0}\rho_{c1}(r,\theta),
 !> \f]
-!> \f$ \phi(r,\theta) \f$ is the electrostatic potential,
+!> where \f$ \phi(r,\theta) \f$ is the electrostatic potential,
 !> \f$ \langle\phi\rangle_f(r) \f$ is the flux-surface average of \f$ \phi(r,\theta) \f$,
 !> \f$ \rho_{c1}(r,\theta) \f$ is the charge perturbation density due to the
 !> kinetic species, \f$ \rho_{m0} \f$ is the equilibrium mass density,
@@ -41,7 +42,7 @@
 !> \f[
 !> \lambda_D\equiv\sqrt{\frac{\epsilon_0\kappa T_e}{q_e^{2}n_{e0}}}.
 !> \f]
-!> The equation in polar coordinates \f$ (r,\theta) \f$ reads
+!> The equation in polar coordinates reads
 !> \f[
 !> -\bigg[
 !> \frac{g}{r}\frac{\partial}{\partial r}
@@ -52,13 +53,14 @@
 !> = \frac{1}{\epsilon_0}\rho_{c1}(r,\theta),
 !> \f]
 !> where \f$ g\equiv\rho_{m0}/\epsilon_0 B^{2} \f$ is assumed to be independent
-!> of \f$ \theta \f$. The boundary conditions on \f$ \phi(r,\theta) \f$ are as follows:
-!> \f$ 2\pi \f$-periodicity along \f$ \theta \f$;
-!> Neumann mode 0 at \f$ r = r_\textrm{min} \f$:
-!> \f$ \partial_r \widehat{\phi}_0(r_\textrm{min}) = 0 \f$
-!> and \f$ \widehat{\phi}_k(r_\textrm{min})=0 \f$ for \f$ k\neq 0 \f$;
-!> homogeneous Dirichlet at \f$ r = r_\textrm{max} \f$:
-!> \f$ \phi(r_\textrm{max},\theta) = 0 \f$.
+!> of \f$ \theta \f$.
+!>
+!> The boundary conditions (BCs) on \f$ \phi(r,\theta) \f$ are set as follows.
+!> \f$ \phi(r,\theta) \f$ is \f$ 2\pi\f$-periodic along \f$ \theta \f$ and the
+!> BCs along \f$ r \f$ can be chosen among the following types:
+!> - Homogeneous Dirichlet;
+!> - Homogeneous Neumann;
+!> - Homogeneous Neumann mode 0.
 !>
 !> The following arguments are given by the user at initialization:
 !> \f$ \rho_{m0} \f$, \f$ B \f$, \f$ \lambda_D \f$, \f$ \epsilon_0 \f$ and the
@@ -82,15 +84,17 @@
 !>                            -\chi\langle\phi\rangle_f(r)\delta_{k0}\big]
 !> = \frac{1}{\epsilon_0}\widehat{\rho}_{c1,k}(r),
 !> \f]
+!> For each mode \f$ k \f$, the resulting ODE is solved with a 2nd-order
+!> finite-difference collocation method.
+!>
 !> Since \f$ \phi(r,\theta) \f$ is real, we have
 !> \f$ \widehat{\phi}_{-k}=\overline{\widehat{\phi}_k} \f$ for each
 !> \f$ k=-N_\theta/2,-N_\theta/2+1,\dots,-1,0,1,\dots,N_\theta/2-1,N_\theta/2\f$,
 !> where \f$ N_\theta\f$ is the number of cells along \f$ \theta \f$.
 !> Therefore, it is enough to consider only \f$ N_\theta/2+1 \f$ coefficients
-!> \f$ \widehat{\phi}_0, \dots, \widehat{\phi}_{N_\theta/2} \f$. For each mode
-!> \f$ k \f$, the resulting ODE is solved with a 2nd-order finite-difference
-!> collocation method.
-!>
+!> \f$ \widehat{\phi}_0, \dots, \widehat{\phi}_{N_\theta/2} \f$. For this purpose,
+!> the \c r2c and \c c2r interfaces of FFTW are used for the forward and backward
+!> FFTs, respectively.
 
 module sll_m_qn_solver_2d_polar
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -134,22 +138,22 @@ module sll_m_qn_solver_2d_polar
   !> Class for 2D Poisson solver in polar coordinates
   type sll_t_qn_solver_2d_polar
 
-   sll_real64              :: rmin     !< Min value of r coordinate
-   sll_real64              :: rmax     !< Max value of r coordinate
-   sll_int32               :: nr       !< Number of cells along r
-   sll_int32               :: nt       !< Number of cells along theta
-   sll_int32               :: bc(2)    !< Boundary conditions options
-   sll_real64              :: epsilon_0!< Vacuum permittivity (user may override)
-   sll_real64, allocatable :: g   (:)  !< g(r) = \rho_{m,0}/(B^2\epsilon_0)
+   sll_real64              :: rmin      !< Min value of r coordinate
+   sll_real64              :: rmax      !< Max value of r coordinate
+   sll_int32               :: nr        !< Number of cells along r
+   sll_int32               :: nt        !< Number of cells along theta
+   sll_int32               :: bc(2)     !< Boundary conditions options
+   sll_real64              :: epsilon_0 !< Vacuum permittivity (user may override)
+   sll_real64, allocatable :: g   (:)   !< \f$ g(r) = \rho_{m,0}/(B^2\epsilon_0) \f$
 
-   type(sll_t_fft)         :: fw       !< Forward FFT plan
-   type(sll_t_fft)         :: bw       !< Inverse FFT plan
-   sll_comp64, allocatable :: z   (:,:)!< 2D work array needed for transposition
+   type(sll_t_fft)         :: fw        !< Forward FFT plan
+   type(sll_t_fft)         :: bw        !< Inverse FFT plan
+   sll_comp64, allocatable :: z   (:,:) !< 2D work array needed for transposition
    sll_real64, pointer     :: temp_r(:) !< 1D work array, real
    sll_comp64, pointer     :: temp_c(:) !< 1D work array, complex
-   sll_real64, allocatable :: mat (:,:)!< Tridiagonal matrix (one for each k)
-   sll_real64, allocatable :: cts (:)  !< Lapack coefficients
-   sll_int32 , allocatable :: ipiv(:)  !< Lapack pivot indices
+   sll_real64, allocatable :: mat (:,:) !< Tridiagonal matrix (one for each k)
+   sll_real64, allocatable :: cts (:)   !< Lapack coefficients
+   sll_int32 , allocatable :: ipiv(:)   !< Lapack pivot indices
 
   end type sll_t_qn_solver_2d_polar
 

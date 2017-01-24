@@ -19,9 +19,14 @@
 !> @author  Yaman Güçlü, IPP Garching
 !> @author  Edoardo Zoni, IPP Garching
 !>
+!> @details
 !> This module solves the Poisson equation \f$ -\nabla^2 \phi = \rho \f$
-!> (permittivity of free space \f$ \epsilon_0 = 1 \f$) on a 2D polar mesh with
-!> coordinates \f$ (r,\theta) \f$:
+!> (permittivity of free space \f$ \epsilon_0 = 1 \f$) on a 2D polar mesh
+!> \f$ (r,\theta) \in [r_\textrm{min},r_\textrm{max}]\times[0,2\pi) \f$
+!> using fast Fourier transforms (FFTs) in \f$ \theta \f$ and 2nd-order
+!> finite-difference methods in \f$ r \f$.
+!>
+!> The Poisson equation in polar coordinates reads
 !> \f[
 !> -\bigg(
 !> \frac{\partial^2}{\partial r^{2}}
@@ -29,13 +34,14 @@
 !> +\frac{1}{r^{2}}\frac{\partial^{2}}{\partial\theta^{2}}
 !> \bigg)\phi(r,\theta) = \rho(r,\theta).
 !> \f]
-!> The boundary conditions on \f$ \phi(r,\theta) \f$ are as follows:
-!> \f$ 2\pi \f$-periodicity along \f$ \theta \f$;
-!> Neumann mode 0 at \f$ r = r_\textrm{min} \f$:
-!> \f$ \partial_r \widehat{\phi}_0(r_\textrm{min}) = 0 \f$
-!> and \f$ \widehat{\phi}_k(r_\textrm{min})=0 \f$ for \f$ k\neq 0 \f$;
-!> homogeneous Dirichlet at \f$ r = r_\textrm{max} \f$:
-!> \f$ \phi(r_\textrm{max},\theta) = 0 \f$.
+!>
+!> The boundary conditions (BCs) on \f$ \phi(r,\theta) \f$ are set as follows.
+!> \f$ \phi(r,\theta) \f$ is \f$ 2\pi\f$-periodic along \f$ \theta \f$ and the
+!> BCs along \f$ r \f$ can be chosen among the following types:
+!> - Homogeneous Dirichlet;
+!> - Homogeneous Neumann;
+!> - Homogeneous Neumann mode 0.
+!>
 !> Thanks to the linearity of the differential operator and the periodicity of
 !> the domain, a discrete Fourier transform (DFT) in \f$ \theta \f$ is applied
 !> to both sides of the above elliptic PDE. Then, each Fourier coefficient
@@ -50,6 +56,21 @@
 !> \f]
 !> For each mode \f$ k \f$, the resulting ODE is solved with a 2nd-order
 !> finite-difference collocation method.
+!>
+!> ##### Note on parallelization #####
+!> - The user must provide two compatible 2D layouts:
+!>   - \c layout_a sequential in \f$ \theta \f$;
+!>   - \c layout_r sequential in \f$ r \f$;
+!> - Input and output data are given in \c layout_a;
+!> - \c layout_r is only used internally;
+!> - FFTs are computed on one row of \c layout_a;
+!> - The linear solver (for each mode \f$ k \f$) works on one column of \c layout_r;
+!> - The maximum number of parallel solve is \f$ N_\theta \f$,
+!>   where \f$ N_\theta\f$ is the number of cells along \f$ \theta \f$.
+!>   Therefore, instead of working with \f$ N_\theta/2+1 \f$ Fourier modes, we
+!>   work with \f$ N_\theta \f$ real modes. For this purpose, the \c r2r interface
+!>   of FFTW is used: this corresponds to DFTs of real input and complex-Hermitian
+!>   output in halfcomplex format.
 !>
 
 module sll_m_poisson_2d_polar_par
