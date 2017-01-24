@@ -1990,22 +1990,39 @@ INCLUDE_FILE_PATTERNS  =
 # recursively expanded use the := operator instead of the = operator.
 # This tag requires that the tag ENABLE_PREPROCESSING is set to YES.
 
-PREDEFINED             = sll_int32=integer(kind=4) \
-                         sll_real64=real(kind=8) \
-                         sll_int64=integer(kind=8) \
-                         sll_real32=real(kind=4) \
-                         sll_comp32=complex(kind=8) \
-                         sll_comp64=complex(kind=16) \
-                         "_sll_int32=sll_int32" \
-                         "_sll_int64=sll_int64" \
-                         "_sll_real32=sll_real32" \
-                         "_sll_real64=sll_real64" \
-                         "sll_transformation=class(sll_coordinate_transformation_2d_base)" \
-                         "SLL_PRIV= " \
-                         fftw_plan=integer(kind=8) \
-                         fftw_comp=complex(kind=16) \
-                         fftw_int=integer(kind=4) \
-                         DOXYGEN_SHOULD_SKIP_THIS
+PREDEFINED = DOXYGEN_SHOULD_SKIP_THIS    \
+             sll_int32=integer(kind=i32) \
+             sll_int64=integer(kind=i64) \
+             sll_real32=real(kind=f32)   \
+             sll_real64=real(kind=f64)   \
+             sll_comp32=complex(kind=f32)\
+             sll_comp64=complex(kind=f64)\
+             "_sll_int32=sll_int32"      \
+             "_sll_int64=sll_int64"      \
+             "_sll_real32=sll_real32"    \
+             "_sll_real64=sll_real64"    \
+             "sll_transformation=class(sll_coordinate_transformation_2d_base)" \
+             fftw_int=integer(kind=i32)  \
+             fftw_real=real(kind=f64)    \
+             fftw_comp=complex(kind=f64)
+
+## [YG] Old stuff (before 24 Jan 2017):
+## PREDEFINED             = sll_int32=integer(kind=4) \
+##                          sll_real64=real(kind=8) \
+##                          sll_int64=integer(kind=8) \
+##                          sll_real32=real(kind=4) \
+##                          sll_comp32=complex(kind=8) \
+##                          sll_comp64=complex(kind=16) \
+##                          "_sll_int32=sll_int32" \
+##                          "_sll_int64=sll_int64" \
+##                          "_sll_real32=sll_real32" \
+##                          "_sll_real64=sll_real64" \
+##                          "sll_transformation=class(sll_coordinate_transformation_2d_base)" \
+##                          "SLL_PRIV= " \
+##                          fftw_plan=integer(kind=8) \
+##                          fftw_comp=complex(kind=16) \
+##                          fftw_int=integer(kind=4) \
+##                          DOXYGEN_SHOULD_SKIP_THIS
 
 # If the MACRO_EXPANSION and EXPAND_ONLY_PREDEF tags are set to YES then this
 # tag can be used to specify a list of macro names that should be expanded. The

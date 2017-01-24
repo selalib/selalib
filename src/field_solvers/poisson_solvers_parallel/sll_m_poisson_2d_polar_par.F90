@@ -16,17 +16,19 @@
 !**************************************************************
 
 !> @ingroup poisson_solvers_parallel
-!> @brief   Parallel Poisson solver on 2D polar mesh; uses FFTs along theta.
+!> @brief
+!> Parallel Poisson solver on 2D polar mesh; uses FFT in theta and 2nd-order FD in r.
+!>
 !> @authors Yaman Güçlü, IPP Garching
 !> @authors Edoardo Zoni, IPP Garching
 !>
 !> @details
+!>
+!> #### Model equations ####
+!>
 !> This module solves the Poisson equation \f$ -\nabla^2 \phi = \rho \f$
 !> (permittivity of free space \f$ \epsilon_0 = 1 \f$) on a 2D polar mesh
-!> \f$ (r,\theta) \in [r_\textrm{min},r_\textrm{max}]\times[0,2\pi) \f$
-!> using fast Fourier transforms (FFTs) in \f$ \theta \f$ and 2nd-order
-!> finite-difference methods in \f$ r \f$.
-!>
+!> \f$ (r,\theta) \in [r_\textrm{min},r_\textrm{max}]\times[0,2\pi) \f$.
 !> The Poisson equation in polar coordinates reads
 !> \f[
 !> -\bigg(
@@ -46,6 +48,10 @@
 !>   \f$ \partial_r\widehat{\phi}_0(\overline{r})=0\f$ and
 !>   \f$ \widehat{\phi}_k(\overline{r})=0 \f$ for \f$ k\neq 0 \f$.
 !>
+!> #### Numerical methods ####
+!>
+!> This module uses fast Fourier transforms (FFTs) in \f$ \theta \f$ and a
+!> 2nd-order finite-difference method in \f$ r \f$.
 !> Thanks to the linearity of the differential operator and the periodicity of
 !> the domain, a discrete Fourier transform (DFT) in \f$ \theta \f$ is applied
 !> to both sides of the above elliptic PDE. Then, each Fourier coefficient
@@ -61,7 +67,8 @@
 !> For each mode \f$ k \f$, the resulting ODE is solved with a 2nd-order
 !> finite-difference collocation method.
 !>
-!> ##### Note on parallelization #####
+!> #### Parallelization ####
+!>
 !> - The user must provide two compatible 2D layouts:
 !>   - \c layout_a sequential in \f$ \theta \f$;
 !>   - \c layout_r sequential in \f$ r \f$;
@@ -76,6 +83,32 @@
 !>   of FFTW is used: this corresponds to DFTs of real input and complex-Hermitian
 !>   output in halfcomplex format.
 !>
+!> #### Usage example ####
+!>
+!> \code
+!> use sll_m_poisson_2d_polar_par, only: &
+!>   sll_t_poisson_2d_polar_par,         &
+!>   sll_s_poisson_2d_polar_par_init,    &
+!>   sll_s_poisson_2d_polar_par_solve,   &
+!>   sll_s_poisson_2d_polar_par_free
+!>
+!> use sll_m_remapper, only: &
+!>   sll_t_layout_2d
+!>
+!> ...
+!>
+!> type(sll_t_poisson_2d_polar_par) :: solver
+!> type(sll_t_layout_2d)            :: layout_a, layout_r
+!> real(f64), allocatable           :: rho(:,:), phi(:,:)
+!> real(f64)                        :: rmin, rmax
+!> integer(i32)                     :: nr, ntheta, bc_rmin, bc_rmax
+!>
+!> ...
+!>
+!> call sll_s_poisson_2d_polar_par_init ( solver, layout_r, layout_a, rmin, rmax, nr, ntheta, bc_rmin, bc_rmax )
+!> call sll_s_poisson_2d_polar_par_solve( solver, rho, phi )
+!> call sll_s_poisson_2d_polar_par_free ( solver )
+!> \endcode
 
 module sll_m_poisson_2d_polar_par
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -131,21 +164,21 @@ module sll_m_poisson_2d_polar_par
   !> Class for the Poisson solver in polar coordinate
   type sll_t_poisson_2d_polar_par
 
-   sll_real64              :: rmin       !< Min value of r coordinate
-   sll_real64              :: rmax       !< Max value of r coordinate
-   sll_int32               :: nr         !< Number of cells along r
-   sll_int32               :: ntheta     !< Number of cells along theta
-   sll_int32               :: bc(2)      !< Boundary conditions options
+   real   (f64)              :: rmin       !< Min value of r coordinate
+   real   (f64)              :: rmax       !< Max value of r coordinate
+   integer(i32)              :: nr         !< Number of cells along r
+   integer(i32)              :: ntheta     !< Number of cells along theta
+   integer(i32)              :: bc(2)      !< Boundary conditions options
 
-   type(sll_t_fft)         :: fw         !< Forward FFT plan
-   type(sll_t_fft)         :: bw         !< Inverse FFT plan
-   sll_real64, pointer     :: tmp (:)    !< 1D work array for FFT, real
-   sll_int32 , allocatable :: k_list(:)
-   sll_real64, allocatable :: z_r (:,:)  !< 2D array sequential in r
-   sll_real64, pointer     :: z_a (:,:)  !< 2D array sequential in theta
-   sll_real64, allocatable :: mat (:,:)  !< Tridiagonal matrix (one for each k)
-   sll_real64, allocatable :: cts (:)    !< Lapack coefficients
-   sll_int32 , allocatable :: ipiv(:)    !< Lapack pivot indices
+   type(sll_t_fft)           :: fw         !< Forward FFT plan
+   type(sll_t_fft)           :: bw         !< Inverse FFT plan
+   real   (f64), pointer     :: tmp (:)    !< 1D work array for FFT, real
+   integer(i32), allocatable :: k_list(:)
+   real   (f64), allocatable :: z_r (:,:)  !< 2D array sequential in r
+   real   (f64), pointer     :: z_a (:,:)  !< 2D array sequential in theta
+   real   (f64), allocatable :: mat (:,:)  !< Tridiagonal matrix (one for each k)
+   real   (f64), allocatable :: cts (:)    !< Lapack coefficients
+   integer(i32), allocatable :: ipiv(:)    !< Lapack pivot indices
 
    type(sll_t_layout_2d)           , pointer :: layout_r !< layout sequential in r
    type(sll_t_layout_2d)           , pointer :: layout_a !< layout sequential in theta
@@ -155,12 +188,12 @@ module sll_m_poisson_2d_polar_par
   end type sll_t_poisson_2d_polar_par
 
   ! Allowed boundary conditions
-  sll_int32, parameter :: bc_opts(3) = &
+  integer(i32), parameter :: bc_opts(3) = &
     [sll_p_dirichlet, sll_p_neumann, sll_p_neumann_mode_0]
 
   ! Local parameters
-  sll_real64, parameter ::  one_third  = 1.0_f64 / 3.0_f64
-  sll_real64, parameter :: four_thirds = 4.0_f64 / 3.0_f64
+  real(f64), parameter ::  one_third  = 1.0_f64 / 3.0_f64
+  real(f64), parameter :: four_thirds = 4.0_f64 / 3.0_f64
 
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 contains
@@ -181,27 +214,27 @@ contains
     type(sll_t_poisson_2d_polar_par), intent(out) :: solver !< solver object
     type(sll_t_layout_2d), pointer    :: layout_r !< layout sequential in r direction
     type(sll_t_layout_2d), pointer    :: layout_a !< layout sequential in theta direction
-    sll_real64           , intent(in) :: rmin     !< rmin
-    sll_real64           , intent(in) :: rmax     !< rmax
-    sll_int32            , intent(in) :: nr       !< number of cells radial
-    sll_int32            , intent(in) :: ntheta   !< number of cells angular
-    sll_int32            , intent(in) :: bc_rmin  !< boundary condition at r_min
-    sll_int32            , intent(in) :: bc_rmax  !< boundary condition at r_max
+    real(f64)            , intent(in) :: rmin     !< rmin
+    real(f64)            , intent(in) :: rmax     !< rmax
+    integer(i32)         , intent(in) :: nr       !< number of cells radial
+    integer(i32)         , intent(in) :: ntheta   !< number of cells angular
+    integer(i32)         , intent(in) :: bc_rmin  !< boundary condition at r_min
+    integer(i32)         , intent(in) :: bc_rmax  !< boundary condition at r_max
 
     character(len=*), parameter :: this_sub_name = 'sll_s_poisson_2d_polar_par_init'
 
-    sll_real64 :: dr
-    sll_real64 :: inv_r
-    sll_real64 :: inv_dr
+    real(f64) :: dr
+    real(f64) :: inv_r
+    real(f64) :: inv_dr
 
-    sll_int32  :: loc_sz_r(2) ! sequential in r direction
-    sll_int32  :: loc_sz_a(2) ! sequential in theta direction
-    sll_int32  :: i, j, k
-    sll_int32  :: bck(2)
-    sll_int32  :: last
-    sll_int32  :: glob_idx(2)
+    integer(i32)  :: loc_sz_r(2) ! sequential in r direction
+    integer(i32)  :: loc_sz_a(2) ! sequential in theta direction
+    integer(i32)  :: i, j, k
+    integer(i32)  :: bck(2)
+    integer(i32)  :: last
+    integer(i32)  :: glob_idx(2)
 
-    sll_int32, allocatable :: k_list_glob(:)
+    integer(i32), allocatable :: k_list_glob(:)
 
     ! Consistency check: boundary conditions must be one of three options
     if( any( bc_rmin == bc_opts ) ) then
@@ -341,11 +374,11 @@ contains
   !> Solve the Poisson equation and get the electrostatic potential
   subroutine sll_s_poisson_2d_polar_par_solve( solver, rho, phi )
     type(sll_t_poisson_2d_polar_par) , intent(inout) :: solver   !< Solver object
-    sll_real64                       , intent(in   ) :: rho(:,:) !< Charge density
-    sll_real64, target               , intent(  out) :: phi(:,:) !< Potential
+    real(f64)                        , intent(in   ) :: rho(:,:) !< Charge density
+    real(f64), target                , intent(  out) :: phi(:,:) !< Potential
 
-    sll_int32  :: nr, ntheta, bck(2)
-    sll_int32  :: i, j, k
+    integer(i32) :: nr, ntheta, bck(2)
+    integer(i32) :: i, j, k
 
     nr     = solver%nr
     ntheta = solver%ntheta
@@ -456,10 +489,10 @@ contains
   !> Check if array sizes are compatble with the layout 
   subroutine verify_argument_sizes_par(layout, array)
 
-    type(sll_t_layout_2d), pointer       :: layout
-    sll_real64, dimension(:,:)     :: array
-    sll_int32,  dimension(2)       :: n ! nx_loc, ny_loc
-    sll_int32                      :: i
+    type(sll_t_layout_2d), pointer   :: layout
+    real(f64)   , dimension(:,:)     :: array
+    integer(i32), dimension(2)       :: n ! nx_loc, ny_loc
+    integer(i32)                     :: i
 
     ! Note that this checks for strict sizes, not an array being bigger
     ! than a certain size, but exactly a desired size... This may be a bit
