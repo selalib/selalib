@@ -75,6 +75,7 @@ use sll_m_fft, only: sll_t_fft, &
   sll_s_init_maxwell_2d_pstd,      &
   sll_s_solve_maxwell_2d_pstd,     &
   sll_s_solve_ampere_2d_pstd,      &
+  sll_s_solve_faraday_2d_pstd,      &
   sll_s_free_maxwell_2d_pstd
 
   private
