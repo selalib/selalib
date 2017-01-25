@@ -384,8 +384,8 @@ contains
     ntheta = solver%ntheta
 
     ! Consistency check: rho and phi must be given in layout sequential in theta
-    call verify_argument_sizes_par( solver%layout_a, rho )
-    call verify_argument_sizes_par( solver%layout_a, phi )
+    call verify_argument_sizes_par( solver%layout_a, rho, 'rho' )
+    call verify_argument_sizes_par( solver%layout_a, phi, 'phi' )
 
     ! Use output array 'phi' as 2D work array sequential in theta
     solver%z_a => phi(:,:)
@@ -486,35 +486,29 @@ contains
 
 
   !=============================================================================
-  !> Check if array sizes are compatble with the layout 
-  subroutine verify_argument_sizes_par(layout, array)
+  !> Check if array sizes are compatible with the layout 
+  subroutine verify_argument_sizes_par( layout, array, array_name )
+    type(sll_t_layout_2d), pointer    :: layout
+    real(f64)            , intent(in) :: array(:,:)
+    character(len=*)     , intent(in) :: array_name
 
-    type(sll_t_layout_2d), pointer   :: layout
-    real(f64)   , dimension(:,:)     :: array
-    integer(i32), dimension(2)       :: n ! nx_loc, ny_loc
-    integer(i32)                     :: i
+    integer(i32)                :: n(2) ! nx_loc, ny_loc
+    character(len=*), parameter :: sfmt = "('['(i0)','(i0)']')"
+    character(len=256)          :: err_fmt
+    character(len=256)          :: err_msg
 
-    ! Note that this checks for strict sizes, not an array being bigger
-    ! than a certain size, but exactly a desired size... This may be a bit
-    ! too stringent.
     call sll_o_compute_local_sizes( layout, n(1), n(2) )
 
-    do i=1,2
-       if ( (n(i)/=size(array,i))) then
-          print*, 'ERROR: solve_poisson_polar_parallel()', &
-               'size of either rho or phi does not match expected size. '
-          if (i==1) then
-             print*, 'solve_poisson_polar_parallel(): ', &
-                  'mismatch in direction r'
-          else if (i==2) then
-             print*, 'solve_poisson_polar_parallel(): ', &
-                  'mismatch in direction theta'
-          endif
-          print *, 'Exiting...'
-          call sll_s_halt_collective()
-          stop
-       endif
-    enddo
+    if ( .not. all( shape(array)==n(:) ) ) then
+      ! Create error format string
+      err_fmt = "(a,"//sfmt//",a,"//sfmt//",a)"
+      ! Write error message to string
+      write( err_msg, err_fmt ) &
+        "shape("//array_name//") = ", shape(array), &
+        " is not compatible with local shape ", n ," of 2D layout"
+      ! Stop execution with error
+      SLL_ERROR( "sll_s_poisson_2d_polar_par_solve", trim(err_msg) )
+    end if
 
   end subroutine verify_argument_sizes_par
 
