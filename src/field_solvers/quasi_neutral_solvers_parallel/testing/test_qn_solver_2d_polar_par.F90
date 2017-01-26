@@ -147,7 +147,7 @@ contains
     sll_int32  :: loc_sz_a(2)
     sll_int32  :: glob_idx(2)
 
-    sll_real64, allocatable :: rhs   (:,:)
+    sll_real64, allocatable :: rho   (:,:)
     sll_real64, allocatable :: phi_ex(:,:)
     sll_real64, allocatable :: phi   (:,:)
 
@@ -195,18 +195,18 @@ contains
     call sll_o_compute_local_sizes( layout_a, loc_sz_a(1), loc_sz_a(2) )
 
     ! Allocate 2D distributed arrays (rho, phi, phi_ex) with layout_a
-    allocate( rhs   (loc_sz_a(1),loc_sz_a(2)) )
+    allocate( rho   (loc_sz_a(1),loc_sz_a(2)) )
     allocate( phi_ex(loc_sz_a(1),loc_sz_a(2)) )
     allocate( phi   (loc_sz_a(1),loc_sz_a(2)) )
 
-    ! Load analytical solution and rhs
+    ! Load analytical solution and rho
     do j = 1, loc_sz_a(2)
       th = (j-1)*dth
       do i = 1, loc_sz_a(1)
         glob_idx(:) = sll_o_local_to_global( layout_a, [i,j] )
         r = rlim(1) + (glob_idx(1)-1)*dr
         phi_ex(i,j) = test_case%phi_ex( r, th )
-        rhs   (i,j) = test_case%rhs   ( r, th )
+        rho   (i,j) = test_case%rho   ( r, th )
       end do
     end do
     phi(:,:) = 0.0_f64
@@ -239,8 +239,8 @@ contains
       bc_rmin        = bcs(1), &
       bc_rmax        = bcs(2) )
 
-    ! Compute numerical phi for a given rhs
-    call sll_s_qn_solver_2d_polar_par_solve( solver, rhs, phi )
+    ! Compute numerical phi for a given rho
+    call sll_s_qn_solver_2d_polar_par_solve( solver, rho, phi )
 
     ! Compute (local) maximum norms of phi_ex and error
     max_phi = maxval(abs( phi_ex ))

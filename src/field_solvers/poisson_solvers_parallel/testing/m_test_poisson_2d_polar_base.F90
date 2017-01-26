@@ -36,7 +36,7 @@ private
     procedure( i_func_2d_real ), deferred :: phi_ex_diff2_r
     procedure( i_func_2d_real ), deferred :: phi_ex_diff2_th
     ! 2D right-hand side to solver
-    procedure, non_overridable :: rhs => f_test_case__rhs
+    procedure, non_overridable :: rho => f_test_case__rho
 
   end type c_test_poisson_2d_polar_base
 
@@ -75,7 +75,7 @@ private
 contains
 !<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
-  pure function f_test_case__rhs( self, r, th ) result( rho )
+  pure function f_test_case__rho( self, r, th ) result( rho )
     class(c_test_poisson_2d_polar_base), intent(in) :: self
     sll_real64                         , intent(in) :: r
     sll_real64                         , intent(in) :: th
@@ -84,7 +84,7 @@ contains
     rho = - self%phi_ex_diff2_r( r, th ) - self%phi_ex_diff1_r( r, th )/r &
           - self%phi_ex_diff2_th( r, th )/r**2
 
-  end function f_test_case__rhs
+  end function f_test_case__rho
 
   
 end module m_test_poisson_2d_polar_base

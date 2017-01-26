@@ -124,7 +124,7 @@ contains
     sll_real64 :: dr, dth
     sll_int32  :: i, j
 
-    sll_real64, allocatable :: rhs   (:,:)
+    sll_real64, allocatable :: rho   (:,:)
     sll_real64, allocatable :: phi_ex(:,:)
     sll_real64, allocatable :: phi   (:,:)
 
@@ -137,17 +137,17 @@ contains
     dth = 2.0_f64*sll_p_pi / nth
 
     ! Allocate 2D distributed arrays (rho, phi, phi_ex) with layout_a
-    allocate( rhs   (nr+1,nth) )
+    allocate( rho   (nr+1,nth) )
     allocate( phi_ex(nr+1,nth) )
     allocate( phi   (nr+1,nth) )
 
-    ! Load analytical solution and rhs
+    ! Load analytical solution and rho
     do j = 1, nth
       th = (j-1)*dth
       do i = 1, nr+1
         r = rlim(1) + (i-1)*dr
         phi_ex(i,j) = test_case%phi_ex( r, th )
-        rhs   (i,j) = test_case%rhs   ( r, th )
+        rho   (i,j) = test_case%rho   ( r, th )
       end do
     end do
     phi(:,:) = 0.0_f64
@@ -161,8 +161,8 @@ contains
       bc_rmin  = bcs(1), &
       bc_rmax  = bcs(2) )
 
-    ! Compute numerical phi for a given rhs
-    call sll_s_poisson_2d_polar_solve( solver, rhs, phi )
+    ! Compute numerical phi for a given rho
+    call sll_s_poisson_2d_polar_solve( solver, rho, phi )
 
     ! Compute (local) maximum norms of phi_ex and error
     max_phi = maxval(abs( phi_ex ))
