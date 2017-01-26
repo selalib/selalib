@@ -9,6 +9,7 @@
 !> call to subroutine 'run_test'.
 !> Tolerance is set according to the order of the radial profile of each test type
 !> (expected zero or non-zero numerical error) as well as according to the mesh sizes.
+!> Recall that k (Fourier mode, see default parameters) must be <= ntheta/2.
 !>
 
 program test_poisson_2d_polar
