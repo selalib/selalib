@@ -14,7 +14,7 @@
 !>
 !> The numerical error expected on the 1st test-case (parabolic radial profile)
 !> with a solver employing a 2nd-order numerical method in the radial direction
-!> is zero (machine precision).
+!> is zero (machine precision), if k (Fourier mode) is <= ntheta/2.
 !>
 
 module m_test_poisson_2d_polar_dirichlet
