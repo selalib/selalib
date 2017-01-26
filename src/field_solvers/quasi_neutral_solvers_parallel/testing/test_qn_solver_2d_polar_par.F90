@@ -13,14 +13,14 @@ program test_qn_solver_2d_polar_par
     sll_s_qn_solver_2d_polar_par_init, &
     sll_s_qn_solver_2d_polar_par_solve
 
-  use m_test_case_qn_2d_base, only: &
-    c_test_case_qn_solver_2d_polar
+  use m_test_qn_solver_2d_polar_base, only: &
+    c_test_qn_solver_2d_polar_base
 
-  use m_test_case_qn_2d_dirichlet, only: &
-    t_test_dirichlet_zero_error
+  use m_test_qn_solver_2d_polar_dirichlet, only: &
+    t_test_qn_solver_2d_polar_dirichlet_quadratic
 
-  use m_test_case_qn_2d_neumann_mode0, only: &
-    t_test_neumann_mode0_zero_error
+  use m_test_qn_solver_2d_polar_neumann_mode0, only: &
+    t_test_qn_solver_2d_polar_neumann_mode0_quadratic
 
   use sll_m_collective, only: &
     sll_t_collective_t, &
@@ -43,8 +43,8 @@ program test_qn_solver_2d_polar_par
   implicit none
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
-  type(t_test_dirichlet_zero_error) :: test_case_dirichlet
-  type(t_test_neumann_mode0_zero_error) :: test_case_neumann_mode0
+  type(t_test_qn_solver_2d_polar_dirichlet_quadratic)     :: test_case_dirichlet
+  type(t_test_qn_solver_2d_polar_neumann_mode0_quadratic) :: test_case_neumann_mode0
 
   type(sll_t_collective_t), pointer :: comm
   sll_int32  :: my_rank
@@ -123,7 +123,7 @@ contains
 
   subroutine run_test( comm, test_case, nr, nth, error_norm )
     type(sll_t_collective_t)             , pointer       :: comm
-    class(c_test_case_qn_solver_2d_polar), intent(in   ) :: test_case
+    class(c_test_qn_solver_2d_polar_base), intent(in   ) :: test_case
     sll_int32                            , intent(in   ) :: nr
     sll_int32                            , intent(in   ) :: nth
     sll_real64                           , intent(  out) :: error_norm
