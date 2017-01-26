@@ -11,7 +11,8 @@
 !>   phi(r,theta) = (r-rmax)(r-rmin)(a + b*cos(k(theta-theta_0))
 !>
 !> The numerical error expected on this test-case with a solver employing a
-!> 2nd-order numerical method in the radial direction is zero (machine precision).
+!> 2nd-order numerical method in the radial direction is zero (machine precision),
+!> if k (Fourier mode) is <= ntheta/2.
 !>
 
 module m_test_qn_solver_2d_polar_dirichlet
