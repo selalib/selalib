@@ -12,10 +12,10 @@
 !> - Test-case with cubic radial profile:
 !>   phi(r,theta) = r(r-rmax)(r-rmin)(a + b*cos(k(theta-theta_0))
 !>
-!> The numerical error expected on the 1st test-case (parabolic radial profile)
-!> with a solver employing a 2nd-order numerical method in the radial direction
-!> is zero (machine precision), if k (Fourier mode) is <= ntheta/2.
-!>
+!> For a solver employing a 2nd-order scheme in the radial direction r and a
+!> spectral Fourier method in the angular direction theta, the numerical error
+!> expected on the first test-case (parabolic radial profile) is zero (machine
+!> precision), if k (Fourier mode) is <= ntheta/2.
 
 module m_test_poisson_2d_polar_dirichlet
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
