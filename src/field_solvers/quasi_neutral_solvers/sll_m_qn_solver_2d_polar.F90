@@ -15,28 +15,51 @@
 !  "http://www.cecill.info". 
 !**************************************************************
 
-!> @ingroup  poisson_solvers
-!> @brief
-!> Serial Poisson solver on 2D polar mesh; uses FFT in theta and 2nd-order FD in r.
+!> @ingroup quasi_neutral_solvers
 !>
-!> @authors  Yaman Güçlü, IPP Garching
-!> @authors  Edoardo Zoni, IPP Garching
+!> @brief
+!> Serial quasi-neutrality solver on 2D polar mesh; uses FFT in theta and
+!> 2nd-order FD in r.
+!>
+!> @authors Yaman Güçlü, IPP Garching
+!> @authors Edoardo Zoni, IPP Garching
 !>
 !> @details
 !>
 !> #### Model equations ####
 !>
-!> This module solves the Poisson equation \f$ -\nabla^2 \phi = \rho \f$
-!> (permittivity of free space \f$ \epsilon_0 = 1 \f$) on a 2D polar mesh
+!> This module solves the quasi-neutrality equation on a 2D polar mesh
 !> \f$ (r,\theta) \in [r_\textrm{min},r_\textrm{max}]\times[0,2\pi) \f$.
-!> The Poisson equation in polar coordinates reads
+!> The general quasi-neutrality equation is of the form
 !> \f[
-!> -\bigg(
-!> \frac{\partial^2}{\partial r^{2}}
-!> +\frac{1}{r}\frac{\partial}{\partial r}
-!> +\frac{1}{r^{2}}\frac{\partial^{2}}{\partial\theta^{2}}
-!> \bigg)\phi(r,\theta) = \rho(r,\theta).
+!> -\nabla_\perp\cdot
+!> \bigg[\frac{\rho_{m0}}{\epsilon_0 B^2}\nabla_\perp\phi\bigg]
+!> +\frac{1}{\lambda_D^2}\big[\phi-\chi\langle\phi\rangle_f\big]
+!> = \frac{1}{\epsilon_0}\rho_{c1},
 !> \f]
+!> where \f$ \phi \f$ is the electrostatic potential,
+!> \f$ \langle\phi\rangle_f \f$ is the flux-surface average of \f$ \phi \f$,
+!> \f$ \rho_{c1} \f$ is the charge perturbation density due to the
+!> kinetic species, \f$ \rho_{m0} \f$ is the equilibrium mass density,
+!> \f$ B \f$ is the intensity of the equilibrium background magnetic field,
+!> \f$ \epsilon_0 \f$ is the permittivity of free space and \f$ \lambda_D \f$ is
+!> the electron Debye length
+!> \f[
+!> \lambda_D\equiv\sqrt{\frac{\epsilon_0\kappa T_e}{q_e^{2}n_{e0}}}.
+!> \f]
+!> The equation in polar coordinates reads
+!> \f[
+!> -\bigg[
+!> \frac{g}{r}\frac{\partial}{\partial r}
+!> +\frac{\partial}{\partial r}\bigg(g\frac{\partial}{\partial r}\bigg)
+!> +\frac{g}{r^2}\frac{\partial^2}{\partial\theta^2}
+!> \bigg]\phi(r,\theta)
+!> +\frac{1}{\lambda_D^2}\big[\phi(r,\theta)-\chi\langle\phi\rangle_\theta(r)\big]
+!> = \frac{1}{\epsilon_0}\rho_{c1}(r,\theta),
+!> \f]
+!> where \f$ g\equiv\rho_{m0}/\epsilon_0 B^{2} \f$ is assumed to be independent
+!> of \f$ \theta \f$ and the flux-surface average is replaced by a simple average
+!> over \f$ \theta \f$.
 !>
 !> The boundary conditions (BCs) on \f$ \phi(r,\theta) \f$ are set as follows.
 !> \f$ \phi(r,\theta) \f$ is \f$ 2\pi\f$-periodic along \f$ \theta \f$ and the
@@ -48,6 +71,15 @@
 !>   \f$ \partial_r\widehat{\phi}_0(\overline{r})=0\f$ and
 !>   \f$ \widehat{\phi}_k(\overline{r})=0 \f$ for \f$ k\neq 0 \f$.
 !>
+!> The following arguments are given by the user at initialization:
+!> \f$ \rho_{m0} \f$, \f$ B \f$, \f$ \lambda_D \f$, \f$ \epsilon_0 \f$ and the
+!> additional parameter \f$ \chi \f$ (default is \f$ \chi=1 \f$).
+!> If \f$ \lambda_D \f$ is not given to the solver, we assume
+!> \f$ 1/\lambda_D^2=0 \f$: the electrons form a kinetic species and their
+!> contribution goes into \f$ \rho_{c1} \f$. If \f$ \epsilon_0 \f$ is not given
+!> to the solver, we assume \f$ \epsilon_0=8.854187817\times10^{-12} [F/m]\f$
+!> according to the parameter \c sll_p_epsilon_0 in module sll_m_constants.
+!>
 !> #### Numerical methods ####
 !>
 !> This module uses fast Fourier transforms (FFTs) in \f$ \theta \f$ and a
@@ -58,11 +90,13 @@
 !> \f$ \widehat{\phi}_k(r) \f$ solves an independent 1D boundary value problem
 !> on \f$ [r_\textrm{min},r_\textrm{max}] \f$:
 !> \f[
-!> -\bigg(
-!> \frac{\partial^2}{\partial r^{2}}
-!> +\frac{1}{r}\frac{\partial}{\partial r}
-!> -\frac{k^{2}}{r^{2}}
-!> \bigg)\widehat{\phi}_k(r) = \widehat{\rho}_k(r).
+!> -\bigg[
+!> \frac{g}{r}\frac{\partial}{\partial r}
+!> +\frac{\partial}{\partial r}\bigg(g\frac{\partial}{\partial r}\bigg)
+!> -\frac{k^2}{r^2}g
+!> \bigg]\widehat{\phi}_k(r)
+!> +\frac{1}{\lambda_D^2}(1-\chi\,\delta_{k0})\widehat{\phi}_k(r)
+!> = \frac{1}{\epsilon_0}\widehat{\rho}_{c1,k}(r),
 !> \f]
 !> For each mode \f$ k \f$, the resulting ODE is solved with a 2nd-order
 !> finite-difference collocation method.
@@ -79,31 +113,35 @@
 !> #### Usage example ####
 !>
 !> \code
-!> use sll_m_poisson_2d_polar, only: &
-!>   sll_t_poisson_2d_polar,         &
-!>   sll_s_poisson_2d_polar_init,    &
-!>   sll_s_poisson_2d_polar_solve,   &
-!>   sll_s_poisson_2d_polar_free
+!> use sll_m_qn_solver_2d_polar, only: &
+!>   sll_t_qn_solver_2d_polar,         &
+!>   sll_s_qn_solver_2d_polar_init,    &
+!>   sll_s_qn_solver_2d_polar_solve,   &
+!>   sll_s_qn_solver_2d_polar_free
 !>
 !> ...
 !>
-!> type(sll_t_poisson_2d_polar) :: solver
-!> real(f64), allocatable       :: rho(:,:), phi(:,:)
-!> real(f64)                    :: rmin, rmax
-!> integer(i32)                 :: nr, ntheta, bc_rmin, bc_rmax
+!> type(sll_t_qn_solver_2d_polar) :: solver
+!> real(f64), allocatable         :: rho(:,:), phi(:,:)
+!> real(f64), allocatable         :: rho_m0(:), b_magn(:), lambda(:)
+!> real(f64)                      :: rmin, rmax
+!> integer(i32)                   :: nr, ntheta, bc_rmin, bc_rmax
 !>
 !> ...
 !>
-!> call sll_s_poisson_2d_polar_init ( solver, rmin, rmax, nr, ntheta, bc_rmin, bc_rmax )
-!> call sll_s_poisson_2d_polar_solve( solver, rho, phi )
-!> call sll_s_poisson_2d_polar_free ( solver )
+!> call sll_s_qn_solver_2d_polar_init ( solver, rmin, rmax, nr, ntheta, bc_rmin, bc_rmax, rho_m0, b_magn, lambda, use_zonal_flow=.false., epsilon_0=1.0_f64 )
+!> call sll_s_qn_solver_2d_polar_solve( solver, rho, phi )
+!> call sll_s_qn_solver_2d_polar_free ( solver )
 !> \endcode
 
-module sll_m_poisson_2d_polar
+module sll_m_qn_solver_2d_polar
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_assert.h"
 #include "sll_errors.h"
 #include "sll_working_precision.h"
+
+  use sll_m_constants, only: &
+    sll_p_epsilon_0
 
   use sll_m_boundary_condition_descriptors, only: &
     sll_p_dirichlet, &
@@ -124,49 +162,38 @@ module sll_m_poisson_2d_polar
     sll_s_setup_cyclic_tridiag, &
     sll_o_solve_cyclic_tridiag
 
-  use sll_m_poisson_2d_base, only: &
-    sll_c_poisson_2d_base, &
-    sll_i_function_of_position
-
   implicit none
 
   public :: &
-    sll_t_poisson_2d_polar, &
-    sll_s_poisson_2d_polar_init, &
-    sll_s_poisson_2d_polar_solve, &
-    sll_s_poisson_2d_polar_free,  &
-    sll_f_new_poisson_2d_polar  ! Needed by some simulations
+    sll_t_qn_solver_2d_polar, &
+    sll_s_qn_solver_2d_polar_init, &
+    sll_s_qn_solver_2d_polar_solve, &
+    sll_s_qn_solver_2d_polar_free
 
   private
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
-  !> Class for the Poisson solver in polar coordinate
-  type, extends(sll_c_poisson_2d_base) :: sll_t_poisson_2d_polar
+  !> Class for 2D Poisson solver in polar coordinates
+  type sll_t_qn_solver_2d_polar
 
    real   (f64)              :: rmin      !< Min value of r coordinate
    real   (f64)              :: rmax      !< Max value of r coordinate
    integer(i32)              :: nr        !< Number of cells along r
    integer(i32)              :: nt        !< Number of cells along theta
    integer(i32)              :: bc(2)     !< Boundary conditions options
+   real   (f64)              :: epsilon_0 !< Vacuum permittivity (user may override)
+   real   (f64), allocatable :: g(:)     !< \f$ g(r) = \rho_{m,0}/(B^2\epsilon_0) \f$
 
    type(sll_t_fft)           :: fw        !< Forward FFT plan
    type(sll_t_fft)           :: bw        !< Inverse FFT plan
-   complex(f64), allocatable :: z   (:,:) !< 2D work array
+   complex(f64), allocatable :: z   (:,:) !< 2D work array needed for transposition
    complex(f64), pointer     :: temp_c(:) !< 1D work array, complex
    real   (f64), pointer     :: temp_r(:) !< 1D work array, real
    real   (f64), allocatable :: mat (:,:) !< Tridiagonal matrix (one for each k)
    real   (f64), allocatable :: cts (:)   !< Lapack coefficients
    integer(i32), allocatable :: ipiv(:)   !< Lapack pivot indices
 
-  contains
-
-    procedure :: compute_phi_from_rho      => s_compute_phi_from_rho
-    procedure :: compute_E_from_rho        => s_compute_E_from_rho
-    procedure :: l2norm_squared            => f_l2norm_squared
-    procedure :: compute_rhs_from_function => s_compute_rhs_from_function
-    procedure :: free                      => s_free
-
-  end type sll_t_poisson_2d_polar
+  end type sll_t_qn_solver_2d_polar
 
   ! Allowed boundary conditions
   integer(i32), parameter :: bc_opts(3) = &
@@ -181,32 +208,45 @@ contains
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
   !=============================================================================
-  !> sll_o_initialize the Poisson solver in polar coordinates
-  subroutine sll_s_poisson_2d_polar_init( solver, &
-      rmin    , &
-      rmax    , &
-      nr      , &
-      ntheta  , &
-      bc_rmin , &
-      bc_rmax )
+  !> Initialize the solver
+  subroutine sll_s_qn_solver_2d_polar_init( solver, &
+      rmin          , &
+      rmax          , &
+      nr            , &
+      ntheta        , &
+      bc_rmin       , &
+      bc_rmax       , &
+      rho_m0        , &
+      b_magn        , &
+      lambda        , &
+      use_zonal_flow, &
+      epsilon_0 )
 
-    type(sll_t_poisson_2d_polar), intent(out) :: solver !< solver object
-    real(f64)   , intent(in) :: rmin     !< rmin
-    real(f64)   , intent(in) :: rmax     !< rmax
-    integer(i32), intent(in) :: nr       !< number of cells radial
-    integer(i32), intent(in) :: ntheta   !< number of cells angular
-    integer(i32), intent(in) :: bc_rmin  !< boundary condition at r_min
-    integer(i32), intent(in) :: bc_rmax  !< boundary condition at r_max
+    type(sll_t_qn_solver_2d_polar), intent(out) :: solver !< Poisson solver class
+    real(f64)          , intent(in) :: rmin           !< rmin
+    real(f64)          , intent(in) :: rmax           !< rmax
+    integer(i32)       , intent(in) :: nr             !< number of cells radial
+    integer(i32)       , intent(in) :: ntheta         !< number of cells angular
+    integer(i32)       , intent(in) :: bc_rmin        !< boundary condition at r_min
+    integer(i32)       , intent(in) :: bc_rmax        !< boundary condition at r_max
+    real(f64)          , intent(in) :: rho_m0(:)      !< radial profile: total mass density of equilibrium
+    real(f64)          , intent(in) :: b_magn(:)      !< radial profile: intensity of magnetic field
+    real(f64), optional, intent(in) :: lambda(:)      !< radial profile: electron Debye length
+    logical  , optional, intent(in) :: use_zonal_flow !< if .false. set flux average to zero
+    real(f64), optional, intent(in) :: epsilon_0      !< override default: vacuum permittivity
 
-    character(len=*), parameter :: this_sub_name = 'sll_s_poisson_2d_polar_init'
+    character(len=*), parameter :: this_sub_name = 'sll_s_qn_solver_2d_polar_init'
 
     real(f64) :: dr
     real(f64) :: inv_r
     real(f64) :: inv_dr
+    real(f64) :: c
+    real(f64) :: d1(-1:+1)
+    real(f64) :: d2(-1:+1)
 
-    integer(i32)  :: i, k
-    integer(i32)  :: bck(2)
-    integer(i32)  :: last
+    integer(i32) :: i, k
+    integer(i32) :: bck(2)
+    integer(i32) :: last
 
     ! Consistency check: boundary conditions must be one of three options
     if( any( bc_rmin == bc_opts ) ) then
@@ -221,14 +261,22 @@ contains
       SLL_ERROR( this_sub_name, 'Unrecognized boundary condition at r_max' )
     end if
 
-    ! Store global information in solver
-    solver%rmin  =  rmin
-    solver%rmax  =  rmax
-    solver%nr    =  nr
-    solver%nt    =  ntheta
+    ! Override vacuum permittivity in SI units
+    if (present( epsilon_0 )) then
+      solver%epsilon_0 = epsilon_0
+    else
+      solver%epsilon_0 = sll_p_epsilon_0
+    end if
 
-    ! Allocate arrays global in r
-    allocate( solver%z   (nr+1   ,0:ntheta/2) )
+    ! Store information in solver
+    solver%rmin  = rmin
+    solver%rmax  = rmax
+    solver%nr    = nr
+    solver%nt    = ntheta
+
+    ! Allocate arrays
+    allocate( solver%g   (nr+1) )
+    allocate( solver%z   (nr+1,0:ntheta/2) )
     allocate( solver%mat((nr-1)*3,0:ntheta/2) ) ! for each k, matrix depends on r
     allocate( solver%cts((nr-1)*7) )
     allocate( solver%ipiv(nr-1) )
@@ -252,9 +300,12 @@ contains
       aligned    = .true., &
       normalized = .false. )
 
+    ! Store non-dimensional coefficient g(r) = \rho(r) / (B(r)^2 \epsilon_0)
+    solver%g(:) = rho_m0(:) / (b_magn(:)**2 * solver%epsilon_0)
+
     ! Precompute convenient parameters
-    dr = (rmax-rmin)/nr
-    inv_dr = 1.0_f64/dr
+    dr     = (rmax-rmin)/nr
+    inv_dr = 1.0_f64 / dr
 
     ! Store matrix coefficients into solver%mat
     ! Cycle over k
@@ -274,10 +325,29 @@ contains
 
       ! Compute matrix coefficients for a given k_j
       do i = 2, nr
-        inv_r = 1.0_f64 / (rmin + (i-1)*dr)
-        solver%mat(3*(i-1)  ,k) =        -inv_dr**2 - 0.5_f64*inv_dr*inv_r
-        solver%mat(3*(i-1)-1,k) = 2.0_f64*inv_dr**2 + (k*inv_r)**2
-        solver%mat(3*(i-1)-2,k) =        -inv_dr**2 + 0.5_f64*inv_dr*inv_r
+
+        associate( g => solver%g(:) )
+
+        if (present( lambda )) then
+          c = 1.0_f64 / (lambda(i)**2 * g(i))
+          if (present( use_zonal_flow )) then
+            if (use_zonal_flow .and. k == 0) then
+              c = 0.0_f64
+            end if
+          end if
+        else
+          c = 0.0_f64
+        end if
+
+        inv_r    = 1.0_f64 / (rmin + (i-1)*dr)
+        d1(-1:1) = [-0.5_f64, 0.0_f64, 0.5_f64] * inv_dr
+        d2(-1:1) = [0.5_f64*(g(i-1)+g(i))/g(i), -2.0_f64, 0.5_f64*(g(i)+g(i+1))/g(i)] * inv_dr**2
+
+        end associate
+
+        solver%mat(3*(i-1)  ,k) = -d2( 1) -d1( 1)*inv_r
+        solver%mat(3*(i-1)-1,k) = -d2( 0) -d1( 0)*inv_r  + (k*inv_r)**2 + c
+        solver%mat(3*(i-1)-2,k) = -d2(-1) -d1(-1)*inv_r
       end do
 
       ! Set boundary condition at rmin
@@ -301,18 +371,18 @@ contains
 
     end do
 
-  end subroutine sll_s_poisson_2d_polar_init
+  end subroutine sll_s_qn_solver_2d_polar_init
 
 
   !=============================================================================
-  !> Solve the Poisson equation and get the electrostatic potential
-  subroutine sll_s_poisson_2d_polar_solve( solver, rho, phi )
-    type(sll_t_poisson_2d_polar), intent(inout) :: solver   !< Solver object
-    real(f64)                   , intent(in   ) :: rho(:,:) !< Charge density
-    real(f64)                   , intent(  out) :: phi(:,:) !< Potential
+  !> Solve the quasi-neutrality equation and get the electrostatic potential
+  subroutine sll_s_qn_solver_2d_polar_solve( solver, rho, phi )
+    type(sll_t_qn_solver_2d_polar) , intent(inout) :: solver   !< Solver object
+    real(f64)                      , intent(in   ) :: rho(:,:) !< Charge density
+    real(f64)                      , intent(  out) :: phi(:,:) !< Potential
 
-    integer(i32)  :: nr, ntheta, bck(2)
-    integer(i32)  :: i, k
+    integer(i32) :: nr, ntheta, bck(2)
+    integer(i32) :: i, k
 
     nr     = solver%nr
     ntheta = solver%nt
@@ -335,11 +405,13 @@ contains
       ! phik(r) is k-th Fourier mode of phi(r,theta)
       ! rhok is 1D contiguous slice (column) of solver%z
       ! we will overwrite rhok with phik
-      associate( rhok => solver%z(:,k), phik => solver%z(:,k) )
+      associate( rhok => solver%z(:,k)/(solver%g(:)*solver%epsilon_0), &
+                 phik => solver%z(:,k) )
 
       ! Solve tridiagonal system to obtain \hat{phi}_{k_j}(r) at internal points
       call sll_s_setup_cyclic_tridiag( solver%mat(:,k), nr-1, solver%cts, solver%ipiv )
-      call sll_o_solve_cyclic_tridiag( solver%cts, solver%ipiv, rhok(2:nr), nr-1, phik(2:nr) )
+      call sll_o_solve_cyclic_tridiag( solver%cts, solver%ipiv, rhok(2:nr), &
+        nr-1, phik(2:nr) )
 
       ! Compute boundary conditions type for mode k
       bck(:) = solver%bc(:)
@@ -378,13 +450,13 @@ contains
       phi(i,:) = solver%temp_r(:)
     end do
 
-  end subroutine sll_s_poisson_2d_polar_solve
+  end subroutine sll_s_qn_solver_2d_polar_solve
 
 
   !=============================================================================
-  !> Delete contents (local storage) of Poisson's solver
-  subroutine sll_s_poisson_2d_polar_free( solver )
-    type(sll_t_poisson_2d_polar) , intent(inout) :: solver
+  !> Delete contents (local storage) of quasi-neutrality solver
+  subroutine sll_s_qn_solver_2d_polar_free( solver )
+    type(sll_t_qn_solver_2d_polar), intent(inout) :: solver
 
     call sll_s_fft_free( solver%fw )
     call sll_s_fft_free( solver%bw )
@@ -397,94 +469,7 @@ contains
     deallocate( solver%cts  )
     deallocate( solver%ipiv )
 
-  end subroutine sll_s_poisson_2d_polar_free
+  end subroutine sll_s_qn_solver_2d_polar_free
 
 
-  !=============================================================================
-  !> OO interface: allocate pointer to Poisson solver and initialize it
-  function sll_f_new_poisson_2d_polar( &
-     rmin  , &
-     rmax  , &
-     nr    , &
-     ntheta, &
-     bc_r  ) &
-   result( solver_ptr )
-
-    real   (f64), intent(in) :: rmin     !< rmin
-    real   (f64), intent(in) :: rmax     !< rmax
-    integer(i32), intent(in) :: nr       !< number of cells radial
-    integer(i32), intent(in) :: ntheta   !< number of cells angular
-    integer(i32), intent(in) :: bc_r(2)  !< boundary conditions at [r_min,r_max]
-
-    type(sll_t_poisson_2d_polar), pointer :: solver_ptr !< pointer to solver
-
-    allocate( solver_ptr )
-    call sll_s_poisson_2d_polar_init( solver_ptr, &
-     rmin   , &
-     rmax   , &
-     nr     , &
-     ntheta , &
-     bc_r(1), &
-     bc_r(2) )
-
-  end function sll_f_new_poisson_2d_polar
-
-  !=============================================================================
-  !> OO interface: solve Poisson's equation
-  subroutine s_compute_phi_from_rho( poisson, phi, rho )
-    class(sll_t_poisson_2d_polar), target        :: poisson
-    real(f64)                    , intent(  out) :: phi(:,:)
-    real(f64)                    , intent(in   ) :: rho(:,:)
-
-    ! If last theta point is repeated, discard point and then manually apply
-    ! periodic boundary conditions
-    associate( ntheta => poisson%nt )
-      if (size(phi,2) == ntheta+1) then
-        call sll_s_poisson_2d_polar_solve( poisson, &
-          rho(:,1:ntheta), &
-          phi(:,1:ntheta) )
-        phi(:,ntheta+1) = phi(:,1)
-      else
-        call sll_s_poisson_2d_polar_solve( poisson, rho, phi )
-      end if
-    end associate
-
-  end subroutine s_compute_phi_from_rho
-
-  !=============================================================================
-  !> OO interface: solve Poisson's equation and compute E field
-  subroutine s_compute_E_from_rho( poisson, E1, E2, rho )
-    class(sll_t_poisson_2d_polar)                :: poisson
-    real(f64)                    , intent(  out) ::  E1(:,:)
-    real(f64)                    , intent(  out) ::  E2(:,:)
-    real(f64)                    , intent(in   ) :: rho(:,:)
-    SLL_ERROR( 'sll_t_poisson_2d_polar % compute_E_from_rho', 'NOT IMPLEMENTED' )
-  end subroutine s_compute_E_from_rho
-
-  !=============================================================================
-  !> OO interface: compute L2 norm squared of something (...)
-  function f_l2norm_squared( poisson, coefs_dofs ) result( r )
-    class(sll_t_poisson_2d_polar), intent(in) :: poisson
-    real(f64)                    , intent(in) :: coefs_dofs(:,:)
-    real(f64) :: r
-    SLL_ERROR( 'sll_t_poisson_2d_polar % l2norm_squared', 'NOT IMPLEMENTED' )
-    r = 0.0_f64
-  end function f_l2norm_squared
-
-  !=============================================================================
-  !> OO interface: project 2D function onto Finite Element space
-  subroutine s_compute_rhs_from_function( poisson, func, coefs_dofs )
-    class(sll_t_poisson_2d_polar)                :: poisson
-    procedure(sll_i_function_of_position)        :: func
-    real(f64)                    , intent(  out) :: coefs_dofs(:)
-    SLL_ERROR( 'sll_t_poisson_2d_polar % compute_rhs_from_function', 'NOT IMPLEMENTED' )
-  end subroutine s_compute_rhs_from_function
-
-  !=============================================================================
-  ! OO interface: release memory
-  subroutine s_free( poisson )
-    class(sll_t_poisson_2d_polar) :: poisson
-    call sll_s_poisson_2d_polar_free( poisson )
-  end subroutine s_free
-
-end module sll_m_poisson_2d_polar
+end module sll_m_qn_solver_2d_polar
