@@ -1,9 +1,9 @@
-module m_test_case_poisson_2d_neumann_mode0
+module m_test_poisson_2d_polar_neumann_mode0
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_working_precision.h"
 
-  use m_test_case_poisson_2d_base, only: &
-    c_test_case_poisson_2d_polar
+  use m_test_poisson_2d_polar_base, only: &
+    c_test_poisson_2d_polar_base
 
   use sll_m_boundary_condition_descriptors, only: &
     sll_p_dirichlet, &
@@ -12,7 +12,7 @@ module m_test_case_poisson_2d_neumann_mode0
   implicit none
 
   public :: &
-    t_test_neumann_mode0_zero_error
+    t_test_poisson_2d_polar_neumann_mode0_quadratic
 
   private
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -20,7 +20,7 @@ module m_test_case_poisson_2d_neumann_mode0
   !-----------------------------------------------------------------------------
   ! Neumann-mode-0 base class
   !-----------------------------------------------------------------------------
-  type, extends(c_test_case_poisson_2d_polar), abstract :: c_test_neumann_mode0
+  type, extends(c_test_poisson_2d_polar_base), abstract :: c_test_neumann_mode0
 
     ! Boundary conditions (non overwritable)
     sll_int32, private :: bc_rmin = sll_p_neumann_mode_0
@@ -46,7 +46,7 @@ module m_test_case_poisson_2d_neumann_mode0
   ! Test-case with expected zero numerical error (parabolic radial profile)
   ! \phi(r,th) = a(r-rmax)(r-2rmin+rmax) + b(r-rmax)(r-rmin)cos(k(th-th0))
   !-----------------------------------------------------------------------------
-  type, extends(c_test_neumann_mode0) :: t_test_neumann_mode0_zero_error
+  type, extends(c_test_neumann_mode0) :: t_test_poisson_2d_polar_neumann_mode0_quadratic
 
   contains
     ! 2D manufactured solution
@@ -55,7 +55,7 @@ module m_test_case_poisson_2d_neumann_mode0
     procedure :: phi_ex_diff2_r  => neumann_mode0_zero_error_phi_ex_d2r
     procedure :: phi_ex_diff2_th => neumann_mode0_zero_error_phi_ex_d2th
 
-  end type t_test_neumann_mode0_zero_error
+  end type t_test_poisson_2d_polar_neumann_mode0_quadratic
 
 !<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 contains
@@ -90,9 +90,9 @@ contains
   !=============================================================================
 
   pure function neumann_mode0_zero_error_phi_ex( self, r, th ) result( val )
-    class(t_test_neumann_mode0_zero_error), intent(in) :: self
-    sll_real64                        , intent(in) :: r
-    sll_real64                        , intent(in) :: th
+    class(t_test_poisson_2d_polar_neumann_mode0_quadratic), intent(in) :: self
+    sll_real64                                            , intent(in) :: r
+    sll_real64                                            , intent(in) :: th
     sll_real64 :: val
 
     val = self%a*(r-self%rmax)*(r-2.0_f64*self%rmin+self%rmax) &
@@ -102,9 +102,9 @@ contains
 
   !-----------------------------------------------------------------------------
   pure function neumann_mode0_zero_error_phi_ex_d1r( self, r, th ) result( val )
-    class(t_test_neumann_mode0_zero_error), intent(in) :: self
-    sll_real64                        , intent(in) :: r
-    sll_real64                        , intent(in) :: th
+    class(t_test_poisson_2d_polar_neumann_mode0_quadratic), intent(in) :: self
+    sll_real64                                            , intent(in) :: r
+    sll_real64                                            , intent(in) :: th
     sll_real64 :: val
 
     val = self%a*2.0_f64*(r-self%rmin) &
@@ -114,9 +114,9 @@ contains
 
   !-----------------------------------------------------------------------------
   pure function neumann_mode0_zero_error_phi_ex_d2r( self, r, th ) result( val )
-    class(t_test_neumann_mode0_zero_error), intent(in) :: self
-    sll_real64                        , intent(in) :: r
-    sll_real64                        , intent(in) :: th
+    class(t_test_poisson_2d_polar_neumann_mode0_quadratic), intent(in) :: self
+    sll_real64                                            , intent(in) :: r
+    sll_real64                                            , intent(in) :: th
     sll_real64 :: val
 
     val = self%a*2.0_f64 + self%b*2.0_f64*cos( self%k*(th-self%th0) )
@@ -125,13 +125,13 @@ contains
 
   !-----------------------------------------------------------------------------
   pure function neumann_mode0_zero_error_phi_ex_d2th( self, r, th ) result( val )
-    class(t_test_neumann_mode0_zero_error), intent(in) :: self
-    sll_real64                        , intent(in) :: r
-    sll_real64                        , intent(in) :: th
+    class(t_test_poisson_2d_polar_neumann_mode0_quadratic), intent(in) :: self
+    sll_real64                                            , intent(in) :: r
+    sll_real64                                            , intent(in) :: th
     sll_real64 :: val
 
     val = -self%b*(r-self%rmax)*(r-self%rmin)*self%k**2*cos( self%k*(th-self%th0) )
 
   end function neumann_mode0_zero_error_phi_ex_d2th
 
-end module m_test_case_poisson_2d_neumann_mode0
+end module m_test_poisson_2d_polar_neumann_mode0
