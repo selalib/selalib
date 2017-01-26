@@ -1,3 +1,20 @@
+!> @authors Yaman Güçlü, IPP Garching
+!> @authors Edoardo Zoni, IPP Garching
+!>
+!> @brief
+!> Method of manufactured solutions for quasi-neutrality equation in 2D polar coordinates.
+!>
+!> @details
+!> This module defines an abstract interface which requires subclasses to implement
+!> an analytical function phi(r,theta), its derivatives and its average over theta.
+!> Additional analytical inputs are: rho_m0(r) and b_magn(r) with the respective
+!> derivatives, and lambda(r).
+!> The analytical rho(r,theta) is calculated here according to the quasi-neutrality
+!> equation, and it is not overridable.
+!> In the numerical tests rho(r,theta) will be given to the quasi-neutral solver,
+!> and the resulting numerical phi will be compared to the exact solution.
+!>
+
 module m_test_qn_solver_2d_polar_base
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_working_precision.h"
