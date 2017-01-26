@@ -13,7 +13,6 @@
 !> equation, and it is not overridable.
 !> In the numerical tests rho(r,theta) will be given to the quasi-neutral solver,
 !> and the resulting numerical phi will be compared to the exact solution.
-!>
 
 module m_test_qn_solver_2d_polar_base
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
