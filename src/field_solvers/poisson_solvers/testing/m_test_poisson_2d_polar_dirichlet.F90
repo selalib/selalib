@@ -1,3 +1,22 @@
+!> @authors Yaman Güçlü, IPP Garching
+!> @authors Edoardo Zoni, IPP Garching
+!>
+!> @brief
+!> Test-cases with Dirichlet BCs for Poisson's equation in 2D polar coordinates.
+!>
+!> @details
+!> This module contains:
+!> - Dirichlet base class with default parameters (all overwritable except for BCs)
+!> - Test-case with parabolic radial profile:
+!>   phi(r,theta) = (r-rmax)(r-rmin)(a + b*cos(k(theta-theta_0))
+!> - Test-case with cubic radial profile:
+!>   phi(r,theta) = r(r-rmax)(r-rmin)(a + b*cos(k(theta-theta_0))
+!>
+!> The numerical error expected on the 1st test-case (parabolic radial profile)
+!> with a solver employing a 2nd-order numerical method in the radial direction
+!> is zero (machine precision).
+!>
+
 module m_test_poisson_2d_polar_dirichlet
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_working_precision.h"

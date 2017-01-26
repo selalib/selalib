@@ -1,3 +1,19 @@
+!> @authors Yaman Güçlü, IPP Garching
+!> @authors Edoardo Zoni, IPP Garching
+!>
+!> @brief
+!> Test-cases with Neumann mode 0 BCs for quasi-neutrality equation in 2D polar coordinates.
+!>
+!> @details
+!> This module contains:
+!> - Neumann mode 0 base class with default parameters (all overwritable except for BCs)
+!> - Test-case with parabolic radial profile:
+!>   phi(r,theta) = a(r-rmax)(r-2rmin+rmax) + b(r-rmax)(r-rmin)cos(k(theta-theta_0))
+!>
+!> The numerical error expected on this test-case with a solver employing a
+!> 2nd-order numerical method in the radial direction is zero (machine precision).
+!>
+
 module m_test_qn_solver_2d_polar_neumann_mode0
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_working_precision.h"

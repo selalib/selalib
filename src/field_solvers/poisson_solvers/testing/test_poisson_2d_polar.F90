@@ -1,3 +1,16 @@
+!> @authors Yaman Güçlü, IPP Garching
+!> @authors Edoardo Zoni, IPP Garching
+!>
+!> @brief
+!> Program to run tests of module 'sll_m_poisson_2d_polar.F90'.
+!>
+!> @details
+!> Default parameters of each test type can be overwritten (except for BCs) before
+!> call to subroutine 'run_test'.
+!> Tolerance is set according to the order of the radial profile of each test type
+!> (expected zero or non-zero numerical error) as well as according to the mesh sizes.
+!>
+
 program test_poisson_2d_polar
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_working_precision.h"
