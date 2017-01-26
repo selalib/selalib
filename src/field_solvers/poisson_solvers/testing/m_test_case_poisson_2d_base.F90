@@ -1,3 +1,17 @@
+!> @authors Yaman Güçlü, IPP Garching
+!> @authors Edoardo Zoni, IPP Garching
+!>
+!> @brief
+!> Method of manufactured solutions for Poisson's equation in 2D polar coordinates.
+!>
+!> @details
+!> This module defines an abstract interface which requires subclasses to implement
+!> an analytical function phi(r,theta) and its derivatives.
+!> The analytical rho(r,theta) is calculated here according to the Poisson
+!> equation, and it is not overridable.
+!> In the numerical tests rho(r,theta) will be given to the Poisson solver, and
+!> the resulting numerical phi will be compared to the exact solution.
+!>
 module m_test_case_poisson_2d_base
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_working_precision.h"
