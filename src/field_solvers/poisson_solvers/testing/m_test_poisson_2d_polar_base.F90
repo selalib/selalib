@@ -12,19 +12,19 @@
 !> In the numerical tests rho(r,theta) will be given to the Poisson solver, and
 !> the resulting numerical phi will be compared to the exact solution.
 !>
-module m_test_case_poisson_2d_base
+module m_test_poisson_2d_polar_base
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_working_precision.h"
 
 implicit none
 
 public :: &
-  c_test_case_poisson_2d_polar
+  c_test_poisson_2d_polar_base
 
 private
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
-  type, abstract :: c_test_case_poisson_2d_polar
+  type, abstract :: c_test_poisson_2d_polar_base
 
   contains
     ! Get domain limits and boundary conditions
@@ -38,7 +38,7 @@ private
     ! 2D right-hand side to solver
     procedure, non_overridable :: rhs => f_test_case__rhs
 
-  end type c_test_case_poisson_2d_polar
+  end type c_test_poisson_2d_polar_base
 
   !-----------------------------------------------------------------------------
   abstract interface
@@ -46,24 +46,24 @@ private
     ! Get domain limits
     pure function i_func_get_rlim( self ) result( rlim )
       use sll_m_working_precision
-      import c_test_case_poisson_2d_polar
-      class( c_test_case_poisson_2d_polar ), intent(in) :: self
+      import c_test_poisson_2d_polar_base
+      class( c_test_poisson_2d_polar_base ), intent(in) :: self
       sll_real64 :: rlim(2)
     end function i_func_get_rlim
 
     ! Get boundary conditions
     pure function i_func_get_bcs( self ) result( bcs )
       use sll_m_working_precision
-      import c_test_case_poisson_2d_polar
-      class( c_test_case_poisson_2d_polar ), intent(in) :: self
+      import c_test_poisson_2d_polar_base
+      class( c_test_poisson_2d_polar_base ), intent(in) :: self
       sll_int32 :: bcs(2)
     end function i_func_get_bcs
 
     ! 2D polar profile, scalar real function
     pure function i_func_2d_real( self, r, th ) result( val )
       use sll_m_working_precision
-      import c_test_case_poisson_2d_polar
-      class( c_test_case_poisson_2d_polar ), intent(in) :: self
+      import c_test_poisson_2d_polar_base
+      class( c_test_poisson_2d_polar_base ), intent(in) :: self
       sll_real64, intent(in) :: r
       sll_real64, intent(in) :: th
       sll_real64 :: val
@@ -76,9 +76,9 @@ contains
 !<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
   pure function f_test_case__rhs( self, r, th ) result( rho )
-    class(c_test_case_poisson_2d_polar), intent(in) :: self
-    sll_real64, intent(in) :: r
-    sll_real64, intent(in) :: th
+    class(c_test_poisson_2d_polar_base), intent(in) :: self
+    sll_real64                         , intent(in) :: r
+    sll_real64                         , intent(in) :: th
     sll_real64 :: rho
 
     rho = - self%phi_ex_diff2_r( r, th ) - self%phi_ex_diff1_r( r, th )/r &
@@ -87,4 +87,4 @@ contains
   end function f_test_case__rhs
 
   
-end module m_test_case_poisson_2d_base
+end module m_test_poisson_2d_polar_base

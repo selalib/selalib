@@ -1,16 +1,16 @@
-module m_test_case_qn_2d_base
+module m_test_qn_solver_2d_polar_base
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_working_precision.h"
 
 implicit none
 
 public :: &
-  c_test_case_qn_solver_2d_polar
+  c_test_qn_solver_2d_polar_base
 
 private
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
-  type, abstract :: c_test_case_qn_solver_2d_polar
+  type, abstract :: c_test_qn_solver_2d_polar_base
 
   contains
     ! Get domain limits, boundary conditions and parameters
@@ -32,7 +32,7 @@ private
     ! 2D right-hand side to solver
     procedure, non_overridable :: rhs => f_test_case__rhs
 
-  end type c_test_case_qn_solver_2d_polar
+  end type c_test_qn_solver_2d_polar_base
 
   !-----------------------------------------------------------------------------
   abstract interface
@@ -40,16 +40,16 @@ private
     ! Get domain limits
     pure function i_func_get_rlim( self ) result( rlim )
       use sll_m_working_precision
-      import c_test_case_qn_solver_2d_polar
-      class( c_test_case_qn_solver_2d_polar ), intent(in) :: self
+      import c_test_qn_solver_2d_polar_base
+      class( c_test_qn_solver_2d_polar_base ), intent(in) :: self
       sll_real64 :: rlim(2)
     end function i_func_get_rlim
 
     ! Get boundary conditions
     pure function i_func_get_bcs( self ) result( bcs )
       use sll_m_working_precision
-      import c_test_case_qn_solver_2d_polar
-      class( c_test_case_qn_solver_2d_polar ), intent(in) :: self
+      import c_test_qn_solver_2d_polar_base
+      class( c_test_qn_solver_2d_polar_base ), intent(in) :: self
       sll_int32 :: bcs(2)
     end function i_func_get_bcs
 
@@ -57,18 +57,18 @@ private
     pure subroutine i_subr_get_parameters( self, adiabatic_electrons, &
                                            use_zonal_flow, epsilon_0 )
       use sll_m_working_precision
-      import c_test_case_qn_solver_2d_polar
-      class( c_test_case_qn_solver_2d_polar ), intent(in) :: self
-      logical,    intent(out) :: adiabatic_electrons
-      logical,    intent(out) :: use_zonal_flow
-      sll_real64, intent(out) :: epsilon_0
+      import c_test_qn_solver_2d_polar_base
+      class( c_test_qn_solver_2d_polar_base ), intent(in   ) :: self
+      logical                                , intent(  out) :: adiabatic_electrons
+      logical                                , intent(  out) :: use_zonal_flow
+      sll_real64                             , intent(  out) :: epsilon_0
     end subroutine i_subr_get_parameters
 
     ! 1D radial profile, scalar real function
     pure function i_func_1d_real( self, r ) result( val )
       use sll_m_working_precision
-      import c_test_case_qn_solver_2d_polar
-      class( c_test_case_qn_solver_2d_polar ), intent(in) :: self
+      import c_test_qn_solver_2d_polar_base
+      class( c_test_qn_solver_2d_polar_base ), intent(in) :: self
       sll_real64                             , intent(in) :: r
       sll_real64 :: val
     end function i_func_1d_real
@@ -76,8 +76,8 @@ private
     ! 2D polar profile, scalar real function
     pure function i_func_2d_real( self, r, th ) result( val )
       use sll_m_working_precision
-      import c_test_case_qn_solver_2d_polar
-      class( c_test_case_qn_solver_2d_polar ), intent(in) :: self
+      import c_test_qn_solver_2d_polar_base
+      class( c_test_qn_solver_2d_polar_base ), intent(in) :: self
       sll_real64                             , intent(in) :: r
       sll_real64                             , intent(in) :: th
       sll_real64 :: val
@@ -90,7 +90,7 @@ contains
 !<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
   pure function f_test_case__rhs( self, r, th ) result( rho_c1 )
-    class(c_test_case_qn_solver_2d_polar), intent(in) :: self
+    class(c_test_qn_solver_2d_polar_base), intent(in) :: self
     sll_real64                           , intent(in) :: r
     sll_real64                           , intent(in) :: th
     sll_real64 :: rho_c1
@@ -134,4 +134,4 @@ contains
   end function f_test_case__rhs
 
   
-end module m_test_case_qn_2d_base
+end module m_test_qn_solver_2d_polar_base

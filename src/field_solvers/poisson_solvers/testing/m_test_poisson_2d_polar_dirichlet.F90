@@ -1,9 +1,9 @@
-module m_test_case_poisson_2d_dirichlet
+module m_test_poisson_2d_polar_dirichlet
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_working_precision.h"
 
-  use m_test_case_poisson_2d_base, only: &
-    c_test_case_poisson_2d_polar
+  use m_test_poisson_2d_polar_base, only: &
+    c_test_poisson_2d_polar_base
 
   use sll_m_boundary_condition_descriptors, only: &
     sll_p_dirichlet
@@ -11,8 +11,8 @@ module m_test_case_poisson_2d_dirichlet
   implicit none
 
   public :: &
-    t_test_dirichlet_zero_error, &
-    t_test_dirichlet
+    t_test_poisson_2d_polar_dirichlet_quadratic, &
+    t_test_poisson_2d_polar_dirichlet_cubic
 
   private
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -20,7 +20,7 @@ module m_test_case_poisson_2d_dirichlet
   !-----------------------------------------------------------------------------
   ! Dirichlet base class
   !-----------------------------------------------------------------------------
-  type, extends(c_test_case_poisson_2d_polar), abstract :: c_test_dirichlet
+  type, extends(c_test_poisson_2d_polar_base), abstract :: c_test_dirichlet
   
     ! Boundary conditions (not overwritable)
     sll_int32, private :: bc_rmin = sll_p_dirichlet
@@ -46,7 +46,7 @@ module m_test_case_poisson_2d_dirichlet
   ! Test-case with expected zero numerical error (parabolic radial profile)
   ! \phi(r,th) = (r-rmax)(r-rmin)(a + b*cos(k(th-th0))
   !-----------------------------------------------------------------------------
-  type, extends(c_test_dirichlet) :: t_test_dirichlet_zero_error
+  type, extends(c_test_dirichlet) :: t_test_poisson_2d_polar_dirichlet_quadratic
 
   contains
     ! 2D manufactured solution
@@ -55,13 +55,13 @@ module m_test_case_poisson_2d_dirichlet
     procedure :: phi_ex_diff2_r  => dirichlet_zero_error_phi_ex_d2r
     procedure :: phi_ex_diff2_th => dirichlet_zero_error_phi_ex_d2th
 
-  end type t_test_dirichlet_zero_error
+  end type t_test_poisson_2d_polar_dirichlet_quadratic
 
   !-----------------------------------------------------------------------------
   ! Test-case with expected non-zero numerical error (cubic radial profile)
   ! \phi(r,th) = r(r-rmax)(r-rmin)(a + b*cos(k(th-th0))
   !-----------------------------------------------------------------------------
-  type, extends(c_test_dirichlet) :: t_test_dirichlet
+  type, extends(c_test_dirichlet) :: t_test_poisson_2d_polar_dirichlet_cubic
 
   contains
     ! 2D manufactured solution
@@ -70,7 +70,7 @@ module m_test_case_poisson_2d_dirichlet
     procedure :: phi_ex_diff2_r  => dirichlet_phi_ex_d2r
     procedure :: phi_ex_diff2_th => dirichlet_phi_ex_d2th
 
-  end type t_test_dirichlet
+  end type t_test_poisson_2d_polar_dirichlet_cubic
 
 !<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 contains
@@ -105,9 +105,9 @@ contains
   !=============================================================================
 
   pure function dirichlet_zero_error_phi_ex( self, r, th ) result( val )
-    class(t_test_dirichlet_zero_error), intent(in) :: self
-    sll_real64                        , intent(in) :: r
-    sll_real64                        , intent(in) :: th
+    class(t_test_poisson_2d_polar_dirichlet_quadratic), intent(in) :: self
+    sll_real64                                        , intent(in) :: r
+    sll_real64                                        , intent(in) :: th
     sll_real64 :: val
 
     val = (r-self%rmax)*(r-self%rmin)*(self%a+self%b*cos( self%k*(th-self%th0) ))
@@ -116,9 +116,9 @@ contains
 
   !-----------------------------------------------------------------------------
   pure function dirichlet_zero_error_phi_ex_d1r( self, r, th ) result( val )
-    class(t_test_dirichlet_zero_error), intent(in) :: self
-    sll_real64                        , intent(in) :: r
-    sll_real64                        , intent(in) :: th
+    class(t_test_poisson_2d_polar_dirichlet_quadratic), intent(in) :: self
+    sll_real64                                        , intent(in) :: r
+    sll_real64                                        , intent(in) :: th
     sll_real64 :: val
 
     val = (2.0_f64*r-self%rmin-self%rmax)*(self%a+self%b*cos( self%k*(th-self%th0) ))
@@ -127,9 +127,9 @@ contains
 
   !-----------------------------------------------------------------------------
   pure function dirichlet_zero_error_phi_ex_d2r( self, r, th ) result( val )
-    class(t_test_dirichlet_zero_error), intent(in) :: self
-    sll_real64                        , intent(in) :: r
-    sll_real64                        , intent(in) :: th
+    class(t_test_poisson_2d_polar_dirichlet_quadratic), intent(in) :: self
+    sll_real64                                        , intent(in) :: r
+    sll_real64                                        , intent(in) :: th
     sll_real64 :: val
 
     val = 2.0_f64*(self%a+self%b*cos( self%k*(th-self%th0) ))
@@ -138,9 +138,9 @@ contains
 
   !-----------------------------------------------------------------------------
   pure function dirichlet_zero_error_phi_ex_d2th( self, r, th ) result( val )
-    class(t_test_dirichlet_zero_error), intent(in) :: self
-    sll_real64                        , intent(in) :: r
-    sll_real64                        , intent(in) :: th
+    class(t_test_poisson_2d_polar_dirichlet_quadratic), intent(in) :: self
+    sll_real64                                        , intent(in) :: r
+    sll_real64                                        , intent(in) :: th
     sll_real64 :: val
 
     val = (r-self%rmax)*(r-self%rmin)*(-self%b*self%k**2*cos( self%k*(th-self%th0) ))
@@ -153,9 +153,9 @@ contains
   !=============================================================================
 
   pure function dirichlet_phi_ex( self, r, th ) result( val )
-    class(t_test_dirichlet), intent(in) :: self
-    sll_real64                        , intent(in) :: r
-    sll_real64                        , intent(in) :: th
+    class(t_test_poisson_2d_polar_dirichlet_cubic), intent(in) :: self
+    sll_real64                                    , intent(in) :: r
+    sll_real64                                    , intent(in) :: th
     sll_real64 :: val
 
     val = r*(r-self%rmax)*(r-self%rmin)*(self%a+self%b*cos( self%k*(th-self%th0) ))
@@ -164,9 +164,9 @@ contains
 
   !-----------------------------------------------------------------------------
   pure function dirichlet_phi_ex_d1r( self, r, th ) result( val )
-    class(t_test_dirichlet), intent(in) :: self
-    sll_real64                        , intent(in) :: r
-    sll_real64                        , intent(in) :: th
+    class(t_test_poisson_2d_polar_dirichlet_cubic), intent(in) :: self
+    sll_real64                                    , intent(in) :: r
+    sll_real64                                    , intent(in) :: th
     sll_real64 :: val
 
     val = (3.0_f64*r**2-2.0_f64*(self%rmin+self%rmax)*r+self%rmin*self%rmax) &
@@ -176,9 +176,9 @@ contains
 
   !-----------------------------------------------------------------------------
   pure function dirichlet_phi_ex_d2r( self, r, th ) result( val )
-    class(t_test_dirichlet), intent(in) :: self
-    sll_real64                        , intent(in) :: r
-    sll_real64                        , intent(in) :: th
+    class(t_test_poisson_2d_polar_dirichlet_cubic), intent(in) :: self
+    sll_real64                                    , intent(in) :: r
+    sll_real64                                    , intent(in) :: th
     sll_real64 :: val
 
     val = (6.0_f64*r-2.0_f64*(self%rmin+self%rmax)) &
@@ -188,13 +188,13 @@ contains
 
   !-----------------------------------------------------------------------------
   pure function dirichlet_phi_ex_d2th( self, r, th ) result( val )
-    class(t_test_dirichlet), intent(in) :: self
-    sll_real64                        , intent(in) :: r
-    sll_real64                        , intent(in) :: th
+    class(t_test_poisson_2d_polar_dirichlet_cubic), intent(in) :: self
+    sll_real64                                    , intent(in) :: r
+    sll_real64                                    , intent(in) :: th
     sll_real64 :: val
 
     val = r*(r-self%rmax)*(r-self%rmin)*(-self%b*self%k**2*cos( self%k*(th-self%th0) ))
 
   end function dirichlet_phi_ex_d2th
 
-end module m_test_case_poisson_2d_dirichlet
+end module m_test_poisson_2d_polar_dirichlet
