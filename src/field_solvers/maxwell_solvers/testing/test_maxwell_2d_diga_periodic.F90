@@ -90,10 +90,10 @@ class(sll_c_coordinate_transformation_2d_base), pointer :: tau
 
 type(sll_t_maxwell_2d_diga)   :: maxwell_TE
 
-type(sll_t_dg_field_2d), pointer :: ex, ex0, dx, sx
-type(sll_t_dg_field_2d), pointer :: ey, ey0, dy, sy
-type(sll_t_dg_field_2d), pointer :: bz, bz0, dz, sz
-type(sll_t_dg_field_2d), pointer :: exact
+type(sll_t_dg_field_2d) :: ex, ex0, dx, sx
+type(sll_t_dg_field_2d) :: ey, ey0, dy, sy
+type(sll_t_dg_field_2d) :: bz, bz0, dz, sz
+type(sll_t_dg_field_2d) :: exact
 
 sll_real64  :: time
 sll_int32   :: istep
