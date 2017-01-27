@@ -39,10 +39,10 @@ module sll_m_sim_bsl_vp_2d2v_curv
   use sll_m_parallel_array_initializer, only: &
     sll_o_4d_parallel_array_initializer
 
-  use sll_m_poisson_2d_periodic_cartesian_par, only: &
-    sll_f_new_poisson_2d_periodic_plan_cartesian_par, &
-    sll_t_poisson_2d_periodic_plan_cartesian_par, &
-    sll_s_solve_poisson_2d_periodic_cartesian_par
+  use sll_m_poisson_2d_periodic_par, only: &
+    sll_t_poisson_2d_periodic_par, &
+    sll_f_poisson_2d_periodic_par_new, &
+    sll_s_poisson_2d_periodic_par_solve
 
   use sll_m_remapper, only: &
     sll_o_apply_remap_2d, &
@@ -105,7 +105,7 @@ module sll_m_sim_bsl_vp_2d2v_curv
      ! This simulation only applies a coordinate transformation to the spatial
      ! coordinates.
      class(sll_c_coordinate_transformation_2d_base), pointer :: transfx
-     type(sll_t_poisson_2d_periodic_plan_cartesian_par), pointer :: poisson_plan
+     type(sll_t_poisson_2d_periodic_par), pointer :: poisson_plan
 
      ! distribution functions. There are several because each array represents
      ! a differently shaped chunk of memory. In this example, each chunk 
@@ -601,7 +601,7 @@ contains
 
     ! Initialize the poisson plan before going into the main loop.
 
-    sim%poisson_plan => sll_f_new_poisson_2d_periodic_plan_cartesian_par( &
+    sim%poisson_plan => sll_f_poisson_2d_periodic_par_new( &
             sim%rho_seq_x1, &
             nc_x1, &
             nc_x2, &
@@ -715,7 +715,7 @@ contains
           itime, &
           ierr )
 
-       call sll_s_solve_poisson_2d_periodic_cartesian_par( &
+       call sll_s_poisson_2d_periodic_par_solve( &
             sim%poisson_plan, &
             sim%rho_x1, &
             sim%phi_x1)
