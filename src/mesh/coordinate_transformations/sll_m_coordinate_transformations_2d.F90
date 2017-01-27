@@ -77,6 +77,8 @@ module sll_m_coordinate_transformations_2d
   public :: &
     sll_f_new_coordinate_transformation_2d_analytic, &
     sll_f_new_coordinate_transformation_2d_discrete, &
+    sll_s_init_coordinate_transformation_2d_analytic, &
+    sll_s_init_coordinate_transformation_2d_discrete, &
     sll_t_coordinate_transformation_2d_analytic, &
     sll_t_coordinate_transformation_2d_discrete, &
     sll_o_delete
