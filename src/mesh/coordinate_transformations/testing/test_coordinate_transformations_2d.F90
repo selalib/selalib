@@ -120,7 +120,7 @@ program unit_test_2d
   ! Need to do something about these variables being always on the stack...
 
   print *, sll_f_x1_polar_f(1.0_f64,1.0_f64,params)
-  call t_a%initialize( &
+  call t_a%init( &
        "map_a", &
        mesh, &
        sll_f_x1_polar_f, &
@@ -211,7 +211,7 @@ program unit_test_2d
 
   print *, 'Initialized interpolators...'
 
-  call t_d%initialize( &
+  call t_d%init( &
        mesh, &
        "transf_d", &
        x1_interp, &
