@@ -24,6 +24,8 @@
 #=============================================================================
 # (To distribute this file outside of CMake, substitute the full
 #  License text for the above reference.)
+#
+# [YG] 27.01.2017: Change Intel flag from -openmp to -qopenmp
 
 INCLUDE (${CMAKE_ROOT}/Modules/FindPackageHandleStandardArgs.cmake)
 
@@ -33,7 +35,7 @@ SET (OpenMP_Fortran_FLAG_CANDIDATES
      #Intel windows
      "/Qopenmp" 
      #Intel
-     "-openmp" 
+     "-qopenmp"
      #Gnu
      "-fopenmp"
      #Empty, if compiler automatically accepts openmp
