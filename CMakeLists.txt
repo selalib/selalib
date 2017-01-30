@@ -95,6 +95,7 @@ INCLUDE(FFTConfig)
 INCLUDE(LapackConfig)
 INCLUDE(DoxygenConfig)
 INCLUDE(PreprocessorTarget)
+INCLUDE(Forcheck)
 INCLUDE(CLAPP_framework)
 
 IF(MPI_ENABLED)
@@ -185,6 +186,7 @@ ENDIF( BUILD_SIMULATIONS )
 
 # CMake target for running C preprocessor on all source files used in build
 ADD_PREPROCESSOR_TARGET()
+ADD_FORCHECK_TARGET()
 
 MARK_AS_ADVANCED(CMAKE_OSX_ARCHITECTURES
 	CMAKE_OSX_DEPLOYMENT_TARGET
