@@ -75,7 +75,7 @@ contains
 subroutine sll_s_init_dg_field_2d( this, degree, tau, init_function ) 
 
   class(sll_t_dg_field_2d)              :: this          !< DG field 2d
-  sll_transformation, pointer           :: tau           !< transformation 
+  sll_transformation, target            :: tau           !< transformation 
   sll_real64, external, optional        :: init_function !< function
   sll_int32, intent(in)                 :: degree        !< degree integration
   sll_int32                             :: nc_eta1
