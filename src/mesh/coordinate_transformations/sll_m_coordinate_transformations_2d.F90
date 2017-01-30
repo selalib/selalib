@@ -582,8 +582,8 @@ contains
     class(sll_t_coordinate_transformation_2d_analytic) :: transf
     sll_int32, optional :: output_format 
     sll_int32           :: local_format 
-    sll_real64, dimension(:,:), pointer :: x1mesh
-    sll_real64, dimension(:,:), pointer :: x2mesh
+    sll_real64, dimension(:,:), allocatable :: x1mesh
+    sll_real64, dimension(:,:), allocatable :: x2mesh
     sll_int32  :: i1
     sll_int32  :: i2
     sll_real64 :: eta1
@@ -661,12 +661,9 @@ contains
        print*,' Warning, you have already written the mesh '
     end if
     transf%written = .true.
-    if( associated(x1mesh) ) then
-       SLL_DEALLOCATE(x1mesh, ierr)
-    end if
-    if( associated(x2mesh) ) then
-       SLL_DEALLOCATE(x2mesh, ierr)
-    end if
+    if( allocated(x1mesh) ) deallocate(x1mesh)
+    if( allocated(x2mesh) ) deallocate(x2mesh)
+
   end subroutine write_to_file_2d_analytic
   
   subroutine read_from_file_2d_analytic( transf, filename )
