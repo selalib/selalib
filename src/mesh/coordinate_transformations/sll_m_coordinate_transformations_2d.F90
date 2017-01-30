@@ -287,7 +287,7 @@ contains
     type(sll_t_coordinate_transformation_2d_analytic), pointer :: &
          sll_f_new_coordinate_transformation_2d_analytic
     character(len=*), intent(in)                  :: label
-    type(sll_t_cartesian_mesh_2d), pointer        :: mesh_2d
+    type(sll_t_cartesian_mesh_2d), target         :: mesh_2d
     procedure(sll_i_transformation_func_nopass)   :: x1_func
     procedure(sll_i_transformation_func_nopass)   :: x2_func
     procedure(sll_i_transformation_func_nopass)   :: j11_func
@@ -334,12 +334,12 @@ contains
     procedure(sll_i_transformation_func_nopass)    :: j12_func
     procedure(sll_i_transformation_func_nopass)    :: j21_func
     procedure(sll_i_transformation_func_nopass)    :: j22_func
-    type(sll_t_cartesian_mesh_2d)                  :: mesh_2d
+    type(sll_t_cartesian_mesh_2d), target          :: mesh_2d
     sll_real64, dimension(:), intent(in), optional :: params
     sll_int32  :: ierr
 
     transf%label = trim(label)
-    transf%mesh  = mesh_2d
+    transf%mesh  => mesh_2d
 
     ! Assign the transformation functions and parameters
     transf%x1_func => x1_func
@@ -882,7 +882,7 @@ contains
     jacobians_cell )
 
     class(sll_t_coordinate_transformation_2d_discrete) :: transf
-    type(sll_t_cartesian_mesh_2d)                      :: mesh_2d
+    type(sll_t_cartesian_mesh_2d), target              :: mesh_2d
     character(len=*), intent(in)                       :: label
 
     class(sll_c_interpolator_2d),              target  :: x1_interpolator
@@ -914,7 +914,7 @@ contains
     logical    :: jc
     logical    :: jn
 
-    transf%mesh = mesh_2d
+    transf%mesh => mesh_2d
     transf%label = trim(label)
     x1n = present(x1_node)
     x2n = present(x2_node)

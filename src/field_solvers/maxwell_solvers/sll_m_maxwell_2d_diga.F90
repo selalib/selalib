@@ -96,7 +96,7 @@ type :: sll_t_maxwell_2d_diga
    sll_int32                               :: bc_north
    sll_int32                               :: bc_west
    sll_int32                               :: flux_type
-   type(sll_t_dg_field_2d), pointer        :: po           !< Potential
+   type(sll_t_dg_field_2d)                 :: po           !< Potential
    sll_real64                              :: xi 
 
 contains
