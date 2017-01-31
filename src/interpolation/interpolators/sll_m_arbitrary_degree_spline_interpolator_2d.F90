@@ -114,7 +114,7 @@ type, extends(sll_c_interpolator_2d) :: &
 
 contains
 
-  procedure :: initialize                  => sll_s_initialize_ad2d_interpolator
+  procedure :: init                        => sll_s_initialize_ad2d_interpolator
   procedure :: set_coefficients            => set_coefficients_ad2d
   procedure :: coefficients_are_set        => coefficients_are_set_ad2d
   procedure :: compute_interpolants        => compute_interpolants_ad2d
