@@ -37,8 +37,7 @@ module sll_m_sim_bsl_vp_2d2v_cart_multipatch
   use sll_m_general_coordinate_elliptic_solver_multipatch, only: &
     sll_s_factorize_mat_es_mp, &
     sll_t_general_coordinate_elliptic_solver_mp, &
-    sll_f_new_general_elliptic_solver_mp, &
-    sll_o_solve_mp
+    sll_f_new_general_elliptic_solver_mp
 
   use sll_m_hdf5_io_serial, only: &
     sll_t_hdf5_ser_handle, &
@@ -675,7 +674,7 @@ contains
     !print*, 'rank: ', sim%my_rank, 'time to create MP F =', time
 
     !call sll_s_set_time_mark(t0)
-    call f_mp%initialize( sim%init_func, sim%params ) 
+    call f_mp%init( sim%init_func, sim%params ) 
     !time = sll_f_time_elapsed_since(t0)
     !print*, 'rank: ', sim%my_rank, 'time to initialize MP F =', time
 
@@ -784,10 +783,7 @@ contains
        end if
        
        !call sll_s_set_time_mark(t0)         
-       call sll_o_solve_mp(&
-            sim%qns,&
-            rho,&
-            phi)
+       call sim%qns%solve( rho, phi)
        !time = sll_f_time_elapsed_since(t0)
        !print*, 'rank: ', sim%my_rank, 'time to solve QNS =', time
        

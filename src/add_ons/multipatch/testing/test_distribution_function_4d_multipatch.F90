@@ -27,13 +27,11 @@ program unit_test_2d
   use sll_m_distribution_function_4d_multipatch, only: &
     sll_s_compute_charge_density_multipatch, &
     sll_t_distribution_function_4d_multipatch, &
-    sll_f_new_distribution_function_4d_multipatch, &
-    sll_o_delete
+    sll_f_new_distribution_function_4d_multipatch
 
   use sll_m_scalar_field_2d_multipatch, only: &
     sll_f_new_scalar_field_multipatch_2d, &
-    sll_t_scalar_field_multipatch_2d, &
-    sll_o_delete
+    sll_t_scalar_field_multipatch_2d
 
   use sll_m_utilities, only: &
     sll_f_is_even
@@ -104,7 +102,7 @@ program unit_test_2d
        t_mp, meshv, nproc_factor1, nproc_factor2 )
 
   init_function => sll_f_landau_initializer_4d
-  call f_mp%initialize( init_function, landau_params )
+  call f_mp%init( init_function, landau_params )
 
   call sll_s_compute_charge_density_multipatch( f_mp, rho_mp )
 
@@ -117,9 +115,9 @@ program unit_test_2d
      call rho_mp%write_to_file(1) ! iplot must be > 0 [YG - 06.10.2015]
   end if
 
-  call sll_o_delete(f_mp)
-  call sll_o_delete(rho_mp)
-  call t_mp%delete()
+  call f_mp%free()
+  call rho_mp%free()
+  call t_mp%free()
 
 
   print *, "PASSED"
