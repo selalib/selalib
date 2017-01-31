@@ -57,8 +57,7 @@ module sll_m_coordinate_transformations_2d_nurbs
   public :: &
     sll_f_new_nurbs_2d_transformation_from_file, &
     sll_t_coordinate_transformation_2d_nurbs, &
-    sll_t_coordinate_transformation_2d_nurbs_ptr, &
-    sll_o_delete
+    sll_t_coordinate_transformation_2d_nurbs_ptr
 
   private
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -90,8 +89,7 @@ module sll_m_coordinate_transformations_2d_nurbs
      sll_real64, dimension(:),pointer :: knots1
      !> PLEASE ADD DOCUMENTATION
      sll_real64, dimension(:),pointer :: knots2
-!     type(sll_t_cartesian_mesh_2d), pointer  :: mesh2d_minimal =>null()
-!     type(sll_t_cartesian_mesh_2d), pointer :: mesh
+
    contains
      
      !> PLEASE ADD DOCUMENTATION
@@ -132,15 +130,8 @@ module sll_m_coordinate_transformations_2d_nurbs
      class(sll_t_coordinate_transformation_2d_nurbs), pointer :: T
   end type sll_t_coordinate_transformation_2d_nurbs_ptr
 
-  interface sll_o_delete
-     module procedure delete_transformation_2d_nurbs
-  end interface sll_o_delete
-
-
-  
 contains
 
-     !> PLEASE ADD DOCUMENTATION
   function sll_f_new_nurbs_2d_transformation_from_file( filename ) result(res)
     type(sll_t_coordinate_transformation_2d_nurbs), pointer :: res
     character(len=*), intent(in) :: filename
