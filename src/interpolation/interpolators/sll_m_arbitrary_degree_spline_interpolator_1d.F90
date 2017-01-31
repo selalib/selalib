@@ -44,7 +44,7 @@ module sll_m_arbitrary_degree_spline_interpolator_1d
   implicit none
 
   public :: &
-    sll_s_initialize_ad1d_interpolator, &
+    sll_s_init_ad1d_interpolator, &
     sll_f_new_arbitrary_degree_1d_interpolator, &
     sll_s_set_values_at_boundary1d, &
     sll_t_arbitrary_degree_spline_interpolator_1d, &
@@ -83,7 +83,7 @@ type, extends(sll_c_interpolator_1d) :: &
 contains
 
   !> Initialize the interpolator
-  procedure :: initialize=>sll_s_initialize_ad1d_interpolator
+  procedure :: init => sll_s_init_ad1d_interpolator
   !> Set spline coefficients
   procedure :: set_coefficients => set_coefficients_ad1d
   !> Compute interpolants
@@ -167,7 +167,7 @@ sll_int32              :: ierr
 
 SLL_ALLOCATE(interpolator,ierr)
 
-call sll_s_initialize_ad1d_interpolator( interpolator, &
+call sll_s_init_ad1d_interpolator( interpolator, &
                                    num_pts,      &
                                    eta_min,      &
                                    eta_max,      &
@@ -189,7 +189,7 @@ end function sll_f_new_arbitrary_degree_1d_interpolator
 !> @param[in] spline_degree the degree of B-spline
 !> @param[out] interpolator the type sll_t_arbitrary_degree_spline_interpolator_1d
 
-subroutine sll_s_initialize_ad1d_interpolator( interpolator, &
+subroutine sll_s_init_ad1d_interpolator( interpolator, &
                                          num_pts,      &
                                          eta_min,      &
                                          eta_max,      &
@@ -211,11 +211,11 @@ sll_int64                   :: bc_selector
 sll_int32                   :: i, k
 sll_real64                  :: delta_eta
 sll_int32                   :: deriv
-character(len=*), parameter :: this_sub_name = 'sll_s_initialize_ad1d_interpolator'
+character(len=*), parameter :: this_sub_name = 'sll_s_init_ad1d_interpolator'
 
 ! do some argument checking...
 if(((bc_left == sll_p_periodic).and.(bc_right.ne. sll_p_periodic))) then
-   print *, 'initialize_arbitrary_degree_1d_interpolator, ERROR: ', &
+   print *, 'init_arbitrary_degree_1d_interpolator, ERROR: ', &
         'if one boundary condition is specified as periodic, then ', &
         'both must be. Error in first direction.'
 end if
@@ -311,7 +311,7 @@ end select
 
 interpolator%coeff_splines(:) = 0.0_f64
 
-end subroutine sll_s_initialize_ad1d_interpolator
+end subroutine sll_s_init_ad1d_interpolator
 
 
 !> Initialization of the boundary for interpolator arbitrary degree splines 1d.
