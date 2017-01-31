@@ -22,9 +22,9 @@ IF(FORCHECK_FOUND)
    set(FORCHECK_FLB_DIR ${CMAKE_CURRENT_SOURCE_DIR}/forcheck)
 
    # Forcheck library files for the external libraries
-   set(FORCHECK_EXTERNAL_FLBS $ENV{FCKDIR}/share/forcheck/MPI.flb ${FORCHECK_FLB_DIR}/hdf5-1_8_9.flb)
-   if(NOT EXISTS "$ENV{FCKDIR}/share/forcheck/MPI.flb")
-     message(WARNING "Forcheck: Can't find MPI.FLB.\n Most probably the Forcheck module is not loaded.\n Try to load it and rerun cmake.")
+   set(FORCHECK_EXTERNAL_FLBS $ENV{FCKDIR}/share/forcheck/MPI_3.flb ${FORCHECK_FLB_DIR}/hdf5-1_8_9.flb)
+   if(NOT EXISTS "$ENV{FCKDIR}/share/forcheck/MPI_3.flb")
+     message(WARNING "Forcheck: Can't find MPI_3.flb.\n Most probably the Forcheck module is not loaded.\n Try to load it and rerun cmake.")
    endif()
 
    #ADD_CUSTOM_TARGET(forcheck "${FORCHECK_EXECUTABLE} -define DEBUG,GFORTRAN -I ${INCS} -l mylistfile -ff ${SRCS} $(FCKDIR)/share/forcheck/MPI.flb"  COMMENT "Forcheck the source code" VERBATIM)
