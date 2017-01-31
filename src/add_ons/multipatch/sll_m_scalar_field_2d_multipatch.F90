@@ -278,7 +278,8 @@ contains   ! *****************************************************************
        print *, 'created interpolator for patch ', i
        print *, "num cells = ", lm%num_cells1, lm%num_cells2
  
-      fmp%fields(i+1)%f => sll_f_new_scalar_field_2d_discrete( &
+      SLL_ALLOCATE(fmp%fields(i+1)%f, ierr)
+      call fmp%fields(i+1)%f%init( &
             patch_name, &
             fmp%interps(i+1)%interp, &
             fmp%get_transformation(i), &
