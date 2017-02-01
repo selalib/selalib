@@ -1,16 +1,16 @@
-
+# Set correct compilation flags for FFTPACK, depending on Fortran compiler
 IF(Fortran_COMPILER_NAME MATCHES "gfortran")
-   set(CMAKE_Fortran_FLAGS_DEBUG "-g -w -cpp -fdefault-real-8 ")
+   set(CMAKE_Fortran_FLAGS_DEBUG    "-g -w -cpp -fdefault-real-8 ")
    set(CMAKE_Fortran_FLAGS_RELEASE "-O3 -w -cpp -fdefault-real-8 ")
 ELSEIF(Fortran_COMPILER_NAME MATCHES "ifort")
-   SET(CMAKE_Fortran_FLAGS_RELEASE "-r8 -nowarn -O3 -xHost -ip -openmp")
-   SET(CMAKE_Fortran_FLAGS_DEBUG "-g -r8 -nowarn")
+   SET(CMAKE_Fortran_FLAGS_DEBUG   "-g -r8 -nowarn")
+   SET(CMAKE_Fortran_FLAGS_RELEASE "-r8 -nowarn -O3 -xHost -ip -qopenmp")
 ELSEIF(Fortran_COMPILER MATCHES IBM)
    SET(CMAKE_Fortran_COMPILER xlf)
+   SET(CMAKE_Fortran_FLAGS_DEBUG   "-qfixed -qrealsize=8")
    SET(CMAKE_Fortran_FLAGS_RELEASE "-qfixed -qrealsize=8")
-   SET(CMAKE_Fortran_FLAGS_DEBUG "-qfixed -qrealsize=8")
 ELSEIF(Fortran_COMPILER_NAME MATCHES "pgf")
-   SET(CMAKE_Fortran_FLAGS_DEBUG "-g -r8 ")
+   SET(CMAKE_Fortran_FLAGS_DEBUG   "-g -r8 ")
    SET(CMAKE_Fortran_FLAGS_RELEASE "-fast -r8 ")
 ENDIF()
 
