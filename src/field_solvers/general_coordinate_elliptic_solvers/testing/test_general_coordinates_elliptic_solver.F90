@@ -311,7 +311,7 @@ do k = itest1, itest2
   print*, " periodic-dirichlet boundary conditions"
   print*, "-------------------------------------------------------------"
   
-  T => sll_f_new_coordinate_transformation_2d_analytic( &
+  call T_a%init( &
        "analytic",                                &
        mesh_2d,                                   &
        sll_f_identity_x1,                               &
@@ -321,6 +321,8 @@ do k = itest1, itest2
        sll_f_identity_jac21,                            &
        sll_f_identity_jac22,                            &
        (/0.0_f64/) )
+
+  T => T_a
 
   call initialize_fields( sll_p_periodic, sll_p_periodic, sll_p_dirichlet, sll_p_dirichlet)
 
@@ -424,7 +426,7 @@ do k = itest1, itest2
   print*, " dirichlet-periodic boundary conditions"
   print*, "-------------------------------------------------------------"
   
-  T => sll_f_new_coordinate_transformation_2d_analytic( &
+  call T_a%init( &
        "analytic",                                &
        mesh_2d,                                   &
        sll_f_identity_x1,                               &
@@ -434,6 +436,8 @@ do k = itest1, itest2
        sll_f_identity_jac21,                            &
        sll_f_identity_jac22,                            &
        (/0.0_f64/) )
+
+  T => T_a
   
   call initialize_fields( sll_p_dirichlet, sll_p_dirichlet, &
                           sll_p_periodic,  sll_p_periodic)
@@ -483,7 +487,7 @@ do k = itest1, itest2
   print*, " periodic-periodic boundary conditions         "
   print*, "-----------------------------------------------"
   
-  T => sll_f_new_coordinate_transformation_2d_analytic( &
+  call T_a%init( &
        "analytic",                                &
        mesh_2d,                                   &
        sll_f_sinprod_x1,                                &
@@ -492,7 +496,9 @@ do k = itest1, itest2
        sll_f_sinprod_jac12,                             &
        sll_f_sinprod_jac21,                             &
        sll_f_sinprod_jac22,                             &
-       (/ 0.1_f64, 0.1_f64, 1.0_f64, 1.0_f64/) )
+       [ 0.1_f64, 0.1_f64, 1.0_f64, 1.0_f64] )
+
+  T => T_a
   
   call initialize_fields( sll_p_periodic, sll_p_periodic, &
                           sll_p_periodic, sll_p_periodic)
@@ -549,7 +555,7 @@ do k = itest1, itest2
   print*, " periodic-dirichlet boundary conditions"
   print*, "-------------------------------------------------------------"
   
-  T => sll_f_new_coordinate_transformation_2d_analytic( &
+  call T_a%init( &
        "analytic",                                &
        mesh_2d,                                   &
        sll_f_sinprod_x1,                                &
@@ -559,6 +565,8 @@ do k = itest1, itest2
        sll_f_sinprod_jac21,                             &
        sll_f_sinprod_jac22,                             &
        (/0.1_f64,0.1_f64,1.0_f64,1.0_f64/))
+
+  T => T_a
   
   call initialize_fields( sll_p_periodic,  sll_p_periodic, sll_p_dirichlet, sll_p_dirichlet)
   
@@ -611,7 +619,7 @@ do k = itest1, itest2
   print*, " dirichlet-dirichlet boundary conditions"
   print*, "-------------------------------------------------------------"
   
-  T => sll_f_new_coordinate_transformation_2d_analytic( &
+  call T_a%init( &
        "analytic",    &
        mesh_2d,       &
        sll_f_sinprod_x1,    &
@@ -621,6 +629,8 @@ do k = itest1, itest2
        sll_f_sinprod_jac21, &
        sll_f_sinprod_jac22, &
        (/0.1_f64,0.1_f64,1.0_f64,1.0_f64/))
+
+  T => T_a
   
   call initialize_fields( sll_p_dirichlet, sll_p_dirichlet, &
                           sll_p_dirichlet, sll_p_dirichlet)
@@ -675,7 +685,7 @@ do k = itest1, itest2
   print*, " dirichlet-periodic boundary conditions"
   print*, "---------------------"
   
-  T => sll_f_new_coordinate_transformation_2d_analytic( &
+  call T_a%init( &
        "analytic",                                &
        mesh_2d,                                   &
        sll_f_sinprod_x1,                                &
@@ -685,6 +695,8 @@ do k = itest1, itest2
        sll_f_sinprod_jac21,                             &
        sll_f_sinprod_jac22,                             &
        (/0.1_f64,0.1_f64,1.0_f64,1.0_f64/))
+
+  T => T_a
 
   call initialize_fields( sll_p_dirichlet, sll_p_dirichlet, &
                           sll_p_periodic,  sll_p_periodic)
@@ -740,7 +752,7 @@ do k = itest1, itest2
   print*, " with non analytic source term " 
   print*, "---------------------"
   
-  T => sll_f_new_coordinate_transformation_2d_analytic( &
+  call T_a%init( &
        "analytic",                                &
        mesh_2d,                                   &
        sll_f_identity_x1,                               &
@@ -750,6 +762,8 @@ do k = itest1, itest2
        sll_f_identity_jac21,                            &
        sll_f_identity_jac22,                            &
        (/0.1_f64,0.1_f64,1.0_f64,1.0_f64/))
+
+  T => T_a
   
   call initialize_fields( sll_p_periodic, sll_p_periodic, &
                           sll_p_periodic, sll_p_periodic)
@@ -815,7 +829,7 @@ do k = itest1, itest2
   print*, " with non analytic source term                  " 
   print*, "------------------------------------------------"
   
-  T => sll_f_new_coordinate_transformation_2d_analytic( &
+  call T_a%init( &
        "analytic",                                &
        mesh_2d,                                   &
        sll_f_sinprod_x1,                                &
@@ -825,6 +839,8 @@ do k = itest1, itest2
        sll_f_sinprod_jac21,                             &
        sll_f_sinprod_jac22,                             &
        (/0.1_f64,0.1_f64,1.0_f64,1.0_f64/))
+
+  T => T_a
   
   call initialize_fields( sll_p_periodic, sll_p_periodic, &
                           sll_p_periodic, sll_p_periodic)
@@ -897,7 +913,7 @@ do k = itest1, itest2
   print*, " with non analytic source term                  " 
   print*, "------------------------------------------------"
   
-  T => sll_f_new_coordinate_transformation_2d_analytic( &
+  call T_a%init( &
        "analytic",                                &
        mesh_2d,                                   &
        sll_f_sinprod_x1,                                &
@@ -907,6 +923,8 @@ do k = itest1, itest2
        sll_f_sinprod_jac21,                             &
        sll_f_sinprod_jac22,                             &
        (/0.1_f64, 0.1_f64, 1.0_f64, 1.0_f64/)) 
+
+  T => T_a
 
   call initialize_fields( sll_p_periodic, sll_p_periodic, &
                           sll_p_dirichlet, sll_p_dirichlet)
@@ -980,7 +998,7 @@ do k = itest1, itest2
   print*, " with non analytic source term                  " 
   print*, "------------------------------------------------"
   
-   T => sll_f_new_coordinate_transformation_2d_analytic( &
+  call T_a%init( &
        "analytic",                                 &
        mesh_2d,                                    &
        sll_f_sinprod_x1,                                 &
@@ -990,6 +1008,8 @@ do k = itest1, itest2
        sll_f_sinprod_jac21,                              &
        sll_f_sinprod_jac22,                              &
        (/0.1_f64, 0.1_f64, 1.0_f64, 1.0_f64/) )
+
+  T => T_a
 
   call initialize_fields( sll_p_dirichlet, sll_p_dirichlet, &
                           sll_p_dirichlet, sll_p_dirichlet)
@@ -1064,7 +1084,7 @@ do k = itest1, itest2
   print*, " with non analytic source term                  " 
   print*, "------------------------------------------------"
   
-  T => sll_f_new_coordinate_transformation_2d_analytic( &
+  call T_a%init( &
        "analytic",                                &
        mesh_2d,                                   &
        sll_f_sinprod_x1,                                &
@@ -1074,6 +1094,8 @@ do k = itest1, itest2
        sll_f_sinprod_jac21,                             &
        sll_f_sinprod_jac22,                             &
        (/0.1_f64,0.1_f64,1.0_f64,1.0_f64/))
+
+  T => T_a
   
   call initialize_fields( sll_p_dirichlet, sll_p_dirichlet, &
                           sll_p_periodic,  sll_p_periodic)
@@ -1145,7 +1167,7 @@ do k = itest1, itest2
   print*, " with analytic source term                        " 
   print*, "--------------------------------------------------"
   
-  T => sll_f_new_coordinate_transformation_2d_analytic( &
+  call T_a%init( &
        "polar",                                   &
        mesh_2d,                                   &
        sll_f_x1_polar_f,                                &
@@ -1155,6 +1177,8 @@ do k = itest1, itest2
        sll_f_deriv_x2_polar_f_eta1,                     &
        sll_f_deriv_x2_polar_f_eta2,                     &
        [1.0_f64,2.0_f64] )
+
+  T => T_a
   
   call initialize_fields( sll_p_dirichlet, sll_p_dirichlet, &
                           sll_p_periodic,  sll_p_periodic)
@@ -1226,7 +1250,7 @@ do k = itest1, itest2
   print*, " with analytic source term                        " 
   print*, "--------------------------------------------------"
   
-  T => sll_f_new_coordinate_transformation_2d_analytic( &
+  call T_a%init( &
        "polar",                                   &
        mesh_2d,                                   &
        sll_f_x1_polar_f,                                &
@@ -1236,6 +1260,8 @@ do k = itest1, itest2
        sll_f_deriv_x2_polar_f_eta1,                     &
        sll_f_deriv_x2_polar_f_eta2,                     &
        [1.0_f64,2.0_f64] )
+
+  T => T_a
   
   call initialize_fields( sll_p_dirichlet, sll_p_dirichlet, sll_p_periodic,  sll_p_periodic)
 
