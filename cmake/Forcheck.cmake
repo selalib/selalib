@@ -15,79 +15,82 @@ MARK_AS_ADVANCED(
 IF(FORCHECK_FOUND)
 
    # The result of the forcheck analysis will go into this directory
-   set(FORCHECK_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/forcheck)
-   file(MAKE_DIRECTORY ${FORCHECK_DIRECTORY})
+   set(FORCHECK_OUTPUT_DIR ${CMAKE_CURRENT_BINARY_DIR}/forcheck)
+   file(MAKE_DIRECTORY ${FORCHECK_OUTPUT_DIR})
 
    # Some files that are required for the analysis are here
-   set(FORCHECK_FLB_DIR ${CMAKE_CURRENT_SOURCE_DIR}/forcheck)
+   set(FORCHECK_INPUT_DIR ${CMAKE_CURRENT_SOURCE_DIR}/forcheck)
 
    # Forcheck library files for the external libraries
-   set(FORCHECK_EXTERNAL_FLBS $ENV{FCKDIR}/share/forcheck/MPI_3.flb ${FORCHECK_FLB_DIR}/hdf5-1_8_9.flb)
+   set(FORCHECK_EXTERNAL_FLBS $ENV{FCKDIR}/share/forcheck/MPI_3.flb ${FORCHECK_INPUT_DIR}/hdf5-1_8_9.flb)
    if(NOT EXISTS "$ENV{FCKDIR}/share/forcheck/MPI_3.flb")
      message(WARNING "Forcheck: Can't find MPI_3.flb.\n Most probably the Forcheck module is not loaded.\n Try to load it and rerun cmake.")
    endif()
 
-   #ADD_CUSTOM_TARGET(forcheck "${FORCHECK_EXECUTABLE} -define DEBUG,GFORTRAN -I ${INCS} -l mylistfile -ff ${SRCS} $(FCKDIR)/share/forcheck/MPI.flb"  COMMENT "Forcheck the source code" VERBATIM)
-
+   MARK_AS_ADVANCED(
+  FORCHECK_OUTPUT_DIR
+  FORCHECK_INPUT_DIR
+  FORCHECK_EXTERNAL_FLBS
+  )
+  
 ENDIF(FORCHECK_FOUND)
 
 
 # adds a custom target for running the Forcheck analysis
 # call this function at the end of the CMakeLists.txt
 function(add_forcheck_target)
+  if(NOT FORCHECK_FOUND)
+    return()
+  endif()
   # retriev the lists that were creatde by add_library:
   get_property(_fck_sources GLOBAL PROPERTY CPP_SOURCES)
-  get_property(_fck_preproc_sources GLOBAL PROPERTY CPP_PREPROC_SOURCES)
   get_property(_fck_includes GLOBAL PROPERTY CPP_INCLUDES)
+  
+  list(REMOVE_DUPLICATES _fck_sources)
 
   # set up include flags for preprocessing
-  set(incflags)
+  set(_incflags)
   foreach(i ${_fck_includes})
-    set(incflags ${incflags} -I${i})
+    set(_incflags ${_incflags} -I${i})
   endforeach()
-
-  # list of compiler definitions to be used for preprocessing 
-  foreach(_source ${_fck_sources})
-     get_source_file_property(_defs "${_source}" COMPILE_DEFINITIONS)
-     list(APPEND _fck_defines "${_defs}")
-     get_filename_component(_dir ${_source} PATH)
-     get_property( _defs  DIRECTORY ${_dir} PROPERTY COMPILE_DEFINITIONS)
-     if(_defs)
-       list(APPEND _fck_defines "${_defs}")
-     endif()
-  endforeach()
-  if(_fck_defines)
-     list(REMOVE_DUPLICATES _fck_defines)
-  endif()
-  set(_defflags)
-  foreach(d ${_fck_defines})
-    set(_defflags ${_defflags} -D${d})
-  endforeach() 
- 
+  
   # Create custom commands for preprocessing the Fortran files
-#   while(_fck_sources)
-#      list(GET _fck_sources 0 _src)
-#      list(GET _fck_preproc_sources 0 _preproc_src)
-#      list(REMOVE_AT _fck_sources 0)
-#      list(REMOVE_AT _fck_preproc_sources 0)
-#      add_custom_command(OUTPUT "${_preproc_src}"
-#          COMMAND ${CMAKE_Fortran_COMPILER} ${incflags} ${_defflags} ${preprocessor_only_flags} ${_src} | sed -f ${FORCHECK_FLB_DIR}/sedscript -f ${FORCHECK_FLB_DIR}/sedscript2  > ${_preproc_src}
-#          #IMPLICIT_DEPENDS Fortran "${_source}"
-#          DEPENDS "${_src}"
-#          COMMENT "Preprocessing ${_src}"
-#          VERBATIM
-#        ) 
-#      # the preprocessed file is piped through a sed script, to break up the long lines
-#      #set_source_files_properties(${_preproc_src} PROPERTIES GENERATED TRUE)
-#   endwhile()
+  foreach (_src ${_fck_sources})
+     # Here we generate the name of the preprocessed source file
+     get_filename_component(_e "${_src}" EXT)
+     get_filename_component(_d "${_src}" DIRECTORY)
+     get_filename_component(_n "${_src}" NAME_WE)
+     string(REGEX REPLACE "F" "f" _e "${_e}")
+     # get the path relative to the source dir
+     string(REGEX REPLACE "^${CMAKE_SOURCE_DIR}" "" _d ${_d})
+     set(_preproc_src "${CMAKE_BINARY_DIR}${_d}/${_n}_forchk${_e}")
+    
+     # get the compiler definitions for the file
+     get_source_file_property(_defs "${_src}" COMPILE_DEFINITIONS)
+     set(_defflags)
+     foreach(_d ${_defs})
+       set(_defflags ${_defflags} -D${_d})
+     endforeach()
+     
+     add_custom_command(OUTPUT "${_preproc_src}"
+         COMMAND gfortran  ${_incflags} ${_defflags} -cpp -E -P ${_src} | sed -f ${FORCHECK_INPUT_DIR}/sedscript -f ${FORCHECK_INPUT_DIR}/sedscript2  > ${_preproc_src}
+         DEPENDS "${_src}"
+         COMMENT "Preprocessing ${_src}"
+         VERBATIM
+       ) 
+     # The preprocessed file is piped through a sed script, 
+     # to break up the long lines that contain ';'.
+     # To avoid trouble, first we remove comment lines that contain ';'.
+     set_source_files_properties(${_preproc_src} PROPERTIES GENERATED TRUE)
+     list(APPEND _fck_preproc_sources ${_preproc_src})
+  endforeach()
 
   # group all preprocessing commands into one target
-  #get_property(_fck_preproc_sources GLOBAL PROPERTY FORCHECK_PREPROC_SOURCES)
-  get_property(_fck_preproc_sources GLOBAL PROPERTY CPP_PREPROC_SOURCES)
-  #add_custom_target(all_preproc DEPENDS ${_fck_preproc_sources})
-  #set_target_properties(all_preproc PROPERTIES EXCLUDE_FROM_ALL TRUE)
+  get_property(_fck_preproc_sources GLOBAL PROPERTY CPP_PROPROC_SOURCES) #hack
+  #add_custom_target(forcheck_preproc DEPENDS ${_fck_preproc_sources})
+  #set_target_properties(forcheck_preproc PROPERTIES EXCLUDE_FROM_ALL TRUE)
 
-  #include directories for running Forcheck
+  # include directories for running Forcheck
   if(_fck_includes)
     string (REGEX REPLACE ";" "," _fck_incs "${_fck_includes}")
     set(_fck_incs "-I ${_fck_incs}")
@@ -95,9 +98,9 @@ function(add_forcheck_target)
   
   # the Forcheck target
   add_custom_target(forcheck
-                     COMMAND forchk -allc -rep selalib.rep -l selalib.lst ${_fck_incs} ${_fck_preproc_sources}  ${FORCHECK_EXTERNAL_FLBS}
-                     WORKING_DIRECTORY  ${FORCHECK_DIRECTORY}
-                     COMMENT "Running Forcheck for selalib"
-                     DEPENDS all_preproc)
+      COMMAND forchk -allc -rep selalib.rep -l selalib.lst ${_fck_incs} ${_fck_preproc_sources}  ${FORCHECK_EXTERNAL_FLBS}
+      WORKING_DIRECTORY  ${FORCHECK_OUTPUT_DIR}
+      COMMENT "Running Forcheck static source code analysis"
+      DEPENDS all_preproc)
   set_target_properties(forcheck PROPERTIES EXCLUDE_FROM_ALL TRUE)
 endfunction()
