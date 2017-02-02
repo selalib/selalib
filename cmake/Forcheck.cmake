@@ -86,7 +86,7 @@ function(add_forcheck_target)
   endforeach()
 
   # group all preprocessing commands into one target
-  get_property(_fck_preproc_sources GLOBAL PROPERTY CPP_PROPROC_SOURCES) #hack
+  get_property(_fck_preproc_sources GLOBAL PROPERTY CPP_PREPROC_SOURCES) #hack
   #add_custom_target(forcheck_preproc DEPENDS ${_fck_preproc_sources})
   #set_target_properties(forcheck_preproc PROPERTIES EXCLUDE_FROM_ALL TRUE)
 
