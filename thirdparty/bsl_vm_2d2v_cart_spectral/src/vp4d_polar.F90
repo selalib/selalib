@@ -10,12 +10,12 @@
 program vlasov_poisson_4d_polar
 #include "selalib-mpi.h"
 use sll_vlasov4d_polar
-use sll_m_poisson_polar_parallel
+use sll_m_poisson_2d_polar_par
 
 implicit none
 
 type(vlasov4d_polar)    :: sim
-type(sll_t_poisson_polar) :: poisson 
+type(sll_t_poisson_2d_polar_par) :: poisson 
 
 type(sll_t_cubic_spline_interpolator_2d), target :: spl_x1x2
 type(sll_t_cubic_spline_interpolator_1d), target :: spl_x3
