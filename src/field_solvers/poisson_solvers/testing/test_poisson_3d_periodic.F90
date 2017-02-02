@@ -23,10 +23,10 @@ program test_poisson_3d_periodic
     sll_p_pi
 
   use sll_m_poisson_3d_periodic, only: &
-    sll_s_delete_poisson_3d_periodic, &
-    sll_f_new_poisson_3d_periodic, &
     sll_t_poisson_3d_periodic, &
-    sll_s_solve_poisson_3d_periodic
+    sll_s_poisson_3d_periodic_init, &
+    sll_s_poisson_3d_periodic_solve, &
+    sll_s_poisson_3d_periodic_free
 
   implicit none
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -38,7 +38,7 @@ program test_poisson_3d_periodic
   sll_real64, dimension(:,:,:), allocatable :: x, y, z
   sll_real64, dimension(:,:,:), allocatable :: rho, phi_an, phi
   sll_int32                                 :: i, j, k
-  type (sll_t_poisson_3d_periodic), pointer :: plan
+  type (sll_t_poisson_3d_periodic)          :: poisson
   sll_real64                                :: average_err
   sll_real64                                :: time_0, time_1, time_2
   sll_int32                                 :: i_test
@@ -56,7 +56,7 @@ program test_poisson_3d_periodic
   dy = Ly/ny
   dz = Lz/nz
 
-  print*, 'Initialize Poisson 3D solver plan'
+  print*, 'Initialize Poisson 3D solver '
   SLL_ALLOCATE(x(nx,ny,nz),error)
   SLL_ALLOCATE(y(nx,ny,nz),error)
   SLL_ALLOCATE(z(nx,ny,nz),error)
@@ -77,7 +77,7 @@ program test_poisson_3d_periodic
   SLL_ALLOCATE(phi(nx,ny,nz),error)
   SLL_ALLOCATE(phi_an(nx,ny,nz),error)
 
-  plan => sll_f_new_poisson_3d_periodic(nx, ny, nz, Lx, Ly, Lz)
+  call sll_s_poisson_3d_periodic_init(poisson, nx, ny, nz, Lx, Ly, Lz)
 
   print*, ' '
   call cpu_time(time_1)
@@ -100,7 +100,7 @@ program test_poisson_3d_periodic
      end if
 
      call cpu_time(time_1)
-     call sll_s_solve_poisson_3d_periodic(plan, rho, phi)
+     call sll_s_poisson_3d_periodic_solve(poisson, rho, phi)
      call cpu_time(time_2)
 
      average_err = sum( abs(phi_an-phi) ) / real(nx*ny*nz,f64)
@@ -117,7 +117,7 @@ program test_poisson_3d_periodic
 
   end do
 
-  call sll_s_delete_poisson_3d_periodic(plan)
+  call sll_s_poisson_3d_periodic_free(poisson)
 
   call cpu_time(time_2)
   print*, 'Total CPU time : ', time_2-time_0
