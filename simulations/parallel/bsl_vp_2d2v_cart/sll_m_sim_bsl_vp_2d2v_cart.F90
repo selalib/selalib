@@ -33,7 +33,7 @@ module sll_m_sim_bsl_vp_2d2v_cart
 
   use sll_m_poisson_2d_periodic_par, only: &
     sll_t_poisson_2d_periodic_par, &
-    sll_f_poisson_2d_periodic_par_new, &
+    sll_s_poisson_2d_periodic_par_init, &
     sll_s_poisson_2d_periodic_par_solve
 
   use sll_m_remapper, only: &
@@ -106,7 +106,7 @@ module sll_m_sim_bsl_vp_2d2v_cart
      ! for initializers
      type(sll_t_init_test_4d_par)                     :: init_4d
      type(sll_t_simple_cartesian_4d_mesh), pointer    :: mesh4d
-     type(sll_t_poisson_2d_periodic_par), pointer :: poisson_plan
+     type(sll_t_poisson_2d_periodic_par) :: poisson_plan
 
      ! distribution functions. There are several because each array represents
      ! a differently shaped chunk of memory. In this example, each chunk 
@@ -395,7 +395,8 @@ contains
 
     ! We are in a position now to compute the electric potential.
     ! Initialize the poisson plan
-    sim%poisson_plan => sll_f_poisson_2d_periodic_par_new( &
+    call sll_s_poisson_2d_periodic_par_init( &
+         sim%poisson_plan, &
          sim%rho_seq_x1, &
          sim%nc_x1, &
          sim%nc_x2, &
