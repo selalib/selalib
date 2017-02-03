@@ -16,7 +16,6 @@
 !**************************************************************
 
 
-
 module sll_m_qn_2d_polar
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_memory.h"
@@ -49,19 +48,19 @@ module sll_m_qn_2d_polar
     sll_s_initialize_mu_quadr_for_phi, &
     sll_s_localize_polar, &
     sll_s_matrix_product_compf, &
-    sll_f_new_plan_qn_polar_splines, &
+    sll_s_qn_2d_polar_init, &
     sll_s_precompute_gyroaverage_index, &
     sll_s_precompute_inverse_qn_matrix_polar_splines, &
-    sll_t_plan_qn_polar, &
-    sll_s_solve_qn_polar_splines, &
+    sll_t_qn_2d_polar, &
+    sll_s_qn_2d_polar_solve, &
     sll_s_splcoefnat1d0old, &
     sll_s_splcoefper1d0old, &
-    sll_s_test_solve_qn_polar_splines
+    sll_s_qn_2d_polar_test_solve
 
   private
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
-  type sll_t_plan_qn_polar
+  type sll_t_qn_2d_polar
      
      sll_real64          :: eta_min(2)     !< r min et theta min
      sll_real64          :: eta_max(2)     !< r max et theta max
@@ -90,13 +89,11 @@ module sll_m_qn_2d_polar
      sll_real64, dimension(:), pointer       :: mu_weights_for_phi
      sll_int32                               :: N_mu_for_phi
 
-  end type sll_t_plan_qn_polar
+  end type sll_t_qn_2d_polar
 
 contains
 
-  function sll_f_new_plan_qn_polar_splines(eta_min,eta_max,Nc,N_points,lambda,T_i) result(this)
-
-    implicit none
+  subroutine sll_s_qn_2d_polar_init(this,eta_min,eta_max,Nc,N_points,lambda,T_i)
 
     sll_real64, intent(in) :: eta_min(2)
     sll_real64, intent(in) :: eta_max(2)
@@ -104,11 +101,10 @@ contains
     sll_int32, intent(in)  :: N_points
     sll_real64, dimension(:), intent(in)    :: lambda
     sll_real64, dimension(:), intent(in)    :: T_i
-    type(sll_t_plan_qn_polar), pointer :: this
+    type(sll_t_qn_2d_polar) :: this
 
     sll_int32 :: err
 
-    SLL_ALLOCATE(this,err)
     SLL_ALLOCATE(this%points(3,N_points),err)
     SLL_ALLOCATE(this%lambda(1:Nc(1)+1),err)
     SLL_ALLOCATE(this%T_i(1:Nc(1)+1),err)
@@ -124,7 +120,7 @@ contains
     this%lambda=lambda
     this%T_i=T_i
     
-  end function sll_f_new_plan_qn_polar_splines
+  end subroutine sll_s_qn_2d_polar_init
 
   
   
@@ -349,7 +345,7 @@ contains
 
   
    subroutine sll_s_precompute_gyroaverage_index(quasineutral,rho,N_rho)
-    type(sll_t_plan_qn_polar)  :: quasineutral
+    type(sll_t_qn_2d_polar)  :: quasineutral
     sll_int32 :: N_rho
     sll_real64,dimension(1:N_rho),intent(in) :: rho
     sll_int32,dimension(:,:),allocatable :: buf
@@ -453,7 +449,7 @@ contains
 
 
    subroutine sll_s_precompute_inverse_qn_matrix_polar_splines(quasineutral,mu_points,mu_weights,N_mu)
-    type(sll_t_plan_qn_polar) :: quasineutral
+    type(sll_t_qn_2d_polar) :: quasineutral
     sll_int32,intent(in) :: N_mu
     sll_real64,dimension(1:N_mu),intent(in) :: mu_points
     sll_real64,dimension(1:N_mu),intent(in) :: mu_weights
@@ -602,8 +598,8 @@ contains
     
   end subroutine sll_s_precompute_inverse_qn_matrix_polar_splines
 
-   subroutine sll_s_solve_qn_polar_splines(quasineutral,phi)
-    type(sll_t_plan_qn_polar) :: quasineutral
+   subroutine sll_s_qn_2d_polar_solve(quasineutral,phi)
+    type(sll_t_qn_2d_polar) :: quasineutral
     sll_real64,dimension(1:quasineutral%Nc(1)+1,1:quasineutral%Nc(2)),intent(inout) :: phi
     sll_comp64,dimension(:,:),allocatable :: phi_comp,phi_old
     sll_real64,dimension(:),allocatable::buf_fft
@@ -663,11 +659,11 @@ contains
     SLL_DEALLOCATE_ARRAY(phi_old,error)
     SLL_DEALLOCATE_ARRAY(buf_fft,error)
     
-  end subroutine sll_s_solve_qn_polar_splines
+  end subroutine sll_s_qn_2d_polar_solve
 
 
 
- subroutine sll_s_test_solve_qn_polar_splines(Nc,eta_min,eta_max,mu_points,mu_weights,N_mu,mode,lambda,T_i,phi_init,phi_qn)
+ subroutine sll_s_qn_2d_polar_test_solve(Nc,eta_min,eta_max,mu_points,mu_weights,N_mu,mode,lambda,T_i,phi_init,phi_qn)
   sll_int32,intent(in)  :: Nc(2)
   sll_real64,intent(in) :: eta_min(2)
   sll_real64,intent(in) :: eta_max(2)
@@ -732,9 +728,7 @@ contains
                   ierr)
 
 
-  end subroutine sll_s_test_solve_qn_polar_splines
-
-
+  end subroutine sll_s_qn_2d_polar_test_solve
 
 
   function sll_f_compute_gamma0_quadrature( &
@@ -1884,7 +1878,7 @@ subroutine splcoefnat1dold(p,dnat,lnat,N)
     mu_weights_user_defined, &
     N_mu_user_defined)
     
-    type(sll_t_plan_qn_polar)                        :: quasineutral
+    type(sll_t_qn_2d_polar)                        :: quasineutral
     character(len=256), intent(in)                 :: mu_quadr_for_phi_case 
     sll_int32, intent(in)                          :: N_mu_for_phi
     sll_real64, intent(in)                         :: mu_max_for_phi
