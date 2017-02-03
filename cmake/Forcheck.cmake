@@ -127,27 +127,11 @@ function(add_forcheck_target)
       endforeach()
     
       # Create a list of library dependencies
-      get_target_property(_link_lib ${_name} LINK_LIBRARIES)
-      set(_flb_dependencies)
-      foreach(_lib ${_link_lib})
-        list(FIND _library_targets ${_lib} _idx)
-        if(${_idx} GREATER -1)
-          list(APPEND _flb_dependencies ${FORCHECK_OUTPUT_DIR}/${_lib}.flb)
-        endif()
-      endforeach()
-      get_target_property(_link_lib2 ${_name} INTERFACE_LINK_LIBRARIES)
-      if(_link_lib2)
-      foreach(_lib ${_link_lib2})
-        list(FIND _link_lib ${_lib} _idx)
-        if(${_idx} EQUAL -1)
-            message(STATUS "new LINK_LIBRARY found ${_lib}")
-            list(APPEND _flb_dependencies ${FORCHECK_OUTPUT_DIR}/${_lib}.flb)
-        endif()
-      endforeach()
-      endif()
+      get_flb_dependencies(${_name} _flb_dependencies)
+      string(REPLACE ";" " " _flbs "${_flb_dependencies}")
       # add forcheck command for the library
       add_custom_command(OUTPUT ${FORCHECK_OUTPUT_DIR}/${_name}.flb
-        COMMAND forchk -batch -rep ${_name}.rep -l ${_name}.lst ${_fck_incs} ${_current_library_sources} -update ${_name}.flb ${FORCHECK_EXTERNAL_FLBS} || true
+        COMMAND forchk -allc -batch -rep ${_name}.rep -l ${_name}.lst ${_fck_incs} ${_current_library_sources} -update ${_name}.flb ${_flbs} ${FORCHECK_EXTERNAL_FLBS} || true
         DEPENDS ${_current_library_sources} ${_flb_dependencies}
         BYPRODUCTS ${FORCHECK_OUTPUT_DIR}/${_name}.rep ${FORCHECK_OUTPUT_DIR}/${_name}.lst
         WORKING_DIRECTORY ${FORCHECK_OUTPUT_DIR}
@@ -162,14 +146,66 @@ function(add_forcheck_target)
     # 8 error messages presented
     # 16 fatal error occurred
     
-      add_custom_target(forcheck_${_name} 
-        DEPENDS  ${FORCHECK_OUTPUT_DIR}/${_name}.flb
-      )
+      add_custom_target(forcheck_${_name} DEPENDS  ${FORCHECK_OUTPUT_DIR}/${_name}.flb)
       set_target_properties(forcheck_${_name} PROPERTIES EXCLUDE_FROM_ALL TRUE)
       list(APPEND _forcheck_targets ${FORCHECK_OUTPUT_DIR}/${_name}.flb)
+    else()
+      # there are no sources for this library
+      # we create a target for all the dependencies
+      # message(STATUS "no source files for ${_name}")
+      get_flb_dependencies(${_name} _flb_dependencies)
+      add_custom_target(forcheck_${_name} DEPENDS ${_flb_dependencies})
+      set_target_properties(forcheck_${_name} PROPERTIES EXCLUDE_FROM_ALL TRUE)
     endif()
   endforeach()
   
-  add_custom_target(forcheck_separete DEPENDS ${_forcheck_targets})
+  add_custom_target(forcheck_separate DEPENDS ${_forcheck_targets})
   set_target_properties(forcheck PROPERTIES EXCLUDE_FROM_ALL TRUE)
+endfunction()
+
+# Get a list of all library dependencies (including transitive dependecies)
+# it wont work properly if we have generator expressions in LINK_LIBRARIES
+function(get_flb_dependencies _name _output_name)   
+  # we will cross check the library names with the LIBRARY_TARGETS list
+  get_property( _library_targets GLOBAL PROPERTY LIBRARY_TARGETS)
+    
+  set(_dependencies) # the output will be stored here
+    
+  get_target_property(_link_lib ${_name} LINK_LIBRARIES)
+  get_target_property(_iflink_lib ${_name} INTERFACE_LINK_LIBRARIES)    
+  list(APPEND _link_lib ${_iflink_lib})
+  list(LENGTH _link_lib _len)
+  set(_idx 0)
+  while(_idx LESS _len)
+    list(GET _link_lib ${_idx} _libname)
+    # check if it is a library target that we know of
+    list(FIND _library_targets ${_libname} _tmpidx)
+    if(${_tmpidx} GREATER -1)
+      list(FIND _dependencies ${_libname} _tmpidx)
+      if(${_tmpidx} EQUAL -1)
+        # not yet in the output list
+        list(APPEND _dependencies ${_libname})
+      endif()
+      # now extend the _link_lib list with dependencies of _lib
+      get_target_property(_tmp ${_libname} LINK_LIBRARIES)
+      get_target_property(_tmp2 ${_libname} INTERFACE_LINK_LIBRARIES)
+      list(APPEND _tmp ${_tmp2})
+
+      foreach(_libname2 ${_tmp})
+        list(FIND _link_lib ${_libname2} _tmpidx)
+        if(${_tmpidx} EQUAL -1)
+          list(APPEND _link_lib ${_libname2})
+        endif()
+      endforeach()
+    endif()
+    list(LENGTH _link_lib _len)
+    math(EXPR _idx "${_idx} + 1")
+  endwhile()
+  
+  #message(STATUS "${_name} depends on ${_dependencies}")
+  set(_flb_dependencies)
+  foreach(_libname ${_dependencies})
+    list(APPEND _flb_dependencies ${FORCHECK_OUTPUT_DIR}/${_libname}.flb)
+  endforeach()
+  set(${_output_name} ${_flb_dependencies} PARENT_SCOPE)
 endfunction()
