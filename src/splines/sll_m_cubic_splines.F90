@@ -219,7 +219,7 @@ contains  ! ****************************************************************
 
 #define MAKE_GET_SLOT_FUNCTION( fname, datatype, slot, ret_type )    \
   function fname( spline_obj ) result(val);                \
-    type(datatype), pointer :: spline_obj;                 \
+    type(datatype) :: spline_obj;                 \
     ret_type :: val;                                       \
     val = spline_obj%slot;                                 \
   end function fname
@@ -1300,7 +1300,7 @@ MAKE_GET_SLOT_FUNCTION(get_x2_delta_cs2d,sll_t_cubic_spline_2d,x2_delta,sll_real
     x2_min_slopes, &
     x2_max_slopes )
 
-    type(sll_t_cubic_spline_2d), pointer :: this
+    type(sll_t_cubic_spline_2d)          :: this
     sll_int32,  intent(in)               :: num_pts_x1
     sll_int32,  intent(in)               :: num_pts_x2
     sll_real64, intent(in)               :: x1_min
@@ -1321,7 +1321,6 @@ MAKE_GET_SLOT_FUNCTION(get_x2_delta_cs2d,sll_t_cubic_spline_2d,x2_delta,sll_real
     sll_int32                            :: ierr
     sll_int32                            :: i
 
-    SLL_ALLOCATE(this, ierr)
     this%num_pts_x1 = num_pts_x1
     this%num_pts_x2 = num_pts_x2
     this%x1_min     = x1_min
@@ -1584,7 +1583,7 @@ MAKE_GET_SLOT_FUNCTION(get_x2_delta_cs2d,sll_t_cubic_spline_2d,x2_delta,sll_real
 
   subroutine compute_spline_2D_prdc_prdc( data, spline )
     sll_real64, dimension(:,:), intent(in), target :: data  ! data to be fit
-    type(sll_t_cubic_spline_2d), pointer         :: spline
+    type(sll_t_cubic_spline_2d)        :: spline
     sll_real64, dimension(:), pointer    :: coeffs
     sll_int32                            :: npx1
     sll_int32                            :: npx2
@@ -1593,12 +1592,12 @@ MAKE_GET_SLOT_FUNCTION(get_x2_delta_cs2d,sll_t_cubic_spline_2d,x2_delta,sll_real
     sll_real64, dimension(:), pointer    :: datap ! 1D data slice pointer
     sll_int32                            :: i
     sll_int32                            :: j
-    if( .not. associated(spline) ) then
-       ! FIXME: THROW ERROR
-       print *, 'ERROR: compute_spline_2D_prdc_prdc(): ', &
-            'uninitialized spline object passed as argument. Exiting... '
-       STOP
-    end if
+    !if( .not. associated(spline) ) then
+    !   ! FIXME: THROW ERROR
+    !   print *, 'ERROR: compute_spline_2D_prdc_prdc(): ', &
+    !        'uninitialized spline object passed as argument. Exiting... '
+    !   STOP
+    !end if
     if( (size(data,1) .lt. spline%num_pts_x1 ) ) then
        ! FIXME: THROW ERROR
        print *, 'ERROR: compute_spline_2D_prdc_prdc(): '
@@ -1640,7 +1639,7 @@ MAKE_GET_SLOT_FUNCTION(get_x2_delta_cs2d,sll_t_cubic_spline_2d,x2_delta,sll_real
 
   subroutine compute_spline_2D_hrmt_prdc( data, spline )
     sll_real64, dimension(:,:), intent(in), target :: data  ! data to be fit
-    type(sll_t_cubic_spline_2d), pointer         :: spline
+    type(sll_t_cubic_spline_2d)        :: spline
     sll_real64, dimension(:), pointer    :: coeffs
     sll_int32                            :: npx1
     sll_int32                            :: npx2
@@ -1655,12 +1654,12 @@ MAKE_GET_SLOT_FUNCTION(get_x2_delta_cs2d,sll_t_cubic_spline_2d,x2_delta,sll_real
     sll_int32                            :: j
     sll_real64                           :: r_x1_delta
 
-    if( .not. associated(spline) ) then
-       ! FIXME: THROW ERROR
-       print *, 'ERROR: compute_spline_2D_prdc_prdc(): ', &
-            'uninitialized spline object passed as argument. Exiting... '
-       STOP
-    end if
+    !if( .not. associated(spline) ) then
+    !   ! FIXME: THROW ERROR
+    !   print *, 'ERROR: compute_spline_2D_prdc_prdc(): ', &
+    !        'uninitialized spline object passed as argument. Exiting... '
+    !   STOP
+    !end if
     if( (size(data,1) .lt. spline%num_pts_x1 ) ) then
        ! FIXME: THROW ERROR
        print *, 'ERROR: compute_spline_2D_prdc_prdc(): '
@@ -1757,7 +1756,7 @@ MAKE_GET_SLOT_FUNCTION(get_x2_delta_cs2d,sll_t_cubic_spline_2d,x2_delta,sll_real
 
   subroutine compute_spline_2D_prdc_hrmt( data, spline )
     sll_real64, dimension(:,:), intent(in), target :: data  ! data to be fit
-    type(sll_t_cubic_spline_2d), pointer         :: spline
+    type(sll_t_cubic_spline_2d)         :: spline
     sll_real64, dimension(:), pointer    :: coeffs
     sll_int32                            :: npx1
     sll_int32                            :: npx2
@@ -1770,12 +1769,12 @@ MAKE_GET_SLOT_FUNCTION(get_x2_delta_cs2d,sll_t_cubic_spline_2d,x2_delta,sll_real
     sll_int32                            :: j
     sll_real64                           :: r_x2_delta
 
-    if( .not. associated(spline) ) then
-       ! FIXME: THROW ERROR
-       print *, 'ERROR: compute_spline_2D_prdc_prdc(): ', &
-            'uninitialized spline object passed as argument. Exiting... '
-       STOP
-    end if
+    !if( .not. associated(spline) ) then
+    !   ! FIXME: THROW ERROR
+    !   print *, 'ERROR: compute_spline_2D_prdc_prdc(): ', &
+    !        'uninitialized spline object passed as argument. Exiting... '
+    !   STOP
+    !end if
     if( (size(data,1) .lt. spline%num_pts_x1 ) ) then
        ! FIXME: THROW ERROR
        print *, 'ERROR: compute_spline_2D_prdc_prdc(): '
@@ -1853,7 +1852,7 @@ MAKE_GET_SLOT_FUNCTION(get_x2_delta_cs2d,sll_t_cubic_spline_2d,x2_delta,sll_real
 
   subroutine compute_spline_2D_hrmt_hrmt( data, spline )
     sll_real64, dimension(:,:), intent(in), target :: data  ! data to be fit
-    type(sll_t_cubic_spline_2d), pointer         :: spline
+    type(sll_t_cubic_spline_2d)         :: spline
     sll_real64, dimension(:), pointer    :: coeffs
     sll_int32                            :: npx1
     sll_int32                            :: npx2
@@ -1867,12 +1866,12 @@ MAKE_GET_SLOT_FUNCTION(get_x2_delta_cs2d,sll_t_cubic_spline_2d,x2_delta,sll_real
     sll_real64                           :: r_x1_delta ! reciprocal of x1_delta
     sll_real64                           :: r_x2_delta ! reciprocal of x2_delta
 
-    if( .not. associated(spline) ) then
-       ! FIXME: THROW ERROR
-       print *, 'ERROR: compute_spline_2D_hrmt_hrmt(): ', &
-            'uninitialized spline object passed as argument. Exiting... '
-       STOP
-    end if
+    !if( .not. associated(spline) ) then
+    !   ! FIXME: THROW ERROR
+    !   print *, 'ERROR: compute_spline_2D_hrmt_hrmt(): ', &
+    !        'uninitialized spline object passed as argument. Exiting... '
+    !   STOP
+    !end if
     if( (size(data,1) .lt. spline%num_pts_x1 ) ) then
        ! FIXME: THROW ERROR
        print *, 'ERROR: compute_spline_2D_hrmt_hrmt(): '
@@ -2023,16 +2022,17 @@ MAKE_GET_SLOT_FUNCTION(get_x2_delta_cs2d,sll_t_cubic_spline_2d,x2_delta,sll_real
   !> @param[inout] spline a pointer to an initialized spline object.
   subroutine sll_s_compute_cubic_spline_2d( data, spline )
     sll_real64, dimension(:,:), intent(in), target :: data  ! data to be fit
-    type(sll_t_cubic_spline_2d), pointer         :: spline
+    type(sll_t_cubic_spline_2d)        :: spline
     sll_int32 :: bc1
     sll_int32 :: bc2
     sll_int32 :: bc_selector
-    if( .not. associated(spline) ) then
-       ! FIXME: THROW ERROR
-       print *, 'ERROR: compute_spline_2D(): ', &
-            'uninitialized spline object passed as argument. Exiting... '
-       STOP
-    end if
+
+    !if( .not. associated(spline) ) then
+    !   ! FIXME: THROW ERROR
+    !   print *, 'ERROR: compute_spline_2D(): ', &
+    !        'uninitialized spline object passed as argument. Exiting... '
+    !   STOP
+    !end if
  
     bc1 = spline%x1_bc_type
     bc2 = spline%x2_bc_type
@@ -2096,7 +2096,7 @@ MAKE_GET_SLOT_FUNCTION(get_x2_delta_cs2d,sll_t_cubic_spline_2d,x2_delta,sll_real
     intrinsic :: real, int
     sll_real64, dimension(1:,1:), intent(in)      :: x1
     sll_real64, dimension(1:,1:), intent(in)      :: x2
-    type(sll_t_cubic_spline_2d), pointer                  :: spline
+    type(sll_t_cubic_spline_2d)                 :: spline
     sll_real64, dimension(:,:),intent(out)        :: a_out
 
     sll_real64  :: cij   ! C_ij
@@ -2131,12 +2131,12 @@ MAKE_GET_SLOT_FUNCTION(get_x2_delta_cs2d,sll_t_cubic_spline_2d,x2_delta,sll_real
     sll_int32 :: bc1
     sll_int32 :: bc2
     
-    if( .not. associated(spline) ) then
-       ! FIXME: THROW ERROR
-       print *, 'ERROR: sll_s_deposit_value_2d(): ', &
-            'uninitialized spline object passed as argument. Exiting... '
-       STOP
-    end if
+    !if( .not. associated(spline) ) then
+    !   ! FIXME: THROW ERROR
+    !   print *, 'ERROR: sll_s_deposit_value_2d(): ', &
+    !        'uninitialized spline object passed as argument. Exiting... '
+    !   STOP
+    !end if
     
     if ((size(x1,1).ne.spline%num_pts_x1).or.(size(x1,2).ne.spline%num_pts_x2)) then
        ! FIXME: THROW ERROR
@@ -2387,7 +2387,7 @@ MAKE_GET_SLOT_FUNCTION(get_x2_delta_cs2d,sll_t_cubic_spline_2d,x2_delta,sll_real
     intrinsic                           :: associated, int, real
     sll_real64, intent(in)              :: x1
     sll_real64, intent(in)              :: x2
-    type(sll_t_cubic_spline_2d), pointer  :: spline
+    type(sll_t_cubic_spline_2d)         :: spline
     sll_real64                          :: rh1   ! reciprocal of cell spacing
     sll_real64                          :: rh2   ! reciprocal of cell spacing
     sll_int32                           :: cell
@@ -2414,7 +2414,7 @@ MAKE_GET_SLOT_FUNCTION(get_x2_delta_cs2d,sll_t_cubic_spline_2d,x2_delta,sll_real
     ! them off.
     SLL_ASSERT( (x1 .ge. spline%x1_min) .and. (x1 .le. spline%x1_max) )
     SLL_ASSERT( (x2 .ge. spline%x2_min) .and. (x2 .le. spline%x2_max) )
-    SLL_ASSERT( associated(spline) )
+    
     x1_min     = spline%x1_min
     x2_min     = spline%x2_min
     num_pts_x1 = spline%num_pts_x1
@@ -2471,7 +2471,7 @@ MAKE_GET_SLOT_FUNCTION(get_x2_delta_cs2d,sll_t_cubic_spline_2d,x2_delta,sll_real
     intrinsic                           :: associated, int, real
     sll_real64, intent(in)              :: x1
     sll_real64, intent(in)              :: x2
-    type(sll_t_cubic_spline_2d), pointer        :: spline
+    type(sll_t_cubic_spline_2d)         :: spline
     sll_real64                          :: rh1   ! reciprocal of cell spacing
     sll_real64                          :: rh2   ! reciprocal of cell spacing
     sll_int32                           :: cell
@@ -2498,7 +2498,7 @@ MAKE_GET_SLOT_FUNCTION(get_x2_delta_cs2d,sll_t_cubic_spline_2d,x2_delta,sll_real
     ! them off.
     SLL_ASSERT( (x1 .ge. spline%x1_min) .and. (x1 .le. spline%x1_max) )
     SLL_ASSERT( (x2 .ge. spline%x2_min) .and. (x2 .le. spline%x2_max) )
-    SLL_ASSERT( associated(spline) )
+    
     x1_min     = spline%x1_min
     x2_min     = spline%x2_min
     num_pts_x1 = spline%num_pts_x1
@@ -2557,7 +2557,7 @@ MAKE_GET_SLOT_FUNCTION(get_x2_delta_cs2d,sll_t_cubic_spline_2d,x2_delta,sll_real
     intrinsic                           :: associated, int, real
     sll_real64, intent(in)              :: x1
     sll_real64, intent(in)              :: x2
-    type(sll_t_cubic_spline_2d), pointer  :: spline
+    type(sll_t_cubic_spline_2d)         :: spline
     sll_real64                          :: rh1   ! reciprocal of cell spacing
     sll_real64                          :: rh2   ! reciprocal of cell spacing
     sll_int32                           :: cell
@@ -2583,7 +2583,7 @@ MAKE_GET_SLOT_FUNCTION(get_x2_delta_cs2d,sll_t_cubic_spline_2d,x2_delta,sll_real
     ! them off.
     SLL_ASSERT( (x1 .ge. spline%x1_min) .and. (x1 .le. spline%x1_max) )
     SLL_ASSERT( (x2 .ge. spline%x2_min) .and. (x2 .le. spline%x2_max) )
-    SLL_ASSERT( associated(spline) )
+    
     x1_min     = spline%x1_min
     x2_min     = spline%x2_min
     num_pts_x1 = spline%num_pts_x1
@@ -2617,7 +2617,7 @@ MAKE_GET_SLOT_FUNCTION(get_x2_delta_cs2d,sll_t_cubic_spline_2d,x2_delta,sll_real
   end function sll_f_interpolate_x2_derivative_2d
 
   subroutine sll_s_get_coeff_cubic_spline_2d(spline, coeff)
-    type(sll_t_cubic_spline_2d), pointer :: spline
+    type(sll_t_cubic_spline_2d) :: spline
     sll_real64, dimension(:), intent(out) :: coeff
     sll_int32 :: i
     sll_int32 :: j
@@ -2637,14 +2637,8 @@ MAKE_GET_SLOT_FUNCTION(get_x2_delta_cs2d,sll_t_cubic_spline_2d,x2_delta,sll_real
   end subroutine sll_s_get_coeff_cubic_spline_2d  
     
   subroutine delete_cubic_spline_2D( spline )
-    type(sll_t_cubic_spline_2d), pointer :: spline
+    type(sll_t_cubic_spline_2d) :: spline
     sll_int32                    :: ierr
-    ! Fixme: some error checking, whether the spline pointer is associated
-    ! for instance
-    if( .not. associated(spline) ) then
-       print *, 'delete_cubic_spline_2D(): passed spline is not associated'
-       STOP
-    end if
     SLL_DEALLOCATE( spline%d1, ierr )
     SLL_DEALLOCATE( spline%d2, ierr )
     SLL_DEALLOCATE( spline%coeffs, ierr )
@@ -2673,7 +2667,6 @@ MAKE_GET_SLOT_FUNCTION(get_x2_delta_cs2d,sll_t_cubic_spline_2d,x2_delta,sll_real
     if( associated(spline%x2_max_slopes_coeffs) ) then
        SLL_DEALLOCATE( spline%x2_max_slopes_coeffs, ierr )
     end if
-    SLL_DEALLOCATE( spline, ierr )
   end subroutine delete_cubic_spline_2D
 
 
