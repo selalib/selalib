@@ -89,7 +89,7 @@ function(add_forcheck_target)
   get_property(_fck_preproc_sources GLOBAL PROPERTY CPP_PREPROC_SOURCES) #hack
   #add_custom_target(forcheck_preproc DEPENDS ${_fck_preproc_sources})
   #set_target_properties(forcheck_preproc PROPERTIES EXCLUDE_FROM_ALL TRUE)
-
+  
   # include directories for running Forcheck
   if(_fck_includes)
     string (REGEX REPLACE ";" "," _fck_incs "${_fck_includes}")
@@ -98,9 +98,78 @@ function(add_forcheck_target)
   
   # the Forcheck target
   add_custom_target(forcheck
-      COMMAND forchk -allc -rep selalib.rep -l selalib.lst ${_fck_incs} ${_fck_preproc_sources}  ${FORCHECK_EXTERNAL_FLBS}
+      COMMAND forchk -batch -allc -rep selalib.rep -l selalib.lst ${_fck_incs} ${_fck_preproc_sources}  ${FORCHECK_EXTERNAL_FLBS}
       WORKING_DIRECTORY  ${FORCHECK_OUTPUT_DIR}
       COMMENT "Running Forcheck static source code analysis"
       DEPENDS all_preproc)
+  set_target_properties(forcheck PROPERTIES EXCLUDE_FROM_ALL TRUE)
+
+  # For each library, we will generate a forcheck target
+  get_property( _library_targets GLOBAL PROPERTY LIBRARY_TARGETS )
+  set(_forcheck_targets)
+  foreach(_name ${_library_targets})
+    get_target_property(_location ${_name} LOCATION)
+    get_filename_component(_directory ${_location} DIRECTORY)
+    #message(STATUS "${_directory}")
+    #set(_directory $<TARGET_FILE_DIR:${_name}>)
+    
+    get_target_property(_sources ${_name} SOURCES)
+    if (_sources)
+      # we create a list of preprocessed source file names 
+      set(_current_library_sources)
+      foreach (_src ${_sources})
+        # Here we generate the name of the preprocessed source file
+        get_filename_component(_e "${_src}" EXT)
+        get_filename_component(_n "${_src}" NAME_WE)
+        string(REGEX REPLACE "F" "f" _e "${_e}")
+        set(_preproc_src "${_directory}/${_n}${_e}")
+        list(APPEND _current_library_sources ${_preproc_src})
+      endforeach()
+    
+      # Create a list of library dependencies
+      get_target_property(_link_lib ${_name} LINK_LIBRARIES)
+      set(_flb_dependencies)
+      foreach(_lib ${_link_lib})
+        list(FIND _library_targets ${_lib} _idx)
+        if(${_idx} GREATER -1)
+          list(APPEND _flb_dependencies ${FORCHECK_OUTPUT_DIR}/${_lib}.flb)
+        endif()
+      endforeach()
+      get_target_property(_link_lib2 ${_name} INTERFACE_LINK_LIBRARIES)
+      if(_link_lib2)
+      foreach(_lib ${_link_lib2})
+        list(FIND _link_lib ${_lib} _idx)
+        if(${_idx} EQUAL -1)
+            message(STATUS "new LINK_LIBRARY found ${_lib}")
+            list(APPEND _flb_dependencies ${FORCHECK_OUTPUT_DIR}/${_lib}.flb)
+        endif()
+      endforeach()
+      endif()
+      # add forcheck command for the library
+      add_custom_command(OUTPUT ${FORCHECK_OUTPUT_DIR}/${_name}.flb
+        COMMAND forchk -batch -rep ${_name}.rep -l ${_name}.lst ${_fck_incs} ${_current_library_sources} -update ${_name}.flb ${FORCHECK_EXTERNAL_FLBS} || true
+        DEPENDS ${_current_library_sources} ${_flb_dependencies}
+        BYPRODUCTS ${FORCHECK_OUTPUT_DIR}/${_name}.rep ${FORCHECK_OUTPUT_DIR}/${_name}.lst
+        WORKING_DIRECTORY ${FORCHECK_OUTPUT_DIR}
+        COMMENT Runs forcheck analysis for ${_name}
+        VERBATIM
+        )
+    # "|| true" is needed because of Forcheck's exit status:
+    # 0 no informative, warning, overflow or error messages presented
+    # 2 informative, but no warning, overflow or error messages presented
+    # 4 warning, but no overflow or error messages presented
+    # 6 table overflow, but no error messages presented
+    # 8 error messages presented
+    # 16 fatal error occurred
+    
+      add_custom_target(forcheck_${_name} 
+        DEPENDS  ${FORCHECK_OUTPUT_DIR}/${_name}.flb
+      )
+      set_target_properties(forcheck_${_name} PROPERTIES EXCLUDE_FROM_ALL TRUE)
+      list(APPEND _forcheck_targets ${FORCHECK_OUTPUT_DIR}/${_name}.flb)
+    endif()
+  endforeach()
+  
+  add_custom_target(forcheck_separete DEPENDS ${_forcheck_targets})
   set_target_properties(forcheck PROPERTIES EXCLUDE_FROM_ALL TRUE)
 endfunction()
