@@ -159,7 +159,7 @@ contains
     sll_real64 :: interp_ngrid(3)
     sll_real64 :: ref_ngrid(3)
     sll_real64 :: x_ngrid, y_ngrid
-    type(sll_t_cubic_spline_2d), pointer :: sp2
+    type(sll_t_cubic_spline_2d) :: sp2
     
     print*, 'Cubic splines 2d:'
     xmin = 0.0_f64

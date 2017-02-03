@@ -71,7 +71,7 @@ module sll_m_cubic_spline_interpolator_2d
     !> PLEASE ADD DOCUMENTATION
      sll_int32                           :: npts2
     !> PLEASE ADD DOCUMENTATION
-     type(sll_t_cubic_spline_2d), pointer :: spline
+     type(sll_t_cubic_spline_2d)         :: spline
     !> PLEASE ADD DOCUMENTATION
      sll_int32                           :: bc_type1
     !> PLEASE ADD DOCUMENTATION
