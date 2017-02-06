@@ -51,7 +51,9 @@ module sll_m_cubic_spline_interpolator_2d
   implicit none
 
   public :: &
+#ifndef __PGI
     sll_f_new_cubic_spline_interpolator_2d, &
+#endif
     sll_t_cubic_spline_interpolator_2d, &
     sll_o_delete
 
@@ -123,6 +125,8 @@ contains
     call sll_o_delete(interpolator%spline)
   end subroutine delete_sll_cubic_spline_interpolator_2d
   
+#ifndef __PGI
+
     !> PLEASE ADD DOCUMENTATION
   function sll_f_new_cubic_spline_interpolator_2d( &
     npts1, &
@@ -185,6 +189,7 @@ contains
      
   end function  sll_f_new_cubic_spline_interpolator_2d
 
+#endif /*  __PGI */
 
   ! We allow to use the enumerators of the splines module in this interpolator
   ! because:

@@ -125,7 +125,7 @@ module sll_m_sim_bsl_ad_2d0v_curv
     sll_f_new_cubic_spline_interpolator_1d
 
   use sll_m_cubic_spline_interpolator_2d, only: &
-    sll_f_new_cubic_spline_interpolator_2d
+    sll_t_cubic_spline_interpolator_2d
 
   use sll_m_hdf5_io_serial, only: &
     sll_t_hdf5_ser_handle, &
@@ -387,12 +387,16 @@ contains
     type(sll_t_cartesian_mesh_1d), pointer :: mesh_x1
     type(sll_t_cartesian_mesh_1d), pointer :: mesh_x2
     class(sll_c_interpolator_2d), pointer :: f_interp2d
+    type(sll_t_cubic_spline_interpolator_2d), target :: f_cs2d
     class(sll_c_interpolator_2d), pointer :: phi_interp2d
+    type(sll_t_cubic_spline_interpolator_2d), target :: phi_cs2d
     class(sll_c_characteristics_2d_base), pointer :: charac2d
     !class(sll_c_characteristics_1d_base), pointer :: charac1d_x1
     !class(sll_c_characteristics_1d_base), pointer :: charac1d_x2
     class(sll_c_interpolator_2d), pointer   :: A1_interp2d
     class(sll_c_interpolator_2d), pointer   :: A2_interp2d
+    type(sll_t_cubic_spline_interpolator_2d), target :: A1_cs2d
+    type(sll_t_cubic_spline_interpolator_2d), target :: A2_cs2d
     class(sll_c_interpolator_1d), pointer   :: A1_interp1d_x1
     class(sll_c_interpolator_1d), pointer   :: A2_interp1d_x1
     class(sll_c_interpolator_1d), pointer   :: A2_interp1d_x2
@@ -910,7 +914,7 @@ contains
     select case (f_interp2d_case)
       case ("SLL_CUBIC_SPLINES")
         print*,"#f interpolation SLL_CUBIC_SPLINES"
-        f_interp2d => sll_f_new_cubic_spline_interpolator_2d( &
+        call f_cs2d%init( &
           Nc_eta1+1, &
           Nc_eta2+1, &
           eta1_min, &
@@ -919,6 +923,9 @@ contains
           eta2_max, &
           sim%bc_interp2d_eta1, &
           sim%bc_interp2d_eta2)
+
+        f_interp2d => f_cs2d
+
       case ("SLL_HERMITE")
         print*,"#f interpolation sll_p_hermite"
         f_interp2d => sll_f_new_hermite_interpolator_2d( &
@@ -948,7 +955,8 @@ contains
     select case (A_interp_case)
       case ("SLL_CUBIC_SPLINES")
        print*,"#A1_2d interpolation SLL_CUBIC_SPLINES"
-        A1_interp2d => sll_f_new_cubic_spline_interpolator_2d( &
+       
+       call A1_cs2d%init( &
           Nc_eta1+1, &
           Nc_eta2+1, &
           eta1_min, &
@@ -957,8 +965,11 @@ contains
           eta2_max, &
           sim%bc_interp2d_eta1, &
           sim%bc_interp2d_eta2)
+
+        A1_interp2d => A1_cs2d
+
        print*,"#A2_2d interpolation SLL_CUBIC_SPLINES"   
-        A2_interp2d => sll_f_new_cubic_spline_interpolator_2d( &
+       call A2_cs2d%init( &
           Nc_eta1+1, &
           Nc_eta2+1, &
           eta1_min, &
@@ -967,6 +978,7 @@ contains
           eta2_max, &
           sim%bc_interp2d_eta1, &
           sim%bc_interp2d_eta2)  
+        A2_interp2d => A2_cs2d
        print*,"#A1_1d interpolation SLL_CUBIC_SPLINES"   
         A1_interp1d_x1 => sll_f_new_cubic_spline_interpolator_1d( &
           Nc_eta1+1, &
@@ -994,7 +1006,7 @@ contains
     select case (phi_interp2d_case)
       case ("SLL_CUBIC_SPLINES")
       print*,"#phi interpolation SLL_CUBIC_SPLINES"  
-        phi_interp2d => sll_f_new_cubic_spline_interpolator_2d( &
+      call phi_cs2d%init( &
           Nc_eta1+1, &
           Nc_eta2+1, &
           eta1_min, &
@@ -1003,6 +1015,7 @@ contains
           eta2_max, &
           sim%bc_interp2d_eta1, &
           sim%bc_interp2d_eta2)         
+        phi_interp2d => phi_cs2d
       case default
         print *,'#bad phi_interp2d_case',phi_interp2d_case
         print *,'#not implemented'

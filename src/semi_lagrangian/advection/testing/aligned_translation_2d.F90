@@ -48,7 +48,7 @@ program aligned_translation_2d
     sll_p_pi
 
   use sll_m_cubic_spline_interpolator_2d, only: &
-    sll_f_new_cubic_spline_interpolator_2d
+    sll_t_cubic_spline_interpolator_2d
 
   use sll_m_fcisl_toroidal, only: &
     sll_s_compute_modulo_vect2d_inplace, &
@@ -151,6 +151,7 @@ program aligned_translation_2d
   sll_real64 :: err3  
   sll_real64 :: err4  
   class(sll_c_interpolator_2d), pointer :: interp_classic
+  type(sll_t_cubic_spline_interpolator_2d), target :: interp_cs2d
   sll_real64, dimension(:), allocatable :: params_aligned
   sll_int32 :: hermite_p
   sll_int32 :: lag_p
@@ -312,7 +313,7 @@ program aligned_translation_2d
 !    4) 
 
 
-  interp_classic => sll_f_new_cubic_spline_interpolator_2d( &
+  call interp_cs2d%init( &
     Nc_x1+1, &
     Nc_x2+1, &
     x1_min, &
@@ -322,6 +323,7 @@ program aligned_translation_2d
     sll_p_periodic, &
     sll_p_periodic)
 
+  interp_classic => interp_cs2d
 
   SLL_ALLOCATE(params_aligned(11),ierr)
   params_aligned(1) = R0

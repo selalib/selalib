@@ -88,7 +88,7 @@ module sll_m_sim_bsl_ad_2d0v_cart
     sll_f_new_cubic_spline_interpolator_1d
 
   use sll_m_cubic_spline_interpolator_2d, only: &
-    sll_f_new_cubic_spline_interpolator_2d
+    sll_t_cubic_spline_interpolator_2d
 
   use sll_m_gnuplot, only: &
     sll_o_gnuplot_1d
@@ -247,12 +247,15 @@ contains
     sll_int32 :: Nc_x2
     type(sll_t_cartesian_mesh_1d), pointer :: mesh_x1
     type(sll_t_cartesian_mesh_1d), pointer :: mesh_x2
-    class(sll_c_interpolator_2d), pointer :: f_interp2d
     class(sll_c_characteristics_2d_base), pointer :: charac2d
     class(sll_c_characteristics_1d_base), pointer :: charac1d_x1
     class(sll_c_characteristics_1d_base), pointer :: charac1d_x2
+    class(sll_c_interpolator_2d), pointer :: f_interp2d
     class(sll_c_interpolator_2d), pointer   :: A1_interp2d
     class(sll_c_interpolator_2d), pointer   :: A2_interp2d
+    type(sll_t_cubic_spline_interpolator_2d), target :: f_cs2d
+    type(sll_t_cubic_spline_interpolator_2d), target :: A1_cs2d
+    type(sll_t_cubic_spline_interpolator_2d), target :: A2_cs2d
     class(sll_c_interpolator_1d), pointer   :: A1_interp1d_x1
     class(sll_c_interpolator_1d), pointer   :: A2_interp1d_x1
     class(sll_c_interpolator_1d), pointer   :: A1_interp1d_x2
@@ -457,7 +460,7 @@ contains
       
     select case (f_interp2d_case) ! 2D interpolation method for f(x1,x2)
       case ("SLL_CUBIC_SPLINES")
-        f_interp2d => sll_f_new_cubic_spline_interpolator_2d( &
+        call f_cs2d%init( &
           Nc_x1+1, &
           Nc_x2+1, &
           x1_min, &
@@ -466,6 +469,7 @@ contains
           x2_max, &
           sll_p_periodic, &
           sll_p_periodic)
+        f_interp2d => f_cs2d
       case default
         print *,'#bad f_interp2d_case',f_interp2d_case
         print *,'#not implemented'
@@ -476,7 +480,7 @@ contains
 
     select case (A_interp_case) ! Interp. method for velocity field A
       case ("SLL_CUBIC_SPLINES")
-        A1_interp2d => sll_f_new_cubic_spline_interpolator_2d( &
+        call A1_cs2d%init( &
           Nc_x1+1, &
           Nc_x2+1, &
           x1_min, &
@@ -485,7 +489,10 @@ contains
           x2_max, &
           sll_p_periodic, &
           sll_p_periodic)
-        A2_interp2d => sll_f_new_cubic_spline_interpolator_2d( &
+
+        A1_interp2d => A1_cs2d
+
+        call A2_cs2d%init( &
           Nc_x1+1, &
           Nc_x2+1, &
           x1_min, &
@@ -494,6 +501,9 @@ contains
           x2_max, &
           sll_p_periodic, &
           sll_p_periodic)  
+
+        A2_interp2d => A2_cs2d
+
         A1_interp1d_x1 => sll_f_new_cubic_spline_interpolator_1d( &
           Nc_x1+1, &
           x1_min, &
