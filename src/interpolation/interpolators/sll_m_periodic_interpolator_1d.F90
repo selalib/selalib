@@ -41,7 +41,7 @@ module sll_m_periodic_interpolator_1d
      type(sll_t_periodic_interp_work), pointer  :: per_interp !< ???
    contains
      !>PLEASE ADD DOCUMENTATION
-     procedure, pass(interpolator) :: initialize => initialize_per1d_interpolator
+     procedure, pass(interpolator) :: init => initialize_per1d_interpolator
      !>PLEASE ADD DOCUMENTATION
      procedure :: compute_interpolants => compute_interpolants_per1d
      !>PLEASE ADD DOCUMENTATION

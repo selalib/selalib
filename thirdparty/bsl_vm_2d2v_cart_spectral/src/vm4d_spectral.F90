@@ -95,7 +95,7 @@ contains
 
     call read_input_file(vlasov4d)
 
-    call spl_x3x4%initialize(vlasov4d%np_eta1,   &
+    call spl_x3x4%init(vlasov4d%np_eta1,   &
     &                        vlasov4d%np_eta1,   &
     &                        vlasov4d%eta1_min,  &
     &                        vlasov4d%eta1_max,  &

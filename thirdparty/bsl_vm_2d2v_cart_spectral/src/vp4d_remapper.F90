@@ -50,22 +50,22 @@ program vp4d
 
   call read_input_file(vlasov4d)
 
-  call spl_x1%initialize(vlasov4d%nc_eta1+1,  &
+  call spl_x1%init(vlasov4d%nc_eta1+1,  &
                          vlasov4d%eta1_min,   &
                          vlasov4d%eta1_max,   &
                          sll_p_periodic)
 
-  call spl_x2%initialize(vlasov4d%nc_eta2+1,  &
+  call spl_x2%init(vlasov4d%nc_eta2+1,  &
                          vlasov4d%eta2_min,   &
                          vlasov4d%eta2_max,   &
                          sll_p_periodic)
 
-  call spl_x3%initialize(vlasov4d%nc_eta3+1,  &
+  call spl_x3%init(vlasov4d%nc_eta3+1,  &
                          vlasov4d%eta3_min,   &
                          vlasov4d%eta3_max,   &
                          sll_p_periodic)
 
-  call spl_x4%initialize(vlasov4d%nc_eta4+1,  &
+  call spl_x4%init(vlasov4d%nc_eta4+1,  &
                          vlasov4d%eta4_min,   &
                          vlasov4d%eta4_max,   &
                          sll_p_periodic)

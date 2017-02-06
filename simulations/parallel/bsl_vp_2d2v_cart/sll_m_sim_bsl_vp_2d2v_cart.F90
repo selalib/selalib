@@ -458,25 +458,25 @@ contains
     ! of cells than points. Is this properly handled by the interpolators??
     ! The interpolators need the number of points and always consider that
     ! num_cells = num_pts - 1. This is a possible source of confusion.
-    call sim%interp_x1%initialize( &
+    call sim%interp_x1%init( &
          sim%nc_x1+1, &
          sim%mesh4d%x1_min, &
          sim%mesh4d%x1_max, &
          sll_p_periodic)
 
-    call sim%interp_x2%initialize( &
+    call sim%interp_x2%init( &
          sim%nc_x2+1, &
          sim%mesh4d%x2_min, &
          sim%mesh4d%x2_max, &
          sll_p_periodic)
 
-    call sim%interp_x3%initialize( &
+    call sim%interp_x3%init( &
          sim%nc_x3+1, &
          sim%mesh4d%x3_min, &
          sim%mesh4d%x3_max, &
          sll_p_hermite)
 
-    call sim%interp_x4%initialize( &
+    call sim%interp_x4%init( &
          sim%nc_x4+1, &
          sim%mesh4d%x4_min, &
          sim%mesh4d%x4_max, &

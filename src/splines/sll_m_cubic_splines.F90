@@ -65,7 +65,7 @@ module sll_m_cubic_splines
     sll_f_interpolate_x1_derivative_2d, &
     sll_f_interpolate_x2_derivative_2d, &
     sll_f_new_cubic_spline_1d, &
-    sll_s_init_cubic_spline_2d, &
+    sll_s_cubic_spline_2d_init, &
     sll_t_cubic_spline_1d, &
     sll_t_cubic_spline_2d, &
     sll_o_delete
@@ -1281,7 +1281,7 @@ MAKE_GET_SLOT_FUNCTION(get_x2_delta_cs2d,sll_t_cubic_spline_2d,x2_delta,sll_real
   !> in case that a specific slope value should to be imposed at each border
   !> point. Default behavior is to compute the slope consistent with the 
   !> given data.
-  subroutine sll_s_init_cubic_spline_2d( &
+  subroutine sll_s_cubic_spline_2d_init( &
     this,         &
     num_pts_x1,   &
     num_pts_x2,   &
@@ -1334,12 +1334,12 @@ MAKE_GET_SLOT_FUNCTION(get_x2_delta_cs2d,sll_t_cubic_spline_2d,x2_delta,sll_real
     this%x1_bc_type = x1_bc_type
     this%x2_bc_type = x2_bc_type
     if( (num_pts_x1 .le. NUM_TERMS) .or. (num_pts_x2 .le. NUM_TERMS) ) then
-       print *, 'ERROR, sll_s_init_cubic_spline_2d: Because of the algorithm used, this ', &
+       print *, 'ERROR, sll_s_cubic_spline_2d_init: Because of the algorithm used, this ', &
        'function is meant to be used with arrays that are at least of size = 28'
-       STOP 'sll_s_init_cubic_spline_2d()'
+       STOP 'sll_s_cubic_spline_2d_init()'
     end if
     if( (x1_min .gt. x1_max) .or. (x2_min .gt. x2_max) ) then
-       print *, 'ERROR, sll_s_init_cubic_spline_2d: one of the xmin is greater than the ', &
+       print *, 'ERROR, sll_s_cubic_spline_2d_init: one of the xmin is greater than the ', &
        'corresponding xmax, this would cause all sorts of errors.'
        STOP
     end if
@@ -1389,7 +1389,7 @@ MAKE_GET_SLOT_FUNCTION(get_x2_delta_cs2d,sll_t_cubic_spline_2d,x2_delta,sll_real
           present(const_slope_x1_min) .or. present(const_slope_x1_max) .or. &
           present(const_slope_x2_min) .or. present(const_slope_x2_max) )then
 
-	    SLL_WARNING('sll_s_init_cubic_spline_2d','values of slopes are not taken into account as we are in periodic-periodic')
+	    SLL_WARNING('sll_s_cubic_spline_2d_init','values of slopes are not taken into account as we are in periodic-periodic')
        else
           this%x1_min_slopes => null()
           this%x1_max_slopes => null()
@@ -1405,20 +1405,20 @@ MAKE_GET_SLOT_FUNCTION(get_x2_delta_cs2d,sll_t_cubic_spline_2d,x2_delta,sll_real
        if( &
           present(x2_min_slopes) .or. present(x2_max_slopes) .or. &
           present(const_slope_x2_min) .or. present(const_slope_x2_max) ) then
-         SLL_WARNING('sll_s_init_cubic_spline_2d','values of slopes in x2 are not taken into account as we are periodic in x2')
+         SLL_WARNING('sll_s_cubic_spline_2d_init','values of slopes in x2 are not taken into account as we are periodic in x2')
 
        end if
        if( present(const_slope_x1_min) .and. present(x1_min_slopes) ) then
-          print *, 'sll_s_init_cubic_spline_2d(): hermite-periodic-case, it is not ', &
+          print *, 'sll_s_cubic_spline_2d_init(): hermite-periodic-case, it is not ', &
                'allowed to specify simultaneously a constant value for ', &
                'the slopes at x1_min and an array-specified set of slopes.'
-          STOP 'sll_s_init_cubic_spline_2d'
+          STOP 'sll_s_cubic_spline_2d_init'
        end if
        if( present(const_slope_x1_max) .and. present(x1_max_slopes) ) then
-          print *, 'sll_s_init_cubic_spline_2d(): hermite-periodic-case, it is not ', &
+          print *, 'sll_s_cubic_spline_2d_init(): hermite-periodic-case, it is not ', &
                'allowed to specify simultaneously a constant value for ', &
                'the slopes at x1_max and an array-specified set of slopes.'
-          STOP 'sll_s_init_cubic_spline_2d'
+          STOP 'sll_s_cubic_spline_2d_init'
        end if
 
        ! X2 slope arrays are not needed
@@ -1442,24 +1442,20 @@ MAKE_GET_SLOT_FUNCTION(get_x2_delta_cs2d,sll_t_cubic_spline_2d,x2_delta,sll_real
        ! we could deallocate those arrays...
 
        ! The following macro is obviously intended only for use within
-       ! sll_s_init_cubic_spline_2d(). But this should be replaced with a subroutine
+       ! sll_s_cubic_spline_2d_init(). But this should be replaced with a subroutine
        ! whenever possible.
 
 #ifndef DOXYGEN_SHOULD_SKIP_THIS
 
 #define FILL_SLOPES(const_opt, input_opt, numpts, output, slopes) \
-       if( present(input_opt) ) then;                           \
-          do i=1,numpts;                                        \
-             this%output(i) = input_opt(i);            \
-          end do;                                               \
-          this%slopes = .false.;                       \
-       else if( present(const_opt) ) then;                      \
-          do i=1,numpts;                                        \
-             this%output(i) = const_opt;               \
-          end do;                                               \
-          this%slopes = .false.;                       \
-       else;                                                    \
-          this%slopes = .true.;                        \
+       if(present(input_opt)) then; \
+          this%output(1:numpts) = input_opt(1:numpts); \
+          this%slopes = .false.; \
+       else if(present(const_opt)) then; \
+          this%output(1:numpts) = const_opt; \
+          this%slopes = .false.; \
+       else; \
+          this%slopes = .true.; \
        end if
 
 #endif /* DOXYGEN_SHOULD_SKIP_THIS */
@@ -1475,25 +1471,25 @@ MAKE_GET_SLOT_FUNCTION(get_x2_delta_cs2d,sll_t_cubic_spline_2d,x2_delta,sll_real
        if( &
           present(x1_min_slopes) .or. present(x1_max_slopes) .or. &
           present(const_slope_x1_min) .or. present(const_slope_x1_max) ) then
-          print *, 'sll_s_init_cubic_spline_2d(): periodic-hermite case, it is not ', &
+          print *, 'sll_s_cubic_spline_2d_init(): periodic-hermite case, it is not ', &
                'allowed to specify the end slopes in the case of periodic ', &
                'boundary conditions.', &
                'Exiting program...'
-          STOP 'sll_s_init_cubic_spline_2d'
-         SLL_WARNING('sll_s_init_cubic_spline_2d','values of slopes in x1 are not taken into account as we are periodic in x1')
+          STOP 'sll_s_cubic_spline_2d_init'
+         SLL_WARNING('sll_s_cubic_spline_2d_init','values of slopes in x1 are not taken into account as we are periodic in x1')
 
        end if
        if( present(const_slope_x2_min) .and. present(x2_min_slopes) ) then
-          print *, 'sll_s_init_cubic_spline_2d(): periodic-hermite case, it is not ', &
+          print *, 'sll_s_cubic_spline_2d_init(): periodic-hermite case, it is not ', &
                'allowed to specify simultaneously a constant value for ', &
                'the slopes at x2_min and an array-specified set of slopes.'
-          STOP 'sll_s_init_cubic_spline_2d'
+          STOP 'sll_s_cubic_spline_2d_init'
        end if
        if( present(const_slope_x2_max) .and. present(x2_max_slopes) ) then
-          print *, 'sll_s_init_cubic_spline_2d(): periodic-hermite case, it is not ', &
+          print *, 'sll_s_cubic_spline_2d_init(): periodic-hermite case, it is not ', &
                'allowed to specify simultaneously a constant value for ', &
                'the slopes at x2_max and an array-specified set of slopes.'
-          STOP 'sll_s_init_cubic_spline_2d'
+          STOP 'sll_s_cubic_spline_2d_init'
        end if
 
        ! X1 slope arrays are not needed
@@ -1519,28 +1515,28 @@ MAKE_GET_SLOT_FUNCTION(get_x2_delta_cs2d,sll_t_cubic_spline_2d,x2_delta,sll_real
     case( 10 )
        ! Hermite conditions in both, X1 and X2
        if( present(const_slope_x1_min) .and. present(x1_min_slopes) ) then
-          print *, 'sll_s_init_cubic_spline_2d(): hermite-hermite case, it is not ', &
+          print *, 'sll_s_cubic_spline_2d_init(): hermite-hermite case, it is not ', &
                'allowed to specify simultaneously a constant value for ', &
                'the slopes at x1_min and an array-specified set of slopes.'
-          STOP 'sll_s_init_cubic_spline_2d'
+          STOP 'sll_s_cubic_spline_2d_init'
        end if
        if( present(const_slope_x1_max) .and. present(x1_max_slopes) ) then
-          print *, 'sll_s_init_cubic_spline_2d(): hermite-hermite case, it is not ', &
+          print *, 'sll_s_cubic_spline_2d_init(): hermite-hermite case, it is not ', &
                'allowed to specify simultaneously a constant value for ', &
                'the slopes at x2_max and an array-specified set of slopes.'
-          STOP 'sll_s_init_cubic_spline_2d'
+          STOP 'sll_s_cubic_spline_2d_init'
        end if
        if( present(const_slope_x2_min) .and. present(x2_min_slopes) ) then
-          print *, 'sll_s_init_cubic_spline_2d(): hermite-hermite case, it is not ', &
+          print *, 'sll_s_cubic_spline_2d_init(): hermite-hermite case, it is not ', &
                'allowed to specify simultaneously a constant value for ', &
                'the slopes at x2_min and an array-specified set of slopes.'
-          STOP 'sll_s_init_cubic_spline_2d'
+          STOP 'sll_s_cubic_spline_2d_init'
        end if
        if( present(const_slope_x2_max) .and. present(x2_max_slopes) ) then
-          print *, 'sll_s_init_cubic_spline_2d(): hermite-hermite case, it is not ', &
+          print *, 'sll_s_cubic_spline_2d_init(): hermite-hermite case, it is not ', &
                'allowed to specify simultaneously a constant value for ', &
                'the slopes at x2_max and an array-specified set of slopes.'
-          STOP 'sll_s_init_cubic_spline_2d'
+          STOP 'sll_s_cubic_spline_2d_init'
        end if
 
        ! Both, X1 and X2 slope arrays are needed.
@@ -1570,7 +1566,7 @@ MAKE_GET_SLOT_FUNCTION(get_x2_delta_cs2d,sll_t_cubic_spline_2d,x2_delta,sll_real
        FILL_SLOPES(const_slope_x2_max,x2_max_slopes,num_pts_x1,x2_max_slopes,compute_slopes_x2_max)
 
     case default
-       print *, 'ERROR: sll_s_init_cubic_spline_2d(): ', &
+       print *, 'ERROR: sll_s_cubic_spline_2d_init(): ', &
             'did not recognize given boundary conditions.'
        STOP
     end select
@@ -1579,7 +1575,7 @@ MAKE_GET_SLOT_FUNCTION(get_x2_delta_cs2d,sll_t_cubic_spline_2d,x2_delta,sll_real
     ! store the boundary condition-specific data. The 'periodic' BC does
     ! not use the num_points+2 point.
     SLL_ALLOCATE( this%coeffs(0:num_pts_x1+2,0:num_pts_x2+2), ierr )
-  end subroutine sll_s_init_cubic_spline_2d
+  end subroutine sll_s_cubic_spline_2d_init
 
   subroutine compute_spline_2D_prdc_prdc( data, spline )
     sll_real64, dimension(:,:), intent(in), target :: data  ! data to be fit
