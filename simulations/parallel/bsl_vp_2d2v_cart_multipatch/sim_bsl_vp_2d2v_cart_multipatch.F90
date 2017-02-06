@@ -188,7 +188,7 @@ program sim_bsl_vp_2d2v_cart_multipatch
   ! initialize simulation object with the above parameters
   ! ---------------------------------------------------------------------
 
-  call simulation%initialize( &
+  call simulation%init( &
        mv, &
        mp, &
        sll_f_gaussian_beam_initializer_4d, &

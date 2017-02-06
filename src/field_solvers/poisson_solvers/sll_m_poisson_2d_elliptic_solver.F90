@@ -227,7 +227,7 @@ contains
     np_eta1 = num_cells_eta1 + 1
     np_eta2 = num_cells_eta2 + 1
     
-!    call poisson%interp_phi%initialize( &
+!    call poisson%interp_phi%init( &
 !         np_eta1, &
 !         np_eta2, &
 !         eta1_min, &
@@ -395,7 +395,7 @@ contains
 
    
        
-!    call poisson%interp_a11%initialize( &
+!    call poisson%interp_a11%init( &
 !         np_eta1, &
 !         np_eta2, &
 !         eta1_min, &
@@ -409,7 +409,7 @@ contains
 !         spline_degree_eta1, &
 !         spline_degree_eta2)     
 !          
-!     call poisson%interp_a12%initialize( &
+!     call poisson%interp_a12%init( &
 !         np_eta1, &
 !         np_eta2, &
 !         eta1_min, &
@@ -423,7 +423,7 @@ contains
 !         spline_degree_eta1, &
 !         spline_degree_eta2)    
 !           
-!    call poisson%interp_a21%initialize( &
+!    call poisson%interp_a21%init( &
 !         np_eta1, &
 !         np_eta2, &
 !         eta1_min, &
@@ -437,7 +437,7 @@ contains
 !         spline_degree_eta1, &
 !         spline_degree_eta2) 
 !          
-!    call poisson%interp_a22%initialize( &
+!    call poisson%interp_a22%init( &
 !         np_eta1, &
 !         np_eta2, &
 !         eta1_min, &
@@ -451,7 +451,7 @@ contains
 !         spline_degree_eta1, &
 !         spline_degree_eta2)   
 !
-!    call poisson%interp_a21%initialize( &
+!    call poisson%interp_a21%init( &
 !         np_eta1, &
 !         np_eta2, &
 !         eta1_min, &
@@ -465,7 +465,7 @@ contains
 !         spline_degree_eta1, &
 !         spline_degree_eta2) 
 !     
-!    call poisson%interp_c%initialize( &
+!    call poisson%interp_c%init( &
 !         np_eta1, &
 !         np_eta2, &
 !         eta1_min, &
@@ -479,7 +479,7 @@ contains
 !         spline_degree_eta1, &
 !         spline_degree_eta2)     
 !          
-!    call poisson%interp_b1%initialize( &
+!    call poisson%interp_b1%init( &
 !         np_eta1, &
 !         np_eta2, &
 !         eta1_min, &
@@ -493,7 +493,7 @@ contains
 !         spline_degree_eta1, &
 !         spline_degree_eta2)
 !      
-!    call poisson%interp_b2%initialize( &
+!    call poisson%interp_b2%init( &
 !         np_eta1, &
 !         np_eta2, &
 !         eta1_min, &

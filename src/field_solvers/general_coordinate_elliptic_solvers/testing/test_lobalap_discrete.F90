@@ -112,7 +112,7 @@ program test_lobalap_discrete
 
   print *, 'initializing the interpolators: '
 
-  call x1_interp%initialize( &
+  call x1_interp%init( &
        NPTS1, &
        NPTS2, &
        0.0_f64, &
@@ -124,7 +124,7 @@ program test_lobalap_discrete
        eta1_min_slopes=x1_eta1_min, &
        eta1_max_slopes=x1_eta1_max )
 
-  call x2_interp%initialize( &
+  call x2_interp%init( &
        NPTS1, &
        NPTS2, &
        0.0_f64, &
@@ -136,7 +136,7 @@ program test_lobalap_discrete
        eta1_min_slopes=x2_eta1_min, &
        eta1_max_slopes=x2_eta1_max )
 
-  call j_interp%initialize( &
+  call j_interp%init( &
        NPTS1, &
        NPTS2, &
        0.0_f64, &

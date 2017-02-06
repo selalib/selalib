@@ -41,7 +41,7 @@ module sll_m_cubic_spline_interpolator_2d
     sll_f_interpolate_value_2d, &
     sll_f_interpolate_x1_derivative_2d, &
     sll_f_interpolate_x2_derivative_2d, &
-    sll_s_init_cubic_spline_2d, &
+    sll_s_cubic_spline_2d_init, &
     sll_t_cubic_spline_2d, &
     sll_o_delete
 
@@ -80,7 +80,7 @@ module sll_m_cubic_spline_interpolator_2d
      sll_real64, dimension(:,:), pointer :: interpolation_points 
    contains
     !> PLEASE ADD DOCUMENTATION
-     procedure, pass(interpolator) :: initialize=>initialize_cs2d_interpolator
+     procedure, pass(interpolator) :: init => initialize_cs2d_interpolator
     !> PLEASE ADD DOCUMENTATION
      procedure :: compute_interpolants => compute_interpolants_cs2d
     !> PLEASE ADD DOCUMENTATION
@@ -164,7 +164,7 @@ contains
     
     SLL_ALLOCATE(interpolator,ierr)
     
-    call interpolator%initialize( &
+    call interpolator%init( &
       npts1, &
       npts2, &
       eta1_min, &
@@ -234,7 +234,7 @@ contains
     interpolator%npts2 = npts2
     interpolator%bc_type1 = eta1_bc_type
     interpolator%bc_type2 = eta2_bc_type
-    call sll_s_init_cubic_spline_2d( &
+    call sll_s_cubic_spline_2d_init( &
          interpolator%spline, &
          npts1, &
          npts2, &

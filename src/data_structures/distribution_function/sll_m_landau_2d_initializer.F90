@@ -31,7 +31,7 @@ module sll_m_landau_2d_initializer
     sll_real64 :: kx
     sll_int32 :: is_delta_f
   contains
-    procedure, pass(init_obj) :: initialize => initialize_landau_2d
+    procedure, pass(init_obj) :: init => initialize_landau_2d
     procedure, pass(init_obj) :: f_of_x1x2  => f_x1x2_landau_2d
   end type sll_t_init_landau_2d
 
