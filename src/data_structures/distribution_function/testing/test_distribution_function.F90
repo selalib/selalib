@@ -87,15 +87,15 @@ program unit_test
 
   print *, 'initialization of the interpolators'
  ! Set up the interpolators for the field
-  call interp_eta1%initialize( nc_eta1+1, 0.0_f64, 1.0_f64, sll_p_periodic )
-  call interp_eta2%initialize( nc_eta2+1, 0.0_f64, 1.0_f64, sll_p_periodic )
+  call interp_eta1%init( nc_eta1+1, 0.0_f64, 1.0_f64, sll_p_periodic )
+  call interp_eta2%init( nc_eta2+1, 0.0_f64, 1.0_f64, sll_p_periodic )
   interp_eta1_ptr => interp_eta1
   interp_eta2_ptr => interp_eta2
 
 
   print*, 'initialization of sll_m_distribution_function'
 
-  call init_landau%initialize(m,sll_p_cell_centered_field,0.001_f64)
+  call init_landau%init(m,sll_p_cell_centered_field,0.001_f64)
   p_init_f => init_landau
 
   print*, 'landau initialized'

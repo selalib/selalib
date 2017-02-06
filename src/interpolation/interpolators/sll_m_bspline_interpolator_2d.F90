@@ -70,7 +70,7 @@ type, extends(sll_c_interpolator_2d) :: sll_t_bspline_interpolator_2d
 contains
 
   !> Allocate data, set dimensions and boundary conditions
-  procedure, pass(interpolator) :: initialize=>initialize_bs2d_interpolator
+  procedure, pass(interpolator) :: init=>initialize_bs2d_interpolator
   !> Compute bspline coefficients
   procedure :: compute_interpolants => compute_interpolants_bs2d
   !> Interpolate single value from last interpolants computed
@@ -160,7 +160,7 @@ contains
     
     SLL_ALLOCATE(interpolator,ierr)
     
-    call interpolator%initialize( &
+    call interpolator%init( &
       npts1,                      &
       npts2,                      &
       eta1_min,                   &

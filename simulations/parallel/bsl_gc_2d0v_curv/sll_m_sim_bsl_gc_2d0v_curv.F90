@@ -2742,7 +2742,7 @@ subroutine sll_DSG( eta1_min,eta1_max, eta2_min,eta2_max,n_eta1,n_eta2, f )
      
    spline_degree_eta1 = 3
    spline_degree_eta2 = 3  
-   call a11_interp%initialize( &
+   call a11_interp%init( &
          n_eta1+1, &
          n_eta2+1, &
          eta1_min, &
@@ -2751,7 +2751,7 @@ subroutine sll_DSG( eta1_min,eta1_max, eta2_min,eta2_max,n_eta1,n_eta2, f )
          eta2_max, &
          sll_p_dirichlet, &
          sll_p_periodic )            
-   call a22_interp%initialize( &
+   call a22_interp%init( &
          n_eta1+1, &
          n_eta2+1, &
          eta1_min, &
@@ -2762,7 +2762,7 @@ subroutine sll_DSG( eta1_min,eta1_max, eta2_min,eta2_max,n_eta1,n_eta2, f )
          sll_p_periodic )    
            
           
-    call a12_interp%initialize( &
+    call a12_interp%init( &
          n_eta1+1, &
          n_eta2+1, &
          eta1_min, &

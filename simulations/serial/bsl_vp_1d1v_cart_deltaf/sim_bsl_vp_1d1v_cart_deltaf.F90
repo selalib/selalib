@@ -278,9 +278,9 @@ program sim_bsl_vp_1d1v_cart_deltaf
   open(unit = adr_diag, file = 'adrdiag.dat') 
 
   ! initialization of sll_m_distribution_function
-  call init_landau%initialize(mesh2d_base, sll_p_node_centered_field, eps, kmode, &
+  call init_landau%init(mesh2d_base, sll_p_node_centered_field, eps, kmode, &
        is_delta_f)
-  call init_tsi%initialize(mesh2d_base, sll_p_node_centered_field, eps, kmode, v0, &
+  call init_tsi%init(mesh2d_base, sll_p_node_centered_field, eps, kmode, v0, &
        is_delta_f)
   if (case == "landau") then
      p_init_f => init_landau
@@ -314,23 +314,23 @@ program sim_bsl_vp_1d1v_cart_deltaf
   end if
 
   ! sll_o_initialize interpolators
-  call interp_spline_x%initialize( Ncx + 1, xmin, xmax, sll_p_periodic )
-  call interp_spline_v%initialize( Ncv + 1, vmin, vmax, sll_p_hermite )
-  !call interp_per_x%initialize( Ncx + 1, xmin, xmax, sll_p_spline, 8)
-  !call interp_per_v%initialize( Ncv + 1, vmin, vmax, sll_p_spline, 8)
+  call interp_spline_x%init( Ncx + 1, xmin, xmax, sll_p_periodic )
+  call interp_spline_v%init( Ncv + 1, vmin, vmax, sll_p_hermite )
+  !call interp_per_x%init( Ncx + 1, xmin, xmax, sll_p_spline, 8)
+  !call interp_per_v%init( Ncv + 1, vmin, vmax, sll_p_spline, 8)
 
-  !call interp_per_x%initialize( Ncx + 1, xmin, xmax, sll_p_trigo, 8)
-  !call interp_per_v%initialize( Ncv + 1, vmin, vmax, sll_p_trigo, 8)
+  !call interp_per_x%init( Ncx + 1, xmin, xmax, sll_p_trigo, 8)
+  !call interp_per_v%init( Ncv + 1, vmin, vmax, sll_p_trigo, 8)
 
-  call interp_per_x%initialize( Ncx + 1, xmin, xmax, sll_p_trigo_fft_selalib, 8)
-  call interp_per_v%initialize( Ncv + 1, vmin, vmax, sll_p_trigo_fft_selalib, 8)
+  call interp_per_x%init( Ncx + 1, xmin, xmax, sll_p_trigo_fft_selalib, 8)
+  call interp_per_v%init( Ncv + 1, vmin, vmax, sll_p_trigo_fft_selalib, 8)
 
-  !call interp_per_x%initialize( Ncx + 1, xmin, xmax, TRIGO_REAL, 8)
-  !call interp_per_v%initialize( Ncv + 1, vmin, vmax, TRIGO_REAL, 8)
+  !call interp_per_x%init( Ncx + 1, xmin, xmax, TRIGO_REAL, 8)
+  !call interp_per_v%init( Ncv + 1, vmin, vmax, TRIGO_REAL, 8)
 
 
-  !call interp_comp_v%initialize( Ncv + 1, vmin, vmax, 5)
-  call interp_comp_v%initialize( Ncv + 1, vmin, vmax, sll_p_hermite)
+  !call interp_comp_v%init( Ncv + 1, vmin, vmax, 5)
+  call interp_comp_v%init( Ncv + 1, vmin, vmax, sll_p_hermite)
   !interp_x => interp_spline_x
   !interp_v => interp_spline_v
 

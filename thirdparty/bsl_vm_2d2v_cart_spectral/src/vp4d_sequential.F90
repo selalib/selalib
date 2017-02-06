@@ -84,10 +84,10 @@ SLL_ALLOCATE(ey(nc_eta1,nc_eta2),error)
 call sll_o_initialize(poisson, eta1_min, eta1_max, nc_eta1-1, &
                          eta2_min, eta2_max, nc_eta2-1, error)
 
-call spl_eta1%initialize(nc_eta1, eta1_min, eta1_max, sll_p_periodic )
-call spl_eta2%initialize(nc_eta2, eta2_min, eta2_max, sll_p_periodic )
-call spl_eta3%initialize(nc_eta3, eta3_min, eta3_max, sll_p_periodic )
-call spl_eta4%initialize(nc_eta4, eta4_min, eta4_max, sll_p_periodic )
+call spl_eta1%init(nc_eta1, eta1_min, eta1_max, sll_p_periodic )
+call spl_eta2%init(nc_eta2, eta2_min, eta2_max, sll_p_periodic )
+call spl_eta3%init(nc_eta3, eta3_min, eta3_max, sll_p_periodic )
+call spl_eta4%init(nc_eta4, eta4_min, eta4_max, sll_p_periodic )
 
 interp_1 => spl_eta1
 interp_2 => spl_eta2

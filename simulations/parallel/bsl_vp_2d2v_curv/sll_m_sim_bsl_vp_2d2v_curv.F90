@@ -570,7 +570,7 @@ contains
     ! unit square. But with the more general logical meshes, this is not
     ! true anymore, so this should be changed to depend on the values stored
     ! in the logical grids.
-    call sim%interp_x1x2%initialize( &
+    call sim%interp_x1x2%init( &
          nc_x1+1, &
          nc_x2+1, &
          sim%mesh2d_x%eta1_min, &
@@ -585,13 +585,13 @@ contains
     print *, 'finished first advection in x1 and x2'
 
     ! other test cases use periodic bc's here...        
-    call sim%interp_x3%initialize( &
+    call sim%interp_x3%init( &
          nc_x3+1, &
          vmin3, &
          vmax3, &
          sll_p_periodic)
 
-    call sim%interp_x4%initialize( &
+    call sim%interp_x4%init( &
          nc_x4+1, &
          vmin4, &
          vmax4, &

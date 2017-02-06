@@ -210,7 +210,7 @@ module sll_m_sim_bsl_vp_2d2v_cart_multipatch
    contains
      procedure, pass(sim) :: run => sll_s_run_4d_qns_general_mp
      procedure, pass(sim) :: init_from_file => init_4d_qns_gen_mp
-     procedure, pass(sim) :: initialize => sll_s_initialize_4d_qns_gen_mp
+     procedure, pass(sim) :: init => sll_s_initialize_4d_qns_gen_mp
   end type sll_t_simulation_4d_qns_general_multipatch
 
   interface sll_o_delete
@@ -718,13 +718,13 @@ contains
 
     !print*, '--- ended factorization matrix qns'
 
-    call sim%interp_x3%initialize( &
+    call sim%interp_x3%init( &
          sim%mesh2d_v%num_cells1+1, &
          sim%mesh2d_v%eta1_min, &
          sim%mesh2d_v%eta1_max, &
          sll_p_hermite)
     
-    call sim%interp_x4%initialize( &
+    call sim%interp_x4%init( &
          sim%mesh2d_v%num_cells2+1, &
          sim%mesh2d_v%eta2_min, &
          sim%mesh2d_v%eta2_max, &

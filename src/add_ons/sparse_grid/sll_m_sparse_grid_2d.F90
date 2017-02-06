@@ -28,7 +28,7 @@ type, extends(sll_t_sparse_grid_interpolator) :: sll_t_sparse_grid_interpolator_
 sll_int32, dimension(:,:), pointer  :: index !< 2d mapping: for each 2d index l on the sparse grid, \a index gives the index of the first node belonging to this level 
 
 contains
-  procedure :: initialize => initialize_sg2d!> Initialization routine
+  procedure :: init => initialize_sg2d!> Initialization routine
   procedure :: interpolate_const_disp
   procedure :: interpolate_from_interpolant_value=>interpolate_value_sg !> Compute the value of the sparse grid interpolant at position eta
   procedure :: interpolate_disp_nconst_in_1d !> Interpolate along one (x)-direction with displacement non-constant in one (v)-direction
