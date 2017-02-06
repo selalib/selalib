@@ -10,7 +10,6 @@ program unit_test_2d
     sll_p_pi
 
   use sll_m_cubic_spline_interpolator_2d, only: &
-    sll_f_new_cubic_spline_interpolator_2d, &
     sll_t_cubic_spline_interpolator_2d
 
   use sll_m_interpolators_2d_base, only: &

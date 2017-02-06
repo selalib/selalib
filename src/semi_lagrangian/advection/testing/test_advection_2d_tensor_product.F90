@@ -51,7 +51,7 @@ program test_advection_2d_tensor_product
     sll_f_new_cubic_spline_interpolator_1d
 
   use sll_m_cubic_spline_interpolator_2d, only: &
-    sll_f_new_cubic_spline_interpolator_2d
+    sll_t_cubic_spline_interpolator_2d
 
   use sll_m_interpolators_1d_base, only: &
     sll_c_interpolator_1d
@@ -70,6 +70,7 @@ program test_advection_2d_tensor_product
   class(sll_c_characteristics_1d_base), pointer :: charac_x1
   class(sll_c_characteristics_1d_base), pointer :: charac_x2
   class(sll_c_interpolator_2d), pointer :: interp
+  type(sll_t_cubic_spline_interpolator_2d), target :: interp_cs2d
   class(sll_c_characteristics_2d_base), pointer :: charac
   sll_real64 :: x1_min
   sll_real64 :: x1_max
@@ -159,11 +160,7 @@ program test_advection_2d_tensor_product
     num_cells_x2+1, &
     eta_coords = x2_mesh)
 
-
-
-
-
-  interp => sll_f_new_cubic_spline_interpolator_2d( &
+  call interp_cs2d%init( &
     num_cells_x1+1, &
     num_cells_x2+1, &
     x1_min, &
@@ -173,6 +170,7 @@ program test_advection_2d_tensor_product
     sll_p_periodic, &
     sll_p_periodic)
 
+  interp => interp_cs2d
 
   charac => sll_f_new_explicit_euler_2d_charac(&
       num_cells_x1+1, &
