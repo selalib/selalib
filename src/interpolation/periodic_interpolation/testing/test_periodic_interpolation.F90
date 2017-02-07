@@ -6,7 +6,7 @@ program test_periodic_interpolation
     sll_p_twopi
 
   use sll_m_periodic_interp, only: &
-    sll_s_initialize_periodic_interp, &
+    sll_s_periodic_interp_init, &
     sll_s_periodic_interp, &
     sll_t_periodic_interp_work, &
     sll_p_spline
@@ -40,10 +40,10 @@ program test_periodic_interpolation
      end do
 
      
-     call sll_s_initialize_periodic_interp(interp, N, sll_p_spline, 8)
-     !call sll_s_initialize_periodic_interp(interp, N, sll_p_trigo_fft_selalib, 8)
-     !call sll_s_initialize_periodic_interp(interp, N, sll_p_trigo, 8)
-     !call sll_s_initialize_periodic_interp(interp, N, sll_p_lagrange, 16)
+     call sll_s_periodic_interp_init(interp, N, sll_p_spline, 8)
+     !call sll_s_periodic_interp_init(interp, N, sll_p_trigo_fft_selalib, 8)
+     !call sll_s_periodic_interp_init(interp, N, sll_p_trigo, 8)
+     !call sll_s_periodic_interp_init(interp, N, sll_p_lagrange, 16)
      call sll_s_periodic_interp(interp, u_out,  u, alpha)
      
      old_error = error

@@ -13,7 +13,7 @@ module sll_m_linear_pendulum_operators
 
   use sll_m_operator_splitting, only: &
     sll_s_do_split_steps, &
-    sll_s_initialize_operator_splitting, &
+    sll_s_operator_splitting_init, &
     sll_t_operator_splitting
 
   implicit none
@@ -80,10 +80,10 @@ contains
     
     ! initialise my_pendulum
     split => my_pendulum
-    !  call sll_s_initialize_operator_splitting(split,sll_p_lie_vt)
-    !  call sll_s_initialize_operator_splitting(split,sll_p_strang_tvt)
-    !  call sll_s_initialize_operator_splitting(split,sll_p_triple_jump_tvt)
-    call sll_s_initialize_operator_splitting(split,method)
+    !  call sll_s_operator_splitting_init(split,sll_p_lie_vt)
+    !  call sll_s_operator_splitting_init(split,sll_p_strang_tvt)
+    !  call sll_s_operator_splitting_init(split,sll_p_triple_jump_tvt)
+    call sll_s_operator_splitting_init(split,method)
 
     ! compute exact solution at final time
     x_exact = x0 * cos( omega * t_final ) + (v0 / omega) * sin( omega * t_final )

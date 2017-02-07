@@ -98,7 +98,7 @@ public ::                                                       &
   sll_s_factorize_mat_es,                                       &
   sll_s_factorize_mat_es_prototype,                             &
   sll_t_general_coordinate_elliptic_solver,                     &
-  sll_s_initialize_general_elliptic_solver_prototype,           &
+  sll_s_general_elliptic_solver_prototype_init,           &
   sll_f_new_general_elliptic_solver,                            &
   sll_f_new_general_elliptic_solver_prototype,                  &
   sll_s_set_rho_coefficients_coordinates_elliptic_eq_prototype, &
@@ -871,7 +871,7 @@ sll_int32 :: ierr
 
 SLL_ALLOCATE(es,ierr)
 
-call sll_s_initialize_general_elliptic_solver_prototype( es, &
+call sll_s_general_elliptic_solver_prototype_init( es, &
 &                      spline_degree1,                       &
 &                      spline_degree2,                       &
 &                      num_cells1,                           &
@@ -2489,7 +2489,7 @@ subroutine compute_b_spline_and_deriv_at_x( &
   
 end subroutine compute_b_spline_and_deriv_at_x
 
-subroutine sll_s_initialize_general_elliptic_solver_prototype( &
+subroutine sll_s_general_elliptic_solver_prototype_init( &
                        es,                                     &
                        spline_degree1,                         &
                        spline_degree2,                         &
@@ -2578,7 +2578,7 @@ if(es%use_cubic_splines)then
     rhs_bc1, &
     rhs_bc2)
   else
-    SLL_ERROR('sll_s_initialize_general_elliptic_solver_prototype','provide rhs_bc1 and rhs_bc2')
+    SLL_ERROR('sll_s_general_elliptic_solver_prototype_init','provide rhs_bc1 and rhs_bc2')
   endif
 endif
 
@@ -2921,7 +2921,7 @@ call compute_non_zero_splines_at_cell_points( &
 
 flush( output_unit )
 
-end subroutine sll_s_initialize_general_elliptic_solver_prototype
+end subroutine sll_s_general_elliptic_solver_prototype_init
 
 subroutine sll_s_factorize_mat_es_prototype( es,            &
                                              a11_field_mat, &

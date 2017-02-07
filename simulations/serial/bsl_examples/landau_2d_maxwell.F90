@@ -18,7 +18,7 @@ use sll_m_interpolators_1d_base, only: &
   sll_c_interpolator_1d
 
 use sll_m_maxwell_2d_pstd, only: &
-  sll_s_init_maxwell_2d_pstd, &
+  sll_s_maxwell_2d_pstd_init, &
   sll_t_maxwell_2d_pstd, &
   sll_s_solve_ampere_2d_pstd
 
@@ -106,7 +106,7 @@ SLL_CLEAR_ALLOCATE(bz(1:nc_eta1+1,1:nc_eta2+1),error)
 SLL_CLEAR_ALLOCATE(jx(1:nc_eta1+1,1:nc_eta2+1),error)
 SLL_CLEAR_ALLOCATE(jy(1:nc_eta1+1,1:nc_eta2+1),error)
 
-call sll_s_init_maxwell_2d_pstd(maxwell, &
+call sll_s_maxwell_2d_pstd_init(maxwell, &
                 eta1_min, eta1_max, nc_eta1, &
                 eta2_min, eta2_max, nc_eta2, TE_POLARIZATION)
 

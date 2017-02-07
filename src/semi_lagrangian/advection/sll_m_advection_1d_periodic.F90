@@ -28,7 +28,7 @@ module sll_m_advection_1d_periodic
     sll_c_advection_1d_base
 
   use sll_m_periodic_interp, only: &
-    sll_s_initialize_periodic_interp, &
+    sll_s_periodic_interp_init, &
     sll_s_periodic_interp, &
     sll_t_periodic_interp_work
 
@@ -102,7 +102,7 @@ contains
     sll_int32,  intent(in)               :: type
     sll_int32,  intent(in)               :: order
 
-    call sll_s_initialize_periodic_interp( &
+    call sll_s_periodic_interp_init( &
       adv%per_interp, &
       num_cells, &
       type, &

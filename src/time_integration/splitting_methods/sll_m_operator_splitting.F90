@@ -27,7 +27,7 @@ module sll_m_operator_splitting
 
   public :: &
     sll_s_do_split_steps, &
-    sll_s_initialize_operator_splitting, &
+    sll_s_operator_splitting_init, &
     sll_t_operator_splitting, &
     sll_p_lie_tv, &
     sll_p_lie_vt, &
@@ -139,7 +139,7 @@ contains
     sll_int32 :: ierr
 
     SLL_ALLOCATE(split,ierr)   
-    call sll_s_initialize_operator_splitting( &
+    call sll_s_operator_splitting_init( &
          split, &
          split_case, &
          split_step, &
@@ -172,7 +172,7 @@ contains
   !> @param[in]	nb_split_step	number of split steps in the method
   !> @param[in]	split_begin_T	logical True if T first false else
   !> @param[in]	dt	time step
-  subroutine sll_s_initialize_operator_splitting( &
+  subroutine sll_s_operator_splitting_init( &
        split, &
        split_case, &
        split_step, &
@@ -505,7 +505,7 @@ contains
        print *,'#split_case not defined'
        stop       
     end select
-  end subroutine sll_s_initialize_operator_splitting
+  end subroutine sll_s_operator_splitting_init
 
   !> @brief Apply the composition method for given number of times steps.
   !> @param[inout]	split	sll_t_operator_splitting object

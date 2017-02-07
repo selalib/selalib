@@ -18,7 +18,7 @@ program landau_4d_multigrid
 
   use sll_m_mudpack, only: &
     sll_s_delete_mudpack_cartesian, &
-    sll_s_initialize_mudpack_cartesian, &
+    sll_s_mudpack_cartesian_init, &
     sll_t_mudpack_solver, &
     sll_s_solve_mudpack_cartesian
 
@@ -103,7 +103,7 @@ SLL_ALLOCATE(bz(nc_eta1+1,nc_eta2+1),error)
 SLL_ALLOCATE(jx(nc_eta1+1,nc_eta2+1),error)
 SLL_ALLOCATE(jy(nc_eta1+1,nc_eta2+1),error)
 
-call sll_s_initialize_mudpack_cartesian(poisson, &
+call sll_s_mudpack_cartesian_init(poisson, &
                          eta1_min, eta1_max, nc_eta1, &
                          eta2_min, eta2_max, nc_eta2)
 

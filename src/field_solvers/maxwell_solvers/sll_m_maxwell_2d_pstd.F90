@@ -72,7 +72,7 @@ use sll_m_fft, only: sll_t_fft, &
   implicit none
 
   public :: sll_t_maxwell_2d_pstd, &
-  sll_s_init_maxwell_2d_pstd,      &
+  sll_s_maxwell_2d_pstd_init,      &
   sll_s_solve_maxwell_2d_pstd,     &
   sll_s_solve_ampere_2d_pstd,      &
   sll_s_solve_faraday_2d_pstd,      &
@@ -128,7 +128,7 @@ end type sll_t_maxwell_2d_pstd
 contains
 
 !> Initialize 2d maxwell solver on cartesian mesh with PSTD scheme
-subroutine sll_s_init_maxwell_2d_pstd(self,xmin,xmax,nc_x,ymin,ymax,nc_y,polarization)
+subroutine sll_s_maxwell_2d_pstd_init(self,xmin,xmax,nc_x,ymin,ymax,nc_y,polarization)
 
    type(sll_t_maxwell_2d_pstd) :: self         !< maxwell object
    sll_real64, intent(in)      :: xmin         !< x min
@@ -182,7 +182,7 @@ subroutine sll_s_init_maxwell_2d_pstd(self,xmin,xmax,nc_x,ymin,ymax,nc_y,polariz
    end do
    self%ky(1) = 1.0_f64
 
-end subroutine sll_s_init_maxwell_2d_pstd
+end subroutine sll_s_maxwell_2d_pstd_init
 
 !> self routine exists only for testing purpose. Use ampere and faraday
 !> in your appication.

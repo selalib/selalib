@@ -24,7 +24,7 @@ program test_general_elliptic_solver_multipatch
   use sll_m_general_coordinate_elliptic_solver_multipatch, only: &
     sll_s_factorize_mat_es_mp, &
     sll_t_general_coordinate_elliptic_solver_mp, &
-    sll_s_initialize_general_elliptic_solver_mp, &
+    sll_s_general_elliptic_solver_mp_init, &
     sll_s_solve_general_coordinates_elliptic_eq_mp
 
   use sll_m_scalar_field_2d_multipatch, only: &
@@ -166,7 +166,7 @@ call phi_field_ex%update_interpolation_coefficients()
 
 print*, 'Initialization solver elliptic multipacth '
 
-call sll_s_initialize_general_elliptic_solver_mp( es_mp,             &
+call sll_s_general_elliptic_solver_mp_init( es_mp,             &
                                             sll_p_es_gauss_legendre, &
                                             sll_p_es_gauss_legendre, &
                                             T)

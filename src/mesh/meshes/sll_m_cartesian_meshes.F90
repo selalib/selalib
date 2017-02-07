@@ -166,7 +166,7 @@ module sll_m_cartesian_meshes
      sll_real64 :: volume_eta456 !< volume of the domain spanned by last three components
      
    contains
-     procedure :: init => sll_s_init_cartesian_mesh_6d
+     procedure :: init => sll_s_cartesian_mesh_6d_init
      procedure :: display => display_cartesian_mesh_6d
      procedure :: delete => delete_cartesian_mesh_6d
   end type sll_t_cartesian_mesh_6d
@@ -265,7 +265,7 @@ end if
     !sll_real64 :: delta
     sll_int32 :: ierr
     SLL_ALLOCATE(m, ierr)
-    call sll_s_init_cartesian_mesh_1d( m, num_cells, eta_min, eta_max )
+    call sll_s_cartesian_mesh_1d_init( m, num_cells, eta_min, eta_max )
   end function sll_f_new_cartesian_mesh_1d
 
 
@@ -276,7 +276,7 @@ end if
   !> @param eta_max optional double precision value which represents the 
   !> maximum value of the eta1 parameter in the cartesian mesh.
   !> @param m is a pointer to the newly allocated object.
-  subroutine sll_s_init_cartesian_mesh_1d( m, num_cells, eta_min, eta_max )
+  subroutine sll_s_cartesian_mesh_1d_init( m, num_cells, eta_min, eta_max )
     class(sll_t_cartesian_mesh_1d), intent(inout) :: m
     sll_int32, intent(in)  :: num_cells
     sll_real64, optional, intent(in) :: eta_min
@@ -290,11 +290,11 @@ end if
     m%delta_eta   = (m%eta_max - m%eta_min)/real(num_cells,f64)
 
     if ( m%eta_max <= m%eta_min) then
-       print*,'ERROR, sll_s_init_cartesian_mesh_1d(): ', &
+       print*,'ERROR, sll_s_cartesian_mesh_1d_init(): ', &
             'Problem to construct the mesh 1d '
        print*,'because eta_max <= eta_min'
     end if
-  end subroutine sll_s_init_cartesian_mesh_1d
+  end subroutine sll_s_cartesian_mesh_1d_init
 
 
   !> Create a 2d mesh from two 1d meshes
@@ -1291,7 +1291,7 @@ function eta1_node_3d(mesh, i1, i2, i3) result(res)
   !> @param [in] num_cells array with number of cells along each dimension
   !> @param [in] eta_min array with minimal value of eta along each dimension
   !> @param [in] eta_max array with maximal value of eta along each dimension
-  subroutine sll_s_init_cartesian_mesh_6d( &
+  subroutine sll_s_cartesian_mesh_6d_init( &
        this, &
        num_cells, &
        eta_min, &
@@ -1312,7 +1312,7 @@ function eta1_node_3d(mesh, i1, i2, i3) result(res)
     this%volume = this%volume_eta123 * this%volume_eta456
 
 
-  end subroutine sll_s_init_cartesian_mesh_6d
+  end subroutine sll_s_cartesian_mesh_6d_init
 
 
 
