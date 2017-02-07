@@ -163,11 +163,10 @@ program test_xml
   ! Write XML file
   !---------------
   call xml_doc%write( 'out1.xml' )
-
+  call xml_doc%write( 'out2.xml' )
   ! Deallocate/delete
   !------------------
   call xml_doc%delete()
-  call xml_doc%write( 'out2.xml' )
 
   !----------------------------------------------------------------------------
   ! UNIT TESTING
