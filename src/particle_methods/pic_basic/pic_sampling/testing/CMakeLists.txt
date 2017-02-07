@@ -6,7 +6,7 @@ SET_TESTS_PROPERTIES(particle_sampling PROPERTIES PASS_REGULAR_EXPRESSION "PASSE
 
 
 ADD_EXECUTABLE( test_particle_sampling_interface test_particle_sampling_interface.F90)
-TARGET_LINK_LIBRARIES( test_particle_sampling_interface sll_pic_sampling sll_pic_weights sll_xdmf_io)
+TARGET_LINK_LIBRARIES( test_particle_sampling_interface sll_pic_sampling sll_pic_weights)
 
 SET( NML_FILE ${CMAKE_CURRENT_SOURCE_DIR}/sampling_interface_test.nml )
 ADD_TEST( NAME particle_sampling_interface COMMAND test_particle_sampling_interface ${NML_FILE})
