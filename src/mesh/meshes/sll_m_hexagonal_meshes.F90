@@ -23,6 +23,7 @@
 module sll_m_hexagonal_meshes
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_memory.h"
+#include "sll_assert.h"
 #include "sll_working_precision.h"
 
   use sll_m_constants, only: &
@@ -763,6 +764,7 @@ contains
     sll_int32,              intent(in) :: cell_num
     sll_real64 :: res
 
+    SLL_ASSERT(0 < cell_num .and. cell_num <= mesh%num_triangles)
     res = mesh%center_cartesian_coord(1, cell_num)
   end function eta1_cell_hex
 
@@ -779,6 +781,7 @@ contains
     sll_int32,              intent(in) :: cell_num
     sll_real64 :: res
 
+    SLL_ASSERT(0 < cell_num .and. cell_num <= mesh%num_triangles)
     res = mesh%center_cartesian_coord(2, cell_num)
   end function eta2_cell_hex
 
