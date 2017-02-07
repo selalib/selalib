@@ -6,6 +6,7 @@ program vp4d_multigrid
   use sll_vlasov4d_poisson
   use init_functions
   use sll_multigrid_2d
+  use sll_m_gnuplot_parallel
 
   implicit none
 
