@@ -32,7 +32,7 @@ module sll_m_dg_fields
   implicit none
 
   public :: &
-    sll_s_init_dg_field_2d, &
+    sll_s_dg_field_2d_init, &
     sll_t_dg_field_2d, &
     sll_f_new_dg_field_2d
 
@@ -52,7 +52,7 @@ type :: sll_t_dg_field_2d
 
 contains
 
-   procedure, pass :: init => sll_s_init_dg_field_2d
+   procedure, pass :: init => sll_s_dg_field_2d_init
    procedure, pass :: write_to_file => write_dg_field_2d_to_file
    procedure, pass :: set_value => set_value_dg_field_2d 
 
@@ -72,7 +72,7 @@ sll_int32 :: error
 
 contains
 
-subroutine sll_s_init_dg_field_2d( this, degree, tau, init_function ) 
+subroutine sll_s_dg_field_2d_init( this, degree, tau, init_function ) 
 
   class(sll_t_dg_field_2d)              :: this          !< DG field 2d
   sll_transformation, target            :: tau           !< transformation 
@@ -103,7 +103,7 @@ subroutine sll_s_init_dg_field_2d( this, degree, tau, init_function )
   this%tag = 0
   this%file_id = 0
 
-end subroutine sll_s_init_dg_field_2d
+end subroutine sll_s_dg_field_2d_init
 
 function sll_f_new_dg_field_2d( degree, tau, init_function ) result (this) 
 

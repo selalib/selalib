@@ -30,7 +30,7 @@ module sll_m_periodic_interp
 
   public :: &
     sll_o_delete, &
-    sll_s_initialize_periodic_interp, &
+    sll_s_periodic_interp_init, &
     sll_p_lagrange, &
     sll_s_periodic_interp, &
     sll_t_periodic_interp_work, &
@@ -65,7 +65,7 @@ module sll_m_periodic_interp
 
 
 contains
-  subroutine sll_s_initialize_periodic_interp( this, N, interpolator, order )
+  subroutine sll_s_periodic_interp_init( this, N, interpolator, order )
     type(sll_t_periodic_interp_work), pointer  :: this
     sll_int32,                intent(in) :: N            ! number of cells
     sll_int32,                intent(in) :: interpolator ! interpolation method
@@ -95,7 +95,7 @@ contains
 
     ! set up sll_p_spline parameters
     if ((order/2) /= int(order/2.0)) then
-       print*, 'sll_s_initialize_periodic_interp: order of interpolators needs to be even.', &
+       print*, 'sll_s_periodic_interp_init: order of interpolators needs to be even.', &
             'Order here is: ', Order
        stop
     end if
@@ -148,7 +148,7 @@ contains
        stop
     end select
 
-  end subroutine sll_s_initialize_periodic_interp
+  end subroutine sll_s_periodic_interp_init
 
   subroutine delete_periodic_interp_work( this )
     type(sll_t_periodic_interp_work), pointer :: this 

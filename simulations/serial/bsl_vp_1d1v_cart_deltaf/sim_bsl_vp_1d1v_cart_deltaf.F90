@@ -41,7 +41,7 @@ program sim_bsl_vp_1d1v_cart_deltaf
     sll_o_delete
 
   use sll_m_distribution_function, only: &
-    sll_s_initialize_distribution_function_2d, &
+    sll_s_distribution_function_2d_init, &
     sll_t_distribution_function_2d
 
   use sll_m_interpolators_1d_base, only: &
@@ -339,7 +339,7 @@ program sim_bsl_vp_1d1v_cart_deltaf
   !$omp barrier
   !$omp single
   fname = 'dist_func'
-  call sll_s_initialize_distribution_function_2d( &
+  call sll_s_distribution_function_2d_init( &
        f, &
        1.0_f64, &
        1.0_f64, &

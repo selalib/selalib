@@ -55,7 +55,7 @@ program test_general_elliptic_solver
     u_sin_der2
 
   use sll_m_arbitrary_degree_spline_interpolator_2d, only: &
-    sll_s_initialize_ad2d_interpolator, &
+    sll_s_ad2d_interpolator_init, &
     sll_t_arbitrary_degree_spline_interpolator_2d
 
   use sll_m_boundary_condition_descriptors, only: &
@@ -1519,7 +1519,7 @@ subroutine initialize_fields( bc_eta1_min, bc_eta1_max, bc_eta2_min, bc_eta2_max
 
   c_field => c_field_a
 
-  call sll_s_initialize_ad2d_interpolator(                 &
+  call sll_s_ad2d_interpolator_init(                 &
     interp_2d,                                       &
     NUM_CELLS1+1,                                    &
     NUM_CELLS2+1,                                    &
@@ -1534,7 +1534,7 @@ subroutine initialize_fields( bc_eta1_min, bc_eta1_max, bc_eta2_min, bc_eta2_max
     SPLINE_DEG1,                                     &
     SPLINE_DEG2 )
 
-  call sll_s_initialize_ad2d_interpolator(           &
+  call sll_s_ad2d_interpolator_init(           &
     interp_2d_rhs,                                   &
     NUM_CELLS1+1,                                    &
     NUM_CELLS2+1,                                    &

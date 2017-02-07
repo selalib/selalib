@@ -66,7 +66,7 @@ module sll_m_coordinate_transformation_multipatch
   public :: &
     sll_t_multipatch_data_2d_real, &
     sll_f_new_coordinate_transformation_multipatch_2d, &
-    sll_s_init_coordinate_transformation_multipatch_2d, &
+    sll_s_coordinate_transformation_multipatch_2d_init, &
     sll_t_coordinate_transformation_multipatch_2d
 
   private
@@ -112,7 +112,7 @@ module sll_m_coordinate_transformation_multipatch
      procedure :: jacobian_matrix => jacobian_matrix_ctmp2d
      procedure :: inverse_jacobian_matrix => inverse_jm_ctmp2d
      procedure :: write_to_file => write_to_file_ctmp2d
-     procedure :: init => sll_s_init_coordinate_transformation_multipatch_2d
+     procedure :: init => sll_s_coordinate_transformation_multipatch_2d_init
      procedure :: free => delete_ctmp2d
   end type sll_t_coordinate_transformation_multipatch_2d
 
@@ -145,14 +145,14 @@ contains
 
   end function sll_f_new_coordinate_transformation_multipatch_2d
 
-  subroutine sll_s_init_coordinate_transformation_multipatch_2d( res, filename ) 
+  subroutine sll_s_coordinate_transformation_multipatch_2d_init( res, filename ) 
     class(sll_t_coordinate_transformation_multipatch_2d) :: res
     character(len=*), intent(in) :: filename
     sll_int32 :: ierr
 
     call res%read_from_file(trim(filename))
 
-  end subroutine sll_s_init_coordinate_transformation_multipatch_2d
+  end subroutine sll_s_coordinate_transformation_multipatch_2d_init
 
   subroutine read_from_file_ctmp2d( mp, name_root )
     class(sll_t_coordinate_transformation_multipatch_2d), intent(inout) :: mp

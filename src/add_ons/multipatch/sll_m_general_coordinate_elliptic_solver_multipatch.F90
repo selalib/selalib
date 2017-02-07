@@ -47,7 +47,7 @@ module sll_m_general_coordinate_elliptic_solver_multipatch
   public :: &
     sll_s_factorize_mat_es_mp, &
     sll_t_general_coordinate_elliptic_solver_mp, &
-    sll_s_initialize_general_elliptic_solver_mp, &
+    sll_s_general_elliptic_solver_mp_init, &
     sll_f_new_general_elliptic_solver_mp, &
     sll_s_solve_general_coordinates_elliptic_eq_mp
 
@@ -89,7 +89,7 @@ type :: sll_t_general_coordinate_elliptic_solver_mp
 
 contains
 
-   procedure :: init  => sll_s_initialize_general_elliptic_solver_mp
+   procedure :: init  => sll_s_general_elliptic_solver_mp_init
    procedure :: free  => sll_s_solve_general_coordinates_elliptic_eq_mp
    procedure :: solve => sll_s_solve_general_coordinates_elliptic_eq_mp
 
@@ -116,7 +116,7 @@ contains ! *******************************************************************
 !> @param[in] T the transformation multipatch
 !> @return the type sll_t_general_coordinate_elliptic_solver_mp
 
-subroutine sll_s_initialize_general_elliptic_solver_mp( &
+subroutine sll_s_general_elliptic_solver_mp_init( &
      es_mp,                                       &
      quadrature_type1,                            &
      quadrature_type2,                            &
@@ -277,7 +277,7 @@ es_mp%values_jacobian = 0.0_f64
 SLL_ALLOCATE(es_mp%tab_index_coeff1(num_patches,max_num_cells_eta1*(max_degspline1+2)),ierr)
 SLL_ALLOCATE(es_mp%tab_index_coeff2(num_patches,max_num_cells_eta2*(max_degspline2+2)),ierr)
    
-end subroutine sll_s_initialize_general_elliptic_solver_mp
+end subroutine sll_s_general_elliptic_solver_mp_init
  
 !> @brief Initialization for elleptic solver.
 !> @details To have the function phi such that 

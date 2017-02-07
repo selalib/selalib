@@ -47,7 +47,7 @@ use sll_m_dg_fields, only: &
 
 use sll_m_maxwell_2d_diga, only: &
   sll_t_maxwell_2d_diga, &
-  sll_s_init_maxwell_2d_diga, &
+  sll_s_maxwell_2d_diga_init, &
   sll_s_solve_maxwell_2d_diga, &
   sll_p_uncentered, &
   sll_f_new_maxwell_2d_diga

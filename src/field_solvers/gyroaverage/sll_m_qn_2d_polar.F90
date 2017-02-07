@@ -45,7 +45,7 @@ module sll_m_qn_2d_polar
     sll_s_compute_splines_coefs_matrix_nat_1d, &
     sll_s_compute_splines_coefs_matrix_per_1d, &
     sll_s_contribution_spl, &
-    sll_s_initialize_mu_quadr_for_phi, &
+    sll_s_mu_quadr_for_phi_init, &
     sll_s_localize_polar, &
     sll_s_matrix_product_compf, &
     sll_s_qn_2d_polar_init, &
@@ -1869,7 +1869,7 @@ subroutine splcoefnat1dold(p,dnat,lnat,N)
 
   
   
-  subroutine sll_s_initialize_mu_quadr_for_phi( &
+  subroutine sll_s_mu_quadr_for_phi_init( &
     quasineutral, &
     mu_quadr_for_phi_case, &
     N_mu_for_phi, &
@@ -1897,7 +1897,7 @@ subroutine splcoefnat1dold(p,dnat,lnat,N)
       if( .not.( (present(mu_points_user_defined)) &
         .and.(present(mu_weights_user_defined)) )) then
         print *,'#provide mu_points_user_defined, mu_weights_user_defined'
-        print *,'#in sll_s_initialize_mu_quadr_for_phi'
+        print *,'#in sll_s_mu_quadr_for_phi_init'
         stop
       endif  
 !    else
@@ -1906,7 +1906,7 @@ subroutine splcoefnat1dold(p,dnat,lnat,N)
 !        .or.(present(mu_weights_user_defined)) &
 !        )then
 !        print *,'# do not provide mu_points_user_defined, mu_weights_user_defined'
-!        print *,'#in sll_s_initialize_mu_quadr_for_phi'
+!        print *,'#in sll_s_mu_quadr_for_phi_init'
 !        stop       
 !      endif
     endif  
@@ -1916,12 +1916,12 @@ subroutine splcoefnat1dold(p,dnat,lnat,N)
         if(size(mu_points_user_defined) /= N_mu_user_defined) then
           print *,'#incompatible sizes for mu_points_user_defined :',size(mu_points_user_defined)
           print *,'#and N_mu_user_defined :',N_mu_user_defined
-          print *,'#in sll_s_initialize_mu_quadr_for_phi'
+          print *,'#in sll_s_mu_quadr_for_phi_init'
           stop
         elseif(size(mu_weights_user_defined) /= N_mu_user_defined) then
           print *,'#incompatible sizes for mu_weights_user_defined :',size(mu_weights_user_defined)
           print *,'#and N_mu_user_defined :',N_mu_user_defined
-          print *,'#in sll_s_initialize_mu_quadr_for_phi'
+          print *,'#in sll_s_mu_quadr_for_phi_init'
           stop
         else
           quasineutral%mu_points_for_phi(1:N_mu_user_defined)=mu_points_user_defined
@@ -1949,7 +1949,7 @@ subroutine splcoefnat1dold(p,dnat,lnat,N)
             quasineutral%mu_weights_for_phi(3) = 0.1413_f64 
           case default  
             print *,'# bad N_mu_user_defined in SLL_LIN_LEE (must be 1, 2 or 3) : ', N_mu_for_phi
-            print *,'#in sll_s_initialize_mu_quadr_for_phi'
+            print *,'#in sll_s_mu_quadr_for_phi_init'
             stop  
         end select
       case ("SLL_RECTANGLES") 
@@ -1977,10 +1977,10 @@ subroutine splcoefnat1dold(p,dnat,lnat,N)
         quasineutral%mu_weights_for_phi(N_mu_for_phi) = h
       case default
         print *,'#mu_quadr_for_phi_case not defined'
-        print *,'#in sll_s_initialize_mu_quadr_for_phi'
+        print *,'#in sll_s_mu_quadr_for_phi_init'
         stop    
     end select
-  end subroutine sll_s_initialize_mu_quadr_for_phi
+  end subroutine sll_s_mu_quadr_for_phi_init
   
   
 
