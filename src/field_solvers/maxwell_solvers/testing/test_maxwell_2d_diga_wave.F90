@@ -61,7 +61,7 @@ program test_maxwell_2d_diga_wave
 
   use sll_m_coordinate_transformations_2d, only: &
     sll_t_coordinate_transformation_2d_analytic, &
-    sll_s_init_coordinate_transformation_2d_analytic, &
+    sll_s_coordinate_transformation_2d_analytic_init, &
     sll_f_new_coordinate_transformation_2d_analytic
 
   use sll_m_dg_fields, only: &
@@ -69,7 +69,7 @@ program test_maxwell_2d_diga_wave
     sll_f_new_dg_field_2d
 
   use sll_m_maxwell_2d_diga, only: &
-    sll_s_init_maxwell_2d_diga, &
+    sll_s_maxwell_2d_diga_init, &
     sll_t_maxwell_2d_diga, &
     sll_s_solve_maxwell_2d_diga, &
     sll_p_uncentered
@@ -129,7 +129,7 @@ program test_maxwell_2d_diga_wave
             case(1)
    
                 print*, "Identity transformation";
-                call sll_s_init_coordinate_transformation_2d_analytic( &
+                call sll_s_coordinate_transformation_2d_analytic_init( &
                     tau_a,                                             &
                     "identity_transformation",                         &
                     mesh,                                              &
@@ -148,7 +148,7 @@ program test_maxwell_2d_diga_wave
                 ! x1 = (b-a)*(cos(e)*eta1-sin(e)*eta2) + a
                 ! x2 = (d-c)*(sin(e)*eta1+cos(e)*eta2) + c
    
-                call sll_s_init_coordinate_transformation_2d_analytic( &
+                call sll_s_coordinate_transformation_2d_analytic_init( &
                     tau_a,                                             &
                     "affine_transformation",                           &
                     mesh,                                              &
@@ -179,7 +179,7 @@ program test_maxwell_2d_diga_wave
                 !  h = proportional scale factors x1 and x2 in function of x2.
          
    
-                call sll_s_init_coordinate_transformation_2d_analytic( &
+                call sll_s_coordinate_transformation_2d_analytic_init( &
                     tau_a,                                             &
                     "homography_transformation",                       &
                     mesh,                                              &
@@ -203,7 +203,7 @@ program test_maxwell_2d_diga_wave
                 ! x1 = eta1 + 0.1 * sin(2*pi*eta1) * sin(2*pi*eta2)
                 ! x2 = eta2 + 0.1 * sin(2*pi*eta1) * sin(2*pi*eta2)
       
-                call sll_s_init_coordinate_transformation_2d_analytic( &
+                call sll_s_coordinate_transformation_2d_analytic_init( &
                     tau_a,                                             &
                     "collela_transformation",                          &
                     mesh,                                              &
@@ -222,7 +222,7 @@ program test_maxwell_2d_diga_wave
                 ! x1 = a*eta1*eta2+b*eta1+c*eta2+d
                 ! x2 = e*eta1*eta2+f*eta1+g*eta2+h
 
-                call sll_s_init_coordinate_transformation_2d_analytic( &
+                call sll_s_coordinate_transformation_2d_analytic_init( &
                     tau_a,                                             &
                     "rubber_sheeting_transformation",                  &
                     mesh,                                              &
@@ -262,7 +262,7 @@ program test_maxwell_2d_diga_wave
         dt = cfl/sqrt(1./(delta_eta1/(degree+1))**2+1./(delta_eta2/(degree+1))**2)
         nstep = ceiling(15.0/dt)
    
-        call sll_s_init_maxwell_2d_diga(maxwell_TE,        &
+        call sll_s_maxwell_2d_diga_init(maxwell_TE,        &
             tau,               &
             degree,            &
             TE_POLARIZATION,   &

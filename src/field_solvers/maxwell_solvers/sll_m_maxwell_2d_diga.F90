@@ -26,7 +26,7 @@ use sll_m_coordinate_transformation_2d_base, only: &
 
 use sll_m_dg_fields, only: &
   sll_t_dg_field_2d, &
-  sll_s_init_dg_field_2d
+  sll_s_dg_field_2d_init
 
 use sll_m_gauss_lobatto_integration, only: &
   sll_f_gauss_lobatto_derivative_matrix, &
@@ -39,7 +39,7 @@ public :: &
   sll_t_maxwell_2d_diga, &
   sll_f_new_maxwell_2d_diga, &
   sll_s_solve_maxwell_2d_diga, &
-  sll_s_init_maxwell_2d_diga, &
+  sll_s_maxwell_2d_diga_init, &
   sll_p_uncentered
 
 private
@@ -101,7 +101,7 @@ type :: sll_t_maxwell_2d_diga
 
 contains
 
-   procedure :: init => sll_s_init_maxwell_2d_diga
+   procedure :: init => sll_s_maxwell_2d_diga_init
    procedure :: solve => sll_s_solve_maxwell_2d_diga
 
 end type sll_t_maxwell_2d_diga
@@ -136,7 +136,7 @@ function sll_f_new_maxwell_2d_diga( tau,          &
 
    SLL_ALLOCATE(self,error)
 
-   call sll_s_init_maxwell_2d_diga( self,         &
+   call sll_s_maxwell_2d_diga_init( self,         &
                                     tau,          &
                                     degree,       &
                                     polarization, &
@@ -149,7 +149,7 @@ function sll_f_new_maxwell_2d_diga( tau,          &
 end function sll_f_new_maxwell_2d_diga
 
 !> Initialize Maxwell solver object using DG method.
-subroutine sll_s_init_maxwell_2d_diga( self,         &
+subroutine sll_s_maxwell_2d_diga_init( self,         &
                                        tau,          &
                                        degree,       &
                                        polarization, &
@@ -307,9 +307,9 @@ subroutine sll_s_init_maxwell_2d_diga( self,         &
    SLL_CLEAR_ALLOCATE(self%r((degree+1)*(degree+1),4),error)
    SLL_CLEAR_ALLOCATE(self%f((degree+1)*(degree+1),4),error)
 
-   call sll_s_init_dg_field_2d(self%po, degree, tau) 
+   call sll_s_dg_field_2d_init(self%po, degree, tau) 
 
-end subroutine sll_s_init_maxwell_2d_diga
+end subroutine sll_s_maxwell_2d_diga_init
 
 
 !> Solve the maxwell equation

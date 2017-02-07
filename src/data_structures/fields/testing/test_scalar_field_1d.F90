@@ -4,7 +4,7 @@ program test_scalar_field_1d
 #include "sll_working_precision.h"
 
   use sll_m_arbitrary_degree_spline_interpolator_1d, only: &
-    sll_s_init_ad1d_interpolator, &
+    sll_s_ad1d_interpolator_init, &
     sll_t_arbitrary_degree_spline_interpolator_1d
 
   use sll_m_boundary_condition_descriptors, only: &
@@ -142,7 +142,7 @@ do i=1,nc1 + 1
   tab_values(i) = test_function_per(point1(i))
 end do
   
-call sll_s_init_ad1d_interpolator( interp_1d,    &
+call sll_s_ad1d_interpolator_init( interp_1d,    &
                                    NUM_CELLS1+1, &
                                    ETA1MIN,      &
                                    ETA1MAX,      &
@@ -201,7 +201,7 @@ do i=1,nc1 + 1
   tab_values(i)   = test_function_dir(point1(i) )
 end do
 
-call sll_s_init_ad1d_interpolator( &
+call sll_s_ad1d_interpolator_init( &
        interp_1d, &
        NUM_CELLS1+1, &
        ETA1MIN, &

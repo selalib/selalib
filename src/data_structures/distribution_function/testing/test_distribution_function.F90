@@ -28,7 +28,7 @@ program unit_test
     sll_t_cubic_spline_interpolator_1d
 
   use sll_m_distribution_function, only: &
-    sll_s_initialize_distribution_function_2d, &
+    sll_s_distribution_function_2d_init, &
     sll_t_distribution_function_2d
 
   use sll_m_interpolators_1d_base, only: &
@@ -100,7 +100,7 @@ program unit_test
 
   print*, 'landau initialized'
 
-  call sll_s_initialize_distribution_function_2d( &
+  call sll_s_distribution_function_2d_init( &
        df, &
        1.0_f64, &
        1.0_f64, &

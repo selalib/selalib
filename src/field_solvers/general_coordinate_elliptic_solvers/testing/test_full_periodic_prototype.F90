@@ -40,7 +40,7 @@ program test_gces_full_periodic_prototype
     sll_p_es_gauss_legendre, &
     sll_s_factorize_mat_es_prototype, &
     sll_t_general_coordinate_elliptic_solver, &
-    sll_s_initialize_general_elliptic_solver_prototype, &
+    sll_s_general_elliptic_solver_prototype_init, &
     sll_s_solve_general_coordinates_elliptic_eq_prototype
 
   use sll_m_interpolators_2d_base, only: &
@@ -363,7 +363,7 @@ endif
 integral_solution       = 0.0_f64
 integral_exact_solution = 0.0_f64
 
-call sll_s_initialize_general_elliptic_solver_prototype( es, &
+call sll_s_general_elliptic_solver_prototype_init( es, &
 &                spline_degree1,                       &
 &                spline_degree2,                       &
 &                npts1-1,                              &

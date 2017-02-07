@@ -17,7 +17,7 @@ module sll_m_periodic_interpolator_1d
 
   use sll_m_periodic_interp, only: &
     sll_o_delete, &
-    sll_s_initialize_periodic_interp, &
+    sll_s_periodic_interp_init, &
     sll_s_periodic_interp, &
     sll_t_periodic_interp_work
 
@@ -299,7 +299,7 @@ contains  ! ****************************************************************
     interpolator%cell_size  = (xmax-xmin) / (num_points-1)
     interpolator%domain_size = xmax-xmin
 
-    call sll_s_initialize_periodic_interp(interpolator%per_interp, num_points-1, &
+    call sll_s_periodic_interp_init(interpolator%per_interp, num_points-1, &
          type, order)
   end subroutine
 

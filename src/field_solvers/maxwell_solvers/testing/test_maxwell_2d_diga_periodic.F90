@@ -61,7 +61,7 @@ program test_maxwell_2d_diga_periodic
     sll_t_dg_field_2d
 
   use sll_m_maxwell_2d_diga, only: &
-    sll_s_init_maxwell_2d_diga, &
+    sll_s_maxwell_2d_diga_init, &
     sll_t_maxwell_2d_diga, &
     sll_s_solve_maxwell_2d_diga, &
     sll_p_uncentered
@@ -159,7 +159,7 @@ call exact%init( degree, tau)
 dt = cfl/sqrt(1./(delta_eta1/(degree+1))**2+1./(delta_eta2/(degree+1))**2)
 nstep = 100
 
-call sll_s_init_maxwell_2d_diga(maxwell_TE, tau, degree, TE_POLARIZATION, &
+call sll_s_maxwell_2d_diga_init(maxwell_TE, tau, degree, TE_POLARIZATION, &
                 sll_p_periodic, sll_p_periodic, sll_p_periodic, sll_p_periodic, &
                 sll_p_uncentered )
 

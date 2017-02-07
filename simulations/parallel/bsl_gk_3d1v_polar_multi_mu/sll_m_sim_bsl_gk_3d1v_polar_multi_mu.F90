@@ -153,7 +153,7 @@ module sll_m_sim_bsl_gk_3d1v_polar_multi_mu
     sll_s_qn_solver_2d_polar_solve
 
   use sll_m_qn_2d_polar, only: &
-    sll_s_initialize_mu_quadr_for_phi
+    sll_s_mu_quadr_for_phi_init
 
   use sll_m_qn_2d_polar_splines_solver, only: &
     sll_f_new_qn_2d_polar_splines_solver, &
@@ -916,7 +916,7 @@ contains
           sim%Ti_r)
           
           
-    call sll_s_initialize_mu_quadr_for_phi( &
+    call sll_s_mu_quadr_for_phi_init( &
       sim%qn%quasineutral, &
       mu_quadr_for_phi_case, &
       N_mu_for_phi, &    
