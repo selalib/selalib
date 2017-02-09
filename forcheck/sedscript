@@ -1,2 +1,5 @@
+# remove all comment lines that have ';' character:
 /^[ \t]*!.*;/d 
+# for lines that are longer than 132 characters, the ';' should be replaced with newline
+/^.\{132\}/s/;/\n/g
 
