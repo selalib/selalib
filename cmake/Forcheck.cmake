@@ -12,8 +12,8 @@
 #
 # This will run a Forcheck analysis over all the source files, and the results
 # of the analysis will be saved forcheck/selalib.lst. Additionally 
-# forcheck/selalib.rep file will be also created (but it is sufficent to 
-# investigate the lst file, the rep file is just a shorter report without source
+# forcheck/selalib.rep file will be also created (it does not contain anything new 
+# compared to the lst file, the rep file is just a shorter report without source
 # listing and without message summary).
 # 
 # If you call cmake with -DFORCHECK_SEPARATE_TARGETS=1, then for each target,
@@ -58,7 +58,12 @@ IF(FORCHECK_FOUND)
    if(NOT EXISTS "$ENV{FCKDIR}/share/forcheck/MPI_3.flb")
      message(WARNING "Forcheck: Can't find MPI_3.flb.\n Most probably the Forcheck module is not loaded.\n Try to load it and rerun cmake.")
    endif()
-
+   
+   # Trying to set Fortran compiler emulation, somehow it does not work
+   set(ENV{FCKCNF} "$ENV{FCKDIR}/share/forcheck/intel15.cnf") # Fortran 2003 with Intel extensions
+   # Alternatively:
+   # set (ENV{FCKCNF} "$ENV{FCKDIR}/share/forcheck/f03.cnf") # Fortran 2003 without extensions
+   # set (ENV{FCKCNF} "$ENV{FCKDIR}/share/forcheck/f08.cnf") # Fortran 2008
    MARK_AS_ADVANCED(
   FORCHECK_OUTPUT_DIR
   FORCHECK_INPUT_DIR
