@@ -12,7 +12,9 @@
 #
 # This will run a Forcheck analysis over all the source files, and the results
 # of the analysis will be saved forcheck/selalib.lst. Additionally 
-# forcheck/selalib.rep file will be also created.
+# forcheck/selalib.rep file will be also created (but it is sufficent to 
+# investigate the lst file, the rep file is just a shorter report without source
+# listing and without message summary).
 # 
 # If you call cmake with -DFORCHECK_SEPARATE_TARGETS=1, then for each target,
 # an additional forcheck target will be also created with the name
@@ -21,7 +23,7 @@
 # make forcheck_sll_working_precision
 #
 # The results will be saved in forcheck/sll_working_precision.lst
-# Additionally forcheck/sll_working_precision.flb will be also genearted which
+# Additionally forcheck/sll_working_precision.flb will be also generated which
 # stores interface information about the library. It is used to facilitate testing
 # other libraries which depend on sll_working_precision. 
 # 
