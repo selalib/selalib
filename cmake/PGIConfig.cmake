@@ -28,5 +28,6 @@ IF(CMAKE_Fortran_COMPILER_ID MATCHES PGI)
   CUT_LONG_LINES(src/particle_methods/pic_opt2d/pic_opt2d_particle_initializers/sll_m_particle_initializers_4d)
   CUT_LONG_LINES(src/particle_methods/pic_opt2d/pic_opt2d_utilities/sll_m_pic_utilities)
   CUT_LONG_LINES(src/particle_methods/pic_basic/particle_groups/sll_m_particle_group_2d2v_lbf)
+  CUT_LONG_LINES(src/interfaces/fft/sll_m_fft_sllfft)
 
 ENDIF(CMAKE_Fortran_COMPILER_ID MATCHES PGI)
