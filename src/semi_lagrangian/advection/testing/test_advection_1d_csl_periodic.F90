@@ -33,7 +33,7 @@ program test_advection_1d_CSL_periodic
     sll_c_characteristics_1d_base
 
   use sll_m_characteristics_1d_explicit_euler, only: &
-    sll_f_new_explicit_euler_1d_charac
+    sll_f_new_charac_1d_explicit_euler
 
   use sll_m_cubic_spline_interpolator_1d, only: &
     sll_f_new_cubic_spline_interpolator_1d
@@ -90,7 +90,7 @@ program test_advection_1d_CSL_periodic
     sll_p_periodic)
 
 
-  charac => sll_f_new_explicit_euler_1d_charac(&
+  charac => sll_f_new_charac_1d_explicit_euler(&
       num_cells+1, &
       sll_p_periodic)
   

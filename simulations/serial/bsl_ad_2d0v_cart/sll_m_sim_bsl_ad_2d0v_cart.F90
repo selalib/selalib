@@ -51,7 +51,7 @@ module sll_m_sim_bsl_ad_2d0v_cart
     sll_c_characteristics_1d_base
 
   use sll_m_characteristics_1d_explicit_euler, only: &
-    sll_f_new_explicit_euler_1d_charac
+    sll_f_new_charac_1d_explicit_euler
 
   use sll_m_characteristics_1d_explicit_euler_conservative, only: &
     sll_f_new_explicit_euler_conservative_1d_charac
@@ -564,7 +564,7 @@ contains
 
     select case(charac1d_x1_case)
       case ("SLL_EULER")
-        charac1d_x1 => sll_f_new_explicit_euler_1d_charac(&
+        charac1d_x1 => sll_f_new_charac_1d_explicit_euler(&
           Nc_x1_bis+1, &
           eta_min=x1_min_bis, &
           eta_max=x1_max_bis, &
@@ -600,7 +600,7 @@ contains
 
     select case(charac1d_x2_case)
       case ("SLL_EULER")
-        charac1d_x2 => sll_f_new_explicit_euler_1d_charac(&
+        charac1d_x2 => sll_f_new_charac_1d_explicit_euler(&
           Nc_x2_bis+1, &
           eta_min=x2_min_bis, &
           eta_max=x2_max_bis, &

@@ -17,7 +17,7 @@ program test_maxwell_2d_diga_wave
     sll_p_silver_muller
 
   use sll_m_cartesian_meshes, only: &
-    sll_s_init_cartesian_mesh_2d, &
+    sll_s_cartesian_mesh_2d_init, &
     sll_t_cartesian_mesh_2d
 
   use sll_m_common_coordinate_transformations, only: &
@@ -107,7 +107,7 @@ program test_maxwell_2d_diga_wave
     sll_int32   :: itest
     !character(len=4) :: cstep
 
-    call sll_s_init_cartesian_mesh_2d(mesh, nc_eta1, nc_eta2, &
+    call sll_s_cartesian_mesh_2d_init(mesh, nc_eta1, nc_eta2, &
         eta1_min=-5._f64, eta1_max=5._f64, &
         eta2_min=-5._f64, eta2_max=5._f64)
 
