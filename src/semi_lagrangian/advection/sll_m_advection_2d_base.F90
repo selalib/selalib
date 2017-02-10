@@ -19,43 +19,44 @@ module sll_m_advection_2d_base
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_working_precision.h"
 
-  implicit none
+implicit none
 
-  public :: &
-    sll_c_advection_2d_base
+public :: sll_c_advector_2d
 
-  private
+private
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-   !solves \partial_t f +A1\partial_x1 f+A2\partial_x2 f = 0
-   ! A1 <=> A1
-   ! A2 <=> A2
-   ! dt <=> dt  
-   ! f(dt) <=> input
-   ! f(0) <=> output
-  type, abstract :: sll_c_advection_2d_base 
-  contains
-    procedure(signature_advect_2d), deferred, pass(adv) :: &
-      advect_2d
-  
-  end type sll_c_advection_2d_base
 
- abstract interface
-    subroutine signature_advect_2d(&
-      adv, &
-      A1, &
-      A2, &
-      dt, &
-      input, &
-      output)
-      use sll_m_working_precision
-      import sll_c_advection_2d_base       
-      class(sll_c_advection_2d_base) :: adv
-      sll_real64, dimension(:,:), intent(in) :: A1
-      sll_real64, dimension(:,:), intent(in) :: A2
-      sll_real64, intent(in) :: dt 
-      sll_real64, dimension(:,:), intent(in) :: input
-      sll_real64, dimension(:,:), intent(out) :: output
-    end subroutine signature_advect_2d
-  end interface
+!solves \partial_t f +A1\partial_x1 f+A2\partial_x2 f = 0
+! A1 <=> A1
+! A2 <=> A2
+! dt <=> dt  
+! f(dt) <=> input
+! f(0) <=> output
+
+type, abstract :: sll_c_advector_2d 
+
+contains
+
+  procedure(advect_2d_executor),    deferred, pass(adv) :: advect_2d
+  
+end type sll_c_advector_2d
+
+abstract interface
+
+  subroutine advect_2d_executor( adv, A1, A2, dt, input, output)
+
+    use sll_m_working_precision
+    import sll_c_advector_2d       
+
+    class(sll_c_advector_2d)          :: adv
+    sll_real64, dimension(:,:), intent(in)  :: A1
+    sll_real64, dimension(:,:), intent(in)  :: A2
+    sll_real64,                 intent(in)  :: dt 
+    sll_real64, dimension(:,:), intent(in)  :: input
+    sll_real64, dimension(:,:), intent(out) :: output
+
+  end subroutine advect_2d_executor
+
+end interface
 
 end module sll_m_advection_2d_base

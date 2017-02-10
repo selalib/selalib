@@ -25,10 +25,10 @@ program rotation_2d
 #include "sll_working_precision.h"
 
   use sll_m_advection_2d_base, only: &
-    sll_c_advection_2d_base
+    sll_c_advector_2d
 
   use sll_m_advection_2d_bsl, only: &
-    sll_f_new_bsl_2d_advector
+    sll_f_new_advector_2d_bsl
 
   use sll_m_boundary_condition_descriptors, only: &
     sll_p_hermite, &
@@ -79,7 +79,7 @@ program rotation_2d
   sll_real64 :: delta_x2
   sll_real64 :: dt
   
-  class(sll_c_advection_2d_base), pointer :: adv
+  class(sll_c_advector_2d), pointer :: adv
   class(sll_c_interpolator_2d), pointer :: interp
   type(sll_t_cubic_spline_interpolator_2d), target   :: interp_cs2d
   class(sll_c_characteristics_2d_base), pointer :: charac
@@ -192,7 +192,7 @@ program rotation_2d
 
 
 
-  adv => sll_f_new_bsl_2d_advector(&
+  adv => sll_f_new_advector_2d_bsl(&
     interp, &
     charac, &
     Nc_x1+1, &

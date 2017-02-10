@@ -29,10 +29,10 @@ module sll_m_sim_bsl_ad_2d0v_cart
     sll_f_new_psm_1d_advector
 
   use sll_m_advection_2d_base, only: &
-    sll_c_advection_2d_base
+    sll_c_advector_2d
 
   use sll_m_advection_2d_bsl, only: &
-    sll_f_new_bsl_2d_advector
+    sll_f_new_advector_2d_bsl
 
   use sll_m_advection_2d_tensor_product, only: &
     sll_f_new_tensor_product_2d_advector
@@ -143,7 +143,7 @@ module sll_m_sim_bsl_ad_2d0v_cart
     sll_real64, dimension(:), pointer :: params
       
     !>@name Advector
-    class(sll_c_advection_2d_base), pointer    :: advect_2d
+    class(sll_c_advector_2d), pointer    :: advect_2d
     procedure(sll_i_scalar_initializer_2d), nopass, pointer :: A1_func
     procedure(sll_i_scalar_initializer_2d), nopass, pointer :: A2_func
     sll_real64, dimension(:), pointer :: A_func_params
@@ -728,7 +728,7 @@ contains
 
     select case(advect2d_case)
       case ("SLL_BSL")
-        sim%advect_2d => sll_f_new_bsl_2d_advector(&
+        sim%advect_2d => sll_f_new_advector_2d_bsl(&
           f_interp2d, &
           charac2d, &
           Nc_x1+1, &
