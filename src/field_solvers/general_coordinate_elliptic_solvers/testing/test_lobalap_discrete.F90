@@ -9,7 +9,7 @@ program test_lobalap_discrete
 
   use sll_m_cartesian_meshes, only: &
     sll_t_cartesian_mesh_2d, &
-    sll_s_init_cartesian_mesh_2d, &
+    sll_s_cartesian_mesh_2d_init, &
     sll_o_delete
 
   use sll_m_common_coordinate_transformations, only: &
@@ -88,7 +88,7 @@ program test_lobalap_discrete
   allocate(x2_eta1_max(NPTS2))
   allocate(jacs(NPTS1,NPTS2))
   
-  call sll_s_init_cartesian_mesh_2d( mesh,  NPTS1-1, NPTS2-1 )
+  call sll_s_cartesian_mesh_2d_init( mesh,  NPTS1-1, NPTS2-1 )
 
   do j=0,NPTS2-1
      do i=0,NPTS1-1
