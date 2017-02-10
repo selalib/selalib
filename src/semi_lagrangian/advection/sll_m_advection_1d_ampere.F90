@@ -23,7 +23,7 @@ module sll_m_advection_1d_ampere
 #include "sll_memory.h"
 #include "sll_working_precision.h"
 
-use sll_m_advection_1d_base, only: sll_c_advection_1d_base
+use sll_m_advection_1d_base, only: sll_c_advector_1d
 
 use sll_m_constants, only: sll_p_pi
 
@@ -44,7 +44,7 @@ public :: &
 private
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
-type,extends(sll_c_advection_1d_base) :: ampere_1d_advector
+type,extends(sll_c_advector_1d) :: ampere_1d_advector
   
   sll_int32                         :: nc_eta1
   sll_real64                        :: eta1_min

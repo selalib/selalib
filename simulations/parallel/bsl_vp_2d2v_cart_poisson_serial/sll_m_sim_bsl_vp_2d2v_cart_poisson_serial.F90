@@ -30,7 +30,7 @@ module sll_m_sim_bsl_vp_2d2v_cart_poisson_serial
 #include "sll_working_precision.h"
 
   use sll_m_advection_1d_base, only: &
-    sll_c_advection_1d_base
+    sll_c_advector_1d
 
   use sll_m_advection_1d_periodic, only: &
     sll_f_new_periodic_1d_advector
@@ -166,10 +166,10 @@ module sll_m_sim_bsl_vp_2d2v_cart_poisson_serial
    character(len=256)      :: thdiag_filename
    
    !advector
-   class(sll_c_advection_1d_base), pointer    :: advect_x1
-   class(sll_c_advection_1d_base), pointer    :: advect_x2
-   class(sll_c_advection_1d_base), pointer    :: advect_x3
-   class(sll_c_advection_1d_base), pointer    :: advect_x4
+   class(sll_c_advector_1d), pointer    :: advect_x1
+   class(sll_c_advector_1d), pointer    :: advect_x2
+   class(sll_c_advector_1d), pointer    :: advect_x3
+   class(sll_c_advector_1d), pointer    :: advect_x4
    
    !poisson solver
    class(sll_c_poisson_2d_base), pointer   :: poisson

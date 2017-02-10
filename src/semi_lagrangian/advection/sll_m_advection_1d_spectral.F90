@@ -23,7 +23,7 @@ module sll_m_advection_1d_spectral
 #include "sll_memory.h"
 #include "sll_working_precision.h"
 
-use sll_m_advection_1d_base, only: sll_c_advection_1d_base
+use sll_m_advection_1d_base, only: sll_c_advector_1d
 
 use sll_m_constants, only: sll_p_pi
 
@@ -42,7 +42,7 @@ public :: sll_f_new_spectral_1d_advector
 private
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
-type,extends(sll_c_advection_1d_base) :: spectral_1d_advector
+type,extends(sll_c_advector_1d) :: spectral_1d_advector
   
   sll_int32                         :: num_cells
   sll_real64                        :: eta_min
