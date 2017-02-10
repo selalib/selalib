@@ -15,13 +15,13 @@
 !  "http://www.cecill.info". 
 !**************************************************************
 
-program test_advection_2d_BSL
+program test_advection_2d_bsl
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_memory.h"
 #include "sll_working_precision.h"
 
 use sll_m_advection_2d_base, only: sll_c_advector_2d
-use sll_m_advection_2d_bsl,  only: sll_f_new_advector_2d_bsl
+use sll_m_advection_2d_bsl,  only: sll_f_new_advector_2d_bsl, sll_t_advector_2d_bsl
 use sll_m_boundary_condition_descriptors, only: sll_p_periodic
 use sll_m_characteristics_2d_base, only: sll_c_characteristics_2d_base
 use sll_m_characteristics_2d_explicit_euler, only: sll_f_new_explicit_euler_2d_charac
@@ -102,8 +102,17 @@ interp => interp_cs2d
 charac => sll_f_new_explicit_euler_2d_charac( num_nodes_x1, num_nodes_x2, &
   sll_p_periodic, sll_p_periodic)
 
-adv => sll_f_new_advector_2d_bsl( interp, charac, num_nodes_x1, num_nodes_x2, &
-  eta1_coords = x1_mesh, eta2_coords = x2_mesh)
+allocate( sll_t_advector_2d_bsl :: adv)
+
+select type ( a => adv )
+  type is (sll_t_advector_2d_bsl)
+
+    call a%init( interp, charac,             &
+                 num_nodes_x1, num_nodes_x2, &
+                 eta1_coords = x1_mesh,      &
+                 eta2_coords = x2_mesh)
+
+end select
 
 call adv%advect_2d(A1, A2, dt, input, output)
 
@@ -112,4 +121,4 @@ error = maxval(abs(input-output))
 print *,'#error = ',error
 if (error < 1.e-15_f64) print *,'#PASSED' 
 
-end program test_advection_2d_BSL
+end program test_advection_2d_bsl
