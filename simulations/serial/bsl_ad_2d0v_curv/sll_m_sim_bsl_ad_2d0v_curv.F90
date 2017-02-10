@@ -20,10 +20,10 @@ module sll_m_sim_bsl_ad_2d0v_curv
     sll_f_new_csl_periodic_1d_advector
 
   use sll_m_advection_2d_base, only: &
-    sll_c_advection_2d_base
+    sll_c_advector_2d
 
   use sll_m_advection_2d_bsl, only: &
-    sll_f_new_bsl_2d_advector
+    sll_f_new_advector_2d_bsl
 
   use sll_m_advection_2d_tensor_product, only: &
     sll_f_new_tensor_product_2d_advector
@@ -231,7 +231,7 @@ module sll_m_sim_bsl_ad_2d0v_curv
       
     !advector
    sll_int32 :: advection_form
-   class(sll_c_advection_2d_base), pointer    :: advect_2d
+   class(sll_c_advector_2d), pointer    :: advect_2d
    class(sll_c_advection_1d_base), pointer    :: advect1_1d
    class(sll_c_advection_1d_base), pointer    :: advect2_1d
    class(sll_c_characteristics_1d_base), pointer :: charac1
@@ -1291,7 +1291,7 @@ contains
     select case(advect2d_case)
       case ("SLL_BSL")
        print*,"#advect2d = SLL_BSL "  
-        sim%advect_2d => sll_f_new_bsl_2d_advector(&
+        sim%advect_2d => sll_f_new_advector_2d_bsl(&
           f_interp2d, &
           charac2d, &
           Nc_eta1+1, &

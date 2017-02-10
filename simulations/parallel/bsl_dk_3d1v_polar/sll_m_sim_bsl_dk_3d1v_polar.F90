@@ -50,10 +50,10 @@ module sll_m_sim_bsl_dk_3d1v_polar
     sll_f_new_periodic_1d_advector
 
   use sll_m_advection_2d_base, only: &
-    sll_c_advection_2d_base
+    sll_c_advector_2d
 
   use sll_m_advection_2d_bsl, only: &
-    sll_f_new_bsl_2d_advector
+    sll_f_new_advector_2d_bsl
 
   use sll_m_ascii_io, only: &
     sll_s_ascii_file_create
@@ -284,7 +284,7 @@ module sll_m_sim_bsl_dk_3d1v_polar
 
 
 
-    class(sll_c_advection_2d_base), pointer :: adv_x1x2
+    class(sll_c_advector_2d), pointer :: adv_x1x2
     !class(sll_c_interpolator_2d), pointer :: interp_x1x2
     class(sll_c_characteristics_2d_base), pointer :: charac_x1x2
     class(sll_c_advection_1d_base), pointer :: adv_x3
@@ -767,7 +767,7 @@ contains
 
     select case(advect2d_case)
       case ("SLL_BSL")
-      sim%adv_x1x2 => sll_f_new_bsl_2d_advector(&
+      sim%adv_x1x2 => sll_f_new_advector_2d_bsl(&
         f_interp2d, &
         charac2d, &
         sim%m_x1%num_cells+1, &
