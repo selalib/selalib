@@ -21,7 +21,7 @@ program test_advection_2d_CSL
 #include "sll_working_precision.h"
 
   use sll_m_advection_2d_base, only: &
-    sll_c_advection_2d_base
+    sll_c_advector_2d
 
   use sll_m_advection_2d_csl, only: &
     sll_f_new_csl_2d_advector
@@ -38,7 +38,7 @@ program test_advection_2d_CSL
   implicit none
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
   
-  class(sll_c_advection_2d_base), pointer :: adv
+  class(sll_c_advector_2d), pointer :: adv
   class(sll_c_characteristics_2d_base), pointer :: charac
   sll_real64 :: x1_min
   sll_real64 :: x1_max

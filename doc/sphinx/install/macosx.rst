@@ -19,14 +19,14 @@ Install Homebrew (`not compatible with macports <https://guide.macports.org/chun
 	$ brew install git
 	$ brew install cmake
 	$ brew install gcc
-	$ brew install openmpi --enable-mpi-thread-multiple
+	$ brew install openmpi --with-mpi-thread-multiple
 	$ brew install hdf5 --with-fortran --with-mpi
 	$ brew install pastix
 	$ brew install fftw
+	$ brew install python3
+	$ brew install doxygen
 	$ cd selalib/build
-	$ cmake ../ -DPASTIX_ENABLED=ON  \
-		-DZLIB_LIBRARIES="/usr/lib/libz.dylib;/usr/local/lib/libsz.a" \
-		-DHDF5_PARALLEL_ENABLED=ON
+	$ cmake ../ -DHDF5_PARALLEL_ENABLED=ON
 	$ make
 
 ==================================

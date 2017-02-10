@@ -21,7 +21,7 @@ program test_advection_1d_PSM
 #include "sll_working_precision.h"
 
   use sll_m_advection_1d_base, only: &
-    sll_c_advection_1d_base
+    sll_c_advector_1d
 
   use sll_m_advection_1d_psm, only: &
     sll_f_new_psm_1d_advector
@@ -29,7 +29,7 @@ program test_advection_1d_PSM
   implicit none
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
   
-  class(sll_c_advection_1d_base), pointer :: adv
+  class(sll_c_advector_1d), pointer :: adv
   sll_real64 :: x_min
   sll_real64 :: x_max
   sll_real64 :: x_min_bis
