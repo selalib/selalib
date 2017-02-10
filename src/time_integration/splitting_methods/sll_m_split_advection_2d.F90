@@ -113,7 +113,6 @@ module sll_m_split_advection_2d
      
      
    contains
-     procedure, pass(this) :: init => initialize_split_advection_2d  !< init advection
      procedure, pass(this) :: operatorT => adv1  !< advection in first direction
      procedure, pass(this) :: operatorV => adv2  !< advection in second direction
   end type sll_t_split_advection_2d
@@ -211,20 +210,20 @@ contains
     sll_real64, dimension(:,:), pointer, intent(in) :: f   !< initial value of function
     sll_real64, dimension(:,:), pointer, intent(in) :: a1   !< advection coefficient in first direction
     sll_real64, dimension(:,:), pointer, intent(in) :: a2   !< advection coefficient in second direction
-    class(sll_c_interpolator_1d), target  :: interp1 !< interpolator direction 1
-    class(sll_c_interpolator_1d), target  :: interp2 !< interpolator direction 1
-    class(sll_c_characteristics_1d_base), target  :: charac1 !< characteristics direction 1
+    class(sll_c_interpolator_1d), pointer  :: interp1 !< interpolator direction 1
+    class(sll_c_interpolator_1d), pointer  :: interp2 !< interpolator direction 1
+    class(sll_c_characteristics_1d_base), pointer  :: charac1 !< characteristics direction 1
     procedure(sll_i_signature_process_outside_point_1d), pointer :: process_outside_point1 !< for bdr direction 1
-    class(sll_c_characteristics_1d_base), target  :: charac2 !< characteristics direction 2
+    class(sll_c_characteristics_1d_base), pointer  :: charac2 !< characteristics direction 2
     procedure(sll_i_signature_process_outside_point_1d), pointer :: process_outside_point2 !< for bdr direction 2
-    type(sll_t_cartesian_mesh_2d), target :: mesh_2d !< cartesian mesh common to interp and charac
+    type(sll_t_cartesian_mesh_2d), pointer :: mesh_2d !< cartesian mesh common to interp and charac
     sll_int32, intent(in) :: advection_form
     sll_int32, intent(in)  :: split_case  !< defines  splitting method
     sll_real64, dimension(:), intent(in), optional :: split_step  !< coefficients of split step
     sll_int32, intent(in), optional :: nb_split_step !< number of split steps
     logical, intent(in), optional :: split_begin_T   !< begin with operator T if .true.
     sll_real64, intent(in), optional :: dt  !< time step
-    class(sll_c_coordinate_transformation_2d_base), target, optional :: transformation !< coordinate transformation
+    class(sll_c_coordinate_transformation_2d_base), pointer, optional :: transformation !< coordinate transformation
     logical, intent(in), optional :: csl_2012
     sll_int32 :: ierr
     sll_int32 :: n1
@@ -358,7 +357,6 @@ contains
   subroutine adv1(this, dt)
     class(sll_t_split_advection_2d), intent(inout) :: this !< object 
     sll_real64, intent(in) :: dt   !< time step
-
     ! local variables
     sll_int32 :: i
     sll_int32 :: j
@@ -369,7 +367,13 @@ contains
     sll_real64 :: eta1_min
     sll_real64 :: eta1_max
     sll_real64 :: mean
+    !sll_real64 :: eta1
+    !sll_real64 :: eta2
+    !sll_real64 :: xi_max
     sll_real64 :: delta_eta1
+    !sll_real64 :: lperiod
+    !sll_real64 :: xi_new
+    !sll_real64 :: mean_init
     
     n1 = this%mesh_2d%num_cells1+1
     n2 = this%mesh_2d%num_cells2+1
