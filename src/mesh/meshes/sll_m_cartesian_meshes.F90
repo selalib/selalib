@@ -22,6 +22,7 @@ module sll_m_cartesian_meshes
 #include "sll_assert.h"
 #include "sll_memory.h"
 #include "sll_working_precision.h"
+#include "sll_errors.h"
 
   use sll_m_meshes_base, only: &
     sll_c_mesh_1d_base, &
@@ -36,10 +37,10 @@ module sll_m_cartesian_meshes
     sll_f_new_cartesian_mesh_2d, &
     sll_f_new_cartesian_mesh_3d, &
     sll_f_new_cartesian_mesh_4d, &
-    sll_s_init_cartesian_mesh_2d, &
     operator(*), &
     sll_t_cartesian_mesh_1d, &
     sll_t_cartesian_mesh_2d, &
+    sll_s_cartesian_mesh_2d_init, &
     sll_t_cartesian_mesh_2d_ptr, &
     sll_t_cartesian_mesh_3d, &
     sll_t_cartesian_mesh_4d, &
@@ -441,7 +442,7 @@ end if
     sll_int32 :: ierr
 
     SLL_ALLOCATE(m, ierr)
-    call sll_s_init_cartesian_mesh_2d( &
+    call sll_s_cartesian_mesh_2d_init( &
          m, &
          num_cells1, &
          num_cells2, &
@@ -465,7 +466,7 @@ end if
   !> @param eta2_max optional double precision value which represents the 
   !> maximum value of the eta1 parameter in the cartesian mesh, direction 2.
   !> @param m is a pointer to the newly allocated object.
-  subroutine sll_s_init_cartesian_mesh_2d( &
+  subroutine sll_s_cartesian_mesh_2d_init( &
     m, & 
     num_cells1, &
     num_cells2, &
@@ -494,16 +495,12 @@ end if
     m%delta_eta2   = (m%eta2_max - m%eta2_min)/real(num_cells2,f64)
 
     if ( m%eta1_max <= m%eta1_min) then
-       print*,'ERROR, sll_s_init_cartesian_mesh_2d(): ', &
-            'Problem to construct the mesh 2d '
-       print*,'because eta1_max <= eta1_min'
+       SLL_ERROR('sll_s_cartesian_mesh_2d_init():','Problem to construct the mesh 2d because eta1_max <= eta1_min')
     end if
     if ( m%eta2_max <= m%eta2_min) then
-       print*,'ERROR, sll_s_init_cartesian_mesh_2d(): ', &
-            'Problem to construct the mesh 2d '
-       print*,'because eta2_max <= eta2_min'
+       SLL_ERROR('sll_s_cartesian_mesh_2d_init():','Problem to construct the mesh 2d because eta2_max <= eta2_min')
     end if
-  end subroutine sll_s_init_cartesian_mesh_2d
+  end subroutine sll_s_cartesian_mesh_2d_init
 
 
 

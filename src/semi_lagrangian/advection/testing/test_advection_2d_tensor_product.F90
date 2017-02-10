@@ -26,7 +26,7 @@ use sll_m_advection_2d_base, only: sll_c_advector_2d
 use sll_m_advection_2d_tensor_product, only: sll_t_advector_2d_tensor_product
 use sll_m_boundary_condition_descriptors, only: sll_p_periodic
 use sll_m_characteristics_1d_base, only: sll_c_characteristics_1d_base
-use sll_m_characteristics_1d_explicit_euler, only: sll_f_new_explicit_euler_1d_charac
+use sll_m_characteristics_1d_explicit_euler, only: sll_f_new_charac_1d_explicit_euler
 use sll_m_characteristics_2d_base, only: sll_c_characteristics_2d_base
 use sll_m_characteristics_2d_explicit_euler, only: sll_t_charac_2d_explicit_euler
 use sll_m_cubic_spline_interpolator_1d, only: sll_f_new_cubic_spline_interpolator_1d
@@ -104,8 +104,8 @@ interp_x1 => sll_f_new_cubic_spline_interpolator_1d( num_cells_x1+1, &
 interp_x2 => sll_f_new_cubic_spline_interpolator_1d( num_cells_x2+1, &
   x2_min, x2_max, sll_p_periodic)
 
-charac_x1 => sll_f_new_explicit_euler_1d_charac( num_cells_x1+1, sll_p_periodic)
-charac_x2 => sll_f_new_explicit_euler_1d_charac( num_cells_x2+1, sll_p_periodic)
+charac_x1 => sll_f_new_charac_1d_explicit_euler( num_cells_x1+1, sll_p_periodic)
+charac_x2 => sll_f_new_charac_1d_explicit_euler( num_cells_x2+1, sll_p_periodic)
 
 allocate( sll_t_advector_1d_bsl :: adv_x1 )
 select type( a => adv_x1 )

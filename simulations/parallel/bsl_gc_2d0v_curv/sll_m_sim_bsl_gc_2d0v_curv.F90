@@ -48,7 +48,7 @@ module sll_m_sim_bsl_gc_2d0v_curv
     sll_c_characteristics_1d_base
 
   use sll_m_characteristics_1d_explicit_euler, only: &
-    sll_f_new_explicit_euler_1d_charac
+    sll_f_new_charac_1d_explicit_euler
 
   use sll_m_characteristics_1d_trapezoid, only: &
     sll_f_new_trapezoid_1d_charac
@@ -1229,7 +1229,7 @@ contains
 
     select case(charac1d_x1_case)
       case ("SLL_EULER")
-        sim%charac1d_x1 => sll_f_new_explicit_euler_1d_charac(&
+        sim%charac1d_x1 => sll_f_new_charac_1d_explicit_euler(&
           Nc_eta1+1, &
           eta_min=eta1_min, &
           eta_max=eta1_max, &
@@ -1253,7 +1253,7 @@ contains
 
     select case(charac1d_x2_case)
       case ("SLL_EULER")
-        sim%charac1d_x2 => sll_f_new_explicit_euler_1d_charac(&
+        sim%charac1d_x2 => sll_f_new_charac_1d_explicit_euler(&
           Nc_eta2+1, &
           eta_min=eta2_min, &
           eta_max=eta2_max, &
