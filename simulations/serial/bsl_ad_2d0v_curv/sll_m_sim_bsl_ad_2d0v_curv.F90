@@ -11,22 +11,22 @@ module sll_m_sim_bsl_ad_2d0v_curv
 #include "sll_working_precision.h"
 
   use sll_m_advection_1d_base, only: &
-    sll_c_advection_1d_base
+    sll_c_advector_1d
 
   use sll_m_advection_1d_bsl, only: &
-    sll_f_new_bsl_1d_advector
+    sll_f_new_advector_1d_bsl
 
   use sll_m_advection_1d_csl_periodic, only: &
     sll_f_new_csl_periodic_1d_advector
 
   use sll_m_advection_2d_base, only: &
-    sll_c_advection_2d_base
+    sll_c_advector_2d
 
   use sll_m_advection_2d_bsl, only: &
-    sll_f_new_bsl_2d_advector
+    sll_f_new_advector_2d_bsl
 
   use sll_m_advection_2d_tensor_product, only: &
-    sll_f_new_tensor_product_2d_advector
+    sll_f_new_advector_2d_tensor_product
 
   use sll_m_ascii_io, only: &
     sll_s_ascii_file_create
@@ -231,9 +231,9 @@ module sll_m_sim_bsl_ad_2d0v_curv
       
     !advector
    sll_int32 :: advection_form
-   class(sll_c_advection_2d_base), pointer    :: advect_2d
-   class(sll_c_advection_1d_base), pointer    :: advect1_1d
-   class(sll_c_advection_1d_base), pointer    :: advect2_1d
+   class(sll_c_advector_2d), pointer    :: advect_2d
+   class(sll_c_advector_1d), pointer    :: advect1_1d
+   class(sll_c_advector_1d), pointer    :: advect2_1d
    class(sll_c_characteristics_1d_base), pointer :: charac1
    class(sll_c_characteristics_1d_base), pointer :: charac2
    class(sll_c_interpolator_1d), pointer   :: interp1
@@ -402,8 +402,8 @@ contains
     class(sll_c_interpolator_1d), pointer   :: A2_interp1d_x2
     !class(sll_c_interpolator_1d), pointer :: f_interp1d_x1
     !class(sll_c_interpolator_1d), pointer :: f_interp1d_x2
-    !class(sll_c_advection_1d_base), pointer    :: advect_1d_x1
-    !class(sll_c_advection_1d_base), pointer    :: advect_1d_x2
+    !class(sll_c_advector_1d), pointer    :: advect_1d_x1
+    !class(sll_c_advector_1d), pointer    :: advect_1d_x2
     sll_int32 :: ierr
     sll_real64, dimension(4) :: params_mesh
     !sll_real64 :: eta1_min_bis
@@ -1182,7 +1182,7 @@ contains
 
     select case(advect1d_x1_case)
       case ("SLL_BSL")
-        sim%advect1_1d => sll_f_new_bsl_1d_advector(&
+        sim%advect1_1d => sll_f_new_advector_1d_bsl(&
           sim%interp1, &
           sim%charac1, &
           Nc_eta1+1, &
@@ -1217,7 +1217,7 @@ contains
 
     select case(advect1d_x2_case)
       case ("SLL_BSL")
-        sim%advect2_1d => sll_f_new_bsl_1d_advector(&
+        sim%advect2_1d => sll_f_new_advector_1d_bsl(&
           sim%interp2, &
           sim%charac2, &
           Nc_eta2+1, &
@@ -1291,7 +1291,7 @@ contains
     select case(advect2d_case)
       case ("SLL_BSL")
        print*,"#advect2d = SLL_BSL "  
-        sim%advect_2d => sll_f_new_bsl_2d_advector(&
+        sim%advect_2d => sll_f_new_advector_2d_bsl(&
           f_interp2d, &
           charac2d, &
           Nc_eta1+1, &
@@ -1302,7 +1302,7 @@ contains
           eta2_max = eta2_max)
       case ("SLL_TENSOR_PRODUCT")
        print*,"#advect2d = SLL_TENSOR_PRODUCT" 
-        sim%advect_2d => sll_f_new_tensor_product_2d_advector(&
+        sim%advect_2d => sll_f_new_advector_2d_tensor_product(&
           sim%advect1_1d, &
           sim%advect2_1d, &
           Nc_eta1+1, &

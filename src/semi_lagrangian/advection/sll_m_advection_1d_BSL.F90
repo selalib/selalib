@@ -25,7 +25,7 @@ module sll_m_advection_1d_BSL
 #include "sll_working_precision.h"
 
   use sll_m_advection_1d_base, only: &
-    sll_c_advection_1d_base
+    sll_c_advector_1d
 
   use sll_m_characteristics_1d_base, only: &
     sll_c_characteristics_1d_base
@@ -36,12 +36,12 @@ module sll_m_advection_1d_BSL
   implicit none
 
   public :: &
-    sll_f_new_bsl_1d_advector
+    sll_f_new_advector_1d_bsl
 
   private
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
-  type,extends(sll_c_advection_1d_base) :: BSL_1d_advector
+  type,extends(sll_c_advector_1d) :: BSL_1d_advector
   
     class(sll_c_interpolator_1d), pointer  :: interp
     class(sll_c_characteristics_1d_base), pointer  :: charac
@@ -63,7 +63,7 @@ module sll_m_advection_1d_BSL
 
 
 contains
-  function sll_f_new_bsl_1d_advector( &
+  function sll_f_new_advector_1d_bsl( &
     interp, &
     charac, &
     Npts, &
@@ -91,7 +91,7 @@ contains
       eta_max, &
       eta_coords)    
     
-  end function  sll_f_new_bsl_1d_advector
+  end function  sll_f_new_advector_1d_bsl
 
 
   subroutine initialize_BSL_1d_advector(&

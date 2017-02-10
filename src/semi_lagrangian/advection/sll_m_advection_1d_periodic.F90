@@ -25,7 +25,7 @@ module sll_m_advection_1d_periodic
 #include "sll_working_precision.h"
 
   use sll_m_advection_1d_base, only: &
-    sll_c_advection_1d_base
+    sll_c_advector_1d
 
   use sll_m_periodic_interp, only: &
     sll_s_periodic_interp_init, &
@@ -40,7 +40,7 @@ module sll_m_advection_1d_periodic
   private
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
-  type,extends(sll_c_advection_1d_base) :: periodic_1d_advector
+  type,extends(sll_c_advector_1d) :: periodic_1d_advector
 
      sll_int32                            :: num_cells
      sll_real64                           :: xmin
