@@ -19,224 +19,157 @@
 ! attached with computation of characteristics
 
 
-module sll_m_advection_1d_BSL
+module sll_m_advection_1d_bsl
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_memory.h"
 #include "sll_working_precision.h"
+#include "sll_errors.h"
 
-  use sll_m_advection_1d_base, only: &
-    sll_c_advector_1d
+use sll_m_advection_1d_base,       only: sll_c_advector_1d
+use sll_m_characteristics_1d_base, only: sll_c_characteristics_1d_base
+use sll_m_interpolators_1d_base,   only: sll_c_interpolator_1d
 
-  use sll_m_characteristics_1d_base, only: &
-    sll_c_characteristics_1d_base
+implicit none
 
-  use sll_m_interpolators_1d_base, only: &
-    sll_c_interpolator_1d
+public :: sll_f_new_advector_1d_bsl, sll_t_advector_1d_bsl
 
-  implicit none
-
-  public :: &
-    sll_f_new_advector_1d_bsl
-
-  private
+private
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
-  type,extends(sll_c_advector_1d) :: BSL_1d_advector
-  
-    class(sll_c_interpolator_1d), pointer  :: interp
-    class(sll_c_characteristics_1d_base), pointer  :: charac
-    sll_real64, dimension(:), pointer :: eta_coords
-    sll_real64, dimension(:), pointer :: charac_feet
-    sll_int32 :: Npts
-  contains
-    procedure, pass(adv) :: initialize => &
-       initialize_BSL_1d_advector
-    procedure, pass(adv) :: advect_1d => &
-      BSL_advect_1d
-    procedure, pass(adv) :: advect_1d_constant => &
-      BSL_advect_1d_constant
-    procedure, pass(adv) :: delete => delete_BSL_1d_adv  
-  end type BSL_1d_advector
-   
+type,extends(sll_c_advector_1d) :: sll_t_advector_1d_bsl
 
-
-
+  class(sll_c_interpolator_1d), pointer  :: interp
+  class(sll_c_characteristics_1d_base), pointer  :: charac
+  sll_real64, dimension(:), pointer :: eta_coords
+  sll_real64, dimension(:), pointer :: charac_feet
+  sll_int32 :: npts
 
 contains
-  function sll_f_new_advector_1d_bsl( &
-    interp, &
-    charac, &
-    Npts, &
-    eta_min, &
-    eta_max, &
-    eta_coords) &  
-    result(adv)      
-    type(BSL_1d_advector), pointer :: adv
-    class(sll_c_interpolator_1d), pointer :: interp
-    class(sll_c_characteristics_1d_base), pointer  :: charac
-    sll_int32, intent(in) :: Npts
-    sll_real64, intent(in), optional :: eta_min
-    sll_real64, intent(in), optional :: eta_max
-    sll_real64, dimension(:), pointer, optional :: eta_coords
-    sll_int32 :: ierr
+
+  procedure, pass(adv) :: init => initialize_advector_1d_bsl
+  procedure, pass(adv) :: advect_1d => bsl_advect_1d
+  procedure, pass(adv) :: advect_1d_constant => bsl_advect_1d_constant
+  procedure, pass(adv) :: delete => delete_bsl_1d_adv  
+
+end type sll_t_advector_1d_bsl
+
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+contains
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+function sll_f_new_advector_1d_bsl( interp, charac, npts, eta_min, eta_max, &
+  eta_coords) result(adv)      
+
+  type(sll_t_advector_1d_bsl),          pointer :: adv
+  class(sll_c_interpolator_1d),         pointer :: interp
+  class(sll_c_characteristics_1d_base), pointer :: charac
+
+  sll_int32,  intent(in)           :: npts
+  sll_real64, intent(in), optional :: eta_min
+  sll_real64, intent(in), optional :: eta_max
+  sll_real64, pointer,    optional :: eta_coords(:)
+
+  sll_int32 :: ierr
     
-    SLL_ALLOCATE(adv,ierr)
+  SLL_ALLOCATE(adv,ierr)
         
-    call initialize_BSL_1d_advector(&
-      adv, &
-      interp, &
-      charac, &
-      Npts, &
-      eta_min, &
-      eta_max, &
-      eta_coords)    
+  call adv%init( interp, charac, npts, eta_min, eta_max, eta_coords)    
     
-  end function  sll_f_new_advector_1d_bsl
+end function  sll_f_new_advector_1d_bsl
 
+subroutine initialize_advector_1d_bsl( adv, interp, charac, npts, &
+  eta_min, eta_max, eta_coords)    
 
-  subroutine initialize_BSL_1d_advector(&
-    adv, &
-    interp, &
-    charac, &
-    Npts, &
-    eta_min, &
-    eta_max, &
-    eta_coords)    
-    class(BSL_1d_advector), intent(inout) :: adv
-    class(sll_c_interpolator_1d), pointer :: interp
-    class(sll_c_characteristics_1d_base), pointer  :: charac
-    sll_int32, intent(in) :: Npts
-    sll_real64, intent(in), optional :: eta_min
-    sll_real64, intent(in), optional :: eta_max
-    sll_real64, dimension(:), pointer, optional :: eta_coords
-    sll_int32 :: ierr
-    sll_int32 :: i
-    sll_real64 :: delta_eta
-    
-    
-    adv%Npts = Npts
-    adv%interp => interp
-    adv%charac => charac
-    SLL_ALLOCATE(adv%eta_coords(Npts),ierr)
+  class(sll_t_advector_1d_bsl),         intent(inout) :: adv
+  class(sll_c_interpolator_1d),         target        :: interp
+  class(sll_c_characteristics_1d_base), target        :: charac
+  sll_int32,                            intent(in)    :: npts
 
-    SLL_ALLOCATE(adv%charac_feet(Npts),ierr)
+  sll_real64, intent(in),            optional :: eta_min
+  sll_real64, intent(in),            optional :: eta_max
+  sll_real64, dimension(:), pointer, optional :: eta_coords
 
-    if(present(eta_min).and.present(eta_max))then
-      if(present(eta_coords))then
-        print *,'#provide either eta_coords or eta_min and eta_max'
-        print *,'#and not both in subroutine initialize_BSL_1d_advector'
-        stop
-      else
-        delta_eta = (eta_max-eta_min)/real(Npts-1,f64)
-        do i=1,Npts
-          adv%eta_coords(i) = eta_min+real(i-1,f64)*delta_eta
-        enddo
-      endif
-    else if(present(eta_coords))then
-      if(size(eta_coords)<Npts)then
-        print *,'#bad size for eta_coords in initialize_BSL_1d_advector'
-        stop
-      else
-        adv%eta_coords(1:Npts) = eta_coords(1:Npts)
-      endif     
+  sll_int32  :: ierr
+  sll_int32  :: i
+  sll_real64 :: delta_eta
+  
+  adv%npts = npts
+  adv%interp => interp
+  adv%charac => charac
+
+  SLL_ALLOCATE(adv%eta_coords(npts),ierr)
+  SLL_ALLOCATE(adv%charac_feet(npts),ierr)
+
+  if(present(eta_min).and.present(eta_max))then
+    if(present(eta_coords))then
+      SLL_ERROR('initialize_advector_1d_bsl','provide either eta_coords or eta_min and eta_max and not both')
     else
-      print *,'#Warning, we assume eta_min = 0._f64 eta_max = 1._f64'
-      delta_eta = 1._f64/real(Npts-1,f64)
-      do i=1,Npts
-          adv%eta_coords(i) = real(i-1,f64)*delta_eta
-      enddo                      
+      delta_eta = (eta_max-eta_min)/real(npts-1,f64)
+      do i=1,npts
+        adv%eta_coords(i) = eta_min+real(i-1,f64)*delta_eta
+      enddo
     endif
-          
-  end subroutine initialize_BSL_1d_advector
+  else if(present(eta_coords))then
+    if(size(eta_coords)<npts)then
+      SLL_ERROR('initialize_advector_1d_bsl','bad size for eta_coords in initialize_sll_t_advector_1d_bsl')
+    else
+      adv%eta_coords(1:npts) = eta_coords(1:npts)
+    endif     
+  else
+    SLL_WARNING('initialize_advector_1d_bsl','we assume eta_min = 0._f64 eta_max = 1._f64')
+    delta_eta = 1._f64/real(npts-1,f64)
+    do i=1,npts
+        adv%eta_coords(i) = real(i-1,f64)*delta_eta
+    enddo                      
+  endif
+        
+end subroutine initialize_advector_1d_bsl
 
-  subroutine BSL_advect_1d(&
-    adv, &
-    A, &
-    dt, &
-    input, &
-    output)
-    class(BSL_1d_advector) :: adv
-    sll_real64, dimension(:), intent(in) :: A
-    sll_real64, intent(in) :: dt 
-    sll_real64, dimension(:), intent(in) :: input
-    sll_real64, dimension(:), intent(out) :: output      
-    
-    call adv%charac%compute_characteristics( &
-      A, &
-      dt, &
-      adv%eta_coords, &
-      adv%charac_feet)
-    
-    
-!    call adv%interp%compute_interpolants( &
-!      input, &
-!      adv%eta1_coords, &
-!      adv%Npts1, &
-!      adv%eta2_coords, &
-!      adv%Npts2 )
+subroutine bsl_advect_1d( adv, A, dt, input, output)
 
-    
-    call adv%interp%interpolate_array( &
-      adv%Npts, &
-      input, &
-      adv%charac_feet, &
-      output)      
-          
-  end subroutine BSL_advect_1d
+  class(sll_t_advector_1d_bsl)          :: adv
+  sll_real64, dimension(:), intent(in)  :: A
+  sll_real64, intent(in)                :: dt 
+  sll_real64, dimension(:), intent(in)  :: input
+  sll_real64, dimension(:), intent(out) :: output      
+  
+  call adv%charac%compute_characteristics( A, dt, adv%eta_coords, adv%charac_feet)
+  
+  call adv%interp%interpolate_array( adv%npts, input, adv%charac_feet, output)      
+        
+end subroutine bsl_advect_1d
 
+subroutine bsl_advect_1d_constant( adv, A, dt, input, output)
 
-  subroutine BSL_advect_1d_constant(&
-    adv, &
-    A, &
-    dt, &
-    input, &
-    output)
-    class(BSL_1d_advector) :: adv
-    sll_real64, intent(in) :: A
-    sll_real64, intent(in) :: dt 
-    sll_real64, dimension(:), intent(in) :: input
-    sll_real64, dimension(:), intent(out) :: output      
-    sll_real64, dimension(:), allocatable :: A1
-    sll_int32 :: ierr
-    
-    !this version is not optimized
-    
-    SLL_ALLOCATE(A1(adv%Npts),ierr)
-    
-    A1 = A
-    
-    call adv%charac%compute_characteristics( &
-      A1, &
-      dt, &
-      adv%eta_coords, &
-      adv%charac_feet)
+  class(sll_t_advector_1d_bsl)          :: adv
+  sll_real64,               intent(in)  :: A
+  sll_real64,               intent(in)  :: dt 
+  sll_real64, dimension(:), intent(in)  :: input
+  sll_real64, dimension(:), intent(out) :: output      
+  sll_real64, dimension(:), allocatable :: A1
+  sll_int32 :: ierr
+  
+  SLL_ALLOCATE(A1(adv%npts),ierr)
+  
+  A1 = A
+  
+  call adv%charac%compute_characteristics( A1, dt, adv%eta_coords, adv%charac_feet)
 
-!    call adv%interp%compute_interpolants( &
-!      input, &
-!      adv%eta1_coords, &
-!      adv%Npts1, &
-!      adv%eta2_coords, &
-!      adv%Npts2 )
+  call adv%interp%interpolate_array( adv%npts, input, adv%charac_feet, output)      
 
-    call adv%interp%interpolate_array( &
-      adv%Npts, &
-      input, &
-      adv%charac_feet, &
-      output)      
+  SLL_DEALLOCATE_ARRAY(A1,ierr)
+        
+end subroutine bsl_advect_1d_constant
 
-    SLL_DEALLOCATE_ARRAY(A1,ierr)
+subroutine delete_bsl_1d_adv(adv)
 
-          
-  end subroutine BSL_advect_1d_constant
+  class(sll_t_advector_1d_bsl), intent(inout) :: adv
 
+  sll_int32 :: ierr
 
-  subroutine delete_BSL_1d_adv(adv)
-    class(BSL_1d_advector), intent(inout) :: adv
-    sll_int32 :: ierr
-    SLL_DEALLOCATE(adv%eta_coords,ierr)
-    SLL_DEALLOCATE(adv%charac_feet,ierr)
-  end subroutine delete_BSL_1d_adv
+  SLL_DEALLOCATE(adv%eta_coords,ierr)
+  SLL_DEALLOCATE(adv%charac_feet,ierr)
 
+end subroutine delete_bsl_1d_adv
 
-
-end module sll_m_advection_1d_BSL
+end module sll_m_advection_1d_bsl
