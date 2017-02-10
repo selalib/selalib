@@ -88,7 +88,7 @@ type, extends(sll_c_poisson_2d_base) :: sll_t_poisson_2d_periodic
 contains
 
   !> Create the Poisson solver
-  procedure, public, pass(poisson) :: initialize => &
+  procedure, public, pass(poisson) :: init => &
     initialize_poisson_2d_periodic
   !> Compute potential solving the Poisson equation
   procedure, public, pass(poisson) :: compute_phi_from_rho => &
