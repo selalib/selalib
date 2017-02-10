@@ -44,7 +44,7 @@ module sll_m_sim_bsl_dk_3d1v_polar
 #include "sll_working_precision.h"
 
   use sll_m_advection_1d_base, only: &
-    sll_c_advection_1d_base
+    sll_c_advector_1d
 
   use sll_m_advection_1d_periodic, only: &
     sll_f_new_periodic_1d_advector
@@ -287,8 +287,8 @@ module sll_m_sim_bsl_dk_3d1v_polar
     class(sll_c_advector_2d), pointer :: adv_x1x2
     !class(sll_c_interpolator_2d), pointer :: interp_x1x2
     class(sll_c_characteristics_2d_base), pointer :: charac_x1x2
-    class(sll_c_advection_1d_base), pointer :: adv_x3
-    class(sll_c_advection_1d_base), pointer :: adv_x4
+    class(sll_c_advector_1d), pointer :: adv_x3
+    class(sll_c_advector_1d), pointer :: adv_x4
 
 
     type(sll_t_qn_solver_2d_polar) :: poisson2d

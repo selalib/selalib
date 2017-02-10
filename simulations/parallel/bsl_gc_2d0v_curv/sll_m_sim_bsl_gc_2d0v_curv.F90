@@ -10,10 +10,10 @@ module sll_m_sim_bsl_gc_2d0v_curv
 #include "sll_working_precision.h"
 
   use sll_m_advection_1d_base, only: &
-    sll_c_advection_1d_base
+    sll_c_advector_1d
 
   use sll_m_advection_1d_bsl, only: &
-    sll_f_new_bsl_1d_advector
+    sll_f_new_advector_1d_bsl
 
   use sll_m_advection_1d_csl_periodic, only: &
     sll_f_new_csl_periodic_1d_advector
@@ -25,7 +25,7 @@ module sll_m_sim_bsl_gc_2d0v_curv
     sll_f_new_advector_2d_bsl
 
   use sll_m_advection_2d_tensor_product, only: &
-    sll_f_new_tensor_product_2d_advector
+    sll_f_new_advector_2d_tensor_product
 
   use sll_m_arbitrary_degree_spline_interpolator_2d, only: &
     sll_f_new_arbitrary_degree_spline_interp2d
@@ -235,8 +235,8 @@ module sll_m_sim_bsl_gc_2d0v_curv
     class(sll_c_interpolator_1d), pointer   :: A2_interp1d_x2 => null()
     class(sll_c_interpolator_1d), pointer :: f_interp1d_x1 => null()
     class(sll_c_interpolator_1d), pointer :: f_interp1d_x2 => null()
-    class(sll_c_advection_1d_base), pointer    :: advect_1d_x1 => null()
-    class(sll_c_advection_1d_base), pointer    :: advect_1d_x2 => null()
+    class(sll_c_advector_1d), pointer    :: advect_1d_x1 => null()
+    class(sll_c_advector_1d), pointer    :: advect_1d_x2 => null()
    
    !initial function
    procedure(sll_i_scalar_initializer_2d), nopass, pointer :: init_func
@@ -1277,7 +1277,7 @@ contains
 
     select case(advect1d_x1_case)
       case ("SLL_BSL")
-        sim%advect_1d_x1 => sll_f_new_bsl_1d_advector(&
+        sim%advect_1d_x1 => sll_f_new_advector_1d_bsl(&
           sim%f_interp1d_x1, &
           sim%charac1d_x1, &
           Nc_eta1+1, &
@@ -1300,7 +1300,7 @@ contains
 
     select case(advect1d_x2_case)
       case ("SLL_BSL")
-        sim%advect_1d_x2 => sll_f_new_bsl_1d_advector(&
+        sim%advect_1d_x2 => sll_f_new_advector_1d_bsl(&
           sim%f_interp1d_x2, &
           sim%charac1d_x2, &
           Nc_eta2+1, &
@@ -1369,7 +1369,7 @@ contains
           eta2_max = eta2_max)
       case ("SLL_TENSOR_PRODUCT")
        print*,"#advect2d = SLL_SPLITING " 
-        sim%advect_2d => sll_f_new_tensor_product_2d_advector(&
+        sim%advect_2d => sll_f_new_advector_2d_tensor_product(&
           sim%advect_1d_x1, &
           sim%advect_1d_x2, &
           Nc_eta1+1, &

@@ -48,7 +48,7 @@ abstract interface
     use sll_m_working_precision
     import sll_c_advector_2d       
 
-    class(sll_c_advector_2d)          :: adv
+    class(sll_c_advector_2d)                :: adv
     sll_real64, dimension(:,:), intent(in)  :: A1
     sll_real64, dimension(:,:), intent(in)  :: A2
     sll_real64,                 intent(in)  :: dt 

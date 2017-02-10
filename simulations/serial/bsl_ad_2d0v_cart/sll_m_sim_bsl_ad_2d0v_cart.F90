@@ -17,10 +17,10 @@ module sll_m_sim_bsl_ad_2d0v_cart
 #include "sll_working_precision.h"
 
   use sll_m_advection_1d_base, only: &
-    sll_c_advection_1d_base
+    sll_c_advector_1d
 
   use sll_m_advection_1d_bsl, only: &
-    sll_f_new_bsl_1d_advector
+    sll_f_new_advector_1d_bsl
 
   use sll_m_advection_1d_csl, only: &
     sll_f_new_csl_1d_advector
@@ -35,7 +35,7 @@ module sll_m_sim_bsl_ad_2d0v_cart
     sll_f_new_advector_2d_bsl
 
   use sll_m_advection_2d_tensor_product, only: &
-    sll_f_new_tensor_product_2d_advector
+    sll_f_new_advector_2d_tensor_product
 
   use sll_m_boundary_condition_descriptors, only: &
     sll_p_periodic
@@ -262,8 +262,8 @@ contains
     class(sll_c_interpolator_1d), pointer   :: A2_interp1d_x2
     class(sll_c_interpolator_1d), pointer :: f_interp1d_x1
     class(sll_c_interpolator_1d), pointer :: f_interp1d_x2
-    class(sll_c_advection_1d_base), pointer    :: advect_1d_x1
-    class(sll_c_advection_1d_base), pointer    :: advect_1d_x2
+    class(sll_c_advector_1d), pointer    :: advect_1d_x1
+    class(sll_c_advector_1d), pointer    :: advect_1d_x2
     sll_int32 :: ierr
     sll_real64 :: x1_min_bis
     sll_real64 :: x1_max_bis
@@ -636,7 +636,7 @@ contains
 
     select case(advect1d_x1_case)
       case ("SLL_BSL")
-        advect_1d_x1 => sll_f_new_bsl_1d_advector(&
+        advect_1d_x1 => sll_f_new_advector_1d_bsl(&
           f_interp1d_x1, &
           charac1d_x1, &
           Nc_x1_bis+1, &
@@ -664,7 +664,7 @@ contains
 
     select case(advect1d_x2_case)
       case ("SLL_BSL")
-        advect_1d_x2 => sll_f_new_bsl_1d_advector(&
+        advect_1d_x2 => sll_f_new_advector_1d_bsl(&
           f_interp1d_x2, &
           charac1d_x2, &
           Nc_x2_bis+1, &
@@ -738,7 +738,7 @@ contains
           eta2_min = x2_min, &
           eta2_max = x2_max)          
       case ("SLL_TENSOR_PRODUCT")
-        sim%advect_2d => sll_f_new_tensor_product_2d_advector(&
+        sim%advect_2d => sll_f_new_advector_2d_tensor_product(&
           advect_1d_x1, &
           advect_1d_x2, &
           Nc_x1+1, &
