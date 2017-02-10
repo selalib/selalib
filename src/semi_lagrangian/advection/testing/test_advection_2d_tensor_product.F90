@@ -27,7 +27,7 @@ program test_advection_2d_tensor_product
     sll_f_new_bsl_1d_advector
 
   use sll_m_advection_2d_base, only: &
-    sll_c_advection_2d_base
+    sll_c_advector_2d
 
   use sll_m_advection_2d_tensor_product, only: &
     sll_f_new_tensor_product_2d_advector
@@ -62,7 +62,7 @@ program test_advection_2d_tensor_product
   implicit none
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
   
-  class(sll_c_advection_2d_base), pointer :: adv
+  class(sll_c_advector_2d), pointer :: adv
   class(sll_c_advection_1d_base), pointer :: adv_x1
   class(sll_c_advection_1d_base), pointer :: adv_x2
   class(sll_c_interpolator_1d), pointer :: interp_x1

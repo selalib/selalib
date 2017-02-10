@@ -29,7 +29,7 @@ module sll_m_advection_2d_tensor_product
     sll_c_advection_1d_base
 
   use sll_m_advection_2d_base, only: &
-    sll_c_advection_2d_base
+    sll_c_advector_2d
 
   implicit none
 
@@ -39,7 +39,7 @@ module sll_m_advection_2d_tensor_product
   private
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
-  type,extends(sll_c_advection_2d_base) :: tensor_product_2d_advector
+  type,extends(sll_c_advector_2d) :: tensor_product_2d_advector
     
     class(sll_c_advection_1d_base), pointer  :: advect_x1
     class(sll_c_advection_1d_base), pointer  :: advect_x2
