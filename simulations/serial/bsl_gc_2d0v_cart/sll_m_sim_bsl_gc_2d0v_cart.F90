@@ -98,7 +98,7 @@ module sll_m_sim_bsl_gc_2d0v_cart
     sll_f_new_cubic_spline_interpolator_1d
 
   use sll_m_cubic_spline_interpolator_2d, only: &
-    sll_f_new_cubic_spline_interpolator_2d
+    sll_t_cubic_spline_interpolator_2d
 
   use sll_m_general_coordinate_elliptic_solver, only: &
     sll_p_es_gauss_legendre
@@ -132,7 +132,7 @@ module sll_m_sim_bsl_gc_2d0v_cart
     sll_f_new_poisson_2d_elliptic_solver
 
   use sll_m_poisson_2d_periodic, only: &
-    sll_f_new_poisson_2d_periodic
+    sll_t_poisson_2d_periodic
 
   use sll_m_reduction, only: &
     sll_f_compute_integral_trapezoid_1d
@@ -279,11 +279,15 @@ contains
     sll_real64 :: x2_max     
     class(sll_c_interpolator_2d), pointer :: f_interp2d
     class(sll_c_interpolator_2d), pointer :: phi_interp2d
+    type(sll_t_cubic_spline_interpolator_2d), target :: f_cs2d
+    type(sll_t_cubic_spline_interpolator_2d), target :: phi_cs2d
     class(sll_c_characteristics_2d_base), pointer :: charac2d
     class(sll_c_characteristics_1d_base), pointer :: charac1d_x1
     class(sll_c_characteristics_1d_base), pointer :: charac1d_x2
     class(sll_c_interpolator_2d), pointer   :: A1_interp2d
     class(sll_c_interpolator_2d), pointer   :: A2_interp2d
+    type(sll_t_cubic_spline_interpolator_2d), target :: A1_cs2d
+    type(sll_t_cubic_spline_interpolator_2d), target :: A2_cs2d
     class(sll_c_interpolator_1d), pointer   :: A1_interp1d_x1
     class(sll_c_interpolator_1d), pointer   :: A2_interp1d_x1
     class(sll_c_interpolator_1d), pointer   :: A1_interp1d_x2
@@ -464,7 +468,7 @@ contains
       
     select case (f_interp2d_case)
       case ("SLL_CUBIC_SPLINES")
-        f_interp2d => sll_f_new_cubic_spline_interpolator_2d( &
+        call f_cs2d%init( &
           Nc_x1+1, &
           Nc_x2+1, &
           x1_min, &
@@ -473,6 +477,7 @@ contains
           x2_max, &
           sll_p_periodic, &
           sll_p_periodic)
+        f_interp2d => f_cs2d
       case default
         print *,'#bad f_interp2d_case',f_interp2d_case
         print *,'#not implemented'
@@ -483,7 +488,7 @@ contains
 
     select case (A_interp_case)
       case ("SLL_CUBIC_SPLINES")
-        A1_interp2d => sll_f_new_cubic_spline_interpolator_2d( &
+        call A1_cs2d%init( &
           Nc_x1+1, &
           Nc_x2+1, &
           x1_min, &
@@ -492,7 +497,9 @@ contains
           x2_max, &
           sll_p_periodic, &
           sll_p_periodic)
-        A2_interp2d => sll_f_new_cubic_spline_interpolator_2d( &
+
+        a1_interp2d => a1_cs2d
+        call A2_cs2d%init( &
           Nc_x1+1, &
           Nc_x2+1, &
           x1_min, &
@@ -501,6 +508,9 @@ contains
           x2_max, &
           sll_p_periodic, &
           sll_p_periodic)  
+
+        a2_interp2d => a1_cs2d
+
         A1_interp1d_x1 => sll_f_new_cubic_spline_interpolator_1d( &
           Nc_x1+1, &
           x1_min, &
@@ -530,7 +540,7 @@ contains
 
     select case (phi_interp2d_case)
       case ("SLL_CUBIC_SPLINES")
-        phi_interp2d => sll_f_new_cubic_spline_interpolator_2d( &
+        call phi_cs2d%init( &
           Nc_x1+1, &
           Nc_x2+1, &
           x1_min, &
@@ -539,6 +549,7 @@ contains
           x2_max, &
           sll_p_periodic, &
           sll_p_periodic)         
+        phi_interp2d => phi_cs2d
       case default
         print *,'#bad phi_interp2d_case',phi_interp2d_case
         print *,'#not implemented'
@@ -619,9 +630,6 @@ contains
         stop  
     end select
 
-
-
-
     select case (f_interp1d_x1_case)
       case ("SLL_CUBIC_SPLINES")
         f_interp1d_x1 => sll_f_new_cubic_spline_interpolator_1d( &
@@ -636,7 +644,6 @@ contains
         stop
     end select
 
-
     select case (f_interp1d_x2_case)
       case ("SLL_CUBIC_SPLINES")
         f_interp1d_x2 => sll_f_new_cubic_spline_interpolator_1d( &
@@ -650,7 +657,6 @@ contains
         print *,'#in initialize_guiding_center_2d_polar'
         stop
     end select
-
 
     select case(charac1d_x1_case)
       case ("SLL_EULER")
@@ -1008,14 +1014,12 @@ contains
          c)
 #endif
       case ("SLL_POISSON_FFT")     
-        !stop  
-        sim%poisson => sll_f_new_poisson_2d_periodic( &
-          x1_min,&
-          x1_max,&
-          Nc_x1,&
-          x2_min,&
-          x2_max,&
-          Nc_x2)
+        allocate( sll_t_poisson_2d_periodic :: sim%poisson )
+        select type ( p => sim%poisson )
+        type is (sll_t_poisson_2d_periodic)
+        call p%init( x1_min, x1_max, Nc_x1, x2_min, x2_max, Nc_x2)
+        end select
+
       case ("SLL_ELLIPTIC_FINITE_ELEMENT_SOLVER")
         transformation => sll_f_new_coordinate_transformation_2d_analytic( &
           "analytic_identity_transformation", &
