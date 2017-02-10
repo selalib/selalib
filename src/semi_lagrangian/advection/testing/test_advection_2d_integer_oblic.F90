@@ -21,7 +21,7 @@ program test_advection_2d_integer_oblic
 #include "sll_working_precision.h"
 
   use sll_m_advection_1d_base, only: &
-    sll_c_advection_1d_base
+    sll_c_advector_1d
 
   use sll_m_advection_1d_periodic, only: &
     sll_f_new_periodic_1d_advector
@@ -53,8 +53,8 @@ program test_advection_2d_integer_oblic
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
   
   type(sll_t_integer_oblic_2d_advector), pointer :: adv
-  class(sll_c_advection_1d_base), pointer :: adv_x1
-  class(sll_c_advection_1d_base), pointer :: adv_aligned
+  class(sll_c_advector_1d), pointer :: adv_x1
+  class(sll_c_advector_1d), pointer :: adv_aligned
   class(sll_c_interpolator_2d), pointer :: interp
   type(sll_t_cubic_spline_interpolator_2d), target :: interp_cs2d
   class(sll_c_characteristics_2d_base), pointer :: charac

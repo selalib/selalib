@@ -23,7 +23,7 @@ module sll_m_advection_1d_non_uniform_cubic_splines
 #include "sll_working_precision.h"
 
   use sll_m_advection_1d_base, only: &
-    sll_c_advection_1d_base
+    sll_c_advector_1d
 
   use sll_m_cubic_non_uniform_splines, only: &
     sll_s_compute_spline_nonunif_1d_periodic_aux2, &
@@ -38,7 +38,7 @@ module sll_m_advection_1d_non_uniform_cubic_splines
   private
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
-  type,extends(sll_c_advection_1d_base) :: non_uniform_cubic_splines_1d_advector
+  type,extends(sll_c_advector_1d) :: non_uniform_cubic_splines_1d_advector
 
      sll_int32                            :: num_cells
      sll_real64                           :: xmin

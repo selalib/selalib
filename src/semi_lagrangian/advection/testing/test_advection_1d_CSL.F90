@@ -21,7 +21,7 @@ program test_advection_1d_CSL
 #include "sll_working_precision.h"
 
   use sll_m_advection_1d_base, only: &
-    sll_c_advection_1d_base
+    sll_c_advector_1d
 
   use sll_m_advection_1d_csl, only: &
     sll_f_new_csl_1d_advector
@@ -50,8 +50,8 @@ program test_advection_1d_CSL
   implicit none
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
   
-  class(sll_c_advection_1d_base), pointer :: adv
-  class(sll_c_advection_1d_base), pointer :: adv_ref
+  class(sll_c_advector_1d), pointer :: adv
+  class(sll_c_advector_1d), pointer :: adv_ref
   class(sll_c_interpolator_1d), pointer :: interp
   class(sll_c_interpolator_1d), pointer :: A_interp
   class(sll_c_characteristics_1d_base), pointer :: charac
