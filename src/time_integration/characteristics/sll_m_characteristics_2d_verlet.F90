@@ -40,13 +40,13 @@ module sll_m_characteristics_2d_verlet
   implicit none
 
   public :: &
-    sll_t_charac_2d_verlet, &
+    sll_t_verlet_2d_charac, &
     sll_f_new_verlet_2d_charac
 
   private
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
-  type,extends(sll_c_characteristics_2d_base) :: sll_t_charac_2d_verlet
+  type,extends(sll_c_characteristics_2d_base) :: sll_t_verlet_2d_charac
     sll_int32                               :: Npts1
     sll_int32                               :: Npts2
     sll_real64                              :: eta1_min   
@@ -71,7 +71,7 @@ module sll_m_characteristics_2d_verlet
       initialize_verlet_2d_charac
     procedure, pass(charac) :: compute_characteristics => &
       compute_verlet_2d_charac
-  end type sll_t_charac_2d_verlet
+  end type sll_t_verlet_2d_charac
 
 contains
   function sll_f_new_verlet_2d_charac(&
@@ -95,7 +95,7 @@ contains
       x2_tol) &
       result(charac)
       
-    type(sll_t_charac_2d_verlet),pointer :: charac
+    type(sll_t_verlet_2d_charac),pointer :: charac
     sll_int32, intent(in) :: Npts1
     sll_int32, intent(in) :: Npts2
     sll_int32, intent(in), optional :: bc_type_1
@@ -163,7 +163,7 @@ contains
       x1_tol, &
       x2_tol)
       
-    class(sll_t_charac_2d_verlet) :: charac
+    class(sll_t_verlet_2d_charac) :: charac
     sll_int32, intent(in) :: Npts1
     sll_int32, intent(in) :: Npts2
     sll_int32, intent(in), optional :: bc_type_1
@@ -222,7 +222,7 @@ contains
     else if(.not.(present(bc_type_1))) then
       print *,'#provide boundary condition'
       print *,'#bc_type_1 or process_outside_point1 function'
-      print *,'#in initialize_sll_t_charac_2d_verlet'
+      print *,'#in initialize_sll_t_verlet_2d_charac'
       stop
     else
       select case (bc_type_1)
@@ -232,7 +232,7 @@ contains
           charac%process_outside_point1 => sll_f_process_outside_point_set_to_limit        
         case default
           print *,'#bad value of boundary condition'
-          print *,'#in initialize_sll_t_charac_2d_verlet'
+          print *,'#in initialize_sll_t_verlet_2d_charac'
           stop
         end select
     endif
@@ -240,7 +240,7 @@ contains
     if((present(process_outside_point1)).and.(present(bc_type_1)))then
       print *,'#provide either process_outside_point1 or bc_type_1'
       print *,'#and not both'
-      print *,'#in initialize_sll_t_charac_2d_verlet'
+      print *,'#in initialize_sll_t_verlet_2d_charac'
       stop
     endif
 
@@ -251,7 +251,7 @@ contains
     else if(.not.(present(bc_type_2))) then
       print *,'#provide boundary condition'
       print *,'#bc_type_2 or process_outside_point1 function'
-      print *,'#in initialize_sll_t_charac_2d_verlet'
+      print *,'#in initialize_sll_t_verlet_2d_charac'
       stop
     else
       select case (bc_type_2)
@@ -261,7 +261,7 @@ contains
           charac%process_outside_point2 => sll_f_process_outside_point_set_to_limit        
         case default
           print *,'#bad value of boundary condition'
-          print *,'#in initialize_sll_t_charac_2d_verlet'
+          print *,'#in initialize_sll_t_verlet_2d_charac'
           stop
         end select
     endif
@@ -269,7 +269,7 @@ contains
     if((present(process_outside_point2)).and.(present(bc_type_2)))then
       print *,'#provide either process_outside_point2 or bc_type_2'
       print *,'#and not both'
-      print *,'#in initialize_sll_t_charac_2d_verlet'
+      print *,'#in initialize_sll_t_verlet_2d_charac'
       stop
     endif
 
@@ -319,7 +319,7 @@ contains
       output1, &
       output2)
             
-    class(sll_t_charac_2d_verlet) :: charac
+    class(sll_t_verlet_2d_charac) :: charac
     sll_real64, dimension(:,:), intent(in) :: A1
     sll_real64, dimension(:,:), intent(in) :: A2
     sll_real64, intent(in) :: dt
