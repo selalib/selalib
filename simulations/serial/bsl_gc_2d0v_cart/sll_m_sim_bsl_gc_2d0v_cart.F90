@@ -34,7 +34,7 @@ module sll_m_sim_bsl_gc_2d0v_cart
     sll_f_new_advector_2d_bsl
 
   use sll_m_advection_2d_tensor_product, only: &
-    sll_t_advector_2d_tensor_product
+    sll_f_new_advector_2d_tensor_product
 
   use sll_m_boundary_condition_descriptors, only: &
     sll_p_periodic
@@ -806,13 +806,11 @@ contains
           eta2_min = x2_min, &
           eta2_max = x2_max)
       case ("SLL_TENSOR_PRODUCT")
-        allocate(sll_t_advector_2d_tensor_product :: sim%advect_2d )
-
-        select type ( a => sim%advect_2d )
-        type is (sll_t_advector_2d_tensor_product)
-        call a%init( advect_1d_x1, advect_1d_x2, Nc_x1+1, Nc_x2+1)
-        end select
-
+        sim%advect_2d => sll_f_new_advector_2d_tensor_product(&
+          advect_1d_x1, &
+          advect_1d_x2, &
+          Nc_x1+1, &
+          Nc_x2+1)          
       case default
         print *,'#bad advect_case',advect2d_case
         print *,'#not implemented'
