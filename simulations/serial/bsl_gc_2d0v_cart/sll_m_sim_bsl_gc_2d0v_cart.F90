@@ -65,7 +65,7 @@ module sll_m_sim_bsl_gc_2d0v_cart
     sll_f_new_explicit_euler_2d_charac
 
   use sll_m_characteristics_2d_verlet, only: &
-    sll_t_charac_2d_verlet
+    sll_f_new_verlet_2d_charac
 
   use sll_m_common_array_initializers, only: &
     sll_f_khp1_2d, &
@@ -186,7 +186,7 @@ module sll_m_sim_bsl_gc_2d0v_cart
    class(sll_c_advector_2d), pointer    :: advect_2d
    
    !interpolator for derivatives
-   type(sll_t_cubic_spline_interpolator_2d) :: phi_interp2d
+   class(sll_c_interpolator_2d), pointer   :: phi_interp2d
 
    
    !poisson solver
@@ -278,7 +278,9 @@ contains
     sll_real64 :: x1_max
     sll_real64 :: x2_max     
     class(sll_c_interpolator_2d), pointer :: f_interp2d
+    class(sll_c_interpolator_2d), pointer :: phi_interp2d
     type(sll_t_cubic_spline_interpolator_2d), target :: f_cs2d
+    type(sll_t_cubic_spline_interpolator_2d), target :: phi_cs2d
     class(sll_c_characteristics_2d_base), pointer :: charac2d
     class(sll_c_characteristics_1d_base), pointer :: charac1d_x1
     class(sll_c_characteristics_1d_base), pointer :: charac1d_x2
@@ -440,11 +442,15 @@ contains
       print *,'#initialization with default parameters'    
     endif
 
+
+
+
     x1_max = 2._f64*sll_p_pi/kmode_x1
     x2_max = 2._f64*sll_p_pi/kmode_x2
     Nc_x1 = num_cells_x1
     Nc_x2 = num_cells_x2
      
+    
     sim%dt = dt
     sim%num_iterations = number_iterations
     sim%freq_diag = freq_diag
@@ -457,6 +463,8 @@ contains
       eta1_max = x1_max, &
       eta2_min = x2_min, &
       eta2_max = x2_max)      
+      
+      
       
     select case (f_interp2d_case)
       case ("SLL_CUBIC_SPLINES")
@@ -491,7 +499,6 @@ contains
           sll_p_periodic)
 
         a1_interp2d => a1_cs2d
-
         call A2_cs2d%init( &
           Nc_x1+1, &
           Nc_x2+1, &
@@ -533,7 +540,7 @@ contains
 
     select case (phi_interp2d_case)
       case ("SLL_CUBIC_SPLINES")
-        call sim%phi_interp2d%init( &
+        call phi_cs2d%init( &
           Nc_x1+1, &
           Nc_x2+1, &
           x1_min, &
@@ -542,6 +549,7 @@ contains
           x2_max, &
           sll_p_periodic, &
           sll_p_periodic)         
+        phi_interp2d => phi_cs2d
       case default
         print *,'#bad phi_interp2d_case',phi_interp2d_case
         print *,'#not implemented'
@@ -562,11 +570,7 @@ contains
           bc_type_1=sll_p_periodic, &!&sll_p_set_to_limit, &
           bc_type_2=sll_p_periodic)    
       case ("SLL_VERLET")      
-        allocate(sll_t_charac_2d_verlet :: charac2d )
-
-        select type(c => charac2d )
-        type is(sll_t_charac_2d_verlet)
-        call c%init(&
+        charac2d => sll_f_new_verlet_2d_charac(&
           Nc_x1+1, &
           Nc_x2+1, &
           A1_interp2d, &
@@ -579,7 +583,6 @@ contains
           eta1_max=x1_max, &
           eta2_min=x2_min, &
           eta2_max=x2_max )
-        end select
       case default
         print *,'#bad charac2d_case',charac2d_case
         print *,'#not implemented'
@@ -588,6 +591,7 @@ contains
     end select
 
   
+    sim%phi_interp2d => phi_interp2d
 
 
     select case(advect1d_x1_case)
@@ -1267,7 +1271,7 @@ contains
     sll_real64, dimension(:,:), intent(out) :: A1
     sll_real64, dimension(:,:), intent(out) :: A2
     type(sll_t_cartesian_mesh_2d), pointer :: mesh_2d
-    type(sll_t_cubic_spline_interpolator_2d) :: interp2d
+    class(sll_c_interpolator_2d), pointer   :: interp2d
     sll_int32 :: Nc_x1
     sll_int32 :: Nc_x2
     sll_real64 :: x1_min
@@ -1286,7 +1290,6 @@ contains
     delta_x1 = mesh_2d%delta_eta1
     delta_x2 = mesh_2d%delta_eta2
 
-    print*, interp2d%bc_type1, interp2d%bc_type2
     call interp2d%compute_interpolants(phi)
 
     do i2=1,Nc_x2+1
