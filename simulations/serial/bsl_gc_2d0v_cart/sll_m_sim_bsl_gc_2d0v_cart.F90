@@ -19,7 +19,7 @@ module sll_m_sim_bsl_gc_2d0v_cart
     sll_c_advector_1d
 
   use sll_m_advection_1d_bsl, only: &
-    sll_f_new_advector_1d_bsl
+    sll_t_advector_1d_bsl
 
   use sll_m_advection_1d_csl, only: &
     sll_f_new_csl_1d_advector
@@ -732,12 +732,11 @@ contains
 
     select case(advect1d_x1_case)
       case ("SLL_BSL")
-        advect_1d_x1 => sll_f_new_advector_1d_bsl(&
-          f_interp1d_x1, &
-          charac1d_x1, &
-          Nc_x1_bis+1, &
-          eta_min = x1_min_bis, &
-          eta_max = x1_max_bis)
+        allocate(sll_t_advector_1d_bsl :: advect_1d_x1 )
+        select type ( a => advect_1d_x1 )
+        type is (sll_t_advector_1d_bsl)
+        call a%init( f_interp1d_x1, charac1d_x1, Nc_x1_bis+1, eta_min=x1_min_bis, eta_max=x1_max_bis)
+        end select
       case ("SLL_CSL")
         advect_1d_x1 => sll_f_new_csl_1d_advector(&
           f_interp1d_x1, &
@@ -760,12 +759,11 @@ contains
 
     select case(advect1d_x2_case)
       case ("SLL_BSL")
-        advect_1d_x2 => sll_f_new_advector_1d_bsl(&
-          f_interp1d_x2, &
-          charac1d_x2, &
-          Nc_x2_bis+1, &
-          eta_min = x2_min_bis, &
-          eta_max = x2_max_bis)
+        allocate(sll_t_advector_1d_bsl :: advect_1d_x2 )
+        select type ( a => advect_1d_x2 )
+        type is (sll_t_advector_1d_bsl)
+        call a%init( f_interp1d_x2, charac1d_x2, Nc_x2_bis+1, eta_min=x2_min_bis, eta_max=x2_max_bis)
+        end select
       case ("SLL_CSL")
         advect_1d_x2 => sll_f_new_csl_1d_advector(&
           f_interp1d_x2, &
@@ -806,8 +804,8 @@ contains
           eta2_min = x2_min, &
           eta2_max = x2_max)
       case ("SLL_TENSOR_PRODUCT")
-        allocate(sll_t_advector_2d_tensor_product :: sim%advect_2d )
 
+        allocate(sll_t_advector_2d_tensor_product :: sim%advect_2d )
         select type ( a => sim%advect_2d )
         type is (sll_t_advector_2d_tensor_product)
         call a%init( advect_1d_x1, advect_1d_x2, Nc_x1+1, Nc_x2+1)
