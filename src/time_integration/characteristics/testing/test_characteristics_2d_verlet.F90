@@ -28,7 +28,7 @@ program test_characteristics_2d_verlet
     sll_c_characteristics_2d_base
 
   use sll_m_characteristics_2d_verlet, only: &
-    sll_t_verlet_2d_charac
+    sll_t_charac_2d_verlet
 
   use sll_m_cubic_spline_interpolator_1d, only: &
     sll_f_new_cubic_spline_interpolator_1d
@@ -46,7 +46,7 @@ program test_characteristics_2d_verlet
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
   
   class(sll_c_characteristics_2d_base),pointer :: charac
-  type(sll_t_verlet_2d_charac),        target  :: verlet
+  type(sll_t_charac_2d_verlet),        target  :: verlet
 
   
   sll_int32 :: Npts1
