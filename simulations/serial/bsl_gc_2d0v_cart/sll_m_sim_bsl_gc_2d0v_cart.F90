@@ -31,7 +31,7 @@ module sll_m_sim_bsl_gc_2d0v_cart
     sll_c_advector_2d
 
   use sll_m_advection_2d_bsl, only: &
-    sll_t_advector_2d_bsl
+    sll_f_new_advector_2d_bsl
 
   use sll_m_advection_2d_tensor_product, only: &
     sll_t_advector_2d_tensor_product
@@ -509,7 +509,7 @@ contains
           sll_p_periodic, &
           sll_p_periodic)  
 
-        a2_interp2d => a2_cs2d
+        a2_interp2d => a1_cs2d
 
         A1_interp1d_x1 => sll_f_new_cubic_spline_interpolator_1d( &
           Nc_x1+1, &
@@ -784,12 +784,17 @@ contains
         stop
     end select
 
+
+
+
+
+
+
+
+
     select case(advect2d_case)
       case ("SLL_BSL")
-        allocate(sll_t_advector_2d_bsl :: sim%advect_2d )
-        select type ( a => sim%advect_2d )
-        type is (sll_t_advector_2d_bsl)
-        call a%init(  &
+        sim%advect_2d => sll_f_new_advector_2d_bsl(&
           f_interp2d, &
           charac2d, &
           Nc_x1+1, &
@@ -798,8 +803,6 @@ contains
           eta1_max = x1_max, &
           eta2_min = x2_min, &
           eta2_max = x2_max)
-        end select
-
       case ("SLL_TENSOR_PRODUCT")
 
         allocate(sll_t_advector_2d_tensor_product :: sim%advect_2d )
