@@ -352,7 +352,7 @@ contains
 
   subroutine init_vp2d_par_cart( sim, filename, num_run )
 
-    type(sll_t_simulation_2d_vlasov_poisson_cart) :: sim
+    class(sll_t_simulation_2d_vlasov_poisson_cart) :: sim
     character(len=*), optional                    :: filename
     sll_int32, intent(in), optional :: num_run
 
