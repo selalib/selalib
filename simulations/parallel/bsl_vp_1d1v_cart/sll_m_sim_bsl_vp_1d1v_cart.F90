@@ -237,9 +237,9 @@ module sll_m_sim_bsl_vp_1d1v_cart
    sll_real64 :: omegadr
    logical    :: turn_drive_off
 
-   type(sll_t_advection_1d_base_ptr), dimension(:), pointer :: advect_x1 
-   type(sll_t_advection_1d_base_ptr), dimension(:), pointer :: advect_x2
-   type(sll_t_ampere_1d_advector_ptr),    dimension(:), pointer :: advect_ampere_x1
+   type(sll_t_advection_1d_base_ptr),  dimension(:), pointer :: advect_x1 
+   type(sll_t_advection_1d_base_ptr),  dimension(:), pointer :: advect_x2
+   type(sll_t_ampere_1d_advector_ptr), dimension(:), pointer :: advect_ampere_x1
 
    sll_int32  :: advection_form_x2
    sll_real64 :: factor_x1
@@ -251,6 +251,8 @@ module sll_m_sim_bsl_vp_1d1v_cart
            
    contains !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
+     procedure, pass(sim) :: init => init_vp2d_par_cart
+     procedure, pass(sim) :: free => sll_s_delete_vp2d_par_cart
      procedure, pass(sim) :: run => run_vp2d_cartesian
      procedure, pass(sim) :: init_from_file => init_vp2d_fake !init_vp2d_par_cart
 
@@ -280,7 +282,7 @@ contains
                                                     params,    &
                                                     num_params)
 
-    class(sll_t_simulation_2d_vlasov_poisson_cart)  :: sim
+    type(sll_t_simulation_2d_vlasov_poisson_cart)  :: sim
     procedure(sll_i_scalar_initializer_2d), pointer :: init_func
     sll_real64, dimension(:), pointer             :: params
     sll_int32, intent(in)                         :: num_params
@@ -350,8 +352,8 @@ contains
 
   subroutine init_vp2d_par_cart( sim, filename, num_run )
 
-    class(sll_t_simulation_2d_vlasov_poisson_cart) :: sim
-    character(len=*), optional                   :: filename
+    type(sll_t_simulation_2d_vlasov_poisson_cart) :: sim
+    character(len=*), optional                    :: filename
     sll_int32, intent(in), optional :: num_run
 
     character(len=*), parameter :: this_sub_name = 'init_vp2d_par_cart'
