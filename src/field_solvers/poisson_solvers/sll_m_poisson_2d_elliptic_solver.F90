@@ -78,33 +78,23 @@ module sll_m_poisson_2d_elliptic_solver
   sll_int32, parameter :: SLL_DO_NOTHING_ELLIPTIC_SOLVER = 2 
 
   type,extends(sll_c_poisson_2d_base) :: poisson_2d_elliptic_solver      
-    type(sll_t_general_coordinate_elliptic_solver), pointer      :: elliptic_solver
-    !class(sll_t_scalar_field_2d_discrete), pointer        :: phi_field
-    class(sll_c_scalar_field_2d_base), pointer                :: rho_field
-    class(sll_c_scalar_field_2d_base), pointer                :: a11_field
-    class(sll_c_scalar_field_2d_base), pointer                :: a12_field
-    class(sll_c_scalar_field_2d_base), pointer                :: a21_field
-    class(sll_c_scalar_field_2d_base), pointer                :: a22_field
-    class(sll_c_scalar_field_2d_base), pointer                :: b1_field
-    class(sll_c_scalar_field_2d_base), pointer                :: b2_field
-    class(sll_c_scalar_field_2d_base), pointer                :: c_field
-    class(sll_c_interpolator_2d), pointer                :: interp_rho
-    class(sll_c_interpolator_2d), pointer                :: interp_a11
-    class(sll_c_interpolator_2d), pointer                :: interp_a12
-    class(sll_c_interpolator_2d), pointer                :: interp_a21
-    class(sll_c_interpolator_2d), pointer                :: interp_a22
-    class(sll_c_interpolator_2d), pointer                :: interp_b1
-    class(sll_c_interpolator_2d), pointer                :: interp_b2
-    class(sll_c_interpolator_2d), pointer                :: interp_c
-    !type(sll_t_arbitrary_degree_spline_interpolator_2d)                           :: interp_rho
-    !type(sll_t_arbitrary_degree_spline_interpolator_2d)                           :: interp_phi
-!    type(sll_t_arbitrary_degree_spline_interpolator_2d)                           :: interp_a11
-!    type(sll_t_arbitrary_degree_spline_interpolator_2d)                           :: interp_a12
-!    type(sll_t_arbitrary_degree_spline_interpolator_2d)                           :: interp_a21
-!    type(sll_t_arbitrary_degree_spline_interpolator_2d)                           :: interp_a22
-!    type(sll_t_arbitrary_degree_spline_interpolator_2d)                           :: interp_b1
-!    type(sll_t_arbitrary_degree_spline_interpolator_2d)                           :: interp_b2
-!    type(sll_t_arbitrary_degree_spline_interpolator_2d)                           :: interp_c
+    type(sll_t_general_coordinate_elliptic_solver), pointer :: elliptic_solver
+    class(sll_c_scalar_field_2d_base), pointer     :: rho_field
+    class(sll_c_scalar_field_2d_base), pointer     :: a11_field
+    class(sll_c_scalar_field_2d_base), pointer     :: a12_field
+    class(sll_c_scalar_field_2d_base), pointer     :: a21_field
+    class(sll_c_scalar_field_2d_base), pointer     :: a22_field
+    class(sll_c_scalar_field_2d_base), pointer     :: b1_field
+    class(sll_c_scalar_field_2d_base), pointer     :: b2_field
+    class(sll_c_scalar_field_2d_base), pointer     :: c_field
+    class(sll_c_interpolator_2d), pointer          :: interp_rho
+    class(sll_c_interpolator_2d), pointer          :: interp_a11
+    class(sll_c_interpolator_2d), pointer          :: interp_a12
+    class(sll_c_interpolator_2d), pointer          :: interp_a21
+    class(sll_c_interpolator_2d), pointer          :: interp_a22
+    class(sll_c_interpolator_2d), pointer          :: interp_b1
+    class(sll_c_interpolator_2d), pointer          :: interp_b2
+    class(sll_c_interpolator_2d), pointer          :: interp_c
     sll_int32 :: control
     logical :: precompute_rhs
   contains
@@ -157,7 +147,7 @@ contains
    with_constraint, &
    zero_mean ) 
    
-   class(poisson_2d_elliptic_solver),        target  :: poisson
+   class(poisson_2d_elliptic_solver)                       :: poisson
    class(sll_c_coordinate_transformation_2d_base), pointer :: transf
    sll_int32, intent(in)  :: spline_degree_eta1
    sll_int32, intent(in)  :: spline_degree_eta2
@@ -759,10 +749,10 @@ contains
   ! solves \Delta phi = -rho in 2d
   subroutine compute_phi_from_rho_2d_elliptic_solver(poisson,phi,rho )
     ! input variables 
-    class(poisson_2d_elliptic_solver), target   :: poisson
-    sll_real64, dimension(:,:), intent(in)     :: rho
+    class(poisson_2d_elliptic_solver)       :: poisson
+    sll_real64, dimension(:,:), intent(in)  :: rho
     ! output variables
-    sll_real64, dimension(:,:), intent(out)  :: phi
+    sll_real64, dimension(:,:), intent(out) :: phi
     ! local variables
     !class(sll_t_general_coordinate_elliptic_solver), pointer   :: elliptic_solver
     sll_real64 :: delta1
