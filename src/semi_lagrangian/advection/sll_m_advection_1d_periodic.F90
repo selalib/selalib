@@ -34,13 +34,13 @@ module sll_m_advection_1d_periodic
 
   implicit none
 
-  public :: &
-    sll_f_new_periodic_1d_advector
+  public :: sll_f_new_periodic_1d_advector
+  public :: sll_t_advector_1d_periodic
 
   private
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
-  type,extends(sll_c_advector_1d) :: periodic_1d_advector
+  type,extends(sll_c_advector_1d) :: sll_t_advector_1d_periodic
 
      sll_int32                            :: num_cells
      sll_real64                           :: xmin
@@ -48,14 +48,13 @@ module sll_m_advection_1d_periodic
      type(sll_t_periodic_interp_work), pointer  :: per_interp
 
   contains
-    procedure, pass(adv) :: initialize => &
-      initialize_periodic_1d_advector
+    procedure, pass(adv) :: init => initialize_periodic_1d_advector
     procedure, pass(adv) :: advect_1d_constant => &
       periodic_advect_1d_constant
     procedure, pass(adv) :: advect_1d => &
       periodic_advect_1d_fake
     procedure, pass(adv) :: delete => delete_periodic_1d_advector
-  end type periodic_1d_advector
+  end type sll_t_advector_1d_periodic
    
 contains
   
@@ -67,7 +66,7 @@ contains
     type, &
     order) &
     result(adv)      
-    type(periodic_1d_advector), pointer :: adv
+    type(sll_t_advector_1d_periodic), pointer :: adv
     sll_int32,  intent(in)               :: num_cells
     sll_real64, intent(in)               :: xmin
     sll_real64, intent(in)               :: xmax
@@ -95,7 +94,7 @@ contains
       type, &
       order)
       
-    class(periodic_1d_advector) :: adv
+    class(sll_t_advector_1d_periodic) :: adv
     sll_int32,  intent(in)               :: num_cells
     sll_real64, intent(in)               :: xmin
     sll_real64, intent(in)               :: xmax
@@ -128,7 +127,7 @@ contains
     dt, &
     input, &
     output)
-    class(periodic_1d_advector) :: adv
+    class(sll_t_advector_1d_periodic) :: adv
     sll_real64, intent(in) :: A
     sll_real64, intent(in) :: dt 
     sll_real64, dimension(:), intent(in) :: input
@@ -162,7 +161,7 @@ contains
     dt, &
     input, &
     output)
-    class(periodic_1d_advector) :: adv
+    class(sll_t_advector_1d_periodic) :: adv
     sll_real64, dimension(:), intent(in) :: A
     sll_real64, intent(in) :: dt 
     sll_real64, dimension(:), intent(in) :: input
@@ -180,7 +179,7 @@ contains
   end subroutine periodic_advect_1d_fake
 
   subroutine delete_periodic_1d_advector( adv )
-    class(periodic_1d_advector), intent(inout) :: adv
+    class(sll_t_advector_1d_periodic), intent(inout) :: adv
     SLL_ASSERT(storage_size(adv)>0)
   end subroutine delete_periodic_1d_advector
 
