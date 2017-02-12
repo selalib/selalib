@@ -282,8 +282,6 @@ contains
     class(sll_c_characteristics_2d_base), pointer :: charac2d
     class(sll_c_characteristics_1d_base), pointer :: charac1d_x1
     class(sll_c_characteristics_1d_base), pointer :: charac1d_x2
-    type(sll_t_cubic_spline_interpolator_2d), target   :: A1_cs2d
-    type(sll_t_cubic_spline_interpolator_2d), target   :: A2_cs2d
     class(sll_c_interpolator_2d), pointer   :: A1_interp2d
     class(sll_c_interpolator_2d), pointer   :: A2_interp2d
     class(sll_c_interpolator_1d), pointer   :: A1_interp1d_x1
@@ -487,7 +485,13 @@ contains
     select case (A_interp_case)
       case ("SLL_CUBIC_SPLINES")
         
-        A1_interp2d => sll_f_new_cubic_spline_interpolator_2d( &
+        allocate(sll_t_cubic_spline_interpolator_2d :: A1_interp2d)
+        allocate(sll_t_cubic_spline_interpolator_2d :: A2_interp2d)
+
+        select type (a1_cs2d => A1_interp2d)
+        type is (sll_t_cubic_spline_interpolator_2d)
+
+        call a1_cs2d%init( &
           Nc_x1+1, &
           Nc_x2+1, &
           x1_min, &
@@ -496,9 +500,11 @@ contains
           x2_max, &
           sll_p_periodic, &
           sll_p_periodic)
+        end select
 
-
-        A2_interp2d => sll_f_new_cubic_spline_interpolator_2d( &
+        select type (a2_cs2d => A2_interp2d)
+        type is (sll_t_cubic_spline_interpolator_2d)
+        call a2_cs2d%init( &
           Nc_x1+1, &
           Nc_x2+1, &
           x1_min, &
@@ -507,6 +513,7 @@ contains
           x2_max, &
           sll_p_periodic, &
           sll_p_periodic)  
+        end select
 
 
         A1_interp1d_x1 => sll_f_new_cubic_spline_interpolator_1d( &

@@ -57,10 +57,10 @@ module sll_m_characteristics_2d_verlet
       process_outside_point1
     procedure(sll_i_signature_process_outside_point), pointer, nopass    :: &
       process_outside_point2
-    class(sll_c_interpolator_2d), pointer               :: A1_interp_x1x2
-    class(sll_c_interpolator_2d), pointer               :: A2_interp_x1x2
-    class(sll_c_interpolator_1d), pointer               :: A1_interp_x1
-    class(sll_c_interpolator_1d), pointer               :: A2_interp_x1
+    class(sll_c_interpolator_2d), pointer :: A1_interp_x1x2
+    class(sll_c_interpolator_2d), pointer :: A2_interp_x1x2
+    class(sll_c_interpolator_1d), pointer :: A1_interp_x1
+    class(sll_c_interpolator_1d), pointer :: A2_interp_x1
     sll_int32 :: x1_maxiter
     sll_int32 :: x2_maxiter
     sll_real64 :: x1_tol
@@ -68,8 +68,7 @@ module sll_m_characteristics_2d_verlet
      
   contains
     procedure, pass(charac) :: init => initialize_verlet_2d_charac
-    procedure, pass(charac) :: compute_characteristics => &
-      compute_verlet_2d_charac
+    procedure, pass(charac) :: compute_characteristics => compute_verlet_2d_charac
   end type sll_t_charac_2d_verlet
 
 contains
@@ -272,13 +271,10 @@ contains
       stop
     endif
 
-    
-    
     charac%A1_interp_x1x2 => A1_interp_x1x2
     charac%A2_interp_x1x2 => A2_interp_x1x2
     charac%A1_interp_x1 => A1_interp_x1
     charac%A2_interp_x1 => A2_interp_x1
-    
     
     if(present(x1_maxiter))then
       charac%x1_maxiter = x1_maxiter
@@ -291,7 +287,6 @@ contains
       charac%x2_maxiter = charac%x1_maxiter  
     endif
 
-
     if(present(x1_tol))then
       charac%x1_tol = x1_tol
     else
@@ -302,9 +297,6 @@ contains
     else
       charac%x2_tol = charac%x1_tol  
     endif
-
-
-    
     
   end subroutine initialize_verlet_2d_charac
 
