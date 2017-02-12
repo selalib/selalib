@@ -121,8 +121,8 @@ contains
 
   !> solves \f[ -\Delta \phi = \rho \f] in 2d
   subroutine compute_phi_from_rho_1d_hmf( poisson, phi, rho )
-    class(sll_t_poisson_1d_hmf), target :: poisson
-    sll_real64,dimension(:),intent(in) :: rho
+    class(sll_t_poisson_1d_hmf)         :: poisson
+    sll_real64,dimension(:),intent(in)  :: rho
     sll_real64,dimension(:),intent(out) :: phi
     
     stop ' compute phi from rho is not implemented '
