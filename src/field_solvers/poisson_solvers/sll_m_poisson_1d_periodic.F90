@@ -24,6 +24,7 @@ module sll_m_poisson_1d_periodic
 #include "sll_assert.h"
 #include "sll_memory.h"
 #include "sll_working_precision.h"
+#include "sll_errors.h"
 
   use sll_m_constants, only: &
     sll_p_pi
@@ -36,6 +37,7 @@ module sll_m_poisson_1d_periodic
     sll_o_initialize, &
     sll_o_new, &
     sll_t_poisson_1d_periodic, &
+    sll_c_poisson_1d_periodic, &
     sll_o_solve,               &
     sll_f_new_poisson_1d_periodic
 
@@ -52,10 +54,10 @@ module sll_m_poisson_1d_periodic
 
   type,extends(sll_c_poisson_1d_base) :: sll_c_poisson_1d_periodic  
   
-    type(sll_t_poisson_1d_periodic), pointer :: poiss
+    type(sll_t_poisson_1d_periodic) :: poiss
   
   contains
-    procedure, pass(poisson) :: sll_o_initialize => &
+    procedure, pass(poisson) :: init => &
       initialize_poisson_1d_periodic_wrapper
     procedure, pass(poisson) :: compute_phi_from_rho => &
       compute_phi_from_rho_1d_periodic
@@ -201,29 +203,17 @@ contains
     sll_int32, intent(in) :: nc_eta1
     sll_int32 :: ierr
 
-    
-    poisson%poiss => sll_o_new( &
-      eta1_min, &
-      eta1_max, &
-      nc_eta1, &
-      ierr)
+    call initialize_poisson_1d_periodic(poisson%poiss,eta1_min,eta1_max,nc_eta1,ierr)
     
   end subroutine initialize_poisson_1d_periodic_wrapper
   
   ! solves -\Delta phi = rho in 2d
   subroutine compute_phi_from_rho_1d_periodic( poisson, phi, rho )
-    class(sll_c_poisson_1d_periodic), target :: poisson
-    sll_real64,dimension(:),intent(in) :: rho
+    class(sll_c_poisson_1d_periodic)    :: poisson
+    sll_real64,dimension(:),intent(in)  :: rho
     sll_real64,dimension(:),intent(out) :: phi
     
-    print *,'#compute_phi_from_rho_1d_periodic'
-    print *,'#not implemented yet'
-    phi = 0._f64
-    if(.not.(associated(poisson%poiss)))then
-      print *,'#poisson%poiss not associated'
-    endif
-    print *,maxval(rho)  
-    stop
+    SLL_ERROR('compute_phi_from_rho_1d_periodic','not implemented yet')
     
   end subroutine compute_phi_from_rho_1d_periodic
 
