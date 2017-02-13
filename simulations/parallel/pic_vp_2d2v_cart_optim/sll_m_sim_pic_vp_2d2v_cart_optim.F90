@@ -7,6 +7,11 @@ module sll_m_sim_pic_vp_2d2v_cart_optim
 #include "sll_accumulators.h"
 #include "sll_particle_representation.h"
 
+  use sll_m_timer, only: &
+    sll_s_set_time_mark, &
+    sll_f_time_elapsed_since, &
+    sll_t_time_mark
+
   use sll_m_accumulators, only: &
     sll_t_electric_field_accumulator, &
     sll_t_electric_field_accumulator_cs, &
@@ -291,7 +296,7 @@ contains
     sll_real64 :: dtqom! dt * qoverm
     sll_real64 :: x, x1  ! for global position
     sll_real64 :: y, y1  ! for global position
-    sll_real64 :: dt, ttime
+    sll_real64 :: dt
     sll_real64 :: pp_vx, pp_vy
     type(sll_t_particle_4d), dimension(:), pointer :: p
     type(sll_t_field_accumulator_cell), dimension(:), pointer :: accumE
@@ -301,13 +306,14 @@ contains
     !sll_real64, dimension(:),   allocatable  ::  diag_TOTmoment
     !sll_real64, dimension(:),   allocatable  ::  diag_TOTenergy
     sll_real64, dimension(:,:), allocatable :: diag_AccMem! a memory buffer
-!    type(sll_time_mark)  :: t2, t3
-!$    sll_real64 :: t2
-    sll_real64 :: t3
     sll_real64, dimension(:), allocatable :: rho1d_send
     sll_real64, dimension(:), allocatable :: rho1d_receive
-    !sll_real64   :: t_init, t_fin, time
-!$    sll_real64   :: time
+    sll_real64 :: time, ttime
+#ifdef _OPENMP
+    sll_real64 :: t2, t3
+#else
+    type(sll_t_time_mark) :: t2, t3
+#endif  
     sll_int32 :: save_nb
     sll_int32 :: thread_id
     sll_int32 :: n_threads
@@ -444,9 +450,11 @@ contains
 
     if (sim%my_rank ==0) open(65,file='logE_standPush.dat')
 #ifdef _OPENMP
-    t2 = omp_get_wtime()!!   call sll_set_time_mark(t2)
+    t2 = omp_get_wtime()
+#else    
+    call sll_s_set_time_mark(t2)
 #endif
-
+    
 !  -------------------------
 !  ------  TIME LOOP  ------
 !  -------------------------
@@ -494,9 +502,11 @@ contains
        !
        ! *******************************************************************
        some_val = 0.0_f64
-! #ifdef _OPENMP
- !      t3 = omp_get_wtime()!!  call sll_set_time_mark(t3)
-! #endif
+#ifdef _OPENMP
+      t3 = omp_get_wtime()
+#else
+      call sll_s_set_time_mark(t3)
+#endif
       if (sim%use_cubic_splines) then 
 
           !$omp parallel default(SHARED) PRIVATE(x,y,x1,y1,Ex,Ey,Ex1,Ey1,gi,tmp1,tmp2,tmp3,tmp4,temp,ttmp1,ttmp2,off_x,off_y,ic_x,ic_y,thread_id,p_guard,q_accum_CS)
@@ -543,13 +553,16 @@ contains
           sim%part_group%num_postprocess_particles(thread_id+1) = gi
           !$omp end parallel
 !       diag_TOTenergy(mod(counter,save_nb)) = some_val
-!!$          ttime = sll_time_elapsed_since(t3)
 #ifdef _OPENMP
           ttime = omp_get_wtime()
-#endif
           diag_AccMem(it,:) = (/ (it+1)*dt, (32*sim%parts_number*2 + gi*2*8 + &
                2*128*ncx*ncy + 2*128*ncx*ncy)/(ttime-t3)/1e9 /)! access to memory in GB/sec
-!!$            2*sizeof(sim%q_accumulator_CS%q_acc) + sizeof(sim%E_accumulator_CS%e_acc))
+!!$          = 2*sizeof(sim%q_accumulator_CS%q_acc) + sizeof(sim%E_accumulator_CS%e_acc))
+#else
+          ttime = sll_f_time_elapsed_since(t3)
+          diag_AccMem(it,:) = (/ (it+1)*dt, (32*sim%parts_number*2 + gi*2*8 + &
+               2*128*ncx*ncy + 2*128*ncx*ncy)/ttime/1e9 /)! access to memory in GB/sec
+#endif
 
           ! Process the particles in the guard list. In the periodic case, no
           ! destruction of particles is needed, so this is simple.
@@ -621,13 +634,17 @@ contains
           sim%part_group%num_postprocess_particles(thread_id+1) = gi
           !$omp end parallel
 !       diag_TOTenergy(mod(counter,save_nb)) = some_val
-!#ifdef _OPENMP
-!          ttime = omp_get_wtime()!! ttime = sll_time_elapsed_since(t3)
-!#endif
- !         diag_AccMem(it,:) = (/ (it+1)*dt, (32*sim%parts_number*2 + gi*2*8 + &
- !              2*32*ncx*ncy + 2*32*ncx*ncy)/(ttime-t3)/1e9 /)! access to memory in GB/sec
-!!$            2*sizeof(sim%q_accumulator%q_acc) + sizeof(sim%E_accumulator%e_acc))
-          
+#ifdef _OPENMP
+          ttime = omp_get_wtime()
+          diag_AccMem(it,:) = (/ (it+1)*dt, (32*sim%parts_number*2 + gi*2*8 + &
+               2*32*ncx*ncy + 2*32*ncx*ncy)/(ttime-t3)/1e9 /)! access to memory in GB/sec
+!!$         = 2*sizeof(sim%q_accumulator%q_acc) + sizeof(sim%E_accumulator%e_acc))
+#else
+          ttime = sll_f_time_elapsed_since(t3)
+          diag_AccMem(it,:) = (/ (it+1)*dt, (32*sim%parts_number*2 + gi*2*8 + &
+               2*32*ncx*ncy + 2*32*ncx*ncy)/ttime/1e9 /)! access to memory in GB/sec
+#endif
+
           ! Process the particles in the guard list. In the periodic case, no
           ! destruction of particles is needed, so this is simple.
 
@@ -733,16 +750,18 @@ contains
     enddo
 !  ---  ---  - - -   END TIME LOOP  - - -  --- -----
 
-#ifdef _OPENMP
-    time = omp_get_wtime()!! time = sll_time_elapsed_since(t2)
-
     if (sim%my_rank ==0) then
        open(93,file='time_parts_sec_omp.dat',position='append')
        write(93,*) '# Nb of threads  ||  time (sec)  ||  average pushes/sec'
+#ifdef _OPENMP
+       time = omp_get_wtime()
        write(93,*) sim%n_threads, time-t2, real(sim%num_iterations*sim%parts_number/(time-t2),f64)
+#else
+       time = sll_f_time_elapsed_since(t2)
+       write(93,*) sim%n_threads, time, real(sim%num_iterations*sim%parts_number/time,f64)
+#endif
        close(93)
     endif
-#endif
     
     if (sim%my_rank ==0) then 
        close(65)
