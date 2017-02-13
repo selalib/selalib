@@ -825,14 +825,22 @@ contains
         SLL_ERROR( this_sub_name, '#split_case not defined' )
     end select
 
-    !advector
+    !allocate advector arrays
     
+    select case (advector_x1)
+    case("SLL_SPLINES") 
+      allocate(sll_t_advector_1d_periodic :: sim%advect_x1(num_threads))
+    case("SLL_LAGRANGE") 
+      allocate(sll_t_advector_1d_periodic :: sim%advect_x1(num_threads))
+    end select
+
     select case (advector_x2)
+    case("SLL_SPLINES") 
+      allocate(sll_t_advector_1d_periodic :: sim%advect_x2(num_threads))
+    case("SLL_LAGRANGE") 
+      allocate(sll_t_advector_1d_periodic :: sim%advect_x2(num_threads))
     case("SLL_NON_UNIFORM_CUBIC_SPLINES") 
       allocate(sll_t_advector_1d_non_uniform_cubic_splines :: sim%advect_x2(num_threads))
-    case default
-      allocate(sll_t_advector_1d_periodic :: sim%advect_x1(num_threads))
-      allocate(sll_t_advector_1d_periodic :: sim%advect_x2(num_threads))
     end select
 
     !$OMP PARALLEL DEFAULT(SHARED) &
