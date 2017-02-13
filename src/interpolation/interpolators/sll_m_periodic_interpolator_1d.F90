@@ -16,7 +16,7 @@ module sll_m_periodic_interpolator_1d
     sll_c_interpolator_1d
 
   use sll_m_periodic_interp, only: &
-    sll_o_delete, &
+    sll_s_periodic_interp_free, &
     sll_s_periodic_interp_init, &
     sll_s_periodic_interp, &
     sll_t_periodic_interp_work
@@ -306,7 +306,7 @@ contains  ! ****************************************************************
 
   subroutine delete_per1d( obj )
     class(sll_t_periodic_interpolator_1d) :: obj
-    call sll_o_delete(obj%per_interp)
+    call sll_s_periodic_interp_free(obj%per_interp)
   end subroutine delete_per1d
 
   subroutine set_coefficients_per1d( interpolator, coeffs )
