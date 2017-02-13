@@ -4,6 +4,7 @@ add_library( sll_ode_integrators STATIC
 
 target_link_libraries( sll_ode_integrators
                        sll_vector_space
+                       sll_assert
                        sll_errors )
 # Tests
 if( BUILD_TESTING )
