@@ -172,6 +172,7 @@ function(add_forcheck_target_separate)
     get_target_property(_source_directory ${_name} SOURCE_DIR)
     get_target_property(_sources ${_name} SOURCES)
     if (_sources)
+      list(REMOVE_DUPLICATES _sources)
       # we create a list of preprocessed source file names 
       set(_current_library_sources)
       foreach (_src ${_sources})
