@@ -30,8 +30,8 @@ module sll_m_sim_bsl_va_1d1v_cart_berk_breizman
 #include "sll_working_precision.h"
 
   use sll_m_advection_1d_ampere, only: &
-    sll_t_ampere_1d_advector_ptr, &
-    sll_f_new_ampere_1d_advector
+    sll_t_advector_1d_ampere_ptr, &
+    sll_f_new_advector_1d_ampere
 
   use sll_m_advection_1d_base, only: &
     sll_t_advection_1d_base_ptr
@@ -40,7 +40,7 @@ module sll_m_sim_bsl_va_1d1v_cart_berk_breizman
     sll_f_new_periodic_1d_advector
 
   use sll_m_advection_1d_spectral, only: &
-    sll_f_new_spectral_1d_advector
+    sll_f_new_advector_1d_spectral
 
   use sll_m_ascii_io, only: &
     sll_s_ascii_file_close, &
@@ -180,7 +180,7 @@ type, extends(sll_c_simulation_base_class) :: sll_t_simulation_2d_vlasov_ampere_
 
  type(sll_t_advection_1d_base_ptr), dimension(:), pointer :: advect_x1 
  type(sll_t_advection_1d_base_ptr), dimension(:), pointer :: advect_x2
- type(sll_t_ampere_1d_advector_ptr),    dimension(:), pointer :: advect_ampere_x1
+ type(sll_t_advector_1d_ampere_ptr),    dimension(:), pointer :: advect_ampere_x1
 
  sll_real64 :: factor_x1
  sll_real64 :: factor_x2_rho
@@ -695,7 +695,7 @@ select case (advector_x1)
 
   case("SLL_SPECTRAL") ! spectral periodic advection
 
-    sim%advect_x1(tid)%ptr => sll_f_new_spectral_1d_advector( &
+    sim%advect_x1(tid)%ptr => sll_f_new_advector_1d_spectral( &
       num_cells_x1,                                     &
       x1_min,                                           &
       x1_max)
@@ -785,7 +785,7 @@ select case (ampere_solver)
     !$OMP PARALLEL DEFAULT(SHARED) &
     !$OMP PRIVATE(tid)
     !$ tid = omp_get_thread_num()+1
-    sim%advect_ampere_x1(tid)%ptr => sll_f_new_ampere_1d_advector( &
+    sim%advect_ampere_x1(tid)%ptr => sll_f_new_advector_1d_ampere( &
       num_cells_x1, &
       x1_min,       &
       x1_max )
