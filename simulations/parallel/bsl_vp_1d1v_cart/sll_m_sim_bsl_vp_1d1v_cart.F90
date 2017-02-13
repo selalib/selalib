@@ -31,10 +31,7 @@ module sll_m_sim_bsl_vp_1d1v_cart
 #include "sll_memory.h"
 #include "sll_working_precision.h"
 
-use sll_m_advection_1d_ampere, only: &
-  sll_t_advector_1d_ampere_ptr, &
-  sll_f_new_advector_1d_ampere
-
+use sll_m_advection_1d_ampere, only: sll_t_advector_1d_ampere
 use sll_m_advection_1d_base, only: sll_c_advector_1d
 
 use sll_m_advection_1d_non_uniform_cubic_splines, only: &
@@ -72,6 +69,8 @@ use sll_m_collective, only: &
   sll_s_collective_gatherv_real64, &
   sll_f_get_collective_rank, &
   sll_f_get_collective_size, &
+  sll_s_collective_barrier, &
+  sll_s_halt_collective, &
   sll_v_world_collective
 
 use sll_m_common_array_initializers, only: &
@@ -235,7 +234,7 @@ type, extends(sll_c_simulation_base_class) :: &
 
  class(sll_c_advector_1d),  dimension(:), pointer :: advect_x1 
  class(sll_c_advector_1d),  dimension(:), pointer :: advect_x2
- type(sll_t_advector_1d_ampere_ptr), dimension(:), pointer :: advect_ampere_x1
+ type(sll_t_advector_1d_ampere), dimension(:), pointer :: advect_ampere_x1
 
  sll_int32  :: advection_form_x2
  sll_real64 :: factor_x1
@@ -912,6 +911,7 @@ contains
 
     !$OMP END PARALLEL
 
+
     if (sim%vlasov_ampere) then
       print*,'########################'
       print*,'# Vlasov-Ampere scheme #'
@@ -921,10 +921,7 @@ contains
       !$OMP PARALLEL DEFAULT(SHARED) &
       !$OMP PRIVATE(tid)
       !$ tid = omp_get_thread_num()+1
-      sim%advect_ampere_x1(tid)%ptr => sll_f_new_advector_1d_ampere( &
-        num_cells_x1, &
-        x1_min,       &
-        x1_max )
+      call sim%advect_ampere_x1(tid)%init( num_cells_x1, x1_min, x1_max )
       !$OMP END PARALLEL
     end if
 
@@ -944,6 +941,11 @@ contains
     sim%factor_x2_rho = factor_x2_rho
     sim%factor_x2_1   = factor_x2_1
     
+    call sll_s_collective_barrier(sll_v_world_collective)
+    print*, "coucou"
+    call sll_s_halt_collective()
+    call flush(6)
+    stop
     SLL_ALLOCATE(sim%integration_weight(sim%num_dof_x2),ierr)
 
     select case (integration_case)
@@ -966,6 +968,7 @@ contains
       case default
         SLL_ERROR( this_sub_name, '#integration_case not implemented' )
     end select  
+
     
     select case (poisson_solver)
       case ("SLL_FFT")
@@ -984,6 +987,8 @@ contains
         err_msg = '#poisson_solver '//poisson_solver//' not implemented'
         SLL_ERROR( this_sub_name, err_msg )
     end select
+
+    
     
     select case (drive_type)
 
@@ -1505,7 +1510,7 @@ contains
                !advection in x
                !$ tid = omp_get_thread_num()+1
                
-               sim%advect_ampere_x1(tid)%ptr%r1 = cmplx(0.0,0.0,kind=f64)
+               sim%advect_ampere_x1(tid)%r1 = cmplx(0.0,0.0,kind=f64)
                !$OMP DO 
                do i_omp = 1, local_size_x2
                
@@ -1514,29 +1519,29 @@ contains
                      * sim%split%split_step(split_istep) * sim%dt
                  f1d_omp_in(1:np_x1,tid) = f_x1(1:np_x1,i_omp)
                  
-                 sim%advect_ampere_x1(tid)%ptr%d_dx = f1d_omp_in(1:nc_x1,tid)
+                 sim%advect_ampere_x1(tid)%d_dx = f1d_omp_in(1:nc_x1,tid)
                
-                 call sll_s_fft_exec_r2c_1d(sim%advect_ampere_x1(tid)%ptr%fwx,  &
-                      sim%advect_ampere_x1(tid)%ptr%d_dx, &
-                      sim%advect_ampere_x1(tid)%ptr%fk)
+                 call sll_s_fft_exec_r2c_1d(sim%advect_ampere_x1(tid)%fwx,  &
+                      sim%advect_ampere_x1(tid)%d_dx, &
+                      sim%advect_ampere_x1(tid)%fk)
                  do i = 2, nc_x1/2+1
-                   sim%advect_ampere_x1(tid)%ptr%fk(i) = &
-                      sim%advect_ampere_x1(tid)%ptr%fk(i) & 
-                      * cmplx(cos(sim%advect_ampere_x1(tid)%ptr%kx(i)*alpha_omp), &
-                             -sin(sim%advect_ampere_x1(tid)%ptr%kx(i)*alpha_omp), &
+                   sim%advect_ampere_x1(tid)%fk(i) = &
+                      sim%advect_ampere_x1(tid)%fk(i) & 
+                      * cmplx(cos(sim%advect_ampere_x1(tid)%kx(i)*alpha_omp), &
+                             -sin(sim%advect_ampere_x1(tid)%kx(i)*alpha_omp), &
                               kind=f64)
                  end do
                
-                 sim%advect_ampere_x1(tid)%ptr%r1(2:nc_x1/2+1) = &
-                      sim%advect_ampere_x1(tid)%ptr%r1(2:nc_x1/2+1) &
-                    + sim%advect_ampere_x1(tid)%ptr%fk(2:nc_x1/2+1) &
+                 sim%advect_ampere_x1(tid)%r1(2:nc_x1/2+1) = &
+                      sim%advect_ampere_x1(tid)%r1(2:nc_x1/2+1) &
+                    + sim%advect_ampere_x1(tid)%fk(2:nc_x1/2+1) &
                     * cmplx(sim%integration_weight(ig_omp),0.0_f64,f64)
                
-                 call sll_s_fft_exec_c2r_1d(sim%advect_ampere_x1(tid)%ptr%bwx, &
-                      sim%advect_ampere_x1(tid)%ptr%fk,  &
-                      sim%advect_ampere_x1(tid)%ptr%d_dx)
+                 call sll_s_fft_exec_c2r_1d(sim%advect_ampere_x1(tid)%bwx, &
+                      sim%advect_ampere_x1(tid)%fk,  &
+                      sim%advect_ampere_x1(tid)%d_dx)
                
-                 f1d_omp_out(1:nc_x1,tid) = sim%advect_ampere_x1(tid)%ptr%d_dx/real(nc_x1,f64)
+                 f1d_omp_out(1:nc_x1,tid) = sim%advect_ampere_x1(tid)%d_dx/real(nc_x1,f64)
                  f1d_omp_out(np_x1,  tid) = f1d_omp_out(1, tid) 
                
                  f_x1(1:np_x1,i_omp)=f1d_omp_out(1:np_x1,tid)
@@ -1547,7 +1552,7 @@ contains
                rk_loc = cmplx(0.0,0.0,kind=f64)
                do i = 2, nc_x1/2+1
                  do tid = 1, sim%num_threads
-                   rk_loc(i) = rk_loc(i) + sim%advect_ampere_x1(tid)%ptr%r1(i)
+                   rk_loc(i) = rk_loc(i) + sim%advect_ampere_x1(tid)%r1(i)
                  end do
                end do
                
@@ -1557,23 +1562,23 @@ contains
                     rk_loc,                                         &
                     nc_x1/2+1,                                      &
                     MPI_SUM,                                        &
-                    sim%advect_ampere_x1(1)%ptr%r1 )
+                    sim%advect_ampere_x1(1)%r1 )
                
-               sim%advect_ampere_x1(tid)%ptr%d_dx = efield(1:nc_x1)
-               call sll_s_fft_exec_r2c_1d(sim%advect_ampere_x1(1)%ptr%fwx,  &
-                    sim%advect_ampere_x1(1)%ptr%d_dx, &
-                    sim%advect_ampere_x1(1)%ptr%ek)
+               sim%advect_ampere_x1(tid)%d_dx = efield(1:nc_x1)
+               call sll_s_fft_exec_r2c_1d(sim%advect_ampere_x1(1)%fwx,  &
+                    sim%advect_ampere_x1(1)%d_dx, &
+                    sim%advect_ampere_x1(1)%ek)
                
                
                do i = 2, nc_x1/2+1
-                 sim%advect_ampere_x1(1)%ptr%ek(i) =  &
-                    - sim%advect_ampere_x1(1)%ptr%r1(i) &
+                 sim%advect_ampere_x1(1)%ek(i) =  &
+                    - sim%advect_ampere_x1(1)%r1(i) &
                     * cmplx(sim%mesh2d%eta1_max-sim%mesh2d%eta1_min,0.0_f64,f64) &
                     / cmplx(0.,2.0_f64*sll_p_pi*real(i-1,f64),kind=f64)
                end do
                
-               call sll_s_fft_exec_c2r_1d(sim%advect_ampere_x1(1)%ptr%bwx, &
-                    sim%advect_ampere_x1(1)%ptr%ek,  &
+               call sll_s_fft_exec_c2r_1d(sim%advect_ampere_x1(1)%bwx, &
+                    sim%advect_ampere_x1(1)%ek,  &
                     efield)
                
                efield(1:nc_x1) = efield(1:nc_x1) / real(nc_x1,f64)
