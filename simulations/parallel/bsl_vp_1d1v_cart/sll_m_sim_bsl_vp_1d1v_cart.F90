@@ -1275,7 +1275,6 @@ contains
 
 
     if (MPI_MASTER) then
-
        call sll_s_binary_file_create("x.bdat", file_id, ierr)
        call sll_s_binary_write_array_1d(file_id,sim%x1_array(1:np_x1-1),ierr)
        call sll_s_binary_file_close(file_id,ierr)                    
@@ -1932,16 +1931,13 @@ contains
 
     class(sll_t_simulation_2d_vlasov_poisson_cart) :: sim
     sll_int32 :: ierr
-    
-    
-   if(associated(sim%x1_array)) then
-     SLL_DEALLOCATE(sim%x1_array,ierr)
-     nullify(sim%x1_array)
-   endif
-   if(associated(sim%x2_array)) then
-     SLL_DEALLOCATE(sim%x2_array,ierr)
-     nullify(sim%x2_array)
-   endif
+     
+    if(associated(sim%x1_array)) then
+      nullify(sim%x1_array)
+    endif
+    if(associated(sim%x2_array)) then
+      nullify(sim%x2_array)
+    endif
         
   end subroutine sll_s_delete_vp2d_par_cart
 
