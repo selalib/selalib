@@ -39,7 +39,7 @@ module sll_m_sim_bsl_va_1d1v_cart_spectral
     sll_t_advection_1d_base_ptr
 
   use sll_m_advection_1d_non_uniform_cubic_splines, only: &
-    sll_f_new_non_uniform_cubic_splines_1d_advector
+    sll_f_new_advector_1d_non_uniform_cubic_splines
 
   use sll_m_advection_1d_periodic, only: &
     sll_f_new_periodic_1d_advector
@@ -938,7 +938,7 @@ contains
                                             ! periodic interpolation
 
         sim%advect_x2(tid)%ptr =>                    &
-          sll_f_new_non_uniform_cubic_splines_1d_advector( &
+          sll_f_new_advector_1d_non_uniform_cubic_splines( &
             num_cells_x2,                            &
             x2_min,                                  &
             x2_max,                                  &
