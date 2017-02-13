@@ -35,10 +35,10 @@ module sll_m_periodic_interpolator_1d
     ! Be careful here. For consistency with the other interpolators
     ! num_points is the number of nodes (including both boundaries)
     ! and not the number of cells as used in the periodic interpolator module.
-     sll_int32                            :: num_points !< size
-     sll_real64                           :: cell_size  !< cell size
-     sll_real64                           :: domain_size!< length of interval
-     type(sll_t_periodic_interp_work), pointer  :: per_interp !< ???
+     sll_int32                         :: num_points !< size
+     sll_real64                        :: cell_size  !< cell size
+     sll_real64                        :: domain_size!< length of interval
+     type(sll_t_periodic_interp_work)  :: per_interp !< ???
    contains
      !>PLEASE ADD DOCUMENTATION
      procedure, pass(interpolator) :: init => initialize_per1d_interpolator
@@ -71,8 +71,6 @@ module sll_m_periodic_interpolator_1d
 
 contains  ! ****************************************************************
 
-
-
   !> Create a new interpolator
   function new_periodic_1d_interpolator( &
     num_points, &
@@ -97,10 +95,6 @@ contains  ! ****************************************************************
          type, &
          order)
   end function new_periodic_1d_interpolator
-
-
-
-
 
   subroutine per_interpolate1d(this, num_pts, data, coordinates, output_array)
     class(sll_t_periodic_interpolator_1d),  intent(in)       :: this
