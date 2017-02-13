@@ -32,8 +32,8 @@ module sll_m_sim_bsl_vp_1d1v_cart
 #include "sll_working_precision.h"
 
 use sll_m_advection_1d_ampere, only: &
-  sll_t_ampere_1d_advector_ptr, &
-  sll_f_new_ampere_1d_advector
+  sll_t_advector_1d_ampere_ptr, &
+  sll_f_new_advector_1d_ampere
 
 use sll_m_advection_1d_base, only: sll_c_advector_1d
 
@@ -235,7 +235,7 @@ type, extends(sll_c_simulation_base_class) :: &
 
  class(sll_c_advector_1d),  dimension(:), pointer :: advect_x1 
  class(sll_c_advector_1d),  dimension(:), pointer :: advect_x2
- type(sll_t_ampere_1d_advector_ptr), dimension(:), pointer :: advect_ampere_x1
+ type(sll_t_advector_1d_ampere_ptr), dimension(:), pointer :: advect_ampere_x1
 
  sll_int32  :: advection_form_x2
  sll_real64 :: factor_x1
@@ -921,7 +921,7 @@ contains
       !$OMP PARALLEL DEFAULT(SHARED) &
       !$OMP PRIVATE(tid)
       !$ tid = omp_get_thread_num()+1
-      sim%advect_ampere_x1(tid)%ptr => sll_f_new_ampere_1d_advector( &
+      sim%advect_ampere_x1(tid)%ptr => sll_f_new_advector_1d_ampere( &
         num_cells_x1, &
         x1_min,       &
         x1_max )
@@ -1930,7 +1930,6 @@ contains
   subroutine sll_s_delete_vp2d_par_cart( sim )
 
     class(sll_t_simulation_2d_vlasov_poisson_cart) :: sim
-    sll_int32 :: ierr
      
     if(associated(sim%x1_array)) then
       nullify(sim%x1_array)
