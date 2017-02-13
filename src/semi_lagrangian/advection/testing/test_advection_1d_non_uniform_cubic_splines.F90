@@ -23,7 +23,7 @@ program test_advection_1d_non_uniform_cubic_splines
     sll_c_advector_1d
 
   use sll_m_advection_1d_non_uniform_cubic_splines, only: &
-    sll_f_new_non_uniform_cubic_splines_1d_advector
+    sll_f_new_advector_1d_non_uniform_cubic_splines
 
   implicit none
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -56,7 +56,7 @@ program test_advection_1d_non_uniform_cubic_splines
   
   input = 1._f64
   
-  adv => sll_f_new_non_uniform_cubic_splines_1d_advector( &
+  adv => sll_f_new_advector_1d_non_uniform_cubic_splines( &
     num_cells, &
     xmin, &
     xmax, &
