@@ -31,237 +31,236 @@ module sll_m_sim_bsl_vp_1d1v_cart
 #include "sll_memory.h"
 #include "sll_working_precision.h"
 
-  use sll_m_advection_1d_ampere, only: &
-    sll_t_ampere_1d_advector_ptr, &
-    sll_f_new_ampere_1d_advector
+use sll_m_advection_1d_ampere, only: &
+  sll_t_ampere_1d_advector_ptr, &
+  sll_f_new_ampere_1d_advector
 
-  use sll_m_advection_1d_base, only: sll_c_advector_1d
+use sll_m_advection_1d_base, only: sll_c_advector_1d
 
-  use sll_m_advection_1d_non_uniform_cubic_splines, only: &
-    sll_t_advector_1d_non_uniform_cubic_splines
+use sll_m_advection_1d_non_uniform_cubic_splines, only: &
+  sll_t_advector_1d_non_uniform_cubic_splines
 
-  use sll_m_advection_1d_periodic, only: sll_t_advector_1d_periodic
+use sll_m_advection_1d_periodic, only: sll_t_advector_1d_periodic
 
-  use sll_m_ascii_io, only: &
-    sll_s_ascii_file_close, &
-    sll_s_ascii_file_create
+use sll_m_ascii_io, only: &
+  sll_s_ascii_file_close, &
+  sll_s_ascii_file_create
 
-  use sll_m_binary_io, only: &
-    sll_s_binary_file_close, &
-    sll_s_binary_file_create, &
-    sll_s_binary_read_array_0d, &
-    sll_s_binary_read_array_2d, &
-    sll_s_binary_write_array_0d, &
-    sll_s_binary_write_array_1d, &
-    sll_s_binary_write_array_2d
+use sll_m_binary_io, only: &
+  sll_s_binary_file_close, &
+  sll_s_binary_file_create, &
+  sll_s_binary_read_array_0d, &
+  sll_s_binary_read_array_2d, &
+  sll_s_binary_write_array_0d, &
+  sll_s_binary_write_array_1d, &
+  sll_s_binary_write_array_2d
 
-  use sll_m_buffer_loader_utilities, only: &
-    sll_s_compute_displacements_array_2d, &
-    sll_s_load_buffer_2d, &
-    sll_f_receive_counts_array_2d
+use sll_m_buffer_loader_utilities, only: &
+  sll_s_compute_displacements_array_2d, &
+  sll_s_load_buffer_2d, &
+  sll_f_receive_counts_array_2d
 
-  use sll_m_cartesian_meshes, only: &
-    sll_o_get_node_positions, &
-    sll_f_new_cartesian_mesh_1d, &
-    sll_t_cartesian_mesh_1d, &
-    sll_t_cartesian_mesh_2d, &
-    operator(*)
+use sll_m_cartesian_meshes, only: &
+  sll_o_get_node_positions, &
+  sll_f_new_cartesian_mesh_1d, &
+  sll_t_cartesian_mesh_1d, &
+  sll_t_cartesian_mesh_2d, &
+  operator(*)
 
-  use sll_m_collective, only: &
-    sll_o_collective_allreduce, &
-    sll_s_collective_gatherv_real64, &
-    sll_f_get_collective_rank, &
-    sll_f_get_collective_size, &
-    sll_v_world_collective
+use sll_m_collective, only: &
+  sll_o_collective_allreduce, &
+  sll_s_collective_gatherv_real64, &
+  sll_f_get_collective_rank, &
+  sll_f_get_collective_size, &
+  sll_v_world_collective
 
-  use sll_m_common_array_initializers, only: &
-    sll_f_beam_initializer_2d, &
-    sll_f_bump_on_tail_initializer_2d, &
-    sll_f_landau_initializer_2d, &
-    sll_i_scalar_initializer_2d, &
-    sll_f_two_stream_instability_initializer_2d
+use sll_m_common_array_initializers, only: &
+  sll_f_beam_initializer_2d, &
+  sll_f_bump_on_tail_initializer_2d, &
+  sll_f_landau_initializer_2d, &
+  sll_i_scalar_initializer_2d, &
+  sll_f_two_stream_instability_initializer_2d
 
-  use sll_m_constants, only: &
-    sll_p_pi
+use sll_m_constants, only: &
+  sll_p_pi
 
-  use sll_m_fft, only: &
-    sll_s_fft_exec_c2r_1d, &
-    sll_s_fft_exec_r2c_1d, &
-    sll_s_fft_exec_r2r_1d, &
-    sll_p_fft_forward, &
-    sll_f_fft_get_mode_r2c_1d, &
-    sll_s_fft_init_r2r_1d, &
-    sll_t_fft
+use sll_m_fft, only: &
+  sll_s_fft_exec_c2r_1d, &
+  sll_s_fft_exec_r2c_1d, &
+  sll_s_fft_exec_r2r_1d, &
+  sll_p_fft_forward, &
+  sll_f_fft_get_mode_r2c_1d, &
+  sll_s_fft_init_r2r_1d, &
+  sll_t_fft
 
-  use sll_m_gnuplot, only: &
-    sll_o_gnuplot_1d
+use sll_m_gnuplot, only: &
+  sll_o_gnuplot_1d
 
-  use sll_m_parallel_array_initializer, only: &
-    sll_o_2d_parallel_array_initializer_cartesian
+use sll_m_parallel_array_initializer, only: &
+  sll_o_2d_parallel_array_initializer_cartesian
 
-  use sll_m_periodic_interp, only: &
-    sll_p_lagrange, &
-    sll_p_spline
+use sll_m_periodic_interp, only: &
+  sll_p_lagrange, &
+  sll_p_spline
 
-  use sll_m_poisson_1d_base, only: &
-    sll_c_poisson_1d_base
+use sll_m_poisson_1d_base, only: &
+  sll_c_poisson_1d_base
 
-  use sll_m_poisson_1d_periodic, only: &
-    sll_f_new_poisson_1d_periodic, &
-    sll_c_poisson_1d_periodic
+use sll_m_poisson_1d_periodic, only: &
+  sll_f_new_poisson_1d_periodic, &
+  sll_c_poisson_1d_periodic
 
-  use sll_m_poisson_1d_polar, only: &
-    sll_t_poisson_1d_polar
+use sll_m_poisson_1d_polar, only: &
+  sll_t_poisson_1d_polar
 
-  use sll_m_primitives, only: &
-    sll_s_function_to_primitive, &
-    sll_s_primitive_to_function
+use sll_m_primitives, only: &
+  sll_s_function_to_primitive, &
+  sll_s_primitive_to_function
 
-  use sll_m_remapper, only: &
-    sll_o_apply_remap_2d, &
-    sll_o_compute_local_sizes, &
-    sll_o_initialize_layout_with_distributed_array, &
-    sll_t_layout_2d, &
-    sll_o_local_to_global, &
-    sll_f_new_layout_2d, &
-    sll_o_new_remap_plan, &
-    sll_t_remap_plan_2d_real64, &
-    sll_o_view_lims
+use sll_m_remapper, only: &
+  sll_o_apply_remap_2d, &
+  sll_o_compute_local_sizes, &
+  sll_o_initialize_layout_with_distributed_array, &
+  sll_t_layout_2d, &
+  sll_o_local_to_global, &
+  sll_f_new_layout_2d, &
+  sll_o_new_remap_plan, &
+  sll_t_remap_plan_2d_real64, &
+  sll_o_view_lims
 
-  use sll_m_sim_base, only: &
-    sll_c_simulation_base_class
+use sll_m_sim_base, only: &
+  sll_c_simulation_base_class
 
-  use sll_m_time_splitting_coeff, only: &
-    sll_f_new_time_splitting_coeff, &
-    sll_p_lie_tv, &
-    sll_p_lie_vt, &
-    sll_p_order6_tvt, &
-    sll_p_order6_vtv, &
-    sll_p_order6vp_tvt, &
-    sll_p_order6vp_vtv, &
-    sll_p_order6vpnew1_vtv, &
-    sll_p_order6vpnew2_vtv, &
-    sll_p_order6vpnew_tvt, &
-    sll_p_strang_tvt, &
-    sll_p_strang_vtv, &
-    sll_p_triple_jump_tvt, &
-    sll_p_triple_jump_vtv, &
-    sll_t_splitting_coeff
+use sll_m_time_splitting_coeff, only: &
+  sll_f_new_time_splitting_coeff, &
+  sll_p_lie_tv, &
+  sll_p_lie_vt, &
+  sll_p_order6_tvt, &
+  sll_p_order6_vtv, &
+  sll_p_order6vp_tvt, &
+  sll_p_order6vp_vtv, &
+  sll_p_order6vpnew1_vtv, &
+  sll_p_order6vpnew2_vtv, &
+  sll_p_order6vpnew_tvt, &
+  sll_p_strang_tvt, &
+  sll_p_strang_vtv, &
+  sll_p_triple_jump_tvt, &
+  sll_p_triple_jump_vtv, &
+  sll_t_splitting_coeff
 
-  use sll_m_utilities, only: &
-    sll_s_compute_bloc, &
-    sll_s_compute_mesh_from_bloc, &
-    sll_s_int2string, &
-    sll_s_pfenvelope, &
-    sll_s_new_file_id
+use sll_m_utilities, only: &
+  sll_s_compute_bloc, &
+  sll_s_compute_mesh_from_bloc, &
+  sll_s_int2string, &
+  sll_s_pfenvelope, &
+  sll_s_new_file_id
 
-  use sll_m_xdmf, only: &
-    sll_s_plot_f_cartesian
+use sll_m_xdmf, only: &
+  sll_s_plot_f_cartesian
 
-  use sll_mpi, only: &
-    mpi_sum
+use sll_mpi, only: &
+  mpi_sum
 
 #ifdef _OPENMP
-  use omp_lib, only: &
-    omp_get_num_threads, &
-    omp_get_thread_num
-
+use omp_lib, only: omp_get_num_threads, omp_get_thread_num
 #endif
-  implicit none
+implicit none
 
-  public :: &
+public :: &
     sll_s_change_equilibrium_function_vp2d_par_cart, &
     sll_s_change_initial_function_vp2d_par_cart, &
     sll_s_delete_vp2d_par_cart, &
     sll_f_new_vp2d_par_cart, &
     sll_t_simulation_2d_vlasov_poisson_cart
 
-  private
+private
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
-  integer, parameter :: SLL_ADVECTIVE    = 0
-  integer, parameter :: SLL_CONSERVATIVE = 1
+integer, parameter :: SLL_ADVECTIVE    = 0
+integer, parameter :: SLL_CONSERVATIVE = 1
 
-  type, extends(sll_c_simulation_base_class) :: &
-       sll_t_simulation_2d_vlasov_poisson_cart
+type, extends(sll_c_simulation_base_class) :: &
+     sll_t_simulation_2d_vlasov_poisson_cart
 
-   sll_int32                            :: num_threads
-   type(sll_t_cartesian_mesh_2d), pointer :: mesh2d
-   sll_int32                            :: num_dof_x2
+ sll_int32                            :: num_threads
+ type(sll_t_cartesian_mesh_2d), pointer :: mesh2d
+ sll_int32                            :: num_dof_x2
 
-   sll_real64, dimension(:),   pointer  :: x1_array
-   sll_real64, dimension(:),   pointer  :: x2_array
-   sll_real64, dimension(:,:), pointer  :: x2_array_omp
-   sll_real64, dimension(:),   pointer  :: integration_weight
-   sll_int32,  dimension(:),   pointer  :: every_x1
-   sll_int32,  dimension(:),   pointer  :: every_x2
-   sll_int32                            :: num_bloc_x1
-   sll_int32                            :: num_bloc_x2
-   sll_int32,  dimension(:),   pointer  :: bloc_index_x1
-   sll_int32,  dimension(:),   pointer  :: bloc_index_x2
-   
-   sll_real64                 :: kx
-   sll_real64                 :: eps
-   character(len=256)         :: restart_file
-   logical                    :: time_init_from_restart_file
+ sll_real64, dimension(:),   pointer  :: x1_array
+ sll_real64, dimension(:),   pointer  :: x2_array
+ sll_real64, dimension(:,:), pointer  :: x2_array_omp
+ sll_real64, dimension(:),   pointer  :: integration_weight
+ sll_int32,  dimension(:),   pointer  :: every_x1
+ sll_int32,  dimension(:),   pointer  :: every_x2
+ sll_int32                            :: num_bloc_x1
+ sll_int32                            :: num_bloc_x2
+ sll_int32,  dimension(:),   pointer  :: bloc_index_x1
+ sll_int32,  dimension(:),   pointer  :: bloc_index_x2
+ 
+ sll_real64                 :: kx
+ sll_real64                 :: eps
+ character(len=256)         :: restart_file
+ logical                    :: time_init_from_restart_file
 
-   !MM initial function
-   procedure(sll_i_scalar_initializer_2d), nopass, pointer :: init_func
-   !ES equilibrium function
-   procedure(sll_i_scalar_initializer_2d), nopass, pointer :: equil_func
-   sll_real64, dimension(:), pointer                     :: equil_func_params
-   sll_real64, dimension(:), pointer                     :: params
+ !MM initial function
+ procedure(sll_i_scalar_initializer_2d), nopass, pointer :: init_func
+ !ES equilibrium function
+ procedure(sll_i_scalar_initializer_2d), nopass, pointer :: equil_func
+ sll_real64, dimension(:), pointer                     :: equil_func_params
+ sll_real64, dimension(:), pointer                     :: params
 
-   sll_real64 :: nrj0
-   sll_real64 :: dt
-   sll_int32  :: num_iterations 
-   sll_int32  :: freq_diag
-   sll_int32  :: freq_diag_time
-   sll_int32  :: freq_diag_restart
-   sll_int32  :: nb_mode
-   sll_real64 :: time_init
+ sll_real64 :: nrj0
+ sll_real64 :: dt
+ sll_int32  :: num_iterations 
+ sll_int32  :: freq_diag
+ sll_int32  :: freq_diag_time
+ sll_int32  :: freq_diag_restart
+ sll_int32  :: nb_mode
+ sll_real64 :: time_init
 
-   type(sll_t_splitting_coeff), pointer :: split
-   character(len=256)      :: thdiag_filename
-  
-   logical    :: driven 
-   character(len=256) :: drive_type
-   sll_real64 :: t0
-   sll_real64 :: twL
-   sll_real64 :: twR
-   sll_real64 :: tflat
-   sll_real64 :: tL
-   sll_real64 :: tR
-   sll_real64 :: Edrmax
-   sll_real64 :: omegadr
-   logical    :: turn_drive_off
+ type(sll_t_splitting_coeff), pointer :: split
+ character(len=256)      :: thdiag_filename
 
-   class(sll_c_advector_1d),  dimension(:), pointer :: advect_x1 
-   class(sll_c_advector_1d),  dimension(:), pointer :: advect_x2
-   type(sll_t_ampere_1d_advector_ptr), dimension(:), pointer :: advect_ampere_x1
+ logical    :: driven 
+ character(len=256) :: drive_type
+ sll_real64 :: t0
+ sll_real64 :: twL
+ sll_real64 :: twR
+ sll_real64 :: tflat
+ sll_real64 :: tL
+ sll_real64 :: tR
+ sll_real64 :: Edrmax
+ sll_real64 :: omegadr
+ logical    :: turn_drive_off
 
-   sll_int32  :: advection_form_x2
-   sll_real64 :: factor_x1
-   sll_real64 :: factor_x2_rho
-   sll_real64 :: factor_x2_1
+ class(sll_c_advector_1d),  dimension(:), pointer :: advect_x1 
+ class(sll_c_advector_1d),  dimension(:), pointer :: advect_x2
+ type(sll_t_ampere_1d_advector_ptr), dimension(:), pointer :: advect_ampere_x1
 
-   class(sll_c_poisson_1d_base), pointer :: poisson 
-   logical                             :: vlasov_ampere = .false.
-           
-   contains !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+ sll_int32  :: advection_form_x2
+ sll_real64 :: factor_x1
+ sll_real64 :: factor_x2_rho
+ sll_real64 :: factor_x2_1
 
-     procedure, pass(sim) :: init => init_vp2d_par_cart
-     procedure, pass(sim) :: free => sll_s_delete_vp2d_par_cart
-     procedure, pass(sim) :: run => run_vp2d_cartesian
-     procedure, pass(sim) :: init_from_file => init_vp2d_fake !init_vp2d_par_cart
+ class(sll_c_poisson_1d_base), pointer :: poisson 
+ logical                             :: vlasov_ampere = .false.
+         
+ contains !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
-  end type sll_t_simulation_2d_vlasov_poisson_cart
+   procedure, pass(sim) :: init => init_vp2d_par_cart
+   procedure, pass(sim) :: free => sll_s_delete_vp2d_par_cart
+   procedure, pass(sim) :: run => run_vp2d_cartesian
+   procedure, pass(sim) :: init_from_file => init_vp2d_fake !init_vp2d_par_cart
 
-  interface sll_o_delete
-     module procedure sll_s_delete_vp2d_par_cart
-  end interface sll_o_delete
+end type sll_t_simulation_2d_vlasov_poisson_cart
 
+interface sll_o_delete
+   module procedure sll_s_delete_vp2d_par_cart
+end interface sll_o_delete
+
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 contains
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
   function sll_f_new_vp2d_par_cart( filename, num_run ) result(sim)    
 
@@ -827,8 +826,14 @@ contains
     end select
 
     !advector
-    ALLOCATE(sll_t_advector_1d_periodic :: sim%advect_x1(num_threads))
-    ALLOCATE(sll_t_advector_1d_periodic :: sim%advect_x2(num_threads))
+    
+    select case (advector_x2)
+    case("SLL_NON_UNIFORM_CUBIC_SPLINES") 
+      allocate(sll_t_advector_1d_non_uniform_cubic_splines :: sim%advect_x2(num_threads))
+    case default
+      allocate(sll_t_advector_1d_periodic :: sim%advect_x1(num_threads))
+      allocate(sll_t_advector_1d_periodic :: sim%advect_x2(num_threads))
+    end select
 
     !$OMP PARALLEL DEFAULT(SHARED) &
     !$OMP PRIVATE(tid)
@@ -839,22 +844,20 @@ contains
     tid = 1
 #endif
 
-
     select case (advector_x1)
 
       case ("SLL_SPLINES") ! arbitrary order periodic splines
 
         select type ( a_x1 => sim%advect_x1(tid))
         type is (sll_t_advector_1d_periodic)
-        call a_x1%init( num_cells_x1, x1_min, x1_max, &
-                sll_p_spline, order_x1) 
+        call a_x1%init( num_cells_x1, x1_min, x1_max, sll_p_spline, order_x1) 
         end select
 
       case("SLL_LAGRANGE") ! arbitrary order sll_p_lagrange periodic interpolation
+
         select type ( a_x1 => sim%advect_x1(tid))
         type is (sll_t_advector_1d_periodic)
-        call a_x1%init( num_cells_x1, x1_min, x1_max, &
-                sll_p_lagrange, order_x1)
+        call a_x1%init( num_cells_x1, x1_min, x1_max, sll_p_lagrange, order_x1)
         end select
 
       case("SLL_VLASOV_AMPERE")
