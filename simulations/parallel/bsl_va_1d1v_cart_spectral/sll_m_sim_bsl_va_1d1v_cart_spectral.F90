@@ -113,7 +113,7 @@ module sll_m_sim_bsl_va_1d1v_cart_spectral
     sll_c_poisson_1d_base
 
   use sll_m_poisson_1d_periodic, only: &
-    sll_f_new_poisson_1d_periodic
+    sll_c_poisson_1d_periodic
 
   use sll_m_poisson_1d_polar, only: &
     sll_f_new_poisson_1d_polar
@@ -996,10 +996,11 @@ contains
     
     select case (poisson_solver)
       case ("SLL_FFT")
-        sim%poisson => sll_f_new_poisson_1d_periodic( &
-          x1_min, &
-          x1_max, &
-          num_cells_x1)
+        allocate( sll_c_poisson_1d_periodic :: sim%poisson)
+        select type( poisson => sim%poisson )
+        type is (sll_c_poisson_1d_periodic )
+        call poisson%init( x1_min, x1_max, num_cells_x1)
+        end select
       case ("SLL_POLAR")
         sim%poisson => sll_f_new_poisson_1d_polar( &
           x1_min, &
@@ -1356,7 +1357,7 @@ contains
     
          else
     
-           if (sim%driven) call set_e_app(sim, sim%time_init+(istep-1)*sim%dt, e_app)
+           if (sim%driven) call set_e_app(sim, sim%time_init+real(istep-1,f64)*sim%dt, e_app)
            call sll_o_apply_remap_2d( remap_plan_x1_x2, f_x1, f_x2 )
            call advection_v(sim, layout_x2, f_x2, efield, e_app, &
                                sim%split%split_step(split_istep)*sim%dt)
@@ -1512,13 +1513,14 @@ contains
     
       sim%advect_ampere_x1(tid)%ptr%r1(2:nc_x1/2+1) = &
            sim%advect_ampere_x1(tid)%ptr%r1(2:nc_x1/2+1) &
-         + sim%advect_ampere_x1(tid)%ptr%fk(2:nc_x1/2+1) * sim%integration_weight(ig_omp)
+         + sim%advect_ampere_x1(tid)%ptr%fk(2:nc_x1/2+1) &
+         * cmplx(sim%integration_weight(ig_omp),0.0,f64)
     
       call sll_s_fft_exec_c2r_1d(sim%advect_ampere_x1(tid)%ptr%bwx, &
            sim%advect_ampere_x1(tid)%ptr%fk,  &
            sim%advect_ampere_x1(tid)%ptr%d_dx)
     
-      f1d_omp_out(1:nc_x1, tid) = sim%advect_ampere_x1(tid)%ptr%d_dx/nc_x1
+      f1d_omp_out(1:nc_x1, tid) = sim%advect_ampere_x1(tid)%ptr%d_dx/real(nc_x1,f64)
       f1d_omp_out(np_x1, tid)   = f1d_omp_out(1, tid) 
     
       f_x1(1:np_x1,i_omp)=f1d_omp_out(1:np_x1,tid)
@@ -1544,14 +1546,15 @@ contains
     
     do i = 2, nc_x1/2+1
       sim%advect_ampere_x1(1)%ptr%ek(i) =  &
-         - sim%advect_ampere_x1(1)%ptr%r1(i) * sim%L / cmplx(0.,2.*sll_p_pi*(i-1),kind=f64)
+         - sim%advect_ampere_x1(1)%ptr%r1(i) * cmplx(sim%L,0.0,f64) &
+         / cmplx(0.0_f64,2.0_f64*sll_p_pi*real(i-1,f64),kind=f64)
     end do
     
     call sll_s_fft_exec_c2r_1d(sim%advect_ampere_x1(1)%ptr%bwx, &
          sim%advect_ampere_x1(1)%ptr%ek,  &
          efield)
     
-    efield(1:nc_x1) = efield(1:nc_x1) / nc_x1
+    efield(1:nc_x1) = efield(1:nc_x1) / real(nc_x1,f64)
     efield(np_x1) = efield(1)
     
     
