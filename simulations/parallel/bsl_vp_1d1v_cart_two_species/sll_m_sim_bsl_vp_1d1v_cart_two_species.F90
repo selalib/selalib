@@ -35,7 +35,7 @@ module sll_m_sim_bsl_vp_1d1v_cart_two_species
     sll_t_advection_1d_base_ptr
 
   use sll_m_advection_1d_non_uniform_cubic_splines, only: &
-    sll_f_new_non_uniform_cubic_splines_1d_advector
+    sll_f_new_advector_1d_non_uniform_cubic_splines
 
   use sll_m_advection_1d_periodic, only: &
     sll_f_new_periodic_1d_advector
@@ -1023,7 +1023,7 @@ contains
           sll_p_lagrange, & 
           order_x2_sp2)
       case("SLL_NON_UNIFORM_CUBIC_SPLINES") ! arbitrary order sll_p_lagrange periodic interpolation
-        sim%advect_x2_sp2(tid)%ptr => sll_f_new_non_uniform_cubic_splines_1d_advector( &
+        sim%advect_x2_sp2(tid)%ptr => sll_f_new_advector_1d_non_uniform_cubic_splines( &
           num_cells_x2_sp2, &
           x2_min_sp2, &
           x2_max_sp2, &
@@ -1052,7 +1052,7 @@ contains
           sll_p_lagrange, & 
           order_x2_sp1)
       case("SLL_NON_UNIFORM_CUBIC_SPLINES") ! arbitrary order sll_p_lagrange periodic interpolation
-        sim%advect_x2_sp1(tid)%ptr => sll_f_new_non_uniform_cubic_splines_1d_advector( &
+        sim%advect_x2_sp1(tid)%ptr => sll_f_new_advector_1d_non_uniform_cubic_splines( &
           num_cells_x2_sp1, &
           x2_min_sp1, &
           x2_max_sp1, &

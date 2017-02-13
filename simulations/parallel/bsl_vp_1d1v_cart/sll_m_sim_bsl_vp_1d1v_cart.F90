@@ -38,10 +38,9 @@ module sll_m_sim_bsl_vp_1d1v_cart
   use sll_m_advection_1d_base, only: sll_c_advector_1d
 
   use sll_m_advection_1d_non_uniform_cubic_splines, only: &
-    sll_f_new_non_uniform_cubic_splines_1d_advector
+    sll_t_advector_1d_non_uniform_cubic_splines
 
-  use sll_m_advection_1d_periodic, only: &
-    sll_t_advector_1d_periodic
+  use sll_m_advection_1d_periodic, only: sll_t_advector_1d_periodic
 
   use sll_m_ascii_io, only: &
     sll_s_ascii_file_close, &
@@ -888,14 +887,10 @@ contains
       case("SLL_NON_UNIFORM_CUBIC_SPLINES") ! arbitrary order sll_p_lagrange 
                                             ! periodic interpolation
 
-        sim%advect_x2(tid) =>                    &
-          sll_f_new_non_uniform_cubic_splines_1d_advector( &
-            num_cells_x2,                            &
-            x2_min,                                  &
-            x2_max,                                  &
-            order_x2,                                &
-            sim%x2_array)
-
+        select type ( a_x2 => sim%advect_x2(tid))
+        type is (sll_t_advector_1d_non_uniform_cubic_splines)
+        call a_x2%init( num_cells_x2, x2_min, x2_max, order_x2, sim%x2_array)
+        end select
 
       case default
 
@@ -1423,7 +1418,7 @@ contains
           e_app = 0._f64
           
           call sll_s_pfenvelope(adr,                    &
-               time_init+istep*sim%dt, &
+               time_init+real(istep,f64)*sim%dt, &
                sim%tflat,              &
                sim%tL,                 &
                sim%tR,                 &
@@ -1525,13 +1520,13 @@ contains
                  sim%advect_ampere_x1(tid)%ptr%r1(2:nc_x1/2+1) = &
                       sim%advect_ampere_x1(tid)%ptr%r1(2:nc_x1/2+1) &
                     + sim%advect_ampere_x1(tid)%ptr%fk(2:nc_x1/2+1) &
-                    * sim%integration_weight(ig_omp)
+                    * cmplx(sim%integration_weight(ig_omp),0.0_f64,f64)
                
                  call sll_s_fft_exec_c2r_1d(sim%advect_ampere_x1(tid)%ptr%bwx, &
                       sim%advect_ampere_x1(tid)%ptr%fk,  &
                       sim%advect_ampere_x1(tid)%ptr%d_dx)
                
-                 f1d_omp_out(1:nc_x1,tid) = sim%advect_ampere_x1(tid)%ptr%d_dx/nc_x1
+                 f1d_omp_out(1:nc_x1,tid) = sim%advect_ampere_x1(tid)%ptr%d_dx/real(nc_x1,f64)
                  f1d_omp_out(np_x1,  tid) = f1d_omp_out(1, tid) 
                
                  f_x1(1:np_x1,i_omp)=f1d_omp_out(1:np_x1,tid)
@@ -1563,15 +1558,15 @@ contains
                do i = 2, nc_x1/2+1
                  sim%advect_ampere_x1(1)%ptr%ek(i) =  &
                     - sim%advect_ampere_x1(1)%ptr%r1(i) &
-                    * (sim%mesh2d%eta1_max-sim%mesh2d%eta1_min) &
-                    / cmplx(0.,2.0_f64*sll_p_pi*(i-1),kind=f64)
+                    * cmplx(sim%mesh2d%eta1_max-sim%mesh2d%eta1_min,0.0_f64,f64) &
+                    / cmplx(0.,2.0_f64*sll_p_pi*real(i-1,f64),kind=f64)
                end do
                
                call sll_s_fft_exec_c2r_1d(sim%advect_ampere_x1(1)%ptr%bwx, &
                     sim%advect_ampere_x1(1)%ptr%ek,  &
                     efield)
                
-               efield(1:nc_x1) = efield(1:nc_x1) / nc_x1
+               efield(1:nc_x1) = efield(1:nc_x1) / real(nc_x1,f64)
                efield(np_x1) = efield(1)
                
             else !*** CLASSIC ADVECTION
