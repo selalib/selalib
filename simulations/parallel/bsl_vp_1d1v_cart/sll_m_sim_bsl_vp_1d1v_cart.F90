@@ -906,12 +906,6 @@ contains
     end select
 
     !$OMP END PARALLEL
-    call sll_s_collective_barrier(sll_v_world_collective)
-    print*, "coucou"
-    call flush(6)
-    call sll_s_halt_collective()
-    stop
-
 
     if (sim%vlasov_ampere) then
       print*,'########################'
