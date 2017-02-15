@@ -123,7 +123,7 @@ function(add_forcheck_target_allfiles)
      # to break up the long lines that contain ';'.
      # To avoid trouble, we delete comment lines that contain  ';'.
      add_custom_command(OUTPUT "${_preproc_name}"
-         COMMAND gfortran  ${_incflags} ${_defflags} -cpp -E -P ${_src} | sed -e "/^[ \\t]*!.*;/d" -e "/^.\\{132\\}/s/;/\\n/g" > ${_preproc_name}
+         COMMAND gfortran  ${_incflags} ${_defflags} -cpp -E -P ${_src} | sed -e "/^.\\{132\\}/s/!.*/ /" -e "/^.\\{132\\}/s/; */\\n/g" > ${_preproc_name}
          DEPENDS "${_src}"
          COMMENT "Preprocessing ${_src}"
          VERBATIM
