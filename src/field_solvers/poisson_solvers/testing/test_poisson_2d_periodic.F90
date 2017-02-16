@@ -50,8 +50,8 @@ sll_real64, dimension(:,:), allocatable :: E2
 
 sll_int32 :: ierr
   
-eta1_min = .0_f64; eta1_max = 2.0_f64*sll_p_pi
-eta2_min = .0_f64; eta2_max = 2.0_f64*sll_p_pi
+eta1_min = .0_f64; eta1_max = 1.0!2.0_f64*sll_p_pi
+eta2_min = .0_f64; eta2_max = 1.0!2.0_f64*sll_p_pi
 
 nc_eta1 = 128; nc_eta2 = 128
 
@@ -76,10 +76,10 @@ do i = 1, nc_eta1+1
    do j = 1, nc_eta2+1
       x1 = (i-1)*(eta1_max-eta1_min)/nc_eta1
       x2 = (j-1)*(eta2_max-eta2_min)/nc_eta2
-      phi_exact(i,j) = real(mode,f64) * sin(mode*x1) * cos(mode*x2)
+      phi_exact(i,j) = cos(2._f64*sll_p_pi*x1)!real(mode,f64) * sin(mode*x1) * cos(mode*x2)
       ex_exact(i,j)  =  1._f64*real(mode,f64)**2*cos(mode*x1)*cos(mode*x2)
       ey_exact(i,j)  = -1._f64*real(mode,f64)**2*sin(mode*x1)*sin(mode*x2)
-      rho(i,j) = -2._f64 * real(mode,f64)**3 * sin(mode*x1)*cos(mode*x2)
+      rho(i,j) = -4._f64*sll_p_pi**2*cos(2._f64*sll_p_pi*x1)!-2._f64 * real(mode,f64)**3 * sin(mode*x1)*cos(mode*x2)
       write(14,*) x1, x2, rho(i,j)
    end do
 end do

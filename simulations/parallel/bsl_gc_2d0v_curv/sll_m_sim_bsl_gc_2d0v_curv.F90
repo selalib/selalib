@@ -679,7 +679,7 @@ contains
 
     
     select case(bc_eta1_left)
-      case ("sll_p_periodic")
+      case ("SLL_PERIODIC")
         print*,"#bc_eta1_left = sll_p_periodic" 
         sim%bc_eta1_left = sll_p_periodic
       case ("SLL_DIRICHLET")
@@ -696,7 +696,7 @@ contains
     end select
     
     select case(bc_eta1_right)
-      case ("sll_p_periodic")
+      case ("SLL_PERIODIC")
         print*,"#bc_eta1_right = sll_p_periodic" 
         sim%bc_eta1_right = sll_p_periodic
       case ("SLL_DIRICHLET")
@@ -713,7 +713,7 @@ contains
     end select
     
        select case(bc_eta2_left)
-      case ("sll_p_periodic")
+      case ("SLL_PERIODIC")
         print*,"#bc_eta2_left = sll_p_periodic" 
         sim%bc_eta2_left = sll_p_periodic
       case ("SLL_DIRICHLET")
@@ -730,7 +730,7 @@ contains
     end select
     
     select case(bc_eta2_right)
-      case ("sll_p_periodic")
+      case ("SLL_PERIODIC")
         print*,"#bc_eta2_right = sll_p_periodic" 
         sim%bc_eta2_right = sll_p_periodic
       case ("SLL_DIRICHLET")
@@ -747,7 +747,7 @@ contains
     end select
     
     select case(bc_interp2d_eta1)
-      case ("sll_p_periodic")
+      case ("SLL_PERIODIC")
         print*,"#bc_interp2d_eta1= sll_p_periodic" 
         sim%bc_interp2d_eta1 = sll_p_periodic
 !      case ("SLL_DIRICHLET")
@@ -764,7 +764,7 @@ contains
     end select
 
     select case(bc_interp2d_eta2)
-      case ("sll_p_periodic")
+      case ("SLL_PERIODIC")
         print*,"#bc_interp2d_eta2= sll_p_periodic" 
         sim%bc_interp2d_eta2 = sll_p_periodic
 !      case ("SLL_DIRICHLET")
@@ -781,7 +781,7 @@ contains
     end select
     
     select case(bc_charac2d_eta1)
-      case ("sll_p_periodic")
+      case ("SLL_PERIODIC")
         print*,"#bc_charac2d_eta1= sll_p_periodic" 
         sim%bc_charac2d_eta1= sll_p_periodic
       case ("SLL_DIRICHLET")
@@ -801,7 +801,7 @@ contains
     end select
 
     select case(bc_charac2d_eta2)
-      case ("sll_p_periodic")
+      case ("SLL_PERIODIC")
         print*,"#bc_charac2d_eta2= sll_p_periodic" 
         sim%bc_charac2d_eta2= sll_p_periodic
       case ("SLL_DIRICHLET")
