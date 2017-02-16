@@ -29,7 +29,7 @@ use sll_m_poisson_2d_tri, only: &
 use sll_m_triangular_meshes, only: &
   sll_s_analyze_triangular_mesh, &
   sll_s_map_to_circle, &
-  sll_s_triangular_mesh_2d_init, &
+  sll_s_triangular_mesh_2d_init_from_square, &
   sll_s_triangular_mesh_2d_free, &
   sll_t_triangular_mesh_2d, &
   sll_s_write_triangular_mesh_mtv
@@ -70,7 +70,7 @@ sll_int32  :: ierr
 !First test, the unstructured mesh is created 
 !by meshing a square with triangles.
 
-call sll_s_triangular_mesh_2d_init(square, nc_x1, x1_min, x1_max, nc_x2, x2_min, x2_max) 
+call sll_s_triangular_mesh_2d_init_from_square(square, nc_x1, x1_min, x1_max, nc_x2, x2_min, x2_max) 
 call sll_s_analyze_triangular_mesh(square) 
 call sll_s_write_triangular_mesh_mtv(square, "tri_square.mtv")
 
@@ -106,7 +106,7 @@ print*,'error e_y=', maxval(abs(e_y))
 
 deallocate(e_x,e_y,phi,rho)
 
-call sll_o_delete(square)
+call sll_s_triangular_mesh_2d_free(square)
 call sll_s_poisson_2d_triangular_free(poisson)
 
 print*, 'PASSED'

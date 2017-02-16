@@ -39,7 +39,8 @@ module sll_m_triangular_meshes
     sll_s_analyze_triangular_mesh, &
     sll_s_map_to_circle, &
     sll_o_new_triangular_mesh_2d, &
-    sll_s_triangular_mesh_2d_init, &
+    sll_s_triangular_mesh_2d_init_from_file, &
+    sll_s_triangular_mesh_2d_init_from_square, &
     sll_s_triangular_mesh_2d_free, &
     sll_s_read_from_file, &
     sll_o_create, &
@@ -126,7 +127,7 @@ interface sll_o_create
 end interface sll_o_create
 
 interface sll_o_delete
-   module procedure delete_triangular_mesh_2d
+   module procedure sll_s_triangular_mesh_2d_free
 end interface sll_o_delete
 
 interface sll_o_display
@@ -898,14 +899,13 @@ close(out_unit)
  
 end subroutine sll_s_write_triangular_mesh_mtv
 
-subroutine delete_triangular_mesh_2d( mesh )
+subroutine sll_s_triangular_mesh_2d_free( mesh )
 
 class(sll_t_triangular_mesh_2d), intent(inout) :: mesh
 
 SLL_ASSERT(mesh%num_nodes>0)
-print*, 'sll_o_delete mesh'
 
-end subroutine delete_triangular_mesh_2d
+end subroutine sll_s_triangular_mesh_2d_free
 
 subroutine sll_s_read_from_file(mesh, maafil)
 
