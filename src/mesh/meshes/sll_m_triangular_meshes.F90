@@ -39,6 +39,8 @@ module sll_m_triangular_meshes
     sll_s_analyze_triangular_mesh, &
     sll_s_map_to_circle, &
     sll_o_new_triangular_mesh_2d, &
+    sll_s_triangular_mesh_2d_init, &
+    sll_s_triangular_mesh_2d_free, &
     sll_s_read_from_file, &
     sll_o_create, &
     sll_o_delete, &
@@ -192,6 +194,20 @@ function new_triangular_mesh_2d_from_file( maafil ) result(m)
 
 end function new_triangular_mesh_2d_from_file
 
+!> @brief Initialize a new 2D triangular mesh
+!> @param maafil file name with data
+!> @return a pointer to the newly allocated object.
+subroutine sll_s_triangular_mesh_2d_init_from_file( m, maafil ) 
+
+  type(sll_t_triangular_mesh_2d) :: m
+  character(len=*), intent(in)   :: maafil
+
+  call sll_s_read_from_file(m, maafil)
+  call compute_aires( m )
+
+end subroutine sll_s_triangular_mesh_2d_init_from_file
+
+
 !> @brief allocates the memory space for a new 2D triangular mesh on the heap,
 !> initializes it with the given hexagonal mesh and returns a pointer to the
 !> object.
@@ -331,6 +347,43 @@ function new_triangular_mesh_2d_from_square( nc_eta1,  &
 
 end function new_triangular_mesh_2d_from_square
 
+!> @brief
+!> Initialize a new 2D triangular mesh
+!> @param[in] nc_eta1 number of cells along first direction
+!> @param[in] eta1_min left edge first direction
+!> @param[in] eta1_max right edge first direction
+!> @param[in] nc_eta2 number of cells along second direction
+!> @param[in] eta2_min left edge second direction
+!> @param[in] eta2_max right edge second direction
+!> @return a pointer to the newly allocated object.
+subroutine sll_s_triangular_mesh_2d_init_from_square( m, &
+  nc_eta1, eta1_min, eta1_max, nc_eta2,  & 
+  eta2_min, eta2_max, bc ) 
+
+  type(sll_t_triangular_mesh_2d) :: m
+  sll_int32,  intent(in)         :: nc_eta1
+  sll_real64, intent(in)         :: eta1_min
+  sll_real64, intent(in)         :: eta1_max
+  sll_int32,  intent(in)         :: nc_eta2
+  sll_real64, intent(in)         :: eta2_min
+  sll_real64, intent(in)         :: eta2_max
+  sll_int32,  optional           :: bc
+
+  if (present(bc)) then
+    SLL_ASSERT(bc == sll_p_periodic)
+  end if
+ 
+  call initialize_triangular_mesh_2d( m,        &
+                                      nc_eta1,  &
+                                      eta1_min, &
+                                      eta1_max, &
+                                      nc_eta2,  &
+                                      eta2_min, &
+                                      eta2_max)
+
+  call compute_aires( m )
+
+end subroutine sll_s_triangular_mesh_2d_init_from_square
 
 subroutine initialize_triangular_mesh_2d( mesh,     &
                                           nc_eta1,  &
@@ -342,13 +395,13 @@ subroutine initialize_triangular_mesh_2d( mesh,     &
                                           bc )
 
 type(sll_t_triangular_mesh_2d) :: mesh
-sll_int32,  intent(in)       :: nc_eta1
-sll_real64, intent(in)       :: eta1_min
-sll_real64, intent(in)       :: eta1_max
-sll_int32,  intent(in)       :: nc_eta2
-sll_real64, intent(in)       :: eta2_min
-sll_real64, intent(in)       :: eta2_max
-sll_int32,  optional         :: bc
+sll_int32,  intent(in)         :: nc_eta1
+sll_real64, intent(in)         :: eta1_min
+sll_real64, intent(in)         :: eta1_max
+sll_int32,  intent(in)         :: nc_eta2
+sll_real64, intent(in)         :: eta2_min
+sll_real64, intent(in)         :: eta2_max
+sll_int32,  optional           :: bc
 
 !*-----------------------------------------------------------------------
 !*  Generation du maillage pour une plaque rectangulaire dans le plan xOy.
