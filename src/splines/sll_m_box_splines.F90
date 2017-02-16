@@ -192,9 +192,9 @@ contains  ! ****************************************************************
     ! If pINT, pIIR1 or  pIIR2:
     ! SLL_ALLOCATE(filter_array(num_pts_radius), ierr)
     ! do k=1, num_pts_radius
-       ! filter_array(k) = sll_f_pre_filter_int(spline%mesh, k, deg)
-       ! filter_array(k) = sll_f_pre_filter_piir1(spline%mesh, k, deg)
-    !    filter_array(k) = sll_f_pre_filter_piir2(spline%mesh, k, deg)
+    !    ! filter_array(k) = sll_f_pre_filter_int(spline%mesh, k, deg)
+    !    ! filter_array(k) = sll_f_pre_filter_piir1(spline%mesh, k, deg)
+    !    ! filter_array(k) = sll_f_pre_filter_piir2(spline%mesh, k, deg)
     ! end do
 
     do i = 1, num_pts_tot

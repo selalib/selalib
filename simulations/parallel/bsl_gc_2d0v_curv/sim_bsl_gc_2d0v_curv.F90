@@ -22,7 +22,7 @@ program sim_bsl_gc_2d0v_curv
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
   
   !class(sll_c_simulation_base_class), pointer :: sim
-  class(sll_t_simulation_2d_guiding_center_curvilinear), pointer :: sim  
+  class(sll_t_simulation_2d_guiding_center_curvilinear), pointer :: sim
   character(len=256) :: filename
   character(len=256) :: filename_local
   type(sll_t_time_mark)  :: t0
