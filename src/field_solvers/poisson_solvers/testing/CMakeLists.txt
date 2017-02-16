@@ -43,7 +43,7 @@ ENDIF(FFT_LIB MATCHES FFTW)
 
 ADD_EXECUTABLE( test_poisson_2d_triangular test_poisson_2d_tri.F90 )
 TARGET_LINK_LIBRARIES( test_poisson_2d_triangular sll_poisson_solvers sll_mesh_calculus sll_file_io )
-ADD_TEST( NAME poisson_2d_triangular  COMMAND test_poisson_2d_tri     )
+ADD_TEST( NAME poisson_2d_triangular  COMMAND test_poisson_2d_triangular     )
 SET_TESTS_PROPERTIES( poisson_2d_triangular PROPERTIES PASS_REGULAR_EXPRESSION "PASSED" )
 
 IF(BUILD_MUDPACK)
