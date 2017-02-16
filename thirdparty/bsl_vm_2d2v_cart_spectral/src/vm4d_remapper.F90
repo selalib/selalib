@@ -101,7 +101,7 @@ contains
     call spl_x2%initialize(vlasov4d%np_eta2, vlasov4d%eta2_min, &
     &                      vlasov4d%eta2_max, sll_p_periodic)
 
-    call spl_x3x4%initialize(vlasov4d%np_eta3,  vlasov4d%np_eta4,  &
+    call spl_x3x4%init(vlasov4d%np_eta3,  vlasov4d%np_eta4,  &
     &                        vlasov4d%eta3_min, vlasov4d%eta3_max, &
     &                        vlasov4d%eta4_min, vlasov4d%eta4_max, &
     &                        sll_p_periodic, sll_p_periodic)
