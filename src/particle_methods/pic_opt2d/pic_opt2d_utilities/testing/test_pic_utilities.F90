@@ -74,9 +74,9 @@ call sll_s_first_charge_accumulation_2d( p_group_4d, q_accumulator )
 
 !$OMP PARALLEL PRIVATE(thread_id)
 !$    thread_id = OMP_GET_THREAD_NUM()+1
-!$OMP ATOMIC
-if (sum(q_accumulator(thread_id)%q%q_acc(:)%q_sw) /= 10.0_f32) stop 'FAILED'
-!$OMP END ATOMIC
+
+if (sum(q_accumulator(thread_id)%q%q_acc(:)%q_sw) /= 10.0_f64) stop 'FAILED'
+
 !$OMP END PARALLEL
 
 allocate(q_accumulator_cs(nthreads))
@@ -115,9 +115,9 @@ allocate(q_gc_accumulator_cs(thread_id)%q)
 call sll_s_charge_accumulator_2d_cs_init(q_gc_accumulator_cs(thread_id)%q, mesh_2d )
 !$omp end parallel
 call sll_s_first_gc_charge_accumulation_2d_cs( p_group_2d, q_gc_accumulator_cs )
+
 !$OMP PARALLEL PRIVATE(thread_id)
 !$    thread_id = OMP_GET_THREAD_NUM()+1
-!$OMP ATOMIC
 
 if (abs(10_f32 - sum(q_accumulator_cs(thread_id)%q%q_acc(:)%q_im1j     &
                   +  q_accumulator_cs(thread_id)%q%q_acc(:)%q_ij       &
@@ -127,9 +127,9 @@ if (abs(10_f32 - sum(q_accumulator_cs(thread_id)%q%q_acc(:)%q_im1j     &
                   +  q_accumulator_cs(thread_id)%q%q_acc(:)%q_ip1jm1   &
                   +  q_accumulator_cs(thread_id)%q%q_acc(:)%q_im1jp1   &
                   +  q_accumulator_cs(thread_id)%q%q_acc(:)%q_ijp1     &
-                  +  q_accumulator_cs(thread_id)%q%q_acc(:)%q_ip1jp1)) > 1e-7) &
+                  +  q_accumulator_cs(thread_id)%q%q_acc(:)%q_ip1jp1)) > 1d-7) &
   stop 'FAILED' 
-!$OMP END ATOMIC
+
 !$OMP END PARALLEL
 
 print*, "PASSED"
