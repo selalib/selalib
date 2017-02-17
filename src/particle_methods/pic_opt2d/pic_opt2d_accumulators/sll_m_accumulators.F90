@@ -35,6 +35,8 @@ module sll_m_accumulators
     sll_f_new_charge_accumulator_2d_cs, &
     sll_f_new_field_accumulator_2d, &
     sll_f_new_field_accumulator_cs_2d, &
+    sll_s_field_accumulator_2d_init, &
+    sll_s_field_accumulator_cs_2d_init, &
     sll_s_reset_charge_accumulator_to_zero, &
     sll_s_reset_charge_accumulator_to_zero_cs, &
     sll_s_reset_field_accumulator_cs_to_zero, &
@@ -337,6 +339,24 @@ contains
 
 
 
+   subroutine sll_s_field_accumulator_2d_init(E_acc, mesh_2d ) 
+     type(sll_t_electric_field_accumulator)         ::  E_acc
+     type(sll_t_cartesian_mesh_2d),          target ::  mesh_2d
+     sll_int32  :: num_cells1
+     sll_int32  :: num_cells2
+     sll_int32  :: num_cells_total
+     sll_int32  :: ierr
+     
+     E_acc%mesh      => mesh_2d
+     num_cells1      = mesh_2d%num_cells1
+     num_cells2      = mesh_2d%num_cells2
+     num_cells_total = num_cells1*num_cells2
+     SLL_ALLOCATE( E_acc%e_acc(num_cells_total), ierr)
+     call sll_s_reset_field_accumulator_to_zero( E_acc )
+
+   end subroutine sll_s_field_accumulator_2d_init
+
+
    function sll_f_new_field_accumulator_2d( mesh_2d ) result(E_acc)
      type(sll_t_cartesian_mesh_2d), pointer        ::  mesh_2d
      type(sll_t_electric_field_accumulator), pointer ::  E_acc
@@ -352,16 +372,29 @@ contains
      end if
      
      SLL_ALLOCATE( E_acc, ierr)
-     E_acc%mesh        => mesh_2d
-     num_cells1      = mesh_2d%num_cells1
-     num_cells2      = mesh_2d%num_cells2
-     num_cells_total = num_cells1*num_cells2
-     SLL_ALLOCATE( E_acc%e_acc(num_cells_total), ierr)
-     call sll_s_reset_field_accumulator_to_zero( E_acc )
+     call sll_s_field_accumulator_2d_init(E_acc, mesh_2d )
+
    end function sll_f_new_field_accumulator_2d
    
+  subroutine sll_s_field_accumulator_cs_2d_init( E_acc, mesh_2d ) 
+    type(sll_t_cartesian_mesh_2d), target     ::  mesh_2d
+    type(sll_t_electric_field_accumulator_cs) ::  E_acc
+    sll_int32  :: num_cells1
+    sll_int32  :: num_cells2
+    sll_int32  :: num_cells_total
+    sll_int32  :: ierr
+
+    E_acc%mesh      => mesh_2d
+    num_cells1      = mesh_2d%num_cells1
+    num_cells2      = mesh_2d%num_cells2
+    num_cells_total = num_cells1*num_cells2
+    SLL_ALLOCATE( E_acc%e_acc(num_cells_total), ierr)
+    call sll_s_reset_field_accumulator_cs_to_zero( E_acc )
+
+  end subroutine sll_s_field_accumulator_cs_2d_init
+  
   function sll_f_new_field_accumulator_cs_2d( mesh_2d ) result(E_acc)
-    type(sll_t_cartesian_mesh_2d), pointer           ::  mesh_2d
+    type(sll_t_cartesian_mesh_2d), pointer             ::  mesh_2d
     type(sll_t_electric_field_accumulator_cs), pointer ::  E_acc
     sll_int32  :: num_cells1
     sll_int32  :: num_cells2
@@ -375,18 +408,14 @@ contains
     end if
 
     SLL_ALLOCATE( E_acc, ierr)
-    E_acc%mesh        => mesh_2d
-    num_cells1      = mesh_2d%num_cells1
-    num_cells2      = mesh_2d%num_cells2
-    num_cells_total = num_cells1*num_cells2
-    SLL_ALLOCATE( E_acc%e_acc(num_cells_total), ierr)
-    call sll_s_reset_field_accumulator_cs_to_zero( E_acc )
+
+    call sll_s_field_accumulator_cs_2d_init( E_acc, mesh_2d ) 
 
   end function sll_f_new_field_accumulator_cs_2d
   
 
   subroutine sll_s_reset_field_accumulator_to_zero( E_acc )
-    type(sll_t_electric_field_accumulator), pointer :: E_acc
+    type(sll_t_electric_field_accumulator) :: E_acc
     sll_int32 :: i
     sll_int32 :: num_cells
 
@@ -405,7 +434,7 @@ contains
 
   subroutine sll_s_reset_field_accumulator_cs_to_zero( E_acc )
 ! -------------   CS is for Cubic Spline   -------------
-    type(sll_t_electric_field_accumulator_cs), pointer :: E_acc
+    type(sll_t_electric_field_accumulator_cs) :: E_acc
     sll_int32 :: i
     sll_int32 :: num_cells
 
