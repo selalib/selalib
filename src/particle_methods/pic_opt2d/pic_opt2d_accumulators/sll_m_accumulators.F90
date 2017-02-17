@@ -33,6 +33,8 @@ module sll_m_accumulators
     sll_t_field_accumulator_cs, &
     sll_f_new_charge_accumulator_2d, &
     sll_f_new_charge_accumulator_2d_cs, &
+    sll_s_charge_accumulator_2d_init, &
+    sll_s_charge_accumulator_2d_cs_init, &
     sll_f_new_field_accumulator_2d, &
     sll_f_new_field_accumulator_cs_2d, &
     sll_s_reset_charge_accumulator_to_zero, &
@@ -178,12 +180,26 @@ module sll_m_accumulators
 
 contains
   
-  function sll_f_new_charge_accumulator_2d( mesh_2d ) result(acc)
-    type(sll_t_cartesian_mesh_2d), pointer       :: mesh_2d
-    type(sll_t_charge_accumulator_2d), pointer :: acc
+  subroutine sll_s_charge_accumulator_2d_init( acc, mesh_2d ) 
+    type(sll_t_charge_accumulator_2d)         :: acc
+    type(sll_t_cartesian_mesh_2d),     target :: mesh_2d
     sll_int32  :: num_cells1
     sll_int32  :: num_cells2
     sll_int32  :: num_cells_total
+    sll_int32  :: ierr
+
+    acc%mesh        => mesh_2d
+    num_cells1      = mesh_2d%num_cells1
+    num_cells2      = mesh_2d%num_cells2
+    num_cells_total = num_cells1*num_cells2
+    SLL_ALLOCATE( acc%q_acc(num_cells_total), ierr)
+    call sll_s_reset_charge_accumulator_to_zero( acc )
+
+  end subroutine sll_s_charge_accumulator_2d_init
+  
+  function sll_f_new_charge_accumulator_2d( mesh_2d ) result(acc)
+    type(sll_t_cartesian_mesh_2d), pointer     :: mesh_2d
+    type(sll_t_charge_accumulator_2d), pointer :: acc
     sll_int32  :: ierr
 
     if( .not. associated(mesh_2d) ) then
@@ -193,12 +209,7 @@ contains
     end if
 
     SLL_ALLOCATE( acc, ierr)
-    acc%mesh        => mesh_2d
-    num_cells1      = mesh_2d%num_cells1
-    num_cells2      = mesh_2d%num_cells2
-    num_cells_total = num_cells1*num_cells2
-    SLL_ALLOCATE( acc%q_acc(num_cells_total), ierr)
-    call sll_s_reset_charge_accumulator_to_zero( acc )
+    call sll_s_charge_accumulator_2d_init( acc, mesh_2d ) 
 
   end function sll_f_new_charge_accumulator_2d
   
@@ -240,7 +251,7 @@ contains
   end function q_acc_add_CS
 
   subroutine sll_s_reset_charge_accumulator_to_zero( acc )
-    type(sll_t_charge_accumulator_2d), pointer :: acc
+    type(sll_t_charge_accumulator_2d) :: acc
     sll_int32 :: i
     sll_int32 :: num_cells
 
@@ -273,12 +284,25 @@ contains
    end subroutine delete_charge_accumulator_2d
 
 
-   function sll_f_new_charge_accumulator_2d_cs( mesh_2d ) result(acc)
-     type(sll_t_cartesian_mesh_2d), pointer       :: mesh_2d
-     type(sll_t_charge_accumulator_2d_cs), pointer :: acc
+   subroutine sll_s_charge_accumulator_2d_cs_init( acc, mesh_2d ) 
+     type(sll_t_cartesian_mesh_2d),        target  :: mesh_2d
+     type(sll_t_charge_accumulator_2d_cs)          :: acc
      sll_int32  :: num_cells1
      sll_int32  :: num_cells2
      sll_int32  :: num_cells_total
+     sll_int32  :: ierr
+     
+     acc%mesh        => mesh_2d
+     num_cells1      = mesh_2d%num_cells1
+     num_cells2      = mesh_2d%num_cells2
+     num_cells_total = num_cells1*num_cells2
+     SLL_ALLOCATE( acc%q_acc(num_cells_total), ierr)
+     call sll_s_reset_charge_accumulator_to_zero_cs( acc )
+   end subroutine sll_s_charge_accumulator_2d_cs_init
+
+   function sll_f_new_charge_accumulator_2d_cs( mesh_2d ) result(acc)
+     type(sll_t_cartesian_mesh_2d), pointer       :: mesh_2d
+     type(sll_t_charge_accumulator_2d_cs), pointer :: acc
      sll_int32  :: ierr
      
      if( .not. associated(mesh_2d) ) then
@@ -288,16 +312,12 @@ contains
      end if
      
      SLL_ALLOCATE( acc, ierr)
-     acc%mesh        => mesh_2d
-     num_cells1      = mesh_2d%num_cells1
-     num_cells2      = mesh_2d%num_cells2
-     num_cells_total = num_cells1*num_cells2
-     SLL_ALLOCATE( acc%q_acc(num_cells_total), ierr)
-     call sll_s_reset_charge_accumulator_to_zero_cs( acc )
+     call sll_s_charge_accumulator_2d_cs_init(acc, mesh_2d)
+
    end function sll_f_new_charge_accumulator_2d_cs
 
    subroutine sll_s_reset_charge_accumulator_to_zero_cs( acc )
-     type(sll_t_charge_accumulator_2d_cs), pointer :: acc
+     type(sll_t_charge_accumulator_2d_cs) :: acc
      sll_int32 :: i
      sll_int32 :: num_cells
      
@@ -332,11 +352,6 @@ contains
      SLL_DEALLOCATE(acc, ierr)
    end subroutine delete_charge_accumulator_2d_CS
    
-   
-   
-
-
-
    function sll_f_new_field_accumulator_2d( mesh_2d ) result(E_acc)
      type(sll_t_cartesian_mesh_2d), pointer        ::  mesh_2d
      type(sll_t_electric_field_accumulator), pointer ::  E_acc

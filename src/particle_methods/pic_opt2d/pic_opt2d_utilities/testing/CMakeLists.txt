@@ -1,4 +1,3 @@
-# CTest
 add_executable( test_particle_sort test_particle_sort.F90 )
 target_link_libraries( test_particle_sort
   sll_random_deviate_generators
@@ -7,3 +6,8 @@ target_link_libraries( test_particle_sort
   sll_meshes )
 add_test( NAME pic_particle_sort COMMAND test_particle_sort )
 set_tests_properties( pic_particle_sort PROPERTIES PASS_REGULAR_EXPRESSION "PASSED" )
+
+add_executable( test_pic_utilities test_pic_utilities.F90 )
+target_link_libraries( test_pic_utilities sll_pic_opt2d_utilities sll_meshes)
+add_test( NAME pic_utilities COMMAND test_pic_utilities )
+set_tests_properties( pic_utilities PROPERTIES PASS_REGULAR_EXPRESSION "PASSED" )
