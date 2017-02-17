@@ -237,7 +237,7 @@ subroutine initlocal()
 
   call read_input_file(vlasov4d)
 
-  call spl_x3x4%initialize(vlasov4d%np_eta3, vlasov4d%np_eta4,   & 
+  call spl_x3x4%init(vlasov4d%np_eta3, vlasov4d%np_eta4,   & 
                            vlasov4d%eta3_min, vlasov4d%eta3_max, &
                            vlasov4d%eta4_min, vlasov4d%eta4_max, &
   &                        sll_p_periodic, sll_p_periodic)
