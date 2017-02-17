@@ -21,7 +21,7 @@ type(sll_t_charge_accumulator_2d_ptr),    pointer :: q_accumulator(:)
 type(sll_t_charge_accumulator_2d_cs_ptr), pointer :: q_accumulator_cs(:)
 type(sll_t_charge_accumulator_2d_ptr),    pointer :: q_gc_accumulator(:)
 type(sll_t_charge_accumulator_2d_cs_ptr), pointer :: q_gc_accumulator_cs(:)
-sll_real64 :: QoverM = 1.0_f64
+sll_real64 :: QoverM = 1.0_f64, s
 sll_int32  :: i
 
 sll_int32  :: nthreads, thread_id
@@ -72,12 +72,12 @@ call sll_s_charge_accumulator_2d_init(q_accumulator(thread_id)%q, mesh_2d )
 
 call sll_s_first_charge_accumulation_2d( p_group_4d, q_accumulator )
 
-!$OMP PARALLEL PRIVATE(thread_id)
-!$    thread_id = OMP_GET_THREAD_NUM()+1
+s = 0.0_f64
+do thread_id = 1, nthreads
+ s = s + sum(q_accumulator(thread_id)%q%q_acc(:)%q_sw)
+end do
 
-if (sum(q_accumulator(thread_id)%q%q_acc(:)%q_sw) /= 10.0_f64) stop 'FAILED'
-
-!$OMP END PARALLEL
+if ( s /= 10.0_f64 ) stop 'FAILED'
 
 allocate(q_accumulator_cs(nthreads))
 !$omp parallel PRIVATE(thread_id)
@@ -116,21 +116,20 @@ call sll_s_charge_accumulator_2d_cs_init(q_gc_accumulator_cs(thread_id)%q, mesh_
 !$omp end parallel
 call sll_s_first_gc_charge_accumulation_2d_cs( p_group_2d, q_gc_accumulator_cs )
 
-!$OMP PARALLEL PRIVATE(thread_id)
-!$    thread_id = OMP_GET_THREAD_NUM()+1
+s = 0.0_f64
+do thread_id = 1, nthreads
+ s = s + sum(  q_accumulator_cs(thread_id)%q%q_acc(:)%q_im1j   &
+             + q_accumulator_cs(thread_id)%q%q_acc(:)%q_ij     &
+             + q_accumulator_cs(thread_id)%q%q_acc(:)%q_ip1j   &
+             + q_accumulator_cs(thread_id)%q%q_acc(:)%q_im1jm1 &
+             + q_accumulator_cs(thread_id)%q%q_acc(:)%q_ijm1   &
+             + q_accumulator_cs(thread_id)%q%q_acc(:)%q_ip1jm1 &
+             + q_accumulator_cs(thread_id)%q%q_acc(:)%q_im1jp1 &
+             + q_accumulator_cs(thread_id)%q%q_acc(:)%q_ijp1   &
+             + q_accumulator_cs(thread_id)%q%q_acc(:)%q_ip1jp1)
+end do
 
-if (abs(10_f32 - sum(q_accumulator_cs(thread_id)%q%q_acc(:)%q_im1j     &
-                  +  q_accumulator_cs(thread_id)%q%q_acc(:)%q_ij       &
-                  +  q_accumulator_cs(thread_id)%q%q_acc(:)%q_ip1j     &
-                  +  q_accumulator_cs(thread_id)%q%q_acc(:)%q_im1jm1   &
-                  +  q_accumulator_cs(thread_id)%q%q_acc(:)%q_ijm1     &
-                  +  q_accumulator_cs(thread_id)%q%q_acc(:)%q_ip1jm1   &
-                  +  q_accumulator_cs(thread_id)%q%q_acc(:)%q_im1jp1   &
-                  +  q_accumulator_cs(thread_id)%q%q_acc(:)%q_ijp1     &
-                  +  q_accumulator_cs(thread_id)%q%q_acc(:)%q_ip1jp1)) > 1d-7) &
-  stop 'FAILED' 
-
-!$OMP END PARALLEL
+if ( abs(s - 10.0_f64) > 1d-7 ) stop 'FAILED'
 
 print*, "PASSED"
 
