@@ -65,6 +65,7 @@ module sll_m_cubic_splines
     sll_f_interpolate_x1_derivative_2d, &
     sll_f_interpolate_x2_derivative_2d, &
     sll_f_new_cubic_spline_1d, &
+    sll_f_new_cubic_spline_2d, &
     sll_s_cubic_spline_2d_init, &
     sll_t_cubic_spline_1d, &
     sll_t_cubic_spline_2d, &
@@ -1281,6 +1282,64 @@ MAKE_GET_SLOT_FUNCTION(get_x2_delta_cs2d,sll_t_cubic_spline_2d,x2_delta,sll_real
   !> in case that a specific slope value should to be imposed at each border
   !> point. Default behavior is to compute the slope consistent with the 
   !> given data.
+  function sll_f_new_cubic_spline_2d( &
+    num_pts_x1,   &
+    num_pts_x2,   &
+    x1_min,       &
+    x1_max,       &
+    x2_min,       &
+    x2_max,       &
+    x1_bc_type,   &
+    x2_bc_type,   &
+    const_slope_x1_min, &
+    const_slope_x1_max, &
+    const_slope_x2_min, &
+    const_slope_x2_max, &
+    x1_min_slopes, &
+    x1_max_slopes, &
+    x2_min_slopes, &
+    x2_max_slopes ) result (this)
+
+    type(sll_t_cubic_spline_2d), pointer           :: this
+    sll_int32,  intent(in)                         :: num_pts_x1
+    sll_int32,  intent(in)                         :: num_pts_x2
+    sll_real64, intent(in)                         :: x1_min
+    sll_real64, intent(in)                         :: x1_max
+    sll_real64, intent(in)                         :: x2_min
+    sll_real64, intent(in)                         :: x2_max
+    sll_int32,  intent(in)                         :: x1_bc_type
+    sll_int32,  intent(in)                         :: x2_bc_type
+    sll_real64, intent(in),               optional :: const_slope_x1_min
+    sll_real64, intent(in),               optional :: const_slope_x1_max
+    sll_real64, intent(in),               optional :: const_slope_x2_min
+    sll_real64, intent(in),               optional :: const_slope_x2_max
+    sll_real64, intent(in), dimension(:), optional :: x1_min_slopes
+    sll_real64, intent(in), dimension(:), optional :: x1_max_slopes
+    sll_real64, intent(in), dimension(:), optional :: x2_min_slopes
+    sll_real64, intent(in), dimension(:), optional :: x2_max_slopes
+
+    allocate(this)
+    call sll_s_cubic_spline_2d_init( &
+    this,         &
+    num_pts_x1,   &
+    num_pts_x2,   &
+    x1_min,       &
+    x1_max,       &
+    x2_min,       &
+    x2_max,       &
+    x1_bc_type,   &
+    x2_bc_type,   &
+    const_slope_x1_min, &
+    const_slope_x1_max, &
+    const_slope_x2_min, &
+    const_slope_x2_max, &
+    x1_min_slopes, &
+    x1_max_slopes, &
+    x2_min_slopes, &
+    x2_max_slopes )
+
+  end function sll_f_new_cubic_spline_2d
+
   subroutine sll_s_cubic_spline_2d_init( &
     this,         &
     num_pts_x1,   &
