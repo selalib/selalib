@@ -10,6 +10,7 @@ use sll_m_particle_group_2d
 use sll_m_particle_group_4d
 use sll_m_accumulators
 use sll_m_pic_utilities
+!$ use omp_lib
 
 implicit none
 
@@ -22,6 +23,16 @@ type(sll_t_charge_accumulator_2d_ptr),    pointer :: q_gc_accumulator(:)
 type(sll_t_charge_accumulator_2d_cs_ptr), pointer :: q_gc_accumulator_cs(:)
 sll_real64 :: QoverM = 1.0_f64
 sll_int32  :: i
+
+sll_int32  :: nthreads, thread_id
+
+nthreads  = 1
+thread_id = 1
+
+!$omp parallel
+!$ nthreads =  OMP_GET_NUM_THREADS()
+!$omp end parallel
+
 
 #define NC_X 10
 #define NC_Y 10
@@ -50,19 +61,21 @@ do i = 1, p_group_4d%number_particles
   p_group_4d%p_list(i)%q  = 1.0_f32
 end do
 
-allocate(q_accumulator(1))
-allocate(q_accumulator(1)%q)
-call sll_s_charge_accumulator_2d_init(q_accumulator(1)%q, mesh_2d )
+allocate(q_accumulator(nthreads))
+!$omp parallel PRIVATE(thread_id)
+!$    thread_id = OMP_GET_THREAD_NUM()+1
+allocate(q_accumulator(thread_id)%q)
+call sll_s_charge_accumulator_2d_init(q_accumulator(thread_id)%q, mesh_2d )
+!$omp end parallel
+
 call sll_s_first_charge_accumulation_2d( p_group_4d, q_accumulator )
-if (sum(q_accumulator(1)%q%q_acc(:)%q_sw) /= 10.0_f64) stop "FAILED"
-if (sum(q_accumulator(1)%q%q_acc(:)%q_se) /= 00.0_f64) stop "FAILED"
-if (sum(q_accumulator(1)%q%q_acc(:)%q_nw) /= 00.0_f64) stop "FAILED"
-if (sum(q_accumulator(1)%q%q_acc(:)%q_ne) /= 00.0_f64) stop "FAILED"
 
-
-allocate(q_accumulator_cs(1))
-allocate(q_accumulator_cs(1)%q)
-call sll_s_charge_accumulator_2d_cs_init(q_accumulator_cs(1)%q, mesh_2d )
+allocate(q_accumulator_cs(nthreads))
+!$omp parallel PRIVATE(thread_id)
+!$    thread_id = OMP_GET_THREAD_NUM()+1
+allocate(q_accumulator_cs(thread_id)%q)
+call sll_s_charge_accumulator_2d_cs_init(q_accumulator_cs(thread_id)%q, mesh_2d )
+!$omp end parallel
 call sll_s_first_charge_accumulation_2d_cs( p_group_4d, q_accumulator_cs )
 
 allocate(p_group_2d)
@@ -78,20 +91,21 @@ do i = 1, p_group_2d%number_particles
   p_group_2d%p_list(i)%q  = 1.0_f32
 end do
 
-allocate(q_gc_accumulator(1))
-allocate(q_gc_accumulator(1)%q)
-call sll_s_charge_accumulator_2d_init(q_gc_accumulator(1)%q, mesh_2d )
+allocate(q_gc_accumulator(nthreads))
+!$omp parallel PRIVATE(thread_id)
+!$    thread_id = OMP_GET_THREAD_NUM()+1
+allocate(q_gc_accumulator(thread_id)%q)
+call sll_s_charge_accumulator_2d_init(q_gc_accumulator(thread_id)%q, mesh_2d )
+!$omp end parallel
 call sll_s_first_gc_charge_accumulation_2d( p_group_2d, q_gc_accumulator )
-if (sum(q_gc_accumulator(1)%q%q_acc(:)%q_sw) /= 10.0_f64) stop "FAILED"
-if (sum(q_gc_accumulator(1)%q%q_acc(:)%q_se) /= 00.0_f64) stop "FAILED"
-if (sum(q_gc_accumulator(1)%q%q_acc(:)%q_nw) /= 00.0_f64) stop "FAILED"
-if (sum(q_gc_accumulator(1)%q%q_acc(:)%q_ne) /= 00.0_f64) stop "FAILED"
 
-allocate(q_gc_accumulator_cs(1))
-allocate(q_gc_accumulator_cs(1)%q)
-call sll_s_charge_accumulator_2d_cs_init(q_gc_accumulator_cs(1)%q, mesh_2d )
+allocate(q_gc_accumulator_cs(nthreads))
+!$omp parallel PRIVATE(thread_id)
+!$    thread_id = OMP_GET_THREAD_NUM()+1
+allocate(q_gc_accumulator_cs(thread_id)%q)
+call sll_s_charge_accumulator_2d_cs_init(q_gc_accumulator_cs(thread_id)%q, mesh_2d )
+!$omp end parallel
 call sll_s_first_gc_charge_accumulation_2d_cs( p_group_2d, q_gc_accumulator_cs )
-
 
 print*, "PASSED"
 
