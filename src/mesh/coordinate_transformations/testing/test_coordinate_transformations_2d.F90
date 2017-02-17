@@ -221,9 +221,6 @@ program unit_test_2d
        x2_tab, &
        jacobians_node=jacs )
 
- ! print *, 'x1: '
- ! print *, map_d%x1_node(:,:)
-
   print *, 'Compare the values of the transformation at the nodes: '
   acc  = 0.0_f64
   acc1 = 0.0_f64
@@ -248,19 +245,9 @@ program unit_test_2d
      do i=0,NPTS1-1
         eta1   = real(i,f64)*h1
         eta2   = real(j,f64)*h2
-!        print *, 'values: ', i, j, eta1, eta2
-!        print *, 'about to call map_a%jacobian(eta1,eta2)'
         node   = t_a%jacobian(eta1,eta2)
-!        node   = map_2d_jacobian_node(map_d,i+1,j+1)
-!        print *, 'about to call map_d%jacobian(eta1,eta2)'
         interp = t_d%jacobian(eta1,eta2)
         delta  =  node - interp
-        ! for inspecting/debugging:
-!!$        print *, 'eta1 = ', eta1, 'eta2 = ', eta2
-!!$        print *, '(',i+1,j+1,'): ANALYT = ', node, ', DISCR = ', interp, &
-!!$             '. DIFFERENCE  = ', delta
-!        print *, '(',i+1,j+1,'): NODE = ', node, ', ANALYT = ', jac_analyt, &
-!             '. DIFFERENCE  = ', delta2
         acc = acc + abs(delta)
      end do
   end do
