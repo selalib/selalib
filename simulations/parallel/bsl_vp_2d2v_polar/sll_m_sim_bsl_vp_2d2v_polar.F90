@@ -335,7 +335,7 @@ contains
     sim%seqx1x2_to_seqx3x4 => &
          sll_o_new_remap_plan(sim%sequential_x1x2,sim%sequential_x3x4,sim%f_x1x2)
 
-    call sim%interp_x1x2%initialize( &
+    call sim%interp_x1x2%init( &
          sim%nc_x1+1, sim%nc_x2+1,   &
          eta1_min, eta1_max,         &
          eta2_min, eta2_max,         &
