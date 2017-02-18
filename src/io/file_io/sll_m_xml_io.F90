@@ -449,9 +449,9 @@ contains
        character(len=*), intent(in)           :: x1filename !< x data file name
        character(len=*), intent(in)           :: x2filename !< y data file name
        character(len=*), intent(in)           :: x3filename !< x datz file name
-       character(len=*), intent(in), optional :: x1dsetname !< x dataset name
-       character(len=*), intent(in), optional :: x2dsetname !< y dataset name
-       character(len=*), intent(in), optional :: x3dsetname !< z dataset name
+       character(len=*), intent(in)           :: x1dsetname !< x dataset name
+       character(len=*), intent(in)           :: x2dsetname !< y dataset name
+       character(len=*), intent(in)           :: x3dsetname !< z dataset name
        sll_int32, intent(in)                  :: nnodes_x1  !< x nodes number
        sll_int32, intent(in)                  :: nnodes_x2  !< y nodes number
        sll_int32, intent(in)                  :: nnodes_x3  !< z nodes number
