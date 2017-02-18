@@ -292,7 +292,7 @@ contains   ! *****************************************************************
        call sll_o_xdmf_write_array(trim(name), &
                                  val,&
                                  scalar_field%name,ierr,file_id, &
-                                 "center")
+                                 center)
        call sll_s_xdmf_close(file_id,ierr)
 
     case (sll_p_io_vtk)
