@@ -570,7 +570,7 @@ contains
     ! unit square. But with the more general logical meshes, this is not
     ! true anymore, so this should be changed to depend on the values stored
     ! in the logical grids.
-    call sim%interp_x1x2%initialize( &
+    call sim%interp_x1x2%init( &
          nc_x1+1, &
          nc_x2+1, &
          sim%mesh2d_x%eta1_min, &
