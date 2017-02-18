@@ -20,6 +20,8 @@ type(sll_t_electric_field_accumulator_cs) :: e_accumulator_cs
 sll_int32, parameter :: num_cells1 = 10
 sll_int32, parameter :: num_cells2 = 10
 
+sll_real64 :: ref = 12100_f64
+
 allocate(rho(num_cells1+1,num_cells2+1))
 allocate(e_1(num_cells1+1,num_cells2+1))
 allocate(e_2(num_cells1+1,num_cells2+1))
@@ -28,19 +30,24 @@ call sll_s_cartesian_mesh_2d_init( mesh_2d, &
   num_cells1, num_cells2, 0.0_f64, 1.0_f64, 0.0_f64, 1.0_f64 )
 
 call sll_s_charge_accumulator_2d_init(charge, mesh_2d )
+charge%q_acc%q_sw = 1.0_f64
 call sll_s_convert_charge_to_rho_2d_per_per( charge, rho )
 call sll_s_field_accumulator_2d_init( e_accumulator, mesh_2d ) 
 call sll_s_accumulate_field( e_1, e_2, e_accumulator)
-if ( sum(rho) /= 0.0_f64 .or. sum(e_1) /= 0.0_f64 .or. sum(e_2) /= 0.0_f64) &
-  stop 'FAILED'
+
+if ( abs(sum(rho) - ref) > 1d7) stop 'FAILED'
+if ( abs(sum(e_1) - ref) > 1d7) stop 'FAILED'
+if ( abs(sum(e_2) - ref) > 1d7) stop 'FAILED'
 
 call sll_s_charge_accumulator_2d_cs_init(charge_cs, mesh_2d )
+charge_cs%q_acc%q_ij = 1.0_f64
 call sll_s_convert_charge_to_rho_2d_per_per_cs( charge_cs, rho )
 call sll_s_field_accumulator_cs_2d_init( e_accumulator_cs, mesh_2d ) 
 call sll_s_accumulate_field_cs( e_1, e_2, e_accumulator_cs)
 
-if ( sum(rho) /= 0.0_f64 .or. sum(e_1) /= 0.0_f64 .or. sum(e_2) /= 0.0_f64) &
-  stop 'FAILED'
+if ( abs(sum(rho) - ref) > 1d7) stop 'FAILED'
+if ( abs(sum(e_1) - ref) > 1d7) stop 'FAILED'
+if ( abs(sum(e_2) - ref) > 1d7) stop 'FAILED'
 
 print*, 'PASSED'
 end program test_charge_to_density
