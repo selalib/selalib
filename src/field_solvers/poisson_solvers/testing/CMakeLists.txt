@@ -1,9 +1,16 @@
+# Save .mod files locally (this does not pollute the main "modules" directory)
+SET(CMAKE_Fortran_MODULE_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}")
+
 ADD_EXECUTABLE( test_poisson_1d_polar test_poisson_1d_polar.F90 )
 TARGET_LINK_LIBRARIES( test_poisson_1d_polar sll_poisson_solvers )
 ADD_TEST( NAME poisson_1d_polar COMMAND test_poisson_1d_polar     )
 SET_TESTS_PROPERTIES( poisson_1d_polar PROPERTIES PASS_REGULAR_EXPRESSION "PASSED" )
 
-ADD_EXECUTABLE( test_poisson_2d_polar test_poisson_2d_polar.F90 )
+ADD_EXECUTABLE( test_poisson_2d_polar
+  test_poisson_2d_polar.F90
+  m_test_poisson_2d_polar_base.F90
+  m_test_poisson_2d_polar_dirichlet.F90
+  m_test_poisson_2d_polar_neumann_mode0.F90 )
 TARGET_LINK_LIBRARIES( test_poisson_2d_polar sll_poisson_solvers )
 ADD_TEST( NAME poisson_2d_polar     COMMAND test_poisson_2d_polar     )
 SET_TESTS_PROPERTIES( poisson_2d_polar PROPERTIES PASS_REGULAR_EXPRESSION "PASSED" )
