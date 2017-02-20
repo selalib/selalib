@@ -22,3 +22,4 @@ def recursive_replace_new( root ) :
 
 recursive_replace_new("src")
 recursive_replace_new("simulations")
+recursive_replace_new("thirdparty")
