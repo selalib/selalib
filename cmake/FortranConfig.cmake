@@ -69,7 +69,7 @@ ELSEIF (CMAKE_Fortran_COMPILER_ID MATCHES GNU)
     SET(CMAKE_Fortran_FLAGS_DEBUG "${CMAKE_Fortran_FLAGS_DEBUG} -Wno-unused-dummy-argument")
   ENDIF()
 
-  if(Fortran_COMPILER_VERSION VERSION_LESS "4.8.0")
+  if(Fortran_COMPILER_VERSION VERSION_LESS "4.8.5")
     message(STATUS "Insufficient gfortran version for the Fortran 2003 Standard")
   else()
     message(STATUS "GNU fortran version OK for the Fortran 2003 standard")
