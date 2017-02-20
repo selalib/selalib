@@ -79,7 +79,7 @@ module sll_m_poisson_2d_base
       use sll_m_working_precision
       import sll_c_poisson_2d_base       
 
-      class(sll_c_poisson_2d_base)              :: poisson
+      class(sll_c_poisson_2d_base)            :: poisson
       sll_real64, dimension(:,:), intent(in)  :: rho
       sll_real64, dimension(:,:), intent(out) :: E1
       sll_real64, dimension(:,:), intent(out) :: E2
