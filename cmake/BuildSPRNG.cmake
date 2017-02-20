@@ -9,8 +9,9 @@ IF(APPLE)
 ELSE()
 
   SET(SPRNG_CXX_COMPILER ${MPI_CXX_COMPILER} CACHE FILEPATH  "CXX compiler for SPRNG")
-  SET(SPRNG_PATCH_COMMAND patch -p0 < ${CMAKE_CURRENT_SOURCE_DIR}/sprng/sprng-mac.patch)
-  SET(SPRNG_CONFIGURE_COMMAND ${CMAKE_BINARY_DIR}/sprng/configure --prefix=${CMAKE_BINARY_DIR}/sprng --with-mpi )
+  SET(SPRNG_LIBS "-lmpi_cxx" CACHE STRING  "LIBS configure argument for SPRNG")
+  SET(SPRNG_PATCH_COMMAND "")
+  SET(SPRNG_CONFIGURE_COMMAND ${CMAKE_BINARY_DIR}/sprng/configure --enable-silent-rules --prefix=${CMAKE_BINARY_DIR}/sprng --with-mpi=yes CXX=${SPRNG_CXX_COMPILER} LIBS=${SPRNG_LIBS} "CXXFLAGS=-w -g -O2")
 
 ENDIF(APPLE)
 
