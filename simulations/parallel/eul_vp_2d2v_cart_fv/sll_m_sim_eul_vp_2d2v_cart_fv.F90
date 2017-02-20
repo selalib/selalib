@@ -44,7 +44,7 @@ module sll_m_sim_eul_vp_2d2v_cart_fv
 
   use sll_m_poisson_2d_periodic_par, only: &
     sll_t_poisson_2d_periodic_par, &
-    sll_f_poisson_2d_periodic_par_new_alt, &
+    sll_s_poisson_2d_periodic_par_init_alt, &
     sll_s_poisson_2d_periodic_par_solve_alt
 
   use sll_m_remapper, only: &
@@ -127,7 +127,7 @@ module sll_m_sim_eul_vp_2d2v_cart_fv
   type(sll_t_p2p_comm_real64), pointer :: comm
   type(sll_t_cartesian_mesh_2d), pointer    :: mesh2dx,mesh2dv
   class(sll_c_coordinate_transformation_2d_base),pointer     :: tx,tv
-  type(sll_t_poisson_2d_periodic_par), pointer :: poisson_plan
+  type(sll_t_poisson_2d_periodic_par) :: poisson_plan
 
   procedure(sll_i_scalar_initializer_4d), nopass, pointer :: init_func
   sll_real64, dimension(:), pointer :: params
@@ -423,7 +423,8 @@ subroutine run_vp_cart(sim)
  SLL_ALLOCATE(sim%phi_x1(loc_sz_x1,loc_sz_x2),ierr)
  !write(*,*) 'taille de rho_x1', size(sim%rho_x1(1,:)),size(sim%rho_x1(:,1))
  !write(*,*) 'arrive ici'
- sim%poisson_plan=>sll_f_poisson_2d_periodic_par_new_alt( &
+ call sll_s_poisson_2d_periodic_par_init_alt( &
+      sim%poisson_plan, &
       sim%phi_seq_x1_layout, &
       sim%nc_x1, &
       sim%nc_x2, &
