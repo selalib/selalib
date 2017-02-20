@@ -77,6 +77,7 @@ do tid = 1, nthreads
  s = s + sum(q_accumulator(tid)%q%q_acc(:)%q_sw)
 end do
 
+print*, s
 if ( s /= 10.0_f64 ) stop 'FAILED'
 
 allocate(q_accumulator_cs(nthreads))
@@ -129,6 +130,7 @@ do tid = 1, nthreads
              + q_accumulator_cs(tid)%q%q_acc(:)%q_ip1jp1)
 end do
 
+print*, s
 if ( abs(s - 10.0_f64) > 1d-7 ) stop 'FAILED'
 
 print*, "PASSED"
