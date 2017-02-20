@@ -405,8 +405,10 @@ contains
       ! phik(r) is k-th Fourier mode of phi(r,theta)
       ! rhok is 1D contiguous slice (column) of solver%z
       ! we will overwrite rhok with phik
-      associate( rhok => solver%z(:,k)/(solver%g(:)*solver%epsilon_0), &
-                 phik => solver%z(:,k) )
+      associate( rhok => solver%z(1:nr+1,k), &
+                 phik => solver%z(1:nr+1,k) )
+
+      rhok(1:nr+1) = rhok(1:nr+1) /(solver%g(1:nr+1)*solver%epsilon_0)
 
       ! Solve tridiagonal system to obtain \hat{phi}_{k_j}(r) at internal points
       call sll_s_setup_cyclic_tridiag( solver%mat(:,k), nr-1, solver%cts, solver%ipiv )

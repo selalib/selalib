@@ -432,7 +432,7 @@ contains
   !=============================================================================
   !> OO interface: solve Poisson's equation
   subroutine s_compute_phi_from_rho( poisson, phi, rho )
-    class(sll_t_poisson_2d_polar), target        :: poisson
+    class(sll_t_poisson_2d_polar)                :: poisson
     real(f64)                    , intent(  out) :: phi(:,:)
     real(f64)                    , intent(in   ) :: rho(:,:)
 

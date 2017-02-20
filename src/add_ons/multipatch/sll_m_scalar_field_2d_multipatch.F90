@@ -35,8 +35,7 @@ module sll_m_scalar_field_2d_multipatch
     sll_f_new_arbitrary_degree_spline_interp2d, &
     sll_s_set_slope2d, &
     sll_t_arbitrary_degree_spline_interpolator_2d, &
-    sll_t_arbitrary_degree_spline_interpolator_2d_ptr, &
-    sll_o_delete
+    sll_t_arbitrary_degree_spline_interpolator_2d_ptr
 
   use sll_m_boundary_condition_descriptors, only: &
     sll_p_hermite
@@ -53,8 +52,7 @@ module sll_m_scalar_field_2d_multipatch
 
   use sll_m_scalar_field_2d, only: &
     sll_f_new_scalar_field_2d_discrete, &
-    sll_t_scalar_field_2d_discrete_ptr, &
-    sll_o_delete
+    sll_t_scalar_field_2d_discrete_ptr
 
   use sll_m_utilities, only: &
     sll_s_int2string, &
@@ -65,7 +63,6 @@ module sll_m_scalar_field_2d_multipatch
   public :: &
     sll_f_new_scalar_field_multipatch_2d, &
     sll_s_set_slope_mp, &
-    sll_o_delete, &
     sll_t_scalar_field_multipatch_2d
 
   private
@@ -98,7 +95,7 @@ module sll_m_scalar_field_2d_multipatch
      type(sll_t_multipatch_data_2d_real), dimension(:), pointer :: derivs2 => null()
      type(sll_t_multipatch_data_2d_real), dimension(:), pointer :: derivs3 => null()
    contains
-     procedure, pass :: initialize => initialize_scalar_field_sfmp2d
+     procedure, pass :: init => initialize_scalar_field_sfmp2d
      procedure, pass :: allocate_memory => allocate_memory_sfmp2d
      procedure, pass :: update_interpolation_coefficients => &
           update_interp_coeffs_sfmp2d
@@ -125,7 +122,7 @@ module sll_m_scalar_field_2d_multipatch
      procedure, pass :: set_patch_data_pointer => set_patch_data_ptr_sfmp2d
      procedure, pass :: set_field_data => set_field_data_sfmp2d
      procedure, pass :: write_to_file => write_to_file_sfmp2d
-     procedure, pass :: delete => delete_field_sfmp2d
+     procedure, pass :: free => delete_field_sfmp2d
   end type sll_t_scalar_field_multipatch_2d
 
 
@@ -143,13 +140,13 @@ contains   ! *****************************************************************
     owns_data ) result(obj)
 
     type(sll_t_scalar_field_multipatch_2d), pointer             :: obj
-    character(len=*), intent(in)                              :: field_name
+    character(len=*), intent(in)                                :: field_name
     type(sll_t_coordinate_transformation_multipatch_2d), target :: transformation
-    logical, intent(in), optional                             :: owns_data
+    logical, intent(in), optional                               :: owns_data
     sll_int32  :: ierr
 
     SLL_ALLOCATE(obj,ierr)
-    call obj%initialize( field_name, transformation, owns_data )
+    call obj%init( field_name, transformation, owns_data )
   end function sll_f_new_scalar_field_multipatch_2d
   
   subroutine initialize_scalar_field_sfmp2d( &
@@ -159,12 +156,12 @@ contains   ! *****************************************************************
     owns_data )
     
     class(sll_t_scalar_field_multipatch_2d)                     :: fmp
-    character(len=*), intent(in)                              :: field_name
+    character(len=*), intent(in)                                :: field_name
     type(sll_t_coordinate_transformation_multipatch_2d), target :: transf
-    logical, intent(in), optional                             :: owns_data
-    character(len=256)                                        :: patch_name
-    class(sll_t_cartesian_mesh_2d), pointer                       :: lm
-    sll_int32, dimension(1:2)                                 :: connectivity
+    logical, intent(in), optional                               :: owns_data
+    character(len=256)                                          :: patch_name
+    class(sll_t_cartesian_mesh_2d), pointer                     :: lm
+    sll_int32, dimension(1:2)                                   :: connectivity
     character(len=128) :: format_string 
     sll_int32  :: i
     sll_int32  :: num_patches
@@ -281,7 +278,8 @@ contains   ! *****************************************************************
        print *, 'created interpolator for patch ', i
        print *, "num cells = ", lm%num_cells1, lm%num_cells2
  
-      fmp%fields(i+1)%f => sll_f_new_scalar_field_2d_discrete( &
+      SLL_ALLOCATE(fmp%fields(i+1)%f, ierr)
+      call fmp%fields(i+1)%f%init( &
             patch_name, &
             fmp%interps(i+1)%interp, &
             fmp%get_transformation(i), &
@@ -353,7 +351,7 @@ contains   ! *****************************************************************
     class(sll_t_scalar_field_multipatch_2d), pointer :: field
     sll_int32 :: ierr
 
-    call field%delete()
+    call field%free()
 #ifndef __INTEL_COMPILER
     SLL_DEALLOCATE(field, ierr)
 #endif
@@ -368,8 +366,8 @@ contains   ! *****************************************************************
 
     num_patches = field%get_number_patches()
     do i=0,num_patches-1
-       call sll_o_delete(field%fields(i+1)%f)
-       call sll_o_delete(field%interps(i+1)%interp)
+       call field%fields(i+1)%f%free()
+       call field%interps(i+1)%interp%delete()
        SLL_DEALLOCATE_ARRAY(field%buffers0(i+1)%array,ierr)
        SLL_DEALLOCATE_ARRAY(field%buffers1(i+1)%array,ierr)
        SLL_DEALLOCATE_ARRAY(field%buffers2(i+1)%array,ierr)

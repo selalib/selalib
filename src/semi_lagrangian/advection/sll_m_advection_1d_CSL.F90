@@ -25,7 +25,7 @@ module sll_m_advection_1d_CSL
 #include "sll_working_precision.h"
 
   use sll_m_advection_1d_base, only: &
-    sll_c_advection_1d_base
+    sll_c_advector_1d
 
   use sll_m_boundary_condition_descriptors, only: &
     sll_p_periodic, &
@@ -49,7 +49,7 @@ module sll_m_advection_1d_CSL
   private
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
-  type,extends(sll_c_advection_1d_base) :: CSL_1d_advector
+  type,extends(sll_c_advector_1d) :: CSL_1d_advector
   
     class(sll_c_interpolator_1d), pointer  :: interp
     class(sll_c_characteristics_1d_base), pointer  :: charac

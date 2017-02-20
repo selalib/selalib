@@ -8,9 +8,12 @@ SET(POISSON_SRCS sll_m_poisson_1d_base.F90
                  sll_m_poisson_2d_elliptic_solver.F90
                  sll_m_poisson_2d_fem.F90
                  sll_m_poisson_3d_base.F90
-                 sll_m_poisson_3d_periodic.F90
                  sll_m_hex_poisson.F90
                  sll_m_poisson_2d_tri.F90 )
+
+IF(FFT_LIB MATCHES FFTW)
+   LIST(APPEND POISSON_SRCS sll_m_poisson_3d_periodic.F90)
+ENDIF()
 
 IF(BUILD_MUDPACK)
   ADD_DEFINITIONS(-DMUDPACK)
@@ -23,6 +26,7 @@ ENDIF(BUILD_MUDPACK)
 
 
 ADD_LIBRARY( sll_poisson_solvers STATIC ${POISSON_SRCS} )
+
 TARGET_LINK_LIBRARIES( sll_poisson_solvers
   sll_assert
   sll_errors

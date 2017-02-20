@@ -71,7 +71,7 @@ type, extends(sll_c_interpolator_1d) :: sll_t_bspline_interpolator_1d
 contains
 
   !> Initialize the interpolator
-  procedure :: initialize=>initialize_bs1d_interpolator
+  procedure :: init => initialize_bs1d_interpolator
   !> Set spline coefficients
   procedure :: set_coefficients => set_coefficients_bs1d
   !> Compute interpolants
