@@ -9,7 +9,9 @@ if( HDF5_ENABLED AND HDF5_IS_PARALLEL AND HDF5_PARALLEL_ENABLED )
     # Semi-Lagrangian simulations
     
     ## Vlasov-Poisson 1Dx1D
-    add_subdirectory( bsl_vp_1d1v_cart                         )
+    if(FULL_FORTRAN2003)
+      add_subdirectory( bsl_vp_1d1v_cart                       )
+    endif(FULL_FORTRAN2003)
     add_subdirectory( bsl_vp_1d1v_cart_two_species             )
     add_subdirectory( bsl_vp_1d1v_cart_multi_species           )
     add_subdirectory( bsl_vp_1d1v_cart_no_split                )
