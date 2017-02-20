@@ -1282,7 +1282,6 @@ MAKE_GET_SLOT_FUNCTION(get_x2_delta_cs2d,sll_t_cubic_spline_2d,x2_delta,sll_real
   !> in case that a specific slope value should to be imposed at each border
   !> point. Default behavior is to compute the slope consistent with the 
   !> given data.
-  !> @return sll_f_new_cubic_spline_2d a pointer to a heap-allocated 2D cubic spline object.
   function sll_f_new_cubic_spline_2d( &
     num_pts_x1,   &
     num_pts_x2,   &

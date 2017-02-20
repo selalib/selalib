@@ -1,13 +1,41 @@
+module test_control_variate_helper
+#include "sll_working_precision.h"
+
+  use sll_m_constants, only : sll_p_pi
+  use sll_m_control_variate
+
+contains
+
+  function control_variate_equi( this, xi, vi, time) result(sll_i_control_variate)
+    class(sll_t_control_variate) :: this
+    sll_real64, optional, intent( in ) :: xi(:) !< particle position
+    sll_real64, optional, intent( in ) :: vi(:) !< particle velocity
+    sll_real64, optional, intent( in ) :: time  !< current time
+    sll_real64               :: sll_i_control_variate
+
+
+    sll_i_control_variate = exp(-0.5_f64*&
+         ((vi(1)/this%control_variate_parameters(1))**2+&
+         (vi(2)/this%control_variate_parameters(2))**2))/&
+         (2.0_f64*sll_p_pi*product(this%control_variate_parameters))
+
+  end function control_variate_equi
+
+end module test_control_variate_helper
+
+!------------------------------------------------------------------------------!
+
 program test_control_variate
 #include "sll_working_precision.h"
   use sll_m_constants, only : &
        sll_p_pi
 
   use sll_m_control_variate, only : &
-       sll_t_control_variate, &
-       sll_i_control_variate
+       sll_t_control_variate
   use sll_m_particle_group_2d2v, only : &
        sll_t_particle_group_2d2v
+
+  use test_control_variate_helper
 
   type(sll_t_control_variate) :: control_variate
   sll_real64, pointer :: control_variate_parameter(:)
@@ -75,24 +103,5 @@ program test_control_variate
   call control_variate%free()
   deallocate(control_variate_parameter)
 
-contains
-
-!------------------------------------------------------------------------------!
-
-  function control_variate_equi( this, xi, vi, time) result(sll_i_control_variate)
-    class(sll_t_control_variate) :: this
-    sll_real64, optional,  intent( in ) :: xi(:) !< particle position
-    sll_real64, optional, intent( in ) :: vi(:) !< particle velocity
-    sll_real64, optional, intent( in ) :: time  !< current time
-    sll_real64               :: sll_i_control_variate
-
-
-    sll_i_control_variate = exp(-0.5_f64*&
-         ((vi(1)/this%control_variate_parameters(1))**2+&
-         (vi(2)/this%control_variate_parameters(2))**2))/&
-         (2.0_f64*sll_p_pi*product(this%control_variate_parameters))
-
-  end function control_variate_equi
-
-
 end program test_control_variate
+
