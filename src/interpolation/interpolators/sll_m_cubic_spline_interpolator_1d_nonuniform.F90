@@ -48,7 +48,7 @@ module sll_m_cubic_spline_interpolator_1d_nonuniform
      type(sll_t_cubic_nonunif_spline_1d), pointer :: nonunif_spline !< spline
    contains
      !> PLEASE ADD DOCUMENTATION
-     procedure, pass(interpolator) :: initialize => initialize_cs1d_interpolator2
+     procedure, pass(interpolator) :: init => initialize_cs1d_interpolator2
      !> PLEASE ADD DOCUMENTATION
      procedure :: compute_interpolants => compute_interpolants_cs1d
      !> PLEASE ADD DOCUMENTATION

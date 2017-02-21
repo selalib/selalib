@@ -341,10 +341,10 @@ contains
          eta2_min, eta2_max,         &
          sll_p_periodic, sll_p_periodic )
 
-    call sim%interp_x3%initialize( &
+    call sim%interp_x3%init( &
          sim%nc_x3+1, eta3_min, eta3_max, sll_p_periodic)
 
-    call sim%interp_x4%initialize( &
+    call sim%interp_x4%init( &
          sim%nc_x4+1, eta4_min, eta4_max, sll_p_periodic)
 
     sim%layout_x1 => sll_f_new_layout_2d( sll_v_world_collective )

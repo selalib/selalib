@@ -33,7 +33,7 @@ module sll_m_tsi_2d_initializer
     sll_real64 :: v0
     sll_int32 :: is_delta_f
   contains
-    procedure, pass(init_obj) :: initialize => initialize_tsi_2d
+    procedure, pass(init_obj) :: init => initialize_tsi_2d
     procedure, pass(init_obj) :: f_of_x1x2  => f_x1x2_tsi_2d
   end type sll_t_init_tsi_2d
 

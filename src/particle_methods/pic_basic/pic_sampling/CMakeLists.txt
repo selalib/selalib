@@ -2,6 +2,7 @@ SET( PIC_SAMPLING_SRCS
   sll_m_particle_sampling.F90 )
 
 SET( PIC_SAMPLING_DEPS
+  sll_pic_weights
   sll_memory
   sll_errors
   sll_working_precision

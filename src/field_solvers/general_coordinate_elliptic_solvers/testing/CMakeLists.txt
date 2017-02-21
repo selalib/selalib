@@ -17,8 +17,12 @@ SET_TESTS_PROPERTIES( general_coordinate_elliptic_solver
 ADD_EXECUTABLE( test_lobalap_analytic test_lobalap_analytic.F90 )
 TARGET_LINK_LIBRARIES( test_lobalap_analytic sll_general_coordinate_elliptic_solvers )
 
-ADD_EXECUTABLE( test_lobalap_discrete test_lobalap_discrete.F90 )
-TARGET_LINK_LIBRARIES( test_lobalap_discrete sll_general_coordinate_elliptic_solvers )
+IF(NOT PGI)
 
-ADD_EXECUTABLE( test_gces_full_periodic_prototype test_full_periodic_prototype.F90 )
-TARGET_LINK_LIBRARIES( test_gces_full_periodic_prototype sll_general_coordinate_elliptic_solvers )
+  ADD_EXECUTABLE( test_lobalap_discrete test_lobalap_discrete.F90 )
+  TARGET_LINK_LIBRARIES( test_lobalap_discrete sll_general_coordinate_elliptic_solvers )
+
+  ADD_EXECUTABLE( test_gces_full_periodic_prototype test_full_periodic_prototype.F90 )
+  TARGET_LINK_LIBRARIES( test_gces_full_periodic_prototype sll_general_coordinate_elliptic_solvers )
+
+ENDIF(NOT PGI)

@@ -5,6 +5,7 @@ program vp4d
   use sll_vlasov4d_base
   use sll_vlasov4d_poisson
   use sll_m_mudpack
+  use sll_m_gnuplot
   use init_functions
 
   implicit none
@@ -50,22 +51,22 @@ program vp4d
 
   call read_input_file(vlasov4d)
 
-  call spl_x1%initialize(vlasov4d%nc_eta1+1,  &
+  call spl_x1%init(vlasov4d%nc_eta1+1,  &
                          vlasov4d%eta1_min,   &
                          vlasov4d%eta1_max,   &
                          sll_p_periodic)
 
-  call spl_x2%initialize(vlasov4d%nc_eta2+1,  &
+  call spl_x2%init(vlasov4d%nc_eta2+1,  &
                          vlasov4d%eta2_min,   &
                          vlasov4d%eta2_max,   &
                          sll_p_periodic)
 
-  call spl_x3%initialize(vlasov4d%nc_eta3+1,  &
+  call spl_x3%init(vlasov4d%nc_eta3+1,  &
                          vlasov4d%eta3_min,   &
                          vlasov4d%eta3_max,   &
                          sll_p_periodic)
 
-  call spl_x4%initialize(vlasov4d%nc_eta4+1,  &
+  call spl_x4%init(vlasov4d%nc_eta4+1,  &
                          vlasov4d%eta4_min,   &
                          vlasov4d%eta4_max,   &
                          sll_p_periodic)
@@ -178,25 +179,25 @@ contains
 
    select case(fieldname)
    case('rho')
-     call sll_o_gnuplot_corect_2d(vlasov4d%eta1_min, vlasov4d%eta1_max, &
-                                vlasov4d%np_eta1, vlasov4d%eta2_min, &
-                                vlasov4d%eta2_max, vlasov4d%np_eta2, &
-                                vlasov4d%rho, fieldname, iter, error)  
+     call sll_o_gnuplot_2d(vlasov4d%eta1_min, vlasov4d%eta1_max, &
+                           vlasov4d%np_eta1, vlasov4d%eta2_min, &
+                           vlasov4d%eta2_max, vlasov4d%np_eta2, &
+                           vlasov4d%rho, fieldname, iter, error)  
    case('phi')
-     call sll_o_gnuplot_corect_2d(vlasov4d%eta1_min, vlasov4d%eta1_max, &
-                                vlasov4d%np_eta1, vlasov4d%eta2_min, &
-                                vlasov4d%eta2_max, vlasov4d%np_eta2, &
-                                phi, fieldname, iter, error)  
+     call sll_o_gnuplot_2d(vlasov4d%eta1_min, vlasov4d%eta1_max, &
+                           vlasov4d%np_eta1, vlasov4d%eta2_min, &
+                           vlasov4d%eta2_max, vlasov4d%np_eta2, &
+                           phi, fieldname, iter, error)  
    case('ex')
-     call sll_o_gnuplot_corect_2d(vlasov4d%eta1_min, vlasov4d%eta1_max, &
-                                vlasov4d%np_eta1, vlasov4d%eta2_min, &
-                                vlasov4d%eta2_max, vlasov4d%np_eta2, &
-                                vlasov4d%ex, fieldname, iter, error)  
+     call sll_o_gnuplot_2d(vlasov4d%eta1_min, vlasov4d%eta1_max, &
+                           vlasov4d%np_eta1, vlasov4d%eta2_min, &
+                           vlasov4d%eta2_max, vlasov4d%np_eta2, &
+                           vlasov4d%ex, fieldname, iter, error)  
    case('ey')
-     call sll_o_gnuplot_corect_2d(vlasov4d%eta1_min, vlasov4d%eta1_max, &
-                                vlasov4d%np_eta1, vlasov4d%eta2_min, &
-                                vlasov4d%eta2_max, vlasov4d%np_eta2, &
-                                vlasov4d%ey, fieldname, iter, error)  
+     call sll_o_gnuplot_2d(vlasov4d%eta1_min, vlasov4d%eta1_max, &
+                           vlasov4d%np_eta1, vlasov4d%eta2_min, &
+                           vlasov4d%eta2_max, vlasov4d%np_eta2, &
+                           vlasov4d%ey, fieldname, iter, error)  
    end select
 
    end subroutine plot

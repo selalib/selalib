@@ -288,6 +288,8 @@ contains
     ! [ROOT only] Prepare receiver buffer
     if (my_rank == 0) then
       allocate( recv_buf(np) )
+    else
+      allocate( recv_buf(1) )
     end if
 
     ! Send v values to ROOT

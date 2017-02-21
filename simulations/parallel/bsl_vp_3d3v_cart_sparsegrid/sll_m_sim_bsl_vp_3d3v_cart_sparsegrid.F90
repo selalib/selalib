@@ -209,12 +209,12 @@ contains
 
 
     ! Initialize the sparse grids in x and v
-    call sim%interp_x%initialize(sim%levelsx,sim%order_sg, sim%order_sg+1,0, &
+    call sim%interp_x%init(sim%levelsx,sim%order_sg, sim%order_sg+1,0, &
          sim%eta_min(1:3),sim%eta_max(1:3), 0, 0);
-    call sim%interp_v%initialize(sim%levelsv,sim%order_sg,sim%order_sg+1,0, &
+    call sim%interp_v%init(sim%levelsv,sim%order_sg,sim%order_sg+1,0, &
          sim%eta_min(4:6), sim%eta_max(4:6),0, 1);
     ! Initialize Poisson
-    call sim%poisson%initialize(sim%interp_x);
+    call sim%poisson%init(sim%interp_x);
 
 
     ! Now we compute the two parallel layouts
@@ -350,9 +350,9 @@ contains
 
        ! Switch to linear interpolation at time 45 to maintain stability
        if (sim%test_case == SLL_TSI .AND. i_step== sim%switch_step) then
-          call sim%interp_x%initialize(sim%levelsx,1, 2,0,sim%eta_min(1:3),sim%eta_max(1:3),&
+          call sim%interp_x%init(sim%levelsx,1, 2,0,sim%eta_min(1:3),sim%eta_max(1:3),&
                0, 0);
-          call sim%interp_v%initialize(sim%levelsv,1,2,0, sim%eta_min(4:6), sim%eta_max(4:6),&
+          call sim%interp_v%init(sim%levelsv,1,2,0, sim%eta_min(4:6), sim%eta_max(4:6),&
                0, 1);
        end if
        

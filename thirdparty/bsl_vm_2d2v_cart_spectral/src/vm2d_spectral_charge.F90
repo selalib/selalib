@@ -286,7 +286,7 @@ subroutine initlocal()
      end do
   end do
   
-  call sll_s_init_maxwell_2d_pstd(maxwell, &
+  call sll_s_maxwell_2d_pstd_init(maxwell, &
        vlasov4d%eta1_min, vlasov4d%eta1_max, vlasov4d%nc_eta1, &
        vlasov4d%eta2_min, vlasov4d%eta2_max, vlasov4d%nc_eta2, TE_POLARIZATION)
   

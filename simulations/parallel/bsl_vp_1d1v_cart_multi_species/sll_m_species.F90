@@ -250,6 +250,7 @@ sll_int32  :: global_indices(2)
 sll_int32  :: local_size_x1
 sll_int32  :: local_size_x2
 sll_int32  :: i
+procedure(sll_i_scalar_initializer_2d),  pointer :: landau_function
 
 sp%label = label
 prank = sll_f_get_collective_rank( sll_v_world_collective )
@@ -330,12 +331,14 @@ call sll_o_2d_parallel_array_initializer_cartesian( &
   sp%init_func,                                   &
   sp%params)
 
+landau_function =>  sll_f_landau_initializer_2d
+
 call sll_o_2d_parallel_array_initializer_cartesian( &
   sp%layout_x1,                                   &
   sp%x1_array,                                    &
   sp%node_positions_x2,                           &
   sp%f_x1_init,                                   &
-  sll_f_landau_initializer_2d,                      &
+  landau_function,                                &
   [sp%params(1),0._f64,sp%params(3),sp%params(4)])
 
 end subroutine sll_s_initialize_species

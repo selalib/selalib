@@ -661,8 +661,8 @@ print*,"   "
 print*, "set term x11 3"
 print*, "set logscale y"
 print*, "set title 'Relative Energies'"
-print*, "plot '-'  title 'kinetic' with lines,\"
-if (maxval(electrostatic_energy)/=0.0_f64) print*, "'-'  title 'electrostatic' with lines,\"
+print*, "plot '-'  title 'kinetic' with lines,\ "
+if (maxval(electrostatic_energy)/=0.0_f64) print*, "'-'  title 'electrostatic' with lines,\ "
 print*, "'-'   title 'total' with lines;"
 do k = 2, timesteps
    print*, (k-1)*timestepwidth, kinetic_energy(k)/maxval(kinetic_energy)

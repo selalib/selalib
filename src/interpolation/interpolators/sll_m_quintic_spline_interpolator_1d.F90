@@ -74,7 +74,7 @@ type, extends(sll_c_interpolator_1d) :: sll_t_quintic_spline_interpolator_1d
 
 contains
 
-  procedure :: initialize                       !< Initialize
+  procedure :: init => sll_s_quintic_spline_interpolator_1d_init !< Initialize
   procedure :: compute_interpolants             !< Compute splines
   procedure :: interpolate_from_interpolant_value              !< Interpolate single value
   procedure :: interpolate_from_interpolant_derivative_eta1      !< Compute derivative
@@ -116,23 +116,23 @@ function new_quintic_spline_interpolator_1d( num_points, &
   sll_int32,  intent(in)     :: bc_min
   sll_int32,  intent(in)     :: bc_max
 
-  call initialize( res,        &
-                   num_points, &
-                   x_min,      &
-                   x_max,      &
-                   bc_min,     &
-                   bc_max)
+  call sll_s_quintic_spline_interpolator_1d_init( res,        &
+             num_points, &
+             x_min,      &
+             x_max,      &
+             bc_min,     &
+             bc_max)
 
 end function new_quintic_spline_interpolator_1d
 
 !---------------------------------------------------------------------------
 
-subroutine initialize( interpolator, &
-                       num_points,   &
-                       x_min,        &
-                       x_max,        &
-                       bc_min,       &
-                       bc_max)
+subroutine sll_s_quintic_spline_interpolator_1d_init( interpolator, &
+                 num_points,   &
+                 x_min,        &
+                 x_max,        &
+                 bc_min,       &
+                 bc_max)
 
   sll_interpolator,  intent(inout) :: interpolator
   sll_int32,         intent(in   ) :: num_points

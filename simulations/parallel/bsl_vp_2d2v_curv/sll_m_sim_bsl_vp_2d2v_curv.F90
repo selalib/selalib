@@ -41,7 +41,7 @@ module sll_m_sim_bsl_vp_2d2v_curv
 
   use sll_m_poisson_2d_periodic_par, only: &
     sll_t_poisson_2d_periodic_par, &
-    sll_f_poisson_2d_periodic_par_new, &
+    sll_s_poisson_2d_periodic_par_init, &
     sll_s_poisson_2d_periodic_par_solve
 
   use sll_m_remapper, only: &
@@ -105,7 +105,7 @@ module sll_m_sim_bsl_vp_2d2v_curv
      ! This simulation only applies a coordinate transformation to the spatial
      ! coordinates.
      class(sll_c_coordinate_transformation_2d_base), pointer :: transfx
-     type(sll_t_poisson_2d_periodic_par), pointer :: poisson_plan
+     type(sll_t_poisson_2d_periodic_par) :: poisson_plan
 
      ! distribution functions. There are several because each array represents
      ! a differently shaped chunk of memory. In this example, each chunk 
@@ -585,13 +585,13 @@ contains
     print *, 'finished first advection in x1 and x2'
 
     ! other test cases use periodic bc's here...        
-    call sim%interp_x3%initialize( &
+    call sim%interp_x3%init( &
          nc_x3+1, &
          vmin3, &
          vmax3, &
          sll_p_periodic)
 
-    call sim%interp_x4%initialize( &
+    call sim%interp_x4%init( &
          nc_x4+1, &
          vmin4, &
          vmax4, &
@@ -601,7 +601,8 @@ contains
 
     ! Initialize the poisson plan before going into the main loop.
 
-    sim%poisson_plan => sll_f_poisson_2d_periodic_par_new( &
+    call sll_s_poisson_2d_periodic_par_init( &
+            sim%poisson_plan, &
             sim%rho_seq_x1, &
             nc_x1, &
             nc_x2, &
