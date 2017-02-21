@@ -7,16 +7,11 @@ program test_rectangle
 use sll_m_constants, only: sll_p_pi
 use sll_m_rectangle_integration, only: sll_o_rectangle_integrate_1d
 
-use test_function_module, only: &
-    one, &
-    one_2d, &
-    test_func, &
-    test_func_2d
+use test_function_module
 
-  implicit none
-!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+implicit none
 
-integer    :: i, j
+sll_int32  :: i, j
 sll_real64 :: f, s
 
 sll_real64, dimension(10) :: x
