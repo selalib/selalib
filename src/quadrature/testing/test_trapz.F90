@@ -7,15 +7,11 @@ program test_trapz
 use sll_m_constants, only: sll_p_pi
 use sll_m_trapz_integration, only: sll_o_trapz_integrate_1d
 
-use test_function_module, only: &
-    one, &
-    one_2d, &
-    test_func, &
-    test_func_2d
+use test_function_module
 
 implicit none
 
-sll_int32 :: i,j
+sll_int32  :: i, j
 sll_real64 :: s, f
 sll_real64, dimension(10) :: x
 
