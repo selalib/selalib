@@ -39,13 +39,14 @@ set(__add_all_preproc YES)
 
 # List of targets created by "add_library" instructions
 set_property(GLOBAL PROPERTY LIBRARY_TARGETS "")
+set_property(GLOBAL PROPERTY EXECUTABLE_TARGETS "")
 
 # List of source files to be analyzed
-set_property(GLOBAL PROPERTY CPP_SOURCES "")
+#set_property(GLOBAL PROPERTY CPP_SOURCES "")
 set_property(GLOBAL PROPERTY CPP_PREPROC_SOURCES "")
 
 # List of include directories
-set_property(GLOBAL PROPERTY CPP_INCLUDES "")
+#set_property(GLOBAL PROPERTY CPP_INCLUDES "")
 
 # Preprocessor flags
 if(CMAKE_Fortran_COMPILER_ID MATCHES Intel)
@@ -64,47 +65,6 @@ endif()
 # Create a list of source files, to be later used to run the preprocessor
 function( collect_source_info _name )
 
-  # The include directories will be added to the global list
-  get_property(_cpp_includes GLOBAL PROPERTY CPP_INCLUDES)
-  get_target_property(_dirs ${_name} INCLUDE_DIRECTORIES)
-  if(_dirs)
-    list(APPEND _cpp_includes "${_dirs}")
-  endif()
-  list(REMOVE_DUPLICATES _cpp_includes)
-  set_property(GLOBAL PROPERTY CPP_INCLUDES ${_cpp_includes})
-
-  # We also extend the list of source files
-  get_property(_cpp_sources  GLOBAL PROPERTY CPP_SOURCES)
-  get_property(_cpp_preproc_sources  GLOBAL PROPERTY CPP_PREPROC_SOURCES)
-
-  get_target_property(_forcheck_sources ${_name} SOURCES)
-  if(_forcheck_sources)
-    foreach(_source ${_forcheck_sources})
-      get_source_file_property(_forcheck_lang "${_source}" LANGUAGE)
-      get_source_file_property(_forcheck_loc "${_source}" LOCATION)
-
-      if("${_forcheck_lang}" MATCHES "Fortran")
-        # first we check if the source file is already in the source list
-        list(FIND _cpp_sources ${_forcheck_loc} _list_idx)
-        if( ${_list_idx} EQUAL -1)
-          # Not yet in the source list
-          list(APPEND _cpp_sources "${_forcheck_loc}")      
-
-          # Here we generate the name of the preprocessed source file
-          get_filename_component(e "${_source}" EXT)
-          get_filename_component(n "${_source}" NAME_WE)
-          string(REGEX REPLACE "F" "f" e "${e}")
-          set(of "${CMAKE_CURRENT_BINARY_DIR}/${n}${e}")
-          list(APPEND _cpp_preproc_sources ${of})
-        endif()
-      endif()
-    endforeach()
-  endif()
-
-  # save the updated source list
-  set_property(GLOBAL PROPERTY CPP_SOURCES  ${_cpp_sources})
-  set_property(GLOBAL PROPERTY CPP_PREPROC_SOURCES  ${_cpp_preproc_sources})
-
 endfunction()
 
 #==============================================================================
@@ -115,6 +75,16 @@ function( collect_library_name _name )
   get_property( _library_targets GLOBAL PROPERTY LIBRARY_TARGETS )
   list( APPEND _library_targets "${_name}" )
   set_property( GLOBAL PROPERTY LIBRARY_TARGETS ${_library_targets} )
+endfunction()
+
+#==============================================================================
+# FUNCTION: collect_executable_name
+#==============================================================================
+# Collect names of all library targets.
+function( collect_executable_name _name )
+  get_property( _targets GLOBAL PROPERTY EXECUTABLE_TARGETS )
+  list( APPEND _targets "${_name}" )
+  set_property( GLOBAL PROPERTY EXECUTABLE_TARGETS ${_targets} )
 endfunction()
 
 #==============================================================================
@@ -143,7 +113,9 @@ endfunction()
 # We override the add_executable built in function.
 function( add_executable _name )
   _add_executable( ${_name} ${ARGN} ) # Call the original function
+  collect_executable_name( ${_name} )
   collect_source_info( ${_name} )     # Create a list of source files
+  store_current_dir ( ${_name} )
 endfunction()
 
 #==============================================================================
@@ -158,60 +130,135 @@ function(add_preprocessor_target)
     set(preprocessor_only_flags ${preprocessor_only_flags} ${OpenMP_Fortran_FLAGS})
   endif()
 
-  # Retrieve the lists that were created by add_library:
-  get_property(_cpp_sources GLOBAL PROPERTY CPP_SOURCES)
-  get_property(_cpp_preproc_sources GLOBAL PROPERTY CPP_PREPROC_SOURCES)
-  get_property(_cpp_includes GLOBAL PROPERTY CPP_INCLUDES)
-
-  # Set up include flags for preprocessing
-  set(incflags)
-  foreach(i ${_cpp_includes})
-    set(incflags ${incflags} -I${i})
-  endforeach()
-
-  # List of compiler definitions to be used for preprocessing
-  foreach(_source ${_cpp_sources})
-    get_source_file_property(_defs "${_source}" COMPILE_DEFINITIONS)
-    list(APPEND _cpp_defines "${_defs}")
-    get_filename_component(_dir ${_source} PATH)
-    get_property( _defs  DIRECTORY ${_dir} PROPERTY COMPILE_DEFINITIONS)
-    if(_defs)
-      list(APPEND _cpp_defines "${_defs}")
+  get_property(_target_list GLOBAL PROPERTY LIBRARY_TARGETS)
+  get_property(_executable_list GLOBAL PROPERTY EXECUTABLE_TARGETS)
+  list(APPEND _target_list ${executable_list})
+  
+  set(_preproc_sources) # we collect the names of the preprocessed source files here
+  
+  foreach(_name ${_target_list})
+    message(STATUS "checking source files for target ${_name}")
+    get_target_property(_source_directory ${_name} SOURCE_DIR)
+    get_target_property(_target_defs ${_name} COMPILE_DEFINITIONS)
+    get_property(_dir_defs  DIRECTORY ${_source_directory} PROPERTY COMPILE_DEFINITIONS)
+    if(_target_defs)
+      message(STATUS "target defs for ${_name} ${_dir_defs}")
+    else()
+    set(_target_defs)
+    endif()
+    if(_dir_defs)
+      list(APPEND _target_defs ${_dir_defs})
+      message(STATUS "dir defs for ${_name} ${_dir_defs}")
+    endif()
+    get_include_flags(${_name} _incflags) # set up include flags specific for each target
+    
+    get_target_property(_sources ${_name} SOURCES)
+    # Problems with the preprocessed files:
+    #  - they can contain arbitrary long lines because of macro expansion,
+    #  - Intel's proprocessor brakes up these lines, but create non-standard
+    #    conforming code.
+    # Therefore in the following loop we create custom commands to preprocess the 
+    # source files with gfortran and fix the problem with long lines using sed.
+  
+    # now we create targets for preprocessing the files
+    if(_sources)
+     foreach (_src ${_sources})
+      check_if_fortran_file(${_src} _fortran_file)
+      # get_source_file_property(_lang "${_src_loc}" LANGUAGE) does not work because we are not in 
+      # same directory where the target was added, therefore we can only see the LOCATION property
+      if(_fortran_file)   
+        set(_src_loc "${_source_directory}/${_src}")
+        get_preprocessed_filename(${_src_loc} _preproc_name)
+        list(FIND _preproc_sources ${_preproc_name} _tmpidx)
+        if (${_tmpidx} EQUAL -1)
+          # not yet in the list of preprocessed files create a target
+          get_compile_definitions(${_src_loc} "${_target_defs}" _defflags)
+          # Create the preprocessor command
+          # The preprocessed file is piped through a sed script, 
+          # to break up the long lines that contain ';'.
+          # To avoid trouble, we delete comment lines that contain  ';'.
+          add_custom_command(OUTPUT "${_preproc_name}"
+            COMMAND gfortran  ${_incflags} ${_defflags} -cpp -E -P ${_src_loc} | sed -e "/^.\\{132\\}/s/!.*/ /" -e "/^.\\{132\\}/s/; */\\n/g" > ${_preproc_name}
+            #COMMAND ${CMAKE_Fortran_COMPILER} ${incflags} ${defflags} ${preprocessor_only_flags} ${_src} > ${_preproc_src}
+            DEPENDS "${_src_loc}"
+            COMMENT "Preprocessing ${_src}"
+            VERBATIM
+          ) 
+          list(APPEND _preproc_sources ${_preproc_name})
+        else()
+          message(STATUS "file ${_src_loc} is already processed with idx ${_tmpidx}")
+        endif()
+      else()
+        message(STATUS "${_src} is not a fortran file")
+      endif()
+     endforeach()
     endif()
   endforeach()
 
-  if(_cpp_defines)
-    list(REMOVE_DUPLICATES _cpp_defines)
-  endif()
-
-  set(defflags)
-  foreach(d ${_cpp_defines})
-    set(defflags ${defflags} -D${d})
-  endforeach()
-
-  # Create custom commands for preprocessing the Fortran files
-  while(_cpp_sources)
-    list(GET _cpp_sources 0 _src)
-    list(GET _cpp_preproc_sources 0 _preproc_src)
-    list(REMOVE_AT _cpp_sources 0)
-    list(REMOVE_AT _cpp_preproc_sources 0)
-    add_custom_command(OUTPUT "${_preproc_src}"
-        COMMAND ${CMAKE_Fortran_COMPILER} ${incflags} ${defflags} ${preprocessor_only_flags} ${_src} > ${_preproc_src}
-##        IMPLICIT_DEPENDS Fortran "${_source}"
-        DEPENDS "${_src}"
-        COMMENT "Preprocessing ${_src}"
-        VERBATIM
-      )
-  endwhile()
-
   # Group all preprocessing commands into one target
-  get_property(_cpp_preproc_sources GLOBAL PROPERTY CPP_PREPROC_SOURCES)
-  add_custom_target(all_preproc DEPENDS ${_cpp_preproc_sources})
+  set_property(GLOBAL PROPERTY CPP_PREPROC_SOURCES ${_preproc_sources})
+  add_custom_target(all_preproc DEPENDS ${_preproc_sources})
   set_target_properties(all_preproc PROPERTIES EXCLUDE_FROM_ALL TRUE)
 
   # Clean up *.s files just generated (if any)
   add_custom_command( TARGET all_preproc POST_BUILD
     COMMAND find . -iname "*.s" -type f -delete
     WORKING_DIRECTORY ${CMAKE_SOURCE_DIR} ) 
-
 endfunction()
+
+# checks the extension of the file _src to determine whether it is a fortran file
+function(check_if_fortran_file _src _output_name)
+  get_filename_component(_ext "${_src}" EXT)
+  string(TOLOWER ${_ext} _ext)
+  set(_fortran_file FALSE)
+  if ("${_ext}" STREQUAL ".f")
+    set(_fortran_file TRUE)
+  elseif("${_ext}" STREQUAL ".f90")
+    set(_fortran_file TRUE)
+  endif()
+  set(${_output_name} ${_fortran_file} PARENT_SCOPE)
+endfunction()
+# get the list of include directories for _target, and transorm into
+# a space separated list with -I prefix, to be given as proprocessor flags
+function(get_include_flags _target _output_name)
+    set(_includes)
+    get_target_property(_dirs ${_target} INCLUDE_DIRECTORIES)
+    if(_dirs)
+      list(APPEND _includes "${_dirs}")
+    endif()
+    get_target_property(_dirs ${_target} INTERFACE_INCLUDE_DIRECTORIES)
+    if(_dirs)
+      list(APPEND _includes "${_dirs}")
+    endif()
+    if(_includes)
+      list(REMOVE_DUPLICATES _includes)
+    endif()
+    set(_incflags)
+    foreach(i ${_includes})
+      set(_incflags ${_incflags} -I${i})
+    endforeach()
+  set(${_output_name} "${_incflags}" PARENT_SCOPE)
+endfunction()
+
+# get a list of compile definition prefixed with -D, separated by space
+function(get_compile_definitions _src_loc _target_defs _output_name)
+  set(_defs)
+  if(_target_defs)
+    list(APPEND _defs ${_target_defs})
+  endif()
+  get_source_file_property(_cpp_defs "${_src_loc}" COMPILE_DEFINITIONS)
+  #unfortunatelly COMPILE_DEFINITIONS are not visible outside the directory 
+  #where the target was added
+  if(_cpp_defs)
+    list(APPEND _defs "${_cpp_defs}")
+  endif()
+  if(_defs)
+    list(REMOVE_DUPLICATES _defs)
+  endif()
+  message(STATUS "${_src_loc} ${_defs}")
+  set(_defflags)
+  foreach(_d ${_defs})
+    set(_defflags ${_defflags} -D${_d})
+  endforeach()
+  set(${_output_name} "${_defflags}" PARENT_SCOPE)
+endfunction() 
