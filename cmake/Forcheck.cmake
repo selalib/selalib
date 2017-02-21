@@ -87,7 +87,7 @@ endfunction()
 # Adds a single target "forcheck" to process all the source files at once.
 function(add_forcheck_target_allfiles)
   # Include flags needed for preprocessing the input files:
-  get_property(_includes GLOBAL PROPERTY CPP_INCLUDES)
+  get_all_include_dirs(_includes)
   set(_incflags)
   foreach(i ${_includes})
     set(_incflags ${_incflags} -I${i})
@@ -139,7 +139,7 @@ function(add_forcheck_target_allfiles)
   # These files will not contain #include proprocessor directives anymore,
   # but they can still have fortran include lines.
   # Therefore, we need to get the include flags and pass it to Forcheck
-  get_forcheck_includes(_fck_incflags)
+  get_forcheck_includes("${_includes}" _fck_incflags)
   
   # The Forcheck target
   add_custom_target(forcheck
@@ -163,7 +163,9 @@ endfunction()
 # Additionally, single target is added to check all libraries
 # individually: forcheck_separate
 function(add_forcheck_target_separate)
-  get_forcheck_includes(_fck_incflags)
+  get_all_include_dirs(_includes)
+  message(STATUS "forcheck_target_separate includes ${_includes}")
+  get_forcheck_includes("${_includes}" _fck_incflags)
   
   get_property(_target_list GLOBAL PROPERTY LIBRARY_TARGETS)
   set(_forcheck_targets)
@@ -232,11 +234,32 @@ function(get_preprocessed_filename _src_path _output_name)
   endif()
 endfunction()
 
+function(get_all_include_dirs _output_name)
+  # get_property(_includes GLOBAL PROPERTY CPP_INCLUDES)
+  # set(${_output_name} ${_includes} PARENT_SCOPE)
+  get_property(_target_list GLOBAL PROPERTY LIBRARY_TARGETS)
+  set(_includes)
+  foreach(_name ${_target_list})
+    get_target_property(_dirs ${_name} INCLUDE_DIRECTORIES)
+    if(_dirs)
+      list(APPEND _includes "${_dirs}")
+    endif()
+    get_target_property(_dirs ${_name} INTERFACE_INCLUDE_DIRECTORIES)
+    if(_dirs)
+      list(APPEND _includes "${_dirs}")
+    endif()
+    list(REMOVE_DUPLICATES _includes)
+  endforeach()
+  set(${_output_name} "${_includes}" PARENT_SCOPE)
+endfunction()
+
 # Returns a comma separated list of all the preprocessor flags
-function(get_forcheck_includes _output_name)
-  get_property(_fck_includes GLOBAL PROPERTY CPP_INCLUDES)
-  if(_fck_includes)
-    string (REGEX REPLACE ";" "," _fck_incs "${_fck_includes}")
+function(get_forcheck_includes _includes _output_name)
+  # get_property(_fck_includes GLOBAL PROPERTY CPP_INCLUDES)
+  message(STATUS "get_forcheck_includes includes ${_includes}")
+
+  if(_includes)
+    string (REGEX REPLACE ";" "," _fck_incs "${_includes}")
     set(_fck_incs "-I ${_fck_incs}")
     set(${_output_name} ${_fck_incs} PARENT_SCOPE)
   endif()
