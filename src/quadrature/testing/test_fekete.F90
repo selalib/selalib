@@ -1,4 +1,4 @@
-program test_integration
+program test_fekete
 
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_memory.h"
@@ -60,4 +60,4 @@ else
   print*, 'PASSED'
 end if
 
-end program test_integration
+end program test_fekete
