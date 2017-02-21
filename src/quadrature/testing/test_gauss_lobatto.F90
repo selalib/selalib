@@ -1,47 +1,22 @@
-program test_integration
+program test_gauss_lobatto
 
-!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_memory.h"
 #include "sll_working_precision.h"
 
-  use sll_m_box_splines, only: &
-    sll_s_write_connectivity
+use sll_m_constants, only: sll_p_pi
 
-  use sll_m_constants, only: &
-    sll_p_pi
-
-  use sll_m_fekete_integration, only: &
-    sll_s_fekete_order_num, &
-    sll_f_fekete_points_and_weights
-
-  use sll_m_gauss_legendre_integration, only: &
-    sll_o_gauss_legendre_integrate_1d, &
-    sll_f_gauss_legendre_points_and_weights
-
-  use sll_m_gauss_lobatto_integration, only: &
+use sll_m_gauss_lobatto_integration, only: &
     sll_f_gauss_lobatto_derivative_matrix, &
     sll_o_gauss_lobatto_integrate_1d, &
     sll_f_gauss_lobatto_points, &
     sll_f_gauss_lobatto_weights
 
-  use sll_m_rectangle_integration, only: &
-    sll_o_rectangle_integrate_1d
+use test_function_module
 
-  use sll_m_trapz_integration, only: &
-    sll_o_trapz_integrate_1d
+implicit none
 
-  use test_function_module, only: &
-    one, &
-    one_2d, &
-    test_func, &
-    test_func_2d
-
-  implicit none
-!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-
-integer :: i,j,n
-sll_int32 :: ierr
-!sll_int32 :: degree
+sll_int32  :: i, j, n
+sll_real64 :: s
 
 sll_real64, dimension(10) :: x, w
 sll_real64, dimension(:,:), allocatable :: d
@@ -49,49 +24,27 @@ sll_real64, dimension(:,:), allocatable :: dlag
 
 character(len=18) :: string
 
-! For the fekete quadrature:
-sll_real64, dimension(2, 3) :: pxy1
-sll_real64, dimension(2, 3) :: pxy2
-sll_real64, dimension(:,:), allocatable :: xyw
-!sll_real64 :: app_res
-sll_int32  :: rule
-!sll_int32  :: num_cells
-!type(sll_t_hex_mesh_2d), pointer :: mesh
-!sll_real64, dimension(:,:), allocatable     :: knots
-!sll_int32,  dimension(:,:), allocatable     :: LM
-
-
-write (*,'(5x, 5a16 )') &
-'rectangle','trapz','legendre','lobatto', 'Exact value'
+write (*,'(5x, 2a16 )') 'lobatto', 'Exact value'
 do i=2,10
   do j = 1, i
-    x(j) = (j-1)*0.5_f64*sll_p_pi/(i-1)
+    x(j) = real(j-1,f64)*0.5_f64*sll_p_pi/real(i-1,f64)
   end do
-  write (*,'(a, i2, a, 5f16.12)') 'n = ', i, ': ', &
-   sll_o_rectangle_integrate_1d( test_func, x, i), &
-   sll_o_trapz_integrate_1d( test_func, x, i), &
-   sll_o_gauss_legendre_integrate_1d( test_func, 0._f64, sll_p_pi/2._f64, i), &
+  write (*,'(a, i2, a, 2f16.12)') 'n = ', i, ': ', &
    sll_o_gauss_lobatto_integrate_1d(  test_func, 0._f64, sll_p_pi/2._f64, i), &
-   0.4674011002723395
+   0.4674011002723395_f64
 end do
 
 write(*,*)" ------- "
 
 do i=2,10
    do j = 1, i
-     x(j) = (j-1)*1.0_f64/(i-1)
+     x(j) = real(j-1,f64)*1.0_f64/real(i-1,f64)
    end do
-   write (*,'(a, i2, a, 4f16.12)') 'n = ', i, ': ', &
-        sll_o_rectangle_integrate_1d( one, x, i), &
-        sll_o_trapz_integrate_1d( one, x, i), &
-        sll_o_gauss_legendre_integrate_1d( one, 0.0_f64, 1.0_f64, i), &
+   write (*,'(a, i2, a, 1f16.12)') 'n = ', i, ': ', &
         sll_o_gauss_lobatto_integrate_1d( one, 0.0_f64, 1.0_f64, i)
 end do
 print *, 'Exact value: '
 write (*,'(f22.15)') 1.00000
-
-print *, 'Test gauss_points()'
-print *, sll_f_gauss_legendre_points_and_weights(5,-1.0_f64,1.0_f64)
 
 x = sll_f_gauss_lobatto_points( 10, -1._f64, 1._f64)
 w = sll_f_gauss_lobatto_weights(10)
@@ -135,64 +88,34 @@ do i = 1, n
 end do
 
 allocate(dlag(4,4))
-dlag(1,1) = -0.3000000000000000000000000000000000000000e1_f64
-dlag(1,2) = -0.8090169943749474241022934171828190588602e0_f64
-dlag(1,3) = 0.3090169943749474241022934171828190588602e0_f64
-dlag(1,4) = -0.5000000000000000000000000000000000000000e0_f64
-dlag(2,1) = 0.4045084971874737120511467085914095294301e1_f64
-dlag(2,2) = -0.6e-39_f64
-dlag(2,3) = -0.1118033988749894848204586834365638117720e1_f64
-dlag(2,4) = 0.1545084971874737120511467085914095294300e1_f64
-dlag(3,1) = -0.1545084971874737120511467085914095294300e1_f64
-dlag(3,2) = 0.1118033988749894848204586834365638117720e1_f64
-dlag(3,3) = 0.1e-38_f64
-dlag(3,4) = -0.4045084971874737120511467085914095294301e1_f64
-dlag(4,1) = 0.5000000000000000000000000000000000000000e0_f64
-dlag(4,2) = -0.3090169943749474241022934171828190588602e0_f64
-dlag(4,3) = 0.8090169943749474241022934171828190588602e0_f64
-dlag(4,4) = 0.3000000000000000000000000000000000000000e1_f64
+dlag(1,1) = -3.000000000000000_f64
+dlag(1,2) = -0.809016994374947_f64
+dlag(1,3) =  0.309016994374947_f64
+dlag(1,4) = -0.500000000000000_f64
+dlag(2,1) =  4.045084971874737_f64
+dlag(2,2) = -0.6d-39
+dlag(2,3) = -1.118033988749894_f64
+dlag(2,4) =  1.545084971874737_f64
+dlag(3,1) = -1.545084971874737_f64
+dlag(3,2) =  1.118033988749894_f64
+dlag(3,3) =  0.1d-38
+dlag(3,4) = -4.045084971874737_f64
+dlag(4,1) =  0.500000000000000_f64
+dlag(4,2) = -0.309016994374947_f64
+dlag(4,3) =  0.809016994374947_f64
+dlag(4,4) =  3.000000000000000_f64
 
 write(*,"(/,a,/)") " Exact values with maple "
 
 do i = 1, n
-   write(*,string) ( dlag(i,j), j = 1, n)
+   write(*,string) ( dlag(j,i), j = 1, n)
 end do
 
-write(*,"(/,a)") "*********************************** "
-write(*,"(a)") "       FEKETE QUAD TEST       "
-write(*,"(a)") "*********************************** "
+s = sum(abs(transpose(dlag)-d))
+if (s > 1d-7) then
+  print*, 'FAILED'
+else
+  print*, 'PASSED'
+end if
 
-!Definition of first triangle
-pxy1(:,1) = (/ 0._f64, 0._f64 /)
-pxy1(:,2) = (/ 1._f64, 0._f64 /)
-pxy1(:,3) = (/ 0._f64, 1._f64 /)
-
-!Definition of first triangle
-pxy2(:,1) = (/ 1._f64, 0._f64 /)
-pxy2(:,2) = (/ 1._f64, 1._f64 /)
-pxy2(:,3) = (/ 0._f64, 1._f64 /)
-
-rule = 2
-call sll_s_fekete_order_num ( rule, n )
-SLL_ALLOCATE(xyw(1:3, 1:n), ierr)
-
-write(*,"(a)") " Computing Fekete points and weights on reference triangle "
-write(*,"(/,a)") "           x                   y                    w"
-xyw = sll_f_fekete_points_and_weights(pxy1, rule)
-
-do j = 1, n
-   write(*, string) (xyw(i,j), i = 1, 3)
-end do
-
-print *, "sum weights = ", SUM(xyw(3,:))
-! write(*,"(/,a)") " --Test for a constant real function (=1) "
-! write(*,"(a)") "    on the squared domain [0,1]^2 divided on 2 triangles "
-
-! app_res = fekete_integral(one_2D, pxy1) + fekete_integral(one_2D, pxy2)
-
-! write (*,"(a, f20.12, a ,/)") " aprox = ", app_res, " (expected = 1.)"
-
-
-print*, 'PASSED'
-
-end program test_integration
+end program test_gauss_lobatto
