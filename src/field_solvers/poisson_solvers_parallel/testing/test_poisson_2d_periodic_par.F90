@@ -30,8 +30,8 @@ program test_poisson_2d_periodic_cart_par
 
   use sll_m_poisson_2d_periodic_par, only: &
     sll_t_poisson_2d_periodic_par, &
-    sll_f_poisson_2d_periodic_par_new, &
-    sll_f_poisson_2d_periodic_par_new_alt, &
+    sll_s_poisson_2d_periodic_par_init, &
+    sll_s_poisson_2d_periodic_par_init_alt, &
     sll_s_poisson_2d_periodic_par_solve, &
     sll_s_poisson_2d_periodic_par_solve_alt, &
     sll_s_poisson_2d_periodic_par_free
@@ -53,8 +53,8 @@ program test_poisson_2d_periodic_cart_par
   implicit none
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
-  type (sll_t_poisson_2d_periodic_par), pointer :: plan
-  type (sll_t_poisson_2d_periodic_par), pointer :: plan_alt
+  type (sll_t_poisson_2d_periodic_par) :: plan
+  type (sll_t_poisson_2d_periodic_par) :: plan_alt
 
   sll_int32                               :: ncx, ncy
   sll_int32                               :: nx_loc, ny_loc
@@ -70,8 +70,8 @@ program test_poisson_2d_periodic_cart_par
   sll_int32, dimension(1:2)               :: global
   sll_int32                               :: gi, gj
   sll_int32                               :: myrank
-  type(sll_t_layout_2d), pointer                :: layout_x
-  type(sll_t_layout_2d), pointer                :: layout_alt
+  type(sll_t_layout_2d), pointer          :: layout_x
+  type(sll_t_layout_2d), pointer          :: layout_alt
   sll_int64                               :: colsz ! collective size
   sll_int32                               :: nprocx, nprocy
   sll_int32                               :: e
@@ -109,8 +109,7 @@ program test_poisson_2d_periodic_cart_par
   call sll_o_initialize_layout_with_distributed_array( ncx, ncy, &
        nprocx, nprocy, layout_alt )
 
-  plan_alt => sll_f_poisson_2d_periodic_par_new_alt(&
-       layout_alt, ncx, ncy, Lx, Ly)
+  call sll_s_poisson_2d_periodic_par_init_alt(plan_alt, layout_alt, ncx, ncy, Lx, Ly)
 
   call sll_o_compute_local_sizes( layout_alt, nx_loc, ny_loc )
   call sll_o_view_lims( layout_alt )
@@ -171,8 +170,7 @@ program test_poisson_2d_periodic_cart_par
   call sll_o_initialize_layout_with_distributed_array( ncx+1, ncy+1, &
        nprocx, nprocy, layout_x )
 
-  plan => sll_f_poisson_2d_periodic_par_new(&
-       layout_x, ncx, ncy, Lx, Ly)
+  call sll_s_poisson_2d_periodic_par_init( plan, layout_x, ncx, ncy, Lx, Ly)
 
   call sll_o_compute_local_sizes( layout_x, nx_loc, ny_loc )
   call sll_o_view_lims( layout_x )

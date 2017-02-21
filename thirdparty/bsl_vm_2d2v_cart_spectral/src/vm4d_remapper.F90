@@ -95,10 +95,10 @@ contains
 
     call read_input_file(vlasov4d)
 
-    call spl_x1%initialize(vlasov4d%np_eta1, vlasov4d%eta1_min, &
+    call spl_x1%init(vlasov4d%np_eta1, vlasov4d%eta1_min, &
     &                      vlasov4d%eta1_max, sll_p_periodic)
 
-    call spl_x2%initialize(vlasov4d%np_eta2, vlasov4d%eta2_min, &
+    call spl_x2%init(vlasov4d%np_eta2, vlasov4d%eta2_min, &
     &                      vlasov4d%eta2_max, sll_p_periodic)
 
     call spl_x3x4%init(vlasov4d%np_eta3,  vlasov4d%np_eta4,  &
@@ -138,7 +138,7 @@ contains
     end do
     end do
 
-    call sll_s_init_maxwell_2d_pstd(maxwell, &
+    call sll_s_maxwell_2d_pstd_init(maxwell, &
          vlasov4d%eta1_min, vlasov4d%eta1_max, vlasov4d%nc_eta1, &
          vlasov4d%eta2_min, vlasov4d%eta2_max, vlasov4d%nc_eta2, TE_POLARIZATION)
 

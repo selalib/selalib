@@ -18,10 +18,12 @@ module sll_m_poisson_2d_periodic_par
 
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_memory.h"
+#include "sll_assert.h"
 #include "sll_working_precision.h"
 
   use sll_m_collective, only: &
     sll_t_collective_t, &
+    sll_f_get_collective_rank, &
     sll_f_get_collective_size
 
   use sll_m_constants, only: &
@@ -29,7 +31,6 @@ module sll_m_poisson_2d_periodic_par
 
   use sll_m_fft, only: &
     sll_s_fft_exec_c2c_1d, &
-    sll_s_fft_exec_c2c_2d, &
     sll_p_fft_backward, &
     sll_s_fft_free, &
     sll_p_fft_forward, &
@@ -55,8 +56,8 @@ module sll_m_poisson_2d_periodic_par
 
   public :: &
     sll_t_poisson_2d_periodic_par, &
-    sll_f_poisson_2d_periodic_par_new, &
-    sll_f_poisson_2d_periodic_par_new_alt, &
+    sll_s_poisson_2d_periodic_par_init, &
+    sll_s_poisson_2d_periodic_par_init_alt, &
     sll_s_poisson_2d_periodic_par_solve, &
     sll_s_poisson_2d_periodic_par_solve_alt, &
     sll_s_poisson_2d_periodic_par_free
@@ -68,26 +69,27 @@ module sll_m_poisson_2d_periodic_par
   !> solver is parallel on structured cartesian mesh. Numerical method
   !> uses FFT transforms.
   type sll_t_poisson_2d_periodic_par
-     sll_int32                           :: ncx    !< number of cells  
-     sll_int32                           :: ncy    !< number of cells
-     sll_real64                          :: Lx     !< domain length 
-     sll_real64                          :: Ly     !< domain length
-     type(sll_t_fft)        :: px     !< fft plan in x
-     type(sll_t_fft)         :: py     !< fft plan in y
-     type(sll_t_fft)         :: px_inv !< inverse fft plan in x
-     type(sll_t_fft)         :: py_inv !< inverse fft plan in y
-     type(sll_t_layout_2d), pointer           :: layout_seq_x1 !< layout sequential in x
-     type(sll_t_layout_2d), pointer           :: layout_seq_x2 !< layout sequential in y
-     sll_int32                           :: seq_x1_local_sz_x1 !< local size 
-     sll_int32                           :: seq_x1_local_sz_x2 !< local size 
-     sll_int32                           :: seq_x2_local_sz_x1 !< local size 
-     sll_int32                           :: seq_x2_local_sz_x2 !< local size 
-     sll_comp64, dimension(:,:), pointer :: fft_x_array !< 2d array for fft in x
-     sll_comp64, dimension(:,:), pointer :: fft_y_array !< array for fft in y
-     sll_comp64, dimension(:),   pointer :: fft_x_1d_array !< 1d array for sliced fft in x
-     sll_comp64, dimension(:),   pointer :: fft_y_1d_array !< 1d array for sliced fft in y
+     sll_int32                                 :: ncx    !< number of cells  
+     sll_int32                                 :: ncy    !< number of cells
+     sll_real64                                :: Lx     !< domain length 
+     sll_real64                                :: Ly     !< domain length
+     type(sll_t_fft)                           :: px     !< fft plan in x
+     type(sll_t_fft)                           :: py     !< fft plan in y
+     type(sll_t_fft)                           :: px_inv !< inverse fft plan in x
+     type(sll_t_fft)                           :: py_inv !< inverse fft plan in y
+     type(sll_t_layout_2d),            pointer :: layout_seq_x1 !< layout sequential in x
+     type(sll_t_layout_2d),            pointer :: layout_seq_x2 !< layout sequential in y
+     sll_int32                                 :: seq_x1_local_sz_x1 !< local size 
+     sll_int32                                 :: seq_x1_local_sz_x2 !< local size 
+     sll_int32                                 :: seq_x2_local_sz_x1 !< local size 
+     sll_int32                                 :: seq_x2_local_sz_x2 !< local size 
+     sll_comp64, dimension(:,:),       pointer :: fft_x_array !< 2d array for fft in x
+     sll_comp64, dimension(:,:),       pointer :: fft_y_array !< array for fft in y
      type(sll_t_remap_plan_2d_comp64), pointer :: rmp_xy !< remap to transpose from x to y
      type(sll_t_remap_plan_2d_comp64), pointer :: rmp_yx !< remap to transpose from y to x
+     sll_comp64,                       pointer :: tmp_x(:)
+     sll_comp64,                       pointer :: tmp_y(:)
+    
   end type sll_t_poisson_2d_periodic_par
 
 contains
@@ -96,31 +98,28 @@ contains
   !> individual arguments. We should consider passing the 'simple geometry'
   !> object that we have for the cartesian cases.
   !> @return
-  function sll_f_poisson_2d_periodic_par_new( &
+  subroutine sll_s_poisson_2d_periodic_par_init( plan, &
     start_layout, &   
     ncx, &            
     ncy, &            
     Lx, &    
-    Ly ) result(plan)
+    Ly ) 
 
-    type (sll_t_poisson_2d_periodic_par), pointer :: plan
-    type(sll_t_layout_2d), pointer         :: start_layout !< First layout
-    sll_int32                        :: ncx          !< number of cells in x
-    sll_int32                        :: ncy          !< number of cells in y
-    sll_real64                       :: Lx           !< length x
-    sll_real64                       :: Ly           !< length y
-    sll_int64                        :: colsz ! collective size
-    type(sll_t_collective_t), pointer  :: collective
+    type (sll_t_poisson_2d_periodic_par) :: plan
+    type(sll_t_layout_2d), pointer       :: start_layout !< First layout
+    sll_int32                            :: ncx          !< number of cells in x
+    sll_int32                            :: ncy          !< number of cells in y
+    sll_real64                           :: Lx           !< length x
+    sll_real64                           :: Ly           !< length y
+    sll_int64                            :: colsz ! collective size
+    type(sll_t_collective_t), pointer    :: collective
+
     ! number of processors
     sll_int32                        :: nprocx1
     sll_int32                        :: nprocx2
     sll_int32                        :: ierr 
     sll_int32                        :: loc_sz_x1
     sll_int32                        :: loc_sz_x2
-    !sll_int32                        :: seq_x1_local_sz_x1
-    !sll_int32                        :: seq_x1_local_sz_x2
-    !sll_int32                        :: seq_x2_local_sz_x1
-    !sll_int32                        :: seq_x2_local_sz_x2
 
     ! The collective to be used is the one that comes with the given layout.
     collective => sll_o_get_layout_collective( start_layout )
@@ -133,8 +132,6 @@ contains
        print *, 'Exiting...'
        stop
     end if
-
-    SLL_ALLOCATE(plan, ierr)
 
     ! We use the number of cells since due to periodicity, the last point is
     ! not considered. 
@@ -154,21 +151,19 @@ contains
     plan%seq_x1_local_sz_x2 = loc_sz_x2
 
     SLL_ALLOCATE( plan%fft_x_array(loc_sz_x1,loc_sz_x2),ierr)
-    SLL_ALLOCATE( plan%fft_x_1d_array(loc_sz_x1),ierr)
+    SLL_ALLOCATE( plan%tmp_x(ncx),ierr)
 
     ! For FFTs (in x-direction)
     call sll_s_fft_init_c2c_1d( &
          plan%px, &
          ncx, &
-         plan%fft_x_1d_array, &
-         plan%fft_x_1d_array, &
+         plan%tmp_x, plan%tmp_x, &
          sll_p_fft_forward)!+FFT_NORMALIZE )
 
     call sll_s_fft_init_c2c_1d( &
          plan%px_inv, &
          ncx, &
-         plan%fft_x_1d_array, &
-         plan%fft_x_1d_array, &
+         plan%tmp_x, plan%tmp_x, &
          sll_p_fft_backward) !+FFT_NORMALIZE )
 
     ! Layout and local sizes for FFTs in y-direction (x2)
@@ -191,176 +186,48 @@ contains
     plan%seq_x2_local_sz_x1 = loc_sz_x1
     plan%seq_x2_local_sz_x2 = loc_sz_x2
     SLL_ALLOCATE( plan%fft_y_array(loc_sz_x1,loc_sz_x2), ierr )
-    SLL_ALLOCATE( plan%fft_y_1d_array(loc_sz_x2), ierr )
+
+    SLL_ALLOCATE( plan%tmp_y(ncy), ierr )
 
     ! For FFTs (in y-direction)
 
     call sll_s_fft_init_c2c_1d( &
          plan%py, &
          ncy, &
-         plan%fft_y_1d_array, &
-         plan%fft_y_1d_array, &
+         plan%tmp_y, plan%tmp_y, &
          sll_p_fft_forward)! + FFT_NORMALIZE )
 
     call sll_s_fft_init_c2c_1d( &
          plan%py_inv, &
          ncy, &
-         plan%fft_y_1d_array, &
-         plan%fft_y_1d_array, &
+         plan%tmp_y, plan%tmp_y, &
          sll_p_fft_backward)! + FFT_NORMALIZE )
 
     plan%rmp_xy => &
      sll_o_new_remap_plan(plan%layout_seq_x1, plan%layout_seq_x2, plan%fft_x_array)
     plan%rmp_yx => &
      sll_o_new_remap_plan(plan%layout_seq_x2, plan%layout_seq_x1, plan%fft_y_array)
-  end function sll_f_poisson_2d_periodic_par_new
-
-
-  !> Presently, this function receives the geometric information as 
-  !> individual arguments. We should consider passing the 'simple geometry'
-  !> object that we have for the cartesian cases. The 'alt' version does not
-  !> consider the last point in the problem, the arrays involved and the layout
-  !> that represents them should also not include this last point
-  !> @return
-  function sll_f_poisson_2d_periodic_par_new_alt( &
-    start_layout, &   
-    ncx, &            
-    ncy, &            
-    Lx, &    
-    Ly ) result(plan)
-
-    type (sll_t_poisson_2d_periodic_par), pointer :: plan
-    type(sll_t_layout_2d), pointer         :: start_layout !< First layout
-    sll_int32                        :: ncx          !< number of cells in x
-    sll_int32                        :: ncy          !< number of cells in y
-    sll_real64                       :: Lx           !< length x
-    sll_real64                       :: Ly           !< length y
-    sll_int64                        :: colsz ! collective size
-    type(sll_t_collective_t), pointer  :: collective
-    ! number of processors
-    sll_int32                        :: nprocx1
-    sll_int32                        :: nprocx2
-    sll_int32                        :: ierr 
-    sll_int32                        :: loc_sz_x1
-    sll_int32                        :: loc_sz_x2
-    !sll_int32                        :: seq_x1_local_sz_x1
-    !sll_int32                        :: seq_x1_local_sz_x2
-    !sll_int32                        :: seq_x2_local_sz_x1
-    !sll_int32                        :: seq_x2_local_sz_x2
-
-    ! The collective to be used is the one that comes with the given layout.
-    collective => sll_o_get_layout_collective( start_layout )
-    colsz      = int(sll_f_get_collective_size( collective ),i64)
-
-    if ( (.not.sll_f_is_power_of_two(int(ncx,i64))) .and. &
-         (.not.sll_f_is_power_of_two(int(ncy,i64))) ) then     
-       print *, 'This test needs to run with numbers of cells which are',  &
-                'powers of 2.'
-       print *, 'Exiting...'
-       stop
-    end if
-
-    SLL_ALLOCATE(plan, ierr)
-
-    ! We use the number of cells since due to periodicity, the last point is
-    ! not considered. It should not even exist...
-    plan%ncx = ncx
-    plan%ncy = ncy
-    plan%Lx  = Lx
-    plan%Ly  = Ly
-
-    ! Layout and local sizes for FFTs in x-direction
-    plan%layout_seq_x1 => start_layout
-    call sll_o_compute_local_sizes( &
-         plan%layout_seq_x1, &
-         loc_sz_x1, &
-         loc_sz_x2 )
-
-    plan%seq_x1_local_sz_x1 = loc_sz_x1  ! ncx
-    plan%seq_x1_local_sz_x2 = loc_sz_x2
-
-    SLL_ALLOCATE( plan%fft_x_array(loc_sz_x1,loc_sz_x2),ierr)
-
-    ! For FFTs (in x-direction)
-    call sll_s_fft_init_c2c_1d( &
-         plan%px, &
-         ncx, &
-         plan%fft_x_1d_array, &
-         plan%fft_x_1d_array, &
-         sll_p_fft_forward)!+FFT_NORMALIZE )
-
-    call sll_s_fft_init_c2c_1d( &
-         plan%px_inv, &
-         ncx, &
-         plan%fft_x_1d_array, &
-         plan%fft_x_1d_array, &
-         sll_p_fft_backward) !+FFT_NORMALIZE )
-
-    ! Layout and local sizes for FFTs in y-direction (x2)
-    plan%layout_seq_x2 => sll_f_new_layout_2d( collective )
-    nprocx1 = int(colsz,kind=4)
-    nprocx2 = 1
-
-    call sll_o_initialize_layout_with_distributed_array( &
-         ncx, &
-         ncy, &
-         nprocx1, &
-         nprocx2, &
-         plan%layout_seq_x2 )
-
-    call sll_o_compute_local_sizes( &
-         plan%layout_seq_x2, &
-         loc_sz_x1, &
-         loc_sz_x2 )
-
-    plan%seq_x2_local_sz_x1 = loc_sz_x1
-    plan%seq_x2_local_sz_x2 = ncy ! loc_sz_x2
-    SLL_ALLOCATE( plan%fft_y_array(loc_sz_x1,loc_sz_x2), ierr )
-
-    ! For FFTs (in y-direction)
-
-    call sll_s_fft_init_c2c_1d( &
-         plan%py, &
-         ncy, &
-         plan%fft_y_1d_array, &
-         plan%fft_y_1d_array, &
-         sll_p_fft_forward)! + FFT_NORMALIZE )
-
-    call sll_s_fft_init_c2c_1d( &
-         plan%py_inv, &
-         ncy, &
-         plan%fft_y_1d_array, &
-         plan%fft_y_1d_array, &
-         sll_p_fft_backward)! + FFT_NORMALIZE )
-
-    plan%rmp_xy => &
-     sll_o_new_remap_plan(plan%layout_seq_x1, plan%layout_seq_x2, plan%fft_x_array)
-    plan%rmp_yx => &
-     sll_o_new_remap_plan(plan%layout_seq_x2, plan%layout_seq_x1, plan%fft_y_array)
-  end function sll_f_poisson_2d_periodic_par_new_alt
-
-
+  end subroutine sll_s_poisson_2d_periodic_par_init
 
   !> Note that the equation that is solved is: \f$ \Delta \phi = \rho \f$
   !> Thus the user is responsible for giving the proper sign to the source term.
   subroutine sll_s_poisson_2d_periodic_par_solve(plan, rho, phi)
-    type (sll_t_poisson_2d_periodic_par), pointer :: plan !< self object
-    sll_real64, dimension(:,:)        :: rho      !< charge density
-    sll_real64, dimension(:,:)        :: phi      !< electric potential
-    sll_int32                         :: ncx      !< global size
-    sll_int32                         :: ncy      !< global size
-    sll_int32                         :: npx_loc
-    sll_int32                         :: npy_loc
-    sll_int32                         :: i, j
+    type (sll_t_poisson_2d_periodic_par) :: plan     !< self object
+    sll_real64, dimension(:,:)           :: rho      !< charge density
+    sll_real64, dimension(:,:)           :: phi      !< electric potential
+    sll_int32                            :: ncx      !< global size
+    sll_int32                            :: ncy      !< global size
+    sll_int32                            :: npx_loc
+    sll_int32                            :: npy_loc
+    sll_int32                            :: i, j
     ! Reciprocals of domain lengths.
-    sll_real64                        :: r_Lx, r_Ly
-    sll_real64                        :: kx, ky
-    !sll_comp64                        :: val
-    sll_real64                        :: normalization
-    type(sll_t_layout_2d), pointer          :: layout_x
-    type(sll_t_layout_2d), pointer          :: layout_y
-    sll_int32, dimension(1:2)         :: global
-    sll_int32                         :: gi, gj
+    sll_real64                           :: r_Lx, r_Ly
+    sll_real64                           :: kx, ky
+    sll_real64                           :: normalization
+    type(sll_t_layout_2d), pointer       :: layout_x
+    type(sll_t_layout_2d), pointer       :: layout_y
+    sll_int32, dimension(1:2)            :: global
+    sll_int32                            :: gi, gj
 
     ncx  = plan%ncx
     ncy  = plan%ncy
@@ -381,7 +248,8 @@ contains
     plan%fft_x_array = cmplx(rho, 0.0_f64, kind=f64)
 
     do j=1,npy_loc
-       call sll_s_fft_exec_c2c_1d(plan%px, plan%fft_x_array(:,j), plan%fft_x_array(:,j))
+       call sll_s_fft_exec_c2c_1d(plan%px, plan%fft_x_array(1:ncx,j), plan%tmp_x)
+       plan%fft_x_array(1:ncx,j) = plan%tmp_x
     end do
     ! FFTs in y-direction
     npx_loc = plan%seq_x2_local_sz_x1
@@ -390,11 +258,12 @@ contains
     call sll_o_apply_remap_2d( plan%rmp_xy, plan%fft_x_array, plan%fft_y_array )
 
     do i=1,npx_loc
-       call sll_s_fft_exec_c2c_1d(plan%py, plan%fft_y_array(i,:), plan%fft_y_array(i,:)) 
+       plan%tmp_y = plan%fft_y_array(i,1:ncy) 
+       call sll_s_fft_exec_c2c_1d(plan%py, plan%tmp_y, plan%fft_y_array(i,1:ncy)) 
     end do
 
     ! This should be inside the FFT plan...
-    normalization = 1.0_f64/(ncx*ncy)
+    normalization = 1.0_f64/real(ncx*ncy,f64)
 
     ! Apply the kernel 
     do j=1, npy_loc-1 ! last point was not transformed
@@ -429,7 +298,7 @@ contains
                 ky = ky - ncy
              end if
 
-              plan%fft_y_array(i,j) = -plan%fft_y_array(i,j)*normalization / &
+              plan%fft_y_array(i,j) = -plan%fft_y_array(i,j) / &
                   ( ( (kx*r_Lx)**2 + (ky*r_Ly)**2)*4.0_f64*sll_p_pi**2)
           end if
        enddo
@@ -437,7 +306,8 @@ contains
 
     ! Inverse FFTs in y-direction
     do i=1,npx_loc
-       call sll_s_fft_exec_c2c_1d(plan%py_inv, plan%fft_y_array(i,:), plan%fft_y_array(i,:))
+       plan%tmp_y = plan%fft_y_array(i,1:ncy) 
+       call sll_s_fft_exec_c2c_1d(plan%py_inv, plan%tmp_y, plan%fft_y_array(i,:))
     end do
 
     ! Force the periodicity condition in the y-direction. CAN'T USE THE FFT
@@ -454,41 +324,156 @@ contains
     npy_loc = plan%seq_x1_local_sz_x2 
 
     do j=1,npy_loc
-       call sll_s_fft_exec_c2c_1d(plan%px_inv, plan%fft_x_array(:,j), plan%fft_x_array(:,j))
+       call sll_s_fft_exec_c2c_1d(plan%px_inv, plan%fft_x_array(1:ncx,j), plan%tmp_x)
+        plan%fft_x_array(1:ncx,j) = plan%tmp_x
     end do
 
     ! Also ensure the periodicity in x
     plan%fft_x_array(npx_loc,:) = plan%fft_x_array(1,:)
 
-    !print*, 'before copying the last line, '
-    !print*, 'npx_loc = ', npx_loc, 'npy_loc = ', npy_loc
+    phi(1:npx_loc,1:npy_loc) = real(plan%fft_x_array(1:npx_loc,1:npy_loc),f64) 
 
-    phi(1:npx_loc,1:npy_loc) = real(plan%fft_x_array(1:npx_loc,1:npy_loc),f64)
+    phi = phi * normalization
 
   end subroutine sll_s_poisson_2d_periodic_par_solve
+
+
+
+  !> Presently, this function receives the geometric information as 
+  !> individual arguments. We should consider passing the 'simple geometry'
+  !> object that we have for the cartesian cases. The 'alt' version does not
+  !> consider the last point in the problem, the arrays involved and the layout
+  !> that represents them should also not include this last point
+  !> @return
+  subroutine sll_s_poisson_2d_periodic_par_init_alt( &
+    plan, &   
+    start_layout, &   
+    ncx, &            
+    ncy, &            
+    Lx, &    
+    Ly ) 
+
+    type (sll_t_poisson_2d_periodic_par) :: plan
+    type(sll_t_layout_2d), pointer       :: start_layout !< First layout
+    sll_int32                            :: ncx          !< number of cells in x
+    sll_int32                            :: ncy          !< number of cells in y
+    sll_real64                           :: Lx           !< length x
+    sll_real64                           :: Ly           !< length y
+    sll_int64                            :: colsz        !< collective size
+    type(sll_t_collective_t), pointer    :: collective
+    ! number of processors
+    sll_int32                        :: nprocx1
+    sll_int32                        :: nprocx2
+    sll_int32                        :: ierr 
+    sll_int32                        :: loc_sz_x1
+    sll_int32                        :: loc_sz_x2
+
+    ! The collective to be used is the one that comes with the given layout.
+    collective => sll_o_get_layout_collective( start_layout )
+    colsz      = int(sll_f_get_collective_size( collective ),i64)
+
+    SLL_ASSERT(sll_f_is_power_of_two(int(ncx,i64)))
+    SLL_ASSERT(sll_f_is_power_of_two(int(ncy,i64))) 
+
+    ! We use the number of cells since due to periodicity, the last point is
+    ! not considered. It should not even exist...
+    plan%ncx = ncx
+    plan%ncy = ncy
+    plan%Lx  = Lx
+    plan%Ly  = Ly
+
+    ! Layout and local sizes for FFTs in x-direction
+    plan%layout_seq_x1 => start_layout
+    call sll_o_compute_local_sizes( &
+         plan%layout_seq_x1, &
+         loc_sz_x1, &
+         loc_sz_x2 )
+
+    plan%seq_x1_local_sz_x1 = loc_sz_x1  ! ncx
+    plan%seq_x1_local_sz_x2 = loc_sz_x2
+
+    SLL_ALLOCATE( plan%fft_x_array(loc_sz_x1,loc_sz_x2),ierr)
+
+    allocate(plan%tmp_x(ncx))
+    call sll_s_fft_init_c2c_1d( &
+         plan%px, &
+         ncx, &
+         plan%tmp_x, &
+         plan%tmp_x, &
+         sll_p_fft_forward)!+FFT_NORMALIZE )
+
+    call sll_s_fft_init_c2c_1d( &
+         plan%px_inv, &
+         ncx, &
+         plan%tmp_x, &
+         plan%tmp_x, &
+         sll_p_fft_backward)!+FFT_NORMALIZE )
+
+    ! Layout and local sizes for FFTs in y-direction (x2)
+    plan%layout_seq_x2 => sll_f_new_layout_2d( collective )
+    nprocx1 = int(colsz,kind=4)
+    nprocx2 = 1
+
+    call sll_o_initialize_layout_with_distributed_array( &
+         ncx, &
+         ncy, &
+         nprocx1, &
+         nprocx2, &
+         plan%layout_seq_x2 )
+
+    call sll_o_compute_local_sizes( &
+         plan%layout_seq_x2, &
+         loc_sz_x1, &
+         loc_sz_x2 )
+
+    plan%seq_x2_local_sz_x1 = loc_sz_x1
+    plan%seq_x2_local_sz_x2 = ncy ! loc_sz_x2
+    SLL_ALLOCATE( plan%fft_y_array(loc_sz_x1,loc_sz_x2), ierr )
+
+    ! For FFTs (in y-direction)
+
+    allocate(plan%tmp_y(ncy))
+    call sll_s_fft_init_c2c_1d( &
+         plan%py, &
+         ncy, &
+         plan%tmp_y, &
+         plan%tmp_y, &
+         sll_p_fft_forward)! + FFT_NORMALIZE )
+
+    call sll_s_fft_init_c2c_1d( &
+         plan%py_inv, &
+         ncy, &
+         plan%tmp_y, &
+         plan%tmp_y, &
+         sll_p_fft_backward)! + FFT_NORMALIZE )
+
+    plan%rmp_xy => &
+     sll_o_new_remap_plan(plan%layout_seq_x1, plan%layout_seq_x2, plan%fft_x_array)
+    plan%rmp_yx => &
+     sll_o_new_remap_plan(plan%layout_seq_x2, plan%layout_seq_x1, plan%fft_y_array)
+  end subroutine sll_s_poisson_2d_periodic_par_init_alt
 
   !> Note that the equation that is solved is: \f$ \Delta \phi = \rho \f$
   !> Thus the user is responsible for giving the proper sign to the source term.
   !> The 'alt' version of this function considers only a domain that does not
   !> include the last, periodic, point
   subroutine sll_s_poisson_2d_periodic_par_solve_alt(plan, rho, phi)
-    type (sll_t_poisson_2d_periodic_par), pointer :: plan !< self object
-    sll_real64, dimension(:,:)        :: rho      !< charge density
-    sll_real64, dimension(:,:)        :: phi      !< electric potential
-    sll_int32                         :: ncx      !< global size
-    sll_int32                         :: ncy      !< global size
-    sll_int32                         :: npx_loc
-    sll_int32                         :: npy_loc
-    sll_int32                         :: i, j
+    type (sll_t_poisson_2d_periodic_par) :: plan     !< self object
+    sll_real64, dimension(:,:)           :: rho      !< charge density
+    sll_real64, dimension(:,:)           :: phi      !< electric potential
+    sll_int32                            :: ncx      !< global size
+    sll_int32                            :: ncy      !< global size
+    sll_int32                            :: npx_loc
+    sll_int32                            :: npy_loc
+    sll_int32                            :: i, j
     ! Reciprocals of domain lengths.
-    sll_real64                        :: r_Lx, r_Ly
-    sll_real64                        :: kx, ky
-    !sll_comp64                        :: val
-    sll_real64                        :: normalization
-    type(sll_t_layout_2d), pointer          :: layout_x
-    type(sll_t_layout_2d), pointer          :: layout_y
-    sll_int32, dimension(1:2)         :: global
-    sll_int32                         :: gi, gj
+    sll_real64                           :: r_Lx, r_Ly
+    sll_real64                           :: kx, ky
+    sll_real64                           :: normalization
+    type(sll_t_layout_2d), pointer       :: layout_x
+    type(sll_t_layout_2d), pointer       :: layout_y
+    sll_int32, dimension(1:2)            :: global
+    sll_int32                            :: gi, gj
 
     ncx  = plan%ncx
     ncy  = plan%ncy
@@ -508,20 +493,26 @@ contains
     ! The input is handled internally as a complex array
     plan%fft_x_array = cmplx(rho, 0.0_f64, kind=f64)
 
-    call sll_s_fft_exec_c2c_2d(plan%px, plan%fft_x_array, plan%fft_x_array)
+    do j=1,npy_loc
+       call sll_s_fft_exec_c2c_1d(plan%px, plan%fft_x_array(:,j), plan%tmp_x)
+       plan%fft_x_array(:,j) = plan%tmp_x
+    end do
     ! FFTs in y-direction
     npx_loc = plan%seq_x2_local_sz_x1
     npy_loc = plan%seq_x2_local_sz_x2
 
     call sll_o_apply_remap_2d( plan%rmp_xy, plan%fft_x_array, plan%fft_y_array )
 
-    call sll_s_fft_exec_c2c_2d(plan%py, plan%fft_y_array, plan%fft_y_array) 
+    do i=1,npx_loc
+       plan%tmp_y = plan%fft_y_array(i,:) 
+       call sll_s_fft_exec_c2c_1d(plan%py, plan%tmp_y, plan%fft_y_array(i,:)) 
+    end do
 
     ! This should be inside the FFT plan...
-    normalization = 1.0_f64/(ncx*ncy)
+    normalization = 1.0_f64/real(ncx*ncy,f64)
 
     ! Apply the kernel 
-    do j=1, npy_loc
+    do j=1, npy_loc 
        do i=1, npx_loc
           ! Make sure that the first mode is set to zero so that we get an
           ! answer with zero mean value. This step assumes that the (1,1) point
@@ -553,14 +544,17 @@ contains
                 ky = ky - ncy
              end if
 
-              plan%fft_y_array(i,j) = -plan%fft_y_array(i,j)*normalization / &
+              plan%fft_y_array(i,j) = -plan%fft_y_array(i,j) / &
                   ( ( (kx*r_Lx)**2 + (ky*r_Ly)**2)*4.0_f64*sll_p_pi**2)
           end if
        enddo
     enddo
 
     ! Inverse FFTs in y-direction
-    call sll_s_fft_exec_c2c_2d(plan%py_inv, plan%fft_y_array, plan%fft_y_array) 
+    do i=1,npx_loc
+       plan%tmp_y = plan%fft_y_array(i,:) 
+       call sll_s_fft_exec_c2c_1d(plan%py_inv, plan%tmp_y, plan%fft_y_array(i,:))
+    end do
 
     ! Prepare to take inverse FFTs in x-direction
     call sll_o_apply_remap_2d( plan%rmp_yx, plan%fft_y_array, plan%fft_x_array )
@@ -568,88 +562,32 @@ contains
     npx_loc = plan%seq_x1_local_sz_x1 
     npy_loc = plan%seq_x1_local_sz_x2 
 
-    call sll_s_fft_exec_c2c_2d(plan%px_inv, plan%fft_x_array, plan%fft_x_array)
+    do j=1,npy_loc
+       call sll_s_fft_exec_c2c_1d(plan%px_inv, plan%fft_x_array(:,j), plan%tmp_x)
+       plan%fft_x_array(:,j) = plan%tmp_x
+    end do
 
-    phi(1:npx_loc,1:npy_loc) = real(plan%fft_x_array(1:npx_loc,1:npy_loc),f64)
+    phi = real(plan%fft_x_array,f64) * normalization
+
   end subroutine sll_s_poisson_2d_periodic_par_solve_alt
 
 
-
-
-!> Delete the Poisson solver object
+  !> Delete the Poisson solver object
   subroutine sll_s_poisson_2d_periodic_par_free(plan)
-    type (sll_t_poisson_2d_periodic_par), pointer :: plan
-    sll_int32                                              :: ierr
-
-    if( .not. associated(plan) ) then
-       print *, 'ERROR, delete_poisson_3d_periodic_plan_par(): ', &
-            'passed plan is not associated.'
-       STOP
-    end if
+    type (sll_t_poisson_2d_periodic_par) :: plan
+    sll_int32                            :: ierr
 
     call sll_s_fft_free(plan%px)
     call sll_s_fft_free(plan%py)
     call sll_s_fft_free(plan%px_inv)
     call sll_s_fft_free(plan%py_inv)
 
-!    call delete( plan%layout_x ) ! can't delete this, the plan does not own it
     call sll_o_delete( plan%layout_seq_x1 )
     call sll_o_delete( plan%layout_seq_x2 )
     SLL_DEALLOCATE_ARRAY(plan%fft_x_array, ierr)
     SLL_DEALLOCATE_ARRAY(plan%fft_y_array, ierr)
     call sll_o_delete( plan%rmp_xy )
     call sll_o_delete( plan%rmp_yx )
-    SLL_DEALLOCATE(plan, ierr)
   end subroutine sll_s_poisson_2d_periodic_par_free
-
-!> Check that arrays match layout properties
-  subroutine verify_argument_sizes_par(layout, rho, phi)
-    type(sll_t_layout_2d), pointer       :: layout !< layout for remap
-    sll_real64, dimension(:,:)     :: rho    !< charge density
-    sll_real64, dimension(:,:)     :: phi    !< electric potential
-    sll_int32                      :: nx
-    sll_int32                      :: ny
-    !sll_int32                      :: i
-
-    ! Note that this checks for strict sizes, not an array being bigger
-    ! than a certain size, but exactly a desired size... This may be a bit
-    ! too stringent.
-    call sll_o_compute_local_sizes( layout, nx, ny )
-    ! Verify the first direction
-    if ( nx /= size(rho,1) ) then
-       print*, 'ERROR: sll_s_poisson_2d_periodic_par_solve()', &
-            'size of rho does not match expected size. ', &
-            'Expected size according to layout = ', nx, 'Received size = ',&
-            size(rho,1)
-       print *, 'Exiting...'
-       stop
-    end if
-    if ( nx /= size(phi,1) ) then
-       print*, 'ERROR: sll_s_poisson_2d_periodic_par_solve()', &
-            'size of phi does not match expected size. ', &
-            'Expected size according to layout = ', nx, 'Received size = ',&
-            size(phi,1)
-       print *, 'Exiting...'
-       stop
-    end if
-    ! Verify the second direction
-    if ( ny /= size(rho,2) ) then
-       print*, 'ERROR: sll_s_poisson_2d_periodic_par_solve()', &
-            'size of rho does not match expected size. ', &
-            'Expected size according to layout = ', ny, 'Received size = ',&
-            size(rho,2)
-       print *, 'Exiting...'
-       stop
-    end if
-    if ( ny /= size(phi,2) ) then
-       print*, 'ERROR: sll_s_poisson_2d_periodic_par_solve()', &
-            'size of phi does not match expected size. ', &
-            'Expected size according to layout = ', ny, 'Received size = ',&
-            size(phi,2)
-       print *, 'Exiting...'
-       stop
-    end if
-  end subroutine verify_argument_sizes_par
-
 
 end module sll_m_poisson_2d_periodic_par

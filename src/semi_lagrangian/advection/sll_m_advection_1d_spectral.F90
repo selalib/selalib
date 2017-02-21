@@ -23,7 +23,7 @@ module sll_m_advection_1d_spectral
 #include "sll_memory.h"
 #include "sll_working_precision.h"
 
-use sll_m_advection_1d_base, only: sll_c_advection_1d_base
+use sll_m_advection_1d_base, only: sll_c_advector_1d
 
 use sll_m_constants, only: sll_p_pi
 
@@ -37,12 +37,13 @@ use sll_m_fft, only: &
 
 implicit none
 
-public :: sll_f_new_spectral_1d_advector
+public :: sll_f_new_advector_1d_spectral
+public :: sll_t_advector_1d_spectral
 
 private
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
-type,extends(sll_c_advection_1d_base) :: spectral_1d_advector
+type,extends(sll_c_advector_1d) :: sll_t_advector_1d_spectral
   
   sll_int32                         :: num_cells
   sll_real64                        :: eta_min
@@ -58,24 +59,24 @@ type,extends(sll_c_advection_1d_base) :: spectral_1d_advector
 
 contains
 
-  procedure, pass(adv) :: initialize 
+  procedure, pass(adv) :: init => advector_1d_spectral_init
   procedure, pass(adv) :: advect_1d 
   procedure, pass(adv) :: advect_1d_constant 
   procedure, pass(adv) :: delete
 
-end type spectral_1d_advector
+end type sll_t_advector_1d_spectral
 
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 contains
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
-function sll_f_new_spectral_1d_advector( num_cells, &
+function sll_f_new_advector_1d_spectral( num_cells, &
                                          eta_min,   &
                                          eta_max    &
                                          ) result(adv)      
 
-  type(spectral_1d_advector), pointer :: adv
+  type(sll_t_advector_1d_spectral), pointer :: adv
 
   sll_int32,  intent(in)              :: num_cells
   sll_real64, intent(in)              :: eta_min
@@ -85,13 +86,13 @@ function sll_f_new_spectral_1d_advector( num_cells, &
   
   SLL_ALLOCATE(adv,error)
       
-  call initialize( adv, num_cells, eta_min, eta_max)    
+  call adv%init( num_cells, eta_min, eta_max)    
   
-end function sll_f_new_spectral_1d_advector
+end function sll_f_new_advector_1d_spectral
 
-subroutine initialize( adv, num_cells, eta_min, eta_max)    
+subroutine advector_1d_spectral_init( adv, num_cells, eta_min, eta_max)    
 
-  class(spectral_1d_advector), intent(inout) :: adv
+  class(sll_t_advector_1d_spectral), intent(inout) :: adv
   sll_int32,                   intent(in)    :: num_cells
   sll_real64,                  intent(in)    :: eta_min
   sll_real64,                  intent(in)    :: eta_max
@@ -117,14 +118,14 @@ subroutine initialize( adv, num_cells, eta_min, eta_max)
 
   adv%kx(1) = 1.0_f64
   do i=2,num_cells/2+1
-     adv%kx(i) = (i-1) * kx0
+     adv%kx(i) = real(i-1,f64) * kx0
   end do
 
-end subroutine initialize
+end subroutine advector_1d_spectral_init
 
 subroutine advect_1d( adv, a, dt, input, output )
 
-  class(spectral_1d_advector)           :: adv
+  class(sll_t_advector_1d_spectral)           :: adv
   sll_real64, dimension(:), intent(in)  :: a
   sll_real64,               intent(in)  :: dt 
   sll_real64, dimension(:), intent(in)  :: input
@@ -143,7 +144,7 @@ end subroutine advect_1d
 
 subroutine advect_1d_constant( adv, a, dt, input, output )
 
-  class(spectral_1d_advector)              :: adv
+  class(sll_t_advector_1d_spectral)              :: adv
   sll_real64,                  intent(in)  :: a
   sll_real64,                  intent(in)  :: dt 
   sll_real64, dimension(:),    intent(in)  :: input
@@ -164,7 +165,7 @@ subroutine advect_1d_constant( adv, a, dt, input, output )
 
   call sll_s_fft_exec_c2r_1d(adv%bwx, adv%fk, adv%d_dx)
 
-  output(1:num_cells)= adv%d_dx / num_cells
+  output(1:num_cells)= adv%d_dx / real(num_cells, f64)
 
   output(num_cells+1) = output(1)
 
@@ -172,7 +173,7 @@ end subroutine advect_1d_constant
 
 subroutine delete(adv)
 
-  class(spectral_1d_advector), intent(inout) :: adv
+  class(sll_t_advector_1d_spectral), intent(inout) :: adv
 
   call sll_s_fft_free(adv%fwx)
   call sll_s_fft_free(adv%bwx)

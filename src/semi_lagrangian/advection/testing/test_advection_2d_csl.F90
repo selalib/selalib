@@ -15,16 +15,16 @@
 !  "http://www.cecill.info". 
 !**************************************************************
 
-program test_advection_2d_BSL
+program test_advection_2d_CSL
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_memory.h"
 #include "sll_working_precision.h"
 
   use sll_m_advection_2d_base, only: &
-    sll_c_advection_2d_base
+    sll_c_advector_2d
 
-  use sll_m_advection_2d_bsl, only: &
-    sll_f_new_bsl_2d_advector
+  use sll_m_advection_2d_csl, only: &
+    sll_f_new_csl_2d_advector
 
   use sll_m_boundary_condition_descriptors, only: &
     sll_p_periodic
@@ -32,20 +32,13 @@ program test_advection_2d_BSL
   use sll_m_characteristics_2d_base, only: &
     sll_c_characteristics_2d_base
 
-  use sll_m_characteristics_2d_explicit_euler, only: &
-    sll_f_new_explicit_euler_2d_charac
-
-  use sll_m_cubic_spline_interpolator_2d, only: &
-    sll_f_new_cubic_spline_interpolator_2d
-
-  use sll_m_interpolators_2d_base, only: &
-    sll_c_interpolator_2d
+  use sll_m_characteristics_2d_explicit_euler_conservative, only: &
+    sll_f_new_explicit_euler_conservative_2d_charac
 
   implicit none
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
   
-  class(sll_c_advection_2d_base), pointer :: adv
-  class(sll_c_interpolator_2d), pointer :: interp
+  class(sll_c_advector_2d), pointer :: adv
   class(sll_c_characteristics_2d_base), pointer :: charac
   sll_real64 :: x1_min
   sll_real64 :: x1_max
@@ -72,7 +65,7 @@ program test_advection_2d_BSL
   x2_max = 1._f64
   num_cells_x1 = 32
   num_cells_x2 = 32
-  dt = 0.1_f64
+  dt = 0.1_f64 !0.1_f64
   
   delta_x1 = (x1_max-x1_min)/real(num_cells_x1,f64)
   delta_x2 = (x2_max-x2_min)/real(num_cells_x2,f64)
@@ -100,25 +93,15 @@ program test_advection_2d_BSL
   err=0._f64
 
 
-  interp => sll_f_new_cubic_spline_interpolator_2d( &
-    num_cells_x1+1, &
-    num_cells_x2+1, &
-    x1_min, &
-    x1_max, &
-    x2_min, &
-    x2_max, &
-    sll_p_periodic, &
-    sll_p_periodic)
 
 
-  charac => sll_f_new_explicit_euler_2d_charac(&
+  charac => sll_f_new_explicit_euler_conservative_2d_charac(&
       num_cells_x1+1, &
       num_cells_x2+1, &
       sll_p_periodic, &
       sll_p_periodic)
   
-  adv => sll_f_new_bsl_2d_advector(&
-    interp, &
+  adv => sll_f_new_csl_2d_advector(&
     charac, &
     num_cells_x1+1, &
     num_cells_x2+1, &
@@ -134,4 +117,4 @@ program test_advection_2d_BSL
     print *,'#PASSED' 
   endif
 
-end program test_advection_2d_BSL
+end program test_advection_2d_CSL

@@ -352,7 +352,7 @@ contains
 
     print*, "[", this_fun_name, "] - sparse grid levels for the remapping tool:", remapping_sparse_grid_max_levels
     self%sparse_grid_max_levels = remapping_sparse_grid_max_levels
-    call self%sparse_grid_interpolator%initialize( &
+    call self%sparse_grid_interpolator%init( &
                   self%sparse_grid_max_levels,   &
                   self%remapped_f_interpolation_degree,   &
                   self%remapped_f_interpolation_degree+1,    &

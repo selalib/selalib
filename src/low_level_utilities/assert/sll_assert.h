@@ -1,6 +1,7 @@
 #ifndef _assert_h_
 #define _assert_h_
 
+/*
 !**************************************************************
 !  Copyright INRIA
 !  Authors : 
@@ -17,6 +18,7 @@
 !  circulated by CEA, CNRS and INRIA at the following URL
 !  "http://www.cecill.info". 
 !**************************************************************
+*/
 
 #if (defined ( GFORTRAN ) || defined ( __PGI ) || defined(MPIF90))
 # define STRNG(x) "x"

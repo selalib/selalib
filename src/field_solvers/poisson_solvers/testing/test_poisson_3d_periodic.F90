@@ -23,10 +23,10 @@ program test_poisson_3d_periodic
     sll_p_pi
 
   use sll_m_poisson_3d_periodic, only: &
-    sll_s_delete_poisson_3d_periodic, &
-    sll_f_new_poisson_3d_periodic, &
     sll_t_poisson_3d_periodic, &
-    sll_s_solve_poisson_3d_periodic
+    sll_s_poisson_3d_periodic_init, &
+    sll_s_poisson_3d_periodic_solve, &
+    sll_s_poisson_3d_periodic_free
 
   implicit none
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -38,7 +38,7 @@ program test_poisson_3d_periodic
   sll_real64, dimension(:,:,:), allocatable :: x, y, z
   sll_real64, dimension(:,:,:), allocatable :: rho, phi_an, phi
   sll_int32                                 :: i, j, k
-  type (sll_t_poisson_3d_periodic), pointer :: plan
+  type (sll_t_poisson_3d_periodic)          :: poisson
   sll_real64                                :: average_err
   sll_real64                                :: time_0, time_1, time_2
   sll_int32                                 :: i_test
@@ -52,11 +52,11 @@ program test_poisson_3d_periodic
   Ly = 2.0_f64*sll_p_pi
   Lz = 2.0_f64*sll_p_pi
 
-  dx = Lx/nx
-  dy = Ly/ny
-  dz = Lz/nz
+  dx = Lx/real(nx,f64)
+  dy = Ly/real(ny,f64)
+  dz = Lz/real(nz,f64)
 
-  print*, 'Initialize Poisson 3D solver plan'
+  print*, 'Initialize Poisson 3D solver '
   SLL_ALLOCATE(x(nx,ny,nz),error)
   SLL_ALLOCATE(y(nx,ny,nz),error)
   SLL_ALLOCATE(z(nx,ny,nz),error)
@@ -64,9 +64,9 @@ program test_poisson_3d_periodic
   do k=1,nz
      do j=1,ny
         do i=1,nx
-           x(i,j,k) = (i-1)*dx
-           y(i,j,k) = (j-1)*dy
-           z(i,j,k) = (k-1)*dz
+           x(i,j,k) = real(i-1,f64)*dx
+           y(i,j,k) = real(j-1,f64)*dy
+           z(i,j,k) = real(k-1,f64)*dz
         end do
      end do
   end do
@@ -77,7 +77,7 @@ program test_poisson_3d_periodic
   SLL_ALLOCATE(phi(nx,ny,nz),error)
   SLL_ALLOCATE(phi_an(nx,ny,nz),error)
 
-  plan => sll_f_new_poisson_3d_periodic(nx, ny, nz, Lx, Ly, Lz)
+  call sll_s_poisson_3d_periodic_init(poisson, nx, ny, nz, Lx, Ly, Lz)
 
   print*, ' '
   call cpu_time(time_1)
@@ -93,14 +93,14 @@ program test_poisson_3d_periodic
         phi_an = cos(x)*sin(y)*cos(z)
         rho = 3._f64 * phi_an
      else if (i_test == 2) then
-        phi_an = (4.0_f64/(sll_p_pi*sqrt(sll_p_pi)*Lx*Ly*Lz)) *  exp(-.5 & 
-                 *(x-Lx/2)**2) * exp(-.5*(y-Ly/2)**2) * sin(z)
+        phi_an = (4.0_f64/(sll_p_pi*sqrt(sll_p_pi)*Lx*Ly*Lz)) *  exp(-.5_f64 & 
+                 *(x-Lx/2)**2) * exp(-.5_f64*(y-Ly/2.0_f64)**2) * sin(z)
         rho    = phi_an * (3.0_f64 - ((x-Lx/2.0_f64)**2 + &
                  (y-Ly/2.0_f64)**2))
      end if
 
      call cpu_time(time_1)
-     call sll_s_solve_poisson_3d_periodic(plan, rho, phi)
+     call sll_s_poisson_3d_periodic_solve(poisson, rho, phi)
      call cpu_time(time_2)
 
      average_err = sum( abs(phi_an-phi) ) / real(nx*ny*nz,f64)
@@ -117,7 +117,7 @@ program test_poisson_3d_periodic
 
   end do
 
-  call sll_s_delete_poisson_3d_periodic(plan)
+  call sll_s_poisson_3d_periodic_free(poisson)
 
   call cpu_time(time_2)
   print*, 'Total CPU time : ', time_2-time_0

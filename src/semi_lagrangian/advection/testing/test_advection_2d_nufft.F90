@@ -31,7 +31,7 @@ use sll_m_interpolators_2d_base
 implicit none
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
   
-class(sll_c_advection_2d_base),       pointer :: adv
+class(sll_c_advector_2d),       pointer :: adv
 class(sll_c_interpolator_2d),         pointer :: interp
 type(sll_t_nufft_interpolator_2d),    target  :: nufft2d
 class(sll_c_characteristics_2d_base), pointer :: charac
@@ -103,7 +103,7 @@ charac => sll_f_new_explicit_euler_2d_charac( num_cells_x1+1, &
                                               sll_p_periodic, &
                                               sll_p_periodic)
 
-adv => sll_f_new_bsl_2d_advector( interp,                &
+adv => sll_f_new_advector_2d_bsl( interp,                &
                                   charac,                &
                                   num_cells_x1+1,        &
                                   num_cells_x2+1,        &
