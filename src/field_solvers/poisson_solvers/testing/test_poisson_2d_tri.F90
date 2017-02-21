@@ -19,31 +19,31 @@ use sll_m_timer, only: &
   sll_t_time_mark
 
 use sll_m_poisson_2d_tri, only: &
-  sll_f_new_triangular_poisson_2d, &
+  sll_s_poisson_2d_triangular_init, &
+  sll_s_poisson_2d_triangular_free, &
   sll_s_compute_e_from_phi, &
   sll_s_compute_e_from_rho, &
   sll_s_compute_phi_from_rho, &
-  sll_t_triangular_poisson_2d, &
-  sll_o_delete
+  sll_t_poisson_2d_triangular
 
 use sll_m_triangular_meshes, only: &
   sll_s_analyze_triangular_mesh, &
   sll_s_map_to_circle, &
-  sll_o_new_triangular_mesh_2d, &
-  sll_o_delete, &
+  sll_s_triangular_mesh_2d_init_from_square, &
+  sll_s_triangular_mesh_2d_free, &
   sll_t_triangular_mesh_2d, &
   sll_s_write_triangular_mesh_mtv
 
 implicit none
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
-sll_real64,                        allocatable :: rho(:)
-sll_real64,                        allocatable :: phi(:)
-sll_real64,                        allocatable :: e_x(:)
-sll_real64,                        allocatable :: e_y(:)
+sll_real64, allocatable :: rho(:)
+sll_real64, allocatable :: phi(:)
+sll_real64, allocatable :: e_x(:)
+sll_real64, allocatable :: e_y(:)
 
-type(sll_t_triangular_poisson_2d), pointer     :: poisson
-type(sll_t_triangular_mesh_2d),    pointer     :: square
+type(sll_t_poisson_2d_triangular) :: poisson
+type(sll_t_triangular_mesh_2d)    :: square
 
 sll_int32  :: ntypfr(5)
 sll_real64 :: potfr(5)
@@ -70,9 +70,7 @@ sll_int32  :: ierr
 !First test, the unstructured mesh is created 
 !by meshing a square with triangles.
 
-square => sll_o_new_triangular_mesh_2d(nc_x1, x1_min, x1_max, &
-                                       nc_x2, x2_min, x2_max) 
-
+call sll_s_triangular_mesh_2d_init_from_square(square, nc_x1, x1_min, x1_max, nc_x2, x2_min, x2_max) 
 call sll_s_analyze_triangular_mesh(square) 
 call sll_s_write_triangular_mesh_mtv(square, "tri_square.mtv")
 
@@ -92,7 +90,7 @@ SLL_CLEAR_ALLOCATE(phi(1:square%num_nodes),ierr)
 rho = 0.0_f64
 
 !Create the Poisson solver on unstructured mesh
-poisson => sll_f_new_triangular_poisson_2d(square, ntypfr, potfr)
+call sll_s_poisson_2d_triangular_init(poisson, square, ntypfr, potfr)
 !We compute phi
 call sll_s_compute_phi_from_rho(poisson, rho, phi)
 
@@ -108,8 +106,8 @@ print*,'error e_y=', maxval(abs(e_y))
 
 deallocate(e_x,e_y,phi,rho)
 
-call sll_o_delete(square)
-call sll_o_delete(poisson)
+call sll_s_triangular_mesh_2d_free(square)
+call sll_s_poisson_2d_triangular_free(poisson)
 
 print*, 'PASSED'
 
@@ -135,7 +133,7 @@ print*, 'PASSED'
 !potfr(1)  = 0.0_f64
 !
 !!Create the Poisson solver on unstructured mesh
-!solver => sll_f_new_triangular_poisson_2d(t_mesh, ntypfr, potfr)
+!solver => sll_f_new_poisson_2d_triangular(t_mesh, ntypfr, potfr)
 !
 !!We set the RHS and analytic solution (see functions below)
 !!Positions of nodes

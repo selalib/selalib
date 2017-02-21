@@ -9,20 +9,24 @@ if( HDF5_ENABLED AND HDF5_IS_PARALLEL AND HDF5_PARALLEL_ENABLED )
     # Semi-Lagrangian simulations
     
     ## Vlasov-Poisson 1Dx1D
-    add_subdirectory( bsl_vp_1d1v_cart                         )
+    if(FULL_FORTRAN2003)
+      add_subdirectory( bsl_vp_1d1v_cart                       )
+    endif(FULL_FORTRAN2003)
     add_subdirectory( bsl_vp_1d1v_cart_two_species             )
     add_subdirectory( bsl_vp_1d1v_cart_multi_species           )
     add_subdirectory( bsl_vp_1d1v_cart_no_split                )
 
-    ## Vlasov-Ampere 1Dx1D
-    add_subdirectory( bsl_va_1d1v_cart_berk_breizman           )
-    add_subdirectory( bsl_va_1d1v_cart_spectral                )
+    if(FULL_FORTRAN2003)
+      ## Vlasov-Ampere 1Dx1D
+      add_subdirectory( bsl_va_1d1v_cart_berk_breizman         )
+      add_subdirectory( bsl_va_1d1v_cart_spectral              )
 
-    ## Vlasov-Poisson 2Dx2D
-    add_subdirectory( bsl_vp_2d2v_cart                         )
+      ## Vlasov-Poisson 2Dx2D
+      add_subdirectory( bsl_vp_2d2v_cart                       )
+    endif(FULL_FORTRAN2003)
     add_subdirectory( bsl_vp_2d2v_cart_poisson_serial          )
     if (NOT (FFT_LIB STREQUAL "SLLFFT"))
-      add_subdirectory( bsl_vp_2d2v_cart_sparsegrid              )
+      add_subdirectory( bsl_vp_2d2v_cart_sparsegrid            )
     endif()
     add_subdirectory( bsl_vp_2d2v_cart_multipatch              )
     add_subdirectory( bsl_vp_2d2v_polar                        )
@@ -30,7 +34,7 @@ if( HDF5_ENABLED AND HDF5_IS_PARALLEL AND HDF5_PARALLEL_ENABLED )
 
     ## Vlasov-Poisson 3Dx3D
     if (NOT (FFT_LIB STREQUAL "SLLFFT"))
-      add_subdirectory( bsl_vp_3d3v_cart_sparsegrid              )
+      add_subdirectory( bsl_vp_3d3v_cart_sparsegrid            )
     endif()
     
     ## Guiding-Center 2D
@@ -41,7 +45,7 @@ if( HDF5_ENABLED AND HDF5_IS_PARALLEL AND HDF5_PARALLEL_ENABLED )
     add_subdirectory( bsl_gk_3d1v_polar_one_mu                 )
     add_subdirectory( bsl_gk_3d1v_polar_multi_mu               )
     if(FULL_FORTRAN2003)
-      add_subdirectory( bsl_dk_3d1v_polar_field_aligned          )
+      add_subdirectory( bsl_dk_3d1v_polar_field_aligned        )
     endif(FULL_FORTRAN2003)
     add_subdirectory( bsl_dk_3d1v_curv                         )
     add_subdirectory( bsl_dk_3d1v_curv_field_aligned           )

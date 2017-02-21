@@ -462,7 +462,7 @@ contains
           print *,'#Problem mudpack_curvilinear_wrapper is not null()'
           stop
         endif
-        mudpack_curvilinear_wrapper => poisson
+        call associate_poisson(poisson)
         call mud2(iprm,fprm,poisson%work, &
           mudpack_curvilinear_cof, &
           mudpack_curvilinear_bndcr, &
@@ -490,7 +490,7 @@ contains
           print *,'#Problem mudpack_curvilinear_wrapper is not null()'
           stop
         endif
-        mudpack_curvilinear_wrapper => poisson
+        call associate_poisson(poisson)
         call mud2cr(iprm,fprm,poisson%work, &
           mudpack_curvilinear_cofcr, &
           mudpack_curvilinear_bndcr, &
@@ -509,9 +509,9 @@ contains
   
   ! solves -\Delta phi = rho in 2d
   subroutine compute_phi_from_rho_2d_mudpack_curvilinear( poisson, phi, rho )
-    class(poisson_2d_mudpack_curvilinear_old), target :: poisson
-    sll_real64,dimension(:,:), intent(in) :: rho
-    sll_real64,dimension(:,:), intent(out) :: phi
+    class(poisson_2d_mudpack_curvilinear_old) :: poisson
+    sll_real64,dimension(:,:), intent(in)     :: rho
+    sll_real64,dimension(:,:), intent(out)    :: phi
     sll_int32 :: Nc_eta1
     sll_int32 :: Nc_eta2
     sll_real64 :: eta1_min
@@ -596,7 +596,7 @@ contains
           print *,'#Problem mudpack_curvilinear_wrapper is not null()'
           stop
         endif
-        mudpack_curvilinear_wrapper => poisson
+        call associate_poisson(poisson)
         call mud2(iprm, &
           fprm, &
           poisson%work, &
@@ -620,7 +620,7 @@ contains
           print *,'#Problem mudpack_curvilinear_wrapper is not null()'
           stop
         endif
-        mudpack_curvilinear_wrapper => poisson
+        call associate_poisson(poisson)
         call mud2cr(iprm, &
           fprm, &
           poisson%work, &
@@ -881,6 +881,13 @@ if (kbdy == 4) then  ! y=yd boundary
    return
 end if
 end subroutine
+
+  subroutine associate_poisson( poisson )
+    type(poisson_2d_mudpack_curvilinear_old), target :: poisson
+
+    mudpack_curvilinear_wrapper => poisson
+
+  end subroutine associate_poisson
 
 end module sll_m_poisson_2d_mudpack_curvilinear_old
 

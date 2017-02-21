@@ -34,9 +34,9 @@ call spl_x1x2%init( sim%nc_eta1+1, sim%nc_eta2+1, &
                           sim%eta2_min, sim%eta2_max,   &
                           sll_p_periodic, sll_p_periodic )
 
-call spl_x3%initialize(sim%nc_eta3+1,sim%eta3_min,sim%eta3_max,sll_p_periodic)
+call spl_x3%init(sim%nc_eta3+1,sim%eta3_min,sim%eta3_max,sll_p_periodic)
 
-call spl_x4%initialize(sim%nc_eta4+1,sim%eta4_min,sim%eta4_max,sll_p_periodic)
+call spl_x4%init(sim%nc_eta4+1,sim%eta4_min,sim%eta4_max,sll_p_periodic)
 
 call initialize_vp4d_polar( sim, spl_x1x2, spl_x3, spl_x4)
 

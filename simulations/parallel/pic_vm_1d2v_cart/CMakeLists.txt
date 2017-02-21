@@ -1,4 +1,4 @@
-if( FULL_FORTRAN2003 )
+if( FULL_FORTRAN2003 AND NOT PGI )
 
 set(    SIM_NAME pic_vm_1d2v_cart             )
 set(   TEST_NAME "sim_${SIM_NAME}"            )
@@ -24,4 +24,4 @@ if(BUILD_TESTING)
     TIMEOUT 5 )
 endif(BUILD_TESTING)
 
-endif( FULL_FORTRAN2003 )
+endif( FULL_FORTRAN2003 AND NOT PGI)

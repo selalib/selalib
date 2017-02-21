@@ -79,7 +79,7 @@ program test_fft_timing
   
 !!$  call sll_s_set_time_mark(t0)
 !!$  do j=1,100000
-!!$     call p%initialize( n, data_in, data_out, &
+!!$     call p%init( n, data_in, data_out, &
 !!$          sll_p_fft_forward)
 !!$     call p%execute( data_in, data_out)
 !!$     
