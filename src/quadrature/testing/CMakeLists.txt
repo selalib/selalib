@@ -27,4 +27,9 @@ IF(BUILD_TESTING)
   ADD_TEST( NAME quadrature_trapz COMMAND test_trapz )
   SET_TESTS_PROPERTIES( quadrature_trapz PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
 
+  ADD_EXECUTABLE( test_primitives test_primitives.F90 )
+  TARGET_LINK_LIBRARIES( test_primitives sll_quadrature )
+  ADD_TEST( NAME quadrature_primitives COMMAND test_primitives )
+  SET_TESTS_PROPERTIES( quadrature_primitives PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
+
 ENDIF(BUILD_TESTING)
