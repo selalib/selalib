@@ -1,17 +1,19 @@
 FIND_PACKAGE(MPI REQUIRED CXX)
+
+SET(SPRNG_CONFIGURE_COMMAND ${CMAKE_BINARY_DIR}/sprng/configure --prefix=${CMAKE_BINARY_DIR}/sprng --with-fortran --with-mpi  LIBS=-lmpi_cxx CXX=${CMAKE_CXX_COMPILER} )
+
 IF(APPLE)
 
   MESSAGE(STATUS "SPRNG : Warning Build the library on mac is tricky")
-  MESSAGE(STATUS "SPRNG : openmpi must be configured with cxx bindings")
+  MESSAGE(STATUS "SPRNG : installed mpi must be configured with cxx bindings")
+  MESSAGE(STATUS "SPRNG : Use GNU c++ as compiler not clang, check with mpic++ -showme")
   SET(SPRNG_PATCH_COMMAND patch -p0 < ${CMAKE_CURRENT_SOURCE_DIR}/sprng/sprng-mac.patch)
-  SET(SPRNG_CONFIGURE_COMMAND ${CMAKE_BINARY_DIR}/sprng/configure --prefix=${CMAKE_BINARY_DIR}/sprng --with-mpi  LIBS=-lmpi_cxx )
 
 ELSE()
 
-  SET(SPRNG_CXX_COMPILER ${MPI_CXX_COMPILER} CACHE FILEPATH  "CXX compiler for SPRNG")
-  SET(SPRNG_LIBS "-lmpi_cxx" CACHE STRING  "LIBS configure argument for SPRNG")
+  MESSAGE(STATUS "SPRNG : Build on fedora does not work")
+  MESSAGE(STATUS "SPRNG : You can try to configure and build it manually in ${CMAKE_BINARY_DIR}/sprng ")
   SET(SPRNG_PATCH_COMMAND "")
-  SET(SPRNG_CONFIGURE_COMMAND ${CMAKE_BINARY_DIR}/sprng/configure --enable-silent-rules --prefix=${CMAKE_BINARY_DIR}/sprng --with-mpi=yes CXX=${SPRNG_CXX_COMPILER} LIBS=${SPRNG_LIBS} "CXXFLAGS=-w -g -O2")
 
 ENDIF(APPLE)
 
@@ -25,5 +27,6 @@ EXTERNALPROJECT_ADD( sprng
    PATCH_COMMAND ${SPRNG_PATCH_COMMAND}
    CONFIGURE_COMMAND ${SPRNG_CONFIGURE_COMMAND}
    BUILD_COMMAND ${MAKE}
+   BUILD_ALWAYS 0
    INSTALL_COMMAND ""
 )
