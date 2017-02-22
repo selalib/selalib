@@ -96,57 +96,19 @@ module sll_m_bspline_interpolator_2d
 
   end type sll_t_bspline_interpolator_2d
 
-  !> Pointer to this interpolator derived type
-  type :: sll_bspline_interpolator_2d_ptr
-    type(sll_t_bspline_interpolator_2d), pointer :: interp
-  end type sll_bspline_interpolator_2d_ptr
-
-contains
-
-<<<<<<< HEAD
-  subroutine sll_s_bspline_interpolator_2d_free( interpolator )
-=======
-  !> Allocate data, set dimensions and boundary conditions
-  procedure, pass(interpolator) :: init=>initialize_bs2d_interpolator
-  !> Compute bspline coefficients
-  procedure :: compute_interpolants => compute_interpolants_bs2d
-  !> Interpolate single value from last interpolants computed
-  procedure :: interpolate_from_interpolant_value => interpolate_value_bs2d
-  !> Interpolate first derivative from last inteprolants computed
-  procedure :: interpolate_from_interpolant_derivative_eta1 => interpolate_deriv1_bs2d
-  !> Interpolate first derivative from last inteprolants computed
-  procedure :: interpolate_from_interpolant_derivative_eta2 => interpolate_deriv2_bs2d
-  !> PLEASE ADD DOCUMENTATION
-  procedure, pass :: interpolate_array => spline_interpolate2d
-  !> PLEASE ADD DOCUMENTATION
-  procedure, pass :: interpolate_array_disp => spline_interpolate2d_disp
-  !> PLEASE ADD DOCUMENTATION
-  procedure, pass :: set_coefficients => set_coefficients_bs2d
-  !> PLEASE ADD DOCUMENTATION
-  procedure, pass :: get_coefficients => get_coefficients_bs2d
-  !> PLEASE ADD DOCUMENTATION
-  procedure, pass :: coefficients_are_set => coefficients_are_set_bs2d
-  !> PLEASE ADD DOCUMENTATION
-  procedure, pass :: delete => delete_bspline_interpolator_2d
-  ! procedure, pass :: compute_spline_coefficients => compute_spl_coeff_bs2d
-
-end type sll_t_bspline_interpolator_2d
-
-!> Pointer to this interpolator derived type
 type :: sll_bspline_interpolator_2d_ptr
   type(sll_t_bspline_interpolator_2d), pointer :: interp
 end type sll_bspline_interpolator_2d_ptr
   
 !> Deallocate the interpolator object
 interface sll_o_delete
-  module procedure delete_bspline_interpolator_2d
+  module procedure sll_s_bspline_interpolator_2d_free
 end interface sll_o_delete
 
 
 contains
 
-  subroutine delete_bspline_interpolator_2d( interpolator )
->>>>>>> develop
+  subroutine sll_s_bspline_interpolator_2d_free( interpolator )
     class(sll_t_bspline_interpolator_2d), intent(inout) :: interpolator
 
     SLL_ASSERT(interpolator%npts1>0)
@@ -196,31 +158,8 @@ contains
     sll_int32 :: ierr
 
     SLL_ALLOCATE(interpolator,ierr)
-<<<<<<< HEAD
 
     call interpolator%initialize( &
-    npts1,                      &
-    npts2,                      &
-    eta1_min,                   &
-    eta1_max,                   &
-    eta2_min,                   &
-    eta2_max,                   &
-    spline_degree1,             &
-    spline_degree2,             &
-    eta1_bc_type,               &
-    eta2_bc_type,               &
-    const_eta1_min_slope,       &
-    const_eta1_max_slope,       &
-    const_eta2_min_slope,       &
-    const_eta2_max_slope,       &
-    eta1_min_slopes,            &
-    eta1_max_slopes,            &
-    eta2_min_slopes,            &
-    eta2_max_slopes )
-
-=======
-    
-    call interpolator%init( &
       npts1,                      &
       npts2,                      &
       eta1_min,                   &
@@ -240,7 +179,6 @@ contains
       eta2_min_slopes,            &
       eta2_max_slopes )
      
->>>>>>> develop
   end function sll_f_new_bspline_interpolator_2d
 
   subroutine sll_s_bspline_interpolator_2d_init( &
