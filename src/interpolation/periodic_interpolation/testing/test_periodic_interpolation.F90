@@ -6,7 +6,7 @@ program test_periodic_interpolation
     sll_p_twopi
 
   use sll_m_periodic_interp, only: &
-    sll_s_periodic_interp_init, &
+    sll_s_initialize_periodic_interp, &
     sll_s_periodic_interp, &
     sll_t_periodic_interp_work, &
     sll_p_spline
@@ -14,12 +14,13 @@ program test_periodic_interpolation
   implicit none
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
   
-  sll_int32, parameter             :: N0 = 16
-  sll_real64                       :: u(16*N0), u_exact(16*N0), u_out(16*N0)
-  type(sll_t_periodic_interp_work) :: interp
-  sll_real64                       :: alpha, error, old_error
-  sll_int32                        :: i, p, N
-  sll_int32                        :: mode 
+  sll_int32, parameter    :: N0 = 16
+  sll_real64               :: u(16*N0), u_exact(16*N0), u_out(16*N0)
+  type(sll_t_periodic_interp_work), pointer :: interp
+  sll_real64 :: alpha, error, old_error
+  sll_int32 :: i, p, N
+  !sll_int32 :: i0
+  sll_int32 :: mode 
 
   error = 0.0_f64
   print*, 'Testing order of periodic interpolation'
@@ -39,10 +40,10 @@ program test_periodic_interpolation
      end do
 
      
-     call sll_s_periodic_interp_init(interp, N, sll_p_spline, 8)
-     !call sll_s_periodic_interp_init(interp, N, sll_p_trigo_fft_selalib, 8)
-     !call sll_s_periodic_interp_init(interp, N, sll_p_trigo, 8)
-     !call sll_s_periodic_interp_init(interp, N, sll_p_lagrange, 16)
+     call sll_s_initialize_periodic_interp(interp, N, sll_p_spline, 8)
+     !call sll_s_initialize_periodic_interp(interp, N, sll_p_trigo_fft_selalib, 8)
+     !call sll_s_initialize_periodic_interp(interp, N, sll_p_trigo, 8)
+     !call sll_s_initialize_periodic_interp(interp, N, sll_p_lagrange, 16)
      call sll_s_periodic_interp(interp, u_out,  u, alpha)
      
      old_error = error

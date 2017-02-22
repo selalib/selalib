@@ -90,7 +90,7 @@ SLL_ALLOCATE(hy(nc_eta1+1,nc_eta2+1), error)
 SLL_ALLOCATE(ez(nc_eta1+1,nc_eta2+1), error)
 SLL_ALLOCATE(ez_exact(nc_eta1+1,nc_eta2+1), error)
 
-call sll_s_maxwell_2d_pstd_init(maxwell_TM, eta1_min, eta1_max, nc_eta1, &
+call sll_s_init_maxwell_2d_pstd(maxwell_TM, eta1_min, eta1_max, nc_eta1, &
          eta2_min, eta2_max, nc_eta2, TM_POLARIZATION)
 
 SLL_ALLOCATE(ex(nc_eta1+1,nc_eta2+1), error)
@@ -98,7 +98,7 @@ SLL_ALLOCATE(ey(nc_eta1+1,nc_eta2+1), error)
 SLL_ALLOCATE(hz(nc_eta1+1,nc_eta2+1), error)
 SLL_ALLOCATE(hz_exact(nc_eta1+1,nc_eta2+1), error)
 
-call sll_s_maxwell_2d_pstd_init(maxwell_TE, eta1_min, eta1_max, nc_eta1, &
+call sll_s_init_maxwell_2d_pstd(maxwell_TE, eta1_min, eta1_max, nc_eta1, &
          eta2_min, eta2_max, nc_eta2, TE_POLARIZATION)
 
 

@@ -120,7 +120,7 @@ program unit_test_2d
   ! Need to do something about these variables being always on the stack...
 
   print *, sll_f_x1_polar_f(1.0_f64,1.0_f64,params)
-  call t_a%init( &
+  call t_a%initialize( &
        "map_a", &
        mesh, &
        sll_f_x1_polar_f, &
@@ -173,7 +173,7 @@ program unit_test_2d
 
   print *, 'initializing the interpolators: '
 
-  call x1_interp%init( &
+  call x1_interp%initialize( &
        NPTS1, &
        NPTS2, &
        0.0_f64, &
@@ -185,7 +185,7 @@ program unit_test_2d
        eta1_min_slopes=x1_eta1_min, &
        eta1_max_slopes=x1_eta1_max )
 
-  call x2_interp%init( &
+  call x2_interp%initialize( &
        NPTS1, &
        NPTS2, &
        0.0_f64, &
@@ -197,7 +197,7 @@ program unit_test_2d
        eta1_min_slopes=x2_eta1_min, &
        eta1_max_slopes=x2_eta1_max )
 
-  call j_interp%init( &
+  call j_interp%initialize( &
        NPTS1, &
        NPTS2, &
        0.0_f64, &
@@ -211,7 +211,7 @@ program unit_test_2d
 
   print *, 'Initialized interpolators...'
 
-  call t_d%init( &
+  call t_d%initialize( &
        mesh, &
        "transf_d", &
        x1_interp, &
@@ -220,6 +220,9 @@ program unit_test_2d
        x1_tab, &
        x2_tab, &
        jacobians_node=jacs )
+
+ ! print *, 'x1: '
+ ! print *, map_d%x1_node(:,:)
 
   print *, 'Compare the values of the transformation at the nodes: '
   acc  = 0.0_f64
@@ -245,9 +248,19 @@ program unit_test_2d
      do i=0,NPTS1-1
         eta1   = real(i,f64)*h1
         eta2   = real(j,f64)*h2
+!        print *, 'values: ', i, j, eta1, eta2
+!        print *, 'about to call map_a%jacobian(eta1,eta2)'
         node   = t_a%jacobian(eta1,eta2)
+!        node   = map_2d_jacobian_node(map_d,i+1,j+1)
+!        print *, 'about to call map_d%jacobian(eta1,eta2)'
         interp = t_d%jacobian(eta1,eta2)
         delta  =  node - interp
+        ! for inspecting/debugging:
+!!$        print *, 'eta1 = ', eta1, 'eta2 = ', eta2
+!!$        print *, '(',i+1,j+1,'): ANALYT = ', node, ', DISCR = ', interp, &
+!!$             '. DIFFERENCE  = ', delta
+!        print *, '(',i+1,j+1,'): NODE = ', node, ', ANALYT = ', jac_analyt, &
+!             '. DIFFERENCE  = ', delta2
         acc = acc + abs(delta)
      end do
   end do

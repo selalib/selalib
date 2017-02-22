@@ -35,7 +35,7 @@ module sll_m_sim_bsl_vp_1d1v_cart_two_species
     sll_t_advection_1d_base_ptr
 
   use sll_m_advection_1d_non_uniform_cubic_splines, only: &
-    sll_f_new_advector_1d_non_uniform_cubic_splines
+    sll_f_new_non_uniform_cubic_splines_1d_advector
 
   use sll_m_advection_1d_periodic, only: &
     sll_f_new_periodic_1d_advector
@@ -451,7 +451,6 @@ contains
     sll_int32 :: tid
     character(len=256)      :: str_num_run
     character(len=256)      :: filename_loc
-
   
     ! namelists for data input
     namelist /geometry/ &
@@ -1023,7 +1022,7 @@ contains
           sll_p_lagrange, & 
           order_x2_sp2)
       case("SLL_NON_UNIFORM_CUBIC_SPLINES") ! arbitrary order sll_p_lagrange periodic interpolation
-        sim%advect_x2_sp2(tid)%ptr => sll_f_new_advector_1d_non_uniform_cubic_splines( &
+        sim%advect_x2_sp2(tid)%ptr => sll_f_new_non_uniform_cubic_splines_1d_advector( &
           num_cells_x2_sp2, &
           x2_min_sp2, &
           x2_max_sp2, &
@@ -1052,7 +1051,7 @@ contains
           sll_p_lagrange, & 
           order_x2_sp1)
       case("SLL_NON_UNIFORM_CUBIC_SPLINES") ! arbitrary order sll_p_lagrange periodic interpolation
-        sim%advect_x2_sp1(tid)%ptr => sll_f_new_advector_1d_non_uniform_cubic_splines( &
+        sim%advect_x2_sp1(tid)%ptr => sll_f_new_non_uniform_cubic_splines_1d_advector( &
           num_cells_x2_sp1, &
           x2_min_sp1, &
           x2_max_sp1, &
@@ -1384,8 +1383,6 @@ contains
     !sll_int32 :: N_buf_poisson
     !sll_real64, dimension(:), allocatable :: buf_poisson
     
-    procedure(sll_i_scalar_initializer_2d), pointer :: init_func1
-    procedure(sll_i_scalar_initializer_2d), pointer :: init_func2
     
 
     iplot = 0
@@ -1615,25 +1612,22 @@ contains
     !call sll_s_binary_file_close(restart_id,ierr)    
 
 
-    init_func1 => sll_f_landau_initializer_2d
     
     call sll_o_2d_parallel_array_initializer_cartesian( &
        layout_x1_sp1, &
        sim%x1_array, &
        node_positions_x2_sp1, &
        f_x1_init_sp1, &
-       init_func1, &
+       sll_f_landau_initializer_2d, &
        (/ sim%params_sp1(1),0._f64,sim%params_sp1(3),sim%params_sp1(4) /))
        !(/ sim%kx_sp1,0._f64 /))
-
-    init_func2 => sll_f_landau_initializer_2d
 
     call sll_o_2d_parallel_array_initializer_cartesian( &
        layout_x1_sp2, &
        sim%x1_array, &
        node_positions_x2_sp2, &
        f_x1_init_sp2, &
-       init_func2, &
+       sll_f_landau_initializer_2d, &
        (/ sim%params_sp2(1),0._f64,sim%params_sp2(3),sim%params_sp2(4) /))
        !(/ sim%kx_sp2,0._f64 /))
     
@@ -2318,7 +2312,7 @@ contains
     endif
 
 
-    print*, 176.00010668708197_f64, 820.3411755236121_f64
+    print*, 176.00010668708197, 820.34117552361215 
     print*, sum(f_x1_sp1), sum(f_x1_sp2)
     
     

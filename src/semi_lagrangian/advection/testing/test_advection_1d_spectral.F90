@@ -24,7 +24,7 @@ program test_advection_1d_spectral
     sll_t_advection_1d_base_ptr
 
   use sll_m_advection_1d_spectral, only: &
-    sll_f_new_advector_1d_spectral
+    sll_f_new_spectral_1d_advector
 
 #ifdef _OPENMP
   use omp_lib, only: &
@@ -76,7 +76,7 @@ SLL_ALLOCATE(adv(psize),ierr)
 
 input = 1.0_f64
 
-adv(prank+1)%ptr => sll_f_new_advector_1d_spectral(num_cells, xmin, xmax) 
+adv(prank+1)%ptr => sll_f_new_spectral_1d_advector(num_cells, xmin, xmax) 
 
 call adv(prank+1)%ptr%advect_1d_constant( a, dt, input, output)
 

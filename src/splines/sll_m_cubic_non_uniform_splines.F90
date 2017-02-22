@@ -50,55 +50,43 @@ module sll_m_cubic_non_uniform_splines
     LOGICAL                           :: is_setup       !< check splines setup
     sll_real64                        :: slope_L        !< left slope, for Hermite
     sll_real64                        :: slope_R        !< right slope, for Hermite
-  contains 
-
-    procedure :: init => sll_s_cubic_nonunif_spline_1d_init
-   
   end type sll_t_cubic_nonunif_spline_1d
 
   interface sll_o_delete
     module procedure delete_cubic_nonunif_spline_1d
   end interface sll_o_delete
 
+  
+  
 contains  ! ****************************************************************
-
   !> create new spline object
   function sll_f_new_cubic_nonunif_spline_1d( n_cells, bc_type )
-
-    type(sll_t_cubic_nonunif_spline_1d), pointer  :: sll_f_new_cubic_nonunif_spline_1d
+    type(sll_t_cubic_nonunif_spline_1d), pointer        :: sll_f_new_cubic_nonunif_spline_1d
     sll_int32,  intent(in)                        :: n_cells
     sll_int32,  intent(in)                        :: bc_type
-    sll_int32                                     :: ierr
+    sll_int32                                     :: ierr,size_buf,size_ibuf
     
     SLL_ALLOCATE( sll_f_new_cubic_nonunif_spline_1d, ierr )
-    call sll_f_new_cubic_nonunif_spline_1d%init( n_cells , bc_type)
+    sll_f_new_cubic_nonunif_spline_1d%n_cells = n_cells
+    sll_f_new_cubic_nonunif_spline_1d%bc_type  = bc_type
     
-  end function sll_f_new_cubic_nonunif_spline_1d
-
-  !> Initialize spline object
-  subroutine sll_s_cubic_nonunif_spline_1d_init( self,  n_cells, bc_type )
-
-    class(sll_t_cubic_nonunif_spline_1d) :: self
-    sll_int32,  intent(in)               :: n_cells
-    sll_int32,  intent(in)               :: bc_type
-    sll_int32                            :: ierr,size_buf,size_ibuf
+    SLL_ALLOCATE( sll_f_new_cubic_nonunif_spline_1d%node_positions(-2:n_cells+2),   ierr )
     
-    self%n_cells = n_cells
-    self%bc_type  = bc_type
-    
-    SLL_ALLOCATE( self%node_positions(-2:n_cells+2),   ierr )
     size_buf = 10*(n_cells+1)
     size_ibuf = n_cells+1 
-    self%size_buf = size_buf
-    SLL_ALLOCATE( self%buf(size_buf),   ierr )
-    self%size_ibuf = size_ibuf
-    SLL_ALLOCATE( self%ibuf(size_ibuf),   ierr )    
-    SLL_ALLOCATE( self%coeffs(-1:n_cells+1),   ierr )
-    self%is_setup = .FALSE.
-    self%slope_L = 0.0_f64
-    self%slope_R = 0.0_f64
+    sll_f_new_cubic_nonunif_spline_1d%size_buf = size_buf
+    SLL_ALLOCATE( sll_f_new_cubic_nonunif_spline_1d%buf(size_buf),   ierr )
+    sll_f_new_cubic_nonunif_spline_1d%size_ibuf = size_ibuf
+    SLL_ALLOCATE( sll_f_new_cubic_nonunif_spline_1d%ibuf(size_ibuf),   ierr )    
+
+    SLL_ALLOCATE( sll_f_new_cubic_nonunif_spline_1d%coeffs(-1:n_cells+1),   ierr )
     
-  end subroutine sll_s_cubic_nonunif_spline_1d_init
+    sll_f_new_cubic_nonunif_spline_1d%is_setup = .FALSE.
+    
+    sll_f_new_cubic_nonunif_spline_1d%slope_L = 0.0_f64
+    sll_f_new_cubic_nonunif_spline_1d%slope_R = 0.0_f64
+    
+  end function sll_f_new_cubic_nonunif_spline_1d
 
   !> delete spline object
   subroutine delete_cubic_nonunif_spline_1D( spline, ierr)

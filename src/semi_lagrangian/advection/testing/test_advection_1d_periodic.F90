@@ -20,7 +20,7 @@ program test_advection_1d_periodic
 #include "sll_working_precision.h"
 
   use sll_m_advection_1d_base, only: &
-    sll_c_advector_1d
+    sll_c_advection_1d_base
 
   use sll_m_advection_1d_periodic, only: &
     sll_f_new_periodic_1d_advector
@@ -31,7 +31,7 @@ program test_advection_1d_periodic
   implicit none
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
   
-  class(sll_c_advector_1d), pointer :: adv
+  class(sll_c_advection_1d_base), pointer :: adv
   sll_real64 :: xmin
   sll_real64 :: xmax
   sll_int32 :: num_cells

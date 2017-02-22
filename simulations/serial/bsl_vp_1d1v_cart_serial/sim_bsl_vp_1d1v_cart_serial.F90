@@ -33,7 +33,7 @@ program sim_bsl_vp_1d1v_cart_serial
     sll_t_cubic_spline_interpolator_1d
 
   use sll_m_distribution_function, only: &
-    sll_s_distribution_function_2d_init, &
+    sll_s_initialize_distribution_function_2d, &
     sll_t_distribution_function_2d
 
   use sll_m_interpolators_1d_base, only: &
@@ -180,8 +180,8 @@ program sim_bsl_vp_1d1v_cart_serial
        (/ 0.0_f64 /)) 
 
   ! sll_o_initialize interpolators
-  call interp_spline_x%init( Ncx + 1, xmin, xmax, sll_p_periodic )
-  call interp_spline_v%init( Ncv + 1, vmin, vmax, sll_p_hermite )
+  call interp_spline_x%initialize( Ncx + 1, xmin, xmax, sll_p_periodic )
+  call interp_spline_v%initialize( Ncv + 1, vmin, vmax, sll_p_hermite )
   interp_x => interp_spline_x
   interp_v => interp_spline_v
 
@@ -190,8 +190,8 @@ program sim_bsl_vp_1d1v_cart_serial
   SLL_ALLOCATE(efield(Ncx+1),ierr)
 
   ! initialization of sll_m_distribution_function
-  call init_landau%init(mesh2d_base, sll_p_node_centered_field, eps, kmode)
-  call init_tsi%init(mesh2d_base, sll_p_node_centered_field, eps, kmode)
+  call init_landau%initialize(mesh2d_base, sll_p_node_centered_field, eps, kmode)
+  call init_tsi%initialize(mesh2d_base, sll_p_node_centered_field, eps, kmode)
   if (case == "landau") then
      p_init_f => init_landau
      fname = "landau"
@@ -200,7 +200,7 @@ program sim_bsl_vp_1d1v_cart_serial
      fname = "tsi"
   end if
   
-  call sll_s_distribution_function_2d_init( &
+  call sll_s_initialize_distribution_function_2d( &
        f, &
        1.0_f64, &
        1.0_f64, &

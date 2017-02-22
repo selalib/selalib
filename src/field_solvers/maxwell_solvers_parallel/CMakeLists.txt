@@ -1,12 +1,5 @@
-SET(CMAKE_Fortran_COMPILER ${MPI_Fortran_COMPILER})
-
-IF (PGI)
-  ADD_LIBRARY(sll_maxwell_parallel STATIC 
-              sll_m_maxwell_2d_periodic_cartesian_par_pgi.F90 )
-ELSE(PGI)
-  ADD_LIBRARY(sll_maxwell_parallel STATIC 
-              sll_m_maxwell_2d_periodic_cartesian_par.F90 )
-ENDIF(PGI)
+ADD_LIBRARY(sll_maxwell_parallel STATIC 
+            sll_m_maxwell_2d_periodic_cartesian_par.F90 )
 
 TARGET_LINK_LIBRARIES(sll_maxwell_parallel sll_remap sll_fft )
   

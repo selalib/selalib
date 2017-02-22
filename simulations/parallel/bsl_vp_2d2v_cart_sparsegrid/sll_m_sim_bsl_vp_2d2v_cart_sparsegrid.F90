@@ -202,12 +202,12 @@ contains
     end if
 
     ! Initialize the sparse grids in x and v
-    call sim%interp_x%init(sim%levelsx,sim%order_sg, sim%order_sg+1,0, &
+    call sim%interp_x%initialize(sim%levelsx,sim%order_sg, sim%order_sg+1,0, &
          sim%eta_min(1:2),sim%eta_max(1:2), 0, 0);
-    call sim%interp_v%init(sim%levelsv,sim%order_sg,sim%order_sg+1,0, &
+    call sim%interp_v%initialize(sim%levelsv,sim%order_sg,sim%order_sg+1,0, &
          sim%eta_min(3:4), sim%eta_max(3:4),0, 1);
     ! Initialize Poisson
-    call sim%poisson%init(sim%interp_x);
+    call sim%poisson%initialize(sim%interp_x);
 
 
     ! Now we compute the two parallel layouts

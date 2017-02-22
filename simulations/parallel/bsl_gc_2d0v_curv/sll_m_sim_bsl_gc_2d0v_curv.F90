@@ -10,22 +10,22 @@ module sll_m_sim_bsl_gc_2d0v_curv
 #include "sll_working_precision.h"
 
   use sll_m_advection_1d_base, only: &
-    sll_c_advector_1d
+    sll_c_advection_1d_base
 
   use sll_m_advection_1d_bsl, only: &
-    sll_f_new_advector_1d_bsl
+    sll_f_new_bsl_1d_advector
 
   use sll_m_advection_1d_csl_periodic, only: &
     sll_f_new_csl_periodic_1d_advector
 
   use sll_m_advection_2d_base, only: &
-    sll_c_advector_2d
+    sll_c_advection_2d_base
 
   use sll_m_advection_2d_bsl, only: &
-    sll_f_new_advector_2d_bsl
+    sll_f_new_bsl_2d_advector
 
   use sll_m_advection_2d_tensor_product, only: &
-    sll_f_new_advector_2d_tensor_product
+    sll_f_new_tensor_product_2d_advector
 
   use sll_m_arbitrary_degree_spline_interpolator_2d, only: &
     sll_f_new_arbitrary_degree_spline_interp2d
@@ -48,7 +48,7 @@ module sll_m_sim_bsl_gc_2d0v_curv
     sll_c_characteristics_1d_base
 
   use sll_m_characteristics_1d_explicit_euler, only: &
-    sll_f_new_charac_1d_explicit_euler
+    sll_f_new_explicit_euler_1d_charac
 
   use sll_m_characteristics_1d_trapezoid, only: &
     sll_f_new_trapezoid_1d_charac
@@ -235,8 +235,8 @@ module sll_m_sim_bsl_gc_2d0v_curv
     class(sll_c_interpolator_1d), pointer   :: A2_interp1d_x2 => null()
     class(sll_c_interpolator_1d), pointer :: f_interp1d_x1 => null()
     class(sll_c_interpolator_1d), pointer :: f_interp1d_x2 => null()
-    class(sll_c_advector_1d), pointer    :: advect_1d_x1 => null()
-    class(sll_c_advector_1d), pointer    :: advect_1d_x2 => null()
+    class(sll_c_advection_1d_base), pointer    :: advect_1d_x1 => null()
+    class(sll_c_advection_1d_base), pointer    :: advect_1d_x2 => null()
    
    !initial function
    procedure(sll_i_scalar_initializer_2d), nopass, pointer :: init_func
@@ -244,7 +244,7 @@ module sll_m_sim_bsl_gc_2d0v_curv
    sll_real64, dimension(:), pointer :: params
       
    !advector
-   class(sll_c_advector_2d), pointer    :: advect_2d
+   class(sll_c_advection_2d_base), pointer    :: advect_2d
    
    !interpolator for derivatives
 !   class(sll_c_interpolator_2d), pointer   :: phi_interp2d
@@ -1229,7 +1229,7 @@ contains
 
     select case(charac1d_x1_case)
       case ("SLL_EULER")
-        sim%charac1d_x1 => sll_f_new_charac_1d_explicit_euler(&
+        sim%charac1d_x1 => sll_f_new_explicit_euler_1d_charac(&
           Nc_eta1+1, &
           eta_min=eta1_min, &
           eta_max=eta1_max, &
@@ -1253,7 +1253,7 @@ contains
 
     select case(charac1d_x2_case)
       case ("SLL_EULER")
-        sim%charac1d_x2 => sll_f_new_charac_1d_explicit_euler(&
+        sim%charac1d_x2 => sll_f_new_explicit_euler_1d_charac(&
           Nc_eta2+1, &
           eta_min=eta2_min, &
           eta_max=eta2_max, &
@@ -1277,7 +1277,7 @@ contains
 
     select case(advect1d_x1_case)
       case ("SLL_BSL")
-        sim%advect_1d_x1 => sll_f_new_advector_1d_bsl(&
+        sim%advect_1d_x1 => sll_f_new_bsl_1d_advector(&
           sim%f_interp1d_x1, &
           sim%charac1d_x1, &
           Nc_eta1+1, &
@@ -1300,7 +1300,7 @@ contains
 
     select case(advect1d_x2_case)
       case ("SLL_BSL")
-        sim%advect_1d_x2 => sll_f_new_advector_1d_bsl(&
+        sim%advect_1d_x2 => sll_f_new_bsl_1d_advector(&
           sim%f_interp1d_x2, &
           sim%charac1d_x2, &
           Nc_eta2+1, &
@@ -1358,7 +1358,7 @@ contains
     select case(advect2d_case)
       case ("SLL_BSL")
        print*,"#advect2d = SLL_BSL "  
-        sim%advect_2d => sll_f_new_advector_2d_bsl(&
+        sim%advect_2d => sll_f_new_bsl_2d_advector(&
           sim%f_interp2d, &
           sim%charac2d, &
           Nc_eta1+1, &
@@ -1369,7 +1369,7 @@ contains
           eta2_max = eta2_max)
       case ("SLL_TENSOR_PRODUCT")
        print*,"#advect2d = SLL_SPLITING " 
-        sim%advect_2d => sll_f_new_advector_2d_tensor_product(&
+        sim%advect_2d => sll_f_new_tensor_product_2d_advector(&
           sim%advect_1d_x1, &
           sim%advect_1d_x2, &
           Nc_eta1+1, &
@@ -2742,7 +2742,7 @@ subroutine sll_DSG( eta1_min,eta1_max, eta2_min,eta2_max,n_eta1,n_eta2, f )
      
    spline_degree_eta1 = 3
    spline_degree_eta2 = 3  
-   call a11_interp%init( &
+   call a11_interp%initialize( &
          n_eta1+1, &
          n_eta2+1, &
          eta1_min, &
@@ -2751,7 +2751,7 @@ subroutine sll_DSG( eta1_min,eta1_max, eta2_min,eta2_max,n_eta1,n_eta2, f )
          eta2_max, &
          sll_p_dirichlet, &
          sll_p_periodic )            
-   call a22_interp%init( &
+   call a22_interp%initialize( &
          n_eta1+1, &
          n_eta2+1, &
          eta1_min, &
@@ -2762,7 +2762,7 @@ subroutine sll_DSG( eta1_min,eta1_max, eta2_min,eta2_max,n_eta1,n_eta2, f )
          sll_p_periodic )    
            
           
-    call a12_interp%init( &
+    call a12_interp%initialize( &
          n_eta1+1, &
          n_eta2+1, &
          eta1_min, &
@@ -2846,12 +2846,14 @@ subroutine sll_DSG( eta1_min,eta1_max, eta2_min,eta2_max,n_eta1,n_eta2, f )
     if(size(input,1)<Npts1)then
       print *,'size(input,1)=',size(input,1)
       print *,'Npts1=',Npts1
-      SLL_ERROR('compute_integral_trapezoid_2d','bad size1')
+      SLL_ERROR('compute_integral_trapezoid_2d&
+      &','bad size1')
     endif
     if(size(input,2)<Npts2)then
       print *,'size(input,2)=',size(input,2)
       print *,'Npts2=',Npts2
-      SLL_ERROR('compute_integral_trapezoid_2d','bad size2')
+      SLL_ERROR('compute_integral_trapezoid_2d&
+      &','bad size2')
     endif
 
     SLL_ALLOCATE(array(Npts2),ierr)    

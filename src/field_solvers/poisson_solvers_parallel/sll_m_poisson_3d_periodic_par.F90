@@ -1,4 +1,4 @@
-!> @ingroup poisson_solvers_parallel
+!> @ingroup poisson_solvers
 !> @brief 
 !> Periodic 3D poisson solver (parallel version)
 !> @details

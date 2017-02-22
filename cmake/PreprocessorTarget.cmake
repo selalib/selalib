@@ -29,7 +29,6 @@
 #   - 02 Dec 2015: fix dependency bug (YG).
 #   - 15 Jan 2016: store names of all libraries (YG).
 #   - 19 Jan 2016: 'collect_source_info' handles libraries with no sources (YG)
-#   - 03 Jan 2017: Add PGI compiler (PN)
 
 if(__add_all_preproc)
    return()
@@ -50,10 +49,8 @@ set_property(GLOBAL PROPERTY CPP_INCLUDES "")
 # Preprocessor flags
 if(CMAKE_Fortran_COMPILER_ID MATCHES Intel)
   set(preprocessor_only_flags -EP)
-elseif(CMAKE_Fortran_COMPILER_ID MATCHES GNU)
+elseif(Fortran_COMPILER_NAME MATCHES gfortran)
   set(preprocessor_only_flags -cpp -E -P)
-elseif(CMAKE_Fortran_COMPILER_ID MATCHES PGI)
-  set(preprocessor_only_flags -Mcpp -E -P )
 else()
   message(SEND_ERROR "Unknown preprocessor flags for current compiler")
 endif()

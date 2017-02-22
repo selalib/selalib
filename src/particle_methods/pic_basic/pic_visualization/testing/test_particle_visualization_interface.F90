@@ -24,6 +24,10 @@ program test_particle_visualization_interface
     sll_s_sample_particle_group, &
     sll_s_resample_particle_group
 
+  use sll_m_io_utilities, only : &
+     sll_s_concatenate_filename_and_path
+
+
   implicit none
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 

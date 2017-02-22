@@ -61,7 +61,7 @@ do i=0,NPTS1-1
   reference(i+1) = sin(2.0_f64*sll_p_pi*eta1)
 end do
   
-call ad1d%init(NPTS1,X1MIN,X1MAX,sll_p_periodic,sll_p_periodic,SPL_DEG)
+call ad1d%initialize(NPTS1,X1MIN,X1MAX,sll_p_periodic,sll_p_periodic,SPL_DEG)
 call ad1d%compute_interpolants(x)
   
 acc  = 0.0_f64
@@ -89,7 +89,7 @@ do i=0,NPTS1-1
   reference(i+1) = sin(2.0_f64*sll_p_pi*eta1)
 end do
   
-call ad1d%init(NPTS1,X1MIN,X1MAX,sll_p_dirichlet,sll_p_dirichlet,SPL_DEG)
+call ad1d%initialize(NPTS1,X1MIN,X1MAX,sll_p_dirichlet,sll_p_dirichlet,SPL_DEG)
 call ad1d%compute_interpolants(x)
   
 acc1 = 0.0_f64
@@ -117,7 +117,7 @@ do i=0,NPTS1-1
   reference(i+1) = sin(2.0_f64*sll_p_pi*eta1) + 3.0_f64
 end do
   
-call ad1d%init(NPTS1,X1MIN,X1MAX,sll_p_dirichlet,sll_p_dirichlet,SPL_DEG)
+call ad1d%initialize(NPTS1,X1MIN,X1MAX,sll_p_dirichlet,sll_p_dirichlet,SPL_DEG)
 
 call sll_s_set_values_at_boundary1d(ad1d,value_left=3.0_f64,value_right=3.0_f64)
   
@@ -152,7 +152,7 @@ xprime(2)     = cos(2.0_f64*sll_p_pi*eta1_pos(NPTS1))*2.0_f64*sll_p_pi
 eta1_prime(1) = eta1_pos(1)
 eta1_prime(2) = eta1_pos(NPTS1)
   
-call ad1d%init(NPTS1,X1MIN,X1MAX,sll_p_hermite,sll_p_hermite,SPL_DEG)
+call ad1d%initialize(NPTS1,X1MIN,X1MAX,sll_p_hermite,sll_p_hermite,SPL_DEG)
 
 call sll_s_set_values_at_boundary1d(ad1d,                   &
                               value_left=3.0_f64,     &
@@ -192,7 +192,7 @@ xprime(2) = 0.0_f64
 eta1_prime(1) = eta1_pos(1)
 eta1_prime(2) = eta1_pos(NPTS1)
 
-call ad1d%init(NPTS1,X1MIN,X1MAX,sll_p_neumann,sll_p_dirichlet,SPL_DEG)
+call ad1d%initialize(NPTS1,X1MIN,X1MAX,sll_p_neumann,sll_p_dirichlet,SPL_DEG)
 
 call sll_s_set_values_at_boundary1d(ad1d,                 &
                               value_left=1.0_f64,   &
@@ -231,7 +231,7 @@ xprime(2) = 0.0_f64
 eta1_prime(1) = eta1_pos(1)
 eta1_prime(2) = eta1_pos(NPTS1)
 
-call ad1d%init(NPTS1,X1MIN,X1MAX,sll_p_neumann,sll_p_dirichlet,SPL_DEG)
+call ad1d%initialize(NPTS1,X1MIN,X1MAX,sll_p_neumann,sll_p_dirichlet,SPL_DEG)
 
 call sll_s_set_values_at_boundary1d(ad1d,                 &
                               value_left=1.0_f64,   &
@@ -270,7 +270,7 @@ xprime(2) = 0.0_f64
 eta1_prime(1) = eta1_pos(1)
 eta1_prime(2) = eta1_pos(NPTS1)
 
-call ad1d%init(NPTS1,X1MIN,X1MAX,sll_p_neumann,sll_p_neumann,SPL_DEG)
+call ad1d%initialize(NPTS1,X1MIN,X1MAX,sll_p_neumann,sll_p_neumann,SPL_DEG)
 
 call sll_s_set_values_at_boundary1d(ad1d,                 &
                               value_left=1.0_f64,   &
@@ -309,7 +309,7 @@ xprime(2) = 0.0_f64
 eta1_prime(1) = eta1_pos(1)
 eta1_prime(2) = eta1_pos(NPTS1)
 
-call ad1d%init(NPTS1,X1MIN,X1MAX,sll_p_hermite,sll_p_neumann,SPL_DEG)
+call ad1d%initialize(NPTS1,X1MIN,X1MAX,sll_p_hermite,sll_p_neumann,SPL_DEG)
 
 call sll_s_set_values_at_boundary1d(ad1d,                  &
                               value_left=1.0_f64,    &
@@ -348,7 +348,7 @@ xprime(2) = 0.0_f64
 eta1_prime(1) = eta1_pos(1)
 eta1_prime(2) = eta1_pos(NPTS1)
 
-call ad1d%init(NPTS1,X1MIN,X1MAX,sll_p_neumann,sll_p_hermite,SPL_DEG)
+call ad1d%initialize(NPTS1,X1MIN,X1MAX,sll_p_neumann,sll_p_hermite,SPL_DEG)
 
 call sll_s_set_values_at_boundary1d(ad1d,                 &
                               value_left=1.0_f64,   &

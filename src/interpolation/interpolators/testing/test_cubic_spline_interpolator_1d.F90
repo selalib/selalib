@@ -81,7 +81,7 @@ contains
     end do
     
     print*, 'Cubic spline interpolation'
-    call spline%init &
+    call spline%initialize &
          (n, x_min, x_max, sll_p_periodic, fast_algorithm=fast_algorithm )
     
     interp => spline

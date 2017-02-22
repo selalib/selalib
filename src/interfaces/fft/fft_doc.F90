@@ -200,7 +200,7 @@
 !>
 !> For the real transform, we have
 !> \f$ (x_0,x_1,\dots,x_{n-1}) \rightarrow
-!>     (r_0,r_1,\dots,r_{n/2-1},r_{n/2},i_{n/2-1},\dots,i_1)\f$
+!>     (r_0,r_{n/2},r_1,i_1,\dots,r_{n/2-1},i_{n/2-1})\f$
 !> which must be interpreted as the complex array
 !> \f[ \begin{pmatrix} r_0 &,& 0
 !>                     \\ r_1 &,& i_1

@@ -46,7 +46,7 @@ end do
 call random_number(x)
 x = x * (XMAX-XMIN)
   
-call interpolator%init(NPTS,XMIN,XMAX,sll_p_neumann,sll_p_neumann,SPL_DEG)
+call interpolator%initialize(NPTS,XMIN,XMAX,sll_p_neumann,sll_p_neumann,SPL_DEG)
 
 call sll_s_set_values_at_boundary1d(interpolator,         &
                               value_left =1.0_f64,  &

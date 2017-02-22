@@ -26,7 +26,7 @@ module sll_m_advection_2d_integer_oblic
 #include "sll_working_precision.h"
 
   use sll_m_advection_1d_base, only: &
-    sll_c_advector_1d
+    sll_c_advection_1d_base
 
   use sll_m_characteristics_2d_base, only: &
     sll_c_characteristics_2d_base
@@ -46,8 +46,8 @@ module sll_m_advection_2d_integer_oblic
 
   type  :: sll_t_integer_oblic_2d_advector
   
-    class(sll_c_advector_1d), pointer :: adv_x1
-    class(sll_c_advector_1d), pointer :: adv_aligned
+    class(sll_c_advection_1d_base), pointer :: adv_x1
+    class(sll_c_advection_1d_base), pointer :: adv_aligned
     class(sll_c_interpolator_2d), pointer  :: interp
     class(sll_c_characteristics_2d_base), pointer  :: charac
     sll_real64, dimension(:), pointer :: eta1_coords
@@ -90,8 +90,8 @@ contains
     eta2_coords) &  
     result(adv)      
     type(sll_t_integer_oblic_2d_advector), pointer :: adv
-    class(sll_c_advector_1d), pointer :: adv_x1
-    class(sll_c_advector_1d), pointer :: adv_aligned
+    class(sll_c_advection_1d_base), pointer :: adv_x1
+    class(sll_c_advection_1d_base), pointer :: adv_aligned
     class(sll_c_interpolator_2d), pointer :: interp
     class(sll_c_characteristics_2d_base), pointer  :: charac
     sll_int32, intent(in) :: Npts1
@@ -139,8 +139,8 @@ contains
     eta1_coords, &
     eta2_coords)    
     type(sll_t_integer_oblic_2d_advector), intent(inout) :: adv
-    class(sll_c_advector_1d), pointer :: adv_x1
-    class(sll_c_advector_1d), pointer :: adv_aligned
+    class(sll_c_advection_1d_base), pointer :: adv_x1
+    class(sll_c_advection_1d_base), pointer :: adv_aligned
     class(sll_c_interpolator_2d), pointer :: interp
     class(sll_c_characteristics_2d_base), pointer  :: charac
     sll_int32, intent(in) :: Npts1
