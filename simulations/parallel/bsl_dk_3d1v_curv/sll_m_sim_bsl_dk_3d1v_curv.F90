@@ -945,7 +945,7 @@ contains
       sll_o_new_remap_plan(sim%layout4d_seqx1x2,sim%layout4d_seqx3x4,sim%f4d_seqx1x2)
 
      !----> for interpolations
-    call sim%interp2d_f_eta1eta2%initialize( &
+    call sim%interp2d_f_eta1eta2%init( &
       sim%cartesian_mesh4d%num_cells1+1, &
       sim%cartesian_mesh4d%num_cells2+1, &
       sim%cartesian_mesh4d%eta1_min, &
@@ -959,7 +959,7 @@ contains
       sim%spline_degree_eta1, &
       sim%spline_degree_eta2)
 
-    call sim%interp1d_f_eta3%initialize( &
+    call sim%interp1d_f_eta3%init( &
        sim%Neta3, &
        sim%cartesian_mesh4d%eta3_min, &
        sim%cartesian_mesh4d%eta3_max, &
@@ -967,7 +967,7 @@ contains
        sim%bc_right_eta3, &
        sim%spline_degree_eta3)
 
-    call sim%interp1d_f_vpar%initialize( &
+    call sim%interp1d_f_vpar%init( &
        sim%Nvpar, &
        sim%cartesian_mesh4d%eta4_min, &
        sim%cartesian_mesh4d%eta4_max, &
@@ -1153,7 +1153,7 @@ contains
     cartesian_mesh2d => sim%transf_xy%get_cartesian_mesh()
 
     !---> For iterpolations of Phi
-    call sim%interp2d_Phi_eta1eta2%initialize( &
+    call sim%interp2d_Phi_eta1eta2%init( &
       cartesian_mesh2d%num_cells1+1, &
       cartesian_mesh2d%num_cells2+1, &
       cartesian_mesh2d%eta1_min, &
@@ -1167,7 +1167,7 @@ contains
       sim%spline_degree_eta1, &
       sim%spline_degree_eta2)
 
-    call sim%interp1d_Phi_eta3%initialize( &
+    call sim%interp1d_Phi_eta3%init( &
        sim%Neta3, &
        sim%cartesian_mesh4d%eta3_min, &
        sim%cartesian_mesh4d%eta3_max, &
@@ -1176,7 +1176,7 @@ contains
        sim%spline_degree_eta3)
 
     !---> For rho
-    call sim%interp2d_rho_eta1eta2%initialize( &
+    call sim%interp2d_rho_eta1eta2%init( &
       cartesian_mesh2d%num_cells1 +1, &
       cartesian_mesh2d%num_cells2 +1, &
       cartesian_mesh2d%eta1_min, &
@@ -1191,7 +1191,7 @@ contains
       sim%spline_degree_eta2)    
 
     !---> For all the matrices required for QN solver
-    call sim%interp2d_QN_A11%initialize( &
+    call sim%interp2d_QN_A11%init( &
       cartesian_mesh2d%num_cells1 +1, &
       cartesian_mesh2d%num_cells2 +1, &
       cartesian_mesh2d%eta1_min, &
@@ -1205,7 +1205,7 @@ contains
       sim%spline_degree_eta1, &
       sim%spline_degree_eta2)    
 
-    call sim%interp2d_QN_A12%initialize( &
+    call sim%interp2d_QN_A12%init( &
       cartesian_mesh2d%num_cells1 +1, &
       cartesian_mesh2d%num_cells2 +1, &
       cartesian_mesh2d%eta1_min, &
@@ -1219,7 +1219,7 @@ contains
       sim%spline_degree_eta1, &
       sim%spline_degree_eta2)    
 
-    call sim%interp2d_QN_A21%initialize( &
+    call sim%interp2d_QN_A21%init( &
       cartesian_mesh2d%num_cells1 +1, &
       cartesian_mesh2d%num_cells2 +1, &
       cartesian_mesh2d%eta1_min, &
@@ -1233,7 +1233,7 @@ contains
       sim%spline_degree_eta1, &
       sim%spline_degree_eta2)    
 
-    call sim%interp2d_QN_A22%initialize( &
+    call sim%interp2d_QN_A22%init( &
       cartesian_mesh2d%num_cells1 +1, &
       cartesian_mesh2d%num_cells2 +1, &
       cartesian_mesh2d%eta1_min, &
@@ -1247,7 +1247,7 @@ contains
       sim%spline_degree_eta1, &
       sim%spline_degree_eta2)    
 
-    call sim%interp2d_QN_B1%initialize( &
+    call sim%interp2d_QN_B1%init( &
       cartesian_mesh2d%num_cells1 +1, &
       cartesian_mesh2d%num_cells2 +1, &
       cartesian_mesh2d%eta1_min, &
@@ -1261,7 +1261,7 @@ contains
       sim%spline_degree_eta1, &
       sim%spline_degree_eta2)
         
-    call sim%interp2d_QN_B2%initialize( &
+    call sim%interp2d_QN_B2%init( &
       cartesian_mesh2d%num_cells1 +1, &
       cartesian_mesh2d%num_cells2 +1, &
       cartesian_mesh2d%eta1_min, &
@@ -1275,7 +1275,7 @@ contains
       sim%spline_degree_eta1, &
       sim%spline_degree_eta2)
     
-    call sim%interp2d_QN_C%initialize( &
+    call sim%interp2d_QN_C%init( &
       cartesian_mesh2d%num_cells1 +1, &
       cartesian_mesh2d%num_cells2 +1, &
       cartesian_mesh2d%eta1_min, &

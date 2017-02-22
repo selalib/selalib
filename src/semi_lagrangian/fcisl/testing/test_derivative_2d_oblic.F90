@@ -21,7 +21,7 @@ program test_derivative_2d_oblic
 #include "sll_working_precision.h"
 
   use sll_m_advection_1d_base, only: &
-    sll_c_advection_1d_base
+    sll_c_advector_1d
 
   use sll_m_advection_1d_periodic, only: &
     sll_f_new_periodic_1d_advector
@@ -41,7 +41,7 @@ program test_derivative_2d_oblic
   sll_int32 :: Nc_x1
   sll_real64 :: x1_min
   sll_real64 :: x1_max
-  class(sll_c_advection_1d_base), pointer :: adv_x1
+  class(sll_c_advector_1d), pointer :: adv_x1
   sll_int32 :: Nc_x2
   sll_real64 :: x2_min
   sll_real64 :: x2_max

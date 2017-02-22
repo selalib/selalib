@@ -13,8 +13,7 @@ program test_general_elliptic_solver_multipatch
 
   use sll_m_coordinate_transformation_multipatch, only: &
     sll_f_new_coordinate_transformation_multipatch_2d, &
-    sll_t_coordinate_transformation_multipatch_2d, &
-    sll_o_delete
+    sll_t_coordinate_transformation_multipatch_2d
 
   use sll_m_coordinate_transformations_2d_nurbs, only: &
     sll_t_coordinate_transformation_2d_nurbs
@@ -25,12 +24,11 @@ program test_general_elliptic_solver_multipatch
   use sll_m_general_coordinate_elliptic_solver_multipatch, only: &
     sll_s_factorize_mat_es_mp, &
     sll_t_general_coordinate_elliptic_solver_mp, &
-    sll_s_initialize_general_elliptic_solver_mp, &
+    sll_s_general_elliptic_solver_mp_init, &
     sll_s_solve_general_coordinates_elliptic_eq_mp
 
   use sll_m_scalar_field_2d_multipatch, only: &
     sll_f_new_scalar_field_multipatch_2d, &
-    sll_o_delete, &
     sll_t_scalar_field_multipatch_2d
 
   implicit none
@@ -168,7 +166,7 @@ call phi_field_ex%update_interpolation_coefficients()
 
 print*, 'Initialization solver elliptic multipacth '
 
-call sll_s_initialize_general_elliptic_solver_mp( es_mp,             &
+call sll_s_general_elliptic_solver_mp_init( es_mp,             &
                                             sll_p_es_gauss_legendre, &
                                             sll_p_es_gauss_legendre, &
                                             T)
@@ -226,18 +224,18 @@ print *, 'writing to file...'
 call phi_field_diff%write_to_file(1)
 
 print*, 'delete object'
-call sll_o_delete(T)
-call sll_o_delete(a11_field_mat)
-call sll_o_delete(a21_field_mat)
-call sll_o_delete(a12_field_mat)
-call sll_o_delete(a22_field_mat)
-call sll_o_delete(b1_field_vect)
-call sll_o_delete(b2_field_vect)
-call sll_o_delete(c_field_scal)
-call sll_o_delete(rho_field_scal)
-call sll_o_delete(phi_field_scal)
-call sll_o_delete(phi_field_ex)
-call sll_o_delete(phi_field_diff)
+call T%free()
+call a11_field_mat%free()
+call a21_field_mat%free()
+call a12_field_mat%free()
+call a22_field_mat%free()
+call b1_field_vect%free()
+call b2_field_vect%free()
+call c_field_scal%free()
+call rho_field_scal%free()
+call phi_field_scal%free()
+call phi_field_ex%free()
+call phi_field_diff%free()
 print *, "PASSED"
 
 end program test_general_elliptic_solver_multipatch
