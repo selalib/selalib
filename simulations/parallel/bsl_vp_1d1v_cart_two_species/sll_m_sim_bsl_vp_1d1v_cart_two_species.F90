@@ -1855,6 +1855,8 @@ contains
                   + sum(f_x1_sp2(i,:)*sim%x2_array_sp2(1+ig:local_size_x2_sp2+ig) &
                   * sim%integration_weight_sp2(1+ig:local_size_x2_sp2+ig))
           end do
+        !  print*,'j_loc(i)',j_loc(i) 
+        !  print*,'sim%integration_weight_sp2',sim%integration_weight_sp2
           call sll_o_collective_allreduce( sll_v_world_collective, &
                j_loc,              &
                np_x1,                &
@@ -1930,7 +1932,9 @@ contains
       split_T = sim%split%split_begin_T
       t_step = real(istep-1,f64)
       do split_istep=1,sim%split%nb_split_step
+    !  print*,'sim%split%nb_split_step',sim%split%nb_split_step
         if(split_T) then
+    !  print*,'sim%split%nb_split_step',sim%split%nb_split_step
            !! T ADVECTION 
            tid=1
 
@@ -2145,6 +2149,7 @@ contains
              case ("SLL_AMPERE_DRIVE" )
                 e_app = sim%Edrmax *  &
                      sin(sim%omegadr*(time_init+real(istep,f64)*sim%dt))
+             !        print*,'e_app',e_app
              case("SLL_KEEN_DRIVE")
                 call compute_e_app(sim,e_app,time_init+real(istep,f64)*sim%dt)
              end select
@@ -2175,6 +2180,7 @@ contains
              ig_omp=i_omp+global_indices_sp1(1)-1
              alpha_omp = -(efield(ig_omp)+sim%alpha_sp1*e_app(ig_omp)) * sim%split%split_step(split_istep)
              f1d_omp_in_sp1(1:num_dof_x2_sp1,tid) = f_x2_sp1(i_omp,1:num_dof_x2_sp1)
+          !   print*,'sim%alpha_sp1',sim%alpha_sp1
              if(sim%advection_form_x2_sp1==SLL_CONSERVATIVE)then
                 call sll_s_function_to_primitive(f1d_omp_in_sp1(:,tid),x2_array_unit_sp1,np_x2_sp1-1,mean_omp)
              endif
@@ -2193,6 +2199,7 @@ contains
              ig_omp=i_omp+global_indices_sp2(1)-1
              alpha_omp = sim%mass_ratio*(efield(ig_omp)-sim%alpha_sp2*e_app(ig_omp)) * sim%split%split_step(split_istep)
              f1d_omp_in_sp2(1:num_dof_x2_sp2,tid) = f_x2_sp2(i_omp,1:num_dof_x2_sp2)
+          !   print*,'sim%alpha_sp2', sim%alpha_sp2
              if(sim%advection_form_x2_sp2==SLL_CONSERVATIVE)then
                 call sll_s_function_to_primitive(f1d_omp_in_sp2(:,tid),x2_array_unit_sp2,np_x2_sp2-1,mean_omp)
              endif
