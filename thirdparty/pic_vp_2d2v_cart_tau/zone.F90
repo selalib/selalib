@@ -30,6 +30,7 @@ sll_int32,  public :: ntau       ! discretization in fast scale direction
 sll_real64, public :: ep         ! epsilon (strength of the magnetic field)
 logical,    public :: plot       ! rho plot (true or false)
 sll_real64, public :: tfinal     ! time (max)
+sll_real64, public :: reset      ! time period for particles reset
 
 sll_int32  :: npm        ! Number of particles by cell
 sll_int32  :: nstepmax   ! Time step number (max)
@@ -63,20 +64,22 @@ namelist/donnees/   nx,  & ! number of points along x direction
                     ky,  & ! wave number along y
                     dt,  & ! time step
                   plot,  & ! true or false
-                 alpha     ! amplitude of perturbation
+                 alpha,  & ! amplitude of perturbation
+                 reset     ! time period for particles reset
 
-nstepmax = 2000          ! nbre d'iterations maxi
-nx       = 120           ! nombre de pts suivant x
-ny       = 10            ! nombre de pts suivant y
-tfinal   = 10.0_f64      ! temps final
-ntau     = 32
-npm      = 50
-ep       = 0.1_f64
-alpha    = 0.05_f64
-kx       = 0.5_f64
-ky       = 1.0_f64 
-dt       = 0.1_f64
-plot     = .false.
+nstepmax   = 2000          ! nbre d'iterations maxi
+nx         = 120           ! nombre de pts suivant x
+ny         = 10            ! nombre de pts suivant y
+ntau       = 32
+npm        = 50
+ep         = 0.1_f64
+alpha      = 0.05_f64
+kx         = 0.5_f64
+ky         = 1.0_f64 
+dt         = 0.1_f64
+plot       = .false.
+tfinal     = nstepmax * dt
+reset      = tfinal
 
 write(*,"(a)") "Input file name :"// filename
 open(93,file=filename,status='old')
@@ -92,6 +95,7 @@ dy = dimy / ny
 nbpart = npm * nx * ny
 
 nstep = min(floor(tfinal/dt),nstepmax)
+tfinal = (nstep-1) * dt
 
 end subroutine readin
 
@@ -136,6 +140,8 @@ call MPI_BCAST(kx,    1,MPI_REAL8  ,0,MPI_COMM_WORLD,code)
 call MPI_BCAST(ky,    1,MPI_REAL8  ,0,MPI_COMM_WORLD,code)
 call MPI_BCAST(dt,    1,MPI_REAL8  ,0,MPI_COMM_WORLD,code)
 call MPI_BCAST(ep,    1,MPI_REAL8  ,0,MPI_COMM_WORLD,code)
+call MPI_BCAST(reset, 1,MPI_REAL8  ,0,MPI_COMM_WORLD,code)
+call MPI_BCAST(tfinal,1,MPI_REAL8  ,0,MPI_COMM_WORLD,code)
 
 end subroutine mpi_global_master
 

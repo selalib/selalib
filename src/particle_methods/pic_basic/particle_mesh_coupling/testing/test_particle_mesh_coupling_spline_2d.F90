@@ -15,6 +15,8 @@ program test_particle_mesh_coupling_spline_2d
   use sll_m_particle_group_2d2v, only: &
     sll_t_particle_group_2d2v
 
+  use sll_m_splines_pp
+
   implicit none
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
@@ -37,6 +39,7 @@ program test_particle_mesh_coupling_spline_2d
   sll_real64 :: xi(3), wi(1)
   logical :: passed
   sll_real64 :: error
+  sll_real64 :: error1
 
   ! Sparse structure for shape factors (for reference)
   sll_int32 :: index_grid(2,4)    !< First dof index with contribution from th
@@ -44,13 +47,17 @@ program test_particle_mesh_coupling_spline_2d
 
   ! Rho dofs
   sll_real64 :: rho_dofs(100)
+  sll_real64 :: rho_dofs1(100)
   sll_real64 :: rho_dofs_ref(100)
+  sll_real64 :: rho_dofs_pp(16,100)
 
   ! For evaluation check
   sll_real64 :: particle_values(4)
+  sll_real64 :: particle_values1(4)
   sll_real64 :: particle_values_ref(4)
 
   sll_real64 :: volume
+
 
   ! 
   passed = .TRUE.
@@ -112,13 +119,14 @@ program test_particle_mesh_coupling_spline_2d
 
   ! Accumulate rho
   rho_dofs = 0.0_f64
-
+  rho_dofs1 = 0.0_f64
   do i_part = 1, n_particles
      xi = particle_group%get_x(i_part)
      wi = particle_group%get_charge(i_part)
      call kernel%add_charge(xi(1:2), wi(1), rho_dofs)
+     call kernel%add_charge_pp(xi(1:2), wi(1), rho_dofs1)
   end do
-  rho_dofs = rho_dofs
+ ! rho_dofs = rho_dofs
 
   rho_dofs_ref = 0.0_f64
   rho_dofs_ref(8:10) = values_grid(1:3,1,1)
@@ -134,9 +142,14 @@ program test_particle_mesh_coupling_spline_2d
   rho_dofs_ref = rho_dofs_ref  *&
        real(n_cells**2,f64)/volume/real(n_particles, f64)
   error = maxval(abs(rho_dofs-rho_dofs_ref))
+  error1 = maxval(abs(rho_dofs1-rho_dofs_ref))
+  
   if (error > 1.e-14) then
      passed = .FALSE.
      print*, 'Error in procedure add_charge.'
+  elseif (error1 >1.e-14)then 
+     passed = .FALSE.
+     print*, 'Error in procedure add_charge_pp .'
   end if
 
 !!$  ! Test j accumulations
@@ -160,11 +173,14 @@ program test_particle_mesh_coupling_spline_2d
 !!$     passed = .FALSE.
 !!$  end if
   
-
+  call sll_s_spline_pp_b_to_pp_2d(kernel%spline_pp,[n_cells,n_cells],rho_dofs,rho_dofs_pp)
+  
+  
   ! Test function evaluation
    do i_part = 1, n_particles
      xi = particle_group%get_x(i_part)
-     call  kernel%evaluate(xi(1), rho_dofs, particle_values(i_part))
+     call kernel%evaluate(xi(1:2), rho_dofs, particle_values(i_part))
+     call kernel%evaluate_pp(xi(1:2), rho_dofs_pp, particle_values1(i_part))
   end do
   particle_values_ref = [1.1560058593749998_f64,       2.3149278428819446_f64, &
        2.2656250000000000_f64,        1.1512586805555554_f64]/volume;
@@ -183,9 +199,14 @@ program test_particle_mesh_coupling_spline_2d
   end do
 
   error = maxval(abs(particle_values-particle_values_ref))
+  error1 = maxval(abs(particle_values1-particle_values_ref))
   if (error > 1.e-14) then
      passed = .FALSE.
      print*, 'Error in procedure evaluate_field_single.'
+  elseif(error1 > 1.e-14) then
+     passed = .FALSE.
+     print*, 'Error in procedure evaluate_field_single_pp.'
+     
   end if
 
   if (passed .EQV. .TRUE.) then

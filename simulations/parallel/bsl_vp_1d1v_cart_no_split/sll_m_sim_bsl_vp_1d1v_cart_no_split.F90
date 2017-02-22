@@ -110,9 +110,10 @@ module sll_m_sim_bsl_vp_1d1v_cart_no_split
     sll_t_fft
 
   use sll_m_hdf5_io_serial, only: &
-    sll_o_hdf5_file_close, &
-    sll_o_hdf5_file_create, &
-    sll_o_hdf5_write_array
+    sll_t_hdf5_ser_handle, &
+    sll_s_hdf5_ser_file_create, &
+    sll_s_hdf5_ser_file_close, &
+    sll_o_hdf5_ser_write_array
 
   use sll_m_interpolators_1d_base, only: &
     sll_c_interpolator_1d
@@ -1473,11 +1474,8 @@ contains
   ! Save the mesh structure
   !---------------------------------------------------
   subroutine plot_f_cartesian(iplot,f,mesh_2d)
-    use sll_m_xdmf
-    use sll_m_hdf5_io_serial
-    use hdf5, only: hid_t
     sll_int32 :: file_id
-    integer(hid_t) :: hfile_id
+    type(sll_t_hdf5_ser_handle) :: hfile_id
     sll_int32 :: error
     sll_real64, dimension(:,:), allocatable :: x1
     sll_real64, dimension(:,:), allocatable :: x2
@@ -1518,12 +1516,12 @@ contains
           x2(i,j) = x2_min+real(j-1,f64)*dx2
         end do
       end do
-      call sll_o_hdf5_file_create("cartesian_mesh-x1.h5",hfile_id,error)
-      call sll_o_hdf5_write_array(hfile_id,x1,"/x1",error)
-      call sll_o_hdf5_file_close(hfile_id, error)
-      call sll_o_hdf5_file_create("cartesian_mesh-x2.h5",hfile_id,error)
-      call sll_o_hdf5_write_array(hfile_id,x2,"/x2",error)
-      call sll_o_hdf5_file_close(hfile_id, error)
+      call sll_s_hdf5_ser_file_create("cartesian_mesh-x1.h5",hfile_id,error)
+      call sll_o_hdf5_ser_write_array(hfile_id,x1,"/x1",error)
+      call sll_s_hdf5_ser_file_close(hfile_id, error)
+      call sll_s_hdf5_ser_file_create("cartesian_mesh-x2.h5",hfile_id,error)
+      call sll_o_hdf5_ser_write_array(hfile_id,x2,"/x2",error)
+      call sll_s_hdf5_ser_file_close(hfile_id, error)
       deallocate(x1)
       deallocate(x2)
 
