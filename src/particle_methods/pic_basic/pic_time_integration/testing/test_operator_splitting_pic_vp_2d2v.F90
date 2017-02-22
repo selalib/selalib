@@ -108,7 +108,12 @@ program test_operator_splitting_pic_vp_2d2v
   !     rnd_seed)
   SLL_ALLOCATE(particle_info_ref(n_particles,5), i_part)
   particle_info_ref = 0.0_f64
-  particle_info_ref = reshape([   11.780972450961723_f64 ,       5.4977871437821380_f64,       0.78539816339744828_f64,        7.0685834705770345_f64,       0.15731068461017067_f64,       -1.5341205443525459_f64,        1.5341205443525459_f64,      -0.15731068461017067_f64,        86.251495608834688_f64,        71.662174808595040_f64], [n_particles, 5])
+  particle_info_ref = reshape([   11.780972450961723_f64 ,       &
+5.4977871437821380_f64,       0.78539816339744828_f64,        &
+7.0685834705770345_f64,       0.15731068461017067_f64,       &
+-1.5341205443525459_f64,        1.5341205443525459_f64,      &
+-0.15731068461017067_f64,        86.251495608834688_f64,     &
+   71.662174808595040_f64], [n_particles, 5])
 
   ! sll_o_initialize particles from particle_info_ref
   xi = 0.0_f64
@@ -139,7 +144,12 @@ program test_operator_splitting_pic_vp_2d2v
 
   ! Compare to reference
   ! Particle information after operatorV application 
-  particle_info_ref = reshape([   11.796703519422740_f64,        5.3443750893468831_f64,       0.93881021783270291_f64,        7.0528524021160175_f64,       0.15731068461017067_f64,       -1.5341205443525459_f64,        1.5341205443525459_f64,      -0.15731068461017067_f64,        86.251495608834688_f64,        71.662174808595040_f64], [n_particles, 5])
+  particle_info_ref = reshape([   11.796703519422740_f64,      &
+  5.3443750893468831_f64,       0.93881021783270291_f64,       &
+ 7.0528524021160175_f64,       0.15731068461017067_f64,       &
+-1.5341205443525459_f64,        1.5341205443525459_f64,      &
+-0.15731068461017067_f64,        86.251495608834688_f64,      &
+  71.662174808595040_f64], [n_particles, 5])
   ! Compare computed values to reference values
   do i_part=1,n_particles
      xi = particle_group%get_x(i_part)
@@ -168,7 +178,12 @@ program test_operator_splitting_pic_vp_2d2v
   call propagator%operatorV(delta_t)
   ! Compare to reference
   ! Particle information after operatorV application 
-  particle_info_ref = reshape([   11.796703519422740_f64,        5.3443750893468831_f64,       0.93881021783270291_f64,        7.0528524021160175_f64,       0.15346588344558551_f64,       -1.5294930005799796_f64,        1.5302579166423358_f64,      -0.15266168508042444_f64,        86.251495608834688_f64,        71.662174808595040_f64  ], [n_particles, 5])
+  particle_info_ref = reshape([   11.796703519422740_f64,    &
+    5.3443750893468831_f64,       0.93881021783270291_f64,   &
+     7.0528524021160175_f64,       0.15346588344558551_f64,  &
+     -1.5294930005799796_f64,        1.5302579166423358_f64, &
+     -0.15266168508042444_f64,        86.251495608834688_f64,&
+        71.662174808595040_f64  ], [n_particles, 5])
   ! Compare computed values to reference values
   do i_part=1,n_particles
      xi = particle_group%get_x(i_part)

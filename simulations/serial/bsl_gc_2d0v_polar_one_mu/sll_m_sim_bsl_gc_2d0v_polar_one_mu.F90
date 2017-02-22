@@ -14,10 +14,10 @@ module sll_m_sim_bsl_gc_2d0v_polar_one_mu
 #include "sll_working_precision.h"
 
   use sll_m_advection_2d_base, only: &
-    sll_c_advection_2d_base
+    sll_c_advector_2d
 
   use sll_m_advection_2d_bsl, only: &
-    sll_f_new_bsl_2d_advector
+    sll_f_new_advector_2d_bsl
 
   use sll_m_boundary_condition_descriptors, only: &
     sll_p_dirichlet, &
@@ -153,7 +153,7 @@ module sll_m_sim_bsl_gc_2d0v_polar_one_mu
    sll_real64, dimension(:), pointer :: params
       
    !advector
-   class(sll_c_advection_2d_base), pointer    :: advect_2d
+   class(sll_c_advector_2d), pointer    :: advect_2d
    
    !interpolator for derivatives
    class(sll_c_interpolator_2d), pointer   :: phi_interp2d
@@ -557,7 +557,7 @@ contains
 
     select case(advect2d_case)
       case ("SLL_BSL")
-        sim%advect_2d => sll_f_new_bsl_2d_advector(&
+        sim%advect_2d => sll_f_new_advector_2d_bsl(&
           f_interp2d, &
           charac2d, &
           Nc_x1+1, &

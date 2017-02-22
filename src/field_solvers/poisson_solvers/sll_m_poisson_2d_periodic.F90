@@ -83,12 +83,12 @@ end interface
 
 type, extends(sll_c_poisson_2d_base) :: sll_t_poisson_2d_periodic
 
-  type(sll_t_poisson_2d_periodic_fft), private, pointer :: solver
+  type(sll_t_poisson_2d_periodic_fft), private :: solver
 
 contains
 
   !> Create the Poisson solver
-  procedure, public, pass(poisson) :: initialize => &
+  procedure, public, pass(poisson) :: init => &
     initialize_poisson_2d_periodic
   !> Compute potential solving the Poisson equation
   procedure, public, pass(poisson) :: compute_phi_from_rho => &
@@ -122,7 +122,7 @@ contains
   end function l2norm_squarred_2d_periodic
   
   subroutine compute_rhs_from_function_2d_periodic(poisson, func, coefs_dofs)
-    class( sll_t_poisson_2d_periodic)                    :: poisson !< Maxwell solver object.
+    class( sll_t_poisson_2d_periodic)              :: poisson !< Maxwell solver object.
     procedure(sll_i_function_of_position)          :: func !< Function to be projected.
     sll_real64, intent(out)                        :: coefs_dofs(:) !< Coefficients of the projection.
     
@@ -183,8 +183,6 @@ contains
     sll_int32 :: nc_eta2
     sll_int32 :: ierr
     
-    SLL_ALLOCATE(poisson%solver,ierr)
-    
     call sll_o_initialize( &
       poisson%solver, &
       eta1_min, &
@@ -199,8 +197,8 @@ contains
   
   !> solves \f$ -\Delta phi(x,y) = rho (x,y) \f$
   subroutine compute_phi_from_rho_2d_fft( poisson, phi, rho )
-    class(sll_t_poisson_2d_periodic), target :: poisson
-    sll_real64,dimension(:,:),intent(in) :: rho
+    class(sll_t_poisson_2d_periodic)      :: poisson
+    sll_real64,dimension(:,:),intent(in)  :: rho
     sll_real64,dimension(:,:),intent(out) :: phi
     
     call sll_o_solve( poisson%solver, phi, rho)

@@ -42,7 +42,7 @@ module sll_m_charge_to_density
 contains
 
   subroutine sll_s_convert_charge_to_rho_2d_per_per( charge, rho )
-    type(sll_t_charge_accumulator_2d), pointer :: charge
+    type(sll_t_charge_accumulator_2d)        :: charge
     sll_real64, dimension(:,:), intent(out)  :: rho
     sll_int32  :: i
     sll_int32  :: j
@@ -109,7 +109,7 @@ contains
   end subroutine sll_s_convert_charge_to_rho_2d_per_per
 
   subroutine sll_s_convert_charge_to_rho_2d_per_per_cs( charge, rho )
-    type(sll_t_charge_accumulator_2d_cs), pointer :: charge
+    type(sll_t_charge_accumulator_2d_cs)     :: charge
     sll_real64, dimension(:,:), intent(out)  :: rho
     sll_int32  :: i, im1, im2, ip1
     sll_int32  :: j, jm1, jm2, jp1!   k
@@ -189,8 +189,8 @@ contains
 !
 
   subroutine sll_s_accumulate_field( E1, E2, E_accumulator)
-    sll_real64, dimension(:,:), pointer, intent(in)        :: E1, E2
-    type(sll_t_electric_field_accumulator), pointer, intent(out) :: E_accumulator
+    sll_real64, dimension(:,:),             intent(in)  :: E1, E2
+    type(sll_t_electric_field_accumulator), intent(out) :: E_accumulator
     sll_int32  ::  i, j
     sll_int32  ::  ncx, ncy
 
@@ -215,8 +215,8 @@ contains
 
   subroutine sll_s_accumulate_field_cs( E1, E2, E_accumulator)
 ! ------   Recall : CS is for Cubic Splines  ------
-    sll_real64, dimension(:,:), pointer, intent(in)        :: E1, E2
-    type(sll_t_electric_field_accumulator_cs), pointer, intent(out) :: E_accumulator
+    sll_real64, dimension(:,:),                intent(in)  :: E1, E2
+    type(sll_t_electric_field_accumulator_cs), intent(out) :: E_accumulator
     sll_int32  ::  i, j, im1, ip2, jm1, jp2
     sll_int32  ::  ncx, ncy
 

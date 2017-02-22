@@ -1,3 +1,4 @@
+/*
 !**************************************************************
 !  Copyright INRIA
 !  Authors : 
@@ -14,6 +15,7 @@
 !  circulated by CEA, CNRS and INRIA at the following URL
 !  "http://www.cecill.info". 
 !**************************************************************
+*/
 
 
 
@@ -61,6 +63,7 @@ module sll_m_remapper
     sll_s_factorize_in_three_powers_of_two, &
     sll_s_factorize_in_two_powers_of_two, &
     sll_o_get_layout_collective, &
+    sll_o_get_layout_global_size_i, &
     sll_o_get_layout_global_size_j, &
     sll_o_get_layout_global_size_k, &
     sll_o_get_layout_global_size_l, &
@@ -537,14 +540,14 @@ MAKE_REMAP_POINTER_CONTAINER( sll_t_remap_plan_4d_real64_ptr, sll_t_remap_plan_4
    end interface
 
    !> Get global size
-   interface get_layout_global_size_i
+   interface sll_o_get_layout_global_size_i
       module procedure &
            get_layout_2d_global_size_1, &
            get_layout_3d_global_size_1, &
            get_layout_4d_global_size_1, &
            get_layout_5d_global_size_1, &
            get_layout_6d_global_size_1
-   end interface get_layout_global_size_i
+   end interface sll_o_get_layout_global_size_i
 
    !> Get global size
    interface sll_o_get_layout_global_size_j
@@ -730,7 +733,7 @@ contains  !******************************************************************
   ! not be discounted easily.
   ! 
   ! One thing learned from this is that the macros called from inside a
-  ! macro like this (like SLL_ALLOCATE), don't need the semicolon, as they
+  ! macro like this (like /* SLL_ALLOCATE */), don't need the semicolon, as they
   ! already have one themselves... it might be a good idea to remove the
   ! semicolon from the last line of all macros, so that they don't introduce
   ! this type of inconsistencies...
@@ -2533,10 +2536,10 @@ MAKE_REMAP_OPTIMIZER( optimize_remap_plan_6D_comp64, remap_plan_6D_comp64, box_6
     sb           => plan%send_buffer
     rb           => plan%recv_buffer
 
-!!$    SLL_ALLOCATE(sdispi(0:col_sz-1), ierr)
-!!$    SLL_ALLOCATE(rdispi(0:col_sz-1), ierr)
-!!$    SLL_ALLOCATE(scntsi(0:col_sz-1), ierr)
-!!$    SLL_ALLOCATE(rcntsi(0:col_sz-1), ierr)
+!!$ /*   SLL_ALLOCATE(sdispi(0:col_sz-1), ierr) */
+!!$ /*   SLL_ALLOCATE(rdispi(0:col_sz-1), ierr) */
+!!$ /*   SLL_ALLOCATE(scntsi(0:col_sz-1), ierr) */
+!!$ /*   SLL_ALLOCATE(rcntsi(0:col_sz-1), ierr) */
 
     ! Translate the amounts into integers
 !!$#if 1
@@ -2675,10 +2678,10 @@ MAKE_REMAP_OPTIMIZER( optimize_remap_plan_6D_comp64, remap_plan_6D_comp64, box_6
        end if
     end do
 !!$    ! And why weren't these arrays part of the plan anyway??
-!!$    SLL_DEALLOCATE_ARRAY(sdispi, ierr)
-!!$    SLL_DEALLOCATE_ARRAY(rdispi, ierr)
-!!$    SLL_DEALLOCATE_ARRAY(scntsi, ierr)
-!!$    SLL_DEALLOCATE_ARRAY(rcntsi, ierr)
+!!$    /* SLL_DEALLOCATE_ARRAY(sdispi, ierr) */
+!!$    /* SLL_DEALLOCATE_ARRAY(rdispi, ierr) */
+!!$    /* SLL_DEALLOCATE_ARRAY(scntsi, ierr) */
+!!$    /* SLL_DEALLOCATE_ARRAY(rcntsi, ierr) */
   end subroutine apply_remap_2D_double
 
   subroutine apply_remap_2D_complex( plan, data_in, data_out )

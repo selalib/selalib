@@ -126,7 +126,7 @@ contains
     else if(.not.(present(bc_type))) then
       print *,'#provide boundary condition'
       print *,'#bc_type or process_outside_point function'
-      print *,'#in initialize_explicit_euler_1d_charac'
+      print *,'#in initialize_charac_1d_explicit_euler'
       stop
     else
       charac%bc_type = bc_type
@@ -137,7 +137,7 @@ contains
           charac%process_outside_point => sll_f_process_outside_point_set_to_limit        
         case default
           print *,'#bad value of boundary condition'
-          print *,'#in initialize_explicit_euler_1d_charac'
+          print *,'#in initialize_charac_1d_explicit_euler'
           stop
         end select
     endif
