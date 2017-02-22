@@ -79,74 +79,29 @@ function(add_forcheck_target)
   if(FORCHECK_FOUND)
     add_forcheck_target_allfiles() # process all sources at once
     if(FORCHECK_SEPARATE_TARGETS)
-      add_forcheck_target_separate() # separet forcheck target for each library/executable
+      add_forcheck_target_separate() 
+      # separet forcheck target for each library/executable
     endif()
   endif()
 endfunction()
 
 # Adds a single target "forcheck" to process all the source files at once.
 function(add_forcheck_target_allfiles)
-  # Include flags needed for preprocessing the input files:
-  get_all_include_dirs(_includes)
-  set(_incflags)
-  foreach(i ${_includes})
-    set(_incflags ${_incflags} -I${i})
-  endforeach()
-
-  # List of source files that we will process with Forcheck
-  get_property(_fck_sources GLOBAL PROPERTY CPP_SOURCES)  
-  list(REMOVE_DUPLICATES _fck_sources)
-
-  # If the files preprocessed by PreprocessorTargets.cmake would be suitable
-  # for forcheck analysis, then we would do
-  # get_property(_fck_preproc_sources GLOBAL PROPERTY CPP_PREPROC_SOURCES)
-  #
-  # Unfortunately the preprocessing defined in PreprocessorTargets.cmake is
-  # NOT suitable for Forcheck analysis:
-  #  - they can contain arbitrary long lines because of macro expansion,
-  #  - Intel's proprocessor brakes up these lines, but create non-standard
-  #    conforming code.
-  # Therefore in the following loop we create custom commands to preprocess the 
-  # source files with gfortran and fix the problem with long lines using sed.
-  foreach (_src ${_fck_sources})
-     get_preprocessed_filename(${_src} _preproc_name _forchk)
-
-     # Get the compiler definitions for the file
-     get_source_file_property(_defs "${_src}" COMPILE_DEFINITIONS)
-     set(_defflags)
-     foreach(_d ${_defs})
-       set(_defflags ${_defflags} -D${_d})
-     endforeach()
-     
-     # Create the preprocessor command
-     # The preprocessed file is piped through a sed script, 
-     # to break up the long lines that contain ';'.
-     # To avoid trouble, we delete comment lines that contain  ';'.
-     add_custom_command(OUTPUT "${_preproc_name}"
-         COMMAND gfortran  ${_incflags} ${_defflags} -cpp -E -P ${_src} | sed -e "/^.\\{132\\}/s/!.*/ /" -e "/^.\\{132\\}/s/; */\\n/g" > ${_preproc_name}
-         DEPENDS "${_src}"
-         COMMENT "Preprocessing ${_src}"
-         VERBATIM
-       ) 
-     list(APPEND _fck_preproc_sources ${_preproc_name})
-  endforeach()
-  
-  # Group all preprocessing commands into one target
-  add_custom_target(forcheck_preproc DEPENDS ${_fck_preproc_sources})
-  set_target_properties(forcheck_preproc PROPERTIES EXCLUDE_FROM_ALL TRUE)
-  
   # Forcheck will analyze already preprocessed files.
   # These files will not contain #include proprocessor directives anymore,
   # but they can still have fortran include lines.
   # Therefore, we need to get the include flags and pass it to Forcheck
-  get_forcheck_includes("${_includes}" _fck_incflags)
+  get_forcheck_includes(_fck_incflags)
   
+  # List of preprocessed source files
+  get_property(_fck_preproc_sources GLOBAL PROPERTY CPP_PREPROC_SOURCES)  
+
   # The Forcheck target
   add_custom_target(forcheck
       COMMAND forchk -batch -allc -rep selalib.rep -l selalib.lst ${_fck_incflags} ${_fck_preproc_sources}  ${FORCHECK_EXTERNAL_FLBS} || true
       WORKING_DIRECTORY  ${FORCHECK_OUTPUT_DIR}
       COMMENT "Running Forcheck static source code analysis"
-      DEPENDS forcheck_preproc)
+      DEPENDS ${_fck_preproc_sources})
   # "|| true" is used because of Forcheck's exit status:
   # 0 no informative, warning, overflow or error messages presented
   # 2 informative, but no warning, overflow or error messages presented
@@ -163,11 +118,11 @@ endfunction()
 # Additionally, single target is added to check all libraries
 # individually: forcheck_separate
 function(add_forcheck_target_separate)
-  get_all_include_dirs(_includes)
-  message(STATUS "forcheck_target_separate includes ${_includes}")
-  get_forcheck_includes("${_includes}" _fck_incflags)
+  get_forcheck_includes(_fck_incflags)
   
   get_property(_target_list GLOBAL PROPERTY LIBRARY_TARGETS)
+  # get_property(_executable_list GLOBAL PROPERTY EXECUTABLE_TARGETS)
+  # list(APPEND _target_list ${_executable_list})
   set(_forcheck_targets)
   # todo: append the list of executables to target_list
   foreach(_name ${_target_list})
@@ -178,7 +133,7 @@ function(add_forcheck_target_separate)
       # we create a list of preprocessed source file names 
       set(_current_library_sources)
       foreach (_src ${_sources})
-        get_preprocessed_filename(${_source_directory}/${_src} _preproc_src "_forchk")
+        get_preprocessed_filename(${_source_directory}/${_src} _preproc_src)
         list(APPEND _current_library_sources ${_preproc_src})
       endforeach()
     
@@ -214,30 +169,15 @@ function(add_forcheck_target_separate)
   set_target_properties(forcheck PROPERTIES EXCLUDE_FROM_ALL TRUE)
 endfunction()
 
-# Generate a name for the preprocessed source file
-# _src_path is the the path of the source file with relative or absolute path
-# _output_name is the name of the variable to store the results
-# There is an optional suffix argument:
-# get_preprocessed_filename(${source} _preproc_name "suffix")
-function(get_preprocessed_filename _src_path _output_name)
-  get_source_file_property(_loc ${_src_path} LOCATION)  # I need the full path
-  get_filename_component(_e "${_loc}" EXT)
-  get_filename_component(_n "${_loc}" NAME_WE)
-  get_filename_component(_dir "${_loc}" DIRECTORY)
-  string(REGEX REPLACE "^${CMAKE_SOURCE_DIR}" "${CMAKE_BINARY_DIR}" _dir ${_dir})
-  string(REGEX REPLACE "F" "f" _e "${_e}")
-  if(${ARGC} GREATER 2)
-     # add optional suffix
-     set(${_output_name} "${_dir}/${_n}${ARGV2}${_e}" PARENT_SCOPE)
-  else()
-     set(${_output_name} "${_dir}/${_n}${_e}" PARENT_SCOPE)
-  endif()
-endfunction()
-
-function(get_all_include_dirs _output_name)
-  # get_property(_includes GLOBAL PROPERTY CPP_INCLUDES)
-  # set(${_output_name} ${_includes} PARENT_SCOPE)
+# Returns a list of all the include flags used by any target.
+# The list is in a format that can be given to Forcheck
+function(get_forcheck_includes _output_name)
+  # Get the list of all targes
   get_property(_target_list GLOBAL PROPERTY LIBRARY_TARGETS)
+  get_property(_executable_list GLOBAL PROPERTY EXECUTABLE_TARGETS)
+  list(APPEND _target_list ${_executable_list})
+  
+  # Collect all the include directories
   set(_includes)
   foreach(_name ${_target_list})
     get_target_property(_dirs ${_name} INCLUDE_DIRECTORIES)
@@ -250,14 +190,8 @@ function(get_all_include_dirs _output_name)
     endif()
     list(REMOVE_DUPLICATES _includes)
   endforeach()
-  set(${_output_name} "${_includes}" PARENT_SCOPE)
-endfunction()
-
-# Returns a comma separated list of all the preprocessor flags
-function(get_forcheck_includes _includes _output_name)
-  # get_property(_fck_includes GLOBAL PROPERTY CPP_INCLUDES)
-  message(STATUS "get_forcheck_includes includes ${_includes}")
-
+  
+  # Transform it to a Format that forcheck accepts
   if(_includes)
     string (REGEX REPLACE ";" "," _fck_incs "${_includes}")
     set(_fck_incs "-I ${_fck_incs}")
@@ -306,7 +240,6 @@ function(get_flb_dependencies _name _output_name)
     math(EXPR _idx "${_idx} + 1")
   endwhile()
   
-  # message(STATUS "${_name} depends on ${_dependencies}")
   set(_flb_dependencies)
   foreach(_libname ${_dependencies})
     list(APPEND _flb_dependencies ${FORCHECK_OUTPUT_DIR}/${_libname}.flb)
