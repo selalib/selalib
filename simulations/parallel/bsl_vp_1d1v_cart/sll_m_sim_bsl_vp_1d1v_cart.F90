@@ -1633,6 +1633,7 @@ contains
                 case("SLL_AMPERE_DRIVE") 
                    e_app = sim%Edrmax &
                      * sin(sim%omegadr*(time_init+real(istep,f64)*sim%dt))
+                     print*,'e_app',e_app
    
                 case("SLL_KEEN_DRIVE") 
                    call sll_s_pfenvelope(adr,                     &
