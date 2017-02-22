@@ -61,8 +61,8 @@ advfield_v = 0.0_f64
 
 print*, 'initialize 2d distribution function f(x,v) sll_m_gaussian'
 print*, 'checking advection of a Gaussian in a uniform field'
-call spline_x%initialize(nc_x+1, x_min, x_max, sll_p_periodic )
-call spline_v%initialize(nc_v+1, v_min, v_max, sll_p_periodic )
+call spline_x%init(nc_x+1, x_min, x_max, sll_p_periodic )
+call spline_v%init(nc_v+1, v_min, v_max, sll_p_periodic )
 
 interp_x => spline_x
 interp_v => spline_v

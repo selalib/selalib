@@ -17,9 +17,8 @@ program test_maxwell_2d_diga_wave
     sll_p_silver_muller
 
   use sll_m_cartesian_meshes, only: &
-    sll_f_new_cartesian_mesh_2d, &
-    sll_t_cartesian_mesh_2d, &
-    sll_o_new
+    sll_s_cartesian_mesh_2d_init, &
+    sll_t_cartesian_mesh_2d
 
   use sll_m_common_coordinate_transformations, only: &
     sll_f_affine_jac11, &
@@ -61,16 +60,18 @@ program test_maxwell_2d_diga_wave
     sll_p_io_mtv
 
   use sll_m_coordinate_transformations_2d, only: &
+    sll_t_coordinate_transformation_2d_analytic, &
+    sll_s_coordinate_transformation_2d_analytic_init, &
     sll_f_new_coordinate_transformation_2d_analytic
 
   use sll_m_dg_fields, only: &
     sll_t_dg_field_2d, &
-    sll_o_new
+    sll_f_new_dg_field_2d
 
   use sll_m_maxwell_2d_diga, only: &
-    sll_o_create, &
+    sll_s_maxwell_2d_diga_init, &
     sll_t_maxwell_2d_diga, &
-    sll_o_solve, &
+    sll_s_solve_maxwell_2d_diga, &
     sll_p_uncentered
 
   implicit none
@@ -89,14 +90,15 @@ program test_maxwell_2d_diga_wave
     sll_real64 :: eta2_max, eta2_min
     sll_real64 :: delta_eta1, delta_eta2
 
-    type(sll_t_cartesian_mesh_2d), pointer :: mesh
-    class(sll_c_coordinate_transformation_2d_base), pointer :: tau
+    type(sll_t_cartesian_mesh_2d) :: mesh
+    class(sll_c_coordinate_transformation_2d_base),    pointer :: tau
+    type(sll_t_coordinate_transformation_2d_analytic), target  :: tau_a
 
     type(sll_t_maxwell_2d_diga)   :: maxwell_TE
 
-    type(sll_t_dg_field_2d), pointer :: ex, ex0, dx, sx
-    type(sll_t_dg_field_2d), pointer :: ey, ey0, dy, sy
-    type(sll_t_dg_field_2d), pointer :: bz, bz0, dz, sz
+    type(sll_t_dg_field_2d) :: ex, ex0, dx, sx
+    type(sll_t_dg_field_2d) :: ey, ey0, dy, sy
+    type(sll_t_dg_field_2d) :: bz, bz0, dz, sz
 
     sll_real64  :: time
     sll_int32   :: istep
@@ -105,7 +107,7 @@ program test_maxwell_2d_diga_wave
     sll_int32   :: itest
     !character(len=4) :: cstep
 
-    mesh => sll_f_new_cartesian_mesh_2d(nc_eta1, nc_eta2, &
+    call sll_s_cartesian_mesh_2d_init(mesh, nc_eta1, nc_eta2, &
         eta1_min=-5._f64, eta1_max=5._f64, &
         eta2_min=-5._f64, eta2_max=5._f64)
 
@@ -127,15 +129,16 @@ program test_maxwell_2d_diga_wave
             case(1)
    
                 print*, "Identity transformation";
-                tau => sll_f_new_coordinate_transformation_2d_analytic( &
-                    "identity_transformation",                 &
-                    mesh,                                      &
-                    sll_f_identity_x1,                               &
-                    sll_f_identity_x2,                               &
-                    sll_f_identity_jac11,                            &
-                    sll_f_identity_jac12,                            &
-                    sll_f_identity_jac21,                            &
-                    sll_f_identity_jac22,                            &
+                call sll_s_coordinate_transformation_2d_analytic_init( &
+                    tau_a,                                             &
+                    "identity_transformation",                         &
+                    mesh,                                              &
+                    sll_f_identity_x1,                                 &
+                    sll_f_identity_x2,                                 &
+                    sll_f_identity_jac11,                              &
+                    sll_f_identity_jac12,                              &
+                    sll_f_identity_jac21,                              &
+                    sll_f_identity_jac22,                              &
                     SLL_NULL_REAL64 )
       
             case(2)
@@ -145,18 +148,20 @@ program test_maxwell_2d_diga_wave
                 ! x1 = (b-a)*(cos(e)*eta1-sin(e)*eta2) + a
                 ! x2 = (d-c)*(sin(e)*eta1+cos(e)*eta2) + c
    
-                tau => sll_f_new_coordinate_transformation_2d_analytic( &
-                    "affine_transformation",                   &
-                    mesh,                                      &
-                    sll_f_affine_x1,                                 &
-                    sll_f_affine_x2,                                 &
-                    sll_f_affine_jac11,                              &
-                    sll_f_affine_jac12,                              &
-                    sll_f_affine_jac21,                              &
-                    sll_f_affine_jac22,                              &
-                    [0.0_f64,1.0_f64, &
-                    0.0_f64,1.0_f64, &
+                call sll_s_coordinate_transformation_2d_analytic_init( &
+                    tau_a,                                             &
+                    "affine_transformation",                           &
+                    mesh,                                              &
+                    sll_f_affine_x1,                                   &
+                    sll_f_affine_x2,                                   &
+                    sll_f_affine_jac11,                                &
+                    sll_f_affine_jac12,                                &
+                    sll_f_affine_jac21,                                &
+                    sll_f_affine_jac22,                                &
+                    [0.0_f64,1.0_f64,                                  &
+                    0.0_f64,1.0_f64,                                   &
                     0.25*sll_p_pi] )
+
             case(3)
       
                 print*, "Homography transformation"
@@ -174,17 +179,18 @@ program test_maxwell_2d_diga_wave
                 !  h = proportional scale factors x1 and x2 in function of x2.
          
    
-                tau => sll_f_new_coordinate_transformation_2d_analytic( &
-                    "homography_transformation",               &
-                    mesh,                                      &
-                    sll_f_homography_x1,                             &
-                    sll_f_homography_x2,                             &
-                    sll_f_homography_jac11,                          &
-                    sll_f_homography_jac12,                          &
-                    sll_f_homography_jac21,                          &
-                    sll_f_homography_jac22,                          &
-                    [ 01.0_f64,00.2_f64,00.0_f64, &
-                    -00.2_f64,01.0_f64,00.0_f64, &
+                call sll_s_coordinate_transformation_2d_analytic_init( &
+                    tau_a,                                             &
+                    "homography_transformation",                       &
+                    mesh,                                              &
+                    sll_f_homography_x1,                               &
+                    sll_f_homography_x2,                               &
+                    sll_f_homography_jac11,                            &
+                    sll_f_homography_jac12,                            &
+                    sll_f_homography_jac21,                            &
+                    sll_f_homography_jac22,                            &
+                    [ 01.0_f64,00.2_f64,00.0_f64,                      &
+                    -00.2_f64,01.0_f64,00.0_f64,                       &
                     00.0_f64,00.0_f64] )
       
             case(4)
@@ -197,17 +203,17 @@ program test_maxwell_2d_diga_wave
                 ! x1 = eta1 + 0.1 * sin(2*pi*eta1) * sin(2*pi*eta2)
                 ! x2 = eta2 + 0.1 * sin(2*pi*eta1) * sin(2*pi*eta2)
       
-                tau => sll_f_new_coordinate_transformation_2d_analytic( &
-                    "collela_transformation",                  &
-                    mesh,                                      &
-                    sll_f_sinprod_x1,                                &
-                    sll_f_sinprod_x2,                                &
-                    sll_f_sinprod_jac11,                             &
-                    sll_f_sinprod_jac12,                             &
-                    sll_f_sinprod_jac21,                             &
-                    sll_f_sinprod_jac22,                             &
-                    [0.1_f64,0.1_f64,                          &
-                    eta1_max-eta1_min,eta2_max-eta2_min] )
+                call sll_s_coordinate_transformation_2d_analytic_init( &
+                    tau_a,                                             &
+                    "collela_transformation",                          &
+                    mesh,                                              &
+                    sll_f_sinprod_x1,                                  &
+                    sll_f_sinprod_x2,                                  &
+                    sll_f_sinprod_jac11,                               &
+                    sll_f_sinprod_jac12,                               &
+                    sll_f_sinprod_jac21,                               &
+                    sll_f_sinprod_jac22,                               &
+                    [0.1_f64,0.1_f64, eta1_max-eta1_min,eta2_max-eta2_min] )
       
             case(5)
    
@@ -215,45 +221,48 @@ program test_maxwell_2d_diga_wave
       
                 ! x1 = a*eta1*eta2+b*eta1+c*eta2+d
                 ! x2 = e*eta1*eta2+f*eta1+g*eta2+h
-      
-                tau => sll_f_new_coordinate_transformation_2d_analytic( &
-                    "rubber_sheeting_transformation",          &
-                    mesh,                                      &
-                    sll_f_rubber_sheeting_x1,                        &
-                    sll_f_rubber_sheeting_x2,                        &
-                    sll_f_rubber_sheeting_jac11,                     &
-                    sll_f_rubber_sheeting_jac12,                     &
-                    sll_f_rubber_sheeting_jac21,                     &
-                    sll_f_rubber_sheeting_jac22,                     &
-                    [00.0_f64,01.0_f64,00.2_f64,00.0_f64,      &
+
+                call sll_s_coordinate_transformation_2d_analytic_init( &
+                    tau_a,                                             &
+                    "rubber_sheeting_transformation",                  &
+                    mesh,                                              &
+                    sll_f_rubber_sheeting_x1,                          &
+                    sll_f_rubber_sheeting_x2,                          &
+                    sll_f_rubber_sheeting_jac11,                       &
+                    sll_f_rubber_sheeting_jac12,                       &
+                    sll_f_rubber_sheeting_jac21,                       &
+                    sll_f_rubber_sheeting_jac22,                       &
+                    [00.0_f64,01.0_f64,00.2_f64,00.0_f64,              &
                     00.0_f64,00.2_f64,01.0_f64,00.0_f64] )
    
         end select
+
+        tau => tau_a
    
         call tau%write_to_file(sll_p_io_mtv)
    
         time = 0.0_f64
    
-        ex  => sll_o_new(degree,tau)
-        ey  => sll_o_new(degree,tau)
-        bz  => sll_o_new(degree,tau,gaussian)
+        call ex%init(degree,tau)
+        call ey%init(degree,tau)
+        call bz%init(degree,tau,gaussian)
    
-        ex0 => sll_o_new(degree,tau)
-        ey0 => sll_o_new(degree,tau)
-        bz0 => sll_o_new(degree,tau)
+        call ex0%init(degree,tau)
+        call ey0%init(degree,tau)
+        call bz0%init(degree,tau)
    
-        dx  => sll_o_new(degree,tau)
-        dy  => sll_o_new(degree,tau)
-        dz  => sll_o_new(degree,tau)
+        call dx%init(degree,tau)
+        call dy%init(degree,tau)
+        call dz%init(degree,tau)
    
-        sx  => sll_o_new(degree,tau)
-        sy  => sll_o_new(degree,tau)
-        sz  => sll_o_new(degree,tau)
+        call sx%init(degree,tau)
+        call sy%init(degree,tau)
+        call sz%init(degree,tau)
    
         dt = cfl/sqrt(1./(delta_eta1/(degree+1))**2+1./(delta_eta2/(degree+1))**2)
         nstep = ceiling(15.0/dt)
    
-        call sll_o_create(maxwell_TE,        &
+        call sll_s_maxwell_2d_diga_init(maxwell_TE,        &
             tau,               &
             degree,            &
             TE_POLARIZATION,   &
@@ -269,20 +278,20 @@ program test_maxwell_2d_diga_wave
    
             call rksetup()
    
-            call sll_o_solve(maxwell_TE, ex, ey, bz, dx, dy, dz)
+            call sll_s_solve_maxwell_2d_diga(maxwell_TE, ex, ey, bz, dx, dy, dz)
    
             call accumulate(1._f64/6._f64)
             call rkstage(0.5_f64)
    
-            call sll_o_solve(maxwell_TE, ex, ey, bz, dx, dy, dz)
+            call sll_s_solve_maxwell_2d_diga(maxwell_TE, ex, ey, bz, dx, dy, dz)
             call accumulate(1._f64/3._f64)
             call rkstage(0.5_f64)
    
-            call sll_o_solve(maxwell_TE, ex, ey, bz, dx, dy, dz)
+            call sll_s_solve_maxwell_2d_diga(maxwell_TE, ex, ey, bz, dx, dy, dz)
             call accumulate(1._f64/3._f64)
             call rkstage(1.0_f64)
    
-            call sll_o_solve(maxwell_TE, ex, ey, bz, dx, dy, dz)
+            call sll_s_solve_maxwell_2d_diga(maxwell_TE, ex, ey, bz, dx, dy, dz)
             call accumulate(1._f64/6._f64)
    
             call rkstep()
@@ -309,44 +318,44 @@ end do
 
 contains
 
-    subroutine rksetup()
+   subroutine rksetup()
 
-        sx%array = 0.0_f64
-        sy%array = 0.0_f64
-        sz%array = 0.0_f64
+      sx%array = 0.0_f64
+      sy%array = 0.0_f64
+      sz%array = 0.0_f64
 
-        ex0%array = ex%array
-        ey0%array = ey%array
-        bz0%array = bz%array
+      ex0%array = ex%array
+      ey0%array = ey%array
+      bz0%array = bz%array
 
-    end subroutine rksetup
+   end subroutine rksetup
 
-    subroutine rkstage(coef)
+   subroutine rkstage(coef)
 
-        sll_real64, intent(in) :: coef
+      sll_real64, intent(in) :: coef
 
-        ex%array = ex0%array + coef * dt * dx%array
-        ey%array = ey0%array + coef * dt * dy%array
-        bz%array = bz0%array + coef * dt * dz%array
+      ex%array = ex0%array + coef * dt * dx%array
+      ey%array = ey0%array + coef * dt * dy%array
+      bz%array = bz0%array + coef * dt * dz%array
 
-    end subroutine rkstage
+   end subroutine rkstage
 
-    subroutine accumulate(coef)
+   subroutine accumulate(coef)
 
-        sll_real64, intent(in) :: coef
+      sll_real64, intent(in) :: coef
 
-        sx%array = sx%array + coef * dx%array
-        sy%array = sy%array + coef * dy%array
-        sz%array = sz%array + coef * dz%array
+      sx%array = sx%array + coef * dx%array
+      sy%array = sy%array + coef * dy%array
+      sz%array = sz%array + coef * dz%array
 
-    end subroutine accumulate
+   end subroutine accumulate
 
-    subroutine rkstep()
+   subroutine rkstep()
 
-        ex%array = ex0%array + dt * sx%array
-        ey%array = ey0%array + dt * sy%array
-        bz%array = bz0%array + dt * sz%array
+      ex%array = ex0%array + dt * sx%array
+      ey%array = ey0%array + dt * sy%array
+      bz%array = bz0%array + dt * sz%array
 
-    end subroutine rkstep
+   end subroutine rkstep
 
 end program test_maxwell_2d_diga_wave

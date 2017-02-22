@@ -248,21 +248,21 @@ contains
     do i=1,interpolator%max_level
        do j=1,interpolator%dim
           if (interpolation_type == 0) then
-             call interpolator%interp_per(j,i)%initialize( 2**i + 1, &
+             call interpolator%interp_per(j,i)%init( 2**i + 1, &
                   interpolator%eta_min(j), &
                   interpolator%eta_max(j),&
                   1, interpolation);
-            ! call interpolator%interp_v(j,i)%initialize( 2**i + 1, &
+            ! call interpolator%interp_v(j,i)%init( 2**i + 1, &
             !      interpolator%eta_min(j+1), &
             !      interpolator%eta_max(j+1),&
             !      interpolation-1);
  
           else
-             call interpolator%interp_per(j,i)%initialize( 2**i +1,&
+             call interpolator%interp_per(j,i)%init( 2**i +1,&
                   interpolator%eta_min(j), &
                   interpolator%eta_max(j),&
                   2, interpolation);
-             !call interpolator%interpl_v(j,i)%initialize( 2**i +1,&
+             !call interpolator%interpl_v(j,i)%init( 2**i +1,&
              !     interpolator%eta_min(j+interpolator%dim/2), &
              !     interpolator%eta_max(j+interpolator%dim/2),&
              !     HERMITE_LAGRANGE,interpolation/2);
@@ -1314,7 +1314,10 @@ subroutine integrate_trapezoidal( interpolator,data_in,val)
   val = val*interpolator%volume
 end subroutine integrate_trapezoidal
 
-!!!! Trapezoidal integrator on sparse grid working with the semi-hierarchical surplus (hierarchical in (d-1) dimensions, nodal along one dimension). Note this functions should usually not be used since it is only working if the maximum number of levels along the nodal dimension is the maximum total levels
+!Trapezoidal integrator on sparse grid working with the semi-hierarchical
+!surplus (hierarchical in (d-1) dimensions, nodal along one dimension). Note
+!this functions should usually not be used since it is only working if the
+!maximum number of levels along the nodal dimension is the maximum total levels
 subroutine integrate_trapezoidal2( interpolator,dorder,data_in,val)
   class(sll_t_sparse_grid_interpolator), intent(inout) :: interpolator
   sll_real64,intent(inout) :: val

@@ -17,14 +17,14 @@
 
 !in development
 
-module sll_m_advection_2d_CSL
+module sll_m_advection_2d_csl
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_assert.h"
 #include "sll_memory.h"
 #include "sll_working_precision.h"
 
   use sll_m_advection_2d_base, only: &
-    sll_c_advection_2d_base
+    sll_c_advector_2d
 
   use sll_m_characteristics_2d_base, only: &
     sll_c_characteristics_2d_base
@@ -32,12 +32,13 @@ module sll_m_advection_2d_CSL
   implicit none
 
   public :: &
-    sll_f_new_csl_2d_advector
+    sll_f_new_csl_2d_advector, &
+    sll_t_csl_2d_advector
 
   private
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
-  type,extends(sll_c_advection_2d_base) :: CSL_2d_advector
+  type,extends(sll_c_advector_2d) :: sll_t_csl_2d_advector
   
     class(sll_c_characteristics_2d_base), pointer  :: charac
     sll_real64, dimension(:), pointer :: eta1_coords
@@ -54,20 +55,15 @@ module sll_m_advection_2d_CSL
     sll_real64, dimension(:,:), pointer :: dir
     sll_int32, dimension(:,:,:), pointer :: cell
      
-
   contains
-     procedure, pass(adv) :: initialize => &
-       initialize_CSL_2d_advector
-    procedure, pass(adv) :: advect_2d => &
-      CSL_advect_2d
+
+    procedure, pass(adv) :: init =>  initialize_csl_2d_advector
+    procedure, pass(adv) :: advect_2d => csl_advect_2d
   
-  end type CSL_2d_advector
+  end type sll_t_csl_2d_advector
    
-
-
-
-
 contains
+
   function sll_f_new_csl_2d_advector( &
     charac, &
     Npts1, &
@@ -79,7 +75,8 @@ contains
     eta1_coords, &
     eta2_coords) &  
     result(adv)      
-    type(CSL_2d_advector), pointer :: adv
+
+    type(sll_t_csl_2d_advector), pointer :: adv
     class(sll_c_characteristics_2d_base), pointer  :: charac
     sll_int32, intent(in) :: Npts1
     sll_int32, intent(in) :: Npts2
@@ -93,7 +90,7 @@ contains
     
     SLL_ALLOCATE(adv,ierr)
         
-    call initialize_CSL_2d_advector(&
+    call initialize_csl_2d_advector(&
       adv, &
       charac, &
       Npts1, &
@@ -108,7 +105,7 @@ contains
   end function  sll_f_new_csl_2d_advector
 
 
-  subroutine initialize_CSL_2d_advector(&
+  subroutine initialize_csl_2d_advector(&
     adv, &
     charac, &
     Npts1, &
@@ -119,7 +116,7 @@ contains
     eta2_max, &
     eta1_coords, &
     eta2_coords)    
-    class(CSL_2d_advector), intent(inout) :: adv
+    class(sll_t_csl_2d_advector)                   :: adv
     class(sll_c_characteristics_2d_base), pointer  :: charac
     sll_int32, intent(in) :: Npts1
     sll_int32, intent(in) :: Npts2
@@ -149,7 +146,7 @@ contains
     if(present(eta1_min).and.present(eta1_max))then
       if(present(eta1_coords))then
         print *,'#provide either eta1_coords or eta1_min and eta1_max'
-        print *,'#and not both in subroutine initialize_CSL_2d_advector'
+        print *,'#and not both in subroutine initialize_csl_2d_advector'
         stop
       else
         delta_eta1 = (eta1_max-eta1_min)/real(Npts1-1,f64)
@@ -159,7 +156,7 @@ contains
       endif
     else if(present(eta1_coords))then
       if(size(eta1_coords,1)<Npts1)then
-        print *,'#bad size for eta1_coords in initialize_CSL_2d_advector'
+        print *,'#bad size for eta1_coords in initialize_csl_2d_advector'
         stop
       else
         adv%eta1_coords(1:Npts1) = eta1_coords(1:Npts1)
@@ -176,7 +173,7 @@ contains
     if(present(eta2_min).and.present(eta2_max))then
       if(present(eta2_coords))then
         print *,'#provide either eta2_coords or eta2_min and eta2_max'
-        print *,'#and not both in subroutine initialize_CSL_2d_advector'
+        print *,'#and not both in subroutine initialize_csl_2d_advector'
         stop
       else
         delta_eta2 = (eta2_max-eta2_min)/real(Npts2-1,f64)
@@ -186,7 +183,7 @@ contains
       endif
     else if(present(eta2_coords))then
       if(size(eta2_coords,1)<Npts2)then
-        print *,'#bad size for eta2_coords in initialize_CSL_2d_advector'
+        print *,'#bad size for eta2_coords in initialize_csl_2d_advector'
         stop
       else
         adv%eta2_coords(1:Npts2) = eta2_coords(1:Npts2)
@@ -209,16 +206,17 @@ contains
     SLL_ALLOCATE(adv%inty(0:adv%nbmax),ierr)
     SLL_ALLOCATE(adv%dir(adv%nbmax,2),ierr)
       
-  end subroutine initialize_CSL_2d_advector
+  end subroutine initialize_csl_2d_advector
 
-  subroutine CSL_advect_2d(&
+  subroutine csl_advect_2d(&
     adv, &
     A1, &
     A2, &
     dt, &
     input, &
     output)
-    class(CSL_2d_advector) :: adv
+    class(sll_t_csl_2d_advector) :: adv
+
     sll_real64, dimension(:,:), intent(in) :: A1
     sll_real64, dimension(:,:), intent(in) :: A2
     sll_real64, intent(in) :: dt 
@@ -573,7 +571,7 @@ contains
         
 
           
-  end subroutine CSL_advect_2d
+  end subroutine csl_advect_2d
 
 
 
@@ -1027,4 +1025,4 @@ contains
 
 
 
-end module sll_m_advection_2d_CSL
+end module sll_m_advection_2d_csl

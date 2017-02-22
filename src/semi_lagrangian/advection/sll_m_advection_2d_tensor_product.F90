@@ -26,138 +26,124 @@ module sll_m_advection_2d_tensor_product
 #include "sll_working_precision.h"
 
   use sll_m_advection_1d_base, only: &
-    sll_c_advection_1d_base
+    sll_c_advector_1d
 
   use sll_m_advection_2d_base, only: &
-    sll_c_advection_2d_base
+    sll_c_advector_2d
 
   implicit none
 
   public :: &
-    sll_f_new_tensor_product_2d_advector
+    sll_f_new_advector_2d_tensor_product, &
+    sll_t_advector_2d_tensor_product
 
   private
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
-  type,extends(sll_c_advection_2d_base) :: tensor_product_2d_advector
+  type,extends(sll_c_advector_2d) :: sll_t_advector_2d_tensor_product
     
-    class(sll_c_advection_1d_base), pointer  :: advect_x1
-    class(sll_c_advection_1d_base), pointer  :: advect_x2
-    sll_int32 :: Npts1
-    sll_int32 :: Npts2
+    class(sll_c_advector_1d), pointer :: advect_x1
+    class(sll_c_advector_1d), pointer :: advect_x2
+    sll_int32                         :: npts1
+    sll_int32                         :: npts2
     sll_real64, dimension(:), pointer :: buf1d 
+
   contains
-     procedure, pass(adv) :: initialize => &
-       initialize_tensor_product_2d_advector
-    procedure, pass(adv) :: advect_2d => &
-      tensor_product_advect_2d
+
+    procedure, pass(adv) :: init => initialize_advector_2d_tensor_product
+    procedure, pass(adv) :: advect_2d => tensor_product_advect_2d
   
-  end type tensor_product_2d_advector
+  end type sll_t_advector_2d_tensor_product
    
-
-
-
-
 contains
-  function sll_f_new_tensor_product_2d_advector( &
-    advect_x1, &
-    advect_x2, &
-    Npts1, &
-    Npts2 ) &
-    result(adv)      
-    type(tensor_product_2d_advector), pointer :: adv
-    class(sll_c_advection_1d_base), pointer :: advect_x1
-    class(sll_c_advection_1d_base), pointer :: advect_x2
-    sll_int32, intent(in) :: Npts1 
-    sll_int32, intent(in) :: Npts2 
+
+  function sll_f_new_advector_2d_tensor_product( advect_x1, advect_x2, &
+    npts1, npts2 ) result(adv)      
+
+    type(sll_t_advector_2d_tensor_product), pointer :: adv
+    class(sll_c_advector_1d),               pointer :: advect_x1
+    class(sll_c_advector_1d),               pointer :: advect_x2
+    sll_int32, intent(in) :: npts1 
+    sll_int32, intent(in) :: npts2 
+
     sll_int32 :: ierr
     
     SLL_ALLOCATE(adv,ierr)
         
-    call initialize_tensor_product_2d_advector(&
-      adv, &
-      advect_x1, &
-      advect_x2, &
-      Npts1, &
-      Npts2)
+    call adv%init( advect_x1, advect_x2, npts1, npts2)
     
-  end function  sll_f_new_tensor_product_2d_advector
+  end function  sll_f_new_advector_2d_tensor_product
 
 
-  subroutine initialize_tensor_product_2d_advector(&
+  subroutine initialize_advector_2d_tensor_product(&
     adv, &
     advect_x1, &
     advect_x2, &
-    Npts1, &
-    Npts2)
-    class(tensor_product_2d_advector), intent(inout) :: adv
-    class(sll_c_advection_1d_base), pointer :: advect_x1
-    class(sll_c_advection_1d_base), pointer :: advect_x2
-    sll_int32, intent(in) :: Npts1
-    sll_int32, intent(in) :: Npts2
+    npts1, &
+    npts2)
+
+    class(sll_t_advector_2d_tensor_product), intent(inout) :: adv
+    class(sll_c_advector_1d), pointer :: advect_x1
+    class(sll_c_advector_1d), pointer :: advect_x2
+    sll_int32, intent(in) :: npts1
+    sll_int32, intent(in) :: npts2
+
     sll_int32 :: ierr
+
     adv%advect_x1 => advect_x1
     adv%advect_x2 => advect_x2
     
-    adv%Npts1 = Npts1
-    adv%Npts2 = Npts2
+    adv%npts1 = npts1
+    adv%npts2 = npts2
     
-    SLL_ALLOCATE(adv%buf1d(max(Npts1,Npts2)),ierr)
+    SLL_ALLOCATE(adv%buf1d(max(npts1,npts2)),ierr)
       
-  end subroutine initialize_tensor_product_2d_advector
+  end subroutine initialize_advector_2d_tensor_product
 
-  subroutine tensor_product_advect_2d(&
-    adv, &
-    A1, &
-    A2, &
-    dt, &
-    input, &
-    output)
-    class(tensor_product_2d_advector) :: adv
-    sll_real64, dimension(:,:), intent(in) :: A1
-    sll_real64, dimension(:,:), intent(in) :: A2
-    sll_real64, intent(in) :: dt 
-    sll_real64, dimension(:,:), intent(in) :: input
+  subroutine tensor_product_advect_2d( adv, A1, A2, dt, input, output)
+
+    class(sll_t_advector_2d_tensor_product) :: adv
+    sll_real64, dimension(:,:), intent(in)  :: A1
+    sll_real64, dimension(:,:), intent(in)  :: A2
+    sll_real64,                 intent(in)  :: dt 
+    sll_real64, dimension(:,:), intent(in)  :: input
     sll_real64, dimension(:,:), intent(out) :: output      
+
     sll_int32 :: i1
     sll_int32 :: i2
-    sll_int32 :: Npts1
-    sll_int32 :: Npts2
+    sll_int32 :: npts1
+    sll_int32 :: npts2
     
-    Npts1 = adv%Npts1
-    Npts2 = adv%Npts2
+    npts1 = adv%npts1
+    npts2 = adv%npts2
     
-    do i2=1,Npts2
-      adv%buf1d(1:Npts1) = input(1:Npts1,i2)
+    do i2=1,npts2
+      adv%buf1d(1:npts1) = input(1:npts1,i2)
       call adv%advect_x1%advect_1d( &
-        A1(1:Npts1,i2), &
+        A1(1:npts1,i2), &
         0.5_f64*dt, &
-        adv%buf1d(1:Npts1), &
-        output(1:Npts1,i2))
+        adv%buf1d(1:npts1), &
+        output(1:npts1,i2))
     enddo
 
-    do i1=1,Npts1
-      adv%buf1d(1:Npts2) = output(i1,1:Npts2)
+    do i1=1,npts1
+      adv%buf1d(1:npts2) = output(i1,1:npts2)
       call adv%advect_x2%advect_1d( &
-        A2(i1,1:Npts2), &
+        A2(i1,1:npts2), &
         dt, &
-        adv%buf1d(1:Npts2), &
-        output(i1,1:Npts2))
+        adv%buf1d(1:npts2), &
+        output(i1,1:npts2))
     enddo
 
-    do i2=1,Npts2
-      adv%buf1d(1:Npts1) = output(1:Npts1,i2)
+    do i2=1,npts2
+      adv%buf1d(1:npts1) = output(1:npts1,i2)
       call adv%advect_x1%advect_1d( &
-        A1(1:Npts1,i2), &
+        A1(1:npts1,i2), &
         0.5_f64*dt, &
-        adv%buf1d(1:Npts1), &
-        output(1:Npts1,i2))
+        adv%buf1d(1:npts1), &
+        output(1:npts1,i2))
     enddo
           
   end subroutine tensor_product_advect_2d
-
-
-
-
 
 end module sll_m_advection_2d_tensor_product

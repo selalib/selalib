@@ -43,7 +43,7 @@ module sll_m_hermite_interpolator_1d
    sll_int32                                    :: npts
    contains
    !> PLEASE ADD DOCUMENTATION
-   procedure,pass(interpolator) :: initialize => initialize_hermite_interpolator_1d
+   procedure,pass(interpolator) :: init => initialize_hermite_interpolator_1d
    !> PLEASE ADD DOCUMENTATION
    procedure :: compute_interpolants => wrap_compute_interpolants_hermite_1d
    !> PLEASE ADD DOCUMENTATION
@@ -111,7 +111,7 @@ contains  !**********************************************************
     
     interpolator%npts = npts
     
-    call interpolator%initialize( &
+    call interpolator%init( &
       npts, &
       eta_min, &
       eta_max, &

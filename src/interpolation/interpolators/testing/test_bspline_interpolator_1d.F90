@@ -61,6 +61,7 @@ do i=0,NPTS1-1
   reference(i+1) = sin(2.0_f64*sll_p_pi*eta1)
 end do
   
+<<<<<<< HEAD
 call ad1d%initialize(NPTS1,X1MIN,X1MAX,sll_p_periodic,sll_p_periodic,SPL_DEG)
 call ad1d%compute_interpolants(x)
   
@@ -79,6 +80,10 @@ do i=0,NPTS1-2
   acc_der1   = acc_der1 + abs(deriv1_val-ref)
   normH1_0   = normH1_0  + (deriv1_val-ref)**2*h1
 end do
+=======
+call interpolator%init(NPTS,XMIN,XMAX,SPL_DEG,sll_p_dirichlet)
+!call set_values_at_boundary1d(interpolator,value_left=1.0_f64,value_right=1.0_f64)
+>>>>>>> develop
 
 call sll_o_delete(ad1d)
   

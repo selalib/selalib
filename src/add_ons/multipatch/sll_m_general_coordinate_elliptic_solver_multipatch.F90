@@ -25,7 +25,6 @@ module sll_m_general_coordinate_elliptic_solver_multipatch
     sll_p_es_gauss_lobatto
 
   use sll_m_scalar_field_2d_multipatch, only: &
-    sll_o_delete, &
     sll_t_scalar_field_multipatch_2d
 
   use sll_m_sparse_matrix, only: &
@@ -48,9 +47,8 @@ module sll_m_general_coordinate_elliptic_solver_multipatch
   public :: &
     sll_s_factorize_mat_es_mp, &
     sll_t_general_coordinate_elliptic_solver_mp, &
-    sll_s_initialize_general_elliptic_solver_mp, &
+    sll_s_general_elliptic_solver_mp_init, &
     sll_f_new_general_elliptic_solver_mp, &
-    sll_o_solve_mp, &
     sll_s_solve_general_coordinates_elliptic_eq_mp
 
   private
@@ -89,20 +87,14 @@ type :: sll_t_general_coordinate_elliptic_solver_mp
    type(sll_t_csr_matrix),         pointer :: sll_csr_mat
    type(sll_t_csr_matrix),         pointer :: sll_csr_mat_source
 
+contains
+
+   procedure :: init  => sll_s_general_elliptic_solver_mp_init
+   procedure :: free  => sll_s_solve_general_coordinates_elliptic_eq_mp
+   procedure :: solve => sll_s_solve_general_coordinates_elliptic_eq_mp
+
 end type sll_t_general_coordinate_elliptic_solver_mp
 
-interface delete
-  module procedure delete_elliptic_mp
-end interface delete
-
-interface initialize
-  module procedure sll_s_initialize_general_elliptic_solver_mp
-end interface initialize
-
-interface sll_o_solve_mp
-  module procedure sll_s_solve_general_coordinates_elliptic_eq_mp
-end interface sll_o_solve_mp
-  
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 contains ! *******************************************************************
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -124,13 +116,13 @@ contains ! *******************************************************************
 !> @param[in] T the transformation multipatch
 !> @return the type sll_t_general_coordinate_elliptic_solver_mp
 
-subroutine sll_s_initialize_general_elliptic_solver_mp( &
+subroutine sll_s_general_elliptic_solver_mp_init( &
      es_mp,                                       &
      quadrature_type1,                            &
      quadrature_type2,                            &
      T)
   
-type(sll_t_general_coordinate_elliptic_solver_mp), intent(out) :: es_mp
+class(sll_t_general_coordinate_elliptic_solver_mp), intent(out) :: es_mp
 type(sll_t_coordinate_transformation_multipatch_2d), pointer :: T
 type(sll_t_cartesian_mesh_2d), pointer                         :: lm
 sll_int32, intent(in) :: quadrature_type1
@@ -285,7 +277,7 @@ es_mp%values_jacobian = 0.0_f64
 SLL_ALLOCATE(es_mp%tab_index_coeff1(num_patches,max_num_cells_eta1*(max_degspline1+2)),ierr)
 SLL_ALLOCATE(es_mp%tab_index_coeff2(num_patches,max_num_cells_eta2*(max_degspline2+2)),ierr)
    
-end subroutine sll_s_initialize_general_elliptic_solver_mp
+end subroutine sll_s_general_elliptic_solver_mp_init
  
 !> @brief Initialization for elleptic solver.
 !> @details To have the function phi such that 
@@ -317,7 +309,7 @@ double precision      :: time
 
 call sll_s_set_time_mark(t0)
 SLL_ALLOCATE(es_mp,ierr)
-call initialize( es_mp, quadrature_type1, quadrature_type2, T)
+call es_mp%init( quadrature_type1, quadrature_type2, T)
 
 time = sll_f_time_elapsed_since(t0)
 print*, '#time for sll_f_new_general_elliptic_solver', time
