@@ -24,11 +24,11 @@ program test_adv_2d
   use sll_m_cubic_spline_interpolator_1d, only: &
     sll_f_new_cubic_spline_interpolator_1d
 
-  use hdf5, only: hid_t
   use sll_m_hdf5_io_serial, only: &
-    sll_o_hdf5_file_close, &
-    sll_o_hdf5_file_create, &
-    sll_o_hdf5_write_array_2d
+    sll_t_hdf5_ser_handle, &
+    sll_s_hdf5_ser_file_create, &
+    sll_s_hdf5_ser_file_close, &
+    sll_o_hdf5_ser_write_array
 
   use sll_m_interpolators_1d_base, only: &
     sll_c_interpolator_1d
@@ -57,8 +57,7 @@ program test_adv_2d
   sll_int32 :: i
   sll_int32 :: j
   sll_real64 :: dt
-  !sll_int32 :: file_id
-  integer(hid_t) :: hfile_id
+  type(sll_t_hdf5_ser_handle) :: hfile_id
   character(len=20) :: filename
   sll_real64 :: x1_min
   sll_real64 :: x1_max
@@ -190,9 +189,9 @@ program test_adv_2d
 
   ! save results
   filename = "data.h5"
-  call sll_o_hdf5_file_create(filename, hfile_id, ierr)
-  call sll_o_hdf5_write_array_2d(hfile_id, f, "data", ierr)
-  call sll_o_hdf5_file_close(hfile_id, ierr)
+  call sll_s_hdf5_ser_file_create( filename, hfile_id, ierr )
+  call sll_o_hdf5_ser_write_array( hfile_id, f, "data", ierr )
+  call sll_s_hdf5_ser_file_close( hfile_id, ierr )
 
 
   
