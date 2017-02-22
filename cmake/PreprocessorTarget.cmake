@@ -169,8 +169,12 @@ endfunction()
 # call this function at the end of the CMakeLists.txt
 function(add_preprocessor_target)
   # If needed, add OpenMP flag to preprocessor flags
-  if(OPENMP_ENABLED)
+  if(OPENMP_ENABLED AND ${preprocessor_command} STREQUAL ${CMAKE_Fortran_COMPILER})
     set(preprocessor_only_flags ${preprocessor_only_flags} ${OpenMP_Fortran_FLAGS})
+  # else()
+    # we have modified the preprocessor command because of Forcheck.
+    # We do not add the OpenMP flag, since it might not work with the modified 
+    # preprocessor command
   endif()
 
   get_property(_target_list GLOBAL PROPERTY LIBRARY_TARGETS)
@@ -341,3 +345,26 @@ function(get_compile_definitions _name _output_name)
   endforeach()
   set(${_output_name} "${_defflags}" PARENT_SCOPE)
 endfunction() 
+
+#==============================================================================
+# FUNCTION: get_preprocessed_filename
+#==============================================================================
+# Generate a name for the preprocessed source file
+# _src_path is the the path of the source file with relative or absolute path
+# _output_name is the name of the variable to store the results
+# There is an optional suffix argument:
+# get_preprocessed_filename(${source} _preproc_name "suffix")
+function(get_preprocessed_filename _src_path _output_name)
+  get_source_file_property(_loc ${_src_path} LOCATION)  # I need the full path
+  get_filename_component(_e "${_loc}" EXT)
+  get_filename_component(_n "${_loc}" NAME_WE)
+  get_filename_component(_dir "${_loc}" DIRECTORY)
+  string(REGEX REPLACE "^${CMAKE_SOURCE_DIR}" "${CMAKE_BINARY_DIR}" _dir ${_dir})
+  string(REGEX REPLACE "F" "f" _e "${_e}")
+  if(${ARGC} GREATER 2)
+     # add optional suffix
+     set(${_output_name} "${_dir}/${_n}${ARGV2}${_e}" PARENT_SCOPE)
+  else()
+     set(${_output_name} "${_dir}/${_n}${_e}" PARENT_SCOPE)
+  endif()
+endfunction()
