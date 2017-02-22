@@ -23,7 +23,7 @@ module sll_m_mudpack_curvilinear
     sll_c_coordinate_transformation_2d_base
 
   use sll_m_cubic_spline_interpolator_2d, only: &
-    sll_f_new_cubic_spline_interpolator_2d
+    sll_t_cubic_spline_interpolator_2d
 
   use sll_m_interpolators_2d_base, only: &
     sll_c_interpolator_2d
@@ -58,20 +58,28 @@ integer, parameter :: sll_p_non_separable_with_cross_terms = 3    !< type of equ
 
 !> Interpolator to compute derivative xx
 class(sll_c_interpolator_2d), pointer :: cxx_interp
+type(sll_t_cubic_spline_interpolator_2d), target :: cxx_cs2d
 !> Interpolator to compute derivative yy
 class(sll_c_interpolator_2d), pointer :: cyy_interp
+type(sll_t_cubic_spline_interpolator_2d), target :: cyy_cs2d
 !> Interpolator to compute derivative xy
 class(sll_c_interpolator_2d), pointer :: cxy_interp
+type(sll_t_cubic_spline_interpolator_2d), target :: cxy_cs2d
 !> Interpolator to compute derivative x
 class(sll_c_interpolator_2d), pointer :: cx_interp
+type(sll_t_cubic_spline_interpolator_2d), target :: cx_cs2d
 !> Interpolator to compute derivative y
 class(sll_c_interpolator_2d), pointer :: cy_interp
+type(sll_t_cubic_spline_interpolator_2d), target :: cy_cs2d
 !> Interpolator to compute rhs coefficient
 class(sll_c_interpolator_2d), pointer :: ce_interp
+type(sll_t_cubic_spline_interpolator_2d), target :: ce_cs2d
 !> PLEASE ADD DOCUMENTATION
 class(sll_c_interpolator_2d), pointer :: a12_interp
+type(sll_t_cubic_spline_interpolator_2d), target :: a12_cs2d
 !> PLEASE ADD DOCUMENTATION
 class(sll_c_interpolator_2d), pointer :: a21_interp
+type(sll_t_cubic_spline_interpolator_2d), target :: a21_cs2d
 
 !> Coordinate transformation of the mesh
 class(sll_c_coordinate_transformation_2d_base), pointer :: transformation
@@ -173,7 +181,7 @@ allocate(a21_array(nx,ny))
 allocate(phi(nx,ny))
 
 transformation => transf
-cxx_interp => sll_f_new_cubic_spline_interpolator_2d( &
+call cxx_cs2d%init( &
           nx, &
           ny, &
           eta1_min, &
@@ -182,8 +190,10 @@ cxx_interp => sll_f_new_cubic_spline_interpolator_2d( &
           eta2_max, &
           sll_p_periodic, &
           sll_p_periodic)
+
+cxx_interp => cxx_cs2d
           
-cyy_interp => sll_f_new_cubic_spline_interpolator_2d( &
+call cyy_cs2d%init( &
           nx, &
           ny, &
           eta1_min, &
@@ -192,8 +202,10 @@ cyy_interp => sll_f_new_cubic_spline_interpolator_2d( &
           eta2_max, &
           sll_p_periodic, &
           sll_p_periodic) 
+
+cyy_interp => cyy_cs2d
           
- cxy_interp => sll_f_new_cubic_spline_interpolator_2d( &
+call cxy_cs2d%init( &
           nx, &
           ny, &
           eta1_min, &
@@ -203,7 +215,9 @@ cyy_interp => sll_f_new_cubic_spline_interpolator_2d( &
           sll_p_periodic, &
           sll_p_periodic)  
           
- cx_interp => sll_f_new_cubic_spline_interpolator_2d( &
+cxy_interp => cxy_cs2d
+
+call cx_cs2d%init( &
           nx, &
           ny, &
           eta1_min, &
@@ -212,7 +226,10 @@ cyy_interp => sll_f_new_cubic_spline_interpolator_2d( &
           eta2_max, &
           sll_p_periodic, &
           sll_p_periodic) 
- cy_interp => sll_f_new_cubic_spline_interpolator_2d( &
+
+cx_interp => cx_cs2d
+
+call cy_cs2d%init( &
           nx, &
           ny, &
           eta1_min, &
@@ -221,8 +238,10 @@ cyy_interp => sll_f_new_cubic_spline_interpolator_2d( &
           eta2_max, &
           sll_p_periodic, &
           sll_p_periodic)    
+
+cy_interp => cy_cs2d
                                          
-ce_interp => sll_f_new_cubic_spline_interpolator_2d( &
+call ce_cs2d%init( &
           nx, &
           ny, &
           eta1_min, &
@@ -231,7 +250,10 @@ ce_interp => sll_f_new_cubic_spline_interpolator_2d( &
           eta2_max, &
           sll_p_periodic, &
           sll_p_periodic)   
-a12_interp => sll_f_new_cubic_spline_interpolator_2d( &
+
+ce_interp => ce_cs2d
+
+call a12_cs2d%init( &
           nx, &
           ny, &
           eta1_min, &
@@ -240,7 +262,10 @@ a12_interp => sll_f_new_cubic_spline_interpolator_2d( &
           eta2_max, &
           sll_p_periodic, &
           sll_p_periodic) 
-a21_interp => sll_f_new_cubic_spline_interpolator_2d( &
+
+a12_interp => a12_cs2d
+
+call a21_cs2d%init( &
           nx, &
           ny, &
           eta1_min, &
@@ -249,6 +274,9 @@ a21_interp => sll_f_new_cubic_spline_interpolator_2d( &
           eta2_max, &
           sll_p_periodic, &
           sll_p_periodic)                             
+
+a21_interp => a21_cs2d
+
 !cxx_array = 1._f64          
 call coefxxyy_array(b11,b12,b21,b22,transf,eta1_min,eta2_min,delta1,delta2,nx,ny,cxx_array,cyy_array)          
 call cxx_interp%compute_interpolants( cxx_array )  

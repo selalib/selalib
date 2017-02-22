@@ -40,12 +40,13 @@ module sll_m_characteristics_1d_trapezoid_conservative
   implicit none
 
   public :: &
+    sll_t_trapezoid_conservative_1d_charac, &
     sll_f_new_trapezoid_conservative_1d_charac
 
   private
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
-  type,extends(sll_c_characteristics_1d_base) :: trapezoid_conservative_1d_charac_computer
+  type,extends(sll_c_characteristics_1d_base) :: sll_t_trapezoid_conservative_1d_charac
     sll_int32                               :: Npts
     sll_real64                              :: eta_min   
     sll_real64                              :: eta_max  
@@ -56,11 +57,11 @@ module sll_m_characteristics_1d_trapezoid_conservative
     sll_real64 :: tol
     sll_int32 :: bc_type 
   contains
-    procedure, pass(charac) :: initialize => &
+    procedure, pass(charac) :: init => &
       initialize_trapezoid_conservative_1d_charac
     procedure, pass(charac) :: compute_characteristics => &
       compute_trapezoid_conservative_1d_charac
-  end type trapezoid_conservative_1d_charac_computer
+  end type sll_t_trapezoid_conservative_1d_charac
 
 contains
   function sll_f_new_trapezoid_conservative_1d_charac(&
@@ -74,7 +75,7 @@ contains
       tol) &
       result(charac)
       
-    type(trapezoid_conservative_1d_charac_computer),pointer :: charac
+    type(sll_t_trapezoid_conservative_1d_charac),pointer :: charac
     sll_int32, intent(in) :: Npts
     sll_int32, intent(in), optional :: bc_type
     sll_real64, intent(in), optional  :: eta_min
@@ -111,7 +112,7 @@ contains
       maxiter, &
       tol)
       
-    class(trapezoid_conservative_1d_charac_computer) :: charac
+    class(sll_t_trapezoid_conservative_1d_charac) :: charac
     sll_int32, intent(in) :: Npts
     sll_int32, intent(in), optional :: bc_type
     sll_real64, intent(in), optional  :: eta_min
@@ -193,7 +194,7 @@ contains
       input, &
       output)
 
-    class(trapezoid_conservative_1d_charac_computer) :: charac
+    class(sll_t_trapezoid_conservative_1d_charac) :: charac
     sll_real64, dimension(:), intent(in) :: A
     sll_real64, intent(in) :: dt
     sll_real64, dimension(:), intent(in) ::  input
