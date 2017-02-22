@@ -21,7 +21,7 @@ program test_advection_1d_ampere
 #include "sll_working_precision.h"
 
   use sll_m_advection_1d_ampere, only: &
-    sll_f_new_advector_1d_ampere
+    sll_f_new_ampere_1d_advector
 
   use sll_m_advection_1d_base, only: &
     sll_t_advection_1d_base_ptr
@@ -71,7 +71,7 @@ SLL_ALLOCATE(input(nc_x+1),    ierr)
 SLL_ALLOCATE(output(nc_x+1),   ierr)
 
 do i = 1, nc_x+1
-  x(i) = xmin + real(i-1,f64)*(xmax-xmin)/real(nc_x,f64) - 0.5_f64
+  x(i) = xmin + (i-1)*(xmax-xmin)/nc_x - 0.5
 end do
 
 !$OMP PARALLEL
@@ -82,10 +82,10 @@ end do
 
 SLL_ALLOCATE(adv(psize),            ierr)
 
-solution = exp(-(x*x)/0.01_f64)
+solution = exp(-(x*x)/0.01)
 input = solution
 
-adv(prank+1)%ptr => sll_f_new_advector_1d_ampere(nc_x, xmin, xmax  )
+adv(prank+1)%ptr => sll_f_new_ampere_1d_advector(nc_x, xmin, xmax  )
 
 do istep = 1, nstep
    call adv(prank+1)%ptr%advect_1d_constant( a, dt, input, output)
@@ -96,7 +96,7 @@ end do
 err = maxval(abs(solution-input))
 
 print *,'# err=',err
-if(err <= 1d-3)then  
+if(err <= 1e-3)then  
   print *,'PASSED' 
 endif
 

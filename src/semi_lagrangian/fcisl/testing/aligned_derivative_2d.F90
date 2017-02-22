@@ -4,7 +4,7 @@ program aligned_derivative_2d
 #include "sll_working_precision.h"
 
   use sll_m_advection_1d_base, only: &
-    sll_c_advector_1d
+    sll_c_advection_1d_base
 
   use sll_m_advection_1d_periodic, only: &
     sll_f_new_periodic_1d_advector
@@ -31,8 +31,8 @@ program aligned_derivative_2d
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
   
   type(sll_t_oblic_2d_derivative), pointer :: deriv
-  class(sll_c_advector_1d), pointer :: adv_x1
-  !class(sll_c_advector_1d), pointer :: adv_x2
+  class(sll_c_advection_1d_base), pointer :: adv_x1
+  !class(sll_c_advection_1d_base), pointer :: adv_x2
   sll_int32 :: i1
   sll_int32 :: i2
   sll_int32 :: Nc_x1

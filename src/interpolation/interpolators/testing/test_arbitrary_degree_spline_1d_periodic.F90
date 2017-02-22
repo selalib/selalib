@@ -44,7 +44,7 @@ end do
 call random_number(x)
 x = x * (XMAX-XMIN)
   
-call interpolator%init(NPTS,XMIN,XMAX,sll_p_periodic,sll_p_periodic,SPL_DEG)
+call interpolator%initialize(NPTS,XMIN,XMAX,sll_p_periodic,sll_p_periodic,SPL_DEG)
 call interpolator%compute_interpolants(y)
   
 normL2 = 0.0_f64

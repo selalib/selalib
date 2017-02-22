@@ -45,7 +45,7 @@ program test_poisson_2d_sparse_grid_fft
 
    nc_eta1 = 20; nc_eta2 = 20
 
-   call interp%init(levels,order, order+1,0,eta_min,eta_max,0,0);
+   call interp%initialize(levels,order, order+1,0,eta_min,eta_max,0,0);
 
    SLL_ALLOCATE(ex(interp%size_basis),error)
    SLL_ALLOCATE(ey(interp%size_basis),error)
@@ -71,7 +71,7 @@ program test_poisson_2d_sparse_grid_fft
            sin(x2)/(2.0_f64+cos(x1));
    end do
 
-   call poisson%init( interp ) 
+   call poisson%initialize( interp ) 
    call poisson%solve(interp,rho,ex,ey)
 
    err(1) =  maxval(abs(ex_exact-ex))

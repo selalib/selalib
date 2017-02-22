@@ -43,7 +43,7 @@ module sll_m_poisson_1d_hmf
   implicit none
 
   public ::                     &
-    sll_s_poisson_1d_hmf_init,  &
+    sll_s_init_poisson_1d_hmf,  &
     sll_t_poisson_1d_hmf,       &
     sll_s_solve_poisson_1d_hmf, &
     sll_s_free_poisson_1d_hmf
@@ -63,7 +63,7 @@ module sll_m_poisson_1d_hmf
   
   contains
 
-    procedure, pass(self)    :: init => sll_s_poisson_1d_hmf_init
+    procedure, pass(self)    :: init => sll_s_init_poisson_1d_hmf
     procedure, pass(self)    :: free => sll_s_free_poisson_1d_hmf
     procedure, pass(poisson) :: compute_phi_from_rho => compute_phi_from_rho_1d_hmf
     procedure, pass(poisson) :: compute_e_from_rho => compute_E_from_rho_1d_hmf
@@ -73,7 +73,7 @@ module sll_m_poisson_1d_hmf
 contains
 
   !> Initialize the poisson 1d hmf solver
-  subroutine sll_s_poisson_1d_hmf_init(self,eta1_min,eta1_max,nc_eta1,error)
+  subroutine sll_s_init_poisson_1d_hmf(self,eta1_min,eta1_max,nc_eta1,error)
 
     class(sll_t_poisson_1d_hmf), intent(out)  :: self     !< Solver structure
     sll_int32,intent(in)                      :: nc_eta1  !< number of cells
@@ -93,7 +93,7 @@ contains
     call sll_s_fft_init_r2c_1d(self%fw,nc_eta1,self%tmp,self%rhok)
     call sll_s_fft_init_c2r_1d(self%bw,nc_eta1,self%rhok,self%tmp)
 
-  end subroutine sll_s_poisson_1d_hmf_init
+  end subroutine sll_s_init_poisson_1d_hmf
 
   !> Solve the 1d equation for the Vlasov-HMF model
   subroutine sll_s_solve_poisson_1d_hmf(self, field, rhs)
@@ -121,8 +121,8 @@ contains
 
   !> solves \f[ -\Delta \phi = \rho \f] in 2d
   subroutine compute_phi_from_rho_1d_hmf( poisson, phi, rho )
-    class(sll_t_poisson_1d_hmf)         :: poisson
-    sll_real64,dimension(:),intent(in)  :: rho
+    class(sll_t_poisson_1d_hmf), target :: poisson
+    sll_real64,dimension(:),intent(in) :: rho
     sll_real64,dimension(:),intent(out) :: phi
     
     stop ' compute phi from rho is not implemented '

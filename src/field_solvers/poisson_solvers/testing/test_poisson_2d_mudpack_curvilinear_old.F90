@@ -36,7 +36,7 @@ use sll_m_poisson_2d_mudpack_curvilinear_old, only: &
     sll_f_new_poisson_2d_mudpack_curvilinear_old
 
 use sll_m_cubic_spline_interpolator_2d, only: &
-  sll_t_cubic_spline_interpolator_2d
+  sll_f_new_cubic_spline_interpolator_2d
 
 use sll_m_interpolators_2d_base, only: &
   sll_c_interpolator_2d
@@ -47,7 +47,6 @@ type(sll_t_cartesian_mesh_2d),                  pointer :: mesh
 class(sll_c_coordinate_transformation_2d_base), pointer :: tau
 class(sll_c_poisson_2d_base),                   pointer :: poisson
 class(sll_c_interpolator_2d),                   pointer :: phi_interp2d
-type(sll_t_cubic_spline_interpolator_2d),       target  :: phi_cs2d
 
 sll_real64 :: r_min
 sll_real64 :: r_max
@@ -118,7 +117,7 @@ b12 = 0._f64
 b21 = 0._f64
 c   = 0._f64
 
-call phi_cs2d%init( &
+phi_interp2d => sll_f_new_cubic_spline_interpolator_2d( &
   nc_x1+1,                                              &
   nc_x2+1,                                              &
   x1_min,                                               &
@@ -127,8 +126,6 @@ call phi_cs2d%init( &
   x2_max,                                               &
   sll_p_periodic,                                       &
   sll_p_periodic)         
-
-phi_interp2d => phi_cs2d
 
 poisson => sll_f_new_poisson_2d_mudpack_curvilinear_old( &
  tau,                                                    &

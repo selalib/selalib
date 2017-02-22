@@ -52,7 +52,7 @@ program test_interpolation_3d
      levelsini(1) = levels; levelsini(2) = levels;
      levelsini(3) = levels; 
      ! Initialize sparse grid
-     call interp%init(levelsini,order(iter), order(iter)+1,0, eta_min, eta_max,0,0);
+     call interp%initialize(levelsini,order(iter), order(iter)+1,0, eta_min, eta_max,0,0);
  
      ! Allocate 
      SLL_ALLOCATE(f(interp%size_basis),ierr);

@@ -34,7 +34,7 @@ program test_characteristics_1d_trapezoid
     sll_c_characteristics_1d_base
 
   use sll_m_characteristics_1d_trapezoid, only: &
-    sll_t_trapezoid_1d_charac
+    sll_f_new_trapezoid_1d_charac
 
   use sll_m_cubic_spline_interpolator_1d, only: &
     sll_f_new_cubic_spline_interpolator_1d
@@ -52,8 +52,7 @@ program test_characteristics_1d_trapezoid
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
   class(sll_c_interpolator_1d),         pointer :: A_interp => null()
-  class(sll_c_characteristics_1d_base), pointer :: charac   => null()
-  type(sll_t_trapezoid_1d_charac),      target  :: trap   
+  class(sll_c_characteristics_1d_base), pointer :: trap     => null()
   class(sll_c_ch1d_test_case),      allocatable :: test_case
 
   sll_int32  :: num_cells
@@ -74,12 +73,12 @@ program test_characteristics_1d_trapezoid
   dt  = 0.7_f64
   tol = 1e-14_f64
   allocate( sll_t_ch1d_constant_flow :: test_case )
-  call s_init_characteristics_1d_trapezoid( )
-  error = sll_s_test_characteristics_1d( charac, test_case, num_cells, dt )
+  call s_init_characteristics_1d_trapezoid( trap, A_interp, test_case, num_cells )
+  error = sll_s_test_characteristics_1d( trap, test_case, num_cells, dt )
   print *, "Constant advection test-case: Tolerance =", tol
   print *, "max(abs(error)) = ", error
   if( error > tol ) passed = .false.
-  nullify(charac)
+  deallocate( trap      )
   deallocate( A_interp  )
   deallocate( test_case )
 
@@ -87,16 +86,16 @@ program test_characteristics_1d_trapezoid
   dt  = 0.2_f64
   tol = 2e-3_f64
   allocate( sll_t_ch1d_stationary_compression_wave :: test_case )
-  call s_init_characteristics_1d_trapezoid( )
+  call s_init_characteristics_1d_trapezoid( trap, A_interp, test_case, num_cells )
   do i=1,5
-    error = sll_s_test_characteristics_1d( charac, test_case, num_cells, dt )
+    error = sll_s_test_characteristics_1d( trap, test_case, num_cells, dt )
     print *, "Stationary compression wave test-case: Tolerance =", tol
     print *, "max(abs(error)) = ", error
     if( error > tol ) passed = .false.
     dt  = dt  /  2.0_f64
     tol = tol / (2.0_f64**3)
   end do
-  nullify(charac)
+  deallocate( trap      )
   deallocate( A_interp  )
   deallocate( test_case )
 
@@ -109,13 +108,18 @@ program test_characteristics_1d_trapezoid
 contains
 !>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 
-  subroutine s_init_characteristics_1d_trapezoid( )
+  subroutine s_init_characteristics_1d_trapezoid( &
+      trap, A_interp, test_case, num_cells )
+    class(sll_c_characteristics_1d_base), pointer    :: trap
+    class(sll_c_interpolator_1d),         pointer    :: A_interp
+    class(sll_c_ch1d_test_case),          intent(in) :: test_case
+    sll_int32,                            intent(in) :: num_cells
 
     character(len=*), parameter :: this_sub_name = &
       "s_init_characteristic_1d_trapezoid"
 
-    if( associated( charac ) ) then
-      SLL_ERROR( this_sub_name, "pointer argument 'charac' already associated" )
+    if( associated( trap ) ) then
+      SLL_ERROR( this_sub_name, "pointer argument 'trap' already associated" )
     else if( associated( A_interp ) ) then
       SLL_ERROR( this_sub_name, "pointer argument 'A_interp' already associated" )
     end if
@@ -128,15 +132,12 @@ contains
       bc_type    = sll_p_periodic )
 
     ! OBJECT TO BE TESTED: trapezoidal integrator of characteristic trajectories
-
-    call trap%init( &
+    trap => sll_f_new_trapezoid_1d_charac( &
       Npts     = num_cells+1,         &
       A_interp = A_interp,            &
       bc_type  = sll_p_periodic,      &
       eta_min  = test_case%eta_min(), &
       eta_max  = test_case%eta_max() )
-
-    charac => trap
 
   end subroutine s_init_characteristics_1d_trapezoid
 

@@ -6,7 +6,6 @@ program vp4d_multigrid
   use sll_vlasov4d_poisson
   use init_functions
   use sll_multigrid_2d
-  use sll_m_gnuplot_parallel
 
   implicit none
 
@@ -86,22 +85,22 @@ program vp4d_multigrid
 
   call read_input_file(vlasov)
 
-  call spl_x1%init(vlasov%nc_eta1+1,  &
+  call spl_x1%initialize(vlasov%nc_eta1+1,  &
                          vlasov%eta1_min,   &
                          vlasov%eta1_max,   &
                          sll_p_periodic)
 
-  call spl_x2%init(vlasov%nc_eta2+1,  &
+  call spl_x2%initialize(vlasov%nc_eta2+1,  &
                          vlasov%eta2_min,   &
                          vlasov%eta2_max,   &
                          sll_p_periodic)
 
-  call spl_x3%init(vlasov%nc_eta3+1,  &
+  call spl_x3%initialize(vlasov%nc_eta3+1,  &
                          vlasov%eta3_min,   &
                          vlasov%eta3_max,   &
                          sll_p_periodic)
 
-  call spl_x4%init(vlasov%nc_eta4+1,  &
+  call spl_x4%initialize(vlasov%nc_eta4+1,  &
                          vlasov%eta4_min,   &
                          vlasov%eta4_max,   &
                          sll_p_periodic)

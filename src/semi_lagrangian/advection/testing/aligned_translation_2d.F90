@@ -31,7 +31,7 @@ program aligned_translation_2d
 #include "sll_working_precision.h"
 
   use sll_m_advection_1d_base, only: &
-    sll_c_advector_1d
+    sll_c_advection_1d_base
 
   use sll_m_advection_1d_periodic, only: &
     sll_f_new_periodic_1d_advector
@@ -48,7 +48,7 @@ program aligned_translation_2d
     sll_p_pi
 
   use sll_m_cubic_spline_interpolator_2d, only: &
-    sll_t_cubic_spline_interpolator_2d
+    sll_f_new_cubic_spline_interpolator_2d
 
   use sll_m_fcisl_toroidal, only: &
     sll_s_compute_modulo_vect2d_inplace, &
@@ -84,8 +84,8 @@ program aligned_translation_2d
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
   type(sll_t_oblic_2d_advector), pointer :: adv  
-  class(sll_c_advector_1d), pointer :: adv_x1
-  class(sll_c_advector_1d), pointer :: adv_x2
+  class(sll_c_advection_1d_base), pointer :: adv_x1
+  class(sll_c_advection_1d_base), pointer :: adv_x2
   sll_int32 :: i1
   sll_int32 :: i2
   sll_int32 :: Nc_x1
@@ -151,7 +151,6 @@ program aligned_translation_2d
   sll_real64 :: err3  
   sll_real64 :: err4  
   class(sll_c_interpolator_2d), pointer :: interp_classic
-  type(sll_t_cubic_spline_interpolator_2d), target :: interp_cs2d
   sll_real64, dimension(:), allocatable :: params_aligned
   sll_int32 :: hermite_p
   sll_int32 :: lag_p
@@ -313,7 +312,7 @@ program aligned_translation_2d
 !    4) 
 
 
-  call interp_cs2d%init( &
+  interp_classic => sll_f_new_cubic_spline_interpolator_2d( &
     Nc_x1+1, &
     Nc_x2+1, &
     x1_min, &
@@ -323,7 +322,6 @@ program aligned_translation_2d
     sll_p_periodic, &
     sll_p_periodic)
 
-  interp_classic => interp_cs2d
 
   SLL_ALLOCATE(params_aligned(11),ierr)
   params_aligned(1) = R0

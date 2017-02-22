@@ -1085,8 +1085,8 @@ contains
   
   ! solves \Delta phi = -rho in 2d
   subroutine compute_phi_from_rho_2d_mudpack( poisson, phi, rho )
-    class(poisson_2d_mudpack_curvilinear) :: poisson
-    sll_real64,dimension(:,:),intent(in)  :: rho
+    class(poisson_2d_mudpack_curvilinear), target :: poisson
+    sll_real64,dimension(:,:),intent(in) :: rho
     sll_real64,dimension(:,:),intent(out) :: phi
     !sll_real64        :: phi(:,:)  !< Electric potential
     !sll_real64        :: rhs(:,:)  !< Charge density
@@ -1141,7 +1141,7 @@ contains
           print *,'#Problem mudpack_wrapper is not null()'
           stop
         endif
-        call associate_poisson (poisson)
+        mudpack_wrapper => poisson
 
 
         call mud2sp(iprm, &
@@ -1168,7 +1168,7 @@ contains
           print *,'#Problem mudpack_wrapper is not null()'
           stop
         endif
-        call associate_poisson (poisson)
+        mudpack_wrapper => poisson
 
         call mud2(iprm, &
           fprm, &
@@ -1193,7 +1193,7 @@ contains
           print *,'#Problem mudpack_wrapper is not null()'
           stop
         endif
-        call associate_poisson (poisson)
+        mudpack_wrapper => poisson
 
         call mud2cr(iprm, &
           fprm, &
@@ -1335,13 +1335,5 @@ contains
        return
     end if
   end subroutine mudpack_bndsp
-
-  subroutine associate_poisson( poisson )
-    type(poisson_2d_mudpack_curvilinear), target :: poisson
-
-    mudpack_wrapper => poisson
-
-  end subroutine associate_poisson
-  
 
 end module sll_m_poisson_2d_mudpack_curvilinear

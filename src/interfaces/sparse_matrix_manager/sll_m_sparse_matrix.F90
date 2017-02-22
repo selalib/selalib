@@ -51,7 +51,7 @@ public ::                                &
   sll_s_csr_add_one_constraint,          &
   sll_s_csr_todense,                     &
   sll_s_free_csr_matrix,                 &
-  sll_s_csr_matrix_with_constraint_init, &
+  sll_s_init_csr_matrix_with_constraint, &
   sll_s_add_to_csr_matrix,               &
   sll_t_csr_matrix,                      &
   sll_s_factorize_csr_matrix,            &
@@ -157,7 +157,7 @@ if (present(solver)) then
 #endif /* MUMPS */
 end if
 
-call sll_s_csr_matrix_init( &
+call sll_s_init_csr_matrix( &
   mat,                      &
   num_rows,                 &
   num_cols,                 &
@@ -182,7 +182,7 @@ end function new_csr_matrix_with_dof
 !> column index of the matrix, for the element i and local degree of freedom \ell
 !> @param[in] num_local_dof_col : number of local degrees of freedom for the columns
 
-subroutine sll_s_csr_matrix_init( mat,                 &
+subroutine sll_s_init_csr_matrix( mat,                 &
                                   num_rows,            &
                                   num_cols,            &
                                   num_elts,            &
@@ -215,7 +215,7 @@ sll_int32                                :: sz
 logical                                  :: ll_done
 
 #ifdef DEBUG
-print *,'#sll_s_csr_matrix_init'
+print *,'#sll_s_init_csr_matrix'
 #endif
 
 coef = 6
@@ -321,9 +321,9 @@ case (sll_p_mumps)
 
 end select
 
-end subroutine sll_s_csr_matrix_init
+end subroutine sll_s_init_csr_matrix
 
-subroutine sll_s_csr_matrix_with_constraint_init( mat, mat_a)
+subroutine sll_s_init_csr_matrix_with_constraint( mat, mat_a)
 
 type(sll_t_csr_matrix), intent(inout) :: mat
 type(sll_t_csr_matrix), intent(in) :: mat_a
@@ -333,7 +333,7 @@ mat%num_nz   = mat_a%num_nz + 2*mat_a%num_rows
 mat%num_rows = mat_a%num_rows  +  1
 mat%num_cols = mat_a%num_cols  +  1
 #ifdef DEBUG
-print*,'# sll_s_csr_matrix_with_constraint_init'
+print*,'# sll_s_init_csr_matrix_with_constraint'
 print*,'# num_nz mat, num_nz mat_tot', mat_a%num_nz,mat%num_nz 
 print*,'# num_rows mat, num_rows mat_tot',mat_a%num_rows , mat%num_rows
 print*,'# num_cols mat, num_cols mat_tot',mat_a%num_cols , mat%num_cols 
@@ -362,7 +362,7 @@ case(sll_p_mumps)
 #endif /* MUMPS */
 end select
 
-end subroutine sll_s_csr_matrix_with_constraint_init
+end subroutine sll_s_init_csr_matrix_with_constraint
 
 function sll_f_new_csr_matrix_with_constraint(mat_a) result(mat)
 
@@ -371,7 +371,7 @@ type(sll_t_csr_matrix)          :: mat_a
 
 sll_int32 :: ierr
 SLL_ALLOCATE(mat, ierr)
-call sll_s_csr_matrix_with_constraint_init( mat, mat_a)
+call sll_s_init_csr_matrix_with_constraint( mat, mat_a)
 
 end function sll_f_new_csr_matrix_with_constraint
 

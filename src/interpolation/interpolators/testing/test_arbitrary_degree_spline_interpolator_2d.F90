@@ -328,7 +328,7 @@ sll_real64 :: node_val
 
 k = k+1
 
-call ad2d%init( NPTS1,         &
+call ad2d%initialize( NPTS1,         &
                       NPTS2,         &
                       X1MIN,         &
                       X1MAX,         &

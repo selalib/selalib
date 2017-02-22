@@ -78,23 +78,33 @@ module sll_m_poisson_2d_elliptic_solver
   sll_int32, parameter :: SLL_DO_NOTHING_ELLIPTIC_SOLVER = 2 
 
   type,extends(sll_c_poisson_2d_base) :: poisson_2d_elliptic_solver      
-    type(sll_t_general_coordinate_elliptic_solver), pointer :: elliptic_solver
-    class(sll_c_scalar_field_2d_base), pointer     :: rho_field
-    class(sll_c_scalar_field_2d_base), pointer     :: a11_field
-    class(sll_c_scalar_field_2d_base), pointer     :: a12_field
-    class(sll_c_scalar_field_2d_base), pointer     :: a21_field
-    class(sll_c_scalar_field_2d_base), pointer     :: a22_field
-    class(sll_c_scalar_field_2d_base), pointer     :: b1_field
-    class(sll_c_scalar_field_2d_base), pointer     :: b2_field
-    class(sll_c_scalar_field_2d_base), pointer     :: c_field
-    class(sll_c_interpolator_2d), pointer          :: interp_rho
-    class(sll_c_interpolator_2d), pointer          :: interp_a11
-    class(sll_c_interpolator_2d), pointer          :: interp_a12
-    class(sll_c_interpolator_2d), pointer          :: interp_a21
-    class(sll_c_interpolator_2d), pointer          :: interp_a22
-    class(sll_c_interpolator_2d), pointer          :: interp_b1
-    class(sll_c_interpolator_2d), pointer          :: interp_b2
-    class(sll_c_interpolator_2d), pointer          :: interp_c
+    type(sll_t_general_coordinate_elliptic_solver), pointer      :: elliptic_solver
+    !class(sll_t_scalar_field_2d_discrete), pointer        :: phi_field
+    class(sll_c_scalar_field_2d_base), pointer                :: rho_field
+    class(sll_c_scalar_field_2d_base), pointer                :: a11_field
+    class(sll_c_scalar_field_2d_base), pointer                :: a12_field
+    class(sll_c_scalar_field_2d_base), pointer                :: a21_field
+    class(sll_c_scalar_field_2d_base), pointer                :: a22_field
+    class(sll_c_scalar_field_2d_base), pointer                :: b1_field
+    class(sll_c_scalar_field_2d_base), pointer                :: b2_field
+    class(sll_c_scalar_field_2d_base), pointer                :: c_field
+    class(sll_c_interpolator_2d), pointer                :: interp_rho
+    class(sll_c_interpolator_2d), pointer                :: interp_a11
+    class(sll_c_interpolator_2d), pointer                :: interp_a12
+    class(sll_c_interpolator_2d), pointer                :: interp_a21
+    class(sll_c_interpolator_2d), pointer                :: interp_a22
+    class(sll_c_interpolator_2d), pointer                :: interp_b1
+    class(sll_c_interpolator_2d), pointer                :: interp_b2
+    class(sll_c_interpolator_2d), pointer                :: interp_c
+    !type(sll_t_arbitrary_degree_spline_interpolator_2d)                           :: interp_rho
+    !type(sll_t_arbitrary_degree_spline_interpolator_2d)                           :: interp_phi
+!    type(sll_t_arbitrary_degree_spline_interpolator_2d)                           :: interp_a11
+!    type(sll_t_arbitrary_degree_spline_interpolator_2d)                           :: interp_a12
+!    type(sll_t_arbitrary_degree_spline_interpolator_2d)                           :: interp_a21
+!    type(sll_t_arbitrary_degree_spline_interpolator_2d)                           :: interp_a22
+!    type(sll_t_arbitrary_degree_spline_interpolator_2d)                           :: interp_b1
+!    type(sll_t_arbitrary_degree_spline_interpolator_2d)                           :: interp_b2
+!    type(sll_t_arbitrary_degree_spline_interpolator_2d)                           :: interp_c
     sll_int32 :: control
     logical :: precompute_rhs
   contains
@@ -147,7 +157,7 @@ contains
    with_constraint, &
    zero_mean ) 
    
-   class(poisson_2d_elliptic_solver)                       :: poisson
+   class(poisson_2d_elliptic_solver),        target  :: poisson
    class(sll_c_coordinate_transformation_2d_base), pointer :: transf
    sll_int32, intent(in)  :: spline_degree_eta1
    sll_int32, intent(in)  :: spline_degree_eta2
@@ -217,7 +227,7 @@ contains
     np_eta1 = num_cells_eta1 + 1
     np_eta2 = num_cells_eta2 + 1
     
-!    call poisson%interp_phi%init( &
+!    call poisson%interp_phi%initialize( &
 !         np_eta1, &
 !         np_eta2, &
 !         eta1_min, &
@@ -385,7 +395,7 @@ contains
 
    
        
-!    call poisson%interp_a11%init( &
+!    call poisson%interp_a11%initialize( &
 !         np_eta1, &
 !         np_eta2, &
 !         eta1_min, &
@@ -399,7 +409,7 @@ contains
 !         spline_degree_eta1, &
 !         spline_degree_eta2)     
 !          
-!     call poisson%interp_a12%init( &
+!     call poisson%interp_a12%initialize( &
 !         np_eta1, &
 !         np_eta2, &
 !         eta1_min, &
@@ -413,7 +423,7 @@ contains
 !         spline_degree_eta1, &
 !         spline_degree_eta2)    
 !           
-!    call poisson%interp_a21%init( &
+!    call poisson%interp_a21%initialize( &
 !         np_eta1, &
 !         np_eta2, &
 !         eta1_min, &
@@ -427,7 +437,7 @@ contains
 !         spline_degree_eta1, &
 !         spline_degree_eta2) 
 !          
-!    call poisson%interp_a22%init( &
+!    call poisson%interp_a22%initialize( &
 !         np_eta1, &
 !         np_eta2, &
 !         eta1_min, &
@@ -441,7 +451,7 @@ contains
 !         spline_degree_eta1, &
 !         spline_degree_eta2)   
 !
-!    call poisson%interp_a21%init( &
+!    call poisson%interp_a21%initialize( &
 !         np_eta1, &
 !         np_eta2, &
 !         eta1_min, &
@@ -455,7 +465,7 @@ contains
 !         spline_degree_eta1, &
 !         spline_degree_eta2) 
 !     
-!    call poisson%interp_c%init( &
+!    call poisson%interp_c%initialize( &
 !         np_eta1, &
 !         np_eta2, &
 !         eta1_min, &
@@ -469,7 +479,7 @@ contains
 !         spline_degree_eta1, &
 !         spline_degree_eta2)     
 !          
-!    call poisson%interp_b1%init( &
+!    call poisson%interp_b1%initialize( &
 !         np_eta1, &
 !         np_eta2, &
 !         eta1_min, &
@@ -483,7 +493,7 @@ contains
 !         spline_degree_eta1, &
 !         spline_degree_eta2)
 !      
-!    call poisson%interp_b2%init( &
+!    call poisson%interp_b2%initialize( &
 !         np_eta1, &
 !         np_eta2, &
 !         eta1_min, &
@@ -749,10 +759,10 @@ contains
   ! solves \Delta phi = -rho in 2d
   subroutine compute_phi_from_rho_2d_elliptic_solver(poisson,phi,rho )
     ! input variables 
-    class(poisson_2d_elliptic_solver)       :: poisson
-    sll_real64, dimension(:,:), intent(in)  :: rho
+    class(poisson_2d_elliptic_solver), target   :: poisson
+    sll_real64, dimension(:,:), intent(in)     :: rho
     ! output variables
-    sll_real64, dimension(:,:), intent(out) :: phi
+    sll_real64, dimension(:,:), intent(out)  :: phi
     ! local variables
     !class(sll_t_general_coordinate_elliptic_solver), pointer   :: elliptic_solver
     sll_real64 :: delta1

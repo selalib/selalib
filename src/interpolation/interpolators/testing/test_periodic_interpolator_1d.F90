@@ -53,7 +53,7 @@ do p=1,4
 !    u_exact(i+1) = cos(mode*twopi*(i-alpha)/N)
    end do
    print*, 'p=', p
-   call interp_per%init( N+1, xmin, xmax, sll_p_spline, 12)
+   call interp_per%initialize( N+1, xmin, xmax, sll_p_spline, 12)
    interp => interp_per
    call interp%interpolate_array_disp( N+1, u(1:N+1), -alpha, u_out(1:N+1))
    old_error = error
@@ -76,7 +76,7 @@ do p=1,4
 !    u_exact(i+1) = cos(mode*twopi*(i-alpha)/N)
    end do
    print*, 'p=', p
-   call interp_per%init( N+1, xmin, xmax, sll_p_lagrange, 12)
+   call interp_per%initialize( N+1, xmin, xmax, sll_p_lagrange, 12)
    interp => interp_per
    call interp%interpolate_array_disp(N+1, u(1:N+1), -alpha, u_out(1:N+1))
    old_error = error
@@ -103,7 +103,7 @@ end do
 !        u_exact(i+1) = cos(mode*twopi*(i-alpha)/N)
      end do
 
-     call interp_lagrange%init( N+1,xmin,xmax,sll_p_periodic,6)
+     call interp_lagrange%initialize( N+1,xmin,xmax,sll_p_periodic,6)
      interp => interp_lagrange
      call interp%interpolate_array_disp(N+1, u(1:N+1), -alpha, u_out(1:N+1))
 

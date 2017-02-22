@@ -78,11 +78,11 @@ program unit_test_4d
   delta_vx = (vx_max-vx_min)/(n_vx-1)
   delta_vy = (vy_max-vy_min)/(n_vy-1)
 
-  call spline_xy%init(n_x, n_y, x_min, x_max, y_min, y_max, &
+  call spline_xy%initialize(n_x, n_y, x_min, x_max, y_min, y_max, &
                             sll_p_periodic, sll_p_periodic )
   interp_xy   => spline_xy
 
-  call spline_vxvy%init(n_vx, n_vy, vx_min, vx_max, vy_min, vy_max, &
+  call spline_vxvy%initialize(n_vx, n_vy, vx_min, vx_max, vy_min, vy_max, &
                               sll_p_periodic, sll_p_periodic )
   interp_vxvy => spline_vxvy
 

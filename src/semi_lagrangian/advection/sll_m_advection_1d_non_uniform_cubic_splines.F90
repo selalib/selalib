@@ -23,7 +23,7 @@ module sll_m_advection_1d_non_uniform_cubic_splines
 #include "sll_working_precision.h"
 
   use sll_m_advection_1d_base, only: &
-    sll_c_advector_1d
+    sll_c_advection_1d_base
 
   use sll_m_cubic_non_uniform_splines, only: &
     sll_s_compute_spline_nonunif_1d_periodic_aux2, &
@@ -33,13 +33,12 @@ module sll_m_advection_1d_non_uniform_cubic_splines
   implicit none
 
   public :: &
-    sll_t_advector_1d_non_uniform_cubic_splines, &
-    sll_f_new_advector_1d_non_uniform_cubic_splines
+    sll_f_new_non_uniform_cubic_splines_1d_advector
 
   private
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
-  type,extends(sll_c_advector_1d) :: sll_t_advector_1d_non_uniform_cubic_splines
+  type,extends(sll_c_advection_1d_base) :: non_uniform_cubic_splines_1d_advector
 
      sll_int32                            :: num_cells
      sll_real64                           :: xmin
@@ -51,14 +50,14 @@ module sll_m_advection_1d_non_uniform_cubic_splines
      sll_real64, dimension(:), pointer :: coeffs
      sll_real64, dimension(:), pointer :: Xstar
   contains
-    procedure, pass(adv) :: init => &
-      initialize_sll_t_advector_1d_non_uniform_cubic_splines
+    procedure, pass(adv) :: initialize => &
+      initialize_non_uniform_cubic_splines_1d_advector
     procedure, pass(adv) :: advect_1d_constant => &
       non_uniform_cubic_splines_advect_1d_constant
     procedure, pass(adv) :: advect_1d => &
       non_uniform_cubic_splines_advect_1d
     procedure, pass(adv) :: delete => delete_non_unif_cubic_splines_1d_adv
-  end type sll_t_advector_1d_non_uniform_cubic_splines
+  end type non_uniform_cubic_splines_1d_advector
    
 !!$  interface sll_o_delete
 !!$     module procedure delete_non_unif_cubic_splines_1d_adv
@@ -68,7 +67,7 @@ module sll_m_advection_1d_non_uniform_cubic_splines
 contains
   
 
-  function sll_f_new_advector_1d_non_uniform_cubic_splines(&
+  function sll_f_new_non_uniform_cubic_splines_1d_advector(&
     num_cells, &
     xmin, &
     xmax, &
@@ -76,7 +75,7 @@ contains
     node_positions &
     ) &
     result(adv)      
-    type(sll_t_advector_1d_non_uniform_cubic_splines), pointer :: adv
+    type(non_uniform_cubic_splines_1d_advector), pointer :: adv
     sll_int32,  intent(in)               :: num_cells
     sll_real64, intent(in)               :: xmin
     sll_real64, intent(in)               :: xmax
@@ -85,7 +84,7 @@ contains
     sll_int32 :: ierr
 
     SLL_ALLOCATE(adv,ierr)
-    call initialize_sll_t_advector_1d_non_uniform_cubic_splines(&
+    call initialize_non_uniform_cubic_splines_1d_advector(&
       adv, &
       num_cells, &
       xmin, &
@@ -93,10 +92,10 @@ contains
       order, &
       node_positions)
     
-  end function sll_f_new_advector_1d_non_uniform_cubic_splines
+  end function sll_f_new_non_uniform_cubic_splines_1d_advector
 
   
-  subroutine initialize_sll_t_advector_1d_non_uniform_cubic_splines(&
+  subroutine initialize_non_uniform_cubic_splines_1d_advector(&
       adv, &
       num_cells, &
       xmin, &
@@ -104,7 +103,7 @@ contains
       order, &
       node_positions)
       
-    class(sll_t_advector_1d_non_uniform_cubic_splines) :: adv
+    class(non_uniform_cubic_splines_1d_advector) :: adv
     sll_int32,  intent(in)               :: num_cells
     sll_real64, intent(in)               :: xmin
     sll_real64, intent(in)               :: xmax
@@ -128,13 +127,13 @@ contains
     
     if(order.ne.4)then
       print *,'#Warning order=4 is enforced'
-      print *,'#in initialize_sll_t_advector_1d_non_uniform_cubic_splines'
+      print *,'#in initialize_non_uniform_cubic_splines_1d_advector'
     endif
     
     if(present(node_positions))then
       if(size(node_positions,1)<num_cells+1)then
         print *,'#size problem for node_positions'
-        print *,'#in subroutine initialize_sll_t_advector_1d_non_uniform_cubic_splines'
+        print *,'#in subroutine initialize_non_uniform_cubic_splines_1d_advector'
         stop
       endif
       SLL_ALLOCATE(adv%node_positions(num_cells+1),ierr)
@@ -159,7 +158,7 @@ contains
     adv%node_pos(0:num_cells)=adv%node_positions(1:num_cells+1)
     call sll_s_setup_spline_nonunif_1d_periodic_aux( adv%node_pos, num_cells, adv%buf, adv%ibuf)
     
-  end subroutine initialize_sll_t_advector_1d_non_uniform_cubic_splines   
+  end subroutine initialize_non_uniform_cubic_splines_1d_advector   
 
 
 
@@ -174,7 +173,7 @@ contains
     dt, &
     input, &
     output)
-    class(sll_t_advector_1d_non_uniform_cubic_splines) :: adv
+    class(non_uniform_cubic_splines_1d_advector) :: adv
     sll_real64, intent(in) :: A
     sll_real64, intent(in) :: dt 
     sll_real64, dimension(:), intent(in) :: input
@@ -224,7 +223,7 @@ contains
     dt, &
     input, &
     output)
-    class(sll_t_advector_1d_non_uniform_cubic_splines) :: adv
+    class(non_uniform_cubic_splines_1d_advector) :: adv
     sll_real64, dimension(:), intent(in) :: A
     sll_real64, intent(in) :: dt 
     sll_real64, dimension(:), intent(in) :: input
@@ -360,7 +359,7 @@ contains
   end subroutine constant_advection_spl_non_unif_per
 
   subroutine delete_non_unif_cubic_splines_1d_adv( adv )
-    class(sll_t_advector_1d_non_uniform_cubic_splines), intent(inout) :: adv
+    class(non_uniform_cubic_splines_1d_advector), intent(inout) :: adv
     sll_int32 :: ierr
     SLL_DEALLOCATE(adv%node_positions,ierr)
     SLL_DEALLOCATE(adv%buf,ierr)

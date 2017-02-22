@@ -40,7 +40,7 @@ program test_gces_full_periodic_prototype
     sll_p_es_gauss_legendre, &
     sll_s_factorize_mat_es_prototype, &
     sll_t_general_coordinate_elliptic_solver, &
-    sll_s_general_elliptic_solver_prototype_init, &
+    sll_s_initialize_general_elliptic_solver_prototype, &
     sll_s_solve_general_coordinates_elliptic_eq_prototype
 
   use sll_m_interpolators_2d_base, only: &
@@ -363,7 +363,7 @@ endif
 integral_solution       = 0.0_f64
 integral_exact_solution = 0.0_f64
 
-call sll_s_general_elliptic_solver_prototype_init( es, &
+call sll_s_initialize_general_elliptic_solver_prototype( es, &
 &                spline_degree1,                       &
 &                spline_degree2,                       &
 &                npts1-1,                              &
@@ -415,14 +415,14 @@ end do
 integral_solution       = sum(calculated)*h1*h2
 integral_exact_solution = sum(reference)*h1*h2
 
-call rho%free()
-call c_field%free()
-call a11_field_mat%free()
-call a12_field_mat%free()
-call a21_field_mat%free()
-call b1_field_vect%free()
-call b2_field_vect%free()
-call a22_field_mat%free()
+call rho%delete()
+call c_field%delete()
+call a11_field_mat%delete()
+call a12_field_mat%delete()
+call a21_field_mat%delete()
+call b1_field_vect%delete()
+call b2_field_vect%delete()
+call a22_field_mat%delete()
 call tau%delete()
 
 print"('integral solution       =',g15.3)", integral_solution

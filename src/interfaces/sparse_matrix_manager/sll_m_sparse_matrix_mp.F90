@@ -31,7 +31,7 @@ module sll_m_sparse_matrix_mp
   implicit none
 
   public :: &
-    sll_s_csr_matrix_mp_init, &
+    sll_s_initialize_csr_matrix_mp, &
     sll_f_new_csr_matrix_mp
 
   private
@@ -75,7 +75,7 @@ contains
     sll_int32, dimension(:),intent(in)      :: num_local_dof_col
     sll_int32 :: ierr
     SLL_ALLOCATE(mat, ierr)
-    call sll_s_csr_matrix_mp_init( &
+    call sll_s_initialize_csr_matrix_mp( &
       mat, &
       num_rows, &
       num_cols, &
@@ -101,7 +101,7 @@ contains
   !> param[in] local_to_global_col : local_to_global_col(p,\ell,i) gives the global 
   !> column index of the matrix, for the element i and local degree of freedom \ell for patch p
   !> param[in] num_local_dof_col : num_local_dof_col(p) number of local degrees of freedom for the columns for each patch
-  subroutine sll_s_csr_matrix_mp_init( &
+  subroutine sll_s_initialize_csr_matrix_mp( &
     mat, &
     num_rows, &
     num_cols, &
@@ -181,7 +181,7 @@ contains
     SLL_DEALLOCATE_ARRAY(lpi_columns,ierr)
     SLL_DEALLOCATE_ARRAY(lpi_occ,ierr)
 
-  end subroutine sll_s_csr_matrix_mp_init
+  end subroutine sll_s_initialize_csr_matrix_mp
   
   integer function sll_count_non_zero_elts_mp( &
        ai_nR,&

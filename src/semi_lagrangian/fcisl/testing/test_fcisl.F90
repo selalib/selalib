@@ -4,7 +4,7 @@ program test_fcisl
 #include "sll_working_precision.h"
 
   use sll_m_advection_1d_base, only: &
-    sll_c_advector_1d
+    sll_c_advection_1d_base
 
   use sll_m_advection_1d_periodic, only: &
     sll_f_new_periodic_1d_advector
@@ -52,7 +52,7 @@ program test_fcisl
   sll_real64 :: delta_x1
   sll_real64 :: delta_x2
   type(sll_t_oblic_derivative), pointer :: deriv
-  class(sll_c_advector_1d), pointer :: adv
+  class(sll_c_advection_1d_base), pointer :: adv
   sll_int32 :: degree
   sll_real64, dimension(:,:), allocatable :: phi
   sll_real64, dimension(:,:), allocatable :: phi_at_aligned

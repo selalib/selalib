@@ -51,8 +51,8 @@ program test_const_coef_adv_2d
   type(sll_t_hdf5_ser_handle) :: hfile_id
 
   ! initialize interpolator
-  call interp_eta1%init( N1, XMIN, XMAX, sll_p_periodic )
-  call interp_eta2%init( N2, XMIN, XMAX, sll_p_periodic )
+  call interp_eta1%initialize( N1, XMIN, XMAX, sll_p_periodic )
+  call interp_eta2%initialize( N2, XMIN, XMAX, sll_p_periodic )
   interp_eta1_ptr => interp_eta1
   interp_eta2_ptr => interp_eta2
 

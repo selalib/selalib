@@ -35,7 +35,7 @@ program unit_test_initializers_4d
     sll_c_coordinate_transformation_2d_base
 
   use sll_m_coordinate_transformations_2d, only: &
-    sll_t_coordinate_transformation_2d_analytic
+    sll_f_new_coordinate_transformation_2d_analytic
 
   use sll_m_remapper, only: &
     sll_o_compute_local_sizes, &
@@ -54,14 +54,13 @@ program unit_test_initializers_4d
 
 #define MPI_MASTER 0
 
-type(sll_t_layout_4d),                             pointer :: layout
-type(sll_t_cartesian_mesh_2d),                     pointer :: mx
-type(sll_t_cartesian_mesh_2d),                     pointer :: mv
-type(sll_t_cartesian_mesh_4d),                     pointer :: mesh_4d
-class(sll_c_coordinate_transformation_2d_base),    pointer :: tx
-type(sll_t_coordinate_transformation_2d_analytic), target  :: ta
-sll_real64, dimension(2)                                   :: params_identity
-sll_real64, dimension(:,:,:,:), allocatable                :: f
+type(sll_t_layout_4d),                              pointer :: layout
+type(sll_t_cartesian_mesh_2d),                  pointer :: mx
+type(sll_t_cartesian_mesh_2d),                  pointer :: mv
+type(sll_t_cartesian_mesh_4d),                  pointer :: mesh_4d
+class(sll_c_coordinate_transformation_2d_base), pointer :: tx
+sll_real64, dimension(2)                              :: params_identity
+sll_real64, dimension(:,:,:,:), allocatable           :: f
 
 
 sll_int32  :: prank
@@ -86,7 +85,7 @@ mx => sll_f_new_cartesian_mesh_2d(63,63)
 mv => sll_f_new_cartesian_mesh_2d(63,63)
 
 ! initialize the transformation
-call ta%init(  &
+tx => sll_f_new_coordinate_transformation_2d_analytic( &
      "identity_transformation",                  &
      mx,                                         &
      sll_f_identity_x1,                                &
@@ -96,8 +95,6 @@ call ta%init(  &
      sll_f_identity_jac21,                             &
      sll_f_identity_jac22,                             &
      params_identity )
-
-tx => ta
 
 ! initialize the array
 

@@ -188,8 +188,8 @@ program VP1d_BSL_time_split
        (/0.0_f64/) ) 
 
   ! initialize interpolators
-  call interp_spline_x%init( Ncx + 1, xmin, xmax, sll_p_periodic )
-  call interp_spline_v%init( Ncv + 1, vmin, vmax, SLL_HERMITE )
+  call interp_spline_x%initialize( Ncx + 1, xmin, xmax, sll_p_periodic )
+  call interp_spline_v%initialize( Ncv + 1, vmin, vmax, SLL_HERMITE )
   interp_x => interp_spline_x
   interp_v => interp_spline_v
 
@@ -199,8 +199,8 @@ program VP1d_BSL_time_split
   SLL_ALLOCATE(e_app(Ncx+1),ierr)
 
   ! initialization of sll_m_distribution_function
-  call init_landau%init(mesh2d_base, NODE_CENTERED_FIELD, eps, kmode, is_delta_f)
-  call init_tsi%init(mesh2d_base, NODE_CENTERED_FIELD, eps, kmode, v0, is_delta_f)
+  call init_landau%initialize(mesh2d_base, NODE_CENTERED_FIELD, eps, kmode, is_delta_f)
+  call init_tsi%initialize(mesh2d_base, NODE_CENTERED_FIELD, eps, kmode, v0, is_delta_f)
   if (case == "landau") then
      p_init_f => init_landau
   else if (case == "tsi") then

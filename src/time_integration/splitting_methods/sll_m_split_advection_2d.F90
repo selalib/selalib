@@ -27,7 +27,7 @@ module sll_m_split_advection_2d
     sll_c_interpolator_1d
 
   use sll_m_operator_splitting, only: &
-    sll_s_operator_splitting_init, &
+    sll_s_initialize_operator_splitting, &
     sll_t_operator_splitting
 
   implicit none
@@ -344,7 +344,7 @@ contains
     this%spl_eta2 => sll_f_new_cubic_nonunif_spline_1d( n2-1, sll_p_periodic)
     
 
-    call sll_s_operator_splitting_init( &
+    call sll_s_initialize_operator_splitting( &
       this, &
       split_case, &
       split_step, &

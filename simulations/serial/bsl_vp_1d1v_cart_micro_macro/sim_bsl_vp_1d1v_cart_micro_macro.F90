@@ -303,13 +303,13 @@ program sim_bsl_vp_1d1v_cart_micro_macro
   select case (interpol_x)
   case (1) ! periodic cubic sll_p_spline
      interp_spline_x => sll_f_new_cubic_spline_1d( Ncx + 1, xmin, xmax, sll_p_periodic )
-!     call interp_spline_x%init( Ncx + 1, xmin, xmax, sll_p_periodic )
+!     call interp_spline_x%initialize( Ncx + 1, xmin, xmax, sll_p_periodic )
 !     interp_x => interp_spline_x
   case (2) ! arbitrary order periodic splines
-     call interp_per_x%init( Ncx + 1, xmin, xmax, sll_p_spline, order_x)
+     call interp_per_x%initialize( Ncx + 1, xmin, xmax, sll_p_spline, order_x)
      interp_x => interp_per_x
   case(3) ! arbitrary order sll_p_lagrange periodic interpolation
-     call interp_per_x%init( Ncx + 1, xmin, xmax, sll_p_lagrange, order_x)
+     call interp_per_x%initialize( Ncx + 1, xmin, xmax, sll_p_lagrange, order_x)
      interp_x => interp_per_x
   case default
      print*,'interpolation in x number ', interpol_x, ' not implemented' 
@@ -319,14 +319,14 @@ program sim_bsl_vp_1d1v_cart_micro_macro
       interp_spline_v => sll_f_new_cubic_spline_1d( Ncv + 1,vmin, vmax, sll_p_hermite )
       interp_spline_vh => sll_f_new_cubic_spline_1d( Ncvh + 1, vh_array(1), vh_array(Ncvh+1), sll_p_hermite )
   case (2) ! arbitrary order periodic splines
-     call interp_per_v%init( Ncv + 1, vmin, vmax, sll_p_spline, order_v)
+     call interp_per_v%initialize( Ncv + 1, vmin, vmax, sll_p_spline, order_v)
      interp_v => interp_per_v
   case(3) ! arbitrary order sll_p_lagrange periodic interpolation
-     call interp_per_v%init( Ncv + 1, vmin, vmax, sll_p_lagrange, order_v)
+     call interp_per_v%initialize( Ncv + 1, vmin, vmax, sll_p_lagrange, order_v)
      interp_v => interp_per_v
   case(4) ! arbitrary order open sll_p_spline interpolation   
      !PN remove odd_degree replaced by cubic_spline
-     call interp_comp_v%init( Ncv + 1, vmin, vmax, sll_p_hermite)!order_v)
+     call interp_comp_v%initialize( Ncv + 1, vmin, vmax, sll_p_hermite)!order_v)
   case default
      print*,'interpolation in x number ', interpol_v, ' not implemented' 
   end select

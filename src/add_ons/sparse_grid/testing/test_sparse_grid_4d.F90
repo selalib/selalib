@@ -58,7 +58,7 @@ program test_interpolation_4d
      levelsini(1) = levels; levelsini(2) = levels;
      levelsini(3) = levels; levelsini(4) = levels;
      ! Initialize sparse grid
-     call interp%init(levelsini,order(iter), order(iter)+1,0, eta_min, eta_max);
+     call interp%initialize(levelsini,order(iter), order(iter)+1,0, eta_min, eta_max);
  
      ! Allocate 
      SLL_ALLOCATE(f(interp%size_basis),ierr);
@@ -167,7 +167,7 @@ print*, 'Displacement non-constant in 1d'
      levelsini(1) = levels; levelsini(2) = levels;
      levelsini(3) = levels; levelsini(4) = levels;
      ! Initialize sparse grid
-     call interp%init(levelsini,order(iter), order(iter)+1,0, eta_min, eta_max);
+     call interp%initialize(levelsini,order(iter), order(iter)+1,0, eta_min, eta_max);
  
      ! Allocate 
      SLL_ALLOCATE(f(interp%size_basis),ierr);
@@ -298,9 +298,9 @@ print*, 'Displacement non-constant in 2d'
      levelsini(1) = levels; levelsini(2) = levels;
      levelsini(3) = levels; levelsini(4) = levels;
      ! Initialize sparse grid
-     call interp%init(levelsini,order(iter), order(iter)+1,0,&
+     call interp%initialize(levelsini,order(iter), order(iter)+1,0,&
           eta_min, eta_max);
-     call interp2d%init(levelsini(1:2),order(iter), order(iter)+1,0, &
+     call interp2d%initialize(levelsini(1:2),order(iter), order(iter)+1,0, &
           eta_min(1:2), eta_max(1:2),0,0);
  
      ! Allocate 

@@ -21,6 +21,8 @@ module sll_m_poisson_3d_base
     !> PLEASE ADD DOCUMENTATION
     procedure(signature_compute_phi_from_rho_3d), deferred, pass(poisson) :: &
       compute_phi_from_rho
+!    procedure(signature_compute_E_from_phi_2d), deferred, pass(poisson) :: &
+!      compute_E_from_phi  
     !> PLEASE ADD DOCUMENTATION
     procedure(signature_compute_E_from_rho_3d), deferred, pass(poisson) :: &
       compute_E_from_rho

@@ -15,7 +15,6 @@ program unit_test_2d
     sll_v_world_collective
 
   use sll_m_common_array_initializers, only: &
-    sll_i_scalar_initializer_4d, &
     sll_f_landau_initializer_4d
 
   use sll_m_constants, only: &
@@ -27,16 +26,16 @@ program unit_test_2d
   use sll_m_distribution_function_4d_multipatch, only: &
     sll_s_compute_charge_density_multipatch, &
     sll_t_distribution_function_4d_multipatch, &
-    sll_f_new_distribution_function_4d_multipatch
+    sll_f_new_distribution_function_4d_multipatch, &
+    sll_o_delete
 
   use sll_m_scalar_field_2d_multipatch, only: &
     sll_f_new_scalar_field_multipatch_2d, &
-    sll_t_scalar_field_multipatch_2d
+    sll_t_scalar_field_multipatch_2d, &
+    sll_o_delete
 
   use sll_m_utilities, only: &
     sll_f_is_even
-
-
 
   implicit none
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -53,8 +52,6 @@ program unit_test_2d
   sll_int32 :: nproc_factor2
   sll_real64, dimension(5) :: landau_params
   type(sll_t_cartesian_mesh_2d), pointer :: meshv
-  procedure(sll_i_scalar_initializer_4d), pointer        :: init_function
-
 
   call sll_s_boot_collective()
   rank = sll_f_get_collective_rank(sll_v_world_collective)
@@ -101,8 +98,7 @@ program unit_test_2d
   f_mp => sll_f_new_distribution_function_4d_multipatch( sll_v_world_collective, &
        t_mp, meshv, nproc_factor1, nproc_factor2 )
 
-  init_function => sll_f_landau_initializer_4d
-  call f_mp%init( init_function, landau_params )
+  call f_mp%initialize( sll_f_landau_initializer_4d, landau_params )
 
   call sll_s_compute_charge_density_multipatch( f_mp, rho_mp )
 
@@ -115,9 +111,9 @@ program unit_test_2d
      call rho_mp%write_to_file(1) ! iplot must be > 0 [YG - 06.10.2015]
   end if
 
-  call f_mp%free()
-  call rho_mp%free()
-  call t_mp%free()
+  call sll_o_delete(f_mp)
+  call sll_o_delete(rho_mp)
+  call t_mp%delete()
 
 
   print *, "PASSED"

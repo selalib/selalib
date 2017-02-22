@@ -19,7 +19,7 @@ if(BUILD_TESTING)
   file( COPY ${INPUT_FILES} DESTINATION ${CMAKE_CURRENT_BINARY_DIR} )
   set(  ARGS ${CMAKE_CURRENT_BINARY_DIR}/vpsim2d_cartesian_input )
   add_mpi_test( ${TEST_NAME} ${EXECUTABLE} ${PROCS} ${ARGS} )
-  set_tests_properties( ${TEST_NAME} PROPERTIES PASS_REGULAR_EXPRESSION "PASSED" TIMEOUT 120)
+  set_tests_properties( ${TEST_NAME} PROPERTIES PASS_REGULAR_EXPRESSION "PASSED" )
 endif(BUILD_TESTING)
 
 #==============================================================================

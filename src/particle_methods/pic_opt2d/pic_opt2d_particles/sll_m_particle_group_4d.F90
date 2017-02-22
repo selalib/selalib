@@ -38,8 +38,6 @@ module sll_m_particle_group_4d
 
   public :: &
     sll_f_new_particle_4d_group, &
-    sll_s_particle_4d_group_init, &
-    sll_s_particle_4d_group_free, &
     sll_o_delete, &
     sll_t_particle_group_4d
 
@@ -60,26 +58,24 @@ module sll_m_particle_group_4d
   end type sll_t_particle_group_4d
   
   interface sll_o_delete
-     module procedure sll_s_particle_4d_group_free
+     module procedure delete_particle_4d_group
   end interface sll_o_delete
 
 contains
 
-  subroutine sll_s_particle_4d_group_init( &
-       res,                 &
+  function sll_f_new_particle_4d_group( &
        num_particles,       &
        particle_array_size, &
        guard_list_size,     &
        qoverm,              &
-       mesh ) 
+       mesh ) result(res)
 
-    type(sll_t_particle_group_4d)         :: res
-    sll_int32,  intent(in)                :: num_particles
-    sll_int32,  intent(in)                :: particle_array_size
-    sll_int32,  intent(in)                :: guard_list_size
-    sll_real64, intent(in)                :: qoverm
-    type(sll_t_cartesian_mesh_2d), target :: mesh
-
+    type(sll_t_particle_group_4d), pointer :: res
+    sll_int32,  intent(in) :: num_particles
+    sll_int32,  intent(in) :: particle_array_size
+    sll_int32,  intent(in) :: guard_list_size
+    sll_real64, intent(in) :: qoverm
+    type(sll_t_cartesian_mesh_2d), pointer :: mesh
     sll_int32 :: ierr
     sll_int32 :: n_thread
     sll_int32 :: thread_id
@@ -91,6 +87,7 @@ contains
        STOP
     end if
 
+    SLL_ALLOCATE( res, ierr )
     res%number_particles = num_particles
     res%active_particles = num_particles
     res%guard_list_size  = guard_list_size
@@ -121,38 +118,14 @@ contains
     SLL_ALLOCATE( res%p_guard(thread_id+1)%g_list(1:nn),ierr)
     !$omp end parallel
     
+    if (.not.associated(mesh) ) then
+       print*, 'error: passed mesh not associated'
+    endif
     res%mesh => mesh
-
-  end subroutine sll_s_particle_4d_group_init
-
-  function sll_f_new_particle_4d_group( &
-       num_particles,       &
-       particle_array_size, &
-       guard_list_size,     &
-       qoverm,              &
-       mesh ) result(res)
-
-    type(sll_t_particle_group_4d), pointer :: res
-    sll_int32,  intent(in) :: num_particles
-    sll_int32,  intent(in) :: particle_array_size
-    sll_int32,  intent(in) :: guard_list_size
-    sll_real64, intent(in) :: qoverm
-    type(sll_t_cartesian_mesh_2d), pointer :: mesh
-    sll_int32 :: ierr
-
-    SLL_ALLOCATE( res, ierr )
-
-    call sll_s_particle_4d_group_init( &
-       res,                 &
-       num_particles,       &
-       particle_array_size, &
-       guard_list_size,     &
-       qoverm,              &
-       mesh ) 
 
   end function sll_f_new_particle_4d_group
 
-  subroutine sll_s_particle_4d_group_free(p_group)
+  subroutine delete_particle_4d_group(p_group)
     type(sll_t_particle_group_4d), pointer :: p_group
     sll_int32 :: ierr
     sll_int32 :: thread_id
@@ -171,7 +144,7 @@ contains
     SLL_DEALLOCATE(p_group%p_list, ierr)
     SLL_DEALLOCATE(p_group%p_guard, ierr)
     SLL_DEALLOCATE(p_group, ierr)
-  end subroutine sll_s_particle_4d_group_free
+  end subroutine delete_particle_4d_group
 
 
 end module sll_m_particle_group_4d

@@ -1,8 +1,6 @@
 #ifndef _sll_memory_h_
 #define _sll_memory_h_
 
-/*
-
 !**************************************************************
 !  Copyright INRIA
 !  Authors : 
@@ -70,22 +68,8 @@
   ! -ffree-line-length-none
   !
   ! *************************************************************************
-*/
  
 use sll_m_memory, only : sll_s_test_error_code
-
-#ifdef __PGI
-
-#define SLL_ALLOCATE(array_name_and_lims, error_var) allocate(array_name_and_lims, stat=error_var)
-
-#define SLL_DEALLOCATE(ptr, error_var) deallocate(ptr, stat=error_var); nullify(ptr);
-
-#define SLL_CLEAR_ALLOCATE(arry_name_and_lims, error_var) \
-allocate(arry_name_and_lims); arry_name_and_lims=0.0_8
-
-#define SLL_DEALLOCATE_ARRAY(array, error_var) deallocate(array, stat=error_var)
-
-#else
 
 #define SLL_ALLOCATE(array_name_and_lims, error_var)   \
   allocate(array_name_and_lims, stat=error_var);      \
@@ -98,22 +82,17 @@ allocate(arry_name_and_lims); arry_name_and_lims=0.0_8
   __LINE__); \
   nullify(ptr);
 
-#define SLL_CLEAR_ALLOCATE(arry_name_and_lims, error_var) \
-  SLL_ALLOCATE(arry_name_and_lims, error_var)             \
-  SLL_INIT_ARRAY(arry_name_and_lims, 0.0_8) 
-
-
 #define SLL_DEALLOCATE_ARRAY(array, error_var) \
   deallocate(array, stat=error_var);           \
   call sll_s_test_error_code(error_var, 'Failed array deallocation: ', __FILE__, \
   __LINE__ ); 
 
-#endif /* __PGI */
-
 #define SLL_INIT_ARRAY(arry,val) arry = val;
 
+#define SLL_CLEAR_ALLOCATE(arry_name_and_lims, error_var) \
+  SLL_ALLOCATE(arry_name_and_lims, error_var)             \
+  SLL_INIT_ARRAY(arry_name_and_lims, 0.0_8) 
 
-/*
   ! **************************************************************************
   ! IMPLEMENTATION NOTES FOR sll_m_memory.h:
   !
@@ -160,7 +139,6 @@ allocate(arry_name_and_lims); arry_name_and_lims=0.0_8
   ! manually.
   !
   ! **************************************************************************
-*/
 
 #endif
  

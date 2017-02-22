@@ -15,7 +15,7 @@ program test_fcisl_toroidal
     sll_p_pi
 
   use sll_m_cubic_spline_interpolator_2d, only: &
-    sll_t_cubic_spline_interpolator_2d
+    sll_f_new_cubic_spline_interpolator_2d
 
   use sll_m_fcisl_toroidal, only: &
     sll_s_compute_analytic_field, &
@@ -85,7 +85,6 @@ program test_fcisl_toroidal
   sll_real64, dimension(:), allocatable :: params_aligned
   
   class(sll_c_interpolator_2d), pointer :: interp_classic
-  type(sll_t_cubic_spline_interpolator_2d), target :: interp_cs2d
   sll_int32 :: mode_m
   sll_int32 :: mode_n
   sll_int32 :: nb_iter
@@ -322,7 +321,7 @@ print*,"iota=",iota
   call sll_s_compute_modulo_vect2d_inplace(charac_phi,Npts_theta,Npts_phi,2._f64*sll_p_pi)
 
 
-  call interp_cs2d%init( &
+  interp_classic => sll_f_new_cubic_spline_interpolator_2d( &
     Npts_theta, &
     Npts_phi, &
     0._f64, &
@@ -331,9 +330,6 @@ print*,"iota=",iota
     2._f64*sll_p_pi, &
     sll_p_periodic, &
     sll_p_periodic)
-
-  interp_classic => interp_cs2d
-
   f_classic = f_init
   err = 0._f64
   do iter=1,nb_iter
