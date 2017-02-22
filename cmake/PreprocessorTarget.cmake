@@ -10,12 +10,13 @@
 # After generating the makefiles one can call
 # make all_preproc
 #
-# This module overrides the add_library and add_exocutable cmake commands to create
-# a list of source of target. The list of targets is later used to preprocess their
+# This module overrides the add_library and add_executable cmake commands to 
+# create a list of targets. The list of targets is later used to preprocess their
 # source files. We should place the include(PreprocessorTarget) command before any 
 # add_library or add_subdirectory commands.
 #
-# The source files are preprocessed individually using the C preprocessor.
+# The source files are preprocessed individually using the Fortran compiler.
+#
 # The add_preprocessor_target() function generates the commands for the
 # preprocessor. It should be called after all the libraries and 
 # subdirectories are included.
@@ -33,16 +34,16 @@
 #   - 03 Jan 2017: Add PGI compiler (PN)
 #   - 22 Feb 2017: To be able to use the preprocessed files for Forcheck 
 #                  analysis, the following changes were implemented:
-#                  - Store a list of executables too (needed for Forcheck).
+#                  - Store a list of executables too.
 #                  - No need to store list of source files, it can be retreived
-#                    from the lists of targets (the SOURCE_DIR property is also
-#                    needed to locate the files). 
+#                    from the lists of targets (by combining the SOURCES and the
+#                    SOURCE_DIR property). 
 #                  - Collect_source_info not needed anymore. 
 #                  - We set the include flags and compile  definitions for each 
 #                    target individually.
 #                  - Preprocessed files can be piped through a sed script to 
 #                    break long lines. 
-#                  - If Forcheck is available, do not use Intel compiler for 
+#                  - If Forcheck is available, do not use Intel compiler 
 #                    to preprocess the source files. The Intel preprocessor 
 #                    brakes long lines in non standard conforming way. 
 #                    We try GFortran instead.
@@ -204,6 +205,7 @@ function(add_preprocessor_target)
             list(APPEND _preproc_sources ${_preproc_name})
             
             if (${copy_lowercase_f_files} AND ${_lowercase_f}) 
+              # just copy the file
               add_custom_command(OUTPUT ${_preproc_name}
                   COMMAND ${CMAKE_COMMAND} -E copy ${_src_loc} ${_preproc_name}
                   DEPENDS "${_src_loc}"
