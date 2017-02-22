@@ -35,7 +35,7 @@ type:: sll_t_fft_derivative
    sll_comp64, dimension(:),pointer :: fcoeffs,fcoeffs2 !< Internal array for SGFFT computations
 
 contains
-   procedure :: init=>new_poisson_2d_sparse_grid_fft
+   procedure :: initialize=>new_poisson_2d_sparse_grid_fft
    procedure :: solve=>solve_for_electric_field!
    procedure :: solve_potential
 end type sll_t_fft_derivative

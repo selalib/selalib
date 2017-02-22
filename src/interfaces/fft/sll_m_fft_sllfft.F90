@@ -1,4 +1,3 @@
-#ifndef DOXYGEN_SHOULD_SKIP_THIS
 !**************************************************************
 !  Copyright INRIA
 !  Authors :
@@ -22,6 +21,7 @@
 !> @details
 !> These functions do not depend on external library
 module sll_m_fft
+#ifndef DOXYGEN_SHOULD_SKIP_THIS
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_working_precision.h"
 #include "sll_assert.h"
@@ -65,9 +65,6 @@ module sll_m_fft
     sll_s_fft_exec_c2c_2d, &
     sll_s_fft_set_mode_c2r_1d, &
     sll_f_fft_get_mode_r2c_1d, &
-    sll_s_fft_get_k_list_c2c_1d, &
-    sll_s_fft_get_k_list_r2r_1d, &
-    sll_s_fft_get_k_list_r2c_1d, &
     sll_s_fft_free
 
 
@@ -148,113 +145,57 @@ contains
 
   end function sll_f_fft_allocate_aligned_real
 
-  !-----------------------------------------------------------------------------
-  !> Get a list of the k modes in a c2c FFT
-  !> k_list = [0, 1, 2, ..., n/2, (n/2+1)-n, ..., -2, -1]
-  !-----------------------------------------------------------------------------
-  subroutine sll_s_fft_get_k_list_c2c_1d( plan, k_list )
-    type(sll_t_fft), intent(in   ) :: plan       !< FFT planner object
-    sll_int32      , intent(  out) :: k_list(0:) !< Array with all the k modes
 
-    sll_int32 :: k  ! single mode
-    sll_int32 :: n  ! problem size
+  !> Function to reconstruct the complex FFT mode from the data of a r2r transform
+  function sll_f_fft_get_mode_r2c_1d(plan,data,k) result(mode)
+    type(sll_t_fft),      intent(in)   :: plan !< FFT plan
+    sll_real64,           intent(in)   :: data(0:) !< real data produced by r2r transform
+    sll_int32,            intent(in)   :: k    !< mode to be extracted
+    sll_comp64                         :: mode !< Complex value of kth mode
+
+    sll_int32                   :: n_2, n
+
+
     n = plan%problem_shape(1)
+    n_2 = n/2 !ishft(n,-1)
 
-    if (size( k_list ) /= n) then
-      SLL_ERROR( "sll_s_fft_get_k_list_c2c_1d", "k_list must have n elements" )
-    end if
+      if( k .eq. 0 ) then
+        mode = cmplx(data(0),0.0_f64,kind=f64)
+      else if( k .eq. n_2 ) then
+        mode = cmplx(data(n_2),0.0_f64,kind=f64)
+      else if( k .gt. n_2 ) then
+        !mode = complex( data(k-n_2) , -data(n-k+n_2) )
+        mode = cmplx( data(n-k) , -data(k) ,kind=f64)
+      else
+        mode = cmplx( data(k) , data(n-k) ,kind=f64)
+      endif
+  end function
 
-    k_list(    0: n/2) = [(k  , k =     0, n/2)]
-    k_list(n/2+1: n-1) = [(k-n, k = n/2+1, n-1)]
 
-  end subroutine sll_s_fft_get_k_list_c2c_1d
+  !> Function to set a complex mode to the real representation of r2r.
+  subroutine sll_s_fft_set_mode_c2r_1d(plan,data,new_value,k)
+    type(sll_t_fft), intent(in)    :: plan !< FFT planner object
+    sll_real64,      intent(out)   :: data(0:) !< Real array to be set
+    sll_comp64,      intent(in)    :: new_value !< Complex value of the kth mode
+    sll_int32,       intent(in)    :: k !< mode to be set
 
-  !-----------------------------------------------------------------------------
-  !> Get a list of the k modes in an r2r FFT
-  !> k_list = [0, 1, 2, ..., n/2, (n+1)/2-1, ..., 2, 1]
-  !-----------------------------------------------------------------------------
-  subroutine sll_s_fft_get_k_list_r2r_1d( plan, k_list )
-    type(sll_t_fft), intent(in   ) :: plan       !< FFT planner object
-    sll_int32      , intent(  out) :: k_list(0:) !< Array with all the k modes
+    sll_int32 :: n_2, n!, index_mode
 
-    sll_int32 :: k  ! single mode
-    sll_int32 :: n  ! problem size
     n = plan%problem_shape(1)
+    n_2 = n/2 !ishft(n,-1)
 
-    if (size( k_list ) /= n) then
-      SLL_ERROR( "sll_s_fft_get_k_list_r2r_1d", "k_list must have n elements" )
-    end if
-
-    k_list(    0: n/2) = [(k  , k =     0, n/2)]
-    k_list(n/2+1: n-1) = [(n-k, k = n/2+1, n-1)]
-
-  end subroutine sll_s_fft_get_k_list_r2r_1d
-
-  !-----------------------------------------------------------------------------
-  !> Get a list of the k modes in an r2c FFT
-  !> k_list = [0, 1, 2, ..., n/2]
-  !-----------------------------------------------------------------------------
-  subroutine sll_s_fft_get_k_list_r2c_1d( plan, k_list )
-    type(sll_t_fft), intent(in   ) :: plan       !< FFT planner object
-    sll_int32      , intent(  out) :: k_list(0:) !< Array with all the k modes
-
-    sll_int32 :: k    ! single mode
-    sll_int32 :: n_2  ! problem size / 2 (rounded down)
-    n_2 = plan%problem_shape(1) / 2
-
-    if (size( k_list ) /= n_2+1) then
-      SLL_ERROR( "sll_s_fft_get_k_list_r2c_1d", "k_list must have n/2+1 elements" )
-    end if
-
-    k_list(:) = [(k, k = 0, n_2)]
-
-  end subroutine sll_s_fft_get_k_list_r2c_1d
-
-  !-----------------------------------------------------------------------------
-  !> Function to reconstruct a complex FFT mode from the data of a r2r transform
-  !-----------------------------------------------------------------------------
-  function sll_f_fft_get_mode_r2c_1d( plan, data, k ) result( ck )
-    type(sll_t_fft), intent(in) :: plan     !< FFT planner object
-    sll_real64,      intent(in) :: data(0:) !< Real FFT coefficients (halfcomplex format)
-    sll_int32,       intent(in) :: k        !< Mode to be extracted (0 <= k <= N-1)
-    sll_comp64                  :: ck       !< Complex coefficient of kth mode
-
-    sll_int32 :: n  ! problem size
-    n = plan%problem_shape(1)
-
-    if      (k == 0       ) then;  ck = cmplx( data(k)  , 0.0_f64  , kind=f64 )
-    else if (k <=(n+1)/2-1) then;  ck = cmplx( data(k)  , data(n-k), kind=f64 )
-    else if (k == n/2     ) then;  ck = cmplx( data(k)  , 0.0_f64  , kind=f64 )
-    else if (k <= n-1     ) then;  ck = cmplx( data(n-k),-data(k)  , kind=f64 )
-    else
-      SLL_ERROR( "sll_f_fft_get_mode_r2c_1d", "k must be between 0 and n-1" )
-    end if
-    
-  end function sll_f_fft_get_mode_r2c_1d
-
-  !-----------------------------------------------------------------------------
-  !> Subroutine to set a complex mode to the real representation of r2r
-  !-----------------------------------------------------------------------------
-  subroutine sll_s_fft_set_mode_c2r_1d( plan, data, ck, k )
-    type(sll_t_fft), intent(in   ) :: plan      !< FFT planner object
-    sll_real64,      intent(inout) :: data(0:)  !< Real FFT coefficients (halfcomplex format)
-    sll_comp64,      intent(in   ) :: ck        !< Complex coefficient of kth mode
-    sll_int32,       intent(in   ) :: k         !< Mode to be set (0 <= k <= N-1)
-
-    sll_int32 :: n  ! problem size
-    n = plan%problem_shape(1)
-
-    if      (k == 0       ) then; data(0)   = real(ck) ! imaginary part ignored
-    else if (k <=(n+1)/2-1) then; data(k)   = real(ck); data(n-k) = aimag(ck)
-    else if (k == n/2     ) then; data(k)   = real(ck) ! imaginary part ignored
-    else if (k <= n-1     ) then; data(n-k) = real(ck); data(k)   =-aimag(ck)
-    else
-      SLL_ERROR( "sll_s_fft_set_mode_c2r_1d", "k must be between 0 and n-1" )
-    end if
-    
-  end subroutine sll_s_fft_set_mode_c2r_1d
-
-  !-----------------------------------------------------------------------------
+      if( k .eq. 0 ) then
+        data(0) = real(new_value,kind=f64)
+      else if( k .eq. n_2 ) then
+        data(n_2) = real(new_value,kind=f64)
+      else if( k .gt. n_2 ) then
+        data(n-k) = real(new_value,kind=f64)
+        data(k) = -aimag(new_value)
+      else
+        data(k) = real(new_value,kind=f64)
+        data(n-k) = aimag(new_value)
+      endif
+  end subroutine 
 
 ! THIS IS THE ORDERING THAT SLLFFT R2R PRODUCES WITHOUT THE REORDERING TO FFTW
 !!$
@@ -995,7 +936,7 @@ contains
     integer                                :: j;                \
     integer                                :: k;                \
     data_type                              :: tmp;              \
-    SLL_ASSERT(sll_f_is_power_of_two(int(n,i64)));              \
+    SLL_ASSERT(sll_f_is_power_of_two(int(n,i64)));                    \
     j = 0;                                                      \
     k = n;                                                      \
     do i=0,n-2;                                                 \
@@ -1014,10 +955,10 @@ contains
   end subroutine function_name
 
   MAKE_BIT_REVERSE_FUNCTION( bit_reverse_complex, sll_comp64 )
-! /* PN DEFINED BUT NOT USED                                       */
-! /* MAKE_BIT_REVERSE_FUNCTION( bit_reverse_integer32, sll_int32 ) */
-! /* MAKE_BIT_REVERSE_FUNCTION( bit_reverse_integer64, sll_int64 ) */
-! /* MAKE_BIT_REVERSE_FUNCTION( bit_reverse_real, sll_real64 )     */
+!PN DEFINED BUT NOT USED
+! MAKE_BIT_REVERSE_FUNCTION( bit_reverse_integer32, sll_int32 )
+! MAKE_BIT_REVERSE_FUNCTION( bit_reverse_integer64, sll_int64 )
+! MAKE_BIT_REVERSE_FUNCTION( bit_reverse_real, sll_real64 )
 
   ! ugly special case to bit-reverse a complex array that is represented
   ! by an array of reals. This is truly awful...
@@ -1153,7 +1094,6 @@ contains
     end if
   end subroutine fft_dit_nr_aux
 
-!PN /* 
 !PN DEFINED BUT NOT USED
 !PN  subroutine fft_dit_rn( data, sign )
 !PN    sll_comp64, dimension(:), intent(inout) :: data
@@ -1170,7 +1110,6 @@ contains
 !PN    ! arrays, so we are just indicating the first twiddle factor.
 !PN    call fft_dit_rn_aux(data, n, twiddles, 1, sign)
 !PN  end subroutine fft_dit_rn
-!PN */ 
 
   recursive subroutine fft_dit_rn_aux( data,           &
                                        data_size,      &

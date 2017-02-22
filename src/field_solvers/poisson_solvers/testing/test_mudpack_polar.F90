@@ -11,7 +11,7 @@ program test_mudpack_polar
     sll_p_pi
 
   use sll_m_mudpack, only: &
-    sll_s_mudpack_polar_init, &
+    sll_s_initialize_mudpack_polar, &
     sll_t_mudpack_solver, &
     sll_s_solve_mudpack_polar
 
@@ -72,7 +72,7 @@ end do
 
 tolmax   = 1.0e-4_f64
 
-call sll_s_mudpack_polar_init(poisson,  &
+call sll_s_initialize_mudpack_polar(poisson,  &
                               r_min, r_max, nr, &
                               theta_min, theta_max, ntheta, &
                               sll_p_dirichlet, sll_p_dirichlet, &

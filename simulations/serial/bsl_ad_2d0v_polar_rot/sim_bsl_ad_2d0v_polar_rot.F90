@@ -34,7 +34,7 @@ program sim_bsl_ad_2d0v_polar_rot
     sll_f_new_coordinate_transformation_2d_analytic
 
   use sll_m_cubic_spline_interpolator_2d, only: &
-    sll_t_cubic_spline_interpolator_2d
+    sll_f_new_cubic_spline_interpolator_2d
 
   use sll_m_hermite_interpolation_2d, only: &
     sll_p_hermite_c0, &
@@ -122,7 +122,6 @@ program sim_bsl_ad_2d0v_polar_rot
   sll_real64 :: rmin
   sll_real64 :: rmax
   class(sll_c_interpolator_2d), pointer :: interp2d
-  type(sll_t_cubic_spline_interpolator_2d), target :: interp_cs2d
   class(sll_c_coordinate_transformation_2d_base), pointer :: transformation
   type(sll_t_cartesian_mesh_2d), pointer :: mesh_2d
   sll_int32 :: j
@@ -209,7 +208,8 @@ program sim_bsl_ad_2d0v_polar_rot
     endif
     open(unit = input_file, file=trim(input_filename_loc),IOStat=IO_stat)
      if( IO_stat /= 0 ) then
-       SLL_ERROR('rotation_2d_hexagonal_hermite,','can not open file')
+       SLL_ERROR('rotation_2d_hexagonal_hermite, &
+       &','can not open file')
      end if
      print *,'#initialization with filename:'
      print *,'#',trim(input_filename_loc)
@@ -300,7 +300,7 @@ program sim_bsl_ad_2d0v_polar_rot
 
   select case (num_method_case)
     case ("SLL_CUBIC_SPLINES")
-      call interp_cs2d%init( &
+      interp2d => sll_f_new_cubic_spline_interpolator_2d( &
         num_cells1+1, &
         num_cells2+1, &
         rmin, &
@@ -311,7 +311,6 @@ program sim_bsl_ad_2d0v_polar_rot
         sll_p_periodic, &
         const_eta1_min_slope = 0._f64, &
         const_eta1_max_slope = 0._f64)
-      interp2d => interp_cs2d
     case ("sll_p_hermite")
       interp2d => sll_f_new_hermite_interpolator_2d( &
         num_cells1+1, &

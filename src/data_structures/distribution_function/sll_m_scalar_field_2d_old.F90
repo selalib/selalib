@@ -38,7 +38,7 @@ module sll_m_scalar_field_2d_old
   implicit none
 
   public :: &
-    sll_s_scalar_field_2d_init, &
+    sll_s_initialize_scalar_field_2d, &
     sll_t_scalar_field_2d, &
     sll_i_scalar_function_2d_old, &
     sll_o_create, &
@@ -57,7 +57,7 @@ module sll_m_scalar_field_2d_old
      sll_int32                                :: plot_counter
   contains
      procedure :: write_to_file =>  sll_s_write_scalar_field_2d
-     procedure :: initialize    =>  sll_s_scalar_field_2d_init
+     procedure :: initialize    =>  sll_s_initialize_scalar_field_2d
   end type sll_t_scalar_field_2d
 
   abstract interface
@@ -70,14 +70,14 @@ module sll_m_scalar_field_2d_old
   end interface
 
   interface sll_o_create
-     module procedure sll_s_scalar_field_2d_init
+     module procedure sll_s_initialize_scalar_field_2d
   end interface sll_o_create
 
 
 contains   ! *****************************************************************  
   ! this used to be new_scalar_field_2d
   ! initializer is not use whith fortran95
-  subroutine sll_s_scalar_field_2d_init( &
+  subroutine sll_s_initialize_scalar_field_2d( &
     this, &
     field_name, &
     transf, &
@@ -95,7 +95,7 @@ contains   ! *****************************************************************
     class(sll_c_scalar_field_2d_initializer_base), pointer, optional :: initializer
     
     class(sll_t_cartesian_mesh_2d), pointer :: mesh
-    character(len=*), parameter :: this_sub_name = 'sll_s_scalar_field_2d_init'
+    character(len=*), parameter :: this_sub_name = 'sll_s_initialize_scalar_field_2d'
 
     sll_int32  :: ierr
     sll_int32  :: num_cells1
@@ -125,14 +125,14 @@ contains   ! *****************************************************************
     if( associated(eta1_interpolator) ) then
        this%eta1_interpolator => eta1_interpolator
     else
-       print *, 'sll_s_scalar_field_2d_init(): eta1_interpolator pointer ', &
+       print *, 'sll_s_initialize_scalar_field_2d(): eta1_interpolator pointer ', &
             'is not associated. Exiting...'
        stop
     end if
     if( associated(eta2_interpolator) ) then
        this%eta2_interpolator => eta2_interpolator
     else
-       print *, 'sll_s_scalar_field_2d_init(): eta2_interpolator pointer ', &
+       print *, 'sll_s_initialize_scalar_field_2d(): eta2_interpolator pointer ', &
             'is not associated. Exiting...'
        stop
     end if
@@ -159,7 +159,7 @@ contains   ! *****************************************************************
        end if
     endif
     this%plot_counter = 0
-  end subroutine sll_s_scalar_field_2d_init
+  end subroutine sll_s_initialize_scalar_field_2d
 
 !PN DEFINED BUT NOT USED
 ! ! The following pair of subroutines are tricky. We want them as general 

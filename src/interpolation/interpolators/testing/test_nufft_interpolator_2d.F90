@@ -52,7 +52,7 @@ call cpu_time(tcpu1)
 
 n_step = int(2.0_f64*sll_p_pi/delta_t)
   
-call nufft2d%init( &
+call nufft2d%initialize( &
      nc_eta1+1,          &
      nc_eta2+1,          &
      eta1_min,           &

@@ -6,11 +6,6 @@ module sll_m_sim_pic_vp_2d2v_cart_optim_push
 #include "sll_accumulators.h"
 #include "sll_particle_representation.h"
 
-  use sll_m_timer, only: &
-    sll_s_set_time_mark, &
-    sll_f_time_elapsed_since, &
-    sll_t_time_mark
-  
   use sll_m_accumulators, only: &
     sll_t_electric_field_accumulator, &
     sll_t_electric_field_accumulator_cs, &
@@ -301,7 +296,7 @@ contains
     sll_real64 :: dtqom! dt * qoverm
     sll_real64 :: x, x1 ! for global position
     sll_real64 :: y, y1 ! for global position
-    sll_real64 :: dt
+    sll_real64 :: dt!, ttime
     sll_real64 :: pp_vx, pp_vy
     type(sll_t_particle_4d), dimension(:), pointer :: p
     type(sll_t_field_accumulator_cell), dimension(:), pointer :: accumE
@@ -311,14 +306,10 @@ contains
     !sll_real64, dimension(:),   allocatable  ::  diag_TOTmoment
     !sll_real64, dimension(:),   allocatable  ::  diag_TOTenergy
     !sll_real64, dimension(:,:), allocatable :: diag_AccMem! a memory buffer
+    !sll_real64  ::  t2, t3!  type(sll_time_mark)  :: t2, t3
     sll_real64, dimension(:), allocatable :: rho1d_send
     sll_real64, dimension(:), allocatable :: rho1d_receive
-    sll_real64 :: time!, ttime
-#ifdef _OPENMP
-    sll_real64 :: t2! t3
-#else
-    type(sll_t_time_mark)  :: t2! t3
-#endif  
+!$    sll_real64   :: t2, t3, time
     sll_int32 :: save_nb
     sll_int32 :: thread_id
     sll_int32 :: n_threads
@@ -454,9 +445,7 @@ contains
        open(65,file='logE_OptPush_th'//nom_thnb//'.dat')
     endif
 #ifdef _OPENMP
-    t2 = omp_get_wtime()
-#else
-    call sll_s_set_time_mark(t2)
+    t2 = omp_get_wtime()!!  call sll_set_time_mark(t2)    
 #endif
 
 !  -------------------------
@@ -496,9 +485,9 @@ contains
        !
        ! *******************************************************************
 !       some_val = 0.0_f64
-!!$#ifdef _OPENMP
-!!$       t3 = omp_get_wtime()!!  call sll_s_set_time_mark(t3)
-!!$#endif
+#ifdef _OPENMP
+       t3 = omp_get_wtime()!!  call sll_set_time_mark(t3)
+#endif
        if (sim%use_cubic_splines) then 
 
           !$omp parallel PRIVATE(x,y,x1,y1,Ex,Ey,gi,temp,ttmp,ic_x,ic_y,thread_id,p_guard,q_accum_CS)
@@ -558,7 +547,7 @@ contains
           !$omp end parallel
 !       diag_TOTenergy(mod(counter,save_nb)) = some_val
 
-!         ttime = omp_get_wtime()!! ttime = sll_f_time_elapsed_since(t3)
+!         ttime = omp_get_wtime()!! ttime = sll_time_elapsed_since(t3)
 !          diag_AccMem(it,:) = (/ (it+1)*dt, (32*sim%parts_number*2 + gi*2*8 + &
 !               2*128*ncx*ncy + 2*128*ncx*ncy)/ttime/1e9 /)! access to memory in GB/sec
 !!$            2*sizeof(sim%q_accumulator_CS%q_acc) + sizeof(sim%E_accumulator_CS%e_acc))
@@ -672,7 +661,7 @@ contains
           end do
           !$omp end parallel
 !!$#ifdef _OPENMP
-!!$          ttime = omp_get_wtime()!! ttime = sll_f_time_elapsed_since(t3)
+!!$          ttime = omp_get_wtime()!! ttime = sll_time_elapsed_since(t3)
 !!$          diag_AccMem(it,:) = (/ (it+1)*dt, &
 !!$               (real(32*sim%parts_number*2,f64)+real(gi*2*8,f64) + real(4*32*ncx*ncy,f64) ) &
 !!$               /(ttime-t3)/1e9 /)! access to memory in GB/sec
@@ -737,18 +726,15 @@ contains
 
     enddo
 !  ---  ---  - - -   END TIME LOOP  - - -  --- -----
+#ifdef _OPENMP
+    time = omp_get_wtime()!! time = sll_time_elapsed_since(t2)
     if (sim%my_rank ==0) then 
        open(93,file='time_OptPush_omp_WITH_SCHEDULE.dat',position='append')
        write(93,*) '# Nb of threads   ||   time (sec)   ||   average pushes/sec'
-#ifdef _OPENMP
-       time = omp_get_wtime()
        write(93,*) n_threads, time-t2, real(sim%num_iterations*sim%parts_number,f64)/(time-t2)
-#else
-       time = sll_f_time_elapsed_since(t2)
-       write(93,*) n_threads, time, real(sim%num_iterations*sim%parts_number,f64)/time
-#endif
        close(93)
     endif
+#endif
 
     if (sim%my_rank ==0) then 
        close(65)

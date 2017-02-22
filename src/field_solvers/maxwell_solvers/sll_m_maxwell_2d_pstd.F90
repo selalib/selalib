@@ -13,16 +13,17 @@
 !  "http://www.cecill.info". 
 !
 !
+!  Contact : Pierre Navaro http://wwww-irma.u-strasbg.fr/~navaro
 !
 !**************************************************************
 
 #include "sll_fftw.h"
 
-#define D_DX(FIELD)\
-self%d_dx = FIELD;\
-call sll_s_fft_exec_r2c_1d(self%fwx, self%d_dx, self%tmp_x);\
-self%tmp_x(2:nc_x/2+1)=-cmplx(0.0_f64,self%kx(2:nc_x/2+1),kind=f64)*self%tmp_x(2:nc_x/2+1);\
-call sll_s_fft_exec_c2r_1d(self%bwx, self%tmp_x, self%d_dx);\
+#define D_DX(FIELD)                                           \
+self%d_dx = FIELD;                                            \
+call sll_s_fft_exec_r2c_1d(self%fwx, self%d_dx, self%tmp_x);   \
+self%tmp_x(2:nc_x/2+1)=-cmplx(0.0_f64,self%kx(2:nc_x/2+1),kind=f64)*self%tmp_x(2:nc_x/2+1); \
+call sll_s_fft_exec_c2r_1d(self%bwx, self%tmp_x, self%d_dx);   \
 self%d_dx = self%d_dx / nc_x
 
 #define D_DY(FIELD)                                           \
@@ -33,26 +34,25 @@ call sll_s_fft_exec_c2r_1d(self%bwy, self%tmp_y, self%d_dy);   \
 self%d_dy = self%d_dy / nc_y
 
 !> @ingroup maxwell_solvers
-!> @author Pierre Navaro 
 !> @brief
 !> Implements the Maxwell solver in 2D with periodic boundary conditions
 !> with PSTD method.
 !> @details
 !> Field derivative is made using Fast Fourier Transform.
 !>
-!> \f$ \displaystyle
-!> \frac{\partial \psi}{\partial x} \Big|_i = F_x^{-1} [ -jk_xF_x(\psi)]_i,
-!> \f$
+!>\f$ \displaystyle
+!>\frac{\partial \psi}{\partial x} \Big|_i = F_x^{-1} [ -jk_xF_x(\psi)]_i,
+!>\f$
 !>
 !> For Maxwell system the scheme is
 !>
-!> \f$ \displaystyle
-!> H_u\Big|^{n+1/2}_{i,j,k} = H_u\Big|^{n-1/2}_{i,j,k}  - \frac{\Delta t}{\mu} \Big\{F_v^{-1}[-jk_vF_v(E_w)]|_{i,j,k}^n -F_w^{-1}[-jk_wF_w(E_v)]|_{i,j,k}^{n}\Big\},
-!> \f$
+!>\f$ \displaystyle
+!>H_u\Big|^{n+1/2}_{i,j,k} = H_u\Big|^{n-1/2}_{i,j,k}  - \frac{\Delta t}{\mu} \Big\{F_v^{-1}[-jk_vF_v(E_w)]|_{i,j,k}^n -F_w^{-1}[-jk_wF_w(E_v)]|_{i,j,k}^{n}\Big\},
+!>\f$
 !>
-!> \f$ \displaystyle
-!> E_u\Big|^{n+1}_{i,j,k} = E_u\Big|^{n}_{i,j,k}  + \frac{\Delta t}{\varepsilon} \Big\{F_v^{-1}[-jk_vF_v(H_w)]|_{i,j,k}^{n+1/2} -F_w^{-1}[-jk_wF_w(H_v)]|_{i,j,k}^{n+1/2}\Big\},
-!> \f$
+!>\f$ \displaystyle
+!>E_u\Big|^{n+1}_{i,j,k} = E_u\Big|^{n}_{i,j,k}  + \frac{\Delta t}{\varepsilon} \Big\{F_v^{-1}[-jk_vF_v(H_w)]|_{i,j,k}^{n+1/2} -F_w^{-1}[-jk_wF_w(H_v)]|_{i,j,k}^{n+1/2}\Big\},
+!>\f$
 !>
 !>where \f$(u,v,w) = (x,y,z),(y,z,x),(z,x,y)\f$
 module sll_m_maxwell_2d_pstd
@@ -72,7 +72,7 @@ use sll_m_fft, only: sll_t_fft, &
   implicit none
 
   public :: sll_t_maxwell_2d_pstd, &
-  sll_s_maxwell_2d_pstd_init,      &
+  sll_s_init_maxwell_2d_pstd,      &
   sll_s_solve_maxwell_2d_pstd,     &
   sll_s_solve_ampere_2d_pstd,      &
   sll_s_solve_faraday_2d_pstd,      &
@@ -128,7 +128,7 @@ end type sll_t_maxwell_2d_pstd
 contains
 
 !> Initialize 2d maxwell solver on cartesian mesh with PSTD scheme
-subroutine sll_s_maxwell_2d_pstd_init(self,xmin,xmax,nc_x,ymin,ymax,nc_y,polarization)
+subroutine sll_s_init_maxwell_2d_pstd(self,xmin,xmax,nc_x,ymin,ymax,nc_y,polarization)
 
    type(sll_t_maxwell_2d_pstd) :: self         !< maxwell object
    sll_real64, intent(in)      :: xmin         !< x min
@@ -182,7 +182,7 @@ subroutine sll_s_maxwell_2d_pstd_init(self,xmin,xmax,nc_x,ymin,ymax,nc_y,polariz
    end do
    self%ky(1) = 1.0_f64
 
-end subroutine sll_s_maxwell_2d_pstd_init
+end subroutine sll_s_init_maxwell_2d_pstd
 
 !> self routine exists only for testing purpose. Use ampere and faraday
 !> in your appication.

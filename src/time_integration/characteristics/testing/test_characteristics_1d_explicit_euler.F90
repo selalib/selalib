@@ -26,7 +26,7 @@ program test_characteristics_1d_explicit_euler
     sll_c_characteristics_1d_base
 
   use sll_m_characteristics_1d_explicit_euler, only: &
-    sll_f_new_charac_1d_explicit_euler
+    sll_f_new_explicit_euler_1d_charac
 
   implicit none
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -52,7 +52,7 @@ program test_characteristics_1d_explicit_euler
   !initialization for explicit_euler_1d
   
   euler => &
-    sll_f_new_charac_1d_explicit_euler(&
+    sll_f_new_explicit_euler_1d_charac(&
       Npts, &
       sll_p_periodic)
 

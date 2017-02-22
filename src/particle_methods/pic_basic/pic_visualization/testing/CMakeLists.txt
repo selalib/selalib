@@ -2,7 +2,8 @@ ADD_EXECUTABLE( test_particle_visualization_interface test_particle_visualizatio
 TARGET_LINK_LIBRARIES( test_particle_visualization_interface
   sll_pic_visualization
   sll_pic_sampling
-  sll_pic_weights
+  sll_particle_groups
+  sll_xdmf_io
   )
 
 SET( NML_FILE ${CMAKE_CURRENT_SOURCE_DIR}/distribution_for_the_test.nml )

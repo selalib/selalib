@@ -26,7 +26,7 @@ program test_characteristics_1d_trapezoid_conservative
     sll_c_characteristics_1d_base
 
   use sll_m_characteristics_1d_trapezoid_conservative, only: &
-    sll_t_trapezoid_conservative_1d_charac
+    sll_f_new_trapezoid_conservative_1d_charac
 
   use sll_m_cubic_spline_interpolator_1d, only: &
     sll_f_new_cubic_spline_interpolator_1d
@@ -37,8 +37,7 @@ program test_characteristics_1d_trapezoid_conservative
   implicit none
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
   
-  class(sll_c_characteristics_1d_base),         pointer :: charac
-  type(sll_t_trapezoid_conservative_1d_charac), target  :: trap
+  class(sll_c_characteristics_1d_base),pointer :: trap
 
   
   sll_int32 :: Npts
@@ -51,8 +50,14 @@ program test_characteristics_1d_trapezoid_conservative
   sll_real64 :: err
   class(sll_c_interpolator_1d), pointer   :: A_interp
 
+  
+  
+  
   Npts = 32
   dt = 0.1_f64
+  
+  
+
   
   !initialization for verlet
   A_interp => sll_f_new_cubic_spline_interpolator_1d( &
@@ -61,17 +66,22 @@ program test_characteristics_1d_trapezoid_conservative
     1._f64, &
     sll_p_periodic)
 
-  call trap%init( &
+
+
+
+
+  trap => &
+    sll_f_new_trapezoid_conservative_1d_charac(&
       Npts, &
       A_interp, &
       bc_type=sll_p_periodic)
-
-  charac => trap
+                  
 
   allocate(input(Npts))
   allocate(output(Npts))
   allocate(A(Npts))
   
+
   do i=1,Npts
     input(i) = real(i-1,f64)/real(Npts-1,f64)
   enddo
@@ -80,13 +90,16 @@ program test_characteristics_1d_trapezoid_conservative
       A(i) = 1._f64 !-input(i)+0.5_f64
   enddo
       
+      
   err = 0._f64  
   
-  call charac%compute_characteristics( &
+  call trap%compute_characteristics( &
       A, &
       dt, &
       input, &
       output)
+
+  
 
   if(err==0)then    
     print *, '#PASSED'

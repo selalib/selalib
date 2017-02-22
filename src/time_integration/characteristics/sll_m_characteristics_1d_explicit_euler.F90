@@ -34,13 +34,12 @@ module sll_m_characteristics_1d_explicit_euler
   implicit none
 
   public :: &
-    sll_t_charac_1d_explicit_euler, &
-    sll_f_new_charac_1d_explicit_euler
+    sll_f_new_explicit_euler_1d_charac
 
   private
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
-  type,extends(sll_c_characteristics_1d_base) :: sll_t_charac_1d_explicit_euler
+  type,extends(sll_c_characteristics_1d_base) :: explicit_euler_1d_charac_computer
     sll_int32                               :: Npts
     sll_real64                              :: eta_min   
     sll_real64                              :: eta_max  
@@ -49,15 +48,16 @@ module sll_m_characteristics_1d_explicit_euler
     logical :: feet_inside
  
   contains
-    procedure, pass(charac) :: init => initialize_charac_1d_explicit_euler
+    procedure, pass(charac) :: initialize => &
+      initialize_explicit_euler_1d_charac
     procedure, pass(charac) :: compute_characteristics => &
-      compute_charac_1d_explicit_euler
-  end type sll_t_charac_1d_explicit_euler
+      compute_explicit_euler_1d_charac
+  end type explicit_euler_1d_charac_computer
 
 
 
 contains
-  function sll_f_new_charac_1d_explicit_euler(&
+  function sll_f_new_explicit_euler_1d_charac(&
       Npts, &
       bc_type, &
       eta_min, &
@@ -66,7 +66,7 @@ contains
       feet_inside) &
       result(charac)
       
-    type(sll_t_charac_1d_explicit_euler),pointer :: charac
+    type(explicit_euler_1d_charac_computer),pointer :: charac
     sll_int32, intent(in) :: Npts
     sll_int32, intent(in), optional :: bc_type
     sll_real64, intent(in), optional  :: eta_min
@@ -77,7 +77,7 @@ contains
     sll_int32 :: ierr
       
     SLL_ALLOCATE(charac,ierr)
-    call initialize_charac_1d_explicit_euler(&
+    call initialize_explicit_euler_1d_charac(&
       charac, &
       Npts, &
       bc_type, &
@@ -87,10 +87,10 @@ contains
       feet_inside)
 
     
-  end function sll_f_new_charac_1d_explicit_euler
+  end function sll_f_new_explicit_euler_1d_charac
   
   
-  subroutine initialize_charac_1d_explicit_euler(&
+  subroutine initialize_explicit_euler_1d_charac(&
       charac, &
       Npts, &
       bc_type, &
@@ -99,7 +99,7 @@ contains
       process_outside_point, &
       feet_inside)
       
-    class(sll_t_charac_1d_explicit_euler) :: charac
+    class(explicit_euler_1d_charac_computer) :: charac
     sll_int32, intent(in) :: Npts
     sll_int32, intent(in), optional :: bc_type
     sll_real64, intent(in), optional  :: eta_min
@@ -130,7 +130,7 @@ contains
     else if(.not.(present(bc_type))) then
       print *,'#provide boundary condition'
       print *,'#bc_type or process_outside_point function'
-      print *,'#in initialize_charac_1d_explicit_euler'
+      print *,'#in initialize_explicit_euler_1d_charac'
       stop
     else
       select case (bc_type)
@@ -140,7 +140,7 @@ contains
           charac%process_outside_point => sll_f_process_outside_point_set_to_limit        
         case default
           print *,'#bad value of boundary condition'
-          print *,'#in initialize_charac_1d_explicit_euler'
+          print *,'#in initialize_explicit_euler_1d_charac'
           stop
         end select
     endif
@@ -160,16 +160,16 @@ contains
 
     
     
-  end subroutine initialize_charac_1d_explicit_euler
+  end subroutine initialize_explicit_euler_1d_charac
 
-  subroutine compute_charac_1d_explicit_euler( &
+  subroutine compute_explicit_euler_1d_charac( &
       charac, &
       A, &
       dt, &
       input, &
       output)
             
-    class(sll_t_charac_1d_explicit_euler) :: charac
+    class(explicit_euler_1d_charac_computer) :: charac
     sll_real64, dimension(:), intent(in) :: A
     sll_real64, intent(in) :: dt
     sll_real64, dimension(:), intent(in) ::  input
@@ -194,7 +194,7 @@ contains
       endif  
     enddo
       
-  end subroutine compute_charac_1d_explicit_euler
+  end subroutine compute_explicit_euler_1d_charac
 
 
 

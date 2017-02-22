@@ -3,7 +3,6 @@
 
   use sll_m_working_precision, only : f32, f64
 
-/*
   ! Note that this macro depends on having the precision module active in its
   ! environment.
   
@@ -19,8 +18,6 @@
   ! will be legitimate. Else syntax errors may occur. We can't expect the 
   ! laudable discipline of always using 'then' after the conditional 
   ! expression unfortunately.
-*/
-
 #define SLL_ACCUMULATE_CHARGE( acc, dx, dy, icell, q, tmp1, tmp2) \
   do; \
     tmp1 = (1.0_f32 - dx); \

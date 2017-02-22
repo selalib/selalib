@@ -43,7 +43,7 @@ do i=1,n
 end do
 
 print*, 'Quintic spline interpolation'
-call spline%init(n, x_min, x_max, sll_p_dirichlet, sll_p_dirichlet )
+call spline%initialize(n, x_min, x_max, sll_p_dirichlet, sll_p_dirichlet )
 
 call sll_s_set_values_at_boundary( spline,     &
                              f( x_min),  &

@@ -26,7 +26,7 @@ module sll_m_derivative_2d_oblic
 #include "sll_working_precision.h"
 
   use sll_m_advection_1d_base, only: &
-    sll_c_advector_1d
+    sll_c_advection_1d_base
 
   use sll_m_fcisl, only: &
     sll_s_compute_w_hermite
@@ -43,7 +43,7 @@ module sll_m_derivative_2d_oblic
 
   type  :: sll_t_oblic_2d_derivative
     sll_int32 :: Nc_x1
-    class(sll_c_advector_1d), pointer :: adv_x1
+    class(sll_c_advection_1d_base), pointer :: adv_x1
     sll_int32 :: Nc_x2
     sll_real64 :: x2_min    
     sll_real64 :: x2_max
@@ -67,7 +67,7 @@ contains
     result(deriv)      
     type(sll_t_oblic_2d_derivative), pointer :: deriv
     sll_int32, intent(in) :: Nc_x1
-    class(sll_c_advector_1d), pointer :: adv_x1
+    class(sll_c_advection_1d_base), pointer :: adv_x1
     sll_int32, intent(in) :: Nc_x2
     sll_real64, intent(in) :: x2_min
     sll_real64, intent(in) :: x2_max
@@ -100,7 +100,7 @@ contains
     stencil_s )
     type(sll_t_oblic_2d_derivative), intent(inout) :: deriv
     sll_int32, intent(in) :: Nc_x1
-    class(sll_c_advector_1d), pointer :: adv_x1
+    class(sll_c_advection_1d_base), pointer :: adv_x1
     sll_int32, intent(in) :: Nc_x2
     sll_real64, intent(in) :: x2_min
     sll_real64, intent(in) :: x2_max
@@ -150,7 +150,7 @@ contains
     sll_int32 :: i2_loc
     sll_real64, dimension(:,:), pointer :: buf
     sll_real64, dimension(:), pointer :: w
-    class(sll_c_advector_1d), pointer :: adv_x1
+    class(sll_c_advection_1d_base), pointer :: adv_x1
     sll_int32 :: r
     sll_int32 :: s
     sll_real64 :: delta_x2

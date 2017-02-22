@@ -64,7 +64,7 @@ module sll_m_poisson_2d_base
       use sll_m_working_precision
       import sll_c_poisson_2d_base      
 
-      class(sll_c_poisson_2d_base)           :: poisson
+      class(sll_c_poisson_2d_base), target     :: poisson
       sll_real64,dimension(:,:), intent(in)  :: rho
       sll_real64,dimension(:,:), intent(out) :: phi
 
@@ -79,7 +79,7 @@ module sll_m_poisson_2d_base
       use sll_m_working_precision
       import sll_c_poisson_2d_base       
 
-      class(sll_c_poisson_2d_base)            :: poisson
+      class(sll_c_poisson_2d_base)              :: poisson
       sll_real64, dimension(:,:), intent(in)  :: rho
       sll_real64, dimension(:,:), intent(out) :: E1
       sll_real64, dimension(:,:), intent(out) :: E2
@@ -92,9 +92,9 @@ module sll_m_poisson_2d_base
      function signature_norm_squared(poisson, coefs_dofs) result( r )
        use sll_m_working_precision
        import sll_c_poisson_2d_base
-       class( sll_c_poisson_2d_base) , intent(in) :: poisson !< Poisson solver object.
-       sll_real64 , intent(in)                    :: coefs_dofs(:,:) !< Values of the coefficient vectors for each DoF
-       sll_real64                                 :: r
+       class( sll_c_poisson_2d_base) , intent(in)                   :: poisson !< Poisson solver object.
+       sll_real64 , intent(in)                                    :: coefs_dofs(:,:) !< Values of the coefficient vectors for each DoF
+       sll_real64                                     :: r
      end function signature_norm_squared
   end interface
 
@@ -104,9 +104,9 @@ module sll_m_poisson_2d_base
        use sll_m_working_precision
        import sll_c_poisson_2d_base
        import sll_i_function_of_position
-       class( sll_c_poisson_2d_base)            :: poisson !< Maxwell solver object.
-       procedure(sll_i_function_of_position)    :: func !< Function to be projected.
-       sll_real64, intent(out)                  :: coefs_dofs(:) !< Coefficients of the projection.
+       class( sll_c_poisson_2d_base)                    :: poisson !< Maxwell solver object.
+       procedure(sll_i_function_of_position)          :: func !< Function to be projected.
+       sll_real64, intent(out)                        :: coefs_dofs(:) !< Coefficients of the projection.
      end subroutine signature_update_dofs_function
   end interface
   

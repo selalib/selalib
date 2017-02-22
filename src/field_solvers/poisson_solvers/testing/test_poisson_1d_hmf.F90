@@ -9,7 +9,7 @@ program test_poisson_1d_hmf
 
   use sll_m_poisson_1d_hmf, only: &
     sll_t_poisson_1d_hmf,         &
-    sll_s_poisson_1d_hmf_init,    &
+    sll_s_init_poisson_1d_hmf,    &
     sll_s_solve_poisson_1d_hmf,   &
     sll_s_free_poisson_1d_hmf
 
@@ -69,7 +69,7 @@ program test_poisson_1d_hmf
   
   allocate(sll_t_poisson_1d_hmf :: p_poisson_1d_hmf)
 
-  call sll_s_poisson_1d_hmf_init(p_poisson_1d_hmf, eta1_min, eta1_max, nc_eta1, error) 
+  call sll_s_init_poisson_1d_hmf(p_poisson_1d_hmf, eta1_min, eta1_max, nc_eta1, error) 
 
   call sll_s_solve_poisson_1d_hmf(p_poisson_1d_hmf, ex, rho)
 

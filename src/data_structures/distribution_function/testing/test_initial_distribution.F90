@@ -8,6 +8,9 @@ program test_initial_distribution
 
   use sll_m_initial_distribution
 
+  use sll_m_io_utilities, only : &
+       sll_s_concatenate_filename_and_path
+  
   implicit none
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 

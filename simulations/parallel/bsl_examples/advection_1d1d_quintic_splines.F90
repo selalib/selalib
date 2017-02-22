@@ -109,9 +109,9 @@ if (.not. sll_f_is_power_of_two(psize)) then
    stop
 end if
 
-call spl_eta1%init(nc_eta1+1,eta1_min,eta1_max,sll_p_hermite,sll_p_hermite)
+call spl_eta1%initialize(nc_eta1+1,eta1_min,eta1_max,sll_p_hermite,sll_p_hermite)
 
-call spl_eta2%init(nc_eta2+1,eta2_min,eta2_max,sll_p_hermite,sll_p_hermite)
+call spl_eta2%initialize(nc_eta2+1,eta2_min,eta2_max,sll_p_hermite,sll_p_hermite)
 
 interp_eta1 => spl_eta1
 interp_eta2 => spl_eta2

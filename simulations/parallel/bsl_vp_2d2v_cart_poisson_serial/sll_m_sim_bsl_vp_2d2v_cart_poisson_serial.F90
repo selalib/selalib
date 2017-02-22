@@ -29,163 +29,163 @@ module sll_m_sim_bsl_vp_2d2v_cart_poisson_serial
 #include "sll_memory.h"
 #include "sll_working_precision.h"
 
-use sll_m_advection_1d_base, only: &
-  sll_c_advector_1d
+  use sll_m_advection_1d_base, only: &
+    sll_c_advection_1d_base
 
-use sll_m_advection_1d_periodic, only: &
-  sll_t_advector_1d_periodic
+  use sll_m_advection_1d_periodic, only: &
+    sll_f_new_periodic_1d_advector
 
-use sll_m_ascii_io, only: &
-  sll_s_ascii_file_close, &
-  sll_s_ascii_file_create
+  use sll_m_ascii_io, only: &
+    sll_s_ascii_file_close, &
+    sll_s_ascii_file_create
 
-use sll_m_binary_io, only: &
-  sll_s_binary_file_create, &
-  sll_s_binary_write_array_2d
+  use sll_m_binary_io, only: &
+    sll_s_binary_file_create, &
+    sll_s_binary_write_array_2d
 
-use sll_m_buffer_loader_utilities, only: &
-  sll_s_compute_displacements_array_2d, &
-  sll_s_load_buffer_2d, &
-  sll_f_receive_counts_array_2d, &
-  sll_s_unload_buffer_2d
+  use sll_m_buffer_loader_utilities, only: &
+    sll_s_compute_displacements_array_2d, &
+    sll_s_load_buffer_2d, &
+    sll_f_receive_counts_array_2d, &
+    sll_s_unload_buffer_2d
 
-use sll_m_cartesian_meshes, only: &
-  sll_f_new_cartesian_mesh_1d, &
-  sll_t_cartesian_mesh_1d
+  use sll_m_cartesian_meshes, only: &
+    sll_f_new_cartesian_mesh_1d, &
+    sll_t_cartesian_mesh_1d
 
-use sll_m_collective, only: &
-  sll_s_collective_allgatherv_real64, &
-  sll_f_get_collective_rank, &
-  sll_f_get_collective_size, &
-  sll_v_world_collective
+  use sll_m_collective, only: &
+    sll_s_collective_allgatherv_real64, &
+    sll_f_get_collective_rank, &
+    sll_f_get_collective_size, &
+    sll_v_world_collective
 
-use sll_m_common_array_initializers, only: &
-  sll_f_landau_mode_initializer_4d, &
-  sll_f_landau_mode_initializer_cos_sum_4d, &
-  sll_i_scalar_initializer_4d
+  use sll_m_common_array_initializers, only: &
+    sll_f_landau_mode_initializer_4d, &
+    sll_f_landau_mode_initializer_cos_sum_4d, &
+    sll_i_scalar_initializer_4d
 
-use sll_m_constants, only: &
-  sll_p_pi
+  use sll_m_constants, only: &
+    sll_p_pi
 
-use sll_m_gnuplot, only: &
-  sll_o_gnuplot_2d
+  use sll_m_gnuplot, only: &
+    sll_o_gnuplot_2d
 
-use sll_m_hermite_interpolation_2d, only: &
-  sll_s_compute_w_hermite
+  use sll_m_hermite_interpolation_2d, only: &
+    sll_s_compute_w_hermite
 
-use sll_m_parallel_array_initializer, only: &
-  sll_o_4d_parallel_array_initializer_cartesian
+  use sll_m_parallel_array_initializer, only: &
+    sll_o_4d_parallel_array_initializer_cartesian
 
-use sll_m_periodic_interp, only: &
-  sll_p_lagrange, &
-  sll_p_spline
+  use sll_m_periodic_interp, only: &
+    sll_p_lagrange, &
+    sll_p_spline
 
-use sll_m_reduction, only: &
-  sll_s_compute_reduction_2d_to_0d, &
-  sll_s_compute_reduction_4d_to_2d_direction34, &
-  sll_s_compute_reduction_diag_4d_to_2d_direction12
+  use sll_m_reduction, only: &
+    sll_s_compute_reduction_2d_to_0d, &
+    sll_s_compute_reduction_4d_to_2d_direction34, &
+    sll_s_compute_reduction_diag_4d_to_2d_direction12
 
-use sll_m_remapper, only: &
-  sll_o_apply_remap_4d, &
-  sll_o_compute_local_sizes, &
-  sll_s_factorize_in_two_powers_of_two, &
-  sll_o_initialize_layout_with_distributed_array, &
-  sll_t_layout_2d, &
-  sll_t_layout_4d, &
-  sll_o_local_to_global, &
-  sll_f_new_layout_2d, &
-  sll_f_new_layout_4d, &
-  sll_o_new_remap_plan, &
-  sll_t_remap_plan_4d_real64
+  use sll_m_remapper, only: &
+    sll_o_apply_remap_4d, &
+    sll_o_compute_local_sizes, &
+    sll_s_factorize_in_two_powers_of_two, &
+    sll_o_initialize_layout_with_distributed_array, &
+    sll_t_layout_2d, &
+    sll_t_layout_4d, &
+    sll_o_local_to_global, &
+    sll_f_new_layout_2d, &
+    sll_f_new_layout_4d, &
+    sll_o_new_remap_plan, &
+    sll_t_remap_plan_4d_real64
 
-use sll_m_sim_base, only: &
-  sll_c_simulation_base_class
+  use sll_m_sim_base, only: &
+    sll_c_simulation_base_class
 
-use sll_m_time_splitting_coeff, only: &
-  sll_f_new_time_splitting_coeff, &
-  sll_p_lie_tv, &
-  sll_p_lie_vt, &
-  sll_p_order6_tvt, &
-  sll_p_order6_vtv, &
-  sll_p_order6vp2d_vtv, &
-  sll_p_order6vp_tvt, &
-  sll_p_order6vp_vtv, &
-  sll_p_order6vpnew1_vtv, &
-  sll_p_order6vpnew2_vtv, &
-  sll_p_order6vpnew_tvt, &
-  sll_p_order6vpot_vtv, &
-  sll_p_order6vpotnew1_vtv, &
-  sll_p_order6vpotnew2_vtv, &
-  sll_p_order6vpotnew3_vtv, &
-  sll_p_strang_tvt, &
-  sll_p_strang_vtv, &
-  sll_p_triple_jump_tvt, &
-  sll_p_triple_jump_vtv, &
-  sll_t_splitting_coeff
+  use sll_m_time_splitting_coeff, only: &
+    sll_f_new_time_splitting_coeff, &
+    sll_p_lie_tv, &
+    sll_p_lie_vt, &
+    sll_p_order6_tvt, &
+    sll_p_order6_vtv, &
+    sll_p_order6vp2d_vtv, &
+    sll_p_order6vp_tvt, &
+    sll_p_order6vp_vtv, &
+    sll_p_order6vpnew1_vtv, &
+    sll_p_order6vpnew2_vtv, &
+    sll_p_order6vpnew_tvt, &
+    sll_p_order6vpot_vtv, &
+    sll_p_order6vpotnew1_vtv, &
+    sll_p_order6vpotnew2_vtv, &
+    sll_p_order6vpotnew3_vtv, &
+    sll_p_strang_tvt, &
+    sll_p_strang_vtv, &
+    sll_p_triple_jump_tvt, &
+    sll_p_triple_jump_vtv, &
+    sll_t_splitting_coeff
 
-use sll_m_utilities, only: &
-  sll_s_int2string, &
-  sll_f_is_even
+  use sll_m_utilities, only: &
+    sll_s_int2string, &
+    sll_f_is_even
 
-use sll_m_poisson_2d_base
-use sll_m_poisson_2d_periodic
+  use sll_m_poisson_2d_base
+  use sll_m_poisson_2d_periodic
 
-implicit none
+  implicit none
 
-public :: &
-  sll_s_delete_vp4d_par_cart, &
-  sll_f_new_vlasov_par_poisson_seq_cart, &
-  sll_t_simulation_4d_vlasov_par_poisson_seq_cart
+  public :: &
+    sll_s_delete_vp4d_par_cart, &
+    sll_f_new_vlasov_par_poisson_seq_cart, &
+    sll_t_simulation_4d_vlasov_par_poisson_seq_cart
 
-private
-
-type, extends(sll_c_simulation_base_class) :: &
-     sll_t_simulation_4d_vlasov_par_poisson_seq_cart
-
- !geometry
- type(sll_t_cartesian_mesh_1d), pointer :: mesh_x1
- type(sll_t_cartesian_mesh_1d), pointer :: mesh_x2
- type(sll_t_cartesian_mesh_1d), pointer :: mesh_x3
- type(sll_t_cartesian_mesh_1d), pointer :: mesh_x4
+  private
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 
- !initial function
- procedure(sll_i_scalar_initializer_4d), nopass, pointer :: init_func
- sll_real64, dimension(:), pointer :: params
- sll_real64 :: nrj0   
- sll_real64 :: l20   
+  type, extends(sll_c_simulation_base_class) :: &
+       sll_t_simulation_4d_vlasov_par_poisson_seq_cart
 
- !time_iterations
- sll_real64 :: dt
- sll_int32  :: num_iterations
- sll_int32  :: freq_diag
- sll_int32  :: freq_diag_time
- type(sll_t_splitting_coeff), pointer :: split
- character(len=256)      :: thdiag_filename
- 
- !advector
- class(sll_c_advector_1d), pointer    :: advect_x1
- class(sll_c_advector_1d), pointer    :: advect_x2
- class(sll_c_advector_1d), pointer    :: advect_x3
- class(sll_c_advector_1d), pointer    :: advect_x4
- 
- !poisson solver
- class(sll_c_poisson_2d_base), pointer   :: poisson
- !class(sll_c_poisson_2d_base), pointer   :: poisson_for_K
- ! -Delta K = 4Det(Jac(E)) 
- !   = 4(\partial_x1E_x1\partial_x2E_x2-\partial_x1E_x2\partial_x2E_x1
- sll_int32 :: stencil_r
- sll_int32 :: stencil_s
-               
-contains
+   !geometry
+   type(sll_t_cartesian_mesh_1d), pointer :: mesh_x1
+   type(sll_t_cartesian_mesh_1d), pointer :: mesh_x2
+   type(sll_t_cartesian_mesh_1d), pointer :: mesh_x3
+   type(sll_t_cartesian_mesh_1d), pointer :: mesh_x4
 
-   procedure, pass(sim) :: run => run_vp4d_cartesian
-   procedure, pass(sim) :: init_from_file => init_vp4d_fake
-   procedure, pass(sim) :: init => initialize_vlasov_par_poisson_seq_cart
+
+   !initial function
+   procedure(sll_i_scalar_initializer_4d), nopass, pointer :: init_func
+   sll_real64, dimension(:), pointer :: params
+   sll_real64 :: nrj0   
+   sll_real64 :: l20   
+
+   !time_iterations
+   sll_real64 :: dt
+   sll_int32  :: num_iterations
+   sll_int32  :: freq_diag
+   sll_int32  :: freq_diag_time
+   type(sll_t_splitting_coeff), pointer :: split
+   character(len=256)      :: thdiag_filename
    
-end type sll_t_simulation_4d_vlasov_par_poisson_seq_cart
-
-
+   !advector
+   class(sll_c_advection_1d_base), pointer    :: advect_x1
+   class(sll_c_advection_1d_base), pointer    :: advect_x2
+   class(sll_c_advection_1d_base), pointer    :: advect_x3
+   class(sll_c_advection_1d_base), pointer    :: advect_x4
+   
+   !poisson solver
+   class(sll_c_poisson_2d_base), pointer   :: poisson
+   !class(sll_c_poisson_2d_base), pointer   :: poisson_for_K
+   ! -Delta K = 4Det(Jac(E)) 
+   !   = 4(\partial_x1E_x1\partial_x2E_x2-\partial_x1E_x2\partial_x2E_x1
+   sll_int32 :: stencil_r
+   sll_int32 :: stencil_s
+                 
+   contains
+     procedure, pass(sim) :: run => run_vp4d_cartesian
+     procedure, pass(sim) :: init_from_file => init_vp4d_fake
+     
+  end type sll_t_simulation_4d_vlasov_par_poisson_seq_cart
+  
+  
 
 contains
   
@@ -195,7 +195,7 @@ contains
     num_run ) &
     result(sim)    
     type(sll_t_simulation_4d_vlasov_par_poisson_seq_cart), pointer :: sim    
-    character(len=*), intent(in), optional :: filename
+    character(len=*), intent(in), optional                                :: filename
     sll_int32, intent(in), optional :: num_run
     sll_int32 :: ierr   
 
@@ -214,15 +214,15 @@ contains
     num_run)
         
     class(sll_t_simulation_4d_vlasov_par_poisson_seq_cart), intent(inout) :: sim
-    character(len=*), intent(in), optional :: filename
+    character(len=*), intent(in), optional                                :: filename
     sll_int32, intent(in), optional :: num_run
     intrinsic :: trim
     sll_int32             :: IO_stat
     sll_int32, parameter  :: input_file = 99
-    character(len=256)    :: mesh_case_x1 
-    character(len=256)    :: mesh_case_x2 
-    character(len=256)    :: mesh_case_x3 
-    character(len=256)    :: mesh_case_x4 
+    character(len=256)      :: mesh_case_x1 
+    character(len=256)      :: mesh_case_x2 
+    character(len=256)      :: mesh_case_x3 
+    character(len=256)      :: mesh_case_x4 
     sll_real64            :: x1_min
     sll_real64            :: x1_max
     sll_real64            :: x2_min
@@ -237,10 +237,10 @@ contains
     sll_int32             :: num_cells_x4    
     sll_int32             :: nbox_x1
     sll_int32             :: nbox_x2
-    character(len=256)    :: advector_x1 
-    character(len=256)    :: advector_x2 
-    character(len=256)    :: advector_x3 
-    character(len=256)    :: advector_x4 
+    character(len=256)      :: advector_x1 
+    character(len=256)      :: advector_x2 
+    character(len=256)      :: advector_x3 
+    character(len=256)      :: advector_x4 
     sll_int32             :: order_x1
     sll_int32             :: order_x2
     sll_int32             :: order_x3
@@ -249,8 +249,8 @@ contains
     sll_int32             :: number_iterations
     sll_int32             :: freq_diag
     sll_int32             :: freq_diag_time
-    character(len=256)    :: split_case
-    character(len=256)    :: initial_function_case
+    character(len=256)      :: split_case
+    character(len=256)      :: initial_function_case
     sll_real64            :: kmode_x1
     sll_real64            :: kmode_x2
     sll_real64            :: lmode_x1
@@ -258,10 +258,10 @@ contains
     sll_real64            :: eps
     sll_real64            :: eps_l
     sll_int32             :: ierr
-    sll_int32             :: stencil_r
-    sll_int32             :: stencil_s
-    character(len=256)    :: str_num_run
-    character(len=256)    :: filename_loc
+    sll_int32 :: stencil_r
+    sll_int32 :: stencil_s
+    character(len=256)      :: str_num_run
+    character(len=256)      :: filename_loc
       
     ! namelists for data input
     namelist / geometry /   &
@@ -300,6 +300,7 @@ contains
       freq_diag_time, &
       split_case
 
+      
     namelist / advector /   &
       advector_x1, &
       order_x1, &
@@ -313,6 +314,9 @@ contains
     namelist / poisson /   &
       stencil_r, &
       stencil_s
+
+ 
+    !!set default parameters
 
     !geometry
     mesh_case_x1="SLL_LANDAU_MESH"
@@ -359,6 +363,7 @@ contains
       sim%thdiag_filename = "thdiag.dat"
     endif
         
+
     !advector
     advector_x1 = "SLL_LAGRANGE"
     order_x1 = 4
@@ -383,6 +388,8 @@ contains
         !filename_loc = adjustl(filename_loc)
         !print *,'filename_loc=',filename_loc
       endif
+      
+      
       
       open(unit = input_file, file=trim(filename_loc)//'.nml',IOStat=IO_stat)
       if( IO_stat /= 0 ) then
@@ -553,80 +560,89 @@ contains
     !advector 
     select case (advector_x1)
       case ("SLL_SPLINES") ! arbitrary order periodic splines
-        allocate(sll_t_advector_1d_periodic :: sim%advect_x1)
-        select type (a => sim%advect_x1)
-        type is(sll_t_advector_1d_periodic)
-        call a%init( num_cells_x1, x1_min, x1_max, sll_p_spline, order_x1) 
-        end select
+        sim%advect_x1 => sll_f_new_periodic_1d_advector( &
+          num_cells_x1, &
+          x1_min, &
+          x1_max, &
+          sll_p_spline, & 
+          order_x1) 
       case("SLL_LAGRANGE") ! arbitrary order sll_p_lagrange periodic interpolation
-        allocate(sll_t_advector_1d_periodic :: sim%advect_x1)
-        select type (a => sim%advect_x1)
-        type is(sll_t_advector_1d_periodic)
-        call a%init( num_cells_x1, x1_min, x1_max, sll_p_lagrange, order_x1) 
-        end select
+        sim%advect_x1 => sll_f_new_periodic_1d_advector( &
+          num_cells_x1, &
+          x1_min, &
+          x1_max, &
+          sll_p_lagrange, & 
+          order_x1)
       case default
         print*,'#advector in x1', advector_x1, ' not implemented'
         stop 
     end select
     select case (advector_x2)
       case ("SLL_SPLINES") ! arbitrary order periodic splines
-        allocate(sll_t_advector_1d_periodic :: sim%advect_x2)
-        select type (a => sim%advect_x2)
-        type is(sll_t_advector_1d_periodic)
-        call a%init( num_cells_x2, x2_min, x2_max, sll_p_spline, order_x2) 
-        end select
+        sim%advect_x2 => sll_f_new_periodic_1d_advector( &
+          num_cells_x2, &
+          x2_min, &
+          x2_max, &
+          sll_p_spline, & 
+          order_x2) 
       case("SLL_LAGRANGE") ! arbitrary order sll_p_lagrange periodic interpolation
-        allocate(sll_t_advector_1d_periodic :: sim%advect_x2)
-        select type (a => sim%advect_x2)
-        type is(sll_t_advector_1d_periodic)
-        call a%init( num_cells_x2, x2_min, x2_max, sll_p_lagrange, order_x2) 
-        end select
+        sim%advect_x2 => sll_f_new_periodic_1d_advector( &
+          num_cells_x2, &
+          x2_min, &
+          x2_max, &
+          sll_p_lagrange, & 
+          order_x2) 
       case default
         print*,'#advector in x2', advector_x2, ' not implemented'
         stop 
     end select
     select case (advector_x3)
       case ("SLL_SPLINES") ! arbitrary order periodic splines
-        allocate(sll_t_advector_1d_periodic :: sim%advect_x3)
-        select type (a => sim%advect_x3)
-        type is(sll_t_advector_1d_periodic)
-        call a%init( num_cells_x3, x3_min, x3_max, sll_p_spline, order_x3) 
-        end select
+        sim%advect_x3 => sll_f_new_periodic_1d_advector( &
+          num_cells_x3, &
+          x3_min, &
+          x3_max, &
+          sll_p_spline, & 
+          order_x3) 
       case("SLL_LAGRANGE") ! arbitrary order sll_p_lagrange periodic interpolation
-        allocate(sll_t_advector_1d_periodic :: sim%advect_x3)
-        select type (a => sim%advect_x3)
-        type is(sll_t_advector_1d_periodic)
-        call a%init( num_cells_x3, x3_min, x3_max, sll_p_lagrange, order_x3) 
-        end select
+        sim%advect_x3 => sll_f_new_periodic_1d_advector( &
+          num_cells_x3, &
+          x3_min, &
+          x3_max, &
+          sll_p_lagrange, & 
+          order_x3) 
       case default
         print*,'#advector in x3', advector_x3, ' not implemented'
         stop 
     end select
     select case (advector_x4)
       case ("SLL_SPLINES") ! arbitrary order periodic splines
-        allocate(sll_t_advector_1d_periodic :: sim%advect_x4)
-        select type (a => sim%advect_x4)
-        type is(sll_t_advector_1d_periodic)
-        call a%init( num_cells_x4, x4_min, x4_max, sll_p_spline, order_x4) 
-        end select
+        sim%advect_x4 => sll_f_new_periodic_1d_advector( &
+          num_cells_x4, &
+          x4_min, &
+          x4_max, &
+          sll_p_spline, & 
+          order_x4) 
       case("SLL_LAGRANGE") ! arbitrary order sll_p_lagrange periodic interpolation
-        allocate(sll_t_advector_1d_periodic :: sim%advect_x4)
-        select type (a => sim%advect_x4)
-        type is(sll_t_advector_1d_periodic)
-        call a%init( num_cells_x4, x4_min, x4_max, sll_p_lagrange, order_x4) 
-        end select
+        sim%advect_x4 => sll_f_new_periodic_1d_advector( &
+          num_cells_x4, &
+          x4_min, &
+          x4_max, &
+          sll_p_lagrange, & 
+          order_x4) 
       case default
         print*,'#advector in x4', advector_x4, ' not implemented'
         stop 
     end select
       
     !poisson: for the moment no choice
-    allocate(sll_t_poisson_2d_periodic :: sim%poisson)
-    select type ( p => sim%poisson )
-    type is (sll_t_poisson_2d_periodic)
-    call p%init( x1_min, x1_max, num_cells_x1, &
-                 x2_min, x2_max, num_cells_x2)
-    end select
+    sim%poisson => sll_f_new_poisson_2d_periodic(&
+      x1_min, &
+      x1_max, &
+      num_cells_x1, &
+      x2_min, &
+      x2_max, &
+      num_cells_x2)
     sim%stencil_r = stencil_r    
     sim%stencil_s = stencil_s    
   end subroutine initialize_vlasov_par_poisson_seq_cart

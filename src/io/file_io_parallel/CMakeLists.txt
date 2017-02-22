@@ -8,8 +8,6 @@ ENDIF()
 
 ADD_LIBRARY(sll_file_io_parallel STATIC ${IO_SRC})
 
-TARGET_INCLUDE_DIRECTORIES(sll_file_io_parallel BEFORE PUBLIC ${HDF5_INCLUDE_DIR_FORTRAN})
-
 TARGET_LINK_LIBRARIES(sll_file_io_parallel sll_collective
                                            sll_file_io
                                            sll_assert 

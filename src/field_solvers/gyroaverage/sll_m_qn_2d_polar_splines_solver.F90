@@ -26,30 +26,29 @@ module sll_m_qn_2d_polar_splines_solver
     sll_c_qn_2d_base
 
   use sll_m_qn_2d_polar, only: &
-    sll_s_qn_2d_polar_init, &
+    sll_f_new_plan_qn_polar_splines, &
     sll_s_precompute_gyroaverage_index, &
     sll_s_precompute_inverse_qn_matrix_polar_splines, &
-    sll_t_qn_2d_polar, &
-    sll_s_qn_2d_polar_solve
+    sll_t_plan_qn_polar, &
+    sll_s_solve_qn_polar_splines
 
   implicit none
 
   public :: &
     sll_f_new_qn_2d_polar_splines_solver, &
-    sll_s_qn_2d_polar_splines_solver_init, &
     sll_t_qn_2d_polar_splines_solver
 
   private
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 
-  type, extends(sll_c_qn_2d_base) :: sll_t_qn_2d_polar_splines_solver     
+  type,extends(sll_c_qn_2d_base) :: sll_t_qn_2d_polar_splines_solver     
   
-    type(sll_t_qn_2d_polar) :: quasineutral
+    type(sll_t_plan_qn_polar), pointer                   :: quasineutral
 
     contains
-      procedure, pass(qn) :: init => &
-        sll_s_qn_2d_polar_splines_solver_init
+      procedure, pass(qn) :: initialize => &
+        initialize_qn_2d_polar_splines_solver
       procedure, pass(qn) :: precompute_qn => &
         precompute_qn_2d_polar_splines
       procedure, pass(qn) :: solve_qn => &
@@ -58,8 +57,6 @@ module sll_m_qn_2d_polar_splines_solver
   end type sll_t_qn_2d_polar_splines_solver
 
 contains
-
-
   function sll_f_new_qn_2d_polar_splines_solver( &
     eta_min, &
     eta_max, &
@@ -79,7 +76,8 @@ contains
     sll_int32 :: ierr
       
     SLL_ALLOCATE(qn,ierr)
-    call qn%init( &
+    call initialize_qn_2d_polar_splines_solver( &
+      qn, &
       eta_min, &
       eta_max, &
       Nc, &
@@ -90,7 +88,7 @@ contains
   end function sll_f_new_qn_2d_polar_splines_solver
   
   
-  subroutine sll_s_qn_2d_polar_splines_solver_init( &
+  subroutine initialize_qn_2d_polar_splines_solver( &
     qn, &
     eta_min, &
     eta_max, &
@@ -98,7 +96,6 @@ contains
     N_points, &
     lambda, &
     T_i)
-
     class(sll_t_qn_2d_polar_splines_solver) :: qn
     sll_real64, intent(in) :: eta_min(2)
     sll_real64, intent(in) :: eta_max(2)
@@ -106,10 +103,21 @@ contains
     sll_int32, intent(in)  :: N_points  
     sll_real64, dimension(:), intent(in)  :: lambda
     sll_real64, dimension(:), intent(in)  :: T_i
+    !sll_int32 :: ierr
 
-    call sll_s_qn_2d_polar_init(qn%quasineutral, eta_min, eta_max, Nc, N_points, lambda, T_i)
+
+          qn%quasineutral => sll_f_new_plan_qn_polar_splines( &
+          eta_min, &
+          eta_max, &
+          Nc, &
+          N_points, &
+          lambda, &
+          T_i)
  
-  end subroutine sll_s_qn_2d_polar_splines_solver_init
+
+  end subroutine initialize_qn_2d_polar_splines_solver
+  
+  
   
   
   subroutine precompute_qn_2d_polar_splines( qn, mu_points, mu_weights, N_mu)
@@ -121,21 +129,24 @@ contains
     sll_int32 :: i
     
     
-    do i=1,N_mu
-      rho_points(i)=sqrt(2._f64*mu_points(i))
-    enddo
-         
-    call sll_s_precompute_gyroaverage_index(qn%quasineutral,rho_points,N_mu)
-    call sll_s_precompute_inverse_qn_matrix_polar_splines(qn%quasineutral,mu_points,mu_weights,N_mu)  
+do i=1,N_mu
+  rho_points(i)=sqrt(2._f64*mu_points(i))
+enddo
+     
+call sll_s_precompute_gyroaverage_index(qn%quasineutral,rho_points,N_mu)
+call sll_s_precompute_inverse_qn_matrix_polar_splines(qn%quasineutral,mu_points,mu_weights,N_mu)  
 
   end subroutine precompute_qn_2d_polar_splines
   
   
+  
+  
+
   subroutine solve_qn_2d_polar_splines( qn, phi)
     class(sll_t_qn_2d_polar_splines_solver), target :: qn
     sll_real64,dimension(:,:),intent(inout) :: phi
     
-    call sll_s_qn_2d_polar_solve(qn%quasineutral,phi)
+    call sll_s_solve_qn_polar_splines(qn%quasineutral,phi)
  
 
   end subroutine solve_qn_2d_polar_splines

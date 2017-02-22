@@ -7,22 +7,27 @@ program unit_test_fields_multipatch
     sll_t_cartesian_mesh_2d
 
   use sll_m_coordinate_transformation_multipatch, only: &
-    sll_t_coordinate_transformation_multipatch_2d
+    sll_f_new_coordinate_transformation_multipatch_2d, &
+    sll_t_coordinate_transformation_multipatch_2d, &
+    sll_o_delete
 
   use sll_m_coordinate_transformations_2d_nurbs, only: &
     sll_t_coordinate_transformation_2d_nurbs
 
   use sll_m_scalar_field_2d_multipatch, only: &
+    sll_f_new_scalar_field_multipatch_2d, &
     sll_s_set_slope_mp, &
+    sll_o_delete, &
     sll_t_scalar_field_multipatch_2d
 
   implicit none
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
-  type(sll_t_coordinate_transformation_multipatch_2d)     :: T
-  type(sll_t_scalar_field_multipatch_2d)                  :: F
-  class(sll_t_cartesian_mesh_2d), pointer                  :: m
-  class(sll_t_coordinate_transformation_2d_nurbs), pointer :: transf
+  
+  type(sll_t_coordinate_transformation_multipatch_2d), pointer :: T
+  class(sll_t_scalar_field_multipatch_2d), pointer             :: F
+  class(sll_t_cartesian_mesh_2d), pointer                        :: m
+  class(sll_t_coordinate_transformation_2d_nurbs), pointer     :: transf
   sll_int32  :: ipatch
   sll_int32  :: i
   sll_int32  :: j
@@ -36,11 +41,11 @@ program unit_test_fields_multipatch
   sll_real64 :: delta2
   sll_real64 :: x1,x2
 
-  call T%init("square_4p_n10")
+  T => sll_f_new_coordinate_transformation_multipatch_2d("square_4p_n10")
   print *, 'initialized multipatch transformation'
   
   
-  call F%init("test_field_multipatch", T)
+  F => sll_f_new_scalar_field_multipatch_2d("test_field_multipatch", T)
   print *, 'initialized scalar field multipatch'
 
   call F%allocate_memory()
@@ -91,9 +96,9 @@ program unit_test_fields_multipatch
   print *, 'writing to file...'
   call F%write_to_file(1)
 
-  call T%free() 
-  call F%free()
-
+  call sll_o_delete(T) 
+  call sll_o_delete(F)
+!  call delete_field_sfmp2d_ptr(F)
   print *, 'PASSED'
   
 

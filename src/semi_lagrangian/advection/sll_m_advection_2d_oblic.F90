@@ -24,7 +24,7 @@ module sll_m_advection_2d_oblic
 #include "sll_working_precision.h"
 
   use sll_m_advection_1d_base, only: &
-    sll_c_advector_1d
+    sll_c_advection_1d_base
 
   use sll_m_lagrange_interpolation, only: &
     sll_f_lagrange_interpolate
@@ -41,7 +41,7 @@ module sll_m_advection_2d_oblic
 
   type  :: sll_t_oblic_2d_advector
     sll_int32 :: Nc_x1
-    class(sll_c_advector_1d), pointer :: adv_x1
+    class(sll_c_advection_1d_base), pointer :: adv_x1
     sll_int32 :: Nc_x2
     sll_real64  :: x2_min
     sll_real64  :: x2_max
@@ -68,7 +68,7 @@ contains
     result(adv)      
     type(sll_t_oblic_2d_advector), pointer :: adv
     sll_int32, intent(in) :: Nc_x1
-    class(sll_c_advector_1d), pointer :: adv_x1
+    class(sll_c_advection_1d_base), pointer :: adv_x1
     sll_int32, intent(in) :: Nc_x2
     sll_real64, intent(in) :: x2_min
     sll_real64, intent(in) :: x2_max
@@ -102,7 +102,7 @@ contains
     stencil_s )
     type(sll_t_oblic_2d_advector), intent(inout) :: adv
     sll_int32, intent(in) :: Nc_x1
-    class(sll_c_advector_1d), pointer :: adv_x1
+    class(sll_c_advection_1d_base), pointer :: adv_x1
     sll_int32, intent(in) :: Nc_x2
     sll_real64, intent(in) :: x2_min
     sll_real64, intent(in) :: x2_max
@@ -184,7 +184,7 @@ contains
     sll_int32 :: ell
     sll_real64, dimension(:,:), pointer :: buf
     sll_real64, dimension(:), pointer :: xx
-    class(sll_c_advector_1d), pointer :: adv_x1
+    class(sll_c_advection_1d_base), pointer :: adv_x1
     sll_real64 :: delta_x2
     sll_int32 :: Nc_x1
     sll_int32 :: Nc_x2

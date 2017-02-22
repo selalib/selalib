@@ -37,7 +37,8 @@ module sll_m_sim_bsl_vp_2d2v_cart_multipatch
   use sll_m_general_coordinate_elliptic_solver_multipatch, only: &
     sll_s_factorize_mat_es_mp, &
     sll_t_general_coordinate_elliptic_solver_mp, &
-    sll_f_new_general_elliptic_solver_mp
+    sll_f_new_general_elliptic_solver_mp, &
+    sll_o_solve_mp
 
   use sll_m_hdf5_io_serial, only: &
     sll_t_hdf5_ser_handle, &
@@ -210,7 +211,7 @@ module sll_m_sim_bsl_vp_2d2v_cart_multipatch
    contains
      procedure, pass(sim) :: run => sll_s_run_4d_qns_general_mp
      procedure, pass(sim) :: init_from_file => init_4d_qns_gen_mp
-     procedure, pass(sim) :: init => sll_s_initialize_4d_qns_gen_mp
+     procedure, pass(sim) :: initialize => sll_s_initialize_4d_qns_gen_mp
   end type sll_t_simulation_4d_qns_general_multipatch
 
   interface sll_o_delete
@@ -674,7 +675,7 @@ contains
     !print*, 'rank: ', sim%my_rank, 'time to create MP F =', time
 
     !call sll_s_set_time_mark(t0)
-    call f_mp%init( sim%init_func, sim%params ) 
+    call f_mp%initialize( sim%init_func, sim%params ) 
     !time = sll_f_time_elapsed_since(t0)
     !print*, 'rank: ', sim%my_rank, 'time to initialize MP F =', time
 
@@ -718,13 +719,13 @@ contains
 
     !print*, '--- ended factorization matrix qns'
 
-    call sim%interp_x3%init( &
+    call sim%interp_x3%initialize( &
          sim%mesh2d_v%num_cells1+1, &
          sim%mesh2d_v%eta1_min, &
          sim%mesh2d_v%eta1_max, &
          sll_p_hermite)
     
-    call sim%interp_x4%init( &
+    call sim%interp_x4%initialize( &
          sim%mesh2d_v%num_cells2+1, &
          sim%mesh2d_v%eta2_min, &
          sim%mesh2d_v%eta2_max, &
@@ -783,7 +784,10 @@ contains
        end if
        
        !call sll_s_set_time_mark(t0)         
-       call sim%qns%solve( rho, phi)
+       call sll_o_solve_mp(&
+            sim%qns,&
+            rho,&
+            phi)
        !time = sll_f_time_elapsed_since(t0)
        !print*, 'rank: ', sim%my_rank, 'time to solve QNS =', time
        

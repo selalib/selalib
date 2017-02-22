@@ -15,7 +15,7 @@ program unit_test_2d
   print *, 'connectivity patch 3, face 1', mp%get_connectivity(3, 1)
 
   call mp%write_to_file()
-  call mp%free()
+  call mp%delete()
 
   print *, "PASSED"
 

@@ -5,7 +5,7 @@ module sll_m_fcisl
 #include "sll_working_precision.h"
 
   use sll_m_advection_1d_base, only: &
-    sll_c_advector_1d
+    sll_c_advection_1d_base
 
   use sll_m_cartesian_meshes, only: &
     sll_f_new_cartesian_mesh_1d, &
@@ -38,7 +38,7 @@ module sll_m_fcisl
     sll_real64, dimension(:,:), pointer :: buf
     type(sll_t_cartesian_mesh_1d), pointer :: mesh_x1
     type(sll_t_cartesian_mesh_1d), pointer :: mesh_x2
-    class(sll_c_advector_1d), pointer :: adv
+    class(sll_c_advection_1d_base), pointer :: adv
     sll_real64, dimension(:), pointer :: w
   end type sll_t_oblic_derivative
 
@@ -78,7 +78,7 @@ contains
     sll_real64, dimension(:,:), intent(out) :: f_output
     sll_int32, intent(in) :: Nc_x1
     sll_int32, intent(in) :: Nc_x2
-    class(sll_c_advector_1d), pointer :: adv
+    class(sll_c_advection_1d_base), pointer :: adv
     sll_real64, intent(in) :: x1_min
     sll_real64, intent(in) :: x1_max
     sll_real64, intent(in) :: iota
@@ -369,7 +369,7 @@ contains
     sll_real64, intent(in) :: x2_max
     sll_int32, intent(in) :: Nc_x1
     sll_int32, intent(in) :: Nc_x2
-    class(sll_c_advector_1d), pointer :: adv
+    class(sll_c_advection_1d_base), pointer :: adv
     !local variables
     sll_int32 :: ierr
     SLL_ALLOCATE(res,ierr)    
@@ -404,7 +404,7 @@ contains
     sll_real64, intent(in) :: x2_max
     sll_int32, intent(in) :: Nc_x1
     sll_int32, intent(in) :: Nc_x2
-    class(sll_c_advector_1d), pointer :: adv
+    class(sll_c_advection_1d_base), pointer :: adv
     sll_int32 :: ierr
     
     deriv%degree = degree    
@@ -431,7 +431,7 @@ contains
     sll_real64, intent(in) :: tau
     sll_real64, dimension(:,:), intent(in) :: phi
     sll_real64, dimension(:,:), intent(out) :: D_phi
-    class(sll_c_advector_1d), pointer :: adv
+    class(sll_c_advection_1d_base), pointer :: adv
     !local variables
     sll_real64, dimension(:,:), pointer :: buf
     sll_int32 :: step

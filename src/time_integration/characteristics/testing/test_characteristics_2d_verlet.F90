@@ -28,13 +28,13 @@ program test_characteristics_2d_verlet
     sll_c_characteristics_2d_base
 
   use sll_m_characteristics_2d_verlet, only: &
-    sll_t_charac_2d_verlet
+    sll_f_new_verlet_2d_charac
 
   use sll_m_cubic_spline_interpolator_1d, only: &
     sll_f_new_cubic_spline_interpolator_1d
 
   use sll_m_cubic_spline_interpolator_2d, only: &
-    sll_t_cubic_spline_interpolator_2d
+    sll_f_new_cubic_spline_interpolator_2d
 
   use sll_m_interpolators_1d_base, only: &
     sll_c_interpolator_1d
@@ -45,14 +45,13 @@ program test_characteristics_2d_verlet
   implicit none
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
   
-  class(sll_c_characteristics_2d_base),pointer :: charac
-  type(sll_t_charac_2d_verlet),        target  :: verlet
+  class(sll_c_characteristics_2d_base),pointer :: verlet
 
   
   sll_int32 :: Npts1
   sll_int32 :: Npts2
-  sll_real64, dimension(:),   allocatable :: input1
-  sll_real64, dimension(:),   allocatable :: input2
+  sll_real64, dimension(:), allocatable :: input1
+  sll_real64, dimension(:), allocatable :: input2
   sll_real64, dimension(:,:), allocatable :: output1
   sll_real64, dimension(:,:), allocatable :: output2
   sll_real64, dimension(:,:), allocatable :: A1
@@ -63,18 +62,20 @@ program test_characteristics_2d_verlet
   sll_real64 :: dt
   sll_real64 :: err
   !sll_real64 :: tmp
-  class(sll_c_interpolator_2d), pointer :: A1_interp_x1x2
-  class(sll_c_interpolator_2d), pointer :: A2_interp_x1x2
-  type(sll_t_cubic_spline_interpolator_2d), target  :: A1_cs2d
-  type(sll_t_cubic_spline_interpolator_2d), target  :: A2_cs2d
-  class(sll_c_interpolator_1d), pointer :: A1_interp_x1
-  class(sll_c_interpolator_1d), pointer :: A2_interp_x1
+  class(sll_c_interpolator_2d), pointer   :: A1_interp_x1x2
+  class(sll_c_interpolator_2d), pointer   :: A2_interp_x1x2
+  class(sll_c_interpolator_1d), pointer   :: A1_interp_x1
+  class(sll_c_interpolator_1d), pointer   :: A2_interp_x1
 
+  
+  
   
   Npts1 = 28
   Npts2 = 32
   dt = 0.1_f64
   
+  
+
   
   !initialization for verlet
   A1_interp_x1 => sll_f_new_cubic_spline_interpolator_1d( &
@@ -89,7 +90,7 @@ program test_characteristics_2d_verlet
     1._f64, &
     sll_p_hermite)
 
-  call A1_cs2d%init( &
+  A1_interp_x1x2 => sll_f_new_cubic_spline_interpolator_2d( &
        Npts1, &
        Npts2, &
        0.0_f64, &
@@ -99,9 +100,7 @@ program test_characteristics_2d_verlet
        sll_p_hermite, &
        sll_p_periodic)
 
-  A1_interp_x1x2 => A1_cs2d
-
-  call A2_cs2d%init( &
+  A2_interp_x1x2 => sll_f_new_cubic_spline_interpolator_2d( &
        Npts1, &
        Npts2, &
        0.0_f64, &
@@ -111,10 +110,10 @@ program test_characteristics_2d_verlet
        sll_p_hermite, &
        sll_p_periodic)
 
-  A2_interp_x1x2 => A2_cs2d
 
 
-  call verlet%init( &
+  verlet => &
+    sll_f_new_verlet_2d_charac(&
       Npts1, &
       Npts2, &
       A1_interp_x1x2, &
@@ -124,7 +123,6 @@ program test_characteristics_2d_verlet
       bc_type_1=sll_p_set_to_limit, &
       bc_type_2=sll_p_periodic)
                   
-  charac => verlet
 
   allocate(input1(Npts1))
   allocate(input2(Npts2))
@@ -151,7 +149,7 @@ program test_characteristics_2d_verlet
       
   err = 0._f64  
   
-  call charac%compute_characteristics( &
+  call verlet%compute_characteristics( &
       A1, &
       A2, &
       dt, &

@@ -14,7 +14,7 @@ program test_mudpack_cartesian
 
   use sll_m_mudpack, only: &
     sll_s_delete_mudpack_cartesian, &
-    sll_s_mudpack_cartesian_init, &
+    sll_s_initialize_mudpack_cartesian, &
     sll_t_mudpack_solver, &
     sll_s_solve_mudpack_cartesian
 
@@ -62,7 +62,7 @@ end do
 
 !Poisson periodic
 
-call sll_s_mudpack_cartesian_init(periodic,  &
+call sll_s_initialize_mudpack_cartesian(periodic,  &
                 eta1_min, eta1_max, nc_eta1, &
                 eta2_min, eta2_max, nc_eta2, &
                 sll_p_periodic, sll_p_periodic,  &
@@ -99,7 +99,7 @@ do i=1,nc_eta1+1
    end do
 end do
      
-call sll_s_mudpack_cartesian_init(dirichlet,  &
+call sll_s_initialize_mudpack_cartesian(dirichlet,  &
                 eta1_min, eta1_max, nc_eta1,  &
                 eta2_min, eta2_max, nc_eta2,  &
                 sll_p_dirichlet, sll_p_dirichlet, &

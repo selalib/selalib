@@ -24,7 +24,6 @@ module sll_m_poisson_1d_polar
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_memory.h"
 #include "sll_working_precision.h"
-#include "sll_errors.h"
 
   use sll_m_poisson_1d_base, only: &
     sll_c_poisson_1d_base
@@ -32,20 +31,19 @@ module sll_m_poisson_1d_polar
   implicit none
 
   public :: &
-    sll_f_new_poisson_1d_polar, &
-    sll_t_poisson_1d_polar
+    sll_f_new_poisson_1d_polar
 
   private
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
-  type,extends(sll_c_poisson_1d_base) :: sll_t_poisson_1d_polar     
+  type,extends(sll_c_poisson_1d_base) :: poisson_1d_polar     
     sll_real64 :: length
     sll_int32 :: nc_eta1
   !type(sll_plan_poisson_polar), pointer                   :: poiss
   
   
   contains
-    procedure, pass(poisson) :: init => &
+    procedure, pass(poisson) :: initialize => &
       initialize_poisson_1d_polar
     procedure, pass(poisson) :: compute_phi_from_rho => &
       compute_phi_from_rho_1d_polar
@@ -54,7 +52,7 @@ module sll_m_poisson_1d_polar
 !    procedure, pass(poisson) :: compute_E_from_phi => &
 !      compute_E_from_phi_2d_polar
       
-  end type sll_t_poisson_1d_polar
+  end type poisson_1d_polar
 
 contains
   function sll_f_new_poisson_1d_polar( &
@@ -64,7 +62,7 @@ contains
     bc) &    
     result(poisson)
       
-    type(sll_t_poisson_1d_polar),pointer :: poisson
+    type(poisson_1d_polar),pointer :: poisson
     sll_real64, intent(in) :: eta1_min
     sll_real64, intent(in) :: eta1_max
     sll_int32, intent(in) :: nc_eta1
@@ -88,7 +86,7 @@ contains
     eta1_max, &
     nc_eta1, &
     bc )
-    class(sll_t_poisson_1d_polar) :: poisson
+    class(poisson_1d_polar) :: poisson
     sll_real64, intent(in) :: eta1_min
     sll_real64, intent(in) :: eta1_max
     sll_int32, intent(in) :: nc_eta1
@@ -105,17 +103,24 @@ contains
   
   ! solves -\Delta phi = rho in 1d
   subroutine compute_phi_from_rho_1d_polar( poisson, phi, rho )
-    class(sll_t_poisson_1d_polar)       :: poisson
-    sll_real64,dimension(:),intent(in)  :: rho
+    class(poisson_1d_polar), target :: poisson
+    sll_real64,dimension(:),intent(in) :: rho
     sll_real64,dimension(:),intent(out) :: phi
 
-    SLL_ERROR('compute_phi_from_rho_1d_polar','#not implemented yet')
+    print *,'#compute_phi_from_rho_1d_polar'
+    print *,'#not implemented yet'
+    phi = 0._f64    
+    print *,poisson%nc_eta1
+    print *,maxval(rho)  
+    stop
+    stop
+    
     
   end subroutine compute_phi_from_rho_1d_polar
 
   ! solves E = -\nabla Phi with -\Delta phi = rho in 1d 
   subroutine compute_E_from_rho_1d_polar( poisson, E, rho )
-    class(sll_t_poisson_1d_polar) :: poisson
+    class(poisson_1d_polar) :: poisson
     sll_real64,dimension(:),intent(in) :: rho
     sll_real64,dimension(:),intent(out) :: E
     sll_int32 :: N

@@ -31,8 +31,8 @@ public :: &
   sll_f_new_csr_matrix_with_constraint, &
   sll_s_csr_add_one_constraint, &
   sll_s_delete_csr_matrix, &
-  sll_s_csr_matrix_init, &
-  sll_s_csr_matrix_init_with_constraint, &
+  sll_s_initialize_csr_matrix, &
+  sll_s_initialize_csr_matrix_with_constraint, &
   sll_s_add_to_csr_matrix, &
   sll_t_csr_matrix, &
   sll_s_factorize_csr_matrix, &
@@ -109,7 +109,7 @@ function sll_f_new_csr_matrix( num_rows,            &
 
   SLL_ALLOCATE(mat, ierr)
 
-  call sll_s_csr_matrix_init( mat,                 &
+  call sll_s_initialize_csr_matrix( mat,                 &
                                     num_rows,            &
                                     num_cols,            &
                                     num_elts,        &
@@ -132,7 +132,7 @@ end function sll_f_new_csr_matrix
 !> param[in] local_to_global_col : local_to_global_col(\ell,i) gives the global 
 !> column index of the matrix, for the element i and local degree of freedom \ell
 !> param[in] num_local_dof_col : number of local degrees of freedom for the columns
-subroutine sll_s_csr_matrix_init(  mat,                 &
+subroutine sll_s_initialize_csr_matrix(  mat,                 &
                                          num_rows,            &
                                          num_cols,            &
                                          num_elts,            &
@@ -198,9 +198,9 @@ subroutine sll_s_csr_matrix_init(  mat,                 &
   SLL_DEALLOCATE_ARRAY(lpi_columns,ierr)
   SLL_DEALLOCATE_ARRAY(lpi_occ,ierr)
   
-end subroutine sll_s_csr_matrix_init
+end subroutine sll_s_initialize_csr_matrix
 
-subroutine sll_s_csr_matrix_init_with_constraint( mat, mat_a)
+subroutine sll_s_initialize_csr_matrix_with_constraint( mat, mat_a)
 
   type(sll_t_csr_matrix), intent(inout) :: mat
   type(sll_t_csr_matrix), intent(in) :: mat_a
@@ -215,7 +215,7 @@ subroutine sll_s_csr_matrix_init_with_constraint( mat, mat_a)
 
   mat%linear_solver%avals = 0._f64
   
-end subroutine sll_s_csr_matrix_init_with_constraint
+end subroutine sll_s_initialize_csr_matrix_with_constraint
 
 function sll_f_new_csr_matrix_with_constraint(mat_a) result(mat)
 
@@ -226,7 +226,7 @@ function sll_f_new_csr_matrix_with_constraint(mat_a) result(mat)
 
   SLL_ALLOCATE(mat, ierr)
 
-  call sll_s_csr_matrix_init_with_constraint( mat, mat_a)
+  call sll_s_initialize_csr_matrix_with_constraint( mat, mat_a)
 
 end function sll_f_new_csr_matrix_with_constraint
  

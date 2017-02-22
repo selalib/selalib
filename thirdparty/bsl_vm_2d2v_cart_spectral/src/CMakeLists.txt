@@ -13,8 +13,7 @@ ADD_LIBRARY(selalib_vlasov4d STATIC sll_vlasov4d_spectral.F90
 
 TARGET_LINK_LIBRARIES(selalib_vlasov4d sll_assert sll_interpolators
   sll_file_io sll_file_io_parallel sll_remap sll_utilities 
-  sll_maxwell_solvers sll_poisson_solvers_parallel
-  sll_poisson_solvers sll_collective sll_fft sll_mpi)
+  sll_maxwell_solvers sll_poisson_solvers sll_collective sll_fft sll_mpi)
 
 ADD_EXECUTABLE(vp4d_remapper        vp4d_remapper.F90)
 ADD_EXECUTABLE(vm4d_remapper        vm4d_remapper.F90)
