@@ -175,12 +175,12 @@ contains
 
 
     ! Initialize the sparse grids in x and v
-    call sim%interp_x%initialize(sim%levels(1:2),sim%order_sg, sim%order_sg+1,0, &
+    call sim%interp_x%init(sim%levels(1:2),sim%order_sg, sim%order_sg+1,0, &
          sim%eta_min(1:2),sim%eta_max(1:2), 0, 0);
-    call sim%interp_xv%initialize(sim%levels, sim%order_sg, sim%order_sg+1, 0, &
+    call sim%interp_xv%init(sim%levels, sim%order_sg, sim%order_sg+1, 0, &
          sim%eta_min, sim%eta_max)
     ! Initialize Poisson
-    call sim%poisson%initialize(sim%interp_x);
+    call sim%poisson%init(sim%interp_x);
     
     sim%size_basis = sim%interp_xv%size_basis
 

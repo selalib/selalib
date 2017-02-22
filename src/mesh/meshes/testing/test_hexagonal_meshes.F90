@@ -9,24 +9,24 @@ program test_hexagonal_meshes
 
   use sll_m_hexagonal_meshes, only: &
     sll_o_delete, &
-    sll_f_new_hex_mesh_2d, &
+    sll_s_hex_mesh_2d_init, &
     sll_t_hex_mesh_2d
 
   implicit none
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
-  type(sll_t_hex_mesh_2d), pointer  :: mesh
-  sll_int32                   :: num_cells
-  sll_real64, pointer         :: field(:)
-  sll_int32                   :: error
-  sll_real64                  :: x1
-  sll_real64                  :: x2
-  sll_int32                   :: i
-  sll_int32                   :: nei1
-  sll_int32                   :: nei2
-  sll_int32                   :: nei3
-  sll_int32                   :: type
-  sll_int32                   :: spline_degree
+  type(sll_t_hex_mesh_2d) :: mesh
+  sll_int32               :: num_cells
+  sll_real64, pointer     :: field(:)
+  sll_int32               :: error
+  sll_real64              :: x1
+  sll_real64              :: x2
+  sll_int32               :: i
+  sll_int32               :: nei1
+  sll_int32               :: nei2
+  sll_int32               :: nei3
+  sll_int32               :: type
+  sll_int32               :: spline_degree
 
   num_cells = 4
   spline_degree = 1
@@ -34,7 +34,7 @@ program test_hexagonal_meshes
   print *, ""
   print *, "Creating a mesh with", num_cells, &
        "cells, mesh coordinates written in ./hex_mesh_coo.txt"
-  mesh => sll_f_new_hex_mesh_2d(num_cells)
+  call sll_s_hex_mesh_2d_init(mesh, num_cells)
   call mesh%display()
   call mesh%write_hex_mesh_2d( "hex_mesh_coo.txt")
   call mesh%write_hex_mesh_mtv("hex_mesh_coo.mtv")
@@ -54,7 +54,7 @@ program test_hexagonal_meshes
 
   ! TESTING NEIGHBOURS :
   num_cells = 2
-  mesh => sll_f_new_hex_mesh_2d(num_cells)
+  call sll_s_hex_mesh_2d_init(mesh, num_cells)
 
   do i = 1, mesh%num_triangles
      call mesh%get_neighbours(i, nei1, nei2, nei3)

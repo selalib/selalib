@@ -30,7 +30,7 @@ module sll_m_advection_1d_CSL_periodic
 !   dfftf
 
   use sll_m_advection_1d_base, only: &
-    sll_c_advection_1d_base
+    sll_c_advector_1d
 
   use sll_m_characteristics_1d_base, only: &
     sll_f_process_outside_point_periodic, &
@@ -56,7 +56,7 @@ module sll_m_advection_1d_CSL_periodic
   private
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
-  type,extends(sll_c_advection_1d_base) :: CSL_periodic_1d_advector
+  type,extends(sll_c_advector_1d) :: CSL_periodic_1d_advector
   
     class(sll_c_interpolator_1d), pointer  :: interp
     class(sll_c_characteristics_1d_base), pointer  :: charac

@@ -48,7 +48,7 @@ module sll_m_scalar_field_2d
 type, extends(sll_c_scalar_field_2d_base) :: sll_t_scalar_field_2d_analytic
 
   private
-  type(sll_t_cartesian_mesh_2d),                pointer         :: mesh
+  type(sll_t_cartesian_mesh_2d),                    pointer         :: mesh
   procedure(sll_i_two_var_parametrizable_function), pointer, nopass :: func
   procedure(sll_i_two_var_parametrizable_function), pointer, nopass :: first_deriv_eta1
   procedure(sll_i_two_var_parametrizable_function), pointer, nopass :: first_deriv_eta2
@@ -66,7 +66,7 @@ type, extends(sll_c_scalar_field_2d_base) :: sll_t_scalar_field_2d_analytic
 
 contains
 
-  procedure, pass(field) :: initialize => initialize_scalar_field_2d_analytic
+  procedure, pass(field) :: init => initialize_scalar_field_2d_analytic
   procedure, pass(field) :: get_transformation => get_transformation_analytic
   procedure, pass(field) :: get_cartesian_mesh => get_cartesian_mesh_2d_analytic
   procedure, pass(field) :: get_jacobian_matrix => get_jacobian_matrix_analytic
@@ -84,7 +84,7 @@ contains
   procedure, pass(field) :: update_interpolation_coefficients => &
                             update_interpolation_coefficients_2d_analytic
   procedure, pass(field) :: write_to_file => write_to_file_analytic_2d
-  procedure, pass(field) :: delete => delete_field_2d_analytic
+  procedure, pass(field) :: free => delete_field_2d_analytic
 
 end type sll_t_scalar_field_2d_analytic
 
@@ -109,7 +109,7 @@ type, extends(sll_c_scalar_field_2d_base) :: sll_t_scalar_field_2d_discrete
 
 contains
 
-  procedure, pass(field) :: initialize => initialize_scalar_field_2d_discrete
+  procedure, pass(field) :: init => initialize_scalar_field_2d_discrete
   procedure, pass(field) :: update_interpolation_coefficients => &
                               update_interp_coeffs_2d_discrete
   procedure, pass(field) :: get_transformation => get_transformation_discrete
@@ -130,7 +130,7 @@ contains
   procedure, pass(field) :: reset_data_pointer => reset_ptr_discrete_2d
   procedure, pass(field) :: get_data_pointer => get_data_ptr_discrete_2d
   procedure, pass(field) :: write_to_file => write_to_file_discrete_2d
-  procedure, pass(field) :: delete => delete_field_2d_discrete
+  procedure, pass(field) :: free => delete_field_2d_discrete
 
 end type sll_t_scalar_field_2d_discrete
 
@@ -302,15 +302,15 @@ end if
 end function first_deriv_eta2_value_at_index_analytic
 
 function sll_f_new_scalar_field_2d_analytic( func,             &
-                                       field_name,       &
-                                       transformation,   &
-                                       bc1_min,          &
-                                       bc1_max,          &
-                                       bc2_min,          &
-                                       bc2_max,          &
-                                       func_params,      &
-                                       first_deriv_eta1, &
-                                       first_deriv_eta2) result(obj)
+                                             field_name,       &
+                                             transformation,   &
+                                             bc1_min,          &
+                                             bc1_max,          &
+                                             bc2_min,          &
+                                             bc2_max,          &
+                                             func_params,      &
+                                             first_deriv_eta1, &
+                                             first_deriv_eta2) result(obj)
   
 type(sll_t_scalar_field_2d_analytic), pointer          :: obj
 procedure(sll_i_two_var_parametrizable_function)           :: func
@@ -325,18 +325,22 @@ procedure(sll_i_two_var_parametrizable_function), optional :: first_deriv_eta1
 procedure(sll_i_two_var_parametrizable_function), optional :: first_deriv_eta2
 sll_int32                                            :: ierr
 
+#ifdef __PGI
+  SLL_ERROR("sll_f_new_scalar_field_2d_analytic","This function does not work with PGI compiler, use init subroutine instead")
+#else
 SLL_ALLOCATE(obj,ierr)
 
-call obj%initialize( func,               &
-&                    field_name,         &
-&                    transformation,     &
-&                    bc1_min,            &
-&                    bc1_max,            &
-&                    bc2_min,            &
-&                    bc2_max,            &
-&                    func_params,        &
-&                    first_deriv_eta1,   &
-&                    first_deriv_eta2)
+call obj%init( func,               &
+&              field_name,         &
+&              transformation,     &
+&              bc1_min,            &
+&              bc1_max,            &
+&              bc2_min,            &
+&              bc2_max,            &
+&              func_params,        &
+&              first_deriv_eta1,   &
+&              first_deriv_eta2)
+#endif
 
 end function sll_f_new_scalar_field_2d_analytic
 
@@ -521,7 +525,7 @@ end subroutine write_to_file_analytic_2d
 !
 ! **************************************************************************
 
-function sll_f_new_scalar_field_2d_discrete( field_name,      &
+function sll_f_new_scalar_field_2d_discrete( field_name,&
                                        interpolator_2d, &
                                        transformation,  &
                                        bc1_min,         &
@@ -534,37 +538,38 @@ function sll_f_new_scalar_field_2d_discrete( field_name,      &
                                        sz_point2) result(obj)
 
 type(sll_t_scalar_field_2d_discrete), pointer  :: obj
-character(len=*), intent(in)                 :: field_name
-class(sll_c_interpolator_2d), target      :: interpolator_2d
+character(len=*), intent(in)                   :: field_name
+class(sll_c_interpolator_2d), target           :: interpolator_2d
 class(sll_c_coordinate_transformation_2d_base) :: transformation
-sll_int32, intent(in)                        :: bc1_min
-sll_int32, intent(in)                        :: bc1_max
-sll_int32, intent(in)                        :: bc2_min
-sll_int32, intent(in)                        :: bc2_max
-sll_real64, dimension(:), optional           :: point1_1d
-sll_real64, dimension(:), optional           :: point2_1d
-sll_int32, optional                          :: sz_point1
-sll_int32, optional                          :: sz_point2
-sll_int32                                    :: ierr
-class(sll_t_cartesian_mesh_2d), pointer        :: mesh
+sll_int32, intent(in)                          :: bc1_min
+sll_int32, intent(in)                          :: bc1_max
+sll_int32, intent(in)                          :: bc2_min
+sll_int32, intent(in)                          :: bc2_max
+sll_real64, dimension(:), optional             :: point1_1d
+sll_real64, dimension(:), optional             :: point2_1d
+sll_int32, optional                            :: sz_point1
+sll_int32, optional                            :: sz_point2
+sll_int32                                      :: ierr
 
-mesh => transformation%get_cartesian_mesh()
+
+#ifdef __PGI
+  SLL_ERROR("sll_f_new_scalar_field_2d_discrete","This function does not work with PGI compiler, use init subroutine instead")
+#else
 
 SLL_ALLOCATE(obj,ierr)
 
-call obj%initialize( field_name,      &
-                     interpolator_2d, &
-                     transformation,  &
-                     mesh%num_cells1, &
-                     mesh%num_cells2, &
-                     bc1_min,         &
-                     bc1_max,         &
-                     bc2_min,         &
-                     bc2_max,         &
-                     point1_1d,       &
-                     sz_point1,       &
-                     point2_1d,       &
-                     sz_point2)
+call obj%init( field_name,      &
+               interpolator_2d, &
+               transformation,  &
+               bc1_min,         &
+               bc1_max,         &
+               bc2_min,         &
+               bc2_max,         &
+               point1_1d,       &
+               sz_point1,       &
+               point2_1d,       &
+               sz_point2)
+#endif
 
 end function sll_f_new_scalar_field_2d_discrete
   
@@ -572,8 +577,6 @@ subroutine initialize_scalar_field_2d_discrete( field,           &
 &                                               field_name,      &
 &                                               interpolator_2d, &
 &                                               transformation,  &
-&                                               num_cells1,      &
-&                                               num_cells2,      &
 &                                               bc1_min,         &
 &                                               bc1_max,         &
 &                                               bc2_min,         &
@@ -583,20 +586,21 @@ subroutine initialize_scalar_field_2d_discrete( field,           &
 &                                               point2_1d,       &
 &                                               sz_point2)
     
-class(sll_t_scalar_field_2d_discrete),          intent(inout) :: field
+class(sll_t_scalar_field_2d_discrete),        intent(inout) :: field
 character(len=*),                             intent(in)    :: field_name
-class(sll_c_interpolator_2d),              target        :: interpolator_2d
-class(sll_c_coordinate_transformation_2d_base), target        :: transformation
+class(sll_c_interpolator_2d),                   target      :: interpolator_2d
+class(sll_c_coordinate_transformation_2d_base), target      :: transformation
 sll_int32,                                    intent(in)    :: bc1_min
 sll_int32,                                    intent(in)    :: bc1_max
 sll_int32,                                    intent(in)    :: bc2_min
 sll_int32,                                    intent(in)    :: bc2_max
-sll_int32,                                    intent(in)    :: num_cells1
-sll_int32,                                    intent(in)    :: num_cells2
 sll_real64, dimension(:),                     optional      :: point1_1d
 sll_real64, dimension(:),                     optional      :: point2_1d
 sll_int32,                                    optional      :: sz_point1
 sll_int32,                                    optional      :: sz_point2
+
+sll_int32 :: num_cells1
+sll_int32 :: num_cells2
 sll_int32 :: ierr   
 
 field%T => transformation
@@ -609,6 +613,9 @@ field%bc1_max = bc1_max
 field%bc2_min = bc2_min
 field%bc2_max = bc2_max
 
+num_cells1 = transformation%mesh%num_cells1
+num_cells2 = transformation%mesh%num_cells2
+
 ! Allocate internal array to store locally a copy of the data.
 SLL_ALLOCATE(field%values(num_cells1+1,num_cells2+1),ierr)
 
@@ -617,6 +624,7 @@ SLL_ASSERT(present(point1_1d))
 SLL_ASSERT(present(point2_1d))
 SLL_ASSERT(present(sz_point1))
 SLL_ASSERT(present(sz_point2))
+
 end subroutine initialize_scalar_field_2d_discrete
   
 
