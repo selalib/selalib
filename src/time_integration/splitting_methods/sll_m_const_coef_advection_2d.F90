@@ -9,7 +9,7 @@ module sll_m_const_coef_advection_2d
     sll_c_interpolator_1d
 
   use sll_m_operator_splitting, only: &
-    sll_s_initialize_operator_splitting, &
+    sll_s_operator_splitting_init, &
     sll_t_operator_splitting
 
   implicit none
@@ -98,7 +98,7 @@ contains
     this%interp1 => interp1
     this%interp2 => interp2
 
-    call sll_s_initialize_operator_splitting( &
+    call sll_s_operator_splitting_init( &
          this, &
          split_case, &
          split_step, &

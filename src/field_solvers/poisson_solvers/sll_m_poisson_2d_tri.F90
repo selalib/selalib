@@ -19,13 +19,12 @@ module sll_m_poisson_2d_tri
   implicit none
 
   public :: &
-    sll_f_new_triangular_poisson_2d, &
+    sll_s_poisson_2d_triangular_init, &
+    sll_s_poisson_2d_triangular_free, &
     sll_s_compute_e_from_phi, &
     sll_s_compute_e_from_rho, &
     sll_s_compute_phi_from_rho, &
-    sll_o_create, &
-    sll_o_delete, &
-    sll_t_triangular_poisson_2d
+    sll_t_poisson_2d_triangular
 
   private
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -34,11 +33,6 @@ interface sll_o_create
   module procedure initialize_poisson_solver
   module procedure initialize_poisson_solver_from_file
 end interface sll_o_create
-
-interface sll_o_delete
-  module procedure delete_poisson_2d_tri
-end interface sll_o_delete
-
 
 !    Caracteristiques du maillage triangulaire:         
 !
@@ -101,7 +95,7 @@ sll_real64, parameter :: grandx = 1.d+20
 !> @details
 !> We using here P1-conformin finite element method.
 !> This program is derived from F. Assous and J. Segre code M2V.
-type :: sll_t_triangular_poisson_2d
+type :: sll_t_poisson_2d_triangular
 
   private
   sll_real64, dimension(:), allocatable :: vnx    !< normal vector on node
@@ -127,34 +121,30 @@ type :: sll_t_triangular_poisson_2d
 
   type(sll_t_triangular_mesh_2d), pointer :: mesh => null()
 
-end type sll_t_triangular_poisson_2d
+end type sll_t_poisson_2d_triangular
 
 contains
 
-function sll_f_new_triangular_poisson_2d(mesh, ntypfr, potfr) result (solver)
+subroutine sll_s_poisson_2d_triangular_init(solver, mesh, ntypfr, potfr)
 
-type(sll_t_triangular_poisson_2d), pointer          :: solver
-type(sll_t_triangular_mesh_2d),  intent(in), target :: mesh
-sll_int32,  dimension(:),      intent(in)         :: ntypfr 
-sll_real64, dimension(:),      intent(in)         :: potfr 
+type(sll_t_poisson_2d_triangular)             :: solver
+type(sll_t_triangular_mesh_2d),   intent(in)  :: mesh
+sll_int32,  dimension(:),         intent(in)  :: ntypfr 
+sll_real64, dimension(:),         intent(in)  :: potfr 
 
-sll_int32 :: ierr
-
-SLL_ALLOCATE(solver,ierr)
 call initialize_poisson_solver(solver, mesh, ntypfr, potfr)
 
-end function sll_f_new_triangular_poisson_2d
+end subroutine sll_s_poisson_2d_triangular_init
 
-!> sll_o_delete the solver derived type
-subroutine delete_poisson_2d_tri( self )
-type(sll_t_triangular_poisson_2d), pointer :: self
+!> Delete the solver derived type
+subroutine sll_s_poisson_2d_triangular_free( self )
+type(sll_t_poisson_2d_triangular) :: self
 
 #ifdef DEBUG
-print*, 'sll_o_delete poisson solver'
+print*, 'delete poisson solver'
 #endif
-nullify(self)
 
-end subroutine delete_poisson_2d_tri
+end subroutine sll_s_poisson_2d_triangular_free
 
 !> Compute electric field from charge density
 !> @param[in]  self solver derived type
@@ -163,7 +153,7 @@ end subroutine delete_poisson_2d_tri
 !> @param[out] ex   electric field x component on nodes
 !> @param[out] ey   electric field y component on nodes
 subroutine sll_s_compute_e_from_rho( self, rho, phi, ex, ey)
-type(sll_t_triangular_poisson_2d) :: self
+type(sll_t_poisson_2d_triangular) :: self
 sll_real64, intent(in)          :: rho(:)
 sll_real64, intent(out)         :: phi(:)
 sll_real64, intent(out)         :: ex(:)
@@ -175,7 +165,7 @@ call poifrc(self, ex, ey)
 end subroutine sll_s_compute_e_from_rho
 
 subroutine sll_s_compute_phi_from_rho( self, rho, phi)
-type(sll_t_triangular_poisson_2d) :: self
+type(sll_t_poisson_2d_triangular) :: self
 sll_real64, intent(in)          :: rho(:)
 sll_real64, intent(out)         :: phi(:)
 
@@ -184,7 +174,7 @@ call poissn(self, rho, phi)
 end subroutine sll_s_compute_phi_from_rho
 
 subroutine sll_s_compute_e_from_phi( self, phi, ex, ey)
-type(sll_t_triangular_poisson_2d) :: self
+type(sll_t_poisson_2d_triangular) :: self
 sll_real64, intent(in)          :: phi(:)
 sll_real64, intent(out)         :: ex(:)
 sll_real64, intent(out)         :: ey(:)
@@ -295,7 +285,7 @@ end subroutine read_data_solver
 
 subroutine initialize_poisson_solver_from_file(self, mesh)
 
-type(sll_t_triangular_poisson_2d),  intent(out)     :: self
+type(sll_t_poisson_2d_triangular),  intent(out)     :: self
 type(sll_t_triangular_mesh_2d),  intent(in), target :: mesh
 sll_int32                                         :: ntypfr(5)
 sll_real64                                        :: potfr(5)
@@ -325,7 +315,7 @@ end subroutine initialize_poisson_solver_from_file
 ! Tableau donnant le numero du dernier terme de chaque ligne (mors1)
 subroutine initialize_poisson_solver( self, mesh, ntypfr, potfr )
 
-type(sll_t_triangular_poisson_2d), intent(out)         :: self
+type(sll_t_poisson_2d_triangular), intent(out)         :: self
 type(sll_t_triangular_mesh_2d)   , intent(in ), target :: mesh
 sll_int32                      , intent(in )         :: ntypfr(:)
 sll_real64                     , intent(in )         :: potfr(:)
@@ -634,7 +624,7 @@ end subroutine morse
 ! Puertolas - Version 1.0  Octobre  1992  
 subroutine poismc(self)
 
-type(sll_t_triangular_poisson_2d),  intent(inout) :: self
+type(sll_t_poisson_2d_triangular),  intent(inout) :: self
 sll_real64 :: amloc(3),aggloc(9),grxloc(9),gryloc(9)
 sll_real64 :: dntx1, dntx2, dntx3, dnty1, dnty2, dnty3 
 sll_real64 :: x1t, x2t, x3t, y1t, y2t, y3t, coef
@@ -809,7 +799,7 @@ end subroutine poismc
 !                                                              
 subroutine poissn(self,rho,phi,ex,ey)
 
-type (sll_t_triangular_poisson_2d)                :: self
+type (sll_t_poisson_2d_triangular)                :: self
 sll_real64, dimension(:), intent(in)            :: rho
 sll_real64, dimension(:), intent(out)           :: phi
 sll_real64, dimension(:), intent(out), optional :: ex
@@ -891,7 +881,7 @@ end subroutine poissn
 !
 subroutine poifrc(self, ex, ey)
 
-type(sll_t_triangular_poisson_2d)   :: self
+type(sll_t_poisson_2d_triangular)   :: self
 sll_real64 :: ex(:), ey(:)
 sll_real64 :: pscal, xnor
 sll_int32 :: is1, is2, ict
@@ -1408,7 +1398,7 @@ end subroutine m1p
 !         On appelle ca un lissage.                        
 subroutine poliss(self, phi, ex, ey)
 
-type(sll_t_triangular_poisson_2d), intent(inout) :: self
+type(sll_t_poisson_2d_triangular), intent(inout) :: self
 sll_real64, dimension(:),        intent(in)    :: phi
 sll_real64, dimension(:),        intent(out)   :: ex
 sll_real64, dimension(:),        intent(out)   :: ey

@@ -32,20 +32,22 @@ module sll_m_sim_bsl_va_1d1v_cart_spectral
 #include "sll_working_precision.h"
 
   use sll_m_advection_1d_ampere, only: &
-    sll_t_ampere_1d_advector_ptr, &
-    sll_f_new_ampere_1d_advector
+    sll_t_advector_1d_ampere, &
+    sll_t_advector_1d_ampere_ptr, &
+    sll_f_new_advector_1d_ampere
 
   use sll_m_advection_1d_base, only: &
+    sll_c_advector_1d, &
     sll_t_advection_1d_base_ptr
 
   use sll_m_advection_1d_non_uniform_cubic_splines, only: &
-    sll_f_new_non_uniform_cubic_splines_1d_advector
+    sll_t_advector_1d_non_uniform_cubic_splines
 
   use sll_m_advection_1d_periodic, only: &
-    sll_f_new_periodic_1d_advector
+    sll_t_advector_1d_periodic
 
   use sll_m_advection_1d_spectral, only: &
-    sll_f_new_spectral_1d_advector
+    sll_t_advector_1d_spectral
 
   use sll_m_ascii_io, only: &
     sll_s_ascii_file_close, &
@@ -113,7 +115,7 @@ module sll_m_sim_bsl_va_1d1v_cart_spectral
     sll_c_poisson_1d_base
 
   use sll_m_poisson_1d_periodic, only: &
-    sll_f_new_poisson_1d_periodic
+    sll_c_poisson_1d_periodic
 
   use sll_m_poisson_1d_polar, only: &
     sll_f_new_poisson_1d_polar
@@ -236,9 +238,9 @@ module sll_m_sim_bsl_va_1d1v_cart_spectral
    sll_real64 :: omegadr
    logical    :: turn_drive_off
 
-   type(sll_t_advection_1d_base_ptr), dimension(:), pointer :: advect_x1 
-   type(sll_t_advection_1d_base_ptr), dimension(:), pointer :: advect_x2
-   type(sll_t_ampere_1d_advector_ptr),    dimension(:), pointer :: advect_ampere_x1
+   class(sll_c_advector_1d), dimension(:), pointer :: advect_x1 
+   class(sll_c_advector_1d), dimension(:), pointer :: advect_x2
+   type(sll_t_advector_1d_ampere), dimension(:), pointer :: advect_ampere_x1
 
    sll_int32  :: advection_form_x2
    sll_real64 :: factor_x1
@@ -857,9 +859,25 @@ contains
         SLL_ERROR( this_sub_name, err_msg )
     end select
 
-    !advector
-    SLL_ALLOCATE(sim%advect_x1(num_threads),ierr)
-    SLL_ALLOCATE(sim%advect_x2(num_threads),ierr)
+    select case (advector_x1)
+    case ("SLL_SPLINES") 
+      allocate(sll_t_advector_1d_periodic :: sim%advect_x1(num_threads))
+    case("SLL_LAGRANGE") 
+      allocate(sll_t_advector_1d_periodic :: sim%advect_x1(num_threads))
+    case("SLL_TRIGO") 
+      allocate(sll_t_advector_1d_periodic :: sim%advect_x1(num_threads))
+    case("SLL_SPECTRAL") 
+      allocate(sll_t_advector_1d_spectral :: sim%advect_x1(num_threads))
+    end select
+
+    select case (advector_x2)
+    case ("SLL_SPLINES") 
+      allocate(sll_t_advector_1d_periodic :: sim%advect_x2(num_threads))
+    case("SLL_LAGRANGE") 
+      allocate(sll_t_advector_1d_periodic :: sim%advect_x2(num_threads))
+    case("SLL_NON_UNIFORM_CUBIC_SPLINES") 
+      allocate(sll_t_advector_1d_non_uniform_cubic_splines :: sim%advect_x2(num_threads))
+    end select
 
     !$OMP PARALLEL DEFAULT(SHARED) &
     !$OMP PRIVATE(tid)
@@ -874,38 +892,31 @@ contains
 
       case ("SLL_SPLINES") ! arbitrary order periodic splines
 
-        sim%advect_x1(tid)%ptr => sll_f_new_periodic_1d_advector( &
-          num_cells_x1,                                     &
-          x1_min,                                           &
-          x1_max,                                           &
-          sll_p_spline,                                           &  
-          order_x1) 
+        select type( a_x1 => sim%advect_x1(tid))
+        type is ( sll_t_advector_1d_periodic )
+        call a_x1%init( num_cells_x1, x1_min, x1_max, sll_p_spline, order_x1) 
+        end select
 
       case("SLL_LAGRANGE") ! arbitrary order sll_p_lagrange periodic interpolation
 
-        sim%advect_x1(tid)%ptr => sll_f_new_periodic_1d_advector( &
-          num_cells_x1,                                     &
-          x1_min,                                           &
-          x1_max,                                           &
-          sll_p_lagrange,                                         & 
-          order_x1)
+        select type( a_x1 => sim%advect_x1(tid))
+        type is ( sll_t_advector_1d_periodic )
+        call a_x1%init( num_cells_x1, x1_min, x1_max, sll_p_lagrange, order_x1)
+        end select
 
       case("SLL_TRIGO") ! sll_p_trigo periodic advection
 
-        sim%advect_x1(tid)%ptr => sll_f_new_periodic_1d_advector( &
-          num_cells_x1,                                     &
-          x1_min,                                           &
-          x1_max,                                           &
-          sll_p_trigo,                                       &
-          order_x1)
+        select type( a_x1 => sim%advect_x1(tid))
+        type is ( sll_t_advector_1d_periodic )
+        call a_x1%init(num_cells_x1, x1_min, x1_max, sll_p_trigo, order_x1)
+        end select
 
       case("SLL_SPECTRAL") ! spectral periodic advection
 
-        sim%advect_x1(tid)%ptr => sll_f_new_spectral_1d_advector( &
-          num_cells_x1,                                     &
-          x1_min,                                           &
-          x1_max)
-
+        select type( a_x1 => sim%advect_x1(tid))
+        type is ( sll_t_advector_1d_spectral )
+        call a_x1%init( num_cells_x1, x1_min, x1_max)
+        end select
 
       case default
 
@@ -918,32 +929,25 @@ contains
 
       case ("SLL_SPLINES") ! arbitrary order periodic splines
 
-        sim%advect_x2(tid)%ptr => sll_f_new_periodic_1d_advector( &
-          num_cells_x2,                                     &
-          x2_min,                                           &
-          x2_max,                                           &
-          sll_p_spline,                                           & 
-          order_x2) 
+        select type( a_x2 => sim%advect_x2(tid))
+        type is ( sll_t_advector_1d_periodic )
+        call a_x2%init( num_cells_x2, x2_min, x2_max, sll_p_spline, order_x2) 
+        end select
 
       case("SLL_LAGRANGE") ! arbitrary order sll_p_lagrange periodic interpolation
 
-        sim%advect_x2(tid)%ptr => sll_f_new_periodic_1d_advector( &
-          num_cells_x2,                                     &
-          x2_min,                                           &
-          x2_max,                                           &
-          sll_p_lagrange,                                         & 
-          order_x2)
+        select type( a_x2 => sim%advect_x2(tid))
+        type is ( sll_t_advector_1d_periodic )
+        call a_x2%init( num_cells_x2, x2_min, x2_max, sll_p_lagrange, order_x2) 
+        end select
 
       case("SLL_NON_UNIFORM_CUBIC_SPLINES") ! arbitrary order sll_p_lagrange 
                                             ! periodic interpolation
 
-        sim%advect_x2(tid)%ptr =>                    &
-          sll_f_new_non_uniform_cubic_splines_1d_advector( &
-            num_cells_x2,                            &
-            x2_min,                                  &
-            x2_max,                                  &
-            order_x2,                                &
-            sim%x2_array)
+        select type( a_x2 => sim%advect_x2(tid))
+        type is ( sll_t_advector_1d_non_uniform_cubic_splines )
+        call a_x2%init( num_cells_x2, x2_min, x2_max, order_x2, sim%x2_array)
+        end select
 
       case default
 
@@ -996,10 +1000,11 @@ contains
     
     select case (poisson_solver)
       case ("SLL_FFT")
-        sim%poisson => sll_f_new_poisson_1d_periodic( &
-          x1_min, &
-          x1_max, &
-          num_cells_x1)
+        allocate( sll_c_poisson_1d_periodic :: sim%poisson)
+        select type( poisson => sim%poisson )
+        type is (sll_c_poisson_1d_periodic )
+        call poisson%init( x1_min, x1_max, num_cells_x1)
+        end select
       case ("SLL_POLAR")
         sim%poisson => sll_f_new_poisson_1d_polar( &
           x1_min, &
@@ -1016,15 +1021,12 @@ contains
         print*,'# Vlasov-Ampere scheme #'
         print*,'########################'
         sim%ampere = .true.
-        SLL_ALLOCATE(sim%advect_ampere_x1(num_threads),ierr)
+        allocate(sim%advect_ampere_x1(num_threads))
         tid = 1
         !$OMP PARALLEL DEFAULT(SHARED) &
         !$OMP PRIVATE(tid)
         !$ tid = omp_get_thread_num()+1
-        sim%advect_ampere_x1(tid)%ptr => sll_f_new_ampere_1d_advector( &
-          num_cells_x1, &
-          x1_min,       &
-          x1_max )
+        call sim%advect_ampere_x1(tid)%init( num_cells_x1, x1_min, x1_max )
         !$OMP END PARALLEL
       case default
         continue
@@ -1356,7 +1358,7 @@ contains
     
          else
     
-           if (sim%driven) call set_e_app(sim, sim%time_init+(istep-1)*sim%dt, e_app)
+           if (sim%driven) call set_e_app(sim, sim%time_init+real(istep-1,f64)*sim%dt, e_app)
            call sll_o_apply_remap_2d( remap_plan_x1_x2, f_x1, f_x2 )
            call advection_v(sim, layout_x2, f_x2, efield, e_app, &
                                sim%split%split_step(split_istep)*sim%dt)
@@ -1443,7 +1445,7 @@ contains
       alpha_omp = sim%factor_x1*sim%node_positions_x2(ig_omp)
       f1d_omp_in(1:np_x1,tid) = f_x1(1:np_x1,i_omp)
       
-      call sim%advect_x1(tid)%ptr%advect_1d_constant(  &
+      call sim%advect_x1(tid)%advect_1d_constant(  &
         alpha_omp,                                     &
         delta_t,                                       &
         f1d_omp_in(1:np_x1,tid),                       &
@@ -1490,7 +1492,7 @@ contains
     !advection in x
     !$ tid = omp_get_thread_num()+1
     
-    sim%advect_ampere_x1(tid)%ptr%r1 = cmplx(0.0,0.0,kind=f64)
+    sim%advect_ampere_x1(tid)%r1 = cmplx(0.0,0.0,kind=f64)
     !$OMP DO 
     do i_omp = 1, local_size_x2
     
@@ -1498,27 +1500,28 @@ contains
       alpha_omp = sim%factor_x1*sim%node_positions_x2(ig_omp)*delta_t
       f1d_omp_in(1:np_x1,tid) = f_x1(1:np_x1,i_omp)
       
-      sim%advect_ampere_x1(tid)%ptr%d_dx = f1d_omp_in(1:nc_x1,tid)
+      sim%advect_ampere_x1(tid)%d_dx = f1d_omp_in(1:nc_x1,tid)
     
-      call sll_s_fft_exec_r2c_1d(sim%advect_ampere_x1(tid)%ptr%fwx,  &
-           sim%advect_ampere_x1(tid)%ptr%d_dx, &
-           sim%advect_ampere_x1(tid)%ptr%fk)
+      call sll_s_fft_exec_r2c_1d(sim%advect_ampere_x1(tid)%fwx,  &
+           sim%advect_ampere_x1(tid)%d_dx, &
+           sim%advect_ampere_x1(tid)%fk)
       do i = 2, nc_x1/2+1
-        sim%advect_ampere_x1(tid)%ptr%fk(i) = &
-           sim%advect_ampere_x1(tid)%ptr%fk(i) & 
-           * cmplx(cos(sim%advect_ampere_x1(tid)%ptr%kx(i)*alpha_omp), &
-                  -sin(sim%advect_ampere_x1(tid)%ptr%kx(i)*alpha_omp),kind=f64)
+        sim%advect_ampere_x1(tid)%fk(i) = &
+           sim%advect_ampere_x1(tid)%fk(i) & 
+           * cmplx(cos(sim%advect_ampere_x1(tid)%kx(i)*alpha_omp), &
+                  -sin(sim%advect_ampere_x1(tid)%kx(i)*alpha_omp),kind=f64)
       end do
     
-      sim%advect_ampere_x1(tid)%ptr%r1(2:nc_x1/2+1) = &
-           sim%advect_ampere_x1(tid)%ptr%r1(2:nc_x1/2+1) &
-         + sim%advect_ampere_x1(tid)%ptr%fk(2:nc_x1/2+1) * sim%integration_weight(ig_omp)
+      sim%advect_ampere_x1(tid)%r1(2:nc_x1/2+1) = &
+           sim%advect_ampere_x1(tid)%r1(2:nc_x1/2+1) &
+         + sim%advect_ampere_x1(tid)%fk(2:nc_x1/2+1) &
+         * cmplx(sim%integration_weight(ig_omp),0.0,f64)
     
-      call sll_s_fft_exec_c2r_1d(sim%advect_ampere_x1(tid)%ptr%bwx, &
-           sim%advect_ampere_x1(tid)%ptr%fk,  &
-           sim%advect_ampere_x1(tid)%ptr%d_dx)
+      call sll_s_fft_exec_c2r_1d(sim%advect_ampere_x1(tid)%bwx, &
+           sim%advect_ampere_x1(tid)%fk,  &
+           sim%advect_ampere_x1(tid)%d_dx)
     
-      f1d_omp_out(1:nc_x1, tid) = sim%advect_ampere_x1(tid)%ptr%d_dx/nc_x1
+      f1d_omp_out(1:nc_x1, tid) = sim%advect_ampere_x1(tid)%d_dx/real(nc_x1,f64)
       f1d_omp_out(np_x1, tid)   = f1d_omp_out(1, tid) 
     
       f_x1(1:np_x1,i_omp)=f1d_omp_out(1:np_x1,tid)
@@ -1529,29 +1532,30 @@ contains
     !$OMP END PARALLEL
     
     
-    sim%advect_ampere_x1(tid)%ptr%d_dx = efield(1:nc_x1)
-    call sll_s_fft_exec_r2c_1d(sim%advect_ampere_x1(1)%ptr%fwx,  &
-         sim%advect_ampere_x1(1)%ptr%d_dx, &
-         sim%advect_ampere_x1(1)%ptr%ek)
+    sim%advect_ampere_x1(tid)%d_dx = efield(1:nc_x1)
+    call sll_s_fft_exec_r2c_1d(sim%advect_ampere_x1(1)%fwx,  &
+         sim%advect_ampere_x1(1)%d_dx, &
+         sim%advect_ampere_x1(1)%ek)
     
     do i = 2, nc_x1/2+1
       s = cmplx(0.0,0.0,kind=f64)
       do tid = 1, sim%num_threads
-        s = s + sim%advect_ampere_x1(tid)%ptr%r1(i)
+        s = s + sim%advect_ampere_x1(tid)%r1(i)
       end do
-      sim%advect_ampere_x1(1)%ptr%r1(i) = s
+      sim%advect_ampere_x1(1)%r1(i) = s
     end do
     
     do i = 2, nc_x1/2+1
-      sim%advect_ampere_x1(1)%ptr%ek(i) =  &
-         - sim%advect_ampere_x1(1)%ptr%r1(i) * sim%L / cmplx(0.,2.*sll_p_pi*(i-1),kind=f64)
+      sim%advect_ampere_x1(1)%ek(i) =  &
+         - sim%advect_ampere_x1(1)%r1(i) * cmplx(sim%L,0.0,f64) &
+         / cmplx(0.0_f64,2.0_f64*sll_p_pi*real(i-1,f64),kind=f64)
     end do
     
-    call sll_s_fft_exec_c2r_1d(sim%advect_ampere_x1(1)%ptr%bwx, &
-         sim%advect_ampere_x1(1)%ptr%ek,  &
+    call sll_s_fft_exec_c2r_1d(sim%advect_ampere_x1(1)%bwx, &
+         sim%advect_ampere_x1(1)%ek,  &
          efield)
     
-    efield(1:nc_x1) = efield(1:nc_x1) / nc_x1
+    efield(1:nc_x1) = efield(1:nc_x1) / real(nc_x1,f64)
     efield(np_x1) = efield(1)
     
     
@@ -1678,7 +1682,7 @@ contains
                                    np_x2-1,mean_omp)
       endif
     
-      call sim%advect_x2(tid)%ptr%advect_1d_constant(    &
+      call sim%advect_x2(tid)%advect_1d_constant(    &
         alpha_omp,                                       &
         delta_t,                                         &
         f1d_omp_in(1:sim%num_dof_x2,tid),                &

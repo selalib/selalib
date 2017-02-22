@@ -995,7 +995,7 @@ contains
     integer                                :: j;                \
     integer                                :: k;                \
     data_type                              :: tmp;              \
-    SLL_ASSERT(sll_f_is_power_of_two(int(n,i64)));                    \
+    SLL_ASSERT(sll_f_is_power_of_two(int(n,i64)));              \
     j = 0;                                                      \
     k = n;                                                      \
     do i=0,n-2;                                                 \
@@ -1014,10 +1014,10 @@ contains
   end subroutine function_name
 
   MAKE_BIT_REVERSE_FUNCTION( bit_reverse_complex, sll_comp64 )
-!PN DEFINED BUT NOT USED
-! MAKE_BIT_REVERSE_FUNCTION( bit_reverse_integer32, sll_int32 )
-! MAKE_BIT_REVERSE_FUNCTION( bit_reverse_integer64, sll_int64 )
-! MAKE_BIT_REVERSE_FUNCTION( bit_reverse_real, sll_real64 )
+! /* PN DEFINED BUT NOT USED                                       */
+! /* MAKE_BIT_REVERSE_FUNCTION( bit_reverse_integer32, sll_int32 ) */
+! /* MAKE_BIT_REVERSE_FUNCTION( bit_reverse_integer64, sll_int64 ) */
+! /* MAKE_BIT_REVERSE_FUNCTION( bit_reverse_real, sll_real64 )     */
 
   ! ugly special case to bit-reverse a complex array that is represented
   ! by an array of reals. This is truly awful...
@@ -1153,6 +1153,7 @@ contains
     end if
   end subroutine fft_dit_nr_aux
 
+!PN /* 
 !PN DEFINED BUT NOT USED
 !PN  subroutine fft_dit_rn( data, sign )
 !PN    sll_comp64, dimension(:), intent(inout) :: data
@@ -1169,6 +1170,7 @@ contains
 !PN    ! arrays, so we are just indicating the first twiddle factor.
 !PN    call fft_dit_rn_aux(data, n, twiddles, 1, sign)
 !PN  end subroutine fft_dit_rn
+!PN */ 
 
   recursive subroutine fft_dit_rn_aux( data,           &
                                        data_size,      &

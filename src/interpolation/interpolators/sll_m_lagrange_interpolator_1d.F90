@@ -51,7 +51,7 @@ module sll_m_lagrange_interpolator_1d
    sll_int32                                    :: interval_selection
  contains
    !> PLEASE ADD DOCUMENTATION
-   procedure,pass(interpolator) :: initialize => initialize_li1d_interpolator
+   procedure,pass(interpolator) :: init => initialize_li1d_interpolator
    !> PLEASE ADD DOCUMENTATION
    procedure :: compute_interpolants => compute_interpolants_li1d
    !> PLEASE ADD DOCUMENTATION

@@ -9,7 +9,6 @@ program test_splines_pp_2d
        sll_s_uniform_b_splines_at_x
 
   use sll_m_arbitrary_degree_spline_interpolator_1d, only: &
-       sll_s_initialize_ad1d_interpolator, &
        sll_t_arbitrary_degree_spline_interpolator_1d
 
   use sll_m_boundary_condition_descriptors, only: &

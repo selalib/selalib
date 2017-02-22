@@ -33,25 +33,21 @@ program sim_bsl_vp_1d1v_cart
   implicit none
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
-class(sll_t_simulation_2d_vlasov_poisson_cart), pointer :: sim
+type(sll_t_simulation_2d_vlasov_poisson_cart) :: sim
 
-character(len=256)  :: filename
-character(len=256)  :: filename_local
+character(len=256)    :: filename
+character(len=256)    :: filename_local
 type(sll_t_time_mark) :: t0
-sll_real64          :: time
-sll_int32           :: ierr
-sll_int32           :: i
-sll_int32           :: num_min
-sll_int32           :: num_max
-character(len=256)  :: str
-
-procedure(sll_i_scalar_initializer_2d), pointer :: init_func
+sll_int32             :: ierr
+sll_int32             :: i
+sll_int32             :: num_min
+sll_int32             :: num_max
+character(len=256)    :: str
 
 sll_real64, dimension(:), pointer :: params
 sll_int32                         :: num_params
 logical                           :: init_from_unit_test  
-
-
+procedure(sll_i_scalar_initializer_2d), pointer :: init_func
 
 init_from_unit_test = .false.
 
@@ -65,65 +61,52 @@ if(sll_f_get_collective_rank(sll_v_world_collective)==0)then
 
 endif
 
+call get_command_argument(1, filename)
+if (len_trim(filename) == 0)then
+  call sim%init( )
+  call sim%run( )
+else
+  filename_local = trim(filename)
+  call get_command_argument(2, str)
+  if(len_trim(str) == 0)then
+    call sim%init( filename_local )
+    
+    if (init_from_unit_test) then
 
-  call get_command_argument(1, filename)
-  if (len_trim(filename) == 0)then
-    sim => sll_f_new_vp2d_par_cart( )
+      print *,'#Warning: init_function is redefined form unit_test'
+      num_params = 2
+      SLL_ALLOCATE(params(num_params),ierr)  
+      params(1) = 0.26_f64
+      params(2) = 100._f64  
+      init_func =>  sll_f_landau_initializer_2d
+
+      call sll_s_change_initial_function_vp2d_par_cart( &
+        sim, init_func, params, num_params)
+      
+    endif
+
     call sim%run( )
   else
-    filename_local = trim(filename)
-    call get_command_argument(2, str)
-    if(len_trim(str) == 0)then
-      sim => sll_f_new_vp2d_par_cart( filename_local )
-      
-      if (init_from_unit_test) then
-
-        print *,'#Warning: init_function is redefined form unit_test'
-        init_func => sll_f_landau_initializer_2d
-        num_params = 2
-        SLL_ALLOCATE(params(num_params),ierr)  
-        params(1) = 0.26_f64
-        params(2) = 100._f64  
-
-        call sll_s_change_initial_function_vp2d_par_cart( &
-          sim,                                      &
-          init_func,                                &
-          params,                                   &
-          num_params)
-        
-      endif
-
-      
-      
-      
-      call sim%run( )
-    else
+    read(str , *) num_max
+    num_min = 0
+    call get_command_argument(3, str)
+    if(len_trim(str) .ne. 0)then
+      num_min = num_max
       read(str , *) num_max
-      num_min = 0
-      call get_command_argument(3, str)
-      if(len_trim(str) .ne. 0)then
-        num_min = num_max
-        read(str , *) num_max
-      endif
-      !print *,'#num=',num_min,num_max
-      do i=num_min,num_max
-        sim => sll_f_new_vp2d_par_cart( filename_local, i)
-        call sim%run( )
-        call sll_s_delete_vp2d_par_cart( sim )
-        nullify( sim )
-      enddo  
-    endif    
-  endif
-
-
-
-
+    endif
+    !print *,'#num=',num_min,num_max
+    do i=num_min,num_max
+      call sim%init( filename_local, i)
+      call sim%run( )
+      call sim%free()
+    enddo  
+  endif    
+endif
 
 if(sll_f_get_collective_rank(sll_v_world_collective)==0)then
 
   print *, '#reached end of vp2d test'
-  time = sll_f_time_elapsed_since(t0)
-  print *, '#time elapsed since t0 : ',time
+  print *, '#time elapsed since t0 : ', sll_f_time_elapsed_since(t0)
   print *, '#PASSED'
 
 endif

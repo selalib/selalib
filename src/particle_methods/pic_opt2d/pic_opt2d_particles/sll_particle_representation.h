@@ -1,9 +1,11 @@
 #ifndef _particle_representations_h_
 #define _particle_representations_h_
 
+/*
 ! ------   ATTENTION   ------   !
 !  the 'real' offset (i.e. x - x_j where x_j is the closest node, at left of x)
 !  of a particle is  offset*dx.
+*/
 #define COMPUTE_CELL_OFFSET(x,xmin,rdelta,icell,offset,tmp) \
   do; \
     tmp = (x - xmin)*rdelta; \
@@ -12,7 +14,10 @@
     exit; \
  end do
 
-! 'extended' cell offset returns arbitrary cell index, allows to track particles not within domain
+/*
+ ! 'extended' cell offset returns arbitrary cell index, allows to track particles not within domain
+*/
+
 #define COMPUTE_CELL_OFFSET_EXTENDED(x,xmin,rdelta,icell,offset,tmp) \
   do; \
     tmp = (x - xmin)*rdelta; \
@@ -22,11 +27,14 @@
  end do
 
 
-! x, y = particle positions (in variable)
-! p = particle (out variable)
-! xmin, ymin, ncx, rdx, rdy = in variables
-! tmp1, tmp2, off_x, off_y  = temporary real variables (tmp are real64, off are real32)  
-! ic_x, ic_y                = temporary integer variables 
+/*
+ ! x, y = particle positions (in variable)
+ ! p = particle (out variable)
+ ! xmin, ymin, ncx, rdx, rdy = in variables
+ ! tmp1, tmp2, off_x, off_y  = temporary real variables (tmp are real64, off are real32)  
+ ! ic_x, ic_y                = temporary integer variables 
+*/
+
 #define SET_PARTICLE_POSITION(p,xmin,ymin,ncx,x,y,ic_x,ic_y,off_x,off_y,rdx,rdy,tmp1,tmp2) \
  do; \
     COMPUTE_CELL_OFFSET(x,xmin,rdx,ic_x,off_x,tmp1); \
@@ -37,13 +45,15 @@
     exit; \
  end do
 
-! similar to SET_PARTICLE_POSITION but 'extended' in the sense that cell index is arbitrary, to track particles not within domain
-! also, now the (LTP) particles store one cell index per dimension: ic_x and ic_y
-! x, y = particle positions (in variable)
-! p = particle (out variable)
-! xmin, ymin, ncx, rdx, rdy = in variables
-! tmp1, tmp2, off_x, off_y  = temporary real variables (tmp are real64, off are real32)
-! ic_x, ic_y                = temporary integer variables
+/*
+ ! similar to SET_PARTICLE_POSITION but 'extended' in the sense that cell index is arbitrary, to track particles not within domain
+ ! also, now the (LTP) particles store one cell index per dimension: ic_x and ic_y
+ ! x, y = particle positions (in variable)
+ ! p = particle (out variable)
+ ! xmin, ymin, ncx, rdx, rdy = in variables
+ ! tmp1, tmp2, off_x, off_y  = temporary real variables (tmp are real64, off are real32)
+ ! ic_x, ic_y                = temporary integer variables
+*/
 #define SET_PARTICLE_POSITION_EXTENDED(p,xmin,ymin,ncx,x,y,ic_x,ic_y,off_x,off_y,rdx,rdy,tmp1,tmp2) \
  do; \
     COMPUTE_CELL_OFFSET_EXTENDED(x,xmin,rdx,ic_x,off_x,tmp1); \
