@@ -31,9 +31,7 @@ program test_dg_fields
   use sll_m_coordinate_transformations_2d, only: &
     sll_f_new_coordinate_transformation_2d_analytic
 
-  use sll_m_dg_fields, only: &
-    sll_t_dg_field_2d, &
-    sll_o_new
+  use sll_m_dg_fields, only: sll_t_dg_field_2d
 
   implicit none
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -106,12 +104,12 @@ tau => sll_f_new_coordinate_transformation_2d_analytic( &
 
 call tau%write_to_file(sll_p_io_mtv)
 
-ex => sll_o_new( degree, tau, add) 
+call ex%init( degree, tau, add) 
 call ex%write_to_file('ex', sll_p_io_gmsh)
 call ex%write_to_file('ex', sll_p_io_mtv)
 call ex%write_to_file('ex', sll_p_io_xdmf)
 
-bz => sll_o_new( degree, collela, gaussian) 
+call bz%init( degree, collela, gaussian) 
 call bz%write_to_file('bz', sll_p_io_gmsh)
 call bz%write_to_file('bz', sll_p_io_mtv)
 call bz%write_to_file('bz', sll_p_io_xdmf)
@@ -119,7 +117,6 @@ call bz%write_to_file('bz', sll_p_io_xdmf)
 print*,'PASSED'
 
 contains
-  
   
   sll_real64 function gaussian( x1, x2, time)
 

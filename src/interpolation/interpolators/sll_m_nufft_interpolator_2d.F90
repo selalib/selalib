@@ -67,7 +67,7 @@ type, extends(sll_c_interpolator_2d) :: sll_t_nufft_interpolator_2d
 contains
 
   !> Allocate data, set dimensions and boundary conditions
-  procedure, pass(interpolator) :: initialize => sll_s_nufft_interpolator_2d_init
+  procedure, pass(interpolator) :: init => sll_s_nufft_interpolator_2d_init
   !> Compute fft 
   procedure :: compute_interpolants => compute_interpolants_nufft2d
   !> Interpolate single value from last interpolants computed

@@ -23,6 +23,7 @@
 module sll_m_hexagonal_meshes
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_memory.h"
+#include "sll_assert.h"
 #include "sll_working_precision.h"
 
   use sll_m_constants, only: &
@@ -49,6 +50,7 @@ module sll_m_hexagonal_meshes
     sll_s_get_triangle_index, &
     sll_f_local_to_global, &
     sll_f_new_hex_mesh_2d, &
+    sll_s_hex_mesh_2d_init, &
     sll_t_hex_mesh_2d, &
     sll_s_write_caid_files
 
@@ -183,7 +185,7 @@ contains
        EXTRA_TABLES) result(mesh)
 
     type(sll_t_hex_mesh_2d), pointer :: mesh
-    sll_int32, intent(in)  :: num_cells
+    sll_int32,            intent(in) :: num_cells
     sll_real64, optional, intent(in) :: radius
     sll_real64, optional, intent(in) :: center_x1
     sll_real64, optional, intent(in) :: center_x2
@@ -195,7 +197,7 @@ contains
 
     SLL_ALLOCATE(mesh, ierr)
 
-    call initialize_hex_mesh_2d( &
+    call sll_s_hex_mesh_2d_init( &
          mesh, &
          num_cells, &
          radius, &
@@ -227,7 +229,7 @@ contains
   !> @param EXTRA_TABLES integer flag: if set to 1 additional tables (for edges'
   !> center) will be created
   !> return a pointer to the newly allocated object.
-  subroutine initialize_hex_mesh_2d( &
+  subroutine sll_s_hex_mesh_2d_init( &
        mesh, &
        num_cells, &
        radius,    &
@@ -242,8 +244,8 @@ contains
        EXTRA_TABLES)
 
 
-    type(sll_t_hex_mesh_2d), pointer :: mesh
-    sll_int32, intent(in)  :: num_cells
+    type(sll_t_hex_mesh_2d)          :: mesh
+    sll_int32,            intent(in) :: num_cells
     sll_real64, optional, intent(in) :: radius
     sll_real64, optional, intent(in) :: center_x1
     sll_real64, optional, intent(in) :: center_x2
@@ -465,7 +467,7 @@ contains
     ! ----------------------------------------- END MATRICES INITIALIZATION
     ! ---------------------------------------------------------------------
 
-  end subroutine initialize_hex_mesh_2d
+  end subroutine sll_s_hex_mesh_2d_init
 
 
 !---------------------------------------------------------------------------
@@ -763,6 +765,7 @@ contains
     sll_int32,              intent(in) :: cell_num
     sll_real64 :: res
 
+    SLL_ASSERT(0 < cell_num .and. cell_num <= mesh%num_triangles)
     res = mesh%center_cartesian_coord(1, cell_num)
   end function eta1_cell_hex
 
@@ -779,6 +782,7 @@ contains
     sll_int32,              intent(in) :: cell_num
     sll_real64 :: res
 
+    SLL_ASSERT(0 < cell_num .and. cell_num <= mesh%num_triangles)
     res = mesh%center_cartesian_coord(2, cell_num)
   end function eta2_cell_hex
 

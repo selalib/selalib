@@ -67,7 +67,7 @@ type, extends(sll_c_interpolator_1d) :: sll_t_cubic_spline_interpolator_1d
 
 contains
 
-   procedure :: initialize => initialize_cs1d_interpolator
+   procedure :: init => initialize_cs1d_interpolator
    procedure :: compute_interpolants => compute_interpolants_cs1d
    procedure :: interpolate_from_interpolant_value => interpolate_value_cs1d
    procedure :: interpolate_from_interpolant_derivative_eta1 => interpolate_deriv1_cs1d
