@@ -1,4 +1,5 @@
 ADD_LIBRARY(characteristics_1d_test_helper STATIC  m_characteristics_1d_test_helper.F90 )
+TARGET_LINK_LIBRARIES( characteristics_1d_test_helper sll_characteristics)
 MACRO( CHARACTERISTICS_TEST TEST_NAME )
   SET( EXECUTABLE test_${TEST_NAME} )
   ADD_EXECUTABLE( ${EXECUTABLE} test_${TEST_NAME}.F90 )

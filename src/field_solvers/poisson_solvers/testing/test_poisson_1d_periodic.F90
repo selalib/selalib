@@ -33,6 +33,7 @@ program test_poisson_1d_periodic
   sll_int32   :: error
   sll_int32   :: mode
   sll_int32   :: i
+  sll_real64  :: err
 
   nc_eta1 = 128
 
@@ -54,9 +55,10 @@ program test_poisson_1d_periodic
 
   call sll_o_solve(poisson, ex, rho)
 
-  print*,'mode=',mode,'   error=',maxval(abs(ex-ex_exact))
+  err = maxval(abs(ex-ex_exact))
+  print*,'mode=',mode,'   error=', err 
 
-  if (error > 1.e-14) stop 'FAILED'
+  if (err > 1.e-14) stop 'FAILED'
  
   poisson_class => sll_f_new_poisson_1d_periodic( eta1_min, &
                                                   eta1_max, &
@@ -68,9 +70,10 @@ program test_poisson_1d_periodic
 
   call poisson_class%compute_e_from_rho( ex, rho )
 
-  print*,'mode=',mode,'   error=',maxval(abs(ex-ex_exact))
+  err = maxval(abs(ex-ex_exact))
+  print*,'mode=',mode,'   error=', err
 
-  if (error > 1.e-14) stop 'FAILED'
+  if (err > 1.e-14) stop 'FAILED'
 
   print*, '#PASSED'
 

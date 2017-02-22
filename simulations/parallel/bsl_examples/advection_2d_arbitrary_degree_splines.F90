@@ -53,17 +53,17 @@ sll_int32  :: i, j
 
 call cpu_time(tcpu1)
 
-call spl%initialize(nc_eta1+1,    &
-                    nc_eta2+1,    &
-                    eta1_min,     &
-                    eta1_max,     &
-                    eta2_min,     &
-                    eta2_max,     &
-                    sll_p_periodic, &
-                    sll_p_periodic, &
-                    sll_p_periodic, &
-                    sll_p_periodic, &
-                    5, 5)
+call spl%init(nc_eta1+1,    &
+              nc_eta2+1,    &
+              eta1_min,     &
+              eta1_max,     &
+              eta2_min,     &
+              eta2_max,     &
+              sll_p_periodic, &
+              sll_p_periodic, &
+              sll_p_periodic, &
+              sll_p_periodic, &
+              5, 5)
 
 interp => spl
 
