@@ -32,8 +32,8 @@ module sll_m_sim_bsl_vp_1d1v_cart_two_species
 #include "sll_working_precision.h"
 
   use sll_m_advection_1d_ampere, only: &
-    sll_t_ampere_1d_advector_ptr, &
-    sll_f_new_ampere_1d_advector
+       sll_t_advector_1d_ampere_ptr, &
+       sll_f_new_advector_1d_ampere
 
   use sll_m_advection_1d_base, only: &
     sll_t_advection_1d_base_ptr
@@ -80,7 +80,9 @@ module sll_m_sim_bsl_vp_1d1v_cart_two_species
     sll_f_bump_on_tail_initializer_2d, &
     sll_f_landau_initializer_2d, &
     sll_i_scalar_initializer_2d, &
-    sll_f_two_stream_instability_initializer_2d
+    sll_f_two_stream_instability_initializer_2d, &
+    sll_f_langmuir_initializer_2d, &
+    sll_f_langmuir_initializer_2d_random
 
   use sll_m_constants, only: &
     sll_p_pi
@@ -94,6 +96,9 @@ module sll_m_sim_bsl_vp_1d1v_cart_two_species
     sll_s_fft_init_r2r_1d, &
     sll_t_fft
 
+  use sll_m_gaussian, only: &
+       sll_f_gaussian_deviate
+  
   use sll_m_gnuplot, only: &
     sll_o_gnuplot_1d
 
@@ -163,7 +168,7 @@ module sll_m_sim_bsl_vp_1d1v_cart_two_species
     sll_o_xdmf_write_array
 
   use sll_mpi, only: &
-    mpi_sum
+       mpi_sum
 
   implicit none
 
@@ -216,9 +221,11 @@ module sll_m_sim_bsl_vp_1d1v_cart_two_species
    !initial function
    procedure(sll_i_scalar_initializer_2d), nopass, pointer :: init_func_sp1
    sll_real64, dimension(:), pointer :: params_sp1
+   logical :: init_function_random_x_sp1 = .false.
    sll_real64 :: nrj0_sp1
    procedure(sll_i_scalar_initializer_2d), nopass, pointer :: init_func_sp2
    sll_real64, dimension(:), pointer :: params_sp2
+   logical :: init_function_random_x_sp2 = .false.
    sll_real64 :: nrj0_sp2
    
    !time_iterations
@@ -255,8 +262,8 @@ module sll_m_sim_bsl_vp_1d1v_cart_two_species
    type(sll_t_advection_1d_base_ptr), dimension(:), pointer :: advect_x2_sp2
 
    ! For Vlasov-Ampere
-   type(sll_t_ampere_1d_advector_ptr),    dimension(:), pointer :: advect_ampere_x1_sp1
-   type(sll_t_ampere_1d_advector_ptr),    dimension(:), pointer :: advect_ampere_x1_sp2
+   type(sll_t_advector_1d_ampere_ptr),    dimension(:), pointer :: advect_ampere_x1_sp1
+   type(sll_t_advector_1d_ampere_ptr),    dimension(:), pointer :: advect_ampere_x1_sp2
    logical :: vlasov_ampere = .false.
    
    
@@ -397,6 +404,12 @@ contains
     sll_real64 :: v0_sp1
     sll_real64 :: factor1_sp1
     sll_real64 :: alpha_gaussian_sp1
+    sll_real64 :: ns_sp1
+    sll_real64 :: vb2_sp1
+    sll_real64 :: vb1_sp1
+    sll_real64 :: vtb_sp1
+    sll_real64 :: db_sp1
+    sll_real64 :: ve_sp1
     character(len=256) :: initial_function_case_sp2
     sll_real64 :: kmode_sp2
     sll_real64 :: eps_sp2
@@ -404,6 +417,12 @@ contains
     sll_real64 :: v0_sp2
     sll_real64 :: factor1_sp2
     sll_real64 :: alpha_gaussian_sp2
+    sll_real64 :: ns_sp2
+    sll_real64 :: vb2_sp2
+    sll_real64 :: vb1_sp2
+    sll_real64 :: vtb_sp2
+    sll_real64 :: db_sp2
+    sll_real64 :: ve_sp2
     character(len=256) :: restart_file
     logical :: time_init_from_restart_file
     
@@ -497,6 +516,12 @@ contains
       v0_sp1, &
       factor1_sp1, &
       alpha_gaussian_sp1, &
+      ns_sp1, &
+      vb2_sp1, &
+      vb1_sp1, &
+      vtb_sp1, &
+      db_sp1, &
+      ve_sp1, &
       initial_function_case_sp2, &
       kmode_sp2, &
       eps_sp2, &
@@ -504,6 +529,12 @@ contains
       v0_sp2, &
       factor1_sp2, &
       alpha_gaussian_sp2, &
+      ns_sp2, &
+      vb2_sp2, &
+      vb1_sp2, &
+      vtb_sp2, &
+      db_sp2, &
+      ve_sp2, &
       restart_file, &
       time_init_from_restart_file
 
@@ -805,6 +836,31 @@ contains
        sim%init_func_sp1 => sll_f_beam_initializer_2d
        SLL_ALLOCATE(sim%params_sp1(1),ierr)
        sim%params_sp1(1) = alpha_gaussian_sp1
+    case ("SLL_LANGMUIR")
+       SLL_ALLOCATE(sim%params_sp1(9),ierr)
+       sim%init_func_sp1 => sll_f_langmuir_initializer_2d
+       sim%params_sp1(1) = eps_sp1
+       sim%params_sp1(2) = kmode_sp1
+       sim%params_sp1(3) = ns_sp1
+       sim%params_sp1(4) = vb2_sp1
+       sim%params_sp1(5) = vb1_sp1
+       sim%params_sp1(6) = vtb_sp1
+       sim%params_sp1(7) = db_sp1
+       sim%params_sp1(8) = ve_sp1
+       sim%params_sp1(9) = sigma_sp1
+    case ("SLL_LANGMUIR_RANDOM")
+       SLL_ALLOCATE(sim%params_sp1(10),ierr)
+       sim%init_func_sp1 => sll_f_langmuir_initializer_2d_random
+       sim%params_sp1(1) = eps_sp1
+       sim%params_sp1(2) = kmode_sp1
+       sim%params_sp1(3) = ns_sp1
+       sim%params_sp1(4) = vb2_sp1
+       sim%params_sp1(5) = vb1_sp1
+       sim%params_sp1(6) = vtb_sp1
+       sim%params_sp1(7) = db_sp1
+       sim%params_sp1(8) = ve_sp1
+       sim%params_sp1(9) = sigma_sp1
+       sim%init_function_random_x_sp1 = .true.
 !    case ("SLL_PLASMA_SHEATH")
 !       sim%init_func_sp1 => sll_plasma_sheath_initializer_2d
 !       SLL_ALLOCATE(sim%params_sp1(2),ierr)
@@ -862,6 +918,31 @@ contains
        sim%init_func_sp2 => sll_f_beam_initializer_2d
        SLL_ALLOCATE(sim%params_sp2(1),ierr)
        sim%params_sp2(1) = alpha_gaussian_sp2
+    case ("SLL_LANGMUIR")
+       SLL_ALLOCATE(sim%params_sp2(9),ierr)
+       sim%init_func_sp2 => sll_f_langmuir_initializer_2d
+       sim%params_sp2(1) = eps_sp2
+       sim%params_sp2(2) = kmode_sp2
+       sim%params_sp2(3) = ns_sp2
+       sim%params_sp2(4) = vb2_sp2
+       sim%params_sp2(5) = vb1_sp2
+       sim%params_sp2(6) = vtb_sp2
+       sim%params_sp2(7) = db_sp2
+       sim%params_sp2(8) = ve_sp2
+       sim%params_sp2(9) = sigma_sp2
+    case ("SLL_LANGMUIR_RANDOM")
+       SLL_ALLOCATE(sim%params_sp1(10),ierr)
+       sim%init_func_sp2 => sll_f_langmuir_initializer_2d_random
+       sim%params_sp2(1) = eps_sp2
+       sim%params_sp2(2) = kmode_sp2
+       sim%params_sp2(3) = ns_sp2
+       sim%params_sp2(4) = vb2_sp2
+       sim%params_sp2(5) = vb1_sp2
+       sim%params_sp2(6) = vtb_sp2
+       sim%params_sp2(7) = db_sp2
+       sim%params_sp2(8) = ve_sp2
+       sim%params_sp2(9) = sigma_sp2 
+       sim%init_function_random_x_sp2 = .true.
 !    case ("SLL_PLASMA_SHEATH")
 !       sim%init_func_sp2 => sll_plasma_sheath_initializer_2d
 !       SLL_ALLOCATE(sim%params_sp2(2),ierr)
@@ -970,7 +1051,7 @@ contains
         !!$OMP PARALLEL DEFAULT(SHARED) &
         !!$OMP PRIVATE(tid)
         !!$ tid = omp_get_thread_num()+1
-        sim%advect_ampere_x1_sp1(tid)%ptr => sll_f_new_ampere_1d_advector( &
+        sim%advect_ampere_x1_sp1(tid)%ptr => sll_f_new_advector_1d_ampere( &
              num_cells_x1, &
              x1_min,       &
              x1_max )
@@ -1027,7 +1108,7 @@ contains
        !!$OMP PARALLEL DEFAULT(SHARED) &
        !!$OMP PRIVATE(tid)
         !!$ tid = omp_get_thread_num()+1
-        sim%advect_ampere_x1_sp2(tid)%ptr => sll_f_new_ampere_1d_advector( &
+        sim%advect_ampere_x1_sp2(tid)%ptr => sll_f_new_advector_1d_ampere( &
              num_cells_x1, &
              x1_min,       &
              x1_max )
@@ -1630,23 +1711,42 @@ contains
         
 
     
-    !initialize distribution function     
-    call sll_o_2d_parallel_array_initializer_cartesian( &
-       layout_x1_sp1, &
-       sim%x1_array, &
-       node_positions_x2_sp1, &
-       f_x1_sp1, &
-       sim%init_func_sp1, &
-       sim%params_sp1)
+    !initialize distribution function
+    if ( sim%init_function_random_x_sp1 .eqv. .true.) then
+       call sll_s_random_initialize_langmuir( &
+            layout_x1_sp1, &
+            sim%x1_array, &
+            node_positions_x2_sp1, &
+            f_x1_sp1, &
+            sim%init_func_sp1, &
+            sim%params_sp1)
+    else
+       call sll_o_2d_parallel_array_initializer_cartesian( &
+            layout_x1_sp1, &
+            sim%x1_array, &
+            node_positions_x2_sp1, &
+            f_x1_sp1, &
+            sim%init_func_sp1, &
+            sim%params_sp1)
+    end if
 
-
-    call sll_o_2d_parallel_array_initializer_cartesian( &
-       layout_x1_sp2, &
-       sim%x1_array, &
-       node_positions_x2_sp2, &
-       f_x1_sp2, &
-       sim%init_func_sp2, &
-       sim%params_sp2)
+    if ( sim%init_function_random_x_sp1 .eqv. .true.) then
+       call sll_s_random_initialize_langmuir( &
+            layout_x1_sp2, &
+            sim%x1_array, &
+            node_positions_x2_sp2, &
+            f_x1_sp2, &
+            sim%init_func_sp2, &
+            sim%params_sp2)
+    else
+       call sll_o_2d_parallel_array_initializer_cartesian( &
+            layout_x1_sp2, &
+            sim%x1_array, &
+            node_positions_x2_sp2, &
+            f_x1_sp2, &
+            sim%init_func_sp2, &
+            sim%params_sp2)
+    end if
 
 
 
@@ -2674,5 +2774,46 @@ contains
 
   end subroutine compute_e_app
 
+
+  !> New array initializer for random initial value (random in x only)
+  subroutine sll_s_random_initialize_langmuir( layout, &
+       x1_array, &
+       x2_array, &
+       array, &
+       func, &
+       func_params)
+    type(sll_t_layout_2d), pointer                    :: layout
+    sll_real64, dimension(:), intent(in)              :: x1_array
+    sll_real64, dimension(:), intent(in)              :: x2_array
+    sll_real64, dimension(:,:), intent(out)           :: array
+    procedure(sll_i_scalar_initializer_2d), pointer   :: func
+    sll_real64, dimension(:), optional                :: func_params
+
+
+    sll_int32  :: i
+    sll_int32  :: j
+    sll_int32  :: loc_size_x1
+    sll_int32  :: loc_size_x2
+    sll_real64 :: eta1
+    sll_real64 :: eta2
+    sll_int32, dimension(1:2)  :: gi ! global indices in the distributed array
+
+    call sll_o_compute_local_sizes( layout, loc_size_x1, loc_size_x2) 
+
+
+    do i=1,loc_size_x1
+       func_params(10) = sll_f_gaussian_deviate()
+       do j=1,loc_size_x2
+        gi(:) = sll_o_local_to_global( layout, (/i,j/) )
+        eta1 = x1_array(gi(1))
+        eta2 = x2_array(gi(2))
+        array(i,j) = func(eta1,eta2,func_params)
+      end do
+    end do
+
+    
+  end subroutine sll_s_random_initialize_langmuir
+  
+  
 
 end module sll_m_sim_bsl_vp_1d1v_cart_two_species
