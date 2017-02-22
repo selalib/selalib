@@ -3,4 +3,5 @@ ADD_LIBRARY(sll_initial_profiles STATIC
 
 TARGET_LINK_LIBRARIES(sll_initial_profiles
                       sll_constants
-                      sll_assert)
+                      sll_assert
+                      sll_random_deviate_generators)

@@ -5,7 +5,10 @@ module sll_m_common_array_initializers
 #include "sll_working_precision.h"
 
   use sll_m_constants, only: &
-    sll_p_pi
+       sll_p_pi
+  
+  use sll_m_gaussian, only: &
+       sll_f_gaussian_deviate
 
   implicit none
 
@@ -60,7 +63,9 @@ module sll_m_common_array_initializers
     sll_f_translation_a2_initializer_2d, &
     sll_f_translation_phi_initializer_2d, &
     sll_f_two_stream_instability_initializer_2d, &
-    sll_f_twostream_1d_xvx_initializer_v1v2x1x2
+    sll_f_twostream_1d_xvx_initializer_v1v2x1x2, &
+    sll_f_langmuir_initializer_2d, &
+    sll_f_langmuir_initializer_2d_random
 
   private
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -1971,5 +1976,141 @@ function sll_f_twostream_1d_xvx_initializer_v1v2x1x2( vx, vy, x, y, params )
          *exp(-0.5*((vx-vxc)**2+(vy-vyc)**2)/(vt*vt))/ (2*sll_p_pi*vt**2)
     
   end function sll_f_gaussian_beam_initializer_4d
+
+
+
+
+ function sll_f_langmuir_initializer_2d( x, vx, params ) 
+    sll_real64 :: sll_f_langmuir_initializer_2d
+    sll_real64, intent(in) :: x
+    sll_real64, intent(in) :: vx
+ 
+    sll_real64, dimension(:), intent(in), optional :: params
+    sll_real64 :: eps
+    sll_real64 :: kx
+    sll_real64 :: factor1
+    sll_real64 :: sum
+    sll_int32  :: ns
+    sll_real64 :: vb2
+    sll_real64 :: vb1
+    sll_real64 :: dvb
+    sll_real64 :: vj
+    sll_real64 :: vtb
+    sll_real64 :: db
+    sll_real64 :: ve
+    sll_int32 :: j
+    sll_real64 :: sigma
+    
+    
+    if( .not. present(params) ) then
+       print *, 'langmuir_initializer_2d, error: the params array must ', &
+            'be passed. params(1) = epsilon, params(2) = kx', &
+            'params(3) = ns, params(4) = vb2, params(5) = vb1', &
+            ' params(6) = vtb, params(7) = db', &
+            'params(8) = ve, params(9) = sigma.'
+       stop
+    end if
+    SLL_ASSERT(size(params)>=9)
+    kx = params(1)
+    eps = params(2)
+    ns = int(params(3), i32)
+    vb2 = params(4)
+    vb1 = params(5)
+    vtb = params(6)
+    db = params(7)
+    ve = params(8)
+    sigma = params(9)
+
+    sum = 0.0_f64
+    !do j = 0,ns
+    do j = 0,ns-1
+    !dvb = (vb2-vb1)/ns
+    dvb = (vb2-vb1)/(ns-1)
+    vj = vb2 -j*dvb
+    !vj = j*dvb
+    sum = sum + exp(-(vx-vj)**2/(2.0_f64*vtb**2*sigma**2))
+    end do
+
+    factor1 = 1.0_f64/(sigma*sqrt(2.0_f64*sll_p_pi))
+  !langmuir initializer with cosine function
+  !  langmuir_initializer_2d = factor1*(1.0_f64+eps*cos(kx*x))&
+  !    *((1.0_f64-db)*exp(-(vx-ve)**2/(2.0_f64*sigma**2))+db*sum/(ns*vtb))
+
+! langmuir initializer with gaussian_deviate 
+    sll_f_langmuir_initializer_2d = factor1* (1.0_f64+eps* sll_f_gaussian_deviate() )&
+      *((1.0_f64-db)*exp(-(vx-ve)**2/(2.0_f64*sigma**2))+db*sum/(ns*vtb))
+
+  end function sll_f_langmuir_initializer_2d
+
+
+
+  function sll_f_langmuir_initializer_2d_random( x, vx, params ) 
+    sll_real64 :: sll_f_langmuir_initializer_2d_random
+    sll_real64, intent(in) :: x
+    sll_real64, intent(in) :: vx
+ 
+    sll_real64, dimension(:), intent(in), optional :: params
+    sll_real64 :: eps
+    sll_real64 :: kx
+    sll_real64 :: factor1
+    sll_real64 :: sum
+    sll_int32  :: ns
+    sll_real64 :: vb2
+    sll_real64 :: vb1
+    sll_real64 :: dvb
+    sll_real64 :: vj
+    sll_real64 :: vtb
+    sll_real64 :: db
+    sll_real64 :: ve
+    sll_int32 :: j
+    sll_real64 :: sigma
+    sll_real64 :: pert
+    
+    
+    if( .not. present(params) ) then
+       print *, 'langmuir_initializer_2d_random, error: the params array must ', &
+            'be passed. params(1) = epsilon, params(2) = kx', &
+            'params(3) = ns, params(4) = vb2, params(5) = vb1', &
+            ' params(6) = vtb, params(7) = db', &
+            'params(8) = ve, params(9) = sigma, params(10) = perturbation.'
+       stop
+    end if
+    SLL_ASSERT(size(params)>=9)
+    kx = params(1)
+    eps = params(2)
+    ns = int(params(3), i32)
+    vb2 = params(4)
+    vb1 = params(5)
+    vtb = params(6)
+    db = params(7)
+    ve = params(8)
+    sigma = params(9)
+    pert = params(10)
+
+    sum = 0.0_f64
+    !do j = 0,ns
+    do j = 0,ns-1
+    !dvb = (vb2-vb1)/ns
+    dvb = (vb2-vb1)/(ns-1)
+    vj = vb2 -j*dvb
+    !vj = j*dvb
+    sum = sum + exp(-(vx-vj)**2/(2.0_f64*vtb**2*sigma**2))
+    end do
+
+    factor1 = 1.0_f64/(sigma*sqrt(2.0_f64*sll_p_pi))
+  !langmuir initializer with cosine function
+  !  langmuir_initializer_2d = factor1*(1.0_f64+eps*cos(kx*x))&
+  !    *((1.0_f64-db)*exp(-(vx-ve)**2/(2.0_f64*sigma**2))+db*sum/(ns*vtb))
+
+! langmuir initializer with gaussian_deviate 
+    sll_f_langmuir_initializer_2d_random = factor1* (1.0_f64+eps* pert )&
+      *((1.0_f64-db)*exp(-(vx-ve)**2/(2.0_f64*sigma**2))+db*sum/(ns*vtb))
+
+  end function sll_f_langmuir_initializer_2d_random
+
+
+
+
+  
 
 end module sll_m_common_array_initializers
