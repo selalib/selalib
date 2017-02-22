@@ -18,6 +18,7 @@ module sll_m_coordinate_transformations_2d_nurbs
 #include "sll_working_precision.h"
 
   use sll_m_arbitrary_degree_spline_interpolator_2d, only: &
+    sll_t_arbitrary_degree_spline_interpolator_2d, &
     sll_f_new_arbitrary_degree_spline_interp2d
 
   use sll_m_boundary_condition_descriptors, only: &
@@ -57,8 +58,7 @@ module sll_m_coordinate_transformations_2d_nurbs
   public :: &
     sll_f_new_nurbs_2d_transformation_from_file, &
     sll_t_coordinate_transformation_2d_nurbs, &
-    sll_t_coordinate_transformation_2d_nurbs_ptr, &
-    sll_o_delete
+    sll_t_coordinate_transformation_2d_nurbs_ptr
 
   private
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -75,11 +75,11 @@ module sll_m_coordinate_transformations_2d_nurbs
      !> PLEASE ADD DOCUMENTATION
      sll_real64, dimension(:,:), pointer :: x2_cell =>null()
      !> PLEASE ADD DOCUMENTATION
-     class(sll_c_interpolator_2d), pointer :: x1_interp =>null()
+     type(sll_t_arbitrary_degree_spline_interpolator_2d) :: x1_interp
      !> PLEASE ADD DOCUMENTATION
-     class(sll_c_interpolator_2d), pointer :: x2_interp =>null()
+     type(sll_t_arbitrary_degree_spline_interpolator_2d) :: x2_interp
      !> PLEASE ADD DOCUMENTATION
-     class(sll_c_interpolator_2d), pointer :: x3_interp =>null()
+     type(sll_t_arbitrary_degree_spline_interpolator_2d) :: x3_interp
      !> PLEASE ADD DOCUMENTATION
      sll_int32 :: is_rational
      !> PLEASE ADD DOCUMENTATION
@@ -90,8 +90,7 @@ module sll_m_coordinate_transformations_2d_nurbs
      sll_real64, dimension(:),pointer :: knots1
      !> PLEASE ADD DOCUMENTATION
      sll_real64, dimension(:),pointer :: knots2
-!     type(sll_t_cartesian_mesh_2d), pointer  :: mesh2d_minimal =>null()
-!     type(sll_t_cartesian_mesh_2d), pointer :: mesh
+
    contains
      
      !> PLEASE ADD DOCUMENTATION
@@ -132,15 +131,8 @@ module sll_m_coordinate_transformations_2d_nurbs
      class(sll_t_coordinate_transformation_2d_nurbs), pointer :: T
   end type sll_t_coordinate_transformation_2d_nurbs_ptr
 
-  interface sll_o_delete
-     module procedure delete_transformation_2d_nurbs
-  end interface sll_o_delete
-
-
-  
 contains
 
-     !> PLEASE ADD DOCUMENTATION
   function sll_f_new_nurbs_2d_transformation_from_file( filename ) result(res)
     type(sll_t_coordinate_transformation_2d_nurbs), pointer :: res
     character(len=*), intent(in) :: filename
@@ -350,7 +342,7 @@ contains
     ! Initialize the first interpolator for 
     ! the first component of our change of coordinates
 
-    transf%x1_interp => sll_f_new_arbitrary_degree_spline_interp2d(&
+    call transf%x1_interp%init(&
          number_cells1 + 1,  &  
          number_cells2 + 1,  &  
          eta1_min_minimal,  &  
@@ -380,7 +372,7 @@ contains
     ! Initialize the second interpolator for 
     ! the second component of our change of coordinates
 
-    transf%x2_interp => sll_f_new_arbitrary_degree_spline_interp2d(&
+    call transf%x2_interp%init(&
          number_cells1 + 1,  & 
          number_cells2 + 2,  & 
          eta1_min_minimal,  & 
@@ -411,7 +403,7 @@ contains
     ! the rational component of our change of coordinates
     ! That is useful if the transfromation is NURBS
 
-    transf%x3_interp => sll_f_new_arbitrary_degree_spline_interp2d(&
+    call transf%x3_interp%init(&
          number_cells1 + 1,  & 
          number_cells2 + 1,  & 
          eta1_min_minimal,  & 

@@ -26,7 +26,7 @@ module sll_m_advection_1d_PSM
 #include "sll_working_precision.h"
 
   use sll_m_advection_1d_base, only: &
-    sll_c_advection_1d_base
+    sll_c_advector_1d
 
   implicit none
 
@@ -36,7 +36,7 @@ module sll_m_advection_1d_PSM
   private
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
-  type,extends(sll_c_advection_1d_base) :: PSM_1d_advector
+  type,extends(sll_c_advector_1d) :: PSM_1d_advector
     sll_real64, dimension(:), pointer :: buf1d    
     sll_real64, dimension(:), pointer :: buf1d_out
     sll_real64, dimension(:), pointer :: dtab     

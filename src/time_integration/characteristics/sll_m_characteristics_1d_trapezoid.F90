@@ -39,12 +39,13 @@ module sll_m_characteristics_1d_trapezoid
   implicit none
 
   public :: &
+    sll_t_trapezoid_1d_charac, &
     sll_f_new_trapezoid_1d_charac
 
   private
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
-  type,extends(sll_c_characteristics_1d_base) :: trapezoid_1d_charac_computer
+  type,extends(sll_c_characteristics_1d_base) :: sll_t_trapezoid_1d_charac
     sll_int32                               :: Npts
     sll_real64                              :: eta_min   
     sll_real64                              :: eta_max  
@@ -56,11 +57,10 @@ module sll_m_characteristics_1d_trapezoid
     logical :: feet_inside
      
   contains
-    procedure, pass(charac) :: initialize => &
-      initialize_trapezoid_1d_charac
+    procedure, pass(charac) :: init => initialize_trapezoid_1d_charac
     procedure, pass(charac) :: compute_characteristics => &
       compute_trapezoid_1d_charac
-  end type trapezoid_1d_charac_computer
+  end type sll_t_trapezoid_1d_charac
 
 contains
   function sll_f_new_trapezoid_1d_charac(&
@@ -75,7 +75,7 @@ contains
       feet_inside) &
       result(charac)
       
-    type(trapezoid_1d_charac_computer),pointer :: charac
+    type(sll_t_trapezoid_1d_charac),pointer :: charac
     sll_int32, intent(in) :: Npts
     sll_int32, intent(in), optional :: bc_type
     sll_real64, intent(in), optional  :: eta_min
@@ -115,7 +115,7 @@ contains
       tol, &
       feet_inside)
       
-    class(trapezoid_1d_charac_computer) :: charac
+    class(sll_t_trapezoid_1d_charac) :: charac
     sll_int32, intent(in) :: Npts
     sll_int32, intent(in), optional :: bc_type
     sll_real64, intent(in), optional  :: eta_min
@@ -201,7 +201,7 @@ contains
       input, &
       output)
 
-    class(trapezoid_1d_charac_computer) :: charac
+    class(sll_t_trapezoid_1d_charac) :: charac
     sll_real64, dimension(:), intent(in) :: A
     sll_real64, intent(in) :: dt
     sll_real64, dimension(:), intent(in) ::  input
@@ -268,7 +268,5 @@ contains
     !print *,'input=',input(1),input(Npts)
     !print *,'output=',output(1),output(Npts)
   end subroutine compute_trapezoid_1d_charac
-
-
 
 end module sll_m_characteristics_1d_trapezoid
