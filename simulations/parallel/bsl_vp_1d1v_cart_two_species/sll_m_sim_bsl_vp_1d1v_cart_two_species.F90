@@ -81,8 +81,9 @@ module sll_m_sim_bsl_vp_1d1v_cart_two_species
     sll_f_landau_initializer_2d, &
     sll_i_scalar_initializer_2d, &
     sll_f_two_stream_instability_initializer_2d, &
-    sll_f_langmuir_initializer_2d, &
-    sll_f_langmuir_initializer_2d_random
+    sll_f_langmuir_cos_initializer_2d, &
+    sll_f_langmuir_gaussxv_initializer_2d, &
+    sll_f_langmuir_parameter_pert_initializer_2d
 
   use sll_m_constants, only: &
     sll_p_pi
@@ -836,9 +837,9 @@ contains
        sim%init_func_sp1 => sll_f_beam_initializer_2d
        SLL_ALLOCATE(sim%params_sp1(1),ierr)
        sim%params_sp1(1) = alpha_gaussian_sp1
-    case ("SLL_LANGMUIR")
+    case ("SLL_LANGMUIR_COS")
        SLL_ALLOCATE(sim%params_sp1(9),ierr)
-       sim%init_func_sp1 => sll_f_langmuir_initializer_2d
+       sim%init_func_sp1 => sll_f_langmuir_cos_initializer_2d
        sim%params_sp1(1) = eps_sp1
        sim%params_sp1(2) = kmode_sp1
        sim%params_sp1(3) = ns_sp1
@@ -848,9 +849,21 @@ contains
        sim%params_sp1(7) = db_sp1
        sim%params_sp1(8) = ve_sp1
        sim%params_sp1(9) = sigma_sp1
-    case ("SLL_LANGMUIR_RANDOM")
+    case ("SLL_LANGMUIR_GAUSSXV")
+       SLL_ALLOCATE(sim%params_sp1(9),ierr)
+       sim%init_func_sp1 => sll_f_langmuir_gaussxv_initializer_2d
+       sim%params_sp1(1) = eps_sp1
+       sim%params_sp1(2) = kmode_sp1
+       sim%params_sp1(3) = ns_sp1
+       sim%params_sp1(4) = vb2_sp1
+       sim%params_sp1(5) = vb1_sp1
+       sim%params_sp1(6) = vtb_sp1
+       sim%params_sp1(7) = db_sp1
+       sim%params_sp1(8) = ve_sp1
+       sim%params_sp1(9) = sigma_sp1
+    case ("SLL_LANGMUIR_GAUSSX")
        SLL_ALLOCATE(sim%params_sp1(10),ierr)
-       sim%init_func_sp1 => sll_f_langmuir_initializer_2d_random
+       sim%init_func_sp1 => sll_f_langmuir_parameter_pert_initializer_2d
        sim%params_sp1(1) = eps_sp1
        sim%params_sp1(2) = kmode_sp1
        sim%params_sp1(3) = ns_sp1
@@ -918,9 +931,9 @@ contains
        sim%init_func_sp2 => sll_f_beam_initializer_2d
        SLL_ALLOCATE(sim%params_sp2(1),ierr)
        sim%params_sp2(1) = alpha_gaussian_sp2
-    case ("SLL_LANGMUIR")
+    case ("SLL_LANGMUIR_COS")
        SLL_ALLOCATE(sim%params_sp2(9),ierr)
-       sim%init_func_sp2 => sll_f_langmuir_initializer_2d
+       sim%init_func_sp2 => sll_f_langmuir_cos_initializer_2d
        sim%params_sp2(1) = eps_sp2
        sim%params_sp2(2) = kmode_sp2
        sim%params_sp2(3) = ns_sp2
@@ -930,9 +943,21 @@ contains
        sim%params_sp2(7) = db_sp2
        sim%params_sp2(8) = ve_sp2
        sim%params_sp2(9) = sigma_sp2
-    case ("SLL_LANGMUIR_RANDOM")
+    case ("SLL_LANGMUIR_GAUSSXV")
+       SLL_ALLOCATE(sim%params_sp2(9),ierr)
+       sim%init_func_sp2 => sll_f_langmuir_gaussxv_initializer_2d
+       sim%params_sp2(1) = eps_sp2
+       sim%params_sp2(2) = kmode_sp2
+       sim%params_sp2(3) = ns_sp2
+       sim%params_sp2(4) = vb2_sp2
+       sim%params_sp2(5) = vb1_sp2
+       sim%params_sp2(6) = vtb_sp2
+       sim%params_sp2(7) = db_sp2
+       sim%params_sp2(8) = ve_sp2
+       sim%params_sp2(9) = sigma_sp2
+    case ("SLL_LANGMUIR_GAUSSX")
        SLL_ALLOCATE(sim%params_sp1(10),ierr)
-       sim%init_func_sp2 => sll_f_langmuir_initializer_2d_random
+       sim%init_func_sp2 => sll_f_langmuir_parameter_pert_initializer_2d
        sim%params_sp2(1) = eps_sp2
        sim%params_sp2(2) = kmode_sp2
        sim%params_sp2(3) = ns_sp2
