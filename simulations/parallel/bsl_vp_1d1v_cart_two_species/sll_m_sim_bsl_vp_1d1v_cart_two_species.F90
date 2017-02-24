@@ -1755,7 +1755,7 @@ contains
             sim%params_sp1)
     end if
 
-    if ( sim%init_function_random_x_sp1 .eqv. .true.) then
+    if ( sim%init_function_random_x_sp2 .eqv. .true.) then
        call sll_s_random_initialize_langmuir( &
             layout_x1_sp2, &
             sim%x1_array, &
