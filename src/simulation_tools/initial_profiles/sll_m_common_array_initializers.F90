@@ -2012,8 +2012,8 @@ function sll_f_twostream_1d_xvx_initializer_v1v2x1x2( vx, vy, x, y, params )
        stop
     end if
     SLL_ASSERT(size(params)>=9)
-    kx = params(1)
-    eps = params(2)
+    eps = params(1)
+    kx = params(2)
     ns = int(params(3), i32)
     vb2 = params(4)
     vb1 = params(5)
@@ -2073,8 +2073,8 @@ function sll_f_twostream_1d_xvx_initializer_v1v2x1x2( vx, vy, x, y, params )
        stop
     end if
     SLL_ASSERT(size(params)>=9)
-    kx = params(1)
-    eps = params(2)
+    eps = params(1)
+    kx = params(2)
     ns = int(params(3), i32)
     vb2 = params(4)
     vb1 = params(5)
@@ -2133,9 +2133,9 @@ function sll_f_twostream_1d_xvx_initializer_v1v2x1x2( vx, vy, x, y, params )
             'params(8) = ve, params(9) = sigma, params(10) = perturbation.'
        stop
     end if
-    SLL_ASSERT(size(params)>=9)
-    kx = params(1)
-    eps = params(2)
+    SLL_ASSERT(size(params)>=10)
+    eps = params(1)
+    kx = params(2)
     ns = int(params(3), i32)
     vb2 = params(4)
     vb1 = params(5)
