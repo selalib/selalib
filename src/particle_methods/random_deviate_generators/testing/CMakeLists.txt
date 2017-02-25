@@ -1,9 +1,12 @@
-add_executable( test_random_deviate_generators test_random_deviate_generators.F90 )
-target_link_libraries( test_random_deviate_generators
-  sll_random_deviate_generators
-  sll_assert
-  sll_memory)
+add_executable( test_gaussian_deviate test_gaussian_deviate.F90 )
+target_link_libraries( test_gaussian_deviate sll_random_deviate_generators)
+add_test( NAME pic_gaussian_deviate COMMAND test_gaussian_deviate )
+set_tests_properties( pic_gaussian_deviate PROPERTIES PASS_REGULAR_EXPRESSION "PASSED" )
 
+add_executable( test_hammersley test_hammersley.F90 )
+target_link_libraries( test_hammersley sll_random_deviate_generators)
+add_test( NAME pic_hammersley COMMAND test_hammersley )
+set_tests_properties( pic_hammersley PROPERTIES PASS_REGULAR_EXPRESSION "PASSED" )
 
 
 FIND_PACKAGE(GSL)
