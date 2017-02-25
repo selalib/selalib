@@ -1,7 +1,6 @@
 SET(QUADRATURE_SRCS sll_m_gauss_lobatto_integration.F90
                     sll_m_rectangle_integration.F90
                     sll_m_trapz_integration.F90
-                    #sll_m_gauss_triangle_integration.F90
                     sll_m_fekete_integration.F90
                     sll_m_primitives.F90)
 
