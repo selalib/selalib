@@ -956,7 +956,7 @@ contains
        sim%params_sp2(8) = ve_sp2
        sim%params_sp2(9) = sigma_sp2
     case ("SLL_LANGMUIR_GAUSSX")
-       SLL_ALLOCATE(sim%params_sp1(10),ierr)
+       SLL_ALLOCATE(sim%params_sp2(10),ierr)
        sim%init_func_sp2 => sll_f_langmuir_parameter_pert_initializer_2d
        sim%params_sp2(1) = eps_sp2
        sim%params_sp2(2) = kmode_sp2
