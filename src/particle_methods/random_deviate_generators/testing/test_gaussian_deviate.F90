@@ -33,12 +33,12 @@ r2_mean     = sum(r(2,:)) / real(num_particles,f64)
 r1_variance = sum((r(1,:)-r1_mean)*(r(1,:)-r1_mean)) / real(num_particles,f64)
 r2_variance = sum((r(2,:)-r2_mean)*(r(2,:)-r2_mean)) / real(num_particles,f64)
 
-print*, ' z mean = ', z_mean
-print*, ' z variance = ', z_variance
-print*, ' r1 mean = ', r1_mean
-print*, ' r1 variance = ', r1_variance
-print*, ' r2 mean = ', r2_mean
-print*, ' r2 variance = ', r2_variance
+print*, ' z mean       = ', z_mean
+print*, ' z variance   = ', z_variance
+print*, ' r1 mean      = ', r1_mean
+print*, ' r1 variance  = ', r1_variance
+print*, ' r2 mean      = ', r2_mean
+print*, ' r2 variance  = ', r2_variance
 write(*,*) "-------"
 write(*,*) "End of Program 'unit_test' for 'deviators' "
 if ( abs(z_mean)  < 1d-2 .and.  abs(z_variance -1.0_f64) < 1d-2 .and. & 
