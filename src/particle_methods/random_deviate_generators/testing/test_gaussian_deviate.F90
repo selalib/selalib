@@ -7,37 +7,47 @@ use sll_m_gaussian
 implicit none
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
-#define Xmin  0._f64
-#define Xmax  5._f64
-#define num_particles 8000_i32
-#define the_mean  -1._f64
-#define the_spatial_variance  4._f64
+#define num_particles 50000_i32
 
+sll_int32  :: j
+sll_real64, allocatable :: r(:,:)
+sll_real64, allocatable :: z(:)
+sll_real64 :: z_mean, z_variance
+sll_real64 :: r1_mean, r1_variance
+sll_real64 :: r2_mean, r2_variance
 
-sll_int32  :: j, incr_index
-sll_real64 :: z, res(2)
-sll_real64 :: shift
-logical    :: is_passed = .TRUE.
-
-!open(152,file='test_Hamm_Gauss.dat')
-
-shift = 0.0734_f64
-incr_index = 0
+call random_seed()
+allocate(z(num_particles))
+allocate(r(2,num_particles))
 do j=1, num_particles
 
-   z = sll_f_gaussian_deviate() * the_spatial_variance + (the_mean)
-   ! This gives a Gaussian centered in 'the_mean'
-   call sll_s_gaussian_deviate_2d(res)
+   z(j) = sll_f_gaussian_deviate() 
+   call sll_s_gaussian_deviate_2d(r(:,j))
 
 enddo
 
-print*, z 
+z_mean      = sum(z) / real(num_particles,f64) 
+z_variance  = sum((z-z_mean)*(z-z_mean)) / real(num_particles,f64)
+r1_mean     = sum(r(1,:)) / real(num_particles,f64) 
+r2_mean     = sum(r(2,:)) / real(num_particles,f64) 
+r1_variance = sum((r(1,:)-r1_mean)*(r(1,:)-r1_mean)) / real(num_particles,f64)
+r2_variance = sum((r(2,:)-r2_mean)*(r(2,:)-r2_mean)) / real(num_particles,f64)
+
+print*, ' z mean = ', z_mean
+print*, ' z variance = ', z_variance
+print*, ' r1 mean = ', r1_mean
+print*, ' r1 variance = ', r1_variance
+print*, ' r2 mean = ', r2_mean
+print*, ' r2 variance = ', r2_variance
 write(*,*) "-------"
 write(*,*) "End of Program 'unit_test' for 'deviators' "
-if (is_passed) then
+if ( abs(z_mean)  < 1d-2 .and.  abs(z_variance -1.0_f64) < 1d-2 .and. & 
+     abs(r1_mean) < 1d-2 .and.  abs(r1_variance-1.0_f64) < 1d-2 .and. & 
+     abs(r2_mean) < 1d-2 .and.  abs(r2_variance-1.0_f64) < 1d-2 ) then
    print *, 'PASSED'
 else
    print *, 'FAILED'
 end if
+deallocate(z)
 
 end program test_gaussian_deviate
