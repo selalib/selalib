@@ -15,7 +15,7 @@ sll_real64, dimension(n) :: v
 sll_real64, dimension(n) :: w
 sll_real64, parameter    :: xmin  = 0.0_f64
 sll_real64, parameter    :: xmax  = 1.0_f64
-sll_int32,  parameter    :: nx    = 4
+sll_int32,  parameter    :: nx    = 8
 sll_real64, parameter    :: vmin  = -1.0_f64
 sll_real64, parameter    :: vmax  =  1.0_f64
 sll_int32,  parameter    :: nv    = 8
@@ -24,7 +24,7 @@ sll_int32                :: root_rank = 0
 logical                  :: file_exists
 sll_int32                :: prank
 sll_int32                :: psize
-character(len=255)       :: res
+sll_int32                :: i, j
 
 
 
@@ -33,10 +33,13 @@ call sll_s_boot_collective()
 prank = sll_f_get_collective_rank( sll_v_world_collective )
 psize = sll_f_get_collective_size( sll_v_world_collective )
 
-call random_number(x)
-x = (xmax-xmin) * x + xmin
-call random_number(v)
-v = (vmax-vmin) * v + vmin
+do i = 1, n
+  x(i) = real(i-1,f64) * (xmax-xmin) / real(nx-1,f64) + xmin
+end do
+
+do j = 1, n
+  v(j) = real(j-1,f64) * (vmax-vmin) / real(nv-1,f64) + vmin
+end do 
 w = real(prank, f64)
 
 call sll_s_distribution_xdmf_coll(plot_name, x, v, w, &
