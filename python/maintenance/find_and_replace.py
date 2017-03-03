@@ -30,7 +30,7 @@ def ignore_dir( d ):
 def select_file( f ):
     """ Return True if filename should be selected for processing.
     """
-    is_fortran = f.endswith( '.c' )
+    is_fortran = f.endswith( '.F90' )
     is_header  = f.endswith( '.h' )
     is_cmake   = (f == 'CMakeLists.txt')
     return is_fortran or is_header or is_cmake
