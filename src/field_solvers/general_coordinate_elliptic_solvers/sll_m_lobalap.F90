@@ -11,6 +11,9 @@ module sll_m_lobalap
   use sll_m_map_function, only: &
     sll_s_map
 
+  use sll_m_scalar_field_2d_base, only: &
+    sll_c_scalar_field_2d_base
+
   implicit none
 
   public :: &
@@ -538,14 +541,14 @@ contains
 
 
   ! assemblage de la matrice élément fini et des conditions aux limites
-  subroutine sll_s_assemb(source_func, potexact_func)
+  subroutine sll_s_assemb(source_field, potexact_func)
     implicit none
     ! matrice locale
     sll_real64 :: jac(2,2),cojac(2,2),det
     sll_real64 :: gradref_i(2),gradref_j(2),xg,yg
     sll_real64 :: grad_i(2),grad_j(2),dxy(2),v,poids,vf
     integer :: iel,ipg,i,ii,j,jj,ig,ib,iib
-    procedure(sll_i_2a_func) :: source_func
+    class(sll_c_scalar_field_2d_base), pointer :: source_field
     procedure(sll_i_2a_func) :: potexact_func
 
     ! assemblage de la matrice de rigidité
@@ -563,7 +566,7 @@ contains
           xg=node(1,ig)
           yg=node(2,ig)
           ! on calcule la charge au point de Gauss
-          vf=source_func(xg,yg)
+          vf=source_field%value_at_point(xg,yg)
           ! calcul de la jacobienne au pg
           ! on pourra le faire directement avec sll_s_map plus tard
           jac=0.0_f64

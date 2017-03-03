@@ -20,31 +20,48 @@ program test_lobalap
     sll_c_coordinate_transformation_2d_base
 
   use sll_m_coordinate_transformations_2d, only: &
-    sll_f_new_coordinate_transformation_2d_analytic
+       sll_t_coordinate_transformation_2d_analytic, &
+       sll_f_new_coordinate_transformation_2d_analytic
 
   use sll_m_dg_fields, only: &
     sll_t_dg_field_2d, &
     sll_o_new
 
+  use sll_m_cubic_spline_interpolator_2d, only: &
+       sll_f_new_cubic_spline_interpolator_2d, &
+       sll_t_cubic_spline_interpolator_2d
+
   use sll_m_lobatto_poisson, only: &
+       sll_f_new_lobatto_poisson, &
     sll_t_lobatto_poisson_solver, &
     sll_o_create, &
     sll_o_solve, &
     sll_o_delete
 
+  use sll_m_boundary_condition_descriptors, only: &
+       sll_p_dirichlet, &
+       sll_p_hermite
+
+  use sll_m_interpolators_2d_base, only: &
+       sll_c_interpolator_2d
+
   implicit none
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
-  type(sll_t_lobatto_poisson_solver)                          :: solver
+  type(sll_t_lobatto_poisson_solver), pointer             :: solver
   type(sll_t_cartesian_mesh_2d), pointer                  :: mesh
-  class(sll_c_coordinate_transformation_2d_base), pointer :: tau
+  type(sll_t_coordinate_transformation_2d_analytic), target :: tau
+  class(sll_c_coordinate_transformation_2d_base), pointer :: tau_pt
+  class(sll_c_interpolator_2d), pointer  :: rho_interp
   type(sll_t_dg_field_2d), pointer                        :: dg_rho
   type(sll_t_dg_field_2d), pointer                        :: dg_ex
   type(sll_t_dg_field_2d), pointer                        :: dg_ey
   sll_int32, parameter                                  :: degree = 3
+  sll_real64, dimension(:,:), allocatable :: rho_tab
+  sll_int32  :: i, j
 
-#define NPTS1 10
-#define NPTS2 10
+#define NPTS1 28
+#define NPTS2 28
 #define R_MIN  0.0_8
 #define R_MAX  1.0_8
 #define THETA_MIN  0.00_8
@@ -68,7 +85,7 @@ program test_lobalap
 !       sll_f_polar_jac22, &
 !       (/ 0.0_f64 /) ) 
 
-  tau => sll_f_new_coordinate_transformation_2d_analytic( &
+  call tau%initialize( &
        "analytic_identity_transformation", &
        mesh, &
        sll_f_identity_x1, &
@@ -91,14 +108,36 @@ program test_lobalap
 !    (/ 0.5_f64,0.5_f64,4.0_f64*sll_p_pi,4.0_f64*sll_p_pi /) )
 
   call tau%write_to_file()
-
-  dg_rho => sll_o_new( degree, tau, f_four )
-  dg_ex  => sll_o_new( degree, tau )
-  dg_ey  => sll_o_new( degree, tau )
+  tau_pt => tau
+  dg_rho => sll_o_new( degree, tau_pt, f_four )
+  dg_ex  => sll_o_new( degree, tau_pt )
+  dg_ey  => sll_o_new( degree, tau_pt )
 
   call dg_rho%write_to_file('rho')
 
-  call sll_o_create(solver, tau, degree )
+  allocate(rho_tab(NPTS1,NPTS2))
+  do j=1,NPTS2
+     do i=1,NPTS1
+        rho_tab(i,j) = source(tau%x1_at_node(i,j), tau%x2_at_node(i,j))
+     end do
+  end do
+
+  rho_interp => sll_f_new_cubic_spline_interpolator_2d( &
+       NPTS1, &
+       NPTS2, &
+       0.0_f64, &
+       1.0_f64, &
+       0.0_f64, &
+       1.0_f64, &
+       sll_p_hermite, &
+       sll_p_hermite)
+
+
+
+  solver =>  sll_f_new_lobatto_poisson(tau, degree, &
+       rho_tab, rho_interp, &
+       sll_p_dirichlet, sll_p_dirichlet, &
+       sll_p_dirichlet, sll_p_dirichlet)
   call sll_o_solve(solver, dg_rho, dg_ex, dg_ey)
   call sll_o_delete(solver)
 
@@ -170,5 +209,13 @@ contains
           + r*sin(N*theta))*r)/r
 
   end function lap_f_sin
+
+      ! fonction donnant le terme source
+  function source(x,y)
+    implicit none
+    sll_real64,intent(in) :: x,y
+    sll_real64 :: source
+    source=-4.0_f64+x-x+y-y
+  end function source
 
 end program test_lobalap
