@@ -658,8 +658,10 @@ contains
 
 
   ! résout le système linéaire
-  subroutine sll_s_compute_phi()
+  subroutine sll_s_compute_phi(phi_tab)
     implicit none
+    
+    sll_real64, dimension(:,:), intent(in) :: phi_tab
 
     integer :: nsym=1,mp=6,ifac=0,isol=1,ier
     sll_real64 :: energ !,solution(neq),rhs(neq)
@@ -670,6 +672,9 @@ contains
          rho,kld,phi,neq,mp,ifac,isol, &
          nsym,energ,ier,nsky)  
 
+    do i=1,neq
+       phi_tab(:,:) = phi(i)
+    end do
   end subroutine sll_s_compute_phi
 
 
