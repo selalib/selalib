@@ -69,7 +69,7 @@ program test_lobalap
 #define N 6
 
   ! logical mesh for space coordinates
-  mesh => sll_f_new_cartesian_mesh_2d( NPTS1, NPTS2, &
+  mesh => sll_f_new_cartesian_mesh_2d( NPTS1-1, NPTS2-1, &
        eta1_min= R_MIN, eta1_max= R_MAX, &
        eta2_min= THETA_MIN, eta2_max= THETA_MAX)
 
@@ -96,16 +96,6 @@ program test_lobalap
        sll_f_identity_jac22, &
        (/ 0.0_f64 /) )
 
-!  tau => sll_f_new_coordinate_transformation_2d_analytic( &
-!    "analytic_colela_transformation", &
-!    mesh, &
-!    sll_f_sinprod_x1, &
-!    sll_f_sinprod_x2, &
-!    sll_f_sinprod_jac11, &
-!    sll_f_sinprod_jac12, &
-!    sll_f_sinprod_jac21, &
-!    sll_f_sinprod_jac22, &
-!    (/ 0.5_f64,0.5_f64,4.0_f64*sll_p_pi,4.0_f64*sll_p_pi /) )
 
   call tau%write_to_file()
   tau_pt => tau
