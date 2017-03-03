@@ -55,6 +55,9 @@ module sll_m_lobalap
   ! connectivité
   integer,dimension(:,:),allocatable :: connec
 
+  ! noeud du maillage logique
+  sll_real64,dimension(:,:),allocatable :: logic_node
+
   ! tableaux pour le stockage morse de la matrice
   ! indices de ligne et de colonne des valeurs non nulles
   !integer,dimension(:),allocatable :: icol,irow
@@ -260,7 +263,7 @@ contains
     write(101,*) 1
     write(101,*) neq
     do i=1,neq
-       write(101,*) i,phi(i)-(node(1,i)**2+node(2,i)**2)
+       write(101,*) i,phi(i)!-(node(1,i)**2+node(2,i)**2)
     end do
     write(101,'(A)') '$EndNodeData'
 
@@ -280,6 +283,7 @@ contains
     write(*,*) 'Construction du maillage...'
     write(*,*) 'Elements:',nel,' Noeuds:',neq
     allocate(node(2,neq))
+    allocate(logic_node(2,neq))
     allocate(connec(nloc,neq))
 
     du=1._f64/nx
@@ -308,6 +312,8 @@ contains
                 v=iy*dv+dv*xpg(iiy+1)
                 node(1,ino)=u
                 node(2,ino)=v
+                logic_node(1,ino)=u
+                logic_node(2,ino)=v
              end do
           end do
        end do
@@ -546,6 +552,7 @@ contains
     ! matrice locale
     sll_real64 :: jac(2,2),cojac(2,2),det
     sll_real64 :: gradref_i(2),gradref_j(2),xg,yg
+    sll_real64 :: lxg, lyg
     sll_real64 :: grad_i(2),grad_j(2),dxy(2),v,poids,vf
     integer :: iel,ipg,i,ii,j,jj,ig,ib,iib
     class(sll_c_scalar_field_2d_base), pointer :: source_field
@@ -563,10 +570,12 @@ contains
           ! numéro global du pg
           ig=connec(ipg,iel)
           ! coordonnées du pg
+          lxg=logic_node(1,ig)
+          lyg=logic_node(2,ig)
+          ! on calcule la charge au point de Gauss
+          vf=source_field%value_at_point(lxg,lyg)
           xg=node(1,ig)
           yg=node(2,ig)
-          ! on calcule la charge au point de Gauss
-          vf=source_field%value_at_point(xg,yg)
           ! calcul de la jacobienne au pg
           ! on pourra le faire directement avec sll_s_map plus tard
           jac=0.0_f64

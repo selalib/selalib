@@ -640,14 +640,23 @@ sll_real64, dimension(:,:), intent(in) :: values
 class(sll_t_cartesian_mesh_2d), pointer :: m
 
 m => field%get_cartesian_mesh()
-if( (size(values,1) < m%num_cells1 ) .or. &
-    (size(values,2) < m%num_cells2 ) ) then
+if( (size(values,1) < m%num_cells1 + 1) .or. &
+    (size(values,2) < m%num_cells2 + 1) ) then
    print *, 'WARNING, set_field_data_discrete_2d(), passed array ', &
         'is smaller than the size of data originally declared for ', &
         'this field. Size of values in first dimension:', size(values,1),&
         ' Size of mesh: ', m%num_cells1, ' Size of values in second ', &
         'dimension:', size(values,2), 'Size of mesh: ', m%num_cells2
 end if
+if( (size(values,1) > m%num_cells1 + 1 ) .or. &
+    (size(values,2) > m%num_cells2 + 1 ) ) then
+   print *, 'WARNING, set_field_data_discrete_2d(), passed array ', &
+        'is bigger than the size of data originally declared for ', &
+        'this field. Size of values in first dimension:', size(values,1),&
+        ' Size of mesh (nc+1): ', m%num_cells1+1, ' Size of values in second ', &
+        'dimension:', size(values,2), 'Size of mesh (nc+1): ', m%num_cells2+1
+end if
+
 field%values(:,:) = values(:,:)
 end subroutine set_field_data_discrete_2d
 

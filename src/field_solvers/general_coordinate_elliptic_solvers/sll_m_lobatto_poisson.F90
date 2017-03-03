@@ -2,6 +2,7 @@ module sll_m_lobatto_poisson
 
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_assert.h"
+#include "sll_memory.h"
 #include "sll_working_precision.h"
 
   use sll_m_coordinate_transformation_2d_base, only: &
@@ -54,7 +55,7 @@ module sll_m_lobatto_poisson
     class(sll_c_interpolator_2d),                   pointer :: interp_rho
     sll_int32                                               :: order
   contains
-    procedure, pass(this) :: initialize => initialize_lobatto_poisson
+    procedure, pass(solver) :: initialize => initialize_lobatto_poisson
  end type sll_t_lobatto_poisson_solver
 
   interface sll_o_create
@@ -101,7 +102,9 @@ contains
     sll_int32, intent(in)  :: bc_eta1_right
     sll_int32, intent(in)  :: bc_eta2_left
     sll_int32, intent(in)  :: bc_eta2_right
+    sll_int32 :: ierr
 
+    SLL_ALLOCATE(sll_f_new_lobatto_poisson, ierr)
     call initialize_lobatto_poisson( &
          sll_f_new_lobatto_poisson, &
          transf, order, &
@@ -114,7 +117,7 @@ contains
   end function sll_f_new_lobatto_poisson
 
 
-subroutine initialize_lobatto_poisson(this, transf, order, &
+subroutine initialize_lobatto_poisson(solver, transf, order, &
        rho_values, &
        interp_rho, &
        bc_eta1_left, &
@@ -122,7 +125,7 @@ subroutine initialize_lobatto_poisson(this, transf, order, &
        bc_eta2_left, &
        bc_eta2_right)
 
-    class(sll_t_lobatto_poisson_solver)                     :: this
+    class(sll_t_lobatto_poisson_solver)                     :: solver
     class(sll_c_coordinate_transformation_2d_base), target  :: transf
     class(sll_c_interpolator_2d),                   target  :: interp_rho
     sll_real64, dimension(:,:), intent(in) :: rho_values
@@ -136,42 +139,37 @@ subroutine initialize_lobatto_poisson(this, transf, order, &
   sll_int32 :: ny0
 
   ! Setting mesh coo. tranformation....................
-  print *, "mesh = ", transf%mesh%num_cells1, transf%mesh%num_cells2
-  this%transf => transf
-  print *, "done 0"
+  solver%transf => transf
   nx0 = transf%mesh%num_cells1
   ny0 = transf%mesh%num_cells2
-  print *, "done 1"
   call sll_s_set_map_function(transf)
-  print *, "done 2"
   ! ...................................................
 
   ! Init tabs and gauss points computation.............
     if (present(order)) then
      call sll_s_init(nx0, ny0, order)
-     this%order = order
+     solver%order = order
   else
      call sll_s_init(nx0, ny0, 2)
-     this%order = 2
+     solver%order = 2
   end if
-  print *, "done 3"
   ! ...................................................
 
   ! Creating rho interp and field from values..........
-  this%interp_rho => interp_rho
-  this%rho_field  => sll_f_new_scalar_field_2d_discrete( &
+  solver%interp_rho => interp_rho
+  solver%rho_field  => sll_f_new_scalar_field_2d_discrete( &
        "rho_field", &
-       this%interp_rho, &
+       solver%interp_rho, &
        transf, &
        bc_eta1_left, &
        bc_eta1_right, &
        bc_eta2_left, &
        bc_eta2_right)
-  call this%rho_field%set_field_data(-rho_values)
-  call this%rho_field%update_interpolation_coefficients( )
+  call solver%rho_field%set_field_data(-rho_values)
+  call solver%rho_field%update_interpolation_coefficients( )
   !....................................................
 
-  call sll_s_assemb(this%rho_field, potexact)
+  call sll_s_assemb(solver%rho_field, potexact)
   call sll_s_computelu()
 
 end subroutine initialize_lobatto_poisson
