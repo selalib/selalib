@@ -129,8 +129,8 @@ program test_lobalap_discrete
        1.0_f64, &
        0.0_f64, &
        1.0_f64, &
-       eta1_bc_type=sll_p_periodic, &
-       eta2_bc_type=sll_p_periodic)
+       eta1_bc_type=sll_p_hermite, &
+       eta2_bc_type=sll_p_hermite)
   ! TODO : BC to add here
 
   call x1_interp%initialize( &
