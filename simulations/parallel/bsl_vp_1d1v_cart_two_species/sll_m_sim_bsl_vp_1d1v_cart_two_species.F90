@@ -2015,7 +2015,7 @@ contains
       write(rhotote_id,*) sim%x1_array
       write(efield_id,*) sim%x1_array
 
-      write(efield_id,*) efield
+      write(efield_id,*) efield+e_app
       write(rhotote_id,*) rho_sp1
       write(rhototi_id,*) rho_sp2
     endif
@@ -2519,7 +2519,7 @@ contains
                f_hat_x2_sp1(nb_mode+1), &
                f_hat_x2_sp2(nb_mode+1)
 
-          write(efield_id,*) efield
+          write(efield_id,*) efield+e_app
           write(rhotote_id,*) rho_sp1
           write(rhototi_id,*) rho_sp2
         endif
