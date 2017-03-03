@@ -33,10 +33,10 @@ program test_lobalap
 
   use sll_m_lobatto_poisson, only: &
        sll_f_new_lobatto_poisson, &
-    sll_t_lobatto_poisson_solver, &
-    sll_o_create, &
-    sll_o_solve, &
-    sll_o_delete
+       sll_t_lobatto_poisson_solver, &
+       sll_o_create, &
+       sll_o_solve, &
+       sll_o_delete
 
   use sll_m_boundary_condition_descriptors, only: &
        sll_p_dirichlet, &
@@ -128,7 +128,7 @@ program test_lobalap
        rho_tab, rho_interp, &
        sll_p_dirichlet, sll_p_dirichlet, &
        sll_p_dirichlet, sll_p_dirichlet)
-  call sll_o_solve(solver, dg_rho, dg_ex, dg_ey)
+  call sll_o_solve(solver)
   call sll_o_delete(solver)
 
   call dg_ex%write_to_file('ex')

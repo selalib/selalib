@@ -196,7 +196,7 @@ program test_lobalap_discrete
        rho_tab, rho_interp, &
        sll_p_dirichlet, sll_p_dirichlet, &
        sll_p_dirichlet, sll_p_dirichlet)
-  call sll_o_solve(solver, dg_rho, dg_ex, dg_ey)
+  call sll_o_solve(solver)
   call sll_o_delete(solver)
 
   call dg_ex%write_to_file('ex')

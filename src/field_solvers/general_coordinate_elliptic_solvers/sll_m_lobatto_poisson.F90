@@ -54,6 +54,7 @@ module sll_m_lobatto_poisson
     class(sll_c_scalar_field_2d_base),              pointer :: rho_field
     class(sll_c_interpolator_2d),                   pointer :: interp_rho
     sll_int32                                               :: order
+    sll_real64, dimension(:,:), pointer ::  phi => null()
   contains
     procedure, pass(solver) :: initialize => initialize_lobatto_poisson
  end type sll_t_lobatto_poisson_solver
@@ -135,8 +136,10 @@ subroutine initialize_lobatto_poisson(solver, transf, order, &
     sll_int32, intent(in)  :: bc_eta2_left
     sll_int32, intent(in)  :: bc_eta2_right
 
-  sll_int32 :: nx0
-  sll_int32 :: ny0
+    sll_int32 :: nx0
+    sll_int32 :: ny0
+    sll_int32 :: ierr
+
 
   ! Setting mesh coo. tranformation....................
   solver%transf => transf
@@ -169,23 +172,23 @@ subroutine initialize_lobatto_poisson(solver, transf, order, &
   call solver%rho_field%update_interpolation_coefficients( )
   !....................................................
 
+  !....................................................
+  SLL_ALLOCATE(solver%phi(nx0,ny0), ierr)
+  solver%phi = 0._f64
+  !....................................................
+
   call sll_s_assemb(solver%rho_field, potexact)
   call sll_s_computelu()
 
 end subroutine initialize_lobatto_poisson
 
 
-subroutine solve_lobatto_poisson(this, rhs, ex, ey)
+subroutine solve_lobatto_poisson(this)
 
   type(sll_t_lobatto_poisson_solver) :: this
-  type(sll_t_dg_field_2d)            :: rhs
-  type(sll_t_dg_field_2d)            :: ex
-  type(sll_t_dg_field_2d)            :: ey
 
   SLL_ASSERT(this%order>0)
-  ! call sll_s_assemb_rhs(rhs%array)
-  call sll_s_compute_phi()
-  ! call sll_s_compute_electric_field(ex%array, ey%array)
+  call sll_s_compute_phi(solver%phi)
 
 end subroutine solve_lobatto_poisson
 
