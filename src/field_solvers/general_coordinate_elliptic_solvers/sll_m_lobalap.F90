@@ -14,14 +14,13 @@ module sll_m_lobalap
   implicit none
 
   public :: &
-    sll_s_assemb, &
-    sll_s_assemb_rhs, &
-    sll_s_compute_electric_field, &
-    sll_s_compute_phi, &
-    sll_s_computelu, &
-    sll_s_init, &
-    sll_s_plotgmsh, &
-    sll_s_release
+       sll_i_2a_func, &
+       sll_s_assemb, &
+       sll_s_compute_phi, &
+       sll_s_computelu, &
+       sll_s_init, &
+       sll_s_plotgmsh, &
+       sll_s_release
 
   private
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -74,55 +73,17 @@ module sll_m_lobalap
   ! liste des noeuds du bord
   integer,dimension(:),allocatable :: indexbc
 
+  abstract interface
+     function sll_i_2a_func( eta1, eta2 )
+       use sll_m_working_precision
+       sll_real64             :: sll_i_2a_func
+       sll_real64, intent(in) :: eta1
+       sll_real64, intent(in) :: eta2
+     end function sll_i_2a_func
+  end interface
+
 contains
 
-  ! fonction donnant le potentiel exact (debug) et/ou les conditions aux limites
-  function potexact(x,y)
-    implicit none
-    sll_real64,intent(in) :: x,y
-    sll_real64 :: potexact
-    !potexact=x*x+y*y
-    potexact=0.0_f64+x-x+y-y
-  end function potexact
-
-  ! fonction donnant le terme source
-  function source(x,y)
-    implicit none
-    sll_real64,intent(in) :: x,y
-    sll_real64 :: source
-    source=-4.0_f64+x-x+y-y
-  end function source
-
-  ! fonction qui envoie le carré [0,1]x[0,1] sur le vrai domaine de calcul
-  ! variables de référence: (u,v)
-  ! variables physiques: (x,y)
-  ! autres données calculées:
-  ! jac, invjac, det: jacobienne, son inverse et déterminant de la jacobienne
-!  ! subroutine sll_s_map(u,v,x,y,jac,invjac,det)
-!  ! pour l'instant on n'utilise pas la jacobienne
-!  subroutine sll_s_map(u,v,x,y)
-!    implicit none
-!    sll_real64,intent(in) :: u,v
-!    sll_real64,intent(out) :: x,y
-!    sll_real64 :: jac(2,2),invjac(2,2),det
-!    sll_real64,parameter :: pi=4*atan(1._f64)
-!
-!    x=(1+u)*(1+v)*cos(pi*v)
-!    y=(1+u)*sin(pi*v)
-!
-!    x=u
-!    y=v
-!
-!    !x=u
-!    !y=v
-!    ! non utilisé
-!    jac=0
-!    jac(1,1)=1
-!    jac(2,2)=1
-!    invjac=jac
-!    det=1
-!
-!  end subroutine sll_s_map
 
   ! remplissage des tableaux de pg
   ! et de polynômes de Lagrange
@@ -269,7 +230,6 @@ contains
     do i=1,nloc
        permut(invpermut(i))=i
     end do
-       
 
     open(101,file='sll_m_lobalap.msh')
     write(101,'(A)') '$MeshFormat'
@@ -297,7 +257,7 @@ contains
     write(101,*) 1
     write(101,*) neq
     do i=1,neq
-       write(101,*) i,phi(i)-potexact(node(1,i),node(2,i))
+       write(101,*) i,phi(i)-(node(1,i)**2+node(2,i)**2)
     end do
     write(101,'(A)') '$EndNodeData'
 
@@ -385,8 +345,6 @@ contains
 !!$   end do
 
 
-    
-
   end subroutine build_mesh
 
   ! alloue et prépare les données pour le calcul
@@ -416,12 +374,13 @@ contains
     allocate(phi(neq))
     allocate(rho(neq))
 
-    ! une solution bidon pour tester la visu
-    do ino=1,neq
-       phi(ino)=potexact(node(1,ino),node(2,ino))
-    end do
+    ! ! une solution bidon pour tester la visu
+    ! do ino=1,neq
+    !    phi(ino)=potexact_func(node(1,ino),node(2,ino))
+    ! end do
 
     ! initialisation du second pour l'assemblage
+    phi=0.0_f64
     rho=0.0_f64
 
     write(*,*) 'Calcul structure matrice creuse...'
@@ -447,7 +406,7 @@ contains
     do i=1,neq
        kld(i+1)=kld(i)+prof(i)
     enddo
-    
+
     nsky=kld(neq+1)-1
 
     allocate(vdiag(neq))
@@ -457,7 +416,6 @@ contains
     vdiag=0.0_f64
     vinf=0.0_f64
     vsup=0.0_f64
-    
 
   end subroutine sll_s_init
 
@@ -484,7 +442,7 @@ contains
     sll_real64, intent(out) :: grad(2),poids
     integer :: ilocx,ilocy,ipgx,ipgy
     ! indices locaux du pg
-    ! dans les directions de référence 
+    ! dans les directions de référence
     ipgx=mod(ipg-1,order+1)+1
     ipgy=(ipg-1)/(order+1)+1
 
@@ -492,8 +450,8 @@ contains
     ! suivant u et v dans l'élément de référence
     ilocx=mod(iloc-1,order+1)+1
     ilocy=(iloc-1)/(order+1)+1
- 
-    ! gradient de la fonction de base au pg 
+
+    ! gradient de la fonction de base au pg
     ! dans les variables de référence
     grad(1)=dlag(ilocx,ipgx)*delta(ilocy,ipgy)
     grad(2)=dlag(ilocy,ipgy)*delta(ilocx,ipgx)
@@ -503,92 +461,93 @@ contains
   end subroutine gradpg
 
 
-  ! calcul du champ électrique
-  subroutine sll_s_compute_electric_field(dg_ex,dg_ey)
-    implicit none
-    ! matrice locale
-    sll_real64 :: jac(2,2),cojac(2,2),det
-    sll_real64 :: gradref(2),xg,yg
-    sll_real64 :: grad(2),dxy(2),poids
-    integer :: iel,ipg,ii,jj,ig,ib,iib,ielx,iely
-    sll_real64, dimension(order+1,order+1,nx,ny) :: dg_ex,dg_ey
-    
-    ! assemblage de la matrice de rigidité
-    ! et du second membre
+  ! ! calcul du champ électrique
+  ! subroutine sll_s_compute_electric_field(dg_ex,dg_ey)
+  !   implicit none
+  !   ! matrice locale
+  !   sll_real64 :: jac(2,2),cojac(2,2),det
+  !   sll_real64 :: gradref(2),xg,yg
+  !   sll_real64 :: grad(2),dxy(2),poids
+  !   integer :: iel,ipg,ii,jj,ig,ib,iib,ielx,iely
+  !   sll_real64, dimension(order+1,order+1,nx,ny) :: dg_ex,dg_ey
 
-    write(*,*) 'Calcul champ éléectrique...'
+  !   ! assemblage de la matrice de rigidité
+  !   ! et du second membre
 
-    dg_ex=0.0_f64
-    dg_ey=0.0_f64
+  !   write(*,*) 'Calcul champ éléectrique...'
 
-    ! boucle sur les éléments
-    do iel=1,nel
-       ! boucle sur les pg pour le calcul du champ
-       ielx=mod(iel-1,nx)+1
-       iely=(iel-1)/nx+1
-       do ipg=1,nloc
-          ! numéros locaux du pg
-          ii=mod(ipg-1,order+1)+1
-          jj=(ipg-1)/(order+1)+1
-          ! numéro global du pg
-          ig=connec(ipg,iel)
-          xg=node(1,ig)
-          yg=node(2,ig)
-          ! calcul de la jacobienne au pg
-          ! on pourra le faire directement avec sll_s_map plus tard
-          jac=0.0_f64
-          ! boucle sur les fonctions de base d'interpolation
-          ! pour construire la jacobienne de la transformation
-          ! géométrique
-          do iib=1,nloc
-             ! gradient de la fonction de base au pg 
-             ! dans les variables de référence
-             ! calcul du poids de gauss
-             call gradpg(iib,ipg,dxy,poids)
-             ib=connec(iib,iel)
-             ! contribution à la jacobienne
-             jac(1,1)=jac(1,1)+node(1,ib)*dxy(1)
-             jac(1,2)=jac(1,2)+node(1,ib)*dxy(2)
-             jac(2,1)=jac(2,1)+node(2,ib)*dxy(1)
-             jac(2,2)=jac(2,2)+node(2,ib)*dxy(2)
-          end do
-          !write(*,*) ipg,jac
-          ! déterminant et transposée de l'inverse
-          det=jac(1,1)*jac(2,2)-jac(1,2)*jac(2,1)
-          cojac(1,1)=jac(2,2)/det
-          cojac(2,2)=jac(1,1)/det
-          cojac(1,2)=-jac(2,1)/det
-          cojac(2,1)=-jac(1,2)/det
+  !   dg_ex=0.0_f64
+  !   dg_ey=0.0_f64
 
-          ! nouvelle boucle sur les noeuds locaux de l'élément iel
-          ! pour calculer le gradient du potentiel
-          do iib=1,nloc
-             ! gradients dans les variables de référence
-             call gradpg(iib,ipg,gradref,poids)
-             ib=connec(iib,iel)
-             grad=matmul(cojac,gradref) 
-             dg_ex(ii,jj,ielx,iely)=dg_ex(ii,jj,ielx,iely)+phi(ib)*grad(1)
-             dg_ey(ii,jj,ielx,iely)=dg_ey(ii,jj,ielx,iely)+phi(ib)*grad(2)
-          end do
-       end do
-    end do
+  !   ! boucle sur les éléments
+  !   do iel=1,nel
+  !      ! boucle sur les pg pour le calcul du champ
+  !      ielx=mod(iel-1,nx)+1
+  !      iely=(iel-1)/nx+1
+  !      do ipg=1,nloc
+  !         ! numéros locaux du pg
+  !         ii=mod(ipg-1,order+1)+1
+  !         jj=(ipg-1)/(order+1)+1
+  !         ! numéro global du pg
+  !         ig=connec(ipg,iel)
+  !         xg=node(1,ig)
+  !         yg=node(2,ig)
+  !         ! calcul de la jacobienne au pg
+  !         ! on pourra le faire directement avec sll_s_map plus tard
+  !         jac=0.0_f64
+  !         ! boucle sur les fonctions de base d'interpolation
+  !         ! pour construire la jacobienne de la transformation
+  !         ! géométrique
+  !         do iib=1,nloc
+  !            ! gradient de la fonction de base au pg
+  !            ! dans les variables de référence
+  !            ! calcul du poids de gauss
+  !            call gradpg(iib,ipg,dxy,poids)
+  !            ib=connec(iib,iel)
+  !            ! contribution à la jacobienne
+  !            jac(1,1)=jac(1,1)+node(1,ib)*dxy(1)
+  !            jac(1,2)=jac(1,2)+node(1,ib)*dxy(2)
+  !            jac(2,1)=jac(2,1)+node(2,ib)*dxy(1)
+  !            jac(2,2)=jac(2,2)+node(2,ib)*dxy(2)
+  !         end do
+  !         !write(*,*) ipg,jac
+  !         ! déterminant et transposée de l'inverse
+  !         det=jac(1,1)*jac(2,2)-jac(1,2)*jac(2,1)
+  !         cojac(1,1)=jac(2,2)/det
+  !         cojac(2,2)=jac(1,1)/det
+  !         cojac(1,2)=-jac(2,1)/det
+  !         cojac(2,1)=-jac(1,2)/det
 
-       
-  end subroutine sll_s_compute_electric_field
+  !         ! nouvelle boucle sur les noeuds locaux de l'élément iel
+  !         ! pour calculer le gradient du potentiel
+  !         do iib=1,nloc
+  !            ! gradients dans les variables de référence
+  !            call gradpg(iib,ipg,gradref,poids)
+  !            ib=connec(iib,iel)
+  !            grad=matmul(cojac,gradref)
+  !            dg_ex(ii,jj,ielx,iely)=dg_ex(ii,jj,ielx,iely)+phi(ib)*grad(1)
+  !            dg_ey(ii,jj,ielx,iely)=dg_ey(ii,jj,ielx,iely)+phi(ib)*grad(2)
+  !         end do
+  !      end do
+  !   end do
+
+  ! end subroutine sll_s_compute_electric_field
 
 
 
 
 
   ! assemblage de la matrice élément fini et des conditions aux limites
-  subroutine sll_s_assemb()
+  subroutine sll_s_assemb(source_func, potexact_func)
     implicit none
     ! matrice locale
     sll_real64 :: jac(2,2),cojac(2,2),det
     sll_real64 :: gradref_i(2),gradref_j(2),xg,yg
     sll_real64 :: grad_i(2),grad_j(2),dxy(2),v,poids,vf
     integer :: iel,ipg,i,ii,j,jj,ig,ib,iib
-    
+    procedure(sll_i_2a_func) :: source_func
+    procedure(sll_i_2a_func) :: potexact_func
+
     ! assemblage de la matrice de rigidité
     ! et du second membre
 
@@ -604,7 +563,7 @@ contains
           xg=node(1,ig)
           yg=node(2,ig)
           ! on calcule la charge au point de Gauss
-          vf=source(xg,yg)
+          vf=source_func(xg,yg)
           ! calcul de la jacobienne au pg
           ! on pourra le faire directement avec sll_s_map plus tard
           jac=0.0_f64
@@ -612,7 +571,7 @@ contains
           ! pour construire la jacobienne de la transformation
           ! géométrique
           do iib=1,nloc
-             ! gradient de la fonction de base au pg 
+             ! gradient de la fonction de base au pg
              ! dans les variables de référence
              ! calcul du poids de gauss
              call gradpg(iib,ipg,dxy,poids)
@@ -632,16 +591,16 @@ contains
           cojac(2,1)=-jac(1,2)/det
 
           ! assemblage du second membre
-          !rho(ig)=rho(ig)+vf*det*poids
+          rho(ig)=rho(ig)+vf*det*poids
 
           ! nouvelle boucle sur les noeuds locaux de l'élément iel
           ! pour calculer la matrice élémentaire
           do ii=1,nloc
              ! gradients dans les variables de référence
-             call gradpg(ii,ipg,gradref_i,poids)  
+             call gradpg(ii,ipg,gradref_i,poids)
              ! gradient dans les variables physiques
              grad_i=matmul(cojac,gradref_i)
-             ! gradient 
+             ! gradient
              ! indice global
              i=connec(ii,iel)
              do jj=1,nloc
@@ -664,91 +623,10 @@ contains
     do ii=1,nbc
        i=indexbc(ii)
        call add(big,i,i)
+       rho(i)=potexact_func(node(1,i),node(2,i))*big
     end do
 
-
-       
   end subroutine sll_s_assemb
-    
-  ! assemblage du second membre
-  subroutine sll_s_assemb_rhs(dg_rho)
-    implicit none
-    ! matrice locale
-    sll_real64 :: jac(2,2),det
-    sll_real64 :: dxy(2),poids,vf
-    sll_real64, dimension(order+1,order+1,nx,ny) :: dg_rho
-    integer :: iel,ipg,i,ii,jj,ig,ib,iib,ielx,iely
-    
-    ! assemblage de la matrice de rigidité
-    ! et du second membre
-
-    write(*,*) 'Assemblage second membre...'
-
-    rho=0.0_f64
-
-    ! boucle sur les éléments
-    do iel=1,nel
-       ielx=mod(iel-1,nx)+1
-       iely=(iel-1)/nx+1
-       ! boucle sur les pg pour intégrer
-       do ipg=1,nloc
-          ! numéro global du pg
-          ig=connec(ipg,iel)
-
-          ! on récupère la charge au point de Gauss
-          ii=mod(ipg-1,order+1)+1
-          jj=(ipg-1)/(order+1)+1
-
-          vf=dg_rho(ii,jj,ielx,iely)
-          !write(*,*) 'vf=',vf
-
-          ! calcul de la jacobienne au pg
-          ! on pourra le faire directement avec sll_s_map plus tard
-          jac=0.0_f64
-          ! boucle sur les fonctions de base d'interpolation
-          ! pour construire la jacobienne de la transformation
-          ! géométrique
-          do iib=1,nloc
-             ! gradient de la fonction de base au pg 
-             ! dans les variables de référence
-             ! calcul du poids de gauss
-             call gradpg(iib,ipg,dxy,poids)
-             ib=connec(iib,iel)
-             ! contribution à la jacobienne
-             jac(1,1)=jac(1,1)+node(1,ib)*dxy(1)
-             jac(1,2)=jac(1,2)+node(1,ib)*dxy(2)
-             jac(2,1)=jac(2,1)+node(2,ib)*dxy(1)
-             jac(2,2)=jac(2,2)+node(2,ib)*dxy(2)
-          end do
-          !write(*,*) ipg,jac
-          ! déterminant et transposée de l'inverse
-          det=jac(1,1)*jac(2,2)-jac(1,2)*jac(2,1)
-!!$          cojac(1,1)=jac(2,2)/det
-!!$          cojac(2,2)=jac(1,1)/det
-!!$          cojac(1,2)=-jac(2,1)/det
-!!$          cojac(2,1)=-jac(1,2)/det
-
-          ! assemblage du second membre
-          rho(ig)=rho(ig)+vf*det*poids
-       end do
-    end do
-       
-    write(*,*) 'Assemblage conditions aux limites rhs...'
-
-    ! assemblage des conditions aux limites de dirichlet
-    ! par pénalisation
-    do ii=1,nbc
-       i=indexbc(ii)
-       rho(i)=potexact(node(1,i),node(2,i))*big
-       !rho(i)=0
-    end do
-
-
-
-
-  end subroutine sll_s_assemb_rhs
-
-
 
 
   ! compute (in place) the LU decomposition
@@ -762,7 +640,7 @@ contains
 
     call sol(vsup,vdiag,vinf,   &
          vfg,kld,vu,neq,mp,ifac,isol, &
-         nsym,energ,ier,nsky)  
+         nsym,energ,ier,nsky)
   end subroutine sll_s_computelu
 
 
@@ -834,4 +712,3 @@ contains
 
 
 end module sll_m_lobalap
-
