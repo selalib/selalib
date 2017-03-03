@@ -62,7 +62,7 @@ program test_lobalap_discrete
   sll_real64, dimension(:), allocatable   :: x1_eta1_min, x1_eta1_max
   sll_real64, dimension(:), allocatable   :: x2_eta1_min, x2_eta1_max
   sll_real64, dimension(:,:), allocatable :: jacs
-  
+
 #define NPTS1 33
 #define NPTS2 33
 #define R_MIN  0.1_8
@@ -88,15 +88,15 @@ program test_lobalap_discrete
   allocate(x2_eta1_min(NPTS2))
   allocate(x2_eta1_max(NPTS2))
   allocate(jacs(NPTS1,NPTS2))
-  
+
   mesh => sll_o_new( NPTS1-1, NPTS2-1 )
 
   do j=0,NPTS2-1
      do i=0,NPTS1-1
         eta1            = real(i,f64)*h1
         eta2            = real(j,f64)*h2
-        x1_tab(i+1,j+1) = sll_f_x1_polar_f(eta1,eta2,[R_MIN,R_MAX]) 
-        x2_tab(i+1,j+1) = sll_f_x2_polar_f(eta1,eta2,[R_MIN,R_MAX]) 
+        x1_tab(i+1,j+1) = sll_f_x1_polar_f(eta1,eta2,[R_MIN,R_MAX])
+        x2_tab(i+1,j+1) = sll_f_x2_polar_f(eta1,eta2,[R_MIN,R_MAX])
         jacs(i+1,j+1)   = sll_f_jacobian_polar_f(eta1,eta2,[R_MIN,R_MAX])
      end do
   end do
@@ -117,7 +117,7 @@ program test_lobalap_discrete
        NPTS1, &
        NPTS2, &
        0.0_f64, &
-       1.0_f64, &      
+       1.0_f64, &
        0.0_f64, &
        1.0_f64, &
        sll_p_hermite, &
@@ -146,8 +146,11 @@ program test_lobalap_discrete
        1.0_f64, &
        sll_p_hermite, &
        sll_p_periodic, &
-       const_eta1_min_slope=sll_f_deriv1_jacobian_polar_f(0.0_f64,0.0_f64,[R_MIN,R_MAX]), &
-       const_eta1_max_slope=sll_f_deriv1_jacobian_polar_f(1.0_f64,0.0_f64,[R_MIN,R_MAX]) )
+       const_eta1_min_slope = &
+       sll_f_deriv1_jacobian_polar_f(0.0_f64,0.0_f64,[R_MIN,R_MAX]), &
+       const_eta1_max_slope= &
+       sll_f_deriv1_jacobian_polar_f(1.0_f64,0.0_f64,[R_MIN,R_MAX]) &
+       )
 
   print *, 'Initialized interpolators...'
 

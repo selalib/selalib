@@ -42,9 +42,9 @@ program test_lobalap
   type(sll_t_dg_field_2d), pointer                        :: dg_ex
   type(sll_t_dg_field_2d), pointer                        :: dg_ey
   sll_int32, parameter                                  :: degree = 3
-  
-#define NPTS1 2
-#define NPTS2 2
+
+#define NPTS1 10
+#define NPTS2 10
 #define R_MIN  0.0_8
 #define R_MAX  1.0_8
 #define THETA_MIN  0.00_8
@@ -52,8 +52,8 @@ program test_lobalap
 #define N 6
 
   ! logical mesh for space coordinates
-  mesh => sll_f_new_cartesian_mesh_2d( NPTS1, NPTS2,    & 
-       eta1_min= R_MIN, eta1_max= R_MAX,    &
+  mesh => sll_f_new_cartesian_mesh_2d( NPTS1, NPTS2, &
+       eta1_min= R_MIN, eta1_max= R_MAX, &
        eta2_min= THETA_MIN, eta2_max= THETA_MAX)
 
 !  ! coordinate transformation associated with space coordinates
@@ -92,9 +92,9 @@ program test_lobalap
 
   call tau%write_to_file()
 
-  dg_rho => sll_o_new( degree, tau, f_four ) 
-  dg_ex  => sll_o_new( degree, tau ) 
-  dg_ey  => sll_o_new( degree, tau ) 
+  dg_rho => sll_o_new( degree, tau, f_four )
+  dg_ex  => sll_o_new( degree, tau )
+  dg_ey  => sll_o_new( degree, tau )
 
   call dg_rho%write_to_file('rho')
 
