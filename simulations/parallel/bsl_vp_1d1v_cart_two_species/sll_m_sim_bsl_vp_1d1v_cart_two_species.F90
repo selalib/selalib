@@ -1994,7 +1994,7 @@ contains
                MPI_SUM,              &
                j_glob )
 
-          sim%Edrmax = sum(j_glob) / real(np_x1,f64)
+          sim%Edrmax = sum(j_glob) * sim%mesh2d_sp1%delta_eta1!/ real(np_x1,f64)
           print*, 'Edrmax', sim%Edrmax
           
           e_app = sim%Edrmax *  &
