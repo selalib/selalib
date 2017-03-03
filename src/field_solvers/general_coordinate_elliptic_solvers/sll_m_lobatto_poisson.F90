@@ -140,8 +140,8 @@ subroutine initialize_lobatto_poisson(solver, transf, order, &
 
   ! Setting mesh coo. tranformation....................
   solver%transf => transf
-  nx0 = transf%mesh%num_cells1
-  ny0 = transf%mesh%num_cells2
+  nx0 = transf%mesh%num_cells1 + 1
+  ny0 = transf%mesh%num_cells2 + 1
   call sll_s_set_map_function(transf)
   ! ...................................................
 
@@ -165,7 +165,7 @@ subroutine initialize_lobatto_poisson(solver, transf, order, &
        bc_eta1_right, &
        bc_eta2_left, &
        bc_eta2_right)
-  call solver%rho_field%set_field_data(-rho_values)
+  call solver%rho_field%set_field_data(rho_values)
   call solver%rho_field%update_interpolation_coefficients( )
   !....................................................
 

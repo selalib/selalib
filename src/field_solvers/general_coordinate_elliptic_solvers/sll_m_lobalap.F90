@@ -603,6 +603,7 @@ contains
           cojac(2,1)=-jac(1,2)/det
 
           ! assemblage du second membre
+          ! print *, ig, rho(ig), vf, det, poids, rho(ig)+vf*det*poids
           rho(ig)=rho(ig)+vf*det*poids
 
           ! nouvelle boucle sur les noeuds locaux de l'élément iel
