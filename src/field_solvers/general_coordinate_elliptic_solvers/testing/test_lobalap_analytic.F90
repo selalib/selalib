@@ -205,7 +205,7 @@ contains
     implicit none
     sll_real64,intent(in) :: x,y
     sll_real64 :: source
-    source=-4.0_f64+x-x+y-y
+    source= -4.0_f64+x-x+y-y
   end function source
 
 end program test_lobalap
