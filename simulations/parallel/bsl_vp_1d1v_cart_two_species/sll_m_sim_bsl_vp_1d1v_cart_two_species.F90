@@ -1994,7 +1994,7 @@ contains
                MPI_SUM,              &
                j_glob )
 
-          sim%Edrmax = sum(j_glob) * sim%mesh2d_sp1%delta_eta1!/ real(np_x1,f64)
+          sim%Edrmax = sum(j_glob) / real(np_x1,f64)
           print*, 'Edrmax', sim%Edrmax
           
           e_app = sim%Edrmax *  &
@@ -2280,7 +2280,7 @@ contains
              case ("SLL_AMPERE_DRIVE" )
                 e_app = sim%Edrmax *  &
                      sin(sim%omegadr*(time_init+real(istep,f64)*sim%dt))
-             !        print*,'e_app',e_app
+                   ! print*,'e_app',e_app(1)
              case("SLL_KEEN_DRIVE")
                 call compute_e_app(sim,e_app,time_init+real(istep,f64)*sim%dt)
              end select
