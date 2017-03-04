@@ -188,7 +188,7 @@ subroutine solve_lobatto_poisson(this)
   type(sll_t_lobatto_poisson_solver) :: this
 
   SLL_ASSERT(this%order>0)
-  call sll_s_compute_phi(solver%phi)
+  call sll_s_compute_phi(this%phi)
 
 end subroutine solve_lobatto_poisson
 
