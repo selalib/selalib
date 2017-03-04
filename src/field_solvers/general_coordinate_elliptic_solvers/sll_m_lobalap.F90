@@ -78,6 +78,19 @@ module sll_m_lobalap
   ! liste des noeuds du bord
   integer,dimension(:),allocatable :: indexbc
 
+  !.......................... Stuff to creat phi_interp:
+  type(sll_t_cubic_spline_interpolator_2d)  :: x1_interp
+  type(sll_t_cubic_spline_interpolator_2d)  :: x2_interp
+  class(sll_c_coordinate_transformation_2d_base), pointer :: transf
+  type(sll_t_cartesian_mesh_2d), pointer  :: mesh
+  class(sll_c_interpolator_2d), pointer   :: phi_interp
+  sll_real64, dimension(:,:), allocatable :: x1_tab
+  sll_real64, dimension(:,:), allocatable :: x2_tab
+  sll_real64, dimension(:),   allocatable :: x1_eta1_min, x1_eta1_max
+  sll_real64, dimension(:),   allocatable :: x2_eta1_min, x2_eta1_max
+  sll_real64, dimension(:,:), allocatable :: phi_tab
+  !.................................................
+
   abstract interface
      function sll_i_2a_func( eta1, eta2 )
        use sll_m_working_precision
@@ -88,7 +101,6 @@ module sll_m_lobalap
   end interface
 
 contains
-
 
   ! remplissage des tableaux de pg
   ! et de polynômes de Lagrange
@@ -195,8 +207,6 @@ contains
        stop
     end select
 
-
-
   end subroutine init_gauss
 
 
@@ -274,6 +284,7 @@ contains
   subroutine build_mesh()
     implicit none
     integer    :: iix,ix,iiy,iy,inoloc,ino,iel
+    sll_int32  :: ind_i, ind_j
     sll_real64 :: du,dv,u,v,x,y,eps
 
     ! construit les tableaux de pg
@@ -309,10 +320,16 @@ contains
                 ! coordonnées
                 u=ix*du+du*xpg(iix+1)
                 v=iy*dv+dv*xpg(iiy+1)
-                node(1,ino)=u
-                node(2,ino)=v
-                logic_node(1,ino)=u
-                logic_node(2,ino)=v
+                node(1,ino) = u
+                node(2,ino) = v
+                logic_node(1,ino) = u
+                logic_node(2,ino) = v
+                !come back
+                ind_i = 1 + iix + order*ix
+                ind_j = 1 + iiy + order*iy
+                call sll_s_map(u,v,x,y)
+                x1_tab(ind_i, ind_j) = x
+                x2_tab(ind_i, ind_j) = y
              end do
           end do
        end do
@@ -328,7 +345,7 @@ contains
        v=node(2,ino)
        if (abs(u*(1-u)*v*(1-v)).lt.eps) nbc=nbc+1
     end do
-    
+
     allocate(indexbc(nbc))
 
     ! deuxième passe pour remplir
@@ -371,6 +388,15 @@ contains
     neqy=ny*order+1
     neq=neqx*neqy
     nel=nx*ny
+
+    allocate(jacs   (neqx,neqy))
+    allocate(x1_tab (neqx,neqy))
+    allocate(x2_tab (neqx,neqy))
+    allocate(rho_tab(neqx,neqy))
+    allocate(x1_eta1_min (neqx))
+    allocate(x1_eta1_max (neqx))
+    allocate(x2_eta1_min (neqy))
+    allocate(x2_eta1_max (neqy))
 
     ! construction du maillage
     ! et des listes de conditions aux limites
