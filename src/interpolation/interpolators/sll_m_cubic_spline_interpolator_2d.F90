@@ -1,18 +1,18 @@
 !**************************************************************
 !  Copyright INRIA
-!  Authors : 
+!  Authors :
 !     CALVI project team
-!  
-!  This code SeLaLib (for Semi-Lagrangian-Library) 
-!  is a parallel library for simulating the plasma turbulence 
+!
+!  This code SeLaLib (for Semi-Lagrangian-Library)
+!  is a parallel library for simulating the plasma turbulence
 !  in a tokamak.
-!  
-!  This software is governed by the CeCILL-B license 
-!  under French law and abiding by the rules of distribution 
-!  of free software.  You can  use, modify and redistribute 
-!  the software under the terms of the CeCILL-B license as 
+!
+!  This software is governed by the CeCILL-B license
+!  under French law and abiding by the rules of distribution
+!  of free software.  You can  use, modify and redistribute
+!  the software under the terms of the CeCILL-B license as
 !  circulated by CEA, CNRS and INRIA at the following URL
-!  "http://www.cecill.info". 
+!  "http://www.cecill.info".
 !**************************************************************
 
 !> @ingroup interpolators
@@ -57,10 +57,9 @@ module sll_m_cubic_spline_interpolator_2d
 
   private
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-  
   !> @brief
   !> The spline-based interpolator is only a wrapper around the capabilities
-  !> of the cubic splines. 
+  !> of the cubic splines.
   !> @details
   !> All interpolators share a common interface with
   !> respect to their use, as described by the interpolator_2d_base class.
@@ -77,7 +76,7 @@ module sll_m_cubic_spline_interpolator_2d
     !> PLEASE ADD DOCUMENTATION
      sll_int32                           :: bc_type2
     !> PLEASE ADD DOCUMENTATION
-     sll_real64, dimension(:,:), pointer :: interpolation_points 
+     sll_real64, dimension(:,:), pointer :: interpolation_points
    contains
     !> PLEASE ADD DOCUMENTATION
      procedure, pass(interpolator) :: initialize=>initialize_cs2d_interpolator
@@ -109,7 +108,6 @@ module sll_m_cubic_spline_interpolator_2d
      type(sll_t_cubic_spline_interpolator_2d), pointer :: interp
   end type sll_cubic_spline_interpolator_2d_ptr
 
-  
 !> Deallocate the interpolator object
   interface sll_o_delete
      module procedure delete_sll_cubic_spline_interpolator_2d
@@ -122,7 +120,7 @@ contains
     class(sll_t_cubic_spline_interpolator_2d), intent(inout) :: interpolator
     call sll_o_delete(interpolator%spline)
   end subroutine delete_sll_cubic_spline_interpolator_2d
-  
+
     !> PLEASE ADD DOCUMENTATION
   function sll_f_new_cubic_spline_interpolator_2d( &
     npts1, &
@@ -161,9 +159,9 @@ contains
     sll_real64, dimension(:),intent(in), optional :: eta2_min_slopes
     sll_real64, dimension(:),intent(in), optional :: eta2_max_slopes
     sll_int32 :: ierr
-    
+
     SLL_ALLOCATE(interpolator,ierr)
-    
+
     call interpolator%initialize( &
       npts1, &
       npts2, &
@@ -182,7 +180,6 @@ contains
       eta2_min_slopes, &
       eta2_max_slopes )
 
-     
   end function  sll_f_new_cubic_spline_interpolator_2d
 
 
@@ -322,7 +319,7 @@ contains
     end do
     end do
 
-  end subroutine spline_interpolate2d  
+  end subroutine spline_interpolate2d
 
   subroutine spline_interpolate2d_disp(this,        &
                                      num_points1, &
