@@ -515,7 +515,7 @@ end subroutine compute_interpolants_ad1d
 !> @return val the values on the points eta
 function interpolate_value_ad1d( interpolator, eta1) result(val)
 
-class(sll_t_arbitrary_degree_spline_interpolator_1d), intent(in)  :: interpolator
+class(sll_t_arbitrary_degree_spline_interpolator_1d), intent(inout)  :: interpolator
 
 sll_real64, intent(in)          :: eta1
 sll_real64                      :: val
@@ -743,7 +743,7 @@ end subroutine set_coefficients_ad1d
 
 function interpolate_derivative_ad1d( interpolator, eta1 ) result(val)
 
-class(sll_t_arbitrary_degree_spline_interpolator_1d), intent(in)  :: interpolator
+class(sll_t_arbitrary_degree_spline_interpolator_1d), intent(inout)  :: interpolator
 
 sll_real64, intent(in)           :: eta1
 sll_real64                       :: val
@@ -780,7 +780,7 @@ subroutine interpolate_array_ad1d( this,         &
                                  coordinates, &
                                  output_array)
 
-class(sll_t_arbitrary_degree_spline_interpolator_1d), intent(in) :: this
+class(sll_t_arbitrary_degree_spline_interpolator_1d), intent(inout) :: this
 
 sll_int32,  intent(in)               :: num_pts
 sll_real64, dimension(num_pts), intent(in) :: coordinates
@@ -810,7 +810,7 @@ subroutine interpolate_1d_array_disp_ad1d( &
      alpha, &
      output_array)
 
-class(sll_t_arbitrary_degree_spline_interpolator_1d), intent(in)    :: this
+class(sll_t_arbitrary_degree_spline_interpolator_1d), intent(inout)    :: this
 sll_int32, intent(in)                          :: num_pts
 sll_real64, dimension(:), intent(in)         :: data
 sll_real64, intent(in)         :: alpha
@@ -827,7 +827,7 @@ subroutine interpolate_1d_array_disp_inplace_ad1d( &
      data,     &
      alpha)
 
-class(sll_t_arbitrary_degree_spline_interpolator_1d), intent(in)    :: this
+class(sll_t_arbitrary_degree_spline_interpolator_1d), intent(inout)    :: this
 sll_int32, intent(in)                          :: num_pts
 sll_real64, dimension(num_pts), intent(inout)         :: data
 sll_real64, intent(in)         :: alpha
@@ -852,7 +852,7 @@ subroutine interpolate_values_ad1d( interpolator,        &
                                     vals_to_interpolate, &
                                     output_array )
 
-class(sll_t_arbitrary_degree_spline_interpolator_1d),  intent(in) :: interpolator
+class(sll_t_arbitrary_degree_spline_interpolator_1d),  intent(inout) :: interpolator
 sll_int32,  intent(in)                 :: num_pts
 sll_real64, dimension(num_pts), intent(in)   :: vals_to_interpolate
 sll_real64, dimension(num_pts), intent(out)  :: output_array
@@ -874,7 +874,7 @@ subroutine interpolate_derivatives_ad1d( &
      vals_to_interpolate, &
      output_array )
 
-  class(sll_t_arbitrary_degree_spline_interpolator_1d),  intent(in) :: interpolator
+  class(sll_t_arbitrary_degree_spline_interpolator_1d),  intent(inout) :: interpolator
   sll_int32,  intent(in)                 :: num_pts
   sll_real64, dimension(:), intent(in) :: vals_to_interpolate
   sll_real64, dimension(:), intent(out) :: output_array

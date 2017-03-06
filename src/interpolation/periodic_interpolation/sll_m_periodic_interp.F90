@@ -62,7 +62,7 @@ module sll_m_periodic_interp
 contains
 
   subroutine sll_s_periodic_interp_init( this, N, interpolator, order )
-    type(sll_t_periodic_interp_work)     :: this
+    type(sll_t_periodic_interp_work), intent(inout)     :: this
     sll_int32,                intent(in) :: N            ! number of cells
     sll_int32,                intent(in) :: interpolator ! interpolation method
     sll_int32,                intent(in) :: order        ! order of method
@@ -141,7 +141,7 @@ contains
   end subroutine sll_s_periodic_interp_init
 
   subroutine sll_s_periodic_interp_free( this )
-    type(sll_t_periodic_interp_work) :: this 
+    type(sll_t_periodic_interp_work), intent(inout) :: this 
 
     sll_int32 :: ierr
     
@@ -159,7 +159,7 @@ contains
   subroutine sll_s_periodic_interp( this, u_out, u, alpha )
     ! interpolate function u given at grid points on a periodic grid
     ! at positions j-alpha (alpha is normalized to the cell size)
-    type(sll_t_periodic_interp_work)    :: this
+    type(sll_t_periodic_interp_work), intent(inout)    :: this
     sll_real64,             intent(out) :: u_out(:) ! result
     sll_real64,             intent(in)  :: u(:)     ! function to be interpolated
     sll_real64,             intent(in)  :: alpha    ! displacement normalized to cell size

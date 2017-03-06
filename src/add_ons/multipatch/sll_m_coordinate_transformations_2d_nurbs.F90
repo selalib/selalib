@@ -717,7 +717,7 @@ contains
 
   
   function jacobian_matrix_2d_nurbs( transf, eta1, eta2 )
-    class(sll_t_coordinate_transformation_2d_nurbs), intent(in):: transf
+    class(sll_t_coordinate_transformation_2d_nurbs), intent(inout):: transf
     sll_real64, dimension(1:2,1:2)     :: jacobian_matrix_2d_nurbs
     sll_real64, intent(in) :: eta1
     sll_real64, intent(in) :: eta2
@@ -782,7 +782,7 @@ contains
 
   
   function inverse_jacobian_matrix_2d_nurbs( transf, eta1, eta2 )
-    class(sll_t_coordinate_transformation_2d_nurbs),intent(in) :: transf
+    class(sll_t_coordinate_transformation_2d_nurbs),intent(inout) :: transf
     sll_real64, intent(in) :: eta1
     sll_real64, intent(in) :: eta2
     sll_real64, dimension(1:2,1:2)     :: inverse_jacobian_matrix_2d_nurbs
