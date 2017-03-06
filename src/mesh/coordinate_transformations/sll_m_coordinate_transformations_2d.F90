@@ -579,7 +579,7 @@ contains
 
 
   subroutine write_to_file_2d_analytic(transf,output_format)
-    class(sll_t_coordinate_transformation_2d_analytic) :: transf
+    class(sll_t_coordinate_transformation_2d_analytic), intent( inout ) :: transf
     sll_int32, optional :: output_format 
     sll_int32           :: local_format 
     sll_real64, dimension(:,:), allocatable :: x1mesh
@@ -1143,7 +1143,7 @@ contains
   end function transf_2d_jacobian_node_discrete
 
   subroutine write_to_file_2d_discrete(transf,output_format)
-    class(sll_t_coordinate_transformation_2d_discrete) :: transf
+    class(sll_t_coordinate_transformation_2d_discrete), intent( inout ) :: transf
     sll_int32, optional :: output_format 
     sll_int32           :: local_format 
     sll_real64, dimension(:,:), pointer :: x1mesh
