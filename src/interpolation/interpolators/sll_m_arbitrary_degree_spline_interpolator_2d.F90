@@ -3278,6 +3278,11 @@ sll_int32 :: i, flag
 
 ! *** set up knots and interpolate between knots
 
+allocate( bcoef(1:nx,1:ny) )
+allocate( pwork(ny,nx) )
+allocate( tx(1:nx+kx ) )
+allocate( ty(1:ny+ky) )
+
 tx(1:kx)       = taux(1)
 tx(nx+1:nx+kx) = taux(nx)
 if (mod(kx,2) == 0) then
