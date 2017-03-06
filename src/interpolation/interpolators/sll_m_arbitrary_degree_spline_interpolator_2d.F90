@@ -1994,7 +1994,7 @@ end function coefficients_are_set_ad2d
 !> @return val the values on the points eta1 and eta2 
 function interpolate_value_ad2d( interpolator, eta1, eta2 ) result(val)
 
-class(sll_t_arbitrary_degree_spline_interpolator_2d), intent(in)  :: interpolator
+class(sll_t_arbitrary_degree_spline_interpolator_2d), intent(inout)  :: interpolator
 
 sll_real64, intent(in) :: eta1
 sll_real64, intent(in) :: eta2
@@ -2082,7 +2082,7 @@ end function interpolate_value_ad2d
 !> @return val the values on the points eta1 and eta2 of the first derivative in eta1
 function interpolate_derivative1_ad2d( interpolator, eta1, eta2 ) result(val)
 
-class(sll_t_arbitrary_degree_spline_interpolator_2d), intent(in)  :: interpolator
+class(sll_t_arbitrary_degree_spline_interpolator_2d), intent(inout)  :: interpolator
 
 sll_real64, intent(in)         :: eta1
 sll_real64, intent(in)         :: eta2
@@ -2177,7 +2177,7 @@ end function interpolate_derivative1_ad2d
 !> @return val the values on the points eta1 and eta2 of the first derivative in eta2
 function interpolate_derivative2_ad2d( interpolator, eta1, eta2 ) result(val)
 
-class(sll_t_arbitrary_degree_spline_interpolator_2d), intent(in)  :: interpolator
+class(sll_t_arbitrary_degree_spline_interpolator_2d), intent(inout)  :: interpolator
 
 sll_real64, intent(in)         :: eta1
 sll_real64, intent(in)         :: eta2
@@ -2261,7 +2261,7 @@ subroutine interpolate_array_ad2d( this,            &
                                  eta2,            &
                                  data_out)
   
-class(sll_t_arbitrary_degree_spline_interpolator_2d), intent(in)  :: this
+class(sll_t_arbitrary_degree_spline_interpolator_2d), intent(inout)  :: this
 
 sll_real64, dimension(:,:), intent(in) :: eta1
 sll_real64, dimension(:,:), intent(in) :: eta2
@@ -2290,7 +2290,7 @@ subroutine interpolate_2d_array_disp_ad2d( this,        &
                                          alpha2,      &
                                          data_out)
     
-class(sll_t_arbitrary_degree_spline_interpolator_2d), intent(in)    :: this
+class(sll_t_arbitrary_degree_spline_interpolator_2d), intent(inout)    :: this
 
 sll_int32,                  intent(in)         :: num_points1  
 sll_int32,                  intent(in)         :: num_points2 
