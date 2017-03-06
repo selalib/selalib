@@ -202,7 +202,7 @@ module sll_m_coordinate_transformation_2d_base
   abstract interface
      subroutine write_to_file_signature( transf, label )
        import     :: sll_c_coordinate_transformation_2d_base
-       class(sll_c_coordinate_transformation_2d_base)  :: transf
+       class(sll_c_coordinate_transformation_2d_base) :: transf
        character(len=*), optional      :: label
      end subroutine write_to_file_signature
   end interface
@@ -211,7 +211,7 @@ module sll_m_coordinate_transformation_2d_base
      subroutine write_transformation_signature( transf, output_format )
        use sll_m_working_precision
        import :: sll_c_coordinate_transformation_2d_base
-       class(sll_c_coordinate_transformation_2d_base)  :: transf
+       class(sll_c_coordinate_transformation_2d_base), intent( inout)   :: transf
        sll_int32, optional :: output_format
      end subroutine write_transformation_signature
   end interface
