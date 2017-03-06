@@ -150,8 +150,8 @@ contains
     sll_real64,              intent(in)           :: eta1_max
     sll_real64,              intent(in)           :: eta2_min
     sll_real64,              intent(in)           :: eta2_max
-    sll_int32,               intent(in), optional :: eta1_bc_type
-    sll_int32,               intent(in), optional :: eta2_bc_type
+    sll_int32,               intent(in)           :: eta1_bc_type
+    sll_int32,               intent(in)           :: eta2_bc_type
     sll_real64,              intent(in), optional :: const_eta1_min_slope
     sll_real64,              intent(in), optional :: const_eta1_max_slope
     sll_real64,              intent(in), optional :: const_eta2_min_slope
@@ -217,8 +217,8 @@ contains
     sll_real64, intent(in)                        :: eta1_max
     sll_real64, intent(in)                        :: eta2_min
     sll_real64, intent(in)                        :: eta2_max
-    sll_int32, intent(in), optional               :: eta1_bc_type
-    sll_int32, intent(in), optional               :: eta2_bc_type
+    sll_int32, intent(in)			  :: eta1_bc_type
+    sll_int32, intent(in)			  :: eta2_bc_type
     sll_real64, intent(in), optional              :: const_eta1_min_slope
     sll_real64, intent(in), optional              :: const_eta1_max_slope
     sll_real64, intent(in), optional              :: const_eta2_min_slope
@@ -232,6 +232,7 @@ contains
     interpolator%npts2 = npts2
     interpolator%bc_type1 = eta1_bc_type
     interpolator%bc_type2 = eta2_bc_type
+
     call sll_s_cubic_spline_2d_init( &
          interpolator%spline, &
          npts1, &

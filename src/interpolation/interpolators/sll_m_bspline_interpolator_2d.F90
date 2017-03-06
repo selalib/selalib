@@ -212,8 +212,8 @@ contains
     sll_real64, intent(in)                            :: eta2_max
     sll_int32,  intent(in)                            :: spline_degree1
     sll_int32,  intent(in)                            :: spline_degree2
-    sll_int32,  intent(in),              optional     :: eta1_bc_type
-    sll_int32,  intent(in),              optional     :: eta2_bc_type
+    sll_int32,  intent(in)                            :: eta1_bc_type
+    sll_int32,  intent(in)                            :: eta2_bc_type
     sll_real64, intent(in),              optional     :: const_eta1_min_slope
     sll_real64, intent(in),              optional     :: const_eta1_max_slope
     sll_real64, intent(in),              optional     :: const_eta2_min_slope
