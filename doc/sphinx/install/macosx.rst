@@ -1,9 +1,10 @@
 .. toctree::
    :maxdepth: 2
 
-Install xcode and command-line tools (OSX Mavericks) ::
+Install xcode and command-line tools ::
 
-	$ xcode-select --install﻿
+	$ xcode-select --install
+	$ sudo xcodebuild -license accept
 
 ==================================
 Install dependencies with Homebrew
@@ -21,13 +22,9 @@ Install Homebrew (`not compatible with macports <https://guide.macports.org/chun
 	$ brew install gcc
 	$ brew install openmpi --with-mpi-thread-multiple
 	$ brew install hdf5 --with-fortran --with-mpi
-	$ brew install pastix
 	$ brew install fftw
 	$ brew install python3
 	$ brew install doxygen
-	$ cd selalib/build
-	$ cmake ../ -DHDF5_PARALLEL_ENABLED=ON
-	$ make
 
 ==================================
 Install dependencies with macports
@@ -40,7 +37,7 @@ Install macports (http://www.macports.org/install.php) and ::
 
 	$ sudo port install cmake git
 	$ sudo port install openmpi
-	$ sudo port install hdf5 +gfortran+openmpi
+	$ sudo port install hdf5 +fortran+openmpi
 	$ sudo port install fftw-3
 	$ sudo port install doxygen
 
