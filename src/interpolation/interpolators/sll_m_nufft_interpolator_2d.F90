@@ -356,9 +356,9 @@ end subroutine !set_coefficients_nufft2d
 
 function get_coefficients_nufft2d(interpolator) result(res)
 class(sll_t_nufft_interpolator_2d), intent(in)    :: interpolator
-sll_real64, pointer :: res(:,:)
+sll_real64, pointer                               :: res(:,:)
 
-res = 0.0_f64
+res => NULL()
    
 SLL_ERROR('get_coefficients','Not implemented for nufft2d')
 
