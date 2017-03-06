@@ -247,7 +247,7 @@ end subroutine compute_interpolants
 
 function interpolate_from_interpolant_value( interpolator, eta1 ) result(val)
 
-  sll_interpolator, intent(in) :: interpolator
+  sll_interpolator, intent(inout) :: interpolator
   sll_real64,       intent(in) :: eta1
   sll_real64                   :: val
   sll_real64                   :: res
@@ -277,7 +277,7 @@ subroutine interpolate_array(this,        &
      coordinates, &
      output_array) 
 
-  sll_interpolator,  intent(in)        :: this
+  sll_interpolator,  intent(inout)        :: this
   sll_int32,  intent(in)               :: num_pts
   sll_real64, dimension(num_pts), intent(in) :: coordinates
   sll_real64, dimension(:), intent(in) :: data
@@ -313,7 +313,7 @@ end subroutine interpolate_array
 
 function interpolate_from_interpolant_derivative_eta1( interpolator, eta1 ) result(val)
 
-  sll_interpolator, intent(in) :: interpolator
+  sll_interpolator, intent(inout) :: interpolator
   sll_real64             :: val
   sll_real64, intent(in) :: eta1
 
@@ -333,10 +333,10 @@ subroutine interpolate_from_interpolant_array( interpolator,        &
      vals_to_interpolate, &
      output_array )
 
-  sll_interpolator,  intent(in)  :: interpolator
-  sll_int32,         intent(in)  :: num_pts
-  sll_real64,        intent(in)  :: vals_to_interpolate(num_pts)
-  sll_real64,        intent(out) :: output_array(num_pts)
+  sll_interpolator,  intent(inout)  :: interpolator
+  sll_int32,         intent(in)     :: num_pts
+  sll_real64,        intent(in)     :: vals_to_interpolate(num_pts)
+  sll_real64,        intent(out)    :: output_array(num_pts)
 
   sll_int32                      :: i
 
@@ -354,10 +354,10 @@ subroutine interpolate_from_interpolant_derivatives_eta1( interpolator,        &
                                           vals_to_interpolate, &
                                           output_array )
 
-  sll_interpolator,         intent(in)  :: interpolator
-  sll_int32,                intent(in)  :: num_pts
-  sll_real64, dimension(:), intent(in)  :: vals_to_interpolate
-  sll_real64, dimension(:), intent(out) :: output_array
+  sll_interpolator,         intent(inout)  :: interpolator
+  sll_int32,                intent(in)     :: num_pts
+  sll_real64, dimension(:), intent(in)     :: vals_to_interpolate
+  sll_real64, dimension(:), intent(out)    :: output_array
 
   sll_real64, dimension(:,:), allocatable :: c
   sll_real64, dimension(:),   allocatable :: h
@@ -435,11 +435,11 @@ subroutine interpolate_array_disp( this,        &
                                  alpha, &
                                  output_array)
 
-  sll_interpolator, intent(in) :: this
-  sll_int32,        intent(in) :: num_pts
-  sll_real64,       intent(in) :: data(:)
-  sll_real64,       intent(in) :: alpha
-  sll_real64,       intent(out):: output_array(num_pts)
+  sll_interpolator, intent(inout) :: this
+  sll_int32,        intent(in)    :: num_pts
+  sll_real64,       intent(in)    :: data(:)
+  sll_real64,       intent(in)    :: alpha
+  sll_real64,       intent(out)   :: output_array(num_pts)
   
   character(len=*), parameter  :: this_fun_name = 'interpolate_array_disp'
 
@@ -457,7 +457,7 @@ subroutine interpolate_array_disp_inplace( this,        &
      data,        &
      alpha)
 
-  sll_interpolator, intent(in)    :: this
+  sll_interpolator, intent(inout) :: this
   sll_int32,        intent(in)    :: num_pts
   sll_real64,       intent(inout) :: data(num_pts)
   sll_real64,       intent(in)    :: alpha

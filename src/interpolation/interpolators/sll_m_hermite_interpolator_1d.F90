@@ -186,7 +186,7 @@ contains  !**********************************************************
   end subroutine wrap_compute_interpolants_hermite_1d
   
   function wrap_interpolate_value_hermite_1d( interpolator, eta1 ) result(val)
-    class(sll_hermite_interpolator_1d), intent(in) :: interpolator
+    class(sll_hermite_interpolator_1d), intent(inout) :: interpolator
     sll_real64 :: val
     sll_real64, intent(in) :: eta1
     val = sll_f_interpolate_value_hermite_1d( eta1, interpolator%hermite )
@@ -200,7 +200,7 @@ contains  !**********************************************************
     data, &
     coordinates, &
     output_array)
-    class(sll_hermite_interpolator_1d),  intent(in) :: this
+    class(sll_hermite_interpolator_1d),  intent(inout) :: this
     sll_int32,  intent(in)                           :: num_pts
     sll_real64, dimension(num_pts), intent(in)           :: coordinates
     sll_real64, dimension(:), intent(in)           :: data
@@ -216,7 +216,7 @@ contains  !**********************************************************
 
 
 subroutine interpolate_array_disp_hi1d(this, num_pts, data, alpha, output_array)
-  class(sll_hermite_interpolator_1d), intent(in)     :: this
+  class(sll_hermite_interpolator_1d), intent(inout)     :: this
   sll_real64, intent(in) :: alpha
   sll_int32, intent(in)  :: num_pts    ! size of output array
   sll_real64, dimension(:), intent(in) :: data  ! data to be interpolated points where output is desired
@@ -234,7 +234,7 @@ end subroutine interpolate_array_disp_hi1d
 
 
 subroutine interpolate_array_disp_inplace_hi1d(this, num_pts, data, alpha)
-  class(sll_hermite_interpolator_1d), intent(in)     :: this
+  class(sll_hermite_interpolator_1d), intent(inout)     :: this
   sll_real64, intent(in) :: alpha
   sll_int32, intent(in)  :: num_pts    ! size of output array
   sll_real64, dimension(num_pts), intent(inout) :: data  ! data to be interpolated points where output is desired
@@ -262,7 +262,7 @@ subroutine interpolate_array_values_hi1d( &
     num_pts, &
     vals_to_interpolate, &
     output_array )
-    class(sll_hermite_interpolator_1d),  intent(in) :: interpolator
+    class(sll_hermite_interpolator_1d),  intent(inout) :: interpolator
     sll_int32,  intent(in)                 :: num_pts
     sll_real64, dimension(num_pts), intent(in)   :: vals_to_interpolate
     sll_real64, dimension(num_pts), intent(out)  :: output_array
@@ -284,7 +284,7 @@ subroutine interpolate_array_derivatives_hi1d( &
     num_pts, &
     vals_to_interpolate, &
     output_array )
-    class(sll_hermite_interpolator_1d),  intent(in) :: interpolator
+    class(sll_hermite_interpolator_1d),  intent(inout) :: interpolator
     sll_int32,  intent(in)                 :: num_pts
     sll_real64, dimension(:), intent(in)   :: vals_to_interpolate
     sll_real64, dimension(:), intent(out)  :: output_array
@@ -302,7 +302,7 @@ end subroutine interpolate_array_derivatives_hi1d
 
 
   function interpolate_derivative_eta1_hi1d( interpolator, eta1 ) result(val)
-    class(sll_hermite_interpolator_1d), intent(in) :: interpolator
+    class(sll_hermite_interpolator_1d), intent(inout) :: interpolator
     sll_real64             :: val
     sll_real64, intent(in) :: eta1
      print*, 'interpolate_derivative_eta1_hi1d: ', &

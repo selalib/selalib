@@ -174,7 +174,7 @@ end subroutine compute_interpolants_nufft2d
 
 function interpolate_value_nufft2d( interpolator, eta1, eta2 ) result(val)
 
-class(sll_t_nufft_interpolator_2d), intent(in) :: interpolator
+class(sll_t_nufft_interpolator_2d), intent(inout) :: interpolator
 sll_real64,                         intent(in) :: eta1
 sll_real64,                         intent(in) :: eta2
 
@@ -188,7 +188,7 @@ end function
 
 function interpolate_deriv1_nufft2d( interpolator, eta1, eta2 ) result(val)
 
-class(sll_t_nufft_interpolator_2d), intent(in) :: interpolator
+class(sll_t_nufft_interpolator_2d), intent(inout) :: interpolator
 sll_real64,                         intent(in) :: eta1
 sll_real64,                         intent(in) :: eta2
 
@@ -203,7 +203,7 @@ end function
 
 function interpolate_deriv2_nufft2d( interpolator, eta1, eta2 ) result(val)
 
-class(sll_t_nufft_interpolator_2d), intent(in) :: interpolator
+class(sll_t_nufft_interpolator_2d), intent(inout) :: interpolator
 sll_real64,                         intent(in) :: eta1
 sll_real64,                         intent(in) :: eta2
 
@@ -224,7 +224,7 @@ subroutine nufft_interpolate2d(this,              &
                                eta2,              &
                                data_out) 
 
-class(sll_t_nufft_interpolator_2d),  intent(in) :: this
+class(sll_t_nufft_interpolator_2d),  intent(inout) :: this
 sll_int32,  intent(in)                          :: num_points1
 sll_int32,  intent(in)                          :: num_points2
 sll_real64, dimension(:,:),          intent(in) :: eta1
@@ -258,7 +258,7 @@ subroutine nufft_interpolate2d_disp(this,        &
                                     alpha2,      &
                                     data_out)
 
-class(sll_t_nufft_interpolator_2d),  intent(in) :: this
+class(sll_t_nufft_interpolator_2d),  intent(inout) :: this
 
 sll_int32,  intent(in)                         :: num_points1
 sll_int32,  intent(in)                         :: num_points2
