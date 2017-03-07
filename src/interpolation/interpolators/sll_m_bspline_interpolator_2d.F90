@@ -30,11 +30,11 @@ module sll_m_bspline_interpolator_2d
   sll_p_hermite, &
   sll_p_periodic
 
-  use sll_m_bspline_interpolation, only: &
+  use sll_m_bspline_2d, only: &
   sll_s_compute_bspline_2d, &
   sll_f_interpolate_value_2d, &
-  sll_t_bspline_interpolation_2d, &
-  sll_s_bspline_interpolation_2d_init
+  sll_t_bspline_2d, &
+  sll_s_bspline_2d_init
 
   use sll_m_interpolators_2d_base, only: &
   sll_c_interpolator_2d
@@ -61,7 +61,7 @@ module sll_m_bspline_interpolator_2d
 
     sll_int32                       :: npts1    !< Number of points along x direction
     sll_int32                       :: npts2    !< Number of points along y direction
-    type(sll_t_bspline_interpolation_2d), pointer :: spline   !< The spline object to store coefficients
+    type(sll_t_bspline_2d), pointer :: spline   !< The spline object to store coefficients
     sll_int32                       :: spline_degree1 !< Boundady condition for x
     sll_int32                       :: spline_degree2 !< Boundary condition for y
     sll_int32                       :: bc_type1       !< Boundady condition for x
@@ -385,8 +385,8 @@ contains
 
     do j = 1, num_points2
       do i = 1, num_points1
-        eta1 = eta1_min + (i-1)*delta_eta1
-        eta2 = eta2_min + (j-1)*delta_eta2
+        eta1 = eta1_min + real(i-1,f64)*delta_eta1
+        eta2 = eta2_min + real(j-1,f64)*delta_eta2
         eta1 = eta1_min + &
         modulo(eta1-eta1_min+alpha1(i,j),eta1_max-eta1_min)
         eta2 = eta2_min + &
@@ -400,8 +400,8 @@ contains
 
     do j = 1, num_points2
       do i = 1, num_points1
-        eta1 = eta1_min + (i-1)*delta_eta1 + alpha1(i,j)
-        eta2 = eta2_min + (j-1)*delta_eta2 + alpha2(i,j)
+        eta1 = eta1_min + real(i-1,f64)*delta_eta1 + alpha1(i,j)
+        eta2 = eta2_min + real(j-1,f64)*delta_eta2 + alpha2(i,j)
         eta1 = min(eta1,eta1_max)
         eta2 = min(eta2,eta2_max)
         eta1 = max(eta1,eta1_min)
@@ -410,13 +410,12 @@ contains
       end do
     end do
 
-
   else
 
     do j = 1, num_points2
       do i = 1, num_points1
-        eta1 = eta1_min + (i-1)*delta_eta1 + alpha1(i,j)
-        eta2 = eta2_min + (j-1)*delta_eta2 + alpha2(i,j)
+        eta1 = eta1_min + real(i-1,f64)*delta_eta1 + alpha1(i,j)
+        eta2 = eta2_min + real(j-1,f64)*delta_eta2 + alpha2(i,j)
         SLL_ASSERT(eta1_min <= eta1 .and. eta1 <= eta1_max)
         SLL_ASSERT(eta2_min <= eta2 .and. eta2 <= eta2_max)
         data_out(i,j) = this%interpolate_from_interpolant_value(eta1,eta2)
@@ -426,25 +425,25 @@ contains
 end subroutine spline_interpolate2d_disp
 
 subroutine set_coefficients_bs2d(  &
-  interpolator,                 &
-  coeffs_1d,                    &
-  coeffs_2d,                    &
-  coeff2d_size1,                &
-  coeff2d_size2,                &
-  knots1,                       &
-  size_knots1,                  &
-  knots2,                       &
+  interpolator,                    &
+  coeffs_1d,                       &
+  coeffs_2d,                       &
+  coeff2d_size1,                   &
+  coeff2d_size2,                   &
+  knots1,                          &
+  size_knots1,                     &
+  knots2,                          &
   size_knots2)
 
   class(sll_t_bspline_interpolator_2d), intent(inout)        :: interpolator
-  sll_real64, dimension(:),           intent(in), optional :: coeffs_1d
-  sll_real64, dimension(:,:),         intent(in), optional :: coeffs_2d
-  sll_int32,                          intent(in), optional :: coeff2d_size1
-  sll_int32,                          intent(in), optional :: coeff2d_size2
-  sll_real64, dimension(:),           intent(in), optional :: knots1
-  sll_real64, dimension(:),           intent(in), optional :: knots2
-  sll_int32,                          intent(in), optional :: size_knots1
-  sll_int32,                          intent(in), optional :: size_knots2
+  sll_real64, dimension(:),             intent(in), optional :: coeffs_1d
+  sll_real64, dimension(:,:),           intent(in), optional :: coeffs_2d
+  sll_int32,                            intent(in), optional :: coeff2d_size1
+  sll_int32,                            intent(in), optional :: coeff2d_size2
+  sll_real64, dimension(:),             intent(in), optional :: knots1
+  sll_real64, dimension(:),             intent(in), optional :: knots2
+  sll_int32,                            intent(in), optional :: size_knots1
+  sll_int32,                            intent(in), optional :: size_knots2
 
   print*, 'set_coefficients_bs2d(): This function has not been implemented yet.'
   print*, interpolator%npts1
