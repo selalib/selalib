@@ -11,7 +11,7 @@ use sll_m_boundary_condition_descriptors, only: &
      sll_p_periodic, &
      sll_p_mirror
 
-use sll_m_bspline_interpolation
+use sll_m_bspline_2d
 
 use sll_m_constants, only: pi => sll_p_pi
 
@@ -68,7 +68,7 @@ contains
 
 subroutine test_process_2d(bc_type,deg,passed_test,spline_bc_type)
 
-type(sll_t_bspline_interpolation_2d) :: bspline_2d
+type(sll_t_bspline_2d) :: bspline_2d
 sll_int32, intent(in)                :: bc_type
 logical                              :: passed_test
 sll_int32, optional                  :: spline_bc_type
@@ -108,12 +108,12 @@ SLL_ALLOCATE(x2(n1,n2),ierr)
 SLL_ALLOCATE(y(n1,n2),ierr)
 
 ! define uniform evaluation grid
-h1 = (x1_max-x1_min)/(n1-1)
-h2 = (x2_max-x2_min)/(n2-1)
+h1 = (x1_max-x1_min)/real(n1-1,f64)
+h2 = (x2_max-x2_min)/real(n2-1,f64)
 do j = 1, n2
   do i = 1, n1
-    x1(i,j) = x1_min + (i-1)*h1
-    x2(i,j) = x2_min + (j-1)*h2
+    x1(i,j) = x1_min + real(i-1,f64)*h1
+    x2(i,j) = x2_min + real(j-1,f64)*h2
   end do
 end do
 
@@ -123,11 +123,11 @@ print*,'*** Spline degree = ', deg
 print*,'+++++++++++++++++++++++++++++++++'
 
 if (present(spline_bc_type)) then
-  call sll_s_bspline_interpolation_2d_init( bspline_2d, &
+  call sll_s_bspline_2d_init( bspline_2d, &
      npts1, npts2, deg, deg, x1_min, x2_min, x1_max, x2_max, &
      bc_type, bc_type, spline_bc_type, spline_bc_type )
 else 
-  call sll_s_bspline_interpolation_2d_init( bspline_2d, &
+  call sll_s_bspline_2d_init( bspline_2d, &
      npts1, npts2, deg, deg, x1_min, x2_min, x1_max, x2_max, &
      bc_type, bc_type)
 end if
@@ -135,7 +135,7 @@ end if
 taux => bspline_2d%bs1%tau
 tauy => bspline_2d%bs2%tau
 
-print*, 'bspline_interpolation_2d_init constructed'
+print*, 'bspline_2d_init constructed'
 
 SLL_ALLOCATE(gtau(size(taux), size(tauy)),ierr)
 SLL_ALLOCATE(bc(2*(deg/2)),ierr)
@@ -494,7 +494,7 @@ nullify(taux)
 nullify(tauy)
 SLL_DEALLOCATE_ARRAY(gtau,ierr)
 SLL_DEALLOCATE_ARRAY(htau,ierr)
-call sll_s_bspline_interpolation_2d_free(bspline_2d)
+call sll_s_bspline_2d_free(bspline_2d)
 
 end subroutine test_process_2d
 

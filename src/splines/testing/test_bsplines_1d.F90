@@ -5,27 +5,27 @@ program test_bsplines_1d
 #include "sll_memory.h"
 #include "sll_working_precision.h"
 
-  use sll_m_boundary_condition_descriptors, only: &
-       sll_p_hermite, &
-       sll_p_greville, &
-       sll_p_periodic, &
-       sll_p_mirror
+use sll_m_boundary_condition_descriptors, only: &
+     sll_p_hermite, &
+     sll_p_greville, &
+     sll_p_periodic, &
+     sll_p_mirror
 
-  use sll_m_bspline_interpolation, only: &
-    sll_s_compute_bspline_1d, &
-    sll_s_interpolate_array_derivatives_1d, &
-    sll_s_interpolate_array_values_1d, &
-    sll_f_interpolate_derivative_1d, &
-    sll_f_interpolate_value_1d, &
-    sll_s_bspline_interpolation_1d_init, &
-    sll_s_bspline_interpolation_1d_free, &
-    sll_t_bspline_interpolation_1d
+use sll_m_bspline_1d, only: &
+  sll_s_compute_bspline_1d, &
+  sll_s_interpolate_array_derivatives_1d, &
+  sll_s_interpolate_array_values_1d, &
+  sll_f_interpolate_derivative_1d, &
+  sll_f_interpolate_value_1d, &
+  sll_s_bspline_1d_init, &
+  sll_s_bspline_1d_free, &
+  sll_t_bspline_1d
 
 
-  use sll_m_constants, only: &
-    sll_p_pi
+use sll_m_constants, only: &
+  sll_p_pi
 
-  implicit none
+implicit none
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 sll_real64                    :: err1
@@ -79,7 +79,7 @@ contains
 
   subroutine test_process_1d(bc_type,deg,passed_test,spline_bc_type)
 
-    type(sll_t_bspline_interpolation_1d) :: bspline_1d
+    type(sll_t_bspline_1d) :: bspline_1d
     sll_int32, intent(in) :: bc_type
     logical :: passed_test
     sll_int32, optional :: spline_bc_type
@@ -105,9 +105,9 @@ contains
     SLL_ALLOCATE(xx(n),ierr)
 
     ! define uniform evaluation grid
-    h = (x_max-x_min)/(n-1)
+    h = (x_max-x_min)/real(n-1,f64)
     do i = 1, n
-       x(i) = x_min + (i-1)*h
+       x(i) = x_min + real(i-1,f64)*h
     end do
     ! define set of random numbers for evaluation
     call random_number(xx)
@@ -117,13 +117,13 @@ contains
     print*,'*** Spline degree = ', deg
     print*,'+++++++++++++++++++++++++++++++++'
     if (present(spline_bc_type)) then
-       call sll_s_bspline_interpolation_1d_init( bspline_1d, npts, deg, x_min, x_max, &
+       call sll_s_bspline_1d_init( bspline_1d, npts, deg, x_min, x_max, &
             bc_type, spline_bc_type )
     else 
-       call sll_s_bspline_interpolation_1d_init( bspline_1d, npts, deg, x_min, x_max, &
+       call sll_s_bspline_1d_init( bspline_1d, npts, deg, x_min, x_max, &
             bc_type)
     end if
-    print*, 'bspline_interpolation_1d_init constructed'
+    print*, 'bspline_1d_init constructed'
 
     SLL_ALLOCATE(gtau(bspline_1d%n),ierr)
     SLL_ALLOCATE(bc(2*(deg/2)),ierr)
@@ -303,7 +303,7 @@ contains
     !......
     SLL_DEALLOCATE_ARRAY(gtau,ierr)
     SLL_DEALLOCATE_ARRAY(htau,ierr)
-    call sll_s_bspline_interpolation_1d_free(bspline_1d)
+    call sll_s_bspline_1d_free(bspline_1d)
 
   end subroutine test_process_1d
 
