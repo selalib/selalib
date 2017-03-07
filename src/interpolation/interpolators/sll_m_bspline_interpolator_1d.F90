@@ -28,15 +28,15 @@ module sll_m_bspline_interpolator_1d
   use sll_m_boundary_condition_descriptors, only: &
     sll_p_periodic
 
-  use sll_m_bspline_interpolation, only: &
+  use sll_m_bspline_1d, only: &
     sll_s_compute_bspline_1d, &
-    sll_s_bspline_interpolation_1d_free, &
+    sll_s_bspline_1d_free, &
     sll_s_interpolate_array_derivatives_1d, &
     sll_s_interpolate_array_values_1d, &
     sll_f_interpolate_derivative_1d, &
     sll_f_interpolate_value_1d, &
-    sll_s_bspline_interpolation_1d_init, &
-    sll_t_bspline_interpolation_1d
+    sll_s_bspline_1d_init, &
+    sll_t_bspline_1d
 
   use sll_m_interpolators_1d_base, only: &
     sll_c_interpolator_1d
@@ -55,7 +55,7 @@ module sll_m_bspline_interpolator_1d
 !> Class for arbitrary degree spline 1d interpolator
 type, extends(sll_c_interpolator_1d) :: sll_t_bspline_interpolator_1d
 
-  type(sll_t_bspline_interpolation_1d) :: bspline    !< bspline data
+  type(sll_t_bspline_1d) :: bspline    !< bspline data
   sll_int32                     :: num_pts
   sll_int32                     :: spl_deg
   sll_real64                    :: eta_min
@@ -221,7 +221,7 @@ interpolator%eta_max = eta_max
 
 if (present(bc_l) .and. present(bc_r)) then
 
-   call sll_s_bspline_interpolation_1d_init(interpolator%bspline, &
+   call sll_s_bspline_1d_init(interpolator%bspline, &
                                           num_pts, &
                                           spl_deg, &
                                           eta_min, &
@@ -231,7 +231,7 @@ if (present(bc_l) .and. present(bc_r)) then
                                           bc_right=bc_r)
 else
 
-   call sll_s_bspline_interpolation_1d_init(interpolator%bspline, &
+   call sll_s_bspline_1d_init(interpolator%bspline, &
                                           num_pts, &
                                           spl_deg, &
                                           eta_min, &
