@@ -44,7 +44,6 @@ module sll_m_bspline_interpolator_1d
   implicit none
 
   public :: &
-    sll_f_new_bspline_interpolator_1d, &
     sll_t_bspline_interpolator_1d, &
     sll_s_set_values_at_boundary1d, &
     sll_o_delete
@@ -56,19 +55,19 @@ module sll_m_bspline_interpolator_1d
 type, extends(sll_c_interpolator_1d) :: sll_t_bspline_interpolator_1d
 
   type(sll_t_bspline_1d) :: bspline    !< bspline data
-  sll_int32                     :: num_pts
-  sll_int32                     :: spl_deg
-  sll_real64                    :: eta_min
-  sll_real64                    :: eta_max
-  sll_int32                     :: bc_type
-  sll_real64                    :: value_l          = 0.0_f64
-  logical                       :: compute_value_l  = .false.
-  sll_real64                    :: value_r         = 0.0_f64
-  logical                       :: compute_value_r = .false.
-  sll_real64                    :: slope_l          = 0.0_f64
-  logical                       :: compute_slope_l  = .false.
-  sll_real64                    :: slope_r         = 0.0_f64
-  logical                       :: compute_slope_r = .false.
+  sll_int32              :: num_pts
+  sll_int32              :: spl_deg
+  sll_real64             :: eta_min
+  sll_real64             :: eta_max
+  sll_int32              :: bc_type
+  sll_real64             :: value_l          = 0.0_f64
+  logical                :: compute_value_l  = .false.
+  sll_real64             :: value_r         = 0.0_f64
+  logical                :: compute_value_r = .false.
+  sll_real64             :: slope_l          = 0.0_f64
+  logical                :: compute_slope_l  = .false.
+  sll_real64             :: slope_r         = 0.0_f64
+  logical                :: compute_slope_r = .false.
 
 contains
 
@@ -121,68 +120,6 @@ class(sll_t_bspline_interpolator_1d), intent(inout) :: interpolator
 
 end subroutine delete_bs1d_interpolator
 
-!> @brief Initialization of a pointer interpolator arbitrary degree splines 1d.
-!> @details To have the interpolator arbitrary degree splines 1d such as a pointer
-!>
-!> @param[in] num_pts the number of points
-!> @param[in] eta_min the minimun
-!> @param[in] eta_max the maximun
-!> @param[in] spl_deg the degree of B-spline
-!> @param[in] bc_type the boundary condition (periodic or not)
-!> @param[in] bc_l    the boundary condition at left
-!> @param[in] bc_r    the boundary condition at right
-!> @return the type interpolator arbitrary degree splines 1d
-function sll_f_new_bspline_interpolator_1d( &
-  num_pts,                            &
-  eta_min,                            &
-  eta_max,                            &
-  spl_deg,                            &
-  bc_type,                            &
-  bc_l,                               &
-  bc_r) result(interpolator)
-
-class(sll_t_bspline_interpolator_1d),pointer :: interpolator
-
-sll_int32,  intent(in) :: num_pts
-sll_real64, intent(in) :: eta_min
-sll_real64, intent(in) :: eta_max
-sll_int32,  intent(in) :: bc_type
-sll_int32,  intent(in) :: spl_deg
-sll_real64, optional   :: bc_l(:)
-sll_real64, optional   :: bc_r(:)
-
-sll_int32              :: ierr
-
-SLL_ALLOCATE(interpolator,ierr)
-
-
-if ( present(bc_l) .and. present(bc_r) ) then
-
-  call initialize_bs1d_interpolator( interpolator,  &
-                                     num_pts,  &
-                                     eta_min,  &
-                                     eta_max,  &
-                                     spl_deg,  &
-                                     bc_type,  &
-                                     bc_type,  &
-                                     bc_l,  &
-                                     bc_r)
-
-else
-
-  call initialize_bs1d_interpolator( interpolator,  &
-                                     num_pts,  &
-                                     eta_min,  &
-                                     eta_max,  &
-                                     spl_deg,  &
-                                     bc_type,  &
-                                     bc_type)
-
-end if
-                                           
-
-end function sll_f_new_bspline_interpolator_1d
-
 !> @brief Initialization of interpolator arbitrary degree splines 1d.
 !> @details To have the interpolator arbitrary degree splines 1d
 !>
@@ -190,6 +127,8 @@ end function sll_f_new_bspline_interpolator_1d
 !> @param[in]  eta_min  the minimun
 !> @param[in]  eta_max  the maximun
 !> @param[in]  bc_type  the boundary condition (periodic or not)
+!> @param[in]  bc_l     the boundary condition at left
+!> @param[in]  bc_r     the boundary condition at right
 !> @param[in]  spl_deg  the degree of B-spline
 !> @param[out] interpolator the type sll_t_bspline_interpolator_1d
 

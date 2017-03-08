@@ -43,7 +43,6 @@ module sll_m_bspline_interpolator_2d
 
   public :: &
   sll_t_bspline_interpolator_2d, &
-  sll_f_new_bspline_interpolator_2d, &
   sll_s_bspline_interpolator_2d_init, &
   sll_s_bspline_interpolator_2d_free
 
@@ -86,106 +85,36 @@ module sll_m_bspline_interpolator_2d
     procedure :: interpolate_from_interpolant_derivative_eta1 => interpolate_deriv1_bs2d
     !> Interpolate first derivative from last inteprolants computed
     procedure :: interpolate_from_interpolant_derivative_eta2 => interpolate_deriv2_bs2d
-    !> PLEASE ADD DOCUMENTATION
+    !> Interpolate values from 2d array of data
     procedure, pass :: interpolate_array => spline_interpolate2d
-    !> PLEASE ADD DOCUMENTATION
+    !> Interpolate values from 2d array of data after a given displacement
     procedure, pass :: interpolate_array_disp => spline_interpolate2d_disp
-    !> PLEASE ADD DOCUMENTATION
+    !> Set the spline coefficients
     procedure, pass :: set_coefficients => set_coefficients_bs2d
-    !> PLEASE ADD DOCUMENTATION
+    !> Get the spline coefficients
     procedure, pass :: get_coefficients => get_coefficients_bs2d
-    !> PLEASE ADD DOCUMENTATION
+    !> Check if spline coefficients are computed or set.
     procedure, pass :: coefficients_are_set => coefficients_are_set_bs2d
-    !> PLEASE ADD DOCUMENTATION
+    !> Free memory
     procedure, pass :: delete => sll_s_bspline_interpolator_2d_free
-    ! procedure, pass :: compute_spline_coefficients => compute_spl_coeff_bs2d
 
   end type sll_t_bspline_interpolator_2d
 
-type :: sll_bspline_interpolator_2d_ptr
-  type(sll_t_bspline_interpolator_2d), pointer :: interp
-end type sll_bspline_interpolator_2d_ptr
+  type :: sll_bspline_interpolator_2d_ptr
+
+    type(sll_t_bspline_interpolator_2d), pointer :: interp
+
+  end type sll_bspline_interpolator_2d_ptr
   
-!> Deallocate the interpolator object
-interface sll_o_delete
-  module procedure sll_s_bspline_interpolator_2d_free
-end interface sll_o_delete
-
-
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 contains
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
   subroutine sll_s_bspline_interpolator_2d_free( interpolator )
     class(sll_t_bspline_interpolator_2d), intent(inout) :: interpolator
 
     SLL_ASSERT(interpolator%npts1>0)
   end subroutine sll_s_bspline_interpolator_2d_free
-
-  !> Create a pointer to a 2d interpolator using bsplines.
-  function sll_f_new_bspline_interpolator_2d( &
-    npts1,                                    &
-    npts2,                                    &
-    eta1_min,                                 &
-    eta1_max,                                 &
-    eta2_min,                                 &
-    eta2_max,                                 &
-    spline_degree1,                           &
-    spline_degree2,                           &
-    eta1_bc_type,                             &
-    eta2_bc_type,                             &
-    const_eta1_min_slope,                     &
-    const_eta1_max_slope,                     &
-    const_eta2_min_slope,                     &
-    const_eta2_max_slope,                     &
-    eta1_min_slopes,                          &
-    eta1_max_slopes,                          &
-    eta2_min_slopes,                          &
-    eta2_max_slopes )                         &
-    result(interpolator)
-
-    type(sll_t_bspline_interpolator_2d),    pointer  :: interpolator
-    sll_int32,                intent(in)           :: npts1
-    sll_int32,                intent(in)           :: npts2
-    sll_real64,               intent(in)           :: eta1_min
-    sll_real64,               intent(in)           :: eta1_max
-    sll_real64,               intent(in)           :: eta2_min
-    sll_real64,               intent(in)           :: eta2_max
-    sll_int32,                intent(in)           :: spline_degree1
-    sll_int32,                intent(in)           :: spline_degree2
-    sll_int32,                intent(in)           :: eta1_bc_type
-    sll_int32,                intent(in)           :: eta2_bc_type
-    sll_real64,               intent(in), optional :: const_eta1_min_slope
-    sll_real64,               intent(in), optional :: const_eta1_max_slope
-    sll_real64,               intent(in), optional :: const_eta2_min_slope
-    sll_real64,               intent(in), optional :: const_eta2_max_slope
-    sll_real64, dimension(:), intent(in), optional :: eta1_min_slopes
-    sll_real64, dimension(:), intent(in), optional :: eta1_max_slopes
-    sll_real64, dimension(:), intent(in), optional :: eta2_min_slopes
-    sll_real64, dimension(:), intent(in), optional :: eta2_max_slopes
-    sll_int32 :: ierr
-
-    SLL_ALLOCATE(interpolator,ierr)
-
-    call interpolator%initialize( &
-      npts1,                      &
-      npts2,                      &
-      eta1_min,                   &
-      eta1_max,                   &
-      eta2_min,                   &
-      eta2_max,                   &
-      spline_degree1,             &
-      spline_degree2,             &
-      eta1_bc_type,               &
-      eta2_bc_type,               &
-      const_eta1_min_slope,       &
-      const_eta1_max_slope,       &
-      const_eta2_min_slope,       &
-      const_eta2_max_slope,       &
-      eta1_min_slopes,            &
-      eta1_max_slopes,            &
-      eta2_min_slopes,            &
-      eta2_max_slopes )
-     
-  end function sll_f_new_bspline_interpolator_2d
 
   subroutine sll_s_bspline_interpolator_2d_init( &
     interpolator,                          &
@@ -228,14 +157,14 @@ contains
     sll_real64, dimension(:),intent(in), optional       :: eta2_min_slopes
     sll_real64, dimension(:),intent(in), optional       :: eta2_max_slopes
 
-    interpolator%npts1    = npts1
-    interpolator%npts2    = npts2
-    interpolator%bc_type1 = eta1_bc_type
-    interpolator%bc_type2 = eta2_bc_type
-    interpolator%eta1_min = eta1_min
-    interpolator%eta1_max = eta1_max
-    interpolator%eta2_min = eta2_min
-    interpolator%eta2_max = eta2_max
+    interpolator%npts1      = npts1
+    interpolator%npts2      = npts2
+    interpolator%bc_type1   = eta1_bc_type
+    interpolator%bc_type2   = eta2_bc_type
+    interpolator%eta1_min   = eta1_min
+    interpolator%eta1_max   = eta1_max
+    interpolator%eta2_min   = eta2_min
+    interpolator%eta2_max   = eta2_max
     interpolator%delta_eta1 = (eta1_max-eta1_min) / real(npts1-1,f64)
     interpolator%delta_eta2 = (eta2_max-eta2_min) / real(npts2-1,f64)
 
