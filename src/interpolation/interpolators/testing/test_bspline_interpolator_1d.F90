@@ -1,29 +1,18 @@
 program unit_test
-!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
 #include "sll_working_precision.h"
 
-  use sll_m_bspline_interpolator_1d, only: &
-    sll_s_set_values_at_boundary1d, &
-    sll_t_bspline_interpolator_1d, &
-    sll_o_delete
+use sll_m_bspline_interpolator_1d
+use sll_m_boundary_condition_descriptors
+use sll_m_constants
 
-  use sll_m_boundary_condition_descriptors, only: &
-    sll_p_dirichlet, &
-    sll_p_hermite, &
-    sll_p_neumann, &
-    sll_p_periodic
+implicit none
 
-  use sll_m_constants, only: &
-    sll_p_pi
-
-  implicit none
-!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-
-#define NPTS1 31
-#define NPTS2 31 
+#define NPTS1   31
+#define NPTS2   31 
 #define SPL_DEG 3
-#define X1MIN 0.0_f64
-#define X1MAX 1.0_f64
+#define X1MIN   0.0_f64
+#define X1MAX   1.0_f64
 
 type(sll_t_bspline_interpolator_1d) :: ad1d
 
@@ -61,13 +50,14 @@ do i=0,NPTS1-1
   reference(i+1) = sin(2.0_f64*sll_p_pi*eta1)
 end do
   
-call ad1d%init(NPTS1,X1MIN,X1MAX,sll_p_periodic,sll_p_periodic,SPL_DEG)
+call ad1d%init(NPTS1,X1MIN,X1MAX,SPL_DEG,sll_p_periodic,sll_p_periodic)
 call ad1d%compute_interpolants(x)
   
-acc  = 0.0_f64
+acc       = 0.0_f64
 acc_der1  = 0.0_f64
-normL2_0 = 0.0_f64
-normH1_0 = 0.0_f64
+normL2_0  = 0.0_f64
+normH1_0  = 0.0_f64
+
 do i=0,NPTS1-2
   eta1       = X1MIN + real(i,f64)*h1
   node_val   = ad1d%interpolate_from_interpolant_value(eta1)
@@ -80,7 +70,7 @@ do i=0,NPTS1-2
   normH1_0   = normH1_0  + (deriv1_val-ref)**2*h1
 end do
 
-call sll_o_delete(ad1d)
+call ad1d%delete()
   
 do i=0,NPTS1-1
   eta1           = X1MIN + real(i,f64)*h1
@@ -89,7 +79,7 @@ do i=0,NPTS1-1
   reference(i+1) = sin(2.0_f64*sll_p_pi*eta1)
 end do
   
-call ad1d%init(NPTS1,X1MIN,X1MAX,sll_p_dirichlet,sll_p_dirichlet,SPL_DEG)
+call ad1d%init(NPTS1,X1MIN,X1MAX,SPL_DEG,sll_p_dirichlet,sll_p_dirichlet)
 call ad1d%compute_interpolants(x)
   
 acc1 = 0.0_f64
@@ -108,7 +98,7 @@ do i=0,NPTS1-2
    normH1_1   = normH1_1  + (deriv1_val-ref)**2*h1
 end do
 
-call sll_o_delete(ad1d)
+call ad1d%delete()
   
 do i=0,NPTS1-1
   eta1           = X1MIN + real(i,f64)*h1
