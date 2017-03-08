@@ -67,6 +67,12 @@ module sll_m_bspline_interpolator_2d
     sll_int32                       :: bc_type1       !< Boundady condition for x
     sll_int32                       :: bc_type2       !< Boundary condition for y
     sll_real64, pointer             :: interpolation_points(:,:) !< positions
+    sll_real64                      :: eta1_min
+    sll_real64                      :: eta1_max
+    sll_real64                      :: eta2_min
+    sll_real64                      :: eta2_max
+    sll_real64                      :: delta_eta1
+    sll_real64                      :: delta_eta2
 
   contains
 
@@ -226,25 +232,15 @@ contains
     interpolator%npts2    = npts2
     interpolator%bc_type1 = eta1_bc_type
     interpolator%bc_type2 = eta2_bc_type
-
-    !interpolator%spline => sll_f_new_bspline_2d( &
-    !npts1,                            &
-    !spline_degree1,                   &
-    !eta1_min,                         &
-    !eta1_max,                         &
-    !eta1_bc_type,                     &
-    !npts2,                            &
-    !spline_degree2,                   &
-    !eta2_min,                         &
-    !eta2_max,                         &
-    !eta2_bc_type,                     &
-    !const_eta1_min_slope,             &
-    !const_eta1_max_slope,             &
-    !const_eta2_min_slope,             &
-    !const_eta2_max_slope              &
-    !)
+    interpolator%eta1_min = eta1_min
+    interpolator%eta1_max = eta1_max
+    interpolator%eta2_min = eta2_min
+    interpolator%eta2_max = eta2_max
+    interpolator%delta_eta1 = (eta1_max-eta1_min) / real(npts1-1,f64)
+    interpolator%delta_eta2 = (eta2_max-eta2_min) / real(npts2-1,f64)
 
     return
+
     SLL_ASSERT(present(eta1_min_slopes))
     SLL_ASSERT(present(eta1_max_slopes))
     SLL_ASSERT(present(eta2_min_slopes))
@@ -352,36 +348,36 @@ contains
     alpha2,      &
     data_out)
 
-    class(sll_t_bspline_interpolator_2d),  intent(in) :: this
+  class(sll_t_bspline_interpolator_2d),  intent(in) :: this
 
-    sll_int32,  intent(in)                         :: num_points1
-    sll_int32,  intent(in)                         :: num_points2
-    sll_real64, dimension(:,:), intent(in)         :: alpha1
-    sll_real64, dimension(:,:), intent(in)         :: alpha2
-    sll_real64, dimension(:,:), intent(in)         :: data_in
-    sll_real64,                 intent(out)        :: data_out(num_points1,num_points2)
-    sll_real64                                     :: eta1
-    sll_real64                                     :: eta1_min
-    sll_real64                                     :: eta1_max
-    sll_real64                                     :: delta_eta1
-    sll_real64                                     :: eta2
-    sll_real64                                     :: eta2_min
-    sll_real64                                     :: eta2_max
-    sll_real64                                     :: delta_eta2
-    sll_int32                                      :: i
-    sll_int32                                      :: j
+  sll_int32,  intent(in)                            :: num_points1
+  sll_int32,  intent(in)                            :: num_points2
+  sll_real64, dimension(:,:), intent(in)            :: alpha1
+  sll_real64, dimension(:,:), intent(in)            :: alpha2
+  sll_real64, dimension(:,:), intent(in)            :: data_in
+  sll_real64,                 intent(out)           :: data_out(num_points1,num_points2)
+  sll_real64                                        :: eta1
+  sll_real64                                        :: eta1_min
+  sll_real64                                        :: eta1_max
+  sll_real64                                        :: delta_eta1
+  sll_real64                                        :: eta2
+  sll_real64                                        :: eta2_min
+  sll_real64                                        :: eta2_max
+  sll_real64                                        :: delta_eta2
+  sll_int32                                         :: i
+  sll_int32                                         :: j
 
-    !PN    eta1_min   = get_x1_min( this%spline ) !this%spline%x1_min
-    !PN    eta1_max   = get_x1_max( this%spline ) !this%spline%x1_max
-    !PN    eta2_min   = get_x1_min( this%spline ) !this%spline%x2_min
-    !PN    eta2_max   = get_x2_max( this%spline ) !this%spline%x2_max
-    !PN    delta_eta1 = get_x1_delta( this%spline ) !this%spline%x1_delta
-    !PN    delta_eta2 = get_x2_delta( this%spline ) !this%spline%x2_delta
+  eta1_min   = this%eta1_min
+  eta1_max   = this%eta1_max
+  eta2_min   = this%eta2_min
+  eta2_max   = this%eta2_max
+  delta_eta1 = this%delta_eta1
+  delta_eta2 = this%delta_eta2
 
-    call sll_s_compute_bspline_2d( this%spline, data_in )
+  call sll_s_compute_bspline_2d( this%spline, data_in )
 
-    if(this%bc_type1 == sll_p_periodic .and. &
-    this%bc_type2 == sll_p_periodic ) then
+  if(this%bc_type1 == sll_p_periodic .and. &
+     this%bc_type2 == sll_p_periodic ) then
 
     do j = 1, num_points2
       do i = 1, num_points1
@@ -396,7 +392,7 @@ contains
     end do
 
   else if(this%bc_type1 == sll_p_hermite .and. &
-    this%bc_type2 == sll_p_hermite ) then
+          this%bc_type2 == sll_p_hermite ) then
 
     do j = 1, num_points2
       do i = 1, num_points1

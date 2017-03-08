@@ -1,6 +1,6 @@
 !PN This is a general test for bsplines 1d and 2d
 !PN This test is used to test performance and precision
-program test_bsplines_1d
+program test_bspline_1d
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_memory.h"
 #include "sll_working_precision.h"
@@ -21,7 +21,6 @@ use sll_m_bspline_1d, only: &
   sll_s_bspline_1d_free, &
   sll_t_bspline_1d
 
-
 use sll_m_constants, only: &
   sll_p_pi
 
@@ -29,11 +28,6 @@ implicit none
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 sll_real64                    :: err1
-!sll_real64                    :: err2
-!sll_real64                    :: err3
-!sll_real64                    :: err4
-!sll_real64                    :: err5
-!sll_real64                    :: err6
 sll_int32                     :: i
 sll_int32                     :: j
 sll_int32,  parameter         :: nstep = 1
@@ -41,7 +35,8 @@ sll_real64,  parameter        :: tol = 1.0d-3    ! tolerance for tests
 sll_real64                    :: t0, t1, t2, t3, t4, t5
 sll_int32                     :: ierr
 sll_int32                     :: deg
-logical                                :: passed_test
+logical                       :: passed_test
+
 passed_test = .true.
   
 print*,'***************************************************************'
@@ -111,7 +106,7 @@ contains
     end do
     ! define set of random numbers for evaluation
     call random_number(xx)
-    xx = xx * (x_max-x_min)
+    xx = x_min + xx * (x_max-x_min)
 
     print*,'+++++++++++++++++++++++++++++++++'
     print*,'*** Spline degree = ', deg
@@ -307,4 +302,4 @@ contains
 
   end subroutine test_process_1d
 
-end program test_bsplines_1d
+end program test_bspline_1d
