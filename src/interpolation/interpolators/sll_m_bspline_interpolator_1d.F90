@@ -45,8 +45,7 @@ module sll_m_bspline_interpolator_1d
 
   public :: &
     sll_t_bspline_interpolator_1d, &
-    sll_s_set_values_at_boundary1d, &
-    sll_o_delete
+    sll_s_set_values_at_boundary1d
 
   private
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -98,12 +97,6 @@ contains
 
 end type sll_t_bspline_interpolator_1d
 
-!> Deallocate
-interface sll_o_delete
-   module procedure delete_bs1d_interpolator
-end interface sll_o_delete
-
-
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 contains
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -116,7 +109,7 @@ subroutine delete_bs1d_interpolator( interpolator )
 
 class(sll_t_bspline_interpolator_1d), intent(inout) :: interpolator
 
-!call sll_s_delete_bspline_1d(interpolator%bspline)
+call sll_s_bspline_1d_free(interpolator%bspline)
 
 end subroutine delete_bs1d_interpolator
 
@@ -158,23 +151,19 @@ interpolator%spl_deg = spl_deg
 interpolator%eta_min = eta_min
 interpolator%eta_max = eta_max
 
+SLL_ASSERT( bc_type_l == bc_type_r)
+
 if (present(bc_l) .and. present(bc_r)) then
 
-   call sll_s_bspline_1d_init(interpolator%bspline, &
-                                          num_pts, &
-                                          spl_deg, &
-                                          eta_min, &
-                                          eta_max, &
-                                          bc_type_l, &
-                                          bc_left=bc_l, &
-                                          bc_right=bc_r)
+  SLL_ERROR("bspline interpolator 1d", "It is not possible to set boundary values")
+
 else
 
    call sll_s_bspline_1d_init(interpolator%bspline, &
-                                          num_pts, &
-                                          spl_deg, &
-                                          eta_min, &
-                                          eta_max, &
+                                          num_pts,  &
+                                          spl_deg,  &
+                                          eta_min,  &
+                                          eta_max,  &
                                           bc_type_l)
 end if
 
@@ -188,11 +177,11 @@ end subroutine initialize_bs1d_interpolator
 !> @param[in]  slope_l contains the value in the left for derivative
 !> @param[in]  slope_r contains the value in the right for derivative
 !> @param[out] interpolator the type sll_t_bspline_interpolator_1d
-subroutine sll_s_set_values_at_boundary1d( interpolator, &
-                                     value_left, &
-                                     value_right, &
-                                     slope_left, &
-                                     slope_right)
+subroutine sll_s_set_values_at_boundary1d( interpolator,  &
+                                           value_left,    &
+                                           value_right,   &
+                                           slope_left,    &
+                                           slope_right)
 
 class(sll_t_bspline_interpolator_1d), intent(inout) :: interpolator
 
