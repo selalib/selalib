@@ -53,7 +53,7 @@ module sll_m_lobatto_poisson
      class(sll_c_coordinate_transformation_2d_base), pointer :: transf
      class(sll_c_scalar_field_2d_base),              pointer :: rho_field
      class(sll_c_interpolator_2d),                   pointer :: interp_rho
-     sll_real64, dimension(:), pointer ::  phi_tab => null()
+     sll_real64, dimension(:,:), pointer ::  phi_tab => null()
      sll_int32   :: order
    contains
      procedure, pass(solver) :: initialize => initialize_lobatto_poisson
@@ -173,8 +173,9 @@ contains
     !....................................................
 
     !....................................................
-    neq = nx0*(order+1)*ny0*(order+1) ! numbre of total unknowns, ie pg
-    SLL_ALLOCATE(solver%phi_tab(neq), ierr)
+    ! neq = nx0*(order+1)*ny0*(order+1) ! numbre of total unknowns, ie pg
+    ! SLL_ALLOCATE(solver%phi_tab(neq), ierr)
+    SLL_ALLOCATE(solver%phi_tab(nx0,ny0), ierr)
     solver%phi_tab = 0._f64
     !....................................................
 
@@ -197,10 +198,11 @@ contains
   subroutine delete_lobatto_poisson(this)
 
     type(sll_t_lobatto_poisson_solver) :: this
+    sll_int32 :: ierr
 
     call sll_s_plotgmsh()
     call sll_s_release()
-    SLL_DEALLOCATE(this%phi_tab)
+    SLL_DEALLOCATE(this%phi_tab, ierr)
 
   end subroutine delete_lobatto_poisson
 
