@@ -78,19 +78,6 @@ module sll_m_lobalap
   ! liste des noeuds du bord
   integer,dimension(:),allocatable :: indexbc
 
-  !.......................... Stuff to creat phi_interp:
-  type(sll_t_cubic_spline_interpolator_2d)  :: x1_interp
-  type(sll_t_cubic_spline_interpolator_2d)  :: x2_interp
-  class(sll_c_coordinate_transformation_2d_base), pointer :: transf
-  type(sll_t_cartesian_mesh_2d), pointer  :: mesh
-  class(sll_c_interpolator_2d), pointer   :: phi_interp
-  sll_real64, dimension(:,:), allocatable :: x1_tab
-  sll_real64, dimension(:,:), allocatable :: x2_tab
-  sll_real64, dimension(:),   allocatable :: x1_eta1_min, x1_eta1_max
-  sll_real64, dimension(:),   allocatable :: x2_eta1_min, x2_eta1_max
-  sll_real64, dimension(:,:), allocatable :: phi_tab
-  !.................................................
-
   abstract interface
      function sll_i_2a_func( eta1, eta2 )
        use sll_m_working_precision
@@ -328,8 +315,6 @@ contains
                 ind_i = 1 + iix + order*ix
                 ind_j = 1 + iiy + order*iy
                 call sll_s_map(u,v,x,y)
-                x1_tab(ind_i, ind_j) = x
-                x2_tab(ind_i, ind_j) = y
              end do
           end do
        end do
@@ -388,15 +373,6 @@ contains
     neqy=ny*order+1
     neq=neqx*neqy
     nel=nx*ny
-
-    allocate(jacs   (neqx,neqy))
-    allocate(x1_tab (neqx,neqy))
-    allocate(x2_tab (neqx,neqy))
-    allocate(rho_tab(neqx,neqy))
-    allocate(x1_eta1_min (neqx))
-    allocate(x1_eta1_max (neqx))
-    allocate(x2_eta1_min (neqy))
-    allocate(x2_eta1_max (neqy))
 
     ! construction du maillage
     ! et des listes de conditions aux limites
@@ -686,10 +662,11 @@ contains
   subroutine sll_s_compute_phi(phi_tab)
     implicit none
 
-    sll_real64, dimension(:), intent(inout) :: phi_tab
+    sll_real64, dimension(:,:), intent(inout) :: phi_tab
 
     integer :: nsym=1,mp=6,ifac=0,isol=1,ier
-    sll_int32 :: i
+    sll_int32 :: i, j
+    sll_int32 :: indexx
     sll_real64 :: energ !,solution(neq),rhs(neq)
 
     write(*,*) 'Résolution...'
@@ -697,9 +674,25 @@ contains
     call sol(vsup,vdiag,vinf,   &
          rho,kld,phi,neq,mp,ifac,isol, &
          nsym,energ,ier,nsky)
-    do i=1,neq
-       phi_tab(:) = phi(i)
+    do j=1,ny
+       do i = 1,nx
+          if (j.ne.ny) then
+             indexx = order*(j-1) + (i-1)*(order)*neqx + 1
+             ! indexx = order*(i-1)+neqy*(j-1)+ (j-1)*(order-1)*neqy + 1
+          else
+             indexx = order*(j) + (i-1)*(order)*neqx
+          end if
+          if ((i.eq.nx).and.(j.lt.ny)) then
+             indexx = order*(j-1) + (neqy-1)*neqx + 1
+          elseif ((i.eq.nx).and.(j.eq.ny)) then
+             indexx = order*(j) + (neqy-1)*neqx
+          end if
+          phi_tab(i,j) = phi(indexx)
+          print *," i, j =", i, j, " glob index :", indexx
+       end do
+       print *, "............................", neqx, neqy
     end do
+    print *, " neq = ............. ", neq
   end subroutine sll_s_compute_phi
 
 
