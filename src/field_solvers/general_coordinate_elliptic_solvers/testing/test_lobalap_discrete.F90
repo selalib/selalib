@@ -69,6 +69,7 @@ program test_lobalap_discrete
   sll_real64, dimension(:), allocatable   :: x2_eta1_min, x2_eta1_max
   sll_real64, dimension(:,:), allocatable :: jacs
   sll_real64, dimension(:,:), allocatable :: rho_tab
+  sll_real64, dimension(:,:), pointer :: phi_tab
 
 #define NPTS1 33
 #define NPTS2 33
@@ -197,6 +198,7 @@ program test_lobalap_discrete
        sll_p_dirichlet, sll_p_dirichlet, &
        sll_p_dirichlet, sll_p_dirichlet)
   call sll_o_solve(solver)
+  phi_tab => solver%phi_tab
   call sll_o_delete(solver)
 
   call dg_ex%write_to_file('ex')
