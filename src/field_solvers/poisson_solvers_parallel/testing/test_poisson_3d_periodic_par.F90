@@ -204,6 +204,9 @@ program test_poisson_3d_periodic_par
 
      call sll_s_poisson_3d_periodic_par_compute_e_from_phi(plan, phi, ex, ey, ez)
 
+     write(13,*) ex
+     write(14,*) ex_an
+
      average_err  = 0._f64
 
      do k=1,nz_loc
@@ -289,7 +292,9 @@ program test_poisson_3d_periodic_par
            flush( output_unit )
            print*, ' '
         endif
-     endif           
+     endif
+
+     
 
   call sll_s_poisson_3d_periodic_par_free(plan)
 
