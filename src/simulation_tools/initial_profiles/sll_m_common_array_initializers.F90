@@ -2023,17 +2023,14 @@ function sll_f_twostream_1d_xvx_initializer_v1v2x1x2( vx, vy, x, y, params )
     sigma = params(9)
 
     sum = 0.0_f64
-    !do j = 0,ns
     do j = 0,ns-1
-    !dvb = (vb2-vb1)/ns
-    dvb = (vb2-vb1)/(ns-1)
-    vj = vb2 -j*dvb
-    !vj = j*dvb
-    sum = sum + exp(-(vx-vj)**2/(2.0_f64*vtb**2*sigma**2))
+       dvb = (vb2-vb1)/(ns-1)
+       vj = vb2 -j*dvb
+       sum = sum + exp(-(vx-vj)**2/(2.0_f64*vtb**2*sigma**2))
     end do
 
     factor1 = 1.0_f64/(sigma*sqrt(2.0_f64*sll_p_pi))
-  !langmuir initializer with cosine function
+    !langmuir initializer with cosine function
     sll_f_langmuir_cos_initializer_2d = factor1*(1.0_f64+eps*cos(kx*x))&
          *((1.0_f64-db)*exp(-(vx-ve)**2/(2.0_f64*sigma**2))+db*sum/(ns*vtb))
 
@@ -2042,7 +2039,7 @@ function sll_f_twostream_1d_xvx_initializer_v1v2x1x2( vx, vy, x, y, params )
 
 
   !> Initializer for Langmuir function with Gaussian deviate perturbation
- function sll_f_langmuir_gaussxv_initializer_2d( x, vx, params ) 
+  function sll_f_langmuir_gaussxv_initializer_2d( x, vx, params ) 
     sll_real64 :: sll_f_langmuir_gaussxv_initializer_2d
     sll_real64, intent(in) :: x
     sll_real64, intent(in) :: vx
@@ -2084,13 +2081,10 @@ function sll_f_twostream_1d_xvx_initializer_v1v2x1x2( vx, vy, x, y, params )
     sigma = params(9)
 
     sum = 0.0_f64
-    !do j = 0,ns
     do j = 0,ns-1
-    !dvb = (vb2-vb1)/ns
-    dvb = (vb2-vb1)/(ns-1)
-    vj = vb2 -j*dvb
-    !vj = j*dvb
-    sum = sum + exp(-(vx-vj)**2/(2.0_f64*vtb**2*sigma**2))
+       dvb = (vb2-vb1)/(ns-1)
+       vj = vb2 -j*dvb
+       sum = sum + exp(-(vx-vj)**2/(2.0_f64*vtb**2*sigma**2))
     end do
 
     factor1 = 1.0_f64/(sigma*sqrt(2.0_f64*sll_p_pi))
@@ -2101,7 +2095,7 @@ function sll_f_twostream_1d_xvx_initializer_v1v2x1x2( vx, vy, x, y, params )
 
   end function sll_f_langmuir_gaussxv_initializer_2d
 
-
+  !> Initializer for Langmuir function with perturbation given as parameter
   function sll_f_langmuir_parameter_pert_initializer_2d( x, vx, params ) 
     sll_real64 :: sll_f_langmuir_parameter_pert_initializer_2d
     sll_real64, intent(in) :: x
@@ -2146,13 +2140,10 @@ function sll_f_twostream_1d_xvx_initializer_v1v2x1x2( vx, vy, x, y, params )
     pert = params(10)
 
     sum = 0.0_f64
-    !do j = 0,ns
     do j = 0,ns-1
-    !dvb = (vb2-vb1)/ns
-    dvb = (vb2-vb1)/(ns-1)
-    vj = vb2 -j*dvb
-    !vj = j*dvb
-    sum = sum + exp(-(vx-vj)**2/(2.0_f64*vtb**2*sigma**2))
+       dvb = (vb2-vb1)/(ns-1)
+       vj = vb2 -j*dvb
+       sum = sum + exp(-(vx-vj)**2/(2.0_f64*vtb**2*sigma**2))
     end do
 
     factor1 = 1.0_f64/(sigma*sqrt(2.0_f64*sll_p_pi))
