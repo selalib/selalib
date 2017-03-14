@@ -18,29 +18,31 @@ Scientific Staff
 
 Software engineering
 --------------------
-* `Pierre NAVARO (IRMAR Rennes) <http://irmar.univ-rennes1.fr>`_
+* `Pierre NAVARO (IRMAR Rennes) <https://www.researchgate.net/profile/Pierre_Navaro>`_
 
 Post-Docs
 ---------
-* `Celine CALDINI-QUEIROS (IPP Garching) <http://ccaldini.perso.math.cnrs.fr>`_
-* `Yaman GÜCLÜ (IPP Garching) <https://www.linkedin.com/pub/yaman-güçlü/70/805/852>`_
+* `Yaman GÜCLÜ (IPP Garching) <https://www.researchgate.net/profile/Yaman_Gueclue>`_
+* `Xiaofei ZHAO (IRMAR Rennes) <https://www.researchgate.net/profile/Xiaofei_Zhao2>`_
 
 Ph.D. students
 --------------
 * Thi Trang Nhung PHAM (IRMA Strasbourg)
 * `Laura MENDOZA (IPP Garching) <http://www2.ipp.mpg.de/~mela/>`_
-* Charles PROUVEUR (ICJ Lyon)
-* Christophe STEINER (IRMA Strasbourg)
 * `Jakob Ameres (IPP Garching) <http://www-m16.ma.tum.de/Allgemeines/JakobAmeres>`_
+* `Edoardo Zoni (IPP Garching) <https://www.researchgate.net/profile/Edoardo_Zoni>`_
 
 Past members
 ------------
 * `Aurore BACK (IEC Nancy) <https://sites.google.com/site/siteauroreback/>`_
-* `Edwin CHACON GOLCHER <http://www.linkedin.com/pub/edwin-chacón-golcher/0/79b/295>`_
+* `Morgane BERGOT (ICJ Lyon) <http://math.univ-lyon1.fr/~bergot/>`_
 * Raphael BLANCHARD
+* `Celine CALDINI-QUEIROS (IPP Garching) <http://ccaldini.perso.math.cnrs.fr>`_
+* `Edwin CHACON GOLCHER <http://www.linkedin.com/pub/edwin-chacón-golcher/0/79b/295>`_
 * `Samuel DE SANTIS <http://www.linkedin.com/pub/samuel-de-santis/80/468/815>`_
 * `Aliou DIOUF <http://www.linkedin.com/pub/aliou-diouf/4a/932/28a>`_
 * `Emmanuel FRENOD (Université Bretagne Sud) <http://www.linkedin.com/pub/emmanuel-frenod/11/68a/133>`_
 * `Adnane HAMIAZ <http://www.linkedin.com/pub/hamiaz-adnane/59/11b/671>`_
 * `Eric MADAULE <https://www.linkedin.com/pub/éric-madaule/68/302/1b3>`_
-* `Morgane BERGOT (ICJ Lyon) <http://math.univ-lyon1.fr/~bergot/>`_
+* Charles PROUVEUR (ICJ Lyon)
+* Christophe STEINER (IRMA Strasbourg)
