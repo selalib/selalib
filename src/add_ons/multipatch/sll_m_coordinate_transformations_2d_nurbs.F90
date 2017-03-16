@@ -815,7 +815,7 @@ contains
 
   subroutine write_to_file_2d_nurbs(transf,output_format)
     class(sll_t_coordinate_transformation_2d_nurbs), intent( inout ) :: transf
-    sll_int32, optional :: output_format 
+    sll_int32, intent( in ), optional :: output_format 
     class(sll_t_cartesian_mesh_2d), pointer :: lm
     sll_int32           :: local_format 
     sll_real64, dimension(:,:), pointer :: x1mesh
