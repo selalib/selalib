@@ -227,7 +227,7 @@ contains  ! ****************************************************************
 
 
   function interpolate_value_per1d( interpolator, eta1 ) result(val)
-    class(sll_t_periodic_interpolator_1d), intent(inout) :: interpolator
+    class(sll_t_periodic_interpolator_1d), intent(in) :: interpolator
     sll_real64 :: val
     sll_real64, intent(in) :: eta1
      print*, 'interpolate_value_per1d: ', &
@@ -239,7 +239,7 @@ contains  ! ****************************************************************
   end function
 
   function interpolate_deriv1_per1d( interpolator, eta1 ) result(val)
-    class(sll_t_periodic_interpolator_1d), intent(inout) :: interpolator
+    class(sll_t_periodic_interpolator_1d), intent(in) :: interpolator
     sll_real64             :: val
     sll_real64, intent(in) :: eta1
      print*, 'interpolate_deriv1_per1d: ', &

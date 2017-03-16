@@ -247,7 +247,7 @@ end subroutine compute_interpolants
 
 function interpolate_from_interpolant_value( interpolator, eta1 ) result(val)
 
-  sll_interpolator, intent(inout) :: interpolator
+  sll_interpolator, intent(in) :: interpolator
   sll_real64,       intent(in) :: eta1
   sll_real64                   :: val
   sll_real64                   :: res
@@ -313,7 +313,7 @@ end subroutine interpolate_array
 
 function interpolate_from_interpolant_derivative_eta1( interpolator, eta1 ) result(val)
 
-  sll_interpolator, intent(inout) :: interpolator
+  sll_interpolator, intent(in) :: interpolator
   sll_real64             :: val
   sll_real64, intent(in) :: eta1
 

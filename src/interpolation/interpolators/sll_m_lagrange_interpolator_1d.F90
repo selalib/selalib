@@ -266,7 +266,7 @@ end subroutine interpolate_array_derivatives_li1d
 
 
   function interpolate_derivative_eta1_li1d( interpolator, eta1 ) result(val)
-    class(sll_t_lagrange_interpolator_1d), intent(inout) :: interpolator
+    class(sll_t_lagrange_interpolator_1d), intent(in) :: interpolator
     sll_real64             :: val
     sll_real64, intent(in) :: eta1
      print*, 'interpolate_derivative_eta1_li1d: ', &
@@ -279,7 +279,7 @@ end subroutine interpolate_array_derivatives_li1d
 
 
   function interpolate_value_li1d( interpolator, eta1 ) result(val)
-    class(sll_t_lagrange_interpolator_1d), intent(inout) :: interpolator
+    class(sll_t_lagrange_interpolator_1d), intent(in) :: interpolator
     sll_real64 :: val
     sll_real64, intent(in) :: eta1
      print*, 'interpolate_value_li1d: ', &
