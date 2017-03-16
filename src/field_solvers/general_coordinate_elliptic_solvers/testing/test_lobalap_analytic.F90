@@ -1,3 +1,11 @@
+#define NPTS1 2
+#define NPTS2 2
+#define R_MIN  0.0_8
+#define R_MAX  1.0_8
+#define THETA_MIN  0.00_8
+#define THETA_MAX  1.00_8
+#define N 6.0_8
+
 module lobalap_analytic_helper_functions
 
 contains
@@ -112,14 +120,7 @@ program test_lobalap
   type(sll_t_dg_field_2d)                                 :: dg_ex
   type(sll_t_dg_field_2d)                                 :: dg_ey
   sll_int32, parameter                                    :: degree = 3
-  
-#define NPTS1 2
-#define NPTS2 2
-#define R_MIN  0.0_8
-#define R_MAX  1.0_8
-#define THETA_MIN  0.00_8
-#define THETA_MAX  1.00_8
-#define N 6
+
 
   ! logical mesh for space coordinates
   mesh => sll_f_new_cartesian_mesh_2d( NPTS1, NPTS2,    & 
