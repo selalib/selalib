@@ -101,7 +101,7 @@ module sll_m_interpolators_2d_base
        use sll_m_working_precision
        import sll_c_interpolator_2d
        sll_real64                                  :: val  !< interpolated value
-       class(sll_c_interpolator_2d), intent(inout) :: interpolator !< interpolator object
+       class(sll_c_interpolator_2d), intent(in)    :: interpolator !< interpolator object
        sll_real64, intent(in)                      :: eta1 !< first coordinate of point where to interpolate
        sll_real64, intent(in)                      :: eta2 !< second coordinate of point where to interpolate
 

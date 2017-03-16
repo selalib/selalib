@@ -267,7 +267,7 @@ contains
   end subroutine wrap_compute_interpolants_hermite_2d
   
   function wrap_interpolate_value_hermite_2d( interpolator, eta1, eta2 ) result(val)
-    class(sll_hermite_interpolator_2d), intent(inout) :: interpolator
+    class(sll_hermite_interpolator_2d), intent(in) :: interpolator
     sll_real64 :: val
     sll_real64, intent(in) :: eta1
     sll_real64, intent(in) :: eta2
@@ -276,7 +276,7 @@ contains
   end function wrap_interpolate_value_hermite_2d
   
   function wrap_interpolate_deriv1_hermite_2d( interpolator, eta1, eta2 ) result(val)
-    class(sll_hermite_interpolator_2d), intent(inout) :: interpolator
+    class(sll_hermite_interpolator_2d), intent(in) :: interpolator
     sll_real64 :: val
     sll_real64, intent(in) :: eta1
     sll_real64, intent(in) :: eta2
@@ -289,7 +289,7 @@ contains
   end function wrap_interpolate_deriv1_hermite_2d
 
   function wrap_interpolate_deriv2_hermite_2d( interpolator, eta1, eta2 ) result(val)
-    class(sll_hermite_interpolator_2d), intent(inout) :: interpolator
+    class(sll_hermite_interpolator_2d), intent(in) :: interpolator
     sll_real64 :: val
     sll_real64, intent(in) :: eta1
     sll_real64, intent(in) :: eta2

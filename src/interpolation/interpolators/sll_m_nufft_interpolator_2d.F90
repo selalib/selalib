@@ -174,7 +174,7 @@ end subroutine compute_interpolants_nufft2d
 
 function interpolate_value_nufft2d( interpolator, eta1, eta2 ) result(val)
 
-class(sll_t_nufft_interpolator_2d), intent(inout) :: interpolator
+class(sll_t_nufft_interpolator_2d), intent(in) :: interpolator
 sll_real64,                         intent(in) :: eta1
 sll_real64,                         intent(in) :: eta2
 
@@ -188,7 +188,7 @@ end function
 
 function interpolate_deriv1_nufft2d( interpolator, eta1, eta2 ) result(val)
 
-class(sll_t_nufft_interpolator_2d), intent(inout) :: interpolator
+class(sll_t_nufft_interpolator_2d), intent(in) :: interpolator
 sll_real64,                         intent(in) :: eta1
 sll_real64,                         intent(in) :: eta2
 
@@ -203,7 +203,7 @@ end function
 
 function interpolate_deriv2_nufft2d( interpolator, eta1, eta2 ) result(val)
 
-class(sll_t_nufft_interpolator_2d), intent(inout) :: interpolator
+class(sll_t_nufft_interpolator_2d), intent(in) :: interpolator
 sll_real64,                         intent(in) :: eta1
 sll_real64,                         intent(in) :: eta2
 
