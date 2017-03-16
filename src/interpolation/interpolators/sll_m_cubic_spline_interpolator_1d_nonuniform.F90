@@ -242,14 +242,14 @@ contains  ! ****************************************************************
 
 
   function interpolate_value_cs1d( interpolator, eta1 ) result(val)
-    class(sll_t_cubic_spline_interpolator_1d_nonuniform), intent(inout) :: interpolator
+    class(sll_t_cubic_spline_interpolator_1d_nonuniform), intent(in) :: interpolator
     sll_real64 :: val
     sll_real64, intent(in) :: eta1
     val = sll_f_interpolate_from_interpolant_value( eta1, interpolator%spline )
   end function
 
   function interpolate_deriv1_cs1d( interpolator, eta1 ) result(val)
-    class(sll_t_cubic_spline_interpolator_1d_nonuniform), intent(inout) :: interpolator
+    class(sll_t_cubic_spline_interpolator_1d_nonuniform), intent(in) :: interpolator
     sll_real64             :: val
     sll_real64, intent(in) :: eta1
     val = sll_f_interpolate_derivative(eta1,interpolator%spline)
