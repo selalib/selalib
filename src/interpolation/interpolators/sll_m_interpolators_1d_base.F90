@@ -105,7 +105,7 @@ end type sll_c_interpolator_1d
        use sll_m_working_precision
        import :: sll_c_interpolator_1d
        sll_real64                                     :: val  !< interpolated value
-       class(sll_c_interpolator_1d     ), intent(inout)    :: interpolator !< interpolator object
+       class(sll_c_interpolator_1d     ), intent(in)    :: interpolator !< interpolator object
        sll_real64,                      intent(in)    :: eta1 !< abscissa where to interpolate
      end function interpolator_one_arg_sub
   end interface

@@ -319,7 +319,7 @@ end subroutine compute_interpolants_bs1d
 !> @return val the values on the points eta
 function interpolate_value_bs1d( interpolator, eta1) result(val)
 
-class(sll_t_bspline_interpolator_1d), intent(inout)  :: interpolator
+class(sll_t_bspline_interpolator_1d), intent(in)  :: interpolator
 
 sll_real64, intent(in)          :: eta1
 sll_real64                      :: val
@@ -374,7 +374,7 @@ end subroutine set_coefficients_bs1d
 
 function interpolate_derivative_bs1d( interpolator, eta1 ) result(val)
 
-class(sll_t_bspline_interpolator_1d), intent(inout)  :: interpolator
+class(sll_t_bspline_interpolator_1d), intent(in)  :: interpolator
 
 sll_real64, intent(in)           :: eta1
 sll_real64                       :: val

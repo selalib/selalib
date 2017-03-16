@@ -186,7 +186,7 @@ contains  !**********************************************************
   end subroutine wrap_compute_interpolants_hermite_1d
   
   function wrap_interpolate_value_hermite_1d( interpolator, eta1 ) result(val)
-    class(sll_hermite_interpolator_1d), intent(inout) :: interpolator
+    class(sll_hermite_interpolator_1d), intent(in) :: interpolator
     sll_real64 :: val
     sll_real64, intent(in) :: eta1
     val = sll_f_interpolate_value_hermite_1d( eta1, interpolator%hermite )
@@ -302,7 +302,7 @@ end subroutine interpolate_array_derivatives_hi1d
 
 
   function interpolate_derivative_eta1_hi1d( interpolator, eta1 ) result(val)
-    class(sll_hermite_interpolator_1d), intent(inout) :: interpolator
+    class(sll_hermite_interpolator_1d), intent(in) :: interpolator
     sll_real64             :: val
     sll_real64, intent(in) :: eta1
      print*, 'interpolate_derivative_eta1_hi1d: ', &
