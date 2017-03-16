@@ -278,7 +278,7 @@ contains
   end subroutine
 
   function interpolate_value_cs2d( interpolator, eta1, eta2 ) result(val)
-    class(sll_t_cubic_spline_interpolator_2d), intent(inout) :: interpolator
+    class(sll_t_cubic_spline_interpolator_2d), intent(in) :: interpolator
     sll_real64 :: val
     sll_real64, intent(in) :: eta1
     sll_real64, intent(in) :: eta2
@@ -286,7 +286,7 @@ contains
   end function
 
   function interpolate_deriv1_cs2d( interpolator, eta1, eta2 ) result(val)
-    class(sll_t_cubic_spline_interpolator_2d), intent(inout) :: interpolator
+    class(sll_t_cubic_spline_interpolator_2d), intent(in) :: interpolator
     sll_real64 :: val
     sll_real64, intent(in) :: eta1
     sll_real64, intent(in) :: eta2
@@ -294,7 +294,7 @@ contains
   end function
 
   function interpolate_deriv2_cs2d( interpolator, eta1, eta2 ) result(val)
-    class(sll_t_cubic_spline_interpolator_2d), intent(inout) :: interpolator
+    class(sll_t_cubic_spline_interpolator_2d), intent(in) :: interpolator
     sll_real64 :: val
     sll_real64, intent(in) :: eta1
     sll_real64, intent(in) :: eta2

@@ -279,7 +279,7 @@ contains
 
   function interpolate_value_bs2d( interpolator, eta1, eta2 ) result(val)
 
-    class(sll_t_bspline_interpolator_2d), intent(inout) :: interpolator
+    class(sll_t_bspline_interpolator_2d), intent(in) :: interpolator
     sll_real64,                         intent(in) :: eta1
     sll_real64,                         intent(in) :: eta2
 
@@ -291,7 +291,7 @@ contains
 
   function interpolate_deriv1_bs2d( interpolator, eta1, eta2 ) result(val)
 
-    class(sll_t_bspline_interpolator_2d), intent(inout) :: interpolator
+    class(sll_t_bspline_interpolator_2d), intent(in) :: interpolator
     sll_real64,                         intent(in) :: eta1
     sll_real64,                         intent(in) :: eta2
 
@@ -303,7 +303,7 @@ contains
 
   function interpolate_deriv2_bs2d( interpolator, eta1, eta2 ) result(val)
 
-    class(sll_t_bspline_interpolator_2d), intent(inout) :: interpolator
+    class(sll_t_bspline_interpolator_2d), intent(in) :: interpolator
     sll_real64,                         intent(in) :: eta1
     sll_real64,                         intent(in) :: eta2
 
