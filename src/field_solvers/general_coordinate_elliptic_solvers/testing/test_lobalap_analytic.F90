@@ -105,13 +105,13 @@ program test_lobalap
   implicit none
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
-  type(sll_t_lobatto_poisson_solver)                          :: solver
+  type(sll_t_lobatto_poisson_solver)                      :: solver
   type(sll_t_cartesian_mesh_2d), pointer                  :: mesh
   class(sll_c_coordinate_transformation_2d_base), pointer :: tau
-  type(sll_t_dg_field_2d), pointer                        :: dg_rho
-  type(sll_t_dg_field_2d), pointer                        :: dg_ex
-  type(sll_t_dg_field_2d), pointer                        :: dg_ey
-  sll_int32, parameter                                  :: degree = 3
+  type(sll_t_dg_field_2d)                                 :: dg_rho
+  type(sll_t_dg_field_2d)                                 :: dg_ex
+  type(sll_t_dg_field_2d)                                 :: dg_ey
+  sll_int32, parameter                                    :: degree = 3
   
 #define NPTS1 2
 #define NPTS2 2
