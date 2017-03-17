@@ -614,7 +614,7 @@ contains
   end function inverse_jm_ctmp2d
 
   subroutine write_to_file_ctmp2d( mp, output_format )
-    class(sll_t_coordinate_transformation_multipatch_2d), intent(in) :: mp
+    class(sll_t_coordinate_transformation_multipatch_2d), intent(inout) :: mp
     sll_int32, intent(in), optional :: output_format
     sll_int32 :: i
     sll_int32 :: np

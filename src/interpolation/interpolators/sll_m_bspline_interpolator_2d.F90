@@ -212,8 +212,8 @@ contains
     sll_real64, intent(in)                            :: eta2_max
     sll_int32,  intent(in)                            :: spline_degree1
     sll_int32,  intent(in)                            :: spline_degree2
-    sll_int32,  intent(in),              optional     :: eta1_bc_type
-    sll_int32,  intent(in),              optional     :: eta2_bc_type
+    sll_int32,  intent(in)                            :: eta1_bc_type
+    sll_int32,  intent(in)                            :: eta2_bc_type
     sll_real64, intent(in),              optional     :: const_eta1_min_slope
     sll_real64, intent(in),              optional     :: const_eta1_max_slope
     sll_real64, intent(in),              optional     :: const_eta2_min_slope
@@ -321,7 +321,7 @@ contains
                                 eta2,              &
                                 data_out) 
 
-    class(sll_t_bspline_interpolator_2d),  intent(in) :: this
+    class(sll_t_bspline_interpolator_2d),  intent(inout) :: this
     sll_int32,  intent(in)                          :: num_points1
     sll_int32,  intent(in)                          :: num_points2
     sll_real64, dimension(:,:),          intent(in) :: eta1
@@ -350,7 +350,7 @@ contains
                                      alpha2,      &
                                      data_out)
 
-    class(sll_t_bspline_interpolator_2d),  intent(in) :: this
+    class(sll_t_bspline_interpolator_2d),  intent(inout) :: this
 
     sll_int32,  intent(in)                         :: num_points1
     sll_int32,  intent(in)                         :: num_points2
