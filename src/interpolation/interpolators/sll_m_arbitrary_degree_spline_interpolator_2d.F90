@@ -3263,9 +3263,9 @@ sll_real64, dimension(:),            intent(in)  :: taux
 sll_real64, dimension(:),            intent(in)  :: tauy
 sll_real64, dimension(:,:), pointer, intent(in)  :: g   
 
-sll_real64, dimension(:,:), pointer, intent(out) :: bcoef
-sll_real64, dimension(:),   pointer, intent(out) :: tx
-sll_real64, dimension(:),   pointer, intent(out) :: ty
+sll_real64, dimension(:,:), pointer, intent(inout) :: bcoef
+sll_real64, dimension(:),   pointer, intent(inout) :: tx
+sll_real64, dimension(:),   pointer, intent(inout) :: ty
 
 sll_real64, dimension(nx)                 :: work_x
 sll_real64, dimension(nx*(2*kx-1))        :: qx
@@ -3277,11 +3277,6 @@ sll_real64, dimension(:,:),       pointer :: pwork
 sll_int32 :: i, flag
 
 ! *** set up knots and interpolate between knots
-
-allocate( bcoef(1:nx,1:ny) )
-allocate( pwork(ny,nx) )
-allocate( tx(1:nx+kx ) )
-allocate( ty(1:ny+ky) )
 
 tx(1:kx)       = taux(1)
 tx(nx+1:nx+kx) = taux(nx)
