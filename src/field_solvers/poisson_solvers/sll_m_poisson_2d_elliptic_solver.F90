@@ -768,14 +768,6 @@ contains
     ! The supposition is that all fields use the same logical mesh
     !elliptic_solver => poisson%elliptic_solver
 
-   if(poisson%control==SLL_DO_NOTHING_ELLIPTIC_SOLVER)then
-     do j=1,nc_eta2+1
-       do i=1,nc_eta1+1
-         phi(i,j) = 0._f64
-       end do
-     end do
-     return
-   endif
    
     delta1    = poisson%elliptic_solver%delta_eta1
     delta2    = poisson%elliptic_solver%delta_eta2
@@ -784,7 +776,15 @@ contains
     nc_eta1   = poisson%elliptic_solver%num_cells1 !+ 1    
     nc_eta2   = poisson%elliptic_solver%num_cells2 !+ 1
     
-    
+   
+   if(poisson%control==SLL_DO_NOTHING_ELLIPTIC_SOLVER)then
+     do j=1,nc_eta2+1
+       do i=1,nc_eta1+1
+         phi(i,j) = 0._f64
+       end do
+     end do
+     return
+   endif 
     
     if(poisson%control==SLL_NO_SOLVE_ELLIPTIC_SOLVER)then
       do j=1,nc_eta2+1

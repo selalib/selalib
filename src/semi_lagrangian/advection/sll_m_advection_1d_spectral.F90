@@ -79,8 +79,8 @@ function sll_f_new_advector_1d_spectral( num_cells, &
   type(sll_t_advector_1d_spectral), pointer :: adv
 
   sll_int32,  intent(in)              :: num_cells
-  sll_real64, intent(in), optional    :: eta_min
-  sll_real64, intent(in), optional    :: eta_max
+  sll_real64, intent(in)              :: eta_min
+  sll_real64, intent(in)              :: eta_max
 
   sll_int32                           :: error
   
@@ -94,8 +94,8 @@ subroutine advector_1d_spectral_init( adv, num_cells, eta_min, eta_max)
 
   class(sll_t_advector_1d_spectral), intent(inout) :: adv
   sll_int32,                   intent(in)    :: num_cells
-  sll_real64,        optional, intent(in)    :: eta_min
-  sll_real64,        optional, intent(in)    :: eta_max
+  sll_real64,                  intent(in)    :: eta_min
+  sll_real64,                  intent(in)    :: eta_max
 
   sll_real64     :: kx0
   sll_int32      :: i, error

@@ -8,6 +8,11 @@ if(HDF5_IS_PARALLEL)
 endif(HDF5_IS_PARALLEL)
 include_directories(BEFORE ${HDF5_INCLUDE_DIR_FORTRAN})
 
+# Define MUDPACK macro if MUDPACK is built
+IF(BUILD_MUDPACK)
+  ADD_DEFINITIONS(-DMUDPACK)
+ENDIF()
+
 # Serial simulations
 add_subdirectory( serial )
 

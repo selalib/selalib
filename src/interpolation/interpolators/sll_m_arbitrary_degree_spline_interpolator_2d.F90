@@ -2261,7 +2261,7 @@ subroutine interpolate_array_ad2d( this,            &
                                  eta2,            &
                                  data_out)
   
-class(sll_t_arbitrary_degree_spline_interpolator_2d), intent(in)  :: this
+class(sll_t_arbitrary_degree_spline_interpolator_2d), intent(inout)  :: this
 
 sll_real64, dimension(:,:), intent(in) :: eta1
 sll_real64, dimension(:,:), intent(in) :: eta2
@@ -2290,7 +2290,7 @@ subroutine interpolate_2d_array_disp_ad2d( this,        &
                                          alpha2,      &
                                          data_out)
     
-class(sll_t_arbitrary_degree_spline_interpolator_2d), intent(in)    :: this
+class(sll_t_arbitrary_degree_spline_interpolator_2d), intent(inout)    :: this
 
 sll_int32,                  intent(in)         :: num_points1  
 sll_int32,                  intent(in)         :: num_points2 
@@ -3263,9 +3263,9 @@ sll_real64, dimension(:),            intent(in)  :: taux
 sll_real64, dimension(:),            intent(in)  :: tauy
 sll_real64, dimension(:,:), pointer, intent(in)  :: g   
 
-sll_real64, dimension(:,:), pointer, intent(out) :: bcoef
-sll_real64, dimension(:),   pointer, intent(out) :: tx
-sll_real64, dimension(:),   pointer, intent(out) :: ty
+sll_real64, dimension(:,:), pointer, intent(inout) :: bcoef
+sll_real64, dimension(:),   pointer, intent(inout) :: tx
+sll_real64, dimension(:),   pointer, intent(inout) :: ty
 
 sll_real64, dimension(nx)                 :: work_x
 sll_real64, dimension(nx*(2*kx-1))        :: qx
