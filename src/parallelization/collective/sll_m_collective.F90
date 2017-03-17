@@ -693,7 +693,7 @@ contains !************************** Operations **************************
     type(sll_t_collective_t), pointer      :: col
     sll_real32, dimension(:), intent(in) :: send_buf ! what would change...
     sll_int32                            :: send_sz
-    sll_real32, dimension(:), intent(in) :: rec_buf  ! would also change
+    sll_real32, dimension(:), intent(out) :: rec_buf  ! would also change
     sll_int32, intent(in)                :: root
     sll_int32                            :: ierr
     !sll_int32                            :: rec_count ! size of receive buf
@@ -712,7 +712,7 @@ contains !************************** Operations **************************
     type(sll_t_collective_t), pointer      :: col
     sll_real64, dimension(:), intent(in) :: send_buf ! what would change...
     sll_int32                            :: send_sz
-    sll_real64, dimension(:), intent(in) :: rec_buf  ! would also change
+    sll_real64, dimension(:), intent(out) :: rec_buf  ! would also change
     sll_int32, intent(in)                :: root
     sll_int32                            :: ierr
     !sll_int32                            :: rec_count ! size of receive buf
@@ -731,7 +731,7 @@ contains !************************** Operations **************************
     type(sll_t_collective_t), pointer    :: col
     logical,                intent(in) :: send_buf(:)
     sll_int32,              intent(in) :: root
-    logical,                intent(in) :: rec_buf(:)
+    logical,                intent(out) :: rec_buf(:)
 
     sll_int32 :: send_sz, ierr
 

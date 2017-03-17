@@ -57,7 +57,7 @@ contains
 
   subroutine sll_s_compute_iota_from_shift(Nc_x1,shift, iota_modif)
     sll_int32, intent(in) :: Nc_x1
-    sll_int32, intent(out) :: shift
+    sll_int32, intent(in) :: shift
     sll_real64, intent(out) :: iota_modif
     
     iota_modif = real(shift,f64)/real(Nc_x1,f64)
@@ -418,79 +418,6 @@ contains
     call compute_finite_difference_init(deriv%w,2*degree)
       
   end subroutine initialize_oblic_derivative
-
-
-!> compute b_tau \cdot \nabla phi
-!> with b_tau = (tau/sqrt(1+tau^2))*hat_theta+ (1/sqrt(1+tau^2))*hat_z
-  subroutine compute_oblic_derivative( &
-    deriv, &
-    tau, &
-    phi, &
-    D_phi)
-    type(sll_t_oblic_derivative), pointer :: deriv
-    sll_real64, intent(in) :: tau
-    sll_real64, dimension(:,:), intent(in) :: phi
-    sll_real64, dimension(:,:), intent(out) :: D_phi
-    class(sll_c_advector_1d), pointer :: adv
-    !local variables
-    sll_real64, dimension(:,:), pointer :: buf
-    sll_int32 :: step
-    sll_int32 :: Nc_x1
-    sll_int32 :: Nc_x2
-    sll_real64 :: delta_x2
-    sll_int32 :: i2_loc
-    sll_int32 :: d
-    
-    Nc_x1 = deriv%mesh_x1%num_cells
-    Nc_x2 = deriv%mesh_x2%num_cells
-    d = deriv%degree
-    
-    
-    
-    buf => deriv%buf
-    
-    !step 1: compute phi on a field aligned mesh from the initial field aligned mesh
-    ! we store on phi_store(-d:Nc_x2+d,1:Nc_x1+1)
-   
-    delta_x2 = deriv%mesh_x2%delta_eta
-    
-    if(size(phi,1)<Nc_x1+1)then
-      print *,'#bad size for phi'
-    endif
-    if(size(phi,2)<Nc_x2+1)then
-      print *,'#bad size for phi'
-    endif
-    
-    D_phi = 0.0_f64
-    print *,size(buf,1),size(buf,2)
-       
-   
-    do step = -d,Nc_x2+d
-      i2_loc = modulo(step+Nc_x2,Nc_x2)+1
-      !deriv%buf(step,1:Nc_x1+1) = phi(1:Nc_x1+1,i2_loc)
-      print *,i2_loc
-      print *,real(step,f64)*delta_x2
-      print *,maxval(phi(1:Nc_x1+1,i2_loc)),minval(phi(1:Nc_x1+1,i2_loc))
-      print *,maxval(deriv%buf(step+d+1,1:Nc_x1+1)),minval(deriv%buf(step+d+1,1:Nc_x1+1))
-      print *,tau
-      print *,real(step,f64)*delta_x2
-      call adv%advect_1d_constant( &
-        tau, &
-        real(step,f64)*delta_x2, &
-        phi(1:Nc_x1+1,i2_loc), &
-        deriv%buf(step+d+1,1:Nc_x1+1))      
-    enddo
-   
-   
-   
-   
-    !step 2: compute derivative on the field aligned mesh
-   
-    !step 3: compute derivative on initial cartesian mesh from field on field aligned mesh
-   
-   
-   
-  end subroutine compute_oblic_derivative
 
 
 
