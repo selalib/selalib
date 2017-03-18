@@ -116,6 +116,7 @@ function new_quintic_spline_interpolator_1d( num_points, &
   sll_int32,  intent(in)     :: bc_min
   sll_int32,  intent(in)     :: bc_max
 
+  allocate( res )
   call sll_s_quintic_spline_interpolator_1d_init( res,        &
              num_points, &
              x_min,      &
@@ -276,7 +277,7 @@ subroutine interpolate_array(this,        &
      coordinates, &
      output_array) 
 
-  sll_interpolator,  intent(in)        :: this
+  sll_interpolator,  intent(inout)        :: this
   sll_int32,  intent(in)               :: num_pts
   sll_real64, dimension(num_pts), intent(in) :: coordinates
   sll_real64, dimension(:), intent(in) :: data
@@ -332,10 +333,10 @@ subroutine interpolate_from_interpolant_array( interpolator,        &
      vals_to_interpolate, &
      output_array )
 
-  sll_interpolator,  intent(in)  :: interpolator
-  sll_int32,         intent(in)  :: num_pts
-  sll_real64,        intent(in)  :: vals_to_interpolate(num_pts)
-  sll_real64,        intent(out) :: output_array(num_pts)
+  sll_interpolator,  intent(inout)  :: interpolator
+  sll_int32,         intent(in)     :: num_pts
+  sll_real64,        intent(in)     :: vals_to_interpolate(num_pts)
+  sll_real64,        intent(out)    :: output_array(num_pts)
 
   sll_int32                      :: i
 
@@ -353,10 +354,10 @@ subroutine interpolate_from_interpolant_derivatives_eta1( interpolator,        &
                                           vals_to_interpolate, &
                                           output_array )
 
-  sll_interpolator,         intent(in)  :: interpolator
-  sll_int32,                intent(in)  :: num_pts
-  sll_real64, dimension(:), intent(in)  :: vals_to_interpolate
-  sll_real64, dimension(:), intent(out) :: output_array
+  sll_interpolator,         intent(inout)  :: interpolator
+  sll_int32,                intent(in)     :: num_pts
+  sll_real64, dimension(:), intent(in)     :: vals_to_interpolate
+  sll_real64, dimension(:), intent(out)    :: output_array
 
   sll_real64, dimension(:,:), allocatable :: c
   sll_real64, dimension(:),   allocatable :: h
@@ -417,11 +418,11 @@ end subroutine set_coefficients
 function get_coefficients( interpolator ) result( coeffs )
 
   sll_interpolator, intent(in) :: interpolator
-  sll_real64, pointer          :: coeffs(:)
+  sll_real64, pointer         :: coeffs(:)
 
   character(len=*), parameter  :: this_fun_name = 'get_coefficients'
 
-  coeffs = interpolator%x
+  coeffs => interpolator%x
   SLL_ERROR( this_fun_name, 'Not implemented yet.' )
 
 end function get_coefficients
@@ -434,11 +435,11 @@ subroutine interpolate_array_disp( this,        &
                                  alpha, &
                                  output_array)
 
-  sll_interpolator, intent(in) :: this
-  sll_int32,        intent(in) :: num_pts
-  sll_real64,       intent(in) :: data(:)
-  sll_real64,       intent(in) :: alpha
-  sll_real64,       intent(out):: output_array(num_pts)
+  sll_interpolator, intent(inout) :: this
+  sll_int32,        intent(in)    :: num_pts
+  sll_real64,       intent(in)    :: data(:)
+  sll_real64,       intent(in)    :: alpha
+  sll_real64,       intent(out)   :: output_array(num_pts)
   
   character(len=*), parameter  :: this_fun_name = 'interpolate_array_disp'
 
@@ -456,7 +457,7 @@ subroutine interpolate_array_disp_inplace( this,        &
      data,        &
      alpha)
 
-  sll_interpolator, intent(in)    :: this
+  sll_interpolator, intent(inout) :: this
   sll_int32,        intent(in)    :: num_pts
   sll_real64,       intent(inout) :: data(num_pts)
   sll_real64,       intent(in)    :: alpha

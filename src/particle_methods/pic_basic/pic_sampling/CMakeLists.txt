@@ -7,6 +7,7 @@ SET( PIC_SAMPLING_DEPS
   sll_errors
   sll_working_precision
   sll_particle_groups
+  sll_pic_weights
   sobol
   prob
   sll_distribution_function )
