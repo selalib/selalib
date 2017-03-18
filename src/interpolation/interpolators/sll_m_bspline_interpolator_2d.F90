@@ -323,7 +323,7 @@ contains
     eta2,              &
     data_out)
 
-    class(sll_t_bspline_interpolator_2d),  intent(in) :: this
+    class(sll_t_bspline_interpolator_2d),  intent(inout) :: this
     sll_int32,  intent(in)                          :: num_points1
     sll_int32,  intent(in)                          :: num_points2
     sll_real64, dimension(:,:),          intent(in) :: eta1
@@ -352,7 +352,7 @@ contains
     alpha2,      &
     data_out)
 
-    class(sll_t_bspline_interpolator_2d),  intent(in) :: this
+    class(sll_t_bspline_interpolator_2d),  intent(inout) :: this
 
     sll_int32,  intent(in)                         :: num_points1
     sll_int32,  intent(in)                         :: num_points2

@@ -310,7 +310,7 @@ MAKE_GET_SLOT_FUNCTION(get_x2_delta_cs2d,sll_t_cubic_spline_2d,x2_delta,sll_real
 !               'end ifin the case of periodic boundary conditions. ', &
 !               'Exiting program...'
 !          STOP 'sll_f_new_cubic_spline_1d'
-	   SLL_WARNING('sll_f_new_cubic_spline_1d','values of sl and sr are not taken into account')
+          SLL_WARNING('sll_f_new_cubic_spline_1d','values of sl and sr are not taken into account')
        else
           ! Assign some value, but this value should never be used in the
           ! periodic case anyway.
@@ -1447,7 +1447,7 @@ MAKE_GET_SLOT_FUNCTION(get_x2_delta_cs2d,sll_t_cubic_spline_2d,x2_delta,sll_real
           present(const_slope_x1_min) .or. present(const_slope_x1_max) .or. &
           present(const_slope_x2_min) .or. present(const_slope_x2_max) )then
 
-	    SLL_WARNING('sll_s_cubic_spline_2d_init','values of slopes are not taken into account as we are in periodic-periodic')
+          SLL_WARNING('sll_s_cubic_spline_2d_init','values of slopes are not taken into account as we are in periodic-periodic')
        end if
     case ( 6 ) 
        ! Hermite condition in X1 and periodic in X2 
@@ -2386,7 +2386,7 @@ MAKE_GET_SLOT_FUNCTION(get_x2_delta_cs2d,sll_t_cubic_spline_2d,x2_delta,sll_real
     intrinsic                           :: associated, int, real
     sll_real64, intent(in)              :: x1
     sll_real64, intent(in)              :: x2
-    type(sll_t_cubic_spline_2d)         :: spline
+    type(sll_t_cubic_spline_2d), intent( in ) :: spline
     sll_real64                          :: rh1   ! reciprocal of cell spacing
     sll_real64                          :: rh2   ! reciprocal of cell spacing
     sll_int32                           :: cell

@@ -170,12 +170,14 @@ function toroidal_1(theta,phi,params) result(res)
   sll_real64 :: res
   sll_real64, intent(in) :: theta
   sll_real64, intent(in) :: phi
-  sll_real64, dimension(:), intent(in), optional :: params
+  sll_real64, dimension(:), intent(in) :: params
 
   sll_real64 :: psipr
   sll_real64 :: smallr
-  smallr = params(1)
-  psipr = params(2)
+
+  smallr = params(1)! default: 1.0_f64
+  psipr = params(2) ! default: 1.0_f64
+
   res = -psipr/smallr  
   return !PN ADD TO PREVENT WARNING
   print*, phi, theta
@@ -185,16 +187,17 @@ function toroidal_2(theta,phi,params) result(res)
   sll_real64 :: res
   sll_real64, intent(in) :: theta
   sll_real64, intent(in) :: phi
-  sll_real64, dimension(:), intent(in), optional :: params
+  sll_real64, dimension(:), intent(in) :: params
 
   sll_real64 :: bigr
   sll_real64 :: F0
   sll_real64 :: R0
   sll_real64 :: smallr
-  
-  smallr = params(1)
-  R0 = params(2)
-  F0 = params(3)
+
+  smallr = params(1) ! default: 1.0_f64
+  R0 = params(2) ! default: 1.0_f64
+  F0 = params(3) ! default: 1.0_f64
+     
   bigr = R0+smallr*cos(theta)
   res=F0/bigr
 
