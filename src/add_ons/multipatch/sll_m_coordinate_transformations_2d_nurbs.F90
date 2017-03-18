@@ -717,7 +717,7 @@ contains
 
   
   function jacobian_matrix_2d_nurbs( transf, eta1, eta2 )
-    class(sll_t_coordinate_transformation_2d_nurbs), intent(in):: transf
+    class(sll_t_coordinate_transformation_2d_nurbs), intent(inout):: transf
     sll_real64, dimension(1:2,1:2)     :: jacobian_matrix_2d_nurbs
     sll_real64, intent(in) :: eta1
     sll_real64, intent(in) :: eta2
@@ -782,7 +782,7 @@ contains
 
   
   function inverse_jacobian_matrix_2d_nurbs( transf, eta1, eta2 )
-    class(sll_t_coordinate_transformation_2d_nurbs),intent(in) :: transf
+    class(sll_t_coordinate_transformation_2d_nurbs),intent(inout) :: transf
     sll_real64, intent(in) :: eta1
     sll_real64, intent(in) :: eta2
     sll_real64, dimension(1:2,1:2)     :: inverse_jacobian_matrix_2d_nurbs
@@ -814,8 +814,8 @@ contains
     
 
   subroutine write_to_file_2d_nurbs(transf,output_format)
-    class(sll_t_coordinate_transformation_2d_nurbs) :: transf
-    sll_int32, optional :: output_format 
+    class(sll_t_coordinate_transformation_2d_nurbs), intent( inout ) :: transf
+    sll_int32, intent( in ), optional :: output_format 
     class(sll_t_cartesian_mesh_2d), pointer :: lm
     sll_int32           :: local_format 
     sll_real64, dimension(:,:), pointer :: x1mesh

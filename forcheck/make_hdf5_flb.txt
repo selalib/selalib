@@ -1,5 +1,5 @@
 # This is a makefile to create the Forcheck library files hdf5.flb and h5lt.flb for HDF5.
-# It works with HDF5 1.8.9 and 1.8.5-patch1.
+# It works with HDF5 1.8.18, 1.8.9, and 1.8.5-patch1.
 # Created by Tamas Feher <tamas.bela.feher@ipp.mpg.de>
 #
 # You can set the location for HDF5 and version, and then run
@@ -11,7 +11,8 @@
 HDF5_SRC = 
 #
 # Set the version number here
-HDF5_VERSION = 1.8.9
+HDF5_VERSION = 1.8.18
+# HDF5_VERSION = 1.8.9
 # HDF5_VERSION = 1.8.5-patch1
 #
 # In case we do not have the sources, then we will have to compile the library, 
@@ -65,9 +66,20 @@ PWD := $(shell pwd)
 
 all: hdf5-$(HDF5_VER_NODOT).flb h5lt-$(HDF5_VER_NODOT).flb
 
+hdf5-1_8_18.flb: $(HDF5_SRC) $(HDF5_SRC_F)/H5fortran_types.f90
+	-cd $(HDF5_SRC_F); \
+	forchk -batch -l hdf5.lst H5Aff_F03.f90 H5Aff.f90 $(H5_DBLE_INTERFACE) \
+	H5Dff_F03.f90 H5Dff.f90 H5Eff_F03.f90 H5Eff.f90 H5f90global.f90 H5FDmpioff.f90 \
+	H5_ff_F03.f90 H5_ff.f90 H5Fff_F03.f90 H5Fff.f90 H5fortran_detect.f90 H5fortran_types.f90 \
+	H5Gff.f90 H5Iff.f90 H5Lff_F03.f90 H5Lff.f90 H5Off_F03.f90 H5Off.f90 H5Pff_F03.f90 \
+        H5Pff.f90 H5Rff_F03.f90 H5Rff.f90 H5Sff.f90 H5test_kind.f90 H5test_kind_SIZEOF.f90 \
+        H5test_kind_STORAGE_SIZE.f90 H5Tff_F03.f90 H5Tff.f90 H5Zff.f90 HDF5.f90 HDF5mpio.f90 \
+        -create  hdf5-1_8_18.flb; \
+        mv hdf5-1_8_18.flb $(PWD)
+
 hdf5-1_8_9.flb: $(HDF5_SRC) $(HDF5_SRC_F)/H5fortran_types.f90
 	-cd $(HDF5_SRC_F); \
-	forchk $(FCK_HDF5_OPT)  -l hdf5.lst H5Aff.f90 $(H5_DBLE_INTERFACE) H5Dff.f90 H5Eff.f90 H5f90global.f90 \
+	forchk $(FCK_HDF5_OPT) -batch -l hdf5.lst H5Aff.f90 $(H5_DBLE_INTERFACE) H5Dff.f90 H5Eff.f90 H5f90global.f90 \
 	H5FDmpioff.f90 H5_ff.f90 H5Fff.f90 H5fortran_detect.f90 H5fortran_types.f90 H5Gff.f90 H5Iff.f90 \
 	H5Lff.f90 H5Off.f90 H5Pff.f90 H5Rff.f90 H5Sff.f90 H5Tff.f90 H5Zff.f90 HDF5.f90 H5_ff_F03.f90 \
 	H5Eff_F03.f90 H5Lff_F03.f90 H5Dff_F03.f90 H5Aff_F03.f90 H5Off_F03.f90 H5Tff_F03.f90 H5Rff_F03.f90 \
@@ -76,7 +88,7 @@ hdf5-1_8_9.flb: $(HDF5_SRC) $(HDF5_SRC_F)/H5fortran_types.f90
 	
 hdf5-1_8_5-patch1.flb: $(HDF5_SRC) $(HDF5_SRC_F)/H5fortran_types.f90
 	-cd $(HDF5_SRC_F);\
-	forchk $(FCK_HDF5_OPT)  -l hdf5.lst $(H5_DBLE_INTERFACE) H5_ff.f90 H5Aff.f90 H5Dff.f90 H5Eff.f90 \
+	forchk $(FCK_HDF5_OPT) -batch -l hdf5.lst $(H5_DBLE_INTERFACE) H5_ff.f90 H5Aff.f90 H5Dff.f90 H5Eff.f90 \
 	H5f90global.f90 H5FDmpioff.f90 H5Fff.f90 H5fortran_types.f90 H5Gff.f90 H5Iff.f90 H5Lff.f90 H5Off.f90 \
 	H5Pff.f90 H5Rff.f90 H5Sff.f90 H5Tff.f90 H5Zff.f90 HDF5mpio.f90 -create hdf5-1_8_5-patch1.flb; \
 	mv hdf5-1_8_5-patch1.flb $(PWD)
@@ -84,7 +96,7 @@ hdf5-1_8_5-patch1.flb: $(HDF5_SRC) $(HDF5_SRC_F)/H5fortran_types.f90
 h5lt-$(HDF5_VER_NODOT).flb: $(HDF5_SRC) hdf5-$(HDF5_VER_NODOT).flb
 	-cd $(HDF5_HL_SRC_F); \
 	cp $(PWD)/hdf5-$(HDF5_VER_NODOT).flb .; \
-	forchk -l h5lt.lst *.f90 -create h5lt-$(HDF5_VER_NODOT).flb hdf5-$(HDF5_VER_NODOT).flb; \
+	forchk -batch -l h5lt.lst *.f90 -create h5lt-$(HDF5_VER_NODOT).flb hdf5-$(HDF5_VER_NODOT).flb; \
 	mv h5lt-$(HDF5_VER_NODOT).flb $(PWD)
 
 # some parts of the source are generated during the compilation of HDF5
@@ -97,6 +109,9 @@ $(HDF5_SRC_F)/H5fortran_types.f90: $(HDF5_SRC)
 	cd $(TMPDIR)/hdf5-$(HDF5_VERSION); make 
        
 # The source of HDF5 can be downloaded from the following locations
+hdf5-1.8.18.tar.gz:
+	wget https://support.hdfgroup.org/ftp/HDF5/current18/src/hdf5-1.8.18.tar.gz
+
 hdf5-1.8.9.tar.gz:  
 	wget http://www.hdfgroup.org/ftp/HDF5/current/src/hdf5-1.8.9.tar.gz
 
