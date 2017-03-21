@@ -52,8 +52,8 @@ type(sll_t_cartesian_mesh_2d), pointer :: mesh
 class(sll_c_coordinate_transformation_2d_base), pointer :: tau
 class(sll_c_coordinate_transformation_2d_base), pointer :: collela
 
-type(sll_t_dg_field_2d), pointer :: ex
-type(sll_t_dg_field_2d), pointer :: bz
+type(sll_t_dg_field_2d) :: ex
+type(sll_t_dg_field_2d) :: bz
 
 
 mesh => sll_f_new_cartesian_mesh_2d(nc_eta1, nc_eta2, &

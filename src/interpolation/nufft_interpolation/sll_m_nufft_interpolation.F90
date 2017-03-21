@@ -140,9 +140,9 @@ if ( 0.0_f64 < xij .and. xij < 1.0_f64 .and. &
   self%y(1) = yij * 2.0 * sll_p_pi
 
   call nufft2d2f90(1,               &
-                   self%x(1), &
-                   self%y(1), &
-                   self%f1d(1),     &
+                   self%x, &
+                   self%y, &
+                   self%f1d,        &
                    1,               &
                    self%epsnufft,   &
                    1,               &
