@@ -1291,39 +1291,40 @@ contains
     sll_f_sinprod_gen_x2 = coef1 * sll_f_sinprod_gen_x2 + coef2
   end function sll_f_sinprod_gen_x2
 
-  !> inverse mapping 
-  !> cannot be computed analytically in this case. Use fixed point iterations.
-  function sinprod_gen_eta1 ( x1, x2, params )
-    sll_real64  :: sinprod_gen_eta1
-    sll_real64, intent(in)   :: x1
-    sll_real64, intent(in)   :: x2
-    sll_real64, dimension(:), optional, intent(in) :: params
-#ifdef DEBUG
-    sll_real64 :: dummy
-    dummy = params(1)
-#endif
-    ! NEEDS TO BE IMPLEMENTED
-    STOP 'function not implemented'
-    sinprod_gen_eta1 = x2
-    sinprod_gen_eta1 = x1
-  end function sinprod_gen_eta1
-
-  !> inverse mapping 
-  !> cannot be computed analytically in this case. Use fixed point iterations.
-  function sinprod_gen_eta2 ( x1, x2, params )
-    sll_real64  :: sinprod_gen_eta2
-    sll_real64, intent(in)   :: x1
-    sll_real64, intent(in)   :: x2
-    sll_real64, dimension(:), optional, intent(in) :: params
-#ifdef DEBUG
-    sll_real64 :: dummy
-    dummy = params(1)
-#endif
-    ! NEEDS TO BE IMPLEMENTED
-    STOP 'function not implemented'
-    sinprod_gen_eta2 = x1
-    sinprod_gen_eta2 = x2
-  end function sinprod_gen_eta2
+  ! KK: Unused functions with forcheck errors
+!!$  !> inverse mapping 
+!!$  !> cannot be computed analytically in this case. Use fixed point iterations.
+!!$  function sinprod_gen_eta1 ( x1, x2, params )
+!!$    sll_real64  :: sinprod_gen_eta1
+!!$    sll_real64, intent(in)   :: x1
+!!$    sll_real64, intent(in)   :: x2
+!!$    sll_real64, dimension(:), optional, intent(in) :: params
+!!$#ifdef DEBUG
+!!$    sll_real64 :: dummy
+!!$    dummy = params(1)
+!!$#endif
+!!$    ! NEEDS TO BE IMPLEMENTED
+!!$    STOP 'function not implemented'
+!!$    sinprod_gen_eta1 = x2
+!!$    sinprod_gen_eta1 = x1
+!!$  end function sinprod_gen_eta1
+!!$
+!!$  !> inverse mapping 
+!!$  !> cannot be computed analytically in this case. Use fixed point iterations.
+!!$  function sinprod_gen_eta2 ( x1, x2, params )
+!!$    sll_real64  :: sinprod_gen_eta2
+!!$    sll_real64, intent(in)   :: x1
+!!$    sll_real64, intent(in)   :: x2
+!!$    sll_real64, dimension(:), optional, intent(in) :: params
+!!$#ifdef DEBUG
+!!$    sll_real64 :: dummy
+!!$    dummy = params(1)
+!!$#endif
+!!$    ! NEEDS TO BE IMPLEMENTED
+!!$    STOP 'function not implemented'
+!!$    sinprod_gen_eta2 = x1
+!!$    sinprod_gen_eta2 = x2
+!!$  end function sinprod_gen_eta2
 
   !> jacobian matrix
   function sll_f_sinprod_gen_jac11 ( eta1, eta2, params )
@@ -1589,39 +1590,40 @@ contains
     sll_f_sinprod_x2 = eta2 + alpha2*sin(pi2*rl1*eta1)*sin(pi2*rl2*eta2)
   end function sll_f_sinprod_x2
 
-  !> inverse mapping 
-  !> cannot be computed analytically in this case. Use fixed point iterations.
-  function sinprod_eta1 ( x1, x2, params )
-    sll_real64  :: sinprod_eta1
-    sll_real64, intent(in)   :: x1
-    sll_real64, intent(in)   :: x2
-    sll_real64, dimension(:), optional, intent(in) :: params
-#ifdef DEBUG
-    sll_real64 :: dummy
-    dummy = params(1)
-#endif
-    ! NEEDS TO BE IMPLEMENTED
-    STOP 'function not implemented'
-    sinprod_eta1 = x2
-    sinprod_eta1 = x1
-  end function sinprod_eta1
-
-  !> inverse mapping 
-  !> cannot be computed analytically in this case. Use fixed point iterations.
-  function sinprod_eta2 ( x1, x2, params )
-    sll_real64  :: sinprod_eta2
-    sll_real64, intent(in)   :: x1
-    sll_real64, intent(in)   :: x2
-    sll_real64, dimension(:), optional, intent(in) :: params
-#ifdef DEBUG
-    sll_real64 :: dummy
-    dummy = params(1)
-#endif
-    ! NEEDS TO BE IMPLEMENTED
-    STOP 'function not implemented'
-    sinprod_eta2 = x1
-    sinprod_eta2 = x2
-  end function sinprod_eta2
+! KK: Unused functions with forcheck errors
+!!$  !> inverse mapping 
+!!$  !> cannot be computed analytically in this case. Use fixed point iterations.
+!!$  function sinprod_eta1 ( x1, x2, params )
+!!$    sll_real64  :: sinprod_eta1
+!!$    sll_real64, intent(in)   :: x1
+!!$    sll_real64, intent(in)   :: x2
+!!$    sll_real64, dimension(:), optional, intent(in) :: params
+!!$#ifdef DEBUG
+!!$    sll_real64 :: dummy
+!!$    dummy = params(1)
+!!$#endif
+!!$    ! NEEDS TO BE IMPLEMENTED
+!!$    STOP 'function not implemented'
+!!$    sinprod_eta1 = x2
+!!$    sinprod_eta1 = x1
+!!$  end function sinprod_eta1
+!!$
+!!$  !> inverse mapping 
+!!$  !> cannot be computed analytically in this case. Use fixed point iterations.
+!!$  function sinprod_eta2 ( x1, x2, params )
+!!$    sll_real64  :: sinprod_eta2
+!!$    sll_real64, intent(in)   :: x1
+!!$    sll_real64, intent(in)   :: x2
+!!$    sll_real64, dimension(:), optional, intent(in) :: params
+!!$#ifdef DEBUG
+!!$    sll_real64 :: dummy
+!!$    dummy = params(1)
+!!$#endif
+!!$    ! NEEDS TO BE IMPLEMENTED
+!!$    STOP 'function not implemented'
+!!$    sinprod_eta2 = x1
+!!$    sinprod_eta2 = x2
+!!$  end function sinprod_eta2
 
   !> jacobian matrix
   function sll_f_sinprod_jac11 ( eta1, eta2, params )

@@ -77,12 +77,12 @@ sll_real64, dimension(2) :: params   ! for the polar transformation
 type(sll_t_maxwell_2d_diga), pointer  :: maxwell_d
 type(sll_t_maxwell_2d_diga), pointer  :: maxwell_a
 sll_int32, parameter                  :: degree = 2
-type(sll_t_dg_field_2d), pointer      :: ex_a, dx_a
-type(sll_t_dg_field_2d), pointer      :: ey_a, dy_a
-type(sll_t_dg_field_2d), pointer      :: bz_a, dz_a
-type(sll_t_dg_field_2d), pointer      :: ex_d, dx_d
-type(sll_t_dg_field_2d), pointer      :: ey_d, dy_d
-type(sll_t_dg_field_2d), pointer      :: bz_d, dz_d
+type(sll_t_dg_field_2d)      :: ex_a, dx_a
+type(sll_t_dg_field_2d)      :: ey_a, dy_a
+type(sll_t_dg_field_2d)      :: bz_a, dz_a
+type(sll_t_dg_field_2d)      :: ex_d, dx_d
+type(sll_t_dg_field_2d)      :: ey_d, dy_d
+type(sll_t_dg_field_2d)      :: bz_d, dz_d
   
 #define RMIN 0.1_f64
 #define RMAX 1.0_f64
