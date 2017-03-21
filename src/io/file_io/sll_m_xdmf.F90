@@ -375,6 +375,7 @@ character(len=4), optional   :: file_format !< "HDF5" or "Binary"
 sll_int32       , optional   :: iplot       !< plot index
 
 character(len=4)             :: cplot
+logical                      :: hdf5_file_format
 #ifndef NOHDF5
 type(sll_t_hdf5_ser_handle)  :: hfile_id      !< hdf5 file handle
 #endif
@@ -402,7 +403,12 @@ write(file_id,"(3f12.5)") delta_eta1, delta_eta2, delta_eta3
 write(file_id,"(a)")"</DataItem>"
 write(file_id,"(a)")"</Geometry>"
 write(file_id,"(a)")"<Attribute Name='"//array_name//"' AttributeType='Scalar' Center='Node'>"
-if(present(file_format) .and. file_format == "HDF5") then
+
+hdf5_file_format = .false.
+if(present(file_format)) then
+  if(file_format == "HDF5") hdf5_file_format = .true.
+endif
+if (hdf5_file_format) then
   write(file_id,"(a,3i5,a)")"<DataItem Dimensions='",nx3,nx2,nx1, &
                             "' NumberType='Float' Precision='8' Format='HDF'>"
   if (present(iplot)) then
@@ -456,6 +462,7 @@ sll_int32,  optional         :: iplot      !< plot index
 sll_real64, optional         :: time       !< time
 sll_int32                    :: i, j
 character(len=4)             :: cplot
+logical                      :: hdf5_file_format
 #ifndef NOHDF5
 type(sll_t_hdf5_ser_handle)  :: hfile_id      !< hdf5 file handle
 #endif
@@ -489,7 +496,11 @@ write(file_id,*) (eta2(j),j=1,nx2)
 write(file_id,"(a)")"</DataItem>"
 write(file_id,"(a)")"</Geometry>"
 write(file_id,"(a)")"<Attribute Name='"//array_name//"' AttributeType='Scalar' Center='Node'>"
-if(present(file_format) .and. file_format == "HDF5") then
+hdf5_file_format = .false.
+if(present(file_format)) then
+  if (file_format == "HDF5") hdf5_file_format = .true.
+endif
+if (hdf5_file_format) then
    write(file_id,"(a,2i5,a)")"<DataItem Dimensions='",nx2,nx1, &
                              "' NumberType='Float' Precision='8' Format='HDF'>"
   if (present(iplot)) then
@@ -547,7 +558,8 @@ sll_int32                    :: i, j, k
 type(sll_t_hdf5_ser_handle)  :: hfile_id      !< hdf5 file handle
 #endif
 character(len=4)             :: cplot
-    
+logical                      :: hdf5_file_format
+
 nx1 = size(array,1)
 nx2 = size(array,2)
 nx3 = size(array,3)
@@ -581,7 +593,11 @@ write(file_id,*) (eta3(k),k=1,nx3)
 write(file_id,"(a)")"</DataItem>"
 write(file_id,"(a)")"</Geometry>"
 write(file_id,"(a)")"<Attribute Name='"//array_name//"' AttributeType='Scalar' Center='Node'>"
-if(present(file_format) .and. file_format == "HDF5") then
+hdf5_file_format = .false.
+if(present(file_format)) then
+  if(file_format == "HDF5") hdf5_file_format = .true.
+endif
+if (hdf5_file_format) then
   write(file_id,"(a,3i5,a)")"<DataItem Dimensions='",nx3,nx2,nx1, &
                                  "' NumberType='Float' Precision='8' Format='HDF'>"
   if (present(iplot)) then
@@ -633,6 +649,7 @@ sll_int32                    :: nx2         !< y nodes number
 character(len=4), optional   :: file_format !< file format "HDF5" or "Binary"
 sll_int32,        optional   :: iplot       !< plot index
 character(len=4)             :: cplot 
+logical                      :: hdf5_file_format
 #ifndef NOHDF5
 type(sll_t_hdf5_ser_handle)  :: hfile_id      !< hdf5 file handle
 #endif
@@ -655,7 +672,11 @@ write(file_id,"(a,2i5,a)")"<Topology TopologyType='2DSMesh' NumberOfElements='",
                           nx2,nx1,"'/>"
 write(file_id,"(a)")"<Geometry GeometryType='X_Y'>"
 
-if(present(file_format) .and. file_format == "HDF5") then
+hdf5_file_format = .false.
+if(present(file_format)) then
+  if(file_format == "HDF5") hdf5_file_format = .true.
+endif
+if (hdf5_file_format) then
 
   write(file_id,"(a,2i5,a)")"<DataItem Dimensions='",nx2,nx1, &
                             "' NumberType='Float' Precision='8' Format='HDF'>"
@@ -694,7 +715,7 @@ write(file_id,"(a)") &
 "<Attribute Name='"//array_name//"' AttributeType='Scalar' Center='Node'>"
 
 #ifndef NOHDF5
-if(present(file_format) .and. file_format == "HDF5") then
+if(hdf5_file_format) then
 
   write(file_id,"(a,2i5,a)")"<DataItem Dimensions='",nx2,nx1, &
                             "' NumberType='Float' Precision='8' Format='HDF'>"
@@ -764,7 +785,8 @@ sll_int32                    :: nx3           !< z nodes number
 character(len=4), optional   :: file_format   !< file format "HDF5" or "Binary"
 sll_int32       , optional   :: iplot         !< plot index
 
-character(len=4)             :: cplot         
+character(len=4)             :: cplot
+logical                      :: hdf5_file_format
 #ifndef NOHDF5
 type(sll_t_hdf5_ser_handle)  :: hfile_id      !< hdf5 file handle
 #endif
@@ -789,7 +811,11 @@ write(file_id,"(a,3i5,a)")"<Topology TopologyType='3DSMesh' NumberOfElements='",
                           nx3,nx2,nx1,"'/>"
 write(file_id,"(a)")"<Geometry GeometryType='X_Y_Z'>"
 
-if(present(file_format) .and. file_format == "HDF5") then
+hdf5_file_format = .false.
+if(present(file_format)) then
+  if(file_format == "HDF5") hdf5_file_format = .true.
+endif
+if (hdf5_file_format) then
 
   write(file_id,"(a,3i5,a)")"<DataItem Dimensions='",nx3,nx2,nx1, &
                             "' NumberType='Float' Precision='8' Format='HDF'>"
@@ -838,7 +864,7 @@ else
 end if
 
 #ifndef NOHDF5
-if(present(file_format) .and. file_format == "HDF5") then
+if(hdf5_file_format) then
 
    write(file_id,"(a,3i5,a)")"<DataItem Dimensions='",nx3,nx2,nx1, &
                              "' NumberType='Float' Precision='8' Format='HDF'>"

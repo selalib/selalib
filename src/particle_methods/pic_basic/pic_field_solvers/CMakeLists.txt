@@ -5,6 +5,7 @@ TARGET_LINK_LIBRARIES( sll_pic_field_solvers
   sll_memory
   sll_working_precision
   sll_collective
+  sll_particle_mesh_coupling
   sll_poisson_solvers
   sll_maxwell_solvers)
 

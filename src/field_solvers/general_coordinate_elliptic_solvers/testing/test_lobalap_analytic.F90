@@ -1,3 +1,11 @@
+#define NPTS1 2
+#define NPTS2 2
+#define R_MIN  0.0_8
+#define R_MAX  1.0_8
+#define THETA_MIN  0.00_8
+#define THETA_MAX  1.00_8
+#define N 6.0_8
+
 module lobalap_analytic_helper_functions
 
 contains
@@ -105,21 +113,14 @@ program test_lobalap
   implicit none
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
-  type(sll_t_lobatto_poisson_solver)                          :: solver
+  type(sll_t_lobatto_poisson_solver)                      :: solver
   type(sll_t_cartesian_mesh_2d), pointer                  :: mesh
   class(sll_c_coordinate_transformation_2d_base), pointer :: tau
-  type(sll_t_dg_field_2d), pointer                        :: dg_rho
-  type(sll_t_dg_field_2d), pointer                        :: dg_ex
-  type(sll_t_dg_field_2d), pointer                        :: dg_ey
-  sll_int32, parameter                                  :: degree = 3
-  
-#define NPTS1 2
-#define NPTS2 2
-#define R_MIN  0.0_8
-#define R_MAX  1.0_8
-#define THETA_MIN  0.00_8
-#define THETA_MAX  1.00_8
-#define N 6
+  type(sll_t_dg_field_2d)                                 :: dg_rho
+  type(sll_t_dg_field_2d)                                 :: dg_ex
+  type(sll_t_dg_field_2d)                                 :: dg_ey
+  sll_int32, parameter                                    :: degree = 3
+
 
   ! logical mesh for space coordinates
   mesh => sll_f_new_cartesian_mesh_2d( NPTS1, NPTS2,    & 
