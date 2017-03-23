@@ -129,7 +129,7 @@ do i=0,NPTS1-2
   normH1_2   = normH1_2  + (deriv1_val-ref)**2*h1
 end do
   
-call sll_o_delete(ad1d)
+call ad1d%delete()
 
 do i=0,NPTS1-1
      eta1               = X1MIN + real(i,f64)*h1
@@ -168,7 +168,7 @@ do i=0,NPTS1-2
   normH1_3   = normH1_3  + (deriv1_val-ref)**2*h1
 end do
   
-call sll_o_delete(ad1d)
+call ad1d%delete()
 
 do i=0,NPTS1-1
   eta1               = X1MIN + real(i,f64)*h1
@@ -208,7 +208,7 @@ do i=0,NPTS1-2
    normH1_4   = normH1_4  + (deriv1_val-ref)**2*h1
 end do
 
-call sll_o_delete(ad1d)
+call ad1d%delete()
 
 do i=0,NPTS1-1
    eta1           = X1MIN + real(i,f64)*h1
@@ -247,7 +247,7 @@ do i=0,NPTS1-1
    normH1_4   = normH1_4  + (deriv1_val-ref)**2*h1
 end do
 
-call sll_o_delete(ad1d)
+call ad1d%delete()
 
 do i=0,NPTS1-1
    eta1           = X1MIN + real(i,f64)*h1
@@ -286,7 +286,7 @@ do i=0,NPTS1-1
    normH1_5   = normH1_5  + (deriv1_val-ref)**2*h1
 end do
 
-call sll_o_delete(ad1d)
+call ad1d%delete()
 
 do i=0,NPTS1-1
    eta1           = X1MIN + real(i,f64)*h1
@@ -325,7 +325,7 @@ do i=0,NPTS1-1
    normH1_6   = normH1_6  + (deriv1_val-ref)**2*h1
 end do
 
-call sll_o_delete(ad1d)
+call ad1d%delete()
 
 do i=0,NPTS1-1
    eta1           = X1MIN + real(i,f64)*h1
@@ -364,7 +364,7 @@ do i=0,NPTS1-1
    normH1_7   = normH1_7  + (deriv1_val-ref)**2*h1
 end do
 
-call sll_o_delete(ad1d)
+call ad1d%delete()
 
 
 write(*,100)'--------------------------------------------'
