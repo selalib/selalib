@@ -405,7 +405,7 @@ contains
   ! need to be caught by the caller.
   function jacobian_matrix_2d_analytic( transf, eta1, eta2 )
     sll_real64, dimension(1:2,1:2)     :: jacobian_matrix_2d_analytic
-    class(sll_t_coordinate_transformation_2d_analytic),intent(in):: transf
+    class(sll_t_coordinate_transformation_2d_analytic),intent(inout):: transf
     sll_real64, intent(in) :: eta1
     sll_real64, intent(in) :: eta2
     sll_real64             :: j11
@@ -428,7 +428,7 @@ contains
 
   function inverse_jacobian_matrix_2d_analytic( transf, eta1, eta2 )
     sll_real64, dimension(1:2,1:2)     :: inverse_jacobian_matrix_2d_analytic
-    class(sll_t_coordinate_transformation_2d_analytic),intent(in) :: transf
+    class(sll_t_coordinate_transformation_2d_analytic),intent(inout) :: transf
     sll_real64, intent(in) :: eta1
     sll_real64, intent(in) :: eta2
     sll_real64             :: inv_j11
@@ -579,8 +579,8 @@ contains
 
 
   subroutine write_to_file_2d_analytic(transf,output_format)
-    class(sll_t_coordinate_transformation_2d_analytic) :: transf
-    sll_int32, optional :: output_format 
+    class(sll_t_coordinate_transformation_2d_analytic), intent( inout ) :: transf
+    sll_int32, intent( in ), optional :: output_format 
     sll_int32           :: local_format 
     sll_real64, dimension(:,:), allocatable :: x1mesh
     sll_real64, dimension(:,:), allocatable :: x2mesh
@@ -768,7 +768,7 @@ contains
   end function jacobian_2d_cell_discrete
 
   function jacobian_matrix_2d_discrete( transf, eta1, eta2 )
-    class(sll_t_coordinate_transformation_2d_discrete),intent(in) :: transf
+    class(sll_t_coordinate_transformation_2d_discrete),intent(inout) :: transf
     sll_real64, dimension(1:2,1:2)     :: jacobian_matrix_2d_discrete
     sll_real64, intent(in) :: eta1
     sll_real64, intent(in) :: eta2
@@ -791,7 +791,7 @@ contains
   end function jacobian_matrix_2d_discrete
 
   function inverse_jacobian_matrix_2d_discrete( transf, eta1, eta2 )
-    class(sll_t_coordinate_transformation_2d_discrete),intent(in) :: transf
+    class(sll_t_coordinate_transformation_2d_discrete),intent(inout) :: transf
     sll_real64, dimension(1:2,1:2)     :: inverse_jacobian_matrix_2d_discrete
     sll_real64, intent(in) :: eta1
     sll_real64, intent(in) :: eta2
@@ -1143,8 +1143,8 @@ contains
   end function transf_2d_jacobian_node_discrete
 
   subroutine write_to_file_2d_discrete(transf,output_format)
-    class(sll_t_coordinate_transformation_2d_discrete) :: transf
-    sll_int32, optional :: output_format 
+    class(sll_t_coordinate_transformation_2d_discrete), intent( inout ) :: transf
+    sll_int32, intent( in ), optional :: output_format 
     sll_int32           :: local_format 
     sll_real64, dimension(:,:), pointer :: x1mesh
     sll_real64, dimension(:,:), pointer :: x2mesh

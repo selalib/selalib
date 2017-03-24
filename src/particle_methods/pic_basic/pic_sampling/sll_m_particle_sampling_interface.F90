@@ -64,7 +64,7 @@ contains
 
   subroutine set_total_charge(self, target_total_charge)
     class(sll_t_conservative_sampling_params),  intent( inout )         :: self
-    sll_real64,                                     intent( in ), optional  :: target_total_charge
+    sll_real64,                                     intent( in )  :: target_total_charge
     self%total_charge = target_total_charge
   end subroutine
 

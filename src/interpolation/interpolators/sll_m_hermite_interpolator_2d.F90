@@ -309,7 +309,7 @@ contains
     eta1, &
     eta2, &
     data_out)
-    class(sll_hermite_interpolator_2d),  intent(in)  :: this
+    class(sll_hermite_interpolator_2d),  intent(inout)  :: this
     sll_int32,  intent(in)                           :: num_points1
     sll_int32,  intent(in)                           :: num_points2
     sll_real64, dimension(:,:), intent(in)           :: eta1
@@ -337,7 +337,7 @@ contains
        alpha1, &
        alpha2, &
        data_out)
-    class(sll_hermite_interpolator_2d), intent(in) :: this
+    class(sll_hermite_interpolator_2d), intent(inout) :: this
     sll_int32,  intent(in)                         :: num_points1
     sll_int32,  intent(in)                         :: num_points2
     sll_real64, dimension(:,:), intent(in)         :: alpha1
