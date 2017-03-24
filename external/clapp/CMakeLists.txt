@@ -1,15 +1,7 @@
-IF(CLAPP)
+IF(CLAPP_FEMA)
 
-  SET(CLAPP_LIBRARIES fema glt disco spl plaf clappio)
-  
-  LINK_DIRECTORIES(${CMAKE_BINARY_DIR}/lib)
-  INCLUDE_DIRECTORIES(${CMAKE_BINARY_DIR}/include/spl)
-  INCLUDE_DIRECTORIES(${CMAKE_BINARY_DIR}/include/fema)
-  INCLUDE_DIRECTORIES(${CMAKE_BINARY_DIR}/include/disco)
-  INCLUDE_DIRECTORIES(${CMAKE_BINARY_DIR}/include/plaf)
   ADD_EXECUTABLE(test_fema_poisson_2d_periodic test_poisson_2d_periodic.F90)
-  ADD_DEPENDENCIES(test_fema_poisson_2d_periodic fema_lib)
-  TARGET_LINK_LIBRARIES(test_fema_poisson_2d_periodic ${CLAPP_LIBRARIES} )
+  TARGET_LINK_LIBRARIES(test_fema_poisson_2d_periodic ${FEMA_LIBRARIES} )
   
   SET(PARAMETERS_FILE "parameters_sim_periodic_1d1d.nml")
   SET(TENSOR_FILE     "parameters_tensor_2d.nml")
@@ -25,4 +17,4 @@ IF(CLAPP)
   ADD_TEST(NAME test_fema_poisson_2d_periodic 
   	COMMAND test_fema_poisson_2d_periodic ${PARAMETERS_FILE} ${SOLVER_FILE1})
 
-ENDIF(CLAPP)
+ENDIF(CLAPP_FEMA)
