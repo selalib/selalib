@@ -2,7 +2,7 @@ INCLUDE(ExternalProject)
 
 # Convenience macro: find another library in the CLAPP framework
 macro( find_clapp_library _NAME )
-  find_package( ${_NAME} QUIET HINTS ${CLAPP_DIR}/cmake )
+  find_package( ${_NAME} QUIET HINTS ${CLAPP_DIR}/cmake  $ENV{CLAPP_DIR}/cmake )
   if( ${_NAME}_FOUND )
     set( CLAPP_${_NAME} ON CACHE BOOL "Use pre-installed CLAPP/${_NAME} library" )
   endif()
