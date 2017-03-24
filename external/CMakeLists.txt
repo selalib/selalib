@@ -3,15 +3,16 @@ ADD_SUBDIRECTORY(fftpack5)
 ADD_SUBDIRECTORY(pppack)
 ADD_SUBDIRECTORY(nufft)
 ADD_SUBDIRECTORY(burkardt)
+ADD_SUBDIRECTORY(clapp)
 
 IF(BUILD_MUDPACK)
   ADD_SUBDIRECTORY(mudpack)
 ENDIF(BUILD_MUDPACK)
 
+INCLUDE(ExternalProject)
 
 IF(BUILD_HDF5)
 
-  INCLUDE(ExternalProject)
   FIND_PACKAGE(MPI REQUIRED CXX)
   EXTERNALPROJECT_ADD( hdf5
      URL  https://support.hdfgroup.org/ftp/HDF5/current18/src/hdf5-1.8.18.tar.bz2
@@ -20,66 +21,8 @@ IF(BUILD_HDF5)
      CONFIGURE_COMMAND ${CMAKE_BINARY_DIR}/hdf5/configure --enable-fortran --prefix=${CMAKE_BINARY_DIR} --enable-parallel CXX=${MPI_CXX_COMPILER} CC=${MPI_C_COMPILER} FC=${MPI_Fortran_COMPILER}
   )
 
-
 ENDIF(BUILD_HDF5)
 
-IF(CLAPP_FRAMEWORK)
-
-  INCLUDE(ExternalProject)
-  EXTERNALPROJECT_ADD(
-    clappio_lib
-    PREFIX clapp
-    GIT_TAG devel
-    GIT_REPOSITORY git@gitlab.mpcdf.mpg.de:clapp/clappio.git
-    CMAKE_ARGS -DCMAKE_INSTALL_PREFIX=${CMAKE_BINARY_DIR} -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE} -DBUILD_TESTING=OFF)
-  
-  EXTERNALPROJECT_ADD(
-    plaf_lib
-    PREFIX clapp
-    GIT_TAG devel
-    GIT_REPOSITORY git@gitlab.mpcdf.mpg.de:clapp/plaf.git
-    CMAKE_ARGS -DCMAKE_INSTALL_PREFIX=${CMAKE_BINARY_DIR} -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE} -DBUILD_TESTING=OFF)
-
-  ADD_DEPENDENCIES(plaf_lib clappio_lib)
-  
-  EXTERNALPROJECT_ADD(
-    spl_lib
-    PREFIX clapp
-    GIT_TAG devel
-    GIT_REPOSITORY git@gitlab.mpcdf.mpg.de:clapp/spl.git
-    CMAKE_ARGS -DCMAKE_INSTALL_PREFIX=${CMAKE_BINARY_DIR} -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE} -DBUILD_TESTING=OFF)
-
-  ADD_DEPENDENCIES(spl_lib plaf_lib)
-  
-  EXTERNALPROJECT_ADD(
-    disco_lib
-    PREFIX clapp
-    GIT_TAG devel
-    GIT_REPOSITORY git@gitlab.mpcdf.mpg.de:clapp/disco.git
-    CMAKE_ARGS -DCMAKE_INSTALL_PREFIX=${CMAKE_BINARY_DIR} -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE} -DBUILD_TESTING=OFF)
-  
-  ADD_DEPENDENCIES(disco_lib spl_lib)
-  
-  EXTERNALPROJECT_ADD(
-    glt_lib
-    PREFIX clapp
-    GIT_TAG devel
-    GIT_REPOSITORY git@gitlab.mpcdf.mpg.de:clapp/glt.git
-    CMAKE_ARGS -DCMAKE_INSTALL_PREFIX=${CMAKE_BINARY_DIR} -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE} -DBUILD_TESTING=OFF)
-
-  ADD_DEPENDENCIES(glt_lib disco_lib)
-  EXTERNALPROJECT_ADD(
-    fema_lib
-    PREFIX clapp
-    GIT_TAG devel
-    GIT_REPOSITORY git@gitlab.mpcdf.mpg.de:clapp/fema.git
-    CMAKE_ARGS -DCMAKE_INSTALL_PREFIX=${CMAKE_BINARY_DIR} -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE} -DBUILD_TESTING=OFF)
-
-  ADD_DEPENDENCIES(fema_lib glt_lib)
-
-  ADD_SUBDIRECTORY(clapp)
-
-ENDIF()
 
 IF(BUILD_PARALUTION)
   INCLUDE(ExternalProject)
