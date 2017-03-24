@@ -56,7 +56,7 @@ module sll_m_decomposition
     mpi_cart_create, &
     mpi_cart_get, &
     mpi_cart_shift, &
-    mpi_double, &
+    mpi_double_precision, &
     mpi_sendrecv, &
     mpi_status_ignore, &
     mpi_success
@@ -341,8 +341,8 @@ module sll_m_decomposition
          ranges(id,2) = decomp%local%tx_lohi(id)
          call copy_array_to_buffer_6d_real64(arr, decomp%local%lo, decomp%local%hi, sendbuf, ranges)
 
-         call MPI_Sendrecv(sendbuf, nxc, MPI_DOUBLE, topo%neighbors(2*id-1), 1, &
-                           recvbuf, nxc, MPI_DOUBLE, topo%neighbors(2*id),   1, &
+         call MPI_Sendrecv(sendbuf, nxc, MPI_DOUBLE_PRECISION, topo%neighbors(2*id-1), 1, &
+                           recvbuf, nxc, MPI_DOUBLE_PRECISION, topo%neighbors(2*id),   1, &
                            topo%comm, MPI_STATUS_IGNORE, ierr)
 
          ranges(:,1) = decomp%local%mn(:)
@@ -359,8 +359,8 @@ module sll_m_decomposition
          ranges(id,2) = decomp%local%tx_hihi(id)
          call copy_array_to_buffer_6d_real64(arr, decomp%local%lo, decomp%local%hi, sendbuf, ranges)
 
-         call MPI_Sendrecv(sendbuf, nxc, MPI_DOUBLE, topo%neighbors(2*id),   1,&
-                           recvbuf, nxc, MPI_DOUBLE, topo%neighbors(2*id-1), 1,&
+         call MPI_Sendrecv(sendbuf, nxc, MPI_DOUBLE_PRECISION, topo%neighbors(2*id),   1,&
+                           recvbuf, nxc, MPI_DOUBLE_PRECISION, topo%neighbors(2*id-1), 1,&
                            topo%comm, MPI_STATUS_IGNORE, ierr)
 
          ranges(:,1) = decomp%local%mn(:)
