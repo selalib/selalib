@@ -11,7 +11,7 @@ endmacro( find_clapp_library )
 
 IF( CLAPP )
 
-  SET( CLAPP_DIR ${CMAKE_BINARY_DIR} CACHE PATH "CLAPP installation directory")
+  SET( CLAPP_DIR ${CMAKE_INSTALL_PREFIX} CACHE PATH "CLAPP installation directory")
   
   # Find all libraries in framework (assuming they have been installed)
   find_clapp_library( CLAPPIO )
@@ -21,74 +21,58 @@ IF( CLAPP )
   find_clapp_library( FEMA    )
   find_clapp_library( SPIGA   )
 
-  if( NOT CLAP_CLAPPIO)
+  OPTION(BUILD_CLAPP "Build CLAPP framework from sources" OFF)
+
+  IF(BUILD_CLAPP)
+
     EXTERNALPROJECT_ADD(
       clappio_lib
       PREFIX clapp
       GIT_TAG devel
       GIT_REPOSITORY git@gitlab.mpcdf.mpg.de:clapp/clappio.git
-      UPDATE_DISCONNECTED 1
-      CMAKE_ARGS -DCMAKE_INSTALL_PREFIX=${CMAKE_BINARY_DIR} -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE} -DBUILD_TESTING=OFF)
-  endif( NOT CLAP_CLAPPIO)
-  
-  if( NOT CLAP_PLAF)
+      CMAKE_ARGS -DCMAKE_INSTALL_PREFIX=${CLAPP_DIR} -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE} -DBUILD_TESTING=OFF)
+
     EXTERNALPROJECT_ADD(
       plaf_lib
       PREFIX clapp
       GIT_TAG devel
       GIT_REPOSITORY git@gitlab.mpcdf.mpg.de:clapp/plaf.git
-      UPDATE_DISCONNECTED 1
-      CMAKE_ARGS -DCMAKE_INSTALL_PREFIX=${CMAKE_BINARY_DIR} -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE} -DBUILD_TESTING=OFF)
-    ADD_DEPENDENCIES(plaf_lib clappio_lib)
-  endif( NOT CLAP_PLAF)
+      CMAKE_ARGS -DCMAKE_INSTALL_PREFIX=${CLAPP_DIR} -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE} -DBUILD_TESTING=OFF)
 
-  
-  if( NOT CLAP_SPL)
     EXTERNALPROJECT_ADD(
       spl_lib
       PREFIX clapp
       GIT_TAG devel
       GIT_REPOSITORY git@gitlab.mpcdf.mpg.de:clapp/spl.git
-      UPDATE_DISCONNECTED 1
-      CMAKE_ARGS -DCMAKE_INSTALL_PREFIX=${CMAKE_BINARY_DIR} -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE} -DBUILD_TESTING=OFF)
-    ADD_DEPENDENCIES(spl_lib plaf_lib)
-  endif( NOT CLAP_SPL)
+      CMAKE_ARGS -DCMAKE_INSTALL_PREFIX=${CLAPP_DIR} -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE} -DBUILD_TESTING=OFF)
 
-  
-  if( NOT CLAP_DISCO)
     EXTERNALPROJECT_ADD(
       disco_lib
       PREFIX clapp
       GIT_TAG devel
       GIT_REPOSITORY git@gitlab.mpcdf.mpg.de:clapp/disco.git
-      UPDATE_DISCONNECTED 1
-      CMAKE_ARGS -DCMAKE_INSTALL_PREFIX=${CMAKE_BINARY_DIR} -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE} -DBUILD_TESTING=OFF)
-    
-    ADD_DEPENDENCIES(disco_lib spl_lib)
-  endif( NOT CLAP_DISCO)
-  
-  if( NOT CLAP_GLT)
+      CMAKE_ARGS -DCMAKE_INSTALL_PREFIX=${CLAPP_DIR} -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE} -DBUILD_TESTING=OFF)
+
     EXTERNALPROJECT_ADD(
       glt_lib
       PREFIX clapp
       GIT_TAG devel
       GIT_REPOSITORY git@gitlab.mpcdf.mpg.de:clapp/glt.git
-      UPDATE_DISCONNECTED 1
-      CMAKE_ARGS -DCMAKE_INSTALL_PREFIX=${CMAKE_BINARY_DIR} -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE} -DBUILD_TESTING=OFF)
+      CMAKE_ARGS -DCMAKE_INSTALL_PREFIX=${CLAPP_DIR} -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE} -DBUILD_TESTING=OFF)
 
-    ADD_DEPENDENCIES(glt_lib disco_lib)
-  endif( NOT CLAP_GLT)
-
-  if( NOT CLAP_FEMA)
     EXTERNALPROJECT_ADD(
       fema_lib
       PREFIX clapp
       GIT_TAG devel
       GIT_REPOSITORY git@gitlab.mpcdf.mpg.de:clapp/fema.git
-      UPDATE_DISCONNECTED 1
-      CMAKE_ARGS -DCMAKE_INSTALL_PREFIX=${CMAKE_BINARY_DIR} -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE} -DBUILD_TESTING=OFF)
+      CMAKE_ARGS -DCMAKE_INSTALL_PREFIX=${CLAPP_DIR} -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE} -DBUILD_TESTING=OFF)
 
-    ADD_DEPENDENCIES(fema_lib glt_lib)
-  endif( NOT CLAP_FEMA)
+    ADD_DEPENDENCIES(plaf_lib  clappio_lib)
+    ADD_DEPENDENCIES(spl_lib   plaf_lib)
+    ADD_DEPENDENCIES(disco_lib spl_lib)
+    ADD_DEPENDENCIES(glt_lib   disco_lib)
+    ADD_DEPENDENCIES(fema_lib  glt_lib)
+
+  ENDIF(BUILD_CLAPP)
 
 ENDIF()
