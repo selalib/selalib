@@ -224,7 +224,7 @@ subroutine nufft_interpolate2d(this,              &
                                eta2,              &
                                data_out) 
 
-class(sll_t_nufft_interpolator_2d),  intent(in) :: this
+class(sll_t_nufft_interpolator_2d),  intent(inout) :: this
 sll_int32,  intent(in)                          :: num_points1
 sll_int32,  intent(in)                          :: num_points2
 sll_real64, dimension(:,:),          intent(in) :: eta1
@@ -258,7 +258,7 @@ subroutine nufft_interpolate2d_disp(this,        &
                                     alpha2,      &
                                     data_out)
 
-class(sll_t_nufft_interpolator_2d),  intent(in) :: this
+class(sll_t_nufft_interpolator_2d),  intent(inout) :: this
 
 sll_int32,  intent(in)                         :: num_points1
 sll_int32,  intent(in)                         :: num_points2
@@ -356,9 +356,9 @@ end subroutine !set_coefficients_nufft2d
 
 function get_coefficients_nufft2d(interpolator) result(res)
 class(sll_t_nufft_interpolator_2d), intent(in)    :: interpolator
-sll_real64, pointer :: res(:,:)
+sll_real64, pointer                               :: res(:,:)
 
-res = 0.0_f64
+res => NULL()
    
 SLL_ERROR('get_coefficients','Not implemented for nufft2d')
 

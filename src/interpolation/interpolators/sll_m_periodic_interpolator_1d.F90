@@ -97,7 +97,7 @@ contains  ! ****************************************************************
   end function new_periodic_1d_interpolator
 
   subroutine per_interpolate1d(this, num_pts, data, coordinates, output_array)
-    class(sll_t_periodic_interpolator_1d),  intent(in)       :: this
+    class(sll_t_periodic_interpolator_1d),  intent(inout)       :: this
     !class(sll_spline_1D),  intent(in)      :: this
     sll_int32,  intent(in)                 :: num_pts
     sll_real64, dimension(num_pts), intent(in)   :: coordinates
@@ -118,7 +118,7 @@ contains  ! ****************************************************************
   end subroutine per_interpolate1d
 
   subroutine per_interpolate1d_disp(this, num_pts, data, alpha, output_array)
-    class(sll_t_periodic_interpolator_1d),  intent(in)       :: this
+    class(sll_t_periodic_interpolator_1d),  intent(inout)       :: this
     sll_int32,  intent(in)                 :: num_pts
     sll_real64,  intent(in)   :: alpha
     sll_real64, dimension(:), intent(in)   :: data
@@ -134,7 +134,7 @@ contains  ! ****************************************************************
 
 
   subroutine per_interpolate1d_disp_inplace(this, num_pts, data, alpha)
-    class(sll_t_periodic_interpolator_1d),  intent(in)       :: this
+    class(sll_t_periodic_interpolator_1d),  intent(inout)       :: this
     sll_int32,  intent(in)                 :: num_pts
     sll_real64,  intent(in)   :: alpha
     sll_real64, dimension(num_pts), intent(inout)   :: data
@@ -187,7 +187,7 @@ contains  ! ****************************************************************
     num_pts, &
     vals_to_interpolate, &
     output_array )
-    class(sll_t_periodic_interpolator_1d),  intent(in) :: interpolator
+    class(sll_t_periodic_interpolator_1d),  intent(inout) :: interpolator
     sll_int32,  intent(in)                 :: num_pts
     sll_real64, dimension(num_pts), intent(in)   :: vals_to_interpolate
     sll_real64, dimension(num_pts), intent(out)  :: output_array

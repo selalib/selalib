@@ -1251,6 +1251,8 @@ contains
     SLL_ALLOCATE(f_hat_x2_loc(nb_mode+1),ierr)
     SLL_ALLOCATE(f_hat_x2(nb_mode+1),ierr)
 
+    e_app = 0.0_f64
+
     x2_array_unit(1:np_x2) = &
          (sim%x2_array(1:np_x2)-sim%x2_array(1))/(sim%x2_array(np_x2)-sim%x2_array(1))
     do i = 1, np_x2-1

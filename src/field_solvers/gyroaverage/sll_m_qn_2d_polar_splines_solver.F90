@@ -73,7 +73,7 @@ contains
     sll_real64, intent(in) :: eta_min(2)
     sll_real64, intent(in) :: eta_max(2)
     sll_int32, intent(in)  :: Nc(2)
-    sll_int32, optional    :: N_points  
+    sll_int32, intent(in)  :: N_points  
     sll_real64, dimension(:), intent(in)  :: lambda
     sll_real64, dimension(:), intent(in)  :: T_i
     sll_int32 :: ierr
@@ -99,7 +99,7 @@ contains
     lambda, &
     T_i)
 
-    class(sll_t_qn_2d_polar_splines_solver) :: qn
+    class(sll_t_qn_2d_polar_splines_solver), intent(out) :: qn
     sll_real64, intent(in) :: eta_min(2)
     sll_real64, intent(in) :: eta_max(2)
     sll_int32, intent(in)  :: Nc(2)
