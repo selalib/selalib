@@ -10,8 +10,8 @@ program unit_test
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #define MARGIN 0.1
 
-  type(sll_t_time_mark)  :: t0 
-  type(sll_t_time_mark)  :: t1 
+  type(sll_t_time_mark)  :: t0
+  type(sll_t_time_mark)  :: t1
   double precision :: time
   integer :: a,b
 
@@ -31,12 +31,14 @@ program unit_test
   time = sll_f_time_elapsed_since(t0)
   print *, 'time elapsed since t0 : ',time
 
-  a = int(time+MARGIN)  
+  print *, "Clock tics per second", t0%clock_ticks_per_sec
+
+  a = int(time+MARGIN)
 
   print *, 'Start time mark t1'
   call sll_s_set_time_mark(t1)
   time = sll_f_time_elapsed_between(t0,t1)
-  print *, 'Time between t0 and t1 (seconds)',time 
+  print *, 'Time between t0 and t1 (seconds)',time
   call sll_s_set_time_mark(t0)
   call sll_s_set_time_mark(t1)
   time = sll_f_time_elapsed_between(t0,t1)
