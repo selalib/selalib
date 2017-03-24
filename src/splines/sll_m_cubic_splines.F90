@@ -58,6 +58,7 @@ module sll_m_cubic_splines
     sll_o_get_x2_delta, &
     sll_o_get_x2_max, &
     sll_f_interpolate_derivative, &
+    sll_s_cubic_spline_1d_interpolate_from_interpolant_disp, &
     sll_s_interpolate_from_interpolant_array, &
     sll_s_interpolate_from_interpolant_derivatives_eta1, &
     sll_f_interpolate_from_interpolant_value, &
@@ -73,6 +74,9 @@ module sll_m_cubic_splines
 
   private
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+  ! --- compile-time constants to avoid run-time division
+  sll_real64, parameter :: inv_6       = 1._f64/6._f64
   
   !> @brief 
   !> basic type for one-dimensional cubic spline data. 
@@ -2668,6 +2672,105 @@ MAKE_GET_SLOT_FUNCTION(get_x2_delta_cs2d,sll_t_cubic_spline_2d,x2_delta,sll_real
     end if
   end subroutine delete_cubic_spline_2D
 
+
+  !> Computes the interpolated values at each grid point replaced by \a alpha for the precomputed spline coefficients
+  subroutine sll_s_cubic_spline_1d_interpolate_from_interpolant_disp( spline, alpha, output_array )
+    type(sll_t_cubic_spline_1d), intent( in ) :: spline !< spline object
+    sll_real64, intent( in ) :: alpha !< displacement
+    sll_real64, intent( out ) :: output_array(:) !< \a output_array(i) holds the interpolated value at \a x(i)+alpha on output
+
+    !local variables
+    sll_real64 :: alpha0
+    sll_int32  :: dcell
+    sll_real64 :: alpha1
+    sll_int32 :: i
+    sll_int32                               :: cell
+    sll_int32 :: num_cells
+
+    ! Check that we are excepting the right number of output values
+    SLL_ASSERT( size(output_array) == spline%n_points )
+    
+    alpha0 =  alpha*spline%rdelta
+    dcell = floor( alpha0 )
+    alpha1 = alpha0 - real(dcell, f64)
+    select case( spline%bc_type )
+    case( sll_p_periodic ) 
+       num_cells = spline%n_points-1
+    case ( sll_p_hermite )
+       num_cells = spline%n_points
+    end select
+    
+    do i = max(1,1-dcell), min(num_cells, num_cells-dcell)
+       cell = i+dcell!modulo( i + dcell -1, this%spline%n_points-1) +1
+       call spline_interpolate_from_interpolant_cell_dx( spline, cell, alpha1, output_array(i) )
+    end do
+
+    if ( spline%bc_type == sll_p_periodic ) then
+          do i = 1,max(1,1-dcell)-1
+             cell = modulo( i + dcell -1, num_cells) +1
+             call spline_interpolate_from_interpolant_cell_dx( spline, cell, alpha1, output_array(i) )
+            
+          end do
+          
+          do i = min(num_cells, num_cells-dcell)+1, num_cells
+             cell = modulo( i + dcell -1, num_cells) +1
+             call spline_interpolate_from_interpolant_cell_dx( spline, cell, alpha1, output_array(i) )
+            
+          end do
+          
+          ! First and last point equal for periodic
+          output_array(spline%n_points) = output_array(1)
+       else
+          alpha1 = 0.0_f64
+          if ( dcell< 0 ) then
+             cell = 1
+             call spline_interpolate_from_interpolant_cell_dx ( spline, cell, alpha1, output_array(1) )
+            
+             do i=2,-dcell
+                output_array(i) = output_array(1)
+             end do
+          else
+             cell = spline%n_points
+             call spline_interpolate_from_interpolant_cell_dx ( spline, cell, alpha1, output_array(spline%n_points) )
+             
+             do i=num_cells-dcell+1, spline%n_points-1
+                output_array(i) = output_array(spline%n_points)
+             end do
+                
+          end if
+       end if
+    
+  end subroutine sll_s_cubic_spline_1d_interpolate_from_interpolant_disp
+
+  !> Helper function for sll_s_cubic_spline_1d_interpolate_from_interpolant_disp: evaluate spline in given \a cell and normalized displacement \a dx
+  subroutine spline_interpolate_from_interpolant_cell_dx(spline, cell, dx, out)
+    type(sll_t_cubic_spline_1d),  intent(in)       :: spline !< spline object
+    sll_int32, intent(in)                               :: cell !< cell 
+    sll_real64, intent(in)                              :: dx !< normalized displacement
+    sll_real64, intent(out) :: out
+    sll_real64                              :: cdx  ! 1-dx
+    sll_real64                              :: cim1 ! C_(i-1)
+    sll_real64                              :: ci   ! C_i
+    sll_real64                              :: cip1 ! C_(i+1)
+    sll_real64                              :: cip2 ! C_(i+2)
+    sll_int32 :: i
+    sll_real64                              :: t1
+    sll_real64                              :: t2
+    sll_real64                              :: t3
+    sll_real64                              :: t4
+    
+    cdx      = 1.0_f64 - dx
+    cim1     = spline%coeffs(cell-1)
+    ci       = spline%coeffs(cell)
+    cip1     = spline%coeffs(cell+1)
+    cip2     = spline%coeffs(cell+2)
+    t1       = 3.0_f64*ci
+    t3       = 3.0_f64*cip1
+    t2       = cdx*(cdx*(cdx*(cim1 - t1) + t1) + t1) + ci
+    t4       =  dx*( dx*( dx*(cip2 - t3) + t3) + t3) + cip1
+    out = inv_6*(t2 + t4)
+    
+  end subroutine spline_interpolate_from_interpolant_cell_dx
 
 #undef NUM_TERMS
 end module sll_m_cubic_splines

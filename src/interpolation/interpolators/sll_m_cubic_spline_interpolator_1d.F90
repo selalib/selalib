@@ -37,6 +37,7 @@ module sll_m_cubic_spline_interpolator_1d
   use sll_m_cubic_splines, only: &
     sll_s_compute_cubic_spline_1d, &
     sll_f_interpolate_derivative, &
+    sll_s_cubic_spline_1d_interpolate_from_interpolant_disp, &
     sll_s_interpolate_from_interpolant_array, &
     sll_s_interpolate_from_interpolant_derivatives_eta1, &
     sll_f_interpolate_from_interpolant_value, &
@@ -110,7 +111,8 @@ contains  ! ****************************************************************
          this%spline )
 
   end subroutine spline_interpolate1d
-
+  
+  !> Computes the interpolated values at each grid point replaced by \a alpha using cubic spline interpolation
   subroutine spline_interpolate1d_disp(this, num_pts, data, alpha, output_array)
     class(sll_t_cubic_spline_interpolator_1d),  intent(inout)       :: this
     !class(sll_t_cubic_spline_1d),  intent(in)      :: this
@@ -118,52 +120,17 @@ contains  ! ****************************************************************
     sll_real64,  intent(in)   :: alpha
     sll_real64, dimension(:), intent(in)   :: data
     sll_real64, dimension(num_pts), intent(out)      :: output_array
-    ! local variables
-    sll_real64, dimension(num_pts)      :: coordinates
-    sll_real64 :: length, delta
-    sll_real64 :: xmin, xmax
-    sll_int32 :: i
-    ! compute the interpolating spline coefficients
+
+    
+    ! Compute the interpolating spline coefficients
     call sll_s_compute_cubic_spline_1d( data, this%spline )
-    ! compute array of coordinates where interpolation is performed from displacement
-    length = this%interpolation_points(this%num_points) - &
-             this%interpolation_points(1)
-    delta = this%interpolation_points(2) - this%interpolation_points(1)
-    xmin = this%interpolation_points(1)
-    xmax = this%interpolation_points(this%num_points)
-    if (this%bc_type == sll_p_periodic) then
-       ! The case alpha = 0.0 is problematic. We need to further try to make
-       ! this computation in general m re efficient, minimize the use of modulo
-       ! and even explore a uniform grid representation...
-       if( alpha == 0.0_f64 ) then
-          coordinates(:) = this%interpolation_points(:)
-       else ! alpha != 0.0
-          do i = 1, num_pts
-             coordinates(i) = xmin + &
-                  modulo(this%interpolation_points(i) - xmin + alpha, length)
-!!$             write (*,'(a,z,f21.16,a,i,a,z,f21.16)') 'xmin = ', &
-!!$                  xmin, xmin, '  coordinates(',i,') = ', coordinates(i), &
-!!$                  coordinates(i)
-             SLL_ASSERT(coordinates(i) >= xmin)
-             SLL_ASSERT(coordinates(i) <= xmax)
-          end do
-       end if
-    else ! any other BC? better a case statement
-       if (alpha < 0 ) then
-          do i = 1, num_pts
-             coordinates(i) = max(this%interpolation_points(i) + alpha, xmin)
-             SLL_ASSERT((xmin <=coordinates(i)).and.(coordinates(i) <= xmax))
-          end do
-       else
-          do i = 1, num_pts
-             coordinates(i) = min(this%interpolation_points(i) + alpha, xmax)
-             SLL_ASSERT((xmin <=coordinates(i)).and.(coordinates(i) <= xmax))
-          end do
-       endif
-    end if
-    call sll_s_interpolate_from_interpolant_array( coordinates, output_array, num_pts, &
-         this%spline )
+
+    ! Evaluate spline at displaced grid points
+    call sll_s_cubic_spline_1d_interpolate_from_interpolant_disp( this%spline, alpha, output_array )
+       
+
   end subroutine spline_interpolate1d_disp
+
 
   subroutine spline_interpolate1d_disp_inplace(this, num_pts, data, alpha)
     class(sll_t_cubic_spline_interpolator_1d),  intent(inout)       :: this
