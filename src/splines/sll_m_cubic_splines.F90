@@ -48,7 +48,15 @@ module sll_m_cubic_splines
   implicit none
 
   public :: &
+    sll_s_cubic_spline_1d_init, &
     sll_s_cubic_spline_1d_compute_interpolant, &
+    sll_f_cubic_spline_1d_eval_deriv, &
+    sll_s_cubic_spline_1d_eval_disp, &
+    sll_s_cubic_spline_1d_eval_array, &
+    sll_s_cubic_spline_1d_eval_deriv, &
+    sll_f_cubic_spline_1d_eval, &
+    sll_s_cubic_spline_1d_free, &
+    sll_t_cubic_spline_1d, &
     sll_s_compute_cubic_spline_2d, &
     sll_s_deposit_value_2d, &
     sll_s_get_coeff_cubic_spline_2d, &
@@ -57,21 +65,12 @@ module sll_m_cubic_splines
     sll_o_get_x1_min, &
     sll_o_get_x2_delta, &
     sll_o_get_x2_max, &
-    sll_f_cubic_spline_1d_eval_deriv, &
-    sll_s_cubic_spline_1d_eval_disp, &
-    sll_s_cubic_spline_1d_eval_array, &
-    sll_s_cubic_spline_1d_eval_deriv, &
-    sll_f_cubic_spline_1d_eval, &
     sll_f_interpolate_value_2d, &
     sll_f_interpolate_x1_derivative_2d, &
     sll_f_interpolate_x2_derivative_2d, &
-    sll_f_new_cubic_spline_2d, &
     sll_s_cubic_spline_2d_init, &
-    sll_s_cubic_spline_1d_init, &
-    sll_s_cubic_spline_1d_free, &
-    sll_t_cubic_spline_1d, &
     sll_t_cubic_spline_2d, &
-    sll_o_delete
+    sll_s_cubic_spline_2d_free
 
   private
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -156,14 +155,6 @@ module sll_m_cubic_splines
     logical, private             :: compute_slopes_x2_min
     logical, private             :: compute_slopes_x2_max
   end type sll_t_cubic_spline_2d
-
-  !> @brief 
-  !~ Generic sub-routine defined for the 1D and 2D cubic spline types.
-  !> deallocates the memory associated with the given cubic spline object.
-  !> @param[inout] spline_object.
-  interface sll_o_delete
-     module procedure delete_cubic_spline_2D
-  end interface
 
 
   ! The following was written after declaring the contents of the fundamental
@@ -1190,7 +1181,6 @@ MAKE_GET_SLOT_FUNCTION(get_x2_delta_cs2d,sll_t_cubic_spline_2d,x2_delta,sll_real
 
 
   !> @brief deallocate the sll_t_cubic_spline_1d object
-  !> @details call it through the sll_o_delete interface. 
   subroutine sll_s_cubic_spline_1d_free( spline )
     type(sll_t_cubic_spline_1d)  :: spline
     sll_int32                    :: ierr
@@ -2617,7 +2607,7 @@ MAKE_GET_SLOT_FUNCTION(get_x2_delta_cs2d,sll_t_cubic_spline_2d,x2_delta,sll_real
     enddo
   end subroutine sll_s_get_coeff_cubic_spline_2d  
     
-  subroutine delete_cubic_spline_2D( spline )
+  subroutine sll_s_cubic_spline_2d_free( spline )
     type(sll_t_cubic_spline_2d) :: spline
     sll_int32                    :: ierr
     SLL_DEALLOCATE( spline%d1, ierr )
@@ -2648,7 +2638,7 @@ MAKE_GET_SLOT_FUNCTION(get_x2_delta_cs2d,sll_t_cubic_spline_2d,x2_delta,sll_real
     if( associated(spline%x2_max_slopes_coeffs) ) then
        SLL_DEALLOCATE( spline%x2_max_slopes_coeffs, ierr )
     end if
-  end subroutine delete_cubic_spline_2D
+  end subroutine sll_s_cubic_spline_2d_free
 
 
   !> Computes the interpolated values at each grid point replaced by \a alpha for the precomputed spline coefficients

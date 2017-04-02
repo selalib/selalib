@@ -33,8 +33,8 @@ program test_deposit_cubic_splines
   implicit none
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
-type(sll_t_cubic_spline_2d), pointer :: spl_bsl
-type(sll_t_cubic_spline_2d), pointer :: spl_fsl
+type(sll_t_cubic_spline_2d) :: spl_bsl
+type(sll_t_cubic_spline_2d) :: spl_fsl
 
 sll_int32  :: N,Neta1,Neta2,mesh_case,test_case,step,nb_step,visu_step,field_case
 sll_int32  :: i,j,bc1_type,bc2_type,err

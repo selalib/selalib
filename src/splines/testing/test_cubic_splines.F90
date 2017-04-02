@@ -21,9 +21,9 @@ program test_cubic_splines
     sll_s_cubic_spline_1d_init, &
     sll_s_cubic_spline_1d_free, &
     sll_s_cubic_spline_2d_init, &
+    sll_s_cubic_spline_2d_free, &
     sll_t_cubic_spline_1d, &
-    sll_t_cubic_spline_2d, &
-    sll_o_delete
+    sll_t_cubic_spline_2d
 
   implicit none
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -275,7 +275,8 @@ contains
        print*, 'Error of x2 derivative at non-grid point too large.'
        passed = .false.
     end if
-    
+
+    call sll_s_cubic_spline_2d_free( sp2 )
 
   end subroutine test_cubic_spline_2d
 

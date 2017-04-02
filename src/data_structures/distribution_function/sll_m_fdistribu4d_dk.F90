@@ -42,7 +42,7 @@ module sll_m_fdistribu4d_dk
     sll_t_cubic_spline_1d, &
     sll_t_cubic_spline_2d, &
     sll_s_cubic_spline_1d_free, &
-    sll_o_delete
+    sll_s_cubic_spline_2d_free
 
   implicit none
 
@@ -391,7 +391,7 @@ module sll_m_fdistribu4d_dk
         func_xy(ix,iy) = sll_f_interpolate_value_2d(r,theta,sp2d_rtheta)
       end do
     end do
-    call sll_o_delete(sp2d_rtheta)
+    call sll_s_cubic_spline_2d_free(sp2d_rtheta)
   end subroutine sll_s_function_xy_from_rtheta
 
 
