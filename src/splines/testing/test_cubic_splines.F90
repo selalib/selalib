@@ -13,7 +13,7 @@ program test_cubic_splines
  use sll_m_cubic_splines, only: &
     sll_s_cubic_spline_1d_compute_interpolant, &
     sll_s_compute_cubic_spline_2d, &
-    sll_f_interpolate_derivative, &
+    sll_f_cubic_spline_1d_eval_deriv, &
     sll_f_interpolate_from_interpolant_value, &
     sll_f_interpolate_value_2d, &
     sll_f_interpolate_x1_derivative_2d, &
@@ -103,14 +103,14 @@ contains
     
     do i=1,np
        data_interp(i) = sll_f_interpolate_from_interpolant_value(x(i), sp1)
-       deriv_interp(i) = sll_f_interpolate_derivative(x(i), sp1)
+       deriv_interp(i) = sll_f_cubic_spline_1d_eval_deriv(x(i), sp1)
     end do
     
     x_ngrid = (real(np/2,f64)-0.5_f64)*delta_x
     ref_ngrid(1) = exp(sin(x_ngrid))
     interp_ngrid(1) = sll_f_interpolate_from_interpolant_value(x_ngrid, sp1)
     ref_ngrid(2) = cos(x_ngrid)*exp(sin(x_ngrid))
-    interp_ngrid(2) = sll_f_interpolate_derivative(x_ngrid, sp1)
+    interp_ngrid(2) = sll_f_cubic_spline_1d_eval_deriv(x_ngrid, sp1)
     
     print*, 'Interpolation error for value at', x_ngrid, ':', ref_ngrid(1)-interp_ngrid(1)
     print*, 'Interpolation error for derivative at', x_ngrid, ':',ref_ngrid(2)-interp_ngrid(2)
