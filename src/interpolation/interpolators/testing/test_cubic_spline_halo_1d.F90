@@ -129,8 +129,8 @@ contains
        fin(i+1) = fdata(modulo(si+i-1, n) + 1)
     end do
 
-    call sll_s_cubic_spline_halo_1d_compute( fin, n, dvec, coeffs )
-    call sll_s_cubic_spline_halo_1d_advect ( coeffs, alpha, n, fout )
+    call sll_s_cubic_spline_halo_1d_compute_interpolant( fin, n, dvec, coeffs )
+    call sll_s_cubic_spline_halo_1d_eval_disp ( coeffs, alpha, n, fout )
     !print*, 'halo'
     !print*, coeffs
   end subroutine test_halo_version
