@@ -61,7 +61,7 @@ module sll_m_cubic_splines
     sll_s_cubic_spline_1d_eval_disp, &
     sll_s_cubic_spline_1d_eval_array, &
     sll_s_interpolate_from_interpolant_derivatives_eta1, &
-    sll_f_interpolate_from_interpolant_value, &
+    sll_f_cubic_spline_1d_eval, &
     sll_f_interpolate_value_2d, &
     sll_f_interpolate_x1_derivative_2d, &
     sll_f_interpolate_x2_derivative_2d, &
@@ -907,8 +907,8 @@ MAKE_GET_SLOT_FUNCTION(get_x2_delta_cs2d,sll_t_cubic_spline_2d,x2_delta,sll_real
   !> @param[in] spline the spline object pointer, duly initialized and 
   !> already operated on by the sll_s_cubic_spline_1d_compute_interpolant subroutine.
   !> @returns the value of the interpolated image of the abscissa x,
-  function sll_f_interpolate_from_interpolant_value( x, spline )
-    sll_real64                         :: sll_f_interpolate_from_interpolant_value
+  function sll_f_cubic_spline_1d_eval( x, spline )
+    sll_real64                         :: sll_f_cubic_spline_1d_eval
     intrinsic                          :: associated, int, real
     sll_real64, intent(in)             :: x
     type(sll_t_cubic_spline_1d)        :: spline
@@ -922,8 +922,8 @@ MAKE_GET_SLOT_FUNCTION(get_x2_delta_cs2d,sll_t_cubic_spline_2d,x2_delta,sll_real
     xmin = spline%xmin
     rh   = spline%rdelta
     coeffs => spline%coeffs(0:spline%n_points+2)
-    sll_f_interpolate_from_interpolant_value = interpolate_value_aux( x, xmin, rh, coeffs )
-  end function sll_f_interpolate_from_interpolant_value
+    sll_f_cubic_spline_1d_eval = interpolate_value_aux( x, xmin, rh, coeffs )
+  end function sll_f_cubic_spline_1d_eval
 
   !> @brief returns the values of the images of a collection of abscissae,
   !> represented by a 1D array in another output array. The spline coefficients
