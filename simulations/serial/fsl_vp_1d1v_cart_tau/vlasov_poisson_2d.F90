@@ -730,10 +730,10 @@ end if
 call sll_s_cubic_spline_1d_free(spl_1d)
 call sll_s_fft_free(fw_fft)
 call sll_s_fft_free(bw_fft)
-call sll_o_delete(spl_2d_f)
+call sll_s_cubic_spline_2d_free(spl_2d_f)
 
 !$OMP MASTER
-call sll_o_delete(spl_2d)
+call sll_s_cubic_spline_2d_free(spl_2d)
 !$OMP END MASTER
 
 call sll_s_fft_free(fsl_fw)

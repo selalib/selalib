@@ -29,7 +29,7 @@ use sll_m_poisson_2d_periodic
 implicit none
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
-type(sll_t_cubic_spline_2d), pointer :: spl_fsl
+type(sll_t_cubic_spline_2d)  :: spl_fsl
 
 sll_int32  :: err
 
