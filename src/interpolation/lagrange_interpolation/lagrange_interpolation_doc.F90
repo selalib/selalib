@@ -6,7 +6,7 @@
 !> @details
 !> The library sll_lagrange_interpolation currently only offers two
 !> implementations of the interpolator routine \a interpolate_array_disp
-!> on uniform 1D grids.  The module sll_m_lagrange_fast is a fast
+!> on uniform 1D grids.  The module sll_m_lagrange_interpolation_1d_fast is a fast
 !> implementation that also works in combination with domain decomposition.
 !> In particular, for the MPI domain decomposition use case, it
 !> implements a Lagrange interpolation that is always centered around

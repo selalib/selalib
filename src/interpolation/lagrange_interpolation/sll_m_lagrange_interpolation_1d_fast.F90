@@ -12,19 +12,20 @@
 !> special case.
 !> Note: The implementation is based on the formulas in Abramowitz and Stegun:
 !> Handbook of Mathematical Functions, Chapter 25.2
-module sll_m_lagrange_fast
+module sll_m_lagrange_interpolation_1d_fast
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_working_precision.h"
 #include "sll_errors.h"
   implicit none
 
-  public :: sll_s_interpolate_array_disp_lagrange_fixed_no_bc, &
-       sll_s_interpolate_array_disp_lagrange_fixed_periodic, &
-       sll_s_interpolate_array_disp_lagrange_fixed_periodic_last, &
-       sll_s_interpolate_array_disp_lagrange_fixed_halo_cells, &
-       sll_s_interpolate_array_disp_lagrange_centered_periodic_last, &
-       sll_s_interpolate_array_disp_lagrange_centered_halo_cells, &
-       sll_s_interpolate_array_disp_lagrange_even_halo_cells
+  public :: &
+    sll_s_lagrange_interpolation_1d_fast_disp_fixed_no_bc, &
+    sll_s_lagrange_interpolation_1d_fast_disp_fixed_periodic, &
+    sll_s_lagrange_interpolation_1d_fast_disp_fixed_periodicl, &
+    sll_s_lagrange_interpolation_1d_fast_disp_fixed_haloc_cells, &
+    sll_s_lagrange_interpolation_1d_fast_disp_centered_periodicl, &
+    sll_s_lagrange_interpolation_1d_fast_disp_centered_halo_cells, &
+    sll_s_lagrange_interpolation_1d_fast_disp_even_halo_cells
 
   private
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -423,11 +424,11 @@ contains
     sll_real64, intent(out) :: pp(9)
     sll_real64, intent(in) :: p
 
-    pp(1) = p*(p-4._f64)*(p**2-9._f64)*(p**2-4._f64)*(p**2-1._f64)*inv_40320
+    pp(1) =  p*(p-4._f64)*(p**2-9._f64)*(p**2-4._f64)*(p**2-1._f64)*inv_40320
     pp(2) = -p*(p-3._f64)*(p**2-16._f64)*(p**2-4._f64)*(p**2-1._f64)*inv_5040
-    pp(3) = p*(p-2._f64)*(p**2-16._f64)*(p**2-9._f64)*(p**2-1._f64)*inv_1440
+    pp(3) =  p*(p-2._f64)*(p**2-16._f64)*(p**2-9._f64)*(p**2-1._f64)*inv_1440
     pp(4) = -p*(p-1._f64)*(p**2-16._f64)*(p**2-9._f64)*(p**2-4._f64)*inv_720
-    pp(5) = (p**2-16._f64)*(p**2-9._f64)*(p**2-4._f64)*(p**2-1._f64)*inv_576
+    pp(5) =  (p**2-16._f64)*(p**2-9._f64)*(p**2-4._f64)*(p**2-1._f64)*inv_576
     pp(6) = -(p+1._f64)*p*(p**2-16._f64)*(p**2-9._f64)*(p**2-4._f64)*inv_720
     pp(7) = (p+2._f64)*p*(p**2-16._f64)*(p**2-9._f64)*(p**2-1._f64)*inv_1440
     pp(8) = -(p+3._f64)*p*(p**2-16._f64)*(p**2-4._f64)*(p**2-1._f64)*inv_5040
@@ -499,17 +500,17 @@ contains
     sll_real64, intent(in)  :: p      !< displacement in units of grid spacing
 
     ! generated using Maple
-    pp(1)  = p*(p-5._f64)*(p**2-16._f64)*(p**2-9._f64)*(p**2-4._f64)*(p**2-1._f64)*inv_3628800
+    pp(1)  =  p*(p-5._f64)*(p**2-16._f64)*(p**2-9._f64)*(p**2-4._f64)*(p**2-1._f64)*inv_3628800
     pp(2)  = -p*(p-4._f64)*(p**2-25._f64)*(p**2-9._f64)*(p**2-4._f64)*(p**2-1._f64)*inv_362880
-    pp(3)  = p*(p-3._f64)*(p**2-25._f64)*(p**2-16._f64)*(p**2-4._f64)*(p**2-1._f64)*inv_80640
+    pp(3)  =  p*(p-3._f64)*(p**2-25._f64)*(p**2-16._f64)*(p**2-4._f64)*(p**2-1._f64)*inv_80640
     pp(4)  = -p*(p-2._f64)*(p**2-25._f64)*(p**2-16._f64)*(p**2-9._f64)*(p**2-1._f64)*inv_30240
-    pp(5)  = p*(p-1._f64)*(p**2-25._f64)*(p**2-16._f64)*(p**2-9._f64)*(p**2-4._f64)*inv_17280
+    pp(5)  =  p*(p-1._f64)*(p**2-25._f64)*(p**2-16._f64)*(p**2-9._f64)*(p**2-4._f64)*inv_17280
     pp(6)  = -(p**2-25._f64)*(p**2-16._f64)*(p**2-9._f64)*(p**2-4._f64)*(p**2-1._f64)*inv_14400
-    pp(7)  = (p+1._f64)*p*(p**2-25._f64)*(p**2-16._f64)*(p**2-9._f64)*(p**2-4._f64)*inv_17280
+    pp(7)  =  (p+1._f64)*p*(p**2-25._f64)*(p**2-16._f64)*(p**2-9._f64)*(p**2-4._f64)*inv_17280
     pp(8)  = -(p+2._f64)*p*(p**2-25._f64)*(p**2-16._f64)*(p**2-9._f64)*(p**2-1._f64)*inv_30240
-    pp(9)  = (p+3._f64)*p*(p**2-25._f64)*(p**2-16._f64)*(p**2-4._f64)*(p**2-1._f64)*inv_80640
+    pp(9)  =  (p+3._f64)*p*(p**2-25._f64)*(p**2-16._f64)*(p**2-4._f64)*(p**2-1._f64)*inv_80640
     pp(10) = -(p+4._f64)*p*(p**2-25._f64)*(p**2-9._f64)*(p**2-4._f64)*(p**2-1._f64)*inv_362880
-    pp(11) = (p+5._f64)*p*(p**2-16._f64)*(p**2-9._f64)*(p**2-4._f64)*(p**2-1._f64)*inv_3628800
+    pp(11) =  (p+5._f64)*p*(p**2-16._f64)*(p**2-9._f64)*(p**2-4._f64)*(p**2-1._f64)*inv_3628800
   end subroutine
 
 
@@ -582,8 +583,8 @@ contains
   !> @param [out] fp(:)      output array of length n
   !> @param [in]  p          offset in units of dx (best interpolation result for p close to zero, about [-1,1], but not a requirement)
   !> @param [in]  stencil    number of points in fi used for interpolation (possible values 3,5)
-!DIR$ ATTRIBUTES FORCEINLINE :: sll_s_interpolate_array_disp_lagrange_fixed_no_bc
-  subroutine sll_s_interpolate_array_disp_lagrange_fixed_no_bc(fi, fp, p, stencil)
+!DIR$ ATTRIBUTES FORCEINLINE :: sll_s_lagrange_interpolation_1d_fast_disp_fixed_no_bc
+  subroutine sll_s_lagrange_interpolation_1d_fast_disp_fixed_no_bc(fi, fp, p, stencil)
     sll_real64, intent(in)   :: fi(:)
     sll_real64, intent(out)  :: fp(:)
     sll_real64, intent(in)   :: p
@@ -617,9 +618,9 @@ contains
 !DIR$ FORCEINLINE
         fp(i) = lagr_3pt(fi(i-2), fi(i-1), fi(i), p+1.)
      case default
-        SLL_ERROR( 'sll_s_interpolate_array_disp_lagrange_fixed_no_bc.', 'Lagrange stencil not implemented.')
+        SLL_ERROR( 'sll_s_lagrange_interpolation_1d_fast_disp_fixed_no_bc.', 'Lagrange stencil not implemented.')
     end select
-  end subroutine sll_s_interpolate_array_disp_lagrange_fixed_no_bc
+  end subroutine sll_s_lagrange_interpolation_1d_fast_disp_fixed_no_bc
 
 
 !------------------------------------------------------------------------------!
@@ -628,8 +629,8 @@ contains
   !> @param [out] fp(:)      output array of length n
   !> @param [in]  p          offset in units of dx (best interpolation result for p close to zero, about [-1,1], but not a requirement)
   !> @param [in]  stencil    number of points in fi used for interpolation (currently possible values 3,5)
-!DIR$ ATTRIBUTES FORCEINLINE :: sll_s_interpolate_array_disp_lagrange_fixed_periodic
-  subroutine sll_s_interpolate_array_disp_lagrange_fixed_periodic(fi, fp, p, stencil)
+!DIR$ ATTRIBUTES FORCEINLINE :: sll_s_lagrange_interpolation_1d_fast_disp_fixed_periodic
+  subroutine sll_s_lagrange_interpolation_1d_fast_disp_fixed_periodic(fi, fp, p, stencil)
     sll_real64, intent(in)   :: fi(:)
     sll_real64, intent(out)  :: fp(:)
     sll_real64, intent(in)   :: p
@@ -672,9 +673,9 @@ contains
 !DIR$ FORCEINLINE
         fp(n) = lagr_3pt(fi(n-1), fi(n), fi(1), p)
       case default
-        SLL_ERROR( 'sll_s_interpolate_array_disp_lagrange_fixed_periodic.', 'Lagrange stencil not implemented.')
+        SLL_ERROR( 'sll_s_lagrange_interpolation_1d_fast_disp_fixed_periodic.', 'Lagrange stencil not implemented.')
     end select
-  end subroutine sll_s_interpolate_array_disp_lagrange_fixed_periodic
+  end subroutine sll_s_lagrange_interpolation_1d_fast_disp_fixed_periodic
 
 
 !------------------------------------------------------------------------------!
@@ -683,8 +684,8 @@ contains
   !> @param [out] fp(:)      output array of length n+1
   !> @param [in]  p          offset in units of dx (best interpolation result for p close to zero, about [-1,1], but not a requirement)
   !> @param [in]  stencil    number of points in fi used for interpolation (currently possible values 3,5)
-!DIR$ ATTRIBUTES FORCEINLINE :: sll_s_interpolate_array_disp_lagrange_fixed_periodic_last
-  subroutine sll_s_interpolate_array_disp_lagrange_fixed_periodic_last(fi, fp, p, stencil)
+!DIR$ ATTRIBUTES FORCEINLINE :: sll_s_lagrange_interpolation_1d_fast_disp_fixed_periodicl
+  subroutine sll_s_lagrange_interpolation_1d_fast_disp_fixed_periodicl(fi, fp, p, stencil)
     sll_real64, intent(in)   :: fi(:)
     sll_real64, intent(out)  :: fp(:)
     sll_real64, intent(in)   :: p
@@ -724,15 +725,15 @@ contains
         call lagr_3pt_vec(fi, fp, p)
         fp(n+1) = fp(1)
       case default
-        SLL_ERROR( 'sll_s_interpolate_array_disp_lagrange_fixed_periodic_last.', 'Lagrange stencil not implemented.')
+        SLL_ERROR( 'sll_s_lagrange_interpolation_1d_fast_disp_fixed_periodicl.', 'Lagrange stencil not implemented.')
     end select
-  end subroutine sll_s_interpolate_array_disp_lagrange_fixed_periodic_last
+  end subroutine sll_s_lagrange_interpolation_1d_fast_disp_fixed_periodicl
 
 
   !> @brief Lagrange interpolation centered around the interval of displacement, periodic boundary condtions, first value repeated at the end
   !> TODO: Implement order other than 4.
-!DIR$ ATTRIBUTES FORCEINLINE :: sll_s_interpolate_array_disp_lagrange_centered_periodic_last
-  subroutine sll_s_interpolate_array_disp_lagrange_centered_periodic_last(fi, fp, p, stencil)
+!DIR$ ATTRIBUTES FORCEINLINE :: sll_s_lagrange_interpolation_1d_fast_disp_centered_periodicl
+  subroutine sll_s_lagrange_interpolation_1d_fast_disp_centered_periodicl(fi, fp, p, stencil)
     implicit none
     sll_real64, intent(in)   :: fi(:)
     sll_real64, intent(out)  :: fp(:)
@@ -789,9 +790,9 @@ contains
        end do
        fp(n+1) = fp(1)
      case default
-        SLL_ERROR( 'sll_s_interpolate_array_disp_lagrange_centered_periodic_last.', 'Lagrange stencil not implemented.')
+        SLL_ERROR( 'sll_s_lagrange_interpolation_1d_fast_disp_centered_periodicl.', 'Lagrange stencil not implemented.')
     end select
-  end subroutine sll_s_interpolate_array_disp_lagrange_centered_periodic_last
+  end subroutine sll_s_lagrange_interpolation_1d_fast_disp_centered_periodicl
 
 
 !------------------------------------------------------------------------------!
@@ -805,8 +806,8 @@ contains
   !>            (ie boundaries of half stencil width are untouched)
   !> @param [in] p          offset in units of dx (best interpolation result for p close to zero, about [-1,1], but not a requirement)
   !> @param [in] stencil    number of points {3,5,7,9,11} in fi used for interpolation
-!DIR$ ATTRIBUTES FORCEINLINE :: sll_s_interpolate_array_disp_lagrange_fixed_halo_cells
-  subroutine sll_s_interpolate_array_disp_lagrange_fixed_halo_cells(fi, fp, p, stencil)
+!DIR$ ATTRIBUTES FORCEINLINE :: sll_s_lagrange_interpolation_1d_fast_disp_fixed_haloc_cells
+  subroutine sll_s_lagrange_interpolation_1d_fast_disp_fixed_haloc_cells(fi, fp, p, stencil)
     sll_real64, intent(in)   :: fi(:)
     sll_real64, intent(out)  :: fp(:)
     sll_real64, intent(in)   :: p
@@ -829,13 +830,13 @@ contains
 !DIR$ FORCEINLINE
         call lagr_3pt_vec(fi, fp, p)
       case default
-        SLL_ERROR( 'sll_s_interpolate_array_disp_lagrange_fixed_halo_cells.', 'Lagrange stencil not implemented.')
+        SLL_ERROR( 'sll_s_lagrange_interpolation_1d_fast_disp_fixed_haloc_cells.', 'Lagrange stencil not implemented.')
     end select
-  end subroutine sll_s_interpolate_array_disp_lagrange_fixed_halo_cells
+  end subroutine sll_s_lagrange_interpolation_1d_fast_disp_fixed_haloc_cells
 
 
-!DIR$ ATTRIBUTES FORCEINLINE :: sll_s_interpolate_array_disp_lagrange_centered_halo_cells
-  subroutine sll_s_interpolate_array_disp_lagrange_centered_halo_cells( fi, fp, p, stencil )
+!DIR$ ATTRIBUTES FORCEINLINE :: sll_s_lagrange_interpolation_1d_fast_disp_centered_halo_cells
+  subroutine sll_s_lagrange_interpolation_1d_fast_disp_centered_halo_cells( fi, fp, p, stencil )
     implicit none
     sll_real64, intent(in)   :: fi(:)
     sll_real64, intent(out)  :: fp(:)
@@ -859,14 +860,14 @@ contains
 !DIR$ FORCEINLINE
         call lagr_8pt_vec(fi, fp, pq, pi )
      case default
-        SLL_ERROR( 'sll_s_interpolate_array_disp_lagrange_centered_halo_cells.', 'Lagrange stencil not implemented.')
+        SLL_ERROR( 'sll_s_lagrange_interpolation_1d_fast_disp_centered_halo_cells.', 'Lagrange stencil not implemented.')
      end select
-   end subroutine sll_s_interpolate_array_disp_lagrange_centered_halo_cells
+   end subroutine sll_s_lagrange_interpolation_1d_fast_disp_centered_halo_cells
 
 
    !> Even Lagrange interpolation with halo cells and no interval shift, i.e. p must be between zero and one
-!DIR$ ATTRIBUTES FORCEINLINE :: sll_s_interpolate_array_disp_lagrange_even_halo_cells
-   subroutine sll_s_interpolate_array_disp_lagrange_even_halo_cells( fi, fp, p, stencil )
+!DIR$ ATTRIBUTES FORCEINLINE :: sll_s_lagrange_interpolation_1d_fast_disp_even_halo_cells
+   subroutine sll_s_lagrange_interpolation_1d_fast_disp_even_halo_cells( fi, fp, p, stencil )
     implicit none
     sll_real64, intent(in)   :: fi(:) !< input values at interpolation points
     sll_real64, intent(out)  :: fp(:) !< interpolated values
@@ -884,9 +885,9 @@ contains
 !DIR$ FORCEINLINE
         call lagr_8pt_vec(fi, fp, p, 0 )
      case default
-        SLL_ERROR( 'sll_s_interpolate_array_disp_lagrange_even_halo_cells.', 'Lagrange stencil not implemented.')
+        SLL_ERROR( 'sll_s_lagrange_interpolation_1d_fast_disp_even_halo_cells.', 'Lagrange stencil not implemented.')
      end select
-   end subroutine sll_s_interpolate_array_disp_lagrange_even_halo_cells
+   end subroutine sll_s_lagrange_interpolation_1d_fast_disp_even_halo_cells
 
 
-end module sll_m_lagrange_fast
+ end module sll_m_lagrange_interpolation_1d_fast

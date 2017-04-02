@@ -13,14 +13,14 @@
 ! ---
 
 
-program test_lagrange_fast_parallel
+program test_lagrange_interpolation_1d_fast_parallel
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_working_precision.h"
 #include "sll_assert.h"
   use sll_m_constants, only : sll_p_pi
 
-  use sll_m_lagrange_fast, only : &
-       sll_s_interpolate_array_disp_lagrange_fixed_halo_cells
+  use sll_m_lagrange_interpolation_1d_fast, only : &
+       sll_s_lagrange_interpolation_1d_fast_disp_fixed_haloc_cells
 
   use sll_m_collective, only : &
        sll_s_boot_collective, &
@@ -135,7 +135,7 @@ program test_lagrange_fast_parallel
 
   ! --- apply interpolation
   stencil = 2 * halo_width_per_dimension(1) + 1
-  call sll_s_interpolate_array_disp_lagrange_fixed_halo_cells(fi(:,1,1,1,1,1), fp(:,1,1,1,1,1), alpha, stencil)
+  call sll_s_lagrange_interpolation_1d_fast_disp_fixed_haloc_cells(fi(:,1,1,1,1,1), fp(:,1,1,1,1,1), alpha, stencil)
 
 
   ! --- write out original values
@@ -200,4 +200,4 @@ contains
     close(fd)
   end subroutine
 
-end program
+end program test_lagrange_interpolation_1d_fast_parallel
