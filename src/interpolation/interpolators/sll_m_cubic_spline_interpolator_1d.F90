@@ -41,9 +41,9 @@ module sll_m_cubic_spline_interpolator_1d
     sll_s_interpolate_from_interpolant_array, &
     sll_s_interpolate_from_interpolant_derivatives_eta1, &
     sll_f_interpolate_from_interpolant_value, &
-    sll_f_new_cubic_spline_1d, &
+    sll_s_cubic_spline_1d_init, &
     sll_t_cubic_spline_1d, &
-    sll_o_delete
+    sll_s_cubic_spline_1d_free
 
   use sll_m_interpolators_1d_base, only: &
     sll_c_interpolator_1d
@@ -64,7 +64,7 @@ type, extends(sll_c_interpolator_1d) :: sll_t_cubic_spline_interpolator_1d
    sll_real64, dimension(:), pointer  :: interpolation_points !< points position
    sll_int32                          :: num_points           !< size
    sll_int32                          :: bc_type              !< boundary condition
-   type(sll_t_cubic_spline_1d), pointer :: spline               !< spline object
+   type(sll_t_cubic_spline_1d)        :: spline               !< spline object
 
 contains
 
@@ -358,7 +358,8 @@ contains  ! ****************************************************************
     interpolator%bc_type = bc_type
     if (present(slope_left).and.present(slope_right)) then
        if (present(fast_algorithm)) then
-          interpolator%spline => sll_f_new_cubic_spline_1d( &
+          call sll_s_cubic_spline_1d_init( &
+               interpolator%spline, &
                num_points, &
                xmin, xmax, &
                bc_type, &
@@ -366,7 +367,8 @@ contains  ! ****************************************************************
                slope_right, &
                fast_algorithm)
        else
-          interpolator%spline => sll_f_new_cubic_spline_1d( &
+          call sll_s_cubic_spline_1d_init( &
+               interpolator%spline, &
                num_points, &
                xmin, xmax, &
                bc_type, &
@@ -374,21 +376,23 @@ contains  ! ****************************************************************
                slope_right )
        end if
     elseif (present(fast_algorithm)) then
-       interpolator%spline => sll_f_new_cubic_spline_1d( &
+       call sll_s_cubic_spline_1d_init( &
+            interpolator%spline, &
             num_points, &
             xmin, xmax, &
             bc_type, &
             fast_algorithm=fast_algorithm)
     else
-       interpolator%spline => &
-            sll_f_new_cubic_spline_1d(num_points, xmin, xmax, bc_type)
+       call sll_s_cubic_spline_1d_init( &
+            interpolator%spline, &
+            num_points, xmin, xmax, bc_type)
     end if
 
   end subroutine
 
   subroutine delete_cs1d( obj )
     class(sll_t_cubic_spline_interpolator_1d) :: obj
-    call sll_o_delete(obj%spline)
+    call sll_s_cubic_spline_1d_free(obj%spline)
   end subroutine delete_cs1d
 
   subroutine set_coefficients_cs1d( interpolator, coeffs )
