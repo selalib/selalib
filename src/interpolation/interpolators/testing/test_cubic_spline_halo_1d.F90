@@ -41,7 +41,7 @@ program test_cubic_spline_halo_1d
   sll_real64 :: pinterp2(n+1)
   sll_real64 :: coord(n+1)
 
-   sll_int32 :: ierr, i
+   sll_int32 :: i
 
    sll_real64  :: x_min, x_max, delta
 

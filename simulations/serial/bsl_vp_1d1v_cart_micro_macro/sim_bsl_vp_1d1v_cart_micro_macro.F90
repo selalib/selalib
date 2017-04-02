@@ -23,7 +23,7 @@ program sim_bsl_vp_1d1v_cart_micro_macro
   use sll_m_cubic_splines, only: &
     sll_s_compute_cubic_spline_1d, &
     sll_s_interpolate_from_interpolant_array, &
-    sll_f_new_cubic_spline_1d, &
+    sll_s_cubic_spline_1d_init, &
     sll_t_cubic_spline_1d
 
   use sll_m_hdf5_io_serial, only: &
@@ -55,7 +55,7 @@ program sim_bsl_vp_1d1v_cart_micro_macro
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 !  type(sll_t_cubic_spline_interpolator_1d), target  ::  interp_spline_x
-  type(sll_t_cubic_spline_1d), pointer :: interp_spline_v, interp_spline_vh, interp_spline_x
+  type(sll_t_cubic_spline_1d)  :: interp_spline_v, interp_spline_vh, interp_spline_x
   type(sll_t_periodic_interpolator_1d), target      :: interp_per_x, interp_per_v
   type(sll_t_cubic_spline_interpolator_1d), target      :: interp_comp_v
   class(sll_c_interpolator_1d), pointer    :: interp_x, interp_v
@@ -302,7 +302,7 @@ program sim_bsl_vp_1d1v_cart_micro_macro
   ! sll_o_initialize interpolators
   select case (interpol_x)
   case (1) ! periodic cubic sll_p_spline
-     interp_spline_x => sll_f_new_cubic_spline_1d( Ncx + 1, xmin, xmax, sll_p_periodic )
+     call sll_s_cubic_spline_1d_init( interp_spline_x, Ncx + 1, xmin, xmax, sll_p_periodic )
 !     call interp_spline_x%init( Ncx + 1, xmin, xmax, sll_p_periodic )
 !     interp_x => interp_spline_x
   case (2) ! arbitrary order periodic splines
@@ -316,8 +316,8 @@ program sim_bsl_vp_1d1v_cart_micro_macro
   end select
      select case (interpol_v)
   case (1) ! hermite cubic sll_p_spline
-      interp_spline_v => sll_f_new_cubic_spline_1d( Ncv + 1,vmin, vmax, sll_p_hermite )
-      interp_spline_vh => sll_f_new_cubic_spline_1d( Ncvh + 1, vh_array(1), vh_array(Ncvh+1), sll_p_hermite )
+      call sll_s_cubic_spline_1d_init( interp_spline_v, Ncv + 1,vmin, vmax, sll_p_hermite )
+      call sll_s_cubic_spline_1d_init( interp_spline_vh, Ncvh + 1, vh_array(1), vh_array(Ncvh+1), sll_p_hermite )
   case (2) ! arbitrary order periodic splines
      call interp_per_v%init( Ncv + 1, vmin, vmax, sll_p_spline, order_v)
      interp_v => interp_per_v

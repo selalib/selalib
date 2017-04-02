@@ -18,7 +18,8 @@ program test_cubic_splines
     sll_f_interpolate_value_2d, &
     sll_f_interpolate_x1_derivative_2d, &
     sll_f_interpolate_x2_derivative_2d, &
-    sll_f_new_cubic_spline_1d, &
+    sll_s_cubic_spline_1d_init, &
+    sll_s_cubic_spline_1d_free, &
     sll_s_cubic_spline_2d_init, &
     sll_t_cubic_spline_1d, &
     sll_t_cubic_spline_2d, &
@@ -71,7 +72,7 @@ contains
     sll_real64 :: interp_ngrid(2)
     sll_real64 :: ref_ngrid(2)
     sll_real64 :: x_ngrid
-    type(sll_t_cubic_spline_1d), pointer :: sp1
+    type(sll_t_cubic_spline_1d) :: sp1
     
     xmin = 0.0_f64
     xmax = sll_p_twopi
@@ -86,10 +87,11 @@ contains
     
     if ( bc == 0) then! periodic boundary conditions       
        print*, 'Cubic spline 1d, periodic boundary conditions:'
-       sp1 =>  sll_f_new_cubic_spline_1d( np+1, xmin, xmax, sll_p_periodic )
+       call sll_s_cubic_spline_1d_init( sp1, np+1, xmin, xmax, sll_p_periodic )
     elseif( bc == 1) then ! Hermite boundary conditions
        print*, 'Cubic spline 1d, Hermite boundary conditions:'
-       sp1 =>  sll_f_new_cubic_spline_1d( &
+       call  sll_s_cubic_spline_1d_init( &
+            sp1, &
             np+1, &
             xmin, &
             xmax, &
@@ -133,7 +135,7 @@ contains
        passed = .false.
     end if
     
-    call sll_o_delete(sp1)
+    call sll_s_cubic_spline_1d_free(sp1)
 
   end subroutine test_cubic_spline_1d
 
