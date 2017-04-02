@@ -48,7 +48,7 @@ module sll_m_cubic_splines
   implicit none
 
   public :: &
-    sll_s_compute_cubic_spline_1d, &
+    sll_s_cubic_spline_1d_compute_interpolant, &
     sll_s_compute_cubic_spline_2d, &
     sll_s_deposit_value_2d, &
     sll_s_get_coeff_cubic_spline_2d, &
@@ -525,7 +525,7 @@ MAKE_GET_SLOT_FUNCTION(get_x2_delta_cs2d,sll_t_cubic_spline_2d,x2_delta,sll_real
   !> the spline object was initialized.
   !> @param[inout] spline a 1D cubic spline object pointer, previously 
   !> initialized.
-  subroutine sll_s_compute_cubic_spline_1d( f, spline )
+  subroutine sll_s_cubic_spline_1d_compute_interpolant( f, spline )
     sll_real64, dimension(:), intent(in) :: f  
     sll_int32                            :: bc_type
     type(sll_t_cubic_spline_1d)         :: spline
@@ -545,7 +545,7 @@ MAKE_GET_SLOT_FUNCTION(get_x2_delta_cs2d,sll_t_cubic_spline_2d,x2_delta,sll_real
        print *, 'ERROR: compute_spline_1D(): not recognized boundary condition'
        STOP
     end select
-  end subroutine sll_s_compute_cubic_spline_1d
+  end subroutine sll_s_cubic_spline_1d_compute_interpolant
 
 
   ! The following auxiliary functions:
@@ -905,7 +905,7 @@ MAKE_GET_SLOT_FUNCTION(get_x2_delta_cs2d,sll_t_cubic_spline_2d,x2_delta,sll_real
   !> @param[in] x the value of the abscissa where the data should be 
   !> interpolated.
   !> @param[in] spline the spline object pointer, duly initialized and 
-  !> already operated on by the sll_s_compute_cubic_spline_1d subroutine.
+  !> already operated on by the sll_s_cubic_spline_1d_compute_interpolant subroutine.
   !> @returns the value of the interpolated image of the abscissa x,
   function sll_f_interpolate_from_interpolant_value( x, spline )
     sll_real64                         :: sll_f_interpolate_from_interpolant_value
@@ -935,7 +935,7 @@ MAKE_GET_SLOT_FUNCTION(get_x2_delta_cs2d,sll_t_cubic_spline_2d,x2_delta,sll_real
   !> @param[in] n the number of elements of the input array which are to be
   !> interpolated.
   !> @param[inout] spline the spline object pointer, duly initialized and 
-  !> already operated on by the sll_s_compute_cubic_spline_1d() subroutine.
+  !> already operated on by the sll_s_cubic_spline_1d_compute_interpolant() subroutine.
   subroutine sll_s_interpolate_from_interpolant_array( a_in, a_out, n, spline )
     intrinsic                               :: associated, int, real
     sll_int32, intent(in)                   :: n
@@ -1003,7 +1003,7 @@ MAKE_GET_SLOT_FUNCTION(get_x2_delta_cs2d,sll_t_cubic_spline_2d,x2_delta,sll_real
   !> @param[in] n the number of elements of the input pointer which are to be
   !> interpolated.
   !> @param[inout] spline the spline object pointer, duly initialized and 
-  !> already operated on by the sll_s_compute_cubic_spline_1d() subroutine.
+  !> already operated on by the sll_s_cubic_spline_1d_compute_interpolant() subroutine.
   !> @returns the values of the images of a collection of abscissae,
   subroutine interpolate_pointer_values( ptr_in, ptr_out, n, spline )
     intrinsic                               :: associated, int, real
@@ -1097,7 +1097,7 @@ MAKE_GET_SLOT_FUNCTION(get_x2_delta_cs2d,sll_t_cubic_spline_2d,x2_delta,sll_real
   !> @param[in] x the value of the abscissa at which the derivative should be
   !> interpolated.
   !> @param[inout] spline the spline object pointer, duly initialized and 
-  !> already operated on by the sll_s_compute_cubic_spline_1d() subroutine.
+  !> already operated on by the sll_s_cubic_spline_1d_compute_interpolant() subroutine.
   !> @returns the value of the derivative at the image of the abscissa 
   function sll_f_interpolate_derivative( x, spline )
     sll_real64                        :: sll_f_interpolate_derivative
@@ -1127,7 +1127,7 @@ MAKE_GET_SLOT_FUNCTION(get_x2_delta_cs2d,sll_t_cubic_spline_2d,x2_delta,sll_real
   !> results.
   !> @param[in] num_pts the number of elements of the input array.
   !> @param[inout] spline the spline object pointer, duly initialized and 
-  !> already operated on by the sll_s_compute_cubic_spline_1d() subroutine.
+  !> already operated on by the sll_s_cubic_spline_1d_compute_interpolant() subroutine.
   subroutine sll_s_interpolate_from_interpolant_derivatives_eta1( &
     array_in, &
     array_out, &
@@ -1161,7 +1161,7 @@ MAKE_GET_SLOT_FUNCTION(get_x2_delta_cs2d,sll_t_cubic_spline_2d,x2_delta,sll_real
   !> the results.
   !> @param[in] num_pts the number of elements of the input array pointer.
   !> @param[inout] spline the spline object pointer, duly initialized and 
-  !> already operated on by the sll_s_compute_cubic_spline_1d() subroutine.
+  !> already operated on by the sll_s_cubic_spline_1d_compute_interpolant() subroutine.
   subroutine interpolate_pointer_derivatives( &
     ptr_in, &
     ptr_out, &

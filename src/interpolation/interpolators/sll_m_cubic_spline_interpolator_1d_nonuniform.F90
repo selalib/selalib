@@ -18,7 +18,7 @@ module sll_m_cubic_spline_interpolator_1d_nonuniform
     sll_t_cubic_nonunif_spline_1d
 
   use sll_m_cubic_splines, only: &
-    sll_s_compute_cubic_spline_1d, &
+    sll_s_cubic_spline_1d_compute_interpolant, &
     sll_f_interpolate_derivative, &
     sll_s_interpolate_from_interpolant_array, &
     sll_s_interpolate_from_interpolant_derivatives_eta1, &
@@ -92,7 +92,7 @@ contains  ! ****************************************************************
     sll_real64, dimension(:), intent(in)   :: data
     sll_real64, dimension(num_pts), intent(out)      :: output_array
     ! compute the interpolating spline coefficients
-    call sll_s_compute_cubic_spline_1d( data, this%spline )
+    call sll_s_cubic_spline_1d_compute_interpolant( data, this%spline )
     call sll_s_interpolate_from_interpolant_array( coordinates, output_array, num_pts, &
          this%spline )
   end subroutine spline_interpolate1d
@@ -110,7 +110,7 @@ contains  ! ****************************************************************
     sll_real64 :: xmin, xmax
     sll_int32 :: i
     ! compute the interpolating spline coefficients
-    call sll_s_compute_cubic_spline_1d( data, this%spline )
+    call sll_s_cubic_spline_1d_compute_interpolant( data, this%spline )
     ! compute array of coordinates where interpolation is performed from displacement
     length = this%interpolation_points(num_pts) - &
              this%interpolation_points(1)
@@ -152,7 +152,7 @@ contains  ! ****************************************************************
     sll_real64 :: xmin, xmax
     sll_int32 :: i
     ! compute the interpolating spline coefficients
-    call sll_s_compute_cubic_spline_1d( data, this%spline )
+    call sll_s_cubic_spline_1d_compute_interpolant( data, this%spline )
     ! compute array of coordinates where interpolation is performed from displacement
     length = this%interpolation_points(num_pts) - &
              this%interpolation_points(1)
@@ -203,7 +203,7 @@ contains  ! ****************************************************************
        SLL_ERROR( 'compute_interpolants_cs1d', 'This case is not yet implemented' )
     end if
 
-    call sll_s_compute_cubic_spline_1d( data_array, interpolator%spline )
+    call sll_s_cubic_spline_1d_compute_interpolant( data_array, interpolator%spline )
 
   end subroutine
 

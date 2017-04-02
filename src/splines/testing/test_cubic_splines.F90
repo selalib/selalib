@@ -11,7 +11,7 @@ program test_cubic_splines
        sll_p_pi
 
  use sll_m_cubic_splines, only: &
-    sll_s_compute_cubic_spline_1d, &
+    sll_s_cubic_spline_1d_compute_interpolant, &
     sll_s_compute_cubic_spline_2d, &
     sll_f_interpolate_derivative, &
     sll_f_interpolate_from_interpolant_value, &
@@ -99,7 +99,7 @@ contains
             deriv(1), &
             deriv(np+1) )
     end if
-    call sll_s_compute_cubic_spline_1d( data, sp1 )
+    call sll_s_cubic_spline_1d_compute_interpolant( data, sp1 )
     
     do i=1,np
        data_interp(i) = sll_f_interpolate_from_interpolant_value(x(i), sp1)

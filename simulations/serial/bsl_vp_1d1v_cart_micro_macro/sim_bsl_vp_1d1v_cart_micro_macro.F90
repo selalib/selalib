@@ -21,7 +21,7 @@ program sim_bsl_vp_1d1v_cart_micro_macro
     sll_t_cubic_spline_interpolator_1d
 
   use sll_m_cubic_splines, only: &
-    sll_s_compute_cubic_spline_1d, &
+    sll_s_cubic_spline_1d_compute_interpolant, &
     sll_s_interpolate_from_interpolant_array, &
     sll_s_cubic_spline_1d_init, &
     sll_t_cubic_spline_1d
@@ -357,7 +357,7 @@ program sim_bsl_vp_1d1v_cart_micro_macro
   !--------------------------------------------
   do i=1,Ncx+1
      !compute splines coef associated to fg and evalute splines on the fine mesh vh_array --> ff1
-     call sll_s_compute_cubic_spline_1d(fg(i,:), interp_spline_v)
+     call sll_s_cubic_spline_1d_compute_interpolant(fg(i,:), interp_spline_v)
      call sll_s_interpolate_from_interpolant_array(vh_array, ff1(i,:), Ncvh+1, interp_spline_v)
 
      !compute ff:=deltaf on the fine mesh: ff(v_j)=f(v_j)-ff1(v_j), v_j\in vh_array
@@ -431,7 +431,7 @@ program sim_bsl_vp_1d1v_cart_micro_macro
 
         !compute splines coef associated to fg 
         !and compute fg^{n+1}(v_j)=fg^n(v_j^*) (v_j on the coarse mesh) -> fg
-        call sll_s_compute_cubic_spline_1d(fg(i,:), interp_spline_v)
+        call sll_s_cubic_spline_1d_compute_interpolant(fg(i,:), interp_spline_v)
         alpha = -(efield(i)+e_app(i)) * 0.5_f64 * dt
         do j=1,Ncv+1
            vg_array(j)=v_array(j)+alpha
@@ -459,7 +459,7 @@ program sim_bsl_vp_1d1v_cart_micro_macro
         ff(i,:)=ff(i,:)-mass/real(Ncvh+1,f64)
 
         !compute splines coef associated to ff 
-        call sll_s_compute_cubic_spline_1d(ff(i,:),interp_spline_vh)
+        call sll_s_cubic_spline_1d_compute_interpolant(ff(i,:),interp_spline_vh)
 
         do j=1,Ncvh+1
            vhg_array(j)=vh_array(j)+alpha
@@ -487,7 +487,7 @@ program sim_bsl_vp_1d1v_cart_micro_macro
         
         !compute splines coef associated to fg 
         !and compute, for the coarse grid in v fg^{n+1}(x_i)=fg^n(x_i^*) -> fg
-        call sll_s_compute_cubic_spline_1d(fg(:,j), interp_spline_x)
+        call sll_s_cubic_spline_1d_compute_interpolant(fg(:,j), interp_spline_x)
         alpha = (vmin + (j-1) * delta_v) * dt
         do i=1, Ncx+1
            xg_array(i)=x_array(i)-alpha
@@ -505,7 +505,7 @@ program sim_bsl_vp_1d1v_cart_micro_macro
      do j=1,Ncvh+1 
         !compute splines coef associated to ff 
         !and compute, for the fine grid in v ff^{n+1}(x_i)=ff^n(x_i^*) -> ff
-        call sll_s_compute_cubic_spline_1d(ff(:,j), interp_spline_x)
+        call sll_s_cubic_spline_1d_compute_interpolant(ff(:,j), interp_spline_x)
         alpha = vh_array(j) * dt 
         do i=1, Ncx+1
            xg_array(i)=x_array(i)-alpha
@@ -552,7 +552,7 @@ program sim_bsl_vp_1d1v_cart_micro_macro
         
         !compute splines coef associated to fg 
         !and compute fg^{n+1}(v_j)=fg^n(v_j^*) (v_j on the coarse mesh) -> fg
-        call sll_s_compute_cubic_spline_1d(fg(i,:),interp_spline_v)
+        call sll_s_cubic_spline_1d_compute_interpolant(fg(i,:),interp_spline_v)
         alpha = -(efield(i)+e_app(i)) * 0.5_f64 * dt
         do j=1,Ncv+1
            vg_array(j)=v_array(j)+alpha
@@ -581,7 +581,7 @@ program sim_bsl_vp_1d1v_cart_micro_macro
         ff(i,:)=ff(i,:)-mass/real(Ncvh+1,f64)
 
         !compute splines coef associated to ff 
-        call sll_s_compute_cubic_spline_1d(ff(i,:), interp_spline_vh)
+        call sll_s_cubic_spline_1d_compute_interpolant(ff(i,:), interp_spline_vh)
 
         do j=1,Ncvh+1
            vhg_array(j)=vh_array(j)+alpha
@@ -668,7 +668,7 @@ program sim_bsl_vp_1d1v_cart_micro_macro
 
   !compute fg on the fine mesh -> ff1 (for diagnostic)
   do i=1,Ncx+1
-     call sll_s_compute_cubic_spline_1d(fg(i,:), interp_spline_v)
+     call sll_s_cubic_spline_1d_compute_interpolant(fg(i,:), interp_spline_v)
      call sll_s_interpolate_from_interpolant_array(vh_array,ff1(i,:),Ncvh+1,interp_spline_v)
   enddo
 
