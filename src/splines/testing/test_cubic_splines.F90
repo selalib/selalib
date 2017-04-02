@@ -12,7 +12,7 @@ program test_cubic_splines
 
  use sll_m_cubic_splines, only: &
     sll_s_cubic_spline_1d_compute_interpolant, &
-    sll_s_compute_cubic_spline_2d, &
+    sll_s_cubic_spline_2d_compute_interpolant, &
     sll_f_cubic_spline_1d_eval_deriv, &
     sll_f_cubic_spline_1d_eval, &
     sll_f_interpolate_value_2d, &
@@ -225,7 +225,7 @@ contains
        passed = .false.
     end if
 
-    call sll_s_compute_cubic_spline_2d( data, sp2 )
+    call sll_s_cubic_spline_2d_compute_interpolant( data, sp2 )
 
     do i=1,np1
        do j=1, np2

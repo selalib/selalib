@@ -314,7 +314,7 @@ do step=1,nb_step !-------- * Evolution in time * ---------
   enddo
 
   !$OMP MASTER
-  call sll_s_compute_cubic_spline_2d(fh_fsl,spl_2d)
+  call sll_s_cubic_spline_2d_compute_interpolant(fh_fsl,spl_2d)
   !$OMP END MASTER
   !$OMP BARRIER
 
@@ -873,7 +873,7 @@ sll_real64                           :: x, y
 sll_real64                           :: xj, yj
 sll_int32                            :: i, j
 
-call sll_s_compute_cubic_spline_2d(fh_fsl, spl)
+call sll_s_cubic_spline_2d_compute_interpolant(fh_fsl, spl)
 
 ct = cos(t)
 st = sin(t)
