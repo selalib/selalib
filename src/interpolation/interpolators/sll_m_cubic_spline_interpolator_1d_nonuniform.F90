@@ -19,7 +19,7 @@ module sll_m_cubic_spline_interpolator_1d_nonuniform
 
   use sll_m_cubic_splines, only: &
     sll_s_cubic_spline_1d_compute_interpolant, &
-    sll_f_interpolate_derivative, &
+    sll_f_cubic_spline_1d_eval_deriv, &
     sll_s_interpolate_from_interpolant_array, &
     sll_s_interpolate_from_interpolant_derivatives_eta1, &
     sll_f_interpolate_from_interpolant_value, &
@@ -252,7 +252,7 @@ contains  ! ****************************************************************
     class(sll_t_cubic_spline_interpolator_1d_nonuniform), intent(in) :: interpolator
     sll_real64             :: val
     sll_real64, intent(in) :: eta1
-    val = sll_f_interpolate_derivative(eta1,interpolator%spline)
+    val = sll_f_cubic_spline_1d_eval_deriv(eta1,interpolator%spline)
   end function
 
 !PN DEFINED BUT NOT USED
@@ -260,7 +260,7 @@ contains  ! ****************************************************************
 !    class(sll_t_cubic_spline_interpolator_1d_nonuniform), intent(in) :: interpolator
 !    sll_real64 :: val
 !    sll_real64, intent(in) :: eta1
-!    val = sll_f_interpolate_derivative(eta1,interpolator%spline)
+!    val = sll_f_cubic_spline_1d_eval_deriv(eta1,interpolator%spline)
 !  end function
 
   ! Why is the name of this function changing depending on the standard?
