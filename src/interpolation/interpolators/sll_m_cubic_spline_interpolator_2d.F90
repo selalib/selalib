@@ -43,7 +43,7 @@ module sll_m_cubic_spline_interpolator_2d
     sll_f_interpolate_x2_derivative_2d, &
     sll_s_cubic_spline_2d_init, &
     sll_t_cubic_spline_2d, &
-    sll_o_delete
+    sll_s_cubic_spline_2d_free
 
   use sll_m_interpolators_2d_base, only: &
     sll_c_interpolator_2d
@@ -117,7 +117,7 @@ contains
 
   subroutine delete_sll_cubic_spline_interpolator_2d( interpolator )
     class(sll_t_cubic_spline_interpolator_2d), intent(inout) :: interpolator
-    call sll_o_delete(interpolator%spline)
+    call sll_s_cubic_spline_2d_free(interpolator%spline)
   end subroutine delete_sll_cubic_spline_interpolator_2d
   
   !> Function that return a pointer to a cubic spline interpolator 2d object.
@@ -217,8 +217,8 @@ contains
     sll_real64, intent(in)                        :: eta1_max
     sll_real64, intent(in)                        :: eta2_min
     sll_real64, intent(in)                        :: eta2_max
-    sll_int32, intent(in)			  :: eta1_bc_type
-    sll_int32, intent(in)			  :: eta2_bc_type
+    sll_int32,intent(in)                          :: eta1_bc_type
+    sll_int32, intent(in)                         :: eta2_bc_type
     sll_real64, intent(in), optional              :: const_eta1_min_slope
     sll_real64, intent(in), optional              :: const_eta1_max_slope
     sll_real64, intent(in), optional              :: const_eta2_min_slope
