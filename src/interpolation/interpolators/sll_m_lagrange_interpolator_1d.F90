@@ -25,7 +25,7 @@ module sll_m_lagrange_interpolator_1d
 
   use sll_m_lagrange_interpolation_1d, only: &
     sll_s_compute_lagrange_interpolation_1d, &
-    sll_s_interpolate_from_interpolant_array, &
+    sll_s_cubic_spline_1d_eval_array, &
     sll_f_new_lagrange_interpolation_1d, &
     sll_t_lagrange_interpolation_1d
 
@@ -179,7 +179,7 @@ subroutine interpolate_array_disp_li1d(this, num_pts, data, alpha, output_array)
 
   select case (this%interval_selection)
   case (sll_p_lagrange_centered)  
-     call sll_s_interpolate_from_interpolant_array(data,-alpha,this%lagrange)
+     call sll_s_cubic_spline_1d_eval_array(data,-alpha,this%lagrange)
      output_array=this%lagrange%data_out
   case (sll_p_lagrange_fixed)
      select case (this%bc_type)
@@ -209,7 +209,7 @@ subroutine interpolate_array_disp_inplace_li1d(this, num_pts, data, alpha)
   sll_int32, intent(in)  :: num_pts    ! size of output array
   sll_real64, dimension(num_pts), intent(inout) :: data  ! data to be interpolated points where output is desired
 
-  call sll_s_interpolate_from_interpolant_array(data,-alpha,this%lagrange)
+  call sll_s_cubic_spline_1d_eval_array(data,-alpha,this%lagrange)
   data=this%lagrange%data_out
 
 end subroutine interpolate_array_disp_inplace_li1d
@@ -234,7 +234,7 @@ subroutine interpolate_array_values_li1d( &
     sll_real64, dimension(num_pts), intent(out)  :: output_array
     !sll_int32 :: ierr
     output_array = 0.0_f64
-    print*, 'sll_s_interpolate_from_interpolant_array:', &
+    print*, 'sll_s_cubic_spline_1d_eval_array:', &
          ' not implemented for lagrange interpolation'
     print *,num_pts
     print *,maxval(vals_to_interpolate)
