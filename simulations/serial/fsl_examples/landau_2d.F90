@@ -184,7 +184,7 @@ do i_step = 1, n_step !Loop over time
   call advection_x2(delta_t)
 
   !call sll_s_cubic_spline_2d_compute_interpolant(f(:,:,1,1),spl_fsl)
-  !call sll_s_deposit_value_2d(eta1feet,eta2feet,spl_fsl,f(:,:,1,1))
+  !call sll_s_cubic_spline_2d_deposit_value(eta1feet,eta2feet,spl_fsl,f(:,:,1,1))
 
 end do !next time step
 

@@ -12,7 +12,7 @@ program sim_fsl_ad_2d0v_curv
 
   use sll_m_cubic_splines, only: &
     sll_s_cubic_spline_2d_compute_interpolant, &
-    sll_s_deposit_value_2d, &
+    sll_s_cubic_spline_2d_deposit_value, &
     sll_f_cubic_spline_2d_eval, &
     sll_s_cubic_spline_2d_init, &
     sll_t_cubic_spline_2d
@@ -786,8 +786,8 @@ program sim_fsl_ad_2d0v_curv
     
     ! --- Deposition ---
     
-    call sll_s_deposit_value_2d(eta1feet,eta2feet,spl_fsl,fh_fsl)
-    call sll_s_deposit_value_2d(eta1feet,eta2feet,spl_fsl_nc,fh_fsl_nc)
+    call sll_s_cubic_spline_2d_deposit_value(eta1feet,eta2feet,spl_fsl,fh_fsl)
+    call sll_s_cubic_spline_2d_deposit_value(eta1feet,eta2feet,spl_fsl_nc,fh_fsl_nc)
     
     ! --- Some adding operations ---
     
