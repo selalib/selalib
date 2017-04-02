@@ -15,7 +15,7 @@ program test_cubic_splines
     sll_s_cubic_spline_2d_compute_interpolant, &
     sll_f_cubic_spline_1d_eval_deriv, &
     sll_f_cubic_spline_1d_eval, &
-    sll_f_interpolate_value_2d, &
+    sll_f_cubic_spline_2d_eval, &
     sll_f_interpolate_x1_derivative_2d, &
     sll_f_interpolate_x2_derivative_2d, &
     sll_s_cubic_spline_1d_init, &
@@ -229,7 +229,7 @@ contains
 
     do i=1,np1
        do j=1, np2
-          data_interp(i,j) = sll_f_interpolate_value_2d(x(i), y(j), sp2)
+          data_interp(i,j) = sll_f_cubic_spline_2d_eval(x(i), y(j), sp2)
           deriv_x_interp(i,j) = sll_f_interpolate_x1_derivative_2d(x(i), y(j), sp2)
           deriv_y_interp(i,j) = sll_f_interpolate_x2_derivative_2d(x(i), y(j), sp2)
        end do
@@ -238,7 +238,7 @@ contains
     x_ngrid = (real(np1/2,f64)-0.5_f64)*delta_x
     y_ngrid = (real(np2/2,f64)+0.5_f64)*delta_y
     ref_ngrid(1) =  exp( cos(x_ngrid)* sin(y_ngrid) )
-    interp_ngrid(1) = sll_f_interpolate_value_2d(x_ngrid, y_ngrid, sp2)
+    interp_ngrid(1) = sll_f_cubic_spline_2d_eval(x_ngrid, y_ngrid, sp2)
     ref_ngrid(2) = -ref_ngrid(1) * sin( x_ngrid ) * sin( y_ngrid )
     interp_ngrid(2) = sll_f_interpolate_x1_derivative_2d(x_ngrid, y_ngrid, sp2)
     ref_ngrid(3) = ref_ngrid(1) * cos( x_ngrid ) * cos( y_ngrid )

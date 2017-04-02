@@ -13,7 +13,7 @@ program sim_fsl_ad_2d0v_polar
   use sll_m_cubic_splines, only: &
     sll_s_cubic_spline_2d_compute_interpolant, &
     sll_s_deposit_value_2d, &
-    sll_f_interpolate_value_2d, &
+    sll_f_cubic_spline_2d_eval, &
     sll_s_cubic_spline_2d_init, &
     sll_t_cubic_spline_2d
 
@@ -383,8 +383,8 @@ program sim_fsl_ad_2d0v_polar
           theta= theta+2._f64*sll_p_pi
         endif
         
-        fh_bsl(i,j)    = sll_f_interpolate_value_2d(r,theta,spl_bsl)
-        fh_bsl_nc(i,j) = sll_f_interpolate_value_2d(r,theta,spl_bsl_nc)/(rmin+real(i-1,f64)*dr)
+        fh_bsl(i,j)    = sll_f_cubic_spline_2d_eval(r,theta,spl_bsl)
+        fh_bsl_nc(i,j) = sll_f_cubic_spline_2d_eval(r,theta,spl_bsl_nc)/(rmin+real(i-1,f64)*dr)
     
         diag(3,step) = diag(3,step) + fh_bsl(i,j) * (rmin+real(i-1,f64)*dr)*dr*dtheta
         diag(4,step) = diag(4,step) + fh_bsl(i,j) * dr*dtheta
