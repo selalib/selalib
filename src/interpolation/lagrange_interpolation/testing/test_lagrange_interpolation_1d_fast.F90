@@ -1,14 +1,14 @@
-program test_lagrange_fast
+program test_lagrange_interpolation_1d_fast
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_working_precision.h"
 
   use sll_m_constants, only : sll_p_pi
 
-  use sll_m_lagrange_fast, only : &
-    sll_s_interpolate_array_disp_lagrange_fixed_no_bc, &
-    sll_s_interpolate_array_disp_lagrange_fixed_periodic, &
-    sll_s_interpolate_array_disp_lagrange_fixed_periodic_last, &
-    sll_s_interpolate_array_disp_lagrange_centered_periodic_last
+  use sll_m_lagrange_interpolation_1d_fast, only : &
+    sll_s_lagrange_interpolation_1d_fast_disp_fixed_no_bc, &
+    sll_s_lagrange_interpolation_1d_fast_disp_fixed_periodic, &
+    sll_s_lagrange_interpolation_1d_fast_disp_fixed_periodicl, &
+    sll_s_lagrange_interpolation_1d_fast_disp_centered_periodicl
 
 
   implicit none
@@ -85,16 +85,16 @@ contains
 
     if (type == 0) then ! no bc
        print*, "Test fixed_no_bc with order", pmessage, '.'
-       call sll_s_interpolate_array_disp_lagrange_fixed_no_bc(fi, fp, alpha, order)
+       call sll_s_lagrange_interpolation_1d_fast_disp_fixed_no_bc(fi, fp, alpha, order)
     elseif (type == 1) then ! periodic
        print*, "Test fixed_periodic with order", pmessage, '.'
-       call sll_s_interpolate_array_disp_lagrange_fixed_periodic(fi, fp, alpha, order)
+       call sll_s_lagrange_interpolation_1d_fast_disp_fixed_periodic(fi, fp, alpha, order)
     elseif (type == 2) then ! periodic with last value
        print*, "Test fixed_periodic_last with order", pmessage, '.'
-       call sll_s_interpolate_array_disp_lagrange_fixed_periodic_last(fi, fp, alpha, order)
+       call sll_s_lagrange_interpolation_1d_fast_disp_fixed_periodicl(fi, fp, alpha, order)
     elseif (type == 3) then ! periodic centered
        print*, "Test centered_periodic_last with order", pmessage, '.'
-       call sll_s_interpolate_array_disp_lagrange_centered_periodic_last(fi, fp, alpha, order)
+       call sll_s_lagrange_interpolation_1d_fast_disp_centered_periodicl(fi, fp, alpha, order)
     else
        print*, 'Interpolation type not implemented.'
     end if
@@ -118,4 +118,4 @@ contains
     f = cos(2*sll_p_pi*x/num_points)
   end function
 
-end program test_lagrange_fast
+end program test_lagrange_interpolation_1d_fast

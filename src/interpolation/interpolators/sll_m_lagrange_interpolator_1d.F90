@@ -17,11 +17,11 @@ module sll_m_lagrange_interpolator_1d
   use sll_m_interpolators_1d_base, only: &
     sll_c_interpolator_1d
 
-  use sll_m_lagrange_fast, only : &
-    sll_s_interpolate_array_disp_lagrange_fixed_no_bc, &
-    sll_s_interpolate_array_disp_lagrange_fixed_periodic, &
-    sll_s_interpolate_array_disp_lagrange_fixed_periodic_last, &
-    sll_s_interpolate_array_disp_lagrange_fixed_halo_cells
+  use sll_m_lagrange_interpolation_1d_fast, only : &
+    sll_s_lagrange_interpolation_1d_fast_disp_fixed_no_bc, &
+    sll_s_lagrange_interpolation_1d_fast_disp_fixed_periodic, &
+    sll_s_lagrange_interpolation_1d_fast_disp_fixed_periodicl, &
+    sll_s_lagrange_interpolation_1d_fast_disp_fixed_haloc_cells
 
   use sll_m_lagrange_interpolation_1d, only: &
     sll_s_compute_lagrange_interpolation_1d, &
@@ -185,14 +185,14 @@ subroutine interpolate_array_disp_li1d(this, num_pts, data, alpha, output_array)
      select case (this%bc_type)
      case (sll_p_periodic)
         if (this%lagrange%periodic_last == 0) then
-           call sll_s_interpolate_array_disp_lagrange_fixed_periodic(data, output_array, alpha/this%lagrange%deta, this%stencil_width)
+           call sll_s_lagrange_interpolation_1d_fast_disp_fixed_periodic(data, output_array, alpha/this%lagrange%deta, this%stencil_width)
         else
-           call sll_s_interpolate_array_disp_lagrange_fixed_periodic_last(data,  output_array, alpha/this%lagrange%deta, this%stencil_width)
+           call sll_s_lagrange_interpolation_1d_fast_disp_fixed_periodicl(data,  output_array, alpha/this%lagrange%deta, this%stencil_width)
         end if
      case (sll_p_one_sided)
-        call sll_s_interpolate_array_disp_lagrange_fixed_no_bc(data, output_array, alpha/this%lagrange%deta, this%stencil_width)
+        call sll_s_lagrange_interpolation_1d_fast_disp_fixed_no_bc(data, output_array, alpha/this%lagrange%deta, this%stencil_width)
      case (sll_p_halo)
-        call sll_s_interpolate_array_disp_lagrange_fixed_halo_cells(data, output_array, alpha/this%lagrange%deta, this%stencil_width)
+        call sll_s_lagrange_interpolation_1d_fast_disp_fixed_haloc_cells(data, output_array, alpha/this%lagrange%deta, this%stencil_width)
      case default
         SLL_ERROR('interpolate_array_disp_li1d', 'Boundary type not implemented.')
      end select
