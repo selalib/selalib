@@ -36,7 +36,7 @@ module sll_m_cubic_spline_interpolator_2d
     sll_f_cubic_spline_2d_get_x1_delta, &
     sll_o_get_x1_max, &
     sll_o_get_x1_min, &
-    sll_s_cubic_spline_2d_get_x2_delta, &
+    sll_f_cubic_spline_2d_get_x2_delta, &
     sll_s_cubic_spline_2d_get_x2_max, &
     sll_f_cubic_spline_2d_eval, &
     sll_f_cubic_spline_2d_eval_deriv_x1, &
@@ -357,7 +357,7 @@ contains
     eta2_min   = sll_o_get_x1_min( this%spline ) !this%spline%x2_min 
     eta2_max   = sll_s_cubic_spline_2d_get_x2_max( this%spline ) !this%spline%x2_max 
     delta_eta1 = sll_f_cubic_spline_2d_get_x1_delta( this%spline ) !this%spline%x1_delta  
-    delta_eta2 = sll_s_cubic_spline_2d_get_x2_delta( this%spline ) !this%spline%x2_delta  
+    delta_eta2 = sll_f_cubic_spline_2d_get_x2_delta( this%spline ) !this%spline%x2_delta  
     
     call sll_s_cubic_spline_2d_compute_interpolant( data_in, this%spline )
 
