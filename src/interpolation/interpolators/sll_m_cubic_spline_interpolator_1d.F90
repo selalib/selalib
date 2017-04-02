@@ -39,7 +39,7 @@ module sll_m_cubic_spline_interpolator_1d
     sll_f_cubic_spline_1d_eval_deriv, &
     sll_s_cubic_spline_1d_eval_disp, &
     sll_s_cubic_spline_1d_eval_array, &
-    sll_s_interpolate_from_interpolant_derivatives_eta1, &
+    sll_s_cubic_spline_1d_eval_deriv, &
     sll_f_cubic_spline_1d_eval, &
     sll_s_cubic_spline_1d_init, &
     sll_t_cubic_spline_1d, &
@@ -231,7 +231,7 @@ contains  ! ****************************************************************
     sll_int32,  intent(in)                 :: num_pts
     sll_real64, dimension(:), intent(in)   :: vals_to_interpolate
     sll_real64, dimension(:), intent(out)  :: output_array
-    call sll_s_interpolate_from_interpolant_derivatives_eta1( vals_to_interpolate, output_array, &
+    call sll_s_cubic_spline_1d_eval_deriv( vals_to_interpolate, output_array, &
          num_pts,  interpolator%spline )
   end subroutine interpolate_derivatives_cs1d
 
