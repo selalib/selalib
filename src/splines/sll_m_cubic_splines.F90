@@ -63,7 +63,7 @@ module sll_m_cubic_splines
     sll_o_get_x1_delta, &
     sll_o_get_x1_max, &
     sll_o_get_x1_min, &
-    sll_o_get_x2_delta, &
+    sll_s_cubic_spline_2d_get_x2_delta, &
     sll_s_cubic_spline_2d_get_x2_max, &
     sll_f_cubic_spline_2d_eval, &
     sll_f_cubic_spline_2d_eval_deriv_x1, &
@@ -173,10 +173,6 @@ module sll_m_cubic_splines
      module procedure get_delta_cs1d, get_x1_delta_cs2d
   end interface sll_o_get_x1_delta
 
-  interface sll_o_get_x2_delta
-     module procedure get_x2_delta_cs2d
-  end interface sll_o_get_x2_delta
-
 #ifndef DOXYGEN_SHOULD_SKIP_THIS
 
   ! Some useful macros that should probably be put in a different file to 
@@ -227,7 +223,7 @@ MAKE_GET_SLOT_FUNCTION(get_x1_max_cs2d,  sll_t_cubic_spline_2d, x1_max, sll_real
 MAKE_GET_SLOT_FUNCTION(get_x2_min_cs2d,  sll_t_cubic_spline_2d, x2_min, sll_real64)
 MAKE_GET_SLOT_FUNCTION(sll_s_cubic_spline_2d_get_x2_max,  sll_t_cubic_spline_2d, x2_max, sll_real64)
 MAKE_GET_SLOT_FUNCTION(get_x1_delta_cs2d,sll_t_cubic_spline_2d,x1_delta,sll_real64)
-MAKE_GET_SLOT_FUNCTION(get_x2_delta_cs2d,sll_t_cubic_spline_2d,x2_delta,sll_real64)
+MAKE_GET_SLOT_FUNCTION(sll_s_cubic_spline_2d_get_x2_delta,sll_t_cubic_spline_2d,x2_delta,sll_real64)
 
   ! The following implementation embodies the algorithm described in
   ! Eric Sonnendrucker's "A possibly faster algorithm for cubic splines on
