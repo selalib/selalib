@@ -59,7 +59,7 @@ module sll_m_cubic_splines
     sll_t_cubic_spline_1d, &
     sll_s_cubic_spline_2d_compute_interpolant, &
     sll_s_cubic_spline_2d_deposit_value, &
-    sll_s_get_coeff_cubic_spline_2d, &
+    sll_s_cubic_spline_2d_get_coeff, &
     sll_o_get_x1_delta, &
     sll_o_get_x1_max, &
     sll_o_get_x1_min, &
@@ -2587,7 +2587,7 @@ MAKE_GET_SLOT_FUNCTION(get_x2_delta_cs2d,sll_t_cubic_spline_2d,x2_delta,sll_real
     sll_f_cubic_spline_2d_eval_deriv_x2 = 0.5_f64*rh2*(dx*(t1 + dx*t2) + t3)
   end function sll_f_cubic_spline_2d_eval_deriv_x2
 
-  subroutine sll_s_get_coeff_cubic_spline_2d(spline, coeff)
+  subroutine sll_s_cubic_spline_2d_get_coeff(spline, coeff)
     type(sll_t_cubic_spline_2d) :: spline
     sll_real64, dimension(:), intent(out) :: coeff
     sll_int32 :: i
@@ -2605,7 +2605,7 @@ MAKE_GET_SLOT_FUNCTION(get_x2_delta_cs2d,sll_t_cubic_spline_2d,x2_delta,sll_real
         coeff(i+(num_pts_x1+2)*(j-1)) = spline%coeffs(i-1,j-1)
       enddo    
     enddo
-  end subroutine sll_s_get_coeff_cubic_spline_2d  
+  end subroutine sll_s_cubic_spline_2d_get_coeff  
     
   subroutine sll_s_cubic_spline_2d_free( spline )
     type(sll_t_cubic_spline_2d) :: spline
