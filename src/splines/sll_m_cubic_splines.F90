@@ -62,10 +62,10 @@ module sll_m_cubic_splines
     sll_s_cubic_spline_2d_get_coeff, &
     sll_f_cubic_spline_2d_get_x1_delta, &
     sll_f_cubic_spline_1d_get_x1_delta, &
-    sll_o_get_x1_max, &
+    sll_f_cubic_spline_2d_get_x1_max, &
     sll_o_get_x1_min, &
     sll_f_cubic_spline_2d_get_x2_delta, &
-    sll_s_cubic_spline_2d_get_x2_max, &
+    sll_f_cubic_spline_2d_get_x2_max, &
     sll_f_cubic_spline_2d_eval, &
     sll_f_cubic_spline_2d_eval_deriv_x1, &
     sll_f_cubic_spline_2d_eval_deriv_x2, &
@@ -166,10 +166,6 @@ module sll_m_cubic_splines
      module procedure get_x1_min_cs1d, get_x1_min_cs2d
   end interface sll_o_get_x1_min
 
-  interface sll_o_get_x1_max
-     module procedure get_x1_max_cs1d, get_x1_max_cs2d
-  end interface sll_o_get_x1_max
-
 #ifndef DOXYGEN_SHOULD_SKIP_THIS
 
   ! Some useful macros that should probably be put in a different file to 
@@ -212,13 +208,13 @@ contains  ! ****************************************************************
 
 
 MAKE_GET_SLOT_FUNCTION(get_x1_min_cs1d,  sll_t_cubic_spline_1d, xmin, sll_real64)
-MAKE_GET_SLOT_FUNCTION(get_x1_max_cs1d,  sll_t_cubic_spline_1d, xmax, sll_real64)
+MAKE_GET_SLOT_FUNCTION(sll_f_cubic_spline_1d_get_x1_max,  sll_t_cubic_spline_1d, xmax, sll_real64)
 MAKE_GET_SLOT_FUNCTION(sll_f_cubic_spline_1d_get_x1_delta,   sll_t_cubic_spline_1d, delta,sll_real64)
 
 MAKE_GET_SLOT_FUNCTION(get_x1_min_cs2d,  sll_t_cubic_spline_2d, x1_min, sll_real64)
-MAKE_GET_SLOT_FUNCTION(get_x1_max_cs2d,  sll_t_cubic_spline_2d, x1_max, sll_real64)
-MAKE_GET_SLOT_FUNCTION(sll_s_cubic_spline_2d_get_x2_min,  sll_t_cubic_spline_2d, x2_min, sll_real64)
-MAKE_GET_SLOT_FUNCTION(sll_s_cubic_spline_2d_get_x2_max,  sll_t_cubic_spline_2d, x2_max, sll_real64)
+MAKE_GET_SLOT_FUNCTION(sll_f_cubic_spline_2d_get_x1_max,  sll_t_cubic_spline_2d, x1_max, sll_real64)
+MAKE_GET_SLOT_FUNCTION(sll_f_cubic_spline_2d_get_x2_min,  sll_t_cubic_spline_2d, x2_min, sll_real64)
+MAKE_GET_SLOT_FUNCTION(sll_f_cubic_spline_2d_get_x2_max,  sll_t_cubic_spline_2d, x2_max, sll_real64)
 MAKE_GET_SLOT_FUNCTION(sll_f_cubic_spline_2d_get_x1_delta,sll_t_cubic_spline_2d,x1_delta,sll_real64)
 MAKE_GET_SLOT_FUNCTION(sll_f_cubic_spline_2d_get_x2_delta,sll_t_cubic_spline_2d,x2_delta,sll_real64)
 
