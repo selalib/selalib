@@ -909,7 +909,7 @@ call sll_s_cubic_spline_1d_compute_interpolant(e, spl)
 do j=1,n+1
   do i=1,n+1
     if (eta_min < x(i,j) .and. x(i,j) < eta_max ) then
-      g(i,j) = sll_f_interpolate_from_interpolant_value(x(i,j), spl)
+      g(i,j) = sll_f_cubic_spline_1d_eval(x(i,j), spl)
     else
       g(i,j) = 0.0_f64
     end if
