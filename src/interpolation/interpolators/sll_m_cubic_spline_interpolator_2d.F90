@@ -39,7 +39,7 @@ module sll_m_cubic_spline_interpolator_2d
     sll_o_get_x2_delta, &
     sll_o_get_x2_max, &
     sll_f_cubic_spline_2d_eval, &
-    sll_f_interpolate_x1_derivative_2d, &
+    sll_f_cubic_spline_2d_eval_deriv_x1, &
     sll_f_interpolate_x2_derivative_2d, &
     sll_s_cubic_spline_2d_init, &
     sll_t_cubic_spline_2d, &
@@ -290,7 +290,7 @@ contains
     sll_real64 :: val
     sll_real64, intent(in) :: eta1
     sll_real64, intent(in) :: eta2
-    val = sll_f_interpolate_x1_derivative_2d(eta1,eta2,interpolator%spline)
+    val = sll_f_cubic_spline_2d_eval_deriv_x1(eta1,eta2,interpolator%spline)
   end function
 
   function interpolate_deriv2_cs2d( interpolator, eta1, eta2 ) result(val)
