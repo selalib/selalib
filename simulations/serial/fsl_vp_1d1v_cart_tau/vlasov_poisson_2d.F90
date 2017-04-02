@@ -26,7 +26,7 @@ sll_real64            :: r_m
 
 type(sll_t_fft)                      :: fw_fft
 type(sll_t_fft)                      :: bw_fft
-type(sll_t_cubic_spline_1d), pointer :: spl_1d
+type(sll_t_cubic_spline_1d)          :: spl_1d
 type(sll_t_cubic_spline_2d), pointer :: spl_2d
 type(sll_t_cubic_spline_2d), pointer :: spl_2d_f
 
@@ -225,7 +225,7 @@ call sll_s_fft_init_c2c_1d(fsl_fw, n,    tmp,    tmp,    sll_p_fft_forward)
 call sll_s_fft_init_c2c_1d(fsl_bw, n,    tmp,    tmp,    sll_p_fft_backward)
 !$OMP END CRITICAL
 
-spl_1d => sll_f_new_cubic_spline_1d( n+1, eta_min, eta_max, sll_p_periodic )
+call sll_s_cubic_spline_1d_init( spl_1d, n+1, eta_min, eta_max, sll_p_periodic )
 
 call sll_s_cubic_spline_2d_init( spl_2d_f,       &
                                  n+1,            &
@@ -727,7 +727,7 @@ end if
 
 !---------------end time solve-------------------------
 
-call sll_o_delete(spl_1d)
+call sll_s_cubic_spline_1d_free(spl_1d)
 call sll_s_fft_free(fw_fft)
 call sll_s_fft_free(bw_fft)
 call sll_o_delete(spl_2d_f)
@@ -897,7 +897,7 @@ end subroutine cubic_splines_interp_2d
 
 subroutine cubic_splines_interp_1d(spl, n, x, e, g)
 
-type(sll_t_cubic_spline_1d), pointer :: spl
+type(sll_t_cubic_spline_1d)          :: spl
 sll_int32,  intent(in)               :: n
 sll_real64, intent(in)               :: x(:,:)
 sll_real64, intent(in)               :: e(:)
