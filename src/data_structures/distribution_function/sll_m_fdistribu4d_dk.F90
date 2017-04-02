@@ -33,7 +33,7 @@ module sll_m_fdistribu4d_dk
     sll_p_pi
 
   use sll_m_cubic_splines, only: &
-    sll_s_compute_cubic_spline_1d, &
+    sll_s_cubic_spline_1d_compute_interpolant, &
     sll_s_compute_cubic_spline_2d, &
     sll_f_interpolate_from_interpolant_value, &
     sll_f_interpolate_value_2d, &
@@ -334,7 +334,7 @@ module sll_m_fdistribu4d_dk
 
     call sll_s_cubic_spline_1d_init(sp1d_r, Npt1, &
          r_grid(1),r_grid(Nr),sll_p_hermite)
-    call sll_s_compute_cubic_spline_1d(func_r,sp1d_r)
+    call sll_s_cubic_spline_1d_compute_interpolant(func_r,sp1d_r)
 
     do iy = 1,Npt2
       do ix = 1,Npt1
