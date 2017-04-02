@@ -57,7 +57,7 @@ module sll_m_cubic_splines
     sll_f_cubic_spline_1d_eval, &
     sll_s_cubic_spline_1d_free, &
     sll_t_cubic_spline_1d, &
-    sll_s_compute_cubic_spline_2d, &
+    sll_s_cubic_spline_2d_compute_interpolant, &
     sll_s_deposit_value_2d, &
     sll_s_get_coeff_cubic_spline_2d, &
     sll_o_get_x1_delta, &
@@ -1991,7 +1991,7 @@ MAKE_GET_SLOT_FUNCTION(get_x2_delta_cs2d,sll_t_cubic_spline_2d,x2_delta,sll_real
   !> @param[in] data The 2D array with the data for which the cubic spline
   !> decomposition is sought.
   !> @param[inout] spline a pointer to an initialized spline object.
-  subroutine sll_s_compute_cubic_spline_2d( data, spline )
+  subroutine sll_s_cubic_spline_2d_compute_interpolant( data, spline )
     sll_real64, dimension(:,:), intent(in), target :: data  ! data to be fit
     type(sll_t_cubic_spline_2d)        :: spline
     sll_int32 :: bc1
@@ -2050,7 +2050,7 @@ MAKE_GET_SLOT_FUNCTION(get_x2_delta_cs2d,sll_t_cubic_spline_2d,x2_delta,sll_real
             'did not recognize given boundary condition combination.'
        STOP
     end select
-  end subroutine sll_s_compute_cubic_spline_2d
+  end subroutine sll_s_cubic_spline_2d_compute_interpolant
 
   !> @brief
   !> Updated distribution function at time \f$ t^{n+1} \f$

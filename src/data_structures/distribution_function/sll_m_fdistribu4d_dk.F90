@@ -34,7 +34,7 @@ module sll_m_fdistribu4d_dk
 
   use sll_m_cubic_splines, only: &
     sll_s_cubic_spline_1d_compute_interpolant, &
-    sll_s_compute_cubic_spline_2d, &
+    sll_s_cubic_spline_2d_compute_interpolant, &
     sll_f_cubic_spline_1d_eval, &
     sll_f_interpolate_value_2d, &
     sll_s_cubic_spline_1d_init, &
@@ -378,7 +378,7 @@ module sll_m_fdistribu4d_dk
       r_grid(1),r_grid(Nr), &
       theta_grid(1),theta_grid(Ntheta), &
       sll_p_hermite,sll_p_periodic)
-    call sll_s_compute_cubic_spline_2d(func_rtheta,sp2d_rtheta)
+    call sll_s_cubic_spline_2d_compute_interpolant(func_rtheta,sp2d_rtheta)
 
     do iy = 1,Npt2
       do ix = 1,Npt1

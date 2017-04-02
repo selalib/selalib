@@ -16,7 +16,7 @@ program test_deposit_cubic_splines
     sll_p_pi
 
   use sll_m_cubic_splines, only: &
-    sll_s_compute_cubic_spline_2d, &
+    sll_s_cubic_spline_2d_compute_interpolant, &
     sll_s_deposit_value_2d, &
     sll_f_interpolate_value_2d, &
     sll_s_cubic_spline_2d_init, &
@@ -243,8 +243,8 @@ do step=1,nb_step ! ---- * Evolution in time * ----
   fh_bsl(:,Neta2+1)    = fh_bsl(:,1)
   fh_fsl(:,Neta2+1)    = fh_fsl(:,1)
       
-  call sll_s_compute_cubic_spline_2d(fh_bsl,spl_bsl)
-  call sll_s_compute_cubic_spline_2d(fh_fsl,spl_fsl)
+  call sll_s_cubic_spline_2d_compute_interpolant(fh_bsl,spl_bsl)
+  call sll_s_cubic_spline_2d_compute_interpolant(fh_fsl,spl_fsl)
     
   do i=1,Neta1+1
     do j=1,Neta2+1
