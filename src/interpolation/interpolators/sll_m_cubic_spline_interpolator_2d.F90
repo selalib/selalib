@@ -32,7 +32,7 @@ module sll_m_cubic_spline_interpolator_2d
     sll_p_periodic
 
   use sll_m_cubic_splines, only: &
-    sll_s_compute_cubic_spline_2d, &
+    sll_s_cubic_spline_2d_compute_interpolant, &
     sll_o_get_x1_delta, &
     sll_o_get_x1_max, &
     sll_o_get_x1_min, &
@@ -273,7 +273,7 @@ contains
        SLL_ERROR( 'compute_interpolants_cs2d', 'This case is not yet implemented' )
     end if
 
-    call sll_s_compute_cubic_spline_2d( data_array, interpolator%spline )
+    call sll_s_cubic_spline_2d_compute_interpolant( data_array, interpolator%spline )
 
   end subroutine
 
@@ -316,7 +316,7 @@ contains
     ! local variables
     sll_int32 :: i,j
     ! compute the interpolating spline coefficients
-    call sll_s_compute_cubic_spline_2d( data_in, this%spline )
+    call sll_s_cubic_spline_2d_compute_interpolant( data_in, this%spline )
     do j = 1, num_points2
     do i = 1, num_points1
         data_out(i,j) = this%interpolate_from_interpolant_value(eta1(i,j),eta2(i,j))
@@ -359,7 +359,7 @@ contains
     delta_eta1 = sll_o_get_x1_delta( this%spline ) !this%spline%x1_delta  
     delta_eta2 = sll_o_get_x2_delta( this%spline ) !this%spline%x2_delta  
     
-    call sll_s_compute_cubic_spline_2d( data_in, this%spline )
+    call sll_s_cubic_spline_2d_compute_interpolant( data_in, this%spline )
 
     if(this%bc_type1 == sll_p_periodic .and. &
        this%bc_type2 == sll_p_periodic ) then
