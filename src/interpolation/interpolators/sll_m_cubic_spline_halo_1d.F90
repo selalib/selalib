@@ -6,9 +6,7 @@
 
 ! NOTE: Check the initialization of pba_pow(:) below when changing NUM_TERMS.
 ! Usual value (and maximum useful value in terms of double precision accuracy): 27
-!!! #define NUM_TERMS 27
-! Temporarily reduced to 15 terms to enable the test case at 16**6 resolution.
-#define NUM_TERMS 15
+#define NUM_TERMS 27
 
 ! Note: Uncomment one of the following macros to select how powers of p_b_a are computed.
 ! fast, pre-computed array
@@ -16,12 +14,19 @@
 ! slow, repeated computation, original implementation
 !#define PBA_POW(i)   (-p_b_a)**(i)
 !> @ingroup interpolators
+!> @author Katharina Kormann, IPP
 !> @brief
-!! Interpolator 1d using cubic splines on regular mesh with halo cells
-!! @details
-!! the following provides an implementation for the abstract interface
-!! sll_interpolator_1d and define spline interpolation of values in
-!! data define on original grid at points coordinates
+!> Interpolator 1d using cubic splines on regular mesh with halo cells
+!> @details
+!> The module provides an optimized implementation of the interpolator function
+!> interpolate_array_disp for a domain with halo cells, i.e. we do not have
+!> explicit boundary conditions but compute the Lagrange interpolation for a
+!> number of cells provided that enough cells around this domain are present
+!> such that no boundary conditions need to be imposed.
+!> The module also provides a version for periodic boundary conditions.
+!> The implementation is based on the algorithms described in Section 5.4.4
+!> (Fast local spline interpolation) of Sonnendrücker, Numerical Methods for the
+!> Vlasov-Maxwell equations, to appear.
 !!
 module sll_m_cubic_spline_halo_1d
 
@@ -152,12 +157,6 @@ contains
     sll_real64                        :: d1
     sll_int32                         :: i
     sll_int32                         :: np
-    logical, save :: first_call = .true.
-
-    if ((first_call).and.(NUM_TERMS < 27)) then
-      write(*,*) "WARNING: sll_s_cubic_spline_halo_1d uses NUM_TERMS=", NUM_TERMS
-    endif
-    first_call = .false.
 
     SLL_ASSERT( size(f) .ge. num_points-1 )
     SLL_ASSERT( size(d) .ge. num_points )
