@@ -37,7 +37,7 @@ module sll_m_cubic_spline_interpolator_1d
   use sll_m_cubic_splines, only: &
     sll_s_cubic_spline_1d_compute_interpolant, &
     sll_f_cubic_spline_1d_eval_deriv, &
-    sll_s_cubic_spline_1d_interpolate_from_interpolant_disp, &
+    sll_s_cubic_spline_1d_eval_disp, &
     sll_s_interpolate_from_interpolant_array, &
     sll_s_interpolate_from_interpolant_derivatives_eta1, &
     sll_f_interpolate_from_interpolant_value, &
@@ -126,7 +126,7 @@ contains  ! ****************************************************************
     call sll_s_cubic_spline_1d_compute_interpolant( data, this%spline )
 
     ! Evaluate spline at displaced grid points
-    call sll_s_cubic_spline_1d_interpolate_from_interpolant_disp( this%spline, alpha, output_array )
+    call sll_s_cubic_spline_1d_eval_disp( this%spline, alpha, output_array )
        
 
   end subroutine spline_interpolate1d_disp

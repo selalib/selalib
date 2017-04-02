@@ -58,7 +58,7 @@ module sll_m_cubic_splines
     sll_o_get_x2_delta, &
     sll_o_get_x2_max, &
     sll_f_cubic_spline_1d_eval_deriv, &
-    sll_s_cubic_spline_1d_interpolate_from_interpolant_disp, &
+    sll_s_cubic_spline_1d_eval_disp, &
     sll_s_interpolate_from_interpolant_array, &
     sll_s_interpolate_from_interpolant_derivatives_eta1, &
     sll_f_interpolate_from_interpolant_value, &
@@ -2652,7 +2652,7 @@ MAKE_GET_SLOT_FUNCTION(get_x2_delta_cs2d,sll_t_cubic_spline_2d,x2_delta,sll_real
 
 
   !> Computes the interpolated values at each grid point replaced by \a alpha for the precomputed spline coefficients
-  subroutine sll_s_cubic_spline_1d_interpolate_from_interpolant_disp( spline, alpha, output_array )
+  subroutine sll_s_cubic_spline_1d_eval_disp( spline, alpha, output_array )
     type(sll_t_cubic_spline_1d), intent( in ) :: spline !< spline object
     sll_real64, intent( in ) :: alpha !< displacement
     sll_real64, intent( out ) :: output_array(:) !< \a output_array(i) holds the interpolated value at \a x(i)+alpha on output
@@ -2718,9 +2718,9 @@ MAKE_GET_SLOT_FUNCTION(get_x2_delta_cs2d,sll_t_cubic_spline_2d,x2_delta,sll_real
           end if
        end if
     
-  end subroutine sll_s_cubic_spline_1d_interpolate_from_interpolant_disp
+  end subroutine sll_s_cubic_spline_1d_eval_disp
 
-  !> Helper function for sll_s_cubic_spline_1d_interpolate_from_interpolant_disp: evaluate spline in given \a cell and normalized displacement \a dx
+  !> Helper function for sll_s_cubic_spline_1d_eval_disp: evaluate spline in given \a cell and normalized displacement \a dx
   subroutine spline_interpolate_from_interpolant_cell_dx(spline, cell, dx, out)
     type(sll_t_cubic_spline_1d),  intent(in)       :: spline !< spline object
     sll_int32, intent(in)                               :: cell !< cell 
