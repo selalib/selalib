@@ -29,8 +29,8 @@ program cubic_spline_interpolator_1d
     
     call test_for_given_n( .true., error1 )
     call test_for_given_n( .false., error2 )
-    call test_disp_for_given_n( .true., error1 )
-    call test_disp_for_given_n( .false., error2 )
+    call test_disp_for_given_n( .true., error3 )
+    call test_disp_for_given_n( .false., error4 )
 
     if (error1 > tol) then
        print*, 'Failed for fast algorithm.'
@@ -115,7 +115,6 @@ contains
     class(sll_c_interpolator_1d), pointer       :: interp
     type(sll_t_cubic_spline_interpolator_1d), target :: spline
 
-    sll_real64, allocatable, dimension(:) :: point
     sll_real64, allocatable, dimension(:) :: pdata  
     sll_real64, allocatable, dimension(:) :: fdata
     sll_real64, allocatable, dimension(:) :: coord
