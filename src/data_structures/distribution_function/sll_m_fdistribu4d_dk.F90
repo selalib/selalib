@@ -35,7 +35,7 @@ module sll_m_fdistribu4d_dk
   use sll_m_cubic_splines, only: &
     sll_s_cubic_spline_1d_compute_interpolant, &
     sll_s_compute_cubic_spline_2d, &
-    sll_f_interpolate_from_interpolant_value, &
+    sll_f_cubic_spline_1d_eval, &
     sll_f_interpolate_value_2d, &
     sll_s_cubic_spline_1d_init, &
     sll_s_cubic_spline_2d_init, &
@@ -342,7 +342,7 @@ module sll_m_fdistribu4d_dk
         y = ygrid_2d(ix,iy)
         r = sll_f_polar_eta1(x,y,(/0.0_f64/)) ! params doesn't matter for sll_f_polar_eta1 
         r = min(max(r,r_grid(1)),r_grid(Nr))
-        func_xy(ix,iy) = sll_f_interpolate_from_interpolant_value(r,sp1d_r)
+        func_xy(ix,iy) = sll_f_cubic_spline_1d_eval(r,sp1d_r)
       end do
     end do
     call sll_s_cubic_spline_1d_free(sp1d_r)

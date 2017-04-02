@@ -14,7 +14,7 @@ program test_cubic_splines
     sll_s_cubic_spline_1d_compute_interpolant, &
     sll_s_compute_cubic_spline_2d, &
     sll_f_cubic_spline_1d_eval_deriv, &
-    sll_f_interpolate_from_interpolant_value, &
+    sll_f_cubic_spline_1d_eval, &
     sll_f_interpolate_value_2d, &
     sll_f_interpolate_x1_derivative_2d, &
     sll_f_interpolate_x2_derivative_2d, &
@@ -102,13 +102,13 @@ contains
     call sll_s_cubic_spline_1d_compute_interpolant( data, sp1 )
     
     do i=1,np
-       data_interp(i) = sll_f_interpolate_from_interpolant_value(x(i), sp1)
+       data_interp(i) = sll_f_cubic_spline_1d_eval(x(i), sp1)
        deriv_interp(i) = sll_f_cubic_spline_1d_eval_deriv(x(i), sp1)
     end do
     
     x_ngrid = (real(np/2,f64)-0.5_f64)*delta_x
     ref_ngrid(1) = exp(sin(x_ngrid))
-    interp_ngrid(1) = sll_f_interpolate_from_interpolant_value(x_ngrid, sp1)
+    interp_ngrid(1) = sll_f_cubic_spline_1d_eval(x_ngrid, sp1)
     ref_ngrid(2) = cos(x_ngrid)*exp(sin(x_ngrid))
     interp_ngrid(2) = sll_f_cubic_spline_1d_eval_deriv(x_ngrid, sp1)
     
