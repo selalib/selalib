@@ -604,7 +604,7 @@ do step=1,nb_step !-------- * Evolution in time * ---------
   !$OMP END DO
 
   !$OMP MASTER
-  call sll_s_deposit_value_2d(eta1feet,eta2feet,spl_2d,fh_fsl) !function value at the half time
+  call sll_s_cubic_spline_2d_deposit_value(eta1feet,eta2feet,spl_2d,fh_fsl) !function value at the half time
   !$OMP END MASTER
 
   !$OMP BARRIER
@@ -692,7 +692,7 @@ do step=1,nb_step !-------- * Evolution in time * ---------
   !$OMP END DO
 
   !$OMP MASTER
-  call sll_s_deposit_value_2d(eta1feet,eta2feet,spl_2d,fh_fsl)
+  call sll_s_cubic_spline_2d_deposit_value(eta1feet,eta2feet,spl_2d,fh_fsl)
   print"('Step =', i6, ' Time = ', g15.3)", step, real(step*k)
 
   if (plot_enabled) then

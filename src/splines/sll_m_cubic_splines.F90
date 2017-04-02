@@ -58,7 +58,7 @@ module sll_m_cubic_splines
     sll_s_cubic_spline_1d_free, &
     sll_t_cubic_spline_1d, &
     sll_s_cubic_spline_2d_compute_interpolant, &
-    sll_s_deposit_value_2d, &
+    sll_s_cubic_spline_2d_deposit_value, &
     sll_s_get_coeff_cubic_spline_2d, &
     sll_o_get_x1_delta, &
     sll_o_get_x1_max, &
@@ -2055,7 +2055,7 @@ MAKE_GET_SLOT_FUNCTION(get_x2_delta_cs2d,sll_t_cubic_spline_2d,x2_delta,sll_real
   !> @brief
   !> Updated distribution function at time \f$ t^{n+1} \f$
   !> @details
-  !> sll_s_deposit_value_2d(): given a spline that describes the decomposition 
+  !> sll_s_cubic_spline_2d_deposit_value(): given a spline that describes the decomposition 
   !> of the distribution function at time \f$ t^n\f$ , and two 2D arrays x1 and x2 
   !> where the foot of the forward characteristics are stored, returns
   !> a 2D array a_out which is the updated distribution function at time 
@@ -2063,7 +2063,7 @@ MAKE_GET_SLOT_FUNCTION(get_x2_delta_cs2d,sll_t_cubic_spline_2d,x2_delta,sll_real
   !>
   !> the boundary conditions are taken into account and any type of BC are 
   !> allowed
-  subroutine sll_s_deposit_value_2d(x1, x2, spline, a_out)
+  subroutine sll_s_cubic_spline_2d_deposit_value(x1, x2, spline, a_out)
     intrinsic :: real, int
     sll_real64, dimension(1:,1:), intent(in)      :: x1
     sll_real64, dimension(1:,1:), intent(in)      :: x2
@@ -2104,28 +2104,28 @@ MAKE_GET_SLOT_FUNCTION(get_x2_delta_cs2d,sll_t_cubic_spline_2d,x2_delta,sll_real
     
     !if( .not. associated(spline) ) then
     !   ! FIXME: THROW ERROR
-    !   print *, 'ERROR: sll_s_deposit_value_2d(): ', &
+    !   print *, 'ERROR: sll_s_cubic_spline_2d_deposit_value(): ', &
     !        'uninitialized spline object passed as argument. Exiting... '
     !   STOP
     !end if
     
     if ((size(x1,1).ne.spline%num_pts_x1).or.(size(x1,2).ne.spline%num_pts_x2)) then
        ! FIXME: THROW ERROR
-       print *, 'ERROR: sll_s_deposit_value_2d(): '
+       print *, 'ERROR: sll_s_cubic_spline_2d_deposit_value(): '
        write (*,'(a, i8, i8, a, i8, i8, a)') 'array of feets of characteristics needs data of size = (', &
             spline%num_pts_x1, spline%num_pts_x2,') . Passed size: (', size(x1,1), size(x1,2),')'
        STOP
     end if
     if ((size(x2,1).ne.spline%num_pts_x1).or.(size(x2,2).ne.spline%num_pts_x2)) then
        ! FIXME: THROW ERROR
-       print *, 'ERROR: sll_s_deposit_value_2d(): '
+       print *, 'ERROR: sll_s_cubic_spline_2d_deposit_value(): '
        write (*,'(a, i8, i8, a, i8, i8, a)') 'array of feets of characteristics needs data of size = (', &
             spline%num_pts_x1, spline%num_pts_x2,') . Passed size: (', size(x2,1), size(x2,2),')'
        STOP
     end if
     if ((size(a_out,1).ne.spline%num_pts_x1).or.(size(a_out,2).ne.spline%num_pts_x2)) then
        ! FIXME: THROW ERROR
-       print *, 'ERROR: sll_s_deposit_value_2d(): '
+       print *, 'ERROR: sll_s_cubic_spline_2d_deposit_value(): '
        write (*,'(a, i8, i8, a, i8, i8, a)') 'array of feets of characteristics needs data of size = (', &
             spline%num_pts_x1, spline%num_pts_x2,') . Passed size: (', size(a_out,1), size(a_out,2),')'
        STOP
@@ -2344,7 +2344,7 @@ MAKE_GET_SLOT_FUNCTION(get_x2_delta_cs2d,sll_t_cubic_spline_2d,x2_delta,sll_real
       a_out(:,n2) = a_out(:,1)
     end if
     			 
-  end subroutine sll_s_deposit_value_2d
+  end subroutine sll_s_cubic_spline_2d_deposit_value
 
   !> @brief 
   !> Returns the interpolated value of the image of the point (x1,x2)
