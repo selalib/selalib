@@ -40,8 +40,8 @@ module sll_m_cubic_spline_halo_1d
   public :: &
     sll_s_cubic_spline_halo_1d_prepare_exchange, &
     sll_s_cubic_spline_halo_1d_finish_boundary_conditions, &
-    sll_s_cubic_spline_halo_1d_compute, &
-    sll_s_cubic_spline_halo_1d_advect, &
+    sll_s_cubic_spline_halo_1d_compute_interpolant, &
+    sll_s_cubic_spline_halo_1d_eval_disp, &
     sll_s_cubic_spline_halo_1d_periodic
   private
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -87,7 +87,6 @@ contains
        ind_min = 1
     end if
     do i = ind_min, NUM_TERMS
-       !d_0 = d_0 + (-p_b_a)**i * fdata( num_points + si - i )
        d_0 = d_0 + PBA_POW(i) * fdata( num_points + si - i )
     end do
     if ( si < -1 ) then
@@ -98,11 +97,9 @@ contains
        ind_min = 1
     end if
     do i = ind_min, NUM_TERMS
-       !c_np2 = c_np2 + (-p_b_a)**i * fdata( 2+si+i )
        c_np2 = c_np2 + PBA_POW(i) * fdata( 2+si+i )
     end do
     do i = 1, si+1
-       !c_np2 = c_np2 + (-p_b_a)**i * fdata( 2+si-i )
        c_np2 = c_np2 + PBA_POW(i) * fdata( 2+si-i )
     end do
   end subroutine sll_s_cubic_spline_halo_1d_prepare_exchange
@@ -123,7 +120,6 @@ contains
        d_0 = d_0 + fdata( si )
     end if
     do i = 1, si-1
-       !d_0 = d_0 + (-p_b_a)**i * fdata( si - i )
        d_0 = d_0 + PBA_POW(i) * fdata( si - i )
     end do
     d_0 = d_0 * p_r_a
@@ -134,11 +130,9 @@ contains
        ind_min = si+2
     end if
     do i = 1, -si-2
-       !c_np2 = c_np2 + (-p_b_a)**i * fdata( num_points+2+si+i )
        c_np2 = c_np2 + PBA_POW(i) * fdata( num_points+2+si+i )
     end do
     do i = ind_min, NUM_TERMS
-       !c_np2 = c_np2 + (-p_b_a)**i * fdata( num_points+2+si-i )
        c_np2 = c_np2 + PBA_POW(i) * fdata( num_points+2+si-i )
     end do
     c_np2 = c_np2 * p_sqrt3
@@ -146,15 +140,13 @@ contains
 
 
   !> Compute the coefficients of the local interpolating spline (after \a d(0) and \a c(num_points+2) have been computed
-!DIR$ ATTRIBUTES FORCEINLINE :: sll_s_cubic_spline_halo_1d_compute
-  subroutine sll_s_cubic_spline_halo_1d_compute( f, num_points, d, coeffs )
+!DIR$ ATTRIBUTES FORCEINLINE :: sll_s_cubic_spline_halo_1d_compute_interpolant
+  subroutine sll_s_cubic_spline_halo_1d_compute_interpolant( f, num_points, d, coeffs )
     sll_real64, intent( in    )   :: f(0:) !< data values including all points to be interpolated at
     sll_int32,  intent( in    )   :: num_points !< number of local data points
     sll_real64, intent(   out )   :: d(0:) !< helper variable for spline coefficients (vales from forward recursion)
     sll_real64, intent(   out )   :: coeffs(0:) !< spline coefficients
 
-    sll_real64                        :: coeff_tmp
-    sll_real64                        :: d1
     sll_int32                         :: i
     sll_int32                         :: np
 
@@ -171,16 +163,16 @@ contains
        d(i) = p_r_a*(f(i) - p_b*d(i-1))
     end do
     coeffs(np+2) = f(np+2)!d1*r_a
-    ! rest of the coefficients:
+    ! remaining coefficients:
     do i = np+1, 0, -1
        coeffs(i) = p_r_a*(d(i) - p_b*coeffs(i+1))
     end do
-  end subroutine sll_s_cubic_spline_halo_1d_compute
+  end subroutine sll_s_cubic_spline_halo_1d_compute_interpolant
 
 
   !> This function corresponds to the interpolate_array_disp function of the interpolators but the displacement is normalized and between [0,1]
-!DIR$ ATTRIBUTES FORCEINLINE :: sll_s_cubic_spline_halo_1d_advect
-  subroutine sll_s_cubic_spline_halo_1d_advect( coeffs, alpha, num_points, fout)
+!DIR$ ATTRIBUTES FORCEINLINE :: sll_s_cubic_spline_halo_1d_eval_disp
+  subroutine sll_s_cubic_spline_halo_1d_eval_disp( coeffs, alpha, num_points, fout)
     sll_real64, intent( in    ) :: coeffs(0: ) !< Spline coefficients (centered around the cell into which we displace, i.e. integer part of displacement is already build in here)
     sll_real64, intent( in    ) :: alpha !< Displacement normalized by dx and only remainder of modulo 1   (in [0,1])
     sll_int32,  intent( in    ) :: num_points !< Number of local data points
@@ -202,7 +194,7 @@ contains
        t4       =  alpha*( alpha*( alpha*(cip2 - t3) + t3) + t3) + cip1
        fout(cell) = p_inv_6*(t2 + t4)
     end do
-  end subroutine sll_s_cubic_spline_halo_1d_advect
+  end subroutine sll_s_cubic_spline_halo_1d_eval_disp
 
 
 !DIR$ ATTRIBUTES FORCEINLINE :: sll_s_cubic_spline_halo_1d_periodic
@@ -212,10 +204,8 @@ contains
     sll_int32,  intent( in    ) :: num_cells
     sll_real64, intent(   out ) :: fout(:)
 
-    sll_real64 :: d_0, c_np2
-
     call sll_s_cubic_spline_halo_1d_compute_periodic( num_cells, fout, fin )
-    call sll_s_cubic_spline_halo_1d_advect ( fin, alpha, num_cells, fout )
+    call sll_s_cubic_spline_halo_1d_eval_disp ( fin, alpha, num_cells, fout )
   end subroutine sll_s_cubic_spline_halo_1d_periodic
 
 
@@ -226,8 +216,6 @@ contains
     sll_real64, intent(   out )   :: d(0:) !< helper variable for spline coefficients (vales from forward recursion)
     sll_real64, intent( inout )   :: f_coeffs(0:) !< on input: data values including all points to be interpolated at; on output: spline coefficients
 
-    sll_real64                        :: coeff_tmp
-    sll_real64                        :: d1
     sll_int32                         :: i
     sll_int32                         :: np
     SLL_ASSERT( size(d) .ge. num_points )
@@ -252,7 +240,7 @@ contains
     end do
     f_coeffs(np) = f_coeffs(np)*p_r_a
 
-    ! rest of the coefficients:
+    ! remaining coefficients:
     do i = np-1, 1, -1
        f_coeffs(i) = p_r_a*(d(i-1) - p_b*f_coeffs(i+1))
     end do
