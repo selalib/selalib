@@ -36,7 +36,7 @@ module sll_m_fdistribu4d_dk
     sll_s_cubic_spline_1d_compute_interpolant, &
     sll_s_cubic_spline_2d_compute_interpolant, &
     sll_f_cubic_spline_1d_eval, &
-    sll_f_interpolate_value_2d, &
+    sll_f_cubic_spline_2d_eval, &
     sll_s_cubic_spline_1d_init, &
     sll_s_cubic_spline_2d_init, &
     sll_t_cubic_spline_1d, &
@@ -388,7 +388,7 @@ module sll_m_fdistribu4d_dk
         r     = min(max(r,r_grid(1)),r_grid(Nr))
         theta = sll_f_polar_eta2(x,y,whatever)
         theta = modulo(theta,2._f64*sll_p_pi)
-        func_xy(ix,iy) = sll_f_interpolate_value_2d(r,theta,sp2d_rtheta)
+        func_xy(ix,iy) = sll_f_cubic_spline_2d_eval(r,theta,sp2d_rtheta)
       end do
     end do
     call sll_s_cubic_spline_2d_free(sp2d_rtheta)

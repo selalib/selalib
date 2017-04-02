@@ -884,7 +884,7 @@ do j=1,n
     x = ct*r(i)-xj
     y = st*r(i)+yj
     if (abs(x)<eta_max .and. abs(y)<eta_max) then
-      fvr(i,j)=sll_f_interpolate_value_2d(x,y,spl)
+      fvr(i,j)=sll_f_cubic_spline_2d_eval(x,y,spl)
     else
       fvr(i,j)=0.0_f64
     endif

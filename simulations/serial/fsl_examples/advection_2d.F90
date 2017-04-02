@@ -18,7 +18,7 @@ program test_deposit_cubic_splines
   use sll_m_cubic_splines, only: &
     sll_s_cubic_spline_2d_compute_interpolant, &
     sll_s_deposit_value_2d, &
-    sll_f_interpolate_value_2d, &
+    sll_f_cubic_spline_2d_eval, &
     sll_s_cubic_spline_2d_init, &
     sll_t_cubic_spline_2d
 
@@ -293,7 +293,7 @@ do step=1,nb_step ! ---- * Evolution in time * ----
       call apply_bc()
       
       ! --- Interpolation ---
-      fh_bsl(i,j)    = sll_f_interpolate_value_2d(eta1,eta2,spl_bsl)
+      fh_bsl(i,j)    = sll_f_cubic_spline_2d_eval(eta1,eta2,spl_bsl)
         
       ! ------------ FSL part -----------------
         

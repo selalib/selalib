@@ -65,7 +65,7 @@ module sll_m_cubic_splines
     sll_o_get_x1_min, &
     sll_o_get_x2_delta, &
     sll_o_get_x2_max, &
-    sll_f_interpolate_value_2d, &
+    sll_f_cubic_spline_2d_eval, &
     sll_f_interpolate_x1_derivative_2d, &
     sll_f_interpolate_x2_derivative_2d, &
     sll_s_cubic_spline_2d_init, &
@@ -2353,8 +2353,8 @@ MAKE_GET_SLOT_FUNCTION(get_x2_delta_cs2d,sll_t_cubic_spline_2d,x2_delta,sll_real
   !> @param[in] x2 second coordinate.
   !> @param[in] spline pointer to spline object.
   !> @returns the interpolated value of the image of the point (x1,x2)
-  function sll_f_interpolate_value_2d( x1, x2, spline )
-    sll_real64                          :: sll_f_interpolate_value_2d
+  function sll_f_cubic_spline_2d_eval( x1, x2, spline )
+    sll_real64                          :: sll_f_cubic_spline_2d_eval
     intrinsic                           :: associated, int, real
     sll_real64, intent(in)              :: x1
     sll_real64, intent(in)              :: x2
@@ -2416,8 +2416,8 @@ MAKE_GET_SLOT_FUNCTION(get_x2_delta_cs2d,sll_t_cubic_spline_2d,x2_delta,sll_real
     t3        = 3.0_f64*cip1
     t2        = cdx*(cdx*(cdx*(cim1 - t1) + t1) + t1) + ci
     t4        =  dx*( dx*( dx*(cip2 - t3) + t3) + t3) + cip1
-    sll_f_interpolate_value_2d = (1.0_f64/6.0_f64)*(t2 + t4)
-  end function sll_f_interpolate_value_2d
+    sll_f_cubic_spline_2d_eval = (1.0_f64/6.0_f64)*(t2 + t4)
+  end function sll_f_cubic_spline_2d_eval
 
   ! sll_f_interpolate_x1_derivative_2d(): given discrete data f(i,j) that are
   ! described by a 2-dimensional cubic spline fit s(x1,x2), where the
