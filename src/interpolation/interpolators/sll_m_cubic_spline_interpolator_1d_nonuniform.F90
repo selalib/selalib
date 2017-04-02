@@ -20,7 +20,7 @@ module sll_m_cubic_spline_interpolator_1d_nonuniform
   use sll_m_cubic_splines, only: &
     sll_s_cubic_spline_1d_compute_interpolant, &
     sll_f_cubic_spline_1d_eval_deriv, &
-    sll_s_interpolate_from_interpolant_array, &
+    sll_s_cubic_spline_1d_eval_array, &
     sll_s_interpolate_from_interpolant_derivatives_eta1, &
     sll_f_interpolate_from_interpolant_value, &
     sll_s_cubic_spline_1d_init, &
@@ -93,7 +93,7 @@ contains  ! ****************************************************************
     sll_real64, dimension(num_pts), intent(out)      :: output_array
     ! compute the interpolating spline coefficients
     call sll_s_cubic_spline_1d_compute_interpolant( data, this%spline )
-    call sll_s_interpolate_from_interpolant_array( coordinates, output_array, num_pts, &
+    call sll_s_cubic_spline_1d_eval_array( coordinates, output_array, num_pts, &
          this%spline )
   end subroutine spline_interpolate1d
 
@@ -136,7 +136,7 @@ contains  ! ****************************************************************
           end do
        endif
     end if
-    call sll_s_interpolate_from_interpolant_array( coordinates, output_array, num_pts, &
+    call sll_s_cubic_spline_1d_eval_array( coordinates, output_array, num_pts, &
          this%spline )
   end subroutine spline_interpolate1d_disp
 
@@ -178,7 +178,7 @@ contains  ! ****************************************************************
           end do
        endif
     end if
-    call sll_s_interpolate_from_interpolant_array( coordinates, data, num_pts, &
+    call sll_s_cubic_spline_1d_eval_array( coordinates, data, num_pts, &
          this%spline )
   end subroutine spline_interpolate1d_disp_inplace
 
@@ -221,7 +221,7 @@ contains  ! ****************************************************************
     sll_int32,  intent(in)                       :: num_pts
     sll_real64, dimension(num_pts), intent(in)   :: vals_to_interpolate
     sll_real64, dimension(num_pts), intent(out)  :: output_array
-    call sll_s_interpolate_from_interpolant_array( vals_to_interpolate, output_array, &
+    call sll_s_cubic_spline_1d_eval_array( vals_to_interpolate, output_array, &
          num_pts, interpolator%spline )
   end subroutine interpolate_values_cs1d
 

@@ -59,7 +59,7 @@ module sll_m_cubic_splines
     sll_o_get_x2_max, &
     sll_f_cubic_spline_1d_eval_deriv, &
     sll_s_cubic_spline_1d_eval_disp, &
-    sll_s_interpolate_from_interpolant_array, &
+    sll_s_cubic_spline_1d_eval_array, &
     sll_s_interpolate_from_interpolant_derivatives_eta1, &
     sll_f_interpolate_from_interpolant_value, &
     sll_f_interpolate_value_2d, &
@@ -936,7 +936,7 @@ MAKE_GET_SLOT_FUNCTION(get_x2_delta_cs2d,sll_t_cubic_spline_2d,x2_delta,sll_real
   !> interpolated.
   !> @param[inout] spline the spline object pointer, duly initialized and 
   !> already operated on by the sll_s_cubic_spline_1d_compute_interpolant() subroutine.
-  subroutine sll_s_interpolate_from_interpolant_array( a_in, a_out, n, spline )
+  subroutine sll_s_cubic_spline_1d_eval_array( a_in, a_out, n, spline )
     intrinsic                               :: associated, int, real
     sll_int32, intent(in)                   :: n
     sll_real64, dimension(1:n), intent(in)  :: a_in
@@ -985,9 +985,9 @@ MAKE_GET_SLOT_FUNCTION(get_x2_delta_cs2d,sll_t_cubic_spline_2d,x2_delta,sll_real
        t2       = cdx*(cdx*(cdx*(cim1 - t1) + t1) + t1) + ci
        t4       =  dx*( dx*( dx*(cip2 - t3) + t3) + t3) + cip1
        a_out(i) = (1.0_f64/6.0_f64)*(t2 + t4)
-       !print*,'sll_s_interpolate_from_interpolant_array', i, a_out(i)
+       !print*,'sll_s_cubic_spline_1d_eval_array', i, a_out(i)
     end do
-  end subroutine sll_s_interpolate_from_interpolant_array
+  end subroutine sll_s_cubic_spline_1d_eval_array
 
 
   ! FIXME: The following function is not in the unit test.
