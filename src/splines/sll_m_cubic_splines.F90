@@ -64,7 +64,7 @@ module sll_m_cubic_splines
     sll_o_get_x1_max, &
     sll_o_get_x1_min, &
     sll_o_get_x2_delta, &
-    sll_o_get_x2_max, &
+    sll_s_cubic_spline_2d_get_x2_max, &
     sll_f_cubic_spline_2d_eval, &
     sll_f_cubic_spline_2d_eval_deriv_x1, &
     sll_f_cubic_spline_2d_eval_deriv_x2, &
@@ -173,10 +173,6 @@ module sll_m_cubic_splines
      module procedure get_delta_cs1d, get_x1_delta_cs2d
   end interface sll_o_get_x1_delta
 
-  interface sll_o_get_x2_max
-     module procedure get_x2_max_cs2d
-  end interface sll_o_get_x2_max
-
   interface sll_o_get_x2_delta
      module procedure get_x2_delta_cs2d
   end interface sll_o_get_x2_delta
@@ -229,7 +225,7 @@ MAKE_GET_SLOT_FUNCTION(get_delta_cs1d,   sll_t_cubic_spline_1d, delta,sll_real64
 MAKE_GET_SLOT_FUNCTION(get_x1_min_cs2d,  sll_t_cubic_spline_2d, x1_min, sll_real64)
 MAKE_GET_SLOT_FUNCTION(get_x1_max_cs2d,  sll_t_cubic_spline_2d, x1_max, sll_real64)
 MAKE_GET_SLOT_FUNCTION(get_x2_min_cs2d,  sll_t_cubic_spline_2d, x2_min, sll_real64)
-MAKE_GET_SLOT_FUNCTION(get_x2_max_cs2d,  sll_t_cubic_spline_2d, x2_max, sll_real64)
+MAKE_GET_SLOT_FUNCTION(sll_s_cubic_spline_2d_get_x2_max,  sll_t_cubic_spline_2d, x2_max, sll_real64)
 MAKE_GET_SLOT_FUNCTION(get_x1_delta_cs2d,sll_t_cubic_spline_2d,x1_delta,sll_real64)
 MAKE_GET_SLOT_FUNCTION(get_x2_delta_cs2d,sll_t_cubic_spline_2d,x2_delta,sll_real64)
 
