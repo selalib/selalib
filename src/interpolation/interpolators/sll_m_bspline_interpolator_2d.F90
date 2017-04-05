@@ -32,7 +32,7 @@ module sll_m_bspline_interpolator_2d
 
   use sll_m_bsplines, only: &
     sll_o_compute_bspline_2d, &
-    sll_f_interpolate_value_2d, &
+    sll_f_cubic_spline_2d_eval, &
     sll_f_new_bspline_2d, &
     sll_t_bspline_2d
 
@@ -285,7 +285,7 @@ contains
 
     sll_real64 :: val
 
-    val = sll_f_interpolate_value_2d( interpolator%spline, eta1, eta2, 0, 0 )
+    val = sll_f_cubic_spline_2d_eval( interpolator%spline, eta1, eta2, 0, 0 )
 
   end function
 
@@ -297,7 +297,7 @@ contains
 
     sll_real64 :: val
 
-    val = sll_f_interpolate_value_2d( interpolator%spline, eta1, eta2, 1, 0 )
+    val = sll_f_cubic_spline_2d_eval( interpolator%spline, eta1, eta2, 1, 0 )
 
   end function
 
@@ -309,7 +309,7 @@ contains
 
     sll_real64 :: val
 
-    val = sll_f_interpolate_value_2d( interpolator%spline, eta1, eta2, 0, 1 )
+    val = sll_f_cubic_spline_2d_eval( interpolator%spline, eta1, eta2, 0, 1 )
 
   end function
 
