@@ -1,7 +1,7 @@
 ADD_LIBRARY( sll_lagrange_interpolation STATIC
              sll_m_lagrange_interpolation.F90
              sll_m_lagrange_interpolation_1d.F90
-             sll_m_lagrange_fast.F90)
+             sll_m_lagrange_interpolation_1d_fast.F90)
 
 TARGET_LINK_LIBRARIES( sll_lagrange_interpolation
   sll_utilities
