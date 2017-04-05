@@ -11,7 +11,7 @@ program test_lagrange_interpolation
 
   use sll_m_lagrange_interpolation_1d, only: &
     sll_s_compute_lagrange_interpolation_1d, &
-    sll_s_interpolate_from_interpolant_array, &
+    sll_s_cubic_spline_1d_eval_array, &
     sll_f_new_lagrange_interpolation_1d, &
     sll_t_lagrange_interpolation_1d
 
@@ -42,7 +42,7 @@ diff=0.0_f64
 
 l_i => sll_f_new_lagrange_interpolation_1d(num_points,xmin,xmax,sll_p_periodic,d)
 call sll_s_compute_lagrange_interpolation_1d(l_i)
-call sll_s_interpolate_from_interpolant_array(fi,-alpha,l_i)
+call sll_s_cubic_spline_1d_eval_array(fi,-alpha,l_i)
 do i=1,num_points
  !print*,"interpolated value = ", l_i%data_out(i), " , Correct value = ",f(coord(i),num_points)
  diff=max(diff,abs(f(coord(i),num_points)-l_i%data_out(i)))

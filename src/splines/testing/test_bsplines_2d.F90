@@ -64,7 +64,7 @@ call cpu_time(t1)
 call sll_s_interpolate_array_values_2d(bspline_2d, nx, ny, gtau, htau, 0, 0)
 !do j=1,ny
 !  do i=1,nx
-!    htau(i,j) = sll_f_interpolate_value_2d(bspline_2d, taux(i), tauy(j), 0, 0)
+!    htau(i,j) = sll_f_cubic_spline_2d_eval(bspline_2d, taux(i), tauy(j), 0, 0)
 !  end do
 !end do
 
