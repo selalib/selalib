@@ -46,8 +46,8 @@ use sll_m_boundary_condition_descriptors, only: &
   sll_p_periodic
 
 use sll_m_cubic_splines, only:     &
-  sll_s_compute_cubic_spline_2d,   &
-  sll_s_get_coeff_cubic_spline_2d, &
+  sll_s_cubic_spline_2d_compute_interpolant,   &
+  sll_s_cubic_spline_2d_get_coeff, &
   sll_s_cubic_spline_2d_init,       &
   sll_t_cubic_spline_2d
 
@@ -3337,8 +3337,8 @@ endif
   
 if(present(rho_values))then
   if(es%use_cubic_splines)then
-    call sll_s_compute_cubic_spline_2d( rho_values, es%cubic_spline )
-    call sll_s_get_coeff_cubic_spline_2d(es%cubic_spline,es%rho_coeff_1d)
+    call sll_s_cubic_spline_2d_compute_interpolant( rho_values, es%cubic_spline )
+    call sll_s_cubic_spline_2d_get_coeff(es%cubic_spline,es%rho_coeff_1d)
   else
   SLL_ERROR('sll_s_set_rho_coefficients_coordinates_elliptic_eq_prototype','spline coeff computed only with cubic splines for the moment if precompute_rhs is true')                 
   endif

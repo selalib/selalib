@@ -185,11 +185,13 @@ end if
 
 call cpu_time(t1)
 
-do j = 1,n2
-  do i = 1,n1
-    y(i,j) = sll_f_interpolate_value_2d( bspline_2d, x1(i,j),x2(i,j))
-  end do
-end do
+! evaluate interpolation error at mesh points and print out
+!call sll_s_interpolate_array_values_2d(bspline_2d, nx, ny, gtau, htau, 0, 0)
+!do j=1,ny
+!  do i=1,nx
+!    htau(i,j) = sll_f_cubic_spline_2d_eval(bspline_2d, taux(i), tauy(j), 0, 0)
+!  end do
+!end do
 
 err1 = maxval(abs(y-cos(2*pi*x1)*cos(2*pi*x2)))
 if (err1 > tol) then
