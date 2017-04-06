@@ -18,14 +18,14 @@ module sll_m_cubic_spline_interpolator_1d_nonuniform
     sll_t_cubic_nonunif_spline_1d
 
   use sll_m_cubic_splines, only: &
-    sll_s_compute_cubic_spline_1d, &
-    sll_f_interpolate_derivative, &
-    sll_s_interpolate_from_interpolant_array, &
-    sll_s_interpolate_from_interpolant_derivatives_eta1, &
-    sll_f_interpolate_from_interpolant_value, &
-    sll_f_new_cubic_spline_1d, &
+    sll_s_cubic_spline_1d_compute_interpolant, &
+    sll_f_cubic_spline_1d_eval_deriv, &
+    sll_s_cubic_spline_1d_eval_array, &
+    sll_s_cubic_spline_1d_eval_deriv, &
+    sll_f_cubic_spline_1d_eval, &
+    sll_s_cubic_spline_1d_init, &
     sll_t_cubic_spline_1d, &
-    sll_o_delete
+    sll_s_cubic_spline_1d_free
 
   use sll_m_interpolators_1d_base, only: &
     sll_c_interpolator_1d
@@ -44,7 +44,7 @@ module sll_m_cubic_spline_interpolator_1d_nonuniform
      sll_real64, dimension(:), pointer      :: interpolation_points !< points
      sll_int32                              :: num_points     !< size
      sll_int32                              :: bc_type        !< boundary condition
-     type(sll_t_cubic_spline_1d), pointer     :: spline         !< cubic spline
+     type(sll_t_cubic_spline_1d)            :: spline         !< cubic spline
      type(sll_t_cubic_nonunif_spline_1d), pointer :: nonunif_spline !< spline
    contains
      !> PLEASE ADD DOCUMENTATION
@@ -92,8 +92,8 @@ contains  ! ****************************************************************
     sll_real64, dimension(:), intent(in)   :: data
     sll_real64, dimension(num_pts), intent(out)      :: output_array
     ! compute the interpolating spline coefficients
-    call sll_s_compute_cubic_spline_1d( data, this%spline )
-    call sll_s_interpolate_from_interpolant_array( coordinates, output_array, num_pts, &
+    call sll_s_cubic_spline_1d_compute_interpolant( data, this%spline )
+    call sll_s_cubic_spline_1d_eval_array( coordinates, output_array, num_pts, &
          this%spline )
   end subroutine spline_interpolate1d
 
@@ -110,7 +110,7 @@ contains  ! ****************************************************************
     sll_real64 :: xmin, xmax
     sll_int32 :: i
     ! compute the interpolating spline coefficients
-    call sll_s_compute_cubic_spline_1d( data, this%spline )
+    call sll_s_cubic_spline_1d_compute_interpolant( data, this%spline )
     ! compute array of coordinates where interpolation is performed from displacement
     length = this%interpolation_points(num_pts) - &
              this%interpolation_points(1)
@@ -136,7 +136,7 @@ contains  ! ****************************************************************
           end do
        endif
     end if
-    call sll_s_interpolate_from_interpolant_array( coordinates, output_array, num_pts, &
+    call sll_s_cubic_spline_1d_eval_array( coordinates, output_array, num_pts, &
          this%spline )
   end subroutine spline_interpolate1d_disp
 
@@ -152,7 +152,7 @@ contains  ! ****************************************************************
     sll_real64 :: xmin, xmax
     sll_int32 :: i
     ! compute the interpolating spline coefficients
-    call sll_s_compute_cubic_spline_1d( data, this%spline )
+    call sll_s_cubic_spline_1d_compute_interpolant( data, this%spline )
     ! compute array of coordinates where interpolation is performed from displacement
     length = this%interpolation_points(num_pts) - &
              this%interpolation_points(1)
@@ -178,7 +178,7 @@ contains  ! ****************************************************************
           end do
        endif
     end if
-    call sll_s_interpolate_from_interpolant_array( coordinates, data, num_pts, &
+    call sll_s_cubic_spline_1d_eval_array( coordinates, data, num_pts, &
          this%spline )
   end subroutine spline_interpolate1d_disp_inplace
 
@@ -203,7 +203,7 @@ contains  ! ****************************************************************
        SLL_ERROR( 'compute_interpolants_cs1d', 'This case is not yet implemented' )
     end if
 
-    call sll_s_compute_cubic_spline_1d( data_array, interpolator%spline )
+    call sll_s_cubic_spline_1d_compute_interpolant( data_array, interpolator%spline )
 
   end subroutine
 
@@ -221,7 +221,7 @@ contains  ! ****************************************************************
     sll_int32,  intent(in)                       :: num_pts
     sll_real64, dimension(num_pts), intent(in)   :: vals_to_interpolate
     sll_real64, dimension(num_pts), intent(out)  :: output_array
-    call sll_s_interpolate_from_interpolant_array( vals_to_interpolate, output_array, &
+    call sll_s_cubic_spline_1d_eval_array( vals_to_interpolate, output_array, &
          num_pts, interpolator%spline )
   end subroutine interpolate_values_cs1d
 
@@ -235,7 +235,7 @@ contains  ! ****************************************************************
     sll_int32,  intent(in)                 :: num_pts
     sll_real64, dimension(:), intent(in)   :: vals_to_interpolate
     sll_real64, dimension(:), intent(out)  :: output_array
-    call sll_s_interpolate_from_interpolant_derivatives_eta1( vals_to_interpolate, output_array, &
+    call sll_s_cubic_spline_1d_eval_deriv( vals_to_interpolate, output_array, &
          num_pts, interpolator%spline )
   end subroutine interpolate_derivatives_cs1d
 
@@ -245,14 +245,14 @@ contains  ! ****************************************************************
     class(sll_t_cubic_spline_interpolator_1d_nonuniform), intent(in) :: interpolator
     sll_real64 :: val
     sll_real64, intent(in) :: eta1
-    val = sll_f_interpolate_from_interpolant_value( eta1, interpolator%spline )
+    val = sll_f_cubic_spline_1d_eval( eta1, interpolator%spline )
   end function
 
   function interpolate_deriv1_cs1d( interpolator, eta1 ) result(val)
     class(sll_t_cubic_spline_interpolator_1d_nonuniform), intent(in) :: interpolator
     sll_real64             :: val
     sll_real64, intent(in) :: eta1
-    val = sll_f_interpolate_derivative(eta1,interpolator%spline)
+    val = sll_f_cubic_spline_1d_eval_deriv(eta1,interpolator%spline)
   end function
 
 !PN DEFINED BUT NOT USED
@@ -260,7 +260,7 @@ contains  ! ****************************************************************
 !    class(sll_t_cubic_spline_interpolator_1d_nonuniform), intent(in) :: interpolator
 !    sll_real64 :: val
 !    sll_real64, intent(in) :: eta1
-!    val = sll_f_interpolate_derivative(eta1,interpolator%spline)
+!    val = sll_f_cubic_spline_1d_eval_deriv(eta1,interpolator%spline)
 !  end function
 
   ! Why is the name of this function changing depending on the standard?
@@ -297,21 +297,23 @@ contains  ! ****************************************************************
     end do
     interpolator%bc_type = bc_type
     if (present(slope_left).and.present(slope_right)) then
-       interpolator%spline => sll_f_new_cubic_spline_1d( &
+       call sll_s_cubic_spline_1d_init( &
+            interpolator%spline, &
             num_points, &
             xmin, xmax, &
             bc_type, &
             slope_left, &
             slope_right )
     else
-       interpolator%spline => &
-            sll_f_new_cubic_spline_1d(num_points, xmin, xmax, bc_type)
+       call sll_s_cubic_spline_1d_init( &
+            interpolator%spline, &
+            num_points, xmin, xmax, bc_type)
     end if
   end subroutine
 
   subroutine delete_cs1d( obj )
     class(sll_t_cubic_spline_interpolator_1d_nonuniform) :: obj
-    call sll_o_delete(obj%spline)
+    call sll_s_cubic_spline_1d_free(obj%spline)
   end subroutine delete_cs1d
 
 

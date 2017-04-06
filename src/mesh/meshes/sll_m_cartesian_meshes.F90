@@ -156,7 +156,7 @@ module sll_m_cartesian_meshes
   end type sll_t_cartesian_mesh_4d
 
 
-  !> 6D cartesian mesh 
+  !> 6D cartesian mesh
   type, public :: sll_t_cartesian_mesh_6d
      sll_int32  :: num_cells(6)  !< number of cells in each direction
      sll_real64 :: eta_min(6)    !< minimum value of eta along each direction
