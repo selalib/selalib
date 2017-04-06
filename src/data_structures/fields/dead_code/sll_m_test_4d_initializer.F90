@@ -190,7 +190,7 @@ contains
     sll_real64 :: vy_min
     sll_real64 :: vy_max
     sll_real64 :: v_thermal
-    type(sll_collective_t), pointer :: col
+    type(sll_t_collective_t), pointer :: col
     sll_real64 :: delta1
     sll_real64 :: delta2
     sll_real64 :: delta3
@@ -290,7 +290,7 @@ contains
 !!$    sll_real64 :: vy_min
 !!$    sll_real64 :: vy_max
 !!$    sll_real64 :: v_thermal
-!!$    type(sll_collective_t), pointer :: col
+!!$    type(sll_t_collective_t), pointer :: col
 !!$    sll_real64 :: delta1
 !!$    sll_real64 :: delta2
 !!$    sll_real64 :: delta3

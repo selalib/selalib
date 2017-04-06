@@ -12,7 +12,7 @@ module sll_m_lagrange_interpolation_1d
 
   public :: &
     sll_s_compute_lagrange_interpolation_1d, &
-    sll_s_interpolate_from_interpolant_array, &
+    sll_s_cubic_spline_1d_eval_array, &
     sll_f_new_lagrange_interpolation_1d, &
     sll_t_lagrange_interpolation_1d
 
@@ -102,7 +102,7 @@ subroutine sll_s_compute_lagrange_interpolation_1d(lagrange)
 end subroutine sll_s_compute_lagrange_interpolation_1d
 
 !> This function computes the value at the grid points displacement by -alpha
-subroutine sll_s_interpolate_from_interpolant_array(fi,alpha,lagrange)
+subroutine sll_s_cubic_spline_1d_eval_array(fi,alpha,lagrange)
 type(sll_t_lagrange_interpolation_1d), pointer :: lagrange !< \a lagrange is the lagrange interpolator object
 sll_real64, intent(in) :: alpha !< \a alpha is the (negative) displacement
 sll_int32 ::i,j,index_gap
@@ -176,7 +176,7 @@ case default
 end select
 end if
 
-end subroutine sll_s_interpolate_from_interpolant_array 
+end subroutine sll_s_cubic_spline_1d_eval_array 
  
  
 subroutine delete_lagrange_interpolation_1D( sll_m_lagrange_interpolation )
