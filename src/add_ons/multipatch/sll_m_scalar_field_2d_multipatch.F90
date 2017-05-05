@@ -52,7 +52,7 @@ module sll_m_scalar_field_2d_multipatch
 
   use sll_m_scalar_field_2d, only: &
     sll_f_new_scalar_field_2d_discrete, &
-    sll_t_scalar_field_2d_discrete_ptr
+    sll_t_scalar_field_2d_discrete
 
   use sll_m_utilities, only: &
     sll_s_int2string, &
@@ -73,8 +73,7 @@ module sll_m_scalar_field_2d_multipatch
      sll_int32 :: num_patches
      character(len=128) :: field_name
      type(sll_t_coordinate_transformation_multipatch_2d), pointer    :: transf
-     type(sll_t_scalar_field_2d_discrete_ptr), dimension(:), pointer :: fields &
-          => null()
+     type(sll_t_scalar_field_2d_discrete), dimension(:), pointer :: fields 
      type(sll_t_arbitrary_degree_spline_interpolator_2d_ptr), dimension(:), pointer :: interps &
           => null()
      ! to be used if the field is supposed to allocate its own data and so
@@ -278,8 +277,8 @@ contains   ! *****************************************************************
        print *, 'created interpolator for patch ', i
        print *, "num cells = ", lm%num_cells1, lm%num_cells2
  
-      SLL_ALLOCATE(fmp%fields(i+1)%f, ierr)
-      call fmp%fields(i+1)%f%init( &
+      !SLL_ALLOCATE(fmp%fields(i+1)%f, ierr)
+      call fmp%fields(i+1)%init( &
             patch_name, &
             fmp%interps(i+1)%interp, &
             fmp%get_transformation(i), &
@@ -366,7 +365,7 @@ contains   ! *****************************************************************
 
     num_patches = field%get_number_patches()
     do i=0,num_patches-1
-       call field%fields(i+1)%f%free()
+       call field%fields(i+1)%free()
        call field%interps(i+1)%interp%delete()
        SLL_DEALLOCATE_ARRAY(field%buffers0(i+1)%array,ierr)
        SLL_DEALLOCATE_ARRAY(field%buffers1(i+1)%array,ierr)
@@ -429,7 +428,7 @@ contains   ! *****************************************************************
     field%owns_memory = .true.
     ! And link each patch with the newly allocated memory.
     do i=0,num_patches-1
-       call field%fields(i+1)%f%set_field_data(field%patch_data(i+1)%array)
+       call field%fields(i+1)%set_field_data(field%patch_data(i+1)%array)
     end do
 
     print *, "entering second loop"
@@ -440,8 +439,8 @@ contains   ! *****************************************************************
     ! simply be to reset the pointer of the field so that it knows instantly
     ! if the data is altered.
     do i=0,num_patches-1
-       call field%fields(i+1)%f%free_internal_data_copy()
-       call field%fields(i+1)%f%reset_data_pointer(field%patch_data(i+1)%array)
+       call field%fields(i+1)%free_internal_data_copy()
+       call field%fields(i+1)%reset_data_pointer(field%patch_data(i+1)%array)
     end do
   end subroutine allocate_memory_sfmp2d
 
@@ -462,14 +461,14 @@ contains   ! *****************************************************************
     ! writes the name of the field, etc.
     SLL_ASSERT( size(values,1) >= numpts1 )
     SLL_ASSERT( size(values,2) >= numpts2 )
-    call mp%fields(patch+1)%f%set_field_data(values)
+    call mp%fields(patch+1)%set_field_data(values)
   end subroutine set_field_data_sfmp2d
 
   function get_patch_data_ptr_sfmp2d( mp, patch ) result(ptr)
     sll_real64, dimension(:,:), pointer                  :: ptr
     class(sll_t_scalar_field_multipatch_2d), intent(inout) :: mp
     sll_int32, intent(in)                                :: patch
-    ptr => mp%fields(patch+1)%f%get_data_pointer()
+    ptr => mp%fields(patch+1)%get_data_pointer()
   end function get_patch_data_ptr_sfmp2d
 
   subroutine set_patch_data_ptr_sfmp2d( mp, patch, ptr )
@@ -486,13 +485,13 @@ contains   ! *****************************************************************
     ! their data via a pointer, the following call will be copying lots of
     ! arrays...
     do ipatch=0,mp%num_patches-1
-       call mp%fields(ipatch+1)%f%set_field_data(mp%patch_data(ipatch+1)%array)
+       call mp%fields(ipatch+1)%set_field_data(mp%patch_data(ipatch+1)%array)
     end do
     ! patches must agree on the compatibility in internal borders before
     ! individually launching the update coefficients per patch.
     call compute_compatible_derivatives_in_borders(mp)
     do ipatch=0,mp%num_patches-1
-       call mp%fields(ipatch+1)%f%update_interpolation_coefficients( )
+       call mp%fields(ipatch+1)%update_interpolation_coefficients( )
     end do
   end subroutine update_interp_coeffs_sfmp2d
 
@@ -790,7 +789,7 @@ contains   ! *****************************************************************
     sll_real64, intent(in)                              :: eta2
     sll_int32, intent(in)                               :: patch
     SLL_ASSERT( (patch >= 0) .and. (patch < mp%num_patches) )
-    res = mp%fields(patch+1)%f%value_at_point(eta1,eta2)
+    res = mp%fields(patch+1)%value_at_point(eta1,eta2)
   end function value_at_pt_sfmp2d
 
   function value_at_indices_sfmp2d( mp, i, j, patch ) result(res)
@@ -800,7 +799,7 @@ contains   ! *****************************************************************
     sll_int32, intent(in)                            :: j
     sll_int32, intent(in)                            :: patch
     SLL_ASSERT( (patch >= 0) .and. (patch < mp%num_patches) )
-    res = mp%fields(patch+1)%f%value_at_indices(i,j)
+    res = mp%fields(patch+1)%value_at_indices(i,j)
   end function value_at_indices_sfmp2d
 
   subroutine set_value_at_indices_sfmp2d( mp, i, j, patch, val )
@@ -822,7 +821,7 @@ contains   ! *****************************************************************
     sll_real64, intent(in)                           :: eta2
     sll_int32, intent(in)                            :: patch
     SLL_ASSERT( (patch >= 0) .and. (patch < mp%num_patches) )
-    res = mp%fields(patch+1)%f%first_deriv_eta1_value_at_point(eta1,eta2)
+    res = mp%fields(patch+1)%first_deriv_eta1_value_at_point(eta1,eta2)
   end function first_deriv_eta1_value_at_pt_sfmp2d
 
   function first_deriv_eta2_value_at_pt_sfmp2d( mp, eta1, eta2, patch ) &
@@ -834,7 +833,7 @@ contains   ! *****************************************************************
     sll_real64, intent(in)                           :: eta2
     sll_int32, intent(in)                            :: patch
     SLL_ASSERT( (patch >= 0) .and. (patch < mp%num_patches) )
-    res = mp%fields(patch+1)%f%first_deriv_eta2_value_at_point(eta1,eta2)
+    res = mp%fields(patch+1)%first_deriv_eta2_value_at_point(eta1,eta2)
   end function first_deriv_eta2_value_at_pt_sfmp2d
   
   function first_deriv_eta1_value_at_indices_sfmp2d( mp, i, j, patch ) &
@@ -846,7 +845,7 @@ contains   ! *****************************************************************
     sll_int32, intent(in)                            :: j
     sll_int32, intent(in)                            :: patch
     SLL_ASSERT( (patch >= 0) .and. (patch < mp%num_patches) )
-    res = mp%fields(patch+1)%f%first_deriv_eta1_value_at_indices(i,j)
+    res = mp%fields(patch+1)%first_deriv_eta1_value_at_indices(i,j)
   end function first_deriv_eta1_value_at_indices_sfmp2d
 
   function first_deriv_eta2_value_at_indices_sfmp2d( mp, i, j, patch ) &
@@ -858,7 +857,7 @@ contains   ! *****************************************************************
     sll_int32, intent(in)                            :: j
     sll_int32, intent(in)                            :: patch
     SLL_ASSERT( (patch >= 0) .and. (patch < mp%num_patches) )
-    res = mp%fields(patch+1)%f%first_deriv_eta2_value_at_indices(i,j)
+    res = mp%fields(patch+1)%first_deriv_eta2_value_at_indices(i,j)
   end function first_deriv_eta2_value_at_indices_sfmp2d
 
 
@@ -873,7 +872,7 @@ contains   ! *****************************************************************
 
     num_patches = mp%num_patches
     do i=1, num_patches
-        call mp%fields(i)%f%write_to_file( tag )
+        call mp%fields(i)%write_to_file( tag )
     end do
 
     call sll_s_new_file_id(gnu_id, error)
@@ -881,11 +880,11 @@ contains   ! *****************************************************************
     call sll_s_int2string(tag,ctag)
     open(gnu_id,file=trim(mp%field_name)//".gnu")
     write(gnu_id,"(a)",advance='no') &
-        "splot '"//trim(mp%fields(1)%f%name)//"_"//ctag//".dat' w l"
+        "splot '"//trim(mp%fields(1)%name)//"_"//ctag//".dat' w l"
     if (num_patches > 1) then
        do i=2, num_patches
            write(gnu_id,"(a)",advance='no') &
-        ", '"//trim(mp%fields(i)%f%name)//"_"//ctag//".dat' w l"
+        ", '"//trim(mp%fields(i)%name)//"_"//ctag//".dat' w l"
        end do
        write(gnu_id,*)
        close(gnu_id)
@@ -962,8 +961,8 @@ contains   ! *****************************************************************
 !!$    
 !!$   
 !!$    SLL_ASSERT( (patch >= 0) .and. (patch < mp%num_patches) )
-!!$    SLL_ASSERT( (cell_i >= 1) .and. (cell_i < mp%fields(patch+1)%f%mesh%num_cells1) )
-!!$    SLL_ASSERT( (cell_j >= 1) .and. (cell_j < mp%fields(patch+1)%f%mesh%num_cells2) )
+!!$    SLL_ASSERT( (cell_i >= 1) .and. (cell_i < mp%fields(patch+1)%mesh%num_cells1) )
+!!$    SLL_ASSERT( (cell_j >= 1) .and. (cell_j < mp%fields(patch+1)%mesh%num_cells2) )
 !!$    SLL_ASSERT( (splines_local >= 1) .and. (splines_local < num_spline_loc_max) )
 !!$
 !!$    lm=>mp%transf%get_cartesian_mesh(patch)
@@ -1016,8 +1015,8 @@ contains   ! *****************************************************************
 !!$    
 !!$    
 !!$    SLL_ASSERT( (patch >= 0) .and. (patch < mp%num_patches) )
-!!$    SLL_ASSERT( (cell_i >= 1) .and. (cell_i < mp%fields(patch+1)%f%mesh%num_cells1) )
-!!$    SLL_ASSERT( (cell_j >= 1) .and. (cell_j < mp%fields(patch+1)%f%mesh%num_cells2) )
+!!$    SLL_ASSERT( (cell_i >= 1) .and. (cell_i < mp%fields(patch+1)%mesh%num_cells1) )
+!!$    SLL_ASSERT( (cell_j >= 1) .and. (cell_j < mp%fields(patch+1)%mesh%num_cells2) )
 !!$   
 !!$    
 !!$    lm=>mp%transf%get_cartesian_mesh(patch)
