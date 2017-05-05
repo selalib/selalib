@@ -529,7 +529,7 @@ contains
        !     m        => sim%transfx%get_cartesian_mesh(ipatch)
        ! logical_m => sim%transfx%transfs(ipatch+1)%t%mesh
        !     transf   => sim%transfx%get_transformation(ipatch)
-       transf => sim%transfx%transfs(ipatch+1)%t
+       transf => sim%transfx%transfs(ipatch+1)
        !       call sll_o_display(transf%mesh)
        
        num_pts1 = sim%transfx%get_num_cells_eta1(ipatch) + 1! logical_m%num_cells1+1
