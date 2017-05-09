@@ -147,7 +147,6 @@ contains
   subroutine sll_s_coordinate_transformation_multipatch_2d_init( res, filename ) 
     class(sll_t_coordinate_transformation_multipatch_2d) :: res
     character(len=*), intent(in) :: filename
-    sll_int32 :: ierr
 
     call res%read_from_file(trim(filename))
 
