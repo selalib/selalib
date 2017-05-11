@@ -54,8 +54,7 @@ module sll_m_coordinate_transformation_multipatch
 
   use sll_m_coordinate_transformations_2d_nurbs, only: &
     sll_f_new_nurbs_2d_transformation_from_file, &
-    sll_t_coordinate_transformation_2d_nurbs, &
-    sll_t_coordinate_transformation_2d_nurbs_ptr
+    sll_t_coordinate_transformation_2d_nurbs
 
   use sll_m_utilities, only: &
     sll_s_int2string, &
@@ -78,7 +77,7 @@ module sll_m_coordinate_transformation_multipatch
      sll_int32 :: number_patches
      character(len=128) :: name_root  ! file names should share this string
      sll_int32, dimension(:,:),pointer :: connectivities => null()
-     type(sll_t_coordinate_transformation_2d_nurbs_ptr), pointer :: transfs(:) 
+     type(sll_t_coordinate_transformation_2d_nurbs), pointer :: transfs(:) 
      ! Element connectivity information for finite element calculations.
      sll_int32, dimension(:), pointer :: global_indices
      type(multipatch_data_2d_int), dimension(:), pointer :: local_indices
@@ -148,7 +147,6 @@ contains
   subroutine sll_s_coordinate_transformation_multipatch_2d_init( res, filename ) 
     class(sll_t_coordinate_transformation_multipatch_2d) :: res
     character(len=*), intent(in) :: filename
-    sll_int32 :: ierr
 
     call res%read_from_file(trim(filename))
 
@@ -253,8 +251,8 @@ contains
 
     ! Create the coordinate transformations.
     do i=1,number_patches
-       SLL_ALLOCATE(mp%transfs(i)%T, ierr)
-       call mp%transfs(i)%T%read_from_file(trim(patches(i)))
+       !SLL_ALLOCATE(mp%transfs(i)%T, ierr)
+       call mp%transfs(i)%read_from_file(trim(patches(i)))
     end do
 
     ! Obtain the information regarding the local index and local to global
@@ -401,7 +399,7 @@ contains
     class(sll_t_coordinate_transformation_multipatch_2d), intent(in) :: mp
     sll_int32, intent(in) :: patch
     SLL_ASSERT( (patch >= 0) .and. (patch < mp%number_patches) )
-    res => mp%transfs(patch+1)%t%mesh
+    res => mp%transfs(patch+1)%mesh
   end function get_cartesian_mesh_ctmp2d
 
   function get_num_cells_eta1_ctmp2d ( mp, patch ) result(res)
@@ -489,7 +487,7 @@ contains
     class(sll_t_coordinate_transformation_multipatch_2d), intent(in) :: mp
     sll_int32, intent(in) :: patch
     SLL_ASSERT( (patch >= 0) .and. (patch < mp%number_patches) )
-    res => mp%transfs(patch+1)%t
+    res => mp%transfs(patch+1)
   end function get_transformation_ctmp2d 
 
   function get_connectivity_ctmp2d( mp, patch, face ) result(res)
@@ -510,7 +508,7 @@ contains
     sll_int32, intent(in)   :: j
     sll_int32, intent(in)   :: patch
     SLL_ASSERT(patch >= 0 .and. patch < mp%number_patches )
-    val = mp%transfs(patch+1)%T%x1_at_node(i,j)
+    val = mp%transfs(patch+1)%x1_at_node(i,j)
   end function x1_node_ctmp2d
 
   function x2_node_ctmp2d( mp, i, j, patch ) result(val)
@@ -520,7 +518,7 @@ contains
     sll_int32, intent(in)   :: j
     sll_int32, intent(in)   :: patch
     SLL_ASSERT(patch >= 0 .and. patch < mp%number_patches )
-    val = mp%transfs(patch+1)%T%x2_at_node(i,j)
+    val = mp%transfs(patch+1)%x2_at_node(i,j)
   end function x2_node_ctmp2d
 
   function jacobian_at_node_ctmp2d( mp, i, j, patch ) result(val)
@@ -530,7 +528,7 @@ contains
     sll_int32, intent(in)   :: j
     sll_int32, intent(in)   :: patch
     SLL_ASSERT(patch >= 0 .and. patch < mp%number_patches )
-    val = mp%transfs(patch+1)%T%jacobian_at_node(i,j)
+    val = mp%transfs(patch+1)%jacobian_at_node(i,j)
   end function jacobian_at_node_ctmp2d
 
   function x1_ctmp2d( mp, eta1, eta2, patch ) result(val)
@@ -540,7 +538,7 @@ contains
     sll_real64, intent(in)   :: eta2
     sll_int32, intent(in)   :: patch
     SLL_ASSERT(patch >= 0 .and. patch < mp%number_patches )
-    val = mp%transfs(patch+1)%T%x1(eta1,eta2)
+    val = mp%transfs(patch+1)%x1(eta1,eta2)
   end function x1_ctmp2d
 
   function x2_ctmp2d( mp, eta1, eta2, patch ) result(val)
@@ -550,7 +548,7 @@ contains
     sll_real64, intent(in)   :: eta2
     sll_int32, intent(in)   :: patch
     SLL_ASSERT(patch >= 0 .and. patch < mp%number_patches )
-    val = mp%transfs(patch+1)%T%x2(eta1,eta2)
+    val = mp%transfs(patch+1)%x2(eta1,eta2)
   end function x2_ctmp2d
 
   function x1_at_cell_ctmp2d( mp, i, j, patch ) result(val)
@@ -560,7 +558,7 @@ contains
     sll_int32, intent(in)   :: j
     sll_int32, intent(in)   :: patch
     SLL_ASSERT(patch >= 0 .and. patch < mp%number_patches )
-    val = mp%transfs(patch+1)%T%x1_at_cell(i,j)
+    val = mp%transfs(patch+1)%x1_at_cell(i,j)
   end function x1_at_cell_ctmp2d
 
   function x2_at_cell_ctmp2d( mp, i, j, patch ) result(val)
@@ -570,7 +568,7 @@ contains
     sll_int32, intent(in)   :: j
     sll_int32, intent(in)   :: patch
     SLL_ASSERT(patch >= 0 .and. patch < mp%number_patches )
-    val = mp%transfs(patch+1)%T%x2_at_cell(i,j)
+    val = mp%transfs(patch+1)%x2_at_cell(i,j)
   end function x2_at_cell_ctmp2d
 
   function jacobian_at_cell_ctmp2d( mp, i, j, patch ) result(val)
@@ -580,7 +578,7 @@ contains
     sll_int32, intent(in)   :: j
     sll_int32, intent(in)   :: patch
     SLL_ASSERT(patch >= 0 .and. patch < mp%number_patches )
-    val = mp%transfs(patch+1)%T%jacobian_at_cell(i,j)
+    val = mp%transfs(patch+1)%jacobian_at_cell(i,j)
   end function jacobian_at_cell_ctmp2d
 
   function jacobian_ctmp2d( mp, eta1, eta2, patch ) result(val)
@@ -590,7 +588,7 @@ contains
     sll_real64, intent(in)   :: eta2
     sll_int32, intent(in)   :: patch
     SLL_ASSERT(patch >= 0 .and. patch < mp%number_patches )
-    val = mp%transfs(patch+1)%T%jacobian(eta1,eta2)
+    val = mp%transfs(patch+1)%jacobian(eta1,eta2)
   end function jacobian_ctmp2d
 
   function jacobian_matrix_ctmp2d( mp, eta1, eta2, patch ) result(val)
@@ -600,7 +598,7 @@ contains
     sll_real64, intent(in)   :: eta2
     sll_int32, intent(in)   :: patch
     SLL_ASSERT(patch >= 0 .and. patch < mp%number_patches )
-    val = mp%transfs(patch+1)%T%jacobian_matrix(eta1,eta2)
+    val = mp%transfs(patch+1)%jacobian_matrix(eta1,eta2)
   end function jacobian_matrix_ctmp2d
 
   function inverse_jm_ctmp2d( mp, eta1, eta2, patch ) result(val)
@@ -610,7 +608,7 @@ contains
     sll_real64, intent(in)   :: eta2
     sll_int32, intent(in)   :: patch
     SLL_ASSERT(patch >= 0 .and. patch < mp%number_patches )
-    val = mp%transfs(patch+1)%T%inverse_jacobian_matrix(eta1,eta2)
+    val = mp%transfs(patch+1)%inverse_jacobian_matrix(eta1,eta2)
   end function inverse_jm_ctmp2d
 
   subroutine write_to_file_ctmp2d( mp, output_format )
@@ -620,7 +618,7 @@ contains
     sll_int32 :: np
     np = mp%number_patches
     do i=1,np
-       call mp%transfs(i)%T%write_to_file( output_format )
+       call mp%transfs(i)%write_to_file( output_format )
     end do
     ! it would be nice to add some kind of 'master' file, in such way that
     ! loading this master with the visualizing program would automatically load
@@ -687,13 +685,13 @@ contains
     sll_int32 :: num_spline_loc_max
    
     SLL_ASSERT((patch >=0).and.(patch <mp%number_patches))
-    SLL_ASSERT((cell_i>=1).and.(cell_i<mp%transfs(patch+1)%t%mesh%num_cells1))
-    SLL_ASSERT((cell_j>=1).and.(cell_j<mp%transfs(patch+1)%t%mesh%num_cells2))
+    SLL_ASSERT((cell_i>=1).and.(cell_i<mp%transfs(patch+1)%mesh%num_cells1))
+    SLL_ASSERT((cell_j>=1).and.(cell_j<mp%transfs(patch+1)%mesh%num_cells2))
     
 
     lm=>mp%get_cartesian_mesh(patch)
-    num_spline_loc_max = (mp%transfs(patch+1)%T%spline_deg1 +1)*&
-                         (mp%transfs(patch+1)%T%spline_deg2 +1)
+    num_spline_loc_max = (mp%transfs(patch+1)%spline_deg1 +1)*&
+                         (mp%transfs(patch+1)%spline_deg2 +1)
 
     SLL_ASSERT((splines_local >= 1).and.(splines_local < num_spline_loc_max))
 
@@ -793,8 +791,8 @@ contains
     SLL_ASSERT( (cell_i >= 1) .and. (cell_i <= lm%num_cells1) )
     SLL_ASSERT( (cell_j >= 1) .and. (cell_j <= lm%num_cells2) )
     
-    num_spline_loc_max = (mp%transfs(patch+1)%T%spline_deg1 +1)*&
-         (mp%transfs(patch+1)%T%spline_deg2 +1)
+    num_spline_loc_max = (mp%transfs(patch+1)%spline_deg1 +1)*&
+         (mp%transfs(patch+1)%spline_deg2 +1)
     SLL_ASSERT((splines_local >= 1) .and. (splines_local <= num_spline_loc_max))
     
     num_cell = cell_i + (cell_j-1)*lm%num_cells1
