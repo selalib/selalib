@@ -1,4 +1,4 @@
-IF(HDF5_ENABLED AND HDF5_PARALLEL_ENABLED)
+IF(HDF5_ENABLED AND HDF5_PARALLEL_ENABLED AND HDF5_IS_PARALLEL)
   ADD_EXECUTABLE( test_parallel_array_initializer 
     test_parallel_array_initializer.F90 
     m_parallel_array_output.F90 )
