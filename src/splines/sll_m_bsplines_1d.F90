@@ -41,9 +41,9 @@ public ::                                      &
 
 private
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-  
-!> @brief 
-!> basic type for one-dimensional B-spline interpolation. 
+
+!> @brief
+!> basic type for one-dimensional B-spline interpolation.
 type :: sll_t_bspline_1d
 
   type (sll_t_arbitrary_degree_spline_1d) :: bsp
@@ -53,7 +53,7 @@ type :: sll_t_bspline_1d
   sll_real64, pointer                     :: bcoef(:) ! bspline coefficients
   sll_int32                               :: bc_type  ! boundary condition
   sll_real64, pointer                     :: q(:,:)   ! triangular factorization
-  sll_real64, pointer                     :: values(:) 
+  sll_real64, pointer                     :: values(:)
   sll_real64, pointer                     :: bsdx(:,:)
   sll_int32,  pointer                     :: ipiv(:)
   sll_real64                              :: length
@@ -69,15 +69,15 @@ contains
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 !> @brief Constructor for sll_t_bspline_1d object
-!> @param[in] num_points Number of points where the data to be 
+!> @param[in] num_points Number of points where the data to be
 !> interpolated are represented.
-!> @param[in] degree Spline degree 
-!> @param[in] xmin Minimum value of the abscissae where the data are meant 
+!> @param[in] degree Spline degree
+!> @param[in] xmin Minimum value of the abscissae where the data are meant
 !> to be interpolated.
-!> @param[in] xmax Maximum value of the abscissae where the data are meant 
+!> @param[in] xmax Maximum value of the abscissae where the data are meant
 !> to be interpolated.
 !> @param[in] bc_type A boundary condition specifier. Can be either
-!> sll_p_periodic for periodic splines or sll_p_open for open knots  
+!> sll_p_periodic for periodic splines or sll_p_open for open knots
   subroutine sll_s_bspline_1d_init( self, &
     num_points,     &
     degree,         &
@@ -97,7 +97,7 @@ contains
     sll_int32,  optional   :: spline_bc_type
     sll_real64, optional   :: bc_left(:)
     sll_real64, optional   :: bc_right(:)
-    
+
     sll_real64, dimension(num_points)    :: grid
     sll_int32                            :: ierr
     sll_int32                            :: i
@@ -111,7 +111,7 @@ contains
           stop
        end if
     end if
-    
+
     ! set first attributes
     self%bc_type = bc_type
     if (bc_type == sll_p_periodic) then
@@ -119,7 +119,7 @@ contains
        self%offset = degree/2  ! offset needed for periodic spline evaluation
     else
        self%n = num_points + degree - 1 ! dimension of non periodic spline space
-       self%offset = 0  
+       self%offset = 0
     end if
     self%deg     = degree
     self%length  = xmax - xmin
@@ -131,18 +131,18 @@ contains
     grid(num_points) = xmax
     ! construct a sll_t_arbitrary_degree_spline_1d object
     if (present(spline_bc_type)) then
-       call sll_s_arbitrary_degree_spline_1d_init(self%bsp, degree, grid, num_points, &
-            bc_type, spline_bc_type )
+       call sll_s_arbitrary_degree_spline_1d_init(self%bsp, degree, grid,  &
+            num_points, bc_type, spline_bc_type )
     else
-       call sll_s_arbitrary_degree_spline_1d_init(self%bsp, degree, grid, num_points, &
-            bc_type)
+       call sll_s_arbitrary_degree_spline_1d_init(self%bsp, degree, grid,  &
+            num_points, bc_type)
     end if
 
     SLL_ALLOCATE(self%bcoef(self%n),  ierr)
     SLL_ALLOCATE(self%values(self%deg+1), ierr)
     SLL_ALLOCATE(self%bsdx(self%deg/2+1,self%deg+1), ierr)
     SLL_ALLOCATE(self%ipiv(self%n), ierr)
-    
+
     ! Allocate tau which contains interpolation points
     SLL_ALLOCATE(self%tau(self%n), ierr)
     select case (bc_type)
@@ -150,7 +150,7 @@ contains
        if (modulo(degree,2) == 0) then
           ! for even degree interpolation points are cell midpoints
           do i = 1, self%n
-             self%tau(i) = xmin + real(i-0.5,f64) * delta
+             self%tau(i) = xmin + (real(i,f64)-0.5_f64) * delta
           end do
        else
           ! for odd degree interpolation points are grid points excluding last point
@@ -159,14 +159,15 @@ contains
           end do
        end if
     case (sll_p_hermite)
+      ! In this case only interior points are saved in tau
        if (modulo(degree,2) == 0) then
           ! for even degree interpolation points are cell midpoints
           do i = 1, num_points - 1
-             self%tau(i) = xmin + real(i-0.5,f64) * delta
+             self%tau(i) = xmin + (real(i,f64)-0.5_f64) * delta
           end do
        else
           ! for odd degree interpolation points are grid points including last point
-          do i = 1, num_points 
+          do i = 1, num_points
              self%tau(i) = xmin + real(i-1,f64) * delta
           end do
        end if
@@ -181,7 +182,7 @@ contains
        end if
     case (sll_p_greville)
        do i = 1, self%n
-          ! Set interpolation points to be Greville points 
+          ! Set interpolation points to be Greville points
           self%tau(i) = 0.0_f64
           do j=1-degree,0
              self%tau(i) = self%tau(i) + self%bsp%knots(i+j)
@@ -192,17 +193,17 @@ contains
 
     ! Assemble banded matrix (B_j(tau(i))) for spline interpolation
     select case (bc_type)
-    case (sll_p_periodic) 
-       call build_system_periodic(self) 
+    case (sll_p_periodic)
+       call build_system_periodic(self)
     case (sll_p_greville)
        call build_system_greville(self)
     case (sll_p_hermite)
        call build_system_with_derivative(self)
     end select
-    
+
   end subroutine sll_s_bspline_1d_init
 
-  !> @brief private subroutine for assembling and factorizing 
+  !> @brief private subroutine for assembling and factorizing
   !> linear system needed for periodic spline interpolation
   !> @param[inout] self bspline interpolation object
   subroutine build_system_periodic(self)
@@ -224,7 +225,7 @@ contains
     sizeq = self%deg/2
     ! assemble matrix q for linear system
     SLL_ALLOCATE(self%q(2*sizeq+1,self%n), ierr)
-    
+
     do j=1,self%n
        do i=1, 2*sizeq+1
           self%q(i,j) = self%values(i)
@@ -236,7 +237,7 @@ contains
 
   end subroutine build_system_periodic
 
-  !> @brief private subroutine for assembling and factorizing 
+  !> @brief private subroutine for assembling and factorizing
   !> linear system needed for spline interpolation at Greville points
   !> @param[inout] self bspline interpolation object
   subroutine build_system_greville(self)
@@ -249,16 +250,16 @@ contains
     sll_int32    :: jj
     sll_int32    :: icell
     sll_real64   :: x
-    
+
     ! The matrix q is a banded matrix using the storage required by banfac (De Boor)
     ! It has k bands above diagonal, k bands below and the diagonal itself
     ! The term A(ii,jj) of the full matrix is stored in q(ii-jj+k+1,jj)
     ! The Bspline interpolation matrix at Greville points x_ii is
     ! A(ii,jj) = B_jj(x_ii)
-    k = self%deg - 1 
+    k = self%deg - 1
     SLL_ALLOCATE(self%q(2*k+1,self%n), iflag)
     self%q = 0.0_f64
-    
+
     ! Treat i=1 separately
     x =  self%bsp%xmin
     icell = 1
@@ -293,8 +294,8 @@ contains
     call banfac ( self%q, 2*k+1, self%n, k, k, iflag )
 
   end subroutine build_system_greville
-  
-  !> @brief private subroutine for assembling and factorizing 
+
+  !> @brief private subroutine for assembling and factorizing
   !> linear system needed for spline interpolation with Hermite boundary conditions
   !> @param[inout] self bspline interpolation object
   !> @param[in] nder number of derivatives to be computed
@@ -312,8 +313,8 @@ contains
     sll_int32   :: k
     sll_int32   :: icell
     sll_real64  :: x
-    
-    ! number of boundary conditions neededdepending on spline degree
+
+    ! number of boundary conditions needed depending on spline degree
     k = self%deg-1
     nbc = self%deg/2
 
@@ -325,7 +326,7 @@ contains
     ! A(ii,jj) = B_jj(x_ii)
     SLL_ALLOCATE(self%q(3*k+1,self%n), iflag)
     self%q = 0.0_f64
-     
+
     ! For even degree splines interpolation points are at cell midpoints
     ! value of function on the boundary needed as additional boundary conditions
     ! for odd degree splines  baundary is in the interpolation points
@@ -335,7 +336,7 @@ contains
     else
        offset = 1
     end if
-   
+
     ! boundary conditions at xmin
     ii=0
     x = self%bsp%xmin
@@ -376,18 +377,24 @@ contains
     call dgbtrf(self%n,self%n,k,k,self%q,3*k+1,self%ipiv,iflag)
 
   end subroutine build_system_with_derivative
-  
+
+  !> @brief subroutine for computing interpolating spline
+  !> Computes 1D spline interpolating function gtau at interpolation points
+  !> @param[inout] self bspline interpolation object
+  !> @param[in] val_min (optional) array containing boundary conditions at x1_min
+  !> @param[in] val_max (optional) array containing boundary conditions at x1_max
+  !>
   subroutine sll_s_compute_bspline_1d(self, gtau, val_min, val_max)
 
     type(sll_t_bspline_1d) :: self
     sll_real64, intent(in) :: gtau(:)
     sll_real64, optional   :: val_min(:)
     sll_real64, optional   :: val_max(:)
-    
+
     sll_int32 :: ncond
     sll_int32 :: k
     sll_int32 :: iflag
-    
+
     select case (self%bc_type)
     case(sll_p_periodic)
        self%bcoef = gtau(1:self%n)
@@ -419,15 +426,15 @@ contains
 !> @brief returns the value of the image of an abscissae,
 !> The spline coefficients
 !> used are stored in the spline object pointer.
-!> @param[in] x input double-precison element containing the 
+!> @param[in] x input double-precison element containing the
 !> abscissae to be interpolated.
-!> @param[out] y output double-precision element containing the 
+!> @param[out] y output double-precision element containing the
 !> results of the interpolation.
-!> @param[inout] spline the spline object pointer, duly initialized and 
+!> @param[inout] spline the spline object pointer, duly initialized and
 !> already operated on by the sll_s_compute_bspline_1d() subroutine.
   function sll_f_interpolate_value_1d( self, x) result(y)
 
-    type(sll_t_bspline_1d)  :: self 
+    type(sll_t_bspline_1d)  :: self
     sll_real64, intent(in)  :: x
     sll_real64              :: y
 
@@ -446,16 +453,16 @@ contains
 
   end function sll_f_interpolate_value_1d
 
-!> @brief returns the values of the images of a collection of 
-!> abscissae, represented by a 1D array in another output array. 
+!> @brief returns the values of the images of a collection of
+!> abscissae, represented by a 1D array in another output array.
 !> The spline coefficients used are stored in the spline object pointer.
-!> @param[in] x input double-precison element array containing the 
+!> @param[in] x input double-precison element array containing the
 !> abscissae to be interpolated.
-!> @param[out] y output double-precision element array containing the 
+!> @param[out] y output double-precision element array containing the
 !> results of the interpolation.
 !> @param[in] n the number of elements of the input array which are to be
 !> interpolated.
-!> @param[inout] spline the spline object pointer, duly initialized and 
+!> @param[inout] spline the spline object pointer, duly initialized and
 !> already operated on by the sll_s_compute_bspline_1d() subroutine.
 subroutine sll_s_interpolate_array_values_1d( self, n, x, y)
 
@@ -481,27 +488,27 @@ subroutine sll_s_interpolate_array_values_1d( self, n, x, y)
         ib = mod(icell+j-2-self%offset+self%n,self%n) + 1
         val = val + self%values(j)*self%bcoef(ib)
      enddo
-     y(i) = val 
+     y(i) = val
   end do
 
 end subroutine sll_s_interpolate_array_values_1d
 
 !> @brief returns the values of the derivatives evaluated at a point.
 !> The spline coefficients used are stored in the spline object.
-!> @param[inout] self the spline object pointer, duly initialized and 
+!> @param[inout] self the spline object pointer, duly initialized and
 !> already operated on by the sll_s_compute_bspline_1d() subroutine.
 !> @param[in] x  abscissa to be interpolated.
 !> @param[out] y  result of the interpolation.
 function sll_f_interpolate_derivative_1d( self, x) result(y)
 
-  type(sll_t_bspline_1d) :: self 
+  type(sll_t_bspline_1d) :: self
   sll_real64, intent(in) :: x
   sll_real64             :: y
 
   sll_int32              :: icell
   sll_int32              :: ib
   sll_int32              :: j
- 
+
   ! get bspline derivatives at x
   icell =  sll_f_find_cell( self%bsp, x )
   call sll_s_spline_derivatives_at_x(self%bsp, icell, x, self%values)
@@ -514,21 +521,21 @@ function sll_f_interpolate_derivative_1d( self, x) result(y)
 end function sll_f_interpolate_derivative_1d
 
 
-!> @brief returns the values of the derivatives evaluated at a 
-!> collection of abscissae stored by a 1D array in another output 
-!> array. The spline coefficients used are stored in the spline 
+!> @brief returns the values of the derivatives evaluated at a
+!> collection of abscissae stored by a 1D array in another output
+!> array. The spline coefficients used are stored in the spline
 !> object pointer.
-!> @param[in] x input double-precison element array containing the 
+!> @param[in] x input double-precison element array containing the
 !> abscissae to be interpolated.
-!> @param[out] y output double-precision element array containing the 
+!> @param[out] y output double-precision element array containing the
 !> results of the interpolation.
 !> @param[in] n the number of elements of the input array which are to be
 !> interpolated.
-!> @param[inout] spline the spline object pointer, duly initialized and 
+!> @param[inout] spline the spline object pointer, duly initialized and
 !> already operated on by the sll_s_compute_bspline_1d() subroutine.
 subroutine sll_s_interpolate_array_derivatives_1d( self, n, x, y)
 
-  type(sll_t_bspline_1d)  :: self 
+  type(sll_t_bspline_1d)  :: self
   sll_int32,  intent(in)  :: n
   sll_real64, intent(in)  :: x(n)
   sll_real64, intent(out) :: y(n)
@@ -550,7 +557,7 @@ subroutine sll_s_interpolate_array_derivatives_1d( self, n, x, y)
         ib = mod(icell+j-2-self%offset+self%n,self%n) + 1
         val = val + self%values(j)*self%bcoef(ib)
      enddo
-     y(i) = val 
+     y(i) = val
   end do
 
 end subroutine sll_s_interpolate_array_derivatives_1d
@@ -571,7 +578,7 @@ subroutine sll_s_bspline_1d_free( self )
   ! free attribute objects
   call sll_s_arbitrary_degree_spline_1d_free(self%bsp)
   call schur_complement_free(self%schur)
-  
+
 end subroutine sll_s_bspline_1d_free
-  
+
 end module sll_m_bspline_1d

@@ -45,10 +45,10 @@ public ::                                       &
      sll_s_interpolate_array_derivatives_x2_2d
 
 private
-  
-!> @brief 
-!> basic type for two-dimensional B-spline data. 
-!> @details 
+
+!> @brief
+!> basic type for two-dimensional B-spline data.
+!> @details
 !> treated as an opaque type. No access to its internals is directly allowed.
 type :: sll_t_bspline_2d
 
@@ -64,26 +64,26 @@ contains
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 !> @brief Initialises a 2D spline interpolation object.
-!> @param[in] nx1 Number of points where the data to be interpolated are 
+!> @param[in] nx1 Number of points where the data to be interpolated are
 !>            represented.
-!> @param[in] degree1 Spline degree 
-!> @param[in] x1_min Minimum value of the abscissae where the data are meant 
+!> @param[in] degree1 Spline degree
+!> @param[in] x1_min Minimum value of the abscissae where the data are meant
 !> to be interpolated.
-!> @param[in] x1_max Maximum value of the abscissae where the data are meant 
+!> @param[in] x1_max Maximum value of the abscissae where the data are meant
 !> to be interpolated.
 !> @param[in] bc1 A boundary condition specifier. Must be one of the
 !> symbols defined in the SLL_BOUNDARY_CONDITION_DESCRIPTORS module.
-!> @param[in] nx2 Number of points where the data to be interpolated are 
+!> @param[in] nx2 Number of points where the data to be interpolated are
 !>            represented.
-!> @param[in] degree2 Spline degree 
-!> @param[in] x2_min Minimum value of the abscissae where the data are meant 
+!> @param[in] degree2 Spline degree
+!> @param[in] x2_min Minimum value of the abscissae where the data are meant
 !> to be interpolated.
-!> @param[in] x2_max Maximum value of the abscissae where the data are meant 
+!> @param[in] x2_max Maximum value of the abscissae where the data are meant
 !> to be interpolated.
 !> @param[in] bc2 A boundary condition specifier. Must be one of the
 !> symbols defined in the sll_m_boundary_condition_descriptors module.
-!> @param[in] spline_bc_type1 A boundary condition specifier (see sll_s_bspline_1d_init). 
-!> @param[in] spline_bc_type2 A boundary condition specifier (see sll_s_bspline_1d_init). 
+!> @param[in] spline_bc_type1 A boundary condition specifier (see sll_s_bspline_1d_init).
+!> @param[in] spline_bc_type2 A boundary condition specifier (see sll_s_bspline_1d_init).
 !> @param[in] bc_left1 value of function on the west boundary
 !> @param[in] bc_left2 value of function on the south boundary
 !> @param[in] bc_right1 value of function on the east boundary
@@ -153,11 +153,11 @@ subroutine sll_s_bspline_2d_init( &
   SLL_CLEAR_ALLOCATE(self%bcoef(1:n1,1:n2), ierr)
 
 end subroutine sll_s_bspline_2d_init
-  
+
 subroutine sll_s_compute_bspline_2d(self, gtau, &
   val1_min, val1_max, val2_min, val2_max)
 
-  type(sll_t_bspline_2d) :: self 
+  type(sll_t_bspline_2d) :: self
   sll_real64, intent(in)               :: gtau(:,:)
   sll_real64, intent(in), optional     :: val1_min(:,:)
   sll_real64, intent(in), optional     :: val1_max(:,:)
@@ -166,29 +166,92 @@ subroutine sll_s_compute_bspline_2d(self, gtau, &
 
   sll_int32                            :: i
   sll_int32                            :: j
+  sll_int32                            :: jj
+  sll_int32                            :: n1
+  sll_int32                            :: n2
+  sll_int32                            :: ncond
 
-  if( present(val1_min) .and. present(val1_max)) then
-    do j = 1, size(gtau,2)
-      call sll_s_compute_bspline_1d( self%bs1, gtau(:,j), &
-        val1_min(:,j), val1_max(:,j))
+  ! set local variables
+  n1 = self%bs1%n
+  n2 = self%bs2%n
+
+  ! compute spline coefficients in first direction
+  if (self%bs2%bc_type == sll_p_hermite) then
+    ! number of needed conditions at boundary
+    ncond = self%bs2%deg/2
+    print*, 'ncond=',ncond
+    !print*, 'val1_min',val1_min
+    !print*, 'val2_min',val2_min
+    if (present(val2_min)) then
+      ! boundary conditions at x2_min
+      do j=1,ncond
+        if( present(val1_min) .and. present(val1_max)) then
+          call sll_s_compute_bspline_1d( self%bs1, val2_min(j,ncond+1:n2-ncond), &
+            val1_min(:,j), val1_max(:,j))
+        else
+          call sll_s_compute_bspline_1d( self%bs1, val2_min(j,ncond+1:n2-ncond))
+        end if
+        self%bwork(j,:) = self%bs1%bcoef(:)
+        !print*,'bwork',j, minval(self%bwork(j,:)), maxval(self%bwork(j,:))
+      end do
+    else  ! set needed boundary values to 0
+      self%bwork(1:ncond,:) = 0.0_f64
+    end if
+    ! interior points
+    do j=ncond+1,n2-ncond
+    !do j=1,n2-ncond
+      if( present(val1_min) .and. present(val1_max)) then
+        call sll_s_compute_bspline_1d( self%bs1, gtau(:,j-ncond), &
+          val1_min(:,j), val1_max(:,j))
+      else
+        call sll_s_compute_bspline_1d( self%bs1, gtau(:,j-ncond))
+      end if
       self%bwork(j,:) = self%bs1%bcoef(:)
+      !print*,'bwork',j, minval(self%bwork(j,:)), maxval(self%bwork(j,:))
     end do
-
+    ! boundary conditions at x2_max
+    if (present(val2_max)) then
+      !do j = n2-2*ncond+1,n2
+      do jj=1,ncond
+        j=n2-ncond+jj
+        if( present(val1_min) .and. present(val1_max)) then
+          call sll_s_compute_bspline_1d( self%bs1, val2_max(jj,ncond+1:n2-ncond), &
+          val1_min(:,j), val1_max(:,j))
+          !print*, 'val1_', val1_min(:,j), val1_max(:,j)
+          !print*, 'val2', val2_max(jj,ncond+1:n2-ncond)
+        else
+          call sll_s_compute_bspline_1d( self%bs1, val2_max(jj,ncond+1:n2-ncond))
+        end if
+        self%bwork(j,:) = self%bs1%bcoef(:)
+        !print*,'bwork',j, minval(self%bwork(j,:)), maxval(self%bwork(j,:))
+      end do
+    else ! set needed boundary values to 0
+      self%bwork(n2-ncond+1:n2,:) = 0.0_f64
+    end if
   else
-    do j = 1, size(gtau,2)
-      call sll_s_compute_bspline_1d( self%bs1, gtau(:,j))
+    do j = 1, n2
+      call sll_s_compute_bspline_1d( self%bs1,gtau(1:self%bs1%n,j))
       self%bwork(j,:) = self%bs1%bcoef(:)
     end do
   end if
 
-  if( present(val2_min) .and. present(val2_max)) then
-    do i = 1, size(self%bs1%bcoef)
-      call sll_s_compute_bspline_1d( self%bs2, self%bwork(:,i), &
-        val2_min(:,i), val2_max(:,i))
-      self%bcoef(i,:) = self%bs2%bcoef(:)
-    end do
+  ! compute spline coefficients in second direction
+  if (self%bs2%bc_type == sll_p_hermite) then
+    if( present(val2_min) .and. present(val2_max)) then
+      do i = 1, n1
+        call sll_s_compute_bspline_1d( self%bs2, self%bwork(ncond+1:n2-ncond,i), &
+        self%bwork(1:ncond,i),self%bwork(n2-ncond+1:n2,i))
+        self%bcoef(i,:) = self%bs2%bcoef(:)
+        !print*,'bcoef',i, minval(self%bcoef(i,:)), maxval(self%bcoef(i,:))
+      end do
+    else
+      do i = 1, n1
+        call sll_s_compute_bspline_1d( self%bs2, self%bwork(ncond+1:n2-ncond,i))
+        self%bcoef(i,:) = self%bs2%bcoef(:)
+      end do
+    end if
   else
-    do i = 1, size(self%bs1%bcoef)
+    do i = 1, n1
       call sll_s_compute_bspline_1d( self%bs2, self%bwork(:,i))
       self%bcoef(i,:) = self%bs2%bcoef(:)
     end do
@@ -374,7 +437,7 @@ end function sll_f_interpolate_derivative_x2_2d
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
-subroutine sll_s_bspline_2d_free(self ) 
+subroutine sll_s_bspline_2d_free(self )
 
 type(sll_t_bspline_2d) :: self
 
@@ -410,7 +473,7 @@ do i2 = 1, n2
     xj = x2(i1,i2)
     icell =  sll_f_find_cell( self%bs1%bsp, xi )
     jcell =  sll_f_find_cell( self%bs2%bsp, xj )
-    
+
     work = 0.0_f64
     do j = 1, k2
       jb = mod(jcell+j-2-self%bs2%offset+self%bs2%n,self%bs2%n) + 1
@@ -426,9 +489,9 @@ do i2 = 1, n2
       jb = mod(jcell+j-2-self%bs2%offset+self%bs2%n,self%bs2%n) + 1
       yy = yy + self%bs2%values(j)*work(j)
     enddo
-    
+
     y(i1,i2) = yy
-    
+
   end do
 end do
 
@@ -461,7 +524,7 @@ do i2 = 1, n2
     xj = x2(i1,i2)
     icell =  sll_f_find_cell( self%bs1%bsp, xi )
     jcell =  sll_f_find_cell( self%bs2%bsp, xj )
-    
+
     work = 0.0_f64
     do j = 1, k2
       jb = mod(jcell+j-2-self%bs2%offset+self%bs2%n,self%bs2%n) + 1
@@ -471,7 +534,7 @@ do i2 = 1, n2
         work(j) = work(j) + self%bs1%values(i)*self%bcoef(ib,jb)
       enddo
     end do
-    
+
     call sll_s_spline_derivatives_at_x(self%bs2%bsp, jcell, xj, self%bs2%values)
     yy = 0.0_f64
     do j = 1, k2
