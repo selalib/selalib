@@ -38,7 +38,7 @@ sll_int32                     :: deg
 logical                       :: passed_test
 
 passed_test = .true.
-  
+
 print*,'***************************************************************'
 print*,'*** 1D PERIODIC ***'
 print*,'***************************************************************'
@@ -61,7 +61,7 @@ print*,'***************************************************************'
 print*,'*** 1D HERMITE  WITH MIRROR KNOT POINTS***'
 print*,'***************************************************************'
 do deg=3,9
-   call test_process_1d(sll_p_hermite,deg, passed_test,sll_p_mirror)
+!   call test_process_1d(sll_p_hermite,deg, passed_test,sll_p_mirror)
 end do
 
 if (passed_test) then
@@ -114,38 +114,40 @@ contains
     if (present(spline_bc_type)) then
        call sll_s_bspline_1d_init( bspline_1d, npts, deg, x_min, x_max, &
             bc_type, spline_bc_type )
-    else 
+    else
        call sll_s_bspline_1d_init( bspline_1d, npts, deg, x_min, x_max, &
             bc_type)
     end if
     print*, 'bspline_1d_init constructed'
 
     SLL_ALLOCATE(gtau(bspline_1d%n),ierr)
-    SLL_ALLOCATE(bc(2*(deg/2)),ierr)
+    SLL_ALLOCATE(bc(deg/2),ierr)
     print*, '------------------------------------------'
     print*, 'Test on cosinus at uniformly spaced points'
     print*, '------------------------------------------'
     gtau = cos(2*sll_p_pi*bspline_1d%tau)
     !print*, 'tau:  ', bspline_1d%tau
     !print*, 'gtau: ', gtau
-    
+
     call cpu_time(t0)
     if (bc_type == sll_p_hermite) then
        ! Compute boundary conditions for Hermite case
        bc=0.0_f64
        if (modulo(deg,2) == 0) then
-          bc(1) = 1.0_f64 
+          bc(1) = 1.0_f64
           do i=3,deg/2,2
              bc(i)=-4*sll_p_pi**2*bc(i-2)
           end do
        else
-          bc(2) = -4*sll_p_pi**2
-          do i=4,deg/2,2
+         if (deg>3) then
+           bc(2) = -4*sll_p_pi**2
+           do i=4,deg/2,2
              bc(i)=-4*sll_p_pi**2*bc(i-2)
-          end do
+           end do
+         end if
        end if
        call sll_s_compute_bspline_1d(bspline_1d, gtau, bc, bc)
-    else    
+    else
        call sll_s_compute_bspline_1d(bspline_1d, gtau)
     end if
     call cpu_time(t1)
@@ -233,7 +235,7 @@ contains
           end do
        end if
        call sll_s_compute_bspline_1d(bspline_1d, htau, bc, bc)
-    else    
+    else
        call sll_s_compute_bspline_1d(bspline_1d, htau)
     end if
 

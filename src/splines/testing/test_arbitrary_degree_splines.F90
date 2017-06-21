@@ -113,7 +113,7 @@ contains
        grid(i) = grid(i-1) + rnd !step
     end do
     ! ..... non uniform mesh done
-    ! creating non uniform 1d spline 
+    ! creating non uniform 1d spline
     call sll_s_arbitrary_degree_spline_1d_init( &
          spline, &
          degree, &
@@ -168,7 +168,7 @@ contains
           print *, 'accumulator = ', acc
           print*, 'Exiting...'
           stop
-       else 
+       else
           print *,  "   sum of non null splines derivatives at x", &
                " (expected 0) =", sum(answer1(1:degree+1)), "... PASSED"
        end if
@@ -187,7 +187,7 @@ contains
 
        passed_test = passed_test .and. (acc < criterion)
        if( passed_test .eqv. .false. ) then
-          print *, 'periodic nonuniform splines test failure:'          
+          print *, 'periodic nonuniform splines test failure:'
           print*,  'values of splines computed in sll_s_splines_at_x and ',&
                ' sll_s_spline_derivatives_at_x are not the same'
           print *, 'cell = ', cell, 'x = ', x
@@ -252,7 +252,7 @@ contains
     ! --------- 1D SPLINE INITIALIZATION ON NON UNIFORM MESH ----
     ! Define non uniform grid
     grid = (/0.0_f64, 2.0_f64, 3.0_f64, 4.5_f64, 5.0_f64 /)
-    ! creating non uniform 1d spline 
+    ! creating non uniform 1d spline
     call sll_s_arbitrary_degree_spline_1d_init( &
          spline, &
          degree, &
@@ -273,32 +273,32 @@ contains
     expected1(1,2) = 0.16874999999999999_f64
     expected1(2,2) = 0.644345238095238_f64
     expected1(3,2) = 0.18227513227513226_f64
-    expected1(4,2) = 0.004629629629629629_f64  
+    expected1(4,2) = 0.004629629629629629_f64
     ! at point 1.2
     expected1(1,3) = 0.0256_f64
     expected1(2,3) = 0.42742857142857144_f64
-    expected1(3,3) = 0.4829714285714285_f64 
+    expected1(3,3) = 0.4829714285714285_f64
     expected1(4,3) = 0.06399999999999999_f64
     ! at point 2.001
     expected1(1,4) = 0.0949526665714286_f64
     expected1(2,4) = 0.6083063706285714_f64
-    expected1(3,4) = 0.2967409626666666_f64 
+    expected1(3,4) = 0.2967409626666666_f64
     expected1(4,4) = 1.3333333333328926d-10
     ! at point 3.0
     expected1(1,5) = 0.2_f64
-    expected1(2,5) = 0.66666666666666666_f64
-    expected1(3,5) = 0.13333333333333333_f64 
+    expected1(2,5) = 0.6666666666666666_f64
+    expected1(3,5) = 0.13333333333333333_f64
     expected1(4,5) = 0.0_f64
     ! at point 4.0
     expected1(1,6) = 0.007407407407407407_f64
     expected1(2,6) = 0.25925925925925924_f64
-    expected1(3,6) = 0.65_f64 
+    expected1(3,6) = 0.65_f64
     expected1(4,6) = 0.08333333333333333_f64
     ! at point 5.0
     expected1(1,7) = 0.0_f64
     expected1(2,7) = 0.4_f64
     expected1(3,7) = 0.5714285714285714_f64
-    expected1(4,7) = 0.028571428571428574_f64   
+    expected1(4,7) = 0.028571428571428574_f64
     ! derivatives
     ! at point 0.0
     expected2(1,1) = -0.6_f64
@@ -309,32 +309,32 @@ contains
     expected2(1,2) = -0.3375_f64
     expected2(2,2) = -0.0982142857142857_f64
     expected2(3,2) = 0.4079365079365079_f64
-    expected2(4,2) = 0.027777777777777777_f64  
+    expected2(4,2) = 0.027777777777777777_f64
     ! point 1.2
     expected2(1,3) = -0.096_f64
     expected2(2,3) = -0.44571428571428573_f64
-    expected2(3,3) = 0.38171428571428573_f64 
+    expected2(3,3) = 0.38171428571428573_f64
     expected2(4,3) = 0.16_f64
     ! at point 2.001
     expected2(1,4) = -0.2851431428571429_f64
     expected2(2,4) = -0.15974525714285698_f64
-    expected2(3,4) = 0.44488799999999984_f64 
+    expected2(3,4) = 0.44488799999999984_f64
     expected2(4,4) = 3.999999999999119d-07
     ! at point 3.0
     expected2(1,5) = -0.4_f64
     expected2(2,5) = 0.0_f64
-    expected2(3,5) = 0.4_f64 
+    expected2(3,5) = 0.4_f64
     expected2(4,5) = 0.0_f64
     ! at point 4.0
     expected2(1,6) = -0.04444444444444444_f64
     expected2(2,6) = -0.55555555555555555_f64
-    expected2(3,6) = 0.35_f64 
+    expected2(3,6) = 0.35_f64
     expected2(4,6) = 0.25_f64
     ! at point 5.0
     expected2(1,7) = 0.0_f64
     expected2(2,7) = -0.6_f64
     expected2(3,7) = 0.42857142857142866_f64
-    expected2(4,7) = 0.17142857142857143_f64   
+    expected2(4,7) = 0.17142857142857143_f64
 
     do j=1,num_tests
        x= x_test(j)
@@ -415,7 +415,7 @@ contains
     sll_int32                   :: max_degree
     sll_int32                   :: ierr
     sll_int32, parameter        :: num_pts = 12
-    sll_real64, dimension(num_pts)  :: grid 
+    sll_real64, dimension(num_pts)  :: grid
     type(sll_t_arbitrary_degree_spline_1d) :: spline
 
     criterion          = 1.0d-14
@@ -429,7 +429,7 @@ contains
          7.0_f64, 8.0_f64, 9.0_f64, 10.0_f64, 11.0_f64 /)
 
     do j=1, max_degree
-       print*, '--------- degree=', j 
+       print*, '--------- degree=', j
        SLL_CLEAR_ALLOCATE(results(1:j+1),ierr)
        SLL_CLEAR_ALLOCATE(derivatives(1:j+1),ierr)
        SLL_CLEAR_ALLOCATE(sp_and_derivs(1:2,1:j+1),ierr)
@@ -517,7 +517,7 @@ contains
   ! The case of 'open' boundary condition yields spline values different
   ! than in the 'periodic' case. Since we can not compare with the uniform
   ! splines anymore to get the right answer, we need a different criterion.
-  ! For lack of something better, at this moment we only check that the 
+  ! For lack of something better, at this moment we only check that the
   ! different spline values, when added, will equal 1.0.
   subroutine test_nonuniform_arb_deg_splines_open( passed_test )
     logical, intent(inout) :: passed_test
@@ -570,7 +570,7 @@ contains
        x = min_val + rnd*(knots(num_pts)-min_val)
        cell = sll_f_find_cell( spline, x )
        acc = 0.0_f64
-       
+
        ! test spline values
        call sll_s_splines_at_x(spline, cell, x, answer)
        acc = sum(answer(1:degree+1))
@@ -583,7 +583,7 @@ contains
           print *, 'Exiting...'
           stop
        end if
-       
+
        ! test spline derivatives
        acc = 0.0_f64
        call sll_s_spline_derivatives_at_x(spline, cell, x, answer)
@@ -597,7 +597,7 @@ contains
           print*, 'Exiting...'
           stop
        end if
-       
+
        ! test values and derivatives
        acc  = 0.0_f64
        acc2 = 0.0_f64
@@ -640,8 +640,8 @@ contains
     sll_real64, dimension(:), allocatable :: answer2
     sll_real64, dimension(:,:), allocatable :: answer3
     type(sll_t_arbitrary_degree_spline_1d) :: spline
-    type(sll_t_time_mark)  :: t0 
-    sll_real64 :: time 
+    type(sll_t_time_mark)  :: t0
+    sll_real64 :: time
 
     ! Test performance of nonuniform arbitrary degree spline evaluation
     num_pts   = 10
@@ -650,7 +650,7 @@ contains
     num_tests = 100000
     print *, "Test performance of spline evaluation for"
     print *, " Spline degree = ", degree
-    print *, " -----------------------------------------------------" 
+    print *, " -----------------------------------------------------"
     SLL_ALLOCATE(grid(num_pts),ierr)
     SLL_ALLOCATE(x(num_tests),ierr)
     SLL_ALLOCATE(xx(num_tests),ierr)
@@ -668,7 +668,7 @@ contains
        grid(i) = grid(i-1) + rnd !step
     end do
     ! ..... non uniform mesh done
-    ! creating non uniform 1d spline 
+    ! creating non uniform 1d spline
     call sll_s_arbitrary_degree_spline_1d_init( &
          spline, &
          degree, &
@@ -715,7 +715,7 @@ contains
             degree, answer3)
     end do
     time = sll_f_time_elapsed_since(t0)
-    print *, 'Computing time for  compute_b_splines_at_x_mm: ', time
+    print *, 'Computing time for  compute_b_splines_deriv_at_x_mm: ', time
 
     ! computing both all non zero splines and derivatives at point x:
     call sll_s_set_time_mark(t0)
