@@ -2515,7 +2515,7 @@ contains
           
           ! Restart file file for sp2
           call sll_s_int2string(iplot,cplot) 
-          call sll_s_binary_file_create('f_plot_sp2_'//cplot//'_proc_'//cproc//'.rst', restart_id, ierr )
+          call sll_s_binary_file_create('f_plot_sp2_'//cplot//'_proc_'//cproc//'.rst', restart_id_sp2, ierr )
           call sll_s_binary_write_array_0d(restart_id_sp2,time,ierr)
           call sll_s_binary_write_array_2d(restart_id_sp2,f_x1_sp2(1:local_size_x1_sp2,1:local_size_x2_sp2),ierr)
           call sll_s_binary_file_close(restart_id_sp2,ierr) 
