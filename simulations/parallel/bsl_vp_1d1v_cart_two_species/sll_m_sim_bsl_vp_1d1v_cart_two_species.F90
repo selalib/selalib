@@ -216,7 +216,8 @@ module sll_m_sim_bsl_vp_1d1v_cart_two_species
    sll_real64  :: eps_sp1
    sll_real64  :: kx_sp2
    sll_real64  :: eps_sp2
-   character(len=256) :: restart_file
+   character(len=256) :: restart_file_sp1
+   character(len=256) :: restart_file_sp2
    logical :: time_init_from_restart_file
    
    !initial function
@@ -424,7 +425,8 @@ contains
     sll_real64 :: vtb_sp2
     sll_real64 :: db_sp2
     sll_real64 :: ve_sp2
-    character(len=256) :: restart_file
+    character(len=256) :: restart_file_sp1
+    character(len=256) :: restart_file_sp2
     logical :: time_init_from_restart_file
     
     !time_iterations
@@ -536,7 +538,8 @@ contains
       vtb_sp2, &
       db_sp2, &
       ve_sp2, &
-      restart_file, &
+      restart_file_sp1, &
+      restart_file_sp2, &
       time_init_from_restart_file
 
     namelist /time_iterations/ &
@@ -640,7 +643,8 @@ contains
     !sigma_sp2 = 5.52d-4
     !v0_sp2 = 0._f64
     
-    restart_file = "no_restart_file"
+    restart_file_sp1 = "no_restart_file"
+    restart_file_sp2 = "no_restart_file"
     time_init_from_restart_file = .false.
     
     !time_iterations
@@ -986,7 +990,8 @@ contains
     end select
 
     sim%time_init_from_restart_file = time_init_from_restart_file
-    sim%restart_file = restart_file
+    sim%restart_file_sp1 = restart_file_sp1
+    sim%restart_file_sp2 = restart_file_sp2
     
     !time iterations
     sim%dt=dt
@@ -1468,7 +1473,8 @@ contains
     sll_int32 :: rhotote_id,rhototi_id
     sll_int32 :: efield_id     
     sll_int32 :: th_diag_id
-    sll_int32 :: restart_id
+    sll_int32 :: restart_id_sp1
+    sll_int32 :: restart_id_sp2
     type(sll_t_layout_2d), pointer :: layout_x1_sp1
     type(sll_t_layout_2d), pointer :: layout_x1_sp2
     type(sll_t_layout_2d), pointer :: layout_x2_sp1
@@ -1779,27 +1785,49 @@ contains
     call sll_s_int2string(iproc, cproc)
     call sll_s_int2string(iplot,cplot)    
 
-    if(sim%restart_file/="no_restart_file")then
-      INQUIRE(FILE=trim(sim%restart_file)//'_proc_'//cproc//'.rst', EXIST=file_exists)
+    if(sim%restart_file_sp1/="no_restart_file")then
+      INQUIRE(FILE=trim(sim%restart_file_sp1)//'_proc_'//cproc//'.rst', EXIST=file_exists)
       if(.not.(file_exists))then
-        print *,'#file ',trim(sim%restart_file)//'_proc_'//cproc//'.rst'
+        print *,'#file ',trim(sim%restart_file_sp1)//'_proc_'//cproc//'.rst'
         print *,'does not exist'
         stop
       endif
-      open(unit=restart_id, &
-        file=trim(sim%restart_file)//'_proc_'//cproc//'.rst', ACCESS="STREAM", &
+      open(unit=restart_id_sp1, &
+        file=trim(sim%restart_file_sp1)//'_proc_'//cproc//'.rst', ACCESS="STREAM", &
         form='unformatted', IOStat=ierr)      
       if( ierr .ne. 0 ) then
         print *, 'ERROR while opening file ', &
-          trim(sim%restart_file)//'_proc_'//cproc//'.rst', &
+          trim(sim%restart_file_sp1)//'_proc_'//cproc//'.rst', &
            '. Called from run_vp2d_cartesian().'
        stop
       end if
-      print *,'#read restart file '//trim(sim%restart_file)//'_proc_'//cproc//'.rst'      
-      call sll_s_binary_read_array_0d(restart_id,time_init,ierr)
-      call sll_s_binary_read_array_2d(restart_id,f_x1_sp1(1:local_size_x1_sp1,1:local_size_x2_sp1),ierr)
-      call sll_s_binary_file_close(restart_id,ierr)
-    endif      
+      print *,'#read restart file '//trim(sim%restart_file_sp1)//'_proc_'//cproc//'.rst'      
+      call sll_s_binary_read_array_0d(restart_id_sp1,time_init,ierr)
+      call sll_s_binary_read_array_2d(restart_id_sp1,f_x1_sp1(1:local_size_x1_sp1,1:local_size_x2_sp1),ierr)
+      call sll_s_binary_file_close(restart_id_sp1,ierr)
+    endif       
+
+    if(sim%restart_file_sp2/="no_restart_file")then
+      INQUIRE(FILE=trim(sim%restart_file_sp2)//'_proc_'//cproc//'.rst', EXIST=file_exists)
+      if(.not.(file_exists))then
+        print *,'#file ',trim(sim%restart_file_sp2)//'_proc_'//cproc//'.rst'
+        print *,'does not exist'
+        stop
+      endif
+      open(unit=restart_id_sp2, &
+        file=trim(sim%restart_file_sp2)//'_proc_'//cproc//'.rst', ACCESS="STREAM", &
+        form='unformatted', IOStat=ierr)      
+      if( ierr .ne. 0 ) then
+        print *, 'ERROR while opening file ', &
+          trim(sim%restart_file_sp2)//'_proc_'//cproc//'.rst', &
+           '. Called from run_vp2d_cartesian().'
+       stop
+      end if
+      print *,'#read restart file '//trim(sim%restart_file_sp2)//'_proc_'//cproc//'.rst'      
+      call sll_s_binary_read_array_0d(restart_id_sp2,time_init,ierr)
+      call sll_s_binary_read_array_2d(restart_id_sp2,f_x1_sp2(1:local_size_x1_sp2,1:local_size_x2_sp2),ierr)
+      call sll_s_binary_file_close(restart_id_sp2,ierr)
+    endif 
     
     if(sim%time_init_from_restart_file .eqv. .true.) then
       sim%time_init = time_init  
@@ -2477,13 +2505,21 @@ contains
 
         
         
-        if (mod(istep,sim%freq_diag_restart)==0) then          
+        if (mod(istep,sim%freq_diag_restart)==0) then
+          ! Restart file file for sp1
           call sll_s_int2string(iplot,cplot) 
-          call sll_s_binary_file_create('f_plot_'//cplot//'_proc_'//cproc//'.rst', restart_id, ierr )
-          call sll_s_binary_write_array_0d(restart_id,time,ierr)
-          call sll_s_binary_write_array_2d(restart_id,f_x1_sp1(1:local_size_x1_sp1,1:local_size_x2_sp1),ierr)
-          call sll_s_binary_write_array_2d(restart_id,f_x1_sp2(1:local_size_x1_sp2,1:local_size_x2_sp2),ierr)
-          call sll_s_binary_file_close(restart_id,ierr)    
+          call sll_s_binary_file_create('f_plot_sp1_'//cplot//'_proc_'//cproc//'.rst', restart_id_sp1, ierr )
+          call sll_s_binary_write_array_0d(restart_id_sp1,time,ierr)
+          call sll_s_binary_write_array_2d(restart_id_sp1,f_x1_sp1(1:local_size_x1_sp1,1:local_size_x2_sp1),ierr)
+          call sll_s_binary_file_close(restart_id_sp1,ierr)
+          
+          ! Restart file file for sp2
+          call sll_s_int2string(iplot,cplot) 
+          call sll_s_binary_file_create('f_plot_sp2_'//cplot//'_proc_'//cproc//'.rst', restart_id, ierr )
+          call sll_s_binary_write_array_0d(restart_id_sp2,time,ierr)
+          call sll_s_binary_write_array_2d(restart_id_sp2,f_x1_sp2(1:local_size_x1_sp2,1:local_size_x2_sp2),ierr)
+          call sll_s_binary_file_close(restart_id_sp2,ierr) 
+          
         endif 
 
         if(sll_f_get_collective_rank(sll_v_world_collective)==0)then                  
