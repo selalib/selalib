@@ -34,7 +34,7 @@ passed_test = .true.
 print*,'***************************************************************'
 print*,'*** 2D HERMITE-HERMITE ***'
 print*,'***************************************************************'
-do deg=3,3
+do deg=3,9
    call test_process_2d(sll_p_hermite,deg, passed_test)
 end do
 print*,'***************************************************************'
@@ -52,7 +52,7 @@ end do
 print*,'***************************************************************'
 print*,'*** 2D HERMITE WITH MIRROR KNOT POINTS***'
 print*,'***************************************************************'
-do deg=3,3
+do deg=3,9
    call test_process_2d(sll_p_hermite,deg, passed_test, sll_p_mirror)
 end do
 
@@ -181,10 +181,18 @@ if (bc_type == sll_p_hermite) then
     bc1_min(:,j+deg/2) = bc * cos(2*pi*tauy(j))
     bc1_max(:,j+deg/2) = bc * cos(2*pi*tauy(j))
   end do
-  ! cross derivatives at corners
   do i = 1, size(taux)-2*(deg/2)
     bc2_min(:,i+deg/2) = bc * cos(2*pi*taux(i))
     bc2_max(:,i+deg/2) = bc * cos(2*pi*taux(i))
+  end do
+  ! cross derivatives needed at corners in bc1 (bc2 at corners not used)
+  do k=1,deg/2
+    do i=1,deg/2
+      bc1_min(k,i) = bc(k)*bc(i)
+      bc1_max(k,i) = bc(k)*bc(i)
+      bc1_min(k,i+size(tauy)-deg/2) = bc(k)*bc(i)
+      bc1_max(k,i+size(tauy)-deg/2) = bc(k)*bc(i)
+    end do
   end do
   call sll_s_compute_bspline_2d(bspline_2d, gtau, &
   bc1_min, bc1_max, bc2_min, bc2_max)
@@ -371,20 +379,14 @@ if (bc_type == sll_p_hermite) then
       bc2_min(k,i+deg/2) = bc(k) * sin(2*pi*taux(i))
       bc2_max(k,i+deg/2) = bc(k) * sin(2*pi*taux(i))
     end do
-    ! cross derivatives needed at corners
+  end do
+    ! cross derivatives needed at corners in bc1 (bc2 at corners not used)
+  do k=1,deg/2
     do i=1,deg/2
-      bc1_min(k,i) = 2*pi*bc(k)
-      bc1_max(k,i) = 2*pi*bc(k)
-      bc2_min(k,i) = 2*pi*bc(k)
-      bc2_max(k,i) = 2*pi*bc(k)
-    end do
-    do i=size(tauy)-deg/2+1, size(tauy)
-      bc1_min(k,i) = 2*pi*bc(k)
-      bc1_max(k,i) = 2*pi*bc(k)
-    end do
-    do i=size(taux)-deg/2+1, size(taux)
-      bc2_min(k,i) = 2*pi*bc(k)
-      bc2_max(k,i) = 2*pi*bc(k)
+      bc1_min(k,i) = bc(k)*bc(i)
+      bc1_max(k,i) = bc(k)*bc(i)
+      bc1_min(k,i+size(tauy)-deg/2) = bc(k)*bc(i)
+      bc1_max(k,i+size(tauy)-deg/2) = bc(k)*bc(i)
     end do
   end do
   call sll_s_compute_bspline_2d(bspline_2d, htau, &
