@@ -1,3 +1,25 @@
+# Save .mod files locally (this does not pollute the main "modules" directory)
+SET(CMAKE_Fortran_MODULE_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}")
+
+#-------------------------------------------------------------------------------
+# New tests for 2D B-splines
+#-------------------------------------------------------------------------------
+
+add_executable( test_bsplines_2d_new
+  test_bsplines_2d_new.F90
+  m_test_bsplines_2d.F90
+  m_analytical_profiles_2d.F90
+  m_analytical_profiles_2d_base.F90
+  m_analytical_profiles_2d_cos_cos.F90
+  )
+target_link_libraries( test_bsplines_2d_new sll_splines )
+
+# WARNING: test name is not consistent with executable (missing 's') -> TODO
+add_test( NAME bspline_2d_new COMMAND test_bsplines_2d_new )
+set_tests_properties( bspline_2d_new PROPERTIES PASS_REGULAR_EXPRESSION "PASSED" )
+
+#-------------------------------------------------------------------------------
+
 # Cubic splines ............................
 ADD_EXECUTABLE( test_cubic_splines test_cubic_splines.F90  )
 TARGET_LINK_LIBRARIES( test_cubic_splines sll_splines )
