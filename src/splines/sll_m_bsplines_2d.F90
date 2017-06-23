@@ -26,13 +26,15 @@ use sll_m_arbitrary_degree_splines, only: &
 
 use schur_complement
 
-use sll_m_bspline_1d, only: sll_t_bspline_1d, &
-  sll_s_bspline_1d_init,                      &
+use sll_m_bspline_1d, only: &
+  sll_t_bspline_1d,         &
+  sll_s_bspline_1d_init,    &
+  sll_s_bspline_1d_free,    &
   sll_s_compute_bspline_1d
 
 implicit none
 
-public ::                                       &
+public ::                         &
      sll_t_bspline_2d,            &
      sll_s_bspline_2d_init,       &
      sll_s_bspline_2d_free,       &
@@ -437,10 +439,17 @@ end function sll_f_interpolate_derivative_x2_2d
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
-subroutine sll_s_bspline_2d_free(self )
+subroutine sll_s_bspline_2d_free( self )
 
-type(sll_t_bspline_2d) :: self
+  type(sll_t_bspline_2d), intent(inout) :: self
 
+  ! Deallocate local 2D arrays
+  deallocate( self%bwork )
+  deallocate( self%bcoef )
+
+  ! Free memory of 1D B-splines
+  call sll_s_bspline_1d_free( self%bs1 )
+  call sll_s_bspline_1d_free( self%bs2 )
 
 end subroutine sll_s_bspline_2d_free
 
