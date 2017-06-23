@@ -86,14 +86,13 @@ if( HDF5_ENABLED AND HDF5_IS_PARALLEL AND HDF5_PARALLEL_ENABLED )
     #is indicated
     #ADD_SUBDIRECTORY( sim_4d_drift_kinetic_cartesian          )
  
+    # here are some other examples of simulations
+    # they can serve as examples for selalib beginners
+    # you can add some new examples
+    # the interface is more free
+    # requirements of the simulations that are
+    # present in the developer guide are not
+    # mandatory here
+    add_subdirectory(bsl_examples)
+
 endif()
-
-
-# here are some other examples of simulations
-# they can serve as examples for selalib beginners
-# you can add some new examples
-# the interface is more free
-# requirements of the simulations that are
-# present in the developer guide are not
-# mandatory here
-add_subdirectory(bsl_examples)
