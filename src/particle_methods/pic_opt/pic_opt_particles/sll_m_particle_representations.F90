@@ -29,10 +29,23 @@ module sll_m_particle_representations
     sll_t_particle_2d_guard_ptr, &
     sll_t_particle_4d, &
     sll_t_particle_4d_guard, &
-    sll_t_particle_4d_guard_ptr
+    sll_t_particle_4d_guard_ptr, &
+    sll_t_particle_6d
 
   private
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+  !> Type for a single particle in a 3d volume
+  type :: sll_t_particle_6d
+     sll_int32  :: ic   !< cell index, linearly arranged
+     sll_real32 :: dx   !< relative coordinate in the cell dx
+     sll_real32 :: dy   !< relative coordinate in the cell dy
+     sll_real32 :: dz   !< relative coordinate in the cell dz
+     sll_real64 :: vx   !< velocity along x direction
+     sll_real64 :: vy   !< velocity along y direction
+     sll_real64 :: vz   !< velocity along z direction
+     sll_real32 :: q    !< charge     
+  end type sll_t_particle_6d
 
   type :: sll_t_particle_4d
      sll_int32  :: ic   ! cell index, linearly arranged
