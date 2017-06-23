@@ -43,6 +43,7 @@ module sll_m_cartesian_meshes
     sll_s_cartesian_mesh_2d_init, &
     sll_t_cartesian_mesh_2d_ptr, &
     sll_t_cartesian_mesh_3d, &
+    sll_s_cartesian_mesh_3d_init, &
     sll_t_cartesian_mesh_4d, &
     sll_o_cell, &
     sll_o_cell_margin, &
@@ -640,12 +641,64 @@ end if
     sll_real64, optional, intent(in) :: eta2_max
     sll_real64, optional, intent(in) :: eta3_min
     sll_real64, optional, intent(in) :: eta3_max
-    !sll_real64 :: delta1
-    !sll_real64 :: delta2
-    !sll_real64 :: delta3
     sll_int32 :: ierr
 
     SLL_ALLOCATE(m, ierr)
+    call sll_s_cartesian_mesh_3d_init( m, &
+       num_cells1, &
+       num_cells2, &
+       num_cells3, &
+       eta1_min, &
+       eta1_max, &
+       eta2_min, &
+       eta2_max, &
+       eta3_min, &
+       eta3_max ) 
+
+
+  end function sll_f_new_cartesian_mesh_3d
+
+  !> @brief allocates the memory space for a new 3D cartesian mesh,
+  !> initializes it with the given arguments and returns the object.
+  !> @param num_cells1 integer denoting the number of cells, direction 1.
+  !> @param num_cells2 integer denoting the number of cells, direction 2.
+  !> @param num_cells3 integer denoting the number of cells, direction 3.
+  !> @param eta1_min optional double precision value which represents the 
+  !> minimum value of the eta1 parameter in the cartesian mesh, direction 1.
+  !> @param eta1_max optional double precision value which represents the 
+  !> maximum value of the eta1 parameter in the cartesian mesh, direction 1.
+  !> @param eta2_min optional double precision value which represents the 
+  !> minimum value of the eta1 parameter in the cartesian mesh, direction 2.
+  !> @param eta2_max optional double precision value which represents the 
+  !> maximum value of the eta1 parameter in the cartesian mesh, direction 2.
+  !> @param eta3_min optional double precision value which represents the 
+  !> minimum value of the eta1 parameter in the cartesian mesh, direction 3.
+  !> @param eta3_max optional double precision value which represents the 
+  !> maximum value of the eta1 parameter in the cartesian mesh, direction 3.
+  !> @return m the object representing a 3d grid.
+  subroutine sll_s_cartesian_mesh_3d_init( m, &
+       num_cells1, &
+       num_cells2, &
+       num_cells3, &
+       eta1_min, &
+       eta1_max, &
+       eta2_min, &
+       eta2_max, &
+       eta3_min, &
+       eta3_max )
+
+    type(sll_t_cartesian_mesh_3d), intent(out) :: m
+    sll_int32, intent(in)  :: num_cells1
+    sll_int32, intent(in)  :: num_cells2
+    sll_int32, intent(in)  :: num_cells3
+    sll_real64, optional, intent(in) :: eta1_min
+    sll_real64, optional, intent(in) :: eta1_max
+    sll_real64, optional, intent(in) :: eta2_min
+    sll_real64, optional, intent(in) :: eta2_max
+    sll_real64, optional, intent(in) :: eta3_min
+    sll_real64, optional, intent(in) :: eta3_max
+    sll_int32 :: ierr
+
     m%num_cells1 = num_cells1
     m%num_cells2 = num_cells2
     m%num_cells3 = num_cells3
@@ -672,7 +725,7 @@ end if
        print*,'because eta3_max <= eta3_min'
     end if
 
-  end function sll_f_new_cartesian_mesh_3d
+  end subroutine sll_s_cartesian_mesh_3d_init
 
 function eta1_node_3d(mesh, i1, i2, i3) result(res)
     class(sll_t_cartesian_mesh_3d), intent(in) :: mesh
