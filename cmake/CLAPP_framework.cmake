@@ -19,7 +19,9 @@ IF( CLAPP )
   find_clapp_library( SPL     )
   find_clapp_library( DISCO   )
   find_clapp_library( FEMA    )
+  find_clapp_library( GLT     )
   find_clapp_library( SPIGA   )
+  find_clapp_library( SLLDJANGO )
 
   OPTION(BUILD_CLAPP "Build CLAPP framework from sources" OFF)
 
