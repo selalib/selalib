@@ -188,10 +188,10 @@ subroutine sll_s_compute_bspline_2d(self, gtau, &
       ! boundary conditions at x2_min
       do j=1,ncond
         if( present(val1_min) .and. present(val1_max)) then
-          call sll_s_compute_bspline_1d( self%bs1, val2_min(j,ncond+1:n2-ncond), &
+          call sll_s_compute_bspline_1d( self%bs1, val2_min(j,ncond+1:n1-ncond), &
             val1_min(:,j), val1_max(:,j))
         else
-          call sll_s_compute_bspline_1d( self%bs1, val2_min(j,ncond+1:n2-ncond))
+          call sll_s_compute_bspline_1d( self%bs1, val2_min(j,ncond+1:n1-ncond))
         end if
         self%bwork(j,:) = self%bs1%bcoef(:)
         !print*,'bwork',j, minval(self%bwork(j,:)), maxval(self%bwork(j,:))
@@ -217,12 +217,12 @@ subroutine sll_s_compute_bspline_2d(self, gtau, &
       do jj=1,ncond
         j=n2-ncond+jj
         if( present(val1_min) .and. present(val1_max)) then
-          call sll_s_compute_bspline_1d( self%bs1, val2_max(jj,ncond+1:n2-ncond), &
+          call sll_s_compute_bspline_1d( self%bs1, val2_max(jj,ncond+1:n1-ncond), &
           val1_min(:,j), val1_max(:,j))
           !print*, 'val1_', val1_min(:,j), val1_max(:,j)
           !print*, 'val2', val2_max(jj,ncond+1:n2-ncond)
         else
-          call sll_s_compute_bspline_1d( self%bs1, val2_max(jj,ncond+1:n2-ncond))
+          call sll_s_compute_bspline_1d( self%bs1, val2_max(jj,ncond+1:n1-ncond))
         end if
         self%bwork(j,:) = self%bs1%bcoef(:)
         !print*,'bwork',j, minval(self%bwork(j,:)), maxval(self%bwork(j,:))
