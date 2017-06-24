@@ -96,6 +96,7 @@ sll_real64, dimension(:,:), allocatable :: bc1_min
 sll_real64, dimension(:,:), allocatable :: bc1_max
 sll_real64, dimension(:,:), allocatable :: bc2_min
 sll_real64, dimension(:,:), allocatable :: bc2_max
+sll_real64, dimension(:,:,:), allocatable :: bc_corners
 
 sll_int32,  parameter                   :: npts1 = 51 ! defines bsplines
 sll_int32,  parameter                   :: npts2 = 51 ! defines bsplines
@@ -138,16 +139,13 @@ tauy => bspline_2d%bs2%tau
 print*, 'bspline_2d_init constructed'
 
 SLL_ALLOCATE(gtau(size(taux), size(tauy)),ierr)
-! SLL_ALLOCATE(bc(2*(deg/2)),ierr)
-! SLL_CLEAR_ALLOCATE(bc1_min(1:2*(deg/2),1:size(tauy)),ierr)
-! SLL_CLEAR_ALLOCATE(bc1_max(1:2*(deg/2),1:size(tauy)),ierr)
-! SLL_CLEAR_ALLOCATE(bc2_min(1:2*(deg/2),1:size(taux)),ierr)
-! SLL_CLEAR_ALLOCATE(bc2_max(1:2*(deg/2),1:size(taux)),ierr)
 SLL_ALLOCATE(bc(deg/2),ierr)
 SLL_CLEAR_ALLOCATE(bc1_min(1:deg/2,1:size(tauy)),ierr)
 SLL_CLEAR_ALLOCATE(bc1_max(1:deg/2,1:size(tauy)),ierr)
 SLL_CLEAR_ALLOCATE(bc2_min(1:deg/2,1:size(taux)),ierr)
 SLL_CLEAR_ALLOCATE(bc2_max(1:deg/2,1:size(taux)),ierr)
+SLL_CLEAR_ALLOCATE(bc_corners(1:deg/2,1:deg/2,4),ierr)
+
 
 print*, '------------------------------------------'
 print*, 'Test on cosinus at uniformly spaced points'
@@ -177,25 +175,25 @@ if (bc_type == sll_p_hermite) then
     end if
   end if
 
-  do j = 1, size(tauy)-2*(deg/2)
-    bc1_min(:,j+deg/2) = bc * cos(2*pi*tauy(j))
-    bc1_max(:,j+deg/2) = bc * cos(2*pi*tauy(j))
+  do j = 1, size(tauy)!-2*(deg/2)
+    bc1_min(:,j) = bc * cos(2*pi*tauy(j))
+    bc1_max(:,j) = bc * cos(2*pi*tauy(j))
   end do
-  do i = 1, size(taux)-2*(deg/2)
-    bc2_min(:,i+deg/2) = bc * cos(2*pi*taux(i))
-    bc2_max(:,i+deg/2) = bc * cos(2*pi*taux(i))
+  do i = 1, size(taux)!-2*(deg/2)
+    bc2_min(:,i) = bc * cos(2*pi*taux(i))
+    bc2_max(:,i) = bc * cos(2*pi*taux(i))
   end do
   ! cross derivatives needed at corners in bc1 (bc2 at corners not used)
   do k=1,deg/2
     do i=1,deg/2
-      bc1_min(k,i) = bc(k)*bc(i)
-      bc1_max(k,i) = bc(k)*bc(i)
-      bc1_min(k,i+size(tauy)-deg/2) = bc(k)*bc(i)
-      bc1_max(k,i+size(tauy)-deg/2) = bc(k)*bc(i)
+      bc_corners(k,i,1) = bc(k)*bc(i)
+      bc_corners(k,i,2) = bc(k)*bc(i)
+      bc_corners(k,i,3) = bc(k)*bc(i)
+      bc_corners(k,i,4) = bc(k)*bc(i)
     end do
   end do
   call sll_s_compute_bspline_2d(bspline_2d, gtau, &
-  bc1_min, bc1_max, bc2_min, bc2_max)
+  bc1_min, bc1_max, bc2_min, bc2_max, bc_corners)
 else
   call sll_s_compute_bspline_2d(bspline_2d, gtau)
 end if
@@ -371,26 +369,26 @@ if (bc_type == sll_p_hermite) then
     end do
   end if
   do k = 1, deg/2
-    do j = 1, size(tauy)-2*(deg/2)
-      bc1_min(k,j+deg/2) = bc(k) * sin(2*pi*tauy(j))
-      bc1_max(k,j+deg/2) = bc(k) * sin(2*pi*tauy(j))
+    do j = 1, size(tauy)!-2*(deg/2)
+      bc1_min(k,j) = bc(k) * sin(2*pi*tauy(j))
+      bc1_max(k,j) = bc(k) * sin(2*pi*tauy(j))
     end do
-    do i = 1, size(taux)-2*(deg/2)
-      bc2_min(k,i+deg/2) = bc(k) * sin(2*pi*taux(i))
-      bc2_max(k,i+deg/2) = bc(k) * sin(2*pi*taux(i))
+    do i = 1, size(taux)!-2*(deg/2)
+      bc2_min(k,i) = bc(k) * sin(2*pi*taux(i))
+      bc2_max(k,i) = bc(k) * sin(2*pi*taux(i))
     end do
   end do
     ! cross derivatives needed at corners in bc1 (bc2 at corners not used)
   do k=1,deg/2
     do i=1,deg/2
-      bc1_min(k,i) = bc(k)*bc(i)
-      bc1_max(k,i) = bc(k)*bc(i)
-      bc1_min(k,i+size(tauy)-deg/2) = bc(k)*bc(i)
-      bc1_max(k,i+size(tauy)-deg/2) = bc(k)*bc(i)
+      bc_corners(k,i,1) = bc(k)*bc(i)
+      bc_corners(k,i,2) = bc(k)*bc(i)
+      bc_corners(k,i,3) = bc(k)*bc(i)
+      bc_corners(k,i,4) = bc(k)*bc(i)
     end do
   end do
   call sll_s_compute_bspline_2d(bspline_2d, htau, &
-    bc1_min, bc1_max, bc2_min, bc2_max)
+    bc1_min, bc1_max, bc2_min, bc2_max, bc_corners)
 else
   call sll_s_compute_bspline_2d(bspline_2d, htau)
 end if

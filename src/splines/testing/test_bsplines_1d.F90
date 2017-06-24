@@ -120,7 +120,7 @@ contains
     end if
     print*, 'bspline_1d_init constructed'
 
-    SLL_ALLOCATE(gtau(bspline_1d%n),ierr)
+    SLL_ALLOCATE(gtau(size(bspline_1d%tau)),ierr)
     SLL_ALLOCATE(bc(deg/2),ierr)
     print*, '------------------------------------------'
     print*, 'Test on cosinus at uniformly spaced points'
@@ -218,7 +218,7 @@ contains
 
     print*, 'Test on sinus at random points'
     print*, ' -----------------------------'
-    SLL_ALLOCATE(htau(bspline_1d%n),ierr)
+    SLL_ALLOCATE(htau(size(bspline_1d%tau)),ierr)
     htau = sin(2*sll_p_pi*bspline_1d%tau)
     if (bc_type == sll_p_hermite) then
        ! Compute boundary conditions for Hermite case

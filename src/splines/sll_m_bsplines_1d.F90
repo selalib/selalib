@@ -49,7 +49,7 @@ type :: sll_t_bspline_1d
   type (sll_t_arbitrary_degree_spline_1d) :: bsp
   sll_int32                               :: n        ! dimension of spline space
   sll_int32                               :: deg      ! degree of spline
-  sll_real64, pointer                     :: tau(:)   ! n interpolation points
+  sll_real64, pointer                     :: tau(:)   ! interpolation points
   sll_real64, pointer                     :: bcoef(:) ! bspline coefficients
   sll_int32                               :: bc_type  ! boundary condition
   sll_real64, pointer                     :: q(:,:)   ! triangular factorization
@@ -143,29 +143,33 @@ contains
     SLL_ALLOCATE(self%bsdx(self%deg/2+1,self%deg+1), ierr)
     SLL_ALLOCATE(self%ipiv(self%n), ierr)
 
-    ! Allocate tau which contains interpolation points
-    SLL_ALLOCATE(self%tau(self%n), ierr)
     select case (bc_type)
     case (sll_p_periodic)
-       if (modulo(degree,2) == 0) then
-          ! for even degree interpolation points are cell midpoints
-          do i = 1, self%n
-             self%tau(i) = xmin + (real(i,f64)-0.5_f64) * delta
-          end do
-       else
-          ! for odd degree interpolation points are grid points excluding last point
-          do i = 1, self%n
-             self%tau(i) = xmin + real(i-1,f64) * delta
-          end do
-       end if
+      ! Allocate tau which contains interpolation points
+      SLL_ALLOCATE(self%tau(self%n), ierr)
+      if (modulo(degree,2) == 0) then
+        ! for even degree interpolation points are cell midpoints
+        do i = 1, self%n
+          self%tau(i) = xmin + (real(i,f64)-0.5_f64) * delta
+        end do
+      else
+        ! for odd degree interpolation points are grid points excluding last point
+        do i = 1, self%n
+          self%tau(i) = xmin + real(i-1,f64) * delta
+        end do
+      end if
     case (sll_p_hermite)
       ! In this case only interior points are saved in tau
        if (modulo(degree,2) == 0) then
-          ! for even degree interpolation points are cell midpoints
-          do i = 1, num_points - 1
-             self%tau(i) = xmin + (real(i,f64)-0.5_f64) * delta
-          end do
+         ! Allocate tau which contains interior interpolation points
+         SLL_ALLOCATE(self%tau(num_points - 1), ierr)
+         ! for even degree interpolation points are cell midpoints
+         do i = 1, num_points - 1
+           self%tau(i) = xmin + (real(i,f64)-0.5_f64) * delta
+         end do
        else
+         ! Allocate tau which contains interior interpolation points
+         SLL_ALLOCATE(self%tau(num_points), ierr)
           ! for odd degree interpolation points are grid points including last point
           do i = 1, num_points
              self%tau(i) = xmin + real(i-1,f64) * delta
@@ -181,14 +185,16 @@ contains
           self%bc_right = bc_right
        end if
     case (sll_p_greville)
-       do i = 1, self%n
-          ! Set interpolation points to be Greville points
-          self%tau(i) = 0.0_f64
-          do j=1-degree,0
-             self%tau(i) = self%tau(i) + self%bsp%knots(i+j)
-          end do
-          self%tau(i) = self%tau(i) / real(degree,f64)
-       end do
+      ! Allocate tau which contains interpolation points
+      SLL_ALLOCATE(self%tau(self%n), ierr)
+      do i = 1, self%n
+        ! Set interpolation points to be Greville points
+        self%tau(i) = 0.0_f64
+        do j=1-degree,0
+          self%tau(i) = self%tau(i) + self%bsp%knots(i+j)
+        end do
+        self%tau(i) = self%tau(i) / real(degree,f64)
+      end do
     end select
 
     ! Assemble banded matrix (B_j(tau(i))) for spline interpolation
