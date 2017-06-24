@@ -178,7 +178,11 @@ subroutine sll_s_compute_bspline_2d(self, gtau, &
   n2 = self%bs2%n
 
   ! compute spline coefficients in first direction
-  if (self%bs2%bc_type == sll_p_hermite) then
+
+  ncond=0
+  if ((self%bs2%bc_type == sll_p_hermite) .and. &
+    (self%bs1%bc_type == sll_p_hermite)) then
+    ! additional interpolation of derivatives on boundaries needed
     ! number of needed conditions at boundary
     ncond = self%bs2%deg/2
     print*, 'ncond=',ncond
@@ -199,18 +203,7 @@ subroutine sll_s_compute_bspline_2d(self, gtau, &
     else  ! set needed boundary values to 0
       self%bwork(1:ncond,:) = 0.0_f64
     end if
-    ! interior points
-    do j=ncond+1,n2-ncond
-    !do j=1,n2-ncond
-      if( present(val1_min) .and. present(val1_max)) then
-        call sll_s_compute_bspline_1d( self%bs1, gtau(:,j-ncond), &
-          val1_min(:,j), val1_max(:,j))
-      else
-        call sll_s_compute_bspline_1d( self%bs1, gtau(:,j-ncond))
-      end if
-      self%bwork(j,:) = self%bs1%bcoef(:)
-      !print*,'bwork',j, minval(self%bwork(j,:)), maxval(self%bwork(j,:))
-    end do
+
     ! boundary conditions at x2_max
     if (present(val2_max)) then
       !do j = n2-2*ncond+1,n2
@@ -236,6 +229,18 @@ subroutine sll_s_compute_bspline_2d(self, gtau, &
       self%bwork(j,:) = self%bs1%bcoef(:)
     end do
   end if
+  ! interior points
+  do j=ncond+1,n2-ncond
+  !do j=1,n2-ncond
+    if( present(val1_min) .and. present(val1_max)) then
+      call sll_s_compute_bspline_1d( self%bs1, gtau(:,j-ncond), &
+        val1_min(:,j), val1_max(:,j))
+    else
+      call sll_s_compute_bspline_1d( self%bs1, gtau(:,j-ncond))
+    end if
+    self%bwork(j,:) = self%bs1%bcoef(:)
+    !print*,'bwork',j, minval(self%bwork(j,:)), maxval(self%bwork(j,:))
+  end do
 
   ! compute spline coefficients in second direction
   if (self%bs2%bc_type == sll_p_hermite) then
