@@ -104,11 +104,12 @@ subroutine sll_s_bspline_2d_init( &
   bc1,             &
   bc2,             &
   spline_bc_type1, &
-  spline_bc_type2, &
-  bc_left1,        &
-  bc_left2,        &
-  bc_right1,       &
-  bc_right2        )
+  spline_bc_type2 )
+  !, &
+  ! bc_left1,        &
+  ! bc_left2,        &
+  ! bc_right1,       &
+  ! bc_right2        )
 
   type(sll_t_bspline_2d) :: self
 
@@ -125,10 +126,10 @@ subroutine sll_s_bspline_2d_init( &
 
   sll_int32,  optional                 :: spline_bc_type1
   sll_int32,  optional                 :: spline_bc_type2
-  sll_real64, optional, pointer        :: bc_left1(:)
-  sll_real64, optional, pointer        :: bc_left2(:)
-  sll_real64, optional, pointer        :: bc_right1(:)
-  sll_real64, optional, pointer        :: bc_right2(:)
+  ! sll_real64, optional, pointer        :: bc_left1(:)
+  ! sll_real64, optional, pointer        :: bc_left2(:)
+  ! sll_real64, optional, pointer        :: bc_right1(:)
+  ! sll_real64, optional, pointer        :: bc_right2(:)
 
   sll_int32                            :: n1
   sll_int32                            :: n2
@@ -157,7 +158,7 @@ subroutine sll_s_bspline_2d_init( &
 end subroutine sll_s_bspline_2d_init
 
 subroutine sll_s_compute_bspline_2d(self, gtau, &
-  val1_min, val1_max, val2_min, val2_max)
+  val1_min, val1_max, val2_min, val2_max, val_corners)
 
   type(sll_t_bspline_2d) :: self
   sll_real64, intent(in)               :: gtau(:,:)
@@ -165,6 +166,7 @@ subroutine sll_s_compute_bspline_2d(self, gtau, &
   sll_real64, intent(in), optional     :: val1_max(:,:)
   sll_real64, intent(in), optional     :: val2_min(:,:)
   sll_real64, intent(in), optional     :: val2_max(:,:)
+  sll_real64, intent(in), optional     :: val_corners(:,:,:)
 
   sll_int32                            :: i
   sll_int32                            :: j
@@ -191,14 +193,13 @@ subroutine sll_s_compute_bspline_2d(self, gtau, &
     if (present(val2_min)) then
       ! boundary conditions at x2_min
       do j=1,ncond
-        if( present(val1_min) .and. present(val1_max)) then
-          call sll_s_compute_bspline_1d( self%bs1, val2_min(j,ncond+1:n1-ncond), &
-            val1_min(:,j), val1_max(:,j))
+        if( present(val_corners)) then
+          call sll_s_compute_bspline_1d( self%bs1, val2_min(j,:), &
+            val_corners(:,j,1), val_corners(:,j,2))
         else
-          call sll_s_compute_bspline_1d( self%bs1, val2_min(j,ncond+1:n1-ncond))
+          call sll_s_compute_bspline_1d( self%bs1, val2_min(j,:))
         end if
         self%bwork(j,:) = self%bs1%bcoef(:)
-        !print*,'bwork',j, minval(self%bwork(j,:)), maxval(self%bwork(j,:))
       end do
     else  ! set needed boundary values to 0
       self%bwork(1:ncond,:) = 0.0_f64
@@ -206,40 +207,34 @@ subroutine sll_s_compute_bspline_2d(self, gtau, &
 
     ! boundary conditions at x2_max
     if (present(val2_max)) then
-      !do j = n2-2*ncond+1,n2
       do jj=1,ncond
         j=n2-ncond+jj
-        if( present(val1_min) .and. present(val1_max)) then
-          call sll_s_compute_bspline_1d( self%bs1, val2_max(jj,ncond+1:n1-ncond), &
-          val1_min(:,j), val1_max(:,j))
-          !print*, 'val1_', val1_min(:,j), val1_max(:,j)
-          !print*, 'val2', val2_max(jj,ncond+1:n2-ncond)
+        if( present(val_corners)) then
+          call sll_s_compute_bspline_1d( self%bs1, val2_max(jj,:), &
+          val_corners(:,jj,3), val_corners(:,jj,4))
         else
-          call sll_s_compute_bspline_1d( self%bs1, val2_max(jj,ncond+1:n1-ncond))
+          call sll_s_compute_bspline_1d( self%bs1, val2_max(jj,:))
         end if
         self%bwork(j,:) = self%bs1%bcoef(:)
-        !print*,'bwork',j, minval(self%bwork(j,:)), maxval(self%bwork(j,:))
       end do
     else ! set needed boundary values to 0
       self%bwork(n2-ncond+1:n2,:) = 0.0_f64
     end if
   else
-    do j = 1, n2
-      call sll_s_compute_bspline_1d( self%bs1,gtau(1:self%bs1%n,j))
+    do j = 1, n2-2*ncond
+      call sll_s_compute_bspline_1d( self%bs1,gtau(:,j))
       self%bwork(j,:) = self%bs1%bcoef(:)
     end do
   end if
   ! interior points
-  do j=ncond+1,n2-ncond
-  !do j=1,n2-ncond
+  do j=1,n2-2*ncond
     if( present(val1_min) .and. present(val1_max)) then
-      call sll_s_compute_bspline_1d( self%bs1, gtau(:,j-ncond), &
+      call sll_s_compute_bspline_1d( self%bs1, gtau(:,j), &
         val1_min(:,j), val1_max(:,j))
     else
-      call sll_s_compute_bspline_1d( self%bs1, gtau(:,j-ncond))
+      call sll_s_compute_bspline_1d( self%bs1, gtau(:,j))
     end if
-    self%bwork(j,:) = self%bs1%bcoef(:)
-    !print*,'bwork',j, minval(self%bwork(j,:)), maxval(self%bwork(j,:))
+    self%bwork(j+ncond,:) = self%bs1%bcoef(:)
   end do
 
   ! compute spline coefficients in second direction
