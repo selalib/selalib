@@ -10,9 +10,9 @@ use sll_m_particle_group_6d
 
 implicit none
 
-type(sll_t_cartesian_mesh_3d)            :: mesh_3d
-type(sll_t_particle_group_6d), pointer   :: p_group_6d
-sll_real64 :: QoverM = 1.0_f64, s
+type(sll_t_cartesian_mesh_3d) :: mesh_3d
+type(sll_t_particle_group_6d) :: p_group_6d
+sll_real64                    :: QoverM = 1.0_f64
 
 #define NC_X 10
 #define NC_Y 10
@@ -31,7 +31,6 @@ call sll_s_cartesian_mesh_3d_init( mesh_3d, NC_X, NC_Y, NC_Z, &
 #define PARTICLE_ARRAY_SIZE 10
 #define GUARD_SIZE 1
 
-allocate(p_group_6d)
 call sll_s_particle_6d_group_init( p_group_6d, &
          NUM_PARTICLES, &
          PARTICLE_ARRAY_SIZE, &
