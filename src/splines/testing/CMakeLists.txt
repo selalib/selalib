@@ -11,6 +11,7 @@ add_executable( test_bsplines_2d_new
   m_analytical_profiles_2d.F90
   m_analytical_profiles_2d_base.F90
   m_analytical_profiles_2d_cos_cos.F90
+  m_analytical_profiles_2d_poly.F90
   )
 target_link_libraries( test_bsplines_2d_new sll_splines )
 
