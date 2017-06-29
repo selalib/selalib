@@ -58,6 +58,9 @@ module m_test_bsplines_2d
     integer                                 :: bc2
     type(t_test_report)                     :: report
 
+    type(sll_t_bspline_2d)  :: bspline_2d
+    real(wp), allocatable   :: gtau(:,:)  ! Profile values at interp. points
+
   contains
 
     procedure, nopass :: print_header
@@ -102,6 +105,21 @@ contains
     integer                          , intent(in   )         :: bc1
     integer                          , intent(in   )         :: bc2
 
+    type(t_profile_2d_info) :: info
+    real(wp), pointer       :: tau1(:)
+    real(wp), pointer       :: tau2(:)
+    integer                 :: nipts1
+    integer                 :: nipts2
+    integer                 :: i1, j1, s1
+    integer                 :: i2, j2, s2
+
+    real(wp), allocatable :: bc1_min(:,:)
+    real(wp), allocatable :: bc1_max(:,:)
+    real(wp), allocatable :: bc2_min(:,:)
+    real(wp), allocatable :: bc2_max(:,:)
+    real(wp), allocatable :: val_corners(:,:,:)
+
+    ! Store pointer to 2D profile and input numerical parameters to spline
     self % profile_2d => profile_2d
     self % nx1        =  nx1
     self % nx2        =  nx2
@@ -110,26 +128,12 @@ contains
     self % bc1        =  bc1
     self % bc2        =  bc2
 
-  end subroutine init
-
-  !-----------------------------------------------------------------------------
-  subroutine run_tests( self, verbose, successful )
-
-    class(t_bspline_2d_test_facility), intent(in   ) :: self
-    logical                          , intent(in   ) :: verbose
-    logical                          , intent(  out) :: successful
-
-    type(sll_t_bspline_2d ) :: bspline_2d
-    type(t_profile_2d_info) :: info
-    type(t_test_report    ) :: report
-
-    successful = .false.
-
     ! Extract information about 2D analytical profile
     call self % profile_2d % get_info( info )
 
     ! Initialize 2D spline
-    call sll_s_bspline_2d_init( bspline_2d, &
+    call sll_s_bspline_2d_init( &
+      self % bspline_2d, &
       self % nx1, &
       self % nx2, &
       self % deg1, &
@@ -141,59 +145,9 @@ contains
       self % bc1, &
       self % bc2 )
 
-    ! Print report to terminal on a single line
-    write(*,'(6i10)', advance='no') &
-      self%nx1, self%nx2, self%deg1, self%deg2, self%bc1, self%bc2
-
-    ! Interpolate analytical 2D profile and run some tests
-    call s_interpolate_and_evaluate( self % profile_2d, bspline_2d, report )
-
-    ! Print report to terminal on a single line
-    write(*,'(e12.2,L12)') report%error, report%passed
-
-    ! Free spline memory
-    call sll_s_bspline_2d_free( bspline_2d )
-
-    ! Determine if all tests were successful
-    successful = report % passed
-
-  end subroutine run_tests
-
-  !-----------------------------------------------------------------------------
-  subroutine s_interpolate_and_evaluate( profile_2d, bspline_2d, report )
-    class( c_analytical_profile_2d ), intent(in   ) :: profile_2d
-    type ( sll_t_bspline_2d        ), intent(inout) :: bspline_2d
-    type ( t_test_report           ), intent(  out) :: report
-
-    type(t_profile_2d_info) :: pinfo
-    real(wp), pointer       :: tau1(:)
-    real(wp), pointer       :: tau2(:)
-    real(wp), allocatable   :: gtau(:,:)  ! Profile values at interp. points
-    integer                 :: nipts1
-    integer                 :: nipts2
-    integer                 :: deg1
-    integer                 :: deg2
-    integer                 :: i1, j1, s1
-    integer                 :: i2, j2, s2
-    real(wp)                :: error
-    real(wp)                :: max_norm_error
-
-    real(wp), allocatable :: bc1_min(:,:)
-    real(wp), allocatable :: bc1_max(:,:)
-    real(wp), allocatable :: bc2_min(:,:)
-    real(wp), allocatable :: bc2_max(:,:)
-    real(wp), allocatable :: val_corners(:,:,:)
-
-    ! Get profile info
-    call profile_2d % get_info( pinfo )
-
-    ! Get spline degree
-    deg1 = bspline_2d % bs1 % deg
-    deg2 = bspline_2d % bs2 % deg
-
     ! Get spline interpolation points
-    tau1 => bspline_2d % bs1 % tau
-    tau2 => bspline_2d % bs2 % tau
+    tau1 => self % bspline_2d % bs1 % tau
+    tau2 => self % bspline_2d % bs2 % tau
 
     ! Store number of interpolation points
     nipts1 = size( tau1 )
@@ -201,71 +155,110 @@ contains
 !    print *, "nipts1 = ", nipts1
 !    print *, "nipts2 = ", nipts2
 
-    allocate( gtau (nipts1,nipts2) )
-
     ! Evaluate analytical profile at interpolation points
+    allocate( self % gtau (nipts1,nipts2) )
     do i2 = 1, nipts2
       do i1 = 1, nipts1
-        gtau(i1,i2) = profile_2d % eval( tau1(i1), tau2(i2) )
+        self % gtau(i1,i2) = self % profile_2d % eval( tau1(i1), tau2(i2) )
       end do
     end do
 
     ! If needed, evaluate x1 derivatives at (x1_min,x2) and (x1_max,x2)
-    if (bspline_2d % bs1 % bc_type == sll_p_hermite) then
+    if (self % bspline_2d % bs1 % bc_type == sll_p_hermite) then
       allocate( bc1_min (deg1/2, nipts2) )
       allocate( bc1_max (deg1/2, nipts2) )
       s1 = 1-modulo(deg1,2) ! shift = 1 for even order, 0 for odd order
       do i2 = 1, nipts2
         do j1 = 1, deg1/2
-          bc1_min(j1,i2) = profile_2d % eval( pinfo%x1_min, tau2(i2), diff_x1=j1-s1 )
-          bc1_max(j1,i2) = profile_2d % eval( pinfo%x1_max, tau2(i2), diff_x1=j1-s1 )
+          bc1_min(j1,i2) = self % profile_2d % eval( info%x1_min, tau2(i2), diff_x1=j1-s1 )
+          bc1_max(j1,i2) = self % profile_2d % eval( info%x1_max, tau2(i2), diff_x1=j1-s1 )
         end do
       end do
     end if
 
     ! If needed, evaluate x2 derivatives at (x1,x2_min) and (x1,x2_max)
-    if (bspline_2d % bs2 % bc_type == sll_p_hermite) then
+    if (self % bspline_2d % bs2 % bc_type == sll_p_hermite) then
       allocate( bc2_min (deg2/2, nipts1) )
       allocate( bc2_max (deg2/2, nipts1) )
       s2 = 1-modulo(deg2,2) ! shift = 1 for even order, 0 for odd order
       do i1 = 1, nipts1
         do j2 = 1, deg2/2
-          bc2_min(j2,i1) = profile_2d % eval( tau1(i1), pinfo%x2_min, diff_x2=j2-s2 )
-          bc2_max(j2,i1) = profile_2d % eval( tau1(i1), pinfo%x2_max, diff_x2=j2-s2 )
+          bc2_min(j2,i1) = self % profile_2d % eval( tau1(i1), info%x2_min, diff_x2=j2-s2 )
+          bc2_max(j2,i1) = self % profile_2d % eval( tau1(i1), info%x2_max, diff_x2=j2-s2 )
         end do
       end do
     end if
 
     ! If needed, evaluate (x1,x2) mixed derivatives at 4 corners
-    if (bspline_2d % bs1 % bc_type == sll_p_hermite .and. &
-        bspline_2d % bs2 % bc_type == sll_p_hermite) then
+    if (self % bspline_2d % bs1 % bc_type == sll_p_hermite .and. &
+        self % bspline_2d % bs2 % bc_type == sll_p_hermite) then
       allocate( val_corners (deg1/2, deg2/2, 4) )
       s1 = 1-modulo(deg1,2) ! shift = 1 for even order, 0 for odd order
       s2 = 1-modulo(deg2,2) ! shift = 1 for even order, 0 for odd order
       do j1 = 1, deg1/2
         do j2 = 1, deg2/2
-          val_corners(j1,j2,1) = profile_2d % eval( pinfo%x1_min, pinfo%x2_min, diff_x1=j1-s1, diff_x2=j2-s2 )
-          val_corners(j1,j2,2) = profile_2d % eval( pinfo%x1_max, pinfo%x2_min, diff_x1=j1-s1, diff_x2=j2-s2 )
-          val_corners(j1,j2,3) = profile_2d % eval( pinfo%x1_min, pinfo%x2_max, diff_x1=j1-s1, diff_x2=j2-s2 )
-          val_corners(j1,j2,4) = profile_2d % eval( pinfo%x1_max, pinfo%x2_max, diff_x1=j1-s1, diff_x2=j2-s2 )
+          val_corners(j1,j2,1) = profile_2d % eval( info%x1_min, info%x2_min, diff_x1=j1-s1, diff_x2=j2-s2 )
+          val_corners(j1,j2,2) = profile_2d % eval( info%x1_max, info%x2_min, diff_x1=j1-s1, diff_x2=j2-s2 )
+          val_corners(j1,j2,3) = profile_2d % eval( info%x1_min, info%x2_max, diff_x1=j1-s1, diff_x2=j2-s2 )
+          val_corners(j1,j2,4) = profile_2d % eval( info%x1_max, info%x2_max, diff_x1=j1-s1, diff_x2=j2-s2 )
         end do
       end do
     end if
 
     ! Compute 2D spline that interpolates analytical 2D profile at points above
-    call s_compute_interpolant_with_correct_arguments( bspline_2d, gtau, &
+    call s_compute_interpolant_with_correct_arguments( &
+      self % bspline_2d, &
+      self % gtau, &
       val1_min    = bc1_min, &
       val1_max    = bc1_max, &
       val2_min    = bc2_min, &
       val2_max    = bc2_max, &
       val_corners = val_corners )
 
+    ! Deallocate local arrays
+    if (allocated(bc1_min))     deallocate( bc1_min )
+    if (allocated(bc1_max))     deallocate( bc1_max )
+    if (allocated(bc2_min))     deallocate( bc2_min )
+    if (allocated(bc2_max))     deallocate( bc2_max )
+    if (allocated(val_corners)) deallocate( val_corners )
+
+  end subroutine init
+
+  !-----------------------------------------------------------------------------
+  subroutine run_tests( self, verbose, successful )
+
+    class(t_bspline_2d_test_facility), intent(inout) :: self    ! TODO verify intent
+    logical                          , intent(in   ) :: verbose
+    logical                          , intent(  out) :: successful
+
+    type(sll_t_bspline_2d ) :: bspline_2d
+    type(t_profile_2d_info) :: info
+    type(t_test_report    ) :: report
+    integer                 :: i1, i2
+    real(wp), pointer       :: tau1(:)
+    real(wp), pointer       :: tau2(:)
+    real(wp)                :: error
+    real(wp)                :: max_norm_error
+
+    successful = .false.
+
+    ! Extract information about 2D analytical profile
+    call self % profile_2d % get_info( info )
+
+    ! Get spline interpolation points
+    tau1 => self % bspline_2d % bs1 % tau
+    tau2 => self % bspline_2d % bs2 % tau
+
+    ! Print report to terminal on a single line
+    write(*,'(6i10)', advance='no') &
+      self%nx1, self%nx2, self%deg1, self%deg2, self%bc1, self%bc2
+
     ! Evaluate 2D spline at interpolation points: error should be zero
     max_norm_error = 0.0_wp
-    do i2 = 1, nipts2
-      do i1 = 1, nipts1
-        error = gtau(i1,i2) &
-              - sll_f_interpolate_value_2d( bspline_2d, tau1(i1), tau2(i2) )
+    do i2 = 1, size( tau2 )
+      do i1 = 1, size( tau1 )
+        error = self % gtau(i1,i2) &
+              - sll_f_interpolate_value_2d( self % bspline_2d, tau1(i1), tau2(i2) )
         max_norm_error = max( max_norm_error, abs( error ) )
       end do
     end do
@@ -274,21 +267,23 @@ contains
 !    write(*,*) "max_norm_error = ", max_norm_error
 !    write(*,*)
 
-    ! Deallocate arrays
-    deallocate( gtau )
-    if (allocated(bc1_min))     deallocate( bc1_min )
-    if (allocated(bc1_max))     deallocate( bc1_max )
-    if (allocated(bc2_min))     deallocate( bc2_min )
-    if (allocated(bc2_max))     deallocate( bc2_max )
-    if (allocated(val_corners)) deallocate( val_corners )
-
     ! Store test data into report
     report % name   = 'zero_error'
     report % tol    = 1e-14_wp
     report % error  = max_norm_error
     report % passed = (report%error <= report%tol)
 
-  end subroutine s_interpolate_and_evaluate
+    ! Print report to terminal on a single line
+    write(*,'(e12.2,L12)') report%error, report%passed
+
+    ! Free spline memory
+    ! TODO: maybe do it in another function
+    call sll_s_bspline_2d_free( self % bspline_2d )
+
+    ! Determine if all tests were successful
+    successful = report % passed
+
+  end subroutine run_tests
 
   !-----------------------------------------------------------------------------
   subroutine s_compute_interpolant_with_correct_arguments( &
