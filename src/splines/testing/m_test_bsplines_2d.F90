@@ -29,27 +29,13 @@ module m_test_bsplines_2d
   implicit none
 
   public :: &
-    s_check_all_bcs
+    t_bspline_2d_test_facility
 
   private
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
   !> Working precision
   integer, parameter :: wp = f64
-
-  !> List of available boundary conditions
-  integer, parameter :: bc_kinds(3) = &
-                                 [sll_p_periodic, sll_p_hermite, sll_p_greville]
-
-  !> Numerical parameters
-  type :: t_numerical_params
-    integer  :: nx1
-    integer  :: nx2
-    integer  :: deg1
-    integer  :: deg2
-    integer  :: bc1
-    integer  :: bc2
-  end type t_numerical_params
 
   !> Test report
   type :: t_test_report
@@ -59,15 +45,37 @@ module m_test_bsplines_2d
     logical            :: passed
   end type t_test_report
 
+
+  !> Type for running test
+  type :: t_bspline_2d_test_facility
+
+    class(c_analytical_profile_2d), pointer :: profile_2d
+    integer                                 :: nx1
+    integer                                 :: nx2
+    integer                                 :: deg1
+    integer                                 :: deg2
+    integer                                 :: bc1
+    integer                                 :: bc2
+    type(t_test_report)                     :: report
+
+  contains
+
+    procedure, nopass :: print_header
+    procedure         :: init
+    procedure         :: run_tests
+
+  end type t_bspline_2d_test_facility
+
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 contains
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
-  subroutine s_test_print_header( n_tests )
-    integer, intent(in) :: n_tests
+  !-----------------------------------------------------------------------------
+  subroutine print_header()
 
-    integer          :: i
-    character(len=6) :: is
+    integer, parameter :: n_tests = 1
+    integer            :: i
+    character(len=6)   :: is
 
     write(*, '(6a10)', advance='no') &
       "nx1", "nx2", "degree1", "degree2", "bc1", "bc2"
@@ -80,103 +88,82 @@ contains
     end do
     write(*,*)
 
-  end subroutine s_test_print_header
+  end subroutine print_header
 
   !-----------------------------------------------------------------------------
-  subroutine s_test_print_report( num_params, test_report )
-    type( t_numerical_params ), intent(in) :: num_params
-    type( t_test_report      ), intent(in) :: test_report
+  subroutine init( self, profile_2d, nx1, nx2, deg1, deg2, bc1, bc2 )
 
-    associate( np => num_params, tr => test_report )
+    class(t_bspline_2d_test_facility), intent(  out)         :: self
+    class(c_analytical_profile_2d   ), intent(in   ), target :: profile_2d
+    integer                          , intent(in   )         :: nx1
+    integer                          , intent(in   )         :: nx2
+    integer                          , intent(in   )         :: deg1
+    integer                          , intent(in   )         :: deg2
+    integer                          , intent(in   )         :: bc1
+    integer                          , intent(in   )         :: bc2
 
-      write(*,'(6i10)', advance='no') &
-        np%nx1, np%nx2, np%deg1, np%deg2, np%bc1, np%bc2
+    self % profile_2d => profile_2d
+    self % nx1        =  nx1
+    self % nx2        =  nx2
+    self % deg1       =  deg1
+    self % deg2       =  deg2
+    self % bc1        =  bc1
+    self % bc2        =  bc2
 
-      write(*,'(e12.2,L12)') tr%error, tr%passed
-
-    end associate
-
-  end subroutine s_test_print_report
+  end subroutine init
 
   !-----------------------------------------------------------------------------
-  subroutine s_check_all_bcs( profile_2d, degree1, degree2, nx1, nx2 )
-    class( c_analytical_profile_2d ), intent(in) :: profile_2d
-    integer                         , intent(in) :: degree1
-    integer                         , intent(in) :: degree2
-    integer                         , intent(in) :: nx1
-    integer                         , intent(in) :: nx2
+  subroutine run_tests( self, verbose, successful )
 
-    integer :: bc1
-    integer :: bc2
-    integer :: i1
-    integer :: i2
-    type(t_profile_2d_info) :: pinfo
+    class(t_bspline_2d_test_facility), intent(in   ) :: self
+    logical                          , intent(in   ) :: verbose
+    logical                          , intent(  out) :: successful
+
     type(sll_t_bspline_2d ) :: bspline_2d
-    type(t_test_report)     :: test_report
+    type(t_profile_2d_info) :: info
+    type(t_test_report    ) :: report
 
-    type(t_numerical_params) :: num_params
+    successful = .false.
 
     ! Extract information about 2D analytical profile
-    call profile_2d % get_info( pinfo )
+    call self % profile_2d % get_info( info )
 
-    ! Print header
-    call s_test_print_header( 1 )
+    ! Initialize 2D spline
+    call sll_s_bspline_2d_init( bspline_2d, &
+      self % nx1, &
+      self % nx2, &
+      self % deg1, &
+      self % deg2, &
+      info % x1_min, &
+      info % x2_min, &
+      info % x1_max, &
+      info % x2_max, &
+      self % bc1, &
+      self % bc2 )
 
-    ! Cycle over all kinds of boundary conditions in x1
-    do i1 = 1, size( bc_kinds )
-      bc1 = bc_kinds(i1)
-      if (bc1 == sll_p_periodic .and. (.not. pinfo % x1_periodic)) then
-        cycle
-      end if
+    ! Print report to terminal on a single line
+    write(*,'(6i10)', advance='no') &
+      self%nx1, self%nx2, self%deg1, self%deg2, self%bc1, self%bc2
 
-      ! Cycle over all kinds of boundary conditions in x2
-      do i2 = 1, size( bc_kinds )
-        bc2 = bc_kinds(i2)
-        if (bc2 == sll_p_periodic .and. (.not. pinfo % x2_periodic)) then
-          cycle
-        end if
+    ! Interpolate analytical 2D profile and run some tests
+    call s_interpolate_and_evaluate( self % profile_2d, bspline_2d, report )
 
-        ! Fill-in data structure with all numerical parameters
-        num_params % nx1  = nx1
-        num_params % nx2  = nx2
-        num_params % deg1 = degree1
-        num_params % deg2 = degree2
-        num_params % bc1  = bc1
-        num_params % bc2  = bc2
+    ! Print report to terminal on a single line
+    write(*,'(e12.2,L12)') report%error, report%passed
 
-        ! Initialize spline, each time with new boundary conditions in x1 and x2
-        ! TODO: Hermite BCs require additional input data
-        call sll_s_bspline_2d_init( bspline_2d, &
-          num_params % nx1, &
-          num_params % nx2, &
-          num_params % deg1, &
-          num_params % deg2, &
-          pinfo      % x1_min, &
-          pinfo      % x2_min, &
-          pinfo      % x1_max, &
-          pinfo      % x2_max, &
-          num_params % bc1, &
-          num_params % bc2 )
+    ! Free spline memory
+    call sll_s_bspline_2d_free( bspline_2d )
 
-        ! Interpolate analytical 2D profile and run some tests
-        call s_interpolate_and_evaluate( profile_2d, bspline_2d, test_report )
+    ! Determine if all tests were successful
+    successful = report % passed
 
-        ! Free spline memory
-        call sll_s_bspline_2d_free( bspline_2d )
-
-        ! Write report line
-        call s_test_print_report( num_params, test_report )
-
-      end do
-    end do
-
-  end subroutine s_check_all_bcs
+  end subroutine run_tests
 
   !-----------------------------------------------------------------------------
-  subroutine s_interpolate_and_evaluate( profile_2d, bspline_2d, test_report )
+  subroutine s_interpolate_and_evaluate( profile_2d, bspline_2d, report )
     class( c_analytical_profile_2d ), intent(in   ) :: profile_2d
     type ( sll_t_bspline_2d        ), intent(inout) :: bspline_2d
-    type ( t_test_report           ), intent(  out) :: test_report
+    type ( t_test_report           ), intent(  out) :: report
 
     type(t_profile_2d_info) :: pinfo
     real(wp), pointer       :: tau1(:)
@@ -266,7 +253,6 @@ contains
     end if
 
     ! Compute 2D spline that interpolates analytical 2D profile at points above
-!    call sll_s_compute_bspline_2d( bspline_2d, gtau )
     call s_compute_interpolant_with_correct_arguments( bspline_2d, gtau, &
       val1_min    = bc1_min, &
       val1_max    = bc1_max, &
@@ -297,10 +283,10 @@ contains
     if (allocated(val_corners)) deallocate( val_corners )
 
     ! Store test data into report
-    test_report % name   = 'zero_error'
-    test_report % tol    = 1e-15_wp
-    test_report % error  = max_norm_error
-    test_report % passed = (test_report%error <= test_report%tol)
+    report % name   = 'zero_error'
+    report % tol    = 1e-14_wp
+    report % error  = max_norm_error
+    report % passed = (report%error <= report%tol)
 
   end subroutine s_interpolate_and_evaluate
 
