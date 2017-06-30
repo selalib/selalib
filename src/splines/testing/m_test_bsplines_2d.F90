@@ -67,6 +67,7 @@ module m_test_bsplines_2d
     procedure         :: init
     procedure         :: free
     procedure         :: evaluate_at_interpolation_points
+    procedure         :: evaluate_func_and_grad_on_uniform_grid
 
   end type t_bspline_2d_test_facility
 
@@ -286,6 +287,51 @@ contains
     write(*,'(e12.2,L12)') max_norm_error, success
 
   end subroutine evaluate_at_interpolation_points
+
+  !-----------------------------------------------------------------------------
+  subroutine evaluate_func_and_grad_on_uniform_grid( self, grid_dim, tol, success )
+
+    class(t_bspline_2d_test_facility), intent(in   ) :: self
+    integer                          , intent(in   ) :: grid_dim(2)
+    real(wp)                         , intent(in   ) :: tol
+    logical                          , intent(  out) :: success
+
+    type(t_profile_2d_info) :: info
+    integer                 :: i1, i2
+    real(wp)                :: dx1, x1
+    real(wp)                :: dx2, x2
+    real(wp)                :: error
+    real(wp)                :: max_norm_error
+
+    call self % profile_2d % get_info( info )
+
+    dx1 = (info%x1_max-info%x1_min) / real( grid_dim(1)-1, wp )
+    dx2 = (info%x2_max-info%x2_min) / real( grid_dim(2)-1, wp )
+
+    ! TODO: also evaluate gradient
+
+    ! Evaluate 2D spline on uniform grid
+    max_norm_error = 0.0_wp
+    do i2 = 1, grid_dim(2)
+      x2 = info%x2_min + real(i2-1,wp)*dx2
+      do i1 = 1, grid_dim(1)
+        x1 = info%x1_min + real(i1-1,wp)*dx1
+        error = self % profile_2d % eval( x1, x2 ) &
+              - sll_f_interpolate_value_2d( self % bspline_2d, x1, x2 )
+        max_norm_error = max( max_norm_error, abs( error ) )
+      end do
+    end do
+
+    ! Determine if test was successful
+    success = (max_norm_error <= tol)
+
+    ! Print report to terminal on a single line
+    write(*,'(6i10)', advance='no') &
+      self%nx1, self%nx2, self%deg1, self%deg2, self%bc1, self%bc2
+
+    write(*,'(e12.2,L12)') max_norm_error, success
+
+  end subroutine evaluate_func_and_grad_on_uniform_grid
 
   !-----------------------------------------------------------------------------
   subroutine free( self )
