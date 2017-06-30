@@ -121,7 +121,7 @@ program test_bsplines_2d_new
   write(*,*)
 
   ! Test tolerance: small but not extremely so
-  tol = 1e-13_wp
+  tol = 2e-13_wp
 
   ! Print report header
   call test_facility % print_header()
