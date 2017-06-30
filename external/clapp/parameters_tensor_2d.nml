@@ -1,0 +1,7 @@
+&P_DIMENSION
+  DDM_DIM          = 2,
+ /
+&PARAMETERS
+  PARTITIONER_NAME = 'TENSOR',
+  N_PROCS          = 1, 1,
+ /

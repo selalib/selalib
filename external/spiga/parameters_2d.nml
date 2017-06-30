@@ -1,8 +1,0 @@
-&P_DIMENSION
- P_DIM=          2,
- /
-&PARAMETERS
- N_ELEMENTS= 256, 256,
- DEGREES=          3, 3,
- N_PROCS=          1, 1,
- /

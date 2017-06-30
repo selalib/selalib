@@ -65,8 +65,8 @@ C
 *
       XABS = DABS(XI)
       YABS = DABS(YI)
-      X    = XABS/6.3
-      Y    = YABS/4.4
+      X    = XABS/6.3D0
+      Y    = YABS/4.4D0
 *
 C
 C     THE FOLLOWING IF-STATEMENT PROTECTS
@@ -78,7 +78,7 @@ C
 *
       XABSQ = XABS**2
       XQUAD = XABSQ - YABS**2
-      YQUAD = 2*XABS*YABS
+      YQUAD = 2.0D0*XABS*YABS
 *
       A     = QRHO.LT.0.085264D0
 *
@@ -89,18 +89,18 @@ C  USING A POWER-SERIES (ABRAMOWITZ/STEGUN, EQUATION (7.1.5), P.297)
 C  N IS THE MINIMUM NUMBER OF TERMS NEEDED TO OBTAIN THE REQUIRED
 C  ACCURACY
 C
-        QRHO  = (1-0.85*Y)*DSQRT(QRHO)
-        N     = IDNINT(6 + 72*QRHO)
+        QRHO  = (1.0D0-0.85D0*Y)*SQRT(QRHO)
+        N     = NINT(6.0D0 + 72.0D0*QRHO)
         J     = 2*N+1
-        XSUM  = 1.0/J
+        XSUM  = 1.0D0/DBLE(J)
         YSUM  = 0.0D0
         DO 10 I=N, 1, -1
           J    = J - 2
-          XAUX = (XSUM*XQUAD - YSUM*YQUAD)/I
-          YSUM = (XSUM*YQUAD + YSUM*XQUAD)/I
-          XSUM = XAUX + 1.0/J
+          XAUX = (XSUM*XQUAD - YSUM*YQUAD)/DBLE(I)
+          YSUM = (XSUM*YQUAD + YSUM*XQUAD)/DBLE(I)
+          XSUM = XAUX + 1.0D0/DBLE(J)
  10     CONTINUE
-        U1   = -FACTOR*(XSUM*YABS + YSUM*XABS) + 1.0
+        U1   = -FACTOR*(XSUM*YABS + YSUM*XABS) + 1.0D0
         V1   =  FACTOR*(XSUM*XABS - YSUM*YABS)
         DAUX =  DEXP(-XQUAD)
         U2   =  DAUX*DCOS(YQUAD)
@@ -128,30 +128,30 @@ C
         IF (QRHO.GT.1.0) THEN
           H    = 0.0D0
           KAPN = 0
-          QRHO = DSQRT(QRHO)
-          NU   = IDINT(3 + (1442/(26*QRHO+77)))
+          QRHO = SQRT(QRHO)
+          NU   = INT(3.0D0 + (1442.0D0/(26.0D0*QRHO+77.0D0)))
         ELSE
-          QRHO = (1-Y)*DSQRT(1-QRHO)
-          H    = 1.88*QRHO
-          H2   = 2*H
-          KAPN = IDNINT(7  + 34*QRHO)
-          NU   = IDNINT(16 + 26*QRHO)
+          QRHO = (1.0D0-Y)*SQRT(1.0D0-QRHO)
+          H    = 1.88D0*QRHO
+          H2   = 2.0D0*H
+          KAPN = NINT(7.0D0  + 34.0D0*QRHO)
+          NU   = NINT(16.0D0 + 26.0D0*QRHO)
         ENDIF
 *
         B = (H.GT.0.0)
 *
         IF (B) QLAMBDA = H2**KAPN
 *
-        RX = 0.0
-        RY = 0.0
-        SX = 0.0
-        SY = 0.0
+        RX = 0.0D0
+        RY = 0.0D0
+        SX = 0.0D0
+        SY = 0.0D0
 *
         DO 11 N=NU, 0, -1
           NP1 = N + 1
-          TX  = YABS + H + NP1*RX
-          TY  = XABS - NP1*RY
-          C   = 0.5/(TX**2 + TY**2)
+          TX  = YABS + H + DBLE(NP1)*RX
+          TY  = XABS - DBLE(NP1)*RY
+          C   = 0.5D0/(TX**2 + TY**2)
           RX  = C*TX
           RY  = C*TY
           IF ((B).AND.(N.LE.KAPN)) THEN
@@ -182,8 +182,8 @@ C
       IF (YI.LT.0.0) THEN
 *
         IF (A) THEN
-          U2    = 2*U2
-          V2    = 2*V2
+          U2    = 2.0D0*U2
+          V2    = 2.0D0*V2
         ELSE
           XQUAD =  -XQUAD
 *
@@ -194,9 +194,9 @@ C
           IF ((YQUAD.GT.RMAXGONI).OR.
      *        (XQUAD.GT.RMAXEXP)) GOTO 100
 *
-          W1 =  2*DEXP(XQUAD)
-          U2  =  W1*DCOS(YQUAD)
-          V2  = -W1*DSIN(YQUAD)
+          W1 =  2.0D0*EXP(XQUAD)
+          U2 =  W1*COS(YQUAD)
+          V2 = -W1*SIN(YQUAD)
         END IF
 *
         U = U2 - U

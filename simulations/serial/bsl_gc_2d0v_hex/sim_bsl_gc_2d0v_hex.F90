@@ -216,8 +216,7 @@ program sim_bsl_gc_2d0v_hex
      endif
      open(unit = input_file, file=trim(input_filename_loc),IOStat=IO_stat)
      if( IO_stat /= 0 ) then
-        SLL_ERROR('simulation_2d_guiding_center_hexagonal, &
-             &','can not open file')
+        SLL_ERROR('simulation_2d_guiding_center_hexagonal,','can not open file')
      end if
      print *,'#initialization with filename:'
      print *,'#',trim(input_filename_loc)

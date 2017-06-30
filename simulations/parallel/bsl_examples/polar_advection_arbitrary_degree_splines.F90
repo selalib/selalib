@@ -71,7 +71,7 @@ logical_mesh => sll_f_new_cartesian_mesh_2d(nc_eta1,  nc_eta2,  &
                                     eta1_min, eta1_max, & 
                                     eta2_min, eta2_max)
 
-call spline_xy%initialize( nc_eta1+1, nc_eta2+1, &
+call spline_xy%init( nc_eta1+1, nc_eta2+1, &
                            eta1_min, eta1_max,   &
                            eta2_min, eta2_max,   &
                            sll_p_dirichlet, sll_p_dirichlet, &

@@ -119,7 +119,11 @@ program test_ode_integrators
         call ode%y_ex( t, z0, z_ex )      ! Write exact solution to z_ex
     end select
 
+#ifdef __PGI
+    max_err = max( max_err, sqrt(dot_product(y%array-z_ex,y%array-z_ex)))
+#else
     max_err = max( max_err, norm2( y%array-z_ex ) )
+#endif
     
     if ( t .ge. tend ) exit           ! Stop if final time is reached
     call odeint%step( t, y, h, ynew ) ! Advance solution by one time-step

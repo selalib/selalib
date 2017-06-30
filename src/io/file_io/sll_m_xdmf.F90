@@ -47,11 +47,11 @@ module sll_m_xdmf
     sll_o_binary_write_array
 
 #else
-  use hdf5, only: hid_t
   use sll_m_hdf5_io_serial, only: &
-    sll_o_hdf5_file_close, &
-    sll_o_hdf5_file_create, &
-    sll_o_hdf5_write_array
+    sll_t_hdf5_ser_handle,      &
+    sll_s_hdf5_ser_file_create, &
+    sll_s_hdf5_ser_file_close, &
+    sll_o_hdf5_ser_write_array
 
 #endif
   implicit none
@@ -155,7 +155,7 @@ sll_int32, intent(in), optional :: xmffile_id  !< xmf file unit number
 character(len=4), optional      :: center      !< "Node" or "Cell"
 
 #ifndef NOHDF5
-integer(hid_t) :: hfile_id
+type(sll_t_hdf5_ser_handle)     :: hfile_id
 #else
 sll_int32                       :: file_id     !< hdf5 file unit number
 #endif
@@ -170,10 +170,10 @@ call sll_s_binary_file_create(trim(mesh_name)//"-"//trim(array_name)//".bin", &
 call sll_o_binary_write_array(file_id,array,error)
 call sll_s_binary_file_close(file_id,error)
 #else
-call sll_o_hdf5_file_create(trim(mesh_name)//"-"//trim(array_name)//".h5", &
-                          hfile_id,error)
-call sll_o_hdf5_write_array(hfile_id,array,"/"//trim(array_name),error)
-call sll_o_hdf5_file_close(hfile_id, error)
+call sll_s_hdf5_ser_file_create( trim(mesh_name)//"-"//trim(array_name)//".h5", &
+                           hfile_id, error )
+call sll_o_hdf5_ser_write_array( hfile_id, array, "/"//trim(array_name), error )
+call sll_s_hdf5_ser_file_close( hfile_id, error )
 #endif
 
 if ( present(xmffile_id) .and. present(center)) then
@@ -208,7 +208,7 @@ sll_int32                       :: npoints_x2   !< y nodes number
 sll_int32                       :: npoints_x3   !< z nodes number
     
 #ifndef NOHDF5
-integer(hid_t) :: hfile_id
+type(sll_t_hdf5_ser_handle)     :: hfile_id
 #else
 sll_int32                       :: file_id      !< hdf5 file unit number
 #endif
@@ -223,10 +223,10 @@ call sll_s_binary_file_create(trim(mesh_name)//"-"//trim(array_name)//".bin", &
 call sll_o_binary_write_array(file_id,array,error)
 call sll_s_binary_file_close(file_id,error)
 #else
-call sll_o_hdf5_file_create(trim(mesh_name)//"-"//trim(array_name)//".h5", &
-                          hfile_id,error)
-call sll_o_hdf5_write_array(hfile_id,array,"/"//trim(array_name),error)
-call sll_o_hdf5_file_close(hfile_id, error)
+call sll_s_hdf5_ser_file_create( trim(mesh_name)//"-"//trim(array_name)//".h5", &
+                           hfile_id, error )
+call sll_o_hdf5_ser_write_array( hfile_id, array, "/"//trim(array_name), error )
+call sll_s_hdf5_ser_file_close( hfile_id, error )
 #endif
 
 if ( present(xmffile_id) .and. present(center)) then
@@ -263,7 +263,8 @@ subroutine sll_s_xdmf_corect2d_nodes( file_name,  &
                                       eta2_min,   &
                                       delta_eta2, &
                                       file_format,&
-                                      iplot       ) 
+                                      iplot,      & 
+                                      time        ) 
 
 sll_real64, intent(in)       :: array(:,:)  !< data array
 character(len=*), intent(in) :: file_name   !< xmf file name
@@ -278,10 +279,11 @@ sll_int32                    :: nx1         !< x nodes number
 sll_int32                    :: nx2         !< y nodes number
 character(len=4), optional   :: file_format !< "HDF5" or "Binary"
 sll_int32       , optional   :: iplot       !< plot index
+sll_real64      , optional   :: time        !< time value
 
 character(len=4)             :: cplot     
 #ifndef NOHDF5
-integer(hid_t)               :: hfile_id    !< h5 file unit number
+type(sll_t_hdf5_ser_handle)  :: hfile_id      !< hdf5 file handle
 #endif
     
 nx1 = size(array,1)
@@ -295,6 +297,9 @@ else
 end if
 
 write(file_id,"(a)")"<Grid Name='mesh' GridType='Uniform'>"
+if (present(time)) then
+  write(file_id,"(a,f12.6,a)") "<Time Value='",time,"'/>"
+end if
 write(file_id,"(a,2i5,a)")"<Topology TopologyType='2DCoRectMesh' NumberOfElements='", &
                           nx2,nx1,"'/>"
 write(file_id,"(a)")"<Geometry GeometryType='ORIGIN_DXDY'>"
@@ -318,12 +323,12 @@ if(present(file_format)) then
     end if
 #ifndef NOHDF5
     if (present(iplot)) then
-      call sll_o_hdf5_file_create(array_name//cplot//".h5",hfile_id,error)
+      call sll_s_hdf5_ser_file_create( array_name//cplot//".h5", hfile_id, error )
     else
-      call sll_o_hdf5_file_create(array_name//".h5",hfile_id,error)
+      call sll_s_hdf5_ser_file_create( array_name//".h5", hfile_id, error )
     end if
-    call sll_o_hdf5_write_array(hfile_id,array,"/node_values",error)
-    call sll_o_hdf5_file_close(hfile_id, error)
+    call sll_o_hdf5_ser_write_array( hfile_id, array, "/node_values", error )
+    call sll_s_hdf5_ser_file_close( hfile_id, error )
 #endif
   end if
 else
@@ -370,8 +375,9 @@ character(len=4), optional   :: file_format !< "HDF5" or "Binary"
 sll_int32       , optional   :: iplot       !< plot index
 
 character(len=4)             :: cplot
+logical                      :: hdf5_file_format
 #ifndef NOHDF5
-integer(hid_t)               :: hfile_id    !< h5 file unit number
+type(sll_t_hdf5_ser_handle)  :: hfile_id      !< hdf5 file handle
 #endif
     
 nx1 = size(array,1)
@@ -397,7 +403,12 @@ write(file_id,"(3f12.5)") delta_eta1, delta_eta2, delta_eta3
 write(file_id,"(a)")"</DataItem>"
 write(file_id,"(a)")"</Geometry>"
 write(file_id,"(a)")"<Attribute Name='"//array_name//"' AttributeType='Scalar' Center='Node'>"
-if(present(file_format) .and. file_format == "HDF5") then
+
+hdf5_file_format = .false.
+if(present(file_format)) then
+  if(file_format == "HDF5") hdf5_file_format = .true.
+endif
+if (hdf5_file_format) then
   write(file_id,"(a,3i5,a)")"<DataItem Dimensions='",nx3,nx2,nx1, &
                             "' NumberType='Float' Precision='8' Format='HDF'>"
   if (present(iplot)) then
@@ -407,12 +418,12 @@ if(present(file_format) .and. file_format == "HDF5") then
   end if
 #ifndef NOHDF5
   if (present(iplot)) then
-    call sll_o_hdf5_file_create(array_name//cplot//".h5",hfile_id,error)
+    call sll_s_hdf5_ser_file_create( array_name//cplot//".h5", hfile_id, error )
   else
-    call sll_o_hdf5_file_create(array_name//".h5",hfile_id,error)
+    call sll_s_hdf5_ser_file_create( array_name//".h5", hfile_id, error )
   end if
-  call sll_o_hdf5_write_array(hfile_id,array,"/node_values",error)
-  call sll_o_hdf5_file_close(hfile_id, error)
+  call sll_o_hdf5_ser_write_array( hfile_id, array, "/node_values", error )
+  call sll_s_hdf5_ser_file_close( hfile_id, error )
 #endif
 else
   write(file_id,"(a,3i5,a)")"<DataItem Dimensions='",nx3,nx2,nx1, &
@@ -451,8 +462,9 @@ sll_int32,  optional         :: iplot      !< plot index
 sll_real64, optional         :: time       !< time
 sll_int32                    :: i, j
 character(len=4)             :: cplot
+logical                      :: hdf5_file_format
 #ifndef NOHDF5
-integer(hid_t)               :: hfile_id    !< h5 file unit number
+type(sll_t_hdf5_ser_handle)  :: hfile_id      !< hdf5 file handle
 #endif
     
 nx1 = size(array,1)
@@ -484,7 +496,11 @@ write(file_id,*) (eta2(j),j=1,nx2)
 write(file_id,"(a)")"</DataItem>"
 write(file_id,"(a)")"</Geometry>"
 write(file_id,"(a)")"<Attribute Name='"//array_name//"' AttributeType='Scalar' Center='Node'>"
-if(present(file_format) .and. file_format == "HDF5") then
+hdf5_file_format = .false.
+if(present(file_format)) then
+  if (file_format == "HDF5") hdf5_file_format = .true.
+endif
+if (hdf5_file_format) then
    write(file_id,"(a,2i5,a)")"<DataItem Dimensions='",nx2,nx1, &
                              "' NumberType='Float' Precision='8' Format='HDF'>"
   if (present(iplot)) then
@@ -494,12 +510,12 @@ if(present(file_format) .and. file_format == "HDF5") then
   end if
 #ifndef NOHDF5
   if (present(iplot)) then
-    call sll_o_hdf5_file_create(array_name//cplot//".h5",hfile_id,error)
+    call sll_s_hdf5_ser_file_create( array_name//cplot//".h5", hfile_id, error )
   else
-    call sll_o_hdf5_file_create(array_name//".h5",hfile_id,error)
+    call sll_s_hdf5_ser_file_create( array_name//".h5", hfile_id, error )
   end if
-  call sll_o_hdf5_write_array(hfile_id,array,"/node_values",error)
-  call sll_o_hdf5_file_close(hfile_id, error)
+  call sll_o_hdf5_ser_write_array( hfile_id, array, "/node_values", error )
+  call sll_s_hdf5_ser_file_close( hfile_id, error )
 #endif
 else
   write(file_id,"(a,2i5,a)")"<DataItem Dimensions='",nx2,nx1, &
@@ -539,10 +555,11 @@ character(len=4), optional   :: file_format  !< file format "HDF5" or "Binary"
 sll_int32       , optional   :: iplot        !< plot index
 sll_int32                    :: i, j, k
 #ifndef NOHDF5
-integer(hid_t)               :: hfile_id    !< h5 file unit number
+type(sll_t_hdf5_ser_handle)  :: hfile_id      !< hdf5 file handle
 #endif
 character(len=4)             :: cplot
-    
+logical                      :: hdf5_file_format
+
 nx1 = size(array,1)
 nx2 = size(array,2)
 nx3 = size(array,3)
@@ -576,7 +593,11 @@ write(file_id,*) (eta3(k),k=1,nx3)
 write(file_id,"(a)")"</DataItem>"
 write(file_id,"(a)")"</Geometry>"
 write(file_id,"(a)")"<Attribute Name='"//array_name//"' AttributeType='Scalar' Center='Node'>"
-if(present(file_format) .and. file_format == "HDF5") then
+hdf5_file_format = .false.
+if(present(file_format)) then
+  if(file_format == "HDF5") hdf5_file_format = .true.
+endif
+if (hdf5_file_format) then
   write(file_id,"(a,3i5,a)")"<DataItem Dimensions='",nx3,nx2,nx1, &
                                  "' NumberType='Float' Precision='8' Format='HDF'>"
   if (present(iplot)) then
@@ -586,12 +607,12 @@ if(present(file_format) .and. file_format == "HDF5") then
   end if
 #ifndef NOHDF5
   if (present(iplot)) then
-    call sll_o_hdf5_file_create(array_name//cplot//".h5",hfile_id,error)
+    call sll_s_hdf5_ser_file_create( array_name//cplot//".h5", hfile_id, error )
   else
-    call sll_o_hdf5_file_create(array_name//".h5",hfile_id,error)
+    call sll_s_hdf5_ser_file_create( array_name//".h5", hfile_id, error )
   end if
-  call sll_o_hdf5_write_array(hfile_id,array,"/node_values",error)
-  call sll_o_hdf5_file_close(hfile_id, error)
+  call sll_o_hdf5_ser_write_array( hfile_id, array, "/node_values", error )
+  call sll_s_hdf5_ser_file_close( hfile_id, error )
 #endif
 else
   write(file_id,"(a,3i5,a)")"<DataItem Dimensions='",nx3,nx2,nx1, &
@@ -628,8 +649,9 @@ sll_int32                    :: nx2         !< y nodes number
 character(len=4), optional   :: file_format !< file format "HDF5" or "Binary"
 sll_int32,        optional   :: iplot       !< plot index
 character(len=4)             :: cplot 
+logical                      :: hdf5_file_format
 #ifndef NOHDF5
-integer(hid_t)               :: hfile_id    !< h5 file unit number
+type(sll_t_hdf5_ser_handle)  :: hfile_id      !< hdf5 file handle
 #endif
 
 nx1 = size(array,1)
@@ -650,7 +672,11 @@ write(file_id,"(a,2i5,a)")"<Topology TopologyType='2DSMesh' NumberOfElements='",
                           nx2,nx1,"'/>"
 write(file_id,"(a)")"<Geometry GeometryType='X_Y'>"
 
-if(present(file_format) .and. file_format == "HDF5") then
+hdf5_file_format = .false.
+if(present(file_format)) then
+  if(file_format == "HDF5") hdf5_file_format = .true.
+endif
+if (hdf5_file_format) then
 
   write(file_id,"(a,2i5,a)")"<DataItem Dimensions='",nx2,nx1, &
                             "' NumberType='Float' Precision='8' Format='HDF'>"
@@ -666,9 +692,9 @@ if(present(file_format) .and. file_format == "HDF5") then
   write(file_id,"(a)")"</DataItem>"
 
 #ifndef NOHDF5
-  call sll_o_hdf5_file_create(file_name//".h5",hfile_id,error)
-  call sll_o_hdf5_write_array(hfile_id,eta1,"/x1_values",error)
-  call sll_o_hdf5_write_array(hfile_id,eta2,"/x2_values",error)
+  call sll_s_hdf5_ser_file_create( file_name//".h5", hfile_id, error )
+  call sll_o_hdf5_ser_write_array( hfile_id, eta1, "/x1_values", error )
+  call sll_o_hdf5_ser_write_array( hfile_id, eta2, "/x2_values", error )
 #endif
 
 else
@@ -689,7 +715,7 @@ write(file_id,"(a)") &
 "<Attribute Name='"//array_name//"' AttributeType='Scalar' Center='Node'>"
 
 #ifndef NOHDF5
-if(present(file_format) .and. file_format == "HDF5") then
+if(hdf5_file_format) then
 
   write(file_id,"(a,2i5,a)")"<DataItem Dimensions='",nx2,nx1, &
                             "' NumberType='Float' Precision='8' Format='HDF'>"
@@ -699,8 +725,8 @@ if(present(file_format) .and. file_format == "HDF5") then
     write(file_id,"(a)")array_name//".h5:/node_values"
   end if
 
-  call sll_o_hdf5_write_array(hfile_id,array,"/node_values",error)
-  call sll_o_hdf5_file_close(hfile_id, error)
+  call sll_o_hdf5_ser_write_array( hfile_id, array, "/node_values", error )
+  call sll_s_hdf5_ser_file_close( hfile_id, error )
 
 else
 #endif
@@ -759,9 +785,10 @@ sll_int32                    :: nx3           !< z nodes number
 character(len=4), optional   :: file_format   !< file format "HDF5" or "Binary"
 sll_int32       , optional   :: iplot         !< plot index
 
-character(len=4)             :: cplot         
+character(len=4)             :: cplot
+logical                      :: hdf5_file_format
 #ifndef NOHDF5
-integer(hid_t)               :: hfile_id    !< h5 file unit number
+type(sll_t_hdf5_ser_handle)  :: hfile_id      !< hdf5 file handle
 #endif
 
 nx1 = size(array,1)
@@ -784,7 +811,11 @@ write(file_id,"(a,3i5,a)")"<Topology TopologyType='3DSMesh' NumberOfElements='",
                           nx3,nx2,nx1,"'/>"
 write(file_id,"(a)")"<Geometry GeometryType='X_Y_Z'>"
 
-if(present(file_format) .and. file_format == "HDF5") then
+hdf5_file_format = .false.
+if(present(file_format)) then
+  if(file_format == "HDF5") hdf5_file_format = .true.
+endif
+if (hdf5_file_format) then
 
   write(file_id,"(a,3i5,a)")"<DataItem Dimensions='",nx3,nx2,nx1, &
                             "' NumberType='Float' Precision='8' Format='HDF'>"
@@ -800,10 +831,10 @@ if(present(file_format) .and. file_format == "HDF5") then
   write(file_id,"(a)")"</DataItem>"
 
 #ifndef NOHDF5
-  call sll_o_hdf5_file_create(array_name//".h5",hfile_id,error)
-  call sll_o_hdf5_write_array(hfile_id,eta1,"/x1_values",error)
-  call sll_o_hdf5_write_array(hfile_id,eta2,"/x2_values",error)
-  call sll_o_hdf5_write_array(hfile_id,eta3,"/x3_values",error)
+  call sll_s_hdf5_ser_file_create( array_name//".h5", hfile_id, error )
+  call sll_o_hdf5_ser_write_array( hfile_id, eta1, "/x1_values", error )
+  call sll_o_hdf5_ser_write_array( hfile_id, eta2, "/x2_values", error )
+  call sll_o_hdf5_ser_write_array( hfile_id, eta3, "/x3_values", error )
 #endif
 
 else
@@ -833,7 +864,7 @@ else
 end if
 
 #ifndef NOHDF5
-if(present(file_format) .and. file_format == "HDF5") then
+if(hdf5_file_format) then
 
    write(file_id,"(a,3i5,a)")"<DataItem Dimensions='",nx3,nx2,nx1, &
                              "' NumberType='Float' Precision='8' Format='HDF'>"
@@ -843,8 +874,8 @@ if(present(file_format) .and. file_format == "HDF5") then
     write(file_id,"(a)")array_name//".h5:/node_values"
   end if
 
-   call sll_o_hdf5_write_array(hfile_id,array,"/node_values",error)
-   call sll_o_hdf5_file_close(hfile_id, error)
+   call sll_o_hdf5_ser_write_array( hfile_id, array, "/node_values", error )
+   call sll_s_hdf5_ser_file_close( hfile_id, error )
 
 else
 #endif
@@ -913,7 +944,7 @@ subroutine sll_s_plot_f_cartesian( iplot,      &
   character(len=4)                        :: cplot
 
 #ifndef NOHDF5
-integer(hid_t) :: hfile_id
+type(sll_t_hdf5_ser_handle)  :: hfile_id      !< hdf5 file handle
 #endif
   
   SLL_ASSERT(iplot > 0)
@@ -929,12 +960,12 @@ integer(hid_t) :: hfile_id
     end do
 
 #ifndef NOHDF5
-    call sll_o_hdf5_file_create("cartesian_mesh-x1.h5",hfile_id,error)
-    call sll_o_hdf5_write_array(hfile_id,x1,"/x1",error)
-    call sll_o_hdf5_file_close(hfile_id, error)
-    call sll_o_hdf5_file_create("cartesian_mesh-x2.h5",hfile_id,error)
-    call sll_o_hdf5_write_array(hfile_id,x2,"/x2",error)
-    call sll_o_hdf5_file_close(hfile_id, error)
+    call sll_s_hdf5_ser_file_create( "cartesian_mesh-x1.h5", hfile_id, error )
+    call sll_o_hdf5_ser_write_array( hfile_id, x1, "/x1", error )
+    call sll_s_hdf5_ser_file_close( hfile_id, error )
+    call sll_s_hdf5_ser_file_create( "cartesian_mesh-x2.h5", hfile_id, error )
+    call sll_o_hdf5_ser_write_array( hfile_id, x2, "/x2", error )
+    call sll_s_hdf5_ser_file_close( hfile_id, error )
 #endif
 
     deallocate(x1)
@@ -995,17 +1026,17 @@ subroutine sll_s_plot_f( &
   character(len=4) :: cplot
 
 #ifndef NOHDF5
-  integer(hid_t) :: hfile_id
+  type(sll_t_hdf5_ser_handle)  :: hfile_id      !< hdf5 file handle
   
   if (present(x1).and.present(x2)) then
 
 
-    call sll_o_hdf5_file_create(trim(mesh_name)//"-x1.h5",hfile_id,ierr)
-    call sll_o_hdf5_write_array(hfile_id,x1,"/x1",ierr)
-    call sll_o_hdf5_file_close(hfile_id, ierr)
-    call sll_o_hdf5_file_create(trim(mesh_name)//"-x2.h5",hfile_id,ierr)
-    call sll_o_hdf5_write_array(hfile_id,x2,"/x2",ierr)
-    call sll_o_hdf5_file_close(hfile_id, ierr)
+    call sll_s_hdf5_ser_file_create( trim(mesh_name)//"-x1.h5", hfile_id, ierr )
+    call sll_o_hdf5_ser_write_array( hfile_id, x1, "/x1", ierr )
+    call sll_s_hdf5_ser_file_close( hfile_id, ierr )
+    call sll_s_hdf5_ser_file_create( trim(mesh_name)//"-x2.h5", hfile_id, ierr )
+    call sll_o_hdf5_ser_write_array( hfile_id, x2, "/x2", ierr )
+    call sll_s_hdf5_ser_file_close( hfile_id, ierr )
 
   end if
 

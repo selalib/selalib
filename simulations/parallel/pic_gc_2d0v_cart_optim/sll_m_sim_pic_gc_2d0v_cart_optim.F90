@@ -51,7 +51,7 @@ module sll_m_sim_pic_gc_2d0v_cart_optim
     sll_t_particle_group_2d
 
   use sll_m_particle_initializers_2d, only: &
-    sll_s_initial_particles_2d_kh
+    sll_s_initial_random_particles_2d_kh
 
   use sll_m_particle_representations, only: &
     sll_t_particle_2d, &
@@ -206,11 +206,12 @@ contains
     enddo
 
     pa_gr => sim%part_group
-    call sll_s_initial_particles_2d_kh( ALPHA, KX, sim%m2d,     &
-                                      sim%parts_number,        &
-                                      pa_gr, &
-                                      rand_seed, sim%my_rank, &
-                                      sim%world_size )
+    call sll_s_initial_random_particles_2d_kh( ALPHA,  &
+         KX, sim%m2d,            &
+         sim%parts_number,       &
+         pa_gr, &
+         rand_seed, sim%my_rank, &
+         sim%world_size )
     SLL_DEALLOCATE_ARRAY( rand_seed, ierr )
     !$omp parallel
     !$omp do

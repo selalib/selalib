@@ -11,16 +11,16 @@ program sim_fsl_ad_2d0v_curv
     sll_p_pi
 
   use sll_m_cubic_splines, only: &
-    sll_s_compute_cubic_spline_2d, &
-    sll_s_deposit_value_2d, &
-    sll_f_interpolate_value_2d, &
-    sll_f_new_cubic_spline_2d, &
+    sll_s_cubic_spline_2d_compute_interpolant, &
+    sll_s_cubic_spline_2d_deposit_value, &
+    sll_f_cubic_spline_2d_eval, &
+    sll_s_cubic_spline_2d_init, &
     sll_t_cubic_spline_2d
 
   implicit none
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
-  type(sll_t_cubic_spline_2d), pointer :: spl_bsl,spl_bsl_nc,spl_fsl,spl_fsl_nc
+  type(sll_t_cubic_spline_2d) :: spl_bsl,spl_bsl_nc,spl_fsl,spl_fsl_nc
   sll_int32  :: N,Neta1,Neta2,mesh_case,test_case,step,nb_step,visu_step,field_case
   sll_int32  :: i,j,bc1_type,bc2_type,err,it
   sll_int32  :: i1,i2,i3
@@ -186,19 +186,19 @@ program sim_fsl_ad_2d0v_curv
   SLL_ALLOCATE(diag(10,0:nb_step), err)
 	
   ! creation of the splines
-  spl_bsl => sll_f_new_cubic_spline_2d(Neta1+1, Neta2+1, &
+  call sll_s_cubic_spline_2d_init(spl_bsl, Neta1+1, Neta2+1, &
     eta1_min, eta1_max, &
     0._f64, 2._f64*sll_p_pi, &
     bc1_type, bc2_type)
-  spl_bsl_nc => sll_f_new_cubic_spline_2d(Neta1+1, Neta2+1, &
+  call sll_s_cubic_spline_2d_init(spl_bsl_nc, Neta1+1, Neta2+1, &
     eta1_min, eta1_max, &
     0._f64, 2._f64*sll_p_pi, &
     bc1_type, bc2_type)
-  spl_fsl => sll_f_new_cubic_spline_2d(Neta1+1, Neta2+1, &
+  call sll_s_cubic_spline_2d_init(spl_fsl, Neta1+1, Neta2+1, &
     eta1_min, eta1_max, &
     0._f64, 2._f64*sll_p_pi, &
     bc1_type, bc2_type)
-  spl_fsl_nc => sll_f_new_cubic_spline_2d(Neta1+1, Neta2+1, &
+  call sll_s_cubic_spline_2d_init(spl_fsl_nc, Neta1+1, Neta2+1, &
     eta1_min, eta1_max, &
     0._f64, 2._f64*sll_p_pi, &
     bc1_type, bc2_type)
@@ -348,10 +348,10 @@ program sim_fsl_ad_2d0v_curv
       fh_fsl_nc(i,Neta2+1) = fh_fsl_nc(i,1)
     enddo
       
-    call sll_s_compute_cubic_spline_2d(fh_bsl,spl_bsl)
-    call sll_s_compute_cubic_spline_2d(fh_bsl_nc,spl_bsl_nc)
-    call sll_s_compute_cubic_spline_2d(fh_fsl,spl_fsl)
-    call sll_s_compute_cubic_spline_2d(fh_fsl_nc,spl_fsl_nc)
+    call sll_s_cubic_spline_2d_compute_interpolant(fh_bsl,spl_bsl)
+    call sll_s_cubic_spline_2d_compute_interpolant(fh_bsl_nc,spl_bsl_nc)
+    call sll_s_cubic_spline_2d_compute_interpolant(fh_fsl,spl_fsl)
+    call sll_s_cubic_spline_2d_compute_interpolant(fh_fsl_nc,spl_fsl_nc)
     
     do i=1,Neta1+1
       do j=1,Neta2+1
@@ -651,8 +651,8 @@ program sim_fsl_ad_2d0v_curv
         endif
       
         ! --- Interpolation ---
-        fh_bsl(i,j)    = sll_f_interpolate_value_2d(eta1,eta2,spl_bsl)
-        fh_bsl_nc(i,j) = sll_f_interpolate_value_2d(eta1,eta2,spl_bsl_nc)/jac_array(i,j)
+        fh_bsl(i,j)    = sll_f_cubic_spline_2d_eval(eta1,eta2,spl_bsl)
+        fh_bsl_nc(i,j) = sll_f_cubic_spline_2d_eval(eta1,eta2,spl_bsl_nc)/jac_array(i,j)
         
         ! ------------ FSL part -----------------
         
@@ -786,8 +786,8 @@ program sim_fsl_ad_2d0v_curv
     
     ! --- Deposition ---
     
-    call sll_s_deposit_value_2d(eta1feet,eta2feet,spl_fsl,fh_fsl)
-    call sll_s_deposit_value_2d(eta1feet,eta2feet,spl_fsl_nc,fh_fsl_nc)
+    call sll_s_cubic_spline_2d_deposit_value(eta1feet,eta2feet,spl_fsl,fh_fsl)
+    call sll_s_cubic_spline_2d_deposit_value(eta1feet,eta2feet,spl_fsl_nc,fh_fsl_nc)
     
     ! --- Some adding operations ---
     

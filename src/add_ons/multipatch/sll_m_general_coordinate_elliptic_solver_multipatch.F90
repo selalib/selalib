@@ -25,7 +25,6 @@ module sll_m_general_coordinate_elliptic_solver_multipatch
     sll_p_es_gauss_lobatto
 
   use sll_m_scalar_field_2d_multipatch, only: &
-    sll_o_delete, &
     sll_t_scalar_field_multipatch_2d
 
   use sll_m_sparse_matrix, only: &
@@ -43,14 +42,16 @@ module sll_m_general_coordinate_elliptic_solver_multipatch
     sll_f_time_elapsed_since, &
     sll_t_time_mark
 
+  use sll_m_arbitrary_degree_spline_interpolator_2d, only: &
+    sll_t_arbitrary_degree_spline_interpolator_2d
+
   implicit none
 
   public :: &
     sll_s_factorize_mat_es_mp, &
     sll_t_general_coordinate_elliptic_solver_mp, &
-    sll_s_initialize_general_elliptic_solver_mp, &
+    sll_s_general_elliptic_solver_mp_init, &
     sll_f_new_general_elliptic_solver_mp, &
-    sll_o_solve_mp, &
     sll_s_solve_general_coordinates_elliptic_eq_mp
 
   private
@@ -89,20 +90,14 @@ type :: sll_t_general_coordinate_elliptic_solver_mp
    type(sll_t_csr_matrix),         pointer :: sll_csr_mat
    type(sll_t_csr_matrix),         pointer :: sll_csr_mat_source
 
+contains
+
+   procedure :: init  => sll_s_general_elliptic_solver_mp_init
+   procedure :: free  => sll_s_solve_general_coordinates_elliptic_eq_mp
+   procedure :: solve => sll_s_solve_general_coordinates_elliptic_eq_mp
+
 end type sll_t_general_coordinate_elliptic_solver_mp
 
-interface delete
-  module procedure delete_elliptic_mp
-end interface delete
-
-interface initialize
-  module procedure sll_s_initialize_general_elliptic_solver_mp
-end interface initialize
-
-interface sll_o_solve_mp
-  module procedure sll_s_solve_general_coordinates_elliptic_eq_mp
-end interface sll_o_solve_mp
-  
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 contains ! *******************************************************************
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -124,14 +119,14 @@ contains ! *******************************************************************
 !> @param[in] T the transformation multipatch
 !> @return the type sll_t_general_coordinate_elliptic_solver_mp
 
-subroutine sll_s_initialize_general_elliptic_solver_mp( &
+subroutine sll_s_general_elliptic_solver_mp_init( &
      es_mp,                                       &
      quadrature_type1,                            &
      quadrature_type2,                            &
      T)
   
-type(sll_t_general_coordinate_elliptic_solver_mp), intent(out) :: es_mp
-type(sll_t_coordinate_transformation_multipatch_2d), pointer :: T
+class(sll_t_general_coordinate_elliptic_solver_mp), intent(out) :: es_mp
+type(sll_t_coordinate_transformation_multipatch_2d), target :: T
 type(sll_t_cartesian_mesh_2d), pointer                         :: lm
 sll_int32, intent(in) :: quadrature_type1
 sll_int32, intent(in) :: quadrature_type2
@@ -155,8 +150,8 @@ SLL_ALLOCATE(es_mp%spline_degree1(num_patches),ierr)
 SLL_ALLOCATE(es_mp%spline_degree2(num_patches),ierr)
 
 do i = 1, es_mp%T%number_patches
-   es_mp%spline_degree1(i) = es_mp%T%transfs(i)%T%spline_deg1
-   es_mp%spline_degree2(i) = es_mp%T%transfs(i)%T%spline_deg2
+   es_mp%spline_degree1(i) = es_mp%T%transfs(i)%spline_deg1
+   es_mp%spline_degree2(i) = es_mp%T%transfs(i)%spline_deg2
    es_mp%total_num_splines_loc(i) = (es_mp%spline_degree1(i)+1)*(es_mp%spline_degree2(i)+1)
 end do
 
@@ -204,15 +199,15 @@ SLL_ALLOCATE(es_mp%phi_vec(es_mp%solution_size_final),ierr)
 
 ! ------------------------------------------------------------------
 ! size of knots and allocation 
-knots1_size = size(es_mp%T%transfs(1)%T%knots1)
-knots2_size = size(es_mp%T%transfs(1)%T%knots2)
+knots1_size = size(es_mp%T%transfs(1)%knots1)
+knots2_size = size(es_mp%T%transfs(1)%knots2)
 if (es_mp%T%number_patches >1) then
   do i = 2, es_mp%T%number_patches
-    if (knots1_size > size(es_mp%T%transfs(i-1)%T%knots1)) then
-      knots1_size = size(es_mp%T%transfs(i-1)%T%knots1)
+    if (knots1_size > size(es_mp%T%transfs(i-1)%knots1)) then
+      knots1_size = size(es_mp%T%transfs(i-1)%knots1)
     end if
-    if (knots2_size > size(es_mp%T%transfs(i-1)%T%knots2)) then
-      knots2_size = size(es_mp%T%transfs(i-1)%T%knots2)
+    if (knots2_size > size(es_mp%T%transfs(i-1)%knots2)) then
+      knots2_size = size(es_mp%T%transfs(i-1)%knots2)
     end if
   end do
 end if
@@ -225,8 +220,8 @@ es_mp%phi_vec(:) = 0.0_f64
 es_mp%intjac     = 0.0_f64
 
 do i = 1, num_patches
-  es_mp%knots1(i,:) = es_mp%T%transfs(i)%T%knots1
-  es_mp%knots2(i,:) = es_mp%T%transfs(i)%T%knots2
+  es_mp%knots1(i,:) = es_mp%T%transfs(i)%knots1
+  es_mp%knots2(i,:) = es_mp%T%transfs(i)%knots2
 end do
 
 SLL_ALLOCATE(es_mp%num_elts_no_null_patchs(num_patches),ierr)
@@ -285,7 +280,7 @@ es_mp%values_jacobian = 0.0_f64
 SLL_ALLOCATE(es_mp%tab_index_coeff1(num_patches,max_num_cells_eta1*(max_degspline1+2)),ierr)
 SLL_ALLOCATE(es_mp%tab_index_coeff2(num_patches,max_num_cells_eta2*(max_degspline2+2)),ierr)
    
-end subroutine sll_s_initialize_general_elliptic_solver_mp
+end subroutine sll_s_general_elliptic_solver_mp_init
  
 !> @brief Initialization for elleptic solver.
 !> @details To have the function phi such that 
@@ -317,7 +312,7 @@ double precision      :: time
 
 call sll_s_set_time_mark(t0)
 SLL_ALLOCATE(es_mp,ierr)
-call initialize( es_mp, quadrature_type1, quadrature_type2, T)
+call es_mp%init( quadrature_type1, quadrature_type2, T)
 
 time = sll_f_time_elapsed_since(t0)
 print*, '#time for sll_f_new_general_elliptic_solver', time
@@ -541,8 +536,8 @@ do patch = 1,es_mp%T%number_patches
     num_pts_g1 = size(es_mp%gauss_pts1,3)
     num_pts_g2 = size(es_mp%gauss_pts2,3)
 
-    eta1  = eta1_min + (cell_i-1)*delta1
-    eta2  = eta2_min + (cell_j-1)*delta2
+    eta1  = eta1_min + real(cell_i-1,f64)*delta1
+    eta2  = eta2_min + real(cell_j-1,f64)*delta2
   
     do j=1,num_pts_g2
 
@@ -552,7 +547,7 @@ do patch = 1,es_mp%T%number_patches
       local_spline_index2 = es_mp%spline_degree2(patch) + cell_j
       call sll_s_interv(deboor, &
         es_mp%knots2(patch,:), &
-        size(es_mp%T%transfs(1)%T%knots2), gpt2, left_y, mflag_y )
+        size(es_mp%T%transfs(1)%knots2), gpt2, left_y, mflag_y )
       if (mflag_y .eq. -1) stop "Problem : interv2 returned flag = -1"
     
       call sll_s_bsplvd( deboor,                       &
@@ -569,10 +564,10 @@ do patch = 1,es_mp%T%number_patches
       do i=1,num_pts_g1
         gpt1  = eta1  + 0.5_f64*delta1 * ( es_mp%gauss_pts1(patch,1,i) + 1.0_f64 )
         wgpt1 = 0.5_f64*delta1*es_mp%gauss_pts1(patch,2,i)
-        gtmp1   = gpt1
+        gtmp1 = gpt1
         local_spline_index1 = es_mp%spline_degree1(patch) + cell_i
         call sll_s_interv(deboor, &
-         es_mp%knots1(patch,:),size(es_mp%T%transfs(1)%T%knots1),gpt1,left_x,mflag_x)
+         es_mp%knots1(patch,:),size(es_mp%T%transfs(1)%knots1),gpt1,left_x,mflag_x)
 
         call sll_s_bsplvd( deboor,                       &
                      es_mp%knots1(patch,:),        &
@@ -585,24 +580,24 @@ do patch = 1,es_mp%T%number_patches
 
         es_mp%tab_index_coeff1(patch,cell_i + num_cells1*(i-1)) = left_x
 
-        val_c       = c_field%fields(patch)%f%value_at_point(gpt1,gpt2)
-        val_a11     = a11_field_mat%fields(patch)%f%value_at_point(gpt1,gpt2)
-        val_a12     = a12_field_mat%fields(patch)%f%value_at_point(gpt1,gpt2)
-        val_a21     = a21_field_mat%fields(patch)%f%value_at_point(gpt1,gpt2)
-        val_a22     = a22_field_mat%fields(patch)%f%value_at_point(gpt1,gpt2)
+        val_c       = c_field%fields(patch)%value_at_point(gpt1,gpt2)
+        val_a11     = a11_field_mat%fields(patch)%value_at_point(gpt1,gpt2)
+        val_a12     = a12_field_mat%fields(patch)%value_at_point(gpt1,gpt2)
+        val_a21     = a21_field_mat%fields(patch)%value_at_point(gpt1,gpt2)
+        val_a22     = a22_field_mat%fields(patch)%value_at_point(gpt1,gpt2)
 
-        val_b1      = b1_field_vect%fields(patch)%f%value_at_point(gpt1,gpt2)
-        val_b1_der1 = b1_field_vect%fields(patch)%f%first_deriv_eta1_value_at_point(gpt1,gpt2)
-        val_b1_der2 = b1_field_vect%fields(patch)%f%first_deriv_eta2_value_at_point(gpt1,gpt2)
+        val_b1      = b1_field_vect%fields(patch)%value_at_point(gpt1,gpt2)
+        val_b1_der1 = b1_field_vect%fields(patch)%first_deriv_eta1_value_at_point(gpt1,gpt2)
+        val_b1_der2 = b1_field_vect%fields(patch)%first_deriv_eta2_value_at_point(gpt1,gpt2)
 
-        val_b2      = b2_field_vect%fields(patch)%f%value_at_point(gpt1,gpt2)
-        val_b2_der1 = b2_field_vect%fields(patch)%f%first_deriv_eta1_value_at_point(gpt1,gpt2)
-        val_b2_der2 = b2_field_vect%fields(patch)%f%first_deriv_eta2_value_at_point(gpt1,gpt2)
+        val_b2      = b2_field_vect%fields(patch)%value_at_point(gpt1,gpt2)
+        val_b2_der1 = b2_field_vect%fields(patch)%first_deriv_eta1_value_at_point(gpt1,gpt2)
+        val_b2_der2 = b2_field_vect%fields(patch)%first_deriv_eta2_value_at_point(gpt1,gpt2)
  
-        jac_mat     = c_field%fields(patch)%f%get_jacobian_matrix(gpt1,gpt2)
+        jac_mat     = c_field%fields(patch)%get_jacobian_matrix(gpt1,gpt2)
         val_jac     = jac_mat(1,1)*jac_mat(2,2) - jac_mat(1,2)*jac_mat(2,1)
 
-        if (val_jac .eq. 0.) stop " ATTENTION : the value of the jacobian is zero !!"
+        if (val_jac == 0.0_f64) stop " ATTENTION : the value of the jacobian is zero !!"
 
         es_mp%values_jacobian(patch,cell_i + num_cells1*(i-1),cell_j + num_cells2*(j-1)) = val_jac
       
@@ -708,9 +703,8 @@ do patch = 1,es_mp%T%number_patches
     end do
  
 do mm = 0,es_mp%spline_degree2(patch)
-   index3 = cell_j + mm
-   
 
+   index3 = cell_j + mm
    
    do i = 0,es_mp%spline_degree1(patch)
       
@@ -857,7 +851,11 @@ class is (sll_t_scalar_field_multipatch_2d)
    
 ! put the spline coefficients in a 1d array
 do patch = 1,es_mp%T%number_patches
-   coeff_rho => type_field%fields(patch)%f%interp_2d%get_coefficients()
+   
+   select type( interp_2d => type_field%fields(patch)%interp_2d)
+   class is (sll_t_arbitrary_degree_spline_interpolator_2d)
+   coeff_rho => interp_2d%coeff_splines
+   end select
    lm => es_mp%T%get_cartesian_mesh(patch-1)
  
    sz_coef2 = type_field%interps(patch)%interp%size_coeffs2
@@ -907,7 +905,7 @@ do patch = 1,es_mp%T%number_patches
       
     end do
   end do
-  call phi%fields(patch)%f%interp_2d%set_coefficients(tmp_phi_vec(1:sz_coef1*sz_coef2))
+  call phi%fields(patch)%interp_2d%set_coefficients(tmp_phi_vec(1:sz_coef1*sz_coef2))
   SLL_DEALLOCATE(tmp_phi_vec,ierr)
 end do
 
@@ -1020,14 +1018,14 @@ real(8)               :: eta
 real(8)               :: delta
 
 ! This routine needs some error-checking...
-delta = (eta_max - eta_min)/num_cells
+delta = (eta_max - eta_min)/real(num_cells,f64)
 
 if ( (bc_left  == KNOTS_PERIODIC) .and. &
      (bc_right == KNOTS_PERIODIC) ) then 
    ! it is intentional that eta_min is not used, one intends to consider
    ! only the [0,1] interval...
    do k = -spline_degree, spline_degree+1
-      knots(k+spline_degree+1) = delta*k 
+      knots(k+spline_degree+1) = delta*real(k ,f64)
    end do
 else if ( (bc_left  == KNOTS_DIRICHLET) .and. &
           (bc_right == KNOTS_DIRICHLET) ) then 
@@ -1060,10 +1058,10 @@ real(8), dimension(:) :: knots
 integer               :: i
 real(8)               :: delta
 
-delta = (eta_max - eta_min)/num_cells
+delta = (eta_max - eta_min)/real(num_cells,f64)
 
 do i = - spline_degree, num_cells + spline_degree
-  knots( i+ spline_degree + 1 ) = eta_min + i* delta
+  knots( i+ spline_degree + 1 ) = eta_min + real(i,f64) * delta
 end do
 end subroutine initialize_knots_per
 
@@ -1082,7 +1080,7 @@ integer               :: i
 real(8)               :: delta
 real(8)               :: eta
 
-delta = (eta_max - eta_min)/num_cells
+delta = (eta_max - eta_min)/real(num_cells,f64)
 do i = 1, spline_degree + 1
   knots(i) = eta_min
 enddo
@@ -1114,7 +1112,7 @@ real(8), dimension(:) :: knots
 real(8)               :: delta
 
 ! This routine needs some error-checking...
-delta = (eta_max - eta_min)/num_cells
+delta = (eta_max - eta_min)/real(num_cells,f64)
 
 if (bc_left  == KNOTS_PERIODIC .and. &
     bc_right == KNOTS_PERIODIC ) then 

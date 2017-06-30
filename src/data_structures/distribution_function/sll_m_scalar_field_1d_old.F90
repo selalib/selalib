@@ -147,8 +147,6 @@ contains   ! *i****************************************************************
     character(len=*), optional              :: output_file_name
     character(len=64)                       :: file_name
 
-    sll_int32                               :: error
-
     if(present(multiply_by_jacobian))then
       print*,'multiply_by_jacobian option is not implemented'
     endif
@@ -162,7 +160,7 @@ contains   ! *i****************************************************************
       file_name = scalar_field%name
     endif 
 
-    call sll_s_gnuplot_write(scalar_field%data,file_name,error)
+    call sll_s_gnuplot_write(scalar_field%data,file_name,1)
   end subroutine write_scalar_field_1d
 
 end module sll_m_scalar_field_1d_old

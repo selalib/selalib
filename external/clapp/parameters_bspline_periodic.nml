@@ -1,0 +1,11 @@
+&P_DIMENSION
+ P_DIM=          1,
+ /
+&PARAMETERS
+ N_ELEMENTS=16,
+ DEGREES=          3,
+ N_PROCS=          1,
+ BC_MIN=           1,
+ BC_MAX=           1,
+ /
+ 

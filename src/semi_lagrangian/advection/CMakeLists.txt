@@ -3,7 +3,6 @@ IF(MPI_ENABLED)
 ENDIF()
 
 SET( ADVECTION_SRC_FILES 
-       sll_m_lagrange_interpolation.F90 
        sll_m_advection_1d_periodic.F90
        sll_m_advection_1d_non_uniform_cubic_splines.F90
        sll_m_advection_1d_BSL.F90

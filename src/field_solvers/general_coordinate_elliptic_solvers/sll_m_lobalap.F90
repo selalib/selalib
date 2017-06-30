@@ -648,7 +648,7 @@ contains
     implicit none
 
     integer :: nsym=1,mp=6,ifac=1,isol=0,ier
-    sll_real64 :: energ,vu,vfg
+    sll_real64 :: energ,vu(1),vfg(1)
 
     write(*,*) 'Factorisation LU...'
 

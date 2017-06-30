@@ -1,5 +1,5 @@
 IF( NOT STDF95)
-IF(HDF5_ENABLED)
+IF(HDF5_ENABLED AND HDF5_IS_PARALLEL)
 #hdf5 is parallel and inside aligned_translation_2d.F90
 #hdf5 is used
 #so the compiler should be parallel
@@ -28,5 +28,5 @@ IF(HDF5_ENABLED)
 
   ENDIF(BUILD_TESTING)
 
-ENDIF(HDF5_ENABLED)
+ENDIF(HDF5_ENABLED AND HDF5_IS_PARALLEL)
 ENDIF(NOT STDF95)
