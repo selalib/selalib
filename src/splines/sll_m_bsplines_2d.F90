@@ -175,7 +175,7 @@ subroutine sll_s_compute_bspline_2d( self, gtau, &
   ! TODO: check size of gtau == tau
   ! TODO: check size of all input arrays
 
-  ! set local variables
+  ! Number of degrees of freedom
   n1 = self%bs1%n
   n2 = self%bs2%n
 
@@ -191,44 +191,70 @@ subroutine sll_s_compute_bspline_2d( self, gtau, &
   ! Compute spline coefficients in x1 direction
   !--------------------------------------------
 
-  ! Hermite-Hermite case:
-  !     additional x1-interpolation of x2-derivatives on boundaries is needed!
-  if ((self%bs2%bc_type == sll_p_hermite) .and. &
-      (self%bs1%bc_type == sll_p_hermite)) then
+  ! Boundary points in x2 (only for Hermite):
+  ! Additional x1-interpolation of x2-derivatives on boundaries is needed!
+  if (self%bs2%bc_type == sll_p_hermite) then
 
-    ! boundary conditions at x2_min
-    if (present(val2_min)) then
-      do j2 = 1, ncond2
-        if( present(val_corners)) then
-          call sll_s_compute_bspline_1d( self%bs1, val2_min(j2,:), &
-            val_corners(:,j2,1), val_corners(:,j2,2))
-        else
+    ! Hermite-Hermite case:
+    if (self%bs1%bc_type == sll_p_hermite) then
+
+      ! boundary conditions at x2_min
+      if (present(val2_min)) then
+        do j2 = 1, ncond2
+          if( present(val_corners)) then
+            call sll_s_compute_bspline_1d( self%bs1, val2_min(j2,:), &
+              val_corners(:,j2,1), val_corners(:,j2,2))
+          else
+            call sll_s_compute_bspline_1d( self%bs1, val2_min(j2,:) )
+          end if
+          self%bwork(j2,:) = self%bs1%bcoef(:)
+        end do
+      else  ! set needed boundary values to 0
+        self%bwork(1:ncond2,:) = 0.0_f64
+      end if
+
+      ! boundary conditions at x2_max
+      if (present(val2_max)) then
+        do j2 = 1, ncond2
+          if (present(val_corners)) then
+            call sll_s_compute_bspline_1d( self%bs1, val2_max(j2,:), &
+            val_corners(:,j2,3), val_corners(:,j2,4))
+          else
+            call sll_s_compute_bspline_1d( self%bs1, val2_max(j2,:) )
+          end if
+          self%bwork(n2-ncond2+j2,:) = self%bs1%bcoef(:)
+        end do
+      else ! set needed boundary values to 0
+        self%bwork(n2-ncond2+1:n2,:) = 0.0_f64
+      end if
+
+    ! Other-Hermite case:
+    else
+
+      ! boundary conditions at x2_min
+      if (present(val2_min)) then
+        do j2 = 1, ncond2
           call sll_s_compute_bspline_1d( self%bs1, val2_min(j2,:) )
-        end if
-        self%bwork(j2,:) = self%bs1%bcoef(:)
-      end do
-    else  ! set needed boundary values to 0
-      self%bwork(1:ncond2,:) = 0.0_f64
-    end if
+          self%bwork(j2,:) = self%bs1%bcoef(:)
+        end do
+      else  ! set needed boundary values to 0
+        self%bwork(1:ncond2,:) = 0.0_f64
+      end if
 
-    ! boundary conditions at x2_max
-    if (present(val2_max)) then
-      do j2 = 1, ncond2
-        if (present(val_corners)) then
-          call sll_s_compute_bspline_1d( self%bs1, val2_max(j2,:), &
-          val_corners(:,j2,3), val_corners(:,j2,4))
-        else
+      ! boundary conditions at x2_max
+      if (present(val2_max)) then
+        do j2 = 1, ncond2
           call sll_s_compute_bspline_1d( self%bs1, val2_max(j2,:) )
-        end if
-        self%bwork(n2-ncond2+j2,:) = self%bs1%bcoef(:)
-      end do
-    else ! set needed boundary values to 0
-      self%bwork(n2-ncond2+1:n2,:) = 0.0_f64
-    end if
+          self%bwork(n2-ncond2+j2,:) = self%bs1%bcoef(:)
+        end do
+      else ! set needed boundary values to 0
+        self%bwork(n2-ncond2+1:n2,:) = 0.0_f64
+      end if
 
+    end if
   end if
 
-  ! interior points
+  ! Interior points
   do i2 = 1, n2-2*ncond2
     if (present(val1_min) .and. present(val1_max)) then
       call sll_s_compute_bspline_1d( self%bs1, gtau(:,i2), &
