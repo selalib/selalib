@@ -19,6 +19,9 @@ program test_bsplines_2d_new
   implicit none
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
+  !> Working precision
+  integer, parameter :: wp = f64
+
   ! List of available boundary conditions
   integer, parameter :: bc_kinds(3) = &
                                  [sll_p_periodic, sll_p_hermite, sll_p_greville]
@@ -27,15 +30,26 @@ program test_bsplines_2d_new
   type(t_profile_2d_info)               :: pinfo
   type(t_analytical_profile_2d_cos_cos) :: profile_2d_cos_cos
   type(t_bspline_2d_test_facility)      :: test_facility
-  integer :: deg1
-  integer :: deg2
-  integer :: nx1
-  integer :: nx2
-  integer :: bc1
-  integer :: bc2
-  integer :: i1, i2
-  logical :: passed
-  logical :: successful
+  integer  :: deg1
+  integer  :: deg2
+  integer  :: nx1
+  integer  :: nx2
+  integer  :: bc1
+  integer  :: bc2
+  integer  :: i1, i2
+  real(wp) :: tol
+  logical  :: passed
+  logical  :: success
+
+  ! ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
+  ! TEST 1: Evaluate spline at interpolation points (error should be zero)
+  ! ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
+
+  ! Test tolerance: very small!
+  tol = 1e-14_wp
+
+  ! Initialize 'PASSED/FAILED' condition
+  passed = .true.
 
   ! Print report header
   call test_facility % print_header()
@@ -79,9 +93,13 @@ program test_bsplines_2d_new
             bc2        = bc2 )
 
           ! Run tests
-          call test_facility % run_tests( verbose=.false., successful=successful )
+          call test_facility % evaluate_at_interpolation_points( tol, success )
 
-          passed = (passed .and. successful)
+          ! Free memory
+          call test_facility % free()
+
+          ! Update 'PASSED/FAILED' condition
+          passed = (passed .and. success)
 
         end do  ! bc2
       end do  ! bc1
