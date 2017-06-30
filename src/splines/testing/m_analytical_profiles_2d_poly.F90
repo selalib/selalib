@@ -73,6 +73,7 @@ contains
     self % info % x2_poly_order =  deg2
 
     ! Generate random polynomial coefficients
+    if( allocated( self%coeffs ) ) deallocate( self%coeffs )
     allocate( self % coeffs (0:deg1,0:deg2) )
     self % deg1 = deg1
     self % deg2 = deg2
@@ -111,13 +112,13 @@ contains
     if (present(diff_x2)) then; d2 = diff_x2; else; d2 = 0; end if
 
     f = 0.0_wp
-    if (diff_x1 > self%deg1 .or. diff_x2 > self%deg2) return
+    if (d1 > self%deg1 .or. d2 > self%deg2) return
 
     do i1 = d1, self%deg1
-      c1 = real( falling_factorial( i1, d1 ), kind=wp )
+      c1 = real( falling_factorial( i1, d1 ), kind=wp ) * x1**(i1-d1)
       do i2 = d2, self%deg2
-        c2 = real( falling_factorial( i2, d2 ), kind=wp )
-        f = f + self%coeffs(i1,i2) * x1**(i1-d1) * x2**(i2-d2)
+        c2 = real( falling_factorial( i2, d2 ), kind=wp ) * x2**(i2-d2)
+        f  = f + self%coeffs(i1,i2) * c1 * c2
       end do
     end do
 
@@ -132,8 +133,8 @@ contains
     integer, intent(in) :: n
     integer :: c
     integer :: k
-    c = x
-    do k = 1, n-1
+    c = 1
+    do k = 0, n-1
       c = c * (x-k)
     end do
   end function falling_factorial
