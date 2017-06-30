@@ -40,13 +40,3 @@ TARGET_LINK_LIBRARIES( test_hctc  sll_memory )
 # 4th executable
 ADD_EXECUTABLE( test_dimitrov test_dimitrov.F90 )
 TARGET_LINK_LIBRARIES( test_dimitrov  sll_memory )
-
-# 5th executable
-ADD_EXECUTABLE( test_hex_center_guide
-  test_hex_center_guide.F90)
-
-TARGET_LINK_LIBRARIES( test_hex_center_guide
-  sll_hermite_interpolation
-  sll_meshes
-  sll_poisson_solvers
-  sll_utilities )

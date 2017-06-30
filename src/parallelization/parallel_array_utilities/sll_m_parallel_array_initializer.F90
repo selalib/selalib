@@ -77,7 +77,7 @@ contains
     type(sll_t_cartesian_mesh_2d), pointer          :: mesh2d
     sll_real64, dimension(:,:), intent(out) :: array
     procedure(sll_i_scalar_initializer_2d)        :: func
-    sll_real64, dimension(:), optional          :: func_params
+    sll_real64, dimension(:), intent(in)          :: func_params
 
 
     sll_int32  :: i
@@ -150,11 +150,11 @@ contains
        func_params)
 
     type(sll_t_layout_2d), pointer                    :: layout
-    sll_real64, dimension(:), intent(in) :: x1_array
-    sll_real64, dimension(:), intent(in) :: x2_array
-    sll_real64, dimension(:,:), intent(out) :: array
-    procedure(sll_i_scalar_initializer_2d)        :: func
-    sll_real64, dimension(:), optional          :: func_params
+    sll_real64, dimension(:), intent(in)              :: x1_array
+    sll_real64, dimension(:), intent(in)              :: x2_array
+    sll_real64, dimension(:,:), intent(out)           :: array
+    procedure(sll_i_scalar_initializer_2d), pointer   :: func
+    sll_real64, dimension(:), intent(in)              :: func_params
 
 
     sll_int32  :: i
@@ -228,8 +228,8 @@ contains
     sll_real64, intent(in) :: delta3
     sll_real64, intent(in) :: delta4
     sll_real64, dimension(:,:,:,:), intent(out) :: array
-    procedure(sll_i_scalar_initializer_4d)        :: func
-    sll_real64, dimension(:), optional          :: func_params
+    procedure(sll_i_scalar_initializer_4d), pointer      :: func
+    sll_real64, dimension(:), intent(in)        :: func_params
     sll_int32  :: i
     sll_int32  :: j
     sll_int32  :: k
@@ -312,8 +312,8 @@ contains
     type(sll_t_cartesian_mesh_1d), pointer          :: mesh1d_eta3
     type(sll_t_cartesian_mesh_1d), pointer          :: mesh1d_eta4
     sll_real64, dimension(:,:,:,:), intent(out) :: array
-    procedure(sll_i_scalar_initializer_4d)        :: func
-    sll_real64, dimension(:), optional          :: func_params
+    procedure(sll_i_scalar_initializer_4d), pointer :: func
+    sll_real64, dimension(:), intent(in)            :: func_params
     sll_real64  :: eta1_min
     sll_real64  :: eta2_min
     sll_real64  :: eta3_min
@@ -358,11 +358,11 @@ contains
        func, &
        func_params)
 
-    type(sll_t_layout_4d), pointer                    :: layout
+    type(sll_t_layout_4d), pointer                  :: layout
     type(sll_t_cartesian_mesh_4d), pointer          :: mesh4d
-    sll_real64, dimension(:,:,:,:), intent(out) :: array
-    procedure(sll_i_scalar_initializer_4d)        :: func
-    sll_real64, dimension(:), optional          :: func_params
+    sll_real64, dimension(:,:,:,:), intent(out)     :: array
+    procedure(sll_i_scalar_initializer_4d), pointer :: func
+    sll_real64, dimension(:), intent(in)            :: func_params
 
     sll_real64 :: delta1
     sll_real64 :: delta2
@@ -421,8 +421,8 @@ contains
     type(sll_t_cartesian_mesh_2d), pointer          :: mesh2d_eta1_eta2
     type(sll_t_cartesian_mesh_2d), pointer          :: mesh2d_eta3_eta4
     sll_real64, dimension(:,:,:,:), intent(out) :: array
-    procedure(sll_i_scalar_initializer_4d)        :: func
-    sll_real64, dimension(:), optional          :: func_params
+    procedure(sll_i_scalar_initializer_4d), pointer :: func
+    sll_real64, dimension(:), intent(in)            :: func_params
 
     class(sll_c_coordinate_transformation_2d_base), pointer, optional :: &
          transf_x1_x2
@@ -847,7 +847,7 @@ contains
     type(sll_t_cartesian_mesh_2d), pointer          :: mesh2d_eta3_eta4
     sll_real64, dimension(:,:,:,:), intent(out) :: array
     procedure(sll_i_scalar_initializer_4d)        :: func
-    sll_real64, dimension(:), optional          :: func_params
+    sll_real64, dimension(:), intent(in)          :: func_params
     sll_int32,optional   :: subcells1
     sll_int32,optional   :: subcells2
     sll_int32,optional   :: subcells3

@@ -53,16 +53,16 @@ module sll_m_sim_bsl_dk_3d1v_polar_field_aligned
 #include "sll_working_precision.h"
 
   use sll_m_advection_1d_base, only: &
-    sll_c_advection_1d_base
+    sll_c_advector_1d
 
   use sll_m_advection_1d_periodic, only: &
     sll_f_new_periodic_1d_advector
 
   use sll_m_advection_2d_base, only: &
-    sll_c_advection_2d_base
+    sll_c_advector_2d
 
   use sll_m_advection_2d_bsl, only: &
-    sll_f_new_bsl_2d_advector
+    sll_f_new_advector_2d_bsl
 
   use sll_m_advection_2d_oblic, only: &
     sll_f_new_oblic_2d_advector, &
@@ -121,11 +121,11 @@ module sll_m_sim_bsl_dk_3d1v_polar_field_aligned
   use sll_m_gnuplot, only: &
     sll_o_gnuplot_1d
 
-  use hdf5, only: hid_t
   use sll_m_hdf5_io_serial, only: &
-    sll_o_hdf5_file_close, &
-    sll_o_hdf5_file_create, &
-    sll_o_hdf5_write_array
+    sll_t_hdf5_ser_handle, &
+    sll_s_hdf5_ser_file_create, &
+    sll_s_hdf5_ser_file_close, &
+    sll_o_hdf5_ser_write_array
 
   use sll_m_interpolators_1d_base, only: &
     sll_c_interpolator_1d
@@ -137,14 +137,11 @@ module sll_m_sim_bsl_dk_3d1v_polar_field_aligned
     sll_p_lagrange, &
     sll_p_spline
 
-  use sll_m_poisson_2d_base, only: &
-    sll_c_poisson_2d_base
-
-  use sll_m_poisson_3d_base, only: &
-    sll_c_poisson_3d_base
-
-  use sll_m_qn_solver_3d_polar_parallel_x1_wrapper, only: &
-    sll_f_new_qn_solver_3d_polar_parallel_x1_wrapper
+  use sll_m_qn_solver_3d_polar_par, only: &
+    sll_t_qn_solver_3d_polar_par, &
+    sll_s_qn_solver_3d_polar_par_init, &
+    sll_s_qn_solver_3d_polar_par_solve, &
+    sll_s_qn_solver_3d_polar_par_free
 
   use sll_m_reduction, only: &
     sll_s_compute_reduction_2d_to_0d, &
@@ -319,21 +316,19 @@ module sll_m_sim_bsl_dk_3d1v_polar_field_aligned
     sll_real64, pointer :: x3_node(:)
     sll_real64, pointer :: x4_node(:)
 
-    class(sll_c_advection_2d_base), pointer :: adv_x1x2
+    class(sll_c_advector_2d), pointer :: adv_x1x2
     !class(sll_c_interpolator_2d), pointer :: interp_x1x2
     class(sll_c_characteristics_2d_base), pointer :: charac_x1x2
-    class(sll_c_advection_1d_base), pointer :: adv_x3
-    class(sll_c_advection_1d_base), pointer :: adv_x4
+    class(sll_c_advector_1d), pointer :: adv_x3
+    class(sll_c_advector_1d), pointer :: adv_x4
     type(sll_t_oblic_2d_advector),      pointer :: adv_x2x3
     
-    class(sll_c_poisson_2d_base), pointer :: poisson2d
-    class(sll_c_poisson_2d_base), pointer :: poisson2d_mean
-    class(sll_c_poisson_3d_base), pointer :: poisson3d
+    type(sll_t_qn_solver_3d_polar_par) :: poisson3d
 
     !for computing advection field from phi
     class(sll_c_interpolator_2d), pointer :: phi_interp_x1x2
     class(sll_c_interpolator_1d), pointer :: phi_interp_x3
-    class(sll_c_advection_1d_base),    pointer :: adv_x2
+    class(sll_c_advector_1d),    pointer :: adv_x2
     type(sll_t_oblic_2d_derivative),       pointer :: deriv
     !class(sll_c_interpolator_1d), pointer   :: phi_interp_fa !for field aligned interp.
     !should replace phi_interp_x3 in future
@@ -464,6 +459,9 @@ contains
     ! Options (True/False)
     logical :: use_field_aligned_derivative    ! For electric field from phi
     logical :: use_field_aligned_interpolation ! FCISL general idea
+
+    ! Index
+    sll_int32 :: i1
 
     ! Namelists read from input file
     namelist /mesh/ &
@@ -779,18 +777,20 @@ contains
         ! Input/output data is parallelized in x1=r
         ! Internally it also uses parallelization in x2=theta
         ! Needs both par-x1 and par-x2 layouts
-        sim%poisson3d => sll_f_new_qn_solver_3d_polar_parallel_x1_wrapper( &
-          sim%layout2d_parx2, &
-          sim%layout2d_parx1, &
-          sim%m_x1%eta_min, &
-          sim%m_x1%eta_max, &
-          sim%m_x1%num_cells, &
-          sim%m_x2%num_cells, &
-          sim%m_x3%num_cells, &
-          poisson2d_BC(1), &
-          poisson2d_BC(2), &
-          dlog_density=sim%dlog_density_r, &
-          inv_Te=1._f64/sim%Te_r )
+        call sll_s_qn_solver_3d_polar_par_init( sim%poisson3d, &
+          layout_r       = sim%layout2d_parx2, &
+          layout_a       = sim%layout2d_parx1, &
+          rmin           = sim%m_x1%eta_min  , &
+          rmax           = sim%m_x1%eta_max  , &
+          nr             = num_cells_x1      , &
+          ntheta         = num_cells_x2      , &
+          rho_m0         = sim%n0_r(:)       , &
+          b_magn         = [(B0, i1=1,num_cells_x1+1)], &
+          lambda         = sqrt( sim%Te_r(:)/sim%n0_r(:) ), &
+          use_zonal_flow = .false.           , &
+          epsilon_0      = 1.0_f64           , &
+          bc_rmin        = poisson2d_BC(1)   , &
+          bc_rmax        = poisson2d_BC(2) )
 
       case default
         print *,'#bad poisson2d_case',poisson2d_case
@@ -954,7 +954,7 @@ contains
     ! 2D advector in (r,theta): given f and poloidal A=(A1,A2), advance by dt
     select case(advect2d_case)
       case ("SLL_BSL")
-      sim%adv_x1x2 => sll_f_new_bsl_2d_advector(&
+      sim%adv_x1x2 => sll_f_new_advector_2d_bsl(&
         f_interp2d, &
         charac2d, &
         sim%m_x1%num_cells+1, &
@@ -2469,13 +2469,14 @@ contains
         do i=1,loc4d_sz_x1
           glob_ind(:) = sll_o_local_to_global( sim%layout4d_parx1, [i,1,1,1] )
           n0 = sim%n0_r(glob_ind(1))
-          sim%rho3d_parx1(i,:,:) = sim%rho3d_parx1(i,:,:) / n0 - 1._f64
+          sim%rho3d_parx1(i,:,:) = sim%rho3d_parx1(i,:,:) - n0
         enddo
  
         ! Solver
-        call sim%poisson3d%compute_phi_from_rho( &
-          sim%phi3d_parx1(:,1:loc4d_sz_x2-1,:), &
-          sim%rho3d_parx1(:,1:loc4d_sz_x2-1,:) )
+        call sll_s_qn_solver_3d_polar_par_solve( &
+          sim%poisson3d, &
+          sim%rho3d_parx1(:,1:loc4d_sz_x2-1,:) , &
+          sim%phi3d_parx1(:,1:loc4d_sz_x2-1,:) )
  
         ! Enforce periodic boundary conditions in theta
         sim%phi3d_parx1(:,loc4d_sz_x2,:) = sim%phi3d_parx1(:,1,:)  
@@ -2599,10 +2600,10 @@ contains
     character(len=*)           , intent(  out) :: dataset_x2
     character(len=*)           , intent(  out) :: dataset_x3
 
-    sll_real64, allocatable :: x2(:,:), x3(:,:)
-    sll_int32               :: i, j, nnodes_x2, nnodes_x3
-    sll_int32               :: error
-    integer(hid_t)          :: file_id
+    sll_real64, allocatable     :: x2(:,:), x3(:,:)
+    sll_int32                   :: i, j, nnodes_x2, nnodes_x3
+    sll_int32                   :: error
+    type(sll_t_hdf5_ser_handle) :: file_id
 
     nnodes_x2 = mesh_x2%num_cells+1
     nnodes_x3 = mesh_x3%num_cells+1
@@ -2618,10 +2619,10 @@ contains
       x3(:,j) = mesh_x3%eta1_node( j )
     end do
 
-    call sll_o_hdf5_file_create( "mesh_x2x3_cart.h5", file_id, error )
-    call sll_o_hdf5_write_array( file_id, x2, "/x2", error )
-    call sll_o_hdf5_write_array( file_id, x3, "/x3", error )
-    call sll_o_hdf5_file_close ( file_id, error )
+    call sll_s_hdf5_ser_file_create( "mesh_x2x3_cart.h5", file_id, error )
+    call sll_o_hdf5_ser_write_array( file_id, x2, "/x2", error )
+    call sll_o_hdf5_ser_write_array( file_id, x3, "/x3", error )
+    call sll_s_hdf5_ser_file_close ( file_id, error )
 
     dataset_x2 = "mesh_x2x3_cart.h5:/x2"
     dataset_x3 = "mesh_x2x3_cart.h5:/x3"
@@ -2657,10 +2658,10 @@ contains
     !  x3(:,j) = mesh_x3%eta1_node( j )
     !end do
 
-    !call sll_o_hdf5_file_create( "mesh_x2x3_cart.h5", file_id, error )
-    !call sll_o_hdf5_write_array( file_id, x2, "/x2", error )
-    !call sll_o_hdf5_write_array( file_id, x3, "/x3", error )
-    !call sll_o_hdf5_file_close ( file_id, error )
+    !call sll_s_hdf5_ser_file_create( "mesh_x2x3_cart.h5", file_id, error )
+    !call sll_o_hdf5_ser_write_array( file_id, x2, "/x2", error )
+    !call sll_o_hdf5_ser_write_array( file_id, x3, "/x3", error )
+    !call sll_s_hdf5_ser_file_close ( file_id, error )
 
     dataset_x2 = "mesh_x2x3_cart.h5:/x2"
     dataset_x3 = "mesh_x2x3_cart.h5:/x3"

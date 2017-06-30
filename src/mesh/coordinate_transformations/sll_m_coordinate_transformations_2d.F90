@@ -77,12 +77,23 @@ module sll_m_coordinate_transformations_2d
   public :: &
     sll_f_new_coordinate_transformation_2d_analytic, &
     sll_f_new_coordinate_transformation_2d_discrete, &
+    sll_s_coordinate_transformation_2d_analytic_init, &
+    sll_s_coordinate_transformation_2d_discrete_init, &
     sll_t_coordinate_transformation_2d_analytic, &
     sll_t_coordinate_transformation_2d_discrete, &
     sll_o_delete
 
   private
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+  abstract interface
+     function j_matrix_f_nopass ( eta1, eta2, params ) result(val)
+       use sll_m_working_precision
+       sll_real64, dimension(2,2)   :: val
+       sll_real64   :: eta1
+       sll_real64   :: eta2
+       sll_real64, dimension(:), optional, intent(in) :: params
+     end function j_matrix_f_nopass
+  end interface
   
 !> Analytic transformation
   type, extends(sll_c_coordinate_transformation_2d_base):: &
@@ -99,15 +110,14 @@ module sll_m_coordinate_transformations_2d
      !> PLEASE ADD DOCUMENTATION
      procedure(sll_i_transformation_func_nopass), pointer, nopass :: x2_func  ! user
      !> PLEASE ADD DOCUMENTATION
-     procedure(two_arg_message_passing_func_analyt), pointer, pass :: &
-          jacobian_func
+     procedure(two_arg_message_passing_func_analyt), pointer, pass :: jacobian_func
      !> PLEASE ADD DOCUMENTATION
      procedure(j_matrix_f_nopass), pointer, nopass :: jacobian_matrix_function
      !> PLEASE ADD DOCUMENTATION
      sll_real64, dimension(:), pointer :: params => null() ! transf params
    contains
      !> PLEASE ADD DOCUMENTATION
-     procedure, pass(transf) :: initialize => initialize_coord_transf_2d_analytic
+     procedure, pass(transf) :: init => sll_s_coordinate_transformation_2d_analytic_init
      !> PLEASE ADD DOCUMENTATION
      procedure, pass(transf) :: get_cartesian_mesh => get_cartesian_mesh_analytic
      ! Functions with integer arguments
@@ -172,8 +182,8 @@ module sll_m_coordinate_transformations_2d
      !type(sll_t_cartesian_mesh_2d), pointer :: mesh => null()
    contains
      !> PLEASE ADD DOCUMENTATION
-     procedure, pass(transf) :: initialize => &
-          initialize_coord_transf_2d_discrete
+     procedure, pass(transf) :: init => &
+          sll_s_coordinate_transformation_2d_discrete_init
      !> PLEASE ADD DOCUMENTATION
      procedure, pass(transf) :: get_cartesian_mesh => get_cartesian_mesh_discrete
      !> PLEASE ADD DOCUMENTATION
@@ -209,16 +219,8 @@ module sll_m_coordinate_transformations_2d
 
 #ifndef DOXYGEN_SHOULD_SKIP_THIS
 
-  abstract interface
-     function j_matrix_f_nopass ( eta1, eta2, params ) result(val)
-       use sll_m_working_precision
-       sll_real64, dimension(2,2)   :: val
-       sll_real64   :: eta1
-       sll_real64   :: eta2
-       sll_real64, dimension(:), optional, intent(in) :: params
-     end function j_matrix_f_nopass
-  end interface
 
+#ifndef __PGI
    abstract interface
       function two_arg_message_passing_func_discr( transf, eta1, eta2 )
         use sll_m_working_precision
@@ -240,6 +242,7 @@ module sll_m_coordinate_transformations_2d
         sll_real64, intent(in)          :: eta2
       end function two_arg_message_passing_func_analyt
    end interface
+#endif /* __PGI */
 
 #endif /* DOXYGEN_SHOULD_SKIP_THIS */
 
@@ -283,18 +286,19 @@ contains
     type(sll_t_coordinate_transformation_2d_analytic), pointer :: &
          sll_f_new_coordinate_transformation_2d_analytic
     character(len=*), intent(in)                  :: label
-    type(sll_t_cartesian_mesh_2d), pointer :: mesh_2d
-    procedure(sll_i_transformation_func_nopass)            :: x1_func
-    procedure(sll_i_transformation_func_nopass)            :: x2_func
-    procedure(sll_i_transformation_func_nopass)            :: j11_func
-    procedure(sll_i_transformation_func_nopass)            :: j12_func
-    procedure(sll_i_transformation_func_nopass)            :: j21_func
-    procedure(sll_i_transformation_func_nopass)            :: j22_func
-    sll_real64, dimension(:), intent(in) :: params
-    sll_int32 :: ierr
+    type(sll_t_cartesian_mesh_2d), target         :: mesh_2d
+    procedure(sll_i_transformation_func_nopass)   :: x1_func
+    procedure(sll_i_transformation_func_nopass)   :: x2_func
+    procedure(sll_i_transformation_func_nopass)   :: j11_func
+    procedure(sll_i_transformation_func_nopass)   :: j12_func
+    procedure(sll_i_transformation_func_nopass)   :: j21_func
+    procedure(sll_i_transformation_func_nopass)   :: j22_func
+    sll_real64, dimension(:), intent(in)          :: params
+    sll_int32                                     :: ierr
 
     SLL_ALLOCATE(sll_f_new_coordinate_transformation_2d_analytic, ierr)
-    call initialize_coord_transf_2d_analytic( &
+
+    call sll_s_coordinate_transformation_2d_analytic_init( &
          sll_f_new_coordinate_transformation_2d_analytic, &
          label,          &
          mesh_2d,        &
@@ -305,9 +309,10 @@ contains
          j21_func,       &
          j22_func,       &
          params )
+
   end function sll_f_new_coordinate_transformation_2d_analytic
 
-  subroutine initialize_coord_transf_2d_analytic( &
+  subroutine sll_s_coordinate_transformation_2d_analytic_init( &
     transf, &
     label,          &
     mesh_2d,        &
@@ -321,19 +326,19 @@ contains
 
     class(sll_t_coordinate_transformation_2d_analytic), intent(inout) :: &
          transf
-    character(len=*), intent(in)                     :: label
-    procedure(sll_i_transformation_func_nopass)            :: x1_func
-    procedure(sll_i_transformation_func_nopass)            :: x2_func
-    procedure(sll_i_transformation_func_nopass)            :: j11_func
-    procedure(sll_i_transformation_func_nopass)            :: j12_func
-    procedure(sll_i_transformation_func_nopass)            :: j21_func
-    procedure(sll_i_transformation_func_nopass)            :: j22_func
-    type(sll_t_cartesian_mesh_2d), pointer               :: mesh_2d
+    character(len=*), intent(in)                   :: label
+    procedure(sll_i_transformation_func_nopass)    :: x1_func
+    procedure(sll_i_transformation_func_nopass)    :: x2_func
+    procedure(sll_i_transformation_func_nopass)    :: j11_func
+    procedure(sll_i_transformation_func_nopass)    :: j12_func
+    procedure(sll_i_transformation_func_nopass)    :: j21_func
+    procedure(sll_i_transformation_func_nopass)    :: j22_func
+    type(sll_t_cartesian_mesh_2d), target          :: mesh_2d
     sll_real64, dimension(:), intent(in), optional :: params
     sll_int32  :: ierr
 
-    transf%label   = trim(label)
-    transf%mesh => mesh_2d
+    transf%label = trim(label)
+    transf%mesh  => mesh_2d
 
     ! Assign the transformation functions and parameters
     transf%x1_func => x1_func
@@ -348,9 +353,11 @@ contains
     transf%j_matrix(1,2)%f => j12_func
     transf%j_matrix(2,1)%f => j21_func
     transf%j_matrix(2,2)%f => j22_func
+#ifndef __PGI
     transf%jacobian_func   => jacobian_2d_analytic
+#endif
     
-  end subroutine initialize_coord_transf_2d_analytic
+  end subroutine sll_s_coordinate_transformation_2d_analytic_init
 
   subroutine delete_transformation_2d_analytic( transf )
     class(sll_t_coordinate_transformation_2d_analytic), intent(inout) :: transf
@@ -360,7 +367,9 @@ contains
     end if
     nullify( transf%x1_func )
     nullify( transf%x2_func )
+#ifndef __PGI
     nullify( transf%jacobian_func )
+#endif
     nullify( transf%jacobian_matrix_function )
   end subroutine delete_transformation_2d_analytic
 
@@ -395,7 +404,7 @@ contains
   ! need to be caught by the caller.
   function jacobian_matrix_2d_analytic( transf, eta1, eta2 )
     sll_real64, dimension(1:2,1:2)     :: jacobian_matrix_2d_analytic
-    class(sll_t_coordinate_transformation_2d_analytic),intent(in):: transf
+    class(sll_t_coordinate_transformation_2d_analytic),intent(inout):: transf
     sll_real64, intent(in) :: eta1
     sll_real64, intent(in) :: eta2
     sll_real64             :: j11
@@ -418,7 +427,7 @@ contains
 
   function inverse_jacobian_matrix_2d_analytic( transf, eta1, eta2 )
     sll_real64, dimension(1:2,1:2)     :: inverse_jacobian_matrix_2d_analytic
-    class(sll_t_coordinate_transformation_2d_analytic),intent(in) :: transf
+    class(sll_t_coordinate_transformation_2d_analytic),intent(inout) :: transf
     sll_real64, intent(in) :: eta1
     sll_real64, intent(in) :: eta2
     sll_real64             :: inv_j11
@@ -569,11 +578,11 @@ contains
 
 
   subroutine write_to_file_2d_analytic(transf,output_format)
-    class(sll_t_coordinate_transformation_2d_analytic) :: transf
-    sll_int32, optional :: output_format 
+    class(sll_t_coordinate_transformation_2d_analytic), intent( inout ) :: transf
+    sll_int32, intent( in ), optional :: output_format 
     sll_int32           :: local_format 
-    sll_real64, dimension(:,:), pointer :: x1mesh
-    sll_real64, dimension(:,:), pointer :: x2mesh
+    sll_real64, dimension(:,:), allocatable :: x1mesh
+    sll_real64, dimension(:,:), allocatable :: x2mesh
     sll_int32  :: i1
     sll_int32  :: i2
     sll_real64 :: eta1
@@ -651,12 +660,9 @@ contains
        print*,' Warning, you have already written the mesh '
     end if
     transf%written = .true.
-    if( associated(x1mesh) ) then
-       SLL_DEALLOCATE(x1mesh, ierr)
-    end if
-    if( associated(x2mesh) ) then
-       SLL_DEALLOCATE(x2mesh, ierr)
-    end if
+    if( allocated(x1mesh) ) deallocate(x1mesh)
+    if( allocated(x2mesh) ) deallocate(x2mesh)
+
   end subroutine write_to_file_2d_analytic
   
   subroutine read_from_file_2d_analytic( transf, filename )
@@ -761,7 +767,7 @@ contains
   end function jacobian_2d_cell_discrete
 
   function jacobian_matrix_2d_discrete( transf, eta1, eta2 )
-    class(sll_t_coordinate_transformation_2d_discrete),intent(in) :: transf
+    class(sll_t_coordinate_transformation_2d_discrete),intent(inout) :: transf
     sll_real64, dimension(1:2,1:2)     :: jacobian_matrix_2d_discrete
     sll_real64, intent(in) :: eta1
     sll_real64, intent(in) :: eta2
@@ -784,7 +790,7 @@ contains
   end function jacobian_matrix_2d_discrete
 
   function inverse_jacobian_matrix_2d_discrete( transf, eta1, eta2 )
-    class(sll_t_coordinate_transformation_2d_discrete),intent(in) :: transf
+    class(sll_t_coordinate_transformation_2d_discrete),intent(inout) :: transf
     sll_real64, dimension(1:2,1:2)     :: inverse_jacobian_matrix_2d_discrete
     sll_real64, intent(in) :: eta1
     sll_real64, intent(in) :: eta2
@@ -842,7 +848,7 @@ contains
     sll_int32 :: ierr
     
     SLL_ALLOCATE(sll_f_new_coordinate_transformation_2d_discrete, ierr)
-    call initialize_coord_transf_2d_discrete(       &
+    call sll_s_coordinate_transformation_2d_discrete_init(       &
          sll_f_new_coordinate_transformation_2d_discrete, &
          mesh_2d,                                   &
          label,                                     &
@@ -857,7 +863,7 @@ contains
          jacobians_cell )
   end function sll_f_new_coordinate_transformation_2d_discrete
 
-  subroutine initialize_coord_transf_2d_discrete( &
+  subroutine sll_s_coordinate_transformation_2d_discrete_init( &
     transf,                                       &
     mesh_2d,                                      &
     label,                                        &
@@ -871,19 +877,19 @@ contains
     x2_cell,                                      &
     jacobians_cell )
 
-    class(sll_t_coordinate_transformation_2d_discrete)    :: transf
-    type(sll_t_cartesian_mesh_2d), pointer :: mesh_2d
-    character(len=*), intent(in)     :: label
+    class(sll_t_coordinate_transformation_2d_discrete) :: transf
+    type(sll_t_cartesian_mesh_2d), target              :: mesh_2d
+    character(len=*), intent(in)                       :: label
 
-    class(sll_c_interpolator_2d), target  :: x1_interpolator
-    class(sll_c_interpolator_2d), target  :: x2_interpolator
-    class(sll_c_interpolator_2d), target :: jacobians_n_interpolator
-    sll_real64, dimension(:,:), intent(in), optional :: x1_node
-    sll_real64, dimension(:,:), intent(in), optional :: x2_node
-    sll_real64, dimension(:,:), intent(in), optional :: jacobians_node
-    sll_real64, dimension(:,:), intent(in), optional :: jacobians_cell
-    sll_real64, dimension(:,:), intent(in), optional :: x1_cell
-    sll_real64, dimension(:,:), intent(in), optional :: x2_cell
+    class(sll_c_interpolator_2d),              target  :: x1_interpolator
+    class(sll_c_interpolator_2d),              target  :: x2_interpolator
+    class(sll_c_interpolator_2d),              target  :: jacobians_n_interpolator
+    sll_real64, dimension(:,:), intent(in),   optional :: x1_node
+    sll_real64, dimension(:,:), intent(in),   optional :: x2_node
+    sll_real64, dimension(:,:), intent(in),   optional :: jacobians_node
+    sll_real64, dimension(:,:), intent(in),   optional :: jacobians_cell
+    sll_real64, dimension(:,:), intent(in),   optional :: x1_cell
+    sll_real64, dimension(:,:), intent(in),   optional :: x2_cell
 
     sll_real64 :: eta_1
     sll_real64 :: eta_2
@@ -937,7 +943,7 @@ contains
     if( (      x1n  .and. (.not.x2n) ) .or. &
         ((.not.x1n) .and.       x2n) ) then
        
-       print *,'ERROR, initialize_coordinate_transformation_2d_discrete():', &
+       print *,'ERROR, sll_s_coordinate_transformation_2d_discrete_init():', &
             'for the moment, this function does not support specifying ', &
             'transformation only with one of the node arrays x1_node or ', &
             'x2_node. Either pass both, or none, but with the ', &
@@ -949,7 +955,7 @@ contains
 
     if( x1n ) then
        if( size(x1_node,1) .lt. npts1 ) then
-          print *,'ERROR, initialize_coordinate_transformation_2d_discrete()',&
+          print *,'ERROR, sll_s_coordinate_transformation_2d_discrete_init()',&
                ' the size of the x1_node arrays is ', &
                'inconsistent with the number of points declared, ', &
                'in the logical mesh.'
@@ -959,7 +965,7 @@ contains
 
     if( x2n ) then
        if( size(x1_node,2) .lt. npts2 ) then
-          print *, 'ERROR, initialize_coordinate_transformation_2d_discrete()',&
+          print *, 'ERROR, sll_s_coordinate_transformation_2d_discrete_init()',&
                ' the size of the x2_node arrays is ', &
                'inconsistent with the number of points declared, ', &
                'in the logical mesh.'
@@ -971,7 +977,7 @@ contains
        if( &
           (size(jacobians_node,1) .lt. npts1 - 1 ) .or. &
           (size(jacobians_node,2) .lt. npts2 - 1 ) ) then
-          print *, 'ERROR, initialize_coordinate_transformation_2d_discrete()',&
+          print *, 'ERROR, sll_s_coordinate_transformation_2d_discrete_init()',&
                ': the size of the jacobians_node array is ', &
                'inconsistent with the number of points declared, ', &
                'npts1 or npts2.'
@@ -983,7 +989,7 @@ contains
        if( &
           (size(jacobians_cell,1) .lt. npts1 - 1 ) .or. &
           (size(jacobians_cell,2) .lt. npts2 - 1 ) ) then
-          print *, 'ERROR, initialize_coordinate_transformation_2d_discrete()',&
+          print *, 'ERROR, sll_s_coordinate_transformation_2d_discrete_init()',&
                ': the size of the jacobians_cell arrays is ', &
                'inconsistent with the number of points declared, ', &
                'npts1 or npts2.'
@@ -1026,13 +1032,13 @@ contains
        end do
     else
        if(x1_interpolator%coefficients_are_set() .eqv. .false.) then
-          print *, 'ERROR, initialize_coordinate_transformation_2d_discrete()',&
+          print *, 'ERROR, sll_s_coordinate_transformation_2d_discrete_init()',&
                ': the x1_node array was not passed and the corresponding ', &
                'interpolator has no initialized coefficients. Exiting...'
           STOP
        endif
        if(x2_interpolator%coefficients_are_set() .eqv. .false.) then
-          print *, 'ERROR, initialize_coordinate_transformation_2d_discrete()',&
+          print *, 'ERROR, sll_s_coordinate_transformation_2d_discrete_init()',&
                ': the x2_node array was not passed and the corresponding ', &
                'interpolator has no initialized coefficients. Exiting...'
           STOP
@@ -1117,7 +1123,7 @@ contains
           end do
        end do
     end if
-  end subroutine initialize_coord_transf_2d_discrete
+  end subroutine sll_s_coordinate_transformation_2d_discrete_init
 
 
   function transf_2d_jacobian_node_discrete( transf, i, j )
@@ -1136,8 +1142,8 @@ contains
   end function transf_2d_jacobian_node_discrete
 
   subroutine write_to_file_2d_discrete(transf,output_format)
-    class(sll_t_coordinate_transformation_2d_discrete) :: transf
-    sll_int32, optional :: output_format 
+    class(sll_t_coordinate_transformation_2d_discrete), intent( inout ) :: transf
+    sll_int32, intent( in ), optional :: output_format 
     sll_int32           :: local_format 
     sll_real64, dimension(:,:), pointer :: x1mesh
     sll_real64, dimension(:,:), pointer :: x2mesh
@@ -1484,7 +1490,7 @@ contains
 
     ! leave the default [0,1]X[0,1] domain for the logical mesh
     !    transf%mesh => sll_f_new_cartesian_mesh_2d(num_cells1, num_cells2)
-    call transf%initialize( &
+    call transf%init( &
          mesh_2d, &
          label, &
          interp2d_1, &

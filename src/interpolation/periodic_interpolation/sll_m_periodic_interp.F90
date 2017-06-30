@@ -29,8 +29,8 @@ module sll_m_periodic_interp
   implicit none
 
   public :: &
-    sll_o_delete, &
-    sll_s_initialize_periodic_interp, &
+    sll_s_periodic_interp_free, &
+    sll_s_periodic_interp_init, &
     sll_p_lagrange, &
     sll_s_periodic_interp, &
     sll_t_periodic_interp_work, &
@@ -46,42 +46,32 @@ module sll_m_periodic_interp
   sll_comp64, parameter :: ii_64 = (0.0_f64, 1.0_f64)
 
   type :: sll_t_periodic_interp_work
-     sll_int32           :: N ! number of cells
-     sll_int32           :: interpolator ! what interpolator is used
-     sll_int32           :: order  ! order of interpolation (not needed for Fourier)
-     sll_real64, pointer :: eigenvalues_Minv(:) ! eigenvalues of M matrix
-     sll_comp64, pointer :: eigenvalues_S(:)   ! eigenvalues of shift matrix
-     sll_real64, pointer :: wsave(:) ! workspace for fft
-     sll_comp64, pointer :: modes(:) ! Fourier modes
-     sll_comp64, pointer :: ufft (:) ! Fourier transform of function
-     sll_real64, pointer :: buf  (:) ! workspace for sll_p_lagrange interpolation
-     sll_int32           :: sizebuf ! size of workspace for sll_p_lagrange interpolation
-     type(sll_t_fft)     :: pinv, pfwd ! type for lagrange_fft_selalib interpolation
+     sll_int32           :: N                   !< number of cells
+     sll_int32           :: interpolator        !< what interpolator is used
+     sll_int32           :: order               !< order of interpolation (not needed for Fourier)
+     sll_real64, pointer :: eigenvalues_Minv(:) !< eigenvalues of M matrix
+     sll_comp64, pointer :: eigenvalues_S(:)    !< eigenvalues of shift matrix
+     sll_real64, pointer :: wsave(:)            !< workspace for fft
+     sll_comp64, pointer :: modes(:)            !< Fourier modes
+     sll_comp64, pointer :: ufft (:)            !< Fourier transform of function
+     sll_real64, pointer :: buf  (:)            !< workspace for sll_p_lagrange interpolation
+     sll_int32           :: sizebuf             !< size of workspace for sll_p_lagrange interpolation
+     type(sll_t_fft)     :: pinv, pfwd          !< type for lagrange_fft_selalib interpolation
    end type sll_t_periodic_interp_work
 
-  interface sll_o_delete
-     module procedure delete_periodic_interp_work
-  end interface sll_o_delete
-
-
 contains
-  subroutine sll_s_initialize_periodic_interp( this, N, interpolator, order )
-    type(sll_t_periodic_interp_work), pointer  :: this
+
+  subroutine sll_s_periodic_interp_init( this, N, interpolator, order )
+    type(sll_t_periodic_interp_work), intent(inout)     :: this
     sll_int32,                intent(in) :: N            ! number of cells
     sll_int32,                intent(in) :: interpolator ! interpolation method
     sll_int32,                intent(in) :: order        ! order of method
 
-    ! local variables
     sll_int32  :: ierr, i, j
-    !sll_int32  :: k
-    sll_int32  :: p ! sll_p_spline degree
+    sll_int32  :: p        ! sll_p_spline degree
     sll_int32  :: icoarse  ! coarsening factor for stabilization of trigonometric interpolation
     sll_real64 :: biatx(order)
-    !sll_real64 :: mode
-    !sll_real64 :: val
-    !sll_real64, allocatable :: buf(:) !for fft_selalib
 
-    SLL_ALLOCATE( this, ierr )
     this%N = N
     this%interpolator = interpolator
     this%order = order 
@@ -95,7 +85,7 @@ contains
 
     ! set up sll_p_spline parameters
     if ((order/2) /= int(order/2.0)) then
-       print*, 'sll_s_initialize_periodic_interp: order of interpolators needs to be even.', &
+       print*, 'sll_s_periodic_interp_init: order of interpolators needs to be even.', &
             'Order here is: ', Order
        stop
     end if
@@ -148,10 +138,10 @@ contains
        stop
     end select
 
-  end subroutine sll_s_initialize_periodic_interp
+  end subroutine sll_s_periodic_interp_init
 
-  subroutine delete_periodic_interp_work( this )
-    type(sll_t_periodic_interp_work), pointer :: this 
+  subroutine sll_s_periodic_interp_free( this )
+    type(sll_t_periodic_interp_work), intent(inout) :: this 
 
     sll_int32 :: ierr
     
@@ -163,28 +153,22 @@ contains
     if(associated(this%buf))then
       SLL_DEALLOCATE(this%buf,ierr)
     endif
-    SLL_DEALLOCATE(this, ierr )
-  end subroutine delete_periodic_interp_work
+
+  end subroutine sll_s_periodic_interp_free
 
   subroutine sll_s_periodic_interp( this, u_out, u, alpha )
     ! interpolate function u given at grid points on a periodic grid
     ! at positions j-alpha (alpha is normalized to the cell size)
-    type(sll_t_periodic_interp_work), pointer :: this
+    type(sll_t_periodic_interp_work), intent(inout)    :: this
     sll_real64,             intent(out) :: u_out(:) ! result
     sll_real64,             intent(in)  :: u(:)     ! function to be interpolated
     sll_real64,             intent(in)  :: alpha    ! displacement normalized to cell size
 
-    ! local variables
     sll_int32  :: i, j, k, p, ishift
-    !sll_int32  :: j0
-    sll_int32  ::  imode,n
+    sll_int32  :: imode,n
     sll_real64 :: beta
     sll_comp64 :: filter
-    !sll_real64 :: mode
     sll_comp64 :: tmp,tmp2
-    !sll_comp64 :: int_fact
-    !sll_comp64 :: z
-    ! 
     sll_real64 :: biatx(this%order)
 
     SLL_ASSERT(size(u_out)>=this%N)
@@ -284,6 +268,7 @@ contains
       ! enddo
 
        call sll_s_fft_exec_r2r_1d(this%pinv,u_out,u_out)        
+
     case default
        print*, 'sll_m_periodic_interp:interpolator ',this%interpolator, ' not implemented'
        stop

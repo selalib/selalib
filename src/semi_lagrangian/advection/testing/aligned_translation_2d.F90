@@ -31,7 +31,7 @@ program aligned_translation_2d
 #include "sll_working_precision.h"
 
   use sll_m_advection_1d_base, only: &
-    sll_c_advection_1d_base
+    sll_c_advector_1d
 
   use sll_m_advection_1d_periodic, only: &
     sll_f_new_periodic_1d_advector
@@ -48,16 +48,17 @@ program aligned_translation_2d
     sll_p_pi
 
   use sll_m_cubic_spline_interpolator_2d, only: &
-    sll_f_new_cubic_spline_interpolator_2d
+    sll_t_cubic_spline_interpolator_2d
 
   use sll_m_fcisl_toroidal, only: &
     sll_s_compute_modulo_vect2d_inplace, &
     sll_f_interpolate2d_toroidal
 
   use sll_m_hdf5_io_serial, only: &
-    sll_o_hdf5_file_close, &
-    sll_o_hdf5_file_create, &
-    sll_o_hdf5_write_array
+    sll_t_hdf5_ser_handle, &
+    sll_s_hdf5_ser_file_create, &
+    sll_s_hdf5_ser_file_close, &
+    sll_o_hdf5_ser_write_array
 
   use sll_m_interpolators_2d_base, only: &
     sll_c_interpolator_2d
@@ -83,8 +84,8 @@ program aligned_translation_2d
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
   type(sll_t_oblic_2d_advector), pointer :: adv  
-  class(sll_c_advection_1d_base), pointer :: adv_x1
-  class(sll_c_advection_1d_base), pointer :: adv_x2
+  class(sll_c_advector_1d), pointer :: adv_x1
+  class(sll_c_advector_1d), pointer :: adv_x2
   sll_int32 :: i1
   sll_int32 :: i2
   sll_int32 :: Nc_x1
@@ -150,6 +151,7 @@ program aligned_translation_2d
   sll_real64 :: err3  
   sll_real64 :: err4  
   class(sll_c_interpolator_2d), pointer :: interp_classic
+  type(sll_t_cubic_spline_interpolator_2d), target :: interp_cs2d
   sll_real64, dimension(:), allocatable :: params_aligned
   sll_int32 :: hermite_p
   sll_int32 :: lag_p
@@ -311,7 +313,7 @@ program aligned_translation_2d
 !    4) 
 
 
-  interp_classic => sll_f_new_cubic_spline_interpolator_2d( &
+  call interp_cs2d%init( &
     Nc_x1+1, &
     Nc_x2+1, &
     x1_min, &
@@ -321,6 +323,7 @@ program aligned_translation_2d
     sll_p_periodic, &
     sll_p_periodic)
 
+  interp_classic => interp_cs2d
 
   SLL_ALLOCATE(params_aligned(11),ierr)
   params_aligned(1) = R0
@@ -728,25 +731,25 @@ contains
     nnodes_x1, &
     node_positions_x2, &
     nnodes_x2, &
-    array_name, time)    
-    !mesh_2d)
+    array_name, &
+    time )    
 
-    use hdf5, only: hid_t
-    integer(hid_t) :: hfile_id
-    sll_int32 :: file_id
-    sll_int32 :: error
-    sll_real64, dimension(:), intent(in) :: node_positions_x1
-    sll_real64, dimension(:), intent(in) :: node_positions_x2    
-     character(len=*), intent(in) :: array_name !< field name
-    sll_real64, dimension(:,:), allocatable :: x1
-    sll_real64, dimension(:,:), allocatable :: x2
-    sll_int32, intent(in) :: nnodes_x1
-    sll_int32, intent(in) :: nnodes_x2
-    sll_int32 :: i, j
-    sll_int32, intent(in) :: iplot
-    character(len=4)      :: cplot
-    sll_real64, dimension(:,:), intent(in) :: f
-    sll_real64 :: time
+    sll_int32       , intent(in) :: iplot
+    sll_real64      , intent(in) :: f(:,:)
+    sll_real64      , intent(in) :: node_positions_x1(:)
+    sll_int32       , intent(in) :: nnodes_x1
+    sll_real64      , intent(in) :: node_positions_x2(:)
+    sll_int32       , intent(in) :: nnodes_x2
+    character(len=*), intent(in) :: array_name !< field name
+    sll_real64      , intent(in) :: time
+
+    sll_real64, allocatable     :: x1(:,:)
+    sll_real64, allocatable     :: x2(:,:)
+    type(sll_t_hdf5_ser_handle) :: hfile_id
+    sll_int32                   :: file_id
+    sll_int32                   :: error
+    sll_int32                   :: i, j
+    character(len=4)            :: cplot
     
     if (iplot == 1) then
 
@@ -758,12 +761,12 @@ contains
           x2(i,j) = node_positions_x2(j) !x2_min+real(j-1,f32)*dx2
         end do
       end do
-      call sll_o_hdf5_file_create("cartesian_mesh-x1.h5",hfile_id,error)
-      call sll_o_hdf5_write_array(hfile_id,x1,"/x1",error)
-      call sll_o_hdf5_file_close(hfile_id, error)
-      call sll_o_hdf5_file_create("cartesian_mesh-x2.h5",hfile_id,error)
-      call sll_o_hdf5_write_array(hfile_id,x2,"/x2",error)
-      call sll_o_hdf5_file_close(hfile_id, error)
+      call sll_s_hdf5_ser_file_create( "cartesian_mesh-x1.h5", hfile_id, error )
+      call sll_o_hdf5_ser_write_array( hfile_id, x1, "/x1", error )
+      call sll_s_hdf5_ser_file_close( hfile_id, error )
+      call sll_s_hdf5_ser_file_create( "cartesian_mesh-x2.h5", hfile_id, error )
+      call sll_o_hdf5_ser_write_array( hfile_id, x2, "/x2", error )
+      call sll_s_hdf5_ser_file_close( hfile_id, error )
       deallocate(x1)
       deallocate(x2)
 

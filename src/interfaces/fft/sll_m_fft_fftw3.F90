@@ -17,6 +17,52 @@
 !> @ingroup fft
 !> @author Katharina Kormann (IPP)
 !> @brief FFT interface for FFTW
+!> @details
+!!
+!!  #### Complex-to-Complex DFT (c2c) ####
+!!
+!!  The complex coefficients returned by the 'c2c' discrete Fourier transform
+!!  correspond to the interval \f$[0,2\pi)\f$, which is not symmetric with
+!!  respect to 0; nevertheless, because of the \f$2\pi\f$-periodicity of the
+!!  transform, the coefficients in \f$(\pi,2\pi)\f$ are identical to those
+!!  in \f$(-\pi,0)\f$.
+!!  Therefore, if we think in terms of positive and negative frequencies, the
+!!  \f$N\f$ complex coefficients returned by the 'c2c' transform are ordered as
+!!  \f[
+!!     \left[ c_0, c_1, c_2,..., c_{N/2}, c_{(-N+N/2+1)}, ..., c_{-2}, c_{-1} \right],
+!!  \f]
+!!  where the integer division is rounded down toward zero, so that
+!!  \f[
+!!     -N+N/2+1 = \begin{cases} -N/2+1 & \text{if $N$ is even},
+!!                           \\ -N/2   & \text{if $N$ is odd}.  \end{cases}
+!!  \f]
+!!
+!!  #### Real-to-Complex DFT (r2c) ####
+!!
+!!  If the input data to be transformed is real, then we know that the Fourier
+!!  transform has real and imaginary parts that are respectively symmetric and
+!!  anti-symmetric around 0; therefore all the necessary information is
+!!  contained in the interval \f$[0,\pi]\f$.
+!!  The 'r2c' discrete Fourier transform takes advantage of this by computing
+!!  only the \f$N/2+1\f$ complex Fourier coefficients
+!!  \f[
+!!     \left[ c_0, c_1, c_2, ..., c_{N/2} \right],
+!!  \f]
+!!  where \f$c_0\f$ has zero imaginary part, as well as \f$c_{N/2}\f$ if N is even.
+!!
+!!  #### Real-to-Real DFT (r2r) ####
+!!
+!!  When the input data array is real it is sometimes more convenient to store
+!!  the complex Fourier coefficients in a real output array of identical size.
+!!  The 'r2r' discrete Fourier transform provides this ability by using the
+!!  so-called 'halcomplex' format, where the \f$N/2+1\f$ complex Fourier
+!!  coefficients are given in the form of \f$N\f$ real values
+!!  \f[
+!!     \left[ r_0, r_1, r_2, ..., r_{N/2}, i_{(N+1)/2-1}, ..., i_{-2}, i_{-1} \right].
+!!  \f]
+!!  Here \f$r_k\f$ and \f$i_k\f$ are respectively the real and imaginary parts
+!!  of the complex coefficient \f$c_k\f$.
+
 module sll_m_fft
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_working_precision.h"
@@ -49,6 +95,7 @@ module sll_m_fft
     sll_s_fft_init_r2c_2d, &
     sll_s_fft_init_c2r_2d, &
     sll_s_fft_init_c2c_2d, &
+    sll_s_fft_init_c2c_3d, &
     sll_s_fft_exec_r2r_1d, &
     sll_s_fft_exec_c2r_1d, &
     sll_s_fft_exec_r2c_1d, &
@@ -56,8 +103,12 @@ module sll_m_fft
     sll_s_fft_exec_r2c_2d, &
     sll_s_fft_exec_c2r_2d, &
     sll_s_fft_exec_c2c_2d, &
+    sll_s_fft_exec_c2c_3d, &
     sll_s_fft_set_mode_c2r_1d, &
     sll_f_fft_get_mode_r2c_1d, &
+    sll_s_fft_get_k_list_c2c_1d, &
+    sll_s_fft_get_k_list_r2r_1d, &
+    sll_s_fft_get_k_list_r2c_1d, &
     sll_s_fft_free
 
 
@@ -103,6 +154,7 @@ module sll_m_fft
   integer, parameter :: p_fftw_r2r_2d = 5
   integer, parameter :: p_fftw_r2c_2d = 6
   integer, parameter :: p_fftw_c2r_2d = 7
+  integer, parameter :: p_fftw_c2c_3d = 8
   
 
 contains
@@ -148,58 +200,113 @@ contains
 
   end function sll_f_fft_allocate_aligned_real
 
+  !-----------------------------------------------------------------------------
+  !> Get a list of the k modes in a c2c FFT
+  !> k_list = [0, 1, 2, ..., n/2, (n/2+1)-n, ..., -2, -1]
+  !-----------------------------------------------------------------------------
+  subroutine sll_s_fft_get_k_list_c2c_1d( plan, k_list )
+    type(sll_t_fft), intent(in   ) :: plan       !< FFT planner object
+    sll_int32      , intent(  out) :: k_list(0:) !< Array with all the k modes
 
-
-  !> Function to reconstruct the complex FFT mode from the data of a r2r transform
-  function sll_f_fft_get_mode_r2c_1d(plan,data,k) result(mode)
-    type(sll_t_fft),      intent(in)   :: plan !< FFT plan
-    sll_real64,           intent(in)   :: data(0:) !< real data produced by r2r transform
-    sll_int32,            intent(in)   :: k    !< mode to be extracted
-    sll_comp64                         :: mode !< Complex value of kth mode
-
-    sll_int32                   :: n_2, n
-
-
+    sll_int32 :: k  ! single mode
+    sll_int32 :: n  ! problem size
     n = plan%problem_shape(1)
-    n_2 = n/2 !ishft(n,-1)
 
-      if( k .eq. 0 ) then
-        mode = cmplx(data(0),0.0_f64,kind=f64)
-      else if( k .eq. n_2 ) then
-        mode = cmplx(data(n_2),0.0_f64,kind=f64)
-      else if( k .gt. n_2 ) then
-        !mode = complex( data(k-n_2) , -data(n-k+n_2) )
-        mode = cmplx( data(n-k) , -data(k) ,kind=f64)
-      else
-        mode = cmplx( data(k) , data(n-k) ,kind=f64)
-      endif
-  end function
+    if (size( k_list ) /= n) then
+      SLL_ERROR( "sll_s_fft_get_k_list_c2c_1d", "k_list must have n elements" )
+    end if
 
+    k_list(    0: n/2) = [(k  , k =     0, n/2)]
+    k_list(n/2+1: n-1) = [(k-n, k = n/2+1, n-1)]
 
-  !> Function to set a complex mode to the real representation of r2r.
-  subroutine sll_s_fft_set_mode_c2r_1d(plan,data,new_value,k)
-    type(sll_t_fft), intent(in)    :: plan !< FFT planner object
-    sll_real64,      intent(out)   :: data(0:) !< Real array to be set
-    sll_comp64,      intent(in)    :: new_value !< Complex value of the kth mode
-    sll_int32,       intent(in)    :: k !< mode to be set
+  end subroutine sll_s_fft_get_k_list_c2c_1d
 
-    sll_int32 :: n_2, n!, index_mode
+  !-----------------------------------------------------------------------------
+  !> Get a list of the k modes in an r2r FFT
+  !> k_list = [0, 1, 2, ..., n/2, (n+1)/2-1, ..., 2, 1]
+  !-----------------------------------------------------------------------------
+  subroutine sll_s_fft_get_k_list_r2r_1d( plan, k_list )
+    type(sll_t_fft), intent(in   ) :: plan       !< FFT planner object
+    sll_int32      , intent(  out) :: k_list(0:) !< Array with all the k modes
 
+    sll_int32 :: k  ! single mode
+    sll_int32 :: n  ! problem size
     n = plan%problem_shape(1)
-    n_2 = n/2 !ishft(n,-1)
 
-      if( k .eq. 0 ) then
-        data(0) = real(new_value,kind=f64)
-      else if( k .eq. n_2 ) then
-        data(n_2) = real(new_value,kind=f64)
-      else if( k .gt. n_2 ) then
-        data(n-k) = real(new_value,kind=f64)
-        data(k) = -aimag(new_value)
-      else
-        data(k) = real(new_value,kind=f64)
-        data(n-k) = aimag(new_value)
-      endif
-  end subroutine 
+    if (size( k_list ) /= n) then
+      SLL_ERROR( "sll_s_fft_get_k_list_r2r_1d", "k_list must have n elements" )
+    end if
+
+    k_list(    0: n/2) = [(k  , k =     0, n/2)]
+    k_list(n/2+1: n-1) = [(n-k, k = n/2+1, n-1)]
+
+  end subroutine sll_s_fft_get_k_list_r2r_1d
+
+  !-----------------------------------------------------------------------------
+  !> Get a list of the k modes in an r2c FFT
+  !> k_list = [0, 1, 2, ..., n/2]
+  !-----------------------------------------------------------------------------
+  subroutine sll_s_fft_get_k_list_r2c_1d( plan, k_list )
+    type(sll_t_fft), intent(in   ) :: plan       !< FFT planner object
+    sll_int32      , intent(  out) :: k_list(0:) !< Array with all the k modes
+
+    sll_int32 :: k    ! single mode
+    sll_int32 :: n_2  ! problem size / 2 (rounded down)
+    n_2 = plan%problem_shape(1) / 2
+
+    if (size( k_list ) /= n_2+1) then
+      SLL_ERROR( "sll_s_fft_get_k_list_r2c_1d", "k_list must have n/2+1 elements" )
+    end if
+
+    k_list(:) = [(k, k = 0, n_2)]
+
+  end subroutine sll_s_fft_get_k_list_r2c_1d
+
+  !-----------------------------------------------------------------------------
+  !> Function to reconstruct a complex FFT mode from the data of a r2r transform
+  !-----------------------------------------------------------------------------
+  function sll_f_fft_get_mode_r2c_1d( plan, data, k ) result( ck )
+    type(sll_t_fft), intent(in) :: plan     !< FFT planner object
+    sll_real64,      intent(in) :: data(0:) !< Real FFT coefficients (halfcomplex format)
+    sll_int32,       intent(in) :: k        !< Mode to be extracted (0 <= k <= N-1)
+    sll_comp64                  :: ck       !< Complex coefficient of kth mode
+
+    sll_int32 :: n  ! problem size
+    n = plan%problem_shape(1)
+
+    if      (k == 0       ) then;  ck = cmplx( data(k)  , 0.0_f64  , kind=f64 )
+    else if (k <=(n+1)/2-1) then;  ck = cmplx( data(k)  , data(n-k), kind=f64 )
+    else if (k == n/2     ) then;  ck = cmplx( data(k)  , 0.0_f64  , kind=f64 )
+    else if (k <= n-1     ) then;  ck = cmplx( data(n-k),-data(k)  , kind=f64 )
+    else
+      SLL_ERROR( "sll_f_fft_get_mode_r2c_1d", "k must be between 0 and n-1" )
+    end if
+    
+  end function sll_f_fft_get_mode_r2c_1d
+
+  !-----------------------------------------------------------------------------
+  !> Subroutine to set a complex mode to the real representation of r2r
+  !-----------------------------------------------------------------------------
+  subroutine sll_s_fft_set_mode_c2r_1d( plan, data, ck, k )
+    type(sll_t_fft), intent(in   ) :: plan      !< FFT planner object
+    sll_real64,      intent(inout) :: data(0:)  !< Real FFT coefficients (halfcomplex format)
+    sll_comp64,      intent(in   ) :: ck        !< Complex coefficient of kth mode
+    sll_int32,       intent(in   ) :: k         !< Mode to be set (0 <= k <= N-1)
+
+    sll_int32 :: n  ! problem size
+    n = plan%problem_shape(1)
+
+    if      (k == 0       ) then; data(0)   = real(ck) ! imaginary part ignored
+    else if (k <=(n+1)/2-1) then; data(k)   = real(ck); data(n-k) = aimag(ck)
+    else if (k == n/2     ) then; data(k)   = real(ck) ! imaginary part ignored
+    else if (k <= n-1     ) then; data(n-k) = real(ck); data(k)   =-aimag(ck)
+    else
+      SLL_ERROR( "sll_s_fft_set_mode_c2r_1d", "k must be between 0 and n-1" )
+    end if
+    
+  end subroutine sll_s_fft_set_mode_c2r_1d
+
+  !-----------------------------------------------------------------------------
 
 ! COMPLEX
   !> Create new 1d complex to complex plan
@@ -211,7 +318,10 @@ contains
     sll_int32,           intent(in)         :: direction  !< Direction of the FFT (\a sll_p_fft_forward or \a sll_p_fft_backward)
     logical, optional,   intent(in)         :: normalized !< Flag to decide if FFT should be normalized by 1/N (default: \a FALSE)
     logical, optional,   intent(in)         :: aligned    !< Flag to decide if FFT routine can assume data alignment (default: \a FALSE). Note that you need to call an aligned initialization if you want to set this option to \a TRUE. 
-    sll_int32, optional, intent(in)         :: optimization !< Planning-rigor flag for FFTW. Possible values \a sll_p_fft_estimate, \a sll_p_fft_measure, \a sll_p_fft_patient, \a sll_p_fft_exhaustive, \a sll_p_fft_wisdom_only. (default: \a sll_p_fft_estimate).
+    !> Planning-rigor flag for FFTW. Possible values \a sll_p_fft_estimate, 
+    !> \a sll_p_fft_measure, \a sll_p_fft_patient, \a sll_p_fft_exhaustive, 
+    !> \a sll_p_fft_wisdom_only. (default: \a sll_p_fft_estimate).
+    sll_int32, optional, intent(in)         :: optimization 
 
     ! local variables
     sll_int32                                :: ierr
@@ -279,7 +389,8 @@ contains
     sll_int32,             intent(in)     :: direction  !< Direction of the FFT (\a sll_p_fft_forward or \a sll_p_fft_backward)
     logical,   optional,   intent(in)     :: normalized !< Flag to decide if FFT should be normalized by 1/N (default: \a FALSE)
     logical,   optional,   intent(in)     :: aligned    !< Flag to decide if FFT routine can assume data alignment (default: \a FALSE). Not that you need to call an aligned initialization if you want to set this option to \a TRUE.
-    sll_int32, optional,  intent(in)      :: optimization !< Planning-rigor flag for FFTW. Possible values \a sll_p_fft_estimate, \a sll_p_fft_measure, \a sll_p_fft_patient, \a sll_p_fft_exhaustive, \a sll_p_fft_wisdom_only. (default: \a sll_p_fft_estimate). Note that you need to 
+    sll_int32, optional,  intent(in)      :: optimization 
+    !< Planning-rigor flag for FFTW. Possible values \a sll_p_fft_estimate, \a sll_p_fft_measure, \a sll_p_fft_patient, \a sll_p_fft_exhaustive, \a sll_p_fft_wisdom_only. (default: \a sll_p_fft_estimate). Note that you need to 
  
     sll_int32                                     :: ierr
     sll_int32                                     :: flag_fftw
@@ -337,6 +448,78 @@ contains
   end subroutine 
 ! END COMPLEX 2D
 
+! COMPLEX 3D
+  !> Create new 3d complex to complex plan
+  subroutine sll_s_fft_init_c2c_3d(plan, nx, ny, nz, array_in, array_out, direction, normalized, aligned, optimization)
+    type(sll_t_fft),       intent(out)    :: plan !< initialized planner object
+    sll_int32,             intent(in)     :: nx !< Number of points along first dimension
+    sll_int32,             intent(in)     :: ny !< Number of points along second dimension
+    sll_int32,             intent(in)     :: nz !< Number of points along third dimension
+    sll_comp64,            intent(inout)  :: array_in(0:,0:,0:) !< (Typical) input array (gets overwritten for certain options)
+    sll_comp64,            intent(inout)  :: array_out(0:,0:,0:) !<(Typical) output array (gets overwritten for certain options)
+    sll_int32,             intent(in)     :: direction  !< Direction of the FFT (\a sll_p_fft_forward or \a sll_p_fft_backward)
+    logical,   optional,   intent(in)     :: normalized !< Flag to decide if FFT should be normalized by 1/N (default: \a FALSE)
+    logical,   optional,   intent(in)     :: aligned    !< Flag to decide if FFT routine can assume data alignment (default: \a FALSE). Not that you need to call an aligned initialization if you want to set this option to \a TRUE.
+    sll_int32, optional,  intent(in)      :: optimization 
+    !< Planning-rigor flag for FFTW. Possible values \a sll_p_fft_estimate, \a sll_p_fft_measure, \a sll_p_fft_patient, \a sll_p_fft_exhaustive, \a sll_p_fft_wisdom_only. (default: \a sll_p_fft_estimate). Note that you need to 
+ 
+    sll_int32                                     :: ierr
+    sll_int32                                     :: flag_fftw
+
+    plan%transform_type = p_fftw_c2c_3d
+    plan%direction = direction
+    if( present(normalized) ) then
+       plan%normalized = normalized
+    else
+       plan%normalized = .false.
+    end if
+    ! Set the information about the algorithm to compute the plan. The default is FFTW_ESTIMATE
+    if ( present(optimization) ) then
+       flag_fftw = optimization
+    else
+       flag_fftw = FFTW_ESTIMATE
+    end if
+    if ( present(aligned) ) then
+       if (aligned .EQV. .false.) then
+          flag_fftw = flag_fftw + FFTW_UNALIGNED
+       end if
+    else
+       flag_fftw = flag_fftw + FFTW_UNALIGNED
+    end if
+    plan%problem_rank = 3
+    SLL_ALLOCATE(plan%problem_shape(3),ierr)
+    plan%problem_shape = [nx, ny, nz] 
+  
+    !We must switch the dimension. It's a fftw convention. 
+
+#ifdef FFTW_F2003
+    plan%fftw = fftw_plan_dft_3d(nz,ny,nx,array_in,array_out,direction,flag_fftw)!FFTW_ESTIMATE + FFTW_UNALIGNED)
+#else
+    call dfftw_plan_dft_3d(plan%fftw,nz,ny,nx,array_in,array_out,direction,flag_fftw)!FFTW_ESTIMATE + FFTW_UNALIGNED)
+#endif
+
+  end subroutine sll_s_fft_init_c2c_3d
+
+
+  !> Compute fast Fourier transform in complex to complex mode.
+  subroutine sll_s_fft_exec_c2c_3d(plan,array_in,array_out)
+    type(sll_t_fft),  intent(in)     :: plan !< FFT planner object
+    sll_comp64,       intent(inout)  :: array_in(0:,0:,0:) !< Complex data to be Fourier transformed 
+    sll_comp64,       intent(inout)  :: array_out(0:,0:,0:) !< Fourier coefficients on output
+
+    sll_real64                                   :: factor
+
+    call fftw_execute_dft(plan%fftw, array_in, array_out)
+
+    if ( plan%normalized ) then
+      factor = 1.0_f64/real(plan%problem_shape(1)*plan%problem_shape(2)*plan%problem_shape(3),kind=f64)
+      array_out = factor*array_out
+    endif
+
+  end subroutine 
+! END COMPLEX 3D
+
+
 ! REAL
   !> Create new 1d real to real plan
   subroutine sll_s_fft_init_r2r_1d(plan,nx,array_in,array_out,direction,normalized, aligned, optimization)
@@ -347,7 +530,8 @@ contains
     sll_int32,           intent(in)    :: direction  !< Direction of the FFT (\a sll_p_fft_forward or \a sll_p_fft_backward)
     logical,   optional, intent(in)    :: normalized !< Flag to decide if FFT should be normalized by 1/N (default: \a FALSE)
     logical,   optional, intent(in)    :: aligned    !< Flag to decide if FFT routine can assume data alignment (default: \a FALSE). Not that you need to call an aligned initialization if you want to set this option to \a TRUE.
-    sll_int32, optional, intent(in)    :: optimization !< Planning-rigor flag for FFTW. Possible values \a sll_p_fft_estimate, \a sll_p_fft_measure, \a sll_p_fft_patient, \a sll_p_fft_exhaustive, \a sll_p_fft_wisdom_only. (default: \a sll_p_fft_estimate). Note that you need to 
+    sll_int32, optional, intent(in)    :: optimization 
+    !< Planning-rigor flag for FFTW. Possible values \a sll_p_fft_estimate, \a sll_p_fft_measure, \a sll_p_fft_patient, \a sll_p_fft_exhaustive, \a sll_p_fft_wisdom_only. (default: \a sll_p_fft_estimate). Note that you need to 
     
     sll_int32 :: ierr
     sll_int32 :: flag_fftw
@@ -452,7 +636,8 @@ contains
     sll_comp64,          intent(out)   :: array_out(:) !< (Typical) output array (gets overwritten for certain options)
     logical,   optional, intent(in)    :: normalized !< Flag to decide if FFT should be normalized by 1/N (default: \a FALSE)
     logical,   optional, intent(in)    :: aligned    !< Flag to decide if FFT routine can assume data alignment (default: \a FALSE). Not that you need to call an aligned initialization if you want to set this option to \a TRUE.
-    sll_int32, optional, intent(in)    :: optimization !< Planning-rigor flag for FFTW. Possible values \a sll_p_fft_estimate, \a sll_p_fft_measure, \a sll_p_fft_patient, \a sll_p_fft_exhaustive, \a sll_p_fft_wisdom_only. (default: \a sll_p_fft_estimate). Note that you need to 
+    sll_int32, optional, intent(in)    :: optimization 
+    !< Planning-rigor flag for FFTW. Possible values \a sll_p_fft_estimate, \a sll_p_fft_measure, \a sll_p_fft_patient, \a sll_p_fft_exhaustive, \a sll_p_fft_wisdom_only. (default: \a sll_p_fft_estimate). Note that you need to 
 
     sll_int32 :: ierr
     sll_int32 :: flag_fftw
@@ -515,7 +700,8 @@ contains
     sll_comp64,          intent(out)   :: array_out(:,:) !< (Typical) output array (gets overwritten for certain options)
     logical,   optional, intent(in)    :: normalized !< Flag to decide if FFT should be normalized by 1/N (default: \a FALSE)
     logical,   optional, intent(in)    :: aligned    !< Flag to decide if FFT routine can assume data alignment (default: \a FALSE). Not that you need to call an aligned initialization if you want to set this option to \a TRUE.
-    sll_int32, optional, intent(in)    :: optimization !< Planning-rigor flag for FFTW. Possible values \a sll_p_fft_estimate, \a sll_p_fft_measure, \a sll_p_fft_patient, \a sll_p_fft_exhaustive, \a sll_p_fft_wisdom_only. (default: \a sll_p_fft_estimate). Note that you need to 
+    sll_int32, optional, intent(in)    :: optimization 
+    !< Planning-rigor flag for FFTW. Possible values \a sll_p_fft_estimate, \a sll_p_fft_measure, \a sll_p_fft_patient, \a sll_p_fft_exhaustive, \a sll_p_fft_wisdom_only. (default: \a sll_p_fft_estimate). Note that you need to 
 
     sll_int32 :: ierr    
     sll_int32 :: flag_fftw
@@ -600,7 +786,8 @@ contains
     sll_real64,          intent(out)      :: array_out(:) !< (Typical) output array (gets overwritten for certain options)
     logical,   optional, intent(in)       :: normalized !< Flag to decide if FFT should be normalized by 1/N (default: \a FALSE)
     logical,   optional, intent(in)       :: aligned    !< Flag to decide if FFT routine can assume data alignment (default: \a FALSE). Not that you need to call an aligned initialization if you want to set this option to \a TRUE.
-    sll_int32, optional, intent(in)       :: optimization !< Planning-rigor flag for FFTW. Possible values \a sll_p_fft_estimate, \a sll_p_fft_measure, \a sll_p_fft_patient, \a sll_p_fft_exhaustive, \a sll_p_fft_wisdom_only. (default: \a sll_p_fft_estimate). Note that you need to 
+    sll_int32, optional, intent(in)       :: optimization 
+    !< Planning-rigor flag for FFTW. Possible values \a sll_p_fft_estimate, \a sll_p_fft_measure, \a sll_p_fft_patient, \a sll_p_fft_exhaustive, \a sll_p_fft_wisdom_only. (default: \a sll_p_fft_estimate). Note that you need to 
     
     sll_int32 :: ierr
     sll_int32 :: flag_fftw
@@ -667,7 +854,8 @@ contains
     sll_real64,          intent(out)     :: array_out(:,:) !< (Typical) output array (gets overwritten for certain options)
     logical,   optional, intent(in)      :: normalized !< Flag to decide if FFT should be normalized by 1/N (default: \a FALSE)
     logical,   optional, intent(in)      :: aligned    !< Flag to decide if FFT routine can assume data alignment (default: \a FALSE). Not that you need to call an aligned initialization if you want to set this option to \a TRUE.
-    sll_int32, optional, intent(in)      :: optimization !< Planning-rigor flag for FFTW. Possible values \a sll_p_fft_estimate, \a sll_p_fft_measure, \a sll_p_fft_patient, \a sll_p_fft_exhaustive, \a sll_p_fft_wisdom_only. (default: \a sll_p_fft_estimate). Note that you need to 
+    sll_int32, optional, intent(in)      :: optimization 
+    !< Planning-rigor flag for FFTW. Possible values \a sll_p_fft_estimate, \a sll_p_fft_measure, \a sll_p_fft_patient, \a sll_p_fft_exhaustive, \a sll_p_fft_wisdom_only. (default: \a sll_p_fft_estimate). Note that you need to 
 
     sll_int32 :: ierr
     sll_int32 :: flag_fftw

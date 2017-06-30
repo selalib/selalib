@@ -15,7 +15,7 @@ module sll_m_distribution_function
     sll_c_interpolator_1d
 
   use sll_m_scalar_field_2d_old, only: &
-    sll_s_initialize_scalar_field_2d, &
+    sll_s_scalar_field_2d_init, &
     sll_t_scalar_field_2d, &
     sll_i_scalar_function_2d_old
 
@@ -27,7 +27,7 @@ module sll_m_distribution_function
   implicit none
 
   public :: &
-    sll_s_initialize_distribution_function_2d, &
+    sll_s_distribution_function_2d_init, &
     sll_t_distribution_function_2d
 
   private
@@ -107,7 +107,7 @@ contains
     endif
   end subroutine sll_new_distribution_function_2d
 
-  subroutine sll_s_initialize_distribution_function_2d( &
+  subroutine sll_s_distribution_function_2d_init( &
     this, &
     mass, &
     charge, &
@@ -131,7 +131,7 @@ contains
     this%pmass = mass
     this%pcharge = charge
 
-    call sll_s_initialize_scalar_field_2d( &
+    call sll_s_scalar_field_2d_init( &
          this, &
          field_name, &
          transf, &
@@ -139,7 +139,7 @@ contains
          eta1_interpolator, &
          eta2_interpolator, &
          initializer )
-  end subroutine sll_s_initialize_distribution_function_2d
+  end subroutine sll_s_distribution_function_2d_init
 #endif
 
 
