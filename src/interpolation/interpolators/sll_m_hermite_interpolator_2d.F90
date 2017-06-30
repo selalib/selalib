@@ -70,7 +70,7 @@ module sll_m_hermite_interpolator_2d
     sll_int32 :: npts2
   contains
     !> PLEASE ADD DOCUMENTATION
-    procedure, pass(interpolator) :: initialize=>initialize_hermite_interpolator_2d
+    procedure, pass(interpolator) :: init=>initialize_hermite_interpolator_2d
     !> PLEASE ADD DOCUMENTATION
     procedure :: compute_interpolants => wrap_compute_interpolants_hermite_2d
     !> PLEASE ADD DOCUMENTATION
@@ -148,7 +148,7 @@ contains
     interpolator%npts1 = npts1
     interpolator%npts2 = npts2
     
-    call interpolator%initialize( &
+    call interpolator%init( &
       npts1, &
       npts2, &
       eta1_min, &
@@ -309,7 +309,7 @@ contains
     eta1, &
     eta2, &
     data_out)
-    class(sll_hermite_interpolator_2d),  intent(in)  :: this
+    class(sll_hermite_interpolator_2d),  intent(inout)  :: this
     sll_int32,  intent(in)                           :: num_points1
     sll_int32,  intent(in)                           :: num_points2
     sll_real64, dimension(:,:), intent(in)           :: eta1
@@ -337,7 +337,7 @@ contains
        alpha1, &
        alpha2, &
        data_out)
-    class(sll_hermite_interpolator_2d), intent(in) :: this
+    class(sll_hermite_interpolator_2d), intent(inout) :: this
     sll_int32,  intent(in)                         :: num_points1
     sll_int32,  intent(in)                         :: num_points2
     sll_real64, dimension(:,:), intent(in)         :: alpha1

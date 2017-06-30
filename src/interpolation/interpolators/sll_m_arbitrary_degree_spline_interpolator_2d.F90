@@ -52,7 +52,7 @@ module sll_m_arbitrary_degree_spline_interpolator_2d
   implicit none
 
   public :: &
-    sll_s_initialize_ad2d_interpolator, &
+    sll_s_ad2d_interpolator_init, &
     sll_f_new_arbitrary_degree_spline_interp2d, &
     sll_s_set_slope2d, &
     sll_t_arbitrary_degree_spline_interpolator_2d, &
@@ -114,7 +114,7 @@ type, extends(sll_c_interpolator_2d) :: &
 
 contains
 
-  procedure :: initialize                  => sll_s_initialize_ad2d_interpolator
+  procedure :: init                        => sll_s_ad2d_interpolator_init
   procedure :: set_coefficients            => set_coefficients_ad2d
   procedure :: coefficients_are_set        => coefficients_are_set_ad2d
   procedure :: compute_interpolants        => compute_interpolants_ad2d
@@ -218,7 +218,7 @@ sll_int32 :: ierr
 
 SLL_ALLOCATE(res,ierr)
 
-call sll_s_initialize_ad2d_interpolator( res,            &
+call sll_s_ad2d_interpolator_init( res,            &
                                    num_pts1,       &
                                    num_pts2,       &
                                    eta1_min,       &
@@ -253,7 +253,7 @@ end function sll_f_new_arbitrary_degree_spline_interp2d
 !> @param[in] spline_degree1 the degree of B-spline in the direction eta1
 !> @param[in] spline_degree2 the degre of B-spline in the direction eta2
 !> @param[out] interpolator the type sll_t_arbitrary_degree_spline_interpolator_2d
-subroutine sll_s_initialize_ad2d_interpolator( interpolator,   &
+subroutine sll_s_ad2d_interpolator_init( interpolator,   &
                                          num_pts1,       &
                                          num_pts2,       &
                                          eta1_min,       &
@@ -349,7 +349,7 @@ interpolator%coeff_splines(:,:) = 0.0_f64
 SLL_CLEAR_ALLOCATE( interpolator%t1(1:num_pts1*(spline_degree1+1)),ierr)
 SLL_CLEAR_ALLOCATE( interpolator%t2(1:num_pts2*(spline_degree2+1)),ierr) 
 
-end subroutine !sll_s_initialize_ad2d_interpolator
+end subroutine !sll_s_ad2d_interpolator_init
 
 subroutine set_coeff_splines_values_1d( values,        &
                                         num_pts,       &
@@ -2261,7 +2261,7 @@ subroutine interpolate_array_ad2d( this,            &
                                  eta2,            &
                                  data_out)
   
-class(sll_t_arbitrary_degree_spline_interpolator_2d), intent(in)  :: this
+class(sll_t_arbitrary_degree_spline_interpolator_2d), intent(inout)  :: this
 
 sll_real64, dimension(:,:), intent(in) :: eta1
 sll_real64, dimension(:,:), intent(in) :: eta2
@@ -2290,7 +2290,7 @@ subroutine interpolate_2d_array_disp_ad2d( this,        &
                                          alpha2,      &
                                          data_out)
     
-class(sll_t_arbitrary_degree_spline_interpolator_2d), intent(in)    :: this
+class(sll_t_arbitrary_degree_spline_interpolator_2d), intent(inout)    :: this
 
 sll_int32,                  intent(in)         :: num_points1  
 sll_int32,                  intent(in)         :: num_points2 
@@ -3247,7 +3247,7 @@ case(2340) ! Hermite in al sides
    end if
    
 case default
-   print*,'sll_s_initialize_ad2d_interpolator: BC combination not implemented.'
+   print*,'sll_s_ad2d_interpolator_init: BC combination not implemented.'
 end select
   
 end subroutine sll_s_set_slope2d
@@ -3263,9 +3263,9 @@ sll_real64, dimension(:),            intent(in)  :: taux
 sll_real64, dimension(:),            intent(in)  :: tauy
 sll_real64, dimension(:,:), pointer, intent(in)  :: g   
 
-sll_real64, dimension(:,:), pointer, intent(out) :: bcoef
-sll_real64, dimension(:),   pointer, intent(out) :: tx
-sll_real64, dimension(:),   pointer, intent(out) :: ty
+sll_real64, dimension(:,:), pointer, intent(inout) :: bcoef
+sll_real64, dimension(:),   pointer, intent(inout) :: tx
+sll_real64, dimension(:),   pointer, intent(inout) :: ty
 
 sll_real64, dimension(nx)                 :: work_x
 sll_real64, dimension(nx*(2*kx-1))        :: qx

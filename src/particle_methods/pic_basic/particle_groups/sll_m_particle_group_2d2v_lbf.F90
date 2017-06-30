@@ -352,7 +352,7 @@ contains
 
     print*, "[", this_fun_name, "] - sparse grid levels for the remapping tool:", remapping_sparse_grid_max_levels
     self%sparse_grid_max_levels = remapping_sparse_grid_max_levels
-    call self%sparse_grid_interpolator%initialize( &
+    call self%sparse_grid_interpolator%init( &
                   self%sparse_grid_max_levels,   &
                   self%remapped_f_interpolation_degree,   &
                   self%remapped_f_interpolation_degree+1,    &
@@ -794,31 +794,32 @@ contains
   end function
 
   !> macro for the lbf approximation of a transported density (reconstruct_f_lbf) below ----------------------------------------
-#define UPDATE_CLOSEST_PARTICLE_ARRAYS_USING_NEIGHBOR_CELLS(djx,djy,djvx,djvy)                                            \
-    do;                                                                                                                 \
-        k_neighbor = closest_particle(j_x+(djx), j_y+(djy), j_vx+(djvx), j_vy+(djvy));                                    \
-;                                                                                                                       \
-        if(k_neighbor /= 0) then;  do          ;                                                                        \
-            coords = self%get_x(k_neighbor) ;                                                                        \
-            x = coords(1) ;                                                                                             \
-            y = coords(2) ;                                                                                             \
-            coords = self%get_v(k_neighbor) ;                                                                        \
-            vx = coords(1) ;                                                                                            \
-            vy = coords(2) ;                                                                                            \
-            call periodic_correction(self,x,y) ;                                                                     \
-            call update_closest_particle_arrays(k_neighbor,                                                       \
+#define UPDATE_CLOSEST_PARTICLE_ARRAYS_USING_NEIGHBOR_CELLS(djx,djy,djvx,djvy) \
+    do; \
+        k_neighbor = closest_particle(j_x+(djx), j_y+(djy), j_vx+(djvx), j_vy+(djvy)); \
+; \
+        if(k_neighbor /= 0) then; \
+        do; \
+            coords = self%get_x(k_neighbor) ; \
+            x = coords(1) ; \
+            y = coords(2) ; \
+            coords = self%get_v(k_neighbor) ; \
+            vx = coords(1) ; \
+            vy = coords(2) ; \
+            call periodic_correction(self,x,y) ; \
+            call update_closest_particle_arrays(k_neighbor, \
                 x - self%lbf_grid%eta1_min, y - self%lbf_grid%eta2_min, vx - self%lbf_grid%eta3_min, vy - self%lbf_grid%eta4_min, \
-                j_x, j_y, j_vx, j_vy,                                                   \
-                h_flow_grid_x,                                                          \
-                h_flow_grid_y,                                                          \
-                h_flow_grid_vx,                                                         \
-                h_flow_grid_vy,                                                         \
-                closest_particle,                                                       \
-                closest_particle_distance) ;                                            \
-        exit;                                                                           \
-        end do;                                                                         \
-        end if;                                                                         \
-    exit;                                                                               \
+                j_x, j_y, j_vx, j_vy, \
+                h_flow_grid_x, \
+                h_flow_grid_y, \
+                h_flow_grid_vx, \
+                h_flow_grid_vy, \
+                closest_particle, \
+                closest_particle_distance) ; \
+        exit; \
+        end do; \
+        end if; \
+    exit; \
     end do
 
 

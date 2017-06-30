@@ -1,4 +1,4 @@
-!> @ingroup poisson_solvers
+!> @ingroup poisson_solvers_parallel
 !> @brief 
 !> Periodic 3D poisson solver (parallel version)
 !> @details
@@ -15,7 +15,8 @@ module sll_m_poisson_3d_periodic_par
     sll_f_get_collective_size
 
   use sll_m_constants, only: &
-    sll_p_pi
+       sll_p_pi, &
+       sll_p_twopi
 
   use sll_m_fft, only: &
     sll_s_fft_exec_c2c_1d, &
@@ -85,6 +86,8 @@ module sll_m_poisson_3d_periodic_par
      sll_comp64, dimension(:,:,:), pointer :: array_x   !< x array component
      sll_comp64, dimension(:,:,:), pointer :: array_y   !< y array component
      sll_comp64, dimension(:,:,:), pointer :: array_z   !< z array component
+     sll_comp64, dimension(:,:,:), pointer :: array_z1   !< z array component
+     sll_comp64, dimension(:,:,:), pointer :: array_z2   !< z array component
      sll_comp64, allocatable               :: array1d_x(:)
      sll_comp64, allocatable               :: array1d_y(:)
      sll_comp64, allocatable               :: array1d_z(:)
@@ -242,6 +245,8 @@ contains
     SLL_ALLOCATE(plan%array_x(loc_sizes(1,1),loc_sizes(1,2),loc_sizes(1,3)),ierr)
     SLL_ALLOCATE(plan%array_y(loc_sizes(2,1),loc_sizes(2,2),loc_sizes(2,3)),ierr)
     SLL_ALLOCATE(plan%array_z(loc_sizes(3,1),loc_sizes(3,2),loc_sizes(3,3)),ierr)
+    SLL_ALLOCATE(plan%array_z1(loc_sizes(3,1),loc_sizes(3,2),loc_sizes(3,3)),ierr)
+    SLL_ALLOCATE(plan%array_z2(loc_sizes(3,1),loc_sizes(3,2),loc_sizes(3,3)),ierr)
 
     allocate(plan%array1d_x(loc_sizes(1,1)))
     allocate(plan%array1d_y(loc_sizes(2,2)))
@@ -289,6 +294,8 @@ contains
     sll_int32                                    :: nx_loc, ny_loc, nz_loc
     sll_int32                                    :: i, j, k
     sll_real64                                   :: Lx, Ly, Lz
+    sll_real64                                   :: kx0, ky0, kz0
+    sll_real64                                   :: kx, ky, kz
     sll_real64                                   :: ind_x, ind_y, ind_z
     type(sll_t_layout_3d), pointer               :: layout_x
     type(sll_t_layout_3d), pointer               :: layout_y
@@ -303,6 +310,10 @@ contains
     Lx = plan%Lx
     Ly = plan%Ly
     Lz = plan%Lz
+    kx0 = sll_p_twopi/Lx
+    ky0 = sll_p_twopi/Ly
+    kz0 = sll_p_twopi/Lz
+    
 
     ! Get layouts to compute FFTs (in each direction)
     layout_x => plan%layout_x
@@ -382,8 +393,10 @@ contains
                 else
                    ind_z = real(nz-(gk-1),f64)
                 endif
-                plan%array_z(i,j,k) = plan%array_z(i,j,k)/(4*sll_p_pi**2 * &
-                            ((ind_x/Lx)**2 + (ind_y/Ly)**2+(ind_z/Lz)**2))
+                kx = kx0*ind_x
+                ky = ky0*ind_y
+                kz = kz0*ind_z
+                plan%array_z(i,j,k) = plan%array_z(i,j,k)/(kx**2+ky**2+kz**2)
              endif
           enddo
        enddo
@@ -437,60 +450,53 @@ contains
 
   end subroutine sll_s_poisson_3d_periodic_par_solve
 
+  !> Compute the electric fields from the potential (phi sequential along x1)
   subroutine sll_s_poisson_3d_periodic_par_compute_e_from_phi(plan, phi, ex, ey, ez)
     type (sll_t_poisson_3d_periodic_par),        intent(inout) :: plan !< Solver structure
     sll_real64,                                  intent(in   ) :: phi(:,:,:)  !< Electric potential
-    sll_real64,                                  intent(  out) :: ex(:,:,:)
-    sll_real64,                                  intent(  out) :: ey(:,:,:)
-    sll_real64,                                  intent(  out) :: ez(:,:,:)
+    sll_real64,                                  intent(  out) :: ex(:,:,:) !< x component of electric field
+    sll_real64,                                  intent(  out) :: ey(:,:,:) !< y component of electric field
+    sll_real64,                                  intent(  out) :: ez(:,:,:) !< z component of electric field
    
 
-    ! compute the values of the electric field. rho is configured for
+    ! compute the values of the electric field. phi is configured for
     ! sequential operations in x1, thus we start by computing the E_x
     ! component.
-    ! The following call is inefficient and unnecessary. The local sizes for
-    ! the arrays should be kept around as parameters basically and not on
-    ! variables whose content could be anything... This will have to do for
-    ! now.
-    call compute_electric_field_x1_3d( plan, phi, plan%ex_x1)
+    call sll_s_compute_ex_from_phi(plan, phi, plan%ex_x1)
     call sll_o_apply_remap_3d( plan%rmp_x1_to_split, plan%ex_x1, ex)
 
     call sll_o_apply_remap_3d( plan%rmp_x1_to_x2, phi, plan%phi_x2)
-    call compute_electric_field_x2_3d( plan, plan%phi_x2, plan%ey_x2)
+    call sll_s_compute_ey_from_phi( plan, plan%phi_x2, plan%ey_x2)
     call sll_o_apply_remap_3d( plan%rmp_x2_to_split, plan%ey_x2, ey)
 
 
     call sll_o_apply_remap_3d( plan%rmp_x2_to_x3, plan%phi_x2, plan%phi_x3)
-    call compute_electric_field_x3_3d( plan, plan%phi_x3, plan%ez_x3)
+    call sll_s_compute_ez_from_phi( plan, plan%phi_x3, plan%ez_x3)
     call sll_o_apply_remap_3d( plan%rmp_x3_to_split, plan%ez_x3, ez)
 
   end subroutine sll_s_poisson_3d_periodic_par_compute_e_from_phi
 
-
+  !> Compute the electric fields from the potential (phi sequential along x3)
   subroutine sll_s_poisson_3d_periodic_par_compute_e_from_phi_layoutseq3(plan, phi, ex, ey, ez)
     type (sll_t_poisson_3d_periodic_par),        intent(inout) :: plan !< Solver structure
     sll_real64,                                  intent(in   ) :: phi(:,:,:)  !< Electric potential
-    sll_real64,                                  intent(  out) :: ex(:,:,:)
-    sll_real64,                                  intent(  out) :: ey(:,:,:)
-    sll_real64,                                  intent(  out) :: ez(:,:,:)
+    sll_real64,                                  intent(  out) :: ex(:,:,:) !< x component of electric field
+    sll_real64,                                  intent(  out) :: ey(:,:,:) !< y component of electric field
+    sll_real64,                                  intent(  out) :: ez(:,:,:) !< z component of electric field
    
 
     ! compute the values of the electric field. rho is configured for
-    ! sequential operations in x1, thus we start by computing the E_x
+    ! sequential operations in x3, thus we start by computing the E_x
     ! component.
-    ! The following call is inefficient and unnecessary. The local sizes for
-    ! the arrays should be kept around as parameters basically and not on
-    ! variables whose content could be anything... This will have to do for
-    ! now.
-    call compute_electric_field_x3_3d( plan, phi, plan%ez_x3)
+    call sll_s_compute_ez_from_phi( plan, phi, plan%ez_x3)
     call sll_o_apply_remap_3d( plan%rmp_x3_to_split, plan%ez_x3, ez)
 
     call sll_o_apply_remap_3d( plan%rmp_x3_to_x1, phi, plan%phi_x1)
-    call compute_electric_field_x1_3d( plan, plan%phi_x1, plan%ex_x1)
+    call sll_s_compute_ex_from_phi( plan, plan%phi_x1, plan%ex_x1)
     call sll_o_apply_remap_3d( plan%rmp_x1_to_split, plan%ex_x1, ex)
 
     call sll_o_apply_remap_3d( plan%rmp_x1_to_x2, plan%phi_x1, plan%phi_x2)
-    call compute_electric_field_x2_3d( plan, plan%phi_x2, plan%ey_x2)
+    call sll_s_compute_ey_from_phi( plan, plan%phi_x2, plan%ey_x2)
     call sll_o_apply_remap_3d( plan%rmp_x2_to_split, plan%ey_x2, ey)
 
 
@@ -550,10 +556,175 @@ contains
     enddo
 
   end subroutine verify_argument_sizes_par
+    
+
+  !> Compute the 3d potential from the Poisson equation with periodic
+  !> boundary conditions.
+  subroutine sll_s_compute_ex_from_phi(plan, phi, ex)
+    type (sll_t_poisson_3d_periodic_par) , intent( inout )        :: plan !< Solver structure
+    sll_real64, dimension(:,:,:), intent( in )                 :: phi  !< Charge density
+    sll_real64, dimension(:,:,:), intent( out )                 :: ex  !< Electric potential
+    sll_int32                                    :: nx
+    ! nx, ny, nz are the numbers of points - 1 in directions x, y ,z
+    sll_int32                                    :: nx_loc, ny_loc, nz_loc
+    sll_int32                                    :: i, j, k
+    sll_real64                                   :: kx0
+    sll_comp64                                   :: norm_fac
+    
+    ! Get geometry information
+    nx = plan%ncx
+    kx0 = sll_p_twopi/plan%Lx
+    norm_fac = cmplx( 1.0_f64/real(nx, f64), 0.0_f64, f64 )
+    
+
+    nx_loc = plan%loc_sizes(1,1) 
+    ny_loc = plan%loc_sizes(1,2) 
+    nz_loc = plan%loc_sizes(1,3)
+
+    do k=1,nz_loc
+       do j=1,ny_loc
+          plan%array1d_x = cmplx(phi(:,j,k), 0_f64, kind=f64)
+          call sll_s_fft_exec_c2c_1d(plan%px, plan%array1d_x, plan%array1d_x)
+          do i =1,nx_loc/2
+             plan%array_x(i,j,k) = plan%array1d_x(i) * cmplx(0_f64, -kx0*(i-1), kind=f64)&
+                  * norm_fac
+          end do
+          do i =nx_loc/2+1,nx_loc
+             plan%array_x(i,j,k) = plan%array1d_x(i) * cmplx(0_f64, kx0*(nx-i+1), kind=f64)&
+                  * norm_fac
+          end do
+       enddo
+    enddo
+
+ 
+    do k=1,nz_loc
+       do j=1,ny_loc
+          plan%array1d_x = plan%array_x(:,j,k)
+          call sll_s_fft_exec_c2c_1d( &
+               plan%px_inv, &
+               plan%array1d_x, &
+               plan%array1d_x )
+          plan%array_x(:,j,k) = plan%array1d_x
+       enddo
+    enddo
+
+    ex = real(plan%array_x, f64)
+
+  end subroutine sll_s_compute_ex_from_phi
 
 
-!------------------------------------------------------------------------------!
+  !> Compute the 3d potential from the Poisson equation with periodic
+  !> boundary conditions.
+  subroutine sll_s_compute_ey_from_phi(plan, phi, ey)
+    type (sll_t_poisson_3d_periodic_par) , intent( inout )        :: plan !< Solver structure
+    sll_real64, dimension(:,:,:), intent( in )                 :: phi  !< Charge density
+    sll_real64, dimension(:,:,:), intent( out )                 :: ey  !< Electric potential
+    sll_int32                                    :: ny
+    ! nx, ny, nz are the numbers of points - 1 in directions x, y ,z
+    sll_int32                                    :: nx_loc, ny_loc, nz_loc
+    sll_int32                                    :: i, j, k
+    sll_real64                                   :: ky0
+    sll_comp64                                   :: norm_fac
 
+    ! Get geometry information
+    ny = plan%ncy
+    ky0 = sll_p_twopi/plan%Ly
+    norm_fac = cmplx( 1.0_f64/real(ny, f64), 0.0_f64, f64 )
+
+    nx_loc = plan%loc_sizes(2,1) 
+    ny_loc = plan%loc_sizes(2,2) 
+    nz_loc = plan%loc_sizes(2,3)
+
+    do k=1,nz_loc
+       do i=1,nx_loc
+          plan%array1d_y = cmplx(phi(i,:,k), 0_f64, kind=f64)
+          call sll_s_fft_exec_c2c_1d(plan%py, plan%array1d_y, plan%array1d_y)
+          do j =1,ny_loc/2
+             plan%array_y(i,j,k) = plan%array1d_y(j) * cmplx(0_f64, -ky0*(j-1), kind=f64)&
+                  * norm_fac
+          end do
+          do j =ny_loc/2+1,ny_loc
+             plan%array_y(i,j,k) = plan%array1d_y(j) * cmplx(0_f64, ky0*(ny-j+1), kind=f64)&
+                  * norm_fac
+          end do
+       enddo
+    enddo
+
+ 
+    do k=1,nz_loc
+       do i=1,nx_loc
+          plan%array1d_y = plan%array_y(i,:,k)
+          call sll_s_fft_exec_c2c_1d( &
+               plan%py_inv, &
+               plan%array1d_y, &
+               plan%array1d_y )
+          plan%array_y(i,:,k) = plan%array1d_y
+       enddo
+    enddo
+
+    ey = real(plan%array_y, f64)
+
+  end subroutine sll_s_compute_ey_from_phi
+
+  
+  !> Compute the 3d potential from the Poisson equation with periodic
+  !> boundary conditions.
+  subroutine sll_s_compute_ez_from_phi(plan, phi, ez)
+    type (sll_t_poisson_3d_periodic_par) , intent( inout )        :: plan !< Solver structure
+    sll_real64, dimension(:,:,:), intent( in )                 :: phi  !< Charge density
+    sll_real64, dimension(:,:,:), intent( out )                 :: ez  !< Electric potential
+    sll_int32                                    :: nz
+    ! nx, ny, nz are the numbers of points - 1 in directions x, y ,z
+    sll_int32                                    :: nx_loc, ny_loc, nz_loc
+    sll_int32                                    :: i, j, k
+    sll_real64                                   :: kz0
+    sll_comp64                                   :: norm_fac
+
+    ! Get geometry information
+    nz = plan%ncz
+    kz0 = sll_p_twopi/plan%Lz
+    norm_fac = cmplx( 1.0_f64/real(nz, f64), 0.0_f64, f64 )
+    
+
+    nx_loc = plan%loc_sizes(3,1) 
+    ny_loc = plan%loc_sizes(3,2) 
+    nz_loc = plan%loc_sizes(3,3)
+
+    do j=1,ny_loc
+       do i=1,nx_loc
+          plan%array1d_z = cmplx(phi(i,j,:), 0_f64, kind=f64)
+          call sll_s_fft_exec_c2c_1d(plan%pz, plan%array1d_z, plan%array1d_z)
+          do k =1,nz_loc/2
+             plan%array_z(i,j,k) = plan%array1d_z(k) * cmplx(0_f64, -kz0*(k-1), kind=f64) &
+                  *norm_fac
+          end do
+          do k =nz_loc/2+1,nz_loc
+             plan%array_z(i,j,k) = plan%array1d_z(k) * cmplx(0_f64, kz0*(nz-k+1), kind=f64) &
+                  *norm_fac
+          end do
+       enddo
+    enddo
+
+ 
+    do j=1,ny_loc
+       do i=1,nx_loc
+          plan%array1d_z = plan%array_z(i,j,:)
+          call sll_s_fft_exec_c2c_1d( &
+               plan%pz_inv, &
+               plan%array1d_z, &
+               plan%array1d_z )
+          plan%array_z(i,j,:) = plan%array1d_z
+       enddo
+    enddo
+
+    ez = real(plan%array_z, f64)
+
+  end subroutine sll_s_compute_ez_from_phi
+
+  
+  !------------------------------------------------------------------------------!
+  ! From here alternative function based on finite differences.
+  ! This function only sets the Ex component of the electric field.
  subroutine compute_electric_field_x1_3d( &
       plan, &
       phi_x1, &
@@ -603,7 +774,7 @@ contains
 
   end subroutine compute_electric_field_x1_3d
 
-
+  
   ! This function only sets the Ey component of the electric field.
   subroutine compute_electric_field_x2_3d( & 
       plan, &

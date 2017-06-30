@@ -1,0 +1,582 @@
+module sll_mudpack_cartesian
+
+implicit none
+
+!> Mudpack solver cartesian 2d
+type, public :: mudpack_2d
+
+   real(8), dimension(:), allocatable :: work !< array for tmp data
+   integer  :: mgopt(4)           !< Option to control multigrid
+   integer  :: iprm(16)           !< Indices to control grid sizes
+   real(8) :: fprm(6)            !< Real to set boundary conditions
+   integer  :: iguess             !< Initial solution or loop over time
+   integer, pointer :: iwork(:,:) !< Internal work array for mudpack library
+
+end type mudpack_2d
+
+integer, parameter, public :: CARTESIAN_2D = 2    !< geometry parameter
+integer, parameter, public :: CARTESIAN_3D = 3    !< geometry parameter
+integer, parameter, public :: POLAR        = 11   !< geometry parameter
+integer, parameter, public :: CYLINDRICAL  = 12   !< geometry parameter
+
+interface sll_create
+  module procedure initialize_mudpack_cartesian
+end interface sll_create
+
+interface sll_solve
+  module procedure solve_mudpack_cartesian
+end interface sll_solve
+
+interface sll_delete
+  module procedure delete_mudpack_cartesian
+end interface sll_delete
+
+contains
+
+!> Initialize the Poisson solver using mudpack library
+subroutine initialize_mudpack_cartesian( this,                        &
+                                        eta1_min, eta1_max, nc_eta1, &
+                                        eta2_min, eta2_max, nc_eta2, &
+                                        bc_eta1_left, bc_eta1_right, &
+                                        bc_eta2_left, bc_eta2_right )
+implicit none
+
+! set grid size params
+type(mudpack_2d):: this          !< Data structure for solver
+real(8), intent(in)  :: eta1_min      !< left corner x direction
+real(8), intent(in)  :: eta1_max      !< right corner x direction
+real(8), intent(in)  :: eta2_min      !< left corner x direction
+real(8), intent(in)  :: eta2_max      !< right corner x direction
+integer,  intent(in)  :: nc_eta1       !< number of cells x direction
+integer,  intent(in)  :: nc_eta2       !< number of cells y direction
+integer,  optional    :: bc_eta1_left  !< boundary condtion
+integer,  optional    :: bc_eta1_right !< boundary condtion
+integer,  optional    :: bc_eta2_left  !< boundary condtion
+integer,  optional    :: bc_eta2_right !< boundary condtion
+integer,  parameter   :: iixp = 4 , jjyq = 4
+integer               :: iiex, jjey, llwork
+
+real(8) :: phi(nc_eta1+1,nc_eta2+1) !< electric potential
+real(8) :: rhs(nc_eta1+1,nc_eta2+1) !< charge density
+
+!put integer and floating point argument names in contiguous
+!storeage for labelling in vectors iprm,fprm
+integer  :: iprm(16)
+real(8) :: fprm(6)
+integer  :: error
+integer  :: intl,nxa,nxb,nyc,nyd,ixp,jyq,iex,jey,nx,ny
+integer  :: iguess,maxcy,method,nwork,lwrkqd,itero
+common/itmud2sp/intl,nxa,nxb,nyc,nyd,ixp,jyq,iex,jey,nx,ny, &
+              iguess,maxcy,method,nwork,lwrkqd,itero
+real(8) :: xa,xb,yc,yd,tolmax,relmax
+common/ftmud2sp/xa,xb,yc,yd,tolmax,relmax
+!real(8),dimension(:),allocatable :: cxx_array
+
+#ifdef DEBUG
+integer :: i
+#endif
+
+equivalence(intl,iprm)
+equivalence(xa,fprm)
+
+!declare coefficient and boundary condition input subroutines external
+external cofx,cofy,bndsp
+
+nx = nc_eta1+1
+ny = nc_eta2+1
+
+! set minimum required work space
+llwork=(7*(nx+2)*(ny+2)+44*nx*ny)/3
+
+allocate(this%work(llwork))
+iiex = ceiling(log((nx-1.)/iixp)/log(2.))+1
+jjey = ceiling(log((ny-1.)/jjyq)/log(2.))+1
+
+!set input integer arguments
+intl = 0
+
+!set boundary condition flags
+nxa  = merge(bc_eta1_left,  0, present(bc_eta1_left))
+nxb  = merge(bc_eta1_right, 0, present(bc_eta1_right))
+nyc  = merge(bc_eta2_left,  0, present(bc_eta2_left))
+nyd  = merge(bc_eta2_right, 0, present(bc_eta2_right))
+
+!set grid sizes from parameter statements
+ixp  = iixp
+jyq  = jjyq
+iex  = iiex
+jey  = jjey
+
+nx = ixp*(2**(iex-1))+1
+ny = jyq*(2**(jey-1))+1
+
+if (nx /= nc_eta1+1 .or. ny /= nc_eta2+1) then
+   print*, "nx,nc_eta1+1=", nx, nc_eta1+1
+   print*, "ny,nc_eta2+1=", ny, nc_eta2+1
+   stop ' nx or ny different in sll_mudpack_cartesian '
+end if
+
+!set multigrid arguments (w(2,1) cycling with fully weighted
+!residual restriction and cubic prolongation)
+this%mgopt(1) = 2
+this%mgopt(2) = 2
+this%mgopt(3) = 1
+this%mgopt(4) = 3
+
+!set for three cycles to ensure second-order approximation is computed
+maxcy = 5
+
+!set no initial guess forcing full multigrid cycling
+this%iguess = 0
+iguess = this%iguess
+
+!set work space length approximation from parameter statement
+nwork = llwork
+
+!set point relaxation
+method = 0
+
+!set end points of solution rectangle in (x,y) space
+xa = eta1_min
+xb = eta1_max
+yc = eta2_min
+yd = eta2_max
+
+!set for no error control flag
+tolmax = 0.0
+
+#ifdef DEBUG
+write(*,101) (iprm(i),i=1,15)
+write(*,102) (this%mgopt(i),i=1,4)
+write(*,103) xa,xb,yc,yd,tolmax
+write(*,104) intl
+#endif
+
+call mud2sp(iprm,fprm,this%work,cofx,cofy,bndsp,rhs,phi,this%mgopt,error)
+
+#ifdef DEBUG
+!print error parameter and minimum work space requirement
+write (*,200) error,iprm(16)
+if (error > 0) call exit(0)
+
+101 format(/'# integer input arguments ', &
+    &/'#intl = ',i2,' nxa = ',i2,' nxb = ',i2,' nyc = ',i2,' nyd = ',i2, &
+    &/'# ixp = ',i2,' jyq = ',i2,' iex = ',i2,' jey = ',i2 &
+    &/'# nx = ',i3,' ny = ',i3,' iguess = ',i2,' maxcy = ',i2, &
+    &/'# method = ',i2, ' work space estimate = ',i7)
+102 format(/'# multigrid option arguments ', &
+    &/'# kcycle = ',i2, &
+    &/'# iprer = ',i2, &
+    &/'# ipost = ',i2, &
+    &/'# intpol = ',i2)
+103 format(/'# floating point input parameters ', &
+    &/'# xa = ',f6.3,' xb = ',f6.3,' yc = ',f6.3,' yd = ',f6.3, &
+    &/'# tolerance (error control) =   ',e10.3)
+104 format(/'# discretization call to mud2sp', ' intl = ', i2)
+200 format('# error = ',i2, ' minimum work space = ',i7)
+     
+#endif
+end subroutine initialize_mudpack_cartesian
+
+
+!> Compute the potential using mudpack library on cartesian mesh
+subroutine solve_mudpack_cartesian(this, phi, rhs, ex, ey, nrj)
+
+type(mudpack_2d)     :: this      !< Data structure for Poisson solver
+real(8)           :: phi(:,:)  !< Electric potential
+real(8)           :: rhs(:,:)  !< Charge density
+real(8), optional :: ex(:,:)   !< Electric field
+real(8), optional :: ey(:,:)   !< Electric field
+real(8), optional :: nrj
+
+!put integer and floating point argument names in contiguous
+!storeage for labelling in vectors iprm,fprm
+integer  :: iprm(16)
+real(8) :: fprm(6)
+integer  :: error
+integer  :: i, j
+real(8) :: dx, dy
+
+integer  :: intl,nxa,nxb,nyc,nyd,ixp,jyq,iex,jey,nx,ny
+integer  :: iguess,maxcy,method,nwork,lwrkqd,itero
+common/itmud2sp/intl,nxa,nxb,nyc,nyd,ixp,jyq,iex,jey,nx,ny, &
+              iguess,maxcy,method,nwork,lwrkqd,itero
+real(8) :: xa,xb,yc,yd,tolmax,relmax
+common/ftmud2sp/xa,xb,yc,yd,tolmax,relmax
+
+equivalence(intl,iprm)
+equivalence(xa,fprm)
+
+!declare coefficient and boundary condition input subroutines external
+external cofx,cofy,bndsp
+
+!set initial guess because solve should be called every time step in a
+!time dependent problem and the elliptic operator does not depend on time.
+if (this%iguess == 0) then
+   iguess = 0
+else
+   this%iguess = 1
+    iguess = 1
+endif
+
+!attempt solution
+intl = 1
+#ifdef DEBUG
+write(*,106) intl,method,iguess
+#endif
+
+if ( nxa == 0 .and. nyc == 0 ) &
+   rhs = rhs - sum(rhs) / (nx*ny)
+
+call mud2sp(iprm,fprm,this%work,cofx,cofy,bndsp,rhs,phi,this%mgopt,error)
+
+#ifdef DEBUG
+write(*,107) error
+if (error > 0) call exit(0)
+#endif
+
+if ( nxa == 0 .and. nyc == 0 ) &
+   phi = phi - sum(phi) / (nx*ny)
+
+iguess = 1
+! attempt to improve approximation to fourth order
+call mud24sp(this%work,phi,error)
+
+#ifdef DEBUG
+write (*,108) error
+if (error > 0) call exit(0)
+
+106 format(/'#approximation call to mud2sp', &
+    &/'# intl = ',i2, ' method = ',i2,' iguess = ',i2)
+107 format('#error = ',i2)
+108 format(/'# mud24sp test ', ' error = ',i2)
+
+#endif
+
+if (present(ex) .and. present(ey)) then
+   dx = (xb-xa)/(nx-1)
+   dy = (yd-yc)/(ny-1)
+   do i = 2, nx-1
+      ex(i,:) = (phi(i+1,:)-phi(i-1,:)) / (2*dx)
+   end do
+   do j = 2, ny-1
+      ey(:,j) = (phi(:,j+1)-phi(:,j-1)) / (2*dy)
+   end do
+
+   if (nxa == 0 ) then
+      ex(nx,:) = (phi(2,:)-phi(nx-1,:))/(2*dx)
+      ex(1,:)  = ex(nx,:)
+   end if
+   if (nyc == 0 ) then
+      ey(:,ny) = (phi(:,2)-phi(:,ny-1))/(2*dy)
+      ey(:,1) = ey(:,ny)
+   end if
+
+   if (present(nrj)) then 
+      nrj=sum(ex*ex+ey*ey)*dx*dy
+   end if
+
+end if
+
+end subroutine solve_mudpack_cartesian
+
+!> deallocate the mudpack solver
+subroutine delete_mudpack_cartesian(this)
+type(mudpack_2d)        :: this          !< Data structure for solver
+
+   deallocate(this%work)
+
+end subroutine delete_mudpack_cartesian
+
+!> Initialize the Poisson solver in polar coordinates using MUDPACK
+!> library
+subroutine initialize_mudpack_polar(this,                      &
+                                    r_min, r_max, nr,          &
+                                    theta_min, theta_max, nth, &
+                                    bc_r_min, bc_r_max,        &
+                                    bc_theta_min, bc_theta_max )
+implicit none
+
+type(mudpack_2d)       :: this      !< Solver object
+real(8), intent(in) :: r_min     !< radius min
+real(8), intent(in) :: r_max     !< radius min
+real(8), intent(in) :: theta_min !< theta min
+real(8), intent(in) :: theta_max !< theta max
+integer, intent(in)  :: nr        !< radius number of points
+integer, intent(in)  :: nth       !< theta number of points
+integer :: icall
+!integer :: iiex,jjey
+integer :: llwork
+integer :: bc_r_min               !< left boundary condition r
+integer :: bc_r_max               !< right boundary condition r
+integer :: bc_theta_min           !< left boundary condition theta
+integer :: bc_theta_max           !< right boundary condition theta
+
+real(8) ::  phi(nr,nth)          !< electric potential
+real(8) ::  rhs(nr,nth)          !< charge density
+
+! put integer and floating point argument names in contiguous
+! storeage for labelling in vectors iprm,fprm
+
+integer :: intl,nxa,nxb,nyc,nyd,ixp,jyq,iex,jey,nx,ny,&
+              iguess,maxcy,method,nwork,lwrkqd,itero
+common/itmud2cr/intl,nxa,nxb,nyc,nyd,ixp,jyq,iex,jey,nx,ny, &
+              iguess,maxcy,method,nwork,lwrkqd,itero
+real(8) :: xa,xb,yc,yd,tolmax,relmax
+common/ftmud2cr/xa,xb,yc,yd,tolmax,relmax
+integer  :: i
+!integer :: j
+integer :: ierror
+integer  :: iprm(16)
+real(8) :: fprm(6)
+
+equivalence(intl,iprm)
+equivalence(xa,fprm)
+
+! declare coefficient and boundary condition input subroutines external
+external coef_polar,bndcr
+
+nx = nr
+ny = nth
+
+! set minimum required work space
+llwork=(7*(nx+2)*(ny+2)+44*nx*ny)/3
+      
+allocate(this%work(llwork))
+icall = 0
+
+! set input integer arguments
+intl = 0
+
+! set boundary condition flags
+nxa = bc_r_min
+nxb = bc_r_max
+nyc = bc_theta_min
+nyd = bc_theta_max
+
+! set grid sizes from parameter statements
+ixp = 2
+jyq = 2
+iex = ceiling(log((nx-1.)/ixp)/log(2.))+1
+jey = ceiling(log((ny-1.)/jyq)/log(2.))+1
+
+nx = ixp*(2**(iex-1))+1
+ny = jyq*(2**(jey-1))+1
+
+if (nx /= nr) then
+   print*, "nx,nr=", nx, nr
+   stop ' nx different de nr dans mg_polar_poisson'
+end if
+if (ny /= nth) then
+   print*, "ny,nth=", ny, nth
+   stop ' ny different de nth dans mg_polar_poisson'
+end if
+
+! set multigrid arguments (w(2,1) cycling with fully weighted
+! residual restriction and cubic prolongation)
+this%mgopt(1) = 2
+this%mgopt(2) = 2
+this%mgopt(3) = 1
+this%mgopt(4) = 3
+
+! set three cycles to ensure second-order approx
+maxcy = 3
+
+! set no initial guess forcing full multigrid cycling
+iguess = 0
+
+! set work space length approximation from parameter statement
+nwork = llwork
+
+! set point relaxation
+method = 0
+
+! set mesh increments
+xa = r_min
+xb = r_max
+yc = theta_min
+yd = theta_max
+
+! set for no error control flag
+tolmax = 0.0
+
+write(*,100)
+write(*,101) (iprm(i),i=1,15)
+write(*,102) (this%mgopt(i),i=1,4)
+write(*,103) xa,xb,yc,yd,tolmax
+write(*,104) intl
+
+call mud2cr(iprm,fprm,this%work,coef_polar,bndcr,rhs,phi,this%mgopt,ierror)
+
+write (*,200) ierror,iprm(16)
+if (ierror > 0) call exit(0)
+
+100 format(//' multigrid poisson solver in polar coordinates ')
+101 format(/' integer input arguments ', &
+    /'intl = ',i2,' nxa = ',i2,' nxb = ',i2,' nyc = ',i2,' nyd = ',i2, &
+    /' ixp = ',i2,' jyq = ',i2,' iex = ',i2,' jey = ',i2 &
+    /' nx = ',i3,' ny = ',i3,' iguess = ',i2,' maxcy = ',i2, &
+    /' method = ',i2, ' work space estimate = ',i7)
+102 format(/' multigrid option arguments ',&
+    /' kcycle = ',i2,  &
+    /' iprer = ',i2,   &
+    /' ipost = ',i2    &
+    /' intpol = ',i2)
+103 format(/' floating point input parameters ', &
+    /' xa = ',f6.3,' xb = ',f6.3,' yc = ',f6.3,' yd = ',f6.3, &
+    /' tolerance (error control) =   ',e10.3)
+104 format(/' discretization call to mud2cr', ' intl = ', i2)
+200 format(' ierror = ',i2, ' minimum work space = ',i7)
+
+return
+end subroutine initialize_mudpack_polar
+
+
+!> Solve the Poisson equation and get the potential
+subroutine solve_mudpack_polar(this, phi, rhs)
+implicit none
+
+! set grid size params
+type(mudpack_2d) :: this  !< solver data object
+integer :: icall
+integer, parameter :: iixp = 2 , jjyq = 2
+
+real(8), intent(inout) ::  phi(:,:) !< electric potential
+real(8), intent(inout) ::  rhs(:,:) !< charge density
+
+! put integer and floating point argument names in contiguous
+! storeage for labelling in vectors iprm,fprm
+
+integer  :: intl,nxa,nxb,nyc,nyd,ixp,jyq,iex,jey,nx,ny
+integer  :: iguess,maxcy,method,nwork,lwrkqd,itero
+real(8) :: xa,xb,yc,yd,tolmax,relmax
+integer  :: ierror
+integer  :: iprm(16)
+real(8) :: fprm(6)
+
+common/itmud2cr/intl,nxa,nxb,nyc,nyd,ixp,jyq,iex,jey,nx,ny, &
+                iguess,maxcy,method,nwork,lwrkqd,itero
+common/ftmud2cr/xa,xb,yc,yd,tolmax,relmax
+
+equivalence(intl,iprm)
+equivalence(xa,fprm)
+
+! declare coefficient and boundary condition input subroutines external
+external coef_polar,bndcr
+
+icall = 1
+intl  = 1
+write(*,106) intl,method,iguess
+! attempt solution
+call mud2cr(iprm,fprm,this%work,coef_polar,bndcr,rhs,phi,this%mgopt,ierror)
+! attempt fourth order approximation
+call mud24cr(this%work,coef_polar,bndcr,phi,ierror)
+
+106 format(/' approximation call to mud2cr', &
+    /' intl = ',i2, ' method = ',i2,' iguess = ',i2)
+
+return
+end subroutine solve_mudpack_polar
+
+end module sll_mudpack_cartesian
+
+
+!> input pde coefficients at any grid point (x,y) in the solution region
+!> (xa.le.x.le.xb,yc.le.y.le.yd) to mud2cr
+subroutine coef_polar(x,y,cxx,cxy,cyy,cx,cy,ce)
+implicit none
+real(8) :: x,y,cxx,cxy,cyy,cx,cy,ce
+cxx = 1.0 +0.0*y
+cxy = 0.0 
+cyy = 1.0 / (x*x) 
+cx  = 1.0 / x 
+cy  = 0.0 
+ce  = 0.0 
+return
+end subroutine
+
+!> input mixed "oblique" derivative b.c. to mud2cr
+!> at upper y boundary
+subroutine bndcr(kbdy,xory,alfa,beta,gama,gbdy)
+implicit none
+integer  :: kbdy
+real(8)  :: xory,alfa,beta,gama,gbdy
+
+if (kbdy.eq.2) then
+
+   ! x=xb boundary.
+   ! b.c. has the form alfyd(x)*px+betyd(x)*py+gamyd(x)*pe = gbdyd(x)
+   ! where x = yorx.   alfa,beta,gama,gbdy corresponding to alfyd(x),
+   ! betyd(x),gamyd(x),gbdyd(y) must be output.
+
+   alfa = 1.0+0.0*xory
+   beta = 0.0
+   gama = 0.0
+   gbdy = 0.0
+
+end if
+
+return
+end subroutine
+
+
+!the form of the pde solved is:
+!
+!
+!          cxx(x)*pxx + cx(x)*px + cex(x)*p(x,y) +
+!
+!          cyy(y)*pyy + cy(y)*py + cey(y)*p(x,y) = r(x,y)
+!
+!     pxx,pyy,px,py are second and first partial derivatives of the
+!     unknown real solution function p(x,y) with respect to the
+!     independent variables x,y.  cxx,cx,cex,cyy,cy,cey are the known
+!     real coefficients of the elliptic pde and r(x,y) is the known
+!     real right hand side of the equation.  cxx and cyy should be
+!     positive for all x,y in the solution region.  If some of the
+!     coefficients depend on both x and y then the PDE is nonseparable.
+
+!> input x dependent coefficients
+subroutine cofx(x,cxx,cx,cex)
+implicit none
+real(8)  :: x,cxx,cx,cex
+cxx = 1.0 +0.0*x 
+cx  = 0.0
+cex = 0.0
+return
+end
+
+!> input y dependent coefficients
+subroutine cofy(y,cyy,cy,cey)
+implicit none
+real(8)  :: y,cyy,cy,cey
+cyy = 1.0 +0.0*y
+cy  = 0.0
+cey = 0.0
+return
+end
+
+!> input mixed derivative b.c. to mud2sp
+subroutine bndsp(kbdy,xory,alfa,gbdy)
+implicit none
+integer  :: kbdy
+real(8)  :: xory,alfa,gbdy,x,y,pe,px,py
+real(8)  :: xa,xb,yc,yd,tolmax,relmax
+common/ftmud2sp/xa,xb,yc,yd,tolmax,relmax
+
+!subroutine not used in periodic case
+if (kbdy == 1) then  ! x=xa boundary
+   y = xory
+   x = xa
+   alfa = -1.0
+   gbdy = px + alfa*pe
+   return
+end if
+
+if (kbdy == 4) then  ! y=yd boundary
+   y = yd
+   x = xory
+   alfa = 1.0
+   gbdy = py + alfa*pe
+   return
+end if
+end

@@ -1,7 +1,7 @@
 Dear selalib developers,
 
 Newcomers should read the [Git Quickstart Guide for SeLaLib](GitQuickstart.md).
-Please also refer to the [developer's guide](https://gitlab.mpcdf.mpg.de/selalib/sll_docs/blob/master/dev_guide/developers_guide.pdf).
+Please also refer to the [developer's guide](https://gitlab.mpcdf.mpg.de/clapp/sll_docs/blob/master/dev_guide/developers_guide.pdf).
 
 To clone the repository, just use
 ```

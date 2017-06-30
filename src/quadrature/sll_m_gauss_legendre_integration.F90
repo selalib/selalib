@@ -1,4 +1,4 @@
-!> @ingroup integration
+!> @ingroup quadrature
 !> @brief
 !> Gauss-Legendre integration
 !> @details
@@ -237,7 +237,7 @@ contains
 !!$    xk(:) = 0.0_f64
 !!$    wk(:) = 0.0_f64
 !!$    select case(n)
-!!$       SELECT_CASES
+!!$       /* SELECT_CASES */
 !!$    end select
 !!$    ans = 0.0
 !!$    ! need to map the interval [-1,1] into the interval [a,b]

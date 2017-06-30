@@ -1,9 +1,10 @@
 .. toctree::
    :maxdepth: 2
 
-Install xcode and command-line tools (OSX Mavericks) ::
+Install xcode and command-line tools ::
 
-	$ xcode-select --install﻿
+	$ xcode-select --install
+	$ sudo xcodebuild -license accept
 
 ==================================
 Install dependencies with Homebrew
@@ -19,15 +20,11 @@ Install Homebrew (`not compatible with macports <https://guide.macports.org/chun
 	$ brew install git
 	$ brew install cmake
 	$ brew install gcc
-	$ brew install openmpi --enable-mpi-thread-multiple
+	$ brew install openmpi --with-mpi-thread-multiple
 	$ brew install hdf5 --with-fortran --with-mpi
-	$ brew install pastix
 	$ brew install fftw
-	$ cd selalib/build
-	$ cmake ../ -DPASTIX_ENABLED=ON  \
-		-DZLIB_LIBRARIES="/usr/lib/libz.dylib;/usr/local/lib/libsz.a" \
-		-DHDF5_PARALLEL_ENABLED=ON
-	$ make
+	$ brew install python3
+	$ brew install doxygen
 
 ==================================
 Install dependencies with macports
@@ -38,11 +35,11 @@ Install dependencies with macports
 
 Install macports (http://www.macports.org/install.php) and ::
 
-	$ sudo port install gcc5 
-	$ sudo port install openmpi
-	$ sudo port install hdf5 +gfortran+openmpi
-	$ sudo port install fftw-3
 	$ sudo port install cmake git
+	$ sudo port install openmpi
+	$ sudo port install hdf5 +fortran+openmpi
+	$ sudo port install fftw-3
+	$ sudo port install doxygen
 
 If you want to run tests that use nurbs ::
 
