@@ -69,8 +69,8 @@ contains
     self % info % x1_max        =  1.0_wp
     self % info % x2_min        = -1.0_wp
     self % info % x2_max        =  1.0_wp
-    self % info % x1_periodic   = .true.
-    self % info % x2_periodic   = .true.
+    self % info % x1_periodic   = .false.
+    self % info % x2_periodic   = .false.
     self % info % x1_poly_order =  deg1
     self % info % x2_poly_order =  deg2
 

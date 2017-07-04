@@ -48,6 +48,7 @@ program test_bsplines_2d_new
   real(wp) :: tol
   logical  :: passed
   logical  :: success
+  real(wp) :: max_norm_error
   real(wp) :: dx1
   real(wp) :: dx2
   integer  :: j
@@ -106,7 +107,12 @@ program test_bsplines_2d_new
             bc2        = bc2  )
 
           ! Run tests
-          call test_facility % evaluate_at_interpolation_points( tol, success )
+          call test_facility % evaluate_at_interpolation_points( max_norm_error )
+          success = (max_norm_error <= tol)
+
+          ! Print test report to terminal on a single line
+          write(*,'(6i10)', advance='no') nx1, nx2, deg1, deg2, bc1, bc2
+          write(*,'(e12.2,L12)') max_norm_error, success
 
           ! Free memory
           call test_facility % free()
@@ -131,7 +137,7 @@ program test_bsplines_2d_new
   write(*,*)
 
   ! Test tolerance: small but not extremely so
-  tol = 2e-13_wp
+  tol = 3e-13_wp
 
   ! Print report header
   call test_facility % print_header()
@@ -146,6 +152,20 @@ program test_bsplines_2d_new
 
   ! Choose dimension of uniform grid of evaluation points
   grid_dim = [20, 20]
+
+  ! Create uniform grid of evaluation points
+  call profile_2d_poly % init( 0, 0 )  ! dummy, only need domain size
+  call profile_2d_poly % get_info( pinfo )
+  allocate( grid_x1 (grid_dim(1),grid_dim(2)) )
+  allocate( grid_x2 (grid_dim(1),grid_dim(2)) )
+  dx1 = (pinfo%x1_max-pinfo%x1_min) / real( grid_dim(1)-1, wp )
+  dx2 = (pinfo%x2_max-pinfo%x2_min) / real( grid_dim(2)-1, wp )
+  do i2 = 1, grid_dim(2)
+    do i1 = 1, grid_dim(1)
+      grid_x1(i1,i2) = pinfo%x1_min + real(i1-1,wp)*dx1
+      grid_x2(i1,i2) = pinfo%x2_min + real(i2-1,wp)*dx2
+    end do
+  end do
 
   do deg1 = 2, 9
     do deg2 = 2, 9
@@ -170,8 +190,12 @@ program test_bsplines_2d_new
             bc2        = bc2 )
 
           ! Run tests
-          call test_facility % evaluate_func_and_grad_on_uniform_grid( &
-            grid_dim, tol, success )
+          call test_facility % evaluate_on_2d_grid( grid_x1, grid_x2, max_norm_error )
+          success = (max_norm_error <= tol)
+
+          ! Print test report to terminal on a single line
+          write(*,'(6i10)', advance='no') nx1, nx2, deg1, deg2, bc1, bc2
+          write(*,'(e12.2,L12)') max_norm_error, success
 
           ! Free memory
           call test_facility % free()
@@ -186,6 +210,8 @@ program test_bsplines_2d_new
 
   ! Deallocate local arrays
   deallocate( bc_kinds )
+  deallocate( grid_x1  )
+  deallocate( grid_x2  )
 
   ! ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
   ! TEST 3: convergence analysis on cos*cos profile (with error bound)
@@ -217,10 +243,8 @@ program test_bsplines_2d_new
   ! Create uniform grid of evaluation points
   allocate( grid_x1 (grid_dim(1),grid_dim(2)) )
   allocate( grid_x2 (grid_dim(1),grid_dim(2)) )
-
   dx1 = (pinfo%x1_max-pinfo%x1_min) / real( grid_dim(1)-1, wp )
   dx2 = (pinfo%x2_max-pinfo%x2_min) / real( grid_dim(2)-1, wp )
-
   do i2 = 1, grid_dim(2)
     do i1 = 1, grid_dim(1)
       grid_x1(i1,i2) = pinfo%x1_min + real(i1-1,wp)*dx1
@@ -265,7 +289,12 @@ program test_bsplines_2d_new
           ! Run tests
           ! TODO: print tolerance
           ! TODO: print numerical order of accuracy
-          call test_facility % evaluate_on_2d_grid( grid_x1, grid_x2, tol, success )
+          call test_facility % evaluate_on_2d_grid( grid_x1, grid_x2, max_norm_error )
+          success = (max_norm_error <= tol)
+
+          ! Print test report to terminal on a single line
+          write(*,'(6i10)', advance='no') nx1, nx2, deg1, deg2, bc1, bc2
+          write(*,'(e12.2,L12)') max_norm_error, success
 
           ! Free memory
           call test_facility % free()
@@ -273,12 +302,12 @@ program test_bsplines_2d_new
           ! Update 'PASSED/FAILED' condition
           passed = (passed .and. success)
 
-        end do
+        end do  ! nx1
         write(*,*)
 
-      end do
-    end do
-  end do
+      end do   ! bc2
+    end do   ! bc1
+  end do   ! deg1=deg2
 
   ! Deallocate local arrays
   deallocate( bc_kinds )
