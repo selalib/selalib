@@ -34,7 +34,7 @@ DO_CLEAN=${DO_CLEAN:=0}
 CMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE:="Release"}
 
 # build the external package "fmempool"
-BUILD_FMEMPOOL=${BUILD_FMEMPOOL:=OFF}
+USE_FMEMPOOL=${USE_FMEMPOOL:=OFF}
 
 # number of processors to be used for a parallel build
 JMAKE=${JMAKE:=8}
@@ -45,22 +45,25 @@ JMAKE=${JMAKE:=8}
 MACROS=${MACROS:=""}
 
 # select the object/build directory
-if [ x"$USER" != x"khr" ]; then
-    # default home directory
-    BUILD_DIR_PRESET=$HOME/selalib_obj
-else
-    # /tmp gives much better performance on GPFS file systems
-    BUILD_DIR_PRESET=/tmp/$USER/selalib_obj
-fi
+# default home directory
+BUILD_DIR_PRESET=$HOME/selalib_obj
+# alternative:
+# with many small files /tmp gives much better performance compared to the
+# home directory which often resides on a large shared GPFS file system
+# umask 0077
+# BUILD_DIR_PRESET=/tmp/$USER/selalib_obj
+
 BUILD_DIR=${BUILD_DIR:="$BUILD_DIR_PRESET"}
 
-# ifort: add the "-ipo" flag (interprocedural optimization), may lead to internal compiler error
+export CLAPP_DIR=$HOME/clapp/usr
+
+# ifort: add the "-ipo-separate" flag (interprocedural optimization)
 USE_IPO=${USE_IPO:=0}
 
-# ifort: add the "-fp-model precise" flag (for reproducibility, but deteriorates vectorization)
+# ifort: add the "-fp-model precise" flag (better reproducibility, but deteriorates vectorization and speed)
 USE_FP_PRECISE=${USE_FP_PRECISE:=1}
 
-# ifort: align arrays to 64 byte boundaries
+# ifort: align arrays to 64 byte boundaries to improve vectorization
 USE_ALIGNMENT=${USE_ALIGNMENT:=1}
 
 # ifort: add various error checking compiler flags (slowdown!)
@@ -75,6 +78,16 @@ SOURCE_DIRECTORY=`pwd`/../
 SOURCE_DIRECTORY=`readlink -f $SOURCE_DIRECTORY`
 LOGFILE="$BUILD_DIR/build.log"
 SEP="-----------------------------------------------------------------------------"
+
+
+if [ ! -d "../scripts" ]
+then
+    echo $SEP
+    echo "Error: This script must be run from the './scripts' subdirectory of SeLaLib,"
+    echo "i.e. typically as follows: './compile_mpcdf.sh'"
+    echo $SEP
+    exit 1
+fi
 
 
 if [ x"$DO_CLEAN" == x"1" ] && [ -e "$BUILD_DIR" ]
@@ -96,10 +109,10 @@ mkdir -p $BUILD_DIR
     module purge
     # ---
     if [ x"$CLUSTER" == x"DRACO" ]; then
-        module load intel/16.0
-        module load mkl/11.3
-        module load impi/5.1.3
-        module load itac
+        module load intel
+        module load mkl
+        module load impi
+#        module load itac
         module load fftw
         module load hdf5-mpi
         module load cmake/3.7
@@ -107,9 +120,9 @@ mkdir -p $BUILD_DIR
         module load git
         # --- optimization flags
         INTEL_OPT_FLAGS="-O3 -xHost"
-    elif [ x"$CLUSTER" == x"ISAAC" ] || [ x"$CLUSTER" == x"GAIA" ]; then
-        module load intel
-        module load mkl
+    elif [ x"$CLUSTER" == x"ISAAC" ] || [ x"$CLUSTER" == x"GAIA" ] || [ x"$CLUSTER" == x"APPDEV" ] ; then
+        module load intel/17.0
+        module load mkl/2017
         module load impi
         module load itac
         module load fftw
@@ -177,7 +190,7 @@ mkdir -p $BUILD_DIR
     # but makes compilation time significantly longer and sometimes produces internal compiler errors (seen with Intel 2017)
     if [ x"$USE_IPO" == x"1" ]
     then
-        INTEL_OPT_FLAGS="$INTEL_OPT_FLAGS -ipo"
+        INTEL_OPT_FLAGS="$INTEL_OPT_FLAGS -ipo-separate"
     fi
 
     if [ x"$USE_CHECKS" == x"1" ]
@@ -201,7 +214,7 @@ mkdir -p $BUILD_DIR
     echo "DO_CONF=${DO_CONF}"
     echo "DO_BUILD=${DO_BUILD}"
     echo "CMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}"
-    echo "BUILD_FMEMPOOL=${BUILD_FMEMPOOL}"
+    echo "USE_FMEMPOOL=${USE_FMEMPOOL}"
     echo "JMAKE=${JMAKE}"
     echo "MACROS=${MACROS}"
     echo "INTEL_OPT_FLAGS=${INTEL_OPT_FLAGS}"
@@ -228,7 +241,7 @@ mkdir -p $BUILD_DIR
     if [ x"$DO_CONF" == x"1" ]
     then
       cmake $SOURCE_DIRECTORY \
-        -DBUILD_FMEMPOOL:BOOL=${BUILD_FMEMPOOL} \
+        -DUSE_FMEMPOOL:BOOL=${USE_FMEMPOOL} \
         -DOPENMP_ENABLED:BOOL=ON \
         -DUSE_MKL:BOOL=ON \
         -DHDF5_PARALLEL_ENABLED:BOOL=ON \
@@ -239,7 +252,8 @@ mkdir -p $BUILD_DIR
         -DFORCE_Fortran_FLAGS_RELEASE:STRING="$INTEL_OPT_FLAGS" \
         -DCMAKE_C_FLAGS:STRING="-g $MACROS $INTEL_OPT_FLAGS" \
         -DCMAKE_CXX_FLAGS:STRING="-g $MACROS $INTEL_OPT_FLAGS" \
-        -DCMAKE_Fortran_FLAGS:STRING="-g $INTEL_F90_FLAGS $MACROS"
+        -DCMAKE_Fortran_FLAGS:STRING="-g $INTEL_F90_FLAGS $MACROS" \
+        -DCLAPP=ON
     else
       echo "skipping configure step ..."
     fi
