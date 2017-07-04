@@ -32,18 +32,19 @@ module sll_m_cubic_spline_interpolator_2d
     sll_p_periodic
 
   use sll_m_cubic_splines, only: &
-    sll_s_compute_cubic_spline_2d, &
-    sll_o_get_x1_delta, &
-    sll_o_get_x1_max, &
-    sll_o_get_x1_min, &
-    sll_o_get_x2_delta, &
-    sll_o_get_x2_max, &
-    sll_f_interpolate_value_2d, &
-    sll_f_interpolate_x1_derivative_2d, &
-    sll_f_interpolate_x2_derivative_2d, &
+    sll_s_cubic_spline_2d_compute_interpolant, &
+    sll_f_cubic_spline_2d_get_x1_delta, &
+    sll_f_cubic_spline_2d_get_x1_max, &
+    sll_f_cubic_spline_2d_get_x1_min, &
+    sll_f_cubic_spline_2d_get_x2_delta, &
+    sll_f_cubic_spline_2d_get_x2_max, &
+    sll_f_cubic_spline_2d_get_x2_min, &
+    sll_f_cubic_spline_2d_eval, &
+    sll_f_cubic_spline_2d_eval_deriv_x1, &
+    sll_f_cubic_spline_2d_eval_deriv_x2, &
     sll_s_cubic_spline_2d_init, &
     sll_t_cubic_spline_2d, &
-    sll_o_delete
+    sll_s_cubic_spline_2d_free
 
   use sll_m_interpolators_2d_base, only: &
     sll_c_interpolator_2d
@@ -117,7 +118,7 @@ contains
 
   subroutine delete_sll_cubic_spline_interpolator_2d( interpolator )
     class(sll_t_cubic_spline_interpolator_2d), intent(inout) :: interpolator
-    call sll_o_delete(interpolator%spline)
+    call sll_s_cubic_spline_2d_free(interpolator%spline)
   end subroutine delete_sll_cubic_spline_interpolator_2d
   
   !> Function that return a pointer to a cubic spline interpolator 2d object.
@@ -217,8 +218,8 @@ contains
     sll_real64, intent(in)                        :: eta1_max
     sll_real64, intent(in)                        :: eta2_min
     sll_real64, intent(in)                        :: eta2_max
-    sll_int32, intent(in)			  :: eta1_bc_type
-    sll_int32, intent(in)			  :: eta2_bc_type
+    sll_int32,intent(in)                          :: eta1_bc_type
+    sll_int32, intent(in)                         :: eta2_bc_type
     sll_real64, intent(in), optional              :: const_eta1_min_slope
     sll_real64, intent(in), optional              :: const_eta1_max_slope
     sll_real64, intent(in), optional              :: const_eta2_min_slope
@@ -273,7 +274,7 @@ contains
        SLL_ERROR( 'compute_interpolants_cs2d', 'This case is not yet implemented' )
     end if
 
-    call sll_s_compute_cubic_spline_2d( data_array, interpolator%spline )
+    call sll_s_cubic_spline_2d_compute_interpolant( data_array, interpolator%spline )
 
   end subroutine
 
@@ -282,7 +283,7 @@ contains
     sll_real64 :: val
     sll_real64, intent(in) :: eta1
     sll_real64, intent(in) :: eta2
-    val = sll_f_interpolate_value_2d( eta1, eta2, interpolator%spline )
+    val = sll_f_cubic_spline_2d_eval( eta1, eta2, interpolator%spline )
   end function
 
   function interpolate_deriv1_cs2d( interpolator, eta1, eta2 ) result(val)
@@ -290,7 +291,7 @@ contains
     sll_real64 :: val
     sll_real64, intent(in) :: eta1
     sll_real64, intent(in) :: eta2
-    val = sll_f_interpolate_x1_derivative_2d(eta1,eta2,interpolator%spline)
+    val = sll_f_cubic_spline_2d_eval_deriv_x1(eta1,eta2,interpolator%spline)
   end function
 
   function interpolate_deriv2_cs2d( interpolator, eta1, eta2 ) result(val)
@@ -299,7 +300,7 @@ contains
     sll_real64, intent(in) :: eta1
     sll_real64, intent(in) :: eta2
 
-    val = sll_f_interpolate_x2_derivative_2d(eta1,eta2,interpolator%spline)
+    val = sll_f_cubic_spline_2d_eval_deriv_x2(eta1,eta2,interpolator%spline)
 
   end function
 
@@ -316,7 +317,7 @@ contains
     ! local variables
     sll_int32 :: i,j
     ! compute the interpolating spline coefficients
-    call sll_s_compute_cubic_spline_2d( data_in, this%spline )
+    call sll_s_cubic_spline_2d_compute_interpolant( data_in, this%spline )
     do j = 1, num_points2
     do i = 1, num_points1
         data_out(i,j) = this%interpolate_from_interpolant_value(eta1(i,j),eta2(i,j))
@@ -352,14 +353,14 @@ contains
     sll_int32                                      :: i
     sll_int32                                      :: j
 
-    eta1_min   = sll_o_get_x1_min( this%spline ) !this%spline%x1_min 
-    eta1_max   = sll_o_get_x1_max( this%spline ) !this%spline%x1_max 
-    eta2_min   = sll_o_get_x1_min( this%spline ) !this%spline%x2_min 
-    eta2_max   = sll_o_get_x2_max( this%spline ) !this%spline%x2_max 
-    delta_eta1 = sll_o_get_x1_delta( this%spline ) !this%spline%x1_delta  
-    delta_eta2 = sll_o_get_x2_delta( this%spline ) !this%spline%x2_delta  
+    eta1_min   = sll_f_cubic_spline_2d_get_x1_min( this%spline ) !this%spline%x1_min 
+    eta1_max   = sll_f_cubic_spline_2d_get_x1_max( this%spline ) !this%spline%x1_max 
+    eta2_min   = sll_f_cubic_spline_2d_get_x2_min( this%spline ) !this%spline%x2_min 
+    eta2_max   = sll_f_cubic_spline_2d_get_x2_max( this%spline ) !this%spline%x2_max 
+    delta_eta1 = sll_f_cubic_spline_2d_get_x1_delta( this%spline ) !this%spline%x1_delta  
+    delta_eta2 = sll_f_cubic_spline_2d_get_x2_delta( this%spline ) !this%spline%x2_delta  
     
-    call sll_s_compute_cubic_spline_2d( data_in, this%spline )
+    call sll_s_cubic_spline_2d_compute_interpolant( data_in, this%spline )
 
     if(this%bc_type1 == sll_p_periodic .and. &
        this%bc_type2 == sll_p_periodic ) then

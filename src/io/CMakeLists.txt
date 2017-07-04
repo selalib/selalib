@@ -4,7 +4,7 @@ if( FULL_FORTRAN2003 )
   ADD_SUBDIRECTORY( xdmf_io ) # YG [work in progress]
 endif( FULL_FORTRAN2003 )
 
-IF(MPI_ENABLED)
+IF(MPI_ENABLED AND HDF5_IS_PARALLEL)
    
   SET(CMAKE_Fortran_COMPILER ${MPI_Fortran_COMPILER})
   ADD_SUBDIRECTORY( file_io_parallel )
@@ -12,4 +12,4 @@ IF(MPI_ENABLED)
     ADD_SUBDIRECTORY( xdmf_io_parallel ) # YG [work in progress]
   endif( FULL_FORTRAN2003 )
 
-ENDIF(MPI_ENABLED)
+ENDIF(MPI_ENABLED AND HDF5_IS_PARALLEL)
