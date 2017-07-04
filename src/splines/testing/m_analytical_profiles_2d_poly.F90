@@ -135,7 +135,19 @@ contains
     integer,                     optional, intent(in) :: diff_x2
     real(wp) :: norm
 
-    SLL_ERROR("t_analytical_profile_2d_poly%max_norm", "not implemented")
+    integer  :: d1, d2
+
+    if (present(diff_x1)) then; d1 = diff_x1; else; d1 = 0; end if
+    if (present(diff_x2)) then; d2 = diff_x2; else; d2 = 0; end if
+
+    if (self%info%x1_max >= abs( self%info%x1_min ) .and. &
+        self%info%x2_max >= abs( self%info%x2_min )) then
+      ! For x1_max >= |x1_min| and x2_max >= |x2_min|:
+      ! max(|f^(d1,d2)(x1,x2)|) = f^(d1,d2)(x1_max,x2_max)
+      norm = self % eval( self%info%x1_max, self%info%x2_max, d1, d2 )
+    else
+      SLL_ERROR( "t_analytical_profile_2d_poly % max_norm", "General formula not implemented" )
+    end if
 
   end function max_norm
 
