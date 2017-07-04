@@ -47,6 +47,9 @@ module m_analytical_profiles_2d_base
     ! Evaluate 2D profile (or one of its derivatives)
     procedure( i_func_eval_profile ), deferred :: eval
 
+    ! Evaluate max norm of profile (or one of its derivatives) over domain
+    procedure( i_func_max_norm ), deferred :: max_norm
+
   end type c_analytical_profile_2d
  
   !-----------------------------------------------------------------------------
@@ -69,6 +72,15 @@ module m_analytical_profiles_2d_base
       integer,                optional, intent(in) :: diff_x2
       real(wp) :: f
     end function i_func_eval_profile
+
+    ! Evaluate max norm of profile (or one of its derivatives) over domain
+    function i_func_max_norm( self, diff_x1, diff_x2 ) result( norm )
+      import c_analytical_profile_2d, wp
+      class( c_analytical_profile_2d ), intent(in) :: self
+      integer,                optional, intent(in) :: diff_x1
+      integer,                optional, intent(in) :: diff_x2
+      real(wp) :: norm
+    end function i_func_max_norm
 
   end interface
 
