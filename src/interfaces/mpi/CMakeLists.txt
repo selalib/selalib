@@ -27,10 +27,18 @@ message( STATUS "MPI_LIB = ${MPI_LIB}" )
 #-------------------------------------------------------------------------------
 if( ${MPI_LIB} STREQUAL "impi" )
   set( INTEL_MPI_INFO $ENV{I_MPI_ROOT} )
+  # --- test for old numbering scheme X.Y.Z
   string( REGEX MATCH "impi[_/]?([0-9]+)\\.([0-9]+)\\.([0-9]+)" INTEL_MPI_VERSION ${INTEL_MPI_INFO} )
-  message( STATUS ${CMAKE_MATCH_0} )
-  math( EXPR INTEL_MPI_VERSION
-    "${CMAKE_MATCH_1}*10000 + ${CMAKE_MATCH_2}*100 + ${CMAKE_MATCH_3}" )
+  if ( CMAKE_MATCH_0 STREQUAL "" )
+    # --- assume new numbering scheme "2017"
+    string( REGEX MATCH "impi[_/]?([0-9]+)" INTEL_MPI_VERSION ${INTEL_MPI_INFO} )
+    # 2017 --> 201700
+    math( EXPR INTEL_MPI_VERSION "${CMAKE_MATCH_1}*100" )
+  else()
+    # 5.0.3 --> 500003
+    #message( STATUS ${CMAKE_MATCH_0} )
+    math( EXPR INTEL_MPI_VERSION "${CMAKE_MATCH_1}*10000 + ${CMAKE_MATCH_2}*100 + ${CMAKE_MATCH_3}" )
+  endif()
   add_definitions( -DINTEL_MPI )
   add_definitions( -DINTEL_MPI_VERSION=${INTEL_MPI_VERSION} )
   message( STATUS "INTEL_MPI_VERSION = ${INTEL_MPI_VERSION}" )
