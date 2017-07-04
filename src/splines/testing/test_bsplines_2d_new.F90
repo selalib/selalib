@@ -49,6 +49,7 @@ program test_bsplines_2d_new
   logical  :: passed
   logical  :: success
   real(wp) :: max_norm_error
+  real(wp) :: max_norm_profile
   real(wp) :: dx1
   real(wp) :: dx2
   integer  :: j
@@ -77,6 +78,9 @@ program test_bsplines_2d_new
 
   ! Extract information about 2D analytical profile
   call profile_2d_cos_cos % get_info( pinfo )
+
+  ! Estimate max-norm of profile (needed to compute relative error)
+  max_norm_profile = profile_2d_cos_cos % max_norm()
 
   ! Choose number of knots in tensor grid
   nx1 = 10
@@ -108,11 +112,11 @@ program test_bsplines_2d_new
 
           ! Run tests
           call test_facility % evaluate_at_interpolation_points( max_norm_error )
-          success = (max_norm_error <= tol)
+          success = (max_norm_error <= tol * max_norm_profile)
 
           ! Print test report to terminal on a single line
           write(*,'(6i10)', advance='no') nx1, nx2, deg1, deg2, bc1, bc2
-          write(*,'(e12.2,L12)') max_norm_error, success
+          write(*,'(e12.2,L12)') max_norm_error / max_norm_profile, success
 
           ! Free memory
           call test_facility % free()
@@ -136,8 +140,8 @@ program test_bsplines_2d_new
   write(*,*)
   write(*,*)
 
-  ! Test tolerance: small but not extremely so
-  tol = 3e-13_wp
+  ! Test tolerance: very small!
+  tol = 1e-14_wp
 
   ! Print report header
   call test_facility % print_header()
@@ -173,6 +177,9 @@ program test_bsplines_2d_new
       ! Initialize polynomial profile with degree (deg1,deg2)
       call profile_2d_poly % init( deg1, deg2 )
 
+      ! Estimate max-norm of profile (needed to compute relative error)
+      max_norm_profile = profile_2d_poly % max_norm()
+
       do i1 = 1, size( bc_kinds )
         bc1 = bc_kinds(i1)
 
@@ -191,11 +198,11 @@ program test_bsplines_2d_new
 
           ! Run tests
           call test_facility % evaluate_on_2d_grid( grid_x1, grid_x2, max_norm_error )
-          success = (max_norm_error <= tol)
+          success = (max_norm_error <= tol * max_norm_profile)
 
           ! Print test report to terminal on a single line
           write(*,'(6i10)', advance='no') nx1, nx2, deg1, deg2, bc1, bc2
-          write(*,'(e12.2,L12)') max_norm_error, success
+          write(*,'(e12.2,L12)') max_norm_error / max_norm_profile, success
 
           ! Free memory
           call test_facility % free()
@@ -236,6 +243,9 @@ program test_bsplines_2d_new
 
   ! Extract information about 2D analytical profile
   call profile_2d_cos_cos % get_info( pinfo )
+
+  ! Estimate max-norm of profile (needed to compute relative error)
+  max_norm_profile = profile_2d_cos_cos % max_norm()
 
   ! Choose dimension of uniform grid of evaluation points
   grid_dim = [20,20]
@@ -290,11 +300,11 @@ program test_bsplines_2d_new
           ! TODO: print tolerance
           ! TODO: print numerical order of accuracy
           call test_facility % evaluate_on_2d_grid( grid_x1, grid_x2, max_norm_error )
-          success = (max_norm_error <= tol)
+          success = (max_norm_error <= tol * max_norm_profile)
 
           ! Print test report to terminal on a single line
           write(*,'(6i10)', advance='no') nx1, nx2, deg1, deg2, bc1, bc2
-          write(*,'(e12.2,L12)') max_norm_error, success
+          write(*,'(e12.2,L12)') max_norm_error / max_norm_profile, success
 
           ! Free memory
           call test_facility % free()
