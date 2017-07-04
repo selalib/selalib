@@ -1,5 +1,6 @@
 module m_test_bsplines_2d
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+#include "sll_assert.h"
 
   use sll_m_working_precision, only: &
     f64
@@ -66,6 +67,7 @@ module m_test_bsplines_2d
     procedure, nopass :: print_header
     procedure         :: init
     procedure         :: free
+    procedure         :: evaluate_on_2d_grid
     procedure         :: evaluate_at_interpolation_points
     procedure         :: evaluate_func_and_grad_on_uniform_grid
 
@@ -287,6 +289,56 @@ contains
     write(*,'(e12.2,L12)') max_norm_error, success
 
   end subroutine evaluate_at_interpolation_points
+
+  !-----------------------------------------------------------------------------
+  subroutine evaluate_on_2d_grid( self, x1, x2, tol, success )
+
+    class(t_bspline_2d_test_facility), intent(in   ) :: self
+    real(wp)                         , intent(in   ) :: x1(:,:)
+    real(wp)                         , intent(in   ) :: x2(:,:)
+    real(wp)                         , intent(in   ) :: tol
+    logical                          , intent(  out) :: success
+
+    integer               :: i1, i2
+    integer               :: n1, n2
+    real(wp), allocatable :: y(:,:)
+    real(wp)              :: error
+    real(wp)              :: max_norm_error
+
+    SLL_ASSERT( all( shape( x1 ) == shape( x2 ) ) )
+
+    n1 = size( x1, 1 )
+    n2 = size( x2, 2 )
+
+    ! Array of spline values
+    allocate( y(n1,n2) )
+
+    ! Evaluate 2D spline on given grid
+    call sll_s_interpolate_array_values_2d( self%bspline_2d, n1, n2, x1, x2, y )
+
+    ! Compare spline values to analytical profile and compute max norm of error
+    max_norm_error = 0.0_wp
+    do i1 = 1, n1
+      do i2 = 1, n2
+        error = self % profile_2d % eval( x1(i1,i2), x2(i1,i2) ) - y(i1,i2)
+        max_norm_error = max( max_norm_error, abs( error ) )
+      end do
+    end do
+
+    ! Determine if test was successful
+    success = (max_norm_error <= tol)
+
+    ! Print report to terminal on a single line
+    ! TODO: remove
+    write(*,'(6i10)', advance='no') &
+      self%nx1, self%nx2, self%deg1, self%deg2, self%bc1, self%bc2
+
+    write(*,'(e12.2,L12)') max_norm_error, success
+
+    ! Free local memory
+    deallocate( y )
+
+  end subroutine evaluate_on_2d_grid
 
   !-----------------------------------------------------------------------------
   subroutine evaluate_func_and_grad_on_uniform_grid( self, grid_dim, tol, success )
