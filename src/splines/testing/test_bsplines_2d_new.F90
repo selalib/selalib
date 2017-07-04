@@ -196,8 +196,8 @@ program test_bsplines_2d_new
   allocate( bc_kinds(3) )
   bc_kinds(:) = [sll_p_periodic, sll_p_hermite, sll_p_greville]
 
-  allocate( nx_list(4) )
-  nx_list(:) = [13, 26, 53, 78]
+  allocate( nx_list(5) )
+  nx_list(:) = [11, 21, 41, 81, 161]
 
   ! Print report header
   call test_facility % print_header()
@@ -243,6 +243,7 @@ program test_bsplines_2d_new
           dx2 = (pinfo%x2_max - pinfo%x2_min) / nx2
           tol = error_bound_cos_cos( dx1, dx2, deg1, deg2 )
           tol = max( 1e-14_wp, tol )
+          !write(*,*) tol
 
           ! Run tests
           ! TODO: print tolerance
@@ -290,15 +291,45 @@ contains
   end function factorial
 
   !-----------------------------------------------------------------------------
-  pure function taylor_error_term_cos_cos( k1, k2 ) result( e )
-    integer, intent(in) :: k1
-    integer, intent(in) :: k2
-    real(wp) :: e
+  pure function max_norm_deriv_cos_cos( diff1, diff2 ) result( norm )
+    integer, intent(in) :: diff1
+    integer, intent(in) :: diff2
+    real(wp) :: norm
 
-    e = sll_p_twopi**(k1+k2) * dx1**k1 * dx2**k2 &
-                / (factorial( k1 ) * factorial( k2 ))
+    norm = sll_p_twopi**(diff1+diff2)
 
-  end function taylor_error_term_cos_cos
+  end function max_norm_deriv_cos_cos
+
+  !-----------------------------------------------------------------------------
+  ! Error bound in max norm for spline interpolation of periodic functions from:
+  !
+  ! V M Tihomirov 1969 Math. USSR Sb. 9 275
+  ! https://doi.org/10.1070/SM1969v009n02ABEH002052 (page 286, bottom)
+  !
+  ! Yu. S. Volkov and Yu. N. Subbotin
+  ! https://doi.org/10.1134/S0081543815020236 (equation 14)
+  !-----------------------------------------------------------------------------
+  pure function sll_f_spline_1d_error_bound( h, deg, norm_f ) result( norm_e )
+    real(wp), intent(in) :: h
+    integer , intent(in) :: deg
+    real(wp), intent(in) :: norm_f
+    real(wp) :: norm_e
+
+    real(wp), parameter :: k(1:10) = &
+         [     1.0_wp /          2.0_wp, &
+               1.0_wp /          8.0_wp, &
+               1.0_wp /         24.0_wp, &
+               5.0_wp /        384.0_wp, &
+               1.0_wp /        240.0_wp, &
+              61.0_wp /      46080.0_wp, &
+              17.0_wp /      40320.0_wp, &
+             277.0_wp /    2064384.0_wp, &
+              31.0_wp /     725760.0_wp, &
+           50521.0_wp / 3715891200.0_wp ]
+
+    norm_e = k(deg+1) * h**(deg+1) * norm_f
+
+  end function sll_f_spline_1d_error_bound
 
   !-----------------------------------------------------------------------------
   pure function error_bound_cos_cos( dx1, dx2, deg1, deg2 ) result( max_error )
@@ -308,24 +339,14 @@ contains
     integer , intent(in   ) :: deg2
     real(wp) :: max_error
 
-!    integer :: k1, k2
-!
-!    max_error = 0.0_wp
-!
-!    k2 = deg2+1
-!    do k1 = 0, deg1
-!      max_error = max_error + taylor_error_term_cos_cos( k1, k2 )
-!    end do
-!
-!    k1 = deg1+1
-!    do k2 = 0, deg2
-!      max_error = max_error + taylor_error_term_cos_cos( k1, k2 )
-!    end do
-!
-!    max_error = max_error + taylor_error_term_cos_cos( deg1+1, deg2+1 )
+    real(wp) :: max_norm1
+    real(wp) :: max_norm2
 
-    max_error = taylor_error_term_cos_cos( deg1+1, 0 ) &
-              + taylor_error_term_cos_cos( 0, deg2+1 )
+    max_norm1 = max_norm_deriv_cos_cos( deg1+1, 0      )
+    max_norm2 = max_norm_deriv_cos_cos( 0     , deg2+1 )
+
+    max_error = sll_f_spline_1d_error_bound( dx1, deg1, max_norm1 ) &
+              + sll_f_spline_1d_error_bound( dx2, deg2, max_norm2 )
 
   end function error_bound_cos_cos
 
