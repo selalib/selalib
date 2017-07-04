@@ -9,13 +9,14 @@ program test_bsplines_2d_new
 
   use m_analytical_profiles_2d, only: &
     t_profile_2d_info, &
+    c_analytical_profile_2d, &
     t_analytical_profile_2d_cos_cos, &
     t_analytical_profile_2d_poly
 
   use sll_m_boundary_condition_descriptors, only: &
-       sll_p_periodic, &
-       sll_p_hermite, &
-       sll_p_greville
+    sll_p_periodic, &
+    sll_p_hermite, &
+    sll_p_greville
 
   use m_test_bsplines_2d, only: &
     t_bspline_2d_test_facility
@@ -203,7 +204,7 @@ program test_bsplines_2d_new
   call test_facility % print_header()
 
   ! Initialize profile
-  call profile_2d_cos_cos % init()
+  call profile_2d_cos_cos % init( n1=3, n2=3, c1=0.3_wp, c2=0.7_wp )
 
   ! Extract information about 2D analytical profile
   call profile_2d_cos_cos % get_info( pinfo )
@@ -241,7 +242,7 @@ program test_bsplines_2d_new
           ! Determine error tolerance
           dx1 = (pinfo%x1_max - pinfo%x1_min) / nx1
           dx2 = (pinfo%x2_max - pinfo%x2_min) / nx2
-          tol = error_bound_cos_cos( dx1, dx2, deg1, deg2 )
+          tol = error_bound( profile_2d_cos_cos, dx1, dx2, deg1, deg2 )
           tol = max( 1e-14_wp, tol )
           !write(*,*) tol
 
@@ -291,16 +292,6 @@ contains
   end function factorial
 
   !-----------------------------------------------------------------------------
-  pure function max_norm_deriv_cos_cos( diff1, diff2 ) result( norm )
-    integer, intent(in) :: diff1
-    integer, intent(in) :: diff2
-    real(wp) :: norm
-
-    norm = sll_p_twopi**(diff1+diff2)
-
-  end function max_norm_deriv_cos_cos
-
-  !-----------------------------------------------------------------------------
   ! Error bound in max norm for spline interpolation of periodic functions from:
   !
   ! V M Tihomirov 1969 Math. USSR Sb. 9 275
@@ -332,7 +323,8 @@ contains
   end function sll_f_spline_1d_error_bound
 
   !-----------------------------------------------------------------------------
-  pure function error_bound_cos_cos( dx1, dx2, deg1, deg2 ) result( max_error )
+  function error_bound( profile_2d, dx1, dx2, deg1, deg2 ) result( max_error )
+    class(c_analytical_profile_2d), intent(in) :: profile_2d
     real(wp), intent(in   ) :: dx1
     real(wp), intent(in   ) :: dx2
     integer , intent(in   ) :: deg1
@@ -342,12 +334,12 @@ contains
     real(wp) :: max_norm1
     real(wp) :: max_norm2
 
-    max_norm1 = max_norm_deriv_cos_cos( deg1+1, 0      )
-    max_norm2 = max_norm_deriv_cos_cos( 0     , deg2+1 )
+    max_norm1 = profile_2d % max_norm( deg1+1, 0      )
+    max_norm2 = profile_2d % max_norm( 0     , deg2+1 )
 
     max_error = sll_f_spline_1d_error_bound( dx1, deg1, max_norm1 ) &
               + sll_f_spline_1d_error_bound( dx2, deg2, max_norm2 )
 
-  end function error_bound_cos_cos
+  end function error_bound
 
 end program test_bsplines_2d_new

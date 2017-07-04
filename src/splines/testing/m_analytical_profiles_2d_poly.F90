@@ -6,6 +6,7 @@
 
 module m_analytical_profiles_2d_poly
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+#include "sll_errors.h"
 
   use sll_m_working_precision, only: &
     f64
@@ -46,6 +47,7 @@ module m_analytical_profiles_2d_poly
     ! Abstract interface
     procedure :: get_info
     procedure :: eval
+    procedure :: max_norm ! not implemented for this profile
 
   end type t_analytical_profile_2d_poly
  
@@ -123,6 +125,19 @@ contains
     end do
 
   end function eval
+
+  !-----------------------------------------------------------------------------
+  !> Evaluate max norm of profile (or one of its derivatives) over domain
+  !-----------------------------------------------------------------------------
+  function max_norm( self, diff_x1, diff_x2 ) result( norm )
+    class( t_analytical_profile_2d_poly ), intent(in) :: self
+    integer,                     optional, intent(in) :: diff_x1
+    integer,                     optional, intent(in) :: diff_x2
+    real(wp) :: norm
+
+    SLL_ERROR("t_analytical_profile_2d_poly%max_norm", "not implemented")
+
+  end function max_norm
 
   !-----------------------------------------------------------------------------
   !> Calculate falling factorial of x
