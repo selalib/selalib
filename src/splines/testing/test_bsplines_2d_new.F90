@@ -32,8 +32,10 @@ program test_bsplines_2d_new
   type(t_bspline_2d_test_facility)      :: test_facility
   type(t_analytical_profile_2d_cos_cos) :: profile_2d_cos_cos
   type(t_analytical_profile_2d_poly)    :: profile_2d_poly
-  integer, allocatable                  :: bc_kinds(:)
-  integer, allocatable                  :: nx_list(:)
+  integer , allocatable                 :: bc_kinds(:)
+  integer , allocatable                 :: nx_list(:)
+  real(wp), allocatable                 :: grid_x1(:,:)
+  real(wp), allocatable                 :: grid_x2(:,:)
 
   integer  :: deg1
   integer  :: deg2
@@ -212,6 +214,20 @@ program test_bsplines_2d_new
   ! Choose dimension of uniform grid of evaluation points
   grid_dim = [20,20]
 
+  ! Create uniform grid of evaluation points
+  allocate( grid_x1 (grid_dim(1),grid_dim(2)) )
+  allocate( grid_x2 (grid_dim(1),grid_dim(2)) )
+
+  dx1 = (pinfo%x1_max-pinfo%x1_min) / real( grid_dim(1)-1, wp )
+  dx2 = (pinfo%x2_max-pinfo%x2_min) / real( grid_dim(2)-1, wp )
+
+  do i2 = 1, grid_dim(2)
+    do i1 = 1, grid_dim(1)
+      grid_x1(i1,i2) = pinfo%x1_min + real(i1-1,wp)*dx1
+      grid_x2(i1,i2) = pinfo%x2_min + real(i2-1,wp)*dx2
+    end do
+  end do
+
   do deg1 = 2, 9
 
     ! Use same spline degree along both directions
@@ -248,10 +264,8 @@ program test_bsplines_2d_new
 
           ! Run tests
           ! TODO: print tolerance
-          ! TODO: evaluate all grid points at once
           ! TODO: print numerical order of accuracy
-          call test_facility % evaluate_func_and_grad_on_uniform_grid( &
-            grid_dim, tol, success )
+          call test_facility % evaluate_on_2d_grid( grid_x1, grid_x2, tol, success )
 
           ! Free memory
           call test_facility % free()
@@ -269,6 +283,8 @@ program test_bsplines_2d_new
   ! Deallocate local arrays
   deallocate( bc_kinds )
   deallocate( nx_list  )
+  deallocate( grid_x1  )
+  deallocate( grid_x2  )
 
   ! ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
 
