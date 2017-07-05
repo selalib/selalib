@@ -45,17 +45,16 @@ JMAKE=${JMAKE:=8}
 MACROS=${MACROS:=""}
 
 # select the object/build directory
-# default home directory
-BUILD_DIR_PRESET=$HOME/selalib_obj
-# alternative:
-# with many small files /tmp gives much better performance compared to the
-# home directory which often resides on a large shared GPFS file system
-# umask 0077
-# BUILD_DIR_PRESET=/tmp/$USER/selalib_obj
-
+if [ x"$USER" != x"khr" ]; then
+    # default home directory
+    BUILD_DIR_PRESET=$HOME/selalib_obj
+else
+    # with many small files /tmp gives much better performance compared to the
+    # home directory which often resides on a large shared GPFS file system
+    umask 0077
+    BUILD_DIR_PRESET=/tmp/$USER/selalib_obj
+fi
 BUILD_DIR=${BUILD_DIR:="$BUILD_DIR_PRESET"}
-
-export CLAPP_DIR=$HOME/clapp/usr
 
 # ifort: add the "-ipo-separate" flag (interprocedural optimization)
 USE_IPO=${USE_IPO:=0}
@@ -69,6 +68,10 @@ USE_ALIGNMENT=${USE_ALIGNMENT:=1}
 # ifort: add various error checking compiler flags (slowdown!)
 USE_CHECKS=${USE_CHECKS:=0}
 
+USE_CLAPP=${USE_CLAPP:=0}
+if [ x"$USE_CLAPP" != x"0" ]; then
+    export CLAPP_DIR=${CLAPP_DIR:=$HOME/clapp/usr}
+fi
 
 # --- end of configuration section ---
 
@@ -253,7 +256,7 @@ mkdir -p $BUILD_DIR
         -DCMAKE_C_FLAGS:STRING="-g $MACROS $INTEL_OPT_FLAGS" \
         -DCMAKE_CXX_FLAGS:STRING="-g $MACROS $INTEL_OPT_FLAGS" \
         -DCMAKE_Fortran_FLAGS:STRING="-g $INTEL_F90_FLAGS $MACROS" \
-        -DCLAPP=ON
+        -DCLAPP:BOOL=${USE_CLAPP}
     else
       echo "skipping configure step ..."
     fi
