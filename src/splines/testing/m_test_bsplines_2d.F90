@@ -69,6 +69,7 @@ module m_test_bsplines_2d
     procedure         :: free
     procedure         :: evaluate_on_2d_grid
     procedure         :: evaluate_at_interpolation_points
+    procedure         :: evaluate_grad_on_2d_grid
 
   end type t_bspline_2d_test_facility
 
@@ -305,8 +306,8 @@ contains
 
     ! Compare spline values to analytical profile and compute max norm of error
     max_norm_error = 0.0_wp
-    do i1 = 1, n1
-      do i2 = 1, n2
+    do i2 = 1, n2
+      do i1 = 1, n1
         error = self % profile_2d % eval( x1(i1,i2), x2(i1,i2) ) - y(i1,i2)
         max_norm_error = max( max_norm_error, abs( error ) )
       end do
@@ -316,6 +317,59 @@ contains
     deallocate( y )
 
   end subroutine evaluate_on_2d_grid
+
+  !-----------------------------------------------------------------------------
+  subroutine evaluate_grad_on_2d_grid( self, &
+      x1, &
+      x2, &
+      max_norm_error_diff_x1, &
+      max_norm_error_diff_x2 )
+
+    class(t_bspline_2d_test_facility), intent(in   ) :: self
+    real(wp)                         , intent(in   ) :: x1(:,:)
+    real(wp)                         , intent(in   ) :: x2(:,:)
+    real(wp)                         , intent(  out) :: max_norm_error_diff_x1
+    real(wp)                         , intent(  out) :: max_norm_error_diff_x2
+
+    integer               :: i1, i2
+    integer               :: n1, n2
+    real(wp), allocatable :: y(:,:)
+    real(wp)              :: error
+
+    SLL_ASSERT( all( shape( x1 ) == shape( x2 ) ) )
+
+    n1 = size( x1, 1 )
+    n2 = size( x2, 2 )
+
+    ! Array of spline values
+    allocate( y(n1,n2) )
+
+    ! x1-derivative: compare spline to analytical profile
+    !----------------------------------------------------
+    call sll_s_interpolate_array_derivatives_x1_2d( self%bspline_2d, n1, n2, x1, x2, y )
+    max_norm_error_diff_x1 = 0.0_wp
+    do i2 = 1, n2
+      do i1 = 1, n1
+        error = self % profile_2d % eval( x1(i1,i2), x2(i1,i2), diff_x1=1 ) - y(i1,i2)
+        max_norm_error_diff_x1 = max( max_norm_error_diff_x1, abs( error ) )
+      end do
+    end do
+
+    ! x2-derivative: compare spline to analytical profile
+    !----------------------------------------------------
+    call sll_s_interpolate_array_derivatives_x2_2d( self%bspline_2d, n1, n2, x1, x2, y )
+    max_norm_error_diff_x2 = 0.0_wp
+    do i2 = 1, n2
+      do i1 = 1, n1
+        error = self % profile_2d % eval( x1(i1,i2), x2(i1,i2), diff_x2=1 ) - y(i1,i2)
+        max_norm_error_diff_x2 = max( max_norm_error_diff_x2, abs( error ) )
+      end do
+    end do
+
+    ! Free local memory
+    deallocate( y )
+
+  end subroutine evaluate_grad_on_2d_grid
 
   !-----------------------------------------------------------------------------
   subroutine free( self )

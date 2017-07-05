@@ -46,13 +46,21 @@ program test_bsplines_2d_new
   integer  :: i1, i2
   integer  :: grid_dim(2)
   real(wp) :: tol
+  real(wp) :: tol_grad
   logical  :: passed
   logical  :: success
-  real(wp) :: max_norm_error
-  real(wp) :: max_norm_profile
+  logical  :: success_diff_x1
+  logical  :: success_diff_x2
+  real(wp) :: max_norm_error        , max_norm_profile
+  real(wp) :: max_norm_error_diff_x1, max_norm_profile_diff_x1
+  real(wp) :: max_norm_error_diff_x2, max_norm_profile_diff_x2
   real(wp) :: dx1
   real(wp) :: dx2
   integer  :: j
+
+  ! Initialize 'PASSED/FAILED' condition
+  ! TODO: separate 'passed' value for each test and print to terminal
+  passed = .true.
 
   ! ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
   ! TEST 1: Evaluate spline at interpolation points (error should be zero)
@@ -66,9 +74,6 @@ program test_bsplines_2d_new
   ! Choose boundary conditions to be tested
   allocate( bc_kinds(3) )
   bc_kinds(:) = [sll_p_periodic, sll_p_hermite, sll_p_greville]
-
-  ! Initialize 'PASSED/FAILED' condition
-  passed = .true.
 
   ! Print report header
   call test_facility % print_header()
@@ -112,11 +117,14 @@ program test_bsplines_2d_new
 
           ! Run tests
           call test_facility % evaluate_at_interpolation_points( max_norm_error )
-          success = (max_norm_error <= tol * max_norm_profile)
+
+          ! Calculate relative error norm from absolute one, check tolerance
+          max_norm_error = max_norm_error / max_norm_profile
+          success = (max_norm_error <= tol)
 
           ! Print test report to terminal on a single line
           write(*,'(6i10)', advance='no') nx1, nx2, deg1, deg2, bc1, bc2
-          write(*,'(e12.2,L12)') max_norm_error / max_norm_profile, success
+          write(*,'(e12.2,a8)') max_norm_error, trim( success_to_string( success ))
 
           ! Free memory
           call test_facility % free()
@@ -141,7 +149,8 @@ program test_bsplines_2d_new
   write(*,*)
 
   ! Test tolerance: very small!
-  tol = 1e-14_wp
+  tol      = 1e-14_wp
+  tol_grad = 2e-13_wp ! larger for derivatives
 
   ! Print report header
   call test_facility % print_header()
@@ -178,7 +187,9 @@ program test_bsplines_2d_new
       call profile_2d_poly % init( deg1, deg2 )
 
       ! Estimate max-norm of profile (needed to compute relative error)
-      max_norm_profile = profile_2d_poly % max_norm()
+      max_norm_profile         = profile_2d_poly % max_norm()
+      max_norm_profile_diff_x1 = profile_2d_poly % max_norm( diff_x1=1 )
+      max_norm_profile_diff_x2 = profile_2d_poly % max_norm( diff_x2=1 )
 
       do i1 = 1, size( bc_kinds )
         bc1 = bc_kinds(i1)
@@ -198,17 +209,31 @@ program test_bsplines_2d_new
 
           ! Run tests
           call test_facility % evaluate_on_2d_grid( grid_x1, grid_x2, max_norm_error )
-          success = (max_norm_error <= tol * max_norm_profile)
+          call test_facility % evaluate_grad_on_2d_grid( grid_x1, grid_x2, &
+            max_norm_error_diff_x1, max_norm_error_diff_x2 )
+
+          ! Calculate relative error norms from absolute ones
+          max_norm_error         = max_norm_error         / max_norm_profile
+          max_norm_error_diff_x1 = max_norm_error_diff_x1 / max_norm_profile_diff_x1 
+          max_norm_error_diff_x2 = max_norm_error_diff_x2 / max_norm_profile_diff_x2 
+
+          ! Check tolerances
+          success         = (max_norm_error         <= tol     )
+          success_diff_x1 = (max_norm_error_diff_x1 <= tol_grad)
+          success_diff_x2 = (max_norm_error_diff_x2 <= tol_grad)
 
           ! Print test report to terminal on a single line
           write(*,'(6i10)', advance='no') nx1, nx2, deg1, deg2, bc1, bc2
-          write(*,'(e12.2,L12)') max_norm_error / max_norm_profile, success
+          write(*,'(3(e12.2,a8))') &
+            max_norm_error        , trim( success_to_string( success         )), &
+            max_norm_error_diff_x1, trim( success_to_string( success_diff_x1 )), &
+            max_norm_error_diff_x2, trim( success_to_string( success_diff_x2 ))
 
           ! Free memory
           call test_facility % free()
 
           ! Update 'PASSED/FAILED' condition
-          passed = (passed .and. success)
+          passed = (passed .and. success .and. success_diff_x1 .and. success_diff_x2)
 
         end do  ! bc2
       end do  ! bc1
@@ -221,7 +246,7 @@ program test_bsplines_2d_new
   deallocate( grid_x2  )
 
   ! ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
-  ! TEST 3: convergence analysis on cos*cos profile (with error bound)
+  ! TEST 3: convergence analysis on cos*cos profile (with absolute error bound)
   ! ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
 
   ! TODO: print test explanation to terminal
@@ -293,18 +318,19 @@ program test_bsplines_2d_new
           dx1 = (pinfo%x1_max - pinfo%x1_min) / nx1
           dx2 = (pinfo%x2_max - pinfo%x2_min) / nx2
           tol = error_bound( profile_2d_cos_cos, dx1, dx2, deg1, deg2 )
-          tol = max( 1e-14_wp, tol )
-          !write(*,*) tol
+
+          ! Increase absolute tolerance if below machine precision
+          tol = max( 1e-14_wp*max_norm_profile, tol )
 
           ! Run tests
           ! TODO: print tolerance
           ! TODO: print numerical order of accuracy
           call test_facility % evaluate_on_2d_grid( grid_x1, grid_x2, max_norm_error )
-          success = (max_norm_error <= tol * max_norm_profile)
+          success = (max_norm_error <= tol)
 
           ! Print test report to terminal on a single line
           write(*,'(6i10)', advance='no') nx1, nx2, deg1, deg2, bc1, bc2
-          write(*,'(e12.2,L12)') max_norm_error / max_norm_profile, success
+          write(*,'(2(e12.2),a8)') tol, max_norm_error, trim( success_to_string( success ))
 
           ! Free memory
           call test_facility % free()
@@ -338,6 +364,19 @@ program test_bsplines_2d_new
 contains
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
+  pure function success_to_string( success ) result( str )
+    logical, intent(in) :: success
+    character(len=4) :: str
+
+    if (success) then
+      str = 'OK'
+    else
+      str = 'FAIL'
+    end if
+
+  end function success_to_string
+
+  !-----------------------------------------------------------------------------
   pure function factorial( n ) result( f )
     integer, intent(in) :: n
     real(wp) :: f
