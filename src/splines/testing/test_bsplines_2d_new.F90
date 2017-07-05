@@ -341,29 +341,38 @@ program test_bsplines_2d_new
   write(*,'(a,i4,a,i4,a)')'Number of evaluation points (uniform grid): [', grid_dim(1), ',', grid_dim(2),']'
   write(*,*)
   write(*,'(a)') "Input:"
-  write(*,'(a)') '  . deg1 = spline degree in x1 direction'
-  write(*,'(a)') '  . deg2 = spline degree in x2 direction'
-  write(*,'(a)') '  .  bc1 = boundary conditions in x1 direction [P|H|G]'
-  write(*,'(a)') '  .  bc2 = boundary conditions in x2 direction [P|H|G]'
+  write(*,'(a)') '  . deg = spline degree (same along x1 and x2 directions)'
+  write(*,'(a)') '  . bc1 = boundary conditions in x1 direction [P|H|G]'
+  write(*,'(a)') '  . bc2 = boundary conditions in x2 direction [P|H|G]'
+  write(*,'(a)') '  . nx  = number of grid points along each direction (nx1=nx2)'
   write(*,*)
   write(*,'(a)') "Output:"
-  write(*,'(a)') '  .  tol     = tolerance for f'
-  write(*,'(a)') '  .  err     = max-norm of error on f'
-  write(*,'(a)') '  .  tol_dx1 = tolerance for ∂f/∂x1'
-  write(*,'(a)') '  .  err_dx1 = max-norm of error on ∂f/∂x1'
-  write(*,'(a)') '  .  tol_dx2 = tolerance for ∂f/∂x2'
-  write(*,'(a)') '  .  err_dx2 = max-norm of error on ∂f/∂x2'
-  write(*,'(a)') '  .  passed  = "OK" if all errors <= tol, "FAIL" otherwise'
+  write(*,'(a)') '  . tol     = tolerance for f'
+  write(*,'(a)') '  . err     = max-norm of error on f'
+  write(*,'(a)') '  . tol_dx1 = tolerance for ∂f/∂x1'
+  write(*,'(a)') '  . err_dx1 = max-norm of error on ∂f/∂x1'
+  write(*,'(a)') '  . tol_dx2 = tolerance for ∂f/∂x2'
+  write(*,'(a)') '  . err_dx2 = max-norm of error on ∂f/∂x2'
+  write(*,'(a)') '  . passed  = "OK" if all errors <= tol, "FAIL" otherwise'
+  write(*,*)
+  write(*,'(a)') "Timing [s]:"
+  write(*,'(a)') '  . t_init  = initialization of spline object'
+  write(*,'(a)') '  . t_comp  = calculation of spline coefficients for interpolation'
+  write(*,'(a)') '  . t_eval  = evaluation of function value S(x1,x2)'
+  write(*,'(a)') '  . t_dx1   = evaluation of x1-derivative ∂S(x1,x2)/∂x1'
+  write(*,'(a)') '  . t_dx2   = evaluation of x2-derivative ∂S(x1,x2)/∂x2'
   write(*,*)
   write(*,'(a)') "Boundary conditions:"
-  write(*,'(a)') '  .  P = periodic'
-  write(*,'(a)') '  .  H = Hermite'
-  write(*,'(a)') '  .  G = Greville'
+  write(*,'(a)') '  . P = periodic'
+  write(*,'(a)') '  . H = Hermite'
+  write(*,'(a)') '  . G = Greville'
   write(*,*)
 
   ! Print table header
-  write(*, '(4a10,6a12,a10)') "deg1=deg2", "bc1", "bc2", "nx1=nx2", &
-    "tol", "err", "tol_dx1", "err_dx1", "tol_dx2", "err_dx2", "passed"
+  write(*, '(a3,3a6,*(a10))') &
+    "deg", "bc1", "bc2", "nx", &
+    "tol", "err", "tol_dx1", "err_dx1", "tol_dx2", "err_dx2", "passed", &
+    "t_init", "t_comp", "t_eval", "t_dx1", "t_dx2"
 
   ! Initialize profile
   call profile_2d_cos_cos % init( cos_n1, cos_n2, cos_c1, cos_c2 )
@@ -443,13 +452,19 @@ program test_bsplines_2d_new
           success = success .and. success_diff_x1 .and. success_diff_x2
 
           ! Print test report to terminal on a single line
-          write(*,'(2i10)'  , advance='no') deg1
-          write(*,'(2a10)'  , advance='no') bc_to_char( bc1 ), bc_to_char( bc2 )
-          write(*,'(2i10)'  , advance='no') nx1
-          write(*,'(2e12.2)', advance='no') tol        , max_norm_error
-          write(*,'(2e12.2)', advance='no') tol_diff_x1, max_norm_error_diff_x1
-          write(*,'(2e12.2)', advance='no') tol_diff_x2, max_norm_error_diff_x2
-          write(*,'(a8)') trim( success_to_string( success ))
+          write(*,'(i3)'     , advance='no') deg1
+          write(*,'(2a6)'    , advance='no') bc_to_char( bc1 ), bc_to_char( bc2 )
+          write(*,'(2i6)'    , advance='no') nx1
+          write(*,'(2es10.1)', advance='no') tol        , max_norm_error
+          write(*,'(2es10.1)', advance='no') tol_diff_x1, max_norm_error_diff_x1
+          write(*,'(2es10.1)', advance='no') tol_diff_x2, max_norm_error_diff_x2
+          write(*,'(a10)'    , advance='no') success_to_string( success )
+          write(*,'(5es10.1)') &
+            test_facility % time_init               , &
+            test_facility % time_compute_interpolant, &
+            test_facility % time_eval_array         , &
+            test_facility % time_eval_diff1_array   , &
+            test_facility % time_eval_diff2_array
 
           ! Free memory
           call test_facility % free()
