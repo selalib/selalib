@@ -26,6 +26,10 @@ module m_test_bsplines_2d
      sll_s_interpolate_array_derivatives_x1_2d, &
      sll_s_interpolate_array_derivatives_x2_2d
 
+  use sll_m_timer, only: &
+    sll_t_time_mark, &
+    sll_s_set_time_mark, &
+    sll_f_time_elapsed_between
 
   implicit none
 
@@ -61,6 +65,15 @@ module m_test_bsplines_2d
 
     type(sll_t_bspline_2d)  :: bspline_2d
     real(wp), allocatable   :: gtau(:,:)  ! Profile values at interp. points
+
+    real(wp) :: time_init
+    real(wp) :: time_compute_interpolant
+    real(wp) :: time_eval
+    real(wp) :: time_eval_array
+    real(wp) :: time_eval_diff1
+    real(wp) :: time_eval_diff1_array
+    real(wp) :: time_eval_diff2
+    real(wp) :: time_eval_diff2_array
 
   contains
 
@@ -123,6 +136,8 @@ contains
     real(wp), allocatable :: val2_max(:,:)
     real(wp), allocatable :: val_corners(:,:,:)
 
+    type(sll_t_time_mark) :: t0, t1, t2, t3
+
     ! Store pointer to 2D profile and input numerical parameters to spline
     self % profile_2d => profile_2d
     self % nx1        =  nx1
@@ -134,6 +149,8 @@ contains
 
     ! Extract information about 2D analytical profile
     call self % profile_2d % get_info( info )
+
+    call sll_s_set_time_mark( t0 )
 
     ! Initialize 2D spline
     call sll_s_bspline_2d_init( &
@@ -148,6 +165,8 @@ contains
       info % x2_max, &
       self % bc1, &
       self % bc2 )
+
+    call sll_s_set_time_mark( t1 )
 
     ! Get spline interpolation points
     tau1 => self % bspline_2d % bs1 % tau
@@ -210,6 +229,7 @@ contains
 
     ! Compute 2D spline that interpolates analytical 2D profile at points above
     ! ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
+    call sll_s_set_time_mark( t2 )
 
     ! Hermite - other
     if (self%bc1 == sll_p_hermite .and. self%bc2 /= sll_p_hermite) then
@@ -242,6 +262,8 @@ contains
 
     end if
 
+    call sll_s_set_time_mark( t3 )
+
     ! Deallocate local arrays
     ! ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
     if (allocated(val1_min))    deallocate( val1_min )
@@ -249,6 +271,16 @@ contains
     if (allocated(val2_min))    deallocate( val2_min )
     if (allocated(val2_max))    deallocate( val2_max )
     if (allocated(val_corners)) deallocate( val_corners )
+
+    ! Timings (set to -1 values not yet available)
+    self % time_init                =  sll_f_time_elapsed_between( t0, t1 )
+    self % time_compute_interpolant =  sll_f_time_elapsed_between( t2, t3 )
+    self % time_eval                = -1.0_wp
+    self % time_eval_array          = -1.0_wp
+    self % time_eval_diff1          = -1.0_wp
+    self % time_eval_diff1_array    = -1.0_wp
+    self % time_eval_diff2          = -1.0_wp
+    self % time_eval_diff2_array    = -1.0_wp
 
   end subroutine init
 
@@ -283,7 +315,7 @@ contains
   !-----------------------------------------------------------------------------
   subroutine evaluate_on_2d_grid( self, x1, x2, max_norm_error )
 
-    class(t_bspline_2d_test_facility), intent(in   ) :: self
+    class(t_bspline_2d_test_facility), intent(inout) :: self
     real(wp)                         , intent(in   ) :: x1(:,:)
     real(wp)                         , intent(in   ) :: x2(:,:)
     real(wp)                         , intent(  out) :: max_norm_error
@@ -292,6 +324,7 @@ contains
     integer               :: n1, n2
     real(wp), allocatable :: y(:,:)
     real(wp)              :: error
+    type(sll_t_time_mark) :: t0, t1
 
     SLL_ASSERT( all( shape( x1 ) == shape( x2 ) ) )
 
@@ -301,8 +334,13 @@ contains
     ! Array of spline values
     allocate( y(n1,n2) )
 
+    call sll_s_set_time_mark( t0 )
+
     ! Evaluate 2D spline on given grid
     call sll_s_interpolate_array_values_2d( self%bspline_2d, n1, n2, x1, x2, y )
+
+    call sll_s_set_time_mark( t1 )
+    self % time_eval_array = sll_f_time_elapsed_between(t0,t1)/real(n1*n2,wp)
 
     ! Compare spline values to analytical profile and compute max norm of error
     max_norm_error = 0.0_wp
@@ -325,7 +363,7 @@ contains
       max_norm_error_diff_x1, &
       max_norm_error_diff_x2 )
 
-    class(t_bspline_2d_test_facility), intent(in   ) :: self
+    class(t_bspline_2d_test_facility), intent(inout) :: self
     real(wp)                         , intent(in   ) :: x1(:,:)
     real(wp)                         , intent(in   ) :: x2(:,:)
     real(wp)                         , intent(  out) :: max_norm_error_diff_x1
@@ -335,6 +373,7 @@ contains
     integer               :: n1, n2
     real(wp), allocatable :: y(:,:)
     real(wp)              :: error
+    type(sll_t_time_mark) :: t0, t1
 
     SLL_ASSERT( all( shape( x1 ) == shape( x2 ) ) )
 
@@ -346,7 +385,13 @@ contains
 
     ! x1-derivative: compare spline to analytical profile
     !----------------------------------------------------
+    call sll_s_set_time_mark( t0 )
+
     call sll_s_interpolate_array_derivatives_x1_2d( self%bspline_2d, n1, n2, x1, x2, y )
+
+    call sll_s_set_time_mark( t1 )
+    self % time_eval_diff1_array = sll_f_time_elapsed_between(t0,t1)/real(n1*n2,wp)
+
     max_norm_error_diff_x1 = 0.0_wp
     do i2 = 1, n2
       do i1 = 1, n1
@@ -357,7 +402,13 @@ contains
 
     ! x2-derivative: compare spline to analytical profile
     !----------------------------------------------------
+    call sll_s_set_time_mark( t0 )
+
     call sll_s_interpolate_array_derivatives_x2_2d( self%bspline_2d, n1, n2, x1, x2, y )
+
+    call sll_s_set_time_mark( t1 )
+    self % time_eval_diff2_array = sll_f_time_elapsed_between(t0,t1)/real(n1*n2,wp)
+
     max_norm_error_diff_x2 = 0.0_wp
     do i2 = 1, n2
       do i1 = 1, n1
