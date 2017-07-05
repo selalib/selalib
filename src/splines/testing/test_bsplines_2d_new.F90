@@ -46,7 +46,8 @@ program test_bsplines_2d_new
   integer  :: i1, i2
   integer  :: grid_dim(2)
   real(wp) :: tol
-  real(wp) :: tol_grad
+  real(wp) :: tol_diff_x1
+  real(wp) :: tol_diff_x2
   logical  :: passed
   logical  :: success
   logical  :: success_diff_x1
@@ -179,8 +180,9 @@ program test_bsplines_2d_new
   write(*,*)
 
   ! Test tolerance: very small!
-  tol      = 1e-14_wp
-  tol_grad = 2e-13_wp ! larger for derivatives
+  tol         = 1e-14_wp
+  tol_diff_x1 = 2e-13_wp ! larger for derivatives
+  tol_diff_x2 = 2e-13_wp ! larger for derivatives
 
   ! Choose boundary conditions to be tested
   allocate( bc_kinds(2) )
@@ -194,9 +196,9 @@ program test_bsplines_2d_new
   grid_dim = [20, 20]
 
   ! Print constant parameters
-  write(*,'(a,e10.2)')  'Relative error tolerance for f     : tol      = ', tol
-  write(*,'(a,e10.2)')  'Relative error tolerance for ∂f/∂x1: tol_grad = ', tol_grad
-  write(*,'(a,e10.2)')  'Relative error tolerance for ∂f/∂x2: tol_grad = ', tol_grad
+  write(*,'(a,e10.2)')  'Relative error tolerance for f     : tol         = ', tol
+  write(*,'(a,e10.2)')  'Relative error tolerance for ∂f/∂x1: tol_diff_x1 = ', tol_diff_x1
+  write(*,'(a,e10.2)')  'Relative error tolerance for ∂f/∂x2: tol_diff_x2 = ', tol_diff_x2
   write(*,'(a,i4)')     'Number of knots in grid: nx1 = ', nx1
   write(*,'(a,i4)')     '                         nx2 = ', nx2
   write(*,'(a,i4,a,i4,a)')'Number of evaluation points (uniform grid): [', grid_dim(1), ',', grid_dim(2),']'
@@ -274,9 +276,9 @@ program test_bsplines_2d_new
           max_norm_error_diff_x2 = max_norm_error_diff_x2 / max_norm_profile_diff_x2
 
           ! Check tolerances
-          success         = (max_norm_error         <= tol     )
-          success_diff_x1 = (max_norm_error_diff_x1 <= tol_grad)
-          success_diff_x2 = (max_norm_error_diff_x2 <= tol_grad)
+          success         = (max_norm_error         <= tol        )
+          success_diff_x1 = (max_norm_error_diff_x1 <= tol_diff_x1)
+          success_diff_x2 = (max_norm_error_diff_x2 <= tol_diff_x2)
 
           ! Keep single success condition
           success = success .and. success_diff_x1 .and. success_diff_x2
@@ -345,12 +347,13 @@ program test_bsplines_2d_new
   write(*,'(a)') '  .  bc2 = boundary conditions in x2 direction [P|H|G]'
   write(*,*)
   write(*,'(a)') "Output:"
-  write(*,'(a)') '  .  error  = max-norm of error'
-  write(*,'(a)') '  .  passed = "OK" if error <= tol, "FAIL" otherwise'
-!  write(*,'(a)') '  .  error     = max-norm of error on f'
-!  write(*,'(a)') '  .  error_dx1 = max-norm of error on ∂f/∂x1'
-!  write(*,'(a)') '  .  error_dx2 = max-norm of error on ∂f/∂x2'
-!  write(*,'(a)') '  .  passed    = "OK" if all errors <= tol, "FAIL" otherwise'
+  write(*,'(a)') '  .  tol     = tolerance for f'
+  write(*,'(a)') '  .  err     = max-norm of error on f'
+  write(*,'(a)') '  .  tol_dx1 = tolerance for ∂f/∂x1'
+  write(*,'(a)') '  .  err_dx1 = max-norm of error on ∂f/∂x1'
+  write(*,'(a)') '  .  tol_dx2 = tolerance for ∂f/∂x2'
+  write(*,'(a)') '  .  err_dx2 = max-norm of error on ∂f/∂x2'
+  write(*,'(a)') '  .  passed  = "OK" if all errors <= tol, "FAIL" otherwise'
   write(*,*)
   write(*,'(a)') "Boundary conditions:"
   write(*,'(a)') '  .  P = periodic'
@@ -359,8 +362,8 @@ program test_bsplines_2d_new
   write(*,*)
 
   ! Print table header
-  write(*, '(4a10,2a12,a10)') "deg1=deg2", "bc1", "bc2", "nx1=nx2", &
-    "tol", "error", "passed"
+  write(*, '(4a10,6a12,a10)') "deg1=deg2", "bc1", "bc2", "nx1=nx2", &
+    "tol", "err", "tol_dx1", "err_dx1", "tol_dx2", "err_dx2", "passed"
 
   ! Initialize profile
   call profile_2d_cos_cos % init( cos_n1, cos_n2, cos_c1, cos_c2 )
@@ -369,7 +372,9 @@ program test_bsplines_2d_new
   call profile_2d_cos_cos % get_info( pinfo )
 
   ! Estimate max-norm of profile (needed to compute relative error)
-  max_norm_profile = profile_2d_cos_cos % max_norm()
+  max_norm_profile         = profile_2d_cos_cos % max_norm()
+  max_norm_profile_diff_x1 = profile_2d_cos_cos % max_norm( diff_x1=1 )
+  max_norm_profile_diff_x2 = profile_2d_cos_cos % max_norm( diff_x2=1 )
 
   ! Create uniform grid of evaluation points
   allocate( grid_x1 (grid_dim(1),grid_dim(2)) )
@@ -410,24 +415,40 @@ program test_bsplines_2d_new
             bc1        = bc1 , &
             bc2        = bc2 )
 
-          ! Determine error tolerance
+          ! Determine error tolerances
           dx1 = (pinfo%x1_max - pinfo%x1_min) / nx1
           dx2 = (pinfo%x2_max - pinfo%x2_min) / nx2
-          tol = error_bound( profile_2d_cos_cos, dx1, dx2, deg1, deg2 )
+          tol         = error_bound        ( profile_2d_cos_cos, dx1, dx2, deg1, deg2 )
+          tol_diff_x1 = error_bound_diff_x1( profile_2d_cos_cos, dx1, dx2, deg1, deg2 )
+          tol_diff_x2 = error_bound_diff_x2( profile_2d_cos_cos, dx1, dx2, deg1, deg2 )
 
-          ! Increase absolute tolerance if below machine precision
-          tol = max( 1e-14_wp*max_norm_profile, tol )
+          ! Increase absolute tolerances if below machine precision
+          ! NOTE: derivatives more sensitive to roundoff
+          tol         = max( 1e-14_wp*max_norm_profile        , tol         )
+          tol_diff_x1 = max( 1e-12_wp*max_norm_profile_diff_x1, tol_diff_x1 )
+          tol_diff_x2 = max( 1e-12_wp*max_norm_profile_diff_x2, tol_diff_x2 )
 
           ! Run tests
           ! TODO: print numerical order of accuracy
           call test_facility % evaluate_on_2d_grid( grid_x1, grid_x2, max_norm_error )
-          success = (max_norm_error <= tol)
+          call test_facility % evaluate_grad_on_2d_grid( grid_x1, grid_x2, &
+            max_norm_error_diff_x1, max_norm_error_diff_x2 )
+
+          ! Check tolerances
+          success         = (max_norm_error         <= tol        )
+          success_diff_x1 = (max_norm_error_diff_x1 <= tol_diff_x1)
+          success_diff_x2 = (max_norm_error_diff_x2 <= tol_diff_x2)
+
+          ! Keep single success condition
+          success = success .and. success_diff_x1 .and. success_diff_x2
 
           ! Print test report to terminal on a single line
-          write(*,'(2i10)', advance='no') deg1
-          write(*,'(2a10)', advance='no') bc_to_char( bc1 ), bc_to_char( bc2 )
-          write(*,'(2i10)', advance='no') nx1
-          write(*,'(2e12.2)', advance='no') tol, max_norm_error
+          write(*,'(2i10)'  , advance='no') deg1
+          write(*,'(2a10)'  , advance='no') bc_to_char( bc1 ), bc_to_char( bc2 )
+          write(*,'(2i10)'  , advance='no') nx1
+          write(*,'(2e12.2)', advance='no') tol        , max_norm_error
+          write(*,'(2e12.2)', advance='no') tol_diff_x1, max_norm_error_diff_x1
+          write(*,'(2e12.2)', advance='no') tol_diff_x2, max_norm_error_diff_x2
           write(*,'(a8)') trim( success_to_string( success ))
 
           ! Free memory
@@ -509,6 +530,9 @@ contains
   !
   ! Yu. S. Volkov and Yu. N. Subbotin
   ! https://doi.org/10.1134/S0081543815020236 (equation 14)
+  !
+  ! Also applicable to first derivative by passing deg-1 instead of deg
+  ! Volkov & Subbotin 2015, eq. 15
   !-----------------------------------------------------------------------------
   pure function sll_f_spline_1d_error_bound( h, deg, norm_f ) result( norm_e )
     real(wp), intent(in) :: h
@@ -535,10 +559,10 @@ contains
   !-----------------------------------------------------------------------------
   function error_bound( profile_2d, dx1, dx2, deg1, deg2 ) result( max_error )
     class(c_analytical_profile_2d), intent(in) :: profile_2d
-    real(wp), intent(in   ) :: dx1
-    real(wp), intent(in   ) :: dx2
-    integer , intent(in   ) :: deg1
-    integer , intent(in   ) :: deg2
+    real(wp)                      , intent(in) :: dx1
+    real(wp)                      , intent(in) :: dx2
+    integer                       , intent(in) :: deg1
+    integer                       , intent(in) :: deg2
     real(wp) :: max_error
 
     real(wp) :: max_norm1
@@ -551,5 +575,45 @@ contains
               + sll_f_spline_1d_error_bound( dx2, deg2, max_norm2 )
 
   end function error_bound
+
+  !-----------------------------------------------------------------------------
+  function error_bound_diff_x1( profile_2d, dx1, dx2, deg1, deg2 ) result( max_error )
+    class(c_analytical_profile_2d), intent(in) :: profile_2d
+    real(wp)                      , intent(in) :: dx1
+    real(wp)                      , intent(in) :: dx2
+    integer                       , intent(in) :: deg1
+    integer                       , intent(in) :: deg2
+    real(wp) :: max_error
+
+    real(wp) :: max_norm1
+    real(wp) :: max_norm2
+
+    max_norm1 = profile_2d % max_norm( deg1+1, 0      )
+    max_norm2 = profile_2d % max_norm( 0     , deg2+1 )
+
+    max_error = sll_f_spline_1d_error_bound( dx1, deg1-1, max_norm1 ) &
+              + sll_f_spline_1d_error_bound( dx2, deg2  , max_norm2 )
+
+  end function error_bound_diff_x1
+
+  !-----------------------------------------------------------------------------
+  function error_bound_diff_x2( profile_2d, dx1, dx2, deg1, deg2 ) result( max_error )
+    class(c_analytical_profile_2d), intent(in) :: profile_2d
+    real(wp)                      , intent(in) :: dx1
+    real(wp)                      , intent(in) :: dx2
+    integer                       , intent(in) :: deg1
+    integer                       , intent(in) :: deg2
+    real(wp) :: max_error
+
+    real(wp) :: max_norm1
+    real(wp) :: max_norm2
+
+    max_norm1 = profile_2d % max_norm( deg1+1, 0      )
+    max_norm2 = profile_2d % max_norm( 0     , deg2+1 )
+
+    max_error = sll_f_spline_1d_error_bound( dx1, deg1  , max_norm1 ) &
+              + sll_f_spline_1d_error_bound( dx2, deg2-1, max_norm2 )
+
+  end function error_bound_diff_x2
 
 end program test_bsplines_2d_new
