@@ -57,6 +57,8 @@ program test_bsplines_2d_new
   real(wp) :: dx1
   real(wp) :: dx2
   integer  :: j
+  integer  :: cos_n1, cos_n2
+  real(wp) :: cos_c1, cos_c2
 
   ! Initialize 'PASSED/FAILED' condition
   ! TODO: separate 'passed' value for each test and print to terminal
@@ -65,8 +67,11 @@ program test_bsplines_2d_new
   ! ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
   ! TEST 1: Evaluate spline at interpolation points (error should be zero)
   ! ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
-
-  ! TODO: print test explanation to terminal
+  write(*,*)
+  write(*,'(a)') '-----------------------------------------------------------------------'
+  write(*,'(a)') ' TEST 1: evaluate spline at interpolation points (error should be zero)'
+  write(*,'(a)') '-----------------------------------------------------------------------'
+  write(*,*)
 
   ! Test tolerance: very small!
   tol = 1e-14_wp
@@ -75,8 +80,35 @@ program test_bsplines_2d_new
   allocate( bc_kinds(3) )
   bc_kinds(:) = [sll_p_periodic, sll_p_hermite, sll_p_greville]
 
-  ! Print report header
-  call test_facility % print_header()
+  ! Choose number of knots in tensor grid
+  nx1 = 10
+  nx2 = 37
+
+  ! Print constant parameters
+  write(*,'(a)') 'Profile: f(x1,x2) = cos( 2*pi*x1 ) * cos( 2*pi*x2 )'
+  write(*,*)
+  write(*,'(a,e10.2)')  'Relative error tolerance: tol = ', tol
+  write(*,'(a,i4)')     'Number of knots in grid : nx1 = ', nx1
+  write(*,'(a,i4)')     '                          nx2 = ', nx2
+  write(*,*)
+  write(*,'(a)') "Input:"
+  write(*,'(a)') '  . deg1 = spline degree in x1 direction'
+  write(*,'(a)') '  . deg2 = spline degree in x2 direction'
+  write(*,'(a)') '  .  bc1 = boundary conditions in x1 direction [P|H|G]'
+  write(*,'(a)') '  .  bc2 = boundary conditions in x2 direction [P|H|G]'
+  write(*,*)
+  write(*,'(a)') "Output:"
+  write(*,'(a)') '  .  error  = relative max-norm of error'
+  write(*,'(a)') '  .  passed = "OK" if error <= tol, "FAIL" otherwise'
+  write(*,*)
+  write(*,'(a)') "Boundary conditions:"
+  write(*,'(a)') '  .  P = periodic'
+  write(*,'(a)') '  .  H = Hermite'
+  write(*,'(a)') '  .  G = Greville'
+  write(*,*)
+
+  ! Print table header
+  write(*, '(4a10,a12,a10)') "deg1", "deg2", "bc1", "bc2", "error", "passed"
 
   ! Initialize profile
   call profile_2d_cos_cos % init()
@@ -86,10 +118,6 @@ program test_bsplines_2d_new
 
   ! Estimate max-norm of profile (needed to compute relative error)
   max_norm_profile = profile_2d_cos_cos % max_norm()
-
-  ! Choose number of knots in tensor grid
-  nx1 = 10
-  nx2 = 37
 
   ! Cycle over spline degree
   do deg1 = 2, 9
@@ -123,7 +151,8 @@ program test_bsplines_2d_new
           success = (max_norm_error <= tol)
 
           ! Print test report to terminal on a single line
-          write(*,'(6i10)', advance='no') nx1, nx2, deg1, deg2, bc1, bc2
+          write(*,'(2i10)', advance='no') deg1, deg2
+          write(*,'(2a10)', advance='no') bc_to_char( bc1 ), bc_to_char( bc2 )
           write(*,'(e12.2,a8)') max_norm_error, trim( success_to_string( success ))
 
           ! Free memory
@@ -143,17 +172,15 @@ program test_bsplines_2d_new
   ! ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
   ! TEST 2: Spline should represent polynomial profiles exactly
   ! ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
-
-  ! TODO: print test explanation to terminal
   write(*,*)
+  write(*,'(a)') '---------------------------------------------------------------------------'
+  write(*,'(a)') ' TEST 2: spline of order (m,n) exactly represents polynomial of same order '
+  write(*,'(a)') '---------------------------------------------------------------------------'
   write(*,*)
 
   ! Test tolerance: very small!
   tol      = 1e-14_wp
   tol_grad = 2e-13_wp ! larger for derivatives
-
-  ! Print report header
-  call test_facility % print_header()
 
   ! Choose boundary conditions to be tested
   allocate( bc_kinds(2) )
@@ -165,6 +192,35 @@ program test_bsplines_2d_new
 
   ! Choose dimension of uniform grid of evaluation points
   grid_dim = [20, 20]
+
+  ! Print constant parameters
+  write(*,'(a,e10.2)')  'Relative error tolerance for f     : tol      = ', tol
+  write(*,'(a,e10.2)')  'Relative error tolerance for ∂f/∂x1: tol_grad = ', tol_grad
+  write(*,'(a,e10.2)')  'Relative error tolerance for ∂f/∂x2: tol_grad = ', tol_grad
+  write(*,'(a,i4)')     'Number of knots in grid: nx1 = ', nx1
+  write(*,'(a,i4)')     '                         nx2 = ', nx2
+  write(*,'(a,i4,a,i4,a)')'Number of evaluation points (uniform grid): [', grid_dim(1), ',', grid_dim(2),']'
+  write(*,*)
+  write(*,'(a)') "Input:"
+  write(*,'(a)') '  . deg1 = spline degree in x1 direction'
+  write(*,'(a)') '  . deg2 = spline degree in x2 direction'
+  write(*,'(a)') '  .  bc1 = boundary conditions in x1 direction [H|G]'
+  write(*,'(a)') '  .  bc2 = boundary conditions in x2 direction [H|G]'
+  write(*,*)
+  write(*,'(a)') "Output:"
+  write(*,'(a)') '  .  error     = relative max-norm of error on f'
+  write(*,'(a)') '  .  error_dx1 = relative max-norm of error on ∂f/∂x1'
+  write(*,'(a)') '  .  error_dx2 = relative max-norm of error on ∂f/∂x2'
+  write(*,'(a)') '  .  passed    = "OK" if all errors <= tol, "FAIL" otherwise'
+  write(*,*)
+  write(*,'(a)') "Boundary conditions:"
+  write(*,'(a)') '  .  H = Hermite'
+  write(*,'(a)') '  .  G = Greville'
+  write(*,*)
+
+  ! Print table header
+  write(*, '(4a10,3a12,a10)') "deg1", "deg2", "bc1", "bc2", &
+    "error", "error_dx1", "error_dx2", "passed"
 
   ! Create uniform grid of evaluation points
   call profile_2d_poly % init( 0, 0 )  ! dummy, only need domain size
@@ -214,26 +270,29 @@ program test_bsplines_2d_new
 
           ! Calculate relative error norms from absolute ones
           max_norm_error         = max_norm_error         / max_norm_profile
-          max_norm_error_diff_x1 = max_norm_error_diff_x1 / max_norm_profile_diff_x1 
-          max_norm_error_diff_x2 = max_norm_error_diff_x2 / max_norm_profile_diff_x2 
+          max_norm_error_diff_x1 = max_norm_error_diff_x1 / max_norm_profile_diff_x1
+          max_norm_error_diff_x2 = max_norm_error_diff_x2 / max_norm_profile_diff_x2
 
           ! Check tolerances
           success         = (max_norm_error         <= tol     )
           success_diff_x1 = (max_norm_error_diff_x1 <= tol_grad)
           success_diff_x2 = (max_norm_error_diff_x2 <= tol_grad)
 
+          ! Keep single success condition
+          success = success .and. success_diff_x1 .and. success_diff_x2
+
           ! Print test report to terminal on a single line
-          write(*,'(6i10)', advance='no') nx1, nx2, deg1, deg2, bc1, bc2
-          write(*,'(3(e12.2,a8))') &
-            max_norm_error        , trim( success_to_string( success         )), &
-            max_norm_error_diff_x1, trim( success_to_string( success_diff_x1 )), &
-            max_norm_error_diff_x2, trim( success_to_string( success_diff_x2 ))
+          write(*,'(6i10)'  , advance='no') deg1, deg2
+          write(*,'(2a10)'  , advance='no') bc_to_char( bc1 ), bc_to_char( bc2 )
+          write(*,'(3e12.2)', advance='no') &
+            max_norm_error, max_norm_error_diff_x1, max_norm_error_diff_x2
+          write(*,'(a8)') trim( success_to_string( success ))
 
           ! Free memory
           call test_facility % free()
 
           ! Update 'PASSED/FAILED' condition
-          passed = (passed .and. success .and. success_diff_x1 .and. success_diff_x2)
+          passed = (passed .and. success)
 
         end do  ! bc2
       end do  ! bc1
@@ -248,9 +307,10 @@ program test_bsplines_2d_new
   ! ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
   ! TEST 3: convergence analysis on cos*cos profile (with absolute error bound)
   ! ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
-
-  ! TODO: print test explanation to terminal
   write(*,*)
+  write(*,'(a)') '-----------------------------------------------------------------------------'
+  write(*,'(a)') ' TEST 3: convergence analysis on cos*cos profile (with absolute error bound) '
+  write(*,'(a)') '-----------------------------------------------------------------------------'
   write(*,*)
 
   ! Choose boundary conditions to be tested
@@ -260,20 +320,56 @@ program test_bsplines_2d_new
   allocate( nx_list(5) )
   nx_list(:) = [11, 21, 41, 81, 161]
 
-  ! Print report header
-  call test_facility % print_header()
+  ! Choose parameters of cos*cos profile to be interpolated
+  cos_n1 = 3
+  cos_n2 = 3
+  cos_c1 = 0.3_wp
+  cos_c2 = 0.7_wp
+
+  ! Choose dimension of uniform grid of evaluation points
+  grid_dim = [20,20]
+
+  ! Print constant parameters
+  write(*,'(a)') 'Profile: f(x1,x2) = cos( 2*pi * (n1*x1+c1) ) * cos( 2*pi * (n2*x2+c2) )'
+  write(*,'(a,i2)') '  . n1 = ', cos_n1
+  write(*,'(a,i2)') '  . n2 = ', cos_n2
+  write(*,'(a,f17.15)')  '  . c1 = ', cos_c1
+  write(*,'(a,f17.15)')  '  . c2 = ', cos_c2
+  write(*,*)
+  write(*,'(a,i4,a,i4,a)')'Number of evaluation points (uniform grid): [', grid_dim(1), ',', grid_dim(2),']'
+  write(*,*)
+  write(*,'(a)') "Input:"
+  write(*,'(a)') '  . deg1 = spline degree in x1 direction'
+  write(*,'(a)') '  . deg2 = spline degree in x2 direction'
+  write(*,'(a)') '  .  bc1 = boundary conditions in x1 direction [P|H|G]'
+  write(*,'(a)') '  .  bc2 = boundary conditions in x2 direction [P|H|G]'
+  write(*,*)
+  write(*,'(a)') "Output:"
+  write(*,'(a)') '  .  error  = max-norm of error'
+  write(*,'(a)') '  .  passed = "OK" if error <= tol, "FAIL" otherwise'
+!  write(*,'(a)') '  .  error     = max-norm of error on f'
+!  write(*,'(a)') '  .  error_dx1 = max-norm of error on ∂f/∂x1'
+!  write(*,'(a)') '  .  error_dx2 = max-norm of error on ∂f/∂x2'
+!  write(*,'(a)') '  .  passed    = "OK" if all errors <= tol, "FAIL" otherwise'
+  write(*,*)
+  write(*,'(a)') "Boundary conditions:"
+  write(*,'(a)') '  .  P = periodic'
+  write(*,'(a)') '  .  H = Hermite'
+  write(*,'(a)') '  .  G = Greville'
+  write(*,*)
+
+  ! Print table header
+  write(*, '(4a10,2a12,a10)') "deg1=deg2", "bc1", "bc2", "nx1=nx2", &
+    "tol", "error", "passed"
 
   ! Initialize profile
-  call profile_2d_cos_cos % init( n1=3, n2=3, c1=0.3_wp, c2=0.7_wp )
+  call profile_2d_cos_cos % init( cos_n1, cos_n2, cos_c1, cos_c2 )
 
   ! Extract information about 2D analytical profile
   call profile_2d_cos_cos % get_info( pinfo )
 
   ! Estimate max-norm of profile (needed to compute relative error)
   max_norm_profile = profile_2d_cos_cos % max_norm()
-
-  ! Choose dimension of uniform grid of evaluation points
-  grid_dim = [20,20]
 
   ! Create uniform grid of evaluation points
   allocate( grid_x1 (grid_dim(1),grid_dim(2)) )
@@ -323,14 +419,16 @@ program test_bsplines_2d_new
           tol = max( 1e-14_wp*max_norm_profile, tol )
 
           ! Run tests
-          ! TODO: print tolerance
           ! TODO: print numerical order of accuracy
           call test_facility % evaluate_on_2d_grid( grid_x1, grid_x2, max_norm_error )
           success = (max_norm_error <= tol)
 
           ! Print test report to terminal on a single line
-          write(*,'(6i10)', advance='no') nx1, nx2, deg1, deg2, bc1, bc2
-          write(*,'(2(e12.2),a8)') tol, max_norm_error, trim( success_to_string( success ))
+          write(*,'(2i10)', advance='no') deg1
+          write(*,'(2a10)', advance='no') bc_to_char( bc1 ), bc_to_char( bc2 )
+          write(*,'(2i10)', advance='no') nx1
+          write(*,'(2e12.2)', advance='no') tol, max_norm_error
+          write(*,'(a8)') trim( success_to_string( success ))
 
           ! Free memory
           call test_facility % free()
@@ -364,6 +462,24 @@ program test_bsplines_2d_new
 contains
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
+  pure function bc_to_char( bc ) result( c )
+    integer, intent(in) :: bc
+    character(len=1) :: c
+
+    select case (bc)
+    case (sll_p_periodic)
+      c = 'P'
+    case (sll_p_hermite)
+      c = 'H'
+    case (sll_p_greville)
+      c = 'G'
+    case default
+      c = '?'
+    end select
+
+  end function bc_to_char
+
+  !-----------------------------------------------------------------------------
   pure function success_to_string( success ) result( str )
     logical, intent(in) :: success
     character(len=4) :: str
