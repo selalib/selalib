@@ -42,15 +42,6 @@ module m_test_bsplines_2d
   !> Working precision
   integer, parameter :: wp = f64
 
-  !> Test report
-  type :: t_test_report
-    character(len=256) :: name
-    real(wp)           :: tol
-    real(wp)           :: error
-    logical            :: success
-  end type t_test_report
-
-
   !> Type for running test
   type :: t_bspline_2d_test_facility
 
@@ -61,7 +52,6 @@ module m_test_bsplines_2d
     integer                                 :: deg2
     integer                                 :: bc1
     integer                                 :: bc2
-    type(t_test_report)                     :: report
 
     type(sll_t_bspline_2d)  :: bspline_2d
     real(wp), allocatable   :: gtau(:,:)  ! Profile values at interp. points
@@ -77,38 +67,17 @@ module m_test_bsplines_2d
 
   contains
 
-    procedure, nopass :: print_header
-    procedure         :: init
-    procedure         :: free
-    procedure         :: evaluate_on_2d_grid
-    procedure         :: evaluate_at_interpolation_points
-    procedure         :: evaluate_grad_on_2d_grid
+    procedure :: init
+    procedure :: free
+    procedure :: evaluate_on_2d_grid
+    procedure :: evaluate_at_interpolation_points
+    procedure :: evaluate_grad_on_2d_grid
 
   end type t_bspline_2d_test_facility
 
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 contains
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-
-  !-----------------------------------------------------------------------------
-  subroutine print_header()
-
-    integer, parameter :: n_tests = 1
-    integer            :: i
-    character(len=6)   :: is
-
-    write(*, '(6a10)', advance='no') &
-      "nx1", "nx2", "degree1", "degree2", "bc1", "bc2"
-
-    do i = 1, n_tests
-      write(is,'(i1)') i
-      write( *,'(a12,a12)', advance='no') &
-        't'//trim(is)//'%error', &
-        't'//trim(is)//'%passed'
-    end do
-    write(*,*)
-
-  end subroutine print_header
 
   !-----------------------------------------------------------------------------
   subroutine init( self, profile_2d, nx1, nx2, deg1, deg2, bc1, bc2 )
@@ -175,8 +144,6 @@ contains
     ! Store number of interpolation points
     nipts1 = size( tau1 )
     nipts2 = size( tau2 )
-!    print *, "nipts1 = ", nipts1
-!    print *, "nipts2 = ", nipts2
 
     ! Evaluate analytical profile at interpolation points
     allocate( self % gtau (nipts1,nipts2) )
