@@ -31,38 +31,53 @@ sll_real64                    :: err1
 sll_int32                     :: i
 sll_int32                     :: j
 sll_int32,  parameter         :: nstep = 1
-sll_real64,  parameter        :: tol = 1.0d-3    ! tolerance for tests
 sll_real64                    :: t0, t1, t2, t3, t4, t5
 sll_int32                     :: ierr
 sll_int32                     :: deg
 logical                       :: passed_test
+sll_real64                    :: tol(9)
 
+! Set tolerances for various spline degrees
+tol(1) = 4e-01_f64
+tol(2) = 1e-02_f64
+tol(3) = 1e-03_f64
+tol(4) = 1e-05_f64
+tol(5) = 1e-07_f64
+tol(6) = 1e-08_f64
+tol(7) = 1e-10_f64
+tol(8) = 1e-11_f64
+tol(9) = 1e-12_f64
+
+! Initialize PASSED/FAILED condition
 passed_test = .true.
 
 print*,'***************************************************************'
 print*,'*** 1D PERIODIC ***'
 print*,'***************************************************************'
-do deg=3,9
-   call test_process_1d(sll_p_periodic,deg, passed_test)
+do deg=1,9
+   call test_process_1d( sll_p_periodic, deg, tol(deg), passed_test)
 end do
+print*,
 print*,'***************************************************************'
 print*,'*** 1D GREVILLE ***'
 print*,'***************************************************************'
-do deg=3,9
-   call test_process_1d(sll_p_greville,deg, passed_test)
+do deg=1,9
+   call test_process_1d( sll_p_greville, deg, tol(deg), passed_test )
 end do
+print*,
 print*,'***************************************************************'
 print*,'*** 1D HERMITE ***'
 print*,'***************************************************************'
-do deg=3,9
-   call test_process_1d(sll_p_hermite,deg,passed_test)
+do deg=1,9
+   call test_process_1d( sll_p_hermite, deg, tol(deg), passed_test )
 end do
-print*,'***************************************************************'
-print*,'*** 1D HERMITE  WITH MIRROR KNOT POINTS***'
-print*,'***************************************************************'
-do deg=3,9
-!   call test_process_1d(sll_p_hermite,deg, passed_test,sll_p_mirror)
-end do
+print*,
+!print*,'***************************************************************'
+!print*,'*** 1D HERMITE  WITH MIRROR KNOT POINTS***'
+!print*,'***************************************************************'
+!do deg=1,9
+!   call test_process_1d( sll_p_hermite, deg, tol(deg), passed_test, sll_p_mirror )
+!end do
 
 if (passed_test) then
    print *, 'PASSED'
@@ -72,14 +87,16 @@ end if
 
 contains
 
-  subroutine test_process_1d(bc_type,deg,passed_test,spline_bc_type)
+  subroutine test_process_1d( bc_type, deg, tol, passed_test, spline_bc_type )
 
-    type(sll_t_bspline_1d) :: bspline_1d
-    sll_int32, intent(in) :: bc_type
-    logical :: passed_test
-    sll_int32, optional :: spline_bc_type
+    sll_int32 , intent(in   )           :: bc_type
+    sll_int32 , intent(in   )           :: deg
+    sll_real64, intent(in   )           :: tol
+    logical   , intent(inout)           :: passed_test
+    sll_int32 , intent(in   ), optional :: spline_bc_type
+
     ! local variables
-    sll_int32  :: deg
+    type(sll_t_bspline_1d) :: bspline_1d
     sll_real64 :: x_min   = 0.0_f64
     sll_real64 :: x_max   = 1.0_f64
 
@@ -133,12 +150,12 @@ contains
     if (bc_type == sll_p_hermite) then
        ! Compute boundary conditions for Hermite case
        bc=0.0_f64
-       if (modulo(deg,2) == 0) then
+       if (modulo(deg,2) == 0) then !------> even degree
           bc(1) = 1.0_f64
           do i=3,deg/2,2
              bc(i)=-4*sll_p_pi**2*bc(i-2)
           end do
-       else
+       else !------------------------------>  odd degree
          if (deg>3) then
            bc(2) = -4*sll_p_pi**2
            do i=4,deg/2,2
@@ -223,16 +240,20 @@ contains
     if (bc_type == sll_p_hermite) then
        ! Compute boundary conditions for Hermite case
        bc=0.0_f64
-       if (modulo(deg,2) == 0) then
-          bc(2) = 2*sll_p_pi
-          do i=4,deg/2,2
+       if (modulo(deg,2) == 0) then !------> even degree
+         if (deg>2) then
+           bc(2) = 2*sll_p_pi
+           do i=4,deg/2,2
              bc(i)=-4*sll_p_pi**2*bc(i-2)
-          end do
-       else
-          bc(1) = 2*sll_p_pi
-          do i=3,deg/2,2
-             bc(i)=-4*sll_p_pi**2*bc(i-2)
-          end do
+           end do
+         end if
+       else !------------------------------>  odd degree
+         if (deg>1) then
+           bc(1) = 2*sll_p_pi
+           do i=3,deg/2,2
+              bc(i)=-4*sll_p_pi**2*bc(i-2)
+           end do
+         end if
        end if
        call sll_s_compute_bspline_1d(bspline_1d, htau, bc, bc)
     else

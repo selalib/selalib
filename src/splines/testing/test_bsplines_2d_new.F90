@@ -171,8 +171,8 @@ program test_bsplines_2d_new
   passed(1) = .true.
 
   ! Cycle over spline degree
-  do deg1 = 2, 9
-    do deg2 = 2, 9
+  do deg1 = 1, 9
+    do deg2 = 1, 9
 
       ! Cycle over all kinds of boundary conditions in x1
       do i1 = 1, size( bc_kinds )
@@ -291,8 +291,8 @@ program test_bsplines_2d_new
   ! Initialize 'PASSED/FAILED' condition
   passed(2) = .true.
 
-  do deg1 = 2, 9
-    do deg2 = 2, 9
+  do deg1 = 1, 9
+    do deg2 = 1, 9
 
       ! Initialize polynomial profile with degree (deg1,deg2)
       call profile_2d_poly % init( deg1, deg2 )
@@ -453,7 +453,7 @@ program test_bsplines_2d_new
   ! Initialize 'PASSED/FAILED' condition
   passed(3) = .true.
 
-  do deg1 = 2, 9
+  do deg1 = 1, 9
 
     ! Use same spline degree along both directions
     deg2 = deg1
@@ -652,6 +652,11 @@ contains
 
     max_error = sll_f_spline_1d_error_bound( dx1, deg1, max_norm1 ) &
               + sll_f_spline_1d_error_bound( dx2, deg2, max_norm2 )
+
+    ! Empirical correction: for linear interpolation increase estimate by 5%
+    if (deg1 == 1 .or. deg2 == 1) then
+      max_error = 1.05_wp * max_error
+    end if
 
   end function error_bound
 
