@@ -49,7 +49,7 @@ program test_bsplines_2d_new
   real(wp) :: tol_diff_x1
   real(wp) :: tol_diff_x2
   logical  :: equiv(3)
-  logical  :: passed
+  logical  :: passed(0:3)
   logical  :: success
   logical  :: success_diff_x1
   logical  :: success_diff_x2
@@ -61,10 +61,6 @@ program test_bsplines_2d_new
   integer  :: j
   integer  :: cos_n1, cos_n2
   real(wp) :: cos_c1, cos_c2
-
-  ! Initialize 'PASSED/FAILED' condition
-  ! TODO: separate 'passed' value for each test and print to terminal
-  passed = .true.
 
   ! ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
   ! TEST 0: Check equivalence between scalar and array methods, and time them
@@ -99,30 +95,30 @@ program test_bsplines_2d_new
   ! Check equivalence between various methods
   call test_facility % check_equivalence_scalar_array_methods( equiv )
 
-  write(*,'(a6,2a10,a10/)') 'method', 't_scalar', 't_array', 'equiv'
+  write(*,'(a7,2a10,a8/)') 'method', 't_scalar', 't_array', 'equiv'
 
-  write(*,'(a6,2es10.2,l8)') 'eval'      , &
+  write(*,'(a7,2es10.2,l6)') 'eval'      , &
     test_facility % time_eval            , &
     test_facility % time_eval_array      , equiv(1)
 
-  write(*,'(a6,2es10.2,l8)') 'diff_x1'   , &
+  write(*,'(a7,2es10.2,l6)') 'diff_x1'   , &
     test_facility % time_eval_diff1      , &
     test_facility % time_eval_diff1_array, equiv(2)
 
-  write(*,'(a6,2es10.2,l8)') 'diff_x2'   , &
+  write(*,'(a7,2es10.2,l6)') 'diff_x2'   , &
     test_facility % time_eval_diff2      , &
     test_facility % time_eval_diff2_array, equiv(3)
 
-  ! Update 'PASSED/FAILED' condition
-  passed = (passed .and. all( equiv ))
+  ! Compute 'PASSED/FAILED' condition
+  passed(0) = all( equiv )
 
   ! ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
   ! TEST 1: Evaluate spline at interpolation points (error should be zero)
   ! ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
   write(*,*)
-  write(*,'(a)') '-----------------------------------------------------------------------'
-  write(*,'(a)') ' TEST 1: evaluate spline at interpolation points (error should be zero)'
-  write(*,'(a)') '-----------------------------------------------------------------------'
+  write(*,'(a)') '------------------------------------------------------------------------'
+  write(*,'(a)') ' TEST 1: evaluate spline at interpolation points (error should be zero) '
+  write(*,'(a)') '------------------------------------------------------------------------'
   write(*,*)
 
   ! Test tolerance: very small!
@@ -139,7 +135,7 @@ program test_bsplines_2d_new
   ! Print constant parameters
   write(*,'(a)') 'Profile: f(x1,x2) = cos( 2*pi*x1 ) * cos( 2*pi*x2 )'
   write(*,*)
-  write(*,'(a,e10.2)')  'Relative error tolerance: tol = ', tol
+  write(*,'(a,es10.1)') 'Relative error tolerance: tol = ', tol
   write(*,'(a,i4)')     'Number of knots in grid : nx1 = ', nx1
   write(*,'(a,i4)')     '                          nx2 = ', nx2
   write(*,*)
@@ -160,7 +156,7 @@ program test_bsplines_2d_new
   write(*,*)
 
   ! Print table header
-  write(*, '(4a10,a12,a10)') "deg1", "deg2", "bc1", "bc2", "error", "passed"
+  write(*, '(4a6,a10,a10)') "deg1", "deg2", "bc1", "bc2", "error", "passed"
 
   ! Initialize profile
   call profile_2d_cos_cos % init()
@@ -170,6 +166,9 @@ program test_bsplines_2d_new
 
   ! Estimate max-norm of profile (needed to compute relative error)
   max_norm_profile = profile_2d_cos_cos % max_norm()
+
+  ! Initialize 'PASSED/FAILED' condition
+  passed(1) = .true.
 
   ! Cycle over spline degree
   do deg1 = 2, 9
@@ -203,15 +202,15 @@ program test_bsplines_2d_new
           success = (max_norm_error <= tol)
 
           ! Print test report to terminal on a single line
-          write(*,'(2i10)', advance='no') deg1, deg2
-          write(*,'(2a10)', advance='no') bc_to_char( bc1 ), bc_to_char( bc2 )
-          write(*,'(e12.2,a8)') max_norm_error, trim( success_to_string( success ))
+          write(*,'(2i6)', advance='no') deg1, deg2
+          write(*,'(2a6)', advance='no') bc_to_char( bc1 ), bc_to_char( bc2 )
+          write(*,'(es10.1,a8)') max_norm_error, trim( success_to_string( success ))
 
           ! Free memory
           call test_facility % free()
 
           ! Update 'PASSED/FAILED' condition
-          passed = (passed .and. success)
+          passed(1) = (passed(1) .and. success)
 
         end do  ! bc2
       end do  ! bc1
@@ -247,9 +246,9 @@ program test_bsplines_2d_new
   grid_dim = [20, 20]
 
   ! Print constant parameters
-  write(*,'(a,e10.2)')  'Relative error tolerance for f     : tol         = ', tol
-  write(*,'(a,e10.2)')  'Relative error tolerance for ∂f/∂x1: tol_diff_x1 = ', tol_diff_x1
-  write(*,'(a,e10.2)')  'Relative error tolerance for ∂f/∂x2: tol_diff_x2 = ', tol_diff_x2
+  write(*,'(a,es10.1)') 'Relative error tolerance for f     : tol         = ', tol
+  write(*,'(a,es10.1)') 'Relative error tolerance for ∂f/∂x1: tol_diff_x1 = ', tol_diff_x1
+  write(*,'(a,es10.1)') 'Relative error tolerance for ∂f/∂x2: tol_diff_x2 = ', tol_diff_x2
   write(*,'(a,i4)')     'Number of knots in grid: nx1 = ', nx1
   write(*,'(a,i4)')     '                         nx2 = ', nx2
   write(*,'(a,i4,a,i4,a)')'Number of evaluation points (uniform grid): [', grid_dim(1), ',', grid_dim(2),']'
@@ -261,10 +260,10 @@ program test_bsplines_2d_new
   write(*,'(a)') '  .  bc2 = boundary conditions in x2 direction [H|G]'
   write(*,*)
   write(*,'(a)') "Output:"
-  write(*,'(a)') '  .  error     = relative max-norm of error on f'
-  write(*,'(a)') '  .  error_dx1 = relative max-norm of error on ∂f/∂x1'
-  write(*,'(a)') '  .  error_dx2 = relative max-norm of error on ∂f/∂x2'
-  write(*,'(a)') '  .  passed    = "OK" if all errors <= tol, "FAIL" otherwise'
+  write(*,'(a)') '  .  err     = relative max-norm of error on f'
+  write(*,'(a)') '  .  err_dx1 = relative max-norm of error on ∂f/∂x1'
+  write(*,'(a)') '  .  err_dx2 = relative max-norm of error on ∂f/∂x2'
+  write(*,'(a)') '  .  passed  = "OK" if all errors <= tol, "FAIL" otherwise'
   write(*,*)
   write(*,'(a)') "Boundary conditions:"
   write(*,'(a)') '  .  H = Hermite'
@@ -272,8 +271,8 @@ program test_bsplines_2d_new
   write(*,*)
 
   ! Print table header
-  write(*, '(4a10,3a12,a10)') "deg1", "deg2", "bc1", "bc2", &
-    "error", "error_dx1", "error_dx2", "passed"
+  write(*, '(4a6,3a10,a10)') "deg1", "deg2", "bc1", "bc2", &
+    "err", "err_dx1", "err_dx2", "passed"
 
   ! Create uniform grid of evaluation points
   call profile_2d_poly % init( 0, 0 )  ! dummy, only need domain size
@@ -288,6 +287,9 @@ program test_bsplines_2d_new
       grid_x2(i1,i2) = pinfo%x2_min + real(i2-1,wp)*dx2
     end do
   end do
+
+  ! Initialize 'PASSED/FAILED' condition
+  passed(2) = .true.
 
   do deg1 = 2, 9
     do deg2 = 2, 9
@@ -335,9 +337,9 @@ program test_bsplines_2d_new
           success = success .and. success_diff_x1 .and. success_diff_x2
 
           ! Print test report to terminal on a single line
-          write(*,'(6i10)'  , advance='no') deg1, deg2
-          write(*,'(2a10)'  , advance='no') bc_to_char( bc1 ), bc_to_char( bc2 )
-          write(*,'(3e12.2)', advance='no') &
+          write(*,'(2i6)'    , advance='no') deg1, deg2
+          write(*,'(2a6)'    , advance='no') bc_to_char( bc1 ), bc_to_char( bc2 )
+          write(*,'(3es10.1)', advance='no') &
             max_norm_error, max_norm_error_diff_x1, max_norm_error_diff_x2
           write(*,'(a8)') trim( success_to_string( success ))
 
@@ -345,7 +347,7 @@ program test_bsplines_2d_new
           call test_facility % free()
 
           ! Update 'PASSED/FAILED' condition
-          passed = (passed .and. success)
+          passed(2) = (passed(2) .and. success)
 
         end do  ! bc2
       end do  ! bc1
@@ -384,10 +386,10 @@ program test_bsplines_2d_new
 
   ! Print constant parameters
   write(*,'(a)') 'Profile: f(x1,x2) = cos( 2*pi * (n1*x1+c1) ) * cos( 2*pi * (n2*x2+c2) )'
-  write(*,'(a,i2)') '  . n1 = ', cos_n1
-  write(*,'(a,i2)') '  . n2 = ', cos_n2
-  write(*,'(a,f17.15)')  '  . c1 = ', cos_c1
-  write(*,'(a,f17.15)')  '  . c2 = ', cos_c2
+  write(*,'(a,i2)'    ) '  . n1 = ', cos_n1
+  write(*,'(a,i2)'    ) '  . n2 = ', cos_n2
+  write(*,'(a,f17.15)') '  . c1 = ', cos_c1
+  write(*,'(a,f17.15)') '  . c2 = ', cos_c2
   write(*,*)
   write(*,'(a,i4,a,i4,a)')'Number of evaluation points (uniform grid): [', grid_dim(1), ',', grid_dim(2),']'
   write(*,*)
@@ -447,6 +449,9 @@ program test_bsplines_2d_new
       grid_x2(i1,i2) = pinfo%x2_min + real(i2-1,wp)*dx2
     end do
   end do
+
+  ! Initialize 'PASSED/FAILED' condition
+  passed(3) = .true.
 
   do deg1 = 2, 9
 
@@ -521,7 +526,7 @@ program test_bsplines_2d_new
           call test_facility % free()
 
           ! Update 'PASSED/FAILED' condition
-          passed = (passed .and. success)
+          passed(3) = (passed(3) .and. success)
 
         end do  ! nx1
         write(*,*)
@@ -538,11 +543,19 @@ program test_bsplines_2d_new
 
   ! ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
 
+  write(*,'(a)') '----------------'
+  write(*,'(a)') 'Test 0: '// success_to_string( passed(0) )
+  write(*,'(a)') 'Test 1: '// success_to_string( passed(1) )
+  write(*,'(a)') 'Test 2: '// success_to_string( passed(2) )
+  write(*,'(a)') 'Test 3: '// success_to_string( passed(3) )
+  write(*,'(a)') '----------------'
+  write(*,*)
+
   ! CTest key
-  if (passed) then
-    write(*,*) "PASSED"
+  if (all( passed )) then
+    write(*,'(a)') "CTEST: PASSED"
   else
-    write(*,*) "FAILED"
+    write(*,'(a)') "CTEST: FAILED"
   end if
 
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
