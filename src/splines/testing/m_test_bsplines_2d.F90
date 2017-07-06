@@ -69,6 +69,7 @@ module m_test_bsplines_2d
 
     procedure :: init
     procedure :: free
+    procedure :: check_equivalence_scalar_array_methods
     procedure :: evaluate_on_2d_grid
     procedure :: evaluate_at_interpolation_points
     procedure :: evaluate_grad_on_2d_grid
@@ -250,6 +251,103 @@ contains
     self % time_eval_diff2_array    = -1.0_wp
 
   end subroutine init
+
+  !-----------------------------------------------------------------------------
+  subroutine check_equivalence_scalar_array_methods( self, equiv )
+
+    class(t_bspline_2d_test_facility), intent(inout) :: self
+    logical                          , intent(  out) :: equiv(3)
+
+    type(t_profile_2d_info) :: info
+    real(wp), allocatable   :: x1(:,:)
+    real(wp), allocatable   :: x2(:,:)
+    real(wp), allocatable   :: y (:,:)
+    real(wp), allocatable   :: ya(:,:)
+    real(wp)                :: r
+    integer                 :: i1, i2
+    type(sll_t_time_mark)   :: t0, t1, t2
+
+    ! Choose size of 2D grid
+    integer , parameter :: n1   = 77
+    integer , parameter :: n2   = 90
+    real(wp), parameter :: npts = real( n1*n2, wp )
+
+    ! Allocate local arrays
+    allocate( x1(n1,n2) )
+    allocate( x2(n1,n2) )
+    allocate( y (n1,n2) )
+    allocate( ya(n1,n2) )
+
+    ! Get info from profile
+    call self % profile_2d % get_info( info )
+
+    ! Generate random grids in x1 and x2
+    do i2 = 1, n2
+      do i1 = 1, n1
+        call random_number( r )
+        x1(i1,i2) = info%x1_min*(1.0_wp-r) + info%x1_max*r
+        x2(i1,i2) = info%x2_min*(1.0_wp-r) + info%x2_max*r
+      end do
+    end do
+
+    ! Compare:
+    !   . sll_f_interpolate_value_2d
+    !   . sll_s_interpolate_array_values_2d
+    call sll_s_set_time_mark( t0 )
+    do i2 = 1, n2
+      do i1 = 1, n1
+        y(i1,i2) = sll_f_interpolate_value_2d( self%bspline_2d, x1(i1,i2), x2(i1,i2) )
+      end do
+    end do
+    call sll_s_set_time_mark( t1 )
+    call sll_s_interpolate_array_values_2d( self%bspline_2d, n1, n2, x1, x2, ya )
+    call sll_s_set_time_mark( t2 )
+
+    self%time_eval       = sll_f_time_elapsed_between( t0, t1 ) / npts
+    self%time_eval_array = sll_f_time_elapsed_between( t1, t2 ) / npts
+    equiv(1) = all( y == ya )
+
+    ! Compare:
+    !   . sll_f_interpolate_derivative_x1_2d
+    !   . sll_s_interpolate_array_derivatives_x1_2d
+    call sll_s_set_time_mark( t0 )
+    do i2 = 1, n2
+      do i1 = 1, n1
+        y(i1,i2) = sll_f_interpolate_derivative_x1_2d( self%bspline_2d, x1(i1,i2), x2(i1,i2) )
+      end do
+    end do
+    call sll_s_set_time_mark( t1 )
+    call sll_s_interpolate_array_derivatives_x1_2d( self%bspline_2d, n1, n2, x1, x2, ya )
+    call sll_s_set_time_mark( t2 )
+
+    self%time_eval_diff1       = sll_f_time_elapsed_between( t0, t1 ) / npts
+    self%time_eval_diff1_array = sll_f_time_elapsed_between( t1, t2 ) / npts
+    equiv(2) = all( y == ya )
+
+    ! Compare:
+    !   . sll_f_interpolate_derivative_x2_2d
+    !   . sll_s_interpolate_array_derivatives_x2_2d
+    call sll_s_set_time_mark( t0 )
+    do i2 = 1, n2
+      do i1 = 1, n1
+        y(i1,i2) = sll_f_interpolate_derivative_x2_2d( self%bspline_2d, x1(i1,i2), x2(i1,i2) )
+      end do
+    end do
+    call sll_s_set_time_mark( t1 )
+    call sll_s_interpolate_array_derivatives_x2_2d( self%bspline_2d, n1, n2, x1, x2, ya )
+    call sll_s_set_time_mark( t2 )
+
+    self%time_eval_diff2       = sll_f_time_elapsed_between( t0, t1 ) / npts
+    self%time_eval_diff2_array = sll_f_time_elapsed_between( t1, t2 ) / npts
+    equiv(3) = all( y == ya )
+
+    ! Deallocate local arrays
+    deallocate( x1 )
+    deallocate( x2 )
+    deallocate( y  )
+    deallocate( ya )
+
+  end subroutine check_equivalence_scalar_array_methods
 
   !-----------------------------------------------------------------------------
   subroutine evaluate_at_interpolation_points( self, max_norm_error )
