@@ -43,6 +43,8 @@ module sll_m_cartesian_meshes
     sll_s_cartesian_mesh_2d_init, &
     sll_t_cartesian_mesh_2d_ptr, &
     sll_t_cartesian_mesh_3d, &
+    sll_s_cartesian_mesh_3d_init, &
+    sll_s_cartesian_mesh_3d_free, &
     sll_t_cartesian_mesh_4d, &
     sll_o_cell, &
     sll_o_cell_margin, &
@@ -65,7 +67,7 @@ module sll_m_cartesian_meshes
      procedure, pass(mesh) :: eta1_node => eta1_node_1d
      procedure, pass(mesh) :: eta1_cell => eta1_cell_1d
      procedure, pass(mesh) :: display   => display_cartesian_mesh_1d
-     procedure, pass(mesh) :: delete    => delete_cartesian_mesh_1d
+     procedure, pass(mesh) :: delete    => sll_s_cartesian_mesh_1d_free
      procedure, pass(mesh) :: eta1_nodes => nodes_cartesian_mesh_1d
      procedure, pass(mesh) :: num_nodes => num_nodes_cartesian_mesh_1d
      procedure, pass(mesh) :: cellnum => cell_cartesian_mesh_1d
@@ -93,7 +95,7 @@ module sll_m_cartesian_meshes
      procedure, pass(mesh) :: eta2_cell_one_arg => eta2_cell_2d_one_arg
      procedure, pass(mesh) :: eta2_cell_two_arg => eta2_cell_2d_two_arg
      procedure, pass(mesh) :: display => display_cartesian_mesh_2d
-     procedure, pass(mesh) :: delete => delete_cartesian_mesh_2d
+     procedure, pass(mesh) :: delete => sll_s_cartesian_mesh_2d_free
   end type sll_t_cartesian_mesh_2d
 
   !> 2d cartesian mesh pointer
@@ -123,7 +125,7 @@ module sll_m_cartesian_meshes
      procedure, pass(mesh) :: eta2_cell => eta2_cell_3d
      procedure, pass(mesh) :: eta3_cell => eta3_cell_3d
      procedure, pass(mesh) :: display => display_cartesian_mesh_3d
-     procedure, pass(mesh) :: delete => delete_cartesian_mesh_3d
+     procedure, pass(mesh) :: delete => sll_s_cartesian_mesh_3d_free
   end type sll_t_cartesian_mesh_3d
 
   !> 4D cartesian mesh
@@ -152,7 +154,7 @@ module sll_m_cartesian_meshes
      procedure, pass(mesh) :: eta2_cell => eta2_cell_4d
      procedure, pass(mesh) :: eta3_cell => eta3_cell_4d
      procedure, pass(mesh) :: display => display_cartesian_mesh_4d
-     procedure, pass(mesh) :: delete => delete_cartesian_mesh_4d
+     procedure, pass(mesh) :: delete => sll_s_cartesian_mesh_4d_free
   end type sll_t_cartesian_mesh_4d
 
 
@@ -169,17 +171,17 @@ module sll_m_cartesian_meshes
    contains
      procedure :: init => sll_s_cartesian_mesh_6d_init
      procedure :: display => display_cartesian_mesh_6d
-     procedure :: delete => delete_cartesian_mesh_6d
+     procedure :: delete => sll_s_cartesian_mesh_6d_free
   end type sll_t_cartesian_mesh_6d
 
 
   !> @brief Deallocates memory for the cartesian mesh. 
   !> @param mesh pointer to a sll_cartesian_mesh_*d object.
   interface sll_o_delete
-     module procedure delete_cartesian_mesh_1d
-     module procedure delete_cartesian_mesh_2d
-     module procedure delete_cartesian_mesh_3d
-     module procedure delete_cartesian_mesh_4d
+     module procedure sll_s_cartesian_mesh_1d_free
+     module procedure sll_s_cartesian_mesh_2d_free
+     module procedure sll_s_cartesian_mesh_3d_free
+     module procedure sll_s_cartesian_mesh_4d_free
   end interface sll_o_delete
 
 
@@ -403,8 +405,8 @@ end if
     SLL_ALLOCATE(eta2(num_cells1+1,num_cells2+1), ierr)
     do j=1,num_cells2+1
       do i=1,num_cells1+1
-        eta1(i,j) = eta1_min+(i-1)*delta_eta1
-        eta2(i,j) = eta2_min+(j-1)*delta_eta2
+        eta1(i,j) = eta1_min+real(i-1,f64)*delta_eta1
+        eta2(i,j) = eta2_min+real(j-1,f64)*delta_eta2
       enddo    
     enddo    
 
@@ -640,12 +642,64 @@ end if
     sll_real64, optional, intent(in) :: eta2_max
     sll_real64, optional, intent(in) :: eta3_min
     sll_real64, optional, intent(in) :: eta3_max
-    !sll_real64 :: delta1
-    !sll_real64 :: delta2
-    !sll_real64 :: delta3
     sll_int32 :: ierr
 
     SLL_ALLOCATE(m, ierr)
+    call sll_s_cartesian_mesh_3d_init( m, &
+       num_cells1, &
+       num_cells2, &
+       num_cells3, &
+       eta1_min, &
+       eta1_max, &
+       eta2_min, &
+       eta2_max, &
+       eta3_min, &
+       eta3_max ) 
+
+
+  end function sll_f_new_cartesian_mesh_3d
+
+  !> @brief allocates the memory space for a new 3D cartesian mesh,
+  !> initializes it with the given arguments and returns the object.
+  !> @param num_cells1 integer denoting the number of cells, direction 1.
+  !> @param num_cells2 integer denoting the number of cells, direction 2.
+  !> @param num_cells3 integer denoting the number of cells, direction 3.
+  !> @param eta1_min optional double precision value which represents the 
+  !> minimum value of the eta1 parameter in the cartesian mesh, direction 1.
+  !> @param eta1_max optional double precision value which represents the 
+  !> maximum value of the eta1 parameter in the cartesian mesh, direction 1.
+  !> @param eta2_min optional double precision value which represents the 
+  !> minimum value of the eta1 parameter in the cartesian mesh, direction 2.
+  !> @param eta2_max optional double precision value which represents the 
+  !> maximum value of the eta1 parameter in the cartesian mesh, direction 2.
+  !> @param eta3_min optional double precision value which represents the 
+  !> minimum value of the eta1 parameter in the cartesian mesh, direction 3.
+  !> @param eta3_max optional double precision value which represents the 
+  !> maximum value of the eta1 parameter in the cartesian mesh, direction 3.
+  !> @return m the object representing a 3d grid.
+  subroutine sll_s_cartesian_mesh_3d_init( m, &
+       num_cells1, &
+       num_cells2, &
+       num_cells3, &
+       eta1_min, &
+       eta1_max, &
+       eta2_min, &
+       eta2_max, &
+       eta3_min, &
+       eta3_max )
+
+    type(sll_t_cartesian_mesh_3d), intent(out) :: m
+    sll_int32, intent(in)  :: num_cells1
+    sll_int32, intent(in)  :: num_cells2
+    sll_int32, intent(in)  :: num_cells3
+    sll_real64, optional, intent(in) :: eta1_min
+    sll_real64, optional, intent(in) :: eta1_max
+    sll_real64, optional, intent(in) :: eta2_min
+    sll_real64, optional, intent(in) :: eta2_max
+    sll_real64, optional, intent(in) :: eta3_min
+    sll_real64, optional, intent(in) :: eta3_max
+    sll_int32 :: ierr
+
     m%num_cells1 = num_cells1
     m%num_cells2 = num_cells2
     m%num_cells3 = num_cells3
@@ -672,7 +726,7 @@ end if
        print*,'because eta3_max <= eta3_min'
     end if
 
-  end function sll_f_new_cartesian_mesh_3d
+  end subroutine sll_s_cartesian_mesh_3d_init
 
 function eta1_node_3d(mesh, i1, i2, i3) result(res)
     class(sll_t_cartesian_mesh_3d), intent(in) :: mesh
@@ -1112,58 +1166,58 @@ function eta1_node_3d(mesh, i1, i2, i3) result(res)
   !> @brief deallocates memory for the 1D cartesian mesh. Recommended access 
   !> through the generic interface delete( mesh ).
   !> @param mesh pointer to a sll_t_cartesian_mesh_1d object.
-  subroutine delete_cartesian_mesh_1d( mesh )
+  subroutine sll_s_cartesian_mesh_1d_free( mesh )
     class(sll_t_cartesian_mesh_1d), intent(inout) :: mesh
     ! sll_int32 :: ierr
     ! if(.not. associated(mesh))then
-    !    print *, 'delete_cartesian_mesh_1d, ERROR: passed argument is not ', &
+    !    print *, 'sll_s_cartesian_mesh_1d_free, ERROR: passed argument is not ', &
     !         'associated. Crash imminent...'
     ! end if
     ! SLL_DEALLOCATE(mesh, ierr)
     SLL_ASSERT(mesh%num_cells>0)
-  end subroutine delete_cartesian_mesh_1d
+  end subroutine sll_s_cartesian_mesh_1d_free
 
   !> @brief deallocates memory for the 2D cartesian mesh. Recommended access 
   !> through the generic interface delete( mesh ).
   !> @param mesh pointer to a sll_t_cartesian_mesh_2d object.
-  subroutine delete_cartesian_mesh_2d( mesh )
+  subroutine sll_s_cartesian_mesh_2d_free( mesh )
     class(sll_t_cartesian_mesh_2d), intent(inout) :: mesh
     ! sll_int32 :: ierr
     ! if(.not. associated(mesh))then
-    !    print *, 'delete_cartesian_mesh_2d, ERROR: passed argument is not ', &
+    !    print *, 'sll_s_cartesian_mesh_2d_free, ERROR: passed argument is not ', &
     !         'associated. Crash imminent...'
     ! end if
     ! SLL_DEALLOCATE(mesh, ierr)
     SLL_ASSERT(mesh%num_cells1>0)
-  end subroutine delete_cartesian_mesh_2d
+  end subroutine sll_s_cartesian_mesh_2d_free
 
   !> @brief deallocates memory for the 3D cartesian mesh. Recommended access 
   !> through the generic interface delete( mesh ).
   !> @param mesh pointer to a sll_t_cartesian_mesh_3d object.
-  subroutine delete_cartesian_mesh_3d( mesh )
+  subroutine sll_s_cartesian_mesh_3d_free( mesh )
     class(sll_t_cartesian_mesh_3d), intent(inout) :: mesh
     ! sll_int32 :: ierr
     ! if(.not. associated(mesh))then
-    !    print *, 'delete_cartesian_mesh_3d, ERROR: passed argument is not ', &
+    !    print *, 'sll_s_cartesian_mesh_3d_free, ERROR: passed argument is not ', &
     !         'associated. Crash imminent...'
     ! end if
     ! SLL_DEALLOCATE(mesh, ierr)
     SLL_ASSERT(mesh%num_cells1>0)
-  end subroutine delete_cartesian_mesh_3d
+  end subroutine sll_s_cartesian_mesh_3d_free
 
   !> @brief deallocates memory for the 4D cartesian mesh. Recommended access 
   !> through the generic interface delete( mesh ).
   !> @param mesh pointer to a sll_t_cartesian_mesh_4d object.
-  subroutine delete_cartesian_mesh_4d( mesh )
+  subroutine sll_s_cartesian_mesh_4d_free( mesh )
     class(sll_t_cartesian_mesh_4d), intent(inout) :: mesh
     ! sll_int32 :: ierr
     ! if(.not. associated(mesh))then
-    !    print *, 'delete_cartesian_mesh_4d, ERROR: passed argument is not ', &
+    !    print *, 'sll_s_cartesian_mesh_4d_free, ERROR: passed argument is not ', &
     !         'associated. Crash imminent...'
     ! end if
     ! SLL_DEALLOCATE(mesh, ierr)
     SLL_ASSERT(mesh%num_cells1>0)
-  end subroutine delete_cartesian_mesh_4d
+  end subroutine sll_s_cartesian_mesh_4d_free
 
   
   !> @brief Returns all nodes for the 1D cartesian mesh
@@ -1175,7 +1229,7 @@ function eta1_node_3d(mesh, i1, i2, i3) result(res)
     sll_int32  :: nknots
     nknots = mesh%num_cells +1
     do idx=1, nknots
-         nodes(idx)=mesh%eta_min + (idx-1)*mesh%delta_eta
+         nodes(idx)=mesh%eta_min + real(idx-1,f64)*mesh%delta_eta
     enddo
     nodes(1)=mesh%eta_min
     nodes(nknots)=mesh%eta_max
@@ -1204,7 +1258,7 @@ function eta1_node_3d(mesh, i1, i2, i3) result(res)
     sll_int32, intent(in) :: cell
     sll_real64, dimension(2) :: margin
 
-    margin(1)=mesh%eta_min + (cell-1)*mesh%delta_eta
+    margin(1)=mesh%eta_min + real(cell-1,f64)*mesh%delta_eta
     margin(2)=mesh%eta_min + cell*mesh%delta_eta
     !!SLL_ASSERT(margin(2)<=mesh%eta_max)
   endfunction
@@ -1302,7 +1356,7 @@ function eta1_node_3d(mesh, i1, i2, i3) result(res)
     this%eta_min = eta_min
     this%eta_max = eta_max
 
-    this%delta_eta = (eta_max-eta_min)/num_cells
+    this%delta_eta = (eta_max-eta_min)/real(num_cells,f64)
     
     this%volume_eta123 = product(this%delta_eta(1:3))
     this%volume_eta456 = product(this%delta_eta(4:6))
@@ -1348,11 +1402,11 @@ function eta1_node_3d(mesh, i1, i2, i3) result(res)
 
   !> @brief destructor of 6D cartesian mesh
   !> @param [inout] mesh sll_cartesian_mesh_6d object
-  subroutine delete_cartesian_mesh_6d(this)
+  subroutine sll_s_cartesian_mesh_6d_free(this)
     class(sll_t_cartesian_mesh_6d), intent(inout) :: this
     
 
-  end subroutine delete_cartesian_mesh_6d
+  end subroutine sll_s_cartesian_mesh_6d_free
 
   
   
