@@ -204,7 +204,7 @@ subroutine sll_s_triangular_mesh_2d_init_from_file( m, maafil )
   character(len=*), intent(in)   :: maafil
 
   call sll_s_read_from_file(m, maafil)
-  call compute_aires( m )
+  call compute_areas( m )
 
 end subroutine sll_s_triangular_mesh_2d_init_from_file
 
@@ -382,7 +382,7 @@ subroutine sll_s_triangular_mesh_2d_init_from_square( m, &
                                       eta2_min, &
                                       eta2_max)
 
-  call compute_aires( m )
+  call compute_areas( m )
 
 end subroutine sll_s_triangular_mesh_2d_init_from_square
 
