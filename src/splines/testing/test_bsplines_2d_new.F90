@@ -48,6 +48,7 @@ program test_bsplines_2d_new
   real(wp) :: tol
   real(wp) :: tol_diff_x1
   real(wp) :: tol_diff_x2
+  logical  :: equiv(3)
   logical  :: passed
   logical  :: success
   logical  :: success_diff_x1
@@ -64,6 +65,56 @@ program test_bsplines_2d_new
   ! Initialize 'PASSED/FAILED' condition
   ! TODO: separate 'passed' value for each test and print to terminal
   passed = .true.
+
+  ! ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
+  ! TEST 0: Check equivalence between scalar and array methods, and time them
+  ! ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
+  write(*,*)
+  write(*,'(a)') '---------------------------------------------------------------------------'
+  write(*,'(a)') ' TEST 0: Check equivalence between scalar and array methods, and time them '
+  write(*,'(a)') '---------------------------------------------------------------------------'
+  write(*,*)
+
+  ! Initialize profile: polynomial with some order
+  call profile_2d_poly % init( 13, 12 )
+
+  ! Choose some parameters
+  nx1  = 19
+  nx2  = 23
+  deg1 = 5
+  deg2 = 8
+  bc1  = sll_p_greville
+  bc2  = sll_p_hermite
+
+  ! Initialize test facility
+  call test_facility % init( &
+    profile_2d = profile_2d_poly, &
+    nx1        = nx1 , &
+    nx2        = nx2 , &
+    deg1       = deg1, &
+    deg2       = deg2, &
+    bc1        = bc1 , &
+    bc2        = bc2  )
+
+  ! Check equivalence between various methods
+  call test_facility % check_equivalence_scalar_array_methods( equiv )
+
+  write(*,'(a6,2a10,a10/)') 'method', 't_scalar', 't_array', 'equiv'
+
+  write(*,'(a6,2es10.2,l8)') 'eval'      , &
+    test_facility % time_eval            , &
+    test_facility % time_eval_array      , equiv(1)
+
+  write(*,'(a6,2es10.2,l8)') 'diff_x1'   , &
+    test_facility % time_eval_diff1      , &
+    test_facility % time_eval_diff1_array, equiv(2)
+
+  write(*,'(a6,2es10.2,l8)') 'diff_x2'   , &
+    test_facility % time_eval_diff2      , &
+    test_facility % time_eval_diff2_array, equiv(3)
+
+  ! Update 'PASSED/FAILED' condition
+  passed = (passed .and. all( equiv ))
 
   ! ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
   ! TEST 1: Evaluate spline at interpolation points (error should be zero)
