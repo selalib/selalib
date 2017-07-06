@@ -197,6 +197,13 @@ contains
       end do
     end select
 
+    ! Special case: linear spline
+    ! No need for matrix assembly
+    if (self%deg == 1) then
+      allocate( self%q(0,0) )
+      return
+    end if
+
     ! Assemble banded matrix (B_j(tau(i))) for spline interpolation
     select case (bc_type)
     case (sll_p_periodic)
@@ -401,6 +408,13 @@ contains
     sll_int32 :: k
     sll_int32 :: iflag
 
+    ! Special case: linear spline
+    if (self%deg == 1) then
+      self%bcoef(:) = gtau(1:self%n)
+      return
+    end if
+
+    ! Degree > 1: boundary conditions matter
     select case (self%bc_type)
     case(sll_p_periodic)
        self%bcoef = gtau(1:self%n)
