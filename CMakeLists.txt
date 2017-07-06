@@ -1,8 +1,8 @@
 IF(DEFINED CMAKE_BUILD_TYPE)
-  SET(CMAKE_BUILD_TYPE ${CMAKE_BUILD_TYPE} 
+  SET(CMAKE_BUILD_TYPE ${CMAKE_BUILD_TYPE}
     CACHE STRING "Choose the type of build, options are: Debug Release.")
 ELSE()
-  SET(CMAKE_BUILD_TYPE Debug 
+  SET(CMAKE_BUILD_TYPE Debug
     CACHE STRING "Choose the type of build, options are: Debug Release.")
 ENDIF()
 
@@ -16,12 +16,12 @@ PROJECT(SeLaLib)
 
 ENABLE_LANGUAGE(Fortran)
 
-IF (${CMAKE_SOURCE_DIR} MATCHES ${CMAKE_BINARY_DIR})                            
-  MESSAGE(SEND_ERROR)                                                           
-  MESSAGE("-- ERROR: in-tree-build not allowed.")                               
+IF (${CMAKE_SOURCE_DIR} MATCHES ${CMAKE_BINARY_DIR})
+  MESSAGE(SEND_ERROR)
+  MESSAGE("-- ERROR: in-tree-build not allowed.")
   MESSAGE("-- TRY: rm -f CMakeCache.txt; mkdir -p build; cd build; cmake ..; make")
-  RETURN()                                                                      
-ENDIF()                               
+  RETURN()
+ENDIF()
 
 OPTION(BUILD_HDF5             "Download and build the HDF5 library"    OFF)
 OPTION(CLAPP                  "Use SELALIB within the CLAPP framework" OFF )
@@ -69,13 +69,15 @@ MARK_AS_ADVANCED(CLEAR PYTHON_EXECUTABLE)
 SET(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
 
 # Add new directory to find the FIND<PACKAGE>.cmake files. CMAKE_SOURCE_DIR is
-# the directory where the project sources are located. CMAKE_MODULE_PATH is 
+# the directory where the project sources are located. CMAKE_MODULE_PATH is
 # the list of directories in which to search for CMake modules.
 SET (CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake ${CMAKE_MODULE_PATH} )
 
 IF(CMAKE_BUILD_TYPE MATCHES Debug)
   ADD_DEFINITIONS(-DDEBUG)
 ENDIF()
+
+INCLUDE(GitVersionString)
 
 # Define folder to be deleted by make clean
 SET_DIRECTORY_PROPERTIES(PROPERTIES ADDITIONAL_MAKE_CLEAN_FILES ${CMAKE_BINARY_DIR}/modules/)
@@ -108,6 +110,7 @@ IF(MPI_ENABLED)
   INCLUDE(SLURMConfig)
 ENDIF()
 
+INCLUDE(CompilerConfigString)
 INCLUDE(FortranConfig)
 INCLUDE(HDF5Config)
 INCLUDE(FFTConfig)
@@ -136,13 +139,14 @@ MESSAGE(STATUS "#### CMAKE_BUILD_TYPE:${CMAKE_BUILD_TYPE}")
 MESSAGE(STATUS "#### Fortran_COMPILER_NAME:${Fortran_COMPILER_NAME}")
 MESSAGE(STATUS "#### CMAKE_Fortran_COMPILER:${CMAKE_Fortran_COMPILER}")
 MESSAGE(STATUS "#### Fortran FLAGS ")
-IF(CMAKE_BUILD_TYPE MATCHES "Debug") 
+IF(CMAKE_BUILD_TYPE MATCHES "Debug")
    MESSAGE(STATUS "#### ${CMAKE_Fortran_FLAGS_DEBUG}")
 ELSE()
    MESSAGE(STATUS "#### ${CMAKE_Fortran_FLAGS_RELEASE}")
 ENDIF()
 MESSAGE(STATUS "####")
 MESSAGE(STATUS "############################################################")
+
 
 ADD_CUSTOM_TARGET( clean_outputs
    COMMAND find . -name *.mtv -delete
@@ -159,7 +163,7 @@ ADD_SUBDIRECTORY( package )
 # Simulations
 IF( BUILD_SIMULATIONS )
   SET( INSTALL_DIR_SIMS ${INSTALL_DIR} )
-  SET(CMAKE_INSTALL_PREFIX_SIMS ${INSTALL_DIR_SIMS} CACHE PATH 
+  SET(CMAKE_INSTALL_PREFIX_SIMS ${INSTALL_DIR_SIMS} CACHE PATH
     "simulations install dir")
   ADD_SUBDIRECTORY( simulations )
 ENDIF( BUILD_SIMULATIONS )
