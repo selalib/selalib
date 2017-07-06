@@ -292,9 +292,10 @@ contains
     sll_real64 :: vpar_point, vpar_min, vpar_max, E_eta3, alpha4
     sll_real64, dimension(:), pointer :: f1d_vpar_tmp
 
-    SLL_ASSERT( size(fdistribu%val4d_seqx3x4,1).eq.size(vlasov%elec_field_eta1_3d%val3d_seqx3,1) )
-    SLL_ASSERT( size(fdistribu%val4d_seqx3x4,2).eq.size(vlasov%elec_field_eta1_3d%val3d_seqx3,2) )
-    SLL_ASSERT( size(fdistribu%val4d_seqx3x4,3).eq.size(vlasov%elec_field_eta1_3d%val3d_seqx3,3) )
+    !PN elec_field_eta1_3d is not a member of vlasov
+    !SLL_ASSERT( size(fdistribu%val4d_seqx3x4,1).eq.size(vlasov%elec_field_eta1_3d%val3d_seqx3,1) )
+    !SLL_ASSERT( size(fdistribu%val4d_seqx3x4,2).eq.size(vlasov%elec_field_eta1_3d%val3d_seqx3,2) )
+    !SLL_ASSERT( size(fdistribu%val4d_seqx3x4,3).eq.size(vlasov%elec_field_eta1_3d%val3d_seqx3,3) )
 
     Neta3    = size( mesh4d%eta3_grid )
     Nvpar    = size( mesh4d%vpar_grid )
