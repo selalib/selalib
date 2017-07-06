@@ -24,6 +24,7 @@ module sll_m_hexagonal_meshes
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_memory.h"
 #include "sll_assert.h"
+#include "sll_errors.h"
 #include "sll_working_precision.h"
 
   use sll_m_constants, only: &
@@ -41,7 +42,7 @@ module sll_m_hexagonal_meshes
   public :: &
     sll_f_cart_to_hex1, &
     sll_f_cart_to_hex2, &
-    sll_f_cells_to_origin, &s
+    sll_f_cells_to_origin, &
     sll_f_change_elements_notation, &
     sll_o_delete, &
     sll_s_delete_hex_mesh_2d, &
