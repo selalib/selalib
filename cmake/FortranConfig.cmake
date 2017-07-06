@@ -75,6 +75,7 @@ ELSEIF (CMAKE_Fortran_COMPILER_ID MATCHES GNU)
     message(STATUS "GNU fortran version OK for the Fortran 2003 standard")
     SET(FULL_FORTRAN2003 TRUE)
   endif()
+  #SET(CMAKE_Fortran_FLAGS_DEBUG "-qextname=flush -qxlf2003=polymorphic")
 
 ELSE()
 
@@ -83,6 +84,11 @@ ELSE()
 ENDIF()
 
 MESSAGE(STATUS "Fortran ${Fortran_COMPILER_NAME}-${Fortran_COMPILER_VERSION}")
+
+# --- enable fully user-defineable compiler flags
+IF(FORCE_Fortran_FLAGS_RELEASE)
+  SET(CMAKE_Fortran_FLAGS_RELEASE "${FORCE_Fortran_FLAGS_RELEASE}")
+ENDIF()
 
 SET(ADDITIONAL_COMPILER_FLAGS "" CACHE STRING "The user can define additional compiler flags here")
 SET(CMAKE_Fortran_FLAGS_DEBUG   "${CMAKE_Fortran_FLAGS_DEBUG} ${ADDITIONAL_COMPILER_FLAGS}")
@@ -101,5 +107,4 @@ ENDIF(FULL_FORTRAN2003)
 MARK_AS_ADVANCED(CLEAR CMAKE_Fortran_COMPILER)
 MARK_AS_ADVANCED(CLEAR CMAKE_C_COMPILER)
 MARK_AS_ADVANCED(CLEAR CMAKE_CXX_COMPILER)
-
 
