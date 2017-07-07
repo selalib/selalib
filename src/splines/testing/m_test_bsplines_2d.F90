@@ -131,8 +131,10 @@ contains
       info % x2_min, &
       info % x1_max, &
       info % x2_max, &
-      self % bc1, &
-      self % bc2 )
+      self % bc1, &  ! BC @ x1_min
+      self % bc2, &  ! BC @ x2_min
+      self % bc1, &  ! BC @ x1_max
+      self % bc2 )   ! BC @ x2_max
 
     call sll_s_set_time_mark( t1 )
 

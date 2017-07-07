@@ -160,12 +160,13 @@ if (present(bc_l) .and. present(bc_r)) then
 
 else
 
-   call sll_s_bspline_1d_init(interpolator%bspline, &
-                                          num_pts,  &
-                                          spl_deg,  &
-                                          eta_min,  &
-                                          eta_max,  &
-                                          bc_type_l)
+   call sll_s_bspline_1d_init( interpolator%bspline,  &
+                                            num_pts,  &
+                                            spl_deg,  &
+                                            eta_min,  &
+                                            eta_max,  &
+                                            bc_type_l,&
+                                            bc_type_r)
 end if
 
 end subroutine initialize_bs1d_interpolator
