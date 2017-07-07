@@ -30,23 +30,24 @@ use sll_m_bspline_1d, only: &
   sll_t_bspline_1d,         &
   sll_s_bspline_1d_init,    &
   sll_s_bspline_1d_free,    &
-  sll_s_compute_bspline_1d
+  sll_s_bspline_1d_compute_interpolant
 
 implicit none
 
-public ::                         &
-     sll_t_bspline_2d,            &
-     sll_s_bspline_2d_init,       &
-     sll_s_bspline_2d_free,       &
-     sll_s_compute_bspline_2d,                  &
-     sll_f_interpolate_value_2d,                &
-     sll_s_interpolate_array_values_2d,         &
-     sll_f_interpolate_derivative_x1_2d,        &
-     sll_f_interpolate_derivative_x2_2d,        &
-     sll_s_interpolate_array_derivatives_x1_2d, &
-     sll_s_interpolate_array_derivatives_x2_2d
+public :: &
+  sll_t_bspline_2d,                     &
+  sll_s_bspline_2d_init,                &
+  sll_s_bspline_2d_free,                &
+  sll_s_bspline_2d_compute_interpolant, &
+  sll_f_bspline_2d_eval,                & ! scalar functions for evaluation
+  sll_f_bspline_2d_eval_deriv_x1,       &
+  sll_f_bspline_2d_eval_deriv_x2,       &
+  sll_s_bspline_2d_eval_array,          & ! vector subroutines for evaluation
+  sll_s_bspline_2d_eval_array_deriv_x1, &
+  sll_s_bspline_2d_eval_array_deriv_x2
 
 private
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 !> @brief
 !> basic type for two-dimensional B-spline data.
@@ -61,9 +62,9 @@ type :: sll_t_bspline_2d
 
 end type sll_t_bspline_2d
 
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 contains
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 !> @brief Initialises a 2D spline interpolation object.
 !> @param[in] nx1 Number of points where the data to be interpolated are
@@ -158,7 +159,7 @@ subroutine sll_s_bspline_2d_init( &
 end subroutine sll_s_bspline_2d_init
 
 
-subroutine sll_s_compute_bspline_2d( self, gtau, &
+subroutine sll_s_bspline_2d_compute_interpolant( self, gtau, &
   val1_min, val1_max, val2_min, val2_max, val_corners )
 
   type(sll_t_bspline_2d), intent(inout)           :: self
@@ -202,10 +203,10 @@ subroutine sll_s_compute_bspline_2d( self, gtau, &
       if (present(val2_min)) then
         do j2 = 1, ncond2
           if( present(val_corners)) then
-            call sll_s_compute_bspline_1d( self%bs1, val2_min(j2,:), &
+            call sll_s_bspline_1d_compute_interpolant( self%bs1, val2_min(j2,:), &
               val_corners(:,j2,1), val_corners(:,j2,2))
           else
-            call sll_s_compute_bspline_1d( self%bs1, val2_min(j2,:) )
+            call sll_s_bspline_1d_compute_interpolant( self%bs1, val2_min(j2,:) )
           end if
           self%bwork(j2,:) = self%bs1%bcoef(:)
         end do
@@ -217,10 +218,10 @@ subroutine sll_s_compute_bspline_2d( self, gtau, &
       if (present(val2_max)) then
         do j2 = 1, ncond2
           if (present(val_corners)) then
-            call sll_s_compute_bspline_1d( self%bs1, val2_max(j2,:), &
+            call sll_s_bspline_1d_compute_interpolant( self%bs1, val2_max(j2,:), &
             val_corners(:,j2,3), val_corners(:,j2,4))
           else
-            call sll_s_compute_bspline_1d( self%bs1, val2_max(j2,:) )
+            call sll_s_bspline_1d_compute_interpolant( self%bs1, val2_max(j2,:) )
           end if
           self%bwork(n2-ncond2+j2,:) = self%bs1%bcoef(:)
         end do
@@ -234,7 +235,7 @@ subroutine sll_s_compute_bspline_2d( self, gtau, &
       ! boundary conditions at x2_min
       if (present(val2_min)) then
         do j2 = 1, ncond2
-          call sll_s_compute_bspline_1d( self%bs1, val2_min(j2,:) )
+          call sll_s_bspline_1d_compute_interpolant( self%bs1, val2_min(j2,:) )
           self%bwork(j2,:) = self%bs1%bcoef(:)
         end do
       else  ! set needed boundary values to 0
@@ -244,7 +245,7 @@ subroutine sll_s_compute_bspline_2d( self, gtau, &
       ! boundary conditions at x2_max
       if (present(val2_max)) then
         do j2 = 1, ncond2
-          call sll_s_compute_bspline_1d( self%bs1, val2_max(j2,:) )
+          call sll_s_bspline_1d_compute_interpolant( self%bs1, val2_max(j2,:) )
           self%bwork(n2-ncond2+j2,:) = self%bs1%bcoef(:)
         end do
       else ! set needed boundary values to 0
@@ -257,10 +258,10 @@ subroutine sll_s_compute_bspline_2d( self, gtau, &
   ! Interior points
   do i2 = 1, n2-2*ncond2
     if (present(val1_min) .and. present(val1_max)) then
-      call sll_s_compute_bspline_1d( self%bs1, gtau(:,i2), &
+      call sll_s_bspline_1d_compute_interpolant( self%bs1, gtau(:,i2), &
         val1_min(:,i2), val1_max(:,i2) )
     else
-      call sll_s_compute_bspline_1d( self%bs1, gtau(:,i2) )
+      call sll_s_bspline_1d_compute_interpolant( self%bs1, gtau(:,i2) )
     end if
     self%bwork(i2+ncond2,:) = self%bs1%bcoef(:)
   end do
@@ -272,7 +273,7 @@ subroutine sll_s_compute_bspline_2d( self, gtau, &
 
     if (present(val2_min) .and. present(val2_max)) then
       do i1 = 1, n1
-        call sll_s_compute_bspline_1d( self%bs2, &
+        call sll_s_bspline_1d_compute_interpolant( self%bs2, &
           self%bwork(ncond2+1:n2-ncond2,i1), &
           self%bwork(1:ncond2,i1), &
           self%bwork(n2-ncond2+1:n2,i1) )
@@ -280,7 +281,7 @@ subroutine sll_s_compute_bspline_2d( self, gtau, &
       end do
     else
       do i1 = 1, n1
-        call sll_s_compute_bspline_1d( self%bs2, self%bwork(ncond2+1:n2-ncond2,i1) )
+        call sll_s_bspline_1d_compute_interpolant( self%bs2, self%bwork(ncond2+1:n2-ncond2,i1) )
         self%bcoef(i1,:) = self%bs2%bcoef(:)
       end do
     end if
@@ -288,16 +289,16 @@ subroutine sll_s_compute_bspline_2d( self, gtau, &
   else
 
     do i1 = 1, n1
-      call sll_s_compute_bspline_1d( self%bs2, self%bwork(:,i1) )
+      call sll_s_bspline_1d_compute_interpolant( self%bs2, self%bwork(:,i1) )
       self%bcoef(i1,:) = self%bs2%bcoef(:)
     end do
 
   end if
 
-end subroutine sll_s_compute_bspline_2d
+end subroutine sll_s_bspline_2d_compute_interpolant
 
 
-subroutine sll_s_interpolate_array_values_2d(self, n1, n2, x1, x2, y )
+subroutine sll_s_bspline_2d_eval_array(self, n1, n2, x1, x2, y )
 
 type(sll_t_bspline_2d)  :: self
 sll_int32               :: n1
@@ -344,9 +345,9 @@ end do
 
 deallocate(work)
 
-end subroutine sll_s_interpolate_array_values_2d
+end subroutine sll_s_bspline_2d_eval_array
 
-function sll_f_interpolate_value_2d(self, xi, xj ) result (y)
+function sll_f_bspline_2d_eval(self, xi, xj ) result (y)
 
 type(sll_t_bspline_2d)  :: self
 sll_real64, intent(in)  :: xi
@@ -389,9 +390,9 @@ enddo
 
 deallocate(work)
 
-end function sll_f_interpolate_value_2d
+end function sll_f_bspline_2d_eval
 
-function sll_f_interpolate_derivative_x1_2d(self, x1, x2 ) result(y)
+function sll_f_bspline_2d_eval_deriv_x1(self, x1, x2 ) result(y)
 
 type(sll_t_bspline_2d) :: self
 sll_real64, intent(in) :: x1
@@ -429,11 +430,11 @@ enddo
 
 deallocate(work)
 
-end function sll_f_interpolate_derivative_x1_2d
+end function sll_f_bspline_2d_eval_deriv_x1
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
-function sll_f_interpolate_derivative_x2_2d(self, x1, x2 ) result(y)
+function sll_f_bspline_2d_eval_deriv_x2(self, x1, x2 ) result(y)
 
 type(sll_t_bspline_2d) :: self
 sll_real64, intent(in) :: x1
@@ -471,7 +472,7 @@ enddo
 
 deallocate(work)
 
-end function sll_f_interpolate_derivative_x2_2d
+end function sll_f_bspline_2d_eval_deriv_x2
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
@@ -491,7 +492,7 @@ end subroutine sll_s_bspline_2d_free
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
-subroutine sll_s_interpolate_array_derivatives_x1_2d( self, n1, n2, x1, x2, y)
+subroutine sll_s_bspline_2d_eval_array_deriv_x1( self, n1, n2, x1, x2, y)
 
 type(sll_t_bspline_2d) :: self
 sll_int32              :: n1
@@ -542,9 +543,9 @@ end do
 
 deallocate(work)
 
-end subroutine sll_s_interpolate_array_derivatives_x1_2d
+end subroutine sll_s_bspline_2d_eval_array_deriv_x1
 
-subroutine sll_s_interpolate_array_derivatives_x2_2d( self, n1, n2, x1, x2, y)
+subroutine sll_s_bspline_2d_eval_array_deriv_x2( self, n1, n2, x1, x2, y)
 
 type(sll_t_bspline_2d) :: self
 sll_int32              :: n1
@@ -594,6 +595,6 @@ end do
 
 deallocate(work)
 
-end subroutine sll_s_interpolate_array_derivatives_x2_2d
+end subroutine sll_s_bspline_2d_eval_array_deriv_x2
 
 end module sll_m_bspline_2d

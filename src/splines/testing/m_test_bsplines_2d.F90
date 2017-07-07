@@ -14,17 +14,17 @@ module m_test_bsplines_2d
        sll_p_hermite, &
        sll_p_greville
 
-  use sll_m_bspline_2d, only: &
-     sll_t_bspline_2d,        &
-     sll_s_bspline_2d_init,   &
-     sll_s_bspline_2d_free,   &
-     sll_s_compute_bspline_2d,                  &
-     sll_f_interpolate_value_2d,                &
-     sll_s_interpolate_array_values_2d,         &
-     sll_f_interpolate_derivative_x1_2d,        &
-     sll_f_interpolate_derivative_x2_2d,        &
-     sll_s_interpolate_array_derivatives_x1_2d, &
-     sll_s_interpolate_array_derivatives_x2_2d
+  use sll_m_bspline_2d, only:             &
+    sll_t_bspline_2d,                     &
+    sll_s_bspline_2d_init,                &
+    sll_s_bspline_2d_free,                &
+    sll_s_bspline_2d_compute_interpolant, &
+    sll_f_bspline_2d_eval,                &
+    sll_f_bspline_2d_eval_deriv_x1,       &
+    sll_f_bspline_2d_eval_deriv_x2,       &
+    sll_s_bspline_2d_eval_array,          &
+    sll_s_bspline_2d_eval_array_deriv_x1, &
+    sll_s_bspline_2d_eval_array_deriv_x2
 
   use sll_m_timer, only: &
     sll_t_time_mark, &
@@ -202,21 +202,21 @@ contains
     ! Hermite - other
     if (self%bc1 == sll_p_hermite .and. self%bc2 /= sll_p_hermite) then
 
-      call sll_s_compute_bspline_2d( self % bspline_2d, self % gtau, &
+      call sll_s_bspline_2d_compute_interpolant( self % bspline_2d, self % gtau, &
         val1_min = val1_min, &
         val1_max = val1_max )
 
     ! other - Hermite
     else if (self%bc1 /= sll_p_hermite .and. self%bc2 == sll_p_hermite) then
 
-      call sll_s_compute_bspline_2d( self % bspline_2d, self % gtau, &
+      call sll_s_bspline_2d_compute_interpolant( self % bspline_2d, self % gtau, &
         val2_min = val2_min, &
         val2_max = val2_max )
 
     ! Hermite - Hermite
     else if (self%bc1 == sll_p_hermite .and. self%bc2 == sll_p_hermite) then
 
-      call sll_s_compute_bspline_2d( self % bspline_2d, self % gtau, &
+      call sll_s_bspline_2d_compute_interpolant( self % bspline_2d, self % gtau, &
         val1_min    = val1_min, &
         val1_max    = val1_max, &
         val2_min    = val2_min, &
@@ -226,7 +226,7 @@ contains
     ! other - other
     else
 
-      call sll_s_compute_bspline_2d( self % bspline_2d, self % gtau )
+      call sll_s_bspline_2d_compute_interpolant( self % bspline_2d, self % gtau )
 
     end if
 
@@ -291,16 +291,16 @@ contains
     end do
 
     ! Compare:
-    !   . sll_f_interpolate_value_2d
-    !   . sll_s_interpolate_array_values_2d
+    !   . sll_f_bspline_2d_eval
+    !   . sll_s_bspline_2d_eval_array
     call sll_s_set_time_mark( t0 )
     do i2 = 1, n2
       do i1 = 1, n1
-        y(i1,i2) = sll_f_interpolate_value_2d( self%bspline_2d, x1(i1,i2), x2(i1,i2) )
+        y(i1,i2) = sll_f_bspline_2d_eval( self%bspline_2d, x1(i1,i2), x2(i1,i2) )
       end do
     end do
     call sll_s_set_time_mark( t1 )
-    call sll_s_interpolate_array_values_2d( self%bspline_2d, n1, n2, x1, x2, ya )
+    call sll_s_bspline_2d_eval_array( self%bspline_2d, n1, n2, x1, x2, ya )
     call sll_s_set_time_mark( t2 )
 
     self%time_eval       = sll_f_time_elapsed_between( t0, t1 ) / npts
@@ -308,16 +308,16 @@ contains
     equiv(1) = all( y == ya )
 
     ! Compare:
-    !   . sll_f_interpolate_derivative_x1_2d
-    !   . sll_s_interpolate_array_derivatives_x1_2d
+    !   . sll_f_bspline_2d_eval_deriv_x1
+    !   . sll_s_bspline_2d_eval_array_deriv_x1
     call sll_s_set_time_mark( t0 )
     do i2 = 1, n2
       do i1 = 1, n1
-        y(i1,i2) = sll_f_interpolate_derivative_x1_2d( self%bspline_2d, x1(i1,i2), x2(i1,i2) )
+        y(i1,i2) = sll_f_bspline_2d_eval_deriv_x1( self%bspline_2d, x1(i1,i2), x2(i1,i2) )
       end do
     end do
     call sll_s_set_time_mark( t1 )
-    call sll_s_interpolate_array_derivatives_x1_2d( self%bspline_2d, n1, n2, x1, x2, ya )
+    call sll_s_bspline_2d_eval_array_deriv_x1( self%bspline_2d, n1, n2, x1, x2, ya )
     call sll_s_set_time_mark( t2 )
 
     self%time_eval_diff1       = sll_f_time_elapsed_between( t0, t1 ) / npts
@@ -325,16 +325,16 @@ contains
     equiv(2) = all( y == ya )
 
     ! Compare:
-    !   . sll_f_interpolate_derivative_x2_2d
-    !   . sll_s_interpolate_array_derivatives_x2_2d
+    !   . sll_f_bspline_2d_eval_deriv_x2
+    !   . sll_s_bspline_2d_eval_array_deriv_x2
     call sll_s_set_time_mark( t0 )
     do i2 = 1, n2
       do i1 = 1, n1
-        y(i1,i2) = sll_f_interpolate_derivative_x2_2d( self%bspline_2d, x1(i1,i2), x2(i1,i2) )
+        y(i1,i2) = sll_f_bspline_2d_eval_deriv_x2( self%bspline_2d, x1(i1,i2), x2(i1,i2) )
       end do
     end do
     call sll_s_set_time_mark( t1 )
-    call sll_s_interpolate_array_derivatives_x2_2d( self%bspline_2d, n1, n2, x1, x2, ya )
+    call sll_s_bspline_2d_eval_array_deriv_x2( self%bspline_2d, n1, n2, x1, x2, ya )
     call sll_s_set_time_mark( t2 )
 
     self%time_eval_diff2       = sll_f_time_elapsed_between( t0, t1 ) / npts
@@ -370,7 +370,7 @@ contains
     do i2 = 1, size( tau2 )
       do i1 = 1, size( tau1 )
         error = self % gtau(i1,i2) &
-              - sll_f_interpolate_value_2d( self % bspline_2d, tau1(i1), tau2(i2) )
+              - sll_f_bspline_2d_eval( self % bspline_2d, tau1(i1), tau2(i2) )
         max_norm_error = max( max_norm_error, abs( error ) )
       end do
     end do
@@ -402,7 +402,7 @@ contains
     call sll_s_set_time_mark( t0 )
 
     ! Evaluate 2D spline on given grid
-    call sll_s_interpolate_array_values_2d( self%bspline_2d, n1, n2, x1, x2, y )
+    call sll_s_bspline_2d_eval_array( self%bspline_2d, n1, n2, x1, x2, y )
 
     call sll_s_set_time_mark( t1 )
     self % time_eval_array = sll_f_time_elapsed_between(t0,t1)/real(n1*n2,wp)
@@ -452,7 +452,7 @@ contains
     !----------------------------------------------------
     call sll_s_set_time_mark( t0 )
 
-    call sll_s_interpolate_array_derivatives_x1_2d( self%bspline_2d, n1, n2, x1, x2, y )
+    call sll_s_bspline_2d_eval_array_deriv_x1( self%bspline_2d, n1, n2, x1, x2, y )
 
     call sll_s_set_time_mark( t1 )
     self % time_eval_diff1_array = sll_f_time_elapsed_between(t0,t1)/real(n1*n2,wp)
@@ -469,7 +469,7 @@ contains
     !----------------------------------------------------
     call sll_s_set_time_mark( t0 )
 
-    call sll_s_interpolate_array_derivatives_x2_2d( self%bspline_2d, n1, n2, x1, x2, y )
+    call sll_s_bspline_2d_eval_array_deriv_x2( self%bspline_2d, n1, n2, x1, x2, y )
 
     call sll_s_set_time_mark( t1 )
     self % time_eval_diff2_array = sll_f_time_elapsed_between(t0,t1)/real(n1*n2,wp)
