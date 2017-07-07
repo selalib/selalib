@@ -29,15 +29,15 @@ use schur_complement
 
 implicit none
 
-public ::                                      &
-     sll_t_bspline_1d,                         &
-     sll_s_bspline_1d_init,                    &
-     sll_s_bspline_1d_free,                    &
-     sll_s_compute_bspline_1d,                 &
-     sll_f_interpolate_value_1d,               &
-     sll_s_interpolate_array_values_1d,        &
-     sll_f_interpolate_derivative_1d,          &
-     sll_s_interpolate_array_derivatives_1d
+public :: &
+  sll_t_bspline_1d,                     &
+  sll_s_bspline_1d_init,                &
+  sll_s_bspline_1d_free,                &
+  sll_s_bspline_1d_compute_interpolant, &
+  sll_f_bspline_1d_eval,                & ! scalar functions for evaluation
+  sll_f_bspline_1d_eval_deriv,          &
+  sll_s_bspline_1d_eval_array,          & ! vector subroutines for evaluation
+  sll_s_bspline_1d_eval_array_deriv
 
 private
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -64,9 +64,9 @@ type :: sll_t_bspline_1d
 
 end type sll_t_bspline_1d
 
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 contains
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 !> @brief Constructor for sll_t_bspline_1d object
 !> @param[in] num_points Number of points where the data to be
@@ -397,7 +397,7 @@ contains
   !> @param[in] val_min (optional) array containing boundary conditions at x1_min
   !> @param[in] val_max (optional) array containing boundary conditions at x1_max
   !>
-  subroutine sll_s_compute_bspline_1d(self, gtau, val_min, val_max)
+  subroutine sll_s_bspline_1d_compute_interpolant(self, gtau, val_min, val_max)
 
     type(sll_t_bspline_1d) :: self
     sll_real64, intent(in) :: gtau(:)
@@ -441,7 +441,7 @@ contains
        call dgbtrs('N',self%n,k,k,1,self%q,3*k+1,self%ipiv,self%bcoef, self%n, iflag)
     end select
 
-  end subroutine sll_s_compute_bspline_1d
+  end subroutine sll_s_bspline_1d_compute_interpolant
 
 !> @brief returns the value of the image of an abscissae,
 !> The spline coefficients
@@ -451,8 +451,8 @@ contains
 !> @param[out] y output double-precision element containing the
 !> results of the interpolation.
 !> @param[inout] spline the spline object pointer, duly initialized and
-!> already operated on by the sll_s_compute_bspline_1d() subroutine.
-  function sll_f_interpolate_value_1d( self, x) result(y)
+!> already operated on by the sll_s_bspline_1d_compute_interpolant() subroutine.
+  function sll_f_bspline_1d_eval( self, x) result(y)
 
     type(sll_t_bspline_1d)  :: self
     sll_real64, intent(in)  :: x
@@ -471,7 +471,7 @@ contains
        y = y + self%values(j)*self%bcoef(ib)
     enddo
 
-  end function sll_f_interpolate_value_1d
+  end function sll_f_bspline_1d_eval
 
 !> @brief returns the values of the images of a collection of
 !> abscissae, represented by a 1D array in another output array.
@@ -483,8 +483,8 @@ contains
 !> @param[in] n the number of elements of the input array which are to be
 !> interpolated.
 !> @param[inout] spline the spline object pointer, duly initialized and
-!> already operated on by the sll_s_compute_bspline_1d() subroutine.
-subroutine sll_s_interpolate_array_values_1d( self, n, x, y)
+!> already operated on by the sll_s_bspline_1d_compute_interpolant() subroutine.
+subroutine sll_s_bspline_1d_eval_array( self, n, x, y)
 
   type(sll_t_bspline_1d)  :: self
   sll_int32,  intent(in)  :: n
@@ -511,15 +511,15 @@ subroutine sll_s_interpolate_array_values_1d( self, n, x, y)
      y(i) = val
   end do
 
-end subroutine sll_s_interpolate_array_values_1d
+end subroutine sll_s_bspline_1d_eval_array
 
 !> @brief returns the values of the derivatives evaluated at a point.
 !> The spline coefficients used are stored in the spline object.
 !> @param[inout] self the spline object pointer, duly initialized and
-!> already operated on by the sll_s_compute_bspline_1d() subroutine.
+!> already operated on by the sll_s_bspline_1d_compute_interpolant() subroutine.
 !> @param[in] x  abscissa to be interpolated.
 !> @param[out] y  result of the interpolation.
-function sll_f_interpolate_derivative_1d( self, x) result(y)
+function sll_f_bspline_1d_eval_deriv( self, x) result(y)
 
   type(sll_t_bspline_1d) :: self
   sll_real64, intent(in) :: x
@@ -538,7 +538,7 @@ function sll_f_interpolate_derivative_1d( self, x) result(y)
      y = y + self%values(j)*self%bcoef(ib)
   enddo
 
-end function sll_f_interpolate_derivative_1d
+end function sll_f_bspline_1d_eval_deriv
 
 
 !> @brief returns the values of the derivatives evaluated at a
@@ -552,8 +552,8 @@ end function sll_f_interpolate_derivative_1d
 !> @param[in] n the number of elements of the input array which are to be
 !> interpolated.
 !> @param[inout] spline the spline object pointer, duly initialized and
-!> already operated on by the sll_s_compute_bspline_1d() subroutine.
-subroutine sll_s_interpolate_array_derivatives_1d( self, n, x, y)
+!> already operated on by the sll_s_bspline_1d_compute_interpolant() subroutine.
+subroutine sll_s_bspline_1d_eval_array_deriv( self, n, x, y)
 
   type(sll_t_bspline_1d)  :: self
   sll_int32,  intent(in)  :: n
@@ -580,7 +580,7 @@ subroutine sll_s_interpolate_array_derivatives_1d( self, n, x, y)
      y(i) = val
   end do
 
-end subroutine sll_s_interpolate_array_derivatives_1d
+end subroutine sll_s_bspline_1d_eval_array_deriv
 
 !> @brief Destructor. Frees all pointers of object
 !> @param[inout] self object to be freed

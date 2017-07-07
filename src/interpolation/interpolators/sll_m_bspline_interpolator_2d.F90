@@ -31,8 +31,8 @@ module sll_m_bspline_interpolator_2d
   sll_p_periodic
 
   use sll_m_bspline_2d, only: &
-  sll_s_compute_bspline_2d, &
-  sll_f_interpolate_value_2d, &
+  sll_s_bspline_2d_compute_interpolant, &
+  sll_f_bspline_2d_eval, &
   sll_t_bspline_2d, &
   sll_s_bspline_2d_init
 
@@ -197,7 +197,7 @@ contains
     if (present(size_eta1_coords)) print*, '#Warning size_eta1_coords not used'
     if (present(size_eta2_coords)) print*, '#Warning size_eta2_coords not used'
 
-    call sll_s_compute_bspline_2d( interpolator%spline, data_array )
+    call sll_s_bspline_2d_compute_interpolant( interpolator%spline, data_array )
 
   end subroutine
 
@@ -210,7 +210,7 @@ contains
     sll_real64 :: val
 
     val = 0.0_f64
-    !val = sll_f_interpolate_value_2d( interpolator%spline, eta1, eta2, 0, 0 )
+    !val = sll_f_bspline_2d_eval( interpolator%spline, eta1, eta2, 0, 0 )
 
   end function
 
@@ -223,7 +223,7 @@ contains
     sll_real64 :: val
 
     val = 0.0_f64
-    !val = sll_f_interpolate_value_2d( interpolator%spline, eta1, eta2, 1, 0 )
+    !val = sll_f_bspline_2d_eval( interpolator%spline, eta1, eta2, 1, 0 )
 
   end function
 
@@ -236,7 +236,7 @@ contains
     sll_real64 :: val
 
     val = 0.0_f64
-    !val = sll_f_interpolate_value_2d( interpolator%spline, eta1, eta2, 0, 1 )
+    !val = sll_f_bspline_2d_eval( interpolator%spline, eta1, eta2, 0, 1 )
 
   end function
 
@@ -259,7 +259,7 @@ contains
     sll_int32 :: i
     sll_int32 :: j
 
-    call sll_s_compute_bspline_2d( this%spline, data_in )
+    call sll_s_bspline_2d_compute_interpolant( this%spline, data_in )
 
     do j = 1, num_points2
       do i = 1, num_points1
@@ -303,7 +303,7 @@ contains
   delta_eta1 = this%delta_eta1
   delta_eta2 = this%delta_eta2
 
-  call sll_s_compute_bspline_2d( this%spline, data_in )
+  call sll_s_bspline_2d_compute_interpolant( this%spline, data_in )
 
   if(this%bc_type1 == sll_p_periodic .and. &
      this%bc_type2 == sll_p_periodic ) then

@@ -192,25 +192,25 @@ if (bc_type == sll_p_hermite) then
       bc_corners(k,i,4) = bc(k)*bc(i)
     end do
   end do
-  call sll_s_compute_bspline_2d(bspline_2d, gtau, &
+  call sll_s_bspline_2d_compute_interpolant(bspline_2d, gtau, &
   bc1_min, bc1_max, bc2_min, bc2_max, bc_corners)
 else
-  call sll_s_compute_bspline_2d(bspline_2d, gtau)
+  call sll_s_bspline_2d_compute_interpolant(bspline_2d, gtau)
 end if
 
 call cpu_time(t1)
 
 ! evaluate interpolation error at mesh points and print out
-call sll_s_interpolate_array_values_2d(bspline_2d, n1, n2, x1, x2, y)
+call sll_s_bspline_2d_eval_array(bspline_2d, n1, n2, x1, x2, y)
 
 err1 = maxval(abs(y-cos(2*pi*x1)*cos(2*pi*x2)))
 if (err1 > tol) then
-  print*,'-------> Test failed in sll_f_interpolate_value_2d'
+  print*,'-------> Test failed in sll_f_bspline_2d_eval'
   passed_test = .false.
 end if
-print*, " sll_f_interpolate_value_2d: average error =             ", &
+print*, " sll_f_bspline_2d_eval: average error =             ", &
      sum(abs(y-cos(2*pi*x1)*cos(2*pi*x2)))/real(n1*n2,f64)
-print*, " sll_f_interpolate_value_2d: maximum error =             ", &
+print*, " sll_f_bspline_2d_eval: maximum error =             ", &
      maxval(abs(y-cos(2*pi*x1)*cos(2*pi*x2)))
 
 !if (.not. passed_test) stop
@@ -219,16 +219,16 @@ call cpu_time(t2)
 
 !.......
 do j = 1,nstep
-  call sll_s_interpolate_array_values_2d( bspline_2d, n1, n2, x1, x2, y)
+  call sll_s_bspline_2d_eval_array( bspline_2d, n1, n2, x1, x2, y)
 end do
 err1 = maxval(abs(y-cos(2*pi*x1)*cos(2*pi*x2)))
 if (err1 > tol) then
-  print*,'-------> Test failed in sll_s_interpolate_array_values_2d'
+  print*,'-------> Test failed in sll_s_bspline_2d_eval_array'
   passed_test = .false.
 end if
-print*, " sll_s_interpolate_array_values_2d: average error =      ", &
+print*, " sll_s_bspline_2d_eval_array: average error =      ", &
     sum(abs(y-cos(2*pi*x1)*cos(2*pi*x2)))/real(n1*n2,f64)
-print*, " sll_s_interpolate_array_values_2d: maximum error =      ", &
+print*, " sll_s_bspline_2d_eval_array: maximum error =      ", &
     maxval(abs(y-cos(2*pi*x1)*cos(2*pi*x2)))
 
 !if (.not. passed_test) stop
@@ -237,17 +237,17 @@ call cpu_time(t3)
 !......
 do j = 1,n2
   do i = 1,n1
-    y(i,j) = sll_f_interpolate_derivative_x1_2d( bspline_2d, x1(i,j), x2(i,j))
+    y(i,j) = sll_f_bspline_2d_eval_deriv_x1( bspline_2d, x1(i,j), x2(i,j))
   end do
 end do
 err1 = maxval(abs(y+2*pi*sin(2*pi*x1)*cos(2*pi*x2)))
 if (err1 > tol) then
-  print*,'-------> Test failed in sll_f_interpolate_derivative_x1_2d'
+  print*,'-------> Test failed in sll_f_bspline_2d_eval_deriv_x1'
   passed_test = .false.
 end if
-print*, " sll_f_interpolate_derivative_x1_2d: average error =        ", &
+print*, " sll_f_bspline_2d_eval_deriv_x1: average error =        ", &
      sum(abs(y+2*pi*sin(2*pi*x1)*cos(2*pi*x2)))/real(n1*n2,f64)
-print*, " sll_f_interpolate_derivative_x1_2d: maximum error =        ", &
+print*, " sll_f_bspline_2d_eval_deriv_x1: maximum error =        ", &
      maxval(abs(y+2*pi*sin(2*pi*x1)*cos(2*pi*x2)))
 
 !if (.not. passed_test) stop
@@ -256,17 +256,17 @@ call cpu_time(t4)
 !......
 do j = 1,n2
   do i = 1,n1
-    y(i,j) = sll_f_interpolate_derivative_x2_2d( bspline_2d, x1(i,j), x2(i,j))
+    y(i,j) = sll_f_bspline_2d_eval_deriv_x2( bspline_2d, x1(i,j), x2(i,j))
   end do
 end do
 err1 = maxval(abs(y+2*pi*sin(2*pi*x2)*cos(2*pi*x1)))
 if (err1 > tol) then
-  print*,'-------> Test failed in sll_f_interpolate_derivative_x2_2d'
+  print*,'-------> Test failed in sll_f_bspline_2d_eval_deriv_x2'
   passed_test = .false.
 end if
-print*, " sll_f_interpolate_derivative_x2_2d: average error =        ", &
+print*, " sll_f_bspline_2d_eval_deriv_x2: average error =        ", &
      sum(abs(y+2*pi*sin(2*pi*x2)*cos(2*pi*x1)))/real(n1*n2,f64)
-print*, " sll_f_interpolate_derivative_x2_2d: maximum error =        ", &
+print*, " sll_f_bspline_2d_eval_deriv_x2: maximum error =        ", &
      maxval(abs(y+2*pi*sin(2*pi*x2)*cos(2*pi*x1)))
 
 !if (.not. passed_test) stop
@@ -274,16 +274,16 @@ call cpu_time(t5)
 
 !......
 do j = 1,nstep
-  call sll_s_interpolate_array_derivatives_x1_2d( bspline_2d, n1, n2, x1, x2, y)
+  call sll_s_bspline_2d_eval_array_deriv_x1( bspline_2d, n1, n2, x1, x2, y)
 end do
 err1 = maxval(abs(y+2*pi*sin(2*pi*x1)*cos(2*pi*x2)))
 if (err1 > tol) then
-  print*,'-------> Test failed in sll_s_interpolate_array_derivatives_x1_2d'
+  print*,'-------> Test failed in sll_s_bspline_2d_eval_array_deriv_x1'
   passed_test = .false.
 end if
-print*, " sll_s_interpolate_array_derivatives_x1_2d: average error = ", &
+print*, " sll_s_bspline_2d_eval_array_deriv_x1: average error = ", &
     sum(abs(y+2*pi*sin(2*pi*x1)*cos(2*pi*x2)))/real(n1*n2,f64)
-print*, " sll_s_interpolate_array_derivatives_x1_2d: maximum error = ", &
+print*, " sll_s_bspline_2d_eval_array_deriv_x1: maximum error = ", &
     maxval(abs(y+2*pi*sin(2*pi*x1)*cos(2*pi*x2)))
 
 !if (.not. passed_test) stop
@@ -291,16 +291,16 @@ call cpu_time(t6)
 
 !......
 do j = 1,nstep
-  call sll_s_interpolate_array_derivatives_x2_2d( bspline_2d, n1, n2, x1, x2, y)
+  call sll_s_bspline_2d_eval_array_deriv_x2( bspline_2d, n1, n2, x1, x2, y)
 end do
 err1 = maxval(abs(y+2*pi*sin(2*pi*x2)*cos(2*pi*x1)))
 if (err1 > tol) then
-  print*,'-------> Test failed in sll_s_interpolate_array_derivatives_x2_2d'
+  print*,'-------> Test failed in sll_s_bspline_2d_eval_array_deriv_x2'
   passed_test = .false.
 end if
-print*, " sll_s_interpolate_array_derivatives_x2_2d: average error = ", &
+print*, " sll_s_bspline_2d_eval_array_deriv_x2: average error = ", &
     sum(abs(y+2*pi*sin(2*pi*x2)*cos(2*pi*x1)))/real(n1*n2,f64)
-print*, " sll_s_interpolate_array_derivatives_x2_2d: maximum error = ", &
+print*, " sll_s_bspline_2d_eval_array_deriv_x2: maximum error = ", &
     maxval(abs(y+2*pi*sin(2*pi*x2)*cos(2*pi*x1)))
 
 !if (.not. passed_test) stop
@@ -387,10 +387,10 @@ if (bc_type == sll_p_hermite) then
       bc_corners(k,i,4) = bc(k)*bc(i)
     end do
   end do
-  call sll_s_compute_bspline_2d(bspline_2d, htau, &
+  call sll_s_bspline_2d_compute_interpolant(bspline_2d, htau, &
     bc1_min, bc1_max, bc2_min, bc2_max, bc_corners)
 else
-  call sll_s_compute_bspline_2d(bspline_2d, htau)
+  call sll_s_bspline_2d_compute_interpolant(bspline_2d, htau)
 end if
 !print*,'bc2_max', bc2_max(1,:)
 !call printout(taux,tauy,bspline_2d%bwork)
@@ -398,9 +398,9 @@ end if
 
 do j = 1,n2
   do i = 1,n1
-    y(i,j) = sll_f_interpolate_value_2d( bspline_2d, xx(i,j), yy(i,j))
+    y(i,j) = sll_f_bspline_2d_eval( bspline_2d, xx(i,j), yy(i,j))
     write(30,*) x1(i,j), x2(i,j), &
-      sll_f_interpolate_value_2d( bspline_2d, x1(i,j), x2(i,j)) - &
+      sll_f_bspline_2d_eval( bspline_2d, x1(i,j), x2(i,j)) - &
       sin(2*pi*x1(i,j))*sin(2*pi*x2(i,j))
     write(40,*) xx(i,j), yy(i,j), y(i,j)
   end do
@@ -411,12 +411,12 @@ close(30)
 close(40)
 err1 = maxval(abs(y-sin(2*pi*xx)*sin(2*pi*yy)))
 if (err1 > tol) then
-  print*,'-------> Test failed in sll_f_interpolate_value_2d'
+  print*,'-------> Test failed in sll_f_bspline_2d_eval'
   passed_test = .false.
 end if
-print*, " sll_f_interpolate_value_2d: average error =             ", &
+print*, " sll_f_bspline_2d_eval: average error =             ", &
      sum(abs(y-sin(2*pi*xx)*sin(2*pi*yy)))/real(n1*n2,f64)
-print*, " sll_f_interpolate_value_2d: maximum error =             ", &
+print*, " sll_f_bspline_2d_eval: maximum error =             ", &
      maxval(abs(y-sin(2*pi*xx)*sin(2*pi*yy)))
 
 !if (.not. passed_test) stop
@@ -425,16 +425,16 @@ call cpu_time(t2)
 
 !.......
 do j = 1,nstep
-  call sll_s_interpolate_array_values_2d( bspline_2d, n1, n2, xx, yy, y)
+  call sll_s_bspline_2d_eval_array( bspline_2d, n1, n2, xx, yy, y)
 end do
 err1 = maxval(abs(y-sin(2*pi*xx)*sin(2*pi*yy)))
 if (err1 > tol) then
-  print*,'-------> Test failed in sll_s_interpolate_array_values_2d'
+  print*,'-------> Test failed in sll_s_bspline_2d_eval_array'
   passed_test = .false.
 end if
-print*, " sll_s_interpolate_array_values_2d: average error =      ", &
+print*, " sll_s_bspline_2d_eval_array: average error =      ", &
     sum(abs(y-sin(2*pi*xx)*sin(2*pi*yy)))/real(n1*n2,f64)
-print*, " sll_s_interpolate_array_values_2d: maximum error =      ", &
+print*, " sll_s_bspline_2d_eval_array: maximum error =      ", &
      maxval(abs(y-sin(2*pi*xx)*sin(2*pi*yy)))
 !if (.not. passed_test) stop
 
@@ -443,18 +443,18 @@ call cpu_time(t3)
 !......
 do j = 1,n2
   do i = 1,n1
-    y(i,j) = sll_f_interpolate_derivative_x1_2d( bspline_2d, xx(i,j), yy(i,j))
+    y(i,j) = sll_f_bspline_2d_eval_deriv_x1( bspline_2d, xx(i,j), yy(i,j))
   end do
 end do
 err1 = maxval(abs(y-2*pi*cos(2*pi*xx)*sin(2*pi*yy)))
 print*, 'maxloc', maxloc(abs(y-2*pi*cos(2*pi*xx)*sin(2*pi*yy)))
 if (err1 > tol) then
-  print*,'-------> Test failed in sll_f_interpolate_derivative_x1_2d'
+  print*,'-------> Test failed in sll_f_bspline_2d_eval_deriv_x1'
   passed_test = .false.
 end if
-print*, " sll_f_interpolate_derivative_x1_2d: average error =        ", &
+print*, " sll_f_bspline_2d_eval_deriv_x1: average error =        ", &
      sum(abs(y-2*pi*cos(2*pi*xx)*sin(2*pi*yy)))/real(n1*n2,f64)
-print*, " sll_f_interpolate_derivative_x1_2d: maximum error =        ", &
+print*, " sll_f_bspline_2d_eval_deriv_x1: maximum error =        ", &
      maxval(abs(y-2*pi*cos(2*pi*xx)*sin(2*pi*yy)))
 
 !if (.not. passed_test) stop
@@ -463,17 +463,17 @@ call cpu_time(t4)
 !......
 do j = 1,n2
   do i = 1,n1
-    y(i,j) = sll_f_interpolate_derivative_x2_2d( bspline_2d, xx(i,j), yy(i,j))
+    y(i,j) = sll_f_bspline_2d_eval_deriv_x2( bspline_2d, xx(i,j), yy(i,j))
   end do
 end do
 err1 = maxval(abs(y-2*pi*cos(2*pi*yy)*sin(2*pi*xx)))
 if (err1 > tol) then
-  print*,'-------> Test failed in sll_f_interpolate_derivative_x2_2d'
+  print*,'-------> Test failed in sll_f_bspline_2d_eval_deriv_x2'
   passed_test = .false.
 end if
-print*, " sll_f_interpolate_derivative_x2_2d: average error =        ", &
+print*, " sll_f_bspline_2d_eval_deriv_x2: average error =        ", &
      sum(abs(y-2*pi*cos(2*pi*yy)*sin(2*pi*xx)))/real(n1*n2,f64)
-print*, " sll_f_interpolate_derivative_x2_2d: maximum error =        ", &
+print*, " sll_f_bspline_2d_eval_deriv_x2: maximum error =        ", &
      maxval(abs(y-2*pi*cos(2*pi*yy)*sin(2*pi*xx)))
 !if (.not. passed_test) stop
 
@@ -481,16 +481,16 @@ call cpu_time(t5)
 
 !......
 do j = 1,nstep
-  call sll_s_interpolate_array_derivatives_x1_2d( bspline_2d, n1, n2, xx, yy, y)
+  call sll_s_bspline_2d_eval_array_deriv_x1( bspline_2d, n1, n2, xx, yy, y)
 end do
 err1 = maxval(abs(y-2*pi*cos(2*pi*xx)*sin(2*pi*yy)))
 if (err1 > tol) then
-  print*,'-------> Test failed in sll_s_interpolate_array_derivatives_x1_2d'
+  print*,'-------> Test failed in sll_s_bspline_2d_eval_array_deriv_x1'
   passed_test = .false.
 end if
-print*, " sll_s_interpolate_array_derivatives_x1_2d: average error = ", &
+print*, " sll_s_bspline_2d_eval_array_deriv_x1: average error = ", &
      sum(abs(y-2*pi*cos(2*pi*xx)*sin(2*pi*yy)))/real(n1*n2,f64)
-print*, " sll_s_interpolate_array_derivatives_x1_2d: maximum error = ", &
+print*, " sll_s_bspline_2d_eval_array_deriv_x1: maximum error = ", &
      maxval(abs(y-2*pi*cos(2*pi*xx)*sin(2*pi*yy)))
 
 !if (.not. passed_test) stop
@@ -498,16 +498,16 @@ call cpu_time(t6)
 
 !......
 do j = 1,nstep
-  call sll_s_interpolate_array_derivatives_x2_2d( bspline_2d, n1, n2, xx, yy, y)
+  call sll_s_bspline_2d_eval_array_deriv_x2( bspline_2d, n1, n2, xx, yy, y)
 end do
 err1 = maxval(abs(y-2*pi*cos(2*pi*yy)*sin(2*pi*xx)))
 if (err1 > tol) then
-  print*,'-------> Test failed in sll_s_interpolate_array_derivatives_x2_2d'
+  print*,'-------> Test failed in sll_s_bspline_2d_eval_array_deriv_x2'
   passed_test = .false.
 end if
-print*, " sll_s_interpolate_array_derivatives_x2_2d: average error = ", &
+print*, " sll_s_bspline_2d_eval_array_deriv_x2: average error = ", &
      sum(abs(y-2*pi*cos(2*pi*yy)*sin(2*pi*xx)))/real(n1*n2,f64)
-print*, " sll_s_interpolate_array_derivatives_x2_2d: maximum error = ", &
+print*, " sll_s_bspline_2d_eval_array_deriv_x2: maximum error = ", &
      maxval(abs(y-2*pi*cos(2*pi*yy)*sin(2*pi*xx)))
 
 !if (.not. passed_test) stop
