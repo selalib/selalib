@@ -29,12 +29,12 @@ module sll_m_bspline_interpolator_1d
     sll_p_periodic
 
   use sll_m_bspline_1d, only: &
-    sll_s_compute_bspline_1d, &
+    sll_s_bspline_1d_compute_interpolant, &
     sll_s_bspline_1d_free, &
-    sll_s_interpolate_array_derivatives_1d, &
-    sll_s_interpolate_array_values_1d, &
-    sll_f_interpolate_derivative_1d, &
-    sll_f_interpolate_value_1d, &
+    sll_s_bspline_1d_eval_array_deriv, &
+    sll_s_bspline_1d_eval_array, &
+    sll_f_bspline_1d_eval_deriv, &
+    sll_f_bspline_1d_eval, &
     sll_s_bspline_1d_init, &
     sll_t_bspline_1d
 
@@ -241,7 +241,7 @@ if(present(eta_coords) .or. present(size_eta_coords)) then
    SLL_ERROR( this_sub_name, 'This case is not yet implemented' )
 end if
 
-call sll_s_compute_bspline_1d ( interpolator%bspline, data_array )
+call sll_s_bspline_1d_compute_interpolant ( interpolator%bspline, data_array )
 
 end subroutine compute_interpolants_bs1d
 
@@ -274,7 +274,7 @@ if (interpolator%bc_type == sll_p_periodic) then ! periodic
 
 end if
 
-val = sll_f_interpolate_value_1d( interpolator%bspline, res)
+val = sll_f_bspline_1d_eval( interpolator%bspline, res)
 
 end function interpolate_value_bs1d
 
@@ -332,7 +332,7 @@ end if
 SLL_ASSERT( res >= interpolator%eta_min )
 SLL_ASSERT( res <= interpolator%eta_max )
 
-val = sll_f_interpolate_derivative_1d( interpolator%bspline, res )
+val = sll_f_bspline_1d_eval_deriv( interpolator%bspline, res )
 
 end function interpolate_derivative_bs1d
 
@@ -348,8 +348,8 @@ sll_real64, dimension(num_pts), intent(in) :: coordinates
 sll_real64, dimension(:), intent(in) :: data
 sll_real64, dimension(num_pts), intent(out)    :: output_array
 
-call sll_s_compute_bspline_1d( this%bspline, data)
-call sll_s_interpolate_array_values_1d( this%bspline, num_pts, coordinates, output_array)
+call sll_s_bspline_1d_compute_interpolant( this%bspline, data)
+call sll_s_bspline_1d_eval_array( this%bspline, num_pts, coordinates, output_array)
 
 end subroutine interpolate_array_bs1d
 
@@ -405,7 +405,7 @@ sll_int32,                          intent(in)  :: num_pts
 sll_real64, dimension(num_pts),           intent(in)  :: vals_to_interpolate
 sll_real64, dimension(num_pts),           intent(out) :: output_array
 
-call sll_s_interpolate_array_values_1d(interpolator%bspline, &
+call sll_s_bspline_1d_eval_array(interpolator%bspline, &
                               num_pts,              &
                               vals_to_interpolate,  &
                               output_array)
@@ -423,7 +423,7 @@ sll_int32,                          intent(in)  :: num_pts
 sll_real64, dimension(:),           intent(in)  :: vals_to_interpolate
 sll_real64, dimension(:),           intent(out) :: output_array
 
-call sll_s_interpolate_array_derivatives_1d(interpolator%bspline, &
+call sll_s_bspline_1d_eval_array_deriv(interpolator%bspline, &
                                    num_pts,              &
                                    vals_to_interpolate,  &
                                    output_array)
