@@ -29,14 +29,15 @@ module sll_m_bspline_interpolator_1d
     sll_p_periodic
 
   use sll_m_bspline_1d, only: &
-    sll_s_bspline_1d_compute_interpolant, &
-    sll_s_bspline_1d_free, &
-    sll_s_bspline_1d_eval_array_deriv, &
-    sll_s_bspline_1d_eval_array, &
-    sll_f_bspline_1d_eval_deriv, &
-    sll_f_bspline_1d_eval, &
+    sll_t_bspline_1d, &
     sll_s_bspline_1d_init, &
-    sll_t_bspline_1d
+    sll_s_bspline_1d_free, &
+    sll_s_bspline_1d_compute_interpolant, &
+    sll_f_bspline_1d_eval, &
+    sll_f_bspline_1d_eval_deriv, &
+    sll_s_bspline_1d_eval_array, &
+    sll_s_bspline_1d_eval_array_deriv, &
+    sll_f_bspline_1d_get_coeff
 
   use sll_m_interpolators_1d_base, only: &
     sll_c_interpolator_1d
@@ -386,14 +387,15 @@ stop 'interpolate_1d_array_disp_bs1d: not implemented.'
 end subroutine interpolate_1d_array_disp_inplace_bs1d
 
 
-function get_coefficients_bs1d(interpolator)
+function get_coefficients_bs1d( interpolator )
 
-class(sll_t_bspline_interpolator_1d), intent(in)    :: interpolator
-sll_real64, dimension(:), pointer            :: get_coefficients_bs1d
+class(sll_t_bspline_interpolator_1d), intent(in) :: interpolator
+sll_real64, pointer :: get_coefficients_bs1d(:)
 
-get_coefficients_bs1d => interpolator%bspline%bcoef
+get_coefficients_bs1d => sll_f_bspline_1d_get_coeff( interpolator%bspline )
 
 end function get_coefficients_bs1d
+
 
 subroutine interpolate_values_bs1d( interpolator,        &
                                     num_pts,             &

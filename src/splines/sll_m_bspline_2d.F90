@@ -24,7 +24,11 @@ use sll_m_arbitrary_degree_splines, only: &
      sll_s_splines_and_n_derivs_at_x, &
      sll_s_uniform_b_splines_at_x
 
-use schur_complement
+use schur_complement, only: &
+  schur_complement_solver, &
+  schur_complement_fac   , &
+  schur_complement_slv   , &
+  schur_complement_free
 
 use sll_m_bspline_1d, only: &
   sll_t_bspline_1d,         &
@@ -55,10 +59,10 @@ private
 !> treated as an opaque type. No access to its internals is directly allowed.
 type :: sll_t_bspline_2d
 
-  type(sll_t_bspline_1d) :: bs1
-  type(sll_t_bspline_1d) :: bs2
-  sll_real64, pointer    :: bcoef(:,:)
-  sll_real64, pointer    :: bwork(:,:)
+  type(sll_t_bspline_1d)  :: bs1
+  type(sll_t_bspline_1d)  :: bs2
+  sll_real64, allocatable :: bcoef(:,:)
+  sll_real64, allocatable :: bwork(:,:)
 
 end type sll_t_bspline_2d
 
@@ -106,35 +110,23 @@ subroutine sll_s_bspline_2d_init( &
   bc2,             &
   spline_bc_type1, &
   spline_bc_type2 )
-  !, &
-  ! bc_left1,        &
-  ! bc_left2,        &
-  ! bc_right1,       &
-  ! bc_right2        )
 
-  type(sll_t_bspline_2d) :: self
+  type(sll_t_bspline_2d), intent(  out) :: self
+  sll_int32 ,             intent(in   ) :: nx1
+  sll_int32 ,             intent(in   ) :: nx2
+  sll_int32 ,             intent(in   ) :: degree1
+  sll_int32 ,             intent(in   ) :: degree2
+  sll_real64,             intent(in   ) :: x1_min
+  sll_real64,             intent(in   ) :: x2_min
+  sll_real64,             intent(in   ) :: x1_max
+  sll_real64,             intent(in   ) :: x2_max
+  sll_int32 ,             intent(in   ) :: bc1
+  sll_int32 ,             intent(in   ) :: bc2
+  sll_int32 , optional,   intent(in   ) :: spline_bc_type1
+  sll_int32 , optional,   intent(in   ) :: spline_bc_type2
 
-  sll_int32,  intent(in)               :: nx1
-  sll_int32,  intent(in)               :: degree1
-  sll_real64, intent(in)               :: x1_min
-  sll_real64, intent(in)               :: x1_max
-  sll_int32,  intent(in)               :: bc1
-  sll_int32,  intent(in)               :: nx2
-  sll_int32,  intent(in)               :: degree2
-  sll_real64, intent(in)               :: x2_min
-  sll_real64, intent(in)               :: x2_max
-  sll_int32,  intent(in)               :: bc2
-
-  sll_int32,  optional                 :: spline_bc_type1
-  sll_int32,  optional                 :: spline_bc_type2
-  ! sll_real64, optional, pointer        :: bc_left1(:)
-  ! sll_real64, optional, pointer        :: bc_left2(:)
-  ! sll_real64, optional, pointer        :: bc_right1(:)
-  ! sll_real64, optional, pointer        :: bc_right2(:)
-
-  sll_int32                            :: n1
-  sll_int32                            :: n2
-  sll_int32                            :: ierr
+  sll_int32 :: n1
+  sll_int32 :: n2
 
   if (present(spline_bc_type1)) then
     call sll_s_bspline_1d_init(self%bs1,nx1,degree1, &
@@ -153,14 +145,20 @@ subroutine sll_s_bspline_2d_init( &
 
   n1 = self%bs1%n
   n2 = self%bs2%n
-  SLL_CLEAR_ALLOCATE(self%bwork(1:n2,1:n1), ierr)
-  SLL_CLEAR_ALLOCATE(self%bcoef(1:n1,1:n2), ierr)
+  allocate( self%bwork(1:n2,1:n1) ); self%bwork = 0.0_f64
+  allocate( self%bcoef(1:n1,1:n2) ); self%bcoef = 0.0_f64
 
 end subroutine sll_s_bspline_2d_init
 
 
-subroutine sll_s_bspline_2d_compute_interpolant( self, gtau, &
-  val1_min, val1_max, val2_min, val2_max, val_corners )
+subroutine sll_s_bspline_2d_compute_interpolant( &
+  self, &
+  gtau, &
+  val1_min, &
+  val1_max, &
+  val2_min, &
+  val2_max, &
+  val_corners )
 
   type(sll_t_bspline_2d), intent(inout)           :: self
   sll_real64            , intent(in   )           :: gtau(:,:)
@@ -185,8 +183,6 @@ subroutine sll_s_bspline_2d_compute_interpolant( self, gtau, &
   ncond2 = 0
   if (self%bs1%bc_type == sll_p_hermite)  ncond1 = self%bs1%deg/2
   if (self%bs2%bc_type == sll_p_hermite)  ncond2 = self%bs2%deg/2
-!  print*, 'ncond1 = ', ncond1
-!  print*, 'ncond2 = ', ncond2
 
   !--------------------------------------------
   ! Compute spline coefficients in x1 direction
@@ -298,14 +294,14 @@ subroutine sll_s_bspline_2d_compute_interpolant( self, gtau, &
 end subroutine sll_s_bspline_2d_compute_interpolant
 
 
-subroutine sll_s_bspline_2d_eval_array(self, n1, n2, x1, x2, y )
+subroutine sll_s_bspline_2d_eval_array( self, n1, n2, x1, x2, y )
 
-type(sll_t_bspline_2d)  :: self
-sll_int32               :: n1
-sll_int32               :: n2
-sll_real64, intent(in)  :: x1(:,:)
-sll_real64, intent(in)  :: x2(:,:)
-sll_real64, intent(out) :: y(:,:)
+type(sll_t_bspline_2d), intent(in   ) :: self
+sll_int32             , intent(in   ) :: n1
+sll_int32             , intent(in   ) :: n2
+sll_real64            , intent(in   ) :: x1(:,:)
+sll_real64            , intent(in   ) :: x2(:,:)
+sll_real64            , intent(  out) :: y (:,:)
 
 sll_real64, allocatable :: work(:)
 sll_int32               :: icell, jcell
@@ -318,13 +314,14 @@ SLL_ASSERT(n2 == size(x1,2) .and. n2 == size(x2,2) )
 
 k1 = self%bs1%deg+1
 k2 = self%bs2%deg+1
-
 allocate(work(k2))
 
 do i2 = 1, n2
   do i1 = 1, n1
+
     icell = sll_f_find_cell( self%bs1%bsp, x1(i1,i2) )
     jcell = sll_f_find_cell( self%bs2%bsp, x2(i1,i2) )
+
     work = 0.0_f64
     do j = 1, k2
       jb = mod(jcell+j-2-self%bs2%offset+self%bs2%n,self%bs2%n) + 1
@@ -334,12 +331,14 @@ do i2 = 1, n2
         work(j) = work(j) + self%bs1%values(k)*self%bcoef(ib,jb)
       end do
     end do
+
     call sll_s_splines_at_x(self%bs2%bsp, jcell, x2(i1,i2), self%bs2%values)
     y(i1,i2) = 0.0_f64
     do k=1,k2
       jb = mod(jcell+k-2-self%bs2%offset+self%bs2%n,self%bs2%n) + 1
       y(i1,i2) = y(i1,i2) + self%bs2%values(k)*work(k)
     enddo
+
   end do
 end do
 
@@ -347,12 +346,13 @@ deallocate(work)
 
 end subroutine sll_s_bspline_2d_eval_array
 
-function sll_f_bspline_2d_eval(self, xi, xj ) result (y)
 
-type(sll_t_bspline_2d)  :: self
-sll_real64, intent(in)  :: xi
-sll_real64, intent(in)  :: xj
-sll_real64              :: y
+function sll_f_bspline_2d_eval( self, x1, x2 ) result( y )
+
+type(sll_t_bspline_2d), intent(in) :: self
+sll_real64            , intent(in) :: x1
+sll_real64            , intent(in) :: x2
+sll_real64 :: y
 
 sll_int32               :: j
 sll_int32               :: k
@@ -367,21 +367,21 @@ sll_real64, allocatable :: work(:)
 k1 = self%bs1%deg+1
 k2 = self%bs2%deg+1
 allocate(work(k2))
+
+icell = sll_f_find_cell( self%bs1%bsp, x1 )
+jcell = sll_f_find_cell( self%bs2%bsp, x2 )
+
 work = 0.0_f64
-
-icell = sll_f_find_cell( self%bs1%bsp, xi )
-jcell = sll_f_find_cell( self%bs2%bsp, xj )
-
 do j = 1, k2
   jb = mod(jcell+j-2-self%bs2%offset+self%bs2%n,self%bs2%n) + 1
-  call sll_s_splines_at_x(self%bs1%bsp, icell, xi, self%bs1%values)
+  call sll_s_splines_at_x(self%bs1%bsp, icell, x1, self%bs1%values)
   do k=1, k1
     ib = mod(icell+k-2-self%bs1%offset+self%bs1%n,self%bs1%n) + 1
     work(j) = work(j) + self%bs1%values(k)*self%bcoef(ib,jb)
   end do
 end do
 
-call sll_s_splines_at_x(self%bs2%bsp, jcell, xj, self%bs2%values)
+call sll_s_splines_at_x(self%bs2%bsp, jcell, x2, self%bs2%values)
 y = 0.0_f64
 do k=1,k2
   jb = mod(jcell+k-2-self%bs2%offset+self%bs2%n,self%bs2%n) + 1
@@ -392,12 +392,13 @@ deallocate(work)
 
 end function sll_f_bspline_2d_eval
 
-function sll_f_bspline_2d_eval_deriv_x1(self, x1, x2 ) result(y)
 
-type(sll_t_bspline_2d) :: self
-sll_real64, intent(in) :: x1
-sll_real64, intent(in) :: x2
-sll_real64             :: y
+function sll_f_bspline_2d_eval_deriv_x1( self, x1, x2 ) result( y )
+
+type(sll_t_bspline_2d), intent(in) :: self
+sll_real64            , intent(in) :: x1
+sll_real64            , intent(in) :: x2
+sll_real64 :: y
 
 sll_real64, allocatable :: work(:)
 sll_int32               :: i, j
@@ -406,11 +407,11 @@ sll_int32               :: ib, jb
 
 k1 = self%bs1%deg+1
 k2 = self%bs2%deg+1
+allocate(work(k2))
 
 icell =  sll_f_find_cell( self%bs1%bsp, x1 )
 jcell =  sll_f_find_cell( self%bs2%bsp, x2 )
 
-allocate(work(k2))
 work = 0.0_f64
 do j = 1, k2
   jb = mod(jcell+j-2-self%bs2%offset+self%bs2%n,self%bs2%n) + 1
@@ -434,12 +435,12 @@ end function sll_f_bspline_2d_eval_deriv_x1
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
-function sll_f_bspline_2d_eval_deriv_x2(self, x1, x2 ) result(y)
+function sll_f_bspline_2d_eval_deriv_x2( self, x1, x2 ) result( y )
 
-type(sll_t_bspline_2d) :: self
-sll_real64, intent(in) :: x1
-sll_real64, intent(in) :: x2
-sll_real64             :: y
+type(sll_t_bspline_2d), intent(in) :: self
+sll_real64            , intent(in) :: x1
+sll_real64            , intent(in) :: x2
+sll_real64 :: y
 
 sll_real64, allocatable :: work(:)
 sll_int32               :: i, j
@@ -448,11 +449,11 @@ sll_int32               :: ib, jb
 
 k1 = self%bs1%deg+1
 k2 = self%bs2%deg+1
+allocate(work(k2))
 
 icell =  sll_f_find_cell( self%bs1%bsp, x1 )
 jcell =  sll_f_find_cell( self%bs2%bsp, x2 )
 
-allocate(work(k2))
 work = 0.0_f64
 do j = 1, k2
   jb = mod(jcell+j-2-self%bs2%offset+self%bs2%n,self%bs2%n) + 1
@@ -474,36 +475,18 @@ deallocate(work)
 
 end function sll_f_bspline_2d_eval_deriv_x2
 
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-
-subroutine sll_s_bspline_2d_free( self )
-
-  type(sll_t_bspline_2d), intent(inout) :: self
-
-  ! Deallocate local 2D arrays
-  deallocate( self%bwork )
-  deallocate( self%bcoef )
-
-  ! Free memory of 1D B-splines
-  call sll_s_bspline_1d_free( self%bs1 )
-  call sll_s_bspline_1d_free( self%bs2 )
-
-end subroutine sll_s_bspline_2d_free
-
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 subroutine sll_s_bspline_2d_eval_array_deriv_x1( self, n1, n2, x1, x2, y)
 
-type(sll_t_bspline_2d) :: self
-sll_int32              :: n1
-sll_int32              :: n2
-sll_real64             :: x1(:,:)
-sll_real64             :: x2(:,:)
-sll_real64             :: y(:,:)
+type(sll_t_bspline_2d), intent(in   ) :: self
+sll_int32             , intent(in   ) :: n1
+sll_int32             , intent(in   ) :: n2
+sll_real64            , intent(in   ) :: x1(:,:)
+sll_real64            , intent(in   ) :: x2(:,:)
+sll_real64            , intent(  out) :: y (:,:)
 
-sll_int32 :: i1, i2
 sll_real64, allocatable :: work(:)
-sll_int32               :: i, j
+sll_int32               :: i, j, i1, i2
 sll_int32               :: k1, k2, icell, jcell
 sll_int32               :: ib, jb
 sll_real64              :: xi, xj, yy
@@ -529,6 +512,7 @@ do i2 = 1, n2
         work(j) = work(j) + self%bs1%values(i)*self%bcoef(ib,jb)
       enddo
     end do
+
     call sll_s_splines_at_x(self%bs2%bsp, jcell, xj, self%bs2%values)
     yy = 0.0_f64
     do j = 1, k2
@@ -545,14 +529,15 @@ deallocate(work)
 
 end subroutine sll_s_bspline_2d_eval_array_deriv_x1
 
-subroutine sll_s_bspline_2d_eval_array_deriv_x2( self, n1, n2, x1, x2, y)
 
-type(sll_t_bspline_2d) :: self
-sll_int32              :: n1
-sll_int32              :: n2
-sll_real64             :: x1(:,:)
-sll_real64             :: x2(:,:)
-sll_real64             :: y(:,:)
+subroutine sll_s_bspline_2d_eval_array_deriv_x2( self, n1, n2, x1, x2, y )
+
+type(sll_t_bspline_2d), intent(in   ) :: self
+sll_int32             , intent(in   ) :: n1
+sll_int32             , intent(in   ) :: n2
+sll_real64            , intent(in   ) :: x1(:,:)
+sll_real64            , intent(in   ) :: x2(:,:)
+sll_real64            , intent(  out) :: y (:,:)
 
 sll_real64, allocatable :: work(:)
 sll_int32               :: i, j, i1, i2
@@ -596,5 +581,23 @@ end do
 deallocate(work)
 
 end subroutine sll_s_bspline_2d_eval_array_deriv_x2
+
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+subroutine sll_s_bspline_2d_free( self )
+
+  type(sll_t_bspline_2d), intent(inout) :: self
+
+  ! Deallocate local 2D arrays
+  deallocate( self%bwork )
+  deallocate( self%bcoef )
+
+  ! Free memory of 1D B-splines
+  call sll_s_bspline_1d_free( self%bs1 )
+  call sll_s_bspline_1d_free( self%bs2 )
+
+end subroutine sll_s_bspline_2d_free
+
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 end module sll_m_bspline_2d

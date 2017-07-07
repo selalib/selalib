@@ -66,20 +66,20 @@ end if
 contains
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
-subroutine test_process_2d(bc_type,deg,passed_test,spline_bc_type)
+subroutine test_process_2d( bc_type, deg, passed_test, spline_bc_type )
 
-type(sll_t_bspline_2d) :: bspline_2d
-sll_int32, intent(in)                :: bc_type
-logical                              :: passed_test
-sll_int32, optional                  :: spline_bc_type
+sll_int32, intent(in )           :: bc_type
+sll_int32, intent(in )           :: deg
+logical  , intent(out)           :: passed_test
+sll_int32, intent(in ), optional :: spline_bc_type
 
 ! local variables
-sll_int32  :: deg
+type(sll_t_bspline_2d), target :: bspline_2d
+
 sll_real64 :: x1_min   = 0.0_f64
 sll_real64 :: x1_max   = 1.0_f64
 sll_real64 :: x2_min   = 0.0_f64
 sll_real64 :: x2_max   = 1.0_f64
-
 
 sll_real64, dimension(:,:), allocatable :: x1
 sll_real64, dimension(:,:), allocatable :: x2
