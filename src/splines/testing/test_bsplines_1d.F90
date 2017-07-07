@@ -130,10 +130,10 @@ contains
     print*,'+++++++++++++++++++++++++++++++++'
     if (present(spline_bc_type)) then
        call sll_s_bspline_1d_init( bspline_1d, npts, deg, x_min, x_max, &
-            bc_type, spline_bc_type )
+            bc_type, bc_type, spline_bc_type )
     else
        call sll_s_bspline_1d_init( bspline_1d, npts, deg, x_min, x_max, &
-            bc_type)
+            bc_type, bc_type )
     end if
     print*, 'bspline_1d_init constructed'
 

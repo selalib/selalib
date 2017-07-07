@@ -82,40 +82,58 @@ contains
   end function sll_f_bspline_1d_get_coeff
 
   !> @brief Constructor for sll_t_bspline_1d object
-  !> @param[in] num_points Number of points where the data to be
-  !>                       interpolated are represented.
-  !> @param[in] degree     Spline degree
-  !> @param[in] xmin       Minimum value of the abscissae where data are meant
-  !>                       to be interpolated.
-  !> @param[in] xmax       Maximum value of the abscissae where data are meant
-  !>                       to be interpolated.
-  !> @param[in] bc_type    Boundary condition specifier. Can be either
-  !> sll_p_periodic for periodic splines or sll_p_open for open knots
+  !> @param[in] num_pts  Number of points where the data to be
+  !>                     interpolated are represented.
+  !> @param[in] degree   Spline degree
+  !> @param[in] xmin     Minimum value of the abscissae where data are meant
+  !>                     to be interpolated.
+  !> @param[in] xmax     Maximum value of the abscissae where data are meant
+  !>                     to be interpolated.
+  !> @param[in] bc_xmin  Boundary condition at x=xmin
+  !> @param[in] bc_xmax  Boundary condition at x=xmax
   subroutine sll_s_bspline_1d_init( &
     self,           &
-    num_points,     &
+    num_pts,        &
     degree,         &
     xmin,           &
     xmax,           &
-    bc_type,        &
+    bc_xmin,        &
+    bc_xmax,        &
+    ! optional arguments (TODO: verify if they should be removed)
     spline_bc_type, &
     bc_left,        &
     bc_right )
 
     type(sll_t_bspline_1d), intent(  out) :: self
-    sll_int32             , intent(in   ) :: num_points
+    sll_int32             , intent(in   ) :: num_pts
     sll_int32             , intent(in   ) :: degree
     sll_real64            , intent(in   ) :: xmin
     sll_real64            , intent(in   ) :: xmax
-    sll_int32             , intent(in   ) :: bc_type
+    sll_int32             , intent(in   ) :: bc_xmin
+    sll_int32             , intent(in   ) :: bc_xmax
     sll_int32 , optional  , intent(in   ) :: spline_bc_type
     sll_real64, optional  , intent(in   ) :: bc_left (:)
     sll_real64, optional  , intent(in   ) :: bc_right(:)
 
-    sll_real64 :: grid(num_points)
-    sll_int32  :: i
-    sll_int32  :: j
+    sll_int32, parameter :: &
+      bc_types_allowed(*) = [sll_p_periodic, sll_p_hermite, sll_p_greville]
+
+    sll_real64 :: grid(num_pts)
+    sll_int32  :: i, j
     sll_real64 :: delta
+    sll_int32  :: bc_type
+
+    ! Sanity checks
+    SLL_ASSERT( num_pts >= 2 )
+    SLL_ASSERT( degree  >= 1 )
+    SLL_ASSERT( xmin < xmax )
+    SLL_ASSERT( any( bc_xmin == bc_types_allowed ) )
+    SLL_ASSERT( any( bc_xmax == bc_types_allowed ) )
+
+    ! NOTE: in the future different boundary conditions at xmin and xmax
+    !       should be considered. For now we only check that bc_xmin==bc_xmax
+    SLL_ASSERT( bc_xmin == bc_xmax )
+    bc_type = bc_xmin
 
     ! knot point mirroring works only for Hermite boundary conditions. Check this
     if (present(spline_bc_type).and.(spline_bc_type == sll_p_mirror)) then
@@ -128,27 +146,27 @@ contains
     ! set first attributes
     self%bc_type = bc_type
     if (bc_type == sll_p_periodic) then
-       self%n = num_points - 1 ! dimension of periodic spline space
+       self%n = num_pts - 1 ! dimension of periodic spline space
        self%offset = degree/2  ! offset needed for periodic spline evaluation
     else
-       self%n = num_points + degree - 1 ! dimension of non periodic spline space
+       self%n = num_pts + degree - 1 ! dimension of non periodic spline space
        self%offset = 0
     end if
     self%deg     = degree
     self%length  = xmax - xmin
     ! define grid for knots
-    delta = self%length / real(num_points-1,f64)
-    do i=1,num_points-1
+    delta = self%length / real(num_pts-1,f64)
+    do i=1,num_pts-1
        grid(i) = xmin + real(i-1,f64) * delta
     end do
-    grid(num_points) = xmax
+    grid(num_pts) = xmax
     ! construct a sll_t_arbitrary_degree_spline_1d object
     if (present(spline_bc_type)) then
        call sll_s_arbitrary_degree_spline_1d_init(self%bsp, degree, grid,  &
-            num_points, bc_type, spline_bc_type )
+            num_pts, bc_type, spline_bc_type )
     else
        call sll_s_arbitrary_degree_spline_1d_init(self%bsp, degree, grid,  &
-            num_points, bc_type)
+            num_pts, bc_type)
     end if
 
     allocate( self%bcoef (self%n) )
@@ -175,16 +193,16 @@ contains
       ! In this case only interior points are saved in tau
        if (modulo(degree,2) == 0) then
          ! Allocate tau which contains interior interpolation points
-         allocate( self%tau(num_points-1) )
+         allocate( self%tau(num_pts-1) )
          ! for even degree interpolation points are cell midpoints
-         do i = 1, num_points - 1
+         do i = 1, num_pts - 1
            self%tau(i) = xmin + (real(i,f64)-0.5_f64) * delta
          end do
        else
          ! Allocate tau which contains interior interpolation points
-         allocate( self%tau(num_points) )
+         allocate( self%tau(num_pts) )
           ! for odd degree interpolation points are grid points including last point
-          do i = 1, num_points
+          do i = 1, num_pts
              self%tau(i) = xmin + real(i-1,f64) * delta
           end do
        end if
