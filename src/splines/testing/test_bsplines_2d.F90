@@ -126,11 +126,11 @@ print*,'+++++++++++++++++++++++++++++++++'
 if (present(spline_bc_type)) then
   call sll_s_bspline_2d_init( bspline_2d, &
      npts1, npts2, deg, deg, x1_min, x2_min, x1_max, x2_max, &
-     bc_type, bc_type, spline_bc_type, spline_bc_type )
+     bc_type, bc_type, bc_type, bc_type, spline_bc_type, spline_bc_type )
 else
   call sll_s_bspline_2d_init( bspline_2d, &
      npts1, npts2, deg, deg, x1_min, x2_min, x1_max, x2_max, &
-     bc_type, bc_type)
+     bc_type, bc_type, bc_type, bc_type)
 end if
 
 taux => bspline_2d%bs1%tau

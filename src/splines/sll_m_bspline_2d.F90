@@ -98,49 +98,58 @@ contains
 !> @return a spline interpolation object.
 subroutine sll_s_bspline_2d_init( &
   self,            &
-  nx1,             &
-  nx2,             &
+  num_pts1,        &
+  num_pts2,        &
   degree1,         &
   degree2,         &
   x1_min,          &
   x2_min,          &
   x1_max,          &
   x2_max,          &
-  bc1,             &
-  bc2,             &
+  bc1_min,         &
+  bc2_min,         &
+  bc1_max,         &
+  bc2_max,         &
   spline_bc_type1, &
   spline_bc_type2 )
 
   type(sll_t_bspline_2d), intent(  out) :: self
-  sll_int32 ,             intent(in   ) :: nx1
-  sll_int32 ,             intent(in   ) :: nx2
+  sll_int32 ,             intent(in   ) :: num_pts1
+  sll_int32 ,             intent(in   ) :: num_pts2
   sll_int32 ,             intent(in   ) :: degree1
   sll_int32 ,             intent(in   ) :: degree2
   sll_real64,             intent(in   ) :: x1_min
   sll_real64,             intent(in   ) :: x2_min
   sll_real64,             intent(in   ) :: x1_max
   sll_real64,             intent(in   ) :: x2_max
-  sll_int32 ,             intent(in   ) :: bc1
-  sll_int32 ,             intent(in   ) :: bc2
+  sll_int32 ,             intent(in   ) :: bc1_min
+  sll_int32 ,             intent(in   ) :: bc2_min
+  sll_int32 ,             intent(in   ) :: bc1_max
+  sll_int32 ,             intent(in   ) :: bc2_max
   sll_int32 , optional,   intent(in   ) :: spline_bc_type1
   sll_int32 , optional,   intent(in   ) :: spline_bc_type2
 
   sll_int32 :: n1
   sll_int32 :: n2
 
+  ! NOTE: in the future different boundary conditions at xmin and xmax
+  !       should be considered. For now we only check that bc_xmin==bc_xmax
+  SLL_ASSERT( bc1_min == bc1_max )
+  SLL_ASSERT( bc2_min == bc2_max )
+
   if (present(spline_bc_type1)) then
-    call sll_s_bspline_1d_init(self%bs1,nx1,degree1, &
-      x1_min,x1_max,bc1, spline_bc_type1)
+    call sll_s_bspline_1d_init( self%bs1, num_pts1, degree1, &
+      x1_min, x1_max, bc1_min, bc1_max, spline_bc_type1)
   else
-    call sll_s_bspline_1d_init(self%bs1,nx1,degree1, &
-      x1_min,x1_max,bc1)
+    call sll_s_bspline_1d_init( self%bs1, num_pts1, degree1, &
+      x1_min, x1_max, bc1_min, bc1_max )
   end if
   if (present(spline_bc_type2)) then
-    call sll_s_bspline_1d_init(self%bs2,nx2,degree2, &
-      x2_min,x2_max,bc2, spline_bc_type2)
+    call sll_s_bspline_1d_init( self%bs2, num_pts2, degree2, &
+      x2_min, x2_max, bc2_min, bc2_max, spline_bc_type2 )
   else
-    call sll_s_bspline_1d_init(self%bs2,nx2,degree2, &
-      x2_min,x2_max,bc2)
+    call sll_s_bspline_1d_init( self%bs2, num_pts2, degree2, &
+      x2_min, x2_max, bc2_min, bc2_max )
   end if
 
   n1 = self%bs1%n
