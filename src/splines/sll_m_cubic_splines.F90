@@ -48,31 +48,33 @@ module sll_m_cubic_splines
   implicit none
 
   public :: &
-    sll_s_cubic_spline_1d_init, &
+    ! 1D
+    sll_t_cubic_spline_1d,                     &
+    sll_s_cubic_spline_1d_init,                &
+    sll_s_cubic_spline_1d_free,                &
     sll_s_cubic_spline_1d_compute_interpolant, &
-    sll_f_cubic_spline_1d_eval_deriv, &
-    sll_s_cubic_spline_1d_eval_disp, &
-    sll_s_cubic_spline_1d_eval_array, &
-    sll_s_cubic_spline_1d_eval_deriv, &
-    sll_f_cubic_spline_1d_eval, &
-    sll_s_cubic_spline_1d_free, &
-    sll_t_cubic_spline_1d, &
+    sll_f_cubic_spline_1d_eval,                &
+    sll_f_cubic_spline_1d_eval_deriv,          &
+    sll_s_cubic_spline_1d_eval_disp,           &
+    sll_s_cubic_spline_1d_eval_array,          &
+    sll_s_cubic_spline_1d_eval_array_deriv,    &
+    sll_f_cubic_spline_1d_get_x1_delta,        &
+    ! 2D
+    sll_t_cubic_spline_2d,                     &
+    sll_s_cubic_spline_2d_init,                &
+    sll_s_cubic_spline_2d_free,                &
     sll_s_cubic_spline_2d_compute_interpolant, &
-    sll_s_cubic_spline_2d_deposit_value, &
-    sll_s_cubic_spline_2d_get_coeff, &
-    sll_f_cubic_spline_2d_get_x1_delta, &
-    sll_f_cubic_spline_1d_get_x1_delta, &
-    sll_f_cubic_spline_2d_get_x1_max, &
-    sll_f_cubic_spline_2d_get_x1_min, &
-    sll_f_cubic_spline_2d_get_x2_delta, &
-    sll_f_cubic_spline_2d_get_x2_max, &
-    sll_f_cubic_spline_2d_get_x2_min, &
-    sll_f_cubic_spline_2d_eval, &
-    sll_f_cubic_spline_2d_eval_deriv_x1, &
-    sll_f_cubic_spline_2d_eval_deriv_x2, &
-    sll_s_cubic_spline_2d_init, &
-    sll_t_cubic_spline_2d, &
-    sll_s_cubic_spline_2d_free
+    sll_f_cubic_spline_2d_eval,                &
+    sll_f_cubic_spline_2d_eval_deriv_x1,       &
+    sll_f_cubic_spline_2d_eval_deriv_x2,       &
+    sll_s_cubic_spline_2d_deposit_value,       &
+    sll_s_cubic_spline_2d_get_coeff,           &
+    sll_f_cubic_spline_2d_get_x1_min,          &
+    sll_f_cubic_spline_2d_get_x1_max,          &
+    sll_f_cubic_spline_2d_get_x1_delta,        &
+    sll_f_cubic_spline_2d_get_x2_min,          &
+    sll_f_cubic_spline_2d_get_x2_max,          &
+    sll_f_cubic_spline_2d_get_x2_delta
 
   private
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -192,7 +194,9 @@ module sll_m_cubic_splines
 #endif /* DOXYGEN_SHOULD_SKIP_THIS */
 
 
-contains  ! ****************************************************************
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+contains
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 #ifndef DOXYGEN_SHOULD_SKIP_THIS
 
@@ -1101,7 +1105,7 @@ MAKE_GET_SLOT_FUNCTION(sll_f_cubic_spline_2d_get_x2_delta,sll_t_cubic_spline_2d,
   !> @param[in] num_pts the number of elements of the input array.
   !> @param[inout] spline the spline object pointer, duly initialized and 
   !> already operated on by the sll_s_cubic_spline_1d_compute_interpolant() subroutine.
-  subroutine sll_s_cubic_spline_1d_eval_deriv( &
+  subroutine sll_s_cubic_spline_1d_eval_array_deriv( &
     array_in, &
     array_out, &
     num_pts, &
@@ -1123,10 +1127,10 @@ MAKE_GET_SLOT_FUNCTION(sll_f_cubic_spline_2d_get_x2_delta,sll_t_cubic_spline_2d,
        array_out(i) = interpolate_derivative_aux( &
             array_in(i), spline%xmin, spline%rdelta, coeffs )
     end do
-  end subroutine sll_s_cubic_spline_1d_eval_deriv
+  end subroutine sll_s_cubic_spline_1d_eval_array_deriv
 
   ! FIXME: The following subroutine is not in the unit test
-  !> @brief analogous to the sll_s_cubic_spline_1d_eval_deriv() subroutine but
+  !> @brief analogous to the sll_s_cubic_spline_1d_eval_array_deriv() subroutine but
   !> its input and output arrays are pointers.
   !> @param[in] ptr_in input double-precison element array pointer containing the 
   !> abscissae at which the derivatives are wanted.
