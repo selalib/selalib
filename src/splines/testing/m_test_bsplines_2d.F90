@@ -93,8 +93,6 @@ contains
     integer                          , intent(in   )         :: bc2
 
     type(t_profile_2d_info) :: info
-    real(wp), pointer       :: tau1(:)
-    real(wp), pointer       :: tau2(:)
     integer                 :: nipts1
     integer                 :: nipts2
     integer                 :: i1, j1, s1
@@ -139,8 +137,8 @@ contains
     call sll_s_set_time_mark( t1 )
 
     ! Get spline interpolation points
-    tau1 => self % bspline_2d % bs1 % tau
-    tau2 => self % bspline_2d % bs2 % tau
+    associate( tau1 => self % bspline_2d % bs1 % tau, &
+               tau2 => self % bspline_2d % bs2 % tau )
 
     ! Store number of interpolation points
     nipts1 = size( tau1 )
@@ -194,6 +192,8 @@ contains
         end do
       end do
     end if
+
+    end associate ! tau1, tau2
 
     ! Compute 2D spline that interpolates analytical 2D profile at points above
     ! ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
@@ -355,25 +355,25 @@ contains
     class(t_bspline_2d_test_facility), intent(in   ) :: self
     real(wp)                         , intent(  out) :: max_norm_error
 
-    integer           :: i1, i2
-    real(wp), pointer :: tau1(:)
-    real(wp), pointer :: tau2(:)
-    real(wp)          :: error
+    integer  :: i1, i2
+    real(wp) :: error
 
     ! Get spline interpolation points
-    tau1 => self % bspline_2d % bs1 % tau
-    tau2 => self % bspline_2d % bs2 % tau
+    associate( tau1 => self % bspline_2d % bs1 % tau, &
+               tau2 => self % bspline_2d % bs2 % tau )
 
-    ! Evaluate 2D spline at interpolation points:
-    ! interpolation values should be obtained
-    max_norm_error = 0.0_wp
-    do i2 = 1, size( tau2 )
-      do i1 = 1, size( tau1 )
-        error = self % gtau(i1,i2) &
-              - sll_f_bspline_2d_eval( self % bspline_2d, tau1(i1), tau2(i2) )
-        max_norm_error = max( max_norm_error, abs( error ) )
+      ! Evaluate 2D spline at interpolation points:
+      ! interpolation values should be obtained
+      max_norm_error = 0.0_wp
+      do i2 = 1, size( tau2 )
+        do i1 = 1, size( tau1 )
+          error = self % gtau(i1,i2) &
+                - sll_f_bspline_2d_eval( self % bspline_2d, tau1(i1), tau2(i2) )
+          max_norm_error = max( max_norm_error, abs( error ) )
+        end do
       end do
-    end do
+
+    end associate ! tau1, tau2
 
   end subroutine evaluate_at_interpolation_points
 
