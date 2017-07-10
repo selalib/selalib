@@ -303,7 +303,7 @@ subroutine sll_s_bspline_2d_compute_interpolant( &
 end subroutine sll_s_bspline_2d_compute_interpolant
 
 
-subroutine sll_s_bspline_2d_eval_array( self, n1, n2, x1, x2, y )
+SLL_PURE subroutine sll_s_bspline_2d_eval_array( self, n1, n2, x1, x2, y )
 
 type(sll_t_bspline_2d), intent(in   ) :: self
 sll_int32             , intent(in   ) :: n1
@@ -312,18 +312,20 @@ sll_real64            , intent(in   ) :: x1(:,:)
 sll_real64            , intent(in   ) :: x2(:,:)
 sll_real64            , intent(  out) :: y (:,:)
 
-sll_real64, allocatable :: work(:)
-sll_int32               :: icell, jcell
-sll_int32               :: i1, i2, k1, k2
-sll_int32               :: ib, jb
-sll_int32               :: j, k
+sll_int32 :: icell, jcell
+sll_int32 :: i1, i2, k1, k2
+sll_int32 :: ib, jb
+sll_int32 :: j, k
 
-SLL_ASSERT(n1 == size(x1,1) .and. n1 == size(x2,1) )
-SLL_ASSERT(n2 == size(x1,2) .and. n2 == size(x2,2) )
+! Automatic arrays
+sll_real64 :: values(1+max(self%bs1%deg,self%bs2%deg))
+sll_real64 :: work  (1+self%bs2%deg)
+
+SLL_ASSERT( n1 == size(x1,1) .and. n1 == size(x2,1) )
+SLL_ASSERT( n2 == size(x1,2) .and. n2 == size(x2,2) )
 
 k1 = self%bs1%deg+1
 k2 = self%bs2%deg+1
-allocate(work(k2))
 
 do i2 = 1, n2
   do i1 = 1, n1
@@ -334,48 +336,47 @@ do i2 = 1, n2
     work = 0.0_f64
     do j = 1, k2
       jb = mod(jcell+j-2-self%bs2%offset+self%bs2%n,self%bs2%n) + 1
-      call sll_s_splines_at_x(self%bs1%bsp, icell, x1(i1,i2), self%bs1%values)
-      do k=1, k1
+      call sll_s_splines_at_x( self%bs1%bsp, icell, x1(i1,i2), values(1:k1) )
+      do k = 1, k1
         ib = mod(icell+k-2-self%bs1%offset+self%bs1%n,self%bs1%n) + 1
-        work(j) = work(j) + self%bs1%values(k)*self%bcoef(ib,jb)
+        work(j) = work(j) + values(k)*self%bcoef(ib,jb)
       end do
     end do
 
-    call sll_s_splines_at_x(self%bs2%bsp, jcell, x2(i1,i2), self%bs2%values)
+    call sll_s_splines_at_x( self%bs2%bsp, jcell, x2(i1,i2), values(1:k2) )
     y(i1,i2) = 0.0_f64
-    do k=1,k2
-      jb = mod(jcell+k-2-self%bs2%offset+self%bs2%n,self%bs2%n) + 1
-      y(i1,i2) = y(i1,i2) + self%bs2%values(k)*work(k)
+    do k = 1, k2
+      y(i1,i2) = y(i1,i2) + values(k)*work(k)
     enddo
 
   end do
 end do
 
-deallocate(work)
-
 end subroutine sll_s_bspline_2d_eval_array
 
 
-function sll_f_bspline_2d_eval( self, x1, x2 ) result( y )
+SLL_PURE function sll_f_bspline_2d_eval( self, x1, x2 ) result( y )
 
 type(sll_t_bspline_2d), intent(in) :: self
 sll_real64            , intent(in) :: x1
 sll_real64            , intent(in) :: x2
 sll_real64 :: y
 
-sll_int32               :: j
-sll_int32               :: k
-sll_int32               :: ib
-sll_int32               :: jb
-sll_int32               :: k1
-sll_int32               :: k2
-sll_int32               :: icell
-sll_int32               :: jcell
-sll_real64, allocatable :: work(:)
+sll_int32 :: j
+sll_int32 :: k
+sll_int32 :: ib
+sll_int32 :: jb
+sll_int32 :: k1
+sll_int32 :: k2
+sll_int32 :: icell
+sll_int32 :: jcell
+
+! Automatic arrays
+sll_real64 :: values(1+max(self%bs1%deg,self%bs2%deg))
+sll_real64 :: work  (1+self%bs2%deg)
 
 k1 = self%bs1%deg+1
 k2 = self%bs2%deg+1
-allocate(work(k2))
 
 icell = sll_f_find_cell( self%bs1%bsp, x1 )
 jcell = sll_f_find_cell( self%bs2%bsp, x2 )
@@ -383,109 +384,104 @@ jcell = sll_f_find_cell( self%bs2%bsp, x2 )
 work = 0.0_f64
 do j = 1, k2
   jb = mod(jcell+j-2-self%bs2%offset+self%bs2%n,self%bs2%n) + 1
-  call sll_s_splines_at_x(self%bs1%bsp, icell, x1, self%bs1%values)
-  do k=1, k1
-    ib = mod(icell+k-2-self%bs1%offset+self%bs1%n,self%bs1%n) + 1
-    work(j) = work(j) + self%bs1%values(k)*self%bcoef(ib,jb)
+  call sll_s_splines_at_x( self%bs1%bsp, icell, x1, values(1:k1) )
+  do k = 1, k1
+    ib = mod( icell+k-2-self%bs1%offset+self%bs1%n, self%bs1%n ) + 1
+    work(j) = work(j) + values(k)*self%bcoef(ib,jb)
   end do
 end do
 
-call sll_s_splines_at_x(self%bs2%bsp, jcell, x2, self%bs2%values)
+call sll_s_splines_at_x(self%bs2%bsp, jcell, x2, values(1:k2) )
 y = 0.0_f64
-do k=1,k2
-  jb = mod(jcell+k-2-self%bs2%offset+self%bs2%n,self%bs2%n) + 1
-  y = y + self%bs2%values(k)*work(k)
+do k = 1, k2
+  y  = y + values(k)*work(k)
 enddo
-
-deallocate(work)
 
 end function sll_f_bspline_2d_eval
 
 
-function sll_f_bspline_2d_eval_deriv_x1( self, x1, x2 ) result( y )
+SLL_PURE function sll_f_bspline_2d_eval_deriv_x1( self, x1, x2 ) result( y )
 
 type(sll_t_bspline_2d), intent(in) :: self
 sll_real64            , intent(in) :: x1
 sll_real64            , intent(in) :: x2
 sll_real64 :: y
 
-sll_real64, allocatable :: work(:)
-sll_int32               :: i, j
-sll_int32               :: k1, k2, icell, jcell
-sll_int32               :: ib, jb
+sll_int32 :: i, j
+sll_int32 :: k1, k2, icell, jcell
+sll_int32 :: ib, jb
+
+! Automatic arrays
+sll_real64 :: values(1+max(self%bs1%deg,self%bs2%deg))
+sll_real64 :: work  (1+self%bs2%deg)
 
 k1 = self%bs1%deg+1
 k2 = self%bs2%deg+1
-allocate(work(k2))
 
 icell =  sll_f_find_cell( self%bs1%bsp, x1 )
 jcell =  sll_f_find_cell( self%bs2%bsp, x2 )
 
 work = 0.0_f64
 do j = 1, k2
-  jb = mod(jcell+j-2-self%bs2%offset+self%bs2%n,self%bs2%n) + 1
-  call sll_s_spline_derivatives_at_x(self%bs1%bsp, icell, x1, self%bs1%values)
+  jb = mod( jcell+j-2-self%bs2%offset+self%bs2%n, self%bs2%n ) + 1
+  call sll_s_spline_derivatives_at_x(self%bs1%bsp, icell, x1, values(1:k1) )
   do i = 1, k1
-    ib = mod(icell+i-2-self%bs1%offset+self%bs1%n,self%bs1%n) + 1
-    work(j) = work(j) + self%bs1%values(i)*self%bcoef(ib,jb)
+    ib = mod( icell+i-2-self%bs1%offset+self%bs1%n, self%bs1%n ) + 1
+    work(j) = work(j) + values(i)*self%bcoef(ib,jb)
   enddo
 end do
 
-call sll_s_splines_at_x(self%bs2%bsp, jcell, x2, self%bs2%values)
+call sll_s_splines_at_x(self%bs2%bsp, jcell, x2, values(1:k2) )
 y = 0.0_f64
 do j = 1, k2
-  jb = mod(jcell+j-2-self%bs2%offset+self%bs2%n,self%bs2%n) + 1
-  y = y + self%bs2%values(j)*work(j)
+  y = y + values(j)*work(j)
 enddo
-
-deallocate(work)
 
 end function sll_f_bspline_2d_eval_deriv_x1
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
-function sll_f_bspline_2d_eval_deriv_x2( self, x1, x2 ) result( y )
+SLL_PURE function sll_f_bspline_2d_eval_deriv_x2( self, x1, x2 ) result( y )
 
 type(sll_t_bspline_2d), intent(in) :: self
 sll_real64            , intent(in) :: x1
 sll_real64            , intent(in) :: x2
 sll_real64 :: y
 
-sll_real64, allocatable :: work(:)
-sll_int32               :: i, j
-sll_int32               :: k1, k2, icell, jcell
-sll_int32               :: ib, jb
+sll_int32 :: i, j
+sll_int32 :: k1, k2, icell, jcell
+sll_int32 :: ib, jb
+
+! Automatic arrays
+sll_real64 :: values(1+max(self%bs1%deg,self%bs2%deg))
+sll_real64 :: work  (1+self%bs2%deg)
 
 k1 = self%bs1%deg+1
 k2 = self%bs2%deg+1
-allocate(work(k2))
 
-icell =  sll_f_find_cell( self%bs1%bsp, x1 )
-jcell =  sll_f_find_cell( self%bs2%bsp, x2 )
+icell = sll_f_find_cell( self%bs1%bsp, x1 )
+jcell = sll_f_find_cell( self%bs2%bsp, x2 )
 
 work = 0.0_f64
 do j = 1, k2
-  jb = mod(jcell+j-2-self%bs2%offset+self%bs2%n,self%bs2%n) + 1
-  call sll_s_splines_at_x(self%bs1%bsp, icell, x1, self%bs1%values)
+  jb = mod( jcell+j-2-self%bs2%offset+self%bs2%n, self%bs2%n ) + 1
+  call sll_s_splines_at_x( self%bs1%bsp, icell, x1, values(1:k1) )
   do i = 1, k1
-    ib = mod(icell+i-2-self%bs1%offset+self%bs1%n,self%bs1%n) + 1
-    work(j) = work(j) + self%bs1%values(i)*self%bcoef(ib,jb)
+    ib = mod( icell+i-2-self%bs1%offset+self%bs1%n, self%bs1%n ) + 1
+    work(j) = work(j) + values(i)*self%bcoef(ib,jb)
   enddo
 end do
 
-call sll_s_spline_derivatives_at_x(self%bs2%bsp, jcell, x2, self%bs2%values)
+call sll_s_spline_derivatives_at_x(self%bs2%bsp, jcell, x2, values(1:k2) )
 y = 0.0_f64
 do j = 1, k2
-  jb = mod(jcell+j-2-self%bs2%offset+self%bs2%n,self%bs2%n) + 1
-  y = y + self%bs2%values(j)*work(j)
+  y = y + values(j)*work(j)
 enddo
-
-deallocate(work)
 
 end function sll_f_bspline_2d_eval_deriv_x2
 
 
-subroutine sll_s_bspline_2d_eval_array_deriv_x1( self, n1, n2, x1, x2, y)
+SLL_PURE subroutine sll_s_bspline_2d_eval_array_deriv_x1( self, n1, n2, x1, x2, y )
 
 type(sll_t_bspline_2d), intent(in   ) :: self
 sll_int32             , intent(in   ) :: n1
@@ -494,15 +490,17 @@ sll_real64            , intent(in   ) :: x1(:,:)
 sll_real64            , intent(in   ) :: x2(:,:)
 sll_real64            , intent(  out) :: y (:,:)
 
-sll_real64, allocatable :: work(:)
-sll_int32               :: i, j, i1, i2
-sll_int32               :: k1, k2, icell, jcell
-sll_int32               :: ib, jb
-sll_real64              :: xi, xj, yy
+sll_int32  :: i, j, i1, i2
+sll_int32  :: k1, k2, icell, jcell
+sll_int32  :: ib, jb
+sll_real64 :: xi, xj, yy
+
+! Automatic arrays
+sll_real64 :: values(1+max(self%bs1%deg,self%bs2%deg))
+sll_real64 :: work  (1+self%bs2%deg)
 
 k1 = self%bs1%deg+1
 k2 = self%bs2%deg+1
-allocate(work(k2))
 
 do i2 = 1, n2
   do i1 = 1, n1
@@ -515,31 +513,28 @@ do i2 = 1, n2
     work = 0.0_f64
     do j = 1, k2
       jb = mod(jcell+j-2-self%bs2%offset+self%bs2%n,self%bs2%n) + 1
-      call sll_s_spline_derivatives_at_x(self%bs1%bsp, icell, xi, self%bs1%values)
+      call sll_s_spline_derivatives_at_x(self%bs1%bsp, icell, xi, values(1:k1) )
       do i = 1, k1
-        ib = mod(icell+i-2-self%bs1%offset+self%bs1%n,self%bs1%n) + 1
-        work(j) = work(j) + self%bs1%values(i)*self%bcoef(ib,jb)
+        ib = mod( icell+i-2-self%bs1%offset+self%bs1%n, self%bs1%n ) + 1
+        work(j) = work(j) + values(i)*self%bcoef(ib,jb)
       enddo
     end do
 
-    call sll_s_splines_at_x(self%bs2%bsp, jcell, xj, self%bs2%values)
+    call sll_s_splines_at_x( self%bs2%bsp, jcell, xj, values(1:k2) )
     yy = 0.0_f64
     do j = 1, k2
-      jb = mod(jcell+j-2-self%bs2%offset+self%bs2%n,self%bs2%n) + 1
-      yy = yy + self%bs2%values(j)*work(j)
+      yy = yy + values(j)*work(j)
     enddo
 
     y(i1,i2) = yy
 
   end do
 end do
-
-deallocate(work)
 
 end subroutine sll_s_bspline_2d_eval_array_deriv_x1
 
 
-subroutine sll_s_bspline_2d_eval_array_deriv_x2( self, n1, n2, x1, x2, y )
+SLL_PURE subroutine sll_s_bspline_2d_eval_array_deriv_x2( self, n1, n2, x1, x2, y )
 
 type(sll_t_bspline_2d), intent(in   ) :: self
 sll_int32             , intent(in   ) :: n1
@@ -548,15 +543,17 @@ sll_real64            , intent(in   ) :: x1(:,:)
 sll_real64            , intent(in   ) :: x2(:,:)
 sll_real64            , intent(  out) :: y (:,:)
 
-sll_real64, allocatable :: work(:)
-sll_int32               :: i, j, i1, i2
-sll_int32               :: k1, k2, icell, jcell
-sll_int32               :: ib, jb
-sll_real64              :: xi, xj, yy
+sll_int32  :: i, j, i1, i2
+sll_int32  :: k1, k2, icell, jcell
+sll_int32  :: ib, jb
+sll_real64 :: xi, xj, yy
+
+! Automatic arrays
+sll_real64 :: values(1+max(self%bs1%deg,self%bs2%deg))
+sll_real64 :: work  (1+self%bs2%deg)
 
 k1 = self%bs1%deg+1
 k2 = self%bs2%deg+1
-allocate(work(k2))
 
 do i2 = 1, n2
   do i1 = 1, n1
@@ -567,27 +564,24 @@ do i2 = 1, n2
 
     work = 0.0_f64
     do j = 1, k2
-      jb = mod(jcell+j-2-self%bs2%offset+self%bs2%n,self%bs2%n) + 1
-      call sll_s_splines_at_x(self%bs1%bsp, icell, xi, self%bs1%values)
+      jb = mod( jcell+j-2-self%bs2%offset+self%bs2%n, self%bs2%n ) + 1
+      call sll_s_splines_at_x( self%bs1%bsp, icell, xi, values(1:k1) )
       do i = 1, k1
-        ib = mod(icell+i-2-self%bs1%offset+self%bs1%n,self%bs1%n) + 1
-        work(j) = work(j) + self%bs1%values(i)*self%bcoef(ib,jb)
+        ib = mod( icell+i-2-self%bs1%offset+self%bs1%n, self%bs1%n ) + 1
+        work(j) = work(j) + values(i)*self%bcoef(ib,jb)
       enddo
     end do
 
-    call sll_s_spline_derivatives_at_x(self%bs2%bsp, jcell, xj, self%bs2%values)
+    call sll_s_spline_derivatives_at_x( self%bs2%bsp, jcell, xj, values(1:k2) )
     yy = 0.0_f64
     do j = 1, k2
-      jb = mod(jcell+j-2-self%bs2%offset+self%bs2%n,self%bs2%n) + 1
-      yy = yy + self%bs2%values(j)*work(j)
+      yy = yy + values(j)*work(j)
     enddo
 
     y(i1,i2) = yy
 
   end do
 end do
-
-deallocate(work)
 
 end subroutine sll_s_bspline_2d_eval_array_deriv_x2
 
