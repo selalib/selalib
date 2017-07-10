@@ -43,6 +43,14 @@
       call sll_s_assertion( STRNG(x), __FILE__, __LINE__ ); \
    end if;
 
+/* Macro for defining pure functions/subroutines that contain ASSERT statements
+  ('pure' attribute not used in DEBUG mode) */
+#ifdef DEBUG
+#define SLL_PURE
+#else
+#define SLL_PURE pure
+#endif
+
 use sll_m_assert
 
 #endif

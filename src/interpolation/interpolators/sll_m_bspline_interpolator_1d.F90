@@ -351,7 +351,7 @@ sll_real64, dimension(:), intent(in) :: data
 sll_real64, dimension(num_pts), intent(out)    :: output_array
 
 call sll_s_bspline_1d_compute_interpolant( this%bspline, data)
-call sll_s_bspline_1d_eval_array( this%bspline, num_pts, coordinates, output_array)
+call sll_s_bspline_1d_eval_array( this%bspline, coordinates, output_array )
 
 end subroutine interpolate_array_bs1d
 
@@ -408,10 +408,9 @@ sll_int32,                          intent(in)  :: num_pts
 sll_real64, dimension(num_pts),           intent(in)  :: vals_to_interpolate
 sll_real64, dimension(num_pts),           intent(out) :: output_array
 
-call sll_s_bspline_1d_eval_array(interpolator%bspline, &
-                              num_pts,              &
-                              vals_to_interpolate,  &
-                              output_array)
+call sll_s_bspline_1d_eval_array( interpolator%bspline, &
+                                  vals_to_interpolate , &
+                                  output_array )
 
 end subroutine interpolate_values_bs1d
 
@@ -426,10 +425,9 @@ sll_int32,                          intent(in)  :: num_pts
 sll_real64, dimension(:),           intent(in)  :: vals_to_interpolate
 sll_real64, dimension(:),           intent(out) :: output_array
 
-call sll_s_bspline_1d_eval_array_deriv(interpolator%bspline, &
-                                   num_pts,              &
-                                   vals_to_interpolate,  &
-                                   output_array)
+call sll_s_bspline_1d_eval_array_deriv( interpolator%bspline, &
+                                        vals_to_interpolate,  &
+                                        output_array)
 
 end subroutine interpolate_derivatives_bs1d
 

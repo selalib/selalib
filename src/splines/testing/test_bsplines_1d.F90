@@ -183,7 +183,7 @@ contains
     call cpu_time(t2)
     !.......
     do j = 1,nstep
-       call sll_s_bspline_1d_eval_array( bspline_1d, n, x, y)
+       call sll_s_bspline_1d_eval_array( bspline_1d, x, y)
     end do
     err1 = maxval(abs(y-cos(2*sll_p_pi*x)))
     if (err1 > tol) then
@@ -211,7 +211,7 @@ contains
     call cpu_time(t4)
     !......
     do j = 1,nstep
-       call sll_s_bspline_1d_eval_array_deriv( bspline_1d, n, x, y)
+       call sll_s_bspline_1d_eval_array_deriv( bspline_1d, x, y)
     end do
     err1 = maxval(abs(y+2*sll_p_pi*sin(2*sll_p_pi*x)))
     if (err1 > tol) then
@@ -275,7 +275,7 @@ contains
     call cpu_time(t2)
     !.......
     do j = 1,nstep
-       call sll_s_bspline_1d_eval_array( bspline_1d, n, xx, y)
+       call sll_s_bspline_1d_eval_array( bspline_1d, xx, y)
     end do
     err1 = maxval(abs(y-sin(2*sll_p_pi*xx)))
     if (err1 > tol) then
@@ -303,7 +303,7 @@ contains
     call cpu_time(t4)
     !......
     do j = 1,nstep
-       call sll_s_bspline_1d_eval_array_deriv( bspline_1d, n, xx, y)
+       call sll_s_bspline_1d_eval_array_deriv( bspline_1d, xx, y)
     end do
     err1 = maxval(abs(y-2*sll_p_pi*cos(2*sll_p_pi*xx)))
     if (err1 > tol) then
