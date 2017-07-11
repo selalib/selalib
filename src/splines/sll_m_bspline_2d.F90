@@ -318,39 +318,35 @@ contains
     sll_real64            , intent(in) :: x2
     sll_real64 :: y
 
-    sll_int32 :: j
-    sll_int32 :: k
-    sll_int32 :: ib
-    sll_int32 :: jb
-    sll_int32 :: k1
-    sll_int32 :: k2
-    sll_int32 :: icell
-    sll_int32 :: jcell
+    sll_int32 :: d1, d2
+    sll_int32 :: k1, k2
+    sll_int32 :: ib, jb
+    sll_int32 :: icell, jcell
 
     ! Automatic arrays
     sll_real64 :: values(1+max(self%bs1%deg,self%bs2%deg))
     sll_real64 :: work  (1+self%bs2%deg)
 
-    k1 = self%bs1%deg+1
-    k2 = self%bs2%deg+1
+    d1 = self%bs1%deg+1
+    d2 = self%bs2%deg+1
 
     icell = sll_f_find_cell( self%bs1%bsp, x1 )
     jcell = sll_f_find_cell( self%bs2%bsp, x2 )
 
     work = 0.0_f64
-    do j = 1, k2
-      jb = mod( jcell+j-2-self%bs2%offset+self%bs2%n, self%bs2%n ) + 1
-      call sll_s_splines_at_x( self%bs1%bsp, icell, x1, values(1:k1) )
-      do k = 1, k1
-        ib = mod( icell+k-2-self%bs1%offset+self%bs1%n, self%bs1%n ) + 1
-        work(j) = work(j) + values(k)*self%bcoef(ib,jb)
+    do k2 = 1, d2
+      jb = mod( jcell+k2-2-self%bs2%offset+self%bs2%n, self%bs2%n ) + 1
+      call sll_s_splines_at_x( self%bs1%bsp, icell, x1, values(1:d1) )
+      do k1 = 1, d1
+        ib = mod( icell+k1-2-self%bs1%offset+self%bs1%n, self%bs1%n ) + 1
+        work(k2) = work(k2) + values(k1)*self%bcoef(ib,jb)
       end do
     end do
 
-    call sll_s_splines_at_x( self%bs2%bsp, jcell, x2, values(1:k2) )
+    call sll_s_splines_at_x( self%bs2%bsp, jcell, x2, values(1:d2) )
     y = 0.0_f64
-    do k = 1, k2
-      y  = y + values(k)*work(k)
+    do k2 = 1, d2
+      y  = y + values(k2)*work(k2)
     end do
 
   end function sll_f_bspline_2d_eval
@@ -364,34 +360,35 @@ contains
     sll_real64            , intent(in) :: x2
     sll_real64 :: y
 
-    sll_int32 :: i, j
-    sll_int32 :: k1, k2, icell, jcell
+    sll_int32 :: d1, d2
+    sll_int32 :: k1, k2
     sll_int32 :: ib, jb
+    sll_int32 :: icell, jcell
 
     ! Automatic arrays
     sll_real64 :: values(1+max(self%bs1%deg,self%bs2%deg))
     sll_real64 :: work  (1+self%bs2%deg)
 
-    k1 = self%bs1%deg+1
-    k2 = self%bs2%deg+1
+    d1 = self%bs1%deg+1
+    d2 = self%bs2%deg+1
 
     icell =  sll_f_find_cell( self%bs1%bsp, x1 )
     jcell =  sll_f_find_cell( self%bs2%bsp, x2 )
 
     work = 0.0_f64
-    do j = 1, k2
-      jb = mod( jcell+j-2-self%bs2%offset+self%bs2%n, self%bs2%n ) + 1
-      call sll_s_spline_derivatives_at_x( self%bs1%bsp, icell, x1, values(1:k1) )
-      do i = 1, k1
-        ib = mod( icell+i-2-self%bs1%offset+self%bs1%n, self%bs1%n ) + 1
-        work(j) = work(j) + values(i)*self%bcoef(ib,jb)
+    do k2 = 1, d2
+      jb = mod( jcell+k2-2-self%bs2%offset+self%bs2%n, self%bs2%n ) + 1
+      call sll_s_spline_derivatives_at_x( self%bs1%bsp, icell, x1, values(1:d1) )
+      do k1 = 1, d1
+        ib = mod( icell+k1-2-self%bs1%offset+self%bs1%n, self%bs1%n ) + 1
+        work(k2) = work(k2) + values(k1)*self%bcoef(ib,jb)
       end do
     end do
 
-    call sll_s_splines_at_x( self%bs2%bsp, jcell, x2, values(1:k2) )
+    call sll_s_splines_at_x( self%bs2%bsp, jcell, x2, values(1:d2) )
     y = 0.0_f64
-    do j = 1, k2
-      y = y + values(j)*work(j)
+    do k2 = 1, d2
+      y = y + values(k2)*work(k2)
     end do
 
   end function sll_f_bspline_2d_eval_deriv_x1
@@ -404,34 +401,35 @@ contains
     sll_real64            , intent(in) :: x2
     sll_real64 :: y
 
-    sll_int32 :: i, j
-    sll_int32 :: k1, k2, icell, jcell
+    sll_int32 :: d1, d2
+    sll_int32 :: k1, k2
     sll_int32 :: ib, jb
+    sll_int32 :: icell, jcell
 
     ! Automatic arrays
     sll_real64 :: values(1+max(self%bs1%deg,self%bs2%deg))
     sll_real64 :: work  (1+self%bs2%deg)
 
-    k1 = self%bs1%deg+1
-    k2 = self%bs2%deg+1
+    d1 = self%bs1%deg+1
+    d2 = self%bs2%deg+1
 
     icell = sll_f_find_cell( self%bs1%bsp, x1 )
     jcell = sll_f_find_cell( self%bs2%bsp, x2 )
 
     work = 0.0_f64
-    do j = 1, k2
-      jb = mod( jcell+j-2-self%bs2%offset+self%bs2%n, self%bs2%n ) + 1
-      call sll_s_splines_at_x( self%bs1%bsp, icell, x1, values(1:k1) )
-      do i = 1, k1
-        ib = mod( icell+i-2-self%bs1%offset+self%bs1%n, self%bs1%n ) + 1
-        work(j) = work(j) + values(i)*self%bcoef(ib,jb)
+    do k2 = 1, d2
+      jb = mod( jcell+k2-2-self%bs2%offset+self%bs2%n, self%bs2%n ) + 1
+      call sll_s_splines_at_x( self%bs1%bsp, icell, x1, values(1:d1) )
+      do k1 = 1, d1
+        ib = mod( icell+k1-2-self%bs1%offset+self%bs1%n, self%bs1%n ) + 1
+        work(k2) = work(k2) + values(k1)*self%bcoef(ib,jb)
       end do
     end do
 
-    call sll_s_spline_derivatives_at_x( self%bs2%bsp, jcell, x2, values(1:k2) )
+    call sll_s_spline_derivatives_at_x( self%bs2%bsp, jcell, x2, values(1:d2) )
     y = 0.0_f64
-    do j = 1, k2
-      y = y + values(j)*work(j)
+    do k2 = 1, d2
+      y = y + values(k2)*work(k2)
     end do
 
   end function sll_f_bspline_2d_eval_deriv_x2
