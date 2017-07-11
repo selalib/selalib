@@ -70,537 +70,535 @@ end type sll_t_bspline_2d
 contains
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
-!> @brief Initialises a 2D spline interpolation object.
-!> @param[in] nx1 Number of points where the data to be interpolated are
-!>            represented.
-!> @param[in] degree1 Spline degree
-!> @param[in] x1_min Minimum value of the abscissae where the data are meant
-!> to be interpolated.
-!> @param[in] x1_max Maximum value of the abscissae where the data are meant
-!> to be interpolated.
-!> @param[in] bc1 A boundary condition specifier. Must be one of the
-!> symbols defined in the SLL_BOUNDARY_CONDITION_DESCRIPTORS module.
-!> @param[in] nx2 Number of points where the data to be interpolated are
-!>            represented.
-!> @param[in] degree2 Spline degree
-!> @param[in] x2_min Minimum value of the abscissae where the data are meant
-!> to be interpolated.
-!> @param[in] x2_max Maximum value of the abscissae where the data are meant
-!> to be interpolated.
-!> @param[in] bc2 A boundary condition specifier. Must be one of the
-!> symbols defined in the sll_m_boundary_condition_descriptors module.
-!> @param[in] spline_bc_type1 A boundary condition specifier (see sll_s_bspline_1d_init).
-!> @param[in] spline_bc_type2 A boundary condition specifier (see sll_s_bspline_1d_init).
-!> @param[in] bc_left1 value of function on the west boundary
-!> @param[in] bc_left2 value of function on the south boundary
-!> @param[in] bc_right1 value of function on the east boundary
-!> @param[in] bc_right2 value of the function on the north boundary
-!> @return a spline interpolation object.
-subroutine sll_s_bspline_2d_init( &
-  self,            &
-  num_pts1,        &
-  num_pts2,        &
-  degree1,         &
-  degree2,         &
-  x1_min,          &
-  x2_min,          &
-  x1_max,          &
-  x2_max,          &
-  bc1_min,         &
-  bc2_min,         &
-  bc1_max,         &
-  bc2_max,         &
-  spline_bc_type1, &
-  spline_bc_type2 )
+  !-----------------------------------------------------------------------------
+  !> @brief Initialises a 2D spline interpolation object.
+  !> @param[in] nx1 Number of points where the data to be interpolated are
+  !>            represented.
+  !> @param[in] degree1 Spline degree
+  !> @param[in] x1_min Minimum value of the abscissae where the data are meant
+  !> to be interpolated.
+  !> @param[in] x1_max Maximum value of the abscissae where the data are meant
+  !> to be interpolated.
+  !> @param[in] bc1 A boundary condition specifier. Must be one of the
+  !> symbols defined in the SLL_BOUNDARY_CONDITION_DESCRIPTORS module.
+  !> @param[in] nx2 Number of points where the data to be interpolated are
+  !>            represented.
+  !> @param[in] degree2 Spline degree
+  !> @param[in] x2_min Minimum value of the abscissae where the data are meant
+  !> to be interpolated.
+  !> @param[in] x2_max Maximum value of the abscissae where the data are meant
+  !> to be interpolated.
+  !> @param[in] bc2 A boundary condition specifier. Must be one of the
+  !> symbols defined in the sll_m_boundary_condition_descriptors module.
+  !> @param[in] spline_bc_type1 A boundary condition specifier (see sll_s_bspline_1d_init).
+  !> @param[in] spline_bc_type2 A boundary condition specifier (see sll_s_bspline_1d_init).
+  !> @param[in] bc_left1 value of function on the west boundary
+  !> @param[in] bc_left2 value of function on the south boundary
+  !> @param[in] bc_right1 value of function on the east boundary
+  !> @param[in] bc_right2 value of the function on the north boundary
+  !> @return a spline interpolation object.
+  !-----------------------------------------------------------------------------
+  subroutine sll_s_bspline_2d_init( &
+    self,            &
+    num_pts1,        &
+    num_pts2,        &
+    degree1,         &
+    degree2,         &
+    x1_min,          &
+    x2_min,          &
+    x1_max,          &
+    x2_max,          &
+    bc1_min,         &
+    bc2_min,         &
+    bc1_max,         &
+    bc2_max,         &
+    spline_bc_type1, &
+    spline_bc_type2 )
 
-  type(sll_t_bspline_2d), intent(  out) :: self
-  sll_int32 ,             intent(in   ) :: num_pts1
-  sll_int32 ,             intent(in   ) :: num_pts2
-  sll_int32 ,             intent(in   ) :: degree1
-  sll_int32 ,             intent(in   ) :: degree2
-  sll_real64,             intent(in   ) :: x1_min
-  sll_real64,             intent(in   ) :: x2_min
-  sll_real64,             intent(in   ) :: x1_max
-  sll_real64,             intent(in   ) :: x2_max
-  sll_int32 ,             intent(in   ) :: bc1_min
-  sll_int32 ,             intent(in   ) :: bc2_min
-  sll_int32 ,             intent(in   ) :: bc1_max
-  sll_int32 ,             intent(in   ) :: bc2_max
-  sll_int32 , optional,   intent(in   ) :: spline_bc_type1
-  sll_int32 , optional,   intent(in   ) :: spline_bc_type2
+    type(sll_t_bspline_2d), intent(  out) :: self
+    sll_int32 ,             intent(in   ) :: num_pts1
+    sll_int32 ,             intent(in   ) :: num_pts2
+    sll_int32 ,             intent(in   ) :: degree1
+    sll_int32 ,             intent(in   ) :: degree2
+    sll_real64,             intent(in   ) :: x1_min
+    sll_real64,             intent(in   ) :: x2_min
+    sll_real64,             intent(in   ) :: x1_max
+    sll_real64,             intent(in   ) :: x2_max
+    sll_int32 ,             intent(in   ) :: bc1_min
+    sll_int32 ,             intent(in   ) :: bc2_min
+    sll_int32 ,             intent(in   ) :: bc1_max
+    sll_int32 ,             intent(in   ) :: bc2_max
+    sll_int32 , optional,   intent(in   ) :: spline_bc_type1
+    sll_int32 , optional,   intent(in   ) :: spline_bc_type2
 
-  sll_int32 :: n1
-  sll_int32 :: n2
+    sll_int32 :: n1
+    sll_int32 :: n2
 
-  ! NOTE: in the future different boundary conditions at xmin and xmax
-  !       should be considered. For now we only check that bc_xmin==bc_xmax
-  SLL_ASSERT( bc1_min == bc1_max )
-  SLL_ASSERT( bc2_min == bc2_max )
+    ! NOTE: in the future different boundary conditions at xmin and xmax
+    !       should be considered. For now we only check that bc_xmin==bc_xmax
+    SLL_ASSERT( bc1_min == bc1_max )
+    SLL_ASSERT( bc2_min == bc2_max )
 
-  if (present(spline_bc_type1)) then
-    call sll_s_bspline_1d_init( self%bs1, num_pts1, degree1, &
-      x1_min, x1_max, bc1_min, bc1_max, spline_bc_type1)
-  else
-    call sll_s_bspline_1d_init( self%bs1, num_pts1, degree1, &
-      x1_min, x1_max, bc1_min, bc1_max )
-  end if
-  if (present(spline_bc_type2)) then
-    call sll_s_bspline_1d_init( self%bs2, num_pts2, degree2, &
-      x2_min, x2_max, bc2_min, bc2_max, spline_bc_type2 )
-  else
-    call sll_s_bspline_1d_init( self%bs2, num_pts2, degree2, &
-      x2_min, x2_max, bc2_min, bc2_max )
-  end if
+    if (present(spline_bc_type1)) then
+      call sll_s_bspline_1d_init( self%bs1, num_pts1, degree1, &
+           x1_min, x1_max, bc1_min, bc1_max, spline_bc_type1)
+    else
+      call sll_s_bspline_1d_init( self%bs1, num_pts1, degree1, &
+           x1_min, x1_max, bc1_min, bc1_max )
+    end if
+    if (present(spline_bc_type2)) then
+      call sll_s_bspline_1d_init( self%bs2, num_pts2, degree2, &
+           x2_min, x2_max, bc2_min, bc2_max, spline_bc_type2 )
+    else
+      call sll_s_bspline_1d_init( self%bs2, num_pts2, degree2, &
+           x2_min, x2_max, bc2_min, bc2_max )
+    end if
 
-  n1 = self%bs1%n
-  n2 = self%bs2%n
-  allocate( self%bwork(1:n2,1:n1) ); self%bwork = 0.0_f64
-  allocate( self%bcoef(1:n1,1:n2) ); self%bcoef = 0.0_f64
+    n1 = self%bs1%n
+    n2 = self%bs2%n
+    allocate( self%bwork(1:n2,1:n1) ); self%bwork = 0.0_f64
+    allocate( self%bcoef(1:n1,1:n2) ); self%bcoef = 0.0_f64
 
-end subroutine sll_s_bspline_2d_init
+  end subroutine sll_s_bspline_2d_init
 
+  !-----------------------------------------------------------------------------
+  subroutine sll_s_bspline_2d_compute_interpolant( &
+    self, &
+    gtau, &
+    val1_min, &
+    val1_max, &
+    val2_min, &
+    val2_max, &
+    val_corners )
 
-subroutine sll_s_bspline_2d_compute_interpolant( &
-  self, &
-  gtau, &
-  val1_min, &
-  val1_max, &
-  val2_min, &
-  val2_max, &
-  val_corners )
+    type(sll_t_bspline_2d), intent(inout)           :: self
+    sll_real64            , intent(in   )           :: gtau(:,:)
+    sll_real64            , intent(in   ), optional :: val1_min(:,:)
+    sll_real64            , intent(in   ), optional :: val1_max(:,:)
+    sll_real64            , intent(in   ), optional :: val2_min(:,:)
+    sll_real64            , intent(in   ), optional :: val2_max(:,:)
+    sll_real64            , intent(in   ), optional :: val_corners(:,:,:)
 
-  type(sll_t_bspline_2d), intent(inout)           :: self
-  sll_real64            , intent(in   )           :: gtau(:,:)
-  sll_real64            , intent(in   ), optional :: val1_min(:,:)
-  sll_real64            , intent(in   ), optional :: val1_max(:,:)
-  sll_real64            , intent(in   ), optional :: val2_min(:,:)
-  sll_real64            , intent(in   ), optional :: val2_max(:,:)
-  sll_real64            , intent(in   ), optional :: val_corners(:,:,:)
+    sll_int32 :: i1, n1, ncond1
+    sll_int32 :: i2, n2, ncond2, j2
 
-  sll_int32 :: i1, n1, ncond1
-  sll_int32 :: i2, n2, ncond2, j2
+    ! TODO: check size of gtau == tau
+    ! TODO: check size of all input arrays
 
-  ! TODO: check size of gtau == tau
-  ! TODO: check size of all input arrays
+    ! Number of degrees of freedom
+    n1 = self%bs1%n
+    n2 = self%bs2%n
 
-  ! Number of degrees of freedom
-  n1 = self%bs1%n
-  n2 = self%bs2%n
+    ! Compute number of additional boundary values needed
+    ncond1 = 0
+    ncond2 = 0
+    if (self%bs1%bc_type == sll_p_hermite)  ncond1 = self%bs1%deg/2
+    if (self%bs2%bc_type == sll_p_hermite)  ncond2 = self%bs2%deg/2
 
-  ! Compute number of additional boundary values needed
-  ncond1 = 0
-  ncond2 = 0
-  if (self%bs1%bc_type == sll_p_hermite)  ncond1 = self%bs1%deg/2
-  if (self%bs2%bc_type == sll_p_hermite)  ncond2 = self%bs2%deg/2
+    !--------------------------------------------
+    ! Compute spline coefficients in x1 direction
+    !--------------------------------------------
 
-  !--------------------------------------------
-  ! Compute spline coefficients in x1 direction
-  !--------------------------------------------
+    ! Boundary points in x2 (only for Hermite):
+    ! Additional x1-interpolation of x2-derivatives on boundaries is needed!
+    if (self%bs2%bc_type == sll_p_hermite) then
 
-  ! Boundary points in x2 (only for Hermite):
-  ! Additional x1-interpolation of x2-derivatives on boundaries is needed!
-  if (self%bs2%bc_type == sll_p_hermite) then
+      ! Hermite-Hermite case:
+      if (self%bs1%bc_type == sll_p_hermite) then
 
-    ! Hermite-Hermite case:
-    if (self%bs1%bc_type == sll_p_hermite) then
+        ! boundary conditions at x2_min
+        if (present(val2_min)) then
+          do j2 = 1, ncond2
+            if( present(val_corners)) then
+              call sll_s_bspline_1d_compute_interpolant( self%bs1, val2_min(j2,:), &
+                   val_corners(:,j2,1), val_corners(:,j2,2))
+            else
+              call sll_s_bspline_1d_compute_interpolant( self%bs1, val2_min(j2,:) )
+            end if
+            self%bwork(j2,:) = self%bs1%bcoef(:)
+          end do
+        else  ! set needed boundary values to 0
+          self%bwork(1:ncond2,:) = 0.0_f64
+        end if
 
-      ! boundary conditions at x2_min
-      if (present(val2_min)) then
-        do j2 = 1, ncond2
-          if( present(val_corners)) then
-            call sll_s_bspline_1d_compute_interpolant( self%bs1, val2_min(j2,:), &
-              val_corners(:,j2,1), val_corners(:,j2,2))
-          else
+        ! boundary conditions at x2_max
+        if (present(val2_max)) then
+          do j2 = 1, ncond2
+            if (present(val_corners)) then
+              call sll_s_bspline_1d_compute_interpolant( self%bs1, val2_max(j2,:), &
+                   val_corners(:,j2,3), val_corners(:,j2,4))
+            else
+              call sll_s_bspline_1d_compute_interpolant( self%bs1, val2_max(j2,:) )
+            end if
+            self%bwork(n2-ncond2+j2,:) = self%bs1%bcoef(:)
+          end do
+        else ! set needed boundary values to 0
+          self%bwork(n2-ncond2+1:n2,:) = 0.0_f64
+        end if
+
+        ! Other-Hermite case:
+      else
+
+        ! boundary conditions at x2_min
+        if (present(val2_min)) then
+          do j2 = 1, ncond2
             call sll_s_bspline_1d_compute_interpolant( self%bs1, val2_min(j2,:) )
-          end if
-          self%bwork(j2,:) = self%bs1%bcoef(:)
-        end do
-      else  ! set needed boundary values to 0
-        self%bwork(1:ncond2,:) = 0.0_f64
-      end if
+            self%bwork(j2,:) = self%bs1%bcoef(:)
+          end do
+        else  ! set needed boundary values to 0
+          self%bwork(1:ncond2,:) = 0.0_f64
+        end if
 
-      ! boundary conditions at x2_max
-      if (present(val2_max)) then
-        do j2 = 1, ncond2
-          if (present(val_corners)) then
-            call sll_s_bspline_1d_compute_interpolant( self%bs1, val2_max(j2,:), &
-            val_corners(:,j2,3), val_corners(:,j2,4))
-          else
+        ! boundary conditions at x2_max
+        if (present(val2_max)) then
+          do j2 = 1, ncond2
             call sll_s_bspline_1d_compute_interpolant( self%bs1, val2_max(j2,:) )
-          end if
-          self%bwork(n2-ncond2+j2,:) = self%bs1%bcoef(:)
-        end do
-      else ! set needed boundary values to 0
-        self%bwork(n2-ncond2+1:n2,:) = 0.0_f64
+            self%bwork(n2-ncond2+j2,:) = self%bs1%bcoef(:)
+          end do
+        else ! set needed boundary values to 0
+          self%bwork(n2-ncond2+1:n2,:) = 0.0_f64
+        end if
+
       end if
-
-    ! Other-Hermite case:
-    else
-
-      ! boundary conditions at x2_min
-      if (present(val2_min)) then
-        do j2 = 1, ncond2
-          call sll_s_bspline_1d_compute_interpolant( self%bs1, val2_min(j2,:) )
-          self%bwork(j2,:) = self%bs1%bcoef(:)
-        end do
-      else  ! set needed boundary values to 0
-        self%bwork(1:ncond2,:) = 0.0_f64
-      end if
-
-      ! boundary conditions at x2_max
-      if (present(val2_max)) then
-        do j2 = 1, ncond2
-          call sll_s_bspline_1d_compute_interpolant( self%bs1, val2_max(j2,:) )
-          self%bwork(n2-ncond2+j2,:) = self%bs1%bcoef(:)
-        end do
-      else ! set needed boundary values to 0
-        self%bwork(n2-ncond2+1:n2,:) = 0.0_f64
-      end if
-
-    end if
-  end if
-
-  ! Interior points
-  do i2 = 1, n2-2*ncond2
-    if (present(val1_min) .and. present(val1_max)) then
-      call sll_s_bspline_1d_compute_interpolant( self%bs1, gtau(:,i2), &
-        val1_min(:,i2), val1_max(:,i2) )
-    else
-      call sll_s_bspline_1d_compute_interpolant( self%bs1, gtau(:,i2) )
-    end if
-    self%bwork(i2+ncond2,:) = self%bs1%bcoef(:)
-  end do
-
-  !--------------------------------------------
-  ! Compute spline coefficients in x2 direction
-  !--------------------------------------------
-  if (self%bs2%bc_type == sll_p_hermite) then
-
-    if (present(val2_min) .and. present(val2_max)) then
-      do i1 = 1, n1
-        call sll_s_bspline_1d_compute_interpolant( self%bs2, &
-          self%bwork(ncond2+1:n2-ncond2,i1), &
-          self%bwork(1:ncond2,i1), &
-          self%bwork(n2-ncond2+1:n2,i1) )
-        self%bcoef(i1,:) = self%bs2%bcoef(:)
-      end do
-    else
-      do i1 = 1, n1
-        call sll_s_bspline_1d_compute_interpolant( self%bs2, self%bwork(ncond2+1:n2-ncond2,i1) )
-        self%bcoef(i1,:) = self%bs2%bcoef(:)
-      end do
     end if
 
-  else
-
-    do i1 = 1, n1
-      call sll_s_bspline_1d_compute_interpolant( self%bs2, self%bwork(:,i1) )
-      self%bcoef(i1,:) = self%bs2%bcoef(:)
+    ! Interior points
+    do i2 = 1, n2-2*ncond2
+      if (present(val1_min) .and. present(val1_max)) then
+        call sll_s_bspline_1d_compute_interpolant( self%bs1, gtau(:,i2), &
+             val1_min(:,i2), val1_max(:,i2) )
+      else
+        call sll_s_bspline_1d_compute_interpolant( self%bs1, gtau(:,i2) )
+      end if
+      self%bwork(i2+ncond2,:) = self%bs1%bcoef(:)
     end do
 
-  end if
+    !--------------------------------------------
+    ! Compute spline coefficients in x2 direction
+    !--------------------------------------------
+    if (self%bs2%bc_type == sll_p_hermite) then
 
-end subroutine sll_s_bspline_2d_compute_interpolant
+      if (present(val2_min) .and. present(val2_max)) then
+        do i1 = 1, n1
+          call sll_s_bspline_1d_compute_interpolant( self%bs2, &
+               self%bwork(ncond2+1:n2-ncond2,i1), &
+               self%bwork(1:ncond2,i1), &
+               self%bwork(n2-ncond2+1:n2,i1) )
+          self%bcoef(i1,:) = self%bs2%bcoef(:)
+        end do
+      else
+        do i1 = 1, n1
+          call sll_s_bspline_1d_compute_interpolant( self%bs2, self%bwork(ncond2+1:n2-ncond2,i1) )
+          self%bcoef(i1,:) = self%bs2%bcoef(:)
+        end do
+      end if
 
+    else
 
-SLL_PURE subroutine sll_s_bspline_2d_eval_array( self, n1, n2, x1, x2, y )
+      do i1 = 1, n1
+        call sll_s_bspline_1d_compute_interpolant( self%bs2, self%bwork(:,i1) )
+        self%bcoef(i1,:) = self%bs2%bcoef(:)
+      end do
 
-type(sll_t_bspline_2d), intent(in   ) :: self
-sll_int32             , intent(in   ) :: n1
-sll_int32             , intent(in   ) :: n2
-sll_real64            , intent(in   ) :: x1(:,:)
-sll_real64            , intent(in   ) :: x2(:,:)
-sll_real64            , intent(  out) :: y (:,:)
+    end if
 
-sll_int32 :: icell, jcell
-sll_int32 :: i1, i2, k1, k2
-sll_int32 :: ib, jb
-sll_int32 :: j, k
+  end subroutine sll_s_bspline_2d_compute_interpolant
 
-! Automatic arrays
-sll_real64 :: values(1+max(self%bs1%deg,self%bs2%deg))
-sll_real64 :: work  (1+self%bs2%deg)
+  !-----------------------------------------------------------------------------
+  SLL_PURE subroutine sll_s_bspline_2d_eval_array( self, n1, n2, x1, x2, y )
 
-SLL_ASSERT( n1 == size(x1,1) .and. n1 == size(x2,1) )
-SLL_ASSERT( n2 == size(x1,2) .and. n2 == size(x2,2) )
+    type(sll_t_bspline_2d), intent(in   ) :: self
+    sll_int32             , intent(in   ) :: n1
+    sll_int32             , intent(in   ) :: n2
+    sll_real64            , intent(in   ) :: x1(:,:)
+    sll_real64            , intent(in   ) :: x2(:,:)
+    sll_real64            , intent(  out) :: y (:,:)
 
-k1 = self%bs1%deg+1
-k2 = self%bs2%deg+1
+    sll_int32 :: icell, jcell
+    sll_int32 :: i1, i2, k1, k2
+    sll_int32 :: ib, jb
+    sll_int32 :: j, k
 
-do i2 = 1, n2
-  do i1 = 1, n1
+    ! Automatic arrays
+    sll_real64 :: values(1+max(self%bs1%deg,self%bs2%deg))
+    sll_real64 :: work  (1+self%bs2%deg)
 
-    icell = sll_f_find_cell( self%bs1%bsp, x1(i1,i2) )
-    jcell = sll_f_find_cell( self%bs2%bsp, x2(i1,i2) )
+    SLL_ASSERT( n1 == size(x1,1) .and. n1 == size(x2,1) )
+    SLL_ASSERT( n2 == size(x1,2) .and. n2 == size(x2,2) )
+
+    k1 = self%bs1%deg+1
+    k2 = self%bs2%deg+1
+
+    do i2 = 1, n2
+      do i1 = 1, n1
+
+        icell = sll_f_find_cell( self%bs1%bsp, x1(i1,i2) )
+        jcell = sll_f_find_cell( self%bs2%bsp, x2(i1,i2) )
+
+        work = 0.0_f64
+        do j = 1, k2
+          jb = mod(jcell+j-2-self%bs2%offset+self%bs2%n,self%bs2%n) + 1
+          call sll_s_splines_at_x( self%bs1%bsp, icell, x1(i1,i2), values(1:k1) )
+          do k = 1, k1
+            ib = mod(icell+k-2-self%bs1%offset+self%bs1%n,self%bs1%n) + 1
+            work(j) = work(j) + values(k)*self%bcoef(ib,jb)
+          end do
+        end do
+
+        call sll_s_splines_at_x( self%bs2%bsp, jcell, x2(i1,i2), values(1:k2) )
+        y(i1,i2) = 0.0_f64
+        do k = 1, k2
+          y(i1,i2) = y(i1,i2) + values(k)*work(k)
+        end do
+
+      end do
+    end do
+
+  end subroutine sll_s_bspline_2d_eval_array
+
+  !-----------------------------------------------------------------------------
+  SLL_PURE function sll_f_bspline_2d_eval( self, x1, x2 ) result( y )
+
+    type(sll_t_bspline_2d), intent(in) :: self
+    sll_real64            , intent(in) :: x1
+    sll_real64            , intent(in) :: x2
+    sll_real64 :: y
+
+    sll_int32 :: j
+    sll_int32 :: k
+    sll_int32 :: ib
+    sll_int32 :: jb
+    sll_int32 :: k1
+    sll_int32 :: k2
+    sll_int32 :: icell
+    sll_int32 :: jcell
+
+    ! Automatic arrays
+    sll_real64 :: values(1+max(self%bs1%deg,self%bs2%deg))
+    sll_real64 :: work  (1+self%bs2%deg)
+
+    k1 = self%bs1%deg+1
+    k2 = self%bs2%deg+1
+
+    icell = sll_f_find_cell( self%bs1%bsp, x1 )
+    jcell = sll_f_find_cell( self%bs2%bsp, x2 )
 
     work = 0.0_f64
     do j = 1, k2
       jb = mod(jcell+j-2-self%bs2%offset+self%bs2%n,self%bs2%n) + 1
-      call sll_s_splines_at_x( self%bs1%bsp, icell, x1(i1,i2), values(1:k1) )
+      call sll_s_splines_at_x( self%bs1%bsp, icell, x1, values(1:k1) )
       do k = 1, k1
-        ib = mod(icell+k-2-self%bs1%offset+self%bs1%n,self%bs1%n) + 1
+        ib = mod( icell+k-2-self%bs1%offset+self%bs1%n, self%bs1%n ) + 1
         work(j) = work(j) + values(k)*self%bcoef(ib,jb)
       end do
     end do
 
-    call sll_s_splines_at_x( self%bs2%bsp, jcell, x2(i1,i2), values(1:k2) )
-    y(i1,i2) = 0.0_f64
+    call sll_s_splines_at_x(self%bs2%bsp, jcell, x2, values(1:k2) )
+    y = 0.0_f64
     do k = 1, k2
-      y(i1,i2) = y(i1,i2) + values(k)*work(k)
-    enddo
-
-  end do
-end do
-
-end subroutine sll_s_bspline_2d_eval_array
-
-
-SLL_PURE function sll_f_bspline_2d_eval( self, x1, x2 ) result( y )
-
-type(sll_t_bspline_2d), intent(in) :: self
-sll_real64            , intent(in) :: x1
-sll_real64            , intent(in) :: x2
-sll_real64 :: y
-
-sll_int32 :: j
-sll_int32 :: k
-sll_int32 :: ib
-sll_int32 :: jb
-sll_int32 :: k1
-sll_int32 :: k2
-sll_int32 :: icell
-sll_int32 :: jcell
-
-! Automatic arrays
-sll_real64 :: values(1+max(self%bs1%deg,self%bs2%deg))
-sll_real64 :: work  (1+self%bs2%deg)
-
-k1 = self%bs1%deg+1
-k2 = self%bs2%deg+1
-
-icell = sll_f_find_cell( self%bs1%bsp, x1 )
-jcell = sll_f_find_cell( self%bs2%bsp, x2 )
-
-work = 0.0_f64
-do j = 1, k2
-  jb = mod(jcell+j-2-self%bs2%offset+self%bs2%n,self%bs2%n) + 1
-  call sll_s_splines_at_x( self%bs1%bsp, icell, x1, values(1:k1) )
-  do k = 1, k1
-    ib = mod( icell+k-2-self%bs1%offset+self%bs1%n, self%bs1%n ) + 1
-    work(j) = work(j) + values(k)*self%bcoef(ib,jb)
-  end do
-end do
-
-call sll_s_splines_at_x(self%bs2%bsp, jcell, x2, values(1:k2) )
-y = 0.0_f64
-do k = 1, k2
-  y  = y + values(k)*work(k)
-enddo
-
-end function sll_f_bspline_2d_eval
-
-
-SLL_PURE function sll_f_bspline_2d_eval_deriv_x1( self, x1, x2 ) result( y )
-
-type(sll_t_bspline_2d), intent(in) :: self
-sll_real64            , intent(in) :: x1
-sll_real64            , intent(in) :: x2
-sll_real64 :: y
-
-sll_int32 :: i, j
-sll_int32 :: k1, k2, icell, jcell
-sll_int32 :: ib, jb
-
-! Automatic arrays
-sll_real64 :: values(1+max(self%bs1%deg,self%bs2%deg))
-sll_real64 :: work  (1+self%bs2%deg)
-
-k1 = self%bs1%deg+1
-k2 = self%bs2%deg+1
-
-icell =  sll_f_find_cell( self%bs1%bsp, x1 )
-jcell =  sll_f_find_cell( self%bs2%bsp, x2 )
-
-work = 0.0_f64
-do j = 1, k2
-  jb = mod( jcell+j-2-self%bs2%offset+self%bs2%n, self%bs2%n ) + 1
-  call sll_s_spline_derivatives_at_x(self%bs1%bsp, icell, x1, values(1:k1) )
-  do i = 1, k1
-    ib = mod( icell+i-2-self%bs1%offset+self%bs1%n, self%bs1%n ) + 1
-    work(j) = work(j) + values(i)*self%bcoef(ib,jb)
-  enddo
-end do
-
-call sll_s_splines_at_x(self%bs2%bsp, jcell, x2, values(1:k2) )
-y = 0.0_f64
-do j = 1, k2
-  y = y + values(j)*work(j)
-enddo
-
-end function sll_f_bspline_2d_eval_deriv_x1
-
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-
-SLL_PURE function sll_f_bspline_2d_eval_deriv_x2( self, x1, x2 ) result( y )
-
-type(sll_t_bspline_2d), intent(in) :: self
-sll_real64            , intent(in) :: x1
-sll_real64            , intent(in) :: x2
-sll_real64 :: y
-
-sll_int32 :: i, j
-sll_int32 :: k1, k2, icell, jcell
-sll_int32 :: ib, jb
-
-! Automatic arrays
-sll_real64 :: values(1+max(self%bs1%deg,self%bs2%deg))
-sll_real64 :: work  (1+self%bs2%deg)
-
-k1 = self%bs1%deg+1
-k2 = self%bs2%deg+1
-
-icell = sll_f_find_cell( self%bs1%bsp, x1 )
-jcell = sll_f_find_cell( self%bs2%bsp, x2 )
-
-work = 0.0_f64
-do j = 1, k2
-  jb = mod( jcell+j-2-self%bs2%offset+self%bs2%n, self%bs2%n ) + 1
-  call sll_s_splines_at_x( self%bs1%bsp, icell, x1, values(1:k1) )
-  do i = 1, k1
-    ib = mod( icell+i-2-self%bs1%offset+self%bs1%n, self%bs1%n ) + 1
-    work(j) = work(j) + values(i)*self%bcoef(ib,jb)
-  enddo
-end do
-
-call sll_s_spline_derivatives_at_x(self%bs2%bsp, jcell, x2, values(1:k2) )
-y = 0.0_f64
-do j = 1, k2
-  y = y + values(j)*work(j)
-enddo
-
-end function sll_f_bspline_2d_eval_deriv_x2
-
-
-SLL_PURE subroutine sll_s_bspline_2d_eval_array_deriv_x1( self, n1, n2, x1, x2, y )
-
-type(sll_t_bspline_2d), intent(in   ) :: self
-sll_int32             , intent(in   ) :: n1
-sll_int32             , intent(in   ) :: n2
-sll_real64            , intent(in   ) :: x1(:,:)
-sll_real64            , intent(in   ) :: x2(:,:)
-sll_real64            , intent(  out) :: y (:,:)
-
-sll_int32  :: i, j, i1, i2
-sll_int32  :: k1, k2, icell, jcell
-sll_int32  :: ib, jb
-sll_real64 :: xi, xj, yy
-
-! Automatic arrays
-sll_real64 :: values(1+max(self%bs1%deg,self%bs2%deg))
-sll_real64 :: work  (1+self%bs2%deg)
-
-k1 = self%bs1%deg+1
-k2 = self%bs2%deg+1
-
-do i2 = 1, n2
-  do i1 = 1, n1
-
-    xi = x1(i1,i2)
-    xj = x2(i1,i2)
-    icell =  sll_f_find_cell( self%bs1%bsp, xi )
-    jcell =  sll_f_find_cell( self%bs2%bsp, xj )
-
-    work = 0.0_f64
-    do j = 1, k2
-      jb = mod(jcell+j-2-self%bs2%offset+self%bs2%n,self%bs2%n) + 1
-      call sll_s_spline_derivatives_at_x(self%bs1%bsp, icell, xi, values(1:k1) )
-      do i = 1, k1
-        ib = mod( icell+i-2-self%bs1%offset+self%bs1%n, self%bs1%n ) + 1
-        work(j) = work(j) + values(i)*self%bcoef(ib,jb)
-      enddo
+      y  = y + values(k)*work(k)
     end do
 
-    call sll_s_splines_at_x( self%bs2%bsp, jcell, xj, values(1:k2) )
-    yy = 0.0_f64
-    do j = 1, k2
-      yy = yy + values(j)*work(j)
-    enddo
+  end function sll_f_bspline_2d_eval
 
-    y(i1,i2) = yy
+  !-----------------------------------------------------------------------------
+  SLL_PURE function sll_f_bspline_2d_eval_deriv_x1( self, x1, x2 ) result( y )
 
-  end do
-end do
+    type(sll_t_bspline_2d), intent(in) :: self
+    sll_real64            , intent(in) :: x1
+    sll_real64            , intent(in) :: x2
+    sll_real64 :: y
 
-end subroutine sll_s_bspline_2d_eval_array_deriv_x1
+    sll_int32 :: i, j
+    sll_int32 :: k1, k2, icell, jcell
+    sll_int32 :: ib, jb
 
+    ! Automatic arrays
+    sll_real64 :: values(1+max(self%bs1%deg,self%bs2%deg))
+    sll_real64 :: work  (1+self%bs2%deg)
 
-SLL_PURE subroutine sll_s_bspline_2d_eval_array_deriv_x2( self, n1, n2, x1, x2, y )
+    k1 = self%bs1%deg+1
+    k2 = self%bs2%deg+1
 
-type(sll_t_bspline_2d), intent(in   ) :: self
-sll_int32             , intent(in   ) :: n1
-sll_int32             , intent(in   ) :: n2
-sll_real64            , intent(in   ) :: x1(:,:)
-sll_real64            , intent(in   ) :: x2(:,:)
-sll_real64            , intent(  out) :: y (:,:)
-
-sll_int32  :: i, j, i1, i2
-sll_int32  :: k1, k2, icell, jcell
-sll_int32  :: ib, jb
-sll_real64 :: xi, xj, yy
-
-! Automatic arrays
-sll_real64 :: values(1+max(self%bs1%deg,self%bs2%deg))
-sll_real64 :: work  (1+self%bs2%deg)
-
-k1 = self%bs1%deg+1
-k2 = self%bs2%deg+1
-
-do i2 = 1, n2
-  do i1 = 1, n1
-    xi = x1(i1,i2)
-    xj = x2(i1,i2)
-    icell =  sll_f_find_cell( self%bs1%bsp, xi )
-    jcell =  sll_f_find_cell( self%bs2%bsp, xj )
+    icell =  sll_f_find_cell( self%bs1%bsp, x1 )
+    jcell =  sll_f_find_cell( self%bs2%bsp, x2 )
 
     work = 0.0_f64
     do j = 1, k2
       jb = mod( jcell+j-2-self%bs2%offset+self%bs2%n, self%bs2%n ) + 1
-      call sll_s_splines_at_x( self%bs1%bsp, icell, xi, values(1:k1) )
+      call sll_s_spline_derivatives_at_x(self%bs1%bsp, icell, x1, values(1:k1) )
       do i = 1, k1
         ib = mod( icell+i-2-self%bs1%offset+self%bs1%n, self%bs1%n ) + 1
         work(j) = work(j) + values(i)*self%bcoef(ib,jb)
-      enddo
+      end do
     end do
 
-    call sll_s_spline_derivatives_at_x( self%bs2%bsp, jcell, xj, values(1:k2) )
-    yy = 0.0_f64
+    call sll_s_splines_at_x(self%bs2%bsp, jcell, x2, values(1:k2) )
+    y = 0.0_f64
     do j = 1, k2
-      yy = yy + values(j)*work(j)
-    enddo
+      y = y + values(j)*work(j)
+    end do
 
-    y(i1,i2) = yy
+  end function sll_f_bspline_2d_eval_deriv_x1
 
-  end do
-end do
+  !-----------------------------------------------------------------------------
+  SLL_PURE function sll_f_bspline_2d_eval_deriv_x2( self, x1, x2 ) result( y )
 
-end subroutine sll_s_bspline_2d_eval_array_deriv_x2
+    type(sll_t_bspline_2d), intent(in) :: self
+    sll_real64            , intent(in) :: x1
+    sll_real64            , intent(in) :: x2
+    sll_real64 :: y
 
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    sll_int32 :: i, j
+    sll_int32 :: k1, k2, icell, jcell
+    sll_int32 :: ib, jb
 
-subroutine sll_s_bspline_2d_free( self )
+    ! Automatic arrays
+    sll_real64 :: values(1+max(self%bs1%deg,self%bs2%deg))
+    sll_real64 :: work  (1+self%bs2%deg)
 
-  type(sll_t_bspline_2d), intent(inout) :: self
+    k1 = self%bs1%deg+1
+    k2 = self%bs2%deg+1
 
-  ! Deallocate local 2D arrays
-  deallocate( self%bwork )
-  deallocate( self%bcoef )
+    icell = sll_f_find_cell( self%bs1%bsp, x1 )
+    jcell = sll_f_find_cell( self%bs2%bsp, x2 )
 
-  ! Free memory of 1D B-splines
-  call sll_s_bspline_1d_free( self%bs1 )
-  call sll_s_bspline_1d_free( self%bs2 )
+    work = 0.0_f64
+    do j = 1, k2
+      jb = mod( jcell+j-2-self%bs2%offset+self%bs2%n, self%bs2%n ) + 1
+      call sll_s_splines_at_x( self%bs1%bsp, icell, x1, values(1:k1) )
+      do i = 1, k1
+        ib = mod( icell+i-2-self%bs1%offset+self%bs1%n, self%bs1%n ) + 1
+        work(j) = work(j) + values(i)*self%bcoef(ib,jb)
+      end do
+    end do
 
-end subroutine sll_s_bspline_2d_free
+    call sll_s_spline_derivatives_at_x(self%bs2%bsp, jcell, x2, values(1:k2) )
+    y = 0.0_f64
+    do j = 1, k2
+      y = y + values(j)*work(j)
+    end do
 
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+  end function sll_f_bspline_2d_eval_deriv_x2
+
+  !-----------------------------------------------------------------------------
+  SLL_PURE subroutine sll_s_bspline_2d_eval_array_deriv_x1( self, n1, n2, x1, x2, y )
+
+    type(sll_t_bspline_2d), intent(in   ) :: self
+    sll_int32             , intent(in   ) :: n1
+    sll_int32             , intent(in   ) :: n2
+    sll_real64            , intent(in   ) :: x1(:,:)
+    sll_real64            , intent(in   ) :: x2(:,:)
+    sll_real64            , intent(  out) :: y (:,:)
+
+    sll_int32  :: i, j, i1, i2
+    sll_int32  :: k1, k2, icell, jcell
+    sll_int32  :: ib, jb
+    sll_real64 :: xi, xj, yy
+
+    ! Automatic arrays
+    sll_real64 :: values(1+max(self%bs1%deg,self%bs2%deg))
+    sll_real64 :: work  (1+self%bs2%deg)
+
+    k1 = self%bs1%deg+1
+    k2 = self%bs2%deg+1
+
+    do i2 = 1, n2
+      do i1 = 1, n1
+
+        xi = x1(i1,i2)
+        xj = x2(i1,i2)
+        icell =  sll_f_find_cell( self%bs1%bsp, xi )
+        jcell =  sll_f_find_cell( self%bs2%bsp, xj )
+
+        work = 0.0_f64
+        do j = 1, k2
+          jb = mod(jcell+j-2-self%bs2%offset+self%bs2%n,self%bs2%n) + 1
+          call sll_s_spline_derivatives_at_x(self%bs1%bsp, icell, xi, values(1:k1) )
+          do i = 1, k1
+            ib = mod( icell+i-2-self%bs1%offset+self%bs1%n, self%bs1%n ) + 1
+            work(j) = work(j) + values(i)*self%bcoef(ib,jb)
+          end do
+        end do
+
+        call sll_s_splines_at_x( self%bs2%bsp, jcell, xj, values(1:k2) )
+        yy = 0.0_f64
+        do j = 1, k2
+          yy = yy + values(j)*work(j)
+        end do
+
+        y(i1,i2) = yy
+
+      end do
+    end do
+
+  end subroutine sll_s_bspline_2d_eval_array_deriv_x1
+
+  !-----------------------------------------------------------------------------
+  SLL_PURE subroutine sll_s_bspline_2d_eval_array_deriv_x2( self, n1, n2, x1, x2, y )
+
+    type(sll_t_bspline_2d), intent(in   ) :: self
+    sll_int32             , intent(in   ) :: n1
+    sll_int32             , intent(in   ) :: n2
+    sll_real64            , intent(in   ) :: x1(:,:)
+    sll_real64            , intent(in   ) :: x2(:,:)
+    sll_real64            , intent(  out) :: y (:,:)
+
+    sll_int32  :: i, j, i1, i2
+    sll_int32  :: k1, k2, icell, jcell
+    sll_int32  :: ib, jb
+    sll_real64 :: xi, xj, yy
+
+    ! Automatic arrays
+    sll_real64 :: values(1+max(self%bs1%deg,self%bs2%deg))
+    sll_real64 :: work  (1+self%bs2%deg)
+
+    k1 = self%bs1%deg+1
+    k2 = self%bs2%deg+1
+
+    do i2 = 1, n2
+      do i1 = 1, n1
+        xi = x1(i1,i2)
+        xj = x2(i1,i2)
+        icell =  sll_f_find_cell( self%bs1%bsp, xi )
+        jcell =  sll_f_find_cell( self%bs2%bsp, xj )
+
+        work = 0.0_f64
+        do j = 1, k2
+          jb = mod( jcell+j-2-self%bs2%offset+self%bs2%n, self%bs2%n ) + 1
+          call sll_s_splines_at_x( self%bs1%bsp, icell, xi, values(1:k1) )
+          do i = 1, k1
+            ib = mod( icell+i-2-self%bs1%offset+self%bs1%n, self%bs1%n ) + 1
+            work(j) = work(j) + values(i)*self%bcoef(ib,jb)
+          end do
+        end do
+
+        call sll_s_spline_derivatives_at_x( self%bs2%bsp, jcell, xj, values(1:k2) )
+        yy = 0.0_f64
+        do j = 1, k2
+          yy = yy + values(j)*work(j)
+        end do
+
+        y(i1,i2) = yy
+
+      end do
+    end do
+
+  end subroutine sll_s_bspline_2d_eval_array_deriv_x2
+
+  !-----------------------------------------------------------------------------
+  subroutine sll_s_bspline_2d_free( self )
+
+    type(sll_t_bspline_2d), intent(inout) :: self
+
+    ! Deallocate local 2D arrays
+    deallocate( self%bwork )
+    deallocate( self%bcoef )
+
+    ! Free memory of 1D B-splines
+    call sll_s_bspline_1d_free( self%bs1 )
+    call sll_s_bspline_1d_free( self%bs2 )
+
+  end subroutine sll_s_bspline_2d_free
 
 end module sll_m_bspline_2d

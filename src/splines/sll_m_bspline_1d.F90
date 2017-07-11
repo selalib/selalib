@@ -512,120 +512,120 @@ contains
     do j=1,self%deg+1
        ib = mod(icell+j-2-self%offset+self%n,self%n) + 1
        y = y + values(j)*self%bcoef(ib)
-    enddo
+    end do
 
   end function sll_f_bspline_1d_eval
 
-!-----------------------------------------------------------------------------
-!> @brief      Evaluate spline S at given 1D array of points x(:)
-!> @param[in]  self spline object
-!> @param[in]  x    1D array of evaluation points
-!> @param[out] y    1D array of spline values y(:)=S(x(:))
-!-----------------------------------------------------------------------------
-SLL_PURE subroutine sll_s_bspline_1d_eval_array( self, x, y )
+  !-----------------------------------------------------------------------------
+  !> @brief      Evaluate spline S at given 1D array of points x(:)
+  !> @param[in]  self spline object
+  !> @param[in]  x    1D array of evaluation points
+  !> @param[out] y    1D array of spline values y(:)=S(x(:))
+  !-----------------------------------------------------------------------------
+  SLL_PURE subroutine sll_s_bspline_1d_eval_array( self, x, y )
 
-  type(sll_t_bspline_1d), intent(in   ) :: self
-  sll_real64            , intent(in   ) :: x(:)
-  sll_real64            , intent(  out) :: y(size(x))
+    type(sll_t_bspline_1d), intent(in   ) :: self
+    sll_real64            , intent(in   ) :: x(:)
+    sll_real64            , intent(  out) :: y(size(x))
 
-  sll_real64 :: xx, val
-  sll_int32  :: i , j
-  sll_int32  :: ib, icell
-  sll_real64 :: values(self%deg+1)
+    sll_real64 :: xx, val
+    sll_int32  :: i , j
+    sll_int32  :: ib, icell
+    sll_real64 :: values(self%deg+1)
 
-  do i = 1, size(x)
-     xx  = x(i)
-     val = 0.0_f64
-     ! get bspline values at x
-     icell =  sll_f_find_cell( self%bsp, xx )
-     call sll_s_splines_at_x( self%bsp, icell, xx, values )
-     do j = 1, self%deg+1
+    do i = 1, size(x)
+      xx  = x(i)
+      val = 0.0_f64
+      ! get bspline values at x
+      icell =  sll_f_find_cell( self%bsp, xx )
+      call sll_s_splines_at_x( self%bsp, icell, xx, values )
+      do j = 1, self%deg+1
         ib = mod(icell+j-2-self%offset+self%n,self%n) + 1
         val = val + values(j)*self%bcoef(ib)
-     enddo
-     y(i) = val
-  end do
+      end do
+      y(i) = val
+    end do
 
-end subroutine sll_s_bspline_1d_eval_array
+  end subroutine sll_s_bspline_1d_eval_array
 
-!-----------------------------------------------------------------------------
-!> @brief      Evaluate spline derivative S' at given point x
-!> @param[in]  self spline object
-!> @param[in]  x    evaluation point
-!> @param[out] y    spline derivative y=S'(x)
-!-----------------------------------------------------------------------------
-SLL_PURE function sll_f_bspline_1d_eval_deriv( self, x ) result( y )
+  !-----------------------------------------------------------------------------
+  !> @brief      Evaluate spline derivative S' at given point x
+  !> @param[in]  self spline object
+  !> @param[in]  x    evaluation point
+  !> @param[out] y    spline derivative y=S'(x)
+  !-----------------------------------------------------------------------------
+  SLL_PURE function sll_f_bspline_1d_eval_deriv( self, x ) result( y )
 
-  type(sll_t_bspline_1d), intent(in) :: self
-  sll_real64            , intent(in) :: x
-  sll_real64 :: y
+    type(sll_t_bspline_1d), intent(in) :: self
+    sll_real64            , intent(in) :: x
+    sll_real64 :: y
 
-  sll_int32  :: icell
-  sll_int32  :: ib
-  sll_int32  :: j
-  sll_real64 :: values(self%deg+1)
+    sll_int32  :: icell
+    sll_int32  :: ib
+    sll_int32  :: j
+    sll_real64 :: values(self%deg+1)
 
-  ! get bspline derivatives at x
-  icell =  sll_f_find_cell( self%bsp, x )
-  call sll_s_spline_derivatives_at_x( self%bsp, icell, x, values )
-  y = 0.0_f64
-  do j=1,self%deg+1
-     ib = mod(icell+j-2-self%offset+self%n,self%n) + 1
-     y = y + values(j)*self%bcoef(ib)
-  enddo
+    ! get bspline derivatives at x
+    icell =  sll_f_find_cell( self%bsp, x )
+    call sll_s_spline_derivatives_at_x( self%bsp, icell, x, values )
+    y = 0.0_f64
+    do j=1,self%deg+1
+      ib = mod(icell+j-2-self%offset+self%n,self%n) + 1
+      y = y + values(j)*self%bcoef(ib)
+    end do
 
-end function sll_f_bspline_1d_eval_deriv
+  end function sll_f_bspline_1d_eval_deriv
 
-!-----------------------------------------------------------------------------
-!> @brief      Evaluate spline derivative S' at given 1D array of points x(:)
-!> @param[in]  self spline object
-!> @param[in]  x    1D array of evaluation points
-!> @param[out] y    1D array of spline derivatives y(:)=S'(x(:))
-!-----------------------------------------------------------------------------
-SLL_PURE subroutine sll_s_bspline_1d_eval_array_deriv( self, x, y )
+  !-----------------------------------------------------------------------------
+  !> @brief      Evaluate spline derivative S' at given 1D array of points x(:)
+  !> @param[in]  self spline object
+  !> @param[in]  x    1D array of evaluation points
+  !> @param[out] y    1D array of spline derivatives y(:)=S'(x(:))
+  !-----------------------------------------------------------------------------
+  SLL_PURE subroutine sll_s_bspline_1d_eval_array_deriv( self, x, y )
 
-  type(sll_t_bspline_1d), intent(in   ) :: self
-  sll_real64            , intent(in   ) :: x(:)
-  sll_real64            , intent(  out) :: y(size(x))
+    type(sll_t_bspline_1d), intent(in   ) :: self
+    sll_real64            , intent(in   ) :: x(:)
+    sll_real64            , intent(  out) :: y(size(x))
 
-  sll_real64 :: xx, val
-  sll_int32  :: i , j
-  sll_int32  :: ib, icell
-  sll_real64 :: values(self%deg+1)
+    sll_real64 :: xx, val
+    sll_int32  :: i , j
+    sll_int32  :: ib, icell
+    sll_real64 :: values(self%deg+1)
 
-  do i = 1, size(x)
-     xx = x(i)
-     val = 0.0_f64
-     ! get bspline derivatives at xx
-     icell =  sll_f_find_cell( self%bsp, xx )
-     call sll_s_spline_derivatives_at_x( self%bsp, icell, xx, values )
-     do j=1, self%deg+1
+    do i = 1, size(x)
+      xx = x(i)
+      val = 0.0_f64
+      ! get bspline derivatives at xx
+      icell =  sll_f_find_cell( self%bsp, xx )
+      call sll_s_spline_derivatives_at_x( self%bsp, icell, xx, values )
+      do j=1, self%deg+1
         ib = mod(icell+j-2-self%offset+self%n,self%n) + 1
         val = val + values(j)*self%bcoef(ib)
-     enddo
-     y(i) = val
-  end do
+      end do
+      y(i) = val
+    end do
 
-end subroutine sll_s_bspline_1d_eval_array_deriv
+  end subroutine sll_s_bspline_1d_eval_array_deriv
 
-!-----------------------------------------------------------------------------
-!> @brief Destructor. Frees all memory in object (pointers, allocatables)
-!> @param[inout] self object to be freed
-!-----------------------------------------------------------------------------
-subroutine sll_s_bspline_1d_free( self )
+  !-----------------------------------------------------------------------------
+  !> @brief Destructor. Frees all memory in object (pointers, allocatables)
+  !> @param[inout] self object to be freed
+  !-----------------------------------------------------------------------------
+  subroutine sll_s_bspline_1d_free( self )
 
-  type(sll_t_bspline_1d), intent(inout) :: self
+    type(sll_t_bspline_1d), intent(inout) :: self
 
-  ! deallocate arrays
-  deallocate( self%bcoef  )
-  deallocate( self%tau    )
-  deallocate( self%q      )
-  deallocate( self%bsdx   )
+    ! deallocate arrays
+    deallocate( self%bcoef  )
+    deallocate( self%tau    )
+    deallocate( self%q      )
+    deallocate( self%bsdx   )
 
-  ! free attribute objects
-  call sll_s_arbitrary_degree_spline_1d_free( self%bsp )
-  call schur_complement_free( self%schur )
+    ! free attribute objects
+    call sll_s_arbitrary_degree_spline_1d_free( self%bsp )
+    call schur_complement_free( self%schur )
 
-end subroutine sll_s_bspline_1d_free
+  end subroutine sll_s_bspline_1d_free
 
 end module sll_m_bspline_1d
