@@ -302,7 +302,7 @@ contains
       end do
     end do
     call sll_s_set_time_mark( t1 )
-    call sll_s_bspline_2d_eval_array( self%bspline_2d, n1, n2, x1, x2, ya )
+    call sll_s_bspline_2d_eval_array( self%bspline_2d, x1, x2, ya )
     call sll_s_set_time_mark( t2 )
 
     self%time_eval       = sll_f_time_elapsed_between( t0, t1 ) / npts
@@ -319,7 +319,7 @@ contains
       end do
     end do
     call sll_s_set_time_mark( t1 )
-    call sll_s_bspline_2d_eval_array_deriv_x1( self%bspline_2d, n1, n2, x1, x2, ya )
+    call sll_s_bspline_2d_eval_array_deriv_x1( self%bspline_2d, x1, x2, ya )
     call sll_s_set_time_mark( t2 )
 
     self%time_eval_diff1       = sll_f_time_elapsed_between( t0, t1 ) / npts
@@ -336,7 +336,7 @@ contains
       end do
     end do
     call sll_s_set_time_mark( t1 )
-    call sll_s_bspline_2d_eval_array_deriv_x2( self%bspline_2d, n1, n2, x1, x2, ya )
+    call sll_s_bspline_2d_eval_array_deriv_x2( self%bspline_2d, x1, x2, ya )
     call sll_s_set_time_mark( t2 )
 
     self%time_eval_diff2       = sll_f_time_elapsed_between( t0, t1 ) / npts
@@ -404,7 +404,7 @@ contains
     call sll_s_set_time_mark( t0 )
 
     ! Evaluate 2D spline on given grid
-    call sll_s_bspline_2d_eval_array( self%bspline_2d, n1, n2, x1, x2, y )
+    call sll_s_bspline_2d_eval_array( self%bspline_2d, x1, x2, y )
 
     call sll_s_set_time_mark( t1 )
     self % time_eval_array = sll_f_time_elapsed_between(t0,t1)/real(n1*n2,wp)
@@ -454,7 +454,7 @@ contains
     !----------------------------------------------------
     call sll_s_set_time_mark( t0 )
 
-    call sll_s_bspline_2d_eval_array_deriv_x1( self%bspline_2d, n1, n2, x1, x2, y )
+    call sll_s_bspline_2d_eval_array_deriv_x1( self%bspline_2d, x1, x2, y )
 
     call sll_s_set_time_mark( t1 )
     self % time_eval_diff1_array = sll_f_time_elapsed_between(t0,t1)/real(n1*n2,wp)
@@ -471,7 +471,7 @@ contains
     !----------------------------------------------------
     call sll_s_set_time_mark( t0 )
 
-    call sll_s_bspline_2d_eval_array_deriv_x2( self%bspline_2d, n1, n2, x1, x2, y )
+    call sll_s_bspline_2d_eval_array_deriv_x2( self%bspline_2d, x1, x2, y )
 
     call sll_s_set_time_mark( t1 )
     self % time_eval_diff2_array = sll_f_time_elapsed_between(t0,t1)/real(n1*n2,wp)
