@@ -438,15 +438,15 @@ contains
   !>
   !> @param[inout] self       1D bspline object
   !> @param[in]    gtau       function values of interpolation points
-  !> @param[in]    bcval_xmin (optional) array with boundary conditions at xmin
-  !> @param[in]    bcval_xmax (optional) array with boundary conditions at xmax
+  !> @param[in]    derivs_xmin (optional) array with boundary conditions at xmin
+  !> @param[in]    derivs_xmax (optional) array with boundary conditions at xmax
   !-----------------------------------------------------------------------------
-  subroutine sll_s_bspline_1d_compute_interpolant( self, gtau, bcval_xmin, bcval_xmax )
+  subroutine sll_s_bspline_1d_compute_interpolant( self, gtau, derivs_xmin, derivs_xmax )
 
     type(sll_t_bspline_1d), intent(inout) :: self
     sll_real64            , intent(in   ) :: gtau(:)
-    sll_real64, optional  , intent(in   ) :: bcval_xmin(:)
-    sll_real64, optional  , intent(in   ) :: bcval_xmax(:)
+    sll_real64, optional  , intent(in   ) :: derivs_xmin(:)
+    sll_real64, optional  , intent(in   ) :: derivs_xmax(:)
 
     sll_int32 :: ncond
     sll_int32 :: k
@@ -469,14 +469,14 @@ contains
     case (sll_p_hermite)
        ! number of needed conditions at boundary
        ncond = self%deg/2
-       if (present(bcval_xmin)) then
-          self%bcoef(1:ncond) = bcval_xmin(1:ncond)
+       if (present(derivs_xmin)) then
+          self%bcoef(1:ncond) = derivs_xmin(1:ncond)
        else  ! set needed boundary values to 0
           self%bcoef(1:ncond) = 0.0_f64
        end if
        self%bcoef(ncond+1:self%n-ncond) = gtau(1:self%n-2*ncond)
-       if (present(bcval_xmax)) then
-          self%bcoef(self%n-ncond+1:self%n) = bcval_xmax(1:ncond)
+       if (present(derivs_xmax)) then
+          self%bcoef(self%n-ncond+1:self%n) = derivs_xmax(1:ncond)
        else ! set needed boundary values to 0
           self%bcoef(self%n-ncond+1:self%n) = 0.0_f64
        end if

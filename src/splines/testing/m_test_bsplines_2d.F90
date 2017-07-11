@@ -98,11 +98,11 @@ contains
     integer                 :: i1, j1, s1
     integer                 :: i2, j2, s2
 
-    real(wp), allocatable :: val1_min(:,:)
-    real(wp), allocatable :: val1_max(:,:)
-    real(wp), allocatable :: val2_min(:,:)
-    real(wp), allocatable :: val2_max(:,:)
-    real(wp), allocatable :: val_corners(:,:,:)
+    real(wp), allocatable :: derivs_x1_min(:,:)
+    real(wp), allocatable :: derivs_x1_max(:,:)
+    real(wp), allocatable :: derivs_x2_min(:,:)
+    real(wp), allocatable :: derivs_x2_max(:,:)
+    real(wp), allocatable :: derivs_corners(:,:,:)
 
     type(sll_t_time_mark) :: t0, t1, t2, t3
 
@@ -156,41 +156,41 @@ contains
 
     ! If needed, evaluate x1 derivatives at (x1_min,x2) and (x1_max,x2)
     if (self%bc1 == sll_p_hermite) then
-      allocate( val1_min (deg1/2, nipts2) )
-      allocate( val1_max (deg1/2, nipts2) )
+      allocate( derivs_x1_min (deg1/2, nipts2) )
+      allocate( derivs_x1_max (deg1/2, nipts2) )
       s1 = 1-modulo(deg1,2) ! shift = 1 for even order, 0 for odd order
       do i2 = 1, nipts2
         do j1 = 1, deg1/2
-          val1_min(j1,i2) = self % profile_2d % eval( info%x1_min, tau2(i2), diff_x1=j1-s1 )
-          val1_max(j1,i2) = self % profile_2d % eval( info%x1_max, tau2(i2), diff_x1=j1-s1 )
+          derivs_x1_min(j1,i2) = self % profile_2d % eval( info%x1_min, tau2(i2), diff_x1=j1-s1 )
+          derivs_x1_max(j1,i2) = self % profile_2d % eval( info%x1_max, tau2(i2), diff_x1=j1-s1 )
         end do
       end do
     end if
 
     ! If needed, evaluate x2 derivatives at (x1,x2_min) and (x1,x2_max)
     if (self%bc2 == sll_p_hermite) then
-      allocate( val2_min (deg2/2, nipts1) )
-      allocate( val2_max (deg2/2, nipts1) )
+      allocate( derivs_x2_min (deg2/2, nipts1) )
+      allocate( derivs_x2_max (deg2/2, nipts1) )
       s2 = 1-modulo(deg2,2) ! shift = 1 for even order, 0 for odd order
       do i1 = 1, nipts1
         do j2 = 1, deg2/2
-          val2_min(j2,i1) = self % profile_2d % eval( tau1(i1), info%x2_min, diff_x2=j2-s2 )
-          val2_max(j2,i1) = self % profile_2d % eval( tau1(i1), info%x2_max, diff_x2=j2-s2 )
+          derivs_x2_min(j2,i1) = self % profile_2d % eval( tau1(i1), info%x2_min, diff_x2=j2-s2 )
+          derivs_x2_max(j2,i1) = self % profile_2d % eval( tau1(i1), info%x2_max, diff_x2=j2-s2 )
         end do
       end do
     end if
 
     ! If needed, evaluate (x1,x2) mixed derivatives at 4 corners
     if (self%bc1 == sll_p_hermite .and. self%bc2 == sll_p_hermite) then
-      allocate( val_corners (deg1/2, deg2/2, 4) )
+      allocate( derivs_corners (deg1/2, deg2/2, 4) )
       s1 = 1-modulo(deg1,2) ! shift = 1 for even order, 0 for odd order
       s2 = 1-modulo(deg2,2) ! shift = 1 for even order, 0 for odd order
       do j1 = 1, deg1/2
         do j2 = 1, deg2/2
-          val_corners(j1,j2,1) = profile_2d % eval( info%x1_min, info%x2_min, diff_x1=j1-s1, diff_x2=j2-s2 )
-          val_corners(j1,j2,2) = profile_2d % eval( info%x1_max, info%x2_min, diff_x1=j1-s1, diff_x2=j2-s2 )
-          val_corners(j1,j2,3) = profile_2d % eval( info%x1_min, info%x2_max, diff_x1=j1-s1, diff_x2=j2-s2 )
-          val_corners(j1,j2,4) = profile_2d % eval( info%x1_max, info%x2_max, diff_x1=j1-s1, diff_x2=j2-s2 )
+          derivs_corners(j1,j2,1) = profile_2d % eval( info%x1_min, info%x2_min, diff_x1=j1-s1, diff_x2=j2-s2 )
+          derivs_corners(j1,j2,2) = profile_2d % eval( info%x1_max, info%x2_min, diff_x1=j1-s1, diff_x2=j2-s2 )
+          derivs_corners(j1,j2,3) = profile_2d % eval( info%x1_min, info%x2_max, diff_x1=j1-s1, diff_x2=j2-s2 )
+          derivs_corners(j1,j2,4) = profile_2d % eval( info%x1_max, info%x2_max, diff_x1=j1-s1, diff_x2=j2-s2 )
         end do
       end do
     end if
@@ -205,25 +205,25 @@ contains
     if (self%bc1 == sll_p_hermite .and. self%bc2 /= sll_p_hermite) then
 
       call sll_s_bspline_2d_compute_interpolant( self % bspline_2d, self % gtau, &
-        val1_min = val1_min, &
-        val1_max = val1_max )
+        derivs_x1_min = derivs_x1_min, &
+        derivs_x1_max = derivs_x1_max )
 
     ! other - Hermite
     else if (self%bc1 /= sll_p_hermite .and. self%bc2 == sll_p_hermite) then
 
       call sll_s_bspline_2d_compute_interpolant( self % bspline_2d, self % gtau, &
-        val2_min = val2_min, &
-        val2_max = val2_max )
+        derivs_x2_min = derivs_x2_min, &
+        derivs_x2_max = derivs_x2_max )
 
     ! Hermite - Hermite
     else if (self%bc1 == sll_p_hermite .and. self%bc2 == sll_p_hermite) then
 
       call sll_s_bspline_2d_compute_interpolant( self % bspline_2d, self % gtau, &
-        val1_min    = val1_min, &
-        val1_max    = val1_max, &
-        val2_min    = val2_min, &
-        val2_max    = val2_max, &
-        val_corners = val_corners )
+        derivs_x1_min  = derivs_x1_min, &
+        derivs_x1_max  = derivs_x1_max, &
+        derivs_x2_min  = derivs_x2_min, &
+        derivs_x2_max  = derivs_x2_max, &
+        derivs_corners = derivs_corners )
 
     ! other - other
     else
@@ -236,11 +236,11 @@ contains
 
     ! Deallocate local arrays
     ! ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
-    if (allocated(val1_min))    deallocate( val1_min )
-    if (allocated(val1_max))    deallocate( val1_max )
-    if (allocated(val2_min))    deallocate( val2_min )
-    if (allocated(val2_max))    deallocate( val2_max )
-    if (allocated(val_corners)) deallocate( val_corners )
+    if (allocated(derivs_x1_min )) deallocate( derivs_x1_min  )
+    if (allocated(derivs_x1_max )) deallocate( derivs_x1_max  )
+    if (allocated(derivs_x2_min )) deallocate( derivs_x2_min  )
+    if (allocated(derivs_x2_max )) deallocate( derivs_x2_max  )
+    if (allocated(derivs_corners)) deallocate( derivs_corners )
 
     ! Timings (set to -1 values not yet available)
     self % time_init                =  sll_f_time_elapsed_between( t0, t1 )
