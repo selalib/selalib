@@ -505,48 +505,15 @@ contains
     sll_int32  :: j
     sll_real64 :: values(self%deg+1)
 
-    ! get bspline values at x
-    icell =  sll_f_find_cell( self%bsp, x )
+    icell = sll_f_find_cell( self%bsp, x )
     call sll_s_splines_at_x( self%bsp, icell, x, values )
     y = 0.0_f64
-    do j=1,self%deg+1
-       ib = mod(icell+j-2-self%offset+self%n,self%n) + 1
+    do j = 1, self%deg+1
+       ib = mod( icell+j-2-self%offset+self%n, self%n ) + 1
        y = y + values(j)*self%bcoef(ib)
     end do
 
   end function sll_f_bspline_1d_eval
-
-  !-----------------------------------------------------------------------------
-  !> @brief      Evaluate spline S at given 1D array of points x(:)
-  !> @param[in]  self spline object
-  !> @param[in]  x    1D array of evaluation points
-  !> @param[out] y    1D array of spline values y(:)=S(x(:))
-  !-----------------------------------------------------------------------------
-  SLL_PURE subroutine sll_s_bspline_1d_eval_array( self, x, y )
-
-    type(sll_t_bspline_1d), intent(in   ) :: self
-    sll_real64            , intent(in   ) :: x(:)
-    sll_real64            , intent(  out) :: y(size(x))
-
-    sll_real64 :: xx, val
-    sll_int32  :: i , j
-    sll_int32  :: ib, icell
-    sll_real64 :: values(self%deg+1)
-
-    do i = 1, size(x)
-      xx  = x(i)
-      val = 0.0_f64
-      ! get bspline values at x
-      icell =  sll_f_find_cell( self%bsp, xx )
-      call sll_s_splines_at_x( self%bsp, icell, xx, values )
-      do j = 1, self%deg+1
-        ib = mod(icell+j-2-self%offset+self%n,self%n) + 1
-        val = val + values(j)*self%bcoef(ib)
-      end do
-      y(i) = val
-    end do
-
-  end subroutine sll_s_bspline_1d_eval_array
 
   !-----------------------------------------------------------------------------
   !> @brief      Evaluate spline derivative S' at given point x
@@ -565,16 +532,35 @@ contains
     sll_int32  :: j
     sll_real64 :: values(self%deg+1)
 
-    ! get bspline derivatives at x
-    icell =  sll_f_find_cell( self%bsp, x )
+    icell = sll_f_find_cell( self%bsp, x )
     call sll_s_spline_derivatives_at_x( self%bsp, icell, x, values )
     y = 0.0_f64
-    do j=1,self%deg+1
-      ib = mod(icell+j-2-self%offset+self%n,self%n) + 1
+    do j = 1, self%deg+1
+      ib = mod( icell+j-2-self%offset+self%n, self%n ) + 1
       y = y + values(j)*self%bcoef(ib)
     end do
 
   end function sll_f_bspline_1d_eval_deriv
+
+  !-----------------------------------------------------------------------------
+  !> @brief      Evaluate spline S at given 1D array of points x(:)
+  !> @param[in]  self spline object
+  !> @param[in]  x    1D array of evaluation points
+  !> @param[out] y    1D array of spline values y(:)=S(x(:))
+  !-----------------------------------------------------------------------------
+  SLL_PURE subroutine sll_s_bspline_1d_eval_array( self, x, y )
+
+    type(sll_t_bspline_1d), intent(in   ) :: self
+    sll_real64            , intent(in   ) :: x(:)
+    sll_real64            , intent(  out) :: y(size(x))
+
+    sll_int32 :: i
+
+    do i = 1, size(x)
+      y(i) = sll_f_bspline_1d_eval( self, x(i) )
+    end do
+
+  end subroutine sll_s_bspline_1d_eval_array
 
   !-----------------------------------------------------------------------------
   !> @brief      Evaluate spline derivative S' at given 1D array of points x(:)
@@ -588,22 +574,10 @@ contains
     sll_real64            , intent(in   ) :: x(:)
     sll_real64            , intent(  out) :: y(size(x))
 
-    sll_real64 :: xx, val
-    sll_int32  :: i , j
-    sll_int32  :: ib, icell
-    sll_real64 :: values(self%deg+1)
+    sll_int32 :: i
 
     do i = 1, size(x)
-      xx = x(i)
-      val = 0.0_f64
-      ! get bspline derivatives at xx
-      icell =  sll_f_find_cell( self%bsp, xx )
-      call sll_s_spline_derivatives_at_x( self%bsp, icell, xx, values )
-      do j=1, self%deg+1
-        ib = mod(icell+j-2-self%offset+self%n,self%n) + 1
-        val = val + values(j)*self%bcoef(ib)
-      end do
-      y(i) = val
+      y(i) = sll_f_bspline_1d_eval_deriv( self, x(i) )
     end do
 
   end subroutine sll_s_bspline_1d_eval_array_deriv
