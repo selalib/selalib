@@ -165,19 +165,19 @@ contains
   subroutine sll_s_bspline_2d_compute_interpolant( &
     self, &
     gtau, &
-    val1_min, &
-    val1_max, &
-    val2_min, &
-    val2_max, &
-    val_corners )
+    derivs_x1_min, &
+    derivs_x1_max, &
+    derivs_x2_min, &
+    derivs_x2_max, &
+    derivs_corners )
 
     type(sll_t_bspline_2d), intent(inout)           :: self
     sll_real64            , intent(in   )           :: gtau(:,:)
-    sll_real64            , intent(in   ), optional :: val1_min(:,:)
-    sll_real64            , intent(in   ), optional :: val1_max(:,:)
-    sll_real64            , intent(in   ), optional :: val2_min(:,:)
-    sll_real64            , intent(in   ), optional :: val2_max(:,:)
-    sll_real64            , intent(in   ), optional :: val_corners(:,:,:)
+    sll_real64            , intent(in   ), optional :: derivs_x1_min (:,:)
+    sll_real64            , intent(in   ), optional :: derivs_x1_max (:,:)
+    sll_real64            , intent(in   ), optional :: derivs_x2_min (:,:)
+    sll_real64            , intent(in   ), optional :: derivs_x2_max (:,:)
+    sll_real64            , intent(in   ), optional :: derivs_corners(:,:,:)
 
     sll_int32 :: i1, n1, ncond1
     sll_int32 :: i2, n2, ncond2, j2
@@ -207,13 +207,15 @@ contains
       if (self%bs1%bc_type == sll_p_hermite) then
 
         ! boundary conditions at x2_min
-        if (present(val2_min)) then
+        if (present(derivs_x2_min)) then
           do j2 = 1, ncond2
-            if( present(val_corners)) then
-              call sll_s_bspline_1d_compute_interpolant( self%bs1, val2_min(j2,:), &
-                   val_corners(:,j2,1), val_corners(:,j2,2))
+            if( present(derivs_corners)) then
+              call sll_s_bspline_1d_compute_interpolant( self%bs1, &
+                derivs_x2_min (j2,:)  , &
+                derivs_corners(:,j2,1), &
+                derivs_corners(:,j2,2))
             else
-              call sll_s_bspline_1d_compute_interpolant( self%bs1, val2_min(j2,:) )
+              call sll_s_bspline_1d_compute_interpolant( self%bs1, derivs_x2_min(j2,:) )
             end if
             self%bwork(j2,:) = self%bs1%bcoef(:)
           end do
@@ -222,13 +224,15 @@ contains
         end if
 
         ! boundary conditions at x2_max
-        if (present(val2_max)) then
+        if (present(derivs_x2_max)) then
           do j2 = 1, ncond2
-            if (present(val_corners)) then
-              call sll_s_bspline_1d_compute_interpolant( self%bs1, val2_max(j2,:), &
-                   val_corners(:,j2,3), val_corners(:,j2,4))
+            if (present(derivs_corners)) then
+              call sll_s_bspline_1d_compute_interpolant( self%bs1, &
+                derivs_x2_max (j2,:)  , &
+                derivs_corners(:,j2,3), &
+                derivs_corners(:,j2,4))
             else
-              call sll_s_bspline_1d_compute_interpolant( self%bs1, val2_max(j2,:) )
+              call sll_s_bspline_1d_compute_interpolant( self%bs1, derivs_x2_max(j2,:) )
             end if
             self%bwork(n2-ncond2+j2,:) = self%bs1%bcoef(:)
           end do
@@ -240,9 +244,9 @@ contains
       else
 
         ! boundary conditions at x2_min
-        if (present(val2_min)) then
+        if (present(derivs_x2_min)) then
           do j2 = 1, ncond2
-            call sll_s_bspline_1d_compute_interpolant( self%bs1, val2_min(j2,:) )
+            call sll_s_bspline_1d_compute_interpolant( self%bs1, derivs_x2_min(j2,:) )
             self%bwork(j2,:) = self%bs1%bcoef(:)
           end do
         else  ! set needed boundary values to 0
@@ -250,9 +254,9 @@ contains
         end if
 
         ! boundary conditions at x2_max
-        if (present(val2_max)) then
+        if (present(derivs_x2_max)) then
           do j2 = 1, ncond2
-            call sll_s_bspline_1d_compute_interpolant( self%bs1, val2_max(j2,:) )
+            call sll_s_bspline_1d_compute_interpolant( self%bs1, derivs_x2_max(j2,:) )
             self%bwork(n2-ncond2+j2,:) = self%bs1%bcoef(:)
           end do
         else ! set needed boundary values to 0
@@ -264,9 +268,11 @@ contains
 
     ! Interior points
     do i2 = 1, n2-2*ncond2
-      if (present(val1_min) .and. present(val1_max)) then
-        call sll_s_bspline_1d_compute_interpolant( self%bs1, gtau(:,i2), &
-             val1_min(:,i2), val1_max(:,i2) )
+      if (present(derivs_x1_min) .and. present(derivs_x1_max)) then
+        call sll_s_bspline_1d_compute_interpolant( self%bs1, &
+          gtau         (:,i2), &
+          derivs_x1_min(:,i2), &
+          derivs_x1_max(:,i2) )
       else
         call sll_s_bspline_1d_compute_interpolant( self%bs1, gtau(:,i2) )
       end if
@@ -278,7 +284,7 @@ contains
     !--------------------------------------------
     if (self%bs2%bc_type == sll_p_hermite) then
 
-      if (present(val2_min) .and. present(val2_max)) then
+      if (present(derivs_x2_min) .and. present(derivs_x2_max)) then
         do i1 = 1, n1
           call sll_s_bspline_1d_compute_interpolant( self%bs2, &
                self%bwork(ncond2+1:n2-ncond2,i1), &
