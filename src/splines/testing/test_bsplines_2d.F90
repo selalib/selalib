@@ -201,7 +201,7 @@ end if
 call cpu_time(t1)
 
 ! evaluate interpolation error at mesh points and print out
-call sll_s_bspline_2d_eval_array(bspline_2d, n1, n2, x1, x2, y)
+call sll_s_bspline_2d_eval_array(bspline_2d, x1, x2, y)
 
 err1 = maxval(abs(y-cos(2*pi*x1)*cos(2*pi*x2)))
 if (err1 > tol) then
@@ -219,7 +219,7 @@ call cpu_time(t2)
 
 !.......
 do j = 1,nstep
-  call sll_s_bspline_2d_eval_array( bspline_2d, n1, n2, x1, x2, y)
+  call sll_s_bspline_2d_eval_array( bspline_2d, x1, x2, y)
 end do
 err1 = maxval(abs(y-cos(2*pi*x1)*cos(2*pi*x2)))
 if (err1 > tol) then
@@ -274,7 +274,7 @@ call cpu_time(t5)
 
 !......
 do j = 1,nstep
-  call sll_s_bspline_2d_eval_array_deriv_x1( bspline_2d, n1, n2, x1, x2, y)
+  call sll_s_bspline_2d_eval_array_deriv_x1( bspline_2d, x1, x2, y)
 end do
 err1 = maxval(abs(y+2*pi*sin(2*pi*x1)*cos(2*pi*x2)))
 if (err1 > tol) then
@@ -291,7 +291,7 @@ call cpu_time(t6)
 
 !......
 do j = 1,nstep
-  call sll_s_bspline_2d_eval_array_deriv_x2( bspline_2d, n1, n2, x1, x2, y)
+  call sll_s_bspline_2d_eval_array_deriv_x2( bspline_2d, x1, x2, y)
 end do
 err1 = maxval(abs(y+2*pi*sin(2*pi*x2)*cos(2*pi*x1)))
 if (err1 > tol) then
@@ -425,7 +425,7 @@ call cpu_time(t2)
 
 !.......
 do j = 1,nstep
-  call sll_s_bspline_2d_eval_array( bspline_2d, n1, n2, xx, yy, y)
+  call sll_s_bspline_2d_eval_array( bspline_2d, xx, yy, y)
 end do
 err1 = maxval(abs(y-sin(2*pi*xx)*sin(2*pi*yy)))
 if (err1 > tol) then
@@ -481,7 +481,7 @@ call cpu_time(t5)
 
 !......
 do j = 1,nstep
-  call sll_s_bspline_2d_eval_array_deriv_x1( bspline_2d, n1, n2, xx, yy, y)
+  call sll_s_bspline_2d_eval_array_deriv_x1( bspline_2d, xx, yy, y)
 end do
 err1 = maxval(abs(y-2*pi*cos(2*pi*xx)*sin(2*pi*yy)))
 if (err1 > tol) then
@@ -498,7 +498,7 @@ call cpu_time(t6)
 
 !......
 do j = 1,nstep
-  call sll_s_bspline_2d_eval_array_deriv_x2( bspline_2d, n1, n2, xx, yy, y)
+  call sll_s_bspline_2d_eval_array_deriv_x2( bspline_2d, xx, yy, y)
 end do
 err1 = maxval(abs(y-2*pi*cos(2*pi*yy)*sin(2*pi*xx)))
 if (err1 > tol) then
