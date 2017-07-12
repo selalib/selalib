@@ -9,8 +9,8 @@ program test_lobalap_discrete
 
   use sll_m_cartesian_meshes, only: &
     sll_t_cartesian_mesh_2d, &
-    sll_s_cartesian_mesh_2d_init, &
-    sll_o_delete
+    sll_o_delete, &
+    sll_o_new
 
   use sll_m_common_coordinate_transformations, only: &
     sll_f_deriv1_jacobian_polar_f, &
@@ -30,7 +30,8 @@ program test_lobalap_discrete
     sll_t_cubic_spline_interpolator_2d
 
   use sll_m_dg_fields, only: &
-    sll_t_dg_field_2d
+    sll_t_dg_field_2d, &
+    sll_o_new
 
   use sll_m_lobatto_poisson, only: &
     sll_t_lobatto_poisson_solver, &
@@ -47,9 +48,9 @@ program test_lobalap_discrete
   type(sll_t_lobatto_poisson_solver)          :: solver
   type(sll_t_cartesian_mesh_2d), pointer  :: mesh
   class(sll_c_coordinate_transformation_2d_base), pointer :: tau
-  type(sll_t_dg_field_2d) :: dg_rho
-  type(sll_t_dg_field_2d) :: dg_ex
-  type(sll_t_dg_field_2d) :: dg_ey
+  type(sll_t_dg_field_2d), pointer :: dg_rho
+  type(sll_t_dg_field_2d), pointer :: dg_ex
+  type(sll_t_dg_field_2d), pointer :: dg_ey
 
   sll_int32, parameter :: degree = 3
 
@@ -82,14 +83,13 @@ program test_lobalap_discrete
   print *, 'h2 = ', h2
   allocate(x1_tab(NPTS1,NPTS2))
   allocate(x2_tab(NPTS1,NPTS2))
-  allocate(potexact_vec(4*NPTS1*3)) !TODO: size is number of points at border... needs NPTS1=NPTS2
   allocate(x1_eta1_min(NPTS2))
   allocate(x1_eta1_max(NPTS2))
   allocate(x2_eta1_min(NPTS2))
   allocate(x2_eta1_max(NPTS2))
   allocate(jacs(NPTS1,NPTS2))
   
-  call sll_s_cartesian_mesh_2d_init( mesh,  NPTS1-1, NPTS2-1 )
+  mesh => sll_o_new( NPTS1-1, NPTS2-1 )
 
   do j=0,NPTS2-1
      do i=0,NPTS1-1
@@ -113,7 +113,7 @@ program test_lobalap_discrete
 
   print *, 'initializing the interpolators: '
 
-  call x1_interp%init( &
+  call x1_interp%initialize( &
        NPTS1, &
        NPTS2, &
        0.0_f64, &
@@ -125,7 +125,7 @@ program test_lobalap_discrete
        eta1_min_slopes=x1_eta1_min, &
        eta1_max_slopes=x1_eta1_max )
 
-  call x2_interp%init( &
+  call x2_interp%initialize( &
        NPTS1, &
        NPTS2, &
        0.0_f64, &
@@ -137,7 +137,7 @@ program test_lobalap_discrete
        eta1_min_slopes=x2_eta1_min, &
        eta1_max_slopes=x2_eta1_max )
 
-  call j_interp%init( &
+  call j_interp%initialize( &
        NPTS1, &
        NPTS2, &
        0.0_f64, &
@@ -163,9 +163,9 @@ program test_lobalap_discrete
 
   call tau%write_to_file()
 
-  call dg_rho%init( degree, tau, f_four ) 
-  call dg_ex %init( degree, tau ) 
-  call dg_ey %init( degree, tau ) 
+  dg_rho => sll_o_new( degree, tau, f_four ) 
+  dg_ex  => sll_o_new( degree, tau ) 
+  dg_ey  => sll_o_new( degree, tau ) 
 
   call dg_rho%write_to_file('rho')
 
