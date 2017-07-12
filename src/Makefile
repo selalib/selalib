@@ -6,3 +6,9 @@ clear:
 	find . -name 'CMakeCache.txt' -exec rm {} \;
 	find . -name 'CTestTestfile.cmake' -exec rm {} \;
 	find . -name 'cmake_install.cmake' -exec rm {} \;
+
+del_orig_files:
+	find . -name '.orig' -exec rm {} \;
+
+del_pgi_files:
+	find . -name '*_pgi.F90' -exec rm {} \;
