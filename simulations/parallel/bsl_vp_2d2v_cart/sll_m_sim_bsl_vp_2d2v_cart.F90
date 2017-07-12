@@ -3,11 +3,6 @@ module sll_m_sim_bsl_vp_2d2v_cart
 #include "sll_memory.h"
 #include "sll_working_precision.h"
 
-  use hdf5, only: &
-    hid_t, &
-    hsize_t, &
-    hssize_t
-
   use sll_m_boundary_condition_descriptors, only: &
     sll_p_hermite, &
     sll_p_periodic
@@ -27,18 +22,19 @@ module sll_m_sim_bsl_vp_2d2v_cart
     sll_f_new_cartesian_4d_mesh, &
     sll_t_simple_cartesian_4d_mesh
 
-  use sll_m_hdf5_io_serial, only: &
-    sll_o_hdf5_file_close, &
-    sll_o_hdf5_file_create, &
-    sll_o_hdf5_write_array
+  use sll_m_hdf5_io_parallel, only: &
+    sll_t_hdf5_par_handle,      &
+    sll_s_hdf5_par_file_create, &
+    sll_s_hdf5_par_file_close,  &
+    sll_o_hdf5_par_write_array
 
   use sll_m_interpolators_1d_base, only: &
     sll_c_interpolator_1d
 
-  use sll_m_poisson_2d_periodic_cartesian_par, only: &
-    sll_f_new_poisson_2d_periodic_plan_cartesian_par, &
-    sll_t_poisson_2d_periodic_plan_cartesian_par, &
-    sll_s_solve_poisson_2d_periodic_cartesian_par
+  use sll_m_poisson_2d_periodic_par, only: &
+    sll_t_poisson_2d_periodic_par, &
+    sll_s_poisson_2d_periodic_par_init, &
+    sll_s_poisson_2d_periodic_par_solve
 
   use sll_m_remapper, only: &
     sll_o_apply_remap_2d, &
@@ -110,7 +106,7 @@ module sll_m_sim_bsl_vp_2d2v_cart
      ! for initializers
      type(sll_t_init_test_4d_par)                     :: init_4d
      type(sll_t_simple_cartesian_4d_mesh), pointer    :: mesh4d
-     type(sll_t_poisson_2d_periodic_plan_cartesian_par), pointer :: poisson_plan
+     type(sll_t_poisson_2d_periodic_par) :: poisson_plan
 
      ! distribution functions. There are several because each array represents
      ! a differently shaped chunk of memory. In this example, each chunk 
@@ -399,7 +395,8 @@ contains
 
     ! We are in a position now to compute the electric potential.
     ! Initialize the poisson plan
-    sim%poisson_plan => sll_f_new_poisson_2d_periodic_plan_cartesian_par( &
+    call sll_s_poisson_2d_periodic_par_init( &
+         sim%poisson_plan, &
          sim%rho_seq_x1, &
          sim%nc_x1, &
          sim%nc_x2, &
@@ -407,7 +404,7 @@ contains
          1.0_f64 )     ! parametrize with mesh values
 
     ! solve for the electric potential
-    call sll_s_solve_poisson_2d_periodic_cartesian_par( &
+    call sll_s_poisson_2d_periodic_par_solve( &
          sim%poisson_plan, &
          sim%rho_x1, &
          sim%phi_x1)
@@ -461,25 +458,25 @@ contains
     ! of cells than points. Is this properly handled by the interpolators??
     ! The interpolators need the number of points and always consider that
     ! num_cells = num_pts - 1. This is a possible source of confusion.
-    call sim%interp_x1%initialize( &
+    call sim%interp_x1%init( &
          sim%nc_x1+1, &
          sim%mesh4d%x1_min, &
          sim%mesh4d%x1_max, &
          sll_p_periodic)
 
-    call sim%interp_x2%initialize( &
+    call sim%interp_x2%init( &
          sim%nc_x2+1, &
          sim%mesh4d%x2_min, &
          sim%mesh4d%x2_max, &
          sll_p_periodic)
 
-    call sim%interp_x3%initialize( &
+    call sim%interp_x3%init( &
          sim%nc_x3+1, &
          sim%mesh4d%x3_min, &
          sim%mesh4d%x3_max, &
          sll_p_hermite)
 
-    call sim%interp_x4%initialize( &
+    call sim%interp_x4%init( &
          sim%nc_x4+1, &
          sim%mesh4d%x4_min, &
          sim%mesh4d%x4_max, &
@@ -682,7 +679,7 @@ contains
        call sll_o_apply_remap_2d( sim%split_to_seqx1, sim%rho_split, sim%rho_x1 )
        
        ! Compute the electric potential.
-       call sll_s_solve_poisson_2d_periodic_cartesian_par( &
+       call sll_s_poisson_2d_periodic_par_solve( &
             sim%poisson_plan, &
             sim%rho_x1, &
             sim%phi_x1)
@@ -1066,13 +1063,12 @@ contains
     sll_real64 :: delta_x3
     sll_real64 :: delta_x4 
 
-    integer(HID_T)                  :: hdf_file_id
-    sll_int32                       :: xml_file_id
-    integer(HSIZE_T), dimension(2)  :: array_dims 
-    integer(HSSIZE_T), dimension(2) :: offset 
+    sll_int32                  :: xml_file_id
+    type(sll_t_hdf5_par_handle)    :: hdf_file_id
+    integer(i64), dimension(2) :: array_dims 
+    integer(i64), dimension(2) :: offset 
 
-    array_dims(1) = int(sim%nc_x1,HSIZE_T)
-    array_dims(2) = int(sim%nc_x2,HSIZE_T)
+    array_dims(:) = int( [sim%nc_x1, sim%nc_x2], i64 )
     world_size    = sll_f_get_collective_size(sll_v_world_collective)
     my_rank       = sll_f_get_collective_rank(sll_v_world_collective)
 
@@ -1088,8 +1084,8 @@ contains
 
        call sll_o_compute_local_sizes( my_layout, local_nx1, local_nx2)        
     
-       offset(1) =  int(sll_o_get_layout_i_min( my_layout, my_rank ) - 1,HSSIZE_T)
-       offset(2) =  int(sll_o_get_layout_j_min( my_layout, my_rank ) - 1,HSSIZE_T)
+       offset(1) =  int( sll_o_get_layout_i_min( my_layout, my_rank ) - 1, i64 )
+       offset(2) =  int( sll_o_get_layout_j_min( my_layout, my_rank ) - 1, i64 )
 
        if (itime == 1) then
 
@@ -1120,11 +1116,11 @@ contains
              end do
           end do
        
-          call sll_o_hdf5_file_create("mesh_x"//c_layout//"_seq.h5",&
-          sll_v_world_collective%comm,hdf_file_id,error)
-          call sll_o_hdf5_write_array(hdf_file_id,array_dims,offset,x1,"x1",error)
-          call sll_o_hdf5_write_array(hdf_file_id,array_dims,offset,x2,"x2",error)
-          call sll_o_hdf5_file_close(hdf_file_id,error)
+          call sll_s_hdf5_par_file_create("mesh_x"//c_layout//"_seq.h5",&
+          sll_v_world_collective%comm, hdf_file_id, error )
+          call sll_o_hdf5_par_write_array( hdf_file_id, array_dims, offset, x1, "x1", error )
+          call sll_o_hdf5_par_write_array( hdf_file_id, array_dims, offset, x2, "x2", error )
+          call sll_s_hdf5_par_file_close ( hdf_file_id, error)
 
           deallocate(x1)
           deallocate(x2)
@@ -1134,23 +1130,23 @@ contains
        call sll_s_int2string(itime, ctime)
        c_layout = char(i_layout+48)
 
-       call sll_o_hdf5_file_create("fields_x"//c_layout//"-"//ctime//".h5", &
+       call sll_s_hdf5_par_file_create( "fields_x"//c_layout//"-"//ctime//".h5", &
                                  sll_v_world_collective%comm, &
-                                 hdf_file_id,error)
+                                 hdf_file_id, error)
 
        if (i_layout == 1) then
-          call sll_o_hdf5_write_array(hdf_file_id,array_dims,offset,sim%rho_x1, &
-                                    "rho_x"//c_layout,error)
-          call sll_o_hdf5_write_array(hdf_file_id,array_dims,offset,sim%phi_x1, &
-                                    "phi_x"//c_layout,error)
+          call sll_o_hdf5_par_write_array( hdf_file_id, array_dims, offset, sim%rho_x1, &
+                                    "rho_x"//c_layout, error )
+          call sll_o_hdf5_par_write_array( hdf_file_id, array_dims, offset, sim%phi_x1, &
+                                    "phi_x"//c_layout, error )
        else
-          call sll_o_hdf5_write_array(hdf_file_id,array_dims,offset,sim%rho_x2, &
-                                    "rho_x"//c_layout,error)
-          call sll_o_hdf5_write_array(hdf_file_id,array_dims,offset,sim%phi_x2, &
-                                    "phi_x"//c_layout,error)
+          call sll_o_hdf5_par_write_array( hdf_file_id, array_dims, offset, sim%rho_x2, &
+                                    "rho_x"//c_layout, error )
+          call sll_o_hdf5_par_write_array( hdf_file_id, array_dims, offset, sim%phi_x2, &
+                                    "phi_x"//c_layout, error )
        end if
 
-       call sll_o_hdf5_file_close(hdf_file_id,error)
+       call sll_s_hdf5_par_file_close( hdf_file_id,error )
    
        if (my_rank == 0) then
           

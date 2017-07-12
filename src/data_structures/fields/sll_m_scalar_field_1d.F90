@@ -62,8 +62,7 @@ module sll_m_scalar_field_1d
      ! allows to decide if the user put the derivative of the analiytic function: func
      logical :: present_derivative
    contains
-     procedure, pass(field) :: initialize => &
-          initialize_scalar_field_1d_analytic
+     procedure, pass(field) :: init => initialize_scalar_field_1d_analytic
      procedure, pass(field) :: get_cartesian_mesh => &
           get_cartesian_mesh_1d_analytic
      procedure, pass(field) :: value_at_point => value_at_pt_analytic_1d
@@ -93,8 +92,7 @@ module sll_m_scalar_field_1d
      sll_int32 :: bc_right
      type( sll_t_cartesian_mesh_1d),pointer :: mesh   
    contains
-     procedure, pass(field) :: initialize => &
-          initialize_scalar_field_1d_discrete
+     procedure, pass(field) :: init => initialize_scalar_field_1d_discrete
      procedure, pass(field) :: get_cartesian_mesh => &
           get_cartesian_mesh_1d_discrete
      procedure, pass(field) :: value_at_point => value_at_pt_discrete_1d
@@ -206,7 +204,7 @@ contains   ! *****************************************************************
     type(sll_t_cartesian_mesh_1d),pointer   :: mesh
  
     SLL_ALLOCATE(obj,ierr)
-    call obj%initialize( &
+    call obj%init( &
     func, &
     field_name, &
     bc_left, &
@@ -377,7 +375,7 @@ contains   ! *****************************************************************
     sll_int32  :: ierr
     
     SLL_ALLOCATE(obj,ierr)
-    call obj%initialize( &
+    call obj%init( &
         ! array_1d, &
          field_name, &
          interpolator_1d, &

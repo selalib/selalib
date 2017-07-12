@@ -10,22 +10,22 @@ module sll_m_sim_bsl_gc_2d0v_curv
 #include "sll_working_precision.h"
 
   use sll_m_advection_1d_base, only: &
-    sll_c_advection_1d_base
+    sll_c_advector_1d
 
   use sll_m_advection_1d_bsl, only: &
-    sll_f_new_bsl_1d_advector
+    sll_f_new_advector_1d_bsl
 
   use sll_m_advection_1d_csl_periodic, only: &
     sll_f_new_csl_periodic_1d_advector
 
   use sll_m_advection_2d_base, only: &
-    sll_c_advection_2d_base
+    sll_c_advector_2d
 
   use sll_m_advection_2d_bsl, only: &
-    sll_f_new_bsl_2d_advector
+    sll_f_new_advector_2d_bsl
 
   use sll_m_advection_2d_tensor_product, only: &
-    sll_f_new_tensor_product_2d_advector
+    sll_f_new_advector_2d_tensor_product
 
   use sll_m_arbitrary_degree_spline_interpolator_2d, only: &
     sll_f_new_arbitrary_degree_spline_interp2d
@@ -48,7 +48,7 @@ module sll_m_sim_bsl_gc_2d0v_curv
     sll_c_characteristics_1d_base
 
   use sll_m_characteristics_1d_explicit_euler, only: &
-    sll_f_new_explicit_euler_1d_charac
+    sll_f_new_charac_1d_explicit_euler
 
   use sll_m_characteristics_1d_trapezoid, only: &
     sll_f_new_trapezoid_1d_charac
@@ -135,9 +135,10 @@ module sll_m_sim_bsl_gc_2d0v_curv
     sll_p_es_gauss_legendre
 
   use sll_m_hdf5_io_serial, only: &
-    sll_o_hdf5_file_close, &
-    sll_o_hdf5_file_create, &
-    sll_o_hdf5_write_array
+    sll_t_hdf5_ser_handle, &
+    sll_s_hdf5_ser_file_create, &
+    sll_s_hdf5_ser_file_close, &
+    sll_o_hdf5_ser_write_array
 
   use sll_m_hermite_interpolation_1d, only: &
     sll_p_hermite_1d_c0
@@ -234,8 +235,8 @@ module sll_m_sim_bsl_gc_2d0v_curv
     class(sll_c_interpolator_1d), pointer   :: A2_interp1d_x2 => null()
     class(sll_c_interpolator_1d), pointer :: f_interp1d_x1 => null()
     class(sll_c_interpolator_1d), pointer :: f_interp1d_x2 => null()
-    class(sll_c_advection_1d_base), pointer    :: advect_1d_x1 => null()
-    class(sll_c_advection_1d_base), pointer    :: advect_1d_x2 => null()
+    class(sll_c_advector_1d), pointer    :: advect_1d_x1 => null()
+    class(sll_c_advector_1d), pointer    :: advect_1d_x2 => null()
    
    !initial function
    procedure(sll_i_scalar_initializer_2d), nopass, pointer :: init_func
@@ -243,7 +244,7 @@ module sll_m_sim_bsl_gc_2d0v_curv
    sll_real64, dimension(:), pointer :: params
       
    !advector
-   class(sll_c_advection_2d_base), pointer    :: advect_2d
+   class(sll_c_advector_2d), pointer    :: advect_2d
    
    !interpolator for derivatives
 !   class(sll_c_interpolator_2d), pointer   :: phi_interp2d
@@ -1228,7 +1229,7 @@ contains
 
     select case(charac1d_x1_case)
       case ("SLL_EULER")
-        sim%charac1d_x1 => sll_f_new_explicit_euler_1d_charac(&
+        sim%charac1d_x1 => sll_f_new_charac_1d_explicit_euler(&
           Nc_eta1+1, &
           eta_min=eta1_min, &
           eta_max=eta1_max, &
@@ -1252,7 +1253,7 @@ contains
 
     select case(charac1d_x2_case)
       case ("SLL_EULER")
-        sim%charac1d_x2 => sll_f_new_explicit_euler_1d_charac(&
+        sim%charac1d_x2 => sll_f_new_charac_1d_explicit_euler(&
           Nc_eta2+1, &
           eta_min=eta2_min, &
           eta_max=eta2_max, &
@@ -1276,7 +1277,7 @@ contains
 
     select case(advect1d_x1_case)
       case ("SLL_BSL")
-        sim%advect_1d_x1 => sll_f_new_bsl_1d_advector(&
+        sim%advect_1d_x1 => sll_f_new_advector_1d_bsl(&
           sim%f_interp1d_x1, &
           sim%charac1d_x1, &
           Nc_eta1+1, &
@@ -1299,7 +1300,7 @@ contains
 
     select case(advect1d_x2_case)
       case ("SLL_BSL")
-        sim%advect_1d_x2 => sll_f_new_bsl_1d_advector(&
+        sim%advect_1d_x2 => sll_f_new_advector_1d_bsl(&
           sim%f_interp1d_x2, &
           sim%charac1d_x2, &
           Nc_eta2+1, &
@@ -1357,7 +1358,7 @@ contains
     select case(advect2d_case)
       case ("SLL_BSL")
        print*,"#advect2d = SLL_BSL "  
-        sim%advect_2d => sll_f_new_bsl_2d_advector(&
+        sim%advect_2d => sll_f_new_advector_2d_bsl(&
           sim%f_interp2d, &
           sim%charac2d, &
           Nc_eta1+1, &
@@ -1368,7 +1369,7 @@ contains
           eta2_max = eta2_max)
       case ("SLL_TENSOR_PRODUCT")
        print*,"#advect2d = SLL_SPLITING " 
-        sim%advect_2d => sll_f_new_tensor_product_2d_advector(&
+        sim%advect_2d => sll_f_new_advector_2d_tensor_product(&
           sim%advect_1d_x1, &
           sim%advect_1d_x2, &
           Nc_eta1+1, &
@@ -2537,21 +2538,19 @@ subroutine compute_field_from_phi_2d_fd_curvilinear(phi,mesh_2d,transformation,A
   ! Save the mesh structure
   !---------------------------------------------------
   subroutine plot_f_curvilinear(iplot,f,mesh_2d,transf)
-    use sll_m_xdmf
-    use hdf5, only: hid_t
-    use sll_m_hdf5_io_serial
+    sll_int32, intent(in) :: iplot
+    sll_real64, dimension(:,:), intent(in) :: f
+    type(sll_t_cartesian_mesh_2d), pointer :: mesh_2d
+    class(sll_c_coordinate_transformation_2d_base), pointer :: transf
+
     sll_int32 :: file_id
-    integer(hid_t) :: hfile_id
+    type(sll_t_hdf5_ser_handle) :: hfile_id
     sll_int32 :: error
     sll_real64, dimension(:,:), allocatable :: x1
     sll_real64, dimension(:,:), allocatable :: x2
     sll_int32 :: i, j
-    sll_int32, intent(in) :: iplot
     character(len=4)      :: cplot
     sll_int32             :: nnodes_x1, nnodes_x2
-    type(sll_t_cartesian_mesh_2d), pointer :: mesh_2d
-    class(sll_c_coordinate_transformation_2d_base), pointer :: transf
-    sll_real64, dimension(:,:), intent(in) :: f
     sll_real64 :: eta1
     sll_real64 :: eta2
     sll_real64 ::  eta1_min, eta2_min
@@ -2585,12 +2584,12 @@ subroutine compute_field_from_phi_2d_fd_curvilinear(phi,mesh_2d,transformation,A
           x2(i,j) = transf%x2(eta1,eta2)
         end do
       end do
-      call sll_o_hdf5_file_create("curvilinear_mesh-x1.h5",hfile_id,error)
-      call sll_o_hdf5_write_array(hfile_id,x1,"/x1",error)
-      call sll_o_hdf5_file_close(hfile_id, error)
-      call sll_o_hdf5_file_create("curvilinear_mesh-x2.h5",hfile_id,error)
-      call sll_o_hdf5_write_array(hfile_id,x2,"/x2",error)
-      call sll_o_hdf5_file_close(hfile_id, error)
+      call sll_s_hdf5_ser_file_create("curvilinear_mesh-x1.h5",hfile_id,error)
+      call sll_o_hdf5_ser_write_array(hfile_id,x1,"/x1",error)
+      call sll_s_hdf5_ser_file_close(hfile_id, error)
+      call sll_s_hdf5_ser_file_create("curvilinear_mesh-x2.h5",hfile_id,error)
+      call sll_o_hdf5_ser_write_array(hfile_id,x2,"/x2",error)
+      call sll_s_hdf5_ser_file_close(hfile_id, error)
       deallocate(x1)
       deallocate(x2)
 
@@ -2606,21 +2605,19 @@ subroutine compute_field_from_phi_2d_fd_curvilinear(phi,mesh_2d,transformation,A
 
 
   subroutine plot_phi_curvilinear(iplot,f,mesh_2d,transf)
-    use sll_m_xdmf
-    use hdf5, only: hid_t
-    use sll_m_hdf5_io_serial
+    sll_int32, intent(in) :: iplot
+    sll_real64, dimension(:,:), intent(in) :: f
+    type(sll_t_cartesian_mesh_2d), pointer :: mesh_2d
+    class(sll_c_coordinate_transformation_2d_base), pointer :: transf
+
     sll_int32 :: file_id
-    integer(hid_t) :: hfile_id
+    type(sll_t_hdf5_ser_handle) :: hfile_id
     sll_int32 :: error
     sll_real64, dimension(:,:), allocatable :: x1
     sll_real64, dimension(:,:), allocatable :: x2
     sll_int32 :: i, j
-    sll_int32, intent(in) :: iplot
     character(len=4)      :: cplot
     sll_int32             :: nnodes_x1, nnodes_x2
-    type(sll_t_cartesian_mesh_2d), pointer :: mesh_2d
-    class(sll_c_coordinate_transformation_2d_base), pointer :: transf
-    sll_real64, dimension(:,:), intent(in) :: f
     sll_real64 :: eta1
     sll_real64 :: eta2
     sll_real64 ::  eta1_min, eta2_min
@@ -2654,12 +2651,12 @@ subroutine compute_field_from_phi_2d_fd_curvilinear(phi,mesh_2d,transformation,A
           x2(i,j) = transf%x2(eta1,eta2)
         end do
       end do
-      call sll_o_hdf5_file_create("curvilinear_mesh-x1.h5",hfile_id,error)
-      call sll_o_hdf5_write_array(hfile_id,x1,"/x1",error)
-      call sll_o_hdf5_file_close(hfile_id, error)
-      call sll_o_hdf5_file_create("curvilinear_mesh-x2.h5",hfile_id,error)
-      call sll_o_hdf5_write_array(hfile_id,x2,"/x2",error)
-      call sll_o_hdf5_file_close(hfile_id, error)
+      call sll_s_hdf5_ser_file_create("curvilinear_mesh-x1.h5",hfile_id,error)
+      call sll_o_hdf5_ser_write_array(hfile_id,x1,"/x1",error)
+      call sll_s_hdf5_ser_file_close(hfile_id, error)
+      call sll_s_hdf5_ser_file_create("curvilinear_mesh-x2.h5",hfile_id,error)
+      call sll_o_hdf5_ser_write_array(hfile_id,x2,"/x2",error)
+      call sll_s_hdf5_ser_file_close(hfile_id, error)
       deallocate(x1)
       deallocate(x2)
 
@@ -2745,7 +2742,7 @@ subroutine sll_DSG( eta1_min,eta1_max, eta2_min,eta2_max,n_eta1,n_eta2, f )
      
    spline_degree_eta1 = 3
    spline_degree_eta2 = 3  
-   call a11_interp%initialize( &
+   call a11_interp%init( &
          n_eta1+1, &
          n_eta2+1, &
          eta1_min, &
@@ -2754,7 +2751,7 @@ subroutine sll_DSG( eta1_min,eta1_max, eta2_min,eta2_max,n_eta1,n_eta2, f )
          eta2_max, &
          sll_p_dirichlet, &
          sll_p_periodic )            
-   call a22_interp%initialize( &
+   call a22_interp%init( &
          n_eta1+1, &
          n_eta2+1, &
          eta1_min, &
@@ -2765,7 +2762,7 @@ subroutine sll_DSG( eta1_min,eta1_max, eta2_min,eta2_max,n_eta1,n_eta2, f )
          sll_p_periodic )    
            
           
-    call a12_interp%initialize( &
+    call a12_interp%init( &
          n_eta1+1, &
          n_eta2+1, &
          eta1_min, &
@@ -2849,14 +2846,12 @@ subroutine sll_DSG( eta1_min,eta1_max, eta2_min,eta2_max,n_eta1,n_eta2, f )
     if(size(input,1)<Npts1)then
       print *,'size(input,1)=',size(input,1)
       print *,'Npts1=',Npts1
-      SLL_ERROR('compute_integral_trapezoid_2d&
-      &','bad size1')
+      SLL_ERROR('compute_integral_trapezoid_2d','bad size1')
     endif
     if(size(input,2)<Npts2)then
       print *,'size(input,2)=',size(input,2)
       print *,'Npts2=',Npts2
-      SLL_ERROR('compute_integral_trapezoid_2d&
-      &','bad size2')
+      SLL_ERROR('compute_integral_trapezoid_2d','bad size2')
     endif
 
     SLL_ALLOCATE(array(Npts2),ierr)    

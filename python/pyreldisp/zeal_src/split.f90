@@ -805,7 +805,7 @@ CONTAINS
 
      SUBROUTINE TRAP1()
 
-       INTEGER                        :: KEY, IER, NEVAL, LAST, EDGE
+       INTEGER                        :: KEY, IER, NEVAL, LAST
        INTEGER, PARAMETER             :: LIMIT = 1000 
        INTEGER, PARAMETER             :: LENW = 4*LIMIT
        INTEGER, DIMENSION(LIMIT)      :: IWORK
@@ -829,7 +829,7 @@ CONTAINS
 !---------------------------------------------------------------------
      SUBROUTINE TRAP2()
 
-       INTEGER                        :: KEY, IER, NEVAL, LAST, EDGE
+       INTEGER                        :: KEY, IER, NEVAL, LAST
        INTEGER, PARAMETER             :: LIMIT = 1000 
        INTEGER, PARAMETER             :: LENW = 4*LIMIT
        INTEGER, DIMENSION(LIMIT)      :: IWORK
@@ -854,7 +854,7 @@ CONTAINS
 
      SUBROUTINE TRAP3()
 
-       INTEGER                        :: KEY, IER, NEVAL, LAST, EDGE
+       INTEGER                        :: KEY, IER, NEVAL, LAST
        INTEGER, PARAMETER             :: LIMIT = 1000 
        INTEGER, PARAMETER             :: LENW = 4*LIMIT
        INTEGER, DIMENSION(LIMIT)      :: IWORK
@@ -880,7 +880,7 @@ CONTAINS
 
      SUBROUTINE TRAP4()
 
-       INTEGER                        :: KEY, IER, NEVAL, LAST, EDGE
+       INTEGER                        :: KEY, IER, NEVAL, LAST
        INTEGER, PARAMETER             :: LIMIT = 1000 
        INTEGER, PARAMETER             :: LENW = 4*LIMIT
        INTEGER, DIMENSION(LIMIT)      :: IWORK

@@ -4,14 +4,14 @@
 
 set( INSTALL_DIR "${INSTALL_DIR}/serial" )
 
-if(HDF5_ENABLED)
-
+if(HDF5_ENABLED AND HDF5_IS_PARALEL)
+  
   # Semi Lagrangian method
-
+  
   ## advection
   add_subdirectory( bsl_ad_2d0v_cart                          )
   add_subdirectory( bsl_ad_2d0v_polar_rot                     )
-  add_subdirectory( bsl_ad_2d0v_curv                          )
+  add_subdirectory( bsl_ad_2d0v_curv                          )  
   add_subdirectory( bsl_ad_2d0v_hex_rot                       )
   add_subdirectory( bsl_ad_2d0v_hex                           )
   add_subdirectory( fsl_ad_2d0v_polar                         )
@@ -39,7 +39,7 @@ if(HDF5_ENABLED)
   ## Vlasov-Poisson 1Dx1D
   add_subdirectory( eul_vp_1d1v_cart_fe_ft                    )
 
-endif(HDF5_ENABLED)
+endif(HDF5_ENABLED AND HDF5_IS_PARALEL)
 
 # Examples that do not extend 'sll_c_simulation_base_class'
 add_subdirectory( bsl_examples )

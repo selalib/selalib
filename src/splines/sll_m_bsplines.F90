@@ -34,7 +34,7 @@ module sll_m_bsplines
     sll_s_interpolate_array_values_2d, &
     sll_f_interpolate_derivative_1d, &
     sll_f_interpolate_value_1d, &
-    sll_f_interpolate_value_2d, &
+    sll_f_cubic_spline_2d_eval, &
     sll_f_new_bspline_1d, &
     sll_f_new_bspline_2d, &
     sll_t_bspline_1d, &
@@ -1268,7 +1268,7 @@ deallocate(wrk)
 
 end subroutine sll_s_interpolate_array_values_2d
 
-function sll_f_interpolate_value_2d(this, xi, xj, ideriv, jderiv ) result (y)
+function sll_f_cubic_spline_2d_eval(this, xi, xj, ideriv, jderiv ) result (y)
 
 type(sll_t_bspline_2d)    :: this
 sll_real64, intent(in)  :: xi
@@ -1427,7 +1427,7 @@ do jjj = jderiv+1, ky-1
 end do
 y = this%bs2%aj(1)
 
-end function sll_f_interpolate_value_2d
+end function sll_f_cubic_spline_2d_eval
 
 subroutine interpolate_array_x1_derivatives_2d(this, n1, n2, x, y)
 

@@ -66,6 +66,7 @@ CONTAINS
      COMPLEX(KIND=DP), DIMENSION(M), INTENT(INOUT) :: ZEROS 
      COMPLEX(KIND=DP), DIMENSION(M), INTENT(INOUT) :: FZEROS
 
+
 !-----------------------------------------------------------------------
 !  Local variables
 !
@@ -129,7 +130,7 @@ CONTAINS
          REFINE_OK(J) = .TRUE.
        ELSE
          INTDO: DO L = 1, NTRIAL
-           Z = ZEROS(J) + DISTANCE(J)*EXP(L*TWO*PI*I/NTRIAL)
+           Z = ZEROS(J) + CMPLX(DISTANCE(J),KIND=DP)*EXP(L*TWO*PI*I/NTRIAL)
            CALL NEWTON(POINT,STEP,MULT,Z,F,NEWTOK)
            DO H = 1, J-1
              IF ( ABS(Z-ZEROS(H)) .LT. NEWTONZ ) NEWTOK = .FALSE.

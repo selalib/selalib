@@ -47,7 +47,7 @@ module sll_mpi
 !  external :: mpi_init, mpi_init_thread, mpi_initialized, mpi_finalize, &
 !    mpi_comm_size, mpi_comm_rank, mpi_comm_split, mpi_comm_free, &
 !    mpi_type_create_f90_real, &
-!    mpi_barrier, mpi_wait, mpi_waitall 
+!    mpi_barrier, mpi_wait, mpi_waitall
 
 !-----------------------------------------------------------------------
 ! Module interface
@@ -62,9 +62,11 @@ module sll_mpi
     mpi_any_tag,         &
     mpi_barrier,         &
     mpi_bcast,           &
+    mpi_byte,            &
     mpi_cart_coords,     &
     mpi_cart_create,     &
     mpi_cart_get,        &
+    mpi_cart_sub,        &
     mpi_cart_shift,      &
     mpi_character,       &
     mpi_comm_free,       &
@@ -116,7 +118,10 @@ module sll_mpi
     mpi_thread_single,   &
     mpi_undefined,       &
     mpi_wait,            &
-    mpi_wtime
+    mpi_wtime,           &
+    mpi_group_incl,      &
+    mpi_comm_create,     &
+    mpi_group_free
 
   private
 
