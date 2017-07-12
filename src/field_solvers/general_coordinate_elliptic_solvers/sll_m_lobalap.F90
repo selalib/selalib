@@ -659,7 +659,6 @@ contains
 
     write(*,*) 'Assemblage conditions aux limites matrice...'
 
-    SLL_ASSERT(size(potexact_vec)==nbc)
     ! assemblage des conditions aux limites de dirichlet
     ! par pénalisation
     do ii=1,nbc

@@ -101,7 +101,7 @@ module sll_m_interpolators_2d_base
        use sll_m_working_precision
        import sll_c_interpolator_2d
        sll_real64                                  :: val  !< interpolated value
-       class(sll_c_interpolator_2d), intent(in)    :: interpolator !< interpolator object
+       class(sll_c_interpolator_2d), intent(in) :: interpolator !< interpolator object
        sll_real64, intent(in)                      :: eta1 !< first coordinate of point where to interpolate
        sll_real64, intent(in)                      :: eta2 !< second coordinate of point where to interpolate
 
@@ -123,7 +123,7 @@ module sll_m_interpolators_2d_base
 
        use sll_m_working_precision
        import sll_c_interpolator_2d
-       class(sll_c_interpolator_2d), intent(inout)    :: this !< interpolator object
+       class(sll_c_interpolator_2d), intent(in)    :: this !< interpolator object
        sll_int32,                       intent(in)    :: num_points1 !< number of points along first dimension
        sll_int32,                       intent(in)    :: num_points2 !< number of points along second dimension
        sll_real64,                      intent(in)    :: data_in(:,:) !< function values
@@ -148,7 +148,7 @@ module sll_m_interpolators_2d_base
 
        use sll_m_working_precision
        import sll_c_interpolator_2d
-       class(sll_c_interpolator_2d), intent(inout)    :: this !< interpolator object
+       class(sll_c_interpolator_2d), intent(in)    :: this !< interpolator object
        sll_int32,                       intent(in)    :: num_points1  !< values of the first coordinate for interpolation points
        sll_int32,                       intent(in)    :: num_points2 !< values of the second coordinate for interpolation points
        sll_real64,                      intent(in)    :: data_in(:,:) !< function values
