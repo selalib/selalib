@@ -154,13 +154,14 @@ contains
 
     sll_real64, intent(out) :: S
     sll_real64, intent(in) :: t
-    type(app_field_params)  :: params
+    type(app_field_params), intent(in)  :: params
     ! local variables
     sll_real64 :: t0, twL, twR, tflat, tL, tR
     sll_real64 :: epsilon
 
     tflat = params%tflat
-    tL = params%tR 
+    tR = params%tR
+    tL = params%tL 
     twL = params%twL
     twR = params%twR 
     t0 = params%t0

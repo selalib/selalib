@@ -56,7 +56,11 @@ program remap_test_6d
     sll_f_is_power_of_two
 
   use sll_mpi, only: &
-    mpi_prod
+       mpi_prod
+
+#ifdef _OPENMP
+  use omp_lib
+#endif
 
   implicit none
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -125,6 +129,7 @@ program remap_test_6d
   sll_int32                                 :: lin_index
   sll_int32, dimension(6)                   :: theo_index
   sll_int32, dimension(6)                   :: tmp_array
+  sll_int32                                 :: n_omp_threads ! number of omp threads
 
   ! Boot parallel environment
   print *, 'Booting parallel environment...'
@@ -134,11 +139,17 @@ program remap_test_6d
   colsz  = int(sll_f_get_collective_size(sll_v_world_collective),i64)
   myrank = sll_f_get_collective_rank(sll_v_world_collective)
 
+#ifdef _OPENMP
+  n_omp_threads = omp_get_max_threads()
+#else
+  n_omp_threads = 1
+#endif
+
   if( myrank .eq. RANK_TO_PRINT ) then
      print *, ' '
      print *, '--------------- REMAP 6D test ---------------------'
      print *, ' '
-     print *, 'Running a test on ', colsz, 'processes'
+     print *, 'Running a test on ', colsz, 'MPI processes and ', n_omp_threads, 'OMP threads.'
      flush( output_unit )
   end if
 

@@ -16,8 +16,8 @@ module sll_m_periodic_interpolator_1d
     sll_c_interpolator_1d
 
   use sll_m_periodic_interp, only: &
-    sll_o_delete, &
-    sll_s_initialize_periodic_interp, &
+    sll_s_periodic_interp_free, &
+    sll_s_periodic_interp_init, &
     sll_s_periodic_interp, &
     sll_t_periodic_interp_work
 
@@ -35,13 +35,13 @@ module sll_m_periodic_interpolator_1d
     ! Be careful here. For consistency with the other interpolators
     ! num_points is the number of nodes (including both boundaries)
     ! and not the number of cells as used in the periodic interpolator module.
-     sll_int32                            :: num_points !< size
-     sll_real64                           :: cell_size  !< cell size
-     sll_real64                           :: domain_size!< length of interval
-     type(sll_t_periodic_interp_work), pointer  :: per_interp !< ???
+     sll_int32                         :: num_points !< size
+     sll_real64                        :: cell_size  !< cell size
+     sll_real64                        :: domain_size!< length of interval
+     type(sll_t_periodic_interp_work)  :: per_interp !< ???
    contains
      !>PLEASE ADD DOCUMENTATION
-     procedure, pass(interpolator) :: initialize => initialize_per1d_interpolator
+     procedure, pass(interpolator) :: init => initialize_per1d_interpolator
      !>PLEASE ADD DOCUMENTATION
      procedure :: compute_interpolants => compute_interpolants_per1d
      !>PLEASE ADD DOCUMENTATION
@@ -71,8 +71,6 @@ module sll_m_periodic_interpolator_1d
 
 contains  ! ****************************************************************
 
-
-
   !> Create a new interpolator
   function new_periodic_1d_interpolator( &
     num_points, &
@@ -98,12 +96,8 @@ contains  ! ****************************************************************
          order)
   end function new_periodic_1d_interpolator
 
-
-
-
-
   subroutine per_interpolate1d(this, num_pts, data, coordinates, output_array)
-    class(sll_t_periodic_interpolator_1d),  intent(in)       :: this
+    class(sll_t_periodic_interpolator_1d),  intent(inout)       :: this
     !class(sll_spline_1D),  intent(in)      :: this
     sll_int32,  intent(in)                 :: num_pts
     sll_real64, dimension(num_pts), intent(in)   :: coordinates
@@ -124,7 +118,7 @@ contains  ! ****************************************************************
   end subroutine per_interpolate1d
 
   subroutine per_interpolate1d_disp(this, num_pts, data, alpha, output_array)
-    class(sll_t_periodic_interpolator_1d),  intent(in)       :: this
+    class(sll_t_periodic_interpolator_1d),  intent(inout)       :: this
     sll_int32,  intent(in)                 :: num_pts
     sll_real64,  intent(in)   :: alpha
     sll_real64, dimension(:), intent(in)   :: data
@@ -140,7 +134,7 @@ contains  ! ****************************************************************
 
 
   subroutine per_interpolate1d_disp_inplace(this, num_pts, data, alpha)
-    class(sll_t_periodic_interpolator_1d),  intent(in)       :: this
+    class(sll_t_periodic_interpolator_1d),  intent(inout)       :: this
     sll_int32,  intent(in)                 :: num_pts
     sll_real64,  intent(in)   :: alpha
     sll_real64, dimension(num_pts), intent(inout)   :: data
@@ -193,7 +187,7 @@ contains  ! ****************************************************************
     num_pts, &
     vals_to_interpolate, &
     output_array )
-    class(sll_t_periodic_interpolator_1d),  intent(in) :: interpolator
+    class(sll_t_periodic_interpolator_1d),  intent(inout) :: interpolator
     sll_int32,  intent(in)                 :: num_pts
     sll_real64, dimension(num_pts), intent(in)   :: vals_to_interpolate
     sll_real64, dimension(num_pts), intent(out)  :: output_array
@@ -299,14 +293,14 @@ contains  ! ****************************************************************
     interpolator%cell_size  = (xmax-xmin) / (num_points-1)
     interpolator%domain_size = xmax-xmin
 
-    call sll_s_initialize_periodic_interp(interpolator%per_interp, num_points-1, &
+    call sll_s_periodic_interp_init(interpolator%per_interp, num_points-1, &
          type, order)
   end subroutine
 
 
   subroutine delete_per1d( obj )
     class(sll_t_periodic_interpolator_1d) :: obj
-    call sll_o_delete(obj%per_interp)
+    call sll_s_periodic_interp_free(obj%per_interp)
   end subroutine delete_per1d
 
   subroutine set_coefficients_per1d( interpolator, coeffs )

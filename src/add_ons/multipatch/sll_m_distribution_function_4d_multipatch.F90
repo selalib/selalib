@@ -79,7 +79,6 @@ module sll_m_distribution_function_4d_multipatch
 
   public :: &
     sll_s_compute_charge_density_multipatch, &
-    sll_o_delete, &
     sll_t_distribution_function_4d_multipatch, &
     sll_f_new_distribution_function_4d_multipatch
 
@@ -108,7 +107,7 @@ module sll_m_distribution_function_4d_multipatch
 
    contains
      procedure, pass(df) :: allocate_memory => allocate_memory_df_4d_mp
-     procedure, pass(df) :: initialize => initialize_df_4d_mp 
+     procedure, pass(df) :: init => initialize_df_4d_mp 
      procedure, pass(df) :: get_x1x2_data_slice_pointer => get_x1x2_slice_4d
      procedure, pass(df) :: get_x3_line_pointer => get_x3_line_df4d
      procedure, pass(df) :: get_x4_line_pointer => get_x4_line_df4d
@@ -119,7 +118,7 @@ module sll_m_distribution_function_4d_multipatch
      procedure, pass(df) :: get_eta_coordinates => get_eta_coords_df4d
      procedure, pass(df) :: compute_moment => moments_df4d
      procedure, pass(df) :: compute_Lp_norms => Lp_norms_df4d
-     procedure, pass(df) :: delete => delete_df_4d_mp
+     procedure, pass(df) :: free => delete_df_4d_mp
   end type sll_t_distribution_function_4d_multipatch
 
   type :: data_4d_ptr
@@ -290,7 +289,7 @@ contains
        init_func, &
        init_func_params )
     class(sll_t_distribution_function_4d_multipatch), intent(inout) :: df
-    procedure(sll_i_scalar_initializer_4d)        :: init_func
+    procedure(sll_i_scalar_initializer_4d), pointer        :: init_func
     sll_real64, dimension(:), optional          :: init_func_params
     sll_int32 :: num_patches
     sll_int32 :: i
@@ -307,8 +306,8 @@ contains
        ! please correct this to:
        ! lm => df%transf%get_cartesian_mesh(i)
        ! whenever gfortan 4.6 is no longer supported by Selalib.
-       lm => df%transf%transfs(i+1)%t%mesh
-       t => df%transf%transfs(i+1)%t
+       lm => df%transf%transfs(i+1)%mesh
+       t => df%transf%transfs(i+1)
        !call sll_set_time_mark(t0) ! delete this
        call sll_o_4d_parallel_array_initializer( &
             layout, &
@@ -849,7 +848,7 @@ contains
   subroutine delete_df_4d_mp_ptr( df )
     type(sll_t_distribution_function_4d_multipatch), pointer :: df
     sll_int32 :: ierr
-    call df%delete()
+    call df%free()
     SLL_DEALLOCATE(df, ierr)
   end subroutine delete_df_4d_mp_ptr
 

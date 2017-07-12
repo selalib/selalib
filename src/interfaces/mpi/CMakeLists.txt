@@ -140,3 +140,6 @@ endif()
 #-------------------------------------------------------------------------------
 set(CMAKE_Fortran_COMPILER ${MPI_Fortran_COMPILER})
 add_library( sll_mpi STATIC sll_mpi.F90 )
+if( NOT PGI)
+  target_include_directories(sll_mpi PRIVATE ${MPI_Fortran_MOD_DIR})
+endif( NOT PGI)

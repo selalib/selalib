@@ -1,4 +1,4 @@
-!> @ingroup integration
+!> @ingroup quadrature
 !> @brief 
 !> Trapezoid formula for numerical integration
 !> @details

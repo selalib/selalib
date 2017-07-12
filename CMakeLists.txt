@@ -23,21 +23,31 @@ IF (${CMAKE_SOURCE_DIR} MATCHES ${CMAKE_BINARY_DIR})
   RETURN()                                                                      
 ENDIF()                               
 
-SET(OPENMP_ENABLED        OFF CACHE BOOL   "Enable use of OpenMP library")
-SET(MPI_ENABLED           ON  CACHE BOOL   "Enable use of MPI library")
-SET(HDF5_ENABLED          ON  CACHE BOOL   "Use HDF5 library for data output")
-SET(HDF5_PARALLEL_ENABLED OFF CACHE BOOL   "Use Parallel HDF5")
-SET(FFTW_ENABLED          ON  CACHE BOOL   "Enable use of FFTW library")
-SET(PASTIX_ENABLED        OFF CACHE BOOL   "Enable PasTiX solver ")
-SET(MUMPS_ENABLED         OFF CACHE BOOL   "Enable MUMPS solver ")
-SET(SUITESPARSE_ENABLED   OFF CACHE BOOL   "Enable UMFpack solver")
-SET(BUILD_SIMULATIONS     ON  CACHE BOOL   "Build selalib simulations")
-SET(BUILD_GSL             OFF CACHE BOOL   "Build GSL and FGSL libraries")
-SET(BUILD_PARALUTION      OFF CACHE BOOL   "Build paralution library")
-SET(BUILD_SPRNG           OFF CACHE BOOL   "Build SPRNG libraries")
-SET(USE_MKL               OFF CACHE BOOL   "Using Intel Math Kernel Library")
-SET(BUILD_MUDPACK         OFF CACHE BOOL   "Build mudpack library")
+OPTION(BUILD_HDF5             "Download and build the HDF5 library"    OFF)
+OPTION(CLAPP                  "Use SELALIB within the CLAPP framework" OFF )
+OPTION(OPENMP_ENABLED         "Enable use of OpenMP library"           OFF)
+OPTION(MPI_ENABLED            "Enable use of MPI library"              ON )
+OPTION(HDF5_ENABLED           "Use HDF5 library for data output"       ON )
+OPTION(HDF5_PARALLEL_ENABLED  "Use Parallel HDF5"                      OFF)
+OPTION(FFTW_ENABLED           "Enable use of FFTW library"             ON )
+OPTION(PASTIX_ENABLED         "Enable PasTiX solver "                  OFF)
+OPTION(MUMPS_ENABLED          "Enable MUMPS solver "                   OFF)
+OPTION(SUITESPARSE_ENABLED    "Enable UMFpack solver"                  OFF)
+OPTION(BUILD_SIMULATIONS      "Build selalib simulations"              ON )
+OPTION(BUILD_GSL              "Build GSL and FGSL libraries"           OFF)
+OPTION(BUILD_PARALUTION       "Build paralution library"               OFF)
+OPTION(BUILD_SPRNG            "Build SPRNG libraries"                  OFF)
+OPTION(USE_MKL                "Using Intel Math Kernel Library"        OFF)
+OPTION(BUILD_THIRDPARTY       "Build third party simulations"          OFF)
+
+INCLUDE(CMakeDependentOption)
+CMAKE_DEPENDENT_OPTION(BUILD_MUDPACK "Build mudpack library" ON "BUILD_THIRDPARTY" ON)
+
 SET(PROCS                 4   CACHE STRING "Number of MPI processes for tests")
+
+IF(BUILD_THIRDPARTY)
+    SET(HDF5_PARALLEL_ENABLED ON)
+ENDIF(BUILD_THIRDPARTY)
 
 IF(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
   GET_FILENAME_COMPONENT(INSTALL_DIR "${CMAKE_SOURCE_DIR}/../usr" ABSOLUTE)
@@ -85,61 +95,40 @@ ADD_CUSTOM_TARGET( clear
   WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
   COMMENT "Delete all .a, .mod, .o and folders /modules, /bin" VERBATIM)
 
+FILE(GLOB_RECURSE SLL_MACROS ${PROJECT_SOURCE_DIR}/src/*.h)
+FILE(COPY ${SLL_MACROS} DESTINATION ${CMAKE_BINARY_DIR}/include)
+INCLUDE_DIRECTORIES(${CMAKE_BINARY_DIR}/include)
+INCLUDE_DIRECTORIES(${CMAKE_BINARY_DIR}/modules)
+INCLUDE(Forcheck)
+
+IF(MPI_ENABLED)
+  INCLUDE(MPIConfig)
+  INCLUDE(ProcessorCount)
+  INCLUDE(POEConfig)
+  INCLUDE(SLURMConfig)
+ENDIF()
+
 INCLUDE(FortranConfig)
+INCLUDE(HDF5Config)
 INCLUDE(FFTConfig)
 INCLUDE(LapackConfig)
 INCLUDE(DoxygenConfig)
 INCLUDE(PreprocessorTarget)
 INCLUDE(CLAPP_framework)
 
-IF(MPI_ENABLED)
-  INCLUDE(MPIConfig)
-  INCLUDE(ProcessorCount)
-  INCLUDE(POEConfig)
-ENDIF()
-
 INCLUDE(CTest)
-INCLUDE(HDF5Config)
+ENABLE_TESTING()
 
 MACRO(SLL_TEST _NAME)
   ADD_EXECUTABLE( test_${_NAME} "test_${_NAME}.F90")
   TARGET_LINK_LIBRARIES(test_${_NAME} ${ARGN})
   ADD_TEST(NAME ${_NAME} COMMAND test_${_NAME})
-  SET(${_NAME} PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
+  SET_TESTS_PROPERTIES(${_NAME} PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
 ENDMACRO(SLL_TEST)
-
-ENABLE_TESTING()
-
-FILE(GLOB_RECURSE SLL_MACROS ${PROJECT_SOURCE_DIR}/src/*.h)
-FILE(COPY ${SLL_MACROS} DESTINATION ${CMAKE_BINARY_DIR}/include)
-INCLUDE_DIRECTORIES(${CMAKE_BINARY_DIR}/include)
-INCLUDE_DIRECTORIES(${CMAKE_BINARY_DIR}/modules)
 
 ADD_SUBDIRECTORY(external)
 ADD_SUBDIRECTORY(src)
-
-IF(BUILD_PARALUTION)
-  INCLUDE(ExternalProject)
-  SET(PARALUTION_VERSION 1.1.0 CACHE STRING "Paralution version number")
-  EXTERNALPROJECT_ADD( paralution
-     URL  http://www.paralution.com/downloads/paralution-${PARALUTION_VERSION}.tar.gz
-     CMAKE_ARGS -DSUPPORT_CUDA=OFF -DBUILD_EXAMPLES=OFF -DCMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER} -DCMAKE_C_COMPILER=${CMAKE_C_COMPILER}
-     INSTALL_COMMAND ""
-  )
-ENDIF()
-
-IF($ENV{PFUNIT})
-  INCLUDE(ExternalProject)
-  EXTERNALPROJECT_ADD(
-    pFUnit
-    PREFIX pFunit
-    GIT_REPOSITORY git://git.code.sf.net/p/pfunit/code
-    CMAKE_ARGS -DINSTALL_PATH=${CMAKE_BINARY_DIR})
-ENDIF()
-
-IF(BUILD_SPRNG)
-  INCLUDE(BuildSPRNG)
-ENDIF()
+ADD_SUBDIRECTORY(thirdparty)
 
 MESSAGE(STATUS "############################################################")
 MESSAGE(STATUS "####")
@@ -177,18 +166,20 @@ ENDIF( BUILD_SIMULATIONS )
 
 # CMake target for running C preprocessor on all source files used in build
 ADD_PREPROCESSOR_TARGET()
+ADD_FORCHECK_TARGET()
 
-MARK_AS_ADVANCED(CMAKE_OSX_ARCHITECTURES
-	CMAKE_OSX_DEPLOYMENT_TARGET
-	CMAKE_OSX_SYSROOT
-        CTEST_GIT_COMMAND
-	DL_LIBRARY
-	LSB_RELEASE_COMMAND
-	OMPI_INFO_PROG
-	PROCESSOR_COUNT
-	ZLIB_LIBRARIES
-	cmd_sys_pro PROCS SZ_LIBRARY 
-	UNUSED_DUMMY_WARNING_ENABLED
-	UNUSED_FUNCTION_WARNING_ENABLED
-	FFTW_ROOT HDF5_ROOT
-	)
+MARK_AS_ADVANCED(
+  CMAKE_OSX_ARCHITECTURES
+  CMAKE_OSX_DEPLOYMENT_TARGET
+  CMAKE_OSX_SYSROOT
+  CTEST_GIT_COMMAND
+  DL_LIBRARY
+  LSB_RELEASE_COMMAND
+  OMPI_INFO_PROG
+  PROCESSOR_COUNT
+  ZLIB_LIBRARIES
+  cmd_sys_pro PROCS SZ_LIBRARY 
+  UNUSED_DUMMY_WARNING_ENABLED
+  UNUSED_FUNCTION_WARNING_ENABLED
+  FFTW_ROOT HDF5_ROOT
+)

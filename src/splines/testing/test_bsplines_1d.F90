@@ -17,7 +17,7 @@ program test_bsplines_1d
     sll_s_interpolate_array_values_2d, &
     sll_f_interpolate_derivative_1d, &
     sll_f_interpolate_value_1d, &
-    sll_f_interpolate_value_2d, &
+    sll_f_cubic_spline_2d_eval, &
     sll_f_new_bspline_1d, &
     sll_f_new_bspline_2d, &
     sll_t_bspline_1d, &
@@ -254,7 +254,7 @@ subroutine test_process_2d(bc1_type, bc2_type)
   err1 = 0.0_f64
   do j = 1, n2
     do i = 1, n1
-      f = sll_f_interpolate_value_2d(bspline_2d,tau1(i,j),tau2(i,j),0,0)
+      f = sll_f_cubic_spline_2d_eval(bspline_2d,tau1(i,j),tau2(i,j),0,0)
       err1 = err1 + abs(f-ftau(i,j))
       write(10,*) tau1(i,j), tau2(i,j), f, ftau(i,j)
     end do
@@ -264,7 +264,7 @@ subroutine test_process_2d(bc1_type, bc2_type)
   err2 = 0.0_f64
   do j = 1, n2
     do i = 1, n1
-      f = sll_f_interpolate_value_2d(bspline_2d,tau1(i,j),tau2(i,j),1,0)
+      f = sll_f_cubic_spline_2d_eval(bspline_2d,tau1(i,j),tau2(i,j),1,0)
       err2 = err2 + abs(f+dpi*sin(dpi*tau1(i,j))*cos(dpi*tau2(i,j)))
     end do
   end do
@@ -272,7 +272,7 @@ subroutine test_process_2d(bc1_type, bc2_type)
   err3 = 0.0_f64
   do j = 1, n2
     do i = 1, n1
-      f = sll_f_interpolate_value_2d(bspline_2d,tau1(i,j),tau2(i,j),0,1)
+      f = sll_f_cubic_spline_2d_eval(bspline_2d,tau1(i,j),tau2(i,j),0,1)
       err3 = err3 + abs(f+dpi*sin(dpi*tau2(i,j))*cos(dpi*tau1(i,j)))
     end do
   end do

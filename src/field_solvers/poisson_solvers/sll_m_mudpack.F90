@@ -22,8 +22,8 @@ module sll_m_mudpack
 
   public :: &
     sll_s_delete_mudpack_cartesian, &
-    sll_s_initialize_mudpack_cartesian, &
-    sll_s_initialize_mudpack_polar, &
+    sll_s_mudpack_cartesian_init, &
+    sll_s_mudpack_polar_init, &
     sll_o_create, &
     sll_o_delete, &
     sll_t_mudpack_solver, &
@@ -52,7 +52,7 @@ integer, parameter :: POLAR        = 11   !< geometry parameter
 integer, parameter :: CYLINDRICAL  = 12   !< geometry parameter
 
 interface sll_o_create
-  module procedure sll_s_initialize_mudpack_cartesian
+  module procedure sll_s_mudpack_cartesian_init
 end interface sll_o_create
 
 interface sll_o_solve
@@ -66,7 +66,7 @@ end interface sll_o_delete
 contains
 
 !> Initialize the Poisson solver using mudpack library
-subroutine sll_s_initialize_mudpack_cartesian( self,                        &
+subroutine sll_s_mudpack_cartesian_init( self,                        &
                                         eta1_min, eta1_max, nc_eta1, &
                                         eta2_min, eta2_max, nc_eta2, &
                                         bc_eta1_left, bc_eta1_right, &
@@ -205,7 +205,7 @@ if (error > 0) call exit(0)
 200 format('# error = ',i2, ' minimum work space = ',i7)
      
 #endif
-end subroutine sll_s_initialize_mudpack_cartesian
+end subroutine sll_s_mudpack_cartesian_init
 
 
 !> Compute the potential using mudpack library on cartesian mesh
@@ -316,7 +316,7 @@ end subroutine sll_s_delete_mudpack_cartesian
 
 !> Initialize the Poisson solver in polar coordinates using MUDPACK
 !> library
-subroutine sll_s_initialize_mudpack_polar(self,                      &
+subroutine sll_s_mudpack_polar_init(self,                      &
                                     r_min, r_max, nr,          &
                                     theta_min, theta_max, nth, &
                                     bc_r_min, bc_r_max,        &
@@ -452,7 +452,7 @@ if (ierror > 0) call exit(0)
 200 format(' ierror = ',i2, ' minimum work space = ',i7)
 
 return
-end subroutine sll_s_initialize_mudpack_polar
+end subroutine sll_s_mudpack_polar_init
 
 
 !> Solve the Poisson equation and get the potential

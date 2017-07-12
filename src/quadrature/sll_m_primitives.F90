@@ -1,4 +1,4 @@
-!> @ingroup utilities
+!> @ingroup quadrature
 !> Functions to compute primitive of 1d function.
 module sll_m_primitives
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++

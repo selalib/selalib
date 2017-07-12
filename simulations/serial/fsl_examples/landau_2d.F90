@@ -14,7 +14,7 @@ use sll_m_cubic_spline_interpolator_1d, only: &
   sll_t_cubic_spline_interpolator_1d
 
 use sll_m_cubic_splines, only: &
-  sll_f_new_cubic_spline_2d, &
+  sll_s_cubic_spline_2d_init, &
   sll_t_cubic_spline_2d
 
 use sll_m_interpolators_1d_base, only: &
@@ -29,7 +29,7 @@ use sll_m_poisson_2d_periodic
 implicit none
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
-type(sll_t_cubic_spline_2d), pointer :: spl_fsl
+type(sll_t_cubic_spline_2d)  :: spl_fsl
 
 sll_int32  :: err
 
@@ -113,12 +113,12 @@ eta2feet = eta2tot
 
 poisson => sll_f_new_poisson_2d_periodic( eta1_min, eta1_max, nc_eta1, eta2_min, eta2_max, nc_eta2)
 
-call spl_eta1%initialize(nc_eta1+1, eta1_min, eta1_max, sll_p_periodic )
-call spl_eta2%initialize(nc_eta2+1, eta2_min, eta2_max, sll_p_periodic )
-call spl_eta3%initialize(nc_eta3+1, eta3_min, eta3_max, sll_p_periodic )
-call spl_eta4%initialize(nc_eta4+1, eta4_min, eta4_max, sll_p_periodic )
+call spl_eta1%init(nc_eta1+1, eta1_min, eta1_max, sll_p_periodic )
+call spl_eta2%init(nc_eta2+1, eta2_min, eta2_max, sll_p_periodic )
+call spl_eta3%init(nc_eta3+1, eta3_min, eta3_max, sll_p_periodic )
+call spl_eta4%init(nc_eta4+1, eta4_min, eta4_max, sll_p_periodic )
 
-spl_fsl => sll_f_new_cubic_spline_2d(nc_eta1+1,     nc_eta2+1,   &
+call sll_s_cubic_spline_2d_init(spl_fsl, nc_eta1+1,     nc_eta2+1,   &
                                eta1_min,      eta1_max,    &
                                eta2_min,      eta2_max,    &
                                sll_p_periodic,  sll_p_periodic )
@@ -183,8 +183,8 @@ do i_step = 1, n_step !Loop over time
   call advection_x1(delta_t)
   call advection_x2(delta_t)
 
-  !call sll_s_compute_cubic_spline_2d(f(:,:,1,1),spl_fsl)
-  !call sll_s_deposit_value_2d(eta1feet,eta2feet,spl_fsl,f(:,:,1,1))
+  !call sll_s_cubic_spline_2d_compute_interpolant(f(:,:,1,1),spl_fsl)
+  !call sll_s_cubic_spline_2d_deposit_value(eta1feet,eta2feet,spl_fsl,f(:,:,1,1))
 
 end do !next time step
 

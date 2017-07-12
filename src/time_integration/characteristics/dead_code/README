@@ -1,0 +1,27 @@
+FILE  : README
+AUTHOR: Yaman Güçlü, IPP Garching
+DATE  : 26 October 2016
+================================================================================
+
+sll_m_characteristics_2d_leapfrog.F90
+-------------------------------------
+* This file contains a module with the same name, which exposes a new type
+  "leapfrog_2d_charac_computer" that extends the base class
+  "sll_characteristics_2d_base" (NOTE: name should start with "sll_c_")
+
+* Original location of file was "src/interpolation/hermite_interpolation/"
+
+* Within "develop" branch, file is never compiled and therefore moved to
+  current subdirectory "src/time_integration/characteristics/dead_code/" 
+
+* Type "leapfrog_2d_charac_computer" seems to fully implement abstract interface
+
+* Algorithm computes foot of characteristic using information about spatial
+  derivatives of flow field U. For instance:
+
+  dX/dt = U(X)
+  dU/dt = ∂U/dt + ∂U/∂x dX/dt = ∂U/∂x U
+
+  X(t+dt) = X(t) + dt X'(t) + dt^2/2 X"(t) + O(dt^3)
+
+  X_np1 ~= X_n + dt*( U(X_n) + dt/2*dxU(X_n) )

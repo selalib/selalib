@@ -44,16 +44,16 @@ module sll_m_sim_bsl_dk_3d1v_polar
 #include "sll_working_precision.h"
 
   use sll_m_advection_1d_base, only: &
-    sll_c_advection_1d_base
+    sll_c_advector_1d
 
   use sll_m_advection_1d_periodic, only: &
     sll_f_new_periodic_1d_advector
 
   use sll_m_advection_2d_base, only: &
-    sll_c_advection_2d_base
+    sll_c_advector_2d
 
   use sll_m_advection_2d_bsl, only: &
-    sll_f_new_bsl_2d_advector
+    sll_f_new_advector_2d_bsl
 
   use sll_m_ascii_io, only: &
     sll_s_ascii_file_create
@@ -101,12 +101,11 @@ module sll_m_sim_bsl_dk_3d1v_polar
     sll_o_gnuplot_1d, &
     sll_o_gnuplot_2d
 
-  use hdf5, only: hid_t
   use sll_m_hdf5_io_serial, only: &
-    sll_o_hdf5_file_close, &
-    sll_o_hdf5_file_create, &
-    sll_o_hdf5_write_array, &
-    sll_o_hdf5_write_array_1d
+    sll_t_hdf5_ser_handle, &
+    sll_s_hdf5_ser_file_create, &
+    sll_s_hdf5_ser_file_close, &
+    sll_o_hdf5_ser_write_array
 
   use sll_m_interpolators_1d_base, only: &
     sll_c_interpolator_1d
@@ -118,12 +117,10 @@ module sll_m_sim_bsl_dk_3d1v_polar
     sll_p_lagrange, &
     sll_p_spline
 
-  use sll_m_poisson_2d_base, only: &
-    sll_c_poisson_2d_base
-
-  use sll_m_poisson_2d_polar, only: &
-    sll_f_new_poisson_2d_polar, &
-    sll_p_poisson_drift_kinetic
+  use sll_m_qn_solver_2d_polar, only: &
+    sll_t_qn_solver_2d_polar, &
+    sll_s_qn_solver_2d_polar_init, &
+    sll_s_qn_solver_2d_polar_solve
 
   use sll_m_reduction, only: &
     sll_s_compute_reduction_2d_to_0d, &
@@ -287,15 +284,14 @@ module sll_m_sim_bsl_dk_3d1v_polar
 
 
 
-    class(sll_c_advection_2d_base), pointer :: adv_x1x2
+    class(sll_c_advector_2d), pointer :: adv_x1x2
     !class(sll_c_interpolator_2d), pointer :: interp_x1x2
     class(sll_c_characteristics_2d_base), pointer :: charac_x1x2
-    class(sll_c_advection_1d_base), pointer :: adv_x3
-    class(sll_c_advection_1d_base), pointer :: adv_x4
+    class(sll_c_advector_1d), pointer :: adv_x3
+    class(sll_c_advector_1d), pointer :: adv_x4
 
 
-    class(sll_c_poisson_2d_base), pointer   :: poisson2d
-    class(sll_c_poisson_2d_base), pointer   :: poisson2d_mean
+    type(sll_t_qn_solver_2d_polar) :: poisson2d
 
 
     !for computing advection field from phi
@@ -609,25 +605,20 @@ contains
         do i=1,num_cells_x1+1
           tmp_r(i,1) = 1._f64/sim%Te_r(i)
         enddo  
-        
-        sim%poisson2d_mean =>sll_f_new_poisson_2d_polar( &
-          sim%m_x1%eta_min, &
-          sim%m_x1%eta_max, &
-          sim%m_x1%num_cells, &
-          sim%m_x2%num_cells, &
-          poisson2d_BC)
 
-        sim%poisson2d =>sll_f_new_poisson_2d_polar( &
-          sim%m_x1%eta_min, &
-          sim%m_x1%eta_max, &
-          sim%m_x1%num_cells, &
-          sim%m_x2%num_cells, &
-          poisson2d_BC, &
-          dlog_density=sim%dlog_density_r, &
-          inv_Te=tmp_r(1:num_cells_x1+1,1), &
-          poisson_case=sll_p_poisson_drift_kinetic)
+        call sll_s_qn_solver_2d_polar_init( sim%poisson2d, &
+          rmin = sim%m_x1%eta_min, &
+          rmax = sim%m_x1%eta_max, &
+          nr = sim%m_x1%num_cells, &
+          ntheta = sim%m_x2%num_cells, &
+          bc_rmin = poisson2d_BC(1), &
+          bc_rmax = poisson2d_BC(2), &
+          rho_m0 = sim%n0_r(:), &
+          b_magn = [(1.0_f64, i=1,sim%m_x1%num_cells+1)], &
+          lambda = sqrt( sim%Te_r(:)/sim%n0_r(:) ), &
+          use_zonal_flow = .false., &
+          epsilon_0 = 1.0_f64 )
 
-          
       case default
         print *,'#bad poisson2d_case',poisson2d_case
         print *,'#not implemented'
@@ -776,7 +767,7 @@ contains
 
     select case(advect2d_case)
       case ("SLL_BSL")
-      sim%adv_x1x2 => sll_f_new_bsl_2d_advector(&
+      sim%adv_x1x2 => sll_f_new_advector_2d_bsl(&
         f_interp2d, &
         charac2d, &
         sim%m_x1%num_cells+1, &
@@ -844,7 +835,7 @@ contains
     class(sll_t_simulation_4d_drift_kinetic_polar), intent(inout) :: sim
     !--> For initial profile HDF5 saving
     integer                      :: file_err
-    integer(hid_t)               :: hfile_id
+    type(sll_t_hdf5_ser_handle)  :: hfile_id
     character(len=12), parameter :: filename_prof = "init_prof.h5"
     sll_real64,dimension(:,:,:,:), allocatable :: f4d_store
     sll_int32 :: loc4d_sz_x1
@@ -876,11 +867,11 @@ contains
 
     !*** Saving of the radial profiles in HDF5 file ***
     if (sll_f_get_collective_rank(sll_v_world_collective)==0) then
-      call sll_o_hdf5_file_create(filename_prof,hfile_id,file_err)
-      call sll_o_hdf5_write_array_1d(hfile_id,sim%n0_r,'n0_r',file_err)
-      call sll_o_hdf5_write_array_1d(hfile_id,sim%Ti_r,'Ti_r',file_err)
-      call sll_o_hdf5_write_array_1d(hfile_id,sim%Te_r,'Te_r',file_err)
-      call sll_o_hdf5_file_close(hfile_id,file_err)
+      call sll_s_hdf5_ser_file_create(filename_prof,hfile_id,file_err)
+      call sll_o_hdf5_ser_write_array(hfile_id,sim%n0_r,'n0_r',file_err)
+      call sll_o_hdf5_ser_write_array(hfile_id,sim%Ti_r,'Ti_r',file_err)
+      call sll_o_hdf5_ser_write_array(hfile_id,sim%Te_r,'Te_r',file_err)
+      call sll_s_hdf5_ser_file_close(hfile_id,file_err)
       
       ierr = 1
       call sll_o_gnuplot_1d(sim%n0_r,'n0_r_init',ierr)
@@ -1858,10 +1849,8 @@ contains
     sll_real64 :: tmp
     sll_int32 :: glob_ind(3)    
 
-
-
-    
     select case (sim%QN_case)
+
       case (SLL_NO_QUASI_NEUTRAL)
       ! no quasi neutral solver as in CRPP-CONF-2001-069
         call sll_o_compute_local_sizes( &
@@ -1891,6 +1880,7 @@ contains
           sim%remap_plan_seqx3_to_seqx1x2, &
           sim%phi3d_seqx3, &
           sim%phi3d_seqx1x2 )  
+
       case (SLL_QUASI_NEUTRAL_WITHOUT_ZONAL_FLOW)
         call sll_o_compute_local_sizes( &
           sim%layout3d_seqx1x2, &
@@ -1901,25 +1891,33 @@ contains
         do iloc2=1, loc3d_sz_x2
           do iloc1=1, loc3d_sz_x1
             sim%phi3d_seqx1x2(iloc1,iloc2,:) = &
-              sim%rho3d_seqx1x2(iloc1,iloc2,:)/sim%n0_r(iloc1)-1._f64
+              sim%rho3d_seqx1x2(iloc1,iloc2,:) - sim%n0_r(iloc1)
           enddo
         enddo
+
         do iloc3=1, loc3d_sz_x3
-          call sim%poisson2d%compute_phi_from_rho( &
-            sim%phi3d_seqx1x2(:,:,iloc3), &
-            sim%phi3d_seqx1x2(:,:,iloc3) )
+           call sll_s_qn_solver_2d_polar_solve( sim%poisson2d, &
+             sim%phi3d_seqx1x2(:,1:loc3d_sz_x2-1,iloc3), &
+             sim%phi3d_seqx1x2(:,1:loc3d_sz_x2-1,iloc3) )
         enddo
+
+        ! Added to enforce periodic boundary conditions in theta
+        sim%phi3d_seqx1x2(:,loc3d_sz_x2,:) = sim%phi3d_seqx1x2(:,1,:)
+
         call sll_o_apply_remap_3d( &
           sim%remap_plan_seqx1x2_to_seqx3, &
           sim%phi3d_seqx1x2, &
           sim%phi3d_seqx3 )            
+
       case (SLL_QUASI_NEUTRAL_WITH_ZONAL_FLOW)
         print *,'#SLL_QUASI_NEUTRAL_WITH_ZONAL_FLOW'
         print *,'#not implemented yet '
         stop      
+
       case default
         print *,'#bad value for sim%QN_case'
         stop  
+
     end select        
   
   end subroutine solve_quasi_neutral
@@ -1933,21 +1931,19 @@ contains
   ! Save the mesh structure
   !---------------------------------------------------
   subroutine plot_f_polar(iplot,f,m_x1,m_x2)
-    use sll_m_xdmf
-    use hdf5, only: hid_t
-    use sll_m_hdf5_io_serial
+    sll_int32, intent(in) :: iplot
+    sll_real64, dimension(:,:), intent(in) :: f
+    type(sll_t_cartesian_mesh_1d), pointer :: m_x1
+    type(sll_t_cartesian_mesh_1d), pointer :: m_x2
+
     sll_int32 :: file_id
-    integer(hid_t) :: hfile_id
+    type(sll_t_hdf5_ser_handle)  :: hfile_id
     sll_int32 :: error
     sll_real64, dimension(:,:), allocatable :: x1
     sll_real64, dimension(:,:), allocatable :: x2
     sll_int32 :: i, j
-    sll_int32, intent(in) :: iplot
     character(len=4)      :: cplot
     sll_int32             :: nnodes_x1, nnodes_x2
-    type(sll_t_cartesian_mesh_1d), pointer :: m_x1
-    type(sll_t_cartesian_mesh_1d), pointer :: m_x2
-    sll_real64, dimension(:,:), intent(in) :: f
     sll_real64 :: r
     sll_real64 :: theta
     sll_real64 :: rmin
@@ -1979,12 +1975,12 @@ contains
           x2(i,j) = r*sin(theta)
         end do
       end do
-      call sll_o_hdf5_file_create("polar_mesh-x1.h5",hfile_id,error)
-      call sll_o_hdf5_write_array(hfile_id,x1,"/x1",error)
-      call sll_o_hdf5_file_close(hfile_id, error)
-      call sll_o_hdf5_file_create("polar_mesh-x2.h5",hfile_id,error)
-      call sll_o_hdf5_write_array(hfile_id,x2,"/x2",error)
-      call sll_o_hdf5_file_close(hfile_id, error)
+      call sll_s_hdf5_ser_file_create("polar_mesh-x1.h5",hfile_id,error)
+      call sll_o_hdf5_ser_write_array(hfile_id,x1,"/x1",error)
+      call sll_s_hdf5_ser_file_close(hfile_id, error)
+      call sll_s_hdf5_ser_file_create("polar_mesh-x2.h5",hfile_id,error)
+      call sll_o_hdf5_ser_write_array(hfile_id,x2,"/x2",error)
+      call sll_s_hdf5_ser_file_close(hfile_id, error)
       deallocate(x1)
       deallocate(x2)
 
