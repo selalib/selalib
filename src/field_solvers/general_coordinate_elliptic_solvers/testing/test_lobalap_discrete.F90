@@ -65,11 +65,12 @@ program test_lobalap_discrete
   class(sll_c_interpolator_2d), pointer  :: rho_interp
   sll_real64, dimension(:,:), allocatable :: x1_tab
   sll_real64, dimension(:,:), allocatable :: x2_tab
-  sll_real64, dimension(:), allocatable   :: x1_eta1_min, x1_eta1_max
-  sll_real64, dimension(:), allocatable   :: x2_eta1_min, x2_eta1_max
+  sll_real64, dimension(:),   allocatable :: x1_eta1_min, x1_eta1_max
+  sll_real64, dimension(:),   allocatable :: x2_eta1_min, x2_eta1_max
   sll_real64, dimension(:,:), allocatable :: jacs
   sll_real64, dimension(:,:), allocatable :: rho_tab
-  sll_real64, dimension(:,:), pointer :: phi_tab
+  sll_real64, dimension(:),   allocatable :: potexact_vec
+  sll_real64, dimension(:,:), pointer     :: phi_tab
 
 #define NPTS1 33
 #define NPTS2 33
@@ -92,6 +93,7 @@ program test_lobalap_discrete
   allocate(x1_tab(NPTS1,NPTS2))
   allocate(x2_tab(NPTS1,NPTS2))
   allocate(rho_tab(NPTS1,NPTS2))
+  allocate(potexact_vec(4*NPTS1*3)) !TODO: size is number of points at border... needs NPTS1=NPTS2
   allocate(x1_eta1_min(NPTS2))
   allocate(x1_eta1_max(NPTS2))
   allocate(x2_eta1_min(NPTS2))
@@ -195,6 +197,7 @@ program test_lobalap_discrete
 
   solver =>  sll_f_new_lobatto_poisson(tau, degree, &
        rho_tab, rho_interp, &
+       potexact_vec, &
        sll_p_dirichlet, sll_p_dirichlet, &
        sll_p_dirichlet, sll_p_dirichlet)
   call sll_o_solve(solver)

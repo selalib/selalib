@@ -74,19 +74,11 @@ module sll_m_lobatto_poisson
 
 contains
 
-  !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-  ! fonction donnant le potentiel exact (debug) et/ou les conditions aux limites
-  function potexact(x,y)
-    implicit none
-    sll_real64,intent(in) :: x,y
-    sll_real64 :: potexact
-    potexact=x*x+y*y
-    ! potexact=0.0_f64+x-x+y-y
-  end function potexact
 
   function sll_f_new_lobatto_poisson(transf, order, &
        rho_values, &
        interp_rho, &
+       potexact_vec, &
        bc_eta1_left, &
        bc_eta1_right, &
        bc_eta2_left, &
@@ -97,6 +89,7 @@ contains
     class(sll_c_coordinate_transformation_2d_base), target  :: transf
     class(sll_c_interpolator_2d),                   target  :: interp_rho
     sll_real64, dimension(:,:), intent(in) :: rho_values
+    sll_real64, dimension(:), intent(in) :: potexact_vec
     sll_int32, intent(in), optional  :: order
     sll_int32, intent(in)  :: bc_eta1_left
     sll_int32, intent(in)  :: bc_eta1_right
@@ -109,6 +102,7 @@ contains
          sll_f_new_lobatto_poisson, &
          transf, order, &
          rho_values, &
+         potexact_vec
          interp_rho, &
          bc_eta1_left, &
          bc_eta1_right, &
@@ -120,6 +114,7 @@ contains
   subroutine initialize_lobatto_poisson(solver, transf, order, &
        rho_values, &
        interp_rho, &
+       potexact_vec, &
        bc_eta1_left, &
        bc_eta1_right, &
        bc_eta2_left, &
@@ -129,6 +124,7 @@ contains
     class(sll_c_coordinate_transformation_2d_base), target  :: transf
     class(sll_c_interpolator_2d),                   target  :: interp_rho
     sll_real64, dimension(:,:), intent(in) :: rho_values
+    sll_real64, dimension(:),   intent(in) :: potexact_vec
     sll_int32, intent(in), optional  :: order
     sll_int32, intent(in)  :: bc_eta1_left
     sll_int32, intent(in)  :: bc_eta1_right
@@ -179,7 +175,7 @@ contains
     solver%phi_tab = 0._f64
     !....................................................
 
-    call sll_s_assemb(solver%rho_field, potexact)
+    call sll_s_assemb(solver%rho_field, potexact_vec)
     call sll_s_computelu()
 
   end subroutine initialize_lobatto_poisson
