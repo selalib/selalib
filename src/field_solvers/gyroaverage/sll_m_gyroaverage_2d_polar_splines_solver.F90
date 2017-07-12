@@ -76,7 +76,7 @@ contains
     sll_real64, intent(in) :: eta_min(2)
     sll_real64, intent(in) :: eta_max(2)
     sll_int32, intent(in)  :: Nc(2)
-    sll_int32, optional    :: N_points  
+    sll_int32              :: N_points  
     sll_int32, optional    :: splines_case
     sll_int32 :: ierr
       
@@ -99,7 +99,7 @@ contains
     Nc, &
     N_points, &
     splines_case)
-    class(gyroaverage_2d_polar_splines_solver) :: gyroaverage
+    class(gyroaverage_2d_polar_splines_solver), intent(out) :: gyroaverage
     sll_real64, intent(in) :: eta_min(2)
     sll_real64, intent(in) :: eta_max(2)
     sll_int32, intent(in)  :: Nc(2)

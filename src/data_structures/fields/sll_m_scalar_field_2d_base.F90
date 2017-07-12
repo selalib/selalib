@@ -19,10 +19,7 @@ module sll_m_scalar_field_2d_base
 
   !> Fundamental field type
   type, abstract :: sll_c_scalar_field_2d_base
-     ! consider eliminating this transformation from this base class,
-     ! it is already in the derived classes and is confusing...
-     ! class(sll_c_coordinate_transformation_2d_base), pointer :: coord_trans 
-     ! PN : done!
+
    contains
      procedure(function_get_mesh), deferred, pass :: get_cartesian_mesh
      procedure(function_get_transformation), deferred, pass :: &
@@ -43,7 +40,7 @@ module sll_m_scalar_field_2d_base
      procedure(field_2d_message_pass), deferred, pass :: &
           update_interpolation_coefficients
      procedure(field_2d_file_output), deferred, pass :: write_to_file
-     procedure(field_2d_subroutine), deferred, pass :: delete
+     procedure(field_2d_subroutine), deferred, pass :: free
      ! here we can continue with derivatives or whatever else that might
      ! be desired.
   end type sll_c_scalar_field_2d_base

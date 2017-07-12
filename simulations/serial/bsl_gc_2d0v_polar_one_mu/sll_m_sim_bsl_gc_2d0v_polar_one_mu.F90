@@ -14,10 +14,10 @@ module sll_m_sim_bsl_gc_2d0v_polar_one_mu
 #include "sll_working_precision.h"
 
   use sll_m_advection_2d_base, only: &
-    sll_c_advection_2d_base
+    sll_c_advector_2d
 
   use sll_m_advection_2d_bsl, only: &
-    sll_f_new_bsl_2d_advector
+    sll_f_new_advector_2d_bsl
 
   use sll_m_boundary_condition_descriptors, only: &
     sll_p_dirichlet, &
@@ -86,9 +86,10 @@ module sll_m_sim_bsl_gc_2d0v_polar_one_mu
     sll_f_new_gyroaverage_2d_polar_splines_solver
 
   use sll_m_hdf5_io_serial, only: &
-    sll_o_hdf5_file_close, &
-    sll_o_hdf5_file_create, &
-    sll_o_hdf5_write_array
+    sll_t_hdf5_ser_handle, &
+    sll_s_hdf5_ser_file_create, &
+    sll_s_hdf5_ser_file_close, &
+    sll_o_hdf5_ser_write_array
 
   use sll_m_interpolators_1d_base, only: &
     sll_c_interpolator_1d
@@ -152,7 +153,7 @@ module sll_m_sim_bsl_gc_2d0v_polar_one_mu
    sll_real64, dimension(:), pointer :: params
       
    !advector
-   class(sll_c_advection_2d_base), pointer    :: advect_2d
+   class(sll_c_advector_2d), pointer    :: advect_2d
    
    !interpolator for derivatives
    class(sll_c_interpolator_2d), pointer   :: phi_interp2d
@@ -556,7 +557,7 @@ contains
 
     select case(advect2d_case)
       case ("SLL_BSL")
-        sim%advect_2d => sll_f_new_bsl_2d_advector(&
+        sim%advect_2d => sll_f_new_advector_2d_bsl(&
           f_interp2d, &
           charac2d, &
           Nc_x1+1, &
@@ -1192,20 +1193,18 @@ contains
   ! Save the mesh structure
   !---------------------------------------------------
   subroutine plot_f_polar(iplot,f,mesh_2d)
-    use sll_m_xdmf
-    use hdf5, only:hid_t
-    use sll_m_hdf5_io_serial
+    sll_int32, intent(in) :: iplot
+    sll_real64, dimension(:,:), intent(in) :: f
+    type(sll_t_cartesian_mesh_2d), pointer :: mesh_2d
+
     sll_int32 :: file_id
-    integer(hid_t) :: hfile_id
+    type(sll_t_hdf5_ser_handle) :: hfile_id
     sll_int32 :: error
     sll_real64, dimension(:,:), allocatable :: x1
     sll_real64, dimension(:,:), allocatable :: x2
     sll_int32 :: i, j
-    sll_int32, intent(in) :: iplot
     character(len=4)      :: cplot
     sll_int32             :: nnodes_x1, nnodes_x2
-    type(sll_t_cartesian_mesh_2d), pointer :: mesh_2d
-    sll_real64, dimension(:,:), intent(in) :: f
     sll_real64 :: r
     sll_real64 :: theta
     sll_real64 :: rmin
@@ -1237,12 +1236,12 @@ contains
           x2(i,j) = r*sin(theta)
         end do
       end do
-      call sll_o_hdf5_file_create("polar_mesh-x1.h5",hfile_id,error)
-      call sll_o_hdf5_write_array(hfile_id,x1,"/x1",error)
-      call sll_o_hdf5_file_close(hfile_id, error)
-      call sll_o_hdf5_file_create("polar_mesh-x2.h5",hfile_id,error)
-      call sll_o_hdf5_write_array(hfile_id,x2,"/x2",error)
-      call sll_o_hdf5_file_close(hfile_id, error)
+      call sll_s_hdf5_ser_file_create("polar_mesh-x1.h5",hfile_id,error)
+      call sll_o_hdf5_ser_write_array(hfile_id,x1,"/x1",error)
+      call sll_s_hdf5_ser_file_close(hfile_id, error)
+      call sll_s_hdf5_ser_file_create("polar_mesh-x2.h5",hfile_id,error)
+      call sll_o_hdf5_ser_write_array(hfile_id,x2,"/x2",error)
+      call sll_s_hdf5_ser_file_close(hfile_id, error)
       deallocate(x1)
       deallocate(x2)
 

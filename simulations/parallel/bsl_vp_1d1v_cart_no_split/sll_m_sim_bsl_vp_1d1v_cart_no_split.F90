@@ -29,22 +29,22 @@ module sll_m_sim_bsl_vp_1d1v_cart_no_split
 #include "sll_working_precision.h"
 
   use sll_m_advection_1d_base, only: &
-    sll_c_advection_1d_base
+    sll_c_advector_1d
 
   use sll_m_advection_1d_bsl, only: &
-    sll_f_new_bsl_1d_advector
+    sll_f_new_advector_1d_bsl
 
   use sll_m_advection_1d_csl, only: &
     sll_f_new_csl_1d_advector
 
   use sll_m_advection_2d_base, only: &
-    sll_c_advection_2d_base
+    sll_c_advector_2d
 
   use sll_m_advection_2d_bsl, only: &
-    sll_f_new_bsl_2d_advector
+    sll_f_new_advector_2d_bsl
 
   use sll_m_advection_2d_tensor_product, only: &
-    sll_f_new_tensor_product_2d_advector
+    sll_f_new_advector_2d_tensor_product
 
   use sll_m_ascii_io, only: &
     sll_s_ascii_file_close, &
@@ -71,7 +71,7 @@ module sll_m_sim_bsl_vp_1d1v_cart_no_split
     sll_c_characteristics_1d_base
 
   use sll_m_characteristics_1d_explicit_euler, only: &
-    sll_f_new_explicit_euler_1d_charac
+    sll_f_new_charac_1d_explicit_euler
 
   use sll_m_characteristics_1d_explicit_euler_conservative, only: &
     sll_f_new_explicit_euler_conservative_1d_charac
@@ -110,9 +110,10 @@ module sll_m_sim_bsl_vp_1d1v_cart_no_split
     sll_t_fft
 
   use sll_m_hdf5_io_serial, only: &
-    sll_o_hdf5_file_close, &
-    sll_o_hdf5_file_create, &
-    sll_o_hdf5_write_array
+    sll_t_hdf5_ser_handle, &
+    sll_s_hdf5_ser_file_create, &
+    sll_s_hdf5_ser_file_close, &
+    sll_o_hdf5_ser_write_array
 
   use sll_m_interpolators_1d_base, only: &
     sll_c_interpolator_1d
@@ -194,7 +195,7 @@ module sll_m_sim_bsl_vp_1d1v_cart_no_split
    logical :: turn_drive_off
 
    !advector
-   class(sll_c_advection_2d_base), pointer    :: advect_2d
+   class(sll_c_advector_2d), pointer    :: advect_2d
    !interpolator for derivatives
    class(sll_c_interpolator_2d), pointer   :: phi_interp2d
    sll_real64 :: factor_x1
@@ -314,8 +315,8 @@ contains
     class(sll_c_interpolator_1d), pointer   :: A2_interp1d_x2
     class(sll_c_interpolator_1d), pointer :: f_interp1d_x1
     class(sll_c_interpolator_1d), pointer :: f_interp1d_x2
-    class(sll_c_advection_1d_base), pointer    :: advect_1d_x1
-    class(sll_c_advection_1d_base), pointer    :: advect_1d_x2
+    class(sll_c_advector_1d), pointer    :: advect_1d_x1
+    class(sll_c_advector_1d), pointer    :: advect_1d_x2
     sll_real64 :: x1_min_bis
     sll_real64 :: x1_max_bis
     sll_real64 :: x2_min_bis
@@ -757,7 +758,7 @@ contains
 
     select case(charac1d_x1_case)
       case ("SLL_EULER")
-        charac1d_x1 => sll_f_new_explicit_euler_1d_charac(&
+        charac1d_x1 => sll_f_new_charac_1d_explicit_euler(&
           Nc_x1_bis+1, &
           eta_min=x1_min_bis, &
           eta_max=x1_max_bis, &
@@ -785,7 +786,7 @@ contains
 
     select case(charac1d_x2_case)
       case ("SLL_EULER")
-        charac1d_x2 => sll_f_new_explicit_euler_1d_charac(&
+        charac1d_x2 => sll_f_new_charac_1d_explicit_euler(&
           Nc_x2_bis+1, &
           eta_min=x2_min_bis, &
           eta_max=x2_max_bis, &
@@ -813,7 +814,7 @@ contains
 
     select case(advect1d_x1_case)
       case ("SLL_BSL")
-        advect_1d_x1 => sll_f_new_bsl_1d_advector(&
+        advect_1d_x1 => sll_f_new_advector_1d_bsl(&
           f_interp1d_x1, &
           charac1d_x1, &
           Nc_x1_bis+1, &
@@ -835,7 +836,7 @@ contains
 
     select case(advect1d_x2_case)
       case ("SLL_BSL")
-        advect_1d_x2 => sll_f_new_bsl_1d_advector(&
+        advect_1d_x2 => sll_f_new_advector_1d_bsl(&
           f_interp1d_x2, &
           charac1d_x2, &
           Nc_x2_bis+1, &
@@ -859,7 +860,7 @@ contains
 
     select case(advect2d_case)
       case ("SLL_BSL")
-        sim%advect_2d => sll_f_new_bsl_2d_advector(&
+        sim%advect_2d => sll_f_new_advector_2d_bsl(&
           f_interp2d, &
           charac2d, &
           Nc_x1+1, &
@@ -869,7 +870,7 @@ contains
           eta2_min = x2_min, &
           eta2_max = x2_max)
       case ("SLL_TENSOR_PRODUCT")
-        sim%advect_2d => sll_f_new_tensor_product_2d_advector(&
+        sim%advect_2d => sll_f_new_advector_2d_tensor_product(&
           advect_1d_x1, &
           advect_1d_x2, &
           Nc_x1+1, &
@@ -1473,11 +1474,8 @@ contains
   ! Save the mesh structure
   !---------------------------------------------------
   subroutine plot_f_cartesian(iplot,f,mesh_2d)
-    use sll_m_xdmf
-    use sll_m_hdf5_io_serial
-    use hdf5, only: hid_t
     sll_int32 :: file_id
-    integer(hid_t) :: hfile_id
+    type(sll_t_hdf5_ser_handle) :: hfile_id
     sll_int32 :: error
     sll_real64, dimension(:,:), allocatable :: x1
     sll_real64, dimension(:,:), allocatable :: x2
@@ -1518,12 +1516,12 @@ contains
           x2(i,j) = x2_min+real(j-1,f64)*dx2
         end do
       end do
-      call sll_o_hdf5_file_create("cartesian_mesh-x1.h5",hfile_id,error)
-      call sll_o_hdf5_write_array(hfile_id,x1,"/x1",error)
-      call sll_o_hdf5_file_close(hfile_id, error)
-      call sll_o_hdf5_file_create("cartesian_mesh-x2.h5",hfile_id,error)
-      call sll_o_hdf5_write_array(hfile_id,x2,"/x2",error)
-      call sll_o_hdf5_file_close(hfile_id, error)
+      call sll_s_hdf5_ser_file_create("cartesian_mesh-x1.h5",hfile_id,error)
+      call sll_o_hdf5_ser_write_array(hfile_id,x1,"/x1",error)
+      call sll_s_hdf5_ser_file_close(hfile_id, error)
+      call sll_s_hdf5_ser_file_create("cartesian_mesh-x2.h5",hfile_id,error)
+      call sll_o_hdf5_ser_write_array(hfile_id,x2,"/x2",error)
+      call sll_s_hdf5_ser_file_close(hfile_id, error)
       deallocate(x1)
       deallocate(x2)
 

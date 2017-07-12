@@ -16,10 +16,10 @@ program test_deposit_cubic_splines
     sll_p_pi
 
   use sll_m_cubic_splines, only: &
-    sll_s_compute_cubic_spline_2d, &
-    sll_s_deposit_value_2d, &
-    sll_f_interpolate_value_2d, &
-    sll_f_new_cubic_spline_2d, &
+    sll_s_cubic_spline_2d_compute_interpolant, &
+    sll_s_cubic_spline_2d_deposit_value, &
+    sll_f_cubic_spline_2d_eval, &
+    sll_s_cubic_spline_2d_init, &
     sll_t_cubic_spline_2d
 
   use sll_m_fft, only: &
@@ -33,8 +33,8 @@ program test_deposit_cubic_splines
   implicit none
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
-type(sll_t_cubic_spline_2d), pointer :: spl_bsl
-type(sll_t_cubic_spline_2d), pointer :: spl_fsl
+type(sll_t_cubic_spline_2d) :: spl_bsl
+type(sll_t_cubic_spline_2d) :: spl_fsl
 
 sll_int32  :: N,Neta1,Neta2,mesh_case,test_case,step,nb_step,visu_step,field_case
 sll_int32  :: i,j,bc1_type,bc2_type,err
@@ -184,12 +184,12 @@ SLL_ALLOCATE(x2tot(Neta1+1,Neta2+1), err)
 SLL_ALLOCATE(diag(10,0:nb_step), err)
 	
 ! creation of the splines
-spl_bsl => sll_f_new_cubic_spline_2d(Neta1+1, Neta2+1, &
+call sll_s_cubic_spline_2d_init(spl_bsl, Neta1+1, Neta2+1, &
   eta1_min, eta1_max, &
   0._f64, 2._f64*sll_p_pi, &
   bc1_type, bc2_type)
 
-spl_fsl => sll_f_new_cubic_spline_2d(Neta1+1, Neta2+1, &
+call sll_s_cubic_spline_2d_init(spl_fsl, Neta1+1, Neta2+1, &
   eta1_min, eta1_max, &
   0._f64, 2._f64*sll_p_pi, &
   bc1_type, bc2_type)
@@ -243,8 +243,8 @@ do step=1,nb_step ! ---- * Evolution in time * ----
   fh_bsl(:,Neta2+1)    = fh_bsl(:,1)
   fh_fsl(:,Neta2+1)    = fh_fsl(:,1)
       
-  call sll_s_compute_cubic_spline_2d(fh_bsl,spl_bsl)
-  call sll_s_compute_cubic_spline_2d(fh_fsl,spl_fsl)
+  call sll_s_cubic_spline_2d_compute_interpolant(fh_bsl,spl_bsl)
+  call sll_s_cubic_spline_2d_compute_interpolant(fh_fsl,spl_fsl)
     
   do i=1,Neta1+1
     do j=1,Neta2+1
@@ -293,7 +293,7 @@ do step=1,nb_step ! ---- * Evolution in time * ----
       call apply_bc()
       
       ! --- Interpolation ---
-      fh_bsl(i,j)    = sll_f_interpolate_value_2d(eta1,eta2,spl_bsl)
+      fh_bsl(i,j)    = sll_f_cubic_spline_2d_eval(eta1,eta2,spl_bsl)
         
       ! ------------ FSL part -----------------
         
@@ -313,7 +313,7 @@ do step=1,nb_step ! ---- * Evolution in time * ----
 
   ! --- Deposition FSL ---
     
-  call sll_s_deposit_value_2d(eta1feet,eta2feet,spl_fsl,fh_fsl)
+  call sll_s_cubic_spline_2d_deposit_value(eta1feet,eta2feet,spl_fsl,fh_fsl)
 
   ! --- Spectral ---
 

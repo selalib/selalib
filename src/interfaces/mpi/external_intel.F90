@@ -8,6 +8,7 @@
     mpi_cart_coords, &
     mpi_cart_create, &
     mpi_cart_get,    &
+    mpi_cart_sub,    &
     mpi_dims_create, &
 #if INTEL_MPI_VERSION < 50000
     mpi_finalize,    &

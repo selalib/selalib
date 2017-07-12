@@ -112,6 +112,7 @@ sll_int32, intent(in), optional :: num_points
 sll_real64, intent(in), optional  :: array2(:)
 sll_real64, intent(in), optional  :: array3(:)
 sll_int32 :: i
+character(len=30) :: rowfmt
 
 if(.not.present(num_points))then
   write(file_id,*,IOSTAT=error) array
@@ -142,8 +143,9 @@ else
       enddo
     endif
   else
+    write(rowfmt,'(a,i7,a)') '(',num_points,'(1x,g15.5))'
     do i=1,num_points
-      write(file_id,*,IOSTAT=error) array(i)
+      write(file_id,trim(rowfmt),IOSTAT=error) array(i)
     enddo
       
   endif
@@ -155,7 +157,7 @@ subroutine sll_s_ascii_write_array_2d(file_id,array,error)
 sll_int32 , intent(in)  :: file_id
 sll_int32 , intent(out) :: error
 sll_real64, intent(in)  :: array(:,:)
-write(file_id,*,IOSTAT=error) array
+write(file_id,"(100(1x,g15.5))",IOSTAT=error) array
 end subroutine
 
 !> Write a 3d array ASCII format
