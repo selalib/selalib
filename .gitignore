@@ -7,6 +7,14 @@
 *.swp
 *~
 *.kate-swp
+
+# Eclipse junk
+.project
+.cproject
+.pydevproject
+.settings
+
+# UNISON backup directories
 .unison
 \#*\#
 
