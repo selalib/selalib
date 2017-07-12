@@ -190,11 +190,8 @@ contains
     namelist /rational/ is_rational
     namelist /knots_1/   knots1
     namelist /knots_2/   knots2
-    namelist /control_points_1/ control_pts1
-    namelist /control_points_2/ control_pts2
-    namelist /control_weights/  weights
-    ! namelist /control_points/ control_pts1, control_pts2
-    ! namelist /pt_weights/  weights
+    namelist /control_points/ control_pts1, control_pts2
+    namelist /pt_weights/  weights
     namelist /cartesian_mesh_2d/ number_cells1,number_cells2
     !character(len=80) :: line_buffer
 
@@ -266,16 +263,13 @@ contains
     SLL_ALLOCATE(weights_2d(num_pts1,num_pts2),ierr)
 
     ! read the control points in the file
-    read( input_file_id, control_points_1 )
-    read( input_file_id, control_points_2 )
-    ! read( input_file_id, control_points )
+    read( input_file_id, control_points )
     ! reshape the control points to use them in the interpolator
     control_pts1_2d = transpose(reshape(control_pts1,(/num_pts2,num_pts1/)))
     control_pts2_2d = transpose(reshape(control_pts2,(/num_pts2,num_pts1/)))
     
     ! read the weight in the file associated in each control points
-    read( input_file_id, control_weights )
-    ! read( input_file_id, pt_weights )
+    read( input_file_id, pt_weights )
     ! reshape the control points to use them in the rational interpolator
     ! only if the transformation is a NURBS
     weights_2d = reshape(weights,(/num_pts1,num_pts2/))

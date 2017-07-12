@@ -7,7 +7,8 @@
 module sll_m_lobalap
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_working_precision.h"
-
+#include "sll_assert.h"
+  
   use sll_m_map_function, only: &
     sll_s_map
 
@@ -349,10 +350,10 @@ contains
        node(2,ino)=y
     end do
 
-!!$    write(*,*) 'Points de bord: ',nbc
-!!$   do ino=1,nbc
-!!$      write(*,*) indexbc(ino)
-!!$   end do
+    ! write(*,*) 'Points de bord: ',nbc
+    ! do ino=1,nbc
+    !    write(*,*) indexbc(ino)
+    ! end do
 
 
   end subroutine build_mesh
@@ -383,11 +384,6 @@ contains
     ! allocation solution et source
     allocate(phi(neq))
     allocate(rho(neq))
-
-    ! ! une solution bidon pour tester la visu
-    ! do ino=1,neq
-    !    phi(ino)=potexact_func(node(1,ino),node(2,ino))
-    ! end do
 
     ! initialisation du second pour l'assemblage
     phi=0.0_f64
@@ -548,7 +544,7 @@ contains
 
 
   ! assemblage de la matrice élément fini et des conditions aux limites
-  subroutine sll_s_assemb(source_field, potexact_func)
+  subroutine sll_s_assemb(source_field, potexact_vec)
     implicit none
     ! matrice locale
     sll_real64 :: jac(2,2),cojac(2,2),det
@@ -557,7 +553,7 @@ contains
     sll_real64 :: grad_i(2),grad_j(2),dxy(2),v,poids,vf
     integer :: iel,ipg,i,ii,j,jj,ig,ib,iib
     class(sll_c_scalar_field_2d_base), pointer :: source_field
-    procedure(sll_i_2a_func) :: potexact_func
+    sll_real64, dimension(:), intent(in) :: potexact_vec
 
     ! assemblage de la matrice de rigidité
     ! et du second membre
@@ -632,12 +628,13 @@ contains
 
     write(*,*) 'Assemblage conditions aux limites matrice...'
 
+    SLL_ASSERT(size(potexact_vec)==nbc)
     ! assemblage des conditions aux limites de dirichlet
     ! par pénalisation
     do ii=1,nbc
        i=indexbc(ii)
        call add(big,i,i)
-       rho(i)=potexact_func(node(1,i),node(2,i))*big
+       rho(i)=potexact_vec(ii)*big
     end do
 
   end subroutine sll_s_assemb
@@ -688,11 +685,8 @@ contains
              indexx = order*(j) + (neqy-1)*neqx
           end if
           phi_tab(i,j) = phi(indexx)
-          print *," i, j =", i, j, " glob index :", indexx
        end do
-       print *, "............................", neqx, neqy
     end do
-    print *, " neq = ............. ", neq
   end subroutine sll_s_compute_phi
 
 
