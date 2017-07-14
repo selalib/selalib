@@ -64,14 +64,13 @@ SET_TESTS_PROPERTIES( cubic_splines_nonuniform PROPERTIES
                       PASS_REGULAR_EXPRESSION "PASSED" )
 #...........................................
 
-# Arbitrary degree splines ............................
-ADD_EXECUTABLE( test_arbitrary_degree_splines test_arbitrary_degree_splines.F90)
-TARGET_LINK_LIBRARIES( test_arbitrary_degree_splines sll_splines )
+# Basis splines ............................
+ADD_EXECUTABLE( test_bsplines test_bsplines.F90)
+TARGET_LINK_LIBRARIES( test_bsplines sll_splines )
 
 # Ctests
-ADD_TEST( NAME arbitrary_degree_splines  COMMAND test_arbitrary_degree_splines )
-SET_TESTS_PROPERTIES( arbitrary_degree_splines PROPERTIES
-                      PASS_REGULAR_EXPRESSION "PASSED" )
+ADD_TEST( NAME bsplines  COMMAND test_bsplines )
+SET_TESTS_PROPERTIES( bsplines PROPERTIES PASS_REGULAR_EXPRESSION "PASSED" )
 #...........................................
 
 # Box-splines ............................

@@ -10,8 +10,8 @@ module sll_m_particle_mesh_coupling_spline_1d
 #include "sll_working_precision.h"
 #include "sll_errors.h"
 
-  use sll_m_arbitrary_degree_splines, only: &
-    sll_s_uniform_b_splines_at_x
+  use sll_m_bsplines, only: &
+    sll_s_uniform_bsplines_eval_basis
 
   use sll_m_gauss_legendre_integration, only : &
     sll_f_gauss_legendre_points_and_weights
@@ -120,7 +120,7 @@ contains
     xi(1) = xi(1) - real(index-1, f64)
     index = index - self%spline_degree
     !self%spline_val = sll_f_uniform_b_splines_at_x(self%spline_degree, xi(1))
-    call sll_s_uniform_b_splines_at_x(self%spline_degree, xi(1), self%spline_val)
+    call sll_s_uniform_bsplines_eval_basis(self%spline_degree, xi(1), self%spline_val)
 
     do i1 = 1, self%n_span
        index1d = modulo(index+i1-2,self%n_grid(1))+1
@@ -314,11 +314,11 @@ contains
    c1 =  0.5_f64*(upper-lower)
    c2 =  0.5_f64*(upper+lower)
 
-   call sll_s_uniform_b_splines_at_x(self%spline_degree, c1*self%quad_xw(1,1)+c2, &
+   call sll_s_uniform_bsplines_eval_basis(self%spline_degree, c1*self%quad_xw(1,1)+c2, &
         self%spline_val)
    self%spline_val = self%spline_val * (self%quad_xw(2,1)*c1)
    do j=2,self%n_quad_points
-      call sll_s_uniform_b_splines_at_x(self%spline_degree, c1*self%quad_xw(1,j)+c2, &
+      call sll_s_uniform_bsplines_eval_basis(self%spline_degree, c1*self%quad_xw(1,j)+c2, &
            self%spline_val_more)
       self%spline_val = self%spline_val + self%spline_val_more * (self%quad_xw(2,j)*c1)
    end do
@@ -398,7 +398,7 @@ contains
     xi(1) = xi(1) - real(index-1, f64)
     index = index - self%spline_degree
     !self%spline_val = sll_f_uniform_b_splines_at_x(self%spline_degree, xi(1))
-    call sll_s_uniform_b_splines_at_x(self%spline_degree, xi(1), self%spline_val)
+    call sll_s_uniform_bsplines_eval_basis(self%spline_degree, xi(1), self%spline_val)
 
     field_value = 0.0_f64
     do i1 = 1, self%n_span
@@ -432,7 +432,7 @@ contains
     index = ceiling(xi(1))
     xi(1) = xi(1) - real(index-1, f64)
     index = index - self%spline_degree    
-    call sll_s_uniform_b_splines_at_x(self%spline_degree, xi(1), self%spline_val)
+    call sll_s_uniform_bsplines_eval_basis(self%spline_degree, xi(1), self%spline_val)
     !self%spline_val = sll_f_uniform_b_splines_at_x(self%spline_degree, xi(1))
 
     field_value = 0.0_f64
