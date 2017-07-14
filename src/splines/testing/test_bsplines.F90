@@ -7,24 +7,24 @@ program test_arbitrary_degree_splines
 #include "sll_working_precision.h"
 
   use sll_m_boundary_condition_descriptors, only: &
-       sll_p_hermite, &
-       sll_p_greville, &
-       sll_p_periodic
+    sll_p_hermite, &
+    sll_p_greville, &
+    sll_p_periodic
 
   use sll_m_bsplines, only: &
     sll_t_bsplines, &
+    sll_s_bsplines_init, &
+    sll_s_bsplines_free, &
+    sll_s_bsplines_eval_basis, &
     sll_s_bsplines_eval_deriv, &
     sll_s_bsplines_eval_basis_and_deriv, &
     sll_s_bsplines_eval_basis_and_n_derivs, &
-    sll_s_bsplines_eval_basis, &
-    sll_s_bsplines_eval_basis_and_deriv_mm, &
-    sll_s_bsplines_eval_basis_mm, &
     sll_f_find_cell, &
-    sll_s_bsplines_init, &
-    sll_s_bsplines_free, &
+    sll_s_bsplines_eval_basis_mm, &
+    sll_s_bsplines_eval_basis_and_deriv_mm, &
+    sll_s_uniform_bsplines_eval_basis, &
     sll_s_uniform_bsplines_eval_deriv, &
-    sll_s_uniform_bsplines_eval_basis_and_deriv, &
-    sll_s_uniform_bsplines_eval_basis
+    sll_s_uniform_bsplines_eval_basis_and_deriv
 
   use sll_m_timer, only: &
     sll_s_set_time_mark, &
@@ -34,7 +34,13 @@ program test_arbitrary_degree_splines
   implicit none
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
-  logical                                :: passed_test
+  ! Output format for timing
+  character(len=*), parameter :: timing_fmt = &
+    "(' Computing time for  ',a,':',es12.2)"
+
+  character(len=43) :: subr
+  logical           :: passed_test
+
   passed_test = .true.
 
   print *, '*****************************************************************'
@@ -691,67 +697,85 @@ contains
     do j=1,num_tests
        call sll_s_bsplines_eval_basis(spline, cells(j), x(j), answer1)
     end do
-    time = sll_f_time_elapsed_since(t0)
-    print *, 'Computing time for  sll_s_bsplines_eval_basis: ', time
+    time = sll_f_time_elapsed_since(t0) / real(num_tests,f64)
+    subr = "sll_s_bsplines_eval_basis"
+    write(*,timing_fmt) adjustl( subr ), time
 
     call sll_s_set_time_mark(t0)
     do j=1,num_tests
        call sll_s_bsplines_eval_basis_mm(spline%knots, cells(j), x(j), degree, &
             answer1)
     end do
-    time = sll_f_time_elapsed_since(t0)
-    print *, 'Computing time for  compute_b_splines_at_x_mm: ', time
-    ! computing all non zero spline derivatives at point x:
-    call sll_s_set_time_mark(t0)
-    do j=1,num_tests
-       call sll_s_bsplines_eval_deriv(spline, cells(j), x(j), answer2)
-    end do
-    time = sll_f_time_elapsed_since(t0)
-    print *, 'Computing time for  sll_s_bsplines_eval_deriv: ', time
-
-    call sll_s_set_time_mark(t0)
-    do j=1,num_tests
-       call sll_s_bsplines_eval_basis_and_deriv_mm(spline%knots, cells(j), x(j), &
-            degree, answer3)
-    end do
-    time = sll_f_time_elapsed_since(t0)
-    print *, 'Computing time for  compute_b_splines_deriv_at_x_mm: ', time
+    time = sll_f_time_elapsed_since(t0) / real(num_tests,f64)
+    subr = "sll_s_bsplines_eval_basis_mm"
+    write(*,timing_fmt) adjustl( subr ), time
+    write(*,*)
 
     ! computing both all non zero splines and derivatives at point x:
     call sll_s_set_time_mark(t0)
     do j=1,num_tests
        call sll_s_bsplines_eval_basis_and_deriv(spline, cells(j), x(j), answer3)
     end do
-    time = sll_f_time_elapsed_since(t0)
-    print *, 'Computing time for  sll_s_bsplines_eval_basis_and_deriv: ', time
+    time = sll_f_time_elapsed_since(t0) / real(num_tests,f64)
+    subr = "sll_s_bsplines_eval_basis_and_deriv"
+    write(*,timing_fmt) adjustl( subr ), time
+
+    call sll_s_set_time_mark(t0)
+    do j=1,num_tests
+       call sll_s_bsplines_eval_basis_and_deriv_mm(spline%knots, cells(j), x(j), &
+            degree, answer3)
+    end do
+    time = sll_f_time_elapsed_since(t0) / real(num_tests,f64)
+    subr = "sll_s_bsplines_eval_basis_and_deriv_mm"
+    write(*,timing_fmt) adjustl( subr ), time
+    write(*,*)
+
+    ! computing all non zero spline derivatives at point x:
+    call sll_s_set_time_mark(t0)
+    do j=1,num_tests
+       call sll_s_bsplines_eval_deriv(spline, cells(j), x(j), answer2)
+    end do
+    time = sll_f_time_elapsed_since(t0) / real(num_tests,f64)
+    subr = "sll_s_bsplines_eval_deriv"
+    write(*,timing_fmt) adjustl( subr ), time
+
     ! computing both all non zero splines and all derivatives at point x:
     call sll_s_set_time_mark(t0)
     do j=1,num_tests
        call sll_s_bsplines_eval_basis_and_n_derivs(spline, cells(j), x(j), 1, answer3)
     end do
-    time = sll_f_time_elapsed_since(t0)
-    print *, 'Computing time for  sll_s_bsplines_eval_basis_and_n_derivs: ', time
+    time = sll_f_time_elapsed_since(t0) / real(num_tests,f64)
+    subr = "sll_s_bsplines_eval_basis_and_n_derivs"
+    write(*,timing_fmt) adjustl( subr ), time
+    write(*,*)
+
     ! computing all non zero uniform splines  at point x:
     call sll_s_set_time_mark(t0)
     do j=1,num_tests
        call sll_s_uniform_bsplines_eval_basis(degree, xx(j), answer1)
     end do
-    time = sll_f_time_elapsed_since(t0)
-    print *, 'Computing time for  sll_s_uniform_bsplines_eval_basis: ', time
+    time = sll_f_time_elapsed_since(t0) / real(num_tests,f64)
+    subr = "sll_s_uniform_bsplines_eval_basis"
+    write(*,timing_fmt) adjustl( subr ), time
+
     ! computing all non zero uniform splines derivatives at point x:
     call sll_s_set_time_mark(t0)
     do j=1,num_tests
        call sll_s_uniform_bsplines_eval_deriv(degree, xx(j),answer2)
     end do
-    time = sll_f_time_elapsed_since(t0)
-    print *, 'Computing time for  sll_s_uniform_bsplines_eval_deriv: ', time
+    time = sll_f_time_elapsed_since(t0) / real(num_tests,f64)
+    subr = "sll_s_uniform_bsplines_eval_deriv"
+    write(*,timing_fmt) adjustl( subr ), time
+
     ! computing all non zero uniform splines and derivatives at point x:
     call sll_s_set_time_mark(t0)
     do j=1,num_tests
        call sll_s_uniform_bsplines_eval_basis_and_deriv(degree, xx(j), answer3)
     end do
-    time = sll_f_time_elapsed_since(t0)
-    print *, 'Computing time for  sll_s_uniform_bsplines_eval_basis_and_deriv: ', time
+    time = sll_f_time_elapsed_since(t0) / real(num_tests,f64)
+    subr = "sll_s_uniform_bsplines_eval_basis_and_deriv"
+    write(*,timing_fmt) adjustl( subr ), time
+    write(*,*)
 
   end subroutine test_cpu_time
 
