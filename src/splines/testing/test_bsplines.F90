@@ -13,7 +13,7 @@ program test_arbitrary_degree_splines
 
   use sll_m_bsplines, only: &
     sll_t_bsplines, &
-    sll_s_bsplines_init, &
+    sll_s_bsplines_init_from_grid, &
     sll_s_bsplines_free, &
     sll_s_bsplines_eval_basis, &
     sll_s_bsplines_eval_deriv, &
@@ -120,7 +120,7 @@ contains
     end do
     ! ..... non uniform mesh done
     ! creating non uniform 1d spline
-    call sll_s_bsplines_init( &
+    call sll_s_bsplines_init_from_grid( &
          spline, &
          degree, &
          grid, &
@@ -259,7 +259,7 @@ contains
     ! Define non uniform grid
     grid = (/0.0_f64, 2.0_f64, 3.0_f64, 4.5_f64, 5.0_f64 /)
     ! creating non uniform 1d spline
-    call sll_s_bsplines_init( &
+    call sll_s_bsplines_init_from_grid( &
          spline, &
          degree, &
          grid, &
@@ -444,7 +444,7 @@ contains
        SLL_CLEAR_ALLOCATE(sp_and_derivs_n(1:2,1:j+1),ierr)
 
        ! creating non uniform 1d spline on uniform grid for comparison
-       call sll_s_bsplines_init( &
+       call sll_s_bsplines_init_from_grid( &
             spline, &
             j, &
             grid, &
@@ -564,7 +564,7 @@ contains
     !print *, 'knots array = ', knots(:)
 
     ! fill spline object
-    call sll_s_bsplines_init( &
+    call sll_s_bsplines_init_from_grid( &
          spline, &
          degree, &
          knots, &
@@ -675,7 +675,7 @@ contains
     end do
     ! ..... non uniform mesh done
     ! creating non uniform 1d spline
-    call sll_s_bsplines_init( &
+    call sll_s_bsplines_init_from_grid( &
          spline, &
          degree, &
          grid, &

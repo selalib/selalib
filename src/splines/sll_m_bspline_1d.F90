@@ -16,7 +16,7 @@ use sll_m_boundary_condition_descriptors, only: &
 
 use sll_m_bsplines, only: &
      sll_t_bsplines, &
-     sll_s_bsplines_init, &
+     sll_s_bsplines_init_from_grid, &
      sll_s_bsplines_free, &
      sll_f_find_cell, &
      sll_s_bsplines_eval_basis, &
@@ -163,10 +163,10 @@ contains
     grid(num_pts) = xmax
     ! construct a sll_t_bsplines object
     if (present(spline_bc_type)) then
-       call sll_s_bsplines_init(self%bsp, degree, grid,  &
+       call sll_s_bsplines_init_from_grid( self%bsp, degree, grid,  &
             num_pts, bc_type, spline_bc_type )
     else
-       call sll_s_bsplines_init(self%bsp, degree, grid,  &
+       call sll_s_bsplines_init_from_grid( self%bsp, degree, grid,  &
             num_pts, bc_type)
     end if
 
