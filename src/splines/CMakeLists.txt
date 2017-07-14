@@ -1,5 +1,6 @@
 SET( SPLINES_FILES
   sll_m_quintic_splines.F90
+  sll_m_spline_1d_base.F90
   sll_m_bspline_1d.F90
   sll_m_bspline_2d.F90
   sll_m_bsplines.F90
