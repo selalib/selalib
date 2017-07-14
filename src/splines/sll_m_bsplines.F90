@@ -27,7 +27,7 @@
 !> found in the de Boor book "Practical guide to splines"
 !> or the NURBS book by Piegl and Tiller.  
 
-module sll_m_arbitrary_degree_splines
+module sll_m_bsplines
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_assert.h"
 #include "sll_memory.h"
@@ -41,41 +41,48 @@ module sll_m_arbitrary_degree_splines
   implicit none
 
   public :: &
-    sll_t_arbitrary_degree_spline_1d, &
-    sll_s_spline_derivatives_at_x, &
-    sll_s_splines_and_derivs_at_x, &
-    sll_s_splines_and_n_derivs_at_x, &
-    sll_s_splines_at_x, &
-    sll_s_compute_b_spline_and_deriv_at_x_mm, &
-    sll_s_compute_b_spline_at_x_mm, &
-    sll_s_eval_uniform_periodic_spline_curve, &
+    sll_t_bsplines, &
+    sll_s_bsplines_init, &
+    sll_s_bsplines_free, &
+    sll_s_bsplines_eval_basis, &
+    sll_s_bsplines_eval_deriv, &
+    sll_s_bsplines_eval_basis_and_deriv, &
+    sll_s_bsplines_eval_basis_and_n_derivs, &
+    ! Binary search algorithm (should be in 'meshes' or 'low_level_utilities'):
     sll_f_find_cell, &
-    sll_s_arbitrary_degree_spline_1d_init, &
-    sll_s_arbitrary_degree_spline_1d_free, &
-    sll_s_uniform_b_spline_derivatives_at_x, &
-    sll_s_uniform_b_splines_and_derivs_at_x, &
-    sll_s_uniform_b_splines_at_x
+    ! Michel Mehrenberger's algorithms (slightly faster but not fully robust):
+    sll_s_bsplines_eval_basis_mm, &
+    sll_s_bsplines_eval_basis_and_deriv_mm, &
+    ! Evaluation of uniform spline basis (faster, should go to separate module):
+    sll_s_uniform_bsplines_eval_basis, &
+    sll_s_uniform_bsplines_eval_deriv, &
+    sll_s_uniform_bsplines_eval_basis_and_deriv, &
+    ! Evaluation of uniform periodic spline (use 'sll_m_spline_1d' instead):
+    sll_s_eval_uniform_periodic_spline_curve
 
   private
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
-  type :: sll_t_arbitrary_degree_spline_1d
+  type :: sll_t_bsplines
      sll_int32           :: num_pts
      sll_int32           :: deg
      sll_real64          :: xmin
      sll_real64          :: xmax
      sll_int32           :: n        ! dimension of spline space
      sll_real64, pointer :: knots(:) ! knots array
-  end type sll_t_arbitrary_degree_spline_1d
+  end type sll_t_bsplines
 
-interface sll_s_arbitrary_degree_spline_1d_init
-  module procedure sll_s_arbitrary_degree_spline_1d_from_grid
-  module procedure sll_s_arbitrary_degree_spline_1d_from_knots
-end interface sll_s_arbitrary_degree_spline_1d_init
+  interface sll_s_bsplines_init
+    module procedure sll_s_bsplines_init_from_grid
+    module procedure sll_s_bsplines_init_from_knots
+  end interface sll_s_bsplines_init
 
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 contains
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
   !> @brief
-  !> Build new sll_t_arbitrary_degree_spline_1d object 
+  !> Build new sll_t_bsplines object 
   !> @details
   !> based on a on a grid of strictly increasing points including the last point also
   !> for periodic domains.
@@ -85,10 +92,10 @@ contains
   !> @param[in] num_pts number of grid points
   !> @param[in] bc_type boundary condition for grid
   !> @param[in] spline_bc_type  boundary condition on knots
-  subroutine sll_s_arbitrary_degree_spline_1d_from_grid( self, degree, grid, &
+  subroutine sll_s_bsplines_init_from_grid( self, degree, grid, &
        num_pts, bc_type, spline_bc_type )
 
-    type(sll_t_arbitrary_degree_spline_1d), intent(  out) :: self
+    type(sll_t_bsplines), intent(  out) :: self
     sll_int32                             , intent(in   ) :: degree
     sll_real64                            , intent(in   ) :: grid(:)
     sll_int32                             , intent(in   ) :: num_pts
@@ -102,14 +109,14 @@ contains
     sll_real64 :: gridmin
 
     if( size(grid) < num_pts ) then
-       print *, 'ERROR. sll_s_arbitrary_degree_spline_1d_from_grid: ', &
+       print *, 'ERROR. sll_s_bsplines_init_from_grid: ', &
             'size of given grid array is smaller than the stated ', &
             'number of points.'
        print *, 'size(grid) = ', size(grid), 'num_pts = ', num_pts
        STOP
     end if
     if( degree < 1 ) then
-       print *, 'ERROR. sll_s_arbitrary_degree_spline_1d_from_grid: ', &
+       print *, 'ERROR. sll_s_bsplines_init_from_grid: ', &
             'only strictly positive integer values for degree are allowed, ', &
             'given: ', degree
     end if
@@ -119,7 +126,7 @@ contains
        gridmin = min(gridmin, grid(i)-grid(i-1)) 
     end do
     if (gridmin < 1.d-10) then
-       print*, 'ERROR. sll_s_arbitrary_degree_spline_1d_from_grid: ', &
+       print*, 'ERROR. sll_s_bsplines_init_from_grid: ', &
             ' we require that grid points are in strictly increasing', &
             ' order and that each cell length is at least 1.e-10.'
     end if
@@ -228,10 +235,10 @@ contains
        end if
     end if
 
-  end subroutine sll_s_arbitrary_degree_spline_1d_from_grid
+  end subroutine sll_s_bsplines_init_from_grid
 
   !> @brief
-  !> Build new sll_t_arbitrary_degree_spline_1d object 
+  !> Build new sll_t_bsplines object 
   !> @details
   !> based on a given array of knots
   !> which is a non decreasing array
@@ -239,9 +246,9 @@ contains
   !> @param[in] degree spline degree
   !> @param[in] n dimension of spline space
   !> @param[in] knots array of give knots
-  subroutine sll_s_arbitrary_degree_spline_1d_from_knots( self, degree, n, knots )
+  subroutine sll_s_bsplines_init_from_knots( self, degree, n, knots )
 
-    type(sll_t_arbitrary_degree_spline_1d), intent(  out) :: self
+    type(sll_t_bsplines), intent(  out) :: self
     sll_int32                             , intent(in   ) :: degree
     sll_int32                             , intent(in   ) :: n
     sll_real64                            , intent(in   ) :: knots(:)
@@ -254,7 +261,7 @@ contains
     ! Error checking
     SLL_ASSERT(size(knots)==n+2*degree)
     if( degree < 1 ) then
-       print *, 'ERROR. sll_s_arbitrary_degree_spline_1d_from_knots: ', &
+       print *, 'ERROR. sll_s_bsplines_init_from_knots: ', &
             'only strictly positive integer values for degree are allowed, ', &
             'given: ', degree
     end if
@@ -264,7 +271,7 @@ contains
        knotmin = min(knotmin, knots(i)-knots(i-1)) 
     end do
     if (knotmin < 0.0_f64) then
-       print*, 'ERROR. sll_s_arbitrary_degree_spline_1d_from_knots: ', &
+       print*, 'ERROR. sll_s_bsplines_init_from_knots: ', &
             ' we require that knots  are in non decreasing.'
     end if
 
@@ -281,7 +288,7 @@ contains
     SLL_ALLOCATE(self%knots(1-degree:n+1),ierr)
     self%knots(1-degree:n+1) = knots
     
-  end subroutine sll_s_arbitrary_degree_spline_1d_from_knots
+  end subroutine sll_s_bsplines_init_from_knots
   
   !>@brief find cell returns the index i of the grid cell such that:
   !> self%knots(i) <= x <= self%knots(i+1).
@@ -290,7 +297,7 @@ contains
   !> If x is not between self%knots(1) and 
   !> self%knots(self%num_pts),  then the value -1 is returned.
   pure function sll_f_find_cell( self, x )
-    type(sll_t_arbitrary_degree_spline_1d), intent(in) :: self
+    type(sll_t_bsplines), intent(in) :: self
     sll_real64                            , intent(in) :: x
     sll_int32 :: sll_f_find_cell
 
@@ -348,7 +355,7 @@ contains
   !> @brief
   !> Evaluates B-spline values at a point x in a given cell.
   !> @details
-  !> sll_s_splines_at_x( self, cell, x, splines_at_x ) computes the values of all the
+  !> sll_s_bsplines_eval_basis( self, cell, x, splines_at_x ) computes the values of all the
   !> splines which have support in 'cell' and evaluates them at point 'x',
   !> which is supposed to be in cell. The spline object should have already
   !> been initialized and will contain information on the spline degree
@@ -357,9 +364,9 @@ contains
   !> Cox - de Boor algorithm, which is a generalisation to splines of the
   !> de Casteljau algorithm for Bezier curves.
   !> @return b_spline_at_x B-spline values
-  SLL_PURE subroutine sll_s_splines_at_x( self, icell, x, splines_at_x )
+  SLL_PURE subroutine sll_s_bsplines_eval_basis( self, icell, x, splines_at_x )
 
-    type(sll_t_arbitrary_degree_spline_1d), intent(in   ) :: self
+    type(sll_t_bsplines), intent(in   ) :: self
     sll_int32                             , intent(in   ) :: icell
     sll_real64                            , intent(in   ) :: x
     sll_real64                            , intent(  out) :: splines_at_x(0:self%deg)
@@ -401,13 +408,13 @@ contains
       splines_at_x(j) = saved
     end do
 
-  end subroutine sll_s_splines_at_x
+  end subroutine sll_s_bsplines_eval_basis
 
 
   !> @brief
   !> returns first derivative values at x of all b-splines with support in cell
   !> @details
-  !> sll_s_spline_derivatives_at_x returns an array with the derivative values of 
+  !> sll_s_bsplines_eval_deriv returns an array with the derivative values of 
   !> the B-splines of a requested order that are supported in 'cell' and 
   !> evaluated at 'x'. 
   !> Algorithm derived from algorithm A3.2 of NURBS book 
@@ -417,9 +424,9 @@ contains
   !> \f]
   !> where 'deg' is the degree of the spline.
   !> @param[out] bsdx  B-spline derivatives
-  SLL_PURE subroutine sll_s_spline_derivatives_at_x( self, icell, x, bsdx )
+  SLL_PURE subroutine sll_s_bsplines_eval_deriv( self, icell, x, bsdx )
 
-    type(sll_t_arbitrary_degree_spline_1d), intent(in   ) :: self
+    type(sll_t_bsplines), intent(in   ) :: self
     sll_int32                             , intent(in   ) :: icell
     sll_real64                            , intent(in   ) :: x
     sll_real64                            , intent(  out) :: bsdx(0:self%deg)
@@ -485,18 +492,18 @@ contains
     ! j = deg
     bsdx(deg) =  saved
 
-  end subroutine sll_s_spline_derivatives_at_x
+  end subroutine sll_s_bsplines_eval_deriv
 
 
 
   !> @brief 
   !> returns splines and first derivatives
   !> @details
-  !> See sll_s_spline_derivatives_at_x and  sll_f_splines_at_x
+  !> See sll_s_bsplines_eval_deriv and  sll_f_splines_at_x
   !> @return b_spline_and_derivs_at_x B-spline values and derivatives
-  SLL_PURE subroutine sll_s_splines_and_derivs_at_x( self, icell, x, bsdx )
+  SLL_PURE subroutine sll_s_bsplines_eval_basis_and_deriv( self, icell, x, bsdx )
 
-    type(sll_t_arbitrary_degree_spline_1d), intent(in   ) :: self
+    type(sll_t_bsplines), intent(in   ) :: self
     sll_int32                             , intent(in   ) :: icell
     sll_real64                            , intent(in   ) :: x
     sll_real64                            , intent(  out) :: bsdx(2,0:self%deg)
@@ -579,20 +586,20 @@ contains
     end do
     bsdx(1,j) = saved 
 
-  end subroutine sll_s_splines_and_derivs_at_x
+  end subroutine sll_s_bsplines_eval_basis_and_deriv
 
   !> @brief 
   !> returns splines and first derivatives
   !> @details
-  !> See sll_s_spline_derivatives_at_x and  sll_f_splines_at_x
+  !> See sll_s_bsplines_eval_deriv and  sll_f_splines_at_x
   !> @param[in] self  bspline object
   !> @param[in] icell cell where bsplines are to be computed
   !> @param[in] x value of point where bsplines are to be computed
   !> @param[in] n number of derivatives to be computed
   !> @param[out] bsdx B-spline values and the first n derivatives
-  SLL_PURE subroutine sll_s_splines_and_n_derivs_at_x( self, icell, x , n, bsdx )
+  SLL_PURE subroutine sll_s_bsplines_eval_basis_and_n_derivs( self, icell, x , n, bsdx )
 
-    type(sll_t_arbitrary_degree_spline_1d), intent(in   ) :: self
+    type(sll_t_bsplines), intent(in   ) :: self
     sll_int32                             , intent(in   ) :: icell
     sll_real64                            , intent(in   ) :: x
     sll_int32                             , intent(in   ) :: n
@@ -703,7 +710,7 @@ contains
        r = r * (deg-k)
     end do
 
-  end subroutine sll_s_splines_and_n_derivs_at_x
+  end subroutine sll_s_bsplines_eval_basis_and_n_derivs
   
   
   !> @brief Alternative direct implentation of recursion formula. 
@@ -713,7 +720,7 @@ contains
   !> formula. It is 10% faster than the classical Cox - de Boor formula 
   !> that is implented in sll_f_splines_at_x, but can have numerical stability issues.
   !>For this reason the Cox - de Boor formula should be the default implementation 
-  SLL_PURE subroutine sll_s_compute_b_spline_at_x_mm( &
+  SLL_PURE subroutine sll_s_bsplines_eval_basis_mm( &
        knots, &
        cell, &
        x, &
@@ -743,7 +750,7 @@ contains
        out(ell+1) = tmp1
     enddo
 
-  end subroutine sll_s_compute_b_spline_at_x_mm
+  end subroutine sll_s_bsplines_eval_basis_mm
 
 
   !> @brief Alternative direct implentation of recursion formula. 
@@ -753,7 +760,7 @@ contains
   !> formula. It is about 80% faster than the classical Cox - de Boor formula 
   !> that is implented in sll_f_splines_at_x, but can have numerical stability issues.
   !> For this reason the Cox - de Boor formula should be the default implementation
-  SLL_PURE subroutine sll_s_compute_b_spline_and_deriv_at_x_mm( &
+  SLL_PURE subroutine sll_s_bsplines_eval_basis_and_deriv_mm( &
        knots, &
        cell, &
        x, &
@@ -794,11 +801,11 @@ contains
        endif
     enddo
 
-  end subroutine sll_s_compute_b_spline_and_deriv_at_x_mm
+  end subroutine sll_s_bsplines_eval_basis_and_deriv_mm
 
 
-  subroutine sll_s_arbitrary_degree_spline_1d_free( spline )
-    type(sll_t_arbitrary_degree_spline_1d), intent(inout) :: spline
+  subroutine sll_s_bsplines_free( spline )
+    type(sll_t_bsplines), intent(inout) :: spline
 
     sll_int32                    :: ierr
     if( .not. associated(spline%knots) ) then
@@ -808,7 +815,7 @@ contains
     end if
     SLL_DEALLOCATE( spline%knots, ierr )
 
-  end subroutine sll_s_arbitrary_degree_spline_1d_free
+  end subroutine sll_s_bsplines_free
 
   ! *************************************************************************
   !
@@ -833,7 +840,7 @@ contains
   !> We also have the property (from the symmetry of the B-spline)
   !> out(1:d+1)= B_d(-(d+1)/2+xx),...,B_d(-(d+1)/2+d+xx),..., 
   !> where xx=1-normalized_offset
-  SLL_PURE subroutine sll_s_uniform_b_splines_at_x( &
+  SLL_PURE subroutine sll_s_uniform_bsplines_eval_basis( &
     spline_degree,     &
     normalized_offset, &
     bspl               )
@@ -870,7 +877,7 @@ contains
        bspl(j) = saved
     end do
 
-  end subroutine sll_s_uniform_b_splines_at_x
+  end subroutine sll_s_uniform_bsplines_eval_basis
 
   !> @brief Evaluate all derivatives of non vanishing uniform B-Splines 
   !> in unit cell. 
@@ -880,7 +887,7 @@ contains
   !> requested degree, evaluated at a given cell offset. The cell size is
   !> normalized between 0 and 1, hence the results must be divided by the
   !> real cell size to scale back the results.
-  SLL_PURE subroutine sll_s_uniform_b_spline_derivatives_at_x( &
+  SLL_PURE subroutine sll_s_uniform_bsplines_eval_deriv( &
     spline_degree,     &
     normalized_offset, & 
     bspl               )
@@ -931,7 +938,7 @@ contains
     end do
     bspl(spline_degree) = bj
 
-  end subroutine sll_s_uniform_b_spline_derivatives_at_x
+  end subroutine sll_s_uniform_bsplines_eval_deriv
 
   !> @brief Evaluate all values and derivatives of non vanishing uniform B-Splines 
   !> in unit cell. 
@@ -941,7 +948,7 @@ contains
   !> requested degree, evaluated at a given cell offset. The cell size is
   !> normalized between 0 and 1, hence the results must be divided by the
   !> real cell size to scale back the results.
-  SLL_PURE subroutine sll_s_uniform_b_splines_and_derivs_at_x( &
+  SLL_PURE subroutine sll_s_uniform_bsplines_eval_basis_and_deriv( &
     degree,            &
     normalized_offset, &
     bspl               )
@@ -999,7 +1006,7 @@ contains
     end do
     bspl(1,j) = saved
 
-  end subroutine sll_s_uniform_b_splines_and_derivs_at_x
+  end subroutine sll_s_uniform_bsplines_eval_basis_and_deriv
 
   !> @brief
   !> Evaluate uniform periodic spline curve defined by coefficients scoef at 
@@ -1015,7 +1022,7 @@ contains
     sll_int32  :: i, j, imj, n
 
     ! get bspline values at knots
-    call sll_s_uniform_b_splines_at_x(degree, 0.0_f64, bspl)
+    call sll_s_uniform_bsplines_eval_basis(degree, 0.0_f64, bspl)
     n = size(scoef)
     do i= 1, n
        val = 0.0_f64
@@ -1029,4 +1036,4 @@ contains
 
   end subroutine sll_s_eval_uniform_periodic_spline_curve
 
-end module sll_m_arbitrary_degree_splines
+end module sll_m_bsplines

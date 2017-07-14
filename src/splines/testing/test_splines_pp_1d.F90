@@ -5,8 +5,8 @@ program test_splines_pp_1d
 #include "sll_working_precision.h"
 
 
-  use sll_m_arbitrary_degree_splines, only: &
-       sll_s_uniform_b_splines_at_x
+  use sll_m_bsplines, only: &
+       sll_s_uniform_bsplines_eval_basis
 
   use sll_m_arbitrary_degree_spline_interpolator_1d, only: &
        sll_t_arbitrary_degree_spline_interpolator_1d
@@ -95,7 +95,7 @@ contains
     
     index = index - degree
     
-    call sll_s_uniform_b_splines_at_x(degree, xi, val)
+    call sll_s_uniform_bsplines_eval_basis(degree, xi, val)
   
     res2 = 0.0_f64
     do i = 1, degree+1 

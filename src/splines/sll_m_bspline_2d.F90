@@ -1,6 +1,6 @@
 !> @ingroup splines
 !> Implements arbitrary degree bspline interpolation on a uniform grid
-!> given a B-Spline object from sll_m_arbitrary_degree_splines
+!> given a B-Spline object from sll_m_bsplines
 module sll_m_bspline_2d
 
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -14,15 +14,15 @@ use sll_m_boundary_condition_descriptors, only: &
      sll_p_greville, &
      sll_p_mirror
 
-use sll_m_arbitrary_degree_splines, only: &
-     sll_t_arbitrary_degree_spline_1d, &
-     sll_s_arbitrary_degree_spline_1d_init, &
-     sll_s_arbitrary_degree_spline_1d_free, &
+use sll_m_bsplines, only: &
+     sll_t_bsplines, &
+     sll_s_bsplines_init, &
+     sll_s_bsplines_free, &
      sll_f_find_cell, &
-     sll_s_splines_at_x, &
-     sll_s_spline_derivatives_at_x, &
-     sll_s_splines_and_n_derivs_at_x, &
-     sll_s_uniform_b_splines_at_x
+     sll_s_bsplines_eval_basis, &
+     sll_s_bsplines_eval_deriv, &
+     sll_s_bsplines_eval_basis_and_n_derivs, &
+     sll_s_uniform_bsplines_eval_basis
 
 use schur_complement, only: &
   schur_complement_solver, &
@@ -336,14 +336,14 @@ contains
     work = 0.0_f64
     do k2 = 1, d2
       jb = mod( jcell+k2-2-self%bs2%offset+self%bs2%n, self%bs2%n ) + 1
-      call sll_s_splines_at_x( self%bs1%bsp, icell, x1, values(1:d1) )
+      call sll_s_bsplines_eval_basis( self%bs1%bsp, icell, x1, values(1:d1) )
       do k1 = 1, d1
         ib = mod( icell+k1-2-self%bs1%offset+self%bs1%n, self%bs1%n ) + 1
         work(k2) = work(k2) + values(k1)*self%bcoef(ib,jb)
       end do
     end do
 
-    call sll_s_splines_at_x( self%bs2%bsp, jcell, x2, values(1:d2) )
+    call sll_s_bsplines_eval_basis( self%bs2%bsp, jcell, x2, values(1:d2) )
     y = 0.0_f64
     do k2 = 1, d2
       y  = y + values(k2)*work(k2)
@@ -378,14 +378,14 @@ contains
     work = 0.0_f64
     do k2 = 1, d2
       jb = mod( jcell+k2-2-self%bs2%offset+self%bs2%n, self%bs2%n ) + 1
-      call sll_s_spline_derivatives_at_x( self%bs1%bsp, icell, x1, values(1:d1) )
+      call sll_s_bsplines_eval_deriv( self%bs1%bsp, icell, x1, values(1:d1) )
       do k1 = 1, d1
         ib = mod( icell+k1-2-self%bs1%offset+self%bs1%n, self%bs1%n ) + 1
         work(k2) = work(k2) + values(k1)*self%bcoef(ib,jb)
       end do
     end do
 
-    call sll_s_splines_at_x( self%bs2%bsp, jcell, x2, values(1:d2) )
+    call sll_s_bsplines_eval_basis( self%bs2%bsp, jcell, x2, values(1:d2) )
     y = 0.0_f64
     do k2 = 1, d2
       y = y + values(k2)*work(k2)
@@ -419,14 +419,14 @@ contains
     work = 0.0_f64
     do k2 = 1, d2
       jb = mod( jcell+k2-2-self%bs2%offset+self%bs2%n, self%bs2%n ) + 1
-      call sll_s_splines_at_x( self%bs1%bsp, icell, x1, values(1:d1) )
+      call sll_s_bsplines_eval_basis( self%bs1%bsp, icell, x1, values(1:d1) )
       do k1 = 1, d1
         ib = mod( icell+k1-2-self%bs1%offset+self%bs1%n, self%bs1%n ) + 1
         work(k2) = work(k2) + values(k1)*self%bcoef(ib,jb)
       end do
     end do
 
-    call sll_s_spline_derivatives_at_x( self%bs2%bsp, jcell, x2, values(1:d2) )
+    call sll_s_bsplines_eval_deriv( self%bs2%bsp, jcell, x2, values(1:d2) )
     y = 0.0_f64
     do k2 = 1, d2
       y = y + values(k2)*work(k2)

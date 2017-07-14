@@ -1,6 +1,6 @@
 !> @ingroup splines
 !> Implements arbitrary degree bspline interpolation on a uniform grid
-!> given a B-Spline object from sll_m_arbitrary_degree_splines
+!> given a B-Spline object from sll_m_bsplines
 module sll_m_bspline_1d
 
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -14,15 +14,15 @@ use sll_m_boundary_condition_descriptors, only: &
      sll_p_greville, &
      sll_p_mirror
 
-use sll_m_arbitrary_degree_splines, only: &
-     sll_t_arbitrary_degree_spline_1d, &
-     sll_s_arbitrary_degree_spline_1d_init, &
-     sll_s_arbitrary_degree_spline_1d_free, &
+use sll_m_bsplines, only: &
+     sll_t_bsplines, &
+     sll_s_bsplines_init, &
+     sll_s_bsplines_free, &
      sll_f_find_cell, &
-     sll_s_splines_at_x, &
-     sll_s_spline_derivatives_at_x, &
-     sll_s_splines_and_n_derivs_at_x, &
-     sll_s_uniform_b_splines_at_x
+     sll_s_bsplines_eval_basis, &
+     sll_s_bsplines_eval_deriv, &
+     sll_s_bsplines_eval_basis_and_n_derivs, &
+     sll_s_uniform_bsplines_eval_basis
 
 use schur_complement, only: &
   schur_complement_solver, &
@@ -50,7 +50,7 @@ private
 !> basic type for one-dimensional B-spline interpolation.
 type :: sll_t_bspline_1d
 
-  type (sll_t_arbitrary_degree_spline_1d) :: bsp
+  type (sll_t_bsplines) :: bsp
   sll_int32                               :: n        ! dimension of spline space
   sll_int32                               :: deg      ! degree of spline
   sll_real64, allocatable                 :: tau(:)   ! interpolation points
@@ -161,12 +161,12 @@ contains
        grid(i) = xmin + real(i-1,f64) * delta
     end do
     grid(num_pts) = xmax
-    ! construct a sll_t_arbitrary_degree_spline_1d object
+    ! construct a sll_t_bsplines object
     if (present(spline_bc_type)) then
-       call sll_s_arbitrary_degree_spline_1d_init(self%bsp, degree, grid,  &
+       call sll_s_bsplines_init(self%bsp, degree, grid,  &
             num_pts, bc_type, spline_bc_type )
     else
-       call sll_s_arbitrary_degree_spline_1d_init(self%bsp, degree, grid,  &
+       call sll_s_bsplines_init(self%bsp, degree, grid,  &
             num_pts, bc_type)
     end if
 
@@ -264,10 +264,10 @@ contains
     ! evaluate bsplines at interpolation points
     if (modulo(self%deg,2) == 0) then
        ! for even degree interpolation points are cell midpoints
-       call sll_s_uniform_b_splines_at_x(self%deg, 0.5_f64, values)
+       call sll_s_uniform_bsplines_eval_basis(self%deg, 0.5_f64, values)
     else
        ! for odd degree interpolation points are grid points
-       call sll_s_uniform_b_splines_at_x(self%deg, 0.0_f64, values)
+       call sll_s_uniform_bsplines_eval_basis(self%deg, 0.0_f64, values)
     end if
     sizeq = self%deg/2
     ! assemble matrix q for linear system
@@ -315,7 +315,7 @@ contains
     x =  self%bsp%xmin
     icell = 1
     ii = 1   ! first Greville point
-    call sll_s_splines_at_x(self%bsp, icell, x, values)
+    call sll_s_bsplines_eval_basis(self%bsp, icell, x, values)
     ! iterate only to k+1 as last bspline is 0
     do j=1,k+1
        jj = icell+j-1
@@ -325,7 +325,7 @@ contains
     do ii=2,self%n - 1
        x = self%tau(ii)
        icell = sll_f_find_cell(self%bsp, x )
-       call sll_s_splines_at_x(self%bsp, icell, x, values)
+       call sll_s_bsplines_eval_basis(self%bsp, icell, x, values)
        do j=1,k+2
           jj = icell+j-1
           self%q(ii-jj+k+1,jj) = values(j)
@@ -335,7 +335,7 @@ contains
     x =  self%bsp%xmax
     icell = self%n - self%deg
     ii = self%n  ! last Greville point
-    call sll_s_splines_at_x(self%bsp, icell, x, values)
+    call sll_s_bsplines_eval_basis(self%bsp, icell, x, values)
     ! iterate only to k as first bspline is 0
     do j=2,k+2
        jj = icell+j-1
@@ -394,7 +394,7 @@ contains
     ii=0
     x = self%bsp%xmin
     icell = 1
-    call sll_s_splines_and_n_derivs_at_x( self%bsp, icell, x , nbc , self%bsdx )
+    call sll_s_bsplines_eval_basis_and_n_derivs( self%bsp, icell, x , nbc , self%bsdx )
     do i=1, nbc
        ! iterate only to k+1 as last bspline is 0
        ii=ii+1
@@ -408,7 +408,7 @@ contains
        ii = ii + 1
        x = self%tau(i)
        icell = sll_f_find_cell( self%bsp, x )
-       call sll_s_splines_at_x( self%bsp, icell, x, values )
+       call sll_s_bsplines_eval_basis( self%bsp, icell, x, values )
        do j=1,k+2
           jj = icell+j-1
           self%q(ii-jj+2*k+1,jj) = values(j)
@@ -417,7 +417,7 @@ contains
     ! boundary conditions at xmax
     x = self%bsp%xmax
     icell = self%n - self%deg
-    call sll_s_splines_and_n_derivs_at_x( self%bsp, icell, x , nbc , self%bsdx )
+    call sll_s_bsplines_eval_basis_and_n_derivs( self%bsp, icell, x , nbc , self%bsdx )
     do i= 1, nbc
        ii = ii + 1
        do j=2,k+2
@@ -506,7 +506,7 @@ contains
     sll_real64 :: values(self%deg+1)
 
     icell = sll_f_find_cell( self%bsp, x )
-    call sll_s_splines_at_x( self%bsp, icell, x, values )
+    call sll_s_bsplines_eval_basis( self%bsp, icell, x, values )
     y = 0.0_f64
     do j = 1, self%deg+1
        ib = mod( icell+j-2-self%offset+self%n, self%n ) + 1
@@ -533,7 +533,7 @@ contains
     sll_real64 :: values(self%deg+1)
 
     icell = sll_f_find_cell( self%bsp, x )
-    call sll_s_spline_derivatives_at_x( self%bsp, icell, x, values )
+    call sll_s_bsplines_eval_deriv( self%bsp, icell, x, values )
     y = 0.0_f64
     do j = 1, self%deg+1
       ib = mod( icell+j-2-self%offset+self%n, self%n ) + 1
@@ -597,7 +597,7 @@ contains
     deallocate( self%bsdx   )
 
     ! free attribute objects
-    call sll_s_arbitrary_degree_spline_1d_free( self%bsp )
+    call sll_s_bsplines_free( self%bsp )
     call schur_complement_free( self%schur )
 
   end subroutine sll_s_bspline_1d_free

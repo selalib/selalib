@@ -5,8 +5,8 @@ program test_splines_pp_3d
 #include "sll_working_precision.h"
 
 
-  use sll_m_arbitrary_degree_splines, only: &
-       sll_s_uniform_b_splines_at_x
+  use sll_m_bsplines, only: &
+       sll_s_uniform_bsplines_eval_basis
 
   use sll_m_arbitrary_degree_spline_interpolator_1d, only: &
        sll_t_arbitrary_degree_spline_interpolator_1d
@@ -93,9 +93,9 @@ contains
     res= sll_f_spline_pp_horner_3d(degree, pp_coeffs, xi, indices, n_cells)
     indices = indices - degree
     
-    call sll_s_uniform_b_splines_at_x(degree(1), xi(1), val1(:))
-    call sll_s_uniform_b_splines_at_x(degree(2), xi(2), val2(:))
-    call sll_s_uniform_b_splines_at_x(degree(3), xi(3), val3(:))
+    call sll_s_uniform_bsplines_eval_basis(degree(1), xi(1), val1(:))
+    call sll_s_uniform_bsplines_eval_basis(degree(2), xi(2), val2(:))
+    call sll_s_uniform_bsplines_eval_basis(degree(3), xi(3), val3(:))
 
         
     res2 = 0.0_f64
