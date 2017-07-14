@@ -19,7 +19,7 @@ program test_maxwell_1d_fem
 #include "sll_working_precision.h"
 #include "sll_maxwell_solvers_macros.h"
 
-  use sll_m_arbitrary_degree_splines, only: &
+  use sll_m_bsplines, only: &
     sll_s_eval_uniform_periodic_spline_curve
 
   use sll_m_constants, only: &
@@ -34,7 +34,7 @@ program test_maxwell_1d_fem
   implicit none
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
-  !  type(sll_t_arbitrary_degree_spline_1d), pointer :: aspl
+  !  type(sll_t_bsplines), pointer :: aspl
   !  sll_real64, dimension(:), allocatable :: knots
 
   sll_real64 :: eta1_max, eta1_min
