@@ -9,20 +9,14 @@ module sll_m_bspline_2d
 #include "sll_working_precision.h"
 
 use sll_m_boundary_condition_descriptors, only: &
-     sll_p_periodic, &
-     sll_p_hermite, &
-     sll_p_greville, &
-     sll_p_mirror
+  sll_p_periodic, &
+  sll_p_hermite, &
+  sll_p_greville
 
 use sll_m_bsplines, only: &
-     sll_t_bsplines, &
-     sll_s_bsplines_init, &
-     sll_s_bsplines_free, &
-     sll_f_find_cell, &
-     sll_s_bsplines_eval_basis, &
-     sll_s_bsplines_eval_deriv, &
-     sll_s_bsplines_eval_basis_and_n_derivs, &
-     sll_s_uniform_bsplines_eval_basis
+  sll_f_find_cell, &
+  sll_s_bsplines_eval_basis, &
+  sll_s_bsplines_eval_deriv
 
 use schur_complement, only: &
   schur_complement_solver, &
@@ -141,7 +135,7 @@ contains
 
     if (present(spline_bc_type1)) then
       call sll_s_bspline_1d_init( self%bs1, num_pts1, degree1, &
-           x1_min, x1_max, bc1_min, bc1_max, spline_bc_type1)
+           x1_min, x1_max, bc1_min, bc1_max, spline_bc_type1 )
     else
       call sll_s_bspline_1d_init( self%bs1, num_pts1, degree1, &
            x1_min, x1_max, bc1_min, bc1_max )
