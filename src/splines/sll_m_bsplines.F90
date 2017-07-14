@@ -30,13 +30,15 @@
 module sll_m_bsplines
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_assert.h"
-#include "sll_memory.h"
-#include "sll_working_precision.h"
+#include "sll_errors.h"
+
+  use sll_m_working_precision, only: &
+    f64
 
   use sll_m_boundary_condition_descriptors, only: &
-       sll_p_periodic, &
-       sll_p_open,     &
-       sll_p_mirror
+    sll_p_periodic, &
+    sll_p_open,     &
+    sll_p_mirror
 
   implicit none
 
@@ -63,15 +65,20 @@ module sll_m_bsplines
   private
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
+  !> Working precision
+  integer, parameter :: wp = f64
+
+  !> Information for evaluation of B-splines on non-uniform grid
   type :: sll_t_bsplines
-     sll_int32           :: num_pts
-     sll_int32           :: deg
-     sll_real64          :: xmin
-     sll_real64          :: xmax
-     sll_int32           :: n        ! dimension of spline space
-     sll_real64, pointer :: knots(:) ! knots array
+     integer               :: num_pts
+     integer               :: deg
+     real(wp)              :: xmin
+     real(wp)              :: xmax
+     integer               :: n        ! dimension of spline space
+     real(wp), allocatable :: knots(:) ! knots array
   end type sll_t_bsplines
 
+  !> Type can be initialized from a grid array or from a knot list
   interface sll_s_bsplines_init
     module procedure sll_s_bsplines_init_from_grid
     module procedure sll_s_bsplines_init_from_knots
@@ -81,6 +88,7 @@ module sll_m_bsplines
 contains
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
+  !-----------------------------------------------------------------------------
   !> @brief
   !> Build new sll_t_bsplines object 
   !> @details
@@ -92,21 +100,20 @@ contains
   !> @param[in] num_pts number of grid points
   !> @param[in] bc_type boundary condition for grid
   !> @param[in] spline_bc_type  boundary condition on knots
+  !-----------------------------------------------------------------------------
   subroutine sll_s_bsplines_init_from_grid( self, degree, grid, &
        num_pts, bc_type, spline_bc_type )
 
     type(sll_t_bsplines), intent(  out) :: self
-    sll_int32                             , intent(in   ) :: degree
-    sll_real64                            , intent(in   ) :: grid(:)
-    sll_int32                             , intent(in   ) :: num_pts
-    sll_int32                             , intent(in   ) :: bc_type
-    sll_int32                   , optional, intent(in   ) :: spline_bc_type 
+    integer             , intent(in   ) :: degree
+    real(wp)            , intent(in   ) :: grid(:)
+    integer             , intent(in   ) :: num_pts
+    integer             , intent(in   ) :: bc_type
+    integer   , optional, intent(in   ) :: spline_bc_type
 
-    ! local variables
-    sll_int32  :: i
-    sll_int32  :: ierr
-    sll_real64 :: period ! length of period
-    sll_real64 :: gridmin
+    integer  :: i
+    real(wp) :: period ! length of period
+    real(wp) :: gridmin
 
     if( size(grid) < num_pts ) then
        print *, 'ERROR. sll_s_bsplines_init_from_grid: ', &
@@ -145,7 +152,7 @@ contains
     ! spline. We aim at setting up the indexing in such a way that the 
     ! original indexing of 'grid' is preserved, i.e.: grid(i) = knot(i), at
     ! least whenever the scope of the indices defined here is active.
-    SLL_ALLOCATE(self%knots(1-degree:num_pts+degree),ierr)
+    allocate( self%knots (1-degree:num_pts+degree) )
     do i=1,num_pts
        self%knots(i) = grid(i)
     end do
@@ -237,6 +244,7 @@ contains
 
   end subroutine sll_s_bsplines_init_from_grid
 
+  !-----------------------------------------------------------------------------
   !> @brief
   !> Build new sll_t_bsplines object 
   !> @details
@@ -246,20 +254,19 @@ contains
   !> @param[in] degree spline degree
   !> @param[in] n dimension of spline space
   !> @param[in] knots array of give knots
+  !-----------------------------------------------------------------------------
   subroutine sll_s_bsplines_init_from_knots( self, degree, n, knots )
 
     type(sll_t_bsplines), intent(  out) :: self
-    sll_int32                             , intent(in   ) :: degree
-    sll_int32                             , intent(in   ) :: n
-    sll_real64                            , intent(in   ) :: knots(:)
+    integer             , intent(in   ) :: degree
+    integer             , intent(in   ) :: n
+    real(wp)            , intent(in   ) :: knots(:)
   
-    ! local variables
-    sll_int32  :: i
-    sll_int32  :: ierr
-    sll_real64 :: knotmin
+    integer  :: i
+    real(wp) :: knotmin
     
     ! Error checking
-    SLL_ASSERT(size(knots)==n+2*degree)
+    SLL_ASSERT( size(knots) == n+2*degree )
     if( degree < 1 ) then
        print *, 'ERROR. sll_s_bsplines_init_from_knots: ', &
             'only strictly positive integer values for degree are allowed, ', &
@@ -270,7 +277,7 @@ contains
     do i=2, n+2*degree
        knotmin = min(knotmin, knots(i)-knots(i-1)) 
     end do
-    if (knotmin < 0.0_f64) then
+    if (knotmin < 0.0_wp) then
        print*, 'ERROR. sll_s_bsplines_init_from_knots: ', &
             ' we require that knots  are in non decreasing.'
     end if
@@ -285,25 +292,28 @@ contains
     ! We aim at setting up the indexing in such a way that the 
     ! the computation grid is [knot(1),knots(num_pts)],  at
     ! least whenever the scope of the indices defined here is active.
-    SLL_ALLOCATE(self%knots(1-degree:n+1),ierr)
+    allocate( self%knots (1-degree:n+1) )
     self%knots(1-degree:n+1) = knots
     
   end subroutine sll_s_bsplines_init_from_knots
   
+  !-----------------------------------------------------------------------------
   !>@brief find cell returns the index i of the grid cell such that:
   !> self%knots(i) <= x <= self%knots(i+1).
   !>
   !>@detail
   !> If x is not between self%knots(1) and 
   !> self%knots(self%num_pts),  then the value -1 is returned.
+  !-----------------------------------------------------------------------------
   pure function sll_f_find_cell( self, x )
-    type(sll_t_bsplines), intent(in) :: self
-    sll_real64                            , intent(in) :: x
-    sll_int32 :: sll_f_find_cell
 
-    sll_int32 :: low
-    sll_int32 :: high
-    sll_int32 :: n
+    type(sll_t_bsplines), intent(in) :: self
+    real(wp)            , intent(in) :: x
+    integer :: sll_f_find_cell
+
+    integer :: low
+    integer :: high
+    integer :: n
 
     n = self%num_pts
 
@@ -319,14 +329,13 @@ contains
     ! check is point is exactly on right boundary
     if (x == self%knots(n)) then
        sll_f_find_cell = n-1
-       !print*, 'sll_f_find_cell=', sll_f_find_cell
        return
     end if
 
     low  = 1
     high = n
     sll_f_find_cell = (low + high) / 2
-    do while (x < self%knots(sll_f_find_cell) &
+    do while (x <  self%knots(sll_f_find_cell) &
          .or. x >= self%knots(sll_f_find_cell+1))
        if (x < self%knots(sll_f_find_cell)) then
           high = sll_f_find_cell
@@ -335,8 +344,10 @@ contains
        end if
        sll_f_find_cell = (low + high) / 2
     end do
+
   end function sll_f_find_cell
 
+  !-----------------------------------------------------------------------------
   ! sll_f_splines_at_x returns the values of all the B-splines of a given 
   ! degree that have support in cell 'cell' and evaluated at the point 'x'. 
   ! In other words, if B[j,i](x) is the spline of degree 'j' whose leftmost 
@@ -364,42 +375,35 @@ contains
   !> Cox - de Boor algorithm, which is a generalisation to splines of the
   !> de Casteljau algorithm for Bezier curves.
   !> @return b_spline_at_x B-spline values
+  !-----------------------------------------------------------------------------
   SLL_PURE subroutine sll_s_bsplines_eval_basis( self, icell, x, splines_at_x )
 
     type(sll_t_bsplines), intent(in   ) :: self
-    sll_int32                             , intent(in   ) :: icell
-    sll_real64                            , intent(in   ) :: x
-    sll_real64                            , intent(  out) :: splines_at_x(0:self%deg)
+    integer             , intent(in   ) :: icell
+    real(wp)            , intent(in   ) :: x
+    real(wp)            , intent(  out) :: splines_at_x(0:self%deg)
 
-    ! local variables
-    sll_real64 :: saved
-    sll_real64 :: temp
-    sll_int32  :: j
-    sll_int32  :: r
-    sll_real64 :: left (1:self%deg) ! GFortran: to allocate on stack use -fstack-arrays
-    sll_real64 :: right(1:self%deg)
+    real(wp) :: saved
+    real(wp) :: temp
+    integer  :: j
+    integer  :: r
+
+    ! GFortran: to allocate on stack use -fstack-arrays
+    real(wp) :: left (1:self%deg)
+    real(wp) :: right(1:self%deg)
 
     ! Run some checks on the arguments.
-    SLL_ASSERT(x > self%xmin - 1.0d-14)
-    SLL_ASSERT(x < self%xmax + 1.0d-14)
-    SLL_ASSERT(icell >= 1)
-    SLL_ASSERT(icell <= self%num_pts - 1)
-    ! This is checked always. If it appear to penalise too much the performances
-    ! one could consider replacing this by ASSERT
-!    if( .not. ((x >= self%knots(icell)) &
-!         .and.(x <= self%knots(icell+1)))) then
-!       print *, 'ERROR. sll_f_splines_at_x(): the given value of x is not ', &
-!            'inside the specified cell.'
-!       STOP
-!    end if
-    ! Indeed, only check in DEBUG mode [YG, 10.07.2017]
+    SLL_ASSERT( x > self%xmin - 1.0d-14 )
+    SLL_ASSERT( x < self%xmax + 1.0d-14 )
+    SLL_ASSERT( icell >= 1 )
+    SLL_ASSERT( icell <= self%num_pts - 1 )
     SLL_ASSERT( self%knots(icell) <= x .and. x <= self%knots(icell+1) )
 
-    splines_at_x(0) = 1.0_f64
+    splines_at_x(0) = 1.0_wp
     do j = 1, self%deg
        left (j) = x - self%knots(icell+1-j)
        right(j) = self%knots(icell+j) - x
-       saved    = 0.0_f64
+       saved    = 0.0_wp
        do r = 0, j-1
           temp = splines_at_x(r) / (right(r+1) + left(j-r))
           splines_at_x(r) = saved + right(r+1) * temp
@@ -410,7 +414,7 @@ contains
 
   end subroutine sll_s_bsplines_eval_basis
 
-
+  !-----------------------------------------------------------------------------
   !> @brief
   !> returns first derivative values at x of all b-splines with support in cell
   !> @details
@@ -424,51 +428,46 @@ contains
   !> \f]
   !> where 'deg' is the degree of the spline.
   !> @param[out] bsdx  B-spline derivatives
+  !-----------------------------------------------------------------------------
   SLL_PURE subroutine sll_s_bsplines_eval_deriv( self, icell, x, bsdx )
 
     type(sll_t_bsplines), intent(in   ) :: self
-    sll_int32                             , intent(in   ) :: icell
-    sll_real64                            , intent(in   ) :: x
-    sll_real64                            , intent(  out) :: bsdx(0:self%deg)
+    integer                             , intent(in   ) :: icell
+    real(wp)                            , intent(in   ) :: x
+    real(wp)                            , intent(  out) :: bsdx(0:self%deg)
 
-    sll_int32  :: deg
-    sll_int32  :: num_pts
-    sll_int32  :: r
-    sll_int32  :: j
-    sll_real64 :: saved
-    sll_real64 :: temp
-    sll_real64 :: rdeg
-    sll_real64 :: left (1:self%deg) ! GFortran: to allocate on stack use -fstack-arrays
-    sll_real64 :: right(1:self%deg)
+    integer  :: deg
+    integer  :: num_pts
+    integer  :: r
+    integer  :: j
+    real(wp) :: saved
+    real(wp) :: temp
+    real(wp) :: rdeg
+
+    ! GFortran: to allocate on stack use -fstack-arrays
+    real(wp) :: left (1:self%deg)
+    real(wp) :: right(1:self%deg)
 
     ! Run some checks on the arguments.
-    SLL_ASSERT(associated(self%knots))
-    SLL_ASSERT(x > self%xmin - 1.0d-14)
-    SLL_ASSERT(x < self%xmax + 1.0d-14)
-    SLL_ASSERT(icell >= 1)
-    SLL_ASSERT(icell <= self%num_pts - 1)
-!    ! This is checked always.
-!    if( .not. (x >= self%knots(icell)) &
-!         .and. (x <= self%knots(icell+1))) then
-!       print *, 'ERROR. sll_f_splines_at_x(): the given value of x is not ', &
-!            'inside the specified cell.'
-!       STOP
-!    end if
-    ! Only check in DEBUG mode [YG, 10.07.2017]
+    SLL_ASSERT( allocated( self%knots ) )
+    SLL_ASSERT( x > self%xmin - 1.0d-14 )
+    SLL_ASSERT( x < self%xmax + 1.0d-14 )
+    SLL_ASSERT( icell >= 1 )
+    SLL_ASSERT( icell <= self%num_pts - 1 )
     SLL_ASSERT( self%knots(icell) <= x .and. x <= self%knots(icell+1) )
 
     deg     = self%deg
-    rdeg    = real(deg,f64)
+    rdeg    = real(deg,wp)
     num_pts = self%num_pts
 
     ! compute nonzero basis functions and knot differences
     ! for splines up to degree deg-1 which are needed to compute derivative
     ! First part of Algorithm  A3.2 of NURBS book 
-    bsdx(0) = 1.0_f64
-    do j = 1, deg - 1
+    bsdx(0) = 1.0_wp
+    do j = 1, deg-1
        left (j) = x - self%knots(icell+1-j)
        right(j) = self%knots(icell+j) - x
-       saved    = 0.0_f64
+       saved    = 0.0_wp
        do r = 0, j-1
           ! compute and save bspline values
           temp    = bsdx(r)/(right(r+1) + left(j-r))
@@ -477,6 +476,7 @@ contains
        end do
        bsdx(j) = saved
     end do
+
     ! Compute derivatives at x using values stored in bsdx and formula
     ! formula for spline derivative based on difference of splines of 
     ! degree deg-1
@@ -494,59 +494,52 @@ contains
 
   end subroutine sll_s_bsplines_eval_deriv
 
-
-
+  !-----------------------------------------------------------------------------
   !> @brief 
   !> returns splines and first derivatives
   !> @details
   !> See sll_s_bsplines_eval_deriv and  sll_f_splines_at_x
   !> @return b_spline_and_derivs_at_x B-spline values and derivatives
+  !-----------------------------------------------------------------------------
   SLL_PURE subroutine sll_s_bsplines_eval_basis_and_deriv( self, icell, x, bsdx )
 
     type(sll_t_bsplines), intent(in   ) :: self
-    sll_int32                             , intent(in   ) :: icell
-    sll_real64                            , intent(in   ) :: x
-    sll_real64                            , intent(  out) :: bsdx(2,0:self%deg)
+    integer             , intent(in   ) :: icell
+    real(wp)            , intent(in   ) :: x
+    real(wp)            , intent(  out) :: bsdx(2,0:self%deg)
 
-    ! local variables
-    sll_int32  :: deg
-    sll_int32  :: num_pts
-    sll_int32  :: r
-    sll_int32  :: j
-    sll_real64 :: saved
-    sll_real64 :: temp
-    sll_real64 :: rdeg
-    sll_real64 :: left (1:self%deg) ! GFortran: to allocate on stack use -fstack-arrays
-    sll_real64 :: right(1:self%deg)
+    integer  :: deg
+    integer  :: num_pts
+    integer  :: r
+    integer  :: j
+    real(wp) :: saved
+    real(wp) :: temp
+    real(wp) :: rdeg
+
+    ! GFortran: to allocate on stack use -fstack-arrays
+    real(wp) :: left (1:self%deg)
+    real(wp) :: right(1:self%deg)
 
     ! Run some checks on the arguments.
-    SLL_ASSERT(associated(self%knots))
-    SLL_ASSERT(x > self%xmin - 1.0d-14)
-    SLL_ASSERT(x < self%xmax + 1.0d-14)
-    SLL_ASSERT(icell >= 1)
-    SLL_ASSERT(icell <= self%num_pts - 1)
-!    ! This is checked always.
-!    if( .not. (x >= self%knots(icell)) &
-!         .and. (x <= self%knots(icell+1))) then
-!       print *, 'ERROR. sll_f_splines_at_x(): the given value of x is not ', &
-!            'inside the specified cell.'
-!       STOP
-!    end if
-    ! Only check in DEBUG mode [YG, 10.07.2017]
+    SLL_ASSERT( allocated( self%knots ) )
+    SLL_ASSERT( x > self%xmin - 1.0d-14 )
+    SLL_ASSERT( x < self%xmax + 1.0d-14 ) 
+    SLL_ASSERT( icell >= 1 )
+    SLL_ASSERT( icell <= self%num_pts - 1 )
     SLL_ASSERT( self%knots(icell) <= x .and. x <= self%knots(icell+1) )
 
     deg = self%deg
     num_pts = self%num_pts
-    rdeg = real(deg,f64) 
+    rdeg = real(deg,wp) 
 
     ! compute nonzero basis functions and knot differences
     ! for splines up to degree deg-1 which are needed to compute derivative
     ! First part of Algorithm  A2.3 of NURBS book 
-    bsdx(1,0) = 1.0_f64
-    do j = 1, deg - 1
+    bsdx(1,0) = 1.0_wp
+    do j = 1, deg-1
        left (j) = x - self%knots(icell+1-j)
        right(j) = self%knots(icell+j) - x
-       saved = 0.0_f64
+       saved = 0.0_wp
        do r = 0, j-1
           ! compute and save knot differences
           temp = bsdx(1,r)/(right(r+1) + left(j-r))
@@ -577,7 +570,7 @@ contains
     j = deg
     left(j)  = x - self%knots(icell+1-j)
     right(j) = self%knots(icell+j) - x
-    saved    = 0.0_f64
+    saved    = 0.0_wp
     do r = 0, j-1
        ! compute and save knot differences
        temp = bsdx(1,r)/(right(r+1) + left(j-r))
@@ -588,6 +581,7 @@ contains
 
   end subroutine sll_s_bsplines_eval_basis_and_deriv
 
+  !-----------------------------------------------------------------------------
   !> @brief 
   !> returns splines and first derivatives
   !> @details
@@ -597,66 +591,58 @@ contains
   !> @param[in] x value of point where bsplines are to be computed
   !> @param[in] n number of derivatives to be computed
   !> @param[out] bsdx B-spline values and the first n derivatives
+  !-----------------------------------------------------------------------------
   SLL_PURE subroutine sll_s_bsplines_eval_basis_and_n_derivs( self, icell, x , n, bsdx )
 
     type(sll_t_bsplines), intent(in   ) :: self
-    sll_int32                             , intent(in   ) :: icell
-    sll_real64                            , intent(in   ) :: x
-    sll_int32                             , intent(in   ) :: n
-    sll_real64                            , intent(  out) :: bsdx(0:n,0:self%deg)
+    integer             , intent(in   ) :: icell
+    real(wp)            , intent(in   ) :: x
+    integer             , intent(in   ) :: n
+    real(wp)            , intent(  out) :: bsdx(0:n,0:self%deg)
 
-    ! local variables
-    sll_int32         :: deg
-    sll_int32         :: num_pts
-    sll_int32         :: r
-    sll_int32         :: k
-    sll_int32         :: j
-    sll_int32         :: j1
-    sll_int32         :: j2
-    sll_int32         :: s1
-    sll_int32         :: s2
-    sll_int32         :: rk
-    sll_int32         :: pk
-    sll_real64        :: saved
-    sll_real64        :: temp
-    sll_real64        :: rdeg
-    sll_real64        :: d
+    integer  :: deg
+    integer  :: num_pts
+    integer  :: r
+    integer  :: k
+    integer  :: j
+    integer  :: j1
+    integer  :: j2
+    integer  :: s1
+    integer  :: s2
+    integer  :: rk
+    integer  :: pk
+    real(wp) :: saved
+    real(wp) :: temp
+    real(wp) :: rdeg
+    real(wp) :: d
 
     ! GFortran: to allocate on stack use -fstack-arrays
-    sll_real64 :: left (1:self%deg)
-    sll_real64 :: right(1:self%deg)
-    sll_real64 :: ndu  (0:self%deg,0:self%deg)
-    sll_real64 :: a    (0:1       ,0:self%deg)
+    real(wp) :: left (1:self%deg)
+    real(wp) :: right(1:self%deg)
+    real(wp) :: ndu  (0:self%deg,0:self%deg)
+    real(wp) :: a    (0:1       ,0:self%deg)
 
     ! Run some checks on the arguments.
-    SLL_ASSERT(associated(self%knots))
-    SLL_ASSERT(x > self%xmin - 1.0d-14)
-    SLL_ASSERT(x < self%xmax + 1.0d-14)
-    SLL_ASSERT(icell >= 1)
-    SLL_ASSERT(icell <= self%num_pts - 1)
-    SLL_ASSERT(n <= self%deg/2)
-!    ! This is checked always.
-!    if( .not. (x >= self%knots(icell)) &
-!         .and. (x <= self%knots(icell+1))) then
-!       print *, 'ERROR. sll_f_splines_at_x(): the given value of x is not ', &
-!            'inside the specified cell.'
-!       STOP
-!    end if
-    ! Only check in DEBUG mode [YG, 10.07.2017]
+    SLL_ASSERT( allocated( self%knots ) )
+    SLL_ASSERT( x > self%xmin - 1.0d-14 )
+    SLL_ASSERT( x < self%xmax + 1.0d-14 )
+    SLL_ASSERT( icell >= 1 )
+    SLL_ASSERT( icell <= self%num_pts - 1 )
+    SLL_ASSERT( n <= self%deg/2 )
     SLL_ASSERT( self%knots(icell) <= x .and. x <= self%knots(icell+1) )
 
     deg     = self%deg
     num_pts = self%num_pts
-    rdeg    = real(deg,f64) 
+    rdeg    = real(deg,wp) 
 
     ! compute nonzero basis functions and knot differences
     ! for splines up to degree deg-1 which are needed to compute derivative
     ! Algorithm  A2.3 of NURBS book 
-    ndu(0,0) = 1.0_f64
+    ndu(0,0) = 1.0_wp
     do j = 1, deg 
        left(j)  = x - self%knots(icell+1-j)
        right(j) = self%knots(icell+j) - x
-       saved    = 0.0_f64
+       saved    = 0.0_wp
        do r = 0, j-1
           ! compute and save knot differences
           ndu(j,r) = right(r+1) + left(j-r)
@@ -671,9 +657,9 @@ contains
     do r = 0, deg
        s1 = 0
        s2 = 1
-       a(0,0) = 1.0_f64
+       a(0,0) = 1.0_wp
        do k = 1, n
-          d  = 0.0_f64
+          d  = 0.0_wp
           rk = r-k
           pk = deg-k
           if (r >= k) then
@@ -711,15 +697,16 @@ contains
     end do
 
   end subroutine sll_s_bsplines_eval_basis_and_n_derivs
-  
-  
+
+  !-----------------------------------------------------------------------------
   !> @brief Alternative direct implentation of recursion formula. 
   !>
   !> @detail
   !> This provides an evaluation of B-splines directly based on the recurrence
   !> formula. It is 10% faster than the classical Cox - de Boor formula 
   !> that is implented in sll_f_splines_at_x, but can have numerical stability issues.
-  !>For this reason the Cox - de Boor formula should be the default implementation 
+  !> For this reason the Cox - de Boor formula should be the default implementation 
+  !-----------------------------------------------------------------------------
   SLL_PURE subroutine sll_s_bsplines_eval_basis_mm( &
        knots, &
        cell, &
@@ -727,22 +714,22 @@ contains
        degree, &
        out )
 
-    sll_int32 , intent(in   ) :: degree
-    sll_real64, intent(in   ) :: knots(1-degree:)
-    sll_int32 , intent(in   ) :: cell
-    sll_real64, intent(in   ) :: x
-    sll_real64, intent(  out) :: out(:)
+    integer , intent(in   ) :: degree
+    real(wp), intent(in   ) :: knots(1-degree:)
+    integer , intent(in   ) :: cell
+    real(wp), intent(in   ) :: x
+    real(wp), intent(  out) :: out(:)
 
-    sll_real64 :: tmp1
-    sll_real64 :: tmp2
-    sll_int32 :: ell
-    sll_int32 :: k
+    real(wp) :: tmp1
+    real(wp) :: tmp2
+    integer  :: ell
+    integer  :: k
 
-    out(1) = 1._f64
-    do ell=1,degree
+    out(1) = 1._wp
+    do ell = 1, degree
        tmp1 = (x-knots(cell+1-ell))/(knots(cell+1)-knots(cell+1-ell))*out(1)
        out(1) = out(1) -tmp1
-       do k=2,ell
+       do k = 2, ell
           tmp2 = (x-knots(cell+k-ell))/(knots(cell+k)-knots(cell+k-ell))*out(k)
           out(k) = out(k)+tmp1-tmp2
           tmp1 = tmp2
@@ -752,7 +739,7 @@ contains
 
   end subroutine sll_s_bsplines_eval_basis_mm
 
-
+  !-----------------------------------------------------------------------------
   !> @brief Alternative direct implentation of recursion formula. 
   !>
   !> @detail
@@ -760,6 +747,7 @@ contains
   !> formula. It is about 80% faster than the classical Cox - de Boor formula 
   !> that is implented in sll_f_splines_at_x, but can have numerical stability issues.
   !> For this reason the Cox - de Boor formula should be the default implementation
+  !-----------------------------------------------------------------------------
   SLL_PURE subroutine sll_s_bsplines_eval_basis_and_deriv_mm( &
        knots, &
        cell, &
@@ -767,22 +755,22 @@ contains
        degree, &
        out )
 
-    sll_int32 , intent(in   ) :: degree
-    sll_real64, intent(in   ) :: knots(1-degree:)
-    sll_int32 , intent(in   ) :: cell
-    sll_real64, intent(in   ) :: x
-    sll_real64, intent(  out) :: out(:,:)
+    integer , intent(in   ) :: degree
+    real(wp), intent(in   ) :: knots(1-degree:)
+    integer , intent(in   ) :: cell
+    real(wp), intent(in   ) :: x
+    real(wp), intent(  out) :: out(:,:)
 
-    sll_real64 :: tmp1
-    sll_real64 :: tmp2
-    sll_int32  :: ell
-    sll_int32  :: k
+    real(wp) :: tmp1
+    real(wp) :: tmp2
+    integer  :: ell
+    integer  :: k
 
-    out(1,1) = 1._f64
-    do ell=1,degree
+    out(1,1) = 1._wp
+    do ell = 1, degree
        tmp1 = (x-knots(cell+1-ell))/(knots(cell+1)-knots(cell+1-ell))*out(1,1)
        out(1,1) = out(1,1) -tmp1
-       do k=2,ell
+       do k = 2, ell
           tmp2 = (x-knots(cell+k-ell))/(knots(cell+k)-knots(cell+k-ell))*out(1,k)
           out(1,k) = out(1,k)+tmp1-tmp2
           tmp1 = tmp2
@@ -790,11 +778,11 @@ contains
        out(2,ell+1) = tmp1
        if(ell==degree-1)then
           !compute the derivatives
-          tmp1 = real(degree,f64)/(knots(cell+1)-knots(cell+1-degree))*out(1,1)
+          tmp1 = real(degree,wp)/(knots(cell+1)-knots(cell+1-degree))*out(1,1)
           out(2,1) = -tmp1
-          do k=2,degree
+          do k = 2, degree
              out(2,k) = tmp1
-             tmp1 = real(degree,f64)/(knots(cell+k)-knots(cell+k-degree))*out(2,k)
+             tmp1 = real(degree,wp)/(knots(cell+k)-knots(cell+k-degree))*out(2,k)
              out(2,k) = out(2,k)-tmp1
           enddo
           out(2,degree+1) = tmp1
@@ -803,17 +791,17 @@ contains
 
   end subroutine sll_s_bsplines_eval_basis_and_deriv_mm
 
-
+  !-----------------------------------------------------------------------------
   subroutine sll_s_bsplines_free( spline )
+
     type(sll_t_bsplines), intent(inout) :: spline
 
-    sll_int32                    :: ierr
-    if( .not. associated(spline%knots) ) then
-       print *, 'ERROR. delete_arbitrary_order_spline_1d(): given spline ', &
-            'pointer is not associated.'
-       STOP
+    character(len=*), parameter :: this_sub_name = "sll_s_bsplines_free()"
+
+    if( .not. allocated(spline%knots) ) then
+       SLL_ERROR( this_sub_name, 'knots array is not allocated.' )
     end if
-    SLL_DEALLOCATE( spline%knots, ierr )
+    deallocate( spline%knots )
 
   end subroutine sll_s_bsplines_free
 
@@ -823,6 +811,7 @@ contains
   !
   ! *************************************************************************
 
+  !-----------------------------------------------------------------------------
   !> @brief Evaluate all non vanishing uniform B-Splines in unit cell. 
   !>
   !> @detail Returns an array with the values of the b-splines of the 
@@ -840,36 +829,36 @@ contains
   !> We also have the property (from the symmetry of the B-spline)
   !> out(1:d+1)= B_d(-(d+1)/2+xx),...,B_d(-(d+1)/2+d+xx),..., 
   !> where xx=1-normalized_offset
+  !-----------------------------------------------------------------------------
   SLL_PURE subroutine sll_s_uniform_bsplines_eval_basis( &
     spline_degree,     &
     normalized_offset, &
     bspl               )
 
-    sll_int32 , intent(in   ) :: spline_degree
-    sll_real64, intent(in   ) :: normalized_offset
-    sll_real64, intent(  out) :: bspl(0:spline_degree)
+    integer , intent(in   ) :: spline_degree
+    real(wp), intent(in   ) :: normalized_offset
+    real(wp), intent(  out) :: bspl(0:spline_degree)
 
-    ! local variables
-    sll_real64 :: inv_j
-    sll_real64 :: x, xx
-    sll_real64 :: j_real
-    sll_int32  :: j, r
-    sll_real64 :: temp
-    sll_real64 :: saved
+    real(wp) :: inv_j
+    real(wp) :: x, xx
+    real(wp) :: j_real
+    integer  :: j, r
+    real(wp) :: temp
+    real(wp) :: saved
 
     SLL_ASSERT( spline_degree >= 0 )
-    SLL_ASSERT( normalized_offset >= 0.0_f64 )
-    SLL_ASSERT( normalized_offset <= 1.0_f64 )
+    SLL_ASSERT( normalized_offset >= 0.0_wp )
+    SLL_ASSERT( normalized_offset <= 1.0_wp )
 
     x = normalized_offset
-    bspl(0) = 1.0_f64
+    bspl(0) = 1.0_wp
     do j = 1, spline_degree
-       saved = 0.0_f64
-       j_real = real(j,f64)
-       inv_j = 1.0_f64 / j_real
+       saved = 0.0_wp
+       j_real = real(j,wp)
+       inv_j = 1.0_wp / j_real
        xx = - x
        do r = 0, j-1
-          xx = xx + 1.0_f64
+          xx = xx + 1.0_wp
           temp = bspl(r) * inv_j
           bspl(r) = saved + xx * temp
           saved = (j_real - xx) * temp
@@ -879,6 +868,7 @@ contains
 
   end subroutine sll_s_uniform_bsplines_eval_basis
 
+  !-----------------------------------------------------------------------------
   !> @brief Evaluate all derivatives of non vanishing uniform B-Splines 
   !> in unit cell. 
   !>
@@ -887,39 +877,39 @@ contains
   !> requested degree, evaluated at a given cell offset. The cell size is
   !> normalized between 0 and 1, hence the results must be divided by the
   !> real cell size to scale back the results.
+  !-----------------------------------------------------------------------------
   SLL_PURE subroutine sll_s_uniform_bsplines_eval_deriv( &
     spline_degree,     &
     normalized_offset, & 
     bspl               )
 
-    sll_int32 , intent(in   ) :: spline_degree
-    sll_real64, intent(in   ) :: normalized_offset
-    sll_real64, intent(  out) :: bspl(0:spline_degree)
+    integer , intent(in   ) :: spline_degree
+    real(wp), intent(in   ) :: normalized_offset
+    real(wp), intent(  out) :: bspl(0:spline_degree)
 
-    ! local variables   
-    sll_real64 :: inv_j
-    sll_real64 :: x, xx
-    sll_real64 :: j_real
-    sll_int32  :: j, r
-    sll_real64 :: temp
-    sll_real64 :: saved
-    sll_real64 :: bj, bjm1 
+    real(wp) :: inv_j
+    real(wp) :: x, xx
+    real(wp) :: j_real
+    integer  :: j, r
+    real(wp) :: temp
+    real(wp) :: saved
+    real(wp) :: bj, bjm1 
 
     SLL_ASSERT( spline_degree >= 0 )
-    SLL_ASSERT( normalized_offset >= 0.0_f64 )
-    SLL_ASSERT( normalized_offset <= 1.0_f64 )
+    SLL_ASSERT( normalized_offset >= 0.0_wp )
+    SLL_ASSERT( normalized_offset <= 1.0_wp )
 
     x = normalized_offset
-    bspl(0) = 1.0_f64
+    bspl(0) = 1.0_wp
 
     ! only need splines of lower degree to compute derivatives
     do j = 1, spline_degree - 1
-       saved = 0.0_f64
-       j_real = real(j,f64)
-       inv_j = 1.0_f64 / j_real
+       saved = 0.0_wp
+       j_real = real(j,wp)
+       inv_j = 1.0_wp / j_real
        xx = - x
        do r = 0, j-1
-          xx = xx + 1.0_f64
+          xx = xx + 1.0_wp
           temp = bspl(r) * inv_j
           bspl(r) = saved + xx * temp
           saved = (j_real - xx) * temp
@@ -940,6 +930,7 @@ contains
 
   end subroutine sll_s_uniform_bsplines_eval_deriv
 
+  !-----------------------------------------------------------------------------
   !> @brief Evaluate all values and derivatives of non vanishing uniform B-Splines 
   !> in unit cell. 
   !>
@@ -948,36 +939,36 @@ contains
   !> requested degree, evaluated at a given cell offset. The cell size is
   !> normalized between 0 and 1, hence the results must be divided by the
   !> real cell size to scale back the results.
+  !-----------------------------------------------------------------------------
   SLL_PURE subroutine sll_s_uniform_bsplines_eval_basis_and_deriv( &
     degree,            &
     normalized_offset, &
     bspl               )
 
-    sll_int32 , intent(in   ) :: degree
-    sll_real64, intent(in   ) :: normalized_offset
-    sll_real64, intent(  out) :: bspl(2,0:degree)
+    integer , intent(in   ) :: degree
+    real(wp), intent(in   ) :: normalized_offset
+    real(wp), intent(  out) :: bspl(2,0:degree)
 
-    ! local variables
-    sll_real64 :: inv_j
-    sll_real64 :: xx
-    sll_real64 :: j_real
-    sll_int32  :: j, r
-    sll_real64 :: temp
-    sll_real64 :: saved
+    real(wp) :: inv_j
+    real(wp) :: xx
+    real(wp) :: j_real
+    integer  :: j, r
+    real(wp) :: temp
+    real(wp) :: saved
 
     SLL_ASSERT( degree >= 0 )
-    SLL_ASSERT( normalized_offset >= 0.0_f64 )
-    SLL_ASSERT( normalized_offset <= 1.0_f64 )
+    SLL_ASSERT( normalized_offset >= 0.0_wp )
+    SLL_ASSERT( normalized_offset <= 1.0_wp )
 
     ! compute splines up to degree spline_degree -1
-    bspl(1,0) = 1.0_f64
+    bspl(1,0) = 1.0_wp
     do j = 1, degree - 1
-       saved = 0.0_f64
-       j_real = real(j,f64)
-       inv_j = 1.0_f64 / j_real
+       saved = 0.0_wp
+       j_real = real(j,wp)
+       inv_j = 1.0_wp / j_real
        xx = - normalized_offset
        do r = 0, j-1
-          xx = xx + 1.0_f64
+          xx = xx + 1.0_wp
           temp = bspl(1,r) * inv_j
           bspl(1,r) = saved + xx * temp
           saved = (j_real - xx) * temp
@@ -994,12 +985,12 @@ contains
 
     ! continue the Cox-De Boor algorithm to evaluate splines
     j = degree
-    saved = 0.0_f64
-    j_real = real(j,f64)
-    inv_j = 1.0_f64 / j_real
+    saved = 0.0_wp
+    j_real = real(j,wp)
+    inv_j = 1.0_wp / j_real
     xx = - normalized_offset
     do r = 0, j-1
-       xx = xx + 1.0_f64
+       xx = xx + 1.0_wp
        temp = bspl(1,r) * inv_j
        bspl(1,r) = saved + xx * temp
        saved = (j_real - xx) * temp
@@ -1008,24 +999,26 @@ contains
 
   end subroutine sll_s_uniform_bsplines_eval_basis_and_deriv
 
+  !-----------------------------------------------------------------------------
   !> @brief
   !> Evaluate uniform periodic spline curve defined by coefficients scoef at 
   !> knots (which are the grid points) 
+  !-----------------------------------------------------------------------------
   SLL_PURE subroutine sll_s_eval_uniform_periodic_spline_curve( degree, scoef, sval )
 
-    sll_int32 , intent(in   ) :: degree
-    sll_real64, intent(in   ) :: scoef(:) 
-    sll_real64, intent(  out) :: sval (:) 
+    integer , intent(in   ) :: degree
+    real(wp), intent(in   ) :: scoef(:) 
+    real(wp), intent(  out) :: sval (:) 
     
-    sll_real64 :: bspl(degree+1)
-    sll_real64 :: val 
-    sll_int32  :: i, j, imj, n
+    real(wp) :: bspl(degree+1)
+    real(wp) :: val 
+    integer  :: i, j, imj, n
 
     ! get bspline values at knots
-    call sll_s_uniform_bsplines_eval_basis(degree, 0.0_f64, bspl)
+    call sll_s_uniform_bsplines_eval_basis(degree, 0.0_wp, bspl)
     n = size(scoef)
     do i= 1, n
-       val = 0.0_f64
+       val = 0.0_wp
        do j=1, degree
           imj = mod(i-1-j+n,n) + 1 
           val = val + bspl(j)*scoef(imj)
