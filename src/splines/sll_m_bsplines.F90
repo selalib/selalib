@@ -44,7 +44,8 @@ module sll_m_bsplines
 
   public :: &
     sll_t_bsplines, &
-    sll_s_bsplines_init, &
+    sll_s_bsplines_init_from_grid, &
+    sll_s_bsplines_init_from_knots, &
     sll_s_bsplines_free, &
     sll_s_bsplines_eval_basis, &
     sll_s_bsplines_eval_deriv, &
@@ -77,12 +78,6 @@ module sll_m_bsplines
      integer               :: n        ! dimension of spline space
      real(wp), allocatable :: knots(:) ! knots array
   end type sll_t_bsplines
-
-  !> Type can be initialized from a grid array or from a knot list
-  interface sll_s_bsplines_init
-    module procedure sll_s_bsplines_init_from_grid
-    module procedure sll_s_bsplines_init_from_knots
-  end interface sll_s_bsplines_init
 
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 contains
