@@ -10,8 +10,9 @@ module sll_m_bspline_1d
 
 use sll_m_boundary_condition_descriptors, only: &
      sll_p_periodic, &
-     sll_p_hermite, &
+     sll_p_hermite , &
      sll_p_greville, &
+     sll_p_open    , &
      sll_p_mirror
 
 use sll_m_bsplines, only: &
@@ -123,6 +124,8 @@ contains
     sll_int32  :: i, j
     sll_real64 :: delta
     sll_int32  :: bc_type
+    sll_int32  :: basis_bc_xmin
+    sll_int32  :: basis_bc_xmax
 
     ! Sanity checks
     SLL_ASSERT( num_pts >= 2 )
@@ -153,27 +156,39 @@ contains
        self%n = num_pts + degree - 1 ! dimension of non periodic spline space
        self%offset = 0
     end if
-    self%deg     = degree
-    self%length  = xmax - xmin
-    ! define grid for knots
+    self%deg    = degree
+    self%length = xmax - xmin
+
+    ! Define grid for knots
+    ! TODO: non-uniform grid should be passed as an argument
     delta = self%length / real(num_pts-1,f64)
-    do i=1,num_pts-1
+    do i = 1, num_pts-1
        grid(i) = xmin + real(i-1,f64) * delta
     end do
     grid(num_pts) = xmax
-    ! construct a sll_t_bsplines object
-    if (present(spline_bc_type)) then
-       call sll_s_bsplines_init_from_grid( self%bsp, degree, grid,  &
-            num_pts, bc_type, spline_bc_type )
-    else
-       call sll_s_bsplines_init_from_grid( self%bsp, degree, grid,  &
-            num_pts, bc_type)
-    end if
+
+    ! Determine boundary conditions for B-splines
+    select case (bc_xmin)
+    case (sll_p_periodic); basis_bc_xmin = sll_p_periodic
+    case (sll_p_greville); basis_bc_xmin = sll_p_open
+    case (sll_p_hermite ); basis_bc_xmin = sll_p_open ! sll_p_mirror also possible
+    end select
+
+    select case (bc_xmax)
+    case (sll_p_periodic); basis_bc_xmax = sll_p_periodic
+    case (sll_p_greville); basis_bc_xmax = sll_p_open
+    case (sll_p_hermite ); basis_bc_xmax = sll_p_open ! sll_p_mirror also possible
+    end select
+
+    ! Construct a sll_t_bsplines object
+    call sll_s_bsplines_init_from_grid( self%bsp, degree, grid,  &
+          basis_bc_xmin, basis_bc_xmax )
 
     allocate( self%bcoef(self%n) )
     allocate( self%bsdx (self%deg/2+1,self%deg+1) )
     allocate( self%ipiv (self%n) )
 
+    ! Determine interpolation points
     select case (bc_type)
     case (sll_p_periodic)
       ! Allocate tau which contains interpolation points

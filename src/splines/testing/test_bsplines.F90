@@ -7,9 +7,9 @@ program test_arbitrary_degree_splines
 #include "sll_working_precision.h"
 
   use sll_m_boundary_condition_descriptors, only: &
-    sll_p_hermite, &
-    sll_p_greville, &
-    sll_p_periodic
+    sll_p_periodic, &
+    sll_p_open    , &
+    sll_p_mirror ! not tested at the moment
 
   use sll_m_bsplines, only: &
     sll_t_bsplines, &
@@ -123,8 +123,8 @@ contains
     call sll_s_bsplines_init_from_grid( &
          spline, &
          degree, &
-         grid, &
-         num_pts, &
+         grid  , &
+         sll_p_periodic, &
          sll_p_periodic )
     ! --------- INITIALIZATION DONE ------------
 
@@ -262,9 +262,9 @@ contains
     call sll_s_bsplines_init_from_grid( &
          spline, &
          degree, &
-         grid, &
-         num_pts, &
-         sll_p_periodic)
+         grid  , &
+         sll_p_periodic, &
+         sll_p_periodic )
     ! --------- INITIALIZATION DONE ------------
     ! array of points where splines will be evaluated
     x_test = (/0._f64, 0.5_f64, 1.2_f64, 2.001_f64, 3._f64, 4.0_f64, 5.0_f64 /)
@@ -446,10 +446,10 @@ contains
        ! creating non uniform 1d spline on uniform grid for comparison
        call sll_s_bsplines_init_from_grid( &
             spline, &
-            j, &
-            grid, &
-            num_pts, &
-            sll_p_periodic)
+            j     , &
+            grid  , &
+            sll_p_periodic, &
+            sll_p_periodic )
 
        do i=1,num_tests
           ! draw random number between 0 and 1
@@ -527,7 +527,7 @@ contains
   ! different spline values, when added, will equal 1.0.
   subroutine test_nonuniform_arb_deg_splines_open( passed_test )
     logical, intent(inout) :: passed_test
-    sll_real64, dimension(:), allocatable :: knots
+    sll_real64, dimension(:), allocatable :: grid
     sll_int32  :: i,j
     sll_int32  :: num_pts
     sll_int32  :: degree
@@ -550,30 +550,30 @@ contains
     min_val = 0.0_f64
     num_pts = 10
     step    = 1.0_f64
-    SLL_ALLOCATE(knots(num_pts),ierr)
+    SLL_ALLOCATE(grid(num_pts),ierr)
     SLL_ALLOCATE(answer(degree+1),ierr)
     SLL_ALLOCATE(answer2(2,degree+1),ierr)
 
-    ! fill knots array. Try first a uniform set of knots to compare with the
+    ! fill grid array. Try first a uniform set of grid to compare with the
     ! uniform spline functions.
-    knots(1) = min_val
+    grid(1) = min_val
     do i=2,num_pts
        call random_number(rnd)
-       knots(i) = knots(i-1) + step + rnd
+       grid(i) = grid(i-1) + step + rnd
     end do
-    !print *, 'knots array = ', knots(:)
+    !print *, 'grid array = ', grid(:)
 
     ! fill spline object
     call sll_s_bsplines_init_from_grid( &
          spline, &
          degree, &
-         knots, &
-         num_pts, &
-         sll_p_hermite )
+         grid  , &
+         sll_p_open, &
+         sll_p_open )
 
     do j=1,num_tests
        call random_number(rnd)
-       x = min_val + rnd*(knots(num_pts)-min_val)
+       x = min_val + rnd*(grid(num_pts)-min_val)
        cell = sll_f_find_cell( spline, x )
        acc = 0.0_f64
 
@@ -678,9 +678,9 @@ contains
     call sll_s_bsplines_init_from_grid( &
          spline, &
          degree, &
-         grid, &
-         num_pts, &
-         sll_p_periodic)
+         grid  , &
+         sll_p_periodic, &
+         sll_p_periodic )
     ! --------- INITIALIZATION DONE ------------
 
     do j=1,num_tests
