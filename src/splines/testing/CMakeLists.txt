@@ -2,22 +2,21 @@
 SET(CMAKE_Fortran_MODULE_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}")
 
 #-------------------------------------------------------------------------------
-# New tests for 2D B-splines
+# New tests for 2D tensor-product spline
 #-------------------------------------------------------------------------------
 
-add_executable( test_bsplines_2d_new
-  test_bsplines_2d_new.F90
-  m_test_bsplines_2d.F90
+add_executable( test_spline_2d_non_uniform
+    test_spline_2d_non_uniform.F90
+  m_test_spline_2d_non_uniform.F90
   m_analytical_profiles_2d.F90
   m_analytical_profiles_2d_base.F90
   m_analytical_profiles_2d_cos_cos.F90
   m_analytical_profiles_2d_poly.F90
   )
-target_link_libraries( test_bsplines_2d_new sll_splines )
+target_link_libraries( test_spline_2d_non_uniform sll_splines )
 
-# WARNING: test name is not consistent with executable (missing 's') -> TODO
-add_test( NAME bspline_2d_new COMMAND test_bsplines_2d_new )
-set_tests_properties( bspline_2d_new PROPERTIES PASS_REGULAR_EXPRESSION "PASSED" )
+add_test( NAME spline_2d_non_uniform COMMAND test_spline_2d_non_uniform )
+set_tests_properties( spline_2d_non_uniform PROPERTIES PASS_REGULAR_EXPRESSION "PASSED" )
 
 #-------------------------------------------------------------------------------
 

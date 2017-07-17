@@ -30,7 +30,7 @@ module sll_m_bspline_interpolator_2d
   sll_p_hermite, &
   sll_p_periodic
 
-  use sll_m_bspline_2d, only: &
+  use sll_m_spline_2d_non_uniform, only: &
   sll_s_bspline_2d_compute_interpolant, &
   sll_f_bspline_2d_eval, &
   sll_t_bspline_2d, &
