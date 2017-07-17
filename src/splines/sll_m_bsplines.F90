@@ -69,6 +69,9 @@ module sll_m_bsplines
   !> Working precision
   integer, parameter :: wp = f64
 
+  !> List of allowed boundary conditions
+  integer, parameter :: allowed_bcs(*) = [sll_p_periodic, sll_p_open, sll_p_mirror]
+
   !> Information for evaluation of B-splines on non-uniform grid
   type :: sll_t_bsplines
      integer               :: num_pts
@@ -86,57 +89,134 @@ contains
   !-----------------------------------------------------------------------------
   !> @brief
   !> Build new sll_t_bsplines object 
-  !> @details
   !> based on a on a grid of strictly increasing points including the last point also
   !> for periodic domains.
-  !> @param[inout] self arbitrary_degree_spline_1d object
-  !> @param[in] degree spline_degree
-  !> @param[in] grid  grid points
+  !> @param[inout] basis arbitrary_degree_spline_1d object
+  !> @param[in] degree  spline_degree
+  !> @param[in] grid    x coordinates of grid points
   !> @param[in] num_pts number of grid points
-  !> @param[in] bc_type boundary condition for grid
-  !> @param[in] spline_bc_type  boundary condition on knots
+  !> @param[in] bc_xmin boundary condition at xmin [periodic/open/mirror]
+  !> @param[in] bc_xmax boundary condition at xmax [periodic/open/mirror]
+  !>
+  !> @details
+  !>
+  !> The logic behind the periodic boundary condition is the following.
+  !> The given grid array has minimum (grid(1)) and maximum (grid(n))
+  !> values at either end. This defines a length 'L'. If interpreted
+  !> as a periodic space, this is also the period. Thus, as we extend
+  !> the number of knots at both ends of the given array, we use the
+  !> periodicity condition to fill out the new values:
+  !>
+  !>                    .
+  !>                    .
+  !>                    .
+  !>           knots(-1) = knots(n-2) - L
+  !>           knots( 0) = knots(n-1) - L
+  !>                    .
+  !>                    .
+  !>                    .
+  !>           knots(n+1) = knots(1) + L
+  !>           knots(n+2) = knots(2) + L
+  !>                    .
+  !>                    .
+  !>                    .
+  !>
+  !> The 'open' boundary condition simply extends the new values
+  !> of the local array at both ends with repeated endpoint values.
+  !> That is
+  !>
+  !>     ... = knots(-2) = knots(-1) = knots(0) = knots(1)
+  !>
+  !> and
+  !>
+  !>    knots(n+1) = knots(n+2) = knots(n+3) = ... =  knots(n)
+  !>
+  !>
+  !> The mirror boundary condition mirrors the knot values on
+  !> each side of the grid
+  !> of the local array at both ends with repeated endpoint values.
+  !> That is
+  !>
+  !>     ... =  = knots(-1) = knots(0) = knots(1)
+  !>
+  !> and
+  !>
+  !>    knots(n+1) = knots(n+2) = knots(n+3) = ... =  knots(n)
   !-----------------------------------------------------------------------------
-  subroutine sll_s_bsplines_init_from_grid( self, degree, grid, &
-       num_pts, bc_type, spline_bc_type )
+  subroutine sll_s_bsplines_init_from_grid( &
+      basis  , &
+      degree , &
+      grid   , &
+      bc_xmin, &
+      bc_xmax )
 
-    type(sll_t_bsplines), intent(  out) :: self
+    type(sll_t_bsplines), intent(  out) :: basis
     integer             , intent(in   ) :: degree
     real(wp)            , intent(in   ) :: grid(:)
-    integer             , intent(in   ) :: num_pts
-    integer             , intent(in   ) :: bc_type
-    integer   , optional, intent(in   ) :: spline_bc_type
+    integer             , intent(in   ) :: bc_xmin
+    integer             , intent(in   ) :: bc_xmax
+
+    character(len=*), parameter :: this_sub_name = "sll_s_bsplines_init_from_grid"
+    character(len=256) :: err_msg
 
     integer  :: i
+    integer  :: num_pts
     real(wp) :: period ! length of period
-    real(wp) :: gridmin
+    real(wp) :: min_cell_width
 
-    if( size(grid) < num_pts ) then
-       print *, 'ERROR. sll_s_bsplines_init_from_grid: ', &
-            'size of given grid array is smaller than the stated ', &
-            'number of points.'
-       print *, 'size(grid) = ', size(grid), 'num_pts = ', num_pts
-       STOP
-    end if
+    ! Check that polynomial degree is at least 1
     if( degree < 1 ) then
-       print *, 'ERROR. sll_s_bsplines_init_from_grid: ', &
-            'only strictly positive integer values for degree are allowed, ', &
-            'given: ', degree
-    end if
-    ! Check whether grid points are in strictly increasing order
-    gridmin = grid(2)-grid(1)
-    do i=2, num_pts
-       gridmin = min(gridmin, grid(i)-grid(i-1)) 
-    end do
-    if (gridmin < 1.d-10) then
-       print*, 'ERROR. sll_s_bsplines_init_from_grid: ', &
-            ' we require that grid points are in strictly increasing', &
-            ' order and that each cell length is at least 1.e-10.'
+      write(err_msg,"('Minimum degree = 1, given ',i0,' instead.')") degree
+      SLL_ERROR( this_sub_name, trim( err_msg ) )
     end if
 
-    self%num_pts  = num_pts
-    self%deg      = degree
-    self%xmin     = grid(1)
-    self%xmax     = grid(num_pts)
+    ! Check that grid contains at least two points
+    num_pts = size( grid )
+    if( num_pts < 2 ) then
+      write(err_msg,"('Minimum size(grid) = 2, given ',i0,' instead.')") num_pts
+      SLL_ERROR( this_sub_name, trim( err_msg ) )
+    end if
+
+    ! Check whether grid points are in strictly increasing order
+    min_cell_width = grid(2)-grid(1)
+    do i = 3, num_pts
+      min_cell_width = min( min_cell_width, grid(i)-grid(i-1) )
+    end do
+    if (min_cell_width <= 0.0_wp) then
+      err_msg = "Grid points must be in strictly increasing order."
+      SLL_ERROR( this_sub_name, trim( err_msg ) )
+    else if (min_cell_width < 1.e-10_wp) then
+      err_msg = "Length of grid cells must be >= 1e-10."
+      SLL_ERROR( this_sub_name, trim( err_msg ) )
+    end if
+
+    ! Check that boundary conditions are OK
+    if (.not. any( bc_xmin == allowed_bcs )) then
+      err_msg = "Unrecognized boundary condition at xmin: " // &
+                "possible values are [sll_p_periodic, sll_p_open, sll_p_mirror]."
+      SLL_ERROR( this_sub_name, trim( err_msg ) )
+    end if
+    if (.not. any( bc_xmax == allowed_bcs )) then
+      err_msg = "Unrecognized boundary condition at xmax: " // &
+                "possible values are [sll_p_periodic, sll_p_open, sll_p_mirror]."
+      SLL_ERROR( this_sub_name, trim( err_msg ) )
+    end if
+    if (any( [bc_xmin,bc_xmax]== sll_p_periodic ) .and. bc_xmin /= bc_xmax) then
+      err_msg = "Periodic boundary conditions mismatch: bc_xmin /= bc_xmax."
+      SLL_ERROR( this_sub_name, trim( err_msg ) )
+    end if
+
+    ! Periodic case: check that there are enough grid points for a given degree
+    if (any( [bc_xmin,bc_xmax]== sll_p_periodic ) .and. num_pts < 2+degree) then
+      err_msg = "Insufficient number of grid points for periodic spline: " // &
+                "condition num_pts >= 2+degree not satisfied."
+      SLL_ERROR( this_sub_name, trim( err_msg ) )
+    end if
+
+    basis%num_pts = num_pts
+    basis%deg     = degree
+    basis%xmin    = grid(1)
+    basis%xmax    = grid(num_pts)
 
     ! 'period' is useful in the case of periodic boundary conditions.
     period = grid(num_pts) - grid(1)
@@ -147,95 +227,52 @@ contains
     ! spline. We aim at setting up the indexing in such a way that the 
     ! original indexing of 'grid' is preserved, i.e.: grid(i) = knot(i), at
     ! least whenever the scope of the indices defined here is active.
-    allocate( self%knots (1-degree:num_pts+degree) )
+    allocate( basis%knots (1-degree:num_pts+degree) )
     do i=1,num_pts
-       self%knots(i) = grid(i)
+       basis%knots(i) = grid(i)
     end do
 
     ! Allocate array for spline coefficients
-    if (bc_type == sll_p_periodic) then
-       self%n = num_pts - 1 ! dimension of periodic spline space 
+    if (bc_xmin == sll_p_periodic) then
+       basis%n = num_pts - 1 ! dimension of periodic spline space
     else 
-       self%n = num_pts + degree - 1 ! dimension of non periodic spline space
+       basis%n = num_pts + degree - 1 ! dimension of non periodic spline space
     end if
 
     ! Fill out the extra points at both ends of the local knot array with
     ! values proper to the boundary condition requested.
-    if ( bc_type == sll_p_periodic ) then
-       ! The logic behind the periodic boundary condition is the following.
-       ! The given grid array has minimum (grid(1)) and maximum (grid(n))
-       ! values at either end. This defines a length 'L'. If interpreted 
-       ! as a periodic space, this is also the period. Thus, as we extend
-       ! the number of knots at both ends of the given array, we use the
-       ! periodicity condition to fill out the new values:
-       !
-       !                    .
-       !                    .
-       !                    .
-       !           knots(-1) = knots(n-2) - L
-       !           knots( 0) = knots(n-1) - L
-       !                    .
-       !                    .
-       !                    .
-       !           knots(n+1) = knots(1) + L
-       !           knots(n+2) = knots(2) + L
-       !                    .
-       !                    .
-       !                    .
-       !
-
-       ! Check that there are enough grid points for a given degree
-       if (num_pts < degree) then
-          print *, 'ERROR. sll_f_new_arbitrary_degree_spline_1d: ', &
-               'new at leas ', degree, 'grid points for a periodic spline', &
-               'of degree', degree
-          stop 
-       end if
-       do i=1,degree
-          ! Fill out the extra nodes on the left
-          self%knots(1-i) = &
-               grid(num_pts-i) - period
-          ! Fill out the extra nodes on the right
-          self%knots(num_pts+i) = &
-               grid(i+1) + period
-       end do
-    else 
-       if ( present(spline_bc_type) .and. (spline_bc_type == sll_p_mirror) ) then
-          ! The mirror boundary condition mirrors the knot values on
-          ! each side of the grid
-          ! of the local array at both ends with repeated endpoint values.
-          ! That is
-          !
-          !     ... =  = knots(-1) = knots(0) = knots(1)
-          !
-          ! and
-          !
-          !    knots(n+1) = knots(n+2) = knots(n+3) = ... =  knots(n)
-          do i=1-degree,0
-             self%knots(i) = 2*grid(1) - grid(2-i) 
-          end do
-          do i=1,degree
-             self%knots(num_pts+i) = 2*grid(num_pts) - grid(num_pts-i) 
-          end do
-       else
-          ! The default is open boundary conditions for knots
-          ! The 'open' boundary condition simply extends the new values
-          ! of the local array at both ends with repeated endpoint values.
-          ! That is
-          !
-          !     ... = knots(-2) = knots(-1) = knots(0) = knots(1)
-          !
-          ! and
-          !
-          !    knots(n+1) = knots(n+2) = knots(n+3) = ... =  knots(n)
-          do i=1-degree,0
-             self%knots(i) = grid(1)
-          end do
-          do i=num_pts+1,num_pts+degree
-             self%knots(i) = grid(num_pts)
-          end do
-       end if
-    end if
+    !
+    ! Fill out the extra nodes on the left
+    select case (bc_xmin)
+    case (sll_p_periodic)
+      do i = 1, degree
+        basis%knots(1-i) = grid(num_pts-i) - period
+      end do
+    case (sll_p_open)
+      do i = 1, degree
+        basis%knots(1-i) = grid(1)
+      end do
+    case (sll_p_mirror)
+      do i = 1, degree
+        basis%knots(1-i) = 2*grid(1) - grid(1+i)
+      end do
+    end select
+    !
+    ! Fill out the extra nodes on the right
+    select case (bc_xmax)
+    case (sll_p_periodic)
+      do i = 1, degree
+        basis%knots(num_pts+i) = grid(i+1) + period
+      end do
+    case (sll_p_open)
+      do i = 1, degree
+        basis%knots(num_pts+i) = grid(num_pts)
+      end do
+    case (sll_p_mirror)
+      do i = 1, degree
+        basis%knots(num_pts+i) = 2*grid(num_pts) - grid(num_pts-i)
+      end do
+    end select
 
   end subroutine sll_s_bsplines_init_from_grid
 
@@ -245,14 +282,14 @@ contains
   !> @details
   !> based on a given array of knots
   !> which is a non decreasing array
-  !> @param[inout] self spline object
+  !> @param[inout] basis spline object
   !> @param[in] degree spline degree
   !> @param[in] n dimension of spline space
   !> @param[in] knots array of give knots
   !-----------------------------------------------------------------------------
-  subroutine sll_s_bsplines_init_from_knots( self, degree, n, knots )
+  subroutine sll_s_bsplines_init_from_knots( basis, degree, n, knots )
 
-    type(sll_t_bsplines), intent(  out) :: self
+    type(sll_t_bsplines), intent(  out) :: basis
     integer             , intent(in   ) :: degree
     integer             , intent(in   ) :: n
     real(wp)            , intent(in   ) :: knots(:)
@@ -278,31 +315,31 @@ contains
     end if
 
     ! Initialise variables
-    self%n       = n
-    self%deg     = degree
-    self%num_pts = n - degree + 1
-    self%xmin    = knots(degree+1)
-    self%xmax    = knots(n+1)
+    basis%n       = n
+    basis%deg     = degree
+    basis%num_pts = n - degree + 1
+    basis%xmin    = knots(degree+1)
+    basis%xmax    = knots(n+1)
 
     ! We aim at setting up the indexing in such a way that the 
     ! the computation grid is [knot(1),knots(num_pts)],  at
     ! least whenever the scope of the indices defined here is active.
-    allocate( self%knots (1-degree:n+1) )
-    self%knots(1-degree:n+1) = knots
+    allocate( basis%knots (1-degree:n+1) )
+    basis%knots(1-degree:n+1) = knots
     
   end subroutine sll_s_bsplines_init_from_knots
   
   !-----------------------------------------------------------------------------
-  !>@brief find cell returns the index i of the grid cell such that:
-  !> self%knots(i) <= x <= self%knots(i+1).
+  !> @brief return index i of grid cell such that:
+  !> basis%knots(i) <= x <= basis%knots(i+1).
   !>
-  !>@detail
-  !> If x is not between self%knots(1) and 
-  !> self%knots(self%num_pts),  then the value -1 is returned.
+  !> @detail
+  !> If x is not between basis%knots(1) and basis%knots(basis%num_pts),
+  !> then the value -1 is returned.
   !-----------------------------------------------------------------------------
-  pure function sll_f_find_cell( self, x )
+  pure function sll_f_find_cell( basis, x )
 
-    type(sll_t_bsplines), intent(in) :: self
+    type(sll_t_bsplines), intent(in) :: basis
     real(wp)            , intent(in) :: x
     integer :: sll_f_find_cell
 
@@ -310,19 +347,19 @@ contains
     integer :: high
     integer :: n
 
-    n = self%num_pts
+    n = basis%num_pts
 
     ! check if point is outside of grid
-    if (x > self%knots(n)) then
+    if (x > basis%knots(n)) then
        sll_f_find_cell = -1
        return
     end if
-    if (x < self%knots(1)) then
+    if (x < basis%knots(1)) then
        sll_f_find_cell = -1
        return
     end if
     ! check is point is exactly on right boundary
-    if (x == self%knots(n)) then
+    if (x == basis%knots(n)) then
        sll_f_find_cell = n-1
        return
     end if
@@ -330,9 +367,9 @@ contains
     low  = 1
     high = n
     sll_f_find_cell = (low + high) / 2
-    do while (x <  self%knots(sll_f_find_cell) &
-         .or. x >= self%knots(sll_f_find_cell+1))
-       if (x < self%knots(sll_f_find_cell)) then
+    do while (x <  basis%knots(sll_f_find_cell) &
+         .or. x >= basis%knots(sll_f_find_cell+1))
+       if (x < basis%knots(sll_f_find_cell)) then
           high = sll_f_find_cell
        else
           low  = sll_f_find_cell
@@ -361,7 +398,7 @@ contains
   !> @brief
   !> Evaluates B-spline values at a point x in a given cell.
   !> @details
-  !> sll_s_bsplines_eval_basis( self, cell, x, splines_at_x ) computes the values of all the
+  !> sll_s_bsplines_eval_basis( basis, cell, x, splines_at_x ) computes the values of all the
   !> splines which have support in 'cell' and evaluates them at point 'x',
   !> which is supposed to be in cell. The spline object should have already
   !> been initialized and will contain information on the spline degree
@@ -371,12 +408,12 @@ contains
   !> de Casteljau algorithm for Bezier curves.
   !> @return b_spline_at_x B-spline values
   !-----------------------------------------------------------------------------
-  SLL_PURE subroutine sll_s_bsplines_eval_basis( self, icell, x, splines_at_x )
+  SLL_PURE subroutine sll_s_bsplines_eval_basis( basis, icell, x, splines_at_x )
 
-    type(sll_t_bsplines), intent(in   ) :: self
+    type(sll_t_bsplines), intent(in   ) :: basis
     integer             , intent(in   ) :: icell
     real(wp)            , intent(in   ) :: x
-    real(wp)            , intent(  out) :: splines_at_x(0:self%deg)
+    real(wp)            , intent(  out) :: splines_at_x(0:basis%deg)
 
     real(wp) :: saved
     real(wp) :: temp
@@ -384,20 +421,20 @@ contains
     integer  :: r
 
     ! GFortran: to allocate on stack use -fstack-arrays
-    real(wp) :: left (1:self%deg)
-    real(wp) :: right(1:self%deg)
+    real(wp) :: left (1:basis%deg)
+    real(wp) :: right(1:basis%deg)
 
     ! Run some checks on the arguments.
-    SLL_ASSERT( x > self%xmin - 1.0d-14 )
-    SLL_ASSERT( x < self%xmax + 1.0d-14 )
+    SLL_ASSERT( x > basis%xmin - 1.0d-14 )
+    SLL_ASSERT( x < basis%xmax + 1.0d-14 )
     SLL_ASSERT( icell >= 1 )
-    SLL_ASSERT( icell <= self%num_pts - 1 )
-    SLL_ASSERT( self%knots(icell) <= x .and. x <= self%knots(icell+1) )
+    SLL_ASSERT( icell <= basis%num_pts - 1 )
+    SLL_ASSERT( basis%knots(icell) <= x .and. x <= basis%knots(icell+1) )
 
     splines_at_x(0) = 1.0_wp
-    do j = 1, self%deg
-       left (j) = x - self%knots(icell+1-j)
-       right(j) = self%knots(icell+j) - x
+    do j = 1, basis%deg
+       left (j) = x - basis%knots(icell+1-j)
+       right(j) = basis%knots(icell+j) - x
        saved    = 0.0_wp
        do r = 0, j-1
           temp = splines_at_x(r) / (right(r+1) + left(j-r))
@@ -424,12 +461,12 @@ contains
   !> where 'deg' is the degree of the spline.
   !> @param[out] bsdx  B-spline derivatives
   !-----------------------------------------------------------------------------
-  SLL_PURE subroutine sll_s_bsplines_eval_deriv( self, icell, x, bsdx )
+  SLL_PURE subroutine sll_s_bsplines_eval_deriv( basis, icell, x, bsdx )
 
-    type(sll_t_bsplines), intent(in   ) :: self
+    type(sll_t_bsplines), intent(in   ) :: basis
     integer                             , intent(in   ) :: icell
     real(wp)                            , intent(in   ) :: x
-    real(wp)                            , intent(  out) :: bsdx(0:self%deg)
+    real(wp)                            , intent(  out) :: bsdx(0:basis%deg)
 
     integer  :: deg
     integer  :: num_pts
@@ -440,28 +477,28 @@ contains
     real(wp) :: rdeg
 
     ! GFortran: to allocate on stack use -fstack-arrays
-    real(wp) :: left (1:self%deg)
-    real(wp) :: right(1:self%deg)
+    real(wp) :: left (1:basis%deg)
+    real(wp) :: right(1:basis%deg)
 
     ! Run some checks on the arguments.
-    SLL_ASSERT( allocated( self%knots ) )
-    SLL_ASSERT( x > self%xmin - 1.0d-14 )
-    SLL_ASSERT( x < self%xmax + 1.0d-14 )
+    SLL_ASSERT( allocated( basis%knots ) )
+    SLL_ASSERT( x > basis%xmin - 1.0d-14 )
+    SLL_ASSERT( x < basis%xmax + 1.0d-14 )
     SLL_ASSERT( icell >= 1 )
-    SLL_ASSERT( icell <= self%num_pts - 1 )
-    SLL_ASSERT( self%knots(icell) <= x .and. x <= self%knots(icell+1) )
+    SLL_ASSERT( icell <= basis%num_pts - 1 )
+    SLL_ASSERT( basis%knots(icell) <= x .and. x <= basis%knots(icell+1) )
 
-    deg     = self%deg
+    deg     = basis%deg
     rdeg    = real(deg,wp)
-    num_pts = self%num_pts
+    num_pts = basis%num_pts
 
     ! compute nonzero basis functions and knot differences
     ! for splines up to degree deg-1 which are needed to compute derivative
     ! First part of Algorithm  A3.2 of NURBS book 
     bsdx(0) = 1.0_wp
     do j = 1, deg-1
-       left (j) = x - self%knots(icell+1-j)
-       right(j) = self%knots(icell+j) - x
+       left (j) = x - basis%knots(icell+1-j)
+       right(j) = basis%knots(icell+j) - x
        saved    = 0.0_wp
        do r = 0, j-1
           ! compute and save bspline values
@@ -477,11 +514,11 @@ contains
     ! degree deg-1
     ! -------
     ! j = 0
-    saved = rdeg*bsdx(0) / (self%knots(icell+1) - self%knots(icell+1-deg)) 
+    saved = rdeg*bsdx(0) / (basis%knots(icell+1) - basis%knots(icell+1-deg))
     bsdx(0) = -saved
     do j = 1, deg-1
        temp    = saved 
-       saved   = rdeg*bsdx(j) / (self%knots(icell+j+1)-self%knots(icell+j+1-deg))
+       saved   = rdeg*bsdx(j) / (basis%knots(icell+j+1)-basis%knots(icell+j+1-deg))
        bsdx(j) = temp - saved
     end do
     ! j = deg
@@ -496,12 +533,12 @@ contains
   !> See sll_s_bsplines_eval_deriv and  sll_f_splines_at_x
   !> @return b_spline_and_derivs_at_x B-spline values and derivatives
   !-----------------------------------------------------------------------------
-  SLL_PURE subroutine sll_s_bsplines_eval_basis_and_deriv( self, icell, x, bsdx )
+  SLL_PURE subroutine sll_s_bsplines_eval_basis_and_deriv( basis, icell, x, bsdx )
 
-    type(sll_t_bsplines), intent(in   ) :: self
+    type(sll_t_bsplines), intent(in   ) :: basis
     integer             , intent(in   ) :: icell
     real(wp)            , intent(in   ) :: x
-    real(wp)            , intent(  out) :: bsdx(2,0:self%deg)
+    real(wp)            , intent(  out) :: bsdx(2,0:basis%deg)
 
     integer  :: deg
     integer  :: num_pts
@@ -512,19 +549,19 @@ contains
     real(wp) :: rdeg
 
     ! GFortran: to allocate on stack use -fstack-arrays
-    real(wp) :: left (1:self%deg)
-    real(wp) :: right(1:self%deg)
+    real(wp) :: left (1:basis%deg)
+    real(wp) :: right(1:basis%deg)
 
     ! Run some checks on the arguments.
-    SLL_ASSERT( allocated( self%knots ) )
-    SLL_ASSERT( x > self%xmin - 1.0d-14 )
-    SLL_ASSERT( x < self%xmax + 1.0d-14 ) 
+    SLL_ASSERT( allocated( basis%knots ) )
+    SLL_ASSERT( x > basis%xmin - 1.0d-14 )
+    SLL_ASSERT( x < basis%xmax + 1.0d-14 )
     SLL_ASSERT( icell >= 1 )
-    SLL_ASSERT( icell <= self%num_pts - 1 )
-    SLL_ASSERT( self%knots(icell) <= x .and. x <= self%knots(icell+1) )
+    SLL_ASSERT( icell <= basis%num_pts - 1 )
+    SLL_ASSERT( basis%knots(icell) <= x .and. x <= basis%knots(icell+1) )
 
-    deg = self%deg
-    num_pts = self%num_pts
+    deg = basis%deg
+    num_pts = basis%num_pts
     rdeg = real(deg,wp) 
 
     ! compute nonzero basis functions and knot differences
@@ -532,8 +569,8 @@ contains
     ! First part of Algorithm  A2.3 of NURBS book 
     bsdx(1,0) = 1.0_wp
     do j = 1, deg-1
-       left (j) = x - self%knots(icell+1-j)
-       right(j) = self%knots(icell+j) - x
+       left (j) = x - basis%knots(icell+1-j)
+       right(j) = basis%knots(icell+j) - x
        saved = 0.0_wp
        do r = 0, j-1
           ! compute and save knot differences
@@ -550,12 +587,12 @@ contains
     ! -------
     ! j = 0
     saved = rdeg * bsdx(1,0) / &
-         (self%knots(icell+1) - self%knots(icell+1-deg)) 
+         (basis%knots(icell+1) - basis%knots(icell+1-deg))
     bsdx(2,0) = -saved
     do j = 1, deg-1
        temp = saved 
        saved =  rdeg*bsdx(1,j) / &
-            (self%knots(icell+j+1) - self%knots(icell+j+1-deg))
+            (basis%knots(icell+j+1) - basis%knots(icell+j+1-deg))
        bsdx(2,j) = temp - saved
     end do
     ! j = deg
@@ -563,8 +600,8 @@ contains
     ! Compute values of splines of degree deg
     !----------------------------------------
     j = deg
-    left(j)  = x - self%knots(icell+1-j)
-    right(j) = self%knots(icell+j) - x
+    left(j)  = x - basis%knots(icell+1-j)
+    right(j) = basis%knots(icell+j) - x
     saved    = 0.0_wp
     do r = 0, j-1
        ! compute and save knot differences
@@ -581,19 +618,19 @@ contains
   !> returns splines and first derivatives
   !> @details
   !> See sll_s_bsplines_eval_deriv and  sll_f_splines_at_x
-  !> @param[in] self  bspline object
+  !> @param[in] basis  bspline object
   !> @param[in] icell cell where bsplines are to be computed
   !> @param[in] x value of point where bsplines are to be computed
   !> @param[in] n number of derivatives to be computed
   !> @param[out] bsdx B-spline values and the first n derivatives
   !-----------------------------------------------------------------------------
-  SLL_PURE subroutine sll_s_bsplines_eval_basis_and_n_derivs( self, icell, x , n, bsdx )
+  SLL_PURE subroutine sll_s_bsplines_eval_basis_and_n_derivs( basis, icell, x , n, bsdx )
 
-    type(sll_t_bsplines), intent(in   ) :: self
+    type(sll_t_bsplines), intent(in   ) :: basis
     integer             , intent(in   ) :: icell
     real(wp)            , intent(in   ) :: x
     integer             , intent(in   ) :: n
-    real(wp)            , intent(  out) :: bsdx(0:n,0:self%deg)
+    real(wp)            , intent(  out) :: bsdx(0:n,0:basis%deg)
 
     integer  :: deg
     integer  :: num_pts
@@ -612,22 +649,22 @@ contains
     real(wp) :: d
 
     ! GFortran: to allocate on stack use -fstack-arrays
-    real(wp) :: left (1:self%deg)
-    real(wp) :: right(1:self%deg)
-    real(wp) :: ndu  (0:self%deg,0:self%deg)
-    real(wp) :: a    (0:1       ,0:self%deg)
+    real(wp) :: left (1:basis%deg)
+    real(wp) :: right(1:basis%deg)
+    real(wp) :: ndu  (0:basis%deg,0:basis%deg)
+    real(wp) :: a    (0:1       ,0:basis%deg)
 
     ! Run some checks on the arguments.
-    SLL_ASSERT( allocated( self%knots ) )
-    SLL_ASSERT( x > self%xmin - 1.0d-14 )
-    SLL_ASSERT( x < self%xmax + 1.0d-14 )
+    SLL_ASSERT( allocated( basis%knots ) )
+    SLL_ASSERT( x > basis%xmin - 1.0d-14 )
+    SLL_ASSERT( x < basis%xmax + 1.0d-14 )
     SLL_ASSERT( icell >= 1 )
-    SLL_ASSERT( icell <= self%num_pts - 1 )
-    SLL_ASSERT( n <= self%deg/2 )
-    SLL_ASSERT( self%knots(icell) <= x .and. x <= self%knots(icell+1) )
+    SLL_ASSERT( icell <= basis%num_pts - 1 )
+    SLL_ASSERT( n <= basis%deg/2 )
+    SLL_ASSERT( basis%knots(icell) <= x .and. x <= basis%knots(icell+1) )
 
-    deg     = self%deg
-    num_pts = self%num_pts
+    deg     = basis%deg
+    num_pts = basis%num_pts
     rdeg    = real(deg,wp) 
 
     ! compute nonzero basis functions and knot differences
@@ -635,8 +672,8 @@ contains
     ! Algorithm  A2.3 of NURBS book 
     ndu(0,0) = 1.0_wp
     do j = 1, deg 
-       left(j)  = x - self%knots(icell+1-j)
-       right(j) = self%knots(icell+j) - x
+       left(j)  = x - basis%knots(icell+1-j)
+       right(j) = basis%knots(icell+j) - x
        saved    = 0.0_wp
        do r = 0, j-1
           ! compute and save knot differences
