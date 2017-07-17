@@ -11,15 +11,11 @@ use sll_m_boundary_condition_descriptors, only: &
      sll_p_periodic, &
      sll_p_mirror
 
+use sll_m_spline_1d_base, only: &
+  sll_c_spline_1d
+
 use sll_m_spline_1d_non_uniform, only: &
-  sll_s_bspline_1d_compute_interpolant, &
-  sll_s_bspline_1d_eval_array_deriv, &
-  sll_s_bspline_1d_eval_array, &
-  sll_f_bspline_1d_eval_deriv, &
-  sll_f_bspline_1d_eval, &
-  sll_s_bspline_1d_init, &
-  sll_s_bspline_1d_free, &
-  sll_t_bspline_1d
+  sll_t_spline_1d_non_uniform
 
 use sll_m_constants, only: &
   sll_p_pi
@@ -96,9 +92,9 @@ contains
     sll_int32 , intent(in   ), optional :: spline_bc_type
 
     ! local variables
-    type(sll_t_bspline_1d) :: bspline_1d
-    sll_real64 :: x_min   = 0.0_f64
-    sll_real64 :: x_max   = 1.0_f64
+    class(sll_t_spline_1d_non_uniform), allocatable :: bspline_1d
+    sll_real64 :: x_min = 0.0_f64
+    sll_real64 :: x_max = 1.0_f64
 
 
     sll_real64, dimension(:), allocatable :: x
@@ -116,6 +112,9 @@ contains
     SLL_ALLOCATE(y(n),ierr)
     SLL_ALLOCATE(xx(n),ierr)
 
+    ! Allocate polymorphic object to non-uniform spline
+    allocate( sll_t_spline_1d_non_uniform :: bspline_1d )
+
     ! define uniform evaluation grid
     h = (x_max-x_min)/real(n-1,f64)
     do i = 1, n
@@ -129,11 +128,9 @@ contains
     print*,'*** Spline degree = ', deg
     print*,'+++++++++++++++++++++++++++++++++'
     if (present(spline_bc_type)) then
-       call sll_s_bspline_1d_init( bspline_1d, npts, deg, x_min, x_max, &
-            bc_type, bc_type, spline_bc_type )
+       call bspline_1d%init( npts, deg, x_min, x_max, bc_type, bc_type, spline_bc_type )
     else
-       call sll_s_bspline_1d_init( bspline_1d, npts, deg, x_min, x_max, &
-            bc_type, bc_type )
+       call bspline_1d%init( npts, deg, x_min, x_max, bc_type, bc_type )
     end if
     print*, 'bspline_1d_init constructed'
 
@@ -163,13 +160,13 @@ contains
            end do
          end if
        end if
-       call sll_s_bspline_1d_compute_interpolant(bspline_1d, gtau, bc, bc)
+       call bspline_1d%compute_interpolant( gtau, bc, bc )
     else
-       call sll_s_bspline_1d_compute_interpolant(bspline_1d, gtau)
+       call bspline_1d%compute_interpolant( gtau )
     end if
     call cpu_time(t1)
     do j = 1,n
-       y(j) = sll_f_bspline_1d_eval( bspline_1d, x(j))
+       y(j) = bspline_1d%eval( x(j) )
     end do
     err1 = maxval(abs(y-cos(2*sll_p_pi*x)))
     if (err1 > tol) then
@@ -183,7 +180,7 @@ contains
     call cpu_time(t2)
     !.......
     do j = 1,nstep
-       call sll_s_bspline_1d_eval_array( bspline_1d, x, y)
+       call bspline_1d%eval_array( x, y )
     end do
     err1 = maxval(abs(y-cos(2*sll_p_pi*x)))
     if (err1 > tol) then
@@ -197,7 +194,7 @@ contains
     call cpu_time(t3)
     !......
     do j = 1,n
-       y(j) = sll_f_bspline_1d_eval_deriv( bspline_1d, x(j))
+       y(j) = bspline_1d%eval_deriv( x(j) )
     end do
     err1 = maxval(abs(y+2*sll_p_pi*sin(2*sll_p_pi*x)))
     if (err1 > tol) then
@@ -211,7 +208,7 @@ contains
     call cpu_time(t4)
     !......
     do j = 1,nstep
-       call sll_s_bspline_1d_eval_array_deriv( bspline_1d, x, y)
+       call bspline_1d%eval_array_deriv( x, y )
     end do
     err1 = maxval(abs(y+2*sll_p_pi*sin(2*sll_p_pi*x)))
     if (err1 > tol) then
@@ -255,13 +252,13 @@ contains
            end do
          end if
        end if
-       call sll_s_bspline_1d_compute_interpolant(bspline_1d, htau, bc, bc)
+       call bspline_1d%compute_interpolant( htau, bc, bc )
     else
-       call sll_s_bspline_1d_compute_interpolant(bspline_1d, htau)
+       call bspline_1d%compute_interpolant( htau )
     end if
 
     do j = 1,n
-       y(j) = sll_f_bspline_1d_eval( bspline_1d, xx(j))
+       y(j) = bspline_1d%eval( xx(j) )
     end do
     err1 = maxval(abs(y-sin(2*sll_p_pi*xx)))
     if (err1 > tol) then
@@ -275,7 +272,7 @@ contains
     call cpu_time(t2)
     !.......
     do j = 1,nstep
-       call sll_s_bspline_1d_eval_array( bspline_1d, xx, y)
+       call bspline_1d%eval_array( xx, y )
     end do
     err1 = maxval(abs(y-sin(2*sll_p_pi*xx)))
     if (err1 > tol) then
@@ -289,7 +286,7 @@ contains
     call cpu_time(t3)
     !......
     do j = 1,n
-       y(j) = sll_f_bspline_1d_eval_deriv( bspline_1d, xx(j))
+       y(j) = bspline_1d%eval_deriv( xx(j) )
     end do
     err1 = maxval(abs(y-2*sll_p_pi*cos(2*sll_p_pi*xx)))
     if (err1 > tol) then
@@ -303,7 +300,7 @@ contains
     call cpu_time(t4)
     !......
     do j = 1,nstep
-       call sll_s_bspline_1d_eval_array_deriv( bspline_1d, xx, y)
+       call bspline_1d%eval_array_deriv( xx, y )
     end do
     err1 = maxval(abs(y-2*sll_p_pi*cos(2*sll_p_pi*xx)))
     if (err1 > tol) then
@@ -319,7 +316,7 @@ contains
     !......
     SLL_DEALLOCATE_ARRAY(gtau,ierr)
     SLL_DEALLOCATE_ARRAY(htau,ierr)
-    call sll_s_bspline_1d_free(bspline_1d)
+    call bspline_1d%free()
 
   end subroutine test_process_1d
 

@@ -9,21 +9,24 @@ module sll_m_spline_1d_non_uniform
 #include "sll_working_precision.h"
 
 use sll_m_boundary_condition_descriptors, only: &
-     sll_p_periodic, &
-     sll_p_hermite , &
-     sll_p_greville, &
-     sll_p_open    , &
-     sll_p_mirror
+  sll_p_periodic, &
+  sll_p_hermite , &
+  sll_p_greville, &
+  sll_p_open    , &
+  sll_p_mirror
+
+use sll_m_spline_1d_base, only: &
+  sll_c_spline_1d
 
 use sll_m_bsplines, only: &
-     sll_t_bsplines, &
-     sll_s_bsplines_init_from_grid, &
-     sll_s_bsplines_free, &
-     sll_f_find_cell, &
-     sll_s_bsplines_eval_basis, &
-     sll_s_bsplines_eval_deriv, &
-     sll_s_bsplines_eval_basis_and_n_derivs, &
-     sll_s_uniform_bsplines_eval_basis
+  sll_t_bsplines, &
+  sll_s_bsplines_init_from_grid, &
+  sll_s_bsplines_free, &
+  sll_f_find_cell, &
+  sll_s_bsplines_eval_basis, &
+  sll_s_bsplines_eval_deriv, &
+  sll_s_bsplines_eval_basis_and_n_derivs, &
+  sll_s_uniform_bsplines_eval_basis
 
 use schur_complement, only: &
   schur_complement_solver, &
@@ -34,22 +37,25 @@ use schur_complement, only: &
 implicit none
 
 public :: &
-  sll_t_bspline_1d,                     &
-  sll_s_bspline_1d_init,                &
-  sll_s_bspline_1d_free,                &
-  sll_s_bspline_1d_compute_interpolant, &
-  sll_f_bspline_1d_eval,                & ! scalar functions for evaluation
-  sll_f_bspline_1d_eval_deriv,          &
-  sll_s_bspline_1d_eval_array,          & ! vector subroutines for evaluation
-  sll_s_bspline_1d_eval_array_deriv,    &
-  sll_f_bspline_1d_get_coeff
+  sll_t_spline_1d_non_uniform
+
+!public :: &
+!  sll_t_bspline_1d,                     &
+!  s_spline_1d_non_uniform__init,                &
+!  s_spline_1d_non_uniform__free,                &
+!  s_spline_1d_non_uniform__compute_interpolant, &
+!  f_spline_1d_non_uniform__eval,                & ! scalar functions for evaluation
+!  f_spline_1d_non_uniform__eval_deriv,          &
+!  s_spline_1d_non_uniform__eval_array,          & ! vector subroutines for evaluation
+!  s_spline_1d_non_uniform__eval_array_deriv,    &
+!  f_spline_1d_non_uniform__get_coeff
 
 private
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 !> @brief
 !> basic type for one-dimensional B-spline interpolation.
-type :: sll_t_bspline_1d
+type, extends(sll_c_spline_1d) :: sll_t_spline_1d_non_uniform
 
   type (sll_t_bsplines) :: bsp
   sll_int32                               :: n        ! dimension of spline space
@@ -66,20 +72,31 @@ type :: sll_t_bspline_1d
   sll_real64, allocatable                 :: bc_left (:)
   sll_real64, allocatable                 :: bc_right(:)
 
-end type sll_t_bspline_1d
+contains
+
+  procedure :: init                => s_spline_1d_non_uniform__init
+  procedure :: free                => s_spline_1d_non_uniform__free
+  procedure :: compute_interpolant => s_spline_1d_non_uniform__compute_interpolant
+  procedure :: eval                => f_spline_1d_non_uniform__eval
+  procedure :: eval_deriv          => f_spline_1d_non_uniform__eval_deriv
+  procedure :: eval_array          => s_spline_1d_non_uniform__eval_array
+  procedure :: eval_array_deriv    => s_spline_1d_non_uniform__eval_array_deriv
+  procedure :: get_coeff           => f_spline_1d_non_uniform__get_coeff
+
+end type sll_t_spline_1d_non_uniform
 
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 contains
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
-  function sll_f_bspline_1d_get_coeff( self ) result( ptr )
+  function f_spline_1d_non_uniform__get_coeff( self ) result( ptr )
 
-    type(sll_t_bspline_1d), target, intent(in) :: self
+    class(sll_t_spline_1d_non_uniform), target, intent(in) :: self
     sll_real64, pointer :: ptr(:)
 
     ptr => self%bcoef
 
-  end function sll_f_bspline_1d_get_coeff
+  end function f_spline_1d_non_uniform__get_coeff
 
   !-----------------------------------------------------------------------------
   !> @brief     Constructor for sll_t_bspline_1d object
@@ -93,7 +110,7 @@ contains
   !> @param[in] bc_xmin  Boundary condition at x=xmin
   !> @param[in] bc_xmax  Boundary condition at x=xmax
   !-----------------------------------------------------------------------------
-  subroutine sll_s_bspline_1d_init( &
+  subroutine s_spline_1d_non_uniform__init( &
     self,           &
     num_pts,        &
     degree,         &
@@ -106,7 +123,7 @@ contains
     bc_left,        &
     bc_right )
 
-    type(sll_t_bspline_1d), intent(  out) :: self
+    class(sll_t_spline_1d_non_uniform), intent(  out) :: self
     sll_int32             , intent(in   ) :: num_pts
     sll_int32             , intent(in   ) :: degree
     sll_real64            , intent(in   ) :: xmin
@@ -260,7 +277,7 @@ contains
        call build_system_with_derivative(self)
     end select
 
-  end subroutine sll_s_bspline_1d_init
+  end subroutine s_spline_1d_non_uniform__init
 
   !-----------------------------------------------------------------------------
   !> @brief        Private subroutine for assembling and factorizing linear
@@ -269,7 +286,7 @@ contains
   !-----------------------------------------------------------------------------
   subroutine build_system_periodic( self )
 
-    type(sll_t_bspline_1d), intent(inout) :: self
+    class(sll_t_spline_1d_non_uniform), intent(inout) :: self
 
     sll_int32  :: i
     sll_int32  :: j
@@ -306,7 +323,7 @@ contains
   !-----------------------------------------------------------------------------
   subroutine build_system_greville( self )
 
-    type(sll_t_bspline_1d), intent(inout) :: self
+    class(sll_t_spline_1d_non_uniform), intent(inout) :: self
 
     sll_int32  :: iflag
     sll_int32  :: j
@@ -368,7 +385,7 @@ contains
   !-----------------------------------------------------------------------------
   subroutine build_system_with_derivative( self )
 
-    type(sll_t_bspline_1d), intent(inout) :: self
+    class(sll_t_spline_1d_non_uniform), intent(inout) :: self
 
     sll_int32  :: nbc
     sll_int32  :: iflag
@@ -456,9 +473,9 @@ contains
   !> @param[in]    derivs_xmin (optional) array with boundary conditions at xmin
   !> @param[in]    derivs_xmax (optional) array with boundary conditions at xmax
   !-----------------------------------------------------------------------------
-  subroutine sll_s_bspline_1d_compute_interpolant( self, gtau, derivs_xmin, derivs_xmax )
+  subroutine s_spline_1d_non_uniform__compute_interpolant( self, gtau, derivs_xmin, derivs_xmax )
 
-    type(sll_t_bspline_1d), intent(inout) :: self
+    class(sll_t_spline_1d_non_uniform), intent(inout) :: self
     sll_real64            , intent(in   ) :: gtau(:)
     sll_real64, optional  , intent(in   ) :: derivs_xmin(:)
     sll_real64, optional  , intent(in   ) :: derivs_xmax(:)
@@ -501,7 +518,7 @@ contains
                     self%bcoef, self%n, iflag )
     end select
 
-  end subroutine sll_s_bspline_1d_compute_interpolant
+  end subroutine s_spline_1d_non_uniform__compute_interpolant
 
   !-----------------------------------------------------------------------------
   !> @brief      Evaluate spline S at given point x
@@ -509,9 +526,9 @@ contains
   !> @param[in]  x    evaluation point
   !> @return     y    spline value y=S(x)
   !-----------------------------------------------------------------------------
-  SLL_PURE function sll_f_bspline_1d_eval( self, x ) result( y )
+  SLL_PURE function f_spline_1d_non_uniform__eval( self, x ) result( y )
 
-    type(sll_t_bspline_1d), intent(in) :: self
+    class(sll_t_spline_1d_non_uniform), intent(in) :: self
     sll_real64            , intent(in) :: x
     sll_real64 :: y
 
@@ -528,7 +545,7 @@ contains
        y = y + values(j)*self%bcoef(ib)
     end do
 
-  end function sll_f_bspline_1d_eval
+  end function f_spline_1d_non_uniform__eval
 
   !-----------------------------------------------------------------------------
   !> @brief      Evaluate spline derivative S' at given point x
@@ -536,9 +553,9 @@ contains
   !> @param[in]  x    evaluation point
   !> @param[out] y    spline derivative y=S'(x)
   !-----------------------------------------------------------------------------
-  SLL_PURE function sll_f_bspline_1d_eval_deriv( self, x ) result( y )
+  SLL_PURE function f_spline_1d_non_uniform__eval_deriv( self, x ) result( y )
 
-    type(sll_t_bspline_1d), intent(in) :: self
+    class(sll_t_spline_1d_non_uniform), intent(in) :: self
     sll_real64            , intent(in) :: x
     sll_real64 :: y
 
@@ -555,7 +572,7 @@ contains
       y = y + values(j)*self%bcoef(ib)
     end do
 
-  end function sll_f_bspline_1d_eval_deriv
+  end function f_spline_1d_non_uniform__eval_deriv
 
   !-----------------------------------------------------------------------------
   !> @brief      Evaluate spline S at given 1D array of points x(:)
@@ -563,19 +580,19 @@ contains
   !> @param[in]  x    1D array of evaluation points
   !> @param[out] y    1D array of spline values y(:)=S(x(:))
   !-----------------------------------------------------------------------------
-  SLL_PURE subroutine sll_s_bspline_1d_eval_array( self, x, y )
+  SLL_PURE subroutine s_spline_1d_non_uniform__eval_array( self, x, y )
 
-    type(sll_t_bspline_1d), intent(in   ) :: self
+    class(sll_t_spline_1d_non_uniform), intent(in   ) :: self
     sll_real64            , intent(in   ) :: x(:)
     sll_real64            , intent(  out) :: y(size(x))
 
     sll_int32 :: i
 
     do i = 1, size(x)
-      y(i) = sll_f_bspline_1d_eval( self, x(i) )
+      y(i) = f_spline_1d_non_uniform__eval( self, x(i) )
     end do
 
-  end subroutine sll_s_bspline_1d_eval_array
+  end subroutine s_spline_1d_non_uniform__eval_array
 
   !-----------------------------------------------------------------------------
   !> @brief      Evaluate spline derivative S' at given 1D array of points x(:)
@@ -583,27 +600,27 @@ contains
   !> @param[in]  x    1D array of evaluation points
   !> @param[out] y    1D array of spline derivatives y(:)=S'(x(:))
   !-----------------------------------------------------------------------------
-  SLL_PURE subroutine sll_s_bspline_1d_eval_array_deriv( self, x, y )
+  SLL_PURE subroutine s_spline_1d_non_uniform__eval_array_deriv( self, x, y )
 
-    type(sll_t_bspline_1d), intent(in   ) :: self
+    class(sll_t_spline_1d_non_uniform), intent(in   ) :: self
     sll_real64            , intent(in   ) :: x(:)
     sll_real64            , intent(  out) :: y(size(x))
 
     sll_int32 :: i
 
     do i = 1, size(x)
-      y(i) = sll_f_bspline_1d_eval_deriv( self, x(i) )
+      y(i) = f_spline_1d_non_uniform__eval_deriv( self, x(i) )
     end do
 
-  end subroutine sll_s_bspline_1d_eval_array_deriv
+  end subroutine s_spline_1d_non_uniform__eval_array_deriv
 
   !-----------------------------------------------------------------------------
   !> @brief Destructor. Frees all memory in object (pointers, allocatables)
   !> @param[inout] self object to be freed
   !-----------------------------------------------------------------------------
-  subroutine sll_s_bspline_1d_free( self )
+  subroutine s_spline_1d_non_uniform__free( self )
 
-    type(sll_t_bspline_1d), intent(inout) :: self
+    class(sll_t_spline_1d_non_uniform), intent(inout) :: self
 
     ! deallocate arrays
     deallocate( self%bcoef  )
@@ -615,6 +632,6 @@ contains
     call sll_s_bsplines_free( self%bsp )
     call schur_complement_free( self%schur )
 
-  end subroutine sll_s_bspline_1d_free
+  end subroutine s_spline_1d_non_uniform__free
 
 end module sll_m_spline_1d_non_uniform
