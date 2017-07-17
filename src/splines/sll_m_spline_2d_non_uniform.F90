@@ -25,10 +25,7 @@ use schur_complement, only: &
   schur_complement_free
 
 use sll_m_spline_1d_non_uniform, only: &
-  sll_t_bspline_1d,         &
-  sll_s_bspline_1d_init,    &
-  sll_s_bspline_1d_free,    &
-  sll_s_bspline_1d_compute_interpolant
+  sll_t_spline_1d_non_uniform
 
 implicit none
 
@@ -53,10 +50,10 @@ private
 !> treated as an opaque type. No access to its internals is directly allowed.
 type :: sll_t_bspline_2d
 
-  type(sll_t_bspline_1d)  :: bs1
-  type(sll_t_bspline_1d)  :: bs2
-  sll_real64, allocatable :: bcoef(:,:)
-  sll_real64, allocatable :: bwork(:,:)
+  type(sll_t_spline_1d_non_uniform) :: bs1
+  type(sll_t_spline_1d_non_uniform) :: bs2
+  sll_real64, allocatable           :: bcoef(:,:)
+  sll_real64, allocatable           :: bwork(:,:)
 
 end type sll_t_bspline_2d
 
@@ -134,18 +131,18 @@ contains
     SLL_ASSERT( bc2_min == bc2_max )
 
     if (present(spline_bc_type1)) then
-      call sll_s_bspline_1d_init( self%bs1, num_pts1, degree1, &
-           x1_min, x1_max, bc1_min, bc1_max, spline_bc_type1 )
+      call self%bs1%init( num_pts1, degree1, x1_min, x1_max, bc1_min, bc1_max, &
+                          spline_bc_type1 )
+      call self%bs1%init( num_pts1, degree1, x1_min, x1_max, bc1_min, bc1_max, &
+                          spline_bc_type1 )
     else
-      call sll_s_bspline_1d_init( self%bs1, num_pts1, degree1, &
-           x1_min, x1_max, bc1_min, bc1_max )
+      call self%bs1%init( num_pts1, degree1, x1_min, x1_max, bc1_min, bc1_max )
     end if
     if (present(spline_bc_type2)) then
-      call sll_s_bspline_1d_init( self%bs2, num_pts2, degree2, &
-           x2_min, x2_max, bc2_min, bc2_max, spline_bc_type2 )
+      call self%bs2%init( num_pts2, degree2, x2_min, x2_max, bc2_min, bc2_max, &
+        spline_bc_type2 )
     else
-      call sll_s_bspline_1d_init( self%bs2, num_pts2, degree2, &
-           x2_min, x2_max, bc2_min, bc2_max )
+      call self%bs2%init( num_pts2, degree2, x2_min, x2_max, bc2_min, bc2_max )
     end if
 
     n1 = self%bs1%n
@@ -204,12 +201,12 @@ contains
         if (present(derivs_x2_min)) then
           do j2 = 1, ncond2
             if( present(derivs_corners)) then
-              call sll_s_bspline_1d_compute_interpolant( self%bs1, &
+              call self%bs1%compute_interpolant( &
                 derivs_x2_min (j2,:)  , &
                 derivs_corners(:,j2,1), &
                 derivs_corners(:,j2,2))
             else
-              call sll_s_bspline_1d_compute_interpolant( self%bs1, derivs_x2_min(j2,:) )
+              call self%bs1%compute_interpolant( derivs_x2_min(j2,:) )
             end if
             self%bwork(j2,:) = self%bs1%bcoef(:)
           end do
@@ -221,12 +218,12 @@ contains
         if (present(derivs_x2_max)) then
           do j2 = 1, ncond2
             if (present(derivs_corners)) then
-              call sll_s_bspline_1d_compute_interpolant( self%bs1, &
+              call self%bs1%compute_interpolant( &
                 derivs_x2_max (j2,:)  , &
                 derivs_corners(:,j2,3), &
                 derivs_corners(:,j2,4))
             else
-              call sll_s_bspline_1d_compute_interpolant( self%bs1, derivs_x2_max(j2,:) )
+              call self%bs1%compute_interpolant( derivs_x2_max(j2,:) )
             end if
             self%bwork(n2-ncond2+j2,:) = self%bs1%bcoef(:)
           end do
@@ -240,7 +237,7 @@ contains
         ! boundary conditions at x2_min
         if (present(derivs_x2_min)) then
           do j2 = 1, ncond2
-            call sll_s_bspline_1d_compute_interpolant( self%bs1, derivs_x2_min(j2,:) )
+            call self%bs1%compute_interpolant( derivs_x2_min(j2,:) )
             self%bwork(j2,:) = self%bs1%bcoef(:)
           end do
         else  ! set needed boundary values to 0
@@ -250,7 +247,7 @@ contains
         ! boundary conditions at x2_max
         if (present(derivs_x2_max)) then
           do j2 = 1, ncond2
-            call sll_s_bspline_1d_compute_interpolant( self%bs1, derivs_x2_max(j2,:) )
+            call self%bs1%compute_interpolant( derivs_x2_max(j2,:) )
             self%bwork(n2-ncond2+j2,:) = self%bs1%bcoef(:)
           end do
         else ! set needed boundary values to 0
@@ -263,12 +260,12 @@ contains
     ! Interior points
     do i2 = 1, n2-2*ncond2
       if (present(derivs_x1_min) .and. present(derivs_x1_max)) then
-        call sll_s_bspline_1d_compute_interpolant( self%bs1, &
+        call self%bs1%compute_interpolant( &
           gtau         (:,i2), &
           derivs_x1_min(:,i2), &
           derivs_x1_max(:,i2) )
       else
-        call sll_s_bspline_1d_compute_interpolant( self%bs1, gtau(:,i2) )
+        call self%bs1%compute_interpolant( gtau(:,i2) )
       end if
       self%bwork(i2+ncond2,:) = self%bs1%bcoef(:)
     end do
@@ -280,7 +277,7 @@ contains
 
       if (present(derivs_x2_min) .and. present(derivs_x2_max)) then
         do i1 = 1, n1
-          call sll_s_bspline_1d_compute_interpolant( self%bs2, &
+          call self%bs2%compute_interpolant( &
                self%bwork(ncond2+1:n2-ncond2,i1), &
                self%bwork(1:ncond2,i1), &
                self%bwork(n2-ncond2+1:n2,i1) )
@@ -288,7 +285,7 @@ contains
         end do
       else
         do i1 = 1, n1
-          call sll_s_bspline_1d_compute_interpolant( self%bs2, self%bwork(ncond2+1:n2-ncond2,i1) )
+          call self%bs2%compute_interpolant( self%bwork(ncond2+1:n2-ncond2,i1) )
           self%bcoef(i1,:) = self%bs2%bcoef(:)
         end do
       end if
@@ -296,7 +293,7 @@ contains
     else
 
       do i1 = 1, n1
-        call sll_s_bspline_1d_compute_interpolant( self%bs2, self%bwork(:,i1) )
+        call self%bs2%compute_interpolant( self%bwork(:,i1) )
         self%bcoef(i1,:) = self%bs2%bcoef(:)
       end do
 
@@ -510,8 +507,8 @@ contains
     deallocate( self%bcoef )
 
     ! Free memory of 1D B-splines
-    call sll_s_bspline_1d_free( self%bs1 )
-    call sll_s_bspline_1d_free( self%bs2 )
+    call self%bs1%free()
+    call self%bs2%free()
 
   end subroutine sll_s_bspline_2d_free
 
