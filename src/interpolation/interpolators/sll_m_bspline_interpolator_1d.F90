@@ -28,7 +28,7 @@ module sll_m_bspline_interpolator_1d
   use sll_m_boundary_condition_descriptors, only: &
     sll_p_periodic
 
-  use sll_m_bspline_1d, only: &
+  use sll_m_spline_1d_non_uniform, only: &
     sll_t_bspline_1d, &
     sll_s_bspline_1d_init, &
     sll_s_bspline_1d_free, &

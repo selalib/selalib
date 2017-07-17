@@ -11,7 +11,7 @@ use sll_m_boundary_condition_descriptors, only: &
      sll_p_periodic, &
      sll_p_mirror
 
-use sll_m_bspline_1d, only: &
+use sll_m_spline_1d_non_uniform, only: &
   sll_s_bspline_1d_compute_interpolant, &
   sll_s_bspline_1d_eval_array_deriv, &
   sll_s_bspline_1d_eval_array, &

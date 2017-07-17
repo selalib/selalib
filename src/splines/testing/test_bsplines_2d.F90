@@ -11,7 +11,7 @@ use sll_m_boundary_condition_descriptors, only: &
      sll_p_periodic, &
      sll_p_mirror
 
-use sll_m_bspline_2d
+use sll_m_spline_2d_non_uniform
 
 use sll_m_constants, only: pi => sll_p_pi
 
