@@ -1,7 +1,7 @@
 !> @ingroup splines
 !> Implements arbitrary degree bspline interpolation on a uniform grid
 !> given a B-Spline object from sll_m_bsplines
-module sll_m_bspline_1d
+module sll_m_spline_1d_non_uniform
 
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_assert.h"
@@ -617,4 +617,4 @@ contains
 
   end subroutine sll_s_bspline_1d_free
 
-end module sll_m_bspline_1d
+end module sll_m_spline_1d_non_uniform

@@ -14,7 +14,7 @@ module m_test_bsplines_2d
        sll_p_hermite, &
        sll_p_greville
 
-  use sll_m_bspline_2d, only:             &
+  use sll_m_spline_2d_non_uniform, only:             &
     sll_t_bspline_2d,                     &
     sll_s_bspline_2d_init,                &
     sll_s_bspline_2d_free,                &
