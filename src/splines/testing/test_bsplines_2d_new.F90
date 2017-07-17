@@ -129,7 +129,7 @@ program test_bsplines_2d_new
   bc_kinds(:) = [sll_p_periodic, sll_p_hermite, sll_p_greville]
 
   ! Choose number of knots in tensor grid
-  nx1 = 10
+  nx1 = 12
   nx2 = 37
 
   ! Print constant parameters
