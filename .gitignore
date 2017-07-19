@@ -54,7 +54,7 @@ Portindex*
 # Default directories for build and install
 /build/
 /usr/
-/include/
+
 
 # Other stuff (to be removed?)
 #prototype/release/*
