@@ -1,14 +1,15 @@
 SET( SPLINES_FILES
-  sll_m_quintic_splines.F90
+  sll_m_bsplines.F90
   sll_m_spline_1d_base.F90
+  sll_m_spline_1d_uniform.F90
   sll_m_spline_1d_non_uniform.F90
   sll_m_spline_2d_non_uniform.F90
-  sll_m_bsplines.F90
-  sll_m_hex_pre_filters.F90
-  sll_m_box_splines.F90
-  sll_m_cubic_non_uniform_splines.F90
   sll_m_deboor_splines_1d.F90 
-  sll_m_splines_pp.F90)
+  sll_m_splines_pp.F90
+  sll_m_cubic_non_uniform_splines.F90
+  sll_m_quintic_splines.F90
+  sll_m_hex_pre_filters.F90
+  sll_m_box_splines.F90 )
 
 IF(PGI)
   LIST(APPEND SPLINES_FILES sll_m_cubic_splines_pgi.F90)
