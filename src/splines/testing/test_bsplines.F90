@@ -12,19 +12,20 @@ program test_arbitrary_degree_splines
     sll_p_mirror ! not tested at the moment
 
   use sll_m_bsplines, only: &
-    sll_t_bsplines, &
-    sll_s_bsplines_init_from_grid, &
-    sll_s_bsplines_free, &
-    sll_s_bsplines_eval_basis, &
-    sll_s_bsplines_eval_deriv, &
-    sll_s_bsplines_eval_basis_and_deriv, &
+    sll_t_bsplines                        , &
+    sll_s_bsplines_init_from_grid         , &
+    sll_s_bsplines_free                   , &
+    sll_s_bsplines_eval_basis             , &
+    sll_s_bsplines_eval_deriv             , &
+    sll_s_bsplines_eval_basis_and_deriv   , &
     sll_s_bsplines_eval_basis_and_n_derivs, &
     sll_f_find_cell, &
-    sll_s_bsplines_eval_basis_mm, &
+    sll_s_bsplines_eval_basis_mm          , &
     sll_s_bsplines_eval_basis_and_deriv_mm, &
-    sll_s_uniform_bsplines_eval_basis, &
-    sll_s_uniform_bsplines_eval_deriv, &
-    sll_s_uniform_bsplines_eval_basis_and_deriv
+    sll_s_uniform_bsplines_eval_basis          , &
+    sll_s_uniform_bsplines_eval_deriv          , &
+    sll_s_uniform_bsplines_eval_basis_and_deriv, &
+    sll_s_uniform_bsplines_eval_basis_and_n_derivs
 
   use sll_m_timer, only: &
     sll_s_set_time_mark, &
@@ -38,7 +39,7 @@ program test_arbitrary_degree_splines
   character(len=*), parameter :: timing_fmt = &
     "(' Computing time for  ',a,':',es12.2)"
 
-  character(len=43) :: subr
+  character(len=46) :: subr
   logical           :: passed_test
 
   passed_test = .true.
@@ -409,17 +410,24 @@ contains
     sll_real64                  :: criterion
     sll_real64                  :: argument
     sll_real64                  :: argument_copy
-    sll_real64, dimension(:), allocatable   :: results
-    sll_real64, dimension(:), allocatable   :: derivatives
+
+    sll_real64, dimension(:)  , allocatable :: results
+    sll_real64, dimension(:)  , allocatable :: results_n
+    sll_real64, dimension(:)  , allocatable :: derivatives
+    sll_real64, dimension(:)  , allocatable :: derivatives_n
     sll_real64, dimension(:,:), allocatable :: sp_and_derivs
-    sll_real64, dimension(:), allocatable   :: results_n
-    sll_real64, dimension(:), allocatable   :: derivatives_n
     sll_real64, dimension(:,:), allocatable :: sp_and_derivs_n
+    sll_real64, dimension(:,:), allocatable :: sp_and_j_derivs
+    sll_real64, dimension(:,:), allocatable :: sp_and_j_derivs_n
+
     sll_int32                   :: num_tests
     sll_int32                   :: i
     sll_int32                   :: j
+    sll_int32                   :: p
     sll_int32                   :: max_degree
     sll_int32                   :: ierr
+    sll_real64                  :: error
+    sll_real64                  :: tolerance
     sll_int32, parameter        :: num_pts = 12
     sll_real64, dimension(num_pts)  :: grid
     type(sll_t_bsplines) :: spline
@@ -436,12 +444,17 @@ contains
 
     do j=1, max_degree
        print*, '--------- degree=', j
-       SLL_CLEAR_ALLOCATE(results(1:j+1),ierr)
-       SLL_CLEAR_ALLOCATE(derivatives(1:j+1),ierr)
-       SLL_CLEAR_ALLOCATE(sp_and_derivs(1:2,1:j+1),ierr)
+       SLL_CLEAR_ALLOCATE(results  (1:j+1),ierr)
        SLL_CLEAR_ALLOCATE(results_n(1:j+1),ierr)
+
+       SLL_CLEAR_ALLOCATE(derivatives  (1:j+1),ierr)
        SLL_CLEAR_ALLOCATE(derivatives_n(1:j+1),ierr)
-       SLL_CLEAR_ALLOCATE(sp_and_derivs_n(1:2,1:j+1),ierr)
+
+       SLL_CLEAR_ALLOCATE(sp_and_derivs  (0:1,1:j+1),ierr)
+       SLL_CLEAR_ALLOCATE(sp_and_derivs_n(0:1,1:j+1),ierr)
+
+       SLL_CLEAR_ALLOCATE(sp_and_j_derivs  (0:j,1:j+1),ierr)
+       SLL_CLEAR_ALLOCATE(sp_and_j_derivs_n(0:j,1:j+1),ierr)
 
        ! creating non uniform 1d spline on uniform grid for comparison
        call sll_s_bsplines_init_from_grid( &
@@ -454,14 +467,18 @@ contains
        do i=1,num_tests
           ! draw random number between 0 and 1
           call random_number(argument)
+
           ! compute values with uniform splines
           call sll_s_uniform_bsplines_eval_basis(j, argument, results)
           call sll_s_uniform_bsplines_eval_deriv(j, argument, derivatives)
-          call sll_s_uniform_bsplines_eval_basis_and_deriv(j, argument, sp_and_derivs)
+          call sll_s_uniform_bsplines_eval_basis_and_deriv   (j, argument, sp_and_derivs)
+          call sll_s_uniform_bsplines_eval_basis_and_n_derivs(j, argument, j, sp_and_j_derivs)
+
           ! compute values with non uniform splines (cell is always 1)
           call sll_s_bsplines_eval_basis(spline, 1, argument, results_n)
           call sll_s_bsplines_eval_deriv(spline, 1, argument, derivatives_n)
-          call sll_s_bsplines_eval_basis_and_deriv(spline, 1, argument, sp_and_derivs_n)
+          call sll_s_bsplines_eval_basis_and_deriv   (spline, 1, argument, sp_and_derivs_n)
+          call sll_s_bsplines_eval_basis_and_n_derivs(spline, 1, argument, j, sp_and_j_derivs_n)
 
           passed_flag = passed_flag .and. &
                (maxval(abs(results-results_n)).le.criterion)
@@ -490,33 +507,53 @@ contains
           end if
 
           passed_flag = passed_flag .and. &
-               (maxval(abs(sp_and_derivs(1,:)-sp_and_derivs_n(1,:) )) &
+               (maxval(abs(sp_and_derivs(0,:)-sp_and_derivs_n(0,:) )) &
                .le.criterion) .and. &
-               (maxval(abs(sp_and_derivs(2,:)-sp_and_derivs_n(2,:) )) &
+               (maxval(abs(sp_and_derivs(1,:)-sp_and_derivs_n(1,:) )) &
                .le.criterion)
           if( passed_flag .eqv. .false. ) then
              print *, 'Test_uniform_b_splines, vals and derivs: ', &
                   'wrong result for x = ', argument
-             print*, 'uniform splines values',  sp_and_derivs(1,:)
-             print*, 'nonuniform splines values', sp_and_derivs_n(1,:)
-             print*, 'uniform splines derivatives',  sp_and_derivs(2,:)
-             print*, 'nonuniform spline derivs', sp_and_derivs_n(2,:)
+             print*, 'uniform splines values'     , sp_and_derivs  (0,:)
+             print*, 'nonuniform splines values'  , sp_and_derivs_n(0,:)
+             print*, 'uniform splines derivatives', sp_and_derivs  (1,:)
+             print*, 'nonuniform spline derivs'   , sp_and_derivs_n(1,:)
              print*, 'Exiting...'
              stop
           end if
+
+          do p = 0, j
+             error = maxval(abs( sp_and_j_derivs(p,:)-sp_and_j_derivs_n(p,:) ))
+             tolerance   = criterion * (10._f64**p)
+             passed_flag = passed_flag .and. (error <= tolerance)
+             if( passed_flag .eqv. .false. ) then
+                print *, 'Test_uniform_b_splines, vals and n derivs: ', &
+                      'wrong result for x = ', argument
+                print*, 'uniform    splines deriv', p, sp_and_j_derivs  (p,:)
+                print*, 'nonuniform splines deriv', p, sp_and_j_derivs_n(p,:)
+                print*, 'Exiting...'
+                stop
+            end if
+          end do
+
           results(:)         = 0.0_f64
           derivatives(:)     = 0.0_f64
           sp_and_derivs(:,:) = 0.0_f64
+          sp_and_j_derivs(:,:) = 0.0_f64
 
        end do
-       SLL_DEALLOCATE_ARRAY(results, ierr)
-       SLL_DEALLOCATE_ARRAY(derivatives, ierr)
-       SLL_DEALLOCATE_ARRAY(sp_and_derivs, ierr)
+       SLL_DEALLOCATE_ARRAY(results  , ierr)
        SLL_DEALLOCATE_ARRAY(results_n, ierr)
+       SLL_DEALLOCATE_ARRAY(derivatives  , ierr)
        SLL_DEALLOCATE_ARRAY(derivatives_n, ierr)
+       SLL_DEALLOCATE_ARRAY(sp_and_derivs  , ierr)
        SLL_DEALLOCATE_ARRAY(sp_and_derivs_n, ierr)
+       SLL_DEALLOCATE_ARRAY(sp_and_j_derivs  , ierr)
+       SLL_DEALLOCATE_ARRAY(sp_and_j_derivs_n, ierr)
+
        call sll_s_bsplines_free(spline)
     end do
+
   end subroutine test_uniform_b_splines_randomly
 
 
@@ -645,6 +682,7 @@ contains
     sll_real64, dimension(:), allocatable :: answer1
     sll_real64, dimension(:), allocatable :: answer2
     sll_real64, dimension(:,:), allocatable :: answer3
+    sll_real64, dimension(:,:), allocatable :: answer4
     type(sll_t_bsplines) :: spline
     type(sll_t_time_mark)  :: t0
     sll_real64 :: time
@@ -664,6 +702,7 @@ contains
     SLL_ALLOCATE(answer1(degree+1),ierr)
     SLL_ALLOCATE(answer2(degree+1),ierr)
     SLL_ALLOCATE(answer3(2,degree+1),ierr)
+    SLL_ALLOCATE(answer4(0:degree,degree+1),ierr)
 
 
     ! --------- 1D SPLINE INITIALIZATION ON NON UNIFORM MESH ----
@@ -774,6 +813,15 @@ contains
     end do
     time = sll_f_time_elapsed_since(t0) / real(num_tests,f64)
     subr = "sll_s_uniform_bsplines_eval_basis_and_deriv"
+    write(*,timing_fmt) adjustl( subr ), time
+
+    ! computing all non zero uniform splines and all derivatives at point x:
+    call sll_s_set_time_mark(t0)
+    do j=1,num_tests
+       call sll_s_uniform_bsplines_eval_basis_and_n_derivs(degree, xx(j), 1, answer4)
+    end do
+    time = sll_f_time_elapsed_since(t0) / real(num_tests,f64)
+    subr = "sll_s_uniform_bsplines_eval_basis_and_n_derivs"
     write(*,timing_fmt) adjustl( subr ), time
     write(*,*)
 

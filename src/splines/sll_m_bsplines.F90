@@ -57,9 +57,10 @@ module sll_m_bsplines
     sll_s_bsplines_eval_basis_mm, &
     sll_s_bsplines_eval_basis_and_deriv_mm, &
     ! Evaluation of uniform spline basis (faster, should go to separate module):
-    sll_s_uniform_bsplines_eval_basis, &
-    sll_s_uniform_bsplines_eval_deriv, &
-    sll_s_uniform_bsplines_eval_basis_and_deriv, &
+    sll_s_uniform_bsplines_eval_basis             , &
+    sll_s_uniform_bsplines_eval_deriv             , &
+    sll_s_uniform_bsplines_eval_basis_and_deriv   , &
+    sll_s_uniform_bsplines_eval_basis_and_n_derivs, &
     ! Evaluation of uniform periodic spline (use 'sll_m_spline_1d' instead):
     sll_s_eval_uniform_periodic_spline_curve
 
@@ -597,6 +598,7 @@ contains
     end do
     ! j = deg
     bsdx(2,deg) =  saved  
+
     ! Compute values of splines of degree deg
     !----------------------------------------
     j = deg
@@ -623,8 +625,11 @@ contains
   !> @param[in] x value of point where bsplines are to be computed
   !> @param[in] n number of derivatives to be computed
   !> @param[out] bsdx B-spline values and the first n derivatives
+  !
+  ! TODO: transpose output array 'bsdx'
+  ! TODO: save inverse of knot differences!
   !-----------------------------------------------------------------------------
-  SLL_PURE subroutine sll_s_bsplines_eval_basis_and_n_derivs( basis, icell, x , n, bsdx )
+  SLL_PURE subroutine sll_s_bsplines_eval_basis_and_n_derivs( basis, icell, x, n, bsdx )
 
     type(sll_t_bsplines), intent(in   ) :: basis
     integer             , intent(in   ) :: icell
@@ -652,7 +657,7 @@ contains
     real(wp) :: left (1:basis%deg)
     real(wp) :: right(1:basis%deg)
     real(wp) :: ndu  (0:basis%deg,0:basis%deg)
-    real(wp) :: a    (0:1       ,0:basis%deg)
+    real(wp) :: a    (0:1        ,0:basis%deg)
 
     ! Run some checks on the arguments.
     SLL_ASSERT( allocated( basis%knots ) )
@@ -660,7 +665,8 @@ contains
     SLL_ASSERT( x < basis%xmax + 1.0d-14 )
     SLL_ASSERT( icell >= 1 )
     SLL_ASSERT( icell <= basis%num_pts - 1 )
-    SLL_ASSERT( n <= basis%deg/2 )
+    SLL_ASSERT( n >= 0 )
+    SLL_ASSERT( n <= basis%deg )
     SLL_ASSERT( basis%knots(icell) <= x .and. x <= basis%knots(icell+1) )
 
     deg     = basis%deg
@@ -670,14 +676,16 @@ contains
     ! compute nonzero basis functions and knot differences
     ! for splines up to degree deg-1 which are needed to compute derivative
     ! Algorithm  A2.3 of NURBS book 
+
     ndu(0,0) = 1.0_wp
     do j = 1, deg 
        left(j)  = x - basis%knots(icell+1-j)
        right(j) = basis%knots(icell+j) - x
        saved    = 0.0_wp
        do r = 0, j-1
-          ! compute and save knot differences
+          ! compute knot differences and save them into lower triangular part of ndu
           ndu(j,r) = right(r+1) + left(j-r)
+          ! compute basis functions and save them into upper triangular part of ndu
           temp     = ndu(r,j-1) / ndu(j,r)
           ndu(r,j) = saved + right(r+1) * temp
           saved    = left(j-r) * temp
@@ -871,10 +879,10 @@ contains
     real(wp), intent(in   ) :: normalized_offset
     real(wp), intent(  out) :: bspl(0:spline_degree)
 
-    real(wp) :: inv_j
-    real(wp) :: x, xx
-    real(wp) :: j_real
     integer  :: j, r
+    real(wp) :: inv_j
+    real(wp) :: j_real
+    real(wp) :: xx
     real(wp) :: temp
     real(wp) :: saved
 
@@ -882,18 +890,17 @@ contains
     SLL_ASSERT( normalized_offset >= 0.0_wp )
     SLL_ASSERT( normalized_offset <= 1.0_wp )
 
-    x = normalized_offset
     bspl(0) = 1.0_wp
     do j = 1, spline_degree
-       saved = 0.0_wp
+       xx     = -normalized_offset
        j_real = real(j,wp)
-       inv_j = 1.0_wp / j_real
-       xx = - x
+       inv_j  = 1.0_wp / j_real
+       saved  = 0.0_wp
        do r = 0, j-1
-          xx = xx + 1.0_wp
-          temp = bspl(r) * inv_j
+          xx      = xx + 1.0_wp
+          temp    = bspl(r) * inv_j
           bspl(r) = saved + xx * temp
-          saved = (j_real - xx) * temp
+          saved   = (j_real - xx) * temp
        end do
        bspl(j) = saved
     end do
@@ -1030,6 +1037,108 @@ contains
     bspl(1,j) = saved
 
   end subroutine sll_s_uniform_bsplines_eval_basis_and_deriv
+
+  !-----------------------------------------------------------------------------
+  ! TODO: transpose output array 'bspl'
+  SLL_PURE subroutine sll_s_uniform_bsplines_eval_basis_and_n_derivs( &
+      spline_degree,     &
+      normalized_offset, &
+      n,                 &
+      bspl               )
+
+    integer , intent(in   ) :: spline_degree
+    real(wp), intent(in   ) :: normalized_offset
+    integer , intent(in   ) :: n
+    real(wp), intent(  out) :: bspl(0:n,0:spline_degree)
+
+    integer  :: j, r
+    real(wp) :: j_real
+    real(wp) :: xx
+    real(wp) :: temp
+    real(wp) :: saved
+
+    integer  :: k, s1, s2, rk, pk, j1, j2
+    real(wp) :: d
+
+    ! GFortran: to allocate on stack use -fstack-arrays
+    real(wp) :: ndu    (0:spline_degree,0:spline_degree)
+    real(wp) :: a      (0:1            ,0:spline_degree)
+
+    ! Inverse of integers for later use (max spline degree = 32)
+    real(wp), parameter :: inv_idx(*) = [(1.0_wp/real(j,wp), j=1,32)]
+
+    SLL_ASSERT( spline_degree >= 0 )
+    SLL_ASSERT( n >= 0 )
+    SLL_ASSERT( normalized_offset >= 0.0_wp )
+    SLL_ASSERT( normalized_offset <= 1.0_wp )
+
+    ! Evaluate all basis splines (see "sll_s_uniform_bsplines_eval_basis")
+    ndu(0,0) = 1.0_wp
+    do j = 1, spline_degree
+       xx     = -normalized_offset
+       j_real = real(j,wp)
+       saved  = 0.0_wp
+       do r = 0, j-1
+          xx       = xx + 1.0_wp
+          temp     = ndu(r,j-1) * inv_idx(j)
+          ndu(r,j) = saved + xx * temp
+          saved    = (j_real - xx) * temp
+       end do
+       ndu(j,j) = saved
+    end do
+    bspl(0,:) = ndu(:,spline_degree)
+
+    ! Use equation 2.10 in "The NURBS Book" to compute n derivatives
+    associate( deg => spline_degree, bsdx => bspl )
+
+    do r = 0, deg
+       s1 = 0
+       s2 = 1
+       a(0,0) = 1.0_wp
+       do k = 1, n
+          d  = 0.0_wp
+          rk = r-k
+          pk = deg-k
+          if (r >= k) then
+             a(s2,0) = a(s1,0) * inv_idx(pk+1)
+             d = a(s2,0) * ndu(rk,pk)
+          end if
+          if (rk > -1) then
+             j1 = 1
+          else
+             j1 = -rk
+          end if
+          if (r-1 <= pk) then
+             j2 = k-1
+          else
+             j2 = deg-r
+          end if
+          do j = j1, j2
+             a(s2,j) = (a(s1,j) - a(s1,j-1)) * inv_idx(pk+1)
+             d = d + a(s2,j) * ndu(rk+j,pk)
+          end do
+          if (r <= pk) then
+             a(s2,k) = - a(s1,k-1) * inv_idx(pk+1)
+             d = d + a(s2,k) * ndu(r,pk)
+          end if
+          bsdx(k,r) = d
+          j  = s1
+          s1 = s2
+          s2 = j
+       end do
+    end do
+
+    ! Multiply result by correct factors:
+    ! deg!/(deg-n)! = deg*(deg-1)*...*(deg-n+1)
+    r = deg
+    do k = 1, n
+       bsdx(k,:) = bsdx(k,:) * r
+       r = r * (deg-k)
+    end do
+
+    end associate
+
+  end subroutine sll_s_uniform_bsplines_eval_basis_and_n_derivs
 
   !-----------------------------------------------------------------------------
   !> @brief
