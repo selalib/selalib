@@ -118,7 +118,7 @@ contains
 !     procedure, pass(mesh) :: eta2_cell_one_arg => eta2_cell_hex
 !     procedure, pass(mesh) :: eta2_cell_two_arg => eta2_cell_triangular_two_arg
 !     procedure, pass(mesh) :: display => display_triangular_mesh_2d
-!     procedure, pass(mesh) :: delete => delete_triangular_mesh_2d
+!     procedure, pass(mesh) :: sll_o_delete => delete_triangular_mesh_2d
 
 end type sll_t_triangular_mesh_2d
 
@@ -149,7 +149,7 @@ end interface sll_o_new_triangular_mesh_2d
 ! end interface eta2_cell
 
 
-!Type: sll_triangular_mesh_2d
+!Type: sll_t_triangular_mesh_2d
 !Structure du maillage
 !
 !nbs    - nombre de sommets

@@ -800,8 +800,8 @@ contains
         rho_values=-rho)
       call sll_s_solve_general_coordinates_elliptic_eq_prototype(&
         poisson%elliptic_solver,&
-        phi)
-   else
+        phi)      
+    else
       call poisson%rho_field%set_field_data(-rho)
       call poisson%rho_field%update_interpolation_coefficients( )
       call sll_s_solve_general_coordinates_elliptic_eq_prototype(&

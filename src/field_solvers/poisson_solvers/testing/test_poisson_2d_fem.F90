@@ -59,17 +59,12 @@ enddo
 dpi = 2*sll_p_pi
 do j = 1, nc_y+1
   do i = 1, nc_x+1
-   ! phi(i,j) = x(i)*x(i) + y(j)*y(j)
-   ! rho(i,j) = phi(i,j)
-     phi(i,j) = cos(2._f64*sll_p_pi*x(i))
-     if ((i.eq.1) .or. (j.eq.1))  then
-        rho(i,j) = -cos(2._f64*sll_p_pi*x(i))
-     end if
-     rho(i,j) = -4._f64*sll_p_pi*sll_p_pi*cos(2._f64*sll_p_pi*x(i))
+   phi(i,j) = x(i)*x(i) + y(j)*y(j)
+   rho(i,j) = phi(i,j)
   end do
 end do
 
-! rho(2:nc_x,2:nc_y) = -4.0_f64
+rho(2:nc_x,2:nc_y) = -4.0_f64
 
 call test_compact()
 
@@ -86,10 +81,8 @@ call sll_o_solve(poisson, e_x, e_y, rho)
 
 errmax = sum(abs(rho-phi)) / real((nc_x+1)*(nc_y+1),f64)
 
-print *, 'err_max = ', errmax
-
 if ( errmax > 0.01 ) then
-   stop 'Compact BC : FAILED'
+  stop 'Compact BC : FAILED'
 end if
 
 end subroutine test_compact
