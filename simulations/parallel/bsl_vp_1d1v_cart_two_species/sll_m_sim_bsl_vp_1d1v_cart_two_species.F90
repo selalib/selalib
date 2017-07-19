@@ -1387,6 +1387,19 @@ contains
         sim%Edrmax         = 0.0_f64
         sim%omegadr        = 1.0_f64
 
+     case("SLL_AMPERE_DRIVE_EDRMAX")
+        sim%driven         = .true.
+        sim%drive_type=  "SLL_AMPERE_DRIVE_EDRMAX"
+        sim%t0             = 0.0_f64
+        sim%twL            = 0.0_f64
+        sim%twR            = 0.0_f64
+        sim%tflat          = 0.0_f64
+        sim%tL             = 0.0_f64
+        sim%tR             = 0.0_f64
+        sim%turn_drive_off = .false.
+        sim%Edrmax         = keen_Edrmax
+        sim%omegadr        = 1.0_f64
+        
         
       case default
         print*,'#drive_type', drive_type, ' not implemented'
@@ -2027,6 +2040,10 @@ contains
           
           e_app = sim%Edrmax *  &
                sin(sim%omegadr*(time_init+real(istep,f64)*sim%dt))
+       case("SLL_AMPERE_DRIVE_EDRMAX")
+          
+          e_app = sim%Edrmax *  &
+               sin(sim%omegadr*(time_init+real(istep,f64)*sim%dt))
        case("SLL_KEEN_DRIVE")
           call compute_e_app(sim,e_app,time_init+real(istep,f64)*sim%dt)
        end select
@@ -2306,6 +2323,9 @@ contains
           if(sim%driven)then
              select case (sim%drive_type)
              case ("SLL_AMPERE_DRIVE" )
+                e_app = sim%Edrmax *  &
+                     sin(sim%omegadr*(time_init+real(istep,f64)*sim%dt))
+             case ("SLL_AMPERE_DRIVE_EDRMAX" )
                 e_app = sim%Edrmax *  &
                      sin(sim%omegadr*(time_init+real(istep,f64)*sim%dt))
                    ! print*,'e_app',e_app(1)
