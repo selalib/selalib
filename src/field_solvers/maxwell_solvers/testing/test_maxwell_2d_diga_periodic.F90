@@ -40,8 +40,7 @@ program test_maxwell_2d_diga_periodic
 
   use sll_m_cartesian_meshes, only: &
     sll_f_new_cartesian_mesh_2d, &
-    sll_t_cartesian_mesh_2d, &
-    sll_o_new
+    sll_t_cartesian_mesh_2d
 
   use sll_m_common_coordinate_transformations, only: &
     sll_f_identity_jac11, &
@@ -59,13 +58,12 @@ program test_maxwell_2d_diga_periodic
     sll_f_new_coordinate_transformation_2d_analytic
 
   use sll_m_dg_fields, only: &
-    sll_t_dg_field_2d, &
-    sll_o_new
+    sll_t_dg_field_2d
 
   use sll_m_maxwell_2d_diga, only: &
-    sll_o_create, &
+    sll_s_maxwell_2d_diga_init, &
     sll_t_maxwell_2d_diga, &
-    sll_o_solve, &
+    sll_s_solve_maxwell_2d_diga, &
     sll_p_uncentered
 
   use sll_m_maxwell_solvers_base, only: &
@@ -92,10 +90,10 @@ class(sll_c_coordinate_transformation_2d_base), pointer :: tau
 
 type(sll_t_maxwell_2d_diga)   :: maxwell_TE
 
-type(sll_t_dg_field_2d), pointer :: ex, ex0, dx, sx
-type(sll_t_dg_field_2d), pointer :: ey, ey0, dy, sy
-type(sll_t_dg_field_2d), pointer :: bz, bz0, dz, sz
-type(sll_t_dg_field_2d), pointer :: exact
+type(sll_t_dg_field_2d) :: ex, ex0, dx, sx
+type(sll_t_dg_field_2d) :: ey, ey0, dy, sy
+type(sll_t_dg_field_2d) :: bz, bz0, dz, sz
+type(sll_t_dg_field_2d) :: exact
 
 sll_real64  :: time
 sll_int32   :: istep
@@ -140,28 +138,28 @@ call tau%write_to_file(sll_p_io_mtv)
 
 time = 0.0_f64
 
-ex  => sll_o_new(degree,tau,sol_ex) 
-ey  => sll_o_new(degree,tau,sol_ey) 
-bz  => sll_o_new(degree,tau,sol_bz) 
+call ex%init(degree,tau,sol_ex) 
+call ey%init(degree,tau,sol_ey) 
+call bz%init(degree,tau,sol_bz) 
 
-ex0 => sll_o_new(degree,tau) 
-ey0 => sll_o_new(degree,tau) 
-bz0 => sll_o_new(degree,tau) 
+call ex0%init(degree,tau) 
+call ey0%init(degree,tau) 
+call bz0%init(degree,tau) 
 
-dx  => sll_o_new(degree,tau) 
-dy  => sll_o_new(degree,tau) 
-dz  => sll_o_new(degree,tau) 
+call dx%init(degree,tau) 
+call dy%init(degree,tau) 
+call dz%init(degree,tau) 
 
-sx  => sll_o_new(degree,tau) 
-sy  => sll_o_new(degree,tau) 
-sz  => sll_o_new(degree,tau) 
+call sx%init(degree,tau) 
+call sy%init(degree,tau) 
+call sz%init(degree,tau) 
 
-exact => sll_o_new( degree, tau)
+call exact%init( degree, tau)
 
 dt = cfl/sqrt(1./(delta_eta1/(degree+1))**2+1./(delta_eta2/(degree+1))**2)
 nstep = 100
 
-call sll_o_create(maxwell_TE, tau, degree, TE_POLARIZATION, &
+call sll_s_maxwell_2d_diga_init(maxwell_TE, tau, degree, TE_POLARIZATION, &
                 sll_p_periodic, sll_p_periodic, sll_p_periodic, sll_p_periodic, &
                 sll_p_uncentered )
 
@@ -172,20 +170,20 @@ do istep = 1, nstep !*** Loop over time
 
    call rksetup()
 
-   call sll_o_solve(maxwell_TE, ex, ey, bz, dx, dy, dz)
+   call sll_s_solve_maxwell_2d_diga(maxwell_TE, ex, ey, bz, dx, dy, dz)
 
    call accumulate(1._f64/6._f64)
    call rkstage(0.5_f64)
 
-   call sll_o_solve(maxwell_TE, ex, ey, bz, dx, dy, dz)
+   call sll_s_solve_maxwell_2d_diga(maxwell_TE, ex, ey, bz, dx, dy, dz)
    call accumulate(1._f64/3._f64)
    call rkstage(0.5_f64)
 
-   call sll_o_solve(maxwell_TE, ex, ey, bz, dx, dy, dz)
+   call sll_s_solve_maxwell_2d_diga(maxwell_TE, ex, ey, bz, dx, dy, dz)
    call accumulate(1._f64/3._f64)
    call rkstage(1.0_f64)
 
-   call sll_o_solve(maxwell_TE, ex, ey, bz, dx, dy, dz)
+   call sll_s_solve_maxwell_2d_diga(maxwell_TE, ex, ey, bz, dx, dy, dz)
    call accumulate(1._f64/6._f64)
 
    call rkstep()
