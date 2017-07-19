@@ -32,8 +32,9 @@ module sll_m_dg_fields
   implicit none
 
   public :: &
+    sll_s_dg_field_2d_init, &
     sll_t_dg_field_2d, &
-    sll_o_new
+    sll_f_new_dg_field_2d
 
   private
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -51,18 +52,11 @@ type :: sll_t_dg_field_2d
 
 contains
 
+   procedure, pass :: init => sll_s_dg_field_2d_init
    procedure, pass :: write_to_file => write_dg_field_2d_to_file
-   procedure, pass :: set_value => initialize_dg_field_2d 
+   procedure, pass :: set_value => set_value_dg_field_2d 
 
 end type sll_t_dg_field_2d
-
-!> function that return a pointer to a DG field 2d
-!> @param[in] tau           transformation 
-!> @param[in] init_function function
-!> @param[in] degree        degree integration
-interface sll_o_new
-  module procedure new_dg_field_2d
-end interface sll_o_new
 
 !> sum operator DG field 2d
 interface operator(+)
@@ -74,12 +68,44 @@ interface operator(-)
   module procedure dg_field_sub
 end interface operator(-)
 
-
 sll_int32 :: error
 
 contains
 
-function new_dg_field_2d( degree, tau, init_function ) result (this) 
+subroutine sll_s_dg_field_2d_init( this, degree, tau, init_function ) 
+
+  class(sll_t_dg_field_2d)              :: this          !< DG field 2d
+  sll_transformation, target            :: tau           !< transformation 
+  sll_real64, external, optional        :: init_function !< function
+  sll_int32, intent(in)                 :: degree        !< degree integration
+  sll_int32                             :: nc_eta1
+  sll_int32                             :: nc_eta2
+  sll_int32                             :: error
+
+  this%tau    => tau
+  this%degree =  degree
+
+  SLL_ALLOCATE(this%xgalo(degree+1),error)
+  SLL_ALLOCATE(this%wgalo(degree+1),error)
+
+  this%xgalo  = sll_f_gauss_lobatto_points(degree+1,-1._f64,1._f64)
+  this%wgalo  = sll_f_gauss_lobatto_weights(degree+1)
+
+  nc_eta1 = tau%mesh%num_cells1
+  nc_eta2 = tau%mesh%num_cells2
+  SLL_CLEAR_ALLOCATE(this%array(1:degree+1,1:degree+1,1:nc_eta1,1:nc_eta2),error)
+
+  this%array = 0.0_f64
+  if (present(init_function)) then
+     call set_value_dg_field_2d( this, init_function, 0.0_f64) 
+  end if
+
+  this%tag = 0
+  this%file_id = 0
+
+end subroutine sll_s_dg_field_2d_init
+
+function sll_f_new_dg_field_2d( degree, tau, init_function ) result (this) 
 
   sll_transformation, pointer           :: tau           !< transformation 
   sll_real64, external, optional        :: init_function !< function
@@ -106,37 +132,34 @@ function new_dg_field_2d( degree, tau, init_function ) result (this)
 
   this%array = 0.0_f64
   if (present(init_function)) then
-     call initialize_dg_field_2d( this, init_function, 0.0_f64) 
+     call set_value_dg_field_2d( this, init_function, 0.0_f64) 
   end if
 
   this%tag = 0
   this%file_id = 0
 
-end function new_dg_field_2d
+end function sll_f_new_dg_field_2d
 
-subroutine initialize_dg_field_2d( this, init_function, time) 
+subroutine set_value_dg_field_2d( this, init_function, time) 
 
-  class(sll_t_dg_field_2d)      :: this
-  sll_real64, external :: init_function
-  sll_real64           :: time
-  sll_real64           :: offset(2)
-  sll_real64           :: eta1
-  sll_real64           :: eta2
-  sll_int32            :: i, j, ii, jj
-  class(sll_t_cartesian_mesh_2d), pointer :: lm
+  class(sll_t_dg_field_2d) :: this
+  sll_real64, external     :: init_function
+  sll_real64               :: time
+  sll_real64               :: offset(2)
+  sll_real64               :: eta1
+  sll_real64               :: eta2
+  sll_int32                :: i, j, ii, jj
   
   SLL_ASSERT(associated(this%array))
 
-  lm => this%tau%get_cartesian_mesh()
-
-  do j = 1, lm%num_cells2
-  do i = 1, lm%num_cells1
-     offset(1) = lm%eta1_min + (i-1)*lm%delta_eta1
-     offset(2) = lm%eta2_min + (j-1)*lm%delta_eta2
+  do j = 1, this%tau%mesh%num_cells2
+  do i = 1, this%tau%mesh%num_cells1
+     offset(1) = this%tau%mesh%eta1_min + (i-1)*this%tau%mesh%delta_eta1
+     offset(2) = this%tau%mesh%eta2_min + (j-1)*this%tau%mesh%delta_eta2
      do jj = 1, this%degree+1
      do ii = 1, this%degree+1
-        eta1 = offset(1) + 0.5 * (this%xgalo(ii) + 1.0) * lm%delta_eta1
-        eta2 = offset(2) + 0.5 * (this%xgalo(jj) + 1.0) * lm%delta_eta2
+        eta1 = offset(1) + 0.5_f64 * (this%xgalo(ii) + 1.0_f64) * this%tau%mesh%delta_eta1
+        eta2 = offset(2) + 0.5_f64 * (this%xgalo(jj) + 1.0_f64) * this%tau%mesh%delta_eta2
         this%array(ii,jj,i,j) = init_function(this%tau%x1(eta1,eta2), &
                                               this%tau%x2(eta1,eta2), &
                                               time)
@@ -145,7 +168,7 @@ subroutine initialize_dg_field_2d( this, init_function, time)
   end do
   end do
 
-end subroutine initialize_dg_field_2d
+end subroutine set_value_dg_field_2d
 
 subroutine write_dg_field_2d_to_file( this, field_name, file_format, time )
 
@@ -167,7 +190,7 @@ subroutine write_dg_field_2d_to_file( this, field_name, file_format, time )
         call plot_dg_field_2d_with_xdmf(this, field_name)
      end if
      case default
-        print"(a)", field_name//' write_to_file : Unknown format'
+        print "(a)", field_name//' write_to_file : Unknown format'
      end select
   else
      call plot_dg_field_2d_with_gnuplot( this, field_name )
@@ -517,7 +540,7 @@ subroutine plot_dg_field_2d_with_xdmf(this, field_name, time)
      write(file_id,"(a13,g15.3,a3)") "<Time Value='",time,"'/>"
   end if
 
-  lm => this%tau%get_cartesian_mesh()
+  lm => this%tau%mesh
 
   k = 0
   do i=1,lm%num_cells1

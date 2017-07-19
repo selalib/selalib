@@ -2018,7 +2018,7 @@ subroutine compute_global_splines_indices( &
 
 end subroutine compute_global_splines_indices
 
-recursive subroutine compute_local_to_global_splines_indices( &
+subroutine compute_local_to_global_splines_indices( &
   num_cells1,&
   num_cells2,&
   spline_degree1,&
