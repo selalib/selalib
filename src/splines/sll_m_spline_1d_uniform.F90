@@ -1,5 +1,8 @@
 !> @ingroup splines
-!> Implements arbitrary degree spline interpolation on uniform grid
+!> @brief   Arbitrary degree spline interpolation on uniform grid
+!> @author  Yaman Güçlü  - IPP Garching
+!> @author  Edoardo Zoni - IPP Garching
+
 module sll_m_spline_1d_uniform
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_assert.h"
@@ -21,8 +24,9 @@ module sll_m_spline_1d_uniform
   use schur_complement, only: &
     schur_complement_solver, &
     schur_complement_fac   , &
-    schur_complement_slv   , &
     schur_complement_free
+
+  implicit none
 
   public :: &
     sll_t_spline_1d_uniform
@@ -37,11 +41,13 @@ module sll_m_spline_1d_uniform
   type, extends(sll_c_spline_1d) :: sll_t_spline_1d_uniform
 
     ! Must be in type:
-    real(wp), private :: xmin
-    real(wp), private :: xmax
-    real(wp), private :: dx
     integer , private :: deg     ! spline degree (= max order of piecewise polynomial)
     integer , private :: n       ! dimension of spline space
+    real(wp), private :: dx
+    real(wp), private :: xmin
+    real(wp), private :: xmax
+    integer , private :: bc_xmin ! boundary condition type at x=xmin
+    integer , private :: bc_xmax ! boundary condition type at x=xmax
     integer , private :: offset  ! shift in bsplines indexing (periodic only)
     real(wp), private, allocatable :: bcoef(:) ! spline coefficients (w.r.t. basis)
     real(wp), private, allocatable :: tau(:)   ! interpolation points
@@ -62,8 +68,6 @@ module sll_m_spline_1d_uniform
     procedure :: eval_array_deriv    => s_spline_1d_uniform__eval_array_deriv
     procedure :: get_coeff           => f_spline_1d_uniform__get_coeff
     procedure :: get_interp_points   => s_spline_1d_uniform__get_interp_points
-
-    ! TODO: get interpolation points
 
   end type sll_t_spline_1d_uniform
 
@@ -112,16 +116,16 @@ contains
   !-----------------------------------------------------------------------------
   subroutine s_spline_1d_uniform__init( &
       self   , &
-      num_pts, &
       degree , &
+      ncells , &
       xmin   , &
       xmax   , &
       bc_xmin, &
       bc_xmax )
 
     class(sll_t_spline_1d_uniform), intent(  out) :: self
-    integer                       , intent(in   ) :: num_pts
     integer                       , intent(in   ) :: degree
+    integer                       , intent(in   ) :: ncells
     real(wp)                      , intent(in   ) :: xmin
     real(wp)                      , intent(in   ) :: xmax
     integer                       , intent(in   ) :: bc_xmin
@@ -129,27 +133,32 @@ contains
 
     ! TODO: consistency checks on input arguments
 
-    real(wp) :: dx
     real(wp) :: shift
+    integer  :: i
     integer  :: size_tau
     real(wp), allocatable :: knots(:)
 
     ! Cell size in uniform grid
-    dx = (xmax-xmin)/real(num_pts-1,wp)
+    self%dx = (xmax-xmin) / real(ncells,wp)
+
+    ! Store other info
+    self%deg     = degree
+    self%xmin    = xmin
+    self%xmax    = xmax
+    self%bc_xmin = bc_xmin
+    self%bc_xmax = bc_xmax
 
     ! Determine number of degrees of freedom
     ! Determine offset (non-zero for periodic spline evaluation)
     if (bc_xmin == sll_p_periodic) then
-      self%n      = num_pts-1
+      self%n      = ncells
       self%offset = degree/2
     else
-      self%n      = num_pts+degree-1
+      self%n      = ncells+degree
       self%offset = 0
     end if
 
-    ! Store info
     ! Allocate array of spline coefficients
-    self%deg = degree
     allocate( self%bcoef(self%n) )
 
     ! Determine interpolation points
@@ -169,7 +178,7 @@ contains
         size_tau = self%n
       end if
       allocate( self%tau (1:size_tau) )
-      self%tau = [(xmin + (real(i-1,wp)+shift)*dx, i=1,size_tau)]
+      self%tau = [(xmin + (real(i-1,wp)+shift)*self%dx, i=1,size_tau)]
 
     ! 2) Hermite-Hermite case:
     !    - for even degree use cell midpoints
@@ -178,13 +187,13 @@ contains
 
        if (modulo(degree,2) == 0) then
          shift    = 0.5_wp
-         size_tau = num_pts-1
+         size_tau = ncells
        else
          shift    = 0.0_wp
-         size_tau = num_pts
+         size_tau = ncells+1
        end if
        allocate( self%tau (1:size_tau) )
-       self%tau = [(xmin + (real(i-1,wp)+shift)*dx, i=1,size_tau)]
+       self%tau = [(xmin + (real(i-1,wp)+shift)*self%dx, i=1,size_tau)]
 
     ! 3) Greville-Greville case:
     !    - for even degree use cell midpoints
@@ -194,25 +203,22 @@ contains
 
       allocate( self%tau(self%n) )
 
-      allocate( knots (1-degree:num_pts+degree) )
-      knots(1-degree:0) = xmin
-      knots(1:num_pts ) = [(xmin+real(i-1,wp)*dx, i=1,num_pts)]
-      knots(num_pts+1:num_pts+degree) = xmax
-      do i = 1, self%n
-        self%tau(i) = sum( knots(i+1-degree:i) ) / real(degree,wp)
-      end do
-      deallocate( knots )
+      associate( num_pts => ncells+1 )
+        allocate( knots (1-degree:num_pts+degree) )
+        knots(1-degree:0) = xmin
+        knots(1:num_pts ) = [(xmin+real(i-1,wp)*self%dx, i=1,num_pts)]
+        knots(num_pts+1:num_pts+degree) = xmax
+        do i = 1, self%n
+          self%tau(i) = sum( knots(i+1-degree:i) ) / real(degree,wp)
+        end do
+        deallocate( knots )
+      end associate
 
     end select
 
     ! Special case: linear spline
     ! No need for matrix assembly
-    if (self%deg == 1) then
-      allocate( self%q(0,0) )
-      return
-    end if
-
-    ! Deal with special case: degree=1
+    if (self%deg == 1) return
 
     ! Assemble matrix $M_{ij} = B_j(\tau_i)$ for spline interpolation
     ! TODO: handle mixed Hermite/Greville BCs
@@ -365,6 +371,7 @@ contains
     end do
 
     ! Perform LU decomposition of matrix q with Lapack
+    allocate( self%ipiv (self%n) )
     call dgbtrf( self%n, self%n, k, k, self%q, 3*k+1, self%ipiv, iflag )
 
   end subroutine s_build_system_hermite
@@ -451,7 +458,45 @@ contains
     real(wp),             optional, intent(in   ) :: derivs_xmin(:)
     real(wp),             optional, intent(in   ) :: derivs_xmax(:)
 
-    ! TODO: implement subroutine...
+    integer :: ncond, k, iflag
+
+    ! Special case: linear spline
+    if (self%deg == 1) then
+      self%bcoef(:) = gtau(1:self%n)
+      return
+    end if
+
+    ! Degree > 1: boundary conditions matter
+    ! TODO: handle different BCs at xmin/xmax
+    select case (self%bc_xmin)
+
+    case(sll_p_periodic)
+       self%bcoef = gtau(1:self%n)
+       call schur_complement_slv( self%schur, self%n, self%deg/2, self%q,  self%bcoef )
+
+    case (sll_p_greville)
+       self%bcoef = gtau
+       call banslv( self%q, 2*self%deg-1, self%n, self%deg-1, self%deg-1, self%bcoef )
+
+    case (sll_p_hermite)
+       ! number of needed conditions at boundary
+       ncond = self%deg/2
+       if (present(derivs_xmin)) then
+          self%bcoef(1:ncond) = derivs_xmin(1:ncond)
+       else  ! set needed boundary values to 0
+          self%bcoef(1:ncond) = 0.0_f64
+       end if
+       self%bcoef(ncond+1:self%n-ncond) = gtau(1:self%n-2*ncond)
+       if (present(derivs_xmax)) then
+          self%bcoef(self%n-ncond+1:self%n) = derivs_xmax(1:ncond)
+       else ! set needed boundary values to 0
+          self%bcoef(self%n-ncond+1:self%n) = 0.0_f64
+       end if
+       ! Use Lapack to solve banded system
+       k = self%deg-1
+       call dgbtrs( 'N', self%n, k, k, 1, self%q, 3*k+1, self%ipiv, &
+                    self%bcoef, self%n, iflag )
+    end select
 
   end subroutine s_spline_1d_uniform__compute_interpolant
 
@@ -529,14 +574,16 @@ contains
 
     class(sll_t_spline_1d_uniform), intent(inout) :: self
 
-    ! deallocate arrays
+    ! Deallocate arrays
     deallocate( self%bcoef  )
-!    deallocate( self%tau    )
-!    deallocate( self%q      )
-!    deallocate( self%bsdx   )
+    deallocate( self%tau    )
 
-    ! free attribute objects
-!    call schur_complement_free( self%schur )
+    ! Arrays used by linear solvers
+    if (allocated( self%q    )) deallocate( self%q    )
+    if (allocated( self%ipiv )) deallocate( self%ipiv )
+
+    ! Free attribute objects
+    call schur_complement_free( self%schur )
 
   end subroutine s_spline_1d_uniform__free
 
