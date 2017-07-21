@@ -19,11 +19,13 @@ module sll_m_spline_1d_uniform
 
   use sll_m_bsplines, only: &
     sll_s_uniform_bsplines_eval_basis, &
-    sll_s_uniform_bsplines_eval_deriv
+    sll_s_uniform_bsplines_eval_deriv, &
+    sll_s_uniform_bsplines_eval_basis_and_n_derivs
 
   use schur_complement, only: &
     schur_complement_solver, &
     schur_complement_fac   , &
+    schur_complement_slv   , &
     schur_complement_free
 
   implicit none
@@ -40,15 +42,19 @@ module sll_m_spline_1d_uniform
   !> 1D spline on uniform grid
   type, extends(sll_c_spline_1d) :: sll_t_spline_1d_uniform
 
-    ! Must be in type:
     integer , private :: deg     ! spline degree (= max order of piecewise polynomial)
     integer , private :: n       ! dimension of spline space
-    real(wp), private :: dx
+
     real(wp), private :: xmin
     real(wp), private :: xmax
+    integer , private :: ncells
+    real(wp), private :: dx
+
     integer , private :: bc_xmin ! boundary condition type at x=xmin
     integer , private :: bc_xmax ! boundary condition type at x=xmax
+
     integer , private :: offset  ! shift in bsplines indexing (periodic only)
+
     real(wp), private, allocatable :: bcoef(:) ! spline coefficients (w.r.t. basis)
     real(wp), private, allocatable :: tau(:)   ! interpolation points
 
@@ -76,19 +82,32 @@ contains
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
   !-----------------------------------------------------------------------------
-  pure subroutine s_get_icell_and_offset( xmin, dx, x, icell, offset )
+  SLL_PURE subroutine s_get_icell_and_offset( xmin, xmax, ncells, x, icell, offset )
+
     real(wp), intent(in   ) :: xmin
-    real(wp), intent(in   ) :: dx
+    real(wp), intent(in   ) :: xmax
+    integer , intent(in   ) :: ncells
     real(wp), intent(in   ) :: x
     integer , intent(  out) :: icell
     real(wp), intent(  out) :: offset
 
     real(wp) :: x_normalized  ! 0 <= x_normalized <= num_cells
 
-    x_normalized = (x-xmin) / dx
-    icell        = int( x_normalized )
-    offset       = x_normalized - real( icell, wp )
-    icell        = icell + 1
+    SLL_ASSERT( x >= xmin )
+    SLL_ASSERT( x <= xmax )
+
+    if (x == xmin) then
+      icell  = 1
+      offset = 0.0_wp
+    else if (x == xmax) then
+      icell  = ncells
+      offset = 1.0_wp
+    else
+      x_normalized = (x-xmin) / (xmax-xmin) * real(ncells,wp)
+      icell        = int( x_normalized )
+      offset       = x_normalized - real( icell, wp )
+      icell        = icell + 1
+    end if
 
   end subroutine s_get_icell_and_offset
 
@@ -138,15 +157,8 @@ contains
     integer  :: size_tau
     real(wp), allocatable :: knots(:)
 
-    ! Cell size in uniform grid
+    ! Compute cell size in uniform grid
     self%dx = (xmax-xmin) / real(ncells,wp)
-
-    ! Store other info
-    self%deg     = degree
-    self%xmin    = xmin
-    self%xmax    = xmax
-    self%bc_xmin = bc_xmin
-    self%bc_xmax = bc_xmax
 
     ! Determine number of degrees of freedom
     ! Determine offset (non-zero for periodic spline evaluation)
@@ -157,6 +169,14 @@ contains
       self%n      = ncells+degree
       self%offset = 0
     end if
+
+    ! Store other info
+    self%deg     = degree
+    self%ncells  = ncells
+    self%xmin    = xmin
+    self%xmax    = xmax
+    self%bc_xmin = bc_xmin
+    self%bc_xmax = bc_xmax
 
     ! Allocate array of spline coefficients
     allocate( self%bcoef(self%n) )
@@ -304,7 +324,7 @@ contains
     real(wp) :: x_offset
 
     real(wp) :: values(self%deg+1)
-    real(wp) :: derivs(0:self%deg/2-1,1:self%deg+1)
+    real(wp) :: derivs(0:self%deg/2,1:self%deg+1)
 
 
     ! number of boundary conditions needed depending on spline degree
@@ -324,7 +344,7 @@ contains
     ! value of function on the boundary needed as additional boundary conditions
     ! for odd degree splines  baundary is in the interpolation points
     ! only derivative values are needed as boundary conditions
-    if (modulo(k+1,2)==0) then ! spline degree even
+    if (modulo( self%deg, 2 ) == 0) then ! spline degree even
        offset = 1
     else
        offset = 0
@@ -336,12 +356,17 @@ contains
     icell    = 1
     x_offset = 0.0_wp
     call sll_s_uniform_bsplines_eval_basis_and_n_derivs( self%deg, x_offset, nbc, derivs )
-    do i = 1-offset, nbc-offset
+    ! When using uniform B-splines, the cell size is normalized between 0 and 1,
+    ! hence the i-th derivative must be divided by dx^i to scale back the result
+    do i = 1, nbc-offset
+      derivs(i,:) = derivs(i,:) / self%dx**i
+    end do
+    do i = 1, nbc
        ! iterate only to k+1 as last bspline is 0
        ii = ii + 1
        do j = 1, k+1
           jj = icell+j-1
-          self%q(ii-jj+2*k+1,jj) = derivs(i,j)
+          self%q(ii-jj+2*k+1,jj) = derivs(i-offset,j)
        end do
     end do
 
@@ -349,7 +374,7 @@ contains
     do i = 1, self%n-2*nbc
        ii = ii + 1
        x = self%tau(i)
-       call s_get_icell_and_offset( self%xmin, self%dx, x, icell, x_offset )
+       call s_get_icell_and_offset( self%xmin, self%xmax, self%ncells, x, icell, x_offset )
        call sll_s_uniform_bsplines_eval_basis( self%deg, x_offset, values )
        do j=1,k+2
           jj = icell+j-1
@@ -362,11 +387,16 @@ contains
     icell    = self%n-self%deg
     x_offset = 1.0_wp
     call sll_s_uniform_bsplines_eval_basis_and_n_derivs( self%deg, x_offset, nbc, derivs )
-    do i = 1-offset, nbc-offset
+    ! When using uniform B-splines, the cell size is normalized between 0 and 1,
+    ! hence the i-th derivative must be divided by dx^i to scale back the result
+    do i = 1, nbc-offset
+      derivs(i,:) = derivs(i,:) / self%dx**i
+    end do
+    do i = 1, nbc
        ii = ii + 1
        do j = 2, k+2
           jj = icell+j-1
-          self%q(ii-jj+2*k+1,jj) = derivs(i,j)
+          self%q(ii-jj+2*k+1,jj) = derivs(i-offset,j)
        end do
     end do
 
@@ -417,7 +447,7 @@ contains
 
     do ii=2,self%n - 1
        x = self%tau(ii)
-       call s_get_icell_and_offset( self%xmin, self%dx, x, icell, offset )
+       call s_get_icell_and_offset( self%xmin, self%xmax, self%ncells, x, icell, offset )
        call sll_s_uniform_bsplines_eval_basis( self%deg, offset, values )
        do j=1,k+2
           jj = icell+j-1
@@ -509,12 +539,22 @@ contains
 
     integer  :: icell
     real(wp) :: offset
-    real(wp) :: values(0:self%deg)
+    real(wp) :: values(self%deg+1)
 
-    call s_get_icell_and_offset( self%xmin, self%dx, x, icell, offset )
+    ! TODO: save larger array of coefficients in case of periodic BCs
+    !       to avoid loop and usage of "mod( , )" function!!
+    integer  :: j, ib
+
+    call s_get_icell_and_offset( self%xmin, self%xmax, self%ncells, x, icell, offset )
     call sll_s_uniform_bsplines_eval_basis( self%deg, offset, values )
 
-    y = dot_product( self%bcoef(icell-self%deg:icell), values )
+    ! FIXME
+!    y = dot_product( self%bcoef(icell-self%deg:icell), values )
+    y = 0.0_wp
+    do j = 1, self%deg+1
+       ib = mod( icell+j-2-self%offset+self%n, self%n ) + 1
+       y = y + values(j)*self%bcoef(ib)
+    end do
 
   end function f_spline_1d_uniform__eval
 
@@ -527,12 +567,26 @@ contains
 
     integer  :: icell
     real(wp) :: offset
-    real(wp) :: values(0:self%deg)
+    real(wp) :: values(self%deg+1)
 
-    call s_get_icell_and_offset( self%xmin, self%dx, x, icell, offset )
+    ! TODO: save larger array of coefficients in case of periodic BCs
+    !       to avoid loop and usage of "mod( , )" function!!
+    integer  :: j, ib
+
+    call s_get_icell_and_offset( self%xmin, self%xmax, self%ncells, x, icell, offset )
     call sll_s_uniform_bsplines_eval_deriv( self%deg, offset, values )
 
-    y = dot_product( self%bcoef(icell-self%deg:icell), values )
+    ! FIXME
+!    y = dot_product( self%bcoef(icell-self%deg:icell), values )
+    y = 0.0_wp
+    do j = 1, self%deg+1
+       ib = mod( icell+j-2-self%offset+self%n, self%n ) + 1
+       y = y + values(j)*self%bcoef(ib)
+    end do
+
+    ! When using uniform B-splines, the cell size is normalized between 0 and 1,
+    ! hence the derivative must be divided by dx to scale back the result.
+    y = y / self%dx
 
   end function f_spline_1d_uniform__eval_deriv
 
