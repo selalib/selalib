@@ -39,17 +39,6 @@ implicit none
 public :: &
   sll_t_spline_1d_non_uniform
 
-!public :: &
-!  sll_t_bspline_1d,                     &
-!  s_spline_1d_non_uniform__init,                &
-!  s_spline_1d_non_uniform__free,                &
-!  s_spline_1d_non_uniform__compute_interpolant, &
-!  f_spline_1d_non_uniform__eval,                & ! scalar functions for evaluation
-!  f_spline_1d_non_uniform__eval_deriv,          &
-!  s_spline_1d_non_uniform__eval_array,          & ! vector subroutines for evaluation
-!  s_spline_1d_non_uniform__eval_array_deriv,    &
-!  f_spline_1d_non_uniform__get_coeff
-
 private
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
@@ -82,6 +71,7 @@ contains
   procedure :: eval_array          => s_spline_1d_non_uniform__eval_array
   procedure :: eval_array_deriv    => s_spline_1d_non_uniform__eval_array_deriv
   procedure :: get_coeff           => f_spline_1d_non_uniform__get_coeff
+  procedure :: get_interp_points   => s_spline_1d_non_uniform__get_interp_points
 
 end type sll_t_spline_1d_non_uniform
 
@@ -97,6 +87,17 @@ contains
     ptr => self%bcoef
 
   end function f_spline_1d_non_uniform__get_coeff
+
+  !-----------------------------------------------------------------------------
+  subroutine s_spline_1d_non_uniform__get_interp_points( self, tau )
+
+    class(sll_t_spline_1d_non_uniform), intent(in   ) :: self
+    sll_real64,            allocatable, intent(  out) :: tau(:)
+
+    SLL_ASSERT( allocated( self%tau ) )
+    allocate( tau(size(self%tau)), source=self%tau )
+
+  end subroutine s_spline_1d_non_uniform__get_interp_points
 
   !-----------------------------------------------------------------------------
   !> @brief     Constructor for sll_t_bspline_1d object

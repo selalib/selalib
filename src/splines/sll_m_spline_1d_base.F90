@@ -29,6 +29,7 @@ module sll_m_spline_1d_base
     procedure(i_fun_evaluate_at_x       ), deferred :: eval_deriv
     procedure(i_sub_evaluate_at_x_array ), deferred :: eval_array       ! could be implemented here
     procedure(i_sub_evaluate_at_x_array ), deferred :: eval_array_deriv ! could be implemented here
+    procedure(i_sub_get_interp_points   ), deferred :: get_interp_points
     procedure(i_fun_get_pointer_to_coeff), deferred :: get_coeff
   end type sll_c_spline_1d
 
@@ -65,6 +66,13 @@ module sll_m_spline_1d_base
     real(wp)              , intent(in   ) :: x(:)
     real(wp)              , intent(  out) :: y(size(x))
   end subroutine i_sub_evaluate_at_x_array
+
+  !-----------------------------------------------------------------------------
+  subroutine i_sub_get_interp_points( self, tau )
+   import sll_c_spline_1d, wp
+    class(sll_c_spline_1d), intent(in   ) :: self
+    real(wp),  allocatable, intent(  out) :: tau(:)
+  end subroutine i_sub_get_interp_points
 
   !-----------------------------------------------------------------------------
   function i_fun_get_pointer_to_coeff( self ) result( ptr )
