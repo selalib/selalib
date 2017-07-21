@@ -42,6 +42,10 @@ public :: &
 private
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
+  !> Allowed boundary conditions
+  sll_int32, parameter :: bc_types_allowed(*) = &
+    [sll_p_periodic, sll_p_hermite, sll_p_greville]
+
 !> @brief
 !> basic type for one-dimensional B-spline interpolation.
 type, extends(sll_c_spline_1d) :: sll_t_spline_1d_non_uniform
@@ -55,11 +59,8 @@ type, extends(sll_c_spline_1d) :: sll_t_spline_1d_non_uniform
   sll_real64, allocatable                 :: q(:,:)   ! triangular factorization
   sll_real64, allocatable                 :: bsdx(:,:)
   sll_int32,  allocatable                 :: ipiv(:)
-  sll_real64                              :: length
   sll_int32                               :: offset
   type(schur_complement_solver)           :: schur
-  sll_real64, allocatable                 :: bc_left (:)
-  sll_real64, allocatable                 :: bc_right(:)
 
 contains
 
@@ -112,43 +113,28 @@ contains
   !> @param[in] bc_xmax  Boundary condition at x=xmax
   !-----------------------------------------------------------------------------
   subroutine s_spline_1d_non_uniform__init( &
-    self,           &
-    num_pts,        &
-    degree,         &
-    xmin,           &
-    xmax,           &
-    bc_xmin,        &
-    bc_xmax,        &
-    ! optional arguments (TODO: verify if they should be removed)
-    spline_bc_type, &
-    bc_left,        &
-    bc_right )
+    self   , &
+    degree , &
+    breaks , &
+    bc_xmin, &
+    bc_xmax )
 
     class(sll_t_spline_1d_non_uniform), intent(  out) :: self
-    sll_int32             , intent(in   ) :: num_pts
-    sll_int32             , intent(in   ) :: degree
-    sll_real64            , intent(in   ) :: xmin
-    sll_real64            , intent(in   ) :: xmax
-    sll_int32             , intent(in   ) :: bc_xmin
-    sll_int32             , intent(in   ) :: bc_xmax
-    sll_int32 , optional  , intent(in   ) :: spline_bc_type
-    sll_real64, optional  , intent(in   ) :: bc_left (:)
-    sll_real64, optional  , intent(in   ) :: bc_right(:)
+    sll_int32                         , intent(in   ) :: degree
+    sll_real64                        , intent(in   ) :: breaks(:)
+    sll_int32                         , intent(in   ) :: bc_xmin
+    sll_int32                         , intent(in   ) :: bc_xmax
 
-    sll_int32, parameter :: &
-      bc_types_allowed(*) = [sll_p_periodic, sll_p_hermite, sll_p_greville]
-
-    sll_real64 :: grid(num_pts)
+    sll_int32  :: num_pts
     sll_int32  :: i, j
-    sll_real64 :: delta
+!    sll_real64 :: delta
     sll_int32  :: bc_type
     sll_int32  :: basis_bc_xmin
     sll_int32  :: basis_bc_xmax
 
     ! Sanity checks
-    SLL_ASSERT( num_pts >= 2 )
-    SLL_ASSERT( degree  >= 1 )
-    SLL_ASSERT( xmin < xmax )
+    SLL_ASSERT( degree >= 1 )
+    SLL_ASSERT( size( breaks ) >= 2 )
     SLL_ASSERT( any( bc_xmin == bc_types_allowed ) )
     SLL_ASSERT( any( bc_xmax == bc_types_allowed ) )
 
@@ -157,13 +143,7 @@ contains
     SLL_ASSERT( bc_xmin == bc_xmax )
     bc_type = bc_xmin
 
-    ! knot point mirroring works only for Hermite boundary conditions. Check this
-    if (present(spline_bc_type).and.(spline_bc_type == sll_p_mirror)) then
-       if (.not.(bc_type == sll_p_hermite)) then
-          print*, 'Mirror knot sequence at boundary only works with Hermite BC'
-          stop
-       end if
-    end if
+    num_pts = size( breaks )
 
     ! set first attributes
     self%bc_type = bc_type
@@ -174,16 +154,7 @@ contains
        self%n = num_pts + degree - 1 ! dimension of non periodic spline space
        self%offset = 0
     end if
-    self%deg    = degree
-    self%length = xmax - xmin
-
-    ! Define grid for knots
-    ! TODO: non-uniform grid should be passed as an argument
-    delta = self%length / real(num_pts-1,f64)
-    do i = 1, num_pts-1
-       grid(i) = xmin + real(i-1,f64) * delta
-    end do
-    grid(num_pts) = xmax
+    self%deg = degree
 
     ! Determine boundary conditions for B-splines
     select case (bc_xmin)
@@ -199,66 +170,49 @@ contains
     end select
 
     ! Construct a sll_t_bsplines object
-    call sll_s_bsplines_init_from_grid( self%bsp, degree, grid,  &
+    call sll_s_bsplines_init_from_grid( self%bsp, degree, breaks,  &
           basis_bc_xmin, basis_bc_xmax )
 
     allocate( self%bcoef(self%n) )
     allocate( self%bsdx (self%deg/2+1,self%deg+1) )
     allocate( self%ipiv (self%n) )
 
-    ! Determine interpolation points
+    ! Determine array 'tau' of interpolation points
     select case (bc_type)
+
     case (sll_p_periodic)
-      ! Allocate tau which contains interpolation points
+
+      ! Even degree: interpolation points are cell midpoints
+      ! Odd  degree: interpolation points are grid points excluding last
+      ! TODO: use averaging (Greville style)
       allocate( self%tau(self%n) )
       if (modulo(degree,2) == 0) then
-        ! for even degree interpolation points are cell midpoints
-        do i = 1, self%n
-          self%tau(i) = xmin + (real(i,f64)-0.5_f64) * delta
-        end do
+        self%tau(:) = [(0.5_f64*(breaks(i)+breaks(i+1)), i=1, num_pts-1)]
       else
-        ! for odd degree interpolation points are grid points excluding last point
-        do i = 1, self%n
-          self%tau(i) = xmin + real(i-1,f64) * delta
-        end do
+        self%tau(:) = breaks(1:num_pts-1)
       end if
+
     case (sll_p_hermite)
-      ! In this case only interior points are saved in tau
+
+       ! In this case only interior points are saved in tau
+       ! Even degree: interpolation points are cell midpoints
+       ! Odd  degree: interpolation points are grid points including last
        if (modulo(degree,2) == 0) then
-         ! Allocate tau which contains interior interpolation points
          allocate( self%tau(num_pts-1) )
-         ! for even degree interpolation points are cell midpoints
-         do i = 1, num_pts - 1
-           self%tau(i) = xmin + (real(i,f64)-0.5_f64) * delta
-         end do
+         self%tau(:) = [(0.5_f64*(breaks(i)+breaks(i+1)), i=1, num_pts-1)]
        else
-         ! Allocate tau which contains interior interpolation points
          allocate( self%tau(num_pts) )
-          ! for odd degree interpolation points are grid points including last point
-          do i = 1, num_pts
-             self%tau(i) = xmin + real(i-1,f64) * delta
-          end do
+         self%tau(:) = breaks(1:num_pts)
        end if
-       ! deal with possible boundary conditions
-       if (present(bc_left).and. present(bc_right)) then
-          SLL_ASSERT((size(bc_left )==self%deg/2))
-          SLL_ASSERT((size(bc_right)==self%deg/2))
-          allocate( self%bc_left (self%deg/2) )
-          allocate( self%bc_right(self%deg/2) )
-          self%bc_left  = bc_left
-          self%bc_right = bc_right
-       end if
+
     case (sll_p_greville)
-      ! Allocate tau which contains interpolation points
+
+      ! Set interpolation points to be Greville points
       allocate( self%tau(self%n) )
       do i = 1, self%n
-        ! Set interpolation points to be Greville points
-        self%tau(i) = 0.0_f64
-        do j=1-degree,0
-          self%tau(i) = self%tau(i) + self%bsp%knots(i+j)
-        end do
-        self%tau(i) = self%tau(i) / real(degree,f64)
+        self%tau(i) = sum( self%bsp%knots(i+1-degree:i) ) / real(degree,f64)
       end do
+
     end select
 
     ! Special case: linear spline
@@ -477,9 +431,9 @@ contains
   subroutine s_spline_1d_non_uniform__compute_interpolant( self, gtau, derivs_xmin, derivs_xmax )
 
     class(sll_t_spline_1d_non_uniform), intent(inout) :: self
-    sll_real64            , intent(in   ) :: gtau(:)
-    sll_real64, optional  , intent(in   ) :: derivs_xmin(:)
-    sll_real64, optional  , intent(in   ) :: derivs_xmax(:)
+    sll_real64                        , intent(in   ) :: gtau(:)
+    sll_real64,               optional, intent(in   ) :: derivs_xmin(:)
+    sll_real64,               optional, intent(in   ) :: derivs_xmax(:)
 
     sll_int32 :: ncond
     sll_int32 :: k

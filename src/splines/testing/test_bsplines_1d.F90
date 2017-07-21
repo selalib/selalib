@@ -11,11 +11,9 @@ use sll_m_boundary_condition_descriptors, only: &
      sll_p_periodic, &
      sll_p_mirror
 
-use sll_m_spline_1d_base, only: &
-  sll_c_spline_1d
-
-use sll_m_spline_1d_non_uniform, only: &
-  sll_t_spline_1d_non_uniform
+use sll_m_spline_1d_base       , only: sll_c_spline_1d
+use sll_m_spline_1d_uniform    , only: sll_t_spline_1d_uniform
+use sll_m_spline_1d_non_uniform, only: sll_t_spline_1d_non_uniform
 
 use sll_m_constants, only: &
   sll_p_pi
@@ -30,6 +28,7 @@ sll_int32,  parameter         :: nstep = 1
 sll_real64                    :: t0, t1, t2, t3, t4, t5
 sll_int32                     :: ierr
 sll_int32                     :: deg
+logical                       :: uniform
 logical                       :: passed_test
 sll_real64                    :: tol(9)
 
@@ -47,27 +46,70 @@ tol(9) = 1e-12_f64
 ! Initialize PASSED/FAILED condition
 passed_test = .true.
 
+!================
+uniform = .true.
+!================
+
 print*,'***************************************************************'
-print*,'*** 1D PERIODIC ***'
+print*,'***                                                         ***'
+print*,'***           1D UNIFORM SPLINE WITH PERIODIC BCS           ***'
+print*,'***                                                         ***'
 print*,'***************************************************************'
 do deg=1,9
-   call test_process_1d( sll_p_periodic, deg, tol(deg), passed_test)
+   call test_process_1d( sll_p_periodic, deg, uniform, tol(deg), passed_test)
 end do
 print*,
 print*,'***************************************************************'
-print*,'*** 1D GREVILLE ***'
+print*,'***                                                         ***'
+print*,'***           1D UNIFORM SPLINE WITH GREVILLE BCS           ***'
+print*,'***                                                         ***'
 print*,'***************************************************************'
 do deg=1,9
-   call test_process_1d( sll_p_greville, deg, tol(deg), passed_test )
+   call test_process_1d( sll_p_greville, deg, uniform, tol(deg), passed_test )
 end do
 print*,
 print*,'***************************************************************'
-print*,'*** 1D HERMITE ***'
+print*,'***                                                         ***'
+print*,'***           1D UNIFORM SPLINE WITH HERMITE BCS            ***'
+print*,'***                                                         ***'
 print*,'***************************************************************'
 do deg=1,9
-   call test_process_1d( sll_p_hermite, deg, tol(deg), passed_test )
+   call test_process_1d( sll_p_hermite, deg, uniform, tol(deg), passed_test )
 end do
 print*,
+
+!================
+uniform = .false.
+!================
+
+print*,'***************************************************************'
+print*,'***                                                         ***'
+print*,'***         1D NON-UNIFORM SPLINE WITH PERIODIC BCS         ***'
+print*,'***                                                         ***'
+print*,'***************************************************************'
+do deg=1,9
+   call test_process_1d( sll_p_periodic, deg, uniform, tol(deg), passed_test)
+end do
+print*,
+print*,'***************************************************************'
+print*,'***                                                         ***'
+print*,'***         1D NON-UNIFORM SPLINE WITH GREVILLE BCS         ***'
+print*,'***                                                         ***'
+print*,'***************************************************************'
+do deg=1,9
+   call test_process_1d( sll_p_greville, deg, uniform, tol(deg), passed_test )
+end do
+print*,
+print*,'***************************************************************'
+print*,'***                                                         ***'
+print*,'***         1D NON-UNIFORM SPLINE WITH HERMITE BCS          ***'
+print*,'***                                                         ***'
+print*,'***************************************************************'
+do deg=1,9
+   call test_process_1d( sll_p_hermite, deg, uniform, tol(deg), passed_test )
+end do
+print*,
+
 !print*,'***************************************************************'
 !print*,'*** 1D HERMITE  WITH MIRROR KNOT POINTS***'
 !print*,'***************************************************************'
@@ -83,16 +125,17 @@ end if
 
 contains
 
-  subroutine test_process_1d( bc_type, deg, tol, passed_test, spline_bc_type )
+  subroutine test_process_1d( bc_type, deg, uniform, tol, passed_test, spline_bc_type )
 
     sll_int32 , intent(in   )           :: bc_type
     sll_int32 , intent(in   )           :: deg
+    logical   , intent(in   )           :: uniform
     sll_real64, intent(in   )           :: tol
     logical   , intent(inout)           :: passed_test
     sll_int32 , intent(in   ), optional :: spline_bc_type
 
     ! local variables
-    class(sll_t_spline_1d_non_uniform), allocatable :: bspline_1d
+    class(sll_c_spline_1d), allocatable :: bspline_1d
     sll_real64 :: x_min = 0.0_f64
     sll_real64 :: x_max = 1.0_f64
 
@@ -108,18 +151,26 @@ contains
     sll_int32,  parameter                 :: n = 27    ! number of evaluation points
     sll_real64                            :: h
 
+    sll_real64 :: dx
+    sll_real64, allocatable :: tau(:)
+
     SLL_ALLOCATE(x(n),ierr)
     SLL_ALLOCATE(y(n),ierr)
     SLL_ALLOCATE(xx(n),ierr)
 
     ! Allocate polymorphic object to non-uniform spline
-    allocate( sll_t_spline_1d_non_uniform :: bspline_1d )
+    if (uniform) then
+      allocate( sll_t_spline_1d_uniform     :: bspline_1d )
+    else
+      allocate( sll_t_spline_1d_non_uniform :: bspline_1d )
+    end if
 
     ! define uniform evaluation grid
     h = (x_max-x_min)/real(n-1,f64)
     do i = 1, n
        x(i) = x_min + real(i-1,f64)*h
     end do
+
     ! define set of random numbers for evaluation
     call random_number(xx)
     xx = x_min + xx * (x_max-x_min)
@@ -127,21 +178,32 @@ contains
     print*,'+++++++++++++++++++++++++++++++++'
     print*,'*** Spline degree = ', deg
     print*,'+++++++++++++++++++++++++++++++++'
-    if (present(spline_bc_type)) then
-       call bspline_1d%init( npts, deg, x_min, x_max, bc_type, bc_type, spline_bc_type )
-    else
-       call bspline_1d%init( npts, deg, x_min, x_max, bc_type, bc_type )
-    end if
+    select type (bspline_1d)
+
+    type is (sll_t_spline_1d_uniform)
+      call bspline_1d%init( deg, npts-1, x_min, x_max, bc_type, bc_type )
+
+    type is (sll_t_spline_1d_non_uniform)
+
+      dx = (x_min+x_max)/real(npts-1,f64)
+      call bspline_1d%init( &
+        degree  = deg, &
+        breaks  = [(x_min+real(i-1,f64)*dx, i=1, npts)], &
+        bc_xmin = bc_type, &
+        bc_xmax = bc_type )
+
+    end select
     print*, 'bspline_1d_init constructed'
 
-    SLL_ALLOCATE(gtau(size(bspline_1d%tau)),ierr)
+    ! Get interpolation points
+    call bspline_1d % get_interp_points( tau )
+
+    SLL_ALLOCATE(gtau(size(tau)),ierr)
     SLL_ALLOCATE(bc(deg/2),ierr)
     print*, '------------------------------------------'
     print*, 'Test on cosinus at uniformly spaced points'
     print*, '------------------------------------------'
-    gtau = cos(2*sll_p_pi*bspline_1d%tau)
-    !print*, 'tau:  ', bspline_1d%tau
-    !print*, 'gtau: ', gtau
+    gtau = cos(2*sll_p_pi*tau)
 
     call cpu_time(t0)
     if (bc_type == sll_p_hermite) then
@@ -232,8 +294,8 @@ contains
 
     print*, 'Test on sinus at random points'
     print*, ' -----------------------------'
-    SLL_ALLOCATE(htau(size(bspline_1d%tau)),ierr)
-    htau = sin(2*sll_p_pi*bspline_1d%tau)
+    SLL_ALLOCATE(htau(size(tau)),ierr)
+    htau = sin(2*sll_p_pi*tau)
     if (bc_type == sll_p_hermite) then
        ! Compute boundary conditions for Hermite case
        bc=0.0_f64
@@ -314,6 +376,7 @@ contains
     call cpu_time(t5)
 
     !......
+    deallocate(tau)
     SLL_DEALLOCATE_ARRAY(gtau,ierr)
     SLL_DEALLOCATE_ARRAY(htau,ierr)
     call bspline_1d%free()

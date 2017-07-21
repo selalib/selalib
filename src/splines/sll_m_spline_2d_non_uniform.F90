@@ -119,31 +119,31 @@ contains
     sll_int32 ,             intent(in   ) :: bc2_min
     sll_int32 ,             intent(in   ) :: bc1_max
     sll_int32 ,             intent(in   ) :: bc2_max
-    sll_int32 , optional,   intent(in   ) :: spline_bc_type1
-    sll_int32 , optional,   intent(in   ) :: spline_bc_type2
+    sll_int32 , optional,   intent(in   ) :: spline_bc_type1 ! TODO: remove
+    sll_int32 , optional,   intent(in   ) :: spline_bc_type2 ! TODO: remove
 
-    sll_int32 :: n1
-    sll_int32 :: n2
+    sll_int32  :: i
+    sll_int32  :: n1
+    sll_int32  :: n2
+    sll_real64 :: dx1
+    sll_real64 :: dx2
+    sll_real64 :: breaks1(num_pts1)
+    sll_real64 :: breaks2(num_pts2)
 
     ! NOTE: in the future different boundary conditions at xmin and xmax
     !       should be considered. For now we only check that bc_xmin==bc_xmax
     SLL_ASSERT( bc1_min == bc1_max )
     SLL_ASSERT( bc2_min == bc2_max )
 
-    if (present(spline_bc_type1)) then
-      call self%bs1%init( num_pts1, degree1, x1_min, x1_max, bc1_min, bc1_max, &
-                          spline_bc_type1 )
-      call self%bs1%init( num_pts1, degree1, x1_min, x1_max, bc1_min, bc1_max, &
-                          spline_bc_type1 )
-    else
-      call self%bs1%init( num_pts1, degree1, x1_min, x1_max, bc1_min, bc1_max )
-    end if
-    if (present(spline_bc_type2)) then
-      call self%bs2%init( num_pts2, degree2, x2_min, x2_max, bc2_min, bc2_max, &
-        spline_bc_type2 )
-    else
-      call self%bs2%init( num_pts2, degree2, x2_min, x2_max, bc2_min, bc2_max )
-    end if
+    ! TODO: x1_breaks and x2_breaks should be input arguments
+    dx1     = (x1_max-x1_min)/real(num_pts1-1,f64)
+    dx2     = (x2_max-x2_min)/real(num_pts2-1,f64)
+    breaks1 = [(x1_min+real(i-1,f64)*dx1, i=1, num_pts1)]
+    breaks2 = [(x2_min+real(i-1,f64)*dx2, i=1, num_pts2)]
+
+    ! TODO: remove optional arguments 'spline_bc_type1' and 'spline_bc_type2'
+    call self%bs1%init( degree1, breaks1, bc1_min, bc1_max )
+    call self%bs2%init( degree2, breaks2, bc2_min, bc2_max )
 
     n1 = self%bs1%n
     n2 = self%bs2%n
