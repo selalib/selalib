@@ -28,8 +28,8 @@ module sll_m_bspline_interpolator_1d
   use sll_m_boundary_condition_descriptors, only: &
     sll_p_periodic
 
-  use sll_m_spline_1d_non_uniform, only: &
-    sll_t_spline_1d_non_uniform
+  use sll_m_spline_1d_uniform, only: &
+    sll_t_spline_1d_uniform
 
   use sll_m_interpolators_1d_base, only: &
     sll_c_interpolator_1d
@@ -46,11 +46,12 @@ module sll_m_bspline_interpolator_1d
 !> Class for arbitrary degree spline 1d interpolator
 type, extends(sll_c_interpolator_1d) :: sll_t_bspline_interpolator_1d
 
-  type(sll_t_spline_1d_non_uniform) :: bspline    !< bspline data
+  type(sll_t_spline_1d_uniform)     :: bspline    !< bspline data
   sll_int32                         :: num_pts
   sll_int32                         :: spl_deg
   sll_real64                        :: eta_min
   sll_real64                        :: eta_max
+  sll_real64                        :: length
   sll_int32                         :: bc_type
   sll_real64                        :: value_l          = 0.0_f64
   logical                           :: compute_value_l  = .false.
@@ -139,12 +140,14 @@ sll_int32,       intent(in) :: bc_type_r
 sll_real64,      optional   :: bc_l(:)
 sll_real64,      optional   :: bc_r(:)
 
+SLL_ASSERT( bc_type_l == bc_type_r)
+
 interpolator%num_pts = num_pts
 interpolator%spl_deg = spl_deg
 interpolator%eta_min = eta_min
 interpolator%eta_max = eta_max
-
-SLL_ASSERT( bc_type_l == bc_type_r)
+interpolator%length  = eta_max-eta_min
+interpolator%bc_type = bc_type_l
 
 if (present(bc_l) .and. present(bc_r)) then
 
@@ -152,8 +155,8 @@ if (present(bc_l) .and. present(bc_r)) then
 
 else
 
-   call interpolator%bspline%init( num_pts,  &
-                                   spl_deg,  &
+   call interpolator%bspline%init( spl_deg,  &
+                                   num_pts-1,&
                                    eta_min,  &
                                    eta_max,  &
                                    bc_type_l,&
@@ -260,9 +263,9 @@ res = eta1
 if (interpolator%bc_type == sll_p_periodic) then ! periodic
 
   if( res < interpolator%eta_min ) then
-     res = res+interpolator%bspline%length
+     res = res + interpolator%length
   else if( res >  interpolator%eta_max ) then
-     res = res-interpolator%bspline%length
+     res = res - interpolator%length
   end if
 
 end if
@@ -312,12 +315,12 @@ sll_real64                       :: res
 
 res = eta1
 
-if (interpolator%bspline%bc_type == sll_p_periodic ) then 
+if (interpolator%bc_type == sll_p_periodic ) then
 
   if( res < interpolator%eta_min ) then
-    res = res+interpolator%bspline%length
+    res = res + interpolator%length
   else if( res >  interpolator%eta_max ) then
-    res = res-interpolator%bspline%length
+    res = res - interpolator%length
   end if
 
 end if
