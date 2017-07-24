@@ -2,9 +2,12 @@ module m_splines_error_bounds
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
   use sll_m_working_precision , only: f64
+  use m_analytical_profiles_1d, only: c_analytical_profile_1d
   use m_analytical_profiles_2d, only: c_analytical_profile_2d
 
   public :: &
+    sll_f_spline_1d_error_bound         , &
+    sll_f_spline_1d_error_bound_on_deriv, &
     sll_f_spline_2d_error_bound         , &
     sll_f_spline_2d_error_bounds_on_grad
 
@@ -56,6 +59,32 @@ contains
     norm_e = k(deg+1) * h**(deg+1) * norm_f
 
   end function f_tihomirov_error_bound
+
+  !-----------------------------------------------------------------------------
+  function sll_f_spline_1d_error_bound( profile_1d, dx, deg ) result( max_error )
+    class(c_analytical_profile_1d), intent(in) :: profile_1d
+    real(wp)                      , intent(in) :: dx
+    integer                       , intent(in) :: deg
+    real(wp) :: max_error
+
+    real(wp) :: max_norm
+    max_norm  = profile_1d % max_norm( deg+1 )
+    max_error = f_tihomirov_error_bound( dx, deg, max_norm )
+
+  end function sll_f_spline_1d_error_bound
+
+  !-----------------------------------------------------------------------------
+  function sll_f_spline_1d_error_bound_on_deriv( profile_1d, dx, deg ) result( max_error )
+    class(c_analytical_profile_1d), intent(in) :: profile_1d
+    real(wp)                      , intent(in) :: dx
+    integer                       , intent(in) :: deg
+    real(wp) :: max_error
+
+    real(wp) :: max_norm
+    max_norm  = profile_1d % max_norm( deg+1 )
+    max_error = f_tihomirov_error_bound( dx, deg-1, max_norm )
+
+  end function sll_f_spline_1d_error_bound_on_deriv
 
   !-----------------------------------------------------------------------------
   function sll_f_spline_2d_error_bound( profile_2d, dx1, dx2, deg1, deg2 ) result( max_error )
