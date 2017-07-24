@@ -5,6 +5,10 @@ SET(CMAKE_Fortran_MODULE_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}")
 # OBJECT libraries containing analytical profiles and error bounds
 #-------------------------------------------------------------------------------
 add_library( analytical_profiles OBJECT
+  m_analytical_profiles_1d.F90
+  m_analytical_profiles_1d_base.F90
+  m_analytical_profiles_1d_cos.F90
+  m_analytical_profiles_1d_poly.F90
   m_analytical_profiles_2d.F90
   m_analytical_profiles_2d_base.F90
   m_analytical_profiles_2d_cos_cos.F90
