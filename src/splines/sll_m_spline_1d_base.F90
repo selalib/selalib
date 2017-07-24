@@ -30,7 +30,7 @@ module sll_m_spline_1d_base
     procedure(i_sub_evaluate_at_x_array ), deferred :: eval_array       ! could be implemented here
     procedure(i_sub_evaluate_at_x_array ), deferred :: eval_array_deriv ! could be implemented here
     procedure(i_sub_get_interp_points   ), deferred :: get_interp_points
-    procedure(i_fun_get_pointer_to_coeff), deferred :: get_coeff
+    procedure(i_fun_get_pointer_to_coeff), deferred :: get_coeff ! TODO: move to bspline_interpolator_1d
   end type sll_c_spline_1d
 
 
