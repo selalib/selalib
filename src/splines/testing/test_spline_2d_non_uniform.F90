@@ -7,12 +7,6 @@ program test_bsplines_2d_new
   use sll_m_constants, only: &
     sll_p_twopi
 
-  use m_analytical_profiles_2d, only: &
-    t_profile_2d_info, &
-    c_analytical_profile_2d, &
-    t_analytical_profile_2d_cos_cos, &
-    t_analytical_profile_2d_poly
-
   use sll_m_boundary_condition_descriptors, only: &
     sll_p_periodic, &
     sll_p_hermite, &
@@ -20,6 +14,16 @@ program test_bsplines_2d_new
 
   use m_test_bsplines_2d, only: &
     t_bspline_2d_test_facility
+
+  use m_analytical_profiles_2d, only: &
+    t_profile_2d_info, &
+    c_analytical_profile_2d, &
+    t_analytical_profile_2d_cos_cos, &
+    t_analytical_profile_2d_poly
+
+  use m_splines_error_bounds, only: &
+    sll_f_spline_2d_error_bound, &
+    sll_f_spline_2d_error_bounds_on_grad
 
   implicit none
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -46,6 +50,7 @@ program test_bsplines_2d_new
   integer  :: i1, i2
   integer  :: grid_dim(2)
   real(wp) :: tol
+  real(wp) :: tols_grad(2)
   real(wp) :: tol_diff_x1
   real(wp) :: tol_diff_x2
   logical  :: equiv(3)
@@ -483,15 +488,14 @@ program test_bsplines_2d_new
           ! Determine error tolerances
           dx1 = (pinfo%x1_max - pinfo%x1_min) / nx1
           dx2 = (pinfo%x2_max - pinfo%x2_min) / nx2
-          tol         = error_bound        ( profile_2d_cos_cos, dx1, dx2, deg1, deg2 )
-          tol_diff_x1 = error_bound_diff_x1( profile_2d_cos_cos, dx1, dx2, deg1, deg2 )
-          tol_diff_x2 = error_bound_diff_x2( profile_2d_cos_cos, dx1, dx2, deg1, deg2 )
+          tol       = sll_f_spline_2d_error_bound         ( profile_2d_cos_cos, dx1, dx2, deg1, deg2 )
+          tols_grad = sll_f_spline_2d_error_bounds_on_grad( profile_2d_cos_cos, dx1, dx2, deg1, deg2 )
 
           ! Increase absolute tolerances if below machine precision
           ! NOTE: derivatives more sensitive to roundoff
-          tol         = max( 1e-14_wp*max_norm_profile        , tol         )
-          tol_diff_x1 = max( 1e-12_wp*max_norm_profile_diff_x1, tol_diff_x1 )
-          tol_diff_x2 = max( 1e-12_wp*max_norm_profile_diff_x2, tol_diff_x2 )
+          tol         = max( 1e-14_wp*max_norm_profile        , tol          )
+          tol_diff_x1 = max( 1e-12_wp*max_norm_profile_diff_x1, tols_grad(1) )
+          tol_diff_x2 = max( 1e-12_wp*max_norm_profile_diff_x2, tols_grad(2) )
 
           ! Run tests
           ! TODO: print numerical order of accuracy
@@ -601,103 +605,5 @@ contains
 
   end function factorial
 
-  !-----------------------------------------------------------------------------
-  ! Error bound in max norm for spline interpolation of periodic functions from:
-  !
-  ! V M Tihomirov 1969 Math. USSR Sb. 9 275
-  ! https://doi.org/10.1070/SM1969v009n02ABEH002052 (page 286, bottom)
-  !
-  ! Yu. S. Volkov and Yu. N. Subbotin
-  ! https://doi.org/10.1134/S0081543815020236 (equation 14)
-  !
-  ! Also applicable to first derivative by passing deg-1 instead of deg
-  ! Volkov & Subbotin 2015, eq. 15
-  !-----------------------------------------------------------------------------
-  pure function sll_f_spline_1d_error_bound( h, deg, norm_f ) result( norm_e )
-    real(wp), intent(in) :: h
-    integer , intent(in) :: deg
-    real(wp), intent(in) :: norm_f
-    real(wp) :: norm_e
-
-    real(wp), parameter :: k(1:10) = &
-         [     1.0_wp /          2.0_wp, &
-               1.0_wp /          8.0_wp, &
-               1.0_wp /         24.0_wp, &
-               5.0_wp /        384.0_wp, &
-               1.0_wp /        240.0_wp, &
-              61.0_wp /      46080.0_wp, &
-              17.0_wp /      40320.0_wp, &
-             277.0_wp /    2064384.0_wp, &
-              31.0_wp /     725760.0_wp, &
-           50521.0_wp / 3715891200.0_wp ]
-
-    norm_e = k(deg+1) * h**(deg+1) * norm_f
-
-  end function sll_f_spline_1d_error_bound
-
-  !-----------------------------------------------------------------------------
-  function error_bound( profile_2d, dx1, dx2, deg1, deg2 ) result( max_error )
-    class(c_analytical_profile_2d), intent(in) :: profile_2d
-    real(wp)                      , intent(in) :: dx1
-    real(wp)                      , intent(in) :: dx2
-    integer                       , intent(in) :: deg1
-    integer                       , intent(in) :: deg2
-    real(wp) :: max_error
-
-    real(wp) :: max_norm1
-    real(wp) :: max_norm2
-
-    max_norm1 = profile_2d % max_norm( deg1+1, 0      )
-    max_norm2 = profile_2d % max_norm( 0     , deg2+1 )
-
-    max_error = sll_f_spline_1d_error_bound( dx1, deg1, max_norm1 ) &
-              + sll_f_spline_1d_error_bound( dx2, deg2, max_norm2 )
-
-    ! Empirical correction: for linear interpolation increase estimate by 5%
-    if (deg1 == 1 .or. deg2 == 1) then
-      max_error = 1.05_wp * max_error
-    end if
-
-  end function error_bound
-
-  !-----------------------------------------------------------------------------
-  function error_bound_diff_x1( profile_2d, dx1, dx2, deg1, deg2 ) result( max_error )
-    class(c_analytical_profile_2d), intent(in) :: profile_2d
-    real(wp)                      , intent(in) :: dx1
-    real(wp)                      , intent(in) :: dx2
-    integer                       , intent(in) :: deg1
-    integer                       , intent(in) :: deg2
-    real(wp) :: max_error
-
-    real(wp) :: max_norm1
-    real(wp) :: max_norm2
-
-    max_norm1 = profile_2d % max_norm( deg1+1, 0      )
-    max_norm2 = profile_2d % max_norm( 0     , deg2+1 )
-
-    max_error = sll_f_spline_1d_error_bound( dx1, deg1-1, max_norm1 ) &
-              + sll_f_spline_1d_error_bound( dx2, deg2  , max_norm2 )
-
-  end function error_bound_diff_x1
-
-  !-----------------------------------------------------------------------------
-  function error_bound_diff_x2( profile_2d, dx1, dx2, deg1, deg2 ) result( max_error )
-    class(c_analytical_profile_2d), intent(in) :: profile_2d
-    real(wp)                      , intent(in) :: dx1
-    real(wp)                      , intent(in) :: dx2
-    integer                       , intent(in) :: deg1
-    integer                       , intent(in) :: deg2
-    real(wp) :: max_error
-
-    real(wp) :: max_norm1
-    real(wp) :: max_norm2
-
-    max_norm1 = profile_2d % max_norm( deg1+1, 0      )
-    max_norm2 = profile_2d % max_norm( 0     , deg2+1 )
-
-    max_error = sll_f_spline_1d_error_bound( dx1, deg1  , max_norm1 ) &
-              + sll_f_spline_1d_error_bound( dx2, deg2-1, max_norm2 )
-
-  end function error_bound_diff_x2
 
 end program test_bsplines_2d_new
