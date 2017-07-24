@@ -2,16 +2,27 @@
 SET(CMAKE_Fortran_MODULE_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}")
 
 #-------------------------------------------------------------------------------
+# OBJECT libraries containing analytical profiles and error bounds
+#-------------------------------------------------------------------------------
+add_library( analytical_profiles OBJECT
+  m_analytical_profiles_2d.F90
+  m_analytical_profiles_2d_base.F90
+  m_analytical_profiles_2d_cos_cos.F90
+  m_analytical_profiles_2d_poly.F90 )
+add_dependencies( analytical_profiles sll_working_precision sll_constants )
+
+add_library( splines_error_bounds OBJECT m_splines_error_bounds.F90 )
+add_dependencies( splines_error_bounds analytical_profiles )
+
+#-------------------------------------------------------------------------------
 # New tests for 2D tensor-product spline
 #-------------------------------------------------------------------------------
 
 add_executable( test_spline_2d_non_uniform
     test_spline_2d_non_uniform.F90
   m_test_spline_2d_non_uniform.F90
-  m_analytical_profiles_2d.F90
-  m_analytical_profiles_2d_base.F90
-  m_analytical_profiles_2d_cos_cos.F90
-  m_analytical_profiles_2d_poly.F90
+  $<TARGET_OBJECTS:analytical_profiles>
+  $<TARGET_OBJECTS:splines_error_bounds>
   )
 target_link_libraries( test_spline_2d_non_uniform sll_splines )
 
