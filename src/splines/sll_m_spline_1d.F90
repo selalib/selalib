@@ -30,8 +30,8 @@ module sll_m_spline_1d
   integer, parameter :: wp = f64
 
   !> Allowed boundary conditions
-  integer, parameter :: allowed_bc_types(*) = &
-    [sll_p_periodic, sll_p_hermite, sll_p_greville]
+  integer, parameter :: &
+    allowed_bcs(*) = [sll_p_periodic, sll_p_hermite, sll_p_greville]
 
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 contains
@@ -100,8 +100,8 @@ contains
     SLL_ASSERT( degree > 0  )
     SLL_ASSERT( ncells > 0  )
     SLL_ASSERT( xmin < xmax )
-    SLL_ASSERT( any( bc_xmin == allowed_bc_types ) )
-    SLL_ASSERT( any( bc_xmax == allowed_bc_types ) )
+    SLL_ASSERT( any( bc_xmin == allowed_bcs ) )
+    SLL_ASSERT( any( bc_xmax == allowed_bcs ) )
 
     ! Allocate 1D spline to correct type
     if (present( breaks ) .and. size( breaks ) > 0) then

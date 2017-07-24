@@ -19,6 +19,28 @@ add_library( splines_error_bounds OBJECT m_splines_error_bounds.F90 )
 add_dependencies( splines_error_bounds analytical_profiles )
 
 #-------------------------------------------------------------------------------
+# New test for 1D spline
+#-------------------------------------------------------------------------------
+add_executable( test_spline_1d
+    test_spline_1d.F90
+  m_test_spline_1d.F90
+  $<TARGET_OBJECTS:analytical_profiles>
+  $<TARGET_OBJECTS:splines_error_bounds>
+  )
+target_link_libraries( test_spline_1d sll_splines )
+
+add_test( NAME spline_1d_uniform COMMAND test_spline_1d )
+set_tests_properties( spline_1d_uniform
+  PROPERTIES PASS_REGULAR_EXPRESSION "PASSED" )
+
+# add_test( NAME spline_1d_uniform     COMMAND test_spline_1d -u )
+# add_test( NAME spline_1d_non_uniform COMMAND test_spline_1d -n )
+# set_tests_properties(
+#   spline_1d_uniform
+#   spline_1d_non_uniform
+#   PROPERTIES PASS_REGULAR_EXPRESSION "PASSED" )
+
+#-------------------------------------------------------------------------------
 # New tests for 2D tensor-product spline
 #-------------------------------------------------------------------------------
 

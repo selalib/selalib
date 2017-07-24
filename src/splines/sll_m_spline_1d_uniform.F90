@@ -6,6 +6,7 @@
 module sll_m_spline_1d_uniform
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_assert.h"
+#include "sll_errors.h"
 
   use sll_m_working_precision, only: f64
 
@@ -38,6 +39,10 @@ module sll_m_spline_1d_uniform
 
   !> Working precision
   integer, parameter :: wp = f64
+
+  !> Allowed boundary conditions
+  integer, parameter :: &
+    allowed_bcs(*) = [sll_p_periodic, sll_p_hermite, sll_p_greville]
 
   !> 1D spline on uniform grid
   type, extends(sll_c_spline_1d) :: sll_t_spline_1d_uniform
@@ -150,12 +155,31 @@ contains
     integer                       , intent(in   ) :: bc_xmin
     integer                       , intent(in   ) :: bc_xmax
 
-    ! TODO: consistency checks on input arguments
+    character(len=*), parameter :: this_sub_name = "sll_t_spline_1d_uniform % init"
+    character(len=256) :: err_msg
 
     real(wp) :: shift
     integer  :: i
     integer  :: size_tau
     real(wp), allocatable :: knots(:)
+
+    ! Sanity checks
+    SLL_ASSERT( degree >= 1 )
+    SLL_ASSERT( ncells >= 1 )
+    SLL_ASSERT( xmin < xmax )
+    SLL_ASSERT( any( bc_xmin == allowed_bcs ) )
+    SLL_ASSERT( any( bc_xmax == allowed_bcs ) )
+
+    if (any( [bc_xmin,bc_xmax]== sll_p_periodic ) .and. bc_xmin /= bc_xmax) then
+      err_msg = "Periodic boundary conditions mismatch: bc_xmin /= bc_xmax."
+      SLL_ERROR( this_sub_name, trim( err_msg ) )
+    end if
+
+    ! TODO: implement different BCs at xmin/xmax
+    if (bc_xmin /= bc_xmax) then
+      err_msg = "Different BCs at xmin/xmax not yet implemented."
+      SLL_ERROR( this_sub_name, trim( err_msg ) )
+    end if
 
     ! Compute cell size in uniform grid
     self%dx = (xmax-xmin) / real(ncells,wp)
