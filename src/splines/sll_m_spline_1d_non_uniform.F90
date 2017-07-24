@@ -43,8 +43,8 @@ private
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
   !> Allowed boundary conditions
-  sll_int32, parameter :: bc_types_allowed(*) = &
-    [sll_p_periodic, sll_p_hermite, sll_p_greville]
+  sll_int32, parameter :: &
+    allowed_bcs(*) = [sll_p_periodic, sll_p_hermite, sll_p_greville]
 
 !> @brief
 !> basic type for one-dimensional B-spline interpolation.
@@ -135,8 +135,8 @@ contains
     ! Sanity checks
     SLL_ASSERT( degree >= 1 )
     SLL_ASSERT( size( breaks ) >= 2 )
-    SLL_ASSERT( any( bc_xmin == bc_types_allowed ) )
-    SLL_ASSERT( any( bc_xmax == bc_types_allowed ) )
+    SLL_ASSERT( any( bc_xmin == allowed_bcs ) )
+    SLL_ASSERT( any( bc_xmax == allowed_bcs ) )
 
     ! NOTE: in the future different boundary conditions at xmin and xmax
     !       should be considered. For now we only check that bc_xmin==bc_xmax
