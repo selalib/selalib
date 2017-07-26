@@ -243,31 +243,29 @@ contains
 
     class(sll_t_spline_1d_non_uniform), intent(inout) :: self
 
-    sll_int32  :: i
-    sll_int32  :: j
-    sll_int32  :: sizeq
-    sll_real64 :: values(self%deg+1)
+    integer  :: i, j
+    integer  :: k, s
+    integer  :: icell
+    real(wp) :: x
+    real(wp) :: values(self%deg+1)
+
+    k = self%deg/2
+    allocate( self%q(2*k+1,self%n) )
 
     ! evaluate bsplines at interpolation points
-    if (modulo(self%deg,2) == 0) then
-       ! for even degree interpolation points are cell midpoints
-       call sll_s_uniform_bsplines_eval_basis(self%deg, 0.5_f64, values)
-    else
-       ! for odd degree interpolation points are grid points
-       call sll_s_uniform_bsplines_eval_basis(self%deg, 0.0_f64, values)
-    end if
-    sizeq = self%deg/2
-    ! assemble matrix q for linear system
-    allocate( self%q(2*sizeq+1,self%n) )
-
-    do j=1,self%n
-       do i=1, 2*sizeq+1
-          self%q(i,j) = values(i)
-       end do
+    ! and assemble matrix q for linear system
+    do i = 1, self%n
+      x = self%tau(i)
+      icell = sll_f_find_cell( self%bsp, x )
+      call sll_s_bsplines_eval_basis(self%bsp, icell, x, values)
+      do s = 1, 2*k+1
+        j = modulo(icell-k-2+s,self%n)+1
+        self%q(2*k+2-s,j) = values(s)
+      end do
     end do
 
     ! Perform LU decomposition of matrix q
-    call schur_complement_fac( self%schur, self%n, sizeq, self%q )
+    call schur_complement_fac( self%schur, self%n, k, self%q )
 
   end subroutine build_system_periodic
 
@@ -580,7 +578,7 @@ contains
     ! deallocate arrays
     deallocate( self%bcoef  )
     deallocate( self%tau    )
-    deallocate( self%q      )
+    if (allocated( self%q )) deallocate( self%q      )
     deallocate( self%bsdx   )
 
     ! free attribute objects
