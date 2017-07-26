@@ -105,9 +105,17 @@ contains
 
     ! Allocate 1D spline to correct type
     if (present( breaks ) .and. size( breaks ) > 0) then
+
+      SLL_ASSERT( size( breaks ) == ncells+1     )
+      SLL_ASSERT( xmin == breaks(1)              )
+      SLL_ASSERT( xmax == breaks(size( breaks )) )
+
       allocate( sll_t_spline_1d_non_uniform :: spline )
+
     else
+
       allocate( sll_t_spline_1d_uniform     :: spline )
+
     end if
 
     ! Properly initialize 1D spline
@@ -119,9 +127,6 @@ contains
 
     type is( sll_t_spline_1d_non_uniform )
 
-      SLL_ASSERT( xmin == breaks(1)            )
-      SLL_ASSERT( xmax == breaks(size(breaks)) )
-      SLL_ASSERT( size(breaks) == ncells+1     )
       call spline % init( degree, breaks, bc_xmin, bc_xmax )
 
     end select
