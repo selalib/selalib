@@ -8,6 +8,8 @@ module sll_m_spline_1d_non_uniform
 #include "sll_memory.h"
 #include "sll_working_precision.h"
 
+use sll_m_working_precision, only: f64
+
 use sll_m_boundary_condition_descriptors, only: &
   sll_p_periodic, &
   sll_p_hermite , &
@@ -42,25 +44,27 @@ public :: &
 private
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
+  !> Working precision
+  integer, parameter :: wp = f64
+
   !> Allowed boundary conditions
-  sll_int32, parameter :: &
-    allowed_bcs(*) = [sll_p_periodic, sll_p_hermite, sll_p_greville]
+  integer, parameter :: allowed_bcs(*) = [sll_p_periodic, sll_p_hermite, sll_p_greville]
 
 !> @brief
 !> basic type for one-dimensional B-spline interpolation.
 type, extends(sll_c_spline_1d) :: sll_t_spline_1d_non_uniform
 
   type (sll_t_bsplines) :: bsp
-  sll_int32                               :: n        ! dimension of spline space
-  sll_int32                               :: deg      ! degree of spline
-  sll_real64, allocatable                 :: tau(:)   ! interpolation points
-  sll_real64, allocatable                 :: bcoef(:) ! bspline coefficients
-  sll_int32                               :: bc_type  ! boundary condition
-  sll_real64, allocatable                 :: q(:,:)   ! triangular factorization
-  sll_real64, allocatable                 :: bsdx(:,:)
-  sll_int32,  allocatable                 :: ipiv(:)
-  sll_int32                               :: offset
-  type(schur_complement_solver)           :: schur
+  integer               :: n        ! dimension of spline space
+  integer               :: deg      ! degree of spline
+  real(wp), allocatable :: tau(:)   ! interpolation points
+  real(wp), allocatable :: bcoef(:) ! bspline coefficients
+  integer               :: bc_type  ! boundary condition
+  real(wp), allocatable :: q(:,:)   ! triangular factorization
+  real(wp), allocatable :: bsdx(:,:)
+  integer , allocatable :: ipiv(:)
+  integer               :: offset
+  type(schur_complement_solver) :: schur
 
 contains
 
@@ -83,7 +87,7 @@ contains
   function f_spline_1d_non_uniform__get_coeff( self ) result( ptr )
 
     class(sll_t_spline_1d_non_uniform), target, intent(in) :: self
-    sll_real64, pointer :: ptr(:)
+    real(wp), pointer :: ptr(:)
 
     ptr => self%bcoef
 
@@ -93,7 +97,7 @@ contains
   subroutine s_spline_1d_non_uniform__get_interp_points( self, tau )
 
     class(sll_t_spline_1d_non_uniform), intent(in   ) :: self
-    sll_real64,            allocatable, intent(  out) :: tau(:)
+    real(wp),              allocatable, intent(  out) :: tau(:)
 
     SLL_ASSERT( allocated( self%tau ) )
     allocate( tau(size(self%tau)), source=self%tau )
@@ -120,17 +124,16 @@ contains
     bc_xmax )
 
     class(sll_t_spline_1d_non_uniform), intent(  out) :: self
-    sll_int32                         , intent(in   ) :: degree
-    sll_real64                        , intent(in   ) :: breaks(:)
-    sll_int32                         , intent(in   ) :: bc_xmin
-    sll_int32                         , intent(in   ) :: bc_xmax
+    integer                           , intent(in   ) :: degree
+    real(wp)                          , intent(in   ) :: breaks(:)
+    integer                           , intent(in   ) :: bc_xmin
+    integer                           , intent(in   ) :: bc_xmax
 
-    sll_int32  :: num_pts
-    sll_int32  :: i, j
-!    sll_real64 :: delta
-    sll_int32  :: bc_type
-    sll_int32  :: basis_bc_xmin
-    sll_int32  :: basis_bc_xmax
+    integer :: num_pts
+    integer :: i
+    integer :: bc_type
+    integer :: basis_bc_xmin
+    integer :: basis_bc_xmax
 
     ! Sanity checks
     SLL_ASSERT( degree >= 1 )
@@ -240,7 +243,6 @@ contains
   !> @param[inout] self bspline interpolation object
   !-----------------------------------------------------------------------------
   subroutine build_system_periodic( self )
-
     class(sll_t_spline_1d_non_uniform), intent(inout) :: self
 
     integer  :: i, j
@@ -275,17 +277,14 @@ contains
   !> @param[inout] self bspline object
   !-----------------------------------------------------------------------------
   subroutine build_system_greville( self )
-
     class(sll_t_spline_1d_non_uniform), intent(inout) :: self
 
-    sll_int32  :: iflag
-    sll_int32  :: j
-    sll_int32  :: k
-    sll_int32  :: ii
-    sll_int32  :: jj
-    sll_int32  :: icell
-    sll_real64 :: x
-    sll_real64 :: values(self%deg+1)
+    integer  :: j, k
+    integer  :: ii, jj
+    integer  :: icell
+    integer  :: iflag
+    real(wp) :: x
+    real(wp) :: values(self%deg+1)
 
     ! The matrix q is a banded matrix using the storage required by banfac (De Boor)
     ! It has k bands above diagonal, k bands below and the diagonal itself
@@ -316,6 +315,7 @@ contains
           self%q(ii-jj+k+1,jj) = values(j)
        end do
     end do
+
     ! Treat i=self%n separately
     x =  self%bsp%xmax
     icell = self%n - self%deg
@@ -326,6 +326,7 @@ contains
        jj = icell+j-1
        self%q(ii-jj+k+1,jj) = values(j)
     end do
+
     ! Perform LU decomposition of matrix q
     call banfac ( self%q, 2*k+1, self%n, k, k, iflag )
 
@@ -337,20 +338,19 @@ contains
   !> @param[inout] self bspline object
   !-----------------------------------------------------------------------------
   subroutine build_system_with_derivative( self )
-
     class(sll_t_spline_1d_non_uniform), intent(inout) :: self
 
-    sll_int32  :: nbc
-    sll_int32  :: iflag
-    sll_int32  :: i
-    sll_int32  :: j
-    sll_int32  :: ii
-    sll_int32  :: jj
-    sll_int32  :: offset
-    sll_int32  :: k
-    sll_int32  :: icell
-    sll_real64 :: x
-    sll_real64 :: values(self%deg+1)
+    integer  :: nbc
+    integer  :: iflag
+    integer  :: i
+    integer  :: j
+    integer  :: ii
+    integer  :: jj
+    integer  :: offset
+    integer  :: k
+    integer  :: icell
+    real(wp) :: x
+    real(wp) :: values(self%deg+1)
 
     ! number of boundary conditions needed depending on spline degree
     k   = self%deg-1
@@ -388,6 +388,7 @@ contains
           self%q(ii-jj+2*k+1,jj) = self%bsdx(i+offset,j)
        end do
     end do
+
     ! interpolation points
     do i=1,self%n - 2*nbc
        ii = ii + 1
@@ -399,6 +400,7 @@ contains
           self%q(ii-jj+2*k+1,jj) = values(j)
        end do
     end do
+
     ! boundary conditions at xmax
     x = self%bsp%xmax
     icell = self%n - self%deg
@@ -427,15 +429,14 @@ contains
   !> @param[in]    derivs_xmax (optional) array with boundary conditions at xmax
   !-----------------------------------------------------------------------------
   subroutine s_spline_1d_non_uniform__compute_interpolant( self, gtau, derivs_xmin, derivs_xmax )
-
     class(sll_t_spline_1d_non_uniform), intent(inout) :: self
-    sll_real64                        , intent(in   ) :: gtau(:)
-    sll_real64,               optional, intent(in   ) :: derivs_xmin(:)
-    sll_real64,               optional, intent(in   ) :: derivs_xmax(:)
+    real(wp)                          , intent(in   ) :: gtau(:)
+    real(wp),                 optional, intent(in   ) :: derivs_xmin(:)
+    real(wp),                 optional, intent(in   ) :: derivs_xmax(:)
 
-    sll_int32 :: ncond
-    sll_int32 :: k
-    sll_int32 :: iflag
+    integer :: ncond
+    integer :: k
+    integer :: iflag
 
     ! Special case: linear spline
     if (self%deg == 1) then
@@ -480,15 +481,13 @@ contains
   !> @return     y    spline value y=S(x)
   !-----------------------------------------------------------------------------
   SLL_PURE function f_spline_1d_non_uniform__eval( self, x ) result( y )
-
     class(sll_t_spline_1d_non_uniform), intent(in) :: self
-    sll_real64            , intent(in) :: x
-    sll_real64 :: y
+    real(wp)                          , intent(in) :: x
+    real(wp) :: y
 
-    sll_int32  :: icell
-    sll_int32  :: ib
-    sll_int32  :: j
-    sll_real64 :: values(self%deg+1)
+    integer  :: icell
+    integer  :: j, ib
+    real(wp) :: values(self%deg+1)
 
     icell = sll_f_find_cell( self%bsp, x )
     call sll_s_bsplines_eval_basis( self%bsp, icell, x, values )
@@ -507,15 +506,13 @@ contains
   !> @param[out] y    spline derivative y=S'(x)
   !-----------------------------------------------------------------------------
   SLL_PURE function f_spline_1d_non_uniform__eval_deriv( self, x ) result( y )
-
     class(sll_t_spline_1d_non_uniform), intent(in) :: self
-    sll_real64            , intent(in) :: x
-    sll_real64 :: y
+    real(wp)                          , intent(in) :: x
+    real(wp) :: y
 
-    sll_int32  :: icell
-    sll_int32  :: ib
-    sll_int32  :: j
-    sll_real64 :: values(self%deg+1)
+    integer  :: icell
+    integer  :: j, ib
+    real(wp) :: values(self%deg+1)
 
     icell = sll_f_find_cell( self%bsp, x )
     call sll_s_bsplines_eval_deriv( self%bsp, icell, x, values )
@@ -534,12 +531,11 @@ contains
   !> @param[out] y    1D array of spline values y(:)=S(x(:))
   !-----------------------------------------------------------------------------
   SLL_PURE subroutine s_spline_1d_non_uniform__eval_array( self, x, y )
-
     class(sll_t_spline_1d_non_uniform), intent(in   ) :: self
-    sll_real64            , intent(in   ) :: x(:)
-    sll_real64            , intent(  out) :: y(size(x))
+    real(wp)                          , intent(in   ) :: x(:)
+    real(wp)                          , intent(  out) :: y(size(x))
 
-    sll_int32 :: i
+    integer :: i
 
     do i = 1, size(x)
       y(i) = f_spline_1d_non_uniform__eval( self, x(i) )
@@ -554,12 +550,11 @@ contains
   !> @param[out] y    1D array of spline derivatives y(:)=S'(x(:))
   !-----------------------------------------------------------------------------
   SLL_PURE subroutine s_spline_1d_non_uniform__eval_array_deriv( self, x, y )
-
     class(sll_t_spline_1d_non_uniform), intent(in   ) :: self
-    sll_real64            , intent(in   ) :: x(:)
-    sll_real64            , intent(  out) :: y(size(x))
+    real(wp)                          , intent(in   ) :: x(:)
+    real(wp)                          , intent(  out) :: y(size(x))
 
-    sll_int32 :: i
+    integer :: i
 
     do i = 1, size(x)
       y(i) = f_spline_1d_non_uniform__eval_deriv( self, x(i) )
@@ -572,14 +567,13 @@ contains
   !> @param[inout] self object to be freed
   !-----------------------------------------------------------------------------
   subroutine s_spline_1d_non_uniform__free( self )
-
     class(sll_t_spline_1d_non_uniform), intent(inout) :: self
 
     ! deallocate arrays
-    deallocate( self%bcoef  )
-    deallocate( self%tau    )
-    if (allocated( self%q )) deallocate( self%q      )
-    deallocate( self%bsdx   )
+    deallocate( self%bcoef )
+    deallocate( self%tau   )
+    deallocate( self%bsdx  )
+    if (allocated( self%q )) deallocate( self%q )
 
     ! free attribute objects
     call sll_s_bsplines_free( self%bsp )

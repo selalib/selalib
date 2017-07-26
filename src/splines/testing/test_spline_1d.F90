@@ -128,20 +128,11 @@ program test_spline_1d
   ! Estimate max-norm of profile (needed to compute relative error)
   max_norm_profile = profile_1d_cos % max_norm()
 
-!  ! Allocate breaks to initialize non-uniform 1D spline (instead of uniform)
-!  if (uniform) then
-!    allocate( breaks(0) )
-!  else
-!    allocate( breaks(ncells+1) )
-!    breaks = [(pinfo%xmin+real(l,wp)*dx, l=0, ncells)]
-!  end if
-
-  ! TEST------------------------------------------------------------------------
   if (uniform) then
     allocate( breaks(0) )
   else
     allocate( breaks(ncells+1) )
-    call generate_non_uniform_breaks( pinfo%xmin, pinfo%xmax, dx, ncells, grid_perturbation, breaks )
+    call generate_non_uniform_breaks( pinfo%xmin, pinfo%xmax, ncells, grid_perturbation, breaks )
   end if
 
   ! Initialize 'PASSED/FAILED' condition
@@ -261,20 +252,11 @@ program test_spline_1d
   grid_dx = (pinfo%xmax-pinfo%xmin) / real( grid_dim-1, wp )
   grid    = [(pinfo%xmin + real(k,wp)*grid_dx, k=0, grid_dim-1)]
 
-!  ! Allocate breaks to initialize non-uniform 1D spline (instead of uniform)
-!  if (uniform) then
-!    allocate( breaks(0) )
-!  else
-!    allocate( breaks(ncells+1) )
-!    breaks = [(pinfo%xmin+real(l,wp)*dx, l=0, ncells)]
-!  end if
-
-  ! TEST------------------------------------------------------------------------
   if (uniform) then
     allocate( breaks(0) )
   else
     allocate( breaks(ncells+1) )
-    call generate_non_uniform_breaks( pinfo%xmin, pinfo%xmax, dx, ncells, grid_perturbation, breaks )
+    call generate_non_uniform_breaks( pinfo%xmin, pinfo%xmax, ncells, grid_perturbation, breaks )
   end if
 
   ! Initialize 'PASSED/FAILED' condition
@@ -447,20 +429,18 @@ program test_spline_1d
         do k = 1, size( nx_list )
           ncells = nx_list(k)
 
-          ! Compute cell size in uniform grid
-          dx = (pinfo%xmax-pinfo%xmin) / ncells
+          if (uniform) then
 
-          ! Allocate breaks to initialize non-uniform 1D spline (instead of uniform)
-!          if ( .not. uniform ) then
-!            breaks(1:ncells+1) = [(pinfo%xmin+real(l,wp)*dx, l=0, ncells)]
-!            breaks_ptr => breaks(1:ncells+1)
-!          end if
+            dx = (pinfo%xmax-pinfo%xmin) / ncells
 
-          ! TEST----------------------------------------------------------------
-          if ( .not. uniform ) then
-            call generate_non_uniform_breaks( pinfo%xmin, pinfo%xmax, dx, ncells, &
+          else
+
+            call generate_non_uniform_breaks( pinfo%xmin, pinfo%xmax, ncells, &
                                               grid_perturbation, breaks )
             breaks_ptr => breaks(1:ncells+1)
+
+            dx = maxval( breaks(2:ncells+1)-breaks(1:ncells) )
+
           end if
 
           ! Initialize test facility
@@ -623,10 +603,9 @@ contains
 
   end subroutine process_args
 
-  subroutine generate_non_uniform_breaks( xmin, xmax, dx, ncells, grid_perturbation, breaks )
+  subroutine generate_non_uniform_breaks( xmin, xmax, ncells, grid_perturbation, breaks )
     real(wp), intent(in   ) :: xmin
     real(wp), intent(in   ) :: xmax
-    real(wp), intent(in   ) :: dx
     integer , intent(in   ) :: ncells
     real(wp), intent(in   ) :: grid_perturbation
     real(wp), intent(  out) :: breaks(:)
@@ -634,11 +613,13 @@ contains
     integer  :: i
     real(wp) :: r
 
-    do i = 1, ncells+1
-      call random_number( r ) !  0.0 <= r < 1.0
-      r = r - 0.5_wp          ! -0.5 <= r < 0.5
-      breaks(i) = xmin + ( real(i-1,wp) + grid_perturbation * r ) * dx
-    end do
+    associate( dx => (xmax-xmin)/ncells )
+      do i = 1, ncells+1
+        call random_number( r ) !  0.0 <= r < 1.0
+        r = r - 0.5_wp          ! -0.5 <= r < 0.5
+        breaks(i) = xmin + ( real(i-1,wp) + grid_perturbation * r ) * dx
+      end do
+    end associate
 
     breaks(1) = xmin
 
