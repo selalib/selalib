@@ -69,15 +69,15 @@ contains
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
   !-----------------------------------------------------------------------------
-  subroutine init( self, profile_1d, degree, ncells, bc_xmin, bc_xmax, break_pts )
+  subroutine init( self, profile_1d, degree, ncells, bc_xmin, bc_xmax, breaks )
 
-    class(t_spline_1d_test_facility), intent(  out)           :: self
-    class(c_analytical_profile_1d  ), intent(in   ), target   :: profile_1d
-    integer                         , intent(in   )           :: degree
-    integer                         , intent(in   )           :: ncells
-    integer                         , intent(in   )           :: bc_xmin
-    integer                         , intent(in   )           :: bc_xmax
-    real(wp)                        , intent(in   ), optional :: break_pts(:)
+    class(t_spline_1d_test_facility), intent(  out)         :: self
+    class(c_analytical_profile_1d  ), intent(in   ), target :: profile_1d
+    integer                         , intent(in   )         :: degree
+    integer                         , intent(in   )         :: ncells
+    integer                         , intent(in   )         :: bc_xmin
+    integer                         , intent(in   )         :: bc_xmax
+    real(wp),               optional, intent(in   )         :: breaks(:)
 
     type(t_profile_1d_info) :: info
     integer                 :: nipts
@@ -109,7 +109,7 @@ contains
       xmax    = info % xmax     , &
       bc_xmin = self % bc_xmin  , &
       bc_xmax = self % bc_xmax  , &
-      breaks  = break_pts )
+      breaks  = breaks )
 
     call sll_s_set_time_mark( t1 )
 
@@ -175,8 +175,8 @@ contains
 
     ! Deallocate local arrays
     ! ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
-    if (allocated(derivs_xmin )) deallocate( derivs_xmin  )
-    if (allocated(derivs_xmax )) deallocate( derivs_xmax  )
+    if (allocated( derivs_xmin )) deallocate( derivs_xmin )
+    if (allocated( derivs_xmax )) deallocate( derivs_xmax )
 
     ! Timings (set to -1 values not yet available)
     self % time_init                =  sll_f_time_elapsed_between( t0, t1 )

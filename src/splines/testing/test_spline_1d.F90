@@ -1,5 +1,6 @@
 program test_spline_1d
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+#include "sll_errors.h"
 
   use sll_m_working_precision, only: &
     f64
@@ -32,19 +33,26 @@ program test_spline_1d
   integer, parameter :: wp = f64
 
   ! Local variables
-  type(t_profile_1d_info)               :: pinfo
-  type(t_spline_1d_test_facility)       :: test_facility
-  type(t_analytical_profile_1d_cos )    :: profile_1d_cos
-  type(t_analytical_profile_1d_poly)    :: profile_1d_poly
-  integer , allocatable                 :: bc_kinds(:)
-  integer , allocatable                 :: nx_list(:)
-  real(wp), allocatable                 :: grid(:)
+  type(t_profile_1d_info)            :: pinfo
+  type(t_spline_1d_test_facility)    :: test_facility
+  type(t_analytical_profile_1d_cos ) :: profile_1d_cos
+  type(t_analytical_profile_1d_poly) :: profile_1d_poly
+  integer , allocatable              :: bc_kinds(:)
+  integer , allocatable              :: nx_list(:)
+  real(wp), allocatable              :: grid(:)
+  real(wp), allocatable, target      :: breaks(:)
+  real(wp), pointer                  :: breaks_ptr(:)
 
   integer  :: degree
   integer  :: ncells
   integer  :: bc_xmin
   integer  :: bc_xmax
-  integer  :: i, j, k
+  integer  :: i,j,k
+  real(wp) :: a, b
+
+  ! Parameters for uniform / non-uniform grid
+  logical  :: uniform
+  real(wp) :: grid_perturbation
 
   integer  :: grid_dim
   real(wp) :: grid_dx
@@ -61,6 +69,9 @@ program test_spline_1d
   logical  :: passed(1:3)
   logical  :: success
   logical  :: success_diff
+
+  ! Read from standard input
+  call process_args( uniform, grid_perturbation )
 
   ! ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
   ! TEST 1: Evaluate spline at interpolation points (error should be zero)
@@ -108,14 +119,30 @@ program test_spline_1d
   ! Initialize profile
   call profile_1d_cos % init()
 
-  ! Extract information about 2D analytical profile
+  ! Extract information about 1D analytical profile
   call profile_1d_cos % get_info( pinfo )
+
+  ! Compute cell size in uniform grid
+  dx = (pinfo%xmax-pinfo%xmin) / ncells
 
   ! Estimate max-norm of profile (needed to compute relative error)
   max_norm_profile = profile_1d_cos % max_norm()
 
-  ! Compute cell size in uniform grid
-  dx = (pinfo%xmax-pinfo%xmin) / ncells
+!  ! Allocate breaks to initialize non-uniform 1D spline (instead of uniform)
+!  if (uniform) then
+!    allocate( breaks(0) )
+!  else
+!    allocate( breaks(ncells+1) )
+!    breaks = [(pinfo%xmin+real(l,wp)*dx, l=0, ncells)]
+!  end if
+
+  ! TEST------------------------------------------------------------------------
+  if (uniform) then
+    allocate( breaks(0) )
+  else
+    allocate( breaks(ncells+1) )
+    call generate_non_uniform_breaks( pinfo%xmin, pinfo%xmax, dx, ncells, grid_perturbation, breaks )
+  end if
 
   ! Initialize 'PASSED/FAILED' condition
   passed(1) = .true.
@@ -136,12 +163,7 @@ program test_spline_1d
 
         ! FIXME: spline 1D should be able to handle different BCs at xmin/xmax
         ! For now skip cases with bc_xmin /= bc_xmax
-        if (bc_xmin /= bc_xmax) then
-!          write(*,'(1i6)', advance='no') degree
-!          write(*,'(2a6)', advance='no') bc_to_char( bc_xmin ), bc_to_char( bc_xmax )
-!          write(*,'(a10,a8)') "---", "SKIP.."
-          cycle
-        end if
+        if (bc_xmin /= bc_xmax) cycle
 
         ! Initialize test facility
         call test_facility % init( &
@@ -149,9 +171,8 @@ program test_spline_1d
           degree  = degree , &
           ncells  = ncells , &
           bc_xmin = bc_xmin, &
-!          bc_xmax = bc_xmax )
           bc_xmax = bc_xmax, &
-          break_pts = [(pinfo%xmin+real(k,wp)*dx, k=0, ncells)] )
+          breaks  = breaks )
 
         ! Run tests
         call test_facility % evaluate_at_interpolation_points( max_norm_error )
@@ -177,6 +198,7 @@ program test_spline_1d
 
   ! Deallocate local arrays
   deallocate( bc_kinds )
+  deallocate( breaks   )
 
   ! ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
   ! TEST 2: Spline should represent polynomial profiles exactly
@@ -225,19 +247,40 @@ program test_spline_1d
   ! Print table header
   write(*, '(3a6,2a10,a10)') "deg", "bcmin", "bcmax", "err", "err_dx", "passed"
 
-  ! Create uniform grid of evaluation points
+  ! Initialize profile
   call profile_1d_poly % init( 0 )  ! dummy, only need domain size
+
+  ! Extract information about 1D analytical profile
   call profile_1d_poly % get_info( pinfo )
-  allocate( grid (grid_dim) )
-  grid_dx = (pinfo%xmax-pinfo%xmin) / real( grid_dim-1, wp )
-  grid    = [(pinfo%xmin + real(k,wp)*grid_dx, k=0, grid_dim-1)]
 
   ! Compute cell size in uniform grid
   dx = (pinfo%xmax-pinfo%xmin) / ncells
 
+  ! Create uniform grid of evaluation points
+  allocate( grid (grid_dim) )
+  grid_dx = (pinfo%xmax-pinfo%xmin) / real( grid_dim-1, wp )
+  grid    = [(pinfo%xmin + real(k,wp)*grid_dx, k=0, grid_dim-1)]
+
+!  ! Allocate breaks to initialize non-uniform 1D spline (instead of uniform)
+!  if (uniform) then
+!    allocate( breaks(0) )
+!  else
+!    allocate( breaks(ncells+1) )
+!    breaks = [(pinfo%xmin+real(l,wp)*dx, l=0, ncells)]
+!  end if
+
+  ! TEST------------------------------------------------------------------------
+  if (uniform) then
+    allocate( breaks(0) )
+  else
+    allocate( breaks(ncells+1) )
+    call generate_non_uniform_breaks( pinfo%xmin, pinfo%xmax, dx, ncells, grid_perturbation, breaks )
+  end if
+
   ! Initialize 'PASSED/FAILED' condition
   passed(2) = .true.
 
+  ! Cycle over spline degree
   do degree = 1, 9
 
     ! Initialize polynomial profile with degree (deg1,deg2)
@@ -255,12 +298,7 @@ program test_spline_1d
 
         ! FIXME: spline 1D should be able to handle different BCs at xmin/xmax
         ! For now skip cases with bc_xmin /= bc_xmax
-        if (bc_xmin /= bc_xmax) then
-!          write(*,'(1i6)', advance='no') degree
-!          write(*,'(2a6)', advance='no') bc_to_char( bc_xmin ), bc_to_char( bc_xmax )
-!          write(*,'(a10,a8)') "---", "SKIP.."
-          cycle
-        end if
+        if (bc_xmin /= bc_xmax) cycle
 
         ! Initialize test facility
         call test_facility % init( &
@@ -268,9 +306,8 @@ program test_spline_1d
           degree  = degree , &
           ncells  = ncells , &
           bc_xmin = bc_xmin, &
-!          bc_xmax = bc_xmax )
-          bc_xmax = bc_xmax, &
-          break_pts = [(pinfo%xmin+real(k,wp)*dx, k=0, ncells)] )
+          bc_xmax = bc_xmin, &
+          breaks  = breaks )
 
         ! Run tests
         call test_facility % evaluate_on_1d_grid      ( grid, max_norm_error )
@@ -306,6 +343,7 @@ program test_spline_1d
   ! Deallocate local arrays
   deallocate( bc_kinds )
   deallocate( grid     )
+  deallocate( breaks   )
 
   ! ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
   ! TEST 3: convergence analysis on cos*cos profile (with absolute error bound)
@@ -339,8 +377,8 @@ program test_spline_1d
   write(*,*)
   write(*,'(a)') "Input:"
   write(*,'(a)') '  . deg   = spline degree (same along x1 and x2 directions)'
-  write(*,'(a)') '  . bcmin = boundary conditions in x1 direction [P|H|G]'
-  write(*,'(a)') '  . bcmax = boundary conditions in x2 direction [P|H|G]'
+  write(*,'(a)') '  . bcmin = boundary conditions at x=xmin [P|H|G]'
+  write(*,'(a)') '  . bcmax = boundary conditions at x=xmax [P|H|G]'
   write(*,'(a)') '  . nc    = number of grid cells'
   write(*,*)
   write(*,'(a)') "Output:"
@@ -353,8 +391,8 @@ program test_spline_1d
   write(*,'(a)') "Timing [s]:"
   write(*,'(a)') '  . t_init  = initialization of spline object'
   write(*,'(a)') '  . t_comp  = calculation of spline coefficients for interpolation'
-  write(*,'(a)') '  . t_eval  = evaluation of function value S(x1,x2)'
-  write(*,'(a)') '  . t_dx    = evaluation of x-derivative  ∂S(x1,x2)/∂x'
+  write(*,'(a)') '  . t_eval  = evaluation of function value S(x)'
+  write(*,'(a)') '  . t_dx    = evaluation of x-derivative  ∂S/∂x'
   write(*,*)
   write(*,'(a)') "Boundary conditions:"
   write(*,'(a)') '  . P = periodic'
@@ -364,8 +402,7 @@ program test_spline_1d
 
   ! Print table header
   write(*, '(a3,3a6,*(a10))') &
-    "deg", "bcmin", "bcmax", "nc", &
-    "tol", "err", "tol_dx1", "err_dx1", "passed", &
+    "deg", "bcmin", "bcmax", "nc", "tol", "err", "tol_dx", "err_dx", "passed", &
     "t_init", "t_comp", "t_eval", "t_dx"
 
   ! Initialize profile
@@ -381,9 +418,16 @@ program test_spline_1d
   ! Create uniform grid of evaluation points
   allocate( grid (grid_dim) )
   grid_dx = (pinfo%xmax-pinfo%xmin) / real( grid_dim-1, wp )
-  do i = 1, grid_dim
-    grid(i) = pinfo%xmin + real(i-1,wp)*grid_dx
-  end do
+  grid    = [(pinfo%xmin + real(k,wp)*grid_dx, k=0, grid_dim-1)]
+
+  ! Allocate breaks to initialize non-uniform 1D spline (instead of uniform)
+  if (uniform) then
+    allocate( breaks(0) )
+  else
+    allocate( breaks( maxval(nx_list)+1 ) )
+  end if
+
+  breaks_ptr => breaks
 
   ! Initialize 'PASSED/FAILED' condition
   passed(3) = .true.
@@ -398,19 +442,26 @@ program test_spline_1d
 
         ! FIXME: spline 1D should be able to handle different BCs at xmin/xmax
         ! For now skip cases with bc_xmin /= bc_xmax
-        if (bc_xmin /= bc_xmax) then
-!          write(*,'(1i6)', advance='no') degree
-!          write(*,'(2a6)', advance='no') bc_to_char( bc_xmin ), bc_to_char( bc_xmax )
-!          write(*,'(a10,a8)') "---", "SKIP.."
-          cycle
-        end if
+        if (bc_xmin /= bc_xmax) cycle
 
         do k = 1, size( nx_list )
           ncells = nx_list(k)
 
-          ! TODO: remove this
           ! Compute cell size in uniform grid
           dx = (pinfo%xmax-pinfo%xmin) / ncells
+
+          ! Allocate breaks to initialize non-uniform 1D spline (instead of uniform)
+!          if ( .not. uniform ) then
+!            breaks(1:ncells+1) = [(pinfo%xmin+real(l,wp)*dx, l=0, ncells)]
+!            breaks_ptr => breaks(1:ncells+1)
+!          end if
+
+          ! TEST----------------------------------------------------------------
+          if ( .not. uniform ) then
+            call generate_non_uniform_breaks( pinfo%xmin, pinfo%xmax, dx, ncells, &
+                                              grid_perturbation, breaks )
+            breaks_ptr => breaks(1:ncells+1)
+          end if
 
           ! Initialize test facility
           call test_facility % init( &
@@ -418,12 +469,10 @@ program test_spline_1d
             degree     = degree , &
             ncells     = ncells , &
             bc_xmin    = bc_xmin, &
-!            bc_xmax    = bc_xmax )
             bc_xmax    = bc_xmax, &
-            break_pts  = [(pinfo%xmin+real(k,wp)*dx, k=0, ncells)] )
+            breaks     = breaks_ptr )
 
           ! Determine error tolerances
-          dx       = (pinfo%xmax - pinfo%xmin) / ncells
           tol      = sll_f_spline_1d_error_bound         ( profile_1d_cos, dx, degree )
           tol_diff = sll_f_spline_1d_error_bound_on_deriv( profile_1d_cos, dx, degree )
 
@@ -474,11 +523,12 @@ program test_spline_1d
   deallocate( bc_kinds )
   deallocate( nx_list  )
   deallocate( grid     )
+  deallocate( breaks   )
+  nullify( breaks_ptr  )
 
   ! ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
 
   write(*,'(a)') '----------------'
-!  write(*,'(a)') 'Test 0: '// success_to_string( passed(0) )
   write(*,'(a)') 'Test 1: '// success_to_string( passed(1) )
   write(*,'(a)') 'Test 2: '// success_to_string( passed(2) )
   write(*,'(a)') 'Test 3: '// success_to_string( passed(3) )
@@ -525,5 +575,81 @@ contains
     end if
 
   end function success_to_string
+
+  !-----------------------------------------------------------------------------
+  subroutine process_args(uniform,grid_perturbation)
+    logical , intent(out) :: uniform
+    real(wp), intent(out) :: grid_perturbation
+
+    integer :: argc
+    character(len=32) :: val
+    integer :: length
+    integer :: status
+
+    argc = command_argument_count()
+
+    select case (argc)
+
+    case(0)
+      SLL_ERROR("process_args","command line arguments: -u | -n [ real number in [0,1) ]")
+
+    case(1)
+      call get_command_argument(1,val,length,status)
+      if (trim(val) == "-u") then
+        uniform = .true.
+      else if (trim(val) == "-n") then
+        uniform = .false.
+        grid_perturbation = 0.0_wp
+      else
+        SLL_ERROR("process_args","command line arguments: -u | -n [ real number in [0,1) ]")
+      end if
+
+    case(2)
+      call get_command_argument(1,val,length,status)
+      if (trim(val) == "-u") then
+        SLL_ERROR("process_args","command line arguments: -u | -n [ real number in [0,1) ]")
+      else if (trim(val) == "-n") then
+        uniform = .false.
+      else
+        SLL_ERROR("process_args","command line arguments: -u | -n [ real number in [0,1) ]")
+      end if
+      call get_command_argument(2,val,length,status)
+      read(val,*) grid_perturbation
+
+    case default
+      SLL_ERROR("process_args","command line arguments: -u | -n [grid perturbation]")
+
+    end select
+
+  end subroutine process_args
+
+  subroutine generate_non_uniform_breaks( xmin, xmax, dx, ncells, grid_perturbation, breaks )
+    real(wp), intent(in   ) :: xmin
+    real(wp), intent(in   ) :: xmax
+    real(wp), intent(in   ) :: dx
+    integer , intent(in   ) :: ncells
+    real(wp), intent(in   ) :: grid_perturbation
+    real(wp), intent(  out) :: breaks(:)
+
+    integer  :: i
+    real(wp) :: r
+
+    do i = 1, ncells+1
+      call random_number( r ) !  0.0 <= r < 1.0
+      r = r - 0.5_wp          ! -0.5 <= r < 0.5
+      breaks(i) = xmin + ( real(i-1,wp) + grid_perturbation * r ) * dx
+    end do
+
+    breaks(1) = xmin
+
+    a = ( xmin - xmax ) / ( breaks(1) - breaks(ncells+1) )
+    b = ( xmax * breaks(1) - xmin * breaks(ncells+1) ) / ( breaks(1) - breaks(ncells+1) )
+    do i = 2, ncells
+      breaks(i) =  a * breaks(i) + b
+    end do
+
+    breaks(ncells+1) = xmax
+
+  end subroutine generate_non_uniform_breaks
 
 end program test_spline_1d
