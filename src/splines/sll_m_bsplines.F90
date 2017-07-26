@@ -338,11 +338,11 @@ contains
   !> If x is not between basis%knots(1) and basis%knots(basis%num_pts),
   !> then the value -1 is returned.
   !-----------------------------------------------------------------------------
-  pure function sll_f_find_cell( basis, x )
+  pure function sll_f_find_cell( basis, x ) result( icell )
 
     type(sll_t_bsplines), intent(in) :: basis
     real(wp)            , intent(in) :: x
-    integer :: sll_f_find_cell
+    integer :: icell
 
     integer :: low
     integer :: high
@@ -352,30 +352,37 @@ contains
 
     ! check if point is outside of grid
     if (x > basis%knots(n)) then
-       sll_f_find_cell = -1
+       icell = -1
        return
     end if
     if (x < basis%knots(1)) then
-       sll_f_find_cell = -1
+       icell = -1
        return
     end if
-    ! check is point is exactly on right boundary
+
+    ! check if point is exactly on left boundary
+    if (x == basis%knots(1)) then
+       icell = 1
+       return
+    end if
+
+    ! check if point is exactly on right boundary
     if (x == basis%knots(n)) then
-       sll_f_find_cell = n-1
+       icell = n-1
        return
     end if
 
     low  = 1
     high = n
-    sll_f_find_cell = (low + high) / 2
-    do while (x <  basis%knots(sll_f_find_cell) &
-         .or. x >= basis%knots(sll_f_find_cell+1))
-       if (x < basis%knots(sll_f_find_cell)) then
-          high = sll_f_find_cell
+    icell = (low + high) / 2
+    do while (x <  basis%knots(icell) &
+         .or. x >= basis%knots(icell+1))
+       if (x < basis%knots(icell)) then
+          high = icell
        else
-          low  = sll_f_find_cell
+          low  = icell
        end if
-       sll_f_find_cell = (low + high) / 2
+       icell = (low + high) / 2
     end do
 
   end function sll_f_find_cell
