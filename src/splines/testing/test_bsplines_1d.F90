@@ -41,7 +41,7 @@ tol(5) = 1e-07_f64
 tol(6) = 1e-08_f64
 tol(7) = 1e-10_f64
 tol(8) = 1e-11_f64
-tol(9) = 1e-12_f64
+tol(9) = 1e-11_f64
 
 ! Initialize PASSED/FAILED condition
 passed_test = .true.
