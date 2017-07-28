@@ -73,9 +73,9 @@ program test_spline_1d
   ! Read from standard input
   call process_args( uniform, grid_perturbation )
 
-  ! ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
+  !-----------------------------------------------------------------------------
   ! TEST 1: Evaluate spline at interpolation points (error should be zero)
-  ! ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
+  !-----------------------------------------------------------------------------
   write(*,*)
   write(*,'(a)') '------------------------------------------------------------------------'
   write(*,'(a)') ' TEST 1: evaluate spline at interpolation points (error should be zero) '
@@ -90,7 +90,7 @@ program test_spline_1d
   bc_kinds(:) = [sll_p_periodic, sll_p_hermite, sll_p_greville]
 
   ! Choose number of cells in grid
-  ncells = 12
+  ncells = 10
 
   ! Print constant parameters
   write(*,'(a)') 'Profile: f(x) = cos( 2*pi*x )'
@@ -149,12 +149,9 @@ program test_spline_1d
       ! Cycle over all kinds of boundary conditions at x=xmax
       do j = 1, size( bc_kinds )
         bc_xmax = bc_kinds(j)
-        if (bc_xmax == sll_p_periodic .and. (.not. pinfo % periodic)) cycle
-        if (bc_xmax == sll_p_periodic .and. bc_xmin /= bc_xmax) cycle
 
-        ! FIXME: spline 1D should be able to handle different BCs at xmin/xmax
-        ! For now skip cases with bc_xmin /= bc_xmax
-        if (bc_xmin /= bc_xmax) cycle
+        if (bc_xmax == sll_p_periodic .and. (.not. pinfo % periodic)) cycle
+        if ( any( [bc_xmax,bc_xmin] == sll_p_periodic ) .and. bc_xmin /= bc_xmax) cycle
 
         ! Initialize test facility
         call test_facility % init( &
@@ -191,9 +188,9 @@ program test_spline_1d
   deallocate( bc_kinds )
   deallocate( breaks   )
 
-  ! ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
+  !-----------------------------------------------------------------------------
   ! TEST 2: Spline should represent polynomial profiles exactly
-  ! ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
+  !-----------------------------------------------------------------------------
   write(*,*)
   write(*,'(a)') '---------------------------------------------------------------------------'
   write(*,'(a)') ' TEST 2: spline of order m exactly represents polynomial of same order     '
@@ -278,10 +275,6 @@ program test_spline_1d
       do j = 1, size( bc_kinds )
         bc_xmax = bc_kinds(j)
 
-        ! FIXME: spline 1D should be able to handle different BCs at xmin/xmax
-        ! For now skip cases with bc_xmin /= bc_xmax
-        if (bc_xmin /= bc_xmax) cycle
-
         ! Initialize test facility
         call test_facility % init( &
           profile_1d = profile_1d_poly, &
@@ -327,9 +320,9 @@ program test_spline_1d
   deallocate( grid     )
   deallocate( breaks   )
 
-  ! ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
+  !-----------------------------------------------------------------------------
   ! TEST 3: convergence analysis on cos*cos profile (with absolute error bound)
-  ! ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
+  !-----------------------------------------------------------------------------
   write(*,*)
   write(*,'(a)') '-----------------------------------------------------------------------------'
   write(*,'(a)') ' TEST 3: convergence analysis on cos profile (with absolute error bound)     '
@@ -422,9 +415,8 @@ program test_spline_1d
       do j = 1, size( bc_kinds )
         bc_xmax = bc_kinds(j)
 
-        ! FIXME: spline 1D should be able to handle different BCs at xmin/xmax
-        ! For now skip cases with bc_xmin /= bc_xmax
-        if (bc_xmin /= bc_xmax) cycle
+        if (bc_xmax == sll_p_periodic .and. (.not. pinfo % periodic)) cycle
+        if ( any( [bc_xmax,bc_xmin] == sll_p_periodic ) .and. bc_xmin /= bc_xmax) cycle
 
         do k = 1, size( nx_list )
           ncells = nx_list(k)
