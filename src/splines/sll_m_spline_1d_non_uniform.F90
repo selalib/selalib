@@ -137,10 +137,12 @@ contains
     integer                           , intent(in   ) :: bc_xmax
 
     integer :: ntau
-    integer :: i, k
+    integer :: i
     integer :: bc_type
     integer :: basis_bc_xmin
     integer :: basis_bc_xmax
+
+    real(wp), allocatable :: temp_knots(:)
 
     character(len=*), parameter :: this_sub_name = "spline_1d_non_uniform % init"
 
@@ -208,100 +210,66 @@ contains
     allocate( self%bsdx (degree/2+1,degree+1) )
     allocate( self%ipiv (self%n) )
 
-!    ! Determine array 'tau' of interpolation points
-!    select case (bc_type)
-!
-!    case (sll_p_periodic)
-!
-!      k = degree/2
-!
-!      ! Even degree: interpolation points are cell midpoints
-!      ! Odd  degree: interpolation points are grid points excluding last
-!      ! TODO: use averaging (Greville style)
-!      allocate( self%tau(self%n) )
-!
-!      do i = 1, self%n
-!        self%tau(i) = sum( self%bsp%knots(i+k+1-degree:i+k) ) / real(degree,wp)
-!      end do
-!
-!      self%tau(:) = modulo( self%tau(:)-self%xmin, self%xmax-self%xmin ) + self%xmin
-!
-!    case (sll_p_hermite)
-!
-!      k = degree/2
-!
-!      ! In this case only interior points are saved in tau
-!      ! Even degree: interpolation points are cell midpoints
-!      ! Odd  degree: interpolation points are grid points including last
-!      if (modulo(degree,2) == 0) then
-!        allocate( self%tau(self%ncells) )
-!        do i = 1, self%ncells
-!          self%tau(i) = sum( self%bsp%knots(i+k+1-degree:i+k) ) / real(degree,wp)
-!        end do
-!      else
-!        allocate( self%tau(self%ncells+1) )
-!        self%tau(1) = self%xmin
-!        do i = 2, self%ncells
-!          self%tau(i) = sum( self%bsp%knots(i+k+1-degree:i+k) ) / real(degree,wp)
-!        end do
-!        self%tau(self%ncells+1) = self%xmax
-!      end if
-!
-!    case (sll_p_greville)
-!
-!      ! Set interpolation points to be Greville points
-!      allocate( self%tau(self%n) )
-!      do i = 1, self%n
-!        self%tau(i) = sum( self%bsp%knots(i+1-degree:i) ) / real(degree,wp)
-!      end do
-!
-!    end select
-
     !---------------------------------------------------------------------------
-    ! Determine array 'tau' of interpolation points
+    ! Determine array tau of interpolation points
     !---------------------------------------------------------------------------
-    k = degree / 2
 
-    ! determine size of tau
+    ! Determine size of tau and allocate tau
     if ( self%bc_xmin == sll_p_periodic ) then
       ntau = self%ncells
     else
-      ntau = self%ncells + self%mod + (k-self%nbc_xmin) + (k-self%nbc_xmax)
+      ntau = self%ncells + degree - self%nbc_xmin - self%nbc_xmax
     end if
+    allocate( self%tau( 1 : ntau ) )
 
-    allocate( self%tau(ntau) )
+    ! Array of temporary knots needed to compute interpolation points
+    ! using Greville-style averaging: tau(i) = average(temp_knots(i+1-degree:i))
+    allocate( temp_knots( 2-degree : ntau ) )
 
-    ! Compute interpolation points using Greville averaging
     if ( self%bc_xmin == sll_p_periodic ) then
 
-      do i = 1, ntau
-        self%tau(i) = sum( self%bsp%knots(i+k+1-degree:i+k) )
-      end do
-      self%tau(:) = self%tau(:) / real(degree,wp)
+      associate( k => degree/2 )
+        temp_knots(:) = self%bsp%knots(2-degree+k:ntau+k)
+      end associate
 
-      self%tau(:) = modulo( self%tau(:)-self%xmin, self%xmax-self%xmin ) + self%xmin
+    else
 
-    else if ( self%bc_xmin == sll_p_hermite ) then
+      associate( r => 2-degree, s => -self%nbc_xmin )
+        select case (bc_xmin)
+        case (sll_p_greville); temp_knots(r:s) = breaks(1)
+        case (sll_p_hermite ); temp_knots(r:s) = 2.0_wp*breaks(1) - breaks(2+s-r:2:-1)
+        end select
+      end associate
 
-      do i = 1, ntau
-        self%tau(i) = sum( self%bsp%knots(i+k+1-degree:i+k) )
-      end do
-      self%tau(:) = self%tau(:) / real(degree,wp)
+      associate( r => -self%nbc_xmin+1, s => -self%nbc_xmin+1+self%ncells )
+        temp_knots(r:s) = breaks(:)
+      end associate
 
-      if ( .not. self%even ) then
-        self%tau(1)    = self%xmin
-        self%tau(ntau) = self%xmax
-      end if
-
-    else if ( self%bc_xmin == sll_p_greville ) then
-
-      do i = 1, ntau
-        self%tau(i) = sum( self%bsp%knots(i+1-degree:i) )
-      end do
-      self%tau(:) = self%tau(:) / real(degree,wp)
+      associate( r => -self%nbc_xmin+1+self%ncells+1, s => ntau, n => self%ncells )
+        select case (bc_xmax)
+        case (sll_p_greville); temp_knots(r:s) = breaks(n+1)
+        case (sll_p_hermite ); temp_knots(r:s) = 2.0_wp*breaks(n+1) - breaks(n:n+r-s:-1)
+        end select
+      end associate
 
     end if
-    !---------------------------------------------------------------------------
+
+    ! Compute interpolation points using Greville-style averaging
+    associate( inv_deg => 1.0_wp / real( degree, wp ) )
+      do i = 1, ntau
+        self%tau(i) = sum( temp_knots(i+1-degree:i) ) * inv_deg
+      end do
+    end associate
+
+    ! Periodic case: apply periodic BCs to interpolation points
+    if ( self%bc_xmin == sll_p_periodic ) then
+      self%tau(:) = modulo( self%tau(:)-self%xmin, self%xmax-self%xmin ) + self%xmin
+
+    ! Non-periodic case, odd degree: fix round-off issues
+    else if ( .not. self%even ) then
+      self%tau(1)    = self%xmin
+      self%tau(ntau) = self%xmax
+    end if
 
     ! Special case: linear spline (no need for matrix assembly)
     if (self%deg == 1) then
@@ -309,17 +277,7 @@ contains
       return
     end if
 
-!    ! Assemble banded matrix (B_j(tau(i))) for spline interpolation
-!    select case (bc_type)
-!    case (sll_p_periodic)
-!      call build_system_periodic( self )
-!    case (sll_p_greville)
-!      call build_system_greville( self )
-!    case (sll_p_hermite)
-!      call build_system_with_derivative( self )
-!    end select
-
-    ! Assemble banded matrix (B_j(tau(i))) for spline interpolation
+    ! Assemble dense matrix (B_j(tau(i))) for spline interpolation
     call build_system_dense( self )
 
   end subroutine s_spline_1d_non_uniform__init
