@@ -52,6 +52,7 @@ ELSE()
                 HINTS
                    ENV OPENBLAS_ROOT  # prioritize custom installation location
                    CMAKE_SYSTEM_LIBRARY_PATH  # also search the default location
+                   /usr/local/opt/openblas  # Library location on mac with homebrew
                 PATH_SUFFIXES
                    lib64 lib
                 DOC "OpenBLAS, the free high performance BLAS and LAPACK implementation")
