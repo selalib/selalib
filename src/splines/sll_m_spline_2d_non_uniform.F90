@@ -172,6 +172,7 @@ contains
 
     sll_int32 :: i1, n1, ncond1
     sll_int32 :: i2, n2, ncond2, j2
+    integer   :: bc_type1, bc_type2
 
     ! TODO: check size of gtau == tau
     ! TODO: check size of all input arrays
@@ -180,11 +181,15 @@ contains
     n1 = self%bs1%n
     n2 = self%bs2%n
 
+    ! Type of boundary conditions (TODO: deal with mixed BCs)
+    bc_type1 = self%bs1%bc_xmin
+    bc_type2 = self%bs2%bc_xmin
+
     ! Compute number of additional boundary values needed
     ncond1 = 0
     ncond2 = 0
-    if (self%bs1%bc_type == sll_p_hermite)  ncond1 = self%bs1%deg/2
-    if (self%bs2%bc_type == sll_p_hermite)  ncond2 = self%bs2%deg/2
+    if (bc_type1 == sll_p_hermite)  ncond1 = self%bs1%deg/2
+    if (bc_type2 == sll_p_hermite)  ncond2 = self%bs2%deg/2
 
     !--------------------------------------------
     ! Compute spline coefficients in x1 direction
@@ -192,10 +197,10 @@ contains
 
     ! Boundary points in x2 (only for Hermite):
     ! Additional x1-interpolation of x2-derivatives on boundaries is needed!
-    if (self%bs2%bc_type == sll_p_hermite) then
+    if (bc_type2 == sll_p_hermite) then
 
       ! Hermite-Hermite case:
-      if (self%bs1%bc_type == sll_p_hermite) then
+      if (bc_type1 == sll_p_hermite) then
 
         ! boundary conditions at x2_min
         if (present(derivs_x2_min)) then
@@ -273,7 +278,7 @@ contains
     !--------------------------------------------
     ! Compute spline coefficients in x2 direction
     !--------------------------------------------
-    if (self%bs2%bc_type == sll_p_hermite) then
+    if (bc_type2 == sll_p_hermite) then
 
       if (present(derivs_x2_min) .and. present(derivs_x2_max)) then
         do i1 = 1, n1
