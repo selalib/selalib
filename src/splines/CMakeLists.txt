@@ -4,6 +4,7 @@ SET( SPLINES_FILES
   sll_m_spline_matrix_base.F90
   sll_m_spline_matrix_dense.F90
   sll_m_spline_matrix_banded.F90
+  sll_m_spline_matrix_periodic_banded.F90
   sll_m_spline_1d.F90
   sll_m_spline_1d_base.F90
   sll_m_spline_1d_uniform.F90
