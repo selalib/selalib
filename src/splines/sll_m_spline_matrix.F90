@@ -9,9 +9,10 @@ module sll_m_spline_matrix
 
   use sll_m_working_precision, only: f64
 
-  use sll_m_spline_matrix_base, only: sll_c_spline_matrix
-  use sll_m_spline_matrix_dense, only: sll_t_spline_matrix_dense
-  use sll_m_spline_matrix_banded, only: sll_t_spline_matrix_banded
+  use sll_m_spline_matrix_base           , only: sll_c_spline_matrix
+  use sll_m_spline_matrix_dense          , only: sll_t_spline_matrix_dense
+  use sll_m_spline_matrix_banded         , only: sll_t_spline_matrix_banded
+  use sll_m_spline_matrix_periodic_banded, only: sll_t_spline_matrix_periodic_banded
 
   implicit none
 
@@ -47,8 +48,8 @@ contains
     case ( "banded" )
       allocate( sll_t_spline_matrix_banded :: matrix )
 
-    case ( "banded_periodic" )
-      SLL_ERROR(this_sub_name,"Case 'banded_periodic' not implemented")
+    case ( "periodic_banded" )
+      allocate( sll_t_spline_matrix_periodic_banded :: matrix )
 
     case default
       SLL_ERROR(this_sub_name,"Unrecognized matrix type: "//trim(matrix_type))
@@ -63,6 +64,9 @@ contains
 
     type is ( sll_t_spline_matrix_banded )
       call matrix % init( n, kl, ku )      
+
+    type is ( sll_t_spline_matrix_periodic_banded )
+      call matrix % init( n, kl, ku )
 
     end select
 
