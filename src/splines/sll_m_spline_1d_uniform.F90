@@ -23,11 +23,15 @@ module sll_m_spline_1d_uniform
     sll_s_uniform_bsplines_eval_deriv, &
     sll_s_uniform_bsplines_eval_basis_and_n_derivs
 
-  use schur_complement, only: &
-    schur_complement_solver, &
-    schur_complement_fac   , &
-    schur_complement_slv   , &
-    schur_complement_free
+!  use schur_complement, only: &
+!    schur_complement_solver, &
+!    schur_complement_fac   , &
+!    schur_complement_slv   , &
+!    schur_complement_free
+
+  use sll_m_spline_matrix, only: &
+    sll_c_spline_matrix, &
+    sll_s_spline_matrix_new
 
   implicit none
 
@@ -63,10 +67,16 @@ module sll_m_spline_1d_uniform
     real(wp), private, allocatable :: bcoef(:) ! spline coefficients (w.r.t. basis)
     real(wp), private, allocatable :: tau(:)   ! interpolation points
 
-    ! Local storage for linear system in interpolation problem
-    real(wp),         allocatable, private :: q(:,:)
-    integer ,         allocatable, private :: ipiv(:)
-    type(schur_complement_solver), private :: schur
+!    ! Local storage for linear system in interpolation problem
+!    real(wp),         allocatable, private :: q(:,:)
+!    integer ,         allocatable, private :: ipiv(:)
+!    type(schur_complement_solver), private :: schur
+
+    integer :: nbc_xmin
+    integer :: nbc_xmax
+    integer :: mod
+    logical :: even
+    class(sll_c_spline_matrix), allocatable :: matrix
 
   contains
 
@@ -162,6 +172,10 @@ contains
     integer  :: i
     integer  :: size_tau
     real(wp), allocatable :: knots(:)
+
+    ! NEW
+    integer           :: kl, ku
+    character(len=32) :: matrix_type
 
     ! Sanity checks
     SLL_ASSERT( degree >= 1 )
@@ -260,240 +274,395 @@ contains
 
     end select
 
+!    ! Special case: linear spline
+!    ! No need for matrix assembly
+!    if (self%deg == 1) return
+!
+!    ! Assemble matrix $M_{ij} = B_j(\tau_i)$ for spline interpolation
+!    ! TODO: handle mixed Hermite/Greville BCs
+!    select case (bc_xmin)
+!    case (sll_p_periodic); call s_build_system_periodic( self )
+!    case (sll_p_hermite ); call s_build_system_hermite ( self )
+!    case (sll_p_greville); call s_build_system_greville( self )
+!    end select
+
+    self%mod  = modulo( degree, 2 )
+    self%even = (self%mod == 0)
+
+    self%nbc_xmin = merge( degree/2, 0, self%bc_xmin == sll_p_hermite )
+    self%nbc_xmax = merge( degree/2, 0, self%bc_xmax == sll_p_hermite )
+
+    !---------------------------------------------------------------------------
+    ! Assemble dense matrix (B_j(tau(i))) for spline interpolation
+    !---------------------------------------------------------------------------
+
     ! Special case: linear spline
     ! No need for matrix assembly
     if (self%deg == 1) return
 
-    ! Assemble matrix $M_{ij} = B_j(\tau_i)$ for spline interpolation
-    ! TODO: handle mixed Hermite/Greville BCs
-    select case (bc_xmin)
-    case (sll_p_periodic); call s_build_system_periodic( self )
-    case (sll_p_hermite ); call s_build_system_hermite ( self )
-    case (sll_p_greville); call s_build_system_greville( self )
+    ! FIXME: In Hermite case ku and kl computed in general case when derivatives
+    !        of B-splines do not vanish at boundary
+    ! TODO: reduce kl and ku to take advantage of uniform grid
+    select case( self%bc_xmin )
+      case ( sll_p_periodic ); ku = (self%deg+1)/2
+      case ( sll_p_hermite  ); ku = max( (self%deg+1)/2, self%deg-1 )
+      case ( sll_p_greville ); ku = self%deg
     end select
+
+    select case( self%bc_xmax )
+      case ( sll_p_periodic ); kl = (self%deg+1)/2
+      case ( sll_p_hermite  ); kl = max( (self%deg+1)/2, self%deg-1 )
+      case ( sll_p_greville ); kl = self%deg
+    end select
+
+    if (self%bc_xmin == sll_p_periodic) then
+      if (kl+1+ku >= self%n) then
+        matrix_type = "dense"
+      else
+        matrix_type = "periodic_banded"
+      end if
+    else
+      matrix_type = "banded"
+    end if
+
+    call sll_s_spline_matrix_new( self%matrix, matrix_type, self%n, kl, ku )
+    call build_system( self, self%matrix )
+    call self % matrix % factorize()
 
   end subroutine s_spline_1d_uniform__init
 
   !-----------------------------------------------------------------------------
   !> @brief        Private subroutine for assembling and factorizing linear
-  !>               system needed for periodic spline interpolation
-  !> @param[inout] self spline 1D object
+  !>               system for any kind of boundary conditions at xmin and xmax
+  !> @param[in]    self   spline interpolation object
+  !> @param[inout] matrix generic 'spline' matrix (dense/banded/periodic-banded)
   !-----------------------------------------------------------------------------
-  subroutine s_build_system_periodic( self )
+  subroutine build_system( self, matrix )
+    class(sll_t_spline_1d_uniform), intent(in   ) :: self
+    class(sll_c_spline_matrix)    , intent(inout) :: matrix
 
-    class(sll_t_spline_1d_uniform), intent(inout) :: self
-
-    integer  :: j
-    integer  :: k
-    real(wp) :: offset
-    real(wp) :: values(self%deg+1)
-
-    ! Evaluate B-splines at interpolation points, noting that:
-    !   a) points are regularly spaced
-    !   b) basis is translationally invariant
-    ! For even degree interpolation points are cell midpoints
-    ! For odd  degree interpolation points are grid points
-    if (modulo(self%deg,2) == 0) then
-      offset = 0.5_wp
-    else
-      offset = 0.0_wp
-    end if
-    call sll_s_uniform_bsplines_eval_basis( self%deg, offset, values )
-
-    ! Allocate matrix Q for linear system:
-    !   - M is circulant banded matrix (sparse)
-    !   - Q is compressed form of A (circulant diagonals of M are rows of Q)
-    k = self%deg/2
-    allocate( self%q(2*k+1,self%n) )
-
-    ! Assemble matrix Q:
-    !  - M has constant elements on each diagonal
-    !  - Q has constant elements on each row
-    do j = 1, self%n
-      self%q(:,j) = values(1:2*k+1)
-    end do
-
-    ! Prepare solution of linear system by performing:
-    ! a) Block decomposition of M = [[A,B],[C,D]] with
-    !     - A (n-k)x(n-k) banded Toeplitz matrix (square, large)
-    !     - B (n-k)x(  k) low-rank Toeplitz (rectangular, empty in the center)
-    !     - C (  k)x(n-k) low-rank Toeplitz (rectangular, empty in the center)
-    !     - D (  k)x(  k) fully dense Toeplitz matrix (square, small)
-    ! b) LU factorization of matrix A
-    ! c) Calculation of Schur complement of A: H = D - C A^{-1} B
-    ! d) LU factorization of Schur complement H
-    call schur_complement_fac( self%schur, self%n, k, self%q )
-
-  end subroutine s_build_system_periodic
-
-  !-----------------------------------------------------------------------------
-  !> @brief        Private subroutine for assembling and factorizing linear
-  !>               system for spline interpolation with Hermite BCs
-  !> @param[inout] self spline 1D object
-  !-----------------------------------------------------------------------------
-  subroutine s_build_system_hermite( self )
-
-    class(sll_t_spline_1d_uniform), intent(inout) :: self
-
-    integer  :: nbc
-    integer  :: iflag
-    integer  :: i
-    integer  :: j
-    integer  :: ii
-    integer  :: jj
-    integer  :: offset
-    integer  :: k
+    integer  :: i,j,d,s
+    integer  :: j0,d0
     integer  :: icell
+    integer  :: order
     real(wp) :: x
     real(wp) :: x_offset
-
     real(wp) :: values(self%deg+1)
-    real(wp) :: derivs(0:self%deg/2,1:self%deg+1)
+    real(wp), allocatable :: derivs(:,:)
 
-
-    ! number of boundary conditions needed depending on spline degree
-    k   = self%deg-1
-    nbc = self%deg/2
-
-    ! The matrix q is a banded matrix using the storage required by DGBTRF (LAPACK)
-    ! It has 2*k bands above diagonal, k bands below and the diagonal itself
-    ! k additional bands above diagonal needed for pivoting
-    ! The term A(ii,jj) of the full matrix is stored in q(ii-jj+2*k+1,jj)
-    ! The Bspline interpolation matrix at Greville points x_ii is
-    ! A(ii,jj) = B_jj(x_ii)
-    allocate( self%q(3*k+1,self%n) )
-    self%q = 0.0_wp
-
-    ! For even degree splines interpolation points are at cell midpoints
-    ! value of function on the boundary needed as additional boundary conditions
-    ! for odd degree splines  baundary is in the interpolation points
-    ! only derivative values are needed as boundary conditions
-    if (modulo( self%deg, 2 ) == 0) then ! spline degree even
-       offset = 1
-    else
-       offset = 0
+    if ( any( [self%bc_xmin,self%bc_xmax] == sll_p_hermite ) ) then
+      allocate ( derivs (0:self%deg/2, 1:self%deg+1) )
     end if
 
-    ! boundary conditions at xmin
-    ii       = 0
-    x        = self%xmin
-    icell    = 1
-    x_offset = 0.0_wp
-    call sll_s_uniform_bsplines_eval_basis_and_n_derivs( self%deg, x_offset, nbc, derivs )
-    ! When using uniform B-splines, the cell size is normalized between 0 and 1,
-    ! hence the i-th derivative must be divided by dx^i to scale back the result
-    do i = 1, nbc-offset
-      derivs(i,:) = derivs(i,:) / self%dx**i
-    end do
-    do i = 1, nbc
-       ! iterate only to k+1 as last bspline is 0
-       ii = ii + 1
-       do j = 1, k+1
-          jj = icell+j-1
-          self%q(ii-jj+2*k+1,jj) = derivs(i-offset,j)
-       end do
-    end do
+    ! Hermite boundary conditions at xmin, if any
+    if ( self%bc_xmin == sll_p_hermite ) then
+      x        = self%xmin
+      icell    = 1
+      x_offset = 0.0_wp
+      call sll_s_uniform_bsplines_eval_basis_and_n_derivs( self%deg, x_offset, self%nbc_xmax, derivs )
 
-    ! interpolation points
-    do i = 1, self%n-2*nbc
-       ii = ii + 1
-       x = self%tau(i)
-       call s_get_icell_and_offset( self%xmin, self%xmax, self%ncells, x, icell, x_offset )
-       call sll_s_uniform_bsplines_eval_basis( self%deg, x_offset, values )
-       do j=1,k+2
-          jj = icell+j-1
-          self%q(ii-jj+2*k+1,jj) = values(j)
-       end do
-    end do
+      ! When using uniform B-splines, the cell size is normalized between 0 and 1,
+      ! hence the i-th derivative must be divided by dx^i to scale back the result
+      do i = 1, self%nbc_xmin-1+self%mod
+        derivs(i,:) = derivs(i,:) / self%dx**i
+      end do
 
-    ! boundary conditions at xmax
-    x        = self%xmax
-    icell    = self%n-self%deg
-    x_offset = 1.0_wp
-    call sll_s_uniform_bsplines_eval_basis_and_n_derivs( self%deg, x_offset, nbc, derivs )
-    ! When using uniform B-splines, the cell size is normalized between 0 and 1,
-    ! hence the i-th derivative must be divided by dx^i to scale back the result
-    do i = 1, nbc-offset
-      derivs(i,:) = derivs(i,:) / self%dx**i
-    end do
-    do i = 1, nbc
-       ii = ii + 1
-       do j = 2, k+2
-          jj = icell+j-1
-          self%q(ii-jj+2*k+1,jj) = derivs(i-offset,j)
-       end do
+      do i = 1, self%nbc_xmin
+        ! iterate only to deg as last bspline is 0
+        order = self%nbc_xmin-i+self%mod
+        do j = 1, self%deg
+          call matrix % set_element( i, j, derivs(order,j) )
+        end do
+      end do
+      if ( self%even ) then
+        call sll_s_uniform_bsplines_eval_basis( self%deg, x_offset, values )
+        i = self%nbc_xmin
+        do j = 1, self%deg
+          call matrix % set_element( i, j, values(j) )
+        end do
+      end if
+    end if
+
+    !-----------------------------------------------
+    ! TODO: treat separately Greville points at xmin
+    !-----------------------------------------------
+    ! TODO: if x_offset close to 0, set x_offset=0
+    ! TODO: if x_offset close to 1, set x_offset=0 and icell=icell-1
+
+    do i = self%nbc_xmin+1, self%n-self%nbc_xmax
+      x = self%tau(i-self%nbc_xmin)
+      call s_get_icell_and_offset( self%xmin, self%xmax, self%ncells, x, icell, x_offset )
+      call sll_s_uniform_bsplines_eval_basis( self%deg, x_offset, values )
+      do s = 1, self%deg+1
+        j = modulo(icell-self%offset-2+s,self%n)+1
+        call matrix % set_element( i, j, values(s) )
+      end do
     end do
 
-    ! Perform LU decomposition of matrix q with Lapack
-    allocate( self%ipiv (self%n) )
-    call dgbtrf( self%n, self%n, k, k, self%q, 3*k+1, self%ipiv, iflag )
+    !-----------------------------------------------
+    ! TODO: treat separately Greville points at xmax
+    !-----------------------------------------------
 
-  end subroutine s_build_system_hermite
+    ! Hermite boundary conditions at xmax, if any
+    if ( self%bc_xmax == sll_p_hermite ) then
+      x        = self%xmax
+      icell    = self%ncells
+      x_offset = 1.0_wp
+      call sll_s_uniform_bsplines_eval_basis_and_n_derivs( self%deg, x_offset, self%nbc_xmax, derivs )
 
-  !-----------------------------------------------------------------------------
-  !> @brief        Private subroutine for assembling and factorizing linear
-  !>               system for spline interpolation at Greville points
-  !> @param[inout] self bspline object
-  !-----------------------------------------------------------------------------
-  subroutine s_build_system_greville( self )
+      ! When using uniform B-splines, the cell size is normalized between 0 and 1,
+      ! hence the i-th derivative must be divided by dx^i to scale back the result
+      do i = 1, self%nbc_xmax-1+self%mod
+        derivs(i,:) = derivs(i,:) / self%dx**i
+      end do
 
-    class(sll_t_spline_1d_uniform), intent(inout) :: self
+      do i = self%n-self%nbc_xmax+1, self%n
+        order = i-(self%n-self%nbc_xmax+1)+self%mod
+        j0 = self%n-self%deg
+        d0 = 1
+        do s = 1, self%deg
+          j = j0 + s
+          d = d0 + s
+          call matrix % set_element( i, j, derivs(order,d) )
+        end do
+      end do
+      if ( self%even ) then
+        call sll_s_uniform_bsplines_eval_basis( self%deg, x_offset, values )
+        i  = self%n-self%nbc_xmax+1
+        j0 = self%n-self%deg
+        d0 = 1
+        do s = 1, self%deg
+          j = j0 + s
+          d = d0 + s
+          call matrix % set_element( i, j, values(d) )
+        end do
+      end if
+    end if
 
-    integer  :: iflag
-    integer  :: j
-    integer  :: k
-    integer  :: ii
-    integer  :: jj
-    integer  :: icell
-    real(wp) :: x
-    real(wp) :: offset
-    real(wp) :: values(self%deg+1)
+    if ( allocated( derivs ) ) deallocate( derivs )
 
-    ! The matrix q is a banded matrix using the storage required by banfac (De Boor)
-    ! It has k bands above diagonal, k bands below and the diagonal itself
-    ! The term A(ii,jj) of the full matrix is stored in q(ii-jj+k+1,jj)
-    ! The Bspline interpolation matrix at Greville points x_ii is
-    ! A(ii,jj) = B_jj(x_ii)
-    k = self%deg - 1
-    allocate( self%q(2*k+1,self%n) )
-    self%q = 0.0_f64
+  end subroutine build_system
 
-    ! Treat i=1 separately
-    x     =  self%xmin
-    icell = 1
-    ii    = 1   ! first Greville point
-    call sll_s_uniform_bsplines_eval_basis( self%deg, 0.0_wp, values )
-    ! iterate only to k+1 as last bspline is 0
-    do j=1,k+1
-       jj = icell+j-1
-       self%q(ii-jj+k+1,jj) = values(j)
-    end do
-
-    do ii=2,self%n - 1
-       x = self%tau(ii)
-       call s_get_icell_and_offset( self%xmin, self%xmax, self%ncells, x, icell, offset )
-       call sll_s_uniform_bsplines_eval_basis( self%deg, offset, values )
-       do j=1,k+2
-          jj = icell+j-1
-          self%q(ii-jj+k+1,jj) = values(j)
-       end do
-    end do
-
-    ! Treat i=self%n separately
-    x     = self%xmax
-    icell = self%n - self%deg
-    ii    = self%n  ! last Greville point
-    call sll_s_uniform_bsplines_eval_basis( self%deg, 1.0_wp, values )
-    ! iterate only to k as first bspline is 0
-    do j=2,k+2
-       jj = icell+j-1
-       self%q(ii-jj+k+1,jj) = values(j)
-    end do
-
-    ! Perform LU decomposition of matrix q
-    call banfac ( self%q, 2*k+1, self%n, k, k, iflag )
-
-  end subroutine s_build_system_greville
+!  !-----------------------------------------------------------------------------
+!  !> @brief        Private subroutine for assembling and factorizing linear
+!  !>               system needed for periodic spline interpolation
+!  !> @param[inout] self spline 1D object
+!  !-----------------------------------------------------------------------------
+!  subroutine s_build_system_periodic( self )
+!
+!    class(sll_t_spline_1d_uniform), intent(inout) :: self
+!
+!    integer  :: j
+!    integer  :: k
+!    real(wp) :: offset
+!    real(wp) :: values(self%deg+1)
+!
+!    ! Evaluate B-splines at interpolation points, noting that:
+!    !   a) points are regularly spaced
+!    !   b) basis is translationally invariant
+!    ! For even degree interpolation points are cell midpoints
+!    ! For odd  degree interpolation points are grid points
+!    if (modulo(self%deg,2) == 0) then
+!      offset = 0.5_wp
+!    else
+!      offset = 0.0_wp
+!    end if
+!    call sll_s_uniform_bsplines_eval_basis( self%deg, offset, values )
+!
+!    ! Allocate matrix Q for linear system:
+!    !   - M is circulant banded matrix (sparse)
+!    !   - Q is compressed form of A (circulant diagonals of M are rows of Q)
+!    k = self%deg/2
+!    allocate( self%q(2*k+1,self%n) )
+!
+!    ! Assemble matrix Q:
+!    !  - M has constant elements on each diagonal
+!    !  - Q has constant elements on each row
+!    do j = 1, self%n
+!      self%q(:,j) = values(1:2*k+1)
+!    end do
+!
+!    ! Prepare solution of linear system by performing:
+!    ! a) Block decomposition of M = [[A,B],[C,D]] with
+!    !     - A (n-k)x(n-k) banded Toeplitz matrix (square, large)
+!    !     - B (n-k)x(  k) low-rank Toeplitz (rectangular, empty in the center)
+!    !     - C (  k)x(n-k) low-rank Toeplitz (rectangular, empty in the center)
+!    !     - D (  k)x(  k) fully dense Toeplitz matrix (square, small)
+!    ! b) LU factorization of matrix A
+!    ! c) Calculation of Schur complement of A: H = D - C A^{-1} B
+!    ! d) LU factorization of Schur complement H
+!    call schur_complement_fac( self%schur, self%n, k, self%q )
+!
+!  end subroutine s_build_system_periodic
+!
+!  !-----------------------------------------------------------------------------
+!  !> @brief        Private subroutine for assembling and factorizing linear
+!  !>               system for spline interpolation with Hermite BCs
+!  !> @param[inout] self spline 1D object
+!  !-----------------------------------------------------------------------------
+!  subroutine s_build_system_hermite( self )
+!
+!    class(sll_t_spline_1d_uniform), intent(inout) :: self
+!
+!    integer  :: nbc
+!    integer  :: iflag
+!    integer  :: i
+!    integer  :: j
+!    integer  :: ii
+!    integer  :: jj
+!    integer  :: offset
+!    integer  :: k
+!    integer  :: icell
+!    real(wp) :: x
+!    real(wp) :: x_offset
+!
+!    real(wp) :: values(self%deg+1)
+!    real(wp) :: derivs(0:self%deg/2,1:self%deg+1)
+!
+!
+!    ! number of boundary conditions needed depending on spline degree
+!    k   = self%deg-1
+!    nbc = self%deg/2
+!
+!    ! The matrix q is a banded matrix using the storage required by DGBTRF (LAPACK)
+!    ! It has 2*k bands above diagonal, k bands below and the diagonal itself
+!    ! k additional bands above diagonal needed for pivoting
+!    ! The term A(ii,jj) of the full matrix is stored in q(ii-jj+2*k+1,jj)
+!    ! The Bspline interpolation matrix at Greville points x_ii is
+!    ! A(ii,jj) = B_jj(x_ii)
+!    allocate( self%q(3*k+1,self%n) )
+!    self%q = 0.0_wp
+!
+!    ! For even degree splines interpolation points are at cell midpoints
+!    ! value of function on the boundary needed as additional boundary conditions
+!    ! for odd degree splines  baundary is in the interpolation points
+!    ! only derivative values are needed as boundary conditions
+!    if (modulo( self%deg, 2 ) == 0) then ! spline degree even
+!       offset = 1
+!    else
+!       offset = 0
+!    end if
+!
+!    ! boundary conditions at xmin
+!    ii       = 0
+!    x        = self%xmin
+!    icell    = 1
+!    x_offset = 0.0_wp
+!    call sll_s_uniform_bsplines_eval_basis_and_n_derivs( self%deg, x_offset, nbc, derivs )
+!    ! When using uniform B-splines, the cell size is normalized between 0 and 1,
+!    ! hence the i-th derivative must be divided by dx^i to scale back the result
+!    do i = 1, nbc-offset
+!      derivs(i,:) = derivs(i,:) / self%dx**i
+!    end do
+!    do i = 1, nbc
+!       ! iterate only to k+1 as last bspline is 0
+!       ii = ii + 1
+!       do j = 1, k+1
+!          jj = icell+j-1
+!          self%q(ii-jj+2*k+1,jj) = derivs(i-offset,j)
+!       end do
+!    end do
+!
+!    ! interpolation points
+!    do i = 1, self%n-2*nbc
+!       ii = ii + 1
+!       x = self%tau(i)
+!       call s_get_icell_and_offset( self%xmin, self%xmax, self%ncells, x, icell, x_offset )
+!       call sll_s_uniform_bsplines_eval_basis( self%deg, x_offset, values )
+!       do j=1,k+2
+!          jj = icell+j-1
+!          self%q(ii-jj+2*k+1,jj) = values(j)
+!       end do
+!    end do
+!
+!    ! boundary conditions at xmax
+!    x        = self%xmax
+!    icell    = self%n-self%deg
+!    x_offset = 1.0_wp
+!    call sll_s_uniform_bsplines_eval_basis_and_n_derivs( self%deg, x_offset, nbc, derivs )
+!    ! When using uniform B-splines, the cell size is normalized between 0 and 1,
+!    ! hence the i-th derivative must be divided by dx^i to scale back the result
+!    do i = 1, nbc-offset
+!      derivs(i,:) = derivs(i,:) / self%dx**i
+!    end do
+!    do i = 1, nbc
+!       ii = ii + 1
+!       do j = 2, k+2
+!          jj = icell+j-1
+!          self%q(ii-jj+2*k+1,jj) = derivs(i-offset,j)
+!       end do
+!    end do
+!
+!    ! Perform LU decomposition of matrix q with Lapack
+!    allocate( self%ipiv (self%n) )
+!    call dgbtrf( self%n, self%n, k, k, self%q, 3*k+1, self%ipiv, iflag )
+!
+!  end subroutine s_build_system_hermite
+!
+!  !-----------------------------------------------------------------------------
+!  !> @brief        Private subroutine for assembling and factorizing linear
+!  !>               system for spline interpolation at Greville points
+!  !> @param[inout] self bspline object
+!  !-----------------------------------------------------------------------------
+!  subroutine s_build_system_greville( self )
+!
+!    class(sll_t_spline_1d_uniform), intent(inout) :: self
+!
+!    integer  :: iflag
+!    integer  :: j
+!    integer  :: k
+!    integer  :: ii
+!    integer  :: jj
+!    integer  :: icell
+!    real(wp) :: x
+!    real(wp) :: offset
+!    real(wp) :: values(self%deg+1)
+!
+!    ! The matrix q is a banded matrix using the storage required by banfac (De Boor)
+!    ! It has k bands above diagonal, k bands below and the diagonal itself
+!    ! The term A(ii,jj) of the full matrix is stored in q(ii-jj+k+1,jj)
+!    ! The Bspline interpolation matrix at Greville points x_ii is
+!    ! A(ii,jj) = B_jj(x_ii)
+!    k = self%deg - 1
+!    allocate( self%q(2*k+1,self%n) )
+!    self%q = 0.0_f64
+!
+!    ! Treat i=1 separately
+!    x     =  self%xmin
+!    icell = 1
+!    ii    = 1   ! first Greville point
+!    call sll_s_uniform_bsplines_eval_basis( self%deg, 0.0_wp, values )
+!    ! iterate only to k+1 as last bspline is 0
+!    do j=1,k+1
+!       jj = icell+j-1
+!       self%q(ii-jj+k+1,jj) = values(j)
+!    end do
+!
+!    do ii=2,self%n - 1
+!       x = self%tau(ii)
+!       call s_get_icell_and_offset( self%xmin, self%xmax, self%ncells, x, icell, offset )
+!       call sll_s_uniform_bsplines_eval_basis( self%deg, offset, values )
+!       do j=1,k+2
+!          jj = icell+j-1
+!          self%q(ii-jj+k+1,jj) = values(j)
+!       end do
+!    end do
+!
+!    ! Treat i=self%n separately
+!    x     = self%xmax
+!    icell = self%n - self%deg
+!    ii    = self%n  ! last Greville point
+!    call sll_s_uniform_bsplines_eval_basis( self%deg, 1.0_wp, values )
+!    ! iterate only to k as first bspline is 0
+!    do j=2,k+2
+!       jj = icell+j-1
+!       self%q(ii-jj+k+1,jj) = values(j)
+!    end do
+!
+!    ! Perform LU decomposition of matrix q
+!    call banfac ( self%q, 2*k+1, self%n, k, k, iflag )
+!
+!  end subroutine s_build_system_greville
 
   !-----------------------------------------------------------------------------
   !> @brief        Compute interpolating 1D spline
@@ -512,7 +681,8 @@ contains
     real(wp),             optional, intent(in   ) :: derivs_xmin(:)
     real(wp),             optional, intent(in   ) :: derivs_xmax(:)
 
-    integer :: ncond, k, iflag
+    character(len=*), parameter :: &
+      this_sub_name = "spline_1d_non_uniform % compute_interpolant"
 
     ! Special case: linear spline
     if (self%deg == 1) then
@@ -520,37 +690,69 @@ contains
       return
     end if
 
-    ! Degree > 1: boundary conditions matter
-    ! TODO: handle different BCs at xmin/xmax
-    select case (self%bc_xmin)
+    ! Hermite boundary conditions at xmin, if any
+    if ( self%bc_xmin == sll_p_hermite ) then
+      if ( present( derivs_xmin ) ) then
+        self%bcoef(1:self%nbc_xmin) = derivs_xmin(self%nbc_xmin:1:-1)
+      else
+        SLL_ERROR(this_sub_name,"Hermite BC at xmin requires derivatives")
+      end if
+    end if
 
-    case(sll_p_periodic)
-       self%bcoef = gtau(1:self%n)
-       call schur_complement_slv( self%schur, self%n, self%deg/2, self%q,  self%bcoef )
+    ! interpolation points
+    self%bcoef(self%nbc_xmin+1:self%n-self%nbc_xmax) = gtau(:)
 
-    case (sll_p_greville)
-       self%bcoef = gtau
-       call banslv( self%q, 2*self%deg-1, self%n, self%deg-1, self%deg-1, self%bcoef )
+    ! Hermite boundary conditions at xmax, if any
+    if ( self%bc_xmax == sll_p_hermite ) then
+      if ( present( derivs_xmax ) ) then
+        self%bcoef(self%n-self%nbc_xmax+1:self%n) = derivs_xmax(1:self%nbc_xmax)
+      else
+        SLL_ERROR(this_sub_name,"Hermite BC at xmax requires derivatives")
+      end if
+    end if
 
-    case (sll_p_hermite)
-       ! number of needed conditions at boundary
-       ncond = self%deg/2
-       if (present(derivs_xmin)) then
-          self%bcoef(1:ncond) = derivs_xmin(1:ncond)
-       else  ! set needed boundary values to 0
-          self%bcoef(1:ncond) = 0.0_f64
-       end if
-       self%bcoef(ncond+1:self%n-ncond) = gtau(1:self%n-2*ncond)
-       if (present(derivs_xmax)) then
-          self%bcoef(self%n-ncond+1:self%n) = derivs_xmax(1:ncond)
-       else ! set needed boundary values to 0
-          self%bcoef(self%n-ncond+1:self%n) = 0.0_f64
-       end if
-       ! Use Lapack to solve banded system
-       k = self%deg-1
-       call dgbtrs( 'N', self%n, k, k, 1, self%q, 3*k+1, self%ipiv, &
-                    self%bcoef, self%n, iflag )
-    end select
+    ! Solve linear system and compute coefficients
+    call self % matrix % solve_inplace( self%bcoef )
+
+!    integer :: ncond, k, iflag
+!
+!    ! Special case: linear spline
+!    if (self%deg == 1) then
+!      self%bcoef(:) = gtau(1:self%n)
+!      return
+!    end if
+!
+!    ! Degree > 1: boundary conditions matter
+!    ! TODO: handle different BCs at xmin/xmax
+!    select case (self%bc_xmin)
+!
+!    case(sll_p_periodic)
+!       self%bcoef = gtau(1:self%n)
+!       call schur_complement_slv( self%schur, self%n, self%deg/2, self%q,  self%bcoef )
+!
+!    case (sll_p_greville)
+!       self%bcoef = gtau
+!       call banslv( self%q, 2*self%deg-1, self%n, self%deg-1, self%deg-1, self%bcoef )
+!
+!    case (sll_p_hermite)
+!       ! number of needed conditions at boundary
+!       ncond = self%deg/2
+!       if (present(derivs_xmin)) then
+!          self%bcoef(1:ncond) = derivs_xmin(1:ncond)
+!       else  ! set needed boundary values to 0
+!          self%bcoef(1:ncond) = 0.0_f64
+!       end if
+!       self%bcoef(ncond+1:self%n-ncond) = gtau(1:self%n-2*ncond)
+!       if (present(derivs_xmax)) then
+!          self%bcoef(self%n-ncond+1:self%n) = derivs_xmax(1:ncond)
+!       else ! set needed boundary values to 0
+!          self%bcoef(self%n-ncond+1:self%n) = 0.0_f64
+!       end if
+!       ! Use Lapack to solve banded system
+!       k = self%deg-1
+!       call dgbtrs( 'N', self%n, k, k, 1, self%q, 3*k+1, self%ipiv, &
+!                    self%bcoef, self%n, iflag )
+!    end select
 
   end subroutine s_spline_1d_uniform__compute_interpolant
 
@@ -656,12 +858,18 @@ contains
     deallocate( self%bcoef  )
     deallocate( self%tau    )
 
-    ! Arrays used by linear solvers
-    if (allocated( self%q    )) deallocate( self%q    )
-    if (allocated( self%ipiv )) deallocate( self%ipiv )
+!    ! Arrays used by linear solvers
+!    if (allocated( self%q    )) deallocate( self%q    )
+!    if (allocated( self%ipiv )) deallocate( self%ipiv )
+!
+!    ! Free attribute objects
+!    call schur_complement_free( self%schur )
 
-    ! Free attribute objects
-    call schur_complement_free( self%schur )
+    ! Free matrix and linear solver
+    if (allocated( self%matrix )) then
+      call self % matrix % free()
+      deallocate( self % matrix )
+    end if
 
   end subroutine s_spline_1d_uniform__free
 
