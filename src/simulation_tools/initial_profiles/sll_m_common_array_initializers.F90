@@ -60,7 +60,8 @@ module sll_m_common_array_initializers
     sll_f_translation_a2_initializer_2d, &
     sll_f_translation_phi_initializer_2d, &
     sll_f_two_stream_instability_initializer_2d, &
-    sll_f_twostream_1d_xvx_initializer_v1v2x1x2
+    sll_f_twostream_1d_xvx_initializer_v1v2x1x2, &
+    sll_f_bump_on_tail_initializer_4d
 
   private
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -1040,6 +1041,56 @@ contains
 
   end function sll_f_landau_mode_initializer_4d
 
+
+  ! -------------------------------------------------------------------------
+  !
+  !             Bump-on-tail 4d initialization function
+  !
+  ! -------------------------------------------------------------------------
+  !
+  ! 
+
+
+
+  function sll_f_bump_on_tail_initializer_4d( x, y, vx, vy, params ) 
+    sll_real64 :: sll_f_bump_on_tail_initializer_4d
+    sll_real64, intent(in) :: x
+    sll_real64, intent(in) :: y
+    sll_real64, intent(in) :: vx
+    sll_real64, intent(in) :: vy
+    sll_real64, dimension(:), intent(in) :: params
+
+    sll_real64 :: kx
+    sll_real64 :: ky
+    sll_real64 :: eps
+    sll_real64 :: sigmax1
+    sll_real64 :: sigmax2
+    sll_real64 :: sigmay
+    sll_real64 :: delta
+    sll_real64 :: vx2
+    sll_real64 :: factor
+
+
+    SLL_ASSERT( size(params) >= 8 )
+
+    kx = params(1)
+    ky = params(2)
+    eps = params(3)
+    sigmax1 = params(4)
+    sigmax2 = params(5)
+    sigmay =  params(6)
+    delta  = params(7)
+    vx2 = params(8)
+    
+    factor = 1.0_f64/(2.0_f64*sll_p_pi*sigmay)
+
+    sll_f_bump_on_tail_initializer_4d = factor * &
+         (1.0_f64+eps * ( cos(kx*x) + cos(ky*y))) * exp( -0.5_f64*(vy/sigmay)**2) * &
+         ( (1-delta)/sigmax1 * exp(-0.5_f64*(vx/sigmax1)**2) + &
+         delta/sigmax2 * exp(-0.5_f64*((vx-vx2)/sigmax2)**2 ) )
+
+    
+  end function sll_f_bump_on_tail_initializer_4d
 
 
   function sll_f_test_x_transport_initializer_v1v2x1x2( vx, vy, x, y, params ) 
