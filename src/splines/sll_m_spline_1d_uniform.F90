@@ -23,12 +23,6 @@ module sll_m_spline_1d_uniform
     sll_s_uniform_bsplines_eval_deriv, &
     sll_s_uniform_bsplines_eval_basis_and_n_derivs
 
-!  use schur_complement, only: &
-!    schur_complement_solver, &
-!    schur_complement_fac   , &
-!    schur_complement_slv   , &
-!    schur_complement_free
-
   use sll_m_spline_matrix, only: &
     sll_c_spline_matrix, &
     sll_s_spline_matrix_new
@@ -48,36 +42,31 @@ module sll_m_spline_1d_uniform
   integer, parameter :: &
     allowed_bcs(*) = [sll_p_periodic, sll_p_hermite, sll_p_greville]
 
-  !> 1D spline on uniform grid
+  !> 1D spline interpolation on uniform grid
   type, extends(sll_c_spline_1d) :: sll_t_spline_1d_uniform
 
-    integer , private :: deg     ! spline degree (= max order of piecewise polynomial)
-    integer , private :: n       ! dimension of spline space
+    integer :: deg      ! spline degree (= order of piecewise polynomial)
+    integer :: n        ! dimension of spline space
+    integer :: bc_xmin  ! boundary condition type at x=xmin
+    integer :: bc_xmax  ! boundary condition type at x=xmax
+    integer :: offset   ! shift in B-spline indexing (periodic only)
 
-    real(wp), private :: xmin
-    real(wp), private :: xmax
-    integer , private :: ncells
-    real(wp), private :: dx
+    real(wp), private :: xmin     ! left  boundary coordinate
+    real(wp), private :: xmax     ! right boundary coordinate
+    integer , private :: nbc_xmin ! number of boundary conditions (derivatives) at x=xmin
+    integer , private :: nbc_xmax ! number of boundary conditions (derivatives) at x=xmax
+    integer , private :: ncells   ! number of cells
+    logical , private :: even     ! true if deg even, false if deg odd
+    integer , private :: mod      ! result of modulo(deg,2): 0 if deg even, 1 if deg odd
 
-    integer , private :: bc_xmin ! boundary condition type at x=xmin
-    integer , private :: bc_xmax ! boundary condition type at x=xmax
+    real(wp), private :: dx       ! cell size
+    real(wp), private :: inv_dx   ! inverse of cell size (=1/dx)
 
-    integer , private :: offset  ! shift in bsplines indexing (periodic only)
+    real(wp), allocatable, private :: bcoef(:) ! B-splines' coefficients
+    real(wp), allocatable, private :: tau(:)   ! interpolation points
 
-    real(wp), private, allocatable :: bcoef(:) ! spline coefficients (w.r.t. basis)
-    real(wp), private, allocatable :: tau(:)   ! interpolation points
-
-!    ! Local storage for linear system in interpolation problem
-!    real(wp),         allocatable, private :: q(:,:)
-!    integer ,         allocatable, private :: ipiv(:)
-!    type(schur_complement_solver), private :: schur
-
-    integer :: nbc_xmin
-    integer :: nbc_xmax
-    integer :: mod
-    logical :: even
-    class(sll_c_spline_matrix), allocatable :: matrix
-    real(wp), private :: inv_dx
+    ! Polymorphic matrix object to store and solve linear system for interpolation
+    class(sll_c_spline_matrix), allocatable, private :: matrix
 
   contains
 
@@ -222,11 +211,7 @@ contains
     !---------------------------------------------------------------------------
 
     ! Determine size of tau and allocate tau
-    if ( self%bc_xmin == sll_p_periodic ) then
-      ntau = self%ncells
-    else
-      ntau = self%ncells + degree - self%nbc_xmin - self%nbc_xmax
-    end if
+    ntau = self%n - self%nbc_xmin - self%nbc_xmax
     allocate( self%tau(1:ntau) )
 
     if ( self%bc_xmin == sll_p_periodic ) then
@@ -265,11 +250,6 @@ contains
         case (sll_p_hermite ); iknots(r:s) = [(i,i=n+1,n+1+s-r)]
         end select
       end associate
-
-!      ! TEST
-!      do i = 2-degree, ntau
-!        write(*,'(a,i0,a,i0)') "iknots(", i, ") = ", iknots(i)
-!      end do
 
       ! Compute interpolation points using Greville-style averaging
       associate( inv_deg => 1.0_wp / real( degree, wp ) )
@@ -322,15 +302,6 @@ contains
 
     call sll_s_spline_matrix_new( self%matrix, matrix_type, self%n, kl, ku )
     call build_system( self, self%matrix )
-
-!    write(*,*)
-!    do i = 1, ntau
-!      write(*,'(a,i0,a,es12.5)') "tau(", i, ") = ", self%tau(i)
-!    end do
-!    write(*,*)
-!    call self % matrix % write()
-!    write(*,*)
-
     call self % matrix % factorize()
 
   end subroutine s_spline_1d_uniform__init
