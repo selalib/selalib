@@ -77,6 +77,7 @@ module sll_m_spline_1d_uniform
     integer :: mod
     logical :: even
     class(sll_c_spline_matrix), allocatable :: matrix
+    real(wp), private :: inv_dx
 
   contains
 
@@ -188,7 +189,8 @@ contains
     end if
 
     ! Compute cell size in uniform grid
-    self%dx = (xmax-xmin) / real(ncells,wp)
+    self%dx     = (xmax-xmin) / real(ncells,wp)
+    self%inv_dx = 1.0_wp / self%dx
 
     ! Determine number of degrees of freedom
     ! Determine offset (non-zero for periodic spline evaluation)
@@ -357,29 +359,26 @@ contains
     end if
 
     ! Hermite boundary conditions at xmin, if any
+    ! NOTE: When using uniform B-splines, the cell size is normalized between
+    !       0 and 1, hence the i-th derivative is multiplied by dx^i.
+    !       This is beneficial to the linear system, acting as a natural
+    !       preconditioner by avoiding very large matrix entries, and hence
+    !       reducing the amplification of round-off errors.
     if ( self%bc_xmin == sll_p_hermite ) then
       x        = self%xmin
       icell    = 1
       x_offset = 0.0_wp
       call sll_s_uniform_bsplines_eval_basis_and_n_derivs( self%deg, x_offset, self%nbc_xmin, derivs )
-
-      ! When using uniform B-splines, the cell size is normalized between 0 and 1,
-      ! hence the i-th derivative must be divided by dx^i to scale back the result
-      do i = 1, self%nbc_xmin-1+self%mod
-        derivs(i,:) = derivs(i,:) / self%dx**i
-      end do
-
       do i = 1, self%nbc_xmin
-        ! iterate only to deg as last bspline is 0
         order = self%nbc_xmin-i+self%mod
-        do j = 1, self%deg
+        do j = 1, self%deg  ! iterate only to deg as last bspline is 0
           call matrix % set_element( i, j, derivs(order,j) )
         end do
       end do
       if ( self%even ) then
         call sll_s_uniform_bsplines_eval_basis( self%deg, x_offset, values )
         i = self%nbc_xmin
-        do j = 1, self%deg
+        do j = 1, self%deg  ! iterate only to deg as last bspline is 0
           call matrix % set_element( i, j, values(j) )
         end do
       end if
@@ -399,18 +398,16 @@ contains
     end do
 
     ! Hermite boundary conditions at xmax, if any
+    ! NOTE: When using uniform B-splines, the cell size is normalized between
+    !       0 and 1, hence the i-th derivative is multiplied by dx^i.
+    !       This is beneficial to the linear system, acting as a natural
+    !       preconditioner by avoiding very large matrix entries, and hence
+    !       reducing the amplification of round-off errors.
     if ( self%bc_xmax == sll_p_hermite ) then
       x        = self%xmax
       icell    = self%ncells
       x_offset = 1.0_wp
       call sll_s_uniform_bsplines_eval_basis_and_n_derivs( self%deg, x_offset, self%nbc_xmax, derivs )
-
-      ! When using uniform B-splines, the cell size is normalized between 0 and 1,
-      ! hence the i-th derivative must be divided by dx^i to scale back the result
-      do i = 1, self%nbc_xmax-1+self%mod
-        derivs(i,:) = derivs(i,:) / self%dx**i
-      end do
-
       do i = self%n-self%nbc_xmax+1, self%n
         order = i-(self%n-self%nbc_xmax+1)+self%mod
         j0 = self%n-self%deg
@@ -679,6 +676,8 @@ contains
     character(len=*), parameter :: &
       this_sub_name = "spline_1d_non_uniform % compute_interpolant"
 
+    integer :: i
+
     ! Special case: linear spline
     if (self%deg == 1) then
       self%bcoef(:) = gtau(1:self%n)
@@ -686,9 +685,13 @@ contains
     end if
 
     ! Hermite boundary conditions at xmin, if any
+    ! NOTE: When using uniform B-splines, the cell size is normalized between
+    !       0 and 1, hence for consistency with the linear system, the i-th
+    !       derivative provided by the user must be multiplied by dx^i
     if ( self%bc_xmin == sll_p_hermite ) then
       if ( present( derivs_xmin ) ) then
-        self%bcoef(1:self%nbc_xmin) = derivs_xmin(self%nbc_xmin:1:-1)
+        self%bcoef(1:self%nbc_xmin) = &
+                [(derivs_xmin(i)*self%dx**(i+self%mod-1), i=self%nbc_xmin,1,-1)]
       else
         SLL_ERROR(this_sub_name,"Hermite BC at xmin requires derivatives")
       end if
@@ -698,9 +701,13 @@ contains
     self%bcoef(self%nbc_xmin+1:self%n-self%nbc_xmax) = gtau(:)
 
     ! Hermite boundary conditions at xmax, if any
+    ! NOTE: When using uniform B-splines, the cell size is normalized between
+    !       0 and 1, hence for consistency with the linear system, the i-th
+    !       derivative provided by the user must be multiplied by dx^i
     if ( self%bc_xmax == sll_p_hermite ) then
       if ( present( derivs_xmax ) ) then
-        self%bcoef(self%n-self%nbc_xmax+1:self%n) = derivs_xmax(1:self%nbc_xmax)
+        self%bcoef(self%n-self%nbc_xmax+1:self%n) = &
+                   [(derivs_xmax(i)*self%dx**(i+self%mod-1), i=1,self%nbc_xmax)]
       else
         SLL_ERROR(this_sub_name,"Hermite BC at xmax requires derivatives")
       end if
@@ -767,7 +774,7 @@ contains
 
     ! When using uniform B-splines, the cell size is normalized between 0 and 1,
     ! hence the derivative must be divided by dx to scale back the result.
-    y = y / self%dx
+    y = y * self%inv_dx
 
   end function f_spline_1d_uniform__eval_deriv
 

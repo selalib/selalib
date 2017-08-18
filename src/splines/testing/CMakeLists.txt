@@ -29,11 +29,11 @@ add_executable( test_spline_1d
   )
 target_link_libraries( test_spline_1d sll_splines )
 
-#add_test( NAME spline_1d_uniform     COMMAND test_spline_1d -u )
+add_test( NAME spline_1d_uniform                     COMMAND test_spline_1d -u )
 add_test( NAME spline_1d_non_uniform_on_uniform_grid COMMAND test_spline_1d -n )
 add_test( NAME spline_1d_non_uniform_on_general_grid COMMAND test_spline_1d -n 0.1 )
 set_tests_properties(
-#  spline_1d_uniform
+  spline_1d_uniform
   spline_1d_non_uniform_on_uniform_grid
   spline_1d_non_uniform_on_general_grid
   PROPERTIES PASS_REGULAR_EXPRESSION "PASSED" )
