@@ -153,11 +153,6 @@ program test_spline_1d
         if (bc_xmax == sll_p_periodic .and. (.not. pinfo % periodic)) cycle
         if ( any( [bc_xmax,bc_xmin] == sll_p_periodic ) .and. bc_xmin /= bc_xmax) cycle
 
-        !-------------------------------------
-        ! FIXME: workaround for uniform solver
-        if (bc_xmin /= bc_xmax) cycle
-        !-------------------------------------
-
         ! Initialize test facility
         call test_facility % init( &
           profile_1d = profile_1d_cos, &
@@ -279,11 +274,6 @@ program test_spline_1d
 
       do j = 1, size( bc_kinds )
         bc_xmax = bc_kinds(j)
-
-        !------------------------------------------
-        ! FIXME: workaround for uniform solver
-        if (uniform .and. bc_xmin /= bc_xmax) cycle
-        !------------------------------------------
 
         ! Initialize test facility
         call test_facility % init( &
@@ -427,11 +417,6 @@ program test_spline_1d
 
         if (bc_xmax == sll_p_periodic .and. (.not. pinfo % periodic)) cycle
         if ( any( [bc_xmax,bc_xmin] == sll_p_periodic ) .and. bc_xmin /= bc_xmax) cycle
-
-        !------------------------------------------
-        ! FIXME: workaround for uniform solver
-        if (uniform .and. bc_xmin /= bc_xmax) cycle
-        !------------------------------------------
 
         do k = 1, size( nx_list )
           ncells = nx_list(k)
