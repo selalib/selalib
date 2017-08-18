@@ -168,14 +168,12 @@ contains
     character(len=*), parameter :: this_sub_name = "sll_t_spline_1d_uniform % init"
     character(len=256) :: err_msg
 
-    real(wp) :: shift
-    integer  :: i
-    integer  :: size_tau
-    real(wp), allocatable :: knots(:)
-
-    ! NEW
-    integer           :: kl, ku
-    character(len=32) :: matrix_type
+    integer              :: i
+    integer              :: ntau
+    integer              :: isum
+    integer, allocatable :: iknots(:)
+    integer              :: kl, ku
+    character(len=32)    :: matrix_type
 
     ! Sanity checks
     SLL_ASSERT( degree >= 1 )
@@ -186,12 +184,6 @@ contains
 
     if (any( [bc_xmin,bc_xmax]== sll_p_periodic ) .and. bc_xmin /= bc_xmax) then
       err_msg = "Periodic boundary conditions mismatch: bc_xmin /= bc_xmax."
-      SLL_ERROR( this_sub_name, trim( err_msg ) )
-    end if
-
-    ! TODO: implement different BCs at xmin/xmax
-    if (bc_xmin /= bc_xmax) then
-      err_msg = "Different BCs at xmin/xmax not yet implemented."
       SLL_ERROR( this_sub_name, trim( err_msg ) )
     end if
 
@@ -209,88 +201,89 @@ contains
     end if
 
     ! Store other info
-    self%deg     = degree
-    self%ncells  = ncells
-    self%xmin    = xmin
-    self%xmax    = xmax
-    self%bc_xmin = bc_xmin
-    self%bc_xmax = bc_xmax
+    self%deg      = degree
+    self%ncells   = ncells
+    self%xmin     = xmin
+    self%xmax     = xmax
+    self%bc_xmin  = bc_xmin
+    self%bc_xmax  = bc_xmax
+    self%nbc_xmin = merge( degree/2, 0, bc_xmin == sll_p_hermite )
+    self%nbc_xmax = merge( degree/2, 0, bc_xmax == sll_p_hermite )
+    self%mod      = modulo( degree, 2 )
+    self%even     = (self%mod == 0)
 
     ! Allocate array of spline coefficients
     allocate( self%bcoef(self%n) )
 
-    ! Determine interpolation points
-    ! TODO: handle different BCs at xmin/xmax
-    select case (bc_xmin)
- 
-    ! 1) Periodic case: 
-    !    - for even degree use cell midpoints
-    !    - for odd  degree use grid points excluding last point
-    case (sll_p_periodic)
+    !---------------------------------------------------------------------------
+    ! Determine array tau of interpolation points
+    !---------------------------------------------------------------------------
 
-      if (modulo(degree,2) == 0) then
-        shift    = 0.5_wp
-        size_tau = self%n
-      else
-        shift    = 0.0_wp
-        size_tau = self%n
-      end if
-      allocate( self%tau (1:size_tau) )
-      self%tau = [(xmin + (real(i-1,wp)+shift)*self%dx, i=1,size_tau)]
+    ! Determine size of tau and allocate tau
+    if ( self%bc_xmin == sll_p_periodic ) then
+      ntau = self%ncells
+    else
+      ntau = self%ncells + degree - self%nbc_xmin - self%nbc_xmax
+    end if
+    allocate( self%tau(1:ntau) )
 
-    ! 2) Hermite-Hermite case:
-    !    - for even degree use cell midpoints
-    !    - for odd  degree use all grid points (including last point)
-    case (sll_p_hermite)
+    if ( self%bc_xmin == sll_p_periodic ) then
 
-       if (modulo(degree,2) == 0) then
-         shift    = 0.5_wp
-         size_tau = ncells
-       else
-         shift    = 0.0_wp
-         size_tau = ncells+1
-       end if
-       allocate( self%tau (1:size_tau) )
-       self%tau = [(xmin + (real(i-1,wp)+shift)*self%dx, i=1,size_tau)]
-
-    ! 3) Greville-Greville case:
-    !    - for even degree use cell midpoints
-    !    - for odd  degree use all grid points (including last point)
-    !    - calculate additional interpolation points in first and last cells
-    case (sll_p_greville)
-
-      allocate( self%tau(self%n) )
-
-      associate( num_pts => ncells+1 )
-        allocate( knots (1-degree:num_pts+degree) )
-        knots(1-degree:0) = xmin
-        knots(1:num_pts ) = [(xmin+real(i-1,wp)*self%dx, i=1,num_pts)]
-        knots(num_pts+1:num_pts+degree) = xmax
-        do i = 1, self%n
-          self%tau(i) = sum( knots(i+1-degree:i) ) / real(degree,wp)
-        end do
-        deallocate( knots )
+      ! Periodic case:
+      !   . for odd  degree, interpolation points are breakpoints (last excluded)
+      !   . for even degree, interpolation points are cell centers
+      associate( shift => merge( 0.5_wp, 0.0_wp, self%even ) )
+        self%tau = [(xmin + (real(i-1,wp)+shift)*self%dx, i=1,ntau)]
       end associate
 
-    end select
+    else
 
-!    ! Special case: linear spline
-!    ! No need for matrix assembly
-!    if (self%deg == 1) return
-!
-!    ! Assemble matrix $M_{ij} = B_j(\tau_i)$ for spline interpolation
-!    ! TODO: handle mixed Hermite/Greville BCs
-!    select case (bc_xmin)
-!    case (sll_p_periodic); call s_build_system_periodic( self )
-!    case (sll_p_hermite ); call s_build_system_hermite ( self )
-!    case (sll_p_greville); call s_build_system_greville( self )
-!    end select
+      ! Non-periodic case: create array of temporary knots (integer shifts only)
+      ! in order to compute interpolation points using Greville-style averaging:
+      ! tau(i) = xmin + average(knots(i+1-degree:i)) * dx
+      allocate( iknots (2-degree:ntau) )
 
-    self%mod  = modulo( degree, 2 )
-    self%even = (self%mod == 0)
+      ! Additional knots near x=xmin
+      associate( r => 2-degree, s => -self%nbc_xmin )
+        select case (bc_xmin)
+        case (sll_p_greville); iknots(r:s) = 0
+        case (sll_p_hermite ); iknots(r:s) = [(i,i=r-s-1,-1)]
+        end select
+      end associate
 
-    self%nbc_xmin = merge( degree/2, 0, self%bc_xmin == sll_p_hermite )
-    self%nbc_xmax = merge( degree/2, 0, self%bc_xmax == sll_p_hermite )
+      ! Knots inside the domain
+      associate( r => -self%nbc_xmin+1, s => -self%nbc_xmin+1+self%ncells )
+        iknots(r:s) = [(i,i=0,self%ncells)]
+      end associate
+
+      ! Additional knots near x=xmax
+      associate( r => -self%nbc_xmin+1+self%ncells+1, s => ntau, n => self%ncells )
+        select case (bc_xmax)
+        case (sll_p_greville); iknots(r:s) = n
+        case (sll_p_hermite ); iknots(r:s) = [(i,i=n+1,n+1+s-r)]
+        end select
+      end associate
+
+!      ! TEST
+!      do i = 2-degree, ntau
+!        write(*,'(a,i0,a,i0)') "iknots(", i, ") = ", iknots(i)
+!      end do
+
+      ! Compute interpolation points using Greville-style averaging
+      associate( inv_deg => 1.0_wp / real( degree, wp ) )
+        do i = 1, ntau
+          isum = sum( iknots(i+1-degree:i) )
+          if (modulo( isum, degree ) == 0) then
+            self%tau(i) = xmin + real(isum/degree,wp) * self%dx
+          else
+            self%tau(i) = xmin + real(isum,wp) * inv_deg * self%dx
+          end if
+        end do
+      end associate
+
+      deallocate( iknots )
+
+    end if
 
     !---------------------------------------------------------------------------
     ! Assemble dense matrix (B_j(tau(i))) for spline interpolation
@@ -327,6 +320,15 @@ contains
 
     call sll_s_spline_matrix_new( self%matrix, matrix_type, self%n, kl, ku )
     call build_system( self, self%matrix )
+
+!    write(*,*)
+!    do i = 1, ntau
+!      write(*,'(a,i0,a,es12.5)') "tau(", i, ") = ", self%tau(i)
+!    end do
+!    write(*,*)
+!    call self % matrix % write()
+!    write(*,*)
+
     call self % matrix % factorize()
 
   end subroutine s_spline_1d_uniform__init
@@ -359,7 +361,7 @@ contains
       x        = self%xmin
       icell    = 1
       x_offset = 0.0_wp
-      call sll_s_uniform_bsplines_eval_basis_and_n_derivs( self%deg, x_offset, self%nbc_xmax, derivs )
+      call sll_s_uniform_bsplines_eval_basis_and_n_derivs( self%deg, x_offset, self%nbc_xmin, derivs )
 
       ! When using uniform B-splines, the cell size is normalized between 0 and 1,
       ! hence the i-th derivative must be divided by dx^i to scale back the result
@@ -383,12 +385,9 @@ contains
       end if
     end if
 
-    !-----------------------------------------------
-    ! TODO: treat separately Greville points at xmin
-    !-----------------------------------------------
+    ! Interpolation points
     ! TODO: if x_offset close to 0, set x_offset=0
     ! TODO: if x_offset close to 1, set x_offset=0 and icell=icell-1
-
     do i = self%nbc_xmin+1, self%n-self%nbc_xmax
       x = self%tau(i-self%nbc_xmin)
       call s_get_icell_and_offset( self%xmin, self%xmax, self%ncells, x, icell, x_offset )
@@ -398,10 +397,6 @@ contains
         call matrix % set_element( i, j, values(s) )
       end do
     end do
-
-    !-----------------------------------------------
-    ! TODO: treat separately Greville points at xmax
-    !-----------------------------------------------
 
     ! Hermite boundary conditions at xmax, if any
     if ( self%bc_xmax == sll_p_hermite ) then
@@ -714,46 +709,6 @@ contains
     ! Solve linear system and compute coefficients
     call self % matrix % solve_inplace( self%bcoef )
 
-!    integer :: ncond, k, iflag
-!
-!    ! Special case: linear spline
-!    if (self%deg == 1) then
-!      self%bcoef(:) = gtau(1:self%n)
-!      return
-!    end if
-!
-!    ! Degree > 1: boundary conditions matter
-!    ! TODO: handle different BCs at xmin/xmax
-!    select case (self%bc_xmin)
-!
-!    case(sll_p_periodic)
-!       self%bcoef = gtau(1:self%n)
-!       call schur_complement_slv( self%schur, self%n, self%deg/2, self%q,  self%bcoef )
-!
-!    case (sll_p_greville)
-!       self%bcoef = gtau
-!       call banslv( self%q, 2*self%deg-1, self%n, self%deg-1, self%deg-1, self%bcoef )
-!
-!    case (sll_p_hermite)
-!       ! number of needed conditions at boundary
-!       ncond = self%deg/2
-!       if (present(derivs_xmin)) then
-!          self%bcoef(1:ncond) = derivs_xmin(1:ncond)
-!       else  ! set needed boundary values to 0
-!          self%bcoef(1:ncond) = 0.0_f64
-!       end if
-!       self%bcoef(ncond+1:self%n-ncond) = gtau(1:self%n-2*ncond)
-!       if (present(derivs_xmax)) then
-!          self%bcoef(self%n-ncond+1:self%n) = derivs_xmax(1:ncond)
-!       else ! set needed boundary values to 0
-!          self%bcoef(self%n-ncond+1:self%n) = 0.0_f64
-!       end if
-!       ! Use Lapack to solve banded system
-!       k = self%deg-1
-!       call dgbtrs( 'N', self%n, k, k, 1, self%q, 3*k+1, self%ipiv, &
-!                    self%bcoef, self%n, iflag )
-!    end select
-
   end subroutine s_spline_1d_uniform__compute_interpolant
 
   !-----------------------------------------------------------------------------
@@ -857,13 +812,6 @@ contains
     ! Deallocate arrays
     deallocate( self%bcoef  )
     deallocate( self%tau    )
-
-!    ! Arrays used by linear solvers
-!    if (allocated( self%q    )) deallocate( self%q    )
-!    if (allocated( self%ipiv )) deallocate( self%ipiv )
-!
-!    ! Free attribute objects
-!    call schur_complement_free( self%schur )
 
     ! Free matrix and linear solver
     if (allocated( self%matrix )) then
