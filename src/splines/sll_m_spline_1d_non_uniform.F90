@@ -66,8 +66,8 @@ module sll_m_spline_1d_non_uniform
     logical , private :: even     ! true if deg even, false if deg odd
     integer , private :: mod      ! result of modulo(deg,2): 0 if deg even, 1 if deg odd
 
-    real(wp), allocatable          :: bcoef(:) ! B-splines' coefficients
-    real(wp), allocatable, private :: tau(:)   ! interpolation points
+    real(wp), allocatable :: bcoef(:) ! B-splines' coefficients
+    real(wp), allocatable :: tau(:)   ! interpolation points
 
     ! Polymorphic matrix object to store and solve linear system for interpolation
     class(sll_c_spline_matrix), allocatable, private :: matrix
