@@ -204,7 +204,13 @@ contains
     self%even     = (self%mod == 0)
 
     ! Allocate array of spline coefficients
-    allocate( self%bcoef(self%n) )
+    ! in case of periodic BCs, a larger array of coefficients is used in order
+    ! to avoid a loop with calls to the "mod( , )" function at evaluation.
+    if (self%bc_xmin == sll_p_periodic) then
+      allocate( self%bcoef (1-degree:self%n+degree) )
+    else
+      allocate( self%bcoef (self%n) )
+    end if
 
     !---------------------------------------------------------------------------
     ! Determine array tau of interpolation points
@@ -651,7 +657,12 @@ contains
 
     ! Special case: linear spline
     if (self%deg == 1) then
-      self%bcoef(:) = gtau(1:self%n)
+      self%bcoef(1:self%n) = gtau(1:self%n)
+      ! Periodic only: "wrap around" coefficients onto extended array
+      if (self%bc_xmin == sll_p_periodic) then
+        self%bcoef(0)        = self%bcoef(self%n)
+        self%bcoef(self%n+1) = self%bcoef(1)
+      end if
       return
     end if
 
@@ -685,7 +696,15 @@ contains
     end if
 
     ! Solve linear system and compute coefficients
-    call self % matrix % solve_inplace( self%bcoef )
+    call self % matrix % solve_inplace( self%bcoef(1:self%n) )
+
+    ! Periodic only: "wrap around" coefficients onto extended array
+    if (self%bc_xmin == sll_p_periodic) then
+      associate( n => self%n, g => 1+self%deg/2 )
+        self%bcoef(1-g:0)   = self%bcoef(n-g+1:n)
+        self%bcoef(n+1:n+g) = self%bcoef(1:g)
+      end associate
+    end if
 
   end subroutine s_spline_1d_uniform__compute_interpolant
 
@@ -700,20 +719,13 @@ contains
     real(wp) :: offset
     real(wp) :: values(self%deg+1)
 
-    ! TODO: save larger array of coefficients in case of periodic BCs
-    !       to avoid loop and usage of "mod( , )" function!!
-    integer  :: j, ib
-
     call s_get_icell_and_offset( self%xmin, self%xmax, self%ncells, x, icell, offset )
     call sll_s_uniform_bsplines_eval_basis( self%deg, offset, values )
 
-    ! FIXME
-!    y = dot_product( self%bcoef(icell-self%deg:icell), values )
-    y = 0.0_wp
-    do j = 1, self%deg+1
-       ib = mod( icell+j-2-self%offset+self%n, self%n ) + 1
-       y = y + values(j)*self%bcoef(ib)
-    end do
+    associate( a => icell-self%offset, &
+               b => icell-self%offset+self%deg )
+      y = dot_product( self%bcoef(a:b), values )
+    end associate
 
   end function f_spline_1d_uniform__eval
 
@@ -728,20 +740,13 @@ contains
     real(wp) :: offset
     real(wp) :: values(self%deg+1)
 
-    ! TODO: save larger array of coefficients in case of periodic BCs
-    !       to avoid loop and usage of "mod( , )" function!!
-    integer  :: j, ib
-
     call s_get_icell_and_offset( self%xmin, self%xmax, self%ncells, x, icell, offset )
     call sll_s_uniform_bsplines_eval_deriv( self%deg, offset, values )
 
-    ! FIXME
-!    y = dot_product( self%bcoef(icell-self%deg:icell), values )
-    y = 0.0_wp
-    do j = 1, self%deg+1
-       ib = mod( icell+j-2-self%offset+self%n, self%n ) + 1
-       y = y + values(j)*self%bcoef(ib)
-    end do
+    associate( a => icell-self%offset, &
+               b => icell-self%offset+self%deg )
+      y = dot_product( self%bcoef(a:b), values )
+    end associate
 
     ! When using uniform B-splines, the cell size is normalized between 0 and 1,
     ! hence the derivative must be divided by dx to scale back the result.
