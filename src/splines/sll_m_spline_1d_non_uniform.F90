@@ -14,8 +14,9 @@ module sll_m_spline_1d_non_uniform
     sll_p_periodic, &
     sll_p_hermite , &
     sll_p_greville, &
-    sll_p_open    , &
-    sll_p_mirror
+    sll_p_open
+!    sll_p_open    , &
+!    sll_p_mirror
 
   use sll_m_spline_1d_base, only: &
     sll_c_spline_1d
@@ -29,12 +30,6 @@ module sll_m_spline_1d_non_uniform
     sll_s_bsplines_eval_deriv, &
     sll_s_bsplines_eval_basis_and_n_derivs, &
     sll_s_uniform_bsplines_eval_basis
-
-  use schur_complement, only: &
-    schur_complement_solver, &
-    schur_complement_fac   , &
-    schur_complement_slv   , &
-    schur_complement_free
 
   use sll_m_spline_matrix, only: &
     sll_c_spline_matrix, &
@@ -53,32 +48,29 @@ module sll_m_spline_1d_non_uniform
   !> Allowed boundary conditions
   integer, parameter :: allowed_bcs(*) = [sll_p_periodic, sll_p_hermite, sll_p_greville]
 
-  ! TODO: use this to employ banded matrix q instead of dense matrix a
-  integer, parameter :: m = 0 ! additional diagonals above and below
-
-  !> @brief
-  !> basic type for one-dimensional B-spline interpolation.
+  !> 1D spline interpolation on non-uniform grid
   type, extends(sll_c_spline_1d) :: sll_t_spline_1d_non_uniform
 
-    type (sll_t_bsplines) :: bsp      ! basis functions (B-splines)
+    integer               :: deg      ! spline degree (= order of piecewise polynomial)
     integer               :: n        ! dimension of spline space
-    integer               :: deg      ! degree of spline
-    real(wp), allocatable :: tau(:)   ! interpolation points
-    real(wp), allocatable :: bcoef(:) ! bspline coefficients
+    integer               :: bc_xmin  ! boundary condition type at x=xmin
+    integer               :: bc_xmax  ! boundary condition type at x=xmax
     integer               :: offset   ! needed for periodic spline evaluation
+    type (sll_t_bsplines) :: bsp      ! basis functions (B-splines)
 
-    ! Polymorphic matrix object for storing and solving linear system arising from interpolation
-    class(sll_c_spline_matrix), allocatable :: matrix
+    real(wp), private :: xmin     ! left  boundary coordinate
+    real(wp), private :: xmax     ! right boundary coordinate
+    integer , private :: nbc_xmin ! number of boundary conditions (derivatives) at x=xmin
+    integer , private :: nbc_xmax ! number of boundary conditions (derivatives) at x=xmax
+    integer , private :: ncells   ! number of cells
+    logical , private :: even     ! true if deg even, false if deg odd
+    integer , private :: mod      ! result of modulo(deg,2): 0 if deg even, 1 if deg odd
 
-    real(wp) :: xmin
-    real(wp) :: xmax
-    integer  :: bc_xmin  ! boundary condition type at x=xmin
-    integer  :: bc_xmax  ! boundary condition type at x=xmax
-    integer  :: nbc_xmin ! number of boundary conditions (derivatives) at x=xmin
-    integer  :: nbc_xmax ! number of boundary conditions (derivatives) at x=xmax
-    integer  :: ncells   ! number of cells
-    logical  :: even     ! true if deg even, false if deg odd
-    integer  :: mod      ! result of modulo(deg,2): 0 if deg even, 1 if deg odd
+    real(wp), allocatable          :: bcoef(:) ! B-splines' coefficients
+    real(wp), allocatable, private :: tau(:)   ! interpolation points
+
+    ! Polymorphic matrix object to store and solve linear system for interpolation
+    class(sll_c_spline_matrix), allocatable, private :: matrix
 
   contains
 
@@ -308,8 +300,9 @@ contains
 
   !-----------------------------------------------------------------------------
   !> @brief        Private subroutine for assembling and factorizing linear
-  !>               system needed for periodic spline interpolation
-  !> @param[inout] self bspline interpolation object
+  !>               system for any kind of boundary conditions at xmin and xmax
+  !> @param[in]    self   spline interpolation object
+  !> @param[inout] matrix generic 'spline' matrix (dense/banded/periodic-banded)
   !-----------------------------------------------------------------------------
   subroutine build_system( self, matrix )
     class(sll_t_spline_1d_non_uniform), intent(in   ) :: self
@@ -348,7 +341,7 @@ contains
       end if
     end if
 
-    ! interpolation points
+    ! Interpolation points
     do i = self%nbc_xmin+1, self%n-self%nbc_xmax
       x = self%tau(i-self%nbc_xmin)
       icell = sll_f_find_cell( self%bsp, x )
