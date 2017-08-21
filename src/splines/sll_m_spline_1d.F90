@@ -62,7 +62,21 @@ contains
     integer, intent(in   ) :: nipts
     integer, intent(  out) :: ncells
 
-    ! TODO: implement subroutine
+    integer :: nbc_xmin, nbc_xmax
+
+    ! Sanity checks
+    SLL_ASSERT( degree > 0  )
+    SLL_ASSERT( any( bc_xmin == allowed_bcs ) )
+    SLL_ASSERT( any( bc_xmax == allowed_bcs ) )
+
+    nbc_xmin = merge( degree/2, 0, bc_xmin == sll_p_hermite )
+    nbc_xmax = merge( degree/2, 0, bc_xmax == sll_p_hermite )
+
+    if ( bc_xmin == sll_p_periodic ) then
+      ncells = nipts + nbc_xmin + nbc_xmax
+    else
+      ncells = nipts + nbc_xmin + nbc_xmax - degree
+    end if
 
   end subroutine sll_s_spline_1d_compute_num_cells
 
