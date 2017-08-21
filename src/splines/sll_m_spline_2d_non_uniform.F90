@@ -213,7 +213,7 @@ contains
             else
               call self%bs1%compute_interpolant( derivs_x2_min(j2,:) )
             end if
-            self%bwork(j2,:) = self%bs1%bcoef(:)
+            self%bwork(j2,:) = self%bs1%bcoef(1:n1)
           end do
         else  ! set needed boundary values to 0
           self%bwork(1:ncond2,:) = 0.0_f64
@@ -230,7 +230,7 @@ contains
             else
               call self%bs1%compute_interpolant( derivs_x2_max(j2,:) )
             end if
-            self%bwork(n2-ncond2+j2,:) = self%bs1%bcoef(:)
+            self%bwork(n2-ncond2+j2,:) = self%bs1%bcoef(1:n1)
           end do
         else ! set needed boundary values to 0
           self%bwork(n2-ncond2+1:n2,:) = 0.0_f64
@@ -243,7 +243,7 @@ contains
         if (present(derivs_x2_min)) then
           do j2 = 1, ncond2
             call self%bs1%compute_interpolant( derivs_x2_min(j2,:) )
-            self%bwork(j2,:) = self%bs1%bcoef(:)
+            self%bwork(j2,:) = self%bs1%bcoef(1:n1)
           end do
         else  ! set needed boundary values to 0
           self%bwork(1:ncond2,:) = 0.0_f64
@@ -253,7 +253,7 @@ contains
         if (present(derivs_x2_max)) then
           do j2 = 1, ncond2
             call self%bs1%compute_interpolant( derivs_x2_max(j2,:) )
-            self%bwork(n2-ncond2+j2,:) = self%bs1%bcoef(:)
+            self%bwork(n2-ncond2+j2,:) = self%bs1%bcoef(1:n1)
           end do
         else ! set needed boundary values to 0
           self%bwork(n2-ncond2+1:n2,:) = 0.0_f64
@@ -272,7 +272,7 @@ contains
       else
         call self%bs1%compute_interpolant( gtau(:,i2) )
       end if
-      self%bwork(i2+ncond2,:) = self%bs1%bcoef(:)
+      self%bwork(i2+ncond2,:) = self%bs1%bcoef(1:n1)
     end do
 
     !--------------------------------------------
@@ -286,12 +286,12 @@ contains
                self%bwork(ncond2+1:n2-ncond2,i1), &
                self%bwork(1:ncond2,i1), &
                self%bwork(n2-ncond2+1:n2,i1) )
-          self%bcoef(i1,:) = self%bs2%bcoef(:)
+          self%bcoef(i1,:) = self%bs2%bcoef(1:n2)
         end do
       else
         do i1 = 1, n1
           call self%bs2%compute_interpolant( self%bwork(ncond2+1:n2-ncond2,i1) )
-          self%bcoef(i1,:) = self%bs2%bcoef(:)
+          self%bcoef(i1,:) = self%bs2%bcoef(1:n2)
         end do
       end if
 
@@ -299,7 +299,7 @@ contains
 
       do i1 = 1, n1
         call self%bs2%compute_interpolant( self%bwork(:,i1) )
-        self%bcoef(i1,:) = self%bs2%bcoef(:)
+        self%bcoef(i1,:) = self%bs2%bcoef(1:n2)
       end do
 
     end if
