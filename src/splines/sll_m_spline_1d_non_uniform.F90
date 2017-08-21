@@ -197,8 +197,16 @@ contains
     call sll_s_bsplines_init_from_grid( self%bsp, degree, breaks,  &
                                         basis_bc_xmin, basis_bc_xmax )
 
-    allocate( self%bcoef(self%n) )
-!    allocate( self%ipiv (self%n) )
+    ! Allocate array of spline coefficients
+    ! in case of periodic BCs, a larger array of coefficients is used in order
+    ! to avoid a loop with calls to the "mod( , )" function at evaluation.
+    associate( n => self%n, g => 1+self%deg/2 )
+      if (self%bc_xmin == sll_p_periodic) then
+        allocate( self%bcoef(1-g:n+g) )
+      else
+        allocate( self%bcoef(1:n) )
+      end if
+    end associate
 
     !---------------------------------------------------------------------------
     ! Determine array tau of interpolation points
@@ -403,9 +411,16 @@ contains
     character(len=*), parameter :: &
       this_sub_name = "spline_1d_non_uniform % compute_interpolant"
 
+    ! TODO: verify size of input arrays
+
     ! Special case: linear spline
     if (self%deg == 1) then
-      self%bcoef(:) = gtau(1:self%n)
+      self%bcoef(1:self%n) = gtau(1:self%n)
+      ! Periodic only: "wrap around" coefficients onto extended array
+      if (self%bc_xmin == sll_p_periodic) then
+        self%bcoef(0)        = self%bcoef(self%n)
+        self%bcoef(self%n+1) = self%bcoef(1)
+      end if
       return
     end if
 
@@ -431,7 +446,15 @@ contains
     end if
 
     ! Solve linear system and compute coefficients
-    call self % matrix % solve_inplace( self%bcoef )
+    call self % matrix % solve_inplace( self%bcoef(1:self%n) )
+
+    ! Periodic only: "wrap around" coefficients onto extended array
+    if (self%bc_xmin == sll_p_periodic) then
+      associate( n => self%n, g => 1+self%deg/2 )
+        self%bcoef(1-g:0)   = self%bcoef(n-g+1:n)
+        self%bcoef(n+1:n+g) = self%bcoef(1:g)
+      end associate
+    end if
 
   end subroutine s_spline_1d_non_uniform__compute_interpolant
 
@@ -447,16 +470,15 @@ contains
     real(wp) :: y
 
     integer  :: icell
-    integer  :: j, ib
     real(wp) :: values(self%deg+1)
 
     icell = sll_f_find_cell( self%bsp, x )
     call sll_s_bsplines_eval_basis( self%bsp, icell, x, values )
-    y = 0.0_wp
-    do j = 1, self%deg+1
-      ib = mod( icell+j-2-self%offset+self%n, self%n ) + 1
-      y = y + values(j)*self%bcoef(ib)
-    end do
+
+    associate( a => icell-self%offset, &
+               b => icell-self%offset+self%deg )
+      y = dot_product( self%bcoef(a:b), values )
+    end associate
 
   end function f_spline_1d_non_uniform__eval
 
@@ -472,16 +494,15 @@ contains
     real(wp) :: y
 
     integer  :: icell
-    integer  :: j, ib
     real(wp) :: values(self%deg+1)
 
     icell = sll_f_find_cell( self%bsp, x )
     call sll_s_bsplines_eval_deriv( self%bsp, icell, x, values )
-    y = 0.0_wp
-    do j = 1, self%deg+1
-      ib = mod( icell+j-2-self%offset+self%n, self%n ) + 1
-      y = y + values(j)*self%bcoef(ib)
-    end do
+
+    associate( a => icell-self%offset, &
+               b => icell-self%offset+self%deg )
+      y = dot_product( self%bcoef(a:b), values )
+    end associate
 
   end function f_spline_1d_non_uniform__eval_deriv
 

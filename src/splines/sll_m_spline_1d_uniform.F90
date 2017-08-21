@@ -206,11 +206,13 @@ contains
     ! Allocate array of spline coefficients
     ! in case of periodic BCs, a larger array of coefficients is used in order
     ! to avoid a loop with calls to the "mod( , )" function at evaluation.
-    if (self%bc_xmin == sll_p_periodic) then
-      allocate( self%bcoef (1-degree:self%n+degree) )
-    else
-      allocate( self%bcoef (self%n) )
-    end if
+    associate( n => self%n, g => 1+self%deg/2 )
+      if (self%bc_xmin == sll_p_periodic) then
+        allocate( self%bcoef(1-g:n+g) )
+      else
+        allocate( self%bcoef(1:n) )
+      end if
+    end associate
 
     !---------------------------------------------------------------------------
     ! Determine array tau of interpolation points
