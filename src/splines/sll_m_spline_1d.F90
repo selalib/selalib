@@ -5,6 +5,7 @@
 module sll_m_spline_1d
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_assert.h"
+#include "sll_errors.h"
 
   use sll_m_working_precision    , only: f64
   use sll_m_spline_1d_base       , only: sll_c_spline_1d
@@ -62,20 +63,22 @@ contains
     integer, intent(in   ) :: nipts
     integer, intent(  out) :: ncells
 
-    integer :: nbc_xmin, nbc_xmax
-
     ! Sanity checks
     SLL_ASSERT( degree > 0  )
     SLL_ASSERT( any( bc_xmin == allowed_bcs ) )
     SLL_ASSERT( any( bc_xmax == allowed_bcs ) )
 
-    nbc_xmin = merge( degree/2, 0, bc_xmin == sll_p_hermite )
-    nbc_xmax = merge( degree/2, 0, bc_xmax == sll_p_hermite )
+    if (any( [bc_xmin,bc_xmax]==sll_p_periodic ) .and. bc_xmin /= bc_xmax) then
+      SLL_ERROR( "sll_s_spline_1d_compute_num_cells", "Incompatible BCs" )
+    end if
 
-    if ( bc_xmin == sll_p_periodic ) then
-      ncells = nipts + nbc_xmin + nbc_xmax
+    if (bc_xmin == sll_p_periodic) then
+      ncells = nipts
     else
-      ncells = nipts + nbc_xmin + nbc_xmax - degree
+      associate( nbc_xmin => merge( degree/2, 0, bc_xmin == sll_p_hermite ), &
+                 nbc_xmax => merge( degree/2, 0, bc_xmax == sll_p_hermite ) )
+        ncells = nipts + nbc_xmin + nbc_xmax - degree
+      end associate
     end if
 
   end subroutine sll_s_spline_1d_compute_num_cells
