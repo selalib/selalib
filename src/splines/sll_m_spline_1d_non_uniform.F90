@@ -66,6 +66,8 @@ module sll_m_spline_1d_non_uniform
     logical , private :: even     ! true if deg even, false if deg odd
     integer , private :: mod      ! result of modulo(deg,2): 0 if deg even, 1 if deg odd
 
+    real(wp), private :: dx       ! cell size (averaged over non-uniform domain)
+
     real(wp), allocatable :: bcoef(:) ! B-splines' coefficients
     real(wp), allocatable :: tau(:)   ! interpolation points
 
@@ -157,6 +159,7 @@ contains
 
     self%xmin = breaks(1)
     self%xmax = breaks(self%ncells+1)
+    self%dx   = (self%xmax-self%xmin)/self%ncells
 
     ! set first attributes
     if ( self%bc_xmin == sll_p_periodic) then
@@ -333,6 +336,15 @@ contains
       x = self%xmin
       icell = 1
       call sll_s_bsplines_eval_basis_and_n_derivs( self%bsp, icell, x , self%nbc_xmin, derivs )
+
+      ! In order to improve the condition number of the matrix, we normalize all
+      ! derivatives by multiplying the i-th derivative by dx^i
+      associate( h => [(self%dx**i, i=1, ubound(derivs,1))] )
+        do j = lbound(derivs,2), ubound(derivs,2)
+          derivs(1:,j) = derivs(1:,j) * h(1:)
+        end do
+      end associate
+
       do i = 1, self%nbc_xmin
         ! iterate only to deg as last bspline is 0
         order = self%nbc_xmin-i+self%mod
@@ -340,6 +352,7 @@ contains
           call matrix % set_element( i, j, derivs(order,j) )
         end do
       end do
+
       if ( self%even ) then
         call sll_s_bsplines_eval_basis( self%bsp, icell, x, values )
         i = self%nbc_xmin
@@ -347,6 +360,7 @@ contains
           call matrix % set_element( i, j, values(j) )
         end do
       end if
+
     end if
 
     ! Interpolation points
@@ -365,6 +379,15 @@ contains
       x = self%xmax
       icell = self%ncells
       call sll_s_bsplines_eval_basis_and_n_derivs( self%bsp, icell, x, self%nbc_xmax, derivs )
+
+      ! In order to improve the condition number of the matrix, we normalize all
+      ! derivatives by multiplying the i-th derivative by dx^i
+      associate( h => [(self%dx**i, i=1, ubound(derivs,1))] )
+        do j = lbound(derivs,2), ubound(derivs,2)
+          derivs(1:,j) = derivs(1:,j) * h(1:)
+        end do
+      end associate
+
       do i = self%n-self%nbc_xmax+1, self%n
         order = i-(self%n-self%nbc_xmax+1)+self%mod
         j0 = self%n-self%deg
@@ -375,6 +398,7 @@ contains
           call matrix % set_element( i, j, derivs(order,d) )
         end do
       end do
+
       if ( self%even ) then
         call sll_s_bsplines_eval_basis( self%bsp, icell, x, values )
         i  = self%n-self%nbc_xmax+1
@@ -386,6 +410,7 @@ contains
           call matrix % set_element( i, j, values(d) )
         end do
       end if
+
     end if
 
     if ( allocated( derivs ) ) deallocate( derivs )
@@ -411,7 +436,9 @@ contains
     character(len=*), parameter :: &
       this_sub_name = "spline_1d_non_uniform % compute_interpolant"
 
-    ! TODO: verify size of input arrays
+    integer :: i
+
+    SLL_ASSERT( size(gtau) == self%n-self%nbc_xmin-self%nbc_xmax )
 
     ! Special case: linear spline
     if (self%deg == 1) then
@@ -425,9 +452,12 @@ contains
     end if
 
     ! Hermite boundary conditions at xmin, if any
+    ! NOTE: For consistency with the linear system, the i-th derivative
+    !       provided by the user must be multiplied by dx^i
     if ( self%bc_xmin == sll_p_hermite ) then
       if ( present( derivs_xmin ) ) then
-        self%bcoef(1:self%nbc_xmin) = derivs_xmin(self%nbc_xmin:1:-1)
+        self%bcoef(1:self%nbc_xmin) = &
+                [(derivs_xmin(i)*self%dx**(i+self%mod-1), i=self%nbc_xmin,1,-1)]
       else
         SLL_ERROR(this_sub_name,"Hermite BC at xmin requires derivatives")
       end if
@@ -437,9 +467,12 @@ contains
     self%bcoef(self%nbc_xmin+1:self%n-self%nbc_xmax) = gtau(:)
 
     ! Hermite boundary conditions at xmax, if any
+    ! NOTE: For consistency with the linear system, the i-th derivative
+    !       provided by the user must be multiplied by dx^i
     if ( self%bc_xmax == sll_p_hermite ) then
       if ( present( derivs_xmax ) ) then
-        self%bcoef(self%n-self%nbc_xmax+1:self%n) = derivs_xmax(1:self%nbc_xmax)
+        self%bcoef(self%n-self%nbc_xmax+1:self%n) = &
+                   [(derivs_xmax(i)*self%dx**(i+self%mod-1), i=1,self%nbc_xmax)]
       else
         SLL_ERROR(this_sub_name,"Hermite BC at xmax requires derivatives")
       end if
