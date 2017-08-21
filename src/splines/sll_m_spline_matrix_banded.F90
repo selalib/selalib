@@ -64,7 +64,15 @@ contains
     self%n  = n
     self%kl = kl
     self%ku = ku
-    
+
+    ! Given the linear system A*x=b, we assume that A is a square (n by n)
+    ! with ku super-diagonals and kl sub-diagonals.
+    ! All non-zero elements of A are stored in the rectangular matrix q, using
+    ! the format required by DGBTRF (LAPACK): diagonals of A are rows of q.
+    ! q has 2*kl rows for the subdiagonals, 1 row for the diagonal, and ku rows
+    ! for the superdiagonals. (The kl additional rows are needed for pivoting.)
+    ! The term A(i,j) of the full matrix is stored in q(i-j+2*kl+1,j).
+
     allocate( self%ipiv(n) )
     allocate( self%q(2*kl+ku+1,n) )
     self%q(:,:) = 0.0_wp
@@ -95,6 +103,7 @@ contains
          this_sub_name = "sll_t_spline_matrix_banded % factorize"
     character(len=256) :: err_msg
 
+    ! Perform LU decomposition of matrix q with Lapack
     call dgbtrf( self%n, self%n, self%kl, self%ku, self%q, 2*self%kl+self%ku+1, &
                  self%ipiv, info )
 

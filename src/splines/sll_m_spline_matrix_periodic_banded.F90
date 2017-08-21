@@ -68,12 +68,6 @@ contains
     SLL_ASSERT( n  >  0 )
     SLL_ASSERT( kl >= 0 )
     SLL_ASSERT( ku >= 0 )
-!    if( ku+1+kl > n ) then
-!      write(*,*)
-!      write(*,*) ku+1+kl
-!      write(*,*)
-!      flush(output_unit)
-!    end if
     SLL_ASSERT( ku+1+kl <= n )
 
     ! FIXME: current linear solver only works for kl=ku
@@ -84,7 +78,10 @@ contains
     self%n  = n
     self%kl = kl
     self%ku = ku
-    
+
+    ! Allocate matrix Q for linear system:
+    !   - M is circulant banded matrix (sparse)
+    !   - Q is compressed form of A (circulant diagonals of M are rows of Q)
     allocate( self%q(ku+1+kl,n) )
     self%q(:,:) = 0.0_wp
 
@@ -120,6 +117,15 @@ contains
   subroutine s_spline_matrix_periodic_banded__factorize( self )
     class(sll_t_spline_matrix_periodic_banded), intent(inout) :: self
 
+    ! Prepare solution of linear system by performing:
+    ! a) Block decomposition of M = [[A,B],[C,D]] with
+    !     - A (n-k)x(n-k) banded Toeplitz matrix (square, large)
+    !     - B (n-k)x(  k) low-rank Toeplitz (rectangular, empty in the center)
+    !     - C (  k)x(n-k) low-rank Toeplitz (rectangular, empty in the center)
+    !     - D (  k)x(  k) fully dense Toeplitz matrix (square, small)
+    ! b) LU factorization of matrix A
+    ! c) Calculation of Schur complement of A: H = D - C A^{-1} B
+    ! d) LU factorization of Schur complement H
     call schur_complement_fac( self%schur, self%n, self%kl, self%q )
 
   end subroutine s_spline_matrix_periodic_banded__factorize
