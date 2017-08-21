@@ -551,13 +551,18 @@ contains
   subroutine s_spline_1d_non_uniform__free( self )
     class(sll_t_spline_1d_non_uniform), intent(inout) :: self
 
-    ! deallocate arrays
+    ! Deallocate arrays
     deallocate( self%bcoef )
     deallocate( self%tau   )
 
-    ! free attribute objects
+    ! Free B-splines' memory
     call sll_s_bsplines_free( self%bsp )
-    if (allocated( self % matrix )) call self % matrix % free()
+
+    ! Free matrix and linear solver
+    if (allocated( self % matrix )) then
+      call self % matrix % free()
+      deallocate( self % matrix )
+    end if
 
   end subroutine s_spline_1d_non_uniform__free
 

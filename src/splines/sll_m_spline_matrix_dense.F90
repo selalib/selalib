@@ -84,6 +84,7 @@ contains
     SLL_ASSERT( size(self%a,1) == self%n )
     SLL_ASSERT( size(self%a,2) == self%n )
 
+    ! Perform LU decomposition using Lapack (A=PLU)
     call dgetrf( self%n, self%n, self%a, self%n, self%ipiv, info )
 
     if ( info < 0 ) then
@@ -114,6 +115,7 @@ contains
     SLL_ASSERT( size(self%a,2) == self%n )
     SLL_ASSERT( size(bx)  == self%n )
 
+    ! Solve linear system PLU*x=b using Lapack
     call dgetrs( 'N', self%n, 1, self%a, self%n, self%ipiv, bx, self%n, info )
 
     if ( info < 0 ) then
