@@ -232,12 +232,15 @@ sll_real64, intent(in   ), optional :: eta_coords(:)
 sll_int32,  intent(in   ), optional :: size_eta_coords
 
 character(len=*), parameter :: this_sub_name = 'compute_interpolants_bs1d'
+integer :: i
 
 if(present(eta_coords) .or. present(size_eta_coords)) then
    SLL_ERROR( this_sub_name, 'This case is not yet implemented' )
 end if
 
-call interpolator%bspline%compute_interpolant( data_array )
+associate( zeros => [(0.0_f64, i=1, interpolator%spl_deg)] )
+  call interpolator%bspline%compute_interpolant( data_array, zeros, zeros )
+end associate
 
 end subroutine compute_interpolants_bs1d
 

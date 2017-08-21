@@ -51,7 +51,7 @@ do i=0,NPTS1-1
 end do
   
 call ad1d%init(NPTS1,X1MIN,X1MAX,SPL_DEG,sll_p_periodic,sll_p_periodic)
-call ad1d%compute_interpolants(x)
+call ad1d%compute_interpolants(x(1:NPTS1-1))
   
 acc       = 0.0_f64
 acc_der1  = 0.0_f64
