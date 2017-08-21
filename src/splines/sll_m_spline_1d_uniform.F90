@@ -122,7 +122,7 @@ contains
     class(sll_t_spline_1d_uniform), target, intent(in) :: self
     real(wp), pointer :: ptr(:)
 
-    ptr => self%bcoef
+    ptr => self%bcoef(1:self%n)
 
   end function f_spline_1d_uniform__get_coeff
 
@@ -656,6 +656,8 @@ contains
       this_sub_name = "spline_1d_non_uniform % compute_interpolant"
 
     integer :: i
+
+    SLL_ASSERT( size(gtau) == self%n-self%nbc_xmin-self%nbc_xmax )
 
     ! Special case: linear spline
     if (self%deg == 1) then
