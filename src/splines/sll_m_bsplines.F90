@@ -634,7 +634,6 @@ contains
   !> @param[out] bsdx B-spline values and the first n derivatives
   !
   ! TODO: transpose output array 'bsdx'
-  ! TODO: save inverse of knot differences!
   !-----------------------------------------------------------------------------
   SLL_PURE subroutine sll_s_bsplines_eval_basis_and_n_derivs( basis, icell, x, n, bsdx )
 
@@ -683,6 +682,9 @@ contains
     ! compute nonzero basis functions and knot differences
     ! for splines up to degree deg-1 which are needed to compute derivative
     ! Algorithm  A2.3 of NURBS book 
+    !
+    ! 21.08.2017: save inverse of knot differences to avoid unnecessary divisions
+    !             [Yaman Güçlü, Edoardo Zoni]
 
     ndu(0,0) = 1.0_wp
     do j = 1, deg 
@@ -690,10 +692,10 @@ contains
        right(j) = basis%knots(icell+j) - x
        saved    = 0.0_wp
        do r = 0, j-1
-          ! compute knot differences and save them into lower triangular part of ndu
-          ndu(j,r) = right(r+1) + left(j-r)
+          ! compute inverse of knot differences and save them into lower triangular part of ndu
+          ndu(j,r) = 1.0_wp / (right(r+1) + left(j-r))
           ! compute basis functions and save them into upper triangular part of ndu
-          temp     = ndu(r,j-1) / ndu(j,r)
+          temp     = ndu(r,j-1) * ndu(j,r)
           ndu(r,j) = saved + right(r+1) * temp
           saved    = left(j-r) * temp
        end do
@@ -710,7 +712,7 @@ contains
           rk = r-k
           pk = deg-k
           if (r >= k) then
-             a(s2,0) = a(s1,0) / ndu(pk+1,rk)
+             a(s2,0) = a(s1,0) * ndu(pk+1,rk)
              d = a(s2,0) * ndu(rk,pk)
           end if
           if (rk > -1) then
@@ -724,11 +726,11 @@ contains
              j2 = deg-r
           end if
           do j = j1, j2
-             a(s2,j) = (a(s1,j) - a(s1,j-1)) / ndu(pk+1,rk+j)
+             a(s2,j) = (a(s1,j) - a(s1,j-1)) * ndu(pk+1,rk+j)
              d = d + a(s2,j) * ndu(rk+j,pk)
           end do
           if (r <= pk) then
-             a(s2,k) = - a(s1,k-1) / ndu(pk+1,r)
+             a(s2,k) = - a(s1,k-1) * ndu(pk+1,r)
              d = d + a(s2,k) * ndu(r,pk)
           end if
           bsdx(k,r) = d
