@@ -81,6 +81,7 @@ contains
     self % deg2 = deg2
     call random_number( self % coeffs )     ! 0 <= c < 1
     self % coeffs = 1.0_wp - self % coeffs  ! 0 < c <= 1
+    self % coeffs = 0.2_wp + 0.8_wp * self % coeffs ! 0.2 < c <= 1
 
   end subroutine init
 
