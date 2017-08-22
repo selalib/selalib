@@ -98,11 +98,13 @@ sll_real64, dimension(:,:), allocatable :: bc2_min
 sll_real64, dimension(:,:), allocatable :: bc2_max
 sll_real64, dimension(:,:,:), allocatable :: bc_corners
 
-sll_int32,  parameter                   :: npts1 = 51 ! defines bsplines
-sll_int32,  parameter                   :: npts2 = 51 ! defines bsplines
-sll_int32,  parameter                   :: n1 = 27    ! nb of evaluation pts
-sll_int32,  parameter                   :: n2 = 27    ! nb of evaluation pts
-sll_real64                              :: h1, h2
+sll_int32,  parameter :: npts1 = 51 ! defines bsplines
+sll_int32,  parameter :: npts2 = 51 ! defines bsplines
+sll_real64            :: dx1, dx2
+
+sll_int32,  parameter :: n1 = 27    ! nb of evaluation pts
+sll_int32,  parameter :: n2 = 27    ! nb of evaluation pts
+sll_real64            :: h1, h2
 
 SLL_ALLOCATE(x1(n1,n2),ierr)
 SLL_ALLOCATE(x2(n1,n2),ierr)
@@ -123,15 +125,17 @@ print*,'+++++++++++++++++++++++++++++++++'
 print*,'*** Spline degree = ', deg
 print*,'+++++++++++++++++++++++++++++++++'
 
-if (present(spline_bc_type)) then
-  call sll_s_bspline_2d_init( bspline_2d, &
-     npts1, npts2, deg, deg, x1_min, x2_min, x1_max, x2_max, &
-     bc_type, bc_type, bc_type, bc_type, spline_bc_type, spline_bc_type )
-else
-  call sll_s_bspline_2d_init( bspline_2d, &
-     npts1, npts2, deg, deg, x1_min, x2_min, x1_max, x2_max, &
-     bc_type, bc_type, bc_type, bc_type)
-end if
+dx1 = (x1_max-x1_min)/real(npts1-1,f64)
+dx2 = (x2_max-x2_min)/real(npts2-1,f64)
+
+! Initialize 2D spline
+call sll_s_bspline_2d_init( &
+  self    = bspline_2d, &
+  degree  = [deg, deg], &
+  breaks1 = [(x1_min+real(i-1,f64)*dx1, i=1, npts1)], &
+  breaks2 = [(x2_min+real(j-1,f64)*dx2, j=1, npts2)], &
+  bc_xmin = [bc_type, bc_type], &
+  bc_xmax = [bc_type, bc_type] )
 
 taux => bspline_2d%bs1%tau
 tauy => bspline_2d%bs2%tau
