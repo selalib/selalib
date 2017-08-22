@@ -1,4 +1,4 @@
-module m_test_bsplines_2d
+module m_test_spline_2d_non_uniform
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_assert.h"
 
@@ -10,21 +10,21 @@ module m_test_bsplines_2d
     c_analytical_profile_2d
 
   use sll_m_boundary_condition_descriptors, only: &
-       sll_p_periodic, &
-       sll_p_hermite, &
-       sll_p_greville
+    sll_p_periodic, &
+    sll_p_hermite, &
+    sll_p_greville
 
   use sll_m_spline_2d_non_uniform, only:             &
-    sll_t_bspline_2d,                     &
-    sll_s_bspline_2d_init,                &
-    sll_s_bspline_2d_free,                &
-    sll_s_bspline_2d_compute_interpolant, &
-    sll_f_bspline_2d_eval,                &
-    sll_f_bspline_2d_eval_deriv_x1,       &
-    sll_f_bspline_2d_eval_deriv_x2,       &
-    sll_s_bspline_2d_eval_array,          &
-    sll_s_bspline_2d_eval_array_deriv_x1, &
-    sll_s_bspline_2d_eval_array_deriv_x2
+    sll_t_spline_2d_non_uniform,                     &
+    sll_s_spline_2d_non_uniform_init,                &
+    sll_s_spline_2d_non_uniform_free,                &
+    sll_s_spline_2d_non_uniform_compute_interpolant, &
+    sll_f_spline_2d_non_uniform_eval,                &
+    sll_f_spline_2d_non_uniform_eval_deriv_x1,       &
+    sll_f_spline_2d_non_uniform_eval_deriv_x2,       &
+    sll_s_spline_2d_non_uniform_eval_array,          &
+    sll_s_spline_2d_non_uniform_eval_array_deriv_x1, &
+    sll_s_spline_2d_non_uniform_eval_array_deriv_x2
 
   use sll_m_timer, only: &
     sll_t_time_mark, &
@@ -34,7 +34,7 @@ module m_test_bsplines_2d
   implicit none
 
   public :: &
-    t_bspline_2d_test_facility
+    t_spline_2d_test_facility
 
   private
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -43,7 +43,7 @@ module m_test_bsplines_2d
   integer, parameter :: wp = f64
 
   !> Type for running test
-  type :: t_bspline_2d_test_facility
+  type :: t_spline_2d_test_facility
 
     class(c_analytical_profile_2d), pointer :: profile_2d
     integer                                 :: nx1
@@ -53,7 +53,7 @@ module m_test_bsplines_2d
     integer                                 :: bc1
     integer                                 :: bc2
 
-    type(sll_t_bspline_2d)  :: bspline_2d
+    type(sll_t_spline_2d_non_uniform)  :: spline_2d
     real(wp), allocatable   :: gtau(:,:)  ! Profile values at interp. points
 
     real(wp) :: time_init
@@ -74,7 +74,7 @@ module m_test_bsplines_2d
     procedure :: evaluate_at_interpolation_points
     procedure :: evaluate_grad_on_2d_grid
 
-  end type t_bspline_2d_test_facility
+  end type t_spline_2d_test_facility
 
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 contains
@@ -83,14 +83,14 @@ contains
   !-----------------------------------------------------------------------------
   subroutine init( self, profile_2d, nx1, nx2, deg1, deg2, bc1, bc2 )
 
-    class(t_bspline_2d_test_facility), intent(  out)         :: self
-    class(c_analytical_profile_2d   ), intent(in   ), target :: profile_2d
-    integer                          , intent(in   )         :: nx1
-    integer                          , intent(in   )         :: nx2
-    integer                          , intent(in   )         :: deg1
-    integer                          , intent(in   )         :: deg2
-    integer                          , intent(in   )         :: bc1
-    integer                          , intent(in   )         :: bc2
+    class(t_spline_2d_test_facility), intent(  out)         :: self
+    class(c_analytical_profile_2d  ), intent(in   ), target :: profile_2d
+    integer                         , intent(in   )         :: nx1
+    integer                         , intent(in   )         :: nx2
+    integer                         , intent(in   )         :: deg1
+    integer                         , intent(in   )         :: deg2
+    integer                         , intent(in   )         :: bc1
+    integer                         , intent(in   )         :: bc2
 
     type(t_profile_2d_info) :: info
     integer                 :: nipts1
@@ -126,8 +126,8 @@ contains
     call sll_s_set_time_mark( t0 )
 
     ! Initialize 2D spline
-    call sll_s_bspline_2d_init( &
-      self    = self % bspline_2d, &
+    call sll_s_spline_2d_non_uniform_init( &
+      self    = self % spline_2d, &
       degree  = [self%deg1, self%deg2], &
       breaks1 = [(info%x1_min+real(i1-1,wp)*dx1, i1=1, nx1)], &
       breaks2 = [(info%x2_min+real(i2-1,wp)*dx2, i2=1, nx2)], &
@@ -137,8 +137,8 @@ contains
     call sll_s_set_time_mark( t1 )
 
     ! Get spline interpolation points
-    associate( tau1 => self % bspline_2d % bs1 % tau, &
-               tau2 => self % bspline_2d % bs2 % tau )
+    associate( tau1 => self % spline_2d % bs1 % tau, &
+               tau2 => self % spline_2d % bs2 % tau )
 
     ! Store number of interpolation points
     nipts1 = size( tau1 )
@@ -202,21 +202,21 @@ contains
     ! Hermite - other
     if (self%bc1 == sll_p_hermite .and. self%bc2 /= sll_p_hermite) then
 
-      call sll_s_bspline_2d_compute_interpolant( self % bspline_2d, self % gtau, &
+      call sll_s_spline_2d_non_uniform_compute_interpolant( self % spline_2d, self % gtau, &
         derivs_x1_min = derivs_x1_min, &
         derivs_x1_max = derivs_x1_max )
 
     ! other - Hermite
     else if (self%bc1 /= sll_p_hermite .and. self%bc2 == sll_p_hermite) then
 
-      call sll_s_bspline_2d_compute_interpolant( self % bspline_2d, self % gtau, &
+      call sll_s_spline_2d_non_uniform_compute_interpolant( self % spline_2d, self % gtau, &
         derivs_x2_min = derivs_x2_min, &
         derivs_x2_max = derivs_x2_max )
 
     ! Hermite - Hermite
     else if (self%bc1 == sll_p_hermite .and. self%bc2 == sll_p_hermite) then
 
-      call sll_s_bspline_2d_compute_interpolant( self % bspline_2d, self % gtau, &
+      call sll_s_spline_2d_non_uniform_compute_interpolant( self % spline_2d, self % gtau, &
         derivs_x1_min  = derivs_x1_min, &
         derivs_x1_max  = derivs_x1_max, &
         derivs_x2_min  = derivs_x2_min, &
@@ -226,7 +226,7 @@ contains
     ! other - other
     else
 
-      call sll_s_bspline_2d_compute_interpolant( self % bspline_2d, self % gtau )
+      call sll_s_spline_2d_non_uniform_compute_interpolant( self % spline_2d, self % gtau )
 
     end if
 
@@ -255,8 +255,8 @@ contains
   !-----------------------------------------------------------------------------
   subroutine check_equivalence_scalar_array_methods( self, equiv )
 
-    class(t_bspline_2d_test_facility), intent(inout) :: self
-    logical                          , intent(  out) :: equiv(3)
+    class(t_spline_2d_test_facility), intent(inout) :: self
+    logical                         , intent(  out) :: equiv(3)
 
     type(t_profile_2d_info) :: info
     real(wp), allocatable   :: x1(:,:)
@@ -291,16 +291,16 @@ contains
     end do
 
     ! Compare:
-    !   . sll_f_bspline_2d_eval
-    !   . sll_s_bspline_2d_eval_array
+    !   . sll_f_spline_2d_non_uniform_eval
+    !   . sll_s_spline_2d_non_uniform_eval_array
     call sll_s_set_time_mark( t0 )
     do i2 = 1, n2
       do i1 = 1, n1
-        y(i1,i2) = sll_f_bspline_2d_eval( self%bspline_2d, x1(i1,i2), x2(i1,i2) )
+        y(i1,i2) = sll_f_spline_2d_non_uniform_eval( self%spline_2d, x1(i1,i2), x2(i1,i2) )
       end do
     end do
     call sll_s_set_time_mark( t1 )
-    call sll_s_bspline_2d_eval_array( self%bspline_2d, x1, x2, ya )
+    call sll_s_spline_2d_non_uniform_eval_array( self%spline_2d, x1, x2, ya )
     call sll_s_set_time_mark( t2 )
 
     self%time_eval       = sll_f_time_elapsed_between( t0, t1 ) / npts
@@ -308,16 +308,16 @@ contains
     equiv(1) = all( y == ya )
 
     ! Compare:
-    !   . sll_f_bspline_2d_eval_deriv_x1
-    !   . sll_s_bspline_2d_eval_array_deriv_x1
+    !   . sll_f_spline_2d_non_uniform_eval_deriv_x1
+    !   . sll_s_spline_2d_non_uniform_eval_array_deriv_x1
     call sll_s_set_time_mark( t0 )
     do i2 = 1, n2
       do i1 = 1, n1
-        y(i1,i2) = sll_f_bspline_2d_eval_deriv_x1( self%bspline_2d, x1(i1,i2), x2(i1,i2) )
+        y(i1,i2) = sll_f_spline_2d_non_uniform_eval_deriv_x1( self%spline_2d, x1(i1,i2), x2(i1,i2) )
       end do
     end do
     call sll_s_set_time_mark( t1 )
-    call sll_s_bspline_2d_eval_array_deriv_x1( self%bspline_2d, x1, x2, ya )
+    call sll_s_spline_2d_non_uniform_eval_array_deriv_x1( self%spline_2d, x1, x2, ya )
     call sll_s_set_time_mark( t2 )
 
     self%time_eval_diff1       = sll_f_time_elapsed_between( t0, t1 ) / npts
@@ -325,16 +325,16 @@ contains
     equiv(2) = all( y == ya )
 
     ! Compare:
-    !   . sll_f_bspline_2d_eval_deriv_x2
-    !   . sll_s_bspline_2d_eval_array_deriv_x2
+    !   . sll_f_spline_2d_non_uniform_eval_deriv_x2
+    !   . sll_s_spline_2d_non_uniform_eval_array_deriv_x2
     call sll_s_set_time_mark( t0 )
     do i2 = 1, n2
       do i1 = 1, n1
-        y(i1,i2) = sll_f_bspline_2d_eval_deriv_x2( self%bspline_2d, x1(i1,i2), x2(i1,i2) )
+        y(i1,i2) = sll_f_spline_2d_non_uniform_eval_deriv_x2( self%spline_2d, x1(i1,i2), x2(i1,i2) )
       end do
     end do
     call sll_s_set_time_mark( t1 )
-    call sll_s_bspline_2d_eval_array_deriv_x2( self%bspline_2d, x1, x2, ya )
+    call sll_s_spline_2d_non_uniform_eval_array_deriv_x2( self%spline_2d, x1, x2, ya )
     call sll_s_set_time_mark( t2 )
 
     self%time_eval_diff2       = sll_f_time_elapsed_between( t0, t1 ) / npts
@@ -352,15 +352,15 @@ contains
   !-----------------------------------------------------------------------------
   subroutine evaluate_at_interpolation_points( self, max_norm_error )
 
-    class(t_bspline_2d_test_facility), intent(in   ) :: self
-    real(wp)                         , intent(  out) :: max_norm_error
+    class(t_spline_2d_test_facility), intent(in   ) :: self
+    real(wp)                        , intent(  out) :: max_norm_error
 
     integer  :: i1, i2
     real(wp) :: error
 
     ! Get spline interpolation points
-    associate( tau1 => self % bspline_2d % bs1 % tau, &
-               tau2 => self % bspline_2d % bs2 % tau )
+    associate( tau1 => self % spline_2d % bs1 % tau, &
+               tau2 => self % spline_2d % bs2 % tau )
 
       ! Evaluate 2D spline at interpolation points:
       ! interpolation values should be obtained
@@ -368,7 +368,7 @@ contains
       do i2 = 1, size( tau2 )
         do i1 = 1, size( tau1 )
           error = self % gtau(i1,i2) &
-                - sll_f_bspline_2d_eval( self % bspline_2d, tau1(i1), tau2(i2) )
+                - sll_f_spline_2d_non_uniform_eval( self % spline_2d, tau1(i1), tau2(i2) )
           max_norm_error = max( max_norm_error, abs( error ) )
         end do
       end do
@@ -380,10 +380,10 @@ contains
   !-----------------------------------------------------------------------------
   subroutine evaluate_on_2d_grid( self, x1, x2, max_norm_error )
 
-    class(t_bspline_2d_test_facility), intent(inout) :: self
-    real(wp)                         , intent(in   ) :: x1(:,:)
-    real(wp)                         , intent(in   ) :: x2(:,:)
-    real(wp)                         , intent(  out) :: max_norm_error
+    class(t_spline_2d_test_facility), intent(inout) :: self
+    real(wp)                        , intent(in   ) :: x1(:,:)
+    real(wp)                        , intent(in   ) :: x2(:,:)
+    real(wp)                        , intent(  out) :: max_norm_error
 
     integer               :: i1, i2
     integer               :: n1, n2
@@ -402,7 +402,7 @@ contains
     call sll_s_set_time_mark( t0 )
 
     ! Evaluate 2D spline on given grid
-    call sll_s_bspline_2d_eval_array( self%bspline_2d, x1, x2, y )
+    call sll_s_spline_2d_non_uniform_eval_array( self%spline_2d, x1, x2, y )
 
     call sll_s_set_time_mark( t1 )
     self % time_eval_array = sll_f_time_elapsed_between(t0,t1)/real(n1*n2,wp)
@@ -428,11 +428,11 @@ contains
       max_norm_error_diff_x1, &
       max_norm_error_diff_x2 )
 
-    class(t_bspline_2d_test_facility), intent(inout) :: self
-    real(wp)                         , intent(in   ) :: x1(:,:)
-    real(wp)                         , intent(in   ) :: x2(:,:)
-    real(wp)                         , intent(  out) :: max_norm_error_diff_x1
-    real(wp)                         , intent(  out) :: max_norm_error_diff_x2
+    class(t_spline_2d_test_facility), intent(inout) :: self
+    real(wp)                        , intent(in   ) :: x1(:,:)
+    real(wp)                        , intent(in   ) :: x2(:,:)
+    real(wp)                        , intent(  out) :: max_norm_error_diff_x1
+    real(wp)                        , intent(  out) :: max_norm_error_diff_x2
 
     integer               :: i1, i2
     integer               :: n1, n2
@@ -452,7 +452,7 @@ contains
     !----------------------------------------------------
     call sll_s_set_time_mark( t0 )
 
-    call sll_s_bspline_2d_eval_array_deriv_x1( self%bspline_2d, x1, x2, y )
+    call sll_s_spline_2d_non_uniform_eval_array_deriv_x1( self%spline_2d, x1, x2, y )
 
     call sll_s_set_time_mark( t1 )
     self % time_eval_diff1_array = sll_f_time_elapsed_between(t0,t1)/real(n1*n2,wp)
@@ -469,7 +469,7 @@ contains
     !----------------------------------------------------
     call sll_s_set_time_mark( t0 )
 
-    call sll_s_bspline_2d_eval_array_deriv_x2( self%bspline_2d, x1, x2, y )
+    call sll_s_spline_2d_non_uniform_eval_array_deriv_x2( self%spline_2d, x1, x2, y )
 
     call sll_s_set_time_mark( t1 )
     self % time_eval_diff2_array = sll_f_time_elapsed_between(t0,t1)/real(n1*n2,wp)
@@ -490,11 +490,11 @@ contains
   !-----------------------------------------------------------------------------
   subroutine free( self )
 
-    class(t_bspline_2d_test_facility), intent(inout) :: self
+    class(t_spline_2d_test_facility), intent(inout) :: self
 
     ! Free spline memory
-    call sll_s_bspline_2d_free( self % bspline_2d )
+    call sll_s_spline_2d_non_uniform_free( self % spline_2d )
 
   end subroutine free
 
-end module m_test_bsplines_2d
+end module m_test_spline_2d_non_uniform

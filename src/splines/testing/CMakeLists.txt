@@ -50,8 +50,10 @@ add_executable( test_spline_2d_non_uniform
   )
 target_link_libraries( test_spline_2d_non_uniform sll_splines )
 
-add_test( NAME spline_2d_non_uniform COMMAND test_spline_2d_non_uniform )
-set_tests_properties( spline_2d_non_uniform PROPERTIES PASS_REGULAR_EXPRESSION "PASSED" )
+add_test( NAME spline_2d_non_uniform_on_uniform_grid COMMAND test_spline_2d_non_uniform )
+set_tests_properties(
+  spline_2d_non_uniform_on_uniform_grid
+  PROPERTIES PASS_REGULAR_EXPRESSION "PASSED" )
 
 #-------------------------------------------------------------------------------
 
