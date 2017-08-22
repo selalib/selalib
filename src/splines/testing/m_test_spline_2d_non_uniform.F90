@@ -97,6 +97,7 @@ contains
     integer                 :: nipts2
     integer                 :: i1, j1, s1
     integer                 :: i2, j2, s2
+    real(wp)                :: dx1, dx2
 
     real(wp), allocatable :: derivs_x1_min(:,:)
     real(wp), allocatable :: derivs_x1_max(:,:)
@@ -118,23 +119,20 @@ contains
     ! Extract information about 2D analytical profile
     call self % profile_2d % get_info( info )
 
+    ! TODO: breaks1 and breaks2 should be input arguments
+    dx1 = (info%x1_max-info%x1_min)/real(nx1-1,wp)
+    dx2 = (info%x2_max-info%x2_min)/real(nx2-1,wp)
+
     call sll_s_set_time_mark( t0 )
 
     ! Initialize 2D spline
     call sll_s_bspline_2d_init( &
-      self % bspline_2d, &
-      self % nx1, &
-      self % nx2, &
-      self % deg1, &
-      self % deg2, &
-      info % x1_min, &
-      info % x2_min, &
-      info % x1_max, &
-      info % x2_max, &
-      self % bc1, &  ! BC @ x1_min
-      self % bc2, &  ! BC @ x2_min
-      self % bc1, &  ! BC @ x1_max
-      self % bc2 )   ! BC @ x2_max
+      self    = self % bspline_2d, &
+      degree  = [self%deg1, self%deg2], &
+      breaks1 = [(info%x1_min+real(i1-1,wp)*dx1, i1=1, nx1)], &
+      breaks2 = [(info%x2_min+real(i2-1,wp)*dx2, i2=1, nx2)], &
+      bc_xmin = [self%bc1, self%bc2], &
+      bc_xmax = [self%bc1, self%bc2] )
 
     call sll_s_set_time_mark( t1 )
 
