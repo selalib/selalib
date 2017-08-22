@@ -123,8 +123,8 @@ contains
     sll_int32 , optional,   intent(in   ) :: spline_bc_type2 ! TODO: remove
 
     sll_int32  :: i
-    sll_int32  :: n1
-    sll_int32  :: n2
+    sll_int32  :: n1, g1
+    sll_int32  :: n2, g2
     sll_real64 :: dx1
     sll_real64 :: dx2
     sll_real64 :: breaks1(num_pts1)
@@ -148,7 +148,14 @@ contains
     n1 = self%bs1%n
     n2 = self%bs2%n
     allocate( self%bwork(1:n2,1:n1) ); self%bwork = 0.0_f64
-    allocate( self%bcoef(1:n1,1:n2) ); self%bcoef = 0.0_f64
+
+    ! Allocate array of spline coefficients
+    ! in case of periodic BCs, a larger array of coefficients is used in order
+    ! to avoid a loop with calls to the "mod( , )" function at evaluation.
+    g1 = merge( 1+self%bs1%deg/2, 0, self%bs1%bc_xmin == sll_p_periodic )
+    g2 = merge( 1+self%bs2%deg/2, 0, self%bs2%bc_xmin == sll_p_periodic )
+    allocate( self%bcoef(1-g1:n1+g1,1-g2:n2+g2) )
+    self%bcoef = 0.0_f64
 
   end subroutine sll_s_bspline_2d_init
 
@@ -286,12 +293,12 @@ contains
                self%bwork(ncond2+1:n2-ncond2,i1), &
                self%bwork(1:ncond2,i1), &
                self%bwork(n2-ncond2+1:n2,i1) )
-          self%bcoef(i1,:) = self%bs2%bcoef(1:n2)
+          self%bcoef(i1,:) = self%bs2%bcoef(:)
         end do
       else
         do i1 = 1, n1
           call self%bs2%compute_interpolant( self%bwork(ncond2+1:n2-ncond2,i1) )
-          self%bcoef(i1,:) = self%bs2%bcoef(1:n2)
+          self%bcoef(i1,:) = self%bs2%bcoef(:)
         end do
       end if
 
@@ -299,9 +306,20 @@ contains
 
       do i1 = 1, n1
         call self%bs2%compute_interpolant( self%bwork(:,i1) )
-        self%bcoef(i1,:) = self%bs2%bcoef(1:n2)
+        self%bcoef(i1,:) = self%bs2%bcoef(:)
       end do
 
+    end if
+
+    !--------------------------------------------------------------
+    ! Periodic only: "wrap around" coefficients onto extended array
+    ! NOTE: only x1 direction is necessary, x2 already taken care of
+    !--------------------------------------------------------------
+    if (self%bs1%bc_xmin == sll_p_periodic) then
+      associate( g1 => 1+self%bs1%deg/2 )
+        self%bcoef(1-g1:0    ,:) = self%bcoef(n1-g1+1:n1,:)
+        self%bcoef(n1+1:n1+g1,:) = self%bcoef(      1:g1,:)
+      end associate
     end if
 
   end subroutine sll_s_bspline_2d_compute_interpolant
@@ -315,9 +333,10 @@ contains
     sll_real64 :: y
 
     sll_int32 :: d1, d2
+    sll_int32 :: a1, a2
+    sll_int32 :: b1, b2
     sll_int32 :: k1, k2
-    sll_int32 :: ib, jb
-    sll_int32 :: icell, jcell
+    sll_int32 :: ic1, ic2
 
     ! Automatic arrays
     sll_real64 :: values1(1+self%bs1%deg)
@@ -326,20 +345,27 @@ contains
     d1 = self%bs1%deg+1
     d2 = self%bs2%deg+1
 
-    icell = sll_f_find_cell( self%bs1%bsp, x1 )
-    jcell = sll_f_find_cell( self%bs2%bsp, x2 )
+    ! Find 2D cell (ic1,ic2)
+    ic1 = sll_f_find_cell( self%bs1%bsp, x1 )
+    ic2 = sll_f_find_cell( self%bs2%bsp, x2 )
 
-    call sll_s_bsplines_eval_basis( self%bs1%bsp, icell, x1, values1(1:d1) )
-    call sll_s_bsplines_eval_basis( self%bs2%bsp, jcell, x2, values2(1:d2) )
+    ! Compute arrays v1 and v2 of B-spline values
+    call sll_s_bsplines_eval_basis( self%bs1%bsp, ic1, x1, values1(1:d1) )
+    call sll_s_bsplines_eval_basis( self%bs2%bsp, ic2, x2, values2(1:d2) )
 
-    y = 0.0_f64
-    do k2 = 1, d2
-      jb = mod( jcell+k2-2-self%bs2%offset+self%bs2%n, self%bs2%n ) + 1
-      do k1 = 1, d1
-        ib = mod( icell+k1-2-self%bs1%offset+self%bs1%n, self%bs1%n ) + 1
-        y  = y + self%bcoef(ib,jb) * values1(k1) * values2(k2)
+    ! Calculate (matrix) block C of B-spline coefficients to be used
+    a1 = ic1 - self%bs1%offset;  b1 = ic1 - self%bs1%offset + self%bs1%deg
+    a2 = ic2 - self%bs2%offset;  b2 = ic2 - self%bs2%offset + self%bs2%deg
+
+    ! Compute scalar product <v1,v2> = (v1^T)*C*v2
+    associate( bcoef => self%bcoef(a1:b1,a2:b2) )
+      y = 0.0_f64
+      do k2 = 1, d2
+        do k1 = 1, d1
+          y  = y + bcoef(k1,k2) * values1(k1) * values2(k2)
+        end do
       end do
-    end do
+    end associate
 
   end function sll_f_bspline_2d_eval
 
@@ -353,9 +379,10 @@ contains
     sll_real64 :: y
 
     sll_int32 :: d1, d2
+    sll_int32 :: a1, a2
+    sll_int32 :: b1, b2
     sll_int32 :: k1, k2
-    sll_int32 :: ib, jb
-    sll_int32 :: icell, jcell
+    sll_int32 :: ic1, ic2
 
     ! Automatic arrays
     sll_real64 :: derivs1(1+self%bs1%deg)
@@ -364,20 +391,27 @@ contains
     d1 = self%bs1%deg+1
     d2 = self%bs2%deg+1
 
-    icell = sll_f_find_cell( self%bs1%bsp, x1 )
-    jcell = sll_f_find_cell( self%bs2%bsp, x2 )
+    ! Find 2D cell (ic1,ic2)
+    ic1 = sll_f_find_cell( self%bs1%bsp, x1 )
+    ic2 = sll_f_find_cell( self%bs2%bsp, x2 )
 
-    call sll_s_bsplines_eval_deriv( self%bs1%bsp, icell, x1, derivs1(1:d1) )
-    call sll_s_bsplines_eval_basis( self%bs2%bsp, jcell, x2, values2(1:d2) )
+    ! Compute arrays d1 and v2 of B-spline derivatives/values
+    call sll_s_bsplines_eval_deriv( self%bs1%bsp, ic1, x1, derivs1(1:d1) )
+    call sll_s_bsplines_eval_basis( self%bs2%bsp, ic2, x2, values2(1:d2) )
 
-    y = 0.0_f64
-    do k2 = 1, d2
-      jb = mod( jcell+k2-2-self%bs2%offset+self%bs2%n, self%bs2%n ) + 1
-      do k1 = 1, d1
-        ib = mod( icell+k1-2-self%bs1%offset+self%bs1%n, self%bs1%n ) + 1
-        y  = y + self%bcoef(ib,jb) * derivs1(k1) * values2(k2)
+    ! Calculate (matrix) block C of B-spline coefficients to be used
+    a1 = ic1 - self%bs1%offset;  b1 = ic1 - self%bs1%offset + self%bs1%deg
+    a2 = ic2 - self%bs2%offset;  b2 = ic2 - self%bs2%offset + self%bs2%deg
+
+    ! Compute scalar product <d1,v2> = (d1^T)*C*v2
+    associate( bcoef => self%bcoef(a1:b1,a2:b2) )
+      y = 0.0_f64
+      do k2 = 1, d2
+        do k1 = 1, d1
+          y  = y + bcoef(k1,k2) * derivs1(k1) * values2(k2)
+        end do
       end do
-    end do
+    end associate
 
   end function sll_f_bspline_2d_eval_deriv_x1
 
@@ -390,9 +424,10 @@ contains
     sll_real64 :: y
 
     sll_int32 :: d1, d2
+    sll_int32 :: a1, a2
+    sll_int32 :: b1, b2
     sll_int32 :: k1, k2
-    sll_int32 :: ib, jb
-    sll_int32 :: icell, jcell
+    sll_int32 :: ic1, ic2
 
     ! Automatic arrays
     sll_real64 :: values1(1+self%bs1%deg)
@@ -401,20 +436,27 @@ contains
     d1 = self%bs1%deg+1
     d2 = self%bs2%deg+1
 
-    icell = sll_f_find_cell( self%bs1%bsp, x1 )
-    jcell = sll_f_find_cell( self%bs2%bsp, x2 )
+    ! Find 2D cell (ic1,ic2)
+    ic1 = sll_f_find_cell( self%bs1%bsp, x1 )
+    ic2 = sll_f_find_cell( self%bs2%bsp, x2 )
 
-    call sll_s_bsplines_eval_basis( self%bs1%bsp, icell, x1, values1(1:d1) )
-    call sll_s_bsplines_eval_deriv( self%bs2%bsp, jcell, x2, derivs2(1:d2) )
+    ! Compute arrays v1 and d2 of B-spline values/derivatives
+    call sll_s_bsplines_eval_basis( self%bs1%bsp, ic1, x1, values1(1:d1) )
+    call sll_s_bsplines_eval_deriv( self%bs2%bsp, ic2, x2, derivs2(1:d2) )
 
-    y = 0.0_f64
-    do k2 = 1, d2
-      jb = mod( jcell+k2-2-self%bs2%offset+self%bs2%n, self%bs2%n ) + 1
-      do k1 = 1, d1
-        ib = mod( icell+k1-2-self%bs1%offset+self%bs1%n, self%bs1%n ) + 1
-        y  = y + self%bcoef(ib,jb) * values1(k1) * derivs2(k2)
+    ! Calculate (matrix) block C of B-spline coefficients to be used
+    a1 = ic1 - self%bs1%offset;  b1 = ic1 - self%bs1%offset + self%bs1%deg
+    a2 = ic2 - self%bs2%offset;  b2 = ic2 - self%bs2%offset + self%bs2%deg
+
+    ! Compute scalar product <v1,d2> = (v1^T)*C*d2
+    associate( bcoef => self%bcoef(a1:b1,a2:b2) )
+      y = 0.0_f64
+      do k2 = 1, d2
+        do k1 = 1, d1
+          y  = y + bcoef(k1,k2) * values1(k1) * derivs2(k2)
+        end do
       end do
-    end do
+    end associate
 
   end function sll_f_bspline_2d_eval_deriv_x2
 
