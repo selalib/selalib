@@ -320,8 +320,8 @@ contains
     sll_int32 :: icell, jcell
 
     ! Automatic arrays
-    sll_real64 :: values(1+max(self%bs1%deg,self%bs2%deg))
-    sll_real64 :: work  (1+self%bs2%deg)
+    sll_real64 :: values1(1+self%bs1%deg)
+    sll_real64 :: values2(1+self%bs2%deg)
 
     d1 = self%bs1%deg+1
     d2 = self%bs2%deg+1
@@ -329,20 +329,16 @@ contains
     icell = sll_f_find_cell( self%bs1%bsp, x1 )
     jcell = sll_f_find_cell( self%bs2%bsp, x2 )
 
-    work = 0.0_f64
-    do k2 = 1, d2
-      jb = mod( jcell+k2-2-self%bs2%offset+self%bs2%n, self%bs2%n ) + 1
-      call sll_s_bsplines_eval_basis( self%bs1%bsp, icell, x1, values(1:d1) )
-      do k1 = 1, d1
-        ib = mod( icell+k1-2-self%bs1%offset+self%bs1%n, self%bs1%n ) + 1
-        work(k2) = work(k2) + values(k1)*self%bcoef(ib,jb)
-      end do
-    end do
+    call sll_s_bsplines_eval_basis( self%bs1%bsp, icell, x1, values1(1:d1) )
+    call sll_s_bsplines_eval_basis( self%bs2%bsp, jcell, x2, values2(1:d2) )
 
-    call sll_s_bsplines_eval_basis( self%bs2%bsp, jcell, x2, values(1:d2) )
     y = 0.0_f64
     do k2 = 1, d2
-      y  = y + values(k2)*work(k2)
+      jb = mod( jcell+k2-2-self%bs2%offset+self%bs2%n, self%bs2%n ) + 1
+      do k1 = 1, d1
+        ib = mod( icell+k1-2-self%bs1%offset+self%bs1%n, self%bs1%n ) + 1
+        y  = y + self%bcoef(ib,jb) * values1(k1) * values2(k2)
+      end do
     end do
 
   end function sll_f_bspline_2d_eval
@@ -362,29 +358,25 @@ contains
     sll_int32 :: icell, jcell
 
     ! Automatic arrays
-    sll_real64 :: values(1+max(self%bs1%deg,self%bs2%deg))
-    sll_real64 :: work  (1+self%bs2%deg)
+    sll_real64 :: derivs1(1+self%bs1%deg)
+    sll_real64 :: values2(1+self%bs2%deg)
 
     d1 = self%bs1%deg+1
     d2 = self%bs2%deg+1
 
-    icell =  sll_f_find_cell( self%bs1%bsp, x1 )
-    jcell =  sll_f_find_cell( self%bs2%bsp, x2 )
+    icell = sll_f_find_cell( self%bs1%bsp, x1 )
+    jcell = sll_f_find_cell( self%bs2%bsp, x2 )
 
-    work = 0.0_f64
-    do k2 = 1, d2
-      jb = mod( jcell+k2-2-self%bs2%offset+self%bs2%n, self%bs2%n ) + 1
-      call sll_s_bsplines_eval_deriv( self%bs1%bsp, icell, x1, values(1:d1) )
-      do k1 = 1, d1
-        ib = mod( icell+k1-2-self%bs1%offset+self%bs1%n, self%bs1%n ) + 1
-        work(k2) = work(k2) + values(k1)*self%bcoef(ib,jb)
-      end do
-    end do
+    call sll_s_bsplines_eval_deriv( self%bs1%bsp, icell, x1, derivs1(1:d1) )
+    call sll_s_bsplines_eval_basis( self%bs2%bsp, jcell, x2, values2(1:d2) )
 
-    call sll_s_bsplines_eval_basis( self%bs2%bsp, jcell, x2, values(1:d2) )
     y = 0.0_f64
     do k2 = 1, d2
-      y = y + values(k2)*work(k2)
+      jb = mod( jcell+k2-2-self%bs2%offset+self%bs2%n, self%bs2%n ) + 1
+      do k1 = 1, d1
+        ib = mod( icell+k1-2-self%bs1%offset+self%bs1%n, self%bs1%n ) + 1
+        y  = y + self%bcoef(ib,jb) * derivs1(k1) * values2(k2)
+      end do
     end do
 
   end function sll_f_bspline_2d_eval_deriv_x1
@@ -403,8 +395,8 @@ contains
     sll_int32 :: icell, jcell
 
     ! Automatic arrays
-    sll_real64 :: values(1+max(self%bs1%deg,self%bs2%deg))
-    sll_real64 :: work  (1+self%bs2%deg)
+    sll_real64 :: values1(1+self%bs1%deg)
+    sll_real64 :: derivs2(1+self%bs2%deg)
 
     d1 = self%bs1%deg+1
     d2 = self%bs2%deg+1
@@ -412,20 +404,16 @@ contains
     icell = sll_f_find_cell( self%bs1%bsp, x1 )
     jcell = sll_f_find_cell( self%bs2%bsp, x2 )
 
-    work = 0.0_f64
-    do k2 = 1, d2
-      jb = mod( jcell+k2-2-self%bs2%offset+self%bs2%n, self%bs2%n ) + 1
-      call sll_s_bsplines_eval_basis( self%bs1%bsp, icell, x1, values(1:d1) )
-      do k1 = 1, d1
-        ib = mod( icell+k1-2-self%bs1%offset+self%bs1%n, self%bs1%n ) + 1
-        work(k2) = work(k2) + values(k1)*self%bcoef(ib,jb)
-      end do
-    end do
+    call sll_s_bsplines_eval_basis( self%bs1%bsp, icell, x1, values1(1:d1) )
+    call sll_s_bsplines_eval_deriv( self%bs2%bsp, jcell, x2, derivs2(1:d2) )
 
-    call sll_s_bsplines_eval_deriv( self%bs2%bsp, jcell, x2, values(1:d2) )
     y = 0.0_f64
     do k2 = 1, d2
-      y = y + values(k2)*work(k2)
+      jb = mod( jcell+k2-2-self%bs2%offset+self%bs2%n, self%bs2%n ) + 1
+      do k1 = 1, d1
+        ib = mod( icell+k1-2-self%bs1%offset+self%bs1%n, self%bs1%n ) + 1
+        y  = y + self%bcoef(ib,jb) * values1(k1) * derivs2(k2)
+      end do
     end do
 
   end function sll_f_bspline_2d_eval_deriv_x2
