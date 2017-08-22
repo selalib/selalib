@@ -12,8 +12,8 @@ program test_bsplines_2d_new
     sll_p_hermite, &
     sll_p_greville
 
-  use m_test_bsplines_2d, only: &
-    t_bspline_2d_test_facility
+  use m_test_spline_2d_non_uniform, only: &
+    t_spline_2d_test_facility
 
   use m_analytical_profiles_2d, only: &
     t_profile_2d_info, &
@@ -33,7 +33,7 @@ program test_bsplines_2d_new
 
   ! Local variables
   type(t_profile_2d_info)               :: pinfo
-  type(t_bspline_2d_test_facility)      :: test_facility
+  type(t_spline_2d_test_facility)      :: test_facility
   type(t_analytical_profile_2d_cos_cos) :: profile_2d_cos_cos
   type(t_analytical_profile_2d_poly)    :: profile_2d_poly
   integer , allocatable                 :: bc_kinds(:)

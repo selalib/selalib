@@ -35,16 +35,16 @@ use sll_m_spline_1d_non_uniform, only: &
 implicit none
 
 public :: &
-  sll_t_bspline_2d,                     &
-  sll_s_bspline_2d_init,                &
-  sll_s_bspline_2d_free,                &
-  sll_s_bspline_2d_compute_interpolant, &
-  sll_f_bspline_2d_eval,                & ! scalar functions for evaluation
-  sll_f_bspline_2d_eval_deriv_x1,       &
-  sll_f_bspline_2d_eval_deriv_x2,       &
-  sll_s_bspline_2d_eval_array,          & ! vector subroutines for evaluation
-  sll_s_bspline_2d_eval_array_deriv_x1, &
-  sll_s_bspline_2d_eval_array_deriv_x2
+  sll_t_spline_2d_non_uniform,                     &
+  sll_s_spline_2d_non_uniform_init,                &
+  sll_s_spline_2d_non_uniform_free,                &
+  sll_s_spline_2d_non_uniform_compute_interpolant, &
+  sll_f_spline_2d_non_uniform_eval,                & ! scalar functions for evaluation
+  sll_f_spline_2d_non_uniform_eval_deriv_x1,       &
+  sll_f_spline_2d_non_uniform_eval_deriv_x2,       &
+  sll_s_spline_2d_non_uniform_eval_array,          & ! vector subroutines for evaluation
+  sll_s_spline_2d_non_uniform_eval_array_deriv_x1, &
+  sll_s_spline_2d_non_uniform_eval_array_deriv_x2
 
 private
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -53,14 +53,14 @@ private
 !> basic type for two-dimensional B-spline data.
 !> @details
 !> treated as an opaque type. No access to its internals is directly allowed.
-type :: sll_t_bspline_2d
+type :: sll_t_spline_2d_non_uniform
 
   type(sll_t_spline_1d_non_uniform) :: bs1
   type(sll_t_spline_1d_non_uniform) :: bs2
   sll_real64, allocatable           :: bcoef(:,:)
   sll_real64, allocatable           :: bwork(:,:)
 
-end type sll_t_bspline_2d
+end type sll_t_spline_2d_non_uniform
 
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 contains
@@ -69,7 +69,7 @@ contains
   !-----------------------------------------------------------------------------
   !> @brief Initialize a 2D spline interpolation object
   !-----------------------------------------------------------------------------
-  subroutine sll_s_bspline_2d_init( &
+  subroutine sll_s_spline_2d_non_uniform_init( &
     self   , &
     degree , &
     breaks1, &
@@ -77,12 +77,12 @@ contains
     bc_xmin, &
     bc_xmax )
 
-    type(sll_t_bspline_2d), intent(  out) :: self
-    sll_int32 ,             intent(in   ) :: degree (2)
-    sll_real64,             intent(in   ) :: breaks1(:)
-    sll_real64,             intent(in   ) :: breaks2(:)
-    sll_int32 ,             intent(in   ) :: bc_xmin(2)
-    sll_int32 ,             intent(in   ) :: bc_xmax(2)
+    type(sll_t_spline_2d_non_uniform), intent(  out) :: self
+    sll_int32                        , intent(in   ) :: degree (2)
+    sll_real64                       , intent(in   ) :: breaks1(:)
+    sll_real64                       , intent(in   ) :: breaks2(:)
+    sll_int32                        , intent(in   ) :: bc_xmin(2)
+    sll_int32                        , intent(in   ) :: bc_xmax(2)
 
     sll_int32  :: n1, g1
     sll_int32  :: n2, g2
@@ -108,10 +108,10 @@ contains
     allocate( self%bcoef(1-g1:n1+g1,1-g2:n2+g2) )
     self%bcoef = 0.0_f64
 
-  end subroutine sll_s_bspline_2d_init
+  end subroutine sll_s_spline_2d_non_uniform_init
 
   !-----------------------------------------------------------------------------
-  subroutine sll_s_bspline_2d_compute_interpolant( &
+  subroutine sll_s_spline_2d_non_uniform_compute_interpolant( &
     self, &
     gtau, &
     derivs_x1_min, &
@@ -120,13 +120,13 @@ contains
     derivs_x2_max, &
     derivs_corners )
 
-    type(sll_t_bspline_2d), intent(inout)           :: self
-    sll_real64            , intent(in   )           :: gtau(:,:)
-    sll_real64            , intent(in   ), optional :: derivs_x1_min (:,:)
-    sll_real64            , intent(in   ), optional :: derivs_x1_max (:,:)
-    sll_real64            , intent(in   ), optional :: derivs_x2_min (:,:)
-    sll_real64            , intent(in   ), optional :: derivs_x2_max (:,:)
-    sll_real64            , intent(in   ), optional :: derivs_corners(:,:,:)
+    type(sll_t_spline_2d_non_uniform), intent(inout)           :: self
+    sll_real64                       , intent(in   )           :: gtau(:,:)
+    sll_real64                       , intent(in   ), optional :: derivs_x1_min (:,:)
+    sll_real64                       , intent(in   ), optional :: derivs_x1_max (:,:)
+    sll_real64                       , intent(in   ), optional :: derivs_x2_min (:,:)
+    sll_real64                       , intent(in   ), optional :: derivs_x2_max (:,:)
+    sll_real64                       , intent(in   ), optional :: derivs_corners(:,:,:)
 
     sll_int32 :: i1, n1, ncond1
     sll_int32 :: i2, n2, ncond2, j2
@@ -273,14 +273,14 @@ contains
       end associate
     end if
 
-  end subroutine sll_s_bspline_2d_compute_interpolant
+  end subroutine sll_s_spline_2d_non_uniform_compute_interpolant
 
   !-----------------------------------------------------------------------------
-  SLL_PURE function sll_f_bspline_2d_eval( self, x1, x2 ) result( y )
+  SLL_PURE function sll_f_spline_2d_non_uniform_eval( self, x1, x2 ) result( y )
 
-    type(sll_t_bspline_2d), intent(in) :: self
-    sll_real64            , intent(in) :: x1
-    sll_real64            , intent(in) :: x2
+    type(sll_t_spline_2d_non_uniform), intent(in) :: self
+    sll_real64                       , intent(in) :: x1
+    sll_real64                       , intent(in) :: x2
     sll_real64 :: y
 
     sll_int32 :: d1, d2
@@ -318,15 +318,15 @@ contains
       end do
     end associate
 
-  end function sll_f_bspline_2d_eval
+  end function sll_f_spline_2d_non_uniform_eval
 
 
   !-----------------------------------------------------------------------------
-  SLL_PURE function sll_f_bspline_2d_eval_deriv_x1( self, x1, x2 ) result( y )
+  SLL_PURE function sll_f_spline_2d_non_uniform_eval_deriv_x1( self, x1, x2 ) result( y )
 
-    type(sll_t_bspline_2d), intent(in) :: self
-    sll_real64            , intent(in) :: x1
-    sll_real64            , intent(in) :: x2
+    type(sll_t_spline_2d_non_uniform), intent(in) :: self
+    sll_real64                       , intent(in) :: x1
+    sll_real64                       , intent(in) :: x2
     sll_real64 :: y
 
     sll_int32 :: d1, d2
@@ -364,14 +364,14 @@ contains
       end do
     end associate
 
-  end function sll_f_bspline_2d_eval_deriv_x1
+  end function sll_f_spline_2d_non_uniform_eval_deriv_x1
 
   !-----------------------------------------------------------------------------
-  SLL_PURE function sll_f_bspline_2d_eval_deriv_x2( self, x1, x2 ) result( y )
+  SLL_PURE function sll_f_spline_2d_non_uniform_eval_deriv_x2( self, x1, x2 ) result( y )
 
-    type(sll_t_bspline_2d), intent(in) :: self
-    sll_real64            , intent(in) :: x1
-    sll_real64            , intent(in) :: x2
+    type(sll_t_spline_2d_non_uniform), intent(in) :: self
+    sll_real64                       , intent(in) :: x1
+    sll_real64                       , intent(in) :: x2
     sll_real64 :: y
 
     sll_int32 :: d1, d2
@@ -409,15 +409,15 @@ contains
       end do
     end associate
 
-  end function sll_f_bspline_2d_eval_deriv_x2
+  end function sll_f_spline_2d_non_uniform_eval_deriv_x2
 
   !-----------------------------------------------------------------------------
-  SLL_PURE subroutine sll_s_bspline_2d_eval_array( self, x1, x2, y )
+  SLL_PURE subroutine sll_s_spline_2d_non_uniform_eval_array( self, x1, x2, y )
 
-    type(sll_t_bspline_2d), intent(in   ) :: self
-    sll_real64            , intent(in   ) :: x1(:,:)
-    sll_real64            , intent(in   ) :: x2(:,:)
-    sll_real64            , intent(  out) :: y (:,:)
+    type(sll_t_spline_2d_non_uniform), intent(in   ) :: self
+    sll_real64                       , intent(in   ) :: x1(:,:)
+    sll_real64                       , intent(in   ) :: x2(:,:)
+    sll_real64                       , intent(  out) :: y (:,:)
 
     sll_int32 :: i1, i2
     sll_int32 :: n1, n2
@@ -429,19 +429,19 @@ contains
 
     do i2 = 1, n2
       do i1 = 1, n1
-        y(i1,i2) = sll_f_bspline_2d_eval( self, x1(i1,i2), x2(i1,i2) )
+        y(i1,i2) = sll_f_spline_2d_non_uniform_eval( self, x1(i1,i2), x2(i1,i2) )
       end do
     end do
 
-  end subroutine sll_s_bspline_2d_eval_array
+  end subroutine sll_s_spline_2d_non_uniform_eval_array
 
   !-----------------------------------------------------------------------------
-  SLL_PURE subroutine sll_s_bspline_2d_eval_array_deriv_x1( self, x1, x2, y )
+  SLL_PURE subroutine sll_s_spline_2d_non_uniform_eval_array_deriv_x1( self, x1, x2, y )
 
-    type(sll_t_bspline_2d), intent(in   ) :: self
-    sll_real64            , intent(in   ) :: x1(:,:)
-    sll_real64            , intent(in   ) :: x2(:,:)
-    sll_real64            , intent(  out) :: y (:,:)
+    type(sll_t_spline_2d_non_uniform), intent(in   ) :: self
+    sll_real64                       , intent(in   ) :: x1(:,:)
+    sll_real64                       , intent(in   ) :: x2(:,:)
+    sll_real64                       , intent(  out) :: y (:,:)
 
     sll_int32 :: i1, i2
     sll_int32 :: n1, n2
@@ -453,19 +453,19 @@ contains
 
     do i2 = 1, n2
       do i1 = 1, n1
-        y(i1,i2) = sll_f_bspline_2d_eval_deriv_x1( self, x1(i1,i2), x2(i1,i2) )
+        y(i1,i2) = sll_f_spline_2d_non_uniform_eval_deriv_x1( self, x1(i1,i2), x2(i1,i2) )
       end do
     end do
 
-  end subroutine sll_s_bspline_2d_eval_array_deriv_x1
+  end subroutine sll_s_spline_2d_non_uniform_eval_array_deriv_x1
 
   !-----------------------------------------------------------------------------
-  SLL_PURE subroutine sll_s_bspline_2d_eval_array_deriv_x2( self, x1, x2, y )
+  SLL_PURE subroutine sll_s_spline_2d_non_uniform_eval_array_deriv_x2( self, x1, x2, y )
 
-    type(sll_t_bspline_2d), intent(in   ) :: self
-    sll_real64            , intent(in   ) :: x1(:,:)
-    sll_real64            , intent(in   ) :: x2(:,:)
-    sll_real64            , intent(  out) :: y (:,:)
+    type(sll_t_spline_2d_non_uniform), intent(in   ) :: self
+    sll_real64                       , intent(in   ) :: x1(:,:)
+    sll_real64                       , intent(in   ) :: x2(:,:)
+    sll_real64                       , intent(  out) :: y (:,:)
 
     sll_int32 :: i1, i2
     sll_int32 :: n1, n2
@@ -477,16 +477,16 @@ contains
 
     do i2 = 1, n2
       do i1 = 1, n1
-        y(i1,i2) = sll_f_bspline_2d_eval_deriv_x2( self, x1(i1,i2), x2(i1,i2) )
+        y(i1,i2) = sll_f_spline_2d_non_uniform_eval_deriv_x2( self, x1(i1,i2), x2(i1,i2) )
       end do
     end do
 
-  end subroutine sll_s_bspline_2d_eval_array_deriv_x2
+  end subroutine sll_s_spline_2d_non_uniform_eval_array_deriv_x2
 
   !-----------------------------------------------------------------------------
-  subroutine sll_s_bspline_2d_free( self )
+  subroutine sll_s_spline_2d_non_uniform_free( self )
 
-    type(sll_t_bspline_2d), intent(inout) :: self
+    type(sll_t_spline_2d_non_uniform), intent(inout) :: self
 
     ! Deallocate local 2D arrays
     deallocate( self%bwork )
@@ -496,6 +496,6 @@ contains
     call self%bs1%free()
     call self%bs2%free()
 
-  end subroutine sll_s_bspline_2d_free
+  end subroutine sll_s_spline_2d_non_uniform_free
 
 end module sll_m_spline_2d_non_uniform
