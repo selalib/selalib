@@ -1,6 +1,11 @@
 !> @ingroup splines
 !> Implements arbitrary degree bspline interpolation on a uniform grid
 !> given a B-Spline object from sll_m_bsplines
+!>
+!> @author Eric Sonnendrücker - IPP Garching
+!> @author Yaman Güçlü        - IPP Garching
+!> @author Edoardo Zoni       - IPP Garching
+
 module sll_m_spline_2d_non_uniform
 
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -62,92 +67,38 @@ contains
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
   !-----------------------------------------------------------------------------
-  !> @brief Initialises a 2D spline interpolation object.
-  !> @param[in] nx1 Number of points where the data to be interpolated are
-  !>            represented.
-  !> @param[in] degree1 Spline degree
-  !> @param[in] x1_min Minimum value of the abscissae where the data are meant
-  !> to be interpolated.
-  !> @param[in] x1_max Maximum value of the abscissae where the data are meant
-  !> to be interpolated.
-  !> @param[in] bc1 A boundary condition specifier. Must be one of the
-  !> symbols defined in the SLL_BOUNDARY_CONDITION_DESCRIPTORS module.
-  !> @param[in] nx2 Number of points where the data to be interpolated are
-  !>            represented.
-  !> @param[in] degree2 Spline degree
-  !> @param[in] x2_min Minimum value of the abscissae where the data are meant
-  !> to be interpolated.
-  !> @param[in] x2_max Maximum value of the abscissae where the data are meant
-  !> to be interpolated.
-  !> @param[in] bc2 A boundary condition specifier. Must be one of the
-  !> symbols defined in the sll_m_boundary_condition_descriptors module.
-  !> @param[in] spline_bc_type1 A boundary condition specifier (see sll_s_bspline_1d_init).
-  !> @param[in] spline_bc_type2 A boundary condition specifier (see sll_s_bspline_1d_init).
-  !> @param[in] bc_left1 value of function on the west boundary
-  !> @param[in] bc_left2 value of function on the south boundary
-  !> @param[in] bc_right1 value of function on the east boundary
-  !> @param[in] bc_right2 value of the function on the north boundary
-  !> @return a spline interpolation object.
+  !> @brief Initialize a 2D spline interpolation object
   !-----------------------------------------------------------------------------
   subroutine sll_s_bspline_2d_init( &
-    self,            &
-    num_pts1,        &
-    num_pts2,        &
-    degree1,         &
-    degree2,         &
-    x1_min,          &
-    x2_min,          &
-    x1_max,          &
-    x2_max,          &
-    bc1_min,         &
-    bc2_min,         &
-    bc1_max,         &
-    bc2_max,         &
-    spline_bc_type1, &
-    spline_bc_type2 )
+    self   , &
+    degree , &
+    breaks1, &
+    breaks2, &
+    bc_xmin, &
+    bc_xmax )
 
     type(sll_t_bspline_2d), intent(  out) :: self
-    sll_int32 ,             intent(in   ) :: num_pts1
-    sll_int32 ,             intent(in   ) :: num_pts2
-    sll_int32 ,             intent(in   ) :: degree1
-    sll_int32 ,             intent(in   ) :: degree2
-    sll_real64,             intent(in   ) :: x1_min
-    sll_real64,             intent(in   ) :: x2_min
-    sll_real64,             intent(in   ) :: x1_max
-    sll_real64,             intent(in   ) :: x2_max
-    sll_int32 ,             intent(in   ) :: bc1_min
-    sll_int32 ,             intent(in   ) :: bc2_min
-    sll_int32 ,             intent(in   ) :: bc1_max
-    sll_int32 ,             intent(in   ) :: bc2_max
-    sll_int32 , optional,   intent(in   ) :: spline_bc_type1 ! TODO: remove
-    sll_int32 , optional,   intent(in   ) :: spline_bc_type2 ! TODO: remove
+    sll_int32 ,             intent(in   ) :: degree (2)
+    sll_real64,             intent(in   ) :: breaks1(:)
+    sll_real64,             intent(in   ) :: breaks2(:)
+    sll_int32 ,             intent(in   ) :: bc_xmin(2)
+    sll_int32 ,             intent(in   ) :: bc_xmax(2)
 
-    sll_int32  :: i
     sll_int32  :: n1, g1
     sll_int32  :: n2, g2
-    sll_real64 :: dx1
-    sll_real64 :: dx2
-    sll_real64 :: breaks1(num_pts1)
-    sll_real64 :: breaks2(num_pts2)
 
     ! NOTE: in the future different boundary conditions at xmin and xmax
     !       should be considered. For now we only check that bc_xmin==bc_xmax
-    SLL_ASSERT( bc1_min == bc1_max )
-    SLL_ASSERT( bc2_min == bc2_max )
+    SLL_ASSERT( bc_xmin(1) == bc_xmax(1) )
+    SLL_ASSERT( bc_xmin(2) == bc_xmax(2) )
 
-    ! TODO: x1_breaks and x2_breaks should be input arguments
-    dx1     = (x1_max-x1_min)/real(num_pts1-1,f64)
-    dx2     = (x2_max-x2_min)/real(num_pts2-1,f64)
-    breaks1 = [(x1_min+real(i-1,f64)*dx1, i=1, num_pts1)]
-    breaks2 = [(x2_min+real(i-1,f64)*dx2, i=1, num_pts2)]
-
-    ! TODO: remove optional arguments 'spline_bc_type1' and 'spline_bc_type2'
-    call self%bs1%init( degree1, breaks1, bc1_min, bc1_max )
-    call self%bs2%init( degree2, breaks2, bc2_min, bc2_max )
+    call self%bs1%init( degree(1), breaks1, bc_xmin(1), bc_xmax(1) )
+    call self%bs2%init( degree(2), breaks2, bc_xmin(2), bc_xmax(2) )
 
     n1 = self%bs1%n
     n2 = self%bs2%n
-    allocate( self%bwork(1:n2,1:n1) ); self%bwork = 0.0_f64
+    allocate( self%bwork(1:n2,1:n1) )
+    self%bwork = 0.0_f64
 
     ! Allocate array of spline coefficients
     ! in case of periodic BCs, a larger array of coefficients is used in order
