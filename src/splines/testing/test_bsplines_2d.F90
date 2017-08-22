@@ -11,7 +11,17 @@ use sll_m_boundary_condition_descriptors, only: &
      sll_p_periodic, &
      sll_p_mirror
 
-use sll_m_spline_2d_non_uniform
+  use sll_m_spline_2d_non_uniform, only:             &
+    sll_t_spline_2d_non_uniform,                     &
+    sll_s_spline_2d_non_uniform_init,                &
+    sll_s_spline_2d_non_uniform_free,                &
+    sll_s_spline_2d_non_uniform_compute_interpolant, &
+    sll_f_spline_2d_non_uniform_eval,                &
+    sll_f_spline_2d_non_uniform_eval_deriv_x1,       &
+    sll_f_spline_2d_non_uniform_eval_deriv_x2,       &
+    sll_s_spline_2d_non_uniform_eval_array,          &
+    sll_s_spline_2d_non_uniform_eval_array_deriv_x1, &
+    sll_s_spline_2d_non_uniform_eval_array_deriv_x2
 
 use sll_m_constants, only: pi => sll_p_pi
 
@@ -74,7 +84,7 @@ logical  , intent(out)           :: passed_test
 sll_int32, intent(in ), optional :: spline_bc_type
 
 ! local variables
-type(sll_t_bspline_2d), target :: bspline_2d
+type(sll_t_spline_2d_non_uniform), target :: bspline_2d
 
 sll_real64 :: x1_min   = 0.0_f64
 sll_real64 :: x1_max   = 1.0_f64
@@ -129,7 +139,7 @@ dx1 = (x1_max-x1_min)/real(npts1-1,f64)
 dx2 = (x2_max-x2_min)/real(npts2-1,f64)
 
 ! Initialize 2D spline
-call sll_s_bspline_2d_init( &
+call sll_s_spline_2d_non_uniform_init( &
   self    = bspline_2d, &
   degree  = [deg, deg], &
   breaks1 = [(x1_min+real(i-1,f64)*dx1, i=1, npts1)], &
@@ -140,7 +150,7 @@ call sll_s_bspline_2d_init( &
 taux => bspline_2d%bs1%tau
 tauy => bspline_2d%bs2%tau
 
-print*, 'bspline_2d_init constructed'
+print*, 'spline_2d constructed'
 
 SLL_ALLOCATE(gtau(size(taux), size(tauy)),ierr)
 SLL_ALLOCATE(bc(deg/2),ierr)
@@ -196,25 +206,25 @@ if (bc_type == sll_p_hermite) then
       bc_corners(k,i,4) = bc(k)*bc(i)
     end do
   end do
-  call sll_s_bspline_2d_compute_interpolant(bspline_2d, gtau, &
+  call sll_s_spline_2d_non_uniform_compute_interpolant(bspline_2d, gtau, &
   bc1_min, bc1_max, bc2_min, bc2_max, bc_corners)
 else
-  call sll_s_bspline_2d_compute_interpolant(bspline_2d, gtau)
+  call sll_s_spline_2d_non_uniform_compute_interpolant(bspline_2d, gtau)
 end if
 
 call cpu_time(t1)
 
 ! evaluate interpolation error at mesh points and print out
-call sll_s_bspline_2d_eval_array(bspline_2d, x1, x2, y)
+call sll_s_spline_2d_non_uniform_eval_array(bspline_2d, x1, x2, y)
 
 err1 = maxval(abs(y-cos(2*pi*x1)*cos(2*pi*x2)))
 if (err1 > tol) then
-  print*,'-------> Test failed in sll_f_bspline_2d_eval'
+  print*,'-------> Test failed in sll_f_spline_2d_non_uniform_eval'
   passed_test = .false.
 end if
-print*, " sll_f_bspline_2d_eval: average error =             ", &
+print*, " sll_f_spline_2d_non_uniform_eval: average error =             ", &
      sum(abs(y-cos(2*pi*x1)*cos(2*pi*x2)))/real(n1*n2,f64)
-print*, " sll_f_bspline_2d_eval: maximum error =             ", &
+print*, " sll_f_spline_2d_non_uniform_eval: maximum error =             ", &
      maxval(abs(y-cos(2*pi*x1)*cos(2*pi*x2)))
 
 !if (.not. passed_test) stop
@@ -223,16 +233,16 @@ call cpu_time(t2)
 
 !.......
 do j = 1,nstep
-  call sll_s_bspline_2d_eval_array( bspline_2d, x1, x2, y)
+  call sll_s_spline_2d_non_uniform_eval_array( bspline_2d, x1, x2, y)
 end do
 err1 = maxval(abs(y-cos(2*pi*x1)*cos(2*pi*x2)))
 if (err1 > tol) then
-  print*,'-------> Test failed in sll_s_bspline_2d_eval_array'
+  print*,'-------> Test failed in sll_s_spline_2d_non_uniform_eval_array'
   passed_test = .false.
 end if
-print*, " sll_s_bspline_2d_eval_array: average error =      ", &
+print*, " sll_s_spline_2d_non_uniform_eval_array: average error =      ", &
     sum(abs(y-cos(2*pi*x1)*cos(2*pi*x2)))/real(n1*n2,f64)
-print*, " sll_s_bspline_2d_eval_array: maximum error =      ", &
+print*, " sll_s_spline_2d_non_uniform_eval_array: maximum error =      ", &
     maxval(abs(y-cos(2*pi*x1)*cos(2*pi*x2)))
 
 !if (.not. passed_test) stop
@@ -241,17 +251,17 @@ call cpu_time(t3)
 !......
 do j = 1,n2
   do i = 1,n1
-    y(i,j) = sll_f_bspline_2d_eval_deriv_x1( bspline_2d, x1(i,j), x2(i,j))
+    y(i,j) = sll_f_spline_2d_non_uniform_eval_deriv_x1( bspline_2d, x1(i,j), x2(i,j))
   end do
 end do
 err1 = maxval(abs(y+2*pi*sin(2*pi*x1)*cos(2*pi*x2)))
 if (err1 > tol) then
-  print*,'-------> Test failed in sll_f_bspline_2d_eval_deriv_x1'
+  print*,'-------> Test failed in sll_f_spline_2d_non_uniform_eval_deriv_x1'
   passed_test = .false.
 end if
-print*, " sll_f_bspline_2d_eval_deriv_x1: average error =        ", &
+print*, " sll_f_spline_2d_non_uniform_eval_deriv_x1: average error =        ", &
      sum(abs(y+2*pi*sin(2*pi*x1)*cos(2*pi*x2)))/real(n1*n2,f64)
-print*, " sll_f_bspline_2d_eval_deriv_x1: maximum error =        ", &
+print*, " sll_f_spline_2d_non_uniform_eval_deriv_x1: maximum error =        ", &
      maxval(abs(y+2*pi*sin(2*pi*x1)*cos(2*pi*x2)))
 
 !if (.not. passed_test) stop
@@ -260,17 +270,17 @@ call cpu_time(t4)
 !......
 do j = 1,n2
   do i = 1,n1
-    y(i,j) = sll_f_bspline_2d_eval_deriv_x2( bspline_2d, x1(i,j), x2(i,j))
+    y(i,j) = sll_f_spline_2d_non_uniform_eval_deriv_x2( bspline_2d, x1(i,j), x2(i,j))
   end do
 end do
 err1 = maxval(abs(y+2*pi*sin(2*pi*x2)*cos(2*pi*x1)))
 if (err1 > tol) then
-  print*,'-------> Test failed in sll_f_bspline_2d_eval_deriv_x2'
+  print*,'-------> Test failed in sll_f_spline_2d_non_uniform_eval_deriv_x2'
   passed_test = .false.
 end if
-print*, " sll_f_bspline_2d_eval_deriv_x2: average error =        ", &
+print*, " sll_f_spline_2d_non_uniform_eval_deriv_x2: average error =        ", &
      sum(abs(y+2*pi*sin(2*pi*x2)*cos(2*pi*x1)))/real(n1*n2,f64)
-print*, " sll_f_bspline_2d_eval_deriv_x2: maximum error =        ", &
+print*, " sll_f_spline_2d_non_uniform_eval_deriv_x2: maximum error =        ", &
      maxval(abs(y+2*pi*sin(2*pi*x2)*cos(2*pi*x1)))
 
 !if (.not. passed_test) stop
@@ -278,16 +288,16 @@ call cpu_time(t5)
 
 !......
 do j = 1,nstep
-  call sll_s_bspline_2d_eval_array_deriv_x1( bspline_2d, x1, x2, y)
+  call sll_s_spline_2d_non_uniform_eval_array_deriv_x1( bspline_2d, x1, x2, y)
 end do
 err1 = maxval(abs(y+2*pi*sin(2*pi*x1)*cos(2*pi*x2)))
 if (err1 > tol) then
-  print*,'-------> Test failed in sll_s_bspline_2d_eval_array_deriv_x1'
+  print*,'-------> Test failed in sll_s_spline_2d_non_uniform_eval_array_deriv_x1'
   passed_test = .false.
 end if
-print*, " sll_s_bspline_2d_eval_array_deriv_x1: average error = ", &
+print*, " sll_s_spline_2d_non_uniform_eval_array_deriv_x1: average error = ", &
     sum(abs(y+2*pi*sin(2*pi*x1)*cos(2*pi*x2)))/real(n1*n2,f64)
-print*, " sll_s_bspline_2d_eval_array_deriv_x1: maximum error = ", &
+print*, " sll_s_spline_2d_non_uniform_eval_array_deriv_x1: maximum error = ", &
     maxval(abs(y+2*pi*sin(2*pi*x1)*cos(2*pi*x2)))
 
 !if (.not. passed_test) stop
@@ -295,16 +305,16 @@ call cpu_time(t6)
 
 !......
 do j = 1,nstep
-  call sll_s_bspline_2d_eval_array_deriv_x2( bspline_2d, x1, x2, y)
+  call sll_s_spline_2d_non_uniform_eval_array_deriv_x2( bspline_2d, x1, x2, y)
 end do
 err1 = maxval(abs(y+2*pi*sin(2*pi*x2)*cos(2*pi*x1)))
 if (err1 > tol) then
-  print*,'-------> Test failed in sll_s_bspline_2d_eval_array_deriv_x2'
+  print*,'-------> Test failed in sll_s_spline_2d_non_uniform_eval_array_deriv_x2'
   passed_test = .false.
 end if
-print*, " sll_s_bspline_2d_eval_array_deriv_x2: average error = ", &
+print*, " sll_s_spline_2d_non_uniform_eval_array_deriv_x2: average error = ", &
     sum(abs(y+2*pi*sin(2*pi*x2)*cos(2*pi*x1)))/real(n1*n2,f64)
-print*, " sll_s_bspline_2d_eval_array_deriv_x2: maximum error = ", &
+print*, " sll_s_spline_2d_non_uniform_eval_array_deriv_x2: maximum error = ", &
     maxval(abs(y+2*pi*sin(2*pi*x2)*cos(2*pi*x1)))
 
 !if (.not. passed_test) stop
@@ -391,10 +401,10 @@ if (bc_type == sll_p_hermite) then
       bc_corners(k,i,4) = bc(k)*bc(i)
     end do
   end do
-  call sll_s_bspline_2d_compute_interpolant(bspline_2d, htau, &
+  call sll_s_spline_2d_non_uniform_compute_interpolant(bspline_2d, htau, &
     bc1_min, bc1_max, bc2_min, bc2_max, bc_corners)
 else
-  call sll_s_bspline_2d_compute_interpolant(bspline_2d, htau)
+  call sll_s_spline_2d_non_uniform_compute_interpolant(bspline_2d, htau)
 end if
 !print*,'bc2_max', bc2_max(1,:)
 !call printout(taux,tauy,bspline_2d%bwork)
@@ -402,9 +412,9 @@ end if
 
 do j = 1,n2
   do i = 1,n1
-    y(i,j) = sll_f_bspline_2d_eval( bspline_2d, xx(i,j), yy(i,j))
+    y(i,j) = sll_f_spline_2d_non_uniform_eval( bspline_2d, xx(i,j), yy(i,j))
     write(30,*) x1(i,j), x2(i,j), &
-      sll_f_bspline_2d_eval( bspline_2d, x1(i,j), x2(i,j)) - &
+      sll_f_spline_2d_non_uniform_eval( bspline_2d, x1(i,j), x2(i,j)) - &
       sin(2*pi*x1(i,j))*sin(2*pi*x2(i,j))
     write(40,*) xx(i,j), yy(i,j), y(i,j)
   end do
@@ -415,12 +425,12 @@ close(30)
 close(40)
 err1 = maxval(abs(y-sin(2*pi*xx)*sin(2*pi*yy)))
 if (err1 > tol) then
-  print*,'-------> Test failed in sll_f_bspline_2d_eval'
+  print*,'-------> Test failed in sll_f_spline_2d_non_uniform_eval'
   passed_test = .false.
 end if
-print*, " sll_f_bspline_2d_eval: average error =             ", &
+print*, " sll_f_spline_2d_non_uniform_eval: average error =             ", &
      sum(abs(y-sin(2*pi*xx)*sin(2*pi*yy)))/real(n1*n2,f64)
-print*, " sll_f_bspline_2d_eval: maximum error =             ", &
+print*, " sll_f_spline_2d_non_uniform_eval: maximum error =             ", &
      maxval(abs(y-sin(2*pi*xx)*sin(2*pi*yy)))
 
 !if (.not. passed_test) stop
@@ -429,16 +439,16 @@ call cpu_time(t2)
 
 !.......
 do j = 1,nstep
-  call sll_s_bspline_2d_eval_array( bspline_2d, xx, yy, y)
+  call sll_s_spline_2d_non_uniform_eval_array( bspline_2d, xx, yy, y)
 end do
 err1 = maxval(abs(y-sin(2*pi*xx)*sin(2*pi*yy)))
 if (err1 > tol) then
-  print*,'-------> Test failed in sll_s_bspline_2d_eval_array'
+  print*,'-------> Test failed in sll_s_spline_2d_non_uniform_eval_array'
   passed_test = .false.
 end if
-print*, " sll_s_bspline_2d_eval_array: average error =      ", &
+print*, " sll_s_spline_2d_non_uniform_eval_array: average error =      ", &
     sum(abs(y-sin(2*pi*xx)*sin(2*pi*yy)))/real(n1*n2,f64)
-print*, " sll_s_bspline_2d_eval_array: maximum error =      ", &
+print*, " sll_s_spline_2d_non_uniform_eval_array: maximum error =      ", &
      maxval(abs(y-sin(2*pi*xx)*sin(2*pi*yy)))
 !if (.not. passed_test) stop
 
@@ -447,18 +457,18 @@ call cpu_time(t3)
 !......
 do j = 1,n2
   do i = 1,n1
-    y(i,j) = sll_f_bspline_2d_eval_deriv_x1( bspline_2d, xx(i,j), yy(i,j))
+    y(i,j) = sll_f_spline_2d_non_uniform_eval_deriv_x1( bspline_2d, xx(i,j), yy(i,j))
   end do
 end do
 err1 = maxval(abs(y-2*pi*cos(2*pi*xx)*sin(2*pi*yy)))
 print*, 'maxloc', maxloc(abs(y-2*pi*cos(2*pi*xx)*sin(2*pi*yy)))
 if (err1 > tol) then
-  print*,'-------> Test failed in sll_f_bspline_2d_eval_deriv_x1'
+  print*,'-------> Test failed in sll_f_spline_2d_non_uniform_eval_deriv_x1'
   passed_test = .false.
 end if
-print*, " sll_f_bspline_2d_eval_deriv_x1: average error =        ", &
+print*, " sll_f_spline_2d_non_uniform_eval_deriv_x1: average error =        ", &
      sum(abs(y-2*pi*cos(2*pi*xx)*sin(2*pi*yy)))/real(n1*n2,f64)
-print*, " sll_f_bspline_2d_eval_deriv_x1: maximum error =        ", &
+print*, " sll_f_spline_2d_non_uniform_eval_deriv_x1: maximum error =        ", &
      maxval(abs(y-2*pi*cos(2*pi*xx)*sin(2*pi*yy)))
 
 !if (.not. passed_test) stop
@@ -467,17 +477,17 @@ call cpu_time(t4)
 !......
 do j = 1,n2
   do i = 1,n1
-    y(i,j) = sll_f_bspline_2d_eval_deriv_x2( bspline_2d, xx(i,j), yy(i,j))
+    y(i,j) = sll_f_spline_2d_non_uniform_eval_deriv_x2( bspline_2d, xx(i,j), yy(i,j))
   end do
 end do
 err1 = maxval(abs(y-2*pi*cos(2*pi*yy)*sin(2*pi*xx)))
 if (err1 > tol) then
-  print*,'-------> Test failed in sll_f_bspline_2d_eval_deriv_x2'
+  print*,'-------> Test failed in sll_f_spline_2d_non_uniform_eval_deriv_x2'
   passed_test = .false.
 end if
-print*, " sll_f_bspline_2d_eval_deriv_x2: average error =        ", &
+print*, " sll_f_spline_2d_non_uniform_eval_deriv_x2: average error =        ", &
      sum(abs(y-2*pi*cos(2*pi*yy)*sin(2*pi*xx)))/real(n1*n2,f64)
-print*, " sll_f_bspline_2d_eval_deriv_x2: maximum error =        ", &
+print*, " sll_f_spline_2d_non_uniform_eval_deriv_x2: maximum error =        ", &
      maxval(abs(y-2*pi*cos(2*pi*yy)*sin(2*pi*xx)))
 !if (.not. passed_test) stop
 
@@ -485,16 +495,16 @@ call cpu_time(t5)
 
 !......
 do j = 1,nstep
-  call sll_s_bspline_2d_eval_array_deriv_x1( bspline_2d, xx, yy, y)
+  call sll_s_spline_2d_non_uniform_eval_array_deriv_x1( bspline_2d, xx, yy, y)
 end do
 err1 = maxval(abs(y-2*pi*cos(2*pi*xx)*sin(2*pi*yy)))
 if (err1 > tol) then
-  print*,'-------> Test failed in sll_s_bspline_2d_eval_array_deriv_x1'
+  print*,'-------> Test failed in sll_s_spline_2d_non_uniform_eval_array_deriv_x1'
   passed_test = .false.
 end if
-print*, " sll_s_bspline_2d_eval_array_deriv_x1: average error = ", &
+print*, " sll_s_spline_2d_non_uniform_eval_array_deriv_x1: average error = ", &
      sum(abs(y-2*pi*cos(2*pi*xx)*sin(2*pi*yy)))/real(n1*n2,f64)
-print*, " sll_s_bspline_2d_eval_array_deriv_x1: maximum error = ", &
+print*, " sll_s_spline_2d_non_uniform_eval_array_deriv_x1: maximum error = ", &
      maxval(abs(y-2*pi*cos(2*pi*xx)*sin(2*pi*yy)))
 
 !if (.not. passed_test) stop
@@ -502,16 +512,16 @@ call cpu_time(t6)
 
 !......
 do j = 1,nstep
-  call sll_s_bspline_2d_eval_array_deriv_x2( bspline_2d, xx, yy, y)
+  call sll_s_spline_2d_non_uniform_eval_array_deriv_x2( bspline_2d, xx, yy, y)
 end do
 err1 = maxval(abs(y-2*pi*cos(2*pi*yy)*sin(2*pi*xx)))
 if (err1 > tol) then
-  print*,'-------> Test failed in sll_s_bspline_2d_eval_array_deriv_x2'
+  print*,'-------> Test failed in sll_s_spline_2d_non_uniform_eval_array_deriv_x2'
   passed_test = .false.
 end if
-print*, " sll_s_bspline_2d_eval_array_deriv_x2: average error = ", &
+print*, " sll_s_spline_2d_non_uniform_eval_array_deriv_x2: average error = ", &
      sum(abs(y-2*pi*cos(2*pi*yy)*sin(2*pi*xx)))/real(n1*n2,f64)
-print*, " sll_s_bspline_2d_eval_array_deriv_x2: maximum error = ", &
+print*, " sll_s_spline_2d_non_uniform_eval_array_deriv_x2: maximum error = ", &
      maxval(abs(y-2*pi*cos(2*pi*yy)*sin(2*pi*xx)))
 
 !if (.not. passed_test) stop
@@ -532,7 +542,7 @@ nullify(taux)
 nullify(tauy)
 SLL_DEALLOCATE_ARRAY(gtau,ierr)
 SLL_DEALLOCATE_ARRAY(htau,ierr)
-call sll_s_bspline_2d_free(bspline_2d)
+call sll_s_spline_2d_non_uniform_free(bspline_2d)
 
 end subroutine test_process_2d
 
