@@ -14,18 +14,11 @@ module m_test_spline_2d_non_uniform
     sll_p_hermite, &
     sll_p_greville
 
-  use sll_m_spline_2d_non_uniform, only:             &
-    sll_t_spline_2d_boundary_data,                   &
-    sll_t_spline_2d_non_uniform,                     &
-    sll_s_spline_2d_non_uniform_init,                &
-    sll_s_spline_2d_non_uniform_free,                &
-    sll_s_spline_2d_non_uniform_compute_interpolant, &
-    sll_f_spline_2d_non_uniform_eval,                &
-    sll_f_spline_2d_non_uniform_eval_deriv_x1,       &
-    sll_f_spline_2d_non_uniform_eval_deriv_x2,       &
-    sll_s_spline_2d_non_uniform_eval_array,          &
-    sll_s_spline_2d_non_uniform_eval_array_deriv_x1, &
-    sll_s_spline_2d_non_uniform_eval_array_deriv_x2
+  use sll_m_spline_2d, only: &
+    sll_t_spline_2d_boundary_data
+
+  use sll_m_spline_2d_non_uniform, only: &
+    sll_t_spline_2d_non_uniform
 
   use sll_m_timer, only: &
     sll_t_time_mark, &
@@ -117,8 +110,7 @@ contains
     call sll_s_set_time_mark( t0 )
 
     ! Initialize 2D spline
-    call sll_s_spline_2d_non_uniform_init( &
-      self    = self % spline_2d, &
+    call self % spline_2d % init( &
       degree  = degree (1:2), &
       breaks1 = [(info%x1_min+real(i1,wp)*dx1, i1=0, ncells(1))], &
       breaks2 = [(info%x2_min+real(i2,wp)*dx2, i2=0, ncells(2))], &
@@ -241,10 +233,7 @@ contains
     ! ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
     call sll_s_set_time_mark( t2 )
 
-    call sll_s_spline_2d_non_uniform_compute_interpolant( &
-      self % spline_2d, &
-      self % gtau     , &
-      boundary_data   )
+    call self % spline_2d % compute_interpolant( self % gtau, boundary_data )
 
     call sll_s_set_time_mark( t3 )
 
@@ -304,11 +293,11 @@ contains
     call sll_s_set_time_mark( t0 )
     do i2 = 1, n2
       do i1 = 1, n1
-        y(i1,i2) = sll_f_spline_2d_non_uniform_eval( self%spline_2d, x1(i1,i2), x2(i1,i2) )
+        y(i1,i2) = self % spline_2d % eval( x1(i1,i2), x2(i1,i2) )
       end do
     end do
     call sll_s_set_time_mark( t1 )
-    call sll_s_spline_2d_non_uniform_eval_array( self%spline_2d, x1, x2, ya )
+    call self % spline_2d % eval_array( x1, x2, ya )
     call sll_s_set_time_mark( t2 )
 
     self%time_eval       = sll_f_time_elapsed_between( t0, t1 ) / npts
@@ -321,11 +310,11 @@ contains
     call sll_s_set_time_mark( t0 )
     do i2 = 1, n2
       do i1 = 1, n1
-        y(i1,i2) = sll_f_spline_2d_non_uniform_eval_deriv_x1( self%spline_2d, x1(i1,i2), x2(i1,i2) )
+        y(i1,i2) = self % spline_2d % eval_deriv_x1( x1(i1,i2), x2(i1,i2) )
       end do
     end do
     call sll_s_set_time_mark( t1 )
-    call sll_s_spline_2d_non_uniform_eval_array_deriv_x1( self%spline_2d, x1, x2, ya )
+    call self % spline_2d % eval_array_deriv_x1( x1, x2, ya )
     call sll_s_set_time_mark( t2 )
 
     self%time_eval_diff1       = sll_f_time_elapsed_between( t0, t1 ) / npts
@@ -338,11 +327,11 @@ contains
     call sll_s_set_time_mark( t0 )
     do i2 = 1, n2
       do i1 = 1, n1
-        y(i1,i2) = sll_f_spline_2d_non_uniform_eval_deriv_x2( self%spline_2d, x1(i1,i2), x2(i1,i2) )
+        y(i1,i2) = self % spline_2d % eval_deriv_x2( x1(i1,i2), x2(i1,i2) )
       end do
     end do
     call sll_s_set_time_mark( t1 )
-    call sll_s_spline_2d_non_uniform_eval_array_deriv_x2( self%spline_2d, x1, x2, ya )
+    call self % spline_2d % eval_array_deriv_x2( x1, x2, ya )
     call sll_s_set_time_mark( t2 )
 
     self%time_eval_diff2       = sll_f_time_elapsed_between( t0, t1 ) / npts
@@ -376,7 +365,7 @@ contains
       do i2 = 1, size( tau2 )
         do i1 = 1, size( tau1 )
           error = self % gtau(i1,i2) &
-                - sll_f_spline_2d_non_uniform_eval( self % spline_2d, tau1(i1), tau2(i2) )
+                - self % spline_2d % eval( tau1(i1), tau2(i2) )
           max_norm_error = max( max_norm_error, abs( error ) )
         end do
       end do
@@ -410,7 +399,7 @@ contains
     call sll_s_set_time_mark( t0 )
 
     ! Evaluate 2D spline on given grid
-    call sll_s_spline_2d_non_uniform_eval_array( self%spline_2d, x1, x2, y )
+    call self % spline_2d % eval_array( x1, x2, y )
 
     call sll_s_set_time_mark( t1 )
     self % time_eval_array = sll_f_time_elapsed_between(t0,t1)/real(n1*n2,wp)
@@ -460,7 +449,7 @@ contains
     !----------------------------------------------------
     call sll_s_set_time_mark( t0 )
 
-    call sll_s_spline_2d_non_uniform_eval_array_deriv_x1( self%spline_2d, x1, x2, y )
+    call self % spline_2d % eval_array_deriv_x1( x1, x2, y )
 
     call sll_s_set_time_mark( t1 )
     self % time_eval_diff1_array = sll_f_time_elapsed_between(t0,t1)/real(n1*n2,wp)
@@ -477,7 +466,7 @@ contains
     !----------------------------------------------------
     call sll_s_set_time_mark( t0 )
 
-    call sll_s_spline_2d_non_uniform_eval_array_deriv_x2( self%spline_2d, x1, x2, y )
+    call self % spline_2d % eval_array_deriv_x2( x1, x2, y )
 
     call sll_s_set_time_mark( t1 )
     self % time_eval_diff2_array = sll_f_time_elapsed_between(t0,t1)/real(n1*n2,wp)
@@ -501,7 +490,7 @@ contains
     class(t_spline_2d_test_facility), intent(inout) :: self
 
     ! Free spline memory
-    call sll_s_spline_2d_non_uniform_free( self % spline_2d )
+    call self % spline_2d % free()
 
   end subroutine free
 
