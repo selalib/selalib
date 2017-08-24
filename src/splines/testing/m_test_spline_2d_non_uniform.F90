@@ -15,6 +15,7 @@ module m_test_spline_2d_non_uniform
     sll_p_greville
 
   use sll_m_spline_2d_non_uniform, only:             &
+    sll_t_spline_2d_boundary_data,                   &
     sll_t_spline_2d_non_uniform,                     &
     sll_s_spline_2d_non_uniform_init,                &
     sll_s_spline_2d_non_uniform_free,                &
@@ -46,12 +47,10 @@ module m_test_spline_2d_non_uniform
   type :: t_spline_2d_test_facility
 
     class(c_analytical_profile_2d), pointer :: profile_2d
-    integer                                 :: nx1
-    integer                                 :: nx2
-    integer                                 :: deg1
-    integer                                 :: deg2
-    integer                                 :: bc1
-    integer                                 :: bc2
+!    integer                                 :: degree (2)
+!    integer                                 :: ncells (2)
+!    integer                                 :: bc_xmin(2)
+!    integer                                 :: bc_xmax(2)
 
     type(sll_t_spline_2d_non_uniform)  :: spline_2d
     real(wp), allocatable   :: gtau(:,:)  ! Profile values at interp. points
@@ -81,68 +80,63 @@ contains
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
   !-----------------------------------------------------------------------------
-  subroutine init( self, profile_2d, nx1, nx2, deg1, deg2, bc1, bc2 )
+  subroutine init( self, profile_2d, degree, ncells, bc_xmin, bc_xmax, breaks1, breaks2 )
 
     class(t_spline_2d_test_facility), intent(  out)         :: self
     class(c_analytical_profile_2d  ), intent(in   ), target :: profile_2d
-    integer                         , intent(in   )         :: nx1
-    integer                         , intent(in   )         :: nx2
-    integer                         , intent(in   )         :: deg1
-    integer                         , intent(in   )         :: deg2
-    integer                         , intent(in   )         :: bc1
-    integer                         , intent(in   )         :: bc2
+    integer                         , intent(in   )         :: degree (2)
+    integer                         , intent(in   )         :: ncells (2)
+    integer                         , intent(in   )         :: bc_xmin(2)
+    integer                         , intent(in   )         :: bc_xmax(2)
+    real(wp),               optional, intent(in   )         :: breaks1(:)
+    real(wp),               optional, intent(in   )         :: breaks2(:)
 
-    type(t_profile_2d_info) :: info
-    integer                 :: nipts1
-    integer                 :: nipts2
-    integer                 :: i1, j1, s1
-    integer                 :: i2, j2, s2
-    real(wp)                :: dx1, dx2
-
-    real(wp), allocatable :: derivs_x1_min(:,:)
-    real(wp), allocatable :: derivs_x1_max(:,:)
-    real(wp), allocatable :: derivs_x2_min(:,:)
-    real(wp), allocatable :: derivs_x2_max(:,:)
-    real(wp), allocatable :: derivs_corners(:,:,:)
-
-    type(sll_t_time_mark) :: t0, t1, t2, t3
+    type(t_profile_2d_info)             :: info
+    integer                             :: i1, j1
+    integer                             :: i2, j2
+    real(wp)                            :: dx1, dx2
+    type(sll_t_spline_2d_boundary_data) :: boundary_data
+    type(sll_t_time_mark)               :: t0, t1, t2, t3
 
     ! Store pointer to 2D profile and input numerical parameters to spline
     self % profile_2d => profile_2d
-    self % nx1        =  nx1
-    self % nx2        =  nx2
-    self % deg1       =  deg1
-    self % deg2       =  deg2
-    self % bc1        =  bc1
-    self % bc2        =  bc2
+!    self % ncells(1)  =  nx1-1
+!    self % ncells(2)  =  nx2-1
+!    self % degree(1)  =  deg1
+!    self % degree(2)  =  deg2
+!    self % bc_xmin(:) =  bc1
+!    self % bc_xmax(:) =  bc2
 
     ! Extract information about 2D analytical profile
     call self % profile_2d % get_info( info )
 
     ! TODO: breaks1 and breaks2 should be input arguments
-    dx1 = (info%x1_max-info%x1_min)/real(nx1-1,wp)
-    dx2 = (info%x2_max-info%x2_min)/real(nx2-1,wp)
+    dx1 = (info%x1_max-info%x1_min)/real(ncells(1),wp)
+    dx2 = (info%x2_max-info%x2_min)/real(ncells(2),wp)
 
     call sll_s_set_time_mark( t0 )
 
     ! Initialize 2D spline
     call sll_s_spline_2d_non_uniform_init( &
       self    = self % spline_2d, &
-      degree  = [self%deg1, self%deg2], &
-      breaks1 = [(info%x1_min+real(i1-1,wp)*dx1, i1=1, nx1)], &
-      breaks2 = [(info%x2_min+real(i2-1,wp)*dx2, i2=1, nx2)], &
-      bc_xmin = [self%bc1, self%bc2], &
-      bc_xmax = [self%bc1, self%bc2] )
+      degree  = degree (1:2), &
+      breaks1 = [(info%x1_min+real(i1,wp)*dx1, i1=0, ncells(1))], &
+      breaks2 = [(info%x2_min+real(i2,wp)*dx2, i2=0, ncells(2))], &
+      bc_xmin = bc_xmin(1:2), &
+      bc_xmax = bc_xmax(1:2) )
 
     call sll_s_set_time_mark( t1 )
 
     ! Get spline interpolation points
-    associate( tau1 => self % spline_2d % bs1 % tau, &
-               tau2 => self % spline_2d % bs2 % tau )
+    associate( tau1   => self % spline_2d % bs1 % tau , &
+               tau2   => self % spline_2d % bs2 % tau )
 
-    ! Store number of interpolation points
-    nipts1 = size( tau1 )
-    nipts2 = size( tau2 )
+    associate( nipts1 => size( tau1 )         , & ! number of interpolation pts
+               nipts2 => size( tau2 )         , & ! number of interpolation pts
+               s1     => 1-modulo(degree(1),2), & ! shift = 1 for even order, 0 for odd order
+               s2     => 1-modulo(degree(2),2), & ! shift = 1 for even order, 0 for odd order
+               dh1    => degree(1)/2          , &
+               dh2    => degree(2)/2          )
 
     ! Evaluate analytical profile at interpolation points
     allocate( self % gtau (nipts1,nipts2) )
@@ -152,93 +146,107 @@ contains
       end do
     end do
 
-    ! If needed, evaluate x1 derivatives at (x1_min,x2) and (x1_max,x2)
-    if (self%bc1 == sll_p_hermite) then
-      allocate( derivs_x1_min (deg1/2, nipts2) )
-      allocate( derivs_x1_max (deg1/2, nipts2) )
-      s1 = 1-modulo(deg1,2) ! shift = 1 for even order, 0 for odd order
+    ! If needed, evaluate x1 derivatives at (x1_min,x2)
+    if (bc_xmin(1) == sll_p_hermite) then
+      allocate( boundary_data % derivs_x1_min (dh1, nipts2) )
       do i2 = 1, nipts2
-        do j1 = 1, deg1/2
-          derivs_x1_min(j1,i2) = self % profile_2d % eval( info%x1_min, tau2(i2), diff_x1=j1-s1 )
-          derivs_x1_max(j1,i2) = self % profile_2d % eval( info%x1_max, tau2(i2), diff_x1=j1-s1 )
+        do j1 = 1, dh1
+          boundary_data % derivs_x1_min(j1,i2) = &
+            self % profile_2d % eval( info%x1_min, tau2(i2), diff_x1=j1-s1 )
         end do
       end do
     end if
 
-    ! If needed, evaluate x2 derivatives at (x1,x2_min) and (x1,x2_max)
-    if (self%bc2 == sll_p_hermite) then
-      allocate( derivs_x2_min (deg2/2, nipts1) )
-      allocate( derivs_x2_max (deg2/2, nipts1) )
-      s2 = 1-modulo(deg2,2) ! shift = 1 for even order, 0 for odd order
+    ! If needed, evaluate x1 derivatives at (x1_max,x2)
+    if (bc_xmax(1) == sll_p_hermite) then
+      allocate( boundary_data % derivs_x1_max (dh1, nipts2) )
+      do i2 = 1, nipts2
+        do j1 = 1, dh1
+          boundary_data % derivs_x1_max(j1,i2) = &
+            self % profile_2d % eval( info%x1_max, tau2(i2), diff_x1=j1-s1 )
+        end do
+      end do
+    end if
+
+    ! If needed, evaluate x2 derivatives at (x1,x2_min)
+    if (bc_xmin(2) == sll_p_hermite) then
+      allocate( boundary_data % derivs_x2_min (dh2, nipts1) )
       do i1 = 1, nipts1
-        do j2 = 1, deg2/2
-          derivs_x2_min(j2,i1) = self % profile_2d % eval( tau1(i1), info%x2_min, diff_x2=j2-s2 )
-          derivs_x2_max(j2,i1) = self % profile_2d % eval( tau1(i1), info%x2_max, diff_x2=j2-s2 )
+        do j2 = 1, dh2
+          boundary_data % derivs_x2_min(j2,i1) = &
+            self % profile_2d % eval( tau1(i1), info%x2_min, diff_x2=j2-s2 )
         end do
       end do
     end if
 
-    ! If needed, evaluate (x1,x2) mixed derivatives at 4 corners
-    if (self%bc1 == sll_p_hermite .and. self%bc2 == sll_p_hermite) then
-      allocate( derivs_corners (deg1/2, deg2/2, 4) )
-      s1 = 1-modulo(deg1,2) ! shift = 1 for even order, 0 for odd order
-      s2 = 1-modulo(deg2,2) ! shift = 1 for even order, 0 for odd order
-      do j1 = 1, deg1/2
-        do j2 = 1, deg2/2
-          derivs_corners(j1,j2,1) = profile_2d % eval( info%x1_min, info%x2_min, diff_x1=j1-s1, diff_x2=j2-s2 )
-          derivs_corners(j1,j2,2) = profile_2d % eval( info%x1_max, info%x2_min, diff_x1=j1-s1, diff_x2=j2-s2 )
-          derivs_corners(j1,j2,3) = profile_2d % eval( info%x1_min, info%x2_max, diff_x1=j1-s1, diff_x2=j2-s2 )
-          derivs_corners(j1,j2,4) = profile_2d % eval( info%x1_max, info%x2_max, diff_x1=j1-s1, diff_x2=j2-s2 )
+    ! If needed, evaluate x2 derivatives at (x1,x2_max)
+    if (bc_xmax(2) == sll_p_hermite) then
+      allocate( boundary_data % derivs_x2_max (dh2, nipts1) )
+      do i1 = 1, nipts1
+        do j2 = 1, dh2
+          boundary_data % derivs_x2_max(j2,i1) = &
+            self % profile_2d % eval( tau1(i1), info%x2_max, diff_x2=j2-s2 )
         end do
       end do
     end if
 
+    ! If needed, evaluate (x1,x2) mixed derivatives at corner A
+    if (all( [bc_xmin(1),bc_xmin(2)] == sll_p_hermite )) then
+      allocate( boundary_data % mixed_derivs_a (dh1,dh2) )
+      do j2 = 1, dh2
+        do j1 = 1, dh1
+          boundary_data % mixed_derivs_a(j1,j2) = &
+            profile_2d % eval( info%x1_min, info%x2_min, diff_x1=j1-s1, diff_x2=j2-s2 )
+        end do
+      end do
+    end if
+
+    ! If needed, evaluate (x1,x2) mixed derivatives at corner B
+    if (all( [bc_xmax(1),bc_xmin(2)] == sll_p_hermite )) then
+      allocate( boundary_data % mixed_derivs_b (dh1,dh2) )
+      do j2 = 1, dh2
+        do j1 = 1, dh1
+          boundary_data % mixed_derivs_b(j1,j2) = &
+            profile_2d % eval( info%x1_max, info%x2_min, diff_x1=j1-s1, diff_x2=j2-s2 )
+        end do
+      end do
+    end if
+
+    ! If needed, evaluate (x1,x2) mixed derivatives at corner C
+    if (all( [bc_xmin(1),bc_xmax(2)] == sll_p_hermite )) then
+      allocate( boundary_data % mixed_derivs_c (dh1,dh2) )
+      do j2 = 1, dh2
+        do j1 = 1, dh1
+          boundary_data % mixed_derivs_c(j1,j2) = &
+            profile_2d % eval( info%x1_min, info%x2_max, diff_x1=j1-s1, diff_x2=j2-s2 )
+        end do
+      end do
+    end if
+
+    ! If needed, evaluate (x1,x2) mixed derivatives at corner D
+    if (all( [bc_xmax(1),bc_xmax(2)] == sll_p_hermite )) then
+      allocate( boundary_data % mixed_derivs_d (dh1,dh2) )
+      do j2 = 1, dh2
+        do j1 = 1, dh1
+          boundary_data % mixed_derivs_d(j1,j2) = &
+            profile_2d % eval( info%x1_max, info%x2_max, diff_x1=j1-s1, diff_x2=j2-s2 )
+        end do
+      end do
+    end if
+
+    end associate ! (various shortcuts)
     end associate ! tau1, tau2
 
     ! Compute 2D spline that interpolates analytical 2D profile at points above
     ! ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
     call sll_s_set_time_mark( t2 )
 
-    ! Hermite - other
-    if (self%bc1 == sll_p_hermite .and. self%bc2 /= sll_p_hermite) then
-
-      call sll_s_spline_2d_non_uniform_compute_interpolant( self % spline_2d, self % gtau, &
-        derivs_x1_min = derivs_x1_min, &
-        derivs_x1_max = derivs_x1_max )
-
-    ! other - Hermite
-    else if (self%bc1 /= sll_p_hermite .and. self%bc2 == sll_p_hermite) then
-
-      call sll_s_spline_2d_non_uniform_compute_interpolant( self % spline_2d, self % gtau, &
-        derivs_x2_min = derivs_x2_min, &
-        derivs_x2_max = derivs_x2_max )
-
-    ! Hermite - Hermite
-    else if (self%bc1 == sll_p_hermite .and. self%bc2 == sll_p_hermite) then
-
-      call sll_s_spline_2d_non_uniform_compute_interpolant( self % spline_2d, self % gtau, &
-        derivs_x1_min  = derivs_x1_min, &
-        derivs_x1_max  = derivs_x1_max, &
-        derivs_x2_min  = derivs_x2_min, &
-        derivs_x2_max  = derivs_x2_max, &
-        derivs_corners = derivs_corners )
-
-    ! other - other
-    else
-
-      call sll_s_spline_2d_non_uniform_compute_interpolant( self % spline_2d, self % gtau )
-
-    end if
+    call sll_s_spline_2d_non_uniform_compute_interpolant( &
+      self % spline_2d, &
+      self % gtau     , &
+      boundary_data   )
 
     call sll_s_set_time_mark( t3 )
-
-    ! Deallocate local arrays
-    ! ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
-    if (allocated(derivs_x1_min )) deallocate( derivs_x1_min  )
-    if (allocated(derivs_x1_max )) deallocate( derivs_x1_max  )
-    if (allocated(derivs_x2_min )) deallocate( derivs_x2_min  )
-    if (allocated(derivs_x2_max )) deallocate( derivs_x2_max  )
-    if (allocated(derivs_corners)) deallocate( derivs_corners )
 
     ! Timings (set to -1 values not yet available)
     self % time_init                =  sll_f_time_elapsed_between( t0, t1 )
