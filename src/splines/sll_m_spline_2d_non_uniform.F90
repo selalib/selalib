@@ -75,7 +75,7 @@ module sll_m_spline_2d_non_uniform
     procedure :: eval_array          => s_spline_2d_non_uniform__eval_array
     procedure :: eval_array_deriv_x1 => s_spline_2d_non_uniform__eval_array_deriv_x1
     procedure :: eval_array_deriv_x2 => s_spline_2d_non_uniform__eval_array_deriv_x2
-!    procedure :: get_interp_points   => s_spline_2d_non_uniform__get_interp_points
+    procedure :: get_interp_points   => s_spline_2d_non_uniform__get_interp_points
 
   end type sll_t_spline_2d_non_uniform
 
@@ -514,5 +514,17 @@ contains
     call self%bs2%free()
 
   end subroutine s_spline_2d_non_uniform__free
+
+  !-----------------------------------------------------------------------------
+  subroutine s_spline_2d_non_uniform__get_interp_points( self, tau1, tau2 )
+
+    class(sll_t_spline_2d_non_uniform), intent(in   ) :: self
+    real(wp),              allocatable, intent(  out) :: tau1(:)
+    real(wp),              allocatable, intent(  out) :: tau2(:)
+
+    call self % bs1 % get_interp_points( tau1 )
+    call self % bs2 % get_interp_points( tau2 )
+
+  end subroutine s_spline_2d_non_uniform__get_interp_points
 
 end module sll_m_spline_2d_non_uniform

@@ -32,7 +32,7 @@ module sll_m_spline_2d_base
     procedure(i_sub_evaluate_at_x_array ), deferred :: eval_array          ! could be implemented here
     procedure(i_sub_evaluate_at_x_array ), deferred :: eval_array_deriv_x1 ! could be implemented here
     procedure(i_sub_evaluate_at_x_array ), deferred :: eval_array_deriv_x2 ! could be implemented here
-!    procedure(i_sub_get_interp_points   ), deferred :: get_interp_points
+    procedure(i_sub_get_interp_points   ), deferred :: get_interp_points
   end type sll_c_spline_2d
 
   !> Container for boundary condition data

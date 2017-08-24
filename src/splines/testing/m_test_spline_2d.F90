@@ -1,4 +1,4 @@
-module m_test_spline_2d_non_uniform
+module m_test_spline_2d
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_assert.h"
 
@@ -15,10 +15,9 @@ module m_test_spline_2d_non_uniform
     sll_p_greville
 
   use sll_m_spline_2d, only: &
+    sll_c_spline_2d, &
+    sll_s_spline_2d_new, &
     sll_t_spline_2d_boundary_data
-
-  use sll_m_spline_2d_non_uniform, only: &
-    sll_t_spline_2d_non_uniform
 
   use sll_m_timer, only: &
     sll_t_time_mark, &
@@ -40,13 +39,10 @@ module m_test_spline_2d_non_uniform
   type :: t_spline_2d_test_facility
 
     class(c_analytical_profile_2d), pointer :: profile_2d
-!    integer                                 :: degree (2)
-!    integer                                 :: ncells (2)
-!    integer                                 :: bc_xmin(2)
-!    integer                                 :: bc_xmax(2)
-
-    type(sll_t_spline_2d_non_uniform)  :: spline_2d
-    real(wp), allocatable   :: gtau(:,:)  ! Profile values at interp. points
+    class(sll_c_spline_2d), allocatable     :: spline_2d  ! polymorphic object
+    real(wp)              , allocatable     ::  tau1(:)   ! interp. points, x1 coord
+    real(wp)              , allocatable     ::  tau2(:)   ! interp. points, x2 coord
+    real(wp)              , allocatable     :: gtau (:,:) ! profile values at tau
 
     real(wp) :: time_init
     real(wp) :: time_compute_interpolant
@@ -91,37 +87,36 @@ contains
     type(sll_t_spline_2d_boundary_data) :: boundary_data
     type(sll_t_time_mark)               :: t0, t1, t2, t3
 
-    ! Store pointer to 2D profile and input numerical parameters to spline
+    ! Store pointer to 2D profile
     self % profile_2d => profile_2d
-!    self % ncells(1)  =  nx1-1
-!    self % ncells(2)  =  nx2-1
-!    self % degree(1)  =  deg1
-!    self % degree(2)  =  deg2
-!    self % bc_xmin(:) =  bc1
-!    self % bc_xmax(:) =  bc2
 
     ! Extract information about 2D analytical profile
     call self % profile_2d % get_info( info )
 
-    ! TODO: breaks1 and breaks2 should be input arguments
+    ! TODO: breaks1 and breaks2 should be read from input arguments
     dx1 = (info%x1_max-info%x1_min)/real(ncells(1),wp)
     dx2 = (info%x2_max-info%x2_min)/real(ncells(2),wp)
 
     call sll_s_set_time_mark( t0 )
 
-    ! Initialize 2D spline
-    call self % spline_2d % init( &
-      degree  = degree (1:2), &
-      breaks1 = [(info%x1_min+real(i1,wp)*dx1, i1=0, ncells(1))], &
-      breaks2 = [(info%x2_min+real(i2,wp)*dx2, i2=0, ncells(2))], &
-      bc_xmin = bc_xmin(1:2), &
-      bc_xmax = bc_xmax(1:2) )
+    ! Construct 2D spline
+!    call self % spline_2d % init( &
+    call sll_s_spline_2d_new( self%spline_2d, &
+      degree  = degree (1:2)              , &
+      ncells  = ncells (1:2)              , &
+      xmin    = [info%x1_min, info%x2_min], &
+      xmax    = [info%x1_max, info%x2_max], &
+      bc_xmin = bc_xmin(1:2)              , &
+      bc_xmax = bc_xmax(1:2)              , &
+      breaks1 = breaks1, &
+      breaks2 = breaks2 )
 
     call sll_s_set_time_mark( t1 )
 
-    ! Get spline interpolation points
-    associate( tau1   => self % spline_2d % bs1 % tau , &
-               tau2   => self % spline_2d % bs2 % tau )
+    ! Get x1 and x2 coordinates of interpolation points
+    call self % spline_2d % get_interp_points( self%tau1, self%tau2 )
+
+    associate( tau1 => self%tau1, tau2 => self%tau2 )
 
     associate( nipts1 => size( tau1 )         , & ! number of interpolation pts
                nipts2 => size( tau2 )         , & ! number of interpolation pts
@@ -226,7 +221,7 @@ contains
       end do
     end if
 
-    end associate ! (various shortcuts)
+    end associate ! nipts1, nipts2, s1, s2, dh1, dh2
     end associate ! tau1, tau2
 
     ! Compute 2D spline that interpolates analytical 2D profile at points above
@@ -355,22 +350,16 @@ contains
     integer  :: i1, i2
     real(wp) :: error
 
-    ! Get spline interpolation points
-    associate( tau1 => self % spline_2d % bs1 % tau, &
-               tau2 => self % spline_2d % bs2 % tau )
-
-      ! Evaluate 2D spline at interpolation points:
-      ! interpolation values should be obtained
-      max_norm_error = 0.0_wp
-      do i2 = 1, size( tau2 )
-        do i1 = 1, size( tau1 )
-          error = self % gtau(i1,i2) &
-                - self % spline_2d % eval( tau1(i1), tau2(i2) )
-          max_norm_error = max( max_norm_error, abs( error ) )
-        end do
+    ! Evaluate 2D spline at interpolation points:
+    ! interpolation values should be obtained
+    max_norm_error = 0.0_wp
+    do i2 = 1, size( self%tau2 )
+      do i1 = 1, size( self%tau1 )
+        error = self % gtau(i1,i2) &
+              - self % spline_2d % eval( self%tau1(i1), self%tau2(i2) )
+        max_norm_error = max( max_norm_error, abs( error ) )
       end do
-
-    end associate ! tau1, tau2
+    end do
 
   end subroutine evaluate_at_interpolation_points
 
@@ -494,4 +483,4 @@ contains
 
   end subroutine free
 
-end module m_test_spline_2d_non_uniform
+end module m_test_spline_2d
