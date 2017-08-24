@@ -1,5 +1,6 @@
-program test_bsplines_2d_new
+program test_spline_2d
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+#include "sll_errors.h"
 
   use sll_m_working_precision, only: &
     f64
@@ -12,7 +13,7 @@ program test_bsplines_2d_new
     sll_p_hermite, &
     sll_p_greville
 
-  use m_test_spline_2d_non_uniform, only: &
+  use m_test_spline_2d, only: &
     t_spline_2d_test_facility
 
   use m_analytical_profiles_2d, only: &
@@ -33,18 +34,23 @@ program test_bsplines_2d_new
 
   ! Local variables
   type(t_profile_2d_info)               :: pinfo
-  type(t_spline_2d_test_facility)      :: test_facility
+  type(t_spline_2d_test_facility)       :: test_facility
   type(t_analytical_profile_2d_cos_cos) :: profile_2d_cos_cos
   type(t_analytical_profile_2d_poly)    :: profile_2d_poly
   integer , allocatable                 :: bc_kinds(:)
   integer , allocatable                 :: nx_list(:)
   real(wp), allocatable                 :: grid_x1(:,:)
   real(wp), allocatable                 :: grid_x2(:,:)
+  real(wp), allocatable                 :: breaks1(:)
+  real(wp), allocatable                 :: breaks2(:)
+
+  ! Parameters for uniform / non-uniform grid
+  logical  :: uniform
+  real(wp) :: grid_perturbation
 
   integer  :: deg1
   integer  :: deg2
-  integer  :: nx1
-  integer  :: nx2
+  integer  :: ncells (2)
   integer  :: bc_xmin(2)
   integer  :: bc_xmax(2)
   integer  :: i1, i2
@@ -67,6 +73,9 @@ program test_bsplines_2d_new
   integer  :: cos_n1, cos_n2
   real(wp) :: cos_c1, cos_c2
 
+  ! Read from standard input
+  call process_args( uniform, grid_perturbation )
+
   ! ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
   ! TEST 1: Evaluate spline at interpolation points (error should be zero)
   ! ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
@@ -83,16 +92,15 @@ program test_bsplines_2d_new
   allocate( bc_kinds(3) )
   bc_kinds(:) = [sll_p_periodic, sll_p_hermite, sll_p_greville]
 
-  ! Choose number of knots in tensor grid
-  nx1 = 12
-  nx2 = 37
+  ! Choose number of cells in tensor grid
+  ncells = [11, 36]
 
   ! Print constant parameters
   write(*,'(a)') 'Profile: f(x1,x2) = cos( 2*pi*x1 ) * cos( 2*pi*x2 )'
   write(*,*)
   write(*,'(a,es10.1)') 'Relative error tolerance: tol = ', tol
-  write(*,'(a,i4)')     'Number of knots in grid : nx1 = ', nx1
-  write(*,'(a,i4)')     '                          nx2 = ', nx2
+  write(*,'(a,i4)')     'Number of cells in grid : nx1 = ', ncells(1)
+  write(*,'(a,i4)')     '                          nx2 = ', ncells(2)
   write(*,*)
   write(*,'(a)') "Input:"
   write(*,'(a)') '  . deg1 = spline degree in x1 direction'
@@ -121,6 +129,16 @@ program test_bsplines_2d_new
 
   ! Estimate max-norm of profile (needed to compute relative error)
   max_norm_profile = profile_2d_cos_cos % max_norm()
+
+  if (uniform) then
+    allocate( breaks1(0) )
+    allocate( breaks2(0) )
+  else
+    allocate( breaks1(ncells(1)+1) )
+    allocate( breaks2(ncells(2)+1) )
+    call generate_non_uniform_breaks( pinfo%x1_min, pinfo%x1_max, ncells(1), grid_perturbation, breaks1 )
+    call generate_non_uniform_breaks( pinfo%x2_min, pinfo%x2_max, ncells(2), grid_perturbation, breaks2 )
+  end if
 
   ! Initialize 'PASSED/FAILED' condition
   passed(1) = .true.
@@ -154,10 +172,12 @@ program test_bsplines_2d_new
               ! Initialize test facility
               call test_facility % init( &
                 profile_2d = profile_2d_cos_cos, &
-                degree     = [deg1 ,deg2 ], &
-                ncells     = [nx1-1,nx2-1], &
+                degree     = [deg1, deg2], &
+                ncells     = ncells (1:2), &
                 bc_xmin    = bc_xmin(1:2), &
-                bc_xmax    = bc_xmax(1:2) )
+                bc_xmax    = bc_xmax(1:2), &
+                breaks1    = breaks1(:)  , &
+                breaks2    = breaks2(:)  )
 
               ! Run tests
               call test_facility % evaluate_at_interpolation_points( max_norm_error )
@@ -188,6 +208,8 @@ program test_bsplines_2d_new
 
   ! Deallocate local arrays
   deallocate( bc_kinds )
+  deallocate( breaks1  )
+  deallocate( breaks2  )
 
   ! ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
   ! TEST 2: Spline should represent polynomial profiles exactly
@@ -207,9 +229,8 @@ program test_bsplines_2d_new
   allocate( bc_kinds(2) )
   bc_kinds(:) = [sll_p_hermite, sll_p_greville]
 
-  ! Choose number of knots in tensor grid
-  nx1 = 23
-  nx2 = 18
+  ! Choose number of cells in tensor grid
+  ncells = [22, 17]
 
   ! Choose dimension of uniform grid of evaluation points
   grid_dim = [20, 20]
@@ -218,8 +239,8 @@ program test_bsplines_2d_new
   write(*,'(a,es10.1)') 'Relative error tolerance for f     : tol         = ', tol
   write(*,'(a,es10.1)') 'Relative error tolerance for ∂f/∂x1: tol_diff_x1 = ', tol_diff_x1
   write(*,'(a,es10.1)') 'Relative error tolerance for ∂f/∂x2: tol_diff_x2 = ', tol_diff_x2
-  write(*,'(a,i4)')     'Number of knots in grid: nx1 = ', nx1
-  write(*,'(a,i4)')     '                         nx2 = ', nx2
+  write(*,'(a,i4)')     'Number of cells in grid: nx1 = ', ncells(1)
+  write(*,'(a,i4)')     '                         nx2 = ', ncells(2)
   write(*,'(a,i4,a,i4,a)')'Number of evaluation points (uniform grid): [', grid_dim(1), ',', grid_dim(2),']'
   write(*,*)
   write(*,'(a)') "Input:"
@@ -257,6 +278,16 @@ program test_bsplines_2d_new
     end do
   end do
 
+  if (uniform) then
+    allocate( breaks1(0) )
+    allocate( breaks2(0) )
+  else
+    allocate( breaks1(ncells(1)+1) )
+    allocate( breaks2(ncells(2)+1) )
+    call generate_non_uniform_breaks( pinfo%x1_min, pinfo%x1_max, ncells(1), grid_perturbation, breaks1 )
+    call generate_non_uniform_breaks( pinfo%x2_min, pinfo%x2_max, ncells(2), grid_perturbation, breaks2 )
+  end if
+
   ! Initialize 'PASSED/FAILED' condition
   passed(2) = .true.
 
@@ -290,10 +321,12 @@ program test_bsplines_2d_new
               ! Initialize test facility
               call test_facility % init( &
                 profile_2d = profile_2d_poly, &
-                degree     = [deg1 ,deg2 ], &
-                ncells     = [nx1-1,nx2-1], &
+                degree     = [deg1, deg2], &
+                ncells     = ncells (1:2), &
                 bc_xmin    = bc_xmin(1:2), &
-                bc_xmax    = bc_xmax(1:2) )
+                bc_xmax    = bc_xmax(1:2), &
+                breaks1    = breaks1(:)  , &
+                breaks2    = breaks2(:) )
 
               ! Run tests
               call test_facility % evaluate_on_2d_grid( grid_x1, grid_x2, max_norm_error )
@@ -339,6 +372,8 @@ program test_bsplines_2d_new
   deallocate( bc_kinds )
   deallocate( grid_x1  )
   deallocate( grid_x2  )
+  deallocate( breaks1  )
+  deallocate( breaks2  )
 
   ! ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
   ! TEST 3: convergence analysis on cos*cos profile (with absolute error bound)
@@ -354,7 +389,7 @@ program test_bsplines_2d_new
   bc_kinds(:) = [sll_p_periodic, sll_p_hermite, sll_p_greville]
 
   allocate( nx_list(5) )
-  nx_list(:) = [11, 21, 41, 81, 161]
+  nx_list(:) = [10, 20, 40, 80, 160]
 
   ! Choose parameters of cos*cos profile to be interpolated
   cos_n1 = 3
@@ -378,7 +413,7 @@ program test_bsplines_2d_new
   write(*,'(a)') '  . deg = spline degree (same along x1 and x2 directions)'
   write(*,'(a)') '  . bc1 = boundary conditions in x1 direction [P|H|G]'
   write(*,'(a)') '  . bc2 = boundary conditions in x2 direction [P|H|G]'
-  write(*,'(a)') '  . nx  = number of grid points along each direction (nx1=nx2)'
+  write(*,'(a)') '  . nx  = number of cells along each direction (nx1=nx2)'
   write(*,*)
   write(*,'(a)') "Output:"
   write(*,'(a)') '  . tol     = tolerance for f'
@@ -461,22 +496,39 @@ program test_bsplines_2d_new
 
             ! Convergence analysis: increase number of knots
             do k = 1, size( nx_list )
-              nx1 = nx_list(k)
+              ncells(1) = nx_list(k)
 
               ! Use same number of knots along both directions
-              nx2 = nx1
+              ncells(2) = ncells(1)
+
+              if (uniform) then
+                allocate( breaks1(0) )
+                allocate( breaks2(0) )
+                dx1 = (pinfo%x1_max - pinfo%x1_min) / ncells(1)
+                dx2 = (pinfo%x2_max - pinfo%x2_min) / ncells(2)
+              else
+                allocate( breaks1(ncells(1)+1) )
+                allocate( breaks2(ncells(2)+1) )
+                call generate_non_uniform_breaks( pinfo%x1_min, pinfo%x1_max, ncells(1), grid_perturbation, breaks1 )
+                call generate_non_uniform_breaks( pinfo%x2_min, pinfo%x2_max, ncells(2), grid_perturbation, breaks2 )
+                dx1 = maxval( breaks1(2:ncells(1)+1)-breaks1(1:ncells(1)) )
+                dx2 = maxval( breaks2(2:ncells(2)+1)-breaks2(1:ncells(2)) )
+              end if
 
               ! Initialize test facility
               call test_facility % init( &
                 profile_2d = profile_2d_cos_cos, &
-                degree     = [deg1 ,deg2 ], &
-                ncells     = [nx1-1,nx2-1], &
-                bc_xmin    = bc_xmin(1:2) , &
-                bc_xmax    = bc_xmax(1:2) )
+                degree     = [deg1, deg2], &
+                ncells     = ncells (1:2), &
+                bc_xmin    = bc_xmin(1:2), &
+                bc_xmax    = bc_xmax(1:2), &
+                breaks1    = breaks1(:)  , &
+                breaks2    = breaks2(:)  )
+
+              deallocate( breaks1 )
+              deallocate( breaks2 )
 
               ! Determine error tolerances
-              dx1 = (pinfo%x1_max - pinfo%x1_min) / nx1
-              dx2 = (pinfo%x2_max - pinfo%x2_min) / nx2
               tol       = sll_f_spline_2d_error_bound         ( profile_2d_cos_cos, dx1, dx2, deg1, deg2 )
               tols_grad = sll_f_spline_2d_error_bounds_on_grad( profile_2d_cos_cos, dx1, dx2, deg1, deg2 )
 
@@ -505,7 +557,7 @@ program test_bsplines_2d_new
               write(*,'(2a6)'    , advance='no') &
                 bc_to_char( bc_xmin(1) ) // "-" // bc_to_char( bc_xmax(1) ), &
                 bc_to_char( bc_xmin(2) ) // "-" // bc_to_char( bc_xmax(2) )
-              write(*,'(2i6)'    , advance='no') nx1
+              write(*,'(2i6)'    , advance='no') ncells(1)
               write(*,'(2es10.1)', advance='no') tol        , max_norm_error
               write(*,'(2es10.1)', advance='no') tol_diff_x1, max_norm_error_diff_x1
               write(*,'(2es10.1)', advance='no') tol_diff_x2, max_norm_error_diff_x2
@@ -597,5 +649,90 @@ contains
 
   end function factorial
 
+  !-----------------------------------------------------------------------------
+  subroutine process_args( uniform, grid_perturbation )
+    logical , intent(out) :: uniform
+    real(wp), intent(out) :: grid_perturbation
 
-end program test_bsplines_2d_new
+    integer :: argc
+    character(len=32) :: val
+    integer :: length
+    integer :: status
+
+    argc = command_argument_count()
+
+    select case (argc)
+
+    case(0)
+      SLL_ERROR("process_args","command line arguments: -u | -n [ real number in [0,1) ]")
+
+    case(1)
+      call get_command_argument(1,val,length,status)
+      if (trim(val) == "-u") then
+        uniform = .true.
+      else if (trim(val) == "-n") then
+        uniform = .false.
+        grid_perturbation = 0.0_wp
+      else
+        SLL_ERROR("process_args","command line arguments: -u | -n [ real number in [0,1) ]")
+      end if
+
+    case(2)
+      call get_command_argument(1,val,length,status)
+      if (trim(val) == "-u") then
+        SLL_ERROR("process_args","command line arguments: -u | -n [ real number in [0,1) ]")
+      else if (trim(val) == "-n") then
+        uniform = .false.
+      else
+        SLL_ERROR("process_args","command line arguments: -u | -n [ real number in [0,1) ]")
+      end if
+      call get_command_argument(2,val,length,status)
+      read(val,*) grid_perturbation
+
+    case default
+      SLL_ERROR("process_args","command line arguments: -u | -n [grid perturbation]")
+
+    end select
+
+  end subroutine process_args
+
+  !-----------------------------------------------------------------------------
+  subroutine generate_non_uniform_breaks( xmin, xmax, ncells, grid_perturbation, breaks )
+    real(wp), intent(in   ) :: xmin
+    real(wp), intent(in   ) :: xmax
+    integer , intent(in   ) :: ncells
+    real(wp), intent(in   ) :: grid_perturbation
+    real(wp), intent(  out) :: breaks(:)
+
+    integer  :: i
+    real(wp) :: r
+    real(wp) :: a, b
+
+    ! Generate breakpoints by applying random noise onto regular grid
+    associate( dx => (xmax-xmin)/ncells )
+      do i = 1, ncells+1
+        call random_number( r ) !  0.0 <= r < 1.0
+        r = r - 0.5_wp          ! -0.5 <= r < 0.5
+        breaks(i) = xmin + ( real(i-1,wp) + grid_perturbation * r ) * dx
+      end do
+    end associate
+
+    ! Linearly transform coordinates in order to match nominal xmin and xmax
+    associate( y    => breaks(:), &
+               ymin => breaks(1), &
+               ymax => breaks(ncells+1) )
+
+      a = (xmin-xmax)/(ymin-ymax)
+      b = (xmax*ymin-xmin*ymax)/(ymin-ymax)
+
+      breaks(1) = xmin
+      do i = 2, ncells
+        breaks(i) =  a * y(i) + b
+      end do
+      breaks(ncells+1) = xmax
+
+    end associate
+
+  end subroutine generate_non_uniform_breaks
+
+end program test_spline_2d
