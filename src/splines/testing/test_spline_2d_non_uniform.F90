@@ -45,16 +45,16 @@ program test_bsplines_2d_new
   integer  :: deg2
   integer  :: nx1
   integer  :: nx2
-  integer  :: bc1
-  integer  :: bc2
+  integer  :: bc_xmin(2)
+  integer  :: bc_xmax(2)
   integer  :: i1, i2
+  integer  :: j1, j2
   integer  :: grid_dim(2)
   real(wp) :: tol
   real(wp) :: tols_grad(2)
   real(wp) :: tol_diff_x1
   real(wp) :: tol_diff_x2
-  logical  :: equiv(3)
-  logical  :: passed(0:3)
+  logical  :: passed(3)
   logical  :: success
   logical  :: success_diff_x1
   logical  :: success_diff_x2
@@ -63,59 +63,9 @@ program test_bsplines_2d_new
   real(wp) :: max_norm_error_diff_x2, max_norm_profile_diff_x2
   real(wp) :: dx1
   real(wp) :: dx2
-  integer  :: j
+  integer  :: k
   integer  :: cos_n1, cos_n2
   real(wp) :: cos_c1, cos_c2
-
-  ! ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
-  ! TEST 0: Check equivalence between scalar and array methods, and time them
-  ! ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
-  write(*,*)
-  write(*,'(a)') '---------------------------------------------------------------------------'
-  write(*,'(a)') ' TEST 0: Check equivalence between scalar and array methods, and time them '
-  write(*,'(a)') '---------------------------------------------------------------------------'
-  write(*,*)
-
-  ! Initialize profile: polynomial with some order
-  call profile_2d_poly % init( 13, 12 )
-
-  ! Choose some parameters
-  nx1  = 19
-  nx2  = 23
-  deg1 = 5
-  deg2 = 8
-  bc1  = sll_p_greville
-  bc2  = sll_p_hermite
-
-  ! Initialize test facility
-  call test_facility % init( &
-    profile_2d = profile_2d_poly, &
-    nx1        = nx1 , &
-    nx2        = nx2 , &
-    deg1       = deg1, &
-    deg2       = deg2, &
-    bc1        = bc1 , &
-    bc2        = bc2  )
-
-  ! Check equivalence between various methods
-  call test_facility % check_equivalence_scalar_array_methods( equiv )
-
-  write(*,'(a7,2a10,a8/)') 'method', 't_scalar', 't_array', 'equiv'
-
-  write(*,'(a7,2es10.2,l6)') 'eval'      , &
-    test_facility % time_eval            , &
-    test_facility % time_eval_array      , equiv(1)
-
-  write(*,'(a7,2es10.2,l6)') 'diff_x1'   , &
-    test_facility % time_eval_diff1      , &
-    test_facility % time_eval_diff1_array, equiv(2)
-
-  write(*,'(a7,2es10.2,l6)') 'diff_x2'   , &
-    test_facility % time_eval_diff2      , &
-    test_facility % time_eval_diff2_array, equiv(3)
-
-  ! Compute 'PASSED/FAILED' condition
-  passed(0) = all( equiv )
 
   ! ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
   ! TEST 1: Evaluate spline at interpolation points (error should be zero)
@@ -161,7 +111,7 @@ program test_bsplines_2d_new
   write(*,*)
 
   ! Print table header
-  write(*, '(4a6,a10,a10)') "deg1", "deg2", "bc1", "bc2", "error", "passed"
+  write(*, '(4a6,2a10)') "deg1", "deg2", "bc1", "bc2", "error", "passed"
 
   ! Initialize profile
   call profile_2d_cos_cos % init()
@@ -179,46 +129,60 @@ program test_bsplines_2d_new
   do deg1 = 1, 9
     do deg2 = 1, 9
 
-      ! Cycle over all kinds of boundary conditions in x1
+      ! Cycle over all kinds of boundary conditions at x1_min
       do i1 = 1, size( bc_kinds )
-        bc1 = bc_kinds(i1)
-        if (bc1 == sll_p_periodic .and. (.not. pinfo % x1_periodic)) cycle
+        bc_xmin(1) = bc_kinds(i1)
+        if (bc_xmin(1) == sll_p_periodic .and. (.not. pinfo % x1_periodic)) cycle
 
-        ! Cycle over all kinds of boundary conditions in x2
-        do i2 = 1, size( bc_kinds )
-          bc2 = bc_kinds(i2)
-          if (bc2 == sll_p_periodic .and. (.not. pinfo % x2_periodic)) cycle
+        ! Cycle over all kinds of boundary conditions at x1_max
+        do j1 = 1, size( bc_kinds )
+          bc_xmax(1) = bc_kinds(j1)
+          if ( any( [bc_xmin(1),bc_xmax(1)] == sll_p_periodic ) &
+              .and. bc_xmin(1) /= bc_xmax(1) ) cycle
 
-          ! Initialize test facility
-          call test_facility % init( &
-            profile_2d = profile_2d_cos_cos, &
-            nx1        = nx1 , &
-            nx2        = nx2 , &
-            deg1       = deg1, &
-            deg2       = deg2, &
-            bc1        = bc1 , &
-            bc2        = bc2  )
+          ! Cycle over all kinds of boundary conditions in x2_min
+          do i2 = 1, size( bc_kinds )
+            bc_xmin(2) = bc_kinds(i2)
+            if (bc_xmin(2) == sll_p_periodic .and. (.not. pinfo % x2_periodic)) cycle
 
-          ! Run tests
-          call test_facility % evaluate_at_interpolation_points( max_norm_error )
+            ! Cycle over all kinds of boundary conditions in x2_max
+            do j2 = 1, size( bc_kinds )
+              bc_xmax(2) = bc_kinds(j2)
+              if ( any( [bc_xmin(2),bc_xmax(2)] == sll_p_periodic ) &
+                  .and. bc_xmin(2) /= bc_xmax(2) ) cycle
 
-          ! Calculate relative error norm from absolute one, check tolerance
-          max_norm_error = max_norm_error / max_norm_profile
-          success = (max_norm_error <= tol)
+              ! Initialize test facility
+              call test_facility % init( &
+                profile_2d = profile_2d_cos_cos, &
+                degree     = [deg1 ,deg2 ], &
+                ncells     = [nx1-1,nx2-1], &
+                bc_xmin    = bc_xmin(1:2), &
+                bc_xmax    = bc_xmax(1:2) )
 
-          ! Print test report to terminal on a single line
-          write(*,'(2i6)', advance='no') deg1, deg2
-          write(*,'(2a6)', advance='no') bc_to_char( bc1 ), bc_to_char( bc2 )
-          write(*,'(es10.1,a8)') max_norm_error, trim( success_to_string( success ))
+              ! Run tests
+              call test_facility % evaluate_at_interpolation_points( max_norm_error )
 
-          ! Free memory
-          call test_facility % free()
+              ! Calculate relative error norm from absolute one, check tolerance
+              max_norm_error = max_norm_error / max_norm_profile
+              success = (max_norm_error <= tol)
 
-          ! Update 'PASSED/FAILED' condition
-          passed(1) = (passed(1) .and. success)
+              ! Print test report to terminal on a single line
+              write(*,'(2i6)', advance='no') deg1, deg2
+              write(*,'(2a6)', advance='no') &
+                bc_to_char( bc_xmin(1) ) // "-" // bc_to_char( bc_xmax(1) ), &
+                bc_to_char( bc_xmin(2) ) // "-" // bc_to_char( bc_xmax(2) )
+              write(*,'(es10.1,a8)') max_norm_error, trim( success_to_string( success ))
 
-        end do  ! bc2
-      end do  ! bc1
+              ! Free memory
+              call test_facility % free()
+
+              ! Update 'PASSED/FAILED' condition
+              passed(1) = (passed(1) .and. success)
+
+            end do  ! bc_xmax(2)
+          end do  ! bc_xmin(2)
+        end do  ! bc_xmax(1)
+      end do  ! bc_xmin(1)
     end do  ! deg2
   end do  ! deg1
 
@@ -307,55 +271,67 @@ program test_bsplines_2d_new
       max_norm_profile_diff_x1 = profile_2d_poly % max_norm( diff_x1=1 )
       max_norm_profile_diff_x2 = profile_2d_poly % max_norm( diff_x2=1 )
 
+      ! Cycle over all kinds of boundary conditions at x1_min
       do i1 = 1, size( bc_kinds )
-        bc1 = bc_kinds(i1)
+        bc_xmin(1) = bc_kinds(i1)
 
-        do i2 = 1, size( bc_kinds )
-          bc2 = bc_kinds(i2)
+        ! Cycle over all kinds of boundary conditions at x1_max
+        do j1 = 1, size( bc_kinds )
+          bc_xmax(1) = bc_kinds(j1)
 
-          ! Initialize test facility
-          call test_facility % init( &
-            profile_2d = profile_2d_poly, &
-            nx1        = nx1 , &
-            nx2        = nx2 , &
-            deg1       = deg1, &
-            deg2       = deg2, &
-            bc1        = bc1 , &
-            bc2        = bc2 )
+          ! Cycle over all kinds of boundary conditions in x2_min
+          do i2 = 1, size( bc_kinds )
+            bc_xmin(2) = bc_kinds(i2)
 
-          ! Run tests
-          call test_facility % evaluate_on_2d_grid( grid_x1, grid_x2, max_norm_error )
-          call test_facility % evaluate_grad_on_2d_grid( grid_x1, grid_x2, &
-            max_norm_error_diff_x1, max_norm_error_diff_x2 )
+            ! Cycle over all kinds of boundary conditions in x2_max
+            do j2 = 1, size( bc_kinds )
+              bc_xmax(2) = bc_kinds(j2)
 
-          ! Calculate relative error norms from absolute ones
-          max_norm_error         = max_norm_error         / max_norm_profile
-          max_norm_error_diff_x1 = max_norm_error_diff_x1 / max_norm_profile_diff_x1
-          max_norm_error_diff_x2 = max_norm_error_diff_x2 / max_norm_profile_diff_x2
+              ! Initialize test facility
+              call test_facility % init( &
+                profile_2d = profile_2d_poly, &
+                degree     = [deg1 ,deg2 ], &
+                ncells     = [nx1-1,nx2-1], &
+                bc_xmin    = bc_xmin(1:2), &
+                bc_xmax    = bc_xmax(1:2) )
 
-          ! Check tolerances
-          success         = (max_norm_error         <= tol        )
-          success_diff_x1 = (max_norm_error_diff_x1 <= tol_diff_x1)
-          success_diff_x2 = (max_norm_error_diff_x2 <= tol_diff_x2)
+              ! Run tests
+              call test_facility % evaluate_on_2d_grid( grid_x1, grid_x2, max_norm_error )
+              call test_facility % evaluate_grad_on_2d_grid( grid_x1, grid_x2, &
+                max_norm_error_diff_x1, max_norm_error_diff_x2 )
 
-          ! Keep single success condition
-          success = success .and. success_diff_x1 .and. success_diff_x2
+              ! Calculate relative error norms from absolute ones
+              max_norm_error         = max_norm_error         / max_norm_profile
+              max_norm_error_diff_x1 = max_norm_error_diff_x1 / max_norm_profile_diff_x1
+              max_norm_error_diff_x2 = max_norm_error_diff_x2 / max_norm_profile_diff_x2
 
-          ! Print test report to terminal on a single line
-          write(*,'(2i6)'    , advance='no') deg1, deg2
-          write(*,'(2a6)'    , advance='no') bc_to_char( bc1 ), bc_to_char( bc2 )
-          write(*,'(3es10.1)', advance='no') &
-            max_norm_error, max_norm_error_diff_x1, max_norm_error_diff_x2
-          write(*,'(a8)') trim( success_to_string( success ))
+              ! Check tolerances
+              success         = (max_norm_error         <= tol        )
+              success_diff_x1 = (max_norm_error_diff_x1 <= tol_diff_x1)
+              success_diff_x2 = (max_norm_error_diff_x2 <= tol_diff_x2)
 
-          ! Free memory
-          call test_facility % free()
+              ! Keep single success condition
+              success = success .and. success_diff_x1 .and. success_diff_x2
 
-          ! Update 'PASSED/FAILED' condition
-          passed(2) = (passed(2) .and. success)
+              ! Print test report to terminal on a single line
+              write(*,'(2i6)'    , advance='no') deg1, deg2
+              write(*,'(2a6)', advance='no') &
+                bc_to_char( bc_xmin(1) ) // "-" // bc_to_char( bc_xmax(1) ), &
+                bc_to_char( bc_xmin(2) ) // "-" // bc_to_char( bc_xmax(2) )
+              write(*,'(3es10.1)', advance='no') &
+                max_norm_error, max_norm_error_diff_x1, max_norm_error_diff_x2
+              write(*,'(a8)') trim( success_to_string( success ))
 
-        end do  ! bc2
-      end do  ! bc1
+              ! Free memory
+              call test_facility % free()
+
+              ! Update 'PASSED/FAILED' condition
+              passed(2) = (passed(2) .and. success)
+
+            end do  ! bc_xmax(2)
+          end do  ! bc_xmin(2)
+        end do  ! bc_xmax(1)
+      end do  ! bc_xmin(1)
     end do  ! deg2
   end do  ! deg1
 
@@ -463,80 +439,97 @@ program test_bsplines_2d_new
     ! Use same spline degree along both directions
     deg2 = deg1
 
+    ! Cycle over all kinds of boundary conditions at x1_min
     do i1 = 1, size( bc_kinds )
-      bc1 = bc_kinds(i1)
+      bc_xmin(1) = bc_kinds(i1)
 
-      do i2 = 1, size( bc_kinds )
-        bc2 = bc_kinds(i2)
+      ! Cycle over all kinds of boundary conditions at x1_max
+      do j1 = 1, size( bc_kinds )
+        bc_xmax(1) = bc_kinds(j1)
+        if ( any( [bc_xmin(1),bc_xmax(1)] == sll_p_periodic ) &
+            .and. bc_xmin(1) /= bc_xmax(1) ) cycle
 
-        do j = 1, size( nx_list )
-          nx1 = nx_list(j)
+        ! Cycle over all kinds of boundary conditions in x2_min
+        do i2 = 1, size( bc_kinds )
+          bc_xmin(2) = bc_kinds(i2)
 
-          ! Use same number of knots along both directions
-          nx2 = nx1
+          ! Cycle over all kinds of boundary conditions in x2_max
+          do j2 = 1, size( bc_kinds )
+            bc_xmax(2) = bc_kinds(j2)
+            if ( any( [bc_xmin(2),bc_xmax(2)] == sll_p_periodic ) &
+                .and. bc_xmin(2) /= bc_xmax(2) ) cycle
 
-          ! Initialize test facility
-          call test_facility % init( &
-            profile_2d = profile_2d_cos_cos, &
-            nx1        = nx1 , &
-            nx2        = nx2 , &
-            deg1       = deg1, &
-            deg2       = deg2, &
-            bc1        = bc1 , &
-            bc2        = bc2 )
+            ! Convergence analysis: increase number of knots
+            do k = 1, size( nx_list )
+              nx1 = nx_list(k)
 
-          ! Determine error tolerances
-          dx1 = (pinfo%x1_max - pinfo%x1_min) / nx1
-          dx2 = (pinfo%x2_max - pinfo%x2_min) / nx2
-          tol       = sll_f_spline_2d_error_bound         ( profile_2d_cos_cos, dx1, dx2, deg1, deg2 )
-          tols_grad = sll_f_spline_2d_error_bounds_on_grad( profile_2d_cos_cos, dx1, dx2, deg1, deg2 )
+              ! Use same number of knots along both directions
+              nx2 = nx1
 
-          ! Increase absolute tolerances if below machine precision
-          ! NOTE: derivatives more sensitive to roundoff
-          tol         = max( 1e-14_wp*max_norm_profile        , tol          )
-          tol_diff_x1 = max( 1e-12_wp*max_norm_profile_diff_x1, tols_grad(1) )
-          tol_diff_x2 = max( 1e-12_wp*max_norm_profile_diff_x2, tols_grad(2) )
+              ! Initialize test facility
+              call test_facility % init( &
+                profile_2d = profile_2d_cos_cos, &
+                degree     = [deg1 ,deg2 ], &
+                ncells     = [nx1-1,nx2-1], &
+                bc_xmin    = bc_xmin(1:2) , &
+                bc_xmax    = bc_xmax(1:2) )
 
-          ! Run tests
-          ! TODO: print numerical order of accuracy
-          call test_facility % evaluate_on_2d_grid( grid_x1, grid_x2, max_norm_error )
-          call test_facility % evaluate_grad_on_2d_grid( grid_x1, grid_x2, &
-            max_norm_error_diff_x1, max_norm_error_diff_x2 )
+              ! Determine error tolerances
+              dx1 = (pinfo%x1_max - pinfo%x1_min) / nx1
+              dx2 = (pinfo%x2_max - pinfo%x2_min) / nx2
+              tol       = sll_f_spline_2d_error_bound         ( profile_2d_cos_cos, dx1, dx2, deg1, deg2 )
+              tols_grad = sll_f_spline_2d_error_bounds_on_grad( profile_2d_cos_cos, dx1, dx2, deg1, deg2 )
 
-          ! Check tolerances
-          success         = (max_norm_error         <= tol        )
-          success_diff_x1 = (max_norm_error_diff_x1 <= tol_diff_x1)
-          success_diff_x2 = (max_norm_error_diff_x2 <= tol_diff_x2)
+              ! Increase absolute tolerances if below machine precision
+              ! NOTE: derivatives more sensitive to roundoff
+              tol         = max( 1e-14_wp*max_norm_profile        , tol          )
+              tol_diff_x1 = max( 1e-12_wp*max_norm_profile_diff_x1, tols_grad(1) )
+              tol_diff_x2 = max( 1e-12_wp*max_norm_profile_diff_x2, tols_grad(2) )
 
-          ! Keep single success condition
-          success = success .and. success_diff_x1 .and. success_diff_x2
+              ! Run tests
+              ! TODO: print numerical order of accuracy
+              call test_facility % evaluate_on_2d_grid( grid_x1, grid_x2, max_norm_error )
+              call test_facility % evaluate_grad_on_2d_grid( grid_x1, grid_x2, &
+                max_norm_error_diff_x1, max_norm_error_diff_x2 )
 
-          ! Print test report to terminal on a single line
-          write(*,'(i3)'     , advance='no') deg1
-          write(*,'(2a6)'    , advance='no') bc_to_char( bc1 ), bc_to_char( bc2 )
-          write(*,'(2i6)'    , advance='no') nx1
-          write(*,'(2es10.1)', advance='no') tol        , max_norm_error
-          write(*,'(2es10.1)', advance='no') tol_diff_x1, max_norm_error_diff_x1
-          write(*,'(2es10.1)', advance='no') tol_diff_x2, max_norm_error_diff_x2
-          write(*,'(a10)'    , advance='no') success_to_string( success )
-          write(*,'(5es10.1)') &
-            test_facility % time_init               , &
-            test_facility % time_compute_interpolant, &
-            test_facility % time_eval_array         , &
-            test_facility % time_eval_diff1_array   , &
-            test_facility % time_eval_diff2_array
+              ! Check tolerances
+              success         = (max_norm_error         <= tol        )
+              success_diff_x1 = (max_norm_error_diff_x1 <= tol_diff_x1)
+              success_diff_x2 = (max_norm_error_diff_x2 <= tol_diff_x2)
 
-          ! Free memory
-          call test_facility % free()
+              ! Keep single success condition
+              success = success .and. success_diff_x1 .and. success_diff_x2
 
-          ! Update 'PASSED/FAILED' condition
-          passed(3) = (passed(3) .and. success)
+              ! Print test report to terminal on a single line
+              write(*,'(i3)'     , advance='no') deg1
+              write(*,'(2a6)'    , advance='no') &
+                bc_to_char( bc_xmin(1) ) // "-" // bc_to_char( bc_xmax(1) ), &
+                bc_to_char( bc_xmin(2) ) // "-" // bc_to_char( bc_xmax(2) )
+              write(*,'(2i6)'    , advance='no') nx1
+              write(*,'(2es10.1)', advance='no') tol        , max_norm_error
+              write(*,'(2es10.1)', advance='no') tol_diff_x1, max_norm_error_diff_x1
+              write(*,'(2es10.1)', advance='no') tol_diff_x2, max_norm_error_diff_x2
+              write(*,'(a10)'    , advance='no') success_to_string( success )
+              write(*,'(5es10.1)') &
+                test_facility % time_init               , &
+                test_facility % time_compute_interpolant, &
+                test_facility % time_eval_array         , &
+                test_facility % time_eval_diff1_array   , &
+                test_facility % time_eval_diff2_array
 
-        end do  ! nx1
-        write(*,*)
+              ! Free memory
+              call test_facility % free()
 
-      end do   ! bc2
-    end do   ! bc1
+              ! Update 'PASSED/FAILED' condition
+              passed(3) = (passed(3) .and. success)
+
+            end do  ! nx1
+            write(*,*)
+
+          end do  ! bc_xmax(2)
+        end do  ! bc_xmin(2)
+      end do  ! bc_xmax(1)
+    end do  ! bc_xmin(1)
   end do   ! deg1=deg2
 
   ! Deallocate local arrays
@@ -548,7 +541,6 @@ program test_bsplines_2d_new
   ! ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
 
   write(*,'(a)') '----------------'
-  write(*,'(a)') 'Test 0: '// success_to_string( passed(0) )
   write(*,'(a)') 'Test 1: '// success_to_string( passed(1) )
   write(*,'(a)') 'Test 2: '// success_to_string( passed(2) )
   write(*,'(a)') 'Test 3: '// success_to_string( passed(3) )
