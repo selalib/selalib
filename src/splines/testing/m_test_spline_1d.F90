@@ -38,10 +38,6 @@ module m_test_spline_1d
   type :: t_spline_1d_test_facility
 
     class(c_analytical_profile_1d), pointer :: profile_1d
-    integer                                 :: degree
-    integer                                 :: ncells
-    integer                                 :: bc_xmin
-    integer                                 :: bc_xmax
     class(sll_c_spline_1d), allocatable     :: spline_1d ! polymorphic object
     real(wp)              , allocatable     ::  tau(:)   ! interpolation points
     real(wp)              , allocatable     :: gtau(:)   ! profile values at tau
@@ -88,12 +84,8 @@ contains
 
     type(sll_t_time_mark) :: t0, t1, t2, t3
 
-    ! Store pointer to 1D profile and input numerical parameters to spline
+    ! Store pointer to 1D profile
     self % profile_1d => profile_1d
-    self % ncells     =  ncells
-    self % degree     =  degree
-    self % bc_xmin    =  bc_xmin
-    self % bc_xmax    =  bc_xmax
 
     ! Extract information about 1D analytical profile
     call self % profile_1d % get_info( info )
@@ -103,12 +95,12 @@ contains
     ! Initialize 1D spline (uniform or non-uniform depending on input)
     call sll_s_spline_1d_new(     &
       spline  = self % spline_1d, &
-      degree  = self % degree   , &
-      ncells  = self % ncells   , &
+      degree  = degree          , &
+      ncells  = ncells          , &
       xmin    = info % xmin     , &
       xmax    = info % xmax     , &
-      bc_xmin = self % bc_xmin  , &
-      bc_xmax = self % bc_xmax  , &
+      bc_xmin = bc_xmin         , &
+      bc_xmax = bc_xmax         , &
       breaks  = breaks )
 
     call sll_s_set_time_mark( t1 )
@@ -124,7 +116,7 @@ contains
     end do
 
     ! If needed, evaluate x derivatives at xmin
-    if (self%bc_xmin == sll_p_hermite) then
+    if (bc_xmin == sll_p_hermite) then
       allocate( derivs_xmin (degree/2) )
       s = 1-modulo(degree,2) ! shift = 1 for even order, 0 for odd order
       do j = 1, degree/2
@@ -133,7 +125,7 @@ contains
     end if
 
     ! If needed, evaluate x derivatives at xmax
-    if (self%bc_xmax == sll_p_hermite) then
+    if (bc_xmax == sll_p_hermite) then
       allocate( derivs_xmax (degree/2) )
       s = 1-modulo(degree,2) ! shift = 1 for even order, 0 for odd order
       do j = 1, degree/2
@@ -146,19 +138,19 @@ contains
     call sll_s_set_time_mark( t2 )
 
     ! Hermite - Greville
-    if (self%bc_xmin == sll_p_hermite .and. self%bc_xmax == sll_p_greville) then
+    if (bc_xmin == sll_p_hermite .and. bc_xmax == sll_p_greville) then
 
       call self % spline_1d % compute_interpolant( self % gtau, &
         derivs_xmin = derivs_xmin )
 
     ! Greville - Hermite
-    else if (self%bc_xmin == sll_p_greville .and. self%bc_xmax == sll_p_hermite) then
+    else if (bc_xmin == sll_p_greville .and. bc_xmax == sll_p_hermite) then
 
       call self % spline_1d % compute_interpolant( self % gtau, &
         derivs_xmax = derivs_xmax )
 
     ! Hermite - Hermite
-    else if (self%bc_xmin == sll_p_hermite .and. self%bc_xmax == sll_p_hermite) then
+    else if (bc_xmin == sll_p_hermite .and. bc_xmax == sll_p_hermite) then
 
       call self % spline_1d % compute_interpolant( self % gtau, &
         derivs_xmin = derivs_xmin, &
