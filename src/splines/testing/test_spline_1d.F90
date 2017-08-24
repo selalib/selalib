@@ -48,7 +48,6 @@ program test_spline_1d
   integer  :: bc_xmin
   integer  :: bc_xmax
   integer  :: i,j,k
-  real(wp) :: a, b
 
   ! Parameters for uniform / non-uniform grid
   logical  :: uniform
@@ -121,9 +120,6 @@ program test_spline_1d
 
   ! Extract information about 1D analytical profile
   call profile_1d_cos % get_info( pinfo )
-
-  ! Compute cell size in uniform grid
-  dx = (pinfo%xmax-pinfo%xmin) / ncells
 
   ! Estimate max-norm of profile (needed to compute relative error)
   max_norm_profile = profile_1d_cos % max_norm()
@@ -240,9 +236,6 @@ program test_spline_1d
 
   ! Extract information about 1D analytical profile
   call profile_1d_poly % get_info( pinfo )
-
-  ! Compute cell size in uniform grid
-  dx = (pinfo%xmax-pinfo%xmin) / ncells
 
   ! Create uniform grid of evaluation points
   allocate( grid (grid_dim) )
@@ -595,6 +588,7 @@ contains
 
   end subroutine process_args
 
+  !-----------------------------------------------------------------------------
   subroutine generate_non_uniform_breaks( xmin, xmax, ncells, grid_perturbation, breaks )
     real(wp), intent(in   ) :: xmin
     real(wp), intent(in   ) :: xmax
@@ -604,7 +598,9 @@ contains
 
     integer  :: i
     real(wp) :: r
+    real(wp) :: a, b
 
+    ! Generate breakpoints by applying random noise onto regular grid
     associate( dx => (xmax-xmin)/ncells )
       do i = 1, ncells+1
         call random_number( r ) !  0.0 <= r < 1.0
@@ -613,15 +609,21 @@ contains
       end do
     end associate
 
-    breaks(1) = xmin
+    ! Linearly transform coordinates in order to match nominal xmin and xmax
+    associate( y    => breaks(:), &
+               ymin => breaks(1), &
+               ymax => breaks(ncells+1) )
 
-    a = ( xmin - xmax ) / ( breaks(1) - breaks(ncells+1) )
-    b = ( xmax * breaks(1) - xmin * breaks(ncells+1) ) / ( breaks(1) - breaks(ncells+1) )
-    do i = 2, ncells
-      breaks(i) =  a * breaks(i) + b
-    end do
+      a = (xmin-xmax)/(ymin-ymax)
+      b = (xmax*ymin-xmin*ymax)/(ymin-ymax)
 
-    breaks(ncells+1) = xmax
+      breaks(1) = xmin
+      do i = 2, ncells
+        breaks(i) =  a * y(i) + b
+      end do
+      breaks(ncells+1) = xmax
+
+    end associate
 
   end subroutine generate_non_uniform_breaks
 
