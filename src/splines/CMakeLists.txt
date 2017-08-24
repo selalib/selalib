@@ -9,6 +9,8 @@ SET( SPLINES_FILES
   sll_m_spline_1d_base.F90
   sll_m_spline_1d_uniform.F90
   sll_m_spline_1d_non_uniform.F90
+  sll_m_spline_2d.F90
+  sll_m_spline_2d_base.F90
   sll_m_spline_2d_non_uniform.F90
   sll_m_deboor_splines_1d.F90 
   sll_m_splines_pp.F90
