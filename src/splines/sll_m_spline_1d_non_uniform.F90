@@ -63,7 +63,6 @@ module sll_m_spline_1d_non_uniform
     integer , private :: nbc_xmin ! number of boundary conditions (derivatives) at x=xmin
     integer , private :: nbc_xmax ! number of boundary conditions (derivatives) at x=xmax
     integer , private :: ncells   ! number of cells
-    logical , private :: even     ! true if deg even, false if deg odd
     integer , private :: mod      ! result of modulo(deg,2): 0 if deg even, 1 if deg odd
 
     real(wp), private :: dx       ! cell size (averaged over non-uniform domain)
@@ -171,14 +170,7 @@ contains
     end if
 
     self%deg = degree
-
     self%mod = modulo( degree, 2 )
-
-    if ( self%mod == 0 ) then
-      self%even = .true.
-    else
-      self%even = .false.
-    end if
 
     self%nbc_xmin = merge( degree/2, 0, self%bc_xmin == sll_p_hermite )
     self%nbc_xmax = merge( degree/2, 0, self%bc_xmax == sll_p_hermite )
@@ -267,7 +259,7 @@ contains
       self%tau(:) = modulo( self%tau(:)-self%xmin, self%xmax-self%xmin ) + self%xmin
 
     ! Non-periodic case, odd degree: fix round-off issues
-    else if ( .not. self%even ) then
+    else if ( self%mod == 1 ) then
       self%tau(1)    = self%xmin
       self%tau(ntau) = self%xmax
     end if
@@ -353,14 +345,6 @@ contains
         end do
       end do
 
-      if ( self%even ) then
-        call sll_s_bsplines_eval_basis( self%bsp, icell, x, values )
-        i = self%nbc_xmin
-        do j = 1, self%deg
-          call matrix % set_element( i, j, values(j) )
-        end do
-      end if
-
     end if
 
     ! Interpolation points
@@ -398,18 +382,6 @@ contains
           call matrix % set_element( i, j, derivs(order,d) )
         end do
       end do
-
-      if ( self%even ) then
-        call sll_s_bsplines_eval_basis( self%bsp, icell, x, values )
-        i  = self%n-self%nbc_xmax+1
-        j0 = self%n-self%deg
-        d0 = 1
-        do s = 1, self%deg
-          j = j0 + s
-          d = d0 + s
-          call matrix % set_element( i, j, values(d) )
-        end do
-      end if
 
     end if
 

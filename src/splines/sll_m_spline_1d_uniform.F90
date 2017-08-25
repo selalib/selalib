@@ -56,7 +56,6 @@ module sll_m_spline_1d_uniform
     integer , private :: nbc_xmin ! number of boundary conditions (derivatives) at x=xmin
     integer , private :: nbc_xmax ! number of boundary conditions (derivatives) at x=xmax
     integer , private :: ncells   ! number of cells
-    logical , private :: even     ! true if deg even, false if deg odd
     integer , private :: mod      ! result of modulo(deg,2): 0 if deg even, 1 if deg odd
 
     real(wp), private :: dx       ! cell size
@@ -204,7 +203,6 @@ contains
     self%nbc_xmin = merge( degree/2, 0, bc_xmin == sll_p_hermite )
     self%nbc_xmax = merge( degree/2, 0, bc_xmax == sll_p_hermite )
     self%mod      = modulo( degree, 2 )
-    self%even     = (self%mod == 0)
 
     ! Allocate array of spline coefficients
     ! in case of periodic BCs, a larger array of coefficients is used in order
@@ -230,7 +228,7 @@ contains
       ! Periodic case:
       !   . for odd  degree, interpolation points are breakpoints (last excluded)
       !   . for even degree, interpolation points are cell centers
-      associate( shift => merge( 0.5_wp, 0.0_wp, self%even ) )
+      associate( shift => merge( 0.5_wp, 0.0_wp, self%mod == 0 ) )
         self%tau = [(xmin + (real(i-1,wp)+shift)*self%dx, i=1,ntau)]
       end associate
 
@@ -357,13 +355,6 @@ contains
           call matrix % set_element( i, j, derivs(order,j) )
         end do
       end do
-      if ( self%even ) then
-        call sll_s_uniform_bsplines_eval_basis( self%deg, x_offset, values )
-        i = self%nbc_xmin
-        do j = 1, self%deg  ! iterate only to deg as last bspline is 0
-          call matrix % set_element( i, j, values(j) )
-        end do
-      end if
     end if
 
     ! Interpolation points
@@ -400,17 +391,6 @@ contains
           call matrix % set_element( i, j, derivs(order,d) )
         end do
       end do
-      if ( self%even ) then
-        call sll_s_uniform_bsplines_eval_basis( self%deg, x_offset, values )
-        i  = self%n-self%nbc_xmax+1
-        j0 = self%n-self%deg
-        d0 = 1
-        do s = 1, self%deg
-          j = j0 + s
-          d = d0 + s
-          call matrix % set_element( i, j, values(d) )
-        end do
-      end if
     end if
 
     if ( allocated( derivs ) ) deallocate( derivs )
