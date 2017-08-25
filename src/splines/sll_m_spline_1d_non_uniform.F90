@@ -135,6 +135,8 @@ contains
     integer :: i,kl,ku
     integer :: basis_bc_xmin
     integer :: basis_bc_xmax
+    integer :: d, icell, j, s
+    real(wp):: x
 
     real(wp), allocatable :: temp_knots(:)
 
@@ -268,23 +270,48 @@ contains
     if (self%deg == 1) return
 
     !---------------------------------------------------------------------------
-    ! Assemble dense matrix (B_j(tau(i))) for spline interpolation
+    ! Assemble matrix (B_j(tau(i))) for spline interpolation
     !---------------------------------------------------------------------------
 
-    ! FIXME: In Hermite case ku and kl computed in general case when derivatives
-    !        of B-splines do not vanish at boundary
-    select case( self%bc_xmin )
-      case ( sll_p_periodic ); ku = ( self%deg + 1 ) / 2
-      case ( sll_p_hermite  ); ku = max( (self%deg+1)/2, self%deg-1 )
-      case ( sll_p_greville ); ku = self%deg
-    end select
+    ! Calculate number of diagonals above and below main diagonal
+    ku = 0
+    kl = 0
 
-    select case( self%bc_xmax )
-      case ( sll_p_periodic ); kl = ( self%deg + 1 ) / 2
-      case ( sll_p_hermite  ); kl = max( (self%deg+1)/2, self%deg-1 )
-      case ( sll_p_greville ); kl = self%deg
-    end select
+    if (self%bc_xmin == sll_p_periodic) then
 
+      do i = 1, self%n
+        x = self%tau(i)
+        icell = sll_f_find_cell( self%bsp, x )
+        do s = 1, self%deg+1
+          j = modulo(icell-self%offset-2+s,self%n)+1
+          d = j-i
+          if (d >  self%n/2) then; d = d-self%n; else &
+          if (d < -self%n/2) then; d = d+self%n; end if
+          ku = max( ku,  d )
+          kl = max( kl, -d )
+        end do
+      end do
+
+    else
+
+      do i = self%nbc_xmin+1, self%n-self%nbc_xmax
+        x = self%tau(i-self%nbc_xmin)
+        icell = sll_f_find_cell( self%bsp, x )
+        do s = 1, self%deg+1
+          j = icell-1+s
+          d = j-i
+          ku = max( ku,  d )
+          kl = max( kl, -d )
+        end do
+      end do
+      ! FIXME: In Hermite case ku and kl computed in general case where
+      !        derivatives of B-splines do not vanish at boundary
+      ku = ku + self%nbc_xmin
+      kl = kl + self%nbc_xmax
+
+    end if
+
+    ! Select matrix storage
     if (self%bc_xmin == sll_p_periodic) then
       if (kl+1+ku >= self%n) then
         matrix_type = "dense"
@@ -295,6 +322,7 @@ contains
       matrix_type = "banded"
     end if
 
+    ! Construct matrix, fill-in non-zero elements and factorize it
     call sll_s_spline_matrix_new( self%matrix, matrix_type, self%n, kl, ku )
     call build_system( self, self%matrix )
     call self % matrix % factorize()
