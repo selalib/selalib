@@ -103,10 +103,13 @@ contains
     !  . d=0 for main diagonal,
     !  . d>0 for superdiagonals,
     !  . d<0 for subdiagonals
-    d = modulo( j-i+self%kl, self%n ) - self%kl
+    d = j-i
+    if (d >  self%n/2) then; d = d-self%n; else &
+    if (d < -self%n/2) then; d = d+self%n; end if
 
     ! Verify that diagonal index is valid
-    SLL_ASSERT( -self%kl <= d .and. d <= self%ku )
+    SLL_ASSERT( d >= -self%kl )
+    SLL_ASSERT( d <=  self%ku )
 
     ! Write element in correct position
     self%q( self%ku+1-d, j ) = a_ij
