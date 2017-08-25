@@ -50,7 +50,7 @@ add_executable( test_spline_2d
   )
 target_link_libraries( test_spline_2d sll_splines )
 
-#add_test( NAME spline_2d_uniform                     COMMAND test_spline_2d -u )
+add_test( NAME spline_2d_uniform                     COMMAND test_spline_2d -u )
 add_test( NAME spline_2d_non_uniform_on_uniform_grid COMMAND test_spline_2d -n )
 add_test( NAME spline_2d_non_uniform_on_general_grid COMMAND test_spline_2d -n 0.1 )
 set_tests_properties(

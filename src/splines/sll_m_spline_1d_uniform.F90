@@ -79,6 +79,7 @@ module sll_m_spline_1d_uniform
     procedure :: eval_array_deriv    => s_spline_1d_uniform__eval_array_deriv
     procedure :: get_coeff           => f_spline_1d_uniform__get_coeff
     procedure :: get_interp_points   => s_spline_1d_uniform__get_interp_points
+    procedure :: get_icell_and_offset=> s_spline_1d_uniform__get_icell_and_offset
 
   end type sll_t_spline_1d_uniform
 
@@ -87,19 +88,19 @@ contains
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
   !-----------------------------------------------------------------------------
-  SLL_PURE subroutine s_get_icell_and_offset( xmin, xmax, ncells, x, icell, offset )
+  SLL_PURE subroutine s_spline_1d_uniform__get_icell_and_offset( self, x, icell, offset )
 
-    real(wp), intent(in   ) :: xmin
-    real(wp), intent(in   ) :: xmax
-    integer , intent(in   ) :: ncells
-    real(wp), intent(in   ) :: x
-    integer , intent(  out) :: icell
-    real(wp), intent(  out) :: offset
+    class(sll_t_spline_1d_uniform), intent(in   ) :: self
+    real(wp)                      , intent(in   ) :: x
+    integer                       , intent(  out) :: icell
+    real(wp)                      , intent(  out) :: offset
 
     real(wp) :: x_normalized  ! 0 <= x_normalized <= num_cells
 
-    SLL_ASSERT( x >= xmin )
-    SLL_ASSERT( x <= xmax )
+    SLL_ASSERT( x >= self % xmin )
+    SLL_ASSERT( x <= self % xmax )
+
+    associate( xmin => self%xmin, xmax => self%xmax, ncells => self%ncells )
 
     if (x == xmin) then
       icell  = 1
@@ -114,7 +115,9 @@ contains
       icell        = icell + 1
     end if
 
-  end subroutine s_get_icell_and_offset
+    end associate  ! xmin, xmax, ncells
+
+  end subroutine s_spline_1d_uniform__get_icell_and_offset
 
   !-----------------------------------------------------------------------------
   function f_spline_1d_uniform__get_coeff( self ) result( ptr )
@@ -368,7 +371,7 @@ contains
     ! TODO: if x_offset close to 1, set x_offset=0 and icell=icell-1
     do i = self%nbc_xmin+1, self%n-self%nbc_xmax
       x = self%tau(i-self%nbc_xmin)
-      call s_get_icell_and_offset( self%xmin, self%xmax, self%ncells, x, icell, x_offset )
+      call self % get_icell_and_offset( x, icell, x_offset )
       call sll_s_uniform_bsplines_eval_basis( self%deg, x_offset, values )
       do s = 1, self%deg+1
         j = modulo(icell-self%offset-2+s,self%n)+1
@@ -502,7 +505,7 @@ contains
     real(wp) :: offset
     real(wp) :: values(self%deg+1)
 
-    call s_get_icell_and_offset( self%xmin, self%xmax, self%ncells, x, icell, offset )
+    call self % get_icell_and_offset( x, icell, offset )
     call sll_s_uniform_bsplines_eval_basis( self%deg, offset, values )
 
     associate( a => icell-self%offset, &
@@ -523,7 +526,7 @@ contains
     real(wp) :: offset
     real(wp) :: values(self%deg+1)
 
-    call s_get_icell_and_offset( self%xmin, self%xmax, self%ncells, x, icell, offset )
+    call self % get_icell_and_offset( x, icell, offset )
     call sll_s_uniform_bsplines_eval_deriv( self%deg, offset, values )
 
     associate( a => icell-self%offset, &

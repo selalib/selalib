@@ -18,8 +18,8 @@ module sll_m_spline_2d
     sll_c_spline_2d, &
     sll_t_spline_2d_boundary_data
 
-!  use sll_m_spline_2d_uniform, only: &
-!    sll_t_spline_2d_uniform
+  use sll_m_spline_2d_uniform, only: &
+    sll_t_spline_2d_uniform
 
   use sll_m_spline_2d_non_uniform, only: &
     sll_t_spline_2d_non_uniform
@@ -117,9 +117,6 @@ contains
     real(wp),                  optional, intent(in   ) :: breaks1(:)
     real(wp),                  optional, intent(in   ) :: breaks2(:)
 
-    integer :: i
-    logical :: uniform
-
     ! Sanity checks
     SLL_ASSERT( all( degree > 0 )  )
     SLL_ASSERT( all( ncells > 0 )  )
@@ -145,44 +142,16 @@ contains
 
     else
 
-      ! TODO: create uniform 2D spline
-      allocate( sll_t_spline_2d_non_uniform :: spline )
-!      allocate( sll_t_spline_2d_uniform     :: spline )
+      allocate( sll_t_spline_2d_uniform     :: spline )
 
     end if
 
     ! Properly initialize 1D spline
     select type( spline )
-
-    ! TODO: create uniform 2D spline
-!    type is( sll_t_spline_2d_uniform )
-!
-!      call spline % init( degree, ncells, xmin, xmax, bc_xmin, bc_xmax )
-
+    type is( sll_t_spline_2d_uniform )
+      call spline % init( degree, ncells, xmin, xmax, bc_xmin, bc_xmax )
     type is( sll_t_spline_2d_non_uniform )
-
-      ! FIXME
-      if (present(breaks1)) then
-        uniform = (size(breaks1)<2)
-      else
-        uniform = .true.
-      end if
-
-      ! FIXME: for now we generate a uniform grid for the non-uniform spline
-      if (uniform) then
-        associate( dx => (xmax-xmin)/ncells )
-          call spline % init( &
-            degree  = degree(:), &
-            breaks1 = [(xmin(1)+i*dx(1), i=0,ncells(1))], &
-            breaks2 = [(xmin(2)+i*dx(2), i=0,ncells(2))], &
-            bc_xmin = bc_xmin(:), &
-            bc_xmax = bc_xmax(:) )
-        end associate
-      else
-        call spline % init( degree(:), breaks1, breaks2, bc_xmin(:), bc_xmax(:) )
-      end if
-
-
+      call spline % init( degree(:), breaks1, breaks2, bc_xmin(:), bc_xmax(:) )
     end select
 
   end subroutine sll_s_spline_2d_new
