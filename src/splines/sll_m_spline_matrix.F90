@@ -38,6 +38,7 @@ contains
     integer                                  , intent(in   ) :: ku
 
     character(len=*), parameter :: this_sub_name = "sll_s_spline_matrix_new"
+    character(len=256) :: msg
 
     ! Allocate correct linear solver type
     select case ( matrix_type )
@@ -52,7 +53,8 @@ contains
       allocate( sll_t_spline_matrix_periodic_banded :: matrix )
 
     case default
-      SLL_ERROR(this_sub_name,"Unrecognized matrix type: "//trim(matrix_type))
+      msg = "Unrecognized matrix type: " // trim( matrix_type )
+      SLL_ERROR( this_sub_name, msg )
 
     end select
 
@@ -66,7 +68,13 @@ contains
       call matrix % init( n, kl, ku )      
 
     type is ( sll_t_spline_matrix_periodic_banded )
-      call matrix % init( n, kl, ku )
+      if (kl /= ku) then
+        msg = "Periodic banded matrix: Schur complement solver requires kl=ku, using their maximum instead."
+        SLL_WARNING( this_sub_name, msg )
+        call matrix % init( n, max(kl,ku), max(kl,ku) )
+      else
+        call matrix % init( n, kl, ku )
+      end if
 
     end select
 
