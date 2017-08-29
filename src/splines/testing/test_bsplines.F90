@@ -32,6 +32,10 @@ program test_arbitrary_degree_splines
     sll_f_time_elapsed_since, &
     sll_t_time_mark
 
+  ! NEW
+  use sll_m_bsplines_base   , only: sll_c_bsplines
+  use sll_m_bsplines_uniform, only: sll_t_bsplines_uniform
+
   implicit none
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
@@ -39,7 +43,7 @@ program test_arbitrary_degree_splines
   character(len=*), parameter :: timing_fmt = &
     "(' Computing time for  ',a,':',es12.2)"
 
-  character(len=46) :: subr
+  character(len=50) :: subr
   logical           :: passed_test
 
   passed_test = .true.
@@ -687,11 +691,21 @@ contains
     type(sll_t_time_mark)  :: t0
     sll_real64 :: time
 
+    ! NEW
+    class(sll_c_bsplines), allocatable :: bsplines
+    sll_real64           , allocatable :: values(:)
+    sll_real64           , allocatable :: derivs(:)
+    sll_real64           , allocatable :: nderivs(:,:)
+    sll_int32                          :: jmin
+    sll_int32                          :: num_derivs
+
     ! Test performance of nonuniform arbitrary degree spline evaluation
-    num_pts   = 10
+    num_pts   = 12
     min_val = 0.0_f64
-    degree    = 7
-    num_tests = 100000
+    degree    = 6
+    num_tests = 1000000
+    num_derivs = 2
+
     print *, "Test performance of spline evaluation for"
     print *, " Spline degree = ", degree
     print *, " -----------------------------------------------------"
@@ -702,7 +716,7 @@ contains
     SLL_ALLOCATE(answer1(degree+1),ierr)
     SLL_ALLOCATE(answer2(degree+1),ierr)
     SLL_ALLOCATE(answer3(2,degree+1),ierr)
-    SLL_ALLOCATE(answer4(0:degree,degree+1),ierr)
+    SLL_ALLOCATE(answer4(0:num_derivs,degree+1),ierr)
 
 
     ! --------- 1D SPLINE INITIALIZATION ON NON UNIFORM MESH ----
@@ -788,6 +802,20 @@ contains
     write(*,timing_fmt) adjustl( subr ), time
     write(*,*)
 
+    !---------------------------------------------------------------------------
+    ! NEW
+    !---------------------------------------------------------------------------
+    allocate( sll_t_bsplines_uniform :: bsplines )
+    allocate( values (degree+1) )
+    allocate( derivs (degree+1) )
+    allocate( nderivs (0:num_derivs,degree+1) )
+
+    select type( bsplines )
+    type is( sll_t_bsplines_uniform )
+      call bsplines % init( degree, periodic=.true., xmin=0.0_f64, xmax=10.0_f64, ncells=10 )
+    end select
+    !---------------------------------------------------------------------------
+
     ! computing all non zero uniform splines  at point x:
     call sll_s_set_time_mark(t0)
     do j=1,num_tests
@@ -796,6 +824,21 @@ contains
     time = sll_f_time_elapsed_since(t0) / real(num_tests,f64)
     subr = "sll_s_uniform_bsplines_eval_basis"
     write(*,timing_fmt) adjustl( subr ), time
+    write(*,*)
+    print *, answer1
+    write(*,*)
+
+    ! NEW BSPLINE INTERFACE
+    call sll_s_set_time_mark( t0 )
+    do j=1,num_tests
+      call bsplines % eval_basis( xx(j), values, jmin )
+    end do
+    time = sll_f_time_elapsed_since(t0) / real(num_tests,f64)
+    subr = "sll_t_bsplines_uniform % eval()"
+    write(*,timing_fmt) adjustl( subr ), time
+    write(*,*)
+    print *, values
+    write(*,*)
 
     ! computing all non zero uniform splines derivatives at point x:
     call sll_s_set_time_mark(t0)
@@ -805,6 +848,21 @@ contains
     time = sll_f_time_elapsed_since(t0) / real(num_tests,f64)
     subr = "sll_s_uniform_bsplines_eval_deriv"
     write(*,timing_fmt) adjustl( subr ), time
+    write(*,*)
+    print *, answer2
+    write(*,*)
+
+    ! NEW BSPLINE INTERFACE
+    call sll_s_set_time_mark( t0 )
+    do j=1,num_tests
+      call bsplines % eval_deriv( xx(j), derivs, jmin )
+    end do
+    time = sll_f_time_elapsed_since(t0) / real(num_tests,f64)
+    subr = "sll_t_bsplines_uniform % eval_deriv()"
+    write(*,timing_fmt) adjustl( subr ), time
+    write(*,*)
+    print *, derivs
+    write(*,*)
 
     ! computing all non zero uniform splines and derivatives at point x:
     call sll_s_set_time_mark(t0)
@@ -814,16 +872,44 @@ contains
     time = sll_f_time_elapsed_since(t0) / real(num_tests,f64)
     subr = "sll_s_uniform_bsplines_eval_basis_and_deriv"
     write(*,timing_fmt) adjustl( subr ), time
+    write(*,*)
 
     ! computing all non zero uniform splines and all derivatives at point x:
     call sll_s_set_time_mark(t0)
     do j=1,num_tests
-       call sll_s_uniform_bsplines_eval_basis_and_n_derivs(degree, xx(j), 1, answer4)
+       call sll_s_uniform_bsplines_eval_basis_and_n_derivs(degree, xx(j), num_derivs, answer4)
     end do
     time = sll_f_time_elapsed_since(t0) / real(num_tests,f64)
     subr = "sll_s_uniform_bsplines_eval_basis_and_n_derivs"
     write(*,timing_fmt) adjustl( subr ), time
     write(*,*)
+    do j=0,num_derivs
+      print *, answer4(j,:)
+    end do
+    write(*,*)
+
+    ! NEW BSPLINE INTERFACE
+    call sll_s_set_time_mark( t0 )
+    do j=1,num_tests
+      call bsplines % eval_basis_and_n_derivs( xx(j), num_derivs, nderivs, jmin )
+    end do
+    time = sll_f_time_elapsed_since(t0) / real(num_tests,f64)
+    subr = "sll_t_bsplines_uniform % eval_basis_and_n_derivs()"
+    write(*,timing_fmt) adjustl( subr ), time
+    write(*,*)
+    do j=0,num_derivs
+      print *, nderivs(j,:)
+    end do
+    write(*,*)
+
+    !---------------------------------------------------------------------------
+    ! NEW
+    !---------------------------------------------------------------------------
+    deallocate( bsplines )
+    deallocate(  values  )
+    deallocate(  derivs  )
+    deallocate( nderivs  )
+    !---------------------------------------------------------------------------
 
   end subroutine test_cpu_time
 
