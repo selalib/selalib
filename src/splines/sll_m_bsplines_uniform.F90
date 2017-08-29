@@ -88,6 +88,10 @@ contains
     self % inv_dx   = 1.0_wp / self%dx
     self % offset   = merge( degree/2, 0, periodic )
 
+    ! FIXME: TESTING
+    self % dx     = 0.1_wp
+    self % inv_dx = 1.0_wp / self%dx
+
   end subroutine s_bsplines_uniform__init
 
   !-----------------------------------------------------------------------------
@@ -118,11 +122,15 @@ contains
     ! Check on inputs
     SLL_ASSERT( size(values) == 1+self%degree )
 
-    ! 1. Compute cell index 'icell' and x_offset
-    call s_bsplines_uniform__get_icell_and_offset( self, x, icell, x_offset )
+!    ! 1. Compute cell index 'icell' and x_offset
+!    call s_bsplines_uniform__get_icell_and_offset( self, x, icell, x_offset )
+!
+!    ! 2. Compute index range of B-splines with support over cell 'icell'
+!    jmin = icell - self%offset
 
-    ! 2. Compute index range of B-splines with support over cell 'icell'
-    jmin = icell - self%offset
+    ! FIXME: TESTING
+    icell    = 1
+    x_offset = x
 
     ! 3. Compute values of aforementioned B-splines
     associate( bspl => values, spline_degree => self%degree )
@@ -169,11 +177,15 @@ contains
     ! Check on inputs
     SLL_ASSERT( size(derivs) == 1+self%degree )
 
-    ! 1. Compute cell index 'icell' and x_offset
-    call s_bsplines_uniform__get_icell_and_offset( self, x, icell, x_offset )
+!    ! 1. Compute cell index 'icell' and x_offset
+!    call s_bsplines_uniform__get_icell_and_offset( self, x, icell, x_offset )
+!
+!    ! 2. Compute index range of B-splines with support over cell 'icell'
+!    jmin = icell - self%offset
 
-    ! 2. Compute index range of B-splines with support over cell 'icell'
-    jmin = icell - self%offset
+    ! FIXME: TESTING
+    icell    = 1
+    x_offset = x
 
     ! 3. Compute derivatives of aforementioned B-splines
     !    Derivatives are normalized, hence they should be divided by dx
@@ -241,11 +253,15 @@ contains
     SLL_ASSERT( size(derivs,1) == 1+n           )
     SLL_ASSERT( size(derivs,2) == 1+self%degree )
 
-    ! 1. Compute cell index 'icell' and x_offset
-    call s_bsplines_uniform__get_icell_and_offset( self, x, icell, x_offset )
+!    ! 1. Compute cell index 'icell' and x_offset
+!    call s_bsplines_uniform__get_icell_and_offset( self, x, icell, x_offset )
+!
+!    ! 2. Compute index range of B-splines with support over cell 'icell'
+!    jmin = icell - self%offset
 
-    ! 2. Compute index range of B-splines with support over cell 'icell'
-    jmin = icell - self%offset
+    ! FIXME: TESTING
+    icell    = 1
+    x_offset = x
 
     ! 3. Recursively evaluate B-splines (see "sll_s_uniform_bsplines_eval_basis")
     !    up to self%degree, and store them all in the upper-right triangle of ndu
