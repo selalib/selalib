@@ -20,8 +20,6 @@ module sll_m_bsplines_uniform
   type, extends(sll_c_bsplines) :: sll_t_bsplines_uniform
 
     ! Private components (public ones defined in base class)
-    real(wp), private :: xmin
-    real(wp), private :: xmax
     real(wp), private :: inv_dx
     integer , private :: offset
 
