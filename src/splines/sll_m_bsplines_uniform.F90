@@ -22,7 +22,6 @@ module sll_m_bsplines_uniform
     ! Private components (public ones defined in base class)
     real(wp), private :: xmin
     real(wp), private :: xmax
-    real(wp), private :: dx
     real(wp), private :: inv_dx
     integer , private :: offset
 
@@ -34,6 +33,10 @@ module sll_m_bsplines_uniform
     procedure :: eval_basis_and_n_derivs => s_bsplines_uniform__eval_basis_and_n_derivs
 
   end type sll_t_bsplines_uniform
+
+  ! Inverse of integers for later use (max spline degree = 32)
+  integer             :: index
+  real(wp), parameter :: inv(*) = [(1.0_wp/real(index,wp), index=1,32)]
 
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 contains
@@ -84,13 +87,8 @@ contains
     ! Private attributes
     self % xmin     = xmin
     self % xmax     = xmax
-    self % dx       = (xmax-xmin) / real(ncells,wp)
-    self % inv_dx   = 1.0_wp / self%dx
+    self % inv_dx   = real(ncells,wp) / (xmax-xmin)
     self % offset   = merge( degree/2, 0, periodic )
-
-    ! FIXME: TESTING
-    self % dx     = 0.1_wp
-    self % inv_dx = 1.0_wp / self%dx
 
   end subroutine s_bsplines_uniform__init
 
@@ -114,7 +112,6 @@ contains
 
     integer  :: j, r
     real(wp) :: j_real
-    real(wp) :: inv_j
     real(wp) :: xx
     real(wp) :: temp
     real(wp) :: saved
@@ -122,28 +119,23 @@ contains
     ! Check on inputs
     SLL_ASSERT( size(values) == 1+self%degree )
 
-!    ! 1. Compute cell index 'icell' and x_offset
-!    call s_bsplines_uniform__get_icell_and_offset( self, x, icell, x_offset )
-!
-!    ! 2. Compute index range of B-splines with support over cell 'icell'
-!    jmin = icell - self%offset
+    ! 1. Compute cell index 'icell' and x_offset
+    call s_bsplines_uniform__get_icell_and_offset( self, x, icell, x_offset )
 
-    ! FIXME: TESTING
-    icell    = 1
-    x_offset = x
+    ! 2. Compute index range of B-splines with support over cell 'icell'
+    jmin = icell - self%offset
 
     ! 3. Compute values of aforementioned B-splines
     associate( bspl => values, spline_degree => self%degree )
 
       bspl(0) = 1.0_wp
       do j = 1, spline_degree
-         xx     = -x_offset
          j_real = real(j,wp)
-         inv_j  = 1.0_wp / j_real
+         xx     = -x_offset
          saved  = 0.0_wp
          do r = 0, j-1
             xx      = xx + 1.0_wp
-            temp    = bspl(r) * inv_j
+            temp    = bspl(r) * inv(j)
             bspl(r) = saved + xx * temp
             saved   = (j_real - xx) * temp
          end do
@@ -167,7 +159,6 @@ contains
 
     integer  :: j, r
     real(wp) :: j_real
-    real(wp) :: inv_j
     real(wp) :: xx
     real(wp) :: temp
     real(wp) :: saved
@@ -177,15 +168,11 @@ contains
     ! Check on inputs
     SLL_ASSERT( size(derivs) == 1+self%degree )
 
-!    ! 1. Compute cell index 'icell' and x_offset
-!    call s_bsplines_uniform__get_icell_and_offset( self, x, icell, x_offset )
-!
-!    ! 2. Compute index range of B-splines with support over cell 'icell'
-!    jmin = icell - self%offset
+    ! 1. Compute cell index 'icell' and x_offset
+    call s_bsplines_uniform__get_icell_and_offset( self, x, icell, x_offset )
 
-    ! FIXME: TESTING
-    icell    = 1
-    x_offset = x
+    ! 2. Compute index range of B-splines with support over cell 'icell'
+    jmin = icell - self%offset
 
     ! 3. Compute derivatives of aforementioned B-splines
     !    Derivatives are normalized, hence they should be divided by dx
@@ -194,13 +181,12 @@ contains
       ! only need splines of lower degree to compute derivatives
       bspl(0) = start
       do j = 1, spline_degree - 1
-         xx     = -x_offset
          j_real = real(j,wp)
-         inv_j  = 1.0_wp / j_real
+         xx     = -x_offset
          saved  = 0.0_wp
          do r = 0, j-1
             xx      = xx + 1.0_wp
-            temp    = bspl(r) * inv_j
+            temp    = bspl(r) * inv(j)
             bspl(r) = saved + xx * temp
             saved   = (j_real - xx) * temp
          end do
@@ -236,7 +222,6 @@ contains
 
     integer  :: j, r
     real(wp) :: j_real
-    real(wp) :: inv_j
     real(wp) :: xx
     real(wp) :: temp
     real(wp) :: saved
@@ -253,15 +238,11 @@ contains
     SLL_ASSERT( size(derivs,1) == 1+n           )
     SLL_ASSERT( size(derivs,2) == 1+self%degree )
 
-!    ! 1. Compute cell index 'icell' and x_offset
-!    call s_bsplines_uniform__get_icell_and_offset( self, x, icell, x_offset )
-!
-!    ! 2. Compute index range of B-splines with support over cell 'icell'
-!    jmin = icell - self%offset
+    ! 1. Compute cell index 'icell' and x_offset
+    call s_bsplines_uniform__get_icell_and_offset( self, x, icell, x_offset )
 
-    ! FIXME: TESTING
-    icell    = 1
-    x_offset = x
+    ! 2. Compute index range of B-splines with support over cell 'icell'
+    jmin = icell - self%offset
 
     ! 3. Recursively evaluate B-splines (see "sll_s_uniform_bsplines_eval_basis")
     !    up to self%degree, and store them all in the upper-right triangle of ndu
@@ -269,13 +250,12 @@ contains
 
       ndu(0,0) = 1.0_wp
       do j = 1, spline_degree
-         xx     = -x_offset
          j_real = real(j,wp)
-         inv_j  = 1.0_wp / j_real
+         xx     = -x_offset
          saved  = 0.0_wp
          do r = 0, j-1
             xx       = xx + 1.0_wp
-            temp     = ndu(r,j-1) * inv_j
+            temp     = ndu(r,j-1) * inv(j)
             ndu(r,j) = saved + xx * temp
             saved    = (j_real - xx) * temp
          end do
@@ -286,9 +266,7 @@ contains
     end associate  ! spline_degree, bspl
 
     ! 4. Use equation 2.10 in "The NURBS Book" to compute n derivatives
-    associate( deg     => self%degree, &
-               bsdx    => derivs, &
-               inv_idx => [(1.0_wp/real(j,wp), j=1,32)] )
+    associate( deg => self%degree, bsdx => derivs )
 
       do r = 0, deg
          s1 = 0
@@ -299,7 +277,7 @@ contains
             rk = r-k
             pk = deg-k
             if (r >= k) then
-               a(s2,0) = a(s1,0) * inv_idx(pk+1)
+               a(s2,0) = a(s1,0) * inv(pk+1)
                d = a(s2,0) * ndu(rk,pk)
             end if
             if (rk > -1) then
@@ -313,11 +291,11 @@ contains
                j2 = deg-r
             end if
             do j = j1, j2
-               a(s2,j) = (a(s1,j) - a(s1,j-1)) * inv_idx(pk+1)
+               a(s2,j) = (a(s1,j) - a(s1,j-1)) * inv(pk+1)
                d = d + a(s2,j) * ndu(rk+j,pk)
             end do
             if (r <= pk) then
-               a(s2,k) = - a(s1,k-1) * inv_idx(pk+1)
+               a(s2,k) = - a(s1,k-1) * inv(pk+1)
                d = d + a(s2,k) * ndu(r,pk)
             end if
             bsdx(k,r) = d
@@ -330,13 +308,13 @@ contains
       ! Multiply result by correct factors:
       ! deg!/(deg-n)! = deg*(deg-1)*...*(deg-n+1)
       ! k-th derivatives are normalized, hence they should be divided by dx^k
-      d = deg * self%inv_dx
+      d = real(deg,wp) * self%inv_dx
       do k = 1, n
          bsdx(k,:) = bsdx(k,:) * d
          d = d * real(deg-k,wp) * self%inv_dx
       end do
 
-    end associate  ! deg, bsdx, inv_idx
+    end associate  ! deg, bsdx
 
   end subroutine s_bsplines_uniform__eval_basis_and_n_derivs
 
