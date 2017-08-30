@@ -58,7 +58,7 @@ print*,'***************************************************************'
 do deg=1,9
    call test_process_1d( sll_p_periodic, deg, uniform, tol(deg), passed_test)
 end do
-print*,
+print*,''
 print*,'***************************************************************'
 print*,'***                                                         ***'
 print*,'***           1D UNIFORM SPLINE WITH GREVILLE BCS           ***'
@@ -67,7 +67,7 @@ print*,'***************************************************************'
 do deg=1,9
    call test_process_1d( sll_p_greville, deg, uniform, tol(deg), passed_test )
 end do
-print*,
+print*,''
 print*,'***************************************************************'
 print*,'***                                                         ***'
 print*,'***           1D UNIFORM SPLINE WITH HERMITE BCS            ***'
@@ -76,7 +76,7 @@ print*,'***************************************************************'
 do deg=1,9
    call test_process_1d( sll_p_hermite, deg, uniform, tol(deg), passed_test )
 end do
-print*,
+print*,''
 
 !================
 uniform = .false.
@@ -90,7 +90,7 @@ print*,'***************************************************************'
 do deg=1,9
    call test_process_1d( sll_p_periodic, deg, uniform, tol(deg), passed_test)
 end do
-print*,
+print*,''
 print*,'***************************************************************'
 print*,'***                                                         ***'
 print*,'***         1D NON-UNIFORM SPLINE WITH GREVILLE BCS         ***'
@@ -99,7 +99,7 @@ print*,'***************************************************************'
 do deg=1,9
    call test_process_1d( sll_p_greville, deg, uniform, tol(deg), passed_test )
 end do
-print*,
+print*,''
 print*,'***************************************************************'
 print*,'***                                                         ***'
 print*,'***         1D NON-UNIFORM SPLINE WITH HERMITE BCS          ***'
@@ -108,7 +108,7 @@ print*,'***************************************************************'
 do deg=1,9
    call test_process_1d( sll_p_hermite, deg, uniform, tol(deg), passed_test )
 end do
-print*,
+print*,''
 
 !print*,'***************************************************************'
 !print*,'*** 1D HERMITE  WITH MIRROR KNOT POINTS***'
