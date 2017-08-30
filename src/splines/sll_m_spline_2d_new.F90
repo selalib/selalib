@@ -16,7 +16,7 @@ module sll_m_spline_2d_new
   !> Working precision
   integer, parameter :: wp = f64
 
-  !> 1D spline
+  !> 2D spline
   type :: sll_t_spline_2d
 
     real(wp)             , allocatable      :: bcoef(:,:)
@@ -27,6 +27,7 @@ module sll_m_spline_2d_new
 
     procedure :: init                => s_spline_2d__init
     procedure :: free                => s_spline_2d__free
+    procedure :: belongs_to_space    => f_spline_2d__belongs_to_space
     procedure :: eval                => f_spline_2d__eval
     procedure :: eval_deriv_x1       => f_spline_2d__eval_deriv_x1
     procedure :: eval_deriv_x2       => f_spline_2d__eval_deriv_x2
@@ -77,6 +78,19 @@ contains
     nullify   ( self % bspl2 )
 
   end subroutine s_spline_2d__free
+
+  !-----------------------------------------------------------------------------
+  SLL_PURE function f_spline_2d__belongs_to_space( self, bsplines_x1, bsplines_x2 ) result( in_space )
+
+    class(sll_t_spline_2d), intent(in)         :: self
+    class(sll_c_bsplines ), intent(in), target :: bsplines_x1
+    class(sll_c_bsplines ), intent(in), target :: bsplines_x2
+    logical :: in_space
+
+    in_space = associated( self%bspl1, bsplines_x1 ) .and. &
+               associated( self%bspl2, bsplines_x2 )
+
+  end function f_spline_2d__belongs_to_space
 
   !-----------------------------------------------------------------------------
   SLL_PURE function f_spline_2d__eval( self, x1, x2 ) result( y )

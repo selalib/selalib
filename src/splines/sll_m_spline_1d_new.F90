@@ -24,12 +24,13 @@ module sll_m_spline_1d_new
 
   contains
 
-    procedure :: init                => s_spline_1d__init
-    procedure :: free                => s_spline_1d__free
-    procedure :: eval                => f_spline_1d__eval
-    procedure :: eval_deriv          => f_spline_1d__eval_deriv
-    procedure :: eval_array          => s_spline_1d__eval_array
-    procedure :: eval_array_deriv    => s_spline_1d__eval_array_deriv
+    procedure :: init             => s_spline_1d__init
+    procedure :: free             => s_spline_1d__free
+    procedure :: belongs_to_space => f_spline_1d__belongs_to_space
+    procedure :: eval             => f_spline_1d__eval
+    procedure :: eval_deriv       => f_spline_1d__eval_deriv
+    procedure :: eval_array       => s_spline_1d__eval_array
+    procedure :: eval_array_deriv => s_spline_1d__eval_array_deriv
 
   end type sll_t_spline_1d
 
@@ -69,6 +70,17 @@ contains
     nullify   ( self % bspl  )
 
   end subroutine s_spline_1d__free
+
+  !-----------------------------------------------------------------------------
+  SLL_PURE function f_spline_1d__belongs_to_space( self, bsplines ) result( in_space )
+
+    class(sll_t_spline_1d), intent(in)         :: self
+    class(sll_c_bsplines ), intent(in), target :: bsplines
+    logical :: in_space
+
+    in_space = associated( self%bspl, bsplines )
+
+  end function f_spline_1d__belongs_to_space
 
   !-----------------------------------------------------------------------------
   SLL_PURE function f_spline_1d__eval( self, x ) result( y )
