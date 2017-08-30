@@ -24,6 +24,11 @@ module sll_m_bsplines_base
     integer :: ncells
     integer :: nbasis
 
+    real(wp) :: xmin
+    real(wp) :: xmax
+
+    real(wp), allocatable :: knots(:) ! Only used by non-uniform B-splines
+
   contains
     procedure(i_sub_eval_basis             ), deferred :: eval_basis
     procedure(i_sub_eval_deriv             ), deferred :: eval_deriv
