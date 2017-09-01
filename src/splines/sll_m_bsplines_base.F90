@@ -31,6 +31,7 @@ module sll_m_bsplines_base
     real(wp), allocatable :: knots(:) ! Only used by non-uniform B-splines
 
   contains
+    procedure(i_fun_find_cell              ), deferred :: find_cell
     procedure(i_sub_eval_basis             ), deferred :: eval_basis
     procedure(i_sub_eval_deriv             ), deferred :: eval_deriv
     procedure(i_sub_eval_basis_and_n_derivs), deferred :: eval_basis_and_n_derivs
@@ -39,6 +40,14 @@ module sll_m_bsplines_base
   end type sll_c_bsplines
 
   abstract interface
+
+    !> Find cell index
+    function i_fun_find_cell( self, x ) result( icell )
+     import sll_c_bsplines, wp
+      class(sll_c_bsplines), intent(in) :: self
+      real(wp)             , intent(in) :: x
+      integer :: icell
+    end function i_fun_find_cell
 
     !> Evaluate value at x of all basis functions with support in local cell
     !> (jmin identifies index of basis functions)
