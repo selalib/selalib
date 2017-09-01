@@ -454,18 +454,139 @@ contains
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
   !-----------------------------------------------------------------------------
-  ! TODO: implement subroutine
   subroutine s_compute_interpolation_points_non_uniform( self, tau )
     class(sll_t_spline_interpolator_1d), intent(in   ) :: self
     real(wp),               allocatable, intent(  out) :: tau(:)
+
+   integer :: i, ntau
+   real(wp), allocatable :: temp_knots(:)
+
+   associate( nbasis   => self % bspl % nbasis, &
+              ncells   => self % bspl % ncells, &
+              degree   => self % bspl % degree, &
+              xmin     => self % bspl % xmin  , &
+              xmax     => self % bspl % xmax  , &
+              dx       => self % dx           , &
+              bc_xmin  => self %  bc_xmin     , &
+              bc_xmax  => self %  bc_xmax     , &
+              nbc_xmin => self % nbc_xmin     , &
+              nbc_xmax => self % nbc_xmax )
+
+   associate( breaks   => self % bspl % knots(1:ncells+1) )
+
+      ! Determine size of tau and allocate tau
+      ntau = nbasis - nbc_xmin - nbc_xmax
+      allocate( tau(1:ntau) )
+
+      ! Array of temporary knots needed to compute interpolation points
+      ! using Greville-style averaging: tau(i) = average(temp_knots(i+1-degree:i))
+      allocate( temp_knots( 2-degree : ntau ) )
+
+      if ( bc_xmin == sll_p_periodic ) then
+
+        associate( k => degree/2 )
+          temp_knots(:) = self%bspl%knots(2-degree+k:ntau+k)
+        end associate
+
+      else
+
+        associate( r => 2-degree, s => -nbc_xmin )
+          select case (bc_xmin)
+          case (sll_p_greville); temp_knots(r:s) = breaks(1)
+          case (sll_p_hermite ); temp_knots(r:s) = 2.0_wp*breaks(1) - breaks(2+s-r:2:-1)
+          end select
+        end associate
+
+        associate( r => -nbc_xmin+1, s => -nbc_xmin+1+ncells )
+          temp_knots(r:s) = breaks(:)
+        end associate
+
+        associate( r => -nbc_xmin+1+ncells+1, s => ntau )
+          select case (bc_xmax)
+          case (sll_p_greville)
+            temp_knots(r:s) = breaks(ncells+1)
+          case (sll_p_hermite )
+            temp_knots(r:s) = 2.0_wp*breaks(ncells+1) - breaks(ncells:ncells+r-s:-1)
+          end select
+        end associate
+
+      end if
+
+      ! Compute interpolation points using Greville-style averaging
+      associate( inv_deg => 1.0_wp / real( degree, wp ) )
+        do i = 1, ntau
+          tau(i) = sum( temp_knots(i+1-degree:i) ) * inv_deg
+        end do
+      end associate
+
+      ! Periodic case: apply periodic BCs to interpolation points
+      if ( bc_xmin == sll_p_periodic ) then
+        tau(:) = modulo( tau(:)-xmin, xmax-xmin ) + xmin
+
+      ! Non-periodic case, odd degree: fix round-off issues
+      else if ( self%odd == 1 ) then
+        tau(1)    = xmin
+        tau(ntau) = xmax
+      end if
+
+    end associate ! breaks
+    end associate ! all other variables
+
   end subroutine s_compute_interpolation_points_non_uniform
 
   !-----------------------------------------------------------------------------
-  ! TODO: implement subroutine
   subroutine s_compute_num_diags_non_uniform( self, kl, ku )
     class(sll_t_spline_interpolator_1d), intent(in   ) :: self
     integer                            , intent(  out) :: kl
     integer                            , intent(  out) :: ku
+
+    integer  :: i,j,s,d,icell
+    real(wp) :: x
+
+    ku = 0
+    kl = 0
+
+    associate( nbasis   => self % bspl % nbasis, &
+               degree   => self % bspl % degree, &
+               nbc_xmin => self % nbc_xmin     , &
+               nbc_xmax => self % nbc_xmax )
+
+      if (self%bc_xmin == sll_p_periodic) then
+
+        do i = 1, nbasis
+          x = self % tau(i)
+          icell = self % bspl % find_cell( x )
+          do s = 1, degree+1
+            j = modulo(icell-self%bspl%offset-2+s,nbasis)+1
+            d = j-i
+            if (d >  nbasis/2) then; d = d-nbasis; else &
+            if (d < -nbasis/2) then; d = d+nbasis; end if
+            ku = max( ku,  d )
+            kl = max( kl, -d )
+          end do
+        end do
+
+      else
+
+        do i = nbc_xmin+1, nbasis-nbc_xmax
+          x = self % tau(i-nbc_xmin)
+          icell = self % bspl % find_cell( x )
+          do s = 1, degree+1
+            j = icell-1+s
+            d = j-i
+            ku = max( ku,  d )
+            kl = max( kl, -d )
+          end do
+        end do
+        ! FIXME: In Hermite case ku and kl computed in general case where
+        !        derivatives of B-splines do not vanish at boundary
+        ku = ku + nbc_xmin
+        kl = kl + nbc_xmax
+
+      end if
+
+    end associate
+
   end subroutine s_compute_num_diags_non_uniform
 
 end module sll_m_spline_interpolator_1d
