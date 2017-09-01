@@ -93,13 +93,14 @@ contains
   end subroutine s_bsplines_uniform__free
 
   !----------------------------------------------------------------------------
-  function f_bsplines_uniform__find_cell( self, x ) result( icell )
+  SLL_PURE function f_bsplines_uniform__find_cell( self, x ) result( icell )
     class(sll_t_bsplines_uniform), intent(in) :: self
     real(wp)                     , intent(in) :: x
     integer :: icell
 
-    icell = -1 ! to avoid warning at compile time
-    SLL_ERROR("sll_t_bsplines_uniform % find_cell","procedure not implemented")
+    icell = -1
+    !TODO: handle error within pure procedure
+    !SLL_ERROR("sll_t_bsplines_uniform % find_cell","procedure not implemented")
 
   end function f_bsplines_uniform__find_cell
 
