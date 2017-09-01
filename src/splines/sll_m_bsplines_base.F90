@@ -42,7 +42,7 @@ module sll_m_bsplines_base
   abstract interface
 
     !> Find cell index
-    function i_fun_find_cell( self, x ) result( icell )
+    SLL_PURE function i_fun_find_cell( self, x ) result( icell )
      import sll_c_bsplines, wp
       class(sll_c_bsplines), intent(in) :: self
       real(wp)             , intent(in) :: x
