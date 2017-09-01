@@ -95,7 +95,7 @@ contains
   end subroutine s_bsplines_non_uniform__free
 
   !----------------------------------------------------------------------------
-  function f_bsplines_non_uniform__find_cell( self, x ) result( icell )
+  SLL_PURE function f_bsplines_non_uniform__find_cell( self, x ) result( icell )
     class(sll_t_bsplines_non_uniform), intent(in) :: self
     real(wp)                         , intent(in) :: x
     integer :: icell
