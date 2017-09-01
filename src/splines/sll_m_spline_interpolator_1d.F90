@@ -342,18 +342,109 @@ contains
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
   !-----------------------------------------------------------------------------
-  ! TODO: implement subroutine
   subroutine s_compute_interpolation_points_uniform( self, tau )
     class(sll_t_spline_interpolator_1d), intent(in   ) :: self
     real(wp),               allocatable, intent(  out) :: tau(:)
+
+    integer :: i, ntau, isum
+    integer, allocatable :: iknots(:)
+
+    associate( nbasis   => self % bspl % nbasis, &
+               ncells   => self % bspl % ncells, &
+               degree   => self % bspl % degree, &
+               xmin     => self % bspl % xmin  , &
+               dx       => self % dx           , &
+               bc_xmin  => self %  bc_xmin     , &
+               bc_xmax  => self %  bc_xmax     , &
+               nbc_xmin => self % nbc_xmin     , &
+               nbc_xmax => self % nbc_xmax )
+
+      ! Determine size of tau and allocate tau
+      ntau = nbasis - nbc_xmin - nbc_xmax
+      allocate( tau(1:ntau) )
+
+      if ( bc_xmin == sll_p_periodic ) then
+
+      ! Periodic case:
+      !   . for odd  degree, interpolation points are breakpoints (last excluded)
+      !   . for even degree, interpolation points are cell centers
+      associate( shift => merge( 0.5_wp, 0.0_wp, self%odd == 0 ) )
+        tau = [(xmin + (real(i-1,wp)+shift)*dx, i=1,ntau)]
+      end associate
+
+      else
+
+      ! Non-periodic case: create array of temporary knots (integer shifts only)
+      ! in order to compute interpolation points using Greville-style averaging:
+      ! tau(i) = xmin + average(knots(i+1-degree:i)) * dx
+      allocate( iknots (2-degree:ntau) )
+
+      ! Additional knots near x=xmin
+      associate( r => 2-degree, s => -nbc_xmin )
+        select case (bc_xmin)
+          case (sll_p_greville); iknots(r:s) = 0
+          case (sll_p_hermite ); iknots(r:s) = [(i,i=r-s-1,-1)]
+        end select
+      end associate
+
+      ! Knots inside the domain
+      associate( r => -nbc_xmin+1, s => -nbc_xmin+1+ncells )
+        iknots(r:s) = [(i,i=0,ncells)]
+      end associate
+
+      ! Additional knots near x=xmax
+      associate( r => -nbc_xmin+1+ncells+1, s => ntau )
+        select case (bc_xmax)
+          case (sll_p_greville); iknots(r:s) = ncells
+          case (sll_p_hermite ); iknots(r:s) = [(i,i=ncells+1,ncells+1+s-r)]
+        end select
+      end associate
+
+      ! Compute interpolation points using Greville-style averaging
+      associate( inv_deg => 1.0_wp / real( degree, wp ) )
+        do i = 1, ntau
+          isum = sum( iknots(i+1-degree:i) )
+          if (modulo( isum, degree ) == 0) then
+            tau(i) = xmin + real(isum/degree,wp) * dx
+          else
+            tau(i) = xmin + real(isum,wp) * inv_deg * dx
+          end if
+        end do
+      end associate
+
+      deallocate( iknots )
+
+      end if
+
+    end associate
+
   end subroutine s_compute_interpolation_points_uniform
 
   !-----------------------------------------------------------------------------
-  ! TODO: implement subroutine
   subroutine s_compute_num_diags_uniform( self, kl, ku )
     class(sll_t_spline_interpolator_1d), intent(in   ) :: self
     integer                            , intent(  out) :: kl
     integer                            , intent(  out) :: ku
+
+    associate( degree => self % bspl % degree )
+
+      ! FIXME: In Hermite case ku and kl computed in general case when derivatives
+      !        of B-splines do not vanish at boundary
+      ! TODO: reduce kl and ku to take advantage of uniform grid
+      select case( self % bc_xmin )
+        case ( sll_p_periodic ); ku = (degree+1)/2
+        case ( sll_p_hermite  ); ku = max( (degree+1)/2, degree-1 )
+        case ( sll_p_greville ); ku = degree
+      end select
+
+      select case( self % bc_xmax )
+        case ( sll_p_periodic ); kl = (degree+1)/2
+        case ( sll_p_hermite  ); kl = max( (degree+1)/2, degree-1 )
+        case ( sll_p_greville ); kl = degree
+      end select
+
+    end associate
+
   end subroutine s_compute_num_diags_uniform
 
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
