@@ -81,11 +81,11 @@ contains
     self % bspl => bspl
 
     ! Save other data
-    self%bc_xmin  = bc_xmin
-    self%bc_xmax  = bc_xmax
-    self%nbc_xmin = merge( bspl%degree/2, 0, bc_xmin == sll_p_hermite )
-    self%nbc_xmax = merge( bspl%degree/2, 0, bc_xmax == sll_p_hermite )
-    self%odd      = modulo( bspl%degree, 2 )
+    self % bc_xmin  = bc_xmin
+    self % bc_xmax  = bc_xmax
+    self % nbc_xmin = merge ( bspl%degree/2, 0, bc_xmin == sll_p_hermite )
+    self % nbc_xmax = merge ( bspl%degree/2, 0, bc_xmax == sll_p_hermite )
+    self % odd      = modulo( bspl%degree  , 2 )
 
     ! Save average cell size for normalization of derivatives
     self%dx = (bspl%xmax - bspl%xmin) / bspl%ncells
@@ -101,10 +101,10 @@ contains
     end if
 
     ! Determine matrix storage type and allocate matrix
-    associate( n => self % bspl % nbasis )
+    associate( nbasis => self % bspl % nbasis )
 
       if (bc_xmin == sll_p_periodic) then
-        if (kl+1+ku >= n) then
+        if (kl+1+ku >= nbasis) then
           matrix_type = "dense"
         else
           matrix_type = "periodic_banded"
@@ -113,9 +113,9 @@ contains
         matrix_type = "banded"
       end if
 
-      call sll_s_spline_matrix_new( self%matrix, matrix_type, n, kl, ku )
+      call sll_s_spline_matrix_new( self%matrix, matrix_type, nbasis, kl, ku )
 
-    end associate ! n
+    end associate ! nbasis
 
     ! Fill in entries A_ij of linear system A*x = b for interpolation
     call s_build_system( self, self%matrix )
@@ -174,19 +174,19 @@ contains
     SLL_ASSERT( size(gtau) == self%bspl%nbasis - self%nbc_xmin - self%nbc_xmax )
     SLL_ASSERT( spline % belongs_to_space( self % bspl ) )
 
-    associate ( n        => self%bspl%nbasis, &
-                deg      => self%bspl%degree, &
-                nbc_xmin => self%nbc_xmin   , &
-                nbc_xmax => self%nbc_xmax   , &
-                bcoef    => spline%bcoef    )
+    associate ( nbasis   =>   self % bspl % nbasis, &
+                degree   =>   self % bspl % degree, &
+                nbc_xmin =>   self % nbc_xmin     , &
+                nbc_xmax =>   self % nbc_xmax     , &
+                bcoef    => spline % bcoef )
 
       ! Special case: linear spline
-      if (deg == 1) then
-        bcoef(1:n) = gtau(1:n)
+      if (degree == 1) then
+        bcoef(1:nbasis) = gtau(1:nbasis)
         ! Periodic only: "wrap around" coefficients onto extended array
         if (self%bspl%periodic) then
-          bcoef(0)   = bcoef(n)
-          bcoef(n+1) = bcoef(1)
+          bcoef(0)        = bcoef(nbasis)
+          bcoef(nbasis+1) = bcoef(1)
         end if
         return
       end if
@@ -204,14 +204,14 @@ contains
       end if
 
       ! Interpolation points
-      bcoef(nbc_xmin+1:n-nbc_xmax) = gtau(:)
+      bcoef(nbc_xmin+1:nbasis-nbc_xmax) = gtau(:)
 
       ! Hermite boundary conditions at xmax, if any
       ! NOTE: For consistency with the linear system, the i-th derivative
       !       provided by the user must be multiplied by dx^i
       if ( self%bc_xmax == sll_p_hermite ) then
         if ( present( derivs_xmax ) ) then
-          bcoef(n-nbc_xmax+1:n) = &
+          bcoef(nbasis-nbc_xmax+1:nbasis) = &
                         [(derivs_xmax(i)*self%dx**(i+self%odd-1), i=1,nbc_xmax)]
         else
           SLL_ERROR(this_sub_name,"Hermite BC at xmax requires derivatives")
@@ -219,17 +219,17 @@ contains
       end if
 
       ! Solve linear system and compute coefficients
-      call self % matrix % solve_inplace( bcoef(1:n) )
+      call self % matrix % solve_inplace( bcoef(1:nbasis) )
 
       ! Periodic only: "wrap around" coefficients onto extended array
       if (self%bc_xmin == sll_p_periodic) then
-        associate( g => 1+deg/2 )
-          bcoef(1-g:0)   = bcoef(n-g+1:n)
-          bcoef(n+1:n+g) = bcoef(1:g)
+        associate( g => 1+degree/2 )
+          bcoef(1-g:0)             = bcoef(nbasis-g+1:nbasis)
+          bcoef(nbasis+1:nbasis+g) = bcoef(1:g)
         end associate
       end if
 
-    end associate ! n, deg, bcoef
+    end associate ! nbasis, degree, bcoef
 
   end subroutine s_spline_interpolator_1d__compute_interpolant
 
@@ -261,13 +261,13 @@ contains
     ! NEW
     integer :: jmin
 
-    associate( n        => self%bspl%nbasis, &
-               deg      => self%bspl%degree, &
-               nbc_xmin => self%nbc_xmin   , &
-               nbc_xmax => self%nbc_xmax   )
+    associate( nbasis   => self % bspl % nbasis, &
+               degree   => self % bspl % degree, &
+               nbc_xmin => self % nbc_xmin     , &
+               nbc_xmax => self % nbc_xmax )
 
       if ( any( [self%bc_xmin,self%bc_xmax] == sll_p_hermite ) ) then
-        allocate ( derivs (0:deg/2, 1:deg+1) )
+        allocate ( derivs (0:degree/2, 1:degree+1) )
       end if
 
       ! Hermite boundary conditions at xmin, if any
@@ -286,7 +286,7 @@ contains
         do i = 1, nbc_xmin
           ! iterate only to deg as last bspline is 0
           order = nbc_xmin-i+self%odd
-          do j = 1, deg
+          do j = 1, degree
             call matrix % set_element( i, j, derivs(order,j) )
           end do
         end do
@@ -294,11 +294,11 @@ contains
       end if
 
       ! Interpolation points
-      do i = nbc_xmin+1, n-nbc_xmax
+      do i = nbc_xmin+1, nbasis-nbc_xmax
         x = self%tau(i-nbc_xmin)
         call self % bspl % eval_basis( x, values, jmin )
-        do s = 1, deg+1
-          j = modulo( jmin+s-1, n ) + 1 
+        do s = 1, degree+1
+          j = modulo( jmin+s-1, nbasis ) + 1
           call matrix % set_element( i, j, values(s) )
         end do
       end do
@@ -316,11 +316,11 @@ contains
           end do
         end associate
 
-        do i = n-nbc_xmax+1, n
-          order = i-(n-nbc_xmax+1)+self%odd
-          j0 = n-deg
+        do i = nbasis-nbc_xmax+1, nbasis
+          order = i-(nbasis-nbc_xmax+1)+self%odd
+          j0 = nbasis-degree
           d0 = 1
-          do s = 1, deg
+          do s = 1, degree
             j = j0 + s
             d = d0 + s
             call matrix % set_element( i, j, derivs(order,d) )
@@ -331,7 +331,7 @@ contains
 
       if ( allocated( derivs ) ) deallocate( derivs )
 
-    end associate ! n, deg
+    end associate ! nbasis, degree
 
   end subroutine s_build_system
 
