@@ -1,6 +1,7 @@
 module sll_m_bsplines_uniform
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_assert.h"
+#include "sll_errors.h"
 
   use sll_m_working_precision, only: f64
   use sll_m_bsplines_base    , only: sll_c_bsplines
@@ -25,6 +26,7 @@ module sll_m_bsplines_uniform
   contains
     procedure :: init                    => s_bsplines_uniform__init
     procedure :: free                    => s_bsplines_uniform__free
+    procedure :: find_cell               => f_bsplines_uniform__find_cell
     procedure :: eval_basis              => s_bsplines_uniform__eval_basis
     procedure :: eval_deriv              => s_bsplines_uniform__eval_deriv
     procedure :: eval_basis_and_n_derivs => s_bsplines_uniform__eval_basis_and_n_derivs
@@ -89,6 +91,17 @@ contains
   subroutine s_bsplines_uniform__free( self )
     class(sll_t_bsplines_uniform), intent(inout) :: self
   end subroutine s_bsplines_uniform__free
+
+  !----------------------------------------------------------------------------
+  function f_bsplines_uniform__find_cell( self, x ) result( icell )
+    class(sll_t_bsplines_uniform), intent(in) :: self
+    real(wp)                     , intent(in) :: x
+    integer :: icell
+
+    icell = -1 ! to avoid warning at compile time
+    SLL_ERROR("sll_t_bsplines_uniform % find_cell","procedure not implemented")
+
+  end function f_bsplines_uniform__find_cell
 
   !-----------------------------------------------------------------------------
   !> Evaluate value at x of all basis functions with support in local cell
