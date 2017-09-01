@@ -21,7 +21,6 @@ module sll_m_bsplines_uniform
 
     ! Private components (public ones defined in base class)
     real(wp), private :: inv_dx
-    integer , private :: offset
 
   contains
     procedure :: init                    => s_bsplines_uniform__init
@@ -42,7 +41,6 @@ contains
 
   ! Module subroutine, private
   SLL_PURE subroutine s_bsplines_uniform__get_icell_and_offset( self, x, icell, x_offset )
-
     class(sll_t_bsplines_uniform), intent(in   ) :: self
     real(wp)                     , intent(in   ) :: x
     integer                      , intent(  out) :: icell
@@ -51,14 +49,10 @@ contains
     SLL_ASSERT( x >= self % xmin )
     SLL_ASSERT( x <= self % xmax )
 
-    if (x == self%xmin) then
-      icell    = 1
-      x_offset = 0.0_wp
-    else if (x == self%xmax) then
-      icell    = self%ncells
-      x_offset = 1.0_wp
+    if      (x == self%xmin) then; icell = 1          ; x_offset = 0.0_wp
+    else if (x == self%xmax) then; icell = self%ncells; x_offset = 1.0_wp
     else
-      x_offset = (x-self%xmin) * self%inv_dx  ! 0 <= x_normalized <= num_cells
+      x_offset = (x-self%xmin) * self%inv_dx  ! 0 <= x_offset <= num_cells
       icell    = int( x_offset )
       x_offset = x_offset - real( icell, wp ) ! 0 <= x_offset < 1
       icell    = icell + 1
@@ -80,13 +74,13 @@ contains
     self % periodic = periodic
     self % uniform  = .true.
     self % ncells   = ncells
-    self % nbasis   = merge( ncells, ncells+degree, periodic )
-
-    ! Private attributes
+    self % nbasis   = merge( ncells  , ncells+degree, periodic )
+    self % offset   = merge( degree/2, 0            , periodic )
     self % xmin     = xmin
     self % xmax     = xmax
+
+    ! Private attributes
     self % inv_dx   = real(ncells,wp) / (xmax-xmin)
-    self % offset   = merge( degree/2, 0, periodic )
 
   end subroutine s_bsplines_uniform__init
 
