@@ -1,15 +1,13 @@
 program test_arbitrary_degree_splines
-!-----------------
-! Contact: Eric Sonnendrucker
-
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_memory.h"
 #include "sll_working_precision.h"
 
+  use sll_m_working_precision, only: f64
+
   use sll_m_boundary_condition_descriptors, only: &
     sll_p_periodic, &
-    sll_p_open    , &
-    sll_p_mirror ! not tested at the moment
+    sll_p_open
 
   use sll_m_bsplines, only: &
     sll_t_bsplines                        , &
@@ -32,885 +30,988 @@ program test_arbitrary_degree_splines
     sll_f_time_elapsed_since, &
     sll_t_time_mark
 
-  ! NEW
-  use sll_m_bsplines_base   , only: sll_c_bsplines
-  use sll_m_bsplines_uniform, only: sll_t_bsplines_uniform
+  ! new interface
+  use sll_m_bsplines_base, only: &
+    sll_c_bsplines
+
+  use sll_m_bsplines_uniform, only: &
+    sll_t_bsplines_uniform
+
+  use sll_m_bsplines_non_uniform, only: &
+    sll_t_bsplines_non_uniform
 
   implicit none
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
-  ! Output format for timing
-  character(len=*), parameter :: timing_fmt = &
-    "(' Computing time for  ',a,':',es12.2)"
+  ! Working precision
+  integer, parameter :: wp = f64
 
-  character(len=50) :: subr
+  ! Output format for timing
+  character(len=*), parameter :: timing_fmt = "('Computing time for  ',a,':',es12.2)"
+
+  character(len=54) :: subr
   logical           :: passed_test
 
   passed_test = .true.
 
-  print *, '*****************************************************************'
-  print *, ' Testing arbitrary degree splines module: '
-  print *, '*****************************************************************'
-
-  print *, '*****************************************************************'
-  print *, ' non uniform periodic '
-  print *, '*****************************************************************'
-  call test_nonuniform_arb_deg_splines_periodic( passed_test )
-  print *, '*****************************************************************'
-  print *, ' uniform B-splines randomly '
-  print *, '*****************************************************************'
-  call test_uniform_b_splines_randomly( passed_test )
-  print *, '*****************************************************************'
-  print *, ' non uniform open '
-  print *, '*****************************************************************'
-  call test_nonuniform_arb_deg_splines_open( passed_test )
-  print *, '*****************************************************************'
-  print *, ' test CPU time '
-  print *, '*****************************************************************'
-  call test_cpu_time
+  write(*,*)
+  write(*,'(a)') '*****************************************************************'
+  write(*,'(a)') ' Compare uniform and non-uniform B-splines on uniform grid'
+  write(*,'(a)') '*****************************************************************'
+  write(*,*)
+  call compare_uniform_and_non_uniform_bsplines( passed_test )
+  write(*,*)
+  write(*,'(a)') '*****************************************************************'
+  write(*,'(a)') ' Non-uniform B-splines, periodic '
+  write(*,'(a)') '*****************************************************************'
+  write(*,*)
+  call test_non_uniform_bsplines_periodic( passed_test )
+  write(*,*)
+  write(*,'(a)') '*****************************************************************'
+  write(*,'(a)') ' Non-uniform B-splines, open '
+  write(*,'(a)') '*****************************************************************'
+  write(*,*)
+  call test_non_uniform_bsplines_open( passed_test )
+  write(*,*)
+  write(*,'(a)') '*****************************************************************'
+  write(*,'(a)') ' Test performance (CPU timing) '
+  write(*,'(a)') '*****************************************************************'
+  write(*,*)
+  call test_performance
 
   if (passed_test) then
-     print *, 'PASSED'
+     write(*,*) 'PASSED'
   else
-     print *, 'FAILED'
+     write(*,*) 'FAILED'
   end if
 
+!++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 contains
+!++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
-  subroutine test_nonuniform_arb_deg_splines_periodic( passed_test )
-
+  !----------------------------------------------------------------------------
+  subroutine compare_uniform_and_non_uniform_bsplines( passed_test )
     logical, intent(inout) :: passed_test
-    sll_real64, dimension(:), allocatable :: grid
-    sll_int32  :: i,j
-    sll_int32  :: num_pts
-    sll_int32  :: degree
-    sll_real64 :: min_val
-    sll_int32  :: ierr
-    sll_real64 :: rnd
-    sll_int32  :: cell
-    sll_real64 :: x
-    sll_real64 :: acc, acc2, acc3
-    sll_real64 :: criterion
-    sll_int32  :: num_tests
-    sll_real64, dimension(:), allocatable :: x_test
-    sll_real64, dimension(:,:), allocatable :: expected1
-    sll_real64, dimension(:,:), allocatable :: expected2
-    sll_real64, dimension(:), allocatable :: answer1
-    sll_real64, dimension(:), allocatable :: answer2
-    sll_real64, dimension(:,:), allocatable :: answer3
-    sll_real64, dimension(:,:), allocatable :: answer4
-    type(sll_t_bsplines)  :: spline
 
-    ! Test on random grid for random degree
+    integer  :: i, p, jmin
+    integer  :: ncells, num_tests
+    integer  :: degree, max_degree
+    real(wp) :: x
+    real(wp) :: tolerance, tolerance_derivs
+
+    real(wp), allocatable :: grid(:)
+    real(wp), allocatable :: values_old(:)
+    real(wp), allocatable :: values_new(:)
+    real(wp), allocatable :: values_old_nu(:)
+    real(wp), allocatable :: values_new_nu(:)
+    real(wp), allocatable :: derivs_old(:)
+    real(wp), allocatable :: derivs_new(:)
+    real(wp), allocatable :: derivs_old_nu(:)
+    real(wp), allocatable :: derivs_new_nu(:)
+    real(wp), allocatable :: values_and_deriv(:,:)
+    real(wp), allocatable :: values_and_deriv_nu(:,:)
+    real(wp), allocatable :: values_and_n_derivs_old(:,:)
+    real(wp), allocatable :: values_and_n_derivs_new(:,:)
+    real(wp), allocatable :: values_and_n_derivs_old_nu(:,:)
+    real(wp), allocatable :: values_and_n_derivs_new_nu(:,:)
+
+    ! B-splines, old type
+    type(sll_t_bsplines) :: bsplines
+    ! Uniform and non-uniform B-splines, new interface
+    type(sll_t_bsplines_uniform)     :: bsplines_uniform
+    type(sll_t_bsplines_non_uniform) :: bsplines_non_uniform
+
+    ncells     = 11
+    num_tests  = 100
+    max_degree = 9
+    tolerance  = 1.0e-15_wp
+
+    ! define uniform grid
+    allocate( grid(ncells+1) )
+    grid(:) = [(0.0_wp+i, i=0,ncells)]
+
+    do degree = 1, max_degree
+
+      write(*,'(a,i0)',advance='no') 'degree = ', degree
+      allocate(values_old   (degree+1)); values_old    = 0.0_wp
+      allocate(values_new   (degree+1)); values_new    = 0.0_wp
+      allocate(values_old_nu(degree+1)); values_old_nu = 0.0_wp
+      allocate(values_new_nu(degree+1)); values_new_nu = 0.0_wp
+
+      allocate(derivs_old   (degree+1)); derivs_old    = 0.0_wp
+      allocate(derivs_new   (degree+1)); derivs_new    = 0.0_wp
+      allocate(derivs_old_nu(degree+1)); derivs_old_nu = 0.0_wp
+      allocate(derivs_new_nu(degree+1)); derivs_new_nu = 0.0_wp
+
+      allocate(values_and_deriv   (0:1,degree+1)); values_and_deriv    = 0.0_wp
+      allocate(values_and_deriv_nu(0:1,degree+1)); values_and_deriv_nu = 0.0_wp
+
+      allocate(values_and_n_derivs_old   (0:degree,degree+1)); values_and_n_derivs_old    = 0.0_wp
+      allocate(values_and_n_derivs_new   (0:degree,degree+1)); values_and_n_derivs_new    = 0.0_wp
+      allocate(values_and_n_derivs_old_nu(0:degree,degree+1)); values_and_n_derivs_old_nu = 0.0_wp
+      allocate(values_and_n_derivs_new_nu(0:degree,degree+1)); values_and_n_derivs_new_nu = 0.0_wp
+
+      ! initialize B-splines, old type
+      call sll_s_bsplines_init_from_grid( bsplines, degree, grid, sll_p_periodic, sll_p_periodic )
+      ! initialize uniform B-splines, new interface
+      call bsplines_uniform % init( degree, periodic=.true., xmin=grid(1), xmax=grid(ncells+1), ncells=ncells )
+      ! initialize non-uniform B-splines, new interface
+      call bsplines_non_uniform % init( degree, periodic=.true., breaks=grid )
+
+      do i=1,num_tests
+
+        ! draw random number between 0 and 1
+        call random_number(x)
+
+        ! compute with uniform B-splines
+        call sll_s_uniform_bsplines_eval_basis( degree, x, values_old )
+        call sll_s_uniform_bsplines_eval_deriv( degree, x, derivs_old )
+        call sll_s_uniform_bsplines_eval_basis_and_deriv( degree, x, values_and_deriv )
+        call sll_s_uniform_bsplines_eval_basis_and_n_derivs( degree, x, degree, values_and_n_derivs_old )
+
+        ! compute with uniform B-splines, new interface
+        call bsplines_uniform % eval_basis( x, values_new, jmin )
+        call bsplines_uniform % eval_deriv( x, derivs_new, jmin )
+        call bsplines_uniform % eval_basis_and_n_derivs( x, degree, values_and_n_derivs_new, jmin )
+
+        ! compute with non uniform B-splines (cell is always 1)
+        call sll_s_bsplines_eval_basis( bsplines, 1, x, values_old_nu )
+        call sll_s_bsplines_eval_deriv( bsplines, 1, x, derivs_old_nu )
+        call sll_s_bsplines_eval_basis_and_deriv( bsplines, 1, x, values_and_deriv_nu )
+        call sll_s_bsplines_eval_basis_and_n_derivs( bsplines, 1, x, degree, values_and_n_derivs_old_nu )
+
+        ! compute with non uniform B-splines, new interface
+        call bsplines_non_uniform % eval_basis( x, values_new_nu, jmin )
+        call bsplines_non_uniform % eval_deriv( x, derivs_new_nu, jmin )
+        call bsplines_non_uniform % eval_basis_and_n_derivs( x, degree, values_and_n_derivs_new_nu, jmin )
+
+        passed_test = passed_test .and. &
+          maxval( abs( values_old-values_new    ) ) < tolerance .and. &
+          maxval( abs( values_old-values_old_nu ) ) < tolerance .and. &
+          maxval( abs( values_old-values_new_nu ) ) < tolerance
+
+        !TODO: improve output
+        if( .not. passed_test ) then
+          write(*,*) 'compare_uniform_and_non_uniform_bsplines, values: wrong result for x = ', x
+          write(*,*) 'degree = ', degree
+          write(*,*) 'uniform B-splines,     old type:', values_old
+          write(*,*) 'uniform B-splines,     new type:', values_new
+          write(*,*) 'non-uniform B-splines, old type:', values_old_nu
+          write(*,*) 'non-uniform B-splines, new type:', values_new_nu
+          write(*,*) 'exiting...'
+          stop
+        end if
+
+        passed_test = passed_test .and. &
+          maxval( abs( derivs_old-derivs_new    ) ) < tolerance .and. &
+          maxval( abs( derivs_old-derivs_old_nu ) ) < tolerance .and. &
+          maxval( abs( derivs_old-derivs_new_nu ) ) < tolerance
+
+        if( .not. passed_test ) then
+          write(*,*) 'compare_uniform_and_non_uniform_bsplines, derivs: ', 'wrong result for x = ', x
+          write(*,*) 'degree = ', degree
+          write(*,*) 'uniform B-splines,     old type:', derivs_old
+          write(*,*) 'uniform B-splines,     new type:', derivs_new
+          write(*,*) 'non-uniform B-splines, old type:', derivs_old_nu
+          write(*,*) 'non-uniform B-splines, new type:', derivs_new_nu
+          write(*,*) 'exiting...'
+          stop
+        end if
+
+        passed_test = passed_test .and. &
+          maxval( abs( values_and_deriv(0,:)-values_and_deriv_nu(0,:) ) ) < tolerance .and. &
+          maxval( abs( values_and_deriv(1,:)-values_and_deriv_nu(1,:) ) ) < tolerance
+
+        if( .not. passed_test ) then
+          write(*,*) 'compare_uniform_and_non_uniform_bsplines, values and derivs: ', 'wrong result for x = ', x
+          write(*,*) 'uniform B-splines,     values:', values_and_deriv   (0,:)
+          write(*,*) 'non-uniform B-splines, values:', values_and_deriv_nu(0,:)
+          write(*,*) 'uniform B-splines,     derivs:', values_and_deriv   (1,:)
+          write(*,*) 'non-uniform B-splines, derivs:', values_and_deriv_nu(1,:)
+          write(*,*) 'exiting...'
+          stop
+        end if
+
+        do p = 0, degree
+          tolerance_derivs = tolerance * 10.0_wp**p
+          passed_test = passed_test .and. &
+            maxval( abs( values_and_n_derivs_old(p,:)-values_and_n_derivs_new(p,:)    ) ) < tolerance_derivs &
+            .and. &
+            maxval( abs( values_and_n_derivs_old(p,:)-values_and_n_derivs_old_nu(p,:) ) ) < tolerance_derivs &
+            .and. &
+            maxval( abs( values_and_n_derivs_old(p,:)-values_and_n_derivs_new_nu(p,:) ) ) < tolerance_derivs
+
+          if( .not. passed_test ) then
+             write(*,*) 'compare_uniform_and_non_uniform_bsplines, values and n derivs: ', 'wrong result for x = ', x
+             write(*,*) 'uniform B-splines,     old type:', p, values_and_n_derivs_old(p,:)
+             write(*,*) 'uniform B-splines,     new type:', p, values_and_n_derivs_new(p,:)
+             write(*,*) 'non-uniform B-splines, old type:', p, values_and_n_derivs_old_nu(p,:)
+             write(*,*) 'non-uniform B-splines, new type:', p, values_and_n_derivs_new_nu(p,:)
+             write(*,*) 'exiting...'
+             stop
+          end if
+        end do
+
+      end do
+
+      if( passed_test ) write(*,*) '  OK'
+
+      deallocate(values_old)
+      deallocate(values_new)
+      deallocate(values_old_nu)
+      deallocate(values_new_nu)
+      deallocate(derivs_old)
+      deallocate(derivs_new)
+      deallocate(derivs_old_nu)
+      deallocate(derivs_new_nu)
+      deallocate(values_and_deriv   )
+      deallocate(values_and_deriv_nu)
+      deallocate(values_and_n_derivs_old)
+      deallocate(values_and_n_derivs_new)
+      deallocate(values_and_n_derivs_old_nu)
+      deallocate(values_and_n_derivs_new_nu)
+
+      ! Free B-splines, old type
+      call sll_s_bsplines_free( bsplines )
+      ! Free uniform B-splines, new interface
+      call bsplines_uniform % free()
+      ! Free non-uniform B-splines, new interface
+      call bsplines_non_uniform % free()
+
+    end do
+
+  end subroutine compare_uniform_and_non_uniform_bsplines
+
+  !----------------------------------------------------------------------------
+  subroutine test_non_uniform_bsplines_periodic( passed_test )
+    logical, intent(inout) :: passed_test
+
+    integer  :: i, j, jmin, cell
+    integer  :: num_pts, num_tests
+    integer  :: degree
+    real(wp) :: x, xmin, rnd
+    real(wp) :: tolerance
+    real(wp), allocatable :: grid(:)
+    real(wp), allocatable :: x_test(:)
+    real(wp), allocatable :: expected1(:,:)
+    real(wp), allocatable :: expected2(:,:)
+    real(wp), allocatable :: values_old(:)
+    real(wp), allocatable :: values_new(:)
+    real(wp), allocatable :: derivs_old(:)
+    real(wp), allocatable :: derivs_new(:)
+    real(wp), allocatable :: values_and_deriv(:,:)
+    real(wp), allocatable :: values_and_n_derivs_old(:,:)
+    real(wp), allocatable :: values_and_n_derivs_new(:,:)
+
+    ! B-splines, old type
+    type(sll_t_bsplines) :: bsplines
+    ! Non-uniform B-splines, new interface
+    type(sll_t_bsplines_non_uniform) :: bsplines_non_uniform
+
+    !--------------------------------------------------------------------------
+    ! Test on random grid for given degree
+    !--------------------------------------------------------------------------
+
     num_tests = 10
-    criterion = 1.0d-15
-    min_val   = 0.0_f64
     num_pts   = 10
+    xmin      = 0.0_wp
+    tolerance = 1.0e-15_wp
 
-    degree    = 6
-    print *, " ------------- Degree = ", degree, " -----------------"
+    degree = 6
+    write(*,'(a)') "Test on random grid for given degree"
+    write(*,'(a)') "------------------------------------"
+    write(*,*)
+    write(*,'(a,i0,a)') "degree = ", degree, ":"
+    write(*,*)
 
-    SLL_ALLOCATE(grid(num_pts),ierr)
-    SLL_ALLOCATE(answer1(degree+1),ierr)
-    SLL_ALLOCATE(answer2(degree+1),ierr)
-    SLL_ALLOCATE(answer3(2,degree+1),ierr)
-    SLL_ALLOCATE(answer4(2,degree+1),ierr)
+    allocate(grid(num_pts))
+    allocate(values_old(degree+1))
+    allocate(values_new(degree+1))
+    allocate(derivs_old(degree+1))
+    allocate(derivs_new(degree+1))
+    allocate(values_and_deriv(2,degree+1))
+    allocate(values_and_n_derivs_old(2,degree+1))
+    allocate(values_and_n_derivs_new(2,degree+1))
 
-    ! --------- 1D SPLINE INITIALIZATION ON NON UNIFORM MESH ----
-    ! Creating non uniform mesh....
-    grid(1) = min_val
-    do i=2,num_pts
-       call random_number(rnd)
-       grid(i) = grid(i-1) + rnd !step
+    ! create non-uniform mesh
+    grid(1) = xmin
+    do i = 2, num_pts
+      call random_number(rnd)
+      grid(i) = grid(i-1) + rnd !step
     end do
-    ! ..... non uniform mesh done
-    ! creating non uniform 1d spline
-    call sll_s_bsplines_init_from_grid( &
-         spline, &
-         degree, &
-         grid  , &
-         sll_p_periodic, &
-         sll_p_periodic )
-    ! --------- INITIALIZATION DONE ------------
 
-    ! To compensate random factor, we do the test more than once:
-    do j=1,num_tests
-       ! We compute a point randomly on the mesh:
-       call random_number(rnd)
-       x = min_val + rnd*(grid(num_pts)-min_val)
-       ! We find its cell:
-       cell = sll_f_find_cell( spline, x )
-       ! initialization accumulator:
-       acc = 0.0_f64
-       ! computing all non zero splines at point x:
-       call sll_s_bsplines_eval_basis(spline, cell, x, answer1)
-       ! computing all non zero spline derivatives at point x:
-       call sll_s_bsplines_eval_deriv(spline, cell, x, answer2)
-       ! computing both all non zero splines and derivatives at point x:
-       call sll_s_bsplines_eval_basis_and_deriv(spline, cell, x, answer3)
-       ! computing both all non zero splines and derivatives at point x:
-       call sll_s_bsplines_eval_basis_and_n_derivs(spline, cell, x, 1, answer4)
-       ! testing partition of unity property of b-splines:
-       acc = abs(1.0_f64 - sum(answer1(1:degree+1)))
-       passed_test = passed_test .and. (acc < criterion)
-       ! corresponding prints:
-       if( passed_test .eqv. .false. ) then
-          print *, 'nonuniform splines test failure, spline values case:'
-          print *, 'cell = ', cell, 'x = ', x
-          print *, 'nonuniform: ', answer1(:)
-          print *, 'accumulator = ', acc
-          print*, 'Exiting...'
-          stop
-       else
-          print *, "test =", j, 'cell = ', cell, 'x=', x
-          print*, "   sum of non null splines at x (expected 1) =", &
-               sum(answer1(1:degree+1)), "... PASSED"
-       end if
+    ! initialize B-splines, old type
+    call sll_s_bsplines_init_from_grid( bsplines, degree, grid, sll_p_periodic, sll_p_periodic )
+    ! initialize non-uniform B-splines, new interface
+    call bsplines_non_uniform % init( degree, periodic=.true., breaks=grid )
 
-       ! test spline derivatives
-       acc = 0.0_f64
-       ! test of sum all derivatives (should be 0):
-       acc = abs(sum(answer2(1:degree+1)))
-       passed_test = passed_test .and. (acc < criterion)
-       if( passed_test .eqv. .false. ) then
-          print *, 'periodic nonuniform splines test failure, derivatives case:'
-          print *, 'cell = ', cell, 'x = ', x
-          print *, 'nonuniform: ', answer1(:)
-          print *, 'accumulator = ', acc
-          print*, 'Exiting...'
-          stop
-       else
-          print *,  "   sum of non null splines derivatives at x", &
-               " (expected 0) =", sum(answer1(1:degree+1)), "... PASSED"
-       end if
+    do j = 1, num_tests
 
-       ! test subroutine sll_s_bsplines_eval_basis_and_deriv
-       ! check that spline values are the same as those from sll_s_bsplines_eval_basis
-       ! and derivatives are the same as those from sll_s_bsplines_eval_deriv
-       acc  = 0.0_f64
-       acc2 = 0.0_f64
-       acc3 = 0.0_f64
-       do i=1, degree+1
-          acc  = max(acc,  abs(answer1(i)-answer3(1,i)))
-          acc2 = max(acc2, abs(answer2(i)-answer3(2,i)))
-          acc3 = max(acc3, abs(answer3(2,i)-answer4(2,i)))
-       end do
+      ! compute a point randomly on the mesh
+      call random_number(rnd)
+      x = xmin + rnd*(grid(num_pts)-xmin)
 
-       passed_test = passed_test .and. (acc < criterion)
-       if( passed_test .eqv. .false. ) then
-          print *, 'periodic nonuniform splines test failure:'
-          print*,  'values of splines computed in sll_s_bsplines_eval_basis and ',&
-               ' sll_s_bsplines_eval_deriv are not the same'
-          print *, 'cell = ', cell, 'x = ', x
-          print *, 'sll_s_bsplines_eval_basis: ', answer1(:)
-          print *, 'b_spline_and_derivs_at_x: ', answer3(1,:)
-          print *, 'accumulator = ', acc
-!          print*, 'Exiting...'
-!          stop
-       end if
-       passed_test = passed_test .and. (acc2 < criterion)
-       if( passed_test .eqv. .false. ) then
-          print *, 'periodic nonuniform splines test failure:'
-          print*,  'values of derivatives computed in ', &
-               'sll_s_bsplines_eval_deriv and ',&
-               ' b_spline_and_derivs_at_x are not the same'
-          print *, 'cell = ', cell, 'x = ', x
-          print *, 'sll_s_bsplines_eval_deriv: ', answer2(:)
-          print *, 'b_spline_and_derivs_at_x: ', answer3(2,:)
-          print *, 'accumulator = ', acc2
-!          print*, 'Exiting...'
-!          stop
-       end if
-       passed_test = passed_test .and. (acc3 < criterion)
-       if( passed_test .eqv. .false. ) then
-          print *, 'periodic nonuniform splines test failure:'
-          print*,  'values of derivatives computed in ', &
-               'sll_s_spline_and_derivs_at_x and ',&
-               'sll_s_spline_and_n_derivs_at_x are not the same'
-          print *, 'cell = ', cell, 'x = ', x
-          print *, 'sll_s_spline_and_derivs_at_x: ', answer3(2,:)
-          print *, 'sll_s_spline_and_n_derivs_at_x: ', answer4(2,:)
-          print *, 'accumulator = ', acc3
-!          print*, 'Exiting...'
-!          stop
-       end if
+      cell = sll_f_find_cell( bsplines, x )
+
+      ! compute with non-uniform B-splines, old type
+      call sll_s_bsplines_eval_basis( bsplines, cell, x, values_old )
+      call sll_s_bsplines_eval_deriv( bsplines, cell, x, derivs_old )
+      call sll_s_bsplines_eval_basis_and_deriv( bsplines, cell, x, values_and_deriv )
+      call sll_s_bsplines_eval_basis_and_n_derivs( bsplines, cell, x, 1, values_and_n_derivs_old )
+
+      ! compute with non uniform B-splines, new interface
+      call bsplines_non_uniform % eval_basis( x, values_new, jmin )
+      call bsplines_non_uniform % eval_deriv( x, derivs_new, jmin )
+      call bsplines_non_uniform % eval_basis_and_n_derivs( x, 1, values_and_n_derivs_new, jmin )
+
+      ! test partition of unity
+      passed_test = passed_test .and. &
+        abs( 1.0_wp - sum( values_old(1:degree+1) ) ) < tolerance .and. &
+        abs( 1.0_wp - sum( values_new(1:degree+1) ) ) < tolerance
+
+      if( .not. passed_test ) then
+        write(*,*) 'test_non_uniform_bsplines_periodic, values: wrong result for x = ', x
+        write(*,*) 'non-uniform B-splines, old type, sum of values: ', sum( values_old(1:degree+1) )
+        write(*,*) 'non-uniform B-splines, new type, sum of values: ', sum( values_new(1:degree+1) )
+        write(*,*) 'exiting...'
+        stop
+      else
+        write(*,'(a,i2,a,i2,a)') "test ", j, ", cell ", cell, ": testing partition of unity   OK"
+      end if
+
+      ! test sum of all derivatives (should be 0)
+      passed_test = passed_test .and. &
+        abs( sum( derivs_old(1:degree+1) ) ) < tolerance .and. &
+        abs( sum( derivs_new(1:degree+1) ) ) < tolerance
+
+      if( .not. passed_test ) then
+        write(*,*) 'test_non_uniform_bsplines_periodic, derivs: wrong result for x = ', x
+        write(*,*) 'non-uniform B-splines, old type, sum of derivs: ', sum( derivs_old(1:degree+1) )
+        write(*,*) 'non-uniform B-splines, new type, sum of derivs: ', sum( derivs_new(1:degree+1) )
+        write(*,*) 'exiting...'
+        stop
+      else
+        write(*,'(a)') "                  testing sum of derivatives   OK"
+      end if
+
+      ! test methods to obtain both values and derivs
+      passed_test = passed_test .and. &
+        maxval( abs( values_old(:)-values_and_deriv(1,:) ) ) < tolerance .and. &
+        maxval( abs( values_new(:)-values_and_deriv(1,:) ) ) < tolerance
+
+      if( .not. passed_test ) then
+        write(*,*) 'test_non_uniform_bsplines_periodic, values and derivs: wrong result for x = ', x
+        write(*,*) 'non-uniform B-splines, old type, values: ', values_old
+        write(*,*) 'non-uniform B-splines, new type, values: ', values_new
+        write(*,*) 'non-uniform B-splines, old type, values_and_deriv: ', values_and_deriv(1,:)
+        write(*,*) 'exiting...'
+        stop
+      else
+        write(*,'(a)') "                  consistency checks           OK"
+      end if
+
+      passed_test = passed_test .and. &
+        maxval( abs( derivs_old(:)-values_and_deriv(2,:) ) ) < tolerance .and. &
+        maxval( abs( derivs_new(:)-values_and_deriv(2,:) ) ) < tolerance
+
+      if( .not. passed_test ) then
+        write(*,*) 'test_non_uniform_bsplines_periodic, values and derivs: wrong result for x = ', x
+        write(*,*) 'non-uniform B-splines, old type, values: ', derivs_old
+        write(*,*) 'non-uniform B-splines, new type, values: ', derivs_new
+        write(*,*) 'non-uniform B-splines, old type, values_and_deriv: ', values_and_deriv(2,:)
+        write(*,*) 'exiting...'
+        stop
+      else
+        write(*,'(a)') "                  consistency checks           OK"
+      end if
+
+      passed_test = passed_test .and. &
+        maxval( abs( values_and_deriv(2,:)-values_and_n_derivs_old(2,:) ) ) < tolerance .and. &
+        maxval( abs( values_and_deriv(2,:)-values_and_n_derivs_new(2,:) ) ) < tolerance
+
+      if( .not. passed_test ) then
+        write(*,*) 'test_non_uniform_bsplines_periodic, values and derivs: wrong result for x = ', x
+        write(*,*) 'non-uniform B-splines, old type, values_and_deriv: ', values_and_deriv(2,:)
+        write(*,*) 'non-uniform B-splines, old type, values_and_n_derivs: ', values_and_n_derivs_old(2,:)
+        write(*,*) 'non-uniform B-splines, new type, values_and_n_derivs: ', values_and_n_derivs_new(2,:)
+        write(*,*) 'exiting...'
+        stop
+      else
+        write(*,'(a)') "                  consistency checks           OK"
+      end if
 
     end do
 
-    SLL_DEALLOCATE_ARRAY(grid,ierr)
-    SLL_DEALLOCATE_ARRAY(answer1, ierr)
-    SLL_DEALLOCATE_ARRAY(answer2, ierr)
-    SLL_DEALLOCATE_ARRAY(answer3, ierr)
+    deallocate(grid)
+    deallocate(values_old)
+    deallocate(values_new)
+    deallocate(derivs_old)
+    deallocate(derivs_new)
+    deallocate(values_and_deriv)
+    deallocate(values_and_n_derivs_old)
+    deallocate(values_and_n_derivs_new)
 
-    call sll_s_bsplines_free(spline)
+    call sll_s_bsplines_free(bsplines)
 
+    !--------------------------------------------------------------------------
     ! Test on given grid with known answer
-    criterion = 1.0d-15
-    min_val   = 0.0_f64
-    num_pts   = 5
+    !--------------------------------------------------------------------------
+
     num_tests = 7
-    degree    = 3
-    print *, " ------------- Degree = ", degree, " -----------------"
+    num_pts   = 5
+    xmin      = 0.0_wp
+    tolerance = 1.0e-15_wp
 
-    SLL_ALLOCATE(grid(num_pts),ierr)
-    SLL_ALLOCATE(x_test(num_tests),ierr)
-    SLL_ALLOCATE(expected1(degree+1,num_tests),ierr)
-    SLL_ALLOCATE(expected2(degree+1,num_tests),ierr)
-    SLL_ALLOCATE(answer1(degree+1),ierr)
-    SLL_ALLOCATE(answer2(degree+1),ierr)
-    SLL_ALLOCATE(answer3(2,degree+1),ierr)
+    degree = 3
+    write(*,*)
+    write(*,'(a)') "Test on given grid with known answer"
+    write(*,'(a)') "------------------------------------"
+    write(*,*)
+    write(*,'(a,i0,a)') "degree = ", degree, ":"
+    write(*,*)
 
-    ! --------- 1D SPLINE INITIALIZATION ON NON UNIFORM MESH ----
-    ! Define non uniform grid
-    grid = (/0.0_f64, 2.0_f64, 3.0_f64, 4.5_f64, 5.0_f64 /)
-    ! creating non uniform 1d spline
-    call sll_s_bsplines_init_from_grid( &
-         spline, &
-         degree, &
-         grid  , &
-         sll_p_periodic, &
-         sll_p_periodic )
-    ! --------- INITIALIZATION DONE ------------
+    allocate(grid(num_pts))
+    allocate(values_old(degree+1))
+    allocate(values_new(degree+1))
+    allocate(derivs_old(degree+1))
+    allocate(derivs_new(degree+1))
+    allocate(values_and_deriv(2,degree+1))
+
+    allocate(x_test(num_tests))
+    allocate(expected1(degree+1,num_tests))
+    allocate(expected2(degree+1,num_tests))
+
+    ! define non-uniform grid
+    grid = (/0.0_wp, 2.0_wp, 3.0_wp, 4.5_wp, 5.0_wp /)
+
+    ! initialize B-splines, old type
+    call sll_s_bsplines_init_from_grid( bsplines, degree, grid, sll_p_periodic, sll_p_periodic )
+    ! initialize non-uniform B-splines, new interface
+    call bsplines_non_uniform % init( degree, periodic=.true., breaks=grid )
+
     ! array of points where splines will be evaluated
-    x_test = (/0._f64, 0.5_f64, 1.2_f64, 2.001_f64, 3._f64, 4.0_f64, 5.0_f64 /)
-    !x_test = (/0._f64, 0.5_f64, 1._f64, 2._f64, 3._f64, 4.5_f64, 5._f64 /)
+    x_test = (/0._wp, 0.5_wp, 1.2_wp, 2.001_wp, 3._wp, 4.0_wp, 5.0_wp /)
+
     ! Expected values of bsplines and derivatives at these points
-    ! at point 0.0
-    expected1(1,1) = 0.4_f64
-    expected1(2,1) = 0.5714285714285714_f64
-    expected1(3,1) = 0.028571428571428574_f64
-    expected1(4,1) = 0.0_f64
-    ! at point 0.5
-    expected1(1,2) = 0.16874999999999999_f64
-    expected1(2,2) = 0.644345238095238_f64
-    expected1(3,2) = 0.18227513227513226_f64
-    expected1(4,2) = 0.004629629629629629_f64
-    ! at point 1.2
-    expected1(1,3) = 0.0256_f64
-    expected1(2,3) = 0.42742857142857144_f64
-    expected1(3,3) = 0.4829714285714285_f64
-    expected1(4,3) = 0.06399999999999999_f64
-    ! at point 2.001
-    expected1(1,4) = 0.0949526665714286_f64
-    expected1(2,4) = 0.6083063706285714_f64
-    expected1(3,4) = 0.2967409626666666_f64
-    expected1(4,4) = 1.3333333333328926d-10
-    ! at point 3.0
-    expected1(1,5) = 0.2_f64
-    expected1(2,5) = 0.6666666666666666_f64
-    expected1(3,5) = 0.13333333333333333_f64
-    expected1(4,5) = 0.0_f64
-    ! at point 4.0
-    expected1(1,6) = 0.007407407407407407_f64
-    expected1(2,6) = 0.25925925925925924_f64
-    expected1(3,6) = 0.65_f64
-    expected1(4,6) = 0.08333333333333333_f64
-    ! at point 5.0
-    expected1(1,7) = 0.0_f64
-    expected1(2,7) = 0.4_f64
-    expected1(3,7) = 0.5714285714285714_f64
-    expected1(4,7) = 0.028571428571428574_f64
-    ! derivatives
-    ! at point 0.0
-    expected2(1,1) = -0.6_f64
-    expected2(2,1) = 0.42857142857142866_f64
-    expected2(3,1) = 0.17142857142857143_f64
-    expected2(4,1) = 0.0_f64
-    ! at point 0.5
-    expected2(1,2) = -0.3375_f64
-    expected2(2,2) = -0.0982142857142857_f64
-    expected2(3,2) = 0.4079365079365079_f64
-    expected2(4,2) = 0.027777777777777777_f64
-    ! point 1.2
-    expected2(1,3) = -0.096_f64
-    expected2(2,3) = -0.44571428571428573_f64
-    expected2(3,3) = 0.38171428571428573_f64
-    expected2(4,3) = 0.16_f64
-    ! at point 2.001
-    expected2(1,4) = -0.2851431428571429_f64
-    expected2(2,4) = -0.15974525714285698_f64
-    expected2(3,4) = 0.44488799999999984_f64
-    expected2(4,4) = 3.999999999999119d-07
-    ! at point 3.0
-    expected2(1,5) = -0.4_f64
-    expected2(2,5) = 0.0_f64
-    expected2(3,5) = 0.4_f64
-    expected2(4,5) = 0.0_f64
-    ! at point 4.0
-    expected2(1,6) = -0.04444444444444444_f64
-    expected2(2,6) = -0.55555555555555555_f64
-    expected2(3,6) = 0.35_f64
-    expected2(4,6) = 0.25_f64
-    ! at point 5.0
-    expected2(1,7) = 0.0_f64
-    expected2(2,7) = -0.6_f64
-    expected2(3,7) = 0.42857142857142866_f64
-    expected2(4,7) = 0.17142857142857143_f64
+    ! expected(:,i): values expected at point x_test(i)
+    ! values:
+    expected1(1,1) = 0.4_wp
+    expected1(2,1) = 0.5714285714285714_wp
+    expected1(3,1) = 0.028571428571428574_wp
+    expected1(4,1) = 0.0_wp
+    !
+    expected1(1,2) = 0.16874999999999999_wp
+    expected1(2,2) = 0.644345238095238_wp
+    expected1(3,2) = 0.18227513227513226_wp
+    expected1(4,2) = 0.004629629629629629_wp
+    !
+    expected1(1,3) = 0.0256_wp
+    expected1(2,3) = 0.42742857142857144_wp
+    expected1(3,3) = 0.4829714285714285_wp
+    expected1(4,3) = 0.06399999999999999_wp
+    !
+    expected1(1,4) = 0.0949526665714286_wp
+    expected1(2,4) = 0.6083063706285714_wp
+    expected1(3,4) = 0.2967409626666666_wp
+    expected1(4,4) = 1.3333333333328926e-10_wp
+    !
+    expected1(1,5) = 0.2_wp
+    expected1(2,5) = 0.6666666666666666_wp
+    expected1(3,5) = 0.13333333333333333_wp
+    expected1(4,5) = 0.0_wp
+    !
+    expected1(1,6) = 0.007407407407407407_wp
+    expected1(2,6) = 0.25925925925925924_wp
+    expected1(3,6) = 0.65_wp
+    expected1(4,6) = 0.08333333333333333_wp
+    !
+    expected1(1,7) = 0.0_wp
+    expected1(2,7) = 0.4_wp
+    expected1(3,7) = 0.5714285714285714_wp
+    expected1(4,7) = 0.028571428571428574_wp
+    ! derivatives:
+    expected2(1,1) = -0.6_wp
+    expected2(2,1) = 0.42857142857142866_wp
+    expected2(3,1) = 0.17142857142857143_wp
+    expected2(4,1) = 0.0_wp
+    !
+    expected2(1,2) = -0.3375_wp
+    expected2(2,2) = -0.0982142857142857_wp
+    expected2(3,2) = 0.4079365079365079_wp
+    expected2(4,2) = 0.027777777777777777_wp
+    !
+    expected2(1,3) = -0.096_wp
+    expected2(2,3) = -0.44571428571428573_wp
+    expected2(3,3) = 0.38171428571428573_wp
+    expected2(4,3) = 0.16_wp
+    !
+    expected2(1,4) = -0.2851431428571429_wp
+    expected2(2,4) = -0.15974525714285698_wp
+    expected2(3,4) = 0.44488799999999984_wp
+    expected2(4,4) = 3.999999999999119e-07_wp
+    !
+    expected2(1,5) = -0.4_wp
+    expected2(2,5) = 0.0_wp
+    expected2(3,5) = 0.4_wp
+    expected2(4,5) = 0.0_wp
+    !
+    expected2(1,6) = -0.04444444444444444_wp
+    expected2(2,6) = -0.55555555555555555_wp
+    expected2(3,6) = 0.35_wp
+    expected2(4,6) = 0.25_wp
+    !
+    expected2(1,7) = 0.0_wp
+    expected2(2,7) = -0.6_wp
+    expected2(3,7) = 0.42857142857142866_wp
+    expected2(4,7) = 0.17142857142857143_wp
 
-    do j=1,num_tests
-       x= x_test(j)
+    do j = 1, num_tests
 
-       ! We find its cell:
-       cell = sll_f_find_cell( spline, x )
-       ! initialization accumulator:
-       acc = 0.0_f64
-       ! computing all non zero splines at point x:
-       call sll_s_bsplines_eval_basis(spline, cell, x, answer1)
-       ! check difference with expected values
-       do i = 1, degree + 1
-          acc = max(acc,abs(answer1(i)-expected1(i,j)))
-       end do
-       passed_test = passed_test .and. (acc < criterion)
-       ! corresponding prints:
-       if( passed_test .eqv. .false. ) then
-          print *, 'nonuniform splines test failure, spline values case:'
-          print *, 'cell = ', cell, ',   x = ', x
-          do i = 1, degree + 1
-             print*, 'computed: ', answer1(i), 'expected = ', expected1(i,j)
-          end do
-          print*, 'Exiting...'
-          stop
-       else
-          print *, 'test:', j, 'Evaluation of splines',  &
-              ' at point ', x_test(j), "... PASSED"
-       end if
+      x = x_test(j)
 
-       ! test spline derivatives
-       ! computing derivatives of all non zero splines:
-       call sll_s_bsplines_eval_deriv(spline, cell, x, answer2)
-       ! check difference with expected values
-       acc = 0.0_f64
-       do i = 1, degree + 1
-          acc = max(acc,abs(answer2(i)-expected2(i,j)))
-       end do
-       passed_test = passed_test .and. (acc < criterion)
-       if( passed_test .eqv. .false. ) then
-          print *, 'periodic nonuniform splines test failure:'
-          print *, 'computation of derivatives:'
-          print *, 'cell = ', cell, 'x = ', x
-          do i = 1, degree + 1
-             print*, 'computed: ', answer2(i), 'expected = ', expected2(i,j)
-          end do
-          print *, 'error = ', acc
-          print*, 'Exiting...'
-          stop
-       else
-          print *, '                  Evaluation of splines derivatives', &
-              ' at point ', x_test(j), "... PASSED"
-       end if
+      cell = sll_f_find_cell( bsplines, x )
+
+      ! compute with non-uniform B-splines, old type
+      call sll_s_bsplines_eval_basis( bsplines, cell, x, values_old )
+      call sll_s_bsplines_eval_deriv( bsplines, cell, x, derivs_old )
+
+      ! compute with non uniform B-splines, new interface
+      call bsplines_non_uniform % eval_basis( x, values_new, jmin )
+      call bsplines_non_uniform % eval_deriv( x, derivs_new, jmin )
+
+      ! values: check difference with expected values
+      passed_test = passed_test .and. &
+        maxval( abs( values_old(:)-expected1(:,j) ) ) < tolerance .and. &
+        maxval( abs( values_new(:)-expected1(:,j) ) ) < tolerance
+
+      if( .not. passed_test ) then
+        write(*,*) 'test_non_uniform_bsplines_periodic, values: wrong result for x = ', x
+        write(*,*) 'non-uniform B-splines, old type, values: ', values_old
+        write(*,*) 'non-uniform B-splines, new type, values: ', values_new
+        write(*,*) 'non-uniform B-splines, expected results: ', expected1(:,j)
+        write(*,*) 'exiting...'
+        stop
+      else
+        write(*,'(a,i2,a,i2,a)') "test ", j, ", cell ", cell, ": comparing values      of B-splines   OK"
+      end if
+
+      ! derivs: check difference with expected values
+      passed_test = passed_test .and. &
+        maxval( abs( derivs_old(:)-expected2(:,j) ) ) < tolerance .and. &
+        maxval( abs( derivs_new(:)-expected2(:,j) ) ) < tolerance
+
+      if( .not. passed_test ) then
+        write(*,*) 'test_non_uniform_bsplines_periodic, derivs: wrong result for x = ', x
+        write(*,*) 'non-uniform B-splines, old type, values: ', derivs_old
+        write(*,*) 'non-uniform B-splines, new type, values: ', derivs_new
+        write(*,*) 'non-uniform B-splines, expected results: ', expected2(:,j)
+        write(*,*) 'exiting...'
+        stop
+      else
+        write(*,'(a)') "                  comparing derivatives of B-splines   OK"
+      end if
+
     end do
 
-    SLL_DEALLOCATE_ARRAY(answer1, ierr)
-    SLL_DEALLOCATE_ARRAY(answer2, ierr)
-    SLL_DEALLOCATE_ARRAY(answer3, ierr)
+    deallocate(values_old)
+    deallocate(values_new)
+    deallocate(derivs_old)
+    deallocate(derivs_new)
+    deallocate(values_and_deriv)
 
-    call sll_s_bsplines_free(spline)
+    call sll_s_bsplines_free( bsplines )
+    call bsplines_non_uniform % free()
 
-  end subroutine test_nonuniform_arb_deg_splines_periodic
+  end subroutine test_non_uniform_bsplines_periodic
 
-  subroutine test_uniform_b_splines_randomly( passed_flag )
-    logical, intent(inout)      :: passed_flag
-    ! local variables
-    sll_real64                  :: criterion
-    sll_real64                  :: argument
-    sll_real64                  :: argument_copy
-
-    sll_real64, dimension(:)  , allocatable :: results
-    sll_real64, dimension(:)  , allocatable :: results_n
-    sll_real64, dimension(:)  , allocatable :: derivatives
-    sll_real64, dimension(:)  , allocatable :: derivatives_n
-    sll_real64, dimension(:,:), allocatable :: sp_and_derivs
-    sll_real64, dimension(:,:), allocatable :: sp_and_derivs_n
-    sll_real64, dimension(:,:), allocatable :: sp_and_j_derivs
-    sll_real64, dimension(:,:), allocatable :: sp_and_j_derivs_n
-
-    sll_int32                   :: num_tests
-    sll_int32                   :: i
-    sll_int32                   :: j
-    sll_int32                   :: p
-    sll_int32                   :: max_degree
-    sll_int32                   :: ierr
-    sll_real64                  :: error
-    sll_real64                  :: tolerance
-    sll_int32, parameter        :: num_pts = 12
-    sll_real64, dimension(num_pts)  :: grid
-    type(sll_t_bsplines) :: spline
-
-    criterion          = 1.0d-14
-    argument           = 0.0_f64
-    num_tests          = 100
-    argument_copy      = argument
-    max_degree         = 10
-
-    ! Define uniform grid for nonuniform spline
-    grid = (/0.0_f64, 1.0_f64, 2.0_f64, 3.0_f64, 4.0_f64, 5.0_f64, 6.0_f64, &
-         7.0_f64, 8.0_f64, 9.0_f64, 10.0_f64, 11.0_f64 /)
-
-    do j=1, max_degree
-       print*, '--------- degree=', j
-       SLL_CLEAR_ALLOCATE(results  (1:j+1),ierr)
-       SLL_CLEAR_ALLOCATE(results_n(1:j+1),ierr)
-
-       SLL_CLEAR_ALLOCATE(derivatives  (1:j+1),ierr)
-       SLL_CLEAR_ALLOCATE(derivatives_n(1:j+1),ierr)
-
-       SLL_CLEAR_ALLOCATE(sp_and_derivs  (0:1,1:j+1),ierr)
-       SLL_CLEAR_ALLOCATE(sp_and_derivs_n(0:1,1:j+1),ierr)
-
-       SLL_CLEAR_ALLOCATE(sp_and_j_derivs  (0:j,1:j+1),ierr)
-       SLL_CLEAR_ALLOCATE(sp_and_j_derivs_n(0:j,1:j+1),ierr)
-
-       ! creating non uniform 1d spline on uniform grid for comparison
-       call sll_s_bsplines_init_from_grid( &
-            spline, &
-            j     , &
-            grid  , &
-            sll_p_periodic, &
-            sll_p_periodic )
-
-       do i=1,num_tests
-          ! draw random number between 0 and 1
-          call random_number(argument)
-
-          ! compute values with uniform splines
-          call sll_s_uniform_bsplines_eval_basis(j, argument, results)
-          call sll_s_uniform_bsplines_eval_deriv(j, argument, derivatives)
-          call sll_s_uniform_bsplines_eval_basis_and_deriv   (j, argument, sp_and_derivs)
-          call sll_s_uniform_bsplines_eval_basis_and_n_derivs(j, argument, j, sp_and_j_derivs)
-
-          ! compute values with non uniform splines (cell is always 1)
-          call sll_s_bsplines_eval_basis(spline, 1, argument, results_n)
-          call sll_s_bsplines_eval_deriv(spline, 1, argument, derivatives_n)
-          call sll_s_bsplines_eval_basis_and_deriv   (spline, 1, argument, sp_and_derivs_n)
-          call sll_s_bsplines_eval_basis_and_n_derivs(spline, 1, argument, j, sp_and_j_derivs_n)
-
-          passed_flag = passed_flag .and. &
-               (maxval(abs(results-results_n)).le.criterion)
-
-          if( passed_flag .eqv. .false. ) then
-             print *, 'Test_uniform_b_splines, values: wrong result for x = ', &
-                  argument
-             print *, 'Degree = ', j
-             print*, 'uniform splines', results
-             print*, 'nonuniform splines', results_n
-             print*, 'Exiting...'
-             stop
-          end if
-
-          passed_flag = passed_flag .and. &
-               (maxval(abs(derivatives-derivatives_n)).le.criterion)
-          if( passed_flag .eqv. .false. ) then
-             print *, 'Test_uniform_b_splines, derivativess: ', &
-                  'wrong result for x = ', &
-                  argument
-             print *, 'Degree = ', j
-             print*, 'uniform splines', derivatives
-             print*, 'nonuniform splines', derivatives_n
-             print*, 'Exiting...'
-             stop
-          end if
-
-          passed_flag = passed_flag .and. &
-               (maxval(abs(sp_and_derivs(0,:)-sp_and_derivs_n(0,:) )) &
-               .le.criterion) .and. &
-               (maxval(abs(sp_and_derivs(1,:)-sp_and_derivs_n(1,:) )) &
-               .le.criterion)
-          if( passed_flag .eqv. .false. ) then
-             print *, 'Test_uniform_b_splines, vals and derivs: ', &
-                  'wrong result for x = ', argument
-             print*, 'uniform splines values'     , sp_and_derivs  (0,:)
-             print*, 'nonuniform splines values'  , sp_and_derivs_n(0,:)
-             print*, 'uniform splines derivatives', sp_and_derivs  (1,:)
-             print*, 'nonuniform spline derivs'   , sp_and_derivs_n(1,:)
-             print*, 'Exiting...'
-             stop
-          end if
-
-          do p = 0, j
-             error = maxval(abs( sp_and_j_derivs(p,:)-sp_and_j_derivs_n(p,:) ))
-             tolerance   = criterion * (10._f64**p)
-             passed_flag = passed_flag .and. (error <= tolerance)
-             if( passed_flag .eqv. .false. ) then
-                print *, 'Test_uniform_b_splines, vals and n derivs: ', &
-                      'wrong result for x = ', argument
-                print*, 'uniform    splines deriv', p, sp_and_j_derivs  (p,:)
-                print*, 'nonuniform splines deriv', p, sp_and_j_derivs_n(p,:)
-                print*, 'Exiting...'
-                stop
-            end if
-          end do
-
-          results(:)         = 0.0_f64
-          derivatives(:)     = 0.0_f64
-          sp_and_derivs(:,:) = 0.0_f64
-          sp_and_j_derivs(:,:) = 0.0_f64
-
-       end do
-       SLL_DEALLOCATE_ARRAY(results  , ierr)
-       SLL_DEALLOCATE_ARRAY(results_n, ierr)
-       SLL_DEALLOCATE_ARRAY(derivatives  , ierr)
-       SLL_DEALLOCATE_ARRAY(derivatives_n, ierr)
-       SLL_DEALLOCATE_ARRAY(sp_and_derivs  , ierr)
-       SLL_DEALLOCATE_ARRAY(sp_and_derivs_n, ierr)
-       SLL_DEALLOCATE_ARRAY(sp_and_j_derivs  , ierr)
-       SLL_DEALLOCATE_ARRAY(sp_and_j_derivs_n, ierr)
-
-       call sll_s_bsplines_free(spline)
-    end do
-
-  end subroutine test_uniform_b_splines_randomly
-
-
+  !----------------------------------------------------------------------------
   ! The case of 'open' boundary condition yields spline values different
   ! than in the 'periodic' case. Since we can not compare with the uniform
   ! splines anymore to get the right answer, we need a different criterion.
-  ! For lack of something better, at this moment we only check that the
-  ! different spline values, when added, will equal 1.0.
-  subroutine test_nonuniform_arb_deg_splines_open( passed_test )
+  ! For lack of something better, at the moment we only check the property of
+  ! the partition of unity.
+  subroutine test_non_uniform_bsplines_open( passed_test )
     logical, intent(inout) :: passed_test
-    sll_real64, dimension(:), allocatable :: grid
-    sll_int32  :: i,j
-    sll_int32  :: num_pts
-    sll_int32  :: degree
-    sll_real64 :: min_val
-    sll_int32  :: ierr
-    sll_real64 :: rnd
-    sll_real64 :: step
-    sll_int32  :: cell
-    sll_real64 :: x
-    sll_real64 :: acc, acc2
-    sll_real64 :: criterion
-    sll_int32  :: num_tests
-    sll_real64, dimension(:), allocatable     :: answer
-    sll_real64, dimension(:,:), allocatable   :: answer2
-    type(sll_t_bsplines)    :: spline
 
-    num_tests = 10 !100000
-    criterion = 1.0d-15
+    integer  :: i, j, jmin, cell
+    integer  :: num_pts, num_tests
+    integer  :: degree
+    real(wp) :: x, xmin, rnd
+    real(wp) :: step
+    real(wp) :: tolerance
+    real(wp), allocatable :: grid(:)
+    real(wp), allocatable :: values_old(:)
+    real(wp), allocatable :: values_new(:)
+    real(wp), allocatable :: derivs_old(:)
+    real(wp), allocatable :: derivs_new(:)
+    real(wp), allocatable :: values_and_deriv(:,:)
+
+    ! B-splines, old type
+    type(sll_t_bsplines) :: bsplines
+    ! Non-uniform B-splines, new interface
+    type(sll_t_bsplines_non_uniform) :: bsplines_non_uniform
+
+    num_tests = 10
+    num_pts   = 10
+    xmin      = 0.0_wp
+    step      = 1.0_wp
+    tolerance = 1.0d-15
+
     degree  = 3
-    min_val = 0.0_f64
-    num_pts = 10
-    step    = 1.0_f64
-    SLL_ALLOCATE(grid(num_pts),ierr)
-    SLL_ALLOCATE(answer(degree+1),ierr)
-    SLL_ALLOCATE(answer2(2,degree+1),ierr)
+    write(*,'(a)') "Test on random grid for given degree"
+    write(*,'(a)') "------------------------------------"
+    write(*,*)
+    write(*,'(a,i0,a)') "degree = ", degree, ":"
+    write(*,*)
 
-    ! fill grid array. Try first a uniform set of grid to compare with the
-    ! uniform spline functions.
-    grid(1) = min_val
-    do i=2,num_pts
-       call random_number(rnd)
-       grid(i) = grid(i-1) + step + rnd
+    allocate(grid(num_pts))
+    allocate(values_old(degree+1))
+    allocate(values_new(degree+1))
+    allocate(derivs_old(degree+1))
+    allocate(derivs_new(degree+1))
+    allocate(values_and_deriv(2,degree+1))
+
+    ! create non-uniform mesh
+    grid(1) = xmin
+    do i = 2, num_pts
+      call random_number(rnd)
+      grid(i) = grid(i-1) + step + rnd
     end do
-    !print *, 'grid array = ', grid(:)
 
-    ! fill spline object
-    call sll_s_bsplines_init_from_grid( &
-         spline, &
-         degree, &
-         grid  , &
-         sll_p_open, &
-         sll_p_open )
+    ! initialize B-splines, old type
+    call sll_s_bsplines_init_from_grid( bsplines, degree, grid, sll_p_open, sll_p_open )
+    ! initialize non-uniform B-splines, new interface
+    call bsplines_non_uniform % init( degree, periodic=.false., breaks=grid )
 
-    do j=1,num_tests
-       call random_number(rnd)
-       x = min_val + rnd*(grid(num_pts)-min_val)
-       cell = sll_f_find_cell( spline, x )
-       acc = 0.0_f64
+    do j = 1, num_tests
 
-       ! test spline values
-       call sll_s_bsplines_eval_basis(spline, cell, x, answer)
-       acc = sum(answer(1:degree+1))
-       passed_test = passed_test .and. (abs(1.0_f64 - acc) < criterion)
-       if( passed_test .eqv. .false. ) then
-          print *, 'nonuniform splines test failure:'
-          print *, 'cell = ', cell, 'x = ', x
-          print *, 'nonuniform: ', answer(:)
-          print *, 'accumulator = ', acc
-          print *, 'Exiting...'
-          stop
-       end if
+      call random_number(rnd)
+      x = xmin + rnd*(grid(num_pts)-xmin)
+      cell = sll_f_find_cell( bsplines, x )
 
-       ! test spline derivatives
-       acc = 0.0_f64
-       call sll_s_bsplines_eval_deriv(spline, cell, x, answer)
-       acc = sum(answer(1:degree+1))
-       passed_test = passed_test .and. (abs(acc) < criterion)
-       if( passed_test .eqv. .false. ) then
-          print *, 'nonuniform splines test failure, derivatives case:'
-          print *, 'cell = ', cell, 'x = ', x
-          print *, 'derivatives: ', answer(:)
-          print *, 'accumulator = ', acc
-          print*, 'Exiting...'
-          stop
-       end if
+      ! compute with non-uniform B-splines, old type
+      call sll_s_bsplines_eval_basis( bsplines, cell, x, values_old )
+      call sll_s_bsplines_eval_deriv( bsplines, cell, x, derivs_old )
+      call sll_s_bsplines_eval_basis_and_deriv( bsplines, cell, x, values_and_deriv )
 
-       ! test values and derivatives
-       acc  = 0.0_f64
-       acc2 = 0.0_f64
-       call sll_s_bsplines_eval_basis_and_deriv(spline, cell, x, answer2)
-       acc  = sum(answer2(1,1:degree+1))
-       acc2 = sum(answer2(2,1:degree+1))
-       passed_test = passed_test .and. (abs(1.0_f64 - acc) < criterion)
-       passed_test = passed_test .and. (abs(acc2) < criterion)
-       if( passed_test .eqv. .false. ) then
-          print *, 'nonuniform splines test failure, ',&
-               'values and derivatives case:'
-          print *, 'cell = ', cell, 'x = ', x
-          print *, 'splines: ', answer2(1,:)
-          print *, 'derivatives: ', answer2(2,:)
-          print *, 'sum of splines = ', acc
-          print *, 'sum of derivatives = ', acc2
-          print*, 'Exiting...'
-          stop
-       end if
+      ! compute with non uniform B-splines, new interface
+      call bsplines_non_uniform % eval_basis( x, values_new, jmin )
+      call bsplines_non_uniform % eval_deriv( x, derivs_new, jmin )
+
+      ! test partition of unity
+      passed_test = passed_test .and. &
+        abs( 1.0_wp - sum( values_old(1:degree+1) ) ) < tolerance .and. &
+        abs( 1.0_wp - sum( values_new(1:degree+1) ) ) < tolerance
+
+      if( .not. passed_test ) then
+        write(*,*) 'test_non_uniform_bsplines_open, values: wrong result for x = ', x
+        write(*,*) 'non-uniform B-splines, old type, sum of values: ', sum( values_old(1:degree+1) )
+        write(*,*) 'non-uniform B-splines, new type, sum of values: ', sum( values_new(1:degree+1) )
+        write(*,*) 'exiting...'
+        stop
+      else
+        write(*,'(a,i2,a,i2,a)') "test ", j, ", cell ", cell, ": testing partition of unity   OK"
+      end if
+
+      ! test sum of all derivatives (should be 0)
+      passed_test = passed_test .and. &
+        abs( sum( derivs_old(1:degree+1) ) ) < tolerance .and. &
+        abs( sum( derivs_new(1:degree+1) ) ) < tolerance
+
+      if( .not. passed_test ) then
+        write(*,*) 'test_non_uniform_bsplines_open, derivs: wrong result for x = ', x
+        write(*,*) 'non-uniform B-splines, old type, sum of derivs: ', sum( derivs_old(1:degree+1) )
+        write(*,*) 'non-uniform B-splines, new type, sum of derivs: ', sum( derivs_new(1:degree+1) )
+        write(*,*) 'exiting...'
+        stop
+      else
+        write(*,'(a)') "                  testing sum of derivatives   OK"
+      end if
+
+      ! test values and derivatives
+      passed_test = passed_test .and. &
+        abs( 1.0_wp - sum( values_and_deriv(1,1:degree+1) ) ) < tolerance .and. &
+        abs(          sum( values_and_deriv(2,1:degree+1) ) ) < tolerance
+
+      if( .not. passed_test ) then
+        write(*,*) 'test_non_uniform_bsplines_periodic, values and derivs: wrong result for x = ', x
+        write(*,*) 'non-uniform B-splines, old type, values_and_deriv(1,:): ', values_and_deriv(1,:)
+        write(*,*) 'non-uniform B-splines, old type, values_and_deriv(2,:): ', values_and_deriv(2,:)
+        write(*,*) 'exiting...'
+        stop
+      else
+        write(*,'(a)') "                  consistency checks           OK"
+      end if
+
     end do
-    SLL_DEALLOCATE_ARRAY(answer, ierr)
-    SLL_DEALLOCATE_ARRAY(answer2, ierr)
-    call sll_s_bsplines_free(spline)
-  end subroutine test_nonuniform_arb_deg_splines_open
 
-  subroutine test_cpu_time
-    ! local variables
-    sll_real64, dimension(:), allocatable :: grid
-    sll_int32  :: i,j
-    sll_int32  :: num_pts
-    sll_int32  :: degree
-    sll_real64 :: min_val
-    sll_int32  :: num_tests
-    sll_real64 :: rnd
-    sll_int32  :: ierr
-    sll_int32, dimension(:), allocatable  :: cells
-    sll_real64, dimension(:), allocatable :: x
-    sll_real64, dimension(:), allocatable :: xx
-    sll_real64, dimension(:), allocatable :: answer1
-    sll_real64, dimension(:), allocatable :: answer2
-    sll_real64, dimension(:,:), allocatable :: answer3
-    sll_real64, dimension(:,:), allocatable :: answer4
-    type(sll_t_bsplines) :: spline
-    type(sll_t_time_mark)  :: t0
-    sll_real64 :: time
+    deallocate(grid)
+    deallocate(values_old)
+    deallocate(values_new)
+    deallocate(derivs_old)
+    deallocate(derivs_new)
+    deallocate(values_and_deriv)
 
-    ! NEW
-    class(sll_c_bsplines), allocatable :: bsplines
-    sll_real64           , allocatable :: values(:)
-    sll_real64           , allocatable :: derivs(:)
-    sll_real64           , allocatable :: nderivs(:,:)
-    sll_int32                          :: jmin
-    sll_int32                          :: num_derivs
+    call sll_s_bsplines_free( bsplines )
+    call bsplines_non_uniform % free()
+
+  end subroutine test_non_uniform_bsplines_open
+
+  !----------------------------------------------------------------------------
+  subroutine test_performance
+
+    real(wp), allocatable :: grid(:)
+    integer  :: i, j, jmin
+    integer  :: ncells, num_tests, num_derivs
+    integer  :: degree
+    real(wp) :: xmin, rnd
+
+    integer , allocatable :: cells(:)
+    real(wp), allocatable :: x(:)
+    real(wp), allocatable :: xx(:)
+
+    real(wp), allocatable :: values(:)
+    real(wp), allocatable :: derivs(:)
+    real(wp), allocatable :: values_and_deriv(:,:)
+    real(wp), allocatable :: values_and_n_derivs(:,:)
+
+    ! B-splines, old type
+    type(sll_t_bsplines) :: bsplines
+    ! Uniform and non-uniform B-splines, new interface
+    type(sll_t_bsplines_uniform)     :: bsplines_uniform
+    type(sll_t_bsplines_non_uniform) :: bsplines_non_uniform
+
+    type(sll_t_time_mark) :: t0
+    real(wp) :: time
 
     ! Test performance of nonuniform arbitrary degree spline evaluation
-    num_pts   = 12
-    min_val = 0.0_f64
-    degree    = 6
-    num_tests = 1000000
+    num_tests  = 1000000
+    ncells     = 11
     num_derivs = 2
+    xmin       = 0.0_wp
 
-    print *, "Test performance of spline evaluation for"
-    print *, " Spline degree = ", degree
-    print *, " -----------------------------------------------------"
-    SLL_ALLOCATE(grid(num_pts),ierr)
-    SLL_ALLOCATE(x(num_tests),ierr)
-    SLL_ALLOCATE(xx(num_tests),ierr)
-    SLL_ALLOCATE(cells(num_tests),ierr)
-    SLL_ALLOCATE(answer1(degree+1),ierr)
-    SLL_ALLOCATE(answer2(degree+1),ierr)
-    SLL_ALLOCATE(answer3(2,degree+1),ierr)
-    SLL_ALLOCATE(answer4(0:num_derivs,degree+1),ierr)
+    degree = 6
+    write(*,'(a,i0,a)') "degree = ", degree, ":"
+    write(*,*)
 
+    allocate(x (num_tests))
+    allocate(xx(num_tests))
+    allocate(cells(num_tests))
 
-    ! --------- 1D SPLINE INITIALIZATION ON NON UNIFORM MESH ----
-    ! Creating non uniform mesh....
-    grid(1) = min_val
-    do i=2,num_pts
+    allocate(grid(ncells+1))
+
+    allocate(values(degree+1))
+    allocate(derivs(degree+1))
+    allocate(values_and_deriv(2,degree+1))
+    allocate(values_and_n_derivs(0:num_derivs,degree+1))
+
+    !--------------------------------------------------------------------------
+    ! Compare performance of non-uniform B-splines
+    !--------------------------------------------------------------------------
+
+    write(*,'(a)') "Compare performance of non-uniform B-splines"
+    write(*,'(a)') "--------------------------------------------"
+    write(*,*)
+
+    ! create non-uniform mesh
+    grid(1) = xmin
+    do i = 2, ncells+1
        call random_number(rnd)
        grid(i) = grid(i-1) + rnd !step
     end do
-    ! ..... non uniform mesh done
-    ! creating non uniform 1d spline
-    call sll_s_bsplines_init_from_grid( &
-         spline, &
-         degree, &
-         grid  , &
-         sll_p_periodic, &
-         sll_p_periodic )
-    ! --------- INITIALIZATION DONE ------------
 
-    do j=1,num_tests
-       ! We compute a point randomly on the mesh:
-       call random_number(rnd)
-       x(j) = min_val + rnd*(grid(num_pts)-min_val)
-       xx(j) = rnd
-       ! We find its cell:
-       cells(j) = sll_f_find_cell( spline, x(j) )
+    ! initialize B-splines, old type
+    call sll_s_bsplines_init_from_grid( bsplines, degree, grid, sll_p_periodic, sll_p_periodic )
+    ! initialize uniform B-splines, new interface
+    call bsplines_uniform % init( degree, periodic=.true., xmin=grid(1), xmax=grid(ncells+1), ncells=ncells )
+    ! initialize non-uniform B-splines, new interface
+    call bsplines_non_uniform % init( degree, periodic=.true., breaks=grid )
+
+    do j = 1, num_tests
+      call random_number(rnd)
+      x(j)  = xmin + rnd*(grid(ncells+1)-xmin)
+      xx(j) = rnd
+      cells(j) = sll_f_find_cell( bsplines, x(j) )
     end do
 
+    !--------------------------------------------------------------------------
     ! computing all non zero splines at all points in x:
     call sll_s_set_time_mark(t0)
-    do j=1,num_tests
-       call sll_s_bsplines_eval_basis(spline, cells(j), x(j), answer1)
+    do j = 1, num_tests
+      call sll_s_bsplines_eval_basis( bsplines, cells(j), x(j), values )
     end do
-    time = sll_f_time_elapsed_since(t0) / real(num_tests,f64)
+    time = sll_f_time_elapsed_since(t0) / real(num_tests,wp)
     subr = "sll_s_bsplines_eval_basis"
     write(*,timing_fmt) adjustl( subr ), time
 
     call sll_s_set_time_mark(t0)
-    do j=1,num_tests
-       call sll_s_bsplines_eval_basis_mm(spline%knots, cells(j), x(j), degree, &
-            answer1)
+    do j = 1, num_tests
+      call sll_s_bsplines_eval_basis_mm( bsplines%knots, cells(j), x(j), degree, values )
     end do
-    time = sll_f_time_elapsed_since(t0) / real(num_tests,f64)
+    time = sll_f_time_elapsed_since(t0) / real(num_tests,wp)
     subr = "sll_s_bsplines_eval_basis_mm"
+    write(*,timing_fmt) adjustl( subr ), time
+
+    ! computing with non-uniform B-splines, new interface
+    call sll_s_set_time_mark( t0 )
+    do j = 1, num_tests
+      call bsplines_non_uniform % eval_basis( xx(j), values, jmin )
+    end do
+    time = sll_f_time_elapsed_since(t0) / real(num_tests,wp)
+    subr = "sll_t_bsplines_non_uniform % eval()"
     write(*,timing_fmt) adjustl( subr ), time
     write(*,*)
 
+    !--------------------------------------------------------------------------
     ! computing both all non zero splines and derivatives at point x:
     call sll_s_set_time_mark(t0)
-    do j=1,num_tests
-       call sll_s_bsplines_eval_basis_and_deriv(spline, cells(j), x(j), answer3)
+    do j = 1, num_tests
+      call sll_s_bsplines_eval_basis_and_deriv( bsplines, cells(j), x(j), values_and_deriv )
     end do
-    time = sll_f_time_elapsed_since(t0) / real(num_tests,f64)
+    time = sll_f_time_elapsed_since(t0) / real(num_tests,wp)
     subr = "sll_s_bsplines_eval_basis_and_deriv"
     write(*,timing_fmt) adjustl( subr ), time
 
     call sll_s_set_time_mark(t0)
-    do j=1,num_tests
-       call sll_s_bsplines_eval_basis_and_deriv_mm(spline%knots, cells(j), x(j), &
-            degree, answer3)
+    do j = 1, num_tests
+      call sll_s_bsplines_eval_basis_and_deriv_mm( bsplines%knots, cells(j), x(j), degree, values_and_deriv )
     end do
-    time = sll_f_time_elapsed_since(t0) / real(num_tests,f64)
+    time = sll_f_time_elapsed_since(t0) / real(num_tests,wp)
     subr = "sll_s_bsplines_eval_basis_and_deriv_mm"
     write(*,timing_fmt) adjustl( subr ), time
     write(*,*)
 
+    !--------------------------------------------------------------------------
     ! computing all non zero spline derivatives at point x:
     call sll_s_set_time_mark(t0)
-    do j=1,num_tests
-       call sll_s_bsplines_eval_deriv(spline, cells(j), x(j), answer2)
+    do j = 1, num_tests
+      call sll_s_bsplines_eval_deriv( bsplines, cells(j), x(j), derivs )
     end do
-    time = sll_f_time_elapsed_since(t0) / real(num_tests,f64)
+    time = sll_f_time_elapsed_since(t0) / real(num_tests,wp)
     subr = "sll_s_bsplines_eval_deriv"
     write(*,timing_fmt) adjustl( subr ), time
 
+    ! computing with non-uniform B-splines, new interface
+    call sll_s_set_time_mark( t0 )
+    do j = 1, num_tests
+      call bsplines_non_uniform % eval_deriv( xx(j), derivs, jmin )
+    end do
+    time = sll_f_time_elapsed_since(t0) / real(num_tests,wp)
+    subr = "sll_t_bsplines_non_uniform % eval_deriv()"
+    write(*,timing_fmt) adjustl( subr ), time
+    write(*,*)
+
+    !--------------------------------------------------------------------------
     ! computing both all non zero splines and all derivatives at point x:
     call sll_s_set_time_mark(t0)
-    do j=1,num_tests
-       call sll_s_bsplines_eval_basis_and_n_derivs(spline, cells(j), x(j), 1, answer3)
+    do j = 1, num_tests
+      call sll_s_bsplines_eval_basis_and_n_derivs( bsplines, cells(j), x(j), 1, values_and_deriv )
     end do
-    time = sll_f_time_elapsed_since(t0) / real(num_tests,f64)
+    time = sll_f_time_elapsed_since(t0) / real(num_tests,wp)
     subr = "sll_s_bsplines_eval_basis_and_n_derivs"
     write(*,timing_fmt) adjustl( subr ), time
-    write(*,*)
 
-    !---------------------------------------------------------------------------
-    ! NEW
-    !---------------------------------------------------------------------------
-    allocate( sll_t_bsplines_uniform :: bsplines )
-    allocate( values (degree+1) )
-    allocate( derivs (degree+1) )
-    allocate( nderivs (0:num_derivs,degree+1) )
-
-    select type( bsplines )
-    type is( sll_t_bsplines_uniform )
-      call bsplines % init( degree, periodic=.true., xmin=0.0_f64, xmax=10.0_f64, ncells=10 )
-    end select
-    !---------------------------------------------------------------------------
-
-    ! computing all non zero uniform splines  at point x:
-    call sll_s_set_time_mark(t0)
-    do j=1,num_tests
-       call sll_s_uniform_bsplines_eval_basis(degree, xx(j), answer1)
+    ! computing with non-uniform B-splines, new interface
+    call sll_s_set_time_mark( t0 )
+    do j = 1, num_tests
+      call bsplines_non_uniform % eval_basis_and_n_derivs( xx(j), num_derivs, values_and_n_derivs, jmin )
     end do
-    time = sll_f_time_elapsed_since(t0) / real(num_tests,f64)
-    subr = "sll_s_uniform_bsplines_eval_basis"
+    time = sll_f_time_elapsed_since(t0) / real(num_tests,wp)
+    subr = "sll_t_bsplines_non_uniform % eval_basis_and_n_derivs()"
     write(*,timing_fmt) adjustl( subr ), time
     write(*,*)
-    print *, answer1
+
+    !--------------------------------------------------------------------------
+    ! Compare performance of uniform B-splines
+    !--------------------------------------------------------------------------
+
+    write(*,'(a)') "Compare performance of uniform B-splines"
+    write(*,'(a)') "----------------------------------------"
     write(*,*)
 
-    ! NEW BSPLINE INTERFACE
-    call sll_s_set_time_mark( t0 )
-    do j=1,num_tests
-      call bsplines % eval_basis( xx(j), values, jmin )
+    !--------------------------------------------------------------------------
+    ! computing all non zero uniform splines at point x:
+    call sll_s_set_time_mark(t0)
+    do j = 1, num_tests
+      call sll_s_uniform_bsplines_eval_basis( degree, xx(j), values )
     end do
-    time = sll_f_time_elapsed_since(t0) / real(num_tests,f64)
+    time = sll_f_time_elapsed_since(t0) / real(num_tests,wp)
+    subr = "sll_s_uniform_bsplines_eval_basis"
+    write(*,timing_fmt) adjustl( subr ), time
+
+    ! computing with uniform B-splines, new interface
+    call sll_s_set_time_mark( t0 )
+    do j = 1, num_tests
+      call bsplines_uniform % eval_basis( xx(j), values, jmin )
+    end do
+    time = sll_f_time_elapsed_since(t0) / real(num_tests,wp)
     subr = "sll_t_bsplines_uniform % eval()"
     write(*,timing_fmt) adjustl( subr ), time
     write(*,*)
-    print *, values
-    write(*,*)
 
+    !--------------------------------------------------------------------------
     ! computing all non zero uniform splines derivatives at point x:
     call sll_s_set_time_mark(t0)
-    do j=1,num_tests
-       call sll_s_uniform_bsplines_eval_deriv(degree, xx(j),answer2)
+    do j = 1, num_tests
+      call sll_s_uniform_bsplines_eval_deriv( degree, xx(j), derivs )
     end do
-    time = sll_f_time_elapsed_since(t0) / real(num_tests,f64)
+    time = sll_f_time_elapsed_since(t0) / real(num_tests,wp)
     subr = "sll_s_uniform_bsplines_eval_deriv"
     write(*,timing_fmt) adjustl( subr ), time
-    write(*,*)
-    print *, answer2
-    write(*,*)
 
-    ! NEW BSPLINE INTERFACE
+    ! computing with uniform B-splines, new interface
     call sll_s_set_time_mark( t0 )
-    do j=1,num_tests
-      call bsplines % eval_deriv( xx(j), derivs, jmin )
+    do j = 1, num_tests
+      call bsplines_uniform % eval_deriv( xx(j), derivs, jmin )
     end do
-    time = sll_f_time_elapsed_since(t0) / real(num_tests,f64)
+    time = sll_f_time_elapsed_since(t0) / real(num_tests,wp)
     subr = "sll_t_bsplines_uniform % eval_deriv()"
     write(*,timing_fmt) adjustl( subr ), time
     write(*,*)
-    print *, derivs
-    write(*,*)
 
+    !--------------------------------------------------------------------------
     ! computing all non zero uniform splines and derivatives at point x:
     call sll_s_set_time_mark(t0)
-    do j=1,num_tests
-       call sll_s_uniform_bsplines_eval_basis_and_deriv(degree, xx(j), answer3)
+    do j = 1, num_tests
+      call sll_s_uniform_bsplines_eval_basis_and_deriv( degree, xx(j), values_and_deriv )
     end do
-    time = sll_f_time_elapsed_since(t0) / real(num_tests,f64)
+    time = sll_f_time_elapsed_since(t0) / real(num_tests,wp)
     subr = "sll_s_uniform_bsplines_eval_basis_and_deriv"
     write(*,timing_fmt) adjustl( subr ), time
     write(*,*)
 
+    !--------------------------------------------------------------------------
     ! computing all non zero uniform splines and all derivatives at point x:
     call sll_s_set_time_mark(t0)
-    do j=1,num_tests
-       call sll_s_uniform_bsplines_eval_basis_and_n_derivs(degree, xx(j), num_derivs, answer4)
+    do j = 1, num_tests
+      call sll_s_uniform_bsplines_eval_basis_and_n_derivs( degree, xx(j), num_derivs, values_and_n_derivs )
     end do
-    time = sll_f_time_elapsed_since(t0) / real(num_tests,f64)
+    time = sll_f_time_elapsed_since(t0) / real(num_tests,wp)
     subr = "sll_s_uniform_bsplines_eval_basis_and_n_derivs"
     write(*,timing_fmt) adjustl( subr ), time
-    write(*,*)
-    do j=0,num_derivs
-      print *, answer4(j,:)
-    end do
-    write(*,*)
 
-    ! NEW BSPLINE INTERFACE
+    ! computing with uniform B-splines, new interface
     call sll_s_set_time_mark( t0 )
-    do j=1,num_tests
-      call bsplines % eval_basis_and_n_derivs( xx(j), num_derivs, nderivs, jmin )
+    do j = 1, num_tests
+      call bsplines_uniform % eval_basis_and_n_derivs( xx(j), num_derivs, values_and_n_derivs, jmin )
     end do
-    time = sll_f_time_elapsed_since(t0) / real(num_tests,f64)
+    time = sll_f_time_elapsed_since(t0) / real(num_tests,wp)
     subr = "sll_t_bsplines_uniform % eval_basis_and_n_derivs()"
     write(*,timing_fmt) adjustl( subr ), time
     write(*,*)
-    do j=0,num_derivs
-      print *, nderivs(j,:)
-    end do
-    write(*,*)
 
-    !---------------------------------------------------------------------------
-    ! NEW
-    !---------------------------------------------------------------------------
-    deallocate( bsplines )
-    deallocate(  values  )
-    deallocate(  derivs  )
-    deallocate( nderivs  )
-    !---------------------------------------------------------------------------
+    deallocate(values)
+    deallocate(derivs)
+    deallocate(values_and_deriv   )
+    deallocate(values_and_n_derivs)
 
-  end subroutine test_cpu_time
+    ! Free B-splines, old type
+    call sll_s_bsplines_free( bsplines )
+    ! Free uniform B-splines, new interface
+    call bsplines_uniform % free()
+    ! Free non-uniform B-splines, new interface
+    call bsplines_non_uniform % free()
+
+  end subroutine test_performance
 
 end program test_arbitrary_degree_splines
