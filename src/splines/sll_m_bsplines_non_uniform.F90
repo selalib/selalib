@@ -38,7 +38,7 @@ contains
     class(sll_t_bsplines_non_uniform), intent(  out) :: self
     integer                          , intent(in   ) :: degree
     logical                          , intent(in   ) :: periodic
-    real(wp),             allocatable, intent(in   ) :: breaks(:)
+    real(wp)                         , intent(in   ) :: breaks(:)
 
     integer  :: i
     real(wp) :: period ! length of period for periodic B-splines
