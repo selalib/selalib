@@ -95,18 +95,17 @@ contains
     real(wp)                      , intent(  out) :: offset
 
     real(wp) :: x_normalized  ! 0 <= x_normalized <= num_cells
+    real(wp) :: tolerance
 
     SLL_ASSERT( x >= self % xmin )
     SLL_ASSERT( x <= self % xmax )
 
+    tolerance = 1.0e-15_wp
+
     associate( xmin => self%xmin, xmax => self%xmax, ncells => self%ncells )
 
-    if (x == xmin) then
-      icell  = 1
-      offset = 0.0_wp
-    else if (x == xmax) then
-      icell  = ncells
-      offset = 1.0_wp
+    if      (abs( x-xmin ) < tolerance) then; icell = 1     ; offset = 0.0_wp
+    else if (abs( x-xmax ) < tolerance) then; icell = ncells; offset = 1.0_wp
     else
       x_normalized = (x-xmin) / (xmax-xmin) * real(ncells,wp)
       icell        = int( x_normalized )
