@@ -103,6 +103,10 @@ contains
     self % bspl1 => bspl1
     self % bspl2 => bspl2
 
+    ! Initialize 1D splines along x1 and x2
+    call self % spline1 % init( bspl1 )
+    call self % spline2 % init( bspl2 )
+
     ! Initialize 1D interpolators along x1 and x2
     call self % interp1 % init( bspl1, bc_xmin(1), bc_xmax(1) )
     call self % interp2 % init( bspl2, bc_xmin(2), bc_xmax(2) )
