@@ -298,7 +298,7 @@ contains
         x = self%tau(i-nbc_xmin)
         call self % bspl % eval_basis( x, values, jmin )
         do s = 1, degree+1
-          j = modulo( jmin+s-1, nbasis ) + 1
+          j = modulo( jmin+s-2, nbasis ) + 1
           call matrix % set_element( i, j, values(s) )
         end do
       end do
@@ -306,7 +306,7 @@ contains
       ! Hermite boundary conditions at xmax, if any
       if ( self%bc_xmax == sll_p_hermite ) then
         x = self%bspl%xmax
-        call self % bspl % eval_basis_and_n_derivs( x, nbc_xmin, derivs, jmin )
+        call self % bspl % eval_basis_and_n_derivs( x, nbc_xmax, derivs, jmin )
 
         ! In order to improve the condition number of the matrix, we normalize all
         ! derivatives by multiplying the i-th derivative by dx^i
