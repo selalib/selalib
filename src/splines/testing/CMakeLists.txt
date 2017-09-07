@@ -39,6 +39,26 @@ set_tests_properties(
   PROPERTIES PASS_REGULAR_EXPRESSION "PASSED" )
 
 #-------------------------------------------------------------------------------
+# New test for new interface of 1D splines
+#-------------------------------------------------------------------------------
+add_executable( test_spline_1d_new
+    test_spline_1d_new.F90
+  m_test_spline_1d_new.F90
+  $<TARGET_OBJECTS:analytical_profiles>
+  $<TARGET_OBJECTS:splines_error_bounds>
+  )
+target_link_libraries( test_spline_1d_new sll_splines )
+
+add_test( NAME spline_1d_new_uniform                     COMMAND test_spline_1d_new -u )
+add_test( NAME spline_1d_new_non_uniform_on_uniform_grid COMMAND test_spline_1d_new -n )
+add_test( NAME spline_1d_new_non_uniform_on_general_grid COMMAND test_spline_1d_new -n 0.1 )
+set_tests_properties(
+  spline_1d_new_uniform
+  spline_1d_new_non_uniform_on_uniform_grid
+  spline_1d_new_non_uniform_on_general_grid
+  PROPERTIES PASS_REGULAR_EXPRESSION "PASSED" )
+
+#-------------------------------------------------------------------------------
 # New tests for 2D tensor-product spline
 #-------------------------------------------------------------------------------
 
