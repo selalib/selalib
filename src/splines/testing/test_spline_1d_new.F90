@@ -5,8 +5,8 @@ program test_spline_1d_new
   use sll_m_working_precision, only: &
     f64
 
-  use sll_m_constants, only: &
-    sll_p_twopi
+  use sll_m_utilities, only: &
+    sll_s_new_array_linspace
 
   use sll_m_boundary_condition_descriptors, only: &
     sll_p_periodic, &
@@ -239,8 +239,7 @@ program test_spline_1d_new
 
   ! Create uniform grid of evaluation points
   allocate( grid (grid_dim) )
-  grid_dx = (pinfo%xmax-pinfo%xmin) / real( grid_dim-1, wp )
-  grid    = [(pinfo%xmin + real(k,wp)*grid_dx, k=0, grid_dim-1)]
+  call sll_s_new_array_linspace( grid, pinfo%xmin, pinfo%xmax, step=grid_dx )
 
   if (uniform) then
     allocate( breaks(0) )

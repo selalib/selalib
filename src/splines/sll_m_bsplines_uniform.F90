@@ -48,15 +48,11 @@ contains
     integer                      , intent(  out) :: icell
     real(wp)                     , intent(  out) :: x_offset
 
-    real(wp) :: tolerance
-
     SLL_ASSERT( x >= self % xmin )
     SLL_ASSERT( x <= self % xmax )
 
-    tolerance = 1.0e-15_wp
-
-    if      (abs( x-self%xmin ) < tolerance) then; icell = 1          ; x_offset = 0.0_wp
-    else if (abs( x-self%xmax ) < tolerance) then; icell = self%ncells; x_offset = 1.0_wp
+    if      (x == self%xmin) then; icell = 1          ; x_offset = 0.0_wp
+    else if (x == self%xmax) then; icell = self%ncells; x_offset = 1.0_wp
     else
       x_offset = (x-self%xmin) * self%inv_dx  ! 0 <= x_offset <= num_cells
       icell    = int( x_offset )

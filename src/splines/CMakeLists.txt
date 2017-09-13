@@ -38,9 +38,13 @@ ENDIF(PGI)
 ADD_LIBRARY( sll_splines STATIC ${SPLINES_FILES} )
 
 TARGET_LINK_LIBRARIES( sll_splines
+  sll_working_precision
+  sll_assert
+  sll_errors
+  sll_constants
+  sll_utilities
   sll_linear_solvers
   sll_meshes
-  sll_linear_solvers
   sll_timer
   pppack
   ${LAPACK_LIBRARIES} )
