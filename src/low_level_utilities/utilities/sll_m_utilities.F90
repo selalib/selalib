@@ -37,7 +37,8 @@ module sll_m_utilities
     sll_o_display, &
     sll_o_factorial, &
     sll_s_new_file_id, &
-    sll_f_query_environment
+    sll_f_query_environment, &
+    sll_s_new_array_linspace
 
   private
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -567,5 +568,63 @@ end subroutine sll_s_compute_mesh_from_bloc
       end select
     endif
   end function sll_f_query_environment
+
+  !-----------------------------------------------------------------------------
+  !> @brief      Equivalent to numpy.linspace
+  !> @contact    Yaman Güçlü, IPP Garching
+  !> @param[in]  vmin     Min value of interval
+  !> @param[in]  vmax     Max value of interval
+  !> @param[in]  endpoint Flag: include endpoint in array? (default=true)
+  !> @param[out] array    Array to be created, with linearly increasing values
+  !> @param[out] step     Step size (
+  !-----------------------------------------------------------------------------
+  pure subroutine sll_s_new_array_linspace( array, vmin, vmax, endpoint, step )
+
+    integer, parameter :: wp = f64
+
+    real(wp), intent(  out)           :: array(:)
+    real(wp), intent(in   )           :: vmin
+    real(wp), intent(in   )           :: vmax
+    logical , intent(in   ), optional :: endpoint
+    real(wp), intent(  out), optional :: step
+
+    integer  :: i
+    integer  :: np
+    integer  :: nc
+    real(wp) :: a
+    real(wp) :: b
+
+    ! Read number of points from given array
+    np = size( array )
+
+    ! Calculate number of intervals in domain (cells) based on 'endpoint' flag
+    ! By default, we assume that endpoint = .true.
+    if (present( endpoint )) then
+      nc = merge( np-1, np, endpoint )
+    else
+      nc = np-1
+    end if
+
+    ! Set first value to vmin in all cases
+    array(1) = vmin
+
+    ! Calculate internal array values using linear blending of vmin and vmax,
+    ! in order to minimize round-off
+    a = vmin / real(nc,wp)
+    b = vmax / real(nc,wp)
+    do i = 2, nc
+      array(i) = a*(nc+1-i) + b*(i-1)
+    end do
+
+    ! If endpoint=.true., set last value to vmax
+    if (np == nc+1) array(np) = vmax
+
+    ! If required, return step size
+    if (present( step )) then
+      step = b-a
+    end if
+
+  end subroutine sll_s_new_array_linspace
+  !-----------------------------------------------------------------------------
 
 end module sll_m_utilities

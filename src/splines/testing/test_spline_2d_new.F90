@@ -8,6 +8,9 @@ program test_spline_2d_new
   use sll_m_constants, only: &
     sll_p_twopi
 
+  use sll_m_utilities, only: &
+    sll_s_new_array_linspace
+
   use sll_m_boundary_condition_descriptors, only: &
     sll_p_periodic, &
     sll_p_hermite, &
@@ -39,10 +42,14 @@ program test_spline_2d_new
   type(t_analytical_profile_2d_poly)    :: profile_2d_poly
   integer , allocatable                 :: bc_kinds(:)
   integer , allocatable                 :: nx_list(:)
-  real(wp), allocatable                 :: grid_x1(:,:)
-  real(wp), allocatable                 :: grid_x2(:,:)
   real(wp), allocatable                 :: breaks1(:)
   real(wp), allocatable                 :: breaks2(:)
+
+  ! Evaluation grid
+  real(wp), allocatable ::  grid_x1(:)
+  real(wp), allocatable ::  grid_x2(:)
+  real(wp), allocatable :: mgrid_x1(:,:)
+  real(wp), allocatable :: mgrid_x2(:,:)
 
   ! Parameters for uniform / non-uniform grid
   logical  :: uniform
@@ -264,17 +271,22 @@ program test_spline_2d_new
   write(*, '(4a6,3a10,a10)') "deg1", "deg2", "bc1", "bc2", &
     "err", "err_dx1", "err_dx2", "passed"
 
-  ! Create uniform grid of evaluation points
   call profile_2d_poly % init( 0, 0 )  ! dummy, only need domain size
   call profile_2d_poly % get_info( pinfo )
-  allocate( grid_x1 (grid_dim(1),grid_dim(2)) )
-  allocate( grid_x2 (grid_dim(1),grid_dim(2)) )
-  dx1 = (pinfo%x1_max-pinfo%x1_min) / real( grid_dim(1)-1, wp )
-  dx2 = (pinfo%x2_max-pinfo%x2_min) / real( grid_dim(2)-1, wp )
+
+  ! Create 1D uniform grids of evaluation points
+  allocate( grid_x1 (grid_dim(1)) )
+  allocate( grid_x2 (grid_dim(2)) )
+  call sll_s_new_array_linspace( grid_x1, pinfo%x1_min, pinfo%x1_max, step=dx1 )
+  call sll_s_new_array_linspace( grid_x2, pinfo%x2_min, pinfo%x2_max, step=dx2 )
+
+  ! Create 2D meshgrids from 1D grids (this could be done with a subroutine)
+  allocate( mgrid_x1 (grid_dim(1),grid_dim(2)) )
+  allocate( mgrid_x2 (grid_dim(1),grid_dim(2)) )
   do i2 = 1, grid_dim(2)
     do i1 = 1, grid_dim(1)
-      grid_x1(i1,i2) = pinfo%x1_min + real(i1-1,wp)*dx1
-      grid_x2(i1,i2) = pinfo%x2_min + real(i2-1,wp)*dx2
+      mgrid_x1(i1,i2) = grid_x1(i1)
+      mgrid_x2(i1,i2) = grid_x2(i2)
     end do
   end do
 
@@ -329,8 +341,8 @@ program test_spline_2d_new
                 breaks2    = breaks2(:) )
 
               ! Run tests
-              call test_facility % evaluate_on_2d_grid( grid_x1, grid_x2, max_norm_error )
-              call test_facility % evaluate_grad_on_2d_grid( grid_x1, grid_x2, &
+              call test_facility % evaluate_on_2d_grid( mgrid_x1, mgrid_x2, max_norm_error )
+              call test_facility % evaluate_grad_on_2d_grid( mgrid_x1, mgrid_x2, &
                 max_norm_error_diff_x1, max_norm_error_diff_x2 )
 
               ! Calculate relative error norms from absolute ones
@@ -370,8 +382,10 @@ program test_spline_2d_new
 
   ! Deallocate local arrays
   deallocate( bc_kinds )
-  deallocate( grid_x1  )
-  deallocate( grid_x2  )
+  deallocate(  grid_x1 )
+  deallocate(  grid_x2 )
+  deallocate( mgrid_x1 )
+  deallocate( mgrid_x2 )
   deallocate( breaks1  )
   deallocate( breaks2  )
 
@@ -454,15 +468,19 @@ program test_spline_2d_new
   max_norm_profile_diff_x1 = profile_2d_cos_cos % max_norm( diff_x1=1 )
   max_norm_profile_diff_x2 = profile_2d_cos_cos % max_norm( diff_x2=1 )
 
-  ! Create uniform grid of evaluation points
-  allocate( grid_x1 (grid_dim(1),grid_dim(2)) )
-  allocate( grid_x2 (grid_dim(1),grid_dim(2)) )
-  dx1 = (pinfo%x1_max-pinfo%x1_min) / real( grid_dim(1)-1, wp )
-  dx2 = (pinfo%x2_max-pinfo%x2_min) / real( grid_dim(2)-1, wp )
+  ! Create 1D uniform grids of evaluation points
+  allocate( grid_x1 (grid_dim(1)) )
+  allocate( grid_x2 (grid_dim(2)) )
+  call sll_s_new_array_linspace( grid_x1, pinfo%x1_min, pinfo%x1_max, step=dx1 )
+  call sll_s_new_array_linspace( grid_x2, pinfo%x2_min, pinfo%x2_max, step=dx2 )
+
+  ! Create 2D meshgrids from 1D grids (this could be done with a subroutine)
+  allocate( mgrid_x1 (grid_dim(1),grid_dim(2)) )
+  allocate( mgrid_x2 (grid_dim(1),grid_dim(2)) )
   do i2 = 1, grid_dim(2)
     do i1 = 1, grid_dim(1)
-      grid_x1(i1,i2) = pinfo%x1_min + real(i1-1,wp)*dx1
-      grid_x2(i1,i2) = pinfo%x2_min + real(i2-1,wp)*dx2
+      mgrid_x1(i1,i2) = grid_x1(i1)
+      mgrid_x2(i1,i2) = grid_x2(i2)
     end do
   end do
 
@@ -540,8 +558,8 @@ program test_spline_2d_new
 
               ! Run tests
               ! TODO: print numerical order of accuracy
-              call test_facility % evaluate_on_2d_grid( grid_x1, grid_x2, max_norm_error )
-              call test_facility % evaluate_grad_on_2d_grid( grid_x1, grid_x2, &
+              call test_facility % evaluate_on_2d_grid( mgrid_x1, mgrid_x2, max_norm_error )
+              call test_facility % evaluate_grad_on_2d_grid( mgrid_x1, mgrid_x2, &
                 max_norm_error_diff_x1, max_norm_error_diff_x2 )
 
               ! Check tolerances
@@ -585,10 +603,12 @@ program test_spline_2d_new
   end do   ! deg1=deg2
 
   ! Deallocate local arrays
-  deallocate( bc_kinds )
-  deallocate( nx_list  )
-  deallocate( grid_x1  )
-  deallocate( grid_x2  )
+  deallocate( bc_kinds  )
+  deallocate( nx_list   )
+  deallocate(  grid_x1  )
+  deallocate(  grid_x2  )
+  deallocate( mgrid_x1  )
+  deallocate( mgrid_x2  )
 
   ! ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
 
