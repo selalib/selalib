@@ -1,5 +1,6 @@
 SET( SPLINES_FILES
   #
+  sll_m_bsplines.F90
   sll_m_bsplines_base.F90
   sll_m_bsplines_uniform.F90
   sll_m_bsplines_non_uniform.F90
