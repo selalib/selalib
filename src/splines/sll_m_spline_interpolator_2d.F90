@@ -182,12 +182,18 @@ contains
 
     class(sll_t_spline_interpolator_2d), intent(inout) :: self
 
-    ! Deallocate local 2D arrays
-    deallocate( self % bwork )
+    ! Detach pointers to B-splines
+    nullify( self % bspl1 )
+    nullify( self % bspl2 )
 
-    ! Free memory of 1D B-splines
-    call self % bspl1 % free()
-    call self % bspl2 % free()
+    ! Destroy local objects: 1D splines and interpolators along x1 and x2
+    call self % spline1 % free()
+    call self % spline2 % free()
+    call self % interp1 % free()
+    call self % interp2 % free()
+
+    ! Deallocate 2D work array
+    deallocate( self % bwork )
 
   end subroutine s_spline_interpolator_2d__free
 
