@@ -1,18 +1,16 @@
 SET( INTERPOLATORS_SRC_FILES 
   sll_m_interpolators_1d_base.F90
   sll_m_interpolators_2d_base.F90 
-  sll_m_cubic_spline_interpolator_1d.F90
-  sll_m_quintic_spline_interpolator_1d.F90
-  sll_m_cubic_spline_interpolator_1d_nonuniform.F90
   sll_m_lagrange_interpolator_1d.F90 
-  sll_m_hermite_interpolator_1d.F90 
   sll_m_periodic_interpolator_1d.F90
+  sll_m_cubic_spline_interpolator_1d.F90
+  sll_m_cubic_spline_interpolator_1d_nonuniform.F90
   sll_m_cubic_spline_interpolator_2d.F90
+  sll_m_quintic_spline_interpolator_1d.F90
+  sll_m_hermite_interpolator_1d.F90 
   sll_m_hermite_interpolator_2d.F90
   sll_m_arbitrary_degree_spline_interpolator_1d.F90
   sll_m_arbitrary_degree_spline_interpolator_2d.F90
-  sll_m_bspline_interpolator_1d.F90
-#  sll_m_bspline_interpolator_2d.F90
   sll_m_nufft_interpolator_2d.F90
   sll_m_cubic_spline_halo_1d.F90)
 
