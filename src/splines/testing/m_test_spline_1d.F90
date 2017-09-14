@@ -1,4 +1,4 @@
-module m_test_spline_1d_new
+module m_test_spline_1d
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_assert.h"
 
@@ -18,7 +18,7 @@ module m_test_spline_1d_new
     sll_c_bsplines, &
     sll_s_bsplines_new
 
-  use sll_m_spline_1d_new, only: &
+  use sll_m_spline_1d, only: &
     sll_t_spline_1d
 
   use sll_m_spline_interpolator_1d, only: &
@@ -379,4 +379,4 @@ contains
 
   end subroutine free
 
-end module m_test_spline_1d_new
+end module m_test_spline_1d
