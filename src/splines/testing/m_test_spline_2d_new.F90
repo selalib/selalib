@@ -14,14 +14,9 @@ module m_test_spline_2d_new
     sll_p_hermite, &
     sll_p_greville
 
-  use sll_m_bsplines_base, only: &
-    sll_c_bsplines
-
-  use sll_m_bsplines_uniform, only: &
-    sll_t_bsplines_uniform
-
-  use sll_m_bsplines_non_uniform, only: &
-    sll_t_bsplines_non_uniform
+  use sll_m_bsplines, only: &
+    sll_c_bsplines, &
+    sll_s_bsplines_new
 
   use sll_m_spline_2d_new, only: &
     sll_t_spline_2d
@@ -132,35 +127,9 @@ contains
       periodic(2) = .false.
     end if
 
-    ! Allocate B-splines (uniform or non-uniform depending on input)
-    if (present( breaks1 ) .and. size( breaks1 )>0 ) then
-      allocate( sll_t_bsplines_non_uniform :: self % bsplines_x1 )
-    else 
-      allocate( sll_t_bsplines_uniform     :: self % bsplines_x1 )
-    end if
-
-    ! Allocate B-splines (uniform or non-uniform depending on input)
-    if (present( breaks2 ) .and. size( breaks2 )>0 ) then
-      allocate( sll_t_bsplines_non_uniform :: self % bsplines_x2 )
-    else 
-      allocate( sll_t_bsplines_uniform     :: self % bsplines_x2 )
-    end if
-
-    ! Initialize B-splines (uniform or non-uniform depending on allocated type)
-    select type( bsplines_x1 => self % bsplines_x1 )
-      type is( sll_t_bsplines_non_uniform )
-        call bsplines_x1 % init( degree(1), periodic(1), breaks1 )
-      type is( sll_t_bsplines_uniform     )
-        call bsplines_x1 % init( degree(1), periodic(1), info%x1_min, info%x1_max, ncells(1) )
-    end select
-
-    ! Initialize B-splines (uniform or non-uniform depending on allocated type)
-    select type( bsplines_x2 => self % bsplines_x2 )
-      type is( sll_t_bsplines_non_uniform )
-        call bsplines_x2 % init( degree(2), periodic(2), breaks2 )
-      type is( sll_t_bsplines_uniform     )
-        call bsplines_x2 % init( degree(2), periodic(2), info%x2_min, info%x2_max, ncells(2) )
-    end select
+    ! Create B-splines (uniform or non-uniform depending on input)
+    call sll_s_bsplines_new( self%bsplines_x1, degree(1), periodic(1), info%x1_min, info%x1_max, ncells(1), breaks1 )
+    call sll_s_bsplines_new( self%bsplines_x2, degree(2), periodic(2), info%x2_min, info%x2_max, ncells(2), breaks2 )
 
     ! Initialize 2D spline
     call self % spline_2d % init( self % bsplines_x1, self % bsplines_x2 )
