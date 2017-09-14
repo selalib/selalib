@@ -180,6 +180,9 @@ contains
     nullify   ( self % bspl )
     deallocate( self % tau  )
 
+    call self % matrix % free()
+    deallocate( self % matrix )
+
   end subroutine s_spline_interpolator_1d__free
 
   !-----------------------------------------------------------------------------
