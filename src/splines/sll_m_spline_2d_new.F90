@@ -1,3 +1,28 @@
+!> @ingroup splines
+!> @brief   Module for tensor-product 2D splines.
+!>
+!> @details Here we define a 2D tensor-product spline type as an element of the
+!>          linear space given by the span of 2D basis functions, which in turn
+!>          are obtained as tensor-product of 1D B-splines.
+!>          A 2D tensor-product B-splines type is not implemented, because an
+!>          object of this type is completely described by the combination of
+!>          two separate 1D B-splines objects, but this decision may be changed.
+!>          Therefore, initialization of a 2D spline object requires two existing
+!>          B-splines objects, to which two private (polymorphic) pointers are
+!>          associated.
+!>          The B-spline coefficients are stored in a 2D public allocatable array;
+!>          at initialization the array is allocated to the proper shape and all
+!>          values are set to zero.
+!>          In most situations the B-spline coefficients are not set directly by
+!>          the end user, but are computed by some other object (e.g., a Poisson
+!>          solver or a spline interpolator).
+!>          Various public methods allow the user to evaluate the 2D spline
+!>          S(x1,x2) and its partial derivatives ∂S(x1,x2)/∂x1 and ∂S(x1,x2)/∂x2
+!>          at any position (x1,x2).
+!>
+!> @author  Yaman Güçlü  - IPP Garching
+!> @author  Edoardo Zoni - IPP Garching
+
 module sll_m_spline_2d_new
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_assert.h"
@@ -16,7 +41,7 @@ module sll_m_spline_2d_new
   !> Working precision
   integer, parameter :: wp = f64
 
-  !> 2D spline
+  !> 2D tensor-product spline
   type :: sll_t_spline_2d
 
     real(wp)             , allocatable      :: bcoef(:,:)
@@ -41,6 +66,12 @@ module sll_m_spline_2d_new
 contains
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
+  !-----------------------------------------------------------------------------
+  !> @brief      Initialize 2D spline object as element of span(B-splines)
+  !> @param[out] self         2D spline: new element of tensor-product space
+  !> @param[in]  bsplines_x1  B-splines along x1
+  !> @param[in]  bsplines_x2  B-splines along x2
+  !-----------------------------------------------------------------------------
   subroutine s_spline_2d__init( self, bsplines_x1, bsplines_x2 )
 
     class(sll_t_spline_2d), intent(  out)         :: self
@@ -69,6 +100,9 @@ contains
   end subroutine s_spline_2d__init
 
   !-----------------------------------------------------------------------------
+  !> @brief        Destroy 2D spline (re-initialization is possible afterwards)
+  !> @param[inout] self  2D spline
+  !-----------------------------------------------------------------------------
   subroutine s_spline_2d__free( self )
 
     class(sll_t_spline_2d), intent(inout) :: self
@@ -79,6 +113,12 @@ contains
 
   end subroutine s_spline_2d__free
 
+  !-----------------------------------------------------------------------------
+  !> @brief     Check if 2D spline belongs to tensor-product span of B-splines
+  !> @param[in] self         2D spline
+  !> @param[in] bsplines_x1  B-splines along x1
+  !> @param[in] bsplines_x2  B-splines along x2
+  !> @returns                true/false answer
   !-----------------------------------------------------------------------------
   SLL_PURE function f_spline_2d__belongs_to_space( self, bsplines_x1, bsplines_x2 ) result( in_space )
 
@@ -92,6 +132,12 @@ contains
 
   end function f_spline_2d__belongs_to_space
 
+  !-----------------------------------------------------------------------------
+  !> @brief     Evaluate value of 2D spline at location (x1,x2)
+  !> @param[in] self  2D spline
+  !> @param[in] x1    x1 coordinate of evaluation point
+  !> @param[in] x2    x2 coordinate of evaluation point
+  !> @returns         spline value y=S(x1,x2)
   !-----------------------------------------------------------------------------
   SLL_PURE function f_spline_2d__eval( self, x1, x2 ) result( y )
 
@@ -129,6 +175,12 @@ contains
   end function f_spline_2d__eval
 
   !-----------------------------------------------------------------------------
+  !> @brief     Evaluate x1-derivative of 2D spline at location (x1,x2)
+  !> @param[in] self  2D spline
+  !> @param[in] x1    x1 coordinate of evaluation point
+  !> @param[in] x2    x2 coordinate of evaluation point
+  !> @returns         spline partial derivative y=∂S(x1,x2)/∂x1
+  !-----------------------------------------------------------------------------
   SLL_PURE function f_spline_2d__eval_deriv_x1( self, x1, x2 ) result( y )
 
     class(sll_t_spline_2d), intent(in) :: self
@@ -164,6 +216,12 @@ contains
 
   end function f_spline_2d__eval_deriv_x1
 
+  !-----------------------------------------------------------------------------
+  !> @brief     Evaluate x2-derivative of 2D spline at location (x1,x2)
+  !> @param[in] self  2D spline
+  !> @param[in] x1    x1 coordinate of evaluation point
+  !> @param[in] x2    x2 coordinate of evaluation point
+  !> @returns         spline partial derivative y=∂S(x1,x2)/∂x2
   !-----------------------------------------------------------------------------
   SLL_PURE function f_spline_2d__eval_deriv_x2( self, x1, x2 ) result( y )
 
@@ -201,6 +259,12 @@ contains
   end function f_spline_2d__eval_deriv_x2
 
   !-----------------------------------------------------------------------------
+  !> @brief      Evaluate value of 2D spline at multiple locations
+  !> @param[in]  self  2D spline
+  !> @param[in]  x1    2D array of x1 coordinates of evaluation points
+  !> @param[in]  x2    2D array of x2 coordinates of evaluation points
+  !> @param[out] y     2D array of spline values y[i,j]=S(x1[i,j],x2[i,j])
+  !-----------------------------------------------------------------------------
   SLL_PURE subroutine s_spline_2d__eval_array( self, x1, x2, y )
 
     class(sll_t_spline_2d), intent(in   ) :: self
@@ -224,6 +288,13 @@ contains
   end subroutine s_spline_2d__eval_array
 
   !-----------------------------------------------------------------------------
+  !> @brief      Evaluate x1-derivative of 2D spline at multiple locations
+  !> @param[in]  self  2D spline
+  !> @param[in]  x1    2D array of x1 coordinates of evaluation points
+  !> @param[in]  x2    2D array of x2 coordinates of evaluation points
+  !> @param[out] y     2D array of spline partial derivatives
+  !>                   y[i,j]=∂S(x1[i,j],x2[i,j])/∂x1
+  !-----------------------------------------------------------------------------
   SLL_PURE subroutine s_spline_2d__eval_array_deriv_x1( self, x1, x2, y )
 
     class(sll_t_spline_2d), intent(in   ) :: self
@@ -246,6 +317,13 @@ contains
 
   end subroutine s_spline_2d__eval_array_deriv_x1
 
+  !-----------------------------------------------------------------------------
+  !> @brief      Evaluate x2-derivative of 2D spline at multiple locations
+  !> @param[in]  self  2D spline
+  !> @param[in]  x1    2D array of x1 coordinates of evaluation points
+  !> @param[in]  x2    2D array of x2 coordinates of evaluation points
+  !> @param[out] y     2D array of spline partial derivatives
+  !>                   y[i,j]=∂S(x1[i,j],x2[i,j])/∂x2
   !-----------------------------------------------------------------------------
   SLL_PURE subroutine s_spline_2d__eval_array_deriv_x2( self, x1, x2, y )
 
