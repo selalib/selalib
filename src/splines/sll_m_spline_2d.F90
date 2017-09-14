@@ -23,7 +23,7 @@
 !> @author  Yaman Güçlü  - IPP Garching
 !> @author  Edoardo Zoni - IPP Garching
 
-module sll_m_spline_2d_new
+module sll_m_spline_2d
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_assert.h"
 
@@ -347,4 +347,4 @@ contains
 
   end subroutine s_spline_2d__eval_array_deriv_x2
 
-end module sll_m_spline_2d_new
+end module sll_m_spline_2d

@@ -18,7 +18,7 @@
 !> @author  Yaman Güçlü  - IPP Garching
 !> @author  Edoardo Zoni - IPP Garching
 
-module sll_m_spline_1d_new
+module sll_m_spline_1d
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_assert.h"
 
@@ -205,4 +205,4 @@ contains
 
   end subroutine s_spline_1d__eval_array_deriv
 
-end module sll_m_spline_1d_new
+end module sll_m_spline_1d
