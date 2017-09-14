@@ -3,22 +3,26 @@ module sll_m_spline_interpolator_2d
 #include "sll_assert.h"
 #include "sll_errors.h"
 
-  use sll_m_working_precision     , only: f64
-  use sll_m_bsplines_base         , only: sll_c_bsplines
-  use sll_m_spline_1d_new         , only: sll_t_spline_1d
-  use sll_m_spline_2d_new         , only: sll_t_spline_2d
-  use sll_m_spline_interpolator_1d, only: sll_t_spline_interpolator_1d
+  use sll_m_working_precision, only: f64
+  use sll_m_bsplines_base    , only: sll_c_bsplines
+  use sll_m_spline_1d_new    , only: sll_t_spline_1d
+  use sll_m_spline_2d_new    , only: sll_t_spline_2d
 
   use sll_m_boundary_condition_descriptors, only: &
     sll_p_periodic, &
     sll_p_hermite, &
     sll_p_greville
 
+  use sll_m_spline_interpolator_1d, only: &
+    sll_t_spline_interpolator_1d, &
+    sll_s_spline_1d_compute_num_cells
+
   implicit none
 
   public :: &
     sll_t_spline_interpolator_2d, &
-    sll_t_spline_2d_boundary_data
+    sll_t_spline_2d_boundary_data, &
+    sll_s_spline_2d_compute_num_cells
 
   private
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -79,6 +83,40 @@ module sll_m_spline_interpolator_2d
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 contains
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+  !-----------------------------------------------------------------------------
+  !> @brief     Calculate number of cells from number of interpolation points
+  !> @details   Important for parallelization: for given spline degree and BCs,
+  !>            calculate the number of grid cells that yields the desired
+  !>            number of interpolation points
+  !>
+  !> @param[in]  degree   spline degree
+  !> @param[in]  bc_xmin  boundary condition type at left  boundary (x=xmin)
+  !> @param[in]  bc_xmax  boundary condition type at right boundary (x=xmax)
+  !> @param[in]  nipts    desired number of interpolation points
+  !> @param[out] ncells   number of cells in domain
+  !-----------------------------------------------------------------------------
+  subroutine sll_s_spline_2d_compute_num_cells( &
+      degree , &
+      bc_xmin, &
+      bc_xmax, &
+      nipts  , &
+      ncells )
+
+    integer, intent(in   ) :: degree (2)
+    integer, intent(in   ) :: bc_xmin(2)
+    integer, intent(in   ) :: bc_xmax(2)
+    integer, intent(in   ) :: nipts  (2)
+    integer, intent(  out) :: ncells (2)
+
+    integer :: i
+
+    do i = 1, 2
+      call sll_s_spline_1d_compute_num_cells( &
+        degree(i), bc_xmin(i), bc_xmax(i), nipts(i), ncells(i) )
+    end do
+
+  end subroutine sll_s_spline_2d_compute_num_cells
 
   !-----------------------------------------------------------------------------
   !> @brief Initialize a 2D spline interpolation object
