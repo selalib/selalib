@@ -1,17 +1,24 @@
+!> @ingroup splines
+!> @brief   Interpolator for 2D tensor-product splines of arbitrary degree,
+!>          on uniform and non-uniform grids (directions are independent)
+!> @author  Yaman Güçlü  - IPP Garching
+!> @author  Edoardo Zoni - IPP Garching
+
 module sll_m_spline_interpolator_2d
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_assert.h"
 #include "sll_errors.h"
 
   use sll_m_working_precision, only: f64
-  use sll_m_bsplines_base    , only: sll_c_bsplines
-  use sll_m_spline_1d_new    , only: sll_t_spline_1d
-  use sll_m_spline_2d_new    , only: sll_t_spline_2d
 
   use sll_m_boundary_condition_descriptors, only: &
     sll_p_periodic, &
     sll_p_hermite, &
     sll_p_greville
+
+  use sll_m_bsplines_base, only: sll_c_bsplines
+  use sll_m_spline_1d_new, only: sll_t_spline_1d
+  use sll_m_spline_2d_new, only: sll_t_spline_2d
 
   use sll_m_spline_interpolator_1d, only: &
     sll_t_spline_interpolator_1d, &
@@ -30,8 +37,11 @@ module sll_m_spline_interpolator_2d
   !> Working precision
   integer, parameter :: wp = f64
 
-
-  !> Container for boundary condition data
+  !-----------------------------------------------------------------------------
+  !> Container for 2D boundary condition data:
+  !>  . x1-derivatives at x1_min and x1_max, for all values of x2;
+  !>  . x2-derivatives at x2_min and x2_max, for all values of x1;
+  !>  . mixed derivatives at the four corners a,b,c,d.
   !>
   !>  x2_max  ____________
   !>         |            |
@@ -43,6 +53,7 @@ module sll_m_spline_interpolator_2d
   !>  x2_min |____________|
   !>       x1_min       x1_max
   !>
+  !-----------------------------------------------------------------------------
   type :: sll_t_spline_2d_boundary_data
     real(wp), allocatable :: derivs_x1_min (:,:)
     real(wp), allocatable :: derivs_x1_max (:,:)
@@ -54,8 +65,9 @@ module sll_m_spline_interpolator_2d
     real(wp), allocatable :: mixed_derivs_d(:,:)
   end type sll_t_spline_2d_boundary_data
 
-
-  !> 2D spline interpolator
+  !-----------------------------------------------------------------------------
+  !> 2D tensor-product spline interpolator
+  !-----------------------------------------------------------------------------
   type :: sll_t_spline_interpolator_2d
 
     ! Private attributes
@@ -85,16 +97,16 @@ contains
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
   !-----------------------------------------------------------------------------
-  !> @brief     Calculate number of cells from number of interpolation points
-  !> @details   Important for parallelization: for given spline degree and BCs,
-  !>            calculate the number of grid cells that yields the desired
-  !>            number of interpolation points
+  !> @brief      Calculate number of cells from number of interpolation points
+  !> @details    Important for parallelization: for given spline degree and BCs,
+  !>             calculate the numbers of grid cells along x1 and x2 that yield
+  !>             the desired number of interpolation points along x1 and x2
   !>
-  !> @param[in]  degree   spline degree
-  !> @param[in]  bc_xmin  boundary condition type at left  boundary (x=xmin)
-  !> @param[in]  bc_xmax  boundary condition type at right boundary (x=xmax)
-  !> @param[in]  nipts    desired number of interpolation points
-  !> @param[out] ncells   number of cells in domain
+  !> @param[in]  degree   spline degrees along x1 and x2
+  !> @param[in]  bc_xmin  boundary conditions at x1_min and x2_min
+  !> @param[in]  bc_xmax  boundary conditions at x1_max and x2_max
+  !> @param[in]  nipts    desired number of interpolation points along x1 and x2
+  !> @param[out] ncells   calculated number of grid cells along x1 and x2
   !-----------------------------------------------------------------------------
   subroutine sll_s_spline_2d_compute_num_cells( &
       degree , &
@@ -119,7 +131,12 @@ contains
   end subroutine sll_s_spline_2d_compute_num_cells
 
   !-----------------------------------------------------------------------------
-  !> @brief Initialize a 2D spline interpolation object
+  !> @brief      Initialize a 2D tensor-product spline interpolator object
+  !> @param[out] self     2D tensor-product spline interpolator
+  !> @param[in]  bspl1    B-splines (basis) along x1 direction
+  !> @param[in]  bspl2    B-splines (basis) along x2 direction
+  !> @param[in]  bc_xmin  boundary conditions at x1_min and x2_min
+  !> @param[in]  bc_xmax  boundary conditions at x1_max and x2_max
   !-----------------------------------------------------------------------------
   subroutine s_spline_interpolator_2d__init( &
     self   , &
@@ -178,6 +195,9 @@ contains
   end subroutine s_spline_interpolator_2d__init
 
   !-----------------------------------------------------------------------------
+  !> @brief        Destroy local objects and free allocated memory
+  !> @param[inout] self  2D tensor-product spline interpolator
+  !-----------------------------------------------------------------------------
   subroutine s_spline_interpolator_2d__free( self )
 
     class(sll_t_spline_interpolator_2d), intent(inout) :: self
@@ -198,6 +218,11 @@ contains
   end subroutine s_spline_interpolator_2d__free
 
   !-----------------------------------------------------------------------------
+  !> @brief      Get coordinates of interpolation points (2D tensor grid)
+  !> @param[in]  self  2D tensor-product spline interpolator
+  !> @param[out] tau1  x1 coordinates of interpolation points
+  !> @param[out] tau2  x2 coordinates of interpolation points
+  !-----------------------------------------------------------------------------
   subroutine s_spline_interpolator_2d__get_interp_points( self, tau1, tau2 )
 
     class(sll_t_spline_interpolator_2d), intent(in   ) :: self
@@ -209,6 +234,16 @@ contains
 
   end subroutine s_spline_interpolator_2d__get_interp_points
 
+  !-----------------------------------------------------------------------------
+  !> @brief        Compute interpolating 2D spline
+  !> @details      Compute coefficients of 2D tensor-product spline that
+  !>               interpolates function values on grid. If Hermite BCs are used,
+  !>               function derivatives at appropriate boundaries are also needed.
+  !>
+  !> @param[inout] self           2D tensor-product spline interpolator
+  !> @param[inout] spline         2D tensor-product spline
+  !> @param[in]    gtau           function values of interpolation points
+  !> @param[in]    boundary_data  (optional) structure with boundary conditions
   !-----------------------------------------------------------------------------
   subroutine s_spline_interpolator_2d__compute_interpolant( self, &
       spline, gtau, boundary_data )
@@ -372,6 +407,5 @@ contains
     end associate
 
   end subroutine s_spline_interpolator_2d__compute_interpolant
-
 
 end module sll_m_spline_interpolator_2d

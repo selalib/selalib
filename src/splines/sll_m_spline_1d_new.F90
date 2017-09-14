@@ -1,3 +1,23 @@
+!> @ingroup splines
+!> @brief   Module for 1D splines, linear combination of B-spline functions.
+!>
+!> @details Here we define a 1D spline type as an element of the linear space
+!>          given by the span of the given B-splines (basis functions).
+!>          Therefore, initialization of a 1D spline object requires an existing
+!>          B-splines object, to which a private (polymorphic) pointer is
+!>          associated.
+!>          The B-spline coefficients are stored in a public allocatable array;
+!>          at initialization the array is allocated to the proper size and all
+!>          values are set to zero.
+!>          In most situations the B-spline coefficients are not set directly by
+!>          the end user, but are computed by some other object (e.g., a Poisson
+!>          solver or a spline interpolator).
+!>          Various public methods allow the user to evaluate the 1D spline S(x)
+!>          and its derivative ∂S(x)/∂x any position x.
+!>
+!> @author  Yaman Güçlü  - IPP Garching
+!> @author  Edoardo Zoni - IPP Garching
+
 module sll_m_spline_1d_new
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_assert.h"
@@ -38,10 +58,15 @@ module sll_m_spline_1d_new
 contains
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
+  !-----------------------------------------------------------------------------
+  !> @brief      Initialize 1D spline object as element of span(B-splines)
+  !> @param[out] self      1D spline: new element of 1D spline space
+  !> @param[in]  bsplines  B-splines: given basis of 1D spline space
+  !-----------------------------------------------------------------------------
   subroutine s_spline_1d__init( self, bsplines )
 
     class(sll_t_spline_1d), intent(  out)         :: self
-    class(sll_c_bsplines) , intent(in   ), target :: bsplines
+    class(sll_c_bsplines ), intent(in   ), target :: bsplines
 
     ! Store pointer to B-splines
     self%bspl => bsplines
@@ -62,6 +87,9 @@ contains
   end subroutine s_spline_1d__init
 
   !-----------------------------------------------------------------------------
+  !> @brief        Destroy 1D spline (re-initialization is possible afterwards)
+  !> @param[inout] self  1D spline
+  !-----------------------------------------------------------------------------
   subroutine s_spline_1d__free( self )
 
     class(sll_t_spline_1d), intent(inout) :: self
@@ -71,6 +99,11 @@ contains
 
   end subroutine s_spline_1d__free
 
+  !-----------------------------------------------------------------------------
+  !> @brief     Check if 1D spline belongs to span of given B-splines
+  !> @param[in] self      1D spline
+  !> @param[in] bsplines  B-splines
+  !> @returns             true/false answer
   !-----------------------------------------------------------------------------
   SLL_PURE function f_spline_1d__belongs_to_space( self, bsplines ) result( in_space )
 
@@ -82,6 +115,11 @@ contains
 
   end function f_spline_1d__belongs_to_space
 
+  !-----------------------------------------------------------------------------
+  !> @brief     Evaluate value of 1D spline at location x: y=S(x)
+  !> @param[in] self  1D spline
+  !> @param[in] x     evaluation point
+  !> @returns         spline value y=S(x)
   !-----------------------------------------------------------------------------
   SLL_PURE function f_spline_1d__eval( self, x ) result( y )
 
@@ -101,6 +139,11 @@ contains
   end function f_spline_1d__eval
 
   !-----------------------------------------------------------------------------
+  !> @brief     Evaluate derivative of 1D spline at location x: y=S'(x)
+  !> @param[in] self  1D spline
+  !> @param[in] x     evaluation point
+  !> @returns         spline derivative y=S'(x)
+  !-----------------------------------------------------------------------------
   SLL_PURE function f_spline_1d__eval_deriv( self, x ) result( y )
 
     class(sll_t_spline_1d), intent(in) :: self
@@ -119,6 +162,11 @@ contains
   end function f_spline_1d__eval_deriv
 
   !-----------------------------------------------------------------------------
+  !> @brief      Evaluate value of 1D spline at all locations in array x
+  !> @param[in]  self  1D spline
+  !> @param[in]  x     array of evaluation points x[i]
+  !> @param[out] y     array of spline values y[i]=S(x[i])
+  !-----------------------------------------------------------------------------
   SLL_PURE subroutine s_spline_1d__eval_array( self, x, y )
 
     class(sll_t_spline_1d), intent(in   ) :: self
@@ -135,6 +183,11 @@ contains
 
   end subroutine s_spline_1d__eval_array
 
+  !-----------------------------------------------------------------------------
+  !> @brief      Evaluate derivative of 1D spline at all locations in array x
+  !> @param[in]  self  1D spline
+  !> @param[in]  x     array of evaluation points x[i]
+  !> @param[out] y     array of spline derivatives y[i]=S'(x[i])
   !-----------------------------------------------------------------------------
   SLL_PURE subroutine s_spline_1d__eval_array_deriv( self, x, y )
 

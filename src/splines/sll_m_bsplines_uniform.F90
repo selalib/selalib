@@ -1,3 +1,7 @@
+!> @brief  Implement uniform B-splines type according to abstract interface
+!> @author Yaman Güçlü  - IPP Garching
+!> @author Edoardo Zoni - IPP Garching
+
 module sll_m_bsplines_uniform
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_assert.h"
@@ -63,6 +67,14 @@ contains
   end subroutine s_bsplines_uniform__get_icell_and_offset
 
   !-----------------------------------------------------------------------------
+  !> @brief      Initialize uniform B-splines object
+  !> @param[out] self      uniform B-splines
+  !> @param[in]  degree    spline degree
+  !> @param[in]  periodic  .true. if domain is periodic, .false. otherwise
+  !> @param[in]  xmin      left  boundary of x domain
+  !> @param[in]  xmax      right boundary of x domain
+  !> @param[in]  ncells    number of grid cells in domain
+  !-----------------------------------------------------------------------------
   subroutine s_bsplines_uniform__init( self, degree, periodic, xmin, xmax, ncells )
     class(sll_t_bsplines_uniform), intent(  out) :: self
     integer                      , intent(in   ) :: degree
@@ -87,12 +99,19 @@ contains
   end subroutine s_bsplines_uniform__init
 
   !-----------------------------------------------------------------------------
-  !> Free storage
+  !> @brief        Free storage
+  !> @param[inout] self  uniform B-splines
+  !-----------------------------------------------------------------------------
   subroutine s_bsplines_uniform__free( self )
     class(sll_t_bsplines_uniform), intent(inout) :: self
   end subroutine s_bsplines_uniform__free
 
-  !----------------------------------------------------------------------------
+  !-----------------------------------------------------------------------------
+  !> @brief     Find which grid cell contains the given point
+  !> @param[in] self  uniform B-splines
+  !> @param[in] x     point of interest
+  !> results          cell index
+  !-----------------------------------------------------------------------------
   SLL_PURE function f_bsplines_uniform__find_cell( self, x ) result( icell )
     class(sll_t_bsplines_uniform), intent(in) :: self
     real(wp)                     , intent(in) :: x
@@ -106,7 +125,13 @@ contains
 
   !-----------------------------------------------------------------------------
   !> Evaluate value at x of all basis functions with support in local cell
-  !> (jrange identifies index of basis functions)
+  !> values[j] = B_j(x) for jmin <= j <= jmin+degree
+  !>
+  !> @param[in]  self    uniform B-splines
+  !> @param[in]  x       evaluation point
+  !> @param[out] values  array of B-splines' values
+  !> @param[out] jmin    index of first non-zero B-spline
+  !-----------------------------------------------------------------------------
   SLL_PURE subroutine s_bsplines_uniform__eval_basis( self, x, values, jmin )
     class(sll_t_bsplines_uniform), intent(in   ) :: self
     real(wp)                     , intent(in   ) :: x
@@ -154,6 +179,13 @@ contains
 
   !-----------------------------------------------------------------------------
   !> Evaluate derivative at x of all basis functions with support in local cell
+  !> derivs[j] = B_j'(x) for jmin <= j <= jmin+degree
+  !>
+  !> @param[in]  self    uniform B-splines
+  !> @param[in]  x       evaluation point
+  !> @param[out] derivs  array of B-splines' derivatives
+  !> @param[out] jmin    index of first non-zero B-spline
+  !-----------------------------------------------------------------------------
   SLL_PURE subroutine s_bsplines_uniform__eval_deriv( self, x, derivs, jmin )
     class(sll_t_bsplines_uniform), intent(in   ) :: self
     real(wp)                     , intent(in   ) :: x
@@ -216,6 +248,14 @@ contains
 
   !-----------------------------------------------------------------------------
   !> Evaluate value and n derivatives at x of all basis functions with support in local cell
+  !> derivs[i,j] = (d/dx)^i B_j(x) for 0 <= i <= n and jmin <= j <= jmin+degree
+  !>
+  !> @param[in]  self    uniform B-splines
+  !> @param[in]  x       evaluation point
+  !> @param[in]  n       number of required derivatives
+  !> @param[out] derivs  array of B-splines' (multiple) derivatives
+  !> @param[out] jmin    index of first non-zero B-spline
+  !-----------------------------------------------------------------------------
   SLL_PURE subroutine s_bsplines_uniform__eval_basis_and_n_derivs( self, x, n, derivs, jmin )
     class(sll_t_bsplines_uniform), intent(in   ) :: self
     real(wp)                     , intent(in   ) :: x

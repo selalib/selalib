@@ -1,3 +1,7 @@
+!> @brief  Implement non-uniform B-splines type according to abstract interface
+!> @author Yaman Güçlü  - IPP Garching
+!> @author Edoardo Zoni - IPP Garching
+
 module sll_m_bsplines_non_uniform
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_assert.h"
@@ -33,6 +37,12 @@ module sll_m_bsplines_non_uniform
 contains
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
+  !-----------------------------------------------------------------------------
+  !> @brief      Initialize non-uniform B-splines object
+  !> @param[out] self      non-uniform B-splines
+  !> @param[in]  degree    spline degree
+  !> @param[in]  periodic  .true. if domain is periodic, .false. otherwise
+  !> @param[in]  breaks    array of breakpoints (including xmin and xmax)
   !-----------------------------------------------------------------------------
   subroutine s_bsplines_non_uniform__init( self, degree, periodic, breaks ) 
     class(sll_t_bsplines_non_uniform), intent(  out) :: self
@@ -86,7 +96,9 @@ contains
   end subroutine s_bsplines_non_uniform__init
 
   !-----------------------------------------------------------------------------
-  !> Free storage
+  !> @brief        Free storage
+  !> @param[inout] self non-uniform B-splines
+  !-----------------------------------------------------------------------------
   subroutine s_bsplines_non_uniform__free( self )
     class(sll_t_bsplines_non_uniform), intent(inout) :: self
 
@@ -94,6 +106,11 @@ contains
 
   end subroutine s_bsplines_non_uniform__free
 
+  !----------------------------------------------------------------------------
+  !> @brief     Find which grid cell contains the given point
+  !> @param[in] self  non-uniform B-splines
+  !> @param[in] x     point of interest
+  !> results          cell index
   !----------------------------------------------------------------------------
   SLL_PURE function f_bsplines_non_uniform__find_cell( self, x ) result( icell )
     class(sll_t_bsplines_non_uniform), intent(in) :: self
@@ -130,7 +147,13 @@ contains
 
   !-----------------------------------------------------------------------------
   !> Evaluate value at x of all basis functions with support in local cell
-  !> (jmin identifies index of basis functions)
+  !> values[j] = B_j(x) for jmin <= j <= jmin+degree
+  !>
+  !> @param[in]  self    non-uniform B-splines
+  !> @param[in]  x       evaluation point
+  !> @param[out] values  array of B-splines' values
+  !> @param[out] jmin    index of first non-zero B-spline
+  !-----------------------------------------------------------------------------
   SLL_PURE subroutine s_bsplines_non_uniform__eval_basis( self, x, values, jmin )
     class(sll_t_bsplines_non_uniform), intent(in   ) :: self
     real(wp)                         , intent(in   ) :: x
@@ -181,6 +204,13 @@ contains
 
   !-----------------------------------------------------------------------------
   !> Evaluate derivative at x of all basis functions with support in local cell
+  !> derivs[j] = B_j'(x) for jmin <= j <= jmin+degree
+  !>
+  !> @param[in]  self    non-uniform B-splines
+  !> @param[in]  x       evaluation point
+  !> @param[out] derivs  array of B-splines' derivatives
+  !> @param[out] jmin    index of first non-zero B-spline
+  !-----------------------------------------------------------------------------
   SLL_PURE subroutine s_bsplines_non_uniform__eval_deriv( self, x, derivs, jmin )
     class(sll_t_bsplines_non_uniform), intent(in   ) :: self
     real(wp)                         , intent(in   ) :: x
@@ -254,6 +284,14 @@ contains
 
   !-----------------------------------------------------------------------------
   !> Evaluate value and n derivatives at x of all basis functions with support in local cell
+  !> derivs[i,j] = (d/dx)^i B_j(x) for 0 <= i <= n and jmin <= j <= jmin+degree
+  !>
+  !> @param[in]  self    non-uniform B-splines
+  !> @param[in]  x       evaluation point
+  !> @param[in]  n       number of required derivatives
+  !> @param[out] derivs  array of B-splines' (multiple) derivatives
+  !> @param[out] jmin    index of first non-zero B-spline
+  !-----------------------------------------------------------------------------
   SLL_PURE subroutine s_bsplines_non_uniform__eval_basis_and_n_derivs( self, x, n, derivs, jmin )
     class(sll_t_bsplines_non_uniform), intent(in   ) :: self
     real(wp)                         , intent(in   ) :: x
