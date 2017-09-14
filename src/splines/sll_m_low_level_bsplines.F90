@@ -27,7 +27,7 @@
 !> found in the de Boor book "Practical guide to splines"
 !> or the NURBS book by Piegl and Tiller.  
 
-module sll_m_bsplines
+module sll_m_low_level_bsplines
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_assert.h"
 #include "sll_errors.h"
@@ -1179,4 +1179,4 @@ contains
 
   end subroutine sll_s_eval_uniform_periodic_spline_curve
 
-end module sll_m_bsplines
+end module sll_m_low_level_bsplines

@@ -5,7 +5,7 @@ program test_splines_pp_3d
 #include "sll_working_precision.h"
 
 
-  use sll_m_bsplines, only: &
+  use sll_m_low_level_bsplines, only: &
        sll_s_uniform_bsplines_eval_basis
 
   use sll_m_arbitrary_degree_spline_interpolator_1d, only: &

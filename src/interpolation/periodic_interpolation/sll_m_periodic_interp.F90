@@ -12,7 +12,7 @@ module sll_m_periodic_interp
 !   zfftf, &
 !   zffti
 
-  use sll_m_bsplines, only: &
+  use sll_m_low_level_bsplines, only: &
     sll_s_uniform_bsplines_eval_basis
 
   use sll_m_constants, only: &
