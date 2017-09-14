@@ -23,7 +23,8 @@ module sll_m_spline_interpolator_1d
   implicit none
 
   public :: &
-    sll_t_spline_interpolator_1d
+    sll_t_spline_interpolator_1d, &
+    sll_s_spline_1d_compute_num_cells
 
   private
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -62,6 +63,52 @@ module sll_m_spline_interpolator_1d
 contains
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
+  !-----------------------------------------------------------------------------
+  !> @brief     Calculate number of cells from number of interpolation points
+  !> @details   Important for parallelization: for given spline degree and BCs,
+  !>            calculate the number of grid cells that yields the desired
+  !>            number of interpolation points
+  !>
+  !> @param[in]  degree   spline degree
+  !> @param[in]  bc_xmin  boundary condition type at left  boundary (x=xmin)
+  !> @param[in]  bc_xmax  boundary condition type at right boundary (x=xmax)
+  !> @param[in]  nipts    desired number of interpolation points
+  !> @param[out] ncells   number of cells in domain
+  !-----------------------------------------------------------------------------
+  subroutine sll_s_spline_1d_compute_num_cells( &
+      degree , &
+      bc_xmin, &
+      bc_xmax, &
+      nipts  , &
+      ncells )
+
+    integer, intent(in   ) :: degree
+    integer, intent(in   ) :: bc_xmin
+    integer, intent(in   ) :: bc_xmax
+    integer, intent(in   ) :: nipts
+    integer, intent(  out) :: ncells
+
+    ! Sanity checks
+    SLL_ASSERT( degree > 0  )
+    SLL_ASSERT( any( bc_xmin == allowed_bcs ) )
+    SLL_ASSERT( any( bc_xmax == allowed_bcs ) )
+
+    if (any( [bc_xmin,bc_xmax]==sll_p_periodic ) .and. bc_xmin /= bc_xmax) then
+      SLL_ERROR( "sll_s_spline_1d_compute_num_cells", "Incompatible BCs" )
+    end if
+
+    if (bc_xmin == sll_p_periodic) then
+      ncells = nipts
+    else
+      associate( nbc_xmin => merge( degree/2, 0, bc_xmin == sll_p_hermite ), &
+                 nbc_xmax => merge( degree/2, 0, bc_xmax == sll_p_hermite ) )
+        ncells = nipts + nbc_xmin + nbc_xmax - degree
+      end associate
+    end if
+
+  end subroutine sll_s_spline_1d_compute_num_cells
+
+  !-----------------------------------------------------------------------------
   subroutine s_spline_interpolator_1d__init( self, bspl, bc_xmin, bc_xmax )
 
     class(sll_t_spline_interpolator_1d), intent(  out) :: self
