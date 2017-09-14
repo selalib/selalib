@@ -1,4 +1,4 @@
-program test_spline_2d_new
+program test_spline_2d
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_errors.h"
 
@@ -16,7 +16,7 @@ program test_spline_2d_new
     sll_p_hermite, &
     sll_p_greville
 
-  use m_test_spline_2d_new, only: &
+  use m_test_spline_2d, only: &
     t_spline_2d_test_facility
 
   use m_analytical_profiles_2d, only: &
@@ -755,4 +755,4 @@ contains
 
   end subroutine generate_non_uniform_breaks
 
-end program test_spline_2d_new
+end program test_spline_2d

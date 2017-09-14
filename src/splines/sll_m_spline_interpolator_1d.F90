@@ -17,7 +17,7 @@ module sll_m_spline_interpolator_1d
     sll_p_greville
 
   use sll_m_bsplines_base, only: sll_c_bsplines
-  use sll_m_spline_1d_new, only: sll_t_spline_1d
+  use sll_m_spline_1d, only: sll_t_spline_1d
 
   use sll_m_spline_matrix, only: &
     sll_c_spline_matrix, &
