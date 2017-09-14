@@ -19,26 +19,6 @@ add_library( splines_error_bounds OBJECT m_splines_error_bounds.F90 )
 add_dependencies( splines_error_bounds analytical_profiles )
 
 #-------------------------------------------------------------------------------
-# New test for 1D spline
-#-------------------------------------------------------------------------------
-add_executable( test_spline_1d
-    test_spline_1d.F90
-  m_test_spline_1d.F90
-  $<TARGET_OBJECTS:analytical_profiles>
-  $<TARGET_OBJECTS:splines_error_bounds>
-  )
-target_link_libraries( test_spline_1d sll_splines )
-
-add_test( NAME spline_1d_uniform                     COMMAND test_spline_1d -u )
-add_test( NAME spline_1d_non_uniform_on_uniform_grid COMMAND test_spline_1d -n )
-add_test( NAME spline_1d_non_uniform_on_general_grid COMMAND test_spline_1d -n 0.1 )
-set_tests_properties(
-  spline_1d_uniform
-  spline_1d_non_uniform_on_uniform_grid
-  spline_1d_non_uniform_on_general_grid
-  PROPERTIES PASS_REGULAR_EXPRESSION "PASSED" )
-
-#-------------------------------------------------------------------------------
 # New test for new interface of 1D splines
 #-------------------------------------------------------------------------------
 add_executable( test_spline_1d_new
@@ -56,26 +36,6 @@ set_tests_properties(
   spline_1d_new_uniform
   spline_1d_new_non_uniform_on_uniform_grid
   spline_1d_new_non_uniform_on_general_grid
-  PROPERTIES PASS_REGULAR_EXPRESSION "PASSED" )
-
-#-------------------------------------------------------------------------------
-# New tests for 2D tensor-product spline
-#-------------------------------------------------------------------------------
-add_executable( test_spline_2d
-    test_spline_2d.F90
-  m_test_spline_2d.F90
-  $<TARGET_OBJECTS:analytical_profiles>
-  $<TARGET_OBJECTS:splines_error_bounds>
-  )
-target_link_libraries( test_spline_2d sll_splines )
-
-add_test( NAME spline_2d_uniform                     COMMAND test_spline_2d -u )
-add_test( NAME spline_2d_non_uniform_on_uniform_grid COMMAND test_spline_2d -n )
-add_test( NAME spline_2d_non_uniform_on_general_grid COMMAND test_spline_2d -n 0.1 )
-set_tests_properties(
-  spline_2d_uniform
-  spline_2d_non_uniform_on_uniform_grid
-  spline_2d_non_uniform_on_general_grid
   PROPERTIES PASS_REGULAR_EXPRESSION "PASSED" )
 
 #-------------------------------------------------------------------------------
@@ -118,15 +78,6 @@ TARGET_LINK_LIBRARIES( test_quintic_splines sll_splines )
 ADD_TEST( NAME quintic_splines COMMAND test_quintic_splines )
 SET_TESTS_PROPERTIES( quintic_splines PROPERTIES
                       PASS_REGULAR_EXPRESSION "PASSED" )
-#...........................................
-
-# B-splines ............................
-ADD_EXECUTABLE( test_bspline_1d test_bsplines_1d.F90 )
-TARGET_LINK_LIBRARIES( test_bspline_1d sll_splines )
-
-# Ctests
-ADD_TEST( NAME bspline_1d COMMAND test_bspline_1d )
-SET_TESTS_PROPERTIES( bspline_1d PROPERTIES PASS_REGULAR_EXPRESSION "PASSED" )
 #...........................................
 
 # Cubic non uniform splines ............................

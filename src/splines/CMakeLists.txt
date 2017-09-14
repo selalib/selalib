@@ -9,20 +9,14 @@ SET( SPLINES_FILES
   sll_m_spline_interpolator_1d.F90
   sll_m_spline_interpolator_2d.F90
   #
-  sll_m_low_level_bsplines.F90
   sll_m_spline_matrix.F90
   sll_m_spline_matrix_base.F90
   sll_m_spline_matrix_dense.F90
   sll_m_spline_matrix_banded.F90
   sll_m_spline_matrix_periodic_banded.F90
-  sll_m_spline_1d.F90
-  sll_m_spline_1d_base.F90
-  sll_m_spline_1d_uniform.F90
-  sll_m_spline_1d_non_uniform.F90
-  sll_m_spline_2d.F90
-  sll_m_spline_2d_base.F90
-  sll_m_spline_2d_uniform.F90
-  sll_m_spline_2d_non_uniform.F90
+  #
+  sll_m_low_level_bsplines.F90
+  #
   sll_m_deboor_splines_1d.F90 
   sll_m_splines_pp.F90
   sll_m_cubic_non_uniform_splines.F90
