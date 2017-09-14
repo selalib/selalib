@@ -14,14 +14,9 @@ module m_test_spline_1d_new
     sll_p_hermite, &
     sll_p_greville
 
-  use sll_m_bsplines_base, only: &
-    sll_c_bsplines
-
-  use sll_m_bsplines_uniform, only: &
-    sll_t_bsplines_uniform
-
-  use sll_m_bsplines_non_uniform, only: &
-    sll_t_bsplines_non_uniform
+  use sll_m_bsplines, only: &
+    sll_c_bsplines, &
+    sll_s_bsplines_new
 
   use sll_m_spline_1d_new, only: &
     sll_t_spline_1d
@@ -115,20 +110,8 @@ contains
       periodic = .false.
     end if
 
-    ! Allocate B-splines (uniform or non-uniform depending on input)
-    if (present( breaks ) .and. size( breaks )>0 ) then
-      allocate( sll_t_bsplines_non_uniform :: self % bsplines )
-    else 
-      allocate( sll_t_bsplines_uniform     :: self % bsplines )
-    end if
-
-    ! Initialize B-splines (uniform or non-uniform depending on allocated type)
-    select type( bsplines => self % bsplines )
-      type is( sll_t_bsplines_non_uniform )
-        call bsplines % init( degree, periodic, breaks )
-      type is( sll_t_bsplines_uniform     )
-        call bsplines % init( degree, periodic, info%xmin, info%xmax, ncells )
-    end select
+    ! Create B-splines (uniform or non-uniform depending on input)
+    call sll_s_bsplines_new( self%bsplines, degree, periodic, info%xmin, info%xmax, ncells, breaks )
 
     ! Initialize 1D spline
     call self % spline_1d % init( self % bsplines )
