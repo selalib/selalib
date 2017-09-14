@@ -1,3 +1,9 @@
+!> @ingroup splines
+!> @brief   Interpolator for 1D splines of arbitrary degree,
+!>          on uniform and non-uniform grids
+!> @author  Yaman Güçlü  - IPP Garching
+!> @author  Edoardo Zoni - IPP Garching
+
 module sll_m_spline_interpolator_1d
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_assert.h"
@@ -10,11 +16,8 @@ module sll_m_spline_interpolator_1d
     sll_p_hermite , &
     sll_p_greville
 
-  use sll_m_bsplines_base, only: &
-    sll_c_bsplines
-
-  use sll_m_spline_1d_new, only: &
-    sll_t_spline_1d
+  use sll_m_bsplines_base, only: sll_c_bsplines
+  use sll_m_spline_1d_new, only: sll_t_spline_1d
 
   use sll_m_spline_matrix, only: &
     sll_c_spline_matrix, &
@@ -36,7 +39,9 @@ module sll_m_spline_interpolator_1d
   integer, parameter :: &
     allowed_bcs(*) = [sll_p_periodic, sll_p_hermite, sll_p_greville]
 
+  !-----------------------------------------------------------------------------
   !> 1D spline interpolator
+  !-----------------------------------------------------------------------------
   type :: sll_t_spline_interpolator_1d
 
     ! Private attributes
@@ -64,16 +69,16 @@ contains
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
   !-----------------------------------------------------------------------------
-  !> @brief     Calculate number of cells from number of interpolation points
-  !> @details   Important for parallelization: for given spline degree and BCs,
-  !>            calculate the number of grid cells that yields the desired
-  !>            number of interpolation points
+  !> @brief      Calculate number of cells from number of interpolation points
+  !> @details    Important for parallelization: for given spline degree and BCs,
+  !>             calculate the number of grid cells that yields the desired
+  !>             number of interpolation points
   !>
   !> @param[in]  degree   spline degree
   !> @param[in]  bc_xmin  boundary condition type at left  boundary (x=xmin)
   !> @param[in]  bc_xmax  boundary condition type at right boundary (x=xmax)
   !> @param[in]  nipts    desired number of interpolation points
-  !> @param[out] ncells   number of cells in domain
+  !> @param[out] ncells   calculated number of cells in domain
   !-----------------------------------------------------------------------------
   subroutine sll_s_spline_1d_compute_num_cells( &
       degree , &
@@ -109,6 +114,12 @@ contains
   end subroutine sll_s_spline_1d_compute_num_cells
 
   !-----------------------------------------------------------------------------
+  !> @brief      Initialize a 1D spline interpolator object
+  !> @param[out] self     1D spline interpolator
+  !> @param[in]  bspl     B-splines (basis)
+  !> @param[in]  bc_xmin  boundary condition at xmin
+  !> @param[in]  bc_xmax  boundary condition at xmax
+  !-----------------------------------------------------------------------------
   subroutine s_spline_interpolator_1d__init( self, bspl, bc_xmin, bc_xmax )
 
     class(sll_t_spline_interpolator_1d), intent(  out) :: self
@@ -138,7 +149,6 @@ contains
     self%dx = (bspl%xmax - bspl%xmin) / bspl%ncells
 
     ! Compute interpolation points and number of diagonals in linear system
-    ! TODO: implement subroutines below
     if (bspl % uniform) then
       call s_compute_interpolation_points_uniform( self, self%tau )
       call s_compute_num_diags_uniform( self, kl, ku )
@@ -173,6 +183,9 @@ contains
   end subroutine s_spline_interpolator_1d__init
 
   !-----------------------------------------------------------------------------
+  !> @brief        Destroy local objects and free allocated memory
+  !> @param[inout] self  1D spline interpolator
+  !-----------------------------------------------------------------------------
   subroutine s_spline_interpolator_1d__free( self )
 
     class(sll_t_spline_interpolator_1d), intent(inout) :: self
@@ -186,6 +199,10 @@ contains
   end subroutine s_spline_interpolator_1d__free
 
   !-----------------------------------------------------------------------------
+  !> @brief      Get coordinates of interpolation points (1D grid)
+  !> @param[in]  self  1D spline interpolator
+  !> @param[out] tau   x coordinates of interpolation points
+  !-----------------------------------------------------------------------------
   subroutine s_spline_interpolator_1d__get_interp_points( self, tau )
 
     class(sll_t_spline_interpolator_1d), intent(in   ) :: self
@@ -198,12 +215,13 @@ contains
 
   !-----------------------------------------------------------------------------
   !> @brief        Compute interpolating 1D spline
-  !> Computes coefficients of 1D spline that interpolates function on grid.
-  !> If Hermite BCs are used, derivatives at boundary are also needed.
+  !> @details      Compute coefficients of 1D spline that interpolates function
+  !>               values on grid. If Hermite BCs are used, function derivatives
+  !>               at appropriate boundary are also needed.
   !>
-  !> @param[inout] self       1D spline interpolator object
-  !> @param[inout] spline     1D spline
-  !> @param[in]    gtau       function values of interpolation points
+  !> @param[in]    self        1D spline interpolator
+  !> @param[inout] spline      1D spline
+  !> @param[in]    gtau        function values of interpolation points
   !> @param[in]    derivs_xmin (optional) array with boundary conditions at xmin
   !> @param[in]    derivs_xmax (optional) array with boundary conditions at xmax
   !-----------------------------------------------------------------------------
@@ -464,7 +482,7 @@ contains
 
       deallocate( iknots )
 
-      end if
+      end if  ! (bc_xmin == sll_p_periodic)
 
     end associate
 
