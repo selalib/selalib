@@ -1,6 +1,6 @@
 !> @ingroup splines
 !> Implements arbitrary degree bspline interpolation on a uniform grid
-!> given a B-Spline object from sll_m_bsplines
+!> given a B-Spline object from sll_m_low_level_bsplines
 !>
 !> @author Eric Sonnendrücker - IPP Garching
 !> @author Yaman Güçlü        - IPP Garching
@@ -20,7 +20,7 @@ module sll_m_spline_2d_uniform
     sll_p_hermite, &
     sll_p_greville
 
-  use sll_m_bsplines, only: &
+  use sll_m_low_level_bsplines, only: &
     sll_s_uniform_bsplines_eval_basis, &
     sll_s_uniform_bsplines_eval_deriv
 

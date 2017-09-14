@@ -21,7 +21,7 @@ module sll_m_spline_1d_non_uniform
   use sll_m_spline_1d_base, only: &
     sll_c_spline_1d
 
-  use sll_m_bsplines, only: &
+  use sll_m_low_level_bsplines, only: &
     sll_t_bsplines, &
     sll_s_bsplines_init_from_grid, &
     sll_s_bsplines_free, &

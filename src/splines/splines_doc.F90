@@ -8,8 +8,7 @@
 !>    - sll_m_cubic_splines            : B-splines of degree 3
 !>    - sll_m_cubic_non_uniform_splines: non-uniform B-splines of degree 3
 !>    - sll_m_quintic_splines          : B-splines of degree 5
-!>    - sll_m_bsplines                 : B-splines 1D and 2D
-!>    - sll_m_bsplines : De Boor splines of arbitrary degree
+!>    - sll_m_low_level_bsplines       : De Boor B-splines of arbitrary degree
 !>    - sll_m_box_splines              : Box-splines for hexagonal mesh
 !>    - sll_m_hex_pre_filters          : Hexagonal prefilters associated to boxsplines
 !>

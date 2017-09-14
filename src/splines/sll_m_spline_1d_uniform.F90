@@ -18,7 +18,7 @@ module sll_m_spline_1d_uniform
   use sll_m_spline_1d_base, only: &
     sll_c_spline_1d
 
-  use sll_m_bsplines, only: &
+  use sll_m_low_level_bsplines, only: &
     sll_s_uniform_bsplines_eval_basis, &
     sll_s_uniform_bsplines_eval_deriv, &
     sll_s_uniform_bsplines_eval_basis_and_n_derivs
