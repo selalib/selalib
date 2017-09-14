@@ -10,7 +10,7 @@ module sll_m_sim_pic_vm_1d2v_cart
 #include "sll_memory.h"
 #include "sll_working_precision.h"
 
-  use sll_m_bsplines, only: &
+  use sll_m_low_level_bsplines, only: &
        sll_s_uniform_bsplines_eval_basis
   
   use sll_m_ascii_io, only: &

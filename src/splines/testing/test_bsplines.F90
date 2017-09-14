@@ -9,7 +9,7 @@ program test_arbitrary_degree_splines
     sll_p_periodic, &
     sll_p_open
 
-  use sll_m_bsplines, only: &
+  use sll_m_low_level_bsplines, only: &
     sll_t_bsplines                        , &
     sll_s_bsplines_init_from_grid         , &
     sll_s_bsplines_free                   , &

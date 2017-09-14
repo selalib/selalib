@@ -10,7 +10,7 @@ module sll_m_particle_mesh_coupling_spline_1d
 #include "sll_working_precision.h"
 #include "sll_errors.h"
 
-  use sll_m_bsplines, only: &
+  use sll_m_low_level_bsplines, only: &
     sll_s_uniform_bsplines_eval_basis
 
   use sll_m_gauss_legendre_integration, only : &
