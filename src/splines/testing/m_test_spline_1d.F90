@@ -107,7 +107,22 @@ contains
     call sll_s_set_time_mark( t0 )
 
     ! Create B-splines (uniform or non-uniform depending on input)
-    call sll_s_bsplines_new( self%bsplines, degree, periodic, info%xmin, info%xmax, ncells, breaks )
+    !
+    ! NOTE: optional arguments may be propagated through a chain of subroutine
+    !       calls, as long as they are optional for all subroutines.
+    !       Therefore the following call is perfectly correct, and recommended:
+    !
+    !       call sll_s_bsplines_new( self%bsplines, degree, periodic, &
+    !                                info%xmin, info%xmax, ncells, breaks ).
+    !
+    !       For the purpose of hunting down segmentation faults arising with
+    !       Gfortran 4.8.4 on Ubuntu and Debian, here we do not pass an optional
+    !       argument if it is not present:
+    if (present( breaks )) then
+      call sll_s_bsplines_new( self%bsplines, degree, periodic, info%xmin, info%xmax, ncells, breaks )
+    else
+      call sll_s_bsplines_new( self%bsplines, degree, periodic, info%xmin, info%xmax, ncells )
+    end if
 
     ! Initialize 1D spline
     call self % spline_1d % init( self % bsplines )
