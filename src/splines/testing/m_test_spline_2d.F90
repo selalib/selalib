@@ -111,21 +111,11 @@ contains
     dx1 = (info%x1_max-info%x1_min)/real(ncells(1),wp)
     dx2 = (info%x2_max-info%x2_min)/real(ncells(2),wp)
 
+    !TODO: add proper checks
+    periodic(1) = (bc_xmin(1) == sll_p_periodic)
+    periodic(2) = (bc_xmin(2) == sll_p_periodic)
+
     call sll_s_set_time_mark( t0 )
-
-    !TODO: add proper checks
-    if (bc_xmin(1) == sll_p_periodic) then
-      periodic(1) = .true.
-    else
-      periodic(1) = .false.
-    end if
-
-    !TODO: add proper checks
-    if (bc_xmin(2) == sll_p_periodic) then
-      periodic(2) = .true.
-    else
-      periodic(2) = .false.
-    end if
 
     ! Create B-splines (uniform or non-uniform depending on input)
     call sll_s_bsplines_new( self%bsplines_x1, degree(1), periodic(1), info%x1_min, info%x1_max, ncells(1), breaks1 )
@@ -511,8 +501,18 @@ contains
 
     class(t_spline_2d_test_facility), intent(inout) :: self
 
-    ! Free spline memory
-    call self % spline_2d % free()
+    ! Call destructors of member objects
+    call self % bsplines_x1 % free()
+    call self % bsplines_x2 % free()
+    call self % spline_2d   % free()
+    call self % spline_interpolator_2d % free()
+
+    ! Free dynamically allocated memory
+    deallocate( self % bsplines_x1 )
+    deallocate( self % bsplines_x2 )
+    deallocate( self %  tau1       )
+    deallocate( self %  tau2       )
+    deallocate( self % gtau        )
 
   end subroutine free
 
