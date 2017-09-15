@@ -55,32 +55,40 @@ contains
     integer                           , intent(in   ) :: ncells
     real(wp),                 optional, intent(in   ) :: breaks(:)
 
+    logical :: uniform
+
     ! Sanity checks
     SLL_ASSERT( degree > 0  )
     SLL_ASSERT( ncells > 0  )
     SLL_ASSERT( xmin < xmax )
 
-    ! Allocate B-splines object to correct type
-    if (present( breaks ) .and. size( breaks ) > 0) then
+    ! Determine if B-splines are uniform based on 'breaks' optional argument
+    if (present( breaks )) then
+      uniform = (size( breaks ) == 0) ! Fall back to uniform if array is empty
+    else
+      uniform = .true.
+    end if
+
+    ! Non-uniform case: perform sanity checks on breakpoints
+    if (.not. uniform) then
       SLL_ASSERT( size( breaks ) == ncells+1     )
       SLL_ASSERT( xmin == breaks(1)              )
       SLL_ASSERT( xmax == breaks(size( breaks )) )
-      allocate( sll_t_bsplines_non_uniform :: bsplines )
-
-    else
-      allocate( sll_t_bsplines_uniform     :: bsplines )
-
     end if
 
-    ! Properly initialize B-splines object
-    select type( bsplines )
+    ! Allocate B-splines object to correct type
+    if (uniform) then
+      allocate( sll_t_bsplines_uniform     :: bsplines )
+    else
+      allocate( sll_t_bsplines_non_uniform :: bsplines )
+    end if
 
+    ! Initialize B-splines object with type-specific constructor
+    select type( bsplines )
     type is( sll_t_bsplines_uniform )
       call bsplines % init( degree, periodic, xmin, xmax, ncells )
-
     type is( sll_t_bsplines_non_uniform )
       call bsplines % init( degree, periodic, breaks )
-
     end select
 
   end subroutine sll_s_bsplines_new
