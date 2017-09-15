@@ -101,14 +101,10 @@ contains
     ! Extract information about 1D analytical profile
     call self % profile_1d % get_info( info )
 
-    call sll_s_set_time_mark( t0 )
-
     !TODO: add proper checks
-    if (bc_xmin == sll_p_periodic) then
-      periodic = .true.
-    else
-      periodic = .false.
-    end if
+    periodic = (bc_xmin == sll_p_periodic)
+
+    call sll_s_set_time_mark( t0 )
 
     ! Create B-splines (uniform or non-uniform depending on input)
     call sll_s_bsplines_new( self%bsplines, degree, periodic, info%xmin, info%xmax, ncells, breaks )
@@ -370,9 +366,12 @@ contains
 
     class(t_spline_1d_test_facility), intent(inout) :: self
 
-    ! Free spline memory
+    ! Call destructors of member objects
+    call self % bsplines  % free()
     call self % spline_1d % free()
+    call self % spline_interpolator_1d % free()
 
+    ! Free dynamically allocated memory
     deallocate( self % bsplines )
     deallocate( self %  tau     )
     deallocate( self % gtau     )
