@@ -124,9 +124,7 @@ program test_spline_1d
   ! Estimate max-norm of profile (needed to compute relative error)
   max_norm_profile = profile_1d_cos % max_norm()
 
-  if (uniform) then
-    allocate( breaks(0) )
-  else
+  if (.not. uniform) then
     allocate( breaks(ncells+1) )
     call generate_non_uniform_breaks( pinfo%xmin, pinfo%xmax, ncells, grid_perturbation, breaks )
   end if
@@ -182,7 +180,7 @@ program test_spline_1d
 
   ! Deallocate local arrays
   deallocate( bc_kinds )
-  deallocate( breaks   )
+  if (allocated( breaks )) deallocate( breaks )
 
   !-----------------------------------------------------------------------------
   ! TEST 2: Spline should represent polynomial profiles exactly
@@ -241,9 +239,7 @@ program test_spline_1d
   allocate( grid (grid_dim) )
   call sll_s_new_array_linspace( grid, pinfo%xmin, pinfo%xmax, step=grid_dx )
 
-  if (uniform) then
-    allocate( breaks(0) )
-  else
+  if (.not. uniform) then
     allocate( breaks(ncells+1) )
     call generate_non_uniform_breaks( pinfo%xmin, pinfo%xmax, ncells, grid_perturbation, breaks )
   end if
@@ -310,7 +306,8 @@ program test_spline_1d
   ! Deallocate local arrays
   deallocate( bc_kinds )
   deallocate( grid     )
-  deallocate( breaks   )
+  deallocate( profile_1d_poly % coeffs )
+  if (allocated( breaks )) deallocate( breaks )
 
   !-----------------------------------------------------------------------------
   ! TEST 3: convergence analysis on cos*cos profile (with absolute error bound)
@@ -388,13 +385,9 @@ program test_spline_1d
   grid    = [(pinfo%xmin + real(k,wp)*grid_dx, k=0, grid_dim-1)]
 
   ! Allocate breaks to initialize non-uniform 1D spline (instead of uniform)
-  if (uniform) then
-    allocate( breaks(0) )
-  else
+  if (.not. uniform) then
     allocate( breaks( maxval(nx_list)+1 ) )
   end if
-
-  breaks_ptr => breaks
 
   ! Initialize 'PASSED/FAILED' condition
   passed(3) = .true.
@@ -414,17 +407,13 @@ program test_spline_1d
           ncells = nx_list(k)
 
           if (uniform) then
-
+            breaks_ptr => null()
             dx = (pinfo%xmax-pinfo%xmin) / ncells
-
           else
-
             call generate_non_uniform_breaks( pinfo%xmin, pinfo%xmax, ncells, &
                                               grid_perturbation, breaks )
             breaks_ptr => breaks(1:ncells+1)
-
             dx = maxval( breaks(2:ncells+1)-breaks(1:ncells) )
-
           end if
 
           ! Initialize test facility
@@ -487,7 +476,7 @@ program test_spline_1d
   deallocate( bc_kinds )
   deallocate( nx_list  )
   deallocate( grid     )
-  deallocate( breaks   )
+  if (allocated( breaks )) deallocate( breaks )
   nullify( breaks_ptr  )
 
   ! ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
