@@ -64,11 +64,7 @@ contains
     SLL_ASSERT( xmin < xmax )
 
     ! Determine if B-splines are uniform based on 'breaks' optional argument
-    if (present( breaks )) then
-      uniform = (size( breaks ) == 0) ! Fall back to uniform if array is empty
-    else
-      uniform = .true.
-    end if
+    uniform = .not. present( breaks )
 
     ! Non-uniform case: perform sanity checks on breakpoints
     if (.not. uniform) then

@@ -137,10 +137,7 @@ program test_spline_2d
   ! Estimate max-norm of profile (needed to compute relative error)
   max_norm_profile = profile_2d_cos_cos % max_norm()
 
-  if (uniform) then
-    allocate( breaks1(0) )
-    allocate( breaks2(0) )
-  else
+  if (.not. uniform) then
     allocate( breaks1(ncells(1)+1) )
     allocate( breaks2(ncells(2)+1) )
     call generate_non_uniform_breaks( pinfo%x1_min, pinfo%x1_max, ncells(1), grid_perturbation, breaks1 )
@@ -183,8 +180,8 @@ program test_spline_2d
                 ncells     = ncells (1:2), &
                 bc_xmin    = bc_xmin(1:2), &
                 bc_xmax    = bc_xmax(1:2), &
-                breaks1    = breaks1(:)  , &
-                breaks2    = breaks2(:)  )
+                breaks1    = breaks1     , &
+                breaks2    = breaks2     )
 
               ! Run tests
               call test_facility % evaluate_at_interpolation_points( max_norm_error )
@@ -215,8 +212,8 @@ program test_spline_2d
 
   ! Deallocate local arrays
   deallocate( bc_kinds )
-  deallocate( breaks1  )
-  deallocate( breaks2  )
+  if (allocated( breaks1 )) deallocate( breaks1  )
+  if (allocated( breaks2 )) deallocate( breaks2  )
 
   ! ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
   ! TEST 2: Spline should represent polynomial profiles exactly
@@ -290,10 +287,7 @@ program test_spline_2d
     end do
   end do
 
-  if (uniform) then
-    allocate( breaks1(0) )
-    allocate( breaks2(0) )
-  else
+  if (.not. uniform) then
     allocate( breaks1(ncells(1)+1) )
     allocate( breaks2(ncells(2)+1) )
     call generate_non_uniform_breaks( pinfo%x1_min, pinfo%x1_max, ncells(1), grid_perturbation, breaks1 )
@@ -337,8 +331,8 @@ program test_spline_2d
                 ncells     = ncells (1:2), &
                 bc_xmin    = bc_xmin(1:2), &
                 bc_xmax    = bc_xmax(1:2), &
-                breaks1    = breaks1(:)  , &
-                breaks2    = breaks2(:) )
+                breaks1    = breaks1     , &
+                breaks2    = breaks2    )
 
               ! Run tests
               call test_facility % evaluate_on_2d_grid( mgrid_x1, mgrid_x2, max_norm_error )
@@ -386,8 +380,9 @@ program test_spline_2d
   deallocate(  grid_x2 )
   deallocate( mgrid_x1 )
   deallocate( mgrid_x2 )
-  deallocate( breaks1  )
-  deallocate( breaks2  )
+  deallocate( profile_2d_poly % coeffs )
+  if (allocated( breaks1 )) deallocate( breaks1  )
+  if (allocated( breaks2 )) deallocate( breaks2  )
 
   ! ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
   ! TEST 3: convergence analysis on cos*cos profile (with absolute error bound)
@@ -520,8 +515,6 @@ program test_spline_2d
               ncells(2) = ncells(1)
 
               if (uniform) then
-                allocate( breaks1(0) )
-                allocate( breaks2(0) )
                 dx1 = (pinfo%x1_max - pinfo%x1_min) / ncells(1)
                 dx2 = (pinfo%x2_max - pinfo%x2_min) / ncells(2)
               else
@@ -540,11 +533,11 @@ program test_spline_2d
                 ncells     = ncells (1:2), &
                 bc_xmin    = bc_xmin(1:2), &
                 bc_xmax    = bc_xmax(1:2), &
-                breaks1    = breaks1(:)  , &
-                breaks2    = breaks2(:)  )
+                breaks1    = breaks1     , &
+                breaks2    = breaks2     )
 
-              deallocate( breaks1 )
-              deallocate( breaks2 )
+              if (allocated( breaks1 )) deallocate( breaks1 )
+              if (allocated( breaks2 )) deallocate( breaks2 )
 
               ! Determine error tolerances
               tol       = sll_f_spline_2d_error_bound         ( profile_2d_cos_cos, dx1, dx2, deg1, deg2 )
