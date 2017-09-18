@@ -47,7 +47,7 @@ contains
       ncells  , &
       breaks  )
 
-    class(sll_c_bsplines), allocatable, intent(  out) :: bsplines
+    class(sll_c_bsplines), allocatable, intent(inout) :: bsplines
     integer                           , intent(in   ) :: degree
     logical                           , intent(in   ) :: periodic
     real(wp)                          , intent(in   ) :: xmin
@@ -58,6 +58,7 @@ contains
     logical :: uniform
 
     ! Sanity checks
+    SLL_ASSERT( .not. allocated( bsplines ) )
     SLL_ASSERT( degree > 0  )
     SLL_ASSERT( ncells > 0  )
     SLL_ASSERT( xmin < xmax )
