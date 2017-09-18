@@ -157,6 +157,10 @@ contains
       call s_compute_num_diags_non_uniform( self, kl, ku )
     end if
 
+    ! Special case: linear spline
+    ! No need for matrix assembly
+    if (self % bspl % degree == 1) return
+
     ! Determine matrix storage type and allocate matrix
     associate( nbasis => self % bspl % nbasis )
 
@@ -193,8 +197,10 @@ contains
     nullify   ( self % bspl )
     deallocate( self % tau  )
 
-    call self % matrix % free()
-    deallocate( self % matrix )
+    if (allocated( self % matrix )) then
+      call self % matrix % free()
+      deallocate( self % matrix )
+    end if
 
   end subroutine s_spline_interpolator_1d__free
 
@@ -421,6 +427,7 @@ contains
                ncells   => self % bspl % ncells, &
                degree   => self % bspl % degree, &
                xmin     => self % bspl % xmin  , &
+               xmax     => self % bspl % xmax  , &
                dx       => self % dx           , &
                bc_xmin  => self %  bc_xmin     , &
                bc_xmax  => self %  bc_xmax     , &
@@ -479,6 +486,12 @@ contains
           end if
         end do
       end associate
+
+      ! Non-periodic case, odd degree: fix round-off issues
+      if ( self%odd == 1 ) then
+        tau(1)    = xmin
+        tau(ntau) = xmax
+      end if
 
       deallocate( iknots )
 

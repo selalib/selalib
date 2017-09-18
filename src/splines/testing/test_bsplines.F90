@@ -858,7 +858,7 @@ contains
       call bsplines_non_uniform % eval_basis( xx(j), values, jmin )
     end do
     time = sll_f_time_elapsed_since(t0) / real(num_tests,wp)
-    subr = "sll_t_bsplines_non_uniform % eval()"
+    subr = "sll_t_bsplines_non_uniform % eval_basis()"
     write(*,timing_fmt) adjustl( subr ), time
     write(*,*)
 
@@ -945,7 +945,7 @@ contains
       call bsplines_uniform % eval_basis( xx(j), values, jmin )
     end do
     time = sll_f_time_elapsed_since(t0) / real(num_tests,wp)
-    subr = "sll_t_bsplines_uniform % eval()"
+    subr = "sll_t_bsplines_uniform % eval_basis()"
     write(*,timing_fmt) adjustl( subr ), time
     write(*,*)
 
