@@ -1,5 +1,4 @@
 program test_assert
-!#include "sll_m_memory.h"
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_assert.h"
 
@@ -18,9 +17,6 @@ program test_assert
   b = get_val(a, 500001) 
   write (*, '(a, i4)') 'a(1001) = ', b
 
-
-
-
 contains
 
   function get_val( a, i )
@@ -30,6 +26,5 @@ contains
     SLL_ASSERT( (i .ge. 1) .and. (i .le. size(a)) )
     get_val = a(i)
   end function get_val
-
 
 end program test_assert
