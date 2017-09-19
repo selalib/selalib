@@ -174,8 +174,7 @@ contains
      
     case default
       print*, ' Mapping type = ', mapping_type, ' not treated'
-      stop
-      call exit(-1)
+      stop -1
     end select
 
     !--> Writing of the transformation in the output file 

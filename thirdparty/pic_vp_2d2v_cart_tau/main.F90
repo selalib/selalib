@@ -65,7 +65,6 @@ sll_real64 :: xmax
 sll_real64 :: ymin
 sll_real64 :: ymax
 sll_int32  :: istep=1
-sll_int32  :: iargc
 sll_int32  :: n,m
 sll_int32  :: i
 sll_int32  :: j
@@ -97,9 +96,9 @@ call init_mpi(prank, psize)
 if (prank == 0 ) master = .true.
 
 if (master) then
-  n = iargc()
+  n = command_argument_count()
   if (n < 1) stop 'Usage: ./bin/sim_pic_2d2v_cart_tau data-file-name'
-  call getarg( 1, argv)
+  call get_command_argument( 1, argv )
   call readin( trim(argv) )
   call cpu_time(start_time)
 end if
