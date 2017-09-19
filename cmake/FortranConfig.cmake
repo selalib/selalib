@@ -46,11 +46,11 @@ ELSEIF (CMAKE_Fortran_COMPILER_ID MATCHES GNU)
   STRING(REGEX MATCH "[4-7]\\.[0-9]\\.[0-9]" Fortran_COMPILER_VERSION ${source_path})
 
   ADD_DEFINITIONS(-DGFORTRAN)
-  SET(CMAKE_Fortran_FLAGS_RELEASE "-w -ffree-line-length-none -fall-intrinsics -O3 -fPIC -march=native ")
+  SET(CMAKE_Fortran_FLAGS_RELEASE "-w -ffree-line-length-none -std=f2008 -O3 -fPIC -march=native")
   IF(APPLE)
     SET(CMAKE_Fortran_FLAGS_RELEASE "${CMAKE_Fortran_FLAGS_RELEASE} -mno-avx")
   ENDIF(APPLE)
-  SET(CMAKE_Fortran_FLAGS_DEBUG "-g -O0 -Wall -cpp -ffree-line-length-none -std=f2008 -pedantic -Wconversion -Wconversion-extra -Wintrinsics-std -Wuninitialized -fcheck=array-temps,bounds,do,pointer,recursion -fall-intrinsics -fbounds-check -fbacktrace -ffpe-trap=invalid,zero,overflow -fcheck-array-temporaries")
+  SET(CMAKE_Fortran_FLAGS_DEBUG "-g -O0 -Wall -cpp -ffree-line-length-none -std=f2008 -pedantic -Werror=intrinsics-std -Wconversion -Wconversion-extra -Wuninitialized -fcheck=array-temps,bounds,do,pointer,recursion -fbounds-check -fbacktrace -ffpe-trap=invalid,zero,overflow -fcheck-array-temporaries")
 
 #-------------------------------------------------------------------------------
 # [YG] Old flags: real and integer variables were initialized with absurd

@@ -8,6 +8,8 @@ program vp4d_multigrid
   use sll_multigrid_2d
   use sll_m_gnuplot_parallel
 
+  use iso_fortran_env, only: output_unit
+
   implicit none
 
   type(vlasov4d_poisson)    :: vlasov 
@@ -165,7 +167,7 @@ program vp4d_multigrid
   do p=0, int(psize,i32)-1
      if (p == prank) then
         print"('Rank: ',i2,', coords: ',2i3,', neighbors: ',8i3)",prank,coords,neighbor
-        call flush(6)
+        flush( output_unit )
       end if
       call MPI_Barrier(MPI_COMM_WORLD, error)
   enddo
@@ -183,7 +185,7 @@ program vp4d_multigrid
     call sll_o_view_lims( layout_mg )
     !call write_to_file(layout_mg, 'mesh')
   end if
-  call flush(6)
+  flush( output_unit )
 
   sx = sll_o_get_layout_i_min(layout_mg, prank)
   ex = sll_o_get_layout_i_max(layout_mg, prank)
@@ -389,7 +391,7 @@ contains
          call MPI_Barrier(MPI_COMM_WORLD, error)
       enddo
  
-      call flush(6)
+      flush( output_unit )
 
    end subroutine display_values
 
