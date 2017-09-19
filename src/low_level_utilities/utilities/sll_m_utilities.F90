@@ -548,16 +548,17 @@ end subroutine sll_s_compute_mesh_from_bloc
 
   !> Query an environment variable for the values on,off,1,0,true,false
   !> and return the result as a logical.
-  function sll_f_query_environment(env_variable, default_value)
-    implicit none
-    logical :: sll_f_query_environment !< result of query
+  logical function sll_f_query_environment( env_variable, default_value )
+
     character(len=*), intent(in) :: env_variable !< environment variable to be checked
-    logical, intent(in) :: default_value !< default value to be checked agains
+    logical         , intent(in) :: default_value !< default value to be checked agains
     
     character(len=255) :: env_str
 
     sll_f_query_environment = default_value
-    call getenv(env_variable, env_str)
+
+    call get_environment_variable( env_variable, value=env_str )
+
     if (len_trim(env_str) > 0) then
       select case(trim(env_str))
         case("1","ON","TRUE","on","true")
@@ -566,6 +567,7 @@ end subroutine sll_s_compute_mesh_from_bloc
           sll_f_query_environment = .false.
       end select
     endif
+
   end function sll_f_query_environment
 
 end module sll_m_utilities
