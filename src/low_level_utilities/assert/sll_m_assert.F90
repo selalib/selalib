@@ -14,9 +14,7 @@
 !  circulated by CEA, CNRS and INRIA at the following URL
 !  "http://www.cecill.info". 
 !**************************************************************
-
 #ifndef DOXYGEN_SHOULD_SKIP_THIS
-
 
 module sll_m_assert
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -28,22 +26,33 @@ module sll_m_assert
   private
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
-contains
+  ! Instead of using the non-standard subroutine abort() provided by the compiler,
+  ! use abort() from the C standard library "stdlib.h"
+  interface
+    subroutine c_abort() bind(C, name="abort")
+    end subroutine
+  end interface
 
-  ! This routine just takes the informations about the assertion error and 
-  ! writes them on the sreen. 
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+contains
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+  ! This routine just takes the information about the assertion error and 
+  ! writes it on the screen.
   ! This function is only meant to be used by the assert macro. No Doxygen 
   ! documentation needed.
-subroutine sll_s_assertion(msg, file, line)
-  intrinsic :: trim
-  character(len=*), intent(in) :: msg
-  character(len=*), intent(in) :: file
-  integer, intent(in)          :: line
-  character(len=8)            :: local_line
-  write(local_line, '(i8)') line ! hoping that I could trim this later, but no..
-  write (*,'(a, a, a, a, a)') msg, ': Assertion error triggered in file ', file, ' in line ', trim(local_line)
-  stop ':  ASSERTION FAILURE'
-end subroutine sll_s_assertion
+  subroutine sll_s_assertion( msg, file, line )
+    character(len=*), intent(in) :: msg
+    character(len=*), intent(in) :: file
+    integer         , intent(in) :: line
+
+    write(*,*)
+    write(*,'(a)'   ) "ASSERTION FAILURE: condition ( " // trim(msg) // " ) is not satisfied."
+    write(*,'(a,i0)') 'Triggered at '// file //':', line
+
+    call c_abort()
+
+  end subroutine sll_s_assertion
 
 end module sll_m_assert
 
