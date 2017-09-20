@@ -90,7 +90,7 @@ subroutine sll_s_gnuplot_curv_2d_parallel(array_x, array_y, array, &
   
   inquire(file=cproc//"/"".", exist=dir_e)
   if (.not. dir_e) then
-     call system("mkdir -p "//cproc)
+     call execute_command_line("mkdir -p "//cproc)
   end if
   
   SLL_ASSERT(size(array_x,1) == size(array_y,1))
@@ -188,7 +188,7 @@ subroutine sll_s_gnuplot_rect_2d_parallel(x_min, delta_x, &
   
   inquire(file=cproc//"/"".", exist=dir_e)
   if (.not. dir_e) then
-     call system("mkdir -p "//cproc)
+     call execute_command_line("mkdir -p "//cproc)
   end if
   
   call sll_s_new_file_id(file_id, error)
@@ -289,7 +289,7 @@ end subroutine sll_s_gnuplot_rect_2d_parallel
 !!$     if (dir_e) then
 !!$        write(*,*) "directory "//cproc//" exists!"
 !!$     else
-!!$        call system("mkdir -p "//cproc)
+!!$        call execute_command_line("mkdir -p "//cproc)
 !!$     end if
 !!$  end if
 !!$
