@@ -1,15 +1,12 @@
 !> @ingroup splines
 !> @author Laura S. Mendoza
-!> @brief Provides capabilities for values and derivatives
-!> interpolation with box splines on a hexagonal mesh
-!> @details This modules contains the computation of boxsplines
-!> of arbitrary degree. There is a special optimized algorithm
-!> for degree 2. The boxsplines here are defined only on hexagonal
-!> meshes (regular equilateral triangles elements).
-!> The only boundary condition supported right now
-!> is dirichlet.
-!>  Reference :
-!>     \@Condat2006 "Three-directional box splines"
+!> @brief Provides capabilities for values and derivatives interpolation with
+!> box splines on hexagonal meshes
+!> @details This module contains the computation of box splines of arbitrary
+!> degree. There is a special optimized algorithm for degree 2. The box splines
+!> here are defined only on hexagonal meshes (regular equilateral triangles elements).
+!> The only boundary condition supported right now is dirichlet.
+!> Reference: http://ieeexplore.ieee.org/document/1642713/
 
 module sll_m_box_splines
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -60,7 +57,7 @@ module sll_m_box_splines
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
   !> @brief
-  !> basic type for 2 dimensional box splines dara
+  !> Basic type for 2 dimensional box splines.
   !> @details
   !> 2D Box spline type, containing the mesh information, the
   !> boundary condition, and the spline coefficients
@@ -768,7 +765,7 @@ contains  ! ****************************************************************
   !> @param[in] deg integer with degree of splines
   !> @param[in] nderiv1 integer number of times to derive on the x direction
   !> @param[in] nderiv2 integer number of times to derive on the y direction
-  !> @return real nderiv-derivatives of boxspline
+  !> @return real nderiv-derivatives of box spline
   function boxspline_val_der(x1, x2, deg, nderiv1, nderiv2) result(val)
     sll_int32,  intent(in)  :: deg
     sll_int32,  intent(in)  :: nderiv1
@@ -876,7 +873,7 @@ contains  ! ****************************************************************
   ! end subroutine write_quadrature
 
   ! !---------------------------------------------------------------------------
-  ! !> @brief Writes on a file values of boxsplines on fekete points
+  ! !> @brief Writes on a file values of box splines on fekete points
   ! !> @details Following CAID structure, we write a file with the values
   ! !> of the basis function (box splines) on a reference element (triangle)
   ! !> fekete points. Output for DJANGO.
@@ -975,7 +972,7 @@ contains  ! ****************************************************************
   !> intented to couple Pigasus poisson solver to the hex-mesh.
   !> Output file : boxsplines_connectivity.txt
   !> @param[in]  mesh pointer to the hexagonal mesh
-  !> @param[in]  deg  integer designing boxsplines degree
+  !> @param[in]  deg  integer designing box splines degree
   subroutine sll_s_write_connectivity(mesh, deg)
     type(sll_t_hex_mesh_2d), pointer :: mesh
     sll_int32, intent(in)          :: deg

@@ -1,4 +1,5 @@
 !> @ingroup splines
+!> @brief   Access point to matrix class providing factory function
 !> @author  Yaman Güçlü  - IPP Garching
 !> @author  Edoardo Zoni - IPP Garching
 

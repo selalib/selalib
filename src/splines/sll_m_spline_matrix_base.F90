@@ -1,4 +1,7 @@
 !> @ingroup splines
+!> @brief
+!> Abstract class for small matrix library with basic operations:
+!> set matrix element, factorize, solve and write to output
 !> @author  Yaman Güçlü  - IPP Garching
 !> @author  Edoardo Zoni - IPP Garching
 

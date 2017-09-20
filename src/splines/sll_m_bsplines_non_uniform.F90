@@ -1,6 +1,7 @@
-!> @brief  Implement non-uniform B-splines type according to abstract interface
-!> @author Yaman Güçlü  - IPP Garching
-!> @author Edoardo Zoni - IPP Garching
+!> @ingroup splines
+!> @brief   Derived type for non-uniform B-splines of arbitrary degree
+!> @author  Yaman Güçlü  - IPP Garching
+!> @author  Edoardo Zoni - IPP Garching
 
 module sll_m_bsplines_non_uniform
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
