@@ -1,4 +1,5 @@
 !> @ingroup splines
+!> @brief   Derived type for periodic banded matrices
 !> @author  Yaman Güçlü  - IPP Garching
 !> @author  Edoardo Zoni - IPP Garching
 

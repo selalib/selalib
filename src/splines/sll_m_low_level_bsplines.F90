@@ -16,16 +16,13 @@
 !**************************************************************
 
 !> @ingroup splines
-!> @brief 
-!> Low level arbitrary degree splines
+!> @brief Low level arbitrary degree splines
 !> @details
-!> This module defines low level algorithms of the arbitrary
-!> degree spline.
-!> For non periodic boundary conditions, knots defined from a grid
-!> are either duplicated (open knot sequence) or mirror outside boundary.
-!> It is a selalib implemnation of the classical algorithms
-!> found in the de Boor book "Practical guide to splines"
-!> or the NURBS book by Piegl and Tiller.  
+!> This module defines low level algorithms for arbitrary degree splines.
+!> For non periodic boundary conditions, knots defined from a grid are either
+!> duplicated (open knot sequence) or mirror outside boundary.
+!> It is a selalib implementation of the classical algorithms found in the
+!> de Boor book "A Practical Guide to Splines" or the NURBS book by Piegl and Tiller.
 
 module sll_m_low_level_bsplines
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
