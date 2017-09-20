@@ -1,5 +1,5 @@
 !> @ingroup splines
-!> @brief   Access point to B-splines (base class and factory)
+!> @brief   Access point to B-splines of arbitrary degree providing factory function
 !> @author  Yaman Güçlü - IPP Garching
 
 module sll_m_bsplines

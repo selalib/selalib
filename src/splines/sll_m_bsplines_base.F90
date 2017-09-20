@@ -1,6 +1,7 @@
-!> @brief  Define abstract base class for B-splines (uniform and non-uniform)
-!> @author Yaman Güçlü  - IPP Garching
-!> @author Edoardo Zoni - IPP Garching
+!> @ingroup splines
+!> @brief   Abstract class for B-splines of arbitrary degree
+!> @author  Yaman Güçlü  - IPP Garching
+!> @author  Edoardo Zoni - IPP Garching
 
 module sll_m_bsplines_base
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++

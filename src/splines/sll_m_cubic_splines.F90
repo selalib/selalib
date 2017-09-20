@@ -17,11 +17,10 @@
 
 !> @ingroup splines 
 !> @brief  
-!> provides capabilities for data and derivative
-!> interpolation with cubic B-splines and different 
-!> boundary conditions
+!> Provides capabilities for data and derivative interpolation with cubic
+!> B-splines and different boundary conditions
 !> @details
-!> Supported boundary conditions presently:  periodic, hermite. 
+!> Supported boundary conditions presently: periodic, hermite.
 !> User needs to declare a pointer to the spline object. The pointer needs
 !> to be allocated and initialized with the appropriate 'new_' function. 
 !> Afterwards this initialized object can be used to compute the spline 
