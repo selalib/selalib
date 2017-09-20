@@ -1,35 +1,32 @@
 program test_splines_pp_1d
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-#include "sll_assert.h"
-#include "sll_memory.h"
 #include "sll_working_precision.h"
 
-
   use sll_m_low_level_bsplines, only: &
-       sll_s_uniform_bsplines_eval_basis
-
-  use sll_m_arbitrary_degree_spline_interpolator_1d, only: &
-       sll_t_arbitrary_degree_spline_interpolator_1d
+    sll_s_uniform_bsplines_eval_basis
 
   use sll_m_boundary_condition_descriptors, only: &
-       sll_p_periodic
+    sll_p_periodic
 
   use sll_m_constants, only: &
-       sll_p_twopi
+    sll_p_twopi
   
-  use sll_m_splines_pp 
-
-  use sll_m_timer
-  
+  use sll_m_splines_pp, only: &
+    sll_t_spline_pp_1d        , &
+    sll_s_spline_pp_init_1d   , &
+    sll_s_spline_pp_free_1d   , &
+    sll_s_spline_pp_b_to_pp_1d, &
+    sll_f_spline_pp_horner_1d
 
   implicit none
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
   sll_real64, parameter :: inv_2  = 1._f64/2._f64
   sll_real64, parameter :: inv_3  = 1._f64/3._f64
   sll_real64, parameter :: inv_4  = 1._f64/4._f64
   sll_real64, parameter :: inv_6  = 1._f64/6._f64
   sll_real64, parameter :: inv_8  = 1._f64/8._f64
-  sll_real64, parameter :: inv_10  = 1._f64/10._f64
+  sll_real64, parameter :: inv_10 = 1._f64/10._f64
   sll_real64, parameter :: inv_24 = 1._f64/24._f64
   
   type(sll_t_spline_pp_1d) :: spline_pp
@@ -40,7 +37,6 @@ program test_splines_pp_1d
   n_cells=8
   degree=3
   call spline_test(spline_pp,degree,n_cells,fail)
-     
   
   if(fail .eqv. .false.) then
      write(*,*) 'PASSED'
@@ -49,7 +45,9 @@ program test_splines_pp_1d
      stop
   end if
 
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 contains
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
   subroutine spline_test(spline_pp, degree, n_cells, fail)
     type(sll_t_spline_pp_1d), intent(inout) :: spline_pp !arbitrary degree spline
@@ -130,13 +128,3 @@ contains
   end subroutine spline_test
   
 end program test_splines_pp_1d
-
-  
-
-    
-
-
-
- 
-
-  
