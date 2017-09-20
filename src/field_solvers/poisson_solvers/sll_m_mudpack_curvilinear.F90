@@ -362,7 +362,7 @@ write(*,104) intl
  call muh2cr(iprm,fprm,self%work,self%iwork,coefcr,bndcr,rhs,phi,self%mgopt,ierror)
 !call mud2sp(iprm,fprm,self%work,cofx,cofy,bndcr,rhs,phi,self%mgopt,ierror)
 write (*,200) ierror,iprm(16)
-if (ierror > 0) call exit(0)
+if (ierror > 0) stop 0
 
 100 format(//' multigrid poisson solver in polar coordinates ')
 101 format(/' integer input arguments ', &
@@ -453,7 +453,7 @@ call muh2cr(iprm,fprm,self%work,self%iwork,coefcr,bndcr,rhs,phi,self%mgopt,ierro
 !call mud2sp(iprm,fprm,self%work,cofx,cofy,bndcr,rhs,phi,self%mgopt,ierror)
 !SLL_ASSERT(ierror == 0)
 !YG write(*,107) ierror
-if (ierror > 0) call exit(0)
+if (ierror > 0) stop 0
 
 ! attempt fourth order approximation
 !call mud24cr(self%work,coefcr,bndcr,phi,ierror)
@@ -461,7 +461,7 @@ call muh24cr(self%work,self%iwork,coefcr,bndcr,phi,ierror)
 !call mud24sp(self%work,phi,ierror)
 !SLL_ASSERT(ierror == 0)
 !YG write (*,108) ierror
-if (ierror > 0) call exit(0)
+if (ierror > 0) stop 0
 
 !YG 106 format(/' approximation call to mud2sp', &
 !YG     &/' intl = ',i2, ' method = ',i2,' iguess = ',i2)

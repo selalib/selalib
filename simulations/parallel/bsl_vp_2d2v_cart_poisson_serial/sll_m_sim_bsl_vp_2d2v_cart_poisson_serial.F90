@@ -62,7 +62,8 @@ use sll_m_collective, only: &
 use sll_m_common_array_initializers, only: &
   sll_f_landau_mode_initializer_4d, &
   sll_f_landau_mode_initializer_cos_sum_4d, &
-  sll_i_scalar_initializer_4d
+  sll_i_scalar_initializer_4d, &
+  sll_f_bump_on_tail_initializer_4d
 
 use sll_m_constants, only: &
   sll_p_pi
@@ -495,8 +496,19 @@ contains
             2._f64*(eps_l*sll_p_pi)**2/(lmode_x1*lmode_x2*(lmode_x1**2+lmode_x2**2))
         endif
         sim%l20 = (2._f64*sll_p_pi/kmode_x1)*(2._f64*sll_p_pi/kmode_x2)*0.25_f64
-        sim%l20 =sim%l20*(1._f64+0.5_f64*(eps**2+eps_l**2))/sll_p_pi           
-      case default
+        sim%l20 =sim%l20*(1._f64+0.5_f64*(eps**2+eps_l**2))/sll_p_pi
+     case( "SLL_BUMP_ON_TAIL" )
+        sim%init_func => sll_f_bump_on_tail_initializer_4d
+        SLL_ALLOCATE(sim%params(8), ierr)
+        sim%params(1) = kmode_x1
+        sim%params(2) = kmode_x2
+        sim%params(3) = eps
+        sim%params(4) = 1.0_f64
+        sim%params(5) = 0.5_f64
+        sim%params(6) = 1.0_f64
+        sim%params(7) = 0.1_f64
+        sim%params(8) = 4.5_f64
+     case default
         print *,'#init_func_case not implemented'
         print *,'#in initialize_vlasov_par_poisson_seq_cart'  
         stop

@@ -6,17 +6,27 @@ program unit_test
     sll_f_time_elapsed_since, &
     sll_t_time_mark
 
+  use iso_c_binding, only: &
+    c_int
+
   implicit none
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #define MARGIN 0.1
+
+  interface
+    integer(c_int) function c_sleep( seconds ) bind(c, name='sleep')
+      import
+      integer(c_int), intent(in), value :: seconds
+    end function c_sleep
+  end interface
 
   type(sll_t_time_mark)  :: t0
   type(sll_t_time_mark)  :: t1
   double precision :: time
   integer :: a,b
 
-  call system_clock(COUNT_RATE=a,&
-                    COUNT_MAX=b)
+  call system_clock( COUNT_RATE=a, COUNT_MAX=b )
+
   if(b .eq. 0) then
     stop 'NO CLOCK AVAILABLE'
   else
@@ -49,4 +59,15 @@ program unit_test
   else
     print *, 'FAILED'
   endif
+
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+contains
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+  subroutine sleep( seconds )
+    integer, intent(in) :: seconds
+    integer :: elapsed
+    elapsed = c_sleep( seconds )
+  end subroutine sleep
+
 end program unit_test
