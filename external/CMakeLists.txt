@@ -1,3 +1,9 @@
+# Allow compiler-specific intrinsic functions (non-standard)
+IF (CMAKE_Fortran_COMPILER_ID MATCHES GNU)
+  SET( CMAKE_Fortran_FLAGS_DEBUG   "${CMAKE_Fortran_FLAGS_DEBUG} -fall-intrinsics" )
+  SET( CMAKE_Fortran_FLAGS_RELEASE "${CMAKE_Fortran_FLAGS_RELEASE} -fall-intrinsics" )
+ENDIF()
+
 ADD_SUBDIRECTORY(fftpack)
 ADD_SUBDIRECTORY(fftpack5)
 ADD_SUBDIRECTORY(pppack)
