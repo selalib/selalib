@@ -133,7 +133,11 @@ contains
     ! Sanity checks
     SLL_ASSERT( any( bc_xmin == allowed_bcs ) )
     SLL_ASSERT( any( bc_xmax == allowed_bcs ) )
-
+    if (bspl % periodic) then
+      SLL_ASSERT( bc_xmin == sll_p_periodic )
+      SLL_ASSERT( bc_xmax == sll_p_periodic )
+    end if
+    
     ! Save pointer to B-splines
     ! (later needed to verify 1D spline input to 'compute_interpolant')
     self % bspl => bspl
