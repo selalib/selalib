@@ -1,9 +1,7 @@
 !> @ingroup splines
 !> @brief
-!> Lowlevel module for sll_cubic_spline_1d_nonuniform
-!> @details
-!> The splines module provides capabilities for 1D data interpolation
-!> with cubic B-splines on non uniform mesh
+!> Provides capabilities for data interpolation with cubic B-splines on
+!> non-uniform meshes
 
 module sll_m_cubic_non_uniform_splines
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
