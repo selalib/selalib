@@ -1,8 +1,8 @@
-
-!> @ingroup particle_groups
+!> @ingroup splines
 !> @author Benedikt Perse, Katharina Kormann, IPP
 !> @brief Splines in pp form
 !> @details Only implements splines on a uniform grid
+
 module sll_m_splines_pp
 
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
