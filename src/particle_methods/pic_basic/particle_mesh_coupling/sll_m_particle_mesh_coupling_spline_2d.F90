@@ -10,8 +10,8 @@ module sll_m_particle_mesh_coupling_spline_2d
 #include "sll_memory.h"
 #include "sll_working_precision.h"
 
-  use sll_m_arbitrary_degree_splines, only: &
-    sll_s_uniform_b_splines_at_x
+  use sll_m_low_level_bsplines, only: &
+    sll_s_uniform_bsplines_eval_basis
 
   use sll_m_particle_mesh_coupling_base, only: &
     sll_p_collocation, &
@@ -85,8 +85,8 @@ contains
     indices = ceiling(xi(1:2))
     xi(1:2) = xi(1:2) - real(indices -1,f64)
     indices =  indices - self%spline_degree
-    call sll_s_uniform_b_splines_at_x(self%spline_degree, xi(1), self%spline_val(1:self%n_span,1))
-    call sll_s_uniform_b_splines_at_x(self%spline_degree, xi(2), self%spline_val(1:self%n_span,2))
+    call sll_s_uniform_bsplines_eval_basis(self%spline_degree, xi(1), self%spline_val(1:self%n_span,1))
+    call sll_s_uniform_bsplines_eval_basis(self%spline_degree, xi(2), self%spline_val(1:self%n_span,2))
     !self%spline_val(1:self%n_span,1) = sll_f_uniform_b_splines_at_x(self%spline_degree, xi(1))
     !self%spline_val(1:self%n_span,2) = sll_f_uniform_b_splines_at_x(self%spline_degree, xi(2))
 
