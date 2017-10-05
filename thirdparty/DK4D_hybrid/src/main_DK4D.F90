@@ -31,7 +31,7 @@ program main_DK4D
   end if
 
   !*** Read the input data file for the 4D drift-kinetic simulation ***
-  call getarg(1,input_filename)
+  call get_command_argument(1,input_filename)
   if ( my_rank==0 )then
     print *, '# *** Read the input data file '
   end if

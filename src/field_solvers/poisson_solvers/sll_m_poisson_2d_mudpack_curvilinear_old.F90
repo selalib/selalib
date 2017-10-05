@@ -607,12 +607,12 @@ contains
           poisson%mgopt, &
           error)
         !write(*,107) error
-        if (error > 0) call exit(0)
+        if (error > 0) stop 0
         ! attempt to improve approximation to fourth order
         ! seems not to work for the moment
         call mud24(poisson%work,phi,error)
         !write (*,108) error
-        if (error > 0) call exit(0)   
+        if (error > 0) stop 0
          mudpack_curvilinear_wrapper => null() 
             
       case (sll_p_non_separable_with_cross_terms)
@@ -631,7 +631,7 @@ contains
           poisson%mgopt, &
           error)
         !write(*,107) error
-        if (error > 0) call exit(0)
+        if (error > 0) stop 0
         ! attempt to improve approximation to fourth order
         ! seems not to work for the moment
         call mud24cr(poisson%work, &
@@ -640,7 +640,7 @@ contains
           phi, &
           error)
         !write (*,108) error
-        if (error > 0) call exit(0)        
+        if (error > 0) stop 0
          mudpack_curvilinear_wrapper => null()
          
       case default

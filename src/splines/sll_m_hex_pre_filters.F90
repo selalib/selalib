@@ -1,9 +1,10 @@
 !> @ingroup splines
-!> @author Laura Mendoza (IPP-Garching)
+!> @author Laura Mendoza - IPP Garching
 !> @brief Pre-filter for box-splines quasi interpolation
 !> @details This module defines pre-filters for quasi-interpolation for
-!> box splines on a hexagonal mesh subdivided in equilateral triangles
-!> Reference : Condat2006 "Three-directional box splines"
+!> box splines on a hexagonal mesh subdivided in equilateral triangles.
+!> Reference: http://ieeexplore.ieee.org/document/1642713/
+
 module sll_m_hex_pre_filters
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_assert.h"

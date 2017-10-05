@@ -34,6 +34,8 @@ use sll_m_coordinate_transformation_2d_base
 use sll_m_coordinate_transformations_2d
 use sll_m_cubic_spline_interpolator_2d
 
+use iso_fortran_env, only: output_unit
+
 implicit none
 
 !> vp4d polar simulation class extended from sll_simulation_base_class
@@ -108,7 +110,7 @@ subroutine initialize_vp4d_polar( this,        &
             1,1,int(psize,4),1,this%layout_x)
 
   if ( prank == MPI_MASTER ) call sll_o_view_lims( this%layout_x )
-  call flush(6)
+  flush( output_unit )
 
   call sll_o_compute_local_sizes(this%layout_x, &
                               loc_sz_x1,loc_sz_x2,loc_sz_x3,loc_sz_x4)        
@@ -120,7 +122,7 @@ subroutine initialize_vp4d_polar( this,        &
               int(psize,4),1,1,1,this%layout_v)
 
   if ( prank == MPI_MASTER ) call sll_o_view_lims( this%layout_v )
-  call flush(6)
+  flush( output_unit )
 
   call sll_o_compute_local_sizes(this%layout_v, &
                               loc_sz_x1,loc_sz_x2,loc_sz_x3,loc_sz_x4)        

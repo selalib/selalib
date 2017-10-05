@@ -186,7 +186,7 @@ call mud2sp(iprm,fprm,self%work,cofx,cofy,bndsp,rhs,phi,self%mgopt,error)
 #ifdef DEBUG
 !print error parameter and minimum work space requirement
 write (*,200) error,iprm(16)
-if (error > 0) call exit(0)
+if (error > 0) stop 0
 
 101 format(/'# integer input arguments ', &
     &/'#intl = ',i2,' nxa = ',i2,' nxb = ',i2,' nyc = ',i2,' nyd = ',i2, &
@@ -258,7 +258,7 @@ call mud2sp(iprm,fprm,self%work,cofx,cofy,bndsp,rhs,phi,self%mgopt,error)
 
 #ifdef DEBUG
 write(*,107) error
-if (error > 0) call exit(0)
+if (error > 0) stop 0
 #endif
 
 if ( nxa == 0 .and. nyc == 0 ) &
@@ -270,7 +270,7 @@ call mud24sp(self%work,phi,error)
 
 #ifdef DEBUG
 write (*,108) error
-if (error > 0) call exit(0)
+if (error > 0) stop 0
 
 106 format(/'#approximation call to mud2sp', &
     &/'# intl = ',i2, ' method = ',i2,' iguess = ',i2)
@@ -432,7 +432,7 @@ write(*,104) intl
 call mud2cr(iprm,fprm,self%work,coef_polar,bndcr,rhs,phi,self%mgopt,ierror)
 
 write (*,200) ierror,iprm(16)
-if (ierror > 0) call exit(0)
+if (ierror > 0) stop 0
 
 100 format(//' multigrid poisson solver in polar coordinates ')
 101 format(/' integer input arguments ', &
