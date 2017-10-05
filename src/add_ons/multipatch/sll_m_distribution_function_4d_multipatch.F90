@@ -306,8 +306,8 @@ contains
        ! please correct this to:
        ! lm => df%transf%get_cartesian_mesh(i)
        ! whenever gfortan 4.6 is no longer supported by Selalib.
-       lm => df%transf%transfs(i+1)%t%mesh
-       t => df%transf%transfs(i+1)%t
+       lm => df%transf%transfs(i+1)%mesh
+       t => df%transf%transfs(i+1)
        !call sll_set_time_mark(t0) ! delete this
        call sll_o_4d_parallel_array_initializer( &
             layout, &

@@ -1155,11 +1155,11 @@ contains
           poisson%mgopt, &
           error)
         !write(*,107) error
-        if (error > 0) call exit(0)
+        if (error > 0) stop 0
         ! attempt to improve approximation to fourth order
         call mud24sp(poisson%work,phi,error)
         !write (*,108) error
-        if (error > 0) call exit(0)
+        if (error > 0) stop 0
         
          mudpack_wrapper => null()
         
@@ -1180,11 +1180,11 @@ contains
           poisson%mgopt, &
           error)
         !write(*,107) error
-        if (error > 0) call exit(0)
+        if (error > 0) stop 0
         ! attempt to improve approximation to fourth order
         call mud24(poisson%work,phi,error)
         !write (*,108) error
-        if (error > 0) call exit(0)
+        if (error > 0) stop 0
         
          mudpack_wrapper => null()
         
@@ -1205,7 +1205,7 @@ contains
           poisson%mgopt, &
           error)
         !write(*,107) error
-        if (error > 0) call exit(0)
+        if (error > 0) stop 0
         ! attempt to improve approximation to fourth order
         call mud24cr(poisson%work, &
           mudpack_cofcr, &
@@ -1213,7 +1213,7 @@ contains
           phi, &
           error)
         !write (*,108) error
-        if (error > 0) call exit(0)
+        if (error > 0) stop 0
         
          mudpack_wrapper => null()
          

@@ -11,9 +11,9 @@ program sim_fsl_ad_2d0v_polar
     sll_p_pi
 
   use sll_m_cubic_splines, only: &
-    sll_s_compute_cubic_spline_2d, &
-    sll_s_deposit_value_2d, &
-    sll_f_interpolate_value_2d, &
+    sll_s_cubic_spline_2d_compute_interpolant, &
+    sll_s_cubic_spline_2d_deposit_value, &
+    sll_f_cubic_spline_2d_eval, &
     sll_s_cubic_spline_2d_init, &
     sll_t_cubic_spline_2d
 
@@ -325,10 +325,10 @@ program sim_fsl_ad_2d0v_polar
       fh_fsl_nc(i,Ntheta+1)=fh_fsl_nc(i,1)
     enddo
       
-    call sll_s_compute_cubic_spline_2d(fh_bsl,spl_bsl)
-    call sll_s_compute_cubic_spline_2d(fh_bsl_nc,spl_bsl_nc)
-    call sll_s_compute_cubic_spline_2d(fh_fsl,spl_fsl)
-    call sll_s_compute_cubic_spline_2d(fh_fsl_nc,spl_fsl_nc)
+    call sll_s_cubic_spline_2d_compute_interpolant(fh_bsl,spl_bsl)
+    call sll_s_cubic_spline_2d_compute_interpolant(fh_bsl_nc,spl_bsl_nc)
+    call sll_s_cubic_spline_2d_compute_interpolant(fh_fsl,spl_fsl)
+    call sll_s_cubic_spline_2d_compute_interpolant(fh_fsl_nc,spl_fsl_nc)
     
     do i=1,Nr+1
       do j=1,Ntheta+1
@@ -383,8 +383,8 @@ program sim_fsl_ad_2d0v_polar
           theta= theta+2._f64*sll_p_pi
         endif
         
-        fh_bsl(i,j)    = sll_f_interpolate_value_2d(r,theta,spl_bsl)
-        fh_bsl_nc(i,j) = sll_f_interpolate_value_2d(r,theta,spl_bsl_nc)/(rmin+real(i-1,f64)*dr)
+        fh_bsl(i,j)    = sll_f_cubic_spline_2d_eval(r,theta,spl_bsl)
+        fh_bsl_nc(i,j) = sll_f_cubic_spline_2d_eval(r,theta,spl_bsl_nc)/(rmin+real(i-1,f64)*dr)
     
         diag(3,step) = diag(3,step) + fh_bsl(i,j) * (rmin+real(i-1,f64)*dr)*dr*dtheta
         diag(4,step) = diag(4,step) + fh_bsl(i,j) * dr*dtheta
@@ -452,8 +452,8 @@ program sim_fsl_ad_2d0v_polar
       enddo
     enddo
     
-    call sll_s_deposit_value_2d(rfeet,thetafeet,spl_fsl,fh_fsl)
-    call sll_s_deposit_value_2d(rfeet,thetafeet,spl_fsl_nc,fh_fsl_nc)
+    call sll_s_cubic_spline_2d_deposit_value(rfeet,thetafeet,spl_fsl,fh_fsl)
+    call sll_s_cubic_spline_2d_deposit_value(rfeet,thetafeet,spl_fsl_nc,fh_fsl_nc)
     
     do i=1,Nr+1
       r=rmin+real(i-1,f64)*dr

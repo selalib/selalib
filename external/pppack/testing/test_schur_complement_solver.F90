@@ -52,7 +52,7 @@ call schur_complement_fac(s, n, k, q)
 call schur_complement_slv(s, n, k, q, x)
 
 print*, ' x = '; call print_vector(x)
-write(*,"(' error = ', g15.3)") sum(b - matmul(m,x))
+write(*,"(' error = ', g15.3)") maxval(b - matmul(m,x))
 
 
 end program test_schur_complement_solver

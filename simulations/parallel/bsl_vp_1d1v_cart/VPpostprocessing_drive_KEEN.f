@@ -7,7 +7,7 @@
       integer N, Nv, Nt, i, j, nsave, nsavef, it, mbox
       integer nmovierho, nmovieefield, nmoviedeltaf, ivmin, ivmax
       integer modeorder, nmovieEdr, nharmonics, nsavef1, nsavef2
-      integer ierr,numarg, iargc
+      integer ierr,numarg
       !parameter (N=1024, Nv=4096)
       double precision pi, dt, k0
       !integer  Nout, nrho, 
@@ -47,7 +47,7 @@
       ii = cmplx(0, 1, 8)
 
       ! get run directory
-      numarg = iargc ( )
+      numarg = command_argument_count()
       if (numarg > 0) then
          call get_command_argument( 1, rundir )
       else 
@@ -341,12 +341,12 @@
                rhoft(1) = cmplx(0.,0.,8)
                phift(1) = cmplx(0.,0.,8)
                do i=2, N/2
-                  k = dfloat(i-1) * dk
+                  k = real(i-1,8) * dk
                   rhoft(i) = efieldft(i) * ii * k
                   phift(i) = efieldft(i) / ii / k
                enddo
                do i=N/2+1, N
-                  k = dfloat(i-1-N) * dk
+                  k = real(i-1-N,8) * dk
                   rhoft(i) = efieldft(i) * ii * k
                   phift(i) = efieldft(i) / ii / k
                enddo
@@ -455,7 +455,7 @@
      
    
       vphase = omega0/k0
-      dv = (vxmax-vxmin)/dfloat(Nv)
+      dv = (vxmax-vxmin)/real(Nv,8)
       ivmin = int((vrangemin - vxmin)/(vxmax-vxmin)*Nv)
       ivmax = int((vrangemax - vxmin)/(vxmax-vxmin)*Nv)
       !write(*,*) 'ivmin, ivmax:', ivmin, ivmax
@@ -622,9 +622,9 @@
                   KE = KE + 0.5_8*f*v(j)*v(j)
                enddo
             enddo 
-            entropy1 = entropy1 * L/dfloat(N) * dv
-            entropy2 = entropy2 * L/dfloat(N) * dv 
-            KE = KE * L/dfloat(N) * dv
+            entropy1 = entropy1 * L/real(N,8) * dv
+            entropy2 = entropy2 * L/real(N,8) * dv
+            KE = KE * L/real(N,8) * dv
             write(25, *) it * dt, entropy1
             write(26, *) it * dt, entropy2
             write(28, *) it * dt, KE

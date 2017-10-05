@@ -1,18 +1,18 @@
 !**************************************************************
 !  Copyright INRIA
-!  Authors : 
+!  Authors :
 !     CALVI project team
-!  
-!  This code SeLaLib (for Semi-Lagrangian-Library) 
-!  is a parallel library for simulating the plasma turbulence 
+!
+!  This code SeLaLib (for Semi-Lagrangian-Library)
+!  is a parallel library for simulating the plasma turbulence
 !  in a tokamak.
-!  
-!  This software is governed by the CeCILL-B license 
-!  under French law and abiding by the rules of distribution 
-!  of free software.  You can  use, modify and redistribute 
-!  the software under the terms of the CeCILL-B license as 
+!
+!  This software is governed by the CeCILL-B license
+!  under French law and abiding by the rules of distribution
+!  of free software.  You can  use, modify and redistribute
+!  the software under the terms of the CeCILL-B license as
 !  circulated by CEA, CNRS and INRIA at the following URL
-!  "http://www.cecill.info". 
+!  "http://www.cecill.info".
 !**************************************************************
 
 !> @ingroup utilities
@@ -36,7 +36,9 @@ module sll_m_utilities
     sll_s_pfenvelope, &
     sll_o_display, &
     sll_o_factorial, &
-    sll_s_new_file_id
+    sll_s_new_file_id, &
+    sll_f_query_environment, &
+    sll_s_new_array_linspace
 
   private
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -45,19 +47,19 @@ module sll_m_utilities
   ! Tentative implementation of a standard-compliant way to get the
   ! memory footprint of a variable. This is our yardstick...
   !
-  ! selected_int_kind(r) returns the default integer scalar that is the kind 
-  ! type parameter value for an integer data type able to represent all 
-  ! integer values n in the range -10^(-r) < n < 10^r, where r is a scalar 
-  ! integer. If more than one is available, a kind with least decimal exponent 
-  ! range is chosen (and least kind value if several have least decimal 
-  ! exponent range). If no corresponding kind is availalble, the result is -1. 
+  ! selected_int_kind(r) returns the default integer scalar that is the kind
+  ! type parameter value for an integer data type able to represent all
+  ! integer values n in the range -10^(-r) < n < 10^r, where r is a scalar
+  ! integer. If more than one is available, a kind with least decimal exponent
+  ! range is chosen (and least kind value if several have least decimal
+  ! exponent range). If no corresponding kind is availalble, the result is -1.
   ! (Metcalf & Reid. F90/95 2nd ed. p. 176).
   !
   ! We are, maybe dangerously, relying on the common practice of many compilers
   ! of using the kind values to indicate the number of bytes of storage
-  ! occupied by a value. But this is not mandated by the standard. For 
+  ! occupied by a value. But this is not mandated by the standard. For
   ! instance a compiler that only has available 4-byte integers may still
-  ! support kind values of 1, 2 and 4 to 'ease portability' from other 
+  ! support kind values of 1, 2 and 4 to 'ease portability' from other
   ! platforms. The size of k1 will become our basic 'yardstick' to measure
   ! the size of a memory footprint of a variable. When we ask for the size
   ! of 'var', the answer will be given in terms of how many 'yardsticks'
@@ -162,7 +164,7 @@ contains
           acc = acc*i
        end do
     end if
-    ! case n == 0 is already taken care of. 
+    ! case n == 0 is already taken care of.
     fac = acc
   end function factorial_int64
 
@@ -195,11 +197,11 @@ contains
     sll_int32, intent(out) :: error     !< error code
 
     logical :: lopen
-      
+
     error=1
 
     do 100 file_id=20,99
-  
+
        inquire(unit=file_id,opened=lopen)
        if(lopen) then
           cycle
@@ -209,11 +211,11 @@ contains
           error=0
           exit
        end if
- 
+
     100 continue
 
     !SLL_ASSERT(error == 0)
-   
+
   end subroutine sll_s_new_file_id
 
 
@@ -324,7 +326,7 @@ subroutine initialize_file( data_file_id, thf_file_id )
   close(thf_file_id)
 
 end subroutine initialize_file
- 
+
 
 !> Routine from slv2d to write diagnostics
 subroutine time_history( file_id, desc, fformat, array )
@@ -332,7 +334,7 @@ subroutine time_history( file_id, desc, fformat, array )
    character(3)            , intent(in) :: desc    !< name of the diagnostics
    character(14)           , intent(in) :: fformat !< fortran output format
    sll_real64, dimension(:), intent(in) :: array   !< data array
-    
+
    if (desc(1:3)=="thf") then
       open(file_id,file="thf.dat",position='append')
       if (flag) then
@@ -344,16 +346,16 @@ subroutine time_history( file_id, desc, fformat, array )
    else
       write(*,*) desc," not recognized"
    endif
-    
+
 end subroutine time_history
 
 !------------------------------------------------------------------------
 !>  @brief
 !>  From the MPE library
 !>  @details
-!>  This file contains a routine for producing a decomposition of a 1-d 
-!>  array when given a number of processors.  It may be used in "direct" 
-!>  product decomposition.  The values returned assume a "global" domain 
+!>  This file contains a routine for producing a decomposition of a 1-d
+!>  array when given a number of processors.  It may be used in "direct"
+!>  product decomposition.  The values returned assume a "global" domain
 !>  in [1:n]
 !------------------------------------------------------------------------
 subroutine sll_s_mpe_decomp1d( n, numprocs, myid, s, e)
@@ -379,7 +381,7 @@ subroutine sll_s_mpe_decomp1d( n, numprocs, myid, s, e)
 end subroutine sll_s_mpe_decomp1d
 
 
-!> S: the wave form at a given point in time. This wave form is 
+!> S: the wave form at a given point in time. This wave form is
 !>    not scaled (its maximum value is 1).
 !> t: the time at which the envelope is being evaluated
 !> tflat, tL, tR, twL, twR, tstart, t0: the parameters defining the
@@ -429,19 +431,19 @@ subroutine sll_s_pfenvelope(S,               &
 end subroutine sll_s_pfenvelope
 
 
-!> - Input: 
+!> - Input:
 !>  + a=bloc_coord(1) b=bloc_coord(2)
 !>  + (a,b) subset (0,1) is the refine zone
-!>  + bloc_index(1) = density of points in (0,a) 
-!>  + bloc_index(2) = density of points in (a,b) 
+!>  + bloc_index(1) = density of points in (0,a)
+!>  + bloc_index(2) = density of points in (a,b)
 !>  + bloc_index(3) = density of points in (b,1)
 !>
 !> - Output:
 !>  + 0<=i1<i1+N_fine<=N and x(i1)=a, x(i1+N_fine)=b (approx), x(0)=0, x(N)=1
 !>  + bloc_coord(1) = x(i1)
 !>  + bloc_coord(2) = x(i1+N_fine)
-!>  + bloc_index(1) = i1 
-!>  + bloc_index(2) = N_fine 
+!>  + bloc_index(1) = i1
+!>  + bloc_index(2) = N_fine
 !>  + bloc_index(3) = N-i1-N_fine
 subroutine sll_s_compute_bloc( bloc_coord, bloc_index, N )
 
@@ -451,25 +453,25 @@ subroutine sll_s_compute_bloc( bloc_coord, bloc_index, N )
 
   sll_real64 :: a,b
   sll_int32  :: i1,i2,N_coarse,N_local,N_fine
-  
+
   a=bloc_coord(1)
   b=bloc_coord(2)
-  
+
   !case of uniform mesh with refined zone
   !we have a coarse mesh with N_coarse
   !N=i1+N_local*(i2-i1)+N_coarse-i2
   !N_fine=N_local*(i2-i1)
   !x(i1)=i1/N_coarse x(i1+N_fine)=i2/N_coarse
 
-  if ((bloc_index(1)==1).and.(bloc_index(3)==1)) then      
+  if ((bloc_index(1)==1).and.(bloc_index(3)==1)) then
 
     N_local = bloc_index(2)
     N_coarse = floor(real(N,f64)/(1._f64+(b-a)*(real(N_local,f64)-1._f64)))
     if (N_local/=1) then
       i2 = (N-N_coarse)/(N_local-1)
     else
-      i2 = floor((b-a)*N_coarse)  
-    endif   
+      i2 = floor((b-a)*N_coarse)
+    endif
     N_coarse      = N-i2*(N_local-1)
     i1            = floor(a*N_coarse)
     i2            = i2+i1
@@ -479,7 +481,7 @@ subroutine sll_s_compute_bloc( bloc_coord, bloc_index, N )
     bloc_index(3) = N-i1-N_fine
     bloc_coord(1) = real(i1,f64)/real(N_coarse,f64)
     bloc_coord(2) = real(i2,f64)/real(N_coarse,f64)
-         
+
     print *,'#uniform fine mesh would be:',N_coarse*N_local
     print *,'#N_coarse=',N_coarse
     print *,'#saving:',real(N,f64)/real(N_coarse*N_local,f64)
@@ -492,16 +494,16 @@ subroutine sll_s_compute_bloc( bloc_coord, bloc_index, N )
     print*, 'case in sll_s_compute_bloc not implemented yet'
 
   endif
-  
+
 end subroutine sll_s_compute_bloc
 
 
-!> - Input:   
+!> - Input:
 !>   + x1=bloc_coord(1),x2=bloc_coord(2)
 !>   + with 0<i1<i2<N i1=bloc_index(1), i2=i1+bloc_index(2)
 !>   + N=bloc_index(1)+bloc_index(2)+bloc_index(3)
-!> 
-!> Output:  
+!>
+!> Output:
 !>   + node_positions(1:N+1)
 !>   + with constraints node_positions(i1+1)=x1,node_positions(i2+1)=x2
 !>   + node_positions(1)=0, node_positions(N+1)=1
@@ -513,7 +515,7 @@ subroutine sll_s_compute_mesh_from_bloc( bloc_coord, bloc_index, node_positions 
 
   sll_int32  :: i, i1, i2, N
   sll_real64 :: dx
-  
+
   N                     = bloc_index(1)+bloc_index(2)+bloc_index(3)
   i1                    = bloc_index(1)
   i2                    = i1+bloc_index(2)
@@ -522,7 +524,7 @@ subroutine sll_s_compute_mesh_from_bloc( bloc_coord, bloc_index, node_positions 
   node_positions(i1+1)  = bloc_coord(1)
   node_positions(i2+1)  = bloc_coord(2)
   node_positions(N+1)   = 1._f64
-  
+
   !piecewise linear mapping (maybe enhanced like in complete mesh)
   if(bloc_index(1).ne. 0)then
     dx=bloc_coord(1)/real(bloc_index(1),f64)
@@ -530,19 +532,101 @@ subroutine sll_s_compute_mesh_from_bloc( bloc_coord, bloc_index, node_positions 
       node_positions(i) = (real(i,f64)-1._f64)*dx
     enddo
   endif
-  if(bloc_index(2).ne.0)then  
+  if(bloc_index(2).ne.0)then
     dx=(bloc_coord(2)-bloc_coord(1))/real(bloc_index(2),f64)
     do i=2,bloc_index(2)
       node_positions(i+i1)=bloc_coord(1)+(real(i,f64)-1._f64)*dx
     enddo
   endif
-  if(bloc_index(3).ne.0)then  
+  if(bloc_index(3).ne.0)then
     dx=(1._f64-bloc_coord(2))/real(bloc_index(3),f64)
     do i=2,bloc_index(3)
       node_positions(i+i2)=bloc_coord(2)+(real(i,f64)-1._f64)*dx
     enddo
-  endif      
+  endif
 end subroutine sll_s_compute_mesh_from_bloc
 
+
+  !> Query an environment variable for the values on,off,1,0,true,false
+  !> and return the result as a logical.
+  logical function sll_f_query_environment( env_variable, default_value )
+
+    character(len=*), intent(in) :: env_variable !< environment variable to be checked
+    logical         , intent(in) :: default_value !< default value to be checked agains
+    
+    character(len=255) :: env_str
+
+    sll_f_query_environment = default_value
+
+    call get_environment_variable( env_variable, value=env_str )
+
+    if (len_trim(env_str) > 0) then
+      select case(trim(env_str))
+        case("1","ON","TRUE","on","true")
+          sll_f_query_environment = .true.
+        case("0","OFF","FALSE","off","false")
+          sll_f_query_environment = .false.
+      end select
+    endif
+
+  end function sll_f_query_environment
+
+  !-----------------------------------------------------------------------------
+  !> @brief      Equivalent to numpy.linspace
+  !> @contact    Yaman Güçlü, IPP Garching
+  !> @param[in]  vmin     Min value of interval
+  !> @param[in]  vmax     Max value of interval
+  !> @param[in]  endpoint Flag: include endpoint in array? (default=true)
+  !> @param[out] array    Array to be created, with linearly increasing values
+  !> @param[out] step     Step size (
+  !-----------------------------------------------------------------------------
+  pure subroutine sll_s_new_array_linspace( array, vmin, vmax, endpoint, step )
+
+    integer, parameter :: wp = f64
+
+    real(wp), intent(  out)           :: array(:)
+    real(wp), intent(in   )           :: vmin
+    real(wp), intent(in   )           :: vmax
+    logical , intent(in   ), optional :: endpoint
+    real(wp), intent(  out), optional :: step
+
+    integer  :: i
+    integer  :: np
+    integer  :: nc
+    real(wp) :: a
+    real(wp) :: b
+
+    ! Read number of points from given array
+    np = size( array )
+
+    ! Calculate number of intervals in domain (cells) based on 'endpoint' flag
+    ! By default, we assume that endpoint = .true.
+    if (present( endpoint )) then
+      nc = merge( np-1, np, endpoint )
+    else
+      nc = np-1
+    end if
+
+    ! Set first value to vmin in all cases
+    array(1) = vmin
+
+    ! Calculate internal array values using linear blending of vmin and vmax,
+    ! in order to minimize round-off
+    a = vmin / real(nc,wp)
+    b = vmax / real(nc,wp)
+    do i = 2, nc
+      array(i) = a*(nc+1-i) + b*(i-1)
+    end do
+
+    ! If endpoint=.true., set last value to vmax
+    if (np == nc+1) array(np) = vmax
+
+    ! If required, return step size
+    if (present( step )) then
+      step = b-a
+    end if
+
+  end subroutine sll_s_new_array_linspace
+  !-----------------------------------------------------------------------------
 
 end module sll_m_utilities
