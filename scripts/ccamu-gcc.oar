@@ -1,19 +1,20 @@
 #!/bin/bash
-#OAR -n selalib 
+#OAR -n selalib-gnu
 #OAR -p cluster
 #OAR -l nodes=4,walltime=00:40:00
-#OAR -O selalib.out
-#OAR -E selalib.err
-source /etc/profile
-module load hdf5/gcc49/1.8.13
-export HDF5_ROOT=/softs/hdf5/gcc49/1.8.13/
-export OMPI_FC=/softs/gcc/4.9.2/bin/gfortran
-export FC=/softs/gcc/4.9.2/bin/gfortran
-module load fftw/gcc47/3.3
-export FFTW_ROOT=/softs/fftw/gcc47/3.3/
-mkdir selalib-gnu
-cd selalib-gnu; {
+#OAR -O selalib-gnu.out
+#OAR -E selalib-gnu.err
+module purge
+module load hdf5/gcc49/1.8.13 
+module load cmake 
+module load Python/3.4.2 
+module rm gcc/4.8.0 
+module load fftw/gcc47/3.3 
+module rm gcc/4.7.0 
+mkdir /scratch/${USER}/selalib-gnu
+cd /scratch/${USER}/selalib-gnu; {
 cmake ${HOME}/selalib -DHDF5_PARALLEL_ENABLED=ON \
+                      -DCMAKE_Fortran_COMPILER=ifort \
                       -DCMAKE_BUILD_TYPE=Release 
 make NightlyUpdate
 make NightlyConfigure
@@ -21,4 +22,4 @@ make NightlyBuild
 make NightlyTest
 make NightlySubmit
 }; cd -
-rm -rf /scratch/pnavaro/selalib-gnu
+rm -rf /scratch/${USER}/selalib-gnu
