@@ -33,15 +33,16 @@ module sll_m_fdistribu4d_dk
     sll_p_pi
 
   use sll_m_cubic_splines, only: &
-    sll_s_compute_cubic_spline_1d, &
-    sll_s_compute_cubic_spline_2d, &
-    sll_f_interpolate_from_interpolant_value, &
-    sll_f_interpolate_value_2d, &
-    sll_f_new_cubic_spline_1d, &
+    sll_s_cubic_spline_1d_compute_interpolant, &
+    sll_s_cubic_spline_2d_compute_interpolant, &
+    sll_f_cubic_spline_1d_eval, &
+    sll_f_cubic_spline_2d_eval, &
+    sll_s_cubic_spline_1d_init, &
     sll_s_cubic_spline_2d_init, &
     sll_t_cubic_spline_1d, &
     sll_t_cubic_spline_2d, &
-    sll_o_delete
+    sll_s_cubic_spline_1d_free, &
+    sll_s_cubic_spline_2d_free
 
   implicit none
 
@@ -325,15 +326,15 @@ module sll_m_fdistribu4d_dk
     sll_int32  :: ix, iy
     sll_real64 :: r, x, y
  
-    type(sll_t_cubic_spline_1d), pointer :: sp1d_r
+    type(sll_t_cubic_spline_1d) :: sp1d_r
 
     Nr   = size(r_grid,1)
     Npt1 = size(xgrid_2d,1)
     Npt2 = size(xgrid_2d,2)
 
-    sp1d_r => sll_f_new_cubic_spline_1d(Npt1, &
-      r_grid(1),r_grid(Nr),sll_p_hermite)
-    call sll_s_compute_cubic_spline_1d(func_r,sp1d_r)
+    call sll_s_cubic_spline_1d_init(sp1d_r, Npt1, &
+         r_grid(1),r_grid(Nr),sll_p_hermite)
+    call sll_s_cubic_spline_1d_compute_interpolant(func_r,sp1d_r)
 
     do iy = 1,Npt2
       do ix = 1,Npt1
@@ -341,10 +342,10 @@ module sll_m_fdistribu4d_dk
         y = ygrid_2d(ix,iy)
         r = sll_f_polar_eta1(x,y,(/0.0_f64/)) ! params doesn't matter for sll_f_polar_eta1 
         r = min(max(r,r_grid(1)),r_grid(Nr))
-        func_xy(ix,iy) = sll_f_interpolate_from_interpolant_value(r,sp1d_r)
+        func_xy(ix,iy) = sll_f_cubic_spline_1d_eval(r,sp1d_r)
       end do
     end do
-    call sll_o_delete(sp1d_r)
+    call sll_s_cubic_spline_1d_free(sp1d_r)
   end subroutine function_xy_from_r
 
 
@@ -365,7 +366,7 @@ module sll_m_fdistribu4d_dk
     sll_int32  :: ix, iy
     sll_real64 :: r, theta, x, y
  
-    type(sll_t_cubic_spline_2d), pointer :: sp2d_rtheta
+    type(sll_t_cubic_spline_2d) :: sp2d_rtheta
 
     Nr     = size(r_grid,1)
     Ntheta = size(theta_grid,1)
@@ -377,7 +378,7 @@ module sll_m_fdistribu4d_dk
       r_grid(1),r_grid(Nr), &
       theta_grid(1),theta_grid(Ntheta), &
       sll_p_hermite,sll_p_periodic)
-    call sll_s_compute_cubic_spline_2d(func_rtheta,sp2d_rtheta)
+    call sll_s_cubic_spline_2d_compute_interpolant(func_rtheta,sp2d_rtheta)
 
     do iy = 1,Npt2
       do ix = 1,Npt1
@@ -387,10 +388,10 @@ module sll_m_fdistribu4d_dk
         r     = min(max(r,r_grid(1)),r_grid(Nr))
         theta = sll_f_polar_eta2(x,y,whatever)
         theta = modulo(theta,2._f64*sll_p_pi)
-        func_xy(ix,iy) = sll_f_interpolate_value_2d(r,theta,sp2d_rtheta)
+        func_xy(ix,iy) = sll_f_cubic_spline_2d_eval(r,theta,sp2d_rtheta)
       end do
     end do
-    call sll_o_delete(sp2d_rtheta)
+    call sll_s_cubic_spline_2d_free(sp2d_rtheta)
   end subroutine sll_s_function_xy_from_rtheta
 
 

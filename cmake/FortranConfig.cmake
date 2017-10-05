@@ -46,18 +46,11 @@ ELSEIF (CMAKE_Fortran_COMPILER_ID MATCHES GNU)
   STRING(REGEX MATCH "[4-7]\\.[0-9]\\.[0-9]" Fortran_COMPILER_VERSION ${source_path})
 
   ADD_DEFINITIONS(-DGFORTRAN)
-  SET(CMAKE_Fortran_FLAGS_RELEASE "-w -ffree-line-length-none -fall-intrinsics -O3 -fPIC -march=native ")
+  SET(CMAKE_Fortran_FLAGS_RELEASE "-std=f2008 -ffree-line-length-none -fstack-arrays -O3 -fPIC -march=native -w")
   IF(APPLE)
     SET(CMAKE_Fortran_FLAGS_RELEASE "${CMAKE_Fortran_FLAGS_RELEASE} -mno-avx")
   ENDIF(APPLE)
-  SET(CMAKE_Fortran_FLAGS_DEBUG "-g -O0 -Wall -cpp -ffree-line-length-none -std=f2008 -pedantic -Wconversion -Wconversion-extra -Wintrinsics-std -Wuninitialized -fcheck=array-temps,bounds,do,pointer,recursion -fall-intrinsics -fbounds-check -fbacktrace -ffpe-trap=invalid,zero,overflow -fcheck-array-temporaries")
-
-#-------------------------------------------------------------------------------
-# [YG] Old flags: real and integer variables were initialized with absurd
-# values, but compiler did not catch uninitialized variables of any type
-#-------------------------------------------------------------------------------
-#  SET(CMAKE_Fortran_FLAGS_DEBUG "-g -O0 -Wall -cpp -ffree-line-length-none -std=f2008 -pedantic -Wconversion -Wconversion-extra -Wintrinsics-std -fcheck=array-temps,bounds,do,pointer,recursion -fall-intrinsics -finit-real=snan -finit-integer=-9999 -fbounds-check -fbacktrace -ffpe-trap=invalid,zero,overflow -fcheck-array-temporaries")
-#-------------------------------------------------------------------------------
+  SET(CMAKE_Fortran_FLAGS_DEBUG "-std=f2008 -ffree-line-length-none -fstack-arrays -O0 -g -fbacktrace -Werror=intrinsics-std -Wall -pedantic -Wconversion-extra -Wuninitialized -fcheck=array-temps,bounds,do,pointer,recursion -ffpe-trap=invalid,zero,overflow")
 
   SET(UNUSED_FUNCTION_WARNING_ENABLED OFF CACHE BOOL "Add -Wunused-function flag to gfortran")
   IF(NOT UNUSED_FUNCTION_WARNING_ENABLED)
@@ -75,6 +68,7 @@ ELSEIF (CMAKE_Fortran_COMPILER_ID MATCHES GNU)
     message(STATUS "GNU fortran version OK for the Fortran 2003 standard")
     SET(FULL_FORTRAN2003 TRUE)
   endif()
+  #SET(CMAKE_Fortran_FLAGS_DEBUG "-qextname=flush -qxlf2003=polymorphic")
 
 ELSE()
 
@@ -83,6 +77,11 @@ ELSE()
 ENDIF()
 
 MESSAGE(STATUS "Fortran ${Fortran_COMPILER_NAME}-${Fortran_COMPILER_VERSION}")
+
+# --- enable fully user-defineable compiler flags
+IF(FORCE_Fortran_FLAGS_RELEASE)
+  SET(CMAKE_Fortran_FLAGS_RELEASE "${FORCE_Fortran_FLAGS_RELEASE}")
+ENDIF()
 
 SET(ADDITIONAL_COMPILER_FLAGS "" CACHE STRING "The user can define additional compiler flags here")
 SET(CMAKE_Fortran_FLAGS_DEBUG   "${CMAKE_Fortran_FLAGS_DEBUG} ${ADDITIONAL_COMPILER_FLAGS}")
@@ -101,5 +100,4 @@ ENDIF(FULL_FORTRAN2003)
 MARK_AS_ADVANCED(CLEAR CMAKE_Fortran_COMPILER)
 MARK_AS_ADVANCED(CLEAR CMAKE_C_COMPILER)
 MARK_AS_ADVANCED(CLEAR CMAKE_CXX_COMPILER)
-
 

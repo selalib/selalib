@@ -10,8 +10,8 @@ module sll_m_sim_pic_vm_1d2v_cart
 #include "sll_memory.h"
 #include "sll_working_precision.h"
 
-  use sll_m_arbitrary_degree_splines, only: &
-       sll_s_uniform_b_splines_at_x
+  use sll_m_low_level_bsplines, only: &
+       sll_s_uniform_bsplines_eval_basis
   
   use sll_m_ascii_io, only: &
     sll_s_ascii_file_create
@@ -637,7 +637,7 @@ contains
     xi(1) = xi(1) - real(index-1, f64)
     index = index - der_degree
 
-    call sll_s_uniform_b_splines_at_x( der_degree, xi(1), spline_val )
+    call sll_s_uniform_bsplines_eval_basis( der_degree, xi(1), spline_val )
     
     derivative = 0.0_f64
 

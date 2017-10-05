@@ -56,14 +56,14 @@ TARGET_LINK_LIBRARIES( test_advection_2d_csl sll_advection)
 ADD_EXECUTABLE(test_advection_2d_tri_mesh test_advection_2d_tri_mesh.F90)
 TARGET_LINK_LIBRARIES(test_advection_2d_tri_mesh sll_advection sll_mesh_calculus)
 
-IF(MPI_ENABLED AND HDF5_ENABLED)
+IF(MPI_ENABLED AND HDF5_ENABLED AND HDF5_IS_PARALLEL)
 
   ADD_EXECUTABLE( test_aligned_translation_2d aligned_translation_2d.F90)
 
   TARGET_LINK_LIBRARIES( test_aligned_translation_2d sll_file_io sll_advection
        sll_utilities sll_fcisl)
 
-ENDIF(MPI_ENABLED AND HDF5_ENABLED)
+ENDIF(MPI_ENABLED AND HDF5_ENABLED AND HDF5_IS_PARALLEL)
 
 ADD_EXECUTABLE( test_rotation_2d rotation_2d.F90)
 TARGET_LINK_LIBRARIES( test_rotation_2d sll_advection)

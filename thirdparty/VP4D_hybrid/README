@@ -1,0 +1,42 @@
+=====================
+    VP4D_hybrid
+=====================
+
+Compilation
+------------
+
+mkdir build;
+cd build;
+ccmake ../src;
+make;
+
+
+To launch a simulation using SeLaLib solver
+-------------------------------------------
+
+cd ../wk;
+mkdir run;
+cd run;
+mpirun -np 4 ../../build/bin/VP4D_hybrid.exe ../test_vp4D_anal_identity.txt > VP4D_res.out
+
+(or any other test case that doesn't contain the word DJANGO in it.)
+
+
+To launch a simulation using DJANGO solver
+------------------------------------------
+
+From the build:
+
+export SLL_VP4D=$SLL_SIM_DIR/VP4D_hybrid
+export SLL_PARAMDIR=$SLL_VP4D/wk/DJANGO_params
+export SLL_GEOM=n_6464
+
+poe $SLL_VP4D/build/bin/VP4D_hybrid.exe
+$SLL_VP4D/wk/test_vp4D_anal_identity_DJANGO.txt  --django-params $SLL_PARAMDIR
+--geometry $SLL_PARAMDIR/$SLL_GEOM
+
+
+For visualization of results / diagnostics
+------------------------------------------
+
+python $SLL_SIMULATIONS_PATH/VP4D_hybrid/Python-scripts/VP4Dhyb_main.py

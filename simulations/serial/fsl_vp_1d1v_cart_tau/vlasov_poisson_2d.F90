@@ -26,7 +26,7 @@ sll_real64            :: r_m
 
 type(sll_t_fft)                      :: fw_fft
 type(sll_t_fft)                      :: bw_fft
-type(sll_t_cubic_spline_1d), pointer :: spl_1d
+type(sll_t_cubic_spline_1d)          :: spl_1d
 type(sll_t_cubic_spline_2d), pointer :: spl_2d
 type(sll_t_cubic_spline_2d), pointer :: spl_2d_f
 
@@ -225,7 +225,7 @@ call sll_s_fft_init_c2c_1d(fsl_fw, n,    tmp,    tmp,    sll_p_fft_forward)
 call sll_s_fft_init_c2c_1d(fsl_bw, n,    tmp,    tmp,    sll_p_fft_backward)
 !$OMP END CRITICAL
 
-spl_1d => sll_f_new_cubic_spline_1d( n+1, eta_min, eta_max, sll_p_periodic )
+call sll_s_cubic_spline_1d_init( spl_1d, n+1, eta_min, eta_max, sll_p_periodic )
 
 call sll_s_cubic_spline_2d_init( spl_2d_f,       &
                                  n+1,            &
@@ -314,7 +314,7 @@ do step=1,nb_step !-------- * Evolution in time * ---------
   enddo
 
   !$OMP MASTER
-  call sll_s_compute_cubic_spline_2d(fh_fsl,spl_2d)
+  call sll_s_cubic_spline_2d_compute_interpolant(fh_fsl,spl_2d)
   !$OMP END MASTER
   !$OMP BARRIER
 
@@ -604,7 +604,7 @@ do step=1,nb_step !-------- * Evolution in time * ---------
   !$OMP END DO
 
   !$OMP MASTER
-  call sll_s_deposit_value_2d(eta1feet,eta2feet,spl_2d,fh_fsl) !function value at the half time
+  call sll_s_cubic_spline_2d_deposit_value(eta1feet,eta2feet,spl_2d,fh_fsl) !function value at the half time
   !$OMP END MASTER
 
   !$OMP BARRIER
@@ -692,7 +692,7 @@ do step=1,nb_step !-------- * Evolution in time * ---------
   !$OMP END DO
 
   !$OMP MASTER
-  call sll_s_deposit_value_2d(eta1feet,eta2feet,spl_2d,fh_fsl)
+  call sll_s_cubic_spline_2d_deposit_value(eta1feet,eta2feet,spl_2d,fh_fsl)
   print"('Step =', i6, ' Time = ', g15.3)", step, real(step*k)
 
   if (plot_enabled) then
@@ -727,13 +727,13 @@ end if
 
 !---------------end time solve-------------------------
 
-call sll_o_delete(spl_1d)
+call sll_s_cubic_spline_1d_free(spl_1d)
 call sll_s_fft_free(fw_fft)
 call sll_s_fft_free(bw_fft)
-call sll_o_delete(spl_2d_f)
+call sll_s_cubic_spline_2d_free(spl_2d_f)
 
 !$OMP MASTER
-call sll_o_delete(spl_2d)
+call sll_s_cubic_spline_2d_free(spl_2d)
 !$OMP END MASTER
 
 call sll_s_fft_free(fsl_fw)
@@ -873,7 +873,7 @@ sll_real64                           :: x, y
 sll_real64                           :: xj, yj
 sll_int32                            :: i, j
 
-call sll_s_compute_cubic_spline_2d(fh_fsl, spl)
+call sll_s_cubic_spline_2d_compute_interpolant(fh_fsl, spl)
 
 ct = cos(t)
 st = sin(t)
@@ -884,7 +884,7 @@ do j=1,n
     x = ct*r(i)-xj
     y = st*r(i)+yj
     if (abs(x)<eta_max .and. abs(y)<eta_max) then
-      fvr(i,j)=sll_f_interpolate_value_2d(x,y,spl)
+      fvr(i,j)=sll_f_cubic_spline_2d_eval(x,y,spl)
     else
       fvr(i,j)=0.0_f64
     endif
@@ -897,7 +897,7 @@ end subroutine cubic_splines_interp_2d
 
 subroutine cubic_splines_interp_1d(spl, n, x, e, g)
 
-type(sll_t_cubic_spline_1d), pointer :: spl
+type(sll_t_cubic_spline_1d)          :: spl
 sll_int32,  intent(in)               :: n
 sll_real64, intent(in)               :: x(:,:)
 sll_real64, intent(in)               :: e(:)
@@ -905,11 +905,11 @@ sll_real64, intent(out)              :: g(:,:)
 
 sll_int32 :: i, j
 
-call sll_s_compute_cubic_spline_1d(e, spl)
+call sll_s_cubic_spline_1d_compute_interpolant(e, spl)
 do j=1,n+1
   do i=1,n+1
     if (eta_min < x(i,j) .and. x(i,j) < eta_max ) then
-      g(i,j) = sll_f_interpolate_from_interpolant_value(x(i,j), spl)
+      g(i,j) = sll_f_cubic_spline_1d_eval(x(i,j), spl)
     else
       g(i,j) = 0.0_f64
     end if

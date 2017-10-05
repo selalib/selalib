@@ -19,7 +19,7 @@ program test_maxwell_1d_fem
 #include "sll_working_precision.h"
 #include "sll_maxwell_solvers_macros.h"
 
-  use sll_m_arbitrary_degree_splines, only: &
+  use sll_m_low_level_bsplines, only: &
     sll_s_eval_uniform_periodic_spline_curve
 
   use sll_m_constants, only: &
@@ -34,7 +34,7 @@ program test_maxwell_1d_fem
   implicit none
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
-  !  type(sll_t_arbitrary_degree_spline_1d), pointer :: aspl
+  !  type(sll_t_bsplines), pointer :: aspl
   !  sll_real64, dimension(:), allocatable :: knots
 
   sll_real64 :: eta1_max, eta1_min
@@ -76,7 +76,7 @@ program test_maxwell_1d_fem
   eta1_min = .0_f64; eta1_max = 2.0_f64*sll_p_pi
   nc_eta1 = 128
   Lx = eta1_max-eta1_min
-  delta_eta1 = Lx/nc_eta1
+  delta_eta1 = Lx/real(nc_eta1,f64)
   domain = [eta1_min, eta1_max]
   ! Set spline degree of 0-forms
   deg = 3
@@ -101,8 +101,8 @@ program test_maxwell_1d_fem
   !-------------
   ! Set exact solution
   do i = 1, nc_eta1
-     xi = eta1_min + (i-1)*delta_eta1
-     ex_exact(i) =   sin_k(xi)/(2*mode*sll_p_pi/Lx)
+     xi = eta1_min + real(i-1,f64)*delta_eta1
+     ex_exact(i) =   sin_k(xi)/(2.0_f64*mode*sll_p_pi/Lx)
   end do
 
   call maxwell_1d%compute_rhs_from_function( cos_k, deg, rho)
@@ -120,10 +120,10 @@ program test_maxwell_1d_fem
   ! Test Ampere
   !-------------
   ! Set time step
-  dt = .5 * delta_eta1
+  dt = .5_f64 * delta_eta1
   ! Set exact solution
   do i = 1, nc_eta1
-     xi = eta1_min + (i-1)*delta_eta1
+     xi = eta1_min + real(i-1,f64)*delta_eta1
      ex_exact(i) =   -cos_k(xi)*dt
   end do
 
@@ -147,7 +147,7 @@ program test_maxwell_1d_fem
   !--------------------------
   ! Set time stepping parameters
   time  = 0.0_f64
-  dt = .5 * delta_eta1
+  dt    = .5_f64 * delta_eta1
   nstep = 10
 
   ! Compute initial fields 
@@ -163,7 +163,7 @@ program test_maxwell_1d_fem
      time = time + dt
 
      do i = 1, nc_eta1
-        xi = eta1_min + (i-1)*delta_eta1
+        xi = eta1_min + real(i-1,f64)*delta_eta1
         ey_exact(i) =   sin(mode*2*sll_p_pi*xi/Lx) * sin(mode*2*sll_p_pi*time/Lx)
         bz_exact(i) =   cos(mode*2*sll_p_pi*xi/Lx) * cos(mode*2*sll_p_pi*time/Lx)
      end do
@@ -197,16 +197,23 @@ program test_maxwell_1d_fem
   DEALLOCATE(rho)
 
 contains
+
   function cos_k(x)
+
     sll_real64             :: cos_k
     sll_real64, intent(in) :: x
 
     cos_k = cos(mode*2*sll_p_pi*x/Lx) 
+
   end function cos_k
+
   function sin_k(x)
+
     sll_real64             :: sin_k
     sll_real64, intent(in) :: x
 
     sin_k = sin(mode*2*sll_p_pi*x/Lx) 
+
   end function sin_k
+
 end program test_maxwell_1d_fem
