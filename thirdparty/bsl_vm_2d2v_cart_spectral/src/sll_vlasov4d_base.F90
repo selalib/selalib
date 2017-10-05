@@ -13,6 +13,8 @@ module sll_vlasov4d_base
  use sll_m_utilities
  use mpi
 
+ use iso_fortran_env, only: output_unit
+
  implicit none
  
  public :: initialize_vlasov4d_base, free_vlasov4d_base
@@ -257,7 +259,7 @@ contains
              1,1,1,int(psize,4),this%layout_x)
 
   if ( prank == MPI_MASTER ) call sll_o_view_lims( this%layout_x )
-  call flush(6)
+  flush( output_unit )
 
   call sll_o_compute_local_sizes(this%layout_x, &
                               loc_sz_i,loc_sz_j,loc_sz_k,loc_sz_l)        
@@ -275,7 +277,7 @@ contains
               1,1,1,int(psize,4),this%layout_p)
 
   if ( prank == MPI_MASTER ) call sll_o_view_lims( this%layout_v )
-  call flush(6)
+  flush( output_unit )
 
   call sll_o_compute_local_sizes(this%layout_v, &
                               loc_sz_i,loc_sz_j,loc_sz_k,loc_sz_l)        
@@ -737,7 +739,7 @@ contains
    character(len=72) :: filename
    integer :: IO_stat ! indicateur d'erreur
 
-   call getarg( 1, filename)
+   call get_command_argument( 1, filename )
 
    open(idata,file=trim(filename),IOStat=IO_stat)
    if (IO_stat/=0) STOP "Miss argument file.nml"

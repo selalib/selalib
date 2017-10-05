@@ -640,7 +640,7 @@ contains
                 alpha = ex*0.25_f64*sim%dt
                 ! interpolate_array_disp() has an interface that must be changed
                 call sim%interp_x3%interpolate_array_disp_inplace( &
-                     sim%nc_x3, &
+                     sim%nc_x3+1, &
                      sim%f_x3x4(i,j,:,l), &
                      alpha )
              end do
@@ -655,7 +655,7 @@ contains
                 alpha = ey*0.5_f64*sim%dt
                 ! interpolate_array_disp() has an interface that must be changed
                 call sim%interp_x4%interpolate_array_disp_inplace( &
-                     sim%nc_x4, &
+                     sim%nc_x4+1, &
                      sim%f_x3x4(i,j,k,:), &
                      alpha )
              end do
@@ -733,7 +733,7 @@ contains
                 alpha = ex*0.5_f64*sim%dt
                 ! interpolate_array_disp() has an interface that must be changed
                 call sim%interp_x3%interpolate_array_disp_inplace( &
-                     sim%nc_x3, &
+                     sim%nc_x3+1, &
                      sim%f_x3x4(i,j,:,l), &
                      alpha )
              end do
@@ -748,7 +748,7 @@ contains
                 alpha = ey*0.5_f64*sim%dt
                 ! interpolate_array_disp() has an interface that must be changed
                 call sim%interp_x4%interpolate_array_disp_inplace( &
-                     sim%nc_x4, &
+                     sim%nc_x4+1, &
                      sim%f_x3x4(i,j,k,:), &
                      alpha )
              end do
@@ -757,7 +757,7 @@ contains
        ! plot fields is giving some errors after the size of the data arrays was
        ! changed to include the last point (the periodic point). After this, some
        ! error messages are given by hdf5...
-!       call plot_fields(itime, sim)
+       call plot_fields(itime, sim)
 
     end do ! main loop
   end subroutine run_vp4d_cartesian
@@ -1068,7 +1068,7 @@ contains
     integer(i64), dimension(2) :: array_dims 
     integer(i64), dimension(2) :: offset 
 
-    array_dims(:) = int( [sim%nc_x1, sim%nc_x2], i64 )
+    array_dims(:) = int( [sim%nc_x1+1, sim%nc_x2+1], i64 )
     world_size    = sll_f_get_collective_size(sll_v_world_collective)
     my_rank       = sll_f_get_collective_rank(sll_v_world_collective)
 

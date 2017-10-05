@@ -12,5 +12,5 @@ HOWTO
      $ cd run
 
 1. Run parallel simulation within directory
-     $ mpirun -np 4 ../test_4d ../vpsim4d_input.nml
+     $ mpirun -np 4 ../sim_bsl_vp_2d2v_cart ../vpsim4d_input.nml
 

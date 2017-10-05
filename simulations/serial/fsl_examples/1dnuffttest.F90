@@ -49,10 +49,10 @@ do n=1,Nn
       j=j+1
       y(j)=x
       do p=1,Nn
-        sum0=sum0+cdexp(sll_p_i1*lx(p)*(x+L))*ftilde(p)
+        sum0=sum0+exp(sll_p_i1*lx(p)*(x+L))*ftilde(p)
       enddo
     endif
-    fvr(q)=dreal(sum0)
+    fvr(q)=real(sum0,f64)
   enddo
 enddo
 call sll_s_fft_free(PlnF)
@@ -65,7 +65,7 @@ do n=1,Nn
     q=m+(n-1)*Nn
     if (dabs(x)<L) then
       j=j+1
-      fnufft(q)=dreal(cj(j))
+      fnufft(q)=real(cj(j),f64)
     else
       fnufft(q)=0.0_f64
     endif

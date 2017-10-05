@@ -1,23 +1,19 @@
 program test_splines_pp_3d
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-#include "sll_assert.h"
-#include "sll_memory.h"
 #include "sll_working_precision.h"
 
-
-  use sll_m_arbitrary_degree_splines, only: &
-       sll_s_uniform_b_splines_at_x
-
-  use sll_m_arbitrary_degree_spline_interpolator_1d, only: &
-       sll_t_arbitrary_degree_spline_interpolator_1d
-
-  use sll_m_boundary_condition_descriptors, only: &
-       sll_p_periodic
+  use sll_m_low_level_bsplines, only: &
+    sll_s_uniform_bsplines_eval_basis
 
   use sll_m_constants, only: &
-       sll_p_twopi
+    sll_p_twopi
   
-  use sll_m_splines_pp 
+  use sll_m_splines_pp, only: &
+    sll_t_spline_pp_3d        , &
+    sll_s_spline_pp_init_3d   , &
+    sll_s_spline_pp_free_3d   , &
+    sll_s_spline_pp_b_to_pp_3d, &
+    sll_f_spline_pp_horner_3d
 
   implicit none
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -40,7 +36,9 @@ program test_splines_pp_3d
      stop
   end if
 
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 contains
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
   subroutine spline_test(spline_pp,degree,n_cells,fail)
 
@@ -93,9 +91,9 @@ contains
     res= sll_f_spline_pp_horner_3d(degree, pp_coeffs, xi, indices, n_cells)
     indices = indices - degree
     
-    call sll_s_uniform_b_splines_at_x(degree(1), xi(1), val1(:))
-    call sll_s_uniform_b_splines_at_x(degree(2), xi(2), val2(:))
-    call sll_s_uniform_b_splines_at_x(degree(3), xi(3), val3(:))
+    call sll_s_uniform_bsplines_eval_basis(degree(1), xi(1), val1(:))
+    call sll_s_uniform_bsplines_eval_basis(degree(2), xi(2), val2(:))
+    call sll_s_uniform_bsplines_eval_basis(degree(3), xi(3), val3(:))
 
         
     res2 = 0.0_f64
@@ -142,6 +140,7 @@ contains
     deallocate(val2)
     deallocate(val3)
     call sll_s_spline_pp_free_3d(spline_pp)
+
   end subroutine spline_test
   
 end program test_splines_pp_3d
