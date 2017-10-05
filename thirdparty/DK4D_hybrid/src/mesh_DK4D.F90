@@ -139,8 +139,7 @@ contains
 
     case default
       print*, ' Scheme type = ', scheme_type, ' not treated '
-      stop
-      call exit(-1)
+      stop -1
 
     end select
 

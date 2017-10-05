@@ -45,39 +45,51 @@ IF(USE_MKL)
    SET(LAPACK_FOUND TRUE)
 
 ELSE()
-   
-   # --- give the fast OpenBLAS library a try
-   FIND_LIBRARY(OPENBLAS_LIBRARIES
-                openblas
-                HINTS
-                   ENV OPENBLAS_ROOT  # prioritize custom installation location
-                   CMAKE_SYSTEM_LIBRARY_PATH  # also search the default location
-                   /usr/local/opt/openblas  # Library location on mac with homebrew
-                PATH_SUFFIXES
-                   lib64 lib
-                DOC "OpenBLAS, the free high performance BLAS and LAPACK implementation")
 
-   INCLUDE(FindPackageHandleStandardArgs)
-   FIND_PACKAGE_HANDLE_STANDARD_ARGS(OPENBLAS DEFAULT_MSG OPENBLAS_LIBRARIES )
-   INCLUDE(CheckFortranFunctionExists)
-   SET(CMAKE_REQUIRED_LIBRARIES ${OPENBLAS_LIBRARIES})
-   CHECK_FORTRAN_FUNCTION_EXISTS(dpbtrs OPENBLAS_HAS_LAPACK)
-   MESSAGE(STATUS "OPENBLAS FOUND : ${OPENBLAS_FOUND}")
-   MESSAGE(STATUS "OPENBLAS HAS LAPACK : ${OPENBLAS_HAS_LAPACK}")
+   # --- give the fast OpenBLAS library a first try with cmake FindLapack
+   IF(CMAKE_VERSION VERSION_GREATER 3.6.2)
+     SET(BLA_VENDOR OpenBLAS)
+     FIND_PACKAGE(BLAS)
+     FIND_PACKAGE(LAPACK)
+   ENDIF()
 
-   IF (OPENBLAS_FOUND AND OPENBLAS_HAS_LAPACK)
-      SET(BLA_VENDOR "OpenBLAS")
-      SET(LAPACK_LIBRARIES ${OPENBLAS_LIBRARIES})
-      SET(BLAS_LIBRARIES ${LAPACK_LIBRARIES})
-      SET(BLAS_FOUND TRUE)
-      SET(LAPACK_FOUND TRUE)
-   ELSE()
-      # --- fall-back to slow reference implementations
-      IF(APPLE)
-         SET(BLA_VENDOR "Apple")
-      ENDIF(APPLE)
-      FIND_PACKAGE(BLAS)
-      FIND_PACKAGE(LAPACK)
+   IF( NOT LAPACK_FOUND)
+
+     # --- give the fast OpenBLAS library a second try 
+     FIND_LIBRARY(OPENBLAS_LIBRARIES
+                  openblas
+                  HINTS
+                     ENV OPENBLAS_ROOT  # prioritize custom installation location
+                     CMAKE_SYSTEM_LIBRARY_PATH  # also search the default location
+                     /usr/local/opt/openblas  # Library location on mac with homebrew
+                  PATH_SUFFIXES
+                     lib64 lib
+                  DOC "OpenBLAS, the free high performance BLAS and LAPACK implementation")
+
+     INCLUDE(FindPackageHandleStandardArgs)
+     FIND_PACKAGE_HANDLE_STANDARD_ARGS(OPENBLAS DEFAULT_MSG OPENBLAS_LIBRARIES )
+     INCLUDE(CheckFortranFunctionExists)
+     SET(CMAKE_REQUIRED_LIBRARIES ${OPENBLAS_LIBRARIES})
+     CHECK_FORTRAN_FUNCTION_EXISTS(dpbtrs OPENBLAS_HAS_LAPACK)
+
+     IF (OPENBLAS_FOUND AND OPENBLAS_HAS_LAPACK)
+        MESSAGE(STATUS "OpenBLAS found and has lapack" )
+        SET(BLA_VENDOR OpenBLAS)
+        SET(LAPACK_LIBRARIES ${OPENBLAS_LIBRARIES})
+        SET(BLAS_LIBRARIES ${LAPACK_LIBRARIES})
+        SET(BLAS_FOUND TRUE)
+        SET(LAPACK_FOUND TRUE)
+     ELSE()
+        # --- fall-back to slow reference implementations
+        IF(APPLE)
+           SET(BLA_VENDOR Apple)
+        ELSE()
+           UNSET(BLA_VENDOR)
+        ENDIF(APPLE)
+        FIND_PACKAGE(BLAS)
+        FIND_PACKAGE(LAPACK)
+     ENDIF()
+
    ENDIF()
 
 ENDIF()

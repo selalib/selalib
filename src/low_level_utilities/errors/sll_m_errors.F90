@@ -13,19 +13,16 @@ module sll_m_errors
   private
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
+  ! Instead of using the non-standard subroutine abort() provided by the compiler,
+  ! use abort() from the C standard library "stdlib.h"
+  interface
+    subroutine c_abort() bind(C, name="abort")
+    end subroutine
+  end interface
+
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 contains
-
-  !----------------------------------------------------------------------------
-  !>  @brief
-  !>  Stop the execution and dump backtrace information.
-  !>  @details
-  !>  
-  !----------------------------------------------------------------------------
-  subroutine abort_program()
-
-    call abort()
-
-  end subroutine abort_program
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
   !----------------------------------------------------------------------------
   !>  @brief
@@ -45,7 +42,7 @@ contains
 
   !----------------------------------------------------------------------------
   !>  @brief
-  !>  Print error message to standard-error and abort program.
+  !>  Print error message to standard-error, stop execution and dump backtrace information.
   !>  @details
   !>  
   !----------------------------------------------------------------------------
@@ -56,8 +53,7 @@ contains
     character(len=*), intent(in) :: message   !< error message
 
     call errout( error_unit, 'F', file_name, line_num, caller, message )
-    call abort_program()
-
+    call c_abort()
 
   end subroutine sll_s_error_handler
 

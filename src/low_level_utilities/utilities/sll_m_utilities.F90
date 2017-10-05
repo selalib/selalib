@@ -37,7 +37,8 @@ module sll_m_utilities
     sll_o_display, &
     sll_o_factorial, &
     sll_s_new_file_id, &
-    sll_f_query_environment
+    sll_f_query_environment, &
+    sll_s_new_array_linspace
 
   private
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -548,16 +549,17 @@ end subroutine sll_s_compute_mesh_from_bloc
 
   !> Query an environment variable for the values on,off,1,0,true,false
   !> and return the result as a logical.
-  function sll_f_query_environment(env_variable, default_value)
-    implicit none
-    logical :: sll_f_query_environment !< result of query
+  logical function sll_f_query_environment( env_variable, default_value )
+
     character(len=*), intent(in) :: env_variable !< environment variable to be checked
-    logical, intent(in) :: default_value !< default value to be checked agains
+    logical         , intent(in) :: default_value !< default value to be checked agains
     
     character(len=255) :: env_str
 
     sll_f_query_environment = default_value
-    call getenv(env_variable, env_str)
+
+    call get_environment_variable( env_variable, value=env_str )
+
     if (len_trim(env_str) > 0) then
       select case(trim(env_str))
         case("1","ON","TRUE","on","true")
@@ -566,6 +568,65 @@ end subroutine sll_s_compute_mesh_from_bloc
           sll_f_query_environment = .false.
       end select
     endif
+
   end function sll_f_query_environment
+
+  !-----------------------------------------------------------------------------
+  !> @brief      Equivalent to numpy.linspace
+  !> @contact    Yaman Güçlü, IPP Garching
+  !> @param[in]  vmin     Min value of interval
+  !> @param[in]  vmax     Max value of interval
+  !> @param[in]  endpoint Flag: include endpoint in array? (default=true)
+  !> @param[out] array    Array to be created, with linearly increasing values
+  !> @param[out] step     Step size (
+  !-----------------------------------------------------------------------------
+  pure subroutine sll_s_new_array_linspace( array, vmin, vmax, endpoint, step )
+
+    integer, parameter :: wp = f64
+
+    real(wp), intent(  out)           :: array(:)
+    real(wp), intent(in   )           :: vmin
+    real(wp), intent(in   )           :: vmax
+    logical , intent(in   ), optional :: endpoint
+    real(wp), intent(  out), optional :: step
+
+    integer  :: i
+    integer  :: np
+    integer  :: nc
+    real(wp) :: a
+    real(wp) :: b
+
+    ! Read number of points from given array
+    np = size( array )
+
+    ! Calculate number of intervals in domain (cells) based on 'endpoint' flag
+    ! By default, we assume that endpoint = .true.
+    if (present( endpoint )) then
+      nc = merge( np-1, np, endpoint )
+    else
+      nc = np-1
+    end if
+
+    ! Set first value to vmin in all cases
+    array(1) = vmin
+
+    ! Calculate internal array values using linear blending of vmin and vmax,
+    ! in order to minimize round-off
+    a = vmin / real(nc,wp)
+    b = vmax / real(nc,wp)
+    do i = 2, nc
+      array(i) = a*(nc+1-i) + b*(i-1)
+    end do
+
+    ! If endpoint=.true., set last value to vmax
+    if (np == nc+1) array(np) = vmax
+
+    ! If required, return step size
+    if (present( step )) then
+      step = b-a
+    end if
+
+  end subroutine sll_s_new_array_linspace
+  !-----------------------------------------------------------------------------
 
 end module sll_m_utilities
