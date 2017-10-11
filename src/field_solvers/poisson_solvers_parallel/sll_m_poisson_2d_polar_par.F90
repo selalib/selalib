@@ -150,6 +150,9 @@ module sll_m_poisson_2d_polar_par
     sll_s_setup_cyclic_tridiag, &
     sll_o_solve_cyclic_tridiag
 
+  use sll_m_utilities, only: &
+    sll_s_new_array_linspace
+
   implicit none
 
   public :: &
@@ -180,6 +183,9 @@ module sll_m_poisson_2d_polar_par
    real   (f64), allocatable :: cts (:)    !< Lapack coefficients
    integer(i32), allocatable :: ipiv(:)    !< Lapack pivot indices
 
+   real(f64) :: bc_coeffs_rmin( 2: 3)
+   real(f64) :: bc_coeffs_rmax(-2:-1)
+
    type(sll_t_layout_2d)           , pointer :: layout_r !< layout sequential in r
    type(sll_t_layout_2d)           , pointer :: layout_a !< layout sequential in theta
    type(sll_t_remap_plan_2d_real64), pointer :: rmp_ra   !< remap r->theta 
@@ -190,10 +196,6 @@ module sll_m_poisson_2d_polar_par
   ! Allowed boundary conditions
   integer(i32), parameter :: bc_opts(3) = &
     [sll_p_dirichlet, sll_p_neumann, sll_p_neumann_mode_0]
-
-  ! Local parameters
-  real(f64), parameter ::  one_third  = 1.0_f64 / 3.0_f64
-  real(f64), parameter :: four_thirds = 4.0_f64 / 3.0_f64
 
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 contains
@@ -209,23 +211,28 @@ contains
       nr      , &
       ntheta  , &
       bc_rmin , &
-      bc_rmax )
+      bc_rmax , &
+      rgrid   )
 
-    type(sll_t_poisson_2d_polar_par), intent(out) :: solver !< solver object
-    type(sll_t_layout_2d), pointer    :: layout_r !< layout sequential in r direction
-    type(sll_t_layout_2d), pointer    :: layout_a !< layout sequential in theta direction
-    real(f64)            , intent(in) :: rmin     !< rmin
-    real(f64)            , intent(in) :: rmax     !< rmax
-    integer(i32)         , intent(in) :: nr       !< number of cells radial
-    integer(i32)         , intent(in) :: ntheta   !< number of cells angular
-    integer(i32)         , intent(in) :: bc_rmin  !< boundary condition at r_min
-    integer(i32)         , intent(in) :: bc_rmax  !< boundary condition at r_max
+    type(sll_t_poisson_2d_polar_par), intent(  out) :: solver   !< solver object
+    type(sll_t_layout_2d)           , pointer       :: layout_r !< layout sequential in r direction
+    type(sll_t_layout_2d)           , pointer       :: layout_a !< layout sequential in theta direction
+    real(f64)                       , intent(in   ) :: rmin     !< rmin
+    real(f64)                       , intent(in   ) :: rmax     !< rmax
+    integer(i32)                    , intent(in   ) :: nr       !< number of cells radial
+    integer(i32)                    , intent(in   ) :: ntheta   !< number of cells angular
+    integer(i32)                    , intent(in   ) :: bc_rmin  !< boundary condition at r_min
+    integer(i32)                    , intent(in   ) :: bc_rmax  !< boundary condition at r_max
+    real(f64),      target, optional, intent(in   ) :: rgrid(:) !< grid points along r
 
     character(len=*), parameter :: this_sub_name = 'sll_s_poisson_2d_polar_par_init'
 
-    real(f64) :: dr
+    real(f64) :: hp, hm
     real(f64) :: inv_r
-    real(f64) :: inv_dr
+    real(f64) :: d1_coeffs(3)
+    real(f64) :: d2_coeffs(3)
+    real(f64), allocatable, target  :: rgrid_uniform(:)
+    real(f64)             , pointer :: r_nodes(:)
 
     integer(i32)  :: loc_sz_r(2) ! sequential in r direction
     integer(i32)  :: loc_sz_a(2) ! sequential in theta direction
@@ -272,6 +279,18 @@ contains
     solver%layout_a => layout_a
     solver%layout_r => layout_r
 
+    ! r grid (possibly non-uniform)
+    if (present( rgrid )) then
+      SLL_ASSERT( size(rgrid) == nr+1 )
+      SLL_ASSERT( rgrid(   1) == rmin )
+      SLL_ASSERT( rgrid(nr+1) == rmax )
+      r_nodes => rgrid
+    else
+      allocate( rgrid_uniform(nr+1) )
+      call sll_s_new_array_linspace( rgrid_uniform, rmin, rmax, endpoint=.true. )
+      r_nodes => rgrid_uniform
+    end if
+
     ! Allocate arrays global in r
     allocate( solver%z_r (nr+1,   loc_sz_r(2)) )
     allocate( solver%mat((nr-1)*3,loc_sz_r(2)) ) ! for each k, matrix depends on r
@@ -315,10 +334,6 @@ contains
     end do
     deallocate( k_list_glob )
 
-    ! Precompute convenient parameters
-    dr = (rmax-rmin)/nr
-    inv_dr = 1.0_f64/dr
-
     ! Store matrix coefficients into solver%mat
     ! Cycle over k_j
     do j = 1, loc_sz_r(2)
@@ -326,7 +341,9 @@ contains
       ! Get value of k_j from precomputed list of local values
       k = solver%k_list(j)
 
+      !----------------------------------------------
       ! Compute boundary conditions type for mode k_j
+      !----------------------------------------------
       bck(:) = solver%bc(:)
       do i = 1, 2
         if (bck(i) == sll_p_neumann_mode_0) then 
@@ -338,31 +355,61 @@ contains
         end if
       end do
 
+      !----------------------------------------------
       ! Compute matrix coefficients for a given k_j
+      !----------------------------------------------
       do i = 2, nr
-        inv_r = 1.0_f64 / (rmin + (i-1)*dr)
-        solver%mat(3*(i-1)  ,j) =        -inv_dr**2 - 0.5_f64*inv_dr*inv_r
-        solver%mat(3*(i-1)-1,j) = 2.0_f64*inv_dr**2 + (k*inv_r)**2
-        solver%mat(3*(i-1)-2,j) =        -inv_dr**2 + 0.5_f64*inv_dr*inv_r
+        hp = r_nodes(i+1)-r_nodes(i)
+        hm = r_nodes(i)  -r_nodes(i-1)
+        inv_r = 1.0_f64 / r_nodes(i)
+        d1_coeffs(:) = [-hp/hm, (hp**2-hm**2)/(hp*hm), hm/hp] / (hp+hm)
+        d2_coeffs(:) = [2*hp/(hp+hm), -2.0_f64, 2*hm/(hp+hm)] / (hp*hm)
+
+        solver%mat(3*(i-1)-2:3*(i-1), j) = &
+          - d2_coeffs(:) - d1_coeffs(:)*inv_r + [0.0_f64, (k*inv_r)**2, 0.0_f64]
       end do
 
+      !----------------------------------------------
       ! Set boundary condition at rmin
+      !----------------------------------------------
       if (bck(1) == sll_p_dirichlet) then ! Dirichlet
         solver%mat(1,j) = 0.0_f64
+
       else if (bck(1) == sll_p_neumann) then ! Neumann
-        solver%mat(3,j) = solver%mat(3,j) -  one_third  * solver%mat(1,j)
-        solver%mat(2,j) = solver%mat(2,j) + four_thirds * solver%mat(1,j)
+
+        ! Coefficients of homogeneous boundary condition
+        hp = r_nodes(3)-r_nodes(2)
+        hm = r_nodes(2)-r_nodes(1)
+        d1_coeffs(:) = [-2-hp/hm, 2+hp/hm+hm/hp, -hm/hp]
+        solver % bc_coeffs_rmin(2:3) = -d1_coeffs(2:3)/d1_coeffs(1)
+
+        ! Gaussian elimination: remove phi(1) variable using boundary condition
+        solver%mat(3,j) = solver%mat(3,j) + solver%bc_coeffs_rmin(3) * solver%mat(1,j)
+        solver%mat(2,j) = solver%mat(2,j) + solver%bc_coeffs_rmin(2) * solver%mat(1,j)
         solver%mat(1,j) = 0.0_f64
+
       end if
 
+      !----------------------------------------------
       ! Set boundary condition at rmax
+      !----------------------------------------------
       last = 3*(nr-1)
       if (bck(2) == sll_p_dirichlet) then ! Dirichlet
         solver%mat(last,j) = 0.0_f64
+
       else if (bck(2) == sll_p_neumann) then ! Neumann
-        solver%mat(last-2,j) = solver%mat(last-2,j) -  one_third  *solver%mat(last,j)
-        solver%mat(last-1,j) = solver%mat(last-1,j) + four_thirds *solver%mat(last,j)
+
+        ! Coefficients of homogeneous boundary condition
+        hp = r_nodes(nr+1)-r_nodes(nr)
+        hm = r_nodes(nr)-r_nodes(nr-1)
+        d1_coeffs(:) = [hp/hm, -2-hp/hm-hm/hp, 2+hm/hp]
+        solver % bc_coeffs_rmax(-2:-1) = -d1_coeffs(1:2)/d1_coeffs(3)
+
+        ! Gaussian elimination: remove phi(last) variable using boundary condition
+        solver%mat(last-2,j) = solver%mat(last-2,j) + solver%bc_coeffs_rmax(-2) * solver%mat(last,j)
+        solver%mat(last-1,j) = solver%mat(last-1,j) + solver%bc_coeffs_rmax(-1) * solver%mat(last,j)
         solver%mat(last  ,j) = 0.0_f64
+
       end if
 
     end do
@@ -379,6 +426,7 @@ contains
 
     integer(i32) :: nr, ntheta, bck(2)
     integer(i32) :: i, j, k
+    integer(i32) :: last
 
     nr     = solver%nr
     ntheta = solver%ntheta
@@ -433,14 +481,19 @@ contains
         if (bck(1) == sll_p_dirichlet) then ! Dirichlet
           phik(1) = 0.0_f64
         else if (bck(1) == sll_p_neumann) then ! Neumann
-          phik(1) = four_thirds*phik(2) - one_third*phik(3)
+          associate( c => solver % bc_coeffs_rmin )
+            phik(1) = c(2)*phik(2) + c(3)*phik(3)
+          end associate
         end if
 
         ! Boundary condition at rmax
+        last = nr+1
         if (bck(2) == sll_p_dirichlet) then ! Dirichlet
-          phik(nr+1) = 0.0_f64
+          phik(last) = 0.0_f64
         else if (bck(2) == sll_p_neumann) then ! Neumann
-          phik(nr+1) = four_thirds*phik(nr) - one_third*phik(nr-1)
+          associate( c => solver % bc_coeffs_rmax )
+            phik(last) = c(-2)*phik(last-2) + c(-1)*phik(last-1)
+          end associate
         endif
 
       end associate
