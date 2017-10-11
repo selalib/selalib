@@ -193,7 +193,7 @@ contains
       bc_rmax , &
       rgrid   )
 
-    type(sll_t_poisson_2d_polar), intent(  out) :: solver !< solver object
+    type(sll_t_poisson_2d_polar), intent(  out) :: solver   !< solver object
     real(f64)                   , intent(in   ) :: rmin     !< rmin
     real(f64)                   , intent(in   ) :: rmax     !< rmax
     integer(i32)                , intent(in   ) :: nr       !< number of cells radial
@@ -460,14 +460,16 @@ contains
      rmax  , &
      nr    , &
      ntheta, &
-     bc_r  ) &
+     bc_r  , &
+     rgrid ) &
    result( solver_ptr )
 
-    real   (f64), intent(in) :: rmin     !< rmin
-    real   (f64), intent(in) :: rmax     !< rmax
-    integer(i32), intent(in) :: nr       !< number of cells radial
-    integer(i32), intent(in) :: ntheta   !< number of cells angular
-    integer(i32), intent(in) :: bc_r(2)  !< boundary conditions at [r_min,r_max]
+    real   (f64)       , intent(in) :: rmin     !< rmin
+    real   (f64)       , intent(in) :: rmax     !< rmax
+    integer(i32)       , intent(in) :: nr       !< number of cells radial
+    integer(i32)       , intent(in) :: ntheta   !< number of cells angular
+    integer(i32)       , intent(in) :: bc_r(2)  !< boundary conditions at [r_min,r_max]
+    real(f64), optional, intent(in) :: rgrid(:) !< grid points along r
 
     type(sll_t_poisson_2d_polar), pointer :: solver_ptr !< pointer to solver
 
@@ -478,7 +480,8 @@ contains
      nr     , &
      ntheta , &
      bc_r(1), &
-     bc_r(2) )
+     bc_r(2), &
+     rgrid  )
 
   end function sll_f_new_poisson_2d_polar
 
