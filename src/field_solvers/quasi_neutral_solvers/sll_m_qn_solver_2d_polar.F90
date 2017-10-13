@@ -162,6 +162,9 @@ module sll_m_qn_solver_2d_polar
     sll_s_setup_cyclic_tridiag, &
     sll_o_solve_cyclic_tridiag
 
+  use sll_m_utilities, only: &
+    sll_s_new_array_linspace
+
   implicit none
 
   public :: &
@@ -193,15 +196,14 @@ module sll_m_qn_solver_2d_polar
    real   (f64), allocatable :: cts (:)   !< Lapack coefficients
    integer(i32), allocatable :: ipiv(:)   !< Lapack pivot indices
 
+   real(f64) :: bc_coeffs_rmin( 2: 3)
+   real(f64) :: bc_coeffs_rmax(-2:-1)
+
   end type sll_t_qn_solver_2d_polar
 
   ! Allowed boundary conditions
   integer(i32), parameter :: bc_opts(3) = &
     [sll_p_dirichlet, sll_p_neumann, sll_p_neumann_mode_0]
-
-  ! Local parameters
-  real(f64), parameter ::  one_third  = 1.0_f64 / 3.0_f64
-  real(f64), parameter :: four_thirds = 4.0_f64 / 3.0_f64
 
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 contains
@@ -220,29 +222,35 @@ contains
       b_magn        , &
       lambda        , &
       use_zonal_flow, &
-      epsilon_0 )
+      epsilon_0     , &
+      rgrid         )
 
-    type(sll_t_qn_solver_2d_polar), intent(out) :: solver !< Poisson solver class
-    real(f64)          , intent(in) :: rmin           !< rmin
-    real(f64)          , intent(in) :: rmax           !< rmax
-    integer(i32)       , intent(in) :: nr             !< number of cells radial
-    integer(i32)       , intent(in) :: ntheta         !< number of cells angular
-    integer(i32)       , intent(in) :: bc_rmin        !< boundary condition at r_min
-    integer(i32)       , intent(in) :: bc_rmax        !< boundary condition at r_max
-    real(f64)          , intent(in) :: rho_m0(:)      !< radial profile: total mass density of equilibrium
-    real(f64)          , intent(in) :: b_magn(:)      !< radial profile: intensity of magnetic field
-    real(f64), optional, intent(in) :: lambda(:)      !< radial profile: electron Debye length
-    logical  , optional, intent(in) :: use_zonal_flow !< if .false. set flux average to zero
-    real(f64), optional, intent(in) :: epsilon_0      !< override default: vacuum permittivity
+    type(sll_t_qn_solver_2d_polar), intent(  out) :: solver         !< solver object
+    real(f64)                     , intent(in   ) :: rmin           !< rmin
+    real(f64)                     , intent(in   ) :: rmax           !< rmax
+    integer(i32)                  , intent(in   ) :: nr             !< number of cells radial
+    integer(i32)                  , intent(in   ) :: ntheta         !< number of cells angular
+    integer(i32)                  , intent(in   ) :: bc_rmin        !< boundary condition at r_min
+    integer(i32)                  , intent(in   ) :: bc_rmax        !< boundary condition at r_max
+    real(f64)                     , intent(in   ) :: rho_m0(:)      !< radial profile: total mass density of equilibrium
+    real(f64)                     , intent(in   ) :: b_magn(:)      !< radial profile: intensity of magnetic field
+    real(f64),            optional, intent(in   ) :: lambda(:)      !< radial profile: electron Debye length
+    logical  ,            optional, intent(in   ) :: use_zonal_flow !< if .false. set flux average to zero
+    real(f64),            optional, intent(in   ) :: epsilon_0      !< override default: vacuum permittivity
+    real(f64),    target, optional, intent(in   ) :: rgrid(:)       !< grid points along r
 
     character(len=*), parameter :: this_sub_name = 'sll_s_qn_solver_2d_polar_init'
 
-    real(f64) :: dr
+    real(f64) :: hp, hm
     real(f64) :: inv_r
-    real(f64) :: inv_dr
+    real(f64) :: d0_coeffs(3)
+    real(f64) :: d1_coeffs(3)
+    real(f64) :: d2_coeffs(3)
+    real(f64) :: ddr_ln_g
     real(f64) :: c
-    real(f64) :: d1(-1:+1)
-    real(f64) :: d2(-1:+1)
+
+    real(f64), allocatable, target  :: rgrid_uniform(:)
+    real(f64)             , pointer :: r_nodes(:)
 
     integer(i32) :: i, k
     integer(i32) :: bck(2)
@@ -274,6 +282,18 @@ contains
     solver%nr    = nr
     solver%nt    = ntheta
 
+    ! r grid (possibly non-uniform)
+    if (present( rgrid )) then
+      SLL_ASSERT( size(rgrid) == nr+1 )
+      SLL_ASSERT( rgrid(   1) == rmin )
+      SLL_ASSERT( rgrid(nr+1) == rmax )
+      r_nodes => rgrid
+    else
+      allocate( rgrid_uniform(nr+1) )
+      call sll_s_new_array_linspace( rgrid_uniform, rmin, rmax, endpoint=.true. )
+      r_nodes => rgrid_uniform
+    end if
+
     ! Allocate arrays
     allocate( solver%g   (nr+1) )
     allocate( solver%z   (nr+1,0:ntheta/2) )
@@ -303,15 +323,13 @@ contains
     ! Store non-dimensional coefficient g(r) = \rho(r) / (B(r)^2 \epsilon_0)
     solver%g(:) = rho_m0(:) / (b_magn(:)**2 * solver%epsilon_0)
 
-    ! Precompute convenient parameters
-    dr     = (rmax-rmin)/nr
-    inv_dr = 1.0_f64 / dr
-
     ! Store matrix coefficients into solver%mat
     ! Cycle over k
     do k = 0, ntheta/2
 
+      !--------------------------------------------
       ! Compute boundary conditions type for mode k
+      !--------------------------------------------
       bck(:) = solver%bc(:)
       do i = 1, 2
         if (bck(i) == sll_p_neumann_mode_0) then
@@ -323,13 +341,25 @@ contains
         end if
       end do
 
+      !--------------------------------------------
       ! Compute matrix coefficients for a given k_j
+      !--------------------------------------------
       do i = 2, nr
 
-        associate( g => solver%g(:) )
+        ! Finite difference coefficients for 0th (trivial), 1st and 2nd derivatives
+        hp = r_nodes(i+1)-r_nodes(i)
+        hm = r_nodes(i)  -r_nodes(i-1)
+        inv_r = 1.0_f64 / r_nodes(i)
+        d0_coeffs(:) = [0.0_f64, 1.0_f64, 0.0_f64]
+        d1_coeffs(:) = [-hp/hm, (hp**2-hm**2)/(hp*hm), hm/hp] / (hp+hm)
+        d2_coeffs(:) = [2*hp/(hp+hm), -2.0_f64, 2*hm/(hp+hm)] / (hp*hm)
 
+        ! Compute d/dr(ln(g)) as (1/g)*(dg/dr) using finite differences
+        ddr_ln_g = dot_product( d1_coeffs(:), solver%g(i-1:i+1) ) / solver%g(i)
+
+        ! Determine contribution from zonal flow
         if (present( lambda )) then
-          c = 1.0_f64 / (lambda(i)**2 * g(i))
+          c = 1.0_f64 / (lambda(i)**2 * solver%g(i))
           if (present( use_zonal_flow )) then
             if (use_zonal_flow .and. k == 0) then
               c = 0.0_f64
@@ -339,34 +369,55 @@ contains
           c = 0.0_f64
         end if
 
-        inv_r    = 1.0_f64 / (rmin + (i-1)*dr)
-        d1(-1:1) = [-0.5_f64, 0.0_f64, 0.5_f64] * inv_dr
-        d2(-1:1) = [0.5_f64*(g(i-1)+g(i))/g(i), -2.0_f64, 0.5_f64*(g(i)+g(i+1))/g(i)] * inv_dr**2
+        ! Fill in elements of i-th matrix row
+        solver%mat(3*(i-1)-2:3*(i-1), k) =    &
+          - d2_coeffs(:)                      &
+          - d1_coeffs(:) * (inv_r + ddr_ln_g) &
+          + d0_coeffs(:) * ((k*inv_r)**2 + c)
 
-        end associate
-
-        solver%mat(3*(i-1)  ,k) = -d2( 1) -d1( 1)*inv_r
-        solver%mat(3*(i-1)-1,k) = -d2( 0) -d1( 0)*inv_r  + (k*inv_r)**2 + c
-        solver%mat(3*(i-1)-2,k) = -d2(-1) -d1(-1)*inv_r
       end do
 
+      !--------------------------------------------
       ! Set boundary condition at rmin
+      !--------------------------------------------
       if (bck(1) == sll_p_dirichlet) then ! Dirichlet
         solver%mat(1,k) = 0.0_f64
+
       else if (bck(1) == sll_p_neumann) then ! Neumann
-        solver%mat(3,k) = solver%mat(3,k) -  one_third  * solver%mat(1,k)
-        solver%mat(2,k) = solver%mat(2,k) + four_thirds * solver%mat(1,k)
+
+        ! Coefficients of homogeneous boundary condition
+        hp = r_nodes(3)-r_nodes(2)
+        hm = r_nodes(2)-r_nodes(1)
+        d1_coeffs(:) = [-2-hp/hm, 2+hp/hm+hm/hp, -hm/hp]
+        solver % bc_coeffs_rmin(2:3) = -d1_coeffs(2:3)/d1_coeffs(1)
+
+        ! Gaussian elimination: remove phi(1) variable using boundary condition
+        solver%mat(3,k) = solver%mat(3,k) + solver%bc_coeffs_rmin(3) * solver%mat(1,k)
+        solver%mat(2,k) = solver%mat(2,k) + solver%bc_coeffs_rmin(2) * solver%mat(1,k)
         solver%mat(1,k) = 0.0_f64
+
       end if
 
+      !--------------------------------------------
       ! Set boundary condition at rmax
+      !--------------------------------------------
       last = 3*(nr-1)
       if (bck(2) == sll_p_dirichlet) then ! Dirichlet
         solver%mat(last,k) = 0.0_f64
+
       else if (bck(2) == sll_p_neumann) then ! Neumann
-        solver%mat(last-2,k) = solver%mat(last-2,k) -  one_third  *solver%mat(last,k)
-        solver%mat(last-1,k) = solver%mat(last-1,k) + four_thirds *solver%mat(last,k)
+
+        ! Coefficients of homogeneous boundary condition
+        hp = r_nodes(nr+1)-r_nodes(nr)
+        hm = r_nodes(nr)-r_nodes(nr-1)
+        d1_coeffs(:) = [hp/hm, -2-hp/hm-hm/hp, 2+hm/hp]
+        solver % bc_coeffs_rmax(-2:-1) = -d1_coeffs(1:2)/d1_coeffs(3)
+
+        ! Gaussian elimination: remove phi(last) variable using boundary condition
+        solver%mat(last-2,k) = solver%mat(last-2,k) + solver%bc_coeffs_rmax(-2) * solver%mat(last,k)
+        solver%mat(last-1,k) = solver%mat(last-1,k) + solver%bc_coeffs_rmax(-1) * solver%mat(last,k)
         solver%mat(last  ,k) = 0.0_f64
+
       end if
 
     end do
@@ -383,6 +434,7 @@ contains
 
     integer(i32) :: nr, ntheta, bck(2)
     integer(i32) :: i, k
+    integer(i32) :: last
 
     nr     = solver%nr
     ntheta = solver%nt
@@ -431,14 +483,19 @@ contains
       if (bck(1) == sll_p_dirichlet) then ! Dirichlet
         phik(1) = (0.0_f64, 0.0_f64)
       else if (bck(1) == sll_p_neumann) then ! Neumann
-        phik(1) = four_thirds*phik(2) - one_third*phik(3)
+        associate( c => solver % bc_coeffs_rmin )
+          phik(1) = c(2)*phik(2) + c(3)*phik(3)
+        end associate
       end if
 
       ! Boundary condition at rmax
+      last = nr+1
       if (bck(2) == sll_p_dirichlet) then ! Dirichlet
-        phik(nr+1) = (0.0_f64, 0.0_f64)
+        phik(last) = (0.0_f64, 0.0_f64)
       else if (bck(2) == sll_p_neumann) then ! Neumann
-        phik(nr+1) = four_thirds*phik(nr) - one_third*phik(nr-1)
+        associate( c => solver % bc_coeffs_rmax )
+          phik(last) = c(-2)*phik(last-2) + c(-1)*phik(last-1)
+        end associate
       end if
 
       end associate
