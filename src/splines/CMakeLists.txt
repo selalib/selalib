@@ -9,6 +9,8 @@ SET( SPLINES_FILES
   sll_m_spline_interpolator_1d.F90
   sll_m_spline_interpolator_2d.F90
   #
+  sll_m_polar_spline_interpolator_2d.F90
+  #
   sll_m_spline_matrix.F90
   sll_m_spline_matrix_base.F90
   sll_m_spline_matrix_dense.F90
