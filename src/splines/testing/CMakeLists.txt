@@ -59,6 +59,15 @@ set_tests_properties(
   PROPERTIES PASS_REGULAR_EXPRESSION "PASSED" )
 
 #-------------------------------------------------------------------------------
+# New tests for 2D polar spline (experimental)
+#-------------------------------------------------------------------------------
+add_executable( test_polar_spline_2d
+  test_polar_spline_2d.F90
+  $<TARGET_OBJECTS:analytical_profiles>
+  )
+target_link_libraries( test_polar_spline_2d sll_splines )
+
+#-------------------------------------------------------------------------------
 
 # Cubic splines ............................
 ADD_EXECUTABLE( test_cubic_splines test_cubic_splines.F90  )
