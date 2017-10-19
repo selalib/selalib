@@ -18,7 +18,9 @@ program test_polar_spline_2d
 
   use sll_m_bsplines, only: &
     sll_c_bsplines, &
-    sll_s_bsplines_new
+    sll_s_bsplines_new, &
+    sll_s_bsplines_new_2d_polar, &
+    sll_s_bsplines_new_mirror_copy
 
   use sll_m_spline_2d, only: &
     sll_t_spline_2d
@@ -45,9 +47,9 @@ program test_polar_spline_2d
   !> Working precision
   integer, parameter :: wp = f64
 
-  class(sll_c_bsplines), allocatable :: bsplines_x1
-  class(sll_c_bsplines), allocatable :: bsplines_x2
-  type(sll_t_spline_2d)              :: spline_2d
+  class(sll_c_bsplines), allocatable       :: bsplines_x1
+  class(sll_c_bsplines), allocatable       :: bsplines_x2
+  type(sll_t_spline_2d)                    :: spline_2d
   type(sll_t_polar_spline_interpolator_2d) :: spline_interpolator_2d
 
   real(wp), allocatable ::  tau1(:)   ! interp. points, x1 coord
@@ -71,7 +73,6 @@ program test_polar_spline_2d
   real(wp), allocatable :: test_grid_eta2(:)
 
   type(t_analytical_profile_2d_cos_cos) :: profile
-
   !-----------------------------------------------------------------------------
 
   ! Domain info
@@ -98,27 +99,17 @@ program test_polar_spline_2d
   write(*,*) ""
   write(*,*) ncells
 
-  ! Create uniform B-splines on extended radial domain
-  call sll_s_bsplines_new( bsplines_x1, &
-    degree   =  degree(1), &
-    periodic = .false.   , &
-    xmin     = -r_max    , &
-    xmax     =  r_max    , &
-    ncells   =  ncells(1) )
-  
-  ! Create uniform B-splines on angular domain
-  call sll_s_bsplines_new( bsplines_x2, &
-    degree   = degree(2), &
-    periodic = .true.   , &
-    xmin     = 0.0_wp   , &
-    xmax     = th_period, &
-    ncells   = ncells(2) )
+  ! Create uniform B-splines along x1 and x2 on polar grid
+  call sll_s_bsplines_new_2d_polar( &
+    bsplines_radial  = bsplines_x1, &
+    bsplines_angular = bsplines_x2, &
+    degree           = degree     , &
+    ncells           = ncells     , &
+    max_radius       = r_max      , &
+    theta_lims       = [0.0_wp, th_period] )
 
-  ! Initialize 2D polar spline (i.e., tensor-product spline on extended domain)
+  ! Initialize 2D polar spline
   call spline_2d % init( bsplines_x1, bsplines_x2 )
-
-!  write(*,*) ""
-!  write(*,*) spline_2d % eval( x1=0.0_wp, x2=0.3_wp*th_period )
 
   ! Initialize 2D polar spline interpolator
   call spline_interpolator_2d % init( bsplines_x1, bsplines_x2, bc_rmax )

@@ -15,7 +15,10 @@ module sll_m_polar_spline_interpolator_2d
     sll_p_hermite, &
     sll_p_greville
 
-  use sll_m_bsplines_base, only: sll_c_bsplines
+  use sll_m_bsplines, only: &
+    sll_c_bsplines, &
+    sll_s_bsplines_new_mirror_copy
+
   use sll_m_spline_1d, only: sll_t_spline_1d
   use sll_m_spline_2d, only: sll_t_spline_2d
 
@@ -47,12 +50,17 @@ module sll_m_polar_spline_interpolator_2d
 
     private
 
+    class(sll_c_bsplines), pointer :: bspl1 => null()
+    class(sll_c_bsplines), pointer :: bspl2 => null()
+
     integer                            :: nbc_rmax
     integer                            :: nipts(2)
     integer                            :: i1_start
     integer                            :: even_deg1
     real(wp), allocatable              :: ext_gtau(:,:)
+    type(sll_t_spline_2d)              :: ext_spline
     type(sll_t_spline_interpolator_2d) :: ext_interp
+    class(sll_c_bsplines), allocatable :: ext_bspl1
 
   contains
 
@@ -97,8 +105,13 @@ contains
 !      degree(1), bc_rmax, bc_rmax, 2*nipts(1)-1, ncells(1) )
     !
     ! Option 2: no breakpoint at r=0
+!    call sll_s_spline_1d_compute_num_cells( &
+!      degree(1), bc_rmax, bc_rmax, 2*nipts(1), ncells(1) )
+    !
+    ! Option 3: no breakpoint at r=0, and use radial basis
     call sll_s_spline_1d_compute_num_cells( &
       degree(1), bc_rmax, bc_rmax, 2*nipts(1), ncells(1) )
+    ncells(1) = (ncells(1)+1)/2
 
     ! Along angular direction theta
     call sll_s_spline_1d_compute_num_cells( &
@@ -125,10 +138,9 @@ contains
     class(sll_c_bsplines),       target, intent(in   ) :: bspl2
     integer                            , intent(in   ) :: bc_rmax
 
-    ! Check requirements on radial basis  !TODO: create new 'polar B-spline' type
-    SLL_ASSERT( bspl1 % xmin == -bspl1 % xmax )
+    ! Check requirements on radial basis
+    SLL_ASSERT( bspl1 % radial )
     SLL_ASSERT( .not. bspl1 % periodic )
-    SLL_ASSERT( bspl1 % uniform )         !TODO: move constraint to type
 
     ! Check requirements on angular basis
     SLL_ASSERT( bspl2 % periodic )
@@ -137,20 +149,30 @@ contains
     ! Check boundary condition
     SLL_ASSERT( any( bc_rmax == [sll_p_greville, sll_p_hermite] ) )
 
+    ! Store pointers to B-splines
+    self % bspl1 => bspl1
+    self % bspl2 => bspl2
+
+    ! Create B-spline on extended radial domain [-R,R]
+    call sll_s_bsplines_new_mirror_copy( self % bspl1, self % ext_bspl1 )
+
+    ! Initialize 2D spline with polar base
+    call self % ext_spline % init( self % ext_bspl1, self % bspl2 )
+
     ! Initialize 2D interpolator on extended domain [-R,R] X [0,2\pi]
     call self % ext_interp % init( &
-      bspl1, &
-      bspl2, &
+      self % ext_bspl1, &
+      self %     bspl2, &
       bc_xmin = [bc_rmax, sll_p_periodic], &
       bc_xmax = [bc_rmax, sll_p_periodic] )
 
     ! Determine number of additional boundary conditions at r=r_max (Hermite)
-    self % nbc_rmax = merge( bspl1%degree/2, 0, bc_rmax == sll_p_hermite )
+    self % nbc_rmax = merge( self%bspl1%degree/2, 0, bc_rmax == sll_p_hermite )
 
     ! Allocate extended radial array of function values
-    associate( n1 => bspl1 % nbasis, &
-               n2 => bspl2 % nbasis, &
-               a1 => self%nbc_rmax    )
+    associate( n1 => self % ext_bspl1 % nbasis, &
+               n2 => self %     bspl2 % nbasis, &
+               a1 => self % nbc_rmax )
 
       allocate( self % ext_gtau (n1-2*a1, n2) )
 
@@ -164,7 +186,7 @@ contains
     self % i1_start = size( self%ext_gtau, 1 ) - self%nipts(1) + 1
 
     ! Store info about whether spline degree along r is even or odd
-    self % even_deg1 = 1 - modulo( bspl1%degree, 2 )
+    self % even_deg1 = 1 - modulo( self%bspl1%degree, 2 )
 
   end subroutine s_polar_spline_interpolator_2d__init
 
@@ -178,6 +200,7 @@ contains
 
     ! Destroy local objects: 1D splines and interpolators along x1 and x2
     call self % ext_interp % free()
+    call self % ext_bspl1  % free()
 
     ! Deallocate 2D array of interpolation points
     deallocate( self % ext_gtau )
@@ -226,10 +249,10 @@ contains
   !> @param[in]    boundary_data  (optional) structure with boundary conditions
   !-----------------------------------------------------------------------------
   subroutine s_polar_spline_interpolator_2d__compute_interpolant( self, &
-      ext_spline, gtau, derivs_rmax )
+      spline, gtau, derivs_rmax )
 
     class(sll_t_polar_spline_interpolator_2d), intent(inout)           :: self
-    type (sll_t_spline_2d)                   , intent(inout)           :: ext_spline
+    type (sll_t_spline_2d)                   , intent(inout)           :: spline
     real(wp)                                 , intent(in   )           :: gtau(:,:)
     real(wp)                                 , intent(in   ), optional :: derivs_rmax(:,:)
 
@@ -239,6 +262,7 @@ contains
     class(sll_t_spline_2d_boundary_data), allocatable :: boundary_data
     integer :: i1, i2, j1, j2, k, shift
 
+    SLL_ASSERT( spline % belongs_to_space( self % bspl1, self % bspl2 ) )
     SLL_ASSERT( size( gtau, 1 ) == self % nipts(1) )
     SLL_ASSERT( size( gtau, 2 ) == self % nipts(2) )
 
@@ -279,7 +303,14 @@ contains
     end if
 
     ! Compute interpolant on extended domain
-    call self % ext_interp % compute_interpolant( ext_spline, self%ext_gtau, boundary_data )
+    call self % ext_interp % compute_interpolant( self%ext_spline, self%ext_gtau, boundary_data )
+
+    ! Copy data back onto 2D polar spline
+    associate( start => 1 + size( self%ext_spline%bcoef, 1 ) - size( spline%bcoef, 1 ) )
+
+      spline % bcoef(:,:) = self % ext_spline % bcoef(start:,:)
+
+    end associate
 
   end subroutine s_polar_spline_interpolator_2d__compute_interpolant
 
