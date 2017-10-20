@@ -10,7 +10,9 @@ ADD_EXECUTABLE( test_poisson_2d_polar
   test_poisson_2d_polar.F90
   m_test_poisson_2d_polar_base.F90
   m_test_poisson_2d_polar_dirichlet.F90
-  m_test_poisson_2d_polar_neumann_mode0.F90 )
+  m_test_poisson_2d_polar_neumann_mode0.F90
+  m_test_poisson_2d_polar_circle_dirichlet.F90 )
+
 TARGET_LINK_LIBRARIES( test_poisson_2d_polar sll_poisson_solvers )
 ADD_TEST( NAME poisson_2d_polar     COMMAND test_poisson_2d_polar     )
 SET_TESTS_PROPERTIES( poisson_2d_polar PROPERTIES PASS_REGULAR_EXPRESSION "PASSED" )

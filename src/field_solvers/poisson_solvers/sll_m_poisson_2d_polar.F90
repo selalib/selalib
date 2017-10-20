@@ -108,7 +108,8 @@ module sll_m_poisson_2d_polar
   use sll_m_boundary_condition_descriptors, only: &
     sll_p_dirichlet, &
     sll_p_neumann, &
-    sll_p_neumann_mode_0
+    sll_p_neumann_mode_0, &
+    sll_p_polar_origin
 
   use sll_m_fft, only: &
     sll_t_fft, &
@@ -146,6 +147,8 @@ module sll_m_poisson_2d_polar
   !> Class for the Poisson solver in polar coordinate
   type, extends(sll_c_poisson_2d_base) :: sll_t_poisson_2d_polar
 
+   private
+
    real   (f64)              :: rmin      !< Min value of r coordinate
    real   (f64)              :: rmax      !< Max value of r coordinate
    integer(i32)              :: nr        !< Number of cells along r
@@ -161,8 +164,9 @@ module sll_m_poisson_2d_polar
    real   (f64), allocatable :: cts (:)   !< Lapack coefficients
    integer(i32), allocatable :: ipiv(:)   !< Lapack pivot indices
 
-   real(f64) :: bc_coeffs_rmin( 2: 3)
-   real(f64) :: bc_coeffs_rmax(-2:-1)
+   real(f64) :: bc_coeffs_rmin( 2: 3) ! needed for Neumann at r=r_min
+   real(f64) :: bc_coeffs_rmax(-2:-1) ! needed for Neumann at r=r_max
+   integer   :: skip0                 ! needed for full circle
 
   contains
 
@@ -173,10 +177,6 @@ module sll_m_poisson_2d_polar
     procedure :: free                      => s_free
 
   end type sll_t_poisson_2d_polar
-
-  ! Allowed boundary conditions
-  integer(i32), parameter :: bc_opts(3) = &
-    [sll_p_dirichlet, sll_p_neumann, sll_p_neumann_mode_0]
 
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 contains
@@ -200,7 +200,7 @@ contains
     integer(i32)                , intent(in   ) :: ntheta   !< number of cells angular
     integer(i32)                , intent(in   ) :: bc_rmin  !< boundary condition at r_min
     integer(i32)                , intent(in   ) :: bc_rmax  !< boundary condition at r_max
-    real(f64), target,  optional, intent(in   ) :: rgrid(:) !< grid points along r
+    real(f64),          optional, intent(in   ) :: rgrid(:) !< grid points along r
 
     character(len=*), parameter :: this_sub_name = 'sll_s_poisson_2d_polar_init'
 
@@ -208,25 +208,37 @@ contains
     real(f64) :: inv_r
     real(f64) :: d1_coeffs(3)
     real(f64) :: d2_coeffs(3)
-    real(f64), allocatable, target  :: rgrid_uniform(:)
-    real(f64)             , pointer :: r_nodes(:)
+    real(f64), allocatable :: r_nodes(:)
 
     integer(i32)  :: i, k
     integer(i32)  :: bck(2)
     integer(i32)  :: last
 
-    ! Consistency check: boundary conditions must be one of three options
-    if( any( bc_rmin == bc_opts ) ) then
+    ! Consistency checks
+    SLL_ASSERT( rmin >= 0.0_f64 )
+    SLL_ASSERT( rmin < rmax )
+    SLL_ASSERT( nr >= 1 )
+    SLL_ASSERT( ntheta >= 1 )
+
+    if (bc_rmin == sll_p_polar_origin .and. rmin /= 0.0_f64) then
+      SLL_ERROR( this_sub_name, "BC option 'sll_p_polar_origin' requires r_min = 0" )
+    end if
+
+    ! Set boundary condition at r_min
+    select case( bc_rmin )
+    case( sll_p_dirichlet, sll_p_neumann, sll_p_neumann_mode_0, sll_p_polar_origin )
       solver%bc(1) = bc_rmin
-    else
+    case default
       SLL_ERROR( this_sub_name, 'Unrecognized boundary condition at r_min' )
-    end if
-    !
-    if( any( bc_rmax == bc_opts ) ) then
+    end select
+
+    ! Set boundary condition at r_max
+    select case( bc_rmax )
+    case( sll_p_dirichlet, sll_p_neumann, sll_p_neumann_mode_0 )
       solver%bc(2) = bc_rmax
-    else
+    case default
       SLL_ERROR( this_sub_name, 'Unrecognized boundary condition at r_max' )
-    end if
+    end select
 
     ! Store global information in solver
     solver%rmin  =  rmin
@@ -234,16 +246,41 @@ contains
     solver%nr    =  nr
     solver%nt    =  ntheta
 
+    ! Important: if full circle is simulated, center point is not solved for!
+    !            Therefore, solution is calculated on nr+1-skip0 points.
+    solver%skip0 = merge( 1, 0, bc_rmin==sll_p_polar_origin )
+
     ! r grid (possibly non-uniform)
-    if (present( rgrid )) then
-      SLL_ASSERT( size(rgrid) == nr+1 )
-      SLL_ASSERT( rgrid(   1) == rmin )
-      SLL_ASSERT( rgrid(nr+1) == rmax )
-      r_nodes => rgrid
-    else
-      allocate( rgrid_uniform(nr+1) )
-      call sll_s_new_array_linspace( rgrid_uniform, rmin, rmax, endpoint=.true. )
-      r_nodes => rgrid_uniform
+    allocate( r_nodes(nr+1) )
+
+    if (present( rgrid )) then  !--> Create computational grid from user data
+
+      SLL_ASSERT( all( rgrid > 0.0_f64 ) )
+      if (bc_rmin == sll_p_polar_origin) then
+        SLL_ASSERT( size(rgrid) == nr   )
+        SLL_ASSERT( rgrid(nr  ) == rmax )
+        r_nodes(1 ) = -rgrid(1)
+        r_nodes(2:) =  rgrid(:)
+      else
+        SLL_ASSERT( size(rgrid) == nr+1 )
+        SLL_ASSERT( rgrid(   1) == rmin )
+        SLL_ASSERT( rgrid(nr+1) == rmax )
+        r_nodes(:) = rgrid(:)
+      end if
+
+    else  !-------------------------> Create uniform grid
+
+      if (bc_rmin == sll_p_polar_origin) then
+        associate( rmin => rmax / real(2*nr+1,f64) )
+          r_nodes(1) = -rmin
+          call sll_s_new_array_linspace( r_nodes(2:), rmin, rmax, endpoint=.true. )
+        end associate
+      else
+
+        call sll_s_new_array_linspace( r_nodes, rmin, rmax, endpoint=.true. )
+
+      end if
+
     end if
 
     ! Allocate arrays global in r
@@ -322,6 +359,12 @@ contains
         solver%mat(2,k) = solver%mat(2,k) + solver%bc_coeffs_rmin(2) * solver%mat(1,k)
         solver%mat(1,k) = 0.0_f64
 
+      else if (bck(1) == sll_p_polar_origin) then ! center of circular domain
+
+        ! Gaussian elimination: phi(1) = (-1)^k phi(2)
+        solver%mat(2,k) = solver%mat(2,k) + (-1)**k * solver%mat(1,k)
+        solver%mat(1,k) = 0.0_f64
+
       end if
 
       !--------------------------------------------
@@ -361,19 +404,22 @@ contains
     integer(i32) :: nr, ntheta, bck(2)
     integer(i32) :: i, k
     integer(i32) :: last
+    integer(i32) :: sh
 
     nr     = solver%nr
     ntheta = solver%nt
 
+    sh = solver%skip0 ! =1 if bc_rmin==sll_p_polar_origin, =0 otherwise
+
     ! Consistency check: 'rho' and 'phi' have shape defined at initialization
-    SLL_ASSERT( all( shape(rho) == [nr+1,ntheta] ) )
-    SLL_ASSERT( all( shape(phi) == [nr+1,ntheta] ) )
+    SLL_ASSERT( all( shape(rho) == [nr+1-sh, ntheta] ) )
+    SLL_ASSERT( all( shape(phi) == [nr+1-sh, ntheta] ) )
 
     ! For each r_i, compute FFT of rho(r_i,theta) to obtain \hat{rho}(r_i,k)
-    do i = 1, nr+1
+    do i = 1, nr+1-sh
       solver%temp_r(:) = rho(i,:)
       call sll_s_fft_exec_r2c_1d( solver%fw, solver%temp_r(:), solver%temp_c(:) )
-      solver%z(i,:) = solver%temp_c(:)
+      solver%z(i+sh,:) = solver%temp_c(:)
     end do
 
     ! Cycle over k
@@ -425,8 +471,8 @@ contains
     end do
 
     ! For each r_i, compute inverse FFT of \hat{phi}(r_i,k) to obtain phi(r_i,theta)
-    do i = 1, nr+1
-      solver%temp_c(:) = solver%z(i,:)
+    do i = 1, nr+1-sh
+      solver%temp_c(:) = solver%z(i+sh,:)
       call sll_s_fft_exec_c2r_1d( solver%bw, solver%temp_c(:), solver%temp_r(:) )
       phi(i,:) = solver%temp_r(:)
     end do
