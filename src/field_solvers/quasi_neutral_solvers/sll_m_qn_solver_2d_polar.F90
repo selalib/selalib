@@ -328,7 +328,7 @@ contains
 
     ! Allocate arrays for solution of linear systems along r
     associate( sh => solver % skip0 )
-      allocate( solver%g   (nr+1-sh) )
+      allocate( solver%g   (nr+1) )
       allocate( solver%z   (nr+1-sh,0:ntheta/2) )
       allocate( solver%mat((nr-1)*3,0:ntheta/2) ) ! for each k, matrix depends on r
       allocate( solver%cts((nr-1)*7) )
@@ -355,7 +355,12 @@ contains
       normalized = .false. )
 
     ! Store non-dimensional coefficient g(r) = \rho(r) / (B(r)^2 \epsilon_0)
-    solver%g(:) = rho_m0(:) / (b_magn(:)**2 * solver%epsilon_0)
+    associate( sh => solver%skip0 )
+      solver%g(1+sh:) = rho_m0(:) / (b_magn(:)**2 * solver%epsilon_0)
+      if (sh==1) then
+        solver%g(1) = solver%g(2) ! ghost point
+      end if
+    end associate
 
     ! Store matrix coefficients into solver%mat
     ! Cycle over k
@@ -506,7 +511,7 @@ contains
       ! we will overwrite rhok with phik
       associate( rhok => solver%z(:,k), phik => solver%z(:,k) )
 
-      rhok(:) = rhok(:) / (solver%g(:) * solver%epsilon_0)
+      rhok(:) = rhok(:) / (solver%g(1+sh:) * solver%epsilon_0)
 
       ! Solve tridiagonal system to obtain \hat{phi}_{k_j}(r) at internal points
       call sll_s_setup_cyclic_tridiag( solver%mat(:,k), nr-1, solver%cts, solver%ipiv )
