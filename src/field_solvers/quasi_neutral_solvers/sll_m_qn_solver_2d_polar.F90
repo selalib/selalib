@@ -146,7 +146,8 @@ module sll_m_qn_solver_2d_polar
   use sll_m_boundary_condition_descriptors, only: &
     sll_p_dirichlet, &
     sll_p_neumann, &
-    sll_p_neumann_mode_0
+    sll_p_neumann_mode_0, &
+    sll_p_polar_origin
 
   use sll_m_fft, only: &
     sll_t_fft, &
@@ -196,14 +197,11 @@ module sll_m_qn_solver_2d_polar
    real   (f64), allocatable :: cts (:)   !< Lapack coefficients
    integer(i32), allocatable :: ipiv(:)   !< Lapack pivot indices
 
-   real(f64) :: bc_coeffs_rmin( 2: 3)
-   real(f64) :: bc_coeffs_rmax(-2:-1)
+   real(f64) :: bc_coeffs_rmin( 2: 3) ! needed for Neumann at r=r_min
+   real(f64) :: bc_coeffs_rmax(-2:-1) ! needed for Neumann at r=r_max
+   integer   :: skip0                 ! needed for full circle
 
   end type sll_t_qn_solver_2d_polar
-
-  ! Allowed boundary conditions
-  integer(i32), parameter :: bc_opts(3) = &
-    [sll_p_dirichlet, sll_p_neumann, sll_p_neumann_mode_0]
 
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 contains
@@ -248,26 +246,37 @@ contains
     real(f64) :: d2_coeffs(3)
     real(f64) :: ddr_ln_g
     real(f64) :: c
-
-    real(f64), allocatable, target  :: rgrid_uniform(:)
-    real(f64)             , pointer :: r_nodes(:)
+    real(f64), allocatable :: r_nodes(:)
 
     integer(i32) :: i, k
     integer(i32) :: bck(2)
     integer(i32) :: last
 
-    ! Consistency check: boundary conditions must be one of three options
-    if( any( bc_rmin == bc_opts ) ) then
+    ! Consistency checks
+    SLL_ASSERT( rmin >= 0.0_f64 )
+    SLL_ASSERT( rmin < rmax )
+    SLL_ASSERT( nr >= 1 )
+    SLL_ASSERT( ntheta >= 1 )
+
+    if (bc_rmin == sll_p_polar_origin .and. rmin /= 0.0_f64) then
+      SLL_ERROR( this_sub_name, "BC option 'sll_p_polar_origin' requires r_min = 0" )
+    end if
+
+    ! Set boundary condition at r_min
+    select case( bc_rmin )
+    case( sll_p_dirichlet, sll_p_neumann, sll_p_neumann_mode_0, sll_p_polar_origin )
       solver%bc(1) = bc_rmin
-    else
+    case default
       SLL_ERROR( this_sub_name, 'Unrecognized boundary condition at r_min' )
-    end if
-    !
-    if( any( bc_rmax == bc_opts ) ) then
+    end select
+
+    ! Set boundary condition at r_max
+    select case( bc_rmax )
+    case( sll_p_dirichlet, sll_p_neumann, sll_p_neumann_mode_0 )
       solver%bc(2) = bc_rmax
-    else
+    case default
       SLL_ERROR( this_sub_name, 'Unrecognized boundary condition at r_max' )
-    end if
+    end select
 
     ! Override vacuum permittivity in SI units
     if (present( epsilon_0 )) then
@@ -282,24 +291,49 @@ contains
     solver%nr    = nr
     solver%nt    = ntheta
 
+    ! Important: if full circle is simulated, center point is not solved for!
+    !            Therefore, solution is calculated on nr+1-skip0 points.
+    solver%skip0 = merge( 1, 0, bc_rmin==sll_p_polar_origin )
+
     ! r grid (possibly non-uniform)
-    if (present( rgrid )) then
-      SLL_ASSERT( size(rgrid) == nr+1 )
-      SLL_ASSERT( rgrid(   1) == rmin )
-      SLL_ASSERT( rgrid(nr+1) == rmax )
-      r_nodes => rgrid
-    else
-      allocate( rgrid_uniform(nr+1) )
-      call sll_s_new_array_linspace( rgrid_uniform, rmin, rmax, endpoint=.true. )
-      r_nodes => rgrid_uniform
+    allocate( r_nodes(nr+1) )
+
+    if (present( rgrid )) then  !--> Create computational grid from user data
+
+      SLL_ASSERT( all( rgrid > 0.0_f64 ) )
+      if (bc_rmin == sll_p_polar_origin) then
+        SLL_ASSERT( size(rgrid) == nr   )
+        SLL_ASSERT( rgrid(nr  ) == rmax )
+        r_nodes(1 ) = -rgrid(1)
+        r_nodes(2:) =  rgrid(:)
+      else
+        SLL_ASSERT( size(rgrid) == nr+1 )
+        SLL_ASSERT( rgrid(   1) == rmin )
+        SLL_ASSERT( rgrid(nr+1) == rmax )
+        r_nodes(:) = rgrid(:)
+      end if
+
+    else  !-------------------------> Create uniform grid
+
+      if (bc_rmin == sll_p_polar_origin) then
+        associate( rmin => rmax / real(2*nr+1,f64) )
+          r_nodes(1) = -rmin
+          call sll_s_new_array_linspace( r_nodes(2:), rmin, rmax, endpoint=.true. )
+        end associate
+      else
+        call sll_s_new_array_linspace( r_nodes, rmin, rmax, endpoint=.true. )
+      end if
+
     end if
 
-    ! Allocate arrays
-    allocate( solver%g   (nr+1) )
-    allocate( solver%z   (nr+1,0:ntheta/2) )
-    allocate( solver%mat((nr-1)*3,0:ntheta/2) ) ! for each k, matrix depends on r
-    allocate( solver%cts((nr-1)*7) )
-    allocate( solver%ipiv(nr-1) )
+    ! Allocate arrays for solution of linear systems along r
+    associate( sh => solver % skip0 )
+      allocate( solver%g   (nr+1-sh) )
+      allocate( solver%z   (nr+1-sh,0:ntheta/2) )
+      allocate( solver%mat((nr-1)*3,0:ntheta/2) ) ! for each k, matrix depends on r
+      allocate( solver%cts((nr-1)*7) )
+      allocate( solver%ipiv(nr-1) )
+    end associate
 
     ! Allocate in ALIGNED fashion 1D work arrays for FFT
     solver%temp_r => sll_f_fft_allocate_aligned_real   ( ntheta )
@@ -396,6 +430,12 @@ contains
         solver%mat(2,k) = solver%mat(2,k) + solver%bc_coeffs_rmin(2) * solver%mat(1,k)
         solver%mat(1,k) = 0.0_f64
 
+      else if (bck(1) == sll_p_polar_origin) then ! center of circular domain
+
+        ! Gaussian elimination: phi(1) = (-1)^k phi(2)
+        solver%mat(2,k) = solver%mat(2,k) + (-1)**k * solver%mat(1,k)
+        solver%mat(1,k) = 0.0_f64
+
       end if
 
       !--------------------------------------------
@@ -434,17 +474,24 @@ contains
 
     integer(i32) :: nr, ntheta, bck(2)
     integer(i32) :: i, k
-    integer(i32) :: last
+    integer(i32) :: nrpts
+    integer(i32) :: sh
 
     nr     = solver%nr
     ntheta = solver%nt
 
+    ! Shift in radial grid indexing
+    sh = solver%skip0 ! =1 if bc_rmin==sll_p_polar_origin, =0 otherwise
+
+    ! Number of points in radial grid
+    nrpts = nr+1-sh
+
     ! Consistency check: 'rho' and 'phi' have shape defined at initialization
-    SLL_ASSERT( all( shape(rho) == [nr+1,ntheta] ) )
-    SLL_ASSERT( all( shape(phi) == [nr+1,ntheta] ) )
+    SLL_ASSERT( all( shape(rho) == [nrpts,ntheta] ) )
+    SLL_ASSERT( all( shape(phi) == [nrpts,ntheta] ) )
 
     ! For each r_i, compute FFT of rho(r_i,theta) to obtain \hat{rho}(r_i,k)
-    do i = 1, nr+1
+    do i = 1, nrpts
       solver%temp_r(:) = rho(i,:)
       call sll_s_fft_exec_r2c_1d( solver%fw, solver%temp_r(:), solver%temp_c(:) )
       solver%z(i,:) = solver%temp_c(:)
@@ -457,15 +504,14 @@ contains
       ! phik(r) is k-th Fourier mode of phi(r,theta)
       ! rhok is 1D contiguous slice (column) of solver%z
       ! we will overwrite rhok with phik
-      associate( rhok => solver%z(1:nr+1,k), &
-                 phik => solver%z(1:nr+1,k) )
+      associate( rhok => solver%z(:,k), phik => solver%z(:,k) )
 
-      rhok(1:nr+1) = rhok(1:nr+1) /(solver%g(1:nr+1)*solver%epsilon_0)
+      rhok(:) = rhok(:) / (solver%g(:) * solver%epsilon_0)
 
       ! Solve tridiagonal system to obtain \hat{phi}_{k_j}(r) at internal points
       call sll_s_setup_cyclic_tridiag( solver%mat(:,k), nr-1, solver%cts, solver%ipiv )
-      call sll_o_solve_cyclic_tridiag( solver%cts, solver%ipiv, rhok(2:nr), &
-        nr-1, phik(2:nr) )
+      call sll_o_solve_cyclic_tridiag( solver%cts, solver%ipiv, &
+        rhok(2-sh:nrpts-1), nr-1, phik(2-sh:nrpts-1) )
 
       ! Compute boundary conditions type for mode k
       bck(:) = solver%bc(:)
@@ -489,12 +535,11 @@ contains
       end if
 
       ! Boundary condition at rmax
-      last = nr+1
       if (bck(2) == sll_p_dirichlet) then ! Dirichlet
-        phik(last) = (0.0_f64, 0.0_f64)
+        phik(nrpts) = (0.0_f64, 0.0_f64)
       else if (bck(2) == sll_p_neumann) then ! Neumann
         associate( c => solver % bc_coeffs_rmax )
-          phik(last) = c(-2)*phik(last-2) + c(-1)*phik(last-1)
+          phik(nrpts) = c(-2)*phik(nrpts-2) + c(-1)*phik(nrpts-1)
         end associate
       end if
 
@@ -503,7 +548,7 @@ contains
     end do
 
     ! For each r_i, compute inverse FFT of \hat{phi}(r_i,k) to obtain phi(r_i,theta)
-    do i = 1, nr+1
+    do i = 1, nrpts
       solver%temp_c(:) = solver%z(i,:)
       call sll_s_fft_exec_c2r_1d( solver%bw, solver%temp_c(:), solver%temp_r(:) )
       phi(i,:) = solver%temp_r(:)
