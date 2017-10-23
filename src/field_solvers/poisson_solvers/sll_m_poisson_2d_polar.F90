@@ -276,18 +276,18 @@ contains
           call sll_s_new_array_linspace( r_nodes(2:), rmin, rmax, endpoint=.true. )
         end associate
       else
-
         call sll_s_new_array_linspace( r_nodes, rmin, rmax, endpoint=.true. )
-
       end if
 
     end if
 
     ! Allocate arrays global in r
-    allocate( solver%z   (nr+1   ,0:ntheta/2) )
-    allocate( solver%mat((nr-1)*3,0:ntheta/2) ) ! for each k, matrix depends on r
-    allocate( solver%cts((nr-1)*7) )
-    allocate( solver%ipiv(nr-1) )
+    associate( sh => solver % skip0 )
+      allocate( solver%z   (nr+1-sh,0:ntheta/2) )
+      allocate( solver%mat((nr-1)*3,0:ntheta/2) ) ! for each k, matrix depends on r
+      allocate( solver%cts((nr-1)*7) )
+      allocate( solver%ipiv(nr-1) )
+    end associate
 
     ! Allocate in ALIGNED fashion 1D work arrays for FFT
     solver%temp_r => sll_f_fft_allocate_aligned_real   ( ntheta )
@@ -403,23 +403,27 @@ contains
 
     integer(i32) :: nr, ntheta, bck(2)
     integer(i32) :: i, k
-    integer(i32) :: last
+    integer(i32) :: nrpts
     integer(i32) :: sh
 
     nr     = solver%nr
     ntheta = solver%nt
 
+    ! Shift in radial grid indexing
     sh = solver%skip0 ! =1 if bc_rmin==sll_p_polar_origin, =0 otherwise
 
+    ! Number of points in radial grid
+    nrpts = nr+1-sh
+
     ! Consistency check: 'rho' and 'phi' have shape defined at initialization
-    SLL_ASSERT( all( shape(rho) == [nr+1-sh, ntheta] ) )
-    SLL_ASSERT( all( shape(phi) == [nr+1-sh, ntheta] ) )
+    SLL_ASSERT( all( shape(rho) == [nrpts, ntheta] ) )
+    SLL_ASSERT( all( shape(phi) == [nrpts, ntheta] ) )
 
     ! For each r_i, compute FFT of rho(r_i,theta) to obtain \hat{rho}(r_i,k)
-    do i = 1, nr+1-sh
+    do i = 1, nrpts
       solver%temp_r(:) = rho(i,:)
       call sll_s_fft_exec_r2c_1d( solver%fw, solver%temp_r(:), solver%temp_c(:) )
-      solver%z(i+sh,:) = solver%temp_c(:)
+      solver%z(i,:) = solver%temp_c(:)
     end do
 
     ! Cycle over k
@@ -433,7 +437,7 @@ contains
 
       ! Solve tridiagonal system to obtain \hat{phi}_{k_j}(r) at internal points
       call sll_s_setup_cyclic_tridiag( solver%mat(:,k), nr-1, solver%cts, solver%ipiv )
-      call sll_o_solve_cyclic_tridiag( solver%cts, solver%ipiv, rhok(2:nr), nr-1, phik(2:nr) )
+      call sll_o_solve_cyclic_tridiag( solver%cts, solver%ipiv, rhok(2-sh:nrpts-1), nr-1, phik(2-sh:nrpts-1) )
 
       ! Compute boundary conditions type for mode k
       bck(:) = solver%bc(:)
@@ -457,12 +461,11 @@ contains
       end if
 
       ! Boundary condition at rmax
-      last = nr+1
       if (bck(2) == sll_p_dirichlet) then ! Dirichlet
-        phik(last) = (0.0_f64, 0.0_f64)
+        phik(nrpts) = (0.0_f64, 0.0_f64)
       else if (bck(2) == sll_p_neumann) then ! Neumann
         associate( c => solver % bc_coeffs_rmax )
-          phik(last) = c(-2)*phik(last-2) + c(-1)*phik(last-1)
+          phik(nrpts) = c(-2)*phik(nrpts-2) + c(-1)*phik(nrpts-1)
         end associate
       end if
 
@@ -471,8 +474,8 @@ contains
     end do
 
     ! For each r_i, compute inverse FFT of \hat{phi}(r_i,k) to obtain phi(r_i,theta)
-    do i = 1, nr+1-sh
-      solver%temp_c(:) = solver%z(i+sh,:)
+    do i = 1, nrpts
+      solver%temp_c(:) = solver%z(i,:)
       call sll_s_fft_exec_c2r_1d( solver%bw, solver%temp_c(:), solver%temp_r(:) )
       phi(i,:) = solver%temp_r(:)
     end do
