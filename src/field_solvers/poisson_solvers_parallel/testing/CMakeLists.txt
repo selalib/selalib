@@ -6,7 +6,8 @@ add_executable( test_poisson_2d_polar_par
   test_poisson_2d_polar_par.F90
   m_test_poisson_2d_polar_base.F90
   m_test_poisson_2d_polar_dirichlet.F90
-  m_test_poisson_2d_polar_neumann_mode0.F90 )
+  m_test_poisson_2d_polar_neumann_mode0.F90
+  m_test_poisson_2d_polar_circle_dirichlet.F90 )
 target_link_libraries( test_poisson_2d_polar_par sll_poisson_solvers_parallel )
 
 ADD_MPI_TEST( poisson_2d_polar_par_np1 test_poisson_2d_polar_par 1 " " )
