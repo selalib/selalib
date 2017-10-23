@@ -240,7 +240,7 @@ contains
       SLL_ERROR( this_sub_name, 'Unrecognized boundary condition at r_max' )
     end select
 
-    ! Store global information in solver
+    ! Store information in solver
     solver%rmin  =  rmin
     solver%rmax  =  rmax
     solver%nr    =  nr
@@ -281,7 +281,7 @@ contains
 
     end if
 
-    ! Allocate arrays global in r
+    ! Allocate arrays for solution of linear systems along r
     associate( sh => solver % skip0 )
       allocate( solver%z   (nr+1-sh,0:ntheta/2) )
       allocate( solver%mat((nr-1)*3,0:ntheta/2) ) ! for each k, matrix depends on r
