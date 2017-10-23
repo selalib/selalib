@@ -119,7 +119,8 @@ module sll_m_poisson_2d_polar_par
   use sll_m_boundary_condition_descriptors, only: &
     sll_p_dirichlet, &
     sll_p_neumann, &
-    sll_p_neumann_mode_0
+    sll_p_neumann_mode_0, &
+    sll_p_polar_origin
 
   use sll_m_collective, only: &
     sll_f_get_collective_size, &
@@ -183,8 +184,9 @@ module sll_m_poisson_2d_polar_par
    real   (f64), allocatable :: cts (:)    !< Lapack coefficients
    integer(i32), allocatable :: ipiv(:)    !< Lapack pivot indices
 
-   real(f64) :: bc_coeffs_rmin( 2: 3)
-   real(f64) :: bc_coeffs_rmax(-2:-1)
+   real(f64) :: bc_coeffs_rmin( 2: 3) ! needed for Neumann at r=r_min
+   real(f64) :: bc_coeffs_rmax(-2:-1) ! needed for Neumann at r=r_max
+   integer   :: skip0                 ! needed for full circle
 
    type(sll_t_layout_2d)           , pointer :: layout_r !< layout sequential in r
    type(sll_t_layout_2d)           , pointer :: layout_a !< layout sequential in theta
@@ -192,10 +194,6 @@ module sll_m_poisson_2d_polar_par
    type(sll_t_remap_plan_2d_real64), pointer :: rmp_ar   !< remap theta->r
 
   end type sll_t_poisson_2d_polar_par
-
-  ! Allowed boundary conditions
-  integer(i32), parameter :: bc_opts(3) = &
-    [sll_p_dirichlet, sll_p_neumann, sll_p_neumann_mode_0]
 
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 contains
@@ -231,45 +229,63 @@ contains
     real(f64) :: inv_r
     real(f64) :: d1_coeffs(3)
     real(f64) :: d2_coeffs(3)
-    real(f64), allocatable, target  :: rgrid_uniform(:)
-    real(f64)             , pointer :: r_nodes(:)
+    real(f64), allocatable :: r_nodes(:)
 
-    integer(i32)  :: loc_sz_r(2) ! sequential in r direction
-    integer(i32)  :: loc_sz_a(2) ! sequential in theta direction
     integer(i32)  :: i, j, k
     integer(i32)  :: bck(2)
     integer(i32)  :: last
+    integer(i32)  :: sh
+
+    integer(i32)  :: loc_sz_r(2) ! sequential in r direction
+    integer(i32)  :: loc_sz_a(2) ! sequential in theta direction
     integer(i32)  :: glob_idx(2)
 
     integer(i32), allocatable :: k_list_glob(:)
 
-    ! Consistency check: boundary conditions must be one of three options
-    if( any( bc_rmin == bc_opts ) ) then
-      solver%bc(1) = bc_rmin
-    else
-      SLL_ERROR( this_sub_name, 'Unrecognized boundary condition at r_min' )
-    end if
-    !
-    if( any( bc_rmax == bc_opts ) ) then
-      solver%bc(2) = bc_rmax
-    else
-      SLL_ERROR( this_sub_name, 'Unrecognized boundary condition at r_max' )
+    ! Consistency checks
+    SLL_ASSERT( rmin >= 0.0_f64 )
+    SLL_ASSERT( rmin < rmax )
+    SLL_ASSERT( nr >= 1 )
+    SLL_ASSERT( ntheta >= 1 )
+
+    if (bc_rmin == sll_p_polar_origin .and. rmin /= 0.0_f64) then
+      SLL_ERROR( this_sub_name, "BC option 'sll_p_polar_origin' requires r_min = 0" )
     end if
 
+    ! Set boundary condition at r_min
+    select case( bc_rmin )
+    case( sll_p_dirichlet, sll_p_neumann, sll_p_neumann_mode_0, sll_p_polar_origin )
+      solver%bc(1) = bc_rmin
+    case default
+      SLL_ERROR( this_sub_name, 'Unrecognized boundary condition at r_min' )
+    end select
+
+    ! Set boundary condition at r_max
+    select case( bc_rmax )
+    case( sll_p_dirichlet, sll_p_neumann, sll_p_neumann_mode_0 )
+      solver%bc(2) = bc_rmax
+    case default
+      SLL_ERROR( this_sub_name, 'Unrecognized boundary condition at r_max' )
+    end select
+
+    ! Important: if full circle is simulated, center point is not solved for!
+    !            Therefore, solution is calculated on nr+1-skip0 points.
+    sh = merge( 1, 0, bc_rmin==sll_p_polar_origin )
+
     ! Consistency check: global size of 2D layouts must be (nr+1,ntheta)
-    SLL_ASSERT( sll_o_get_layout_global_size_i( layout_r ) == nr+1   )
-    SLL_ASSERT( sll_o_get_layout_global_size_j( layout_r ) == ntheta )
+    SLL_ASSERT( sll_o_get_layout_global_size_i( layout_r ) == nr+1-sh )
+    SLL_ASSERT( sll_o_get_layout_global_size_j( layout_r ) == ntheta  )
     !
-    SLL_ASSERT( sll_o_get_layout_global_size_i( layout_a ) == nr+1   )
-    SLL_ASSERT( sll_o_get_layout_global_size_j( layout_a ) == ntheta )
+    SLL_ASSERT( sll_o_get_layout_global_size_i( layout_a ) == nr+1-sh )
+    SLL_ASSERT( sll_o_get_layout_global_size_j( layout_a ) == ntheta  )
 
     ! Compute local size of 2D arrays in the two layouts
     call sll_o_compute_local_sizes( layout_r, loc_sz_r(1), loc_sz_r(2) )
     call sll_o_compute_local_sizes( layout_a, loc_sz_a(1), loc_sz_a(2) )
 
     ! Consistency check: layout_r sequential in r, layout_a sequential in theta
-    SLL_ASSERT( loc_sz_r(1) == nr+1   )
-    SLL_ASSERT( loc_sz_a(2) == ntheta )
+    SLL_ASSERT( loc_sz_r(1) == nr+1-sh )
+    SLL_ASSERT( loc_sz_a(2) == ntheta  )
 
     ! Store global information in solver
     solver%rmin     =  rmin
@@ -278,21 +294,41 @@ contains
     solver%ntheta   =  ntheta
     solver%layout_a => layout_a
     solver%layout_r => layout_r
+    solver%skip0    =  sh
 
     ! r grid (possibly non-uniform)
-    if (present( rgrid )) then
-      SLL_ASSERT( size(rgrid) == nr+1 )
-      SLL_ASSERT( rgrid(   1) == rmin )
-      SLL_ASSERT( rgrid(nr+1) == rmax )
-      r_nodes => rgrid
-    else
-      allocate( rgrid_uniform(nr+1) )
-      call sll_s_new_array_linspace( rgrid_uniform, rmin, rmax, endpoint=.true. )
-      r_nodes => rgrid_uniform
+    allocate( r_nodes(nr+1) )
+
+    if (present( rgrid )) then  !--> Create computational grid from user data
+
+      SLL_ASSERT( all( rgrid > 0.0_f64 ) )
+      if (bc_rmin == sll_p_polar_origin) then
+        SLL_ASSERT( size(rgrid) == nr   )
+        SLL_ASSERT( rgrid(nr  ) == rmax )
+        r_nodes(1 ) = -rgrid(1)
+        r_nodes(2:) =  rgrid(:)
+      else
+        SLL_ASSERT( size(rgrid) == nr+1 )
+        SLL_ASSERT( rgrid(   1) == rmin )
+        SLL_ASSERT( rgrid(nr+1) == rmax )
+        r_nodes(:) = rgrid(:)
+      end if
+
+    else  !-------------------------> Create uniform grid
+
+      if (bc_rmin == sll_p_polar_origin) then
+        associate( rmin => rmax / real(2*nr+1,f64) )
+          r_nodes(1) = -rmin
+          call sll_s_new_array_linspace( r_nodes(2:), rmin, rmax, endpoint=.true. )
+        end associate
+      else
+        call sll_s_new_array_linspace( r_nodes, rmin, rmax, endpoint=.true. )
+      end if
+
     end if
 
     ! Allocate arrays global in r
-    allocate( solver%z_r (nr+1,   loc_sz_r(2)) )
+    allocate( solver%z_r (nr+1+sh,loc_sz_r(2)) )
     allocate( solver%mat((nr-1)*3,loc_sz_r(2)) ) ! for each k, matrix depends on r
     allocate( solver%cts((nr-1)*7) )
     allocate( solver%ipiv(nr-1) )
@@ -388,6 +424,12 @@ contains
         solver%mat(2,j) = solver%mat(2,j) + solver%bc_coeffs_rmin(2) * solver%mat(1,j)
         solver%mat(1,j) = 0.0_f64
 
+      else if (bck(1) == sll_p_polar_origin) then ! center of circular domain
+
+        ! Gaussian elimination: phi(1) = (-1)^k phi(2)
+        solver%mat(2,j) = solver%mat(2,j) + (-1)**k * solver%mat(1,j)
+        solver%mat(1,j) = 0.0_f64
+
       end if
 
       !----------------------------------------------
@@ -426,10 +468,17 @@ contains
 
     integer(i32) :: nr, ntheta, bck(2)
     integer(i32) :: i, j, k
-    integer(i32) :: last
+    integer(i32) :: nrpts
+    integer(i32) :: sh
 
     nr     = solver%nr
     ntheta = solver%ntheta
+
+    ! Shift in radial grid indexing
+    sh = solver%skip0 ! =1 if bc_rmin==sll_p_polar_origin, =0 otherwise
+
+    ! Number of points in radial grid
+    nrpts = nr+1-sh
 
     ! Consistency check: rho and phi must be given in layout sequential in theta
     call verify_argument_sizes_par( solver%layout_a, rho, 'rho' )
@@ -459,8 +508,7 @@ contains
 
         ! Solve tridiagonal system to obtain \hat{phi}_{k_j}(r) at internal points
         call sll_s_setup_cyclic_tridiag( solver%mat(:,j), nr-1, solver%cts, solver%ipiv )
-        call sll_o_solve_cyclic_tridiag( solver%cts, solver%ipiv, rhok(2:nr), &
-          nr-1, phik(2:nr) )
+        call sll_o_solve_cyclic_tridiag( solver%cts, solver%ipiv, rhok(2-sh:nrpts-1), nr-1, phik(2-sh:nrpts-1) )
 
         ! Get value of k_j from precomputed list of local values
         k = solver%k_list(j)
@@ -487,12 +535,11 @@ contains
         end if
 
         ! Boundary condition at rmax
-        last = nr+1
         if (bck(2) == sll_p_dirichlet) then ! Dirichlet
-          phik(last) = 0.0_f64
+          phik(nrpts) = 0.0_f64
         else if (bck(2) == sll_p_neumann) then ! Neumann
           associate( c => solver % bc_coeffs_rmax )
-            phik(last) = c(-2)*phik(last-2) + c(-1)*phik(last-1)
+            phik(nrpts) = c(-2)*phik(nrpts-2) + c(-1)*phik(nrpts-1)
           end associate
         endif
 

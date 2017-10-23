@@ -159,7 +159,8 @@ program test_poisson_2d_polar
   write(*,"(a)")  "BC at r_min: polar origin (i.e., full circle is simulated)"
   write(*,"(a)")  "BC at r_max: homogeneous Dirichlet"
   write(*,"(a)")  "Radial grid: "// trim( rgrid_opt )
-  write(*,"(a)")  "phi(r,theta) = TBD"
+  write(*,"(a)")  "phi(r,theta) = a (1-(r/rmax)^2) &
+       &+ b 4(r/rmax)(1-r/rmax)cos(k(theta-theta_0))"
   write(*,"(a)")  "-----------------------------------------------------------&
        &--------------------"
   write(*,"(a,e11.3)") "Relative L_inf norm of error = ", error_norm
@@ -207,8 +208,6 @@ contains
     ! Extract domain limits and boundary conditions
     rlim(:) = test_case%get_rlim()
     bcs (:) = test_case%get_bcs ()
-
-    write(*,*) "bcs = ", bcs
 
     ! Computational grid in theta
     dth = sll_p_twopi / nth
