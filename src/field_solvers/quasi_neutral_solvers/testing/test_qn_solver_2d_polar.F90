@@ -117,7 +117,6 @@ program test_qn_solver_2d_polar
   ! TEST #3: Full circle (rmin=0), Dirichlet at rmax, solver should be exact
   !=============================================================================
 
-  test_case_circle_dirichlet % adiabatic_electrons = .false.
   test_case => test_case_circle_dirichlet
   nr        = 64
   nth       = 32
