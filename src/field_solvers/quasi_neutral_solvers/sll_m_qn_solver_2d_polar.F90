@@ -398,7 +398,9 @@ contains
 
         ! Determine contribution from zonal flow
         if (present( lambda )) then
-          c = 1.0_f64 / (lambda(i)**2 * solver%g(i))
+          associate( sh => solver%skip0 )
+            c = 1.0_f64 / (lambda(i-sh)**2 * solver%g(i))
+          end associate
           if (present( use_zonal_flow )) then
             if (use_zonal_flow .and. k == 0) then
               c = 0.0_f64
