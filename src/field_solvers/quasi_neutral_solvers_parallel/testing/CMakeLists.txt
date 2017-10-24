@@ -5,7 +5,8 @@ add_executable( test_qn_solver_2d_polar_par
   test_qn_solver_2d_polar_par.F90
   m_test_qn_solver_2d_polar_base.F90
   m_test_qn_solver_2d_polar_dirichlet.F90
-  m_test_qn_solver_2d_polar_neumann_mode0.F90 )
+  m_test_qn_solver_2d_polar_neumann_mode0.F90
+  m_test_qn_solver_2d_polar_circle_dirichlet.F90 )
 
 target_link_libraries( test_qn_solver_2d_polar_par
   sll_quasi_neutral_solvers_parallel )
