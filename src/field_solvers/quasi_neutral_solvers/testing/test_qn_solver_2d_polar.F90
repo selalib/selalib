@@ -261,17 +261,23 @@ contains
     end do
     phi(:,:) = 0.0_f64
 
-    ! Allocate and load 1D radial profiles (needed by solver)
+    ! Equation parameters: allocate and load rho_m0(r) and b_magn(r)
     allocate( rho_m0(nr+1-sh) )
     allocate( b_magn(nr+1-sh) )
-    allocate( lambda(nr+1-sh) )
-    !
     do i = 1, nr+1-sh
       r = rgrid(i)
       rho_m0(i) = test_case%rho_m0( r )
       b_magn(i) = test_case%b_magn( r )
-      lambda(i) = test_case%lambda( r )
     end do
+
+    ! Equation parameters: if required, also allocate and load b_magn(r)
+    if (adiabatic_electrons) then
+      allocate( lambda(nr+1-sh) )
+      do i = 1, nr+1-sh
+        r = rgrid(i)
+        lambda(i) = test_case%lambda( r )
+      end do
+    end if
 
     ! Initialize solver
     call sll_s_qn_solver_2d_polar_init( solver, &
