@@ -8,7 +8,7 @@
 !> This module contains:
 !> - Dirichlet base class with default parameters (all overwritable except for BCs)
 !> - Test-case with parabolic radial profile:
-!>   phi(r,theta) = (r-rmax)(r-rmin)(a + b*cos(k(theta-theta_0))
+!>   phi(r,th) = a * (1-(r/rmax)^2) + b * 4(r/rmax)(1-r/rmax)cos(k(th-th0))
 !>
 !> For a solver employing a 2nd-order scheme in the radial direction r and a
 !> spectral Fourier method in the angular direction theta, the numerical error
@@ -141,10 +141,7 @@ contains
     class(t_test_qn_solver_2d_polar_circle_dirichlet_quadratic), intent(in) :: self
     sll_real64                                          , intent(in) :: r
     sll_real64 :: val
-    associate( rmin => self%rmin, rmax => self%rmax )
-      val = 10.0_f64*(rmax-r)/(rmax-rmin) + 2.0_f64*(r-rmin)/(rmax-rmin)
-      val = 1.0_f64
-    end associate
+    val = 1.0_f64
   end function f_test__rho_m0
 
   !-----------------------------------------------------------------------------
@@ -152,10 +149,7 @@ contains
     class(t_test_qn_solver_2d_polar_circle_dirichlet_quadratic), intent(in) :: self
     sll_real64                                          , intent(in) :: r
     sll_real64 :: val
-    associate( rmin => self%rmin, rmax => self%rmax )
-      val = -8.0_f64/(rmax-rmin)
-      val = 0.0_f64
-    end associate
+    val = 0.0_f64
   end function f_test__rho_m0_diff1_r 
 
   !-----------------------------------------------------------------------------
@@ -179,9 +173,14 @@ contains
     class(t_test_qn_solver_2d_polar_circle_dirichlet_quadratic), intent(in) :: self
     sll_real64                                          , intent(in) :: r
     sll_real64 :: val
-    associate( rmean => 0.5_f64*(self%rmax+self%rmin), &
-               width => 0.1_f64*(self%rmax-self%rmin) )
-      val = 0.01_f64 * (1.0_f64 + exp( -(r-rmean)**2/width**2 ))
+
+    sll_real64 :: temp_e
+    associate( minv   => 0.01_f64, &
+               maxv   => 1.0_f64 , &
+               width  => 0.1_f64*self%rmax, &
+               dens_e => self % rho_m0( r ) )
+      temp_e = minv + (maxv-minv)*exp( -(r/2.0_f64*width)**2 )  ! in [0.01, 1]
+      val    = 0.01_f64 * sqrt( temp_e / dens_e )
     end associate
   end function f_test__lambda
 
