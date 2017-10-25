@@ -40,7 +40,7 @@ module sll_m_bsplines_uniform
 
   ! Inverse of integers for later use (max spline degree = 32)
   integer             :: index
-  real(wp), parameter :: inv(*) = [(1.0_wp/real(index,wp), index=1,32)]
+  real(wp), parameter :: inv(1:32) = [(1.0_wp/real(index,wp), index=1,32)]
 
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 contains
