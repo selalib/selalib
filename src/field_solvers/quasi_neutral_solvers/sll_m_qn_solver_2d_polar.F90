@@ -253,10 +253,10 @@ contains
     integer(i32) :: last
 
     ! Consistency checks
-    SLL_ASSERT( rmin >= 0.0_f64 )
-    SLL_ASSERT( rmin < rmax )
-    SLL_ASSERT( nr >= 1 )
-    SLL_ASSERT( ntheta >= 1 )
+    SLL_ASSERT_ALWAYS( rmin >= 0.0_f64 )
+    SLL_ASSERT_ALWAYS( rmin < rmax )
+    SLL_ASSERT_ALWAYS( nr >= 1 )
+    SLL_ASSERT_ALWAYS( ntheta >= 1 )
 
     if (bc_rmin == sll_p_polar_origin .and. rmin /= 0.0_f64) then
       SLL_ERROR( this_sub_name, "BC option 'sll_p_polar_origin' requires r_min = 0" )
@@ -300,16 +300,16 @@ contains
 
     if (present( rgrid )) then  !--> Create computational grid from user data
 
-      SLL_ASSERT( all( rgrid > 0.0_f64 ) )
+      SLL_ASSERT_ALWAYS( all( rgrid > 0.0_f64 ) )
       if (bc_rmin == sll_p_polar_origin) then
-        SLL_ASSERT( size(rgrid) == nr   )
-        SLL_ASSERT( rgrid(nr  ) == rmax )
+        SLL_ASSERT_ALWAYS( size(rgrid) == nr   )
+        SLL_ASSERT_ALWAYS( rgrid(nr  ) == rmax )
         r_nodes(1 ) = -rgrid(1)
         r_nodes(2:) =  rgrid(:)
       else
-        SLL_ASSERT( size(rgrid) == nr+1 )
-        SLL_ASSERT( rgrid(   1) == rmin )
-        SLL_ASSERT( rgrid(nr+1) == rmax )
+        SLL_ASSERT_ALWAYS( size(rgrid) == nr+1 )
+        SLL_ASSERT_ALWAYS( rgrid(   1) == rmin )
+        SLL_ASSERT_ALWAYS( rgrid(nr+1) == rmax )
         r_nodes(:) = rgrid(:)
       end if
 
@@ -494,8 +494,8 @@ contains
     nrpts = nr+1-sh
 
     ! Consistency check: 'rho' and 'phi' have shape defined at initialization
-    SLL_ASSERT( all( shape(rho) == [nrpts,ntheta] ) )
-    SLL_ASSERT( all( shape(phi) == [nrpts,ntheta] ) )
+    SLL_ASSERT_ALWAYS( all( shape(rho) == [nrpts,ntheta] ) )
+    SLL_ASSERT_ALWAYS( all( shape(phi) == [nrpts,ntheta] ) )
 
     ! For each r_i, compute FFT of rho(r_i,theta) to obtain \hat{rho}(r_i,k)
     do i = 1, nrpts

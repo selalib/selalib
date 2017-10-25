@@ -243,10 +243,10 @@ contains
     integer(i32), allocatable :: k_list_glob(:)
 
     ! Consistency checks
-    SLL_ASSERT( rmin >= 0.0_f64 )
-    SLL_ASSERT( rmin < rmax )
-    SLL_ASSERT( nr >= 1 )
-    SLL_ASSERT( ntheta >= 1 )
+    SLL_ASSERT_ALWAYS( rmin >= 0.0_f64 )
+    SLL_ASSERT_ALWAYS( rmin < rmax )
+    SLL_ASSERT_ALWAYS( nr >= 1 )
+    SLL_ASSERT_ALWAYS( ntheta >= 1 )
 
     if (bc_rmin == sll_p_polar_origin .and. rmin /= 0.0_f64) then
       SLL_ERROR( this_sub_name, "BC option 'sll_p_polar_origin' requires r_min = 0" )
@@ -273,19 +273,19 @@ contains
     sh = merge( 1, 0, bc_rmin==sll_p_polar_origin )
 
     ! Consistency check: global size of 2D layouts must be (nr+1,ntheta)
-    SLL_ASSERT( sll_o_get_layout_global_size_i( layout_r ) == nr+1-sh )
-    SLL_ASSERT( sll_o_get_layout_global_size_j( layout_r ) == ntheta  )
+    SLL_ASSERT_ALWAYS( sll_o_get_layout_global_size_i( layout_r ) == nr+1-sh )
+    SLL_ASSERT_ALWAYS( sll_o_get_layout_global_size_j( layout_r ) == ntheta  )
     !
-    SLL_ASSERT( sll_o_get_layout_global_size_i( layout_a ) == nr+1-sh )
-    SLL_ASSERT( sll_o_get_layout_global_size_j( layout_a ) == ntheta  )
+    SLL_ASSERT_ALWAYS( sll_o_get_layout_global_size_i( layout_a ) == nr+1-sh )
+    SLL_ASSERT_ALWAYS( sll_o_get_layout_global_size_j( layout_a ) == ntheta  )
 
     ! Compute local size of 2D arrays in the two layouts
     call sll_o_compute_local_sizes( layout_r, loc_sz_r(1), loc_sz_r(2) )
     call sll_o_compute_local_sizes( layout_a, loc_sz_a(1), loc_sz_a(2) )
 
     ! Consistency check: layout_r sequential in r, layout_a sequential in theta
-    SLL_ASSERT( loc_sz_r(1) == nr+1-sh )
-    SLL_ASSERT( loc_sz_a(2) == ntheta  )
+    SLL_ASSERT_ALWAYS( loc_sz_r(1) == nr+1-sh )
+    SLL_ASSERT_ALWAYS( loc_sz_a(2) == ntheta  )
 
     ! Store global information in solver
     solver%rmin     =  rmin
@@ -301,16 +301,16 @@ contains
 
     if (present( rgrid )) then  !--> Create computational grid from user data
 
-      SLL_ASSERT( all( rgrid > 0.0_f64 ) )
+      SLL_ASSERT_ALWAYS( all( rgrid > 0.0_f64 ) )
       if (bc_rmin == sll_p_polar_origin) then
-        SLL_ASSERT( size(rgrid) == nr   )
-        SLL_ASSERT( rgrid(nr  ) == rmax )
+        SLL_ASSERT_ALWAYS( size(rgrid) == nr   )
+        SLL_ASSERT_ALWAYS( rgrid(nr  ) == rmax )
         r_nodes(1 ) = -rgrid(1)
         r_nodes(2:) =  rgrid(:)
       else
-        SLL_ASSERT( size(rgrid) == nr+1 )
-        SLL_ASSERT( rgrid(   1) == rmin )
-        SLL_ASSERT( rgrid(nr+1) == rmax )
+        SLL_ASSERT_ALWAYS( size(rgrid) == nr+1 )
+        SLL_ASSERT_ALWAYS( rgrid(   1) == rmin )
+        SLL_ASSERT_ALWAYS( rgrid(nr+1) == rmax )
         r_nodes(:) = rgrid(:)
       end if
 
