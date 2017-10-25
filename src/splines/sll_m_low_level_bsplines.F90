@@ -68,7 +68,7 @@ module sll_m_low_level_bsplines
   integer, parameter :: wp = f64
 
   !> List of allowed boundary conditions
-  integer, parameter :: allowed_bcs(*) = [sll_p_periodic, sll_p_open, sll_p_mirror]
+  integer, parameter :: allowed_bcs(1:3) = [sll_p_periodic, sll_p_open, sll_p_mirror]
 
   !> Information for evaluation of B-splines on non-uniform grid
   type :: sll_t_bsplines
@@ -1071,7 +1071,7 @@ contains
     real(wp) :: a      (0:1            ,0:spline_degree)
 
     ! Inverse of integers for later use (max spline degree = 32)
-    real(wp), parameter :: inv_idx(*) = [(1.0_wp/real(j,wp), j=1,32)]
+    real(wp), parameter :: inv_idx(1:32) = [(1.0_wp/real(j,wp), j=1,32)]
 
     SLL_ASSERT( spline_degree >= 0 )
     SLL_ASSERT( n >= 0 )
