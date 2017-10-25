@@ -225,7 +225,7 @@ program test_spline_2d
   write(*,*)
 
   ! Test tolerance: very small!
-  tol         = 1e-14_wp
+  tol         = 2e-14_wp
   tol_diff_x1 = 2e-13_wp ! larger for derivatives
   tol_diff_x2 = 2e-13_wp ! larger for derivatives
 
