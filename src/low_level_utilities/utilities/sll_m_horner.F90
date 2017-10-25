@@ -1,116 +1,117 @@
-!>  @brief
+!> @brief
 !> module for evaluation of a polynomial
 !> in pp form using Horner's algorithm
 !
-!> @authors:
-!>  Celine Caldini-Queiros  - celine.caldini@gmail.com
+!> @authors  Cèline Caldini-Queiros
+!> @authors  Yaman Güçlü, IPP Garching
 !
 module sll_m_horner
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-  
+#include "sll_assert.h"
+
+  use sll_m_working_precision, only: f64
+
   implicit none
 
-  public :: sll_f_horner_1d_eval, &
-       sll_f_horner_2d_eval, &
-       sll_f_horner_3d_eval
+  public :: &
+    sll_f_horner_1d_eval, &
+    sll_f_horner_2d_eval, &
+    sll_f_horner_3d_eval
 
   private
-  
+
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
+  !> Working precision
+  integer, parameter :: wp = f64
+
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 contains
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
-  !.................................................
-  !> @brief     horner algorithm in 1D
-  !> @description evaluation +  derivative of the polynomials
+  !-----------------------------------------------------------------------------
+  !> @brief       Horner's algorithm in 1D
+  !> @description evaluation of a polynomial or its derivative
   !>
-  !> @param[in] coeffs: pp coeffs 
-  !> @param[in] x : point of evaluation
-  !> @param[out] res : results
-  function sll_f_horner_1d_eval(coeffs, x, jderiv) result (res)
-  implicit none
-    real(8), dimension (:), intent (in) :: coeffs
-    real(8), intent (in)  :: x
-    integer, intent (in)  :: jderiv 
-    real(8)                             :: res
-    integer :: i
-    integer :: k
-    real(8) :: fmmjdr 
+  !> @param[in]  coeffs: pp coeffs
+  !> @param[in]  x     : point of evaluation
+  !> @param[in]  deriv : order of derivative
+  !> @param[out] res   : value
+  !-----------------------------------------------------------------------------
+  SLL_PURE function sll_f_horner_1d_eval( coeffs, x, deriv ) result( res )
+    real(wp), intent(in) :: coeffs(:)
+    real(wp), intent(in) :: x
+    integer , intent(in) :: deriv
+    real(wp) :: res
 
-    k = ubound(coeffs,1)
-    fmmjdr = real(k - 1 - jderiv, 8)
-    res = coeffs(k)
+    real(wp) :: fmmjdr
+    integer  :: i1, n1
 
-    do i = 1,k-1-jderiv
-       res = (res / fmmjdr) * x + coeffs (k-i) 
-       fmmjdr = fmmjdr - 1._8
+    n1 = ubound( coeffs, 1 )
+
+    fmmjdr = real( n1-1-deriv, wp )
+    res    = coeffs(n1)
+    do i1 = 1, n1-1-deriv
+       res = (res/fmmjdr) * x + coeffs(n1-i1)
+       fmmjdr = fmmjdr-1.0_wp
     end do
+
   end function sll_f_horner_1d_eval
-  !.................................................
   
-  !.................................................
-  !> @brief     horner algorithm in 2D
+  !-----------------------------------------------------------------------------
+  !> @brief       Horner's algorithm in 2D
+  !> @description evaluation of a polynomial or its (mixed) partial derivative
   !>
-  !> @param[in] coeffs: pp coeffs 
-  !> @param[in] x : point of evaluation (2D)
-  !> @param[out] res : results
-  function sll_f_horner_2d_eval (coeffs, x,jderiv) result (res)
-  implicit none
-    real(8), dimension (:,:), intent (in) :: coeffs
-    real(8), dimension(:), intent (in) :: x
-    integer, dimension(:), intent (in)  :: jderiv 
-    real(8)                            :: res
+  !> @param[in]  coeffs: pp coeffs
+  !> @param[in]  x     : point of evaluation          (2 components)
+  !> @param[in]  deriv : order of partial derivatives (2 components)
+  !> @param[out] res   : value
+  !-----------------------------------------------------------------------------
+  SLL_PURE function sll_f_horner_2d_eval( coeffs, x, deriv ) result( res )
+    real(wp), intent(in) :: coeffs(:,:)
+    real(wp), intent(in) ::      x(:)
+    integer , intent(in) ::  deriv(:)
+    real(wp) :: res
 
-    !local
-    real(8), dimension(ubound(coeffs,2)) :: coeffi
-    integer :: j
-    integer :: k_v
+    real(wp) :: coeffi(ubound(coeffs,2))
+    integer  :: i2, n2
 
-    k_v = ubound(coeffs,2)
-    coeffi(:) = 0.0_8
+    n2 = ubound( coeffs, 2 )
 
-    do j = 1 , k_v
-      coeffi(j) = sll_f_horner_1d_eval(coeffs(:,j),x(1),jderiv(1))
+    do i2 = 1, n2
+      coeffi(i2) = sll_f_horner_1d_eval( coeffs(:,i2), x(1), deriv(1) )
     end do
     
-    res = sll_f_horner_1d_eval(coeffi,x(2),jderiv(2)) 
+    res = sll_f_horner_1d_eval( coeffi, x(2), deriv(2) )
 
   end function sll_f_horner_2d_eval
-  !.................................................
  
-  !...............................................
-  !> @brief     horner algorithm in 3D
+  !-----------------------------------------------------------------------------
+  !> @brief       Horner's algorithm in 3D
+  !> @description evaluation of a polynomial or its (mixed) partial derivative
   !>
-  !> @param[in] coeffs: pp coeffs 
-  !> @param[in] x : point of evaluation (3D)
-  !> @param[out] res : results
-  function sll_f_horner_3d_eval (coeffs, x,jderiv) result (res)
-  implicit none
-    real(8), dimension (:,:,:), intent (in) :: coeffs
-    real(8), dimension(:), intent (in) :: x
-    integer, dimension(:), intent (in)  :: jderiv 
-    real(8):: res
+  !> @param[in]  coeffs: pp coeffs
+  !> @param[in]  x     : point of evaluation          (3 components)
+  !> @param[in]  deriv : order of partial derivatives (3 components)
+  !> @param[out] res   : value
+  !-----------------------------------------------------------------------------
+  SLL_PURE function sll_f_horner_3d_eval( coeffs, x, deriv ) result( res )
+    real(wp), intent(in) :: coeffs(:,:,:)
+    real(wp), intent(in) ::      x(:)
+    integer , intent(in) ::  deriv(:)
+    real(wp) :: res
     
-    !local
-    real(8), dimension(ubound(coeffs,1),ubound(coeffs,1)) :: coeffij
-    real(8), dimension(ubound(coeffs,1)) :: coeffi
-    integer :: i
-    integer :: j 
-    integer :: k_u
-    integer :: k_v
-    integer :: k_z
+    real(wp) :: coeffi(ubound(coeffs,3))
+    integer  :: i3, n3
 
-    k_u = ubound(coeffs,1)
-    k_v = ubound(coeffs,2)
-    k_z = ubound(coeffs,3)
+    n3 = ubound( coeffs, 3 )
 
-    do i = 1 , k_z   
-       coeffi(i) = sll_f_horner_2d_eval(coeffs(:,:,i),x(1:2),jderiv(1:2))
+    do i3 = 1, n3
+       coeffi(i3) = sll_f_horner_2d_eval( coeffs(:,:,i3), x(1:2), deriv(1:2) )
     end do
-    res = sll_f_horner_1d_eval(coeffi,x(3),jderiv(3)) 
 
+    res = sll_f_horner_1d_eval( coeffi, x(3), deriv(3) )
 
   end function sll_f_horner_3d_eval
-  !...............................................
 
 end module sll_m_horner
