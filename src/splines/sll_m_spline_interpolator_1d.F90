@@ -37,7 +37,7 @@ module sll_m_spline_interpolator_1d
 
   !> Allowed boundary conditions
   integer, parameter :: &
-    allowed_bcs(*) = [sll_p_periodic, sll_p_hermite, sll_p_greville]
+    allowed_bcs(1:3) = [sll_p_periodic, sll_p_hermite, sll_p_greville]
 
   !-----------------------------------------------------------------------------
   !> 1D spline interpolator
