@@ -281,7 +281,7 @@ module sll_m_vector_space_base
   !----------------------------------------------------------------------------
   !> @brief     Norm of vector: ||z||
   !> @details   Compute the norm of the vector *z* ('self') that is invoking
-  !>            the function. By default, \c norm(z)=inner(z,z).
+  !>            the function. By default, \c norm(z)=sqrt(inner(z,z)).
   !>            Usage: \code r = z%norm() \endcode
   !>
   !> @param[in] self Vector *z*, caller
@@ -289,9 +289,9 @@ module sll_m_vector_space_base
   !----------------------------------------------------------------------------
   function norm__base( self ) result( res )
     class( sll_c_vector_space_base ), intent( in ) :: self
-    sll_real64                                   :: res
+    sll_real64                                     :: res
 
-    res = self%inner( self )
+    res = sqrt( self%inner( self ) )
 
   end function norm__base
 
