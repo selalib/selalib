@@ -9,7 +9,7 @@ module m_ode_collection
     sll_c_ode_base
 
   use sll_m_vector_space_base, only: &
-    sll_c_vector_space_base
+    sll_c_vector_space
 
   use sll_m_vector_space_real_arrays, only: &
     sll_t_vector_space_real_1d
@@ -43,8 +43,8 @@ contains
   subroutine rhs__harmonic_oscillator( self, t, y, ydot )
     class( harmonic_oscillator )  , intent( inout ) :: self
     sll_real64                    , intent( in    ) :: t
-    class( sll_c_vector_space_base ), intent( in    ) :: y
-    class( sll_c_vector_space_base ), intent( inout ) :: ydot
+    class( sll_c_vector_space ) , intent( in    ) :: y
+    class( sll_c_vector_space ) , intent( inout ) :: ydot
 
     character( len=* ), parameter :: this_sub_name = "rhs__harmonic_oscillator"
     character( len=* ), parameter :: err_msg = &
