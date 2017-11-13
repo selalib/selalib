@@ -271,7 +271,11 @@ contains
     class( sll_vector_space_real ), intent( in ) :: self
     sll_real64                                   :: res
 
-    res = dot_product( self%d, self%d )
+#ifdef __PGI
+    res = sqrt( dot_product( self%d, self%d ) )
+#else
+    res = norm2( self%d )
+#endif
 
   end function norm__real
 
