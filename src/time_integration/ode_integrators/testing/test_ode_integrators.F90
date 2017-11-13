@@ -8,8 +8,8 @@ program test_ode_integrators
     harmonic_oscillator
 
   use sll_m_ode_integrator_base, only: &
-    sll_c_ode_base, &
-    sll_c_ode_integrator_base
+    sll_c_ode, &
+    sll_c_ode_integrator
 
   use sll_m_rk_explicit, only: &
     sll_t_rk1e_fwd_euler, &
@@ -61,9 +61,9 @@ program test_ode_integrators
   sll_real64                                    :: z0(2), z_ex(2)
   sll_real64                                    :: max_err
   type( sll_t_vector_space_real_1d )              :: y   , ynew
-  class( sll_c_ode_base ), allocatable, target    :: ode
-  class( sll_c_ode_base ), pointer                :: p_ode  ! pointer to ODE
-  class( sll_c_ode_integrator_base ), allocatable :: odeint
+  class( sll_c_ode ), allocatable, target    :: ode
+  class( sll_c_ode ), pointer                :: p_ode  ! pointer to ODE
+  class( sll_c_ode_integrator ), allocatable :: odeint
 
   !----------------------------------------------------------------------------
   ! Get input arguments (from command line)
