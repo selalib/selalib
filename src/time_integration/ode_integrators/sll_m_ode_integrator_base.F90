@@ -16,7 +16,7 @@ module sll_m_ode_integrator_base
 #include "sll_working_precision.h"
 
   use sll_m_vector_space_base, only: &
-    sll_c_vector_space_base
+    sll_c_vector_space
 
   implicit none
 
@@ -61,7 +61,7 @@ module sll_m_ode_integrator_base
     class( sll_c_ode_base ), pointer :: ode => null()
 
     !> Storage for intermediate stage computation
-    class( sll_c_vector_space_base ), allocatable :: work(:)
+    class( sll_c_vector_space ), allocatable :: work(:)
 
   contains
     procedure( i_init  ), deferred :: init
@@ -82,11 +82,11 @@ module sll_m_ode_integrator_base
   abstract interface
    subroutine i_rhs( self, t, y, ydot )
     use sll_m_working_precision
-    import sll_c_ode_base, sll_c_vector_space_base
+    import sll_c_ode_base, sll_c_vector_space
     class( sll_c_ode_base )         , intent( inout ) :: self
     sll_real64                    , intent( in    ) :: t
-    class( sll_c_vector_space_base ), intent( in    ) :: y
-    class( sll_c_vector_space_base ), intent( inout ) :: ydot
+    class( sll_c_vector_space ), intent( in    ) :: y
+    class( sll_c_vector_space ), intent( inout ) :: ydot
    end subroutine i_rhs
   end interface
 
@@ -107,11 +107,11 @@ module sll_m_ode_integrator_base
   abstract interface
    subroutine i_init( self, ode, t0, y0 )
     use sll_m_working_precision
-    import sll_c_ode_integrator_base, sll_c_ode_base, sll_c_vector_space_base
+    import sll_c_ode_integrator_base, sll_c_ode_base, sll_c_vector_space
     class( sll_c_ode_integrator_base ), intent(   out ) :: self
     class( sll_c_ode_base ), pointer  , intent( in    ) :: ode
     sll_real64                      , intent( in    ) :: t0
-    class( sll_c_vector_space_base )  , intent( inout ) :: y0
+    class( sll_c_vector_space )       , intent( inout ) :: y0
    end subroutine i_init
   end interface
 
@@ -128,12 +128,12 @@ module sll_m_ode_integrator_base
   abstract interface
    subroutine i_step( self, t, y, h, ynew )
     use sll_m_working_precision
-    import sll_c_ode_integrator_base, sll_c_ode_base, sll_c_vector_space_base
+    import sll_c_ode_integrator_base, sll_c_ode_base, sll_c_vector_space
     class( sll_c_ode_integrator_base ), intent( inout ) :: self
     sll_real64                      , intent( in    ) :: t
-    class( sll_c_vector_space_base )  , intent( in    ) :: y
+    class( sll_c_vector_space )       , intent( in    ) :: y
     sll_real64                      , intent( in    ) :: h
-    class( sll_c_vector_space_base )  , intent( inout ) :: ynew
+    class( sll_c_vector_space )       , intent( inout ) :: ynew
    end subroutine i_step
   end interface
 
