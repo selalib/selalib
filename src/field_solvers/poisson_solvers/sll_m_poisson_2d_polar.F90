@@ -42,11 +42,26 @@
 !> \f$ \phi(r,\theta) \f$ is \f$ 2\pi\f$-periodic along \f$ \theta \f$ and the
 !> BCs along \f$ r \f$ can be chosen among the following types
 !> (\f$ \overline{r} = r_\textrm{min} \f$ or \f$ \overline{r} = r_\textrm{max} \f$):
-!> - Homogeneous Dirichlet: \f$ \phi(\overline{r},\theta)=0\f$;
-!> - Homogeneous Neumann: \f$ \partial_r\phi(\overline{r},\theta)=0\f$;
-!> - Homogeneous Neumann mode 0:
-!>   \f$ \partial_r\widehat{\phi}_0(\overline{r})=0\f$ and
-!>   \f$ \widehat{\phi}_k(\overline{r})=0 \f$ for \f$ k\neq 0 \f$.
+!>  <table>
+!>  <tr><th> \c Option name <th> Description <th> Condition on solution <th> Condition on Fourier modes
+!>  <tr><td> \c sll_p_dirichlet <td> Homogeneous Dirichlet
+!>      <td> \f$ \phi(\overline{r},\theta)\equiv 0\f$
+!>      <td> \f$ \widehat{\phi}_k(\overline{r})= 0\quad \forall k \f$
+!>  <tr><td> \c sll_p_neumann <td> Homogeneous Neumann
+!>      <td> \f$ \partial_r\phi(\overline{r},\theta)\equiv 0\f$
+!>      <td> \f$ \partial_r\widehat{\phi}_k(\overline{r})=0\quad \forall k \f$
+!>  <tr><td> \c sll_p_neumann_mode_0 <td> Homogeneous Neumann mode 0
+!>      <td> \f$ \partial_\theta\phi(\overline{r},\theta)\equiv 0 \f$ and
+!>           \f$ \int_0^{2\pi} \partial_r\phi(\overline{r},\theta) d\theta = 0 \f$
+!>      <td> \f$ \partial_r\widehat{\phi}_0(\overline{r})=0 \f$ and
+!>           \f$ \widehat{\phi}_k(\overline{r})=0 \f$ for \f$ k\neq 0 \f$
+!>  <tr><td> \c sll_p_polar_origin   <td> \f$ \overline{r}=r_\textrm{min}=0 \f$ is center of circular disk
+!>           <td> \f$ \phi(-\Delta r/2,\theta) \equiv \phi(\Delta r/2,\theta+\pi) \f$
+!>           <td> \f$ \widehat{\phi}_k(-\Delta r/2) = (-1)^k \widehat{\phi}_k(\Delta r/2)\quad \forall k \f$
+!>  </table>
+!>
+!> Please note that the option \c sll_p_polar_origin can only be used at
+!> \f$ \overline{r} = r_\textrm{min} \f$ when one sets \f$ r_\textrm{min} = 0 \f$.
 !>
 !> #### Numerical methods ####
 !>
@@ -75,6 +90,46 @@
 !> \f$ \widehat{\phi}_0, \dots, \widehat{\phi}_{N_\theta/2} \f$. For this purpose,
 !> the \c r2c and \c c2r interfaces of FFTW are used for the forward and backward
 !> FFTs, respectively.
+!>
+!> If the user does not provide a radial grid, a collocation grid with uniform
+!> spacing \f$ \Delta r \f$ is calculated from the input parameters
+!> \f$ r_\textrm{min} \f$, \f$ r_\textrm{max} \f$ and \f$N_r\f$
+!> (number of radial cells).
+!> In the case of a circular annulus (\f$ r_\textrm{min} > 0\f$),
+!> the collocation grid has \f$ N_r+1 \f$ points, with first point
+!> \f$ r_1 = r_\textrm{min} \f$ and last point \f$ r_{N_r+1} = r_\textrm{max} \f$.
+!> In the case of a circular disc (\f$ r_\textrm{min} = 0 \f$),
+!> the collocation grid has only \f$ N_r \f$ points, with first point
+!> \f$ r_1 = \Delta r/2 \f$ and last point \f$ r_{N_r} = r_\textrm{max} \f$.
+!>
+!> For a given mode \f$k\f$, at each interior point in the collocation grid
+!> (\f$ r_i \neq r_\textrm{min}, r_\textrm{max} \f$) the equation above
+!> is approximated using 2nd-order finite-differences, valid on general non-uniform grids:
+!>
+!> \f[
+!> \frac{\partial}{\partial r} \widehat\phi_k(r_i) =
+!> \frac{1}{h_i^+ + h_i^-} \left[
+!>  -\frac{h_i^+}{h_i^-}\, \widehat{\phi}_k(r_{i-1})
+!>  +\left( \frac{h_i^+}{h_i^-} - \frac{h_i^-}{h_i^+} \right)\, \widehat{\phi}_k(r_i)
+!>  +\frac{h_i^-}{h_i^+}\, \widehat{\phi}_k(r_{i+1})
+!> \right]
+!>  \,+\, \left[ -\frac{\partial^3}{\partial r^3} \widehat\phi_k(r_i) \frac{h_i^+ h_i^-}{6} \right]
+!>  \,+\, \left[ \textit{H.O.T.} \right],
+!> \f]
+!>
+!> \f[
+!> \frac{\partial^2}{\partial r^2} \widehat\phi_k(r_i) =
+!> \frac{1}{h_i^+ h_i^-} \left[
+!>   \frac{2h_i^+}{h_i^++h_i^-}\, \widehat{\phi}_k(r_{i-1})
+!>                             -2 \widehat{\phi}_k(r_i)
+!>  +\frac{2h_i^-}{h_i^++h_i^-}\, \widehat{\phi}_k(r_{i+1})
+!> \right]
+!>  \,+\, \left[ -\frac{\partial^3}{\partial r^3} \widehat\phi_k(r_i) \frac{h_i^+ - h_i^-}{3}
+!>  \,           -\frac{\partial^4}{\partial r^4} \widehat\phi_k(r_i) \frac{(h_i^+)^2 - h_i^+ h_i^- +(h_i^-)^2}{12} \right]
+!>  \,+\, \left[ \textit{H.O.T.} \right],
+!> \f]
+!>
+!> where \f$ h_i^{+}=r_{i+1}-r_i \f$ and \f$ h_i^{-}=r_{i}-r_{i-1} \f$.
 !>
 !> #### Usage example ####
 !>
