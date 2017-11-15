@@ -15,7 +15,7 @@
 !> expected on this test-case is zero (machine precision), if k (Fourier mode)
 !> is <= ntheta/2.
 
-module m_test_qn_solver_2d_polar_neumann_mode0
+module m_test_qn_solver_2d_polar_annulus_neumann_mode0
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_working_precision.h"
 
@@ -29,7 +29,7 @@ module m_test_qn_solver_2d_polar_neumann_mode0
   implicit none
 
   public :: &
-    t_test_qn_solver_2d_polar_neumann_mode0_quadratic
+    t_test_qn_solver_2d_polar_annulus_neumann_mode0_quadratic
 
   private
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -67,7 +67,7 @@ module m_test_qn_solver_2d_polar_neumann_mode0
   ! Test-case with expected zero numerical error (parabolic radial profile)
   ! \phi(r,th) = a(r-rmax)(r-2rmin+rmax) + b(r-rmax)(r-rmin)cos(k(th-th0))
   !-----------------------------------------------------------------------------
-  type, extends(c_test_neumann_mode0) :: t_test_qn_solver_2d_polar_neumann_mode0_quadratic
+  type, extends(c_test_neumann_mode0) :: t_test_qn_solver_2d_polar_annulus_neumann_mode0_quadratic
 
   contains
     ! 1D input profiles
@@ -83,7 +83,7 @@ module m_test_qn_solver_2d_polar_neumann_mode0
     procedure :: phi_ex_diff2_r  => f_test__phi_ex_diff2_r
     procedure :: phi_ex_diff2_th => f_test__phi_ex_diff2_th
 
-  end type t_test_qn_solver_2d_polar_neumann_mode0_quadratic
+  end type t_test_qn_solver_2d_polar_annulus_neumann_mode0_quadratic
 
 !<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 contains
@@ -136,7 +136,7 @@ contains
   !-----------------------------------------------------------------------------
 
   pure function f_test__rho_m0( self, r ) result( val )
-    class(t_test_qn_solver_2d_polar_neumann_mode0_quadratic), intent(in) :: self
+    class(t_test_qn_solver_2d_polar_annulus_neumann_mode0_quadratic), intent(in) :: self
     sll_real64, intent(in) :: r
     sll_real64 :: val
 
@@ -148,8 +148,8 @@ contains
 
   !-----------------------------------------------------------------------------
   pure function f_test__rho_m0_diff1_r( self, r ) result( val )
-    class(t_test_qn_solver_2d_polar_neumann_mode0_quadratic), intent(in) :: self
-    sll_real64                                              , intent(in) :: r
+    class(t_test_qn_solver_2d_polar_annulus_neumann_mode0_quadratic), intent(in) :: self
+    sll_real64                                                      , intent(in) :: r
     sll_real64 :: val
 
     associate( rmin => self%rmin, rmax => self%rmax )
@@ -160,8 +160,8 @@ contains
 
   !-----------------------------------------------------------------------------
   pure function f_test__b_magn( self, r ) result( val )
-    class(t_test_qn_solver_2d_polar_neumann_mode0_quadratic), intent(in) :: self
-    sll_real64                                              , intent(in) :: r
+    class(t_test_qn_solver_2d_polar_annulus_neumann_mode0_quadratic), intent(in) :: self
+    sll_real64                                                      , intent(in) :: r
     sll_real64 :: val
 
     val = 1.0_f64
@@ -170,8 +170,8 @@ contains
 
   !-----------------------------------------------------------------------------
   pure function f_test__b_magn_diff1_r( self, r ) result( val )
-    class(t_test_qn_solver_2d_polar_neumann_mode0_quadratic), intent(in) :: self
-    sll_real64                                              , intent(in) :: r
+    class(t_test_qn_solver_2d_polar_annulus_neumann_mode0_quadratic), intent(in) :: self
+    sll_real64                                                      , intent(in) :: r
     sll_real64 :: val
 
     val = 0.0_f64
@@ -180,8 +180,8 @@ contains
 
   !-----------------------------------------------------------------------------
   pure function f_test__lambda( self, r ) result( val )
-    class(t_test_qn_solver_2d_polar_neumann_mode0_quadratic), intent(in) :: self
-    sll_real64                                              , intent(in) :: r
+    class(t_test_qn_solver_2d_polar_annulus_neumann_mode0_quadratic), intent(in) :: self
+    sll_real64                                                      , intent(in) :: r
     sll_real64 :: val
 
     associate( rmean => 0.5_f64*(self%rmax+self%rmin), &
@@ -196,9 +196,9 @@ contains
   !-----------------------------------------------------------------------------
 
   pure function f_test__phi_ex( self, r, th ) result( val )
-    class(t_test_qn_solver_2d_polar_neumann_mode0_quadratic), intent(in) :: self
-    sll_real64                                              , intent(in) :: r
-    sll_real64                                              , intent(in) :: th
+    class(t_test_qn_solver_2d_polar_annulus_neumann_mode0_quadratic), intent(in) :: self
+    sll_real64                                                      , intent(in) :: r
+    sll_real64                                                      , intent(in) :: th
     sll_real64 :: val
 
     val = self%a*(r-self%rmax)*(r-2.0_f64*self%rmin+self%rmax) &
@@ -208,9 +208,9 @@ contains
 
   !-----------------------------------------------------------------------------
   pure function f_test__phi_ex_avg_th( self, r, th ) result( val )
-    class(t_test_qn_solver_2d_polar_neumann_mode0_quadratic), intent(in) :: self
-    sll_real64                                              , intent(in) :: r
-    sll_real64                                              , intent(in) :: th
+    class(t_test_qn_solver_2d_polar_annulus_neumann_mode0_quadratic), intent(in) :: self
+    sll_real64                                                      , intent(in) :: r
+    sll_real64                                                      , intent(in) :: th
     sll_real64 :: val
 
     if (self%k == 0) then
@@ -224,9 +224,9 @@ contains
 
   !-----------------------------------------------------------------------------
   pure function f_test__phi_ex_diff1_r( self, r, th ) result( val )
-    class(t_test_qn_solver_2d_polar_neumann_mode0_quadratic), intent(in) :: self
-    sll_real64                                              , intent(in) :: r
-    sll_real64                                              , intent(in) :: th
+    class(t_test_qn_solver_2d_polar_annulus_neumann_mode0_quadratic), intent(in) :: self
+    sll_real64                                                      , intent(in) :: r
+    sll_real64                                                      , intent(in) :: th
     sll_real64 :: val
 
     val = self%a*2.0_f64*(r-self%rmin) &
@@ -236,9 +236,9 @@ contains
 
   !-----------------------------------------------------------------------------
   pure function f_test__phi_ex_diff2_r( self, r, th ) result( val )
-    class(t_test_qn_solver_2d_polar_neumann_mode0_quadratic), intent(in) :: self
-    sll_real64                                              , intent(in) :: r
-    sll_real64                                              , intent(in) :: th
+    class(t_test_qn_solver_2d_polar_annulus_neumann_mode0_quadratic), intent(in) :: self
+    sll_real64                                                      , intent(in) :: r
+    sll_real64                                                      , intent(in) :: th
     sll_real64 :: val
 
     val = self%a*2.0_f64 + self%b*2.0_f64*cos( self%k*(th-self%th0) )
@@ -247,13 +247,13 @@ contains
 
   !-----------------------------------------------------------------------------
   pure function f_test__phi_ex_diff2_th( self, r, th ) result( val )
-    class(t_test_qn_solver_2d_polar_neumann_mode0_quadratic), intent(in) :: self
-    sll_real64                                              , intent(in) :: r
-    sll_real64                                              , intent(in) :: th
+    class(t_test_qn_solver_2d_polar_annulus_neumann_mode0_quadratic), intent(in) :: self
+    sll_real64                                                      , intent(in) :: r
+    sll_real64                                                      , intent(in) :: th
     sll_real64 :: val
 
     val = -self%b*(r-self%rmax)*(r-self%rmin)*self%k**2*cos( self%k*(th-self%th0) )
 
   end function f_test__phi_ex_diff2_th
 
-end module m_test_qn_solver_2d_polar_neumann_mode0
+end module m_test_qn_solver_2d_polar_annulus_neumann_mode0

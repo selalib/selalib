@@ -36,15 +36,15 @@ program test_poisson_2d_polar_par
   use m_test_poisson_2d_polar_base, only: &
     c_test_poisson_2d_polar_base
 
-  use m_test_poisson_2d_polar_dirichlet, only: &
-    t_test_poisson_2d_polar_dirichlet_quadratic, &
-    t_test_poisson_2d_polar_dirichlet_cubic
+  use m_test_poisson_2d_polar_annulus_dirichlet, only: &
+    t_test_poisson_2d_polar_annulus_dirichlet_quadratic, &
+    t_test_poisson_2d_polar_annulus_dirichlet_cubic
 
-  use m_test_poisson_2d_polar_neumann_mode0, only: &
-    t_test_poisson_2d_polar_neumann_mode0_quadratic
+  use m_test_poisson_2d_polar_annulus_neumann_mode0, only: &
+    t_test_poisson_2d_polar_annulus_neumann_mode0_quadratic
 
-  use m_test_poisson_2d_polar_circle_dirichlet, only: &
-    t_test_poisson_2d_polar_circle_dirichlet_quadratic
+  use m_test_poisson_2d_polar_disk_dirichlet, only: &
+    t_test_poisson_2d_polar_disk_dirichlet_quadratic
 
   use sll_mpi, only: &
     mpi_max
@@ -68,12 +68,12 @@ program test_poisson_2d_polar_par
   implicit none
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
-  class(c_test_poisson_2d_polar_base)                   , pointer :: test_case
-  type (t_test_poisson_2d_polar_dirichlet_quadratic)    , target  :: test_case_dirichlet_zero_error
-  type (t_test_poisson_2d_polar_dirichlet_cubic)        , target  :: test_case_dirichlet
-  type (t_test_poisson_2d_polar_neumann_mode0_quadratic), target  :: test_case_neumann_mode0_zero_error
+  class(c_test_poisson_2d_polar_base)                           , pointer :: test_case
+  type (t_test_poisson_2d_polar_annulus_dirichlet_quadratic)    , target  :: test_case_dirichlet_zero_error
+  type (t_test_poisson_2d_polar_annulus_dirichlet_cubic    )    , target  :: test_case_dirichlet
+  type (t_test_poisson_2d_polar_annulus_neumann_mode0_quadratic), target  :: test_case_neumann_mode0_zero_error
 
-  type (t_test_poisson_2d_polar_circle_dirichlet_quadratic), target  :: test_case_circle_dirichlet
+  type (t_test_poisson_2d_polar_disk_dirichlet_quadratic), target  :: test_case_circle_dirichlet
 
   type(sll_t_collective_t), pointer :: comm
   sll_int32  :: my_rank
