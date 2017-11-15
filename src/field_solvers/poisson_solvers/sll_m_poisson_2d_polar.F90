@@ -104,7 +104,9 @@
 !>
 !> For a given mode \f$k\f$, at each interior point in the collocation grid
 !> (\f$ r_i \neq r_\textrm{min}, r_\textrm{max} \f$) the equation above
-!> is approximated using 2nd-order finite-differences, valid on general non-uniform grids:
+!> is approximated using centered finite-differences on a 3-point stencil,
+!> valid on a general non-uniform grid with
+!> \f$ h_i^{+}=r_{i+1}-r_i \f$ and \f$ h_i^{-}=r_{i}-r_{i-1} \f$:
 !>
 !> \f[
 !> \frac{\partial}{\partial r} \widehat\phi_k(r_i) =
@@ -113,8 +115,8 @@
 !>  +\left( \frac{h_i^+}{h_i^-} - \frac{h_i^-}{h_i^+} \right)\, \widehat{\phi}_k(r_i)
 !>  +\frac{h_i^-}{h_i^+}\, \widehat{\phi}_k(r_{i+1})
 !> \right]
-!>  \,+\, \left[ -\frac{\partial^3}{\partial r^3} \widehat\phi_k(r_i) \frac{h_i^+ h_i^-}{6} \right]
-!>  \,+\, \left[ \textit{H.O.T.} \right],
+!>  \,+\, \left\{ -\frac{\partial^3}{\partial r^3} \widehat\phi_k(r_i) \frac{h_i^+ h_i^-}{6} \right\}
+!>  \,+\, \textit{H.O.T.},
 !> \f]
 !>
 !> \f[
@@ -124,12 +126,35 @@
 !>                             -2 \widehat{\phi}_k(r_i)
 !>  +\frac{2h_i^-}{h_i^++h_i^-}\, \widehat{\phi}_k(r_{i+1})
 !> \right]
-!>  \,+\, \left[ -\frac{\partial^3}{\partial r^3} \widehat\phi_k(r_i) \frac{h_i^+ - h_i^-}{3}
-!>  \,           -\frac{\partial^4}{\partial r^4} \widehat\phi_k(r_i) \frac{(h_i^+)^2 - h_i^+ h_i^- +(h_i^-)^2}{12} \right]
-!>  \,+\, \left[ \textit{H.O.T.} \right],
+!>  \,+\, \left\{ -\frac{\partial^3}{\partial r^3} \widehat\phi_k(r_i) \frac{h_i^+ - h_i^-}{3}
+!>  \,            -\frac{\partial^4}{\partial r^4} \widehat\phi_k(r_i) \frac{(h_i^+)^2 - h_i^+ h_i^- +(h_i^-)^2}{12} \right\}
+!>  \,+\, \textit{H.O.T.}.
 !> \f]
 !>
-!> where \f$ h_i^{+}=r_{i+1}-r_i \f$ and \f$ h_i^{-}=r_{i}-r_{i-1} \f$.
+!> On the right-hand side of each equation, the first term is the
+!> finite-difference approximation used in the code,
+!> the terms in curly braces represent the leading truncation error,
+!> and \f$ \textit{H.O.T} \f$ means "higher order terms".
+!> The coefficients that multiply \f$\widehat{\phi}_k(r_{i-1})\f$, \f$\widehat{\phi}_k(r_i)\f$
+!> and \f$\widehat{\phi}_k(r_{i+1})\f$ are the so-called "finite-difference coefficients".
+!> Although both formulas are exact for a parabolic profile, for a general profile
+!> the finite-difference approximation to the second derivative is only 1st-order
+!> accurate when \f$ h_i^+ \neq h_i^- \f$.
+!> In the future the finite-difference coefficients for the second derivative
+!> can be modified to cancel the 1st-order error term: the Fourier-transformed
+!> Poisson equation is differentiated to obtain an expression for
+!> \f$ \partial^3\widehat{\phi}_k / \partial r^3 \f$ that involves only
+!> 1st and 2nd derivatives,
+!>
+!> \f[
+!>                     \frac{\partial^3\widehat\phi_k}{\partial r^3} =
+!>  -\frac{1}{r}       \frac{\partial^2\widehat\phi_k}{\partial r^2}
+!>  +\frac{1+k^2}{r^2} \frac{\partial  \widehat\phi_k}{\partial r  }
+!>  -\frac{2 k^2}{r^3}      {          \widehat\phi_k}
+!>  -                  \frac{\partial  \widehat\rho_k}{\partial r  },
+!> \f]
+!>
+!> which are then approximated with the same finite-difference formulas.
 !>
 !> #### Usage example ####
 !>
