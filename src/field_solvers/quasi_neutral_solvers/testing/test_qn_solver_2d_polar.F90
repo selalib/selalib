@@ -33,23 +33,22 @@ program test_qn_solver_2d_polar
   use m_test_qn_solver_2d_polar_base, only: &
     c_test_qn_solver_2d_polar_base
 
-  use m_test_qn_solver_2d_polar_dirichlet, only: &
-    t_test_qn_solver_2d_polar_dirichlet_quadratic
+  use m_test_qn_solver_2d_polar_annulus_dirichlet, only: &
+    t_test_qn_solver_2d_polar_annulus_dirichlet_quadratic
 
-  use m_test_qn_solver_2d_polar_neumann_mode0, only: &
-    t_test_qn_solver_2d_polar_neumann_mode0_quadratic
+  use m_test_qn_solver_2d_polar_annulus_neumann_mode0, only: &
+    t_test_qn_solver_2d_polar_annulus_neumann_mode0_quadratic
 
-  use m_test_qn_solver_2d_polar_circle_dirichlet, only: &
-    t_test_qn_solver_2d_polar_circle_dirichlet_quadratic
+  use m_test_qn_solver_2d_polar_disk_dirichlet, only: &
+    t_test_qn_solver_2d_polar_disk_dirichlet_quadratic
 
   implicit none
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
-  class(c_test_qn_solver_2d_polar_base)                   , pointer :: test_case
-  type (t_test_qn_solver_2d_polar_dirichlet_quadratic)    , target  :: test_case_dirichlet
-  type (t_test_qn_solver_2d_polar_neumann_mode0_quadratic), target  :: test_case_neumann_mode0
-
-  type (t_test_qn_solver_2d_polar_circle_dirichlet_quadratic), target  :: test_case_circle_dirichlet
+  class(c_test_qn_solver_2d_polar_base)                           , pointer :: test_case
+  type (t_test_qn_solver_2d_polar_annulus_dirichlet_quadratic    ), target  :: test_case_dirichlet
+  type (t_test_qn_solver_2d_polar_annulus_neumann_mode0_quadratic), target  :: test_case_neumann_mode0
+  type (t_test_qn_solver_2d_polar_disk_dirichlet_quadratic       ), target  :: test_case_circle_dirichlet
 
   sll_int32  :: nr, nth
   sll_real64 :: error_norm, tol

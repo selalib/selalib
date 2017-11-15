@@ -15,7 +15,7 @@
 !> expected on the first test-case (parabolic radial profile) is zero (machine
 !> precision), if k (Fourier mode) is <= ntheta/2.
 
-module m_test_poisson_2d_polar_circle_dirichlet
+module m_test_poisson_2d_polar_disk_dirichlet
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_working_precision.h"
 
@@ -29,7 +29,7 @@ module m_test_poisson_2d_polar_circle_dirichlet
   implicit none
 
   public :: &
-    t_test_poisson_2d_polar_circle_dirichlet_quadratic
+    t_test_poisson_2d_polar_disk_dirichlet_quadratic
 
   private
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -37,7 +37,7 @@ module m_test_poisson_2d_polar_circle_dirichlet
   !-----------------------------------------------------------------------------
   ! Dirichlet base class
   !-----------------------------------------------------------------------------
-  type, extends(c_test_poisson_2d_polar_base), abstract :: c_test_circle_dirichlet
+  type, extends(c_test_poisson_2d_polar_base), abstract :: c_test_disk_dirichlet
   
     ! Boundary conditions (not overwritable)
     sll_real64, private :: rmin    = 0.0_f64
@@ -57,14 +57,14 @@ module m_test_poisson_2d_polar_circle_dirichlet
     procedure :: get_rlim => dirichlet_get_rlim
     procedure :: get_bcs  => dirichlet_get_bcs
 
-  end type c_test_circle_dirichlet
+  end type c_test_disk_dirichlet
 
   !-----------------------------------------------------------------------------
   ! Test-case with expected zero numerical error (parabolic radial profile).
   ! Solution is linear combination of two terms with unitary amplitude:
   ! \phi(r,th) = a * (1-(r/rmax)^2) + b * 4(r/rmax)(1-r/rmax)cos(k(th-th0))
   !-----------------------------------------------------------------------------
-  type, extends(c_test_circle_dirichlet) :: t_test_poisson_2d_polar_circle_dirichlet_quadratic
+  type, extends(c_test_disk_dirichlet) :: t_test_poisson_2d_polar_disk_dirichlet_quadratic
 
   contains
     ! 2D manufactured solution
@@ -73,7 +73,7 @@ module m_test_poisson_2d_polar_circle_dirichlet
     procedure :: phi_ex_diff2_r  => dirichlet_zero_error_phi_ex_d2r
     procedure :: phi_ex_diff2_th => dirichlet_zero_error_phi_ex_d2th
 
-  end type t_test_poisson_2d_polar_circle_dirichlet_quadratic
+  end type t_test_poisson_2d_polar_disk_dirichlet_quadratic
 
 !<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 contains
@@ -84,7 +84,7 @@ contains
   !=============================================================================
 
   pure function dirichlet_get_rlim( self ) result( rlim )
-    class(c_test_circle_dirichlet), intent(in) :: self
+    class(c_test_disk_dirichlet), intent(in) :: self
     sll_real64 :: rlim(2)
 
     rlim(1) = self%rmin
@@ -94,7 +94,7 @@ contains
 
   !-----------------------------------------------------------------------------
   pure function dirichlet_get_bcs( self ) result( bcs )
-    class(c_test_circle_dirichlet), intent(in) :: self
+    class(c_test_disk_dirichlet), intent(in) :: self
     sll_int32 :: bcs(2)
 
     bcs(1) = self%bc_rmin
@@ -109,9 +109,9 @@ contains
   !=============================================================================
 
   pure function dirichlet_zero_error_phi_ex( self, r, th ) result( val )
-    class(t_test_poisson_2d_polar_circle_dirichlet_quadratic), intent(in) :: self
-    sll_real64                                        , intent(in) :: r
-    sll_real64                                        , intent(in) :: th
+    class(t_test_poisson_2d_polar_disk_dirichlet_quadratic), intent(in) :: self
+    sll_real64                                             , intent(in) :: r
+    sll_real64                                             , intent(in) :: th
     sll_real64 :: val
 
     associate( rbar => r/self%rmax )
@@ -123,9 +123,9 @@ contains
 
   !-----------------------------------------------------------------------------
   pure function dirichlet_zero_error_phi_ex_d1r( self, r, th ) result( val )
-    class(t_test_poisson_2d_polar_circle_dirichlet_quadratic), intent(in) :: self
-    sll_real64                                        , intent(in) :: r
-    sll_real64                                        , intent(in) :: th
+    class(t_test_poisson_2d_polar_disk_dirichlet_quadratic), intent(in) :: self
+    sll_real64                                             , intent(in) :: r
+    sll_real64                                             , intent(in) :: th
     sll_real64 :: val
 
     associate( rbar => r/self%rmax )
@@ -137,9 +137,9 @@ contains
 
   !-----------------------------------------------------------------------------
   pure function dirichlet_zero_error_phi_ex_d2r( self, r, th ) result( val )
-    class(t_test_poisson_2d_polar_circle_dirichlet_quadratic), intent(in) :: self
-    sll_real64                                        , intent(in) :: r
-    sll_real64                                        , intent(in) :: th
+    class(t_test_poisson_2d_polar_disk_dirichlet_quadratic), intent(in) :: self
+    sll_real64                                             , intent(in) :: r
+    sll_real64                                             , intent(in) :: th
     sll_real64 :: val
 
     val = self%a * (-2.0_f64/self%rmax**2) + &
@@ -149,9 +149,9 @@ contains
 
   !-----------------------------------------------------------------------------
   pure function dirichlet_zero_error_phi_ex_d2th( self, r, th ) result( val )
-    class(t_test_poisson_2d_polar_circle_dirichlet_quadratic), intent(in) :: self
-    sll_real64                                        , intent(in) :: r
-    sll_real64                                        , intent(in) :: th
+    class(t_test_poisson_2d_polar_disk_dirichlet_quadratic), intent(in) :: self
+    sll_real64                                             , intent(in) :: r
+    sll_real64                                             , intent(in) :: th
     sll_real64 :: val
 
     associate( rbar => r/self%rmax )
@@ -160,4 +160,4 @@ contains
 
   end function dirichlet_zero_error_phi_ex_d2th
 
-end module m_test_poisson_2d_polar_circle_dirichlet
+end module m_test_poisson_2d_polar_disk_dirichlet
