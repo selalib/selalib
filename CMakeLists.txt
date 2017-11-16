@@ -13,6 +13,14 @@ ENDIF()
 
 CMAKE_MINIMUM_REQUIRED(VERSION 2.8.12)
 PROJECT(SeLaLib)
+if (POLICY CMP0051)
+  # CMake 3.1 and higher include generator expressions of the form
+  # $<TARGETLIB:obj> in the SOURCES property.  These need to be
+  # stripped everywhere that access the SOURCES property, so we just
+  # defer to the OLD behavior of not including generator expressions
+  # in the output for now.
+  cmake_policy(SET CMP0051 OLD)
+endif()
 
 ENABLE_LANGUAGE(Fortran)
 
