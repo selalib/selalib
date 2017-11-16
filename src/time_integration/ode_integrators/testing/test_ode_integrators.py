@@ -8,7 +8,7 @@ executable = 'test_ode_integrators'
 directory  = os.path.dirname( os.path.realpath( __file__ ) )
 
 vals_ode_selector    = [0]
-vals_odeint_selector = [0, 1, 2, 3, 4, 5]
+vals_odeint_selector = [0, 1, 2, 3, 4, 5, 10, 12]
 vals_h_factor        = [1.0, 2.0, 4.0, 8.0]
 
 cmd_template = "{:s}/{:s} {:d} {:d} {:f}"
