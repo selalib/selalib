@@ -1,10 +1,11 @@
 program test_vector_space
-
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-#include "sll_working_precision.h"
+
+  use sll_m_working_precision, only: &
+    f64
 
   use sll_m_vector_space_base, only: &
-    sll_c_vector_space_base
+    sll_c_vector_space
 
   use sll_m_vector_space_real_arrays, only: &
     sll_t_vector_space_real_1d, &
@@ -13,11 +14,14 @@ program test_vector_space
   implicit none
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
-  sll_real64,             target, allocatable :: a1(:), a2(:,:)
-  type( sll_t_vector_space_real_1d )            :: v1
-  type( sll_t_vector_space_real_2d )            :: v2
-  class( sll_c_vector_space_base ), allocatable :: v3
-  sll_int32                                   :: i, j, n, m
+  ! Working precision
+  integer, parameter :: wp = f64
+
+  real(wp),            target, allocatable :: a1(:), a2(:,:)
+  type( sll_t_vector_space_real_1d )       :: v1
+  type( sll_t_vector_space_real_2d )       :: v2
+  class( sll_c_vector_space ), allocatable :: v3
+  integer                                  :: i, j, n, m
 
   interface test_association
     procedure test_association_1d
@@ -88,8 +92,8 @@ contains
   
   !----------------------------------------------------------------------------
   subroutine test_association_1d( v, vname )
-    sll_real64, pointer, intent( in ) :: v(:)
-    character( len=* ) , intent( in ) :: vname
+    real(wp),  pointer, intent( in ) :: v(:)
+    character( len=* ), intent( in ) :: vname
 
     if( associated( v ) ) then
       write(*,*) vname, " is associated"
@@ -101,8 +105,8 @@ contains
 
   !----------------------------------------------------------------------------
   subroutine test_association_2d( v, vname )
-    sll_real64, pointer, intent( in ) :: v(:,:)
-    character( len=* ) , intent( in ) :: vname
+    real(wp),  pointer, intent( in ) :: v(:,:)
+    character( len=* ), intent( in ) :: vname
 
     if( associated( v ) ) then
       write(*,*) vname, " is associated"
@@ -114,8 +118,8 @@ contains
 
   !----------------------------------------------------------------------------
   subroutine test_association_3d( v, vname )
-    sll_real64, pointer, intent( in ) :: v(:,:,:)
-    character( len=* ) , intent( in ) :: vname
+    real(wp),  pointer, intent( in ) :: v(:,:,:)
+    character( len=* ), intent( in ) :: vname
 
     if( associated( v ) ) then
       write(*,*) vname, " is associated"

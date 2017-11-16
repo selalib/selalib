@@ -40,7 +40,7 @@ module sll_m_bsplines_uniform
 
   ! Inverse of integers for later use (max spline degree = 32)
   integer             :: index
-  real(wp), parameter :: inv(*) = [(1.0_wp/real(index,wp), index=1,32)]
+  real(wp), parameter :: inv(1:32) = [(1.0_wp/real(index,wp), index=1,32)]
 
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 contains
@@ -63,6 +63,13 @@ contains
       icell    = int( x_offset )
       x_offset = x_offset - real( icell, wp ) ! 0 <= x_offset < 1
       icell    = icell + 1
+    end if
+
+    ! When x is very close to xmax, round-off may cause the wrong answer
+    ! icell=ncells+1 and x_offset=0, which we convert to the case x=xmax:
+    if (icell == self%ncells+1 .and. x_offset == 0.0_wp) then
+      icell    = self%ncells
+      x_offset = 1.0_wp
     end if
 
   end subroutine s_bsplines_uniform__get_icell_and_offset
