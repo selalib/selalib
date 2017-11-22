@@ -124,10 +124,17 @@ INCLUDE(CompilerConfigString)
 INCLUDE(FortranConfig)
 INCLUDE(HDF5Config)
 INCLUDE(FFTConfig)
-INCLUDE(LapackConfig)
 INCLUDE(DoxygenConfig)
 INCLUDE(PreprocessorTarget)
 INCLUDE(CLAPP_framework)
+
+# if BLASLAPACK_DIR was specified
+IF(DEFINED BLASLAPACK_DIR)
+  SET(BLASLAPACK_DIR ${BLASLAPACK_DIR} CACHE STRING "Choose the blas-lapack directory.")
+  FIND_PACKAGE(BlasLapack)
+ELSE()
+  INCLUDE(LapackConfig)
+ENDIF()
 
 INCLUDE(CTest)
 ENABLE_TESTING()
