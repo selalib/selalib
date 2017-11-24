@@ -130,7 +130,7 @@ INCLUDE(CLAPP_framework)
 
 # if BLASLAPACK_DIR was specified
 IF(DEFINED BLASLAPACK_DIR)
-  SET(BLASLAPACK_DIR ${BLASLAPACK_DIR} CACHE STRING "Choose the blas-lapack directory.")
+  SET(BLASLAPACK_DIR ${BLASLAPACK_DIR} CACHE STRING "blas-lapack directory.")
   FIND_PACKAGE(BlasLapack)
 ELSE()
   INCLUDE(LapackConfig)
