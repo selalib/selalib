@@ -1,17 +1,22 @@
 integer(hid_t)   ::   loc_id
 integer(hid_t)   ::  attr_id
 integer(hsize_t) :: dims(1)
+type(h5o_info_t) :: object_info
 
 dims = int( [1], hsize_t )
 
-! Set starting location to root group
-loc_id = handle%file_id
+! Inquire about type of object in target path: group or dataset?
+call h5oget_info_by_name_f( handle%file_id, objpath, object_info, error )
 
-! If path was provided, open existing dataset
-if (len_trim(dsetname) > 0) then
-  call h5dopen_f( handle%file_id, dsetname, loc_id, error )
+! Open existing group or dataset
+select case (object_info % type)
+case (H5O_TYPE_GROUP)
+  call h5gopen_f( handle%file_id, objpath, loc_id, error )
   SLL_ASSERT( error==0 )
-end if
+case (H5O_TYPE_DATASET)
+  call h5dopen_f( handle%file_id, objpath, loc_id, error )
+  SLL_ASSERT( error==0 )
+end select
 
 ! Open existing scalar attribute
 call h5aopen_f( loc_id, attrname, attr_id, error )
@@ -20,8 +25,12 @@ call h5aopen_f( loc_id, attrname, attr_id, error )
 call h5aread_f( attr_id, DATATYPE, attrvalue, dims, error )
 SLL_ASSERT( error==0 )
 
-! Close dataset if needed
-if (len_trim(dsetname) > 0) then
+! Close existing group or dataset
+select case (object_info % type)
+case (H5O_TYPE_GROUP)
+  call h5gclose_f( loc_id, error )
+  SLL_ASSERT( error==0 )
+case (H5O_TYPE_DATASET)
   call h5dclose_f( loc_id, error )
   SLL_ASSERT( error==0 )
-end if
+end select

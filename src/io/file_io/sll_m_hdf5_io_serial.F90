@@ -46,6 +46,10 @@ module sll_m_hdf5_io_serial
     h5fclose_f, &
     h5fcreate_f, &
     h5fopen_f, &
+    h5gclose_f, &
+    h5gopen_f, &
+    h5o_info_t, &
+    h5oget_info_by_name_f, &
     h5open_f, &
     h5s_scalar_f, &
     h5sclose_f, &
@@ -72,6 +76,10 @@ module sll_m_hdf5_io_serial
 
   private
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+  ! HDF5 workaround: C enumeration does not seem to be available in Fortran
+  integer, parameter :: H5O_TYPE_GROUP   = 0
+  integer, parameter :: H5O_TYPE_DATASET = 1
 
   !> Opaque object around HDF5 file id
   type :: sll_t_hdf5_ser_handle
@@ -113,12 +121,12 @@ module sll_m_hdf5_io_serial
 
   !-----------------------------------------------------------------------------
   !> @brief
-  !> Attach named scalar attribute (double precision float or integer) to
-  !> pre-existing nD array in HDF5 file
+  !> Attach new named scalar attribute (double precision float or integer) to
+  !> HDF5 object (group or dataset)
   !>
   !> @param[in]  handle    file handle
-  !> @param[in]  dsetname  HDF5 dataset name
-  !> @param[in]  attrname  HDF5 attribute name
+  !> @param[in]  objpath   absolute path of HDF5 object (group or dataset)
+  !> @param[in]  attrname  name of HDF5 attribute
   !> @param[in]  attrvalue scalar value
   !> @param[out] error     HDF5 error code
   !-----------------------------------------------------------------------------
@@ -129,12 +137,12 @@ module sll_m_hdf5_io_serial
 
   !-----------------------------------------------------------------------------
   !> @brief
-  !> Read named scalar attribute (double precision float or integer)
-  !> attached to nD array in HDF5 file
+  !> Read pre-existing named scalar attribute (double precision float or integer)
+  !> from HDF5 object (group or dataset)
   !>
   !> @param[in]  handle    file handle
-  !> @param[in]  dsetname  HDF5 dataset name
-  !> @param[in]  attrname  HDF5 attribute name
+  !> @param[in]  objpath   absolute path of HDF5 object (group or dataset)
+  !> @param[in]  attrname  name of HDF5 attribute
   !> @param[out] attrvalue scalar value
   !> @param[out] error     HDF5 error code
   !-----------------------------------------------------------------------------
@@ -438,11 +446,11 @@ contains
   end subroutine sll_s_hdf5_ser_write_file  
 
   !-----------------------------------------------------------------------------
-  !> Attach named float64 attribute to existing dataset
+  !> Attach named float64 attribute to existing group or dataset
   !-----------------------------------------------------------------------------
-  subroutine s_hdf5_ser_write_attribute_dble( handle, dsetname, attrname, attrvalue, error )
+  subroutine s_hdf5_ser_write_attribute_dble( handle, objpath, attrname, attrvalue, error )
     type(sll_t_hdf5_ser_handle), intent(in   ) :: handle
-    character(len=*)           , intent(in   ) :: dsetname
+    character(len=*)           , intent(in   ) :: objpath
     character(len=*)           , intent(in   ) :: attrname
     real(f64)                  , intent(in   ) :: attrvalue
     integer                    , intent(  out) :: error
@@ -454,11 +462,11 @@ contains
   end subroutine s_hdf5_ser_write_attribute_dble
 
   !-----------------------------------------------------------------------------
-  !> Attach named integer attribute to existing dataset
+  !> Attach named integer attribute to existing group or dataset
   !-----------------------------------------------------------------------------
-  subroutine s_hdf5_ser_write_attribute_int( handle, dsetname, attrname, attrvalue, error )
+  subroutine s_hdf5_ser_write_attribute_int( handle, objpath, attrname, attrvalue, error )
     type(sll_t_hdf5_ser_handle), intent(in   ) :: handle
-    character(len=*)           , intent(in   ) :: dsetname
+    character(len=*)           , intent(in   ) :: objpath
     character(len=*)           , intent(in   ) :: attrname
     integer                    , intent(in   ) :: attrvalue
     integer                    , intent(  out) :: error
@@ -470,11 +478,11 @@ contains
   end subroutine s_hdf5_ser_write_attribute_int
 
   !-----------------------------------------------------------------------------
-  !> Read named float64 attribute from existing dataset
+  !> Read named float64 attribute from existing group or dataset
   !-----------------------------------------------------------------------------
-  subroutine s_hdf5_ser_read_attribute_dble( handle, dsetname, attrname, attrvalue, error )
+  subroutine s_hdf5_ser_read_attribute_dble( handle, objpath, attrname, attrvalue, error )
     type(sll_t_hdf5_ser_handle), intent(in   ) :: handle
-    character(len=*)           , intent(in   ) :: dsetname
+    character(len=*)           , intent(in   ) :: objpath
     character(len=*)           , intent(in   ) :: attrname
     real(f64)                  , intent(  out) :: attrvalue
     integer                    , intent(  out) :: error
@@ -486,11 +494,11 @@ contains
   end subroutine s_hdf5_ser_read_attribute_dble
 
   !-----------------------------------------------------------------------------
-  !> Read named integer attribute from existing dataset
+  !> Read named integer attribute from existing group or dataset
   !-----------------------------------------------------------------------------
-  subroutine s_hdf5_ser_read_attribute_int( handle, dsetname, attrname, attrvalue, error )
+  subroutine s_hdf5_ser_read_attribute_int( handle, objpath, attrname, attrvalue, error )
     type(sll_t_hdf5_ser_handle), intent(in   ) :: handle
-    character(len=*)           , intent(in   ) :: dsetname
+    character(len=*)           , intent(in   ) :: objpath
     character(len=*)           , intent(in   ) :: attrname
     integer                    , intent(  out) :: attrvalue
     integer                    , intent(  out) :: error
