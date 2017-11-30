@@ -30,6 +30,10 @@ module sll_m_hdf5_io_serial
 #include "sll_working_precision.h"
 
   use hdf5, only: &
+    h5acreate_f, &
+    h5aopen_f, &
+    h5aread_f, &
+    h5awrite_f, &
     h5close_f, &
     h5dclose_f, &
     h5dcreate_f, &
@@ -43,6 +47,7 @@ module sll_m_hdf5_io_serial
     h5fcreate_f, &
     h5fopen_f, &
     h5open_f, &
+    h5s_scalar_f, &
     h5sclose_f, &
     h5screate_f, &
     h5screate_simple_f, &
@@ -55,12 +60,14 @@ module sll_m_hdf5_io_serial
   implicit none
 
   public :: &
-    sll_t_hdf5_ser_handle,      &
-    sll_s_hdf5_ser_file_create, &
-    sll_s_hdf5_ser_file_open,   &
-    sll_s_hdf5_ser_file_close,  &
-    sll_o_hdf5_ser_write_array, &
-    sll_o_hdf5_ser_read_array,  &
+    sll_t_hdf5_ser_handle         , &
+    sll_s_hdf5_ser_file_create    , &
+    sll_s_hdf5_ser_file_open      , &
+    sll_s_hdf5_ser_file_close     , &
+    sll_o_hdf5_ser_write_array    , &
+    sll_o_hdf5_ser_read_array     , &
+    sll_o_hdf5_ser_write_attribute, &
+    sll_o_hdf5_ser_read_attribute , &
     sll_s_hdf5_ser_write_file
 
   private
@@ -104,7 +111,41 @@ module sll_m_hdf5_io_serial
     module procedure sll_hdf5_ser_read_dble_array_3d
   end interface
 
+  !-----------------------------------------------------------------------------
+  !> @brief
+  !> Attach named scalar attribute (double precision float or integer) to
+  !> pre-existing nD array in HDF5 file
+  !>
+  !> @param[in]  handle    file handle
+  !> @param[in]  dsetname  HDF5 dataset name
+  !> @param[in]  attrname  HDF5 attribute name
+  !> @param[in]  attrvalue scalar value
+  !> @param[out] error     HDF5 error code
+  !-----------------------------------------------------------------------------
+  interface sll_o_hdf5_ser_write_attribute
+     module procedure s_hdf5_ser_write_attribute_dble
+     module procedure s_hdf5_ser_write_attribute_int
+  end interface
+
+  !-----------------------------------------------------------------------------
+  !> @brief
+  !> Read named scalar attribute (double precision float or integer)
+  !> attached to nD array in HDF5 file
+  !>
+  !> @param[in]  handle    file handle
+  !> @param[in]  dsetname  HDF5 dataset name
+  !> @param[in]  attrname  HDF5 attribute name
+  !> @param[out] attrvalue scalar value
+  !> @param[out] error     HDF5 error code
+  !-----------------------------------------------------------------------------
+  interface sll_o_hdf5_ser_read_attribute
+     module procedure s_hdf5_ser_read_attribute_dble
+     module procedure s_hdf5_ser_read_attribute_int
+  end interface
+
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 contains
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
   
   !-----------------------------------------------------------------------------
   !> @brief Create new HDF5 file
@@ -395,8 +436,72 @@ contains
     call sll_hdf5_ser_write_char_array( handle, content, dsetname, error )
 
   end subroutine sll_s_hdf5_ser_write_file  
-  
 
+  !-----------------------------------------------------------------------------
+  !> Attach named float64 attribute to existing dataset
+  !-----------------------------------------------------------------------------
+  subroutine s_hdf5_ser_write_attribute_dble( handle, dsetname, attrname, attrvalue, error )
+    type(sll_t_hdf5_ser_handle), intent(in   ) :: handle
+    character(len=*)           , intent(in   ) :: dsetname
+    character(len=*)           , intent(in   ) :: attrname
+    real(f64)                  , intent(in   ) :: attrvalue
+    integer                    , intent(  out) :: error
+
+#define  DATATYPE  H5T_NATIVE_DOUBLE
+#include "sll_k_hdf5_ser_write_attribute.F90"
+#undef   DATATYPE
+
+  end subroutine s_hdf5_ser_write_attribute_dble
+
+  !-----------------------------------------------------------------------------
+  !> Attach named integer attribute to existing dataset
+  !-----------------------------------------------------------------------------
+  subroutine s_hdf5_ser_write_attribute_int( handle, dsetname, attrname, attrvalue, error )
+    type(sll_t_hdf5_ser_handle), intent(in   ) :: handle
+    character(len=*)           , intent(in   ) :: dsetname
+    character(len=*)           , intent(in   ) :: attrname
+    integer                    , intent(in   ) :: attrvalue
+    integer                    , intent(  out) :: error
+
+#define  DATATYPE  H5T_NATIVE_INTEGER
+#include "sll_k_hdf5_ser_write_attribute.F90"
+#undef   DATATYPE
+
+  end subroutine s_hdf5_ser_write_attribute_int
+
+  !-----------------------------------------------------------------------------
+  !> Read named float64 attribute from existing dataset
+  !-----------------------------------------------------------------------------
+  subroutine s_hdf5_ser_read_attribute_dble( handle, dsetname, attrname, attrvalue, error )
+    type(sll_t_hdf5_ser_handle), intent(in   ) :: handle
+    character(len=*)           , intent(in   ) :: dsetname
+    character(len=*)           , intent(in   ) :: attrname
+    real(f64)                  , intent(  out) :: attrvalue
+    integer                    , intent(  out) :: error
+
+#define  DATATYPE  H5T_NATIVE_DOUBLE
+#include "sll_k_hdf5_ser_read_attribute.F90"
+#undef   DATATYPE
+
+  end subroutine s_hdf5_ser_read_attribute_dble
+
+  !-----------------------------------------------------------------------------
+  !> Read named integer attribute from existing dataset
+  !-----------------------------------------------------------------------------
+  subroutine s_hdf5_ser_read_attribute_int( handle, dsetname, attrname, attrvalue, error )
+    type(sll_t_hdf5_ser_handle), intent(in   ) :: handle
+    character(len=*)           , intent(in   ) :: dsetname
+    character(len=*)           , intent(in   ) :: attrname
+    integer                    , intent(  out) :: attrvalue
+    integer                    , intent(  out) :: error
+
+#define  DATATYPE  H5T_NATIVE_INTEGER
+#include "sll_k_hdf5_ser_read_attribute.F90"
+#undef   DATATYPE
+
+  end subroutine s_hdf5_ser_read_attribute_int
+
+  !-----------------------------------------------------------------------------
 #endif
 
 end module sll_m_hdf5_io_serial
