@@ -30,7 +30,7 @@ program test_hdf5_io_serial
 
   ! Attribute 1: name, location, and value to be written to file
   character(len=*), parameter :: attr1name = "scalar_1"
-  character(len=*), parameter :: attr1loc  = ""
+  character(len=*), parameter :: attr1loc  = "/"
   real(f64)       , parameter :: attr1_in  = -1.67_f64
 
   ! Attribute 2: name, location, and value to be written to file
