@@ -4,7 +4,7 @@
 !> @author  Yaman Güçlü, IPP Garching
 !> @details Test serial HDF5 write/read for 2D array of double precision floats,
 !>          as well as write/read of scalar attributes (real64 and integer)
-!>          attached to dataset of aforementioned array.
+!>          attached to root group or to array dataset
 
 program test_hdf5_io_serial
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -24,13 +24,21 @@ program test_hdf5_io_serial
   implicit none
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
-  character(len=*), parameter :: fname     = "test_hdf5_io_serial.h5" ! File name
-  character(len=*), parameter :: dsetname  = "real_array"      !     Dataset name
-  character(len=*), parameter :: attr1name = "scalar_1"        ! Attribute-1 name
-  character(len=*), parameter :: attr2name = "scalar_2"        ! Attribute-2 name
-  real(f64)       , parameter :: attr1_in  = -1.67_f64 ! Value of attribute-1 to write
-  integer         , parameter :: attr2_in  = 19        ! Value of attribute-2 to write
+  ! Name of HDF5 file and array dataset
+  character(len=*), parameter :: fname     = "test_hdf5_io_serial.h5"
+  character(len=*), parameter :: dsetname  = "real_array"
 
+  ! Attribute 1: name, location, and value to be written to file
+  character(len=*), parameter :: attr1name = "scalar_1"
+  character(len=*), parameter :: attr1loc  = ""
+  real(f64)       , parameter :: attr1_in  = -1.67_f64
+
+  ! Attribute 2: name, location, and value to be written to file
+  character(len=*), parameter :: attr2name = "scalar_2"
+  character(len=*), parameter :: attr2loc  = dsetname
+  integer         , parameter :: attr2_in  = 19
+
+  ! Local variables
   type(sll_t_hdf5_ser_handle) :: fid
   integer                     :: ferror
   real(f64), allocatable      :: a(:,:)     !  Local data to write
@@ -44,9 +52,9 @@ program test_hdf5_io_serial
   ! Check array WRITE/READ
   !-----------------------------------------------------------------------------
 
-  write(*,'(/a)') "------------------------------------------------------------"
+  write(*,'(/a)') "------------------------------------------------------------------------"
   write(*, '(a)') "TESTING WRITE/READ OF MULTI-DIMENSIONAL ARRAYS:"
-  write(*, '(a)') "------------------------------------------------------------"
+  write(*, '(a)') "------------------------------------------------------------------------"
 
   ! Create rectangular matrix (2D array) with 7x11 elements and a(i,j) = i-j
   allocate( a(7,11) )
@@ -90,29 +98,29 @@ program test_hdf5_io_serial
   ! Check attribute WRITE/READ
   !-----------------------------------------------------------------------------
 
-  write(*,'(/a)') "------------------------------------------------------------"
+  write(*,'(/a)') "------------------------------------------------------------------------"
   write(*, '(a)') "TESTING WRITE/READ OF SCALAR ATTRIBUTES:"
-  write(*, '(a)') "------------------------------------------------------------"
-  write(*,'(5a12/)') "type", "name", "value[in]", "value[out]", "status"
+  write(*, '(a)') "------------------------------------------------------------------------"
+  write(*,'(6a12/)') "location", "type", "name", "value[in]", "value[out]", "status"
 
   ! Attach attributes to array
   call sll_s_hdf5_ser_file_open( fname, fid, ferror )
-  call sll_o_hdf5_ser_write_attribute( fid, dsetname, attr1name, attr1_in, ferror )
-  call sll_o_hdf5_ser_write_attribute( fid, dsetname, attr2name, attr2_in, ferror )
+  call sll_o_hdf5_ser_write_attribute( fid, attr1loc, attr1name, attr1_in, ferror )
+  call sll_o_hdf5_ser_write_attribute( fid, attr2loc, attr2name, attr2_in, ferror )
   call sll_s_hdf5_ser_file_close( fid, ferror )
 
   ! Read attributes
   call sll_s_hdf5_ser_file_open( fname, fid, ferror )
-  call sll_o_hdf5_ser_read_attribute( fid, dsetname, attr1name, attr1_out, ferror )
-  call sll_o_hdf5_ser_read_attribute( fid, dsetname, attr2name, attr2_out, ferror )
+  call sll_o_hdf5_ser_read_attribute( fid, attr1loc, attr1name, attr1_out, ferror )
+  call sll_o_hdf5_ser_read_attribute( fid, attr2loc, attr2name, attr2_out, ferror )
   call sll_s_hdf5_ser_file_close( fid, ferror )
 
   ! Check correctness of attributes
   equal(1) = (attr1_in == attr1_out)
   equal(2) = (attr2_in == attr2_out)
 
-  write(*,'(a12,a12,g12.3,g12.3,a12)') "real(f64)", attr1name, attr1_in, attr1_out, status( equal(1) )
-  write(*,'(a12,a12,i12,i12,a12/)')    "integer"  , attr2name, attr2_in, attr2_out, status( equal(2) )
+  write(*,'(a12,a12,a12,g12.3,g12.3,a12)') attr1loc, attr1name, "real(f64)", attr1_in, attr1_out, status( equal(1) )
+  write(*,'(a12,a12,a12,i12,i12,a12/)')    attr2loc, attr2name, "integer"  , attr2_in, attr2_out, status( equal(2) )
 
   if (all( equal(1:2) )) then
     write(*,'(a)') "OK: all attributes are identical"
@@ -125,9 +133,9 @@ program test_hdf5_io_serial
   !-----------------------------------------------------------------------------
 
   if (all( equal )) then
-    write(*,'(/a/)') ">>>>>>>>>>>>>>>>>  UNIT TEST HAS PASSED!  <<<<<<<<<<<<<<<<<<"
+    write(*,'(/a/)') ">>>>>>>>>>>>>>>>>>>>>>>  UNIT TEST HAS PASSED!  <<<<<<<<<<<<<<<<<<<<<<<<"
   else
-    write(*,'(/a/)') ">>>>>>>>>>>>>>>>>  UNIT TEST HAS FAILED!  <<<<<<<<<<<<<<<<<<"
+    write(*,'(/a/)') ">>>>>>>>>>>>>>>>>>>>>>>  UNIT TEST HAS FAILED!  <<<<<<<<<<<<<<<<<<<<<<<<"
   end if
 
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
