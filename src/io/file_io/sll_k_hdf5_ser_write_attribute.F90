@@ -5,9 +5,14 @@ integer(hsize_t) :: dims(1)
 
 dims = int( [1], hsize_t )
 
-! Open existing dataset
-call h5dopen_f( handle%file_id, dsetname, loc_id, error )
-SLL_ASSERT( error==0 )
+! Set starting location to root group
+loc_id = handle%file_id
+
+! If path was provided, open existing dataset
+if (len_trim(dsetname) > 0) then
+  call h5dopen_f( handle%file_id, dsetname, loc_id, error )
+  SLL_ASSERT( error==0 )
+end if
 
 ! Create dataspace for new scalar attribute
 call h5screate_f( H5S_SCALAR_F, space_id, error )
@@ -25,6 +30,8 @@ SLL_ASSERT( error==0 )
 call h5sclose_f( space_id, error )
 SLL_ASSERT( error==0 )
 
-! Close dataset
-call h5dclose_f( loc_id, error )
-SLL_ASSERT( error==0 )
+! Close dataset if needed
+if (len_trim(dsetname) > 0) then
+  call h5dclose_f( loc_id, error )
+  SLL_ASSERT( error==0 )
+end if
