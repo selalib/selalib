@@ -45,7 +45,7 @@ theta_min = 0.0_f64
 theta_max = 2.0_f64 * sll_p_pi
 
 nr     = 33
-ntheta = 129
+ntheta = 65
 delta_r     = (r_max-r_min)/(nr-1)
 delta_theta = 2.0_f64*sll_p_pi/(ntheta-1)
 
@@ -70,7 +70,7 @@ do j=1,ntheta
    end do
 end do
 
-tolmax   = 1.0e-4_f64
+tolmax   = 1.0e-2_f64
 
 call sll_s_mudpack_polar_init(poisson,  &
                               r_min, r_max, nr, &
