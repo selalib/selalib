@@ -125,8 +125,6 @@ INCLUDE(FortranConfig)
 INCLUDE(HDF5Config)
 INCLUDE(FFTConfig)
 INCLUDE(DoxygenConfig)
-INCLUDE(PreprocessorTarget)
-INCLUDE(CLAPP_framework)
 
 # if BLASLAPACK_DIR was specified
 IF(DEFINED BLASLAPACK_DIR)
@@ -135,6 +133,9 @@ IF(DEFINED BLASLAPACK_DIR)
 ELSE()
   INCLUDE(LapackConfig)
 ENDIF()
+
+INCLUDE(PreprocessorTarget)
+INCLUDE(CLAPP_framework)
 
 INCLUDE(CTest)
 ENABLE_TESTING()
