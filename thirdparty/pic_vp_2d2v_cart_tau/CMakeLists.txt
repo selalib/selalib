@@ -1,4 +1,5 @@
 SET(CMAKE_Fortran_COMPILER ${MPI_Fortran_COMPILER})
+INCLUDE_DIRECTORIES(${MPI_Fortran_MOD_DIR})
 ADD_LIBRARY(pic_vp_2d2v_cart_tau STATIC zone.F90 quietstart.F90 
   particules.F90 )
 
