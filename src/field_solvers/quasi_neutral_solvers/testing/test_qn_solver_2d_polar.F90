@@ -22,6 +22,9 @@ program test_qn_solver_2d_polar
   use sll_m_utilities, only: &
     sll_s_new_array_linspace
 
+  use sll_m_boundary_condition_descriptors, only: &
+    sll_p_polar_origin
+
   use sll_m_qn_solver_2d_polar, only: &
     sll_t_qn_solver_2d_polar, &
     sll_s_qn_solver_2d_polar_init, &
@@ -30,18 +33,22 @@ program test_qn_solver_2d_polar
   use m_test_qn_solver_2d_polar_base, only: &
     c_test_qn_solver_2d_polar_base
 
-  use m_test_qn_solver_2d_polar_dirichlet, only: &
-    t_test_qn_solver_2d_polar_dirichlet_quadratic
+  use m_test_qn_solver_2d_polar_annulus_dirichlet, only: &
+    t_test_qn_solver_2d_polar_annulus_dirichlet_quadratic
 
-  use m_test_qn_solver_2d_polar_neumann_mode0, only: &
-    t_test_qn_solver_2d_polar_neumann_mode0_quadratic
+  use m_test_qn_solver_2d_polar_annulus_neumann_mode0, only: &
+    t_test_qn_solver_2d_polar_annulus_neumann_mode0_quadratic
+
+  use m_test_qn_solver_2d_polar_disk_dirichlet, only: &
+    t_test_qn_solver_2d_polar_disk_dirichlet_quadratic
 
   implicit none
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
-  class(c_test_qn_solver_2d_polar_base)                   , pointer :: test_case
-  type (t_test_qn_solver_2d_polar_dirichlet_quadratic)    , target  :: test_case_dirichlet
-  type (t_test_qn_solver_2d_polar_neumann_mode0_quadratic), target  :: test_case_neumann_mode0
+  class(c_test_qn_solver_2d_polar_base)                           , pointer :: test_case
+  type (t_test_qn_solver_2d_polar_annulus_dirichlet_quadratic    ), target  :: test_case_dirichlet
+  type (t_test_qn_solver_2d_polar_annulus_neumann_mode0_quadratic), target  :: test_case_neumann_mode0
+  type (t_test_qn_solver_2d_polar_disk_dirichlet_quadratic       ), target  :: test_case_circle_dirichlet
 
   sll_int32  :: nr, nth
   sll_real64 :: error_norm, tol
@@ -105,7 +112,38 @@ program test_qn_solver_2d_polar
     write(*,"(a/)") "!!! FAILED !!!"
   end if
 
-  ! Check if test passed
+  !=============================================================================
+  ! TEST #3: Full circle (rmin=0), Dirichlet at rmax, solver should be exact
+  !=============================================================================
+
+  test_case => test_case_circle_dirichlet
+  nr        = 64
+  nth       = 32
+  tol       = 1.0e-11_f64
+  rgrid_opt = "uniform"
+
+  call run_test( test_case, nr, nth, rgrid_opt, error_norm )
+
+  ! Write relative error norm (global) to standard output
+  write(*,"(/a)") "-----------------------------------------------------------&
+       &--------------------"
+  write(*,"(a)")  "BC at r_min: polar origin (i.e., full circle is simulated)"
+  write(*,"(a)")  "BC at r_max: homogeneous Dirichlet"
+  write(*,"(a)")  "Radial grid: "// trim( rgrid_opt )
+  write(*,"(a)")  "phi(r,theta) = a (1-(r/rmax)^2) &
+       &+ b 4(r/rmax)(1-r/rmax)cos(k(theta-theta_0))"
+  write(*,"(a)")  "-----------------------------------------------------------&
+       &--------------------"
+  write(*,"(a,e11.3)") "Relative L_inf norm of error = ", error_norm
+  write(*,"(a,e11.3)") "Tolerance                    = ", tol
+  if (error_norm > tol) then
+     success = .false.
+     write(*,"(a/)") "!!! FAILED !!!"
+  end if
+
+  !=============================================================================
+  ! Check if all tests have passed
+  !=============================================================================
   if(success) then
      write(*,"(/a/)") "PASSED"
   endif
@@ -128,6 +166,7 @@ contains
     sll_real64 ::  r,  th
     sll_real64 :: dr, dth
     sll_int32  :: i, j
+    sll_int32  :: sh
 
     sll_real64 :: rlim(2)
     sll_int32  :: bcs (2)
@@ -155,52 +194,64 @@ contains
     ! Computational grid in theta
     dth = sll_p_twopi / nth
 
-    ! Computational grid in r
-    allocate( rgrid(nr+1) )
-    select case (rgrid_opt)
+    ! Computational grid in r: handle full circle
+    sh = merge( 1, 0, bcs(1) == sll_p_polar_origin )
+    allocate( rgrid(nr+1-sh) )
 
-    case ("uniform") ! uniform grid
-      call sll_s_new_array_linspace( rgrid, rlim(1), rlim(2), endpoint=.true. )
-
-    case ("smooth")  ! apply smooth coordinate transformation to uniform grid
-      associate( alpha => 0.3_f64 )
-        !
-        ! 1. Create uniform logical grid: $\eta \in [0,1]$;
-        ! 2. Apply sine transformation: 1D version of 2D transformation in
-        !    P. Colella et al. JCP 230 (2011), formula (102) p. 2968;
-        !    $\zeta = \eta + \alpha \sin(2\pi\eta)$, with $\zeta \in [0,1]$
-        ! 3. Apply linear transformation to obtain radial grid:
-        !    $r = r_{\min}(1-\zeta) + r_{\max}\zeta$, with $r \in [rmin,rmax]$.
-        !
-        call sll_s_new_array_linspace( rgrid, 0.0_f64, 1.0_f64, endpoint=.true. )
-        rgrid = rgrid + alpha * sin( sll_p_twopi*rgrid ); rgrid(nr+1) = 1.0_f64
-        rgrid = rlim(1)*(1.0_f64-rgrid) + rlim(2)*rgrid
+    if (bcs(1) == sll_p_polar_origin) then
+      associate( rmin => rlim(2)/real(2*nr-1,f64) )
+        call sll_s_new_array_linspace( rgrid, rmin, rlim(2), endpoint=.true. )
       end associate
 
-    case ("greville") ! similar to cubic spline with Greville's BCs
-      associate( nc => nr-2 )
-        dr = (rlim(2)-rlim(1))/ nc
-        rgrid(1) = rlim(1)
-        rgrid(2) = rlim(1) + dr/3.0_f64
-        rgrid(3:nr-1) = [(rlim(1)+i*dr, i=1,nc-1)]
-        rgrid(nr  ) = rlim(2) - dr/3.0_f64
-        rgrid(nr+1) = rlim(2)
-      end associate
+    else
 
-    case ("default")
-      SLL_ERROR("run_test","Unrecognized value for rgrid_option: "//trim(rgrid_opt))
+      ! Computational grid in r: handle non-uniform spacing
+      select case (rgrid_opt)
 
-    end select
+      case ("uniform") ! uniform grid
+        call sll_s_new_array_linspace( rgrid, rlim(1), rlim(2), endpoint=.true. )
+
+      case ("smooth")  ! apply smooth coordinate transformation to uniform grid
+        associate( alpha => 0.3_f64 )
+          !
+          ! 1. Create uniform logical grid: $\eta \in [0,1]$;
+          ! 2. Apply sine transformation: 1D version of 2D transformation in
+          !    P. Colella et al. JCP 230 (2011), formula (102) p. 2968;
+          !    $\zeta = \eta + \alpha \sin(2\pi\eta)$, with $\zeta \in [0,1]$
+          ! 3. Apply linear transformation to obtain radial grid:
+          !    $r = r_{\min}(1-\zeta) + r_{\max}\zeta$, with $r \in [rmin,rmax]$.
+          !
+          call sll_s_new_array_linspace( rgrid, 0.0_f64, 1.0_f64, endpoint=.true. )
+          rgrid = rgrid + alpha * sin( sll_p_twopi*rgrid ); rgrid(nr+1) = 1.0_f64
+          rgrid = rlim(1)*(1.0_f64-rgrid) + rlim(2)*rgrid
+        end associate
+
+      case ("greville") ! similar to cubic spline with Greville's BCs
+        associate( nc => nr-2 )
+          dr = (rlim(2)-rlim(1))/ nc
+          rgrid(1) = rlim(1)
+          rgrid(2) = rlim(1) + dr/3.0_f64
+          rgrid(3:nr-1) = [(rlim(1)+i*dr, i=1,nc-1)]
+          rgrid(nr  ) = rlim(2) - dr/3.0_f64
+          rgrid(nr+1) = rlim(2)
+        end associate
+
+      case ("default")
+        SLL_ERROR("run_test","Unrecognized value for rgrid_option: "//trim(rgrid_opt))
+
+      end select
+
+    end if
 
     ! Allocate 2D distributed arrays (rho, phi, phi_ex) with layout_a
-    allocate( rho   (nr+1,nth) )
-    allocate( phi_ex(nr+1,nth) )
-    allocate( phi   (nr+1,nth) )
+    allocate( rho   (nr+1-sh,nth) )
+    allocate( phi_ex(nr+1-sh,nth) )
+    allocate( phi   (nr+1-sh,nth) )
 
     ! Load analytical solution and rho
     do j = 1, nth
       th = (j-1)*dth
-      do i = 1, nr+1
+      do i = 1, nr+1-sh
         r = rgrid(i)
         phi_ex(i,j) = test_case%phi_ex( r, th )
         rho   (i,j) = test_case%rho   ( r, th )
@@ -208,17 +259,23 @@ contains
     end do
     phi(:,:) = 0.0_f64
 
-    ! Allocate and load 1D radial profiles (needed by solver)
-    allocate( rho_m0(nr+1) )
-    allocate( b_magn(nr+1) )
-    allocate( lambda(nr+1) )
-    !
-    do i = 1, nr+1
+    ! Equation parameters: allocate and load rho_m0(r) and b_magn(r)
+    allocate( rho_m0(nr+1-sh) )
+    allocate( b_magn(nr+1-sh) )
+    do i = 1, nr+1-sh
       r = rgrid(i)
       rho_m0(i) = test_case%rho_m0( r )
       b_magn(i) = test_case%b_magn( r )
-      lambda(i) = test_case%lambda( r )
     end do
+
+    ! Equation parameters: if required, also allocate and load b_magn(r)
+    if (adiabatic_electrons) then
+      allocate( lambda(nr+1-sh) )
+      do i = 1, nr+1-sh
+        r = rgrid(i)
+        lambda(i) = test_case%lambda( r )
+      end do
+    end if
 
     ! Initialize solver
     call sll_s_qn_solver_2d_polar_init( solver, &
