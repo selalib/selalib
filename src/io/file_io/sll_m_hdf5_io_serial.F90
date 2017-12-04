@@ -30,6 +30,10 @@ module sll_m_hdf5_io_serial
 #include "sll_working_precision.h"
 
   use hdf5, only: &
+    h5acreate_f, &
+    h5aopen_f, &
+    h5aread_f, &
+    h5awrite_f, &
     h5close_f, &
     h5dclose_f, &
     h5dcreate_f, &
@@ -42,7 +46,12 @@ module sll_m_hdf5_io_serial
     h5fclose_f, &
     h5fcreate_f, &
     h5fopen_f, &
+    h5gclose_f, &
+    h5gopen_f, &
+    h5o_info_t, &
+    h5oget_info_by_name_f, &
     h5open_f, &
+    h5s_scalar_f, &
     h5sclose_f, &
     h5screate_f, &
     h5screate_simple_f, &
@@ -55,16 +64,22 @@ module sll_m_hdf5_io_serial
   implicit none
 
   public :: &
-    sll_t_hdf5_ser_handle,      &
-    sll_s_hdf5_ser_file_create, &
-    sll_s_hdf5_ser_file_open,   &
-    sll_s_hdf5_ser_file_close,  &
-    sll_o_hdf5_ser_write_array, &
-    sll_o_hdf5_ser_read_array,  &
+    sll_t_hdf5_ser_handle         , &
+    sll_s_hdf5_ser_file_create    , &
+    sll_s_hdf5_ser_file_open      , &
+    sll_s_hdf5_ser_file_close     , &
+    sll_o_hdf5_ser_write_array    , &
+    sll_o_hdf5_ser_read_array     , &
+    sll_o_hdf5_ser_write_attribute, &
+    sll_o_hdf5_ser_read_attribute , &
     sll_s_hdf5_ser_write_file
 
   private
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+  ! HDF5 workaround: C enumeration does not seem to be available in Fortran
+  integer, parameter :: H5O_TYPE_GROUP   = 0
+  integer, parameter :: H5O_TYPE_DATASET = 1
 
   !> Opaque object around HDF5 file id
   type :: sll_t_hdf5_ser_handle
@@ -104,7 +119,41 @@ module sll_m_hdf5_io_serial
     module procedure sll_hdf5_ser_read_dble_array_3d
   end interface
 
+  !-----------------------------------------------------------------------------
+  !> @brief
+  !> Attach new named scalar attribute (double precision float or integer) to
+  !> HDF5 object (group or dataset)
+  !>
+  !> @param[in]  handle    file handle
+  !> @param[in]  objpath   absolute path of HDF5 object (group or dataset)
+  !> @param[in]  attrname  name of HDF5 attribute
+  !> @param[in]  attrvalue scalar value
+  !> @param[out] error     HDF5 error code
+  !-----------------------------------------------------------------------------
+  interface sll_o_hdf5_ser_write_attribute
+     module procedure s_hdf5_ser_write_attribute_dble
+     module procedure s_hdf5_ser_write_attribute_int
+  end interface
+
+  !-----------------------------------------------------------------------------
+  !> @brief
+  !> Read pre-existing named scalar attribute (double precision float or integer)
+  !> from HDF5 object (group or dataset)
+  !>
+  !> @param[in]  handle    file handle
+  !> @param[in]  objpath   absolute path of HDF5 object (group or dataset)
+  !> @param[in]  attrname  name of HDF5 attribute
+  !> @param[out] attrvalue scalar value
+  !> @param[out] error     HDF5 error code
+  !-----------------------------------------------------------------------------
+  interface sll_o_hdf5_ser_read_attribute
+     module procedure s_hdf5_ser_read_attribute_dble
+     module procedure s_hdf5_ser_read_attribute_int
+  end interface
+
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 contains
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
   
   !-----------------------------------------------------------------------------
   !> @brief Create new HDF5 file
@@ -395,8 +444,72 @@ contains
     call sll_hdf5_ser_write_char_array( handle, content, dsetname, error )
 
   end subroutine sll_s_hdf5_ser_write_file  
-  
 
+  !-----------------------------------------------------------------------------
+  !> Attach named float64 attribute to existing group or dataset
+  !-----------------------------------------------------------------------------
+  subroutine s_hdf5_ser_write_attribute_dble( handle, objpath, attrname, attrvalue, error )
+    type(sll_t_hdf5_ser_handle), intent(in   ) :: handle
+    character(len=*)           , intent(in   ) :: objpath
+    character(len=*)           , intent(in   ) :: attrname
+    real(f64)                  , intent(in   ) :: attrvalue
+    integer                    , intent(  out) :: error
+
+#define  DATATYPE  H5T_NATIVE_DOUBLE
+#include "sll_k_hdf5_ser_write_attribute.F90"
+#undef   DATATYPE
+
+  end subroutine s_hdf5_ser_write_attribute_dble
+
+  !-----------------------------------------------------------------------------
+  !> Attach named integer attribute to existing group or dataset
+  !-----------------------------------------------------------------------------
+  subroutine s_hdf5_ser_write_attribute_int( handle, objpath, attrname, attrvalue, error )
+    type(sll_t_hdf5_ser_handle), intent(in   ) :: handle
+    character(len=*)           , intent(in   ) :: objpath
+    character(len=*)           , intent(in   ) :: attrname
+    integer                    , intent(in   ) :: attrvalue
+    integer                    , intent(  out) :: error
+
+#define  DATATYPE  H5T_NATIVE_INTEGER
+#include "sll_k_hdf5_ser_write_attribute.F90"
+#undef   DATATYPE
+
+  end subroutine s_hdf5_ser_write_attribute_int
+
+  !-----------------------------------------------------------------------------
+  !> Read named float64 attribute from existing group or dataset
+  !-----------------------------------------------------------------------------
+  subroutine s_hdf5_ser_read_attribute_dble( handle, objpath, attrname, attrvalue, error )
+    type(sll_t_hdf5_ser_handle), intent(in   ) :: handle
+    character(len=*)           , intent(in   ) :: objpath
+    character(len=*)           , intent(in   ) :: attrname
+    real(f64)                  , intent(  out) :: attrvalue
+    integer                    , intent(  out) :: error
+
+#define  DATATYPE  H5T_NATIVE_DOUBLE
+#include "sll_k_hdf5_ser_read_attribute.F90"
+#undef   DATATYPE
+
+  end subroutine s_hdf5_ser_read_attribute_dble
+
+  !-----------------------------------------------------------------------------
+  !> Read named integer attribute from existing group or dataset
+  !-----------------------------------------------------------------------------
+  subroutine s_hdf5_ser_read_attribute_int( handle, objpath, attrname, attrvalue, error )
+    type(sll_t_hdf5_ser_handle), intent(in   ) :: handle
+    character(len=*)           , intent(in   ) :: objpath
+    character(len=*)           , intent(in   ) :: attrname
+    integer                    , intent(  out) :: attrvalue
+    integer                    , intent(  out) :: error
+
+#define  DATATYPE  H5T_NATIVE_INTEGER
+#include "sll_k_hdf5_ser_read_attribute.F90"
+#undef   DATATYPE
+
+  end subroutine s_hdf5_ser_read_attribute_int
+
+  !-----------------------------------------------------------------------------
 #endif
 
 end module sll_m_hdf5_io_serial
