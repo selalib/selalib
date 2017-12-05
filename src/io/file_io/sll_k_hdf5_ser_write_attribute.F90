@@ -8,6 +8,7 @@ dims = int( [1], hsize_t )
 
 ! Inquire about type of object in target path: group or dataset?
 call h5oget_info_by_name_f( handle%file_id, objpath, object_info, error )
+SLL_ASSERT( error==0 )
 
 ! Open existing group or dataset
 select case (object_info % type)
@@ -29,6 +30,10 @@ SLL_ASSERT( error==0 )
 
 ! Write attribute
 call h5awrite_f( attr_id, DATATYPE, attrvalue, dims, error )
+SLL_ASSERT( error==0 )
+
+! Close attribute
+call h5aclose_f( attr_id, error )
 SLL_ASSERT( error==0 )
 
 ! Close dataspace
