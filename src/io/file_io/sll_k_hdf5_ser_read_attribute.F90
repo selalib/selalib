@@ -7,6 +7,7 @@ dims = int( [1], hsize_t )
 
 ! Inquire about type of object in target path: group or dataset?
 call h5oget_info_by_name_f( handle%file_id, objpath, object_info, error )
+SLL_ASSERT( error==0 )
 
 ! Open existing group or dataset
 select case (object_info % type)
@@ -20,9 +21,14 @@ end select
 
 ! Open existing scalar attribute
 call h5aopen_f( loc_id, attrname, attr_id, error )
+SLL_ASSERT( error==0 )
 
 ! Read attribute
 call h5aread_f( attr_id, DATATYPE, attrvalue, dims, error )
+SLL_ASSERT( error==0 )
+
+! Close attribute
+call h5aclose_f( attr_id, error )
 SLL_ASSERT( error==0 )
 
 ! Close existing group or dataset

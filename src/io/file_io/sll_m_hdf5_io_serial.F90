@@ -31,6 +31,7 @@ module sll_m_hdf5_io_serial
 
   use hdf5, only: &
     h5acreate_f, &
+    h5aclose_f, &
     h5aopen_f, &
     h5aread_f, &
     h5awrite_f, &
