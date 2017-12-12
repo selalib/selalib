@@ -52,7 +52,7 @@ contains
 
     !-> Local variables
     !--> For cartesian meshes
-    type(sll_t_cartesian_mesh_2d), pointer :: cartesian_mesh2d_eta1eta2
+    class(sll_t_cartesian_mesh_2d), pointer :: cartesian_mesh2d_eta1eta2
 
     cartesian_mesh2d_eta1eta2 => mesh4d%eta1_eta2_mesh2d
 
