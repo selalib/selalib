@@ -16,6 +16,7 @@
 !**************************************************************
 !> @ingroup fft
 !> @author Katharina Kormann (IPP)
+!> @author Yaman Güçlü (IPP)
 !> @brief FFT interface for FFTW
 !> @details
 !!
@@ -88,6 +89,8 @@ module sll_m_fft
     sll_s_fft_print_defaultlib, &
     sll_f_fft_allocate_aligned_complex, &
     sll_f_fft_allocate_aligned_real, &
+    sll_s_fft_deallocate_aligned_complex, &
+    sll_s_fft_deallocate_aligned_real, &
     sll_s_fft_init_r2r_1d, &
     sll_s_fft_init_c2r_1d, &
     sll_s_fft_init_r2c_1d, &
@@ -199,6 +202,40 @@ contains
 #endif
 
   end function sll_f_fft_allocate_aligned_real
+
+  !-----------------------------------------------------------------------------
+  !> Function to deallocate an aligned complex array
+  !-----------------------------------------------------------------------------
+  subroutine sll_s_fft_deallocate_aligned_complex(data)
+    complex(C_DOUBLE_COMPLEX), pointer :: data(:) !< Array to be deallocated
+
+#ifdef FFTW_F2003
+    type(C_PTR) :: ptr_data ! C pointer needed for deallocation
+    ptr_data = c_loc(data)
+    call fftw_free(ptr_data)
+#else
+    deallocate(data)
+    SLL_WARNING('sll_s_fft_deallocate_aligned_complex','Aligned deallocation only supported by F2003. Usual deallocation.')
+#endif
+
+  end subroutine sll_s_fft_deallocate_aligned_complex
+
+  !-----------------------------------------------------------------------------
+  !> Function to deallocate an aligned real array
+  !-----------------------------------------------------------------------------
+  subroutine sll_s_fft_deallocate_aligned_real(data)
+    real(C_DOUBLE), pointer :: data(:) !< Array to be deallocated
+
+#ifdef FFTW_F2003
+    type(C_PTR) :: ptr_data ! C pointer needed for deallocation
+    ptr_data = c_loc(data)
+    call fftw_free(ptr_data)
+#else
+    deallocate(data)
+    SLL_WARNING('sll_s_fft_deallocate_aligned_real','Aligned deallocation only supported by F2003. Usual deallocation.')
+#endif
+
+  end subroutine sll_s_fft_deallocate_aligned_real
 
   !-----------------------------------------------------------------------------
   !> Get a list of the k modes in a c2c FFT
