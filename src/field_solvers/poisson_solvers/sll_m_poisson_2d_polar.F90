@@ -195,6 +195,8 @@ module sll_m_poisson_2d_polar
     sll_t_fft, &
     sll_f_fft_allocate_aligned_complex, &
     sll_f_fft_allocate_aligned_real, &
+    sll_s_fft_deallocate_aligned_complex, &
+    sll_s_fft_deallocate_aligned_real, &
     sll_s_fft_init_r2c_1d, &
     sll_s_fft_init_c2r_1d, &
     sll_s_fft_exec_r2c_1d, &
@@ -571,8 +573,8 @@ contains
     call sll_s_fft_free( solver%fw )
     call sll_s_fft_free( solver%bw )
 
-    deallocate( solver%temp_r )
-    deallocate( solver%temp_c )
+    call sll_s_fft_deallocate_aligned_real   ( solver%temp_r )
+    call sll_s_fft_deallocate_aligned_complex( solver%temp_c )
 
     deallocate( solver%z    )
     deallocate( solver%mat  )

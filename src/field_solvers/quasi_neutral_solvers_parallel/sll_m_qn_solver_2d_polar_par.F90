@@ -241,6 +241,7 @@ module sll_m_qn_solver_2d_polar_par
     sll_p_fft_forward, &
     sll_p_fft_backward, &
     sll_f_fft_allocate_aligned_real, &
+    sll_s_fft_deallocate_aligned_real, &
     sll_s_fft_init_r2r_1d, &
     sll_s_fft_exec_r2r_1d, &
     sll_s_fft_get_k_list_r2r_1d, &
@@ -724,7 +725,8 @@ contains
 
     call sll_s_fft_free( solver%fw )
     call sll_s_fft_free( solver%bw )
-    deallocate( solver%tmp  )
+
+    call sll_s_fft_deallocate_aligned_real( solver%tmp )
 
     deallocate( solver%z_r  )
     deallocate( solver%mat  )
