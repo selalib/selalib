@@ -73,7 +73,9 @@ module sll_m_fft
 #include "sll_fftw.h"
 
   use sll_m_fftw3
-  use, intrinsic :: iso_c_binding
+  use, intrinsic :: iso_c_binding, only: &
+    c_f_pointer, &
+    c_loc
 
   implicit none 
 
@@ -216,7 +218,7 @@ contains
 
 #ifdef FFTW_F2003
     type(C_PTR) :: ptr_data ! C pointer needed for deallocation
-    ptr_data = c_loc(data)
+    ptr_data = c_loc(data(1))
     call fftw_free(ptr_data)
 #else
     deallocate(data)
@@ -233,7 +235,7 @@ contains
 
 #ifdef FFTW_F2003
     type(C_PTR) :: ptr_data ! C pointer needed for deallocation
-    ptr_data = c_loc(data)
+    ptr_data = c_loc(data(1))
     call fftw_free(ptr_data)
 #else
     deallocate(data)
