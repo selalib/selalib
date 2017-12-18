@@ -22,6 +22,7 @@ Install Homebrew (`not compatible with macports <https://guide.macports.org/chun
 	$ brew install gcc
 	$ brew install openmpi --with-mpi-thread-multiple
 	$ brew install hdf5 --with-fortran --with-mpi
+	$ brew install openblas
 	$ brew install fftw
 	$ brew install python3
 	$ brew install doxygen
@@ -40,6 +41,7 @@ Install macports (http://www.macports.org/install.php) and ::
 	$ sudo port install hdf5 +fortran+openmpi
 	$ sudo port install fftw-3
 	$ sudo port install doxygen
+	$ sudo port install openblas
 
 If you want to run tests that use nurbs ::
 

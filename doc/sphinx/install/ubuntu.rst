@@ -31,7 +31,7 @@ Install compilers :
 
 Install libraries (MPI, HDF5, FFTW3, LAPACK) :
 
- $ sudo apt-get install  libfftw3-dev liblapack-dev 
+ $ sudo apt-get install  libfftw3-dev liblapack-dev libopenblas-dev
 
 Install software for documentation:
 
