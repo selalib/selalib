@@ -19,7 +19,7 @@ Install compilers ::
 
 Install libraries (MPI, HDF5, FFTW3, LAPACK) ::
 
- $ sudo dnf install hdf5-openmpi-devel openmpi-devel fftw-devel
+ $ sudo dnf install hdf5-openmpi-devel openmpi-devel fftw-devel openblas-devel
 
 Install software for documentation::
 
