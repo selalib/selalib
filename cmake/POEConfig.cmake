@@ -36,12 +36,15 @@ IF(POE_FOUND)
 ELSE(POE_FOUND)
 
    MACRO(ADD_MPI_TEST TEST_NAME EXEC_NAME PROCS ARGS)
-      IF(NOT APPLE)
+      IF(APPLE)
+         SET(MPIEXEC_PREFLAGS "-oversubscribe")
+      ELSE()
          STRING(REGEX REPLACE "mpiexec" "mpirun" MPIEXEC ${MPIEXEC})
       ENDIF()
       ADD_TEST(NAME ${TEST_NAME}
                COMMAND ${MPIEXEC} 
-	               ${MPIEXEC_NUMPROC_FLAG} ${PROCS} ${MPIEXEC_PREFLAGS}
+		       ${MPIEXEC_PREFLAGS}
+	               ${MPIEXEC_NUMPROC_FLAG} ${PROCS} 
 	               ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/${EXEC_NAME}
 	               ${MPIEXEC_POSTFLAGS} ${ARGS}
               )
