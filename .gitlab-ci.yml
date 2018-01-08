@@ -33,25 +33,25 @@ stages:
 #    - osx
 #    - mpich    
     
-fedora-openmpi:
-  stage: build
-  script: 
-    - "scripts/fedora-openmpi-ci.sh"
-  only:
-    - develop
-  tags:
-    - fedora
-    - openmpi
+#fedora-openmpi:
+#  stage: build
+#  script: 
+#    - "scripts/fedora-openmpi-ci.sh"
+#  only:
+#    - develop
+#  tags:
+#    - fedora
+#    - openmpi
 
-fedora-mpich:
-  stage: build
-  script: 
-    - "scripts/fedora-mpich-ci.sh"
-  only:
-    - develop
-  tags:
-    - fedora
-    - mpich
+#fedora-mpich:
+#  stage: build
+#  script: 
+#    - "scripts/fedora-mpich-ci.sh"
+#  only:
+#    - develop
+#  tags:
+#    - fedora
+#    - mpich
 
 #intel-impi:
 #  stage: build
