@@ -19,7 +19,8 @@ TARGET_LINK_LIBRARIES( sll_gyroaverage
   sll_periodic_interpolation
   sll_splines
   sll_file_io
-  sll_quadrature )
+  sll_quadrature 
+  ${BLAS_LIBRARIES})
 
 
 # Ctests

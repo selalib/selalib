@@ -21,7 +21,7 @@ IF(BUILD_HDF5)
 
   FIND_PACKAGE(MPI REQUIRED CXX)
   EXTERNALPROJECT_ADD( hdf5
-     URL  https://support.hdfgroup.org/ftp/HDF5/current18/src/hdf5-1.8.18.tar.bz2
+     URL https://support.hdfgroup.org/ftp/HDF5/current/src/hdf5-1.10.1.tar.bz2
      SOURCE_DIR ${CMAKE_BINARY_DIR}/hdf5
      BINARY_DIR ${CMAKE_BINARY_DIR}/hdf5
      CONFIGURE_COMMAND ${CMAKE_BINARY_DIR}/hdf5/configure --enable-fortran --prefix=${CMAKE_BINARY_DIR} --enable-parallel CXX=${MPI_CXX_COMPILER} CC=${MPI_C_COMPILER} FC=${MPI_Fortran_COMPILER}

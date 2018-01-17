@@ -26,10 +26,13 @@ module sll_m_spline_matrix_dense
   !> Working precision
   integer, parameter :: wp = f64
 
+  !-----------------------------------------------------------------------------
+  !> Dense matrix type
+  !-----------------------------------------------------------------------------
   type, extends( sll_c_spline_matrix ) :: sll_t_spline_matrix_dense
 
     integer :: n
-    real(wp), allocatable :: ipiv(:)
+    integer , allocatable :: ipiv(:)
     real(wp), allocatable :: a(:,:)
 
   contains
@@ -42,6 +45,38 @@ module sll_m_spline_matrix_dense
     procedure :: free          => s_spline_matrix_dense__free
 
   end type sll_t_spline_matrix_dense
+
+  !-----------------------------------------------------------------------------
+  ! Interfaces to LAPACK subroutines (www.netlib.org/lapack)
+  !-----------------------------------------------------------------------------
+  interface
+
+    ! LU factorization of a general M-by-N matrix A using partial pivoting
+    ! with row interchanges
+    subroutine dgetrf( m, n, a, lda, ipiv, info )
+      integer         , intent(in   ) :: m             ! number of rows
+      integer         , intent(in   ) :: n             ! number of columns
+      double precision, intent(inout) :: a(lda,n)      ! M-by-N matrix
+      integer         , intent(in   ) :: lda           ! leading dimension of A
+      integer         , intent(  out) :: ipiv(min(m,n))! pivot indices
+      integer         , intent(  out) :: info          ! 0 if successful
+    end subroutine dgetrf
+
+    ! Solution of the linear system A*X=B or A^T*X=B with a general N-by-N
+    ! matrix A using the LU factorization computed by DGETRF
+    subroutine dgetrs( trans, n, nrhs, a, lda, ipiv, b, ldb, info )
+      character(len=1), intent(in   ) :: trans         ! form of system of eqns.
+      integer         , intent(in   ) :: n             ! order of matrix A
+      integer         , intent(in   ) :: nrhs          ! no. of right hand sides
+      double precision, intent(in   ) :: a(lda,n)      ! LU factors (A=P*L*U)
+      integer         , intent(in   ) :: lda           ! leading dimension of A
+      integer         , intent(in   ) :: ipiv(n)       ! pivot indices
+      double precision, intent(inout) :: b(ldb,nrhs)   ! B on entry, X on exit
+      integer         , intent(in   ) :: ldb           ! leading dimension of B
+      integer         , intent(  out) :: info          ! 0 if successful
+    end subroutine dgetrs
+
+  end interface
 
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 contains

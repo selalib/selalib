@@ -26,12 +26,15 @@ module sll_m_spline_matrix_banded
   !> Working precision
   integer, parameter :: wp = f64
 
+  !-----------------------------------------------------------------------------
+  !> Banded matrix type
+  !-----------------------------------------------------------------------------
   type, extends( sll_c_spline_matrix ) :: sll_t_spline_matrix_banded
 
     integer :: n
     integer :: kl
     integer :: ku
-    real(wp), allocatable :: ipiv(:)
+    integer , allocatable :: ipiv(:)
     real(wp), allocatable :: q(:,:)
 
   contains
@@ -44,6 +47,42 @@ module sll_m_spline_matrix_banded
     procedure :: free          => s_spline_matrix_banded__free
 
   end type sll_t_spline_matrix_banded
+
+  !-----------------------------------------------------------------------------
+  ! Interfaces to LAPACK subroutines (www.netlib.org/lapack)
+  !-----------------------------------------------------------------------------
+  interface
+
+    ! LU factorization of a real M-by-N band matrix A using partial pivoting
+    ! with row interchanges
+    subroutine dgbtrf( m, n, kl, ku, ab, ldab, ipiv, info )
+      integer         , intent(in   ) :: m             ! no. of rows
+      integer         , intent(in   ) :: n             ! no. of columns
+      integer         , intent(in   ) :: kl            ! no. of subdiagonals
+      integer         , intent(in   ) :: ku            ! no. of superdiagonals
+      double precision, intent(inout) :: ab(ldab,n)    ! matrix A in band storage
+      integer         , intent(in   ) :: ldab          ! leading dimension of A
+      integer         , intent(  out) :: ipiv(min(m,n))! pivot indices
+      integer         , intent(  out) :: info          ! 0 if successful
+    end subroutine dgbtrf
+
+    ! Solution of the linear system A*X=B or A^T*X=B with a general band
+    ! matrix A using the LU factorization computed by DGBTRF
+    subroutine dgbtrs( trans, n, kl, ku, nrhs, ab, ldab, ipiv, b, ldb, info )
+      character(len=1), intent(in   ) :: trans         ! form of system of eqns.
+      integer         , intent(in   ) :: n             ! order of matrix A
+      integer         , intent(in   ) :: kl            ! no. of subdiagonals
+      integer         , intent(in   ) :: ku            ! no. of superdiagonals
+      integer         , intent(in   ) :: nrhs          ! no. of right hand sides
+      double precision, intent(in   ) :: ab(ldab,n)    ! LU factors (A=P*L*U)
+      integer         , intent(in   ) :: ldab          ! leading dimension of A
+      integer         , intent(in   ) :: ipiv(n)       ! pivot indices
+      double precision, intent(inout) :: b(ldb,nrhs)   ! B on entry, X on exit
+      integer         , intent(in   ) :: ldb           ! leading dimension of B
+      integer         , intent(  out) :: info          ! 0 if successful
+    end subroutine dgbtrs
+
+  end interface
 
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 contains
