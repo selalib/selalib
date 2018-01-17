@@ -256,9 +256,10 @@ module sll_m_collective
      module procedure sll_collective_bcast_int32
      module procedure sll_collective_bcast_int64
      module procedure sll_collective_bcast_real32
-     module procedure sll_s_collective_bcast_real64
-     module procedure sll_collective_bcast_comp32
-     module procedure sll_collective_bcast_comp64
+     module procedure sll_collective_bcast_real64
+     module procedure sll_s_collective_bcast_real64 ! TODO: delete (use subr above)
+     module procedure sll_collective_bcast_comp32   ! TODO: remove 'size' argument
+     module procedure sll_collective_bcast_comp64   ! TODO: remove 'size' argument
   end interface
 
   !> @brief Gathers together values from a group of processes.
@@ -599,6 +600,24 @@ contains !************************** Operations **************************
     call sll_s_test_mpi_error( ierr, &
          'sll_collective_bcast_int64(): MPI_BCAST()' )
   end subroutine sll_collective_bcast_int64
+
+
+  !> @brief Broadcasts an array of type 'sll_real64' from the process
+  !>        with rank "root" to all other processes of the communicator
+  !> @param        col    Wrapper around the communicator
+  !> @param[inout] buffer Array of type 'sll_real64'
+  !> @param[in]    root   Rank of broadcast root
+  subroutine sll_collective_bcast_real64( col, buffer, root )
+    type(sll_t_collective_t), pointer       :: col
+    sll_real64              , intent(inout) :: buffer(:)
+    sll_int32               , intent(in)    :: root
+
+    sll_int32 :: ierr
+
+    call MPI_BCAST( buffer, size( buffer ), MPI_REAL8, root, col%comm, ierr )
+    call sll_s_test_mpi_error( ierr, &
+         'sll_collective_bcast_real64(): MPI_BCAST()' )
+  end subroutine sll_collective_bcast_real64
 
 
   !> @brief Broadcasts an array of type 'sll_real32' from the process

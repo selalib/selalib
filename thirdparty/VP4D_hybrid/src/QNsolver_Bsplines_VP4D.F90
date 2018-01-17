@@ -99,7 +99,7 @@ contains
     type(boundary_conditions_2d_t), intent(in)    :: bound_cond
     type(spline_degree_2d_t)      , intent(in)    :: spline_degree
 
-    type(sll_t_cartesian_mesh_2d), pointer :: cartesian_mesh2d
+    class(sll_t_cartesian_mesh_2d), pointer :: cartesian_mesh2d
     sll_int32 :: ierr
     sll_real64, dimension(1) :: func_zero_params
     sll_real64, dimension(1) :: func_minus_one_params
