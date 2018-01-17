@@ -1,4 +1,5 @@
 SET(CMAKE_Fortran_COMPILER ${MPI_Fortran_COMPILER})
+INCLUDE_DIRECTORIES(${MPI_Fortran_MOD_DIR})
 
 INCLUDE_DIRECTORIES(${CMAKE_BINARY_DIR}/include)
 ADD_LIBRARY(selalib_vlasov4d STATIC sll_vlasov4d_spectral.F90

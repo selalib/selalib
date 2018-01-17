@@ -1,15 +1,16 @@
 module m_ode_collection
-
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_assert.h"
 #include "sll_errors.h"
-#include "sll_working_precision.h"
+
+  use sll_m_working_precision, only: &
+    f64
 
   use sll_m_ode_integrator_base, only: &
-    sll_c_ode_base
+    sll_c_ode
 
   use sll_m_vector_space_base, only: &
-    sll_c_vector_space_base
+    sll_c_vector_space
 
   use sll_m_vector_space_real_arrays, only: &
     sll_t_vector_space_real_1d
@@ -22,12 +23,15 @@ module m_ode_collection
   private
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
+  ! Working precision
+  integer, parameter :: wp = f64
+
   !----------------------------------------------------------------------------
   ! Harmonic oscillator
   !----------------------------------------------------------------------------
-  type, extends( sll_c_ode_base ) :: harmonic_oscillator
-    sll_int32  :: ndof  = 2
-    sll_real64 :: omega = 1.0_f64
+  type, extends( sll_c_ode ) :: harmonic_oscillator
+    integer  :: ndof  = 2
+    real(wp) :: omega = 1.0_f64
   contains
     procedure :: rhs => rhs__harmonic_oscillator
     procedure :: y_ex => y_ex__harmonic_oscillator
@@ -41,10 +45,10 @@ contains
   ! Harmonic oscillator
   !----------------------------------------------------------------------------
   subroutine rhs__harmonic_oscillator( self, t, y, ydot )
-    class( harmonic_oscillator )  , intent( inout ) :: self
-    sll_real64                    , intent( in    ) :: t
-    class( sll_c_vector_space_base ), intent( in    ) :: y
-    class( sll_c_vector_space_base ), intent( inout ) :: ydot
+    class( harmonic_oscillator ), intent( inout ) :: self
+    real(wp)                    , intent( in    ) :: t
+    class( sll_c_vector_space ) , intent( in    ) :: y
+    class( sll_c_vector_space ) , intent( inout ) :: ydot
 
     character( len=* ), parameter :: this_sub_name = "rhs__harmonic_oscillator"
     character( len=* ), parameter :: err_msg = &
@@ -66,12 +70,12 @@ contains
 
   ! Exact solution
   subroutine y_ex__harmonic_oscillator( self, t, y0, y_ex )
-    class( harmonic_oscillator )  , intent( in    ) :: self
-    sll_real64                    , intent( in    ) :: t
-    sll_real64                    , intent( in    ) :: y0(2)
-    sll_real64                    , intent(   out ) :: y_ex(2)
+    class( harmonic_oscillator ), intent( in    ) :: self
+    real(wp)                    , intent( in    ) :: t
+    real(wp)                    , intent( in    ) :: y0(2)
+    real(wp)                    , intent(   out ) :: y_ex(2)
 
-    sll_real64 :: theta
+    real(wp) :: theta
     theta = self%omega * t
 
     y_ex(1) = y0(1)*cos( theta ) - y0(2)*sin( theta )

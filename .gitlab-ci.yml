@@ -1,37 +1,37 @@
 stages:
   - build
-  
-
-
-ubuntu-mpich:
-  stage: build
-  script: 
-    - "scripts/selalib-ci.sh"
-  only:
-    - develop
-  tags:
-    - ubuntu
-    - mpich
-    
-mavericks-openmpi:
-  stage: build
-  script: 
-    - "scripts/selalib-ci.sh"
-  only:
-    - develop
-  tags:
-    - osx
-    - openmpi
-    
-mavericks-mpich:
-  stage: build
-  script: 
-    - "scripts/selalib-ci.sh"
-  only:
-    - develop
-  tags:
-    - osx
-    - mpich    
+#  
+#
+#
+#ubuntu-mpich:
+#  stage: build
+#  script: 
+#    - "scripts/selalib-ci.sh"
+#  only:
+#    - develop
+#  tags:
+#    - ubuntu
+#    - mpich
+#    
+#mavericks-openmpi:
+#  stage: build
+#  script: 
+#    - "scripts/selalib-ci.sh"
+#  only:
+#    - develop
+#  tags:
+#    - osx
+#    - openmpi
+#    
+#mavericks-mpich:
+#  stage: build
+#  script: 
+#    - "scripts/selalib-ci.sh"
+#  only:
+#    - develop
+#  tags:
+#    - osx
+#    - mpich    
     
 fedora-openmpi:
   stage: build
@@ -53,14 +53,14 @@ fedora-mpich:
     - fedora
     - mpich
 
-intel-impi:
-  stage: build
-  script:
-    - "scripts/intel16-build.sh"
-  only:
-    - develop
-  tags:
-    - intel
+#intel-impi:
+#  stage: build
+#  script:
+#    - "scripts/intel16-build.sh"
+#  only:
+#    - develop
+#  tags:
+#    - intel
     
 #ubuntu-openmpi:
 #  tags:

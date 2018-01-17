@@ -5535,7 +5535,7 @@ print *, 'remap 2d complex:'
     sll_int32  :: tmpi
 
     SLL_ASSERT( sll_f_is_power_of_two(int(num_procs,f64)) )
-    exponent = int(log(real(num_procs))/log(2.0))
+    exponent = int(log(real(num_procs, f64))/log(2.0_f64))
     if( (exponent > 0) .and. divisible_by_three(exponent) ) then
        tmpi = exponent/3
        decomp_procs_1 = 2**tmpi
@@ -5580,7 +5580,7 @@ print *, 'remap 2d complex:'
     sll_int32  :: tmpi
 
     SLL_ASSERT( sll_f_is_power_of_two(int(num_procs,f64)) )
-    exponent = int(log(real(num_procs))/log(2.0))
+    exponent = int(log(real(num_procs, f64))/log(2.0_f64))
     if( (exponent > 0) .and. divisible_by_two(exponent) ) then
        tmpi = exponent/2
        f1 = 2**tmpi

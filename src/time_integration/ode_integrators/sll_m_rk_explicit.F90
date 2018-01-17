@@ -10,35 +10,39 @@
 !----------------------
 
 module sll_m_rk_explicit
-
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_assert.h"
-#include "sll_working_precision.h"
+
+  use sll_m_working_precision, only: &
+    f64
 
   use sll_m_ode_integrator_base, only: &
-    sll_c_ode_base, &
-    sll_c_ode_integrator_base
+    sll_c_ode, &
+    sll_c_ode_integrator
 
   use sll_m_vector_space_base, only: &
-    sll_c_vector_space_base
+    sll_c_vector_space
 
   implicit none
 
   public :: &
     sll_t_rk1e_fwd_euler, &
-    sll_t_rk2e_heun, &
-    sll_t_rk2e_midpoint, &
-    sll_t_rk2e_ralston, &
-    sll_t_rk3e_heun3, &
+    sll_t_rk2e_heun     , &
+    sll_t_rk2e_midpoint , &
+    sll_t_rk2e_ralston  , &
+    sll_t_rk3e_heun3    , &
     sll_t_rk4e_classic
 
   private
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-  
+
+  !> Working precision
+  integer, parameter :: wp = f64
+
   !----------------------------------------------------------------------------
   ! Explicit Euler method
   !----------------------------------------------------------------------------
-  type, extends( sll_c_ode_integrator_base ) :: sll_t_rk1e_fwd_euler
+  type, extends( sll_c_ode_integrator ) :: sll_t_rk1e_fwd_euler
 
   contains
     procedure :: init  =>  init__rk1e_fwd_euler
@@ -50,7 +54,7 @@ module sll_m_rk_explicit
   !----------------------------------------------------------------------------
   ! Explicit midpoint method
   !----------------------------------------------------------------------------
-  type, extends( sll_c_ode_integrator_base ) :: sll_t_rk2e_midpoint
+  type, extends( sll_c_ode_integrator ) :: sll_t_rk2e_midpoint
 
   contains
     procedure :: init  =>  init__rk2e_midpoint
@@ -62,7 +66,7 @@ module sll_m_rk_explicit
   !----------------------------------------------------------------------------
   ! Explicit trapezoidal rule (Heun's method)
   !----------------------------------------------------------------------------
-  type, extends( sll_c_ode_integrator_base ) :: sll_t_rk2e_heun
+  type, extends( sll_c_ode_integrator ) :: sll_t_rk2e_heun
 
   contains
     procedure :: init  =>  init__rk2e_heun
@@ -74,7 +78,7 @@ module sll_m_rk_explicit
   !----------------------------------------------------------------------------
   ! Ralston's method
   !----------------------------------------------------------------------------
-  type, extends( sll_c_ode_integrator_base ) :: sll_t_rk2e_ralston
+  type, extends( sll_c_ode_integrator ) :: sll_t_rk2e_ralston
 
   contains
     procedure :: init  =>  init__rk2e_ralston
@@ -86,7 +90,7 @@ module sll_m_rk_explicit
   !----------------------------------------------------------------------------
   ! 3rd-order method by Heun
   !----------------------------------------------------------------------------
-  type, extends( sll_c_ode_integrator_base ) :: sll_t_rk3e_heun3
+  type, extends( sll_c_ode_integrator ) :: sll_t_rk3e_heun3
 
   contains
     procedure :: init  =>  init__rk3e_heun3
@@ -98,7 +102,7 @@ module sll_m_rk_explicit
   !----------------------------------------------------------------------------
   ! The 'classic' 4th-order RK
   !----------------------------------------------------------------------------
-  type, extends( sll_c_ode_integrator_base ) :: sll_t_rk4e_classic
+  type, extends( sll_c_ode_integrator ) :: sll_t_rk4e_classic
 
   contains
     procedure :: init  =>  init__rk4e_classic
@@ -115,10 +119,10 @@ contains
   ! Explicit Euler method
   !----------------------------------------------------------------------------
   subroutine init__rk1e_fwd_euler( self, ode, t0, y0 )
-    class( sll_t_rk1e_fwd_euler  )  , intent(   out ) :: self
-    class( sll_c_ode_base ), pointer, intent( in    ) :: ode
-    sll_real64                    , intent( in    ) :: t0
-    class( sll_c_vector_space_base ), intent( inout ) :: y0
+    class( sll_t_rk1e_fwd_euler  ), intent(   out ) :: self
+    class( sll_c_ode ),    pointer, intent( in    ) :: ode
+    real(wp)                      , intent( in    ) :: t0
+    class( sll_c_vector_space )   , intent( inout ) :: y0
 
     self%ode => ode
     SLL_ASSERT(t0>=0.0)
@@ -128,11 +132,11 @@ contains
 
   !----------------------------------------------------------------------------
   subroutine step__rk1e_fwd_euler( self, t, y, h, ynew )
-    class( sll_t_rk1e_fwd_euler  )  , intent( inout ) :: self
-    sll_real64                    , intent( in    ) :: t
-    class( sll_c_vector_space_base ), intent( in    ) :: y
-    sll_real64                    , intent( in    ) :: h
-    class( sll_c_vector_space_base ), intent( inout ) :: ynew
+    class( sll_t_rk1e_fwd_euler  ), intent( inout ) :: self
+    real(wp)                      , intent( in    ) :: t
+    class( sll_c_vector_space )   , intent( in    ) :: y
+    real(wp)                      , intent( in    ) :: h
+    class( sll_c_vector_space )   , intent( inout ) :: ynew
 
     ! ynew = y + h * f(t,y)
     call self%ode%rhs( t, y, ynew ) ! ynew  = f(t,y)
@@ -152,10 +156,10 @@ contains
   ! Explicit midpoint method
   !----------------------------------------------------------------------------
   subroutine init__rk2e_midpoint( self, ode, t0, y0 )
-    class( sll_t_rk2e_midpoint )    , intent(   out ) :: self
-    class( sll_c_ode_base ), pointer, intent( in    ) :: ode
-    sll_real64                    , intent( in    ) :: t0
-    class( sll_c_vector_space_base ), intent( inout ) :: y0
+    class( sll_t_rk2e_midpoint ), intent(   out ) :: self
+    class( sll_c_ode ),  pointer, intent( in    ) :: ode
+    real(wp)                    , intent( in    ) :: t0
+    class( sll_c_vector_space ) , intent( inout ) :: y0
 
     self%ode => ode                 ! Store pointer to ODE system
     call y0%source( self%work, 1 )  ! Allocate temporary storage
@@ -165,14 +169,14 @@ contains
 
   !----------------------------------------------------------------------------
   subroutine step__rk2e_midpoint( self, t, y, h, ynew )
-    class( sll_t_rk2e_midpoint )    , intent( inout ) :: self
-    sll_real64                    , intent( in    ) :: t
-    class( sll_c_vector_space_base ), intent( in    ) :: y
-    sll_real64                    , intent( in    ) :: h
-    class( sll_c_vector_space_base ), intent( inout ) :: ynew
+    class( sll_t_rk2e_midpoint ), intent( inout ) :: self
+    real(wp)                    , intent( in    ) :: t
+    class( sll_c_vector_space ) , intent( in    ) :: y
+    real(wp)                    , intent( in    ) :: h
+    class( sll_c_vector_space ) , intent( inout ) :: ynew
 
     ! Half time step
-    sll_real64 :: h2
+    real(wp) :: h2
     h2 = h*0.5_f64
     
     ! yi   = y + h/2 * f(t    ,y )
@@ -202,10 +206,10 @@ contains
   ! Explicit trapezoidal rule (Heun's method)
   !----------------------------------------------------------------------------
   subroutine init__rk2e_heun( self, ode, t0, y0 )
-    class( sll_t_rk2e_heun )        , intent(   out ) :: self
-    class( sll_c_ode_base ), pointer, intent( in    ) :: ode
-    sll_real64                    , intent( in    ) :: t0
-    class( sll_c_vector_space_base ), intent( inout ) :: y0
+    class( sll_t_rk2e_heun )   , intent(   out ) :: self
+    class( sll_c_ode ), pointer, intent( in    ) :: ode
+    real(wp)                   , intent( in    ) :: t0
+    class( sll_c_vector_space ), intent( inout ) :: y0
 
     self%ode => ode                 ! Store pointer to ODE system
     call y0%source( self%work, 2 )  ! Allocate temporary storage
@@ -215,11 +219,11 @@ contains
 
   !----------------------------------------------------------------------------
   subroutine step__rk2e_heun( self, t, y, h, ynew )
-    class( sll_t_rk2e_heun )        , intent( inout ) :: self
-    sll_real64                    , intent( in    ) :: t
-    class( sll_c_vector_space_base ), intent( in    ) :: y
-    sll_real64                    , intent( in    ) :: h
-    class( sll_c_vector_space_base ), intent( inout ) :: ynew
+    class( sll_t_rk2e_heun )   , intent( inout ) :: self
+    real(wp)                   , intent( in    ) :: t
+    class( sll_c_vector_space ), intent( in    ) :: y
+    real(wp)                   , intent( in    ) :: h
+    class( sll_c_vector_space ), intent( inout ) :: ynew
 
     ! Compute 1st stage derivative:  k1 = f(t,y)
     call self%ode%rhs( t, y, self%work(1) )
@@ -249,10 +253,10 @@ contains
   ! Ralston's method
   !----------------------------------------------------------------------------
   subroutine init__rk2e_ralston( self, ode, t0, y0 )
-    class( sll_t_rk2e_ralston )     , intent(   out ) :: self
-    class( sll_c_ode_base ), pointer, intent( in    ) :: ode
-    sll_real64                    , intent( in    ) :: t0
-    class( sll_c_vector_space_base ), intent( inout ) :: y0
+    class( sll_t_rk2e_ralston ), intent(   out ) :: self
+    class( sll_c_ode ), pointer, intent( in    ) :: ode
+    real(wp)                   , intent( in    ) :: t0
+    class( sll_c_vector_space ), intent( inout ) :: y0
 
     self%ode => ode                 ! Store pointer to ODE system
     call y0%source( self%work, 2 )  ! Allocate temporary storage
@@ -262,13 +266,13 @@ contains
 
   !----------------------------------------------------------------------------
   subroutine step__rk2e_ralston( self, t, y, h, ynew )
-    class( sll_t_rk2e_ralston )     , intent( inout ) :: self
-    sll_real64                    , intent( in    ) :: t
-    class( sll_c_vector_space_base ), intent( in    ) :: y
-    sll_real64                    , intent( in    ) :: h
-    class( sll_c_vector_space_base ), intent( inout ) :: ynew
+    class( sll_t_rk2e_ralston ), intent( inout ) :: self
+    real(wp)                   , intent( in    ) :: t
+    class( sll_c_vector_space ), intent( in    ) :: y
+    real(wp)                   , intent( in    ) :: h
+    class( sll_c_vector_space ), intent( inout ) :: ynew
 
-    sll_real64, parameter :: two_thirds = 2.0_f64/3.0_f64
+    real(wp), parameter :: two_thirds = 2.0_f64/3.0_f64
 
     ! Compute 1st stage derivative:  k1 = f(t,y)
     call self%ode%rhs( t, y, self%work(1) )
@@ -298,10 +302,10 @@ contains
   ! 3rd-order method by Heun
   !----------------------------------------------------------------------------
   subroutine init__rk3e_heun3( self, ode, t0, y0 )
-    class( sll_t_rk3e_heun3 )       , intent(   out ) :: self
-    class( sll_c_ode_base ), pointer, intent( in    ) :: ode
-    sll_real64                    , intent( in    ) :: t0
-    class( sll_c_vector_space_base ), intent( inout ) :: y0
+    class( sll_t_rk3e_heun3 )  , intent(   out ) :: self
+    class( sll_c_ode ), pointer, intent( in    ) :: ode
+    real(wp)                   , intent( in    ) :: t0
+    class( sll_c_vector_space ), intent( inout ) :: y0
 
     self%ode => ode                 ! Store pointer to ODE system
     call y0%source( self%work, 2 )  ! Allocate temporary storage
@@ -312,11 +316,11 @@ contains
 
   !----------------------------------------------------------------------------
   subroutine step__rk3e_heun3( self, t, y, h, ynew )
-    class( sll_t_rk3e_heun3 )       , intent( inout ) :: self
-    sll_real64                    , intent( in    ) :: t
-    class( sll_c_vector_space_base ), intent( in    ) :: y
-    sll_real64                    , intent( in    ) :: h
-    class( sll_c_vector_space_base ), intent( inout ) :: ynew
+    class( sll_t_rk3e_heun3 )  , intent( inout ) :: self
+    real(wp)                   , intent( in    ) :: t
+    class( sll_c_vector_space ), intent( in    ) :: y
+    real(wp)                   , intent( in    ) :: h
+    class( sll_c_vector_space ), intent( inout ) :: ynew
 
     ! Compute 1st stage derivative:  k1 = f(t,y)
     call self%ode%rhs( t, y, self%work(1) )
@@ -352,10 +356,10 @@ contains
   ! The 'classic' 4th-order RK
   !----------------------------------------------------------------------------
   subroutine init__rk4e_classic( self, ode, t0, y0 )
-    class( sll_t_rk4e_classic )     , intent(   out ) :: self
-    class( sll_c_ode_base ), pointer, intent( in    ) :: ode
-    sll_real64                    , intent( in    ) :: t0
-    class( sll_c_vector_space_base ), intent( inout ) :: y0
+    class( sll_t_rk4e_classic ), intent(   out ) :: self
+    class( sll_c_ode ), pointer, intent( in    ) :: ode
+    real(wp)                   , intent( in    ) :: t0
+    class( sll_c_vector_space ), intent( inout ) :: y0
 
     self%ode => ode                 ! Store pointer to ODE system
     call y0%source( self%work, 2 )  ! Allocate temporary storage
@@ -365,15 +369,15 @@ contains
 
   !----------------------------------------------------------------------------
   subroutine step__rk4e_classic( self, t, y, h, ynew )
-    class( sll_t_rk4e_classic )     , intent( inout ) :: self
-    sll_real64                    , intent( in    ) :: t
-    class( sll_c_vector_space_base ), intent( in    ) :: y
-    sll_real64                    , intent( in    ) :: h
-    class( sll_c_vector_space_base ), intent( inout ) :: ynew
+    class( sll_t_rk4e_classic ), intent( inout ) :: self
+    real(wp)                   , intent( in    ) :: t
+    class( sll_c_vector_space ), intent( in    ) :: y
+    real(wp)                   , intent( in    ) :: h
+    class( sll_c_vector_space ), intent( inout ) :: ynew
 
     ! Butcher's table
-    sll_real64, parameter :: f3=1.0_f64/3.0_f64, f6=1.0_f64/6.0_f64
-    sll_real64, parameter :: &
+    real(wp), parameter :: f3=1.0_f64/3.0_f64, f6=1.0_f64/6.0_f64
+    real(wp), parameter :: &
       c2=0.5_f64, a21=0.5_f64,                                   &
       c3=0.5_f64,              a32=0.5_f64,                      &
       c4=1.0_f64,                           a43=1.0_f64,         &

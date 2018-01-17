@@ -42,11 +42,26 @@
 !> \f$ \phi(r,\theta) \f$ is \f$ 2\pi\f$-periodic along \f$ \theta \f$ and the
 !> BCs along \f$ r \f$ can be chosen among the following types
 !> (\f$ \overline{r} = r_\textrm{min} \f$ or \f$ \overline{r} = r_\textrm{max} \f$):
-!> - Homogeneous Dirichlet: \f$ \phi(\overline{r},\theta)=0\f$;
-!> - Homogeneous Neumann: \f$ \partial_r\phi(\overline{r},\theta)=0\f$;
-!> - Homogeneous Neumann mode 0:
-!>   \f$ \partial_r\widehat{\phi}_0(\overline{r})=0\f$ and
-!>   \f$ \widehat{\phi}_k(\overline{r})=0 \f$ for \f$ k\neq 0 \f$.
+!>  <table>
+!>  <tr><th> \c Option name <th> Description <th> Condition on solution <th> Condition on Fourier modes
+!>  <tr><td> \c sll_p_dirichlet <td> Homogeneous Dirichlet
+!>      <td> \f$ \phi(\overline{r},\theta)\equiv 0\f$
+!>      <td> \f$ \widehat{\phi}_k(\overline{r})= 0\quad \forall k \f$
+!>  <tr><td> \c sll_p_neumann <td> Homogeneous Neumann
+!>      <td> \f$ \partial_r\phi(\overline{r},\theta)\equiv 0\f$
+!>      <td> \f$ \partial_r\widehat{\phi}_k(\overline{r})=0\quad \forall k \f$
+!>  <tr><td> \c sll_p_neumann_mode_0 <td> Homogeneous Neumann mode 0
+!>      <td> \f$ \partial_\theta\phi(\overline{r},\theta)\equiv 0 \f$ and
+!>           \f$ \int_0^{2\pi} \partial_r\phi(\overline{r},\theta) d\theta = 0 \f$
+!>      <td> \f$ \partial_r\widehat{\phi}_0(\overline{r})=0 \f$ and
+!>           \f$ \widehat{\phi}_k(\overline{r})=0 \f$ for \f$ k\neq 0 \f$
+!>  <tr><td> \c sll_p_polar_origin   <td> \f$ \overline{r}=r_\textrm{min}=0 \f$ is center of circular disk
+!>           <td> \f$ \phi(-\Delta r/2,\theta) \equiv \phi(\Delta r/2,\theta+\pi) \f$
+!>           <td> \f$ \widehat{\phi}_k(-\Delta r/2) = (-1)^k \widehat{\phi}_k(\Delta r/2)\quad \forall k \f$
+!>  </table>
+!>
+!> Please note that the option \c sll_p_polar_origin can only be used at
+!> \f$ \overline{r} = r_\textrm{min} \f$ when one sets \f$ r_\textrm{min} = 0 \f$.
 !>
 !> #### Numerical methods ####
 !>
@@ -75,6 +90,71 @@
 !> \f$ \widehat{\phi}_0, \dots, \widehat{\phi}_{N_\theta/2} \f$. For this purpose,
 !> the \c r2c and \c c2r interfaces of FFTW are used for the forward and backward
 !> FFTs, respectively.
+!>
+!> If the user does not provide a radial grid, a collocation grid with uniform
+!> spacing \f$ \Delta r \f$ is calculated from the input parameters
+!> \f$ r_\textrm{min} \f$, \f$ r_\textrm{max} \f$ and \f$N_r\f$
+!> (number of radial cells).
+!> In the case of a circular annulus (\f$ r_\textrm{min} > 0\f$),
+!> the collocation grid has \f$ N_r+1 \f$ points, with first point
+!> \f$ r_1 = r_\textrm{min} \f$ and last point \f$ r_{N_r+1} = r_\textrm{max} \f$.
+!> In the case of a circular disc (\f$ r_\textrm{min} = 0 \f$),
+!> the collocation grid has only \f$ N_r \f$ points, with first point
+!> \f$ r_1 = \Delta r/2 \f$ and last point \f$ r_{N_r} = r_\textrm{max} \f$.
+!>
+!> For a given mode \f$k\f$, at each interior point in the collocation grid
+!> (\f$ r_i \neq r_\textrm{min}, r_\textrm{max} \f$) the equation above
+!> is approximated using centered finite-differences on a 3-point stencil,
+!> valid on a general non-uniform grid with
+!> \f$ h_i^{+}=r_{i+1}-r_i \f$ and \f$ h_i^{-}=r_{i}-r_{i-1} \f$:
+!>
+!> \f[
+!> \frac{\partial}{\partial r} \widehat\phi_k(r_i) =
+!> \frac{1}{h_i^+ + h_i^-} \left[
+!>  -\frac{h_i^+}{h_i^-}\, \widehat{\phi}_k(r_{i-1})
+!>  +\left( \frac{h_i^+}{h_i^-} - \frac{h_i^-}{h_i^+} \right)\, \widehat{\phi}_k(r_i)
+!>  +\frac{h_i^-}{h_i^+}\, \widehat{\phi}_k(r_{i+1})
+!> \right]
+!>  \,+\, \left\{ -\frac{\partial^3}{\partial r^3} \widehat\phi_k(r_i) \frac{h_i^+ h_i^-}{6} \right\}
+!>  \,+\, \textit{H.O.T.},
+!> \f]
+!>
+!> \f[
+!> \frac{\partial^2}{\partial r^2} \widehat\phi_k(r_i) =
+!> \frac{1}{h_i^+ h_i^-} \left[
+!>   \frac{2h_i^+}{h_i^++h_i^-}\, \widehat{\phi}_k(r_{i-1})
+!>                             -2 \widehat{\phi}_k(r_i)
+!>  +\frac{2h_i^-}{h_i^++h_i^-}\, \widehat{\phi}_k(r_{i+1})
+!> \right]
+!>  \,+\, \left\{ -\frac{\partial^3}{\partial r^3} \widehat\phi_k(r_i) \frac{h_i^+ - h_i^-}{3}
+!>  \,            -\frac{\partial^4}{\partial r^4} \widehat\phi_k(r_i) \frac{(h_i^+)^2 - h_i^+ h_i^- +(h_i^-)^2}{12} \right\}
+!>  \,+\, \textit{H.O.T.}.
+!> \f]
+!>
+!> On the right-hand side of each equation, the first term is the
+!> finite-difference approximation used in the code,
+!> the terms in curly braces represent the leading truncation error,
+!> and \f$ \textit{H.O.T} \f$ means "higher order terms".
+!> The coefficients that multiply \f$\widehat{\phi}_k(r_{i-1})\f$, \f$\widehat{\phi}_k(r_i)\f$
+!> and \f$\widehat{\phi}_k(r_{i+1})\f$ are the so-called "finite-difference coefficients".
+!> Although both formulas are exact for a parabolic profile, for a general profile
+!> the finite-difference approximation to the second derivative is only 1st-order
+!> accurate when \f$ h_i^+ \neq h_i^- \f$.
+!> In the future the finite-difference coefficients for the second derivative
+!> can be modified to cancel the 1st-order error term: the Fourier-transformed
+!> Poisson equation is differentiated to obtain an expression for
+!> \f$ \partial^3\widehat{\phi}_k / \partial r^3 \f$ that involves only
+!> 1st and 2nd derivatives,
+!>
+!> \f[
+!>                     \frac{\partial^3\widehat\phi_k}{\partial r^3} =
+!>  -\frac{1}{r}       \frac{\partial^2\widehat\phi_k}{\partial r^2}
+!>  +\frac{1+k^2}{r^2} \frac{\partial  \widehat\phi_k}{\partial r  }
+!>  -\frac{2 k^2}{r^3}      {          \widehat\phi_k}
+!>  -                  \frac{\partial  \widehat\rho_k}{\partial r  },
+!> \f]
+!>
+!> which are then approximated with the same finite-difference formulas.
 !>
 !> #### Usage example ####
 !>
@@ -108,12 +188,15 @@ module sll_m_poisson_2d_polar
   use sll_m_boundary_condition_descriptors, only: &
     sll_p_dirichlet, &
     sll_p_neumann, &
-    sll_p_neumann_mode_0
+    sll_p_neumann_mode_0, &
+    sll_p_polar_origin
 
   use sll_m_fft, only: &
     sll_t_fft, &
     sll_f_fft_allocate_aligned_complex, &
     sll_f_fft_allocate_aligned_real, &
+    sll_s_fft_deallocate_aligned_complex, &
+    sll_s_fft_deallocate_aligned_real, &
     sll_s_fft_init_r2c_1d, &
     sll_s_fft_init_c2r_1d, &
     sll_s_fft_exec_r2c_1d, &
@@ -146,6 +229,8 @@ module sll_m_poisson_2d_polar
   !> Class for the Poisson solver in polar coordinate
   type, extends(sll_c_poisson_2d_base) :: sll_t_poisson_2d_polar
 
+   private
+
    real   (f64)              :: rmin      !< Min value of r coordinate
    real   (f64)              :: rmax      !< Max value of r coordinate
    integer(i32)              :: nr        !< Number of cells along r
@@ -161,8 +246,9 @@ module sll_m_poisson_2d_polar
    real   (f64), allocatable :: cts (:)   !< Lapack coefficients
    integer(i32), allocatable :: ipiv(:)   !< Lapack pivot indices
 
-   real(f64) :: bc_coeffs_rmin( 2: 3)
-   real(f64) :: bc_coeffs_rmax(-2:-1)
+   real(f64) :: bc_coeffs_rmin( 2: 3) ! needed for Neumann at r=r_min
+   real(f64) :: bc_coeffs_rmax(-2:-1) ! needed for Neumann at r=r_max
+   integer   :: skip0                 ! needed for full circle
 
   contains
 
@@ -173,10 +259,6 @@ module sll_m_poisson_2d_polar
     procedure :: free                      => s_free
 
   end type sll_t_poisson_2d_polar
-
-  ! Allowed boundary conditions
-  integer(i32), parameter :: bc_opts(3) = &
-    [sll_p_dirichlet, sll_p_neumann, sll_p_neumann_mode_0]
 
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 contains
@@ -200,7 +282,7 @@ contains
     integer(i32)                , intent(in   ) :: ntheta   !< number of cells angular
     integer(i32)                , intent(in   ) :: bc_rmin  !< boundary condition at r_min
     integer(i32)                , intent(in   ) :: bc_rmax  !< boundary condition at r_max
-    real(f64), target,  optional, intent(in   ) :: rgrid(:) !< grid points along r
+    real(f64),          optional, intent(in   ) :: rgrid(:) !< grid points along r
 
     character(len=*), parameter :: this_sub_name = 'sll_s_poisson_2d_polar_init'
 
@@ -208,49 +290,86 @@ contains
     real(f64) :: inv_r
     real(f64) :: d1_coeffs(3)
     real(f64) :: d2_coeffs(3)
-    real(f64), allocatable, target  :: rgrid_uniform(:)
-    real(f64)             , pointer :: r_nodes(:)
+    real(f64), allocatable :: r_nodes(:)
 
     integer(i32)  :: i, k
     integer(i32)  :: bck(2)
     integer(i32)  :: last
 
-    ! Consistency check: boundary conditions must be one of three options
-    if( any( bc_rmin == bc_opts ) ) then
-      solver%bc(1) = bc_rmin
-    else
-      SLL_ERROR( this_sub_name, 'Unrecognized boundary condition at r_min' )
-    end if
-    !
-    if( any( bc_rmax == bc_opts ) ) then
-      solver%bc(2) = bc_rmax
-    else
-      SLL_ERROR( this_sub_name, 'Unrecognized boundary condition at r_max' )
+    ! Consistency checks
+    SLL_ASSERT_ALWAYS( rmin >= 0.0_f64 )
+    SLL_ASSERT_ALWAYS( rmin < rmax )
+    SLL_ASSERT_ALWAYS( nr >= 1 )
+    SLL_ASSERT_ALWAYS( ntheta >= 1 )
+
+    if (bc_rmin == sll_p_polar_origin .and. rmin /= 0.0_f64) then
+      SLL_ERROR( this_sub_name, "BC option 'sll_p_polar_origin' requires r_min = 0" )
     end if
 
-    ! Store global information in solver
+    ! Set boundary condition at r_min
+    select case( bc_rmin )
+    case( sll_p_dirichlet, sll_p_neumann, sll_p_neumann_mode_0, sll_p_polar_origin )
+      solver%bc(1) = bc_rmin
+    case default
+      SLL_ERROR( this_sub_name, 'Unrecognized boundary condition at r_min' )
+    end select
+
+    ! Set boundary condition at r_max
+    select case( bc_rmax )
+    case( sll_p_dirichlet, sll_p_neumann, sll_p_neumann_mode_0 )
+      solver%bc(2) = bc_rmax
+    case default
+      SLL_ERROR( this_sub_name, 'Unrecognized boundary condition at r_max' )
+    end select
+
+    ! Store information in solver
     solver%rmin  =  rmin
     solver%rmax  =  rmax
     solver%nr    =  nr
     solver%nt    =  ntheta
 
+    ! Important: if full circle is simulated, center point is not solved for!
+    !            Therefore, solution is calculated on nr+1-skip0 points.
+    solver%skip0 = merge( 1, 0, bc_rmin==sll_p_polar_origin )
+
     ! r grid (possibly non-uniform)
-    if (present( rgrid )) then
-      SLL_ASSERT( size(rgrid) == nr+1 )
-      SLL_ASSERT( rgrid(   1) == rmin )
-      SLL_ASSERT( rgrid(nr+1) == rmax )
-      r_nodes => rgrid
-    else
-      allocate( rgrid_uniform(nr+1) )
-      call sll_s_new_array_linspace( rgrid_uniform, rmin, rmax, endpoint=.true. )
-      r_nodes => rgrid_uniform
+    allocate( r_nodes(nr+1) )
+
+    if (present( rgrid )) then  !--> Create computational grid from user data
+
+      SLL_ASSERT_ALWAYS( all( rgrid > 0.0_f64 ) )
+      if (bc_rmin == sll_p_polar_origin) then
+        SLL_ASSERT_ALWAYS( size(rgrid) == nr   )
+        SLL_ASSERT_ALWAYS( rgrid(nr  ) == rmax )
+        r_nodes(1 ) = -rgrid(1)
+        r_nodes(2:) =  rgrid(:)
+      else
+        SLL_ASSERT_ALWAYS( size(rgrid) == nr+1 )
+        SLL_ASSERT_ALWAYS( rgrid(   1) == rmin )
+        SLL_ASSERT_ALWAYS( rgrid(nr+1) == rmax )
+        r_nodes(:) = rgrid(:)
+      end if
+
+    else  !-------------------------> Create uniform grid
+
+      if (bc_rmin == sll_p_polar_origin) then
+        associate( rmin => rmax / real(2*nr+1,f64) )
+          r_nodes(1) = -rmin
+          call sll_s_new_array_linspace( r_nodes(2:), rmin, rmax, endpoint=.true. )
+        end associate
+      else
+        call sll_s_new_array_linspace( r_nodes, rmin, rmax, endpoint=.true. )
+      end if
+
     end if
 
-    ! Allocate arrays global in r
-    allocate( solver%z   (nr+1   ,0:ntheta/2) )
-    allocate( solver%mat((nr-1)*3,0:ntheta/2) ) ! for each k, matrix depends on r
-    allocate( solver%cts((nr-1)*7) )
-    allocate( solver%ipiv(nr-1) )
+    ! Allocate arrays for solution of linear systems along r
+    associate( sh => solver % skip0 )
+      allocate( solver%z   (nr+1-sh,0:ntheta/2) )
+      allocate( solver%mat((nr-1)*3,0:ntheta/2) ) ! for each k, matrix depends on r
+      allocate( solver%cts((nr-1)*7) )
+      allocate( solver%ipiv(nr-1) )
+    end associate
 
     ! Allocate in ALIGNED fashion 1D work arrays for FFT
     solver%temp_r => sll_f_fft_allocate_aligned_real   ( ntheta )
@@ -322,6 +441,12 @@ contains
         solver%mat(2,k) = solver%mat(2,k) + solver%bc_coeffs_rmin(2) * solver%mat(1,k)
         solver%mat(1,k) = 0.0_f64
 
+      else if (bck(1) == sll_p_polar_origin) then ! center of circular domain
+
+        ! Gaussian elimination: phi(1) = (-1)^k phi(2)
+        solver%mat(2,k) = solver%mat(2,k) + (-1)**k * solver%mat(1,k)
+        solver%mat(1,k) = 0.0_f64
+
       end if
 
       !--------------------------------------------
@@ -360,17 +485,24 @@ contains
 
     integer(i32) :: nr, ntheta, bck(2)
     integer(i32) :: i, k
-    integer(i32) :: last
+    integer(i32) :: nrpts
+    integer(i32) :: sh
 
     nr     = solver%nr
     ntheta = solver%nt
 
+    ! Shift in radial grid indexing
+    sh = solver%skip0 ! =1 if bc_rmin==sll_p_polar_origin, =0 otherwise
+
+    ! Number of points in radial grid
+    nrpts = nr+1-sh
+
     ! Consistency check: 'rho' and 'phi' have shape defined at initialization
-    SLL_ASSERT( all( shape(rho) == [nr+1,ntheta] ) )
-    SLL_ASSERT( all( shape(phi) == [nr+1,ntheta] ) )
+    SLL_ASSERT_ALWAYS( all( shape(rho) == [nrpts, ntheta] ) )
+    SLL_ASSERT_ALWAYS( all( shape(phi) == [nrpts, ntheta] ) )
 
     ! For each r_i, compute FFT of rho(r_i,theta) to obtain \hat{rho}(r_i,k)
-    do i = 1, nr+1
+    do i = 1, nrpts
       solver%temp_r(:) = rho(i,:)
       call sll_s_fft_exec_r2c_1d( solver%fw, solver%temp_r(:), solver%temp_c(:) )
       solver%z(i,:) = solver%temp_c(:)
@@ -387,7 +519,7 @@ contains
 
       ! Solve tridiagonal system to obtain \hat{phi}_{k_j}(r) at internal points
       call sll_s_setup_cyclic_tridiag( solver%mat(:,k), nr-1, solver%cts, solver%ipiv )
-      call sll_o_solve_cyclic_tridiag( solver%cts, solver%ipiv, rhok(2:nr), nr-1, phik(2:nr) )
+      call sll_o_solve_cyclic_tridiag( solver%cts, solver%ipiv, rhok(2-sh:nrpts-1), nr-1, phik(2-sh:nrpts-1) )
 
       ! Compute boundary conditions type for mode k
       bck(:) = solver%bc(:)
@@ -411,12 +543,11 @@ contains
       end if
 
       ! Boundary condition at rmax
-      last = nr+1
       if (bck(2) == sll_p_dirichlet) then ! Dirichlet
-        phik(last) = (0.0_f64, 0.0_f64)
+        phik(nrpts) = (0.0_f64, 0.0_f64)
       else if (bck(2) == sll_p_neumann) then ! Neumann
         associate( c => solver % bc_coeffs_rmax )
-          phik(last) = c(-2)*phik(last-2) + c(-1)*phik(last-1)
+          phik(nrpts) = c(-2)*phik(nrpts-2) + c(-1)*phik(nrpts-1)
         end associate
       end if
 
@@ -425,7 +556,7 @@ contains
     end do
 
     ! For each r_i, compute inverse FFT of \hat{phi}(r_i,k) to obtain phi(r_i,theta)
-    do i = 1, nr+1
+    do i = 1, nrpts
       solver%temp_c(:) = solver%z(i,:)
       call sll_s_fft_exec_c2r_1d( solver%bw, solver%temp_c(:), solver%temp_r(:) )
       phi(i,:) = solver%temp_r(:)
@@ -442,8 +573,8 @@ contains
     call sll_s_fft_free( solver%fw )
     call sll_s_fft_free( solver%bw )
 
-    deallocate( solver%temp_r )
-    deallocate( solver%temp_c )
+    call sll_s_fft_deallocate_aligned_real   ( solver%temp_r )
+    call sll_s_fft_deallocate_aligned_complex( solver%temp_c )
 
     deallocate( solver%z    )
     deallocate( solver%mat  )

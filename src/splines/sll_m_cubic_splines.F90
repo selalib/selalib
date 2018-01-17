@@ -1669,7 +1669,7 @@ MAKE_GET_SLOT_FUNCTION(sll_f_cubic_spline_2d_get_x2_delta,sll_t_cubic_spline_2d,
        ! estimate the derivative at the last point.
        do j=1,npx2
           spline%x1_max_slopes(j) = &
-               r_x1_delta*(-0.25_f64*data(npx1-4,j) + &
+               r_x1_delta*(+0.25_f64*data(npx1-4,j) - &
                    (4.0_f64/3.0_f64)*data(npx1-3,j) + &
                              3.0_f64*data(npx1-2,j) - &
                              4.0_f64*data(npx1-1,j) + &
@@ -1770,7 +1770,7 @@ MAKE_GET_SLOT_FUNCTION(sll_f_cubic_spline_2d_get_x2_delta,sll_t_cubic_spline_2d,
        ! at the last point.
        do i=1,npx1
           spline%x2_max_slopes(i) = &
-               r_x2_delta*(-0.25_f64*data(i,npx2-4) + &
+               r_x2_delta*(+0.25_f64*data(i,npx2-4) - &
                    (4.0_f64/3.0_f64)*data(i,npx2-3) + &
                              3.0_f64*data(i,npx2-2) - &
                              4.0_f64*data(i,npx2-1) + &
@@ -1867,7 +1867,7 @@ MAKE_GET_SLOT_FUNCTION(sll_f_cubic_spline_2d_get_x2_delta,sll_t_cubic_spline_2d,
        ! at the last point.
        do j=1,npx2
           spline%x1_max_slopes(j) = &
-               r_x1_delta*( -0.25_f64*data(npx1-4,j) + &
+               r_x1_delta*( +0.25_f64*data(npx1-4,j) - &
                     (4.0_f64/3.0_f64)*data(npx1-3,j) + &
                               3.0_f64*data(npx1-2,j) - &
                               4.0_f64*data(npx1-1,j) + &
@@ -1892,7 +1892,7 @@ MAKE_GET_SLOT_FUNCTION(sll_f_cubic_spline_2d_get_x2_delta,sll_t_cubic_spline_2d,
        ! at the last point.
        do i=1,npx1
           spline%x2_max_slopes(i) = &
-               r_x2_delta*(-0.25_f64*data(i,npx2-4) + &
+               r_x2_delta*(+0.25_f64*data(i,npx2-4) - &
                    (4.0_f64/3.0_f64)*data(i,npx2-3) + &
                              3.0_f64*data(i,npx2-2) - &
                              4.0_f64*data(i,npx2-1) + &

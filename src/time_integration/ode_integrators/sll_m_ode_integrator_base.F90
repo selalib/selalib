@@ -11,41 +11,45 @@
 !> @todo    Add detailed description
 !------------------------------------------------------------------------------
 module sll_m_ode_integrator_base
-
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-#include "sll_working_precision.h"
+
+  use sll_m_working_precision, only: &
+    f64
 
   use sll_m_vector_space_base, only: &
-    sll_c_vector_space_base
+    sll_c_vector_space
 
   implicit none
 
   public :: &
-    sll_c_ode_base, &
-    sll_c_ode_integrator_base
+    sll_c_ode, &
+    sll_c_ode_integrator
 
   private
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
+  !> Working precision
+  integer, parameter :: wp = f64
+
   !----------------------------------------------------------------------------
-  ! Abstract type: sll_c_ode_base
+  ! Abstract type: sll_c_ode
   !----------------------------------------------------------------------------
   !> @brief   ODE system
   !> @details Abstract type for ODE systems, to be fed to an ODE integrator.
-  !>          ODE systems are in the form \f$ \frac{dy}{dt} = f(t,y) \f$, where
-  !>          *y* is the state vector, of <class(sll_vector_space)>, and *t* is
-  !>          time, a double precision real number.
+  !>          ODE systems are in the form \f$ \frac{dy}{dt} = f(t,y) \f$,
+  !>          where *y* is the state vector of <class(sll_c_vector_space)>,
+  !>          and *t* is time, a double precision real number.
   !>          The user of the library should provide a derived ODE class, and 
   !>          possibly a derived vector space for its data.
   !>
-  type, abstract :: sll_c_ode_base
+  type, abstract :: sll_c_ode
   contains
     procedure( i_rhs ), deferred :: rhs   !< evaluate *f(t,y)*
 !    procedure                    :: solve !< solve an implicit problem
-  end type sll_c_ode_base
+  end type sll_c_ode
 
   !----------------------------------------------------------------------------
-  ! Abstract type: sll_c_ode_integrator_base
+  ! Abstract type: sll_c_ode_integrator
   !----------------------------------------------------------------------------
   !> @brief   Base class for standard ODE integrators
   !> @details Abstract type for ODE integrators that do not use specific
@@ -55,20 +59,20 @@ module sll_m_ode_integrator_base
   !>          of this class in order to use any integrator.  Additionally,
   !>          specific integrators will have other options and methods.
   !>
-  type, abstract :: sll_c_ode_integrator_base
+  type, abstract :: sll_c_ode_integrator
 
     !> Pointer to ODE object
-    class( sll_c_ode_base ), pointer :: ode => null()
+    class( sll_c_ode ), pointer :: ode => null()
 
     !> Storage for intermediate stage computation
-    class( sll_c_vector_space_base ), allocatable :: work(:)
+    class( sll_c_vector_space ), allocatable :: work(:)
 
   contains
     procedure( i_init  ), deferred :: init
     procedure( i_step  ), deferred :: step
     procedure( i_clean ), deferred :: clean
 
-  end type sll_c_ode_integrator_base
+  end type sll_c_ode_integrator
 
   !----------------------------------------------------------------------------
   ! Abstract interface: i_rhs
@@ -81,12 +85,11 @@ module sll_m_ode_integrator_base
   !>
   abstract interface
    subroutine i_rhs( self, t, y, ydot )
-    use sll_m_working_precision
-    import sll_c_ode_base, sll_c_vector_space_base
-    class( sll_c_ode_base )         , intent( inout ) :: self
-    sll_real64                    , intent( in    ) :: t
-    class( sll_c_vector_space_base ), intent( in    ) :: y
-    class( sll_c_vector_space_base ), intent( inout ) :: ydot
+    import sll_c_ode, sll_c_vector_space, wp
+    class( sll_c_ode )         , intent( inout ) :: self
+    real(wp)                   , intent( in    ) :: t
+    class( sll_c_vector_space ), intent( in    ) :: y
+    class( sll_c_vector_space ), intent( inout ) :: ydot
    end subroutine i_rhs
   end interface
 
@@ -106,12 +109,11 @@ module sll_m_ode_integrator_base
   !>
   abstract interface
    subroutine i_init( self, ode, t0, y0 )
-    use sll_m_working_precision
-    import sll_c_ode_integrator_base, sll_c_ode_base, sll_c_vector_space_base
-    class( sll_c_ode_integrator_base ), intent(   out ) :: self
-    class( sll_c_ode_base ), pointer  , intent( in    ) :: ode
-    sll_real64                      , intent( in    ) :: t0
-    class( sll_c_vector_space_base )  , intent( inout ) :: y0
+    import sll_c_ode_integrator, sll_c_ode, sll_c_vector_space, wp
+    class( sll_c_ode_integrator ), intent(   out ) :: self
+    class( sll_c_ode ),   pointer, intent( in    ) :: ode
+    real(wp)                     , intent( in    ) :: t0
+    class( sll_c_vector_space )  , intent( inout ) :: y0
    end subroutine i_init
   end interface
 
@@ -127,13 +129,12 @@ module sll_m_ode_integrator_base
   !>
   abstract interface
    subroutine i_step( self, t, y, h, ynew )
-    use sll_m_working_precision
-    import sll_c_ode_integrator_base, sll_c_ode_base, sll_c_vector_space_base
-    class( sll_c_ode_integrator_base ), intent( inout ) :: self
-    sll_real64                      , intent( in    ) :: t
-    class( sll_c_vector_space_base )  , intent( in    ) :: y
-    sll_real64                      , intent( in    ) :: h
-    class( sll_c_vector_space_base )  , intent( inout ) :: ynew
+    import sll_c_ode_integrator, sll_c_ode, sll_c_vector_space, wp
+    class( sll_c_ode_integrator ), intent( inout ) :: self
+    real(wp)                     , intent( in    ) :: t
+    class( sll_c_vector_space )  , intent( in    ) :: y
+    real(wp)                     , intent( in    ) :: h
+    class( sll_c_vector_space )  , intent( inout ) :: ynew
    end subroutine i_step
   end interface
 
@@ -145,8 +146,8 @@ module sll_m_ode_integrator_base
   !>
   abstract interface
    subroutine i_clean( self )
-    import sll_c_ode_integrator_base
-    class( sll_c_ode_integrator_base ), intent( inout ) :: self
+    import sll_c_ode_integrator
+    class( sll_c_ode_integrator ), intent( inout ) :: self
    end subroutine i_clean
   end interface
 
@@ -155,8 +156,8 @@ module sll_m_ode_integrator_base
 !==============================================================================
 
 !  subroutine solve( self, t, y, ynew, b, sigma )
-!    class( sll_c_ode_base ), intent( inout ) :: self
-!    sll_real64           , intent( in    ) :: t
+!    class( sll_c_ode ), intent( inout ) :: self
+!    real(wp)          , intent( in    ) :: t
 !  end subroutine solve
 
 end module sll_m_ode_integrator_base
