@@ -20,15 +20,16 @@ module sll_m_polar_mapping_analytical_target
   !> Concrete type, analytical polar mapping
   type, extends(sll_c_polar_mapping_analytical) :: sll_t_polar_mapping_analytical_target
 
-    ! Default values, can be overwritten from 'init' method
-    real(wp) :: x0(2) = [ 0.08_wp, 0.0_wp ]
-    real(wp) :: d0 = 0.2_wp
-    real(wp) :: e0 = 0.3_wp
+    ! Default values (circle), can be overwritten from 'init' method
+    real(wp) :: x0(2) = [ 0.0_wp, 0.0_wp ]
+    real(wp) :: d0 = 0.0_wp
+    real(wp) :: e0 = 0.0_wp
 
   contains
 
-    procedure :: init => s_polar_mapping_analytical_target__init
-    procedure :: eval => f_polar_mapping_analytical_target__eval
+    procedure :: init     => s_polar_mapping_analytical_target__init
+    procedure :: eval     => f_polar_mapping_analytical_target__eval
+    procedure :: jacobian => f_polar_mapping_analytical_target__jacobian ! Jacobian determinant
 
   end type sll_t_polar_mapping_analytical_target
 
@@ -55,13 +56,38 @@ contains
     real(wp)                                    , intent(in) :: eta(2)
     real(wp) :: x(2)
 
-    associate( x0 => self % x0, d0 => self % d0, e0 => self % e0 )
+    associate( s => eta(1), t => eta(2), x0 => self % x0, d0 => self % d0, e0 => self % e0 )
 
-      x(1) = x0(1) + (1.0_wp-e0)*eta(1)*cos( eta(2) ) - d0*eta(1)**2
-      x(2) = x0(2) + (1.0_wp+e0)*eta(1)*sin( eta(2) )
+      x(1) = x0(1) + (1.0_wp-e0)*s*cos(t) - d0*s**2
+      x(2) = x0(2) + (1.0_wp+e0)*s*sin(t)
 
     end associate
 
   end function f_polar_mapping_analytical_target__eval
+
+  !-----------------------------------------------------------------------------
+  function f_polar_mapping_analytical_target__jacobian( self, eta ) result( jacobian )
+    class(sll_t_polar_mapping_analytical_target), intent(in) :: self
+    real(wp)                                    , intent(in) :: eta(2)
+    real(wp) :: jacobian
+
+    real(wp) :: d1, d2, d3, d4
+
+    associate( s => eta(1), t => eta(2), d0 => self % d0, e0 => self % e0 )
+
+      ! d1 = d(x1)/d(eta1)
+      ! d2 = d(x1)/d(eta2)
+      ! d3 = d(x2)/d(eta1)
+      ! d4 = d(x2)/d(eta2)
+      d1 = -2.0_wp*d0*s + (1.0_wp-e0)*cos(t)
+      d2 = -(1.0_wp-e0)*s*sin(t)
+      d3 =  (1.0_wp+e0)*sin(t)
+      d4 =  (1.0_wp+e0)*s*cos(t)
+
+      jacobian = d1*d4 - d2*d3
+
+    end associate
+
+  end function f_polar_mapping_analytical_target__jacobian
 
 end module sll_m_polar_mapping_analytical_target
