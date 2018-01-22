@@ -9,6 +9,11 @@ SET( SPLINES_FILES
   sll_m_spline_interpolator_1d.F90
   sll_m_spline_interpolator_2d.F90
   #
+  sll_m_polar_mapping_base.F90
+  sll_m_polar_mapping_iga.F90
+  sll_m_polar_mapping_analytical.F90
+  sll_m_polar_mapping_analytical_target.F90
+  sll_m_polar_mapping_analytical_czarny.F90
   sll_m_polar_spline_interpolator_2d.F90
   #
   sll_m_spline_matrix.F90
@@ -43,6 +48,7 @@ TARGET_LINK_LIBRARIES( sll_splines
   sll_linear_solvers
   sll_meshes
   sll_timer
+  sll_xdmf_io
   pppack
   ${LAPACK_LIBRARIES} )
 

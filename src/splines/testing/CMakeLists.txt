@@ -68,6 +68,12 @@ add_executable( test_polar_spline_2d
 target_link_libraries( test_polar_spline_2d sll_splines )
 
 #-------------------------------------------------------------------------------
+# New tests for 2D polar mapping
+#-------------------------------------------------------------------------------
+add_executable( test_polar_mapping test_polar_mapping.F90 )
+target_link_libraries( test_polar_mapping sll_splines )
+
+#-------------------------------------------------------------------------------
 
 # Cubic splines ............................
 ADD_EXECUTABLE( test_cubic_splines test_cubic_splines.F90  )
