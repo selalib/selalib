@@ -40,6 +40,8 @@ program test_polar_mapping
   class(sll_c_bsplines), allocatable :: spline_basis_eta1
   class(sll_c_bsplines), allocatable :: spline_basis_eta2
 
+  ! Note: Circle corresponds to Target or Czarny default mapping
+  type(sll_t_polar_mapping_analytical_target) :: mapping_analytical_circle
   type(sll_t_polar_mapping_analytical_target) :: mapping_analytical_target
   type(sll_t_polar_mapping_analytical_czarny) :: mapping_analytical_czarny
   type(sll_t_polar_mapping_iga) :: mapping_iga
@@ -51,15 +53,20 @@ program test_polar_mapping
   ! Analytical mappings
   !-----------------------------------------------------------------------------
 
-  ! Target
-  call mapping_analytical_target % init()
+  ! Circle (Target or Czarny default mapping)
+  call mapping_analytical_circle % init()
 
-  call mapping_analytical_target % write_mesh( npts1, npts2, "mapping_analytical_target_mesh")
+  call mapping_analytical_circle % store_data( npts1, npts2, "mapping_analytical_circle")
+
+  ! Target
+  call mapping_analytical_target % init( x0=[0.2_wp,-0.1_wp], d0=0.2_wp, e0=0.3_wp )
+
+  call mapping_analytical_target % store_data( npts1, npts2, "mapping_analytical_target")
 
   ! Czarny
-  call mapping_analytical_czarny % init()
+  call mapping_analytical_czarny % init( x0=[0.2_wp,-0.1_wp], b=1.4_wp, e=0.3_wp )
 
-  call mapping_analytical_czarny % write_mesh( npts1, npts2, "mapping_analytical_czarny_mesh")
+  call mapping_analytical_czarny % store_data( npts1, npts2, "mapping_analytical_czarny")
 
   !-----------------------------------------------------------------------------
   ! Discrete IGA mappings
@@ -109,21 +116,24 @@ program test_polar_mapping
     xmax     = sll_p_twopi      , &
     ncells   = ncells2 )
 
+  ! Circle (Target or Czarny default mapping)
+  call mapping_iga % init( spline_basis_eta1, spline_basis_eta2, mapping_analytical_circle )
+
+  call mapping_iga % store_data( npts1, npts2, "mapping_iga_circle")
+
+  call mapping_iga % free()
+
   ! Target
   call mapping_iga % init( spline_basis_eta1, spline_basis_eta2, mapping_analytical_target )
 
-  call mapping_iga % write_mesh( npts1, npts2, "mapping_iga_target_mesh")
-
-  call mapping_iga % store_data( "mapping_iga_target_data")
+  call mapping_iga % store_data( npts1, npts2, "mapping_iga_target")
 
   call mapping_iga % free()
 
   ! Czarny
   call mapping_iga % init( spline_basis_eta1, spline_basis_eta2, mapping_analytical_czarny )
 
-  call mapping_iga % write_mesh( npts1, npts2, "mapping_iga_czarny_mesh")
-
-  call mapping_iga % store_data( "mapping_iga_czarny_data")
+  call mapping_iga % store_data( npts1, npts2, "mapping_iga_czarny")
 
   call mapping_iga % free()
 
