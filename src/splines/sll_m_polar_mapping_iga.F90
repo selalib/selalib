@@ -62,6 +62,7 @@ module sll_m_polar_mapping_iga
   contains
 
     procedure :: init       => s_polar_mapping_iga__init
+    procedure :: pole       => f_polar_mapping_iga__pole
     procedure :: eval       => f_polar_mapping_iga__eval
     procedure :: jacobian   => f_polar_mapping_iga__jacobian ! Jacobian determinant
     procedure :: store_data => s_polar_mapping_iga__store_data
@@ -141,6 +142,16 @@ contains
       gtau   = self % gtau_x2 )
 
   end subroutine s_polar_mapping_iga__init
+
+  !-----------------------------------------------------------------------------
+  SLL_PURE function f_polar_mapping_iga__pole( self ) result( pole )
+    class(sll_t_polar_mapping_iga), intent(in) :: self
+    real(wp) :: pole(2)
+
+    pole(1) = self % spline_2d_x1 % bcoef(1,1)
+    pole(2) = self % spline_2d_x2 % bcoef(1,1)
+
+  end function f_polar_mapping_iga__pole
 
   !-----------------------------------------------------------------------------
   SLL_PURE function f_polar_mapping_iga__eval( self, eta ) result( x )

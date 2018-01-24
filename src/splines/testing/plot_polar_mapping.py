@@ -120,6 +120,7 @@ ax.plot( x1_circle_iga.transpose(), x2_circle_iga.transpose(), '.', color='r' )
 # plot control points
 ax.plot( c_x1_circle_iga.ravel(), c_x2_circle_iga.ravel(), 'x', color='k' )
 
+plt.axis('equal')
 plt.title('Circle mapping: mesh and control points')
 
 fig.show()
@@ -138,6 +139,7 @@ ax.plot( x1_target_iga.transpose(), x2_target_iga.transpose(), '.', color='r' )
 # plot control points
 ax.plot( c_x1_target_iga.ravel(), c_x2_target_iga.ravel(), 'x', color='k' )
 
+plt.axis('equal')
 plt.title('Target mapping: mesh and control points')
 
 fig.show()
@@ -156,6 +158,7 @@ ax.plot( x1_czarny_iga.transpose(), x2_czarny_iga.transpose(), '.', color='r' )
 # plot control points
 ax.plot( c_x1_czarny_iga.ravel(), c_x2_czarny_iga.ravel(), 'x', color='k' )
 
+plt.axis('equal')
 plt.title('Czarny mapping: mesh and control points')
 
 fig.show()

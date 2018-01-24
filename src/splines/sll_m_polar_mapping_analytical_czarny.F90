@@ -45,9 +45,9 @@ contains
     real(wp), optional                          , intent(in   ) :: e
 
     ! Overwrite parameters
-    if ( present( x0 ) ) self % x0(:) = x0(:)
-    if ( present( b )  ) self % b     = b
-    if ( present( e )  ) self % e     = e
+    if ( present( x0 ) ) self % x0 = x0
+    if ( present( b  ) ) self % b  = b
+    if ( present( e  ) ) self % e  = e
 
   end subroutine s_polar_mapping_analytical_czarny__init
 
@@ -59,7 +59,8 @@ contains
 
     associate( s => eta(1), t => eta(2), x0 => self % x0, b => self % b, e => self % e )
 
-      x(1) = x0(1) + (1.0_wp-sqrt( 1.0_wp + e*(e+2.0_wp*s*cos(t)) ))/e
+      ! TODO: check if x0(1) can be added to x(1) as well
+      x(1) = (1.0_wp-sqrt( 1.0_wp + e*(e+2.0_wp*s*cos(t)) ))/e
       x(2) = x0(2) + b*s*sin(t)/((1.0_wp+e*x(1))*sqrt( 1.0_wp-e**2*0.25_wp ))
 
     end associate

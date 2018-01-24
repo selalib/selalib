@@ -45,9 +45,9 @@ contains
     real(wp), optional                          , intent(in   ) :: e0
 
     ! Overwrite parameters
-    if ( present( x0 ) ) self % x0(:) = x0(:)
-    if ( present( d0 ) ) self % d0    = d0
-    if ( present( e0 ) ) self % e0    = e0
+    if ( present( x0 ) ) self % x0 = x0
+    if ( present( d0 ) ) self % d0 = d0
+    if ( present( e0 ) ) self % e0 = e0
 
   end subroutine s_polar_mapping_analytical_target__init
 
