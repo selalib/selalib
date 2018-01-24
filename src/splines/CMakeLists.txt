@@ -14,6 +14,7 @@ SET( SPLINES_FILES
   sll_m_polar_mapping_analytical.F90
   sll_m_polar_mapping_analytical_target.F90
   sll_m_polar_mapping_analytical_czarny.F90
+  sll_m_polar_bsplines_2d.F90
   sll_m_polar_spline_interpolator_2d.F90
   #
   sll_m_spline_matrix.F90
