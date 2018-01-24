@@ -1,5 +1,6 @@
 module sll_m_polar_mapping_base
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+#include "sll_assert.h"
 
   use sll_m_working_precision, only: f64
 
@@ -28,14 +29,14 @@ module sll_m_polar_mapping_base
   ! Interfaces for deferred procedures
   abstract interface
 
-    function i_fun_eval( self, eta ) result( x )
+    SLL_PURE function i_fun_eval( self, eta ) result( x )
       import sll_c_polar_mapping, wp
       class(sll_c_polar_mapping), intent(in) :: self
       real(wp)                  , intent(in) :: eta(2)
       real(wp) :: x(2)
     end function i_fun_eval
 
-    function i_fun_jacobian( self, eta ) result( jacobian )
+    SLL_PURE function i_fun_jacobian( self, eta ) result( jacobian )
       import sll_c_polar_mapping, wp
       class(sll_c_polar_mapping), intent(in) :: self
       real(wp)                  , intent(in) :: eta(2)

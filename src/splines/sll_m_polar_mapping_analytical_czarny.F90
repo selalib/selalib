@@ -1,5 +1,6 @@
 module sll_m_polar_mapping_analytical_czarny
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+#include "sll_assert.h"
 
   use sll_m_working_precision, only: f64
 
@@ -51,7 +52,7 @@ contains
   end subroutine s_polar_mapping_analytical_czarny__init
 
   !-----------------------------------------------------------------------------
-  function f_polar_mapping_analytical_czarny__eval( self, eta ) result( x )
+  SLL_PURE function f_polar_mapping_analytical_czarny__eval( self, eta ) result( x )
     class(sll_t_polar_mapping_analytical_czarny), intent(in) :: self
     real(wp)                                    , intent(in) :: eta(2)
     real(wp) :: x(2)
@@ -66,7 +67,7 @@ contains
   end function f_polar_mapping_analytical_czarny__eval
 
   !-----------------------------------------------------------------------------
-  function f_polar_mapping_analytical_czarny__jacobian( self, eta ) result( jacobian )
+  SLL_PURE function f_polar_mapping_analytical_czarny__jacobian( self, eta ) result( jacobian )
     class(sll_t_polar_mapping_analytical_czarny), intent(in) :: self
     real(wp)                                    , intent(in) :: eta(2)
     real(wp) :: jacobian
