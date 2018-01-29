@@ -261,7 +261,7 @@ program test_polar_mapping
       x(:) = mapping_analytical_circle % eval( eta )
       x1_grid(i1,i2) = x(1)
       x2_grid(i1,i2) = x(2)
-      jacobian(i1,i2) = mapping_analytical_circle % jacobian( eta )
+      jacobian(i1,i2) = mapping_analytical_circle % jdet( eta )
     end do
   end do
 
@@ -283,7 +283,7 @@ program test_polar_mapping
       x(:) = mapping_analytical_target % eval( eta )
       x1_grid(i1,i2) = x(1)
       x2_grid(i1,i2) = x(2)
-      jacobian(i1,i2) = mapping_analytical_target % jacobian( eta )
+      jacobian(i1,i2) = mapping_analytical_target % jdet( eta )
     end do
   end do
 
@@ -305,7 +305,7 @@ program test_polar_mapping
       x(:) = mapping_analytical_czarny % eval( eta )
       x1_grid(i1,i2) = x(1)
       x2_grid(i1,i2) = x(2)
-      jacobian(i1,i2) = mapping_analytical_czarny % jacobian( eta )
+      jacobian(i1,i2) = mapping_analytical_czarny % jdet( eta )
     end do
   end do
 
