@@ -70,7 +70,7 @@ contains
         x  (:) = self % eval( eta )
         x1(i1,i2) = x(1)
         x2(i1,i2) = x(2)
-        jacobian(i1,i2) = self % jacobian( eta )
+        jacobian(i1,i2) = self % jdet( eta )
       end do
     end do
 

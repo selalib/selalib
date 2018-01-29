@@ -28,9 +28,9 @@ module sll_m_polar_mapping_analytical_target
 
   contains
 
-    procedure :: init     => s_polar_mapping_analytical_target__init
-    procedure :: eval     => f_polar_mapping_analytical_target__eval
-    procedure :: jacobian => f_polar_mapping_analytical_target__jacobian ! Jacobian determinant
+    procedure :: init => s_polar_mapping_analytical_target__init
+    procedure :: eval => f_polar_mapping_analytical_target__eval
+    procedure :: jmat => f_polar_mapping_analytical_target__jmat ! Jacobian matrix
 
   end type sll_t_polar_mapping_analytical_target
 
@@ -67,28 +67,24 @@ contains
   end function f_polar_mapping_analytical_target__eval
 
   !-----------------------------------------------------------------------------
-  SLL_PURE function f_polar_mapping_analytical_target__jacobian( self, eta ) result( jacobian )
+  SLL_PURE function f_polar_mapping_analytical_target__jmat( self, eta ) result( jmat )
     class(sll_t_polar_mapping_analytical_target), intent(in) :: self
     real(wp)                                    , intent(in) :: eta(2)
-    real(wp) :: jacobian
-
-    real(wp) :: d1, d2, d3, d4
+    real(wp) :: jmat(2,2)
 
     associate( s => eta(1), t => eta(2), d0 => self % d0, e0 => self % e0 )
 
-      ! d1 = d(x1)/d(eta1)
-      ! d2 = d(x1)/d(eta2)
-      ! d3 = d(x2)/d(eta1)
-      ! d4 = d(x2)/d(eta2)
-      d1 = -2.0_wp*d0*s + (1.0_wp-e0)*cos(t)
-      d2 = -(1.0_wp-e0)*s*sin(t)
-      d3 =  (1.0_wp+e0)*sin(t)
-      d4 =  (1.0_wp+e0)*s*cos(t)
-
-      jacobian = d1*d4 - d2*d3
+      ! J_11 = d(x1)/d(eta1)
+      ! J_12 = d(x1)/d(eta2)
+      ! J_21 = d(x2)/d(eta1)
+      ! J_22 = d(x2)/d(eta2)
+      jmat(1,1) = -2.0_wp*d0*s + (1.0_wp-e0)*cos(t)
+      jmat(1,2) = -(1.0_wp-e0)*s*sin(t)
+      jmat(2,1) =  (1.0_wp+e0)*sin(t)
+      jmat(2,2) =  (1.0_wp+e0)*s*cos(t)
 
     end associate
 
-  end function f_polar_mapping_analytical_target__jacobian
+  end function f_polar_mapping_analytical_target__jmat
 
 end module sll_m_polar_mapping_analytical_target
