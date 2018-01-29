@@ -70,7 +70,7 @@ target_link_libraries( test_polar_spline_2d sll_splines )
 #-------------------------------------------------------------------------------
 # New tests for 2D polar mapping
 #-------------------------------------------------------------------------------
-add_executable( test_polar_mapping test_polar_mapping.F90 )
+add_executable( test_polar_mapping test_polar_mapping.F90 $<TARGET_OBJECTS:analytical_profiles> )
 target_link_libraries( test_polar_mapping sll_splines )
 
 #-------------------------------------------------------------------------------
