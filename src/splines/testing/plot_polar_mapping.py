@@ -2,163 +2,120 @@ import h5py
 import numpy as np
 import matplotlib.pyplot as plt
 
-#-------------------------------------------------------------------------------
-# Circle mapping
-#-------------------------------------------------------------------------------
+# Lists of keys
+k1_list = ['circle','target','czarny']
+k2_list = ['analytic','discrete','intermed','interpol']
 
-f0 = h5py.File('mapping_analytical_circle.h5',mode='r')
-f1 = h5py.File('mapping_iga_circle.h5',mode='r')
+# Dictionary of HDF5 files
+h5 = dict()
+for k1 in k1_list:
+    for k2 in k2_list:
+        file_name = 'mapping_' + k2 + '_' + k1 + '.h5'
+        h5[(k1,k2)] = h5py.File( file_name, mode='r' )
 
-# Load data from analytical mapping
-x1_circle_analytical       = f0['x1'].value
-x2_circle_analytical       = f0['x2'].value
-jacobian_circle_analytical = f0['jacobian'].value
+# Load x1 mesh from HDF5 files
+x1 = dict()
+for k1 in k1_list:
+    # cycle over all keys except 'interpol'
+    for k2 in k2_list[:-1]:
+        x1[(k1,k2)] = h5[(k1,k2)]['x1'].value
 
-# Load data from discrete IGA mapping
-x1_circle_iga       = f1['x1'].value
-x2_circle_iga       = f1['x2'].value
-c_x1_circle_iga     = f1['c_x1'].value
-c_x2_circle_iga     = f1['c_x2'].value
-jacobian_circle_iga = f1['jacobian'].value
+# Load x2 mesh from HDF5 files
+x2 = dict()
+for k1 in k1_list:
+    # cycle over all keys except 'interpol'
+    for k2 in k2_list[:-1]:
+        x2[(k1,k2)] = h5[(k1,k2)]['x2'].value
 
-f0.close()
-f1.close()
+# Load Jacobian from HDF5 files
+JJ = dict()
+for k1 in k1_list:
+    # cycle over all keys except 'interpol'
+    for k2 in k2_list[:-1]:
+        JJ[(k1,k2)] = h5[(k1,k2)]['jacobian'].value
 
-#-------------------------------------------------------------------------------
-# Target mapping
-#-------------------------------------------------------------------------------
+# Load control points along x1 from HDF5 files
+c_x1 = dict()
+for k1 in k1_list:
+    c_x1[k1] = h5[(k1,'discrete')]['c_x1'].value
 
-f0 = h5py.File('mapping_analytical_target.h5',mode='r')
-f1 = h5py.File('mapping_iga_target.h5',mode='r')
+# Load control points along x2 from HDF5 files
+c_x2 = dict()
+for k1 in k1_list:
+    c_x2[k1] = h5[(k1,'discrete')]['c_x2'].value
 
-# Load data from analytical mapping
-x1_target_analytical       = f0['x1'].value
-x2_target_analytical       = f0['x2'].value
-jacobian_target_analytical = f0['jacobian'].value
+# Load interpolation error from HDF5 files
+interp_funct = dict()
+interp_error = dict()
+for k1 in k1_list:
+    interp_funct[k1] = h5[(k1,'interpol')]['interp_funct'].value
+    interp_error[k1] = h5[(k1,'interpol')]['interp_error'].value
 
-# Load data from discrete IGA mapping
-x1_target_iga       = f1['x1'].value
-x2_target_iga       = f1['x2'].value
-c_x1_target_iga     = f1['c_x1'].value
-c_x2_target_iga     = f1['c_x2'].value
-jacobian_target_iga = f1['jacobian'].value
-
-f0.close()
-f1.close()
-
-#-------------------------------------------------------------------------------
-# Czarny mapping
-#-------------------------------------------------------------------------------
-
-f0 = h5py.File('mapping_analytical_czarny.h5',mode='r')
-f1 = h5py.File('mapping_iga_czarny.h5',mode='r')
-
-# Load data from analytical mapping
-x1_czarny_analytical       = f0['x1'].value
-x2_czarny_analytical       = f0['x2'].value
-jacobian_czarny_analytical = f0['jacobian'].value
-
-# Load data from discrete IGA mapping
-x1_czarny_iga       = f1['x1'].value
-x2_czarny_iga       = f1['x2'].value
-c_x1_czarny_iga     = f1['c_x1'].value
-c_x2_czarny_iga     = f1['c_x2'].value
-jacobian_czarny_iga = f1['jacobian'].value
-
-f0.close()
-f1.close()
+# Close HDF5 files
+for k1 in k1_list:
+    for k2 in k2_list:
+        h5[(k1,k2)].close()
 
 #-------------------------------------------------------------------------------
 # OUTPUT
 #-------------------------------------------------------------------------------
 
-print()
-print( ' Circle mapping' )
-print( ' ==============' )
-print()
-print(' Maximum absolute errors between analytical and discrete mapping:')
-print()
-print( ' x:', np.amax( np.abs( x1_circle_analytical - x1_circle_iga ) ) )
-print( ' y:', np.amax( np.abs( x2_circle_analytical - x2_circle_iga ) ) )
-print( ' J:', np.amax( np.abs( jacobian_circle_analytical - jacobian_circle_iga ) ) )
-
-print()
-print( ' Target mapping' )
-print( ' ==============' )
-print()
-print(' Maximum absolute errors between analytical and discrete mapping:')
-print()
-print( ' x:', np.amax( np.abs( x1_target_analytical - x1_target_iga ) ) )
-print( ' y:', np.amax( np.abs( x2_target_analytical - x2_target_iga ) ) )
-print( ' J:', np.amax( np.abs( jacobian_target_analytical - jacobian_target_iga ) ) )
-
-print()
-print( ' Czarny mapping' )
-print( ' ==============' )
-print()
-print(' Maximum absolute errors between analytical and discrete mapping:')
-print()
-print( ' x:', np.amax( np.abs( x1_czarny_analytical - x1_czarny_iga ) ) )
-print( ' y:', np.amax( np.abs( x2_czarny_analytical - x2_czarny_iga ) ) )
-print( ' J:', np.amax( np.abs( jacobian_czarny_analytical - jacobian_czarny_iga ) ) )
+for k1 in k1_list:
+    print()
+    print( '%s mapping' %k1 )
+    print( ' ==============' )
+    print()
+    print(' Maximum absolute errors between analytical and discrete mapping:')
+    print()
+    print( ' x:', np.amax( np.abs( x1[(k1,'analytic')] - x1[(k1,'discrete')] ) ) )
+    print( ' y:', np.amax( np.abs( x2[(k1,'analytic')] - x2[(k1,'discrete')] ) ) )
+    print( ' J:', np.amax( np.abs( JJ[(k1,'analytic')] - JJ[(k1,'discrete')] ) ) )
 
 #-------------------------------------------------------------------------------
 # PLOTS
 #-------------------------------------------------------------------------------
 
-# Circle mapping
-
+# Mesh from analytical, discrete and intermediate mappings plus control points
 fig = plt.figure()
-ax  = fig.add_subplot(111)
-
-# plot analytical mesh
-ax.plot( x1_circle_analytical, x2_circle_analytical, color='b' )
-ax.plot( x1_circle_analytical.transpose(), x2_circle_analytical.transpose(), color='b' )
-# plot discrete mesh
-ax.plot( x1_circle_iga, x2_circle_iga, '.', color='r' )
-ax.plot( x1_circle_iga.transpose(), x2_circle_iga.transpose(), '.', color='r' )
-# plot control points
-ax.plot( c_x1_circle_iga.ravel(), c_x2_circle_iga.ravel(), 'x', color='k' )
-
-plt.axis('equal')
-plt.title('Circle mapping: mesh and control points')
-
+i_plot = 1
+for k1 in k1_list:
+    ax = fig.add_subplot(1,3,i_plot)
+    for k2 in k2_list:
+        # analytical mapping
+        if (k2 == 'analytic'):
+           ax.plot( x1[(k1,k2)], x2[(k1,k2)], color='b' )
+           ax.plot( x1[(k1,k2)].transpose(), x2[(k1,k2)].transpose(), color='b' )
+        # discrete mapping
+        elif (k2 == 'discrete'):
+           ax.plot( x1[(k1,k2)], x2[(k1,k2)], '.', color='r' )
+           ax.plot( x1[(k1,k2)].transpose(), x2[(k1,k2)].transpose(), '.', color='r' )
+        # intermediate mapping
+        elif (k2 == 'intermed'):
+           ax.plot( x1[(k1,k2)], x2[(k1,k2)], color='k', lw=0.5)
+           ax.plot( x1[(k1,k2)].transpose(), x2[(k1,k2)].transpose(), color='k', lw=0.5 )
+    # control points
+    #ax.plot( c_x1[k1].ravel(), c_x2[k1].ravel(), 'x', color='k' )
+    # plot style
+    ax.set_aspect( 'equal' )
+    ax.set_title( '%s mapping: mesh and control points' %k1 )
+    i_plot = i_plot + 1
 fig.show()
 
-# Target mapping
-
-fig = plt.figure()
-ax  = fig.add_subplot(111)
-
-# plot analytical mesh
-ax.plot( x1_target_analytical, x2_target_analytical, color='b' )
-ax.plot( x1_target_analytical.transpose(), x2_target_analytical.transpose(), color='b' )
-# plot discrete mesh
-ax.plot( x1_target_iga, x2_target_iga, '.', color='r' )
-ax.plot( x1_target_iga.transpose(), x2_target_iga.transpose(), '.', color='r' )
-# plot control points
-ax.plot( c_x1_target_iga.ravel(), c_x2_target_iga.ravel(), 'x', color='k' )
-
-plt.axis('equal')
-plt.title('Target mapping: mesh and control points')
-
-fig.show()
-
-# Czarny mapping
-
-fig = plt.figure()
-ax  = fig.add_subplot(111)
-
-# plot analytical mesh
-ax.plot( x1_czarny_analytical, x2_czarny_analytical, color='b' )
-ax.plot( x1_czarny_analytical.transpose(), x2_czarny_analytical.transpose(), color='b' )
-# plot discrete mesh
-ax.plot( x1_czarny_iga, x2_czarny_iga, '.', color='r' )
-ax.plot( x1_czarny_iga.transpose(), x2_czarny_iga.transpose(), '.', color='r' )
-# plot control points
-ax.plot( c_x1_czarny_iga.ravel(), c_x2_czarny_iga.ravel(), 'x', color='k' )
-
-plt.axis('equal')
-plt.title('Czarny mapping: mesh and control points')
-
-fig.show()
+# Contour plot of interpolation function and error
+for k1 in k1_list:
+    fig = plt.figure()
+    # function profile
+    ax = fig.add_subplot(1,2,1)
+    clevels = np.linspace( interp_funct[k1].min(), interp_funct[k1].max(), 50 )
+    im = ax.contourf( x1[(k1,'discrete')], x2[(k1,'discrete')], interp_funct[k1], clevels )
+    ax.set_aspect( 'equal' )
+    ax.set_title( '%s mapping: function profile' %k1 )
+    fig.colorbar( im )
+    # interpolation error
+    ax = fig.add_subplot(1,2,2)
+    clevels = np.linspace( interp_error[k1].min(), interp_error[k1].max(), 50 )
+    im = ax.contourf( x1[(k1,'discrete')], x2[(k1,'discrete')], interp_error[k1], clevels )
+    ax.set_aspect( 'equal' )
+    ax.set_title( '%s mapping: interpolation error' %k1 )
+    fig.colorbar( im )
+    fig.show()
