@@ -64,7 +64,7 @@ module sll_m_polar_mapping_iga
     procedure :: init       => s_polar_mapping_iga__init
     procedure :: pole       => f_polar_mapping_iga__pole
     procedure :: eval       => f_polar_mapping_iga__eval
-    procedure :: jacobian   => f_polar_mapping_iga__jacobian ! Jacobian determinant
+    procedure :: jmat       => f_polar_mapping_iga__jmat ! Jacobian matrix
     procedure :: store_data => s_polar_mapping_iga__store_data
     procedure :: free       => s_polar_mapping_iga__free
 
@@ -165,25 +165,21 @@ contains
   end function f_polar_mapping_iga__eval
 
   !-----------------------------------------------------------------------------
-  SLL_PURE function f_polar_mapping_iga__jacobian( self, eta ) result( jacobian )
+  SLL_PURE function f_polar_mapping_iga__jmat( self, eta ) result( jmat )
     class(sll_t_polar_mapping_iga), intent(in) :: self
     real(wp)                      , intent(in) :: eta(2)
-    real(wp) :: jacobian
+    real(wp) :: jmat(2,2)
 
-    real(wp) :: d1, d2, d3, d4
+    ! J_11 = d(x1)/d(eta1)
+    ! J_12 = d(x1)/d(eta2)
+    ! J_21 = d(x2)/d(eta1)
+    ! J_22 = d(x2)/d(eta2)
+    jmat(1,1) = self % spline_2d_x1 % eval_deriv_x1( eta(1), eta(2) )
+    jmat(1,2) = self % spline_2d_x1 % eval_deriv_x2( eta(1), eta(2) )
+    jmat(2,1) = self % spline_2d_x2 % eval_deriv_x1( eta(1), eta(2) )
+    jmat(2,2) = self % spline_2d_x2 % eval_deriv_x2( eta(1), eta(2) )
 
-    ! d1 = d(x1)/d(eta1)
-    ! d2 = d(x1)/d(eta2)
-    ! d3 = d(x2)/d(eta1)
-    ! d4 = d(x2)/d(eta2)
-    d1 = self % spline_2d_x1 % eval_deriv_x1( eta(1), eta(2) )
-    d2 = self % spline_2d_x1 % eval_deriv_x2( eta(1), eta(2) )
-    d3 = self % spline_2d_x2 % eval_deriv_x1( eta(1), eta(2) )
-    d4 = self % spline_2d_x2 % eval_deriv_x2( eta(1), eta(2) )
-
-    jacobian = d1*d4 - d2*d3
-
-  end function f_polar_mapping_iga__jacobian
+  end function f_polar_mapping_iga__jmat
 
   !-----------------------------------------------------------------------------
   subroutine s_polar_mapping_iga__store_data( self, n1, n2, file_name )
@@ -219,7 +215,7 @@ contains
         x  (:) = self % eval( eta )
         x1(i1,i2) = x(1)
         x2(i1,i2) = x(2)
-        jacobian(i1,i2) = self % jacobian( eta )
+        jacobian(i1,i2) = self % jdet( eta )
       end do
     end do
 

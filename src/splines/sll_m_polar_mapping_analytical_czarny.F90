@@ -28,9 +28,9 @@ module sll_m_polar_mapping_analytical_czarny
 
   contains
 
-    procedure :: init     => s_polar_mapping_analytical_czarny__init
-    procedure :: eval     => f_polar_mapping_analytical_czarny__eval
-    procedure :: jacobian => f_polar_mapping_analytical_czarny__jacobian ! Jacobian determinant
+    procedure :: init => s_polar_mapping_analytical_czarny__init
+    procedure :: eval => f_polar_mapping_analytical_czarny__eval
+    procedure :: jmat => f_polar_mapping_analytical_czarny__jmat ! Jacobian matrix
 
   end type sll_t_polar_mapping_analytical_czarny
 
@@ -68,12 +68,11 @@ contains
   end function f_polar_mapping_analytical_czarny__eval
 
   !-----------------------------------------------------------------------------
-  SLL_PURE function f_polar_mapping_analytical_czarny__jacobian( self, eta ) result( jacobian )
+  SLL_PURE function f_polar_mapping_analytical_czarny__jmat( self, eta ) result( jmat )
     class(sll_t_polar_mapping_analytical_czarny), intent(in) :: self
     real(wp)                                    , intent(in) :: eta(2)
-    real(wp) :: jacobian
+    real(wp) :: jmat(2,2)
 
-    real(wp) :: d1, d2, d3, d4
     real(wp) :: tmp1, tmp2
 
     associate( s => eta(1), t => eta(2), b => self % b, e => self % e )
@@ -81,19 +80,17 @@ contains
       tmp1 = sqrt( 1.0_wp + e*(e+2.0_wp*s*cos(t)) )
       tmp2 = sqrt( 1.0_wp-e**2*0.25_wp )
 
-      ! d1 = d(x1)/d(eta1)
-      ! d2 = d(x1)/d(eta2)
-      ! d3 = d(x2)/d(eta1)
-      ! d4 = d(x2)/d(eta2)
-      d1 = -cos(t)/tmp1
-      d2 = s*sin(t)/tmp1
-      d3 = b*sin(t)/((2.0_wp-tmp1)*tmp2) + e*b*s*sin(t)*cos(t)/(tmp1*tmp2*(2.0_wp-tmp1)**2)
-      d4 = b*s*cos(t)/((2.0_wp-tmp1)*tmp2) - e*b*s**2*sin(t)**2/(tmp1*tmp2*(2.0_wp-tmp1)**2)
-
-      jacobian = d1*d4 - d2*d3
+      ! J_11 = d(x1)/d(eta1)
+      ! J_12 = d(x1)/d(eta2)
+      ! J_21 = d(x2)/d(eta1)
+      ! J_22 = d(x2)/d(eta2)
+      jmat(1,1) = -cos(t)/tmp1
+      jmat(1,2) = s*sin(t)/tmp1
+      jmat(2,1) = b*sin(t)/((2.0_wp-tmp1)*tmp2) + e*b*s*sin(t)*cos(t)/(tmp1*tmp2*(2.0_wp-tmp1)**2)
+      jmat(2,2) = b*s*cos(t)/((2.0_wp-tmp1)*tmp2) - e*b*s**2*sin(t)**2/(tmp1*tmp2*(2.0_wp-tmp1)**2)
 
     end associate
 
-  end function f_polar_mapping_analytical_czarny__jacobian
+  end function f_polar_mapping_analytical_czarny__jmat
 
 end module sll_m_polar_mapping_analytical_czarny

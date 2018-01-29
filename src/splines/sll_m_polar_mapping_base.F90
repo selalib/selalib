@@ -21,8 +21,11 @@ module sll_m_polar_mapping_base
 
     ! Deferred procedures
     procedure(i_fun_eval)      , deferred :: eval
-    procedure(i_fun_jacobian)  , deferred :: jacobian ! Jacobian determinant
+    procedure(i_fun_jmat)      , deferred :: jmat ! Jacobian matrix
     procedure(i_sub_store_data), deferred :: store_data
+
+    ! Non-deferred procedures
+    procedure :: jdet => f_polar_mapping__jdet ! Jacobian determinant
 
   end type sll_c_polar_mapping
 
@@ -36,12 +39,12 @@ module sll_m_polar_mapping_base
       real(wp) :: x(2)
     end function i_fun_eval
 
-    SLL_PURE function i_fun_jacobian( self, eta ) result( jacobian )
+    SLL_PURE function i_fun_jmat( self, eta ) result( jmat )
       import sll_c_polar_mapping, wp
       class(sll_c_polar_mapping), intent(in) :: self
       real(wp)                  , intent(in) :: eta(2)
-      real(wp) :: jacobian
-    end function i_fun_jacobian
+      real(wp) :: jmat(2,2)
+    end function i_fun_jmat
 
     subroutine i_sub_store_data( self, n1, n2, file_name )
       import sll_c_polar_mapping
@@ -52,5 +55,22 @@ module sll_m_polar_mapping_base
     end subroutine i_sub_store_data
 
   end interface
+
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+contains
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+  SLL_PURE function f_polar_mapping__jdet( self, eta ) result( jdet )
+    class(sll_c_polar_mapping), intent(in) :: self
+    real(wp)                  , intent(in) :: eta(2)
+    real(wp) :: jdet
+
+    real(wp) :: jmat(2,2)
+
+    jmat = self % jmat( eta )
+
+    jdet = jmat(1,1) * jmat(2,2) - jmat(1,2) * jmat(2,1)
+
+  end function f_polar_mapping__jdet
 
 end module sll_m_polar_mapping_base
