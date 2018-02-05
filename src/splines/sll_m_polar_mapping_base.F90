@@ -4,6 +4,8 @@ module sll_m_polar_mapping_base
 
   use sll_m_working_precision, only: f64
 
+  use sll_m_hdf5_io_serial, only: sll_t_hdf5_ser_handle
+
   implicit none
 
   public :: sll_c_polar_mapping
@@ -46,12 +48,12 @@ module sll_m_polar_mapping_base
       real(wp) :: jmat(2,2)
     end function i_fun_jmat
 
-    subroutine i_sub_store_data( self, n1, n2, file_name )
-      import sll_c_polar_mapping
-      class(sll_c_polar_mapping), intent(in) :: self
-      integer                   , intent(in) :: n1
-      integer                   , intent(in) :: n2
-      character(len=*)          , intent(in) :: file_name
+    subroutine i_sub_store_data( self, n1, n2, file_id )
+      import sll_c_polar_mapping, sll_t_hdf5_ser_handle
+      class(sll_c_polar_mapping) , intent(in) :: self
+      integer                    , intent(in) :: n1
+      integer                    , intent(in) :: n2
+      type(sll_t_hdf5_ser_handle), intent(in) :: file_id
     end subroutine i_sub_store_data
 
   end interface
