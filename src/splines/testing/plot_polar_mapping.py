@@ -1,6 +1,7 @@
 import h5py
 import numpy as np
 import matplotlib.pyplot as plt
+from mpl_toolkits.axes_grid1.axes_divider import make_axes_locatable
 
 # Lists of keys
 k1_list = ['circle','target','czarny']
@@ -62,7 +63,7 @@ for k1 in k1_list:
 
 for k1 in k1_list:
     print()
-    print( '%s mapping' %k1 )
+    print( ' %s mapping' %k1 )
     print( ' ==============' )
     print()
     print(' Maximum absolute errors between analytical and discrete mapping:')
@@ -76,10 +77,10 @@ for k1 in k1_list:
 #-------------------------------------------------------------------------------
 
 # Mesh from analytical, discrete and intermediate mappings plus control points
-fig = plt.figure()
+fg = plt.figure()
 i_plot = 1
 for k1 in k1_list:
-    ax = fig.add_subplot(1,3,i_plot)
+    ax = fg.add_subplot(1,3,i_plot)
     for k2 in k2_list:
         # analytical mapping
         if (k2 == 'analytic'):
@@ -99,23 +100,25 @@ for k1 in k1_list:
     ax.set_aspect( 'equal' )
     ax.set_title( '%s mapping: mesh and control points' %k1 )
     i_plot = i_plot + 1
-fig.show()
+fg.show()
 
 # Contour plot of interpolation function and error
 for k1 in k1_list:
-    fig = plt.figure()
+    fg = plt.figure()
     # function profile
-    ax = fig.add_subplot(1,2,1)
+    ax = fg.add_subplot(1,2,1)
+    cax = make_axes_locatable(ax).append_axes( 'right', size='8%', pad='5%' )
     clevels = np.linspace( interp_funct[k1].min(), interp_funct[k1].max(), 50 )
     im = ax.contourf( x1[(k1,'discrete')], x2[(k1,'discrete')], interp_funct[k1], clevels )
     ax.set_aspect( 'equal' )
     ax.set_title( '%s mapping: function profile' %k1 )
-    fig.colorbar( im )
+    fg.colorbar( im, cax=cax )
     # interpolation error
-    ax = fig.add_subplot(1,2,2)
+    ax = fg.add_subplot(1,2,2)
+    cax = make_axes_locatable(ax).append_axes( 'right', size='8%', pad='5%' )
     clevels = np.linspace( interp_error[k1].min(), interp_error[k1].max(), 50 )
     im = ax.contourf( x1[(k1,'discrete')], x2[(k1,'discrete')], interp_error[k1], clevels )
     ax.set_aspect( 'equal' )
     ax.set_title( '%s mapping: interpolation error' %k1 )
-    fig.colorbar( im )
-    fig.show()
+    fg.colorbar( im, cax=cax )
+    fg.show()

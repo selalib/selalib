@@ -37,11 +37,11 @@ module sll_m_polar_mapping_analytical
 contains
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
-  subroutine s_polar_mapping_analytical__store_data( self, n1, n2, file_name )
+  subroutine s_polar_mapping_analytical__store_data( self, n1, n2, file_id )
     class(sll_c_polar_mapping_analytical), intent(in) :: self
     integer                              , intent(in) :: n1
     integer                              , intent(in) :: n2
-    character(len=*)                     , intent(in) :: file_name
+    type(sll_t_hdf5_ser_handle)          , intent(in) :: file_id
 
     integer  :: i1, i2
     real(wp) :: eta(2), x(2)
@@ -49,8 +49,7 @@ contains
     real(wp), allocatable :: x1(:,:), x2(:,:), jacobian(:,:)
 
     ! For hdf5 I/O
-    type(sll_t_hdf5_ser_handle) :: file_id
-    integer                     :: error
+    integer :: error
 
     ! Allocate physical mesh
     allocate( x1( n1, n2+1 ) ) ! repeated point along eta2
@@ -58,9 +57,6 @@ contains
 
     ! Allocate Jacobian determinant
     allocate( jacobian( n1, n2+1 ) ) ! repeated point along eta2
-
-    ! Create HDF5 file
-    call sll_s_hdf5_ser_file_create( trim( file_name )//'.h5', file_id, error )
 
     ! Compute physical mesh and Jacobian determinant
     do i2 = 1, n2+1 ! repeated point along eta2
@@ -80,8 +76,6 @@ contains
 
     ! Store Jacobian determinant
     call sll_o_hdf5_ser_write_array( file_id, jacobian, "/jacobian", error )
-
-    call sll_s_hdf5_ser_file_close ( file_id, error )
 
   end subroutine s_polar_mapping_analytical__store_data
 
