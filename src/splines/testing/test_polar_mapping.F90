@@ -163,14 +163,31 @@ program test_polar_mapping
   ! Circle (Target or Czarny default mapping)
   !-----------------------------------------------------------------------------
 
+  ! Initialize analytical mapping
   call mapping_analytical_circle % init()
 
-  call mapping_analytical_circle % store_data( npts1, npts2, "mapping_analytic_circle")
+  ! Create HDF5 file
+  call sll_s_hdf5_ser_file_create( 'mapping_analytic_circle.h5', file_id, h5_error )
 
+  ! Store data in HDF5 file
+  call mapping_analytical_circle % store_data( npts1, npts2, file_id )
+
+  ! Close HDF5 file
+  call sll_s_hdf5_ser_file_close ( file_id, h5_error )
+
+  ! Initialize discrete IGA mapping
   call mapping_iga % init( spline_basis_eta1, spline_basis_eta2, mapping_analytical_circle )
 
-  call mapping_iga % store_data( npts1, npts2, "mapping_discrete_circle")
+  ! Create HDF5 file
+  call sll_s_hdf5_ser_file_create( 'mapping_discrete_circle.h5', file_id, h5_error )
 
+  ! Store data in HDF5 file
+  call mapping_iga % store_data( npts1, npts2, file_id)
+
+  ! Close HDF5 file
+  call sll_s_hdf5_ser_file_close ( file_id, h5_error )
+
+  ! Initialize polar spline basis
   call polar_spline_basis % init( spline_basis_eta1, spline_basis_eta2, mapping_iga )
 
   call polar_spline_basis % free()
@@ -185,14 +202,31 @@ program test_polar_mapping
   d0 = 0.2_wp
   e0 = 0.3_wp
 
+  ! Initialize analytical mapping
   call mapping_analytical_target % init( x0=x0, d0=d0, e0=e0 )
 
-  call mapping_analytical_target % store_data( npts1, npts2, "mapping_analytic_target")
+  ! Create HDF5 file
+  call sll_s_hdf5_ser_file_create( 'mapping_analytic_target.h5', file_id, h5_error )
 
+  ! Store data in HDF5 file
+  call mapping_analytical_target % store_data( npts1, npts2, file_id )
+
+  ! Close HDF5 file
+  call sll_s_hdf5_ser_file_close ( file_id, h5_error )
+
+  ! Initialize discrete IGA mapping
   call mapping_iga % init( spline_basis_eta1, spline_basis_eta2, mapping_analytical_target )
 
-  call mapping_iga % store_data( npts1, npts2, "mapping_discrete_target")
+  ! Create HDF5 file
+  call sll_s_hdf5_ser_file_create( 'mapping_discrete_target.h5', file_id, h5_error )
 
+  ! Store data in HDF5 file
+  call mapping_iga % store_data( npts1, npts2, file_id )
+
+  ! Close HDF5 file
+  call sll_s_hdf5_ser_file_close ( file_id, h5_error )
+
+  ! Initialize polar spline basis
   call polar_spline_basis % init( spline_basis_eta1, spline_basis_eta2, mapping_iga )
 
   call polar_spline_basis % free()
@@ -207,14 +241,31 @@ program test_polar_mapping
   b  = 1.4_wp
   e  = 0.3_wp
 
+  ! Initialize analytical mapping
   call mapping_analytical_czarny % init( x0=x0, b=b, e=e )
 
-  call mapping_analytical_czarny % store_data( npts1, npts2, "mapping_analytic_czarny")
+  ! Create HDF5 file
+  call sll_s_hdf5_ser_file_create( 'mapping_analytic_czarny.h5', file_id, h5_error )
 
+  ! Store data in HDF5 file
+  call mapping_analytical_czarny % store_data( npts1, npts2, file_id )
+
+  ! Close HDF5 file
+  call sll_s_hdf5_ser_file_close ( file_id, h5_error )
+
+  ! Initialize discrete IGA mapping
   call mapping_iga % init( spline_basis_eta1, spline_basis_eta2, mapping_analytical_czarny )
 
-  call mapping_iga % store_data( npts1, npts2, "mapping_discrete_czarny")
+  ! Create HDF5 file
+  call sll_s_hdf5_ser_file_create( 'mapping_discrete_czarny.h5', file_id, h5_error )
 
+  ! Store data in HDF5 file
+  call mapping_iga % store_data( npts1, npts2, file_id )
+
+  ! Close HDF5 file
+  call sll_s_hdf5_ser_file_close ( file_id, h5_error )
+
+  ! Initialize polar spline basis
   call polar_spline_basis % init( spline_basis_eta1, spline_basis_eta2, mapping_iga )
 
   call polar_spline_basis % free()
@@ -417,7 +468,7 @@ program test_polar_mapping
     end do
   end do
 
-  ! Store mesh
+  ! Store function values and interpolation error
   call sll_o_hdf5_ser_write_array( file_id, interp_funct, "/interp_funct", h5_error )
   call sll_o_hdf5_ser_write_array( file_id, abs( interp_error ), "/interp_error", h5_error )
 
