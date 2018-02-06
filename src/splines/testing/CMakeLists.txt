@@ -73,6 +73,9 @@ target_link_libraries( test_polar_spline_2d sll_splines )
 add_executable( test_polar_mapping test_polar_mapping.F90 $<TARGET_OBJECTS:analytical_profiles> )
 target_link_libraries( test_polar_mapping sll_splines )
 
+add_executable( test_polar_mapping_advection test_polar_mapping_advection.F90 )
+target_link_libraries( test_polar_mapping_advection sll_splines )
+
 #-------------------------------------------------------------------------------
 
 # Cubic splines ............................
