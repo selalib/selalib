@@ -27,7 +27,7 @@ module sll_m_polar_advector_base
   ! Interfaces for deferred procedures
   abstract interface
 
-    subroutine i_sub_velocity_field( self, x, a )
+    SLL_PURE subroutine i_sub_velocity_field( self, x, a )
       import sll_c_polar_advector, wp
       class(sll_c_polar_advector), intent(in   ) :: self
       real(wp)                   , intent(in   ) :: x(2)
