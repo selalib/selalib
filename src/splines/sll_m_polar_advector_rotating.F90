@@ -41,7 +41,7 @@ contains
   end subroutine s_polar_advector_rotating__init
 
   !-----------------------------------------------------------------------------
-  subroutine s_polar_advector_rotating__velocity_field( self, x, a )
+  SLL_PURE subroutine s_polar_advector_rotating__velocity_field( self, x, a )
     class(sll_t_polar_advector_rotating), intent(in   ) :: self
     real(wp)                            , intent(in   ) :: x(2)
     real(wp)                            , intent(  out) :: a(2)
