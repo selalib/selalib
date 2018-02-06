@@ -122,3 +122,102 @@ for k1 in k1_list:
     ax.set_title( '%s mapping: interpolation error' %k1 )
     fg.colorbar( im, cax=cax )
     fg.show()
+
+#-------------------------------------------------------------------------------
+# Advection tests
+#-------------------------------------------------------------------------------
+
+h5 = h5py.File( 'mapping_test_advection.h5', mode='r' )
+
+# meshes
+x1 = h5['x1'].value
+x2 = h5['x2'].value
+
+# number of iterations (including initial time)
+Ni = h5.attrs['iterations']+1
+
+f = dict()
+f_ex = dict()
+for i in range(Ni):
+    s = str(i)
+    f[s] = h5['f_'+s].value
+    f_ex[s] = h5['f_ex_'+s].value
+
+h5.close()
+
+# find minimum of f
+min_f = 1.0
+for i in range(Ni):
+    if ( f[str(i)].min() < min_f ):
+       min_f = f[str(i)].min()
+
+# find maximum of f
+max_f = 0.0
+for i in range(Ni):
+    if ( f[str(i)].max() > max_f ):
+       max_f = f[str(i)].max()
+
+# find minimum of f exact
+min_f_ex = 1.0
+for i in range(Ni):
+    if ( f_ex[str(i)].min() < min_f_ex ):
+       min_f_ex = f_ex[str(i)].min()
+
+# find maximum of f exact
+max_f_ex = 0.0
+for i in range(Ni):
+    if ( f_ex[str(i)].max() > max_f_ex ):
+       max_f_ex = f_ex[str(i)].max()
+
+# compute error
+e = dict()
+for i in range(Ni):
+    s = str(i)
+    e[s] = f[s] - f_ex[s]
+
+# find minimum of error
+min_err = 1.0
+for i in range(Ni):
+    if ( e[str(i)].min() < min_err ):
+       min_err = e[str(i)].min()
+
+# find maximum of error
+max_err = 0.0
+for i in range(Ni):
+    if ( e[str(i)].max() > max_err ):
+       max_err = e[str(i)].max()
+
+# Animated plot
+def plot_time_evolution( arg ):
+
+    fg = plt.figure(figsize=[9.0,9.0])
+    ax = fg.add_subplot(1,1,1)
+    cax = make_axes_locatable(ax).append_axes( 'right', size='8%', pad='5%' )
+
+    for i in range(Ni):
+        ax.clear()
+        cax.clear()
+        if ( arg == 'f' ):
+           clevels = np.linspace( min_f, max_f, 50 )
+           im = ax.contourf( x1, x2, f[str(i)], clevels )
+           ax.set_title( 'Distribution function at t = %i' %i )
+        elif ( arg == 'f_ex' ):
+           clevels = np.linspace( min_f_ex, max_f_ex, 50 )
+           im = ax.contourf( x1, x2, f_ex[str(i)], clevels )
+           ax.set_title( 'Exact solution at t = %i' %i )
+        elif ( arg == 'error' ):
+           clevels = np.linspace( min_err, max_err, 50 )
+           im = ax.contourf( x1, x2, e[str(i)], clevels )
+           ax.set_title( 'Error on solution at t = %i' %i )
+        ax.set_aspect( 'equal' )
+        fg.colorbar( im, cax=cax )
+        fg.canvas.draw()
+        plt.pause(1.0e-05)
+
+print()
+print( ' Testing 2D advection on Czarny mapping' )
+print( ' ======================================' )
+print()
+
+plot_time_evolution( 'f' )
+plot_time_evolution( 'error' )
