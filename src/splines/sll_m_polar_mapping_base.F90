@@ -110,12 +110,6 @@ contains
     ! Newton method
     do i = 1, maxiter
 
-      if ( eta_new(1) < 0.0_wp ) eta_new(1) = 1.0e-14_wp
-      if ( eta_new(1) > 1.0_wp ) then
-        eta(1) = 1.0_wp
-        return
-      end if
-
       ! Function to be inverted
       temp = self % eval( eta_new ) - x
 
@@ -135,8 +129,12 @@ contains
       ! Apply periodicity for eta2
       eta(2) = modulo( eta(2), sll_p_twopi )
 
+      ! Deal with points out of domain
+      if ( eta(1) < 0.0_wp ) then; eta(1) = 1.0e-14_wp;         end if
+      if ( eta(1) > 1.0_wp ) then; eta(1) = 1.0_wp    ; return; end if
+
       ! Check convergence using Euclidean distance
-      x_new = self % eval( eta_new )
+      x_new = self % eval( eta )
       if ( norm2( x_new - x ) < tol ) return
 
       eta_new = eta
