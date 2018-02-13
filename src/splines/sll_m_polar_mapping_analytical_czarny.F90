@@ -31,6 +31,7 @@ module sll_m_polar_mapping_analytical_czarny
     procedure :: init => s_polar_mapping_analytical_czarny__init
     procedure :: eval => f_polar_mapping_analytical_czarny__eval
     procedure :: jmat => f_polar_mapping_analytical_czarny__jmat ! Jacobian matrix
+    procedure :: jmat_comp => f_polar_mapping_analytical_czarny__jmat_comp
 
   end type sll_t_polar_mapping_analytical_czarny
 
@@ -92,5 +93,29 @@ contains
     end associate
 
   end function f_polar_mapping_analytical_czarny__jmat
+
+  !-----------------------------------------------------------------------------
+  SLL_PURE function f_polar_mapping_analytical_czarny__jmat_comp( self, eta ) result( jmat_comp )
+    class(sll_t_polar_mapping_analytical_czarny), intent(in) :: self
+    real(wp)                                    , intent(in) :: eta(2)
+    real(wp) :: jmat_comp(2,2)
+
+    real(wp) :: tmp1, tmp2
+
+    associate( s => eta(1), t => eta(2), b => self % b, e => self % e )
+
+      tmp1 = sqrt( 1.0_wp + e*(e+2.0_wp*s*cos(t)) )
+      tmp2 = sqrt( 1.0_wp-e**2*0.25_wp )
+
+      jmat_comp(1,1) = b/(tmp2*(2.0_wp-tmp1))
+      jmat_comp(1,2) = 0.0_wp
+      jmat_comp(2,1) = -b*e*s*sin(t)/(tmp1*tmp2*(2.0_wp-tmp1)**2)
+      jmat_comp(2,2) = -1.0_wp/tmp1
+
+      jmat_comp = jmat_comp / ( -b/(tmp1*tmp2*(2.0_wp-tmp1)) )
+
+    end associate
+
+  end function f_polar_mapping_analytical_czarny__jmat_comp
 
 end module sll_m_polar_mapping_analytical_czarny

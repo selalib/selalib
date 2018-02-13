@@ -76,52 +76,52 @@ for k1 in k1_list:
 # PLOTS
 #-------------------------------------------------------------------------------
 
-# Mesh from analytical, discrete and intermediate mappings plus control points
-fg = plt.figure()
-i_plot = 1
-for k1 in k1_list:
-    ax = fg.add_subplot(1,3,i_plot)
-    for k2 in k2_list:
-        # analytical mapping
-        if (k2 == 'analytic'):
-           ax.plot( x1[(k1,k2)], x2[(k1,k2)], color='b' )
-           ax.plot( x1[(k1,k2)].transpose(), x2[(k1,k2)].transpose(), color='b' )
-        # discrete mapping
-        elif (k2 == 'discrete'):
-           ax.plot( x1[(k1,k2)], x2[(k1,k2)], '.', color='r' )
-           ax.plot( x1[(k1,k2)].transpose(), x2[(k1,k2)].transpose(), '.', color='r' )
-        # intermediate mapping
-        elif (k2 == 'intermed'):
-           ax.plot( x1[(k1,k2)], x2[(k1,k2)], color='k', lw=0.5)
-           ax.plot( x1[(k1,k2)].transpose(), x2[(k1,k2)].transpose(), color='k', lw=0.5 )
-    # control points
-    #ax.plot( c_x1[k1].ravel(), c_x2[k1].ravel(), 'x', color='k' )
-    # plot style
-    ax.set_aspect( 'equal' )
-    ax.set_title( '%s mapping: mesh and control points' %k1 )
-    i_plot = i_plot + 1
-fg.show()
-
-# Contour plot of interpolation function and error
-for k1 in k1_list:
-    fg = plt.figure()
-    # function profile
-    ax = fg.add_subplot(1,2,1)
-    cax = make_axes_locatable(ax).append_axes( 'right', size='8%', pad='5%' )
-    clevels = np.linspace( interp_funct[k1].min(), interp_funct[k1].max(), 50 )
-    im = ax.contourf( x1[(k1,'discrete')], x2[(k1,'discrete')], interp_funct[k1], clevels )
-    ax.set_aspect( 'equal' )
-    ax.set_title( '%s mapping: function profile' %k1 )
-    fg.colorbar( im, cax=cax )
-    # interpolation error
-    ax = fg.add_subplot(1,2,2)
-    cax = make_axes_locatable(ax).append_axes( 'right', size='8%', pad='5%' )
-    clevels = np.linspace( interp_error[k1].min(), interp_error[k1].max(), 50 )
-    im = ax.contourf( x1[(k1,'discrete')], x2[(k1,'discrete')], interp_error[k1], clevels )
-    ax.set_aspect( 'equal' )
-    ax.set_title( '%s mapping: interpolation error' %k1 )
-    fg.colorbar( im, cax=cax )
-    fg.show()
+## Mesh from analytical, discrete and intermediate mappings plus control points
+#fg = plt.figure()
+#i_plot = 1
+#for k1 in k1_list:
+#    ax = fg.add_subplot(1,3,i_plot)
+#    for k2 in k2_list:
+#        # analytical mapping
+#        if (k2 == 'analytic'):
+#           ax.plot( x1[(k1,k2)], x2[(k1,k2)], color='b' )
+#           ax.plot( x1[(k1,k2)].transpose(), x2[(k1,k2)].transpose(), color='b' )
+#        # discrete mapping
+#        elif (k2 == 'discrete'):
+#           ax.plot( x1[(k1,k2)], x2[(k1,k2)], '.', color='r' )
+#           ax.plot( x1[(k1,k2)].transpose(), x2[(k1,k2)].transpose(), '.', color='r' )
+#        # intermediate mapping
+#        elif (k2 == 'intermed'):
+#           ax.plot( x1[(k1,k2)], x2[(k1,k2)], color='k', lw=0.5)
+#           ax.plot( x1[(k1,k2)].transpose(), x2[(k1,k2)].transpose(), color='k', lw=0.5 )
+#    # control points
+#    #ax.plot( c_x1[k1].ravel(), c_x2[k1].ravel(), 'x', color='k' )
+#    # plot style
+#    ax.set_aspect( 'equal' )
+#    ax.set_title( '%s mapping: mesh and control points' %k1 )
+#    i_plot = i_plot + 1
+#fg.show()
+#
+## Contour plot of interpolation function and error
+#for k1 in k1_list:
+#    fg = plt.figure()
+#    # function profile
+#    ax = fg.add_subplot(1,2,1)
+#    cax = make_axes_locatable(ax).append_axes( 'right', size='8%', pad='5%' )
+#    clevels = np.linspace( interp_funct[k1].min(), interp_funct[k1].max(), 50 )
+#    im = ax.contourf( x1[(k1,'discrete')], x2[(k1,'discrete')], interp_funct[k1], clevels )
+#    ax.set_aspect( 'equal' )
+#    ax.set_title( '%s mapping: function profile' %k1 )
+#    fg.colorbar( im, cax=cax )
+#    # interpolation error
+#    ax = fg.add_subplot(1,2,2)
+#    cax = make_axes_locatable(ax).append_axes( 'right', size='8%', pad='5%' )
+#    clevels = np.linspace( interp_error[k1].min(), interp_error[k1].max(), 50 )
+#    im = ax.contourf( x1[(k1,'discrete')], x2[(k1,'discrete')], interp_error[k1], clevels )
+#    ax.set_aspect( 'equal' )
+#    ax.set_title( '%s mapping: interpolation error' %k1 )
+#    fg.colorbar( im, cax=cax )
+#    fg.show()
 
 #-------------------------------------------------------------------------------
 # Advection tests
@@ -220,4 +220,4 @@ print( ' ======================================' )
 print()
 
 plot_time_evolution( 'f' )
-plot_time_evolution( 'error' )
+#plot_time_evolution( 'error' )
