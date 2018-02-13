@@ -1,8 +1,17 @@
 module sll_m_polar_advector_base
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_assert.h"
+#include "sll_errors.h"
 
   use sll_m_working_precision, only: f64
+
+  use sll_m_constants, only: sll_p_twopi
+
+  use sll_m_spline_2d, only: sll_t_spline_2d
+
+  use sll_m_polar_mapping_base, only: sll_c_polar_mapping
+
+  use sll_m_polar_mapping_analytical, only: sll_c_polar_mapping_analytical
 
   implicit none
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -20,7 +29,8 @@ module sll_m_polar_advector_base
     procedure(i_sub_free)          , deferred :: free
 
     ! Non-deferred procedures
-    procedure :: advect => f_polar_advector__advect ! time integrator
+    procedure :: advect_x1x2 => f_polar_advector__advect_x1x2 ! time integrator (Cartesian coordinates)
+    procedure :: advect_y1y2 => f_polar_advector__advect_y1y2 ! time integrator (intermediate coordinates)
 
   end type sll_c_polar_advector
 
@@ -53,22 +63,160 @@ module sll_m_polar_advector_base
 contains
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
-  ! Explicit Runge-Kutta 4th order
-  SLL_PURE function f_polar_advector__advect( self, x, h ) result( y )
+  ! Advector (time integrator RK4): works in Cartesian coordinates (x1,x2)
+  function f_polar_advector__advect_x1x2( self, eta, h, mapping, spline_2d_a1, spline_2d_a2, tol, maxiter ) result( eta_new )
     class(sll_c_polar_advector), intent(in) :: self
-    real(wp)                   , intent(in) :: x(2)
+    real(wp)                   , intent(in) :: eta(2)
     real(wp)                   , intent(in) :: h
-    real(wp) :: y(2)
+    class(sll_c_polar_mapping) , intent(in) :: mapping
+    type(sll_t_spline_2d)      , intent(in) :: spline_2d_a1
+    type(sll_t_spline_2d)      , intent(in) :: spline_2d_a2
+    real(wp)                   , intent(in) :: tol
+    integer                    , intent(in) :: maxiter
+    real(wp) :: eta_new(2)
 
-    real(wp) :: k1(2), k2(2), k3(2), k4(2)
+    real(wp) :: x(2), tmp(2), k1(2), k2(2), k3(2), k4(2)
 
-    call self % velocity_field( x                  , k1 )
-    call self % velocity_field( x + 0.5_wp * h * k1, k2 )
-    call self % velocity_field( x + 0.5_wp * h * k2, k3 )
-    call self % velocity_field( x +          h * k3, k4 )
+    ! Initial position
+    x = mapping % eval( eta )
 
-    y = x + h * ( k1 + 2.0_wp * k2 + 2.0_wp * k3 + k4 ) / 6.0_wp
+    !---------------------------------------------------------------------------
+    ! Using interpolated advection field
+    !---------------------------------------------------------------------------
 
-  end function f_polar_advector__advect
+    ! step #1
+    k1(1) = spline_2d_a1 % eval( eta(1), eta(2) )
+    k1(2) = spline_2d_a2 % eval( eta(1), eta(2) )
+
+    ! step #2
+    tmp = mapping % eval_inverse( x + 0.5_wp * h * k1, eta, tol, maxiter )
+
+    k2(1) = spline_2d_a1 % eval( tmp(1), tmp(2) )
+    k2(2) = spline_2d_a2 % eval( tmp(1), tmp(2) )
+
+    ! step #3
+    tmp = mapping % eval_inverse( x + 0.5_wp * h * k2, eta, tol, maxiter )
+
+    k3(1) = spline_2d_a1 % eval( tmp(1), tmp(2) )
+    k3(2) = spline_2d_a2 % eval( tmp(1), tmp(2) )
+
+    ! step #4
+    tmp = mapping % eval_inverse( x + h * k3, eta, tol, maxiter )
+
+    k4(1) = spline_2d_a1 % eval( tmp(1), tmp(2) )
+    k4(2) = spline_2d_a2 % eval( tmp(1), tmp(2) )
+
+!    !---------------------------------------------------------------------------
+!    ! Using analytical advection field
+!    !---------------------------------------------------------------------------
+!
+!    call self % velocity_field( x                  , k1 )
+!    call self % velocity_field( x + 0.5_wp * h * k1, k2 )
+!    call self % velocity_field( x + 0.5_wp * h * k2, k3 )
+!    call self % velocity_field( x +          h * k3, k4 )
+
+    ! Final position
+    x = x + h * ( k1 + 2.0_wp * k2 + 2.0_wp * k3 + k4 ) / 6.0_wp
+
+    eta_new = mapping % eval_inverse( x, eta, tol, maxiter )
+
+  end function f_polar_advector__advect_x1x2
+
+  ! Advector (time integrator RK4): works in intermediate coordinates (y1,y2)
+  function f_polar_advector__advect_y1y2( self, eta, h, mapping, spline_2d_a1, spline_2d_a2, tol, maxiter ) result( eta_new )
+    class(sll_c_polar_advector)          , intent(in) :: self
+    real(wp)                             , intent(in) :: eta(2)
+    real(wp)                             , intent(in) :: h
+    class(sll_c_polar_mapping_analytical), intent(in) :: mapping
+    type(sll_t_spline_2d)                , intent(in) :: spline_2d_a1
+    type(sll_t_spline_2d)                , intent(in) :: spline_2d_a2
+    real(wp)                             , intent(in) :: tol
+    integer                              , intent(in) :: maxiter
+    real(wp) :: eta_new(2)
+
+    real(wp) :: a_x1, a_x2
+    real(wp) :: y(2), tmp(2), k1(2), k2(2), k3(2), k4(2)
+    real(wp) :: jmat_comp(2,2)
+
+    ! Initial position
+    y = polar_map( eta )
+
+    !---------------------------------------------------------------------------
+    ! Using interpolated advection field
+    !---------------------------------------------------------------------------
+
+    ! step #1
+    a_x1  = spline_2d_a1 % eval( eta(1), eta(2) )
+    a_x2  = spline_2d_a2 % eval( eta(1), eta(2) )
+
+    jmat_comp = mapping % jmat_comp( eta )
+
+    k1(1) = jmat_comp(1,1) * a_x1 + jmat_comp(1,2) * a_x2
+    k1(2) = jmat_comp(2,1) * a_x1 + jmat_comp(2,2) * a_x2
+
+    ! step #2
+    tmp = polar_map_inverse( y + 0.5_wp * h * k1 )
+!    write(*,*) tmp(1), tmp(2)
+
+    a_x1  = spline_2d_a1 % eval( tmp(1), tmp(2) )
+    a_x2  = spline_2d_a2 % eval( tmp(1), tmp(2) )
+
+    jmat_comp = mapping % jmat_comp( tmp )
+
+    k2(1) = jmat_comp(1,1) * a_x1 + jmat_comp(1,2) * a_x2
+    k2(2) = jmat_comp(2,1) * a_x1 + jmat_comp(2,2) * a_x2
+
+    ! step #3
+    tmp = polar_map_inverse( y + 0.5_wp * h * k2 )
+
+    a_x1  = spline_2d_a1 % eval( tmp(1), tmp(2) )
+    a_x2  = spline_2d_a2 % eval( tmp(1), tmp(2) )
+
+    jmat_comp = mapping % jmat_comp( tmp )
+
+    k3(1) = jmat_comp(1,1) * a_x1 + jmat_comp(1,2) * a_x2
+    k3(2) = jmat_comp(2,1) * a_x1 + jmat_comp(2,2) * a_x2
+
+    ! step #4
+    tmp = polar_map_inverse( y + h * k3 )
+
+    a_x1  = spline_2d_a1 % eval( tmp(1), tmp(2) )
+    a_x2  = spline_2d_a2 % eval( tmp(1), tmp(2) )
+
+    jmat_comp = mapping % jmat_comp( tmp )
+
+    k4(1) = jmat_comp(1,1) * a_x1 + jmat_comp(1,2) * a_x2
+    k4(2) = jmat_comp(2,1) * a_x1 + jmat_comp(2,2) * a_x2
+
+    ! Final position
+    y = y + h * ( k1 + 2.0_wp * k2 + 2.0_wp * k3 + k4 ) / 6.0_wp
+
+    eta_new = polar_map_inverse( y )
+
+  !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+  contains
+  !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+    SLL_PURE function polar_map( eta ) result( y )
+      real(wp), intent(in) :: eta(2)
+      real(wp) :: y(2)
+
+      y(1) = eta(1) * cos( eta(2) )
+      y(2) = eta(1) * sin( eta(2) )
+
+    end function polar_map
+
+    SLL_PURE function polar_map_inverse( y ) result( eta )
+      real(wp), intent(in) :: y(2)
+      real(wp) :: eta(2)
+
+      eta(1) = norm2( y )
+      eta(2) = modulo( atan2( y(2), y(1) ), sll_p_twopi )
+
+      if ( eta(1) > 1.0_wp ) eta(1) = 1.0_wp
+
+    end function polar_map_inverse
+
+  end function f_polar_advector__advect_y1y2
 
 end module sll_m_polar_advector_base
