@@ -11,6 +11,10 @@ program test_polar_mapping_advection
 
   use sll_m_utilities, only: sll_s_new_array_linspace
 
+  use sll_m_polar_mapping_analytical, only: sll_c_polar_mapping_analytical
+
+  use sll_m_polar_mapping_analytical_target, only: sll_t_polar_mapping_analytical_target
+
   use sll_m_polar_mapping_analytical_czarny, only: sll_t_polar_mapping_analytical_czarny
 
   use sll_m_polar_mapping_iga, only: sll_t_polar_mapping_iga
@@ -59,11 +63,13 @@ program test_polar_mapping_advection
   class(sll_c_bsplines), allocatable :: spline_basis_eta2
 
   ! Analytical and discrete IGA mappings
-  type(sll_t_polar_mapping_analytical_czarny) :: mapping_analytical
+  class(sll_c_polar_mapping_analytical), allocatable :: mapping_analytical
   type(sll_t_polar_mapping_iga) :: mapping_iga
 
   ! 2D tensor-product splines for advection fields A1,A2 and distribution function f
   type(sll_t_spline_2d) :: spline_2d_f
+  type(sll_t_spline_2d) :: spline_2d_a1
+  type(sll_t_spline_2d) :: spline_2d_a2
 
   ! 2D tensor-product spline interpolator
   type(sll_t_spline_interpolator_2d) :: spline_interpolator_2d
@@ -73,14 +79,17 @@ program test_polar_mapping_advection
   real(wp), allocatable :: e1_node(:)
   real(wp), allocatable :: e2_node(:)
   real(wp), allocatable :: f(:,:), f_ex(:,:)
+  real(wp), allocatable :: a1(:,:), a2(:,:)
 
   ! For 2D advection
   type(sll_t_polar_advector_rotating) :: advector
 
   ! Auxiliary variables
   integer  :: i1, i2, i, iterations
-  real(wp) :: eta(2), x(2), y(2), y0(2)
-  real(wp) :: dt, error, max_err
+  real(wp) :: eta(2), eta_new(2)
+  real(wp) :: x(2), x0(2), a(2)!, x_new(2)
+  real(wp) :: dt, error, max_err, tol
+  integer  :: maxiter
 
   ! For hdf5 I/O
   type(sll_t_hdf5_ser_handle) :: file_id
@@ -144,7 +153,9 @@ program test_polar_mapping_advection
   !=============================================================================
 
   ! Initialize 2D tensor-product splines
-  call spline_2d_f % init( spline_basis_eta1, spline_basis_eta2 )
+  call spline_2d_f  % init( spline_basis_eta1, spline_basis_eta2 )
+  call spline_2d_a1 % init( spline_basis_eta1, spline_basis_eta2 )
+  call spline_2d_a2 % init( spline_basis_eta1, spline_basis_eta2 )
 
   ! Initialize 2D tensor-product spline interpolator
   call spline_interpolator_2d % init( spline_basis_eta1, spline_basis_eta2, &
@@ -166,8 +177,16 @@ program test_polar_mapping_advection
   ! Initialize mapping
   !=============================================================================
 
+!  allocate( sll_t_polar_mapping_analytical_target :: mapping_analytical )
+  allocate( sll_t_polar_mapping_analytical_czarny :: mapping_analytical )
+
   ! Initialize analytica mapping
-  call mapping_analytical % init( x0=[0.0_wp,0.0_wp], b=1.4_wp, e=0.3_wp )
+  select type ( mapping_analytical )
+    type is ( sll_t_polar_mapping_analytical_target )
+      call mapping_analytical % init( x0=[0.0_wp,0.0_wp], d0=0.2_wp, e0=0.3_wp )
+    type is ( sll_t_polar_mapping_analytical_czarny )
+      call mapping_analytical % init( x0=[0.0_wp,0.0_wp], b =1.4_wp, e =0.3_wp )
+  end select
 
   ! Initialize discrete IGA mapping
   call mapping_iga % init( spline_basis_eta1, spline_basis_eta2, mapping_analytical )
@@ -198,11 +217,11 @@ program test_polar_mapping_advection
   !=============================================================================
 
   ! Initialize advector
-  call advector % init( xc=[0.3_wp,0.0_wp], omega=sll_p_twopi )
+  call advector % init( xc=[-0.3_wp,0.0_wp], omega=sll_p_twopi )
 
   ! Parameters for time cycle
-  iterations = 100
-  dt = 1.0e-02_wp
+  iterations = 100 * 2
+  dt = 1.0e-02_wp  / 1.0_wp
 
   call sll_o_hdf5_ser_write_attribute( file_id, "/", "iterations", iterations, h5_error )
 
@@ -213,6 +232,24 @@ program test_polar_mapping_advection
   write(*,'(a)') " *********************************************************************************"
   write(*,'(a)') " Test 2D advection on singular mapping: compare numerical and analytical solutions"
   write(*,'(a)') " *********************************************************************************"
+
+  ! Compute interpolating splines for advection fields
+  allocate( a1( npts1, npts2 ) )
+  allocate( a2( npts1, npts2 ) )
+  do i2 = 1, npts2
+    do i1 = 1, npts1
+      x = mapping_iga % eval( [ e1_node(i1), e2_node(i2) ] )
+      call advector % velocity_field( x, a )
+      a1(i1,i2) = a(1)
+      a2(i1,i2) = a(2)
+    end do
+  end do
+  call spline_interpolator_2d % compute_interpolant( spline_2d_a1, a1(:,:) )
+  call spline_interpolator_2d % compute_interpolant( spline_2d_a2, a2(:,:) )
+
+  ! Set tolerance and maximum iterations for mapping inversion
+  tol = 1.0e-14_wp
+  maxiter = 100
 
   ! Time cycle
   do i = 1, iterations
@@ -234,23 +271,24 @@ program test_polar_mapping_advection
 !        write(*,'(a,es21.14,a,es21.14,a)') " (x1,x2) = (",   x(1), ",",   x(2), ") at t"
 
 !        ! Advect point using analytical flow field
-!        y = advector % flow_field( x, -dt )
+!        x_new   = advector % flow_field( x, -dt )
+!        eta_new = mapping_iga % eval_inverse( x_new, eta, tol, maxiter )
 
-        ! Advect point using explicit Runge-Kutta 4th order
-        y = advector % advect( x, -dt )
+!        ! Advect point using explicit Runge-Kutta 4th order (Cartesian coordinates)
+!        eta_new = advector % advect_x1x2( eta, -dt, mapping_iga, spline_2d_a1, spline_2d_a2, tol, maxiter )
 
-        ! Map back Cartesian coordinates to logical coordinates using Newton method
-        eta = mapping_iga % eval_inverse( y, eta0=eta, tol=1.0e-14_wp, maxiter=100 )
+        ! Advect point using explicit Runge-Kutta 4th order (intermediate coordinates)
+        eta_new = advector % advect_y1y2( eta, -dt, mapping_analytical, spline_2d_a1, spline_2d_a2, tol, maxiter )
 
-!        write(*,'(a,es21.14,a,es21.14,a)') " (x1,x2) = (",   y(1), ",",   y(2), ") at t+dt"
-!        write(*,'(a,es21.14,a,es21.14,a)') " (e1,e2) = (", eta(1), ",", eta(2), ") at t+dt"
+!        write(*,'(a,es21.14,a,es21.14,a)') " (x1,x2) = (", x_new(1), ",", x_new(2), ") at t+dt"
+!        write(*,'(a,es21.14,a,es21.14,a)') " (e1,e2) = (", eta_new(1), ",", eta_new(2), ") at t+dt"
 
         ! Evaluate distribution function at origin of characteristics
-        f(i1,i2) = spline_2d_f % eval( eta(1), eta(2) )
+        f(i1,i2) = spline_2d_f % eval( eta_new(1), eta_new(2) )
 
         ! Exact solution using method of characteristics
-        y0 = advector % flow_field( x, -dt*real(i,wp) )
-        f_ex(i1,i2) = f_initial( y0 )
+        x0 = advector % flow_field( x, -dt*real(i,wp) )
+        f_ex(i1,i2) = f_initial( x0 )
 
         error = f(i1,i2) - f_ex(i1,i2)
 
@@ -287,13 +325,21 @@ program test_polar_mapping_advection
 
   deallocate( e1_node )
   deallocate( e2_node )
-  deallocate( f )
+  deallocate( f    )
+  deallocate( f_ex )
+  deallocate( a1 )
+  deallocate( a2 )
 
-  call mapping_iga % free()
-  call spline_2d_f % free()
+  deallocate( mapping_analytical )
+
+  call mapping_iga  % free()
+  call spline_2d_f  % free()
+  call spline_2d_a1 % free()
+  call spline_2d_a2 % free()
   call spline_interpolator_2d % free()
   call spline_basis_eta1 % free()
   call spline_basis_eta2 % free()
+  call advector % free()
 
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 contains
@@ -306,34 +352,34 @@ contains
     real(wp), intent(in) :: x(2)
     real(wp) :: f0
 
-!    ! Cosine bell
-!
-!    real(wp), parameter :: x0(2) = [0.0_wp,0.0_wp]
-!    integer , parameter :: p = 4
-!    real(wp) :: xmod
-!
-!    xmod = norm2( x-x0 )
-!
-!    if ( xmod < 0.25_wp ) then
-!      f0 = cos( sll_p_twopi * (x(1)-x0(1)) )**p * cos( sll_p_twopi * (x(2)-x0(2)) )**p
-!    else
-!      f0 = 0.0_wp
-!    end if
-
-    ! Superposition of cosine bells with elliptical cross-sections
+    ! Cosine bell
 
     real(wp), parameter :: x0(2) = [0.0_wp,0.0_wp]
     integer , parameter :: p = 4
-    real(wp), parameter :: a = 0.3_wp
-    real(wp) :: r1, r2
+    real(wp) :: xmod
 
-    r1 = sqrt( ( x(1) - x0(1) )**2 + 8.0_wp * ( x(2) - x0(2) )**2 )
-    r2 = sqrt( 8.0_wp * ( x(1) - x0(1) )**2 + ( x(2) - x0(2) )**2 )
+    xmod = norm2( x-x0 )
 
-    f0 = 0.0_wp
+    if ( xmod < 0.25_wp ) then
+      f0 = cos( sll_p_twopi * (x(1)-x0(1)) )**p * cos( sll_p_twopi * (x(2)-x0(2)) )**p
+    else
+      f0 = 0.0_wp
+    end if
 
-    if ( r1 < a ) f0 = 0.5_wp * cos( 0.5_wp * sll_p_pi * r1 / a )**p
-    if ( r2 < a ) f0 = f0 + 0.5_wp * cos( 0.5_wp * sll_p_pi * r2 / a )**p
+!    ! Superposition of cosine bells with elliptical cross-sections
+!
+!    real(wp), parameter :: x0(2) = [0.0_wp,0.0_wp]
+!    integer , parameter :: p = 4
+!    real(wp), parameter :: a = 0.3_wp
+!    real(wp) :: r1, r2
+!
+!    r1 = sqrt( ( x(1) - x0(1) )**2 + 8.0_wp * ( x(2) - x0(2) )**2 )
+!    r2 = sqrt( 8.0_wp * ( x(1) - x0(1) )**2 + ( x(2) - x0(2) )**2 )
+!
+!    f0 = 0.0_wp
+!
+!    if ( r1 < a ) f0 = 0.5_wp * cos( 0.5_wp * sll_p_pi * r1 / a )**p
+!    if ( r2 < a ) f0 = f0 + 0.5_wp * cos( 0.5_wp * sll_p_pi * r2 / a )**p
 
   end function f_initial
 

@@ -1,5 +1,6 @@
 module sll_m_polar_mapping_analytical
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+#include "sll_assert.h"
 
   use sll_m_working_precision, only: f64
 
@@ -29,9 +30,25 @@ module sll_m_polar_mapping_analytical
 
   contains
 
+    ! Deferred procedures
+    procedure(i_fun_jmat_comp), deferred :: jmat_comp
+
+    ! Non-deferred procedures
     procedure :: store_data => s_polar_mapping_analytical__store_data
 
   end type sll_c_polar_mapping_analytical
+
+  ! Interfaces for deferred procedures
+  abstract interface
+
+    SLL_PURE function i_fun_jmat_comp( self, eta ) result( jmat_comp )
+      import sll_c_polar_mapping_analytical, wp
+      class(sll_c_polar_mapping_analytical), intent(in) :: self
+      real(wp)                             , intent(in) :: eta(2)
+      real(wp) :: jmat_comp(2,2)
+    end function i_fun_jmat_comp
+
+  end interface
 
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 contains

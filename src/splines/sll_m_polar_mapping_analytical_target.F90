@@ -28,9 +28,10 @@ module sll_m_polar_mapping_analytical_target
 
   contains
 
-    procedure :: init => s_polar_mapping_analytical_target__init
-    procedure :: eval => f_polar_mapping_analytical_target__eval
-    procedure :: jmat => f_polar_mapping_analytical_target__jmat ! Jacobian matrix
+    procedure :: init      => s_polar_mapping_analytical_target__init
+    procedure :: eval      => f_polar_mapping_analytical_target__eval
+    procedure :: jmat      => f_polar_mapping_analytical_target__jmat ! Jacobian matrix
+    procedure :: jmat_comp => f_polar_mapping_analytical_target__jmat_comp
 
   end type sll_t_polar_mapping_analytical_target
 
@@ -86,5 +87,24 @@ contains
     end associate
 
   end function f_polar_mapping_analytical_target__jmat
+
+  !-----------------------------------------------------------------------------
+  SLL_PURE function f_polar_mapping_analytical_target__jmat_comp( self, eta ) result( jmat_comp )
+    class(sll_t_polar_mapping_analytical_target), intent(in) :: self
+    real(wp)                                    , intent(in) :: eta(2)
+    real(wp) :: jmat_comp(2,2)
+
+    associate( s => eta(1), t => eta(2), d0 => self % d0, e0 => self % e0 )
+
+      jmat_comp(1,1) = (1.0_wp+e0)
+      jmat_comp(1,2) = 2.0_wp*d0*s*sin(t)
+      jmat_comp(2,1) = 0.0_wp
+      jmat_comp(2,2) = (1.0_wp-e0)-2.0_wp*d0*s*cos(t)
+
+      jmat_comp = jmat_comp / ( (1.0_wp+e0)*((1.0_wp-e0)-2.0_wp*d0*s*cos(t)) )
+
+    end associate
+
+  end function f_polar_mapping_analytical_target__jmat_comp
 
 end module sll_m_polar_mapping_analytical_target
