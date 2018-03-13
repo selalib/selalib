@@ -17,7 +17,7 @@ program test_conjugate_gradient
   ! Working precision
   integer, parameter :: wp = f64
 
-  integer :: i, j, n
+  integer :: i, j, k, n
 
   ! 2D and 1D real arrays
   real(wp), allocatable :: A(:,:)
@@ -43,81 +43,210 @@ program test_conjugate_gradient
 
   ! For CTest
   logical :: passed
+  logical :: success
 
-  passed = .false.
+  passed  = .true.
 
-  n = 256
-  allocate( A(n,n) )
-  allocate( x(n) )
-  allocate( b(n) )
-  allocate( z(n) )
+  !-----------------------------------------------------------------------------
+  ! Test #1: diagonal matrices of increasing size
+  !-----------------------------------------------------------------------------
 
-  ! Output
   write(*,*)
-  write(*,'(a,i0,a,i0)') " Matrix A: ", size(A,1), " x ", size(A,2)
+  write(*,'(a)') " **************************"
+  write(*,'(a)') " Test #1: diagonal matrices"
+  write(*,'(a)') " **************************"
 
-  ! Initialize matrix A diagonal
-  A(:,:) = 0.0_wp
-  do i = 1, n
-    call random_number( A(i,i) )
-    A(i,i) = 0.5_wp + A(i,i)
-  end do
+  do k = 1, 8
 
-  ! Initialize vector x with random numbers in [0,1)
-  do i = 1, n
-    call random_number( x(i) )
-    x(i) = 0.5_wp + x(i)
-  end do
+    n = 2**k
 
-  ! Compute b=Ax
-  b(:) = 0.0_wp
-  do i = 1, n
-    do j = 1, n
-      b(i) = b(i) + A(i,j)*x(j)
+    allocate( A(n,n) )
+    allocate( x(n) )
+    allocate( b(n) )
+    allocate( z(n) )
+
+    ! Output
+    write(*,*)
+    write(*,'(a,i0,a,i0)') " Matrix A: ", size(A,1), " x ", size(A,2)
+
+    ! Initialize matrix A diagonal
+    A(:,:) = 0.0_wp
+    do i = 1, n
+      call random_number( A(i,i) )
+      A(i,i) = 0.5_wp + A(i,i) ! 0.5 <= A(i,i) < 1.5
     end do
+
+    ! Initialize vector x
+    do i = 1, n
+      call random_number( x(i) )
+      x(i) = -0.5_wp + x(i) ! -0.5 <= x < 0.5
+    end do
+
+    ! Compute b=Ax
+    b(:) = 0.0_wp
+    do i = 1, n
+      do j = 1, n
+        b(i) = b(i) + A(i,j)*x(j)
+      end do
+    end do
+
+    ! Array of zeros
+    z(:) = 0.0_wp
+
+    ! Construct linear operator from matrix A
+    call AA % attach( A )
+    call AA_linear_operator % init( AA )
+
+    ! Construct vector space from vector b
+    call bb % attach( b )
+
+    ! Construct vector space object for initial guess
+    call x0 % attach( z )
+
+    ! Construct vector space object for solution
+    call xx % attach( z )
+
+    ! Solve linear system Ax=b for x using conjugate gradient method
+    call conjugate_gradient % solve( &
+      A       = AA_linear_operator, &
+      b       = bb                , &
+      x0      = x0                , &
+      tol     = tol               , &
+      verbose = verbose           , &
+      x       = xx )
+
+    ! Check error and write to output
+    error = maxval( abs( xx % array(:) - x(:) ) )
+    write(*,*)
+    write(*,'(a,es8.2/)') " Maximum absolute error (numerical vs. exact solution): ", error
+
+    if ( error <= tol ) then
+      success = .true.
+    else
+      success = .false.
+      write(*,'(a/)') " Test FAILED"
+    end if
+
+    passed = passed .and. success
+
+    ! Deallocate allocatables and free objects
+    call AA_linear_operator % free()
+    call AA % delete()
+    call xx % delete()
+    call bb % delete()
+    call x0 % delete()
+    deallocate( A, x, b, z )
+
   end do
 
-  ! Array of zeros
-  z(:) = 0.0_wp
+  !-----------------------------------------------------------------------------
+  ! Test #2: banded matrices
+  !-----------------------------------------------------------------------------
 
-  ! Construct linear operator from matrix A
-  call AA % attach( A )
-  call AA_linear_operator % init( AA )
-
-  ! Construct vector space from vector b
-  call bb % attach( b )
-
-  ! Construct vector space object for initial guess
-  call x0 % attach( z )
-
-  ! Construct vector space object for solution
-  call xx % attach( z )
-
-  ! Solve linear system Ax=b for x using conjugate gradient method
-  call conjugate_gradient % solve( &
-    A       = AA_linear_operator, &
-    b       = bb                , &
-    x0      = x0                , &
-    tol     = tol               , &
-    verbose = verbose           , &
-    x       = xx )
-
-  ! Check error and write to output
-  error = maxval( abs( xx % array(:) - x(:) ) )
   write(*,*)
-  write(*,'(a,es8.2)') " Maximum absolute error (numerical vs. exact solution): ", error
-  write(*,*)
+  write(*,'(a)') " ************************"
+  write(*,'(a)') " Test #2: banded matrices"
+  write(*,'(a)') " ************************"
 
-  if ( error <= tol ) passed = .true.
+  do k = 1, 8
 
-  if ( passed ) write(*,'(a/)') " CTest: PASSED"
+    n = 2**k
 
-  ! Deallocate allocatables and free objects
-  call AA_linear_operator % free()
-  call AA % delete()
-  call xx % delete()
-  call bb % delete()
-  call x0 % delete()
-  deallocate( A, x, b, z )
+    allocate( A(n,n) )
+    allocate( x(n) )
+    allocate( b(n) )
+    allocate( z(n) )
+
+    ! Output
+    write(*,*)
+    write(*,'(a,i0,a,i0)') " Matrix A: ", size(A,1), " x ", size(A,2)
+
+    ! Initialize matrix A
+    A(:,:) = 0.0_wp
+    ! diagonal
+    do i = 1, n
+      call random_number( A(i,i) )
+      A(i,i) = 2.0_wp + A(i,i) ! 2.0 <= A(i,i) < 3.0
+    end do
+    ! upper-diagonal
+    do i = 1, n-1
+      A(i,i+1) = -1.0_wp
+    end do
+    ! lower-diagonal
+    do i = 2, n
+      A(i,i-1) = -1.0_wp
+    end do
+
+    ! Initialize vector x
+    do i = 1, n
+      call random_number( x(i) )
+      x(i) = -0.5_wp + x(i) ! -0.5 <= x < 0.5
+    end do
+
+    ! Compute b=Ax
+    b(:) = 0.0_wp
+    do i = 1, n
+      do j = 1, n
+        b(i) = b(i) + A(i,j)*x(j)
+      end do
+    end do
+
+    ! Array of zeros
+    z(:) = 0.0_wp
+
+    ! Construct linear operator from matrix A
+    call AA % attach( A )
+    call AA_linear_operator % init( AA )
+
+    ! Construct vector space from vector b
+    call bb % attach( b )
+
+    ! Construct vector space object for initial guess
+    call x0 % attach( z )
+
+    ! Construct vector space object for solution
+    call xx % attach( z )
+
+    ! Solve linear system Ax=b for x using conjugate gradient method
+    call conjugate_gradient % solve( &
+      A       = AA_linear_operator, &
+      b       = bb                , &
+      x0      = x0                , &
+      tol     = tol               , &
+      verbose = verbose           , &
+      x       = xx )
+
+    ! Check error and write to output
+    error = maxval( abs( xx % array(:) - x(:) ) )
+    write(*,*)
+    write(*,'(a,es8.2/)') " Maximum absolute error (numerical vs. exact solution): ", error
+
+    if ( error <= tol ) then
+      success = .true.
+    else
+      success = .false.
+      write(*,'(a/)') " !!! Test FAILED !!!"
+    end if
+
+    passed = passed .and. success
+
+    ! Deallocate allocatables and free objects
+    call AA_linear_operator % free()
+    call AA % delete()
+    call xx % delete()
+    call bb % delete()
+    call x0 % delete()
+    deallocate( A, x, b, z )
+
+  end do
+
+  !-----------------------------------------------------------------------------
+  ! Check if all tests passed
+  !-----------------------------------------------------------------------------
+  if ( passed ) then
+    write(*,'(/a/)') "PASSED"
+  else
+    write(*,*)
+  end if
 
 end program test_conjugate_gradient
