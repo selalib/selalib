@@ -18,7 +18,17 @@ module sll_m_conjugate_gradient
   ! Working precision
   integer, parameter :: wp = f64
 
+  type :: sll_t_conjugate_gradient_info
+
+    integer  :: iterations
+    logical  :: success
+    real(wp) :: residual
+
+  end type sll_t_conjugate_gradient_info
+
   type :: sll_t_conjugate_gradient
+
+    type(sll_t_conjugate_gradient_info) :: info
 
   contains
 
@@ -32,7 +42,7 @@ contains
 
   ! Conjugate gradient algorithm for solving linear system Ax = b
   subroutine s_conjugate_gradient__solve( self, A, b, x0, tol, verbose, x )
-    class(sll_t_conjugate_gradient), intent(in   ) :: self
+    class(sll_t_conjugate_gradient), intent(inout) :: self
     class(sll_c_linear_operator)   , intent(in   ) :: A
     class(sll_c_vector_space)      , intent(in   ) :: b
     class(sll_c_vector_space)      , intent(in   ) :: x0
@@ -88,11 +98,15 @@ contains
 
     end do
 
+    self % info % iterations = m
+    self % info % success    = .true.
+    self % info % residual   = sqrt( am )
+
     if ( verbose ) then
 
       write(*,*)
-      write(*,'(a,i0,a,es8.2)') " CG method converged after ", m, " iterations"// &
-                                " with residual ", sqrt(am)
+      write(*,'(a,i0,a,es8.2)') " CG method converged after ", self % info % iterations, &
+                                " iterations with residual " , self % info % residual
 
     end if
 
