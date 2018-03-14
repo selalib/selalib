@@ -41,7 +41,6 @@ program test_conjugate_gradient
 
   real(wp) :: error
   real(wp), parameter :: tol = 1.0e-14_wp
-  logical , parameter :: verbose = .true.
 
   ! For CTest
   logical :: passed
@@ -57,6 +56,9 @@ program test_conjugate_gradient
   write(*,'(a)') " **************************"
   write(*,'(a)') " Test #1: diagonal matrices"
   write(*,'(a)') " **************************"
+
+  ! Initialize conjugate gradient solver
+  call conjugate_gradient % init( tol=tol )
 
   do k = 1, 10
 
@@ -109,8 +111,6 @@ program test_conjugate_gradient
     call conjugate_gradient % solve( &
       A       = AA_linear_operator, &
       b       = bb                , &
-      tol     = tol               , &
-      verbose = verbose           , &
       x       = xx )
 
     ! Check error and write to output
@@ -229,8 +229,6 @@ program test_conjugate_gradient
     call conjugate_gradient % solve( &
       A       = AA_linear_operator, &
       b       = bb                , &
-      tol     = tol               , &
-      verbose = verbose           , &
       x       = xx )
 
     ! Check error and write to output
