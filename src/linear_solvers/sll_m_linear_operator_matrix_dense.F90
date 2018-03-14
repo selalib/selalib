@@ -28,6 +28,9 @@ module sll_m_linear_operator_matrix_dense
     ! Pointer to matrix A
     type(sll_t_vector_space_real_2d), pointer :: A => null()
 
+    ! Logical flag telling whether A was given transposed or not
+    logical :: transposed = .false.
+
   contains
 
     procedure :: init      => s_linear_operator_matrix_dense__init
@@ -42,11 +45,14 @@ contains
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
   ! Initialize linear operator
-  subroutine s_linear_operator_matrix_dense__init( self, A )
+  subroutine s_linear_operator_matrix_dense__init( self, A, transposed )
     class(sll_t_linear_operator_matrix_dense), intent(inout) :: self
     type(sll_t_vector_space_real_2d), target , intent(in   ) :: A
+    logical, optional                        , intent(in   ) :: transposed
 
     self % A => A
+
+    if ( present( transposed ) ) self % transposed = transposed
 
   end subroutine s_linear_operator_matrix_dense__init
 
@@ -65,7 +71,7 @@ contains
     class(sll_c_vector_space)                , intent(in   ) :: x
     class(sll_c_vector_space)                , intent(inout) :: y ! already constructed
 
-    integer :: i, j, nx(1), ny(1), n(2)
+    integer :: nx(1), ny(1), n(2)
 
     character(len=*), parameter :: this_sub_name = "sll_t_linear_operator_matrix_dense % dot"
     character(len=64) :: err_msg
@@ -89,12 +95,11 @@ contains
         ny = shape( y % array )
         SLL_ASSERT( n(1) == ny(1) )
 
-        y % array(:) = 0.0_wp
-        do i = 1, n(1)
-          do j = 1, n(2)
-            y % array(i) = y % array(i) + self % A % array(i,j) * x % array(j)
-          end do
-        end do
+        if ( self % transposed ) then
+          y % array = matmul( x % array, self % A % array ) ! A was given transposed
+        else
+          y % array = matmul( self % A % array, x % array )
+        end if
 
       class default
         err_msg = "y must be of type sll_t_vector_space_real_1d"
