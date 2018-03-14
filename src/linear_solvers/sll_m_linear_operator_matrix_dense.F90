@@ -63,7 +63,7 @@ contains
   subroutine s_linear_operator_matrix_dense__dot( self, x, y )
     class(sll_t_linear_operator_matrix_dense), intent(in   ) :: self
     class(sll_c_vector_space)                , intent(in   ) :: x
-    class(sll_c_vector_space)                , intent(inout) :: y ! already initialized
+    class(sll_c_vector_space)                , intent(inout) :: y ! already constructed
 
     integer :: i, j, nx(1), ny(1), n(2)
 
