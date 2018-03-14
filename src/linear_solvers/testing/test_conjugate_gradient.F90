@@ -41,6 +41,7 @@ program test_conjugate_gradient
 
   real(wp) :: error
   real(wp), parameter :: tol = 1.0e-14_wp
+  logical , parameter :: verbose = .true.
 
   ! For CTest
   logical :: passed
@@ -56,9 +57,6 @@ program test_conjugate_gradient
   write(*,'(a)') " **************************"
   write(*,'(a)') " Test #1: diagonal matrices"
   write(*,'(a)') " **************************"
-
-  ! Initialize conjugate gradient solver
-  call conjugate_gradient % init( tol=tol )
 
   do k = 1, 10
 
@@ -107,11 +105,17 @@ program test_conjugate_gradient
     ! Construct vector space object for solution
     call xx % attach( z )
 
+    ! Initialize conjugate gradient solver
+    call conjugate_gradient % init( tol=tol, verbose=verbose, template_vector=xx )
+
     ! Solve linear system Ax=b for x using conjugate gradient method
     call conjugate_gradient % solve( &
       A       = AA_linear_operator, &
       b       = bb                , &
       x       = xx )
+
+    ! Free conjugate gradient solver
+    call conjugate_gradient % free()
 
     ! Check error and write to output
     error = maxval( abs( xx % array(:) - x(:) ) )
@@ -225,11 +229,17 @@ program test_conjugate_gradient
     ! Construct vector space object for solution
     call xx % attach( z )
 
+    ! Initialize conjugate gradient solver
+    call conjugate_gradient % init( tol=tol, verbose=verbose, template_vector=xx )
+
     ! Solve linear system Ax=b for x using conjugate gradient method
     call conjugate_gradient % solve( &
       A       = AA_linear_operator, &
       b       = bb                , &
       x       = xx )
+
+    ! Free conjugate gradient solver
+    call conjugate_gradient % free()
 
     ! Check error and write to output
     error = maxval( abs( xx % array(:) - x(:) ) )
