@@ -32,7 +32,6 @@ program test_conjugate_gradient
   type(sll_t_vector_space_real_2d) :: AA
   type(sll_t_vector_space_real_1d) :: xx
   type(sll_t_vector_space_real_1d) :: bb
-  type(sll_t_vector_space_real_1d) :: x0
 
   ! Linear operator constructed from AA
   type(sll_t_linear_operator_matrix_dense) :: AA_linear_operator
@@ -103,9 +102,6 @@ program test_conjugate_gradient
     ! Construct vector space from vector b
     call bb % attach( b )
 
-    ! Construct vector space object for initial guess
-    call x0 % attach( z )
-
     ! Construct vector space object for solution
     call xx % attach( z )
 
@@ -113,7 +109,6 @@ program test_conjugate_gradient
     call conjugate_gradient % solve( &
       A       = AA_linear_operator, &
       b       = bb                , &
-      x0      = x0                , &
       tol     = tol               , &
       verbose = verbose           , &
       x       = xx )
@@ -137,7 +132,6 @@ program test_conjugate_gradient
     call AA % delete()
     call xx % delete()
     call bb % delete()
-    call x0 % delete()
     deallocate( A, x, b, z )
 
   end do
@@ -228,9 +222,6 @@ program test_conjugate_gradient
     ! Construct vector space from vector b
     call bb % attach( b )
 
-    ! Construct vector space object for initial guess
-    call x0 % attach( z )
-
     ! Construct vector space object for solution
     call xx % attach( z )
 
@@ -238,7 +229,6 @@ program test_conjugate_gradient
     call conjugate_gradient % solve( &
       A       = AA_linear_operator, &
       b       = bb                , &
-      x0      = x0                , &
       tol     = tol               , &
       verbose = verbose           , &
       x       = xx )
@@ -262,7 +252,6 @@ program test_conjugate_gradient
     call AA % delete()
     call xx % delete()
     call bb % delete()
-    call x0 % delete()
     deallocate( A, La, Id, x, b, z )
 
   end do
