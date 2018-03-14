@@ -18,9 +18,12 @@ program test_conjugate_gradient
   integer, parameter :: wp = f64
 
   integer :: i, j, k, n
+  integer :: m, ki, kj, li, lj
 
   ! 2D and 1D real arrays
   real(wp), allocatable :: A(:,:)
+  real(wp), allocatable :: La(:,:)
+  real(wp), allocatable :: Id(:,:)
   real(wp), allocatable :: x(:)
   real(wp), allocatable :: b(:)
   real(wp), allocatable :: z(:) ! 1D array of zeros
@@ -56,7 +59,7 @@ program test_conjugate_gradient
   write(*,'(a)') " Test #1: diagonal matrices"
   write(*,'(a)') " **************************"
 
-  do k = 1, 8
+  do k = 1, 10
 
     n = 2**k
 
@@ -140,17 +143,21 @@ program test_conjugate_gradient
   end do
 
   !-----------------------------------------------------------------------------
-  ! Test #2: banded matrices
+  ! Test #2: Laplacian matrices
   !-----------------------------------------------------------------------------
 
   write(*,*)
-  write(*,'(a)') " ************************"
-  write(*,'(a)') " Test #2: banded matrices"
-  write(*,'(a)') " ************************"
+  write(*,'(a)') " ***************************"
+  write(*,'(a)') " Test #2: Laplacian matrices"
+  write(*,'(a)') " ***************************"
 
-  do k = 1, 8
+  do m = 3, 12
 
-    n = 2**k
+    ! Auxiliary matrices
+    allocate( La(m,m) )
+    allocate( Id(m,m) )
+
+    n = m**2
 
     allocate( A(n,n) )
     allocate( x(n) )
@@ -161,20 +168,40 @@ program test_conjugate_gradient
     write(*,*)
     write(*,'(a,i0,a,i0)') " Matrix A: ", size(A,1), " x ", size(A,2)
 
-    ! Initialize matrix A
-    A(:,:) = 0.0_wp
+    ! Initialize Laplacian (m x m) matrix La
+    La(:,:) = 0.0_wp
     ! diagonal
-    do i = 1, n
-      call random_number( A(i,i) )
-      A(i,i) = 2.0_wp + A(i,i) ! 2.0 <= A(i,i) < 3.0
+    do i = 1, m
+      La(i,i) = 2.0_wp
     end do
     ! upper-diagonal
-    do i = 1, n-1
-      A(i,i+1) = -1.0_wp
+    do i = 1, m-1
+      La(i,i+1) = -1.0_wp
     end do
     ! lower-diagonal
-    do i = 2, n
-      A(i,i-1) = -1.0_wp
+    do i = 2, m
+      La(i,i-1) = -1.0_wp
+    end do
+
+    ! Initialize identity (m x m) matrix Id
+    Id(:,:) = 0.0_wp
+    do i = 1, m
+      Id(i,i) = 1.0_wp
+    end do
+
+    ! Initialize (m^2 x m^2) matrix A = La x Id + Id x La (Kronecker products)
+    do j = 1, m
+      do i = 1, m
+        lj = 1
+        do kj = (j-1)*m+1, j*m
+          li = 1
+          do ki = (i-1)*m+1, i*m
+            A(ki,kj) = La(i,j)*Id(li,lj) + Id(i,j)*La(li,lj)
+            li = li + 1
+          end do
+          lj = lj + 1
+        end do
+      end do
     end do
 
     ! Initialize vector x
@@ -236,7 +263,7 @@ program test_conjugate_gradient
     call xx % delete()
     call bb % delete()
     call x0 % delete()
-    deallocate( A, x, b, z )
+    deallocate( A, La, Id, x, b, z )
 
   end do
 
