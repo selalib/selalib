@@ -41,14 +41,13 @@ contains
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
   ! Conjugate gradient algorithm for solving linear system Ax = b
-  subroutine s_conjugate_gradient__solve( self, A, b, x0, tol, verbose, x )
+  subroutine s_conjugate_gradient__solve( self, A, b, tol, verbose, x )
     class(sll_t_conjugate_gradient), intent(inout) :: self
     class(sll_c_linear_operator)   , intent(in   ) :: A
     class(sll_c_vector_space)      , intent(in   ) :: b
-    class(sll_c_vector_space)      , intent(in   ) :: x0
     real(wp)                       , intent(in   ) :: tol
     logical                        , intent(in   ) :: verbose
-    class(sll_c_vector_space)      , intent(inout) :: x ! x must be already constructed
+    class(sll_c_vector_space)      , intent(inout) :: x ! already constructed, first guess
 
     integer  :: m, n(2)
     real(wp) :: am, am1, l, tol_sqr
@@ -61,14 +60,11 @@ contains
     SLL_ASSERT( n(1) == n(2) )
 
     ! Construct auxiliary vector spaces
-    call x0 % source( y )
-    call x0 % source( p )
-    call x0 % source( r )
-    call x0 % source( v )
-    call x0 % source( t )
-
-    ! First guess of solution
-    call x % copy( x0 )
+    call x % source( y )
+    call x % source( p )
+    call x % source( r )
+    call x % source( v )
+    call x % source( t )
 
     ! First values
     call A % dot( x, y )     ! y =  Ax
