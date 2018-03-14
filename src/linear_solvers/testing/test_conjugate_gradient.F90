@@ -29,12 +29,11 @@ program test_conjugate_gradient
   real(wp), allocatable :: z(:) ! 1D array of zeros
 
   ! 2D and 1D equivalent vector space real arrays
-  type(sll_t_vector_space_real_2d) :: AA
   type(sll_t_vector_space_real_1d) :: xx
   type(sll_t_vector_space_real_1d) :: bb
 
-  ! Linear operator constructed from AA
-  type(sll_t_linear_operator_matrix_dense) :: AA_linear_operator
+  ! Linear operator constructed from A
+  type(sll_t_linear_operator_matrix_dense) :: A_linear_operator
 
   ! Conjugate gradient solver
   type(sll_t_conjugate_gradient) :: conjugate_gradient
@@ -96,8 +95,7 @@ program test_conjugate_gradient
     z(:) = 0.0_wp
 
     ! Construct linear operator from matrix A
-    call AA % attach( A )
-    call AA_linear_operator % init( AA )
+    call A_linear_operator % init( A )
 
     ! Construct vector space from vector b
     call bb % attach( b )
@@ -110,8 +108,8 @@ program test_conjugate_gradient
 
     ! Solve linear system Ax=b for x using conjugate gradient method
     call conjugate_gradient % solve( &
-      A       = AA_linear_operator, &
-      b       = bb                , &
+      A       = A_linear_operator, &
+      b       = bb               , &
       x       = xx )
 
     ! Free conjugate gradient solver
@@ -132,8 +130,7 @@ program test_conjugate_gradient
     passed = passed .and. success
 
     ! Deallocate allocatables and free objects
-    call AA_linear_operator % free()
-    call AA % delete()
+    call A_linear_operator % free()
     call xx % delete()
     call bb % delete()
     deallocate( A, x, b, z )
@@ -220,8 +217,7 @@ program test_conjugate_gradient
     z(:) = 0.0_wp
 
     ! Construct linear operator from matrix A
-    call AA % attach( A )
-    call AA_linear_operator % init( AA )
+    call A_linear_operator % init( A )
 
     ! Construct vector space from vector b
     call bb % attach( b )
@@ -234,8 +230,8 @@ program test_conjugate_gradient
 
     ! Solve linear system Ax=b for x using conjugate gradient method
     call conjugate_gradient % solve( &
-      A       = AA_linear_operator, &
-      b       = bb                , &
+      A       = A_linear_operator, &
+      b       = bb               , &
       x       = xx )
 
     ! Free conjugate gradient solver
@@ -256,8 +252,7 @@ program test_conjugate_gradient
     passed = passed .and. success
 
     ! Deallocate allocatables and free objects
-    call AA_linear_operator % free()
-    call AA % delete()
+    call A_linear_operator % free()
     call xx % delete()
     call bb % delete()
     deallocate( A, La, Id, x, b, z )
