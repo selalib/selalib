@@ -51,7 +51,7 @@ contains
 
     integer  :: m, n(2)
     real(wp) :: am, am1, l, tol_sqr
-    class(sll_c_vector_space), allocatable :: y, p, r, v, t
+    class(sll_c_vector_space), allocatable :: p, r, v
 
     ! Get shape of linear operator
     n = A % get_shape()
@@ -60,16 +60,14 @@ contains
     SLL_ASSERT( n(1) == n(2) )
 
     ! Construct auxiliary vector spaces
-    call x % source( y )
     call x % source( p )
     call x % source( r )
     call x % source( v )
-    call x % source( t )
 
     ! First values
-    call A % dot( x, y )     ! y =  Ax
-    call y % scal( -1.0_wp ) ! y = -Ax
-    call p % add( b, y )     ! p = b - Ax
+    call A % dot( x, p )     ! p = Ax
+    call p % scal( -1.0_wp ) ! p = -Ax
+    call p % incr( b )       ! p = b - Ax
     call r % copy( p )       ! r = b - Ax
     am = r % inner( r )      ! am = < r, r >
 
@@ -80,16 +78,14 @@ contains
 
       if ( am < tol_sqr ) exit
 
-      call A % dot( p, v )          ! v = Ap
-      l = v % inner( p )            ! l = < v, p >
-      l = am / l                    ! l = am / < v, p >
-      call t % mult( l, p )         ! t = l*p
-      call x % incr( t )            ! x = x + l*p
-      call t % mult( -1.0_wp*l, v ) ! t = -l*v
-      call r % incr( t )            ! r = r - l*v
-      am1 = r % inner( r )          ! am1 = < r, r >
-      call p % scal( am1/am )       ! p = am1/am*p
-      call p % incr( r )            ! p = r + am1/am*p
+      call A % dot( p, v )        ! v = Ap
+      l = v % inner( p )          ! l = < v, p >
+      l = am / l                  ! l = am / < v, p >
+      call x % incr_mult( l, p )  ! x = x + l*p
+      call r % incr_mult( -l, v ) ! r = r - l*v
+      am1 = r % inner( r )        ! am1 = < r, r >
+      call p % scal( am1/am )     ! p = am1/am*p
+      call p % incr( r )          ! p = r + am1/am*p
       am = am1
 
     end do
