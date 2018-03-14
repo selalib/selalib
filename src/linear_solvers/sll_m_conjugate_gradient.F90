@@ -18,20 +18,20 @@ module sll_m_conjugate_gradient
   ! Working precision
   integer, parameter :: wp = f64
 
-  type :: sll_t_conjugate_gradient_info
+  type :: sll_t_conjugate_gradient
 
+    ! Default parameters (can be overwritten from method 'init')
+    real(wp) :: tol = 1.0e-14_wp
+    logical  :: verbose = .true.
+
+    ! Information
     integer  :: iterations
     logical  :: success
     real(wp) :: residual
 
-  end type sll_t_conjugate_gradient_info
-
-  type :: sll_t_conjugate_gradient
-
-    type(sll_t_conjugate_gradient_info) :: info
-
   contains
 
+    procedure :: init  => s_conjugate_gradient__init
     procedure :: solve => s_conjugate_gradient__solve
 
   end type sll_t_conjugate_gradient
@@ -40,13 +40,22 @@ module sll_m_conjugate_gradient
 contains
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
+  ! Initializer
+  subroutine s_conjugate_gradient__init( self, tol, verbose )
+    class(sll_t_conjugate_gradient), intent(inout) :: self
+    real(wp), optional             , intent(in   ) :: tol
+    logical , optional             , intent(in   ) :: verbose
+
+    if ( present( tol     ) ) self % tol     = tol
+    if ( present( verbose ) ) self % verbose = verbose
+
+  end subroutine s_conjugate_gradient__init
+
   ! Conjugate gradient algorithm for solving linear system Ax = b
-  subroutine s_conjugate_gradient__solve( self, A, b, tol, verbose, x )
+  subroutine s_conjugate_gradient__solve( self, A, b, x )
     class(sll_t_conjugate_gradient), intent(inout) :: self
     class(sll_c_linear_operator)   , intent(in   ) :: A
     class(sll_c_vector_space)      , intent(in   ) :: b
-    real(wp)                       , intent(in   ) :: tol
-    logical                        , intent(in   ) :: verbose
     class(sll_c_vector_space)      , intent(inout) :: x ! already constructed, first guess
 
     integer  :: m, n(2)
@@ -71,7 +80,7 @@ contains
     call r % copy( p )       ! r = b - Ax
     am = r % inner( r )      ! am = < r, r >
 
-    tol_sqr = tol**2
+    tol_sqr = self % tol**2
 
     ! Iterate to convergence
     do m = 0, n(1)-1
@@ -90,17 +99,12 @@ contains
 
     end do
 
-    self % info % iterations = m
-    self % info % success    = .true.
-    self % info % residual   = sqrt( am )
+    self % iterations = m
+    self % success    = .true.
+    self % residual   = sqrt( am )
 
-    if ( verbose ) then
-
-      write(*,*)
-      write(*,'(a,i0,a,es8.2)') " CG method converged after ", self % info % iterations, &
-                                " iterations with residual " , self % info % residual
-
-    end if
+    if ( self % verbose ) write(*,'(/a,i0,a,es8.2)') " CG method converged after ", &
+                          self % iterations, " iterations with residual " , self % residual
 
   end subroutine s_conjugate_gradient__solve
 
