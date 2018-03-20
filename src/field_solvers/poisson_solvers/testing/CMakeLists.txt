@@ -94,3 +94,9 @@ IF(BUILD_MUDPACK)
   ADD_TEST( NAME poisson_2d_mudpack_curvilinear_old COMMAND test_poisson_2d_mudpack_curvilinear_old )
   SET_TESTS_PROPERTIES( poisson_2d_mudpack_curvilinear_old PROPERTIES PASS_REGULAR_EXPRESSION "PASSED" )
 ENDIF(BUILD_MUDPACK)
+
+#-------------------------------------------------------------------------------
+# Test FE Poisson solver based on smooth polar splines
+#-------------------------------------------------------------------------------
+add_executable( test_poisson_2d_fem_ssm test_poisson_2d_fem_ssm.F90 )
+target_link_libraries( test_poisson_2d_fem_ssm sll_poisson_solvers )
