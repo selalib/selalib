@@ -24,6 +24,7 @@ IF(BUILD_HDF5)
      URL https://support.hdfgroup.org/ftp/HDF5/current/src/hdf5-1.10.1.tar.bz2
      SOURCE_DIR ${CMAKE_BINARY_DIR}/hdf5
      BINARY_DIR ${CMAKE_BINARY_DIR}/hdf5
+     PATCH_COMMAND patch ${CMAKE_BINARY_DIR}/hdf5/fortran/src/H5f90global.F90 < ${CMAKE_CURRENT_SOURCE_DIR}/Intel18HDF5.patch
      CONFIGURE_COMMAND ${CMAKE_BINARY_DIR}/hdf5/configure --enable-fortran --prefix=${CMAKE_BINARY_DIR} --enable-parallel CXX=${MPI_CXX_COMPILER} CC=${MPI_C_COMPILER} FC=${MPI_Fortran_COMPILER}
   )
 
