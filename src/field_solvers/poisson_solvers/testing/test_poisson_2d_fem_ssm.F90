@@ -19,6 +19,8 @@ program test_poisson_2d_fem_ssm
 
   use sll_m_spline_interpolator_1d, only: sll_s_spline_1d_compute_num_cells 
 
+  use sll_m_polar_bsplines_2d, only: sll_t_polar_bsplines_2d
+
   use sll_m_polar_mapping_analytical, only: sll_c_polar_mapping_analytical
 
   use sll_m_polar_mapping_analytical_target, only: sll_t_polar_mapping_analytical_target
@@ -30,6 +32,8 @@ program test_poisson_2d_fem_ssm
   use sll_m_poisson_2d_fem_ssm_weak_form, only: sll_t_poisson_2d_fem_ssm_weak_form
 
   use sll_m_poisson_2d_fem_ssm_assembler, only: sll_t_poisson_2d_fem_ssm_assembler
+
+  use sll_m_poisson_2d_fem_ssm_projector, only: sll_t_poisson_2d_fem_ssm_projector
 
   use sll_m_gauss_legendre_integration, only: &
     sll_f_gauss_legendre_points, &
@@ -63,6 +67,9 @@ program test_poisson_2d_fem_ssm
   class(sll_c_polar_mapping_analytical), allocatable :: mapping_analytical
   type(sll_t_polar_mapping_iga) :: mapping_iga
 
+  ! Polar B-splines
+  type(sll_t_polar_bsplines_2d) :: polar_bsplines
+
   ! Number of finite elements
   integer :: Nk1, Nk2
 
@@ -89,15 +96,25 @@ program test_poisson_2d_fem_ssm
   real(wp), allocatable :: A(:,:)
   real(wp), allocatable :: M(:,:)
 
+  ! C1 projections of stiffness and mass matrices
+  real(wp), allocatable :: Ap(:,:)
+  real(wp), allocatable :: Mp(:,:)
+
+  ! Matrix for barycentric coordinates
+  real(wp), allocatable :: L(:,:)
+
   ! Weak form
   type(sll_t_poisson_2d_fem_ssm_weak_form) :: weak_form
 
   ! Assembler
   type(sll_t_poisson_2d_fem_ssm_assembler) :: assembler
 
+  ! C1 projector
+  type(sll_t_poisson_2d_fem_ssm_projector) :: projector
+
   ! Auxiliary/temporary variables
-  integer  :: i, k1, k2, q1, q2
-  real(wp) :: jdet, eta(2), jmat(2,2)
+  integer  :: i, j, k, k1, k2, q1, q2
+  real(wp) :: cx, cy, jdet, eta(2), jmat(2,2)
 
   ! For hdf5 I/O
   type(sll_t_hdf5_ser_handle) :: file_id
@@ -177,6 +194,12 @@ program test_poisson_2d_fem_ssm
 
   ! Initialize discrete mapping
   call mapping_iga % init( bsplines_eta1, bsplines_eta2, mapping_analytical )
+
+  !-----------------------------------------------------------------------------
+  ! Initialize polar B-splines
+  !-----------------------------------------------------------------------------
+
+  call polar_bsplines % init( bsplines_eta1, bsplines_eta2, mapping_iga )
 
   !-----------------------------------------------------------------------------
   ! Allocate and initialize quadrature points and weights
@@ -273,11 +296,30 @@ program test_poisson_2d_fem_ssm
     end do
   end do
 
+  ! Barycentric coordinates needed for C1 projection
+  allocate( L( 2*n2, 3 ) )
+
+  do i = 1, 2*n2
+
+    ! Indices to access control points
+    j = (i-1) / n2 + 1
+    k = modulo( (i-1), n2 ) + 1
+
+    cx = mapping_iga % spline_2d_x1 % bcoef(j,k)
+    cy = mapping_iga % spline_2d_x2 % bcoef(j,k)
+
+    L(i,1) = polar_bsplines % eval_l0( cx, cy )
+    L(i,2) = polar_bsplines % eval_l1( cx, cy )
+    L(i,3) = polar_bsplines % eval_l2( cx, cy )
+
+  end do
+
   !-----------------------------------------------------------------------------
-  ! Initialize weak form and assembler
+  ! Initialize assembler and projector
   !-----------------------------------------------------------------------------
 
   call assembler % init( n1, n2, weak_form )
+  call projector % init( n1, n2, L )
 
   !-----------------------------------------------------------------------------
   ! Allocate and fill stiffness and mass matrices
@@ -305,6 +347,16 @@ program test_poisson_2d_fem_ssm
   end do
 
   !-----------------------------------------------------------------------------
+  ! Allocate and fill C1 projections of stiffness and mass matrices
+  !-----------------------------------------------------------------------------
+
+  allocate( Ap( 3+(n1-2)*n2, 3+(n1-2)*n2) )
+  allocate( Mp( 3+(n1-2)*n2, 3+(n1-2)*n2) )
+
+  call projector % change_basis( A, Ap )
+  call projector % change_basis( M, Mp )
+
+  !-----------------------------------------------------------------------------
   ! HDF5 I/O
   !-----------------------------------------------------------------------------
 
@@ -316,6 +368,12 @@ program test_poisson_2d_fem_ssm
 
   ! Write mass matrix
   call sll_o_hdf5_ser_write_array( file_id, M, "/M", h5_error )
+
+  ! Write C1 projection of stiffness matrix
+  call sll_o_hdf5_ser_write_array( file_id, Ap, "/Ap", h5_error )
+
+  ! Write C1 projection of mass matrix
+  call sll_o_hdf5_ser_write_array( file_id, Mp, "/Mp", h5_error )
 
   ! Close HDF5 file
   call sll_s_hdf5_ser_file_close ( file_id, h5_error )
@@ -334,13 +392,19 @@ program test_poisson_2d_fem_ssm
   deallocate( data_1d_eta2 )
   deallocate( int_volume )
   deallocate( inv_metric )
-  deallocate( A )
-  deallocate( M )
+  deallocate( A  )
+  deallocate( M  )
+  deallocate( Ap )
+  deallocate( Mp )
+  deallocate( L  )
 
   deallocate( mapping_analytical )
 
-  call bsplines_eta1 % free()
-  call bsplines_eta2 % free()
-  call mapping_iga % free()
+  call bsplines_eta1  % free()
+  call bsplines_eta2  % free()
+  call mapping_iga    % free()
+  call polar_bsplines % free()
+
+  call projector % free()
 
 end program test_poisson_2d_fem_ssm
