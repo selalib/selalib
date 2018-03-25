@@ -4,7 +4,7 @@
 
 set( INSTALL_DIR "${INSTALL_DIR}/serial" )
 
-if(HDF5_ENABLED AND HDF5_IS_PARALEL)
+if(HDF5_ENABLED AND HDF5_IS_PARALLEL)
   
   # Semi Lagrangian method
   
@@ -38,7 +38,7 @@ if(HDF5_ENABLED AND HDF5_IS_PARALEL)
   ## Vlasov-Poisson 1Dx1D
   add_subdirectory( eul_vp_1d1v_cart_fe_ft                    )
 
-endif(HDF5_ENABLED AND HDF5_IS_PARALEL)
+endif(HDF5_ENABLED AND HDF5_IS_PARALLEL)
 
 # Examples that do not extend 'sll_c_simulation_base_class'
 add_subdirectory( bsl_examples )
