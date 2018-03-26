@@ -19,22 +19,8 @@ module sll_m_poisson_2d_fem_ssm_projector
     integer :: n1
     integer :: n2
 
-    ! Temporary storage needed for projection: blocks of input matrix
-    real(wp), allocatable :: Q_block1(:,:)
-    real(wp), allocatable :: Q_block2(:,:)
-    real(wp), allocatable :: Q_block3(:,:)
-    real(wp), allocatable :: Q_block4(:,:)
-
-    ! Temporary storage needed for projection: blocks of projected matrix
-    real(wp), allocatable :: Qp_block1(:,:)
-    real(wp), allocatable :: Qp_block2(:,:)
-    real(wp), allocatable :: Qp_block3(:,:)
-    real(wp), allocatable :: Qp_block4(:,:)
-
-    ! Temporary storage needed for projection: additional
+    ! Temporary storage needed for projection
     real(wp), allocatable :: Qp_temp(:,:)
-
-    ! Temporary storage needed for projection: barycentric coordinates
     real(wp), allocatable :: L(:,:)
     real(wp), allocatable :: Lt(:,:) ! transpose
 
@@ -65,19 +51,7 @@ contains
     nn = (n1-2)*n2
 
     ! Allocate temporary storage
-
-    allocate( self % Q_block1( 2*n2, 2*n2 ) )
-    allocate( self % Q_block2( 2*n2,   nn ) )
-    allocate( self % Q_block3(   nn, 2*n2 ) )
-    allocate( self % Q_block4(   nn,   nn ) )
-
-    allocate( self % Qp_block1( 3 , 3  ) )
-    allocate( self % Qp_block2( 3 , nn ) )
-    allocate( self % Qp_block3( nn, 3  ) )
-    allocate( self % Qp_block4( nn, nn ) )
-
     allocate( self % Qp_temp( 2*n2, 3 ) )
-
     allocate( self % L ( size(L,1), size(L,2) ) )
     allocate( self % Lt( size(L,2), size(L,1) ) )
 
@@ -96,21 +70,9 @@ contains
     real(wp)                                 , intent(in   ) :: Q(:,:)
     real(wp)                                 , intent(inout) :: Qp(:,:)
 
-    integer :: i, j, ii, jj, nn
+    integer :: nn
 
-    associate( n1        => self % n1       , &
-               n2        => self % n2       , &
-               Q_block1  => self % Q_block1 , &
-               Q_block2  => self % Q_block2 , &
-               Q_block3  => self % Q_block3 , &
-               Q_block4  => self % Q_block4 , &
-               Qp_block1 => self % Qp_block1, &
-               Qp_block2 => self % Qp_block2, &
-               Qp_block3 => self % Qp_block3, &
-               Qp_block4 => self % Qp_block4, &
-               Qp_temp   => self % Qp_temp  , &
-               L         => self % L        , &
-               Lt        => self % Lt )
+    associate( n1 => self % n1, n2 => self % n2 )
 
       nn = (n1-2)*n2
 
@@ -120,108 +82,18 @@ contains
       SLL_ASSERT( size(Qp,1) == 3+nn  )
       SLL_ASSERT( size(Qp,2) == 3+nn  )
 
-      Qp(:,:) = 0.0_wp
-
-      ! NOTE: (i,j) to access projected matrices, (ii,jj) to access input matrices
-
-      !-------------------------------------------------------------------------
       ! Fill block 1: 3 x 3
-      !-------------------------------------------------------------------------
+      self % Qp_temp = matmul( Q(1:2*n2,1:2*n2), self % L )
+      Qp(1:3,1:3)    = matmul( self % Lt, self % Qp_temp )
 
-      ! Copy block 1 of input matrix
-      jj = 1
-      do j = 1, 2*n2
-        ii = 1 
-        do i = 1, 2*n2
-          Q_block1(i,j) = Q(ii,jj)
-          ii = ii+1
-        end do
-        jj = jj+1
-      end do
-
-      Qp_temp   = matmul( Q_block1, L )
-      Qp_block1 = matmul( Lt, Qp_temp )
-
-      ! Copy result into projected matrix
-      jj = 1
-      do j = 1, 3
-        ii = 1
-        do i = 1, 3
-          Qp(i,j) = Qp_block1(ii,jj)
-          ii = ii+1
-        end do
-        jj = jj+1
-      end do
-
-      !-------------------------------------------------------------------------
       ! Fill block 2: 3 x (n1-2)*n2
-      !-------------------------------------------------------------------------
+      Qp(1:3,4:3+nn) = matmul( self % Lt, Q(1:2*n2,2*n2+1:n1*n2) )
 
-      ! Copy block 2 of input matrix
-      jj = 2*n2+1
-      do j = 1, nn
-        ii = 1
-        do i = 1, 2*n2
-          Q_block2(i,j) = Q(ii,jj)
-          ii = ii+1
-        end do
-        jj = jj+1
-      end do
-
-      Qp_block2 = matmul( Lt, Q_block2 )
-
-      ! Copy result into projected matrix
-      jj = 1
-      do j = 4, 3+nn
-        ii = 1
-        do i = 1, 3
-          Qp(i,j) = Qp_block2(ii,jj)
-          ii = ii+1
-        end do
-        jj = jj+1
-      end do
-
-      !-------------------------------------------------------------------------
       ! Fill block 3: (n1-2)*n2 x 3
-      !-------------------------------------------------------------------------
+      Qp(4:3+nn,1:3) = matmul( Q(2*n2+1:n1*n2,1:2*n2), self % L )
 
-      ! Copy block 3 of input matrix
-      jj = 1
-      do j = 1, 2*n2
-        ii = 2*n2+1
-        do i = 1, nn
-          Q_block3(i,j) = Q(ii,jj)
-          ii = ii+1
-        end do
-        jj = jj+1
-      end do
-
-      Qp_block3 = matmul( Q_block3, L )
-
-      ! Copy result into projected matrix
-      jj = 1
-      do j = 1, 3
-        ii = 1
-        do i = 4, 3+nn
-          Qp(i,j) = Qp_block3(ii,jj)
-          ii = ii+1
-        end do
-        jj = jj+1
-      end do
-
-      !-------------------------------------------------------------------------
       ! Fill block 4: (n1-2)*n2 x (n1-2)*n2
-      !-------------------------------------------------------------------------
-
-      jj = 2*n2+1
-      do j = 4, 3+nn
-        ii = 2*n2+1
-        do i = 4, 3+nn
-          Qp(i,j) = Q(ii,jj)
-          ii = ii+1
-        end do
-        jj = jj+1
-      end do
+      Qp(4:3+nn,4:3+nn) = Q(2*n2+1:n1*n2,2*n2+1:n1*n2)
 
     end associate
 
@@ -231,20 +103,9 @@ contains
   subroutine s_poisson_2d_fem_ssm_projector__free( self )
     class(sll_t_poisson_2d_fem_ssm_projector), intent(inout) :: self
 
-    deallocate( self % Q_block1 )
-    deallocate( self % Q_block2 )
-    deallocate( self % Q_block3 )
-    deallocate( self % Q_block4 )
-
-    deallocate( self % Qp_block1 )
-    deallocate( self % Qp_block2 )
-    deallocate( self % Qp_block3 )
-    deallocate( self % Qp_block4 )
-
     deallocate( self % Qp_temp )
-
-    deallocate( self % L  )
-    deallocate( self % Lt )
+    deallocate( self % L       )
+    deallocate( self % Lt      )
 
   end subroutine s_poisson_2d_fem_ssm_projector__free
 
