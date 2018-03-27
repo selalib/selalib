@@ -258,16 +258,15 @@ contains
                 degree   =>   self % bspl % degree, &
                 nbc_xmin =>   self % nbc_xmin     , &
                 nbc_xmax =>   self % nbc_xmax     , &
-                g        => merge( 1+self%bspl%degree/2, 0, self%bspl%periodic ), &
+                g        =>   self % offset       , &
                 bcoef    => spline % bcoef )
 
       ! Special case: linear spline
       if (degree == 1) then
-        bcoef(1+g:nbasis+g) = gtau(1:nbasis)
+        bcoef(1:nbasis) = gtau(1:nbasis)
         ! Periodic only: "wrap around" coefficients onto extended array
         if (self%bspl%periodic) then
-          bcoef(g)          = bcoef(nbasis+g)
-          bcoef(nbasis+1+g) = bcoef(1+g)
+          bcoef(nbasis+1) = bcoef(1)
         end if
         return
       end if
@@ -304,8 +303,8 @@ contains
 
       ! Periodic only: "wrap around" coefficients onto extended array
       if (self%bc_xmin == sll_p_periodic) then
-        bcoef(1:g)                   = bcoef(nbasis+1:nbasis+g)
-        bcoef(nbasis+1+g:nbasis+2*g) = bcoef(1+g:2*g)
+        bcoef(1:g)                      = bcoef(nbasis+1:nbasis+g)
+        bcoef(nbasis+1+g:nbasis+degree) = bcoef(1+g:degree)
       end if
 
     end associate
