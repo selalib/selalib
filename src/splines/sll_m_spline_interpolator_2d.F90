@@ -273,9 +273,7 @@ contains
                b1 => self%nbc_xmax(1) , &
                b2 => self%nbc_xmax(2) , &
                p1 => self%bspl1%degree, &
-               p2 => self%bspl2%degree, &
-               g1 => merge( self%bspl1%degree/2, 0, self%bspl1%periodic ), &
-               g2 => merge( self%bspl2%degree/2, 0, self%bspl2%periodic ) )
+               p2 => self%bspl2%degree )
 
     SLL_ASSERT( all( shape(gtau) == [n1-a1-b1,n2-a2-b2] ) )
     SLL_ASSERT( spline % belongs_to_space( self % bspl1, self % bspl2 ) )
@@ -335,16 +333,16 @@ contains
     end if
 
     ! Copy interpolation data onto w array
-    w(1+a1+g1:n1-b1+g1,1+a2+g2:n2-b2+g2) = gtau(:,:)
+    w(1+a1:n1-b1,1+a2:n2-b2) = gtau(:,:)
 
     ! Hermite BCs: store boundary data in appropriate chunk of w array
     if (present( boundary_data )) then
 
-      if (a1 > 0) w(      1:a1,1+a2+g2:n2-b2+g2) = boundary_data % derivs_x1_min(1:a1,:)
-      if (b1 > 0) w(n1-b1+1:n1,1+a2+g2:n2-b2+g2) = boundary_data % derivs_x1_max(1:b1,:)
+      if (a1 > 0) w(      1:a1,1+a2:n2-b2) = boundary_data % derivs_x1_min(1:a1,:)
+      if (b1 > 0) w(n1-b1+1:n1,1+a2:n2-b2) = boundary_data % derivs_x1_max(1:b1,:)
 
-      if (a2 > 0) w(1+a1+g1:n1-b1+g1,      1:a2) = transpose( boundary_data % derivs_x2_min(1:a2,:) )
-      if (b2 > 0) w(1+a1+g1:n1-b1+g1,n2-b2+1:n2) = transpose( boundary_data % derivs_x2_max(1:b2,:) )
+      if (a2 > 0) w(1+a1:n1-b1,      1:a2) = transpose( boundary_data % derivs_x2_min(1:a2,:) )
+      if (b2 > 0) w(1+a1:n1-b1,n2-b2+1:n2) = transpose( boundary_data % derivs_x2_max(1:b2,:) )
 
       if (a1 > 0 .and. a2 > 0) w(      1:a1,      1:a2) = boundary_data % mixed_derivs_a(:,:)
       if (b1 > 0 .and. a2 > 0) w(n1-b1+1:n1,      1:a2) = boundary_data % mixed_derivs_b(:,:)
@@ -359,11 +357,11 @@ contains
 
       call self % interp1 % compute_interpolant( &
         spline      = self % spline1      , &
-        gtau        = w(   1+a1+g1:n1-b1+g1,i2+g2) , &
-        derivs_xmin = w(      1+g1:a1+g1   ,i2+g2) , &
-        derivs_xmax = w(n1-b1+1+g1:n1+g1   ,i2+g2) )
+        gtau        = w(   1+a1:n1-b1,i2) , &
+        derivs_xmin = w(      1:a1   ,i2) , &
+        derivs_xmax = w(n1-b1+1:n1   ,i2) )
 
-      w(1+g1:n1+g1,i2+g2) = self % spline1 % bcoef(1+g1:n1+g1)
+      w(1:n1,i2) = self % spline1 % bcoef(1:n1)
 
     end do
 
@@ -375,26 +373,24 @@ contains
 
       call self % interp2 % compute_interpolant( &
         spline      = self % spline2       , &
-        gtau        = wt(   1+a2+g2:n2-b2+g2,i1+g1) , &
-        derivs_xmin = wt(      1+g2:a2+g2   ,i1+g1) , &
-        derivs_xmax = wt(n2-b2+1+g2:n2+g2   ,i1+g1) )
+        gtau        = wt(   1+a2:n2-b2,i1) , &
+        derivs_xmin = wt(      1:a2   ,i1) , &
+        derivs_xmax = wt(n2-b2+1:n2   ,i1) )
 
-      wt(1+g2:n2+g2,i1+g1) = self % spline2 % bcoef(1+g2:n2+g2)
+      wt(1:n2,i1) = self % spline2 % bcoef(1:n2)
 
     end do
 
     ! x1-periodic only: "wrap around" coefficients onto extended array
     if (self%bc_xmin(1) == sll_p_periodic) then
-      wt(:,      1:g1   ) = wt(:,n1+1:n1+g1)
-      wt(:,n1+1+g1:n1+p1) = wt(:,1+g1:p1)
+      wt(:,n1+1:n1+p1) = wt(:,1:p1)
     end if
 
     w = transpose( wt )
 
     ! x2-periodic only: "wrap around" coefficients onto extended array
     if (self%bc_xmin(2) == sll_p_periodic) then
-      w(:,      1:g2   ) = w(:,n2+1:n2+g2)
-      w(:,n2+1+g2:n2+p2) = w(:,1+g2:p2)
+      w(:,n2+1:n2+p2) = w(:,1:p2)
     end if
 
     end associate
