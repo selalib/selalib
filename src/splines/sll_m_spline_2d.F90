@@ -90,7 +90,7 @@ contains
                g1 => merge( 1 + bsplines_x1 % degree/2, 0, bsplines_x1 % periodic ), &
                g2 => merge( 1 + bsplines_x2 % degree/2, 0, bsplines_x2 % periodic ) )
 
-      allocate( self%bcoef(1-g1:n1+g1,1-g2:n2+g2) )
+      allocate( self%bcoef(1:n1+2*g1,1:n2+2*g2) )
       
     end associate
 
@@ -158,6 +158,9 @@ contains
     call self % bspl1 % eval_basis( x1, values1, jmin(1) )
     call self % bspl2 % eval_basis( x2, values2, jmin(2) )
 
+    jmin(1) = merge( jmin(1)+1, jmin(1), self%bspl1%periodic )
+    jmin(2) = merge( jmin(2)+1, jmin(2), self%bspl2%periodic )
+
     jmax(1) = jmin(1) + self%bspl1%degree
     jmax(2) = jmin(2) + self%bspl2%degree
 
@@ -200,6 +203,9 @@ contains
     call self % bspl1 % eval_deriv( x1, derivs1, jmin(1) )
     call self % bspl2 % eval_basis( x2, values2, jmin(2) )
 
+    jmin(1) = merge( jmin(1)+1, jmin(1), self%bspl1%periodic )
+    jmin(2) = merge( jmin(2)+1, jmin(2), self%bspl2%periodic )
+
     jmax(1) = jmin(1) + self%bspl1%degree
     jmax(2) = jmin(2) + self%bspl2%degree
 
@@ -241,6 +247,9 @@ contains
     ! Compute arrays v1 and d2 of B-spline values/derivatives
     call self % bspl1 % eval_basis( x1, values1, jmin(1) )
     call self % bspl2 % eval_deriv( x2, derivs2, jmin(2) )
+
+    jmin(1) = merge( jmin(1)+1, jmin(1), self%bspl1%periodic )
+    jmin(2) = merge( jmin(2)+1, jmin(2), self%bspl2%periodic )
 
     jmax(1) = jmin(1) + self%bspl1%degree
     jmax(2) = jmin(2) + self%bspl2%degree

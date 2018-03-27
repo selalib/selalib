@@ -77,7 +77,7 @@ contains
     associate( n => bsplines % nbasis, &
                g => merge( 1 + bsplines % degree/2, 0, bsplines % periodic ) )
 
-      allocate( self%bcoef(1-g:n+g) )
+      allocate( self%bcoef(1:n+2*g) )
 
     end associate
 
@@ -132,6 +132,8 @@ contains
 
     call self % bspl % eval_basis( x, values, jmin )
 
+    jmin = merge( jmin+1, jmin, self%bspl%periodic )
+
     jmax = jmin + self%bspl%degree
 
     y = dot_product( self%bcoef(jmin:jmax), values )
@@ -154,6 +156,8 @@ contains
     integer  :: jmin, jmax
 
     call self % bspl % eval_deriv( x, derivs, jmin )
+
+    jmin = merge( jmin+1, jmin, self%bspl%periodic )
 
     jmax = jmin + self%bspl%degree
 

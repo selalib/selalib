@@ -97,7 +97,6 @@ contains
     self % uniform  = .true.
     self % ncells   = ncells
     self % nbasis   = merge( ncells  , ncells+degree, periodic )
-    self % offset   = merge( degree/2, 0            , periodic )
     self % xmin     = xmin
     self % xmax     = xmax
 
@@ -162,7 +161,7 @@ contains
     call s_bsplines_uniform__get_icell_and_offset( self, x, icell, x_offset )
 
     ! 2. Compute index range of B-splines with support over cell 'icell'
-    jmin = icell - self%offset
+    jmin = icell
 
     ! 3. Compute values of aforementioned B-splines
     associate( bspl => values, spline_degree => self%degree )
@@ -218,7 +217,7 @@ contains
     call s_bsplines_uniform__get_icell_and_offset( self, x, icell, x_offset )
 
     ! 2. Compute index range of B-splines with support over cell 'icell'
-    jmin = icell - self%offset
+    jmin = icell
 
     ! 3. Compute derivatives of aforementioned B-splines
     !    Derivatives are normalized, hence they should be divided by dx
@@ -296,7 +295,7 @@ contains
     call s_bsplines_uniform__get_icell_and_offset( self, x, icell, x_offset )
 
     ! 2. Compute index range of B-splines with support over cell 'icell'
-    jmin = icell - self%offset
+    jmin = icell
 
     ! 3. Recursively evaluate B-splines (see "sll_s_uniform_bsplines_eval_basis")
     !    up to self%degree, and store them all in the upper-right triangle of ndu
