@@ -151,8 +151,6 @@ contains
     integer                            , intent(in   ) :: bc_xmin(2)
     integer                            , intent(in   ) :: bc_xmax(2)
 
-    integer :: g1, g2
-
     ! Save pointers to B-splines
     ! (later needed to verify 2D spline input to 'compute_interpolant')
     self % bspl1 => bspl1
@@ -166,23 +164,18 @@ contains
     call self % interp1 % init( bspl1, bc_xmin(1), bc_xmax(1) )
     call self % interp2 % init( bspl2, bc_xmin(2), bc_xmax(2) )
 
-    associate( n1     =>  bspl1 % nbasis, &
-               n2     =>  bspl2 % nbasis, &
+    associate( n1     =>  bspl1 % ncells, &
+               n2     =>  bspl2 % ncells, &
                degree => [bspl1 % degree, bspl2 % degree] )
 
-      g1 = merge( 1+degree(1)/2, 0, bc_xmin(1) == sll_p_periodic )
-      g2 = merge( 1+degree(2)/2, 0, bc_xmin(2) == sll_p_periodic )
-
-!      ! Save data into type
-!      self%deg     = degree
-!      self%n       = [n1,n2]
+      ! Save data into type
       self%bc_xmin = bc_xmin
       self%bc_xmax = bc_xmax
 
       ! Allocate work array for interpolation.
       ! In case of periodic BCs, a larger array of coefficients is used in order
       ! to avoid a loop with calls to the "mod( , )" function at evaluation.
-      allocate( self%bwork(1:n2+2*g2,1:n1+2*g1) )
+      allocate( self%bwork(1:n2+degree(2),1:n1+degree(1)) )
       self%bwork = 0.0_f64
 
       ! Calculate number of additional boundary data on each side of domain
@@ -279,8 +272,10 @@ contains
                a2 => self%nbc_xmin(2) , &
                b1 => self%nbc_xmax(1) , &
                b2 => self%nbc_xmax(2) , &
-               g1 => merge( 1+self%bspl1%degree/2, 0, self%bspl1%periodic ), &
-               g2 => merge( 1+self%bspl2%degree/2, 0, self%bspl2%periodic ) )
+               p1 => self%bspl1%degree, &
+               p2 => self%bspl2%degree, &
+               g1 => merge( self%bspl1%degree/2, 0, self%bspl1%periodic ), &
+               g2 => merge( self%bspl2%degree/2, 0, self%bspl2%periodic ) )
 
     SLL_ASSERT( all( shape(gtau) == [n1-a1-b1,n2-a2-b2] ) )
     SLL_ASSERT( spline % belongs_to_space( self % bspl1, self % bspl2 ) )
@@ -390,16 +385,16 @@ contains
 
     ! x1-periodic only: "wrap around" coefficients onto extended array
     if (self%bc_xmin(1) == sll_p_periodic) then
-      wt(:,      1:g1     ) = wt(:,n1+1:n1+g1)
-      wt(:,n1+1+g1:n1+2*g1) = wt(:,1+g1:2*g1)
+      wt(:,      1:g1   ) = wt(:,n1+1:n1+g1)
+      wt(:,n1+1+g1:n1+p1) = wt(:,1+g1:p1)
     end if
 
     w = transpose( wt )
 
     ! x2-periodic only: "wrap around" coefficients onto extended array
     if (self%bc_xmin(2) == sll_p_periodic) then
-      w(:,      1:g2)      = w(:,n2+1:n2+g2)
-      w(:,n2+1+g2:n2+2*g2) = w(:,1+g2:2*g2)
+      w(:,      1:g2   ) = w(:,n2+1:n2+g2)
+      w(:,n2+1+g2:n2+p2) = w(:,1+g2:p2)
     end if
 
     end associate
