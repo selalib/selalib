@@ -150,7 +150,7 @@ contains
     self % odd      = modulo( bspl%degree  , 2 )
 
     ! Save average cell size for normalization of derivatives
-    self%dx = (bspl%xmax - bspl%xmin) / bspl%ncells
+    self%dx = (bspl%xmax - bspl%xmin) / real(bspl%ncells,f64)
 
     ! Compute interpolation points and number of diagonals in linear system
     if (bspl % uniform) then

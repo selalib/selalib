@@ -698,7 +698,6 @@ end if
     sll_real64, optional, intent(in) :: eta2_max
     sll_real64, optional, intent(in) :: eta3_min
     sll_real64, optional, intent(in) :: eta3_max
-    sll_int32 :: ierr
 
     m%num_cells1 = num_cells1
     m%num_cells2 = num_cells2
@@ -1259,7 +1258,7 @@ function eta1_node_3d(mesh, i1, i2, i3) result(res)
     sll_real64, dimension(2) :: margin
 
     margin(1)=mesh%eta_min + real(cell-1,f64)*mesh%delta_eta
-    margin(2)=mesh%eta_min + cell*mesh%delta_eta
+    margin(2)=mesh%eta_min + real(cell,f64)*mesh%delta_eta
     !!SLL_ASSERT(margin(2)<=mesh%eta_max)
   endfunction
 

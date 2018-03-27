@@ -71,7 +71,7 @@ integer :: lenq
 !real(8) :: alpha, beta, gamma
 
 do i = 1, n
-  tau(i)  = tau_min + (i-1)*(tau_max-tau_min)/(n-1)
+  tau(i)  = tau_min + real(i-1,8)*(tau_max-tau_min)/real(n-1,kind=8)
   gtau(i) = 1.0_8
 end do
 
@@ -82,7 +82,7 @@ if ( mod(k,2) == 0 ) then
   end do
 else
   do i = k+1, n
-    t(i) = 0.5*(tau(i-(k-1)/2)+tau(i-1-(k-1)/2))
+    t(i) = 0.5_8*(tau(i-(k-1)/2)+tau(i-1-(k-1)/2))
   end do
 end if
 t(n+1:n+k) = tau_max
