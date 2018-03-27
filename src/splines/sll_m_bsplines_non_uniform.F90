@@ -397,7 +397,7 @@ contains
       end do
       r = degree
       do k = 1, n
-         derivs(k,:) = derivs(k,:) * r
+         derivs(k,:) = derivs(k,:) * real(r,kind=wp)
          r = r * (degree-k)
       end do
 
