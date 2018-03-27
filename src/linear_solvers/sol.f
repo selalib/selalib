@@ -114,7 +114,7 @@ c
       jck=jck+1
       end do
       vkgd(ik)=vkgd(ik)-cdiag
-      if (vkgd(ik).eq.0.) goto 800
+      if (vkgd(ik).eq.0.0d0) goto 800
 c
 c-------  resolution du systeme triangulaire inferieur
 c
