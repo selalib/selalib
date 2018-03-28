@@ -414,18 +414,18 @@ subroutine sll_s_pfenvelope(S,               &
   ! rises to 1 smoothly, stay constant for tflat, and returns
   ! smoothly to zero.
   if (turn_drive_off) then
-     epsilon = 0.5*(tanh((t0-tL)/twL) - tanh((t0-tR)/twR))
-     S = 0.5*(tanh((t-tL)/twL) - tanh((t-tR)/twR)) - epsilon
+     epsilon = 0.5_f64*(tanh((t0-tL)/twL) - tanh((t0-tR)/twR))
+     S = 0.5_f64*(tanh((t-tL)/twL) - tanh((t-tR)/twR)) - epsilon
      S = S / (1-epsilon)
   else
-     epsilon = 0.5*(tanh((t0-tL)/twL) + 1.0_f64)
-     S = 0.5*(tanh((t-tL)/twL) + 1.0_f64) - epsilon
+     epsilon = 0.5_f64*(tanh((t0-tL)/twL) + 1.0_f64)
+     S = 0.5_f64*(tanh((t-tL)/twL) + 1.0_f64) - epsilon
      S = S / (1.0_f64-epsilon)
   endif
   if (S<0) then
      S = 0.0_f64
   endif
-  S = S + 0.*tflat ! for use of unused
+  S = S + 0.0_f64*tflat ! for use of unused
   return
 
 end subroutine sll_s_pfenvelope
@@ -470,10 +470,10 @@ subroutine sll_s_compute_bloc( bloc_coord, bloc_index, N )
     if (N_local/=1) then
       i2 = (N-N_coarse)/(N_local-1)
     else
-      i2 = floor((b-a)*N_coarse)
+      i2 = floor((b-a)*real(N_coarse,f64))
     endif
     N_coarse      = N-i2*(N_local-1)
-    i1            = floor(a*N_coarse)
+    i1            = floor(a*real(N_coarse,f64))
     i2            = i2+i1
     bloc_index(1) = i1
     N_fine        = N_local*(i2-i1)
@@ -615,7 +615,7 @@ end subroutine sll_s_compute_mesh_from_bloc
     a = vmin / real(nc,wp)
     b = vmax / real(nc,wp)
     do i = 2, nc
-      array(i) = a*(nc+1-i) + b*(i-1)
+      array(i) = a*real(nc+1-i,f64) + b*real(i-1,f64)
     end do
 
     ! If endpoint=.true., set last value to vmax

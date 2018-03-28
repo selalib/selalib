@@ -738,7 +738,7 @@ contains
     end do
     r = deg
     do k = 1, n
-       bsdx(k,:) = bsdx(k,:) * r
+       bsdx(k,:) = bsdx(k,:) * real(r,f64)
        r = r * (deg-k)
     end do
 
@@ -1138,7 +1138,7 @@ contains
     ! deg!/(deg-n)! = deg*(deg-1)*...*(deg-n+1)
     r = deg
     do k = 1, n
-       bsdx(k,:) = bsdx(k,:) * r
+       bsdx(k,:) = bsdx(k,:) * real(r,f64)
        r = r * (deg-k)
     end do
 
