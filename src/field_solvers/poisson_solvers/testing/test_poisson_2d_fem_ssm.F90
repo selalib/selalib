@@ -353,8 +353,8 @@ program test_poisson_2d_fem_ssm
   allocate( Ap( 3+(n1-2)*n2, 3+(n1-2)*n2) )
   allocate( Mp( 3+(n1-2)*n2, 3+(n1-2)*n2) )
 
-  call projector % change_basis( A, Ap )
-  call projector % change_basis( M, Mp )
+  call projector % change_basis_matrix( A, Ap )
+  call projector % change_basis_matrix( M, Mp )
 
   !-----------------------------------------------------------------------------
   ! HDF5 I/O

@@ -26,9 +26,11 @@ module sll_m_poisson_2d_fem_ssm_projector
 
   contains
 
-    procedure :: init         => s_poisson_2d_fem_ssm_projector__init
-    procedure :: change_basis => s_poisson_2d_fem_ssm_projector__change_basis
-    procedure :: free         => s_poisson_2d_fem_ssm_projector__free
+    procedure :: init                        => s_poisson_2d_fem_ssm_projector__init
+    procedure :: change_basis_matrix         => s_poisson_2d_fem_ssm_projector__change_basis_matrix
+    procedure :: change_basis_vector         => s_poisson_2d_fem_ssm_projector__change_basis_vector
+    procedure :: change_basis_vector_inverse => s_poisson_2d_fem_ssm_projector__change_basis_vector_inverse
+    procedure :: free                        => s_poisson_2d_fem_ssm_projector__free
 
   end type sll_t_poisson_2d_fem_ssm_projector
 
@@ -65,9 +67,9 @@ contains
 
   ! Change basis: C1 projection of stiffness and mass matrices
   ! NOTE: 'self' has intent(inout) because temporary storage has to be assigned
-  subroutine s_poisson_2d_fem_ssm_projector__change_basis( self, Q, Qp )
+  subroutine s_poisson_2d_fem_ssm_projector__change_basis_matrix( self, Q, Qp )
     class(sll_t_poisson_2d_fem_ssm_projector), intent(inout) :: self
-    real(wp)                                 , intent(in   ) :: Q(:,:)
+    real(wp)                                 , intent(in   ) :: Q (:,:)
     real(wp)                                 , intent(inout) :: Qp(:,:)
 
     integer :: nn
@@ -97,7 +99,53 @@ contains
 
     end associate
 
-  end subroutine s_poisson_2d_fem_ssm_projector__change_basis
+  end subroutine s_poisson_2d_fem_ssm_projector__change_basis_matrix
+
+  ! Change basis: C1 projection of vectors
+  subroutine s_poisson_2d_fem_ssm_projector__change_basis_vector( self, V, Vp )
+    class(sll_t_poisson_2d_fem_ssm_projector), intent(in   ) :: self
+    real(wp)                                 , intent(in   ) :: V (:)
+    real(wp)                                 , intent(inout) :: Vp(:)
+
+    integer :: nn
+
+    associate( n1 => self % n1, n2 => self % n2 )
+
+      nn = (n1-2)*n2
+
+      ! Checks
+      SLL_ASSERT( size(V ) == n1*n2 )
+      SLL_ASSERT( size(Vp) == 3+nn  )
+
+      Vp(1:3)    = matmul( self % Lt, V(1:2*n2) )
+      Vp(4:3+nn) = V(2*n2+1:n1*n2)
+
+    end associate
+
+  end subroutine s_poisson_2d_fem_ssm_projector__change_basis_vector
+
+  ! Change basis: C1 projection of vectors
+  subroutine s_poisson_2d_fem_ssm_projector__change_basis_vector_inverse( self, Vp, V )
+    class(sll_t_poisson_2d_fem_ssm_projector), intent(in   ) :: self
+    real(wp)                                 , intent(in   ) :: Vp(:)
+    real(wp)                                 , intent(inout) :: V (:)
+
+    integer :: nn
+
+    associate( n1 => self % n1, n2 => self % n2 )
+
+      nn = (n1-2)*n2
+
+      ! Checks
+      SLL_ASSERT( size(Vp) == 3+nn  )
+      SLL_ASSERT( size(V ) == n1*n2 )
+
+      V(1:2*n2)       = matmul( self % L, Vp(1:3) )
+      V(2*n2+1:n1*n2) = Vp(4:3+nn)
+
+    end associate
+
+  end subroutine s_poisson_2d_fem_ssm_projector__change_basis_vector_inverse
 
   ! Deallocate allocatables
   subroutine s_poisson_2d_fem_ssm_projector__free( self )
