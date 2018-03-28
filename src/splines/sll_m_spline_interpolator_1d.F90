@@ -51,6 +51,7 @@ module sll_m_spline_interpolator_1d
     integer                                , private :: nbc_xmin
     integer                                , private :: nbc_xmax
     integer                                , private :: odd
+    integer                                , private :: offset
     real(wp)                               , private :: dx
     real(wp),                   allocatable, private :: tau(:)
     class(sll_c_spline_matrix), allocatable, private :: matrix
@@ -148,6 +149,7 @@ contains
     self % nbc_xmin = merge ( bspl%degree/2, 0, bc_xmin == sll_p_hermite )
     self % nbc_xmax = merge ( bspl%degree/2, 0, bc_xmax == sll_p_hermite )
     self % odd      = modulo( bspl%degree  , 2 )
+    self % offset   = merge ( bspl%degree/2, 0, bspl%periodic )
 
     ! Save average cell size for normalization of derivatives
     self%dx = (bspl%xmax - bspl%xmin) / real(bspl%ncells,f64)
@@ -256,6 +258,7 @@ contains
                 degree   =>   self % bspl % degree, &
                 nbc_xmin =>   self % nbc_xmin     , &
                 nbc_xmax =>   self % nbc_xmax     , &
+                g        =>   self % offset       , &
                 bcoef    => spline % bcoef )
 
       ! Special case: linear spline
@@ -263,7 +266,6 @@ contains
         bcoef(1:nbasis) = gtau(1:nbasis)
         ! Periodic only: "wrap around" coefficients onto extended array
         if (self%bspl%periodic) then
-          bcoef(0)        = bcoef(nbasis)
           bcoef(nbasis+1) = bcoef(1)
         end if
         return
@@ -282,7 +284,7 @@ contains
       end if
 
       ! Interpolation points
-      bcoef(nbc_xmin+1:nbasis-nbc_xmax) = gtau(:)
+      bcoef(nbc_xmin+1+g:nbasis-nbc_xmax+g) = gtau(:)
 
       ! Hermite boundary conditions at xmax, if any
       ! NOTE: For consistency with the linear system, the i-th derivative
@@ -297,17 +299,15 @@ contains
       end if
 
       ! Solve linear system and compute coefficients
-      call self % matrix % solve_inplace( bcoef(1:nbasis) )
+      call self % matrix % solve_inplace( bcoef(1+g:nbasis+g) )
 
       ! Periodic only: "wrap around" coefficients onto extended array
       if (self%bc_xmin == sll_p_periodic) then
-        associate( g => 1+degree/2 )
-          bcoef(1-g:0)             = bcoef(nbasis-g+1:nbasis)
-          bcoef(nbasis+1:nbasis+g) = bcoef(1:g)
-        end associate
+        bcoef(1:g)                      = bcoef(nbasis+1:nbasis+g)
+        bcoef(nbasis+1+g:nbasis+degree) = bcoef(1+g:degree)
       end if
 
-    end associate ! nbasis, degree, bcoef
+    end associate
 
   end subroutine s_spline_interpolator_1d__compute_interpolant
 
@@ -376,7 +376,7 @@ contains
         x = self%tau(i-nbc_xmin)
         call self % bspl % eval_basis( x, values, jmin )
         do s = 1, degree+1
-          j = modulo( jmin+s-2, nbasis ) + 1
+          j = modulo( jmin-self%offset+s-2, nbasis ) + 1
           call matrix % set_element( i, j, values(s) )
         end do
       end do
@@ -633,6 +633,7 @@ contains
 
     associate( nbasis   => self % bspl % nbasis, &
                degree   => self % bspl % degree, &
+               offset   => self % offset       , &
                nbc_xmin => self % nbc_xmin     , &
                nbc_xmax => self % nbc_xmax )
 
@@ -642,7 +643,7 @@ contains
           x = self % tau(i)
           icell = self % bspl % find_cell( x )
           do s = 1, degree+1
-            j = modulo(icell-self%bspl%offset-2+s,nbasis)+1
+            j = modulo(icell-offset-2+s,nbasis)+1
             d = j-i
             if (d >  nbasis/2) then; d = d-nbasis; else &
             if (d < -nbasis/2) then; d = d+nbasis; end if
