@@ -35,6 +35,12 @@ program test_poisson_2d_fem_ssm
 
   use sll_m_poisson_2d_fem_ssm_projector, only: sll_t_poisson_2d_fem_ssm_projector
 
+  use sll_m_vector_space_real_arrays, only: sll_t_vector_space_real_1d
+
+  use sll_m_linear_operator_matrix_dense, only: sll_t_linear_operator_matrix_dense
+
+  use sll_m_conjugate_gradient, only: sll_t_conjugate_gradient
+
   use sll_m_gauss_legendre_integration, only: &
     sll_f_gauss_legendre_points, &
     sll_f_gauss_legendre_weights
@@ -88,20 +94,29 @@ program test_poisson_2d_fem_ssm
   real(wp), allocatable :: data_1d_eta1(:,:,:,:)
   real(wp), allocatable :: data_1d_eta2(:,:,:,:)
 
-  ! 2D data (inverse metric tensor and integral volume)
+  ! 2D data (inverse metric tensor, integral volume, right hand side)
   real(wp), allocatable :: int_volume(:,:,:,:)
   real(wp), allocatable :: inv_metric(:,:,:,:,:,:)
+  real(wp), allocatable :: data_2d_rhs(:,:,:,:)
 
-  ! Stiffness and mass matrices
-  real(wp), allocatable :: A(:,:)
-  real(wp), allocatable :: M(:,:)
-
-  ! C1 projections of stiffness and mass matrices
+  ! Stiffness and mass matrices and C1 projections
+  real(wp), allocatable :: A (:,:)
+  real(wp), allocatable :: M (:,:)
   real(wp), allocatable :: Ap(:,:)
+  real(wp), allocatable :: Ap_temp(:,:)
   real(wp), allocatable :: Mp(:,:)
 
   ! Matrix for barycentric coordinates
   real(wp), allocatable :: L(:,:)
+
+  ! Right hand side vector and C1 projection
+  real(wp), allocatable :: b (:)
+  real(wp), allocatable :: bp(:)
+  real(wp), allocatable :: bp_temp(:)
+
+  ! Solution and C1 projection
+  real(wp), allocatable :: x (:)
+  real(wp), allocatable :: xp(:)
 
   ! Weak form
   type(sll_t_poisson_2d_fem_ssm_weak_form) :: weak_form
@@ -111,6 +126,14 @@ program test_poisson_2d_fem_ssm
 
   ! C1 projector
   type(sll_t_poisson_2d_fem_ssm_projector) :: projector
+
+  ! Linear solver
+  type(sll_t_vector_space_real_1d)         :: bp_vecsp
+  type(sll_t_vector_space_real_1d)         :: xp_vecsp
+  type(sll_t_linear_operator_matrix_dense) :: Ap_linop
+  type(sll_t_conjugate_gradient)           :: cjsolver
+  real(wp), parameter :: tol = 1.0e-14_wp
+  logical , parameter :: verbose = .false.
 
   ! Auxiliary/temporary variables
   integer  :: i, j, k, k1, k2, q1, q2
@@ -276,7 +299,7 @@ program test_poisson_2d_fem_ssm
       do q2 = 1, Nq2
         do q1 = 1, Nq1
 
-          eta(:) = [ quad_points_eta1(q1,k1), quad_points_eta2(q2,k2) ]
+          eta  = [ quad_points_eta1(q1,k1), quad_points_eta2(q2,k2) ]
 
           jdet = mapping_iga % jdet( eta )
           jmat = mapping_iga % jmat( eta )
@@ -296,7 +319,27 @@ program test_poisson_2d_fem_ssm
     end do
   end do
 
-  ! Barycentric coordinates needed for C1 projection
+  allocate( data_2d_rhs( Nq1, Nq2, Nk1, Nk2 ) )
+
+  ! Initialize 2D discrete RHS
+  do k2 = 1, Nk2
+    do k1 = 1, Nk1
+      do q2 = 1, Nq2
+        do q1 = 1, Nq1
+
+          eta = [ quad_points_eta1(q1,k1), quad_points_eta2(q2,k2) ]
+
+          data_2d_rhs(q1,q2,k1,k2) = rhs( eta, mapping_iga )
+
+        end do
+      end do
+    end do
+  end do
+
+  !-----------------------------------------------------------------------------
+  ! Matrix of barycentric coordinates needed for C1 projection
+  !-----------------------------------------------------------------------------
+
   allocate( L( 2*n2, 3 ) )
 
   do i = 1, 2*n2
@@ -328,13 +371,13 @@ program test_poisson_2d_fem_ssm
   allocate( A( n1*n2, n1*n2 ) )
   allocate( M( n1*n2, n1*n2 ) )
 
-  A(:,:) = 0.0_wp
-  M(:,:) = 0.0_wp
+  A = 0.0_wp
+  M = 0.0_wp
 
   ! Cycle over finite elements
   do k2 = 1, Nk2
     do k1 = 1, Nk1
-      call assembler % add_element( &
+      call assembler % add_element_mat( &
         k1          , &
         k2          , &
         data_1d_eta1, &
@@ -347,14 +390,110 @@ program test_poisson_2d_fem_ssm
   end do
 
   !-----------------------------------------------------------------------------
+  ! Allocate and fill right hand side
+  !-----------------------------------------------------------------------------
+
+  allocate( b( n1*n2 ) )
+
+  b = 0.0_wp
+
+  ! Cycle over finite elements
+  do k2 = 1, Nk2
+    do k1 = 1, Nk1
+      call assembler % add_element_rhs( &
+        k1          , &
+        k2          , &
+        data_1d_eta1, &
+        data_1d_eta2, &
+        data_2d_rhs , &
+        int_volume  , &
+        b )
+    end do
+  end do
+
+  !-----------------------------------------------------------------------------
   ! Allocate and fill C1 projections of stiffness and mass matrices
   !-----------------------------------------------------------------------------
 
-  allocate( Ap( 3+(n1-2)*n2, 3+(n1-2)*n2) )
-  allocate( Mp( 3+(n1-2)*n2, 3+(n1-2)*n2) )
+  allocate( Ap( 3+(n1-2)*n2, 3+(n1-2)*n2 ) )
+  allocate( Mp( 3+(n1-2)*n2, 3+(n1-2)*n2 ) )
 
   call projector % change_basis_matrix( A, Ap )
   call projector % change_basis_matrix( M, Mp )
+
+  allocate( Ap_temp( size(Ap,1), size(Ap,2) ), source=Ap )
+
+  associate( nn => 3+(n1-2)*n2, idx => 3+(n1-3)*n2 )
+
+!    do j = idx+1, nn
+!      do i = idx+1, nn
+!        Ap_temp(i,j) = 0.0_wp
+!      end do
+!    end do
+    do i = idx+1, nn
+      Ap_temp(i,:) = 0.0_wp
+    end do
+    do j = idx+1, nn
+      Ap_temp(:,j) = 0.0_wp
+    end do
+
+  end associate
+
+  !-----------------------------------------------------------------------------
+  ! Allocate and fill C1 projection of right hand side
+  !-----------------------------------------------------------------------------
+
+  allocate( bp( 3+(n1-2)*n2 ) )
+
+  call projector % change_basis_vector( b, bp )
+
+  allocate( bp_temp( size(bp) ), source=bp )
+
+  associate( nn => 3+(n1-2)*n2, idx => 3+(n1-3)*n2 )
+
+    do i = idx+1, nn
+      bp_temp(i) = 0.0_wp
+    end do
+
+  end associate
+
+  !-----------------------------------------------------------------------------
+  ! Allocate C1 projection of solution
+  !-----------------------------------------------------------------------------
+
+  allocate( xp( 3+(n1-2)*n2 ) )
+
+  xp = 0.0_wp
+
+  !-----------------------------------------------------------------------------
+  ! Initialize and solve linear system
+  !-----------------------------------------------------------------------------
+
+  ! Construct linear operator from matrix Ap_temp
+  call Ap_linop % init( Ap_temp )
+
+  ! Construct vector space from vector bp_temp
+  call bp_vecsp % attach( bp_temp )
+
+  ! Construct vector space for solution
+  call xp_vecsp % attach( xp )
+
+  ! Initialize conjugate gradient solver
+  call cjsolver % init( tol=tol, verbose=verbose, template_vector=xp_vecsp )
+
+  ! Solve linear system Ap*xp=bp
+  call cjsolver % solve( A=Ap_linop, b=bp_vecsp, x=xp_vecsp )
+
+  ! Copy solution into array xp
+  xp = xp_vecsp % array
+
+  !-----------------------------------------------------------------------------
+  ! Allocate and compute solution in tensor-product space
+  !-----------------------------------------------------------------------------
+
+  allocate( x( n1*n2 ) )
+
+  call projector % change_basis_vector_inverse( xp, x )
 
   !-----------------------------------------------------------------------------
   ! HDF5 I/O
@@ -374,9 +513,23 @@ program test_poisson_2d_fem_ssm
 
   ! Write C1 projection of stiffness matrix
   call sll_o_hdf5_ser_write_array( file_id, Ap, "/Ap", h5_error )
+  call sll_o_hdf5_ser_write_array( file_id, Ap_temp, "/Ap_temp", h5_error )
 
   ! Write C1 projection of mass matrix
   call sll_o_hdf5_ser_write_array( file_id, Mp, "/Mp", h5_error )
+
+  ! Write right hand side
+  call sll_o_hdf5_ser_write_array( file_id, b, "/b", h5_error )
+
+  ! Write C1 projection of right hand side
+  call sll_o_hdf5_ser_write_array( file_id, bp, "/bp", h5_error )
+  call sll_o_hdf5_ser_write_array( file_id, bp_temp, "/bp_temp", h5_error )
+
+  ! Write solution
+  call sll_o_hdf5_ser_write_array( file_id, x, "/x", h5_error )
+
+  ! Write C1 projection of solution
+  call sll_o_hdf5_ser_write_array( file_id, xp, "/xp", h5_error )
 
   ! Close HDF5 file
   call sll_s_hdf5_ser_file_close ( file_id, h5_error )
@@ -399,6 +552,8 @@ program test_poisson_2d_fem_ssm
   deallocate( M  )
   deallocate( Ap )
   deallocate( Mp )
+  deallocate( b  )
+  deallocate( bp )
   deallocate( L  )
 
   deallocate( mapping_analytical )
@@ -409,5 +564,29 @@ program test_poisson_2d_fem_ssm
   call polar_bsplines % free()
 
   call projector % free()
+
+  call cjsolver % free()
+  call Ap_linop % free()
+  call bp_vecsp % delete()
+  call xp_vecsp % delete()
+
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+contains
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+  SLL_PURE function rhs( eta, mapping )
+    real(wp)                     , intent(in) :: eta(2)
+    type(sll_t_polar_mapping_iga), intent(in) :: mapping
+    real(wp) :: rhs
+
+    real(wp) :: x(2)
+
+    x   = mapping % eval( eta )
+
+    rhs = sin( sll_p_twopi * x(1) ) * cos( sll_p_twopi * x(2) )
+
+    return
+
+  end function rhs
 
 end program test_poisson_2d_fem_ssm

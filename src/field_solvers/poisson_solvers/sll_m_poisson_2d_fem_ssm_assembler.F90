@@ -24,8 +24,9 @@ module sll_m_poisson_2d_fem_ssm_assembler
 
   contains
 
-    procedure :: init        => s_poisson_2d_fem_ssm_assembler__init
-    procedure :: add_element => s_poisson_2d_fem_ssm_assembler__add_element
+    procedure :: init            => s_poisson_2d_fem_ssm_assembler__init
+    procedure :: add_element_mat => s_poisson_2d_fem_ssm_assembler__add_element_mat
+    procedure :: add_element_rhs => s_poisson_2d_fem_ssm_assembler__add_element_rhs
 
   end type sll_t_poisson_2d_fem_ssm_assembler
 
@@ -48,7 +49,7 @@ contains
   end subroutine
 
   ! Add element in stiffness and mass matrices
-  subroutine s_poisson_2d_fem_ssm_assembler__add_element( &
+  subroutine s_poisson_2d_fem_ssm_assembler__add_element_mat( &
     self        , &
     k1          , &
     k2          , &
@@ -102,11 +103,11 @@ contains
               ! First matrix global index
               i = i1 * n2 + i2 + 1
 
-              call self % weak_form % element( &
-                test_values_and_derivs_eta1  = data_1d_eta1(:,:,il1,k1)  , &
-                test_values_and_derivs_eta2  = data_1d_eta2(:,:,il2,k2)  , &
-                trial_values_and_derivs_eta1 = data_1d_eta1(:,:,jl1,k1)  , &
-                trial_values_and_derivs_eta2 = data_1d_eta2(:,:,jl2,k2)  , &
+              call self % weak_form % element_mat( &
+                test_values_and_derivs_eta1  = data_1d_eta1(:,:,il1,k1) , &
+                test_values_and_derivs_eta2  = data_1d_eta2(:,:,il2,k2) , &
+                trial_values_and_derivs_eta1 = data_1d_eta1(:,:,jl1,k1) , &
+                trial_values_and_derivs_eta2 = data_1d_eta2(:,:,jl2,k2) , &
                 int_volume                   = int_volume(:,:,k1,k2)    , &
                 inv_metric                   = inv_metric(:,:,k1,k2,:,:), &
                 Aij = Aij, &
@@ -123,6 +124,63 @@ contains
 
     end associate
 
-  end subroutine s_poisson_2d_fem_ssm_assembler__add_element
+  end subroutine s_poisson_2d_fem_ssm_assembler__add_element_mat
+
+  ! Add element in stiffness and mass matrices
+  subroutine s_poisson_2d_fem_ssm_assembler__add_element_rhs( &
+    self        , &
+    k1          , &
+    k2          , &
+    data_1d_eta1, &
+    data_1d_eta2, &
+    data_2d_rhs , &
+    int_volume  , &
+    b )
+    class(sll_t_poisson_2d_fem_ssm_assembler), intent(in   ) :: self
+    integer                                  , intent(in   ) :: k1
+    integer                                  , intent(in   ) :: k2
+    real(wp)                                 , intent(in   ) :: data_1d_eta1(:,:,:,:)
+    real(wp)                                 , intent(in   ) :: data_1d_eta2(:,:,:,:)
+    real(wp)                                 , intent(in   ) :: data_2d_rhs(:,:,:,:)
+    real(wp)                                 , intent(in   ) :: int_volume (:,:,:,:)
+    real(wp)                                 , intent(inout) :: b(:)
+
+    integer  :: i, i1, i2, p1, p2
+    real(wp) :: bi
+    integer  :: il1, il2
+
+    ! Extract degree of B-splines
+    p1 = size( data_1d_eta1, 3 ) - 1
+    p2 = size( data_1d_eta2, 3 ) - 1
+
+    associate( n1 => self % n1, n2 => self % n2 )
+
+      ! Cycle over basis functions in 2D test space
+      do il2 = 1, p2+1
+
+        i2 = modulo( k2 + il2 - 2, n2 )
+
+        do il1 = 1, p1+1
+
+          i1 = k1 + il1 - 2
+
+          ! First matrix global index
+          i = i1 * n2 + i2 + 1
+
+          call self % weak_form % element_rhs( &
+            test_values_and_derivs_eta1  = data_1d_eta1(:,:,il1,k1), &
+            test_values_and_derivs_eta2  = data_1d_eta2(:,:,il2,k2), &
+            data_2d_rhs                  = data_2d_rhs(:,:,k1,k2) , &
+            int_volume                   = int_volume (:,:,k1,k2)   , &
+            bi = bi )
+
+          b(i) = b(i) + bi
+
+        end do
+      end do ! End cycle over basis functions in 2D test space
+
+    end associate
+
+  end subroutine s_poisson_2d_fem_ssm_assembler__add_element_rhs
 
 end module sll_m_poisson_2d_fem_ssm_assembler
