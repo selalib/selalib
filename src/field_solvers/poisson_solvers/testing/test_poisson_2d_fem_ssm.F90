@@ -303,8 +303,7 @@ program test_poisson_2d_fem_ssm
 
     ! Indices to access control points
     j = (i-1) / n2 + 1
-    ! TODO: remove shift of p/2 after numeration of periodic B-splines is fixed
-    k = modulo( (i-1)-p2/2, n2 ) + 1
+    k = modulo( (i-1), n2 ) + 1
 
     cx = mapping_iga % spline_2d_x1 % bcoef(j,k)
     cy = mapping_iga % spline_2d_x2 % bcoef(j,k)
