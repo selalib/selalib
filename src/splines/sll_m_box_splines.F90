@@ -332,31 +332,31 @@ contains  ! ****************************************************************
 
        val = 0._f64
        do K = -deg, CEILING(u)-1
-          if ((x1_in.eq.0.).and.(x2_in.eq.0.8)) then
+          if ((x1_in.eq.0._f64).and.(x2_in.eq.0.8_f64)) then
              !             print *, " K = ", K
           end if
           do L = -deg, CEILING(v)-1
-             if ((x1_in.eq.0.).and.(x2_in.eq.0.8)) then
+             if ((x1_in.eq.0._f64).and.(x2_in.eq.0.8_f64)) then
                 !                print *, "    L = ", L
              end if
              do i = 0,min(deg+K, deg+L)
-                if ((x1_in.eq.0.).and.(x2_in.eq.0.8)) then
+                if ((x1_in.eq.0._f64).and.(x2_in.eq.0.8_f64)) then
                    !                   print *, "      i = ", i
                 end if
                 coeff = (-1.0_f64)**(K+L+i)* &
                      choose(deg,i-K)*     &
                      choose(deg,i-L)*     &
                      choose(deg,i)
-                if ((x1_in.eq.0.).and.(x2_in.eq.0.8)) then
+                if ((x1_in.eq.0._f64).and.(x2_in.eq.0.8_f64)) then
                    !                  print *, "      coeff = ", coeff
                 end if
                 do d = 0,deg-1
-                   if ((x1_in.eq.0.).and.(x2_in.eq.0.8)) then
+                   if ((x1_in.eq.0._f64).and.(x2_in.eq.0.8_f64)) then
                       !                    print *, "          d = ", d
                    end if
-                   aux=abs(v-L-u+K)
-                   aux2=(u-K+v-L-aux)/2._f64
-                   if(aux2.lt.0.) then
+                   aux=abs(v-real(L,f64)-u+real(K,f64))
+                   aux2=(u-real(K,f64)+v-real(L,f64)-aux)/2._f64
+                   if(aux2.lt.0._f64) then
                       aux2 = 0._f64
                    end if
                    val = val + coeff*choose(deg-1+d,d)   &
@@ -364,7 +364,7 @@ contains  ! ****************************************************************
                         /real(sll_o_factorial(deg -1 -d), f64) &
                         * aux**(deg-1-d) &
                         * aux2**(2*deg-1+d)
-                   if ((x1_in.eq.0.).and.(x2_in.eq.0.8)) then
+                   if ((x1_in.eq.0._f64).and.(x2_in.eq.0.8_f64)) then
                       !                   print *, "            aux, aux2, val = ", aux, aux2, val
                    end if
                 end do
@@ -591,8 +591,10 @@ contains  ! ****************************************************************
              ! We centralize and shift the coordinates
              ! i.e. centralize : xm = x - Rk
              !      shifting   : xm to the associated rhomboid point
-             xm1 = x1 - r11*k1_asso - r21*k2_asso - ki*r11 - kj*r21
-             xm2 = x2 - r12*k1_asso - r22*k2_asso - ki*r12 - kj*r22
+             xm1 = x1 - r11*real(k1_asso,f64) - r21*real(k2_asso,f64) &
+                   - real(ki,f64)*r11 - real(kj,f64)*r21
+             xm2 = x2 - r12*real(k1_asso,f64) - r22*real(k2_asso,f64) &
+                   - real(ki,f64)*r12 - real(kj,f64)*r22
 
              ! change of basis : geometrical basis => spline basis
              x1_spl = change_basis_x1(spline, xm1, xm2)
@@ -711,7 +713,7 @@ contains  ! ****************************************************************
     sll_real64 :: val
 
     !Computing step on each direction
-    h = max(10.*sll_p_epsilon_0*abs(x1), sll_p_epsilon_0)
+    h = max(10._f64*sll_p_epsilon_0*abs(x1), sll_p_epsilon_0)
 
     ! Finite difference method of order 5
     fm2h = chi_gen_val(x1-2.0_f64*h, x2, deg)
@@ -743,15 +745,15 @@ contains  ! ****************************************************************
     sll_real64 :: val
 
     !Computing step on each direction
-    h = max(10.*sll_p_epsilon_0*abs(x2), sll_p_epsilon_0)
+    h = max(10._f64*sll_p_epsilon_0*abs(x2), sll_p_epsilon_0)
 
     ! Finite difference method of order 5
-    fm2h = chi_gen_val(x1, x2-2.0*h, deg)
+    fm2h = chi_gen_val(x1, x2-2.0_f64*h, deg)
     fm1h = chi_gen_val(x1, x2 - h,   deg)
-    fp2h = chi_gen_val(x1, x2+2.0*h, deg)
+    fp2h = chi_gen_val(x1, x2+2.0_f64*h, deg)
     fp1h = chi_gen_val(x1, x2 + h,   deg)
 
-    val = 0.25/3._f64/h * ( - fp2h + 8._f64 * fp1h - 8._f64 * fm1h + fm2h)
+    val = 0.25_f64/3._f64/h * ( - fp2h + 8._f64 * fp1h - 8._f64 * fm1h + fm2h)
 
   end function sll_f_boxspline_x2_derivative
 
