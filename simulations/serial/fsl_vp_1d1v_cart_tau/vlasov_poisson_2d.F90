@@ -271,7 +271,14 @@ do i = 1, n
   r(i)  = eta_min + (i-1)*delta_eta
 end do
 
-lx = [ (cmplx(j,0.,f64), j=0,n/2-1), (cmplx(j,0.,f64), j=-n/2,-1 ) ]
+! NOTE: internal compiler error with gfortran 5.4.0, replaced with do cycles
+!lx = [ (cmplx(j,0.,8), j=0,nloc/2-1), (cmplx(j,0.,8), j=-nloc/2,-1 ) ]
+do j = 1, n/2
+  lx(j) = cmplx(j-1,0.,f64)
+end do
+do j = n/2+1, n
+  lx(j) = cmplx(j-1-n,0.,f64)
+end do
 lx = lx * 2.0d0*sll_p_pi * sll_p_i1 / delta_eta
 
 !$OMP DO
@@ -305,7 +312,14 @@ do i=1,n+1
 end do
 !$OMP END DO
 
-ltau = [(cmplx(0.,-l,f64),l=0,ntau/2-1),(cmplx(0,-l,f64),l=-ntau/2,-1)]
+! NOTE: internal compiler error with gfortran 5.4.0, replaced with do cycles
+!ltau = [(cmplx(0.,-l,f64),l=0,ntau/2-1),(cmplx(0,-l,f64),l=-ntau/2,-1)]
+do j = 1, ntau/2
+  ltau(j) = cmplx(0.,-j+1,f64)
+end do
+do j = ntau/2+1, ntau
+  ltau(j) = cmplx(0.,-j+1+ntau,f64)
+end do
 
 do step=1,nb_step !-------- * Evolution in time * ---------
 

@@ -60,7 +60,6 @@ contains
     self % uniform  = .false.
     self % ncells   = size(breaks) - 1
     self % nbasis   = merge( self%ncells, self%ncells+degree, periodic )
-    self % offset   = merge( degree/2   , 0                 , periodic )
     self % xmin     = breaks(1)
     self % xmax     = breaks(self%ncells+1)
 
@@ -185,7 +184,7 @@ contains
     SLL_ASSERT( x <= self%knots(icell+1) ) 
 
     ! 2. Compute index range of B-splines with support over cell 'icell'
-    jmin = icell - self%offset
+    jmin = icell
 
     ! 3. Compute values of aforementioned B-splines
     values(0) = 1.0_wp
@@ -242,7 +241,7 @@ contains
     SLL_ASSERT( x <= self%knots(icell+1) )
 
     ! 2. Compute index range of B-splines with support over cell 'icell'
-    jmin = icell - self%offset
+    jmin = icell
 
     ! 3. Compute derivatives of aforementioned B-splines
     associate( degree => self%degree, degree_real => real(self%degree,wp) )
@@ -332,7 +331,7 @@ contains
     SLL_ASSERT( x <= self%knots(icell+1) )
 
     ! 2. Compute index range of B-splines with support over cell 'icell'
-    jmin = icell - self%offset
+    jmin = icell
 
     ! 3. Compute nonzero basis functions and knot differences for splines
     !    up to degree (degree-1) which are needed to compute derivative
@@ -397,7 +396,7 @@ contains
       end do
       r = degree
       do k = 1, n
-         derivs(k,:) = derivs(k,:) * r
+         derivs(k,:) = derivs(k,:) * real(r,kind=wp)
          r = r * (degree-k)
       end do
 
