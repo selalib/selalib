@@ -164,24 +164,24 @@ contains
     call self % interp1 % init( bspl1, bc_xmin(1), bc_xmax(1) )
     call self % interp2 % init( bspl2, bc_xmin(2), bc_xmax(2) )
 
-    associate( n1     =>  bspl1 % ncells, &
-               n2     =>  bspl2 % ncells, &
-               degree => [bspl1 % degree, bspl2 % degree] )
+    associate( n1 => bspl1 % ncells, &
+               n2 => bspl2 % ncells, &
+               p1 => bspl1 % degree, &
+               p2 => bspl2 % degree )
 
       ! Save data into type
       self%bc_xmin = bc_xmin
       self%bc_xmax = bc_xmax
 
-      ! Allocate work array for interpolation.
-      ! In case of periodic BCs, a larger array of coefficients is used in order
-      ! to avoid a loop with calls to the "mod( , )" function at evaluation.
-      allocate( self%bwork(1:n2+degree(2),1:n1+degree(1)) )
+      ! Allocate work array for interpolation: in case of periodic BCs, the last
+      ! p coefficients are a periodic copy of the first p ones (p=p1,p2)
+      allocate( self%bwork(1:n2+p2,1:n1+p1) )
       self%bwork = 0.0_f64
 
       ! Calculate number of additional boundary data on each side of domain
       ! (i.e. derivatives for Hermite BC)
-      self%nbc_xmin = merge( degree/2, 0, bc_xmin == sll_p_hermite )
-      self%nbc_xmax = merge( degree/2, 0, bc_xmax == sll_p_hermite )
+      self%nbc_xmin = merge( [p1,p2]/2, 0, bc_xmin == sll_p_hermite )
+      self%nbc_xmax = merge( [p1,p2]/2, 0, bc_xmax == sll_p_hermite )
 
     end associate
 
