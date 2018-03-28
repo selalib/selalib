@@ -28,7 +28,6 @@ module sll_m_bsplines_base
     logical :: uniform
     integer :: ncells
     integer :: nbasis
-    integer :: offset
 
     real(wp) :: xmin
     real(wp) :: xmax
