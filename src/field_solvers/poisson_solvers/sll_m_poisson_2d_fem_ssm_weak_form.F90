@@ -19,7 +19,8 @@ module sll_m_poisson_2d_fem_ssm_weak_form
 
   contains
 
-    procedure :: element => s_poisson_2d_fem_ssm_weak_form__element
+    procedure :: element_mat => s_poisson_2d_fem_ssm_weak_form__element_mat
+    procedure :: element_rhs => s_poisson_2d_fem_ssm_weak_form__element_rhs
 
   end type sll_t_poisson_2d_fem_ssm_weak_form
 
@@ -28,8 +29,8 @@ contains
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
   ! Compute elementary contribution to stiffness and mass matrices
-  subroutine s_poisson_2d_fem_ssm_weak_form__element( &
-    self        , &
+  subroutine s_poisson_2d_fem_ssm_weak_form__element_mat( &
+    self                        , &
     test_values_and_derivs_eta1 , &
     test_values_and_derivs_eta2 , &
     trial_values_and_derivs_eta1, &
@@ -85,6 +86,43 @@ contains
       end do
     end do
 
-  end subroutine s_poisson_2d_fem_ssm_weak_form__element
+  end subroutine s_poisson_2d_fem_ssm_weak_form__element_mat
+
+  ! Compute elementary contribution to right hand side
+  subroutine s_poisson_2d_fem_ssm_weak_form__element_rhs( &
+    self                        , &
+    test_values_and_derivs_eta1 , &
+    test_values_and_derivs_eta2 , &
+    data_2d_rhs                 , &
+    int_volume                  , &
+    bi )
+    class(sll_t_poisson_2d_fem_ssm_weak_form), intent(in   ) :: self
+    real(wp)                                 , intent(in   ) :: test_values_and_derivs_eta1(:,:)
+    real(wp)                                 , intent(in   ) :: test_values_and_derivs_eta2(:,:)
+    real(wp)                                 , intent(in   ) :: data_2d_rhs(:,:)
+    real(wp)                                 , intent(in   ) :: int_volume (:,:)
+    real(wp)                                 , intent(  out) :: bi
+
+    integer :: q1, q2, Nq1, Nq2
+
+    ! Extract number of quadrature points
+    Nq1 = size( test_values_and_derivs_eta1, 1 )
+    Nq2 = size( test_values_and_derivs_eta2, 1 )
+
+    bi = 0.0_wp
+
+    ! Quadrature
+    do q2 = 1, Nq2
+      do q1 = 1, Nq1
+
+        ! Elementary contribution to mass matrix
+        bi = bi + &
+             test_values_and_derivs_eta1 (q1,1) * test_values_and_derivs_eta2 (q2,1) * &
+             data_2d_rhs(q1,q2) * int_volume(q1,q2)
+
+      end do
+    end do
+
+  end subroutine s_poisson_2d_fem_ssm_weak_form__element_rhs
 
 end module sll_m_poisson_2d_fem_ssm_weak_form
