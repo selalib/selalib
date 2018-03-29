@@ -19,6 +19,7 @@ program test_scalar_field_1d
     sll_p_pi
 
   use sll_m_scalar_field_1d, only: &
+    sll_t_scalar_field_1d_analytic, &
     sll_f_new_scalar_field_1d_analytic, &
     sll_f_new_scalar_field_1d_discrete
 
@@ -66,13 +67,18 @@ mesh_1d => sll_f_new_cartesian_mesh_1d( NUM_CELLS1,ETA1MIN, ETA1MAX)
 !----------------------------------------------------------------------------
   
 ! ----> initialization of the field
-periodic_analytic  => sll_f_new_scalar_field_1d_analytic( &
+allocate( sll_t_scalar_field_1d_analytic :: periodic_analytic)
+select type ( periodic_analytic )
+type is ( sll_t_scalar_field_1d_analytic )
+  call periodic_analytic%init(  &
   test_function_per, &
    "periodic_analytic",  &
   sll_p_periodic,      &
   sll_p_periodic,      &
   mesh_1d,           &
   first_derivative=test_function_per_der1)
+end select
+
   
 ! -------> compute error norm L2 and H1
 normL2_1 = 0.0_f64

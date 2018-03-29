@@ -424,7 +424,7 @@ contains
 
     if ( plan%normalized .EQV. .true.) then
        factor = 1.0_f64/real(plan%problem_shape(1),kind=f64)
-       array_out = factor*array_out
+       array_out = cmplx(factor,0.0,f64)*array_out
     endif
   end subroutine 
 
@@ -500,7 +500,7 @@ contains
 
     if ( plan%normalized .EQV. .true.) then
       factor = 1.0_f64/real(plan%problem_shape(1)*plan%problem_shape(2),kind=f64)
-      array_out = factor*array_out
+      array_out = cmplx(factor,0.0,f64)*array_out
     endif
 
   end subroutine 
@@ -578,7 +578,7 @@ contains
 
     if ( plan%normalized ) then
       factor = 1.0_f64/real(plan%problem_shape(1)*plan%problem_shape(2)*plan%problem_shape(3),kind=f64)
-      array_out = factor*array_out
+      array_out = cmplx(factor,0.0,f64)*array_out
     endif
 
   end subroutine 
@@ -765,7 +765,7 @@ contains
 
     if( plan%normalized .EQV. .TRUE. ) then
       factor = 1.0_f64/real(plan%problem_shape(1),kind=f64)
-      array_out = factor*array_out
+      array_out = cmplx(factor,0.0,kind=f64)*array_out
     endif
   end subroutine
 
@@ -853,7 +853,7 @@ contains
 
     if( plan%normalized .EQV. .TRUE. ) then
       factor = 1.0_f64/real(nx*ny,kind=f64)
-      array_out = factor*array_out
+      array_out = cmplx(factor,0.0,kind=f64)*array_out
     endif
   end subroutine
 

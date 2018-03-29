@@ -62,10 +62,14 @@ implicit none
   integer, parameter :: filestream = 111
   character(len=256)            :: filename_solver
   character(len=256)            :: filename_params
-  logical                       :: file_exists, equal, empty
-  real(kind=plf_rk), parameter :: pi = 3.1415926535897931 
-  real(kind=plf_rk), parameter :: k1 = 2.0 * pi 
-  real(kind=plf_rk), parameter :: k2 = 2.0 * pi 
+  logical                       :: file_exists!, equal, empty
+  real(kind=plf_rk) :: pi 
+  real(kind=plf_rk) :: k1 
+  real(kind=plf_rk) :: k2 
+
+  pi = 4d0 * atan(1d0)
+  k1 = 2d0 * pi
+  k2 = 2d0 * pi
 
   ! ...
   call jrk_initialize(i_err)
@@ -238,9 +242,9 @@ contains
   implicit none
     class(jrk_t_assembler_abstract), intent(inout) :: self
     ! local
-    integer :: i_trial_basis
+    !integer :: i_trial_basis
     integer :: i_point
-    integer :: n_points
+    !integer :: n_points
     real(plf_rk) :: vj_0 
     real(plf_rk) :: vj_x 
     real(plf_rk) :: vj_y 

@@ -36,7 +36,7 @@ IF (${CMAKE_SOURCE_DIR} MATCHES ${CMAKE_BINARY_DIR})
 ENDIF()
 
 OPTION(BUILD_HDF5             "Download and build the HDF5 library"    OFF)
-OPTION(CLAPP                  "Use SELALIB within the CLAPP framework" OFF )
+OPTION(CLAPP                  "Use SELALIB within the CLAPP framework" OFF)
 OPTION(OPENMP_ENABLED         "Enable use of OpenMP library"           OFF)
 OPTION(MPI_ENABLED            "Enable use of MPI library"              ON )
 OPTION(HDF5_ENABLED           "Use HDF5 library for data output"       ON )
