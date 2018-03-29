@@ -271,7 +271,14 @@ do i = 1, n
   r(i)  = eta_min + (i-1)*delta_eta
 end do
 
-lx = [ (cmplx(j,0.,f64), j=0,n/2-1), (cmplx(j,0.,f64), j=-n/2,-1 ) ]
+do j = 0, n/2-1
+  lx(j) = cmplx(j,0.,f64)
+end do
+
+do j= -n/2, -1
+  lx(j) = cmplx(j,0.,f64)
+end do
+
 lx = lx * 2.0d0*sll_p_pi * sll_p_i1 / delta_eta
 
 !$OMP DO
