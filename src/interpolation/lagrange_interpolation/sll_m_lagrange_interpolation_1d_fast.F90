@@ -596,27 +596,27 @@ contains
       case(5)
         i=1
 !DIR$ FORCEINLINE
-        fp(i) = lagr_5pt(fi(i), fi(i+1), fi(i+2), fi(i+3), fi(i+4), p-2.)
+        fp(i) = lagr_5pt(fi(i), fi(i+1), fi(i+2), fi(i+3), fi(i+4), p-2.0_f64)
         i=2
 !DIR$ FORCEINLINE
-        fp(i) = lagr_5pt(fi(i-1), fi(i), fi(i+1), fi(i+2), fi(i+3), p-1.)
+        fp(i) = lagr_5pt(fi(i-1), fi(i), fi(i+1), fi(i+2), fi(i+3), p-1.0_f64)
 !DIR$ FORCEINLINE
         call lagr_5pt_vec(fi, fp, p)
         i=n-1
 !DIR$ FORCEINLINE
-        fp(i) = lagr_5pt(fi(i-3), fi(i-2), fi(i-1), fi(i), fi(i+1), p+1.)
+        fp(i) = lagr_5pt(fi(i-3), fi(i-2), fi(i-1), fi(i), fi(i+1), p+1.0_f64)
         i=n
 !DIR$ FORCEINLINE
-        fp(i) = lagr_5pt(fi(i-4), fi(i-3), fi(i-2), fi(i-1), fi(i), p+2.)
+        fp(i) = lagr_5pt(fi(i-4), fi(i-3), fi(i-2), fi(i-1), fi(i), p+2.0_f64)
       case(3)
         i=1
 !DIR$ FORCEINLINE
-        fp(i) = lagr_3pt(fi(i), fi(i+1), fi(i+2), p-1.)
+        fp(i) = lagr_3pt(fi(i), fi(i+1), fi(i+2), p-1.0_f64)
 !DIR$ FORCEINLINE
         call lagr_3pt_vec(fi, fp, p)
         i=n
 !DIR$ FORCEINLINE
-        fp(i) = lagr_3pt(fi(i-2), fi(i-1), fi(i), p+1.)
+        fp(i) = lagr_3pt(fi(i-2), fi(i-1), fi(i), p+1.0_f64)
      case default
         SLL_ERROR( 'sll_s_lagrange_interpolation_1d_fast_disp_fixed_no_bc.', 'Lagrange stencil not implemented.')
     end select
@@ -746,7 +746,7 @@ contains
     n = size(fi)-1
     ! compute interval shift
     pi = floor(p)
-    pq = p - pi
+    pq = p - real(pi,f64)
 
     select case (stencil)
      case(6)
@@ -847,7 +847,7 @@ contains
 
     ! Compute interval shift
     pi = floor(p)
-    pq = p - pi
+    pq = p - real(pi,f64)
 
     select case (stencil)
       case(6)
