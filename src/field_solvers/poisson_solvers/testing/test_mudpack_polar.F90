@@ -45,7 +45,7 @@ theta_min = 0.0_f64
 theta_max = 2.0_f64 * sll_p_pi
 
 nr     = 33
-ntheta = 65
+ntheta = 129
 delta_r     = (r_max-r_min)/(nr-1)
 delta_theta = 2.0_f64*sll_p_pi/(ntheta-1)
 

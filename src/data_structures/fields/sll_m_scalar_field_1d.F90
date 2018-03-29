@@ -45,12 +45,13 @@ module sll_m_scalar_field_1d
   public :: &
     sll_f_new_scalar_field_1d_analytic, &
     sll_f_new_scalar_field_1d_discrete, &
+    sll_t_scalar_field_1d_analytic, &
     sll_t_scalar_field_1d_discrete
 
   private
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
   
-  type, extends(sll_c_scalar_field_1d_base) :: sll_scalar_field_1d_analytic
+  type, extends(sll_c_scalar_field_1d_base) :: sll_t_scalar_field_1d_analytic
      procedure(one_var_parametrizable_function), pointer, nopass :: func
      procedure(one_var_parametrizable_function), pointer, nopass :: first_derivative
      sll_real64, dimension(:), pointer        :: params
@@ -76,7 +77,7 @@ module sll_m_scalar_field_1d
           update_interp_coeffs_1d_analytic
      procedure, pass(field) :: write_to_file => write_to_file_analytic_1d
      procedure, pass(field) :: delete => delete_field_1d_analytic
-  end type sll_scalar_field_1d_analytic
+  end type sll_t_scalar_field_1d_analytic
   
   type, extends(sll_c_scalar_field_1d_base) :: sll_t_scalar_field_1d_discrete
      sll_real64, dimension(:), pointer  :: values
@@ -137,14 +138,14 @@ contains   ! *****************************************************************
   
 
   function value_at_pt_analytic_1d( field, eta )
-    class(sll_scalar_field_1d_analytic), intent(inout) :: field
+    class(sll_t_scalar_field_1d_analytic), intent(inout) :: field
     sll_real64, intent(in) :: eta
     sll_real64             ::  value_at_pt_analytic_1d
     value_at_pt_analytic_1d = field%func(eta, field%params)
   end function value_at_pt_analytic_1d
 
   function value_at_index_analytic_1d( field, i )
-    class(sll_scalar_field_1d_analytic), intent(inout) :: field
+    class(sll_t_scalar_field_1d_analytic), intent(inout) :: field
     sll_int32, intent(in) :: i
     sll_real64            :: eta
     sll_real64            :: value_at_index_analytic_1d
@@ -153,7 +154,7 @@ contains   ! *****************************************************************
   end function value_at_index_analytic_1d
 
   function derivative_value_at_pt_analytic_1d( field, eta)
-    class(sll_scalar_field_1d_analytic), intent(inout) :: field
+    class(sll_t_scalar_field_1d_analytic), intent(inout) :: field
     sll_real64, intent(in) :: eta
     sll_real64             :: derivative_value_at_pt_analytic_1d
     
@@ -168,7 +169,7 @@ contains   ! *****************************************************************
 
   
   function derivative_value_at_index_analytic_1d( field, i)
-    class(sll_scalar_field_1d_analytic), intent(inout) :: field
+    class(sll_t_scalar_field_1d_analytic), intent(inout) :: field
     sll_int32, intent(in) :: i
     sll_real64            :: eta
     sll_real64            :: derivative_value_at_index_analytic_1d
@@ -193,7 +194,7 @@ contains   ! *****************************************************************
        func_params,&
        first_derivative) result(obj)
     
-    type(sll_scalar_field_1d_analytic), pointer :: obj
+    type(sll_t_scalar_field_1d_analytic), pointer :: obj
     procedure(one_var_parametrizable_function)      :: func
     procedure(one_var_parametrizable_function), optional :: first_derivative
     character(len=*), intent(in)                    :: field_name
@@ -215,7 +216,7 @@ contains   ! *****************************************************************
   end function sll_f_new_scalar_field_1d_analytic
 
   subroutine set_field_data_analytic_1d( field, values )
-    class(sll_scalar_field_1d_analytic), intent(inout) :: field
+    class(sll_t_scalar_field_1d_analytic), intent(inout) :: field
     sll_real64, dimension(:), intent(in) :: values
     print *, 'WARNING: set_field_data_analytic_1d(): it is useless to ', &
          'call this function on an analytic scalar field.'
@@ -223,7 +224,7 @@ contains   ! *****************************************************************
   end subroutine set_field_data_analytic_1d
 
   subroutine update_interp_coeffs_1d_analytic( field )
-    class(sll_scalar_field_1d_analytic), intent(inout) :: field
+    class(sll_t_scalar_field_1d_analytic), intent(inout) :: field
     print *, 'WARNING: update_interpolation_coefficients_1d_analytic(): ', &
          ' it is useless to call this function on an analytic scalar field.'
     print*, field%bc_left
@@ -231,7 +232,7 @@ contains   ! *****************************************************************
 
 
   subroutine delete_field_1d_analytic( field )
-    class(sll_scalar_field_1d_analytic), intent(inout) :: field
+    class(sll_t_scalar_field_1d_analytic), intent(inout) :: field
     ! nothing internal do deallocate, just nullify pointers. Can't call
     ! delete on them because the field does not 'own' these data.
     !print*, associated(field%func)
@@ -252,7 +253,7 @@ contains   ! *****************************************************************
     func_params, &
     first_derivative)
 
-    class(sll_scalar_field_1d_analytic), intent(out) :: field
+    class(sll_t_scalar_field_1d_analytic), intent(out) :: field
     procedure(one_var_parametrizable_function)      :: func
     procedure(one_var_parametrizable_function), optional :: first_derivative
     character(len=*), intent(in)                    :: field_name
@@ -299,14 +300,14 @@ contains   ! *****************************************************************
 
 
   function get_cartesian_mesh_1d_analytic( field ) result(res)
-    class(sll_scalar_field_1d_analytic), intent(in) :: field
+    class(sll_t_scalar_field_1d_analytic), intent(in) :: field
     type(sll_t_cartesian_mesh_1d), pointer :: res
     res => field%mesh
   end function get_cartesian_mesh_1d_analytic
 
 
   subroutine write_to_file_analytic_1d( field, tag )
-    class(sll_scalar_field_1d_analytic), intent(inout) :: field
+    class(sll_t_scalar_field_1d_analytic), intent(inout) :: field
     sll_int32, intent(in)                               :: tag
     sll_int32 :: nptsx
     sll_real64, dimension(:), allocatable :: xcoords
