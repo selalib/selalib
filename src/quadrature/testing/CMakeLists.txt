@@ -1,6 +1,7 @@
 IF(BUILD_TESTING)
 
   ADD_LIBRARY( quadrature_helper STATIC test_func_module.F90 )
+  TARGET_LINK_LIBRARIES( quadrature_helper sll_working_precision )
 
   ADD_EXECUTABLE( test_fekete test_fekete.F90 )
   TARGET_LINK_LIBRARIES( test_fekete sll_quadrature )
