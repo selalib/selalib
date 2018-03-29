@@ -71,13 +71,11 @@ contains
     ! Store pointer to B-splines
     self%bspl => bsplines
 
-    ! Allocate array of spline coefficients
-    ! in case of periodic BCs, a larger array of coefficients is used in order
-    ! to avoid a loop with calls to the "mod( , )" function at evaluation.
-    associate( n => bsplines % nbasis, &
-               g => merge( 1 + bsplines % degree/2, 0, bsplines % periodic ) )
+    ! Allocate array of spline coefficients: in case of periodic BCs, the last
+    ! p coefficients are a periodic copy of the first p ones
+    associate( n => bsplines % ncells, p => bsplines % degree )
 
-      allocate( self%bcoef(1-g:n+g) )
+      allocate( self%bcoef(1:n+p) )
 
     end associate
 

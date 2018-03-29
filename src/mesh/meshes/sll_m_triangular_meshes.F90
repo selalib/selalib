@@ -267,7 +267,7 @@ function new_triangular_mesh_2d_from_hex_mesh( hex_mesh ) result(tri_mesh)
     xc = tri_mesh%coord(1,is3)
     yc = tri_mesh%coord(2,is3)
    
-    det = 2.*((xb-xa)*(yc-ya)-(xc-xa)*(yb-ya))
+    det = 2.0_f64*((xb-xa)*(yc-ya)-(xc-xa)*(yb-ya))
     
     if ( det > 0) then
       tri_mesh%nodes(:,i) = [is1,is2,is3]
@@ -405,8 +405,8 @@ sll_real64, intent(in)         :: eta2_max
 sll_int32,  optional           :: bc
 
 !*-----------------------------------------------------------------------
-!*  Generation du maillage pour une plaque rectangulaire dans le plan xOy.
-!*  Maillage regulier de type TRIANGLES P1 - Q4T.
+!*  Mesh generation of rectangular domain 
+!*  TRIANGLES P1 - Q4T.
 !*-----------------------------------------------------------------------
 
 sll_int32 :: i, j
@@ -434,13 +434,11 @@ ndd = max(nbox,nboy)
 alx = eta1_max-eta1_min
 aly = eta2_max-eta2_min
 
-!*---- Determination de quelques utilitaires
-
-nxm    = nbox - 1      !nombre de quadrangles sur l'axe Ox du maillage
-nym    = nboy - 1      !nombre de quadrangles sur l'axe Oy du maillage
-neltot = 2 * nxm * nym !nombre total de triangles du maillage 
-nsom   = nbox * nboy   !nombre de "sommets" du maillage quadrangulaire
-noeud  = nsom          !nombre total de noeuds
+nxm    = nbox - 1      !number quadrangles x 
+nym    = nboy - 1      !number quadrangles y
+neltot = 2 * nxm * nym !number total triangles 
+nsom   = nbox * nboy   !number nodes
+noeud  = nsom          !number total nodes
 
 mesh%num_triangles = neltot
 mesh%num_nodes     = noeud
@@ -449,63 +447,58 @@ SLL_ALLOCATE(mesh%nodes(1:3,1:neltot),ierr); mesh%nodes = 0
 SLL_ALLOCATE(mesh%nvois(3,1:neltot),ierr); mesh%nvois = 0
 SLL_ALLOCATE(mesh%refs(1:noeud),ierr); mesh%refs = 0
 
-!*---- Ecriture des coordonnees des sommets ----*!
                   
-pasx0 = alx / nxm                   !pas le long de OX
-pasx1 = pasx0 * 0.5                 !demi - pas       
-pasy0 = aly / nym                   !pas le long de OY
-pasy1 = pasy0 * 0.5                 !demi - pas       
+pasx0 = alx / real(nxm,f64)                  
+pasx1 = pasx0 * 0.5_f64               
+pasy0 = aly / real(nym,f64)
+pasy1 = pasy0 * 0.5_f64
 
-do n = 0 , nym       !Coordonnees des noeuds
+do n = 0 , nym      
    in = nbox * n
    do i = 1 , nbox
-      iin = in + i                  !numero du noeud
-      xx1 = eta1_min + alx - (i - 1) * pasx0   !coordonnees du noeud
-      xx2 = eta2_min + n * pasy0 
+      iin = in + i                  
+      xx1 = eta1_min + alx - real(i-1,f64) * pasx0 
+      xx2 = eta2_min + real(n,f64) * pasy0 
       mesh%coord(1,iin) = xx1
       mesh%coord(2,iin) = xx2
    end do
 end do
 
-!*---- Table de connectivite ----*!
 
-nelt = 0                        !initialisation
-do l = 1 , nym                  !boucle sur les lignes
+nelt = 0                      
+do l = 1 , nym               
 
    l1  = l - 1
    ll1 = l1 * nbox
    ll2 = l  * nbox 
 
-   do i = 1 , nxm               !boucle sur les colonnes
+   do i = 1 , nxm           
 
       nd1 = ll1 + i             
       nd2 = ll2 + i             
       nd3 = ll2 + i + 1         
 
-      nelt = nelt + 1           !premier e.f. du "quadrangle"
+      nelt = nelt + 1      
 
-      mesh%nodes(1,nelt) = nd1       !premier  noeud
-      mesh%nodes(2,nelt) = nd2       !deuxieme noeud
-      mesh%nodes(3,nelt) = nd1 + 1   !troisieme noeud
+      mesh%nodes(1,nelt) = nd1     
+      mesh%nodes(2,nelt) = nd2    
+      mesh%nodes(3,nelt) = nd1 + 1
 
-      nelt = nelt + 1           !second e.f. du "quadrangle"
+      nelt = nelt + 1          
        
-      mesh%nodes(1,nelt) = nd1 + 1   !premier noeud        
-      mesh%nodes(2,nelt) = nd2       !deuxieme noeud
-      mesh%nodes(3,nelt) = nd3       !troisieme noeud
+      mesh%nodes(1,nelt) = nd1 + 1 
+      mesh%nodes(2,nelt) = nd2    
+      mesh%nodes(3,nelt) = nd3   
 
    end do
 
 end do
 
-!*** Recherche des elements sur la frontiere
 nefro = 4*(nbox-2) + 4*(nboy-2)
 nelfr = 2*(nbox-1) + 2*(nboy-1) - 2
 nelin = neltot - nelfr 
 
 allocate(nar(2*(nbox+nboy)))
-
-!---- Description des frontieres ----
 
 nhp = nbox + 1
 do i = 1 , nbox
@@ -531,7 +524,6 @@ do i = 1 , nboy
 end do        
 
 mesh%nmxfr = 0
-!*** Initialisation des voisins ***
 
 if (present(bc)) then
 
@@ -554,14 +546,10 @@ if (present(bc)) then
 
 else
 
-   !*** Voisins en bas et en haut
-   
    do i = 1, 2*(nbox-1), 2
       mesh%nvois(3,i      ) = -1
       mesh%nvois(2,neltot-i+1) = -3
    end do
-   
-   !*** Voisins de chaque cote lateral
    
    mesh%nvois(1,1) = -2
    nhp = 2*(nbox-1)
@@ -682,10 +670,10 @@ end do
 do i = 1, mesh%num_triangles
    x1 = (  mesh%coord(1,mesh%nodes(1,i))  &
          + mesh%coord(1,mesh%nodes(2,i))  &
-     + mesh%coord(1,mesh%nodes(3,i))    )/3.
+     + mesh%coord(1,mesh%nodes(3,i))    )/3.0_f64
    y1 = (  mesh%coord(2,mesh%nodes(1,i))  &
          + mesh%coord(2,mesh%nodes(2,i))  &
-     + mesh%coord(2,mesh%nodes(3,i))    )/3.
+     + mesh%coord(2,mesh%nodes(3,i))    )/3.0_f64
    write(out_unit,"(a)"   , advance="no")"@text x1="
    write(out_unit,"(f8.5)", advance="no") x1
    write(out_unit,"(a)"   , advance="no")" y1="
@@ -750,10 +738,10 @@ end do
 do i = 1, mesh%num_triangles
    x1 = (  mesh%coord(1,mesh%nodes(1,i))  &
          + mesh%coord(1,mesh%nodes(2,i))  &
-     + mesh%coord(1,mesh%nodes(3,i))    )/3.
+     + mesh%coord(1,mesh%nodes(3,i))    )/3.0_f64
    y1 = (  mesh%coord(2,mesh%nodes(1,i))  &
          + mesh%coord(2,mesh%nodes(2,i))  &
-     + mesh%coord(2,mesh%nodes(3,i))    )/3.
+     + mesh%coord(2,mesh%nodes(3,i))    )/3.0_f64
    write(out_unit,"(a)"   , advance="no")"@text x1="
    write(out_unit,"(g15.3)", advance="no") x1
    write(out_unit,"(a)"   , advance="no")" y1="
@@ -787,9 +775,9 @@ do i = 1, mesh%num_triangles
       x2 = mesh%coord(1,mesh%nodes(l,i))
       y2 = mesh%coord(2,mesh%nodes(l,i))
       write(out_unit,"(a)"    , advance="no")"@text x1="
-      write(out_unit,"(g15.3)", advance="no") 0.5*(x1+x2)
+      write(out_unit,"(g15.3)", advance="no") 0.5_f64*(x1+x2)
       write(out_unit,"(a)"    , advance="no")" y1="
-      write(out_unit,"(g15.3)", advance="no") 0.5*(y1+y2)
+      write(out_unit,"(g15.3)", advance="no") 0.5_f64*(y1+y2)
       write(out_unit,"(a)"    , advance="no")" z1=0. lc=5 ll='"
       write(out_unit,"(i1)"   , advance="no") -mesh%nvois(j,i)
       write(out_unit,"(a)")"'"
@@ -869,8 +857,8 @@ do i = 1, mesh%nbtcot
    write(out_unit,"(3f10.5)")mesh%coord(:,mesh%nuvac(1,i)),0.
    write(out_unit,"(3f10.5)")mesh%coord(:,mesh%nuvac(2,i)),0.
    write(out_unit,*)
-   x1 = 0.5*(mesh%coord(1,mesh%nuvac(1,i))+mesh%coord(1,mesh%nuvac(2,i)))
-   y1 = 0.5*(mesh%coord(2,mesh%nuvac(1,i))+mesh%coord(2,mesh%nuvac(2,i)))
+   x1 = 0.5_f64*(mesh%coord(1,mesh%nuvac(1,i))+mesh%coord(1,mesh%nuvac(2,i)))
+   y1 = 0.5_f64*(mesh%coord(2,mesh%nuvac(1,i))+mesh%coord(2,mesh%nuvac(2,i)))
    write(out_unit,"(a)"   ,  advance="no")"@text x1="
    write(out_unit,"(g15.3)", advance="no") x1
    write(out_unit,"(a)"   ,  advance="no")" y1="
@@ -995,7 +983,7 @@ yb = mesh%coord(2,mesh%nodes(2,iel))
 xc = mesh%coord(1,mesh%nodes(3,iel))
 yc = mesh%coord(2,mesh%nodes(3,iel))
 
-det  = 2.*((xb-xa)*(yc-ya)-(xc-xa)*(yb-ya))
+det  = 2.0_f64*((xb-xa)*(yc-ya)-(xc-xa)*(yb-ya))
 syca = (yc-ya)*(xb*xb-xa*xa+yb*yb-ya*ya)
 syba = (xb-xa)*(xc*xc-xa*xa+yc*yc-ya*ya)
 
@@ -1028,12 +1016,12 @@ end if
 i = 2
 do cell = 1, num_cells
   if (cell > num_cells - layer) then
-    r     = cell * 1.0_f64 / num_cells
+    r     = real(cell,f64) * 1.0_f64 / real(num_cells,f64)
     alpha = sll_p_pi / 6.0_f64
     do j = 1, cell*6
       mesh%coord(1,i+j-1) = r * cos(alpha)
       mesh%coord(2,i+j-1) = r * sin(alpha)
-      alpha =  alpha + sll_p_pi / (3.0_f64 * cell)
+      alpha =  alpha + sll_p_pi / real(3 * cell, f64)
     end do
   end if
   i = i + cell*6
@@ -1069,8 +1057,8 @@ xlmu = maxval(mesh%coord(1,:))
 ylml = minval(mesh%coord(2,:))
 ylmu = maxval(mesh%coord(2,:))
 
-mesh%petitl = 1.e-04 * min(xlmu-xlml,ylmu-ylml)/sqrt(real(mesh%num_nodes,8))
-mesh%grandl = 1.e+04 * max(xlmu-xlml,ylmu-ylmu)
+mesh%petitl = 1.d-04 * min(xlmu-xlml,ylmu-ylml)/sqrt(real(mesh%num_nodes,8))
+mesh%grandl = 1.d+04 * max(xlmu-xlml,ylmu-ylmu)
 
 !*** Calcul des aires des triangles
 #ifdef DEBUG
@@ -1088,9 +1076,9 @@ do it = 1, mesh%num_triangles
    lx2 = mesh%coord(1,mesh%nodes(3,it))-mesh%coord(1,mesh%nodes(1,it))
    ly2 = mesh%coord(2,mesh%nodes(2,it))-mesh%coord(2,mesh%nodes(1,it))
 
-   mesh%aire(it) = 0.5 * abs(lx1*ly1 - lx2*ly2)
+   mesh%aire(it) = 0.5_f64 * abs(lx1*ly1 - lx2*ly2)
 
-   if( mesh%aire(it) <= 0. ) then
+   if( mesh%aire(it) <= 0.0_f64 ) then
      write(6,*) " Triangle : ", it
      write(6,*) mesh%nodes(1,it), ":",mesh%coord(1:2,mesh%nodes(1,it))
      write(6,*) mesh%nodes(2,it), ":",mesh%coord(1:2,mesh%nodes(2,it))

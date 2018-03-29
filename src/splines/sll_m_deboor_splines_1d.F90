@@ -660,7 +660,7 @@ do j = 1, jderiv
    
   ilo = k - j
   do jj = 1, k - j
-    aj(jj) = ((aj(jj+1)-aj(jj))/(dl(ilo)+dr(jj)))*(k-j)
+    aj(jj) = ((aj(jj+1)-aj(jj))/(dl(ilo)+dr(jj)))*real(k-j,8)
     ilo = ilo - 1
   end do
    
