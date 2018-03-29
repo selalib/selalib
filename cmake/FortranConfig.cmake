@@ -50,7 +50,11 @@ ELSEIF (CMAKE_Fortran_COMPILER_ID MATCHES GNU)
   IF(NOT APPLE)
     SET(CMAKE_Fortran_FLAGS_RELEASE "${CMAKE_Fortran_FLAGS_RELEASE} -march=native")
   ENDIF()
-  SET(CMAKE_Fortran_FLAGS_DEBUG "-std=f2008 -ffree-line-length-none -fstack-arrays -O0 -g -fbacktrace -Werror=intrinsics-std -Wall -pedantic -Wconversion-extra -Wuninitialized -fcheck=array-temps,bounds,do,pointer,recursion -ffpe-trap=invalid,zero,overflow")
+  SET(CMAKE_Fortran_FLAGS_DEBUG "-std=f2008 -ffree-line-length-none \
+  -fstack-arrays -O0 -g -fbacktrace -Werror=intrinsics-std -Wall \
+  -pedantic -Wconversion-extra -Wuninitialized \
+  -fcheck=array-temps,bounds,do,pointer,recursion \
+  -ffpe-trap=invalid,zero,overflow") #-Wno-integer-division -Werror")
 
   SET(UNUSED_FUNCTION_WARNING_ENABLED OFF CACHE BOOL "Add -Wunused-function flag to gfortran")
   IF(NOT UNUSED_FUNCTION_WARNING_ENABLED)
