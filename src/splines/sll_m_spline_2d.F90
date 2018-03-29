@@ -82,16 +82,15 @@ contains
     self%bspl1 => bsplines_x1
     self%bspl2 => bsplines_x2
 
-    ! Allocate array of spline coefficients
-    ! in case of periodic BCs, a larger array of coefficients is used in order
-    ! to avoid a loop with calls to the "mod( , )" function at evaluation.
-    associate( n1 => bsplines_x1 % nbasis, &
-               n2 => bsplines_x2 % nbasis, &
-               g1 => merge( 1 + bsplines_x1 % degree/2, 0, bsplines_x1 % periodic ), &
-               g2 => merge( 1 + bsplines_x2 % degree/2, 0, bsplines_x2 % periodic ) )
+    ! Allocate array of spline coefficients: in case of periodic BCs, the last
+    ! p coefficients are a periodic copy of the first p ones (p=p1,p2)
+    associate( n1 => bsplines_x1 % ncells, &
+               n2 => bsplines_x2 % ncells, &
+               p1 => bsplines_x1 % degree, &
+               p2 => bsplines_x2 % degree )
 
-      allocate( self%bcoef(1-g1:n1+g1,1-g2:n2+g2) )
-      
+      allocate( self%bcoef(1:n1+p1,1:n2+p2) )
+ 
     end associate
 
     ! Set all coefficients to zero

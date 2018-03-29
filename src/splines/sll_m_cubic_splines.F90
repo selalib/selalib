@@ -639,7 +639,7 @@ MAKE_GET_SLOT_FUNCTION(sll_f_cubic_spline_2d_get_x2_delta,sll_t_cubic_spline_2d,
     ! This requires the subtraction of the  2*slope*delta*(i-1) term...
     do i = 2, NUM_TERMS  ! if NUM_TERMS == 2, only f(2) is considered.
        coeff_tmp = coeff_tmp*(-b_a)
-       d1 = d1 + coeff_tmp*(f(i)-2.0*slope_l*delta*(i-1)) 
+       d1 = d1 + coeff_tmp*(f(i)-2.0_f64*slope_l*delta*real(i-1,f64)) 
     end do
     ! Fill the d array with the intermediate result
     d(1) = d1*r_a
@@ -653,8 +653,8 @@ MAKE_GET_SLOT_FUNCTION(sll_f_cubic_spline_2d_get_x2_delta,sll_t_cubic_spline_2d,
     do i = np-1, 1, -1
        coeffs(i+1) = r_a*(d(i) - b*coeffs(i+2))
     end do
-    coeffs(1)    = coeffs(3)  - 2.0 * delta * slope_l
-    coeffs(np+2) = coeffs(np) + 2.0 * delta * slope_r
+    coeffs(1)    = coeffs(3)  - 2.0_f64 * delta * slope_l
+    coeffs(np+2) = coeffs(np) + 2.0_f64 * delta * slope_r
     coeffs(np+3) = 0.0_f64 !coeffs(np-2)  ! not used
   end subroutine compute_spline_1D_hermite_aux
 
@@ -2160,11 +2160,13 @@ MAKE_GET_SLOT_FUNCTION(sll_f_cubic_spline_2d_get_x2_delta,sll_t_cubic_spline_2d,
         ! checking if the particle is well localized
         ! the particle is in the cell (cell1,cell2)
         ! placed in ((cell1-1)/rh1+x1_min,(cell2-1)/rh2+x2_min)
-        if (((cell1-1)/rh1+x1_min>x1(i1,i2)).or.(x1(i1,i2)>cell1/rh1+x1_min)) then
-          print*,'problem with the localization of r', (cell1-1)/rh1+x1_min,x1(i1,i2),cell1/rh1+x1_min,dx1
+        if ((real(cell1-1,f64)/rh1+x1_min>x1(i1,i2)).or.(x1(i1,i2)>real(cell1,f64)/rh1+x1_min)) then
+          print*,'problem with the localization of r', &
+          real(cell1-1,f64)/rh1+x1_min,x1(i1,i2),real(cell1,f64)/rh1+x1_min,dx1
         end if
-        if (((cell2-1)/rh2+x2_min>x2(i1,i2)).or.(x2(i1,i2)>cell2/rh2+x2_min)) then
-          print*,'problem with the localization of theta', (cell2-1)/rh2+x2_min,x2(i1,i2),cell2/rh2+x2_min,dx2
+        if ((real(cell2-1,f64)/rh2+x2_min>x2(i1,i2)).or.(x2(i1,i2)>real(cell2,f64)/rh2+x2_min)) then
+          print*,'problem with the localization of theta', &
+          real(cell2-1,f64)/rh2+x2_min,x2(i1,i2),real(cell2,f64)/rh2+x2_min,dx2
         end if
 
         cij = spline%coeffs(i1,i2)

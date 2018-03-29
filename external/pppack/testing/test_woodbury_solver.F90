@@ -36,7 +36,7 @@ do i = 1, n
 end do
 
 do i = 1, n
-  b(i) = 1.0_8 *i
+  b(i) = 1.0_8 * real(i,kind=8)
 end do
 
 q = 0.0_8

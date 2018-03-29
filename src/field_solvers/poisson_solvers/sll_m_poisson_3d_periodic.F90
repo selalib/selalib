@@ -54,14 +54,14 @@ contains
   !> @return
   subroutine sll_s_poisson_3d_periodic_init(self, nx ,ny ,nz, Lx, Ly, Lz) 
 
-    sll_int32                                    :: nx   !< number of points in x
-    sll_int32                                    :: ny   !< number of points in y
-    sll_int32                                    :: nz   !< number of points in z
-    sll_int32                                    :: ierr
-    sll_real64                                   :: Lx   !< Length along x
-    sll_real64                                   :: Ly   !< Length along y
-    sll_real64                                   :: Lz   !< Length along z
-    type (sll_t_poisson_3d_periodic)             :: self !< Poisson solver type
+    sll_int32                              :: nx   !< number of points in x
+    sll_int32                              :: ny   !< number of points in y
+    sll_int32                              :: nz   !< number of points in z
+    sll_int32                              :: ierr
+    sll_real64                             :: Lx   !< Length along x
+    sll_real64                             :: Ly   !< Length along y
+    sll_real64                             :: Lz   !< Length along z
+    type (sll_t_poisson_3d_periodic)       :: self !< Poisson solver type
 
     SLL_ALLOCATE(self%hat_rho(1:nx,1:ny,1:nz), ierr)
     SLL_ALLOCATE(self%hat_phi(1:nx,1:ny,1:nz), ierr)

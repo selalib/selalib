@@ -97,7 +97,8 @@ contains
     type(sll_t_penta_diagonal_solver), pointer :: plan
     sll_real64                              :: s, t, p, l1, l2
     sll_real64                              :: d, d1, d2
-    sll_int32                               :: n, i, sign_of_a=0
+    sll_int32                               :: n, i
+    sll_real64                              :: sign_of_a=0.0_f64
 
     if ( abs(a) <= 2.0_f64*(abs(b)+abs(c)) ) then
       print*, 'a, b, and c must be such that: |a| > 2(|b|+|c|)'
@@ -112,11 +113,11 @@ contains
     t = a*a/2 - b*b - 2*c*c
 
     if (a/=0.0_f64) then
-       sign_of_a = int(a/abs(a))
+       sign_of_a = a/abs(a)
     endif
 
-    p = (a-2*c)/4 + real(sign_of_a,f64)*sqrt(sign_of_a*(a-2*c)* &
-                     sqrt(s)+t)/2.0_f64 + real(sign_of_a,f64)*sqrt(s)/2.0_f64
+    p = (a-2*c)/4 + sign_of_a*sqrt(sign_of_a*(a-2*c)* &
+                     sqrt(s)+t)/2.0_f64 + sign_of_a*sqrt(s)/2.0_f64
     l1 = b/(p+c)
     l2 = c/p
 

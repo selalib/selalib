@@ -92,16 +92,17 @@ contains
     ! Some checks
     SLL_ASSERT( n(1) == n(2) )
 
+    ! Construct temporary vector spaces, if not done already at initialization
+    if ( .not. self % allocate_once ) then
+
+      call x % source( self % p )
+      call x % source( self % r )
+      call x % source( self % v )
+
+    end if
+
+    ! Conjugate gradient algorithm
     associate( p => self % p, r => self % r, v => self % v )
-
-      ! Construct temporary vector spaces, if not done already at initialization
-      if ( .not. self % allocate_once ) then
-
-        call x % source( p )
-        call x % source( r )
-        call x % source( v )
-
-      end if
 
       ! First values
       call A % dot( x, p )     ! p = Ax
@@ -129,21 +130,23 @@ contains
 
       end do
 
-      ! Destroy temporary vector spaces, if not done only once by 'free' method
-      if ( .not. self % allocate_once ) then
-
-        call p % delete()
-        call r % delete()
-        call v % delete()
-
-      end if
-
     end associate
 
+    ! Destroy temporary vector spaces, if not done only once by 'free' method
+    if ( .not. self % allocate_once ) then
+
+      call self % p % delete()
+      call self % r % delete()
+      call self % v % delete()
+
+    end if
+
+    ! Store info
     self % iterations = m
     self % success    = .true.
     self % residual   = sqrt( am )
 
+    ! Verbose output
     if ( self % verbose ) write(*,'(/a,i0,a,es8.2)') " CG method converged after ", &
                           self % iterations, " iterations with residual " , self % residual
 

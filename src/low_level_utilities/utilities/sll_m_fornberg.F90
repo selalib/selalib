@@ -101,12 +101,12 @@ contains
         c2 = c2*c3
         if (j == i-1) then
           do k = mn, 1, -1
-            c(i, k) = c1*(k*c(i-1, k-1) - c5*c(i-1, k))/c2
+            c(i, k) = c1*(real(k,kind=8)*c(i-1, k-1) - c5*c(i-1, k))/c2
           end do
           c(i, 0) = -c1*c5*c(i-1, 0)/c2
         endif
         do k=mn,1,-1
-          c(j, k) = (c4*c(j, k) - k*c(j, k-1))/c3
+          c(j, k) = (c4*c(j, k) - real(k,kind=8)*c(j, k-1))/c3
         end do
         c(j, 0) = c4*c(j, 0)/c3
       end do
