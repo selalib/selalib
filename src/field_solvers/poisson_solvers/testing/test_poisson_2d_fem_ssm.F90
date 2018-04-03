@@ -1,7 +1,6 @@
 program test_poisson_2d_fem_ssm
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_assert.h"
-#include "sll_errors.h"
 
   use sll_m_working_precision, only: f64
 
@@ -19,8 +18,6 @@ program test_poisson_2d_fem_ssm
 
   use sll_m_spline_interpolator_1d, only: sll_s_spline_1d_compute_num_cells 
 
-  use sll_m_polar_bsplines_2d, only: sll_t_polar_bsplines_2d
-
   use sll_m_polar_mapping_analytical, only: sll_c_polar_mapping_analytical
 
   use sll_m_polar_mapping_analytical_target, only: sll_t_polar_mapping_analytical_target
@@ -29,21 +26,7 @@ program test_poisson_2d_fem_ssm
 
   use sll_m_polar_mapping_iga, only: sll_t_polar_mapping_iga
 
-  use sll_m_poisson_2d_fem_ssm_weak_form, only: sll_t_poisson_2d_fem_ssm_weak_form
-
-  use sll_m_poisson_2d_fem_ssm_assembler, only: sll_t_poisson_2d_fem_ssm_assembler
-
-  use sll_m_poisson_2d_fem_ssm_projector, only: sll_t_poisson_2d_fem_ssm_projector
-
-  use sll_m_vector_space_real_arrays, only: sll_t_vector_space_real_1d
-
-  use sll_m_linear_operator_matrix_dense, only: sll_t_linear_operator_matrix_dense
-
-  use sll_m_conjugate_gradient, only: sll_t_conjugate_gradient
-
-  use sll_m_gauss_legendre_integration, only: &
-    sll_f_gauss_legendre_points, &
-    sll_f_gauss_legendre_weights
+  use sll_m_poisson_2d_fem_ssm, only: sll_t_poisson_2d_fem_ssm
 
   use sll_m_hdf5_io_serial, only: &
     sll_t_hdf5_ser_handle     , &
@@ -73,69 +56,8 @@ program test_poisson_2d_fem_ssm
   class(sll_c_polar_mapping_analytical), allocatable :: mapping_analytical
   type(sll_t_polar_mapping_iga) :: mapping_iga
 
-  ! Polar B-splines
-  type(sll_t_polar_bsplines_2d) :: polar_bsplines
-
-  ! Number of finite elements
-  integer :: Nk1, Nk2
-
-  ! Number of Gauss-Legendre quadrature points
-  integer :: Nq1, Nq2
-
-  ! Quadrature points
-  real(wp), allocatable :: quad_points_eta1(:,:)
-  real(wp), allocatable :: quad_points_eta2(:,:)
-
-  ! Quadrature weights
-  real(wp), allocatable :: quad_weights_eta1(:,:)
-  real(wp), allocatable :: quad_weights_eta2(:,:)
-
-  ! 1D data (B-splines values and derivatives)
-  real(wp), allocatable :: data_1d_eta1(:,:,:,:)
-  real(wp), allocatable :: data_1d_eta2(:,:,:,:)
-
-  ! 2D data (inverse metric tensor, integral volume, right hand side)
-  real(wp), allocatable :: int_volume(:,:,:,:)
-  real(wp), allocatable :: inv_metric(:,:,:,:,:,:)
-  real(wp), allocatable :: data_2d_rhs(:,:,:,:)
-
-  ! Stiffness and mass matrices and C1 projections
-  real(wp), allocatable :: A (:,:)
-  real(wp), allocatable :: M (:,:)
-  real(wp), allocatable :: Ap(:,:)
-  real(wp), allocatable :: Mp(:,:)
-
-  ! Matrix for barycentric coordinates
-  real(wp), allocatable :: L(:,:)
-
-  ! Right hand side vector and C1 projection
-  real(wp), allocatable :: b (:)
-  real(wp), allocatable :: bp(:)
-
-  ! Solution and C1 projection
-  real(wp), allocatable :: x (:)
-  real(wp), allocatable :: xp(:)
-
-  ! Weak form
-  type(sll_t_poisson_2d_fem_ssm_weak_form) :: weak_form
-
-  ! Assembler
-  type(sll_t_poisson_2d_fem_ssm_assembler) :: assembler
-
-  ! C1 projector
-  type(sll_t_poisson_2d_fem_ssm_projector) :: projector
-
-  ! Linear solver
-  type(sll_t_vector_space_real_1d)         :: bp_vecsp
-  type(sll_t_vector_space_real_1d)         :: xp_vecsp
-  type(sll_t_linear_operator_matrix_dense) :: Ap_linop
-  type(sll_t_conjugate_gradient)           :: cjsolver
-  real(wp), parameter :: tol = 1.0e-14_wp
-  logical , parameter :: verbose = .false.
-
-  ! Auxiliary/temporary variables
-  integer  :: i, j, k, k1, k2, q1, q2
-  real(wp) :: cx, cy, jdet, eta(2), jmat(2,2)
+  ! Poisson solver
+  type(sll_t_poisson_2d_fem_ssm) :: solver
 
   ! For hdf5 I/O
   type(sll_t_hdf5_ser_handle) :: file_id
@@ -214,262 +136,15 @@ program test_poisson_2d_fem_ssm
   ! Discrete mapping
   call mapping_iga % init( bsplines_eta1, bsplines_eta2, mapping_analytical )
 
-  ! Polar B-splines
-  call polar_bsplines % init( bsplines_eta1, bsplines_eta2, mapping_iga )
-
   !-----------------------------------------------------------------------------
-  ! Allocations
+  ! Poisson solver
   !-----------------------------------------------------------------------------
 
-  ! Number of finite elements
-  Nk1 = size( breaks_eta1 )-1
-  Nk2 = size( breaks_eta2 )-1
+  ! Initialize
+  call solver % init( bsplines_eta1, bsplines_eta2, breaks_eta1, breaks_eta2, mapping_iga )
 
-  ! Number of Gauss-Legendre quadrature points
-  Nq1 = p1 + 1
-  Nq2 = p2 + 1
-
-  ! Quadrature points
-  allocate( quad_points_eta1( Nq1, Nk1 ) )
-  allocate( quad_points_eta2( Nq2, Nk2 ) )
-
-  ! Quadrature weights
-  allocate( quad_weights_eta1( Nq1, Nk1 ) )
-  allocate( quad_weights_eta2( Nq2, Nk2 ) )
-
-  ! 1D data
-  allocate( data_1d_eta1( Nq1, 2, 1+p1, Nk1 ) )
-  allocate( data_1d_eta2( Nq2, 2, 1+p2, Nk2 ) )
-
-  ! 2D data
-  allocate( int_volume ( Nq1, Nq2, Nk1, Nk2 ) )
-  allocate( inv_metric ( Nq1, Nq2, Nk1, Nk2, 2, 2 ) )
-  allocate( data_2d_rhs( Nq1, Nq2, Nk1, Nk2 ) )
-
-  ! Barycentric coordinates
-  allocate( L( 2*n2, 3 ) )
-
-  ! Stiffness and mass matrices
-  allocate( A( n1*n2, n1*n2 ) )
-  allocate( M( n1*n2, n1*n2 ) )
-
-  ! Right hand side
-  allocate( b( n1*n2 ) )
-
-  ! Solution
-  allocate( x( n1*n2 ) )
-
-  ! C1 projections
-  associate( nn => 3+(n1-2)*n2 )
-
-    ! Stiffness and mass matrices
-    allocate( Ap( nn, nn ) )
-    allocate( Mp( nn, nn ) )
-
-    ! Right hand side
-    allocate( bp( nn ) )
-
-    ! Solution
-    allocate( xp( nn ) )
-
-  end associate
-
-  !-----------------------------------------------------------------------------
-  ! Initialize quadrature points and weights
-  !-----------------------------------------------------------------------------
-
-  ! Quadrature points and weights along s
-  do k1 = 1, Nk1
-    quad_points_eta1 (:,k1) = sll_f_gauss_legendre_points ( Nq1, breaks_eta1(k1), breaks_eta1(k1+1) )
-    quad_weights_eta1(:,k1) = sll_f_gauss_legendre_weights( Nq1, breaks_eta1(k1), breaks_eta1(k1+1) )
-  end do
-
-  ! Quadrature points and weights along theta
-  do k2 = 1, Nk2
-    quad_points_eta2 (:,k2) = sll_f_gauss_legendre_points ( Nq2, breaks_eta2(k2), breaks_eta2(k2+1) )
-    quad_weights_eta2(:,k2) = sll_f_gauss_legendre_weights( Nq2, breaks_eta2(k2), breaks_eta2(k2+1) )
-  end do
-
-  !-----------------------------------------------------------------------------
-  ! Fill in 1D data
-  !-----------------------------------------------------------------------------
-
-  ! 1D data along s
-  do k1 = 1, Nk1
-    do q1 = 1, Nq1
-      call bsplines_eta1 % eval_basis_and_n_derivs( &
-        x      = quad_points_eta1(q1,k1), &
-        n      = 1, &
-        derivs = data_1d_eta1(q1,:,:,k1), &
-        jmin   = i )
-    end do
-  end do
-
-  ! 1D data along theta
-  do k2 = 1, Nk2
-    do q2 = 1, Nq2
-      call bsplines_eta2 % eval_basis_and_n_derivs( &
-        x      = quad_points_eta2(q2,k2), &
-        n      = 1, &
-        derivs = data_1d_eta2(q2,:,:,k2), &
-        jmin   = i )
-    end do
-  end do
-
-  !-----------------------------------------------------------------------------
-  ! Fill in 2D data
-  !-----------------------------------------------------------------------------
-
-  ! 2D data
-  do k2 = 1, Nk2
-    do k1 = 1, Nk1
-      do q2 = 1, Nq2
-        do q1 = 1, Nq1
-
-          eta  = [ quad_points_eta1(q1,k1), quad_points_eta2(q2,k2) ]
-
-          jdet = mapping_iga % jdet( eta )
-          jmat = mapping_iga % jmat( eta )
-
-          ! Area associated to each quadrature point
-          int_volume(q1,q2,k1,k2) = abs( jdet ) * quad_weights_eta1(q1,k1) * quad_weights_eta2(q2,k2)
-
-          ! Inverse metric tensor
-          inv_metric(q1,q2,k1,k2,1,1) = jmat(1,2)**2 + jmat(2,2)**2
-          inv_metric(q1,q2,k1,k2,1,2) = - jmat(1,1)*jmat(1,2) - jmat(2,1)*jmat(2,2)
-          inv_metric(q1,q2,k1,k2,2,1) = inv_metric(q1,q2,k1,k2,1,2) ! symmetry
-          inv_metric(q1,q2,k1,k2,2,2) = jmat(1,1)**2 + jmat(2,1)**2
-          inv_metric(q1,q2,k1,k2,:,:) = inv_metric(q1,q2,k1,k2,:,:) / jdet**2
-
-        end do
-      end do
-    end do
-  end do
-
-  ! 2D discrete RHS
-  do k2 = 1, Nk2
-    do k1 = 1, Nk1
-      do q2 = 1, Nq2
-        do q1 = 1, Nq1
-
-          eta = [ quad_points_eta1(q1,k1), quad_points_eta2(q2,k2) ]
-
-          data_2d_rhs(q1,q2,k1,k2) = rhs( eta, mapping_iga )
-
-        end do
-      end do
-    end do
-  end do
-
-  !-----------------------------------------------------------------------------
-  ! Matrix of barycentric coordinates
-  !-----------------------------------------------------------------------------
-
-  do i = 1, 2*n2
-
-    ! Indices to access control points
-    j = (i-1) / n2 + 1
-    k = modulo( (i-1), n2 ) + 1
-
-    cx = mapping_iga % spline_2d_x1 % bcoef(j,k)
-    cy = mapping_iga % spline_2d_x2 % bcoef(j,k)
-
-    L(i,1) = polar_bsplines % eval_l0( cx, cy )
-    L(i,2) = polar_bsplines % eval_l1( cx, cy )
-    L(i,3) = polar_bsplines % eval_l2( cx, cy )
-
-  end do
-
-  !-----------------------------------------------------------------------------
-  ! Initialize assembler and projector
-  !-----------------------------------------------------------------------------
-
-  call assembler % init( n1, n2, weak_form )
-  call projector % init( n1, n2, L )
-
-  !-----------------------------------------------------------------------------
-  ! Allocate and fill stiffness and mass matrices
-  !-----------------------------------------------------------------------------
-
-  A = 0.0_wp
-  M = 0.0_wp
-
-  ! Cycle over finite elements
-  do k2 = 1, Nk2
-    do k1 = 1, Nk1
-      call assembler % add_element_mat( &
-        k1          , &
-        k2          , &
-        data_1d_eta1, &
-        data_1d_eta2, &
-        int_volume  , &
-        inv_metric  , &
-        A           , &
-        M )
-    end do
-  end do
-
-  !-----------------------------------------------------------------------------
-  ! Allocate and fill right hand side
-  !-----------------------------------------------------------------------------
-
-  b = 0.0_wp
-
-  ! Cycle over finite elements
-  do k2 = 1, Nk2
-    do k1 = 1, Nk1
-      call assembler % add_element_rhs( &
-        k1          , &
-        k2          , &
-        data_1d_eta1, &
-        data_1d_eta2, &
-        data_2d_rhs , &
-        int_volume  , &
-        b )
-    end do
-  end do
-
-  !-----------------------------------------------------------------------------
-  ! Compute C1 projections
-  !-----------------------------------------------------------------------------
-
-  call projector % change_basis_matrix( A, Ap )
-  call projector % change_basis_matrix( M, Mp )
-
-  call projector % change_basis_vector( b, bp )
-
-  !-----------------------------------------------------------------------------
-  ! Initialize and solve linear system (homogeneous Dirichlet boundary conditions)
-  !-----------------------------------------------------------------------------
-
-  associate( idx => 3+(n1-3)*n2 )
-
-  ! Construct linear operator from matrix Ap
-  call Ap_linop % init( Ap(:idx,:idx) )
-
-  ! Construct vector space from vector bp
-  call bp_vecsp % attach( bp(:idx) )
-
-  ! Construct vector space for solution
-  xp = 0.0_wp
-  call xp_vecsp % attach( xp(:idx) )
-
-  ! Initialize conjugate gradient solver
-  call cjsolver % init( tol=tol, verbose=verbose, template_vector=xp_vecsp )
-
-  ! Solve linear system Ap*xp=bp
-  call cjsolver % solve( A=Ap_linop, b=bp_vecsp, x=xp_vecsp )
-
-  ! Copy solution into array xp
-  xp(:idx) = xp_vecsp % array
-
-  end associate
-
-  !-----------------------------------------------------------------------------
-  ! Compute solution in tensor-product space
-  !-----------------------------------------------------------------------------
-
-  call projector % change_basis_vector_inverse( xp, x )
+  ! Solve
+  call solver % solve( rhs )
 
   !-----------------------------------------------------------------------------
   ! HDF5 I/O
@@ -485,31 +160,31 @@ program test_poisson_2d_fem_ssm
   call sll_o_hdf5_ser_write_attribute( file_id, "/", "p2", p2, h5_error )
 
   ! Write stiffness matrix
-  call sll_o_hdf5_ser_write_array( file_id, A, "/A", h5_error )
+  call sll_o_hdf5_ser_write_array( file_id, solver % A, "/A", h5_error )
 
   ! Write mass matrix
-  call sll_o_hdf5_ser_write_array( file_id, M, "/M", h5_error )
+  call sll_o_hdf5_ser_write_array( file_id, solver % M, "/M", h5_error )
 
   ! Write L matrix needed for projection
-  call sll_o_hdf5_ser_write_array( file_id, L, "/L", h5_error )
+  call sll_o_hdf5_ser_write_array( file_id, solver % L, "/L", h5_error )
 
   ! Write right hand side
-  call sll_o_hdf5_ser_write_array( file_id, b, "/b", h5_error )
+  call sll_o_hdf5_ser_write_array( file_id, solver % b, "/b", h5_error )
 
   ! Write solution
-  call sll_o_hdf5_ser_write_array( file_id, x, "/x", h5_error )
+  call sll_o_hdf5_ser_write_array( file_id, solver % x, "/x", h5_error )
 
   ! Write C1 projection of stiffness matrix
-  call sll_o_hdf5_ser_write_array( file_id, Ap, "/Ap", h5_error )
+  call sll_o_hdf5_ser_write_array( file_id, solver % Ap, "/Ap", h5_error )
 
   ! Write C1 projection of mass matrix
-  call sll_o_hdf5_ser_write_array( file_id, Mp, "/Mp", h5_error )
+  call sll_o_hdf5_ser_write_array( file_id, solver % Mp, "/Mp", h5_error )
 
   ! Write C1 projection of right hand side
-  call sll_o_hdf5_ser_write_array( file_id, bp, "/bp", h5_error )
+  call sll_o_hdf5_ser_write_array( file_id, solver % bp, "/bp", h5_error )
 
   ! Write C1 projection of solution
-  call sll_o_hdf5_ser_write_array( file_id, xp, "/xp", h5_error )
+  call sll_o_hdf5_ser_write_array( file_id, solver % xp, "/xp", h5_error )
 
   ! Close HDF5 file
   call sll_s_hdf5_ser_file_close ( file_id, h5_error )
@@ -518,54 +193,23 @@ program test_poisson_2d_fem_ssm
   ! Deallocations and free
   !-----------------------------------------------------------------------------
 
-  deallocate( breaks_eta1 )
-  deallocate( breaks_eta2 )
-  deallocate( quad_points_eta1 )
-  deallocate( quad_points_eta2 )
-  deallocate( quad_weights_eta1 )
-  deallocate( quad_weights_eta2 )
-  deallocate( data_1d_eta1 )
-  deallocate( data_1d_eta2 )
-  deallocate( int_volume )
-  deallocate( inv_metric )
-  deallocate( A  )
-  deallocate( M  )
-  deallocate( Ap )
-  deallocate( Mp )
-  deallocate( b  )
-  deallocate( bp )
-  deallocate( L  )
-
   deallocate( mapping_analytical )
 
   call bsplines_eta1  % free()
   call bsplines_eta2  % free()
   call mapping_iga    % free()
-  call polar_bsplines % free()
 
-  call projector % free()
-
-  call cjsolver % free()
-  call Ap_linop % free()
-  call bp_vecsp % delete()
-  call xp_vecsp % delete()
+  call solver % free()
 
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 contains
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
-  SLL_PURE function rhs( eta, mapping )
-    real(wp)                     , intent(in) :: eta(2)
-    type(sll_t_polar_mapping_iga), intent(in) :: mapping
+  SLL_PURE function rhs( x )
+    real(wp), intent(in) :: x(2)
     real(wp) :: rhs
 
-    real(wp) :: x(2)
-
-    x   = mapping % eval( eta )
-
     rhs = sin( sll_p_twopi * x(1) ) * cos( sll_p_twopi * x(2) )
-
-    return
 
   end function rhs
 
