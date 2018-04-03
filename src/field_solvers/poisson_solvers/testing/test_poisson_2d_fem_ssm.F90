@@ -103,7 +103,6 @@ program test_poisson_2d_fem_ssm
   real(wp), allocatable :: A (:,:)
   real(wp), allocatable :: M (:,:)
   real(wp), allocatable :: Ap(:,:)
-  real(wp), allocatable :: Ap_temp(:,:)
   real(wp), allocatable :: Mp(:,:)
 
   ! Matrix for barycentric coordinates
@@ -112,7 +111,6 @@ program test_poisson_2d_fem_ssm
   ! Right hand side vector and C1 projection
   real(wp), allocatable :: b (:)
   real(wp), allocatable :: bp(:)
-  real(wp), allocatable :: bp_temp(:)
 
   ! Solution and C1 projection
   real(wp), allocatable :: x (:)
@@ -200,32 +198,27 @@ program test_poisson_2d_fem_ssm
     ncells   = ncells2 )
 
   !-----------------------------------------------------------------------------
-  ! Initialize mapping
+  ! Initialize mapping and polar B-splines
   !-----------------------------------------------------------------------------
 
-!  allocate( sll_t_polar_mapping_analytical_target :: mapping_analytical )
   allocate( sll_t_polar_mapping_analytical_czarny :: mapping_analytical )
 
-  ! Initialize analytical mapping
+  ! Analytical mapping
   select type ( mapping_analytical )
     type is ( sll_t_polar_mapping_analytical_target )
-      call mapping_analytical % init() ! circle
-!      call mapping_analytical % init( x0=[0.0_wp,0.0_wp], d0=0.2_wp, e0=0.3_wp )
+      call mapping_analytical % init( x0=[0.0_wp,0.0_wp], d0=0.2_wp, e0=0.3_wp )
     type is ( sll_t_polar_mapping_analytical_czarny )
       call mapping_analytical % init( x0=[0.0_wp,0.0_wp], b =1.4_wp, e =0.3_wp )
   end select
 
-  ! Initialize discrete mapping
+  ! Discrete mapping
   call mapping_iga % init( bsplines_eta1, bsplines_eta2, mapping_analytical )
 
-  !-----------------------------------------------------------------------------
-  ! Initialize polar B-splines
-  !-----------------------------------------------------------------------------
-
+  ! Polar B-splines
   call polar_bsplines % init( bsplines_eta1, bsplines_eta2, mapping_iga )
 
   !-----------------------------------------------------------------------------
-  ! Allocate and initialize quadrature points and weights
+  ! Allocations
   !-----------------------------------------------------------------------------
 
   ! Number of finite elements
@@ -236,35 +229,72 @@ program test_poisson_2d_fem_ssm
   Nq1 = p1 + 1
   Nq2 = p2 + 1
 
-  ! Allocate quadrature points along s and theta
+  ! Quadrature points
   allocate( quad_points_eta1( Nq1, Nk1 ) )
   allocate( quad_points_eta2( Nq2, Nk2 ) )
 
-  ! Allocate quadrature weights along s and theta
+  ! Quadrature weights
   allocate( quad_weights_eta1( Nq1, Nk1 ) )
   allocate( quad_weights_eta2( Nq2, Nk2 ) )
 
-  ! Initialize quadrature points and weights along s
+  ! 1D data
+  allocate( data_1d_eta1( Nq1, 2, 1+p1, Nk1 ) )
+  allocate( data_1d_eta2( Nq2, 2, 1+p2, Nk2 ) )
+
+  ! 2D data
+  allocate( int_volume ( Nq1, Nq2, Nk1, Nk2 ) )
+  allocate( inv_metric ( Nq1, Nq2, Nk1, Nk2, 2, 2 ) )
+  allocate( data_2d_rhs( Nq1, Nq2, Nk1, Nk2 ) )
+
+  ! Barycentric coordinates
+  allocate( L( 2*n2, 3 ) )
+
+  ! Stiffness and mass matrices
+  allocate( A( n1*n2, n1*n2 ) )
+  allocate( M( n1*n2, n1*n2 ) )
+
+  ! Right hand side
+  allocate( b( n1*n2 ) )
+
+  ! Solution
+  allocate( x( n1*n2 ) )
+
+  ! C1 projections
+  associate( nn => 3+(n1-2)*n2 )
+
+    ! Stiffness and mass matrices
+    allocate( Ap( nn, nn ) )
+    allocate( Mp( nn, nn ) )
+
+    ! Right hand side
+    allocate( bp( nn ) )
+
+    ! Solution
+    allocate( xp( nn ) )
+
+  end associate
+
+  !-----------------------------------------------------------------------------
+  ! Initialize quadrature points and weights
+  !-----------------------------------------------------------------------------
+
+  ! Quadrature points and weights along s
   do k1 = 1, Nk1
     quad_points_eta1 (:,k1) = sll_f_gauss_legendre_points ( Nq1, breaks_eta1(k1), breaks_eta1(k1+1) )
     quad_weights_eta1(:,k1) = sll_f_gauss_legendre_weights( Nq1, breaks_eta1(k1), breaks_eta1(k1+1) )
   end do
 
-  ! Initialize quadrature points and weights along theta
+  ! Quadrature points and weights along theta
   do k2 = 1, Nk2
     quad_points_eta2 (:,k2) = sll_f_gauss_legendre_points ( Nq2, breaks_eta2(k2), breaks_eta2(k2+1) )
     quad_weights_eta2(:,k2) = sll_f_gauss_legendre_weights( Nq2, breaks_eta2(k2), breaks_eta2(k2+1) )
   end do
 
   !-----------------------------------------------------------------------------
-  ! Allocate and fill 1D data
+  ! Fill in 1D data
   !-----------------------------------------------------------------------------
 
-  ! Allocate 1D data along s and theta
-  allocate( data_1d_eta1( Nq1, 2, 1+p1, Nk1 ) )
-  allocate( data_1d_eta2( Nq2, 2, 1+p2, Nk2 ) )
-
-  ! Initialize 1D data along s
+  ! 1D data along s
   do k1 = 1, Nk1
     do q1 = 1, Nq1
       call bsplines_eta1 % eval_basis_and_n_derivs( &
@@ -275,7 +305,7 @@ program test_poisson_2d_fem_ssm
     end do
   end do
 
-  ! Initialize 1D data along theta
+  ! 1D data along theta
   do k2 = 1, Nk2
     do q2 = 1, Nq2
       call bsplines_eta2 % eval_basis_and_n_derivs( &
@@ -287,13 +317,10 @@ program test_poisson_2d_fem_ssm
   end do
 
   !-----------------------------------------------------------------------------
-  ! Allocate and fill 2D data
+  ! Fill in 2D data
   !-----------------------------------------------------------------------------
 
-  allocate( int_volume( Nq1, Nq2, Nk1, Nk2 ) )
-  allocate( inv_metric( Nq1, Nq2, Nk1, Nk2, 2, 2 ) )
-
-  ! Initialize 2D data
+  ! 2D data
   do k2 = 1, Nk2
     do k1 = 1, Nk1
       do q2 = 1, Nq2
@@ -319,9 +346,7 @@ program test_poisson_2d_fem_ssm
     end do
   end do
 
-  allocate( data_2d_rhs( Nq1, Nq2, Nk1, Nk2 ) )
-
-  ! Initialize 2D discrete RHS
+  ! 2D discrete RHS
   do k2 = 1, Nk2
     do k1 = 1, Nk1
       do q2 = 1, Nq2
@@ -337,10 +362,8 @@ program test_poisson_2d_fem_ssm
   end do
 
   !-----------------------------------------------------------------------------
-  ! Matrix of barycentric coordinates needed for C1 projection
+  ! Matrix of barycentric coordinates
   !-----------------------------------------------------------------------------
-
-  allocate( L( 2*n2, 3 ) )
 
   do i = 1, 2*n2
 
@@ -368,9 +391,6 @@ program test_poisson_2d_fem_ssm
   ! Allocate and fill stiffness and mass matrices
   !-----------------------------------------------------------------------------
 
-  allocate( A( n1*n2, n1*n2 ) )
-  allocate( M( n1*n2, n1*n2 ) )
-
   A = 0.0_wp
   M = 0.0_wp
 
@@ -393,8 +413,6 @@ program test_poisson_2d_fem_ssm
   ! Allocate and fill right hand side
   !-----------------------------------------------------------------------------
 
-  allocate( b( n1*n2 ) )
-
   b = 0.0_wp
 
   ! Cycle over finite elements
@@ -412,71 +430,29 @@ program test_poisson_2d_fem_ssm
   end do
 
   !-----------------------------------------------------------------------------
-  ! Allocate and fill C1 projections of stiffness and mass matrices
+  ! Compute C1 projections
   !-----------------------------------------------------------------------------
-
-  allocate( Ap( 3+(n1-2)*n2, 3+(n1-2)*n2 ) )
-  allocate( Mp( 3+(n1-2)*n2, 3+(n1-2)*n2 ) )
 
   call projector % change_basis_matrix( A, Ap )
   call projector % change_basis_matrix( M, Mp )
 
-  allocate( Ap_temp( size(Ap,1), size(Ap,2) ), source=Ap )
-
-  associate( nn => 3+(n1-2)*n2, idx => 3+(n1-3)*n2 )
-
-!    do j = idx+1, nn
-!      do i = idx+1, nn
-!        Ap_temp(i,j) = 0.0_wp
-!      end do
-!    end do
-    do i = idx+1, nn
-      Ap_temp(i,:) = 0.0_wp
-    end do
-    do j = idx+1, nn
-      Ap_temp(:,j) = 0.0_wp
-    end do
-
-  end associate
-
-  !-----------------------------------------------------------------------------
-  ! Allocate and fill C1 projection of right hand side
-  !-----------------------------------------------------------------------------
-
-  allocate( bp( 3+(n1-2)*n2 ) )
-
   call projector % change_basis_vector( b, bp )
 
-  allocate( bp_temp( size(bp) ), source=bp )
-
-  associate( nn => 3+(n1-2)*n2, idx => 3+(n1-3)*n2 )
-
-    do i = idx+1, nn
-      bp_temp(i) = 0.0_wp
-    end do
-
-  end associate
-
   !-----------------------------------------------------------------------------
-  ! Allocate C1 projection of solution
+  ! Initialize and solve linear system (homogeneous Dirichlet boundary conditions)
   !-----------------------------------------------------------------------------
 
-  allocate( xp( 3+(n1-2)*n2 ) )
+  associate( idx => 3+(n1-3)*n2 )
 
-  xp = 0.0_wp
+  ! Construct linear operator from matrix Ap
+  call Ap_linop % init( Ap(:idx,:idx) )
 
-  !-----------------------------------------------------------------------------
-  ! Initialize and solve linear system
-  !-----------------------------------------------------------------------------
-
-  ! Construct linear operator from matrix Ap_temp
-  call Ap_linop % init( Ap_temp )
-
-  ! Construct vector space from vector bp_temp
-  call bp_vecsp % attach( bp_temp )
+  ! Construct vector space from vector bp
+  call bp_vecsp % attach( bp(:idx) )
 
   ! Construct vector space for solution
-  call xp_vecsp % attach( xp )
+  xp = 0.0_wp
+  call xp_vecsp % attach( xp(:idx) )
 
   ! Initialize conjugate gradient solver
   call cjsolver % init( tol=tol, verbose=verbose, template_vector=xp_vecsp )
@@ -485,13 +461,13 @@ program test_poisson_2d_fem_ssm
   call cjsolver % solve( A=Ap_linop, b=bp_vecsp, x=xp_vecsp )
 
   ! Copy solution into array xp
-  xp = xp_vecsp % array
+  xp(:idx) = xp_vecsp % array
+
+  end associate
 
   !-----------------------------------------------------------------------------
-  ! Allocate and compute solution in tensor-product space
+  ! Compute solution in tensor-product space
   !-----------------------------------------------------------------------------
-
-  allocate( x( n1*n2 ) )
 
   call projector % change_basis_vector_inverse( xp, x )
 
@@ -502,6 +478,12 @@ program test_poisson_2d_fem_ssm
   ! Create HDF5 file for output
   call sll_s_hdf5_ser_file_create( 'poisson_2d_fem_ssm.h5', file_id, h5_error )
 
+  ! Write useful parameters
+  call sll_o_hdf5_ser_write_attribute( file_id, "/", "n1", n1, h5_error )
+  call sll_o_hdf5_ser_write_attribute( file_id, "/", "n2", n2, h5_error )
+  call sll_o_hdf5_ser_write_attribute( file_id, "/", "p1", p1, h5_error )
+  call sll_o_hdf5_ser_write_attribute( file_id, "/", "p2", p2, h5_error )
+
   ! Write stiffness matrix
   call sll_o_hdf5_ser_write_array( file_id, A, "/A", h5_error )
 
@@ -511,22 +493,20 @@ program test_poisson_2d_fem_ssm
   ! Write L matrix needed for projection
   call sll_o_hdf5_ser_write_array( file_id, L, "/L", h5_error )
 
+  ! Write right hand side
+  call sll_o_hdf5_ser_write_array( file_id, b, "/b", h5_error )
+
+  ! Write solution
+  call sll_o_hdf5_ser_write_array( file_id, x, "/x", h5_error )
+
   ! Write C1 projection of stiffness matrix
   call sll_o_hdf5_ser_write_array( file_id, Ap, "/Ap", h5_error )
-  call sll_o_hdf5_ser_write_array( file_id, Ap_temp, "/Ap_temp", h5_error )
 
   ! Write C1 projection of mass matrix
   call sll_o_hdf5_ser_write_array( file_id, Mp, "/Mp", h5_error )
 
-  ! Write right hand side
-  call sll_o_hdf5_ser_write_array( file_id, b, "/b", h5_error )
-
   ! Write C1 projection of right hand side
   call sll_o_hdf5_ser_write_array( file_id, bp, "/bp", h5_error )
-  call sll_o_hdf5_ser_write_array( file_id, bp_temp, "/bp_temp", h5_error )
-
-  ! Write solution
-  call sll_o_hdf5_ser_write_array( file_id, x, "/x", h5_error )
 
   ! Write C1 projection of solution
   call sll_o_hdf5_ser_write_array( file_id, xp, "/xp", h5_error )
@@ -535,7 +515,7 @@ program test_poisson_2d_fem_ssm
   call sll_s_hdf5_ser_file_close ( file_id, h5_error )
 
   !-----------------------------------------------------------------------------
-  ! Deallocate allocatables and free objects
+  ! Deallocations and free
   !-----------------------------------------------------------------------------
 
   deallocate( breaks_eta1 )
