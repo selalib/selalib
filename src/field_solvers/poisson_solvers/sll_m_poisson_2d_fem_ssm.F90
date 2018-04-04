@@ -6,6 +6,8 @@ module sll_m_poisson_2d_fem_ssm
 
   use sll_m_bsplines, only: sll_c_bsplines
 
+  use sll_m_spline_2d, only: sll_t_spline_2d
+
   use sll_m_polar_bsplines_2d, only: sll_t_polar_bsplines_2d
 
   use sll_m_polar_mapping_iga, only: sll_t_polar_mapping_iga
@@ -100,8 +102,12 @@ module sll_m_poisson_2d_fem_ssm
   contains
 
     procedure :: init  => s_poisson_2d_fem_ssm__init
-    procedure :: solve => s_poisson_2d_fem_ssm__solve
     procedure :: free  => s_poisson_2d_fem_ssm__free
+
+    ! Generic procedure with multiple implementations
+    procedure :: solve_1 => s_poisson_2d_fem_ssm__solve_1
+    procedure :: solve_2 => s_poisson_2d_fem_ssm__solve_2
+    generic   :: solve   => solve_1, solve_2
 
   end type sll_t_poisson_2d_fem_ssm
 
@@ -364,12 +370,13 @@ contains
 
     end associate
 
+    call polar_bsplines % free()
+
   end subroutine s_poisson_2d_fem_ssm__init
 
-  ! Solver
-  subroutine s_poisson_2d_fem_ssm__solve( self, rhs )
+  ! Solver: signature #1
+  subroutine s_poisson_2d_fem_ssm__solve_1( self, rhs, sol )
     class(sll_t_poisson_2d_fem_ssm), intent(inout) :: self
-
     interface
       SLL_PURE function rhs( x )
         import wp
@@ -377,6 +384,7 @@ contains
         real(wp) :: rhs
       end function
     end interface
+    type(sll_t_spline_2d)          , intent(inout) :: sol
 
     ! Auxiliary variables
     integer  :: idx, k1, k2, q1, q2
@@ -457,9 +465,101 @@ contains
 
       call self % projector % change_basis_vector_inverse( self % xp, self % x )
 
+      sol % bcoef = reshape( self % x, (/ n2, n1 /) )
+
     end associate
 
-  end subroutine s_poisson_2d_fem_ssm__solve
+  end subroutine s_poisson_2d_fem_ssm__solve_1
+
+  ! Solver: signature #2
+  subroutine s_poisson_2d_fem_ssm__solve_2( self, rhs, sol )
+    class(sll_t_poisson_2d_fem_ssm), intent(inout) :: self
+    type(sll_t_spline_2d)          , intent(in   ) :: rhs
+    type(sll_t_spline_2d)          , intent(inout) :: sol
+
+    ! Auxiliary variables
+    integer  :: idx, k1, k2, q1, q2
+    real(wp) :: eta(2), x(2)
+
+    associate( n1  => self % n1 , &
+               n2  => self % n2 , &
+               nn  => 3+(self%n1-2)*self%n2, &
+               Nk1 => self % Nk1, &
+               Nk2 => self % Nk2, &
+               Nq1 => self % Nq1, &
+               Nq2 => self % Nq2 )
+
+      ! 2D discrete RHS
+      do k2 = 1, Nk2
+        do k1 = 1, Nk1
+          do q2 = 1, Nq2
+            do q1 = 1, Nq1
+
+              eta = [ self % quad_points_eta1(q1,k1), self % quad_points_eta2(q2,k2) ]
+
+              self % data_2d_rhs(q1,q2,k1,k2) = rhs % eval( eta(1), eta(2) )
+
+            end do
+          end do
+        end do
+      end do
+
+      !-------------------------------------------------------------------------
+      ! Fill in right hand side
+      !-------------------------------------------------------------------------
+
+      self % b = 0.0_wp
+
+      ! Cycle over finite elements
+      do k2 = 1, Nk2
+        do k1 = 1, Nk1
+          call self % assembler % add_element_rhs( &
+            k1                 , &
+            k2                 , &
+            self % data_1d_eta1, &
+            self % data_1d_eta2, &
+            self % data_2d_rhs , &
+            self % int_volume  , &
+            self % b )
+        end do
+      end do
+
+      !-------------------------------------------------------------------------
+      ! Compute C1 projection of right hand side
+      !-------------------------------------------------------------------------
+
+      call self % projector % change_basis_vector( self % b, self % bp )
+
+      !-------------------------------------------------------------------------
+      ! Solve linear system (homogeneous Dirichlet boundary conditions)
+      !-------------------------------------------------------------------------
+
+      idx = 3+(n1-3)*n2
+
+      ! Construct vector space from vector bp
+      call self % bp_vecsp % attach( self % bp(:idx) )
+
+      ! Solve linear system Ap*xp=bp
+      call self % cjsolver % solve( &
+        A = self % Ap_linop, &
+        b = self % bp_vecsp, &
+        x = self % xp_vecsp )
+
+      ! Copy solution into array xp
+      self % xp(:idx) = self % xp_vecsp % array
+
+      !-------------------------------------------------------------------------
+      ! Compute solution in tensor-product space
+      !-------------------------------------------------------------------------
+
+      call self % projector % change_basis_vector_inverse( self % xp, self % x )
+
+      sol % bcoef = reshape( self % x, (/ n2, n1 /) )
+
+    end associate
+
+  end subroutine s_poisson_2d_fem_ssm__solve_2
+
 
   ! Free
   subroutine s_poisson_2d_fem_ssm__free( self )
