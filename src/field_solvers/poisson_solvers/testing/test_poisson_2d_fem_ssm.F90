@@ -18,6 +18,10 @@ program test_poisson_2d_fem_ssm
 
   use sll_m_spline_interpolator_1d, only: sll_s_spline_1d_compute_num_cells 
 
+  use sll_m_spline_2d, only: sll_t_spline_2d
+
+  use sll_m_spline_interpolator_2d, only: sll_t_spline_interpolator_2d
+
   use sll_m_polar_mapping_analytical, only: sll_c_polar_mapping_analytical
 
   use sll_m_polar_mapping_analytical_target, only: sll_t_polar_mapping_analytical_target
@@ -56,8 +60,24 @@ program test_poisson_2d_fem_ssm
   class(sll_c_polar_mapping_analytical), allocatable :: mapping_analytical
   type(sll_t_polar_mapping_iga) :: mapping_iga
 
+  ! 2D splines representing right hand side and solution
+  type(sll_t_spline_2d) :: spline_2d_rhs
+  type(sll_t_spline_2d) :: spline_2d_phi
+
+  ! 2D spline interpolator
+  type(sll_t_spline_interpolator_2d) :: spline_interp_2d
+
+  ! Needed for 2D interpolation of right hand side
+  real(wp), allocatable :: tau_eta1(:)
+  real(wp), allocatable :: tau_eta2(:)
+  real(wp), allocatable :: gtau(:,:)
+
   ! Poisson solver
   type(sll_t_poisson_2d_fem_ssm) :: solver
+
+  ! Auxiliary variables
+  integer  :: i1, i2
+  real(wp) :: eta(2), x(2)
 
   ! For hdf5 I/O
   type(sll_t_hdf5_ser_handle) :: file_id
@@ -68,7 +88,7 @@ program test_poisson_2d_fem_ssm
   !-----------------------------------------------------------------------------
 
   ! Number of degrees of freedom (control points) along s and theta
-  mm = 10
+  mm = 20
   n1 = mm * 1
   n2 = mm * 2
 
@@ -137,14 +157,53 @@ program test_poisson_2d_fem_ssm
   call mapping_iga % init( bsplines_eta1, bsplines_eta2, mapping_analytical )
 
   !-----------------------------------------------------------------------------
+  ! Interpolate right hand side in tensor-product space
+  !-----------------------------------------------------------------------------
+
+  ! Initialize 2D spline for right hand side
+  call spline_2d_rhs % init( bsplines_eta1, bsplines_eta2 )
+
+  ! Initialize 2D spline interpolator
+  call spline_interp_2d % init( &
+    bsplines_eta1, &
+    bsplines_eta2, &
+    [sll_p_greville,sll_p_periodic], &
+    [sll_p_greville,sll_p_periodic] )
+
+  ! Get interpolation points from 2D spline interpolator
+  call spline_interp_2d % get_interp_points( tau_eta1, tau_eta2 )
+
+  associate( nt1 => size( tau_eta1 ), nt2 => size( tau_eta2 ) )
+
+    allocate( gtau( nt1, nt2 ) )
+
+    ! Evaluate right hand side on interpolation points
+    do i2 = 1, nt2
+      do i1 = 1, nt1
+        eta = (/ tau_eta1(i1), tau_eta2(i2) /)
+        x   = mapping_iga % eval( eta )
+        gtau(i1,i2) = rhs( x )
+      end do
+    end do
+
+  end associate
+
+  ! Compute interpolant spline
+  call spline_interp_2d % compute_interpolant( spline_2d_rhs, gtau )
+
+  !-----------------------------------------------------------------------------
   ! Poisson solver
   !-----------------------------------------------------------------------------
 
-  ! Initialize
+  ! Initialize 2D spline for solution
+  call spline_2d_phi % init( bsplines_eta1, bsplines_eta2 )
+
+  ! Initialize Poisson solver
   call solver % init( bsplines_eta1, bsplines_eta2, breaks_eta1, breaks_eta2, mapping_iga )
 
   ! Solve
-  call solver % solve( rhs )
+!  call solver % solve( spline_2d_rhs, spline_2d_phi ) ! Right hand side is 2D spline
+  call solver % solve( rhs, spline_2d_phi ) ! Right hand side is callable function
 
   !-----------------------------------------------------------------------------
   ! HDF5 I/O
@@ -186,6 +245,9 @@ program test_poisson_2d_fem_ssm
   ! Write C1 projection of solution
   call sll_o_hdf5_ser_write_array( file_id, solver % xp, "/xp", h5_error )
 
+  ! Write reshaped solution
+  call sll_o_hdf5_ser_write_array( file_id, spline_2d_phi % bcoef, "/phi", h5_error )
+
   ! Close HDF5 file
   call sll_s_hdf5_ser_file_close ( file_id, h5_error )
 
@@ -193,11 +255,17 @@ program test_poisson_2d_fem_ssm
   ! Deallocations and free
   !-----------------------------------------------------------------------------
 
+  deallocate( breaks_eta1 )
+  deallocate( breaks_eta2 )
+
   deallocate( mapping_analytical )
 
-  call bsplines_eta1  % free()
-  call bsplines_eta2  % free()
-  call mapping_iga    % free()
+  call bsplines_eta1 % free()
+  call bsplines_eta2 % free()
+
+  call mapping_iga % free()
+
+  call spline_2d_phi % free()
 
   call solver % free()
 
