@@ -164,7 +164,7 @@ contains
 
           i1 = k1 + il1 - 2
 
-          ! First matrix global index
+          ! Vector global index
           i = i1 * n2 + i2 + 1
 
           call self % weak_form % element_rhs( &
