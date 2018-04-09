@@ -477,57 +477,22 @@ contains
     type(sll_t_spline_2d)          , intent(in   ) :: rhs
     type(sll_t_spline_2d)          , intent(inout) :: sol
 
-    ! Auxiliary variables
-    integer  :: idx, k1, k2, q1, q2
-    real(wp) :: eta(2), x(2)
+    integer :: idx, i, i1, i2
 
-    associate( n1  => self % n1 , &
-               n2  => self % n2 , &
-               nn  => 3+(self%n1-2)*self%n2, &
-               Nk1 => self % Nk1, &
-               Nk2 => self % Nk2, &
-               Nq1 => self % Nq1, &
-               Nq2 => self % Nq2 )
+    associate( n1 => self % n1, n2 => self % n2 )
 
-      ! 2D discrete RHS
-      do k2 = 1, Nk2
-        do k1 = 1, Nk1
-          do q2 = 1, Nq2
-            do q1 = 1, Nq1
-
-              eta = [ self % quad_points_eta1(q1,k1), self % quad_points_eta2(q2,k2) ]
-
-              self % data_2d_rhs(q1,q2,k1,k2) = rhs % eval( eta(1), eta(2) )
-
-            end do
-          end do
+      ! Store temporarily spline coefficients of right hand side into self % b
+      do i2 = 1, n2
+        do i1 = 1, n1
+          i = (i1-1) * n2 + i2
+          self % b(i) = rhs % bcoef(i1,i2)
         end do
       end do
 
-      !-------------------------------------------------------------------------
-      ! Fill in right hand side
-      !-------------------------------------------------------------------------
+      ! Compute right hand side
+      self % b = matmul( self % M, self % b )
 
-      self % b = 0.0_wp
-
-      ! Cycle over finite elements
-      do k2 = 1, Nk2
-        do k1 = 1, Nk1
-          call self % assembler % add_element_rhs( &
-            k1                 , &
-            k2                 , &
-            self % data_1d_eta1, &
-            self % data_1d_eta2, &
-            self % data_2d_rhs , &
-            self % int_volume  , &
-            self % b )
-        end do
-      end do
-
-      !-------------------------------------------------------------------------
       ! Compute C1 projection of right hand side
-      !-------------------------------------------------------------------------
-
       call self % projector % change_basis_vector( self % b, self % bp )
 
       !-------------------------------------------------------------------------
@@ -559,7 +524,6 @@ contains
     end associate
 
   end subroutine s_poisson_2d_fem_ssm__solve_2
-
 
   ! Free
   subroutine s_poisson_2d_fem_ssm__free( self )
