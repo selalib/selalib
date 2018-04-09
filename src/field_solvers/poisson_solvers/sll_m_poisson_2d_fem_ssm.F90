@@ -38,6 +38,15 @@ module sll_m_poisson_2d_fem_ssm
   ! Working precision
   integer, parameter :: wp = f64
 
+  ! Abstract interface for right hand side
+  abstract interface
+    SLL_PURE function i_fun_rhs( x ) result( rhs )
+      import wp
+      real(wp), intent(in) :: x(2)
+      real(wp) :: rhs
+    end function i_fun_rhs
+  end interface
+
   type :: sll_t_poisson_2d_fem_ssm
 
     ! To initialize B-splines (p1,p2 degrees)
@@ -377,13 +386,7 @@ contains
   ! Solver: signature #1
   subroutine s_poisson_2d_fem_ssm__solve_1( self, rhs, sol )
     class(sll_t_poisson_2d_fem_ssm), intent(inout) :: self
-    interface
-      SLL_PURE function rhs( x )
-        import wp
-        real(wp), intent(in) :: x(2)
-        real(wp) :: rhs
-      end function
-    end interface
+    procedure(i_fun_rhs)                           :: rhs
     type(sll_t_spline_2d)          , intent(inout) :: sol
 
     ! Auxiliary variables
