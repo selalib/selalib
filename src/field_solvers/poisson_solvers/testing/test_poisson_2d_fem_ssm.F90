@@ -32,6 +32,11 @@ program test_poisson_2d_fem_ssm
 
   use sll_m_poisson_2d_fem_ssm, only: sll_t_poisson_2d_fem_ssm
 
+  use sll_m_timer, only: &
+    sll_t_time_mark    , &
+    sll_s_set_time_mark, &
+    sll_f_time_elapsed_between
+
   use sll_m_hdf5_io_serial, only: &
     sll_t_hdf5_ser_handle     , &
     sll_s_hdf5_ser_file_create, &
@@ -79,6 +84,10 @@ program test_poisson_2d_fem_ssm
   integer  :: i1, i2
   real(wp) :: eta(2), x(2)
 
+  ! Timing
+  type(sll_t_time_mark) :: t0, t1
+  real(wp) :: dt
+
   ! For hdf5 I/O
   type(sll_t_hdf5_ser_handle) :: file_id
   integer                     :: h5_error
@@ -87,8 +96,10 @@ program test_poisson_2d_fem_ssm
   ! Initialize B-splines basis functions
   !-----------------------------------------------------------------------------
 
+  call sll_s_set_time_mark( t0 )
+
   ! Number of degrees of freedom (control points) along s and theta
-  mm = 20
+  mm = 40
   n1 = mm * 1
   n2 = mm * 2
 
@@ -156,9 +167,16 @@ program test_poisson_2d_fem_ssm
   ! Discrete mapping
   call mapping_iga % init( bsplines_eta1, bsplines_eta2, mapping_analytical )
 
+  call sll_s_set_time_mark( t1 )
+
+  dt = sll_f_time_elapsed_between( t0, t1 )
+  write(*,'(/a,es8.1/)') " Time required for initialization of B-splines and mapping: ", dt
+
   !-----------------------------------------------------------------------------
   ! Interpolate right hand side in tensor-product space
   !-----------------------------------------------------------------------------
+
+  call sll_s_set_time_mark( t0 )
 
   ! Initialize 2D spline for right hand side
   call spline_2d_rhs % init( bsplines_eta1, bsplines_eta2 )
@@ -191,6 +209,11 @@ program test_poisson_2d_fem_ssm
   ! Compute interpolant spline
   call spline_interp_2d % compute_interpolant( spline_2d_rhs, gtau )
 
+  call sll_s_set_time_mark( t1 )
+
+  dt = sll_f_time_elapsed_between( t0, t1 )
+  write(*,'(a,es8.1/)' ) " Time required for interpolation of right hand side: ", dt
+
   !-----------------------------------------------------------------------------
   ! Poisson solver
   !-----------------------------------------------------------------------------
@@ -198,16 +221,32 @@ program test_poisson_2d_fem_ssm
   ! Initialize 2D spline for solution
   call spline_2d_phi % init( bsplines_eta1, bsplines_eta2 )
 
+  call sll_s_set_time_mark( t0 )
+
   ! Initialize Poisson solver
   call solver % init( bsplines_eta1, bsplines_eta2, breaks_eta1, breaks_eta2, mapping_iga )
 
+  call sll_s_set_time_mark( t1 )
+
+  dt = sll_f_time_elapsed_between( t0, t1 )
+  write(*,'(a,es8.1/)' ) " Time required for initialization of Poisson solver: ", dt
+
+  call sll_s_set_time_mark( t0 )
+
   ! Solve
-!  call solver % solve( spline_2d_rhs, spline_2d_phi ) ! Right hand side is 2D spline
-  call solver % solve( rhs, spline_2d_phi ) ! Right hand side is callable function
+  call solver % solve( spline_2d_rhs, spline_2d_phi ) ! Right hand side is 2D spline
+!  call solver % solve( rhs, spline_2d_phi ) ! Right hand side is callable function
+
+  call sll_s_set_time_mark( t1 )
+
+  dt = sll_f_time_elapsed_between( t0, t1 )
+  write(*,'(a,es8.1/)' ) " Time required for solution of Poisson equation: ", dt
 
   !-----------------------------------------------------------------------------
   ! HDF5 I/O
   !-----------------------------------------------------------------------------
+
+  call sll_s_set_time_mark( t0 )
 
   ! Create HDF5 file for output
   call sll_s_hdf5_ser_file_create( 'poisson_2d_fem_ssm.h5', file_id, h5_error )
@@ -250,6 +289,11 @@ program test_poisson_2d_fem_ssm
 
   ! Close HDF5 file
   call sll_s_hdf5_ser_file_close ( file_id, h5_error )
+
+  call sll_s_set_time_mark( t1 )
+
+  dt = sll_f_time_elapsed_between( t0, t1 )
+  write(*,'(a,es8.1/)' ) " Time required for writing HDF5 output: ", dt
 
   !-----------------------------------------------------------------------------
   ! Deallocations and free
