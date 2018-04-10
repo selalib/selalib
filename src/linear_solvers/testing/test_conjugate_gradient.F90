@@ -17,8 +17,8 @@ program test_conjugate_gradient
   ! Working precision
   integer, parameter :: wp = f64
 
-  integer :: i, j, k, n
-  integer :: m, ki, kj, li, lj
+  integer  :: i, j, n, p, m, ki, kj, li, lj
+  real(wp) :: Amin, Amax
 
   ! 2D and 1D real arrays
   real(wp), allocatable :: A(:,:)
@@ -33,7 +33,7 @@ program test_conjugate_gradient
   type(sll_t_vector_space_real_1d) :: bb
 
   ! Linear operator constructed from A
-  type(sll_t_linear_operator_matrix_dense) :: A_linear_operator
+  type(sll_t_linear_operator_matrix_dense) :: A_linop_dense
 
   ! Conjugate gradient solver
   type(sll_t_conjugate_gradient) :: conjugate_gradient
@@ -57,9 +57,9 @@ program test_conjugate_gradient
   write(*,'(a)') " Test #1: diagonal matrices"
   write(*,'(a)') " **************************"
 
-  do k = 1, 10
+  do m = 1, 10
 
-    n = 2**k
+    n = 2**m
 
     allocate( A(n,n) )
     allocate( x(n) )
@@ -84,18 +84,13 @@ program test_conjugate_gradient
     end do
 
     ! Compute b=Ax
-    b(:) = 0.0_wp
-    do i = 1, n
-      do j = 1, n
-        b(i) = b(i) + A(i,j)*x(j)
-      end do
-    end do
+    b = matmul( A, x )
 
     ! Array of zeros
     z(:) = 0.0_wp
 
     ! Construct linear operator from matrix A
-    call A_linear_operator % init( A )
+    call A_linop_dense % init( A )
 
     ! Construct vector space from vector b
     call bb % attach( b )
@@ -108,8 +103,8 @@ program test_conjugate_gradient
 
     ! Solve linear system Ax=b for x using conjugate gradient method
     call conjugate_gradient % solve( &
-      A       = A_linear_operator, &
-      b       = bb               , &
+      A       = A_linop_dense, &
+      b       = bb           , &
       x       = xx )
 
     ! Free conjugate gradient solver
@@ -130,7 +125,7 @@ program test_conjugate_gradient
     passed = passed .and. success
 
     ! Deallocate allocatables and free objects
-    call A_linear_operator % free()
+    call A_linop_dense % free()
     call xx % delete()
     call bb % delete()
     deallocate( A, x, b, z )
@@ -206,18 +201,13 @@ program test_conjugate_gradient
     end do
 
     ! Compute b=Ax
-    b(:) = 0.0_wp
-    do i = 1, n
-      do j = 1, n
-        b(i) = b(i) + A(i,j)*x(j)
-      end do
-    end do
+    b = matmul( A, x )
 
     ! Array of zeros
     z(:) = 0.0_wp
 
     ! Construct linear operator from matrix A
-    call A_linear_operator % init( A )
+    call A_linop_dense % init( A )
 
     ! Construct vector space from vector b
     call bb % attach( b )
@@ -230,8 +220,8 @@ program test_conjugate_gradient
 
     ! Solve linear system Ax=b for x using conjugate gradient method
     call conjugate_gradient % solve( &
-      A       = A_linear_operator, &
-      b       = bb               , &
+      A       = A_linop_dense, &
+      b       = bb           , &
       x       = xx )
 
     ! Free conjugate gradient solver
@@ -252,10 +242,120 @@ program test_conjugate_gradient
     passed = passed .and. success
 
     ! Deallocate allocatables and free objects
-    call A_linear_operator % free()
+    call A_linop_dense % free()
     call xx % delete()
     call bb % delete()
     deallocate( A, La, Id, x, b, z )
+
+  end do
+
+  !-----------------------------------------------------------------------------
+  ! Test #3: multi-diagonal matrices
+  !-----------------------------------------------------------------------------
+
+  write(*,*)
+  write(*,'(a)') " ********************************"
+  write(*,'(a)') " Test #3: multi-diagonal matrices"
+  write(*,'(a)') " ********************************"
+
+  ! Following Gershgorin circle theorem, we construct A as follows:
+  ! - random diagonal elements in a certain positive interval (does not need to be positive maybe)
+  ! - p upper and lower diagonal elements: sum of absolute values of non-diagonal elements on each
+  !   row kept smaller than value of corresponding diagonal element (=> eigenvalues all positive)
+  ! - lower diagonal elements constructed by symmetry
+
+  do n = 3, 12
+
+    allocate( A(n,n) )
+    allocate( x(n) )
+    allocate( b(n) )
+    allocate( z(n) )
+
+    do p = 1, n-2
+
+      ! Output
+      write(*,*)
+      write(*,'(a,i0,a,i0,a,i0,a,i0,a)') " Matrix A: ", size(A,1), " x ", size(A,2), &
+                                         " with 2*", p, "+1=", 2*p+1, " diagonals"
+
+      ! Initialize matrix A diagonal
+      A(:,:) = 0.0_wp
+      ! diagonal
+      do i = 1, n
+        call random_number( A(i,i) )
+        A(i,i) = 0.5_wp + A(i,i) ! 0.5 <= A(i,i) < 1.5
+      end do
+      ! upper diagonals
+      do j = 1, p
+        do i = 1, n-j
+          Amin = - A(i,i) / ( 2.0_wp*p )
+          Amax =   A(i,i) / ( 2.0_wp*p )
+          call random_number( A(i,i+j) )
+          A(i,i+j) = Amin + A(i,i+j) * (Amax-Amin)
+        end do
+      end do
+      ! lower diagonals (apply symmetry)
+      do j = 1, p
+        do i = 1+j, n
+          A(i,i-j) = A(i-j,i)
+        end do
+      end do
+
+      ! Initialize vector x
+      do i = 1, n
+        call random_number( x(i) )
+        x(i) = -0.5_wp + x(i) ! -0.5 <= x < 0.5
+      end do
+
+      ! Compute b=Ax
+      b = matmul( A, x )
+
+      ! Array of zeros
+      z(:) = 0.0_wp
+
+      ! Construct linear operator from matrix A
+      call A_linop_dense % init( A )
+
+      ! Construct vector space from vector b
+      call bb % attach( b )
+
+      ! Construct vector space object for solution
+      call xx % attach( z )
+
+      ! Initialize conjugate gradient solver
+      call conjugate_gradient % init( tol=tol, verbose=verbose, template_vector=xx )
+
+      ! Solve linear system Ax=b for x using conjugate gradient method
+      call conjugate_gradient % solve( &
+        A       = A_linop_dense, &
+        b       = bb           , &
+        x       = xx )
+
+      ! Free conjugate gradient solver
+      call conjugate_gradient % free()
+
+      ! Check error and write to output
+      error = maxval( abs( xx % array(:) - x(:) ) )
+      write(*,*)
+      write(*,'(a,es8.2/)') " Maximum absolute error (numerical vs. exact solution): ", error
+
+      if ( error <= tol ) then
+        success = .true.
+      else
+        success = .false.
+        write(*,'(a/)') " !!! Test FAILED !!!"
+      end if
+
+      passed = passed .and. success
+
+      ! Deallocate allocatables and free objects
+      call A_linop_dense % free()
+      call xx % delete()
+      call bb % delete()
+
+    end do
+
+    deallocate( A, x, b, z )
 
   end do
 
