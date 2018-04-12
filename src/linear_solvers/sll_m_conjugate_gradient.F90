@@ -132,14 +132,14 @@ contains
 
     end associate
 
-    ! Destroy temporary vector spaces, if not done only once by 'free' method
-    if ( .not. self % allocate_once ) then
-
-      call self % p % delete()
-      call self % r % delete()
-      call self % v % delete()
-
-    end if
+!    ! Destroy temporary vector spaces, if not done only once by 'free' method
+!    if ( .not. self % allocate_once ) then
+!
+!      call self % p % delete()
+!      call self % r % delete()
+!      call self % v % delete()
+!
+!    end if
 
     ! Store info
     self % iterations = m
@@ -156,13 +156,13 @@ contains
   subroutine s_conjugate_gradient__free( self )
     class(sll_t_conjugate_gradient), intent(inout) :: self
 
-    if ( self % allocate_once ) then
-
-      call self % p % delete()
-      call self % r % delete()
-      call self % v % delete()
-
-    end if
+!    if ( self % allocate_once ) then
+!
+!      call self % p % delete()
+!      call self % r % delete()
+!      call self % v % delete()
+!
+!    end if
 
   end subroutine s_conjugate_gradient__free
 
