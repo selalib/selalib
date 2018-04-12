@@ -1,4 +1,5 @@
-add_executable( test_vector_space test_vector_space.F90 )
-target_link_libraries( test_vector_space sll_vector_space )
-
-# TODO: add CTest
+# Test vector space wrapper for 1D arrays
+add_executable( test_vector_space_real_array_1d test_vector_space_real_array_1d.F90 )
+target_link_libraries( test_vector_space_real_array_1d sll_vector_space )
+add_test( NAME vector_space_real_array_1d COMMAND test_vector_space_real_array_1d )
+set_tests_properties( vector_space_real_array_1d PROPERTIES PASS_REGULAR_EXPRESSION "PASSED" )

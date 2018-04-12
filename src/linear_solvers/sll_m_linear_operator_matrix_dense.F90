@@ -9,9 +9,7 @@ module sll_m_linear_operator_matrix_dense
 
   use sll_m_vector_space_base, only: sll_c_vector_space
 
-  use sll_m_vector_space_real_arrays, only: &
-    sll_t_vector_space_real_1d, &
-    sll_t_vector_space_real_2d
+  use sll_m_vector_space_real_array_1d, only: sll_t_vector_space_real_array_1d
 
   implicit none
 
@@ -92,7 +90,7 @@ contains
     ! Make sure to work with 1D real arrays
     select type ( x )
 
-    type is ( sll_t_vector_space_real_1d )
+    type is ( sll_t_vector_space_real_array_1d )
 
       ! Check if A and x are compatible for multiplication
       nx = shape( x % array )
@@ -100,7 +98,7 @@ contains
 
       select type ( y )
 
-      type is ( sll_t_vector_space_real_1d )
+      type is ( sll_t_vector_space_real_array_1d )
 
         ! Check if y and Ax are compatible for multiplication
         ny = shape( y % array )
@@ -113,13 +111,13 @@ contains
         end if
 
       class default
-        err_msg = "y must be of type sll_t_vector_space_real_1d"
+        err_msg = "y must be of type sll_t_vector_space_real_array_1d"
         SLL_ERROR( this_sub_name, err_msg )
 
       end select
 
     class default
-      err_msg = "x must be of type sll_t_vector_space_real_1d"
+      err_msg = "x must be of type sll_t_vector_space_real_array_1d"
       SLL_ERROR( this_sub_name, err_msg )
 
     end select
