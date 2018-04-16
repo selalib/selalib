@@ -52,7 +52,7 @@ program test_vector_space_real_array_3d
   ! Test sll_t_vector_space_real_array_3d % copy
   !-----------------------------------------------------------------------------
 
-  ! Automatic allocation
+  allocate( w % array( size( v % array, 1 ), size( v % array, 2 ), size( v % array, 3 ) ) )
   call w % copy( v )
 
   ! Check test

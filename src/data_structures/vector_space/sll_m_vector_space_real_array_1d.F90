@@ -71,7 +71,7 @@ contains
     class is( sll_t_vector_space_real_array_1d )
 
       ! Automatic allocation
-      self % array = x % array
+      self % array(:) = x % array
 
     class default
 
