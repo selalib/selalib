@@ -53,8 +53,8 @@ module sll_m_vector_space_real_array_2d
   end type sll_t_vector_space_real_array_2d
 
   ! Error messages
-  character(len=*), parameter :: wrong_type_x = "x not of class( sll_c_vector_space_real )"
-  character(len=*), parameter :: wrong_type_y = "y not of class( sll_c_vector_space_real )"
+  character(len=*), parameter :: wrong_type_x = "x not of type 'sll_t_vector_space_real_array_2d'"
+  character(len=*), parameter :: wrong_type_y = "y not of type 'sll_t_vector_space_real_array_2d'"
 
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 contains
