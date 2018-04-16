@@ -40,7 +40,7 @@ program test_vector_space_real_array_1d
   ! Test sll_t_vector_space_real_array_1d % copy
   !-----------------------------------------------------------------------------
 
-  ! Automatic allocation
+  allocate( w % array( size( v % array ) ) )
   call w % copy( v )
 
   ! Check test
