@@ -8,6 +8,12 @@ module sll_m_conjugate_gradient
 
   use sll_m_vector_space_base, only: sll_c_vector_space
 
+  use sll_m_vector_space_real_array_1d, only: sll_t_vector_space_real_array_1d
+
+  use sll_m_vector_space_real_array_2d, only: sll_t_vector_space_real_array_2d
+
+  use sll_m_vector_space_real_array_3d, only: sll_t_vector_space_real_array_3d
+
   implicit none
 
   public :: sll_t_conjugate_gradient
@@ -132,14 +138,37 @@ contains
 
     end associate
 
-!    ! Destroy temporary vector spaces, if not done only once by 'free' method
-!    if ( .not. self % allocate_once ) then
-!
-!      call self % p % delete()
-!      call self % r % delete()
-!      call self % v % delete()
-!
-!    end if
+    ! Destroy temporary vector spaces, if not done only once by 'free' method
+    if ( .not. self % allocate_once ) then
+
+      select type( p => self % p )
+      type is( sll_t_vector_space_real_array_1d )
+        deallocate( p % array )
+      type is( sll_t_vector_space_real_array_2d )
+        deallocate( p % array )
+      type is( sll_t_vector_space_real_array_3d )
+        deallocate( p % array )
+      end select
+
+      select type( r => self % r )
+      type is( sll_t_vector_space_real_array_1d )
+        deallocate( r % array )
+      type is( sll_t_vector_space_real_array_2d )
+        deallocate( r % array )
+      type is( sll_t_vector_space_real_array_3d )
+        deallocate( r % array )
+      end select
+
+      select type( v => self % v )
+      type is( sll_t_vector_space_real_array_1d )
+        deallocate( v % array )
+      type is( sll_t_vector_space_real_array_2d )
+        deallocate( v % array )
+      type is( sll_t_vector_space_real_array_3d )
+        deallocate( v % array )
+      end select
+
+    end if
 
     ! Store info
     self % iterations = m
@@ -156,13 +185,36 @@ contains
   subroutine s_conjugate_gradient__free( self )
     class(sll_t_conjugate_gradient), intent(inout) :: self
 
-!    if ( self % allocate_once ) then
-!
-!      call self % p % delete()
-!      call self % r % delete()
-!      call self % v % delete()
-!
-!    end if
+    if ( self % allocate_once ) then
+
+      select type( p => self % p )
+      type is( sll_t_vector_space_real_array_1d )
+        deallocate( p % array )
+      type is( sll_t_vector_space_real_array_2d )
+        deallocate( p % array )
+      type is( sll_t_vector_space_real_array_3d )
+        deallocate( p % array )
+      end select
+
+      select type( r => self % r )
+      type is( sll_t_vector_space_real_array_1d )
+        deallocate( r % array )
+      type is( sll_t_vector_space_real_array_2d )
+        deallocate( r % array )
+      type is( sll_t_vector_space_real_array_3d )
+        deallocate( r % array )
+      end select
+
+      select type( v => self % v )
+      type is( sll_t_vector_space_real_array_1d )
+        deallocate( v % array )
+      type is( sll_t_vector_space_real_array_2d )
+        deallocate( v % array )
+      type is( sll_t_vector_space_real_array_3d )
+        deallocate( v % array )
+      end select
+
+    end if
 
   end subroutine s_conjugate_gradient__free
 
