@@ -18,7 +18,7 @@ module sll_m_poisson_2d_fem_ssm
 
   use sll_m_poisson_2d_fem_ssm_projector, only: sll_t_poisson_2d_fem_ssm_projector
 
-  use sll_m_vector_space_real_arrays, only: sll_t_vector_space_real_1d
+  use sll_m_vector_space_real_array_1d, only: sll_t_vector_space_real_array_1d
 
   use sll_m_linear_operator_matrix_dense, only: sll_t_linear_operator_matrix_dense
 
@@ -101,8 +101,8 @@ module sll_m_poisson_2d_fem_ssm
     type(sll_t_poisson_2d_fem_ssm_projector) :: projector
 
     ! Linear solver
-    type(sll_t_vector_space_real_1d)         :: bp_vecsp
-    type(sll_t_vector_space_real_1d)         :: xp_vecsp
+    type(sll_t_vector_space_real_array_1d)   :: bp_vecsp
+    type(sll_t_vector_space_real_array_1d)   :: xp_vecsp
     type(sll_t_linear_operator_matrix_dense) :: Ap_linop
     type(sll_t_conjugate_gradient)           :: cjsolver
     real(wp) :: tol = 1.0e-14_wp  ! default value, can be overwritten from init method
@@ -369,7 +369,7 @@ contains
 
       ! Construct vector space for solution
       self % xp = 0.0_wp
-      call self % xp_vecsp % attach( self % xp(:idx) )
+      allocate( self % xp_vecsp % array( size( self % xp(:idx) ) ), source = self % xp(:idx) )
 
       ! Initialize conjugate gradient solver
       call self % cjsolver % init( &
@@ -451,7 +451,7 @@ contains
       idx = 3+(n1-3)*n2
 
       ! Construct vector space from vector bp
-      call self % bp_vecsp % attach( self % bp(:idx) )
+      allocate( self % bp_vecsp % array( size( self % bp(:idx) ) ), source = self % bp(:idx) )
 
       ! Solve linear system Ap*xp=bp
       call self % cjsolver % solve( &
@@ -505,7 +505,7 @@ contains
       idx = 3+(n1-3)*n2
 
       ! Construct vector space from vector bp
-      call self % bp_vecsp % attach( self % bp(:idx) )
+      allocate( self % bp_vecsp % array( size( self % bp(:idx) ) ), source = self % bp(:idx) )
 
       ! Solve linear system Ap*xp=bp
       call self % cjsolver % solve( &
@@ -550,8 +550,8 @@ contains
 
     call self % cjsolver % free()
     call self % Ap_linop % free()
-    call self % bp_vecsp % delete()
-    call self % xp_vecsp % delete()
+    deallocate( self % bp_vecsp % array )
+    deallocate( self % xp_vecsp % array )
 
   end subroutine s_poisson_2d_fem_ssm__free
 
