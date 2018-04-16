@@ -12,8 +12,7 @@ module m_ode_collection
   use sll_m_vector_space_base, only: &
     sll_c_vector_space
 
-  use sll_m_vector_space_real_arrays, only: &
-    sll_t_vector_space_real_1d
+  use sll_m_vector_space_real_array_1d, only: sll_t_vector_space_real_array_1d
 
   implicit none
 
@@ -51,11 +50,10 @@ contains
     class( sll_c_vector_space ) , intent( inout ) :: ydot
 
     character( len=* ), parameter :: this_sub_name = "rhs__harmonic_oscillator"
-    character( len=* ), parameter :: err_msg = &
-      " not of type( sll_t_vector_space_real_1d )"
+    character( len=* ), parameter :: err_msg = " not of type( sll_t_vector_space_real_array_1d )"
 
-    select type( y    ); type is( sll_t_vector_space_real_1d )
-    select type( ydot ); type is( sll_t_vector_space_real_1d )
+    select type( y    ); type is( sll_t_vector_space_real_array_1d )
+    select type( ydot ); type is( sll_t_vector_space_real_array_1d )
 
       SLL_ASSERT( size( y   %array ) .eq. 2 )
       SLL_ASSERT( size( ydot%array ) .eq. 2 )

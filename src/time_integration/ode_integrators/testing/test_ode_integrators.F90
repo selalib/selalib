@@ -24,8 +24,7 @@ program test_ode_integrators
     sll_t_rk1d_bwd_euler, &
     sll_t_rk1d_trapezoid
 
-  use sll_m_vector_space_real_arrays, only: &
-    sll_t_vector_space_real_1d
+  use sll_m_vector_space_real_array_1d, only: sll_t_vector_space_real_array_1d
 
   implicit none
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -67,7 +66,7 @@ program test_ode_integrators
   sll_real64, target                            :: z(2), znew(2)
   sll_real64                                    :: z0(2), z_ex(2)
   sll_real64                                    :: max_err
-  type( sll_t_vector_space_real_1d )              :: y   , ynew
+  type( sll_t_vector_space_real_array_1d )      :: y   , ynew
   class( sll_c_ode ), allocatable, target    :: ode
   class( sll_c_ode ), pointer                :: p_ode  ! pointer to ODE
   class( sll_c_ode_integrator ), allocatable :: odeint
@@ -89,8 +88,8 @@ program test_ode_integrators
 
   !----------------------------------------------------------------------------
   ! Create state vector (current and next solution)
-  call y   %attach( z    )
-  call ynew%attach( znew )
+  allocate( y % array( size( z ) ), source=z )
+  allocate( ynew % array( size( znew ) ), source=znew )
 
   ! Create ODE system
   allocate( harmonic_oscillator::ode )
