@@ -3,9 +3,7 @@ program test_conjugate_gradient
 
   use sll_m_working_precision, only: f64
 
-  use sll_m_vector_space_real_arrays, only: &
-    sll_t_vector_space_real_1d, &
-    sll_t_vector_space_real_2d
+  use sll_m_vector_space_real_array_1d, only: sll_t_vector_space_real_array_1d
 
   use sll_m_linear_operator_matrix_dense, only: sll_t_linear_operator_matrix_dense
 
@@ -29,8 +27,8 @@ program test_conjugate_gradient
   real(wp), allocatable :: z(:) ! 1D array of zeros
 
   ! 2D and 1D equivalent vector space real arrays
-  type(sll_t_vector_space_real_1d) :: xx
-  type(sll_t_vector_space_real_1d) :: bb
+  type(sll_t_vector_space_real_array_1d) :: xx
+  type(sll_t_vector_space_real_array_1d) :: bb
 
   ! Linear operator constructed from A
   type(sll_t_linear_operator_matrix_dense) :: A_linear_operator
@@ -98,10 +96,10 @@ program test_conjugate_gradient
     call A_linear_operator % init( A )
 
     ! Construct vector space from vector b
-    call bb % attach( b )
+    allocate( bb % array( size( b ) ), source=b )
 
     ! Construct vector space object for solution
-    call xx % attach( z )
+    allocate( xx % array( size( z ) ), source=z )
 
     ! Initialize conjugate gradient solver
     call conjugate_gradient % init( tol=tol, verbose=verbose, template_vector=xx )
@@ -131,8 +129,8 @@ program test_conjugate_gradient
 
     ! Deallocate allocatables and free objects
     call A_linear_operator % free()
-    call xx % delete()
-    call bb % delete()
+    deallocate( bb % array )
+    deallocate( xx % array )
     deallocate( A, x, b, z )
 
   end do
@@ -220,10 +218,10 @@ program test_conjugate_gradient
     call A_linear_operator % init( A )
 
     ! Construct vector space from vector b
-    call bb % attach( b )
+    allocate( bb % array( size( b ) ), source=b )
 
     ! Construct vector space object for solution
-    call xx % attach( z )
+    allocate( xx % array( size( z ) ), source=z )
 
     ! Initialize conjugate gradient solver
     call conjugate_gradient % init( tol=tol, verbose=verbose, template_vector=xx )
@@ -253,8 +251,8 @@ program test_conjugate_gradient
 
     ! Deallocate allocatables and free objects
     call A_linear_operator % free()
-    call xx % delete()
-    call bb % delete()
+    deallocate( bb % array )
+    deallocate( xx % array )
     deallocate( A, La, Id, x, b, z )
 
   end do
