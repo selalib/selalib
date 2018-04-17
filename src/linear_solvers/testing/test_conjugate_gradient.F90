@@ -44,7 +44,7 @@ program test_conjugate_gradient
   logical :: passed
   logical :: success
 
-  passed  = .true.
+  passed = .true.
 
   !-----------------------------------------------------------------------------
   ! Test #1: diagonal matrices of increasing size
