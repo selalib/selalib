@@ -6,6 +6,7 @@ ADD_LIBRARY( sll_linear_solvers STATIC
   sll_m_pivotbande.F90
   sll_m_linear_operator_base.F90
   sll_m_linear_operator_matrix_dense.F90
+  sll_m_linear_operator_matrix_stencil.F90
   sll_m_conjugate_gradient.F90
 )
 
