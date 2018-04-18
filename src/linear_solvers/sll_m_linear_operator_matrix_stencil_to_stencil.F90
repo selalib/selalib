@@ -1,4 +1,4 @@
-module sll_m_linear_operator_matrix_stencil
+module sll_m_linear_operator_matrix_stencil_to_stencil
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_assert.h"
 #include "sll_errors.h"
@@ -13,7 +13,7 @@ module sll_m_linear_operator_matrix_stencil
 
   implicit none
 
-  public :: sll_t_linear_operator_matrix_stencil
+  public :: sll_t_linear_operator_matrix_stencil_to_stencil
 
   private
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -21,7 +21,7 @@ module sll_m_linear_operator_matrix_stencil
   ! Working precision
   integer, parameter :: wp = f64
 
-  type, extends(sll_c_linear_operator) :: sll_t_linear_operator_matrix_stencil
+  type, extends(sll_c_linear_operator) :: sll_t_linear_operator_matrix_stencil_to_stencil
 
     private
 
@@ -34,24 +34,24 @@ module sll_m_linear_operator_matrix_stencil
 
   contains
 
-    procedure :: init      => s_linear_operator_matrix_stencil__init
-    procedure :: get_shape => f_linear_operator_matrix_stencil__get_shape
-    procedure :: dot       => s_linear_operator_matrix_stencil__dot
-    procedure :: to_array  => s_linear_operator_matrix_stencil__to_array
-    procedure :: free      => s_linear_operator_matrix_stencil__free
+    procedure :: init      => s_linear_operator_matrix_stencil_to_stencil__init
+    procedure :: get_shape => f_linear_operator_matrix_stencil_to_stencil__get_shape
+    procedure :: dot       => s_linear_operator_matrix_stencil_to_stencil__dot
+    procedure :: to_array  => s_linear_operator_matrix_stencil_to_stencil__to_array
+    procedure :: free      => s_linear_operator_matrix_stencil_to_stencil__free
 
-  end type sll_t_linear_operator_matrix_stencil
+  end type sll_t_linear_operator_matrix_stencil_to_stencil
 
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 contains
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
   ! Initialize linear operator
-  subroutine s_linear_operator_matrix_stencil__init( self, l1, l2, A )
-    class(sll_t_linear_operator_matrix_stencil), intent(inout) :: self
-    integer                                    , intent(in   ) :: l1
-    integer                                    , intent(in   ) :: l2
-    real(wp), target                           , intent(in   ) :: A(l1:,l2:,:,:)
+  subroutine s_linear_operator_matrix_stencil_to_stencil__init( self, l1, l2, A )
+    class(sll_t_linear_operator_matrix_stencil_to_stencil), intent(inout) :: self
+    integer                                               , intent(in   ) :: l1
+    integer                                               , intent(in   ) :: l2
+    real(wp), target                                      , intent(in   ) :: A(l1:,l2:,:,:)
 
     self % A => A
 
@@ -63,28 +63,28 @@ contains
     SLL_ASSERT( self % p1 == -l1 )
     SLL_ASSERT( self % p2 == -l2 )
 
-  end subroutine s_linear_operator_matrix_stencil__init
+  end subroutine s_linear_operator_matrix_stencil_to_stencil__init
 
   ! Get shape of linear operator
-  function f_linear_operator_matrix_stencil__get_shape( self ) result( s )
-    class(sll_t_linear_operator_matrix_stencil), intent(in) :: self
+  function f_linear_operator_matrix_stencil_to_stencil__get_shape( self ) result( s )
+    class(sll_t_linear_operator_matrix_stencil_to_stencil), intent(in) :: self
     integer :: s(2)
 
     s(1) = size( self % A, 3 ) * size( self % A, 4 )
     s(2) = s(1)
 
-  end function f_linear_operator_matrix_stencil__get_shape
+  end function f_linear_operator_matrix_stencil_to_stencil__get_shape
 
   ! Implement Ax=y, with A stencil matrix, x and y real 2D arrays
-  subroutine s_linear_operator_matrix_stencil__dot( self, x, y )
-    class(sll_t_linear_operator_matrix_stencil), intent(in   ) :: self
-    class(sll_c_vector_space)                  , intent(in   ) :: x
-    class(sll_c_vector_space)                  , intent(inout) :: y ! already constructed
+  subroutine s_linear_operator_matrix_stencil_to_stencil__dot( self, x, y )
+    class(sll_t_linear_operator_matrix_stencil_to_stencil), intent(in   ) :: self
+    class(sll_c_vector_space)                             , intent(in   ) :: x
+    class(sll_c_vector_space)                             , intent(inout) :: y ! already constructed
 
     integer :: nx(2), ny(2)
     integer :: i1, i2, j1, j2, k1, k2
 
-    character(len=*), parameter :: this_sub_name = "sll_t_linear_operator_matrix_stencil % dot"
+    character(len=*), parameter :: this_sub_name = "sll_t_linear_operator_matrix_stencil_to_stencil % dot"
     character(len=64) :: err_msg
 
     associate( n1 => self % n1, &
@@ -140,12 +140,12 @@ contains
 
     end associate
 
-  end subroutine s_linear_operator_matrix_stencil__dot
+  end subroutine s_linear_operator_matrix_stencil_to_stencil__dot
 
   ! Convert stencil matrix to dense matrix
-  subroutine s_linear_operator_matrix_stencil__to_array( self, A )
-    class(sll_t_linear_operator_matrix_stencil), intent(in   ) :: self
-    real(wp)                                   , intent(inout) :: A(:,:)
+  subroutine s_linear_operator_matrix_stencil_to_stencil__to_array( self, A )
+    class(sll_t_linear_operator_matrix_stencil_to_stencil), intent(in   ) :: self
+    real(wp)                                              , intent(inout) :: A(:,:)
 
     integer :: i, j, i1, i2, j1, j2, k1, k2
 
@@ -173,14 +173,14 @@ contains
 
     end associate
 
-  end subroutine s_linear_operator_matrix_stencil__to_array
+  end subroutine s_linear_operator_matrix_stencil_to_stencil__to_array
 
   ! Free objects
-  subroutine s_linear_operator_matrix_stencil__free( self )
-    class(sll_t_linear_operator_matrix_stencil), intent(inout) :: self
+  subroutine s_linear_operator_matrix_stencil_to_stencil__free( self )
+    class(sll_t_linear_operator_matrix_stencil_to_stencil), intent(inout) :: self
 
     self % A  => null()
 
-  end subroutine s_linear_operator_matrix_stencil__free
+  end subroutine s_linear_operator_matrix_stencil_to_stencil__free
 
-end module sll_m_linear_operator_matrix_stencil
+end module sll_m_linear_operator_matrix_stencil_to_stencil

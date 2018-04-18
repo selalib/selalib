@@ -20,7 +20,7 @@ module sll_m_poisson_2d_fem_ssm
 
   use sll_m_vector_space_real_array_1d, only: sll_t_vector_space_real_array_1d
 
-  use sll_m_linear_operator_matrix_dense, only: sll_t_linear_operator_matrix_dense
+  use sll_m_linear_operator_matrix_dense_to_dense, only: sll_t_linear_operator_matrix_dense_to_dense
 
   use sll_m_conjugate_gradient, only: sll_t_conjugate_gradient
 
@@ -101,10 +101,10 @@ module sll_m_poisson_2d_fem_ssm
     type(sll_t_poisson_2d_fem_ssm_projector) :: projector
 
     ! Linear solver
-    type(sll_t_vector_space_real_array_1d)   :: bp_vecsp
-    type(sll_t_vector_space_real_array_1d)   :: xp_vecsp
-    type(sll_t_linear_operator_matrix_dense) :: Ap_linop
-    type(sll_t_conjugate_gradient)           :: cjsolver
+    type(sll_t_vector_space_real_array_1d)            :: bp_vecsp
+    type(sll_t_vector_space_real_array_1d)            :: xp_vecsp
+    type(sll_t_linear_operator_matrix_dense_to_dense) :: Ap_linop
+    type(sll_t_conjugate_gradient)                    :: cjsolver
     real(wp) :: tol = 1.0e-14_wp  ! default value, can be overwritten from init method
     logical  :: verbose = .false. ! default value, can be overwritten from init method
 
