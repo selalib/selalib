@@ -35,6 +35,7 @@ module sll_m_linear_operator_matrix_stencil_to_stencil
     procedure :: init      => s_linear_operator_matrix_stencil_to_stencil__init
     procedure :: get_shape => f_linear_operator_matrix_stencil_to_stencil__get_shape
     procedure :: dot       => s_linear_operator_matrix_stencil_to_stencil__dot
+    procedure :: dot_incr  => s_linear_operator_matrix_stencil_to_stencil__dot_incr
     procedure :: to_array  => s_linear_operator_matrix_stencil_to_stencil__to_array
     procedure :: free      => s_linear_operator_matrix_stencil_to_stencil__free
 
@@ -71,7 +72,7 @@ contains
 
   end function f_linear_operator_matrix_stencil_to_stencil__get_shape
 
-  ! Implement Ax=y, with A stencil matrix, x and y real 2D arrays
+  ! Implement y=Ax, with A stencil matrix, x and y real 2D arrays
   subroutine s_linear_operator_matrix_stencil_to_stencil__dot( self, x, y )
     class(sll_t_linear_operator_matrix_stencil_to_stencil), intent(in   ) :: self
     class(sll_c_vector_space)                             , intent(in   ) :: x
@@ -137,6 +138,72 @@ contains
     end associate
 
   end subroutine s_linear_operator_matrix_stencil_to_stencil__dot
+
+  ! Implement y=y+Ax, with A stencil matrix, x and y real 2D arrays
+  subroutine s_linear_operator_matrix_stencil_to_stencil__dot_incr( self, x, y )
+    class(sll_t_linear_operator_matrix_stencil_to_stencil), intent(in   ) :: self
+    class(sll_c_vector_space)                             , intent(in   ) :: x
+    class(sll_c_vector_space)                             , intent(inout) :: y ! already constructed
+
+    integer :: nx(2), ny(2)
+    integer :: i1, i2, j1, j2, k1, k2
+
+    character(len=*), parameter :: this_sub_name = "sll_t_linear_operator_matrix_stencil_to_stencil % dot"
+    character(len=64) :: err_msg
+
+    associate( n1 => self % n1, &
+               n2 => self % n2, &
+               p1 => self % p1, &
+               p2 => self % p2 )
+
+      ! Make sure to work with 1D real arrays
+      select type ( x )
+
+      type is ( sll_t_vector_space_real_array_2d )
+
+        ! TODO: check dimensions
+        nx = shape( x % array )
+
+        select type ( y )
+
+        type is ( sll_t_vector_space_real_array_2d )
+
+          ! TODO: check dimensions
+          ny = shape( y % array )
+
+          do i2 = 1, n2
+            do i1 = 1, n1
+              do k2 = -p2, p2
+                do k1 = -p1, p1
+                  j1 = modulo( i1 - 1 + k1, n1 ) + 1
+                  j2 = modulo( i2 - 1 + k2, n2 ) + 1
+                  y % array(i1,i2) = y % array(i1,i2) + self % A(k1,k2,i1,i2) * x % array(j1,j2)
+                end do
+              end do
+            end do
+          end do
+
+          ! Update buffer regions
+          y % array(1-p1:0    ,:) = y % array(n1-p1+1:n1,:)
+          y % array(n1+1:n1+p1,:) = y % array(1:p1      ,:)
+          y % array(:,1-p2:0    ) = y % array(:,n2-p2+1:n2)
+          y % array(:,n2+1:n2+p2) = y % array(:,1:p2      )
+
+        class default
+          err_msg = "y must be of type sll_t_vector_space_real_array_2d"
+          SLL_ERROR( this_sub_name, err_msg )
+
+        end select
+
+      class default
+        err_msg = "x must be of type sll_t_vector_space_real_array_2d"
+        SLL_ERROR( this_sub_name, err_msg )
+
+      end select
+
+    end associate
+
+  end subroutine s_linear_operator_matrix_stencil_to_stencil__dot_incr
 
   ! Convert stencil matrix to dense matrix
   subroutine s_linear_operator_matrix_stencil_to_stencil__to_array( self, A )
