@@ -23,11 +23,8 @@ module sll_m_linear_operator_matrix_dense_to_dense
 
   type, extends(sll_c_linear_operator) :: sll_t_linear_operator_matrix_dense_to_dense
 
-    private
-
-    ! Pointers to matrix A or its transpose
-    real(wp), pointer :: A (:,:) => null()
-    real(wp), pointer :: At(:,:) => null()
+    real(wp), allocatable :: A (:,:)
+    real(wp), allocatable :: At(:,:)
 
     ! Logical flag telling whether A was given transposed or not
     logical :: transposed = .false.
@@ -46,17 +43,18 @@ contains
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
   ! Initialize linear operator
-  subroutine s_linear_operator_matrix_dense_to_dense__init( self, A, transposed )
+  subroutine s_linear_operator_matrix_dense_to_dense__init( self, n1, n2, transposed )
     class(sll_t_linear_operator_matrix_dense_to_dense), intent(inout) :: self
-    real(wp), target                                  , intent(in   ) :: A(:,:)
+    integer                                           , intent(in   ) :: n1
+    integer                                           , intent(in   ) :: n2
     logical , optional                                , intent(in   ) :: transposed
 
     if ( present( transposed ) ) self % transposed = transposed
 
     if ( self % transposed ) then
-      self % At => A
+      allocate( self % At( n1, n2 ) )
     else
-      self % A  => A
+      allocate( self % A( n1, n2 ) )
     end if
 
   end subroutine s_linear_operator_matrix_dense_to_dense__init
@@ -129,9 +127,9 @@ contains
     class(sll_t_linear_operator_matrix_dense_to_dense), intent(inout) :: self
 
     if ( self % transposed ) then
-      self % At => null()
+      deallocate( self % At )
     else
-      self % A  => null()
+      deallocate( self % A )
     end if
 
   end subroutine s_linear_operator_matrix_dense_to_dense__free

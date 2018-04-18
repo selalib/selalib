@@ -365,7 +365,8 @@ contains
       idx = 3+(n1-3)*n2
 
       ! Construct linear operator from matrix Ap
-      call self % Ap_linop % init( self % Ap(:idx,:idx) )
+      call self % Ap_linop % init( idx, idx )
+      self % Ap_linop % A = self % Ap(:idx,:idx)
 
       ! Construct vector space for solution
       self % xp = 0.0_wp
