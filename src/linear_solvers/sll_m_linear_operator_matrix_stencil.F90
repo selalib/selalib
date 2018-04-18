@@ -35,7 +35,7 @@ module sll_m_linear_operator_matrix_stencil
   contains
 
     procedure :: init      => s_linear_operator_matrix_stencil__init
-    procedure :: get_shape => s_linear_operator_matrix_stencil__get_shape
+    procedure :: get_shape => f_linear_operator_matrix_stencil__get_shape
     procedure :: dot       => s_linear_operator_matrix_stencil__dot
     procedure :: to_array  => s_linear_operator_matrix_stencil__to_array
     procedure :: free      => s_linear_operator_matrix_stencil__free
@@ -66,13 +66,14 @@ contains
   end subroutine s_linear_operator_matrix_stencil__init
 
   ! Get shape of linear operator
-  subroutine s_linear_operator_matrix_stencil__get_shape( self, s )
-    class(sll_t_linear_operator_matrix_stencil), intent(in   ) :: self
-    integer                                    , intent(inout) :: s(:)
+  function f_linear_operator_matrix_stencil__get_shape( self ) result( s )
+    class(sll_t_linear_operator_matrix_stencil), intent(in) :: self
+    integer :: s(2)
 
-    s = shape( self % A  )
+    s(1) = size( self % A, 3 ) * size( self % A, 4 )
+    s(2) = s(1)
 
-  end subroutine s_linear_operator_matrix_stencil__get_shape
+  end function f_linear_operator_matrix_stencil__get_shape
 
   ! Implement Ax=y, with A stencil matrix, x and y real 2D arrays
   subroutine s_linear_operator_matrix_stencil__dot( self, x, y )
