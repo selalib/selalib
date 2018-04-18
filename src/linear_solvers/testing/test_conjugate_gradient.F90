@@ -7,9 +7,9 @@ program test_conjugate_gradient
 
   use sll_m_vector_space_real_array_2d, only: sll_t_vector_space_real_array_2d
 
-  use sll_m_linear_operator_matrix_dense, only: sll_t_linear_operator_matrix_dense
+  use sll_m_linear_operator_matrix_dense_to_dense, only: sll_t_linear_operator_matrix_dense_to_dense
 
-  use sll_m_linear_operator_matrix_stencil, only: sll_t_linear_operator_matrix_stencil
+  use sll_m_linear_operator_matrix_stencil_to_stencil, only: sll_t_linear_operator_matrix_stencil_to_stencil
 
   use sll_m_conjugate_gradient, only: sll_t_conjugate_gradient
 
@@ -47,8 +47,8 @@ program test_conjugate_gradient
   type(sll_t_vector_space_real_array_2d) :: bs_vecsp
 
   ! Linear operator constructed from A
-  type(sll_t_linear_operator_matrix_dense  ) :: A_linop
-  type(sll_t_linear_operator_matrix_stencil) :: As_linop
+  type(sll_t_linear_operator_matrix_dense_to_dense    ) :: A_linop
+  type(sll_t_linear_operator_matrix_stencil_to_stencil) :: As_linop
 
   ! Conjugate gradient solver
   type(sll_t_conjugate_gradient) :: conjugate_gradient

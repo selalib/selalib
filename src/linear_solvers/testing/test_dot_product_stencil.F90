@@ -9,9 +9,7 @@ program test_dot_product_stencil
 
   use sll_m_vector_space_real_array_2d, only: sll_t_vector_space_real_array_2d
 
-  use sll_m_linear_operator_matrix_dense, only: sll_t_linear_operator_matrix_dense
-
-  use sll_m_linear_operator_matrix_stencil, only: sll_t_linear_operator_matrix_stencil
+  use sll_m_linear_operator_matrix_stencil_to_stencil, only: sll_t_linear_operator_matrix_stencil_to_stencil
 
   implicit none
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -33,7 +31,7 @@ program test_dot_product_stencil
   real(wp), allocatable :: Vs(:,:) ! stencil
 
   ! Linear operators
-  type(sll_t_linear_operator_matrix_stencil) :: As_linop
+  type(sll_t_linear_operator_matrix_stencil_to_stencil) :: As_linop
 
   ! Vector spaces
   type(sll_t_vector_space_real_array_2d) :: Vs_vecsp
