@@ -103,7 +103,8 @@ program test_conjugate_gradient
     z(:) = 0.0_wp
 
     ! Construct linear operator from matrix A
-    call A_linop % init( A )
+    call A_linop % init( n, n )
+    A_linop % A = A
 
     ! Construct vector space from vector b
     allocate( b_vecsp % array( size( b ) ), source=b )
@@ -217,7 +218,8 @@ program test_conjugate_gradient
     z(:) = 0.0_wp
 
     ! Construct linear operator from matrix A
-    call A_linop % init( A )
+    call A_linop % init( n, n )
+    A_linop % A = A
 
     ! Construct vector space from vector b
     allocate( b_vecsp % array( size( b ) ), source=b )
@@ -321,7 +323,8 @@ program test_conjugate_gradient
       z(:) = 0.0_wp
 
       ! Construct linear operator from matrix A
-      call A_linop % init( A )
+      call A_linop % init( n, n )
+      A_linop % A = A
 
       ! Construct vector space from vector b
       allocate( b_vecsp % array( size( b ) ), source=b )
@@ -405,7 +408,8 @@ program test_conjugate_gradient
   end do ! i2
 
   ! Construct linear operator from stencil matrix As
-  call As_linop % init( lbound(As,1), lbound(As,2), As )
+  call As_linop % init( n1, n2, p1, p2 )
+  As_linop % A = As
 
   ! Initialize stencil vector xs
   do l2 = 1-p2, n2+p2
@@ -477,7 +481,8 @@ program test_conjugate_gradient
   z(:) = 0.0_wp
 
   ! Construct linear operator from matrix A
-  call A_linop % init( A )
+  call A_linop % init( n1*n2, n1*n2 )
+  A_linop % A = A
 
   ! Construct vector space from vector b
   allocate( b_vecsp % array( size( b ) ), source=b )
