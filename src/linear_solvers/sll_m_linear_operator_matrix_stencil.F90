@@ -112,8 +112,8 @@ contains
             do i1 = 1, n1
               do k2 = -p2, p2
                 do k1 = -p1, p1
-                  j1 = modulo( i1 + k1, n1 ) + 1
-                  j2 = modulo( i2 + k2, n2 ) + 1
+                  j1 = modulo( i1 - 1 + k1, n1 ) + 1
+                  j2 = modulo( i2 - 1 + k2, n2 ) + 1
                   y % array(i1,i2) = y % array(i1,i2) + self % A(k1,k2,i1,i2) * x % array(j1,j2)
                 end do
               end do
@@ -161,8 +161,8 @@ contains
         do i1 = 1, n1
           do k2 = -p2, p2
             do k1 = -p1, p1
-              j1 = modulo( i1 + k1, n1 ) + 1
-              j2 = modulo( i2 + k2, n2 ) + 1
+              j1 = modulo( i1 - 1 + k1, n1 ) + 1
+              j2 = modulo( i2 - 1 + k2, n2 ) + 1
               i  = (i1-1) * n2 + i2
               j  = (j1-1) * n2 + j2
               A(i,j) = self % A(k1,k2,i1,i2)
