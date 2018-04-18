@@ -93,7 +93,7 @@ contains
     real(wp) :: am, am1, l, tol_sqr
 
     ! Get shape of linear operator
-    call A % get_shape( n )
+    n = A % get_shape()
 
     ! Some checks
     SLL_ASSERT( n(1) == n(2) )

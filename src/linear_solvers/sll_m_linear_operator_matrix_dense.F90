@@ -35,7 +35,7 @@ module sll_m_linear_operator_matrix_dense
   contains
 
     procedure :: init      => s_linear_operator_matrix_dense__init
-    procedure :: get_shape => s_linear_operator_matrix_dense__get_shape
+    procedure :: get_shape => f_linear_operator_matrix_dense__get_shape
     procedure :: dot       => s_linear_operator_matrix_dense__dot
     procedure :: free      => s_linear_operator_matrix_dense__free
 
@@ -62,9 +62,9 @@ contains
   end subroutine s_linear_operator_matrix_dense__init
 
   ! Get shape of linear operator
-  subroutine s_linear_operator_matrix_dense__get_shape( self, s )
-    class(sll_t_linear_operator_matrix_dense), intent(in   ) :: self
-    integer                                  , intent(inout) :: s(:)
+  function f_linear_operator_matrix_dense__get_shape( self ) result( s )
+    class(sll_t_linear_operator_matrix_dense), intent(in) :: self
+    integer :: s(2)
 
     if ( self % transposed ) then
       s = shape( self % At )
@@ -72,7 +72,7 @@ contains
       s = shape( self % A  )
     end if
 
-  end subroutine s_linear_operator_matrix_dense__get_shape
+  end function f_linear_operator_matrix_dense__get_shape
 
   ! Implement Ax=y, with A dense matrix, x and y real 1D arrays
   subroutine s_linear_operator_matrix_dense__dot( self, x, y )
@@ -85,7 +85,7 @@ contains
     character(len=*), parameter :: this_sub_name = "sll_t_linear_operator_matrix_dense % dot"
     character(len=64) :: err_msg
 
-    call self % get_shape( n )
+    n = self % get_shape()
 
     ! Make sure to work with 1D real arrays
     select type ( x )
