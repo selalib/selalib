@@ -23,9 +23,7 @@ module sll_m_linear_operator_matrix_stencil_to_stencil
 
   type, extends(sll_c_linear_operator) :: sll_t_linear_operator_matrix_stencil_to_stencil
 
-    private
-
-    real(wp), pointer :: A(:,:,:,:) => null()
+    real(wp), allocatable :: A(:,:,:,:)
 
     integer :: n1
     integer :: n2
@@ -47,21 +45,19 @@ contains
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
   ! Initialize linear operator
-  subroutine s_linear_operator_matrix_stencil_to_stencil__init( self, l1, l2, A )
+  subroutine s_linear_operator_matrix_stencil_to_stencil__init( self, n1, n2, p1, p2 )
     class(sll_t_linear_operator_matrix_stencil_to_stencil), intent(inout) :: self
-    integer                                               , intent(in   ) :: l1
-    integer                                               , intent(in   ) :: l2
-    real(wp), target                                      , intent(in   ) :: A(l1:,l2:,:,:)
+    integer                                               , intent(in   ) :: n1
+    integer                                               , intent(in   ) :: n2
+    integer                                               , intent(in   ) :: p1
+    integer                                               , intent(in   ) :: p2
 
-    self % A => A
+    allocate( self % A( -p1:p1, -p2:p2, 1:n1, 1:n2 ) )
 
-    self % n1 = size( A, 3 )
-    self % n2 = size( A, 4 )
-    self % p1 = ubound( A, 1 )
-    self % p2 = ubound( A, 2 )
-
-    SLL_ASSERT( self % p1 == -l1 )
-    SLL_ASSERT( self % p2 == -l2 )
+    self % n1 = n1
+    self % n2 = n2
+    self % p1 = p1
+    self % p2 = p2
 
   end subroutine s_linear_operator_matrix_stencil_to_stencil__init
 
@@ -179,7 +175,7 @@ contains
   subroutine s_linear_operator_matrix_stencil_to_stencil__free( self )
     class(sll_t_linear_operator_matrix_stencil_to_stencil), intent(inout) :: self
 
-    self % A  => null()
+    deallocate( self % A )
 
   end subroutine s_linear_operator_matrix_stencil_to_stencil__free
 

@@ -76,7 +76,8 @@ program test_dot_product_stencil
   end do
 
   ! Construct linear operator from stencil matrix As
-  call As_linop % init( lbound(As,1), lbound(As,2), As )
+  call As_linop % init( n1, n2, p1, p2 )
+  As_linop % A = As
 
   ! Convert stencil matrix to dense matrix
   Ad = 0.0_wp
