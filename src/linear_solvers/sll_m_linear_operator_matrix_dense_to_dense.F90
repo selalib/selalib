@@ -1,4 +1,4 @@
-module sll_m_linear_operator_matrix_dense
+module sll_m_linear_operator_matrix_dense_to_dense
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_assert.h"
 #include "sll_errors.h"
@@ -13,7 +13,7 @@ module sll_m_linear_operator_matrix_dense
 
   implicit none
 
-  public :: sll_t_linear_operator_matrix_dense
+  public :: sll_t_linear_operator_matrix_dense_to_dense
 
   private
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -21,7 +21,7 @@ module sll_m_linear_operator_matrix_dense
   ! Working precision
   integer, parameter :: wp = f64
 
-  type, extends(sll_c_linear_operator) :: sll_t_linear_operator_matrix_dense
+  type, extends(sll_c_linear_operator) :: sll_t_linear_operator_matrix_dense_to_dense
 
     private
 
@@ -34,22 +34,22 @@ module sll_m_linear_operator_matrix_dense
 
   contains
 
-    procedure :: init      => s_linear_operator_matrix_dense__init
-    procedure :: get_shape => f_linear_operator_matrix_dense__get_shape
-    procedure :: dot       => s_linear_operator_matrix_dense__dot
-    procedure :: free      => s_linear_operator_matrix_dense__free
+    procedure :: init      => s_linear_operator_matrix_dense_to_dense__init
+    procedure :: get_shape => f_linear_operator_matrix_dense_to_dense__get_shape
+    procedure :: dot       => s_linear_operator_matrix_dense_to_dense__dot
+    procedure :: free      => s_linear_operator_matrix_dense_to_dense__free
 
-  end type sll_t_linear_operator_matrix_dense
+  end type sll_t_linear_operator_matrix_dense_to_dense
 
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 contains
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
   ! Initialize linear operator
-  subroutine s_linear_operator_matrix_dense__init( self, A, transposed )
-    class(sll_t_linear_operator_matrix_dense), intent(inout) :: self
-    real(wp), target                         , intent(in   ) :: A(:,:)
-    logical , optional                       , intent(in   ) :: transposed
+  subroutine s_linear_operator_matrix_dense_to_dense__init( self, A, transposed )
+    class(sll_t_linear_operator_matrix_dense_to_dense), intent(inout) :: self
+    real(wp), target                                  , intent(in   ) :: A(:,:)
+    logical , optional                                , intent(in   ) :: transposed
 
     if ( present( transposed ) ) self % transposed = transposed
 
@@ -59,11 +59,11 @@ contains
       self % A  => A
     end if
 
-  end subroutine s_linear_operator_matrix_dense__init
+  end subroutine s_linear_operator_matrix_dense_to_dense__init
 
   ! Get shape of linear operator
-  function f_linear_operator_matrix_dense__get_shape( self ) result( s )
-    class(sll_t_linear_operator_matrix_dense), intent(in) :: self
+  function f_linear_operator_matrix_dense_to_dense__get_shape( self ) result( s )
+    class(sll_t_linear_operator_matrix_dense_to_dense), intent(in) :: self
     integer :: s(2)
 
     if ( self % transposed ) then
@@ -72,17 +72,17 @@ contains
       s = shape( self % A  )
     end if
 
-  end function f_linear_operator_matrix_dense__get_shape
+  end function f_linear_operator_matrix_dense_to_dense__get_shape
 
   ! Implement Ax=y, with A dense matrix, x and y real 1D arrays
-  subroutine s_linear_operator_matrix_dense__dot( self, x, y )
-    class(sll_t_linear_operator_matrix_dense), intent(in   ) :: self
-    class(sll_c_vector_space)                , intent(in   ) :: x
-    class(sll_c_vector_space)                , intent(inout) :: y ! already constructed
+  subroutine s_linear_operator_matrix_dense_to_dense__dot( self, x, y )
+    class(sll_t_linear_operator_matrix_dense_to_dense), intent(in   ) :: self
+    class(sll_c_vector_space)                         , intent(in   ) :: x
+    class(sll_c_vector_space)                         , intent(inout) :: y ! already constructed
 
     integer :: nx(1), ny(1), n(2)
 
-    character(len=*), parameter :: this_sub_name = "sll_t_linear_operator_matrix_dense % dot"
+    character(len=*), parameter :: this_sub_name = "sll_t_linear_operator_matrix_dense_to_dense % dot"
     character(len=64) :: err_msg
 
     n = self % get_shape()
@@ -122,11 +122,11 @@ contains
 
     end select
 
-  end subroutine s_linear_operator_matrix_dense__dot
+  end subroutine s_linear_operator_matrix_dense_to_dense__dot
 
   ! Free objects
-  subroutine s_linear_operator_matrix_dense__free( self )
-    class(sll_t_linear_operator_matrix_dense), intent(inout) :: self
+  subroutine s_linear_operator_matrix_dense_to_dense__free( self )
+    class(sll_t_linear_operator_matrix_dense_to_dense), intent(inout) :: self
 
     if ( self % transposed ) then
       self % At => null()
@@ -134,6 +134,6 @@ contains
       self % A  => null()
     end if
 
-  end subroutine s_linear_operator_matrix_dense__free
+  end subroutine s_linear_operator_matrix_dense_to_dense__free
 
-end module sll_m_linear_operator_matrix_dense
+end module sll_m_linear_operator_matrix_dense_to_dense
