@@ -80,11 +80,11 @@ contains
 
   end function f_linear_operator_matrix_dense_to_dense__get_shape
 
-  ! Implement y=Ax, with A dense matrix, x and y real 1D arrays
+  ! Implement y=Ax, with A dense matrix (2D), x and y dense vectors (1D)
   subroutine s_linear_operator_matrix_dense_to_dense__dot( self, x, y )
     class(sll_t_linear_operator_matrix_dense_to_dense), intent(in   ) :: self
-    class(sll_c_vector_space)                         , intent(in   ) :: x
-    class(sll_c_vector_space)                         , intent(inout) :: y ! already constructed
+    class(sll_c_vector_space)                         , intent(in   ) :: x ! dense
+    class(sll_c_vector_space)                         , intent(inout) :: y ! dense
 
     integer :: nx(1), ny(1), n(2)
 
@@ -93,12 +93,11 @@ contains
 
     n = self % get_shape()
 
-    ! Make sure to work with 1D real arrays
     select type ( x )
 
     type is ( sll_t_vector_space_real_array_1d )
 
-      ! Check if A and x are compatible for multiplication
+      ! Check dimensions
       nx = shape( x % array )
       SLL_ASSERT( n(2) == nx(1) )
 
@@ -106,7 +105,7 @@ contains
 
       type is ( sll_t_vector_space_real_array_1d )
 
-        ! Check if y and Ax are compatible for multiplication
+        ! Check dimensions
         ny = shape( y % array )
         SLL_ASSERT( n(1) == ny(1) )
 
@@ -130,11 +129,11 @@ contains
 
   end subroutine s_linear_operator_matrix_dense_to_dense__dot
 
-  ! Implement y=y+Ax, with A dense matrix, x and y real 1D arrays
+  ! Implement y=y+Ax, with A dense matrix (2D), x and y dense vectors (1D)
   subroutine s_linear_operator_matrix_dense_to_dense__dot_incr( self, x, y )
     class(sll_t_linear_operator_matrix_dense_to_dense), intent(in   ) :: self
-    class(sll_c_vector_space)                         , intent(in   ) :: x
-    class(sll_c_vector_space)                         , intent(inout) :: y ! already constructed
+    class(sll_c_vector_space)                         , intent(in   ) :: x ! dense
+    class(sll_c_vector_space)                         , intent(inout) :: y ! dense
 
     integer :: nx(1), ny(1), n(2)
 
@@ -143,12 +142,11 @@ contains
 
     n = self % get_shape()
 
-    ! Make sure to work with 1D real arrays
     select type ( x )
 
     type is ( sll_t_vector_space_real_array_1d )
 
-      ! Check if A and x are compatible for multiplication
+      ! Check dimensions
       nx = shape( x % array )
       SLL_ASSERT( n(2) == nx(1) )
 
@@ -156,7 +154,7 @@ contains
 
       type is ( sll_t_vector_space_real_array_1d )
 
-        ! Check if y and Ax are compatible for multiplication
+        ! Check dimensions
         ny = shape( y % array )
         SLL_ASSERT( n(1) == ny(1) )
 
