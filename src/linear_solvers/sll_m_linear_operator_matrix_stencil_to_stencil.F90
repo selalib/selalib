@@ -72,13 +72,12 @@ contains
 
   end function f_linear_operator_matrix_stencil_to_stencil__get_shape
 
-  ! Implement y=Ax, with A stencil matrix, x and y real 2D arrays
+  ! Implement y=Ax, with A stencil matrix (4D), x and y stencil vectors (2D)
   subroutine s_linear_operator_matrix_stencil_to_stencil__dot( self, x, y )
     class(sll_t_linear_operator_matrix_stencil_to_stencil), intent(in   ) :: self
-    class(sll_c_vector_space)                             , intent(in   ) :: x
-    class(sll_c_vector_space)                             , intent(inout) :: y ! already constructed
+    class(sll_c_vector_space)                             , intent(in   ) :: x ! stencil
+    class(sll_c_vector_space)                             , intent(inout) :: y ! stencil
 
-    integer :: nx(2), ny(2)
     integer :: i1, i2, j1, j2, k1, k2
 
     character(len=*), parameter :: this_sub_name = "sll_t_linear_operator_matrix_stencil_to_stencil % dot"
@@ -89,20 +88,25 @@ contains
                p1 => self % p1, &
                p2 => self % p2 )
 
-      ! Make sure to work with 1D real arrays
       select type ( x )
 
       type is ( sll_t_vector_space_real_array_2d )
 
-        ! TODO: check dimensions
-        nx = shape( x % array )
+        ! Check dimensions
+        SLL_ASSERT( self % p1 == -lbound( x % array, 1 ) + 1 )
+        SLL_ASSERT( self % p2 == -lbound( x % array, 2 ) + 1 )
+        SLL_ASSERT( self % n1 ==  ubound( x % array, 1 ) + lbound( x % array, 1 ) - 1 )
+        SLL_ASSERT( self % n2 ==  ubound( x % array, 2 ) + lbound( x % array, 2 ) - 1 )
 
         select type ( y )
 
         type is ( sll_t_vector_space_real_array_2d )
 
-          ! TODO: check dimensions
-          ny = shape( y % array )
+          ! Check dimensions
+          SLL_ASSERT( self % p1 == -lbound( y % array, 1 ) + 1 )
+          SLL_ASSERT( self % p2 == -lbound( y % array, 2 ) + 1 )
+          SLL_ASSERT( self % n1 ==  ubound( y % array, 1 ) + lbound( y % array, 1 ) - 1 )
+          SLL_ASSERT( self % n2 ==  ubound( y % array, 2 ) + lbound( y % array, 2 ) - 1 )
 
           y % array = 0.0_wp
           do i2 = 1, n2
@@ -139,13 +143,12 @@ contains
 
   end subroutine s_linear_operator_matrix_stencil_to_stencil__dot
 
-  ! Implement y=y+Ax, with A stencil matrix, x and y real 2D arrays
+  ! Implement y=y+Ax, with A stencil matrix (4D), x and y stencil vectors (2D)
   subroutine s_linear_operator_matrix_stencil_to_stencil__dot_incr( self, x, y )
     class(sll_t_linear_operator_matrix_stencil_to_stencil), intent(in   ) :: self
-    class(sll_c_vector_space)                             , intent(in   ) :: x
-    class(sll_c_vector_space)                             , intent(inout) :: y ! already constructed
+    class(sll_c_vector_space)                             , intent(in   ) :: x ! stencil
+    class(sll_c_vector_space)                             , intent(inout) :: y ! stencil
 
-    integer :: nx(2), ny(2)
     integer :: i1, i2, j1, j2, k1, k2
 
     character(len=*), parameter :: this_sub_name = "sll_t_linear_operator_matrix_stencil_to_stencil % dot"
@@ -156,20 +159,25 @@ contains
                p1 => self % p1, &
                p2 => self % p2 )
 
-      ! Make sure to work with 1D real arrays
       select type ( x )
 
       type is ( sll_t_vector_space_real_array_2d )
 
-        ! TODO: check dimensions
-        nx = shape( x % array )
+        ! Check dimensions
+        SLL_ASSERT( self % p1 == -lbound( x % array, 1 ) + 1 )
+        SLL_ASSERT( self % p2 == -lbound( x % array, 2 ) + 1 )
+        SLL_ASSERT( self % n1 ==  ubound( x % array, 1 ) + lbound( x % array, 1 ) - 1 )
+        SLL_ASSERT( self % n2 ==  ubound( x % array, 2 ) + lbound( x % array, 2 ) - 1 )
 
         select type ( y )
 
         type is ( sll_t_vector_space_real_array_2d )
 
-          ! TODO: check dimensions
-          ny = shape( y % array )
+          ! Check dimensions
+          SLL_ASSERT( self % p1 == -lbound( y % array, 1 ) + 1 )
+          SLL_ASSERT( self % p2 == -lbound( y % array, 2 ) + 1 )
+          SLL_ASSERT( self % n1 ==  ubound( y % array, 1 ) + lbound( y % array, 1 ) - 1 )
+          SLL_ASSERT( self % n2 ==  ubound( y % array, 2 ) + lbound( y % array, 2 ) - 1 )
 
           do i2 = 1, n2
             do i1 = 1, n1
