@@ -1,4 +1,4 @@
-module sll_m_poisson_2d_fem_ssm_projector
+module sll_m_poisson_2d_fem_sps_dense_projector
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_assert.h"
 
@@ -6,7 +6,7 @@ module sll_m_poisson_2d_fem_ssm_projector
 
   implicit none
 
-  public :: sll_t_poisson_2d_fem_ssm_projector
+  public :: sll_t_poisson_2d_fem_sps_dense_projector
 
   private
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -14,7 +14,7 @@ module sll_m_poisson_2d_fem_ssm_projector
   ! Working precision
   integer, parameter :: wp = f64
 
-  type :: sll_t_poisson_2d_fem_ssm_projector
+  type :: sll_t_poisson_2d_fem_sps_dense_projector
 
     integer :: n1
     integer :: n2
@@ -26,24 +26,24 @@ module sll_m_poisson_2d_fem_ssm_projector
 
   contains
 
-    procedure :: init                        => s_poisson_2d_fem_ssm_projector__init
-    procedure :: change_basis_matrix         => s_poisson_2d_fem_ssm_projector__change_basis_matrix
-    procedure :: change_basis_vector         => s_poisson_2d_fem_ssm_projector__change_basis_vector
-    procedure :: change_basis_vector_inverse => s_poisson_2d_fem_ssm_projector__change_basis_vector_inverse
-    procedure :: free                        => s_poisson_2d_fem_ssm_projector__free
+    procedure :: init                    => s_poisson_2d_fem_sps_dense_projector__init
+    procedure :: change_basis_matrix     => s_poisson_2d_fem_sps_dense_projector__change_basis_matrix
+    procedure :: change_basis_vector     => s_poisson_2d_fem_sps_dense_projector__change_basis_vector
+    procedure :: change_basis_vector_inv => s_poisson_2d_fem_sps_dense_projector__change_basis_vector_inv
+    procedure :: free                    => s_poisson_2d_fem_sps_dense_projector__free
 
-  end type sll_t_poisson_2d_fem_ssm_projector
+  end type sll_t_poisson_2d_fem_sps_dense_projector
 
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 contains
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
   ! Initializer
-  subroutine s_poisson_2d_fem_ssm_projector__init( self, n1, n2, L )
-    class(sll_t_poisson_2d_fem_ssm_projector), intent(inout) :: self
-    integer                                  , intent(in   ) :: n1
-    integer                                  , intent(in   ) :: n2
-    real(wp)                                 , intent(in   ) :: L(:,:) ! matrix of barycentric coordinates
+  subroutine s_poisson_2d_fem_sps_dense_projector__init( self, n1, n2, L )
+    class(sll_t_poisson_2d_fem_sps_dense_projector), intent(inout) :: self
+    integer                                        , intent(in   ) :: n1
+    integer                                        , intent(in   ) :: n2
+    real(wp)                                       , intent(in   ) :: L(:,:) ! matrix of barycentric coordinates
 
     integer :: nn
 
@@ -63,14 +63,14 @@ contains
     self % L  = L
     self % Lt = transpose( L )
 
-  end subroutine s_poisson_2d_fem_ssm_projector__init
+  end subroutine s_poisson_2d_fem_sps_dense_projector__init
 
   ! Change basis: C1 projection of stiffness and mass matrices
   ! NOTE: 'self' has intent(inout) because temporary storage has to be assigned
-  subroutine s_poisson_2d_fem_ssm_projector__change_basis_matrix( self, Q, Qp )
-    class(sll_t_poisson_2d_fem_ssm_projector), intent(inout) :: self
-    real(wp)                                 , intent(in   ) :: Q (:,:)
-    real(wp)                                 , intent(inout) :: Qp(:,:)
+  subroutine s_poisson_2d_fem_sps_dense_projector__change_basis_matrix( self, Q, Qp )
+    class(sll_t_poisson_2d_fem_sps_dense_projector), intent(inout) :: self
+    real(wp)                                       , intent(in   ) :: Q (:,:)
+    real(wp)                                       , intent(inout) :: Qp(:,:)
 
     integer :: nn
 
@@ -99,13 +99,13 @@ contains
 
     end associate
 
-  end subroutine s_poisson_2d_fem_ssm_projector__change_basis_matrix
+  end subroutine s_poisson_2d_fem_sps_dense_projector__change_basis_matrix
 
   ! Change basis: C1 projection of vectors
-  subroutine s_poisson_2d_fem_ssm_projector__change_basis_vector( self, V, Vp )
-    class(sll_t_poisson_2d_fem_ssm_projector), intent(in   ) :: self
-    real(wp)                                 , intent(in   ) :: V (:)
-    real(wp)                                 , intent(inout) :: Vp(:)
+  subroutine s_poisson_2d_fem_sps_dense_projector__change_basis_vector( self, V, Vp )
+    class(sll_t_poisson_2d_fem_sps_dense_projector), intent(in   ) :: self
+    real(wp)                                       , intent(in   ) :: V (:)
+    real(wp)                                       , intent(inout) :: Vp(:)
 
     integer :: nn
 
@@ -122,13 +122,13 @@ contains
 
     end associate
 
-  end subroutine s_poisson_2d_fem_ssm_projector__change_basis_vector
+  end subroutine s_poisson_2d_fem_sps_dense_projector__change_basis_vector
 
   ! Change basis: C1 projection of vectors
-  subroutine s_poisson_2d_fem_ssm_projector__change_basis_vector_inverse( self, Vp, V )
-    class(sll_t_poisson_2d_fem_ssm_projector), intent(in   ) :: self
-    real(wp)                                 , intent(in   ) :: Vp(:)
-    real(wp)                                 , intent(inout) :: V (:)
+  subroutine s_poisson_2d_fem_sps_dense_projector__change_basis_vector_inv( self, Vp, V )
+    class(sll_t_poisson_2d_fem_sps_dense_projector), intent(in   ) :: self
+    real(wp)                                       , intent(in   ) :: Vp(:)
+    real(wp)                                       , intent(inout) :: V (:)
 
     integer :: nn
 
@@ -145,16 +145,16 @@ contains
 
     end associate
 
-  end subroutine s_poisson_2d_fem_ssm_projector__change_basis_vector_inverse
+  end subroutine s_poisson_2d_fem_sps_dense_projector__change_basis_vector_inv
 
   ! Deallocate allocatables
-  subroutine s_poisson_2d_fem_ssm_projector__free( self )
-    class(sll_t_poisson_2d_fem_ssm_projector), intent(inout) :: self
+  subroutine s_poisson_2d_fem_sps_dense_projector__free( self )
+    class(sll_t_poisson_2d_fem_sps_dense_projector), intent(inout) :: self
 
     deallocate( self % Qp_temp )
     deallocate( self % L       )
     deallocate( self % Lt      )
 
-  end subroutine s_poisson_2d_fem_ssm_projector__free
+  end subroutine s_poisson_2d_fem_sps_dense_projector__free
 
-end module sll_m_poisson_2d_fem_ssm_projector
+end module sll_m_poisson_2d_fem_sps_dense_projector
