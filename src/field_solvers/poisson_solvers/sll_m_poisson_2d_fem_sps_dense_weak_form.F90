@@ -1,13 +1,13 @@
-module sll_m_poisson_2d_fem_ssm_weak_form
+module sll_m_poisson_2d_fem_sps_dense_weak_form
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
   use sll_m_working_precision, only: f64
 
-  use sll_m_elliptic_2d_fem_ssm_weak_form, only: sll_c_elliptic_2d_fem_ssm_weak_form
+  use sll_m_elliptic_2d_fem_sps_dense_weak_form, only: sll_c_elliptic_2d_fem_sps_dense_weak_form
 
   implicit none
 
-  public :: sll_t_poisson_2d_fem_ssm_weak_form
+  public :: sll_t_poisson_2d_fem_sps_dense_weak_form
 
   private
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -15,21 +15,21 @@ module sll_m_poisson_2d_fem_ssm_weak_form
   ! Working precision
   integer, parameter :: wp = f64
 
-  type, extends(sll_c_elliptic_2d_fem_ssm_weak_form) :: sll_t_poisson_2d_fem_ssm_weak_form
+  type, extends(sll_c_elliptic_2d_fem_sps_dense_weak_form) :: sll_t_poisson_2d_fem_sps_dense_weak_form
 
   contains
 
-    procedure :: element_mat => s_poisson_2d_fem_ssm_weak_form__element_mat
-    procedure :: element_rhs => s_poisson_2d_fem_ssm_weak_form__element_rhs
+    procedure :: element_mat => s_poisson_2d_fem_sps_dense_weak_form__element_mat
+    procedure :: element_rhs => s_poisson_2d_fem_sps_dense_weak_form__element_rhs
 
-  end type sll_t_poisson_2d_fem_ssm_weak_form
+  end type sll_t_poisson_2d_fem_sps_dense_weak_form
 
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 contains
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
   ! Compute elementary contribution to stiffness and mass matrices
-  subroutine s_poisson_2d_fem_ssm_weak_form__element_mat( &
+  subroutine s_poisson_2d_fem_sps_dense_weak_form__element_mat( &
     self                        , &
     test_values_and_derivs_eta1 , &
     test_values_and_derivs_eta2 , &
@@ -39,15 +39,15 @@ contains
     inv_metric                  , &
     Aij, &
     Mij )
-    class(sll_t_poisson_2d_fem_ssm_weak_form), intent(in   ) :: self
-    real(wp)                                 , intent(in   ) :: test_values_and_derivs_eta1 (:,:)
-    real(wp)                                 , intent(in   ) :: test_values_and_derivs_eta2 (:,:)
-    real(wp)                                 , intent(in   ) :: trial_values_and_derivs_eta1(:,:)
-    real(wp)                                 , intent(in   ) :: trial_values_and_derivs_eta2(:,:)
-    real(wp)                                 , intent(in   ) :: int_volume(:,:)
-    real(wp)                                 , intent(in   ) :: inv_metric(:,:,:,:)
-    real(wp)                                 , intent(  out) :: Aij
-    real(wp)                                 , intent(  out) :: Mij
+    class(sll_t_poisson_2d_fem_sps_dense_weak_form), intent(in   ) :: self
+    real(wp)                                       , intent(in   ) :: test_values_and_derivs_eta1 (:,:)
+    real(wp)                                       , intent(in   ) :: test_values_and_derivs_eta2 (:,:)
+    real(wp)                                       , intent(in   ) :: trial_values_and_derivs_eta1(:,:)
+    real(wp)                                       , intent(in   ) :: trial_values_and_derivs_eta2(:,:)
+    real(wp)                                       , intent(in   ) :: int_volume(:,:)
+    real(wp)                                       , intent(in   ) :: inv_metric(:,:,:,:)
+    real(wp)                                       , intent(  out) :: Aij
+    real(wp)                                       , intent(  out) :: Mij
 
     integer :: q1, q2, Nq1, Nq2
 
@@ -86,22 +86,22 @@ contains
       end do
     end do
 
-  end subroutine s_poisson_2d_fem_ssm_weak_form__element_mat
+  end subroutine s_poisson_2d_fem_sps_dense_weak_form__element_mat
 
   ! Compute elementary contribution to right hand side
-  subroutine s_poisson_2d_fem_ssm_weak_form__element_rhs( &
+  subroutine s_poisson_2d_fem_sps_dense_weak_form__element_rhs( &
     self                        , &
     test_values_and_derivs_eta1 , &
     test_values_and_derivs_eta2 , &
     data_2d_rhs                 , &
     int_volume                  , &
     bi )
-    class(sll_t_poisson_2d_fem_ssm_weak_form), intent(in   ) :: self
-    real(wp)                                 , intent(in   ) :: test_values_and_derivs_eta1(:,:)
-    real(wp)                                 , intent(in   ) :: test_values_and_derivs_eta2(:,:)
-    real(wp)                                 , intent(in   ) :: data_2d_rhs(:,:)
-    real(wp)                                 , intent(in   ) :: int_volume (:,:)
-    real(wp)                                 , intent(  out) :: bi
+    class(sll_t_poisson_2d_fem_sps_dense_weak_form), intent(in   ) :: self
+    real(wp)                                       , intent(in   ) :: test_values_and_derivs_eta1(:,:)
+    real(wp)                                       , intent(in   ) :: test_values_and_derivs_eta2(:,:)
+    real(wp)                                       , intent(in   ) :: data_2d_rhs(:,:)
+    real(wp)                                       , intent(in   ) :: int_volume (:,:)
+    real(wp)                                       , intent(  out) :: bi
 
     integer :: q1, q2, Nq1, Nq2
 
@@ -123,6 +123,6 @@ contains
       end do
     end do
 
-  end subroutine s_poisson_2d_fem_ssm_weak_form__element_rhs
+  end subroutine s_poisson_2d_fem_sps_dense_weak_form__element_rhs
 
-end module sll_m_poisson_2d_fem_ssm_weak_form
+end module sll_m_poisson_2d_fem_sps_dense_weak_form

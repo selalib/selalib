@@ -1,4 +1,4 @@
-program test_poisson_2d_fem_ssm
+program test_poisson_2d_fem_sps_dense
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_assert.h"
 
@@ -16,7 +16,7 @@ program test_poisson_2d_fem_ssm
     sll_c_bsplines, &
     sll_s_bsplines_new
 
-  use sll_m_spline_interpolator_1d, only: sll_s_spline_1d_compute_num_cells 
+  use sll_m_spline_interpolator_1d, only: sll_s_spline_1d_compute_num_cells
 
   use sll_m_spline_2d, only: sll_t_spline_2d
 
@@ -30,7 +30,7 @@ program test_poisson_2d_fem_ssm
 
   use sll_m_polar_mapping_iga, only: sll_t_polar_mapping_iga
 
-  use sll_m_poisson_2d_fem_ssm, only: sll_t_poisson_2d_fem_ssm
+  use sll_m_poisson_2d_fem_sps_dense, only: sll_t_poisson_2d_fem_sps_dense
 
   use sll_m_timer, only: &
     sll_t_time_mark    , &
@@ -78,7 +78,7 @@ program test_poisson_2d_fem_ssm
   real(wp), allocatable :: gtau(:,:)
 
   ! Poisson solver
-  type(sll_t_poisson_2d_fem_ssm) :: solver
+  type(sll_t_poisson_2d_fem_sps_dense) :: solver
 
   ! Auxiliary variables
   integer  :: i1, i2
@@ -325,4 +325,4 @@ contains
 
   end function rhs
 
-end program test_poisson_2d_fem_ssm
+end program test_poisson_2d_fem_sps_dense

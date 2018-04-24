@@ -1,13 +1,13 @@
-module sll_m_poisson_2d_fem_ssm_assembler
+module sll_m_poisson_2d_fem_sps_dense_assembler
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
   use sll_m_working_precision, only: f64
 
-  use sll_m_elliptic_2d_fem_ssm_weak_form, only: sll_c_elliptic_2d_fem_ssm_weak_form
+  use sll_m_elliptic_2d_fem_sps_dense_weak_form, only: sll_c_elliptic_2d_fem_sps_dense_weak_form
 
   implicit none
 
-  public :: sll_t_poisson_2d_fem_ssm_assembler
+  public :: sll_t_poisson_2d_fem_sps_dense_assembler
 
   private
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -15,31 +15,31 @@ module sll_m_poisson_2d_fem_ssm_assembler
   ! Working precision
   integer, parameter :: wp = f64
 
-  type :: sll_t_poisson_2d_fem_ssm_assembler
+  type :: sll_t_poisson_2d_fem_sps_dense_assembler
 
     integer :: n1
     integer :: n2
 
-    class(sll_c_elliptic_2d_fem_ssm_weak_form), pointer :: weak_form
+    class(sll_c_elliptic_2d_fem_sps_dense_weak_form), pointer :: weak_form
 
   contains
 
-    procedure :: init            => s_poisson_2d_fem_ssm_assembler__init
-    procedure :: add_element_mat => s_poisson_2d_fem_ssm_assembler__add_element_mat
-    procedure :: add_element_rhs => s_poisson_2d_fem_ssm_assembler__add_element_rhs
+    procedure :: init            => s_poisson_2d_fem_sps_dense_assembler__init
+    procedure :: add_element_mat => s_poisson_2d_fem_sps_dense_assembler__add_element_mat
+    procedure :: add_element_rhs => s_poisson_2d_fem_sps_dense_assembler__add_element_rhs
 
-  end type sll_t_poisson_2d_fem_ssm_assembler
+  end type sll_t_poisson_2d_fem_sps_dense_assembler
 
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 contains
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
   ! Initializer
-  subroutine s_poisson_2d_fem_ssm_assembler__init( self, n1, n2, weak_form )
-    class(sll_t_poisson_2d_fem_ssm_assembler)         , intent(inout) :: self
-    integer                                           , intent(in   ) :: n1
-    integer                                           , intent(in   ) :: n2
-    class(sll_c_elliptic_2d_fem_ssm_weak_form), target, intent(in   ) :: weak_form
+  subroutine s_poisson_2d_fem_sps_dense_assembler__init( self, n1, n2, weak_form )
+    class(sll_t_poisson_2d_fem_sps_dense_assembler)         , intent(inout) :: self
+    integer                                                 , intent(in   ) :: n1
+    integer                                                 , intent(in   ) :: n2
+    class(sll_c_elliptic_2d_fem_sps_dense_weak_form), target, intent(in   ) :: weak_form
 
     self % n1 = n1
     self % n2 = n2
@@ -49,7 +49,7 @@ contains
   end subroutine
 
   ! Add element in stiffness and mass matrices
-  subroutine s_poisson_2d_fem_ssm_assembler__add_element_mat( &
+  subroutine s_poisson_2d_fem_sps_dense_assembler__add_element_mat( &
     self        , &
     k1          , &
     k2          , &
@@ -59,15 +59,15 @@ contains
     inv_metric  , &
     A           , &
     M )
-    class(sll_t_poisson_2d_fem_ssm_assembler), intent(in   ) :: self
-    integer                                  , intent(in   ) :: k1
-    integer                                  , intent(in   ) :: k2
-    real(wp)                                 , intent(in   ) :: data_1d_eta1(:,:,:,:)
-    real(wp)                                 , intent(in   ) :: data_1d_eta2(:,:,:,:)
-    real(wp)                                 , intent(in   ) :: int_volume(:,:,:,:)
-    real(wp)                                 , intent(in   ) :: inv_metric(:,:,:,:,:,:)
-    real(wp)                                 , intent(inout) :: A(:,:)
-    real(wp)                                 , intent(inout) :: M(:,:)
+    class(sll_t_poisson_2d_fem_sps_dense_assembler), intent(in   ) :: self
+    integer                                        , intent(in   ) :: k1
+    integer                                        , intent(in   ) :: k2
+    real(wp)                                       , intent(in   ) :: data_1d_eta1(:,:,:,:)
+    real(wp)                                       , intent(in   ) :: data_1d_eta2(:,:,:,:)
+    real(wp)                                       , intent(in   ) :: int_volume(:,:,:,:)
+    real(wp)                                       , intent(in   ) :: inv_metric(:,:,:,:,:,:)
+    real(wp)                                       , intent(inout) :: A(:,:)
+    real(wp)                                       , intent(inout) :: M(:,:)
 
     integer  :: i, j, i1, i2, j1, j2, p1, p2
     real(wp) :: Aij, Mij
@@ -124,10 +124,10 @@ contains
 
     end associate
 
-  end subroutine s_poisson_2d_fem_ssm_assembler__add_element_mat
+  end subroutine s_poisson_2d_fem_sps_dense_assembler__add_element_mat
 
   ! Add element in stiffness and mass matrices
-  subroutine s_poisson_2d_fem_ssm_assembler__add_element_rhs( &
+  subroutine s_poisson_2d_fem_sps_dense_assembler__add_element_rhs( &
     self        , &
     k1          , &
     k2          , &
@@ -136,14 +136,14 @@ contains
     data_2d_rhs , &
     int_volume  , &
     b )
-    class(sll_t_poisson_2d_fem_ssm_assembler), intent(in   ) :: self
-    integer                                  , intent(in   ) :: k1
-    integer                                  , intent(in   ) :: k2
-    real(wp)                                 , intent(in   ) :: data_1d_eta1(:,:,:,:)
-    real(wp)                                 , intent(in   ) :: data_1d_eta2(:,:,:,:)
-    real(wp)                                 , intent(in   ) :: data_2d_rhs(:,:,:,:)
-    real(wp)                                 , intent(in   ) :: int_volume (:,:,:,:)
-    real(wp)                                 , intent(inout) :: b(:)
+    class(sll_t_poisson_2d_fem_sps_dense_assembler), intent(in   ) :: self
+    integer                                        , intent(in   ) :: k1
+    integer                                        , intent(in   ) :: k2
+    real(wp)                                       , intent(in   ) :: data_1d_eta1(:,:,:,:)
+    real(wp)                                       , intent(in   ) :: data_1d_eta2(:,:,:,:)
+    real(wp)                                       , intent(in   ) :: data_2d_rhs(:,:,:,:)
+    real(wp)                                       , intent(in   ) :: int_volume (:,:,:,:)
+    real(wp)                                       , intent(inout) :: b(:)
 
     integer  :: i, i1, i2, p1, p2
     real(wp) :: bi
@@ -181,6 +181,6 @@ contains
 
     end associate
 
-  end subroutine s_poisson_2d_fem_ssm_assembler__add_element_rhs
+  end subroutine s_poisson_2d_fem_sps_dense_assembler__add_element_rhs
 
-end module sll_m_poisson_2d_fem_ssm_assembler
+end module sll_m_poisson_2d_fem_sps_dense_assembler
