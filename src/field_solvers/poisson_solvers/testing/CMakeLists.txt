@@ -98,5 +98,5 @@ ENDIF(BUILD_MUDPACK)
 #-------------------------------------------------------------------------------
 # Test FE Poisson solver based on smooth polar splines
 #-------------------------------------------------------------------------------
-add_executable( test_poisson_2d_fem_ssm test_poisson_2d_fem_ssm.F90 )
-target_link_libraries( test_poisson_2d_fem_ssm sll_poisson_solvers )
+add_executable( test_poisson_2d_fem_sps_dense test_poisson_2d_fem_sps_dense.F90 )
+target_link_libraries( test_poisson_2d_fem_sps_dense sll_poisson_solvers )

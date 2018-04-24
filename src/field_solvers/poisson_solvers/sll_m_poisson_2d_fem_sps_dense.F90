@@ -1,4 +1,4 @@
-module sll_m_poisson_2d_fem_ssm
+module sll_m_poisson_2d_fem_sps_dense
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_assert.h"
 
@@ -12,11 +12,11 @@ module sll_m_poisson_2d_fem_ssm
 
   use sll_m_polar_mapping_iga, only: sll_t_polar_mapping_iga
 
-  use sll_m_poisson_2d_fem_ssm_weak_form, only: sll_t_poisson_2d_fem_ssm_weak_form
+  use sll_m_poisson_2d_fem_sps_dense_weak_form, only: sll_t_poisson_2d_fem_sps_dense_weak_form
 
-  use sll_m_poisson_2d_fem_ssm_assembler, only: sll_t_poisson_2d_fem_ssm_assembler
+  use sll_m_poisson_2d_fem_sps_dense_assembler, only: sll_t_poisson_2d_fem_sps_dense_assembler
 
-  use sll_m_poisson_2d_fem_ssm_projector, only: sll_t_poisson_2d_fem_ssm_projector
+  use sll_m_poisson_2d_fem_sps_dense_projector, only: sll_t_poisson_2d_fem_sps_dense_projector
 
   use sll_m_vector_space_real_array_1d, only: sll_t_vector_space_real_array_1d
 
@@ -30,7 +30,7 @@ module sll_m_poisson_2d_fem_ssm
 
   implicit none
 
-  public :: sll_t_poisson_2d_fem_ssm
+  public :: sll_t_poisson_2d_fem_sps_dense
 
   private
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -47,7 +47,7 @@ module sll_m_poisson_2d_fem_ssm
     end function i_fun_rhs
   end interface
 
-  type :: sll_t_poisson_2d_fem_ssm
+  type :: sll_t_poisson_2d_fem_sps_dense
 
     ! To initialize B-splines (p1,p2 degrees)
     integer :: mm, n1, n2, ncells1, ncells2
@@ -92,13 +92,13 @@ module sll_m_poisson_2d_fem_ssm
     real(wp), allocatable :: xp(:)
 
     ! Weak form
-    type(sll_t_poisson_2d_fem_ssm_weak_form) :: weak_form
+    type(sll_t_poisson_2d_fem_sps_dense_weak_form) :: weak_form
 
     ! Assembler
-    type(sll_t_poisson_2d_fem_ssm_assembler) :: assembler
+    type(sll_t_poisson_2d_fem_sps_dense_assembler) :: assembler
 
     ! C1 projector
-    type(sll_t_poisson_2d_fem_ssm_projector) :: projector
+    type(sll_t_poisson_2d_fem_sps_dense_projector) :: projector
 
     ! Linear solver
     type(sll_t_vector_space_real_array_1d)            :: bp_vecsp
@@ -110,22 +110,22 @@ module sll_m_poisson_2d_fem_ssm
 
   contains
 
-    procedure :: init  => s_poisson_2d_fem_ssm__init
-    procedure :: free  => s_poisson_2d_fem_ssm__free
+    procedure :: init  => s_poisson_2d_fem_sps_dense__init
+    procedure :: free  => s_poisson_2d_fem_sps_dense__free
 
     ! Generic procedure with multiple implementations
-    procedure :: solve_1 => s_poisson_2d_fem_ssm__solve_1
-    procedure :: solve_2 => s_poisson_2d_fem_ssm__solve_2
+    procedure :: solve_1 => s_poisson_2d_fem_sps_dense__solve_1
+    procedure :: solve_2 => s_poisson_2d_fem_sps_dense__solve_2
     generic   :: solve   => solve_1, solve_2
 
-  end type sll_t_poisson_2d_fem_ssm
+  end type sll_t_poisson_2d_fem_sps_dense
 
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 contains
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
   ! Initializer
-  subroutine s_poisson_2d_fem_ssm__init( &
+  subroutine s_poisson_2d_fem_sps_dense__init( &
     self         , &
     bsplines_eta1, &
     bsplines_eta2, &
@@ -134,7 +134,7 @@ contains
     mapping      , &
     tol          , &
     verbose )
-    class(sll_t_poisson_2d_fem_ssm)      , intent(inout) :: self
+    class(sll_t_poisson_2d_fem_sps_dense), intent(inout) :: self
     class(sll_c_bsplines)        , target, intent(in   ) :: bsplines_eta1
     class(sll_c_bsplines)        , target, intent(in   ) :: bsplines_eta2
     real(wp), allocatable                , intent(in   ) :: breaks_eta1(:)
@@ -382,13 +382,13 @@ contains
 
     call polar_bsplines % free()
 
-  end subroutine s_poisson_2d_fem_ssm__init
+  end subroutine s_poisson_2d_fem_sps_dense__init
 
   ! Solver: signature #1
-  subroutine s_poisson_2d_fem_ssm__solve_1( self, rhs, sol )
-    class(sll_t_poisson_2d_fem_ssm), intent(inout) :: self
-    procedure(i_fun_rhs)                           :: rhs
-    type(sll_t_spline_2d)          , intent(inout) :: sol
+  subroutine s_poisson_2d_fem_sps_dense__solve_1( self, rhs, sol )
+    class(sll_t_poisson_2d_fem_sps_dense), intent(inout) :: self
+    procedure(i_fun_rhs)                                 :: rhs
+    type(sll_t_spline_2d)                , intent(inout) :: sol
 
     ! Auxiliary variables
     integer  :: idx, k1, k2, q1, q2
@@ -467,19 +467,19 @@ contains
       ! Compute solution in tensor-product space
       !-------------------------------------------------------------------------
 
-      call self % projector % change_basis_vector_inverse( self % xp, self % x )
+      call self % projector % change_basis_vector_inv( self % xp, self % x )
 
       sol % bcoef = reshape( self % x, (/ n2, n1 /) )
 
     end associate
 
-  end subroutine s_poisson_2d_fem_ssm__solve_1
+  end subroutine s_poisson_2d_fem_sps_dense__solve_1
 
   ! Solver: signature #2
-  subroutine s_poisson_2d_fem_ssm__solve_2( self, rhs, sol )
-    class(sll_t_poisson_2d_fem_ssm), intent(inout) :: self
-    type(sll_t_spline_2d)          , intent(in   ) :: rhs
-    type(sll_t_spline_2d)          , intent(inout) :: sol
+  subroutine s_poisson_2d_fem_sps_dense__solve_2( self, rhs, sol )
+    class(sll_t_poisson_2d_fem_sps_dense), intent(inout) :: self
+    type(sll_t_spline_2d)                , intent(in   ) :: rhs
+    type(sll_t_spline_2d)                , intent(inout) :: sol
 
     integer :: idx, i, i1, i2
 
@@ -521,17 +521,17 @@ contains
       ! Compute solution in tensor-product space
       !-------------------------------------------------------------------------
 
-      call self % projector % change_basis_vector_inverse( self % xp, self % x )
+      call self % projector % change_basis_vector_inv( self % xp, self % x )
 
       sol % bcoef = reshape( self % x, (/ n2, n1 /) )
 
     end associate
 
-  end subroutine s_poisson_2d_fem_ssm__solve_2
+  end subroutine s_poisson_2d_fem_sps_dense__solve_2
 
   ! Free
-  subroutine s_poisson_2d_fem_ssm__free( self )
-    class(sll_t_poisson_2d_fem_ssm), intent(inout) :: self
+  subroutine s_poisson_2d_fem_sps_dense__free( self )
+    class(sll_t_poisson_2d_fem_sps_dense), intent(inout) :: self
 
     deallocate( self % quad_points_eta1 )
     deallocate( self % quad_points_eta2 )
@@ -554,6 +554,6 @@ contains
     deallocate( self % bp_vecsp % array )
     deallocate( self % xp_vecsp % array )
 
-  end subroutine s_poisson_2d_fem_ssm__free
+  end subroutine s_poisson_2d_fem_sps_dense__free
 
-end module sll_m_poisson_2d_fem_ssm
+end module sll_m_poisson_2d_fem_sps_dense
