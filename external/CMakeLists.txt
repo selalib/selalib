@@ -24,7 +24,7 @@ IF(BUILD_HDF5)
      URL https://support.hdfgroup.org/ftp/HDF5/releases/hdf5-1.10/hdf5-1.10.2/src/hdf5-1.10.2.tar.bz2
      SOURCE_DIR ${CMAKE_BINARY_DIR}/hdf5
      BINARY_DIR ${CMAKE_BINARY_DIR}/hdf5
-     CONFIGURE_COMMAND ${CMAKE_BINARY_DIR}/hdf5/configure --enable-fortran --prefix=${CMAKE_BINARY_DIR} --enable-parallel CXX=${MPI_CXX_COMPILER} CC=${MPI_C_COMPILER} FC=${MPI_Fortran_COMPILER}
+     CONFIGURE_COMMAND ${CMAKE_BINARY_DIR}/hdf5/configure --disable-shared --enable-fortran --prefix=${CMAKE_BINARY_DIR} --enable-parallel CXX=${MPI_CXX_COMPILER} CC=${MPI_C_COMPILER} FC=${MPI_Fortran_COMPILER}
   )
 
 ENDIF(BUILD_HDF5)
