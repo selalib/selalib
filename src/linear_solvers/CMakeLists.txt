@@ -9,6 +9,7 @@ ADD_LIBRARY( sll_linear_solvers STATIC
   sll_m_linear_operator_matrix_dense_to_stencil.F90
   sll_m_linear_operator_matrix_stencil_to_dense.F90
   sll_m_linear_operator_matrix_stencil_to_stencil.F90
+  sll_m_linear_operator_matrix_c1_block.F90
   sll_m_conjugate_gradient.F90
 )
 

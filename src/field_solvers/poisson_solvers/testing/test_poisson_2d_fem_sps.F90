@@ -1,4 +1,4 @@
-program test_poisson_2d_fem_sps_dense
+program test_poisson_2d_fem_sps
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_assert.h"
 
@@ -31,6 +31,8 @@ program test_poisson_2d_fem_sps_dense
   use sll_m_polar_mapping_iga, only: sll_t_polar_mapping_iga
 
   use sll_m_poisson_2d_fem_sps_dense, only: sll_t_poisson_2d_fem_sps_dense
+
+  use sll_m_poisson_2d_fem_sps_stencil, only: sll_t_poisson_2d_fem_sps_stencil
 
   use sll_m_timer, only: &
     sll_t_time_mark    , &
@@ -78,7 +80,8 @@ program test_poisson_2d_fem_sps_dense
   real(wp), allocatable :: gtau(:,:)
 
   ! Poisson solver
-  type(sll_t_poisson_2d_fem_sps_dense) :: solver
+!  type(sll_t_poisson_2d_fem_sps_dense  ) :: solver
+  type(sll_t_poisson_2d_fem_sps_stencil) :: solver
 
   ! Auxiliary variables
   integer  :: i1, i2
@@ -234,8 +237,8 @@ program test_poisson_2d_fem_sps_dense
   call sll_s_set_time_mark( t0 )
 
   ! Solve
-  call solver % solve( spline_2d_rhs, spline_2d_phi ) ! Right hand side is 2D spline
-!  call solver % solve( rhs, spline_2d_phi ) ! Right hand side is callable function
+!  call solver % solve( spline_2d_rhs, spline_2d_phi ) ! Right hand side is 2D spline
+  call solver % solve( rhs, spline_2d_phi ) ! Right hand side is callable function
 
   call sll_s_set_time_mark( t1 )
 
@@ -249,7 +252,7 @@ program test_poisson_2d_fem_sps_dense
   call sll_s_set_time_mark( t0 )
 
   ! Create HDF5 file for output
-  call sll_s_hdf5_ser_file_create( 'poisson_2d_fem_ssm.h5', file_id, h5_error )
+  call sll_s_hdf5_ser_file_create( 'poisson_2d_fem_sps.h5', file_id, h5_error )
 
   ! Write useful parameters
   call sll_o_hdf5_ser_write_attribute( file_id, "/", "n1", n1, h5_error )
@@ -325,4 +328,4 @@ contains
 
   end function rhs
 
-end program test_poisson_2d_fem_sps_dense
+end program test_poisson_2d_fem_sps
