@@ -131,7 +131,7 @@ do tid = 1, nthreads
 end do
 
 print*, s
-if ( abs(s - 10.0_f64) > 1d-7 ) stop 'FAILED'
+if ( abs(s - 10.0_f64) > 1d-6 ) stop 'FAILED'
 
 print*, "PASSED"
 
