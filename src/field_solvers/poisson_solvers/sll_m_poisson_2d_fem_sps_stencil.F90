@@ -12,7 +12,7 @@ module sll_m_poisson_2d_fem_sps_stencil
 
   use sll_m_polar_mapping_iga, only: sll_t_polar_mapping_iga
 
-  use sll_m_poisson_2d_fem_sps_dense_weak_form, only: sll_t_poisson_2d_fem_sps_dense_weak_form
+  use sll_m_poisson_2d_fem_sps_weak_form, only: sll_t_poisson_2d_fem_sps_weak_form
 
   use sll_m_poisson_2d_fem_sps_dense_assembler, only: sll_t_poisson_2d_fem_sps_dense_assembler
 
@@ -92,7 +92,7 @@ module sll_m_poisson_2d_fem_sps_stencil
     real(wp), allocatable :: xp(:)
 
     ! Weak form
-    type(sll_t_poisson_2d_fem_sps_dense_weak_form) :: weak_form
+    type(sll_t_poisson_2d_fem_sps_weak_form) :: weak_form
 
     ! Assembler
     type(sll_t_poisson_2d_fem_sps_dense_assembler) :: assembler
