@@ -15,6 +15,8 @@ SET(POISSON_SRCS sll_m_poisson_1d_base.F90
                  sll_m_poisson_2d_fem_sps_dense_assembler.F90
                  sll_m_poisson_2d_fem_sps_dense_projector.F90
                  sll_m_poisson_2d_fem_sps_dense.F90
+                 sll_m_poisson_2d_fem_sps_stencil_assembler.F90
+                 sll_m_poisson_2d_fem_sps_stencil_projector.F90
                  sll_m_poisson_2d_fem_sps_stencil.F90 )
 
 IF(FFT_LIB MATCHES FFTW)

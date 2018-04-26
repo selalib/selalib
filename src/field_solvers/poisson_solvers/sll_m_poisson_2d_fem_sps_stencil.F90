@@ -14,11 +14,13 @@ module sll_m_poisson_2d_fem_sps_stencil
 
   use sll_m_poisson_2d_fem_sps_weak_form, only: sll_t_poisson_2d_fem_sps_weak_form
 
-  use sll_m_poisson_2d_fem_sps_dense_assembler, only: sll_t_poisson_2d_fem_sps_dense_assembler
+  use sll_m_poisson_2d_fem_sps_stencil_assembler, only: sll_t_poisson_2d_fem_sps_stencil_assembler
 
-  use sll_m_poisson_2d_fem_sps_dense_projector, only: sll_t_poisson_2d_fem_sps_dense_projector
+  use sll_m_poisson_2d_fem_sps_stencil_projector, only: sll_t_poisson_2d_fem_sps_stencil_projector
 
   use sll_m_vector_space_c1_block, only: sll_t_vector_space_c1_block
+
+  use sll_m_linear_operator_matrix_stencil_to_stencil, only: sll_t_linear_operator_matrix_stencil_to_stencil
 
   use sll_m_linear_operator_matrix_c1_block, only: sll_t_linear_operator_matrix_c1_block
 
@@ -79,6 +81,8 @@ module sll_m_poisson_2d_fem_sps_stencil
     real(wp), allocatable :: M (:,:)
     real(wp), allocatable :: Ap(:,:)
     real(wp), allocatable :: Mp(:,:)
+    type(sll_t_linear_operator_matrix_stencil_to_stencil) :: A_linop_stencil
+    type(sll_t_linear_operator_matrix_stencil_to_stencil) :: M_linop_stencil
 
     ! Matrix for barycentric coordinates
     real(wp), allocatable :: L(:,:)
@@ -95,10 +99,10 @@ module sll_m_poisson_2d_fem_sps_stencil
     type(sll_t_poisson_2d_fem_sps_weak_form) :: weak_form
 
     ! Assembler
-    type(sll_t_poisson_2d_fem_sps_dense_assembler) :: assembler
+    type(sll_t_poisson_2d_fem_sps_stencil_assembler) :: assembler
 
     ! C1 projector
-    type(sll_t_poisson_2d_fem_sps_dense_projector) :: projector
+    type(sll_t_poisson_2d_fem_sps_stencil_projector) :: projector
 
     ! Linear solver
     type(sll_t_conjugate_gradient) :: cjsolver
@@ -222,6 +226,9 @@ contains
       allocate( self % A( n1*n2, n1*n2 ) )
       allocate( self % M( n1*n2, n1*n2 ) )
 
+      call self % A_linop_stencil % init( n1, n2, p1, p2 )
+      call self % M_linop_stencil % init( n1, n2, p1, p2 )
+
       ! Right hand side
       allocate( self % b( n1*n2 ) )
 
@@ -333,30 +340,33 @@ contains
       ! Initialize assembler and projector
       !-------------------------------------------------------------------------
 
-      call self % assembler % init( n1, n2, self % weak_form )
-      call self % projector % init( n1, n2, self % L )
+      call self % assembler % init( n1, n2, p1, p2, self % weak_form )
+      call self % projector % init( n1, n2, p1, p2, self % L )
 
       !-------------------------------------------------------------------------
       ! Fill in stiffness and mass matrices
       !-------------------------------------------------------------------------
 
-      self % A = 0.0_wp
-      self % M = 0.0_wp
-
       ! Cycle over finite elements
       do k2 = 1, Nk2
         do k1 = 1, Nk1
           call self % assembler % add_element_mat( &
-            k1                 , &
-            k2                 , &
-            self % data_1d_eta1, &
-            self % data_1d_eta2, &
-            self % int_volume  , &
-            self % inv_metric  , &
-            self % A           , &
-            self % M )
+            k1                        , &
+            k2                        , &
+            self % data_1d_eta1       , &
+            self % data_1d_eta2       , &
+            self % int_volume         , &
+            self % inv_metric         , &
+            self % A_linop_stencil % A, &
+            self % M_linop_stencil % A)
         end do
       end do
+
+      ! Convert stencil to dense
+      self % A = 0.0_wp
+      self % M = 0.0_wp
+      call self % A_linop_stencil % to_array( self % A )
+      call self % M_linop_stencil % to_array( self % M )
 
       !-------------------------------------------------------------------------
       ! Compute C1 projections of stiffness and mass matrices
@@ -391,8 +401,8 @@ contains
         do i1 = 1, n1-3
           do k2 = -p2, p2
             do k1 = -p1, p1
-              j1 = modulo( i1 - 1 + k1, m1(4) ) + 1
-              j2 = modulo( i2 - 1 + k2, m2(4) ) + 1
+              j1 = modulo( i1 - 1 + k1, n1-3 ) + 1
+              j2 = modulo( i2 - 1 + k2, n2   ) + 1
               i  = (i1-1) * n2 + i2
               j  = (j1-1) * n2 + j2
               self % Ap_linop_c1_block % block4 % A(k1,k2,i1,i2) = self % Ap(i+3,j+3)
