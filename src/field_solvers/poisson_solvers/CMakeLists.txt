@@ -10,8 +10,8 @@ SET(POISSON_SRCS sll_m_poisson_1d_base.F90
                  sll_m_poisson_3d_base.F90
                  sll_m_hex_poisson.F90
                  sll_m_poisson_2d_tri.F90
-                 sll_m_elliptic_2d_fem_sps_dense_weak_form.F90
-                 sll_m_poisson_2d_fem_sps_dense_weak_form.F90
+                 sll_m_elliptic_2d_fem_sps_weak_form.F90
+                 sll_m_poisson_2d_fem_sps_weak_form.F90
                  sll_m_poisson_2d_fem_sps_dense_assembler.F90
                  sll_m_poisson_2d_fem_sps_dense_projector.F90
                  sll_m_poisson_2d_fem_sps_dense.F90
