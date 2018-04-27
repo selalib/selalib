@@ -111,6 +111,7 @@ module sll_m_poisson_2d_fem_sps_stencil
 
     ! New C1 block format
     type(sll_t_linear_operator_matrix_c1_block) :: Ap_linop_c1_block
+    type(sll_t_linear_operator_matrix_c1_block) :: Mp_linop_c1_block
     type(sll_t_vector_space_c1_block) :: xp_vecsp_c1_block
     type(sll_t_vector_space_c1_block) :: bp_vecsp_c1_block
 
@@ -369,43 +370,45 @@ contains
       call self % M_linop_stencil % to_array( self % M )
 
       !-------------------------------------------------------------------------
-      ! Compute C1 projections of stiffness and mass matrices
-      !-------------------------------------------------------------------------
-
-      call self % projector % change_basis_matrix( self % A, self % Ap )
-      call self % projector % change_basis_matrix( self % M, self % Mp )
-
-      !-------------------------------------------------------------------------
       ! Initialize linear system (homogeneous Dirichlet boundary conditions)
       !-------------------------------------------------------------------------
 
-      ! Construct C1 block linear operator from matrix Ap
+      ! Construct C1 block linear operator
 
-      nb = (n1-3)*n2
-      m1 = (/ 3, 3 , nb, (n1-3) /)
+      nb = (n1-2)*n2
+      m1 = (/ 3, 3 , nb, (n1-2) /)
       m2 = (/ 3, nb, 3 , n2 /)
 
-      call self % Ap_linop_c1_block % init( m1, m2, p1, p2 )        
+      call self % Ap_linop_c1_block % init( m1, m2, p1, p2 )
+      call self % Mp_linop_c1_block % init( m1, m2, p1, p2 )
 
-      ! Block 1, dense
-      self % Ap_linop_c1_block % block1 % A(:,:) = self % Ap(1:3,1:3)
+      !-------------------------------------------------------------------------
+      ! Compute C1 projections of stiffness and mass matrices
+      !-------------------------------------------------------------------------
 
-      ! Block 2, dense
-      self % Ap_linop_c1_block % block2 % A(:,:) = self % Ap(1:3,4:3+nb)
+      call self % projector % change_basis_matrix( self % A, self % Ap_linop_c1_block )
+      call self % projector % change_basis_matrix( self % M, self % Mp_linop_c1_block )
 
-      ! Block 3, dense
-      self % Ap_linop_c1_block % block3 % A(:,:) = self % Ap(4:3+nb,1:3)
+      ! Convert stencil to dense
+      self % Ap = 0.0_wp
+      self % Mp = 0.0_wp
+      call self % Ap_linop_c1_block % to_array( self % Ap )
+      call self % Mp_linop_c1_block % to_array( self % Mp )
 
-      ! Block 4, stencil
+      ! Homogeneous Dirichlet boundary conditions
+      self % Ap_linop_c1_block % block2 % A(:,nb-n2+1:nb) = 0.0_wp
+      self % Ap_linop_c1_block % block3 % A(nb-n2+1:nb,:) = 0.0_wp
       do i2 = 1, n2
-        do i1 = 1, n1-3
+        do i1 = 1, n1-2
           do k2 = -p2, p2
             do k1 = -p1, p1
-              j1 = modulo( i1 - 1 + k1, n1-3 ) + 1
+              j1 = modulo( i1 - 1 + k1, n1-2 ) + 1
               j2 = modulo( i2 - 1 + k2, n2   ) + 1
               i  = (i1-1) * n2 + i2
               j  = (j1-1) * n2 + j2
-              self % Ap_linop_c1_block % block4 % A(k1,k2,i1,i2) = self % Ap(i+3,j+3)
+              ! Check range of indices i and j
+              if ( i > nb - n2 .or. j > nb - n2 ) &
+                self % Ap_linop_c1_block % block4 % A(k1,k2,i1,i2) = 0.0_wp
             end do
           end do
         end do
@@ -413,16 +416,16 @@ contains
 
       ! Construct C1 block vector space from vector xp
 
-      call self % xp_vecsp_c1_block % init( n1-3, n2, p1, p2 )
+      call self % xp_vecsp_c1_block % init( n1-2, n2, p1, p2 )
 
       self % xp = 0.0_wp
 
       allocate( self % xp_vecsp_c1_block % vd % array(1:3), source = self % xp(1:3) )
 
-      allocate( self % xp_vecsp_c1_block % vs % array( 1-p1:(n1-3)+p1, 1-p2:n2+p2 ) )
+      allocate( self % xp_vecsp_c1_block % vs % array( 1-p1:(n1-2)+p1, 1-p2:n2+p2 ) )
 
       do j2 = 1, n2
-        do j1 = 1, n1-3
+        do j1 = 1, n1-2
           j = (j1-1) * n2 + j2
           self % xp_vecsp_c1_block % vs % array(j1,j2) = self % xp(j+3)
         end do
@@ -430,7 +433,7 @@ contains
 
       ! Update buffer regions
       self % xp_vecsp_c1_block % vs % array(1-p1:0            ,:) = 0.0_wp ! no periodicity
-      self % xp_vecsp_c1_block % vs % array((n1-3)+1:(n1-3)+p1,:) = 0.0_wp ! no periodicity
+      self % xp_vecsp_c1_block % vs % array((n1-2)+1:(n1-2)+p1,:) = 0.0_wp ! no periodicity
       self % xp_vecsp_c1_block % vs % array(:,1-p2:0    ) = self % xp_vecsp_c1_block % vs % array(:,n2-p2+1:n2)
       self % xp_vecsp_c1_block % vs % array(:,n2+1:n2+p2) = self % xp_vecsp_c1_block % vs % array(:,1:p2      )
 
@@ -502,10 +505,7 @@ contains
         end do
       end do
 
-      !-------------------------------------------------------------------------
       ! Compute C1 projection of right hand side
-      !-------------------------------------------------------------------------
-
       call self % projector % change_basis_vector( self % b, self % bp )
 
       !-------------------------------------------------------------------------
@@ -514,14 +514,17 @@ contains
 
       ! Construct C1 block vector space from vector bp
 
-      call self % bp_vecsp_c1_block % init( n1-3, n2, p1, p2 )
+      ! Homogeneous Dirichlet boundary conditions
+      self % bp(3+(n1-3)*n2+1:3+(n1-2)*n2) = 0.0_wp
+
+      call self % bp_vecsp_c1_block % init( n1-2, n2, p1, p2 )
 
       allocate( self % bp_vecsp_c1_block % vd % array(1:3), source = self % bp(1:3) )
 
-      allocate( self % bp_vecsp_c1_block % vs % array( 1-p1:(n1-3)+p1, 1-p2:n2+p2 ) )
+      allocate( self % bp_vecsp_c1_block % vs % array( 1-p1:(n1-2)+p1, 1-p2:n2+p2 ) )
 
       do j2 = 1, n2
-        do j1 = 1, n1-3
+        do j1 = 1, n1-2
           j = (j1-1) * n2 + j2
           self % bp_vecsp_c1_block % vs % array(j1,j2) = self % bp(j+3)
         end do
@@ -529,7 +532,7 @@ contains
 
       ! Update buffer regions
       self % bp_vecsp_c1_block % vs % array(1-p1:0            ,:) = 0.0_wp ! no periodicity
-      self % bp_vecsp_c1_block % vs % array((n1-3)+1:(n1-3)+p1,:) = 0.0_wp ! no periodicity
+      self % bp_vecsp_c1_block % vs % array((n1-2)+1:(n1-2)+p1,:) = 0.0_wp ! no periodicity
       self % bp_vecsp_c1_block % vs % array(:,1-p2:0    ) = self % bp_vecsp_c1_block % vs % array(:,n2-p2+1:n2)
       self % bp_vecsp_c1_block % vs % array(:,n2+1:n2+p2) = self % bp_vecsp_c1_block % vs % array(:,1:p2      )
 
@@ -544,11 +547,14 @@ contains
       self % xp(1:3) = self % xp_vecsp_c1_block % vd % array(1:3)
 
       do j2 = 1, n2
-        do j1 = 1, n1-3
+        do j1 = 1, n1-2
           j = (j1-1) * n2 + j2
           self % xp(j+3) = self % xp_vecsp_c1_block % vs % array(j1,j2)
         end do
       end do
+
+      ! Homogeneous Dirichlet boundary conditions
+      self % xp(3+(n1-3)*n2+1:3+(n1-2)*n2) = 0.0_wp
 
       !-------------------------------------------------------------------------
       ! Compute solution in tensor-product space
@@ -595,14 +601,17 @@ contains
 
       ! Construct C1 block vector space from vector bp
 
-      call self % bp_vecsp_c1_block % init( n1-3, n2, p1, p2 )
+      ! Homogeneous Dirichlet boundary conditions
+      self % bp(3+(n1-3)*n2+1:3+(n1-2)*n2) = 0.0_wp
+
+      call self % bp_vecsp_c1_block % init( n1-2, n2, p1, p2 )
 
       allocate( self % bp_vecsp_c1_block % vd % array(1:3), source = self % bp(1:3) )
 
-      allocate( self % bp_vecsp_c1_block % vs % array( 1-p1:(n1-3)+p1, 1-p2:n2+p2 ) )
+      allocate( self % bp_vecsp_c1_block % vs % array( 1-p1:(n1-2)+p1, 1-p2:n2+p2 ) )
 
       do j2 = 1, n2
-        do j1 = 1, n1-3
+        do j1 = 1, n1-2
           j = (j1-1) * n2 + j2
           self % bp_vecsp_c1_block % vs % array(j1,j2) = self % bp(j+3)
         end do
@@ -610,7 +619,7 @@ contains
 
       ! Update buffer regions
       self % bp_vecsp_c1_block % vs % array(1-p1:0            ,:) = 0.0_wp ! no periodicity
-      self % bp_vecsp_c1_block % vs % array((n1-3)+1:(n1-3)+p1,:) = 0.0_wp ! no periodicity
+      self % bp_vecsp_c1_block % vs % array((n1-2)+1:(n1-2)+p1,:) = 0.0_wp ! no periodicity
       self % bp_vecsp_c1_block % vs % array(:,1-p2:0    ) = self % bp_vecsp_c1_block % vs % array(:,n2-p2+1:n2)
       self % bp_vecsp_c1_block % vs % array(:,n2+1:n2+p2) = self % bp_vecsp_c1_block % vs % array(:,1:p2      )
 
@@ -625,11 +634,14 @@ contains
       self % xp(1:3) = self % xp_vecsp_c1_block % vd % array(1:3)
 
       do j2 = 1, n2
-        do j1 = 1, n1-3
+        do j1 = 1, n1-2
           j = (j1-1) * n2 + j2
           self % xp(j+3) = self % xp_vecsp_c1_block % vs % array(j1,j2)
         end do
       end do
+
+      ! Homogeneous Dirichlet boundary conditions
+      self % xp(3+(n1-3)*n2+1:3+(n1-2)*n2) = 0.0_wp
 
       !-------------------------------------------------------------------------
       ! Compute solution in tensor-product space
@@ -661,14 +673,16 @@ contains
     deallocate( self % bp )
     deallocate( self % L  )
 
-    call self % projector % free()
-
-    call self % cjsolver % free()
     call self % Ap_linop_c1_block % free()
+    call self % Mp_linop_c1_block % free()
     deallocate( self % bp_vecsp_c1_block % vd % array )
     deallocate( self % bp_vecsp_c1_block % vs % array )
     deallocate( self % xp_vecsp_c1_block % vd % array )
     deallocate( self % xp_vecsp_c1_block % vs % array )
+
+    call self % projector % free()
+
+    call self % cjsolver % free()
 
   end subroutine s_poisson_2d_fem_sps_stencil__free
 
