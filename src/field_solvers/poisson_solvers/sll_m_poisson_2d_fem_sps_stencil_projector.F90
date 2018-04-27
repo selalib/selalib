@@ -4,6 +4,8 @@ module sll_m_poisson_2d_fem_sps_stencil_projector
 
   use sll_m_working_precision, only: f64
 
+  use sll_m_linear_operator_matrix_c1_block, only: sll_t_linear_operator_matrix_c1_block
+
   implicit none
 
   public :: sll_t_poisson_2d_fem_sps_stencil_projector
@@ -76,42 +78,43 @@ contains
   subroutine s_poisson_2d_fem_sps_stencil_projector__change_basis_matrix( self, Q, Qp )
     class(sll_t_poisson_2d_fem_sps_stencil_projector), intent(inout) :: self
     real(wp)                                         , intent(in   ) :: Q (:,:)
-    real(wp)                                         , intent(inout) :: Qp(:,:)
+    type(sll_t_linear_operator_matrix_c1_block)      , intent(inout) :: Qp
 
-    integer :: nn
-!    integer :: i, j, ip, jp
+    integer :: i1, i2, j1, j2, k1, k2, i, j
 
-    associate( n1 => self % n1, n2 => self % n2 )
-
-      nn = (n1-2)*n2
+    associate( n1 => self % n1, &
+               n2 => self % n2, &
+               p1 => self % p1, &
+               p2 => self % p2 )
 
       ! Checks
       SLL_ASSERT( size(Q ,1) == n1*n2 )
       SLL_ASSERT( size(Q ,2) == n1*n2 )
-      SLL_ASSERT( size(Qp,1) == 3+nn  )
-      SLL_ASSERT( size(Qp,2) == 3+nn  )
 
       ! Fill block 1: 3 x 3
       self % Qp_temp = matmul( Q(1:2*n2,1:2*n2), self % L )
-      Qp(1:3,1:3)    = matmul( self % Lt, self % Qp_temp )
+      Qp % block1 % A(:,:) = matmul( self % Lt, self % Qp_temp )
 
       ! Fill block 2: 3 x (n1-2)*n2
-      Qp(1:3,4:3+nn) = matmul( self % Lt, Q(1:2*n2,2*n2+1:n1*n2) )
+      Qp % block2 % A(:,:) = matmul( self % Lt, Q(1:2*n2,2*n2+1:n1*n2) )
 
       ! Fill block 3: (n1-2)*n2 x 3
-      Qp(4:3+nn,1:3) = matmul( Q(2*n2+1:n1*n2,1:2*n2), self % L )
+      Qp % block3 % A(:,:) = matmul( Q(2*n2+1:n1*n2,1:2*n2), self % L )
 
       ! Fill block 4: (n1-2)*n2 x (n1-2)*n2
-      Qp(4:3+nn,4:3+nn) = Q(2*n2+1:n1*n2,2*n2+1:n1*n2)
-!      jp = 4
-!      do j = 2*n2+1, n1*n2
-!        ip = 4
-!        do i = 2*n2+1, n1*n2
-!          Qp(ip,jp) = Q(i,j)
-!          ip = ip+1
-!        end do
-!        jp = jp+1
-!      end do
+      do i2 = 1, n2
+        do i1 = 1, n1-2
+          do k2 = -p2, p2
+            do k1 = -p1, p1
+              j1 = modulo( i1 - 1 + k1, n1-2 ) + 1
+              j2 = modulo( i2 - 1 + k2, n2   ) + 1
+              i  = (i1-1) * n2 + i2
+              j  = (j1-1) * n2 + j2
+              Qp % block4 % A(k1,k2,i1,i2) = Q(2*n2+i,2*n2+j)
+            end do
+          end do
+        end do
+      end do
 
     end associate
 
