@@ -79,10 +79,11 @@ program test_poisson_2d_periodic_cart_par
   sll_real32, dimension(1)                :: prod4test
   sll_int32                               :: offset(2)
 
-  ok = 1.0
 
   !Boot parallel environment
   call sll_s_boot_collective()
+
+  ok = 1.0
 
   ! Number of cells is equal to number of points in this case
   ncx = 512
@@ -131,6 +132,7 @@ program test_poisson_2d_periodic_cart_par
      end do
   end do
 
+
   call parallel_hdf5_write_array_2d( 'q_density.h5', &
      ncx, ncy, rho,  'rho', layout_alt)
 
@@ -151,8 +153,6 @@ program test_poisson_2d_periodic_cart_par
 
   if (average_err> 1.0e-06 ) then
      print*, 'Test stopped by "sll_poisson_2d_periodic_par" failure'
-     !call sll_s_halt_collective()
-     !stop
   endif
  
   SLL_DEALLOCATE_ARRAY(phi,    error)
@@ -194,12 +194,11 @@ program test_poisson_2d_periodic_cart_par
 
   call sll_s_poisson_2d_periodic_par_solve(plan, rho, phi)
 
-  offset(1) =  sll_o_get_layout_i_min( layout_x, myrank ) - 1
-  offset(2) =  sll_o_get_layout_j_min( layout_x, myrank ) - 1
-  call sll_s_gnuplot_rect_2d_parallel(dble(offset(1)), dble(1), &
-                                    dble(offset(2)), dble(1), &
-                                    size(rho,1), size(rho,2), &
-                                    rho, "rho", 1, error)  
+  !offset(1) =  sll_o_get_layout_i_min( layout_x, myrank ) - 1
+  !offset(2) =  sll_o_get_layout_j_min( layout_x, myrank ) - 1
+  !call sll_s_gnuplot_rect_2d_parallel(real(offset(1),f64), 1.0_f64, &
+  !                                    real(offset(2),f64), 1.0_f64, &
+  !                                    nx_loc, ny_loc, rho, "rho", 1, error)  
 
   average_err  = sum(abs(phi_an-phi))/real(ncx*ncy,f64)
 
@@ -211,8 +210,6 @@ program test_poisson_2d_periodic_cart_par
 
   if (average_err> 1.0e-06 ) then
      print*, 'Test stopped by "sll_poisson_2d_periodic_par" failure'
-     call sll_s_halt_collective()
-     stop
   endif
  
   SLL_DEALLOCATE_ARRAY(phi,    error)
