@@ -181,13 +181,13 @@ contains
   offset(1) = int( sll_o_get_layout_i_min( layout, myrank )-1, SIZE_T )
   offset(2) = int( sll_o_get_layout_j_min( layout, myrank )-1, SIZE_T )
 
-  !Gnuplot output
-  call sll_s_gnuplot_rect_2d_parallel( dble(offset(1)), dble(1), &
-                                       dble(offset(2)), dble(1), &
-                                       mx, my, &
-                                       zdata, "rect_mesh", 1, error )
+  !!Gnuplot output
+  !call sll_s_gnuplot_rect_2d_parallel( dble(offset(1)), dble(1), &
+  !                                     dble(offset(2)), dble(1), &
+  !                                     mx, my, &
+  !                                     zdata, "rect_mesh", 1, error )
 
-  call sll_s_gnuplot_curv_2d_parallel( xdata, ydata, zdata, "curv_mesh", 1, error )  
+  !call sll_s_gnuplot_curv_2d_parallel( xdata, ydata, zdata, "curv_mesh", 1, error )  
   
   
 #ifndef NOHDF5
