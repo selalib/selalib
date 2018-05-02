@@ -227,9 +227,6 @@ contains
       allocate( self % A( n1*n2, n1*n2 ) )
       allocate( self % M( n1*n2, n1*n2 ) )
 
-      call self % A_linop_stencil % init( n1, n2, p1, p2 )
-      call self % M_linop_stencil % init( n1, n2, p1, p2 )
-
       ! Right hand side
       allocate( self % b( n1*n2 ) )
 
@@ -348,6 +345,10 @@ contains
       ! Fill in stiffness and mass matrices
       !-------------------------------------------------------------------------
 
+      ! Construct stencil linear operators
+      call self % A_linop_stencil % init( n1, n2, p1, p2 )
+      call self % M_linop_stencil % init( n1, n2, p1, p2 )
+
       ! Cycle over finite elements
       do k2 = 1, Nk2
         do k1 = 1, Nk1
@@ -373,7 +374,7 @@ contains
       ! Initialize linear system (homogeneous Dirichlet boundary conditions)
       !-------------------------------------------------------------------------
 
-      ! Construct C1 block linear operator
+      ! Construct C1 block linear operators
 
       nb = (n1-2)*n2
       m1 = (/ 3, 3 , nb, (n1-2) /)
@@ -386,8 +387,8 @@ contains
       ! Compute C1 projections of stiffness and mass matrices
       !-------------------------------------------------------------------------
 
-      call self % projector % change_basis_matrix( self % A, self % Ap_linop_c1_block )
-      call self % projector % change_basis_matrix( self % M, self % Mp_linop_c1_block )
+      call self % projector % change_basis_matrix( self % A_linop_stencil, self % Ap_linop_c1_block )
+      call self % projector % change_basis_matrix( self % M_linop_stencil, self % Mp_linop_c1_block )
 
       ! Convert stencil to dense
       self % Ap = 0.0_wp
