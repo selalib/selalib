@@ -108,7 +108,8 @@ call plot_layout3d()
 
 tcpu2 = MPI_WTIME()
 if (myrank == 0) &
-   write(*,"(//10x,' Temps CPU = ', G15.3, ' sec' )") (tcpu2-tcpu1)*colsz
+   write(*,"(//10x,' Temps CPU = ', G15.3, ' sec' )") &
+     (tcpu2-tcpu1) * real(colsz, f64)
 
 
 print *, myrank, 'PASSED'
@@ -168,7 +169,7 @@ contains
         gj = global_indices(2)
         xdata(i,j) = real(myrank,f64) !float(gi-1)!/(nx-1)
         ydata(i,j) = real(gj-1,f64)!/(ny-1)
-        zdata(i,j) = (myrank+1) * xdata(i,j) * ydata(i,j)
+        zdata(i,j) = real(myrank+1,f64) * xdata(i,j) * ydata(i,j)
      end do
   end do
  
@@ -181,13 +182,15 @@ contains
   offset(1) = int( sll_o_get_layout_i_min( layout, myrank )-1, SIZE_T )
   offset(2) = int( sll_o_get_layout_j_min( layout, myrank )-1, SIZE_T )
 
-  !!Gnuplot output
-  !call sll_s_gnuplot_rect_2d_parallel( dble(offset(1)), dble(1), &
-  !                                     dble(offset(2)), dble(1), &
-  !                                     mx, my, &
-  !                                     zdata, "rect_mesh", 1, error )
+  !Gnuplot output
+  call sll_s_gnuplot_rect_2d_parallel( real(offset(1),f64), &
+                                       1.0_f64, &
+                                       real(offset(2),f64), &
+                                       1.0_f64, &
+                                       mx, my, &
+                                       zdata, "rect_mesh", 1, error )
 
-  !call sll_s_gnuplot_curv_2d_parallel( xdata, ydata, zdata, "curv_mesh", 1, error )  
+  call sll_s_gnuplot_curv_2d_parallel( xdata, ydata, zdata, "curv_mesh", 1, error )  
   
   
 #ifndef NOHDF5
@@ -387,12 +390,12 @@ contains
        call sll_s_halt_collective()
        stop
     endif 
-    expo = int(log(real(n))/log(2.))  
+    expo = floor(log(real(n))/log(2.))  
     call random_number(rand_real)
-    expo1 = int(rand_real*expo)
+    expo1 = floor(rand_real*real(expo,f64))
     if (present(n3)) then
        call random_number(rand_real)
-       expo2 = int(rand_real*(expo-expo1))
+       expo2 = floor(rand_real*real(expo-expo1,f64))
        expo3 = expo - (expo1+expo2)
        n3 = 2**expo3
     else
