@@ -32,6 +32,10 @@ module sll_m_gnuplot_parallel
 #include "sll_assert.h"
 #include "sll_working_precision.h"
 
+#ifdef __INTEL_COMPILER
+  use ifport
+#endif
+
   use sll_m_ascii_io, only: &
     sll_s_ascii_file_create
 
@@ -88,10 +92,16 @@ subroutine sll_s_gnuplot_curv_2d_parallel(array_x, array_y, array, &
   call sll_s_int2string(iproc, cproc)
   call sll_s_int2string(iplot, fin)
   
+#ifdef __INTEL_COMPILER
+  if (makedirqq(cproc)) then
+     print*, ' Make directory '//cproc
+  end if
+#else
   inquire(file=cproc//"/"".", exist=dir_e)
   if (.not. dir_e) then
      call execute_command_line("mkdir -p "//cproc)
   end if
+#endif
   
   SLL_ASSERT(size(array_x,1) == size(array_y,1))
   SLL_ASSERT(size(array_x,2) == size(array_y,2))
@@ -187,10 +197,16 @@ subroutine sll_s_gnuplot_rect_2d_parallel(x_min, delta_x, &
   call sll_s_int2string(iproc, cproc)
   call sll_s_int2string(iplot, fin)
   
+#ifdef __INTEL_COMPILER
+  if (makedirqq(cproc)) then
+     print*, ' Make directory '//cproc
+  end if
+#else
   inquire(file=cproc//"/"".", exist=dir_e)
   if (.not. dir_e) then
      call execute_command_line("mkdir -p "//cproc)
   end if
+#endif
   
   call sll_s_new_file_id(file_id, error)
   call sll_s_ascii_file_create(cproc//"/"//array_name//'_'//fin//'.dat', file_id, error )
