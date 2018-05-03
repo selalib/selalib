@@ -39,10 +39,10 @@ module sll_m_gnuplot_parallel
     sll_s_int2string, &
     sll_s_new_file_id
 
-  use sll_mpi, only: &
-    mpi_comm_rank, &
-    mpi_comm_size, &
-    mpi_comm_world
+  use sll_m_collective, only:  &
+    sll_f_get_collective_rank, &
+    sll_f_get_collective_size, &
+    sll_v_world_collective
 
   implicit none
 
@@ -78,13 +78,13 @@ subroutine sll_s_gnuplot_curv_2d_parallel(array_x, array_y, array, &
   sll_int32                  :: file_id
   sll_int32                  :: i, j
   character(len=4)           :: cproc 
-  sll_int32                  :: comm, iproc, nproc
+  sll_int32                  :: iproc, nproc
   logical                    :: dir_e
   logical, save              :: first_call = .true.
   
-  call MPI_COMM_SIZE(MPI_COMM_WORLD,nproc,error)
-  call MPI_COMM_RANK(MPI_COMM_WORLD,iproc,error)
-  comm = MPI_COMM_WORLD
+  iproc = sll_f_get_collective_rank( sll_v_world_collective )
+  nproc = sll_f_get_collective_size( sll_v_world_collective )
+
   call sll_s_int2string(iproc, cproc)
   call sll_s_int2string(iplot, fin)
   
@@ -154,9 +154,10 @@ end subroutine sll_s_gnuplot_curv_2d_parallel
 !! different collectives will write data with the same name... further changes
 !! are needed.
 subroutine sll_s_gnuplot_rect_2d_parallel(x_min, delta_x, &
-                                        y_min, delta_y, &
-                                        npts_x, npts_y, &
-                                        array, array_name, iplot, error)  
+                                          y_min, delta_y, &
+                                          npts_x, npts_y, &
+                                          array, array_name, &
+                                          iplot, error)  
 
   sll_real64, intent(in)       :: x_min      !< Box corners
   sll_real64, intent(in)       :: delta_x    !< step size
@@ -175,14 +176,14 @@ subroutine sll_s_gnuplot_rect_2d_parallel(x_min, delta_x, &
   sll_int32                    :: i, j
   sll_real64                   :: x, y
   character(len=4)             :: cproc 
-  sll_int32                    :: comm, iproc, nproc
+  sll_int32                    :: iproc, nproc
   logical                      :: dir_e
   logical, save                :: first_call= .true.
   
 
-  call MPI_COMM_SIZE(MPI_COMM_WORLD,nproc,error)
-  call MPI_COMM_RANK(MPI_COMM_WORLD,iproc,error)
-  comm  = MPI_COMM_WORLD
+  iproc = sll_f_get_collective_rank( sll_v_world_collective )
+  nproc = sll_f_get_collective_size( sll_v_world_collective )
+
   call sll_s_int2string(iproc, cproc)
   call sll_s_int2string(iplot, fin)
   
@@ -194,9 +195,9 @@ subroutine sll_s_gnuplot_rect_2d_parallel(x_min, delta_x, &
   call sll_s_new_file_id(file_id, error)
   call sll_s_ascii_file_create(cproc//"/"//array_name//'_'//fin//'.dat', file_id, error )
   do j = 1, npts_y
-     y = y_min + (j-1)*delta_y  
+     y = y_min + real(j-1,f64)*delta_y  
      do i = 1, npts_x
-        x = x_min+(i-1)*delta_x
+        x = x_min+real(i-1,f64)*delta_x
         write(file_id,*) sngl(x), sngl(y), sngl(array(i,j))
      end do
      write(file_id,*)
