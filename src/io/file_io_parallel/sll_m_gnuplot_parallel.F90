@@ -99,7 +99,11 @@ subroutine sll_s_gnuplot_curv_2d_parallel(array_x, array_y, array, &
 #else
   inquire(file=cproc//"/"".", exist=dir_e)
   if (.not. dir_e) then
+#ifdef __PGI
+     call system("mkdir -p "//cproc)
+#else
      call execute_command_line("mkdir -p "//cproc)
+#endif
   end if
 #endif
   
@@ -204,7 +208,11 @@ subroutine sll_s_gnuplot_rect_2d_parallel(x_min, delta_x, &
 #else
   inquire(file=cproc//"/"".", exist=dir_e)
   if (.not. dir_e) then
+#ifdef __PGI
+     call system("mkdir -p "//cproc)
+#else
      call execute_command_line("mkdir -p "//cproc)
+#endif
   end if
 #endif
   
