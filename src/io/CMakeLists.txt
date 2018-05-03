@@ -1,15 +1,11 @@
 ADD_SUBDIRECTORY( file_io )
 MESSAGE(STATUS "FULL_FORTRAN2008:${FULL_FORTRAN2008}" )
-if( FULL_FORTRAN2008 )
-  ADD_SUBDIRECTORY( xdmf_io ) # YG [work in progress]
-endif( FULL_FORTRAN2008 )
+ADD_SUBDIRECTORY( xdmf_io ) # YG [work in progress]
 
 IF(MPI_ENABLED AND HDF5_IS_PARALLEL)
    
   SET(CMAKE_Fortran_COMPILER ${MPI_Fortran_COMPILER})
   ADD_SUBDIRECTORY( file_io_parallel )
-  if( FULL_FORTRAN2008 )
-    ADD_SUBDIRECTORY( xdmf_io_parallel ) # YG [work in progress]
-  endif( FULL_FORTRAN2008 )
+  ADD_SUBDIRECTORY( xdmf_io_parallel ) # YG [work in progress]
 
 ENDIF(MPI_ENABLED AND HDF5_IS_PARALLEL)
