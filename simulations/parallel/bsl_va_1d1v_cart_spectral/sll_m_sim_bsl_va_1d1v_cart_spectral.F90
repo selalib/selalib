@@ -103,8 +103,7 @@ module sll_m_sim_bsl_va_1d1v_cart_spectral
   use sll_m_gnuplot, only: &
     sll_o_gnuplot_1d
 
-  use sll_m_parallel_array_initializer, only: &
-    sll_o_2d_parallel_array_initializer_cartesian
+  use sll_m_parallel_array_initializer
 
   use sll_m_periodic_interp, only: &
     sll_p_lagrange, &
@@ -188,20 +187,20 @@ module sll_m_sim_bsl_va_1d1v_cart_spectral
   type, extends(sll_c_simulation_base_class) :: &
        sll_t_simulation_2d_vlasov_ampere_cart
 
-   sll_int32                            :: num_threads
-   type(sll_t_cartesian_mesh_2d), pointer :: mesh2d
-   sll_int32                            :: num_dof_x2
+   sll_int32                                :: num_threads
+   type(sll_t_cartesian_mesh_2d), pointer   :: mesh2d
+   sll_int32                                :: num_dof_x2
 
-   sll_real64, dimension(:),   pointer  :: x1_array
-   sll_real64, dimension(:),   pointer  :: x2_array
-   sll_real64, dimension(:,:), pointer  :: x2_array_omp
-   sll_real64, dimension(:),   pointer  :: integration_weight
-   sll_int32,  dimension(:),   pointer  :: every_x1
-   sll_int32,  dimension(:),   pointer  :: every_x2
-   sll_int32                            :: num_bloc_x1
-   sll_int32                            :: num_bloc_x2
-   sll_int32,  dimension(:),   pointer  :: bloc_index_x1
-   sll_int32,  dimension(:),   pointer  :: bloc_index_x2
+   sll_real64, dimension(:),   allocatable  :: x1_array
+   sll_real64, dimension(:),   allocatable  :: x2_array
+   sll_real64, dimension(:,:), allocatable  :: x2_array_omp
+   sll_real64, dimension(:),   allocatable  :: integration_weight
+   sll_int32,  dimension(:),   allocatable  :: every_x1
+   sll_int32,  dimension(:),   allocatable  :: every_x2
+   sll_int32                                :: num_bloc_x1
+   sll_int32                                :: num_bloc_x2
+   sll_int32,  dimension(:),   allocatable  :: bloc_index_x1
+   sll_int32,  dimension(:),   allocatable  :: bloc_index_x2
    
    sll_real64                 :: kx
    sll_real64                 :: eps
@@ -212,8 +211,8 @@ module sll_m_sim_bsl_va_1d1v_cart_spectral
    procedure(sll_i_scalar_initializer_2d), nopass, pointer :: init_func
    !ES equilibrium function
    procedure(sll_i_scalar_initializer_2d), nopass, pointer :: equil_func
-   sll_real64, dimension(:), pointer                     :: equil_func_params
-   sll_real64, dimension(:), pointer                     :: params
+   sll_real64, dimension(:), allocatable                   :: equil_func_params
+   sll_real64, dimension(:), allocatable                   :: params
 
    sll_real64 :: nrj0
    sll_real64 :: dt
@@ -324,7 +323,7 @@ contains
     sll_int32 :: i
     
     sim%init_func => init_func
-    if (associated(sim%params)) SLL_DEALLOCATE(sim%params,ierr)
+    if (allocated(sim%params)) deallocate(sim%params)
 
     if (num_params<1) then
       SLL_ERROR( this_sub_name, '#num_params should be >=1' )
@@ -360,8 +359,8 @@ contains
     sll_int32 :: i
     
     sim%equil_func => equil_func
-    if (associated(sim%equil_func_params)) then
-      SLL_DEALLOCATE(sim%equil_func_params,ierr)
+    if (allocated(sim%equil_func_params)) then
+      deallocate(sim%equil_func_params)
     end if
 
     if (num_params<1) then
@@ -1250,7 +1249,7 @@ contains
         SLL_ERROR( this_prog_name, err_msg )
     end select  
         
-    call sll_o_2d_parallel_array_initializer_cartesian( &
+    call sll_2d_parallel_array_initializer_cartesian_array_1d_1d( &
        layout_x1,                                     &
        sim%x1_array,                                  &
        sim%node_positions_x2,                         &
@@ -1266,7 +1265,7 @@ contains
     
     !ES initialise f_x1_equil that is used to define deltaf: 
     !ES deltaf =  f_x1 - f_x1_equil
-    call sll_o_2d_parallel_array_initializer_cartesian( &
+    call sll_2d_parallel_array_initializer_cartesian_array_1d_1d( &
        layout_x1,                                     &
        sim%x1_array,                                  &
        sim%node_positions_x2,                         &
@@ -2051,13 +2050,11 @@ contains
     class(sll_t_simulation_2d_vlasov_ampere_cart) :: sim
     sll_int32 :: ierr
     
-    if(associated(sim%x1_array)) then
-      SLL_DEALLOCATE(sim%x1_array,ierr)
-      nullify(sim%x1_array)
+    if(allocated(sim%x1_array)) then
+      deallocate(sim%x1_array)
     endif
-    if(associated(sim%x2_array)) then
-      SLL_DEALLOCATE(sim%x2_array,ierr)
-      nullify(sim%x2_array)
+    if(allocated(sim%x2_array)) then
+      deallocate(sim%x2_array)
     endif
         
   end subroutine delete_va2d_par_cart

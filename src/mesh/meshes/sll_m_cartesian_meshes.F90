@@ -339,8 +339,8 @@ end if
   end function tensor_product_2d_2d
 
   subroutine get_node_positions_1d( m, eta1_node )
-    type(sll_t_cartesian_mesh_1d), pointer :: m
-    sll_real64, dimension(:), pointer :: eta1_node
+    type(sll_t_cartesian_mesh_1d) :: m
+    sll_real64, dimension(:), allocatable :: eta1_node
     sll_int32  :: num_cells
     sll_real64 :: eta_min
     sll_real64 :: delta_eta
@@ -382,9 +382,9 @@ end if
 
 
   subroutine get_node_positions_2d( m, eta1, eta2 )
-    class(sll_t_cartesian_mesh_2d),  pointer :: m
-    sll_real64, dimension(:,:), pointer :: eta1
-    sll_real64, dimension(:,:), pointer :: eta2
+    class(sll_t_cartesian_mesh_2d)          :: m
+    sll_real64, dimension(:,:), allocatable :: eta1
+    sll_real64, dimension(:,:), allocatable :: eta2
     sll_int32  :: num_cells1
     sll_int32  :: num_cells2
     sll_real64 :: eta1_min

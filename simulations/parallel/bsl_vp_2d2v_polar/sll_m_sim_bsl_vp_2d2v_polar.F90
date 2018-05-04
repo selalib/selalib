@@ -80,8 +80,7 @@ module sll_m_sim_bsl_vp_2d2v_polar
   use sll_m_gnuplot_parallel, only: &
     sll_o_gnuplot_2d_parallel
 
-  use sll_m_parallel_array_initializer, only: &
-    sll_o_4d_parallel_array_initializer
+  use sll_m_parallel_array_initializer
 
   use sll_m_poisson_2d_polar_par, only: &
     sll_t_poisson_2d_polar_par, &
@@ -324,7 +323,7 @@ contains
     if ( prank == MPI_MASTER ) call sll_o_view_lims( sim%sequential_x3x4 )
     flush( output_unit )
  
-    call sll_o_4d_parallel_array_initializer( &
+    call sll_2d_times_2d_parallel_array_initializer( &
          sim%sequential_x3x4, sim%mesh2d_x, sim%mesh2d_v, &
          sim%f_x3x4, sim%init_func, sim%params, &
          transf_x1_x2=sim%transfx )
