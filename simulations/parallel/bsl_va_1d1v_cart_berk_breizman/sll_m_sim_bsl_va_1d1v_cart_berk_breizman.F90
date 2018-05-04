@@ -80,8 +80,7 @@ use sll_m_fft, only: &
   sll_s_fft_init_r2r_1d, &
   sll_t_fft
 
-use sll_m_parallel_array_initializer, only: &
-  sll_o_2d_parallel_array_initializer_cartesian
+use sll_m_parallel_array_initializer
 
 use sll_m_periodic_interp, only: &
   sll_p_lagrange, &
@@ -141,16 +140,16 @@ type, extends(sll_c_simulation_base_class) :: sll_t_simulation_2d_vlasov_ampere_
  type(sll_t_cartesian_mesh_2d), pointer :: mesh2d
  sll_int32                            :: num_dof_x2
 
- sll_real64, dimension(:),   pointer  :: x1_array
- sll_real64, dimension(:),   pointer  :: x2_array
- sll_real64, dimension(:,:), pointer  :: x2_array_omp
- sll_real64, dimension(:),   pointer  :: integration_weight
- sll_int32,  dimension(:),   pointer  :: every_x1
- sll_int32,  dimension(:),   pointer  :: every_x2
- sll_int32                            :: num_bloc_x1
- sll_int32                            :: num_bloc_x2
- sll_int32,  dimension(:),   pointer  :: bloc_index_x1
- sll_int32,  dimension(:),   pointer  :: bloc_index_x2
+ sll_real64, dimension(:),   allocatable  :: x1_array
+ sll_real64, dimension(:),   allocatable  :: x2_array
+ sll_real64, dimension(:,:), allocatable  :: x2_array_omp
+ sll_real64, dimension(:),   allocatable  :: integration_weight
+ sll_int32,  dimension(:),   allocatable  :: every_x1
+ sll_int32,  dimension(:),   allocatable  :: every_x2
+ sll_int32                                :: num_bloc_x1
+ sll_int32                                :: num_bloc_x2
+ sll_int32,  dimension(:),   allocatable  :: bloc_index_x1
+ sll_int32,  dimension(:),   allocatable  :: bloc_index_x2
  
  sll_real64                           :: kx
  sll_real64                           :: eps
@@ -981,7 +980,7 @@ SLL_ALLOCATE(F0(np_x2),ierr)
 
 sim%node_positions_x2(1:num_dof_x2) = sim%x2_array(1:num_dof_x2)
     
-call sll_o_2d_parallel_array_initializer_cartesian( &
+call sll_2d_parallel_array_initializer_cartesian_array_1d_1d( &
    layout_x1,                                     &
    sim%x1_array,                                  &
    sim%node_positions_x2,                         &
@@ -1520,7 +1519,6 @@ sll_real64 :: tmp_loc(5), tmp(5)
 sll_real64 :: mass, l1norm, l2norm, momentum
 sll_real64 :: potential_energy, kinetic_energy
 sll_int32  :: i, ig, np_x1
-sll_real64, pointer :: vx(:)
 sll_real64 :: dx
 
 np_x1            = sim%mesh2d%num_cells1+1
@@ -1538,7 +1536,7 @@ tmp_loc          = 0._f64
 ig               = global_indices(2)-1               
 
 dx = sim%mesh2d%delta_eta1
-vx => sim%integration_weight(1+ig:local_size_x2+ig)
+associate (vx => sim%integration_weight(1+ig:local_size_x2+ig))
 
 do i = 1, np_x1-1        
   tmp_loc(1) = tmp_loc(1)+sum(f_x1(i,1:local_size_x2)*vx)
@@ -1547,6 +1545,8 @@ do i = 1, np_x1-1
   tmp_loc(4) = tmp_loc(4)+sum(f_x1(i,1:local_size_x2)*sim%x2_array(ig+1:ig+local_size_x2)*vx)          
   tmp_loc(5) = tmp_loc(5)+sum(f_x1(i,1:local_size_x2)*sim%x2_array(ig+1:ig+local_size_x2)**2*vx)          
 end do
+
+end associate
 
 call sll_o_collective_allreduce( sll_v_world_collective, tmp_loc, 5, MPI_SUM, tmp )
 
@@ -1578,13 +1578,11 @@ subroutine delete_va2d_par_cart( sim )
 class(sll_t_simulation_2d_vlasov_ampere_cart) :: sim
 sll_int32 :: ierr
 
-if(associated(sim%x1_array)) then
-  SLL_DEALLOCATE(sim%x1_array,ierr)
-  nullify(sim%x1_array)
+if(allocated(sim%x1_array)) then
+  deallocate(sim%x1_array)
 endif
-if(associated(sim%x2_array)) then
-  SLL_DEALLOCATE(sim%x2_array,ierr)
-  nullify(sim%x2_array)
+if(allocated(sim%x2_array)) then
+  deallocate(sim%x2_array)
 endif
       
 end subroutine delete_va2d_par_cart
