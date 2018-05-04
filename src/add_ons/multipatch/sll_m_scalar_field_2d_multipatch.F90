@@ -468,7 +468,7 @@ contains   ! *****************************************************************
     sll_real64, dimension(:,:), pointer                  :: ptr
     class(sll_t_scalar_field_multipatch_2d), intent(inout) :: mp
     sll_int32, intent(in)                                :: patch
-    ptr => mp%fields(patch+1)%get_data_pointer()
+    ptr = mp%fields(patch+1)%get_data_pointer()
   end function get_patch_data_ptr_sfmp2d
 
   subroutine set_patch_data_ptr_sfmp2d( mp, patch, ptr )
