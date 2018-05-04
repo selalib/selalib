@@ -286,25 +286,25 @@ module sll_m_sim_bsl_gk_3d1v_polar_multi_mu
 
 
      !--> Density and temperature profiles
-     sll_real64, dimension(:)  , pointer :: n0_r
-     sll_real64, dimension(:)  , pointer :: Ti_r
-     sll_real64, dimension(:)  , pointer :: Te_r
-     sll_real64, dimension(:)  , pointer :: dlog_density_r
+     sll_real64, dimension(:)  , allocatable :: n0_r
+     sll_real64, dimension(:)  , allocatable :: Ti_r
+     sll_real64, dimension(:)  , allocatable :: Te_r
+     sll_real64, dimension(:)  , allocatable :: dlog_density_r
 
      !--> Gyroaverage of density profile
-     sll_real64, dimension(:)  , pointer :: gyro_n0_r
+     sll_real64, dimension(:)  , allocatable :: gyro_n0_r
 
      !--> Equilibrium distribution function
-     sll_real64, dimension(:,:), pointer :: feq_x1x4
+     sll_real64, dimension(:,:), allocatable :: feq_x1x4
 
 
      !--> 4D distribution function 
      !----> sequential in (x1,x2,x4) and parallel in (x3)
      type(sll_t_layout_4d), pointer :: layout4d_seqx1x2x4
-     sll_real64, dimension(:,:,:,:), pointer :: f4d_seqx1x2x4 
+     sll_real64, dimension(:,:,:,:), allocatable :: f4d_seqx1x2x4 
      !----> parallel in (x3) and sequential in (x1,x2,x4) 
      type(sll_t_layout_4d), pointer :: layout4d_seqx3
-     sll_real64, dimension(:,:,:,:), pointer :: f4d_seqx3
+     sll_real64, dimension(:,:,:,:), allocatable :: f4d_seqx3
      !----> definition of remap
      type(sll_t_remap_plan_4d_real64), pointer ::remap_plan_seqx1x2x4_to_seqx3
      type(sll_t_remap_plan_4d_real64), pointer ::remap_plan_seqx3_to_seqx1x2x4
@@ -313,18 +313,18 @@ module sll_m_sim_bsl_gk_3d1v_polar_multi_mu
      !--> 3D charge density and 3D electric potential
      !----> sequential in (x1,x2)
      type(sll_t_layout_3d), pointer :: layout3d_seqx1x2
-     sll_real64, dimension(:,:,:), pointer :: rho3d_seqx1x2 
-     sll_real64, dimension(:,:,:), pointer :: phi3d_seqx1x2 
-     sll_real64, dimension(:,:,:), pointer :: A1_seqx1x2 
-     sll_real64, dimension(:,:,:), pointer :: A2_seqx1x2 
-     sll_real64, dimension(:,:,:), pointer :: A3_seqx1x2
+     sll_real64, dimension(:,:,:), allocatable :: rho3d_seqx1x2 
+     sll_real64, dimension(:,:,:), allocatable :: phi3d_seqx1x2 
+     sll_real64, dimension(:,:,:), allocatable :: A1_seqx1x2 
+     sll_real64, dimension(:,:,:), allocatable :: A2_seqx1x2 
+     sll_real64, dimension(:,:,:), allocatable :: A3_seqx1x2
      sll_real64, dimension(:), pointer :: rho3d_buf1d_in 
      sll_real64, dimension(:), pointer :: rho3d_buf1d_out 
      !----> sequential in x3
      type(sll_t_layout_3d), pointer :: layout3d_seqx3
-     sll_real64, dimension(:,:,:), pointer :: rho3d_seqx3
-     sll_real64, dimension(:,:,:), pointer :: phi3d_seqx3
-     sll_real64, dimension(:,:,:), pointer :: A3_seqx3
+     sll_real64, dimension(:,:,:), allocatable :: rho3d_seqx3
+     sll_real64, dimension(:,:,:), allocatable :: phi3d_seqx3
+     sll_real64, dimension(:,:,:), allocatable :: A3_seqx3
      !----> definition of remap
      type(sll_t_remap_plan_3d_real64), pointer ::remap_plan_seqx1x2_to_seqx3
      type(sll_t_remap_plan_3d_real64), pointer ::remap_plan_seqx3_to_seqx1x2
@@ -334,10 +334,10 @@ module sll_m_sim_bsl_gk_3d1v_polar_multi_mu
     !type(sll_t_cubic_spline_1d), pointer :: interp_x3
     !type(sll_t_cubic_spline_1d), pointer :: interp_x4
 
-    sll_real64, dimension(:), pointer :: x1_node
-    sll_real64, dimension(:), pointer :: x2_node
-    sll_real64, dimension(:), pointer :: x3_node
-    sll_real64, dimension(:), pointer :: x4_node
+    sll_real64, dimension(:), allocatable :: x1_node
+    sll_real64, dimension(:), allocatable :: x2_node
+    sll_real64, dimension(:), allocatable :: x3_node
+    sll_real64, dimension(:), allocatable :: x4_node
 
 
 
@@ -2058,13 +2058,13 @@ subroutine gyroaverage_phi_dk( sim )
   subroutine initialize_fdistribu4d_DK(sim,layout,f4d)
     class(sll_t_simulation_4d_drift_kinetic_polar_multi_mu), intent(inout) :: sim
     type(sll_t_layout_4d), pointer :: layout
-    sll_real64, dimension(:,:,:,:), pointer :: f4d
+    sll_real64, dimension(:,:,:,:) :: f4d
     sll_int32  :: ierr
     sll_int32  :: i1, i2, i3, i4
     sll_int32  :: iloc1, iloc2, iloc3, iloc4
     sll_int32  :: loc4d_sz_x1, loc4d_sz_x2, loc4d_sz_x3, loc4d_sz_x4
     sll_int32, dimension(1:4) :: glob_ind
-    sll_real64, dimension(:), pointer :: x1_node,x2_node,x3_node,x4_node
+    sll_real64, dimension(:), allocatable :: x1_node,x2_node,x3_node,x4_node
     sll_real64 :: rpeak,k_x2,k_x3
     sll_real64 :: tmp_mode,tmp
     sll_real64 :: x1_min,x1_max
@@ -2126,10 +2126,6 @@ subroutine gyroaverage_phi_dk( sim )
         end do
       end do
     end do
-    SLL_DEALLOCATE(x1_node,ierr)
-    SLL_DEALLOCATE(x2_node,ierr)
-    SLL_DEALLOCATE(x3_node,ierr)
-    SLL_DEALLOCATE(x4_node,ierr)
   end subroutine initialize_fdistribu4d_DK
 
 

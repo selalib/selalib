@@ -109,8 +109,7 @@ module sll_m_sim_bsl_vp_1d1v_cart_two_species
     sll_s_hdf5_ser_file_close, &
     sll_o_hdf5_ser_write_array
 
-  use sll_m_parallel_array_initializer, only: &
-    sll_o_2d_parallel_array_initializer_cartesian
+  use sll_m_parallel_array_initializer
 
   use sll_m_periodic_interp, only: &
     sll_p_lagrange, &
@@ -195,21 +194,21 @@ module sll_m_sim_bsl_vp_1d1v_cart_two_species
    type(sll_t_cartesian_mesh_2d), pointer :: mesh2d_sp2
    sll_int32 :: num_dof_x2_sp1
    sll_int32 :: num_dof_x2_sp2
-   sll_real64, dimension(:), pointer :: x1_array
-   sll_real64, dimension(:), pointer :: x2_array_sp1
-   sll_real64, dimension(:), pointer :: x2_array_sp2
-   sll_real64, dimension(:,:), pointer :: x2_array_omp_sp1
-   sll_real64, dimension(:,:), pointer :: x2_array_omp_sp2
-   sll_real64, dimension(:), pointer :: integration_weight_sp1
-   sll_real64, dimension(:), pointer :: integration_weight_sp2
-   sll_int32, dimension(:), pointer :: every_x1
-   sll_int32, dimension(:), pointer :: every_x2
+   sll_real64, dimension(:),   allocatable :: x1_array
+   sll_real64, dimension(:),   allocatable :: x2_array_sp1
+   sll_real64, dimension(:),   allocatable :: x2_array_sp2
+   sll_real64, dimension(:,:), allocatable :: x2_array_omp_sp1
+   sll_real64, dimension(:,:), allocatable :: x2_array_omp_sp2
+   sll_real64, dimension(:),   allocatable :: integration_weight_sp1
+   sll_real64, dimension(:),   allocatable :: integration_weight_sp2
+   sll_int32,  dimension(:),   allocatable :: every_x1
+   sll_int32,  dimension(:),   allocatable :: every_x2
+   sll_int32,  dimension(:),   allocatable :: bloc_index_x1
+   sll_int32,  dimension(:),   allocatable :: bloc_index_x2_sp1
+   sll_int32,  dimension(:),   allocatable :: bloc_index_x2_sp2
    sll_int32 :: num_bloc_x1
    sll_int32 :: num_bloc_x2_sp1
    sll_int32 :: num_bloc_x2_sp2
-   sll_int32, dimension(:), pointer :: bloc_index_x1
-   sll_int32, dimension(:), pointer :: bloc_index_x2_sp1
-   sll_int32, dimension(:), pointer :: bloc_index_x2_sp2
       
    !initial function
    sll_real64  :: kx_sp1
@@ -1765,7 +1764,7 @@ contains
             sim%init_func_sp1, &
             sim%params_sp1)
     else
-       call sll_o_2d_parallel_array_initializer_cartesian( &
+       call sll_2d_parallel_array_initializer_cartesian_array_1d_1d( &
             layout_x1_sp1, &
             sim%x1_array, &
             node_positions_x2_sp1, &
@@ -1783,7 +1782,7 @@ contains
             sim%init_func_sp2, &
             sim%params_sp2)
     else
-       call sll_o_2d_parallel_array_initializer_cartesian( &
+       call sll_2d_parallel_array_initializer_cartesian_array_1d_1d( &
             layout_x1_sp2, &
             sim%x1_array, &
             node_positions_x2_sp2, &
@@ -1855,7 +1854,7 @@ contains
 
     init_func1 => sll_f_landau_initializer_2d
     
-    call sll_o_2d_parallel_array_initializer_cartesian( &
+    call sll_2d_parallel_array_initializer_cartesian_array_1d_1d( &
        layout_x1_sp1, &
        sim%x1_array, &
        node_positions_x2_sp1, &
@@ -1866,7 +1865,7 @@ contains
 
     init_func2 => sll_f_landau_initializer_2d
 
-    call sll_o_2d_parallel_array_initializer_cartesian( &
+    call sll_2d_parallel_array_initializer_cartesian_array_1d_1d( &
        layout_x1_sp2, &
        sim%x1_array, &
        node_positions_x2_sp2, &
