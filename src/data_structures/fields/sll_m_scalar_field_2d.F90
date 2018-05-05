@@ -53,7 +53,7 @@ type, extends(sll_c_scalar_field_2d_base) :: sll_t_scalar_field_2d_analytic
   procedure(sll_i_two_var_parametrizable_function), pointer, nopass :: first_deriv_eta1
   procedure(sll_i_two_var_parametrizable_function), pointer, nopass :: first_deriv_eta2
 
-  sll_real64, dimension(:), pointer                     :: params
+  sll_real64, dimension(:), allocatable                 :: params
   character(len=64)                                     :: name
   class(sll_c_coordinate_transformation_2d_base), pointer :: t
 
@@ -313,21 +313,19 @@ function sll_f_new_scalar_field_2d_analytic( func,             &
                                              first_deriv_eta2) result(obj)
   
 type(sll_t_scalar_field_2d_analytic), pointer          :: obj
-procedure(sll_i_two_var_parametrizable_function)           :: func
-character(len=*), intent(in)                         :: field_name
+procedure(sll_i_two_var_parametrizable_function)       :: func
+character(len=*), intent(in)                           :: field_name
 class(sll_c_coordinate_transformation_2d_base), target :: transformation
-sll_int32, intent(in)                                :: bc1_min
-sll_int32, intent(in)                                :: bc1_max
-sll_int32, intent(in)                                :: bc2_min
-sll_int32, intent(in)                                :: bc2_max
-sll_real64, dimension(:), intent(in)                 :: func_params
+sll_int32, intent(in)                                  :: bc1_min
+sll_int32, intent(in)                                  :: bc1_max
+sll_int32, intent(in)                                  :: bc2_min
+sll_int32, intent(in)                                  :: bc2_max
+sll_real64, dimension(:), intent(in)                   :: func_params
 procedure(sll_i_two_var_parametrizable_function), optional :: first_deriv_eta1
 procedure(sll_i_two_var_parametrizable_function), optional :: first_deriv_eta2
 sll_int32                                            :: ierr
 
-#ifdef __PGI
-  SLL_ERROR("sll_f_new_scalar_field_2d_analytic","This function does not work with PGI compiler, use init subroutine instead")
-#else
+SLL_WARNING("sll_f_new_scalar_field_2d_analytic","This function is deprecated, use init subroutine instead")
 SLL_ALLOCATE(obj,ierr)
 
 call obj%init( func,               &
@@ -340,7 +338,6 @@ call obj%init( func,               &
 &              func_params,        &
 &              first_deriv_eta1,   &
 &              first_deriv_eta2)
-#endif
 
 end function sll_f_new_scalar_field_2d_analytic
 
@@ -371,8 +368,8 @@ class(sll_t_scalar_field_2d_analytic), intent(inout) :: field
 ! nothing internal do deallocate, just nullify pointers. Can't call
 ! delete on them because the field does not 'own' these data.
 if(associated(field%func))  nullify(field%func)
-if(associated(field%params))nullify(field%params)
 if(associated(field%T))     nullify(field%T)
+if(allocated(field%params)) deallocate(field%params)
 
 end subroutine delete_field_2d_analytic
 
@@ -551,10 +548,7 @@ sll_int32, optional                            :: sz_point1
 sll_int32, optional                            :: sz_point2
 sll_int32                                      :: ierr
 
-
-#ifdef __PGI
-  SLL_ERROR("sll_f_new_scalar_field_2d_discrete","This function does not work with PGI compiler, use init subroutine instead")
-#else
+SLL_WARNING("sll_f_new_scalar_field_2d_discrete","is deprectated, use init subroutine instead")
 
 SLL_ALLOCATE(obj,ierr)
 
@@ -569,7 +563,6 @@ call obj%init( field_name,      &
                sz_point1,       &
                point2_1d,       &
                sz_point2)
-#endif
 
 end function sll_f_new_scalar_field_2d_discrete
   
