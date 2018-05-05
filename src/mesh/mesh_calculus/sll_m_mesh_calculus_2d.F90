@@ -58,11 +58,10 @@ contains
     !sll_real64 :: factor2
     sll_int32  :: i
     sll_int32  :: j
-    class(sll_t_cartesian_mesh_2d), pointer :: m
 
     ! Verify arguments
     SLL_ASSERT(associated(T))
-    m => T%get_cartesian_mesh()
+    associate (m => T%mesh)
     ! verify that the indices requested are within the logical mesh.
     SLL_ASSERT(ic <= m%num_cells1)
     SLL_ASSERT(jc <= m%num_cells2)
@@ -73,6 +72,8 @@ contains
     delta1   = m%delta_eta1
     eta2_min = m%eta2_min
     delta2   = m%delta_eta2
+
+    end associate
 
     ! This function carries out the integral of the jacobian evaluated on
     ! gauss-legendre points within the cell.
@@ -125,11 +126,12 @@ contains
     sll_int32  :: j
     sll_real64 :: x1_eta2  ! derivative of x1(eta1,eta2) with respect to eta2
     sll_real64 :: x2_eta2  ! derivative of x1(eta1,eta2) with respect to eta2
-    class(sll_t_cartesian_mesh_2d), pointer :: m
 
     ! Verify arguments
     SLL_ASSERT(associated(T))
-    m => T%get_cartesian_mesh()
+
+    associate (m => T%mesh)
+
     ! verify that the indices requested are within the logical mesh.
     SLL_ASSERT(ic <= m%num_cells1)
     SLL_ASSERT(jc <= m%num_cells2)
@@ -140,6 +142,8 @@ contains
     delta1   = m%delta_eta1
     eta2_min = m%eta2_min
     delta2   = m%delta_eta2
+
+    end associate
 
     ! The limits of integration are the limits of the cell in eta-space
     eta1    = ic*delta1 ! only difference with sll_f_edge_length_eta1_minus function
@@ -184,11 +188,11 @@ contains
     sll_int32  :: j
     sll_real64 :: x1_eta2  ! derivative of x1(eta1,eta2) with respect to eta2
     sll_real64 :: x2_eta2  ! derivative of x1(eta1,eta2) with respect to eta2
-    class(sll_t_cartesian_mesh_2d), pointer :: m
     
     ! Verify arguments
     SLL_ASSERT(associated(T))
-    m => T%get_cartesian_mesh()
+
+    associate (m => T%mesh)
 
     ! verify that the indices requested are within the logical mesh.
     SLL_ASSERT(ic <= m%num_cells1)
@@ -200,6 +204,8 @@ contains
     delta1   = m%delta_eta1
     eta2_min = m%eta2_min
     delta2   = m%delta_eta2
+
+    end associate
 
     ! The limits of integration are the limits of the cell in eta-space
     eta1    = (ic-1)*delta1
@@ -244,11 +250,10 @@ contains
     sll_int32  :: i
     sll_real64 :: x1_eta1  ! derivative of x1(eta1,eta2) with respect to eta1
     sll_real64 :: x2_eta1  ! derivative of x1(eta1,eta2) with respect to eta1
-    class(sll_t_cartesian_mesh_2d), pointer :: m
 
     ! Verify arguments
     SLL_ASSERT(associated(T))
-    m => T%get_cartesian_mesh()
+    associate (m => T%mesh)
 
     ! verify that the indices requested are within the logical mesh.
     SLL_ASSERT(ic <= m%num_cells1)
@@ -259,6 +264,8 @@ contains
     eta1_min = m%eta1_min
     delta1   = m%delta_eta1
     delta2   = m%delta_eta2  ! is this used?
+
+    end associate
 
     ! The limits of integration are the limits of the cell in eta-space
     min1    = eta1_min + (ic-1)*delta1
@@ -305,11 +312,11 @@ contains
     sll_int32  :: i
     sll_real64 :: x1_eta1  ! derivative of x1(eta1,eta2) with respect to eta1
     sll_real64 :: x2_eta1  ! derivative of x1(eta1,eta2) with respect to eta1
-    class(sll_t_cartesian_mesh_2d), pointer :: m
 
     ! Verify arguments
     SLL_ASSERT(associated(T))
-    m => T%get_cartesian_mesh()
+
+    associate (m => T%mesh)
 
     ! verify that the indices requested are within the logical mesh.
     SLL_ASSERT(ic <= m%num_cells1)
@@ -320,6 +327,8 @@ contains
     eta1_min = m%eta1_min
     delta1   = m%delta_eta1
     delta2   = m%delta_eta2  ! is this used?
+
+    end associate
 
     ! The limits of integration are the limits of the cell in eta-space
     min1    = eta1_min + (ic-1)*delta1
@@ -371,11 +380,11 @@ contains
     sll_real64 :: eta1_x1  ! derivative of eta1(x1,x2) with respect to x1
     sll_real64 :: eta1_x2  ! derivative of eta1(x1,x2) with respect to x2
     sll_real64 :: edge_length
-    class(sll_t_cartesian_mesh_2d), pointer :: m
 
     ! Verify arguments
     SLL_ASSERT(associated(T))
-    m => T%get_cartesian_mesh()
+
+    associate (m => T%mesh)
 
     ! verify that the indices requested are within the logical mesh.
     SLL_ASSERT(ic <= m%num_cells1)
@@ -385,6 +394,8 @@ contains
     delta1   = m%delta_eta1
     eta2_min = m%eta2_min
     delta2   = m%delta_eta2
+
+    end associate
 
     ! The limits of integration are the limits of the cell in eta-space
     !    min1    = eta1_min + (ic-1)*delta1
@@ -447,11 +458,11 @@ contains
     sll_real64 :: eta1_x1  ! derivative of eta1(x1,x2) with respect to x1
     sll_real64 :: eta1_x2  ! derivative of eta1(x1,x2) with respect to x2
     sll_real64 :: edge_length
-    class(sll_t_cartesian_mesh_2d), pointer :: m
     
     ! Verify arguments
     SLL_ASSERT(associated(T))
-    m => T%get_cartesian_mesh()
+
+    associate (m => T%mesh)
 
     ! verify that the indices requested are within the logical mesh.
     SLL_ASSERT(ic <= m%num_cells1)
@@ -460,6 +471,8 @@ contains
     delta1   = m%delta_eta1
     eta2_min = m%eta2_min
     delta2   = m%delta_eta2
+
+    end associate
     
     ! The limits of integration are the limits of the cell in eta-space
     !    min1    = eta1_min + (ic-1)*delta1
@@ -525,11 +538,11 @@ contains
     sll_real64 :: eta2_x1  ! derivative of eta2(x1,x2) with respect to x1
     sll_real64 :: eta2_x2  ! derivative of eta2(x1,x2) with respect to x2
     sll_real64 :: edge_length
-    class(sll_t_cartesian_mesh_2d), pointer :: m
 
     ! Verify arguments
     SLL_ASSERT(associated(T))
-    m => T%get_cartesian_mesh()
+
+    associate (m => T%mesh)
 
     ! verify that the indices requested are within the logical mesh.
     SLL_ASSERT(ic <= m%num_cells1)
@@ -538,6 +551,8 @@ contains
     eta1_min = m%eta1_min
     delta1   = m%delta_eta1
     delta2   = m%delta_eta2
+
+    end associate
     
     ! The limits of integration are the limits of the cell in eta-space
     min1    = eta1_min + (ic-1)*delta1
@@ -602,11 +617,11 @@ contains
     sll_real64 :: eta2_x1  ! derivative of eta2(x1,x2) with respect to x1
     sll_real64 :: eta2_x2  ! derivative of eta2(x1,x2) with respect to x2
     sll_real64 :: edge_length
-    class(sll_t_cartesian_mesh_2d), pointer :: m
 
     ! Verify arguments
     SLL_ASSERT(associated(T))
-    m => T%get_cartesian_mesh()
+
+    associate (m => T%mesh)
 
     ! verify that the indices requested are within the logical mesh.
     SLL_ASSERT(ic <= m%num_cells1)
@@ -615,6 +630,8 @@ contains
     eta1_min = m%eta1_min
     delta1   = m%delta_eta1
     delta2   = m%delta_eta2
+
+    end associate
     
     ! The limits of integration are the limits of the cell in eta-space
     min1    = eta1_min + (ic-1)*delta1

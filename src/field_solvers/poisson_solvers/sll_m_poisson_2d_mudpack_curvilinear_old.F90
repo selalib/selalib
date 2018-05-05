@@ -531,7 +531,6 @@ contains
     sll_int32  :: error
     sll_int32  :: intl,nxa,nxb,nyc,nyd,ixp,jyq,iex,jey,nx,ny
     sll_int32  :: iguess,maxcy,method,nwork,lwrkqd,itero
-    class(sll_t_cartesian_mesh_2d), pointer :: mesh
 
     common/itmud2sp/intl,nxa,nxb,nyc,nyd,ixp,jyq,iex,jey,nx,ny, &
               iguess,maxcy,method,nwork,lwrkqd,itero
@@ -549,13 +548,16 @@ contains
     intl = 1
     !write(*,106) intl,method,iguess
 
-    mesh => poisson%transformation%get_cartesian_mesh()
+    associate (mesh => poisson%transformation%mesh)
+
     Nc_eta1    = mesh%num_cells1
     Nc_eta2    = mesh%num_cells2
     eta1_min   = mesh%eta1_min
     eta2_min   = mesh%eta2_min
     delta_eta1 = mesh%delta_eta1
     delta_eta2 = mesh%delta_eta2
+
+    end associate
 
     poisson%rho(1:Nc_eta1+1,1:Nc_eta2+1) =  0._f64
     do i2=1,Nc_eta2+1
