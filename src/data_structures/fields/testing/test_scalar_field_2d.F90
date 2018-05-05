@@ -25,9 +25,7 @@ program unit_test_2d
     sll_p_dirichlet, &
     sll_p_periodic
 
-  use sll_m_cartesian_meshes, only: &
-    sll_f_new_cartesian_mesh_2d, &
-    sll_t_cartesian_mesh_2d
+  use sll_m_cartesian_meshes
 
   use sll_m_common_coordinate_transformations, only: &
     sll_f_identity_jac11, &
@@ -40,8 +38,7 @@ program unit_test_2d
   use sll_m_coordinate_transformation_2d_base, only: &
     sll_c_coordinate_transformation_2d_base
 
-  use sll_m_coordinate_transformations_2d, only: &
-    sll_f_new_coordinate_transformation_2d_analytic
+  use sll_m_coordinate_transformations_2d
 
   use sll_m_scalar_field_2d, only: &
     sll_t_scalar_field_2d_analytic, &
@@ -65,8 +62,10 @@ program unit_test_2d
 #define ETA2MAX  1.0_f64
 #define PRINT_COMPARISON .false.
   
-  type(sll_t_cartesian_mesh_2d), pointer                  :: mesh_2d
-  class(sll_c_coordinate_transformation_2d_base), pointer :: T
+  type(sll_t_cartesian_mesh_2d)                               :: mesh_2d
+  class(sll_c_coordinate_transformation_2d_base),     pointer :: T
+  type(sll_t_coordinate_transformation_2d_analytic),  target  :: T_analytic
+  type(sll_t_coordinate_transformation_2d_discrete),  target  :: T_discrete
 
   class(sll_c_scalar_field_2d_base), pointer :: scalar_field
 
@@ -97,9 +96,7 @@ program unit_test_2d
   sll_real64 :: normH1_1,normH1_2,normH1_3,normH1_4
   sll_real64 :: normH1_5,normH1_6,normH1_7,normH1_8
 
-  sll_real64, dimension(1) :: params_identity
-
-  params_identity(:) = (/ 0.0_f64 /)
+  sll_real64, dimension(1), parameter :: params_identity = [ 0.0_f64 ]
 
   ! logical mesh
   nc1 = NUM_CELLS1
@@ -110,13 +107,14 @@ program unit_test_2d
   print *, 'h2 = ', h2
 
   ! First thing, initialize the logical mesh associated with this problem.        
-  mesh_2d => sll_f_new_cartesian_mesh_2d( NUM_CELLS1, NUM_CELLS2, &
-       ETA1MIN, ETA1MAX, ETA2MIN,ETA2MAX )
+  call sll_s_cartesian_mesh_2d_init( mesh_2d, NUM_CELLS1, NUM_CELLS2, &
+       ETA1MIN, ETA1MAX, ETA2MIN, ETA2MAX )
   
   print *, 'initialized mesh 2D'
   
   ! coordinate transformation
-  T => sll_f_new_coordinate_transformation_2d_analytic( &
+  call sll_s_coordinate_transformation_2d_analytic_init ( &
+       T_analytic, &
        "analytic", &
        mesh_2d, &
        sll_f_identity_x1, &
@@ -127,6 +125,7 @@ program unit_test_2d
        sll_f_identity_jac22, &
        params_identity )
   print *, 'initialized transformation'
+  T => T_analytic
 
 
 
@@ -709,7 +708,6 @@ program unit_test_2d
   call dirichlet_dirichlet_discrete%set_field_data(tab_values)
   ! --------> Compute coefficients of the field
   call dirichlet_dirichlet_discrete%update_interpolation_coefficients( )
-  
 
   ! -------> compute error norm L2 and H1
   normL2_8 = 0.0_f64
