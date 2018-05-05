@@ -56,7 +56,7 @@ module sll_m_scalar_field_2d_base
        use sll_m_cartesian_meshes
        import sll_c_scalar_field_2d_base
        class(sll_c_scalar_field_2d_base), intent(in) :: field
-       type(sll_t_cartesian_mesh_2d)                 :: res
+       class(sll_t_cartesian_mesh_2d), pointer :: res
      end function function_get_mesh
   end interface
 

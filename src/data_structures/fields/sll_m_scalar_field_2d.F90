@@ -48,13 +48,13 @@ module sll_m_scalar_field_2d
 type, extends(sll_c_scalar_field_2d_base) :: sll_t_scalar_field_2d_analytic
 
   private
-  type(sll_t_cartesian_mesh_2d)                                     :: mesh
+  type(sll_t_cartesian_mesh_2d),                    pointer         :: mesh
   procedure(sll_i_two_var_parametrizable_function), pointer, nopass :: func
   procedure(sll_i_two_var_parametrizable_function), pointer, nopass :: first_deriv_eta1
   procedure(sll_i_two_var_parametrizable_function), pointer, nopass :: first_deriv_eta2
 
-  sll_real64, dimension(:), pointer                       :: params
-  character(len=64)                                       :: name
+  sll_real64, dimension(:), pointer                     :: params
+  character(len=64)                                     :: name
   class(sll_c_coordinate_transformation_2d_base), pointer :: t
 
   sll_int32 :: bc1_min
@@ -91,16 +91,16 @@ end type sll_t_scalar_field_2d_analytic
 
 type, extends(sll_c_scalar_field_2d_base) :: sll_t_scalar_field_2d_discrete
 
-  type(sll_t_cartesian_mesh_2d)            :: mesh
-  sll_real64, dimension(:,:), allocatable  :: values 
-  logical                                  :: owns_memory = .true. 
-  character(len=64)                        :: name
+  type(sll_t_cartesian_mesh_2d), pointer :: mesh
+  sll_real64, dimension(:,:), pointer  :: values => null()
+  logical                              :: owns_memory = .true. 
+  character(len=64)                    :: name
 
   class(sll_c_coordinate_transformation_2d_base), pointer :: T
-  class(sll_c_interpolator_2d),                   pointer :: interp_2d
+  class(sll_c_interpolator_2d), pointer              :: interp_2d
 
-  sll_real64, dimension(:), allocatable :: point1_1d
-  sll_real64, dimension(:), allocatable :: point2_1d
+  sll_real64, dimension(:), pointer :: point1_1d
+  sll_real64, dimension(:), pointer :: point2_1d
 
   sll_int32 :: bc1_min
   sll_int32 :: bc1_max
@@ -189,14 +189,14 @@ function value_at_index_analytic( field, i, j )
 class(sll_t_scalar_field_2d_analytic), intent(in) :: field
 sll_int32, intent(in)                           :: i
 sll_int32, intent(in)                           :: j
+type(sll_t_cartesian_mesh_2d), pointer            :: lm
 sll_real64                                      :: eta1
 sll_real64                                      :: eta2
 sll_real64                                      :: value_at_index_analytic
 
-associate (lm => field%T%mesh)
-eta1 = lm%eta1_min + real(i-1,f64)*lm%delta_eta1
-eta2 = lm%eta2_min + real(j-1,f64)*lm%delta_eta2
-end associate
+lm => field%T%mesh
+eta1 = lm%eta1_min + (i-1)*lm%delta_eta1
+eta2 = lm%eta2_min + (j-1)*lm%delta_eta2
 value_at_index_analytic = field%func(eta1,eta2,field%params)
 
 end function value_at_index_analytic
@@ -257,13 +257,13 @@ sll_int32, intent(in)                           :: i
 sll_int32, intent(in)                           :: j
 sll_real64                                      :: eta1
 sll_real64                                      :: eta2
+type(sll_t_cartesian_mesh_2d), pointer            :: lm
 
 sll_real64 :: first_deriv_eta1_value_at_index_analytic
 
-associate (lm => field%T%mesh)
+lm => field%T%mesh
 eta1 = lm%eta1_min + real(i-1,f64)*lm%delta_eta1
 eta2 = lm%eta2_min + real(j-1,f64)*lm%delta_eta2
-end associate
 
 if ( field%present_deriv_eta1_int ) then 
    first_deriv_eta1_value_at_index_analytic = &
@@ -284,13 +284,13 @@ sll_int32, intent(in)                           :: i
 sll_int32, intent(in)                           :: j
 sll_real64                                      :: eta1
 sll_real64                                      :: eta2
+type(sll_t_cartesian_mesh_2d), pointer            :: lm
 
 sll_real64 :: first_deriv_eta2_value_at_index_analytic
 
-associate (lm => field%T%mesh)
+lm => field%T%mesh
 eta1 = lm%eta1_min + real(i-1,f64)*lm%delta_eta1
 eta2 = lm%eta2_min + real(j-1,f64)*lm%delta_eta2
-end associate
   
 if ( field%present_deriv_eta2_int ) then 
   first_deriv_eta2_value_at_index_analytic = &
@@ -351,7 +351,7 @@ sll_real64, dimension(:,:), intent(in) :: values
 
 print *, 'WARNING: set_field_data_analytic_2d(): it is useless to ', &
        'call this function on an analytic scalar field.'
-
+SLL_ASSERT(associated(field%mesh))
 SLL_ASSERT(size(values,1)>0)
 
 end subroutine set_field_data_analytic_2d
@@ -361,6 +361,7 @@ subroutine update_interpolation_coefficients_2d_analytic( field )
 class(sll_t_scalar_field_2d_analytic), intent(inout) :: field
 print *, 'WARNING: update_interpolation_coefficients_2d_analytic(): ', &
      ' it is useless to call this function on an analytic scalar field.'
+SLL_ASSERT(associated(field%mesh))
 
 end subroutine update_interpolation_coefficients_2d_analytic
 
@@ -450,8 +451,8 @@ end function get_transformation_analytic
 function get_cartesian_mesh_2d_analytic( field ) result(res)
 
 class(sll_t_scalar_field_2d_analytic), intent(in) :: field
-type(sll_t_cartesian_mesh_2d) :: res
-res = field%mesh
+class(sll_t_cartesian_mesh_2d), pointer :: res
+res => field%T%get_cartesian_mesh()
 
 end function get_cartesian_mesh_2d_analytic
 
@@ -461,7 +462,7 @@ class(sll_t_scalar_field_2d_analytic), intent(in) :: field
 sll_real64, intent(in) :: eta1
 sll_real64, intent(in) :: eta2
 sll_real64, dimension(2,2) :: res
-res = field%T%jacobian_matrix(eta1,eta2)
+res = (field%T%jacobian_matrix(eta1,eta2))
 
 end function get_jacobian_matrix_analytic
 
@@ -476,15 +477,16 @@ sll_real64, dimension(:,:), allocatable :: x2coords
 sll_real64, dimension(:,:), allocatable :: values
 sll_real64                              :: eta1
 sll_real64                              :: eta2
+class(sll_c_coordinate_transformation_2d_base), pointer :: T
+class(sll_t_cartesian_mesh_2d), pointer      :: mesh
 sll_int32 :: i
 sll_int32 :: j
 sll_int32 :: ierr
 
 ! use the logical mesh information to find out the extent of the
 ! domain and allocate the arrays for the plotter.
-
-associate (mesh   => field%mesh, T => field%T)
-
+T      => field%get_transformation()
+mesh   => field%get_cartesian_mesh()
 nptsx1 = mesh%num_cells1 + 1
 nptsx2 = mesh%num_cells2 + 1
 SLL_ALLOCATE(x1coords(nptsx1,nptsx2),ierr)
@@ -493,16 +495,14 @@ SLL_ALLOCATE(values(nptsx1,nptsx2),ierr)
 
 ! Fill the arrays with the needed information.
 do j=1, nptsx2
-  eta2 = mesh%eta2_min + real(j-1,f64)*mesh%delta_eta2 
+  eta2 = mesh%eta2_min + (j-1)*mesh%delta_eta2 
   do i=1, nptsx1
-    eta1 = mesh%eta1_min + real(i-1,f64)*mesh%delta_eta1
+    eta1 = mesh%eta1_min + (i-1)*mesh%delta_eta1
     x1coords(i,j) = T%x1(eta1,eta2)
     x2coords(i,j) = T%x2(eta1,eta2)
     values(i,j)   = field%value_at_point(eta1,eta2)
   end do
 end do
-
-end associate
 
 call sll_o_gnuplot_2d( nptsx1,           &
 &                    nptsx2,           &
@@ -634,19 +634,20 @@ subroutine delete_field_2d_discrete( field )
 class(sll_t_scalar_field_2d_discrete), intent(inout) :: field
 sll_int32 :: ierr
 if(field%owns_memory) then
-   if(allocated(field%values)) deallocate(field%values)
+   if(associated(field%values)) SLL_DEALLOCATE(field%values,ierr)
 end if
 if(associated(field%T))         nullify(field%T)
 if(associated(field%interp_2d)) nullify(field%interp_2d)
-if(allocated(field%point1_1d)) deallocate(field%point1_1d)
-if(allocated(field%point2_1d)) deallocate(field%point2_1d)
+if(associated(field%point1_1d)) nullify(field%point1_1d)
+if(associated(field%point2_1d)) nullify(field%point2_1d)
 end subroutine delete_field_2d_discrete
 
 subroutine set_field_data_discrete_2d( field, values )
 class(sll_t_scalar_field_2d_discrete), intent(inout) :: field
 sll_real64, dimension(:,:), intent(in) :: values
+class(sll_t_cartesian_mesh_2d), pointer :: m
 
-associate (m => field%mesh)
+m => field%get_cartesian_mesh()
 if( (size(values,1) < m%num_cells1 ) .or. &
     (size(values,2) < m%num_cells2 ) ) then
    print *, 'WARNING, set_field_data_discrete_2d(), passed array ', &
@@ -655,7 +656,6 @@ if( (size(values,1) < m%num_cells1 ) .or. &
         ' Size of mesh: ', m%num_cells1, ' Size of values in second ', &
         'dimension:', size(values,2), 'Size of mesh: ', m%num_cells2
 end if
-end associate
 field%values(:,:) = values(:,:)
 end subroutine set_field_data_discrete_2d
 
@@ -674,33 +674,33 @@ subroutine free_data_discrete_2d( field )
 class(sll_t_scalar_field_2d_discrete), intent(inout) :: field
 sll_int32 :: ierr
 
-if( .not. allocated(field%values) ) then
+if( .not. associated(field%values) ) then
    print *, 'ERROR, free_data_discrete_2d(): the internal copy of the ', &
         'data has been already freed or never allocated.'
 end if
-deallocate(field%values)
+SLL_DEALLOCATE(field%values,ierr)
 field%owns_memory = .false.
 end subroutine free_data_discrete_2d
 
 subroutine reset_ptr_discrete_2d( field, values )
 class(sll_t_scalar_field_2d_discrete), intent(inout) :: field
-sll_real64, dimension(:,:) :: values
+sll_real64, dimension(:,:), target :: values
 if( field%owns_memory .eqv. .true. ) then
    print *, 'ERROR, reset_ptr_discrete_2d(): the data pointer can not ', &
         'be reset without a previous call to free_internal_data_copy().',&
         'This object is not being used properly. A memory leak has ', &
         'occurred. Continue at your peril.'
 end if
-field%values = values
+field%values => values
 end subroutine reset_ptr_discrete_2d
 
 function get_data_ptr_discrete_2d( field ) result(ptr)
 
   sll_real64, dimension(:,:), pointer :: ptr
   class(sll_t_scalar_field_2d_discrete), intent(inout) :: field
-  SLL_ASSERT(allocated(field%values))
+  SLL_ASSERT(associated(field%values))
   
-  ptr = field%values
+  ptr => field%values
 
 end function get_data_ptr_discrete_2d
 
@@ -721,11 +721,11 @@ end function get_transformation_discrete
 function get_cartesian_mesh_2d_discrete( field ) result(res)
 
   class(sll_t_scalar_field_2d_discrete), intent(in) :: field
-  type(sll_t_cartesian_mesh_2d) :: res
+  class(sll_t_cartesian_mesh_2d), pointer :: res
   class(sll_c_coordinate_transformation_2d_base),pointer :: transf
   
   transf => field%T
-  res = field%mesh
+  res => transf%get_cartesian_mesh()
 
 end function get_cartesian_mesh_2d_discrete
 
@@ -757,12 +757,12 @@ function value_at_index_discrete( field, i, j )
   sll_int32, intent(in) :: j
   sll_real64            :: eta1
   sll_real64            :: eta2
+  class(sll_t_cartesian_mesh_2d), pointer :: lm
   sll_real64            :: value_at_index_discrete
 
-  associate (lm => field%mesh)
+  lm => field%get_cartesian_mesh()
   eta1 = lm%eta1_min + real(i-1,f64)*lm%delta_eta1
   eta2 = lm%eta2_min + real(j-1,f64)*lm%delta_eta2
-  end associate
   value_at_index_discrete = field%interp_2d%interpolate_from_interpolant_value(eta1,eta2)
 end function value_at_index_discrete
 
@@ -792,14 +792,14 @@ function first_deriv_eta1_value_at_index_discrete( field, i, j )
   sll_int32, intent(in) :: j
   sll_real64            :: eta1
   sll_real64            :: eta2
+  class(sll_t_cartesian_mesh_2d), pointer :: lm
   sll_real64            :: first_deriv_eta1_value_at_index_discrete
 
-  associate (lm => field%mesh)
+  lm => field%get_cartesian_mesh()
   eta1 = lm%eta1_min + real(i-1,f64)*lm%delta_eta1
   eta2 = lm%eta2_min + real(j-1,f64)*lm%delta_eta2
   first_deriv_eta1_value_at_index_discrete = &
         field%interp_2d%interpolate_from_interpolant_derivative_eta1(eta1,eta2)
-  end associate 
 
 end function first_deriv_eta1_value_at_index_discrete
 
@@ -809,13 +809,12 @@ function first_deriv_eta2_value_at_index_discrete( field, i, j )
   sll_int32, intent(in) :: j
   sll_real64            :: eta1
   sll_real64            :: eta2
+  class(sll_t_cartesian_mesh_2d), pointer :: lm
   sll_real64            :: first_deriv_eta2_value_at_index_discrete
 
-  associate (lm => field%mesh)
+  lm => field%get_cartesian_mesh()
   eta1 = lm%eta1_min + real(i-1,f64)*lm%delta_eta1
   eta2 = lm%eta2_min + real(j-1,f64)*lm%delta_eta2
-  end associate
-
   first_deriv_eta2_value_at_index_discrete = &
        field%interp_2d%interpolate_from_interpolant_derivative_eta2(eta1,eta2)
 end function first_deriv_eta2_value_at_index_discrete
@@ -831,6 +830,8 @@ sll_real64, dimension(:,:), allocatable :: x2coords
 sll_real64, dimension(:,:), allocatable :: values
 sll_real64                              :: eta1
 sll_real64                              :: eta2
+class(sll_c_coordinate_transformation_2d_base), pointer :: T
+class(sll_t_cartesian_mesh_2d), pointer      :: mesh
 sll_int32 :: i
 sll_int32 :: j
 sll_int32 :: ierr
@@ -838,8 +839,8 @@ character(len=4) :: ctag
 
 ! use the logical mesh information to find out the extent of the
 ! domain and allocate the arrays for the plotter.
-
-associate(T => field%T, mesh => field%mesh)
+T      => field%get_transformation()
+mesh   => field%get_cartesian_mesh()
 nptsx1 = mesh%num_cells1 + 1
 nptsx2 = mesh%num_cells2 + 1
 SLL_ALLOCATE(x1coords(nptsx1,nptsx2),ierr)
@@ -848,15 +849,14 @@ SLL_ALLOCATE(values(nptsx1,nptsx2),ierr)
 
 ! Fill the arrays with the needed information.
 do j=1, nptsx2
-   eta2 = mesh%eta2_min + real(j-1,f64)*mesh%delta_eta2 
+   eta2 = mesh%eta2_min + (j-1)*mesh%delta_eta2 
    do i=1, nptsx1
-      eta1 = mesh%eta1_min + real(i-1,f64)*mesh%delta_eta1
+      eta1 = mesh%eta1_min + (i-1)*mesh%delta_eta1
       x1coords(i,j) = field%T%x1(eta1,eta2)
       x2coords(i,j) = field%T%x2(eta1,eta2)
       values(i,j)   = field%value_at_point(eta1,eta2)
    end do
 end do
-end associate
 
 call sll_o_gnuplot_2d( nptsx1,           &
 &                    nptsx2,           &
