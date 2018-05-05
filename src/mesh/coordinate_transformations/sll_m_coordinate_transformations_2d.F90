@@ -335,7 +335,7 @@ contains
     procedure(sll_i_transformation_func_nopass)    :: j21_func
     procedure(sll_i_transformation_func_nopass)    :: j22_func
     type(sll_t_cartesian_mesh_2d), target          :: mesh_2d
-    sll_real64, dimension(:), intent(in), optional :: params
+    sll_real64, dimension(:), intent(in)           :: params
     sll_int32  :: ierr
 
     transf%label = trim(label)
@@ -344,10 +344,13 @@ contains
     ! Assign the transformation functions and parameters
     transf%x1_func => x1_func
     transf%x2_func => x2_func
-    if( present(params) ) then
+    if (size(params) > 0) then
        SLL_ALLOCATE(transf%params(size(params)),ierr)
        transf%params(:) = params(:)
+    else
+       SLL_CLEAR_ALLOCATE(transf%params(1),ierr)
     end if
+ 
     ! Fill the jacobian matrix
     SLL_ALLOCATE(transf%j_matrix(2,2), ierr)
     transf%j_matrix(1,1)%f => j11_func
