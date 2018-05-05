@@ -6,10 +6,7 @@ program unit_test_2d
     sll_p_hermite, &
     sll_p_periodic
 
-  use sll_m_cartesian_meshes, only: &
-    sll_f_new_cartesian_mesh_2d, &
-    sll_t_cartesian_mesh_2d, &
-    sll_o_delete
+  use sll_m_cartesian_meshes
 
   use sll_m_common_coordinate_transformations, only: &
     sll_f_deriv1_jacobian_polar_f, &
@@ -38,11 +35,7 @@ program unit_test_2d
   use sll_m_coordinate_transformation_2d_base, only: &
     sll_p_io_mtv
 
-  use sll_m_coordinate_transformations_2d, only: &
-    sll_f_new_coordinate_transformation_2d_analytic, &
-    sll_t_coordinate_transformation_2d_analytic, &
-    sll_t_coordinate_transformation_2d_discrete, &
-    sll_o_delete
+  use sll_m_coordinate_transformations_2d
 
   use sll_m_cubic_spline_interpolator_2d, only: &
     sll_t_cubic_spline_interpolator_2d
@@ -52,7 +45,7 @@ program unit_test_2d
 
 #define NPTS1 33
 #define NPTS2 33 
-  type(sll_t_cartesian_mesh_2d), pointer :: mesh
+  type(sll_t_cartesian_mesh_2d) :: mesh
   type(sll_t_coordinate_transformation_2d_analytic) :: t_a    ! analytic transf
   type(sll_t_coordinate_transformation_2d_discrete) :: t_d    ! discrete transf
   type(sll_t_coordinate_transformation_2d_analytic), pointer :: t_a_ptr !test
@@ -115,7 +108,7 @@ program unit_test_2d
   print *, '**********************************************************'
 
 
-  mesh => sll_f_new_cartesian_mesh_2d( NPTS1-1, NPTS2-1 )
+  call sll_s_cartesian_mesh_2d_init( mesh,  NPTS1-1, NPTS2-1 )
 
   ! Need to do something about these variables being always on the stack...
 
