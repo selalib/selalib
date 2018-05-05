@@ -70,7 +70,6 @@ contains
     class(sll_t_init_landau_2d), intent(inout)       :: init_obj
     class(sll_c_coordinate_transformation_2d_base), pointer :: transf
     sll_real64, dimension(:,:), intent(out)    :: data_out
-    class(sll_t_cartesian_mesh_2d), pointer         :: mesh
     sll_int32  :: i
     sll_int32  :: j
     sll_int32  :: num_pts1
@@ -82,14 +81,13 @@ contains
 
     eps = init_obj%eps
     transf => init_obj%transf
-    mesh => transf%get_cartesian_mesh()
 
     if (init_obj%data_position ==  sll_p_node_centered_field) then
-       num_pts1 = mesh%num_cells1+1
-       num_pts2 = mesh%num_cells2+1
+       num_pts1 = transf%mesh%num_cells1+1
+       num_pts2 = transf%mesh%num_cells2+1
     else if (init_obj%data_position ==  sll_p_cell_centered_field) then
-       num_pts1 = mesh%num_cells1
-       num_pts2 = mesh%num_cells2
+       num_pts1 = transf%mesh%num_cells1
+       num_pts2 = transf%mesh%num_cells2
     end if
     kx = init_obj%kx
     SLL_ASSERT( size(data_out,1) .ge. num_pts1 )
