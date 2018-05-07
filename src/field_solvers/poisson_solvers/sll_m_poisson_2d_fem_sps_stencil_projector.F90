@@ -4,6 +4,8 @@ module sll_m_poisson_2d_fem_sps_stencil_projector
 
   use sll_m_working_precision, only: f64
 
+  use sll_m_vector_space_c1_block, only: sll_t_vector_space_c1_block
+
   use sll_m_linear_operator_matrix_stencil_to_stencil, only: sll_t_linear_operator_matrix_stencil_to_stencil
 
   use sll_m_linear_operator_matrix_c1_block, only: sll_t_linear_operator_matrix_c1_block
@@ -181,20 +183,29 @@ contains
   subroutine s_poisson_2d_fem_sps_stencil_projector__change_basis_vector( self, V, Vp )
     class(sll_t_poisson_2d_fem_sps_stencil_projector), intent(in   ) :: self
     real(wp)                                         , intent(in   ) :: V (:)
-    real(wp)                                         , intent(inout) :: Vp(:)
+    type(sll_t_vector_space_c1_block)                , intent(inout) :: Vp
 
-    integer :: nn
+    integer :: j, j1, j2
 
-    associate( n1 => self % n1, n2 => self % n2 )
-
-      nn = (n1-2)*n2
+    associate( n1 => self % n1, &
+               n2 => self % n2, &
+               p1 => self % p1, &
+               p2 => self % p2 )
 
       ! Checks
-      SLL_ASSERT( size(V ) == n1*n2 )
-      SLL_ASSERT( size(Vp) == 3+nn  )
+      SLL_ASSERT( size( V ) == n1*n2 )
+      SLL_ASSERT( size( Vp % vd % array    ) == 3 )
+      SLL_ASSERT( size( Vp % vs % array, 1 ) == n1-2+2*p1 )
+      SLL_ASSERT( size( Vp % vs % array, 2 ) == n2  +2*p2 )
 
-      Vp(1:3)    = matmul( self % Lt, V(1:2*n2) )
-      Vp(4:3+nn) = V(2*n2+1:n1*n2)
+      Vp % vd % array(1:3) = matmul( self % Lt, V(1:2*n2) )
+
+      do j2 = 1, n2
+        do j1 = 1, n1-2
+          j = (j1-1) * n2 + j2
+          Vp % vs % array(j1,j2) = V(2*n2+j)
+        end do
+      end do
 
     end associate
 
@@ -203,21 +214,30 @@ contains
   ! Change basis: C1 projection of vectors
   subroutine s_poisson_2d_fem_sps_stencil_projector__change_basis_vector_inv( self, Vp, V )
     class(sll_t_poisson_2d_fem_sps_stencil_projector), intent(in   ) :: self
-    real(wp)                                         , intent(in   ) :: Vp(:)
+    type(sll_t_vector_space_c1_block)                , intent(inout) :: Vp
     real(wp)                                         , intent(inout) :: V (:)
 
-    integer :: nn
+    integer :: j, j1, j2
 
-    associate( n1 => self % n1, n2 => self % n2 )
-
-      nn = (n1-2)*n2
+    associate( n1 => self % n1, &
+               n2 => self % n2, &
+               p1 => self % p1, &
+               p2 => self % p2 )
 
       ! Checks
-      SLL_ASSERT( size(Vp) == 3+nn  )
-      SLL_ASSERT( size(V ) == n1*n2 )
+      SLL_ASSERT( size( Vp % vd % array    ) == 3 )
+      SLL_ASSERT( size( Vp % vs % array, 1 ) == n1-2+2*p1 )
+      SLL_ASSERT( size( Vp % vs % array, 2 ) == n2  +2*p2 )
+      SLL_ASSERT( size( V ) == n1*n2 )
 
-      V(1:2*n2)       = matmul( self % L, Vp(1:3) )
-      V(2*n2+1:n1*n2) = Vp(4:3+nn)
+      V(1:2*n2) = matmul( self % L, Vp % vd % array(1:3) )
+
+      do j2 = 1, n2
+        do j1 = 1, n1-2
+          j = (j1-1) * n2 + j2
+          V(2*n2+j) = Vp % vs % array(j1,j2)
+        end do
+      end do
 
     end associate
 

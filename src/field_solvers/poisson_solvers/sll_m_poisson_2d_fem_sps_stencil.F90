@@ -89,11 +89,9 @@ module sll_m_poisson_2d_fem_sps_stencil
 
     ! Right hand side vector and C1 projection
     real(wp), allocatable :: b (:)
-    real(wp), allocatable :: bp(:)
 
     ! Solution and C1 projection
     real(wp), allocatable :: x (:)
-    real(wp), allocatable :: xp(:)
 
     ! Weak form
     type(sll_t_poisson_2d_fem_sps_weak_form) :: weak_form
@@ -193,14 +191,14 @@ contains
     self % Nq1 = 1 + self % p1
     self % Nq2 = 1 + self % p2
 
-    associate( n1  => self % n1             , &
-               n2  => self % n2             , &
-               p1  => self % p1             , &
-               p2  => self % p2             , &
-               nn  => 3+(self%n1-2)*self%n2 , &
-               Nk1 => self % Nk1            , &
-               Nk2 => self % Nk2            , &
-               Nq1 => self % Nq1            , &
+    associate( n1  => self % n1            , &
+               n2  => self % n2            , &
+               p1  => self % p1            , &
+               p2  => self % p2            , &
+               nn  => 3+(self%n1-2)*self%n2, &
+               Nk1 => self % Nk1           , &
+               Nk2 => self % Nk2           , &
+               Nq1 => self % Nq1           , &
                Nq2 => self % Nq2 )
 
       ! Quadrature points
@@ -236,12 +234,6 @@ contains
       ! C1 projections of stiffness and mass matrices
       allocate( self % Ap( nn, nn ) )
       allocate( self % Mp( nn, nn ) )
-
-      ! C1 projection of right hand side
-      allocate( self % bp( nn ) )
-
-      ! C1 projection of solution
-      allocate( self % xp( nn ) )
 
       !-------------------------------------------------------------------------
       ! Initialize quadrature points and weights
@@ -419,24 +411,10 @@ contains
 
       call self % xp_vecsp_c1_block % init( n1-2, n2, p1, p2 )
 
-      self % xp = 0.0_wp
-
-      allocate( self % xp_vecsp_c1_block % vd % array(1:3), source = self % xp(1:3) )
-
+      allocate( self % xp_vecsp_c1_block % vd % array( 1:3 ) )
       allocate( self % xp_vecsp_c1_block % vs % array( 1-p1:(n1-2)+p1, 1-p2:n2+p2 ) )
-
-      do j2 = 1, n2
-        do j1 = 1, n1-2
-          j = (j1-1) * n2 + j2
-          self % xp_vecsp_c1_block % vs % array(j1,j2) = self % xp(j+3)
-        end do
-      end do
-
-      ! Update buffer regions
-      self % xp_vecsp_c1_block % vs % array(1-p1:0            ,:) = 0.0_wp ! no periodicity
-      self % xp_vecsp_c1_block % vs % array((n1-2)+1:(n1-2)+p1,:) = 0.0_wp ! no periodicity
-      self % xp_vecsp_c1_block % vs % array(:,1-p2:0    ) = self % xp_vecsp_c1_block % vs % array(:,n2-p2+1:n2)
-      self % xp_vecsp_c1_block % vs % array(:,n2+1:n2+p2) = self % xp_vecsp_c1_block % vs % array(:,1:p2      )
+      self % xp_vecsp_c1_block % vd % array(:  ) = 0.0_wp
+      self % xp_vecsp_c1_block % vs % array(:,:) = 0.0_wp
 
       ! Initialize conjugate gradient solver
       call self % cjsolver % init( &
@@ -457,7 +435,7 @@ contains
     type(sll_t_spline_2d)                  , intent(inout) :: sol
 
     ! Auxiliary variables
-    integer  :: k1, k2, q1, q2, j, j1, j2
+    integer  :: k1, k2, q1, q2, j2
     real(wp) :: eta(2), x(2)
 
     associate( n1  => self % n1 , &
@@ -506,29 +484,21 @@ contains
         end do
       end do
 
-      ! Compute C1 projection of right hand side
-      call self % projector % change_basis_vector( self % b, self % bp )
-
       !-------------------------------------------------------------------------
       ! Solve linear system (homogeneous Dirichlet boundary conditions)
       !-------------------------------------------------------------------------
 
-      ! Construct C1 block vector space from vector bp
-
-      ! Homogeneous Dirichlet boundary conditions
-      self % bp(3+(n1-3)*n2+1:3+(n1-2)*n2) = 0.0_wp
-
+      ! Construct C1 block vector space
       call self % bp_vecsp_c1_block % init( n1-2, n2, p1, p2 )
-
-      allocate( self % bp_vecsp_c1_block % vd % array(1:3), source = self % bp(1:3) )
-
+      allocate( self % bp_vecsp_c1_block % vd % array( 1:3 ) )
       allocate( self % bp_vecsp_c1_block % vs % array( 1-p1:(n1-2)+p1, 1-p2:n2+p2 ) )
 
+      ! Compute C1 projection of right hand side
+      call self % projector % change_basis_vector( self % b, self % bp_vecsp_c1_block )
+
+      ! Homogeneous Dirichlet boundary conditions
       do j2 = 1, n2
-        do j1 = 1, n1-2
-          j = (j1-1) * n2 + j2
-          self % bp_vecsp_c1_block % vs % array(j1,j2) = self % bp(j+3)
-        end do
+        self % bp_vecsp_c1_block % vs % array(n1-2,j2) = 0.0_wp
       end do
 
       ! Update buffer regions
@@ -543,25 +513,8 @@ contains
         b = self % bp_vecsp_c1_block, &
         x = self % xp_vecsp_c1_block )
 
-      ! Copy solution into array xp
-
-      self % xp(1:3) = self % xp_vecsp_c1_block % vd % array(1:3)
-
-      do j2 = 1, n2
-        do j1 = 1, n1-2
-          j = (j1-1) * n2 + j2
-          self % xp(j+3) = self % xp_vecsp_c1_block % vs % array(j1,j2)
-        end do
-      end do
-
-      ! Homogeneous Dirichlet boundary conditions
-      self % xp(3+(n1-3)*n2+1:3+(n1-2)*n2) = 0.0_wp
-
-      !-------------------------------------------------------------------------
       ! Compute solution in tensor-product space
-      !-------------------------------------------------------------------------
-
-      call self % projector % change_basis_vector_inv( self % xp, self % x )
+      call self % projector % change_basis_vector_inv( self % xp_vecsp_c1_block, self % x )
 
       sol % bcoef = reshape( self % x, (/ n2, n1 /) )
 
@@ -575,7 +528,7 @@ contains
     type(sll_t_spline_2d)                  , intent(in   ) :: rhs
     type(sll_t_spline_2d)                  , intent(inout) :: sol
 
-    integer :: i, j, i1, i2, j1, j2
+    integer :: i, i1, i2, j2
 
     associate( n1 => self % n1, &
                n2 => self % n2, &
@@ -593,29 +546,21 @@ contains
       ! Compute right hand side
       self % b = matmul( self % M, self % b )
 
-      ! Compute C1 projection of right hand side
-      call self % projector % change_basis_vector( self % b, self % bp )
-
       !-------------------------------------------------------------------------
       ! Solve linear system (homogeneous Dirichlet boundary conditions)
       !-------------------------------------------------------------------------
 
-      ! Construct C1 block vector space from vector bp
-
-      ! Homogeneous Dirichlet boundary conditions
-      self % bp(3+(n1-3)*n2+1:3+(n1-2)*n2) = 0.0_wp
-
+      ! Construct C1 block vector space
       call self % bp_vecsp_c1_block % init( n1-2, n2, p1, p2 )
-
-      allocate( self % bp_vecsp_c1_block % vd % array(1:3), source = self % bp(1:3) )
-
+      allocate( self % bp_vecsp_c1_block % vd % array( 1:3 ) )
       allocate( self % bp_vecsp_c1_block % vs % array( 1-p1:(n1-2)+p1, 1-p2:n2+p2 ) )
 
+      ! Compute C1 projection of right hand side
+      call self % projector % change_basis_vector( self % b, self % bp_vecsp_c1_block )
+
+      ! Homogeneous Dirichlet boundary conditions
       do j2 = 1, n2
-        do j1 = 1, n1-2
-          j = (j1-1) * n2 + j2
-          self % bp_vecsp_c1_block % vs % array(j1,j2) = self % bp(j+3)
-        end do
+        self % bp_vecsp_c1_block % vs % array(n1-2,j2) = 0.0_wp
       end do
 
       ! Update buffer regions
@@ -630,25 +575,8 @@ contains
         b = self % bp_vecsp_c1_block, &
         x = self % xp_vecsp_c1_block )
 
-      ! Copy solution into array xp
-
-      self % xp(1:3) = self % xp_vecsp_c1_block % vd % array(1:3)
-
-      do j2 = 1, n2
-        do j1 = 1, n1-2
-          j = (j1-1) * n2 + j2
-          self % xp(j+3) = self % xp_vecsp_c1_block % vs % array(j1,j2)
-        end do
-      end do
-
-      ! Homogeneous Dirichlet boundary conditions
-      self % xp(3+(n1-3)*n2+1:3+(n1-2)*n2) = 0.0_wp
-
-      !-------------------------------------------------------------------------
       ! Compute solution in tensor-product space
-      !-------------------------------------------------------------------------
-
-      call self % projector % change_basis_vector_inv( self % xp, self % x )
+      call self % projector % change_basis_vector_inv( self % xp_vecsp_c1_block, self % x )
 
       sol % bcoef = reshape( self % x, (/ n2, n1 /) )
 
@@ -670,9 +598,9 @@ contains
     deallocate( self % M  )
     deallocate( self % Ap )
     deallocate( self % Mp )
-    deallocate( self % b  )
-    deallocate( self % bp )
     deallocate( self % L  )
+    deallocate( self % x  )
+    deallocate( self % b  )
 
     call self % Ap_linop_c1_block % free()
     call self % Mp_linop_c1_block % free()
