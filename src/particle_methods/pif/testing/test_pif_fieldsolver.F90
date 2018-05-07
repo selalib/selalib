@@ -24,17 +24,10 @@ program pif_fieldsolver_test
   implicit none
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
-
-    
-!sll_real64 ::time
 sll_int32 :: ierr
 sll_int32 :: npart !number of particles
 sll_real64, dimension(:,:), allocatable :: x!,y !particle coordinate
- type(sll_t_time_mark)  :: tstart, tstop
-!sll_int32 :: maxmode=10
-!sll_comp64, dimension(:), allocatable :: fmodes
-!sll_comp64, dimension(:), allocatable :: modeone
-!sll_int32, dimension(:,:), allocatable :: modes
+type(sll_t_time_mark)  :: tstart, tstop
 sll_int32 :: idx, dimx
 sll_real64 :: boxlen=2*sll_p_pi
 type(sll_t_pif_fieldsolver) :: SOLVER
@@ -43,13 +36,12 @@ sll_int32, dimension(:),allocatable :: stenx,stenv,stenxw
 sll_int32 :: stenw
 
 
-dimx=2;
+dimx=2
 
 !allocate stencils
 SLL_ALLOCATE(stenx(dimx),ierr)
 SLL_ALLOCATE(stenxw(dimx+1),ierr)
 SLL_ALLOCATE(stenv(dimx),ierr)
-! stenx=0; stenxw=0; stenv=0;
 
 stenx=(/( idx,idx=1,dimx)/)
 stenv=(/( idx,idx=dimx+1,2*dimx)/)
@@ -57,30 +49,21 @@ stenw=2*dimx+1
 stenxw(1:dimx)=stenx
 stenxw(dimx+1)=stenw
 
-
-!\(idx, idx=1,dimx\);
-! stenv(dimx+1:2*dimx)=1_i32;
-! stenxw=stenx
-! stenxw(2*dimx+1)=1_i32 !include the weights
-
-
 SOLVER%dimx=dimx
+
 !Load some particles
 
-
 call SOLVER%set_box_len(boxlen)
-call SOLVER%init(15)
- call sll_s_display_matrix_2d_integer(transpose(SOLVER%allmodes),'i8')
+call SOLVER%init(5)
+call sll_s_display_matrix_2d_integer(transpose(SOLVER%allmodes),'i8')
 
-
-npart=int(1e5,i32)
+npart = 10000
 
 call speed_test()
 
 do idx=1,SOLVER%problemsize()
-
-print *,"Testing mode: ",SOLVER%allmodes(:,idx)
-call mode_test(idx)
+   print *,"Testing mode: ",SOLVER%allmodes(:,idx)
+   call mode_test(idx)
 end do
 
 contains
@@ -147,7 +130,8 @@ end do
 !Test poisson solve
 sol=SOLVER%solve_poisson(rhs)
 
-y1=alpha*cos(matmul(mode, testx(1:dimx,:))+boxlen/3)/sum((mode(:)**2))
+y1=cos(matmul(mode,testx)+boxlen/3)
+y1=alpha*y1/sum(mode*mode)
 y2=SOLVER%eval_solution(testx, sol)
 print *,"PHI L2:", sum((y1-y2)**2)/real(size(testx),f64)
 
