@@ -281,12 +281,6 @@ program test_poisson_2d_fem_sps
   ! Write C1 projection of mass matrix
   call sll_o_hdf5_ser_write_array( file_id, solver % Mp, "/Mp", h5_error )
 
-  ! Write C1 projection of right hand side
-  call sll_o_hdf5_ser_write_array( file_id, solver % bp, "/bp", h5_error )
-
-  ! Write C1 projection of solution
-  call sll_o_hdf5_ser_write_array( file_id, solver % xp, "/xp", h5_error )
-
   ! Write reshaped solution
   call sll_o_hdf5_ser_write_array( file_id, spline_2d_phi % bcoef, "/phi", h5_error )
 
@@ -312,6 +306,7 @@ program test_poisson_2d_fem_sps
 
   call mapping_iga % free()
 
+  call spline_2d_rhs % free()
   call spline_2d_phi % free()
 
   call solver % free()
