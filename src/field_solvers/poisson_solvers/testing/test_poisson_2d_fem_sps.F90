@@ -34,6 +34,8 @@ program test_poisson_2d_fem_sps
 
   use sll_m_poisson_2d_fem_sps_stencil, only: sll_t_poisson_2d_fem_sps_stencil
 
+  use sll_m_poisson_2d_fem_sps_stencil_new, only: sll_t_poisson_2d_fem_sps_stencil_new
+
   use sll_m_timer, only: &
     sll_t_time_mark    , &
     sll_s_set_time_mark, &
@@ -80,8 +82,9 @@ program test_poisson_2d_fem_sps
   real(wp), allocatable :: gtau(:,:)
 
   ! Poisson solver
-!  type(sll_t_poisson_2d_fem_sps_dense  ) :: solver
-  type(sll_t_poisson_2d_fem_sps_stencil) :: solver
+!  type(sll_t_poisson_2d_fem_sps_dense      ) :: solver
+!  type(sll_t_poisson_2d_fem_sps_stencil    ) :: solver
+  type(sll_t_poisson_2d_fem_sps_stencil_new) :: solver
 
   ! Auxiliary variables
   integer  :: i1, i2
