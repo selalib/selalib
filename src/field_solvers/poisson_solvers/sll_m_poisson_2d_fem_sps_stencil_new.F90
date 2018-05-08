@@ -20,11 +20,11 @@ module sll_m_poisson_2d_fem_sps_stencil_new
 
   use sll_m_vector_space_real_array_2d, only: sll_t_vector_space_real_array_2d
 
-  use sll_m_vector_space_c1_block, only: sll_t_vector_space_c1_block
+  use sll_m_vector_space_c1_block_new, only: sll_t_vector_space_c1_block_new
 
   use sll_m_linear_operator_matrix_stencil_to_stencil, only: sll_t_linear_operator_matrix_stencil_to_stencil
 
-  use sll_m_linear_operator_matrix_c1_block, only: sll_t_linear_operator_matrix_c1_block
+  use sll_m_linear_operator_matrix_c1_block_new, only: sll_t_linear_operator_matrix_c1_block_new
 
   use sll_m_conjugate_gradient, only: sll_t_conjugate_gradient
 
@@ -108,10 +108,10 @@ module sll_m_poisson_2d_fem_sps_stencil_new
     logical  :: verbose = .false. ! default value, can be overwritten from init method
 
     ! New C1 block format
-    type(sll_t_linear_operator_matrix_c1_block) :: Ap_linop_c1_block
-    type(sll_t_linear_operator_matrix_c1_block) :: Mp_linop_c1_block
-    type(sll_t_vector_space_c1_block) :: xp_vecsp_c1_block
-    type(sll_t_vector_space_c1_block) :: bp_vecsp_c1_block
+    type(sll_t_linear_operator_matrix_c1_block_new) :: Ap_linop_c1_block
+    type(sll_t_linear_operator_matrix_c1_block_new) :: Mp_linop_c1_block
+    type(sll_t_vector_space_c1_block_new) :: xp_vecsp_c1_block
+    type(sll_t_vector_space_c1_block_new) :: bp_vecsp_c1_block
 
   contains
 
