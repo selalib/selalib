@@ -4,11 +4,11 @@ module sll_m_poisson_2d_fem_sps_stencil_new_projector
 
   use sll_m_working_precision, only: f64
 
-  use sll_m_vector_space_c1_block, only: sll_t_vector_space_c1_block
+  use sll_m_vector_space_c1_block_new, only: sll_t_vector_space_c1_block_new
 
   use sll_m_linear_operator_matrix_stencil_to_stencil, only: sll_t_linear_operator_matrix_stencil_to_stencil
 
-  use sll_m_linear_operator_matrix_c1_block, only: sll_t_linear_operator_matrix_c1_block
+  use sll_m_linear_operator_matrix_c1_block_new, only: sll_t_linear_operator_matrix_c1_block_new
 
   implicit none
 
@@ -82,7 +82,7 @@ contains
   subroutine s_poisson_2d_fem_sps_stencil_new_projector__change_basis_matrix( self, Ql, Qp )
     class(sll_t_poisson_2d_fem_sps_stencil_new_projector), intent(inout) :: self
     type(sll_t_linear_operator_matrix_stencil_to_stencil), intent(inout) :: Ql
-    type(sll_t_linear_operator_matrix_c1_block)          , intent(inout) :: Qp
+    type(sll_t_linear_operator_matrix_c1_block_new)      , intent(inout) :: Qp
 
     integer :: i1, i2, j1, j2, k1, k2, i, j, ip, jp, ll
 
@@ -153,7 +153,7 @@ contains
   subroutine s_poisson_2d_fem_sps_stencil_new_projector__change_basis_vector( self, V, Vp )
     class(sll_t_poisson_2d_fem_sps_stencil_new_projector), intent(in   ) :: self
     real(wp)                                             , intent(in   ) :: V (:)
-    type(sll_t_vector_space_c1_block)                    , intent(inout) :: Vp
+    type(sll_t_vector_space_c1_block_new)                , intent(inout) :: Vp
 
     integer :: j, j1, j2
 
@@ -184,7 +184,7 @@ contains
   ! Change basis: C1 projection of vectors
   subroutine s_poisson_2d_fem_sps_stencil_new_projector__change_basis_vecinv( self, Vp, V )
     class(sll_t_poisson_2d_fem_sps_stencil_new_projector), intent(in   ) :: self
-    type(sll_t_vector_space_c1_block)                    , intent(inout) :: Vp
+    type(sll_t_vector_space_c1_block_new)                , intent(inout) :: Vp
     real(wp)                                             , intent(inout) :: V (:)
 
     integer :: j, j1, j2
