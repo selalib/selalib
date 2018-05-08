@@ -172,8 +172,8 @@ contains
           call self % weak_form % element_rhs( &
             test_values_and_derivs_eta1  = data_1d_eta1(:,:,il1,k1), &
             test_values_and_derivs_eta2  = data_1d_eta2(:,:,il2,k2), &
-            data_2d_rhs                  = data_2d_rhs(:,:,k1,k2) , &
-            int_volume                   = int_volume (:,:,k1,k2)   , &
+            data_2d_rhs                  = data_2d_rhs(:,:,k1,k2)  , &
+            int_volume                   = int_volume (:,:,k1,k2)  , &
             bi = bi )
 
           b(i) = b(i) + bi
