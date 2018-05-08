@@ -18,6 +18,8 @@ module sll_m_poisson_2d_fem_sps_stencil
 
   use sll_m_poisson_2d_fem_sps_stencil_projector, only: sll_t_poisson_2d_fem_sps_stencil_projector
 
+  use sll_m_vector_space_real_array_2d, only: sll_t_vector_space_real_array_2d
+
   use sll_m_vector_space_c1_block, only: sll_t_vector_space_c1_block
 
   use sll_m_linear_operator_matrix_stencil_to_stencil, only: sll_t_linear_operator_matrix_stencil_to_stencil
@@ -77,10 +79,10 @@ module sll_m_poisson_2d_fem_sps_stencil
     real(wp), allocatable :: data_2d_rhs(:,:,:,:)
 
     ! Stiffness and mass matrices and C1 projections
-    real(wp), allocatable :: A (:,:)
-    real(wp), allocatable :: M (:,:)
-    real(wp), allocatable :: Ap(:,:)
-    real(wp), allocatable :: Mp(:,:)
+!    real(wp), allocatable :: A (:,:)
+!    real(wp), allocatable :: M (:,:)
+!    real(wp), allocatable :: Ap(:,:)
+!    real(wp), allocatable :: Mp(:,:)
     type(sll_t_linear_operator_matrix_stencil_to_stencil) :: A_linop_stencil
     type(sll_t_linear_operator_matrix_stencil_to_stencil) :: M_linop_stencil
 
@@ -88,10 +90,12 @@ module sll_m_poisson_2d_fem_sps_stencil
     real(wp), allocatable :: L(:,:)
 
     ! Right hand side vector and C1 projection
-    real(wp), allocatable :: b (:)
+    real(wp), allocatable :: b(:)
+    type(sll_t_vector_space_real_array_2d) :: bs_tmp1
+    type(sll_t_vector_space_real_array_2d) :: bs_tmp2
 
     ! Solution and C1 projection
-    real(wp), allocatable :: x (:)
+    real(wp), allocatable :: x(:)
 
     ! Weak form
     type(sll_t_poisson_2d_fem_sps_weak_form) :: weak_form
@@ -221,19 +225,21 @@ contains
       ! Barycentric coordinates
       allocate( self % L( 2*n2, 3 ) )
 
-      ! Stiffness and mass matrices
-      allocate( self % A( n1*n2, n1*n2 ) )
-      allocate( self % M( n1*n2, n1*n2 ) )
+!      ! Stiffness and mass matrices
+!      allocate( self % A( n1*n2, n1*n2 ) )
+!      allocate( self % M( n1*n2, n1*n2 ) )
 
       ! Right hand side
       allocate( self % b( n1*n2 ) )
+      allocate( self % bs_tmp1 % array( 1-p1:n1+p1, 1-p2:n2+p2 ) )
+      allocate( self % bs_tmp2 % array( 1-p1:n1+p1, 1-p2:n2+p2 ) )
 
       ! Solution
       allocate( self % x( n1*n2 ) )
 
-      ! C1 projections of stiffness and mass matrices
-      allocate( self % Ap( nn, nn ) )
-      allocate( self % Mp( nn, nn ) )
+!      ! C1 projections of stiffness and mass matrices
+!      allocate( self % Ap( nn, nn ) )
+!      allocate( self % Mp( nn, nn ) )
 
       !-------------------------------------------------------------------------
       ! Initialize quadrature points and weights
@@ -356,11 +362,11 @@ contains
         end do
       end do
 
-      ! Convert stencil to dense
-      self % A = 0.0_wp
-      self % M = 0.0_wp
-      call self % A_linop_stencil % to_array( self % A )
-      call self % M_linop_stencil % to_array( self % M )
+!      ! Convert stencil to dense
+!      self % A = 0.0_wp
+!      self % M = 0.0_wp
+!      call self % A_linop_stencil % to_array( self % A )
+!      call self % M_linop_stencil % to_array( self % M )
 
       !-------------------------------------------------------------------------
       ! Initialize linear system (homogeneous Dirichlet boundary conditions)
@@ -382,11 +388,11 @@ contains
       call self % projector % change_basis_matrix( self % A_linop_stencil, self % Ap_linop_c1_block )
       call self % projector % change_basis_matrix( self % M_linop_stencil, self % Mp_linop_c1_block )
 
-      ! Convert stencil to dense
-      self % Ap = 0.0_wp
-      self % Mp = 0.0_wp
-      call self % Ap_linop_c1_block % to_array( self % Ap )
-      call self % Mp_linop_c1_block % to_array( self % Mp )
+!      ! Convert stencil to dense
+!      self % Ap = 0.0_wp
+!      self % Mp = 0.0_wp
+!      call self % Ap_linop_c1_block % to_array( self % Ap )
+!      call self % Mp_linop_c1_block % to_array( self % Mp )
 
       ! Homogeneous Dirichlet boundary conditions
       self % Ap_linop_c1_block % block2 % A(:,nb-n2+1:nb) = 0.0_wp
@@ -536,15 +542,17 @@ contains
                p2 => self % p2 )
 
       ! Store temporarily spline coefficients of right hand side into self % b
+      self % bs_tmp1 % array(:,:) = 0.0_wp
+      self % bs_tmp1 % array(1:n1,1:n2) = rhs % bcoef(1:n1,1:n2)
+
+      call self % M_linop_stencil % dot( self % bs_tmp1, self % bs_tmp2 )
+
       do i2 = 1, n2
         do i1 = 1, n1
           i = (i1-1) * n2 + i2
-          self % b(i) = rhs % bcoef(i1,i2)
+          self % b(i) = self % bs_tmp2 % array(i1,i2)
         end do
       end do
-
-      ! Compute right hand side
-      self % b = matmul( self % M, self % b )
 
       !-------------------------------------------------------------------------
       ! Solve linear system (homogeneous Dirichlet boundary conditions)
@@ -594,13 +602,15 @@ contains
     deallocate( self % data_1d_eta2 )
     deallocate( self % int_volume )
     deallocate( self % inv_metric )
-    deallocate( self % A  )
-    deallocate( self % M  )
-    deallocate( self % Ap )
-    deallocate( self % Mp )
+!    deallocate( self % A  )
+!    deallocate( self % M  )
+!    deallocate( self % Ap )
+!    deallocate( self % Mp )
     deallocate( self % L  )
     deallocate( self % x  )
     deallocate( self % b  )
+    deallocate( self % bs_tmp1 % array )
+    deallocate( self % bs_tmp2 % array )
 
     call self % Ap_linop_c1_block % free()
     call self % Mp_linop_c1_block % free()

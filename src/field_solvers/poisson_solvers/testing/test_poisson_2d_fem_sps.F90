@@ -102,7 +102,7 @@ program test_poisson_2d_fem_sps
   call sll_s_set_time_mark( t0 )
 
   ! Number of degrees of freedom (control points) along s and theta
-  mm = 40
+  mm = 64
   n1 = mm * 1
   n2 = mm * 2
 
@@ -260,11 +260,11 @@ program test_poisson_2d_fem_sps
   call sll_o_hdf5_ser_write_attribute( file_id, "/", "p1", p1, h5_error )
   call sll_o_hdf5_ser_write_attribute( file_id, "/", "p2", p2, h5_error )
 
-  ! Write stiffness matrix
-  call sll_o_hdf5_ser_write_array( file_id, solver % A, "/A", h5_error )
+!  ! Write stiffness matrix
+!  call sll_o_hdf5_ser_write_array( file_id, solver % A, "/A", h5_error )
 
-  ! Write mass matrix
-  call sll_o_hdf5_ser_write_array( file_id, solver % M, "/M", h5_error )
+!  ! Write mass matrix
+!  call sll_o_hdf5_ser_write_array( file_id, solver % M, "/M", h5_error )
 
   ! Write L matrix needed for projection
   call sll_o_hdf5_ser_write_array( file_id, solver % L, "/L", h5_error )
@@ -275,11 +275,11 @@ program test_poisson_2d_fem_sps
   ! Write solution
   call sll_o_hdf5_ser_write_array( file_id, solver % x, "/x", h5_error )
 
-  ! Write C1 projection of stiffness matrix
-  call sll_o_hdf5_ser_write_array( file_id, solver % Ap, "/Ap", h5_error )
+!  ! Write C1 projection of stiffness matrix
+!  call sll_o_hdf5_ser_write_array( file_id, solver % Ap, "/Ap", h5_error )
 
-  ! Write C1 projection of mass matrix
-  call sll_o_hdf5_ser_write_array( file_id, solver % Mp, "/Mp", h5_error )
+!  ! Write C1 projection of mass matrix
+!  call sll_o_hdf5_ser_write_array( file_id, solver % Mp, "/Mp", h5_error )
 
   ! Write reshaped solution
   call sll_o_hdf5_ser_write_array( file_id, spline_2d_phi % bcoef, "/phi", h5_error )
