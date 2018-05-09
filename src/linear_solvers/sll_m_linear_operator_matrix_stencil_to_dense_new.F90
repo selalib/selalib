@@ -25,10 +25,11 @@ module sll_m_linear_operator_matrix_stencil_to_dense_new
 
   type, extends(sll_c_linear_operator) :: sll_t_linear_operator_matrix_stencil_to_dense_new
 
-    real(wp), allocatable :: A (:,:)
+    real(wp), allocatable :: A (:,:,:)
 
-    integer :: n1
-    integer :: n2
+    integer :: s1
+    integer :: s2
+    integer :: s3
 
   contains
 
@@ -36,7 +37,6 @@ module sll_m_linear_operator_matrix_stencil_to_dense_new
     procedure :: get_shape => f_linear_operator_matrix_stencil_to_dense_new__get_shape
     procedure :: dot       => s_linear_operator_matrix_stencil_to_dense_new__dot
     procedure :: dot_incr  => s_linear_operator_matrix_stencil_to_dense_new__dot_incr
-    procedure :: to_array  => s_linear_operator_matrix_stencil_to_dense_new__to_array
     procedure :: free      => s_linear_operator_matrix_stencil_to_dense_new__free
 
   end type sll_t_linear_operator_matrix_stencil_to_dense_new
@@ -46,15 +46,17 @@ contains
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
   ! Initialize linear operator
-  subroutine s_linear_operator_matrix_stencil_to_dense_new__init( self, n1, n2 )
+  subroutine s_linear_operator_matrix_stencil_to_dense_new__init( self, s1, s2, s3 )
     class(sll_t_linear_operator_matrix_stencil_to_dense_new), intent(inout) :: self
-    integer                                                 , intent(in   ) :: n1
-    integer                                                 , intent(in   ) :: n2
+    integer                                                 , intent(in   ) :: s1
+    integer                                                 , intent(in   ) :: s2
+    integer                                                 , intent(in   ) :: s3
 
-    allocate( self % A( n1, n2 ) )
+    allocate( self % A( s1, s2, s3 ) )
 
-    self % n1 = n1
-    self % n2 = n2
+    self % s1 = s1
+    self % s2 = s2
+    self % s3 = s3
 
   end subroutine s_linear_operator_matrix_stencil_to_dense_new__init
 
@@ -63,7 +65,8 @@ contains
     class(sll_t_linear_operator_matrix_stencil_to_dense_new), intent(in) :: self
     integer :: s(2)
 
-    s = shape( self % A  )
+    s(1) = size( self % A, 1 )
+    s(2) = size( self % A, 2 ) * size( self % A, 3 )
 
   end function f_linear_operator_matrix_stencil_to_dense_new__get_shape
 
@@ -73,7 +76,7 @@ contains
     class(sll_c_vector_space)                               , intent(in   ) :: x ! stencil
     class(sll_c_vector_space)                               , intent(inout) :: y ! dense
 
-    integer :: j1, j2, i, j
+    integer :: j1, j2, i
 
     character(len=*), parameter :: this_sub_name = "sll_t_linear_operator_matrix_stencil_to_dense_new % dot"
     character(len=64) :: err_msg
@@ -88,22 +91,18 @@ contains
       associate( nx1 => ubound( x % array, 1 ) - p1, &
                  nx2 => ubound( x % array, 2 ) - p2 )
 
-        ! Check dimensions
-        SLL_ASSERT( self % n2 == nx1*nx2 )
-
         select type ( y )
 
         type is ( sll_t_vector_space_real_array_1d )
 
           ! Check dimensions
-          SLL_ASSERT( self  % n1 == size( y % array ) )
+          SLL_ASSERT( self%s1 == size(y%array) )
 
           y % array = 0.0_wp
           do i = 1, size( y % array )
             do j2 = 1, nx2
-              do j1 = 1, nx1
-                j = (j1-1) * nx2 + j2
-                y % array(i) = y % array(i) + self % A(i,j) * x % array(j1,j2)
+              do j1 = 1, p1
+                y % array(i) = y % array(i) + self % A(i,j1,j2) * x % array(j1,j2)
               end do
             end do
           end do
@@ -132,7 +131,7 @@ contains
     class(sll_c_vector_space)                               , intent(in   ) :: x ! stencil
     class(sll_c_vector_space)                               , intent(inout) :: y ! dense
 
-    integer :: j1, j2, i, j
+    integer :: j1, j2, i
 
     character(len=*), parameter :: this_sub_name = "sll_t_linear_operator_matrix_stencil_to_dense_new % dot"
     character(len=64) :: err_msg
@@ -147,21 +146,17 @@ contains
       associate( nx1 => ubound( x % array, 1 ) - p1, &
                  nx2 => ubound( x % array, 2 ) - p2 )
 
-        ! Check dimensions
-        SLL_ASSERT( self % n2 == nx1*nx2 )
-
         select type ( y )
 
         type is ( sll_t_vector_space_real_array_1d )
 
           ! Check dimensions
-          SLL_ASSERT( self  % n1 == size( y % array ) )
+          SLL_ASSERT( self%s1 == size(y%array) )
 
           do i = 1, size( y % array )
             do j2 = 1, nx2
-              do j1 = 1, nx1
-                j = (j1-1) * nx2 + j2
-                y % array(i) = y % array(i) + self % A(i,j) * x % array(j1,j2)
+              do j1 = 1, p1
+                y % array(i) = y % array(i) + self % A(i,j1,j2) * x % array(j1,j2)
               end do
             end do
           end do
@@ -183,18 +178,6 @@ contains
     end select
 
   end subroutine s_linear_operator_matrix_stencil_to_dense_new__dot_incr
-
-  ! Convert dense matrix to array (trivial)
-  subroutine s_linear_operator_matrix_stencil_to_dense_new__to_array( self, A )
-    class(sll_t_linear_operator_matrix_stencil_to_dense_new), intent(in   ) :: self
-    real(wp)                                                , intent(inout) :: A(:,:)
-
-    SLL_ASSERT( size( A, 1 ) == self % n1 )
-    SLL_ASSERT( size( A, 2 ) == self % n2 )
-
-    A = self % A
-
-  end subroutine s_linear_operator_matrix_stencil_to_dense_new__to_array
 
   ! Free objects
   subroutine s_linear_operator_matrix_stencil_to_dense_new__free( self )

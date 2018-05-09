@@ -31,8 +31,8 @@ module sll_m_linear_operator_matrix_c1_block_new
 
   type, extends(sll_c_linear_operator) :: sll_t_linear_operator_matrix_c1_block_new
 
-    integer :: n1(4)
-    integer :: n2(4)
+    integer :: n1
+    integer :: n2
     integer :: p1
     integer :: p2
 
@@ -59,8 +59,8 @@ contains
   ! Initialize linear operator
   subroutine s_linear_operator_matrix_c1_block_new__init( self, n1, n2, p1, p2 )
     class(sll_t_linear_operator_matrix_c1_block_new), intent(inout) :: self
-    integer                                         , intent(in   ) :: n1(4)
-    integer                                         , intent(in   ) :: n2(4)
+    integer                                         , intent(in   ) :: n1
+    integer                                         , intent(in   ) :: n2
     integer                                         , intent(in   ) :: p1
     integer                                         , intent(in   ) :: p2
 
@@ -69,10 +69,10 @@ contains
     self % p1 = p1
     self % p2 = p2
 
-    call self % block1 % init( n1(1), n2(1) )
-    call self % block2 % init( n1(2), n2(2) )
-    call self % block3 % init( n1(3), n2(3) )
-    call self % block4 % init( n1(4), n2(4), p1, p2 )
+    call self % block1 % init( 3, 3 )
+    call self % block2 % init( 3, p1, n2 )
+    call self % block3 % init( p1, n2, 3 )
+    call self % block4 % init( n1-2, n2, p1, p2 )
 
   end subroutine s_linear_operator_matrix_c1_block_new__init
 
@@ -166,26 +166,44 @@ contains
     integer :: i, j, i1, i2, j1, j2, k1, k2
 
     ! Indices 1,2,3 correspond to dense blocks
-    SLL_ASSERT( size(A,1) == self % n1(1) + self % n1(3) )
-    SLL_ASSERT( size(A,2) == self % n2(1) + self % n2(2) )
+    SLL_ASSERT( size(A,1) == 3+(self%n1-2)*self%n2 )
+    SLL_ASSERT( size(A,2) == 3+(self%n1-2)*self%n2 )
 
     associate( n1 => self % n1, &
                n2 => self % n2, &
                p1 => self % p1, &
                p2 => self % p2 )
 
-      A(       1:n1(1)      ,       1:n2(1)       ) = self % block1 % A(:,:)
-      A(       1:n1(1)      , n2(1)+1:n2(1)+n2(2) ) = self % block2 % A(:,:)
-      A( n1(1)+1:n1(1)+n1(3),       1:n2(1)       ) = self % block3 % A(:,:)
+      ! block 1
+      A(1:3,1:3) = self % block1 % A(:,:)
 
-      do i2 = 1, n2(4)
-        do i1 = 1, n1(4)
+      ! block 2
+      do i2 = 1, n2
+        do i1 = 1, p1
+          i = (i1-1) * n2 + i2
+          A(1:3,i+3) = self % block2 % A(:,i1,i2)
+        end do
+      end do
+      A(1:3,4+p1:3+(n1-2)*n2) = 0.0_wp
+
+      ! block 3
+      do i2 = 1, n2
+        do i1 = 1, p1
+          i = (i1-1) * n2 + i2
+          A(i+3,1:3) = self % block3 % A(i1,i2,:)
+        end do
+      end do
+      A(4+p1:3+(n1-2)*n2,1:3) = 0.0_wp
+
+      ! block 4
+      do i2 = 1, n2
+        do i1 = 1, n1-2
           do k2 = -p2, p2
             do k1 = -p1, p1
-              j1 = modulo( i1 - 1 + k1, n1(4) ) + 1
-              j2 = modulo( i2 - 1 + k2, n2(4) ) + 1
-              i  = (i1-1) * n2(4) + i2
-              j  = (j1-1) * n2(4) + j2
+              j1 = modulo( i1 - 1 + k1, n1-2 ) + 1
+              j2 = modulo( i2 - 1 + k2, n2   ) + 1
+              i  = (i1-1) * n2 + i2
+              j  = (j1-1) * n2 + j2
               A(i+3,j+3) = self % block4 % A(k1,k2,i1,i2)
             end do
           end do
