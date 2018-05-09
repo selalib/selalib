@@ -28,9 +28,8 @@ module sll_m_poisson_2d_fem_sps_stencil_new_projector
     integer :: p2
 
     ! Temporary storage needed for projection
-    real(wp), allocatable :: Qp_temp(:,:)
-    real(wp), allocatable :: L(:,:)
-    real(wp), allocatable :: Lt(:,:) ! transpose
+    real(wp), allocatable :: Qp_temp(:,:,:)
+    real(wp), allocatable :: L(:,:,:)
 
   contains
 
@@ -53,27 +52,20 @@ contains
     integer                                              , intent(in   ) :: n2
     integer                                              , intent(in   ) :: p1
     integer                                              , intent(in   ) :: p2
-    real(wp)                                             , intent(in   ) :: L(:,:) ! matrix of barycentric coordinates
-
-    integer :: nn
+    real(wp)                                             , intent(in   ) :: L(:,:,:) ! matrix of barycentric coordinates
 
     self % n1 = n1
     self % n2 = n2
     self % p1 = p1
     self % p2 = p2
 
-    nn = (n1-2)*n2
+    SLL_ASSERT( size(L,1) == 2  )
+    SLL_ASSERT( size(L,2) == n2 )
+    SLL_ASSERT( size(L,3) == 3  )
 
     ! Allocate temporary storage
-    allocate( self % Qp_temp( 2*n2, 3 ) )
-    allocate( self % L ( size(L,1), size(L,2) ) )
-    allocate( self % Lt( size(L,2), size(L,1) ) )
-
-    SLL_ASSERT( size(L,1) == 2*n2  )
-    SLL_ASSERT( size(L,2) == 3     )
-
-    self % L  = L
-    self % Lt = transpose( L )
+    allocate( self % L      ( size(L,1), size(L,2), size(L,3) ), source = L )
+    allocate( self % Qp_temp( size(L,1), size(L,2), size(L,3) ) )
 
   end subroutine s_poisson_2d_fem_sps_stencil_new_projector__init
 
@@ -92,10 +84,10 @@ contains
                p2 => self % p2 )
 
       ! Fill blocks
-      self % Qp_temp (:,:) = 0.0_wp
-      Qp % block1 % A(:,:) = 0.0_wp
-      Qp % block2 % A(:,:) = 0.0_wp
-      Qp % block3 % A(:,:) = 0.0_wp
+      self % Qp_temp (:,:,:) = 0.0_wp
+      Qp % block1 % A(:,:  ) = 0.0_wp
+      Qp % block2 % A(:,:,:) = 0.0_wp
+      Qp % block3 % A(:,:,:) = 0.0_wp
       do ll = 1, 3
         do i2 = 1, n2
           do i1 = 1, n1
@@ -103,17 +95,15 @@ contains
               do k1 = -p1, p1
                 j1 = modulo( i1 - 1 + k1, n1 ) + 1
                 j2 = modulo( i2 - 1 + k2, n2 ) + 1
-                i  = (i1-1) * n2 + i2
-                j  = (j1-1) * n2 + j2
                 ! block 1: 3 x 3
-                if ( 1 <= i .and. i <= 2*n2 .and. 1 <= j .and. j <= 2*n2 ) then
-                  self % Qp_temp(i,ll) = self % Qp_temp(i,ll) + Ql % A(k1,k2,i1,i2) * self % L(j,ll)
+                if ( i1 <= 2 .and. j1 <= 2 ) then
+                  self % Qp_temp(i1,i2,ll) = self % Qp_temp(i1,i2,ll) + Ql % A(k1,k2,i1,i2) * self % L(j1,j2,ll)
                 ! block 2: 3 x (n1-2)*n2
-                else if ( 1 <= i .and. i <= 2*n2 .and. 2*n2+1 <= j .and. j <= n1*n2 ) then
-                  Qp % block2 % A(ll,j-2*n2) = Qp % block2 % A(ll,j-2*n2) + self % Lt(ll,i) * Ql % A(k1,k2,i1,i2)
+                else if ( i1 <= 2 .and. j1 <= 2+p1 ) then
+                  Qp % block2 % A(ll,j1-2,j2) = Qp % block2 % A(ll,j1-2,j2) + self % L(i1,i2,ll) * Ql % A(k1,k2,i1,i2)
                 ! block 3: (n1-2)*n2 x 3
-                else if ( 2*n2+1 <= i .and. i <= n1*n2 .and. 1 <= j .and. j <= 2*n2 ) then
-                  Qp % block3 % A(i-2*n2,ll) = Qp % block3 % A(i-2*n2,ll) + Ql % A(k1,k2,i1,i2) * self % L(j,ll)
+                else if ( i1 <= 2+p1 .and. j1 <= 2 ) then
+                  Qp % block3 % A(i1-2,i2,ll) = Qp % block3 % A(i1-2,i2,ll) + Ql % A(k1,k2,i1,i2) * self % L(j1,j2,ll)
                 end if
               end do
             end do
@@ -121,7 +111,15 @@ contains
         end do
       end do
       ! complete calculation of block 1
-      Qp % block1 % A(:,:) = matmul( self % Lt, self % Qp_temp )
+      do ip = 1, 3
+        do jp = 1, 3
+          do i2 = 1, n2
+            do i1 = 1, 2
+              Qp % block1 % A(ip,jp) = Qp % block1 % A(ip,jp) + self % L(i1,i2,ip) * self % Qp_temp(i1,i2,jp)
+            end do
+          end do
+        end do
+      end do
 
       ! block 4: (n1-2)*n2 x (n1-2)*n2
       Qp % block4 % A(:,:,:,:) = 0.0_wp
@@ -155,7 +153,7 @@ contains
     real(wp)                                             , intent(in   ) :: V (:)
     type(sll_t_vector_space_c1_block_new)                , intent(inout) :: Vp
 
-    integer :: j, j1, j2
+    integer :: i, i1, i2, j, j1, j2, ll
 
     associate( n1 => self % n1, &
                n2 => self % n2, &
@@ -168,7 +166,15 @@ contains
       SLL_ASSERT( size( Vp % vs % array, 1 ) == n1-2+2*p1 )
       SLL_ASSERT( size( Vp % vs % array, 2 ) == n2  +2*p2 )
 
-      Vp % vd % array(1:3) = matmul( self % Lt, V(1:2*n2) )
+      Vp % vd % array(:) = 0.0_wp
+      do ll = 1, 3
+        do i2 = 1, n2
+          do i1 = 1, 2
+            i = (i1-1)*n2 + i2
+            Vp % vd % array(ll) = Vp % vd % array(ll) + self % L(i1,i2,ll) * V(i)
+          end do
+        end do
+      end do
 
       do j2 = 1, n2
         do j1 = 1, n1-2
@@ -187,7 +193,7 @@ contains
     type(sll_t_vector_space_c1_block_new)                , intent(inout) :: Vp
     real(wp)                                             , intent(inout) :: V (:)
 
-    integer :: j, j1, j2
+    integer :: i, i1, i2, j, j1, j2, ll
 
     associate( n1 => self % n1, &
                n2 => self % n2, &
@@ -200,7 +206,15 @@ contains
       SLL_ASSERT( size( Vp % vs % array, 2 ) == n2  +2*p2 )
       SLL_ASSERT( size( V ) == n1*n2 )
 
-      V(1:2*n2) = matmul( self % L, Vp % vd % array(1:3) )
+      V(:) = 0.0_wp
+      do ll = 1, 3
+        do i2 = 1, n2
+          do i1 = 1, 2
+            i = (i1-1)*n2 + i2
+            V(i) = V(i) + self % L(i1,i2,ll) * Vp % vd % array(ll)
+          end do
+        end do
+      end do
 
       do j2 = 1, n2
         do j1 = 1, n1-2
@@ -219,7 +233,6 @@ contains
 
     deallocate( self % Qp_temp )
     deallocate( self % L       )
-    deallocate( self % Lt      )
 
   end subroutine s_poisson_2d_fem_sps_stencil_new_projector__free
 

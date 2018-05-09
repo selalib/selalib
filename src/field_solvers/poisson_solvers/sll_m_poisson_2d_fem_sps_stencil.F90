@@ -79,10 +79,10 @@ module sll_m_poisson_2d_fem_sps_stencil
     real(wp), allocatable :: data_2d_rhs(:,:,:,:)
 
     ! Stiffness and mass matrices and C1 projections
-!    real(wp), allocatable :: A (:,:)
-!    real(wp), allocatable :: M (:,:)
-!    real(wp), allocatable :: Ap(:,:)
-!    real(wp), allocatable :: Mp(:,:)
+    real(wp), allocatable :: A (:,:)
+    real(wp), allocatable :: M (:,:)
+    real(wp), allocatable :: Ap(:,:)
+    real(wp), allocatable :: Mp(:,:)
     type(sll_t_linear_operator_matrix_stencil_to_stencil) :: A_linop_stencil
     type(sll_t_linear_operator_matrix_stencil_to_stencil) :: M_linop_stencil
 
@@ -225,9 +225,9 @@ contains
       ! Barycentric coordinates
       allocate( self % L( 2*n2, 3 ) )
 
-!      ! Stiffness and mass matrices
-!      allocate( self % A( n1*n2, n1*n2 ) )
-!      allocate( self % M( n1*n2, n1*n2 ) )
+      ! Stiffness and mass matrices
+      allocate( self % A( n1*n2, n1*n2 ) )
+      allocate( self % M( n1*n2, n1*n2 ) )
 
       ! Right hand side
       allocate( self % b( n1*n2 ) )
@@ -237,9 +237,9 @@ contains
       ! Solution
       allocate( self % x( n1*n2 ) )
 
-!      ! C1 projections of stiffness and mass matrices
-!      allocate( self % Ap( nn, nn ) )
-!      allocate( self % Mp( nn, nn ) )
+      ! C1 projections of stiffness and mass matrices
+      allocate( self % Ap( nn, nn ) )
+      allocate( self % Mp( nn, nn ) )
 
       !-------------------------------------------------------------------------
       ! Initialize quadrature points and weights
@@ -362,11 +362,11 @@ contains
         end do
       end do
 
-!      ! Convert stencil to dense
-!      self % A = 0.0_wp
-!      self % M = 0.0_wp
-!      call self % A_linop_stencil % to_array( self % A )
-!      call self % M_linop_stencil % to_array( self % M )
+      ! Convert stencil to dense
+      self % A = 0.0_wp
+      self % M = 0.0_wp
+      call self % A_linop_stencil % to_array( self % A )
+      call self % M_linop_stencil % to_array( self % M )
 
       !-------------------------------------------------------------------------
       ! Initialize linear system (homogeneous Dirichlet boundary conditions)
@@ -388,11 +388,11 @@ contains
       call self % projector % change_basis_matrix( self % A_linop_stencil, self % Ap_linop_c1_block )
       call self % projector % change_basis_matrix( self % M_linop_stencil, self % Mp_linop_c1_block )
 
-!      ! Convert stencil to dense
-!      self % Ap = 0.0_wp
-!      self % Mp = 0.0_wp
-!      call self % Ap_linop_c1_block % to_array( self % Ap )
-!      call self % Mp_linop_c1_block % to_array( self % Mp )
+      ! Convert stencil to dense
+      self % Ap = 0.0_wp
+      self % Mp = 0.0_wp
+      call self % Ap_linop_c1_block % to_array( self % Ap )
+      call self % Mp_linop_c1_block % to_array( self % Mp )
 
       ! Homogeneous Dirichlet boundary conditions
       self % Ap_linop_c1_block % block2 % A(:,nb-n2+1:nb) = 0.0_wp
@@ -602,10 +602,10 @@ contains
     deallocate( self % data_1d_eta2 )
     deallocate( self % int_volume )
     deallocate( self % inv_metric )
-!    deallocate( self % A  )
-!    deallocate( self % M  )
-!    deallocate( self % Ap )
-!    deallocate( self % Mp )
+    deallocate( self % A  )
+    deallocate( self % M  )
+    deallocate( self % Ap )
+    deallocate( self % Mp )
     deallocate( self % L  )
     deallocate( self % x  )
     deallocate( self % b  )

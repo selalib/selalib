@@ -27,8 +27,8 @@ module sll_m_linear_operator_matrix_stencil_to_dense
 
     real(wp), allocatable :: A (:,:)
 
-    integer :: n1
-    integer :: n2
+    integer :: s1
+    integer :: s2
 
   contains
 
@@ -46,15 +46,15 @@ contains
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
   ! Initialize linear operator
-  subroutine s_linear_operator_matrix_stencil_to_dense__init( self, n1, n2 )
+  subroutine s_linear_operator_matrix_stencil_to_dense__init( self, s1, s2 )
     class(sll_t_linear_operator_matrix_stencil_to_dense), intent(inout) :: self
-    integer                                             , intent(in   ) :: n1
-    integer                                             , intent(in   ) :: n2
+    integer                                             , intent(in   ) :: s1
+    integer                                             , intent(in   ) :: s2
 
-    allocate( self % A( n1, n2 ) )
+    allocate( self % A( s1, s2 ) )
 
-    self % n1 = n1
-    self % n2 = n2
+    self % s1 = s1
+    self % s2 = s2
 
   end subroutine s_linear_operator_matrix_stencil_to_dense__init
 
@@ -89,14 +89,14 @@ contains
                  nx2 => ubound( x % array, 2 ) - p2 )
 
         ! Check dimensions
-        SLL_ASSERT( self % n2 == nx1*nx2 )
+        SLL_ASSERT( self % s2 == nx1*nx2 )
 
         select type ( y )
 
         type is ( sll_t_vector_space_real_array_1d )
 
           ! Check dimensions
-          SLL_ASSERT( self  % n1 == size( y % array ) )
+          SLL_ASSERT( self  % s1 == size( y % array ) )
 
           y % array = 0.0_wp
           do i = 1, size( y % array )
@@ -148,14 +148,14 @@ contains
                  nx2 => ubound( x % array, 2 ) - p2 )
 
         ! Check dimensions
-        SLL_ASSERT( self % n2 == nx1*nx2 )
+        SLL_ASSERT( self % s2 == nx1*nx2 )
 
         select type ( y )
 
         type is ( sll_t_vector_space_real_array_1d )
 
           ! Check dimensions
-          SLL_ASSERT( self  % n1 == size( y % array ) )
+          SLL_ASSERT( self  % s1 == size( y % array ) )
 
           do i = 1, size( y % array )
             do j2 = 1, nx2
@@ -189,8 +189,8 @@ contains
     class(sll_t_linear_operator_matrix_stencil_to_dense), intent(in   ) :: self
     real(wp)                                            , intent(inout) :: A(:,:)
 
-    SLL_ASSERT( size( A, 1 ) == self % n1 )
-    SLL_ASSERT( size( A, 2 ) == self % n2 )
+    SLL_ASSERT( size( A, 1 ) == self % s1 )
+    SLL_ASSERT( size( A, 2 ) == self % s2 )
 
     A = self % A
 
