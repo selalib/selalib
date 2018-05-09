@@ -25,8 +25,8 @@ module sll_m_linear_operator_matrix_stencil_to_stencil
 
     real(wp), allocatable :: A(:,:,:,:)
 
-    integer :: n1
-    integer :: n2
+    integer :: s1
+    integer :: s2
     integer :: p1
     integer :: p2
 
@@ -46,17 +46,17 @@ contains
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
   ! Initialize linear operator
-  subroutine s_linear_operator_matrix_stencil_to_stencil__init( self, n1, n2, p1, p2 )
+  subroutine s_linear_operator_matrix_stencil_to_stencil__init( self, s1, s2, p1, p2 )
     class(sll_t_linear_operator_matrix_stencil_to_stencil), intent(inout) :: self
-    integer                                               , intent(in   ) :: n1
-    integer                                               , intent(in   ) :: n2
+    integer                                               , intent(in   ) :: s1
+    integer                                               , intent(in   ) :: s2
     integer                                               , intent(in   ) :: p1
     integer                                               , intent(in   ) :: p2
 
-    allocate( self % A( -p1:p1, -p2:p2, 1:n1, 1:n2 ) )
+    allocate( self % A( -p1:p1, -p2:p2, 1:s1, 1:s2 ) )
 
-    self % n1 = n1
-    self % n2 = n2
+    self % s1 = s1
+    self % s2 = s2
     self % p1 = p1
     self % p2 = p2
 
@@ -83,8 +83,8 @@ contains
     character(len=*), parameter :: this_sub_name = "sll_t_linear_operator_matrix_stencil_to_stencil % dot"
     character(len=64) :: err_msg
 
-    associate( n1 => self % n1, &
-               n2 => self % n2, &
+    associate( s1 => self % s1, &
+               s2 => self % s2, &
                p1 => self % p1, &
                p2 => self % p2 )
 
@@ -95,8 +95,8 @@ contains
         ! Check dimensions
         SLL_ASSERT( self % p1 == -lbound( x % array, 1 ) + 1 )
         SLL_ASSERT( self % p2 == -lbound( x % array, 2 ) + 1 )
-        SLL_ASSERT( self % n1 ==  ubound( x % array, 1 ) + lbound( x % array, 1 ) - 1 )
-        SLL_ASSERT( self % n2 ==  ubound( x % array, 2 ) + lbound( x % array, 2 ) - 1 )
+        SLL_ASSERT( self % s1 ==  ubound( x % array, 1 ) + lbound( x % array, 1 ) - 1 )
+        SLL_ASSERT( self % s2 ==  ubound( x % array, 2 ) + lbound( x % array, 2 ) - 1 )
 
         select type ( y )
 
@@ -105,16 +105,16 @@ contains
           ! Check dimensions
           SLL_ASSERT( self % p1 == -lbound( y % array, 1 ) + 1 )
           SLL_ASSERT( self % p2 == -lbound( y % array, 2 ) + 1 )
-          SLL_ASSERT( self % n1 ==  ubound( y % array, 1 ) + lbound( y % array, 1 ) - 1 )
-          SLL_ASSERT( self % n2 ==  ubound( y % array, 2 ) + lbound( y % array, 2 ) - 1 )
+          SLL_ASSERT( self % s1 ==  ubound( y % array, 1 ) + lbound( y % array, 1 ) - 1 )
+          SLL_ASSERT( self % s2 ==  ubound( y % array, 2 ) + lbound( y % array, 2 ) - 1 )
 
           y % array = 0.0_wp
-          do i2 = 1, n2
-            do i1 = 1, n1
+          do i2 = 1, s2
+            do i1 = 1, s1
               do k2 = -p2, p2
                 do k1 = -p1, p1
-                  j1 = modulo( i1 - 1 + k1, n1 ) + 1
-                  j2 = modulo( i2 - 1 + k2, n2 ) + 1
+                  j1 = modulo( i1 - 1 + k1, s1 ) + 1
+                  j2 = modulo( i2 - 1 + k2, s2 ) + 1
                   y % array(i1,i2) = y % array(i1,i2) + self % A(k1,k2,i1,i2) * x % array(j1,j2)
                 end do
               end do
@@ -122,10 +122,10 @@ contains
           end do
 
           ! Update buffer regions
-          y % array(1-p1:0    ,:) = y % array(n1-p1+1:n1,:)
-          y % array(n1+1:n1+p1,:) = y % array(1:p1      ,:)
-          y % array(:,1-p2:0    ) = y % array(:,n2-p2+1:n2)
-          y % array(:,n2+1:n2+p2) = y % array(:,1:p2      )
+          y % array(1-p1:0    ,:) = y % array(s1-p1+1:s1,:)
+          y % array(s1+1:s1+p1,:) = y % array(1:p1      ,:)
+          y % array(:,1-p2:0    ) = y % array(:,s2-p2+1:s2)
+          y % array(:,s2+1:s2+p2) = y % array(:,1:p2      )
 
         class default
           err_msg = "y must be of type sll_t_vector_space_real_array_2d"
@@ -154,8 +154,8 @@ contains
     character(len=*), parameter :: this_sub_name = "sll_t_linear_operator_matrix_stencil_to_stencil % dot"
     character(len=64) :: err_msg
 
-    associate( n1 => self % n1, &
-               n2 => self % n2, &
+    associate( s1 => self % s1, &
+               s2 => self % s2, &
                p1 => self % p1, &
                p2 => self % p2 )
 
@@ -166,8 +166,8 @@ contains
         ! Check dimensions
         SLL_ASSERT( self % p1 == -lbound( x % array, 1 ) + 1 )
         SLL_ASSERT( self % p2 == -lbound( x % array, 2 ) + 1 )
-        SLL_ASSERT( self % n1 ==  ubound( x % array, 1 ) + lbound( x % array, 1 ) - 1 )
-        SLL_ASSERT( self % n2 ==  ubound( x % array, 2 ) + lbound( x % array, 2 ) - 1 )
+        SLL_ASSERT( self % s1 ==  ubound( x % array, 1 ) + lbound( x % array, 1 ) - 1 )
+        SLL_ASSERT( self % s2 ==  ubound( x % array, 2 ) + lbound( x % array, 2 ) - 1 )
 
         select type ( y )
 
@@ -176,15 +176,15 @@ contains
           ! Check dimensions
           SLL_ASSERT( self % p1 == -lbound( y % array, 1 ) + 1 )
           SLL_ASSERT( self % p2 == -lbound( y % array, 2 ) + 1 )
-          SLL_ASSERT( self % n1 ==  ubound( y % array, 1 ) + lbound( y % array, 1 ) - 1 )
-          SLL_ASSERT( self % n2 ==  ubound( y % array, 2 ) + lbound( y % array, 2 ) - 1 )
+          SLL_ASSERT( self % s1 ==  ubound( y % array, 1 ) + lbound( y % array, 1 ) - 1 )
+          SLL_ASSERT( self % s2 ==  ubound( y % array, 2 ) + lbound( y % array, 2 ) - 1 )
 
-          do i2 = 1, n2
-            do i1 = 1, n1
+          do i2 = 1, s2
+            do i1 = 1, s1
               do k2 = -p2, p2
                 do k1 = -p1, p1
-                  j1 = modulo( i1 - 1 + k1, n1 ) + 1
-                  j2 = modulo( i2 - 1 + k2, n2 ) + 1
+                  j1 = modulo( i1 - 1 + k1, s1 ) + 1
+                  j2 = modulo( i2 - 1 + k2, s2 ) + 1
                   y % array(i1,i2) = y % array(i1,i2) + self % A(k1,k2,i1,i2) * x % array(j1,j2)
                 end do
               end do
@@ -192,10 +192,10 @@ contains
           end do
 
           ! Update buffer regions
-          y % array(1-p1:0    ,:) = y % array(n1-p1+1:n1,:)
-          y % array(n1+1:n1+p1,:) = y % array(1:p1      ,:)
-          y % array(:,1-p2:0    ) = y % array(:,n2-p2+1:n2)
-          y % array(:,n2+1:n2+p2) = y % array(:,1:p2      )
+          y % array(1-p1:0    ,:) = y % array(s1-p1+1:s1,:)
+          y % array(s1+1:s1+p1,:) = y % array(1:p1      ,:)
+          y % array(:,1-p2:0    ) = y % array(:,s2-p2+1:s2)
+          y % array(:,s2+1:s2+p2) = y % array(:,1:p2      )
 
         class default
           err_msg = "y must be of type sll_t_vector_space_real_array_2d"
@@ -220,22 +220,22 @@ contains
 
     integer :: i, j, i1, i2, j1, j2, k1, k2
 
-    associate( n1 => self % n1, &
-               n2 => self % n2, &
+    associate( s1 => self % s1, &
+               s2 => self % s2, &
                p1 => self % p1, &
                p2 => self % p2 )
 
-      SLL_ASSERT( size( A, 1 ) == n1*n2 )
-      SLL_ASSERT( size( A, 2 ) == n1*n2 )
+      SLL_ASSERT( size( A, 1 ) == s1*s2 )
+      SLL_ASSERT( size( A, 2 ) == s1*s2 )
 
-      do i2 = 1, n2
-        do i1 = 1, n1
+      do i2 = 1, s2
+        do i1 = 1, s1
           do k2 = -p2, p2
             do k1 = -p1, p1
-              j1 = modulo( i1 - 1 + k1, n1 ) + 1
-              j2 = modulo( i2 - 1 + k2, n2 ) + 1
-              i  = (i1-1) * n2 + i2
-              j  = (j1-1) * n2 + j2
+              j1 = modulo( i1 - 1 + k1, s1 ) + 1
+              j2 = modulo( i2 - 1 + k2, s2 ) + 1
+              i  = (i1-1) * s2 + i2
+              j  = (j1-1) * s2 + j2
               A(i,j) = self % A(k1,k2,i1,i2)
             end do
           end do

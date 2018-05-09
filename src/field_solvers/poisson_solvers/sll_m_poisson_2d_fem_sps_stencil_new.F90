@@ -79,11 +79,15 @@ module sll_m_poisson_2d_fem_sps_stencil_new
     real(wp), allocatable :: data_2d_rhs(:,:,:,:)
 
     ! Stiffness and mass matrices and C1 projections
+    real(wp), allocatable :: A (:,:)
+    real(wp), allocatable :: M (:,:)
+    real(wp), allocatable :: Ap(:,:)
+    real(wp), allocatable :: Mp(:,:)
     type(sll_t_linear_operator_matrix_stencil_to_stencil) :: A_linop_stencil
     type(sll_t_linear_operator_matrix_stencil_to_stencil) :: M_linop_stencil
 
     ! Matrix for barycentric coordinates
-    real(wp), allocatable :: L(:,:)
+    real(wp), allocatable :: L(:,:,:)
 
     ! Right hand side vector and C1 projection
     real(wp), allocatable :: b(:)
@@ -160,7 +164,7 @@ contains
     real(wp) :: cx, cy, jdet, eta(2), jmat(2,2)
 
     ! New auxiliary variables
-    integer :: i1, i2, j1, j2, nb, m1(4), m2(4)
+    integer :: i1, i2, j1, j2, nb
 
     if ( present( tol     ) ) self % tol     = tol
     if ( present( verbose ) ) self % verbose = verbose
@@ -219,7 +223,11 @@ contains
       allocate( self % data_2d_rhs( Nq1, Nq2, Nk1, Nk2 ) )
 
       ! Barycentric coordinates
-      allocate( self % L( 2*n2, 3 ) )
+      allocate( self % L( 2, n2, 3 ) )
+
+      ! Stiffness and mass matrices
+      allocate( self % A( n1*n2, n1*n2 ) )
+      allocate( self % M( n1*n2, n1*n2 ) )
 
       ! Right hand side
       allocate( self % b( n1*n2 ) )
@@ -228,6 +236,10 @@ contains
 
       ! Solution
       allocate( self % x( n1*n2 ) )
+
+      ! C1 projections of stiffness and mass matrices
+      allocate( self % Ap( nn, nn ) )
+      allocate( self % Mp( nn, nn ) )
 
       !-------------------------------------------------------------------------
       ! Initialize quadrature points and weights
@@ -305,19 +317,22 @@ contains
       ! Matrix of barycentric coordinates
       !-------------------------------------------------------------------------
 
-      do i = 1, 2*n2
+      do i2 = 1, n2
+        do i1 = 1, 2
 
         ! Indices to access control points
+        i = (i1-1)*n2 + i2
         j = (i-1) / n2 + 1
         k = modulo( (i-1), n2 ) + 1
 
         cx = mapping % spline_2d_x1 % bcoef(j,k)
         cy = mapping % spline_2d_x2 % bcoef(j,k)
 
-        self % L(i,1) = polar_bsplines % eval_l0( cx, cy )
-        self % L(i,2) = polar_bsplines % eval_l1( cx, cy )
-        self % L(i,3) = polar_bsplines % eval_l2( cx, cy )
+        self % L(i1,i2,1) = polar_bsplines % eval_l0( cx, cy )
+        self % L(i1,i2,2) = polar_bsplines % eval_l1( cx, cy )
+        self % L(i1,i2,3) = polar_bsplines % eval_l2( cx, cy )
 
+        end do
       end do
 
       !-------------------------------------------------------------------------
@@ -350,6 +365,12 @@ contains
         end do
       end do
 
+      ! Convert stencil to dense
+      self % A = 0.0_wp
+      self % M = 0.0_wp
+      call self % A_linop_stencil % to_array( self % A )
+      call self % M_linop_stencil % to_array( self % M )
+
       !-------------------------------------------------------------------------
       ! Initialize linear system (homogeneous Dirichlet boundary conditions)
       !-------------------------------------------------------------------------
@@ -357,11 +378,9 @@ contains
       ! Construct C1 block linear operators
 
       nb = (n1-2)*n2
-      m1 = (/ 3, 3 , nb, (n1-2) /)
-      m2 = (/ 3, nb, 3 , n2 /)
 
-      call self % Ap_linop_c1_block % init( m1, m2, p1, p2 )
-      call self % Mp_linop_c1_block % init( m1, m2, p1, p2 )
+      call self % Ap_linop_c1_block % init( n1, n2, p1, p2 )
+      call self % Mp_linop_c1_block % init( n1, n2, p1, p2 )
 
       !-------------------------------------------------------------------------
       ! Compute C1 projections of stiffness and mass matrices
@@ -370,9 +389,13 @@ contains
       call self % projector % change_basis_matrix( self % A_linop_stencil, self % Ap_linop_c1_block )
       call self % projector % change_basis_matrix( self % M_linop_stencil, self % Mp_linop_c1_block )
 
+      ! Convert C1 block to dense
+      self % Ap = 0.0_wp
+      self % Mp = 0.0_wp
+      call self % Ap_linop_c1_block % to_array( self % Ap )
+      call self % Mp_linop_c1_block % to_array( self % Mp )
+
       ! Homogeneous Dirichlet boundary conditions
-      self % Ap_linop_c1_block % block2 % A(:,nb-n2+1:nb) = 0.0_wp
-      self % Ap_linop_c1_block % block3 % A(nb-n2+1:nb,:) = 0.0_wp
       do i2 = 1, n2
         do i1 = 1, n1-2
           do k2 = -p2, p2
@@ -578,6 +601,10 @@ contains
     deallocate( self % data_1d_eta2 )
     deallocate( self % int_volume )
     deallocate( self % inv_metric )
+    deallocate( self % A  )
+    deallocate( self % M  )
+    deallocate( self % Ap )
+    deallocate( self % Mp )
     deallocate( self % L  )
     deallocate( self % x  )
     deallocate( self % b  )

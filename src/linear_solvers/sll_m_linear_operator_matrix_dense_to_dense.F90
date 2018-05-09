@@ -29,8 +29,8 @@ module sll_m_linear_operator_matrix_dense_to_dense
     ! Logical flag telling whether A was given transposed or not
     logical :: transposed = .false.
 
-    integer :: n1
-    integer :: n2
+    integer :: s1
+    integer :: s2
 
   contains
 
@@ -38,7 +38,6 @@ module sll_m_linear_operator_matrix_dense_to_dense
     procedure :: get_shape => f_linear_operator_matrix_dense_to_dense__get_shape
     procedure :: dot       => s_linear_operator_matrix_dense_to_dense__dot
     procedure :: dot_incr  => s_linear_operator_matrix_dense_to_dense__dot_incr
-    procedure :: to_array  => s_linear_operator_matrix_dense_to_dense__to_array
     procedure :: free      => s_linear_operator_matrix_dense_to_dense__free
 
   end type sll_t_linear_operator_matrix_dense_to_dense
@@ -48,22 +47,22 @@ contains
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
   ! Initialize linear operator
-  subroutine s_linear_operator_matrix_dense_to_dense__init( self, n1, n2, transposed )
+  subroutine s_linear_operator_matrix_dense_to_dense__init( self, s1, s2, transposed )
     class(sll_t_linear_operator_matrix_dense_to_dense), intent(inout) :: self
-    integer                                           , intent(in   ) :: n1
-    integer                                           , intent(in   ) :: n2
+    integer                                           , intent(in   ) :: s1
+    integer                                           , intent(in   ) :: s2
     logical , optional                                , intent(in   ) :: transposed
 
     if ( present( transposed ) ) self % transposed = transposed
 
     if ( self % transposed ) then
-      allocate( self % At( n1, n2 ) )
+      allocate( self % At( s1, s2 ) )
     else
-      allocate( self % A( n1, n2 ) )
+      allocate( self % A( s1, s2 ) )
     end if
 
-    self % n1 = n1
-    self % n2 = n2
+    self % s1 = s1
+    self % s2 = s2
 
   end subroutine s_linear_operator_matrix_dense_to_dense__init
 
@@ -177,18 +176,6 @@ contains
     end select
 
   end subroutine s_linear_operator_matrix_dense_to_dense__dot_incr
-
-  ! Convert dense matrix to array (trivial)
-  subroutine s_linear_operator_matrix_dense_to_dense__to_array( self, A )
-    class(sll_t_linear_operator_matrix_dense_to_dense), intent(in   ) :: self
-    real(wp)                                          , intent(inout) :: A(:,:)
-
-    SLL_ASSERT( size( A, 1 ) == self % n1 )
-    SLL_ASSERT( size( A, 2 ) == self % n2 )
-
-    A = self % A
-
-  end subroutine s_linear_operator_matrix_dense_to_dense__to_array
 
   ! Free objects
   subroutine s_linear_operator_matrix_dense_to_dense__free( self )
