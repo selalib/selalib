@@ -96,7 +96,13 @@ IF(BUILD_MUDPACK)
 ENDIF(BUILD_MUDPACK)
 
 #-------------------------------------------------------------------------------
-# Test FE Poisson solver based on smooth polar splines
+# Test FE Poisson solver based on smooth polar splines (dense version)
 #-------------------------------------------------------------------------------
-add_executable( test_poisson_2d_fem_sps test_poisson_2d_fem_sps.F90 )
-target_link_libraries( test_poisson_2d_fem_sps sll_poisson_solvers )
+add_executable( test_poisson_2d_fem_sps_dense test_poisson_2d_fem_sps_dense.F90 )
+target_link_libraries( test_poisson_2d_fem_sps_dense sll_poisson_solvers )
+
+#-------------------------------------------------------------------------------
+# Test FE Poisson solver based on smooth polar splines (stencil version)
+#-------------------------------------------------------------------------------
+add_executable( test_poisson_2d_fem_sps_stencil test_poisson_2d_fem_sps_stencil.F90 )
+target_link_libraries( test_poisson_2d_fem_sps_stencil sll_poisson_solvers )
