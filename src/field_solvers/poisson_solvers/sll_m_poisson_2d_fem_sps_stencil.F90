@@ -1,6 +1,7 @@
 module sll_m_poisson_2d_fem_sps_stencil
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_assert.h"
+#include "sll_errors.h"
 
   use sll_m_working_precision, only: f64
 
@@ -31,6 +32,8 @@ module sll_m_poisson_2d_fem_sps_stencil
   use sll_m_gauss_legendre_integration, only: &
     sll_f_gauss_legendre_points, &
     sll_f_gauss_legendre_weights
+
+  use sll_m_boundary_condition_descriptors, only: sll_p_dirichlet
 
   implicit none
 
@@ -79,10 +82,6 @@ module sll_m_poisson_2d_fem_sps_stencil
     real(wp), allocatable :: data_2d_rhs(:,:,:,:)
 
     ! Stiffness and mass matrices and C1 projections
-    real(wp), allocatable :: A (:,:)
-    real(wp), allocatable :: M (:,:)
-    real(wp), allocatable :: Ap(:,:)
-    real(wp), allocatable :: Mp(:,:)
     type(sll_t_linear_operator_matrix_stencil_to_stencil) :: A_linop_stencil
     type(sll_t_linear_operator_matrix_stencil_to_stencil) :: M_linop_stencil
 
@@ -119,8 +118,9 @@ module sll_m_poisson_2d_fem_sps_stencil
 
   contains
 
-    procedure :: init  => s_poisson_2d_fem_sps_stencil__init
-    procedure :: free  => s_poisson_2d_fem_sps_stencil__free
+    procedure :: init                    => s_poisson_2d_fem_sps_stencil__init
+    procedure :: set_boundary_conditions => s_poisson_2d_fem_sps_stencil__set_boundary_conditions
+    procedure :: free                    => s_poisson_2d_fem_sps_stencil__free
 
     ! Generic procedure with multiple implementations
     procedure :: solve_1 => s_poisson_2d_fem_sps_stencil__solve_1
@@ -164,7 +164,7 @@ contains
     real(wp) :: cx, cy, jdet, eta(2), jmat(2,2)
 
     ! New auxiliary variables
-    integer :: i1, i2, j1, j2, nb, m1(4), m2(4)
+    integer :: nb, m1(4), m2(4)
 
     if ( present( tol     ) ) self % tol     = tol
     if ( present( verbose ) ) self % verbose = verbose
@@ -225,10 +225,6 @@ contains
       ! Barycentric coordinates
       allocate( self % L( 2*n2, 3 ) )
 
-      ! Stiffness and mass matrices
-      allocate( self % A( n1*n2, n1*n2 ) )
-      allocate( self % M( n1*n2, n1*n2 ) )
-
       ! Right hand side
       allocate( self % b( n1*n2 ) )
       allocate( self % bs_tmp1 % array( 1-p1:n1+p1, 1-p2:n2+p2 ) )
@@ -236,10 +232,6 @@ contains
 
       ! Solution
       allocate( self % x( n1*n2 ) )
-
-      ! C1 projections of stiffness and mass matrices
-      allocate( self % Ap( nn, nn ) )
-      allocate( self % Mp( nn, nn ) )
 
       !-------------------------------------------------------------------------
       ! Initialize quadrature points and weights
@@ -362,12 +354,6 @@ contains
         end do
       end do
 
-      ! Convert stencil to dense
-      self % A = 0.0_wp
-      self % M = 0.0_wp
-      call self % A_linop_stencil % to_array( self % A )
-      call self % M_linop_stencil % to_array( self % M )
-
       !-------------------------------------------------------------------------
       ! Initialize linear system (homogeneous Dirichlet boundary conditions)
       !-------------------------------------------------------------------------
@@ -387,31 +373,6 @@ contains
 
       call self % projector % change_basis_matrix( self % A_linop_stencil, self % Ap_linop_c1_block )
       call self % projector % change_basis_matrix( self % M_linop_stencil, self % Mp_linop_c1_block )
-
-      ! Convert stencil to dense
-      self % Ap = 0.0_wp
-      self % Mp = 0.0_wp
-      call self % Ap_linop_c1_block % to_array( self % Ap )
-      call self % Mp_linop_c1_block % to_array( self % Mp )
-
-      ! Homogeneous Dirichlet boundary conditions
-      self % Ap_linop_c1_block % block2 % A(:,nb-n2+1:nb) = 0.0_wp
-      self % Ap_linop_c1_block % block3 % A(nb-n2+1:nb,:) = 0.0_wp
-      do i2 = 1, n2
-        do i1 = 1, n1-2
-          do k2 = -p2, p2
-            do k1 = -p1, p1
-              j1 = modulo( i1 - 1 + k1, n1-2 ) + 1
-              j2 = modulo( i2 - 1 + k2, n2   ) + 1
-              i  = (i1-1) * n2 + i2
-              j  = (j1-1) * n2 + j2
-              ! Check range of indices i and j
-              if ( i > nb - n2 .or. j > nb - n2 ) &
-                self % Ap_linop_c1_block % block4 % A(k1,k2,i1,i2) = 0.0_wp
-            end do
-          end do
-        end do
-      end do
 
       ! Construct C1 block vector space from vector xp
 
@@ -433,6 +394,53 @@ contains
     call polar_bsplines % free()
 
   end subroutine s_poisson_2d_fem_sps_stencil__init
+
+  ! Set boundary conditions
+  subroutine s_poisson_2d_fem_sps_stencil__set_boundary_conditions( self, bc )
+    class(sll_t_poisson_2d_fem_sps_stencil), intent(inout) :: self
+    integer                                , intent(in   ) :: bc
+
+    integer :: i, j, i1, i2, j1, j2, k1, k2, nb
+
+    character(len=*), parameter :: this_sub_name = "sll_t_poisson_2d_fem_sps_stencil % set_boundary_conditions"
+
+    if ( bc == sll_p_dirichlet ) then
+
+      associate( n1  => self % n1, &
+                 n2  => self % n2, &
+                 p1  => self % p1, &
+                 p2  => self % p2 )
+
+        nb = (n1-2) * n2
+
+        ! Homogeneous Dirichlet boundary conditions
+        self % Ap_linop_c1_block % block2 % A(:,nb-n2+1:nb) = 0.0_wp
+        self % Ap_linop_c1_block % block3 % A(nb-n2+1:nb,:) = 0.0_wp
+        do i2 = 1, n2
+          do i1 = 1, n1-2
+            do k2 = -p2, p2
+              do k1 = -p1, p1
+                j1 = modulo( i1 - 1 + k1, n1-2 ) + 1
+                j2 = modulo( i2 - 1 + k2, n2   ) + 1
+                i  = (i1-1) * n2 + i2
+                j  = (j1-1) * n2 + j2
+                ! Check range of indices i and j
+                if ( i > nb - n2 .or. j > nb - n2 ) &
+                  self % Ap_linop_c1_block % block4 % A(k1,k2,i1,i2) = 0.0_wp
+              end do
+            end do
+          end do
+        end do
+
+
+      end associate
+
+    else
+      SLL_ERROR( this_sub_name, "Boundary conditions not implemented" )
+
+    end if
+
+  end subroutine s_poisson_2d_fem_sps_stencil__set_boundary_conditions
 
   ! Solver: signature #1
   subroutine s_poisson_2d_fem_sps_stencil__solve_1( self, rhs, sol )
@@ -602,10 +610,6 @@ contains
     deallocate( self % data_1d_eta2 )
     deallocate( self % int_volume )
     deallocate( self % inv_metric )
-    deallocate( self % A  )
-    deallocate( self % M  )
-    deallocate( self % Ap )
-    deallocate( self % Mp )
     deallocate( self % L  )
     deallocate( self % x  )
     deallocate( self % b  )
