@@ -32,12 +32,6 @@ program test_poisson_2d_fem_sps
 
   use sll_m_poisson_2d_fem_sps_dense, only: sll_t_poisson_2d_fem_sps_dense
 
-  use sll_m_poisson_2d_fem_sps_stencil, only: sll_t_poisson_2d_fem_sps_stencil
-
-  use sll_m_poisson_2d_fem_sps_stencil_new, only: sll_t_poisson_2d_fem_sps_stencil_new
-
-  use sll_m_boundary_condition_descriptors, only: sll_p_dirichlet
-
   use sll_m_timer, only: &
     sll_t_time_mark    , &
     sll_s_set_time_mark, &
@@ -57,7 +51,7 @@ program test_poisson_2d_fem_sps
   integer, parameter :: wp = f64
 
   ! To initialize B-splines (p1,p2 degrees)
-  integer :: mm, n1, n2, nn, p1, p2, ncells1, ncells2
+  integer :: mm, n1, n2, p1, p2, ncells1, ncells2
 
   ! B-splines break points
   real(wp), allocatable :: breaks_eta1(:)
@@ -84,15 +78,7 @@ program test_poisson_2d_fem_sps
   real(wp), allocatable :: gtau(:,:)
 
   ! Poisson solver
-!  type(sll_t_poisson_2d_fem_sps_dense      ) :: solver
-!  type(sll_t_poisson_2d_fem_sps_stencil    ) :: solver
-  type(sll_t_poisson_2d_fem_sps_stencil_new) :: solver
-
-  ! Stiffness/mass dense matrices and C1 projections
-  real(wp), allocatable :: A (:,:)
-  real(wp), allocatable :: M (:,:)
-  real(wp), allocatable :: Ap(:,:)
-  real(wp), allocatable :: Mp(:,:)
+  type(sll_t_poisson_2d_fem_sps_dense) :: solver
 
   ! Auxiliary variables
   integer  :: i1, i2
@@ -116,7 +102,6 @@ program test_poisson_2d_fem_sps
   mm = 32
   n1 = mm * 1
   n2 = mm * 2
-  nn = 3 + (n1-2) * n2
 
   ! Spline degrees along s and theta
   p1 = 3
@@ -246,26 +231,6 @@ program test_poisson_2d_fem_sps
   dt = sll_f_time_elapsed_between( t0, t1 )
   write(*,'(a,es8.1/)' ) " Time required for initialization of Poisson solver: ", dt
 
-  ! Allocate stiffness/mass dense matrices and C1 projections
-  allocate( A( n1*n2, n1*n2 ) )
-  allocate( M( n1*n2, n1*n2 ) )
-  allocate( Ap( nn, nn ) )
-  allocate( Mp( nn, nn ) )
-
-  ! Convert stencil to dense
-  A = 0.0_wp
-  M = 0.0_wp
-  call solver % A_linop_stencil % to_array( A )
-  call solver % M_linop_stencil % to_array( M )
-
-  ! Convert C1 block to dense
-  Ap = 0.0_wp
-  Mp = 0.0_wp
-  call solver % Ap_linop_c1_block % to_array( Ap )
-  call solver % Mp_linop_c1_block % to_array( Mp )
-
-  call solver % set_boundary_conditions( sll_p_dirichlet )
-
   call sll_s_set_time_mark( t0 )
 
   ! Solve
@@ -293,10 +258,10 @@ program test_poisson_2d_fem_sps
   call sll_o_hdf5_ser_write_attribute( file_id, "/", "p2", p2, h5_error )
 
   ! Write stiffness matrix
-  call sll_o_hdf5_ser_write_array( file_id, A, "/A", h5_error )
+  call sll_o_hdf5_ser_write_array( file_id, solver % A, "/A", h5_error )
 
   ! Write mass matrix
-  call sll_o_hdf5_ser_write_array( file_id, M, "/M", h5_error )
+  call sll_o_hdf5_ser_write_array( file_id, solver % M, "/M", h5_error )
 
   ! Write right hand side
   call sll_o_hdf5_ser_write_array( file_id, solver % b, "/b", h5_error )
@@ -305,10 +270,10 @@ program test_poisson_2d_fem_sps
   call sll_o_hdf5_ser_write_array( file_id, solver % x, "/x", h5_error )
 
   ! Write C1 projection of stiffness matrix
-  call sll_o_hdf5_ser_write_array( file_id, Ap, "/Ap", h5_error )
+  call sll_o_hdf5_ser_write_array( file_id, solver % Ap, "/Ap", h5_error )
 
   ! Write C1 projection of mass matrix
-  call sll_o_hdf5_ser_write_array( file_id, Mp, "/Mp", h5_error )
+  call sll_o_hdf5_ser_write_array( file_id, solver % Mp, "/Mp", h5_error )
 
 !  ! Write L matrix needed for projection
 !  call sll_o_hdf5_ser_write_array( file_id, solver % L, "/L", h5_error )
@@ -330,11 +295,6 @@ program test_poisson_2d_fem_sps
 
   deallocate( breaks_eta1 )
   deallocate( breaks_eta2 )
-
-  deallocate( A )
-  deallocate( M )
-  deallocate( Ap )
-  deallocate( Mp )
 
   deallocate( mapping_analytical )
 
