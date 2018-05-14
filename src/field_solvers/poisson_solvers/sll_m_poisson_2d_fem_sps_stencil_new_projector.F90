@@ -4,7 +4,7 @@ module sll_m_poisson_2d_fem_sps_stencil_new_projector
 
   use sll_m_working_precision, only: f64
 
-  use sll_m_vector_space_c1_block_new, only: sll_t_vector_space_c1_block_new
+  use sll_m_vector_space_c1_block, only: sll_t_vector_space_c1_block
 
   use sll_m_linear_operator_matrix_stencil_to_stencil, only: sll_t_linear_operator_matrix_stencil_to_stencil
 
@@ -151,7 +151,7 @@ contains
   subroutine s_poisson_2d_fem_sps_stencil_new_projector__change_basis_vector( self, V, Vp )
     class(sll_t_poisson_2d_fem_sps_stencil_new_projector), intent(in   ) :: self
     real(wp)                                             , intent(in   ) :: V (:)
-    type(sll_t_vector_space_c1_block_new)                , intent(inout) :: Vp
+    type(sll_t_vector_space_c1_block)                    , intent(inout) :: Vp
 
     integer :: i, i1, i2, j, j1, j2, ll
 
@@ -190,7 +190,7 @@ contains
   ! Change basis: C1 projection of vectors
   subroutine s_poisson_2d_fem_sps_stencil_new_projector__change_basis_vecinv( self, Vp, V )
     class(sll_t_poisson_2d_fem_sps_stencil_new_projector), intent(in   ) :: self
-    type(sll_t_vector_space_c1_block_new)                , intent(inout) :: Vp
+    type(sll_t_vector_space_c1_block)                    , intent(inout) :: Vp
     real(wp)                                             , intent(inout) :: V (:)
 
     integer :: i, i1, i2, j, j1, j2, ll

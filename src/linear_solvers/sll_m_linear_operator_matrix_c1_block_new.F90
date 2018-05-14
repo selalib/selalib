@@ -17,7 +17,7 @@ module sll_m_linear_operator_matrix_c1_block_new
 
   use sll_m_vector_space_base, only: sll_c_vector_space
 
-  use sll_m_vector_space_c1_block_new, only: sll_t_vector_space_c1_block_new
+  use sll_m_vector_space_c1_block, only: sll_t_vector_space_c1_block
 
   implicit none
 
@@ -97,11 +97,11 @@ contains
 
     select type ( x ) 
 
-    type is ( sll_t_vector_space_c1_block_new )
+    type is ( sll_t_vector_space_c1_block )
 
       select type ( y )
 
-      type is ( sll_t_vector_space_c1_block_new )
+      type is ( sll_t_vector_space_c1_block )
 
         call self % block1 % dot     ( x % vd, y % vd )
         call self % block2 % dot_incr( x % vs, y % vd )
@@ -109,13 +109,13 @@ contains
         call self % block4 % dot_incr( x % vs, y % vs )
 
       class default
-        err_msg = "y must be of type sll_t_vector_space_c1_block_new"
+        err_msg = "y must be of type sll_t_vector_space_c1_block"
         SLL_ERROR( this_sub_name, err_msg )
 
       end select
 
     class default
-      err_msg = "x must be of type sll_t_vector_space_c1_block_new"
+      err_msg = "x must be of type sll_t_vector_space_c1_block"
       SLL_ERROR( this_sub_name, err_msg )
 
     end select
@@ -133,11 +133,11 @@ contains
 
     select type ( x ) 
 
-    type is ( sll_t_vector_space_c1_block_new )
+    type is ( sll_t_vector_space_c1_block )
 
       select type ( y )
 
-      type is ( sll_t_vector_space_c1_block_new )
+      type is ( sll_t_vector_space_c1_block )
 
         call self % block1 % dot_incr( x % vd, y % vd )
         call self % block2 % dot_incr( x % vs, y % vd )
@@ -145,13 +145,13 @@ contains
         call self % block4 % dot_incr( x % vs, y % vs )
 
       class default
-        err_msg = "y must be of type sll_t_vector_space_c1_block_new"
+        err_msg = "y must be of type sll_t_vector_space_c1_block"
         SLL_ERROR( this_sub_name, err_msg )
 
       end select
 
     class default
-      err_msg = "x must be of type sll_t_vector_space_c1_block_new"
+      err_msg = "x must be of type sll_t_vector_space_c1_block"
       SLL_ERROR( this_sub_name, err_msg )
 
     end select
