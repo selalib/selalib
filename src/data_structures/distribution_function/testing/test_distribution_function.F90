@@ -6,9 +6,7 @@ program unit_test
   use sll_m_boundary_condition_descriptors, only: &
     sll_p_periodic
 
-  use sll_m_cartesian_meshes, only: &
-    sll_f_new_cartesian_mesh_2d, &
-    sll_t_cartesian_mesh_2d
+  use sll_m_cartesian_meshes
 
   use sll_m_common_coordinate_transformations, only: &
     sll_f_sinprod_jac11, &
@@ -21,8 +19,7 @@ program unit_test
   use sll_m_coordinate_transformation_2d_base, only: &
     sll_c_coordinate_transformation_2d_base
 
-  use sll_m_coordinate_transformations_2d, only: &
-    sll_f_new_coordinate_transformation_2d_analytic
+  use sll_m_coordinate_transformations_2d
 
   use sll_m_cubic_spline_interpolator_1d, only: &
     sll_t_cubic_spline_interpolator_1d
@@ -52,7 +49,8 @@ program unit_test
  
   sll_int32 :: nc_eta1, nc_eta2
   class(sll_c_coordinate_transformation_2d_base), pointer   :: m
-  type(sll_t_cartesian_mesh_2d), pointer :: m_log
+  type(sll_t_coordinate_transformation_2d_analytic), target :: m_analytic
+  type(sll_t_cartesian_mesh_2d) :: m_log
   class(sll_c_scalar_field_2d_initializer_base), pointer    :: p_init_f
   class(sll_c_interpolator_1d), pointer :: interp_eta1_ptr
   class(sll_c_interpolator_1d), pointer :: interp_eta2_ptr
@@ -70,11 +68,11 @@ program unit_test
 
   print*, 'initialization of mesh'
   
- m_log => sll_f_new_cartesian_mesh_2d( &
+ call sll_s_cartesian_mesh_2d_init( m_log, &
        nc_eta1, &
        nc_eta2  &
    )
-  m => sll_f_new_coordinate_transformation_2d_analytic( &
+  call sll_s_coordinate_transformation_2d_analytic_init( m_analytic, &
        "mesh2d_coll",      &
        m_log,             &
        sll_f_sinprod_x1, &
@@ -83,7 +81,9 @@ program unit_test
        sll_f_sinprod_jac12, &
        sll_f_sinprod_jac21, &
        sll_f_sinprod_jac22, &
-       (/0.1_f64, 0.1_f64, 1.0_f64, 1.0_f64/) )
+       [0.1_f64, 0.1_f64, 1.0_f64, 1.0_f64] )
+
+  m => m_analytic
 
   print *, 'initialization of the interpolators'
  ! Set up the interpolators for the field
