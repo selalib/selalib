@@ -15,13 +15,13 @@ module sll_m_poisson_2d_fem_sps_stencil_new
 
   use sll_m_poisson_2d_fem_sps_weak_form, only: sll_t_poisson_2d_fem_sps_weak_form
 
-  use sll_m_poisson_2d_fem_sps_stencil_new_assembler, only: sll_t_poisson_2d_fem_sps_stencil_new_assembler
+  use sll_m_poisson_2d_fem_sps_stencil_assembler, only: sll_t_poisson_2d_fem_sps_stencil_assembler
 
   use sll_m_poisson_2d_fem_sps_stencil_new_projector, only: sll_t_poisson_2d_fem_sps_stencil_new_projector
 
   use sll_m_vector_space_real_array_2d, only: sll_t_vector_space_real_array_2d
 
-  use sll_m_vector_space_c1_block_new, only: sll_t_vector_space_c1_block_new
+  use sll_m_vector_space_c1_block, only: sll_t_vector_space_c1_block
 
   use sll_m_linear_operator_matrix_stencil_to_stencil, only: sll_t_linear_operator_matrix_stencil_to_stencil
 
@@ -100,7 +100,7 @@ module sll_m_poisson_2d_fem_sps_stencil_new
     type(sll_t_poisson_2d_fem_sps_weak_form) :: weak_form
 
     ! Assembler
-    type(sll_t_poisson_2d_fem_sps_stencil_new_assembler) :: assembler
+    type(sll_t_poisson_2d_fem_sps_stencil_assembler) :: assembler
 
     ! C1 projector
     type(sll_t_poisson_2d_fem_sps_stencil_new_projector) :: projector
@@ -113,8 +113,8 @@ module sll_m_poisson_2d_fem_sps_stencil_new
     ! New C1 block format
     type(sll_t_linear_operator_matrix_c1_block_new) :: Ap_linop_c1_block
     type(sll_t_linear_operator_matrix_c1_block_new) :: Mp_linop_c1_block
-    type(sll_t_vector_space_c1_block_new) :: xp_vecsp_c1_block
-    type(sll_t_vector_space_c1_block_new) :: bp_vecsp_c1_block
+    type(sll_t_vector_space_c1_block) :: xp_vecsp_c1_block
+    type(sll_t_vector_space_c1_block) :: bp_vecsp_c1_block
 
   contains
 
