@@ -76,7 +76,7 @@ contains
     type(sll_t_linear_operator_matrix_stencil_to_stencil), intent(inout) :: Ql
     type(sll_t_linear_operator_matrix_c1_block_new)      , intent(inout) :: Qp
 
-    integer :: i1, i2, j1, j2, k1, k2, i, j, ip, jp, ll
+    integer :: i1, i2, j1, j2, k1, k2, ip, jp, ll
 
     associate( n1 => self % n1, &
                n2 => self % n2, &
@@ -123,21 +123,13 @@ contains
 
       ! block 4: (n1-2)*n2 x (n1-2)*n2
       Qp % block4 % A(:,:,:,:) = 0.0_wp
-      do ll = 1, n1-2
-        do i2 = 1, n2
-          do i1 = 1, n1
-            do k2 = -p2, p2
-              do k1 = -p1, p1
-                j1 = modulo( ll - 1 + k1, n1-2 ) + 1
-                j2 = modulo( i2 - 1 + k2, n2   ) + 1
-                i  = (ll-1) * n2 + i2
-                j  = (j1-1) * n2 + j2
-                j1 = modulo( i1 - 1 + k1, n1 ) + 1
-                ip = (i1-1) * n2 + i2
-                jp = (j1-1) * n2 + j2
-                if ( ip == 2*n2+i .and. jp == 2*n2+j ) &
-                  Qp % block4 % A(k1,k2,ll,i2) = Ql % A(k1,k2,i1,i2)
-              end do
+      do i2 = 1, n2
+        do i1 = 1, n1-2
+          do k2 = -p2, p2
+            do k1 = -p1, p1
+              j1 = modulo( i1 - 1 + k1, n1-2 )
+              ll = modulo( i1 + 1 + k1, n1   )
+              if ( ll == 2+j1 ) Qp % block4 % A(k1,k2,i1,i2) = Ql % A(k1,k2,i1+2,i2)
             end do
           end do
         end do
