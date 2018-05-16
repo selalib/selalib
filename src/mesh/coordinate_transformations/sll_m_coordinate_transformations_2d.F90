@@ -365,7 +365,7 @@ contains
 
   subroutine delete_transformation_2d_analytic( transf )
     class(sll_t_coordinate_transformation_2d_analytic), intent(inout) :: transf
-    sll_int32 :: ierr
+    
     nullify( transf%x1_func )
     nullify( transf%x2_func )
 #ifndef __PGI
