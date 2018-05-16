@@ -9,8 +9,8 @@ use m_quietstart
 implicit none
 
 type particle
-  sll_real64, pointer :: dpx(:)
-  sll_real64, pointer :: dpy(:)
+  sll_real32, pointer :: dpx(:)
+  sll_real32, pointer :: dpy(:)
   sll_int32 , pointer :: idx(:)
   sll_int32 , pointer :: idy(:)
   sll_real64, pointer :: vpx(:)
@@ -68,8 +68,8 @@ do while (k<=nbpart)
   if (temm >= zi) then
     ele%idx(k) = floor(xi/dimx*nx)
     ele%idy(k) = floor(yi/dimy*ny)
-    ele%dpx(k) = real(xi/dx - ele%idx(k), f64)
-    ele%dpy(k) = real(yi/dy - ele%idy(k), f64)
+    ele%dpx(k) = real(xi/dx - ele%idx(k), f32)
+    ele%dpy(k) = real(yi/dy - ele%idy(k), f32)
     k=k+1
   endif
 enddo
@@ -83,8 +83,8 @@ type(mesh_fields) :: f
 sll_real32 :: a1, a2, a3, a4
 sll_int32  :: k
 sll_int32  :: i, j
-sll_real64 :: dpx
-sll_real64 :: dpy
+sll_real32 :: dpx
+sll_real32 :: dpy
 
 ! i,j+1_________i+1,j+1
 !  |     |        |
@@ -128,8 +128,8 @@ sll_real64        :: a1, a2, a3, a4, weight
 sll_real64        :: rho_total
 sll_int32         :: k
 sll_int32         :: i, j
-sll_real64        :: dpx
-sll_real64        :: dpy
+sll_real32        :: dpx
+sll_real32        :: dpy
 
 f%r0 = 0.d0
 
