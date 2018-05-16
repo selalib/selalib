@@ -95,7 +95,6 @@ contains
     type(spline_degree_3d_t)      , intent(in)    :: spline_degree
 
     type(sll_t_cartesian_mesh_2d), pointer :: cartesian_mesh2d
-    sll_int32 :: ierr
 
     !*** Initialization of the boundary conditions ***
     QNsolver%bound_cond%left_eta1  = bound_cond%left_eta1
@@ -371,8 +370,6 @@ contains
 
     type(QNsolver_DK4D_hybrid_t), intent(inout) :: QNsolver
 
-    sll_int32 :: ierr
-    
     call QNsolver%interp2d_QN_A11%delete( )
     call QNsolver%interp2d_QN_A12%delete( )
     call QNsolver%interp2d_QN_A21%delete( )
@@ -727,9 +724,6 @@ contains
 
     sll_int32  :: ieta1, ieta2
     sll_int32  :: Neta1, Neta2
-    sll_real64 :: x_tmp, y_tmp
-    sll_real64 :: n0_xy_tmp, B_xy_tmp
-    sll_real64 :: norm2_xy_tmp, val_tmp
 
     Neta1 = QNsolver%Neta1
     Neta2 = QNsolver%Neta2

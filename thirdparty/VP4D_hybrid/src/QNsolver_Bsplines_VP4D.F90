@@ -337,8 +337,6 @@ contains
 
     type(QNsolver_Bsplines_VP4D_t), intent(inout) :: QNsolver
 
-    sll_int32 :: ierr
-    
     call QNsolver%interp2d_QNrhs_eta1eta2%delete( )
     call QNsolver%interp2d_Phi_eta1eta2%delete( )
 
@@ -414,12 +412,12 @@ contains
     sll_int32, dimension(1:4) :: glob_ind4d
     !----> Used to compute rho sequential in (x1,x2) 
     !---->  (for allgatherv operation)
-    sll_int32 :: world_size
-    sll_int32 :: send_size   
-    sll_real64, dimension(:), allocatable :: send_buf
-    sll_real64, dimension(:), allocatable :: recv_buf
-    sll_int32 , dimension(:), allocatable :: recv_sz
-    sll_int32 , dimension(:), allocatable :: disps 
+    !sll_int32 :: world_size
+    !sll_int32 :: send_size   
+    !sll_real64, dimension(:), allocatable :: send_buf
+    !sll_real64, dimension(:), allocatable :: recv_buf
+    !sll_int32 , dimension(:), allocatable :: recv_sz
+    !sll_int32 , dimension(:), allocatable :: disps 
     !---> Used to compute \int rho |J| deta1 deta2/ \int |J| deta1 deta2
     sll_real64 :: jacob_tmp, val_jac
     sll_real64 :: coef_int_deta1, coef_int_deta2
@@ -508,7 +506,7 @@ contains
 
     sll_int32 :: ieta1, ieta2
     sll_int32 :: Neta1, Neta2
-    sll_int32 :: loc2d_sz_x1, loc2d_sz_x2
+    !sll_int32 :: loc2d_sz_x1, loc2d_sz_x2
 
     !*** Computation of the RHS of the quasi-neutrality equation ***
     call compRHS_QNsolver_Bsplines_VP4D( QNsolver, &
