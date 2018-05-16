@@ -1576,7 +1576,6 @@ end subroutine diagnostics
 subroutine delete_va2d_par_cart( sim )
 
 class(sll_t_simulation_2d_vlasov_ampere_cart) :: sim
-sll_int32 :: ierr
 
 if(allocated(sim%x1_array)) then
   deallocate(sim%x1_array)
