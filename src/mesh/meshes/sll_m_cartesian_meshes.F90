@@ -245,7 +245,7 @@ contains
     obj%slot = arg; \
   else; \
     obj%slot = default_val; \
-end if
+  end if
 
   !> @brief allocates the memory space for a new 1D cartesian mesh on the heap,
   !> initializes it with the given arguments and returns a pointer to the
