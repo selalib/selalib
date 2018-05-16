@@ -295,8 +295,8 @@ program test_poisson_2d_fem_sps
   ! Write mass matrix
   call sll_o_hdf5_ser_write_array( file_id, M, "/M", h5_error )
 
-  ! Write right hand side
-  call sll_o_hdf5_ser_write_array( file_id, solver % b, "/b", h5_error )
+!  ! Write right hand side
+!  call sll_o_hdf5_ser_write_array( file_id, solver % b, "/b", h5_error )
 
   ! Write solution
   call sll_o_hdf5_ser_write_array( file_id, solver % x, "/x", h5_error )

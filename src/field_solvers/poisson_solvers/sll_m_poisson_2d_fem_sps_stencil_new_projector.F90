@@ -142,10 +142,10 @@ contains
   ! Change basis: C1 projection of vectors
   subroutine s_poisson_2d_fem_sps_stencil_new_projector__change_basis_vector( self, V, Vp )
     class(sll_t_poisson_2d_fem_sps_stencil_new_projector), intent(in   ) :: self
-    real(wp)                                             , intent(in   ) :: V (:)
+    real(wp)                                             , intent(in   ) :: V(:,:)
     type(sll_t_vector_space_c1_block)                    , intent(inout) :: Vp
 
-    integer :: i, i1, i2, j, j1, j2, ll
+    integer :: i1, i2, ll
 
     associate( n1 => self % n1, &
                n2 => self % n2, &
@@ -153,7 +153,8 @@ contains
                p2 => self % p2 )
 
       ! Checks
-      SLL_ASSERT( size( V ) == n1*n2 )
+      SLL_ASSERT( size( V, 1 ) == n1 )
+      SLL_ASSERT( size( V, 2 ) == n2 )
       SLL_ASSERT( size( Vp % vd % array    ) == 3 )
       SLL_ASSERT( size( Vp % vs % array, 1 ) == n1-2+2*p1 )
       SLL_ASSERT( size( Vp % vs % array, 2 ) == n2  +2*p2 )
@@ -162,16 +163,14 @@ contains
       do ll = 1, 3
         do i2 = 1, n2
           do i1 = 1, 2
-            i = (i1-1)*n2 + i2
-            Vp % vd % array(ll) = Vp % vd % array(ll) + self % L(i1,i2,ll) * V(i)
+            Vp % vd % array(ll) = Vp % vd % array(ll) + self % L(i1,i2,ll) * V(i1,i2)
           end do
         end do
       end do
 
-      do j2 = 1, n2
-        do j1 = 1, n1-2
-          j = (j1-1) * n2 + j2
-          Vp % vs % array(j1,j2) = V(2*n2+j)
+      do i2 = 1, n2
+        do i1 = 3, n1
+          Vp % vs % array(i1-2,i2) = V(i1,i2)
         end do
       end do
 

@@ -15,7 +15,7 @@ module sll_m_poisson_2d_fem_sps_stencil_new
 
   use sll_m_poisson_2d_fem_sps_weak_form, only: sll_t_poisson_2d_fem_sps_weak_form
 
-  use sll_m_poisson_2d_fem_sps_stencil_assembler, only: sll_t_poisson_2d_fem_sps_stencil_assembler
+  use sll_m_poisson_2d_fem_sps_stencil_new_assembler, only: sll_t_poisson_2d_fem_sps_stencil_new_assembler
 
   use sll_m_poisson_2d_fem_sps_stencil_new_projector, only: sll_t_poisson_2d_fem_sps_stencil_new_projector
 
@@ -89,9 +89,8 @@ module sll_m_poisson_2d_fem_sps_stencil_new
     real(wp), allocatable :: L(:,:,:)
 
     ! Right hand side vector and C1 projection
-    real(wp), allocatable :: b(:)
-    type(sll_t_vector_space_real_array_2d) :: bs_tmp1
-    type(sll_t_vector_space_real_array_2d) :: bs_tmp2
+    type(sll_t_vector_space_real_array_2d) :: bs
+    type(sll_t_vector_space_real_array_2d) :: bs_tmp
 
     ! Solution and C1 projection
     real(wp), allocatable :: x(:)
@@ -100,7 +99,7 @@ module sll_m_poisson_2d_fem_sps_stencil_new
     type(sll_t_poisson_2d_fem_sps_weak_form) :: weak_form
 
     ! Assembler
-    type(sll_t_poisson_2d_fem_sps_stencil_assembler) :: assembler
+    type(sll_t_poisson_2d_fem_sps_stencil_new_assembler) :: assembler
 
     ! C1 projector
     type(sll_t_poisson_2d_fem_sps_stencil_new_projector) :: projector
@@ -223,9 +222,8 @@ contains
       allocate( self % L( 2, n2, 3 ) )
 
       ! Right hand side
-      allocate( self % b( n1*n2 ) )
-      allocate( self % bs_tmp1 % array( 1-p1:n1+p1, 1-p2:n2+p2 ) )
-      allocate( self % bs_tmp2 % array( 1-p1:n1+p1, 1-p2:n2+p2 ) )
+      allocate( self % bs     % array( 1-p1:n1+p1, 1-p2:n2+p2 ) )
+      allocate( self % bs_tmp % array( 1-p1:n1+p1, 1-p2:n2+p2 ) )
 
       ! Solution
       allocate( self % x( n1*n2 ) )
@@ -355,7 +353,7 @@ contains
       end do
 
       !-------------------------------------------------------------------------
-      ! Initialize linear system (homogeneous Dirichlet boundary conditions)
+      ! Initialize linear system
       !-------------------------------------------------------------------------
 
       ! Construct C1 block linear operators
@@ -475,7 +473,7 @@ contains
       ! Fill in right hand side
       !-------------------------------------------------------------------------
 
-      self % b = 0.0_wp
+      self % bs % array(:,:) = 0.0_wp
 
       ! Cycle over finite elements
       do k2 = 1, Nk2
@@ -487,12 +485,12 @@ contains
             self % data_1d_eta2, &
             self % data_2d_rhs , &
             self % int_volume  , &
-            self % b )
+            self % bs % array(1:n1,1:n2) )
         end do
       end do
 
       !-------------------------------------------------------------------------
-      ! Solve linear system (homogeneous Dirichlet boundary conditions)
+      ! Solve linear system
       !-------------------------------------------------------------------------
 
       ! Construct C1 block vector space
@@ -501,7 +499,7 @@ contains
       allocate( self % bp_vecsp_c1_block % vs % array( 1-p1:(n1-2)+p1, 1-p2:n2+p2 ) )
 
       ! Compute C1 projection of right hand side
-      call self % projector % change_basis_vector( self % b, self % bp_vecsp_c1_block )
+      call self % projector % change_basis_vector( self % bs % array(1:n1,1:n2), self % bp_vecsp_c1_block )
 
       ! Homogeneous Dirichlet boundary conditions
       do j2 = 1, n2
@@ -535,7 +533,7 @@ contains
     type(sll_t_spline_2d)                      , intent(in   ) :: rhs
     type(sll_t_spline_2d)                      , intent(inout) :: sol
 
-    integer :: i, i1, i2, j2
+    integer :: j2
 
     associate( n1 => self % n1, &
                n2 => self % n2, &
@@ -543,20 +541,13 @@ contains
                p2 => self % p2 )
 
       ! Store temporarily spline coefficients of right hand side into self % b
-      self % bs_tmp1 % array(:,:) = 0.0_wp
-      self % bs_tmp1 % array(1:n1,1:n2) = rhs % bcoef(1:n1,1:n2)
+      self % bs_tmp % array(:,:) = 0.0_wp
+      self % bs_tmp % array(1:n1,1:n2) = rhs % bcoef(1:n1,1:n2)
 
-      call self % M_linop_stencil % dot( self % bs_tmp1, self % bs_tmp2 )
-
-      do i2 = 1, n2
-        do i1 = 1, n1
-          i = (i1-1) * n2 + i2
-          self % b(i) = self % bs_tmp2 % array(i1,i2)
-        end do
-      end do
+      call self % M_linop_stencil % dot( self % bs_tmp, self % bs )
 
       !-------------------------------------------------------------------------
-      ! Solve linear system (homogeneous Dirichlet boundary conditions)
+      ! Solve linear system
       !-------------------------------------------------------------------------
 
       ! Construct C1 block vector space
@@ -565,7 +556,7 @@ contains
       allocate( self % bp_vecsp_c1_block % vs % array( 1-p1:(n1-2)+p1, 1-p2:n2+p2 ) )
 
       ! Compute C1 projection of right hand side
-      call self % projector % change_basis_vector( self % b, self % bp_vecsp_c1_block )
+      call self % projector % change_basis_vector( self % bs % array(1:n1,1:n2), self % bp_vecsp_c1_block )
 
       ! Homogeneous Dirichlet boundary conditions
       do j2 = 1, n2
@@ -605,9 +596,8 @@ contains
     deallocate( self % inv_metric )
     deallocate( self % L  )
     deallocate( self % x  )
-    deallocate( self % b  )
-    deallocate( self % bs_tmp1 % array )
-    deallocate( self % bs_tmp2 % array )
+    deallocate( self % bs     % array )
+    deallocate( self % bs_tmp % array )
 
     call self % Ap_linop_c1_block % free()
     call self % Mp_linop_c1_block % free()
