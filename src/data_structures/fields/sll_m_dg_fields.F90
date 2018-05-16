@@ -42,13 +42,13 @@ module sll_m_dg_fields
 !> Object to describe field data with DG numerical method
 type :: sll_t_dg_field_2d
 
-   sll_int32                               :: degree  !< polynom degree
-   sll_transformation, pointer             :: tau     !< coordinate transformation
-   sll_real64, dimension(:,:,:,:), pointer :: array   !< field data
-   sll_real64, dimension(:), pointer       :: xgalo   !< gauss-lobatto points
-   sll_real64, dimension(:), pointer       :: wgalo   !< gauss-lobatto weights
-   sll_int32                               :: tag     !< just a tag
-   sll_int32                               :: file_id !< file unit for output
+   sll_int32                                   :: degree  !< polynom degree
+   sll_transformation,             pointer     :: tau     !< coord transformation
+   sll_real64, dimension(:,:,:,:), allocatable :: array   !< field data
+   sll_real64, dimension(:),       allocatable :: xgalo   !< gauss-lobatto points
+   sll_real64, dimension(:),       allocatable :: wgalo   !< gauss-lobatto weights
+   sll_int32                                   :: tag     !< just a tag
+   sll_int32                                   :: file_id !< file unit for output
 
 contains
 
@@ -93,7 +93,7 @@ subroutine sll_s_dg_field_2d_init( this, degree, tau, init_function )
 
   nc_eta1 = tau%mesh%num_cells1
   nc_eta2 = tau%mesh%num_cells2
-  SLL_CLEAR_ALLOCATE(this%array(1:degree+1,1:degree+1,1:nc_eta1,1:nc_eta2),error)
+  allocate(this%array(1:degree+1,1:degree+1,1:nc_eta1,1:nc_eta2))
 
   this%array = 0.0_f64
   if (present(init_function)) then
@@ -112,7 +112,7 @@ function sll_f_new_dg_field_2d( degree, tau, init_function ) result (this)
   sll_int32, intent(in)                 :: degree        !< degree integration
   sll_int32                             :: nc_eta1
   sll_int32                             :: nc_eta2
-  type(sll_t_dg_field_2d), pointer        :: this
+  type(sll_t_dg_field_2d), pointer      :: this
   sll_int32                             :: error
   SLL_ALLOCATE(this, error)
   this%tau    => tau
@@ -128,7 +128,8 @@ function sll_f_new_dg_field_2d( degree, tau, init_function ) result (this)
   nc_eta1 = lm%num_cells1
   nc_eta2 = lm%num_cells2
   end associate
-  SLL_CLEAR_ALLOCATE(this%array(1:degree+1,1:degree+1,1:nc_eta1,1:nc_eta2),error)
+
+  allocate(this%array(1:degree+1,1:degree+1,1:nc_eta1,1:nc_eta2))
 
   this%array = 0.0_f64
   if (present(init_function)) then
@@ -150,7 +151,7 @@ subroutine set_value_dg_field_2d( this, init_function, time)
   sll_real64               :: eta2
   sll_int32                :: i, j, ii, jj
   
-  SLL_ASSERT(associated(this%array))
+  SLL_ASSERT(allocated(this%array))
 
   do j = 1, this%tau%mesh%num_cells2
   do i = 1, this%tau%mesh%num_cells1
@@ -173,9 +174,9 @@ end subroutine set_value_dg_field_2d
 subroutine write_dg_field_2d_to_file( this, field_name, file_format, time )
 
   class(sll_t_dg_field_2d) :: this
-  character(len=*)       :: field_name
-  sll_int32, optional    :: file_format
-  sll_real64, optional   :: time
+  character(len=*)         :: field_name
+  sll_int32, optional      :: file_format
+  sll_real64, optional     :: time
 
   if (present(file_format)) then
      select case(file_format)
@@ -201,14 +202,13 @@ end subroutine write_dg_field_2d_to_file
 subroutine plot_dg_field_2d_with_gnuplot( this, field_name )
 
   class(sll_t_dg_field_2d) :: this
-  character(len=*)       :: field_name
-  sll_int32              :: file_id
-  sll_int32              :: gnu_id
-  sll_real64             :: eta1, eta2
-  sll_real64             :: offset(2)
-  sll_int32              :: i, j, ii, jj
-  character(len=4)       :: ctag
-  class(sll_t_cartesian_mesh_2d), pointer :: lm
+  character(len=*)         :: field_name
+  sll_int32                :: file_id
+  sll_int32                :: gnu_id
+  sll_real64               :: eta1, eta2
+  sll_real64               :: offset(2)
+  sll_int32                :: i, j, ii, jj
+  character(len=4)         :: ctag
 
   call sll_s_int2string(this%tag, ctag)
 
@@ -267,8 +267,8 @@ function dg_field_add( W1, W2) result(W3)
   type(sll_t_dg_field_2d)             :: W3
  
   SLL_ASSERT(W1%degree == W2%degree)
-  SLL_ASSERT(associated(W1%array))
-  SLL_ASSERT(associated(W2%array))
+  SLL_ASSERT(allocated(W1%array))
+  SLL_ASSERT(allocated(W2%array))
  
   W3%array  = W1%array + W2%array
 
@@ -280,11 +280,7 @@ function dg_field_sub( W1, W2) result(W3)
   type(sll_t_dg_field_2d), intent(in) :: W2
   type(sll_t_dg_field_2d)             :: W3
 
-  SLL_ASSERT(W1%degree == W2%degree)
-  SLL_ASSERT(associated(W1%array))
-  SLL_ASSERT(associated(W2%array))
-
-  W3%array  = W1%array - W2%array
+  W3%array = W1%array - W2%array
 
 end function dg_field_sub
 
@@ -292,21 +288,21 @@ subroutine plot_dg_field_2d_with_gmsh(this, field_name)
 
   class(sll_t_dg_field_2d) :: this
   character(len=*)         :: field_name
-  sll_int32                :: file_id
 
-  sll_int32, parameter :: nlocmax=16
-  sll_int32 :: typelem
+  sll_int32                :: file_id
+  sll_int32, parameter     :: nlocmax=16
+  sll_int32                :: typelem
   sll_int32, dimension(4)  :: invpermut1=(/1,2,4,3/)
   sll_int32, dimension(9)  :: invpermut2=(/1,5,2,8,9,6,4,7,3/)
   sll_int32, dimension(16) :: invpermut3=(/1,5,6,2,12,13,14,7,11,16,15,8,4,10,9,3/)
-  sll_int32 :: invpermut(nlocmax),permut(nlocmax)
-  sll_int32 :: nloc, nel, neq, iel, ino, inoloc
-  sll_int32 :: i, j, k, l, ii, jj, ni, nj
-  sll_int32,  allocatable, dimension(:,:) :: connec
-  sll_real64, allocatable, dimension(:,:) :: coords
-  sll_real64, allocatable, dimension(:)   :: values
-  sll_real64 :: offset(2), eta1, eta2
-  character(len=32) :: my_fmt
+  sll_int32                :: invpermut(nlocmax),permut(nlocmax)
+  sll_int32                :: nloc, nel, neq, iel, ino, inoloc
+  sll_int32                :: i, j, k, l, ii, jj, ni, nj
+  sll_int32,  allocatable  :: connec(:,:)
+  sll_real64, allocatable  :: coords(:,:)
+  sll_real64, allocatable  :: values(:)
+  sll_real64               :: offset(2), eta1, eta2
+  character(len=32)        :: my_fmt
 
   if (this%degree > 3) then
      write(*,*) 'ordre non prévu'
@@ -410,13 +406,15 @@ end subroutine plot_dg_field_2d_with_gmsh
 subroutine plot_dg_field_2d_with_plotmtv(this, field_name)
 
   class(sll_t_dg_field_2d) :: this
-  character(len=*)       :: field_name
-  sll_int32              :: file_id
-  sll_int32              :: ni, nj, ino
-  sll_int32              :: i, j, ii, jj
-  sll_real64             :: offset(2)
-  sll_real64             :: eta1, eta2
+  character(len=*)         :: field_name
 
+  sll_int32                :: file_id
+  sll_int32                :: ni, nj, ino
+  sll_int32                :: i, j, ii, jj
+  sll_real64               :: offset(2)
+  sll_real64               :: eta1, eta2
+
+  offset = 0.0_f64
   call sll_s_ascii_file_create(field_name//".mtv", file_id, error)
 
   write(file_id,*)"$DATA=CONTCURVE"
@@ -427,10 +425,10 @@ subroutine plot_dg_field_2d_with_plotmtv(this, field_name)
   associate (lm => this%tau%mesh)
 
   do j=1,lm%num_cells2
-     offset(2) = lm%eta2_min+(j-1)*lm%delta_eta2
+     offset(2) = lm%eta2_min+real(j-1,f64)*lm%delta_eta2
      do jj=1,merge(this%degree,this%degree+1,j<lm%num_cells2)
         do i=1,lm%num_cells1
-           offset(1) = lm%eta1_min+(i-1)*lm%delta_eta1
+           offset(1) = lm%eta1_min+real(i-1,f64)*lm%delta_eta1
            do ii=1,merge(this%degree,this%degree+1,i<lm%num_cells1)
               eta1 = offset(1) + .5_f64*(this%xgalo(ii)+1._f64)*lm%delta_eta1
               eta2 = offset(2) + .5_f64*(this%xgalo(jj)+1._f64)*lm%delta_eta2
@@ -441,7 +439,6 @@ subroutine plot_dg_field_2d_with_plotmtv(this, field_name)
         end do
      end do
   end do
-
 
   write(file_id,*)
   
@@ -519,14 +516,15 @@ end subroutine plot_dg_field_2d_with_plotmtv
 
 subroutine plot_dg_field_2d_with_xdmf(this, field_name, time)
 
-  class(sll_t_dg_field_2d)   :: this
+  class(sll_t_dg_field_2d) :: this
   character(len=*)         :: field_name
+  sll_real64, optional     :: time
+
   sll_int32                :: file_id
   sll_int32                :: i, j, k, ii, jj
   sll_real64               :: offset(2)
   sll_real64               :: eta1, eta2
   sll_int32                :: clength
-  sll_real64, optional     :: time
 
   clength = len_trim(field_name)
 
