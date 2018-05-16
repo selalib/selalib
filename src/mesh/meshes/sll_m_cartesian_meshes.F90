@@ -39,6 +39,7 @@ module sll_m_cartesian_meshes
     sll_f_new_cartesian_mesh_4d, &
     operator(*), &
     sll_t_cartesian_mesh_1d, &
+    sll_s_cartesian_mesh_1d_init, &
     sll_t_cartesian_mesh_2d, &
     sll_s_cartesian_mesh_2d_init, &
     sll_t_cartesian_mesh_2d_ptr, &
