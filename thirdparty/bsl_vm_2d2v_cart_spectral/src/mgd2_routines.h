@@ -1825,8 +1825,8 @@ c               -> rescale pressure and density around average values
 c------------------------------------------------------------------------
       REALN avo,acorr
       integer sxf,exf,syf,eyf,nxf,nyf,sxc,exc,syc,eyc,nxc,nyc
-      integer ipf,irf,ipc,irc,sxm,exm,sym,eym,nxm,nym,ip,ic,kcur
-      integer itype,jtype,ijtype,lev,ir1,ir2
+      integer ipf,irf,sxm,exm,sym,eym,nxm,nym,ip,ic,kcur
+      integer itype,jtype,lev,ir1,ir2
       integer icf, k
       REALN relmax
 # if cdebug
@@ -2054,7 +2054,7 @@ c Code      : tmgd2
 c Called in : mgdinit
 c Calls     : MPI_TYPE_CONTIGUOUS, MPI_TYPE_COMMIT, MPI_TYPE_VECTOR
 c------------------------------------------------------------------------
-      integer ier
+      !integer ier
 # if cdebug
       double precision tinitial
       tinitial=MPI_WTIME()
