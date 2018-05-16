@@ -7,7 +7,7 @@ use sll_m_gaussian
 implicit none
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
-#define num_particles 100000_i32
+sll_int32, parameter :: num_particles = 1000000
 
 sll_int32  :: j
 sll_real64, allocatable :: r(:,:)
@@ -16,7 +16,6 @@ sll_real64 :: z_mean, z_variance
 sll_real64 :: r1_mean, r1_variance
 sll_real64 :: r2_mean, r2_variance
 
-call random_seed()
 allocate(z(num_particles))
 allocate(r(2,num_particles))
 do j=1, num_particles
