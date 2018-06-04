@@ -55,7 +55,7 @@ program test_poisson_2d_fem_sps
   integer, parameter :: wp = f64
 
   ! To initialize B-splines (p1,p2 degrees)
-  integer :: mm, n1, n2, nn, p1, p2, ncells1, ncells2
+  integer :: mm, n1, n2, p1, p2, ncells1, ncells2!, nn
 
   ! B-splines break points
   real(wp), allocatable :: breaks_eta1(:)
@@ -85,11 +85,11 @@ program test_poisson_2d_fem_sps
 !  type(sll_t_poisson_2d_fem_sps_stencil    ) :: solver
   type(sll_t_poisson_2d_fem_sps_stencil_new) :: solver
 
-  ! Stiffness/mass dense matrices and C1 projections
-  real(wp), allocatable :: A (:,:)
-  real(wp), allocatable :: M (:,:)
-  real(wp), allocatable :: Ap(:,:)
-  real(wp), allocatable :: Mp(:,:)
+!  ! Stiffness/mass dense matrices and C1 projections
+!  real(wp), allocatable :: A (:,:)
+!  real(wp), allocatable :: M (:,:)
+!  real(wp), allocatable :: Ap(:,:)
+!  real(wp), allocatable :: Mp(:,:)
 
   ! Auxiliary variables
   integer  :: i1, i2
@@ -103,6 +103,9 @@ program test_poisson_2d_fem_sps
   type(sll_t_hdf5_ser_handle) :: file_id
   integer                     :: h5_error
 
+  real(wp), allocatable :: phi_spl(:,:)
+  real(wp) :: eta1, eta2
+
   !-----------------------------------------------------------------------------
   ! Initialize B-splines basis functions
   !-----------------------------------------------------------------------------
@@ -111,9 +114,9 @@ program test_poisson_2d_fem_sps
 
   ! Number of degrees of freedom (control points) along s and theta
   mm = 32
-  n1 = mm * 1
+  n1 = mm
   n2 = mm * 2
-  nn = 3 + (n1-2) * n2
+!  nn = 3 + (n1-2) * n2
 
   ! Spline degrees along s and theta
   p1 = 3
@@ -179,6 +182,15 @@ program test_poisson_2d_fem_sps
   ! Discrete mapping
   call mapping_iga % init( bsplines_eta1, bsplines_eta2, mapping_analytical )
 
+  ! Create HDF5 file
+  call sll_s_hdf5_ser_file_create( 'mapping_info.h5', file_id, h5_error )
+
+  ! Write mapping info
+  call mapping_iga % store_data( n1, n2, file_id )
+
+  ! Close HDF5 file
+  call sll_s_hdf5_ser_file_close( file_id, h5_error )
+
   call sll_s_set_time_mark( t1 )
 
   dt = sll_f_time_elapsed_between( t0, t1 )
@@ -243,23 +255,23 @@ program test_poisson_2d_fem_sps
   dt = sll_f_time_elapsed_between( t0, t1 )
   write(*,'(a,es8.1/)' ) " Time required for initialization of Poisson solver: ", dt
 
-  ! Allocate stiffness/mass dense matrices and C1 projections
-  allocate( A( n1*n2, n1*n2 ) )
-  allocate( M( n1*n2, n1*n2 ) )
-  allocate( Ap( nn, nn ) )
-  allocate( Mp( nn, nn ) )
-
-  ! Convert stencil to dense
-  A = 0.0_wp
-  M = 0.0_wp
-  call solver % A_linop_stencil % to_array( A )
-  call solver % M_linop_stencil % to_array( M )
-
-  ! Convert C1 block to dense
-  Ap = 0.0_wp
-  Mp = 0.0_wp
-  call solver % Ap_linop_c1_block % to_array( Ap )
-  call solver % Mp_linop_c1_block % to_array( Mp )
+!  ! Allocate stiffness/mass dense matrices and C1 projections
+!  allocate( A( n1*n2, n1*n2 ) )
+!  allocate( M( n1*n2, n1*n2 ) )
+!  allocate( Ap( nn, nn ) )
+!  allocate( Mp( nn, nn ) )
+!
+!  ! Convert stencil to dense
+!  A = 0.0_wp
+!  M = 0.0_wp
+!  call solver % A_linop_stencil % to_array( A )
+!  call solver % M_linop_stencil % to_array( M )
+!
+!  ! Convert C1 block to dense
+!  Ap = 0.0_wp
+!  Mp = 0.0_wp
+!  call solver % Ap_linop_c1_block % to_array( Ap )
+!  call solver % Mp_linop_c1_block % to_array( Mp )
 
   call solver % set_boundary_conditions( sll_p_dirichlet )
 
@@ -274,13 +286,23 @@ program test_poisson_2d_fem_sps
   dt = sll_f_time_elapsed_between( t0, t1 )
   write(*,'(a,es8.1/)' ) " Time required for solution of Poisson equation: ", dt
 
+  ! Evaluate phi spline on logical grid
+  allocate( phi_spl( n1, n2 ) )
+  do i2 = 1, n2
+    do i1 = 1, n1
+      eta1 = real( i1-1, wp ) / real( n1-1, wp )
+      eta2 = real( i2-1, wp ) * sll_p_twopi / real( n2, wp )
+      phi_spl(i1,i2) = spline_2d_phi % eval( eta1, eta2 )
+    end do
+  end do
+
   !-----------------------------------------------------------------------------
   ! HDF5 I/O
   !-----------------------------------------------------------------------------
 
   call sll_s_set_time_mark( t0 )
 
-  ! Create HDF5 file for output
+  ! Create HDF5 file
   call sll_s_hdf5_ser_file_create( 'poisson_2d_fem_sps.h5', file_id, h5_error )
 
   ! Write useful parameters
@@ -289,29 +311,32 @@ program test_poisson_2d_fem_sps
   call sll_o_hdf5_ser_write_attribute( file_id, "/", "p1", p1, h5_error )
   call sll_o_hdf5_ser_write_attribute( file_id, "/", "p2", p2, h5_error )
 
-  ! Write stiffness matrix
-  call sll_o_hdf5_ser_write_array( file_id, A, "/A", h5_error )
-
-  ! Write mass matrix
-  call sll_o_hdf5_ser_write_array( file_id, M, "/M", h5_error )
-
-!  ! Write right hand side
-!  call sll_o_hdf5_ser_write_array( file_id, solver % b, "/b", h5_error )
+!  ! Write stiffness matrix
+!  call sll_o_hdf5_ser_write_array( file_id, A, "/A", h5_error )
+!
+!  ! Write mass matrix
+!  call sll_o_hdf5_ser_write_array( file_id, M, "/M", h5_error )
+!
+!!  ! Write right hand side
+!!  call sll_o_hdf5_ser_write_array( file_id, solver % b, "/b", h5_error )
 
   ! Write solution
   call sll_o_hdf5_ser_write_array( file_id, solver % x, "/x", h5_error )
 
-  ! Write C1 projection of stiffness matrix
-  call sll_o_hdf5_ser_write_array( file_id, Ap, "/Ap", h5_error )
-
-  ! Write C1 projection of mass matrix
-  call sll_o_hdf5_ser_write_array( file_id, Mp, "/Mp", h5_error )
-
-!  ! Write L matrix needed for projection
-!  call sll_o_hdf5_ser_write_array( file_id, solver % L, "/L", h5_error )
+!  ! Write C1 projection of stiffness matrix
+!  call sll_o_hdf5_ser_write_array( file_id, Ap, "/Ap", h5_error )
+!
+!  ! Write C1 projection of mass matrix
+!  call sll_o_hdf5_ser_write_array( file_id, Mp, "/Mp", h5_error )
+!
+!!  ! Write L matrix needed for projection
+!!  call sll_o_hdf5_ser_write_array( file_id, solver % L, "/L", h5_error )
 
   ! Write reshaped solution
-  call sll_o_hdf5_ser_write_array( file_id, spline_2d_phi % bcoef, "/phi", h5_error )
+  call sll_o_hdf5_ser_write_array( file_id, spline_2d_phi % bcoef(1:n1,1:n2), "/phi", h5_error )
+
+  ! Write phi spline
+  call sll_o_hdf5_ser_write_array( file_id, phi_spl, "/phi_spl", h5_error )
 
   ! Close HDF5 file
   call sll_s_hdf5_ser_file_close ( file_id, h5_error )
@@ -328,10 +353,12 @@ program test_poisson_2d_fem_sps
   deallocate( breaks_eta1 )
   deallocate( breaks_eta2 )
 
-  deallocate( A )
-  deallocate( M )
-  deallocate( Ap )
-  deallocate( Mp )
+  deallocate( phi_spl )
+
+!  deallocate( A )
+!  deallocate( M )
+!  deallocate( Ap )
+!  deallocate( Mp )
 
   deallocate( mapping_analytical )
 

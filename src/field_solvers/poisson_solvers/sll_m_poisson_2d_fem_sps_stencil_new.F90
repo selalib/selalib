@@ -440,7 +440,7 @@ contains
     type(sll_t_spline_2d)                      , intent(inout) :: sol
 
     ! Auxiliary variables
-    integer  :: k1, k2, q1, q2, j2
+    integer  :: k1, k2, q1, q2, j2, i1, i2, i
     real(wp) :: eta(2), x(2)
 
     associate( n1  => self % n1 , &
@@ -521,7 +521,13 @@ contains
       ! Compute solution in tensor-product space
       call self % projector % change_basis_vector_inv( self % xp_vecsp_c1_block, self % x )
 
-      sol % bcoef = reshape( self % x, (/ n2, n1 /) )
+      do i2 = 1, n2
+        do i1 = 1, n1
+          i = (i1-1) * n2 + i2
+          sol % bcoef(i1,i2) = self % x(i)
+        end do
+      end do
+      sol % bcoef(:,n2+1:n2+p2) = sol % bcoef(:,1:p2)
 
     end associate
 
@@ -533,7 +539,7 @@ contains
     type(sll_t_spline_2d)                      , intent(in   ) :: rhs
     type(sll_t_spline_2d)                      , intent(inout) :: sol
 
-    integer :: j2
+    integer :: j2, i1, i2, i
 
     associate( n1 => self % n1, &
                n2 => self % n2, &
@@ -578,7 +584,13 @@ contains
       ! Compute solution in tensor-product space
       call self % projector % change_basis_vector_inv( self % xp_vecsp_c1_block, self % x )
 
-      sol % bcoef = reshape( self % x, (/ n2, n1 /) )
+      do i2 = 1, n2
+        do i1 = 1, n1
+          i = (i1-1) * n2 + i2
+          sol % bcoef(i1,i2) = self % x(i)
+        end do
+      end do
+      sol % bcoef(:,n2+1:n2+p2) = sol % bcoef(:,1:p2)
 
     end associate
 
