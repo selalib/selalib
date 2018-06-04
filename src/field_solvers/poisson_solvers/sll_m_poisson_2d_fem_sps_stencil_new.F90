@@ -383,6 +383,11 @@ contains
         verbose         = self % verbose, &
         template_vector = self % xp_vecsp_c1_block )
 
+      ! Construct C1 block vector space for right hand side
+      call self % bp_vecsp_c1_block % init( n1-2, n2, p1, p2 )
+      allocate( self % bp_vecsp_c1_block % vd % array( 1:3 ) )
+      allocate( self % bp_vecsp_c1_block % vs % array( 1-p1:(n1-2)+p1, 1-p2:n2+p2 ) )
+
     end associate
 
     call polar_bsplines % free()
@@ -493,11 +498,6 @@ contains
       ! Solve linear system
       !-------------------------------------------------------------------------
 
-      ! Construct C1 block vector space
-      call self % bp_vecsp_c1_block % init( n1-2, n2, p1, p2 )
-      allocate( self % bp_vecsp_c1_block % vd % array( 1:3 ) )
-      allocate( self % bp_vecsp_c1_block % vs % array( 1-p1:(n1-2)+p1, 1-p2:n2+p2 ) )
-
       ! Compute C1 projection of right hand side
       call self % projector % change_basis_vector( self % bs % array(1:n1,1:n2), self % bp_vecsp_c1_block )
 
@@ -555,11 +555,6 @@ contains
       !-------------------------------------------------------------------------
       ! Solve linear system
       !-------------------------------------------------------------------------
-
-      ! Construct C1 block vector space
-      call self % bp_vecsp_c1_block % init( n1-2, n2, p1, p2 )
-      allocate( self % bp_vecsp_c1_block % vd % array( 1:3 ) )
-      allocate( self % bp_vecsp_c1_block % vs % array( 1-p1:(n1-2)+p1, 1-p2:n2+p2 ) )
 
       ! Compute C1 projection of right hand side
       call self % projector % change_basis_vector( self % bs % array(1:n1,1:n2), self % bp_vecsp_c1_block )
