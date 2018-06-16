@@ -1251,11 +1251,12 @@ contains
 
 
   function l2norm_squarred_2d_mudpack(poisson, coefs_dofs) result(r)
-    class( poisson_2d_mudpack_curvilinear), intent(in)         :: poisson !< Poisson solver object.
-    sll_real64 , intent(in)                                    :: coefs_dofs(:,:) !< Values of the coefficient vectors for each DoF
-    sll_real64                                     :: r
+    class( poisson_2d_mudpack_curvilinear), intent(in) :: poisson !< Poisson solver object.
+    sll_real64 , intent(in)                            :: coefs_dofs(:,:) !< Values of the coefficient vectors for each DoF
+    sll_real64                                         :: r
     
     print*, 'l2norm_squared not implemented for poisson_2d_mudpack.'
+    r = 0.0_f64
     
   end function l2norm_squarred_2d_mudpack
   
