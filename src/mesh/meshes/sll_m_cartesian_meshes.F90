@@ -39,6 +39,7 @@ module sll_m_cartesian_meshes
     sll_f_new_cartesian_mesh_4d, &
     operator(*), &
     sll_t_cartesian_mesh_1d, &
+    sll_s_cartesian_mesh_1d_init, &
     sll_t_cartesian_mesh_2d, &
     sll_s_cartesian_mesh_2d_init, &
     sll_t_cartesian_mesh_2d_ptr, &
@@ -245,7 +246,7 @@ contains
     obj%slot = arg; \
   else; \
     obj%slot = default_val; \
-end if
+  end if
 
   !> @brief allocates the memory space for a new 1D cartesian mesh on the heap,
   !> initializes it with the given arguments and returns a pointer to the

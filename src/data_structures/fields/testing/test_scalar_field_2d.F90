@@ -42,9 +42,7 @@ program unit_test_2d
 
   use sll_m_scalar_field_2d, only: &
     sll_t_scalar_field_2d_analytic, &
-    sll_t_scalar_field_2d_discrete, &
-    sll_f_new_scalar_field_2d_analytic, &
-    sll_f_new_scalar_field_2d_discrete
+    sll_t_scalar_field_2d_discrete
 
   use sll_m_scalar_field_2d_base, only: &
     sll_c_scalar_field_2d_base
@@ -65,7 +63,7 @@ program unit_test_2d
   type(sll_t_cartesian_mesh_2d)                               :: mesh_2d
   class(sll_c_coordinate_transformation_2d_base),     pointer :: T
   type(sll_t_coordinate_transformation_2d_analytic),  target  :: T_analytic
-  type(sll_t_coordinate_transformation_2d_discrete),  target  :: T_discrete
+  !type(sll_t_coordinate_transformation_2d_discrete),  target  :: T_discrete
 
   class(sll_c_scalar_field_2d_base), pointer :: scalar_field
 
@@ -242,7 +240,7 @@ program unit_test_2d
   end do
 
   ! -------> field visualization
-   call scalar_field%write_to_file(1)
+  call scalar_field%write_to_file(1)
   
    ! -------> delete field
   call scalar_field%free()
@@ -299,7 +297,7 @@ program unit_test_2d
   end do
 
   ! -------> field visualization 
-   call dirichlet_periodic_analytic%write_to_file(1)
+  call dirichlet_periodic_analytic%write_to_file(1)
   
    ! -------> delete field
   call dirichlet_periodic_analytic%free()
@@ -381,7 +379,7 @@ program unit_test_2d
      end do
   end do
   
-  ! ----> initializatio of the interpolator for the field
+  ! ----> initialization of the interpolator for the field
   
   call sll_s_ad2d_interpolator_init( &
        interp_2d, &
