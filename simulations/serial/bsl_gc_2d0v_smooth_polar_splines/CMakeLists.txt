@@ -4,7 +4,10 @@ set( SIM_NAME sim_${DIR_NAME} )
 
 #-------------------------------------------------------------------------------
 
-add_library( ${SIM_NAME}_obj OBJECT )
+add_library( ${SIM_NAME}_obj OBJECT
+             sll_m_advector_2d_pseudo_cartesian.F90
+             sll_m_electric_field.F90
+             sll_m_scalar_diagnostics.F90 )
 
 add_dependencies( ${SIM_NAME}_obj ${SLL_LIB} )
 

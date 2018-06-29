@@ -36,6 +36,16 @@ program sim_bsl_gc_2d0v_smooth_polar_splines
 
   use sll_m_poisson_2d_fem_sps_stencil_new, only: sll_t_poisson_2d_fem_sps_stencil_new
 
+  use sll_m_electric_field, only: sll_t_electric_field
+
+  use sll_m_scalar_diagnostics, only: sll_t_scalar_diagnostics
+
+  use sll_m_advector_2d_pseudo_cartesian, only: sll_t_advector_2d_pseudo_cartesian
+
+  use sll_m_gauss_legendre_integration, only: &
+    sll_f_gauss_legendre_points, &
+    sll_f_gauss_legendre_weights
+
   use sll_m_timer, only: &
     sll_t_time_mark    , &
     sll_s_set_time_mark, &
@@ -44,9 +54,11 @@ program sim_bsl_gc_2d0v_smooth_polar_splines
   use sll_m_hdf5_io_serial, only: &
     sll_t_hdf5_ser_handle     , &
     sll_s_hdf5_ser_file_create, &
+    sll_s_hdf5_ser_file_open  , &
     sll_s_hdf5_ser_file_close , &
     sll_o_hdf5_ser_write_array, &
-    sll_o_hdf5_ser_write_attribute
+    sll_o_hdf5_ser_write_attribute, &
+    sll_o_hdf5_ser_read_array
 
   implicit none
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -54,78 +66,109 @@ program sim_bsl_gc_2d0v_smooth_polar_splines
   ! Working precision
   integer, parameter :: wp = f64
 
-  ! To initialize B-splines (p1,p2 degrees)
-  integer :: mm, n1, n2, p1, p2, ncells1, ncells2, ntau1, ntau2
+  ! Integer variables
+  integer :: n1, n2, p1, p2, ncells1, ncells2, ntau1, ntau2, nx1, nx2, i1, i2, &
+             k1, k2, q1, q2, Nk1, Nk2, Nq1, Nq2, it, iter, diag_freq, maxiter, &
+             l, p, maptype, h5_error, file_unit
 
-  ! B-splines break points
-  real(wp), allocatable :: breaks_eta1(:)
-  real(wp), allocatable :: breaks_eta2(:)
+  ! Real variables
+  real(wp) :: dt, abs_tol, rel_tol, smin, smax, ampl, t_diff, t_iter, x(2), eta(2), El(2)
 
-  ! 1D B-splines
-  class(sll_c_bsplines), allocatable :: bsplines_eta1
-  class(sll_c_bsplines), allocatable :: bsplines_eta2
+  ! Namelists
 
-  ! Analytical and discrete mappings
-  class(sll_c_polar_mapping_analytical), allocatable :: mapping_analytical
-  type(sll_t_polar_mapping_iga) :: mapping_iga
+  namelist /splines/ &
+    n1, &
+    n2, &
+    p1, &
+    p2
 
-  ! 2D splines for rho and phi
-  type(sll_t_spline_2d) :: spline_2d_rho
-  type(sll_t_spline_2d) :: spline_2d_phi
+  namelist /geometry/ &
+    maptype
 
-  ! 2D spline interpolator
-  type(sll_t_spline_interpolator_2d) :: spline_interp_2d
+  namelist /time_integration/ &
+    dt, &
+    iter
 
-  ! Needed for 2D interpolation of right hand side
-  real(wp), allocatable :: tau_eta1(:)
-  real(wp), allocatable :: tau_eta2(:)
-  real(wp), allocatable :: rho(:,:), rho_new(:,:)
+  namelist /characteristics/ &
+    abs_tol, &
+    rel_tol, &
+    maxiter
 
-  ! Poisson solver
-  type(sll_t_poisson_2d_fem_sps_stencil_new) :: poisson_solver
+  namelist /initial_condition/ &
+    l   , &
+    p   , &
+    smin, &
+    smax, &
+    ampl
 
-  ! Auxiliary variables
-  integer  :: i1, i2
-  integer  :: i, iter
-  real(wp) :: dt, half_dt
-  real(wp) :: eta(2)
+  namelist /diagnostics/ &
+    diag_freq, &
+    nx1      , &
+    nx2
 
-  ! Timing
-  type(sll_t_time_mark) :: t0, t1
-  real(wp) :: t_diff, t_iter
+  ! Real parameters
+  real(wp), parameter :: epsi = 1.0e-12_wp
 
-  ! ODE integrator
-  real(wp), parameter :: abs_tol = 1.0e-14_wp
-  real(wp), parameter :: rel_tol = 1.0e-12_wp
-  integer , parameter :: maxiter = 100
+  ! Logical variables
   logical :: success
 
-  ! HDF5 I/O
-  type(sll_t_hdf5_ser_handle) :: file_id
-  integer                     :: h5_error
-  character(len=32)           :: attr_name
+  ! Character variables
+  character(len=:), allocatable :: input_file
+  character(len=32) :: file_name
+  character(len=10) :: status
+  character(len=10) :: position
+  character(len=32) :: attr_name
 
-  !-----------------------------------------------------------------------------
-  ! Initialize B-splines basis functions
-  !-----------------------------------------------------------------------------
+  ! Real 1D allocatables
+  real(wp), allocatable :: breaks_eta1(:), breaks_eta2(:), tau_eta1(:), tau_eta2(:), x1_grid(:), x2_grid(:)
 
-  ! Number of degrees of freedom (control points) along s and theta
-  mm = 128
-  n1 = mm
-  n2 = mm * 2
+  ! Real 2D allocatables
+  real(wp), allocatable :: rho(:,:), rho_new(:,:), phi(:,:), Ex(:,:), Ey(:,:), Ex_cart(:,:), Ey_cart(:,:), &
+                           quad_points_eta1(:,:), quad_points_eta2(:,:), quad_weights_eta1(:,:), quad_weights_eta2(:,:)
 
-  ! Spline degrees along s and theta
-  p1 = 3
-  p2 = 3
+  ! Real 3D allocatables
+  real(wp), allocatable :: eta0(:,:,:), etai(:,:,:)
+
+  ! Real 4D allocatables
+  real(wp), allocatable :: phi_quad_eq(:,:,:,:), volume(:,:,:,:)
+
+  ! Abstract polymorphic types
+  class(sll_c_bsplines)                , allocatable :: bsplines_eta1, bsplines_eta2
+  class(sll_c_polar_mapping_analytical), allocatable :: mapping_analytic
+
+  ! Concrete types
+  type(sll_t_polar_mapping_iga)              :: mapping_discrete
+  type(sll_t_spline_2d)                      :: spline_2d_rho, spline_2d_phi
+  type(sll_t_spline_interpolator_2d)         :: spline_interp_2d
+  type(sll_t_poisson_2d_fem_sps_stencil_new) :: poisson_solver
+  type(sll_t_electric_field)                 :: electric_field
+  type(sll_t_advector_2d_pseudo_cartesian)   :: advector
+  type(sll_t_scalar_diagnostics)             :: scalar_diagnostics
+  type(sll_t_time_mark)                      :: t0, t1
+  type(sll_t_hdf5_ser_handle)                :: file_id
+
+  ! Parse input argument
+  call s_parse_command_arguments( input_file )
+
+  ! Read input file
+  open ( file=trim( input_file ), status='old', action='read', newunit=file_unit )
+  read ( file_unit, splines           ); rewind( file_unit )
+  read ( file_unit, geometry          ); rewind( file_unit )
+  read ( file_unit, time_integration  ); rewind( file_unit )
+  read ( file_unit, characteristics   ); rewind( file_unit )
+  read ( file_unit, initial_condition ); rewind( file_unit )
+  read ( file_unit, diagnostics       ); close ( file_unit )
 
   ! Create HDF5 file
   call sll_s_hdf5_ser_file_create( 'sim_bsl_gc_2d0v_smooth_polar_splines.h5', file_id, h5_error )
 
-  ! HDF5 I/O
+  ! Write data to HDF5 file
   call sll_o_hdf5_ser_write_attribute( file_id, "/", "n1", n1, h5_error )
   call sll_o_hdf5_ser_write_attribute( file_id, "/", "n2", n2, h5_error )
   call sll_o_hdf5_ser_write_attribute( file_id, "/", "p1", p1, h5_error )
   call sll_o_hdf5_ser_write_attribute( file_id, "/", "p2", p2, h5_error )
+  call sll_o_hdf5_ser_write_attribute( file_id, "/", "nx1", nx1, h5_error )
+  call sll_o_hdf5_ser_write_attribute( file_id, "/", "nx2", nx2, h5_error )
 
   write(*,'(/a)') " >> Initializing B-splines"
 
@@ -172,33 +215,44 @@ program sim_bsl_gc_2d0v_smooth_polar_splines
     xmax     = sll_p_twopi  , &
     ncells   = ncells2 )
 
-  !-----------------------------------------------------------------------------
-  ! Initialize mapping
-  !-----------------------------------------------------------------------------
+  ! For quadrature points
+  Nk1 = ncells1
+  Nk2 = ncells2
+  Nq1 = 1 + p1
+  Nq2 = 1 + p2
+
+  ! Write data to HDF5 file
+  call sll_o_hdf5_ser_write_attribute( file_id, "/", "Nk1", Nk1, h5_error )
+  call sll_o_hdf5_ser_write_attribute( file_id, "/", "Nk2", Nk2, h5_error )
+  call sll_o_hdf5_ser_write_attribute( file_id, "/", "Nq1", Nq1, h5_error )
+  call sll_o_hdf5_ser_write_attribute( file_id, "/", "Nq2", Nq2, h5_error )
 
   write(*,'(/a)') " >> Initializing mapping"
 
-  allocate( sll_t_polar_mapping_analytical_target :: mapping_analytical )
-!  allocate( sll_t_polar_mapping_analytical_czarny :: mapping_analytical )
+  ! Allocate analytical mapping
+  if ( maptype == 0 .or. maptype == 1 ) then
+    allocate( sll_t_polar_mapping_analytical_target :: mapping_analytic )
+  else if ( maptype == 2 ) then
+    allocate( sll_t_polar_mapping_analytical_czarny :: mapping_analytic )
+  end if
 
-  ! Analytical mapping
-  select type ( mapping_analytical )
+  ! Initialize analytical mapping
+  select type ( mapping_analytic )
     type is ( sll_t_polar_mapping_analytical_target )
-      call mapping_analytical % init( x0=[0.0_wp,0.0_wp], d0=0.0_wp, e0=0.0_wp ) ! circular mapping
-!      call mapping_analytical % init( x0=[0.0_wp,0.0_wp], d0=0.2_wp, e0=0.3_wp )
+      if ( maptype == 0 ) then
+        call mapping_analytic % init( x0=[0.0_wp,0.0_wp], d0=0.0_wp, e0=0.0_wp )
+      else if ( maptype == 1 ) then
+        call mapping_analytic % init( x0=[0.0_wp,0.0_wp], d0=0.2_wp, e0=0.3_wp )
+      end if
     type is ( sll_t_polar_mapping_analytical_czarny )
-      call mapping_analytical % init( x0=[0.0_wp,0.0_wp], b =1.4_wp, e =0.3_wp )
+      call mapping_analytic % init( x0=[0.0_wp,0.0_wp], b =1.4_wp, e =0.3_wp )
   end select
 
-  ! Discrete mapping
-  call mapping_iga % init( bsplines_eta1, bsplines_eta2, mapping_analytical )
+  ! Initialize discrete mapping
+  call mapping_discrete % init( bsplines_eta1, bsplines_eta2, mapping_analytic )
 
-  ! HDF5 I/O
-  call mapping_iga % store_data( n1, n2, file_id )
-
-  !-----------------------------------------------------------------------------
-  ! Initialize splines and spline interpolator
-  !-----------------------------------------------------------------------------
+  ! Write data to HDF5 file
+  call mapping_discrete % store_data( n1, n2, file_id )
 
   write(*,'(/a)') " >> Initializing 2D splines and interpolator"
 
@@ -219,16 +273,22 @@ program sim_bsl_gc_2d0v_smooth_polar_splines
   ntau1 = size( tau_eta1 )
   ntau2 = size( tau_eta2 )
 
-  !-----------------------------------------------------------------------------
-  ! Initialize Poisson solver
-  !-----------------------------------------------------------------------------
+  ! Write data to HDF5 file
+  call sll_o_hdf5_ser_write_attribute( file_id, "/", "ntau1", ntau1, h5_error )
+  call sll_o_hdf5_ser_write_attribute( file_id, "/", "ntau2", ntau2, h5_error )
 
   write(*,'(/a)',advance='no') " >> Initializing Poisson solver"
  
   call sll_s_set_time_mark( t0 )
 
   ! Initialize Poisson solver
-  call poisson_solver % init( bsplines_eta1, bsplines_eta2, breaks_eta1, breaks_eta2, mapping_iga )
+  call poisson_solver % init( &
+    bsplines_eta1   , &
+    bsplines_eta2   , &
+    breaks_eta1     , &
+    breaks_eta2     , &
+    mapping_discrete, &
+    abs_tol )
 
   ! Set boundary conditions
   call poisson_solver % set_boundary_conditions( sll_p_dirichlet )
@@ -238,14 +298,28 @@ program sim_bsl_gc_2d0v_smooth_polar_splines
   t_diff = sll_f_time_elapsed_between( t0, t1 )
   write(*,'(a,es7.1,a)') " ( ", t_diff, " s )"
 
-  !-----------------------------------------------------------------------------
-  ! Compute interpolators
-  !-----------------------------------------------------------------------------
+  ! Initialize electric field
+  call electric_field % init( mapping_discrete, spline_2d_phi )
 
-  allocate( rho    ( ntau1, ntau2+1 ) ) ! repeated point along theta
-  allocate( rho_new( ntau1, ntau2+1 ) ) ! repeated point along theta
+  ! Initialize advector
+  call advector % init( &
+    tau_eta1        , &
+    tau_eta2        , &
+    mapping_analytic, &
+    spline_2d_rho   , &
+    electric_field  , &
+    abs_tol         , &
+    rel_tol         , &
+    maxiter )
 
-  ! Evaluate right hand side on interpolation points
+  ! Repeated point along theta
+  allocate( rho    ( ntau1, ntau2+1 ) )
+  allocate( rho_new( ntau1, ntau2+1 ) )
+  allocate( phi    ( ntau1, ntau2+1 ) )
+  allocate( Ex     ( ntau1, ntau2+1 ) )
+  allocate( Ey     ( ntau1, ntau2+1 ) )
+
+  ! Evaluate initial density on interpolation points
   do i2 = 1, ntau2
     do i1 = 1, ntau1
       eta(1) = tau_eta1(i1)
@@ -257,52 +331,143 @@ program sim_bsl_gc_2d0v_smooth_polar_splines
   ! Apply periodicity along theta
   rho(:,ntau2+1) = rho(:,1)
 
-  ! HDF5 I/O
+  ! Write data to HDF5 file
   write( attr_name, '(a,i0)' ) "/rho_", 0
   call sll_o_hdf5_ser_write_array( file_id, rho, trim(attr_name), h5_error )
 
   ! Compute interpolant spline for initial density
   call spline_interp_2d % compute_interpolant( spline_2d_rho, rho(:,1:ntau2) )
 
-  !-----------------------------------------------------------------------------
-  ! Time cycle
-  !-----------------------------------------------------------------------------
-
   ! Solve Poisson equation
   call poisson_solver % solve( spline_2d_rho, spline_2d_phi )
 
-  ! Time step
-  dt      = 0.1_wp
-  half_dt = 0.5_wp * dt
+  ! Write phi, Ex and Ey on interpolation points
+  do i2 = 1, ntau2
+    do i1 = 1, ntau1
+      eta(1) = tau_eta1(i1)
+      eta(2) = tau_eta2(i2)
+      phi(i1,i2) = spline_2d_phi % eval( eta(1), eta(2) )
+      El = electric_field % eval( eta )
+      Ex(i1,i2) = El(1)
+      Ey(i1,i2) = El(2)
+    end do
+  end do
+
+  ! Apply periodicity along theta
+  phi(:,ntau2+1) = phi(:,1)
+  Ex (:,ntau2+1) = Ex (:,1)
+  Ey (:,ntau2+1) = Ey (:,1)
+
+  ! Write data to HDF5 file
+  write( attr_name, '(a,i0)' ) "/phi_", 0
+  call sll_o_hdf5_ser_write_array( file_id, phi, trim(attr_name), h5_error )
+  write( attr_name, '(a,i0)' ) "/Ex_", 0
+  call sll_o_hdf5_ser_write_array( file_id, Ex, trim(attr_name), h5_error )
+  write( attr_name, '(a,i0)' ) "/Ey_", 0
+  call sll_o_hdf5_ser_write_array( file_id, Ey, trim(attr_name), h5_error )
+
+  ! Write Cartesian grid
+  allocate( x1_grid( nx1 ) )
+  allocate( x2_grid( nx2 ) )
+  allocate( eta0( 2, nx1, nx2 ) )
+  allocate( etai( 2, nx1, nx2 ) )
+  do i2 = 1, nx2
+    do i1 = 1, nx1
+      x1_grid(i1) = 2.0_wp * real( i1-1, wp ) / real( nx1-1, wp ) - 1.0_wp
+      x2_grid(i2) = 2.0_wp * real( i2-1, wp ) / real( nx2-1, wp ) - 1.0_wp
+      x = (/ x1_grid(i1), x2_grid(i2) /)
+      eta0(:,i1,i2) = (/ sqrt( x(1)**2 + x(2)**2 ), modulo( atan2( x(2), x(1) ), sll_p_twopi ) /)
+      etai(:,i1,i2) = mapping_analytic % eval_inverse( x, eta0(:,i1,i2), tol=1.0e-14_wp, maxiter=100 )
+    end do
+  end do
+  write( attr_name, '(a)' ) "/x1_cart"
+  call sll_o_hdf5_ser_write_array( file_id, x1_grid, trim(attr_name), h5_error )
+  write( attr_name, '(a)' ) "/x2_cart"
+  call sll_o_hdf5_ser_write_array( file_id, x2_grid, trim(attr_name), h5_error )
+
+  ! Write electric field on Cartesian grid to compute vorticity
+  allocate( Ex_cart( nx1, nx2 ) )
+  allocate( Ey_cart( nx1, nx2 ) )
+  do i2 = 1, nx2
+    do i1 = 1, nx1
+      El = electric_field % eval( etai(:,i1,i2) )
+      Ex_cart(i1,i2) = El(1)
+      Ey_cart(i1,i2) = El(2)
+    end do
+  end do
+  write( attr_name, '(a,i0)' ) "/Ex_cart_", 0
+  call sll_o_hdf5_ser_write_array( file_id, Ex_cart, trim(attr_name), h5_error )
+  write( attr_name, '(a,i0)' ) "/Ey_cart_", 0
+  call sll_o_hdf5_ser_write_array( file_id, Ey_cart, trim(attr_name), h5_error )
+
+  allocate( quad_points_eta1 ( Nq1, Nk1 ) )
+  allocate( quad_points_eta2 ( Nq2, Nk2 ) )
+  allocate( quad_weights_eta1( Nq1, Nk1 ) )
+  allocate( quad_weights_eta2( Nq2, Nk2 ) )
+
+  ! Quadrature points and weights along s
+  do k1 = 1, Nk1
+    quad_points_eta1 (:,k1) = sll_f_gauss_legendre_points ( Nq1, breaks_eta1(k1), breaks_eta1(k1+1) )
+    quad_weights_eta1(:,k1) = sll_f_gauss_legendre_weights( Nq1, breaks_eta1(k1), breaks_eta1(k1+1) )
+  end do
+
+  ! Quadrature points and weights along theta
+  do k2 = 1, Nk2
+    quad_points_eta2 (:,k2) = sll_f_gauss_legendre_points ( Nq2, breaks_eta2(k2), breaks_eta2(k2+1) )
+    quad_weights_eta2(:,k2) = sll_f_gauss_legendre_weights( Nq2, breaks_eta2(k2), breaks_eta2(k2+1) )
+  end do
+
+  allocate( volume     ( Nq1, Nq2, Nk1, Nk2 ) )
+  allocate( phi_quad_eq( Nq1, Nq2, Nk1, Nk2 ) )
+
+  do k2 = 1, Nk2
+    do k1 = 1, Nk1
+      do q2 = 1, Nq2
+        do q1 = 1, Nq1
+          eta(1) = quad_points_eta1(q1,k1)
+          eta(2) = quad_points_eta2(q2,k2)
+          volume(q1,q2,k1,k2) = abs( mapping_discrete % jdet( eta ) ) * quad_weights_eta1(q1,k1) * quad_weights_eta2(q2,k2)
+          phi_quad_eq(q1,q2,k1,k2) = spline_2d_phi % eval( eta(1), eta(2) )
+        end do
+      end do
+    end do
+  end do
+
+  file_name = "scalar_diagnostics.dat"
+  status    = 'replace'
+  position  = 'asis'
+  open( file=file_name, newunit=file_unit, action='write', status=status, position=position )
+
+  ! Initialize scalar diagnostics
+  call scalar_diagnostics % init( &
+    file_unit       , &
+    spline_2d_rho   , &
+    spline_2d_phi   , &
+    electric_field  , &
+    quad_points_eta1, &
+    quad_points_eta2, &
+    phi_quad_eq     , &
+    volume )
+
+  call scalar_diagnostics % write_data( 0.0_wp )
 
   ! HDF5 I/O
   call sll_o_hdf5_ser_write_attribute( file_id, "/", "time_step", dt, h5_error )
+  call sll_o_hdf5_ser_write_attribute( file_id, "/", "diag_freq", diag_freq, h5_error )
 
   write(*,'(/a/)') " >> Entering time cycle"
 
   ! Average time per iteration
   t_iter = 0.0_wp
 
-  iter = 1000
-  do i = 1, iter
+  do it = 1, iter
 
-    write(*,'(a,i4)',advance='no') "    iteration ", i
+    write(*,'(a,i4)',advance='no') "    iteration ", it
 
     call sll_s_set_time_mark( t0 )
 
     ! Predictor
-    call advect_pseudo_cartesian( &
-      -half_dt          , &
-      tau_eta1          , &
-      tau_eta2          , &
-      mapping_analytical, &
-      spline_2d_phi     , &
-      spline_2d_rho     , &
-      abs_tol           , &
-      rel_tol           , &
-      maxiter           , &
-      success           , &
-      rho_new )
+    call advector % advect( -dt*0.5_wp, success, rho_new )
 
     ! If integration of characteristics did not converge, exit time cycle, close HDF5 file and end simulation
     if ( .not. success ) exit
@@ -315,18 +480,7 @@ program sim_bsl_gc_2d0v_smooth_polar_splines
     call spline_interp_2d % compute_interpolant( spline_2d_rho, rho(:,1:ntau2) )
 
     ! Corrector
-    call advect_pseudo_cartesian( &
-      -dt               , &
-      tau_eta1          , &
-      tau_eta2          , &
-      mapping_analytical, &
-      spline_2d_phi     , &
-      spline_2d_rho     , &
-      abs_tol           , &
-      rel_tol           , &
-      maxiter           , &
-      success           , &
-      rho_new )
+    call advector % advect( -dt, success, rho_new )
 
     ! If integration of characteristics did not converge, exit time cycle, close HDF5 file and end simulation
     if ( .not. success ) exit
@@ -338,9 +492,50 @@ program sim_bsl_gc_2d0v_smooth_polar_splines
 
     rho = rho_new
 
-    ! HDF5 I/O
-    write( attr_name, '(a,i0)' ) "/rho_", i
-    call sll_o_hdf5_ser_write_array( file_id, rho, trim(attr_name), h5_error )
+    call scalar_diagnostics % write_data( it*dt )
+
+    if ( mod( it, diag_freq ) == 0 ) then
+
+      ! Write rho on interpolation points
+      write( attr_name, '(a,i0)' ) "/rho_", it
+      call sll_o_hdf5_ser_write_array( file_id, rho, trim(attr_name), h5_error )
+
+      ! Write phi and E on interpolation points
+      do i2 = 1, ntau2
+        do i1 = 1, ntau1
+          eta(1) = tau_eta1(i1)
+          eta(2) = tau_eta2(i2)
+          phi(i1,i2) = spline_2d_phi % eval( eta(1), eta(2) )
+          El = electric_field % eval( eta )
+          Ex(i1,i2) = El(1)
+          Ey(i1,i2) = El(2)
+        end do
+      end do
+      ! Apply periodicity along theta
+      phi(:,ntau2+1) = phi(:,1)
+      Ex (:,ntau2+1) = Ex (:,1)
+      Ey (:,ntau2+1) = Ey (:,1)
+      write( attr_name, '(a,i0)' ) "/phi_", it
+      call sll_o_hdf5_ser_write_array( file_id, phi, trim(attr_name), h5_error )
+      write( attr_name, '(a,i0)' ) "/Ex_", it
+      call sll_o_hdf5_ser_write_array( file_id, Ex, trim(attr_name), h5_error )
+      write( attr_name, '(a,i0)' ) "/Ey_", it
+      call sll_o_hdf5_ser_write_array( file_id, Ey, trim(attr_name), h5_error )
+
+      ! Write electric field on Cartesian grid to compute vorticity
+      do i2 = 1, nx2
+        do i1 = 1, nx1
+          El = electric_field % eval( etai(:,i1,i2) )
+          Ex_cart(i1,i2) = El(1)
+          Ey_cart(i1,i2) = El(2)
+        end do
+      end do
+      write( attr_name, '(a,i0)' ) "/Ex_cart_", it
+      call sll_o_hdf5_ser_write_array( file_id, Ex_cart, trim(attr_name), h5_error )
+      write( attr_name, '(a,i0)' ) "/Ey_cart_", it
+      call sll_o_hdf5_ser_write_array( file_id, Ey_cart, trim(attr_name), h5_error )
+
+    end if
 
     call sll_s_set_time_mark( t1 )
 
@@ -351,40 +546,50 @@ program sim_bsl_gc_2d0v_smooth_polar_splines
 
   end do
 
-  ! HDF5 I/O
-  call sll_o_hdf5_ser_write_attribute( file_id, "/", "iterations", i, h5_error )
+  call sll_o_hdf5_ser_write_attribute( file_id, "/", "iterations", it, h5_error )
 
   ! Average time per iteration
-  if ( i /= 1 ) t_iter = t_iter / real(i-1,wp)
+  if ( it /= 1 ) t_iter = t_iter / real(it-1,wp)
   write(*,'(/a,es7.1,a)') " >> Average time per iteration: ", t_iter, " s"
 
   ! Close HDF5 file
-  call sll_s_hdf5_ser_file_close ( file_id, h5_error )
+  call sll_s_hdf5_ser_file_close( file_id, h5_error )
+
+  close( file_unit )
 
   !-----------------------------------------------------------------------------
   ! Deallocations and free
   !-----------------------------------------------------------------------------
 
-  deallocate( breaks_eta1 )
-  deallocate( breaks_eta2 )
+  ! Deallocate real 1D allocatables
+  deallocate( breaks_eta1, breaks_eta2, tau_eta1, tau_eta2, x1_grid, x2_grid )
 
+  ! Deallocate real 2D allocatables
+  deallocate( rho, rho_new, phi, Ex, Ey, Ex_cart, Ey_cart, quad_points_eta1, &
+              quad_points_eta2, quad_weights_eta1, quad_weights_eta2 )
+
+  ! Deallocate real 3D allocatables
+  deallocate( eta0, etai )
+
+  ! Deallocate real 4D allocatables
+  deallocate( phi_quad_eq, volume )
+
+  ! Free abstract polymorphic types
   call bsplines_eta1 % free()
   call bsplines_eta2 % free()
 
-  deallocate( mapping_analytical )
-  call mapping_iga % free()
+  ! Deallocate abstract polymorphic types
+  deallocate( bsplines_eta1, bsplines_eta2, mapping_analytic )
 
-  call spline_2d_rho % free()
-  call spline_2d_phi % free()
-
-  call spline_interp_2d % free()
-
-  deallocate( tau_eta1 )
-  deallocate( tau_eta2 )
-  deallocate( rho     )
-  deallocate( rho_new )
-
-  call poisson_solver % free()
+  ! Free concrete types
+  call mapping_discrete   % free()
+  call spline_2d_rho      % free()
+  call spline_2d_phi      % free()
+  call spline_interp_2d   % free()
+  call poisson_solver     % free()
+  call electric_field     % free()
+  call advector           % free()
+  call scalar_diagnostics % free()
 
   write(*,'(/a/)') " >> End of simulation"
 
@@ -392,297 +597,44 @@ program sim_bsl_gc_2d0v_smooth_polar_splines
 contains
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
-  SLL_PURE function logical_to_pseudo_cartesian( eta ) result( x )
-    real(wp), intent(in) :: eta(2)
-    real(wp) :: x(2)
+  subroutine s_parse_command_arguments( input_file )
+    character(len=:), allocatable, intent(  out) :: input_file
 
-    x(1) = eta(1) * cos( eta(2) )
-    x(2) = eta(1) * sin( eta(2) )
+    character(len=*), parameter :: this_sub_name = "s_parse_command_arguments"
 
-  end function logical_to_pseudo_cartesian
+    integer :: argc
+    character(len=256) :: string
+    character(len=256) :: err_msg
 
-  !-----------------------------------------------------------------------------
-  SLL_PURE function pseudo_cartesian_to_logical( x ) result( eta )
-    real(wp), intent(in) :: x(2)
-    real(wp) :: eta(2)
+    ! Count command line arguments
+    argc = command_argument_count()
 
-    eta(1) = norm2( x )
-    eta(2) = modulo( atan2( x(2), x(1) ), sll_p_twopi ) ! atan2 returns theta in [-pi,pi)
+    ! Stop if there are no arguments
+    if (argc == 0) then
+      err_msg = "Input file not found"
+      SLL_ERROR( this_sub_name, err_msg )
+      return
+    end if
 
-    ! For characteristics going out of the domain
-    if ( eta(1) > 1.0_wp ) eta(1) = 1.0_wp
+    ! Read file name
+    call get_command_argument( 1, string )
+    string  = adjustl( string )
+    input_file = trim( string )
 
-  end function pseudo_cartesian_to_logical
+  end subroutine s_parse_command_arguments
 
   !-----------------------------------------------------------------------------
   SLL_PURE function rho_initial( eta )
     real(wp), intent(in) :: eta(2)
     real(wp) :: rho_initial
 
-    integer  :: l
-    real(wp) :: smin, smax, eps
+    associate( smid => 0.5_wp * ( smin + smax ), dist => 0.5_wp * ( smax - smin ) )
 
-    ! TODO: move this as input (read from input file in simulation)
-    l    = 6
-    smin = 0.45_wp
-    smax = 0.55_wp
-    eps  = 1.0e-01_wp
+      ! smoothing on initial condition suggested in doi:10.1140/epjd/e2014-50180-9 (eq. 10)
+      rho_initial = ( 1.0_wp + ampl * cos( l*eta(2) )) * exp( - ( (eta(1)-smid)/dist )**p )
 
-    ! see doi:10.1140/epjd/e2014-50180-9, equation (10)
-    if ( smin <= eta(1) .and. eta(1) <= smax ) then
-      rho_initial = ( 1.0_wp + eps*cos( l*eta(2) ) ) * exp( -( eta(1) - 0.5_wp )**2 / 0.002_wp )
-!      rho_initial = 1.0_wp + eps * cos( l*eta(2) )
-    else
-      rho_initial = 0.0_wp
-    end if
+    end associate
 
   end function rho_initial
-
-  !-----------------------------------------------------------------------------
-  function electric_field( eta, mapping, spline_2d_phi )
-    real(wp)                             , intent(in) :: eta(2)
-    class(sll_c_polar_mapping_analytical), intent(in) :: mapping
-    type(sll_t_spline_2d)                , intent(in) :: spline_2d_phi
-    real(wp) :: electric_field(2)
-
-    ! NOTE: this parameter can not be arbitrarily small
-    real(wp), parameter :: eps = 1.0e-02_wp
-
-    real(wp) :: jdet, jmat(2,2)
-    real(wp) :: d1, d2, d3, d4, d5, d6
-    real(wp) :: th1, th2
-    real(wp) :: ef_0(2), ef_eps(2)
-
-    if ( eta(1) == 0.0_wp ) then
-
-      th1 = 0.1_wp * sll_p_pi
-      th2 = 0.3_wp * sll_p_pi
-
-      d1 = spline_2d_phi % eval_deriv_x1( eta(1), th1 ) ! dphi/ds(0,theta_1)
-      d2 = spline_2d_phi % eval_deriv_x1( eta(1), th2 ) ! dphi/ds(0,theta_2)
-
-!      write(*,*)
-!      write(*,'(a)',advance='no') "    d1  = " ; write(*,*) d1
-!      write(*,'(a)',advance='no') "    d2  = " ; write(*,*) d2
-
-      jmat = mapping % jmat( (/ 0.0_wp, th1 /) )
- 
-      d3 = jmat(1,1) ! dx/ds(0,theta_1)
-      d4 = jmat(2,1) ! dy/ds(0,theta_1)
-
-!      write(*,'(a)',advance='no') "    d3  = " ; write(*,*) d3
-!      write(*,'(a)',advance='no') "    d4  = " ; write(*,*) d4
-
-      jmat = mapping % jmat( (/ 0.0_wp, th2 /) )
- 
-      d5 = jmat(1,1) ! dx/ds(0,theta_2)
-      d6 = jmat(2,1) ! dy/ds(0,theta_2)
-
-!      write(*,'(a)',advance='no') "    d5  = " ; write(*,*) d5
-!      write(*,'(a)',advance='no') "    d6  = " ; write(*,*) d6
-
-      electric_field(1) = - ( d4*d2 - d1*d6 ) / ( d4*d5 - d3*d6 )
-      electric_field(2) = - ( d1*d5 - d3*d2 ) / ( d4*d5 - d3*d6 )
-
-    else if ( 0.0_wp < eta(1) .and. eta(1) < eps ) then
-
-      th1 = 0.1_wp * sll_p_pi
-      th2 = 0.3_wp * sll_p_pi
-
-      d1 = spline_2d_phi % eval_deriv_x1( eta(1), th1 ) ! dphi/ds(0,theta_1)
-      d2 = spline_2d_phi % eval_deriv_x1( eta(1), th2 ) ! dphi/ds(0,theta_2)
-
-      jmat = mapping % jmat( (/ 0.0_wp, th1 /) )
- 
-      d3 = jmat(1,1) ! dx/ds(0,theta_1)
-      d4 = jmat(2,1) ! dy/ds(0,theta_1)
-
-      jmat = mapping % jmat( (/ 0.0_wp, th2 /) )
- 
-      d5 = jmat(1,1) ! dx/ds(0,theta_2)
-      d6 = jmat(2,1) ! dy/ds(0,theta_2)
-
-      ! E(0,theta)
-      ef_0(1) = - ( d4*d2 - d1*d6 ) / ( d4*d5 - d3*d6 )
-      ef_0(2) = - ( d1*d5 - d3*d2 ) / ( d4*d5 - d3*d6 )
-
-      jmat = mapping % jmat( eta )
-      jdet = mapping % jdet( eta )
-
-      ! E(eps,theta): J^(-T) times 'logical' gradient
-      ef_eps(1) = - (   jmat(2,2) * spline_2d_phi % eval_deriv_x1( eta(1), eta(2) ) &
-                      - jmat(2,1) * spline_2d_phi % eval_deriv_x2( eta(1), eta(2) ) ) / jdet
-      ef_eps(2) = - ( - jmat(1,2) * spline_2d_phi % eval_deriv_x1( eta(1), eta(2) ) &
-                      + jmat(1,1) * spline_2d_phi % eval_deriv_x2( eta(1), eta(2) ) ) / jdet
-
-      ! Linear interpolation between 0 and eps
-      electric_field(1) = (1.0_wp-eta(1)/eps)*ef_0(1) + eta(1)/eps*ef_eps(1)
-      electric_field(2) = (1.0_wp-eta(1)/eps)*ef_0(2) + eta(1)/eps*ef_eps(2)
-
-    else if ( eps <= eta(1) ) then
-
-      jmat = mapping % jmat( eta )
-      jdet = mapping % jdet( eta )
-
-      ! J^(-T) times 'logical' gradient
-      electric_field(1) = - (   jmat(2,2) * spline_2d_phi % eval_deriv_x1( eta(1), eta(2) ) &
-                              - jmat(2,1) * spline_2d_phi % eval_deriv_x2( eta(1), eta(2) ) ) / jdet
-      electric_field(2) = - ( - jmat(1,2) * spline_2d_phi % eval_deriv_x1( eta(1), eta(2) ) &
-                              + jmat(1,1) * spline_2d_phi % eval_deriv_x2( eta(1), eta(2) ) ) / jdet
-
-    end if
-
-  end function electric_field
-
-  !-----------------------------------------------------------------------------
-  subroutine advect_pseudo_cartesian( &
-    h            , &
-    tau_eta1     , &
-    tau_eta2     , &
-    mapping      , &
-    spline_2d_phi, &
-    spline_2d_rho, &
-    abs_tol      , &
-    rel_tol      , &
-    maxiter      , &
-    success      , &
-    rho_new )
-    real(wp)                             , intent(in   ) :: h
-    real(wp)                             , intent(in   ) :: tau_eta1(:)
-    real(wp)                             , intent(in   ) :: tau_eta2(:)
-    class(sll_c_polar_mapping_analytical), intent(in   ) :: mapping
-    type(sll_t_spline_2d)                , intent(in   ) :: spline_2d_phi
-    type(sll_t_spline_2d)                , intent(in   ) :: spline_2d_rho
-    real(wp)                             , intent(in   ) :: abs_tol
-    real(wp)                             , intent(in   ) :: rel_tol
-    integer                              , intent(in   ) :: maxiter
-    logical                              , intent(  out) :: success
-    real(wp)                             , intent(inout) :: rho_new(:,:)
-
-    integer  :: i1, i2, j, ntau1, ntau2
-    real(wp) :: tol_sqr
-    real(wp) :: x0(2), x(2), dx(2), temp(2), k2(2), a0(2), E(2), eta(2)
-    real(wp) :: jmat_comp(2,2)
-
-    character(len=*), parameter :: this_sub_name = "advect_pseudo_cartesian"
-    character(len=256) :: err_msg
-
-    ntau1 = size( tau_eta1 )
-    ntau2 = size( tau_eta2 )
-
-    success = .true.
-
-!    write(*,*)
-
-    do i2 = 1, ntau2
-      do i1 = 1, ntau1
-
-!        write(*,*)
-!        write(*,'(a,i3,a,i3)') "    i1 = ", i1, "    i2 = ", i2
-
-        eta(1) = tau_eta1(i1)
-        eta(2) = tau_eta2(i2)
-
-        !-----------------------------------------------------------------------
-        ! Trapezoidal rule for integrating characteristics
-        !-----------------------------------------------------------------------
-
-        x0 = logical_to_pseudo_cartesian( eta )
-
-!        write(*,*)
-!        write(*,'(a)',advance='no') "    x0  = " ; write(*,*) x0
-!        write(*,'(a)',advance='no') "    eta = " ; write(*,*) eta
-
-        tol_sqr = ( abs_tol + rel_tol * norm2( x0 ) )**2
-
-!        write(*,*)
-!        write(*,'(a)',advance='no') "    tol = " ; write(*,*) tol_sqr
-
-        ! Cartesian components of electric field
-        E = electric_field( eta, mapping, spline_2d_phi )
-
-!        write(*,*)
-!        write(*,'(a)',advance='no') "    E   = " ; write(*,*) E
-
-        jmat_comp = mapping % jmat_comp( eta )
-
-        ! Pseudo-Cartesian components of advection field
-        a0(1) = jmat_comp(1,1) * (-E(2)) + jmat_comp(1,2) * E(1)
-        a0(2) = jmat_comp(2,1) * (-E(2)) + jmat_comp(2,2) * E(1)
-
-!        write(*,*)
-!        write(*,'(a)',advance='no') "    a0  = " ; write(*,*) a0
-
-        ! First iteration
-        dx  = h * a0
-        x   = x0 + dx
-        eta = pseudo_cartesian_to_logical( x )
-
-!        write(*,*)
-!        write(*,'(a)',advance='no') "    x   = " ; write(*,*) x
-!        write(*,'(a)',advance='no') "    eta = " ; write(*,*) eta
-
-        ! Successive iterations if first iteration did not converge
-        if ( dot_product( dx, dx ) > tol_sqr ) then
-
-          success = .false.
-
-          associate( k1 => a0, h_half => 0.5_wp*h, dx_old => temp, error => temp )
-
-            do j = 2, maxiter
-
-              jmat_comp = mapping % jmat_comp( eta )
-
-              ! Cartesian components of advection field
-              E = electric_field( eta, mapping, spline_2d_phi )
-
-!              write(*,*)
-!              write(*,'(a)',advance='no') "    E   = " ; write(*,*) E
-
-              ! k2 = f(t,x_{i-1})
-              k2(1) = jmat_comp(1,1) * (-E(2)) + jmat_comp(1,2) * E(1)
-              k2(2) = jmat_comp(2,1) * (-E(2)) + jmat_comp(2,2) * E(1)
-
-              dx_old = dx
-              dx     = h_half*(k1+k2)
-              error  = dx_old - dx
-              x      = x0 + dx
-              eta    = pseudo_cartesian_to_logical( x )
-
-!              write(*,*)
-!              write(*,'(a)',advance='no') "    x   = " ; write(*,*) x
-!              write(*,'(a)',advance='no') "    eta = " ; write(*,*) eta
-
-              if ( dot_product( error, error ) <= tol_sqr ) then
-                success = .true. ; exit
-              end if
-
-            end do
-
-          end associate
-
-        end if
-
-        ! Check if integrator converged
-        if ( success ) then
-
-          rho_new(i1,i2) = spline_2d_rho % eval( eta(1), eta(2) )
-
-        else
-
-          write( err_msg, '(a,i0,a)' ) "integration of characteristics did not converge after ", maxiter, " iterations"
-          SLL_WARNING( this_sub_name, err_msg )
-
-          return
-
-        end if
-
-      end do
-    end do
-
-    ! Apply periodicity along theta
-    rho_new(:,ntau2+1) = rho_new(:,1)
-
-  end subroutine advect_pseudo_cartesian
 
 end program sim_bsl_gc_2d0v_smooth_polar_splines
