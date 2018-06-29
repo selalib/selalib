@@ -1,0 +1,35 @@
+&splines
+  n1 = 128
+  n2 = 256
+  p1 = 3
+  p2 = 3
+/
+
+&geometry
+  maptype = 0
+/
+
+&time_integration
+  dt = 0.05
+  iter = 1200
+/
+
+&characteristics
+  abs_tol = 1.0e-12
+  rel_tol = 1.0e-12
+  maxiter = 100
+/
+
+&initial_condition
+  l = 9
+  p = 50
+  smin = 0.45
+  smax = 0.50
+  ampl = 1.0e-04
+/
+
+&diagnostics
+  diag_freq = 20
+  nx1       = 512
+  nx2       = 512
+/
