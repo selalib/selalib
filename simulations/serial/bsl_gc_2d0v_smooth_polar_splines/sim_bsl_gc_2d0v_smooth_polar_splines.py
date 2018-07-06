@@ -1,10 +1,14 @@
+import sys
 import h5py
 import numpy as np
 import matplotlib.pyplot as plt
 from mpl_toolkits.axes_grid1.axes_divider import make_axes_locatable
 
+# Read folder name from standard input
+fold_name = sys.argv[1]
+
 # Open HDF5 file
-file_name = 'sim_bsl_gc_2d0v_smooth_polar_splines.h5'
+file_name = fold_name+'sim_bsl_gc_2d0v_smooth_polar_splines.h5'
 h5 = h5py.File( file_name, mode='r' )
 
 # Load x1 and x2 mesh
@@ -12,8 +16,7 @@ x1 = h5['x1'].value
 x2 = h5['x2'].value
 
 # Load Jacobian
-Jm = h5['jacobian_mat'].value
-Jd = h5['jacobian_det'].value
+Jd = h5['jacobian'].value
 
 # Load control points along x1 and x2
 c_x1 = h5['c_x1'].value
@@ -143,10 +146,9 @@ def plot_time_evolution( arg ):
         fg.canvas.draw()
         plt.pause(1.0e-03)
 
-## to save figure
-#i  = 1000
+## save figures
+#i  = 0
 #fg = plt.figure()
-##fg = plt.figure(figsize=[9.0,9.0])
 #ax = fg.add_subplot(111)
 #cax = make_axes_locatable(ax).append_axes( 'right', size='8%', pad='5%' )
 #
@@ -163,7 +165,7 @@ def plot_time_evolution( arg ):
 #fs = 10
 #ax.set_xlabel( r'$x$', fontsize=fs )
 #ax.set_ylabel( r'$y$', fontsize=fs, rotation=0 )
-#ax.set_title( r'Density $\rho$ at $t = %g$' %(i*dt), fontsize=fs )
+#ax.set_title( r'Density $\rho$ at $t = %g$' %(i*dt) )
 #ax.set_aspect( 'equal' )
 #fg.tight_layout()
 #fg.show()
@@ -181,7 +183,7 @@ coeff = 3.5e-08
 
 # Load data from file
 # y1 = mass, y2 = energy, y3 = L2-norm of phi
-file_name = 'scalar_diagnostics.dat'
+file_name = fold_name+'scalar_diagnostics.dat'
 xt = np.loadtxt( file_name, usecols=[0] )
 y1 = np.loadtxt( file_name, usecols=[1] )
 y2 = np.loadtxt( file_name, usecols=[2] )
@@ -208,9 +210,9 @@ def plot_scalar_data( arg ):
       ax.plot( xt, y2, '-r' , lw=1.5, label='Energy conservation' )
       ax.set_ylabel( r'$\int dx\,dy\,|\nabla\phi|^2$', fontsize=fs )
     if ( arg == 'l2_norm' ):
-      ax.plot( xt, y3, '-r' , lw=1.5, label=r'Numerical instability (mode $l=%d$)' %(l) )
+      ax.plot( xt, y3, '-r' , lw=1.5, label=r'Numerical instability (mode $m=%d$)' %(l) )
       ax.plot( xt, ya, '--k', lw=1.5, label=r'Analytical growth rate: $\gamma\approx %g$' %(omega) )
-      ax.set_ylabel( r'$||\phi_1||_{L^2}$', fontsize=fs )
+      ax.set_ylabel( r'$||\phi-\phi_0||_{L^2}$', fontsize=fs )
       ax.set_yscale( 'log' )
       ymin = ax.get_ylim()[0]
       ymax = 2.*max(y3)
@@ -221,7 +223,7 @@ def plot_scalar_data( arg ):
     ax.grid()
     fg.tight_layout()
     fg.show()
-#    fg.savefig( './l2_norm_phi.pdf', dpi=300 )
+    #fg.savefig( './l2_norm_phi.pdf', dpi=300 )
 
 #-------------------------------------------------------------------------------
 # Vorticity
