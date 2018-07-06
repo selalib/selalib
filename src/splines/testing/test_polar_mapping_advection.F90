@@ -85,11 +85,11 @@ program test_polar_mapping_advection
   type(sll_t_polar_advector_rotating) :: advector
 
   ! Auxiliary variables
-  integer  :: i1, i2, i, iterations
+  integer  :: i1, i2, i, iterations, maxiter
   real(wp) :: eta(2), eta_new(2)
-  real(wp) :: x(2), x0(2), a(2)!, x_new(2)
-  real(wp) :: dt, error, max_err, tol
-  integer  :: maxiter
+  real(wp) :: x(2), xi(2), a(2)
+  real(wp) :: dt, dV, abs_tol, rel_tol
+  real(wp) :: err, err_L2_norm_space, err_Linf_norm_space, err_Linf_norm_time_L2, err_Linf_norm_time_Li
 
   ! For hdf5 I/O
   type(sll_t_hdf5_ser_handle) :: file_id
@@ -100,9 +100,9 @@ program test_polar_mapping_advection
   ! Initialize B-splines basis functions
   !=============================================================================
 
-  mm = 128
-  n1 = 1 * mm
-  n2 = 2 * mm
+  mm = 64 * 16
+  n1 = mm
+  n2 = mm * 2
 
   deg1 = 3
   deg2 = 3
@@ -167,8 +167,8 @@ program test_polar_mapping_advection
 
   npts1 = size( e1_node )
   npts2 = size( e2_node )
-  allocate( f    ( npts1, npts2+1 ) ) ! repeated point along eta2
-  allocate( f_ex ( npts1, npts2+1 ) ) ! repeated point along eta2
+  allocate( f   ( npts1, npts2+1 ) ) ! repeated point along eta2
+  allocate( f_ex( npts1, npts2+1 ) ) ! repeated point along eta2
 
   ! Create HDF5 file for output
   call sll_s_hdf5_ser_file_create( 'mapping_test_advection.h5', file_id, h5_error )
@@ -183,7 +183,8 @@ program test_polar_mapping_advection
   ! Initialize analytica mapping
   select type ( mapping_analytical )
     type is ( sll_t_polar_mapping_analytical_target )
-      call mapping_analytical % init( x0=[0.0_wp,0.0_wp], d0=0.2_wp, e0=0.3_wp )
+      call mapping_analytical % init() ! circular mapping
+!      call mapping_analytical % init( x0=[0.0_wp,0.0_wp], d0=0.2_wp, e0=0.3_wp )
     type is ( sll_t_polar_mapping_analytical_czarny )
       call mapping_analytical % init( x0=[0.0_wp,0.0_wp], b =1.4_wp, e =0.3_wp )
   end select
@@ -217,21 +218,14 @@ program test_polar_mapping_advection
   !=============================================================================
 
   ! Initialize advector
-  call advector % init( xc=[-0.3_wp,0.0_wp], omega=sll_p_twopi )
+  call advector % init( xc=[0.25_wp,0.0_wp], omega=sll_p_twopi )
+!  call advector % init( xc=[-0.15_wp,0.0_wp], omega=sll_p_twopi )
 
   ! Parameters for time cycle
-  iterations = 100 * 2
-  dt = 1.0e-02_wp  / 1.0_wp
+  iterations = 10 * 16
+  dt = 1.0e-01_wp / 16.0_wp
 
   call sll_o_hdf5_ser_write_attribute( file_id, "/", "iterations", iterations, h5_error )
-
-  ! Initial values for maximum errors
-  max_err = 0.0_wp
-
-  write(*,*)
-  write(*,'(a)') " *********************************************************************************"
-  write(*,'(a)') " Test 2D advection on singular mapping: compare numerical and analytical solutions"
-  write(*,'(a)') " *********************************************************************************"
 
   ! Compute interpolating splines for advection fields
   allocate( a1( npts1, npts2 ) )
@@ -247,15 +241,28 @@ program test_polar_mapping_advection
   call spline_interpolator_2d % compute_interpolant( spline_2d_a1, a1(:,:) )
   call spline_interpolator_2d % compute_interpolant( spline_2d_a2, a2(:,:) )
 
-  ! Set tolerance and maximum iterations for mapping inversion
-  tol = 1.0e-14_wp
+!  ! Set tolerance and maximum iterations for mapping inversion
+!  tol = 1.0e-14_wp
+!  maxiter = 100
+
+  abs_tol = 1.0e-14_wp
+  rel_tol = 1.0e-12_wp
   maxiter = 100
+
+  ! Integral volume in logical space: ds * dtheta
+  dV = ( 1.0 / n1 ) * ( sll_p_twopi / n2 )
+
+  err_Linf_norm_time_L2 = 0.0_wp
+  err_Linf_norm_time_Li = 0.0_wp
 
   ! Time cycle
   do i = 1, iterations
 
     ! Compute interpolating spline for f
     call spline_interpolator_2d % compute_interpolant( spline_2d_f, f(:,1:npts2) )
+
+    err_L2_norm_space   = 0.0_wp
+    err_Linf_norm_space = 0.0_wp
 
     ! 2D advection
     do i2 = 1, npts2
@@ -278,7 +285,7 @@ program test_polar_mapping_advection
 !        eta_new = advector % advect_x1x2( eta, -dt, mapping_iga, spline_2d_a1, spline_2d_a2, tol, maxiter )
 
         ! Advect point using explicit Runge-Kutta 4th order (intermediate coordinates)
-        eta_new = advector % advect_y1y2( eta, -dt, mapping_analytical, spline_2d_a1, spline_2d_a2, tol, maxiter )
+        eta_new = advector % advect_y1y2( eta, -dt, mapping_analytical, spline_2d_a1, spline_2d_a2, rel_tol, abs_tol, maxiter )
 
 !        write(*,'(a,es21.14,a,es21.14,a)') " (x1,x2) = (", x_new(1), ",", x_new(2), ") at t+dt"
 !        write(*,'(a,es21.14,a,es21.14,a)') " (e1,e2) = (", eta_new(1), ",", eta_new(2), ") at t+dt"
@@ -287,15 +294,27 @@ program test_polar_mapping_advection
         f(i1,i2) = spline_2d_f % eval( eta_new(1), eta_new(2) )
 
         ! Exact solution using method of characteristics
-        x0 = advector % flow_field( x, -dt*real(i,wp) )
-        f_ex(i1,i2) = f_initial( x0 )
+        xi = advector % flow_field( x, -dt*real(i,wp) )
+        f_ex(i1,i2) = f_initial( xi )
 
-        error = f(i1,i2) - f_ex(i1,i2)
+        err = f(i1,i2) - f_ex(i1,i2)
 
-        max_err = merge( abs( error ), max_err, abs( error ) > max_err ) 
+        err_L2_norm_space = err_L2_norm_space + err**2 * abs( mapping_iga % jdet( eta ) ) * dV
+
+        err = abs( f(i1,i2) - f_ex(i1,i2) )
+
+        err_Linf_norm_space = merge( err, err_Linf_norm_space, err > err_Linf_norm_space )
 
       end do
     end do
+
+    err_L2_norm_space = sqrt( err_L2_norm_space )
+
+    ! Compute L-inf norm of error in time of L2 norm of error in space
+    err_Linf_norm_time_L2 = merge( err_L2_norm_space, err_Linf_norm_time_L2, err_L2_norm_space > err_Linf_norm_time_L2 )
+
+    ! Compute L-inf norm of error in time of L-inf norm of error in space
+    err_Linf_norm_time_Li = merge( err_Linf_norm_space, err_Linf_norm_time_Li, err_Linf_norm_space > err_Linf_norm_time_Li )
 
     ! Apply periodicity along eta2
     f   (:,npts2+1) = f   (:,1)
@@ -311,9 +330,12 @@ program test_polar_mapping_advection
 
   end do
 
-  ! Check results
   write(*,*)
-  write(*,'(a,es8.2)') " Maximum error = ", max_err
+  write(*,'(a,es8.2)') " Maximum in time of spatial L2 norm of error = ", err_Linf_norm_time_L2
+  write(*,*)
+
+  write(*,*)
+  write(*,'(a,es8.2)') " Maximum in time of spatial L-inf norm of error = ", err_Linf_norm_time_Li
   write(*,*)
 
   ! Close HDF5 file
@@ -352,34 +374,35 @@ contains
     real(wp), intent(in) :: x(2)
     real(wp) :: f0
 
-    ! Cosine bell
-
-    real(wp), parameter :: x0(2) = [0.0_wp,0.0_wp]
-    integer , parameter :: p = 4
-    real(wp) :: xmod
-
-    xmod = norm2( x-x0 )
-
-    if ( xmod < 0.25_wp ) then
-      f0 = cos( sll_p_twopi * (x(1)-x0(1)) )**p * cos( sll_p_twopi * (x(2)-x0(2)) )**p
-    else
-      f0 = 0.0_wp
-    end if
-
-!    ! Superposition of cosine bells with elliptical cross-sections
+!    ! Cosine bell
 !
 !    real(wp), parameter :: x0(2) = [0.0_wp,0.0_wp]
 !    integer , parameter :: p = 4
-!    real(wp), parameter :: a = 0.3_wp
-!    real(wp) :: r1, r2
+!    real(wp) :: xmod
 !
-!    r1 = sqrt( ( x(1) - x0(1) )**2 + 8.0_wp * ( x(2) - x0(2) )**2 )
-!    r2 = sqrt( 8.0_wp * ( x(1) - x0(1) )**2 + ( x(2) - x0(2) )**2 )
+!    xmod = norm2( x-x0 )
 !
-!    f0 = 0.0_wp
-!
-!    if ( r1 < a ) f0 = 0.5_wp * cos( 0.5_wp * sll_p_pi * r1 / a )**p
-!    if ( r2 < a ) f0 = f0 + 0.5_wp * cos( 0.5_wp * sll_p_pi * r2 / a )**p
+!    if ( xmod < 0.25_wp ) then
+!      f0 = cos( sll_p_twopi * (x(1)-x0(1)) )**p * cos( sll_p_twopi * (x(2)-x0(2)) )**p
+!    else
+!      f0 = 0.0_wp
+!    end if
+
+    ! Superposition of cosine bells with elliptical cross-sections
+
+    real(wp), parameter :: x0(2) = [-0.15_wp,0.0_wp]
+!    real(wp), parameter :: x0(2) = [0.25_wp,0.0_wp]
+    integer , parameter :: p = 4
+    real(wp), parameter :: a = 0.3_wp
+    real(wp) :: r1, r2
+
+    r1 = sqrt( ( x(1) - x0(1) )**2 + 8.0_wp * ( x(2) - x0(2) )**2 )
+    r2 = sqrt( 8.0_wp * ( x(1) - x0(1) )**2 + ( x(2) - x0(2) )**2 )
+
+    f0 = 0.0_wp
+
+    if ( r1 < a ) f0 = 0.5_wp * cos( 0.5_wp * sll_p_pi * r1 / a )**p
+    if ( r2 < a ) f0 = f0 + 0.5_wp * cos( 0.5_wp * sll_p_pi * r2 / a )**p
 
   end function f_initial
 
