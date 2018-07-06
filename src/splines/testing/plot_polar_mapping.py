@@ -2,6 +2,7 @@ import h5py
 import numpy as np
 import matplotlib.pyplot as plt
 from mpl_toolkits.axes_grid1.axes_divider import make_axes_locatable
+from matplotlib import cm, rc
 
 # Lists of keys
 k1_list = ['circle','target','czarny']
@@ -14,6 +15,10 @@ for k1 in k1_list:
         file_name = 'mapping_' + k2 + '_' + k1 + '.h5'
         h5[(k1,k2)] = h5py.File( file_name, mode='r' )
 
+#h5c = dict()
+#h5c['discrete'] = h5py.File( 'mapping_discrete_connor.h5', mode='r' )
+#h5c['intermed'] = h5py.File( 'mapping_intermed_connor.h5', mode='r' )
+
 # Load x1 mesh from HDF5 files
 x1 = dict()
 for k1 in k1_list:
@@ -21,12 +26,20 @@ for k1 in k1_list:
     for k2 in k2_list[:-1]:
         x1[(k1,k2)] = h5[(k1,k2)]['x1'].value
 
+#x1c = dict()
+#x1c['discrete'] = h5c['discrete']['x1'].value
+#x1c['intermed'] = h5c['intermed']['x1'].value
+
 # Load x2 mesh from HDF5 files
 x2 = dict()
 for k1 in k1_list:
     # cycle over all keys except 'interpol'
     for k2 in k2_list[:-1]:
         x2[(k1,k2)] = h5[(k1,k2)]['x2'].value
+
+#x2c = dict()
+#x2c['discrete'] = h5c['discrete']['x2'].value
+#x2c['intermed'] = h5c['intermed']['x2'].value
 
 # Load Jacobian from HDF5 files
 JJ = dict()
@@ -40,10 +53,16 @@ c_x1 = dict()
 for k1 in k1_list:
     c_x1[k1] = h5[(k1,'discrete')]['c_x1'].value
 
+#c_x1c = dict()
+#c_x1c = h5c['discrete']['c_x1'].value
+
 # Load control points along x2 from HDF5 files
 c_x2 = dict()
 for k1 in k1_list:
     c_x2[k1] = h5[(k1,'discrete')]['c_x2'].value
+
+#c_x2c = dict()
+#c_x2c = h5c['discrete']['c_x2'].value
 
 # Load interpolation error from HDF5 files
 interp_funct = dict()
@@ -56,6 +75,9 @@ for k1 in k1_list:
 for k1 in k1_list:
     for k2 in k2_list:
         h5[(k1,k2)].close()
+
+#h5c['discrete'].close()
+#h5c['intermed'].close()
 
 #-------------------------------------------------------------------------------
 # OUTPUT
@@ -75,6 +97,10 @@ for k1 in k1_list:
 #-------------------------------------------------------------------------------
 # PLOTS
 #-------------------------------------------------------------------------------
+
+# text style
+#plt.rc( 'text', usetex=True )
+#plt.rc( 'font', family='serif' )
 
 ## Mesh from analytical, discrete and intermediate mappings plus control points
 #fg = plt.figure()
@@ -101,7 +127,31 @@ for k1 in k1_list:
 #    ax.set_title( '%s mapping: mesh and control points' %k1 )
 #    i_plot = i_plot + 1
 #fg.show()
-#
+
+## Temporary plot (Connor)
+#fs = 10
+#fg = plt.figure()
+#ax = fg.add_subplot(1,1,1)
+## intermediate mapping
+#k2 = 'intermed'
+#ax.plot( x1c[k2], x2c[k2], color='lightgrey', lw=0.5)
+#ax.plot( x1c[k2].transpose(), x2c[k2].transpose(), color='lightgrey', lw=0.5 )
+## discrete mapping
+#k2 = 'discrete'
+##nr = 16
+##ax.plot( x1c[k2][:,::nr], x2c[k2][:,::nr], color='b', lw=0.5 )
+##ax.plot( x1c[k2][:,127], x2c[k2][:,127], color='b', lw=0.5 )
+##ax.plot( x1c[k2].transpose()[:,::nr], x2c[k2].transpose()[:,::nr], color='b', lw=0.5 )
+#ax.plot( x1c[k2], x2c[k2], color='b', lw=0.5 )
+#ax.plot( x1c[k2].transpose(), x2c[k2].transpose(), color='b', lw=0.5 )
+## plot style
+#ax.set_xlabel( r'$x$', fontsize=fs )
+#ax.set_ylabel( r'$y$', fontsize=fs, rotation=0 )
+#ax.set_aspect( 'equal' )
+#fg.tight_layout()
+#fg.show()
+#fg.savefig( '/home/ezoni/Desktop/mapping.pdf', dpi=300 )
+
 ## Contour plot of interpolation function and error
 #for k1 in k1_list:
 #    fg = plt.figure()
@@ -123,8 +173,36 @@ for k1 in k1_list:
 #    fg.colorbar( im, cax=cax )
 #    fg.show()
 
+## save figures
+#fs = 10
+##for k1 in k1_list:
+#for k1 in ['czarny']:
+#    fg = plt.figure()
+#    ax = fg.add_subplot(1,1,1)
+#    # intermediate mapping
+#    k2 = 'intermed'
+#    ax.plot( x1[(k1,k2)], x2[(k1,k2)], color='k', lw=0.3)
+#    ax.plot( x1[(k1,k2)].transpose(), x2[(k1,k2)].transpose(), color='k', lw=0.3 )
+#    # discrete mapping
+#    k2 = 'discrete'
+#    nr = 16
+#    ax.plot( x1[(k1,k2)][:,::nr], x2[(k1,k2)][:,::nr], color='b', lw=0.5 )
+#    ax.plot( x1[(k1,k2)][:,127], x2[(k1,k2)][:,127], color='b', lw=0.5 )
+#    ax.plot( x1[(k1,k2)].transpose()[:,::nr], x2[(k1,k2)].transpose()[:,::nr], color='b', lw=0.5 )
+#    # plot style
+#    ax.set_xlim( -1., 1.3 )
+#    ax.annotate( r'$X$', xy=(0.1,-1.55) )
+#    ax.annotate( r'$Y$', xy=(1.1,0.05) )
+#    ax.set_xlabel( r'$x$', fontsize=fs )
+#    ax.set_ylabel( r'$y$', fontsize=fs, rotation=0 )
+##    ax.set_title( 'Physical domain', fontsize=fs )
+#    ax.set_aspect( 'equal' )
+#    fg.tight_layout()
+#    fg.show()
+#    fg.savefig( './'+k1+'_pseudo.pdf', dpi=300 )
+
 #-------------------------------------------------------------------------------
-# Advection tests
+# ADVECTION TESTS
 #-------------------------------------------------------------------------------
 
 h5 = h5py.File( 'mapping_test_advection.h5', mode='r' )
@@ -191,33 +269,74 @@ for i in range(Ni):
 def plot_time_evolution( arg ):
 
     fg = plt.figure(figsize=[9.0,9.0])
-    ax = fg.add_subplot(1,1,1)
+    ax = fg.add_subplot(111)
     cax = make_axes_locatable(ax).append_axes( 'right', size='8%', pad='5%' )
 
     for i in range(Ni):
         ax.clear()
         cax.clear()
         if ( arg == 'f' ):
-           clevels = np.linspace( min_f, max_f, 50 )
-           im = ax.contourf( x1, x2, f[str(i)], clevels )
+           clevels = np.linspace( min_f, max_f, 100 )
+           # contour plot
+           im = ax.contourf( x1, x2, f[str(i)], clevels, cmap='jet' )
            ax.set_title( 'Distribution function at t = %i' %i )
         elif ( arg == 'f_ex' ):
-           clevels = np.linspace( min_f_ex, max_f_ex, 50 )
-           im = ax.contourf( x1, x2, f_ex[str(i)], clevels )
+           clevels = np.linspace( min_f_ex, max_f_ex, 100 )
+           im = ax.contourf( x1, x2, f_ex[str(i)], clevels, cmap='jet' )
            ax.set_title( 'Exact solution at t = %i' %i )
         elif ( arg == 'error' ):
-           clevels = np.linspace( min_err, max_err, 50 )
-           im = ax.contourf( x1, x2, e[str(i)], clevels )
+           clevels = np.linspace( min_err, max_err, 100 )
+           im = ax.contourf( x1, x2, e[str(i)], clevels, cmap='jet' )
            ax.set_title( 'Error on solution at t = %i' %i )
+        # plot grids
+        nr = 16
+        ax.plot( x1[:,::nr], x2[:,::nr], color='lightgrey', lw=0.5 )
+        ax.plot( x1.transpose()[:,::nr], x2.transpose()[:,::nr], color='lightgrey', lw=0.5 )
+        # style
         ax.set_aspect( 'equal' )
         fg.colorbar( im, cax=cax )
         fg.canvas.draw()
-        plt.pause(1.0e-05)
+        plt.pause(1.0e-03)
 
 print()
 print( ' Testing 2D advection on Czarny mapping' )
 print( ' ======================================' )
 print()
 
-plot_time_evolution( 'f' )
-#plot_time_evolution( 'error' )
+## save figures
+#xc = 0.25
+#yc = 0.0
+#
+#s = 0.4
+#t = np.linspace(0.0,2.0*np.pi,100)
+#
+#xm = s*np.cos(t)+xc
+#ym = s*np.sin(t)+yc
+#
+#fs = 10
+#fg = plt.figure()
+#ax = fg.add_subplot(111)
+#clevels = np.linspace( min_f, max_f, 100 )
+#i  = 17
+## plot grids
+#nr = 16
+#ax.plot( x1[:,::nr], x2[:,::nr], color='lightgrey', lw=0.5 )
+#ax.plot( x1[:,127 ], x2[:,127 ], color='lightgrey', lw=0.5 )
+#ax.plot( x1.transpose()[:,::nr], x2.transpose()[:,::nr], color='lightgrey', lw=0.5 )
+## plot center of rotation
+#ax.plot( xc, yc, '.', color='w' )
+#ax.annotate( r'$(x_c,y_c)$', xy=[xc,yc-0.15], color='w',
+#             horizontalalignment='center', verticalalignment='bottom', fontsize=fs )
+## plot analytical trajectory
+#ax.plot( xm, ym, '--', color='w' )
+## contour plot
+#im = ax.contourf( x1, x2, f[str(i)], clevels, cmap='jet' )
+## style
+#ax.set_xlabel( r'$x$', fontsize=fs )
+#ax.set_ylabel( r'$y$', fontsize=fs, rotation=0 )
+#ax.set_title( r'$f$ $(x,y)$' )
+#ax.set_aspect( 'equal' )
+#fg.colorbar( im )
+#fg.tight_layout()
+#fg.show()
+#fg.savefig( './advection.pdf', dpi=300 )
