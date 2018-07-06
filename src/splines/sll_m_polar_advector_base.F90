@@ -122,28 +122,93 @@ contains
 
   end function f_polar_advector__advect_x1x2
 
-  ! Advector (time integrator RK4): works in intermediate coordinates (y1,y2)
-  function f_polar_advector__advect_y1y2( self, eta, h, mapping, spline_2d_a1, spline_2d_a2, tol, maxiter ) result( eta_new )
+  ! Advector: works in intermediate coordinates (y1,y2)
+  function f_polar_advector__advect_y1y2( &
+    self        , &
+    eta         , &
+    h           , &
+    mapping     , &
+    spline_2d_a1, &
+    spline_2d_a2, &
+    abs_tol     , &
+    rel_tol     , &
+    maxiter ) result( eta_new )
     class(sll_c_polar_advector)          , intent(in) :: self
     real(wp)                             , intent(in) :: eta(2)
     real(wp)                             , intent(in) :: h
     class(sll_c_polar_mapping_analytical), intent(in) :: mapping
     type(sll_t_spline_2d)                , intent(in) :: spline_2d_a1
     type(sll_t_spline_2d)                , intent(in) :: spline_2d_a2
-    real(wp)                             , intent(in) :: tol
+    real(wp)                             , intent(in) :: abs_tol
+    real(wp)                             , intent(in) :: rel_tol
     integer                              , intent(in) :: maxiter
     real(wp) :: eta_new(2)
 
+    !---------------------------------------------------------------------------
+    ! Trapezoidal 2nd order
+    !---------------------------------------------------------------------------
+
+!    integer  :: j
+!    real(wp) :: tol_sqr
+!    real(wp) :: y0(2), y(2), dy(2), temp(2), k2(2), a0(2)
+!    real(wp) :: jmat_comp(2,2)
+!
+!    y0 = polar_map( eta )
+!
+!    tol_sqr = ( abs_tol + rel_tol * norm2( y0 ) )**2
+!
+!    jmat_comp = mapping % jmat_comp( eta )
+!
+!    ! Pseudo-Cartesian components of advection field
+!    a0(1) =   jmat_comp(1,1) * spline_2d_a1 % eval( eta(1), eta(2) ) &
+!            + jmat_comp(1,2) * spline_2d_a2 % eval( eta(1), eta(2) )
+!    a0(2) =   jmat_comp(2,1) * spline_2d_a1 % eval( eta(1), eta(2) ) &
+!            + jmat_comp(2,2) * spline_2d_a2 % eval( eta(1), eta(2) )
+!
+!    ! First iteration
+!    dy  = h * a0
+!    y   = y0 + dy
+!    eta_new = polar_map_inverse( y )
+!
+!    ! Successive iterations if first iteration did not converge
+!    if ( dot_product( dy, dy ) > tol_sqr ) then
+!
+!      associate( k1 => a0, h_half => 0.5_wp*h, dy_old => temp, error => temp )
+!
+!        do j = 2, maxiter
+!
+!          jmat_comp = mapping % jmat_comp( eta_new )
+!
+!          ! k2 = f(t,x_{i-1})
+!          k2(1) =   jmat_comp(1,1) * spline_2d_a1 % eval( eta_new(1), eta_new(2) ) &
+!                  + jmat_comp(1,2) * spline_2d_a2 % eval( eta_new(1), eta_new(2) )
+!          k2(2) =   jmat_comp(2,1) * spline_2d_a1 % eval( eta_new(1), eta_new(2) ) &
+!                  + jmat_comp(2,2) * spline_2d_a2 % eval( eta_new(1), eta_new(2) )
+!
+!          dy_old  = dy
+!          dy      = h_half*(k1+k2)
+!          error   = dy_old - dy
+!          y       = y0 + dy
+!          eta_new = polar_map_inverse( y )
+!
+!          if ( dot_product( error, error ) <= tol_sqr ) exit
+!
+!        end do
+!
+!      end associate
+!
+!    end if
+
+    !---------------------------------------------------------------------------
+    ! Runge-Kutta 3rd order
+    !---------------------------------------------------------------------------
+
     real(wp) :: a_x1, a_x2
-    real(wp) :: y(2), tmp(2), k1(2), k2(2), k3(2), k4(2)
+    real(wp) :: y(2), tmp(2), k1(2), k2(2), k3(2)
     real(wp) :: jmat_comp(2,2)
 
     ! Initial position
     y = polar_map( eta )
-
-    !---------------------------------------------------------------------------
-    ! Using interpolated advection field
-    !---------------------------------------------------------------------------
 
     ! step #1
     a_x1  = spline_2d_a1 % eval( eta(1), eta(2) )
@@ -156,7 +221,6 @@ contains
 
     ! step #2
     tmp = polar_map_inverse( y + 0.5_wp * h * k1 )
-!    write(*,*) tmp(1), tmp(2)
 
     a_x1  = spline_2d_a1 % eval( tmp(1), tmp(2) )
     a_x2  = spline_2d_a2 % eval( tmp(1), tmp(2) )
@@ -167,7 +231,7 @@ contains
     k2(2) = jmat_comp(2,1) * a_x1 + jmat_comp(2,2) * a_x2
 
     ! step #3
-    tmp = polar_map_inverse( y + 0.5_wp * h * k2 )
+    tmp = polar_map_inverse( y + h * ( 2.0_wp * k2 - k1 ) )
 
     a_x1  = spline_2d_a1 % eval( tmp(1), tmp(2) )
     a_x2  = spline_2d_a2 % eval( tmp(1), tmp(2) )
@@ -177,21 +241,68 @@ contains
     k3(1) = jmat_comp(1,1) * a_x1 + jmat_comp(1,2) * a_x2
     k3(2) = jmat_comp(2,1) * a_x1 + jmat_comp(2,2) * a_x2
 
-    ! step #4
-    tmp = polar_map_inverse( y + h * k3 )
-
-    a_x1  = spline_2d_a1 % eval( tmp(1), tmp(2) )
-    a_x2  = spline_2d_a2 % eval( tmp(1), tmp(2) )
-
-    jmat_comp = mapping % jmat_comp( tmp )
-
-    k4(1) = jmat_comp(1,1) * a_x1 + jmat_comp(1,2) * a_x2
-    k4(2) = jmat_comp(2,1) * a_x1 + jmat_comp(2,2) * a_x2
-
     ! Final position
-    y = y + h * ( k1 + 2.0_wp * k2 + 2.0_wp * k3 + k4 ) / 6.0_wp
+    y = y + h * ( k1 + 4.0_wp * k2 + k3 ) / 6.0_wp
 
     eta_new = polar_map_inverse( y )
+
+    !---------------------------------------------------------------------------
+    ! Runge-Kutta 4th order
+    !---------------------------------------------------------------------------
+
+!    real(wp) :: a_x1, a_x2
+!    real(wp) :: y(2), tmp(2), k1(2), k2(2), k3(2), k4(2)
+!    real(wp) :: jmat_comp(2,2)
+!
+!    ! Initial position
+!    y = polar_map( eta )
+!
+!    ! step #1
+!    a_x1  = spline_2d_a1 % eval( eta(1), eta(2) )
+!    a_x2  = spline_2d_a2 % eval( eta(1), eta(2) )
+!
+!    jmat_comp = mapping % jmat_comp( eta )
+!
+!    k1(1) = jmat_comp(1,1) * a_x1 + jmat_comp(1,2) * a_x2
+!    k1(2) = jmat_comp(2,1) * a_x1 + jmat_comp(2,2) * a_x2
+!
+!    ! step #2
+!    tmp = polar_map_inverse( y + 0.5_wp * h * k1 )
+!
+!    a_x1  = spline_2d_a1 % eval( tmp(1), tmp(2) )
+!    a_x2  = spline_2d_a2 % eval( tmp(1), tmp(2) )
+!
+!    jmat_comp = mapping % jmat_comp( tmp )
+!
+!    k2(1) = jmat_comp(1,1) * a_x1 + jmat_comp(1,2) * a_x2
+!    k2(2) = jmat_comp(2,1) * a_x1 + jmat_comp(2,2) * a_x2
+!
+!    ! step #3
+!    tmp = polar_map_inverse( y + 0.5_wp * h * k2 )
+!
+!    a_x1  = spline_2d_a1 % eval( tmp(1), tmp(2) )
+!    a_x2  = spline_2d_a2 % eval( tmp(1), tmp(2) )
+!
+!    jmat_comp = mapping % jmat_comp( tmp )
+!
+!    k3(1) = jmat_comp(1,1) * a_x1 + jmat_comp(1,2) * a_x2
+!    k3(2) = jmat_comp(2,1) * a_x1 + jmat_comp(2,2) * a_x2
+!
+!    ! step #4
+!    tmp = polar_map_inverse( y + h * k3 )
+!
+!    a_x1  = spline_2d_a1 % eval( tmp(1), tmp(2) )
+!    a_x2  = spline_2d_a2 % eval( tmp(1), tmp(2) )
+!
+!    jmat_comp = mapping % jmat_comp( tmp )
+!
+!    k4(1) = jmat_comp(1,1) * a_x1 + jmat_comp(1,2) * a_x2
+!    k4(2) = jmat_comp(2,1) * a_x1 + jmat_comp(2,2) * a_x2
+!
+!    ! Final position
+!    y = y + h * ( k1 + 2.0_wp * k2 + 2.0_wp * k3 + k4 ) / 6.0_wp
+!
+!    eta_new = polar_map_inverse( y )
 
   !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
   contains
