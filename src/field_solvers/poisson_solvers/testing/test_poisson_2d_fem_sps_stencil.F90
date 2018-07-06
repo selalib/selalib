@@ -4,7 +4,9 @@ program test_poisson_2d_fem_sps
 
   use sll_m_working_precision, only: f64
 
-  use sll_m_constants, only: sll_p_twopi
+  use sll_m_constants, only: &
+    sll_p_pi, &
+    sll_p_twopi
 
   use sll_m_utilities, only: sll_s_new_array_linspace
 
@@ -103,8 +105,8 @@ program test_poisson_2d_fem_sps
   type(sll_t_hdf5_ser_handle) :: file_id
   integer                     :: h5_error
 
-  real(wp), allocatable :: phi_spl(:,:)
-  real(wp) :: eta1, eta2
+  real(wp), allocatable :: phi_spl(:,:), err(:,:)
+  real(wp) :: err_L2_norm, err_Linf_norm, dV, phi_exact
 
   !-----------------------------------------------------------------------------
   ! Initialize B-splines basis functions
@@ -113,14 +115,23 @@ program test_poisson_2d_fem_sps
   call sll_s_set_time_mark( t0 )
 
   ! Number of degrees of freedom (control points) along s and theta
-  mm = 32
+  mm = 512
   n1 = mm
   n2 = mm * 2
 !  nn = 3 + (n1-2) * n2
 
   ! Spline degrees along s and theta
   p1 = 3
-  p2 = 5
+  p2 = 3
+
+  ! Create HDF5 file
+  call sll_s_hdf5_ser_file_create( 'poisson_2d_fem_sps.h5', file_id, h5_error )
+
+  ! HDF5 I/O
+  call sll_o_hdf5_ser_write_attribute( file_id, "/", "n1", n1, h5_error )
+  call sll_o_hdf5_ser_write_attribute( file_id, "/", "n2", n2, h5_error )
+  call sll_o_hdf5_ser_write_attribute( file_id, "/", "p1", p1, h5_error )
+  call sll_o_hdf5_ser_write_attribute( file_id, "/", "p2", p2, h5_error )
 
   ! Compute number of cells from number of interpolation points along s
   call sll_s_spline_1d_compute_num_cells( &
@@ -169,12 +180,14 @@ program test_poisson_2d_fem_sps
   ! Initialize mapping and polar B-splines
   !-----------------------------------------------------------------------------
 
-  allocate( sll_t_polar_mapping_analytical_czarny :: mapping_analytical )
+  allocate( sll_t_polar_mapping_analytical_target :: mapping_analytical )
+!  allocate( sll_t_polar_mapping_analytical_czarny :: mapping_analytical )
 
   ! Analytical mapping
   select type ( mapping_analytical )
     type is ( sll_t_polar_mapping_analytical_target )
-      call mapping_analytical % init( x0=[0.0_wp,0.0_wp], d0=0.2_wp, e0=0.3_wp )
+      call mapping_analytical % init( x0=[0.0_wp,0.0_wp], d0=0.0_wp, e0=0.0_wp ) ! circular mapping
+!      call mapping_analytical % init( x0=[0.0_wp,0.0_wp], d0=0.2_wp, e0=0.3_wp )
     type is ( sll_t_polar_mapping_analytical_czarny )
       call mapping_analytical % init( x0=[0.0_wp,0.0_wp], b =1.4_wp, e =0.3_wp )
   end select
@@ -182,14 +195,8 @@ program test_poisson_2d_fem_sps
   ! Discrete mapping
   call mapping_iga % init( bsplines_eta1, bsplines_eta2, mapping_analytical )
 
-  ! Create HDF5 file
-  call sll_s_hdf5_ser_file_create( 'mapping_info.h5', file_id, h5_error )
-
   ! Write mapping info
   call mapping_iga % store_data( n1, n2, file_id )
-
-  ! Close HDF5 file
-  call sll_s_hdf5_ser_file_close( file_id, h5_error )
 
   call sll_s_set_time_mark( t1 )
 
@@ -223,8 +230,9 @@ program test_poisson_2d_fem_sps
     do i2 = 1, nt2
       do i1 = 1, nt1
         eta = (/ tau_eta1(i1), tau_eta2(i2) /)
+!        gtau(i1,i2) = rhs_log( eta )
         x   = mapping_iga % eval( eta )
-        gtau(i1,i2) = rhs( x )
+        gtau(i1,i2) = rhs_cart( x )
       end do
     end do
 
@@ -278,38 +286,54 @@ program test_poisson_2d_fem_sps
   call sll_s_set_time_mark( t0 )
 
   ! Solve
-!  call solver % solve( spline_2d_rhs, spline_2d_phi ) ! Right hand side is 2D spline
-  call solver % solve( rhs, spline_2d_phi ) ! Right hand side is callable function
+  call solver % solve( spline_2d_rhs, spline_2d_phi ) ! Right hand side is 2D spline
+!  call solver % solve( rhs, spline_2d_phi ) ! Right hand side is callable function
 
   call sll_s_set_time_mark( t1 )
 
   dt = sll_f_time_elapsed_between( t0, t1 )
   write(*,'(a,es8.1/)' ) " Time required for solution of Poisson equation: ", dt
 
-  ! Evaluate phi spline on logical grid
+  ! Evaluate phi spline on logical grid and compute spatial L2-norm of error
+
   allocate( phi_spl( n1, n2 ) )
+  allocate( err( n1, n2 ) )
+
+  err_L2_norm   = 0.0_wp
+  err_Linf_norm = 0.0_wp
+
+  ! Integral volume in logical space: ds * dtheta
+  dV = ( 1.0 / n1 ) * ( sll_p_twopi / n2 )
+
   do i2 = 1, n2
     do i1 = 1, n1
-      eta1 = real( i1-1, wp ) / real( n1-1, wp )
-      eta2 = real( i2-1, wp ) * sll_p_twopi / real( n2, wp )
-      phi_spl(i1,i2) = spline_2d_phi % eval( eta1, eta2 )
+
+      eta(1) = real( i1-1, wp ) / real( n1-1, wp )
+      eta(2) = real( i2-1, wp ) * sll_p_twopi / real( n2, wp )
+
+      x = mapping_iga % eval( eta )
+
+      phi_spl(i1,i2) = spline_2d_phi % eval( eta(1), eta(2) )
+
+!      phi_exact = eta(1)**2 * ( 1.0_wp - eta(1)**2 ) * cos( eta(2) )
+      phi_exact = ( 1.0_wp - eta(1)**2 ) * cos( sll_p_twopi * x(1) ) * sin( sll_p_twopi * x(2) )
+
+      err(i1,i2) = phi_spl(i1,i2) - phi_exact
+
+      err_L2_norm = err_L2_norm + err(i1,i2)**2 * mapping_iga % jdet( eta ) * dV
+
+      err_Linf_norm = merge( abs( err(i1,i2) ), err_Linf_norm, abs( err(i1,i2) ) > err_Linf_norm )
+
     end do
   end do
+
+  err_L2_norm = sqrt( err_L2_norm )
 
   !-----------------------------------------------------------------------------
   ! HDF5 I/O
   !-----------------------------------------------------------------------------
 
   call sll_s_set_time_mark( t0 )
-
-  ! Create HDF5 file
-  call sll_s_hdf5_ser_file_create( 'poisson_2d_fem_sps.h5', file_id, h5_error )
-
-  ! Write useful parameters
-  call sll_o_hdf5_ser_write_attribute( file_id, "/", "n1", n1, h5_error )
-  call sll_o_hdf5_ser_write_attribute( file_id, "/", "n2", n2, h5_error )
-  call sll_o_hdf5_ser_write_attribute( file_id, "/", "p1", p1, h5_error )
-  call sll_o_hdf5_ser_write_attribute( file_id, "/", "p2", p2, h5_error )
 
 !  ! Write stiffness matrix
 !  call sll_o_hdf5_ser_write_array( file_id, A, "/A", h5_error )
@@ -338,13 +362,20 @@ program test_poisson_2d_fem_sps
   ! Write phi spline
   call sll_o_hdf5_ser_write_array( file_id, phi_spl, "/phi_spl", h5_error )
 
+  ! Write error
+  call sll_o_hdf5_ser_write_array( file_id, err, "/error", h5_error )
+
   ! Close HDF5 file
   call sll_s_hdf5_ser_file_close ( file_id, h5_error )
 
   call sll_s_set_time_mark( t1 )
 
   dt = sll_f_time_elapsed_between( t0, t1 )
-  write(*,'(a,es8.1/)' ) " Time required for writing HDF5 output: ", dt
+  write(*,'(a,es8.1/)') " Time required for writing HDF5 output: ", dt
+
+  write(*,'(a,es8.2/)') " Spatial L2    norm of error: ", err_L2_norm
+
+  write(*,'(a,es8.2/)') " Spatial L-inf norm of error: ", err_Linf_norm
 
   !-----------------------------------------------------------------------------
   ! Deallocations and free
@@ -376,12 +407,27 @@ program test_poisson_2d_fem_sps
 contains
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
-  SLL_PURE function rhs( x )
+  SLL_PURE function rhs_cart( x )
     real(wp), intent(in) :: x(2)
-    real(wp) :: rhs
+    real(wp) :: rhs_cart
 
-    rhs = sin( sll_p_twopi * x(1) ) * cos( sll_p_twopi * x(2) )
+    associate( sq => x(1)**2 + x(2)**2, xp => sll_p_twopi * x(1), yp => sll_p_twopi * x(2) )
 
-  end function rhs
+      rhs_cart =   8.0_wp * sll_p_pi**2 * ( 1.0_wp - sq ) * cos( xp ) * sin( yp ) &
+                 + 4.0_wp * cos( xp ) * sin( yp ) &
+                 - 8.0_wp * sll_p_pi * ( x(1) * sin( xp ) * sin( yp ) - x(2) * cos( xp ) * cos( yp ) )
+
+    end associate
+
+  end function rhs_cart
+
+  ! Manifactured solution on circle
+  SLL_PURE function rhs_log( eta )
+    real(wp), intent(in) :: eta(2)
+    real(wp) :: rhs_log
+
+    rhs_log = - ( 3.0_wp - 15.0_wp*eta(1)**2 ) * cos( eta(2) )
+
+  end function rhs_log
 
 end program test_poisson_2d_fem_sps
