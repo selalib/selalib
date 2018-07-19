@@ -14,7 +14,7 @@ HOWTO
      $ cd run
 
 1. Run simulation within directory
-     $ ../test_2d_gc_cartesian ../gcsim2d_cartesian_input
+     $ ../sim_bsl_gc_2d0v_cart ../gcsim2d_cartesian_input
 
 2. Run included gnuplot script
      $ gnuplot --persist ../gcsim2d_cartesian.gnu
