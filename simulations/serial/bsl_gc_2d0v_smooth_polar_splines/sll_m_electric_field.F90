@@ -72,12 +72,12 @@ contains
       d1 = self % spline_2d_phi % eval_deriv_x1( eta(1), th1 ) ! dphi/ds(0,theta_1)
       d2 = self % spline_2d_phi % eval_deriv_x1( eta(1), th2 ) ! dphi/ds(0,theta_2)
 
-      jmat = self % mapping_discrete % jmat( (/ 0.0_wp, th1 /) )
+      jmat = self % mapping_discrete % jmat( (/ eta(1), th1 /) )
  
       d3 = jmat(1,1) ! dx/ds(0,theta_1)
       d4 = jmat(2,1) ! dy/ds(0,theta_1)
 
-      jmat = self % mapping_discrete % jmat( (/ 0.0_wp, th2 /) )
+      jmat = self % mapping_discrete % jmat( (/ eta(1), th2 /) )
  
       d5 = jmat(1,1) ! dx/ds(0,theta_2)
       d6 = jmat(2,1) ! dy/ds(0,theta_2)
@@ -90,8 +90,8 @@ contains
       th1 = 0.0_wp
       th2 = 0.5_wp * sll_p_pi
 
-      d1 = self % spline_2d_phi % eval_deriv_x1( eta(1), th1 ) ! dphi/ds(0,theta_1)
-      d2 = self % spline_2d_phi % eval_deriv_x1( eta(1), th2 ) ! dphi/ds(0,theta_2)
+      d1 = self % spline_2d_phi % eval_deriv_x1( 0.0_wp, th1 ) ! dphi/ds(0,theta_1)
+      d2 = self % spline_2d_phi % eval_deriv_x1( 0.0_wp, th2 ) ! dphi/ds(0,theta_2)
 
       jmat = self % mapping_discrete % jmat( (/ 0.0_wp, th1 /) )
  
@@ -107,14 +107,14 @@ contains
       ef_0(1) = - ( d4*d2 - d1*d6 ) / ( d4*d5 - d3*d6 )
       ef_0(2) = - ( d1*d5 - d3*d2 ) / ( d4*d5 - d3*d6 )
 
-      jmat = self % mapping_discrete % jmat( eta )
-      jdet = self % mapping_discrete % jdet( eta )
+      jmat = self % mapping_discrete % jmat( (/ eps, eta(2) /) )
+      jdet = self % mapping_discrete % jdet( (/ eps, eta(2) /) )
 
       ! E(eps,theta): J^(-T) times 'logical' gradient
-      ef_eps(1) = - (   jmat(2,2) * self % spline_2d_phi % eval_deriv_x1( eta(1), eta(2) ) &
-                      - jmat(2,1) * self % spline_2d_phi % eval_deriv_x2( eta(1), eta(2) ) ) / jdet
-      ef_eps(2) = - ( - jmat(1,2) * self % spline_2d_phi % eval_deriv_x1( eta(1), eta(2) ) &
-                      + jmat(1,1) * self % spline_2d_phi % eval_deriv_x2( eta(1), eta(2) ) ) / jdet
+      ef_eps(1) = - (   jmat(2,2) * self % spline_2d_phi % eval_deriv_x1( eps, eta(2) ) &
+                      - jmat(2,1) * self % spline_2d_phi % eval_deriv_x2( eps, eta(2) ) ) / jdet
+      ef_eps(2) = - ( - jmat(1,2) * self % spline_2d_phi % eval_deriv_x1( eps, eta(2) ) &
+                      + jmat(1,1) * self % spline_2d_phi % eval_deriv_x2( eps, eta(2) ) ) / jdet
 
       ! Linear interpolation between 0 and eps
       electric_field(1) = (1.0_wp-eta(1)/eps)*ef_0(1) + eta(1)/eps*ef_eps(1)
