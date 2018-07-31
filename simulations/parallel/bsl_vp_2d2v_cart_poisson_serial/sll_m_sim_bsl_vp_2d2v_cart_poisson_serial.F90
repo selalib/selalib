@@ -74,8 +74,7 @@ use sll_m_gnuplot, only: &
 use sll_m_hermite_interpolation_2d, only: &
   sll_s_compute_w_hermite
 
-use sll_m_parallel_array_initializer, only: &
-  sll_o_4d_parallel_array_initializer_cartesian
+use sll_m_parallel_array_initializer
 
 use sll_m_periodic_interp, only: &
   sll_p_lagrange, &
@@ -861,7 +860,7 @@ contains
 
 
 
-    call sll_o_4d_parallel_array_initializer_cartesian( &
+    call sll_4d_parallel_array_initializer_cartesian_logical_1d_1d_1d_1d( &
          sequential_x3x4, &
          sim%mesh_x1, &
          sim%mesh_x2, &

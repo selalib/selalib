@@ -45,7 +45,7 @@ program test_poisson_2d_sparse_grid_fft
 
    nc_eta1 = 20; nc_eta2 = 20
 
-   call interp%init(levels,order, order+1,0,eta_min,eta_max,0,0);
+   call interp%init(levels,order, order,0,eta_min,eta_max,0,0);
 
    SLL_ALLOCATE(ex(interp%size_basis),error)
    SLL_ALLOCATE(ey(interp%size_basis),error)

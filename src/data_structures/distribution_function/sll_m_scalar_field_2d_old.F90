@@ -49,9 +49,9 @@ module sll_m_scalar_field_2d_old
 
   type :: sll_t_scalar_field_2d
      class(sll_c_coordinate_transformation_2d_base), pointer :: transf
-     class(sll_c_interpolator_1d), pointer :: eta1_interpolator
-     class(sll_c_interpolator_1d), poInter :: eta2_interpolator
-     sll_real64, dimension(:,:), pointer      :: data
+     class(sll_c_interpolator_1d), pointer    :: eta1_interpolator
+     class(sll_c_interpolator_1d), pointer    :: eta2_interpolator
+     sll_real64, dimension(:,:),   pointer    :: data
      sll_int32                                :: data_position
      character(len=64)                        :: name
      sll_int32                                :: plot_counter
@@ -94,7 +94,6 @@ contains   ! *****************************************************************
     class(sll_c_interpolator_1d), pointer            :: eta2_interpolator
     class(sll_c_scalar_field_2d_initializer_base), pointer, optional :: initializer
     
-    class(sll_t_cartesian_mesh_2d), pointer :: mesh
     character(len=*), parameter :: this_sub_name = 'sll_s_scalar_field_2d_init'
 
     sll_int32  :: ierr
@@ -111,14 +110,15 @@ contains   ! *****************************************************************
     this%transf => transf
     this%transf%written = .false.
     
-    mesh => transf%get_cartesian_mesh()
-    SLL_ASSERT(associated(mesh))
+    associate (mesh => transf%mesh)
 
     this%name  = trim(field_name)
     num_cells1 = mesh%num_cells1
     num_cells2 = mesh%num_cells2
     num_pts1   = mesh%num_cells1+1
     num_pts2   = mesh%num_cells2+1
+    
+    end associate
 
     ! For an initializing function, argument check should not be assertions
     ! but more permanent if-tests. There is no reason to turn these off ever.
@@ -195,12 +195,10 @@ contains   ! *****************************************************************
     output_format)
 
     class(sll_t_scalar_field_2d) :: scalar_field
-    class(sll_c_coordinate_transformation_2d_base), pointer :: transf
     logical, optional      :: multiply_by_jacobian 
     sll_int32, optional    :: output_format 
     character(len=*), optional    :: output_file_name 
     sll_int32              :: local_format 
-    class(sll_t_cartesian_mesh_2d), pointer :: mesh
 
     sll_int32  :: i1
     sll_int32  :: i2
@@ -223,35 +221,35 @@ contains   ! *****************************************************************
        local_format = sll_p_io_xdmf
     end if
 
-    transf => scalar_field%transf
-    mesh => transf%get_cartesian_mesh()
+    associate (transf => scalar_field%transf )
 
-    SLL_ASSERT(associated(mesh))  
     if (.not. transf%written) then
        call transf%write_to_file(local_format)
     end if
 
-    num_pts1 = mesh%num_cells1+1
-    num_pts2 = mesh%num_cells2+1
+    num_pts1 = transf%mesh%num_cells1+1
+    num_pts2 = transf%mesh%num_cells2+1
     if (scalar_field%data_position == sll_p_node_centered_field) then
        SLL_ALLOCATE(val(num_pts1,num_pts2), ierr)
     else
        SLL_ALLOCATE(val(num_pts1-1,num_pts2-1), ierr)
     end if
 
-    if (.not.(present(multiply_by_jacobian))) then
+    if (.not. present(multiply_by_jacobian )) then
+       multiply_by_jacobian = .false.
        val =  scalar_field%data
-    else !if (multiply_by_jacobian) then 
+
+    else if (multiply_by_jacobian) then 
 
        if (scalar_field%data_position == sll_p_cell_centered_field) then
-          eta2 =  0.5_f64 * mesh%delta_eta2
-          do i2 = 1, mesh%num_cells2
-             eta1 = 0.5_f64 * mesh%delta_eta1
-             do i1 = 1, mesh%num_cells1
+          eta2 =  0.5_f64 * transf%mesh%delta_eta2
+          do i2 = 1, transf%mesh%num_cells2
+             eta1 = 0.5_f64 * transf%mesh%delta_eta1
+             do i1 = 1, transf%mesh%num_cells1
                 val(i1,i2) = scalar_field%data(i1,i2)/transf%jacobian(eta1,eta2)
-                eta1 = eta1 + mesh%delta_eta1
+                eta1 = eta1 + transf%mesh%delta_eta1
              end do
-             eta2 = eta2 + mesh%delta_eta2
+             eta2 = eta2 + transf%mesh%delta_eta2
           end do
        else
           eta2 =  0.0_f64 
@@ -259,14 +257,16 @@ contains   ! *****************************************************************
              eta1 = 0.0_f64 
              do i1 = 1, num_pts1
                 val(i1,i2) = scalar_field%data(i1,i2)
-                eta1 = eta1 + mesh%delta_eta1
+                eta1 = eta1 + transf%mesh%delta_eta1
              end do
-             eta2 = eta2 + mesh%delta_eta2
+             eta2 = eta2 + transf%mesh%delta_eta2
           end do
        end if
      
     end if
     
+    end associate
+
     print*, local_format
 
     select case(local_format)

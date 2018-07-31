@@ -73,13 +73,15 @@ contains
     sll_real64 :: displacement
     sll_int32 :: j
     sll_real64 :: vmin, vmax, delta_v
-    class(sll_t_cartesian_mesh_2d), pointer :: mesh
 
-    mesh => this%dist_func%transf%get_cartesian_mesh()
+    associate (mesh => this%dist_func%transf%mesh)
 
     vmin = this%dist_func%transf%x2_at_node(1,1)
     vmax = this%dist_func%transf%x2_at_node(1,this%Ncv+1)
     delta_v = (vmax - vmin) /  mesh%num_cells2
+
+    end associate
+
     do j = 1, this%Ncv+1
        displacement = -(vmin + (j-1) * delta_v) * dt
        f1d => FIELD_DATA(this%dist_func) (:,j)
@@ -100,11 +102,10 @@ contains
     sll_int32 :: i
     sll_real64 :: xmin, xmax, delta_x
     sll_real64 :: vmin, vmax, delta_v
-    class(sll_t_cartesian_mesh_2d), pointer :: mesh
     
     time = this%current_time
 
-    mesh => this%dist_func%transf%get_cartesian_mesh()
+    associate (mesh => this%dist_func%transf%mesh)
 
     xmin = this%dist_func%transf%x1_at_node(1,1)
     xmax = this%dist_func%transf%x1_at_node(this%Ncx+1,1)
@@ -112,6 +113,8 @@ contains
     vmin = this%dist_func%transf%x2_at_node(1,1)
     vmax = this%dist_func%transf%x2_at_node(1,this%Ncv+1)
     delta_v = (vmax - vmin) /  mesh%num_cells2
+
+    end associate
     
     ! compute electric field
     !-----------------------

@@ -63,15 +63,18 @@ module m_test_spline_2d
     real(wp) :: time_eval_diff1_array
     real(wp) :: time_eval_diff2
     real(wp) :: time_eval_diff2_array
+    real(wp) :: time_eval_diff12
+    real(wp) :: time_eval_diff12_array
 
   contains
 
     procedure :: init
     procedure :: free
     procedure :: check_equivalence_scalar_array_methods
-    procedure :: evaluate_on_2d_grid
     procedure :: evaluate_at_interpolation_points
+    procedure :: evaluate_on_2d_grid
     procedure :: evaluate_grad_on_2d_grid
+    procedure :: evaluate_mixed_deriv_on_2d_grid
 
   end type t_spline_2d_test_facility
 
@@ -264,6 +267,8 @@ contains
     self % time_eval_diff1_array    = -1.0_wp
     self % time_eval_diff2          = -1.0_wp
     self % time_eval_diff2_array    = -1.0_wp
+    self % time_eval_diff12         = -1.0_wp
+    self % time_eval_diff12_array   = -1.0_wp
 
   end subroutine init
 
@@ -271,7 +276,7 @@ contains
   subroutine check_equivalence_scalar_array_methods( self, equiv )
 
     class(t_spline_2d_test_facility), intent(inout) :: self
-    logical                         , intent(  out) :: equiv(3)
+    logical                         , intent(  out) :: equiv(4)
 
     type(t_profile_2d_info) :: info
     real(wp), allocatable   :: x1(:,:)
@@ -355,6 +360,23 @@ contains
     self%time_eval_diff2       = sll_f_time_elapsed_between( t0, t1 ) / npts
     self%time_eval_diff2_array = sll_f_time_elapsed_between( t1, t2 ) / npts
     equiv(3) = all( y == ya )
+
+    ! Compare:
+    !   . sll_f_spline_2d_non_uniform_eval_deriv_x1x2
+    !   . sll_s_spline_2d_non_uniform_eval_array_deriv_x1x2
+    call sll_s_set_time_mark( t0 )
+    do i2 = 1, n2
+      do i1 = 1, n1
+        y(i1,i2) = self % spline_2d % eval_deriv_x1x2( x1(i1,i2), x2(i1,i2) )
+      end do
+    end do
+    call sll_s_set_time_mark( t1 )
+    call self % spline_2d % eval_array_deriv_x1x2( x1, x2, ya )
+    call sll_s_set_time_mark( t2 )
+
+    self%time_eval_diff12       = sll_f_time_elapsed_between( t0, t1 ) / npts
+    self%time_eval_diff12_array = sll_f_time_elapsed_between( t1, t2 ) / npts
+    equiv(4) = all( y == ya )
 
     ! Deallocate local arrays
     deallocate( x1 )
@@ -495,6 +517,53 @@ contains
     deallocate( y )
 
   end subroutine evaluate_grad_on_2d_grid
+
+  !-----------------------------------------------------------------------------
+  subroutine evaluate_mixed_deriv_on_2d_grid( self, &
+      x1, &
+      x2, &
+      max_norm_error_diff_x1x2 )
+
+    class(t_spline_2d_test_facility), intent(inout) :: self
+    real(wp)                        , intent(in   ) :: x1(:,:)
+    real(wp)                        , intent(in   ) :: x2(:,:)
+    real(wp)                        , intent(  out) :: max_norm_error_diff_x1x2
+
+    integer               :: i1, i2
+    integer               :: n1, n2
+    real(wp), allocatable :: y(:,:)
+    real(wp)              :: error
+    type(sll_t_time_mark) :: t0, t1
+
+    SLL_ASSERT( all( shape( x1 ) == shape( x2 ) ) )
+
+    n1 = size( x1, 1 )
+    n2 = size( x2, 2 )
+
+    ! Array of spline values
+    allocate( y(n1,n2) )
+
+    ! x1-x2 mixed derivative: compare spline to analytical profile
+    !-------------------------------------------------------------
+    call sll_s_set_time_mark( t0 )
+
+    call self % spline_2d % eval_array_deriv_x1x2( x1, x2, y )
+
+    call sll_s_set_time_mark( t1 )
+    self % time_eval_diff12_array = sll_f_time_elapsed_between(t0,t1)/real(n1*n2,wp)
+
+    max_norm_error_diff_x1x2 = 0.0_wp
+    do i2 = 1, n2
+      do i1 = 1, n1
+        error = self % profile_2d % eval( x1(i1,i2), x2(i1,i2), diff_x1=1, diff_x2=1 ) - y(i1,i2)
+        max_norm_error_diff_x1x2 = max( max_norm_error_diff_x1x2, abs( error ) )
+      end do
+    end do
+
+    ! Free local memory
+    deallocate( y )
+
+  end subroutine evaluate_mixed_deriv_on_2d_grid
 
   !-----------------------------------------------------------------------------
   subroutine free( self )
