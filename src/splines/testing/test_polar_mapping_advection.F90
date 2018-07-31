@@ -19,6 +19,8 @@ program test_polar_mapping_advection
 
   use sll_m_polar_mapping_iga, only: sll_t_polar_mapping_iga
 
+  use sll_m_jacobian_2d_pseudo_cartesian, only: sll_t_jacobian_2d_pseudo_cartesian
+
   use sll_m_polar_advector_base, only: sll_c_polar_advector
 
   use sll_m_polar_advector_constant, only: sll_t_polar_advector_constant
@@ -65,6 +67,8 @@ program test_polar_mapping_advection
   ! Analytical and discrete IGA mappings
   class(sll_c_polar_mapping_analytical), allocatable :: mapping_analytical
   type(sll_t_polar_mapping_iga) :: mapping_iga
+
+  type(sll_t_jacobian_2d_pseudo_cartesian) :: jac_2d_pcart
 
   ! 2D tensor-product splines for advection fields A1,A2 and distribution function f
   type(sll_t_spline_2d) :: spline_2d_f
@@ -241,6 +245,9 @@ program test_polar_mapping_advection
   call spline_interpolator_2d % compute_interpolant( spline_2d_a1, a1(:,:) )
   call spline_interpolator_2d % compute_interpolant( spline_2d_a2, a2(:,:) )
 
+  ! Initialize Jacobian of pseudo-Cartesian coordinates
+  call jac_2d_pcart % init( mapping_iga )
+
 !  ! Set tolerance and maximum iterations for mapping inversion
 !  tol = 1.0e-14_wp
 !  maxiter = 100
@@ -285,7 +292,15 @@ program test_polar_mapping_advection
 !        eta_new = advector % advect_x1x2( eta, -dt, mapping_iga, spline_2d_a1, spline_2d_a2, tol, maxiter )
 
         ! Advect point using explicit Runge-Kutta 4th order (intermediate coordinates)
-        eta_new = advector % advect_y1y2( eta, -dt, mapping_analytical, spline_2d_a1, spline_2d_a2, rel_tol, abs_tol, maxiter )
+        eta_new = advector % advect_y1y2( &
+          eta         , &
+          -dt         , &
+          jac_2d_pcart, &
+          spline_2d_a1, &
+          spline_2d_a2, &
+          rel_tol     , &
+          abs_tol     , &
+          maxiter )
 
 !        write(*,'(a,es21.14,a,es21.14,a)') " (x1,x2) = (", x_new(1), ",", x_new(2), ") at t+dt"
 !        write(*,'(a,es21.14,a,es21.14,a)') " (e1,e2) = (", eta_new(1), ",", eta_new(2), ") at t+dt"
@@ -361,6 +376,7 @@ program test_polar_mapping_advection
   call spline_interpolator_2d % free()
   call spline_basis_eta1 % free()
   call spline_basis_eta2 % free()
+  call jac_2d_pcart % free()
   call advector % free()
 
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++

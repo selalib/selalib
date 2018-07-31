@@ -19,6 +19,7 @@ SET( SPLINES_FILES
   sll_m_polar_advector_base.F90
   sll_m_polar_advector_constant.F90
   sll_m_polar_advector_rotating.F90
+  sll_m_jacobian_2d_pseudo_cartesian.F90
   #
   sll_m_spline_matrix.F90
   sll_m_spline_matrix_base.F90

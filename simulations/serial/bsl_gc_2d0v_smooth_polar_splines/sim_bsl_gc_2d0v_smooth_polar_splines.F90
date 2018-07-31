@@ -305,7 +305,7 @@ program sim_bsl_gc_2d0v_smooth_polar_splines
   call advector % init( &
     tau_eta1        , &
     tau_eta2        , &
-    mapping_analytic, &
+    mapping_discrete, &
     spline_2d_rho   , &
     electric_field  , &
     abs_tol         , &
