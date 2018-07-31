@@ -53,7 +53,6 @@ contains
 
     type(diagnostics_DK4D_t), intent(inout) :: diagnostics
 
-    sll_int32 :: ierr
 
   end subroutine new_diagnostics_DK4D
   !---------------------------------------------------------------------------
@@ -66,7 +65,6 @@ contains
 
     type(diagnostics_DK4D_t), intent(inout) :: diagnostics
 
-    sll_int32 :: ierr
 
   end subroutine delete_diagnostics_DK4D
   !---------------------------------------------------------------------------

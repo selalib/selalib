@@ -84,7 +84,7 @@ contains
     SLL_ALLOCATE(this%modes(0:N-1),ierr)
 
     ! set up sll_p_spline parameters
-    if ((order/2) /= int(order/2.0)) then
+    if (iand(order,1) /= 0) then
        print*, 'sll_s_periodic_interp_init: order of interpolators needs to be even.', &
             'Order here is: ', Order
        stop

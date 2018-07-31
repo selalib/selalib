@@ -380,9 +380,6 @@ contains
    function sll_f_new_field_accumulator_2d( mesh_2d ) result(E_acc)
      type(sll_t_cartesian_mesh_2d), pointer        ::  mesh_2d
      type(sll_t_electric_field_accumulator), pointer ::  E_acc
-     sll_int32  :: num_cells1
-     sll_int32  :: num_cells2
-     sll_int32  :: num_cells_total
      sll_int32  :: ierr
      
      if( .not. associated(mesh_2d) ) then
@@ -416,9 +413,6 @@ contains
   function sll_f_new_field_accumulator_cs_2d( mesh_2d ) result(E_acc)
     type(sll_t_cartesian_mesh_2d), pointer             ::  mesh_2d
     type(sll_t_electric_field_accumulator_cs), pointer ::  E_acc
-    sll_int32  :: num_cells1
-    sll_int32  :: num_cells2
-    sll_int32  :: num_cells_total
     sll_int32  :: ierr
 
     if( .not. associated(mesh_2d) ) then

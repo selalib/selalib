@@ -160,9 +160,9 @@ module sll_m_sim_bsl_vp_1d1v_cart_no_split
 
    !geometry
    type(sll_t_cartesian_mesh_2d), pointer :: mesh_2d
-   sll_real64, dimension(:), pointer :: x1_array
-   sll_real64, dimension(:), pointer :: x2_array
-   sll_real64, dimension(:), pointer :: integration_weight
+   sll_real64, dimension(:), allocatable :: x1_array
+   sll_real64, dimension(:), allocatable :: x2_array
+   sll_real64, dimension(:), allocatable :: integration_weight
       
    !initial function
    sll_real64  :: kx

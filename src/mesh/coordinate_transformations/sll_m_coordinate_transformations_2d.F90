@@ -94,6 +94,16 @@ module sll_m_coordinate_transformations_2d
        sll_real64, dimension(:), optional, intent(in) :: params
      end function j_matrix_f_nopass
   end interface
+
+  !> @brief
+  !> Functions array
+  !> @details
+  !> Here we try to represent the Jacobian matrix an actual 2D array of
+  !> functions. But since fortran does not allow arrays of pointers, here
+  !> we define a special type that can be used as an array element.
+  type jacobian_matrix_element
+     procedure(sll_i_transformation_func_nopass), pointer, nopass :: f
+  end type jacobian_matrix_element
   
 !> Analytic transformation
   type, extends(sll_c_coordinate_transformation_2d_base):: &
@@ -104,7 +114,7 @@ module sll_m_coordinate_transformations_2d
      !logical           :: written! = .false.
      !type(sll_t_cartesian_mesh_2d), pointer :: mesh => null()
      !> PLEASE ADD DOCUMENTATION
-     type(jacobian_matrix_element), dimension(:,:), pointer :: j_matrix
+     type(jacobian_matrix_element), dimension(2,2) :: j_matrix
      !> PLEASE ADD DOCUMENTATION
      procedure(sll_i_transformation_func_nopass), pointer, nopass :: x1_func  ! user
      !> PLEASE ADD DOCUMENTATION
@@ -174,7 +184,7 @@ module sll_m_coordinate_transformations_2d
      sll_real64, dimension(:,:), pointer :: jacobians_n =>null()
      !> PLEASE ADD DOCUMENTATION
      sll_real64, dimension(:,:), pointer :: jacobians_c =>null()
-!     type(jacobian_matrix_element), dimension(:,:), pointer :: j_matrix
+!     type(jacobian_matrix_element), dimension(2,2) :: j_matrix
      !> PLEASE ADD DOCUMENTATION
      class(sll_c_interpolator_2d), pointer               :: x1_interp
      !> PLEASE ADD DOCUMENTATION
@@ -246,15 +256,6 @@ module sll_m_coordinate_transformations_2d
 
 #endif /* DOXYGEN_SHOULD_SKIP_THIS */
 
-  !> @brief
-  !> Functions array
-  !> @details
-  !> Here we try to represent the Jacobian matrix an actual 2D array of
-  !> functions. But since fortran does not allow arrays of pointers, here
-  !> we define a special type that can be used as an array element.
-  type jacobian_matrix_element
-     procedure(sll_i_transformation_func_nopass), pointer, nopass :: f
-  end type jacobian_matrix_element
 
   !> Deallocate
   interface sll_o_delete
@@ -335,7 +336,7 @@ contains
     procedure(sll_i_transformation_func_nopass)    :: j21_func
     procedure(sll_i_transformation_func_nopass)    :: j22_func
     type(sll_t_cartesian_mesh_2d), target          :: mesh_2d
-    sll_real64, dimension(:), intent(in), optional :: params
+    sll_real64, dimension(:), intent(in)           :: params
     sll_int32  :: ierr
 
     transf%label = trim(label)
@@ -344,12 +345,14 @@ contains
     ! Assign the transformation functions and parameters
     transf%x1_func => x1_func
     transf%x2_func => x2_func
-    if( present(params) ) then
+    if (size(params) > 0) then
        SLL_ALLOCATE(transf%params(size(params)),ierr)
        transf%params(:) = params(:)
+    else
+       SLL_CLEAR_ALLOCATE(transf%params(1),ierr)
     end if
+ 
     ! Fill the jacobian matrix
-    SLL_ALLOCATE(transf%j_matrix(2,2), ierr)
     transf%j_matrix(1,1)%f => j11_func
     transf%j_matrix(1,2)%f => j12_func
     transf%j_matrix(2,1)%f => j21_func
@@ -362,10 +365,7 @@ contains
 
   subroutine delete_transformation_2d_analytic( transf )
     class(sll_t_coordinate_transformation_2d_analytic), intent(inout) :: transf
-    sll_int32 :: ierr
-    if(associated(transf%j_matrix)) then
-       SLL_DEALLOCATE( transf%j_matrix, ierr )
-    end if
+    
     nullify( transf%x1_func )
     nullify( transf%x2_func )
 #ifndef __PGI
@@ -1241,8 +1241,6 @@ contains
 
   subroutine delete_transformation_2d_discrete( transf )
     class(sll_t_coordinate_transformation_2d_discrete), intent(inout) :: transf
-!!$    sll_int32 :: ierr
-!!$    SLL_DEALLOCATE( transf%j_matrix, ierr )
     transf%label = ""
     transf%written = .false.
     nullify( transf%x1_node )
@@ -1553,9 +1551,6 @@ contains
     end if
     if( associated(transf%x2_cell) ) then
        SLL_DEALLOCATE( transf%x2_cell, ierr )
-    end if
-    if( associated(transf%j_matrix) ) then
-       SLL_DEALLOCATE( transf%j_matrix, ierr )
     end if
     SLL_DEALLOCATE( transf%jacobians_n, ierr )
     SLL_DEALLOCATE( transf%jacobians_c, ierr )

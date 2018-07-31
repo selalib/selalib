@@ -66,8 +66,8 @@ contains
     type(sll_t_cartesian_mesh_1d), pointer :: logical_mesh1d_eta3
     type(sll_t_cartesian_mesh_1d), pointer :: logical_mesh1d_vpar
     !--> For electic field boundary conditions and spline degree
-    type(boundary_conditions_3d_t) :: elec_field_bc
-    type(spline_degree_3d_t)       :: elec_field_spline_degree
+    !type(boundary_conditions_3d_t) :: elec_field_bc
+    !type(spline_degree_3d_t)       :: elec_field_spline_degree
 
     Neta3 = size(mesh4d%eta3_grid)
     Nvpar = size(mesh4d%vpar_grid)

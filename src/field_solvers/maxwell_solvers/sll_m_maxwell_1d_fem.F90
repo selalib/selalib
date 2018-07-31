@@ -120,7 +120,7 @@ contains
 
    !> Compute E_i from j_i integrated over the time interval using weak Ampere formulation
    subroutine compute_E_from_j_1d_fem(self, current, component, E)
-     class(sll_t_maxwell_1d_fem)             :: self !< Maxwell solver class
+     class(sll_t_maxwell_1d_fem)           :: self !< Maxwell solver class
      sll_real64,dimension(:),intent(in)    :: current !< Component \a component of the current integrated over time interval
      sll_int32, intent(in)                 :: component !< Component of the Efield to be computed
      sll_real64,dimension(:),intent(inout) :: E !< Updated electric field

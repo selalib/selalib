@@ -140,7 +140,6 @@ contains
 
     sll_int32  :: ir, Nr
     sll_int32  :: num_cells1 , num_cells2
-    sll_int32  :: ierr
     sll_real64 :: eta1_min, eta1_max
     sll_real64 :: r_point
     
@@ -160,7 +159,7 @@ contains
     !*** Allocation and initialization of the QNS type ***
     !--> Verification of the number of cells in theta direction
     !-->  which must be a power of 2
-    if ( modulo(real(log(real(num_cells2))),real(log(2._F64))) .ne. 0 ) then
+    if ( modulo(log(real(num_cells2, f64)),real(log(2._F64), f64)) .ne. 0 ) then
       print*,'Problem with the number of cells in theta direction:', &
           num_cells2, ' is not a power of 2 as required for SELALIB fft'
       stop
@@ -215,7 +214,7 @@ contains
     sll_int32  :: iloc1, iloc2
     sll_int32  :: i1, i2, i3, i4
     sll_int32  :: loc3d_sz_x1, loc3d_sz_x2, loc3d_sz_x3
-    sll_int32  :: loc4d_sz_x1, loc4d_sz_x2, loc4d_sz_x3, loc4d_sz_x4
+    !sll_int32  :: loc4d_sz_x1, loc4d_sz_x2, loc4d_sz_x3, loc4d_sz_x4
     sll_real64 :: delta_f
     sll_real64 :: delta_vpar, intf_dvpar
     sll_int32, dimension(1:4) :: glob_ind4d
@@ -296,7 +295,7 @@ contains
     type(fdistribu_DK4D_t)     , intent(in)    :: fdistribu
     type(field3d_DK4D_t)       , intent(inout) :: Phi
 
-    sll_int32 :: ieta1, ieta2, iloc3
+    sll_int32 :: iloc3
     sll_int32 :: Neta1, Neta2
     sll_int32 :: loc3d_sz_x1, loc3d_sz_x2, loc3d_sz_x3
 

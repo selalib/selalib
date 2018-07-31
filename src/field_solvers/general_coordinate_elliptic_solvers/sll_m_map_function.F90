@@ -40,16 +40,17 @@ contains
     real(8),intent(in) :: u,v
     real(8),intent(out) :: x,y
     real(8) :: eta1, eta2
-    class(sll_t_cartesian_mesh_2d), pointer :: mesh
 
     !x=(1+u)*(1+v)*cos(pi*v)
     !y=(1+u)*sin(pi*v)
-    mesh => tau%get_cartesian_mesh()
+    associate ( mesh => tau%mesh)
     
     eta1 = mesh%eta1_min + u * (mesh%eta1_max -mesh%eta1_min)
     eta2 = mesh%eta2_min + v * (mesh%eta2_max -mesh%eta2_min)
     x = tau%x1(eta1,eta2)
     y = tau%x2(eta1,eta2)
+
+    end associate
 
   end subroutine sll_s_map
 

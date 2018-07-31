@@ -1088,7 +1088,6 @@ contains
 
     type(sll_t_simulation_4d_dk_hybrid), intent(inout) :: sim
 
-    class(sll_t_cartesian_mesh_2d), pointer :: cartesian_mesh2d
     sll_int32 :: ierr
     sll_int32 :: loc3d_sz_x1, loc3d_sz_x2, loc3d_sz_x3
     sll_int32 :: nproc_x1
@@ -1150,7 +1149,7 @@ contains
     SLL_ALLOCATE(sim%E3d_x2_seqx1x2(loc3d_sz_x1,loc3d_sz_x2,loc3d_sz_x3),ierr)
     
     !---->
-    cartesian_mesh2d => sim%transf_xy%get_cartesian_mesh()
+    associate (cartesian_mesh2d => sim%transf_xy%mesh)
 
     !---> For iterpolations of Phi
     call sim%interp2d_Phi_eta1eta2%init( &
@@ -1289,6 +1288,8 @@ contains
       sim%spline_degree_eta1, &
       sim%spline_degree_eta2)    
 
+    end associate
+
     !-----> rho2D field
     sim%rho2d => sll_f_new_scalar_field_2d_discrete( &
       "rho2d_seqx1x2", &
@@ -1342,7 +1343,6 @@ contains
     sll_real64, dimension(:,:), pointer :: B1
     sll_real64, dimension(:,:), pointer :: B2
     sll_real64, dimension(:,:), pointer :: C
-    class(sll_t_cartesian_mesh_2d), pointer :: cartesian_mesh2d
 
     Neta1 = sim%Neta1
     Neta2 = sim%Neta2
@@ -1446,7 +1446,7 @@ contains
     call sim%QN_C%update_interpolation_coefficients( )
 
     !---> Initialization of the QNS type
-    cartesian_mesh2d => sim%transf_xy%get_cartesian_mesh()
+    associate(cartesian_mesh2d => sim%transf_xy%mesh)
 
     sim%QNS => sll_f_new_general_elliptic_solver( &
       sim%spline_degree_eta1, & 
@@ -1463,6 +1463,7 @@ contains
       cartesian_mesh2d%eta1_max, & 
       cartesian_mesh2d%eta2_min, & 
       cartesian_mesh2d%eta2_max ) 
+    end associate
 
     SLL_DEALLOCATE(A11,ierr)
     SLL_DEALLOCATE(A12,ierr)
