@@ -3254,7 +3254,7 @@ end subroutine sll_s_set_slope2d
   
 subroutine spli2d_custom(db, nx, kx, taux, ny, ky, tauy, g, bcoef, tx, ty)
 
-type(sll_t_deboor_type)                                :: db(2)
+type(sll_t_deboor_type)                          :: db(2)
 sll_int32,                           intent(in)  :: nx
 sll_int32,                           intent(in)  :: kx
 sll_int32,                           intent(in)  :: ny
@@ -3305,7 +3305,11 @@ ty(1:ky)       = tauy(1)
 ty(ny+1:ny+ky) = tauy(ny)
 
 pwork => bwork
-bcoef(1:nx,1:ny) = g
+if (associated(g)) then
+   bcoef(1:nx,1:ny) = g
+else
+   stop 'hello'
+end if
 
 call spli2d( db(1), taux, bcoef, tx, nx, kx, ny, work_x, qx, pwork, flag)
 call spli2d( db(2), tauy, pwork, ty, ny, ky, nx, work_y, qy, bcoef, flag)
@@ -3411,7 +3415,7 @@ sll_int32                          , intent(in)  :: k
 sll_int32                          , intent(in)  :: m
 sll_real64, dimension(n)                         :: work
 sll_real64, dimension((2*k-1)*n)                 :: q
-sll_real64, dimension(:,:), pointer, intent(out) :: bcoef
+sll_real64, dimension(:,:), pointer, intent(inout) :: bcoef
 sll_int32,                           intent(out) :: iflag
 
 sll_int32 :: i
@@ -3570,9 +3574,9 @@ sll_real64, dimension(:,:), pointer, intent(in) :: gtau
 sll_real64, dimension(:,:), pointer, intent(in) :: gtau_der1 
 sll_real64, dimension(:,:), pointer, intent(in) :: gtau_der2
 
-sll_real64, dimension(:,:), pointer, intent(out) :: bcoef
-sll_real64, dimension( : ), pointer, intent(out) :: tx 
-sll_real64, dimension( : ), pointer, intent(out) :: ty 
+sll_real64, dimension(:,:), pointer, intent(inout) :: bcoef
+sll_real64, dimension( : ), pointer, intent(inout) :: tx 
+sll_real64, dimension( : ), pointer, intent(inout) :: ty 
 
 
 sll_real64, dimension(nx+mx)                :: wx

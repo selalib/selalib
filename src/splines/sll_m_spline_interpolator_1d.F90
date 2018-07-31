@@ -338,6 +338,9 @@ contains
     real(wp) :: x
     real(wp) :: values(self%bspl%degree+1)
     real(wp), allocatable :: derivs(:,:)
+#ifdef __PGI
+    real(wp), allocatable :: h(:)
+#endif
 
     ! NEW
     integer :: jmin
@@ -358,11 +361,21 @@ contains
 
         ! In order to improve the condition number of the matrix, we normalize all
         ! derivatives by multiplying the i-th derivative by dx^i
+
+#ifdef __PGI
+        allocate(h(ubound(derivs,1)))
+        h = [(self%dx**i, i=1, ubound(derivs,1))]
+        do j = lbound(derivs,2), ubound(derivs,2)
+          derivs(1:,j) = derivs(1:,j) * h(1:)
+        end do
+        deallocate(h)
+#else
         associate( h => [(self%dx**i, i=1, ubound(derivs,1))] )
           do j = lbound(derivs,2), ubound(derivs,2)
             derivs(1:,j) = derivs(1:,j) * h(1:)
           end do
         end associate
+#endif
 
         do i = 1, nbc_xmin
           ! iterate only to deg as last bspline is 0
@@ -391,11 +404,20 @@ contains
 
         ! In order to improve the condition number of the matrix, we normalize all
         ! derivatives by multiplying the i-th derivative by dx^i
+#ifdef __PGI
+        allocate(h(ubound(derivs,1)))
+        h = [(self%dx**i, i=1, ubound(derivs,1))]
+        do j = lbound(derivs,2), ubound(derivs,2)
+          derivs(1:,j) = derivs(1:,j) * h(1:)
+        end do
+        deallocate(h)
+#else
         associate( h => [(self%dx**i, i=1, ubound(derivs,1))] )
           do j = lbound(derivs,2), ubound(derivs,2)
             derivs(1:,j) = derivs(1:,j) * h(1:)
           end do
         end associate
+#endif
 
         do i = nbasis-nbc_xmax+1, nbasis
           order = i-(nbasis-nbc_xmax+1)+self%odd

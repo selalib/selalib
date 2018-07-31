@@ -85,7 +85,6 @@ type :: sll_t_maxwell_2d_diga
    sll_real64                              :: eta2_max     !< top side
    sll_real64                              :: delta_eta2   !< step size
    sll_transformation, pointer             :: tau          !< transformation
-   type(sll_t_cartesian_mesh_2d), pointer  :: mesh         !< Logical mesh
    sll_int32                               :: degree       !< degree of gauss integration
    type(cell_type), pointer                :: cell(:,:)    !< mesh cells
    sll_real64, pointer                     :: f(:,:)       !< cell flux
@@ -184,23 +183,19 @@ subroutine sll_s_maxwell_2d_diga_init( self,         &
    sll_int32  :: error
 
    self%tau        => tau
-   ! Please undo self 'fix' whenever it is decided that gfortran 4.6 is no
-   ! longer supported.
-   !   self%mesh       => tau%get_cartesian_mesh()
-   self%mesh       => tau%mesh
    self%bc_south   =  bc_south
    self%bc_east    =  bc_east
    self%bc_north   =  bc_north
    self%bc_west    =  bc_west
 
-   self%nc_eta1    = self%mesh%num_cells1
-   self%nc_eta2    = self%mesh%num_cells2
-   self%eta1_min   = self%mesh%eta1_min
-   self%eta2_min   = self%mesh%eta2_min
-   self%eta1_max   = self%mesh%eta1_max
-   self%eta2_max   = self%mesh%eta2_max
-   self%delta_eta1 = self%mesh%delta_eta1
-   self%delta_eta2 = self%mesh%delta_eta2
+   self%nc_eta1    = self%tau%mesh%num_cells1
+   self%nc_eta2    = self%tau%mesh%num_cells2
+   self%eta1_min   = self%tau%mesh%eta1_min
+   self%eta2_min   = self%tau%mesh%eta2_min
+   self%eta1_max   = self%tau%mesh%eta1_max
+   self%eta2_max   = self%tau%mesh%eta2_max
+   self%delta_eta1 = self%tau%mesh%delta_eta1
+   self%delta_eta2 = self%tau%mesh%delta_eta2
 
    self%xi           = 0.0_f64
    self%degree       = degree
@@ -221,10 +216,10 @@ subroutine sll_s_maxwell_2d_diga_init( self,         &
    w    = sll_f_gauss_lobatto_weights(degree+1,0.0_f64,1.0_f64)
    dlag = sll_f_gauss_lobatto_derivative_matrix(degree+1,x)
 
-   dtau_ij_mat(1,1) = self%mesh%delta_eta1
+   dtau_ij_mat(1,1) = self%tau%mesh%delta_eta1
    dtau_ij_mat(1,2) = 0.0_f64
    dtau_ij_mat(2,1) = 0.0_f64
-   dtau_ij_mat(2,2) = self%mesh%delta_eta2
+   dtau_ij_mat(2,2) = self%tau%mesh%delta_eta2
 
    do j = 1, self%nc_eta2   !Loop over cells
    do i = 1, self%nc_eta1
@@ -426,13 +421,13 @@ subroutine sll_s_solve_maxwell_2d_diga( self, fx, fy, fz, dx, dy, dz )
             A(3,:) = [    -n2,      n1, 0.0_f64, 0.0_f64]
             A(4,:) = [  xi*n1,   xi*n2, 0.0_f64, 0.0_f64]
 
-            A_p(1,:)=[ (n2*n2+xi*n1*n1)/r,    n2*n1*(xi-1.)/r,    -n2, xi*n1]
-            A_p(2,:)=[    n2*n1*(xi-1.)/r, (n1*n1+xi*n2*n2)/r,     n1, xi*n2]
-            A_p(3,:)=[                -n2,                 n1,      r,0._f64]
-            A_p(4,:)=[              n1*xi,              n2*xi,0.0_f64,  xi*r]
+            A_p(1,:)=[ (n2*n2+xi*n1*n1)/r, n2*n1*(xi-1._f64)/r, -n2, xi*n1]
+            A_p(2,:)=[n2*n1*(xi-1._f64)/r,  (n1*n1+xi*n2*n2)/r,  n1, xi*n2]
+            A_p(3,:)=[                -n2,                  n1,   r,0._f64]
+            A_p(4,:)=[              n1*xi,               n2*xi,0._f64,  xi*r]
     
-            A_m(1,:)=[-(n2*n2+xi*n1*n1)/r,   -n2*n1*(xi-1.)/r,    -n2, xi*n1]
-            A_m(2,:)=[   -n2*n1*(xi-1.)/r,-(n1*n1+xi*n2*n2)/r,     n1, xi*n2]
+            A_m(1,:)=[-(n2*n2+xi*n1*n1)/r,   -n2*n1*(xi-1._f64)/r, -n2, xi*n1]
+            A_m(2,:)=[   -n2*n1*(xi-1._f64)/r,-(n1*n1+xi*n2*n2)/r, n1, xi*n2]
             A_m(3,:)=[                -n2,                 n1,     -r,0._f64]
             A_m(4,:)=[              n1*xi,              n2*xi,0.0_f64, -xi*r]
 
@@ -457,18 +452,18 @@ subroutine sll_s_solve_maxwell_2d_diga( self, fx, fy, fz, dx, dy, dz )
                A(3,:) = [           0.0_f64,           0.0_f64,       r, 0.0_f64]
                A(4,:) = [           0.0_f64,           0.0_f64, 0.0_f64,    xi*r]
 
-               self%f(left,:) = self%f(left,:)-0.5*matmul(A,self%w(left,:)) 
+               self%f(left,:) = self%f(left,:)-0.5_f64*matmul(A,self%w(left,:)) 
 
             case default
 
                if (self%flux_type == sll_p_uncentered) then
 
                   self%f(left,:) = self%f(left,:) &
-                                   -0.5*matmul(A_p,self%w(left,:)) &
-                                   -0.5*matmul(A_m,self%r(right,:)) 
+                                   -0.5_f64*matmul(A_p,self%w(left,:)) &
+                                   -0.5_f64*matmul(A_m,self%r(right,:)) 
                else
 
-                  flux = 0.5*(self%w(left,:)+self%r(right,:))
+                  flux = 0.5_f64*(self%w(left,:)+self%r(right,:))
 
                   self%f(left,:) = self%f(left,:)-matmul(A,flux)
 
@@ -567,14 +562,13 @@ subroutine compute_normals(tau, bc_south, bc_east, bc_north, bc_west, &
    sll_int32                   :: bc_west
    sll_int32                   :: k
    sll_int32                   :: error
-   class(sll_t_cartesian_mesh_2d), pointer :: lm
 
-   lm => tau%get_cartesian_mesh()
+   associate (lm => tau%mesh)
    
    cell%i = i
    cell%j = j
-   cell%eta1_min = lm%eta1_min + (i-1)*lm%delta_eta1
-   cell%eta2_min = lm%eta2_min + (j-1)*lm%delta_eta2
+   cell%eta1_min = lm%eta1_min + real(i-1,f64)*lm%delta_eta1
+   cell%eta2_min = lm%eta2_min + real(j-1,f64)*lm%delta_eta2
    
    cell%eta1_max = cell%eta1_min + lm%delta_eta1
    cell%eta2_max = cell%eta2_min + lm%delta_eta2
@@ -583,6 +577,7 @@ subroutine compute_normals(tau, bc_south, bc_east, bc_north, bc_west, &
    dtau_ij_mat(1,2) = 0.0_f64
    dtau_ij_mat(2,1) = 0.0_f64
    dtau_ij_mat(2,2) = lm%delta_eta2
+   
 
    do side = 1, 4
       SLL_CLEAR_ALLOCATE(cell%edge(side)%vec_norm(1:d+1,1:2),error)
@@ -680,6 +675,8 @@ subroutine compute_normals(tau, bc_south, bc_east, bc_north, bc_west, &
 
    cell%edge(WEST)%length = length
    cell%edge(WEST)%vec_norm = vec_norm/lm%delta_eta2
+
+   end associate
 
 end subroutine compute_normals
 

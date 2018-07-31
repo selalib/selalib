@@ -500,18 +500,18 @@ contains
 
     if(df%ready_for_sequential_ops_in_x1x2 .eqv. .true.) then
        gi = sll_o_local_to_global(df%layouts_x1x2(patch+1)%l, ijkl)
-       etas(1) = eta1_min + (gi(1)-1)*delta1
-       etas(2) = eta2_min + (gi(2)-1)*delta2
-       etas(3) = eta3_min + (gi(3)-1)*delta3
-       etas(4) = eta4_min + (gi(4)-1)*delta4
+       etas(1) = eta1_min + real(gi(1)-1,f64)*delta1
+       etas(2) = eta2_min + real(gi(2)-1,f64)*delta2
+       etas(3) = eta3_min + real(gi(3)-1,f64)*delta3
+       etas(4) = eta4_min + real(gi(4)-1,f64)*delta4
     end if
 
     if(df%ready_for_sequential_ops_in_x1x2 .eqv. .false.) then
        gi = sll_o_local_to_global(df%layouts_x3x4(patch+1)%l, ijkl)
-       etas(1) = eta1_min + (gi(1)-1)*delta1
-       etas(2) = eta2_min + (gi(2)-1)*delta2
-       etas(3) = eta3_min + (gi(3)-1)*delta3
-       etas(4) = eta4_min + (gi(4)-1)*delta4
+       etas(1) = eta1_min + real(gi(1)-1,f64)*delta1
+       etas(2) = eta2_min + real(gi(2)-1,f64)*delta2
+       etas(3) = eta3_min + real(gi(3)-1,f64)*delta3
+       etas(4) = eta4_min + real(gi(4)-1,f64)*delta4
     end if
   end function get_eta_coords_df4d
 

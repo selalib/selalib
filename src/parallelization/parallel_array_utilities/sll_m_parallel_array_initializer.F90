@@ -28,7 +28,6 @@ module sll_m_parallel_array_initializer
     sll_o_4d_parallel_array_initializer_cartesian, &
     sll_s_4d_parallel_array_initializer_finite_volume
 
-  private
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
   ! The parallel array initializer module helps initialize multidimensional
