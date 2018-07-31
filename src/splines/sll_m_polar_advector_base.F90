@@ -11,7 +11,7 @@ module sll_m_polar_advector_base
 
   use sll_m_polar_mapping_base, only: sll_c_polar_mapping
 
-  use sll_m_polar_mapping_analytical, only: sll_c_polar_mapping_analytical
+  use sll_m_jacobian_2d_pseudo_cartesian, only: sll_t_jacobian_2d_pseudo_cartesian
 
   implicit none
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -127,21 +127,21 @@ contains
     self        , &
     eta         , &
     h           , &
-    mapping     , &
+    jac_2d_pcart, &
     spline_2d_a1, &
     spline_2d_a2, &
     abs_tol     , &
     rel_tol     , &
     maxiter ) result( eta_new )
-    class(sll_c_polar_advector)          , intent(in) :: self
-    real(wp)                             , intent(in) :: eta(2)
-    real(wp)                             , intent(in) :: h
-    class(sll_c_polar_mapping_analytical), intent(in) :: mapping
-    type(sll_t_spline_2d)                , intent(in) :: spline_2d_a1
-    type(sll_t_spline_2d)                , intent(in) :: spline_2d_a2
-    real(wp)                             , intent(in) :: abs_tol
-    real(wp)                             , intent(in) :: rel_tol
-    integer                              , intent(in) :: maxiter
+    class(sll_c_polar_advector)             , intent(in) :: self
+    real(wp)                                , intent(in) :: eta(2)
+    real(wp)                                , intent(in) :: h
+    type(sll_t_jacobian_2d_pseudo_cartesian), intent(in) :: jac_2d_pcart
+    type(sll_t_spline_2d)                   , intent(in) :: spline_2d_a1
+    type(sll_t_spline_2d)                   , intent(in) :: spline_2d_a2
+    real(wp)                                , intent(in) :: abs_tol
+    real(wp)                                , intent(in) :: rel_tol
+    integer                                 , intent(in) :: maxiter
     real(wp) :: eta_new(2)
 
     !---------------------------------------------------------------------------
@@ -157,7 +157,7 @@ contains
 !
 !    tol_sqr = ( abs_tol + rel_tol * norm2( y0 ) )**2
 !
-!    jmat_comp = mapping % jmat_comp( eta )
+!    jmat_comp = jac_2d_pcart % eval( eta )
 !
 !    ! Pseudo-Cartesian components of advection field
 !    a0(1) =   jmat_comp(1,1) * spline_2d_a1 % eval( eta(1), eta(2) ) &
@@ -177,7 +177,7 @@ contains
 !
 !        do j = 2, maxiter
 !
-!          jmat_comp = mapping % jmat_comp( eta_new )
+!          jmat_comp = jac_2d_pcart % eval( eta_new )
 !
 !          ! k2 = f(t,x_{i-1})
 !          k2(1) =   jmat_comp(1,1) * spline_2d_a1 % eval( eta_new(1), eta_new(2) ) &
@@ -214,7 +214,7 @@ contains
     a_x1  = spline_2d_a1 % eval( eta(1), eta(2) )
     a_x2  = spline_2d_a2 % eval( eta(1), eta(2) )
 
-    jmat_comp = mapping % jmat_comp( eta )
+    jmat_comp = jac_2d_pcart % eval( eta )
 
     k1(1) = jmat_comp(1,1) * a_x1 + jmat_comp(1,2) * a_x2
     k1(2) = jmat_comp(2,1) * a_x1 + jmat_comp(2,2) * a_x2
@@ -225,7 +225,7 @@ contains
     a_x1  = spline_2d_a1 % eval( tmp(1), tmp(2) )
     a_x2  = spline_2d_a2 % eval( tmp(1), tmp(2) )
 
-    jmat_comp = mapping % jmat_comp( tmp )
+    jmat_comp = jac_2d_pcart % eval( tmp )
 
     k2(1) = jmat_comp(1,1) * a_x1 + jmat_comp(1,2) * a_x2
     k2(2) = jmat_comp(2,1) * a_x1 + jmat_comp(2,2) * a_x2
@@ -236,7 +236,7 @@ contains
     a_x1  = spline_2d_a1 % eval( tmp(1), tmp(2) )
     a_x2  = spline_2d_a2 % eval( tmp(1), tmp(2) )
 
-    jmat_comp = mapping % jmat_comp( tmp )
+    jmat_comp = jac_2d_pcart % eval( tmp )
 
     k3(1) = jmat_comp(1,1) * a_x1 + jmat_comp(1,2) * a_x2
     k3(2) = jmat_comp(2,1) * a_x1 + jmat_comp(2,2) * a_x2
@@ -261,7 +261,7 @@ contains
 !    a_x1  = spline_2d_a1 % eval( eta(1), eta(2) )
 !    a_x2  = spline_2d_a2 % eval( eta(1), eta(2) )
 !
-!    jmat_comp = mapping % jmat_comp( eta )
+!    jmat_comp = jac_2d_pcart % eval( eta )
 !
 !    k1(1) = jmat_comp(1,1) * a_x1 + jmat_comp(1,2) * a_x2
 !    k1(2) = jmat_comp(2,1) * a_x1 + jmat_comp(2,2) * a_x2
@@ -272,7 +272,7 @@ contains
 !    a_x1  = spline_2d_a1 % eval( tmp(1), tmp(2) )
 !    a_x2  = spline_2d_a2 % eval( tmp(1), tmp(2) )
 !
-!    jmat_comp = mapping % jmat_comp( tmp )
+!    jmat_comp = jac_2d_pcart % eval( tmp )
 !
 !    k2(1) = jmat_comp(1,1) * a_x1 + jmat_comp(1,2) * a_x2
 !    k2(2) = jmat_comp(2,1) * a_x1 + jmat_comp(2,2) * a_x2
@@ -283,7 +283,7 @@ contains
 !    a_x1  = spline_2d_a1 % eval( tmp(1), tmp(2) )
 !    a_x2  = spline_2d_a2 % eval( tmp(1), tmp(2) )
 !
-!    jmat_comp = mapping % jmat_comp( tmp )
+!    jmat_comp = jac_2d_pcart % eval( tmp )
 !
 !    k3(1) = jmat_comp(1,1) * a_x1 + jmat_comp(1,2) * a_x2
 !    k3(2) = jmat_comp(2,1) * a_x1 + jmat_comp(2,2) * a_x2
@@ -294,7 +294,7 @@ contains
 !    a_x1  = spline_2d_a1 % eval( tmp(1), tmp(2) )
 !    a_x2  = spline_2d_a2 % eval( tmp(1), tmp(2) )
 !
-!    jmat_comp = mapping % jmat_comp( tmp )
+!    jmat_comp = jac_2d_pcart % eval( tmp )
 !
 !    k4(1) = jmat_comp(1,1) * a_x1 + jmat_comp(1,2) * a_x2
 !    k4(2) = jmat_comp(2,1) * a_x1 + jmat_comp(2,2) * a_x2
