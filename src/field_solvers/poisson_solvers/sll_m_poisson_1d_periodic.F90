@@ -143,7 +143,7 @@ contains
     ! Forward FFT 
     call dfftf( self%nc_eta1, self%work, self%wsave)
 
-    self%work = self%work /self%nc_eta1      ! normalize FFT
+    self%work = self%work /real(self%nc_eta1,f64)      ! normalize FFT
 
     kx0  = 2_f64*sll_p_pi/(self%eta1_max-self%eta1_min)
 
@@ -153,12 +153,12 @@ contains
 
     ! Calcul des autres composantes de Fourier
     do ik=1,(self%nc_eta1-2)/2 
-       kx= ik*kx0
+       kx= real(ik,f64)*kx0
        k2 = kx*kx
        field(2*ik)       = kx/k2*self%work(2*ik+1)
        field(2*ik+1)     = -kx/k2*self%work(2*ik)
-       self%work(2*ik)   = 1/k2*self%work(2*ik)
-       self%work(2*ik+1) = 1/k2*self%work(2*ik+1)
+       self%work(2*ik)   = 1.0_f64/k2*self%work(2*ik)
+       self%work(2*ik+1) = 1.0_f64/k2*self%work(2*ik+1)
     end do
 
     field(self%nc_eta1)= 0.0_f64          ! because Im(rhs/2)=0
