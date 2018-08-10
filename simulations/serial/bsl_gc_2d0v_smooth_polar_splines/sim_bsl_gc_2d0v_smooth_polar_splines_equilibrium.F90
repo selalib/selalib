@@ -57,14 +57,29 @@ program sim_bsl_gc_2d0v_smooth_polar_splines
   integer, parameter :: wp = f64
 
   ! Integer variables
-  integer :: n1, n2, p1, p2, ncells1, ncells2, ntau1, ntau2, i1, i2, it, maptype, h5_error
+  integer :: n1, n2, p1, p2, ncells1, ncells2, ntau1, ntau2, i1, i2, it, maptype, h5_error, file_unit
 
   ! Real variables
   real(wp) :: sigma, inf_norm_phi, residual, t_diff, t_iter, eta(2)
 
-  real(wp), parameter :: tolerance = 1.0e-6_wp
+  ! Namelists
+
+  namelist /splines/ &
+    n1, &
+    n2, &
+    p1, &
+    p2
+
+  namelist /geometry/ &
+    maptype
+
+  real(wp), parameter :: tolerance = 1.0e-12_wp
 
   ! Character variables
+  character(len=:), allocatable :: input_file
+  character(len=32) :: file_name
+  character(len=10) :: status
+  character(len=10) :: position
   character(len=32) :: attr_name
 
   ! Real 1D allocatables
@@ -85,13 +100,13 @@ program sim_bsl_gc_2d0v_smooth_polar_splines
   type(sll_t_time_mark)                      :: t0, t1
   type(sll_t_hdf5_ser_handle)                :: file_id
 
-  ! Degrees of freedom
-  n1 = 128
-  n2 = n1*2
+  ! Parse input argument
+  call s_parse_command_arguments( input_file )
 
-  ! Spline degrees
-  p1 = 3
-  p2 = 3
+  ! Read input file
+  open ( file=trim( input_file ), status='old', action='read', newunit=file_unit )
+  read ( file_unit, splines  ); rewind( file_unit )
+  read ( file_unit, geometry ); close ( file_unit )
 
   ! Create HDF5 file
   call sll_s_hdf5_ser_file_create( 'sim_bsl_gc_2d0v_smooth_polar_splines_equilibrium.h5', file_id, h5_error )
@@ -148,9 +163,6 @@ program sim_bsl_gc_2d0v_smooth_polar_splines
     ncells   = ncells2 )
 
   write(*,'(/a)') " >> Initializing mapping"
-
-  ! Maptype: 0 (circle), 1 (target), 2 (Czarny)
-  maptype = 2
 
   ! Allocate analytical mapping
   if ( maptype == 0 .or. maptype == 1 ) then
@@ -315,7 +327,7 @@ program sim_bsl_gc_2d0v_smooth_polar_splines
 
     t_iter = t_iter + t_diff
 
-    write(*,'(a,es13.6)') " sigma = ", sigma
+    write(*,'(a,es21.14)') " sigma = ", sigma
 
   end do
 
@@ -358,6 +370,33 @@ program sim_bsl_gc_2d0v_smooth_polar_splines
 contains
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
+  subroutine s_parse_command_arguments( input_file )
+    character(len=:), allocatable, intent(  out) :: input_file
+
+    character(len=*), parameter :: this_sub_name = "s_parse_command_arguments"
+
+    integer :: argc
+    character(len=256) :: string
+    character(len=256) :: err_msg
+
+    ! Count command line arguments
+    argc = command_argument_count()
+
+    ! Stop if there are no arguments
+    if (argc == 0) then
+      err_msg = "Input file not found"
+      SLL_ERROR( this_sub_name, err_msg )
+      return
+    end if
+
+    ! Read file name
+    call get_command_argument( 1, string )
+    string  = adjustl( string )
+    input_file = trim( string )
+
+  end subroutine s_parse_command_arguments
+
+  !-----------------------------------------------------------------------------
   SLL_PURE function f( psi )
     real(wp), intent(in) :: psi 
     real(wp) :: f
