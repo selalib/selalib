@@ -82,7 +82,7 @@ subroutine sll_s_gnuplot_write(array, array_name, iplot)
   npoints = size(array)
 
   ! Check that plot index is strictly positive
-  SLL_ASSERT( iplot > 0 )
+  SLL_ASSERT_ALWAYS( iplot > 0 )
 
   ! Convert plot index to string
   call sll_s_int2string( iplot, cplot )
@@ -140,10 +140,10 @@ subroutine sll_gnuplot_write_two_arrays_1d(array_name, array1, array2, iplot)
   character(len=8) :: gnu_status
   
   n = size(array1)
-  SLL_ASSERT(size(array2) == n)
+  SLL_ASSERT_ALWAYS(size(array2) == n)
 
   ! Check that plot index is strictly positive
-  SLL_ASSERT( iplot > 0 )
+  SLL_ASSERT_ALWAYS( iplot > 0 )
 
   ! Convert plot index to string
   call sll_s_int2string( iplot, cplot )
@@ -212,7 +212,7 @@ subroutine sll_gnuplot_write_1d( y_array, x_array, array_name, iplot)
  
   if (present( iplot )) then
     ! Check that plot index is strictly positive
-    SLL_ASSERT( iplot > 0 )
+    SLL_ASSERT_ALWAYS( iplot > 0 )
 
     ! Convert plot index to string
     call sll_s_int2string( iplot, cplot )
@@ -304,7 +304,7 @@ subroutine sll_gnuplot_corect_2d(xmin, xmax, nx,    &
   logical          :: file_exists
   
   ! Check that plot index is strictly positive
-  SLL_ASSERT( iplot > 0 )
+  SLL_ASSERT_ALWAYS( iplot > 0 )
 
   ! Convert plot index to string
   call sll_s_int2string( iplot, fin )
@@ -387,7 +387,7 @@ subroutine sll_gnuplot_rect_2d( nx, xvec, ny, yvec,&
   character(len=8) :: gnu_status
   
   ! Check that plot index is strictly positive
-  SLL_ASSERT( iplot > 0 )
+  SLL_ASSERT_ALWAYS( iplot > 0 )
 
   ! Convert plot index to string
   call sll_s_int2string( iplot, fin )
@@ -514,7 +514,7 @@ subroutine sll_gnuplot_curv_2d( nx, ny, x, y, array, array_name, iplot, error)
   character(len=8) :: gnu_status
 
   ! Check that plot index is strictly positive
-  SLL_ASSERT( iplot > 0 )
+  SLL_ASSERT_ALWAYS( iplot > 0 )
 
   ! Convert plot index to string
   call sll_s_int2string( iplot, fin )
@@ -591,10 +591,10 @@ subroutine write_unstructured_field( field_at_node,  &
 
   ! Get number of nodes, and verify that three coordinates are given
   num_cells = size(nodes,2)
-  SLL_ASSERT( size(nodes,1) == 3)
+  SLL_ASSERT_ALWAYS( size(nodes,1) == 3)
 
   ! Check that plot index is strictly positive
-  SLL_ASSERT( plot_number > 0 )
+  SLL_ASSERT_ALWAYS( plot_number > 0 )
 
   ! Convert plot index to string
   call sll_s_int2string( plot_number, cplot )
