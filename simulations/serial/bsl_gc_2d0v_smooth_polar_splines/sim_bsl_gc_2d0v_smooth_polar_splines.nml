@@ -28,6 +28,10 @@
   ampl = 1.0e-04
 /
 
+&equilibrium
+  equil_num = .false.
+/
+
 &diagnostics
   diag_freq = 20
   nx1       = 512
