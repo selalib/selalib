@@ -33,7 +33,7 @@ p2 = h5.attrs['p2']
 # interpolation points
 ntau1 = h5.attrs['ntau1']
 ntau2 = h5.attrs['ntau2']
-Ni = h5.attrs['iterations']
+Ni = h5.attrs['iterations']+1
 
 tt = np.ndarray( Ni, dtype=int )
 for i in range(0,Ni):
