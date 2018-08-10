@@ -52,13 +52,14 @@ program sim_bsl_gc_2d0v_smooth_polar_splines
     sll_f_time_elapsed_between
 
   use sll_m_hdf5_io_serial, only: &
-    sll_t_hdf5_ser_handle     , &
-    sll_s_hdf5_ser_file_create, &
-    sll_s_hdf5_ser_file_open  , &
-    sll_s_hdf5_ser_file_close , &
-    sll_o_hdf5_ser_write_array, &
+    sll_t_hdf5_ser_handle         , &
+    sll_s_hdf5_ser_file_create    , &
+    sll_s_hdf5_ser_file_open      , &
+    sll_s_hdf5_ser_file_close     , &
+    sll_o_hdf5_ser_write_array    , &
     sll_o_hdf5_ser_write_attribute, &
-    sll_o_hdf5_ser_read_array
+    sll_o_hdf5_ser_read_array     , &
+    sll_o_hdf5_ser_read_attribute
 
   implicit none
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -73,6 +74,9 @@ program sim_bsl_gc_2d0v_smooth_polar_splines
 
   ! Real variables
   real(wp) :: dt, abs_tol, rel_tol, smin, smax, ampl, t_diff, t_iter, x(2), eta(2), El(2)
+
+  ! Logical variables
+  logical :: equil_num, success
 
   ! Namelists
 
@@ -101,6 +105,9 @@ program sim_bsl_gc_2d0v_smooth_polar_splines
     smax, &
     ampl
 
+  namelist /equilibrium/ &
+    equil_num
+
   namelist /diagnostics/ &
     diag_freq, &
     nx1      , &
@@ -108,9 +115,6 @@ program sim_bsl_gc_2d0v_smooth_polar_splines
 
   ! Real parameters
   real(wp), parameter :: epsi = 1.0e-12_wp
-
-  ! Logical variables
-  logical :: success
 
   ! Character variables
   character(len=:), allocatable :: input_file
@@ -145,7 +149,7 @@ program sim_bsl_gc_2d0v_smooth_polar_splines
   type(sll_t_advector_2d_pseudo_cartesian)   :: advector
   type(sll_t_scalar_diagnostics)             :: scalar_diagnostics
   type(sll_t_time_mark)                      :: t0, t1
-  type(sll_t_hdf5_ser_handle)                :: file_id
+  type(sll_t_hdf5_ser_handle)                :: file_id, file_id_eq
 
   ! Parse input argument
   call s_parse_command_arguments( input_file )
@@ -157,6 +161,7 @@ program sim_bsl_gc_2d0v_smooth_polar_splines
   read ( file_unit, time_integration  ); rewind( file_unit )
   read ( file_unit, characteristics   ); rewind( file_unit )
   read ( file_unit, initial_condition ); rewind( file_unit )
+  read ( file_unit, equilibrium       ); rewind( file_unit )
   read ( file_unit, diagnostics       ); close ( file_unit )
 
   ! Create HDF5 file
@@ -287,8 +292,7 @@ program sim_bsl_gc_2d0v_smooth_polar_splines
     bsplines_eta2   , &
     breaks_eta1     , &
     breaks_eta2     , &
-    mapping_discrete, &
-    abs_tol )
+    mapping_discrete )
 
   ! Set boundary conditions
   call poisson_solver % set_boundary_conditions( sll_p_dirichlet )
@@ -319,15 +323,42 @@ program sim_bsl_gc_2d0v_smooth_polar_splines
   allocate( Ex     ( ntau1, ntau2+1 ) )
   allocate( Ey     ( ntau1, ntau2+1 ) )
 
-  ! Evaluate initial density on interpolation points
+  ! Compute equilibrium density on interpolation points
+  if ( equil_num ) then
+
+    call sll_s_hdf5_ser_file_open( 'sim_bsl_gc_2d0v_smooth_polar_splines_equilibrium.h5', file_id_eq, h5_error )
+    call sll_o_hdf5_ser_read_attribute( file_id_eq, "/", "iterations", it, h5_error )
+    write( attr_name, '(a,i0)' ) "/rho_", it
+    call sll_o_hdf5_ser_read_array( file_id_eq, rho, trim(attr_name), h5_error )
+    call sll_o_hdf5_ser_read_array( file_id_eq, phi, trim(attr_name), h5_error )
+!    call sll_s_hdf5_ser_file_close( file_id_eq, h5_error )
+
+  ! Write data to HDF5 file
+  call sll_o_hdf5_ser_write_array( file_id, phi, "/phi_eq", h5_error )
+
+  else
+
+    do i2 = 1, ntau2
+      do i1 = 1, ntau1
+        eta(1) = tau_eta1(i1)
+        eta(2) = tau_eta2(i2)
+        rho(i1,i2) = rho_equilibrium( eta )
+      end do
+    end do
+
+  end if
+
+  ! Write data to HDF5 file
+  call sll_o_hdf5_ser_write_array( file_id, rho, "/rho_eq", h5_error )
+
+  ! Add perturbation to equilibrium
   do i2 = 1, ntau2
     do i1 = 1, ntau1
       eta(1) = tau_eta1(i1)
       eta(2) = tau_eta2(i2)
-      rho(i1,i2) = rho_initial( eta )
+      rho(i1,i2) = rho(i1,i2) + rho_perturbation( eta )
     end do
   end do
-
   ! Apply periodicity along theta
   rho(:,ntau2+1) = rho(:,1)
 
@@ -624,17 +655,45 @@ contains
   end subroutine s_parse_command_arguments
 
   !-----------------------------------------------------------------------------
-  SLL_PURE function rho_initial( eta )
+  SLL_PURE function rho_equilibrium( eta )
     real(wp), intent(in) :: eta(2)
-    real(wp) :: rho_initial
+    real(wp) :: rho_equilibrium
 
     associate( smid => 0.5_wp * ( smin + smax ), dist => 0.5_wp * ( smax - smin ) )
 
       ! smoothing on initial condition suggested in doi:10.1140/epjd/e2014-50180-9 (eq. 10)
-      rho_initial = ( 1.0_wp + ampl * cos( l*eta(2) )) * exp( - ( (eta(1)-smid)/dist )**p )
+      rho_equilibrium = exp( - ( (eta(1)-smid)/dist )**p )
 
     end associate
 
-  end function rho_initial
+  end function rho_equilibrium
+
+  !-----------------------------------------------------------------------------
+  SLL_PURE function rho_perturbation( eta )
+    real(wp), intent(in) :: eta(2)
+    real(wp) :: rho_perturbation
+
+    associate( smid => 0.5_wp * ( smin + smax ), dist => 0.5_wp * ( smax - smin ) )
+
+      ! smoothing on initial condition suggested in doi:10.1140/epjd/e2014-50180-9 (eq. 10)
+      rho_perturbation = ampl * cos( l*eta(2) ) * exp( - ( (eta(1)-smid)/dist )**p )
+
+    end associate
+
+!    real(wp) :: s, x(2), x0(2), rho_p1, rho_p2
+!
+!    s  = 0.08_wp
+!
+!    x  = mapping_discrete % eval( eta )
+!
+!    x0 = (/ 0.08_wp, -0.14_wp /)
+!    rho_p1 = ampl * exp( - ( 0.5_wp*((x(1)-x0(1))**2+(x(2)-x0(2))**2)/s**2 ) )
+!
+!    x0 = (/ -0.08_wp, 0.14_wp /)
+!    rho_p2 = ampl * exp( - ( 0.5_wp*((x(1)-x0(1))**2+(x(2)-x0(2))**2)/s**2 ) )
+!
+!    rho_perturbation = rho_p1 + rho_p2
+
+  end function rho_perturbation
 
 end program sim_bsl_gc_2d0v_smooth_polar_splines
