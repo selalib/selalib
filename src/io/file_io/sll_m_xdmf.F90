@@ -470,8 +470,8 @@ type(sll_t_hdf5_ser_handle)  :: hfile_id      !< hdf5 file handle
 nx1 = size(array,1)
 nx2 = size(array,2)
 
-SLL_ASSERT(nx1 == size(eta1))
-SLL_ASSERT(nx2 == size(eta2))
+SLL_ASSERT_ALWAYS(nx1 == size(eta1))
+SLL_ASSERT_ALWAYS(nx2 == size(eta2))
 
 if (present(iplot)) then
   call sll_s_int2string(iplot, cplot)
@@ -564,9 +564,9 @@ nx1 = size(array,1)
 nx2 = size(array,2)
 nx3 = size(array,3)
 
-SLL_ASSERT(nx1 == size(eta1))
-SLL_ASSERT(nx2 == size(eta2))
-SLL_ASSERT(nx3 == size(eta3))
+SLL_ASSERT_ALWAYS(nx1 == size(eta1))
+SLL_ASSERT_ALWAYS(nx2 == size(eta2))
+SLL_ASSERT_ALWAYS(nx3 == size(eta3))
 
 if (present(iplot)) then
   call sll_s_int2string(iplot, cplot)
@@ -657,8 +657,8 @@ type(sll_t_hdf5_ser_handle)  :: hfile_id      !< hdf5 file handle
 nx1 = size(array,1)
 nx2 = size(array,2)
 
-SLL_ASSERT(nx1 == size(eta1,1))
-SLL_ASSERT(nx2 == size(eta2,2))
+SLL_ASSERT_ALWAYS(nx1 == size(eta1,1))
+SLL_ASSERT_ALWAYS(nx2 == size(eta2,2))
 
 if (present(iplot)) then
   call sll_s_int2string(iplot, cplot)
@@ -795,9 +795,9 @@ nx1 = size(array,1)
 nx2 = size(array,2)
 nx3 = size(array,3)
 
-SLL_ASSERT(nx1 == size(eta1,1))
-SLL_ASSERT(nx2 == size(eta2,2))
-SLL_ASSERT(nx3 == size(eta3,3))
+SLL_ASSERT_ALWAYS(nx1 == size(eta1,1))
+SLL_ASSERT_ALWAYS(nx2 == size(eta2,2))
+SLL_ASSERT_ALWAYS(nx3 == size(eta3,3))
 
 if (present(iplot)) then
   call sll_s_int2string(iplot, cplot)
@@ -947,7 +947,7 @@ subroutine sll_s_plot_f_cartesian( iplot,      &
 type(sll_t_hdf5_ser_handle)  :: hfile_id      !< hdf5 file handle
 #endif
   
-  SLL_ASSERT(iplot > 0)
+  SLL_ASSERT_ALWAYS(iplot > 0)
   if (iplot == 1) then
 
     SLL_ALLOCATE(x1(nnodes_x1,nnodes_x2), error)
