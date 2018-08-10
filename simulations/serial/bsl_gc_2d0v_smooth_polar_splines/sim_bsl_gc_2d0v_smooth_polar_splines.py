@@ -61,12 +61,15 @@ Ex_cart = dict()
 Ey_cart = dict()
 for i in tt:
     t = str(i)
-    rho[t] = h5['rho_'+t].value
-    phi[t] = h5['phi_'+t].value
-    Ex[t]  = h5['Ex_' +t].value
-    Ey[t]  = h5['Ey_' +t].value
+    rho    [t] = h5['rho_'    +t].value
+    phi    [t] = h5['phi_'    +t].value
+    Ex     [t] = h5['Ex_'     +t].value
+    Ey     [t] = h5['Ey_'     +t].value
     Ex_cart[t] = h5['Ex_cart_'+t].value
     Ey_cart[t] = h5['Ey_cart_'+t].value
+
+# Load equilibrium density
+rho_eq = h5['rho_eq'].value
 
 # Load Cartesian grids
 x1_cart = h5['x1_cart'].value
@@ -97,11 +100,20 @@ def minmax( Q ):
            max_Q = Q[t].max()
     return [ min_Q, max_Q ]
 
-min_rho, max_rho = minmax( rho )
 min_phi, max_phi = minmax( phi )
 min_Ex , max_Ex  = minmax( Ex )
 min_Ey , max_Ey  = minmax( Ey )
 min_Em , max_Em  = minmax( Em )
+
+min_rho = 1.0
+max_rho = 0.0
+for i in tt:
+    t = str(i)
+    d = rho[t] - rho_eq
+    if ( d.min() < min_rho ):
+       min_rho = d.min()
+    if ( d.max() > max_rho ):
+       max_rho = d.max()
 
 # Animated plot
 def plot_time_evolution( arg ):
@@ -116,23 +128,23 @@ def plot_time_evolution( arg ):
         ax.clear()
         cax.clear()
         if ( arg == 'rho' ):
-           clevels = np.linspace( min_rho, max_rho, 100 )
-           im = ax.contourf( x1, x2, rho[t], clevels, cmap='jet' )
+           clevels = np.linspace( min_rho, max_rho, 101 )
+           im = ax.contourf( x1, x2, rho[t]-rho_eq, clevels, cmap='jet' )
            ax.set_title( r'Density $\rho$ at $t = %g$' %(i*dt) )
         if ( arg == 'phi' ):
-           clevels = np.linspace( min_phi, max_phi, 100 )
+           clevels = np.linspace( min_phi, max_phi, 101 )
            im = ax.contourf( x1, x2, phi[t], clevels, cmap='jet' )
            ax.set_title( r'Potential $\phi$ at $t = %g$' %(i*dt) )
         if ( arg == 'Ex' ):
-           clevels = np.linspace( min_Ex, max_Ex, 100 )
+           clevels = np.linspace( min_Ex, max_Ex, 101 )
            im = ax.contourf( x1, x2, Ex[t], clevels, cmap='jet' )
            ax.set_title( r'Electric field component $E_x$ at $t = %g$' %(i*dt) )
         if ( arg == 'Ey' ):
-           clevels = np.linspace( min_Ey, max_Ey, 100 )
+           clevels = np.linspace( min_Ey, max_Ey, 101 )
            im = ax.contourf( x1, x2, Ey[t], clevels, cmap='jet' )
            ax.set_title( r'Electric field component $E_y$ at $t = %g$' %(i*dt) )
         if ( arg == 'Em' ):
-           clevels = np.linspace( min_Em, max_Em, 100 )
+           clevels = np.linspace( min_Em, max_Em, 101 )
            im = ax.contourf( x1, x2, Em[t], clevels, cmap='jet' )
            ax.set_title( r'Electric field magnitude $|E|$ at $t = %g$' %(i*dt) )
         nr = 16
@@ -146,13 +158,33 @@ def plot_time_evolution( arg ):
         fg.canvas.draw()
         plt.pause(1.0e-03)
 
+# plot initial condition
+i = 0
+t = str(i)
+fg = plt.figure(figsize=[9.0,9.0])
+ax = fg.add_subplot(111)
+cax = make_axes_locatable(ax).append_axes( 'right', size='8%', pad='5%' )
+clevels = np.linspace( min_rho, max_rho, 101 )
+im = ax.contourf( x1, x2, rho[t]-rho_eq, clevels, cmap='jet' )
+fg.colorbar( im, cax=cax )
+ax.set_title( r'Density $\rho$ at $t = %g$' %(i*dt) )
+nr = 16
+ax.plot( x1[:,::nr], x2[:,::nr], color='lightgrey', lw=0.5 )
+ax.plot( x1[:,n1-1], x2[:,n1-1], color='lightgrey', lw=0.5 )
+ax.plot( x1.transpose()[:,::nr], x2.transpose()[:,::nr], color='lightgrey', lw=0.5 )
+ax.set_xlabel( r'$x$' )
+ax.set_ylabel( r'$y$', rotation=0 )
+ax.set_aspect( 'equal' )
+fg.tight_layout()
+fg.show()
+
 ## save figures
 #i  = 0
 #fg = plt.figure()
 #ax = fg.add_subplot(111)
 #cax = make_axes_locatable(ax).append_axes( 'right', size='8%', pad='5%' )
 #
-#clevels = np.linspace( min_rho, max_rho, 100 )
+#clevels = np.linspace( min_rho, max_rho, 101 )
 ## contour plot
 #im = ax.contourf( x1, x2, rho[str(i)], clevels, cmap='jet' )
 #fg.colorbar( im, cax=cax )
@@ -309,15 +341,15 @@ def plot_advection_field( arg ):
         ax.clear()
         cax.clear()
         if ( arg == 'expansion' ):
-           clevels = np.linspace( min_expansion, max_expansion, 100 )
+           clevels = np.linspace( min_expansion, max_expansion, 101 )
            im = ax.contourf( x_meshgrid, y_meshgrid, expansion[t], clevels, cmap='jet' )
            ax.set_title( r'Expansion rate of advection field at $t = %g$' %(i*dt) )
         if ( arg == 'vorticity' ):
-           clevels = np.linspace( min_vorticity, max_vorticity, 100 )
+           clevels = np.linspace( min_vorticity, max_vorticity, 101 )
            im = ax.contourf( x_meshgrid, y_meshgrid, vorticity[t], clevels, cmap='jet' )
            ax.set_title( r'Vorticity of advection field at $t = %g$' %(i*dt) )
         if ( arg == 'shearrate' ):
-           clevels = np.linspace( min_shearrate, max_shearrate, 100 )
+           clevels = np.linspace( min_shearrate, max_shearrate, 101 )
            im = ax.contourf( x_meshgrid, y_meshgrid, shearrate[t], clevels, cmap='jet' )
            ax.set_title( r'Shear rate of advection field at $t = %g$' %(i*dt) )
         nx = 16
