@@ -57,7 +57,7 @@ program test_poisson_2d_fem_sps
   integer, parameter :: wp = f64
 
   ! To initialize B-splines (p1,p2 degrees)
-  integer :: mm, n1, n2, p1, p2, ncells1, ncells2!, nn
+  integer :: mm, n1, n2, p1, p2, ncells1, ncells2, maptype!, nn
 
   ! B-splines break points
   real(wp), allocatable :: breaks_eta1(:)
@@ -68,8 +68,9 @@ program test_poisson_2d_fem_sps
   class(sll_c_bsplines), allocatable :: bsplines_eta2
 
   ! Analytical and discrete mappings
-  class(sll_c_polar_mapping_analytical), allocatable :: mapping_analytical
-  type(sll_t_polar_mapping_iga) :: mapping_iga
+  class(sll_c_polar_mapping_analytical), allocatable :: mapping_analytic
+  type(sll_t_polar_mapping_iga) :: mapping_discrete
+  real(wp) :: d0, e0, b, e, x0(2)
 
   ! 2D splines representing right hand side and solution
   type(sll_t_spline_2d) :: spline_2d_rhs
@@ -115,7 +116,7 @@ program test_poisson_2d_fem_sps
   call sll_s_set_time_mark( t0 )
 
   ! Number of degrees of freedom (control points) along s and theta
-  mm = 512
+  mm = 128
   n1 = mm
   n2 = mm * 2
 !  nn = 3 + (n1-2) * n2
@@ -123,6 +124,9 @@ program test_poisson_2d_fem_sps
   ! Spline degrees along s and theta
   p1 = 3
   p2 = 3
+
+  ! Mapping type: 0 circle, 1 target (no manufactured solution for Czarny's mapping)
+  maptype = 1
 
   ! Create HDF5 file
   call sll_s_hdf5_ser_file_create( 'poisson_2d_fem_sps.h5', file_id, h5_error )
@@ -180,23 +184,30 @@ program test_poisson_2d_fem_sps
   ! Initialize mapping and polar B-splines
   !-----------------------------------------------------------------------------
 
-  allocate( sll_t_polar_mapping_analytical_target :: mapping_analytical )
-!  allocate( sll_t_polar_mapping_analytical_czarny :: mapping_analytical )
+  ! Allocate analytical mapping
+  allocate( sll_t_polar_mapping_analytical_target :: mapping_analytic )
 
-  ! Analytical mapping
-  select type ( mapping_analytical )
+  ! Initialize analytical mapping
+  select type ( mapping_analytic )
     type is ( sll_t_polar_mapping_analytical_target )
-      call mapping_analytical % init( x0=[0.0_wp,0.0_wp], d0=0.0_wp, e0=0.0_wp ) ! circular mapping
-!      call mapping_analytical % init( x0=[0.0_wp,0.0_wp], d0=0.2_wp, e0=0.3_wp )
-    type is ( sll_t_polar_mapping_analytical_czarny )
-      call mapping_analytical % init( x0=[0.0_wp,0.0_wp], b =1.4_wp, e =0.3_wp )
-  end select
+      if ( maptype == 0 ) then
+        x0 = (/ 0.0_wp, 0.0_wp /)
+        d0 = 0.0_wp
+        e0 = 0.0_wp
+        call mapping_analytic % init( x0, d0, e0 )
+      else if ( maptype == 1 ) then
+        x0 = (/ 0.0_wp, 0.0_wp /)
+        d0 = 0.2_wp
+        e0 = 0.3_wp
+        call mapping_analytic % init( x0, d0, e0 )
+      end if
+   end select
 
   ! Discrete mapping
-  call mapping_iga % init( bsplines_eta1, bsplines_eta2, mapping_analytical )
+  call mapping_discrete % init( bsplines_eta1, bsplines_eta2, mapping_analytic )
 
   ! Write mapping info
-  call mapping_iga % store_data( n1, n2, file_id )
+  call mapping_discrete % store_data( n1, n2, file_id )
 
   call sll_s_set_time_mark( t1 )
 
@@ -222,19 +233,31 @@ program test_poisson_2d_fem_sps
   ! Get interpolation points from 2D spline interpolator
   call spline_interp_2d % get_interp_points( tau_eta1, tau_eta2 )
 
+  ! Evaluate right hand side on interpolation points
   associate( nt1 => size( tau_eta1 ), nt2 => size( tau_eta2 ) )
 
     allocate( gtau( nt1, nt2 ) )
 
-    ! Evaluate right hand side on interpolation points
-    do i2 = 1, nt2
-      do i1 = 1, nt1
-        eta = (/ tau_eta1(i1), tau_eta2(i2) /)
-!        gtau(i1,i2) = rhs_log( eta )
-        x   = mapping_iga % eval( eta )
-        gtau(i1,i2) = rhs_cart( x )
+    if ( maptype == 0 ) then
+
+      do i2 = 1, nt2
+        do i1 = 1, nt1
+          eta = (/ tau_eta1(i1), tau_eta2(i2) /)
+          x   = mapping_discrete % eval( eta )
+          gtau(i1,i2) = rhs_cart( x )
+        end do
       end do
-    end do
+
+     else if ( maptype == 1 ) then
+
+       do i2 = 1, nt2
+         do i1 = 1, nt1
+           eta = (/ tau_eta1(i1), tau_eta2(i2) /)
+           gtau(i1,i2) = rhs_log( eta )
+         end do
+       end do
+
+     end if
 
   end associate
 
@@ -256,7 +279,7 @@ program test_poisson_2d_fem_sps
   call sll_s_set_time_mark( t0 )
 
   ! Initialize Poisson solver
-  call solver % init( bsplines_eta1, bsplines_eta2, breaks_eta1, breaks_eta2, mapping_iga )
+  call solver % init( bsplines_eta1, bsplines_eta2, breaks_eta1, breaks_eta2, mapping_discrete )
 
   call sll_s_set_time_mark( t1 )
 
@@ -311,16 +334,19 @@ program test_poisson_2d_fem_sps
       eta(1) = real( i1-1, wp ) / real( n1-1, wp )
       eta(2) = real( i2-1, wp ) * sll_p_twopi / real( n2, wp )
 
-      x = mapping_iga % eval( eta )
+      x = mapping_discrete % eval( eta )
 
       phi_spl(i1,i2) = spline_2d_phi % eval( eta(1), eta(2) )
 
-!      phi_exact = eta(1)**2 * ( 1.0_wp - eta(1)**2 ) * cos( eta(2) )
-      phi_exact = ( 1.0_wp - eta(1)**2 ) * cos( sll_p_twopi * x(1) ) * sin( sll_p_twopi * x(2) )
+      if ( maptype == 0 ) then
+        phi_exact = ( 1.0_wp - eta(1)**2 ) * cos( sll_p_twopi * x(1) ) * sin( sll_p_twopi * x(2) )
+      else if ( maptype == 1 ) then
+        phi_exact = eta(1)**2 * ( 1.0_wp - eta(1)**2 ) * cos( eta(2) )
+      end if
 
       err(i1,i2) = phi_spl(i1,i2) - phi_exact
 
-      err_L2_norm = err_L2_norm + err(i1,i2)**2 * mapping_iga % jdet( eta ) * dV
+      err_L2_norm = err_L2_norm + err(i1,i2)**2 * mapping_discrete % jdet( eta ) * dV
 
       err_Linf_norm = merge( abs( err(i1,i2) ), err_Linf_norm, abs( err(i1,i2) ) > err_Linf_norm )
 
@@ -391,12 +417,12 @@ program test_poisson_2d_fem_sps
 !  deallocate( Ap )
 !  deallocate( Mp )
 
-  deallocate( mapping_analytical )
+  deallocate( mapping_analytic )
 
   call bsplines_eta1 % free()
   call bsplines_eta2 % free()
 
-  call mapping_iga % free()
+  call mapping_discrete % free()
 
   call spline_2d_rhs % free()
   call spline_2d_phi % free()
@@ -413,20 +439,33 @@ contains
 
     associate( sq => x(1)**2 + x(2)**2, xp => sll_p_twopi * x(1), yp => sll_p_twopi * x(2) )
 
-      rhs_cart =   8.0_wp * sll_p_pi**2 * ( 1.0_wp - sq ) * cos( xp ) * sin( yp ) &
-                 + 4.0_wp * cos( xp ) * sin( yp ) &
-                 - 8.0_wp * sll_p_pi * ( x(1) * sin( xp ) * sin( yp ) - x(2) * cos( xp ) * cos( yp ) )
+      rhs_cart =  8.0_wp*sll_p_pi**2*(1.0_wp-sq)*cos(xp)*sin(yp)+4.0_wp*cos(xp)*sin(yp) &
+                 -8.0_wp*sll_p_pi*(x(1)*sin(xp)*sin(yp)-x(2)*cos(xp)*cos(yp))
 
     end associate
 
   end function rhs_cart
 
-  ! Manifactured solution on circle
   SLL_PURE function rhs_log( eta )
     real(wp), intent(in) :: eta(2)
     real(wp) :: rhs_log
 
-    rhs_log = - ( 3.0_wp - 15.0_wp*eta(1)**2 ) * cos( eta(2) )
+    associate( s => eta(1), t => eta(2) )
+
+      rhs_log = (8.0_wp*d0**3)*s**5+(-24.0_wp*d0**2*e0*cos(t)**3+20.0_wp*d0**2*e0*cos(t)                  &
+                +24.0_wp*d0**2*cos(t)**3-20.0_wp*d0**2*cos(t))*s**4+(-8.0_wp*d0**3                        &
+                -42.0_wp*d0*e0**2*cos(t)**2+16.0_wp*d0*e0**2-24.0_wp*d0*e0*(-cos(t)**2+1.0_wp)**2         &
+                -12.0_wp*d0*e0*cos(t)**2-42.0_wp*d0*cos(t)**2+16.0_wp*d0)*s**3+(8.0_wp*d0**2*e0*cos(t)**3 &
+                -12.0_wp*d0**2*e0*cos(t)-8.0_wp*d0**2*cos(t)**3+12.0_wp*d0**2*cos(t)-15.0_wp*e0**3*cos(t) &
+                -12.0_wp*e0**2*cos(t)**3+9.0_wp*e0**2*cos(t)+12.0_wp*e0*cos(t)**3-9.0_wp*e0*cos(t)        &
+                +15.0_wp*cos(t))*s**2+(10.0_wp*d0*e0**2*cos(t)**2-8.0_wp*d0*e0**2                         &
+                -8.0_wp*d0*e0*(-cos(t)**2+1.0_wp)**2-20.0_wp*d0*e0*cos(t)**2+16.0_wp*d0*e0                &
+                +10.0_wp*d0*cos(t)**2-8.0_wp*d0)*s-3.0_wp*cos(t)+3.0_wp*e0**3*cos(t)                      &
+                +e0**2*(-4.0_wp*cos(t)**3+3.0_wp*cos(t))+e0*(4.0_wp*cos(t)**3-3.0_wp*cos(t))
+
+      rhs_log = - rhs_log / ( (1.0_wp+e0)**2 * (2.0_wp*d0*s*cos(t)+e0-1)**3 )
+
+    end associate
 
   end function rhs_log
 
