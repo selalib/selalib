@@ -1,5 +1,3 @@
-set( CMAKE_Fortran_COMPILER ${MPI_Fortran_COMPILER} )
-
 set( POISSON_PARALLEL_SRCS
   sll_m_poisson_2d_periodic_par.F90
   sll_m_poisson_2d_polar_par.F90
