@@ -1,5 +1,4 @@
 # Parallel library
-set( CMAKE_Fortran_COMPILER ${MPI_Fortran_COMPILER} )
 
 add_library( sll_quasi_neutral_solvers_parallel STATIC
   sll_m_qn_solver_2d_polar_par.F90
