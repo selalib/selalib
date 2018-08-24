@@ -27,7 +27,6 @@ program test_box_splines_derivatives
 
   use sll_m_hexagonal_meshes, only: &
     sll_f_new_hex_mesh_2d, &
-    sll_s_write_field_hex_mesh_xmf, &
     sll_t_hex_mesh_2d
 
   use sll_m_constants, only : &
@@ -154,9 +153,9 @@ program test_box_splines_derivatives
 
 
   !Wrtting on docs:
-  call sll_s_write_field_hex_mesh_xmf(mesh,   f2, "boxspline2")
-  call sll_s_write_field_hex_mesh_xmf(mesh, dxf2, "der1_boxspline2")
-  call sll_s_write_field_hex_mesh_xmf(mesh, dyf2, "der2_boxspline2")
+  call mesh%write_field_hex_mesh_xmf(   f2, "boxspline2")
+  call mesh%write_field_hex_mesh_xmf( dxf2, "der1_boxspline2")
+  call mesh%write_field_hex_mesh_xmf( dyf2, "der2_boxspline2")
 
   SLL_DEALLOCATE_ARRAY(dist, ierr)
 
