@@ -443,7 +443,6 @@ end subroutine initialize_poisson_solver
 ! mors1(1)=0 and mors1(i+1) aii address                    
 ! mors2 - arrays of the numbers of the "morse" matrix terms    
 
-Translated with www.DeepL.com/Translator
 subroutine morse(npoel1, npoel2, ntri, nbt, nbs, mors1, mors2)
 
 sll_int32,                   intent(in)  :: nbt

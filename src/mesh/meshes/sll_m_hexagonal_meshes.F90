@@ -46,9 +46,6 @@ module sll_m_hexagonal_meshes
     sll_f_change_elements_notation, &
     sll_o_delete, &
     sll_s_delete_hex_mesh_2d, &
-    sll_s_write_hex_mesh_mtv, &
-    sll_s_write_hex_mesh_2d, &
-    sll_s_write_field_hex_mesh_xmf, &
     sll_s_display_hex_mesh_2d, &
     sll_s_get_cell_vertices_index, &
     sll_s_get_edge_index, &
@@ -124,15 +121,15 @@ module sll_m_hexagonal_meshes
      procedure, pass(mesh) :: sll_f_local_to_global
      procedure, pass(mesh) :: local_hex_to_global
      procedure, pass(mesh) :: cell_type
-     procedure, pass(mesh) :: sll_s_write_hex_mesh_2d
-     procedure, pass(mesh) :: sll_s_write_hex_mesh_mtv
+     procedure, pass(mesh) :: write_hex_mesh_2d
+     procedure, pass(mesh) :: write_hex_mesh_mtv
      procedure, pass(mesh) :: get_neighbours
      procedure, pass(mesh) :: hex_to_aligned_pt
      procedure, pass(mesh) :: hex_to_aligned_elmt
      procedure, pass(mesh) :: ref_to_hex_elmt
      procedure, pass(mesh) :: ref_to_aligned_elmt
      procedure, pass(mesh) :: display => sll_s_display_hex_mesh_2d
-     procedure, pass(mesh) :: sll_s_write_field_hex_mesh_xmf
+     procedure, pass(mesh) :: write_field_hex_mesh_xmf
      procedure, pass(mesh) :: delete => sll_s_delete_hex_mesh_2d
   end type sll_t_hex_mesh_2d
 
@@ -1996,7 +1993,7 @@ contains
   !> the hexagonal and cartesian coordinates
   !> @param[IN] mesh the hexagonal mesh
   !> @param[IN] name the name of the file where the info will be written into.
-  subroutine sll_s_write_hex_mesh_2d( mesh, name )
+  subroutine write_hex_mesh_2d( mesh, name )
     class(sll_t_hex_mesh_2d), intent(in) :: mesh
     character(len=*)      , intent(in) :: name
 
@@ -2023,7 +2020,7 @@ contains
     end do
 
     close(out_unit)
-  end subroutine sll_s_write_hex_mesh_2d
+  end subroutine write_hex_mesh_2d
 
 
   !---------------------------------------------------------------------------
@@ -2034,7 +2031,7 @@ contains
   !> @param[IN] field a vector of size =(number of pts of the mesh) containg the
   !> values of a field on every mesh point.
   !> @param[IN] name the name of the file where the info will be written into.
-  subroutine sll_s_write_field_hex_mesh_xmf(mesh, field, name)
+  subroutine write_field_hex_mesh_xmf(mesh, field, name)
 
     class(sll_t_hex_mesh_2d),   intent(in) :: mesh
     sll_real64, dimension(:), intent(in) :: field
@@ -2070,7 +2067,7 @@ contains
          name, coor, ntri, &
          num_pts_tot, num_triangles, field, 'values')
 
-  end subroutine sll_s_write_field_hex_mesh_xmf
+  end subroutine write_field_hex_mesh_xmf
 
 
   !---------------------------------------------------------------------------
@@ -2081,7 +2078,7 @@ contains
   !> To visualize use plotmtv.
   !> @param[IN] mesh the hexagonal mesh
   !> @param[IN] name the name of the file where the info will be written into.
-  subroutine sll_s_write_hex_mesh_mtv( mesh, mtv_file )
+  subroutine write_hex_mesh_mtv( mesh, mtv_file )
     class(sll_t_hex_mesh_2d), intent(in) :: mesh
     character(len=*)      , intent(in) :: mtv_file
 
@@ -2225,7 +2222,7 @@ contains
     write(out_unit,*)"$END"
     close(out_unit)
 
-  end subroutine sll_s_write_hex_mesh_mtv
+  end subroutine write_hex_mesh_mtv
 
 
   !---------------------------------------------------------------------------
