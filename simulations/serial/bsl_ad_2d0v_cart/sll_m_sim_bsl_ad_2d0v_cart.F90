@@ -845,8 +845,8 @@ contains
     sll_real64, dimension(:),   allocatable :: f_visu_buf1d
     !
     ! Declarations: objects allocated by Selalib library functions
-    sll_real64, dimension(:),  pointer :: node_positions_x1
-    sll_real64, dimension(:),  pointer :: node_positions_x2
+    sll_real64, dimension(:),  allocatable :: node_positions_x1
+    sll_real64, dimension(:),  allocatable :: node_positions_x2
     type(sll_t_cartesian_mesh_1d), pointer :: mesh_x1
     type(sll_t_cartesian_mesh_1d), pointer :: mesh_x2
     !

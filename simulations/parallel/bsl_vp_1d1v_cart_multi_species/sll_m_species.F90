@@ -51,8 +51,7 @@ module sll_m_species
     sll_s_hdf5_ser_file_close, &
     sll_o_hdf5_ser_write_array
 
-  use sll_m_parallel_array_initializer, only: &
-    sll_o_2d_parallel_array_initializer_cartesian
+  use sll_m_parallel_array_initializer
 
   use sll_m_primitives, only: &
     sll_s_function_to_primitive, &
@@ -105,43 +104,43 @@ module sll_m_species
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 type sll_t_species
-  character                                                :: label
-  sll_int32                                                :: num_bloc_x2
-  sll_int32                                                :: num_dof_x2
-  type(sll_t_cartesian_mesh_2d),                   pointer :: mesh2d
-  procedure(sll_i_scalar_initializer_2d), nopass,  pointer :: init_func
-  sll_real64, dimension(:),                        pointer :: params
-  sll_real64                                               :: nrj0
-  sll_real64, dimension(:),                        pointer :: x1_array
-  sll_real64, dimension(:),                        pointer :: x2_array
-  sll_int32,  dimension(:),                        pointer :: bloc_index_x2
-  sll_real64                                               :: kx
-  sll_real64                                               :: eps
-  sll_real64, dimension(:),                        pointer :: integration_weight
-  sll_real64                                               :: factor_x1
-  type(sll_t_advection_1d_base_ptr), dimension(:), pointer :: advect_x1
-  type(sll_t_advection_1d_base_ptr), dimension(:), pointer :: advect_x2
-  sll_int32                                                :: advection_form_x2
-  sll_real64                                               :: alpha
-  type(sll_t_remap_plan_2d_real64),                pointer :: remap_plan_x1_x2
-  type(sll_t_remap_plan_2d_real64),                pointer :: remap_plan_x2_x1
-  type(sll_t_layout_2d),                           pointer :: layout_x1
-  type(sll_t_layout_2d),                           pointer :: layout_x2
-  sll_real64, dimension(:,:),                      pointer :: f_x1
-  sll_real64, dimension(:,:),                      pointer :: f_x2
-  sll_real64, dimension(:,:),                      pointer :: f_x1_init
-  sll_real64, dimension(:),                        pointer :: rho
-  sll_real64, dimension(:),                        pointer :: rho_loc
-  sll_real64, dimension(:),                        pointer :: x2_array_unit
-  sll_real64, dimension(:),                        pointer :: x2_array_middle
-  sll_real64, dimension(:),                        pointer :: node_positions_x2
-  sll_real64, dimension(:,:),                      pointer :: f_visu 
-  sll_real64, dimension(:),                        pointer :: f_visu_buf1d
-  sll_real64, dimension(:),                        pointer :: f_x1_buf1d
-  sll_real64, dimension(:),                        pointer :: f_hat_x2_loc
-  sll_real64, dimension(:),                        pointer :: f_hat_x2
-  sll_real64, dimension(:,:),                      pointer :: f1d_omp_in
-  sll_real64, dimension(:,:),                      pointer :: f1d_omp_out
+  character                                                    :: label
+  sll_int32                                                    :: num_bloc_x2
+  sll_int32                                                    :: num_dof_x2
+  type(sll_t_cartesian_mesh_2d),                   pointer     :: mesh2d
+  procedure(sll_i_scalar_initializer_2d), nopass,  pointer     :: init_func
+  sll_real64, dimension(:),                        allocatable :: params
+  sll_real64                                                   :: nrj0
+  sll_real64, dimension(:),                        allocatable :: x1_array
+  sll_real64, dimension(:),                        allocatable :: x2_array
+  sll_int32,  dimension(:),                        allocatable :: bloc_index_x2
+  sll_real64                                                   :: kx
+  sll_real64                                                   :: eps
+  sll_real64, dimension(:),                        allocatable :: integration_weight
+  sll_real64                                                   :: factor_x1
+  type(sll_t_advection_1d_base_ptr), dimension(:), pointer     :: advect_x1
+  type(sll_t_advection_1d_base_ptr), dimension(:), pointer     :: advect_x2
+  sll_int32                                                    :: advection_form_x2
+  sll_real64                                                   :: alpha
+  type(sll_t_remap_plan_2d_real64),                pointer     :: remap_plan_x1_x2
+  type(sll_t_remap_plan_2d_real64),                pointer     :: remap_plan_x2_x1
+  type(sll_t_layout_2d),                           pointer     :: layout_x1
+  type(sll_t_layout_2d),                           pointer     :: layout_x2
+  sll_real64, dimension(:,:),                      allocatable :: f_x1
+  sll_real64, dimension(:,:),                      allocatable :: f_x2
+  sll_real64, dimension(:,:),                      allocatable :: f_x1_init
+  sll_real64, dimension(:),                        allocatable :: rho
+  sll_real64, dimension(:),                        allocatable :: rho_loc
+  sll_real64, dimension(:),                        allocatable :: x2_array_unit
+  sll_real64, dimension(:),                        allocatable :: x2_array_middle
+  sll_real64, dimension(:),                        allocatable :: node_positions_x2
+  sll_real64, dimension(:,:),                      allocatable :: f_visu 
+  sll_real64, dimension(:),                        allocatable :: f_visu_buf1d
+  sll_real64, dimension(:),                        allocatable :: f_x1_buf1d
+  sll_real64, dimension(:),                        allocatable :: f_hat_x2_loc
+  sll_real64, dimension(:),                        allocatable :: f_hat_x2
+  sll_real64, dimension(:,:),                      allocatable :: f1d_omp_in
+  sll_real64, dimension(:,:),                      allocatable :: f1d_omp_out
 
   sll_real64                                               :: mass           
   sll_real64                                               :: momentum       
@@ -323,7 +322,7 @@ case default
   stop
 end select  
 
-call sll_o_2d_parallel_array_initializer_cartesian( &
+call sll_2d_parallel_array_initializer_cartesian_array_1d_1d( &
   sp%layout_x1,                                   &
   sp%x1_array,                                    &
   sp%node_positions_x2,                           &
@@ -333,7 +332,7 @@ call sll_o_2d_parallel_array_initializer_cartesian( &
 
 landau_function =>  sll_f_landau_initializer_2d
 
-call sll_o_2d_parallel_array_initializer_cartesian( &
+call sll_2d_parallel_array_initializer_cartesian_array_1d_1d( &
   sp%layout_x1,                                   &
   sp%x1_array,                                    &
   sp%node_positions_x2,                           &
@@ -360,8 +359,8 @@ sll_int32 :: i
 
 sp%init_func => init_func
 
-if(associated(sp%params))then
-  SLL_DEALLOCATE(sp%params,ierr)
+if(allocated(sp%params))then
+  deallocate(sp%params)
 endif
 
 if(num_params<1)then
@@ -547,21 +546,21 @@ end subroutine plot_f_cartesian
 
 subroutine sll_s_write_f( sp, iplot, array_name, time)
 
-  type(sll_t_species),    intent(in) :: sp
-  sll_int32,        intent(in) :: iplot
-  character(len=*), intent(in) :: array_name
-  sll_real64,       intent(in) :: time
-  sll_int32                    :: i
-  sll_int32                    :: ierr
-  sll_int32                    :: nc_x1
-  sll_int32                    :: nc_x2
-  sll_int32                    :: psize
-  sll_int32                    :: prank
-  logical                      :: mpi_master
-  sll_int32                    :: local_size_x1
-  sll_int32                    :: local_size_x2
-  sll_int32,       allocatable :: collective_displs(:)
-  sll_int32,       allocatable :: collective_recvcnts(:)
+  type(sll_t_species),intent(inout) :: sp
+  sll_int32,          intent(in)    :: iplot
+  character(len=*),   intent(in)    :: array_name
+  sll_real64,         intent(in)    :: time
+  sll_int32                         :: i
+  sll_int32                         :: ierr
+  sll_int32                         :: nc_x1
+  sll_int32                         :: nc_x2
+  sll_int32                         :: psize
+  sll_int32                         :: prank
+  logical                           :: mpi_master
+  sll_int32                         :: local_size_x1
+  sll_int32                         :: local_size_x2
+  sll_int32,       allocatable      :: collective_displs(:)
+  sll_int32,       allocatable      :: collective_recvcnts(:)
 
   nc_x1 = sp%mesh2d%num_cells1
   nc_x2 = sp%mesh2d%num_cells2
@@ -682,16 +681,16 @@ end subroutine sll_s_write_restart_file
 
 subroutine sll_s_read_restart_file(restart_file, sp, time)
 
-  character(len=*), intent(in)    :: restart_file
-  type(sll_t_species),    intent(in)    :: sp
-  sll_real64,       intent(inout) :: time
-  character(len=4)                :: cproc
-  sll_int32                       :: prank
-  sll_int32                       :: ierr
-  sll_int32                       :: restart_id
-  sll_int32                       :: local_size_x1
-  sll_int32                       :: local_size_x2
-  logical                         :: file_exists
+  character(len=*),    intent(in)    :: restart_file
+  type(sll_t_species), intent(inout) :: sp
+  sll_real64,          intent(inout) :: time
+  character(len=4)                   :: cproc
+  sll_int32                          :: prank
+  sll_int32                          :: ierr
+  sll_int32                          :: restart_id
+  sll_int32                          :: local_size_x1
+  sll_int32                          :: local_size_x2
+  logical                            :: file_exists
 
   prank = sll_f_get_collective_rank( sll_v_world_collective )
   call sll_s_int2string(prank,cproc)

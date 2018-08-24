@@ -318,7 +318,7 @@ contains
     sll_real64 :: eta1_point, eta2_point
     sll_real64 :: vx_point, vy_point
     sll_real64 :: alpha1, alpha2
-    logical    :: outofdomain_eta1, outofdomain_eta2
+    !logical    :: outofdomain_eta1, outofdomain_eta2
     sll_real64, dimension(:,:), pointer :: f2d_eta1eta2_tmp
     sll_int32 , dimension(4)            :: glob_ind4d
     sll_real64, dimension(2,2)          :: inv_JacobMat

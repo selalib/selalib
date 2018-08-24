@@ -53,7 +53,6 @@ contains
 
     type(diagnostics_VP4D_t), intent(inout) :: diagnostics
 
-    sll_int32 :: ierr
 
   end subroutine new_diagnostics_VP4D
   !---------------------------------------------------------------------------
@@ -66,7 +65,6 @@ contains
 
     type(diagnostics_VP4D_t), intent(inout) :: diagnostics
 
-    sll_int32 :: ierr
 
   end subroutine delete_diagnostics_VP4D
   !---------------------------------------------------------------------------
@@ -411,8 +409,8 @@ contains
     sll_real64 :: dx_space, dphase_space
     sll_real64 :: Phi_tmp, Ex_tmp, Ey_tmp
     sll_real64 :: delta_f
-    sll_real64 :: energy_kin_loc, energy_pot_loc
-    sll_real64 :: Phisquare_loc
+    sll_real64 :: energy_kin_loc!, energy_pot_loc
+    !sll_real64 :: Phisquare_loc
     sll_real64, dimension(2,2) :: inv_JacobMat
 
     !--> Temporary storage used for MPI

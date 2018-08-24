@@ -72,7 +72,6 @@ contains
     sll_int32  :: i1, i2
     sll_real64 :: eta1, eta2
     sll_real64 :: delta1, delta2
-    class(sll_t_cartesian_mesh_2d), pointer :: mesh
 
     this%transf => transf
     this%plot_counter = 0
@@ -80,7 +79,7 @@ contains
     this%data_position = data_position
     this%pcharge = 1.0_f64
     this%pmass = 1.0_f64
-    mesh => transf%get_cartesian_mesh()
+    associate (mesh => transf%mesh)
 
     if (data_position == sll_p_node_centered_field) then
        SLL_ALLOCATE(this%data(mesh%num_cells1+1,mesh%num_cells2+1), ierr)
@@ -105,6 +104,8 @@ contains
           eta2 = eta2 + delta2
        end do
     endif
+
+    end associate
   end subroutine sll_new_distribution_function_2d
 
   subroutine sll_s_distribution_function_2d_init( &

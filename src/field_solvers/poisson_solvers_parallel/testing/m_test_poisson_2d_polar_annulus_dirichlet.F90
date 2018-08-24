@@ -17,7 +17,7 @@
 !> expected on the first test-case (parabolic radial profile) is zero (machine
 !> precision), if k (Fourier mode) is <= ntheta/2.
 
-module m_test_poisson_2d_polar_dirichlet
+module m_test_poisson_2d_polar_annulus_dirichlet
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_working_precision.h"
 
@@ -30,8 +30,8 @@ module m_test_poisson_2d_polar_dirichlet
   implicit none
 
   public :: &
-    t_test_poisson_2d_polar_dirichlet_quadratic, &
-    t_test_poisson_2d_polar_dirichlet_cubic
+    t_test_poisson_2d_polar_annulus_dirichlet_quadratic, &
+    t_test_poisson_2d_polar_annulus_dirichlet_cubic
 
   private
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -65,7 +65,7 @@ module m_test_poisson_2d_polar_dirichlet
   ! Test-case with expected zero numerical error (parabolic radial profile)
   ! \phi(r,th) = (r-rmax)(r-rmin)(a + b*cos(k(th-th0))
   !-----------------------------------------------------------------------------
-  type, extends(c_test_dirichlet) :: t_test_poisson_2d_polar_dirichlet_quadratic
+  type, extends(c_test_dirichlet) :: t_test_poisson_2d_polar_annulus_dirichlet_quadratic
 
   contains
     ! 2D manufactured solution
@@ -74,13 +74,13 @@ module m_test_poisson_2d_polar_dirichlet
     procedure :: phi_ex_diff2_r  => dirichlet_zero_error_phi_ex_d2r
     procedure :: phi_ex_diff2_th => dirichlet_zero_error_phi_ex_d2th
 
-  end type t_test_poisson_2d_polar_dirichlet_quadratic
+  end type t_test_poisson_2d_polar_annulus_dirichlet_quadratic
 
   !-----------------------------------------------------------------------------
   ! Test-case with expected non-zero numerical error (cubic radial profile)
   ! \phi(r,th) = r(r-rmax)(r-rmin)(a + b*cos(k(th-th0))
   !-----------------------------------------------------------------------------
-  type, extends(c_test_dirichlet) :: t_test_poisson_2d_polar_dirichlet_cubic
+  type, extends(c_test_dirichlet) :: t_test_poisson_2d_polar_annulus_dirichlet_cubic
 
   contains
     ! 2D manufactured solution
@@ -89,7 +89,7 @@ module m_test_poisson_2d_polar_dirichlet
     procedure :: phi_ex_diff2_r  => dirichlet_phi_ex_d2r
     procedure :: phi_ex_diff2_th => dirichlet_phi_ex_d2th
 
-  end type t_test_poisson_2d_polar_dirichlet_cubic
+  end type t_test_poisson_2d_polar_annulus_dirichlet_cubic
 
 !<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 contains
@@ -124,7 +124,7 @@ contains
   !=============================================================================
 
   pure function dirichlet_zero_error_phi_ex( self, r, th ) result( val )
-    class(t_test_poisson_2d_polar_dirichlet_quadratic), intent(in) :: self
+    class(t_test_poisson_2d_polar_annulus_dirichlet_quadratic), intent(in) :: self
     sll_real64                                        , intent(in) :: r
     sll_real64                                        , intent(in) :: th
     sll_real64 :: val
@@ -135,7 +135,7 @@ contains
 
   !-----------------------------------------------------------------------------
   pure function dirichlet_zero_error_phi_ex_d1r( self, r, th ) result( val )
-    class(t_test_poisson_2d_polar_dirichlet_quadratic), intent(in) :: self
+    class(t_test_poisson_2d_polar_annulus_dirichlet_quadratic), intent(in) :: self
     sll_real64                                        , intent(in) :: r
     sll_real64                                        , intent(in) :: th
     sll_real64 :: val
@@ -146,7 +146,7 @@ contains
 
   !-----------------------------------------------------------------------------
   pure function dirichlet_zero_error_phi_ex_d2r( self, r, th ) result( val )
-    class(t_test_poisson_2d_polar_dirichlet_quadratic), intent(in) :: self
+    class(t_test_poisson_2d_polar_annulus_dirichlet_quadratic), intent(in) :: self
     sll_real64                                        , intent(in) :: r
     sll_real64                                        , intent(in) :: th
     sll_real64 :: val
@@ -157,7 +157,7 @@ contains
 
   !-----------------------------------------------------------------------------
   pure function dirichlet_zero_error_phi_ex_d2th( self, r, th ) result( val )
-    class(t_test_poisson_2d_polar_dirichlet_quadratic), intent(in) :: self
+    class(t_test_poisson_2d_polar_annulus_dirichlet_quadratic), intent(in) :: self
     sll_real64                                        , intent(in) :: r
     sll_real64                                        , intent(in) :: th
     sll_real64 :: val
@@ -172,7 +172,7 @@ contains
   !=============================================================================
 
   pure function dirichlet_phi_ex( self, r, th ) result( val )
-    class(t_test_poisson_2d_polar_dirichlet_cubic), intent(in) :: self
+    class(t_test_poisson_2d_polar_annulus_dirichlet_cubic), intent(in) :: self
     sll_real64                                    , intent(in) :: r
     sll_real64                                    , intent(in) :: th
     sll_real64 :: val
@@ -183,7 +183,7 @@ contains
 
   !-----------------------------------------------------------------------------
   pure function dirichlet_phi_ex_d1r( self, r, th ) result( val )
-    class(t_test_poisson_2d_polar_dirichlet_cubic), intent(in) :: self
+    class(t_test_poisson_2d_polar_annulus_dirichlet_cubic), intent(in) :: self
     sll_real64                                    , intent(in) :: r
     sll_real64                                    , intent(in) :: th
     sll_real64 :: val
@@ -195,7 +195,7 @@ contains
 
   !-----------------------------------------------------------------------------
   pure function dirichlet_phi_ex_d2r( self, r, th ) result( val )
-    class(t_test_poisson_2d_polar_dirichlet_cubic), intent(in) :: self
+    class(t_test_poisson_2d_polar_annulus_dirichlet_cubic), intent(in) :: self
     sll_real64                                    , intent(in) :: r
     sll_real64                                    , intent(in) :: th
     sll_real64 :: val
@@ -207,7 +207,7 @@ contains
 
   !-----------------------------------------------------------------------------
   pure function dirichlet_phi_ex_d2th( self, r, th ) result( val )
-    class(t_test_poisson_2d_polar_dirichlet_cubic), intent(in) :: self
+    class(t_test_poisson_2d_polar_annulus_dirichlet_cubic), intent(in) :: self
     sll_real64                                    , intent(in) :: r
     sll_real64                                    , intent(in) :: th
     sll_real64 :: val
@@ -216,4 +216,4 @@ contains
 
   end function dirichlet_phi_ex_d2th
 
-end module m_test_poisson_2d_polar_dirichlet
+end module m_test_poisson_2d_polar_annulus_dirichlet

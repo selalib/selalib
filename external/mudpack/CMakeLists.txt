@@ -6,6 +6,9 @@ IF(Fortran_COMPILER MATCHES IBM)
    SET(CMAKE_Fortran_FLAGS_DEBUG "-qfixed")
 ENDIF(Fortran_COMPILER MATCHES IBM)
 
+
+SET(CMAKE_Fortran_FLAGS_DEBUG ${CMAKE_Fortran_FLAGS_RELEASE})
+
 ADD_LIBRARY(mudpack STATIC mudcom.f 
                            mud2.f mud24.f 
                            muh2.f muh24.f 

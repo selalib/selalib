@@ -8,8 +8,8 @@ program test_ode_integrators
     harmonic_oscillator
 
   use sll_m_ode_integrator_base, only: &
-    sll_c_ode_base, &
-    sll_c_ode_integrator_base
+    sll_c_ode, &
+    sll_c_ode_integrator
 
   use sll_m_rk_explicit, only: &
     sll_t_rk1e_fwd_euler, &
@@ -19,8 +19,12 @@ program test_ode_integrators
     sll_t_rk3e_heun3, &
     sll_t_rk4e_classic
 
-  use sll_m_vector_space_real_arrays, only: &
-    sll_t_vector_space_real_1d
+  use sll_m_rk_implicit, only: &
+    sll_c_rk_implicit, &
+    sll_t_rk1d_bwd_euler, &
+    sll_t_rk1d_trapezoid
+
+  use sll_m_vector_space_real_array_1d, only: sll_t_vector_space_real_array_1d
 
   implicit none
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -41,6 +45,8 @@ program test_ode_integrators
   !  .3 : Ralston's method
   !  .4 : 3rd-order method by Heun
   !  .5 : 'classic' RK4 by Runge
+  !  .10 : implicit Euler
+  !  .12 : implicit trapezoidal
   
   ! Time step selection:
   ! h = h_max / h_factor
@@ -60,10 +66,10 @@ program test_ode_integrators
   sll_real64, target                            :: z(2), znew(2)
   sll_real64                                    :: z0(2), z_ex(2)
   sll_real64                                    :: max_err
-  type( sll_t_vector_space_real_1d )              :: y   , ynew
-  class( sll_c_ode_base ), allocatable, target    :: ode
-  class( sll_c_ode_base ), pointer                :: p_ode  ! pointer to ODE
-  class( sll_c_ode_integrator_base ), allocatable :: odeint
+  type( sll_t_vector_space_real_array_1d )      :: y   , ynew
+  class( sll_c_ode ), allocatable, target    :: ode
+  class( sll_c_ode ), pointer                :: p_ode  ! pointer to ODE
+  class( sll_c_ode_integrator ), allocatable :: odeint
 
   !----------------------------------------------------------------------------
   ! Get input arguments (from command line)
@@ -75,15 +81,15 @@ program test_ode_integrators
   
   ! Final time and maximum allowed time-step (from test-case)
   tend  = 2.0_f64*PI
-  h_max = PI / 2.0_f64
+  h_max = PI / 16.0_f64
 
   ! Compute actual time-step size
   h = h_max / h_factor
 
   !----------------------------------------------------------------------------
   ! Create state vector (current and next solution)
-  call y   %attach( z    )
-  call ynew%attach( znew )
+  allocate( y % array( size( z ) ), source=z )
+  allocate( ynew % array( size( znew ) ), source=znew )
 
   ! Create ODE system
   allocate( harmonic_oscillator::ode )
@@ -91,17 +97,24 @@ program test_ode_integrators
 
   ! Create ODE integrator
   select case( odeint_selector )
-   case( 0 ); allocate( sll_t_rk1e_fwd_euler::odeint )
-   case( 1 ); allocate( sll_t_rk2e_midpoint ::odeint )
-   case( 2 ); allocate( sll_t_rk2e_heun     ::odeint )
-   case( 3 ); allocate( sll_t_rk2e_ralston  ::odeint )
-   case( 4 ); allocate( sll_t_rk3e_heun3    ::odeint )
-   case( 5 ); allocate( sll_t_rk4e_classic  ::odeint )
+   case( 0  ); allocate( sll_t_rk1e_fwd_euler :: odeint )
+   case( 1  ); allocate( sll_t_rk2e_midpoint  :: odeint )
+   case( 2  ); allocate( sll_t_rk2e_heun      :: odeint )
+   case( 3  ); allocate( sll_t_rk2e_ralston   :: odeint )
+   case( 4  ); allocate( sll_t_rk3e_heun3     :: odeint )
+   case( 5  ); allocate( sll_t_rk4e_classic   :: odeint )
+   case( 10 ); allocate( sll_t_rk1d_bwd_euler :: odeint )
+   case( 12 ); allocate( sll_t_rk1d_trapezoid :: odeint )
   end select
 
   ! Initialize ODE integrator
 !  call odeint%init( ode, t, y )   ! This does not work with IFortran yet
   call odeint%init( p_ode, t, y )
+
+!  select type( odeint )
+!    class is( sll_c_rk_implicit )
+!      call odeint%set_params( 1.0e-12_f64, 1.0e-15_f64, 1000 )
+!  end select
 
   ! Give initial conditions
   y%array = z0
@@ -169,7 +182,7 @@ contains
       SLL_ERROR( this_prog_name, trim( err_msg ) )
     end select
 
-    if (odeint_selector < 0 .or. 5 < odeint_selector) then
+    if (odeint_selector < 0 .or. 12 < odeint_selector) then
       err_msg = "odeint_selector can only assume integer values between 0 and 5"
       SLL_ERROR( this_prog_name, trim( err_msg ) )
     end if

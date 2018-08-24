@@ -78,3 +78,16 @@ for many parts of the software:
 ~~~
 cmake -DHDF5_PARALLEL_ENABLED=ON <path to the selalib directory>
 ~~~
+
+Build with intel compilers
+--------------------------
+
+Use this cmake configuration:
+~~~
+cmake <path to the selalib directory> \
+         -DHDF5_PARALLEL_ENABLED=ON \
+         -DCMAKE_Fortran_COMPILER=ifort \
+         -DMPI_Fortran_COMPILER=mpiifort \
+         -DBUILD_HDF5=ON \
+         -DCMAKE_BUILD_TYPE=Release
+~~~

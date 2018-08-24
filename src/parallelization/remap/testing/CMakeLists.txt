@@ -1,32 +1,40 @@
 SET( ARGS " " )
 
-ADD_EXECUTABLE( test_remap_2d test_remap_2d.F90 )
-TARGET_LINK_LIBRARIES( test_remap_2d sll_remap )
-ADD_MPI_TEST( remap_2d test_remap_2d ${PROCS} ${ARGS} )
-SET_TESTS_PROPERTIES( remap_2d PROPERTIES PASS_REGULAR_EXPRESSION "PASSED" )
-
-ADD_EXECUTABLE( test_remap_3d test_remap_3d.F90 )
-TARGET_LINK_LIBRARIES( test_remap_3d sll_remap )
-ADD_MPI_TEST( remap_3d test_remap_3d ${PROCS} ${ARGS} )
-SET_TESTS_PROPERTIES( remap_3d PROPERTIES PASS_REGULAR_EXPRESSION "PASSED" )
-
 IF(PROCESSOR_COUNT GREATER 1)
+
+  ADD_EXECUTABLE( test_remap_2d test_remap_2d.F90 )
+  TARGET_LINK_LIBRARIES( test_remap_2d sll_remap )
+  ADD_MPI_TEST( remap_2d test_remap_2d ${PROCS} ${ARGS} )
+  SET_TESTS_PROPERTIES( remap_2d PROPERTIES 
+                        TIMEOUT 20
+                        PASS_REGULAR_EXPRESSION "PASSED" )
   
+  ADD_EXECUTABLE( test_remap_3d test_remap_3d.F90 )
+  TARGET_LINK_LIBRARIES( test_remap_3d sll_remap )
+  ADD_MPI_TEST( remap_3d test_remap_3d ${PROCS} ${ARGS} )
+  SET_TESTS_PROPERTIES( remap_3d PROPERTIES 
+                        TIMEOUT 30
+                        PASS_REGULAR_EXPRESSION "PASSED" )
+
   ADD_EXECUTABLE(test_remap_4d test_remap_4d.F90 )
   TARGET_LINK_LIBRARIES(test_remap_4d sll_remap )
   ADD_MPI_TEST( remap_4d test_remap_4d ${PROCS} ${ARGS} )
-  SET_TESTS_PROPERTIES( remap_4d PROPERTIES PASS_REGULAR_EXPRESSION "PASSED" )
+  SET_TESTS_PROPERTIES( remap_4d PROPERTIES 
+                        TIMEOUT 60
+                        PASS_REGULAR_EXPRESSION "PASSED" )
 
   ADD_EXECUTABLE( test_remap_5d test_remap_5d.F90 )
   TARGET_LINK_LIBRARIES( test_remap_5d sll_remap )
   ADD_MPI_TEST( remap_5d test_remap_5d ${PROCS} ${ARGS} )
-  SET_TESTS_PROPERTIES( remap_5d PROPERTIES PASS_REGULAR_EXPRESSION "PASSED" )
+  SET_TESTS_PROPERTIES( remap_5d PROPERTIES 
+                        TIMEOUT 120
+                        PASS_REGULAR_EXPRESSION "PASSED" )
 
   ADD_EXECUTABLE( test_remap_6d test_remap_6d.F90 )
   TARGET_LINK_LIBRARIES( test_remap_6d sll_remap )
   ADD_MPI_TEST( remap_6d test_remap_6d ${PROCS} ${ARGS} )
   SET_TESTS_PROPERTIES( remap_6d PROPERTIES 
-    PASS_REGULAR_EXPRESSION "PASSED" TIMEOUT 200 )
+    PASS_REGULAR_EXPRESSION "PASSED" TIMEOUT 240 )
 
 ENDIF(PROCESSOR_COUNT GREATER 1)
 

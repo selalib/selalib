@@ -29,7 +29,7 @@ module mesh_VP4D_module
     sll_int32 :: analytical_formula
 
     !> 2D mesh in (eta1,eta2) direction
-    type(sll_t_cartesian_mesh_2d), pointer :: eta1_eta2_mesh2d
+    class(sll_t_cartesian_mesh_2d), pointer :: eta1_eta2_mesh2d
     sll_real64, dimension(:) , pointer :: eta1_grid
     sll_real64, dimension(:) , pointer :: eta2_grid
     sll_real64 :: eta1_min, eta1_max, eta1_length
@@ -40,7 +40,7 @@ module mesh_VP4D_module
     sll_real64, dimension(:,:), pointer :: ygrid_2d
 
     !> 2D mesh in (vx,vy) direction
-    type(sll_t_cartesian_mesh_2d), pointer :: vx_vy_mesh2d
+    class(sll_t_cartesian_mesh_2d), pointer :: vx_vy_mesh2d
     sll_real64, dimension(:)   , pointer :: vx_grid
     sll_real64, dimension(:)   , pointer :: vy_grid
     sll_real64 :: vx_min, vx_max, vx_length
@@ -88,7 +88,7 @@ contains
       mapping_filename, &
       colella_coeff )
 
-    type(mesh_VP4D_t), intent(inout) :: mesh4d
+    class(mesh_VP4D_t), intent(inout) :: mesh4d
     sll_int32        , intent(in) :: num_cells_x1
     sll_int32        , intent(in) :: num_cells_x2
     sll_int32        , intent(in) :: num_cells_x3
@@ -404,8 +404,8 @@ contains
     type is (sll_t_coordinate_transformation_2d_nurbs)
       x1_interp_tmp => transf_tmp%x1_interp
       x2_interp_tmp => transf_tmp%x2_interp
-      control_pts1_2d = x1_interp_tmp%get_coefficients()
-      control_pts2_2d = x2_interp_tmp%get_coefficients()
+      control_pts1_2d => x1_interp_tmp%get_coefficients()
+      control_pts2_2d => x2_interp_tmp%get_coefficients()
       do icoef2 = 1,Ncoef2
         do icoef1 = 1,Ncoef1
           control_pts1_2d(icoef1,icoef2) = &

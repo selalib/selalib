@@ -1,7 +1,6 @@
 !File: Module Poisson
-!Solveur de Poisson sur un maillage non structure
 !
-! Traduit en Fortran 90 a partir de M2V ou DEGAS2D
+! Poisson solver on unstructured mesh with triangles
 !
 module sll_m_poisson_2d_tri
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -34,44 +33,43 @@ interface sll_o_create
   module procedure initialize_poisson_solver_from_file
 end interface sll_o_create
 
-!    Caracteristiques du maillage triangulaire:         
+!    Mesh parameters
 !
-!        nbs     - nombre de noeuds du maillage         
-!        nbt     - nombre de triangles du maillage     
-!        ndiric  - nombre de noeuds verifiant Dirichlet              
-!        ndirb3  - nombre de noeuds verifiant Dirichlet pour Ampere 
-!        nbfrax  - nombre de noeuds a l'intersection axe/frontiere  
-!        nmxfr   - nombre de frontieres referencees max            
-!        nmxsd   - nombre de sous-domaines references max         
-!        nefro   - nombre d'elements ayant au moins 1 sommet frontiere
-!        nelfr   - nombre d'elements frontieres                      
-!        nelin   - nombre d'elements internes                       
-!        irefdir - references de frontieres Dirichlet non homogenes  
-!        nnoeuf  - nombre de noeuds frontieres Dirichlet non homogenes
+!        nbs     - number of nodes
+!        nbt     - number of triangles
+!        ndiric  - number of nodes Dirichlet              
+!        ndirb3  - number of nodes Dirichlet for Ampere 
+!        nbfrax  - number of nodes axis/boundary  
+!        nmxfr   - number of boundary referenced
+!        nmxsd   - number of subdomains referenced
+!        nefro   - number of elements with one node on the boundary
+!        nelfr   - number of elements on the boundaries                      
+!        nelin   - number of elements not on the boundaries
+!        irefdir - boundary references Dirichlet non homogeneous  
+!        nnoeuf  - number of nodes Dirichlet non homogeneous
 !
-!    Dimensions de reference:
+!    Geometry :
 !
-!        xlml   - limite inf x du domaine                          
-!        xlmu   - limite sup x du domaine                         
-!        ylml   - limite inf y du domaine                        
-!        ylmu   - limite sup y du domaine                       
-!        petitl - petite longueur de reference                 
-!        grandl - grande longueur de reference                
-!        imxref - nombre entier eleve de reference           
+!        xlml   - limit below x of domain                          
+!        xlmu   - limit above x of domain                         
+!        ylml   - limit below y of domain                        
+!        ylmu   - limit above y of domain                       
+!        petitl - small length reference                 
+!        grandl - big length reference                
+!        imxref - undefined reference           
 !                                                           
-!    Caracteristiques du maillage de Delaunay-Voronoi:
+!    Delaunay-Voronoi:
 !
-!        nbcoti - nombre de cotes internes Delaunay       
-!        nbtcot - nombre total de cotes Delaunay         
-!        nbcfli - nombre de cotes internes ne satisfaisant pas CFL
-!        ncotcu - nombre de cotes cumules par type de frontiere  
-!        nnref  - nombre de references de frontieres Dirichlet non
-!                 homogenes                                      
+!        nbcoti - number of edges Delaunay inside
+!        nbtcot - number of edges Delaunay total        
+!        nbcfli - number of edges inside with wrong CFL
+!        ncotcu - number of edges fo each boundary
+!        nnref  - number of references Dirichlet non homogeneous boundary                                      
 !                                                               
-!    Caracteristiques des cotes frontieres:
+!    Edges on boundaries:
 !
-!        nctfrt - nombre total de cotes frontieres            
-!        nctfro - nombre de cotes frontieres par reference   
+!        nctfrt - number total de cotes frontieres            
+!        nctfro - number de cotes frontieres par reference   
 !        nctfrp - pointeur des tableaux de cotes frontieres 
 !                                                          
 !    Caracteristiques des frontieres internes: 
