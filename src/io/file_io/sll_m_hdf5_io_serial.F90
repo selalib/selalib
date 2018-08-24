@@ -171,9 +171,9 @@ contains
     integer                    , intent(  out) :: error     !< error code
     
     call h5open_f(error)
-    SLL_ASSERT(error==0)
+    SLL_ASSERT_ALWAYS(error==0)
     call h5fcreate_f( filename, H5F_ACC_TRUNC_F, handle%file_id, error )
-    SLL_ASSERT(error==0)
+    SLL_ASSERT_ALWAYS(error==0)
   end subroutine sll_s_hdf5_ser_file_create
 
   !-----------------------------------------------------------------------------
@@ -189,9 +189,9 @@ contains
     integer                    , intent(  out) :: error     !< error code
     
     call h5open_f(error)
-    SLL_ASSERT(error==0)
+    SLL_ASSERT_ALWAYS(error==0)
     call h5fopen_f( filename, H5F_ACC_RDWR_F, handle%file_id, error )
-    SLL_ASSERT(error==0)
+    SLL_ASSERT_ALWAYS(error==0)
   end subroutine sll_s_hdf5_ser_file_open
 
   !-----------------------------------------------------------------------------
@@ -205,9 +205,9 @@ contains
     integer                    , intent(  out) :: error
 
     call h5fclose_f( handle%file_id, error ) ! Close property list and file
-    SLL_ASSERT(error==0)
+    SLL_ASSERT_ALWAYS(error==0)
     call h5close_f( error )                  ! Close FORTRAN interface
-    SLL_ASSERT(error==0)
+    SLL_ASSERT_ALWAYS(error==0)
   end subroutine sll_s_hdf5_ser_file_close
 
   !-----------------------------------------------------------------------------
@@ -376,24 +376,24 @@ contains
  
     ! Create dataspace
     call h5screate_simple_f( 1, array_dim, dataspace_id, error )
-    SLL_ASSERT(error==0)
+    SLL_ASSERT_ALWAYS(error==0)
 
     ! Create dataset
     call h5dcreate_f( handle%file_id, dsetname, H5T_NATIVE_CHARACTER, &
                       dataspace_id, dataset_id, error )
-    SLL_ASSERT(error==0)
+    SLL_ASSERT_ALWAYS(error==0)
 
     ! Write dataset
     call h5dwrite_f( dataset_id, H5T_NATIVE_CHARACTER, string, array_dim, error )
-    SLL_ASSERT(error==0)
+    SLL_ASSERT_ALWAYS(error==0)
 
     ! Close dataspace
     call h5sclose_f( dataspace_id, error )
-    SLL_ASSERT(error==0)
+    SLL_ASSERT_ALWAYS(error==0)
 
     ! Close dataset
     call h5dclose_f( dataset_id, error )
-    SLL_ASSERT(error==0)
+    SLL_ASSERT_ALWAYS(error==0)
   
   end subroutine sll_hdf5_ser_write_char_array
 
