@@ -1,7 +1,3 @@
-IF (HDF5_IS_PARALLEL)
-  SET( CMAKE_Fortran_COMPILER ${MPI_Fortran_COMPILER})
-ENDIF (HDF5_IS_PARALLEL)
-
 ADD_EXECUTABLE( test_general_coordinates_elliptic_solver 
                 m_init_functions.F90 test_general_coordinates_elliptic_solver.F90 )
 
