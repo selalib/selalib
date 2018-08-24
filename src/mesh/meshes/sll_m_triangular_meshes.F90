@@ -54,8 +54,8 @@ module sll_m_triangular_meshes
 
 
 !> @brief 2d hexagonal mesh
-!  vtaux  - composante x des vecteurs tangeants
-!  vtauy  - composante y des vecteurs tangeants
+!  vtaux  - coordinate x vectors tan
+!  vtauy  - coordinate y vectors tan
 type :: sll_t_triangular_mesh_2d
 
   sll_int32           :: num_nodes  
@@ -111,14 +111,6 @@ contains
 
    procedure, pass(mesh) :: global_to_x1
    procedure, pass(mesh) :: global_to_x2
-!     procedure, pass(mesh) :: eta1_node => eta1_node_hex
-!     procedure, pass(mesh) :: eta2_node => eta2_node_hex
-!     procedure, pass(mesh) :: eta1_cell_one_arg => eta1_cell_hex
-!     procedure, pass(mesh) :: eta1_cell_two_arg => eta1_cell_triangular_two_arg
-!     procedure, pass(mesh) :: eta2_cell_one_arg => eta2_cell_hex
-!     procedure, pass(mesh) :: eta2_cell_two_arg => eta2_cell_triangular_two_arg
-!     procedure, pass(mesh) :: display => display_triangular_mesh_2d
-!     procedure, pass(mesh) :: sll_o_delete => delete_triangular_mesh_2d
 
 end type sll_t_triangular_mesh_2d
 
@@ -140,40 +132,30 @@ interface sll_o_new_triangular_mesh_2d
   module procedure new_triangular_mesh_2d_from_square
 end interface sll_o_new_triangular_mesh_2d
 
-! interface eta1_cell
-!    module procedure eta1_cell_one_arg, eta1_cell_two_arg
-! end interface eta1_cell
-
-! interface eta2_cell
-!    module procedure eta2_cell_one_arg, eta2_cell_two_arg
-! end interface eta2_cell
-
-
 !Type: sll_t_triangular_mesh_2d
-!Structure du maillage
 !
-!nbs    - nombre de sommets
-!nbt    - nombre de triangles
-!nbtcot - nombre total de cotes
-!nbcoti - nombre de cotes internes
-!num_bound  - nombre total de frontieres referencees
-!nelfr  - nombre de triangles sur une frontiere
-!coor   - coordonnees des sommets
-!area   - areas de elements
-!refs   - references des sommets
-!reft   - references des elements
-!nodes   - table de connectivite
-!nvois  - numeros des voisins (solveur)
-!nvoif  - numero local dans le voisin de la face commune
-!nusd   - references du sous-domaine
-!petitl - petite longueur de reference   
-!grandl - grande longueur de reference    
-!ncfrt  - nombre de cotes situes sur une frontiere
-!nbcfli - nombre de cotes internes ne satisfaisant pas la CFL
-!nndfnt - noeuds Dirichlet sur les frontieres internes       
-!noefnt - noeuds Dirichlet sur les frontieres internes 
-!irffnt - numeros de reference de ces noeuds Dirichlet
-!nmxsd  - nombre de sous domaines references
+!nbs    - nodes
+!nbt    - triangles
+!nbtcot - edges
+!nbcoti - inside edges
+!num_bound  - total references for BC
+!nelfr  - triangles on boundary
+!coor   - coords nodes
+!area   - areas elements
+!refs   - references nodes
+!reft   - references elements
+!nodes  - connectivity
+!nvois  - neighbors
+!nvoif  - number of edge in neighbor triangle
+!nusd   - references of subdomain
+!petitl - smaller length 
+!grandl - bigger length
+!ncfrt  - edges on boundary
+!nbcfli - edges inside with CFL problem
+!nndfnt - nodes Dirichlet inside boubdary
+!noefnt - nodes Dirichlet boundary
+!irffnt - reference nodes Dirichlet
+!nmxsd  - sub domains number
 
 contains
 
@@ -945,16 +927,16 @@ read(nfmaa,*)  (mesh%nusd(i)   ,i=1,mesh%num_triangles)
 
 close(nfmaa)
 
-write(iout,"(//,10x,'Nb de noeuds                : ',i10/       &
-&              ,10x,'Nb de triangles             : ',i10/       &
-&              ,10x,'Nb max de front referencees : ',i10/       &
-&              ,10x,'Nb max de SD references     : ',i10/       &
-&              ,10x,/'Nb de triangles ayant au moins 1 sommet'  &
-&              ,' sur une frontiere : ',i10/)") mesh%num_nodes, &
+write(iout,"(//,10x,'Nb of nodes                 : ',i10/       &
+&              ,10x,'Nb of triangles             : ',i10/       &
+&              ,10x,'Nb max of BC                : ',i10/       &
+&              ,10x,'Nb max of subdomain         : ',i10/       &
+&              ,10x,/'Nb triangles with 1 node'  &
+&              ,' on boundary : ',i10/)") mesh%num_nodes, &
                    mesh%num_triangles,mesh%nmxfr,mesh%nmxsd,nefro
 
-write(iout,"(//10x,'Nb d''elements internes     : ',i10/    &
-          &   ,10x,'Nb d''elements frontieres   : ',i10/)") nelin,mesh%nelfr
+write(iout,"(//10x,'Nb elements inside     : ',i10/    &
+          &   ,10x,'Nb elements boundary   : ',i10/)") nelin,mesh%nelfr
 
 1050 format(/' Read mesh from file  ', A, ' ?  Y')
 
@@ -1047,11 +1029,6 @@ real(8)   :: airtot
 real(8)   :: xlml, xlmu, ylml, ylmu
 real(8)   :: lx1, lx2, ly1, ly2
 
-!*** Calcul des longueurs de reference
-#ifdef DEBUG
-write(6,*)"*** Calcul des longueurs de reference ***"
-#endif /* DEBUG */
-
 xlml = minval(mesh%coord(1,:))
 xlmu = maxval(mesh%coord(1,:))
 ylml = minval(mesh%coord(2,:))
@@ -1059,11 +1036,6 @@ ylmu = maxval(mesh%coord(2,:))
 
 mesh%petitl = 1.d-04 * min(xlmu-xlml,ylmu-ylml)/sqrt(real(mesh%num_nodes,8))
 mesh%grandl = 1.d+04 * max(xlmu-xlml,ylmu-ylmu)
-
-!*** Calcul des aires des triangles
-#ifdef DEBUG
-write(6,*)"*** Calcul des aires des triangles ***"
-#endif /* DEBUG */
 
 allocate(mesh%area(mesh%num_triangles)); mesh%area=0.0_f64
 
@@ -1083,28 +1055,18 @@ do it = 1, mesh%num_triangles
      write(6,*) mesh%nodes(1,it), ":",mesh%coord(1:2,mesh%nodes(1,it))
      write(6,*) mesh%nodes(2,it), ":",mesh%coord(1:2,mesh%nodes(2,it))
      write(6,*) mesh%nodes(3,it), ":",mesh%coord(1:2,mesh%nodes(3,it))
-     stop "Aire de triangle negative"
+     stop "triangle negative area"
    end if
 
    airtot = airtot + mesh%area(it)
 
 end do
 
-#ifdef DEBUG
-write(6,"(/10x,'Longueurs de reference :',2E15.5/)") mesh%petitl,mesh%grandl
-write(6,"(/10x,'Limites x du domaine   :',2E15.5/   &
-&          10x,'Limites y du domaine   :',2E15.5/   &
-&          10x,'Aire des triangles     :',E15.5 /)") xlml,xlmu,ylml,ylmu,airtot
-
-#endif /* DEBUG */
-
-! --- Gestion des triangles ayant un noeud en commun -----------
-!if (ldebug) &
-!write(iout,*)"*** Gestion des triangles ayant un noeud en commun ***"
+! --- triangles with one node in common  -----------
  
-! ... recherche des elements ayant un sommet commun
-!     creation du tableau npoel1(i+1)  contenant le nombre de 
-!     triangles ayant le noeud i en commun
+!search for elements with a common summit
+!creation of table npoel1(i+1) containing the number of 
+!triangles having node i in common
 
 allocate(mesh%npoel1(mesh%num_nodes+1))
 
@@ -1118,27 +1080,28 @@ do i=1,mesh%num_triangles
    mesh%npoel1(is3+1) = mesh%npoel1(is3+1)+1
 end do
 
-! ... le tableau npoel1 devient le tableau donnant l'adresse 
-!     dans npoel2 du dernier element dans la suite des triangles
-!     communs a un noeud
+! table npoel1 becomes the table giving the address 
+!  in npoel2 of the last element in the sequence of triangles
+!  common to a node
+
 
 mesh%npoel1(1)=0
 do i=3,mesh%num_nodes+1
    mesh%npoel1(i)=mesh%npoel1(i-1)+mesh%npoel1(i)
 end do
 
-! ... creation du tableau npoel2 contenant sequentiellement les 
-!     numeros des triangles ayant un noeud en commun      
-!     le premier triangle s'appuyant sur le noeud i est
-!     adresse par "npoel1(i)+1" 
-!     le nombre de triangles ayant le noeud i en commun est
-!     "npoel1(i+1)-npoel1(i)"
+! creation of the npoel2 table containing sequentially the 
+! triangles numbers with a common node      
+! the first triangle leaning on node i is
+! address by "npoel1(i)+1" 
+! the number of triangles having node i in common is
+! "npoel1(i+1)-npoel1(i)"
 
 
 allocate(mesh%npoel2(mesh%npoel1(mesh%num_nodes+1)))
 allocate(indc(mesh%num_nodes))
 
-indc   = 1  !Le tableau temporaire indc doit etre initialise a 1
+indc   = 1  
 
 do it = 1,mesh%num_triangles
    do k = 1,3
@@ -1150,21 +1113,18 @@ end do
 
 deallocate(indc)
 
-! --- Recherche des numeros des triangles voisins d'un triangle 
+! --- search neighbors
 
 do iel=1,mesh%num_triangles
-
-  ! ... numeros des 3 sommets du triangle
 
   is1=mesh%nodes(1,iel)
   is2=mesh%nodes(2,iel)
   is3=mesh%nodes(3,iel)
   
-  ! ... boucles imbriquees sur les elements pointant vers
-  !     les 2 noeuds extremites de l'arete consideree
-  !     Le voisin est le triangle commun (hormis iel)
-
-  ! ... premiere arete (entre le sommet is1 et is2)
+  !nested loops on elements pointing towards
+  !the 2 end nodes of the considered ridge
+  !The neighbour is the common triangle (except iel)
+  !first ridge (between vertex is1 and is2)
 
   nel1=mesh%npoel1(is1+1)-mesh%npoel1(is1) !nb de triangles communs a is1
   nel2=mesh%npoel1(is2+1)-mesh%npoel1(is2) !nb de triangles communs a is2
@@ -1182,7 +1142,7 @@ do iel=1,mesh%num_triangles
     end if
   end do loop1
 
-  ! ... deuxieme arete (entre le sommet is2 et is3)
+  ! ... second edge (is2-is3)
 
   nel2=mesh%npoel1(is2+1)-mesh%npoel1(is2)
   nel3=mesh%npoel1(is3+1)-mesh%npoel1(is3)
@@ -1200,7 +1160,7 @@ do iel=1,mesh%num_triangles
     end if
   end do loop2
 
-  ! ... troisieme arete (entre le sommet is3 et is1)
+  ! ... third edge (is3-is1)
 
   nel3=mesh%npoel1(is3+1)-mesh%npoel1(is3)
   nel1=mesh%npoel1(is1+1)-mesh%npoel1(is1)
@@ -1220,7 +1180,7 @@ do iel=1,mesh%num_triangles
 
 end do
 
-! --- Rangement de npoel2 dans l'ordre trigonometrique ---------
+! --- npoel2 ---------
 
 do is=1,mesh%num_nodes
 
@@ -1228,7 +1188,7 @@ do is=1,mesh%num_nodes
 
   if ( nel > 1 ) then
 
-    !*** Noeuds internes (Numero de reference nul) ***
+    !*** internal nodes (ref=0) ***
 
     if( mesh%refs(is) == 0) then
 
@@ -1252,11 +1212,11 @@ do is=1,mesh%num_nodes
         end do
       end do loop4
 
-     ! Noeuds frontieres
+     ! boundary nodes
 
      else 
 
-       ! --> Recherche du premier triangle dans l'ordre trigonometrique
+       ! --> first triangle
        loop5:do id1=1,nel
          iel1=mesh%npoel2(mesh%npoel1(is)+id1)
          do j=1,3
@@ -1269,8 +1229,6 @@ do is=1,mesh%num_nodes
          end do
        end do loop5
            
-       ! --> Rangement des autres triangles dans l'ordre trigonometrique
-       !     (s'il y en a plus que 2) 
        if(nel  > 2) then
          ind =1
          iel1=mesh%npoel2(mesh%npoel1(is)+1)
@@ -1311,24 +1269,25 @@ end subroutine compute_areas
 
 !Subroutine: poclis
 !                                               
-!  Calcul des matrices de lissage associees a chaque     
-!  noeud du maillage.                                  
-!  Necessaires au calcul des composantes de E1,E2     
-!  a partir des composantes tangeantielles de E      
-!  connues sur les cotes des triangles.             
-!  Calcul des composantes des vecteurs unitaires tangeants.                                     
+!  Calculation of the smoothing matrices associated with each     
+! mesh node.                                  
+!  Required to calculate the components of E1,E2     
+! from the tangeantial components of E      
+! known on the dimensions of the triangles.             
+!  Calculation of the components of the tangling unit vectors.                                     
 !                                                             
-!  Variables d'entree:                                    
+!  Input variables:                                    
 ! 
-!    nuvac  - numeros des PV associes aux cotes          
-!    coor   - coordonnees des noeuds Delaunay           
-!    xlcod  - longueur des cotes Delaunay              
-!    npoel1 - pointeur du tableau npoel2              
-!    npoel2 - numeros des triangles entourant un noeud       
-!    xmal1  - somme des taux*taux entourant un noeud (/det) 
-!    xmal2  - somme des tauy*tauy entourant un noeud (/det)
-!    xmal3  - somme des taux*tauy entourant un noeud (/det)
-!                                                               
+! nuvac - PV numbers associated with the odds          
+! coor - coordinates of Delaunay nodes           
+! xlcod - Delaunay dimension length              
+! npoel1 - pointer of the npoel2 array              
+! npoel2 - number of triangles surrounding a node       
+! xmal1 - sum of the rates*rates surrounding a node (/det) 
+! xmal2 - sum of tauy*tauy surrounding a node (/det)
+! xmal3 - sum of rates*tauy surrounding a node (/det)
+
+
 subroutine poclis(mesh, ncotcu, nuctfr)
 
 type(sll_t_triangular_mesh_2d) :: mesh
@@ -1346,7 +1305,7 @@ integer, parameter           :: iout=6
 integer                      :: iac, nbc
      
 !======================================================================
-! --- 1.0 --- Pointeur des numeros de cotes pointant vers un noeud -----
+! --- 1.0 --- Pointer of edge nodes -----
 
 do is=1,mesh%num_nodes
    nbti=mesh%npoel1(is+1)-mesh%npoel1(is)
@@ -1366,12 +1325,11 @@ do is=1,mesh%num_nodes
   iac=mesh%nbcov(is)
 end do
 
-! --- 1.5 --- Tableau temporaire (cumul des cotes frontieres) ----------
 nucti  = 0
 nuctfr = 0
 
 ! ======================================================================
-! --- 2.0 --- Numerotation des cotes -----------------------------------
+! --- 2.0 --- set edge numbers -----------------------------------
 
 do iel = 1, mesh%num_triangles
 
@@ -1390,13 +1348,13 @@ do iel = 1, mesh%num_triangles
     nel1  = mesh%npoel1(num1+1)-mesh%npoel1(num1)
     nel2  = mesh%npoel1(num2+1)-mesh%npoel1(num2)
 
-    !Cas des cotes internes ...........................................
+    !internal edges
 
     if (ivois >  iel) then
 
       nucti=nucti+1
 
-      !Numeros globaux de cotes pointant vers le meme noeud 
+      !Numbers of edges with the same node
 
       do nm1=1,nel1
          if(mesh%npoel2(indn1+nm1) == ivois) then
@@ -1410,12 +1368,12 @@ do iel = 1, mesh%num_triangles
          end if
       end do
 
-      !Numeros des triangles ou polygones associes
+      !number of triangles
 
       mesh%nuvac(1,nucti)=num1
       mesh%nuvac(2,nucti)=num2
 
-    else if (ivois < 0) then !Cas des cotes frontaliers 
+    else if (ivois < 0) then !boundaries
 
       ind         = -ivois
       nuctfr(ind) = nuctfr(ind)+1
@@ -1432,16 +1390,8 @@ do iel = 1, mesh%num_triangles
 
 end do
 
-#ifdef DEBUG
-!do is=1,mesh%num_nodes
-!  nbc=mesh%nbcov(is+1)-mesh%nbcov(is)
-!  iac=mesh%nbcov(is)
-!  write(*,"(i8,2x,10i8)") is, (mesh%nugcv(iac+i),i=1,nbc)
-!end do
-#endif
-
 !======================================================================
-!----------- Longueurs des cotes des triangles ------------------------
+!----------- length triangles edges ------------------------
 
 do ic=1,mesh%nbtcot
    xa=mesh%coord(1,mesh%nuvac(1,ic))
@@ -1452,7 +1402,7 @@ do ic=1,mesh%nbtcot
 end do
 
 !======================================================================
-!--- 4.0 --- Calcul des matrices de lissage ---------------------------
+!--- 4.0 --- matrices to compute electric field from potential --------
 
 do ic=1,mesh%nbtcot
    n1  = mesh%nuvac(1,ic)
@@ -1472,7 +1422,7 @@ do ic=1,mesh%nbtcot
    mesh%xmal3(n2)=mesh%xmal3(n2)+s3
 end do
 
-!--- 4.5 --- Normalisation par rapport aux determinants ---------------
+!--- 4.5 --- Normalization ---------------
 lerr = .false.
 
 do is=1,mesh%num_nodes
@@ -1491,20 +1441,6 @@ if(lerr) then
    stop "poclis"
 end if
 
-! ======================================================================
-! --- 5.0 --- Impression des tableaux ----------------------------------
- 
-
-!write(iout,902)
-!do is=1,mesh%num_nodes
-!   write(iout,903) mesh%xmal1(is),mesh%xmal2(is),mesh%xmal3(is)
-!end do
-!
-!write(iout,904)
-!do ic=1,mesh%nbtcot
-!   write(iout,905) mesh%vtaux(ic),mesh%vtauy(ic)
-!end do
-
 if(lerr) then
    write(iout,901)
    stop "poclis"
@@ -1516,28 +1452,21 @@ end if
  901  format(//10x,'Le nombre de triangles communs a un noeud'  &
               /10x,'est superieur a 12'             &   
               /10x,'Modifiez legerement le maillage'//)
-! 902  format(//10x,'Matrices de lissage'            &
-!              /10x,'xmal1',7x,'xmal2',7x,'xmal3')
-! 903  format(  10x,3e12.3)
-! 904  format(//10x,'Composantes des vecteurs tangeants'     &
-!              /10x,'vtaux',7x,'vtauy')
-! 905  format(  10x,2e12.3)
-
 
 end subroutine poclis
 
 !========================================================================
 !> Compute unstructured mesh quantities
 !>                                                           
-!>  num_nodes - nombre de noeuds                          
-!>  num_cells - nombre de triangles du maillage            
-!>  coord - coordonnees des noeuds           
-!>  refs - numeros de references des noeuds 
-!>  nodes - numeros des sommets              
-!>  nvois - numeros des voisins des triangles
-!>  area - areas des triangles              
-!>  base - integrales des fonctions de base  
-!>  nusd - numeros de sous-domaine            
+!>  num_nodes - nodes                          
+!>  num_cells - triangles 
+!>  coord - coord nodes           
+!>  refs - references
+!>  nodes - number nodes              
+!>  nvois - number neighbors
+!>  area - areas triangles              
+!>  base - integral bsis function
+!>  nusd - num subdomains
 !>
 !>  npoel1 - pointer to "npoel2" array
 !>  npoel2 - triangles indices with same node
@@ -1579,55 +1508,13 @@ do i=1,mesh%num_triangles
 end do
 
 
-!if (ldebug) then
-!  write(iout,*)"*** Recherche des numeros des triangles voisins d'un triangle ***"
-!  do i = 1, mesh%num_triangles
-!    write(iout,"(a10,i4,a10,3i4,a10,3i4)") &
-!      " Triangle:", i,                     &
-!      " Nodes   :", mesh%nodes(1:3,i),     &
-!      " Voisins :", mesh%nvois(1:3,i)
-!  end do
-!end if
-!======================================================================
-!----------- Nombre de noeuds sur les frontieres internes -------------
-!======================================================================
-
-!do iel = 1, mesh%num_triangles
-!  do j = 1, 3
-!    if( mesh%nvois(j,iel) == imxref ) then
-!      write(iout,*) " Triangle ", iel, " Voisins :", (mesh%nvois(i,iel),i=1,3)
-!      write(iout,*) " Coordonnees x =", mesh%coord(1,mesh%nodes(1,iel))
-!      write(iout,*) " Coordonnees y =", mesh%coord(2,mesh%nodes(1,iel))
-!      stop
-!    end if
-!  end do
-!end do
-
-! ... Verification approchee de la condition CFL sur les triangles
-
-!  nbtcot : nombre total de cotes                           *
-!  nbcoti : nombre de cotes internes                        *
-!  ncotcu : nombre de cotes internes et frontieres          *
-!  ncotcu : nombre de cotes cumules :                       *
-!  1 = nombre de cotes internes effectifs                   *
-!  2 = 1 + nombre de cotes internes fictifs                 *
-!  3 = 2 + nombre de cotes frontieres references 1          *
-!  4 = 3 + nombre de cotes frontieres references 2 , etc... *
-
-!write(iout,"(/10x,a,i3)") 'Maximum de frontieres referencees ', mesh%nmxfr
-
-!*** Calcul du nb de cotes internes et total (nbcoti,nbtcot)
+!*** total edges and internal (nbcoti,nbtcot)
 
 mesh%nbtcot = (3*mesh%num_triangles+mesh%nctfrt)/2
 
-!write(iout,"( 10x,a,i6)") 'Nombre total de cotes      =', mesh%nbtcot
-
 mesh%nbcoti = mesh%nbtcot - mesh%nctfrt
 
-!write(iout,"( 10x,a,i6)") 'Nombre de cotes internes   =', mesh%nbcoti
-!write(iout,"( 10x,a,i6/)")'Nombre de cotes frontieres =', mesh%nctfrt
- 
-!  Calcul du nb de cotes cumules par type de traitement (ncotcu) ....
+!  cumsum of edges ....
 
 allocate(ncotcu(mesh%nbcoti+mesh%nmxfr*mesh%nctfrt))
 
@@ -1649,62 +1536,43 @@ do ifr=1,mesh%nmxfr
    ncotcu(ifr+2)=ncotcu(ifr+1)+ncotcu(ifr+2)
 end do
 
-!if (ldebug) then
-!   write(iout,"(10x,'Nombre de cotes cumules a partir de nbcoti :')")
-!   do ifr=1,mesh%nmxfr
-!      write(iout,"(20x,'ref = ',i3,'   ncotcu(i) = ',i6)") ifr,ncotcu(ifr+2)
-!   end do
-!end if
-
 allocate(mesh%vtaux(mesh%nbtcot),mesh%vtauy(mesh%nbtcot))
 mesh%vtaux = 0._f64; mesh%vtauy = 0._f64
 
-!==============================================================!
-!--- Calcul complementaires relatifs au lissage des champs ----!
-!    dans le cas de la resolution de POISSON               !
-!==============================================================!
-
-!tableau des numeros des noeuds associes a un cote 
 allocate(mesh%nuvac(2,mesh%nbtcot)); mesh%nuvac = 0
 
-!tableau des longueurs des cotes 
 allocate(mesh%xlcod(mesh%nbtcot)); mesh%xlcod = 0.0_f64
 
-!tableaux de lissage et des cotes tangeants 
 allocate(mesh%xmal1(mesh%num_nodes)); mesh%xmal1=0._f64
 allocate(mesh%xmal2(mesh%num_nodes)); mesh%xmal2=0._f64
 allocate(mesh%xmal3(mesh%num_nodes)); mesh%xmal3=0._f64
 
-allocate(mesh%nbcov(mesh%num_nodes+1))  !pointeur des cotes pointant sur le meme noeud
-allocate(mesh%nugcv(10*mesh%num_nodes)) !tableau contenant les numeros de ces cotes
-allocate(nuctfr(mesh%nmxfr)) !tableau temporaire                              
-
-!Creation du maillage de Voronoi et quantites associees
+allocate(mesh%nbcov(mesh%num_nodes+1))  
+allocate(mesh%nugcv(10*mesh%num_nodes)) 
+allocate(nuctfr(mesh%nmxfr))
 
 call poclis(mesh, ncotcu, nuctfr)
-
-!On tue le tableau temporaire         I                      
 
 deallocate(nuctfr) 
 
 
-!Event: Numerotation des cotes frontieres
+!quantities for boundary edges
 !
-!    Numerotation des cotes frontieres dans le sens 
-!    trigonometrique, par numero de reference, pour
-!    effectuer tous les diagnostics relatifs aux  
-!    frontieres.                                 
+!    Numbering of border dimensions in the direction 
+! trigonometric, by reference number, for
+! carry out all diagnoses relating to  
+! borders.                                 
 !                                               
-!    kelfro - numero d'element auquel appartient le cote 
-!    kctfro - numero local (1,2,3) de cote              
-!    krefro - numero de reference du cote              
-!    ksofro - numeros des 2 sommets extremite du cote 
-!    vnofro - composantes du vecteur normal (vers l'interieur)
+! kelfro - element number to which the dimension belongs 
+! kctfro - local number (1,2,3) of rating              
+! krefro - reference number of the dimension              
+! ksofro - numbers of the 2 vertices at the end of the side 
+! vnofro - normal vector components (inward)
 !                                                            
-!    nctfrt - Nb total de cotes frontieres                  
-!    nctfro - Nb de cotes frontieres par reference         
-!    nctfrp - Pointeur de tableau (nb de cote par ref)    
-!                                                        
+! nctfrt - Total number of border dimensions                  
+! nctfro - Number of border dimensions by reference         
+! nctfrp - Array pointer (nb of dimension by ref) 
+
 
 ! --- Initialisation (numerotation quelconque) -----------------
 
@@ -1718,8 +1586,6 @@ allocate(mesh%vnofro(2,mesh%nctfrt))
 
 mesh%nctfro = 0
 
-!*** Premiere numerotation des cotes frontieres ***
-
 ifr=0
 do ict=1,3
   do iel=1,mesh%num_triangles
@@ -1728,26 +1594,23 @@ do ict=1,3
       iref = -mesh%nvois(ict,iel)
 
       ifr  = ifr+1
-      mesh%kelfro(ifr)   = iel  !element auquel appartient le cote
-      mesh%kctfro(ifr)   = ict  !numero local du cote dans cet element
-      mesh%krefro(ifr)   = iref !reference de ce cote
-      mesh%ksofro(1,ifr) = mesh%nodes(ict,iel) !numeros des 2 sommets de ce cote
+      mesh%kelfro(ifr)   = iel  !element 
+      mesh%kctfro(ifr)   = ict  !local edge
+      mesh%krefro(ifr)   = iref !reference edge
+      mesh%ksofro(1,ifr) = mesh%nodes(ict,iel) ! 2 edge nodes
       mesh%ksofro(2,ifr) = mesh%nodes(mod(ict,3)+1,iel) 
-      mesh%nctfro(iref)  = mesh%nctfro(iref)+1  !nombre de cote par reference
+      mesh%nctfro(iref)  = mesh%nctfro(iref)+1  ! edge per reference
 
     end if 
   end do
 end do
-
-!... Pointeur de tableau .........................................
 
 mesh%nctfrp(0)=0
 do ifr=1,mesh%nmxfr
    mesh%nctfrp(ifr)=mesh%nctfrp(ifr-1)+mesh%nctfro(ifr)
 end do
 
-!--- Balayage sur les numeros de reference --------------------
-!    Premier classement par numero de reference        
+!--- Loop over reference --------------------
 
 ictcl=1
 do iref=1,mesh%nmxfr
@@ -1787,13 +1650,12 @@ do iref=1,mesh%nmxfr
   end if 
 end do
 
-! --- Rangement dans l'ordre trigonometrique -------------------
 
 do iref=1,mesh%nmxfr
 
    nbcot=mesh%nctfro(iref)
 
-   !Une seule reference pour toute la frontiere ................
+   !One reference for the whole boundary
 
    if(nbcot  ==  mesh%nctfrt) then 
       ict1=1
@@ -1831,14 +1693,12 @@ do iref=1,mesh%nmxfr
         end if
      end do
 
-     ! ... Plusieurs references sur la frontiere ...........................
+     ! ... several references for one boundary
 
   else if (nbcot>1) then 
 
      ictcl1=mesh%nctfrp(iref-1)+1
      ictcl2=mesh%nctfrp(iref)
-
-     ! ... Premier cote d'un segment ........................................
 
      ict1=ictcl1
  31  continue
@@ -1856,8 +1716,6 @@ do iref=1,mesh%nmxfr
         end if
      end do
 
-! ... Permutation ......................................................
-               
      keltmp=mesh%kelfro(ict1)
      kcttmp=mesh%kctfro(ict1)
      kretmp=mesh%krefro(ict1)
@@ -1878,8 +1736,6 @@ do iref=1,mesh%nmxfr
      mesh%ksofro(1,ictcl1)=ks1tmp
      mesh%ksofro(2,ictcl1)=ks2tmp
         
-! ... Classement des cotes suivants ....................................
-
  37  continue
      ict1=ictcl1
  33  continue
@@ -1912,8 +1768,6 @@ do iref=1,mesh%nmxfr
            end if
         end if
      end do
-
-! ...Test s'il y a d'autres segments de la meme reference .............
 
      if (ict1<ictcl2) then 
         ictcl1=ict1+1
