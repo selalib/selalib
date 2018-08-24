@@ -17,7 +17,11 @@ module sll_m_hex_pre_filters
   implicit none
 
   public :: &
-    sll_s_pre_filter_pfir
+    sll_s_pre_filter_pfir, &
+    sll_f_pre_filter_int, &
+    sll_f_pre_filter_piir2, &
+    sll_f_pre_filter_piir1
+
 
   private
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -60,7 +64,7 @@ contains
           weight_tab(index+1) = 7._f64/240._f64
        end do
     case(4)
-       ! prefiltre PFIR for box-splines of deg =3 chi6
+       ! prefiltre PFIR for box-splines of deg =4 chi8
        ! with coefficients  h0 : -300538194444442.,
        ! h1 : 100179398148148.,   h2 : -100179398148149.0,
        ! h3 : 50089699074074.4, h4 : -0.0102843915343915
@@ -70,6 +74,34 @@ contains
           weight_tab(index+1) = -100179398148149.0_f64
           weight_tab(index)   =  50089699074074.4_f64
        end do
+       do index=19,36
+          if (modulo(index-1,3).ne.0) then
+             print *, index
+             weight_tab(index) = -0.0102843915343915_f64
+          end if
+       end do
+       print *, ""
+       print *, "sum =", SUM(weight_tab)
+       print *, ""
+    case(5)
+       weight_tab(1)   = 631779569171640.0_f64
+       weight_tab(2:7) = -192578390410100.0
+       do index=8,18,2
+          weight_tab(index+1) = 174563591096320.0
+          weight_tab(index)   = -105296594861938.41
+       end do
+       do index=19,36
+          if (modulo(index-1,3).ne.0) then
+             print *, index
+             weight_tab(index) = 18014799313778.578
+          else
+             weight_tab(index) = -18014799313778.602
+          end if
+       end do
+       print *, ""
+       print *, weight_tab
+       print *, "sum =", SUM(weight_tab)
+       print *, ""
     case default
        print *, 'ERROR: sll_s_pre_filter_pfir(...): ', &
             '     function not implemented for splines of degree > 4'
@@ -89,7 +121,7 @@ contains
   !> @param[IN] local_index integer: local index of the point we want the filter
   !> @param[IN] deg integer: degree of the spline
   !> @param[OUT] weight float: filter (aka weight) at the local index
-  function pre_filter_piir2(mesh, local_index, deg) result(weight)
+  function sll_f_pre_filter_piir2(mesh, local_index, deg) result(weight)
     type(sll_t_hex_mesh_2d)      :: mesh
     sll_int32, intent(in)      :: local_index
     sll_int32, intent(in)      :: deg
@@ -214,7 +246,7 @@ contains
           weight = 0._f64
        end if
     end if
-  end function pre_filter_piir2
+  end function sll_f_pre_filter_piir2
 
   !---------------------------------------------------------------------------
   !> @brief Pre-filter PIIR1 to compute the box splines coefficients
@@ -225,7 +257,7 @@ contains
   !> @param[IN] local_index integer: local index of the point we want the filter
   !> @param[IN] deg integer: degree of the spline
   !> @param[OUT] weight float: filter (aka weight) at the local index
-  function pre_filter_piir1(mesh, local_index, deg) result(weight)
+  function sll_f_pre_filter_piir1(mesh, local_index, deg) result(weight)
     type(sll_t_hex_mesh_2d)     :: mesh
     sll_int32, intent(in)     :: local_index
     sll_int32, intent(in)     :: deg
@@ -262,7 +294,7 @@ contains
        ! STOP
 
     end if
-  end function pre_filter_piir1
+  end function sll_f_pre_filter_piir1
 
   !---------------------------------------------------------------------------
   !> @brief Pre-filter PINT to compute the box splines coefficients
@@ -273,7 +305,7 @@ contains
   !> @param[IN] local_index integer: local index of the point we want the filter
   !> @param[IN] deg integer: degree of the spline
   !> @param[OUT] weight float: filter (aka weight) at the local index
-  function pre_filter_int(mesh, local_index, deg) result(weight)
+  function sll_f_pre_filter_int(mesh, local_index, deg) result(weight)
     type(sll_t_hex_mesh_2d) :: mesh
     sll_int32, intent(in)     :: local_index
     sll_int32, intent(in)     :: deg
@@ -309,12 +341,12 @@ contains
           weight = 0._f64
        end if
     case default
-       print *, 'ERROR: pre_filter_int(...): ', &
+       print *, 'ERROR: sll_f_pre_filter_int(...): ', &
             '     function not implemented for degree > 2 splines '
        print *, "Exiting..."
        STOP
     end select
-  end function pre_filter_int
+  end function sll_f_pre_filter_int
 
 
 end module sll_m_hex_pre_filters
