@@ -1,5 +1,4 @@
 if( MPI_ENABLED )
-  set( CMAKE_Fortran_COMPILER ${MPI_Fortran_COMPILER} )
   add_subdirectory( pic_opt   )
   add_subdirectory( pic_basic )
   add_subdirectory( pif )
