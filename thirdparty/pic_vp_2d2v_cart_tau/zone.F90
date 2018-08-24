@@ -12,8 +12,6 @@ type, public :: mesh_fields
   sll_real64, dimension(:,:), pointer :: r0
 end type mesh_fields
 
-logical :: relativ 
-
 sll_int32,  public :: nx         ! Number of cells along x
 sll_int32,  public :: ny         ! Number of cells along y
 sll_int32,  public :: nstep      ! Time step number
@@ -35,10 +33,6 @@ sll_real64, public :: reset      ! time period for particles reset
 sll_int32  :: npm        ! Number of particles by cell
 sll_int32  :: nstepmax   ! Time step number (max)
 
-integer, dimension(MPI_STATUS_SIZE) :: stat
-
-integer :: nproc=1, rang=0
-integer :: tag=1111
 integer, public :: code
 
 public readin, init_mpi, mpi_global_master, finish_mpi
@@ -104,7 +98,6 @@ end subroutine readin
 subroutine init_mpi( prank , psize)
 integer :: prank
 integer :: psize
-integer :: iproc
 
 call MPI_INIT(code)
 call MPI_COMM_RANK(MPI_COMM_WORLD,prank,code)

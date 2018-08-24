@@ -12,7 +12,7 @@ implicit none
 
 type(sll_t_cartesian_mesh_2d)            :: mesh_2d
 type(sll_t_particle_group_4d), pointer   :: p_group_4d
-sll_real64 :: QoverM = 1.0_f64, s
+sll_real64 :: QoverM = 1.0_f64
 
 #define NC_X 10
 #define NC_Y 10

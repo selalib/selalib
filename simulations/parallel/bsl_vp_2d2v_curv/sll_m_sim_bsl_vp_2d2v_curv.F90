@@ -36,8 +36,7 @@ module sll_m_sim_bsl_vp_2d2v_curv
   use sll_m_interpolators_1d_base, only: &
     sll_c_interpolator_1d
 
-  use sll_m_parallel_array_initializer, only: &
-    sll_o_4d_parallel_array_initializer
+  use sll_m_parallel_array_initializer
 
   use sll_m_poisson_2d_periodic_par, only: &
     sll_t_poisson_2d_periodic_par, &
@@ -453,7 +452,7 @@ contains
 
     print *, 'completed memory allocations'
     
-    call sll_o_4d_parallel_array_initializer( &
+    call sll_2d_times_2d_parallel_array_initializer( &
          sim%sequential_x3x4, &
          sim%mesh2d_x, &
          sim%mesh2d_v, &

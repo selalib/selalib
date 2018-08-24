@@ -10,8 +10,8 @@ IF(NOT HDF5_FOUND AND HDF5_ENABLED)
      SET(MPI_LIB_ROOT "")
    ENDIF()
 
-   SET(HDF5_PATHS ${MPI_Fortran_INCLUDE_PATH}
-                  ${HDF5_ROOT} 
+   SET(HDF5_PATHS ${HDF5_ROOT} 
+                  ${MPI_Fortran_INCLUDE_PATH}
                   $ENV{HDF5_HOME}
                   $ENV{HDF5ROOT} 
                   $ENV{HDF5_BASE}

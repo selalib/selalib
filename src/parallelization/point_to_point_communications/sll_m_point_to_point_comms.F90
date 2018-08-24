@@ -225,6 +225,10 @@ contains
     ! shift the higher part of the tag to the upper bits, starting at bit 16 
     ! and leaving the lower 15 bits available for the lower part of the tag.
     receive_tag = ior(ishft(higher,15),lower)
+
+#ifdef __INTEL_COMPILER
+    receive_tag = receive_tag / 10000
+#endif
   end function receive_tag
 
   ! The send tag is analogous to the receive tag with the difference that
@@ -239,7 +243,12 @@ contains
 
     lower  = ior( ishft(flip_bit(bit),8), iand(other_port, int(z'3fff',i32)))  
     higher = ior( ishft(         bit, 8), iand(my_port,    int(z'3fff',i32)))
+
     send_tag = ior(ishft(higher,15),lower)
+
+#ifdef __INTEL_COMPILER
+    send_tag = send_tag / 10000
+#endif
   end function send_tag
 
   subroutine initialize_buffer_real64( buff, num_elems )

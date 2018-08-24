@@ -268,7 +268,7 @@ sll_int32  :: i
 
 f = 0.0_f64
 
-xn = (xx-x(1))/(x(n)-x(1))*(n-1)
+xn = (xx-x(1))/(x(n)-x(1))*real(n-1,f64)
 
 i = ceiling(xn)+1
 

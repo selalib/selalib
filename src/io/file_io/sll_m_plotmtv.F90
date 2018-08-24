@@ -109,8 +109,8 @@ end do
 !Numeros des elements
 do i=1,nx-1
    do j=1,ny-1
-      x1 = 0.25*(xcoord(i,j)+xcoord(i+1,j)+xcoord(i,j+1)+xcoord(i+1,j+1))
-      y1 = 0.25*(ycoord(i,j)+ycoord(i+1,j)+ycoord(i,j+1)+ycoord(i+1,j+1))
+      x1 = 0.25_f64*(xcoord(i,j)+xcoord(i+1,j)+xcoord(i,j+1)+xcoord(i+1,j+1))
+      y1 = 0.25_f64*(ycoord(i,j)+ycoord(i+1,j)+ycoord(i,j+1)+ycoord(i+1,j+1))
       write(file_id,"(a)"   ,  advance="no")"@text x1="
       write(file_id,"(g15.3)", advance="no") x1
       write(file_id,"(a)"   ,  advance="no")" y1="

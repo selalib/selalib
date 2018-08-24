@@ -95,8 +95,7 @@ use sll_m_fft, only: &
 use sll_m_gnuplot, only: &
   sll_o_gnuplot_1d
 
-use sll_m_parallel_array_initializer, only: &
-  sll_o_2d_parallel_array_initializer_cartesian
+use sll_m_parallel_array_initializer
 
 use sll_m_periodic_interp, only: &
   sll_p_lagrange, &
@@ -185,16 +184,16 @@ type, extends(sll_c_simulation_base_class) :: &
   type(sll_t_cartesian_mesh_2d), pointer :: mesh2d
   sll_int32                              :: num_dof_x2
 
-  sll_real64, dimension(:),   pointer  :: x1_array
-  sll_real64, dimension(:),   pointer  :: x2_array
-  sll_real64, dimension(:,:), pointer  :: x2_array_omp
-  sll_real64, dimension(:),   pointer  :: integration_weight
-  sll_int32,  dimension(:),   pointer  :: every_x1
-  sll_int32,  dimension(:),   pointer  :: every_x2
-  sll_int32                            :: num_bloc_x1
-  sll_int32                            :: num_bloc_x2
-  sll_int32,  dimension(:),   pointer  :: bloc_index_x1
-  sll_int32,  dimension(:),   pointer  :: bloc_index_x2
+  sll_real64, dimension(:),   allocatable  :: x1_array
+  sll_real64, dimension(:),   allocatable  :: x2_array
+  sll_real64, dimension(:,:), allocatable  :: x2_array_omp
+  sll_real64, dimension(:),   allocatable  :: integration_weight
+  sll_int32,  dimension(:),   allocatable  :: every_x1
+  sll_int32,  dimension(:),   allocatable  :: every_x2
+  sll_int32                                :: num_bloc_x1
+  sll_int32                                :: num_bloc_x2
+  sll_int32,  dimension(:),   allocatable  :: bloc_index_x1
+  sll_int32,  dimension(:),   allocatable  :: bloc_index_x2
   
   sll_real64                 :: kx
   sll_real64                 :: eps
@@ -205,8 +204,8 @@ type, extends(sll_c_simulation_base_class) :: &
   procedure(sll_i_scalar_initializer_2d), nopass, pointer :: init_func
   !ES equilibrium function
   procedure(sll_i_scalar_initializer_2d), nopass, pointer :: equil_func
-  sll_real64, dimension(:), pointer                       :: equil_func_params
-  sll_real64, dimension(:), pointer                       :: params
+  sll_real64, dimension(:), allocatable                   :: equil_func_params
+  sll_real64, dimension(:), allocatable                   :: params
 
   sll_real64 :: nrj0
   sll_real64 :: dt
@@ -289,7 +288,7 @@ contains
     sll_int32 :: i
     
     sim%init_func => init_func
-    if (associated(sim%params)) SLL_DEALLOCATE(sim%params,ierr)
+    if (allocated(sim%params)) deallocate(sim%params)
 
     if (num_params<1) then
       SLL_ERROR( this_sub_name, '#num_params should be >=1' )
@@ -323,8 +322,8 @@ contains
     sll_int32 :: i
     
     sim%equil_func => equil_func
-    if (associated(sim%equil_func_params)) then
-      SLL_DEALLOCATE(sim%equil_func_params,ierr)
+    if (allocated(sim%equil_func_params)) then
+      deallocate(sim%equil_func_params)
     end if
 
     if (num_params<1) then
@@ -911,6 +910,7 @@ contains
       print*,'########################'
       print*,'# Vlasov-Ampere scheme #'
       print*,'########################'
+      print*, 'THIS OPTION DOES NOT WORK.'
       SLL_ALLOCATE(sim%advect_ampere_x1(num_threads),ierr)
       tid = 1
       !$OMP PARALLEL DEFAULT(SHARED) &
@@ -1280,7 +1280,7 @@ contains
        call sll_s_binary_file_close(file_id,ierr)                                             
     endif
 
-    call sll_o_2d_parallel_array_initializer_cartesian( &
+    call sll_2d_parallel_array_initializer_cartesian_array_1d_1d( &
          layout_x1,                                     &
          sim%x1_array,                                  &
          node_positions_x2,                             &
@@ -1327,7 +1327,7 @@ contains
 
     !ES initialise f_x1_equil that is used to define deltaf: 
     !ES deltaf =  f_x1 - f_x1_equil
-    call sll_o_2d_parallel_array_initializer_cartesian( &
+    call sll_2d_parallel_array_initializer_cartesian_array_1d_1d( &
          layout_x1,                                     &
          sim%x1_array,                                  &
          node_positions_x2,                             &
@@ -1563,7 +1563,7 @@ contains
                
                
                do i = 2, nc_x1/2+1
-                 sim%advect_ampere_x1(1)%ek(i) =  &
+                 sim%advect_ampere_x1(1)%ek(i) =  sim%advect_ampere_x1(1)%ek(i)&
                     - sim%advect_ampere_x1(1)%r1(i) &
                     * cmplx(sim%mesh2d%eta1_max-sim%mesh2d%eta1_min,0.0_f64,f64) &
                     / cmplx(0.,2.0_f64*sll_p_pi*real(i-1,f64),kind=f64)
@@ -1631,6 +1631,7 @@ contains
                 case("SLL_AMPERE_DRIVE") 
                    e_app = sim%Edrmax &
                      * sin(sim%omegadr*(time_init+real(istep,f64)*sim%dt))
+                     print*,'e_app',e_app
    
                 case("SLL_KEEN_DRIVE") 
                    call sll_s_pfenvelope(adr,                     &
@@ -1815,7 +1816,6 @@ contains
              enddo
 
              write(th_diag_id,'(1g25.15)') f_hat_x2(nb_mode+1)
-
              call sll_s_binary_write_array_1d(efield_id,efield(1:np_x1-1),ierr)
              call sll_s_binary_write_array_1d(rhotot_id,rho(1:np_x1-1),ierr)
              call sll_s_binary_write_array_0d(t_id,time,ierr)
@@ -1928,11 +1928,11 @@ contains
 
     class(sll_t_simulation_2d_vlasov_poisson_cart) :: sim
      
-    if(associated(sim%x1_array)) then
-      nullify(sim%x1_array)
+    if(allocated(sim%x1_array)) then
+      deallocate(sim%x1_array)
     endif
-    if(associated(sim%x2_array)) then
-      nullify(sim%x2_array)
+    if(allocated(sim%x2_array)) then
+      deallocate(sim%x2_array)
     endif
         
   end subroutine sll_s_delete_vp2d_par_cart

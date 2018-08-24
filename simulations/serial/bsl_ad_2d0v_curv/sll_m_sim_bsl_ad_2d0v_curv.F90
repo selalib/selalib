@@ -210,12 +210,12 @@ module sll_m_sim_bsl_ad_2d0v_curv
    
    !geometry
    type(sll_t_cartesian_mesh_2d), pointer :: mesh_2d
-   sll_real64, dimension(:), pointer :: eta1_array
-   sll_real64, dimension(:), pointer :: eta2_array
+   sll_real64, dimension(:), allocatable :: eta1_array
+   sll_real64, dimension(:), allocatable :: eta2_array
    sll_int32 :: num_dof1  
    sll_int32 :: num_dof2
-   sll_real64, dimension(:), pointer :: integration_weight1
-   sll_real64, dimension(:), pointer :: integration_weight2
+   sll_real64, dimension(:), allocatable :: integration_weight1
+   sll_real64, dimension(:), allocatable :: integration_weight2
    
      
    !transformation 

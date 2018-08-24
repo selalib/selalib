@@ -249,22 +249,22 @@ module sll_m_sim_bsl_dk_3d1v_polar_field_aligned
     sll_real64 :: eps_perturb
 
     !--> Density and temperature profiles
-    sll_real64, pointer :: n0_r(:)
-    sll_real64, pointer :: Ti_r(:)
-    sll_real64, pointer :: Te_r(:)
-    sll_real64, pointer :: dlog_density_r(:)
+    sll_real64, allocatable :: n0_r(:)
+    sll_real64, allocatable :: Ti_r(:)
+    sll_real64, allocatable :: Te_r(:)
+    sll_real64, allocatable :: dlog_density_r(:)
 
     !--> Magnetic field
     !sll_real64 :: q0
     !sll_real64 :: Dr_q0
-    sll_real64, pointer :: iota_r(:)
+    sll_real64, allocatable :: iota_r(:)
     !sll_real64, pointer :: Diota_r(:)
     !sll_real64 :: B_norm_exponent
     !sll_real64, pointer :: B_norm_r(:)
     !sll_real64, pointer :: Bstar_par_v_r(:)
     sll_real64 :: B0
-    sll_real64, pointer :: b_unit_x2(:)
-    sll_real64, pointer :: b_unit_x3(:)
+    sll_real64, allocatable :: b_unit_x2(:)
+    sll_real64, allocatable :: b_unit_x3(:)
 
     !variables that permit to compare the code when non field alignement is used
     !the convenience, her is tu use the same code
@@ -289,17 +289,17 @@ module sll_m_sim_bsl_dk_3d1v_polar_field_aligned
 
     !----> parallel in x1
     type(sll_t_layout_3d), pointer ::       layout3d_parx1
-    sll_real64,      pointer ::          rho3d_parx1(:,:,:)
-    sll_real64,      pointer ::          phi3d_parx1(:,:,:)
-    sll_real64,      pointer :: Daligned_phi3d_parx1(:,:,:)
-    sll_real64,      pointer ::             A3_parx1(:,:,:)
+    sll_real64,      allocatable ::          rho3d_parx1(:,:,:)
+    sll_real64,      allocatable ::          phi3d_parx1(:,:,:)
+    sll_real64,      allocatable :: Daligned_phi3d_parx1(:,:,:)
+    sll_real64,      allocatable ::             A3_parx1(:,:,:)
 
     !----> parallel in x3
     type(sll_t_layout_3d), pointer :: layout3d_parx3
-    sll_real64,      pointer ::    rho3d_parx3(:,:,:)
-    sll_real64,      pointer ::    phi3d_parx3(:,:,:)
-    sll_real64,      pointer ::       A1_parx3(:,:,:)
-    sll_real64,      pointer ::       A2_parx3(:,:,:)
+    sll_real64,      allocatable ::    rho3d_parx3(:,:,:)
+    sll_real64,      allocatable ::    phi3d_parx3(:,:,:)
+    sll_real64,      allocatable ::       A1_parx3(:,:,:)
+    sll_real64,      allocatable ::       A2_parx3(:,:,:)
     type(sll_t_remap_plan_3d_real64), pointer ::remap_plan_parx1_to_parx3
 
     !----> for Poisson
@@ -311,10 +311,10 @@ module sll_m_sim_bsl_dk_3d1v_polar_field_aligned
     !type(sll_t_cubic_spline_1d), pointer :: interp_x3
     !type(sll_t_cubic_spline_1d), pointer :: interp_x4
 
-    sll_real64, pointer :: x1_node(:)
-    sll_real64, pointer :: x2_node(:)
-    sll_real64, pointer :: x3_node(:)
-    sll_real64, pointer :: x4_node(:)
+    sll_real64, allocatable :: x1_node(:)
+    sll_real64, allocatable :: x2_node(:)
+    sll_real64, allocatable :: x3_node(:)
+    sll_real64, allocatable :: x4_node(:)
 
     class(sll_c_advector_2d), pointer :: adv_x1x2
     !class(sll_c_interpolator_2d), pointer :: interp_x1x2
@@ -2335,17 +2335,17 @@ contains
   subroutine initialize_fdistribu4d_DK(sim,layout,f4d)
     class(sll_t_simulation_4d_drift_kinetic_field_aligned_polar), intent(inout) :: sim
     type(sll_t_layout_4d), pointer :: layout
-    sll_real64     , pointer :: f4d(:,:,:,:)
+    sll_real64     :: f4d(:,:,:,:)
 
     sll_int32  :: ierr
     sll_int32  :: i1, i2, i3, i4
     sll_int32  :: iloc1, iloc2, iloc3, iloc4
     sll_int32  :: loc4d_sz_x1, loc4d_sz_x2, loc4d_sz_x3, loc4d_sz_x4
     sll_int32  :: glob_ind(1:4)
-    sll_real64, pointer :: x1_node(:)
-    sll_real64, pointer :: x2_node(:)
-    sll_real64, pointer :: x3_node(:)
-    sll_real64, pointer :: x4_node(:)
+    sll_real64, allocatable :: x1_node(:)
+    sll_real64, allocatable :: x2_node(:)
+    sll_real64, allocatable :: x3_node(:)
+    sll_real64, allocatable :: x4_node(:)
     sll_real64 :: rpeak,k_x2,k_x3
     sll_real64 :: tmp_mode,tmp
     sll_real64 :: x1_min,x1_max
@@ -2406,11 +2406,6 @@ contains
         end do
       end do
     end do
-
-    SLL_DEALLOCATE(x1_node,ierr)
-    SLL_DEALLOCATE(x2_node,ierr)
-    SLL_DEALLOCATE(x3_node,ierr)
-    SLL_DEALLOCATE(x4_node,ierr)
 
   end subroutine initialize_fdistribu4d_DK
 

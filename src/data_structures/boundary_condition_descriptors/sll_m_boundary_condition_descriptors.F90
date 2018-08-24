@@ -32,6 +32,7 @@ module sll_m_boundary_condition_descriptors
     sll_p_interior, &
     sll_p_neumann, &
     sll_p_neumann_mode_0, &
+    sll_p_polar_origin, &
     sll_p_periodic, &
     sll_p_open, &
     sll_p_mirror, &
@@ -75,6 +76,8 @@ module sll_m_boundary_condition_descriptors
   sll_int32, parameter :: sll_p_open         = 13
   !> Mirror points around boundary to define knots for B-splines from grid
   sll_int32, parameter :: sll_p_mirror       = 14
+  !> Treat boundary point as origin of polar coordinates (= center of a circle)
+  sll_int32, parameter :: sll_p_polar_origin = 15
 
 
 end module sll_m_boundary_condition_descriptors

@@ -7,7 +7,6 @@ SET(CMAKE_Fortran_MODULE_DIRECTORY "${CMAKE_BINARY_DIR}/modules")
 
 GET_FILENAME_COMPONENT(Fortran_COMPILER_NAME "${CMAKE_Fortran_COMPILER}" NAME)
 MESSAGE(STATUS "CMAKE_Fortran_COMPILER_ID:${CMAKE_Fortran_COMPILER_ID}")
-SET(FULL_FORTRAN2003 FALSE)
 
 IF (CMAKE_Fortran_COMPILER_ID MATCHES Intel)
 
@@ -18,39 +17,34 @@ IF (CMAKE_Fortran_COMPILER_ID MATCHES Intel)
   SET(CMAKE_Fortran_FLAGS_DEBUG   "-g -O0 -check all,noarg_temp_created -fpe0 -traceback -ftrapuv -fpic")
   SET(CMAKE_SHARED_LIBRARY_LINK_Fortran_FLAGS "-shared-intel")
 
-  if(Fortran_COMPILER_VERSION VERSION_LESS "14.0.0")
-    message(STATUS "Insufficient ifort version for the F2003 standard")
-  else()
-    message(STATUS "Intel fortran version OK for the F2003 standard")
-    SET(FULL_FORTRAN2003 TRUE)
-  endif()
-
 ELSEIF (CMAKE_Fortran_COMPILER_ID MATCHES PGI)
 
   EXEC_PROGRAM(${CMAKE_Fortran_COMPILER} ARGS "--version" OUTPUT_VARIABLE source_path)
   STRING(REGEX MATCH "1[0-9]\\.([1-9]|1[0-2])\\-[0-9]" Fortran_COMPILER_VERSION ${source_path})
-  SET(CMAKE_Fortran_FLAGS_DEBUG "-Mextend -Mbounds -Mchkptr -Mchkstk -O0 -g -Minform=inform")
-  SET(CMAKE_Fortran_FLAGS_RELEASE "-Mextend -acc -Minfo=accel -fast ")
-  SET(FULL_FORTRAN2003 FALSE)
+  SET(CMAKE_Fortran_FLAGS_DEBUG "-Mextend -Mbounds -Mchkptr -Mchkstk -O0 -g -Minform=inform -Mallocatable=03")
+  SET(CMAKE_Fortran_FLAGS_RELEASE "-Mextend -fast -Mallocatable=03")
   INCLUDE(PGIConfig)
 
 ELSEIF (CMAKE_Fortran_COMPILER_ID MATCHES IBM)
 
   SET(CMAKE_Fortran_FLAGS_DEBUG   "-qextname=flush -qxlf2003=polymorphic")
   SET(CMAKE_Fortran_FLAGS_RELEASE "-qnosave -qextname=flush -qxlf2003=polymorphic")
-  SET(FULL_FORTRAN2003 TRUE)
 
 ELSEIF (CMAKE_Fortran_COMPILER_ID MATCHES GNU)
 
   EXEC_PROGRAM(${CMAKE_Fortran_COMPILER} ARGS "--version" OUTPUT_VARIABLE source_path)
-  STRING(REGEX MATCH "[4-7]\\.[0-9]\\.[0-9]" Fortran_COMPILER_VERSION ${source_path})
+  STRING(REGEX MATCH "[4-9]\\.[0-9]\\.[0-9]" Fortran_COMPILER_VERSION ${source_path})
 
   ADD_DEFINITIONS(-DGFORTRAN)
-  SET(CMAKE_Fortran_FLAGS_RELEASE "-std=f2008 -ffree-line-length-none -fstack-arrays -O3 -fPIC -march=native -w")
-  IF(APPLE)
-    SET(CMAKE_Fortran_FLAGS_RELEASE "${CMAKE_Fortran_FLAGS_RELEASE} -mno-avx")
-  ENDIF(APPLE)
-  SET(CMAKE_Fortran_FLAGS_DEBUG "-std=f2008 -ffree-line-length-none -fstack-arrays -O0 -g -fbacktrace -Werror=intrinsics-std -Wall -pedantic -Wconversion-extra -Wuninitialized -fcheck=array-temps,bounds,do,pointer,recursion -ffpe-trap=invalid,zero,overflow")
+  SET(CMAKE_Fortran_FLAGS_RELEASE "-std=f2008 -ffree-line-length-none -fstack-arrays -O3 -fPIC  -w")
+  IF(NOT APPLE)
+    SET(CMAKE_Fortran_FLAGS_RELEASE "${CMAKE_Fortran_FLAGS_RELEASE} -march=native")
+  ENDIF()
+  SET(CMAKE_Fortran_FLAGS_DEBUG "-std=f2008 -ffree-line-length-none \
+  -fstack-arrays -O0 -g -fbacktrace -Werror=intrinsics-std -Wall \
+  -pedantic -Wconversion-extra -Wuninitialized \
+  -fcheck=array-temps,bounds,do,pointer,recursion \
+  -ffpe-trap=invalid,zero,overflow") #-Wno-integer-division -Werror")
 
   SET(UNUSED_FUNCTION_WARNING_ENABLED OFF CACHE BOOL "Add -Wunused-function flag to gfortran")
   IF(NOT UNUSED_FUNCTION_WARNING_ENABLED)
@@ -61,14 +55,6 @@ ELSEIF (CMAKE_Fortran_COMPILER_ID MATCHES GNU)
   IF(NOT UNUSED_DUMMY_WARNING_ENABLED)
     SET(CMAKE_Fortran_FLAGS_DEBUG "${CMAKE_Fortran_FLAGS_DEBUG} -Wno-unused-dummy-argument")
   ENDIF()
-
-  if(Fortran_COMPILER_VERSION VERSION_LESS "4.8.5")
-    message(STATUS "Insufficient gfortran version for the Fortran 2003 Standard")
-  else()
-    message(STATUS "GNU fortran version OK for the Fortran 2003 standard")
-    SET(FULL_FORTRAN2003 TRUE)
-  endif()
-  #SET(CMAKE_Fortran_FLAGS_DEBUG "-qextname=flush -qxlf2003=polymorphic")
 
 ELSE()
 
@@ -92,10 +78,6 @@ IF(OPENMP_ENABLED)
   SET(CMAKE_Fortran_FLAGS_DEBUG "${CMAKE_Fortran_FLAGS_DEBUG} ${OpenMP_Fortran_FLAGS}")
   SET(CMAKE_Fortran_FLAGS_RELEASE "${CMAKE_Fortran_FLAGS_RELEASE} ${OpenMP_Fortran_FLAGS}")
 ENDIF()
-
-IF(FULL_FORTRAN2003)
-  ADD_DEFINITIONS(-DFULL_FORTRAN2003)
-ENDIF(FULL_FORTRAN2003)
 
 MARK_AS_ADVANCED(CLEAR CMAKE_Fortran_COMPILER)
 MARK_AS_ADVANCED(CLEAR CMAKE_C_COMPILER)

@@ -342,8 +342,8 @@ subroutine sll_gnuplot_corect_2d(xmin, xmax, nx,    &
     iostat  = error )
 
   ! Write array, then close file
-  dx = (xmax-xmin)/(nx-1)
-  dy = (ymax-ymin)/(ny-1)
+  dx = (xmax-xmin)/real(nx-1,f64)
+  dy = (ymax-ymin)/real(ny-1,f64)
   x = xmin
   do i=1,nx
      y = ymin
