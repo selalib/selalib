@@ -186,7 +186,7 @@ contains
   end if
 
   return
-  SLL_ASSERT(present(center))
+  SLL_ASSERT_ALWAYS(present(center))
 
   end subroutine sll_s_xdmf_array_2d_serial_blocks
 
