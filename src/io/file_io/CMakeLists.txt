@@ -1,9 +1,6 @@
-IF(HDF5_IS_PARALLEL)
-   MESSAGE(STATUS "Switch to MPI fortran Wrapper to build sll_file_io library")
-   SET(CMAKE_Fortran_COMPILER ${MPI_Fortran_COMPILER})
-ELSE()
+IF(NOT HDF5_IS_PARALLEL)
    MESSAGE(STATUS "Serial version of HDF5 is installed")
-ENDIF(HDF5_IS_PARALLEL)
+ENDIF(NOT HDF5_IS_PARALLEL)
 
 SET(IO_SRC sll_m_ascii_io.F90 
            sll_m_binary_io.F90 

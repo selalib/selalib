@@ -1,9 +1,5 @@
 IF(HDF5_ENABLED)
 
-  IF(HDF5_IS_PARALLEL)
-    SET(CMAKE_Fortran_COMPILER ${MPI_Fortran_COMPILER})
-  ENDIF(HDF5_IS_PARALLEL)
-
   ADD_EXECUTABLE( test_linear_pendulum test_linear_pendulum.F90 )
   TARGET_LINK_LIBRARIES( test_linear_pendulum sll_splitting_methods )
   ADD_TEST( NAME splitting_methods_linear_pendulum COMMAND test_linear_pendulum )
