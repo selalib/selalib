@@ -1,4 +1,3 @@
-SET(CMAKE_Fortran_COMPILER ${MPI_Fortran_COMPILER})
 ADD_EXECUTABLE(test_maxwell_2d_pstd_parallel test_maxwell_2d_pstd_parallel.F90 )
 
 TARGET_LINK_LIBRARIES(test_maxwell_2d_pstd_parallel sll_maxwell_parallel sll_file_io_parallel)

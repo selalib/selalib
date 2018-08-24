@@ -4,9 +4,6 @@
 # sequential modules. Or, maybe this should be handled at the highest possible
 # level: once the parallel hdf5 is found, all the library should be compiled 
 # with the mpi wrapper compiler.
-if( HDF5_ENABLED AND HDF5_IS_PARALLEL )
-  set(CMAKE_Fortran_COMPILER ${MPI_Fortran_COMPILER} )
-endif( HDF5_ENABLED AND HDF5_IS_PARALLEL )
 
 add_library( sll_pic_opt_accumulators STATIC sll_m_accumulators.F90 )
 target_link_libraries( sll_pic_opt_accumulators
