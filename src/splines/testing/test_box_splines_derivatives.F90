@@ -20,7 +20,7 @@ program test_box_splines_derivatives
     sll_f_compute_box_spline, &
     sll_f_new_box_spline_2d, &
     sll_t_box_spline_2d, &
-    sll_s_write_all_django_files
+    sll_f_hex_interpolate_value
 
   use sll_m_hex_pre_filters, only: &
     sll_s_pre_filter_pfir
@@ -28,6 +28,9 @@ program test_box_splines_derivatives
   use sll_m_hexagonal_meshes, only: &
     sll_f_new_hex_mesh_2d, &
     sll_t_hex_mesh_2d
+
+  use sll_m_constants, only : &
+       sll_p_pi
 
   implicit none
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -37,21 +40,33 @@ program test_box_splines_derivatives
   ! Variables for the test:
   type(sll_t_hex_mesh_2d),   pointer   :: mesh
   type(sll_t_box_spline_2d), pointer   :: spline
-  sll_int32,  parameter :: max_deg = 5
+  sll_int32,  parameter :: max_deg = 2
   sll_real64, parameter :: criterion = 1.0e-14_f64
   sll_int32    :: ierr
   sll_int32    :: num_cells
+  sll_int32    :: num_cells_max
+  sll_int32    :: num_cells_min
+  sll_int32    :: num_cells_step
   sll_int32    :: degree
   sll_int32    :: rule
   sll_int32    :: i
-  sll_real64   :: x1
-  sll_real64   :: x2
+  sll_real64   :: x1, x1p
+  sll_real64   :: x2, x2p
   sll_real64   :: somme
   sll_real64   :: val
+  sll_real64   :: error_current
+  sll_real64   :: error_linf
+  sll_real64   :: error_l2
+  sll_real64   :: appx_f
+  sll_real64   :: randnum
   sll_real64, dimension(:), allocatable :: filters
+  sll_real64, dimension(:), allocatable :: dist
   sll_real64, dimension(:), allocatable :: f
   sll_real64, dimension(:), allocatable :: dxf
   sll_real64, dimension(:), allocatable :: dyf
+  sll_real64, dimension(:), allocatable :: f2
+  sll_real64, dimension(:), allocatable :: dxf2
+  sll_real64, dimension(:), allocatable :: dyf2
   !sll_real64, dimension(:), allocatable :: splines_on_support
 
   print *, " ************************************************** "
@@ -61,7 +76,10 @@ program test_box_splines_derivatives
 
   print *, "  Test will be made on the following mesh:"
   ! Mesh initialization
-  num_cells = 20
+  num_cells_max = 80
+  num_cells_min = 20
+  num_cells_step = 20
+  do num_cells = num_cells_min, num_cells_max, num_cells_step
   mesh => sll_f_new_hex_mesh_2d(num_cells, 0._f64, 0._f64, radius = 2._f64)
   call mesh%display()
 
@@ -72,35 +90,83 @@ program test_box_splines_derivatives
   SLL_ALLOCATE(f(mesh%num_pts_tot),ierr)
   SLL_ALLOCATE(dxf(mesh%num_pts_tot),ierr)
   SLL_ALLOCATE(dyf(mesh%num_pts_tot),ierr)
+  ! Allocation for degree 2 splines:
+  SLL_ALLOCATE(f2(mesh%num_pts_tot),ierr)
+  SLL_ALLOCATE(dxf2(mesh%num_pts_tot),ierr)
+  SLL_ALLOCATE(dyf2(mesh%num_pts_tot),ierr)
+  ! Allocation for a distribution function
+  SLL_ALLOCATE(dist(mesh%num_pts_tot),ierr)
+
+  ! Initialization of distribution function
+  do i=1, mesh%num_pts_tot
+     x1 = mesh%global_to_x1(i)
+     x2 = mesh%global_to_x2(i)
+     dist(i) = cos(x1*2.0*sll_p_pi)
+  end do
 
   do degree=1,max_deg
+     ! Computing box-splines coefficients:
+     call spline%compute_coeff_box_spline_2d(dist, degree)
+     ! Reseting errors:
+     error_linf = 0._f64
+     error_l2   = 0._f64
      do i=1, mesh%num_pts_tot
         x1 = mesh%global_to_x1(i)
         x2 = mesh%global_to_x2(i)
+        if (i .lt. 3*(num_cells-4)*(num_cells-5)+1) then
+           !call random_number(randnum)
+           randnum = 0._f64
+           x1p = x1 - randnum/num_cells
+           x2p = x2 - randnum/num_cells
+           ! Interpolation on mesh points computation:
+           appx_f = sll_f_hex_interpolate_value(mesh, x1p, x2p, spline, degree)
+           ! Computing errors:
+           error_current = ABS(cos(x1p*2.0*sll_p_pi) - appx_f)
+           error_l2   = error_l2 + error_current**2
+           error_linf = max(error_linf, error_current)
+        end if
+        ! Computing values of box-splines and derivatives
+        ! Note: This is not needed for interpolation
         f(i) = sll_f_compute_box_spline(spline, x1, x2, degree)
         dxf(i) = sll_f_boxspline_x1_derivative(x1, x2, degree)
         dyf(i) = sll_f_boxspline_x2_derivative(x1, x2, degree)
      end do
+     ! Storing degree two results:
+     if (degree .eq. 2) then
+        f2(:) = f(:)
+        dxf2(:) = dxf(:)
+        dyf2(:) = dyf(:)
+     end if
+     ! Printing errors of interpolation and values of box-splines :
      print *, " * Degree =", degree
-     print *, "    --> sum boxspline      = ", sum(f)
-     print *, "    --> sum 1st derivative = ", sum(dxf)
-     print *, "    --> sum 2nd derivative = ", sum(dyf)
+     print *, "    --> Error in L_inf     = ", error_linf
+     print *, "    --> Error in L_2       = ", SQRT(error_l2)
+     ! print *, "    --> sum boxspline      = ", sum(f)
+     ! print *, "    --> sum 1st derivative = ", sum(dxf)
+     ! print *, "    --> sum 2nd derivative = ", sum(dyf)
      if (abs(sum(f)-1.0_f64).gt.criterion) then
         passed_test = .false.
-        print *, "    --------------> FAILED"
+        print *, " Test FAILED for box-spline of degree = ", degree
         STOP
      end if
   end do
 
-  ! !Wrtting on docs:
-  ! call write_field_hex_mesh_xmf(mesh,   f, "boxspline2")
-  ! call write_field_hex_mesh_xmf(mesh, dxf, "der1_boxspline2")
-  ! call write_field_hex_mesh_xmf(mesh, dyf, "der2_boxspline2")
+
+  !Wrtting on docs:
+  call mesh%write_field_hex_mesh_xmf(   f2, "boxspline2")
+  call mesh%write_field_hex_mesh_xmf( dxf2, "der1_boxspline2")
+  call mesh%write_field_hex_mesh_xmf( dyf2, "der2_boxspline2")
+
+  SLL_DEALLOCATE_ARRAY(dist, ierr)
 
   SLL_DEALLOCATE_ARRAY(f, ierr)
   SLL_DEALLOCATE_ARRAY(dxf, ierr)
   SLL_DEALLOCATE_ARRAY(dyf, ierr)
 
+  SLL_DEALLOCATE_ARRAY(f2, ierr)
+  SLL_DEALLOCATE_ARRAY(dxf2, ierr)
+  SLL_DEALLOCATE_ARRAY(dyf2, ierr)
+end do
 
   ! ! Computing non null splines on one cell:
   ! SLL_ALLOCATE(splines_on_support(degree*degree*3),ierr)
@@ -114,17 +180,6 @@ program test_box_splines_derivatives
   ! SLL_DEALLOCATE_ARRAY(splines_on_support, ierr)
   ! call sll_o_delete(spline) !also deletes the mesh
 
-  ! Writing all django files
-  num_cells = 20
-  degree = 1
-  rule = 1
-  !call sll_s_write_all_django_files(num_cells, degree, rule)
-  print *, ""
-  print *, "*********** wrote all django files ***********"
-  print *, "   - number of cells    : ", num_cells
-  print *, "   - degree of splines  :", degree
-  print *, "   - rule of quadrature :", rule
-  print *, ""
 
   ! Testing degree 3 boxsplines:
   ! print *, ""
@@ -141,7 +196,7 @@ program test_box_splines_derivatives
   !    f(i) = sll_f_compute_box_spline(spline, x1, x2, degree)
   ! end do
   ! print *, sum(f)
-  ! call write_field_hex_mesh_xmf(mesh, f, "chi3")
+  ! call sll_s_write_field_hex_mesh_xmf(mesh, f, "chi3")
 
 
   ! Testing pre-filter:
