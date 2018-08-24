@@ -38,9 +38,7 @@ program test_maxwell_2d_diga_periodic
   use sll_m_boundary_condition_descriptors, only: &
     sll_p_periodic
 
-  use sll_m_cartesian_meshes, only: &
-    sll_f_new_cartesian_mesh_2d, &
-    sll_t_cartesian_mesh_2d
+  use sll_m_cartesian_meshes
 
   use sll_m_common_coordinate_transformations, only: &
     sll_f_identity_jac11, &
@@ -54,8 +52,7 @@ program test_maxwell_2d_diga_periodic
     sll_c_coordinate_transformation_2d_base, &
     sll_p_io_mtv
 
-  use sll_m_coordinate_transformations_2d, only: &
-    sll_f_new_coordinate_transformation_2d_analytic
+  use sll_m_coordinate_transformations_2d
 
   use sll_m_dg_fields, only: &
     sll_t_dg_field_2d
@@ -85,8 +82,9 @@ sll_real64 :: eta1_max, eta1_min
 sll_real64 :: eta2_max, eta2_min
 sll_real64 :: delta_eta1, delta_eta2
 
-type(sll_t_cartesian_mesh_2d), pointer :: mesh
-class(sll_c_coordinate_transformation_2d_base), pointer :: tau
+type(sll_t_cartesian_mesh_2d)                              :: mesh
+class(sll_c_coordinate_transformation_2d_base),    pointer :: tau
+type(sll_t_coordinate_transformation_2d_analytic), target  :: tau_analytic
 
 type(sll_t_maxwell_2d_diga)   :: maxwell_TE
 
@@ -107,7 +105,7 @@ sll_real64, dimension(nc_eta1,nc_eta2) :: f1
 sll_real64, dimension(nc_eta1,nc_eta2) :: f2
 #endif
 
-mesh => sll_f_new_cartesian_mesh_2d(nc_eta1, nc_eta2, &
+call sll_s_cartesian_mesh_2d_init( mesh, nc_eta1, nc_eta2, &
                             eta1_min=0._f64, eta1_max=1._f64, &
                             eta2_min=0._f64, eta2_max=1._f64)
 
@@ -123,16 +121,19 @@ delta_eta1 = mesh%delta_eta1
 delta_eta2 = mesh%delta_eta2
 
 ! "Identity transformation";
-tau => sll_f_new_coordinate_transformation_2d_analytic( &
-       "identity_transformation",                 &
-       mesh,                                      &
-       sll_f_identity_x1,                               &
-       sll_f_identity_x2,                               &
-       sll_f_identity_jac11,                            &
-       sll_f_identity_jac12,                            &
-       sll_f_identity_jac21,                            &
-       sll_f_identity_jac22,                            &
+call sll_s_coordinate_transformation_2d_analytic_init( &
+       tau_analytic,                                   &
+       "identity_transformation",                      &
+       mesh,                                           &
+       sll_f_identity_x1,                              &
+       sll_f_identity_x2,                              &
+       sll_f_identity_jac11,                           &
+       sll_f_identity_jac12,                           &
+       sll_f_identity_jac21,                           &
+       sll_f_identity_jac22,                           &
        SLL_NULL_REAL64 )
+
+tau => tau_analytic
 
 call tau%write_to_file(sll_p_io_mtv)
 

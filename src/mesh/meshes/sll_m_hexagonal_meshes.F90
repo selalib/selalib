@@ -305,7 +305,7 @@ contains
     mesh%r3_x1 = mesh%r3_x1 * mesh%delta
     mesh%r3_x2 = mesh%r3_x2 * mesh%delta
 
-    if ( mesh%radius <= 0.) then
+    if ( mesh%radius <= 0.0_f64) then
        print*,'ERROR, initialize_hex_mesh_2d(): ', &
             'Problem to construct the mesh 2d '
        print*,'because radius <= 0.'
@@ -487,7 +487,7 @@ contains
   subroutine init_center_points_triangle(mesh)
     class(sll_t_hex_mesh_2d) :: mesh
     sll_int32          :: center_index, global
-    sll_int32          :: k1, k2
+    sll_real64         :: k1, k2
     sll_real64         :: x1, x2, x3
     sll_real64         :: y1, y2, y3
     sll_real64         :: xx, yy, r1x1
@@ -507,8 +507,8 @@ contains
        ! almost each point is the base of a lozenge , thus two triangle
        ! from which we get two center points
 
-       k1 = mesh%hex_coord(1, global)
-       k2 = mesh%hex_coord(2, global)
+       k1 = real(mesh%hex_coord(1, global),f64)
+       k2 = real(mesh%hex_coord(2, global),f64)
 
        ! center point in the left triangle
 
@@ -529,8 +529,8 @@ contains
        k1c = abs(mesh%r2_x2 * xx - mesh%r2_x1 * yy) / abs(jacob)
        k2c = abs(mesh%r1_x1 * yy - mesh%r1_x2 * xx) / abs(jacob)
 
-       if ( k1c >  mesh%num_cells ) inside = .false.
-       if ( k2c >  mesh%num_cells ) inside = .false.
+       if ( ceiling(k1c) >  mesh%num_cells ) inside = .false.
+       if ( ceiling(k2c) >  mesh%num_cells ) inside = .false.
        if ( abs(xx) > r1x1 ) inside = .false.
 
        if ( inside ) then
@@ -560,8 +560,8 @@ contains
        k1c = abs(mesh%r2_x2 * xx - mesh%r2_x1 * yy) / abs(jacob)
        k2c = abs(mesh%r1_x1 * yy - mesh%r1_x2 * xx) / abs(jacob)
 
-       if ( k1c >  mesh%num_cells ) inside = .false.
-       if ( k2c >  mesh%num_cells ) inside = .false.
+       if ( ceiling(k1c) >  mesh%num_cells ) inside = .false.
+       if ( ceiling(k2c) >  mesh%num_cells ) inside = .false.
        if ( abs(xx) > r1x1 ) inside = .false.
 
        if ( inside ) then
@@ -711,13 +711,13 @@ contains
     if (k1.le.0) then
        k    = num_cells + k1
        !this value is always an integer, floor avoids the transformation
-       nk1  = num_cells*k + FLOOR( k*(k+1)*0.5 )
+       nk1  = num_cells*k + floor(real(k*(k+1))*0.5)
        nk2  = k2 + num_cells_plus1
     else
        ! n0 is the total number of points from (-num_cells,-num_cells) to
        ! ( 0, numcells)
-       n0  =  num_cells**2 + FLOOR(num_cells*num_cells_plus1*0.5 )
-       nk1 = n0 + k1*(2*num_cells + 1) - FLOOR( k1*(k1-1)*0.5 )
+       n0  =  num_cells**2 + floor(real(num_cells*num_cells_plus1)*0.5)
+       nk1 = n0 + k1*(2*num_cells + 1) - floor( real(k1*(k1-1))*0.5)
        nk2 = k2 + num_cells_plus1 - k1
     endif
 
@@ -740,7 +740,8 @@ contains
     sll_int32, intent(in)  :: j
     sll_real64 :: res
 
-    res = mesh%r1_x1*i + mesh%r2_x1*j + mesh%center_x1
+    res = mesh%r1_x1*real(i,f64) + mesh%r2_x1*real(j,f64) + mesh%center_x1
+
   end function eta1_node_hex
 
   !> @brief Computes the second cartesian coordinate of a given point
@@ -757,7 +758,7 @@ contains
     sll_int32, intent(in)  :: j
     sll_real64  :: res
 
-    res = mesh%r1_x2*i + mesh%r2_x2*j + mesh%center_x2
+    res = mesh%r1_x2*real(i,f64) + mesh%r2_x2*real(j,f64) + mesh%center_x2
   end function eta2_node_hex
 
 
@@ -806,7 +807,7 @@ contains
     sll_int32, intent(in)      :: i, j
     sll_real64 :: res
 
-    res = 0.0_f64+i+j+mesh%num_cells
+    res = real(i+j+mesh%num_cells,f64)
     print *, "Error in eta1_cell() :"
     print *, "   function only works with ONE parameter (num_cell)"
     STOP
@@ -822,7 +823,7 @@ contains
     sll_int32, intent(in)      :: i, j
     sll_real64 :: res
 
-    res = 0.0_f64+i+j+mesh%num_cells
+    res = real(i+j+mesh%num_cells,f64)
     print *, "Error in eta2_cell() :"
     print *, "   function only works with ONE parameter (num_cell)"
     STOP
@@ -2142,10 +2143,10 @@ contains
     do i = 1, mesh%num_triangles
        x1 = (  coor(1,ntri(1,i))  &
              + coor(1,ntri(2,i))  &
-         + coor(1,ntri(3,i))    )/3.
+         + coor(1,ntri(3,i))    )/3.0_f64
        y1 = (  coor(2,ntri(1,i))  &
              + coor(2,ntri(2,i))  &
-         + coor(2,ntri(3,i))    )/3.
+         + coor(2,ntri(3,i))    )/3.0_f64
        write(out_unit,"(a)"   , advance="no")"@text x1="
        write(out_unit,"(f8.5)", advance="no") x1
        write(out_unit,"(a)"   , advance="no")" y1="
@@ -2208,10 +2209,10 @@ contains
     do i = 1, mesh%num_triangles
        x1 = (  coor(1,ntri(1,i))  &
              + coor(1,ntri(2,i))  &
-         + coor(1,ntri(3,i))    )/3.
+         + coor(1,ntri(3,i))    )/3.0_f64
        y1 = (  coor(2,ntri(1,i))  &
              + coor(2,ntri(2,i))  &
-         + coor(2,ntri(3,i))    )/3.
+         + coor(2,ntri(3,i))    )/3.0_f64
        write(out_unit,"(a)"   , advance="no")"@text x1="
        write(out_unit,"(g15.3)", advance="no") x1
        write(out_unit,"(a)"   , advance="no")" y1="

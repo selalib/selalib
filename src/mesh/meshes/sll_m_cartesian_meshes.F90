@@ -39,6 +39,7 @@ module sll_m_cartesian_meshes
     sll_f_new_cartesian_mesh_4d, &
     operator(*), &
     sll_t_cartesian_mesh_1d, &
+    sll_s_cartesian_mesh_1d_init, &
     sll_t_cartesian_mesh_2d, &
     sll_s_cartesian_mesh_2d_init, &
     sll_t_cartesian_mesh_2d_ptr, &
@@ -245,7 +246,7 @@ contains
     obj%slot = arg; \
   else; \
     obj%slot = default_val; \
-end if
+  end if
 
   !> @brief allocates the memory space for a new 1D cartesian mesh on the heap,
   !> initializes it with the given arguments and returns a pointer to the
@@ -339,8 +340,8 @@ end if
   end function tensor_product_2d_2d
 
   subroutine get_node_positions_1d( m, eta1_node )
-    type(sll_t_cartesian_mesh_1d), pointer :: m
-    sll_real64, dimension(:), pointer :: eta1_node
+    type(sll_t_cartesian_mesh_1d) :: m
+    sll_real64, dimension(:), allocatable :: eta1_node
     sll_int32  :: num_cells
     sll_real64 :: eta_min
     sll_real64 :: delta_eta
@@ -382,9 +383,9 @@ end if
 
 
   subroutine get_node_positions_2d( m, eta1, eta2 )
-    class(sll_t_cartesian_mesh_2d),  pointer :: m
-    sll_real64, dimension(:,:), pointer :: eta1
-    sll_real64, dimension(:,:), pointer :: eta2
+    class(sll_t_cartesian_mesh_2d)          :: m
+    sll_real64, dimension(:,:), allocatable :: eta1
+    sll_real64, dimension(:,:), allocatable :: eta2
     sll_int32  :: num_cells1
     sll_int32  :: num_cells2
     sll_real64 :: eta1_min
@@ -698,7 +699,6 @@ end if
     sll_real64, optional, intent(in) :: eta2_max
     sll_real64, optional, intent(in) :: eta3_min
     sll_real64, optional, intent(in) :: eta3_max
-    sll_int32 :: ierr
 
     m%num_cells1 = num_cells1
     m%num_cells2 = num_cells2
@@ -1259,7 +1259,7 @@ function eta1_node_3d(mesh, i1, i2, i3) result(res)
     sll_real64, dimension(2) :: margin
 
     margin(1)=mesh%eta_min + real(cell-1,f64)*mesh%delta_eta
-    margin(2)=mesh%eta_min + cell*mesh%delta_eta
+    margin(2)=mesh%eta_min + real(cell,f64)*mesh%delta_eta
     !!SLL_ASSERT(margin(2)<=mesh%eta_max)
   endfunction
 

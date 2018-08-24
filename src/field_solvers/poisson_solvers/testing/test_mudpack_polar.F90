@@ -70,7 +70,7 @@ do j=1,ntheta
    end do
 end do
 
-tolmax   = 1.0e-4_f64
+tolmax   = 1.0e-2_f64
 
 call sll_s_mudpack_polar_init(poisson,  &
                               r_min, r_max, nr, &

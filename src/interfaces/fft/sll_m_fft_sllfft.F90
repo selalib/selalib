@@ -17,6 +17,8 @@
 !**************************************************************
 
 !> @ingroup fft
+!> @author Katharina Kormann (IPP)
+!> @author Yaman Güçlü (IPP)
 !> @brief
 !> Functions for Fast Fourier Transform
 !> @details
@@ -49,6 +51,8 @@ module sll_m_fft
     sll_s_fft_print_defaultlib, &
     sll_f_fft_allocate_aligned_complex, &
     sll_f_fft_allocate_aligned_real, &
+    sll_s_fft_deallocate_aligned_complex, &
+    sll_s_fft_deallocate_aligned_real, &
     sll_s_fft_init_r2r_1d, &
     sll_s_fft_init_c2r_1d, &
     sll_s_fft_init_r2c_1d, &
@@ -147,6 +151,28 @@ contains
     SLL_WARNING('sll_f_fft_allocate_aligned_real', 'Aligned allocation not implemented for SLLFFT. Usual allocation.')
 
   end function sll_f_fft_allocate_aligned_real
+
+  !-----------------------------------------------------------------------------
+  !> Function to deallocate an aligned complex array
+  !-----------------------------------------------------------------------------
+  subroutine sll_s_fft_deallocate_aligned_complex(data)
+    complex(f64), pointer :: data(:) !< Array to be deallocated
+
+    deallocate(data)
+    SLL_WARNING('sll_s_fft_deallocate_aligned_complex','Aligned deallocation not implemented for SLLFFT. Usual deallocation.')
+
+  end subroutine sll_s_fft_deallocate_aligned_complex
+
+  !-----------------------------------------------------------------------------
+  !> Function to deallocate an aligned real array
+  !-----------------------------------------------------------------------------
+  subroutine sll_s_fft_deallocate_aligned_real(data)
+    real(f64), pointer :: data(:) !< Array to be deallocated
+
+    deallocate(data)
+    SLL_WARNING('sll_s_fft_deallocate_aligned_real','Aligned deallocation not implemented for SLLFFT. Usual deallocation.')
+
+  end subroutine sll_s_fft_deallocate_aligned_real
 
   !-----------------------------------------------------------------------------
   !> Get a list of the k modes in a c2c FFT

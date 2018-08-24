@@ -59,22 +59,24 @@ contains
       b_magn        , &
       lambda        , &
       use_zonal_flow, &
-      epsilon_0 )
+      epsilon_0     , &
+      rgrid         )
 
-    type(sll_t_qn_solver_3d_polar_par), intent(inout) :: solver   !< Poisson solver class
-    type(sll_t_layout_2d), pointer    :: layout_r       !< sequential in r direction
-    type(sll_t_layout_2d), pointer    :: layout_a       !< sequential in theta direction
-    sll_real64           , intent(in) :: rmin           !< rmin
-    sll_real64           , intent(in) :: rmax           !< rmax
-    sll_int32            , intent(in) :: nr             !< number of cells radial
-    sll_int32            , intent(in) :: ntheta         !< number of cells angular
-    sll_int32            , intent(in) :: bc_rmin        !< boundary condition at r_min
-    sll_int32            , intent(in) :: bc_rmax        !< boundary condition at r_max
-    sll_real64           , intent(in) :: rho_m0(:)      !< radial profile: total mass density of equilibrium
-    sll_real64           , intent(in) :: b_magn(:)      !< radial profile: intensity of magnetic field
-    sll_real64,  optional, intent(in) :: lambda(:)      !< radial profile: electron Debye length
-    logical   ,  optional, intent(in) :: use_zonal_flow !< if .false. set flux average to zero
-    sll_real64,  optional, intent(in) :: epsilon_0      !< override default: vacuum permittivity
+    type(sll_t_qn_solver_3d_polar_par), intent(inout) :: solver         !< Poisson solver class
+    type(sll_t_layout_2d)             , pointer       :: layout_r       !< sequential in r direction
+    type(sll_t_layout_2d)             , pointer       :: layout_a       !< sequential in theta direction
+    real(f64)                         , intent(in   ) :: rmin           !< rmin
+    real(f64)                         , intent(in   ) :: rmax           !< rmax
+    integer(i32)                      , intent(in   ) :: nr             !< number of cells radial
+    integer(i32)                      , intent(in   ) :: ntheta         !< number of cells angular
+    integer(i32)                      , intent(in   ) :: bc_rmin        !< boundary condition at r_min
+    integer(i32)                      , intent(in   ) :: bc_rmax        !< boundary condition at r_max
+    real(f64)                         , intent(in   ) :: rho_m0(:)      !< radial profile: total mass density of equilibrium
+    real(f64)                         , intent(in   ) :: b_magn(:)      !< radial profile: intensity of magnetic field
+    real(f64),                optional, intent(in   ) :: lambda(:)      !< radial profile: electron Debye length
+    logical  ,                optional, intent(in   ) :: use_zonal_flow !< if .false. set flux average to zero
+    real(f64),                optional, intent(in   ) :: epsilon_0      !< override default: vacuum permittivity
+    real(f64),        target, optional, intent(in   ) :: rgrid(:)       !< grid points along r
 
     ! Initialize the 2D solver
     call sll_s_qn_solver_2d_polar_par_init( solver%solver_2d, &
@@ -90,7 +92,8 @@ contains
       b_magn        , &
       lambda        , &
       use_zonal_flow, &
-      epsilon_0 )
+      epsilon_0     , &
+      rgrid         )
 
   end subroutine sll_s_qn_solver_3d_polar_par_init
 
@@ -99,10 +102,10 @@ contains
   !> Solve the quasi-neutrality equation and get the electrostatic potential
   subroutine sll_s_qn_solver_3d_polar_par_solve( solver, rhs, phi )
     type(sll_t_qn_solver_3d_polar_par) , intent(inout) :: solver     !< 3D solver
-    sll_real64                         , intent(in   ) :: rhs(:,:,:) !< Charge density
-    sll_real64                         , intent(  out) :: phi(:,:,:) !< Potential
+    real(f64)                          , intent(in   ) :: rhs(:,:,:) !< Charge density
+    real(f64)                          , intent(  out) :: phi(:,:,:) !< Potential
 
-    sll_int32 :: i3
+    integer(i32) :: i3
 
     SLL_ASSERT( all( shape(rhs)==shape(phi) ) )
 

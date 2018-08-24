@@ -171,7 +171,7 @@ program comm_unit_test_2d
   call sll_s_delete_comm_real64( comm )
 
   if( rank == 0 ) then
-     if( general_pass(1) .eqv. .true.) then  
+     if( general_pass(1) ) then  
         print *, 'PASSED'
      else
         print *, 'FAILED'

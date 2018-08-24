@@ -61,7 +61,7 @@ function sll_f_new_lagrange_interpolation_1d(num_points,xmin,xmax,bc_type,d, per
  sll_f_new_lagrange_interpolation_1d%xmax=xmax
  sll_f_new_lagrange_interpolation_1d%nb_cell=num_points-1
  sll_f_new_lagrange_interpolation_1d%bc_type=bc_type
- sll_f_new_lagrange_interpolation_1d%deta = (xmax-xmin)/(sll_f_new_lagrange_interpolation_1d%nb_cell)
+ sll_f_new_lagrange_interpolation_1d%deta = (xmax-xmin)/real(sll_f_new_lagrange_interpolation_1d%nb_cell,f64)
  if (present(periodic_last)) then
     sll_f_new_lagrange_interpolation_1d%periodic_last = periodic_last
  else
@@ -88,7 +88,7 @@ subroutine sll_s_compute_lagrange_interpolation_1d(lagrange)
  wj=1.0_f64
  do i=1,lagrange%d
   do j=1,2*lagrange%d-1
-   wj(i)=wj(i)*table(i+j-1)
+   wj(i)=wj(i)*real(table(i+j-1),f64)
   end do
   wj(i)=((-1.0_f64)**(lagrange%d+i))*wj(i)
  end do

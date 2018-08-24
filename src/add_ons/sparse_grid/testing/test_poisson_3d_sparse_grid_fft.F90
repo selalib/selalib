@@ -30,7 +30,7 @@ program test_poisson_3d_sparsegrid_fft
    sll_real64, allocatable      :: phi(:)
    sll_real64, allocatable      :: phi_exact(:)
    sll_real64, allocatable      :: rho_hsp(:), phi_hsp(:)
-   type(sll_t_fft3d_derivative)   :: poisson
+   type(sll_t_fft3d_derivative) :: poisson
 
    sll_real64                   :: x(3)
    sll_int32                    :: i
@@ -47,7 +47,7 @@ program test_poisson_3d_sparsegrid_fft
    eta_min(2) = .0_f64; eta_max(2) = 4.0_f64*sll_p_pi
    eta_min(3) = .0_f64; eta_max(3) = 4.0_f64*sll_p_pi
 
-   call interp%init(levels,order, order+1,0,eta_min,eta_max,0,0);
+   call interp%init(levels,order, order,0,eta_min,eta_max,0,0);
 
    SLL_ALLOCATE(ex(interp%size_basis),error)
    SLL_ALLOCATE(ey(interp%size_basis),error)

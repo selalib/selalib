@@ -29,7 +29,7 @@ contains
 
     do j=1,n
        do i=j,n
-          if (abs(a(i,j)) > 1e-16) then
+          if (abs(a(i,j)) > 1d-16) then
              ll1 = i - j
              ll2 = i - j
           endif
@@ -123,7 +123,7 @@ contains
           ki = k + i
           ll1i = ll1 - i          
           if (ki <= n) then 
-             if (  abs(u(ki,ll1i)) > 1e-16 ) then
+             if (  abs(u(ki,ll1i)) > 1d-16 ) then
                 l(ki,ll1i) = u(ki,ll1i)/u(k,ll1)
                 !if (  abs(l(ki,ll1i)) > 1e-17 ) then
                 do j = 1,band
@@ -237,7 +237,7 @@ contains
 
     error_l2 = 1._f64
 
-    do while ( error_l2 > 1e-12 ) 
+    do while ( error_l2 > 1d-12 ) 
 
        do i = 1,n
           s1 = 0._f64
@@ -309,7 +309,7 @@ contains
     error_l2 = 1._f64
     l_tot = l1+l2+1
 
-    do while ( error_l2 > 1e-12 ) 
+    do while ( error_l2 > 1d-12 ) 
 
        do i = 1,n
 

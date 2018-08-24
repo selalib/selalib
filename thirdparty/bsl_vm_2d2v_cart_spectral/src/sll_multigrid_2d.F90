@@ -42,7 +42,6 @@ sll_int32  :: bd(8)
 sll_int32  :: nx
 sll_int32  :: ny
 sll_real64 :: phibc(4,20)
-sll_real64 :: wk
 sll_int32  :: myid
 sll_int32  :: ngrid
 sll_int32  :: nerror

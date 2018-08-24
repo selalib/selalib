@@ -276,7 +276,7 @@ subroutine sll_s_setup_cyclic_tridiag( a, n, cts, ipiv )
            end if
            ! Eliminate the current column of A below the diagonal. The 
            ! column of L will be stored in place of the zeros.
-           if( s11 == 0.0 ) print *, 'zero determinant' ! FIX THIS
+           if( s11 == 0.0_f64 ) print *, 'zero determinant' ! FIX THIS
            s21 = s21/s11
            s22 = s22 - s21*s12
            s23 = s23 - s21*s13
@@ -347,7 +347,7 @@ subroutine sll_s_setup_cyclic_tridiag( a, n, cts, ipiv )
            ! Eliminate the current column of A below the diagonal. The column
            ! of L will be stored in place of the zeros.
 
-           if( s11==0.0 ) print *, 'Zero determinant' ! FIX: Do something else!
+           if( s11==0.0_f64 ) print *, 'Zero determinant' ! FIX: Do something else!
            s21 = s21/s11
            s22 = s22 - s21*s12
            s23 = s23 - s21*s13
@@ -405,7 +405,7 @@ subroutine sll_s_setup_cyclic_tridiag( a, n, cts, ipiv )
            end if
            ! Eliminate the current column of A below the diagonal. The
            ! column of L will be sotred inplace of the zeros.
-           if( s11==0.0 )  print *, 'zero determinant' ! FIX THIS
+           if( s11==0.0_f64 )  print *, 'zero determinant' ! FIX THIS
            s21 = s21/s11
            s22 = s22 - s21*s12
            s23 = s23 - s21*s13
@@ -455,7 +455,7 @@ subroutine sll_s_setup_cyclic_tridiag( a, n, cts, ipiv )
            
            ! Eliminate the current column of A below the diagonal.
            ! The column of L will be stored in place of the zeros.
-           if( s11==0.0 ) print *, 'Zero determinant' ! FIX THIS
+           if( s11==0.0_f64 ) print *, 'Zero determinant' ! FIX THIS
            s21 = s21/s11
            s22 = s22 - s21*s12
 
@@ -490,7 +490,7 @@ subroutine sll_s_setup_cyclic_tridiag( a, n, cts, ipiv )
            !   n-1 |                                    ln2 dn1 un1
            !   n   | m1  m2  m3  m4  m5 ... mn5 mn4 mn3 mn2 ln1 s11 
 
-           if( s11 == 0.0 ) print *, 'zero determinant' ! FIX THIS
+           if( s11 == 0.0_f64 ) print *, 'zero determinant' ! FIX THIS
            ipiv(i) = i
            d(i) = s11
            u(i) = 0.0_f64
@@ -648,19 +648,19 @@ subroutine sll_s_setup_cyclic_tridiag( a, n, cts, ipiv )
      ! Overwrite x with the solution of Ly = Pb
      do i=1,n-1
         SWP(x(i),x(ipiv(i)))
-        x(i+1) = x(i+1) - l(i)*x(i)
-        x(n)   = x(n) - m(i)*x(i)
+        x(i+1) = x(i+1) - cmplx(l(i),0.0_f64,kind=f64)*x(i)
+        x(n)   = x(n) - cmplx(m(i),0.0,f64)*x(i)
      end do
 
      ! Overwrite x with the solution of Ux = y
      i    = n
-     x(i) = x(i)/d(i)
+     x(i) = x(i)/cmplx(d(i),0.0,f64)
      i    = i-1
-     x(i) = (x(i) - u(i)*x(i+1))/d(i)
+     x(i) = (x(i) - cmplx(u(i),0.0,f64)*x(i+1))/cmplx(d(i),0.0,f64)
      inew    = i-1
      do i=inew,1,-1
-        x(i) = (x(i)-(u(i)*x(i+1) + v(i)*x(i+2) + &
-                      q(i)*x(n-1) + r(i)*x(n) ))/d(i)
+        x(i) = (x(i)-(cmplx(u(i),0.0,f64)*x(i+1) + cmplx(v(i),0.0,f64)*x(i+2) + &
+                      cmplx(q(i),0.0,f64)*x(n-1) + cmplx(r(i),0.0,f64)*x(n) ))/cmplx(d(i),0.0,kind=f64)
      end do
    end subroutine solve_cyclic_tridiag_complex
 

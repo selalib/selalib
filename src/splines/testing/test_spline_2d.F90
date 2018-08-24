@@ -27,7 +27,8 @@ program test_spline_2d
 
   use m_splines_error_bounds, only: &
     sll_f_spline_2d_error_bound, &
-    sll_f_spline_2d_error_bounds_on_grad
+    sll_f_spline_2d_error_bounds_on_grad, &
+    sll_f_spline_2d_error_bound_on_mixed_deriv
 
   implicit none
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -65,15 +66,19 @@ program test_spline_2d
   integer  :: grid_dim(2)
   real(wp) :: tol
   real(wp) :: tols_grad(2)
+  real(wp) :: tol_mixed_deriv
   real(wp) :: tol_diff_x1
   real(wp) :: tol_diff_x2
+  real(wp) :: tol_diff_x1x2
   logical  :: passed(3)
   logical  :: success
   logical  :: success_diff_x1
   logical  :: success_diff_x2
-  real(wp) :: max_norm_error        , max_norm_profile
-  real(wp) :: max_norm_error_diff_x1, max_norm_profile_diff_x1
-  real(wp) :: max_norm_error_diff_x2, max_norm_profile_diff_x2
+  logical  :: success_diff_x1x2
+  real(wp) :: max_norm_error          , max_norm_profile
+  real(wp) :: max_norm_error_diff_x1  , max_norm_profile_diff_x1
+  real(wp) :: max_norm_error_diff_x2  , max_norm_profile_diff_x2
+  real(wp) :: max_norm_error_diff_x1x2, max_norm_profile_diff_x1x2
   real(wp) :: dx1
   real(wp) :: dx2
   integer  :: k
@@ -225,9 +230,10 @@ program test_spline_2d
   write(*,*)
 
   ! Test tolerance: very small!
-  tol         = 1e-14_wp
-  tol_diff_x1 = 2e-13_wp ! larger for derivatives
-  tol_diff_x2 = 2e-13_wp ! larger for derivatives
+  tol           = 2e-14_wp
+  tol_diff_x1   = 2e-13_wp ! larger for derivatives
+  tol_diff_x2   = 2e-13_wp ! larger for derivatives
+  tol_diff_x1x2 = 4e-12_wp ! even larger for mixed derivative
 
   ! Choose boundary conditions to be tested
   allocate( bc_kinds(2) )
@@ -240,9 +246,10 @@ program test_spline_2d
   grid_dim = [20, 20]
 
   ! Print constant parameters
-  write(*,'(a,es10.1)') 'Relative error tolerance for f     : tol         = ', tol
-  write(*,'(a,es10.1)') 'Relative error tolerance for ∂f/∂x1: tol_diff_x1 = ', tol_diff_x1
-  write(*,'(a,es10.1)') 'Relative error tolerance for ∂f/∂x2: tol_diff_x2 = ', tol_diff_x2
+  write(*,'(a,es10.1)') 'Relative error tolerance for f              : tol           = ', tol
+  write(*,'(a,es10.1)') 'Relative error tolerance for ∂f/∂x1         : tol_diff_x1   = ', tol_diff_x1
+  write(*,'(a,es10.1)') 'Relative error tolerance for ∂f/∂x2         : tol_diff_x2   = ', tol_diff_x2
+  write(*,'(a,es10.1)') 'Relative error tolerance for ∂^2/(∂x1 ∂x2) f: tol_diff_x1x2 = ', tol_diff_x1x2
   write(*,'(a,i4)')     'Number of cells in grid: nx1 = ', ncells(1)
   write(*,'(a,i4)')     '                         nx2 = ', ncells(2)
   write(*,'(a,i4,a,i4,a)')'Number of evaluation points (uniform grid): [', grid_dim(1), ',', grid_dim(2),']'
@@ -254,10 +261,11 @@ program test_spline_2d
   write(*,'(a)') '  .  bc2 = boundary conditions in x2 direction [H|G]'
   write(*,*)
   write(*,'(a)') "Output:"
-  write(*,'(a)') '  .  err     = relative max-norm of error on f'
-  write(*,'(a)') '  .  err_dx1 = relative max-norm of error on ∂f/∂x1'
-  write(*,'(a)') '  .  err_dx2 = relative max-norm of error on ∂f/∂x2'
-  write(*,'(a)') '  .  passed  = "OK" if all errors <= tol, "FAIL" otherwise'
+  write(*,'(a)') '  .  err      = relative max-norm of error on f'
+  write(*,'(a)') '  .  err_dx1  = relative max-norm of error on ∂f/∂x1'
+  write(*,'(a)') '  .  err_dx2  = relative max-norm of error on ∂f/∂x2'
+  write(*,'(a)') '  .  err_dx12 = relative max-norm of error on ∂^2/(∂x1 ∂x2)'
+  write(*,'(a)') '  .  passed   = "OK" if all errors <= tol, "FAIL" otherwise'
   write(*,*)
   write(*,'(a)') "Boundary conditions:"
   write(*,'(a)') '  .  H = Hermite'
@@ -265,8 +273,8 @@ program test_spline_2d
   write(*,*)
 
   ! Print table header
-  write(*, '(4a6,3a10,a10)') "deg1", "deg2", "bc1", "bc2", &
-    "err", "err_dx1", "err_dx2", "passed"
+  write(*, '(4a6,4a10,a10)') "deg1", "deg2", "bc1", "bc2", &
+    "err", "err_dx1", "err_dx2", "err_dx12", "passed"
 
   call profile_2d_poly % init( 0, 0 )  ! dummy, only need domain size
   call profile_2d_poly % get_info( pinfo )
@@ -304,9 +312,10 @@ program test_spline_2d
       call profile_2d_poly % init( deg1, deg2 )
 
       ! Estimate max-norm of profile (needed to compute relative error)
-      max_norm_profile         = profile_2d_poly % max_norm()
-      max_norm_profile_diff_x1 = profile_2d_poly % max_norm( diff_x1=1 )
-      max_norm_profile_diff_x2 = profile_2d_poly % max_norm( diff_x2=1 )
+      max_norm_profile           = profile_2d_poly % max_norm()
+      max_norm_profile_diff_x1   = profile_2d_poly % max_norm( diff_x1=1 )
+      max_norm_profile_diff_x2   = profile_2d_poly % max_norm( diff_x2=1 )
+      max_norm_profile_diff_x1x2 = profile_2d_poly % max_norm( diff_x1=1, diff_x2=1 )
 
       ! Cycle over all kinds of boundary conditions at x1_min
       do i1 = 1, size( bc_kinds )
@@ -338,27 +347,31 @@ program test_spline_2d
               call test_facility % evaluate_on_2d_grid( mgrid_x1, mgrid_x2, max_norm_error )
               call test_facility % evaluate_grad_on_2d_grid( mgrid_x1, mgrid_x2, &
                 max_norm_error_diff_x1, max_norm_error_diff_x2 )
+              call test_facility % evaluate_mixed_deriv_on_2d_grid( mgrid_x1, mgrid_x2, &
+                max_norm_error_diff_x1x2 )
 
               ! Calculate relative error norms from absolute ones
-              max_norm_error         = max_norm_error         / max_norm_profile
-              max_norm_error_diff_x1 = max_norm_error_diff_x1 / max_norm_profile_diff_x1
-              max_norm_error_diff_x2 = max_norm_error_diff_x2 / max_norm_profile_diff_x2
+              max_norm_error           = max_norm_error           / max_norm_profile
+              max_norm_error_diff_x1   = max_norm_error_diff_x1   / max_norm_profile_diff_x1
+              max_norm_error_diff_x2   = max_norm_error_diff_x2   / max_norm_profile_diff_x2
+              max_norm_error_diff_x1x2 = max_norm_error_diff_x1x2 / max_norm_profile_diff_x1x2
 
               ! Check tolerances
-              success         = (max_norm_error         <= tol        )
-              success_diff_x1 = (max_norm_error_diff_x1 <= tol_diff_x1)
-              success_diff_x2 = (max_norm_error_diff_x2 <= tol_diff_x2)
+              success           = (max_norm_error           <= tol          )
+              success_diff_x1   = (max_norm_error_diff_x1   <= tol_diff_x1  )
+              success_diff_x2   = (max_norm_error_diff_x2   <= tol_diff_x2  )
+              success_diff_x1x2 = (max_norm_error_diff_x1x2 <= tol_diff_x1x2)
 
               ! Keep single success condition
-              success = success .and. success_diff_x1 .and. success_diff_x2
+              success = success .and. success_diff_x1 .and. success_diff_x2 .and. success_diff_x1x2
 
               ! Print test report to terminal on a single line
               write(*,'(2i6)'    , advance='no') deg1, deg2
               write(*,'(2a6)', advance='no') &
                 bc_to_char( bc_xmin(1) ) // "-" // bc_to_char( bc_xmax(1) ), &
                 bc_to_char( bc_xmin(2) ) // "-" // bc_to_char( bc_xmax(2) )
-              write(*,'(3es10.1)', advance='no') &
-                max_norm_error, max_norm_error_diff_x1, max_norm_error_diff_x2
+              write(*,'(4es10.1)', advance='no') &
+                max_norm_error, max_norm_error_diff_x1, max_norm_error_diff_x2, max_norm_error_diff_x1x2
               write(*,'(a8)') trim( success_to_string( success ))
 
               ! Free memory
@@ -425,13 +438,15 @@ program test_spline_2d
   write(*,'(a)') '  . nx  = number of cells along each direction (nx1=nx2)'
   write(*,*)
   write(*,'(a)') "Output:"
-  write(*,'(a)') '  . tol     = tolerance for f'
-  write(*,'(a)') '  . err     = max-norm of error on f'
-  write(*,'(a)') '  . tol_dx1 = tolerance for ∂f/∂x1'
-  write(*,'(a)') '  . err_dx1 = max-norm of error on ∂f/∂x1'
-  write(*,'(a)') '  . tol_dx2 = tolerance for ∂f/∂x2'
-  write(*,'(a)') '  . err_dx2 = max-norm of error on ∂f/∂x2'
-  write(*,'(a)') '  . passed  = "OK" if all errors <= tol, "FAIL" otherwise'
+  write(*,'(a)') '  . tol      = tolerance for f'
+  write(*,'(a)') '  . err      = max-norm of error on f'
+  write(*,'(a)') '  . tol_dx1  = tolerance for ∂f/∂x1'
+  write(*,'(a)') '  . err_dx1  = max-norm of error on ∂f/∂x1'
+  write(*,'(a)') '  . tol_dx2  = tolerance for ∂f/∂x2'
+  write(*,'(a)') '  . err_dx2  = max-norm of error on ∂f/∂x2'
+  write(*,'(a)') '  . tol_dx12 = tolerance for ∂^2/(∂x1 ∂x2) f'
+  write(*,'(a)') '  . err_dx12 = max-norm of error on ∂^2/(∂x1 ∂x2) f'
+  write(*,'(a)') '  . passed   = "OK" if all errors <= tol, "FAIL" otherwise'
   write(*,*)
   write(*,'(a)') "Timing [s]:"
   write(*,'(a)') '  . t_init  = initialization of spline object'
@@ -439,6 +454,7 @@ program test_spline_2d
   write(*,'(a)') '  . t_eval  = evaluation of function value S(x1,x2)'
   write(*,'(a)') '  . t_dx1   = evaluation of x1-derivative ∂S(x1,x2)/∂x1'
   write(*,'(a)') '  . t_dx2   = evaluation of x2-derivative ∂S(x1,x2)/∂x2'
+  write(*,'(a)') '  . t_dx12  = evaluation of mixed derivative ∂^2/(∂x1 ∂x2) S(x1,x2)'
   write(*,*)
   write(*,'(a)') "Boundary conditions:"
   write(*,'(a)') '  . P = periodic'
@@ -449,8 +465,8 @@ program test_spline_2d
   ! Print table header
   write(*, '(a3,3a6,*(a10))') &
     "deg", "bc1", "bc2", "nx", &
-    "tol", "err", "tol_dx1", "err_dx1", "tol_dx2", "err_dx2", "passed", &
-    "t_init", "t_comp", "t_eval", "t_dx1", "t_dx2"
+    "tol", "err", "tol_dx1", "err_dx1", "tol_dx2", "err_dx2", "tol_dx12", "err_dx12", "passed", &
+    "t_init", "t_comp", "t_eval", "t_dx1", "t_dx2", "t_dx12"
 
   ! Initialize profile
   call profile_2d_cos_cos % init( cos_n1, cos_n2, cos_c1, cos_c2 )
@@ -459,9 +475,10 @@ program test_spline_2d
   call profile_2d_cos_cos % get_info( pinfo )
 
   ! Estimate max-norm of profile (needed to compute relative error)
-  max_norm_profile         = profile_2d_cos_cos % max_norm()
-  max_norm_profile_diff_x1 = profile_2d_cos_cos % max_norm( diff_x1=1 )
-  max_norm_profile_diff_x2 = profile_2d_cos_cos % max_norm( diff_x2=1 )
+  max_norm_profile           = profile_2d_cos_cos % max_norm()
+  max_norm_profile_diff_x1   = profile_2d_cos_cos % max_norm( diff_x1=1 )
+  max_norm_profile_diff_x2   = profile_2d_cos_cos % max_norm( diff_x2=1 )
+  max_norm_profile_diff_x1x2 = profile_2d_cos_cos % max_norm( diff_x1=1, diff_x2=1 )
 
   ! Create 1D uniform grids of evaluation points
   allocate( grid_x1 (grid_dim(1)) )
@@ -540,28 +557,32 @@ program test_spline_2d
               if (allocated( breaks2 )) deallocate( breaks2 )
 
               ! Determine error tolerances
-              tol       = sll_f_spline_2d_error_bound         ( profile_2d_cos_cos, dx1, dx2, deg1, deg2 )
-              tols_grad = sll_f_spline_2d_error_bounds_on_grad( profile_2d_cos_cos, dx1, dx2, deg1, deg2 )
+              tol             = sll_f_spline_2d_error_bound               ( profile_2d_cos_cos, dx1, dx2, deg1, deg2 )
+              tols_grad       = sll_f_spline_2d_error_bounds_on_grad      ( profile_2d_cos_cos, dx1, dx2, deg1, deg2 )
+              tol_mixed_deriv = sll_f_spline_2d_error_bound_on_mixed_deriv( profile_2d_cos_cos, dx1, dx2, deg1, deg2 )
 
               ! Increase absolute tolerances if below machine precision
               ! NOTE: derivatives more sensitive to roundoff
-              tol         = max( 1e-14_wp*max_norm_profile        , tol          )
-              tol_diff_x1 = max( 1e-12_wp*max_norm_profile_diff_x1, tols_grad(1) )
-              tol_diff_x2 = max( 1e-12_wp*max_norm_profile_diff_x2, tols_grad(2) )
+              tol           = max( 1e-14_wp*max_norm_profile          , tol             )
+              tol_diff_x1   = max( 1e-12_wp*max_norm_profile_diff_x1  , tols_grad(1)    )
+              tol_diff_x2   = max( 1e-12_wp*max_norm_profile_diff_x2  , tols_grad(2)    )
+              tol_diff_x1x2 = max( 1e-11_wp*max_norm_profile_diff_x1x2, tol_mixed_deriv )
 
               ! Run tests
               ! TODO: print numerical order of accuracy
               call test_facility % evaluate_on_2d_grid( mgrid_x1, mgrid_x2, max_norm_error )
               call test_facility % evaluate_grad_on_2d_grid( mgrid_x1, mgrid_x2, &
                 max_norm_error_diff_x1, max_norm_error_diff_x2 )
+              call test_facility % evaluate_mixed_deriv_on_2d_grid( mgrid_x1, mgrid_x2, max_norm_error_diff_x1x2 )
 
               ! Check tolerances
-              success         = (max_norm_error         <= tol        )
-              success_diff_x1 = (max_norm_error_diff_x1 <= tol_diff_x1)
-              success_diff_x2 = (max_norm_error_diff_x2 <= tol_diff_x2)
+              success           = (max_norm_error           <= tol          )
+              success_diff_x1   = (max_norm_error_diff_x1   <= tol_diff_x1  )
+              success_diff_x2   = (max_norm_error_diff_x2   <= tol_diff_x2  )
+              success_diff_x1x2 = (max_norm_error_diff_x1x2 <= tol_diff_x1x2)
 
               ! Keep single success condition
-              success = success .and. success_diff_x1 .and. success_diff_x2
+              success = success .and. success_diff_x1 .and. success_diff_x2 .and. success_diff_x1x2
 
               ! Print test report to terminal on a single line
               write(*,'(i3)'     , advance='no') deg1
@@ -569,16 +590,18 @@ program test_spline_2d
                 bc_to_char( bc_xmin(1) ) // "-" // bc_to_char( bc_xmax(1) ), &
                 bc_to_char( bc_xmin(2) ) // "-" // bc_to_char( bc_xmax(2) )
               write(*,'(2i6)'    , advance='no') ncells(1)
-              write(*,'(2es10.1)', advance='no') tol        , max_norm_error
-              write(*,'(2es10.1)', advance='no') tol_diff_x1, max_norm_error_diff_x1
-              write(*,'(2es10.1)', advance='no') tol_diff_x2, max_norm_error_diff_x2
+              write(*,'(2es10.1)', advance='no') tol          , max_norm_error
+              write(*,'(2es10.1)', advance='no') tol_diff_x1  , max_norm_error_diff_x1
+              write(*,'(2es10.1)', advance='no') tol_diff_x2  , max_norm_error_diff_x2
+              write(*,'(2es10.1)', advance='no') tol_diff_x1x2, max_norm_error_diff_x1x2
               write(*,'(a10)'    , advance='no') success_to_string( success )
-              write(*,'(5es10.1)') &
+              write(*,'(*(es10.1))') &
                 test_facility % time_init               , &
                 test_facility % time_compute_interpolant, &
                 test_facility % time_eval_array         , &
                 test_facility % time_eval_diff1_array   , &
-                test_facility % time_eval_diff2_array
+                test_facility % time_eval_diff2_array   , &
+                test_facility % time_eval_diff12_array
 
               ! Free memory
               call test_facility % free()

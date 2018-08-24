@@ -40,7 +40,7 @@ module sll_m_bsplines_uniform
 
   ! Inverse of integers for later use (max spline degree = 32)
   integer             :: index
-  real(wp), parameter :: inv(*) = [(1.0_wp/real(index,wp), index=1,32)]
+  real(wp), parameter :: inv(1:32) = [(1.0_wp/real(index,wp), index=1,32)]
 
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 contains
@@ -63,6 +63,13 @@ contains
       icell    = int( x_offset )
       x_offset = x_offset - real( icell, wp ) ! 0 <= x_offset < 1
       icell    = icell + 1
+    end if
+
+    ! When x is very close to xmax, round-off may cause the wrong answer
+    ! icell=ncells+1 and x_offset=0, which we convert to the case x=xmax:
+    if (icell == self%ncells+1 .and. x_offset == 0.0_wp) then
+      icell    = self%ncells
+      x_offset = 1.0_wp
     end if
 
   end subroutine s_bsplines_uniform__get_icell_and_offset
@@ -90,7 +97,6 @@ contains
     self % uniform  = .true.
     self % ncells   = ncells
     self % nbasis   = merge( ncells  , ncells+degree, periodic )
-    self % offset   = merge( degree/2, 0            , periodic )
     self % xmin     = xmin
     self % xmax     = xmax
 
@@ -155,7 +161,7 @@ contains
     call s_bsplines_uniform__get_icell_and_offset( self, x, icell, x_offset )
 
     ! 2. Compute index range of B-splines with support over cell 'icell'
-    jmin = icell - self%offset
+    jmin = icell
 
     ! 3. Compute values of aforementioned B-splines
     associate( bspl => values, spline_degree => self%degree )
@@ -211,7 +217,7 @@ contains
     call s_bsplines_uniform__get_icell_and_offset( self, x, icell, x_offset )
 
     ! 2. Compute index range of B-splines with support over cell 'icell'
-    jmin = icell - self%offset
+    jmin = icell
 
     ! 3. Compute derivatives of aforementioned B-splines
     !    Derivatives are normalized, hence they should be divided by dx
@@ -289,7 +295,7 @@ contains
     call s_bsplines_uniform__get_icell_and_offset( self, x, icell, x_offset )
 
     ! 2. Compute index range of B-splines with support over cell 'icell'
-    jmin = icell - self%offset
+    jmin = icell
 
     ! 3. Recursively evaluate B-splines (see "sll_s_uniform_bsplines_eval_basis")
     !    up to self%degree, and store them all in the upper-right triangle of ndu

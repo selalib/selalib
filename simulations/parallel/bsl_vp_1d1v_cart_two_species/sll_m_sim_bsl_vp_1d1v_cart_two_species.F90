@@ -31,6 +31,10 @@ module sll_m_sim_bsl_vp_1d1v_cart_two_species
 #include "sll_memory.h"
 #include "sll_working_precision.h"
 
+  use sll_m_advection_1d_ampere, only: &
+       sll_t_advector_1d_ampere_ptr, &
+       sll_f_new_advector_1d_ampere
+
   use sll_m_advection_1d_base, only: &
     sll_t_advection_1d_base_ptr
 
@@ -76,18 +80,26 @@ module sll_m_sim_bsl_vp_1d1v_cart_two_species
     sll_f_bump_on_tail_initializer_2d, &
     sll_f_landau_initializer_2d, &
     sll_i_scalar_initializer_2d, &
-    sll_f_two_stream_instability_initializer_2d
+    sll_f_two_stream_instability_initializer_2d, &
+    sll_f_langmuir_cos_initializer_2d, &
+    sll_f_langmuir_gaussxv_initializer_2d, &
+    sll_f_langmuir_parameter_pert_initializer_2d
 
   use sll_m_constants, only: &
     sll_p_pi
 
   use sll_m_fft, only: &
+    sll_s_fft_exec_c2r_1d, &
+    sll_s_fft_exec_r2c_1d, &
     sll_s_fft_exec_r2r_1d, &
     sll_p_fft_forward, &
     sll_f_fft_get_mode_r2c_1d, &
     sll_s_fft_init_r2r_1d, &
     sll_t_fft
 
+  use sll_m_gaussian, only: &
+       sll_f_gaussian_deviate
+  
   use sll_m_gnuplot, only: &
     sll_o_gnuplot_1d
 
@@ -97,8 +109,7 @@ module sll_m_sim_bsl_vp_1d1v_cart_two_species
     sll_s_hdf5_ser_file_close, &
     sll_o_hdf5_ser_write_array
 
-  use sll_m_parallel_array_initializer, only: &
-    sll_o_2d_parallel_array_initializer_cartesian
+  use sll_m_parallel_array_initializer
 
   use sll_m_periodic_interp, only: &
     sll_p_lagrange, &
@@ -157,7 +168,7 @@ module sll_m_sim_bsl_vp_1d1v_cart_two_species
     sll_o_xdmf_write_array
 
   use sll_mpi, only: &
-    mpi_sum
+       mpi_sum
 
   implicit none
 
@@ -183,36 +194,39 @@ module sll_m_sim_bsl_vp_1d1v_cart_two_species
    type(sll_t_cartesian_mesh_2d), pointer :: mesh2d_sp2
    sll_int32 :: num_dof_x2_sp1
    sll_int32 :: num_dof_x2_sp2
-   sll_real64, dimension(:), pointer :: x1_array
-   sll_real64, dimension(:), pointer :: x2_array_sp1
-   sll_real64, dimension(:), pointer :: x2_array_sp2
-   sll_real64, dimension(:,:), pointer :: x2_array_omp_sp1
-   sll_real64, dimension(:,:), pointer :: x2_array_omp_sp2
-   sll_real64, dimension(:), pointer :: integration_weight_sp1
-   sll_real64, dimension(:), pointer :: integration_weight_sp2
-   sll_int32, dimension(:), pointer :: every_x1
-   sll_int32, dimension(:), pointer :: every_x2
+   sll_real64, dimension(:),   allocatable :: x1_array
+   sll_real64, dimension(:),   allocatable :: x2_array_sp1
+   sll_real64, dimension(:),   allocatable :: x2_array_sp2
+   sll_real64, dimension(:,:), allocatable :: x2_array_omp_sp1
+   sll_real64, dimension(:,:), allocatable :: x2_array_omp_sp2
+   sll_real64, dimension(:),   allocatable :: integration_weight_sp1
+   sll_real64, dimension(:),   allocatable :: integration_weight_sp2
+   sll_int32,  dimension(:),   allocatable :: every_x1
+   sll_int32,  dimension(:),   allocatable :: every_x2
+   sll_int32,  dimension(:),   allocatable :: bloc_index_x1
+   sll_int32,  dimension(:),   allocatable :: bloc_index_x2_sp1
+   sll_int32,  dimension(:),   allocatable :: bloc_index_x2_sp2
    sll_int32 :: num_bloc_x1
    sll_int32 :: num_bloc_x2_sp1
    sll_int32 :: num_bloc_x2_sp2
-   sll_int32, dimension(:), pointer :: bloc_index_x1
-   sll_int32, dimension(:), pointer :: bloc_index_x2_sp1
-   sll_int32, dimension(:), pointer :: bloc_index_x2_sp2
       
    !initial function
    sll_real64  :: kx_sp1
    sll_real64  :: eps_sp1
    sll_real64  :: kx_sp2
    sll_real64  :: eps_sp2
-   character(len=256) :: restart_file
+   character(len=256) :: restart_file_sp1
+   character(len=256) :: restart_file_sp2
    logical :: time_init_from_restart_file
    
    !initial function
    procedure(sll_i_scalar_initializer_2d), nopass, pointer :: init_func_sp1
    sll_real64, dimension(:), pointer :: params_sp1
+   logical :: init_function_random_x_sp1 = .false.
    sll_real64 :: nrj0_sp1
    procedure(sll_i_scalar_initializer_2d), nopass, pointer :: init_func_sp2
    sll_real64, dimension(:), pointer :: params_sp2
+   logical :: init_function_random_x_sp2 = .false.
    sll_real64 :: nrj0_sp2
    
    !time_iterations
@@ -230,6 +244,7 @@ module sll_m_sim_bsl_vp_1d1v_cart_two_species
   
    !parameters for drive
    logical :: driven
+   character(len=256) :: drive_type   
    sll_real64 :: t0
    sll_real64 :: twL
    sll_real64 :: twR
@@ -246,6 +261,13 @@ module sll_m_sim_bsl_vp_1d1v_cart_two_species
    type(sll_t_advection_1d_base_ptr), dimension(:), pointer :: advect_x1_sp2
    type(sll_t_advection_1d_base_ptr), dimension(:), pointer :: advect_x2_sp1
    type(sll_t_advection_1d_base_ptr), dimension(:), pointer :: advect_x2_sp2
+
+   ! For Vlasov-Ampere
+   type(sll_t_advector_1d_ampere_ptr),    dimension(:), pointer :: advect_ampere_x1_sp1
+   type(sll_t_advector_1d_ampere_ptr),    dimension(:), pointer :: advect_ampere_x1_sp2
+   logical :: vlasov_ampere = .false.
+   
+   
    sll_int32 :: advection_form_x2_sp1
    sll_int32 :: advection_form_x2_sp2
    sll_real64 :: factor_x1
@@ -383,6 +405,12 @@ contains
     sll_real64 :: v0_sp1
     sll_real64 :: factor1_sp1
     sll_real64 :: alpha_gaussian_sp1
+    sll_real64 :: ns_sp1
+    sll_real64 :: vb2_sp1
+    sll_real64 :: vb1_sp1
+    sll_real64 :: vtb_sp1
+    sll_real64 :: db_sp1
+    sll_real64 :: ve_sp1
     character(len=256) :: initial_function_case_sp2
     sll_real64 :: kmode_sp2
     sll_real64 :: eps_sp2
@@ -390,7 +418,14 @@ contains
     sll_real64 :: v0_sp2
     sll_real64 :: factor1_sp2
     sll_real64 :: alpha_gaussian_sp2
-    character(len=256) :: restart_file
+    sll_real64 :: ns_sp2
+    sll_real64 :: vb2_sp2
+    sll_real64 :: vb1_sp2
+    sll_real64 :: vtb_sp2
+    sll_real64 :: db_sp2
+    sll_real64 :: ve_sp2
+    character(len=256) :: restart_file_sp1
+    character(len=256) :: restart_file_sp2
     logical :: time_init_from_restart_file
     
     !time_iterations
@@ -483,6 +518,12 @@ contains
       v0_sp1, &
       factor1_sp1, &
       alpha_gaussian_sp1, &
+      ns_sp1, &
+      vb2_sp1, &
+      vb1_sp1, &
+      vtb_sp1, &
+      db_sp1, &
+      ve_sp1, &
       initial_function_case_sp2, &
       kmode_sp2, &
       eps_sp2, &
@@ -490,7 +531,14 @@ contains
       v0_sp2, &
       factor1_sp2, &
       alpha_gaussian_sp2, &
-      restart_file, &
+      ns_sp2, &
+      vb2_sp2, &
+      vb1_sp2, &
+      vtb_sp2, &
+      db_sp2, &
+      ve_sp2, &
+      restart_file_sp1, &
+      restart_file_sp2, &
       time_init_from_restart_file
 
     namelist /time_iterations/ &
@@ -594,7 +642,8 @@ contains
     !sigma_sp2 = 5.52d-4
     !v0_sp2 = 0._f64
     
-    restart_file = "no_restart_file"
+    restart_file_sp1 = "no_restart_file"
+    restart_file_sp2 = "no_restart_file"
     time_init_from_restart_file = .false.
     
     !time_iterations
@@ -791,6 +840,43 @@ contains
        sim%init_func_sp1 => sll_f_beam_initializer_2d
        SLL_ALLOCATE(sim%params_sp1(1),ierr)
        sim%params_sp1(1) = alpha_gaussian_sp1
+    case ("SLL_LANGMUIR_COS")
+       SLL_ALLOCATE(sim%params_sp1(9),ierr)
+       sim%init_func_sp1 => sll_f_langmuir_cos_initializer_2d
+       sim%params_sp1(1) = eps_sp1
+       sim%params_sp1(2) = kmode_sp1
+       sim%params_sp1(3) = ns_sp1
+       sim%params_sp1(4) = vb2_sp1
+       sim%params_sp1(5) = vb1_sp1
+       sim%params_sp1(6) = vtb_sp1
+       sim%params_sp1(7) = db_sp1
+       sim%params_sp1(8) = ve_sp1
+       sim%params_sp1(9) = sigma_sp1
+    case ("SLL_LANGMUIR_GAUSSXV")
+       SLL_ALLOCATE(sim%params_sp1(9),ierr)
+       sim%init_func_sp1 => sll_f_langmuir_gaussxv_initializer_2d
+       sim%params_sp1(1) = eps_sp1
+       sim%params_sp1(2) = kmode_sp1
+       sim%params_sp1(3) = ns_sp1
+       sim%params_sp1(4) = vb2_sp1
+       sim%params_sp1(5) = vb1_sp1
+       sim%params_sp1(6) = vtb_sp1
+       sim%params_sp1(7) = db_sp1
+       sim%params_sp1(8) = ve_sp1
+       sim%params_sp1(9) = sigma_sp1
+    case ("SLL_LANGMUIR_GAUSSX")
+       SLL_ALLOCATE(sim%params_sp1(10),ierr)
+       sim%init_func_sp1 => sll_f_langmuir_parameter_pert_initializer_2d
+       sim%params_sp1(1) = eps_sp1
+       sim%params_sp1(2) = kmode_sp1
+       sim%params_sp1(3) = ns_sp1
+       sim%params_sp1(4) = vb2_sp1
+       sim%params_sp1(5) = vb1_sp1
+       sim%params_sp1(6) = vtb_sp1
+       sim%params_sp1(7) = db_sp1
+       sim%params_sp1(8) = ve_sp1
+       sim%params_sp1(9) = sigma_sp1
+       sim%init_function_random_x_sp1 = .true.
 !    case ("SLL_PLASMA_SHEATH")
 !       sim%init_func_sp1 => sll_plasma_sheath_initializer_2d
 !       SLL_ALLOCATE(sim%params_sp1(2),ierr)
@@ -848,6 +934,43 @@ contains
        sim%init_func_sp2 => sll_f_beam_initializer_2d
        SLL_ALLOCATE(sim%params_sp2(1),ierr)
        sim%params_sp2(1) = alpha_gaussian_sp2
+    case ("SLL_LANGMUIR_COS")
+       SLL_ALLOCATE(sim%params_sp2(9),ierr)
+       sim%init_func_sp2 => sll_f_langmuir_cos_initializer_2d
+       sim%params_sp2(1) = eps_sp2
+       sim%params_sp2(2) = kmode_sp2
+       sim%params_sp2(3) = ns_sp2
+       sim%params_sp2(4) = vb2_sp2
+       sim%params_sp2(5) = vb1_sp2
+       sim%params_sp2(6) = vtb_sp2
+       sim%params_sp2(7) = db_sp2
+       sim%params_sp2(8) = ve_sp2
+       sim%params_sp2(9) = sigma_sp2
+    case ("SLL_LANGMUIR_GAUSSXV")
+       SLL_ALLOCATE(sim%params_sp2(9),ierr)
+       sim%init_func_sp2 => sll_f_langmuir_gaussxv_initializer_2d
+       sim%params_sp2(1) = eps_sp2
+       sim%params_sp2(2) = kmode_sp2
+       sim%params_sp2(3) = ns_sp2
+       sim%params_sp2(4) = vb2_sp2
+       sim%params_sp2(5) = vb1_sp2
+       sim%params_sp2(6) = vtb_sp2
+       sim%params_sp2(7) = db_sp2
+       sim%params_sp2(8) = ve_sp2
+       sim%params_sp2(9) = sigma_sp2
+    case ("SLL_LANGMUIR_GAUSSX")
+       SLL_ALLOCATE(sim%params_sp2(10),ierr)
+       sim%init_func_sp2 => sll_f_langmuir_parameter_pert_initializer_2d
+       sim%params_sp2(1) = eps_sp2
+       sim%params_sp2(2) = kmode_sp2
+       sim%params_sp2(3) = ns_sp2
+       sim%params_sp2(4) = vb2_sp2
+       sim%params_sp2(5) = vb1_sp2
+       sim%params_sp2(6) = vtb_sp2
+       sim%params_sp2(7) = db_sp2
+       sim%params_sp2(8) = ve_sp2
+       sim%params_sp2(9) = sigma_sp2 
+       sim%init_function_random_x_sp2 = .true.
 !    case ("SLL_PLASMA_SHEATH")
 !       sim%init_func_sp2 => sll_plasma_sheath_initializer_2d
 !       SLL_ALLOCATE(sim%params_sp2(2),ierr)
@@ -866,7 +989,8 @@ contains
     end select
 
     sim%time_init_from_restart_file = time_init_from_restart_file
-    sim%restart_file = restart_file
+    sim%restart_file_sp1 = restart_file_sp1
+    sim%restart_file_sp2 = restart_file_sp2
     
     !time iterations
     sim%dt=dt
@@ -920,6 +1044,8 @@ contains
     SLL_ALLOCATE(sim%advect_x2_sp1(num_threads),ierr)
     SLL_ALLOCATE(sim%advect_x1_sp2(num_threads),ierr)
     SLL_ALLOCATE(sim%advect_x2_sp2(num_threads),ierr)
+    SLL_ALLOCATE(sim%advect_ampere_x1_sp1(num_threads),ierr)
+    SLL_ALLOCATE(sim%advect_ampere_x1_sp2(num_threads),ierr)
 
     tid = 1
 !#ifdef _OPENMP
@@ -944,6 +1070,22 @@ contains
           sll_p_lagrange, & 
           order_x1_sp1)
 
+     case("SLL_VLASOV_AMPERE")
+
+        sim%vlasov_ampere = .true.
+        print*,'########################'
+        print*,'# Vlasov-Ampere scheme #'
+        print*,'########################'
+        SLL_ALLOCATE(sim%advect_ampere_x1_sp2(num_threads),ierr)
+        !!$OMP PARALLEL DEFAULT(SHARED) &
+        !!$OMP PRIVATE(tid)
+        !!$ tid = omp_get_thread_num()+1
+        sim%advect_ampere_x1_sp1(tid)%ptr => sll_f_new_advector_1d_ampere( &
+             num_cells_x1, &
+             x1_min,       &
+             x1_max )
+        !!$OMP END PARALLEL
+        
 !     case("SLL_BSL_0INFLOW") ! BSL advection with no inflow BC
 !        sim%advect_x1_sp1(tid)%ptr => new_BSL_1d_advector_0inflow(&
 !             num_cells_x1+1, &
@@ -984,6 +1126,24 @@ contains
           sll_p_lagrange, & 
           order_x1_sp2)
 
+     case("SLL_VLASOV_AMPERE")
+
+        sim%vlasov_ampere = .true.
+        print*,'########################'
+        print*,'# Vlasov-Ampere scheme #'
+        print*,'########################'
+        print*, 'THIS OPTION DOES NOT WORK.'
+        SLL_ALLOCATE(sim%advect_ampere_x1_sp2(num_threads),ierr)
+       !!$OMP PARALLEL DEFAULT(SHARED) &
+       !!$OMP PRIVATE(tid)
+        !!$ tid = omp_get_thread_num()+1
+        sim%advect_ampere_x1_sp2(tid)%ptr => sll_f_new_advector_1d_ampere( &
+             num_cells_x1, &
+             x1_min,       &
+             x1_max )
+        !!$OMP END PARALLEL
+
+        
 !     case("SLL_BSL_0INFLOW") ! BSL advection with no inflow BC
 !        sim%advect_x1_sp2(tid)%ptr => new_BSL_1d_advector_0inflow(&
 !             num_cells_x1+1, &
@@ -1201,6 +1361,7 @@ contains
         sim%driven = .false.
       case("SLL_KEEN_DRIVE")
         sim%driven = .true.
+        sim%drive_type=  "SLL_KEEN_DRIVE"
         sim%t0=keen_t0
         sim%twL=keen_twL
         sim%twR=keen_twR
@@ -1210,7 +1371,35 @@ contains
         sim%tR=keen_tR
         sim%turn_drive_off=keen_turn_drive_off
         sim%Edrmax=keen_Edrmax
-        sim%omegadr=keen_omegadr        
+        sim%omegadr=keen_omegadr
+
+     case ("SLL_AMPERE_DRIVE")
+        sim%driven         = .true.
+        sim%drive_type=  "SLL_AMPERE_DRIVE"
+        sim%t0             = 0.0_f64
+        sim%twL            = 0.0_f64
+        sim%twR            = 0.0_f64
+        sim%tflat          = 0.0_f64
+        sim%tL             = 0.0_f64
+        sim%tR             = 0.0_f64
+        sim%turn_drive_off = .false.
+        sim%Edrmax         = 0.0_f64
+        sim%omegadr        = 1.0_f64
+
+     case("SLL_AMPERE_DRIVE_EDRMAX")
+        sim%driven         = .true.
+        sim%drive_type=  "SLL_AMPERE_DRIVE_EDRMAX"
+        sim%t0             = 0.0_f64
+        sim%twL            = 0.0_f64
+        sim%twR            = 0.0_f64
+        sim%tflat          = 0.0_f64
+        sim%tL             = 0.0_f64
+        sim%tR             = 0.0_f64
+        sim%turn_drive_off = .false.
+        sim%Edrmax         = keen_Edrmax
+        sim%omegadr        = 1.0_f64
+        
+        
       case default
         print*,'#drive_type', drive_type, ' not implemented'
         stop 
@@ -1286,6 +1475,9 @@ contains
     sll_real64,dimension(:,:),pointer :: f_x1_sp1,f_x2_sp1,f_x1_init_sp1
     sll_real64,dimension(:,:),pointer :: f_x1_sp2,f_x2_sp2,f_x1_init_sp2
     sll_real64,dimension(:),pointer :: rho_sp1,rho_sp2,efield,e_app,rho_loc_sp1,rho_loc_sp2
+    sll_comp64, dimension(:),   pointer :: rk_loc
+    sll_real64, dimension(:),   pointer :: j_loc
+    sll_real64, dimension(:),   pointer :: j_glob
     !sll_real64 :: qel(1),qel_loc(1)
     !sll_real64, dimension(:), allocatable :: rho_split
     !sll_real64, dimension(:), allocatable :: rho_full
@@ -1293,7 +1485,8 @@ contains
     sll_int32 :: rhotote_id,rhototi_id
     sll_int32 :: efield_id     
     sll_int32 :: th_diag_id
-    sll_int32 :: restart_id
+    sll_int32 :: restart_id_sp1
+    sll_int32 :: restart_id_sp2
     type(sll_t_layout_2d), pointer :: layout_x1_sp1
     type(sll_t_layout_2d), pointer :: layout_x1_sp2
     type(sll_t_layout_2d), pointer :: layout_x2_sp1
@@ -1310,7 +1503,7 @@ contains
     sll_real64, dimension(:,:), pointer     :: f1d_omp_sp2
     sll_real64, dimension(:,:), pointer     :: f1d_omp_in_sp2
     sll_real64, dimension(:,:), pointer     :: f1d_omp_out_sp2
-    sll_int32 :: np_x1,np_x2_sp1,np_x2_sp2
+    sll_int32 :: np_x1,np_x2_sp1,np_x2_sp2, nc_x1
     sll_int32 :: nproc_x1,nproc_x2
     sll_int32 :: global_indices_sp1(2)
     sll_int32 :: global_indices_sp2(2)
@@ -1485,6 +1678,9 @@ contains
     SLL_ALLOCATE(rho_sp2(np_x1),ierr)
     SLL_ALLOCATE(rho_loc_sp1(np_x1),ierr)
     SLL_ALLOCATE(rho_loc_sp2(np_x1),ierr)
+    SLL_ALLOCATE(rk_loc((np_x1-1)/2+1), ierr)
+    SLL_ALLOCATE(j_loc(np_x1),ierr)
+    SLL_ALLOCATE(j_glob(np_x1),ierr)
     SLL_ALLOCATE(efield(np_x1),ierr)
     SLL_ALLOCATE(e_app(np_x1),ierr)
     e_app = 0._f64
@@ -1558,23 +1754,42 @@ contains
         
 
     
-    !initialize distribution function     
-    call sll_o_2d_parallel_array_initializer_cartesian( &
-       layout_x1_sp1, &
-       sim%x1_array, &
-       node_positions_x2_sp1, &
-       f_x1_sp1, &
-       sim%init_func_sp1, &
-       sim%params_sp1)
+    !initialize distribution function
+    if ( sim%init_function_random_x_sp1 .eqv. .true.) then
+       call sll_s_random_initialize_langmuir( &
+            layout_x1_sp1, &
+            sim%x1_array, &
+            node_positions_x2_sp1, &
+            f_x1_sp1, &
+            sim%init_func_sp1, &
+            sim%params_sp1)
+    else
+       call sll_2d_parallel_array_initializer_cartesian_array_1d_1d( &
+            layout_x1_sp1, &
+            sim%x1_array, &
+            node_positions_x2_sp1, &
+            f_x1_sp1, &
+            sim%init_func_sp1, &
+            sim%params_sp1)
+    end if
 
-
-    call sll_o_2d_parallel_array_initializer_cartesian( &
-       layout_x1_sp2, &
-       sim%x1_array, &
-       node_positions_x2_sp2, &
-       f_x1_sp2, &
-       sim%init_func_sp2, &
-       sim%params_sp2)
+    if ( sim%init_function_random_x_sp2 .eqv. .true.) then
+       call sll_s_random_initialize_langmuir( &
+            layout_x1_sp2, &
+            sim%x1_array, &
+            node_positions_x2_sp2, &
+            f_x1_sp2, &
+            sim%init_func_sp2, &
+            sim%params_sp2)
+    else
+       call sll_2d_parallel_array_initializer_cartesian_array_1d_1d( &
+            layout_x1_sp2, &
+            sim%x1_array, &
+            node_positions_x2_sp2, &
+            f_x1_sp2, &
+            sim%init_func_sp2, &
+            sim%params_sp2)
+    end if
 
 
 
@@ -1582,27 +1797,49 @@ contains
     call sll_s_int2string(iproc, cproc)
     call sll_s_int2string(iplot,cplot)    
 
-    if(sim%restart_file/="no_restart_file")then
-      INQUIRE(FILE=trim(sim%restart_file)//'_proc_'//cproc//'.rst', EXIST=file_exists)
+    if(sim%restart_file_sp1/="no_restart_file")then
+      INQUIRE(FILE=trim(sim%restart_file_sp1)//'_proc_'//cproc//'.rst', EXIST=file_exists)
       if(.not.(file_exists))then
-        print *,'#file ',trim(sim%restart_file)//'_proc_'//cproc//'.rst'
+        print *,'#file ',trim(sim%restart_file_sp1)//'_proc_'//cproc//'.rst'
         print *,'does not exist'
         stop
       endif
-      open(unit=restart_id, &
-        file=trim(sim%restart_file)//'_proc_'//cproc//'.rst', ACCESS="STREAM", &
+      open(unit=restart_id_sp1, &
+        file=trim(sim%restart_file_sp1)//'_proc_'//cproc//'.rst', ACCESS="STREAM", &
         form='unformatted', IOStat=ierr)      
       if( ierr .ne. 0 ) then
         print *, 'ERROR while opening file ', &
-          trim(sim%restart_file)//'_proc_'//cproc//'.rst', &
+          trim(sim%restart_file_sp1)//'_proc_'//cproc//'.rst', &
            '. Called from run_vp2d_cartesian().'
        stop
       end if
-      print *,'#read restart file '//trim(sim%restart_file)//'_proc_'//cproc//'.rst'      
-      call sll_s_binary_read_array_0d(restart_id,time_init,ierr)
-      call sll_s_binary_read_array_2d(restart_id,f_x1_sp1(1:local_size_x1_sp1,1:local_size_x2_sp1),ierr)
-      call sll_s_binary_file_close(restart_id,ierr)
-    endif      
+      print *,'#read restart file '//trim(sim%restart_file_sp1)//'_proc_'//cproc//'.rst'      
+      call sll_s_binary_read_array_0d(restart_id_sp1,time_init,ierr)
+      call sll_s_binary_read_array_2d(restart_id_sp1,f_x1_sp1(1:local_size_x1_sp1,1:local_size_x2_sp1),ierr)
+      call sll_s_binary_file_close(restart_id_sp1,ierr)
+    endif       
+
+    if(sim%restart_file_sp2/="no_restart_file")then
+      INQUIRE(FILE=trim(sim%restart_file_sp2)//'_proc_'//cproc//'.rst', EXIST=file_exists)
+      if(.not.(file_exists))then
+        print *,'#file ',trim(sim%restart_file_sp2)//'_proc_'//cproc//'.rst'
+        print *,'does not exist'
+        stop
+      endif
+      open(unit=restart_id_sp2, &
+        file=trim(sim%restart_file_sp2)//'_proc_'//cproc//'.rst', ACCESS="STREAM", &
+        form='unformatted', IOStat=ierr)      
+      if( ierr .ne. 0 ) then
+        print *, 'ERROR while opening file ', &
+          trim(sim%restart_file_sp2)//'_proc_'//cproc//'.rst', &
+           '. Called from run_vp2d_cartesian().'
+       stop
+      end if
+      print *,'#read restart file '//trim(sim%restart_file_sp2)//'_proc_'//cproc//'.rst'      
+      call sll_s_binary_read_array_0d(restart_id_sp2,time_init,ierr)
+      call sll_s_binary_read_array_2d(restart_id_sp2,f_x1_sp2(1:local_size_x1_sp2,1:local_size_x2_sp2),ierr)
+      call sll_s_binary_file_close(restart_id_sp2,ierr)
+    endif 
     
     if(sim%time_init_from_restart_file .eqv. .true.) then
       sim%time_init = time_init  
@@ -1617,7 +1854,7 @@ contains
 
     init_func1 => sll_f_landau_initializer_2d
     
-    call sll_o_2d_parallel_array_initializer_cartesian( &
+    call sll_2d_parallel_array_initializer_cartesian_array_1d_1d( &
        layout_x1_sp1, &
        sim%x1_array, &
        node_positions_x2_sp1, &
@@ -1628,7 +1865,7 @@ contains
 
     init_func2 => sll_f_landau_initializer_2d
 
-    call sll_o_2d_parallel_array_initializer_cartesian( &
+    call sll_2d_parallel_array_initializer_cartesian_array_1d_1d( &
        layout_x1_sp2, &
        sim%x1_array, &
        node_positions_x2_sp2, &
@@ -1772,7 +2009,43 @@ contains
     
     istep = 0
     if(sim%driven)then
-      call compute_e_app(sim,e_app,time_init+real(istep,f64)*sim%dt)
+       select case (sim%drive_type)
+       case ("SLL_AMPERE_DRIVE" )
+          
+          ! Add electric field generated by current induced by initial distribution function
+          j_loc = 0._f64
+          ig = global_indices_sp1(2)-1
+          do i=1,np_x1
+             j_loc(i) = j_loc(i)&
+                  + sum(f_x1_sp1(i,:)*sim%x2_array_sp1(1+ig:local_size_x2_sp1+ig) &
+                  * sim%integration_weight_sp1(1+ig:local_size_x2_sp1+ig))
+          end do
+          ig = global_indices_sp2(2)-1
+          do i=1,np_x1
+             j_loc(i) = j_loc(i)&
+                  + sum(f_x1_sp2(i,:)*sim%x2_array_sp2(1+ig:local_size_x2_sp2+ig) &
+                  * sim%integration_weight_sp2(1+ig:local_size_x2_sp2+ig))
+          end do
+        !  print*,'j_loc(i)',j_loc(i) 
+        !  print*,'sim%integration_weight_sp2',sim%integration_weight_sp2
+          call sll_o_collective_allreduce( sll_v_world_collective, &
+               j_loc,              &
+               np_x1,                &
+               MPI_SUM,              &
+               j_glob )
+
+          sim%Edrmax = sum(j_glob) / real(np_x1,f64)
+          print*, 'Edrmax', sim%Edrmax
+          
+          e_app = sim%Edrmax *  &
+               sin(sim%omegadr*(time_init+real(istep,f64)*sim%dt))
+       case("SLL_AMPERE_DRIVE_EDRMAX")
+          
+          e_app = sim%Edrmax *  &
+               sin(sim%omegadr*(time_init+real(istep,f64)*sim%dt))
+       case("SLL_KEEN_DRIVE")
+          call compute_e_app(sim,e_app,time_init+real(istep,f64)*sim%dt)
+       end select
     endif
     
     ! write initial fields
@@ -1785,6 +2058,10 @@ contains
       write(rhototi_id,*) sim%x1_array
       write(rhotote_id,*) sim%x1_array
       write(efield_id,*) sim%x1_array
+
+      write(efield_id,*) efield+e_app
+      write(rhotote_id,*) rho_sp1
+      write(rhototi_id,*) rho_sp2
     endif
     
     
@@ -1830,9 +2107,128 @@ contains
       split_T = sim%split%split_begin_T
       t_step = real(istep-1,f64)
       do split_istep=1,sim%split%nb_split_step
+    !  print*,'sim%split%nb_split_step',sim%split%nb_split_step
         if(split_T) then
-          !! T ADVECTION 
-          tid=1          
+    !  print*,'sim%split%nb_split_step',sim%split%nb_split_step
+           !! T ADVECTION 
+           tid=1
+
+           if (sim%vlasov_ampere) then
+
+              nc_x1 = np_x1-1
+              sim%advect_ampere_x1_sp1(tid)%ptr%r1 = cmplx(0.0,0.0,kind=f64)
+              sim%advect_ampere_x1_sp2(tid)%ptr%r1 = cmplx(0.0,0.0,kind=f64)
+              do i_omp = 1, local_size_x2_sp1
+                 ig_omp = i_omp+global_indices_sp1(2)-1
+                 alpha_omp = sim%factor_x1*node_positions_x2_sp1(ig_omp) * sim%split%split_step(split_istep) *&
+                      sim%dt
+                 f1d_omp_in_sp1(1:np_x1,tid) = f_x1_sp1(1:np_x1,i_omp)
+                 
+                 sim%advect_ampere_x1_sp1(tid)%ptr%d_dx = f1d_omp_in_sp1(1:nc_x1,tid)
+                 call sll_s_fft_exec_r2c_1d(sim%advect_ampere_x1_sp1(tid)%ptr%fwx,  &
+                      sim%advect_ampere_x1_sp1(tid)%ptr%d_dx, &
+                      sim%advect_ampere_x1_sp1(tid)%ptr%fk)
+                 do i = 2, nc_x1/2+1
+                   sim%advect_ampere_x1_sp1(tid)%ptr%fk(i) = &
+                      sim%advect_ampere_x1_sp1(tid)%ptr%fk(i) & 
+                      * cmplx(cos(sim%advect_ampere_x1_sp1(tid)%ptr%kx(i)*alpha_omp), &
+                             -sin(sim%advect_ampere_x1_sp1(tid)%ptr%kx(i)*alpha_omp), &
+                              kind=f64)
+                 end do
+               
+                 sim%advect_ampere_x1_sp1(tid)%ptr%r1(2:nc_x1/2+1) = &
+                      sim%advect_ampere_x1_sp1(tid)%ptr%r1(2:nc_x1/2+1) &
+                    + sim%advect_ampere_x1_sp1(tid)%ptr%fk(2:nc_x1/2+1) &
+                    * sim%integration_weight_sp1(ig_omp)
+               
+                 call sll_s_fft_exec_c2r_1d(sim%advect_ampere_x1_sp1(tid)%ptr%bwx, &
+                      sim%advect_ampere_x1_sp1(tid)%ptr%fk,  &
+                      sim%advect_ampere_x1_sp1(tid)%ptr%d_dx)
+               
+                 f1d_omp_out_sp1(1:nc_x1,tid) = sim%advect_ampere_x1_sp1(tid)%ptr%d_dx/nc_x1
+                 f1d_omp_out_sp1(np_x1,  tid) = f1d_omp_out_sp1(1, tid) 
+                 
+                 f_x1_sp1(1:np_x1,i_omp)=f1d_omp_out_sp1(1:np_x1,tid)
+              end do
+
+              do i_omp = 1,local_size_x2_sp2
+                 ig_omp = i_omp+global_indices_sp2(2)-1   
+                 alpha_omp = sim%factor_x1*node_positions_x2_sp2(ig_omp) * sim%split%split_step(split_istep)  *&
+                      sim%dt
+                 f1d_omp_in_sp2(1:np_x1,tid) = f_x1_sp2(1:np_x1,i_omp)
+
+                 sim%advect_ampere_x1_sp2(tid)%ptr%d_dx = f1d_omp_in_sp2(1:nc_x1,tid)
+                 call sll_s_fft_exec_r2c_1d(sim%advect_ampere_x1_sp2(tid)%ptr%fwx,  &
+                      sim%advect_ampere_x1_sp2(tid)%ptr%d_dx, &
+                      sim%advect_ampere_x1_sp2(tid)%ptr%fk)
+                 do i = 2, nc_x1/2+1
+                   sim%advect_ampere_x1_sp2(tid)%ptr%fk(i) = &
+                      sim%advect_ampere_x1_sp2(tid)%ptr%fk(i) & 
+                      * cmplx(cos(sim%advect_ampere_x1_sp2(tid)%ptr%kx(i)*alpha_omp), &
+                             -sin(sim%advect_ampere_x1_sp2(tid)%ptr%kx(i)*alpha_omp), &
+                              kind=f64)
+                 end do
+
+                 sim%advect_ampere_x1_sp2(tid)%ptr%r1(2:nc_x1/2+1) = &
+                      sim%advect_ampere_x1_sp2(tid)%ptr%r1(2:nc_x1/2+1) &
+                    + sim%advect_ampere_x1_sp2(tid)%ptr%fk(2:nc_x1/2+1) &
+                    * sim%integration_weight_sp2(ig_omp)
+                 call sll_s_fft_exec_c2r_1d(sim%advect_ampere_x1_sp2(tid)%ptr%bwx, &
+                      sim%advect_ampere_x1_sp2(tid)%ptr%fk,  &
+                      sim%advect_ampere_x1_sp2(tid)%ptr%d_dx)
+               
+                 f1d_omp_out_sp2(1:nc_x1,tid) = sim%advect_ampere_x1_sp2(tid)%ptr%d_dx/nc_x1
+                 f1d_omp_out_sp2(np_x1,  tid) = f1d_omp_out_sp2(1, tid) 
+
+                 f_x1_sp2(1:np_x1,i_omp)=f1d_omp_out_sp2(1:np_x1,tid)
+                 
+              end do
+              t_step = t_step+sim%split%split_step(split_istep)
+
+              rk_loc = cmplx(0.0,0.0,kind=f64)
+               do i = 2, nc_x1/2+1
+                 do tid = 1, sim%num_threads
+                    rk_loc(i) = rk_loc(i) - sim%advect_ampere_x1_sp1(tid)%ptr%r1(i) + &
+                         sim%advect_ampere_x1_sp2(tid)%ptr%r1(i)
+                 end do
+               end do
+               
+               !!$OMP END PARALLEL
+
+               call sll_o_collective_allreduce( sll_v_world_collective, &
+                    rk_loc,                                         &
+                    nc_x1/2+1,                                      &
+                    MPI_SUM,                                        &
+                    sim%advect_ampere_x1_sp1(1)%ptr%r1 )
+
+               call sll_o_collective_allreduce( sll_v_world_collective, &
+                    rk_loc,                                         &
+                    nc_x1/2+1,                                      &
+                    MPI_SUM,                                        &
+                    sim%advect_ampere_x1_sp2(1)%ptr%r1 )
+               
+               sim%advect_ampere_x1_sp1(1)%ptr%d_dx = efield(1:nc_x1)
+               
+               call sll_s_fft_exec_r2c_1d(sim%advect_ampere_x1_sp1(1)%ptr%fwx,  &
+                    sim%advect_ampere_x1_sp1(1)%ptr%d_dx, &
+                    sim%advect_ampere_x1_sp1(1)%ptr%ek)
+               
+               do i = 2, nc_x1/2+1
+                  sim%advect_ampere_x1_sp1(1)%ptr%ek(i) =  &
+                       sim%advect_ampere_x1_sp1(1)%ptr%ek(i) + &
+                      sim%advect_ampere_x1_sp1(1)%ptr%r1(i) &
+                    * (sim%mesh2d_sp1%eta1_max-sim%mesh2d_sp1%eta1_min) &
+                    / cmplx(0.,2.0_f64*sll_p_pi*(i-1),kind=f64)
+               end do
+               
+               call sll_s_fft_exec_c2r_1d(sim%advect_ampere_x1_sp1(1)%ptr%bwx, &
+                    sim%advect_ampere_x1_sp1(1)%ptr%ek,  &
+                    efield)
+               
+               efield(1:nc_x1) = efield(1:nc_x1) / nc_x1
+               efield(np_x1) = efield(1)
+           else
+           
 !#ifdef _OPENMP
 !!$OMP PARALLEL DEFAULT(SHARED) &
 !!$OMP PRIVATE(i_omp,ig_omp,alpha_omp,tid) 
@@ -1916,13 +2312,26 @@ contains
           !sim%mixt_bc(1) = sim%mixt_bc(1) - 0.5_f64*qel(1)*sim%dt
 
           call sim%poisson%compute_E_from_rho( efield, rho_sp2-rho_sp1 )
-          
+
+
+       end if
+       
           t_step = t_step+sim%split%split_step(split_istep)
+
           
           if(sim%driven)then
-            call compute_e_app(sim,e_app,time_init+t_step*sim%dt)
+             select case (sim%drive_type)
+             case ("SLL_AMPERE_DRIVE" )
+                e_app = sim%Edrmax *  &
+                     sin(sim%omegadr*(time_init+real(istep,f64)*sim%dt))
+             case ("SLL_AMPERE_DRIVE_EDRMAX" )
+                e_app = sim%Edrmax *  &
+                     sin(sim%omegadr*(time_init+real(istep,f64)*sim%dt))
+                   ! print*,'e_app',e_app(1)
+             case("SLL_KEEN_DRIVE")
+                call compute_e_app(sim,e_app,time_init+real(istep,f64)*sim%dt)
+             end select
           endif
-
           
           
        else
@@ -1949,6 +2358,7 @@ contains
              ig_omp=i_omp+global_indices_sp1(1)-1
              alpha_omp = -(efield(ig_omp)+sim%alpha_sp1*e_app(ig_omp)) * sim%split%split_step(split_istep)
              f1d_omp_in_sp1(1:num_dof_x2_sp1,tid) = f_x2_sp1(i_omp,1:num_dof_x2_sp1)
+          !   print*,'sim%alpha_sp1',sim%alpha_sp1
              if(sim%advection_form_x2_sp1==SLL_CONSERVATIVE)then
                 call sll_s_function_to_primitive(f1d_omp_in_sp1(:,tid),x2_array_unit_sp1,np_x2_sp1-1,mean_omp)
              endif
@@ -1967,6 +2377,7 @@ contains
              ig_omp=i_omp+global_indices_sp2(1)-1
              alpha_omp = sim%mass_ratio*(efield(ig_omp)-sim%alpha_sp2*e_app(ig_omp)) * sim%split%split_step(split_istep)
              f1d_omp_in_sp2(1:num_dof_x2_sp2,tid) = f_x2_sp2(i_omp,1:num_dof_x2_sp2)
+          !   print*,'sim%alpha_sp2', sim%alpha_sp2
              if(sim%advection_form_x2_sp2==SLL_CONSERVATIVE)then
                 call sll_s_function_to_primitive(f1d_omp_in_sp2(:,tid),x2_array_unit_sp2,np_x2_sp2-1,mean_omp)
              endif
@@ -2113,13 +2524,21 @@ contains
 
         
         
-        if (mod(istep,sim%freq_diag_restart)==0) then          
+        if (mod(istep,sim%freq_diag_restart)==0) then
+          ! Restart file file for sp1
           call sll_s_int2string(iplot,cplot) 
-          call sll_s_binary_file_create('f_plot_'//cplot//'_proc_'//cproc//'.rst', restart_id, ierr )
-          call sll_s_binary_write_array_0d(restart_id,time,ierr)
-          call sll_s_binary_write_array_2d(restart_id,f_x1_sp1(1:local_size_x1_sp1,1:local_size_x2_sp1),ierr)
-          call sll_s_binary_write_array_2d(restart_id,f_x1_sp2(1:local_size_x1_sp2,1:local_size_x2_sp2),ierr)
-          call sll_s_binary_file_close(restart_id,ierr)    
+          call sll_s_binary_file_create('f_plot_sp1_'//cplot//'_proc_'//cproc//'.rst', restart_id_sp1, ierr )
+          call sll_s_binary_write_array_0d(restart_id_sp1,time,ierr)
+          call sll_s_binary_write_array_2d(restart_id_sp1,f_x1_sp1(1:local_size_x1_sp1,1:local_size_x2_sp1),ierr)
+          call sll_s_binary_file_close(restart_id_sp1,ierr)
+          
+          ! Restart file file for sp2
+          call sll_s_int2string(iplot,cplot) 
+          call sll_s_binary_file_create('f_plot_sp2_'//cplot//'_proc_'//cproc//'.rst', restart_id_sp2, ierr )
+          call sll_s_binary_write_array_0d(restart_id_sp2,time,ierr)
+          call sll_s_binary_write_array_2d(restart_id_sp2,f_x1_sp2(1:local_size_x1_sp2,1:local_size_x2_sp2),ierr)
+          call sll_s_binary_file_close(restart_id_sp2,ierr) 
+          
         endif 
 
         if(sll_f_get_collective_rank(sll_v_world_collective)==0)then                  
@@ -2155,7 +2574,7 @@ contains
                f_hat_x2_sp1(nb_mode+1), &
                f_hat_x2_sp2(nb_mode+1)
 
-          write(efield_id,*) efield
+          write(efield_id,*) efield+e_app
           write(rhotote_id,*) rho_sp1
           write(rhototi_id,*) rho_sp2
         endif
@@ -2435,5 +2854,46 @@ contains
 
   end subroutine compute_e_app
 
+
+  !> New array initializer for random initial value (random in x only)
+  subroutine sll_s_random_initialize_langmuir( layout, &
+       x1_array, &
+       x2_array, &
+       array, &
+       func, &
+       func_params)
+    type(sll_t_layout_2d), pointer                    :: layout
+    sll_real64, dimension(:), intent(in)              :: x1_array
+    sll_real64, dimension(:), intent(in)              :: x2_array
+    sll_real64, dimension(:,:), intent(out)           :: array
+    procedure(sll_i_scalar_initializer_2d), pointer   :: func
+    sll_real64, dimension(:), optional                :: func_params
+
+
+    sll_int32  :: i
+    sll_int32  :: j
+    sll_int32  :: loc_size_x1
+    sll_int32  :: loc_size_x2
+    sll_real64 :: eta1
+    sll_real64 :: eta2
+    sll_int32, dimension(1:2)  :: gi ! global indices in the distributed array
+
+    call sll_o_compute_local_sizes( layout, loc_size_x1, loc_size_x2) 
+
+
+    do i=1,loc_size_x1
+       func_params(10) = sll_f_gaussian_deviate()
+       do j=1,loc_size_x2
+        gi(:) = sll_o_local_to_global( layout, (/i,j/) )
+        eta1 = x1_array(gi(1))
+        eta2 = x2_array(gi(2))
+        array(i,j) = func(eta1,eta2,func_params)
+      end do
+    end do
+
+    
+  end subroutine sll_s_random_initialize_langmuir
+  
+  
 
 end module sll_m_sim_bsl_vp_1d1v_cart_two_species

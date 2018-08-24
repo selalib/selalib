@@ -52,7 +52,7 @@ contains
 
     !-> Local variables
     !--> For cartesian meshes
-    type(sll_t_cartesian_mesh_2d), pointer :: cartesian_mesh2d_eta1eta2
+    class(sll_t_cartesian_mesh_2d), pointer :: cartesian_mesh2d_eta1eta2
 
     cartesian_mesh2d_eta1eta2 => mesh4d%eta1_eta2_mesh2d
 
@@ -136,11 +136,10 @@ contains
     type(elecpot_Bsplines_VP4D_t), intent(inout) :: elecpot
     type(mesh_VP4D_t)            , intent(in)    :: mesh4d
 
-    sll_int32  :: iloc1, iloc2
+    !sll_int32  :: iloc1, iloc2
     sll_int32  :: ieta1, ieta2
-    sll_int32  :: loc2d_sz_x1, loc2d_sz_x2
+    !sll_int32  :: loc2d_sz_x1, loc2d_sz_x2
     sll_int32  :: Neta1, Neta2
-    sll_int32  :: ierr
     sll_real64 :: eta1_point, eta2_point
 
     Neta1 = size(mesh4d%eta1_grid)

@@ -46,7 +46,8 @@ module sll_m_constants
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 !> @param PI number
-sll_real64, parameter :: sll_p_pi = 3.1415926535897932384626433_f64 
+!sll_real64, parameter :: sll_p_pi = 3.1415926535897932384626433_f64 
+sll_real64, parameter :: sll_p_pi = 3.141592653589793_f64 
 
 !> @param 2*PI number
 sll_real64, parameter :: sll_p_twopi = 2.0_f64*sll_p_pi
@@ -76,7 +77,8 @@ sll_real64, parameter :: sll_p_proton_mass = 1.672621777e-27_f64
 sll_real64, parameter :: sll_p_g = 9.80665_f64
 
 !> @param value of \f$ \sqrt{3} \f$ (needed for hexagonal meshes).
-sll_real64, parameter :: sll_p_sqrt3 = 1.7320508075688771931766041_f64
+!sll_real64, parameter :: sll_p_sqrt3 = 1.7320508075688771931766041_f64
+sll_real64, parameter :: sll_p_sqrt3 = 1.7320508075688772_f64
 
 !> @param Boltzmann constant J/K
 sll_real64, parameter :: sll_p_kb = 1.3806488e-23_f64

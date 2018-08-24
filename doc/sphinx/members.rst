@@ -15,6 +15,7 @@ Scientific Staff
 * `Martin CAMPOS-PINTO (LJLL Paris VI) <https://www.ljll.math.upmc.fr/~campos/>`_
 * `Antoine LE HYARIC (LJLL Paris VI) <https://www.ljll.math.upmc.fr/~lehyaric/>`_
 * `Nicolas CROUSEILLES (IRMAR Rennes) <http://people.rennes.inria.fr/Nicolas.Crouseilles/>`_
+* `Klaus REUTER (MPCDF Garching) <http://www.mpcdf.mpg.de/about-mpcdf/groups/hpc-application-support/>`_
 
 Software engineering
 --------------------

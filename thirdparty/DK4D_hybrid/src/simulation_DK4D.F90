@@ -106,7 +106,7 @@ contains
 
     !-> Local variables
     sll_int32 :: Neta1, Neta2, Neta3, Nvpar
-    sll_int32 :: Nr, Nx, Ny
+    !sll_int32 :: Nr, Nx, Ny
     !--> For electrostatic potential boundary conditions and spline degree
     type(boundary_conditions_3d_t) :: elec_pot_bc
     type(spline_degree_3d_t)       :: elec_pot_spline_degree
