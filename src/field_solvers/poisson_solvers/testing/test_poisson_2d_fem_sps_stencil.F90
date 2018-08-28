@@ -70,7 +70,7 @@ program test_poisson_2d_fem_sps
   ! Analytical and discrete mappings
   class(sll_c_polar_mapping_analytical), allocatable :: mapping_analytic
   type(sll_t_polar_mapping_iga) :: mapping_discrete
-  real(wp) :: d0, e0, b, e, x0(2)
+  real(wp) :: d0, e0, x0(2)
 
   ! 2D splines representing right hand side and solution
   type(sll_t_spline_2d) :: spline_2d_rhs
@@ -309,8 +309,10 @@ program test_poisson_2d_fem_sps
   call sll_s_set_time_mark( t0 )
 
   ! Solve
-  call solver % solve( spline_2d_rhs, spline_2d_phi ) ! Right hand side is 2D spline
-!  call solver % solve( rhs, spline_2d_phi ) ! Right hand side is callable function
+  call solver % reset_charge()
+  ! TODO: test properly signature with callable function
+  call solver % accumulate_charge( spline_2d_rhs ) ! Right hand side is 2D spline
+  call solver % solve( spline_2d_phi )
 
   call sll_s_set_time_mark( t1 )
 
@@ -463,7 +465,7 @@ contains
                 +10.0_wp*d0*cos(t)**2-8.0_wp*d0)*s-3.0_wp*cos(t)+3.0_wp*e0**3*cos(t)                      &
                 +e0**2*(-4.0_wp*cos(t)**3+3.0_wp*cos(t))+e0*(4.0_wp*cos(t)**3-3.0_wp*cos(t))
 
-      rhs_log = - rhs_log / ( (1.0_wp+e0)**2 * (2.0_wp*d0*s*cos(t)+e0-1)**3 )
+      rhs_log = - rhs_log / ( (1.0_wp+e0)**2 * (2.0_wp*d0*s*cos(t)+e0-1.0_wp)**3 )
 
     end associate
 

@@ -35,6 +35,8 @@ module sll_m_poisson_2d_fem_sps_stencil_new
 
   use sll_m_boundary_condition_descriptors, only: sll_p_dirichlet
 
+  use sll_m_point_charge, only: sll_t_point_charge
+
   implicit none
 
   public :: sll_t_poisson_2d_fem_sps_stencil_new
@@ -95,6 +97,10 @@ module sll_m_poisson_2d_fem_sps_stencil_new
     ! Solution and C1 projection
     real(wp), allocatable :: x(:)
 
+    ! Allocatables for accumulation of point charge density
+    real(wp), allocatable :: bspl1(:)
+    real(wp), allocatable :: bspl2(:)
+
     ! Weak form
     type(sll_t_poisson_2d_fem_sps_weak_form) :: weak_form
 
@@ -119,12 +125,15 @@ module sll_m_poisson_2d_fem_sps_stencil_new
 
     procedure :: init                    => s_poisson_2d_fem_sps_stencil_new__init
     procedure :: set_boundary_conditions => s_poisson_2d_fem_sps_stencil_new__set_boundary_conditions
+    procedure :: reset_charge            => s_poisson_2d_fem_sps_stencil_new__reset_charge
+    procedure :: solve                   => s_poisson_2d_fem_sps_stencil_new__solve
     procedure :: free                    => s_poisson_2d_fem_sps_stencil_new__free
 
-    ! Generic procedure with multiple implementations
-    procedure :: solve_1 => s_poisson_2d_fem_sps_stencil_new__solve_1
-    procedure :: solve_2 => s_poisson_2d_fem_sps_stencil_new__solve_2
-    generic   :: solve   => solve_1, solve_2
+    ! Accumulate charge: generic procedure with multiple implementations
+    procedure :: accumulate_charge_1 => s_poisson_2d_fem_sps_stencil_new__accumulate_charge_1
+    procedure :: accumulate_charge_2 => s_poisson_2d_fem_sps_stencil_new__accumulate_charge_2
+    procedure :: accumulate_charge_3 => s_poisson_2d_fem_sps_stencil_new__accumulate_charge_3
+    generic   :: accumulate_charge   => accumulate_charge_1, accumulate_charge_2, accumulate_charge_3
 
   end type sll_t_poisson_2d_fem_sps_stencil_new
 
@@ -227,6 +236,10 @@ contains
 
       ! Solution
       allocate( self % x( n1*n2 ) )
+
+      ! Allocatables for accumulation of point charge density
+      allocate( self % bspl1( 1+p1 ) )
+      allocate( self % bspl2( 1+p2 ) )
 
       !-------------------------------------------------------------------------
       ! Initialize quadrature points and weights
@@ -438,20 +451,24 @@ contains
 
   end subroutine s_poisson_2d_fem_sps_stencil_new__set_boundary_conditions
 
-  ! Solver: signature #1
-  subroutine s_poisson_2d_fem_sps_stencil_new__solve_1( self, rhs, sol )
+  subroutine s_poisson_2d_fem_sps_stencil_new__reset_charge( self )
+    class(sll_t_poisson_2d_fem_sps_stencil_new), intent(inout) :: self
+
+    self % bs % array(:,:) = 0.0_wp
+
+  end subroutine s_poisson_2d_fem_sps_stencil_new__reset_charge
+
+  ! Accumulate charge: signature #1
+  subroutine s_poisson_2d_fem_sps_stencil_new__accumulate_charge_1( self, rhs )
     class(sll_t_poisson_2d_fem_sps_stencil_new), intent(inout) :: self
     procedure(i_fun_rhs)                                       :: rhs
-    type(sll_t_spline_2d)                      , intent(inout) :: sol
 
     ! Auxiliary variables
-    integer  :: k1, k2, q1, q2, j2, i1, i2, i
+    integer  :: k1, k2, q1, q2
     real(wp) :: eta(2), x(2)
 
     associate( n1  => self % n1 , &
                n2  => self % n2 , &
-               p1  => self % p1 , &
-               p2  => self % p2 , &
                Nk1 => self % Nk1, &
                Nk2 => self % Nk2, &
                Nq1 => self % Nq1, &
@@ -462,23 +479,13 @@ contains
         do k1 = 1, Nk1
           do q2 = 1, Nq2
             do q1 = 1, Nq1
-
-              eta = [ self % quad_points_eta1(q1,k1), self % quad_points_eta2(q2,k2) ]
-
+              eta = (/ self % quad_points_eta1(q1,k1), self % quad_points_eta2(q2,k2) /)
               x   = self % mapping % eval( eta )
-
               self % data_2d_rhs(q1,q2,k1,k2) = rhs( x )
-
             end do
           end do
         end do
       end do
-
-      !-------------------------------------------------------------------------
-      ! Fill in right hand side
-      !-------------------------------------------------------------------------
-
-      self % bs % array(:,:) = 0.0_wp
 
       ! Cycle over finite elements
       do k2 = 1, Nk2
@@ -494,49 +501,64 @@ contains
         end do
       end do
 
-      !-------------------------------------------------------------------------
-      ! Solve linear system
-      !-------------------------------------------------------------------------
+    end associate
 
-      ! Compute C1 projection of right hand side
-      call self % projector % change_basis_vector( self % bs % array(1:n1,1:n2), self % bp_vecsp_c1_block )
+  end subroutine s_poisson_2d_fem_sps_stencil_new__accumulate_charge_1
 
-      ! Homogeneous Dirichlet boundary conditions
-      do j2 = 1, n2
-        self % bp_vecsp_c1_block % vs % array(n1-2,j2) = 0.0_wp
-      end do
+  ! Accumulate charge: signature #2
+  subroutine s_poisson_2d_fem_sps_stencil_new__accumulate_charge_2( self, rhs )
+    class(sll_t_poisson_2d_fem_sps_stencil_new), intent(inout) :: self
+    type(sll_t_spline_2d)                      , intent(in   ) :: rhs
 
-      ! Update buffer regions
-      self % bp_vecsp_c1_block % vs % array(1-p1:0            ,:) = 0.0_wp ! no periodicity
-      self % bp_vecsp_c1_block % vs % array((n1-2)+1:(n1-2)+p1,:) = 0.0_wp ! no periodicity
-      self % bp_vecsp_c1_block % vs % array(:,1-p2:0    ) = self % bp_vecsp_c1_block % vs % array(:,n2-p2+1:n2)
-      self % bp_vecsp_c1_block % vs % array(:,n2+1:n2+p2) = self % bp_vecsp_c1_block % vs % array(:,1:p2      )
+    associate( n1 => self % n1, n2 => self % n2 )
 
-      ! Solve linear system Ap*xp=bp
-      call self % cjsolver % solve( &
-        A = self % Ap_linop_c1_block, &
-        b = self % bp_vecsp_c1_block, &
-        x = self % xp_vecsp_c1_block )
+      ! Store temporarily spline coefficients of right hand side into self % b
+      self % bs_tmp % array(:,:) = 0.0_wp
+      self % bs_tmp % array(1:n1,1:n2) = rhs % bcoef(1:n1,1:n2)
 
-      ! Compute solution in tensor-product space
-      call self % projector % change_basis_vector_inv( self % xp_vecsp_c1_block, self % x )
-
-      do i2 = 1, n2
-        do i1 = 1, n1
-          i = (i1-1) * n2 + i2
-          sol % bcoef(i1,i2) = self % x(i)
-        end do
-      end do
-      sol % bcoef(:,n2+1:n2+p2) = sol % bcoef(:,1:p2)
+      call self % M_linop_stencil % dot_incr( self % bs_tmp, self % bs )
 
     end associate
 
-  end subroutine s_poisson_2d_fem_sps_stencil_new__solve_1
+  end subroutine s_poisson_2d_fem_sps_stencil_new__accumulate_charge_2
 
-  ! Solver: signature #2
-  subroutine s_poisson_2d_fem_sps_stencil_new__solve_2( self, rhs, sol )
+  ! Accumulate charge: signature #3
+  subroutine s_poisson_2d_fem_sps_stencil_new__accumulate_charge_3( self, rhs, bsplines_eta1, bsplines_eta2 )
     class(sll_t_poisson_2d_fem_sps_stencil_new), intent(inout) :: self
-    type(sll_t_spline_2d)                      , intent(in   ) :: rhs
+    type(sll_t_point_charge)                   , intent(in   ) :: rhs
+    class(sll_c_bsplines)                      , intent(in   ) :: bsplines_eta1
+    class(sll_c_bsplines)                      , intent(in   ) :: bsplines_eta2
+
+    integer :: i1, i2, j1, j2, jmin1, jmin2
+
+    associate( n1 => self % n1        , &
+               n2 => self % n2        , &
+               p1 => self % p1        , &
+               p2 => self % p2        , &
+               qc => rhs % intensity  , &
+               sc => rhs % location(1), &
+               tc => rhs % location(2) )
+
+      call bsplines_eta1 % eval_basis( sc, self % bspl1(:), jmin1 )
+      call bsplines_eta2 % eval_basis( tc, self % bspl2(:), jmin2 )
+
+      i2 = 1
+      do j2 = jmin2, jmin2 + p2
+        i1 = 1
+        do j1 = jmin1, jmin1 + p1
+          self % bs % array(j1,j2) = self % bs % array(j1,j2) + qc * self % bspl1(i1) * self % bspl2(i2)
+          i1 = i1 + 1
+        end do
+        i2 = i2 + 1
+      end do
+
+    end associate
+
+  end subroutine s_poisson_2d_fem_sps_stencil_new__accumulate_charge_3
+
+  ! Solver
+  subroutine s_poisson_2d_fem_sps_stencil_new__solve( self, sol )
+    class(sll_t_poisson_2d_fem_sps_stencil_new), intent(inout) :: self
     type(sll_t_spline_2d)                      , intent(inout) :: sol
 
     integer :: j2, i1, i2, i
@@ -546,16 +568,6 @@ contains
                p1 => self % p1, &
                p2 => self % p2 )
 
-      ! Store temporarily spline coefficients of right hand side into self % b
-      self % bs_tmp % array(:,:) = 0.0_wp
-      self % bs_tmp % array(1:n1,1:n2) = rhs % bcoef(1:n1,1:n2)
-
-      call self % M_linop_stencil % dot( self % bs_tmp, self % bs )
-
-      !-------------------------------------------------------------------------
-      ! Solve linear system
-      !-------------------------------------------------------------------------
-
       ! Compute C1 projection of right hand side
       call self % projector % change_basis_vector( self % bs % array(1:n1,1:n2), self % bp_vecsp_c1_block )
 
@@ -589,7 +601,7 @@ contains
 
     end associate
 
-  end subroutine s_poisson_2d_fem_sps_stencil_new__solve_2
+  end subroutine s_poisson_2d_fem_sps_stencil_new__solve
 
   ! Free
   subroutine s_poisson_2d_fem_sps_stencil_new__free( self )
