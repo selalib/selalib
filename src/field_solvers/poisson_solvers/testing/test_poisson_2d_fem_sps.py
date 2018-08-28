@@ -211,18 +211,18 @@ fs = 10
 fg = plt.figure()
 ax = fg.add_subplot(111)
 # contour plot
-clevels = np.linspace( np.min( phi_plt ), np.max( phi_plt ), 100) 
+clevels = np.linspace( np.min( phi_plt ), np.max( phi_plt ), 101)
 im = ax.contourf( x1, x2, phi_plt, clevels, cmap='jet' )
 fg.colorbar( im, ax=ax )
 # grid
-nr = 16
-ax.plot( x1[:,::nr], x2[:,::nr], color='grey', lw=0.5 )
-ax.plot( x1[:,n1-1], x2[:,n1-1], color='grey', lw=0.5 )
-ax.plot( x1.transpose()[:,::nr], x2.transpose()[:,::nr], color='grey', lw=0.5 )
+nr = n1//8
+ax.plot( x1[:,::nr], x2[:,::nr], color='lightgrey', lw=0.5 )
+ax.plot( x1[:,n1-1], x2[:,n1-1], color='lightgrey', lw=0.5 )
+ax.plot( x1.transpose()[:,::nr], x2.transpose()[:,::nr], color='lightgrey', lw=0.5 )
 # style
 ax.set_xlabel( r'$x$', fontsize=fs )
 ax.set_ylabel( r'$y$', fontsize=fs, rotation=0 )
-ax.set_title( r'Numerical solution: $\phi_h(x,y)$' )
+ax.set_title( r'Numerical solution: $\phi(x,y)$' )
 ax.set_aspect( 'equal' )
 fg.tight_layout()
 fg.show()
@@ -236,18 +236,18 @@ fs = 10
 fg = plt.figure()
 ax = fg.add_subplot(111)
 # contour plot
-clevels = np.linspace( np.min( err_plt ), np.max( err_plt ), 100) 
-im = ax.contourf( x1, x2, err_plt, clevels, cmap='jet' )
+clevels = np.linspace( np.min( err_plt ), -np.min( err_plt ), 101)
+im = ax.contourf( x1, x2, err_plt, clevels, cmap='seismic' )
 fg.colorbar( im, ax=ax )
 # grid
-nr = 16
-ax.plot( x1[:,::nr], x2[:,::nr], color='grey', lw=0.5 )
-ax.plot( x1[:,n1-1], x2[:,n1-1], color='grey', lw=0.5 )
-ax.plot( x1.transpose()[:,::nr], x2.transpose()[:,::nr], color='grey', lw=0.5 )
+nr = n1//8
+ax.plot( x1[:,::nr], x2[:,::nr], color='lightgrey', lw=0.5 )
+ax.plot( x1[:,n1-1], x2[:,n1-1], color='lightgrey', lw=0.5 )
+ax.plot( x1.transpose()[:,::nr], x2.transpose()[:,::nr], color='lightgrey', lw=0.5 )
 # style
 ax.set_xlabel( r'$x$', fontsize=fs )
 ax.set_ylabel( r'$y$', fontsize=fs, rotation=0 )
-ax.set_title( r'Numerical error: $\phi_h-\phi_{ex}$' )
+ax.set_title( r'Numerical error: $\phi-\phi_{ex}$' )
 ax.set_aspect( 'equal' )
 fg.tight_layout()
 fg.show()
