@@ -316,7 +316,7 @@ print()
 #fs = 10
 #fg = plt.figure()
 #ax = fg.add_subplot(111)
-#clevels = np.linspace( min_f, max_f, 100 )
+#clevels = np.linspace( min_f, max_f, 101 )
 #i  = 17
 ## plot grids
 #nr = 16
@@ -334,7 +334,7 @@ print()
 ## style
 #ax.set_xlabel( r'$x$', fontsize=fs )
 #ax.set_ylabel( r'$y$', fontsize=fs, rotation=0 )
-#ax.set_title( r'$f$ $(x,y)$' )
+#ax.set_title( r'$\rho$ $(x,y)$' )
 #ax.set_aspect( 'equal' )
 #fg.colorbar( im )
 #fg.tight_layout()
