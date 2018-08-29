@@ -40,6 +40,8 @@ program sim_bsl_gc_2d0v_smooth_polar_splines
 
   use sll_m_scalar_diagnostics, only: sll_t_scalar_diagnostics
 
+  use sll_m_point_charge, only: sll_t_point_charge
+
   use sll_m_advector_2d_pseudo_cartesian, only: sll_t_advector_2d_pseudo_cartesian
 
   use sll_m_gauss_legendre_integration, only: &
@@ -70,10 +72,10 @@ program sim_bsl_gc_2d0v_smooth_polar_splines
   ! Integer variables
   integer :: n1, n2, p1, p2, ncells1, ncells2, ntau1, ntau2, nx1, nx2, i1, i2, &
              k1, k2, q1, q2, Nk1, Nk2, Nq1, Nq2, it, iter, diag_freq, maxiter, &
-             l, p, maptype, h5_error, file_unit
+             l, p, maptype, h5_error, file_unit, nc, ic
 
   ! Real variables
-  real(wp) :: dt, abs_tol, rel_tol, smin, smax, ampl, t_diff, t_iter, x(2), eta(2), El(2)
+  real(wp) :: h, dt, abs_tol, rel_tol, smin, smax, ampl, t_diff, t_iter, x(2), eta(2), El(2)
 
   ! Logical variables
   logical :: equil_num, success
@@ -150,6 +152,9 @@ program sim_bsl_gc_2d0v_smooth_polar_splines
   type(sll_t_scalar_diagnostics)             :: scalar_diagnostics
   type(sll_t_time_mark)                      :: t0, t1
   type(sll_t_hdf5_ser_handle)                :: file_id, file_id_eq
+
+  type(sll_t_point_charge), allocatable :: point_charges(:)
+  real(wp), allocatable :: point_charges_loc(:,:)
 
   ! Parse input argument
   call s_parse_command_arguments( input_file )
@@ -282,6 +287,24 @@ program sim_bsl_gc_2d0v_smooth_polar_splines
   call sll_o_hdf5_ser_write_attribute( file_id, "/", "ntau1", ntau1, h5_error )
   call sll_o_hdf5_ser_write_attribute( file_id, "/", "ntau2", ntau2, h5_error )
 
+  ! Allocate and initialize array of point charges
+  nc = 1
+  if ( nc /= 0 ) then
+    allocate( point_charges(nc) )
+    call point_charges(1) % init( intensity=+ampl, location=(/0.4_wp,0.0_wp/) )
+    allocate( point_charges_loc(2,nc) )
+  end if
+
+  ! Write data to HDF5 file
+  call sll_o_hdf5_ser_write_attribute( file_id, "/", "nc", nc, h5_error )
+  if ( nc /= 0 ) then
+    do ic = 1, nc
+      point_charges_loc(:,ic) = mapping_discrete % eval( point_charges(ic) % location )
+    end do
+    write( attr_name, '(a,i0)' ) "/point_charges_", 0
+    call sll_o_hdf5_ser_write_array( file_id, point_charges_loc, trim(attr_name), h5_error )
+  end if
+
   write(*,'(/a)',advance='no') " >> Initializing Poisson solver"
  
   call sll_s_set_time_mark( t0 )
@@ -345,6 +368,8 @@ program sim_bsl_gc_2d0v_smooth_polar_splines
         rho(i1,i2) = rho_equilibrium( eta )
       end do
     end do
+    ! Apply periodicity along theta
+    rho(:,ntau2+1) = rho(:,1)
 
   end if
 
@@ -370,7 +395,14 @@ program sim_bsl_gc_2d0v_smooth_polar_splines
   call spline_interp_2d % compute_interpolant( spline_2d_rho, rho(:,1:ntau2) )
 
   ! Solve Poisson equation
-  call poisson_solver % solve( spline_2d_rho, spline_2d_phi )
+  call poisson_solver % reset_charge()
+  call poisson_solver % accumulate_charge( spline_2d_rho )
+  if ( nc /= 0 ) then
+    do ic = 1, nc
+      call poisson_solver % accumulate_charge( point_charges(ic), bsplines_eta1, bsplines_eta2 )
+    end do
+  end if
+  call poisson_solver % solve( spline_2d_phi )
 
   ! Write phi, Ex and Ey on interpolation points
   do i2 = 1, ntau2
@@ -486,7 +518,7 @@ program sim_bsl_gc_2d0v_smooth_polar_splines
   call sll_o_hdf5_ser_write_attribute( file_id, "/", "time_step", dt, h5_error )
   call sll_o_hdf5_ser_write_attribute( file_id, "/", "diag_freq", diag_freq, h5_error )
 
-  write(*,'(/a/)') " >> Entering time cycle"
+  if ( iter > 0 ) write(*,'(/a/)') " >> Entering time cycle"
 
   ! Average time per iteration
   t_iter = 0.0_wp
@@ -497,29 +529,61 @@ program sim_bsl_gc_2d0v_smooth_polar_splines
 
     call sll_s_set_time_mark( t0 )
 
-    ! Predictor
-    call advector % advect( -dt*0.5_wp, success, rho_new )
-
-    ! If integration of characteristics did not converge, exit time cycle, close HDF5 file and end simulation
+    ! Predictor: evolve density
+    h = -0.5_wp * dt
+    call advector % advect( h, success, rho_new )
     if ( .not. success ) exit
+
+    ! Predictor: evolve point charges
+    if ( nc /= 0 ) then
+      h = 0.5_wp * dt
+      do ic = 1, nc
+        point_charges_loc(:,ic) = point_charges(ic) % location(:)
+        call advector % advance_position( h, success, point_charges(ic) % location )
+        if ( .not. success ) exit
+      end do
+    end if
 
     call spline_interp_2d % compute_interpolant( spline_2d_rho, rho_new(:,1:ntau2) )
 
     ! Solve Poisson equation
-    call poisson_solver % solve ( spline_2d_rho, spline_2d_phi )
+    call poisson_solver % reset_charge()
+    call poisson_solver % accumulate_charge ( spline_2d_rho )
+    if ( nc /= 0 ) then
+      do ic = 1, nc
+        call poisson_solver % accumulate_charge( point_charges(ic), bsplines_eta1, bsplines_eta2 )
+      end do
+    end if
+    call poisson_solver % solve ( spline_2d_phi )
 
     call spline_interp_2d % compute_interpolant( spline_2d_rho, rho(:,1:ntau2) )
 
-    ! Corrector
-    call advector % advect( -dt, success, rho_new )
-
-    ! If integration of characteristics did not converge, exit time cycle, close HDF5 file and end simulation
+    ! Corrector: evolve density
+    h = - dt
+    call advector % advect( h, success, rho_new )
     if ( .not. success ) exit
+
+    ! Corrector: evolve point charges
+    if ( nc /= 0 ) then
+      h = dt
+      do ic = 1, nc
+        point_charges(ic) % location(:) = point_charges_loc(:,ic)
+        call advector % advance_position( h, success, point_charges(ic) % location )
+        if ( .not. success ) exit
+      end do
+    end if
 
     call spline_interp_2d % compute_interpolant( spline_2d_rho, rho_new(:,1:ntau2) )
 
     ! Solve Poisson equation
-    call poisson_solver % solve ( spline_2d_rho, spline_2d_phi )
+    call poisson_solver % reset_charge()
+    call poisson_solver % accumulate_charge ( spline_2d_rho )
+    if ( nc /= 0 ) then
+      do ic = 1, nc
+        call poisson_solver % accumulate_charge( point_charges(ic), bsplines_eta1, bsplines_eta2 )
+      end do
+    end if
+    call poisson_solver % solve ( spline_2d_phi )
 
     rho = rho_new
 
@@ -530,6 +594,14 @@ program sim_bsl_gc_2d0v_smooth_polar_splines
       ! Write rho on interpolation points
       write( attr_name, '(a,i0)' ) "/rho_", it
       call sll_o_hdf5_ser_write_array( file_id, rho, trim(attr_name), h5_error )
+
+      if ( nc /= 0 ) then
+        do ic = 1, nc
+          point_charges_loc(:,ic) = mapping_discrete % eval( point_charges(ic) % location )
+        end do
+        write( attr_name, '(a,i0)' ) "/point_charges_", it
+        call sll_o_hdf5_ser_write_array( file_id, point_charges_loc, trim(attr_name), h5_error )
+      end if
 
       ! Write phi and E on interpolation points
       do i2 = 1, ntau2
@@ -579,9 +651,11 @@ program sim_bsl_gc_2d0v_smooth_polar_splines
 
   call sll_o_hdf5_ser_write_attribute( file_id, "/", "iterations", it, h5_error )
 
-  ! Average time per iteration
-  if ( it /= 1 ) t_iter = t_iter / real(it-1,wp)
-  write(*,'(/a,es7.1,a)') " >> Average time per iteration: ", t_iter, " s"
+  if ( iter > 0 ) then
+    ! Average time per iteration
+    if ( it /= 1 ) t_iter = t_iter / real(it-1,wp)
+    write(*,'(/a,es7.1,a)') " >> Average time per iteration: ", t_iter, " s"
+  end if
 
   ! Close HDF5 file
   call sll_s_hdf5_ser_file_close( file_id, h5_error )
@@ -598,6 +672,8 @@ program sim_bsl_gc_2d0v_smooth_polar_splines
   ! Deallocate real 2D allocatables
   deallocate( rho, rho_new, phi, Ex, Ey, Ex_cart, Ey_cart, quad_points_eta1, &
               quad_points_eta2, quad_weights_eta1, quad_weights_eta2 )
+
+  if ( nc /= 0 ) deallocate( point_charges_loc )
 
   ! Deallocate real 3D allocatables
   deallocate( eta0, etai )
@@ -659,12 +735,19 @@ contains
     real(wp), intent(in) :: eta(2)
     real(wp) :: rho_equilibrium
 
-    associate( smid => 0.5_wp * ( smin + smax ), dist => 0.5_wp * ( smax - smin ) )
+!    ! Diocotron instability
+!    associate( smid => 0.5_wp * ( smin + smax ), dist => 0.5_wp * ( smax - smin ) )
+!
+!      ! smoothing on initial condition suggested in doi:10.1140/epjd/e2014-50180-9 (eq. 10)
+!      rho_equilibrium = exp( - ( (eta(1)-smid)/dist )**p )
+!
+!    end associate
 
-      ! smoothing on initial condition suggested in doi:10.1140/epjd/e2014-50180-9 (eq. 10)
-      rho_equilibrium = exp( - ( (eta(1)-smid)/dist )**p )
-
-    end associate
+    if ( eta(1) <= 0.8_wp ) then
+      rho_equilibrium = 1.0_wp - 1.25_wp * eta(1)
+    else
+      rho_equilibrium = 0.0_wp
+    end if
 
   end function rho_equilibrium
 
@@ -673,13 +756,15 @@ contains
     real(wp), intent(in) :: eta(2)
     real(wp) :: rho_perturbation
 
-    associate( smid => 0.5_wp * ( smin + smax ), dist => 0.5_wp * ( smax - smin ) )
+!    ! Diocotron instability
+!    associate( smid => 0.5_wp * ( smin + smax ), dist => 0.5_wp * ( smax - smin ) )
+!
+!      ! smoothing on initial condition suggested in doi:10.1140/epjd/e2014-50180-9 (eq. 10)
+!      rho_perturbation = ampl * cos( l*eta(2) ) * exp( - ( (eta(1)-smid)/dist )**p )
+!
+!    end associate
 
-      ! smoothing on initial condition suggested in doi:10.1140/epjd/e2014-50180-9 (eq. 10)
-      rho_perturbation = ampl * cos( l*eta(2) ) * exp( - ( (eta(1)-smid)/dist )**p )
-
-    end associate
-
+!    ! Vortex merger
 !    real(wp) :: s, x(2), x0(2), rho_p1, rho_p2
 !
 !    s  = 0.08_wp
@@ -693,6 +778,9 @@ contains
 !    rho_p2 = ampl * exp( - ( 0.5_wp*((x(1)-x0(1))**2+(x(2)-x0(2))**2)/s**2 ) )
 !
 !    rho_perturbation = rho_p1 + rho_p2
+
+    ! Point-like vortexes
+    rho_perturbation = 0.0_wp
 
   end function rho_perturbation
 
