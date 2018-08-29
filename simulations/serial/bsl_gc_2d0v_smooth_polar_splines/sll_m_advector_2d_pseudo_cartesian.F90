@@ -44,9 +44,10 @@ module sll_m_advector_2d_pseudo_cartesian
 
   contains
 
-    procedure :: init   => s_advector_2d_pseudo_cartesian__init
-    procedure :: advect => s_advector_2d_pseudo_cartesian__advect
-    procedure :: free   => s_advector_2d_pseudo_cartesian__free
+    procedure :: init             => s_advector_2d_pseudo_cartesian__init
+    procedure :: advect           => s_advector_2d_pseudo_cartesian__advect
+    procedure :: advance_position => s_advector_2d_pseudo_cartesian__advance_position
+    procedure :: free             => s_advector_2d_pseudo_cartesian__free
 
   end type sll_t_advector_2d_pseudo_cartesian
 
@@ -91,13 +92,13 @@ contains
 
   !-----------------------------------------------------------------------------
   subroutine s_advector_2d_pseudo_cartesian__advect( self, h, success, rho_new )
-    class(sll_t_advector_2d_pseudo_cartesian), intent(in) :: self
-    real(wp), intent(in   ) :: h
-    logical , intent(  out) :: success
-    real(wp), intent(inout) :: rho_new(:,:)
+    class(sll_t_advector_2d_pseudo_cartesian), intent(inout) :: self
+    real(wp)                                 , intent(in   ) :: h
+    logical                                  , intent(  out) :: success
+    real(wp)                                 , intent(inout) :: rho_new(:,:)
 
-    integer  :: j, i1, i2, ntau1, ntau2
-    real(wp) :: tol_sqr, x0(2), x(2), dx(2), temp(2), k2(2), a0(2), E(2), eta(2), jmat_comp(2,2)
+    integer  :: i1, i2, ntau1, ntau2
+    real(wp) :: eta(2)
 
     character(len=*), parameter :: this_sub_name = "sll_t_advector_2d_pseudo_cartesian % advect"
     character(len=256) :: err_msg
@@ -113,70 +114,13 @@ contains
         eta(1) = self % tau_eta1(i1)
         eta(2) = self % tau_eta2(i2)
 
-        x0 = logical_to_pseudo_cartesian( eta )
-
-        tol_sqr = ( self % abs_tol + self % rel_tol * norm2( x0 ) )**2
-
-        ! Cartesian components of electric field
-        E = self % electric_field % eval( eta )
-
-        jmat_comp = self % jacobian_2d_pseudo_cartesian % eval( eta )
-
-        ! Pseudo-Cartesian components of advection field
-        a0(1) = jmat_comp(1,1) * (-E(2)) + jmat_comp(1,2) * E(1)
-        a0(2) = jmat_comp(2,1) * (-E(2)) + jmat_comp(2,2) * E(1)
-
-        ! First iteration
-        dx  = h * a0
-        x   = x0 + dx
-        eta = pseudo_cartesian_to_logical( x )
-
-        ! Successive iterations if first iteration did not converge
-        if ( dot_product( dx, dx ) > tol_sqr ) then
-
-          success = .false.
-
-          associate( k1 => a0, h_half => 0.5_wp*h, dx_old => temp, error => temp )
-
-            do j = 2, self % maxiter
-
-              jmat_comp = self % jacobian_2d_pseudo_cartesian % eval( eta )
-
-              ! Cartesian components of advection field
-              E = self % electric_field % eval( eta )
-
-              ! k2 = f(t,x_{i-1})
-              k2(1) = jmat_comp(1,1) * (-E(2)) + jmat_comp(1,2) * E(1)
-              k2(2) = jmat_comp(2,1) * (-E(2)) + jmat_comp(2,2) * E(1)
-
-              dx_old = dx
-              dx     = h_half*(k1+k2)
-              error  = dx_old - dx
-              x      = x0 + dx
-              eta    = pseudo_cartesian_to_logical( x )
-
-              if ( dot_product( error, error ) <= tol_sqr ) then
-                success = .true. ; exit
-              end if
-
-            end do
-
-          end associate
-
-        end if
+        call self % advance_position( h, success, eta )
 
         ! Check if integrator converged
         if ( success ) then
-
           rho_new(i1,i2) = self % spline_2d_rho % eval( eta(1), eta(2) )
-
         else
-
-          write( err_msg, '(a,i0,a)' ) "integration of characteristics did not converge after ", self % maxiter, " iterations"
-          SLL_WARNING( this_sub_name, err_msg )
-
           return
-
         end if
 
       end do
@@ -186,6 +130,93 @@ contains
     rho_new(:,ntau2+1) = rho_new(:,1)
 
   end subroutine s_advector_2d_pseudo_cartesian__advect
+
+  !-----------------------------------------------------------------------------
+  subroutine s_advector_2d_pseudo_cartesian__advance_position( self, h, success, eta )
+    class(sll_t_advector_2d_pseudo_cartesian), intent(inout) :: self
+    real(wp)                                 , intent(in   ) :: h
+    logical                                  , intent(  out) :: success
+    real(wp)                                 , intent(inout) :: eta(2)
+
+    integer  :: j
+    real(wp) :: tol_sqr, eta0(2), x0(2), x(2), dx(2), temp(2), k2(2), a0(2), E(2), jmat_comp(2,2)
+
+    character(len=*), parameter :: this_sub_name = "sll_t_advector_2d_pseudo_cartesian % advance_position"
+    character(len=256) :: err_msg
+
+    success = .true.
+
+    eta0 = eta
+
+    x0 = logical_to_pseudo_cartesian( eta )
+
+    tol_sqr = ( self % abs_tol + self % rel_tol * norm2( x0 ) )**2
+
+    ! Cartesian components of electric field
+    E = self % electric_field % eval( eta )
+
+    jmat_comp = self % jacobian_2d_pseudo_cartesian % eval( eta )
+
+    ! Pseudo-Cartesian components of advection field
+    a0(1) = jmat_comp(1,1) * (-E(2)) + jmat_comp(1,2) * E(1)
+    a0(2) = jmat_comp(2,1) * (-E(2)) + jmat_comp(2,2) * E(1)
+
+    ! First iteration
+    dx  = h * a0
+    x   = x0 + dx
+    eta = pseudo_cartesian_to_logical( x )
+
+    ! Successive iterations if first iteration did not converge
+    if ( dot_product( dx, dx ) > tol_sqr ) then
+
+      success = .false.
+
+      associate( k1 => a0, h_half => 0.5_wp*h, dx_old => temp, error => temp )
+
+        do j = 2, self % maxiter
+
+          jmat_comp = self % jacobian_2d_pseudo_cartesian % eval( eta )
+
+          ! Cartesian components of advection field
+          E = self % electric_field % eval( eta )
+
+          ! k2 = f(t,x_{i-1})
+          k2(1) = jmat_comp(1,1) * (-E(2)) + jmat_comp(1,2) * E(1)
+          k2(2) = jmat_comp(2,1) * (-E(2)) + jmat_comp(2,2) * E(1)
+
+          dx_old = dx
+          dx     = h_half*(k1+k2)
+          error  = dx_old - dx
+          x      = x0 + dx
+          eta    = pseudo_cartesian_to_logical( x )
+
+          if ( dot_product( error, error ) <= tol_sqr ) then
+            success = .true.
+            return
+          end if
+
+        end do
+
+      end associate
+
+    end if
+
+    ! Check if integrator converged
+    if ( .not. success ) then
+
+!      write( err_msg, '(a,i0,a)' ) "integration of characteristics did not converge after ", self % maxiter, " iterations: trying sub-stepping"
+!      SLL_WARNING( this_sub_name, err_msg )
+!
+!      return
+
+      ! Sub-stepping
+      eta = eta0
+      call self % advance_position( h/2, success, eta )
+      call self % advance_position( h/2, success, eta )
+
+    end if
+
+  end subroutine s_advector_2d_pseudo_cartesian__advance_position
 
   !-----------------------------------------------------------------------------
   subroutine s_advector_2d_pseudo_cartesian__free( self )
