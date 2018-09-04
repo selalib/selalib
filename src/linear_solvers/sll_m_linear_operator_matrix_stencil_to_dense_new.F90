@@ -76,7 +76,8 @@ contains
     class(sll_c_vector_space)                               , intent(in   ) :: x ! stencil
     class(sll_c_vector_space)                               , intent(inout) :: y ! dense
 
-    integer :: j1, j2, i
+    integer  :: j1, j2, i
+    real(wp) :: temp
 
     character(len=*), parameter :: this_sub_name = "sll_t_linear_operator_matrix_stencil_to_dense_new % dot"
     character(len=64) :: err_msg
@@ -100,11 +101,17 @@ contains
 
           y % array = 0.0_wp
           do i = 1, size( y % array )
+
+            temp = 0.0_wp
+
             do j2 = 1, nx2
               do j1 = 1, p1
-                y % array(i) = y % array(i) + self % A(i,j1,j2) * x % array(j1,j2)
+                temp = temp + self % A(i,j1,j2) * x % array(j1,j2)
               end do
             end do
+
+            y % array(i) = y % array(i) + temp
+
           end do
 
         class default
@@ -131,7 +138,8 @@ contains
     class(sll_c_vector_space)                               , intent(in   ) :: x ! stencil
     class(sll_c_vector_space)                               , intent(inout) :: y ! dense
 
-    integer :: j1, j2, i
+    integer  :: j1, j2, i
+    real(wp) :: temp
 
     character(len=*), parameter :: this_sub_name = "sll_t_linear_operator_matrix_stencil_to_dense_new % dot"
     character(len=64) :: err_msg
@@ -154,11 +162,17 @@ contains
           SLL_ASSERT( self%s1 == size(y%array) )
 
           do i = 1, size( y % array )
+
+            temp = 0.0_wp
+
             do j2 = 1, nx2
               do j1 = 1, p1
-                y % array(i) = y % array(i) + self % A(i,j1,j2) * x % array(j1,j2)
+                temp = temp + self % A(i,j1,j2) * x % array(j1,j2)
               end do
             end do
+
+            y % array(i) = y % array(i) + temp
+
           end do
 
         class default
