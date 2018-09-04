@@ -100,6 +100,8 @@ contains
                    ny2 => ubound( y % array, 2 ) - p2 )
 
           y % array = 0.0_wp
+
+          !$OMP PARALLEL DO PRIVATE(temp)
           do j2 = 1, ny2
             do j1 = 1, p1
 
@@ -113,6 +115,7 @@ contains
 
             end do
           end do
+          !$OMP END PARALLEL DO
 
           ! Update buffer regions
           y % array(1-p1:0      ,:) = y % array(ny1-p1+1:ny1,:)
@@ -167,6 +170,7 @@ contains
         associate( ny1 => ubound( y % array, 1 ) - p1, &
                    ny2 => ubound( y % array, 2 ) - p2 )
 
+          !$OMP PARALLEL DO PRIVATE(temp)
           do j2 = 1, ny2
             do j1 = 1, p1
 
@@ -180,6 +184,7 @@ contains
 
             end do
           end do
+          !$OMP END PARALLEL DO
 
           ! Update buffer regions
           y % array(1-p1:0      ,:) = y % array(ny1-p1+1:ny1,:)
