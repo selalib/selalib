@@ -78,7 +78,7 @@ contains
     class(sll_c_vector_space)                             , intent(in   ) :: x ! stencil
     class(sll_c_vector_space)                             , intent(inout) :: y ! stencil
 
-    integer :: i1, i2, j1, j2, k1, k2
+    integer  :: i1, i2, j1, j2, k1, k2
     real(wp) :: temp
 
     character(len=*), parameter :: this_sub_name = "sll_t_linear_operator_matrix_stencil_to_stencil % dot"
@@ -169,7 +169,7 @@ contains
     class(sll_c_vector_space)                             , intent(in   ) :: x ! stencil
     class(sll_c_vector_space)                             , intent(inout) :: y ! stencil
 
-    integer :: i1, i2, j1, j2, k1, k2
+    integer  :: i1, i2, j1, j2, k1, k2
     real(wp) :: temp
 
     character(len=*), parameter :: this_sub_name = "sll_t_linear_operator_matrix_stencil_to_stencil % dot"
