@@ -59,6 +59,9 @@ module sll_m_poisson_2d_fem_sps_stencil_new
     ! To initialize B-splines
     integer :: mm, n1, n2, ncells1, ncells2, p1, p2
 
+    class(sll_c_bsplines), pointer :: bsplines_eta1 => null()
+    class(sll_c_bsplines), pointer :: bsplines_eta2 => null()
+
     ! Analytical and discrete mappings
     type(sll_t_polar_mapping_iga), pointer :: mapping
 
@@ -171,6 +174,10 @@ contains
 
     if ( present( tol     ) ) self % tol     = tol
     if ( present( verbose ) ) self % verbose = verbose
+
+    ! B-splines
+    self % bsplines_eta1 => bsplines_eta1
+    self % bsplines_eta2 => bsplines_eta2
 
     ! Smooth spline mapping
     self % mapping => mapping
@@ -521,12 +528,10 @@ contains
   end subroutine s_poisson_2d_fem_sps_stencil_new__accumulate_charge_2
 
   ! Accumulate charge: signature #3
-  subroutine s_poisson_2d_fem_sps_stencil_new__accumulate_charge_3( self, intensity, location, bsplines_eta1, bsplines_eta2 )
+  subroutine s_poisson_2d_fem_sps_stencil_new__accumulate_charge_3( self, intensity, location )
     class(sll_t_poisson_2d_fem_sps_stencil_new), intent(inout) :: self
     real(wp)                                   , intent(in   ) :: intensity
     real(wp)                                   , intent(in   ) :: location(2)
-    class(sll_c_bsplines)                      , intent(in   ) :: bsplines_eta1
-    class(sll_c_bsplines)                      , intent(in   ) :: bsplines_eta2
 
     integer :: i1, i2, j1, j2, jmin1, jmin2
 
@@ -538,8 +543,8 @@ contains
                sc => location(1), &
                tc => location(2) )
 
-      call bsplines_eta1 % eval_basis( sc, self % bspl1(:), jmin1 )
-      call bsplines_eta2 % eval_basis( tc, self % bspl2(:), jmin2 )
+      call self % bsplines_eta1 % eval_basis( sc, self % bspl1(:), jmin1 )
+      call self % bsplines_eta2 % eval_basis( tc, self % bspl2(:), jmin2 )
 
       i2 = 1
       do j2 = jmin2, jmin2 + p2
