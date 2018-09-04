@@ -401,7 +401,7 @@ program sim_bsl_gc_2d0v_smooth_polar_splines
     do ic = 1, nc
       associate( intensity => point_charges(ic)%intensity, &
                  location  => point_charges(ic)%location )
-        call poisson_solver % accumulate_charge( intensity, location, bsplines_eta1, bsplines_eta2 )
+        call poisson_solver % accumulate_charge( intensity, location )
       end associate
     end do
   end if
@@ -556,7 +556,7 @@ program sim_bsl_gc_2d0v_smooth_polar_splines
       do ic = 1, nc
         associate( intensity => point_charges(ic)%intensity, &
                    location  => point_charges(ic)%location )
-          call poisson_solver % accumulate_charge( intensity, location, bsplines_eta1, bsplines_eta2 )
+          call poisson_solver % accumulate_charge( intensity, location )
         end associate
       end do
     end if
@@ -588,7 +588,7 @@ program sim_bsl_gc_2d0v_smooth_polar_splines
       do ic = 1, nc
         associate( intensity => point_charges(ic)%intensity, &
                    location  => point_charges(ic)%location )
-          call poisson_solver % accumulate_charge( intensity, location, bsplines_eta1, bsplines_eta2 )
+          call poisson_solver % accumulate_charge( intensity, location )
         end associate
       end do
     end if
