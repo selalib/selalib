@@ -100,6 +100,8 @@ contains
           SLL_ASSERT( self%s1 == size(y%array) )
 
           y % array = 0.0_wp
+
+          !$OMP PARALLEL DO PRIVATE(temp)
           do i = 1, size( y % array )
 
             temp = 0.0_wp
@@ -113,6 +115,7 @@ contains
             y % array(i) = y % array(i) + temp
 
           end do
+          !$OMP END PARALLEL DO
 
         class default
           err_msg = "y must be of type sll_t_vector_space_real_array_1d"
@@ -161,6 +164,7 @@ contains
           ! Check dimensions
           SLL_ASSERT( self%s1 == size(y%array) )
 
+          !$OMP PARALLEL DO PRIVATE(temp)
           do i = 1, size( y % array )
 
             temp = 0.0_wp
@@ -174,6 +178,7 @@ contains
             y % array(i) = y % array(i) + temp
 
           end do
+          !$OMP END PARALLEL DO
 
         class default
           err_msg = "y must be of type sll_t_vector_space_real_array_1d"
