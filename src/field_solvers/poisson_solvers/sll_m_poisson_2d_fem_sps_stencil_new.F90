@@ -35,8 +35,6 @@ module sll_m_poisson_2d_fem_sps_stencil_new
 
   use sll_m_boundary_condition_descriptors, only: sll_p_dirichlet
 
-  use sll_m_point_charge, only: sll_t_point_charge
-
   implicit none
 
   public :: sll_t_poisson_2d_fem_sps_stencil_new
@@ -523,21 +521,22 @@ contains
   end subroutine s_poisson_2d_fem_sps_stencil_new__accumulate_charge_2
 
   ! Accumulate charge: signature #3
-  subroutine s_poisson_2d_fem_sps_stencil_new__accumulate_charge_3( self, rhs, bsplines_eta1, bsplines_eta2 )
+  subroutine s_poisson_2d_fem_sps_stencil_new__accumulate_charge_3( self, intensity, location, bsplines_eta1, bsplines_eta2 )
     class(sll_t_poisson_2d_fem_sps_stencil_new), intent(inout) :: self
-    type(sll_t_point_charge)                   , intent(in   ) :: rhs
+    real(wp)                                   , intent(in   ) :: intensity
+    real(wp)                                   , intent(in   ) :: location(2)
     class(sll_c_bsplines)                      , intent(in   ) :: bsplines_eta1
     class(sll_c_bsplines)                      , intent(in   ) :: bsplines_eta2
 
     integer :: i1, i2, j1, j2, jmin1, jmin2
 
-    associate( n1 => self % n1        , &
-               n2 => self % n2        , &
-               p1 => self % p1        , &
-               p2 => self % p2        , &
-               qc => rhs % intensity  , &
-               sc => rhs % location(1), &
-               tc => rhs % location(2) )
+    associate( n1 => self % n1  , &
+               n2 => self % n2  , &
+               p1 => self % p1  , &
+               p2 => self % p2  , &
+               qc => intensity  , &
+               sc => location(1), &
+               tc => location(2) )
 
       call bsplines_eta1 % eval_basis( sc, self % bspl1(:), jmin1 )
       call bsplines_eta2 % eval_basis( tc, self % bspl2(:), jmin2 )

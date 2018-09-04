@@ -399,7 +399,10 @@ program sim_bsl_gc_2d0v_smooth_polar_splines
   call poisson_solver % accumulate_charge( spline_2d_rho )
   if ( nc /= 0 ) then
     do ic = 1, nc
-      call poisson_solver % accumulate_charge( point_charges(ic), bsplines_eta1, bsplines_eta2 )
+      associate( intensity => point_charges(ic)%intensity, &
+                 location  => point_charges(ic)%location )
+        call poisson_solver % accumulate_charge( intensity, location, bsplines_eta1, bsplines_eta2 )
+      end associate
     end do
   end if
   call poisson_solver % solve( spline_2d_phi )
@@ -551,7 +554,10 @@ program sim_bsl_gc_2d0v_smooth_polar_splines
     call poisson_solver % accumulate_charge ( spline_2d_rho )
     if ( nc /= 0 ) then
       do ic = 1, nc
-        call poisson_solver % accumulate_charge( point_charges(ic), bsplines_eta1, bsplines_eta2 )
+        associate( intensity => point_charges(ic)%intensity, &
+                   location  => point_charges(ic)%location )
+          call poisson_solver % accumulate_charge( intensity, location, bsplines_eta1, bsplines_eta2 )
+        end associate
       end do
     end if
     call poisson_solver % solve ( spline_2d_phi )
@@ -580,7 +586,10 @@ program sim_bsl_gc_2d0v_smooth_polar_splines
     call poisson_solver % accumulate_charge ( spline_2d_rho )
     if ( nc /= 0 ) then
       do ic = 1, nc
-        call poisson_solver % accumulate_charge( point_charges(ic), bsplines_eta1, bsplines_eta2 )
+        associate( intensity => point_charges(ic)%intensity, &
+                   location  => point_charges(ic)%location )
+          call poisson_solver % accumulate_charge( intensity, location, bsplines_eta1, bsplines_eta2 )
+        end associate
       end do
     end if
     call poisson_solver % solve ( spline_2d_phi )
