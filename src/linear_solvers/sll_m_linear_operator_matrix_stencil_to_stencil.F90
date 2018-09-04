@@ -111,6 +111,7 @@ contains
 
           y % array = 0.0_wp
 
+          !$OMP PARALLEL DO PRIVATE(j1,j2,temp)
           do i2 = 1, s2
             do i1 = 1, s1
 
@@ -138,6 +139,7 @@ contains
 
             end do
           end do
+          !$OMP END PARALLEL DO
 
           ! Update buffer regions
           y % array(1-p1:0    ,:) = y % array(s1-p1+1:s1,:)
@@ -198,6 +200,7 @@ contains
           SLL_ASSERT( self % s1 ==  ubound( y % array, 1 ) + lbound( y % array, 1 ) - 1 )
           SLL_ASSERT( self % s2 ==  ubound( y % array, 2 ) + lbound( y % array, 2 ) - 1 )
 
+          !$OMP PARALLEL DO PRIVATE(j1,j2,temp)
           do i2 = 1, s2
             do i1 = 1, s1
 
@@ -225,6 +228,7 @@ contains
 
             end do
           end do
+          !$OMP END PARALLEL DO
 
           ! Update buffer regions
           y % array(1-p1:0    ,:) = y % array(s1-p1+1:s1,:)
