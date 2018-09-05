@@ -112,7 +112,7 @@ contains
                 Aij = Ael, &
                 Mij = Mel )
 
-              s1 = modulo( j1 - i1 + p1, n1 ) - p1
+              s1 = j1 - i1
               s2 = modulo( j2 - i2 + p2, n2 ) - p2
 
               A(s1,s2,i1,i2) = A(s1,s2,i1,i2) + Ael

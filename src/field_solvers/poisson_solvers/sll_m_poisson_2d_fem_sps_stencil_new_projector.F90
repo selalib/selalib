@@ -93,7 +93,7 @@ contains
           do i1 = 1, n1
             do k2 = -p2, p2
               do k1 = -p1, p1
-                j1 = modulo( i1 - 1 + k1, n1 ) + 1
+                j1 = i1 + k1
                 j2 = modulo( i2 - 1 + k2, n2 ) + 1
                 ! block 1: 3 x 3
                 if ( i1 <= 2 .and. j1 <= 2 ) then
