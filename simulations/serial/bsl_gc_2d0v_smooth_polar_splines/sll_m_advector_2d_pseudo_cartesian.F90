@@ -206,13 +206,13 @@ contains
 
 !      write( err_msg, '(a,i0,a)' ) "integration of characteristics did not converge after ", self % maxiter, " iterations: trying sub-stepping"
 !      SLL_WARNING( this_sub_name, err_msg )
-!
 !      return
 
       ! Sub-stepping
       eta = eta0
-      call self % advance_position( h/2, success, eta )
-      call self % advance_position( h/2, success, eta )
+      call self % advance_position( h*0.5_wp, success, eta )
+      call self % advance_position( h*0.5_wp, success, eta )
+      return
 
     end if
 
