@@ -132,7 +132,7 @@ contains
   end subroutine s_advector_2d_pseudo_cartesian__advect
 
   !-----------------------------------------------------------------------------
-  subroutine s_advector_2d_pseudo_cartesian__advance_position( self, h, success, eta )
+  recursive subroutine s_advector_2d_pseudo_cartesian__advance_position( self, h, success, eta )
     class(sll_t_advector_2d_pseudo_cartesian), intent(inout) :: self
     real(wp)                                 , intent(in   ) :: h
     logical                                  , intent(  out) :: success
