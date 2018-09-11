@@ -155,15 +155,15 @@ contains
     info = mpi_info_null
 
     call h5open_f(error) 
-    SLL_ASSERT(error==0)
+    SLL_ASSERT_ALWAYS(error==0)
     call h5pcreate_f(H5P_FILE_ACCESS_F, plist_id, error)
-    SLL_ASSERT(error==0)
+    SLL_ASSERT_ALWAYS(error==0)
     call h5pset_fapl_mpio_f(plist_id, comm, info, error)
-    SLL_ASSERT(error==0)
+    SLL_ASSERT_ALWAYS(error==0)
     call h5fcreate_f(filename, H5F_ACC_TRUNC_F, handle%file_id, error, access_prp = plist_id)
-    SLL_ASSERT(error==0)
+    SLL_ASSERT_ALWAYS(error==0)
     call h5pclose_f(plist_id, error)
-    SLL_ASSERT(error==0)
+    SLL_ASSERT_ALWAYS(error==0)
 
   end subroutine sll_s_hdf5_par_file_create
 
@@ -188,15 +188,15 @@ contains
     info = mpi_info_null
 
     call h5open_f(error) 
-    SLL_ASSERT(error==0)
+    SLL_ASSERT_ALWAYS(error==0)
     call h5pcreate_f(H5P_FILE_ACCESS_F, plist_id, error)
-    SLL_ASSERT(error==0)
+    SLL_ASSERT_ALWAYS(error==0)
     call h5pset_fapl_mpio_f(plist_id, comm, info, error)
-    SLL_ASSERT(error==0)
+    SLL_ASSERT_ALWAYS(error==0)
     call h5fopen_f(filename, H5F_ACC_RDONLY_F, handle%file_id, error, access_prp = plist_id)
-    SLL_ASSERT(error==0)
+    SLL_ASSERT_ALWAYS(error==0)
     call h5pclose_f(plist_id, error)
-    SLL_ASSERT(error==0)
+    SLL_ASSERT_ALWAYS(error==0)
 
   end subroutine sll_s_hdf5_par_file_open
 
@@ -211,9 +211,9 @@ contains
     integer                    , intent(  out) :: error
 
     call h5fclose_f( handle%file_id, error ) ! Close property list and file
-    SLL_ASSERT(error==0)
+    SLL_ASSERT_ALWAYS(error==0)
     call h5close_f( error )                  ! Close FORTRAN interface
-    SLL_ASSERT(error==0)
+    SLL_ASSERT_ALWAYS(error==0)
   end subroutine sll_s_hdf5_par_file_close
 
   !-----------------------------------------------------------------------------

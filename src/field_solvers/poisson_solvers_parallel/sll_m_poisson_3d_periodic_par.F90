@@ -165,9 +165,9 @@ contains
     plan%Ly  = Ly
     plan%Lz  = Lz
 
-    plan%dx = Lx/ncx
-    plan%dy = Ly/ncy
-    plan%dz = Lz/ncz
+    plan%dx = Lx/real(ncx, f64)
+    plan%dy = Ly/real(ncy, f64)
+    plan%dz = Lz/real(ncz, f64)
 
     ! For FFTs (in each direction)
     call sll_s_fft_init_c2c_1d( plan%px, ncx, x, x, sll_p_fft_forward )

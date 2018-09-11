@@ -1,7 +1,3 @@
-IF(HDF5_ENABLED AND HDF5_IS_PARALLEL)
-  SET(CMAKE_Fortran_COMPILER ${MPI_Fortran_COMPILER})
-ENDIF(HDF5_ENABLED AND HDF5_IS_PARALLEL)
-
 ADD_LIBRARY(sll_coordinate_transformations STATIC
             sll_m_coordinate_transformation_2d_base.F90
             sll_m_coordinate_transformations_2d.F90

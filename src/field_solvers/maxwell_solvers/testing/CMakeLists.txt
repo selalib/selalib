@@ -12,10 +12,6 @@ TARGET_LINK_LIBRARIES(test_maxwell_2d_fdtd sll_maxwell_solvers)
 ADD_TEST(NAME maxwell_2d_fdtd COMMAND test_maxwell_2d_fdtd)
 SET_TESTS_PROPERTIES(maxwell_2d_fdtd PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
 
-IF(HDF5_IS_PARALLEL)
-  SET(CMAKE_Fortran_COMPILER ${MPI_Fortran_COMPILER})
-ENDIF(HDF5_IS_PARALLEL)
-
 ADD_LIBRARY(maxwell_helper_functions STATIC m_maxwell_helper_functions.F90)
 
 TARGET_LINK_LIBRARIES(maxwell_helper_functions sll_constants)

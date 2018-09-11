@@ -5,12 +5,12 @@ array_dims = int( shape(array), hsize_t )
 
 ! Open existing dataset
 call h5dopen_f( handle%file_id, dsetname, dataset_id, error )
-SLL_ASSERT(error==0)
+SLL_ASSERT_ALWAYS(error==0)
 
 ! Read dataset into array
 call h5dread_f( dataset_id, DATATYPE, array, array_dims, error )
-SLL_ASSERT(error==0)
+SLL_ASSERT_ALWAYS(error==0)
 
 ! Close dataset
 call h5dclose_f( dataset_id, error )
-SLL_ASSERT(error==0)
+SLL_ASSERT_ALWAYS(error==0)

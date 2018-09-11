@@ -1,7 +1,5 @@
 IF(HDF5_ENABLED AND HDF5_IS_PARALLEL AND HDF5_PARALLEL_ENABLED AND MPI_ENABLED)
 
-    SET(CMAKE_Fortran_COMPILER ${MPI_Fortran_COMPILER})
-
     SET(MULTIPATCH_FILES 
             sll_m_distribution_function_4d_multipatch.F90
             sll_m_coordinate_transformations_2d_nurbs.F90
