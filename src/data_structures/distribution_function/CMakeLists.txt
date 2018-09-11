@@ -34,7 +34,6 @@ ENDIF(PGI)
 
 IF(MPI_ENABLED)
 
-  SET(CMAKE_Fortran_COMPILER ${MPI_Fortran_COMPILER})
   ADD_LIBRARY(sll_distribution_function STATIC 
                  ${DISTRIBUTION_SOURCES_LIBRARY}
                  sll_m_distribution_function_initializer_4d.F90)

@@ -1,4 +1,3 @@
-SET(CMAKE_Fortran_COMPILER ${MPI_Fortran_COMPILER})
 SET(LIBS sll_interpolators sll_remap sll_file_io_parallel sll_file_io)
 
 ADD_EXECUTABLE(advection_1d1d_cubic_splines advection_1d1d_cubic_splines.F90)

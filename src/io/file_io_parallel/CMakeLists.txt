@@ -1,4 +1,3 @@
-SET(CMAKE_Fortran_COMPILER ${MPI_Fortran_COMPILER})
 SET(IO_SRC sll_m_gnuplot_parallel.F90 sll_m_xdmf_serial_blocks.F90)
 
 IF(HDF5_ENABLED AND HDF5_PARALLEL_ENABLED)

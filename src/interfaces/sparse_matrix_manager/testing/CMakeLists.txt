@@ -1,9 +1,5 @@
 #PN sll_collective is necessary when PasTiX is used
 
-IF(PASTIX_FOUND OR MUMPS_FOUND)
-  SET(CMAKE_Fortran_COMPILER ${MPI_Fortran_COMPILER})
-ENDIF(PASTIX_FOUND OR MUMPS_FOUND)
-
 ADD_EXECUTABLE( test_sparse_matrix_cg test_sparse_matrix_cg.F90 )
 TARGET_LINK_LIBRARIES( test_sparse_matrix_cg sll_sparse_matrix )
 ADD_TEST(NAME sparse_matrix_cg COMMAND test_sparse_matrix_cg )

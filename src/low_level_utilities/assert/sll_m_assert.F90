@@ -18,6 +18,9 @@
 
 module sll_m_assert
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+#ifdef MPI_VERSION
+  use mpi
+#endif
   implicit none
 
   public :: &
@@ -50,7 +53,11 @@ contains
     write(*,'(a)'   ) "ASSERTION FAILURE: condition ( " // trim(msg) // " ) is not satisfied."
     write(*,'(a,i0)') 'Triggered at '// file //':', line
 
+#ifdef MPI_VERSION
+    call mpi_abort()
+#else
     call c_abort()
+#endif
 
   end subroutine sll_s_assertion
 
