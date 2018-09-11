@@ -124,6 +124,13 @@ contains
                   j2 = i2+k2
 
                   ! Hand-made modulo operation
+                  if (j1 < 1) then
+                    j1 = j1+s1
+                  else if (j1 > s1) then
+                    j1 = j1-s1
+                  end if
+
+                  ! Hand-made modulo operation
                   if (j2 < 1) then
                     j2 = j2+s2
                   else if (j2 > s2) then
@@ -211,6 +218,13 @@ contains
 
                   j1 = i1+k1
                   j2 = i2+k2
+
+                  ! Hand-made modulo operation
+                  if (j1 < 1) then
+                    j1 = j1+s1
+                  else if (j1 > s1) then
+                    j1 = j1-s1
+                  end if
 
                   ! Hand-made modulo operation
                   if (j2 < 1) then
