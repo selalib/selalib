@@ -24,10 +24,12 @@ module sll_m_hexagonal_meshes
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_memory.h"
 #include "sll_assert.h"
+#include "sll_errors.h"
 #include "sll_working_precision.h"
 
   use sll_m_constants, only: &
-    sll_p_sqrt3
+    sll_p_sqrt3, &
+    sll_p_epsilon_0
 
   use sll_m_meshes_base, only: &
     sll_c_mesh_2d_base
@@ -122,6 +124,10 @@ module sll_m_hexagonal_meshes
      procedure, pass(mesh) :: write_hex_mesh_2d
      procedure, pass(mesh) :: write_hex_mesh_mtv
      procedure, pass(mesh) :: get_neighbours
+     procedure, pass(mesh) :: hex_to_aligned_pt
+     procedure, pass(mesh) :: hex_to_aligned_elmt
+     procedure, pass(mesh) :: ref_to_hex_elmt
+     procedure, pass(mesh) :: ref_to_aligned_elmt
      procedure, pass(mesh) :: display => sll_s_display_hex_mesh_2d
      procedure, pass(mesh) :: write_field_hex_mesh_xmf
      procedure, pass(mesh) :: delete => sll_s_delete_hex_mesh_2d
@@ -517,8 +523,8 @@ contains
 
        inside = .true.
 
-       k1c = abs(mesh%r2_x2 * xx - mesh%r2_x1 * yy)/jacob
-       k2c = abs(mesh%r1_x1 * yy - mesh%r1_x2 * xx)/jacob
+       k1c = abs(mesh%r2_x2 * xx - mesh%r2_x1 * yy) / abs(jacob)
+       k2c = abs(mesh%r1_x1 * yy - mesh%r1_x2 * xx) / abs(jacob)
 
        if ( ceiling(k1c) >  mesh%num_cells ) inside = .false.
        if ( ceiling(k2c) >  mesh%num_cells ) inside = .false.
@@ -548,8 +554,8 @@ contains
        inside = .true.
 
 
-       k1c = abs(mesh%r2_x2 * xx - mesh%r2_x1 * yy)/jacob
-       k2c = abs(mesh%r1_x1 * yy - mesh%r1_x2 * xx)/jacob
+       k1c = abs(mesh%r2_x2 * xx - mesh%r2_x1 * yy) / abs(jacob)
+       k2c = abs(mesh%r1_x1 * yy - mesh%r1_x2 * xx) / abs(jacob)
 
        if ( ceiling(k1c) >  mesh%num_cells ) inside = .false.
        if ( ceiling(k2c) >  mesh%num_cells ) inside = .false.
@@ -1199,42 +1205,6 @@ contains
 
   end subroutine sll_s_get_cell_vertices_index
 
-!PN function defined but not used
-!  !---------------------------------------------------------
-!  !> @brief Returns index of lowest point in cell
-!  !> @details Returns index of lowest point in a given cell.
-!  !> This means the point with the lowest y-coordinate
-!  !> @param[IN] mesh hexagonal mesh
-!  !> @param[IN] cell_index index of cell we wish to know the lowest point
-!  !> @param[OUT] lowest_index index of point with lowest y-coordinate
-!  function get_cell_lowest_point(mesh, cell_index) result(lowest_index)
-!    type(sll_t_hex_mesh_2d), pointer :: mesh
-!    sll_int32, intent(in) :: cell_index
-!    sll_int32  :: edge1, edge2, edge3
-!    sll_int32  :: lowest_index
-!    sll_real64 :: y_lowest
-!
-!    ! initialization ...
-!    lowest_index = -1
-!
-!    call sll_s_get_cell_vertices_index(mesh%center_cartesian_coord(1,cell_index), &
-!         mesh%center_cartesian_coord(2,cell_index),&
-!         mesh, &
-!         edge1, edge2, edge3)
-!
-!    lowest_index = edge1
-!
-!    ! we compare the ordinates of edge2 and edge1
-!    y_lowest = mesh%cartesian_coord(2, lowest_index)
-!    if (mesh%cartesian_coord(2, edge2) < y_lowest) then
-!       lowest_index = edge2
-!    end if
-!    ! we compare the ordinates of lowest_point and edge3
-!    if (mesh%cartesian_coord(2, edge3) < y_lowest) then
-!       lowest_index = edge3
-!    end if
-!
-!  end function get_cell_lowest_point
 
   !---------------------------------------------------------------------------
   !> @brief Given a mesh point and the first cartesian coordinate of a point
@@ -1559,8 +1529,284 @@ contains
     end if
   end function sll_f_change_elements_notation
 
+  !---------------------------------------------------------------------------
+  !> @brief Computes the coordinate transformation hex->aligned for a point.
+  !> @details Given a point in the hexagonal mesh, this subroutine computes the
+  !> coordinates it would have if mapped to an aligned flux surface.
+  !> @param[IN] mesh hexagonal mesh
+  !> @param[IN] ind integer index of the point to be mapped.
+  !> @param[IN] x real the x-coordinate of point to be mapped
+  !> @param[IN] y real the y-coordinate of point to be mapped
+  !> @param[OUT] x_new real the x-coordinate of mapped point
+  !> @param[OUT] y_new real the y-coordinate of mapped point
+  recursive subroutine hex_to_aligned_pt(mesh, ind, transf, x_new, y_new)
+    class(sll_t_hex_mesh_2d), intent(in)  :: mesh
+    sll_int32,              intent(in)  :: ind
+    character(len=*),       intent(in)  :: transf
+    sll_real64,             intent(out) :: x_new
+    sll_real64,             intent(out) :: y_new
+    ! Local
+    sll_real64 :: x
+    sll_real64 :: y
+    sll_real64 :: radius
+    sll_real64 :: angle
+    sll_real64 :: asin_gamma
+    sll_real64 :: kappa
+    sll_real64 :: x_temp
+    sll_real64 :: y_temp
+    sll_real64 :: dist_to_origin
+    sll_int32  :: k1
+    sll_int32  :: k2
+    sll_int32  :: cells_dist
+
+    ! Initalization
+    x = mesh%cartesian_coord(1, ind)
+    y = mesh%cartesian_coord(2, ind)
+    x_new = -1000.0_f64
+    y_new = -1000.0_f64
+
+    select case(transf)
+    case("CIRCLE")
+       !........................................................................
+       ! Computing current radius from point to origin
+       dist_to_origin = SQRT(x**2 + y**2)
+
+       ! Computing the actual radius if the point was on a circle:
+       ! First we get the hexagonal coordinates
+       k1 = mesh%hex_coord(1, ind)
+       k2 = mesh%hex_coord(2, ind)
+       cells_dist = sll_f_cells_to_origin(k1, k2)
+       radius = mesh%radius / mesh%num_cells * cells_dist
+
+       if (dist_to_origin .le. sll_p_epsilon_0) then
+          x_new = 0._f64
+          y_new = 0._f64
+       else
+          x_new = x * radius/dist_to_origin
+          y_new = y * radius/dist_to_origin
+       end if
+       !........................................................................
+    case("TOKAMAK")
+       !........................................................................
+       call mesh%hex_to_aligned_pt(ind, "CIRCLE", x_temp, y_temp)
+       ! Computing current radius and angle
+       radius = SQRT(x_temp**2 + y_temp**2)
+       angle  = 0._f64
+       if (.not.( (x_temp .eq. 0._f64) .and. (y_temp .eq. 0._f64))) then
+          angle = ATAN2(y_temp, x_temp)
+       end if
+
+       ! Some constants taken from "Noncircular, finite aspect ratio, local
+       ! equilibrium model" by R.L. Miller et al, Physics of Plamas, Vol 5 ('98)
+       asin_gamma = 0.4290421956533866_f64
+       kappa      = 1.66_f64
+       x_new = radius * COS(angle + asin_gamma * SIN(angle))
+       y_new = kappa * radius * SIN(angle)
+       !........................................................................
+    case default
+       print *, "ERROR in hex_to_aligned_pt: no known transformation =>", transf
+       print *, " Options are : CIRCLE and TOKAMAK."
+       STOP
+    end select
+  end subroutine hex_to_aligned_pt
+
 
   !---------------------------------------------------------------------------
+  !> @brief Computes the coordinate transformation hex->aligned for an element.
+  !> @details Given an element in the hexagonal mesh, this subroutine computes
+  !> the affine transformation that maps the element to the aligned transforma-
+  !> tion. This transformation can be written in the form AX + B = X'.
+  !> @param[IN] mesh hexagonal mesh
+  !> @param[IN] i_elmt int index of the element in the hexagonal mesh.
+  !> @param[OUT] transf_matA real matrix that contains the A matrix.
+  !> @param[OUT] transf_vecB real vector that contains the B vector.
+  subroutine hex_to_aligned_elmt(mesh, i_elmt, transf, transf_matA, transf_vecB)
+    class(sll_t_hex_mesh_2d),     intent(in)  :: mesh
+    sll_int32,                  intent(in)  :: i_elmt
+    character(len=*),           intent(in)  :: transf
+    sll_real64, dimension(2,2), intent(out) :: transf_matA
+    sll_real64, dimension(2),   intent(out) :: transf_vecB
+    ! Local
+    sll_real64 :: x_v1, y_v1
+    sll_real64 :: x_v2, y_v2
+    sll_real64 :: x_v3, y_v3
+    sll_real64 :: xp_v1, yp_v1
+    sll_real64 :: xp_v2, yp_v2
+    sll_real64 :: xp_v3, yp_v3
+    sll_real64 :: ccx,  ccy
+    sll_int32  :: e1
+    sll_int32  :: e2
+    sll_int32  :: e3
+    sll_int32  :: error_flag
+    sll_int32  :: error_flag2
+    sll_real64, dimension(3, 3) :: P
+    sll_real64, dimension(3, 1) :: Bp1
+    sll_real64, dimension(3, 1) :: Bp2
+    sll_int32,  dimension(3)    :: pivot
+
+    ! Getting the indices of the vertices, have to compute first the center coos
+    ccx = mesh%center_cartesian_coord(1, i_elmt)
+    ccy = mesh%center_cartesian_coord(2, i_elmt)
+    call sll_s_get_cell_vertices_index(ccx, ccy, mesh, e1, e2, e3)
+
+    ! Getting the coordinates of the vertices of the element (in the hexmesh)
+    x_v1 = mesh%cartesian_coord(1, e1)
+    y_v1 = mesh%cartesian_coord(2, e1)
+    x_v2 = mesh%cartesian_coord(1, e2)
+    y_v2 = mesh%cartesian_coord(2, e2)
+    x_v3 = mesh%cartesian_coord(1, e3)
+    y_v3 = mesh%cartesian_coord(2, e3)
+
+    ! Getting the coordinates of the mapped triangle
+    call mesh%hex_to_aligned_pt(e1, transf, xp_v1, yp_v1)
+    call mesh%hex_to_aligned_pt(e2, transf, xp_v2, yp_v2)
+    call mesh%hex_to_aligned_pt(e3, transf, xp_v3, yp_v3)
+
+    ! We now want to get A and B in AX + B = X', where X contains the values of
+    ! the vertices in the hexmesh and X' the values of the mapped vertices,
+    ! A = ( a11 a12, a21 a22) a 2x2 matrix et B=(b1 b2).
+    ! For this we can solve two indepent linear systems of the form:
+    ! P * A1 = Bp1, where the i-th line of 3x3 matrix P = (x_vi, y_vi, 1),
+    ! A1 = (a11, a12, b1) and Bp1 = (xp_v1, xp_v2, xp_v3).
+    ! The second linear system is P * A2 = Bp2. where P is the same matrix as
+    ! in the previous system, A2 = (a21, a22, b2) and Bp2 is like Bp1 but
+    ! using the y coordinates of the mapped points.
+    ! We use LAPACK for the resolution.
+
+    ! We first create the P matrices:
+    P(1, 1:2) = (/ x_v1, y_v1 /)
+    P(2, 1:2) = (/ x_v2, y_v2 /)
+    P(3, 1:2) = (/ x_v3, y_v3 /)
+    P(:, 3)   = 1._f64
+
+    ! Then the RHS vectors:
+    Bp1(1, 1) = xp_v1
+    Bp1(2, 1) = xp_v2
+    Bp1(3, 1) = xp_v3
+    ! ... 2nd RHS vector:
+    Bp2(1, 1) = yp_v1
+    Bp2(2, 1) = yp_v2
+    Bp2(3, 1) = yp_v3
+
+    ! Now we solve the system :
+    error_flag = 0
+    call DGESV( 3, 1, P, 3, pivot, Bp1, 3, error_flag )
+    pivot(:) = 0
+    P(1, 1:2) = (/ x_v1, y_v1 /)
+    P(2, 1:2) = (/ x_v2, y_v2 /)
+    P(3, 1:2) = (/ x_v3, y_v3 /)
+    P(:, 3)   = 1._f64
+    call DGESV( 3, 1, P, 3, pivot, Bp2, 3, error_flag2 )
+    if ((error_flag .ne. 0).or.(error_flag2 .ne. 0)) then
+       print *, "LAPACK error flag for 1st sys = ", error_flag
+       print *, "LAPACK error flag for 2nd sys = ", error_flag2
+       SLL_ERROR('hex_to_aligned_elmt', "Error while calling DGESV from Lapack")
+    end if
+
+    transf_matA(1, 1) = Bp1(1, 1)
+    transf_matA(1, 2) = Bp1(2, 1)
+    transf_matA(2, 1) = Bp2(1, 1)
+    transf_matA(2, 2) = Bp2(2, 1)
+
+    transf_vecB(1) = Bp1(3, 1)
+    transf_vecB(2) = Bp2(3, 1)
+
+  end subroutine hex_to_aligned_elmt
+
+  !---------------------------------------------------------------------------
+  !> @brief Computes the coordinate transformation ref->hex for an element.
+  !> @details The coordinate transformation is the transformation from the
+  !> reference element to the current cell. As the reference element is the 1st
+  !> cell of an hexagonal mesh of radius 1 the transformation is only a rotation
+  !> followed by a translation. Thus we only need 6 values to stock the
+  !> transformation. 4 values for the matrix A and 2 for the vector v, where:
+  !> Ax + b = x'. x being the reference coordinates and x' the coordinates of
+  !> the current mesh.
+  !> Reference coordinates: (0,0), (sqrt(3)/2, 0.5), (0,1)
+  !> @param[IN] mesh hexagonal mesh
+  !> @param[IN] i_elmt int index of the element in the hexagonal mesh.
+  !> @param[OUT] transf_matA real matrix that contains the A matrix.
+  !> @param[OUT] transf_vecB real vector that contains the B vector.
+  subroutine ref_to_hex_elmt(mesh, i_elmt, transf_matA, transf_vecB)
+    class(sll_t_hex_mesh_2d),     intent(in)  :: mesh
+    sll_int32,                  intent(in)  :: i_elmt
+    sll_real64, dimension(2,2), intent(out) :: transf_matA
+    sll_real64, dimension(2),   intent(out) :: transf_vecB
+    ! Local
+    sll_int32  :: e1
+    sll_int32  :: e2
+    sll_int32  :: e3
+    sll_int32  :: type
+    sll_real64 :: x1, y1
+    sll_real64 :: x_v1
+    sll_real64 :: y_v1
+
+    ! We get the cells center coordinates in order to get its vertices
+    x1 = mesh%center_cartesian_coord(1, i_elmt)
+    y1 = mesh%center_cartesian_coord(2, i_elmt)
+    call sll_s_get_cell_vertices_index(x1, y1, mesh, e1, e2, e3)
+
+    ! We get the lowest vertex coordinates (by default: e1's coordinates)
+    x_v1 = mesh%cartesian_coord(1, e1)
+    y_v1 = mesh%cartesian_coord(2, e1)
+
+    ! Getting the cell type:
+    call mesh%cell_type(i_elmt, type)
+
+    ! We fill the matrices A and B:
+    transf_vecB(1:2) = (/ x_v1, y_v1 /)
+
+    if (type == 1) then
+       transf_matA(1,1) = 0.5_f64 / mesh%num_cells
+       transf_matA(1,2) = -sll_p_sqrt3/2._f64 / mesh%num_cells
+       transf_matA(2,1) =  sll_p_sqrt3/2._f64 / mesh%num_cells
+       transf_matA(2,2) = 0.5_f64 / mesh%num_cells
+    else
+       transf_matA(1,1) = 1._f64 / mesh%num_cells
+       transf_matA(1,2) = 0._f64 / mesh%num_cells
+       transf_matA(2,1) = 0._f64 / mesh%num_cells
+       transf_matA(2,2) = 1._f64 / mesh%num_cells
+    end if
+
+  end subroutine ref_to_hex_elmt
+
+  !---------------------------------------------------------------------------
+  !> @brief Computes the coordinate transformation ref->aligned for an element.
+  !> @details Given an element in the hexagonal mesh, this subroutine computes
+  !> the affine transformation that maps the reference triangle to the element
+  !> following an aligned transformation. This transformation can be
+  !> written in the form AX + B = X', as it is a combination of ref_to_hex_elmt
+  !> and hex_to_aligned_elmt.
+  !> @param[IN] mesh hexagonal mesh
+  !> @param[IN] i_elmt int index of the element in the hexagonal mesh.
+  !> @param[OUT] transf_matA real matrix that contains the A matrix.
+  !> @param[OUT] transf_vecB real vector that contains the B vector.
+  subroutine ref_to_aligned_elmt(mesh, i_elmt, transf, transf_matA, transf_vecB)
+    class(sll_t_hex_mesh_2d),     intent(in)  :: mesh
+    sll_int32,                  intent(in)  :: i_elmt
+    character(len=*),           intent(in)  :: transf
+    sll_real64, dimension(2,2), intent(out) :: transf_matA
+    sll_real64, dimension(2),   intent(out) :: transf_vecB
+    ! Local
+    sll_real64, dimension(2,2) :: transf_matA1
+    sll_real64, dimension(2)   :: transf_vecB1
+    sll_real64, dimension(2,2) :: transf_matA2
+    sll_real64, dimension(2)   :: transf_vecB2
+
+    ! To compute the transformation ref->aligned we compute first the
+    ! transformations ref->hex then hex->aligned:
+    call mesh%ref_to_hex_elmt(i_elmt, transf_matA1, transf_vecB1)
+    call mesh%hex_to_aligned_elmt(i_elmt, transf, transf_matA2, transf_vecB2)
+
+    ! To get the composition of two linear combinations, we know that:
+    ! A = A2*A1 B=A2*B1+B2
+    transf_matA = MATMUL(transf_matA2, transf_matA1)
+    transf_vecB = MATMUL(transf_matA2, transf_vecB1) + transf_vecB2
+
+  end subroutine ref_to_aligned_elmt
+
+
+  !-----------------------------------------------------------------------------
   !> @brief Displays hexagonal mesh in terminal
   !> @details Displays a simple text describing the mesh to the terminal
   !> @param[IN] mesh hexagonal mesh
@@ -1585,17 +1831,13 @@ contains
   !> DJANGO CAID and pigasus.
   !> This is was written in order to have a Poisson solver for the hex-mesh
   !> @param mesh hex-mesh that will be described
-  subroutine sll_s_write_caid_files(mesh, spline_deg)
+  subroutine sll_s_write_caid_files(mesh, transf, spline_deg)
     type(sll_t_hex_mesh_2d), pointer :: mesh
+    character(len=*),  intent(in)  :: transf
     character(len=20),   parameter :: name_nodes = "boxsplines_nodes.txt"
     character(len=23),   parameter :: name_elemt = "boxsplines_elements.txt"
     character(len=24),   parameter :: name_diri  = "boxsplines_dirichlet.txt"
     sll_real64 :: x1, y1
-    sll_real64 :: x_ver1, y_ver1
-    sll_real64 :: x_ver2, y_ver2
-    sll_real64 :: x_ver3, y_ver3
-    sll_real64 :: a11, a12, a21, a22
-    sll_real64 :: b1, b2
     sll_real64 :: scale
     sll_int32  :: e1, e2, e3
     sll_int32  :: temp_e
@@ -1611,6 +1853,8 @@ contains
     sll_int32  :: dirichlet
     sll_int32  :: type
     sll_int32,  parameter :: out_unit=20
+    sll_real64, dimension(2,2) :: matA
+    sll_real64, dimension(2)   :: vecB
 
     ! Writing the nodes file....................
     open (unit=out_unit,file=name_nodes,action="write",status="replace")
@@ -1627,12 +1871,20 @@ contains
        if (num_cells_to_origin.eq.mesh%num_cells) then
           boundary = 1
        end if
+       ! Mapping to circle:
+       if (transf .eq. "IDENTITY") then
+          x1 = mesh%cartesian_coord(1, i)
+          y1 = mesh%cartesian_coord(2, i)
+       else
+          call mesh%hex_to_aligned_pt( i, transf, x1, y1)
+       end if
+
        !... we write the coordinates
        write (out_unit, "((i6),(a,1x),(g25.17),(a,1x),(g25.17))") boundary, &
             ",", &
-            mesh%global_to_x1(i), &
+            x1, &
             ",", &
-            mesh%global_to_x2(i)
+            y1
     end do
 
     close(out_unit)
@@ -1678,20 +1930,22 @@ contains
        end if
        write(out_unit, "((i6),(a,1x),(i6),(a,1x),(i6))") e1, ",",e2,",", e3
        !... we write the coordinate transformation (*)
-       x_ver1 = mesh%cartesian_coord(1, e1)
-       y_ver1 = mesh%cartesian_coord(2, e1)
-       x_ver2 = mesh%cartesian_coord(1, e2)
-       y_ver2 = mesh%cartesian_coord(2, e2)
-       x_ver3 = mesh%cartesian_coord(1, e3)
-       y_ver3 = mesh%cartesian_coord(2, e3)
-       b1  = x_ver1
-       b2  = y_ver1
-       a11 = x_ver2 - x_ver1
-       a12 = x_ver3 - x_ver1
-       a21 = y_ver2 - y_ver1
-       a22 = y_ver3 - y_ver1
+       select case(transf)
+       case("IDENTITY")
+          call mesh%ref_to_hex_elmt(i, matA, vecB)
+       case ("TOKAMAK")
+          call mesh%ref_to_aligned_elmt(i, transf, matA, vecB)
+       case ("CIRCLE")
+          call mesh%ref_to_aligned_elmt(i, transf, matA, vecB)
+       case default
+          print *, "ERROR in write_caid_files(): Not known transfromation."
+          print *, " Options are : CIRCLE, TOKAMAK and IDENTITY."
+          STOP
+       end select
+
        write(out_unit, "(5((f22.17), (a,1x)), (f22.17))") &
-            a11, ",", a12, ",", a21, ",", a22, ",", b1, ",", b2
+            matA(1,1), ",", matA(1,2), ",", matA(2,1), ",", matA(2,2), ",", &
+            vecB(1), ",", vecB(2)
     end do
     print *, ""
     close(out_unit)
@@ -1768,40 +2022,6 @@ contains
     close(out_unit)
   end subroutine write_hex_mesh_2d
 
-!PN function defined but not used
-!  !---------------------------------------------------------------------------
-!  !> @brief Writes the info of a given field in a hex-mesh into a given file
-!  !> @details This function writes for every point of the hex mesh its cartesian
-!  !> coordinate as well as the value of a given field(vector) at that point
-!  !> @param[IN] mesh the hexagonal mesh
-!  !> @param[IN] field a vector of size=(number of pts of the mesh) containg the
-!  !> values of a field on every mesh point.
-!  !> @param[IN] name the name of the file where the info will be written into.
-!  subroutine write_field_hex_mesh(mesh, field, name)
-!    ! Writes the points cartesian coordinates and
-!    ! field(vector) values in a file named "name"
-!    type(sll_t_hex_mesh_2d), pointer :: mesh
-!    sll_real64,dimension(:) :: field
-!    character(len=*) :: name
-!    sll_int32  :: i
-!    sll_int32  :: num_pts_tot
-!    sll_real64 :: x1, x2
-!    sll_int32, parameter :: out_unit=20
-!
-!    open (unit=out_unit,file=name,action="write",status="replace")
-!
-!    num_pts_tot = mesh%num_pts_tot
-!    do i=1, num_pts_tot
-!       x1 = mesh%global_to_x1(i)
-!       x2 = mesh%global_to_x2(i)
-!       write (out_unit, "(3(g13.3,1x))") x1, &
-!            x2, &
-!            field(i)
-!    end do
-!
-!    close(out_unit)
-!  end subroutine write_field_hex_mesh
-
 
   !---------------------------------------------------------------------------
   !> @brief Same as write_field_hex_mesh but output in xmf
@@ -1820,7 +2040,6 @@ contains
     sll_int32  :: i
     sll_int32  :: num_triangles
     sll_int32  :: num_pts_tot
-    !sll_int32  :: out_unit
     sll_real64, allocatable :: coor(:,:)
     sll_int32,  allocatable :: ntri(:,:)
     sll_int32  :: error

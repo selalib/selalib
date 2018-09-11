@@ -3,10 +3,6 @@
 # should propagate to all its clients, even if these were envisioned as
 # sequential modules. pic_visu is an example.
 
-IF(HDF5_IS_PARALLEL AND HDF5_ENABLED)
-  SET(CMAKE_Fortran_COMPILER ${MPI_Fortran_COMPILER})
-ENDIF(HDF5_IS_PARALLEL AND HDF5_ENABLED)
-
 ADD_LIBRARY( sll_pic_visu STATIC sll_m_pic_visu.F90 sll_m_pic_viewer.F90 )
 
 TARGET_LINK_LIBRARIES( sll_pic_visu sll_coordinate_transformations sll_file_io sll_utilities sll_file_io sll_assert)

@@ -19,7 +19,6 @@ SET_TESTS_PROPERTIES( lagrange_interpolation_1d_fast PROPERTIES PASS_REGULAR_EXP
 
 # lagrange fast (parallel)
 IF( MPI_ENABLED )
-   SET(CMAKE_Fortran_COMPILER ${MPI_Fortran_COMPILER})
    ADD_EXECUTABLE( test_lagrange_interpolation_1d_fast_parallel test_lagrange_interpolation_1d_fast_parallel.F90 )
    TARGET_LINK_LIBRARIES( test_lagrange_interpolation_1d_fast_parallel sll_lagrange_interpolation sll_decomposition sll_collective )
    ADD_MPI_TEST( lagrange_interpolation_1d_fast_parallel test_lagrange_interpolation_1d_fast_parallel "1" "" )
