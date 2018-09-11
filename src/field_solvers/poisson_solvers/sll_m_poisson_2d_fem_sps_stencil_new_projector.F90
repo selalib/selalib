@@ -93,8 +93,24 @@ contains
           do i1 = 1, n1
             do k2 = -p2, p2
               do k1 = -p1, p1
+
                 j1 = i1 + k1
-                j2 = modulo( i2 - 1 + k2, n2 ) + 1
+                j2 = i2 + k2
+
+                ! Hand-made modulo operation
+                if (j1 < 1) then
+                  j1 = j1+n1
+                else if (j1 > n1) then
+                  j1 = j1-n1
+                end if
+
+                ! Hand-made modulo operation
+                if (j2 < 1) then
+                  j2 = j2+n2
+                else if (j2 > n2) then
+                  j2 = j2-n2
+                end if
+
                 ! block 1: 3 x 3
                 if ( i1 <= 2 .and. j1 <= 2 ) then
                   self % Qp_temp(i1,i2,ll) = self % Qp_temp(i1,i2,ll) + Ql % A(k1,k2,i1,i2) * self % L(j1,j2,ll)
@@ -105,6 +121,7 @@ contains
                 else if ( i1 <= 2+p1 .and. j1 <= 2 ) then
                   Qp % block3 % A(i1-2,i2,ll) = Qp % block3 % A(i1-2,i2,ll) + Ql % A(k1,k2,i1,i2) * self % L(j1,j2,ll)
                 end if
+
               end do
             end do
           end do
