@@ -46,6 +46,8 @@ ny = h5.attrs['nx2']
 dt = h5.attrs['time_step']
 Ni = h5.attrs['iterations']
 df = h5.attrs['diag_freq']
+# point charges
+nc = h5.attrs['nc']
 
 Nd = (Ni-1) // df + 1
 tt = np.ndarray( Nd, dtype=int )
@@ -67,6 +69,11 @@ for t in tt:
     Ey     [t] = h5['Ey_'     +str(t)].value
     Ex_cart[t] = h5['Ex_cart_'+str(t)].value
     Ey_cart[t] = h5['Ey_cart_'+str(t)].value
+
+if ( nc > 0 ):
+   point_charges = dict()
+   for t in tt:
+       point_charges[t] = h5['point_charges_'+str(t)].value
 
 # Load equilibrium density
 rho_eq = h5['rho_eq'].value
@@ -187,6 +194,11 @@ def plot_time_evolution( arg ):
         if ( arg == 'rho' ):
            clevels = np.linspace( min_rho, max_rho, 101 )
            im = ax.contourf( x1, x2, rho[t], clevels, cmap=cmap )
+           if ( nc > 0 ):
+              for ic in range(nc):
+                  xc = point_charges[t][ic,0]
+                  yc = point_charges[t][ic,1]
+                  ax.plot( xc, yc, marker='o', color='k', markersize=5. )
            ax.set_title( r'Density $\rho$ at $t = %g$' %(t*dt) )
         if ( arg == 'delta_rho' ):
            clevels = np.linspace( min_delta_rho, max_delta_rho, 101 )
