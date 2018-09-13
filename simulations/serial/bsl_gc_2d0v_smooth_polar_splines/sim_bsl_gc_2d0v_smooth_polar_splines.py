@@ -187,7 +187,6 @@ def plot_time_evolution( arg ):
     ax = fg.add_subplot(111)
     cax = make_axes_locatable(ax).append_axes( 'right', size='8%', pad='5%' )
 
-    step = df
     for t in tt:
         ax.clear()
         cax.clear()
@@ -223,8 +222,8 @@ def plot_time_evolution( arg ):
         ax.plot( x1[:,::nr], x2[:,::nr], color='lightgrey', lw=0.5 )
         ax.plot( x1[:,n1-1], x2[:,n1-1], color='lightgrey', lw=0.5 )
         ax.plot( x1.transpose()[:,::nr], x2.transpose()[:,::nr], color='lightgrey', lw=0.5 )
-        ax.set_xlabel( r'$x$' )#, fontsize=fs )
-        ax.set_ylabel( r'$y$', rotation=0 )#, fontsize=fs )
+        ax.set_xlabel( r'$x$' )
+        ax.set_ylabel( r'$y$', rotation=0 )
         ax.set_aspect( 'equal' )
         fg.colorbar( im, cax=cax )
         fg.canvas.draw()
@@ -378,9 +377,93 @@ def plot_advection_field( arg ):
         ax.plot( x1.transpose()[:,::nr], x2.transpose()[:,::nr], color='k', lw=0.5 )
         ax.set_xlim( [ -1., 1. ] )
         ax.set_ylim( [ -1., 1. ] )
-        ax.set_xlabel( r'$x$' )#, fontsize=fs )
-        ax.set_ylabel( r'$y$', rotation=0 )#, fontsize=fs )
+        ax.set_xlabel( r'$x$' )
+        ax.set_ylabel( r'$y$', rotation=0 )
         ax.set_aspect( 'equal' )
         fg.colorbar( im, cax=cax )
         fg.canvas.draw()
         plt.pause(0.1)
+
+#-------------------------------------------------------------------------------
+# stream lines in inertial and rotating frame (works for circle only)
+#-------------------------------------------------------------------------------
+
+t = 0
+
+x1_mesh, x2_mesh = np.meshgrid( x1_cart, x2_cart )
+
+# advection field in rotating frame
+omega = 0.3332
+Ax_rot = - Ey_cart[t] + omega*x2_mesh
+Ay_rot =   Ex_cart[t] - omega*x1_mesh
+
+# set zero outside domain
+for ix in range(nx):
+    for iy in range(ny):
+        if ( np.sqrt(x1_cart[ix]**2+x2_cart[iy]**2) > 1.0 ):
+           Ex_cart[t][ix,iy] = 0.0
+           Ey_cart[t][ix,iy] = 0.0
+           Ax_rot[ix,iy] = 0.0
+           Ay_rot[ix,iy] = 0.0
+
+fg = plt.figure(figsize=[9.0,9.0])
+ax = fg.add_subplot(111)
+ax.streamplot( x1_mesh, x2_mesh, -Ey_cart[t], Ex_cart[t], density=6. )
+if ( nc > 0 ):
+   for ic in range(nc):
+       xc = point_charges[t][ic,0]
+       yc = point_charges[t][ic,1]
+       ax.plot( xc, yc, marker='o', color='k', markersize=5. )
+ax.set_title( r'Stream lines of advection field at $t = %g$ (inertial frame)' %(t*dt) )
+ax.plot( x1[:,::nr], x2[:,::nr], color='lightgrey', lw=0.5 )
+ax.plot( x1[:,n1-1], x2[:,n1-1], color='lightgrey', lw=0.5 )
+ax.plot( x1.transpose()[:,::nr], x2.transpose()[:,::nr], color='lightgrey', lw=0.5 )
+ax.set_xlabel( r'$x$' )
+ax.set_ylabel( r'$y$', rotation=0 )
+ax.set_aspect( 'equal' )
+fg.show()
+
+fg = plt.figure(figsize=[9.0,9.0])
+ax = fg.add_subplot(111)
+ax.streamplot( x1_mesh, x2_mesh, Ax_rot, Ay_rot, density=6. )
+if ( nc > 0 ):
+   for ic in range(nc):
+       xc = point_charges[t][ic,0]
+       yc = point_charges[t][ic,1]
+       ax.plot( xc, yc, marker='o', color='k', markersize=5. )
+ax.set_title( r'Stream lines of advection field at $t = %g$ (rotating frame)' %(t*dt) )
+ax.plot( x1[:,::nr], x2[:,::nr], color='lightgrey', lw=0.5 )
+ax.plot( x1[:,n1-1], x2[:,n1-1], color='lightgrey', lw=0.5 )
+ax.plot( x1.transpose()[:,::nr], x2.transpose()[:,::nr], color='lightgrey', lw=0.5 )
+ax.set_xlabel( r'$x$' )
+ax.set_ylabel( r'$y$', rotation=0 )
+ax.set_aspect( 'equal' )
+fg.show()
+
+def return_index( minval, maxval, array ):
+
+    imin = np.argmin( abs( array - minval ) )
+    imax = np.argmin( abs( array - maxval ) )
+
+    index = slice( imin, imax+1 )
+
+    return index
+
+index_x1 = return_index(  0.3, 0.5, x1_cart )
+index_x2 = return_index( -0.1, 0.1, x2_cart )
+
+index = [ index_x2, index_x1 ]
+
+fg = plt.figure(figsize=[9.0,9.0])
+ax = fg.add_subplot(111)
+ax.streamplot( x1_mesh[index], x2_mesh[index], Ax_rot[index], Ay_rot[index], density=6. )
+if ( nc > 0 ):
+   for ic in range(nc):
+       xc = point_charges[t][ic,0]
+       yc = point_charges[t][ic,1]
+       ax.plot( xc, yc, marker='o', color='k', markersize=5. )
+ax.grid()
+ax.set_title( r'Stream lines of advection field at $t = %g$ (rotating frame)' %(t*dt) )
+ax.set_xlabel( r'$x$' )
+ax.set_ylabel( r'$y$', rotation=0 )
+fg.show()
