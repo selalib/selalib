@@ -15,39 +15,15 @@ h5 = h5py.File( file_name, mode='r' )
 x1 = h5['x1'].value
 x2 = h5['x2'].value
 
-# Load Jacobian
-Jd = h5['jacobian'].value
-
-# Load control points along x1 and x2
-c_x1 = h5['c_x1'].value
-c_x2 = h5['c_x2'].value
-
-# Load other attributes
-
-# degrees of freedom
+# Load attributes
 n1 = h5.attrs['n1']
 n2 = h5.attrs['n2']
-# spline degrees
-p1 = h5.attrs['p1']
-p2 = h5.attrs['p2']
-# interpolation points
-ntau1 = h5.attrs['ntau1']
-ntau2 = h5.attrs['ntau2']
-# finite elements
-Nk1 = h5.attrs['Nk1']
-Nk2 = h5.attrs['Nk2']
-# quadrature points
-Nq1 = h5.attrs['Nq1']
-Nq2 = h5.attrs['Nq2']
-# Cartesian grid points
 nx = h5.attrs['nx1']
 ny = h5.attrs['nx2']
-# time stepping
+nc = h5.attrs['nc']
 dt = h5.attrs['time_step']
 Ni = h5.attrs['iterations']
 df = h5.attrs['diag_freq']
-# point charges
-nc = h5.attrs['nc']
 
 Nd = (Ni-1) // df + 1
 tt = np.ndarray( Nd, dtype=int )
@@ -151,6 +127,22 @@ ax.plot( x1[:,n1-1], x2[:,n1-1], color='lightgrey', lw=0.5 )
 ax.plot( x1.transpose()[:,::nr], x2.transpose()[:,::nr], color='lightgrey', lw=0.5 )
 ax.set_xlabel( r'$x$' )
 ax.set_ylabel( r'$y$', rotation=0 )
+ax.set_aspect( 'equal' )
+fg.tight_layout()
+fg.show()
+
+# point charge trajectory
+fg = plt.figure(figsize=[9.0,9.0])
+ax = fg.add_subplot(111)
+for t in tt:
+    xc = point_charges[t][0,0]
+    yc = point_charges[t][0,1]
+    ax.plot( xc, yc, marker='.', color='k', markersize=5. )
+ax.plot( x1[:,:], x2[:,:], color='lightgrey', lw=0.5 )
+ax.plot( x1.transpose()[:,:], x2.transpose()[:,:], color='lightgrey', lw=0.5 )
+ax.set_xlabel( r'$x$' )
+ax.set_ylabel( r'$y$', rotation=0 )
+ax.set_title( 'Point charge trajectory' )
 ax.set_aspect( 'equal' )
 fg.tight_layout()
 fg.show()
@@ -440,7 +432,7 @@ ax.set_ylabel( r'$y$', rotation=0 )
 ax.set_aspect( 'equal' )
 fg.show()
 
-def return_index( minval, maxval, array ):
+def return_index( array, minval, maxval ):
 
     imin = np.argmin( abs( array - minval ) )
     imax = np.argmin( abs( array - maxval ) )
@@ -449,10 +441,10 @@ def return_index( minval, maxval, array ):
 
     return index
 
-index_x1 = return_index(  0.3, 0.5, x1_cart )
-index_x2 = return_index( -0.1, 0.1, x2_cart )
+index_x1 = return_index( x1_cart,  0.3, 0.5 )
+index_x2 = return_index( x2_cart, -0.1, 0.1 )
 
-index = [ index_x2, index_x1 ]
+index = tuple( ( index_x2, index_x1 ) )
 
 fg = plt.figure(figsize=[9.0,9.0])
 ax = fg.add_subplot(111)
