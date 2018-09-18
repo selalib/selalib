@@ -1,8 +1,8 @@
 import sys
 import h5py
 import numpy as np
-import matplotlib.pyplot as plt
-from mpl_toolkits.axes_grid1.axes_divider import make_axes_locatable
+
+np.set_printoptions( precision=15 )
 
 # Read folder name from standard input
 fold_name = sys.argv[1]
@@ -69,9 +69,6 @@ for t in tt:
 # to plot fine grid
 nr = n1 // 8
 
-# color map for plots
-cmap = 'Greys'
-
 #-------------------------------------------------------------------------------
 # Plot time evolution of RHO
 #-------------------------------------------------------------------------------
@@ -97,7 +94,8 @@ min_rho, max_rho = minmax( rho )
 if ( max_rho == min_rho ):
    max_rho = 1.0
 
-min_rho_eq, max_rho_eq = minmax( rho_eq )
+min_rho_eq = rho_eq.min()
+max_rho_eq = rho_eq.max()
 # if max_rho_eq = 0.0, contour levels need to be increasing
 if ( max_rho_eq == min_rho_eq ):
    max_rho_eq = 1.0
@@ -114,120 +112,13 @@ for t in tt:
 if ( max_delta_rho == min_delta_rho ):
    max_delta_rho = 1.0
 
-# plot equilibrium density
-fg = plt.figure(figsize=[9.0,9.0])
-ax = fg.add_subplot(111)
-cax = make_axes_locatable(ax).append_axes( 'right', size='8%', pad='5%' )
-clevels = np.linspace( min_rho_eq, max_rho_eq, 101 )
-im = ax.contourf( x1, x2, rho_eq, clevels, cmap=cmap )
-fg.colorbar( im, cax=cax )
-ax.set_title( r'Equilibrium density $\rho_{eq}$' )
-ax.plot( x1[:,::nr], x2[:,::nr], color='lightgrey', lw=0.5 )
-ax.plot( x1[:,n1-1], x2[:,n1-1], color='lightgrey', lw=0.5 )
-ax.plot( x1.transpose()[:,::nr], x2.transpose()[:,::nr], color='lightgrey', lw=0.5 )
-ax.set_xlabel( r'$x$' )
-ax.set_ylabel( r'$y$', rotation=0 )
-ax.set_aspect( 'equal' )
-fg.tight_layout()
-fg.show()
-
-# point charge trajectory
-fg = plt.figure(figsize=[9.0,9.0])
-ax = fg.add_subplot(111)
-for t in tt:
-    xc = point_charges[t][0,0]
-    yc = point_charges[t][0,1]
-    ax.plot( xc, yc, marker='.', color='k', markersize=5. )
-ax.plot( x1[:,:], x2[:,:], color='lightgrey', lw=0.5 )
-ax.plot( x1.transpose()[:,:], x2.transpose()[:,:], color='lightgrey', lw=0.5 )
-ax.set_xlabel( r'$x$' )
-ax.set_ylabel( r'$y$', rotation=0 )
-ax.set_title( 'Point charge trajectory' )
-ax.set_aspect( 'equal' )
-fg.tight_layout()
-fg.show()
-
-## save figures
-#t  = 0
-#fg = plt.figure()
-#ax = fg.add_subplot(111)
-#cax = make_axes_locatable(ax).append_axes( 'right', size='8%', pad='5%' )
-#
-#clevels = np.linspace( min_rho, max_rho, 101 )
-## contour plot
-#im = ax.contourf( x1, x2, rho[t], clevels, cmap=cmap )
-#fg.colorbar( im, cax=cax )
-## grid
-#ax.plot( x1[:,::nr], x2[:,::nr], color='lightgrey', lw=0.5 )
-#ax.plot( x1[:,n1-1], x2[:,n1-1], color='lightgrey', lw=0.5 )
-#ax.plot( x1.transpose()[:,::nr], x2.transpose()[:,::nr], color='lightgrey', lw=0.5 )
-## style
-#fs = 10
-#ax.set_xlabel( r'$x$', fontsize=fs )
-#ax.set_ylabel( r'$y$', fontsize=fs, rotation=0 )
-#ax.set_title( r'Density $\rho$ at $t = %g$' %(t*dt) )
-#ax.set_aspect( 'equal' )
-#fg.tight_layout()
-#fg.show()
-#fg_name = './rho_t=%g.pdf' %(i*dt)
-#fg.savefig( fg_name, dpi=300 )
-
-# Animated plot
-def plot_time_evolution( arg ):
-
-    fg = plt.figure(figsize=[9.0,9.0])
-    ax = fg.add_subplot(111)
-    cax = make_axes_locatable(ax).append_axes( 'right', size='8%', pad='5%' )
-
-    for t in tt:
-        ax.clear()
-        cax.clear()
-        if ( arg == 'rho' ):
-           clevels = np.linspace( min_rho, max_rho, 101 )
-           im = ax.contourf( x1, x2, rho[t], clevels, cmap=cmap )
-           if ( nc > 0 ):
-              for ic in range(nc):
-                  xc = point_charges[t][ic,0]
-                  yc = point_charges[t][ic,1]
-                  ax.plot( xc, yc, marker='o', color='k', markersize=5. )
-           ax.set_title( r'Density $\rho$ at $t = %g$' %(t*dt) )
-        if ( arg == 'delta_rho' ):
-           clevels = np.linspace( min_delta_rho, max_delta_rho, 101 )
-           im = ax.contourf( x1, x2, rho[t]-rho_eq, clevels, cmap=cmap )
-           ax.set_title( r'Density $\rho$ at $t = %g$' %(t*dt) )
-        if ( arg == 'phi' ):
-           clevels = np.linspace( min_phi, max_phi, 101 )
-           im = ax.contourf( x1, x2, phi[t], clevels, cmap=cmap )
-           ax.set_title( r'Potential $\phi$ at $t = %g$' %(t*dt) )
-        if ( arg == 'Ex' ):
-           clevels = np.linspace( min_Ex, max_Ex, 101 )
-           im = ax.contourf( x1, x2, Ex[t], clevels, cmap=cmap )
-           ax.set_title( r'Electric field component $E_x$ at $t = %g$' %(t*dt) )
-        if ( arg == 'Ey' ):
-           clevels = np.linspace( min_Ey, max_Ey, 101 )
-           im = ax.contourf( x1, x2, Ey[t], clevels, cmap=cmap )
-           ax.set_title( r'Electric field component $E_y$ at $t = %g$' %(t*dt) )
-        if ( arg == 'Em' ):
-           clevels = np.linspace( min_Em, max_Em, 101 )
-           im = ax.contourf( x1, x2, Em[t], clevels, cmap=cmap )
-           ax.set_title( r'Electric field magnitude $|E|$ at $t = %g$' %(t*dt) )
-        ax.plot( x1[:,::nr], x2[:,::nr], color='lightgrey', lw=0.5 )
-        ax.plot( x1[:,n1-1], x2[:,n1-1], color='lightgrey', lw=0.5 )
-        ax.plot( x1.transpose()[:,::nr], x2.transpose()[:,::nr], color='lightgrey', lw=0.5 )
-        ax.set_xlabel( r'$x$' )
-        ax.set_ylabel( r'$y$', rotation=0 )
-        ax.set_aspect( 'equal' )
-        fg.colorbar( im, cax=cax )
-        fg.canvas.draw()
-        plt.pause(0.1)
-
 #-------------------------------------------------------------------------------
 # Scalar diagnostics
 #-------------------------------------------------------------------------------
 
 # Analytical growth rate
 l = 9
-omega = 0.179630959411
+gamma = 0.179630959411
 coeff = 3.5e-08
 
 # Load data from file
@@ -238,40 +129,13 @@ y1 = np.loadtxt( file_name, usecols=[1] )
 y2 = np.loadtxt( file_name, usecols=[2] )
 y3 = np.loadtxt( file_name, usecols=[3] )
 
-ya = coeff * np.exp( omega * xt )
+ya = coeff * np.exp( gamma * xt )
 
 ## Limit t in some range
 #mask = ( xt >= 0. )
 #xt = xt[mask]
 #y1 = y1[mask]
 #ya = ya[mask]
-
-# Plot time evolution of L2-norm of phi
-def plot_scalar_data( arg ):
-
-    fg = plt.figure( figsize=[9.5,6.0] )
-    ax = fg.add_subplot(111)
-    fs = 16
-    if ( arg == 'mass' ):
-      ax.plot( xt, y1, '-r' , lw=1.5, label='Mass conservation' )
-      ax.set_ylabel( r'$\int dx\,dy\,\rho$', fontsize=fs )
-    if ( arg == 'energy' ):
-      ax.plot( xt, y2, '-r' , lw=1.5, label='Energy conservation' )
-      ax.set_ylabel( r'$\int dx\,dy\,|\nabla\phi|^2$', fontsize=fs )
-    if ( arg == 'l2_norm' ):
-      ax.plot( xt, y3, '-r' , lw=1.5, label=r'Numerical instability (mode $m=%d$)' %(l) )
-      ax.plot( xt, ya, '--k', lw=1.5, label=r'Analytical growth rate: $\gamma\approx %g$' %(omega) )
-      ax.set_ylabel( r'$||\phi-\phi_0||_{L^2}$', fontsize=fs )
-      ax.set_yscale( 'log' )
-      ymin = ax.get_ylim()[0]
-      ymax = 2.*max(y3)
-      ax.set_ylim( [ymin,ymax] )
-    ax.set_xlabel( r'$t$', fontsize=fs )
-    ax.legend( loc='best', fontsize=fs )
-    ax.tick_params( labelsize=fs )
-    ax.grid()
-    fg.tight_layout()
-    fg.show()
 
 #-------------------------------------------------------------------------------
 # Vorticity
@@ -340,42 +204,6 @@ min_expansion, max_expansion = minmax( expansion )
 min_vorticity, max_vorticity = minmax( vorticity )
 min_shearrate, max_shearrate = minmax( shearrate )
 
-def plot_advection_field( arg ):
-
-    fg = plt.figure(figsize=[9.0,9.0])
-    ax = fg.add_subplot(111)
-    cax = make_axes_locatable(ax).append_axes( 'right', size='8%', pad='5%' )
-
-    for t in tt:
-        ax.clear()
-        cax.clear()
-        if ( arg == 'expansion' ):
-           clevels = np.linspace( min_expansion, max_expansion, 101 )
-           im = ax.contourf( x_meshgrid, y_meshgrid, expansion[t], clevels, cmap=cmap )
-           ax.set_title( r'Expansion rate of advection field at $t = %g$' %(t*dt) )
-        if ( arg == 'vorticity' ):
-           clevels = np.linspace( min_vorticity, max_vorticity, 101 )
-           im = ax.contourf( x_meshgrid, y_meshgrid, vorticity[t], clevels, cmap=cmap )
-           ax.set_title( r'Vorticity of advection field at $t = %g$' %(t*dt) )
-        if ( arg == 'shearrate' ):
-           clevels = np.linspace( min_shearrate, max_shearrate, 101 )
-           im = ax.contourf( x_meshgrid, y_meshgrid, shearrate[t], clevels, cmap=cmap )
-           ax.set_title( r'Shear rate of advection field at $t = %g$' %(t*dt) )
-        nx = 16
-        ax.plot( x_meshgrid[:,::nx], y_meshgrid[:,::nx], color='lightgrey', lw=0.5 )
-        ax.plot( x_meshgrid.transpose()[:,::nx], y_meshgrid.transpose()[:,::nx], color='lightgrey', lw=0.5 )
-        ax.plot( x1[:,::nr], x2[:,::nr], color='k', lw=0.5 )
-        ax.plot( x1[:,n1-1], x2[:,n1-1], color='k', lw=0.5 )
-        ax.plot( x1.transpose()[:,::nr], x2.transpose()[:,::nr], color='k', lw=0.5 )
-        ax.set_xlim( [ -1., 1. ] )
-        ax.set_ylim( [ -1., 1. ] )
-        ax.set_xlabel( r'$x$' )
-        ax.set_ylabel( r'$y$', rotation=0 )
-        ax.set_aspect( 'equal' )
-        fg.colorbar( im, cax=cax )
-        fg.canvas.draw()
-        plt.pause(0.1)
-
 #-------------------------------------------------------------------------------
 # stream lines in inertial and rotating frame (works for circle only)
 #-------------------------------------------------------------------------------
@@ -397,65 +225,3 @@ for ix in range(nx):
            Ey_cart[t][ix,iy] = 0.0
            Ax_rot[ix,iy] = 0.0
            Ay_rot[ix,iy] = 0.0
-
-fg = plt.figure(figsize=[9.0,9.0])
-ax = fg.add_subplot(111)
-ax.streamplot( x1_mesh, x2_mesh, -Ey_cart[t], Ex_cart[t], density=6. )
-if ( nc > 0 ):
-   for ic in range(nc):
-       xc = point_charges[t][ic,0]
-       yc = point_charges[t][ic,1]
-       ax.plot( xc, yc, marker='o', color='k', markersize=5. )
-ax.set_title( r'Stream lines of advection field at $t = %g$ (inertial frame)' %(t*dt) )
-ax.plot( x1[:,::nr], x2[:,::nr], color='lightgrey', lw=0.5 )
-ax.plot( x1[:,n1-1], x2[:,n1-1], color='lightgrey', lw=0.5 )
-ax.plot( x1.transpose()[:,::nr], x2.transpose()[:,::nr], color='lightgrey', lw=0.5 )
-ax.set_xlabel( r'$x$' )
-ax.set_ylabel( r'$y$', rotation=0 )
-ax.set_aspect( 'equal' )
-fg.show()
-
-fg = plt.figure(figsize=[9.0,9.0])
-ax = fg.add_subplot(111)
-ax.streamplot( x1_mesh, x2_mesh, Ax_rot, Ay_rot, density=6. )
-if ( nc > 0 ):
-   for ic in range(nc):
-       xc = point_charges[t][ic,0]
-       yc = point_charges[t][ic,1]
-       ax.plot( xc, yc, marker='o', color='k', markersize=5. )
-ax.set_title( r'Stream lines of advection field at $t = %g$ (rotating frame)' %(t*dt) )
-ax.plot( x1[:,::nr], x2[:,::nr], color='lightgrey', lw=0.5 )
-ax.plot( x1[:,n1-1], x2[:,n1-1], color='lightgrey', lw=0.5 )
-ax.plot( x1.transpose()[:,::nr], x2.transpose()[:,::nr], color='lightgrey', lw=0.5 )
-ax.set_xlabel( r'$x$' )
-ax.set_ylabel( r'$y$', rotation=0 )
-ax.set_aspect( 'equal' )
-fg.show()
-
-def return_index( array, minval, maxval ):
-
-    imin = np.argmin( abs( array - minval ) )
-    imax = np.argmin( abs( array - maxval ) )
-
-    index = slice( imin, imax+1 )
-
-    return index
-
-index_x1 = return_index( x1_cart,  0.3, 0.5 )
-index_x2 = return_index( x2_cart, -0.1, 0.1 )
-
-index = tuple( ( index_x2, index_x1 ) )
-
-fg = plt.figure(figsize=[9.0,9.0])
-ax = fg.add_subplot(111)
-ax.streamplot( x1_mesh[index], x2_mesh[index], Ax_rot[index], Ay_rot[index], density=6. )
-if ( nc > 0 ):
-   for ic in range(nc):
-       xc = point_charges[t][ic,0]
-       yc = point_charges[t][ic,1]
-       ax.plot( xc, yc, marker='o', color='k', markersize=5. )
-ax.grid()
-ax.set_title( r'Stream lines of advection field at $t = %g$ (rotating frame)' %(t*dt) )
-ax.set_xlabel( r'$x$' )
-ax.set_ylabel( r'$y$', rotation=0 )
-fg.show()
