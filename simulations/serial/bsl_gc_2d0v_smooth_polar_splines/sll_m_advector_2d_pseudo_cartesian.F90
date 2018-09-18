@@ -108,6 +108,7 @@ contains
 
     success = .true.
 
+    !$OMP PARALLEL DO PRIVATE(eta,success)
     do i2 = 1, ntau2
       do i1 = 1, ntau1
 
@@ -120,14 +121,15 @@ contains
         if ( success ) then
           rho_new(i1,i2) = self % spline_2d_rho % eval( eta(1), eta(2) )
         else
-          return
+          exit
         end if
 
       end do
     end do
+    !$OMP END PARALLEL DO
 
     ! Apply periodicity along theta
-    rho_new(:,ntau2+1) = rho_new(:,1)
+    if ( success ) rho_new(:,ntau2+1) = rho_new(:,1)
 
   end subroutine s_advector_2d_pseudo_cartesian__advect
 
