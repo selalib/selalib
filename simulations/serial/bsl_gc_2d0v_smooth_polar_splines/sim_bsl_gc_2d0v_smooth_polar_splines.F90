@@ -42,7 +42,11 @@ program sim_bsl_gc_2d0v_smooth_polar_splines
 
   use sll_m_point_charge, only: sll_t_point_charge
 
+  use sll_m_simulation_state, only: sll_t_simulation_state
+
   use sll_m_advector_2d_pseudo_cartesian, only: sll_t_advector_2d_pseudo_cartesian
+
+  use sll_m_time_integrator, only: sll_t_time_integrator
 
   use sll_m_gauss_legendre_integration, only: &
     sll_f_gauss_legendre_points, &
@@ -126,10 +130,10 @@ program sim_bsl_gc_2d0v_smooth_polar_splines
   character(len=32) :: attr_name
 
   ! Real 1D allocatables
-  real(wp), allocatable :: breaks_eta1(:), breaks_eta2(:), tau_eta1(:), tau_eta2(:), x1_grid(:), x2_grid(:)
+  real(wp), allocatable :: breaks_eta1(:), breaks_eta2(:), tau_eta1(:), tau_eta2(:), x1_grid(:), x2_grid(:), intensity(:)
 
   ! Real 2D allocatables
-  real(wp), allocatable :: rho(:,:), rho_new(:,:), phi(:,:), Ex(:,:), Ey(:,:), Ex_cart(:,:), Ey_cart(:,:), &
+  real(wp), allocatable :: phi(:,:), Ex(:,:), Ey(:,:), Ex_cart(:,:), Ey_cart(:,:), location(:,:), &
                            quad_points_eta1(:,:), quad_points_eta2(:,:), quad_weights_eta1(:,:), quad_weights_eta2(:,:)
 
   ! Real 3D allocatables
@@ -149,11 +153,12 @@ program sim_bsl_gc_2d0v_smooth_polar_splines
   type(sll_t_poisson_2d_fem_sps_stencil_new) :: poisson_solver
   type(sll_t_electric_field)                 :: electric_field
   type(sll_t_advector_2d_pseudo_cartesian)   :: advector
+  type(sll_t_simulation_state)               :: sim_state
+  type(sll_t_time_integrator)                :: time_integrator
   type(sll_t_scalar_diagnostics)             :: scalar_diagnostics
   type(sll_t_time_mark)                      :: t0, t1
   type(sll_t_hdf5_ser_handle)                :: file_id, file_id_eq
 
-  type(sll_t_point_charge), allocatable :: point_charges(:)
   real(wp), allocatable :: point_charges_loc(:,:)
 
   ! Parse input argument
@@ -289,20 +294,12 @@ program sim_bsl_gc_2d0v_smooth_polar_splines
 
   ! Allocate and initialize array of point charges
   nc = 1
+  allocate( intensity( nc ) )
+  allocate( location( 2, nc ) )
+  intensity(1)  = ampl
+  location(:,1) = (/ 0.4_wp, 0.0_wp /)
   if ( nc /= 0 ) then
-    allocate( point_charges(nc) )
-    call point_charges(1) % init( intensity=+ampl, location=(/0.4_wp,0.0_wp/) )
     allocate( point_charges_loc(2,nc) )
-  end if
-
-  ! Write data to HDF5 file
-  call sll_o_hdf5_ser_write_attribute( file_id, "/", "nc", nc, h5_error )
-  if ( nc /= 0 ) then
-    do ic = 1, nc
-      point_charges_loc(:,ic) = mapping_discrete % eval( point_charges(ic) % location )
-    end do
-    write( attr_name, '(a,i0)' ) "/point_charges_", 0
-    call sll_o_hdf5_ser_write_array( file_id, point_charges_loc, trim(attr_name), h5_error )
   end if
 
   write(*,'(/a)',advance='no') " >> Initializing Poisson solver"
@@ -340,11 +337,12 @@ program sim_bsl_gc_2d0v_smooth_polar_splines
     maxiter )
 
   ! Repeated point along theta
-  allocate( rho    ( ntau1, ntau2+1 ) )
-  allocate( rho_new( ntau1, ntau2+1 ) )
   allocate( phi    ( ntau1, ntau2+1 ) )
   allocate( Ex     ( ntau1, ntau2+1 ) )
   allocate( Ey     ( ntau1, ntau2+1 ) )
+
+  ! Initialize simulation state
+  call sim_state % init( ntau1, ntau2, nc, intensity, location, spline_2d_rho, spline_2d_phi )
 
   ! Compute equilibrium density on interpolation points
   if ( equil_num ) then
@@ -352,7 +350,7 @@ program sim_bsl_gc_2d0v_smooth_polar_splines
     call sll_s_hdf5_ser_file_open( 'sim_bsl_gc_2d0v_smooth_polar_splines_equilibrium.h5', file_id_eq, h5_error )
     call sll_o_hdf5_ser_read_attribute( file_id_eq, "/", "iterations", it, h5_error )
     write( attr_name, '(a,i0)' ) "/rho_", it
-    call sll_o_hdf5_ser_read_array( file_id_eq, rho, trim(attr_name), h5_error )
+    call sll_o_hdf5_ser_read_array( file_id_eq, sim_state % rho, trim(attr_name), h5_error )
     call sll_o_hdf5_ser_read_array( file_id_eq, phi, trim(attr_name), h5_error )
 !    call sll_s_hdf5_ser_file_close( file_id_eq, h5_error )
 
@@ -365,42 +363,55 @@ program sim_bsl_gc_2d0v_smooth_polar_splines
       do i1 = 1, ntau1
         eta(1) = tau_eta1(i1)
         eta(2) = tau_eta2(i2)
-        rho(i1,i2) = rho_equilibrium( eta )
+        sim_state % rho(i1,i2) = rho_equilibrium( eta )
       end do
     end do
     ! Apply periodicity along theta
-    rho(:,ntau2+1) = rho(:,1)
+    sim_state % rho(:,ntau2+1) = sim_state % rho(:,1)
 
   end if
 
   ! Write data to HDF5 file
-  call sll_o_hdf5_ser_write_array( file_id, rho, "/rho_eq", h5_error )
+  call sll_o_hdf5_ser_write_array( file_id, sim_state % rho, "/rho_eq", h5_error )
 
   ! Add perturbation to equilibrium
   do i2 = 1, ntau2
     do i1 = 1, ntau1
       eta(1) = tau_eta1(i1)
       eta(2) = tau_eta2(i2)
-      rho(i1,i2) = rho(i1,i2) + rho_perturbation( eta )
+      sim_state % rho(i1,i2) = sim_state % rho(i1,i2) + rho_perturbation( eta )
     end do
   end do
   ! Apply periodicity along theta
-  rho(:,ntau2+1) = rho(:,1)
+  sim_state % rho(:,ntau2+1) = sim_state % rho(:,1)
+
+  ! Initialize time integrator
+  call time_integrator % init( dt, advector, poisson_solver, spline_interp_2d, sim_state )
+
+  ! Write data to HDF5 file
+  call sll_o_hdf5_ser_write_attribute( file_id, "/", "nc", nc, h5_error )
+  if ( nc /= 0 ) then
+    do ic = 1, nc
+      point_charges_loc(:,ic) = mapping_discrete % eval( sim_state % point_charges(ic) % location )
+    end do
+    write( attr_name, '(a,i0)' ) "/point_charges_", 0
+    call sll_o_hdf5_ser_write_array( file_id, point_charges_loc, trim(attr_name), h5_error )
+  end if
 
   ! Write data to HDF5 file
   write( attr_name, '(a,i0)' ) "/rho_", 0
-  call sll_o_hdf5_ser_write_array( file_id, rho, trim(attr_name), h5_error )
+  call sll_o_hdf5_ser_write_array( file_id, sim_state % rho, trim(attr_name), h5_error )
 
   ! Compute interpolant spline for initial density
-  call spline_interp_2d % compute_interpolant( spline_2d_rho, rho(:,1:ntau2) )
+  call spline_interp_2d % compute_interpolant( spline_2d_rho, sim_state % rho(:,1:ntau2) )
 
   ! Solve Poisson equation
   call poisson_solver % reset_charge()
   call poisson_solver % accumulate_charge( spline_2d_rho )
   if ( nc /= 0 ) then
     do ic = 1, nc
-      associate( intensity => point_charges(ic)%intensity, &
-                 location  => point_charges(ic)%location )
+      associate( intensity => sim_state % point_charges(ic)%intensity, &
+                 location  => sim_state % point_charges(ic)%location )
         call poisson_solver % accumulate_charge( intensity, location )
       end associate
     end do
@@ -532,69 +543,8 @@ program sim_bsl_gc_2d0v_smooth_polar_splines
 
     call sll_s_set_time_mark( t0 )
 
-    ! Predictor: evolve density
-    h = -0.5_wp * dt
-    call advector % advect( h, success, rho_new )
+    call time_integrator % advance_in_time( sim_state, success )
     if ( .not. success ) exit
-
-    ! Predictor: evolve point charges
-    if ( nc /= 0 ) then
-      h = 0.5_wp * dt
-      do ic = 1, nc
-        point_charges_loc(:,ic) = point_charges(ic) % location(:)
-        call advector % advance_position( h, success, point_charges(ic) % location )
-        if ( .not. success ) exit
-      end do
-    end if
-
-    call spline_interp_2d % compute_interpolant( spline_2d_rho, rho_new(:,1:ntau2) )
-
-    ! Solve Poisson equation
-    call poisson_solver % reset_charge()
-    call poisson_solver % accumulate_charge ( spline_2d_rho )
-    if ( nc /= 0 ) then
-      do ic = 1, nc
-        associate( intensity => point_charges(ic)%intensity, &
-                   location  => point_charges(ic)%location )
-          call poisson_solver % accumulate_charge( intensity, location )
-        end associate
-      end do
-    end if
-    call poisson_solver % solve ( spline_2d_phi )
-
-    call spline_interp_2d % compute_interpolant( spline_2d_rho, rho(:,1:ntau2) )
-
-    ! Corrector: evolve density
-    h = - dt
-    call advector % advect( h, success, rho_new )
-    if ( .not. success ) exit
-
-    ! Corrector: evolve point charges
-    if ( nc /= 0 ) then
-      h = dt
-      do ic = 1, nc
-        point_charges(ic) % location(:) = point_charges_loc(:,ic)
-        call advector % advance_position( h, success, point_charges(ic) % location )
-        if ( .not. success ) exit
-      end do
-    end if
-
-    call spline_interp_2d % compute_interpolant( spline_2d_rho, rho_new(:,1:ntau2) )
-
-    ! Solve Poisson equation
-    call poisson_solver % reset_charge()
-    call poisson_solver % accumulate_charge ( spline_2d_rho )
-    if ( nc /= 0 ) then
-      do ic = 1, nc
-        associate( intensity => point_charges(ic)%intensity, &
-                   location  => point_charges(ic)%location )
-          call poisson_solver % accumulate_charge( intensity, location )
-        end associate
-      end do
-    end if
-    call poisson_solver % solve ( spline_2d_phi )
-
-    rho = rho_new
 
     call scalar_diagnostics % write_data( it*dt )
 
@@ -602,11 +552,11 @@ program sim_bsl_gc_2d0v_smooth_polar_splines
 
       ! Write rho on interpolation points
       write( attr_name, '(a,i0)' ) "/rho_", it
-      call sll_o_hdf5_ser_write_array( file_id, rho, trim(attr_name), h5_error )
+      call sll_o_hdf5_ser_write_array( file_id, sim_state % rho, trim(attr_name), h5_error )
 
       if ( nc /= 0 ) then
         do ic = 1, nc
-          point_charges_loc(:,ic) = mapping_discrete % eval( point_charges(ic) % location )
+          point_charges_loc(:,ic) = mapping_discrete % eval( sim_state % point_charges(ic) % location )
         end do
         write( attr_name, '(a,i0)' ) "/point_charges_", it
         call sll_o_hdf5_ser_write_array( file_id, point_charges_loc, trim(attr_name), h5_error )
@@ -679,7 +629,7 @@ program sim_bsl_gc_2d0v_smooth_polar_splines
   deallocate( breaks_eta1, breaks_eta2, tau_eta1, tau_eta2, x1_grid, x2_grid )
 
   ! Deallocate real 2D allocatables
-  deallocate( rho, rho_new, phi, Ex, Ey, Ex_cart, Ey_cart, quad_points_eta1, &
+  deallocate( phi, Ex, Ey, Ex_cart, Ey_cart, quad_points_eta1, &
               quad_points_eta2, quad_weights_eta1, quad_weights_eta2 )
 
   if ( nc /= 0 ) deallocate( point_charges_loc )
@@ -706,6 +656,9 @@ program sim_bsl_gc_2d0v_smooth_polar_splines
   call electric_field     % free()
   call advector           % free()
   call scalar_diagnostics % free()
+  call sim_state          % free()
+  call time_integrator    % free()
+
 
   write(*,'(/a/)') " >> End of simulation"
 
