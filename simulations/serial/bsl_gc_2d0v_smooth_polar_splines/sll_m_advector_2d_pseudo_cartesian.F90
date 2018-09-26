@@ -17,6 +17,10 @@ module sll_m_advector_2d_pseudo_cartesian
 
   use sll_m_electric_field, only: sll_t_electric_field
 
+  use sll_m_point_charge, only: sll_t_point_charge
+
+  use sll_m_simulation_state, only: sll_t_simulation_state
+
   implicit none
 
   public :: sll_t_advector_2d_pseudo_cartesian
@@ -44,10 +48,12 @@ module sll_m_advector_2d_pseudo_cartesian
 
   contains
 
-    procedure :: init             => s_advector_2d_pseudo_cartesian__init
-    procedure :: advect           => s_advector_2d_pseudo_cartesian__advect
-    procedure :: advance_position => s_advector_2d_pseudo_cartesian__advance_position
-    procedure :: free             => s_advector_2d_pseudo_cartesian__free
+    procedure :: init                 => s_advector_2d_pseudo_cartesian__init
+    procedure :: advect_field         => f_advector_2d_pseudo_cartesian__advect_field
+    procedure :: advect_single_coords => s_advector_2d_pseudo_cartesian__advect_single_coords
+    procedure :: advect_distribution  => s_advector_2d_pseudo_cartesian__advect_distribution
+    procedure :: advect_point_charges => s_advector_2d_pseudo_cartesian__advect_point_charges
+    procedure :: free                 => s_advector_2d_pseudo_cartesian__free
 
   end type sll_t_advector_2d_pseudo_cartesian
 
@@ -91,59 +97,35 @@ contains
   end subroutine s_advector_2d_pseudo_cartesian__init
 
   !-----------------------------------------------------------------------------
-  subroutine s_advector_2d_pseudo_cartesian__advect( self, h, success, rho_new )
-    class(sll_t_advector_2d_pseudo_cartesian), intent(inout) :: self
-    real(wp)                                 , intent(in   ) :: h
-    logical                                  , intent(  out) :: success
-    real(wp)                                 , intent(inout) :: rho_new(:,:)
+  SLL_PURE function f_advector_2d_pseudo_cartesian__advect_field( self, eta ) result( u )
+    class(sll_t_advector_2d_pseudo_cartesian), intent(in) :: self
+    real(wp)                                 , intent(in) :: eta(2)
+    real(wp) :: u(2)
 
-    integer  :: i1, i2, ntau1, ntau2
-    real(wp) :: eta(2)
+    real(wp) :: jmat_comp(2,2), E(2)
 
-    character(len=*), parameter :: this_sub_name = "sll_t_advector_2d_pseudo_cartesian % advect"
-    character(len=256) :: err_msg
+    jmat_comp = self % jacobian_2d_pseudo_cartesian % eval( eta )
 
-    ntau1 = size( self % tau_eta1 )
-    ntau2 = size( self % tau_eta2 )
+    ! Cartesian components of electric field
+    E = self % electric_field % eval( eta )
 
-    success = .true.
+    ! Pseudo-Cartesian components of advection field
+    u(1) = jmat_comp(1,1) * (-E(2)) + jmat_comp(1,2) * E(1)
+    u(2) = jmat_comp(2,1) * (-E(2)) + jmat_comp(2,2) * E(1)
 
-    !$OMP PARALLEL DO PRIVATE(eta,success)
-    do i2 = 1, ntau2
-      do i1 = 1, ntau1
-
-        eta(1) = self % tau_eta1(i1)
-        eta(2) = self % tau_eta2(i2)
-
-        call self % advance_position( h, success, eta )
-
-        ! Check if integrator converged
-        if ( success ) then
-          rho_new(i1,i2) = self % spline_2d_rho % eval( eta(1), eta(2) )
-        else
-          exit
-        end if
-
-      end do
-    end do
-    !$OMP END PARALLEL DO
-
-    ! Apply periodicity along theta
-    if ( success ) rho_new(:,ntau2+1) = rho_new(:,1)
-
-  end subroutine s_advector_2d_pseudo_cartesian__advect
+  end function f_advector_2d_pseudo_cartesian__advect_field
 
   !-----------------------------------------------------------------------------
-  recursive subroutine s_advector_2d_pseudo_cartesian__advance_position( self, h, success, eta )
-    class(sll_t_advector_2d_pseudo_cartesian), intent(inout) :: self
+  recursive subroutine s_advector_2d_pseudo_cartesian__advect_single_coords( self, h, success, eta )
+    class(sll_t_advector_2d_pseudo_cartesian), intent(in   ) :: self
     real(wp)                                 , intent(in   ) :: h
     logical                                  , intent(  out) :: success
     real(wp)                                 , intent(inout) :: eta(2)
 
     integer  :: j
-    real(wp) :: tol_sqr, eta0(2), x0(2), x(2), dx(2), temp(2), k2(2), a0(2), E(2), jmat_comp(2,2)
+    real(wp) :: tol_sqr, eta0(2), x0(2), x(2), dx(2), temp(2), k2(2), a0(2)
 
-    character(len=*), parameter :: this_sub_name = "sll_t_advector_2d_pseudo_cartesian % advance_position"
+    character(len=*), parameter :: this_sub_name = "sll_t_advector_2d_pseudo_cartesian % advect_single_coords"
     character(len=256) :: err_msg
 
     success = .true.
@@ -154,14 +136,8 @@ contains
 
     tol_sqr = ( self % abs_tol + self % rel_tol * norm2( x0 ) )**2
 
-    ! Cartesian components of electric field
-    E = self % electric_field % eval( eta )
-
-    jmat_comp = self % jacobian_2d_pseudo_cartesian % eval( eta )
-
     ! Pseudo-Cartesian components of advection field
-    a0(1) = jmat_comp(1,1) * (-E(2)) + jmat_comp(1,2) * E(1)
-    a0(2) = jmat_comp(2,1) * (-E(2)) + jmat_comp(2,2) * E(1)
+    a0 = self % advect_field( eta )
 
     ! First iteration
     dx  = h * a0
@@ -177,14 +153,8 @@ contains
 
         do j = 2, self % maxiter
 
-          jmat_comp = self % jacobian_2d_pseudo_cartesian % eval( eta )
-
-          ! Cartesian components of advection field
-          E = self % electric_field % eval( eta )
-
           ! k2 = f(t,x_{i-1})
-          k2(1) = jmat_comp(1,1) * (-E(2)) + jmat_comp(1,2) * E(1)
-          k2(2) = jmat_comp(2,1) * (-E(2)) + jmat_comp(2,2) * E(1)
+          k2 = self % advect_field( eta )
 
           dx_old = dx
           dx     = h_half*(k1+k2)
@@ -206,19 +176,77 @@ contains
     ! Check if integrator converged
     if ( .not. success ) then
 
-!      write( err_msg, '(a,i0,a)' ) "integration of characteristics did not converge after ", self % maxiter, " iterations: trying sub-stepping"
-!      SLL_WARNING( this_sub_name, err_msg )
-!      return
-
       ! Sub-stepping
       eta = eta0
-      call self % advance_position( h*0.5_wp, success, eta )
-      call self % advance_position( h*0.5_wp, success, eta )
+      call self % advect_single_coords( h*0.5_wp, success, eta )
+      call self % advect_single_coords( h*0.5_wp, success, eta )
       return
 
     end if
 
-  end subroutine s_advector_2d_pseudo_cartesian__advance_position
+  end subroutine s_advector_2d_pseudo_cartesian__advect_single_coords
+
+  !-----------------------------------------------------------------------------
+  subroutine s_advector_2d_pseudo_cartesian__advect_distribution( self, h, success, rho_new )
+    class(sll_t_advector_2d_pseudo_cartesian), intent(inout) :: self
+    real(wp)                                 , intent(in   ) :: h
+    logical                                  , intent(  out) :: success
+    real(wp)                                 , intent(inout) :: rho_new(:,:)
+
+    integer  :: i1, i2, ntau1, ntau2
+    real(wp) :: eta(2)
+
+    ntau1 = size( self % tau_eta1 )
+    ntau2 = size( self % tau_eta2 )
+
+    success = .true.
+
+    !$OMP PARALLEL DO PRIVATE(eta,success)
+    do i2 = 1, ntau2
+      do i1 = 1, ntau1
+
+        eta(1) = self % tau_eta1(i1)
+        eta(2) = self % tau_eta2(i2)
+
+        call self % advect_single_coords( h, success, eta )
+
+        ! Check if integrator converged
+        if ( success ) then
+          rho_new(i1,i2) = self % spline_2d_rho % eval( eta(1), eta(2) )
+        else
+          exit
+        end if
+
+      end do
+    end do
+    !$OMP END PARALLEL DO
+
+    ! Apply periodicity along theta
+    if ( success ) rho_new(:,ntau2+1) = rho_new(:,1)
+
+  end subroutine s_advector_2d_pseudo_cartesian__advect_distribution
+
+  !-----------------------------------------------------------------------------
+  subroutine s_advector_2d_pseudo_cartesian__advect_point_charges( self, h, success, point_charges )
+    class(sll_t_advector_2d_pseudo_cartesian), intent(inout) :: self
+    real(wp)                                 , intent(in   ) :: h
+    logical                                  , intent(  out) :: success
+    type(sll_t_point_charge)                 , intent(inout) :: point_charges(:)
+
+    integer :: ic
+
+    SLL_ASSERT( size( point_charges ) > 0 )
+
+    associate( nc => size( point_charges ) )
+
+      do ic = 1, nc
+        call self % advect_single_coords( h, success, point_charges(ic) % location )
+        if ( .not. success ) exit
+      end do
+
+    end associate
+
+  end subroutine s_advector_2d_pseudo_cartesian__advect_point_charges
 
   !-----------------------------------------------------------------------------
   subroutine s_advector_2d_pseudo_cartesian__free( self )
