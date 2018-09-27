@@ -4,9 +4,13 @@ module sll_m_diagnostics
 
   use sll_m_working_precision, only: f64
 
+  use sll_m_constants, only: sll_p_twopi
+
   use sll_m_spline_2d, only: sll_t_spline_2d
 
   use sll_m_electric_field, only: sll_t_electric_field
+
+  use sll_m_polar_mapping_analytical, only: sll_c_polar_mapping_analytical
 
   use sll_m_polar_mapping_iga, only: sll_t_polar_mapping_iga
 
@@ -32,7 +36,7 @@ module sll_m_diagnostics
 
   type :: sll_t_diagnostics
 
-    integer :: Nk1, Nk2, Nq1, Nq2
+    integer :: Nk1, Nk2, Nq1, Nq2, nx1, nx2
 
     type(sll_t_simulation_state), pointer :: sim_state => null()
 
@@ -47,11 +51,16 @@ module sll_m_diagnostics
     real(wp), allocatable :: phi_quad_eq(:,:,:,:)
     real(wp), allocatable :: volume(:,:,:,:)
 
+    real(wp), allocatable :: x1_grid(:)
+    real(wp), allocatable :: x2_grid(:)
+    real(wp), allocatable :: x1x2_inverse_grid(:,:,:)
+
   contains
 
     procedure :: init                        => s_diagnostics__init
     procedure :: write_scalar_data           => s_diagnostics__write_scalar_data
     procedure :: write_on_interpolation_grid => s_diagnostics__write_on_interpolation_grid
+    procedure :: write_on_cartesian_grid     => s_diagnostics__write_on_cartesian_grid
     procedure :: free                        => s_diagnostics__free
 
   end type sll_t_diagnostics
@@ -66,26 +75,36 @@ contains
     ncells2         , &
     p1              , &
     p2              , &
+    nx1             , &
+    nx2             , &
     tau_eta1        , &
     tau_eta2        , &
     breaks_eta1     , &
     breaks_eta2     , &
     mapping_discrete, &
+    mapping_analytic, &
     sim_state )
-    class(sll_t_diagnostics)            , intent(inout) :: self
-    integer                             , intent(in   ) :: ncells1
-    integer                             , intent(in   ) :: ncells2
-    integer                             , intent(in   ) :: p1
-    integer                             , intent(in   ) :: p2
-    real(wp)                            , intent(in   ) :: tau_eta1(:)
-    real(wp)                            , intent(in   ) :: tau_eta2(:)
-    real(wp)                            , intent(in   ) :: breaks_eta1(:)
-    real(wp)                            , intent(in   ) :: breaks_eta2(:)
-    type(sll_t_polar_mapping_iga)       , intent(in   ) :: mapping_discrete
-    type(sll_t_simulation_state), target, intent(in   ) :: sim_state
+    class(sll_t_diagnostics)             , intent(inout) :: self
+    integer                              , intent(in   ) :: ncells1
+    integer                              , intent(in   ) :: ncells2
+    integer                              , intent(in   ) :: p1
+    integer                              , intent(in   ) :: p2
+    integer                              , intent(in   ) :: nx1
+    integer                              , intent(in   ) :: nx2
+    real(wp)                             , intent(in   ) :: tau_eta1(:)
+    real(wp)                             , intent(in   ) :: tau_eta2(:)
+    real(wp)                             , intent(in   ) :: breaks_eta1(:)
+    real(wp)                             , intent(in   ) :: breaks_eta2(:)
+    type(sll_t_polar_mapping_iga)        , intent(in   ) :: mapping_discrete
+    class(sll_c_polar_mapping_analytical), intent(in   ) :: mapping_analytic
+    type(sll_t_simulation_state), target , intent(in   ) :: sim_state
 
-    integer  :: k1, k2, q1, q2
-    real(wp) :: eta(2)
+    integer  :: i1, i2, k1, k2, q1, q2
+    real(wp) :: eta(2), x(2)
+
+    ! Cartesian grid
+    self % nx1 = nx1
+    self % nx2 = nx2
 
     ! For quadrature points
     self % Nk1 = ncells1
@@ -103,6 +122,10 @@ contains
 
     allocate( self % volume     ( self % Nq1, self % Nq2, self % Nk1, self % Nk2 ) )
     allocate( self % phi_quad_eq( self % Nq1, self % Nq2, self % Nk1, self % Nk2 ) )
+
+    allocate( self % x1_grid( nx1 ) )
+    allocate( self % x2_grid( nx2 ) )
+    allocate( self % x1x2_inverse_grid( 2, nx1, nx2 ) )
 
     ! Quadrature points and weights along s
     do k1 = 1, self % Nk1
@@ -128,6 +151,18 @@ contains
             self % phi_quad_eq(q1,q2,k1,k2) = self % sim_state % spline_2d_phi % eval( eta(1), eta(2) )
           end do
         end do
+      end do
+    end do
+
+    ! Write Cartesian grid
+    do i2 = 1, nx2
+      do i1 = 1, nx1
+        self % x1_grid(i1) = 2.0_wp * real( i1-1, wp ) / real( nx1-1, wp ) - 1.0_wp
+        self % x2_grid(i2) = 2.0_wp * real( i2-1, wp ) / real( nx2-1, wp ) - 1.0_wp
+        x = (/ self % x1_grid(i1), self % x2_grid(i2) /)
+        eta(1) = sqrt( x(1)**2 + x(2)**2 )
+        eta(2) = modulo( atan2( x(2), x(1) ), sll_p_twopi )
+        self % x1x2_inverse_grid(:,i1,i2) = mapping_analytic % eval_inverse( x, eta, tol=1.0e-14_wp, maxiter=100 )
       end do
     end do
 
@@ -207,7 +242,7 @@ contains
       allocate( Ex ( ntau1, ntau2+1 ) )
       allocate( Ey ( ntau1, ntau2+1 ) )
 
-      ! Write phi, Ex and Ey on interpolation points
+      ! Write phi, Ex and Ey on interpolation grid
       do i2 = 1, ntau2
         do i1 = 1, ntau1
           eta(1) = self % tau_eta1(i1)
@@ -243,6 +278,52 @@ contains
   end subroutine s_diagnostics__write_on_interpolation_grid
 
   !-----------------------------------------------------------------------------
+  subroutine s_diagnostics__write_on_cartesian_grid( self, file_id, iteration )
+    class(sll_t_diagnostics)   , intent(in) :: self
+    type(sll_t_hdf5_ser_handle), intent(in) :: file_id
+    integer                    , intent(in) :: iteration
+
+    integer  :: i1, i2, h5_error
+    real(wp) :: eta(2), E(2)
+    real(wp), allocatable :: Ex_cart(:,:), Ey_cart(:,:)
+
+    character(len=32) :: attr_name
+
+    if ( iteration == 0 ) then
+      write( attr_name, '(a)' ) "/x1_cart"
+      call sll_o_hdf5_ser_write_array( file_id, self % x1_grid, trim(attr_name), h5_error )
+      write( attr_name, '(a)' ) "/x2_cart"
+      call sll_o_hdf5_ser_write_array( file_id, self % x2_grid, trim(attr_name), h5_error )
+    end if
+
+    associate( nx1 => self % nx1, nx2 => self % nx2 )
+
+      allocate( Ex_cart( nx1, nx2 ) )
+      allocate( Ey_cart( nx1, nx2 ) )
+
+      ! Write electric field on Cartesian grid
+      do i2 = 1, nx2
+        do i1 = 1, nx1
+          E = self % sim_state % electric_field % eval( self % x1x2_inverse_grid(:,i1,i2) )
+          Ex_cart(i1,i2) = E(1)
+          Ey_cart(i1,i2) = E(2)
+        end do
+      end do
+
+    end associate
+
+    ! Write data to HDF5 file
+    write( attr_name, '(a,i0)' ) "/Ex_cart_", iteration
+    call sll_o_hdf5_ser_write_array( file_id, Ex_cart, trim(attr_name), h5_error )
+    write( attr_name, '(a,i0)' ) "/Ey_cart_", iteration
+    call sll_o_hdf5_ser_write_array( file_id, Ey_cart, trim(attr_name), h5_error )
+
+    deallocate( Ex_cart )
+    deallocate( Ey_cart )
+
+  end subroutine s_diagnostics__write_on_cartesian_grid
+
+  !-----------------------------------------------------------------------------
   subroutine s_diagnostics__free( self )
     class(sll_t_diagnostics), intent(inout) :: self
 
@@ -256,6 +337,10 @@ contains
 
     deallocate( self % phi_quad_eq )
     deallocate( self % volume      )
+
+    deallocate( self % x1_grid )
+    deallocate( self % x2_grid )
+    deallocate( self % x1x2_inverse_grid )
 
     nullify( self % sim_state )
 
