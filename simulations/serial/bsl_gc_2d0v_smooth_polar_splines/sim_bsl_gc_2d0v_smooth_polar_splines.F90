@@ -304,24 +304,31 @@ program sim_bsl_gc_2d0v_smooth_polar_splines
   ! Initialize electric field
   call electric_field % init( mapping_discrete, spline_2d_phi )
 
-  ! Initialize advector
-  call advector % init( &
-    tau_eta1        , &
-    tau_eta2        , &
-    mapping_discrete, &
-    spline_2d_rho   , &
-    electric_field  , &
-    abs_tol         , &
-    rel_tol         , &
-    maxiter )
-
   ! Repeated point along theta
   allocate( phi( ntau1, ntau2+1 ) )
   allocate( Ex ( ntau1, ntau2+1 ) )
   allocate( Ey ( ntau1, ntau2+1 ) )
 
   ! Initialize simulation state
-  call sim_state % init( ntau1, ntau2, nc, intensity, location, spline_2d_rho, spline_2d_phi )
+  call sim_state % init( &
+    ntau1        , &
+    ntau2        , &
+    nc           , &
+    intensity    , &
+    location     , &
+    spline_2d_rho, &
+    spline_2d_phi, &
+    electric_field )
+
+  ! Initialize advector
+  call advector % init( &
+    tau_eta1        , &
+    tau_eta2        , &
+    mapping_discrete, &
+    sim_state       , &
+    abs_tol         , &
+    rel_tol         , &
+    maxiter )
 
   ! Compute equilibrium density on interpolation points
   if ( equil_num ) then
