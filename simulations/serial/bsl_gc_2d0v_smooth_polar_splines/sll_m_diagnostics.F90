@@ -55,12 +55,15 @@ module sll_m_diagnostics
     real(wp), allocatable :: x2_grid(:)
     real(wp), allocatable :: x1x2_inverse_grid(:,:,:)
 
+    type(sll_t_polar_mapping_iga), pointer :: mapping_discrete
+
   contains
 
     procedure :: init                        => s_diagnostics__init
     procedure :: write_scalar_data           => s_diagnostics__write_scalar_data
     procedure :: write_on_interpolation_grid => s_diagnostics__write_on_interpolation_grid
     procedure :: write_on_cartesian_grid     => s_diagnostics__write_on_cartesian_grid
+    procedure :: write_point_charges         => s_diagnostics__write_point_charges
     procedure :: free                        => s_diagnostics__free
 
   end type sll_t_diagnostics
@@ -95,9 +98,9 @@ contains
     real(wp)                             , intent(in   ) :: tau_eta2(:)
     real(wp)                             , intent(in   ) :: breaks_eta1(:)
     real(wp)                             , intent(in   ) :: breaks_eta2(:)
-    type(sll_t_polar_mapping_iga)        , intent(in   ) :: mapping_discrete
+    type(sll_t_polar_mapping_iga), target, intent(in   ) :: mapping_discrete
     class(sll_c_polar_mapping_analytical), intent(in   ) :: mapping_analytic
-    type(sll_t_simulation_state), target , intent(in   ) :: sim_state
+    type(sll_t_simulation_state) , target, intent(in   ) :: sim_state
 
     integer  :: i1, i2, k1, k2, q1, q2
     real(wp) :: eta(2), x(2)
@@ -166,6 +169,8 @@ contains
       end do
     end do
 
+    self % mapping_discrete => mapping_discrete
+
   end subroutine s_diagnostics__init
 
   !-----------------------------------------------------------------------------
@@ -233,7 +238,6 @@ contains
     integer  :: i1, i2, h5_error
     real(wp) :: eta(2), E(2)
     real(wp), allocatable :: phi(:,:), Ex(:,:), Ey(:,:)
-
     character(len=32) :: attr_name
 
     associate( ntau1 => size( self % tau_eta1 ), ntau2 => size( self % tau_eta2 ) )
@@ -259,21 +263,21 @@ contains
       Ex (:,ntau2+1) = Ex (:,1)
       Ey (:,ntau2+1) = Ey (:,1)
 
+      ! Write data to HDF5 file
+      write( attr_name, '(a,i0)' ) "/rho_", iteration
+      call sll_o_hdf5_ser_write_array( file_id, self % sim_state % rho, trim(attr_name), h5_error )
+      write( attr_name, '(a,i0)' ) "/phi_", iteration
+      call sll_o_hdf5_ser_write_array( file_id, phi, trim(attr_name), h5_error )
+      write( attr_name, '(a,i0)' ) "/Ex_" , iteration
+      call sll_o_hdf5_ser_write_array( file_id, Ex, trim(attr_name), h5_error )
+      write( attr_name, '(a,i0)' ) "/Ey_" , iteration
+      call sll_o_hdf5_ser_write_array( file_id, Ey, trim(attr_name), h5_error )
+
+      deallocate( phi )
+      deallocate( Ex  )
+      deallocate( Ey  )
+
     end associate
-
-    ! Write data to HDF5 file
-    write( attr_name, '(a,i0)' ) "/rho_", iteration
-    call sll_o_hdf5_ser_write_array( file_id, self % sim_state % rho, trim(attr_name), h5_error )
-    write( attr_name, '(a,i0)' ) "/phi_", iteration
-    call sll_o_hdf5_ser_write_array( file_id, phi, trim(attr_name), h5_error )
-    write( attr_name, '(a,i0)' ) "/Ex_" , iteration
-    call sll_o_hdf5_ser_write_array( file_id, Ex, trim(attr_name), h5_error )
-    write( attr_name, '(a,i0)' ) "/Ey_" , iteration
-    call sll_o_hdf5_ser_write_array( file_id, Ey, trim(attr_name), h5_error )
-
-    deallocate( phi )
-    deallocate( Ex  )
-    deallocate( Ey  )
 
   end subroutine s_diagnostics__write_on_interpolation_grid
 
@@ -286,7 +290,6 @@ contains
     integer  :: i1, i2, h5_error
     real(wp) :: eta(2), E(2)
     real(wp), allocatable :: Ex_cart(:,:), Ey_cart(:,:)
-
     character(len=32) :: attr_name
 
     if ( iteration == 0 ) then
@@ -310,18 +313,45 @@ contains
         end do
       end do
 
+      ! Write data to HDF5 file
+      write( attr_name, '(a,i0)' ) "/Ex_cart_", iteration
+      call sll_o_hdf5_ser_write_array( file_id, Ex_cart, trim(attr_name), h5_error )
+      write( attr_name, '(a,i0)' ) "/Ey_cart_", iteration
+      call sll_o_hdf5_ser_write_array( file_id, Ey_cart, trim(attr_name), h5_error )
+
+      deallocate( Ex_cart )
+      deallocate( Ey_cart )
+
     end associate
 
-    ! Write data to HDF5 file
-    write( attr_name, '(a,i0)' ) "/Ex_cart_", iteration
-    call sll_o_hdf5_ser_write_array( file_id, Ex_cart, trim(attr_name), h5_error )
-    write( attr_name, '(a,i0)' ) "/Ey_cart_", iteration
-    call sll_o_hdf5_ser_write_array( file_id, Ey_cart, trim(attr_name), h5_error )
-
-    deallocate( Ex_cart )
-    deallocate( Ey_cart )
-
   end subroutine s_diagnostics__write_on_cartesian_grid
+
+  !-----------------------------------------------------------------------------
+  subroutine s_diagnostics__write_point_charges( self, file_id, iteration )
+    class(sll_t_diagnostics)   , intent(in) :: self
+    type(sll_t_hdf5_ser_handle), intent(in) :: file_id
+    integer                    , intent(in) :: iteration
+
+    integer :: ic, h5_error
+    real(wp), allocatable :: point_charges_loc(:,:)
+    character(len=32) :: attr_name
+
+    associate( nc => size( self % sim_state % point_charges ) )
+
+      allocate( point_charges_loc( 2, nc ) )
+
+      do ic = 1, nc
+        point_charges_loc(:,ic) = self % mapping_discrete % eval( self % sim_state % point_charges(ic) % location )
+      end do
+
+      write( attr_name, '(a,i0)' ) "/point_charges_", iteration
+      call sll_o_hdf5_ser_write_array( file_id, point_charges_loc, trim(attr_name), h5_error )
+
+      deallocate( point_charges_loc )
+
+    end associate
+
+  end subroutine s_diagnostics__write_point_charges
 
   !-----------------------------------------------------------------------------
   subroutine s_diagnostics__free( self )
@@ -342,6 +372,7 @@ contains
     deallocate( self % x2_grid )
     deallocate( self % x1x2_inverse_grid )
 
+    nullify( self % mapping_discrete )
     nullify( self % sim_state )
 
   end subroutine s_diagnostics__free
