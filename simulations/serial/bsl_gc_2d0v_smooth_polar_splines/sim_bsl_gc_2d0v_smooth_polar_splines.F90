@@ -48,10 +48,6 @@ program sim_bsl_gc_2d0v_smooth_polar_splines
 
   use sll_m_time_integrator, only: sll_t_time_integrator
 
-  use sll_m_gauss_legendre_integration, only: &
-    sll_f_gauss_legendre_points, &
-    sll_f_gauss_legendre_weights
-
   use sll_m_timer, only: &
     sll_t_time_mark    , &
     sll_s_set_time_mark, &
@@ -74,9 +70,8 @@ program sim_bsl_gc_2d0v_smooth_polar_splines
   integer, parameter :: wp = f64
 
   ! Integer variables
-  integer :: n1, n2, p1, p2, ncells1, ncells2, ntau1, ntau2, nx1, nx2, i1, i2, &
-             k1, k2, q1, q2, Nk1, Nk2, Nq1, Nq2, it, iter, diag_freq, maxiter, &
-             l, p, maptype, h5_error, file_unit, nc, ic
+  integer :: n1, n2, p1, p2, ncells1, ncells2, ntau1, ntau2, nx1, nx2, i1, i2, it, &
+             iter, diag_freq, maxiter, l, p, maptype, h5_error, file_unit, nc, ic
 
   ! Real variables
   real(wp) :: h, dt, abs_tol, rel_tol, smin, smax, ampl, t_diff, t_iter, x(2), eta(2), El(2)
@@ -133,14 +128,10 @@ program sim_bsl_gc_2d0v_smooth_polar_splines
   real(wp), allocatable :: breaks_eta1(:), breaks_eta2(:), tau_eta1(:), tau_eta2(:), x1_grid(:), x2_grid(:), intensity(:)
 
   ! Real 2D allocatables
-  real(wp), allocatable :: phi(:,:), Ex(:,:), Ey(:,:), Ex_cart(:,:), Ey_cart(:,:), location(:,:), &
-                           quad_points_eta1(:,:), quad_points_eta2(:,:), quad_weights_eta1(:,:), quad_weights_eta2(:,:)
+  real(wp), allocatable :: phi(:,:), Ex(:,:), Ey(:,:), Ex_cart(:,:), Ey_cart(:,:), location(:,:)
 
   ! Real 3D allocatables
   real(wp), allocatable :: eta0(:,:,:), etai(:,:,:)
-
-  ! Real 4D allocatables
-  real(wp), allocatable :: phi_quad_eq(:,:,:,:), volume(:,:,:,:)
 
   ! Abstract polymorphic types
   class(sll_c_bsplines)                , allocatable :: bsplines_eta1, bsplines_eta2
@@ -229,18 +220,6 @@ program sim_bsl_gc_2d0v_smooth_polar_splines
     xmin     = 0.0_wp       , &
     xmax     = sll_p_twopi  , &
     ncells   = ncells2 )
-
-  ! For quadrature points
-  Nk1 = ncells1
-  Nk2 = ncells2
-  Nq1 = 1 + p1
-  Nq2 = 1 + p2
-
-  ! Write data to HDF5 file
-  call sll_o_hdf5_ser_write_attribute( file_id, "/", "Nk1", Nk1, h5_error )
-  call sll_o_hdf5_ser_write_attribute( file_id, "/", "Nk2", Nk2, h5_error )
-  call sll_o_hdf5_ser_write_attribute( file_id, "/", "Nq1", Nq1, h5_error )
-  call sll_o_hdf5_ser_write_attribute( file_id, "/", "Nq2", Nq2, h5_error )
 
   write(*,'(/a)') " >> Initializing mapping"
 
@@ -337,9 +316,9 @@ program sim_bsl_gc_2d0v_smooth_polar_splines
     maxiter )
 
   ! Repeated point along theta
-  allocate( phi    ( ntau1, ntau2+1 ) )
-  allocate( Ex     ( ntau1, ntau2+1 ) )
-  allocate( Ey     ( ntau1, ntau2+1 ) )
+  allocate( phi( ntau1, ntau2+1 ) )
+  allocate( Ex ( ntau1, ntau2+1 ) )
+  allocate( Ey ( ntau1, ntau2+1 ) )
 
   ! Initialize simulation state
   call sim_state % init( ntau1, ntau2, nc, intensity, location, spline_2d_rho, spline_2d_phi )
@@ -354,8 +333,8 @@ program sim_bsl_gc_2d0v_smooth_polar_splines
     call sll_o_hdf5_ser_read_array( file_id_eq, phi, trim(attr_name), h5_error )
 !    call sll_s_hdf5_ser_file_close( file_id_eq, h5_error )
 
-  ! Write data to HDF5 file
-  call sll_o_hdf5_ser_write_array( file_id, phi, "/phi_eq", h5_error )
+    ! Write data to HDF5 file
+    call sll_o_hdf5_ser_write_array( file_id, phi, "/phi_eq", h5_error )
 
   else
 
@@ -477,39 +456,6 @@ program sim_bsl_gc_2d0v_smooth_polar_splines
   write( attr_name, '(a,i0)' ) "/Ey_cart_", 0
   call sll_o_hdf5_ser_write_array( file_id, Ey_cart, trim(attr_name), h5_error )
 
-  allocate( quad_points_eta1 ( Nq1, Nk1 ) )
-  allocate( quad_points_eta2 ( Nq2, Nk2 ) )
-  allocate( quad_weights_eta1( Nq1, Nk1 ) )
-  allocate( quad_weights_eta2( Nq2, Nk2 ) )
-
-  ! Quadrature points and weights along s
-  do k1 = 1, Nk1
-    quad_points_eta1 (:,k1) = sll_f_gauss_legendre_points ( Nq1, breaks_eta1(k1), breaks_eta1(k1+1) )
-    quad_weights_eta1(:,k1) = sll_f_gauss_legendre_weights( Nq1, breaks_eta1(k1), breaks_eta1(k1+1) )
-  end do
-
-  ! Quadrature points and weights along theta
-  do k2 = 1, Nk2
-    quad_points_eta2 (:,k2) = sll_f_gauss_legendre_points ( Nq2, breaks_eta2(k2), breaks_eta2(k2+1) )
-    quad_weights_eta2(:,k2) = sll_f_gauss_legendre_weights( Nq2, breaks_eta2(k2), breaks_eta2(k2+1) )
-  end do
-
-  allocate( volume     ( Nq1, Nq2, Nk1, Nk2 ) )
-  allocate( phi_quad_eq( Nq1, Nq2, Nk1, Nk2 ) )
-
-  do k2 = 1, Nk2
-    do k1 = 1, Nk1
-      do q2 = 1, Nq2
-        do q1 = 1, Nq1
-          eta(1) = quad_points_eta1(q1,k1)
-          eta(2) = quad_points_eta2(q2,k2)
-          volume(q1,q2,k1,k2) = abs( mapping_discrete % jdet( eta ) ) * quad_weights_eta1(q1,k1) * quad_weights_eta2(q2,k2)
-          phi_quad_eq(q1,q2,k1,k2) = spline_2d_phi % eval( eta(1), eta(2) )
-        end do
-      end do
-    end do
-  end do
-
   file_name = "scalar_diagnostics.dat"
   status    = 'replace'
   position  = 'asis'
@@ -518,19 +464,26 @@ program sim_bsl_gc_2d0v_smooth_polar_splines
   ! Initialize scalar diagnostics
   call scalar_diagnostics % init( &
     file_unit       , &
+    ncells1         , &
+    ncells2         , &
+    p1              , &
+    p2              , &
+    breaks_eta1     , &
+    breaks_eta2     , &
+    mapping_discrete, &
     spline_2d_rho   , &
     spline_2d_phi   , &
-    electric_field  , &
-    quad_points_eta1, &
-    quad_points_eta2, &
-    phi_quad_eq     , &
-    volume )
+    electric_field )
 
   call scalar_diagnostics % write_data( 0.0_wp )
 
   ! HDF5 I/O
   call sll_o_hdf5_ser_write_attribute( file_id, "/", "time_step", dt, h5_error )
   call sll_o_hdf5_ser_write_attribute( file_id, "/", "diag_freq", diag_freq, h5_error )
+
+  !-----------------------------------------------------------------------------
+  ! Time cycle
+  !-----------------------------------------------------------------------------
 
   if ( iter > 0 ) write(*,'(/a/)') " >> Entering time cycle"
 
@@ -626,19 +579,15 @@ program sim_bsl_gc_2d0v_smooth_polar_splines
   !-----------------------------------------------------------------------------
 
   ! Deallocate real 1D allocatables
-  deallocate( breaks_eta1, breaks_eta2, tau_eta1, tau_eta2, x1_grid, x2_grid )
+  deallocate( breaks_eta1, breaks_eta2, tau_eta1, tau_eta2, x1_grid, x2_grid, intensity )
 
   ! Deallocate real 2D allocatables
-  deallocate( phi, Ex, Ey, Ex_cart, Ey_cart, quad_points_eta1, &
-              quad_points_eta2, quad_weights_eta1, quad_weights_eta2 )
+  deallocate( phi, Ex, Ey, Ex_cart, Ey_cart, location )
 
   if ( nc /= 0 ) deallocate( point_charges_loc )
 
   ! Deallocate real 3D allocatables
   deallocate( eta0, etai )
-
-  ! Deallocate real 4D allocatables
-  deallocate( phi_quad_eq, volume )
 
   ! Free abstract polymorphic types
   call bsplines_eta1 % free()
