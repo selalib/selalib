@@ -503,7 +503,6 @@ program sim_bsl_gc_2d0v_smooth_polar_splines
   call sim_state        % free()
   call time_integrator  % free()
 
-
   write(*,'(/a/)') " >> End of simulation"
 
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
