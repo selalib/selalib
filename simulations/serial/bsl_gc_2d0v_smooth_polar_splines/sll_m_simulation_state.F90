@@ -8,6 +8,8 @@ module sll_m_simulation_state
 
   use sll_m_point_charge, only: sll_t_point_charge
 
+  use sll_m_electric_field, only: sll_t_electric_field
+
   implicit none
 
   public :: sll_t_simulation_state
@@ -22,8 +24,9 @@ module sll_m_simulation_state
 
     real(wp), allocatable :: rho(:,:)
 
-    type(sll_t_spline_2d), pointer :: spline_2d_rho => null()
-    type(sll_t_spline_2d), pointer :: spline_2d_phi => null()
+    type(sll_t_spline_2d)     , pointer :: spline_2d_rho  => null()
+    type(sll_t_spline_2d)     , pointer :: spline_2d_phi  => null()
+    type(sll_t_electric_field), pointer :: electric_field => null()
 
     type(sll_t_point_charge), allocatable :: point_charges(:)
 
@@ -47,22 +50,25 @@ contains
     intensity    , &
     location     , &
     spline_2d_rho, &
-    spline_2d_phi )
-    class(sll_t_simulation_state)   , intent(inout) :: self
-    integer                         , intent(in   ) :: ntau1
-    integer                         , intent(in   ) :: ntau2
-    integer                         , intent(in   ) :: nc
-    real(wp)                        , intent(in   ) :: intensity(:)
-    real(wp)                        , intent(in   ) :: location(:,:)
-    type(sll_t_spline_2d), target   , intent(in   ) :: spline_2d_rho
-    type(sll_t_spline_2d), target   , intent(in   ) :: spline_2d_phi
+    spline_2d_phi, &
+    electric_field )
+    class(sll_t_simulation_state)     , intent(inout) :: self
+    integer                           , intent(in   ) :: ntau1
+    integer                           , intent(in   ) :: ntau2
+    integer                           , intent(in   ) :: nc
+    real(wp)                          , intent(in   ) :: intensity(:)
+    real(wp)                          , intent(in   ) :: location(:,:)
+    type(sll_t_spline_2d)     , target, intent(in   ) :: spline_2d_rho
+    type(sll_t_spline_2d)     , target, intent(in   ) :: spline_2d_phi
+    type(sll_t_electric_field), target, intent(in   ) :: electric_field
 
     integer :: ic
 
     allocate( self % rho( ntau1, ntau2+1 ) )
 
-    self % spline_2d_rho     => spline_2d_rho
-    self % spline_2d_phi     => spline_2d_phi
+    self % spline_2d_rho  => spline_2d_rho
+    self % spline_2d_phi  => spline_2d_phi
+    self % electric_field => electric_field
 
     SLL_ASSERT( nc == 0 .or. nc == size( intensity ) )
     SLL_ASSERT( nc == 0 .or. nc == size( location, 2 ) )
@@ -95,8 +101,9 @@ contains
 
     deallocate( self % rho )
 
-    nullify( self % spline_2d_rho )
-    nullify( self % spline_2d_phi )
+    nullify( self % spline_2d_rho  )
+    nullify( self % spline_2d_phi  )
+    nullify( self % electric_field )
 
     deallocate( self % point_charges )
 

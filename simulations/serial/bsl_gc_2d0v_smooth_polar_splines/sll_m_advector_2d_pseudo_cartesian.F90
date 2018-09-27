@@ -13,10 +13,6 @@ module sll_m_advector_2d_pseudo_cartesian
 
   use sll_m_jacobian_2d_pseudo_cartesian, only: sll_t_jacobian_2d_pseudo_cartesian
 
-  use sll_m_spline_2d, only: sll_t_spline_2d
-
-  use sll_m_electric_field, only: sll_t_electric_field
-
   use sll_m_point_charge, only: sll_t_point_charge
 
   use sll_m_simulation_state, only: sll_t_simulation_state
@@ -40,11 +36,10 @@ module sll_m_advector_2d_pseudo_cartesian
     real(wp), pointer :: tau_eta1(:)
     real(wp), pointer :: tau_eta2(:)
 
-    type(sll_t_polar_mapping_iga), pointer :: mapping_discrete => null()
-    type(sll_t_spline_2d)        , pointer :: spline_2d_rho    => null()
-    type(sll_t_electric_field)   , pointer :: electric_field   => null()
-
+    type(sll_t_polar_mapping_iga), pointer   :: mapping_discrete => null()
     type(sll_t_jacobian_2d_pseudo_cartesian) :: jacobian_2d_pseudo_cartesian
+
+    type(sll_t_simulation_state), pointer :: sim_state
 
   contains
 
@@ -66,8 +61,7 @@ contains
     tau_eta1        , &
     tau_eta2        , &
     mapping_discrete, &
-    spline_2d_rho   , &
-    electric_field  , &
+    sim_state       , &
     abs_tol         , &
     rel_tol         , &
     maxiter )
@@ -75,8 +69,7 @@ contains
     real(wp)                     , target    , intent(in   ) :: tau_eta1(:)
     real(wp)                     , target    , intent(in   ) :: tau_eta2(:)
     type(sll_t_polar_mapping_iga), target    , intent(in   ) :: mapping_discrete
-    type(sll_t_spline_2d)        , target    , intent(in   ) :: spline_2d_rho
-    type(sll_t_electric_field)   , target    , intent(in   ) :: electric_field
+    type(sll_t_simulation_state) , target    , intent(in   ) :: sim_state
     real(wp)                                 , intent(in   ) :: abs_tol
     real(wp)                                 , intent(in   ) :: rel_tol
     integer                                  , intent(in   ) :: maxiter
@@ -85,10 +78,9 @@ contains
     self % tau_eta2 => tau_eta2
 
     self % mapping_discrete => mapping_discrete
-    self % spline_2d_rho    => spline_2d_rho
-    self % electric_field   => electric_field
-
     call self % jacobian_2d_pseudo_cartesian % init( mapping_discrete )
+
+    self % sim_state => sim_state
 
     self % abs_tol = abs_tol
     self % rel_tol = rel_tol
@@ -107,7 +99,7 @@ contains
     jmat_comp = self % jacobian_2d_pseudo_cartesian % eval( eta )
 
     ! Cartesian components of electric field
-    E = self % electric_field % eval( eta )
+    E = self % sim_state % electric_field % eval( eta )
 
     ! Pseudo-Cartesian components of advection field
     u(1) = jmat_comp(1,1) * (-E(2)) + jmat_comp(1,2) * E(1)
@@ -212,7 +204,7 @@ contains
 
         ! Check if integrator converged
         if ( success ) then
-          rho_new(i1,i2) = self % spline_2d_rho % eval( eta(1), eta(2) )
+          rho_new(i1,i2) = self % sim_state % spline_2d_rho % eval( eta(1), eta(2) )
         else
           exit
         end if
@@ -256,10 +248,9 @@ contains
     nullify( self % tau_eta2 )
 
     nullify( self % mapping_discrete )
-    nullify( self % spline_2d_rho    )
-    nullify( self % electric_field   )
-
     call self % jacobian_2d_pseudo_cartesian % free()
+
+    nullify( self % sim_state )
 
   end subroutine s_advector_2d_pseudo_cartesian__free
 
