@@ -22,8 +22,8 @@ module sll_m_simulation_state
 
     real(wp), allocatable :: rho(:,:)
 
-    type(sll_t_spline_2d)   , pointer :: spline_2d_rho => null()
-    type(sll_t_spline_2d)   , pointer :: spline_2d_phi => null()
+    type(sll_t_spline_2d), pointer :: spline_2d_rho => null()
+    type(sll_t_spline_2d), pointer :: spline_2d_phi => null()
 
     type(sll_t_point_charge), allocatable :: point_charges(:)
 
