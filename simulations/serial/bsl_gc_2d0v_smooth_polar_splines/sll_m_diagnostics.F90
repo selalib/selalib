@@ -16,6 +16,10 @@ module sll_m_diagnostics
     sll_f_gauss_legendre_points, &
     sll_f_gauss_legendre_weights
 
+  use sll_m_hdf5_io_serial, only: &
+    sll_t_hdf5_ser_handle, &
+    sll_o_hdf5_ser_write_array
+
   implicit none
 
   public :: sll_t_diagnostics
@@ -28,9 +32,12 @@ module sll_m_diagnostics
 
   type :: sll_t_diagnostics
 
-    integer :: Nk1, Nk2, Nq1, Nq2, file_unit
+    integer :: Nk1, Nk2, Nq1, Nq2
 
     type(sll_t_simulation_state), pointer :: sim_state => null()
+
+    real(wp), allocatable :: tau_eta1(:)
+    real(wp), allocatable :: tau_eta2(:)
 
     real(wp), allocatable :: quad_points_eta1(:,:)
     real(wp), allocatable :: quad_points_eta2(:,:)
@@ -42,9 +49,10 @@ module sll_m_diagnostics
 
   contains
 
-    procedure :: init       => s_diagnostics__init
-    procedure :: write_data => s_diagnostics__write_data
-    procedure :: free       => s_diagnostics__free
+    procedure :: init                        => s_diagnostics__init
+    procedure :: write_scalar_data           => s_diagnostics__write_scalar_data
+    procedure :: write_on_interpolation_grid => s_diagnostics__write_on_interpolation_grid
+    procedure :: free                        => s_diagnostics__free
 
   end type sll_t_diagnostics
 
@@ -54,21 +62,23 @@ contains
 
   subroutine s_diagnostics__init( &
     self            , &
-    file_unit       , &
     ncells1         , &
     ncells2         , &
     p1              , &
     p2              , &
+    tau_eta1        , &
+    tau_eta2        , &
     breaks_eta1     , &
     breaks_eta2     , &
     mapping_discrete, &
     sim_state )
     class(sll_t_diagnostics)            , intent(inout) :: self
-    integer                             , intent(in   ) :: file_unit
     integer                             , intent(in   ) :: ncells1
     integer                             , intent(in   ) :: ncells2
     integer                             , intent(in   ) :: p1
     integer                             , intent(in   ) :: p2
+    real(wp)                            , intent(in   ) :: tau_eta1(:)
+    real(wp)                            , intent(in   ) :: tau_eta2(:)
     real(wp)                            , intent(in   ) :: breaks_eta1(:)
     real(wp)                            , intent(in   ) :: breaks_eta2(:)
     type(sll_t_polar_mapping_iga)       , intent(in   ) :: mapping_discrete
@@ -77,15 +87,14 @@ contains
     integer  :: k1, k2, q1, q2
     real(wp) :: eta(2)
 
-    self % file_unit = file_unit
-
     ! For quadrature points
     self % Nk1 = ncells1
     self % Nk2 = ncells2
     self % Nq1 = 1 + p1
     self % Nq2 = 1 + p2
 
-    self % sim_state => sim_state
+    allocate( self % tau_eta1( size( tau_eta1 ) ), source = tau_eta1 )
+    allocate( self % tau_eta2( size( tau_eta2 ) ), source = tau_eta2 )
 
     allocate( self % quad_points_eta1 ( self % Nq1, self % Nk1 ) )
     allocate( self % quad_points_eta2 ( self % Nq2, self % Nk2 ) )
@@ -107,6 +116,8 @@ contains
       self % quad_weights_eta2(:,k2) = sll_f_gauss_legendre_weights( self % Nq2, breaks_eta2(k2), breaks_eta2(k2+1) )
     end do
 
+    self % sim_state => sim_state
+
     do k2 = 1, self % Nk2
       do k1 = 1, self % Nk1
         do q2 = 1, self % Nq2
@@ -123,8 +134,9 @@ contains
   end subroutine s_diagnostics__init
 
   !-----------------------------------------------------------------------------
-  subroutine s_diagnostics__write_data( self, time )
+  subroutine s_diagnostics__write_scalar_data( self, file_unit, time )
     class(sll_t_diagnostics), intent(in) :: self
+    integer                 , intent(in) :: file_unit
     real(wp)                , intent(in) :: time
 
     integer :: k1, k2, q1, q2
@@ -161,8 +173,7 @@ contains
               El     = electric_field % eval( eta )
               energy = energy + volume(q1,q2,k1,k2) * ( El(1)**2 + El(2)**2 )
 
-              l2_norm_phi = l2_norm_phi + volume(q1,q2,k1,k2) * &
-                            ( spline_2d_phi % eval( eta(1), eta(2) ) - phi_quad_eq(q1,q2,k1,k2) )**2
+              l2_norm_phi = l2_norm_phi + volume(q1,q2,k1,k2) * ( spline_2d_phi % eval( eta(1), eta(2) ) - phi_quad_eq(q1,q2,k1,k2) )**2
 
             end do
           end do
@@ -173,14 +184,70 @@ contains
 
     l2_norm_phi = sqrt( l2_norm_phi )
 
-    write( self % file_unit, '(4g24.15)' ) time, mass, energy, l2_norm_phi
-    flush( self % file_unit )
+    write( file_unit, '(4g24.15)' ) time, mass, energy, l2_norm_phi
+    flush( file_unit )
 
-  end subroutine s_diagnostics__write_data
+  end subroutine s_diagnostics__write_scalar_data
+
+  !-----------------------------------------------------------------------------
+  subroutine s_diagnostics__write_on_interpolation_grid( self, file_id, iteration )
+    class(sll_t_diagnostics)   , intent(in) :: self
+    type(sll_t_hdf5_ser_handle), intent(in) :: file_id
+    integer                    , intent(in) :: iteration
+
+    integer  :: i1, i2, h5_error
+    real(wp) :: eta(2), E(2)
+    real(wp), allocatable :: phi(:,:), Ex(:,:), Ey(:,:)
+
+    character(len=32) :: attr_name
+
+    associate( ntau1 => size( self % tau_eta1 ), ntau2 => size( self % tau_eta2 ) )
+
+      allocate( phi( ntau1, ntau2+1 ) )
+      allocate( Ex ( ntau1, ntau2+1 ) )
+      allocate( Ey ( ntau1, ntau2+1 ) )
+
+      ! Write phi, Ex and Ey on interpolation points
+      do i2 = 1, ntau2
+        do i1 = 1, ntau1
+          eta(1) = self % tau_eta1(i1)
+          eta(2) = self % tau_eta2(i2)
+          phi(i1,i2) = self % sim_state % spline_2d_phi % eval( eta(1), eta(2) )
+          E = self % sim_state % electric_field % eval( eta )
+          Ex(i1,i2) = E(1)
+          Ey(i1,i2) = E(2)
+        end do
+      end do
+
+      ! Apply periodicity along theta
+      phi(:,ntau2+1) = phi(:,1)
+      Ex (:,ntau2+1) = Ex (:,1)
+      Ey (:,ntau2+1) = Ey (:,1)
+
+    end associate
+
+    ! Write data to HDF5 file
+    write( attr_name, '(a,i0)' ) "/rho_", iteration
+    call sll_o_hdf5_ser_write_array( file_id, self % sim_state % rho, trim(attr_name), h5_error )
+    write( attr_name, '(a,i0)' ) "/phi_", iteration
+    call sll_o_hdf5_ser_write_array( file_id, phi, trim(attr_name), h5_error )
+    write( attr_name, '(a,i0)' ) "/Ex_" , iteration
+    call sll_o_hdf5_ser_write_array( file_id, Ex, trim(attr_name), h5_error )
+    write( attr_name, '(a,i0)' ) "/Ey_" , iteration
+    call sll_o_hdf5_ser_write_array( file_id, Ey, trim(attr_name), h5_error )
+
+    deallocate( phi )
+    deallocate( Ex  )
+    deallocate( Ey  )
+
+  end subroutine s_diagnostics__write_on_interpolation_grid
 
   !-----------------------------------------------------------------------------
   subroutine s_diagnostics__free( self )
     class(sll_t_diagnostics), intent(inout) :: self
+
+    deallocate( self % tau_eta1 )
+    deallocate( self % tau_eta2 )
 
     deallocate( self % quad_points_eta1 )
     deallocate( self % quad_points_eta2 )

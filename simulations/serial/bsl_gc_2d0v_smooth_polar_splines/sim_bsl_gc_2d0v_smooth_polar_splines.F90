@@ -146,7 +146,7 @@ program sim_bsl_gc_2d0v_smooth_polar_splines
   type(sll_t_advector_2d_pseudo_cartesian)   :: advector
   type(sll_t_simulation_state)               :: sim_state
   type(sll_t_time_integrator)                :: time_integrator
-  type(sll_t_diagnostics)                    :: scalar_diagnostics
+  type(sll_t_diagnostics)                    :: diag
   type(sll_t_time_mark)                      :: t0, t1
   type(sll_t_hdf5_ser_handle)                :: file_id, file_id_eq
 
@@ -374,20 +374,6 @@ program sim_bsl_gc_2d0v_smooth_polar_splines
   ! Initialize time integrator
   call time_integrator % init( dt, advector, poisson_solver, spline_interp_2d, sim_state )
 
-  ! Write data to HDF5 file
-  call sll_o_hdf5_ser_write_attribute( file_id, "/", "nc", nc, h5_error )
-  if ( nc /= 0 ) then
-    do ic = 1, nc
-      point_charges_loc(:,ic) = mapping_discrete % eval( sim_state % point_charges(ic) % location )
-    end do
-    write( attr_name, '(a,i0)' ) "/point_charges_", 0
-    call sll_o_hdf5_ser_write_array( file_id, point_charges_loc, trim(attr_name), h5_error )
-  end if
-
-  ! Write data to HDF5 file
-  write( attr_name, '(a,i0)' ) "/rho_", 0
-  call sll_o_hdf5_ser_write_array( file_id, sim_state % rho, trim(attr_name), h5_error )
-
   ! Compute interpolant spline for initial density
   call spline_interp_2d % compute_interpolant( sim_state % spline_2d_rho, sim_state % rho(:,1:ntau2) )
 
@@ -404,30 +390,31 @@ program sim_bsl_gc_2d0v_smooth_polar_splines
   end if
   call poisson_solver % solve( sim_state % spline_2d_phi )
 
-  ! Write phi, Ex and Ey on interpolation points
-  do i2 = 1, ntau2
-    do i1 = 1, ntau1
-      eta(1) = tau_eta1(i1)
-      eta(2) = tau_eta2(i2)
-      phi(i1,i2) = sim_state % spline_2d_phi % eval( eta(1), eta(2) )
-      El = electric_field % eval( eta )
-      Ex(i1,i2) = El(1)
-      Ey(i1,i2) = El(2)
-    end do
-  end do
+  ! Initialize scalar diagnostics
+  call diag % init( &
+    ncells1         , &
+    ncells2         , &
+    p1              , &
+    p2              , &
+    tau_eta1        , &
+    tau_eta2        , &
+    breaks_eta1     , &
+    breaks_eta2     , &
+    mapping_discrete, &
+    sim_state )
 
-  ! Apply periodicity along theta
-  phi(:,ntau2+1) = phi(:,1)
-  Ex (:,ntau2+1) = Ex (:,1)
-  Ey (:,ntau2+1) = Ey (:,1)
+  ! Write 2D data on interpolation grid at iteration 0
+  call diag % write_on_interpolation_grid( file_id, 0 )
 
   ! Write data to HDF5 file
-  write( attr_name, '(a,i0)' ) "/phi_", 0
-  call sll_o_hdf5_ser_write_array( file_id, phi, trim(attr_name), h5_error )
-  write( attr_name, '(a,i0)' ) "/Ex_", 0
-  call sll_o_hdf5_ser_write_array( file_id, Ex, trim(attr_name), h5_error )
-  write( attr_name, '(a,i0)' ) "/Ey_", 0
-  call sll_o_hdf5_ser_write_array( file_id, Ey, trim(attr_name), h5_error )
+  call sll_o_hdf5_ser_write_attribute( file_id, "/", "nc", nc, h5_error )
+  if ( nc /= 0 ) then
+    do ic = 1, nc
+      point_charges_loc(:,ic) = mapping_discrete % eval( sim_state % point_charges(ic) % location )
+    end do
+    write( attr_name, '(a,i0)' ) "/point_charges_", 0
+    call sll_o_hdf5_ser_write_array( file_id, point_charges_loc, trim(attr_name), h5_error )
+  end if
 
   ! Write Cartesian grid
   allocate( x1_grid( nx1 ) )
@@ -468,19 +455,7 @@ program sim_bsl_gc_2d0v_smooth_polar_splines
   position  = 'asis'
   open( file=file_name, newunit=file_unit, action='write', status=status, position=position )
 
-  ! Initialize scalar diagnostics
-  call scalar_diagnostics % init( &
-    file_unit       , &
-    ncells1         , &
-    ncells2         , &
-    p1              , &
-    p2              , &
-    breaks_eta1     , &
-    breaks_eta2     , &
-    mapping_discrete, &
-    sim_state )
-
-  call scalar_diagnostics % write_data( 0.0_wp )
+  call diag % write_scalar_data( file_unit, 0.0_wp )
 
   ! HDF5 I/O
   call sll_o_hdf5_ser_write_attribute( file_id, "/", "time_step", dt, h5_error )
@@ -504,13 +479,9 @@ program sim_bsl_gc_2d0v_smooth_polar_splines
     call time_integrator % advance_in_time( success )
     if ( .not. success ) exit
 
-    call scalar_diagnostics % write_data( it*dt )
+    call diag % write_scalar_data( file_unit, it*dt )
 
     if ( mod( it, diag_freq ) == 0 ) then
-
-      ! Write rho on interpolation points
-      write( attr_name, '(a,i0)' ) "/rho_", it
-      call sll_o_hdf5_ser_write_array( file_id, sim_state % rho, trim(attr_name), h5_error )
 
       if ( nc /= 0 ) then
         do ic = 1, nc
@@ -520,27 +491,8 @@ program sim_bsl_gc_2d0v_smooth_polar_splines
         call sll_o_hdf5_ser_write_array( file_id, point_charges_loc, trim(attr_name), h5_error )
       end if
 
-      ! Write phi and E on interpolation points
-      do i2 = 1, ntau2
-        do i1 = 1, ntau1
-          eta(1) = tau_eta1(i1)
-          eta(2) = tau_eta2(i2)
-          phi(i1,i2) = sim_state % spline_2d_phi % eval( eta(1), eta(2) )
-          El = electric_field % eval( eta )
-          Ex(i1,i2) = El(1)
-          Ey(i1,i2) = El(2)
-        end do
-      end do
-      ! Apply periodicity along theta
-      phi(:,ntau2+1) = phi(:,1)
-      Ex (:,ntau2+1) = Ex (:,1)
-      Ey (:,ntau2+1) = Ey (:,1)
-      write( attr_name, '(a,i0)' ) "/phi_", it
-      call sll_o_hdf5_ser_write_array( file_id, phi, trim(attr_name), h5_error )
-      write( attr_name, '(a,i0)' ) "/Ex_", it
-      call sll_o_hdf5_ser_write_array( file_id, Ex, trim(attr_name), h5_error )
-      write( attr_name, '(a,i0)' ) "/Ey_", it
-      call sll_o_hdf5_ser_write_array( file_id, Ey, trim(attr_name), h5_error )
+      ! Write 2D data on interpolation grid at iteration it
+      call diag % write_on_interpolation_grid( file_id, it )
 
       ! Write electric field on Cartesian grid to compute vorticity
       do i2 = 1, nx2
@@ -602,16 +554,16 @@ program sim_bsl_gc_2d0v_smooth_polar_splines
   deallocate( bsplines_eta1, bsplines_eta2, mapping_analytic )
 
   ! Free concrete types
-  call mapping_discrete   % free()
-  call spline_2d_rho      % free()
-  call spline_2d_phi      % free()
-  call spline_interp_2d   % free()
-  call poisson_solver     % free()
-  call electric_field     % free()
-  call advector           % free()
-  call scalar_diagnostics % free()
-  call sim_state          % free()
-  call time_integrator    % free()
+  call mapping_discrete % free()
+  call spline_2d_rho    % free()
+  call spline_2d_phi    % free()
+  call spline_interp_2d % free()
+  call poisson_solver   % free()
+  call electric_field   % free()
+  call advector         % free()
+  call diag             % free()
+  call sim_state        % free()
+  call time_integrator  % free()
 
 
   write(*,'(/a/)') " >> End of simulation"
