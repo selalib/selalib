@@ -389,11 +389,11 @@ program sim_bsl_gc_2d0v_smooth_polar_splines
   call sll_o_hdf5_ser_write_array( file_id, sim_state % rho, trim(attr_name), h5_error )
 
   ! Compute interpolant spline for initial density
-  call spline_interp_2d % compute_interpolant( spline_2d_rho, sim_state % rho(:,1:ntau2) )
+  call spline_interp_2d % compute_interpolant( sim_state % spline_2d_rho, sim_state % rho(:,1:ntau2) )
 
   ! Solve Poisson equation
   call poisson_solver % reset_charge()
-  call poisson_solver % accumulate_charge( spline_2d_rho )
+  call poisson_solver % accumulate_charge( sim_state % spline_2d_rho )
   if ( nc /= 0 ) then
     do ic = 1, nc
       associate( intensity => sim_state % point_charges(ic)%intensity, &
@@ -402,14 +402,14 @@ program sim_bsl_gc_2d0v_smooth_polar_splines
       end associate
     end do
   end if
-  call poisson_solver % solve( spline_2d_phi )
+  call poisson_solver % solve( sim_state % spline_2d_phi )
 
   ! Write phi, Ex and Ey on interpolation points
   do i2 = 1, ntau2
     do i1 = 1, ntau1
       eta(1) = tau_eta1(i1)
       eta(2) = tau_eta2(i2)
-      phi(i1,i2) = spline_2d_phi % eval( eta(1), eta(2) )
+      phi(i1,i2) = sim_state % spline_2d_phi % eval( eta(1), eta(2) )
       El = electric_field % eval( eta )
       Ex(i1,i2) = El(1)
       Ey(i1,i2) = El(2)
@@ -525,7 +525,7 @@ program sim_bsl_gc_2d0v_smooth_polar_splines
         do i1 = 1, ntau1
           eta(1) = tau_eta1(i1)
           eta(2) = tau_eta2(i2)
-          phi(i1,i2) = spline_2d_phi % eval( eta(1), eta(2) )
+          phi(i1,i2) = sim_state % spline_2d_phi % eval( eta(1), eta(2) )
           El = electric_field % eval( eta )
           Ex(i1,i2) = El(1)
           Ey(i1,i2) = El(2)
