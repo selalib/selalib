@@ -27,8 +27,8 @@ module sll_m_time_integrator
 
     real(wp) :: dt
 
-    type(sll_t_advector_2d_pseudo_cartesian)  , pointer :: advector       => null()
-    type(sll_t_poisson_2d_fem_sps_stencil_new), pointer :: poisson_solver => null()
+    type(sll_t_advector_2d_pseudo_cartesian)  , pointer :: advector         => null()
+    type(sll_t_poisson_2d_fem_sps_stencil_new), pointer :: poisson_solver   => null()
     type(sll_t_spline_interpolator_2d)        , pointer :: spline_interp_2d => null()
 
     type(sll_t_simulation_state), pointer :: sim_state
@@ -66,21 +66,20 @@ contains
   end subroutine s_time_integrator__init
 
   !-----------------------------------------------------------------------------
-  subroutine s_time_integrator__advance_in_time( self, sim_state, success )
+  subroutine s_time_integrator__advance_in_time( self, success )
     class(sll_t_time_integrator), intent(inout) :: self
-    type(sll_t_simulation_state), intent(inout) :: sim_state
     logical                     , intent(  out) :: success
 
     integer :: ic
 
-    associate( dt                => self % dt                           , &
-               nc                => size( sim_state % point_charges )   , &
-               ntau2             => size( sim_state % rho, 2 ) - 1      , &
-               spline_interp_2d  => self % spline_interp_2d             , &
-               spline_2d_rho     => sim_state % spline_2d_rho           , &
-               spline_2d_phi     => sim_state % spline_2d_phi           , &
-               point_charges     => sim_state % point_charges           , &
-               point_charges_aux => self % sim_state_aux % point_charges, &
+    associate( dt                => self % dt                               , &
+               nc                => size( self % sim_state % point_charges ), &
+               ntau2             => size( self % sim_state % rho, 2 ) - 1   , &
+               spline_interp_2d  => self % spline_interp_2d                 , &
+               spline_2d_rho     => self % sim_state % spline_2d_rho        , &
+               spline_2d_phi     => self % sim_state % spline_2d_phi        , &
+               point_charges     => self % sim_state % point_charges        , &
+               point_charges_aux => self % sim_state_aux % point_charges    , &
                rho_aux           => self % sim_state_aux % rho )
 
       ! Predictor: evolve density
@@ -111,7 +110,7 @@ contains
       end if
       call self % poisson_solver % solve ( spline_2d_phi )
 
-      call spline_interp_2d % compute_interpolant( spline_2d_rho, sim_state % rho(:,1:ntau2) )
+      call spline_interp_2d % compute_interpolant( spline_2d_rho, self % sim_state % rho(:,1:ntau2) )
 
       ! Corrector: evolve density
       call self % advector % advect_distribution( -dt, success, rho_aux )
@@ -141,7 +140,7 @@ contains
       end if
       call self % poisson_solver % solve ( spline_2d_phi )
 
-      sim_state % rho = rho_aux
+      self % sim_state % rho = rho_aux
 
     end associate
 

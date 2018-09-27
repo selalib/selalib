@@ -496,7 +496,7 @@ program sim_bsl_gc_2d0v_smooth_polar_splines
 
     call sll_s_set_time_mark( t0 )
 
-    call time_integrator % advance_in_time( sim_state, success )
+    call time_integrator % advance_in_time( success )
     if ( .not. success ) exit
 
     call scalar_diagnostics % write_data( it*dt )
