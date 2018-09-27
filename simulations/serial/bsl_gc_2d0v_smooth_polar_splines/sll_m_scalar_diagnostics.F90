@@ -10,6 +10,8 @@ module sll_m_scalar_diagnostics
 
   use sll_m_polar_mapping_iga, only: sll_t_polar_mapping_iga
 
+  use sll_m_simulation_state, only: sll_t_simulation_state
+
   use sll_m_gauss_legendre_integration, only: &
     sll_f_gauss_legendre_points, &
     sll_f_gauss_legendre_weights
@@ -28,9 +30,7 @@ module sll_m_scalar_diagnostics
 
     integer :: Nk1, Nk2, Nq1, Nq2, file_unit
 
-    type(sll_t_spline_2d)     , pointer :: spline_2d_rho  => null()
-    type(sll_t_spline_2d)     , pointer :: spline_2d_phi  => null()
-    type(sll_t_electric_field), pointer :: electric_field => null()
+    type(sll_t_simulation_state), pointer :: sim_state => null()
 
     real(wp), allocatable :: quad_points_eta1(:,:)
     real(wp), allocatable :: quad_points_eta2(:,:)
@@ -62,21 +62,17 @@ contains
     breaks_eta1     , &
     breaks_eta2     , &
     mapping_discrete, &
-    spline_2d_rho   , &
-    spline_2d_phi   , &
-    electric_field )
-    class(sll_t_scalar_diagnostics)   , intent(inout) :: self
-    integer                           , intent(in   ) :: file_unit
-    integer                           , intent(in   ) :: ncells1
-    integer                           , intent(in   ) :: ncells2
-    integer                           , intent(in   ) :: p1
-    integer                           , intent(in   ) :: p2
-    real(wp)                          , intent(in   ) :: breaks_eta1(:)
-    real(wp)                          , intent(in   ) :: breaks_eta2(:)
-    type(sll_t_polar_mapping_iga)     , intent(in   ) :: mapping_discrete
-    type(sll_t_spline_2d)     , target, intent(in   ) :: spline_2d_rho
-    type(sll_t_spline_2d)     , target, intent(in   ) :: spline_2d_phi
-    type(sll_t_electric_field), target, intent(in   ) :: electric_field 
+    sim_state )
+    class(sll_t_scalar_diagnostics)     , intent(inout) :: self
+    integer                             , intent(in   ) :: file_unit
+    integer                             , intent(in   ) :: ncells1
+    integer                             , intent(in   ) :: ncells2
+    integer                             , intent(in   ) :: p1
+    integer                             , intent(in   ) :: p2
+    real(wp)                            , intent(in   ) :: breaks_eta1(:)
+    real(wp)                            , intent(in   ) :: breaks_eta2(:)
+    type(sll_t_polar_mapping_iga)       , intent(in   ) :: mapping_discrete
+    type(sll_t_simulation_state), target, intent(in   ) :: sim_state
 
     integer  :: k1, k2, q1, q2
     real(wp) :: eta(2)
@@ -89,10 +85,7 @@ contains
     self % Nq1 = 1 + p1
     self % Nq2 = 1 + p2
 
-    self % spline_2d_rho => spline_2d_rho
-    self % spline_2d_phi => spline_2d_phi
-
-    self % electric_field => electric_field
+    self % sim_state => sim_state
 
     allocate( self % quad_points_eta1 ( self % Nq1, self % Nk1 ) )
     allocate( self % quad_points_eta2 ( self % Nq2, self % Nk2 ) )
@@ -121,7 +114,7 @@ contains
             eta(1) = self % quad_points_eta1(q1,k1)
             eta(2) = self % quad_points_eta2(q2,k2)
             self % volume(q1,q2,k1,k2) = abs( mapping_discrete % jdet( eta ) ) * self % quad_weights_eta1(q1,k1) * self % quad_weights_eta2(q2,k2)
-            self % phi_quad_eq(q1,q2,k1,k2) = spline_2d_phi % eval( eta(1), eta(2) )
+            self % phi_quad_eq(q1,q2,k1,k2) = self % sim_state % spline_2d_phi % eval( eta(1), eta(2) )
           end do
         end do
       end do
@@ -143,23 +136,33 @@ contains
     energy      = 0.0_wp
     l2_norm_phi = 0.0_wp
 
-    associate( Nk1 => self%Nk1, Nk2 => self%Nk2, Nq1 => self%Nq1, Nq2 => self%Nq2 )
+    associate( Nk1 => self % Nk1, &
+               Nk2 => self % Nk2, &
+               Nq1 => self % Nq1, &
+               Nq2 => self % Nq2, &
+               quad_points_eta1 => self % quad_points_eta1, &
+               quad_points_eta2 => self % quad_points_eta2, &
+               volume           => self % volume          , &
+               phi_quad_eq      => self % phi_quad_eq     , &
+               spline_2d_rho    => self % sim_state % spline_2d_rho, &
+               spline_2d_phi    => self % sim_state % spline_2d_phi, &
+               electric_field   => self % sim_state % electric_field )
 
       do k2 = 1, Nk2
         do k1 = 1, Nk1
           do q2 = 1, Nq2
             do q1 = 1, Nq1
 
-              eta(1) = self % quad_points_eta1(q1,k1)
-              eta(2) = self % quad_points_eta2(q2,k2)
+              eta(1) = quad_points_eta1(q1,k1)
+              eta(2) = quad_points_eta2(q2,k2)
 
-              mass = mass + self % volume(q1,q2,k1,k2) * self % spline_2d_rho % eval( eta(1), eta(2) )
+              mass = mass + volume(q1,q2,k1,k2) * spline_2d_rho % eval( eta(1), eta(2) )
 
-              El     = self % electric_field % eval( eta )
-              energy = energy + self % volume(q1,q2,k1,k2) * ( El(1)**2 + El(2)**2 )
+              El     = electric_field % eval( eta )
+              energy = energy + volume(q1,q2,k1,k2) * ( El(1)**2 + El(2)**2 )
 
-              l2_norm_phi = l2_norm_phi + self % volume(q1,q2,k1,k2) * &
-                            ( self % spline_2d_phi % eval( eta(1), eta(2) ) - self % phi_quad_eq(q1,q2,k1,k2) )**2
+              l2_norm_phi = l2_norm_phi + volume(q1,q2,k1,k2) * &
+                            ( spline_2d_phi % eval( eta(1), eta(2) ) - phi_quad_eq(q1,q2,k1,k2) )**2
 
             end do
           end do
@@ -187,9 +190,7 @@ contains
     deallocate( self % phi_quad_eq )
     deallocate( self % volume      )
 
-    nullify( self % spline_2d_rho  )
-    nullify( self % spline_2d_phi  )
-    nullify( self % electric_field )
+    nullify( self % sim_state )
 
   end subroutine s_scalar_diagnostics__free
 

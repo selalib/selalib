@@ -478,9 +478,7 @@ program sim_bsl_gc_2d0v_smooth_polar_splines
     breaks_eta1     , &
     breaks_eta2     , &
     mapping_discrete, &
-    spline_2d_rho   , &
-    spline_2d_phi   , &
-    electric_field )
+    sim_state )
 
   call scalar_diagnostics % write_data( 0.0_wp )
 
