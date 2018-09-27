@@ -145,8 +145,6 @@ program sim_bsl_gc_2d0v_smooth_polar_splines
   type(sll_t_time_mark)                      :: t0, t1
   type(sll_t_hdf5_ser_handle)                :: file_id, file_id_eq
 
-  real(wp), allocatable :: point_charges_loc(:,:)
-
   ! Parse input argument
   call s_parse_command_arguments( input_file )
 
@@ -273,9 +271,7 @@ program sim_bsl_gc_2d0v_smooth_polar_splines
   intensity (1) = ampl
   location(:,1) = (/ 0.4_wp, 0.0_wp /)
 !  location(:,:) = reshape( (/ 0.4_wp, 0.0_wp, 0.8_wp, 0.0_wp /), (/ 2, nc /) )
-  if ( nc /= 0 ) then
-    allocate( point_charges_loc(2,nc) )
-  end if
+  call sll_o_hdf5_ser_write_attribute( file_id, "/", "nc", nc, h5_error )
 
   write(*,'(/a)',advance='no') " >> Initializing Poisson solver"
  
@@ -400,22 +396,6 @@ program sim_bsl_gc_2d0v_smooth_polar_splines
     mapping_analytic, &
     sim_state )
 
-  ! Write 2D data on interpolation grid
-  call diag % write_on_interpolation_grid( file_id, 0 )
-
-  ! Write data to HDF5 file
-  call sll_o_hdf5_ser_write_attribute( file_id, "/", "nc", nc, h5_error )
-  if ( nc /= 0 ) then
-    do ic = 1, nc
-      point_charges_loc(:,ic) = mapping_discrete % eval( sim_state % point_charges(ic) % location )
-    end do
-    write( attr_name, '(a,i0)' ) "/point_charges_", 0
-    call sll_o_hdf5_ser_write_array( file_id, point_charges_loc, trim(attr_name), h5_error )
-  end if
-
-  ! Write electric field on Cartesian grid
-  call diag % write_on_cartesian_grid( file_id, 0 )
-
   file_name = "scalar_diagnostics.dat"
   status    = 'replace'
   position  = 'asis'
@@ -423,6 +403,15 @@ program sim_bsl_gc_2d0v_smooth_polar_splines
 
   ! Write scalar diagnostics
   call diag % write_scalar_data( file_unit, 0.0_wp )
+
+  ! Write 2D data on interpolation grid
+  call diag % write_on_interpolation_grid( file_id, 0 )
+
+  ! Write electric field on Cartesian grid
+  call diag % write_on_cartesian_grid( file_id, 0 )
+
+  ! Write point charges trajectory
+  if ( nc /= 0 ) call diag % write_point_charges( file_id, 0 )
 
   ! HDF5 I/O
   call sll_o_hdf5_ser_write_attribute( file_id, "/", "time_step", dt, h5_error )
@@ -452,13 +441,8 @@ program sim_bsl_gc_2d0v_smooth_polar_splines
     ! Write 2D diagnostics
     if ( mod( it, diag_freq ) == 0 ) then
 
-      if ( nc /= 0 ) then
-        do ic = 1, nc
-          point_charges_loc(:,ic) = mapping_discrete % eval( sim_state % point_charges(ic) % location )
-        end do
-        write( attr_name, '(a,i0)' ) "/point_charges_", it
-        call sll_o_hdf5_ser_write_array( file_id, point_charges_loc, trim(attr_name), h5_error )
-      end if
+      ! Write point charges trajectory
+      if ( nc /= 0 ) call diag % write_point_charges( file_id, it )
 
       ! Write 2D data on interpolation grid
       call diag % write_on_interpolation_grid( file_id, it )
@@ -499,8 +483,6 @@ program sim_bsl_gc_2d0v_smooth_polar_splines
 
   ! Deallocate real 2D allocatables
   deallocate( phi, location )
-
-  if ( nc /= 0 ) deallocate( point_charges_loc )
 
   ! Free abstract polymorphic types
   call bsplines_eta1 % free()
