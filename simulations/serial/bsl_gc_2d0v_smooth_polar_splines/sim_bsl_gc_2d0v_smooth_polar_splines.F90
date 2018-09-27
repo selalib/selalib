@@ -38,7 +38,7 @@ program sim_bsl_gc_2d0v_smooth_polar_splines
 
   use sll_m_electric_field, only: sll_t_electric_field
 
-  use sll_m_scalar_diagnostics, only: sll_t_scalar_diagnostics
+  use sll_m_diagnostics, only: sll_t_diagnostics
 
   use sll_m_point_charge, only: sll_t_point_charge
 
@@ -146,7 +146,7 @@ program sim_bsl_gc_2d0v_smooth_polar_splines
   type(sll_t_advector_2d_pseudo_cartesian)   :: advector
   type(sll_t_simulation_state)               :: sim_state
   type(sll_t_time_integrator)                :: time_integrator
-  type(sll_t_scalar_diagnostics)             :: scalar_diagnostics
+  type(sll_t_diagnostics)                    :: scalar_diagnostics
   type(sll_t_time_mark)                      :: t0, t1
   type(sll_t_hdf5_ser_handle)                :: file_id, file_id_eq
 

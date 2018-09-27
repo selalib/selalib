@@ -1,4 +1,4 @@
-module sll_m_scalar_diagnostics
+module sll_m_diagnostics
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_assert.h"
 
@@ -18,7 +18,7 @@ module sll_m_scalar_diagnostics
 
   implicit none
 
-  public :: sll_t_scalar_diagnostics
+  public :: sll_t_diagnostics
 
   private
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -26,7 +26,7 @@ module sll_m_scalar_diagnostics
   ! Working precision
   integer, parameter :: wp = f64
 
-  type :: sll_t_scalar_diagnostics
+  type :: sll_t_diagnostics
 
     integer :: Nk1, Nk2, Nq1, Nq2, file_unit
 
@@ -42,17 +42,17 @@ module sll_m_scalar_diagnostics
 
   contains
 
-    procedure :: init       => s_scalar_diagnostics__init
-    procedure :: write_data => s_scalar_diagnostics__write_data
-    procedure :: free       => s_scalar_diagnostics__free
+    procedure :: init       => s_diagnostics__init
+    procedure :: write_data => s_diagnostics__write_data
+    procedure :: free       => s_diagnostics__free
 
-  end type sll_t_scalar_diagnostics
+  end type sll_t_diagnostics
 
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 contains
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
-  subroutine s_scalar_diagnostics__init( &
+  subroutine s_diagnostics__init( &
     self            , &
     file_unit       , &
     ncells1         , &
@@ -63,7 +63,7 @@ contains
     breaks_eta2     , &
     mapping_discrete, &
     sim_state )
-    class(sll_t_scalar_diagnostics)     , intent(inout) :: self
+    class(sll_t_diagnostics)            , intent(inout) :: self
     integer                             , intent(in   ) :: file_unit
     integer                             , intent(in   ) :: ncells1
     integer                             , intent(in   ) :: ncells2
@@ -120,12 +120,12 @@ contains
       end do
     end do
 
-  end subroutine s_scalar_diagnostics__init
+  end subroutine s_diagnostics__init
 
   !-----------------------------------------------------------------------------
-  subroutine s_scalar_diagnostics__write_data( self, time )
-    class(sll_t_scalar_diagnostics), intent(in) :: self
-    real(wp)                       , intent(in) :: time
+  subroutine s_diagnostics__write_data( self, time )
+    class(sll_t_diagnostics), intent(in) :: self
+    real(wp)                , intent(in) :: time
 
     integer :: k1, k2, q1, q2
 
@@ -176,11 +176,11 @@ contains
     write( self % file_unit, '(4g24.15)' ) time, mass, energy, l2_norm_phi
     flush( self % file_unit )
 
-  end subroutine s_scalar_diagnostics__write_data
+  end subroutine s_diagnostics__write_data
 
   !-----------------------------------------------------------------------------
-  subroutine s_scalar_diagnostics__free( self )
-    class(sll_t_scalar_diagnostics), intent(inout) :: self
+  subroutine s_diagnostics__free( self )
+    class(sll_t_diagnostics), intent(inout) :: self
 
     deallocate( self % quad_points_eta1 )
     deallocate( self % quad_points_eta2 )
@@ -192,6 +192,6 @@ contains
 
     nullify( self % sim_state )
 
-  end subroutine s_scalar_diagnostics__free
+  end subroutine s_diagnostics__free
 
-end module sll_m_scalar_diagnostics
+end module sll_m_diagnostics
