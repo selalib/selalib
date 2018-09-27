@@ -5,9 +5,7 @@ program sim_bsl_gc_2d0v_smooth_polar_splines
 
   use sll_m_working_precision, only: f64
 
-  use sll_m_constants, only: &
-    sll_p_pi, &
-    sll_p_twopi
+  use sll_m_constants, only: sll_p_twopi
 
   use sll_m_utilities, only: sll_s_new_array_linspace
 
@@ -125,13 +123,10 @@ program sim_bsl_gc_2d0v_smooth_polar_splines
   character(len=32) :: attr_name
 
   ! Real 1D allocatables
-  real(wp), allocatable :: breaks_eta1(:), breaks_eta2(:), tau_eta1(:), tau_eta2(:), x1_grid(:), x2_grid(:), intensity(:)
+  real(wp), allocatable :: breaks_eta1(:), breaks_eta2(:), tau_eta1(:), tau_eta2(:), intensity(:)
 
   ! Real 2D allocatables
-  real(wp), allocatable :: phi(:,:), Ex(:,:), Ey(:,:), Ex_cart(:,:), Ey_cart(:,:), location(:,:)
-
-  ! Real 3D allocatables
-  real(wp), allocatable :: eta0(:,:,:), etai(:,:,:)
+  real(wp), allocatable :: phi(:,:), location(:,:)
 
   ! Abstract polymorphic types
   class(sll_c_bsplines)                , allocatable :: bsplines_eta1, bsplines_eta2
@@ -275,8 +270,9 @@ program sim_bsl_gc_2d0v_smooth_polar_splines
   nc = 1
   allocate( intensity( nc ) )
   allocate( location( 2, nc ) )
-  intensity(1)  = ampl
+  intensity (1) = ampl
   location(:,1) = (/ 0.4_wp, 0.0_wp /)
+!  location(:,:) = reshape( (/ 0.4_wp, 0.0_wp, 0.8_wp, 0.0_wp /), (/ 2, nc /) )
   if ( nc /= 0 ) then
     allocate( point_charges_loc(2,nc) )
   end if
@@ -306,8 +302,6 @@ program sim_bsl_gc_2d0v_smooth_polar_splines
 
   ! Repeated point along theta
   allocate( phi( ntau1, ntau2+1 ) )
-  allocate( Ex ( ntau1, ntau2+1 ) )
-  allocate( Ey ( ntau1, ntau2+1 ) )
 
   ! Initialize simulation state
   call sim_state % init( &
@@ -396,14 +390,17 @@ program sim_bsl_gc_2d0v_smooth_polar_splines
     ncells2         , &
     p1              , &
     p2              , &
+    nx1             , &
+    nx2             , &
     tau_eta1        , &
     tau_eta2        , &
     breaks_eta1     , &
     breaks_eta2     , &
     mapping_discrete, &
+    mapping_analytic, &
     sim_state )
 
-  ! Write 2D data on interpolation grid at iteration 0
+  ! Write 2D data on interpolation grid
   call diag % write_on_interpolation_grid( file_id, 0 )
 
   ! Write data to HDF5 file
@@ -416,45 +413,15 @@ program sim_bsl_gc_2d0v_smooth_polar_splines
     call sll_o_hdf5_ser_write_array( file_id, point_charges_loc, trim(attr_name), h5_error )
   end if
 
-  ! Write Cartesian grid
-  allocate( x1_grid( nx1 ) )
-  allocate( x2_grid( nx2 ) )
-  allocate( eta0( 2, nx1, nx2 ) )
-  allocate( etai( 2, nx1, nx2 ) )
-  do i2 = 1, nx2
-    do i1 = 1, nx1
-      x1_grid(i1) = 2.0_wp * real( i1-1, wp ) / real( nx1-1, wp ) - 1.0_wp
-      x2_grid(i2) = 2.0_wp * real( i2-1, wp ) / real( nx2-1, wp ) - 1.0_wp
-      x = (/ x1_grid(i1), x2_grid(i2) /)
-      eta0(:,i1,i2) = (/ sqrt( x(1)**2 + x(2)**2 ), modulo( atan2( x(2), x(1) ), sll_p_twopi ) /)
-      etai(:,i1,i2) = mapping_analytic % eval_inverse( x, eta0(:,i1,i2), tol=1.0e-14_wp, maxiter=100 )
-    end do
-  end do
-  write( attr_name, '(a)' ) "/x1_cart"
-  call sll_o_hdf5_ser_write_array( file_id, x1_grid, trim(attr_name), h5_error )
-  write( attr_name, '(a)' ) "/x2_cart"
-  call sll_o_hdf5_ser_write_array( file_id, x2_grid, trim(attr_name), h5_error )
-
-  ! Write electric field on Cartesian grid to compute vorticity
-  allocate( Ex_cart( nx1, nx2 ) )
-  allocate( Ey_cart( nx1, nx2 ) )
-  do i2 = 1, nx2
-    do i1 = 1, nx1
-      El = electric_field % eval( etai(:,i1,i2) )
-      Ex_cart(i1,i2) = El(1)
-      Ey_cart(i1,i2) = El(2)
-    end do
-  end do
-  write( attr_name, '(a,i0)' ) "/Ex_cart_", 0
-  call sll_o_hdf5_ser_write_array( file_id, Ex_cart, trim(attr_name), h5_error )
-  write( attr_name, '(a,i0)' ) "/Ey_cart_", 0
-  call sll_o_hdf5_ser_write_array( file_id, Ey_cart, trim(attr_name), h5_error )
+  ! Write electric field on Cartesian grid
+  call diag % write_on_cartesian_grid( file_id, 0 )
 
   file_name = "scalar_diagnostics.dat"
   status    = 'replace'
   position  = 'asis'
   open( file=file_name, newunit=file_unit, action='write', status=status, position=position )
 
+  ! Write scalar diagnostics
   call diag % write_scalar_data( file_unit, 0.0_wp )
 
   ! HDF5 I/O
@@ -479,8 +446,10 @@ program sim_bsl_gc_2d0v_smooth_polar_splines
     call time_integrator % advance_in_time( success )
     if ( .not. success ) exit
 
+    ! Write scalar diagnostics
     call diag % write_scalar_data( file_unit, it*dt )
 
+    ! Write 2D diagnostics
     if ( mod( it, diag_freq ) == 0 ) then
 
       if ( nc /= 0 ) then
@@ -491,21 +460,11 @@ program sim_bsl_gc_2d0v_smooth_polar_splines
         call sll_o_hdf5_ser_write_array( file_id, point_charges_loc, trim(attr_name), h5_error )
       end if
 
-      ! Write 2D data on interpolation grid at iteration it
+      ! Write 2D data on interpolation grid
       call diag % write_on_interpolation_grid( file_id, it )
 
-      ! Write electric field on Cartesian grid to compute vorticity
-      do i2 = 1, nx2
-        do i1 = 1, nx1
-          El = electric_field % eval( etai(:,i1,i2) )
-          Ex_cart(i1,i2) = El(1)
-          Ey_cart(i1,i2) = El(2)
-        end do
-      end do
-      write( attr_name, '(a,i0)' ) "/Ex_cart_", it
-      call sll_o_hdf5_ser_write_array( file_id, Ex_cart, trim(attr_name), h5_error )
-      write( attr_name, '(a,i0)' ) "/Ey_cart_", it
-      call sll_o_hdf5_ser_write_array( file_id, Ey_cart, trim(attr_name), h5_error )
+      ! Write electric field on Cartesian grid
+      call diag % write_on_cartesian_grid( file_id, it )
 
     end if
 
@@ -536,15 +495,12 @@ program sim_bsl_gc_2d0v_smooth_polar_splines
   !-----------------------------------------------------------------------------
 
   ! Deallocate real 1D allocatables
-  deallocate( breaks_eta1, breaks_eta2, tau_eta1, tau_eta2, x1_grid, x2_grid, intensity )
+  deallocate( breaks_eta1, breaks_eta2, tau_eta1, tau_eta2, intensity )
 
   ! Deallocate real 2D allocatables
-  deallocate( phi, Ex, Ey, Ex_cart, Ey_cart, location )
+  deallocate( phi, location )
 
   if ( nc /= 0 ) deallocate( point_charges_loc )
-
-  ! Deallocate real 3D allocatables
-  deallocate( eta0, etai )
 
   ! Free abstract polymorphic types
   call bsplines_eta1 % free()
