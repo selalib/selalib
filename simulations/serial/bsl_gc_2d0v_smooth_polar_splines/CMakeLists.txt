@@ -8,11 +8,11 @@ file( GLOB POST_PROC   "*.py"  )
 #-------------------------------------------------------------------------------
 
 add_library( ${SIM_NAME}_obj OBJECT
-             sll_m_advector_2d_pseudo_cartesian.F90
              sll_m_electric_field.F90
              sll_m_diagnostics.F90
              sll_m_point_charge.F90
       	     sll_m_simulation_state.F90
+						 sll_m_time_integrator_base.F90
 						 sll_m_time_integrator.F90 )
 
 add_dependencies( ${SIM_NAME}_obj ${SLL_LIB} )
