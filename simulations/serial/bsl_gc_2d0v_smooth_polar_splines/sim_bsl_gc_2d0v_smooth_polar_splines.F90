@@ -42,8 +42,6 @@ program sim_bsl_gc_2d0v_smooth_polar_splines
 
   use sll_m_simulation_state, only: sll_t_simulation_state
 
-  use sll_m_advector_2d_pseudo_cartesian, only: sll_t_advector_2d_pseudo_cartesian
-
   use sll_m_time_integrator, only: sll_t_time_integrator
 
   use sll_m_timer, only: &
@@ -138,7 +136,6 @@ program sim_bsl_gc_2d0v_smooth_polar_splines
   type(sll_t_spline_interpolator_2d)         :: spline_interp_2d
   type(sll_t_poisson_2d_fem_sps_stencil_new) :: poisson_solver
   type(sll_t_electric_field)                 :: electric_field
-  type(sll_t_advector_2d_pseudo_cartesian)   :: advector
   type(sll_t_simulation_state)               :: sim_state
   type(sll_t_time_integrator)                :: time_integrator
   type(sll_t_diagnostics)                    :: diag
@@ -232,7 +229,7 @@ program sim_bsl_gc_2d0v_smooth_polar_splines
         call mapping_analytic % init( x0=[0.0_wp,0.0_wp], d0=0.2_wp, e0=0.3_wp )
       end if
     type is ( sll_t_polar_mapping_analytical_czarny )
-      call mapping_analytic % init( x0=[0.0_wp,0.0_wp], b =1.4_wp, e =0.3_wp )
+      call mapping_analytic % init( x0=[0.0_wp,0.0_wp], b=1.4_wp, e=0.3_wp )
   end select
 
   ! Initialize discrete mapping
@@ -310,16 +307,6 @@ program sim_bsl_gc_2d0v_smooth_polar_splines
     spline_2d_phi, &
     electric_field )
 
-  ! Initialize advector
-  call advector % init( &
-    tau_eta1        , &
-    tau_eta2        , &
-    mapping_discrete, &
-    sim_state       , &
-    abs_tol         , &
-    rel_tol         , &
-    maxiter )
-
   ! Compute equilibrium density on interpolation points
   if ( equil_num ) then
 
@@ -362,7 +349,17 @@ program sim_bsl_gc_2d0v_smooth_polar_splines
   sim_state % rho(:,ntau2+1) = sim_state % rho(:,1)
 
   ! Initialize time integrator
-  call time_integrator % init( dt, advector, poisson_solver, spline_interp_2d, sim_state )
+   call time_integrator % init( &
+     dt              , &
+     tau_eta1        , &
+     tau_eta2        , &
+     mapping_discrete, &
+     spline_interp_2d, &
+     sim_state       , &
+     poisson_solver  , &
+     abs_tol         , &
+     rel_tol         , &
+     maxiter )
 
   ! Compute interpolant spline for initial density
   call spline_interp_2d % compute_interpolant( sim_state % spline_2d_rho, sim_state % rho(:,1:ntau2) )
@@ -498,7 +495,6 @@ program sim_bsl_gc_2d0v_smooth_polar_splines
   call spline_interp_2d % free()
   call poisson_solver   % free()
   call electric_field   % free()
-  call advector         % free()
   call diag             % free()
   call sim_state        % free()
   call time_integrator  % free()
