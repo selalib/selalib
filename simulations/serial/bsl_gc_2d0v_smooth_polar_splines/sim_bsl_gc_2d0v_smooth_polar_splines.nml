@@ -37,3 +37,12 @@
   nx1       = 512
   nx2       = 512
 /
+
+&point_charges
+  nc = 1
+/
+
+&point_charges_specs
+  intensity(1)  = 0.0025
+  location(:,1) = 0.4, 0.0
+/
