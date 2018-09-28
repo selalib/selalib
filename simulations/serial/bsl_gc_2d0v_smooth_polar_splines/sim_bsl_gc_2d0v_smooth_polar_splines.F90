@@ -110,6 +110,13 @@ program sim_bsl_gc_2d0v_smooth_polar_splines
     nx1      , &
     nx2
 
+  namelist /point_charges/ &
+    nc
+
+  namelist /point_charges_specs/ &
+    intensity, &
+    location
+
   ! Real parameters
   real(wp), parameter :: epsi = 1.0e-12_wp
 
@@ -147,24 +154,32 @@ program sim_bsl_gc_2d0v_smooth_polar_splines
 
   ! Read input file
   open ( file=trim( input_file ), status='old', action='read', newunit=file_unit )
-  read ( file_unit, splines           ); rewind( file_unit )
-  read ( file_unit, geometry          ); rewind( file_unit )
-  read ( file_unit, time_integration  ); rewind( file_unit )
-  read ( file_unit, characteristics   ); rewind( file_unit )
-  read ( file_unit, initial_condition ); rewind( file_unit )
-  read ( file_unit, equilibrium       ); rewind( file_unit )
-  read ( file_unit, diagnostics       ); close ( file_unit )
+  read ( file_unit, splines             ); rewind( file_unit )
+  read ( file_unit, geometry            ); rewind( file_unit )
+  read ( file_unit, time_integration    ); rewind( file_unit )
+  read ( file_unit, characteristics     ); rewind( file_unit )
+  read ( file_unit, initial_condition   ); rewind( file_unit )
+  read ( file_unit, equilibrium         ); rewind( file_unit )
+
+  ! for point charges: reading number of point charges, intesities and positions
+  read ( file_unit, point_charges       ); rewind( file_unit )
+  allocate( intensity(    nc ) )
+  allocate( location ( 2, nc ) )
+  read ( file_unit, point_charges_specs ); rewind( file_unit )
+
+  read ( file_unit, diagnostics         ); close ( file_unit )
 
   ! Create HDF5 file
   call sll_s_hdf5_ser_file_create( 'sim_bsl_gc_2d0v_smooth_polar_splines.h5', file_id, h5_error )
 
   ! Write data to HDF5 file
-  call sll_o_hdf5_ser_write_attribute( file_id, "/", "n1", n1, h5_error )
-  call sll_o_hdf5_ser_write_attribute( file_id, "/", "n2", n2, h5_error )
-  call sll_o_hdf5_ser_write_attribute( file_id, "/", "p1", p1, h5_error )
-  call sll_o_hdf5_ser_write_attribute( file_id, "/", "p2", p2, h5_error )
+  call sll_o_hdf5_ser_write_attribute( file_id, "/", "n1" , n1 , h5_error )
+  call sll_o_hdf5_ser_write_attribute( file_id, "/", "n2" , n2 , h5_error )
+  call sll_o_hdf5_ser_write_attribute( file_id, "/", "p1" , p1 , h5_error )
+  call sll_o_hdf5_ser_write_attribute( file_id, "/", "p2" , p2 , h5_error )
   call sll_o_hdf5_ser_write_attribute( file_id, "/", "nx1", nx1, h5_error )
   call sll_o_hdf5_ser_write_attribute( file_id, "/", "nx2", nx2, h5_error )
+  call sll_o_hdf5_ser_write_attribute( file_id, "/", "nc" , nc , h5_error )
 
   write(*,'(/a)') " >> Initializing B-splines"
 
@@ -260,15 +275,6 @@ program sim_bsl_gc_2d0v_smooth_polar_splines
   ! Write data to HDF5 file
   call sll_o_hdf5_ser_write_attribute( file_id, "/", "ntau1", ntau1, h5_error )
   call sll_o_hdf5_ser_write_attribute( file_id, "/", "ntau2", ntau2, h5_error )
-
-  ! Allocate and initialize array of point charges
-  nc = 1
-  allocate( intensity( nc ) )
-  allocate( location( 2, nc ) )
-  intensity (1) = ampl
-  location(:,1) = (/ 0.4_wp, 0.0_wp /)
-!  location(:,:) = reshape( (/ 0.4_wp, 0.0_wp, 0.8_wp, 0.0_wp /), (/ 2, nc /) )
-  call sll_o_hdf5_ser_write_attribute( file_id, "/", "nc", nc, h5_error )
 
   write(*,'(/a)',advance='no') " >> Initializing Poisson solver"
  
