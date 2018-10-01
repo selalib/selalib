@@ -288,7 +288,7 @@ contains
     integer                    , intent(in) :: iteration
 
     integer  :: i1, i2, h5_error
-    real(wp) :: eta(2), E(2)
+    real(wp) :: E(2)
     real(wp), allocatable :: Ex_cart(:,:), Ey_cart(:,:)
     character(len=32) :: attr_name
 
@@ -336,7 +336,7 @@ contains
     real(wp), allocatable :: point_charges_loc(:,:)
     character(len=32) :: attr_name
 
-    associate( nc => size( self % sim_state % point_charges ) )
+    associate( nc => self % sim_state % nc )
 
       allocate( point_charges_loc( 2, nc ) )
 

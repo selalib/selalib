@@ -70,7 +70,7 @@ program sim_bsl_gc_2d0v_smooth_polar_splines
              iter, diag_freq, maxiter, l, p, maptype, h5_error, file_unit, nc, ic
 
   ! Real variables
-  real(wp) :: h, dt, abs_tol, rel_tol, smin, smax, ampl, t_diff, t_iter, x(2), eta(2), El(2)
+  real(wp) :: dt, abs_tol, rel_tol, smin, smax, ampl, t_diff, t_iter, eta(2)
 
   ! Logical variables
   logical :: equil_num, success
@@ -153,21 +153,21 @@ program sim_bsl_gc_2d0v_smooth_polar_splines
   call s_parse_command_arguments( input_file )
 
   ! Read input file
-  open ( file=trim( input_file ), status='old', action='read', newunit=file_unit )
-  read ( file_unit, splines             ); rewind( file_unit )
-  read ( file_unit, geometry            ); rewind( file_unit )
-  read ( file_unit, time_integration    ); rewind( file_unit )
-  read ( file_unit, characteristics     ); rewind( file_unit )
-  read ( file_unit, initial_condition   ); rewind( file_unit )
-  read ( file_unit, equilibrium         ); rewind( file_unit )
+  open( file=trim( input_file ), status='old', action='read', newunit=file_unit )
+  read( file_unit, splines             ); rewind( file_unit )
+  read( file_unit, geometry            ); rewind( file_unit )
+  read( file_unit, time_integration    ); rewind( file_unit )
+  read( file_unit, characteristics     ); rewind( file_unit )
+  read( file_unit, initial_condition   ); rewind( file_unit )
+  read( file_unit, equilibrium         ); rewind( file_unit )
 
   ! for point charges: reading number of point charges, intesities and positions
-  read ( file_unit, point_charges       ); rewind( file_unit )
+  read( file_unit, point_charges       ); rewind( file_unit )
   allocate( intensity(    nc ) )
   allocate( location ( 2, nc ) )
-  read ( file_unit, point_charges_specs ); rewind( file_unit )
+  read( file_unit, point_charges_specs ); rewind( file_unit )
 
-  read ( file_unit, diagnostics         ); close ( file_unit )
+  read( file_unit, diagnostics         ); close ( file_unit )
 
   ! Create HDF5 file
   call sll_s_hdf5_ser_file_create( 'sim_bsl_gc_2d0v_smooth_polar_splines.h5', file_id, h5_error )
@@ -373,7 +373,7 @@ program sim_bsl_gc_2d0v_smooth_polar_splines
   ! Solve Poisson equation
   call poisson_solver % reset_charge()
   call poisson_solver % accumulate_charge( sim_state % spline_2d_rho )
-  if ( nc /= 0 ) then
+  if ( sim_state % point_charges_present ) then
     do ic = 1, nc
       associate( intensity => sim_state % point_charges(ic)%intensity, &
                  location  => sim_state % point_charges(ic)%location )
@@ -414,7 +414,7 @@ program sim_bsl_gc_2d0v_smooth_polar_splines
   call diag % write_on_cartesian_grid( file_id, 0 )
 
   ! Write point charges trajectory
-  if ( nc /= 0 ) call diag % write_point_charges( file_id, 0 )
+  if ( sim_state % point_charges_present ) call diag % write_point_charges( file_id, 0 )
 
   ! HDF5 I/O
   call sll_o_hdf5_ser_write_attribute( file_id, "/", "time_step", dt, h5_error )
@@ -445,7 +445,7 @@ program sim_bsl_gc_2d0v_smooth_polar_splines
     if ( mod( it, diag_freq ) == 0 ) then
 
       ! Write point charges trajectory
-      if ( nc /= 0 ) call diag % write_point_charges( file_id, it )
+      if ( sim_state % point_charges_present ) call diag % write_point_charges( file_id, it )
 
       ! Write 2D data on interpolation grid
       call diag % write_on_interpolation_grid( file_id, it )
