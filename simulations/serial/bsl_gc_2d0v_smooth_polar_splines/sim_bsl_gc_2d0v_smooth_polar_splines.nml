@@ -21,15 +21,7 @@
 /
 
 &initial_condition
-  l = 9
-  p = 50
-  smin = 0.45
-  smax = 0.50
-  ampl = 1.0e-04
-/
-
-&equilibrium
-  equil_num = .false.
+  test_case = "vortex_in_cell"
 /
 
 &diagnostics
