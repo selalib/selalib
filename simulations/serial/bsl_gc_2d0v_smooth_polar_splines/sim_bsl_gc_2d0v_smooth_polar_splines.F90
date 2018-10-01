@@ -67,10 +67,10 @@ program sim_bsl_gc_2d0v_smooth_polar_splines
 
   ! Integer variables
   integer :: n1, n2, p1, p2, ncells1, ncells2, ntau1, ntau2, nx1, nx2, i1, i2, it, &
-             iter, diag_freq, maxiter, l, p, maptype, h5_error, file_unit, nc, ic
+             iter, diag_freq, maxiter, maptype, h5_error, file_unit, nc, ic
 
   ! Real variables
-  real(wp) :: dt, abs_tol, rel_tol, smin, smax, ampl, t_diff, t_iter, eta(2)
+  real(wp) :: dt, abs_tol, rel_tol, t_diff, t_iter, eta(2)
 
   ! Logical variables
   logical :: equil_num, success
@@ -96,14 +96,7 @@ program sim_bsl_gc_2d0v_smooth_polar_splines
     maxiter
 
   namelist /initial_condition/ &
-    l   , &
-    p   , &
-    smin, &
-    smax, &
-    ampl
-
-  namelist /equilibrium/ &
-    equil_num
+    test_case
 
   namelist /diagnostics/ &
     diag_freq, &
@@ -121,11 +114,12 @@ program sim_bsl_gc_2d0v_smooth_polar_splines
   real(wp), parameter :: epsi = 1.0e-12_wp
 
   ! Character variables
-  character(len=:), allocatable :: input_file
+  character(len=14) :: test_case
   character(len=32) :: file_name
   character(len=10) :: status
   character(len=10) :: position
   character(len=32) :: attr_name
+  character(len=: ), allocatable :: input_file
 
   ! Real 1D allocatables
   real(wp), allocatable :: breaks_eta1(:), breaks_eta2(:), tau_eta1(:), tau_eta2(:), intensity(:)
@@ -159,7 +153,6 @@ program sim_bsl_gc_2d0v_smooth_polar_splines
   read( file_unit, time_integration    ); rewind( file_unit )
   read( file_unit, characteristics     ); rewind( file_unit )
   read( file_unit, initial_condition   ); rewind( file_unit )
-  read( file_unit, equilibrium         ); rewind( file_unit )
 
   ! for point charges: reading number of point charges, intesities and positions
   read( file_unit, point_charges       ); rewind( file_unit )
@@ -168,6 +161,16 @@ program sim_bsl_gc_2d0v_smooth_polar_splines
   read( file_unit, point_charges_specs ); rewind( file_unit )
 
   read( file_unit, diagnostics         ); close ( file_unit )
+
+  test_case = trim( test_case )
+
+  if ( test_case == "diocotron" ) then
+    equil_num = .false.
+  else if ( test_case == "vortex_merger" ) then
+    equil_num = .true.
+  else if ( test_case == "vortex_in_cell" ) then
+    equil_num = .false.
+  end if
 
   ! Create HDF5 file
   call sll_s_hdf5_ser_file_create( 'sim_bsl_gc_2d0v_smooth_polar_splines.h5', file_id, h5_error )
@@ -332,7 +335,7 @@ program sim_bsl_gc_2d0v_smooth_polar_splines
       do i1 = 1, ntau1
         eta(1) = tau_eta1(i1)
         eta(2) = tau_eta2(i2)
-        sim_state % rho(i1,i2) = rho_equilibrium( eta )
+        sim_state % rho(i1,i2) = rho_equilibrium( test_case, eta )
       end do
     end do
     ! Apply periodicity along theta
@@ -348,7 +351,7 @@ program sim_bsl_gc_2d0v_smooth_polar_splines
     do i1 = 1, ntau1
       eta(1) = tau_eta1(i1)
       eta(2) = tau_eta2(i2)
-      sim_state % rho(i1,i2) = sim_state % rho(i1,i2) + rho_perturbation( eta )
+      sim_state % rho(i1,i2) = sim_state % rho(i1,i2) + rho_perturbation( test_case, eta )
     end do
   end do
   ! Apply periodicity along theta
@@ -538,56 +541,88 @@ contains
   end subroutine s_parse_command_arguments
 
   !-----------------------------------------------------------------------------
-  SLL_PURE function rho_equilibrium( eta )
-    real(wp), intent(in) :: eta(2)
+  SLL_PURE function rho_equilibrium( test_case, eta )
+    character(len=*), intent(in) :: test_case
+    real(wp)        , intent(in) :: eta(2)
     real(wp) :: rho_equilibrium
 
-!    ! Diocotron instability
-!    associate( smid => 0.5_wp * ( smin + smax ), dist => 0.5_wp * ( smax - smin ) )
-!
-!      ! smoothing on initial condition suggested in doi:10.1140/epjd/e2014-50180-9 (eq. 10)
-!      rho_equilibrium = exp( - ( (eta(1)-smid)/dist )**p )
-!
-!    end associate
+    ! Diocotron instability
+    integer  :: l, p
+    real(wp) :: ampl, smin, smax, smid, dist
 
-    if ( eta(1) <= 0.8_wp ) then
-      rho_equilibrium = 1.0_wp - 1.25_wp * eta(1)
-    else
-      rho_equilibrium = 0.0_wp
+    if ( test_case == "diocotron" ) then
+
+      l = 9
+      p = 50
+      smin = 0.45_wp
+      smax = 0.50_wp
+      ampl = 1.0e-04_wp
+
+      smid = 0.5_wp * ( smin + smax )
+      dist = 0.5_wp * ( smax - smin )
+
+      ! smoothing on initial condition suggested in doi:10.1140/epjd/e2014-50180-9 (eq. 10)
+      rho_equilibrium = exp( - ( (eta(1)-smid)/dist )**p )
+
+    else if ( test_case == "vortex_in_cell" ) then
+
+      if ( eta(1) <= 0.8_wp ) then
+        rho_equilibrium = 1.0_wp - 1.25_wp * eta(1)
+      else
+        rho_equilibrium = 0.0_wp
+      end if
+
     end if
 
   end function rho_equilibrium
 
   !-----------------------------------------------------------------------------
-  SLL_PURE function rho_perturbation( eta )
-    real(wp), intent(in) :: eta(2)
+  SLL_PURE function rho_perturbation( test_case, eta )
+    character(len=*), intent(in) :: test_case
+    real(wp)        , intent(in) :: eta(2)
     real(wp) :: rho_perturbation
 
-!    ! Diocotron instability
-!    associate( smid => 0.5_wp * ( smin + smax ), dist => 0.5_wp * ( smax - smin ) )
-!
-!      ! smoothing on initial condition suggested in doi:10.1140/epjd/e2014-50180-9 (eq. 10)
-!      rho_perturbation = ampl * cos( l*eta(2) ) * exp( - ( (eta(1)-smid)/dist )**p )
-!
-!    end associate
+    ! Diocotron instability
+    integer  :: l, p
+    real(wp) :: ampl, smin, smax, smid, dist
 
-!    ! Vortex merger
-!    real(wp) :: s, x(2), x0(2), rho_p1, rho_p2
-!
-!    s  = 0.08_wp
-!
-!    x  = mapping_discrete % eval( eta )
-!
-!    x0 = (/ 0.08_wp, -0.14_wp /)
-!    rho_p1 = ampl * exp( - ( 0.5_wp*((x(1)-x0(1))**2+(x(2)-x0(2))**2)/s**2 ) )
-!
-!    x0 = (/ -0.08_wp, 0.14_wp /)
-!    rho_p2 = ampl * exp( - ( 0.5_wp*((x(1)-x0(1))**2+(x(2)-x0(2))**2)/s**2 ) )
-!
-!    rho_perturbation = rho_p1 + rho_p2
+    ! Vortex merger
+    real(wp) :: s, rho_p1, rho_p2, x(2), x0(2)
 
-    ! Point-like vortexes
-    rho_perturbation = 0.0_wp
+    if ( test_case == "diocotron" ) then
+
+      l = 9
+      p = 50
+      smin = 0.45_wp
+      smax = 0.50_wp
+      ampl = 1.0e-04_wp
+
+      smid = 0.5_wp * ( smin + smax )
+      dist = 0.5_wp * ( smax - smin )
+
+      ! smoothing on initial condition suggested in doi:10.1140/epjd/e2014-50180-9 (eq. 10)
+      rho_perturbation = ampl * cos( l*eta(2) ) * exp( - ( (eta(1)-smid)/dist )**p )
+
+    else if ( test_case == "vortex_merger" ) then
+
+      s  = 0.08_wp
+      ampl = 1.0e-04_wp
+
+      x  = mapping_discrete % eval( eta )
+
+      x0 = (/ 0.08_wp, -0.14_wp /)
+      rho_p1 = ampl * exp( - ( 0.5_wp*((x(1)-x0(1))**2+(x(2)-x0(2))**2)/s**2 ) )
+
+      x0 = (/ -0.08_wp, 0.14_wp /)
+      rho_p2 = ampl * exp( - ( 0.5_wp*((x(1)-x0(1))**2+(x(2)-x0(2))**2)/s**2 ) )
+
+      rho_perturbation = rho_p1 + rho_p2
+
+    else if ( test_case == "vortex_in_cell" ) then
+
+      rho_perturbation = 0.0_wp
+
+    end if
 
   end function rho_perturbation
 
