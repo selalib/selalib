@@ -18,9 +18,9 @@ module sll_m_time_integrator_base
 
   use sll_m_poisson_2d_fem_sps_stencil_new, only: sll_t_poisson_2d_fem_sps_stencil_new
 
-	implicit none
+  implicit none
 
-	public :: sll_c_time_integrator
+  public :: sll_c_time_integrator
 
   private
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -159,7 +159,7 @@ contains
 
     SLL_ASSERT( size( point_charges ) > 0 )
 
-    associate( nc => size( point_charges ) )
+    associate( nc => self % sim_state % nc )
 
       do ic = 1, nc
         call self % advect_single_coords( h, success, point_charges(ic) % location )

@@ -28,6 +28,8 @@ module sll_m_simulation_state
     type(sll_t_spline_2d)     , pointer :: spline_2d_phi  => null()
     type(sll_t_electric_field), pointer :: electric_field => null()
 
+    integer :: nc
+    logical :: point_charges_present
     type(sll_t_point_charge), allocatable :: point_charges(:)
 
   contains
@@ -70,15 +72,27 @@ contains
     self % spline_2d_phi  => spline_2d_phi
     self % electric_field => electric_field
 
-    SLL_ASSERT( nc == 0 .or. nc == size( intensity ) )
-    SLL_ASSERT( nc == 0 .or. nc == size( location, 2 ) )
-    SLL_ASSERT( 2  == size( location, 1 ) )
+    SLL_ASSERT( nc == 0 .or. nc > 0 )
 
-    if ( nc /= 0 ) then
+    self % nc = nc
+
+    if ( nc == 0 ) then
+      self % point_charges_present = .false.
+    else
+      self % point_charges_present = .true.
+    end if
+
+    if ( self % point_charges_present ) then
+
+      SLL_ASSERT( nc == size( intensity ) )
+      SLL_ASSERT( nc == size( location, 2 ) )
+      SLL_ASSERT( 2  == size( location, 1 ) )
+
       allocate( self % point_charges( nc ) )
       do ic = 1, nc
         call self % point_charges(ic) % init( intensity(ic), location(:,ic) )
       end do
+
     end if
 
   end subroutine s_simulation_state__init
@@ -88,10 +102,10 @@ contains
     class(sll_t_simulation_state), intent(in   ) :: self
     class(sll_t_simulation_state), intent(inout) :: sim_state_copy
 
-    associate( rho => self % rho, point_charges => self % point_charges )
-      allocate( sim_state_copy % rho( size( rho, 1 ), size( rho, 2 ) ) , source = rho )
-      allocate( sim_state_copy % point_charges( size( point_charges ) ), source = point_charges )
-    end associate
+    allocate( sim_state_copy % rho( size( self % rho, 1 ), size( self % rho, 2 ) ) , source = self % rho )
+
+    if ( self % point_charges_present ) &
+      allocate( sim_state_copy % point_charges( size( self % point_charges ) ), source = self % point_charges )
 
   end subroutine s_simulation_state__copy
 
@@ -105,7 +119,7 @@ contains
     nullify( self % spline_2d_phi  )
     nullify( self % electric_field )
 
-    deallocate( self % point_charges )
+    if ( self % point_charges_present ) deallocate( self % point_charges )
 
   end subroutine s_simulation_state__free
 
