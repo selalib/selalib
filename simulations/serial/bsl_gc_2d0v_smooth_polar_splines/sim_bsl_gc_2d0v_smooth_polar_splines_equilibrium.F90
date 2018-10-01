@@ -405,7 +405,7 @@ contains
 
 !    f = psi
 
-    real(wp) :: b, m, q, L, k, s
+    real(wp) :: b, m, q, L, k
 
     b = 1.0e+15_wp
 

@@ -14,9 +14,9 @@ module sll_m_time_integrator
 
   use sll_m_time_integrator_base, only: sll_c_time_integrator
 
-	implicit none
+  implicit none
 
-	public :: sll_t_time_integrator
+  public :: sll_t_time_integrator
 
   private
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -101,7 +101,6 @@ contains
     real(wp) :: tol_sqr, eta0(2), x0(2), x(2), dx(2), temp(2), k2(2), a0(2)
 
     character(len=*), parameter :: this_sub_name = "sll_t_time_integrator % advect_single_coords"
-    character(len=256) :: err_msg
 
     success = .true.
 
@@ -168,10 +167,10 @@ contains
 
     integer :: ic
 
-    associate( dt                 => self % dt                               , &
-               nc                 => size( self % sim_state % point_charges ), &
-               point_charges      => self % sim_state % point_charges        , &
-               point_charges_copy => self % sim_state_copy % point_charges   , &
+    associate( dt                 => self % dt                            , &
+               nc                 => self % sim_state % nc                , &
+               point_charges      => self % sim_state % point_charges     , &
+               point_charges_copy => self % sim_state_copy % point_charges, &
                rho_copy           => self % sim_state_copy % rho )
 
       ! Evolve density
@@ -179,7 +178,7 @@ contains
       if ( .not. success ) return
 
       ! Evolve point charges
-      if ( nc /= 0 ) then
+      if ( self % sim_state % point_charges_present ) then
         do ic = 1, nc
           point_charges_copy(ic) % location(:) = point_charges(ic) % location(:)
         end do
@@ -198,10 +197,10 @@ contains
 
     integer :: ic
 
-    associate( dt                 => self % dt                               , &
-               nc                 => size( self % sim_state % point_charges ), &
-               point_charges      => self % sim_state % point_charges        , &
-               point_charges_copy => self % sim_state_copy % point_charges   , &
+    associate( dt                 => self % dt                            , &
+               nc                 => self % sim_state % nc                , &
+               point_charges      => self % sim_state % point_charges     , &
+               point_charges_copy => self % sim_state_copy % point_charges, &
                rho_copy           => self % sim_state_copy % rho )
 
       ! Evolve density
@@ -209,7 +208,7 @@ contains
       if ( .not. success ) return
 
       ! Evolve point charges
-      if ( nc /= 0 ) then
+      if ( self % sim_state % point_charges_present ) then
         do ic = 1, nc
           point_charges(ic) % location(:) = point_charges_copy(ic) % location(:)
         end do
@@ -228,13 +227,13 @@ contains
 
     integer :: ic
 
-    associate( nc                 => size( self % sim_state % point_charges ), &
-               ntau2              => size( self % sim_state % rho, 2 ) - 1   , &
-               spline_interp_2d   => self % spline_interp_2d                 , &
-               spline_2d_rho      => self % sim_state % spline_2d_rho        , &
-               spline_2d_phi      => self % sim_state % spline_2d_phi        , &
-               point_charges      => self % sim_state % point_charges        , &
-               rho                => self % sim_state % rho                  , &
+    associate( nc                 => self % sim_state % nc                , &
+               ntau2              => size( self % sim_state % rho, 2 ) - 1, &
+               spline_interp_2d   => self % spline_interp_2d              , &
+               spline_2d_rho      => self % sim_state % spline_2d_rho     , &
+               spline_2d_phi      => self % sim_state % spline_2d_phi     , &
+               point_charges      => self % sim_state % point_charges     , &
+               rho                => self % sim_state % rho               , &
                rho_copy           => self % sim_state_copy % rho )
 
       call self % predictor( success )
@@ -245,7 +244,7 @@ contains
       ! Solve Poisson equation
       call self % poisson_solver % reset_charge()
       call self % poisson_solver % accumulate_charge ( spline_2d_rho )
-      if ( nc /= 0 ) then
+      if ( self % sim_state % point_charges_present ) then
         do ic = 1, nc
           associate( intensity => point_charges(ic)%intensity, &
                      location  => point_charges(ic)%location )
@@ -265,7 +264,7 @@ contains
       ! Solve Poisson equation
       call self % poisson_solver % reset_charge()
       call self % poisson_solver % accumulate_charge ( spline_2d_rho )
-      if ( nc /= 0 ) then
+      if ( self % sim_state % point_charges_present ) then
         do ic = 1, nc
           associate( intensity => point_charges(ic)%intensity, &
                      location  => point_charges(ic)%location )
