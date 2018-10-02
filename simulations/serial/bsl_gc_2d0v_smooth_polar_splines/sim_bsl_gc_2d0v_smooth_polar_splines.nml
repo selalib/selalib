@@ -10,8 +10,9 @@
 /
 
 &time_integration
-  dt = 0.05
-  iter = 1200
+  method = "explicit"
+  dt     = 0.05
+  iter   = 1200
 /
 
 &characteristics

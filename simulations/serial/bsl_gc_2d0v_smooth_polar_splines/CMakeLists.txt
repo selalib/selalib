@@ -13,7 +13,8 @@ add_library( ${SIM_NAME}_obj OBJECT
              sll_m_point_charge.F90
       	     sll_m_simulation_state.F90
 						 sll_m_time_integrator_base.F90
-						 sll_m_time_integrator.F90 )
+						 sll_m_time_integrator_implicit.F90
+						 sll_m_time_integrator_explicit.F90 )
 
 add_dependencies( ${SIM_NAME}_obj ${SLL_LIB} )
 add_executable( ${SIM_NAME} ${SIM_NAME}.F90 $<TARGET_OBJECTS:${SIM_NAME}_obj> )
