@@ -24,9 +24,9 @@ module sll_m_simulation_state
 
     real(wp), allocatable :: rho(:,:)
 
-    type(sll_t_spline_2d)     , pointer :: spline_2d_rho  => null()
-    type(sll_t_spline_2d)     , pointer :: spline_2d_phi  => null()
-    type(sll_t_electric_field), pointer :: electric_field => null()
+    type(sll_t_spline_2d)      :: spline_2d_rho
+    type(sll_t_spline_2d)      :: spline_2d_phi
+    type(sll_t_electric_field) :: electric_field
 
     integer :: nc
     logical :: point_charges_present
@@ -35,7 +35,6 @@ module sll_m_simulation_state
   contains
 
     procedure :: init => s_simulation_state__init
-    procedure :: copy => s_simulation_state__copy
     procedure :: free => s_simulation_state__free
 
   end type sll_t_simulation_state
@@ -44,33 +43,17 @@ module sll_m_simulation_state
 contains
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
-  subroutine s_simulation_state__init( &
-    self         , &
-    ntau1        , &
-    ntau2        , &
-    nc           , &
-    intensity    , &
-    location     , &
-    spline_2d_rho, &
-    spline_2d_phi, &
-    electric_field )
+  subroutine s_simulation_state__init( self, ntau1, ntau2, nc, intensity, location )
     class(sll_t_simulation_state)     , intent(inout) :: self
     integer                           , intent(in   ) :: ntau1
     integer                           , intent(in   ) :: ntau2
     integer                           , intent(in   ) :: nc
     real(wp)                          , intent(in   ) :: intensity(:)
     real(wp)                          , intent(in   ) :: location(:,:)
-    type(sll_t_spline_2d)     , target, intent(in   ) :: spline_2d_rho
-    type(sll_t_spline_2d)     , target, intent(in   ) :: spline_2d_phi
-    type(sll_t_electric_field), target, intent(in   ) :: electric_field
 
     integer :: ic
 
     allocate( self % rho( ntau1, ntau2+1 ) )
-
-    self % spline_2d_rho  => spline_2d_rho
-    self % spline_2d_phi  => spline_2d_phi
-    self % electric_field => electric_field
 
     SLL_ASSERT( nc == 0 .or. nc > 0 )
 
@@ -98,26 +81,10 @@ contains
   end subroutine s_simulation_state__init
 
   !-----------------------------------------------------------------------------
-  subroutine s_simulation_state__copy( self, sim_state_copy )
-    class(sll_t_simulation_state), intent(in   ) :: self
-    class(sll_t_simulation_state), intent(inout) :: sim_state_copy
-
-    allocate( sim_state_copy % rho( size( self % rho, 1 ), size( self % rho, 2 ) ) , source = self % rho )
-
-    if ( self % point_charges_present ) &
-      allocate( sim_state_copy % point_charges( size( self % point_charges ) ), source = self % point_charges )
-
-  end subroutine s_simulation_state__copy
-
-  !-----------------------------------------------------------------------------
   subroutine s_simulation_state__free( self )
     class(sll_t_simulation_state), intent(inout) :: self
 
     deallocate( self % rho )
-
-    nullify( self % spline_2d_rho  )
-    nullify( self % spline_2d_phi  )
-    nullify( self % electric_field )
 
     if ( self % point_charges_present ) deallocate( self % point_charges )
 

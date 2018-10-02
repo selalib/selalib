@@ -34,15 +34,17 @@ program sim_bsl_gc_2d0v_smooth_polar_splines
 
   use sll_m_poisson_2d_fem_sps_stencil_new, only: sll_t_poisson_2d_fem_sps_stencil_new
 
-  use sll_m_electric_field, only: sll_t_electric_field
-
   use sll_m_diagnostics, only: sll_t_diagnostics
 
   use sll_m_point_charge, only: sll_t_point_charge
 
   use sll_m_simulation_state, only: sll_t_simulation_state
 
-  use sll_m_time_integrator, only: sll_t_time_integrator
+  use sll_m_time_integrator_base, only: sll_c_time_integrator
+
+  use sll_m_time_integrator_implicit, only: sll_t_time_integrator_implicit
+
+  use sll_m_time_integrator_explicit, only: sll_t_time_integrator_explicit
 
   use sll_m_timer, only: &
     sll_t_time_mark    , &
@@ -87,7 +89,8 @@ program sim_bsl_gc_2d0v_smooth_polar_splines
     maptype
 
   namelist /time_integration/ &
-    dt, &
+    method, &
+    dt    , &
     iter
 
   namelist /characteristics/ &
@@ -114,6 +117,7 @@ program sim_bsl_gc_2d0v_smooth_polar_splines
   real(wp), parameter :: epsi = 1.0e-12_wp
 
   ! Character variables
+  character(len=8 ) :: method
   character(len=14) :: test_case
   character(len=32) :: file_name
   character(len=10) :: status
@@ -130,15 +134,14 @@ program sim_bsl_gc_2d0v_smooth_polar_splines
   ! Abstract polymorphic types
   class(sll_c_bsplines)                , allocatable :: bsplines_eta1, bsplines_eta2
   class(sll_c_polar_mapping_analytical), allocatable :: mapping_analytic
+  class(sll_c_time_integrator)         , allocatable :: time_integrator
 
   ! Concrete types
   type(sll_t_polar_mapping_iga)              :: mapping_discrete
-  type(sll_t_spline_2d)                      :: spline_2d_rho, spline_2d_phi
   type(sll_t_spline_interpolator_2d)         :: spline_interp_2d
   type(sll_t_poisson_2d_fem_sps_stencil_new) :: poisson_solver
-  type(sll_t_electric_field)                 :: electric_field
   type(sll_t_simulation_state)               :: sim_state
-  type(sll_t_time_integrator)                :: time_integrator
+  type(sll_t_simulation_state)               :: sim_state_copy
   type(sll_t_diagnostics)                    :: diag
   type(sll_t_time_mark)                      :: t0, t1
   type(sll_t_hdf5_ser_handle)                :: file_id, file_id_eq
@@ -153,13 +156,10 @@ program sim_bsl_gc_2d0v_smooth_polar_splines
   read( file_unit, time_integration    ); rewind( file_unit )
   read( file_unit, characteristics     ); rewind( file_unit )
   read( file_unit, initial_condition   ); rewind( file_unit )
-
-  ! for point charges: reading number of point charges, intesities and positions
   read( file_unit, point_charges       ); rewind( file_unit )
   allocate( intensity(    nc ) )
   allocate( location ( 2, nc ) )
   read( file_unit, point_charges_specs ); rewind( file_unit )
-
   read( file_unit, diagnostics         ); close ( file_unit )
 
   test_case = trim( test_case )
@@ -258,10 +258,6 @@ program sim_bsl_gc_2d0v_smooth_polar_splines
 
   write(*,'(/a)') " >> Initializing 2D splines and interpolator"
 
-  ! Initialize 2D splines
-  call spline_2d_rho % init( bsplines_eta1, bsplines_eta2 )
-  call spline_2d_phi % init( bsplines_eta1, bsplines_eta2 )
-
   ! Initialize 2D spline interpolator
   call spline_interp_2d % init( &
     bsplines_eta1, &
@@ -299,22 +295,14 @@ program sim_bsl_gc_2d0v_smooth_polar_splines
   t_diff = sll_f_time_elapsed_between( t0, t1 )
   write(*,'(a,es7.1,a)') " ( ", t_diff, " s )"
 
-  ! Initialize electric field
-  call electric_field % init( mapping_discrete, spline_2d_phi )
+  ! Initialize simulation state
+  call sim_state % init( ntau1, ntau2, nc, intensity, location )
+  call sim_state % spline_2d_rho  % init( bsplines_eta1, bsplines_eta2 )
+  call sim_state % spline_2d_phi  % init( bsplines_eta1, bsplines_eta2 )
+  call sim_state % electric_field % init( mapping_discrete, sim_state % spline_2d_phi )
 
   ! Repeated point along theta
   allocate( phi( ntau1, ntau2+1 ) )
-
-  ! Initialize simulation state
-  call sim_state % init( &
-    ntau1        , &
-    ntau2        , &
-    nc           , &
-    intensity    , &
-    location     , &
-    spline_2d_rho, &
-    spline_2d_phi, &
-    electric_field )
 
   ! Compute equilibrium density on interpolation points
   if ( equil_num ) then
@@ -357,18 +345,56 @@ program sim_bsl_gc_2d0v_smooth_polar_splines
   ! Apply periodicity along theta
   sim_state % rho(:,ntau2+1) = sim_state % rho(:,1)
 
-  ! Initialize time integrator
-   call time_integrator % init( &
-     dt              , &
-     tau_eta1        , &
-     tau_eta2        , &
-     mapping_discrete, &
-     spline_interp_2d, &
-     sim_state       , &
-     poisson_solver  , &
-     abs_tol         , &
-     rel_tol         , &
-     maxiter )
+  ! Allocate and initialize time integrator
+
+  if ( method == "implicit" ) then
+    allocate( sll_t_time_integrator_implicit :: time_integrator )
+  else if ( method == "explicit" ) then
+    allocate( sll_t_time_integrator_explicit :: time_integrator )
+  end if
+
+  select type ( time_integrator )
+
+  type is ( sll_t_time_integrator_implicit )
+
+    ! Initialize auxiliary intermediate simulation state and 2D spline therein
+    call sim_state_copy % init( ntau1, ntau2, nc, intensity, location )
+    call sim_state_copy % spline_2d_rho  % init( bsplines_eta1, bsplines_eta2 )
+    call sim_state_copy % spline_2d_phi  % init( bsplines_eta1, bsplines_eta2 )
+    call sim_state_copy % electric_field % init( mapping_discrete, sim_state_copy % spline_2d_phi )
+
+    call time_integrator % init( &
+      dt              , &
+      tau_eta1        , &
+      tau_eta2        , &
+      mapping_discrete, &
+      spline_interp_2d, &
+      sim_state       , &
+      sim_state_copy  , &
+      poisson_solver  , &
+      abs_tol         , &
+      rel_tol         , &
+      maxiter )
+
+  type is ( sll_t_time_integrator_explicit )
+
+    ! Initialize auxiliary intermediate simulation state and 2D spline therein
+    call sim_state_copy % init( ntau1, ntau2, nc, intensity, location )
+    call sim_state_copy % spline_2d_rho  % init( bsplines_eta1, bsplines_eta2 )
+    call sim_state_copy % spline_2d_phi  % init( bsplines_eta1, bsplines_eta2 )
+    call sim_state_copy % electric_field % init( mapping_discrete, sim_state_copy % spline_2d_phi )
+
+    call time_integrator % init( &
+      dt              , &
+      tau_eta1        , &
+      tau_eta2        , &
+      mapping_discrete, &
+      spline_interp_2d, &
+      sim_state       , &
+      sim_state_copy  , &
+      poisson_solver )
+
+  end select
 
   ! Compute interpolant spline for initial density
   call spline_interp_2d % compute_interpolant( sim_state % spline_2d_rho, sim_state % rho(:,1:ntau2) )
@@ -378,10 +404,9 @@ program sim_bsl_gc_2d0v_smooth_polar_splines
   call poisson_solver % accumulate_charge( sim_state % spline_2d_rho )
   if ( sim_state % point_charges_present ) then
     do ic = 1, nc
-      associate( intensity => sim_state % point_charges(ic)%intensity, &
-                 location  => sim_state % point_charges(ic)%location )
-        call poisson_solver % accumulate_charge( intensity, location )
-      end associate
+      call poisson_solver % accumulate_charge( &
+        sim_state % point_charges(ic) % intensity, &
+        sim_state % point_charges(ic) % location )
     end do
   end if
   call poisson_solver % solve( sim_state % spline_2d_phi )
@@ -438,8 +463,13 @@ program sim_bsl_gc_2d0v_smooth_polar_splines
 
     call sll_s_set_time_mark( t0 )
 
-    call time_integrator % advance_in_time( success )
-    if ( .not. success ) exit
+    select type ( time_integrator )
+    type is ( sll_t_time_integrator_implicit )
+      call time_integrator % advance_in_time( success )
+      if ( .not. success ) exit
+    type is ( sll_t_time_integrator_explicit )
+      call time_integrator % advance_in_time()
+    end select
 
     ! Write scalar diagnostics
     call diag % write_scalar_data( file_unit, it*dt )
@@ -499,11 +529,8 @@ program sim_bsl_gc_2d0v_smooth_polar_splines
 
   ! Free concrete types
   call mapping_discrete % free()
-  call spline_2d_rho    % free()
-  call spline_2d_phi    % free()
   call spline_interp_2d % free()
   call poisson_solver   % free()
-  call electric_field   % free()
   call diag             % free()
   call sim_state        % free()
   call time_integrator  % free()
