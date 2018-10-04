@@ -28,7 +28,7 @@ module sll_m_time_integrator_explicit
 
     real(wp), allocatable :: eta_copy(:,:,:)
 
-    type(sll_t_simulation_state), pointer :: sim_state_copy
+    type(sll_t_simulation_state) :: sim_state_copy
 
   contains
 
@@ -52,7 +52,6 @@ contains
     mapping_discrete, &
     spline_interp_2d, &
     sim_state       , &
-    sim_state_copy  , &
     poisson_solver )
     class(sll_t_time_integrator_explicit)             , intent(inout) :: self
     real(wp)                                          , intent(in   ) :: dt
@@ -61,7 +60,6 @@ contains
     type(sll_t_polar_mapping_iga)                     , intent(in   ) :: mapping_discrete
     type(sll_t_spline_interpolator_2d)        , target, intent(in   ) :: spline_interp_2d
     type(sll_t_simulation_state)              , target, intent(in   ) :: sim_state
-    type(sll_t_simulation_state)              , target, intent(in   ) :: sim_state_copy
     type(sll_t_poisson_2d_fem_sps_stencil_new), target, intent(in   ) :: poisson_solver
 
     self % dt = dt
@@ -76,8 +74,8 @@ contains
 
     allocate( self % eta_copy( 2, size( tau_eta1 ), size( tau_eta2 ) ) )
 
-    self % sim_state      => sim_state
-    self % sim_state_copy => sim_state_copy
+    self % sim_state => sim_state
+    call self % sim_state % copy( self % sim_state_copy )
 
   end subroutine s_time_integrator_explicit__init
 
@@ -92,8 +90,10 @@ contains
                nc                 => self % sim_state % nc                , &
                ntau1              => size( self % tau_eta1 )              , &
                ntau2              => size( self % tau_eta2 )              , &
+               sim_state          => self % sim_state                     , &
+               spline_2d_rho      => self % sim_state % spline_2d_rho     , &
                rho_copy           => self % sim_state_copy % rho          , &
-               point_charges      => self % sim_state % point_charges     , &
+               point_charges      => self % sim_state      % point_charges, &
                point_charges_copy => self % sim_state_copy % point_charges, &
                eta_copy           => self % eta_copy )
 
@@ -109,7 +109,7 @@ contains
           x = x - dt * u
           eta_copy(:,i1,i2) = self % pseudo_cartesian_to_logical( x )
 
-          rho_copy(i1,i2) = self % sim_state % spline_2d_rho % eval( eta_copy(1,i1,i2), eta_copy(2,i1,i2) )
+          rho_copy(i1,i2) = spline_2d_rho % eval( eta_copy(1,i1,i2), eta_copy(2,i1,i2) )
 
         end do
       end do
@@ -148,8 +148,9 @@ contains
                ntau2              => size( self % tau_eta2 )              , &
                sim_state          => self % sim_state                     , &
                sim_state_copy     => self % sim_state_copy                , &
+               spline_2d_rho      => self % sim_state % spline_2d_rho     , &
                rho                => self % sim_state % rho               , &
-               point_charges      => self % sim_state % point_charges     , &
+               point_charges      => self % sim_state      % point_charges, &
                point_charges_copy => self % sim_state_copy % point_charges, &
                eta_copy           => self % eta_copy )
 
@@ -166,7 +167,7 @@ contains
           x  = x - 0.5_wp * dt * ( u1 + u2 )
           eta = self % pseudo_cartesian_to_logical( x )
 
-          rho(i1,i2) = self % sim_state % spline_2d_rho % eval( eta(1), eta(2) )
+          rho(i1,i2) = spline_2d_rho % eval( eta(1), eta(2) )
 
         end do
       end do
@@ -200,21 +201,22 @@ contains
     associate( nc                 => self % sim_state % nc                , &
                ntau2              => size( self % sim_state % rho, 2 ) - 1, &
                spline_interp_2d   => self % spline_interp_2d              , &
-               spline_2d_rho      => self % sim_state % spline_2d_rho     , &
-               spline_2d_phi      => self % sim_state % spline_2d_phi     , &
-               rho                => self % sim_state % rho               , &
+               spline_2d_rho      => self % sim_state      % spline_2d_rho, &
+               spline_2d_rho_copy => self % sim_state_copy % spline_2d_rho, &
+               spline_2d_phi      => self % sim_state      % spline_2d_phi, &
+               spline_2d_phi_copy => self % sim_state_copy % spline_2d_phi, &
+               rho                => self % sim_state      % rho          , &
                rho_copy           => self % sim_state_copy % rho          , &
-               point_charges      => self % sim_state % point_charges     , &
-               point_charges_copy => self % sim_state_copy % point_charges, &
-               spline_2d_phi_copy => self % sim_state_copy % spline_2d_phi )
+               point_charges      => self % sim_state      % point_charges, &
+               point_charges_copy => self % sim_state_copy % point_charges )
 
       call self % predictor()
 
-      call spline_interp_2d % compute_interpolant( spline_2d_rho, rho_copy(:,1:ntau2) )
+      call spline_interp_2d % compute_interpolant( spline_2d_rho_copy, rho_copy(:,1:ntau2) )
 
       ! Solve Poisson equation
       call self % poisson_solver % reset_charge()
-      call self % poisson_solver % accumulate_charge ( spline_2d_rho )
+      call self % poisson_solver % accumulate_charge ( spline_2d_rho_copy )
       if ( self % sim_state % point_charges_present ) then
         do ic = 1, nc
           call self % poisson_solver % accumulate_charge( &
@@ -223,8 +225,6 @@ contains
         end do
       end if
       call self % poisson_solver % solve ( spline_2d_phi_copy )
-
-      call spline_interp_2d % compute_interpolant( spline_2d_rho, rho(:,1:ntau2) )
 
       call self % corrector()
 
