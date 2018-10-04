@@ -132,16 +132,15 @@ program sim_bsl_gc_2d0v_smooth_polar_splines
   real(wp), allocatable :: phi(:,:), location(:,:)
 
   ! Abstract polymorphic types
-  class(sll_c_bsplines)                , allocatable :: bsplines_eta1, bsplines_eta2
-  class(sll_c_polar_mapping_analytical), allocatable :: mapping_analytic
-  class(sll_c_time_integrator)         , allocatable :: time_integrator
+  class(sll_c_bsplines)                , allocatable, target :: bsplines_eta1, bsplines_eta2
+  class(sll_c_polar_mapping_analytical), allocatable         :: mapping_analytic
+  class(sll_c_time_integrator)         , allocatable         :: time_integrator
 
   ! Concrete types
-  type(sll_t_polar_mapping_iga)              :: mapping_discrete
+  type(sll_t_polar_mapping_iga), target      :: mapping_discrete
   type(sll_t_spline_interpolator_2d)         :: spline_interp_2d
   type(sll_t_poisson_2d_fem_sps_stencil_new) :: poisson_solver
   type(sll_t_simulation_state)               :: sim_state
-  type(sll_t_simulation_state)               :: sim_state_copy
   type(sll_t_diagnostics)                    :: diag
   type(sll_t_time_mark)                      :: t0, t1
   type(sll_t_hdf5_ser_handle)                :: file_id, file_id_eq
@@ -296,10 +295,15 @@ program sim_bsl_gc_2d0v_smooth_polar_splines
   write(*,'(a,es7.1,a)') " ( ", t_diff, " s )"
 
   ! Initialize simulation state
-  call sim_state % init( ntau1, ntau2, nc, intensity, location )
-  call sim_state % spline_2d_rho  % init( bsplines_eta1, bsplines_eta2 )
-  call sim_state % spline_2d_phi  % init( bsplines_eta1, bsplines_eta2 )
-  call sim_state % electric_field % init( mapping_discrete, sim_state % spline_2d_phi )
+  call sim_state % init( &
+    bsplines_eta1   , &
+    bsplines_eta2   , &
+    mapping_discrete, &
+    ntau1           , &
+    ntau2           , &
+    nc              , &
+    intensity       , &
+    location )
 
   ! Repeated point along theta
   allocate( phi( ntau1, ntau2+1 ) )
@@ -357,12 +361,6 @@ program sim_bsl_gc_2d0v_smooth_polar_splines
 
   type is ( sll_t_time_integrator_implicit )
 
-    ! Initialize auxiliary intermediate simulation state and 2D spline therein
-    call sim_state_copy % init( ntau1, ntau2, nc, intensity, location )
-    call sim_state_copy % spline_2d_rho  % init( bsplines_eta1, bsplines_eta2 )
-    call sim_state_copy % spline_2d_phi  % init( bsplines_eta1, bsplines_eta2 )
-    call sim_state_copy % electric_field % init( mapping_discrete, sim_state_copy % spline_2d_phi )
-
     call time_integrator % init( &
       dt              , &
       tau_eta1        , &
@@ -370,7 +368,6 @@ program sim_bsl_gc_2d0v_smooth_polar_splines
       mapping_discrete, &
       spline_interp_2d, &
       sim_state       , &
-      sim_state_copy  , &
       poisson_solver  , &
       abs_tol         , &
       rel_tol         , &
@@ -378,12 +375,6 @@ program sim_bsl_gc_2d0v_smooth_polar_splines
 
   type is ( sll_t_time_integrator_explicit )
 
-    ! Initialize auxiliary intermediate simulation state and 2D spline therein
-    call sim_state_copy % init( ntau1, ntau2, nc, intensity, location )
-    call sim_state_copy % spline_2d_rho  % init( bsplines_eta1, bsplines_eta2 )
-    call sim_state_copy % spline_2d_phi  % init( bsplines_eta1, bsplines_eta2 )
-    call sim_state_copy % electric_field % init( mapping_discrete, sim_state_copy % spline_2d_phi )
-
     call time_integrator % init( &
       dt              , &
       tau_eta1        , &
@@ -391,7 +382,6 @@ program sim_bsl_gc_2d0v_smooth_polar_splines
       mapping_discrete, &
       spline_interp_2d, &
       sim_state       , &
-      sim_state_copy  , &
       poisson_solver )
 
   end select
