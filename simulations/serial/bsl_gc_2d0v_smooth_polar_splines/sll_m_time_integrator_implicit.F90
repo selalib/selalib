@@ -182,6 +182,8 @@ contains
                point_charges_copy => self % sim_state_copy % point_charges )
 
       ! Evolve density
+
+      !$OMP PARALLEL DO PRIVATE(eta,success)
       do i2 = 1, ntau2
         do i1 = 1, ntau1
 
@@ -194,13 +196,19 @@ contains
           if ( success ) then
             rho_copy(i1,i2) = spline_2d_rho % eval( eta(1), eta(2) )
           else
-            return
+            exit
           end if
 
         end do
       end do
+      !$OMP END PARALLEL DO
+
       ! Apply periodicity along theta
-      rho_copy(:,ntau2+1) = rho_copy(:,1)
+      if ( success ) then
+        rho_copy(:,ntau2+1) = rho_copy(:,1)
+      else
+        return
+      end if
 
       ! Evolve point charges
       if ( self % sim_state % point_charges_present ) then
@@ -235,6 +243,8 @@ contains
                point_charges  => self % sim_state % point_charges )
 
       ! Evolve density
+
+      !$OMP PARALLEL DO PRIVATE(eta,success)
       do i2 = 1, ntau2
         do i1 = 1, ntau1
 
@@ -247,13 +257,20 @@ contains
           if ( success ) then
             rho(i1,i2) = spline_2d_rho % eval( eta(1), eta(2) )
           else
-            return
+            exit
           end if
 
         end do
       end do
+      !$OMP END PARALLEL DO
+
       ! Apply periodicity along theta
-      rho(:,ntau2+1) = rho(:,1)
+      if ( success ) then
+        rho(:,ntau2+1) = rho(:,1)
+      else
+        return
+      end if
+
 
       ! Evolve point charges
       if ( self % sim_state % point_charges_present ) then
