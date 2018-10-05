@@ -145,6 +145,10 @@ program sim_bsl_gc_2d0v_smooth_polar_splines
   type(sll_t_time_mark)                      :: t0, t1
   type(sll_t_hdf5_ser_handle)                :: file_id, file_id_eq
 
+  ! Auxiliary pointers (not necessary when using automatic pointer targetting, if supported by compiler)
+  class(sll_c_bsplines)        , pointer :: bsplines_eta1_pointer, bsplines_eta2_pointer
+  type(sll_t_polar_mapping_iga), pointer :: mapping_discrete_pointer
+
   ! Parse input argument
   call s_parse_command_arguments( input_file )
 
@@ -294,15 +298,20 @@ program sim_bsl_gc_2d0v_smooth_polar_splines
   t_diff = sll_f_time_elapsed_between( t0, t1 )
   write(*,'(a,es7.1,a)') " ( ", t_diff, " s )"
 
+  ! Associate auxiliary pointers (not necessary when using automatic pointer targetting, if supported by compiler)
+  bsplines_eta1_pointer    => bsplines_eta1
+  bsplines_eta2_pointer    => bsplines_eta2
+  mapping_discrete_pointer => mapping_discrete
+
   ! Initialize simulation state
   call sim_state % init( &
-    bsplines_eta1   , &
-    bsplines_eta2   , &
-    mapping_discrete, &
-    ntau1           , &
-    ntau2           , &
-    nc              , &
-    intensity       , &
+    bsplines_eta1_pointer   , &
+    bsplines_eta2_pointer   , &
+    mapping_discrete_pointer, &
+    ntau1                   , &
+    ntau2                   , &
+    nc                      , &
+    intensity               , &
     location )
 
   ! Repeated point along theta
@@ -509,6 +518,11 @@ program sim_bsl_gc_2d0v_smooth_polar_splines
 
   ! Deallocate real 2D allocatables
   deallocate( phi, location )
+
+  ! Nullify auxiliary pointers (not necessary when using automatic pointer targetting, if supported by compiler)
+  nullify( bsplines_eta1_pointer    )
+  nullify( bsplines_eta2_pointer    )
+  nullify( mapping_discrete_pointer )
 
   ! Free abstract polymorphic types
   call bsplines_eta1 % free()
