@@ -199,7 +199,6 @@ contains
 
         end do
       end do
-
       ! Apply periodicity along theta
       rho_copy(:,ntau2+1) = rho_copy(:,1)
 
@@ -253,7 +252,6 @@ contains
 
         end do
       end do
-
       ! Apply periodicity along theta
       rho(:,ntau2+1) = rho(:,1)
 

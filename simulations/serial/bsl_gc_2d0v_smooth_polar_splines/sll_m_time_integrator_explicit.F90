@@ -104,8 +104,8 @@ contains
           eta_copy(1,i1,i2) = self % tau_eta1(i1)
           eta_copy(2,i1,i2) = self % tau_eta2(i2)
 
-          x = self % logical_to_pseudo_cartesian( eta_copy )
-          u = self % advection_field( self % sim_state, eta_copy )
+          x = self % logical_to_pseudo_cartesian( eta_copy(:,i1,i2) )
+          u = self % advection_field( sim_state , eta_copy(:,i1,i2) )
           x = x - dt * u
           eta_copy(:,i1,i2) = self % pseudo_cartesian_to_logical( x )
 
@@ -113,6 +113,7 @@ contains
 
         end do
       end do
+      ! Apply periodicity along theta
       rho_copy(:,ntau2+1) = rho_copy(:,1)
 
       ! Evolve point charges
@@ -123,7 +124,7 @@ contains
           point_charges_copy(ic) % location = point_charges(ic) % location
 
           x = self % logical_to_pseudo_cartesian( point_charges_copy(ic) % location )
-          u = self % advection_field( self % sim_state, point_charges_copy(ic) % location )
+          u = self % advection_field( sim_state, point_charges_copy(ic) % location )
           x = x + dt * u
           point_charges_copy(ic) % location = self % pseudo_cartesian_to_logical( x )
 
@@ -163,7 +164,7 @@ contains
 
           x  = self % logical_to_pseudo_cartesian( eta )
           u1 = self % advection_field( sim_state_copy, eta )
-          u2 = self % advection_field( sim_state, eta_copy )
+          u2 = self % advection_field( sim_state, eta_copy(:,i1,i2) )
           x  = x - 0.5_wp * dt * ( u1 + u2 )
           eta = self % pseudo_cartesian_to_logical( x )
 
@@ -171,6 +172,7 @@ contains
 
         end do
       end do
+      ! Apply periodicity along theta
       rho(:,ntau2+1) = rho(:,1)
 
       ! Evolve point charges
