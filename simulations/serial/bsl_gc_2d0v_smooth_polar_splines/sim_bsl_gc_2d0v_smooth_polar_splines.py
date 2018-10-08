@@ -48,7 +48,7 @@ for t in tt:
 
 if ( nc > 0 ):
    point_charges = dict()
-   for t in tt:
+   for t in range(Ni):
        point_charges[t] = h5['point_charges_'+str(t)].value
 
 # Load equilibrium density
