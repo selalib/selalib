@@ -55,13 +55,13 @@ def plot_point_charge_trajectory( frame, tmax ):
     fg = plt.figure(figsize=[9.0,9.0])
     ax = fg.add_subplot(111)
     if ( frame == 'inertial' ):
-        for t in (ti for ti in tt if ti <= tmax):
+        for t in range(tmax+1):
             xc = point_charges[t][0,0]
             yc = point_charges[t][0,1]
             ax.plot( xc, yc, marker='.', color='k', markersize=5. )
         ax.set_title( 'Point charge trajectory (inertial frame)' )
     if ( frame == 'rotating' ):
-        for t in (ti for ti in tt if ti <= tmax):
+        for t in range(tmax+1):
             xc = point_charges[t][0,0]
             yc = point_charges[t][0,1]
             xr, yr = rotate( xc, yc, -omega*(t*dt) )
@@ -80,7 +80,7 @@ def plot_point_charge_coordinates( tmax ):
     fg = plt.figure(figsize=[9.0,9.0])
     ax1 = fg.add_subplot(121)
     ax2 = fg.add_subplot(122)
-    for t in (ti for ti in tt if ti <= tmax):
+    for t in range(tmax+1):
         xc = point_charges[t][0,0]
         yc = point_charges[t][0,1]
         xr, yr = rotate( xc, yc, -omega*(t*dt) )
@@ -183,6 +183,8 @@ def plot_time_evolution( arg, tmax ):
         ax.plot( x1[:,::nr], x2[:,::nr], color='lightgrey', lw=0.5 )
         ax.plot( x1[:,n1-1], x2[:,n1-1], color='lightgrey', lw=0.5 )
         ax.plot( x1.transpose()[:,::nr], x2.transpose()[:,::nr], color='lightgrey', lw=0.5 )
+        ax.set_xlim([-1.,1.])
+        ax.set_ylim([-1.,1.])
         ax.set_xlabel( r'$x$' )
         ax.set_ylabel( r'$y$', rotation=0 )
         ax.set_aspect( 'equal' )

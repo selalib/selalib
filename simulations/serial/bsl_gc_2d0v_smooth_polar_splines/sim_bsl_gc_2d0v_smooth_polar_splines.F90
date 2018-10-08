@@ -473,11 +473,11 @@ program sim_bsl_gc_2d0v_smooth_polar_splines
     ! Write scalar diagnostics
     call diag % write_scalar_data( file_unit, it*dt )
 
+    ! Write point charges trajectory
+    if ( sim_state % point_charges_present ) call diag % write_point_charges( file_id, it )
+
     ! Write 2D diagnostics
     if ( mod( it, diag_freq ) == 0 ) then
-
-      ! Write point charges trajectory
-      if ( sim_state % point_charges_present ) call diag % write_point_charges( file_id, it )
 
       ! Write 2D data on interpolation grid
       call diag % write_on_interpolation_grid( file_id, it )
