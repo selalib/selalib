@@ -75,7 +75,7 @@ program sim_bsl_gc_2d0v_smooth_polar_splines
   real(wp) :: dt, abs_tol, rel_tol, t_diff, t_iter, eta(2)
 
   ! Logical variables
-  logical :: equil_num, success
+  logical :: equil_num, evolve_background, success
 
   ! Namelists
 
@@ -89,8 +89,9 @@ program sim_bsl_gc_2d0v_smooth_polar_splines
     maptype
 
   namelist /time_integration/ &
-    method, &
-    dt    , &
+    method           , &
+    evolve_background, &
+    dt               , &
     iter
 
   namelist /characteristics/ &
@@ -312,7 +313,8 @@ program sim_bsl_gc_2d0v_smooth_polar_splines
     ntau2                   , &
     nc                      , &
     intensity               , &
-    location )
+    location                , &
+    evolve_background )
 
   ! Repeated point along theta
   allocate( phi( ntau1, ntau2+1 ) )

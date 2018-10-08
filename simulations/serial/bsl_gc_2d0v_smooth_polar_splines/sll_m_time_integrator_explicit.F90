@@ -98,27 +98,48 @@ contains
                eta_copy           => self % eta_copy )
 
       ! Evolve density
+      if ( self % sim_state % evolve_background ) then
 
-      !$OMP PARALLEL DO PRIVATE(x,u)
-      do i2 = 1, ntau2
-        do i1 = 1, ntau1
+        !$OMP PARALLEL DO PRIVATE(x,u)
+        do i2 = 1, ntau2
+          do i1 = 1, ntau1
 
-          eta_copy(1,i1,i2) = self % tau_eta1(i1)
-          eta_copy(2,i1,i2) = self % tau_eta2(i2)
+            eta_copy(1,i1,i2) = self % tau_eta1(i1)
+            eta_copy(2,i1,i2) = self % tau_eta2(i2)
 
-          x = self % logical_to_pseudo_cartesian( eta_copy(:,i1,i2) )
-          u = self % advection_field( sim_state , eta_copy(:,i1,i2) )
-          x = x - dt * u
-          eta_copy(:,i1,i2) = self % pseudo_cartesian_to_logical( x )
+            x = self % logical_to_pseudo_cartesian( eta_copy(:,i1,i2) )
+            u = self % advection_field( sim_state , eta_copy(:,i1,i2) )
+            x = x - dt * u
+            eta_copy(:,i1,i2) = self % pseudo_cartesian_to_logical( x )
 
-          rho_copy(i1,i2) = spline_2d_rho % eval( eta_copy(1,i1,i2), eta_copy(2,i1,i2) )
+            rho_copy(i1,i2) = spline_2d_rho % eval( eta_copy(1,i1,i2), eta_copy(2,i1,i2) )
 
+          end do
         end do
-      end do
-      !$OMP END PARALLEL DO
+        !$OMP END PARALLEL DO
 
-      ! Apply periodicity along theta
-      rho_copy(:,ntau2+1) = rho_copy(:,1)
+        ! Apply periodicity along theta
+        rho_copy(:,ntau2+1) = rho_copy(:,1)
+
+      else
+
+        !$OMP PARALLEL DO PRIVATE(x,u)
+        do i2 = 1, ntau2
+          do i1 = 1, ntau1
+
+            eta_copy(1,i1,i2) = self % tau_eta1(i1)
+            eta_copy(2,i1,i2) = self % tau_eta2(i2)
+
+            rho_copy(i1,i2) = spline_2d_rho % eval( eta_copy(1,i1,i2), eta_copy(2,i1,i2) )
+
+          end do
+        end do
+        !$OMP END PARALLEL DO
+
+        ! Apply periodicity along theta
+        rho_copy(:,ntau2+1) = rho_copy(:,1)
+
+      end if
 
       ! Evolve point charges
       if ( self % sim_state % point_charges_present ) then
@@ -160,28 +181,49 @@ contains
                eta_copy           => self % eta_copy )
 
       ! Evolve density
+      if ( self % sim_state % evolve_background ) then
 
-      !$OMP PARALLEL DO PRIVATE(eta,x,u1,u2)
-      do i2 = 1, ntau2
-        do i1 = 1, ntau1
+        !$OMP PARALLEL DO PRIVATE(eta,x,u1,u2)
+        do i2 = 1, ntau2
+          do i1 = 1, ntau1
 
-          eta(1) = self % tau_eta1(i1)
-          eta(2) = self % tau_eta2(i2)
+            eta(1) = self % tau_eta1(i1)
+            eta(2) = self % tau_eta2(i2)
 
-          x  = self % logical_to_pseudo_cartesian( eta )
-          u1 = self % advection_field( sim_state_copy, eta )
-          u2 = self % advection_field( sim_state, eta_copy(:,i1,i2) )
-          x  = x - 0.5_wp * dt * ( u1 + u2 )
-          eta = self % pseudo_cartesian_to_logical( x )
+            x  = self % logical_to_pseudo_cartesian( eta )
+            u1 = self % advection_field( sim_state_copy, eta )
+            u2 = self % advection_field( sim_state, eta_copy(:,i1,i2) )
+            x  = x - 0.5_wp * dt * ( u1 + u2 )
+            eta = self % pseudo_cartesian_to_logical( x )
 
-          rho(i1,i2) = spline_2d_rho % eval( eta(1), eta(2) )
+            rho(i1,i2) = spline_2d_rho % eval( eta(1), eta(2) )
 
+          end do
         end do
-      end do
-      !$OMP END PARALLEL DO
+        !$OMP END PARALLEL DO
 
-      ! Apply periodicity along theta
-      rho(:,ntau2+1) = rho(:,1)
+        ! Apply periodicity along theta
+        rho(:,ntau2+1) = rho(:,1)
+
+      else
+
+        !$OMP PARALLEL DO PRIVATE(eta,x,u1,u2)
+        do i2 = 1, ntau2
+          do i1 = 1, ntau1
+
+            eta(1) = self % tau_eta1(i1)
+            eta(2) = self % tau_eta2(i2)
+
+            rho(i1,i2) = spline_2d_rho % eval( eta(1), eta(2) )
+
+          end do
+        end do
+        !$OMP END PARALLEL DO
+
+        ! Apply periodicity along theta
+        rho(:,ntau2+1) = rho(:,1)
+
+      end if
 
       ! Evolve point charges
       if ( self % sim_state % point_charges_present ) then

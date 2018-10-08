@@ -182,32 +182,53 @@ contains
                point_charges_copy => self % sim_state_copy % point_charges )
 
       ! Evolve density
+      if ( self % sim_state % evolve_background ) then
 
-      !$OMP PARALLEL DO PRIVATE(eta,success)
-      do i2 = 1, ntau2
-        do i1 = 1, ntau1
+        !$OMP PARALLEL DO PRIVATE(eta,success)
+        do i2 = 1, ntau2
+          do i1 = 1, ntau1
 
-          eta(1) = self % tau_eta1(i1)
-          eta(2) = self % tau_eta2(i2)
+            eta(1) = self % tau_eta1(i1)
+            eta(2) = self % tau_eta2(i2)
 
-          call self % advect_single_coords( -0.5_wp*dt, sim_state, success, eta )
+            call self % advect_single_coords( -0.5_wp*dt, sim_state, success, eta )
 
-          ! Check if integrator converged
-          if ( success ) then
-            rho_copy(i1,i2) = spline_2d_rho % eval( eta(1), eta(2) )
-          else
-            exit
-          end if
+            ! Check if integrator converged
+            if ( success ) then
+              rho_copy(i1,i2) = spline_2d_rho % eval( eta(1), eta(2) )
+            else
+              exit
+            end if
 
+          end do
         end do
-      end do
-      !$OMP END PARALLEL DO
+        !$OMP END PARALLEL DO
 
-      ! Apply periodicity along theta
-      if ( success ) then
-        rho_copy(:,ntau2+1) = rho_copy(:,1)
+        ! Apply periodicity along theta
+        if ( success ) then
+          rho_copy(:,ntau2+1) = rho_copy(:,1)
+        else
+          return
+        end if
+
       else
-        return
+
+        !$OMP PARALLEL DO PRIVATE(eta,success)
+        do i2 = 1, ntau2
+          do i1 = 1, ntau1
+
+            eta(1) = self % tau_eta1(i1)
+            eta(2) = self % tau_eta2(i2)
+
+            rho_copy(i1,i2) = spline_2d_rho % eval( eta(1), eta(2) )
+
+          end do
+        end do
+        !$OMP END PARALLEL DO
+
+        ! Apply periodicity along theta
+        rho_copy(:,ntau2+1) = rho_copy(:,1)
+
       end if
 
       ! Evolve point charges
@@ -243,34 +264,54 @@ contains
                point_charges  => self % sim_state % point_charges )
 
       ! Evolve density
+      if ( self % sim_state % evolve_background ) then
 
-      !$OMP PARALLEL DO PRIVATE(eta,success)
-      do i2 = 1, ntau2
-        do i1 = 1, ntau1
+        !$OMP PARALLEL DO PRIVATE(eta,success)
+        do i2 = 1, ntau2
+          do i1 = 1, ntau1
 
-          eta(1) = self % tau_eta1(i1)
-          eta(2) = self % tau_eta2(i2)
+            eta(1) = self % tau_eta1(i1)
+            eta(2) = self % tau_eta2(i2)
 
-          call self % advect_single_coords( -dt, sim_state_copy, success, eta )
+            call self % advect_single_coords( -dt, sim_state_copy, success, eta )
 
-          ! Check if integrator converged
-          if ( success ) then
-            rho(i1,i2) = spline_2d_rho % eval( eta(1), eta(2) )
-          else
-            exit
-          end if
+            ! Check if integrator converged
+            if ( success ) then
+              rho(i1,i2) = spline_2d_rho % eval( eta(1), eta(2) )
+            else
+              exit
+            end if
 
+          end do
         end do
-      end do
-      !$OMP END PARALLEL DO
+        !$OMP END PARALLEL DO
 
-      ! Apply periodicity along theta
-      if ( success ) then
-        rho(:,ntau2+1) = rho(:,1)
+        ! Apply periodicity along theta
+        if ( success ) then
+          rho(:,ntau2+1) = rho(:,1)
+        else
+          return
+        end if
+
       else
-        return
-      end if
 
+        !$OMP PARALLEL DO PRIVATE(eta,success)
+        do i2 = 1, ntau2
+          do i1 = 1, ntau1
+
+            eta(1) = self % tau_eta1(i1)
+            eta(2) = self % tau_eta2(i2)
+
+            rho(i1,i2) = spline_2d_rho % eval( eta(1), eta(2) )
+
+          end do
+        end do
+        !$OMP END PARALLEL DO
+
+        ! Apply periodicity along theta
+        rho(:,ntau2+1) = rho(:,1)
+
+      end if
 
       ! Evolve point charges
       if ( self % sim_state % point_charges_present ) then
