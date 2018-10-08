@@ -10,9 +10,10 @@
 /
 
 &time_integration
-  method = "explicit"
-  dt     = 0.05
-  iter   = 1200
+  method            = "explicit"
+  evolve_background = .true.
+  dt                = 0.05
+  iter              = 1400
 /
 
 &characteristics
@@ -26,7 +27,7 @@
 /
 
 &diagnostics
-  diag_freq = 20
+  diag_freq = 10
   nx1       = 512
   nx2       = 512
 /
