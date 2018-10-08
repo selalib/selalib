@@ -98,6 +98,8 @@ contains
                eta_copy           => self % eta_copy )
 
       ! Evolve density
+
+      !$OMP PARALLEL DO PRIVATE(x,u)
       do i2 = 1, ntau2
         do i1 = 1, ntau1
 
@@ -113,6 +115,8 @@ contains
 
         end do
       end do
+      !$OMP END PARALLEL DO
+
       ! Apply periodicity along theta
       rho_copy(:,ntau2+1) = rho_copy(:,1)
 
@@ -156,6 +160,8 @@ contains
                eta_copy           => self % eta_copy )
 
       ! Evolve density
+
+      !$OMP PARALLEL DO PRIVATE(eta,x,u1,u2)
       do i2 = 1, ntau2
         do i1 = 1, ntau1
 
@@ -172,6 +178,8 @@ contains
 
         end do
       end do
+      !$OMP END PARALLEL DO
+
       ! Apply periodicity along theta
       rho(:,ntau2+1) = rho(:,1)
 
