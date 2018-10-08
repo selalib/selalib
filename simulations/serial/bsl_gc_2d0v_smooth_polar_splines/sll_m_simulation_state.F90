@@ -41,6 +41,8 @@ module sll_m_simulation_state
     logical :: point_charges_present
     type(sll_t_point_charge), allocatable :: point_charges(:)
 
+    logical :: evolve_background
+
   contains
 
     procedure :: init => s_simulation_state__init
@@ -62,7 +64,8 @@ contains
     ntau2           , &
     nc              , &
     intensity       , &
-    location )
+    location        , &
+    evolve_background )
     class(sll_t_simulation_state)         , intent(inout) :: self
     class(sll_c_bsplines)        , pointer, intent(in   ) :: bsplines_eta1
     class(sll_c_bsplines)        , pointer, intent(in   ) :: bsplines_eta2
@@ -72,6 +75,7 @@ contains
     integer                               , intent(in   ) :: nc
     real(wp)                              , intent(in   ) :: intensity(:)
     real(wp)                              , intent(in   ) :: location(:,:)
+    logical                               , intent(in   ) :: evolve_background
 
     integer :: ic
 
@@ -108,6 +112,8 @@ contains
       end do
 
     end if
+
+    self % evolve_background = evolve_background
 
   end subroutine s_simulation_state__init
 
@@ -146,6 +152,8 @@ contains
       end do
 
     end if
+
+    sim_state_copy % evolve_background = self % evolve_background
 
   end subroutine s_simulation_state__copy
 
