@@ -12,7 +12,7 @@ cmap = 'Greys'
 # angular velocity of background
 omega = 0.3332
 
-# time conversion factor
+# time conversion factor (only for vortex in cell simulation)
 tconv = 0.417*0.4
 
 # auxiliary functions
@@ -55,17 +55,16 @@ def plot_point_charge_trajectory( frame, tmax ):
     fg = plt.figure(figsize=[9.0,9.0])
     ax = fg.add_subplot(111)
     if ( frame == 'inertial' ):
-        for t in range(tmax+1):
-            xc = point_charges[t][0,0]
-            yc = point_charges[t][0,1]
-            ax.plot( xc, yc, marker='.', color='k', markersize=5. )
+        xc = np.fromiter( ( point_charges[t][0,0] for t in range(tmax+1) ), dtype=float )
+        yc = np.fromiter( ( point_charges[t][0,1] for t in range(tmax+1) ), dtype=float )
+        ax.plot( xc, yc, '-', color='k', markersize=1. )
         ax.set_title( 'Point charge trajectory (inertial frame)' )
     if ( frame == 'rotating' ):
-        for t in range(tmax+1):
-            xc = point_charges[t][0,0]
-            yc = point_charges[t][0,1]
-            xr, yr = rotate( xc, yc, -omega*(t*dt) )
-            ax.plot( xr, yr, marker='.', color='k', markersize=5. )
+        xc = np.fromiter( ( point_charges[t][0,0] for t in range(tmax+1) ), dtype=float )
+        yc = np.fromiter( ( point_charges[t][0,1] for t in range(tmax+1) ), dtype=float )
+        th = np.fromiter( ( -omega*(t*dt) for t in range(tmax+1) ), dtype=float )
+        xr, yr = rotate( xc, yc, th )
+        ax.plot( xr, yr, '-', color='k', markersize=1. )
         ax.set_title( 'Point charge trajectory (rotating frame)' )
     ax.plot( x1[:,:], x2[:,:], color='lightgrey', lw=0.5 )
     ax.plot( x1.transpose()[:,:], x2.transpose()[:,:], color='lightgrey', lw=0.5 )
@@ -80,14 +79,14 @@ def plot_point_charge_coordinates( tmax ):
     fg = plt.figure(figsize=[9.0,9.0])
     ax1 = fg.add_subplot(121)
     ax2 = fg.add_subplot(122)
-    for t in range(tmax+1):
-        xc = point_charges[t][0,0]
-        yc = point_charges[t][0,1]
-        xr, yr = rotate( xc, yc, -omega*(t*dt) )
-        rr = np.sqrt( xr**2 + yr**2 )
-        tr = np.arctan2( yr, xr ) % ( 2.0 * np.pi )
-        ax1.plot( t*dt*tconv, rr, marker='.', color='k', markersize=5. )
-        ax2.plot( t*dt*tconv, tr, marker='.', color='k', markersize=5. )
+    xc = np.fromiter( ( point_charges[t][0,0] for t in range(tmax+1) ), dtype=float )
+    yc = np.fromiter( ( point_charges[t][0,1] for t in range(tmax+1) ), dtype=float )
+    th = np.fromiter( ( -omega*(t*dt) for t in range(tmax+1) ), dtype=float )
+    xr, yr = rotate( xc, yc, th )
+    rr = np.sqrt( xr**2 + yr**2 )
+    tr = np.arctan2( yr, xr ) % ( 2.0 * np.pi )
+    ax1.plot( th*(-tconv/omega), rr, '-', color='k', markersize=1. )
+    ax2.plot( th*(-tconv/omega), tr, '-', color='k', markersize=1. )
     ax1.set_xlabel( r'$T$' )
     ax1.set_ylabel( r'$r$', rotation=0 )
     ax1.set_title( 'Radial position of point charge (rotating frame)' )
@@ -159,6 +158,8 @@ def plot_time_evolution( arg, tmax ):
                     yc = point_charges[t][ic,1]
                     xr, yr = rotate( xc, yc, -omega*(t*dt) )
                     ax.plot( xr, yr, marker='o', color='w', markersize=5. )
+            ax.set_xlim([-1.,1.])
+            ax.set_ylim([-1.,1.])
             ax.set_title( r'Density $\rho$ at $T = %g$ (rotating frame)' %(t*dt*tconv) )
         if ( arg == 'delta_rho' ):
             clevels = np.linspace( min_delta_rho, max_delta_rho, 101 )
@@ -183,8 +184,6 @@ def plot_time_evolution( arg, tmax ):
         ax.plot( x1[:,::nr], x2[:,::nr], color='lightgrey', lw=0.5 )
         ax.plot( x1[:,n1-1], x2[:,n1-1], color='lightgrey', lw=0.5 )
         ax.plot( x1.transpose()[:,::nr], x2.transpose()[:,::nr], color='lightgrey', lw=0.5 )
-        ax.set_xlim([-1.,1.])
-        ax.set_ylim([-1.,1.])
         ax.set_xlabel( r'$x$' )
         ax.set_ylabel( r'$y$', rotation=0 )
         ax.set_aspect( 'equal' )
