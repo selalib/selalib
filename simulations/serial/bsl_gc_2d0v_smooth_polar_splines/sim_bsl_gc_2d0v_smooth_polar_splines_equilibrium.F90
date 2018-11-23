@@ -60,10 +60,10 @@ program sim_bsl_gc_2d0v_smooth_polar_splines
   integer :: n1, n2, p1, p2, ncells1, ncells2, ntau1, ntau2, i1, i2, it, maptype, h5_error, file_unit
 
   ! Real variables
-  real(wp) :: sigma, inf_norm_phi, residual, t_diff, t_iter, eta(2)
+  real(wp) :: sigma, inf_norm_phi, residual, t_diff, t_iter, eta(2), norm_coeff
 
-!  real(wp), parameter :: max_phi = 0.11268967746569288_wp
-  real(wp), parameter :: max_phi = 0.113_wp
+  real(wp), parameter :: max_rho = 1.0_wp
+  real(wp), parameter :: max_phi = 0.15004864751654967_wp
 
   ! Namelists
 
@@ -273,10 +273,10 @@ program sim_bsl_gc_2d0v_smooth_polar_splines
  
     call sll_s_set_time_mark( t0 )
 
-    ! rho_n
+    ! rho_i
     call spline_interp_2d % compute_interpolant( spline_2d_rho, rho(:,1:ntau2) )
 
-    ! phi_*
+    ! phi*
     call poisson_solver % reset_charge()
     call poisson_solver % accumulate_charge( spline_2d_rho )
     call poisson_solver % solve( spline_2d_phi )
@@ -290,16 +290,25 @@ program sim_bsl_gc_2d0v_smooth_polar_splines
     end do
     phi(:,ntau2+1) = phi(:,1)
 
-    ! || phi_* ||_inf
+    ! || phi* ||_inf
     inf_norm_phi = maxval( abs( phi(:,:) ) )
 
-    ! phi_n = phi_* / || phi_* ||_inf
-    spline_2d_phi % bcoef(:,:) = spline_2d_phi % bcoef(:,:) / inf_norm_phi * max_phi
+!    ! Normalization fixing maximum of phi
+!    norm_coeff = max_phi / inf_norm_phi
+
+!    ! Normalization fixing maximum of rho, valid for f(phi) = phi
+!    norm_coeff = sqrt( max_rho / ( sigma * inf_norm_phi ) )
+
+    ! Normalization fixing maximum of rho, valid for f(phi) = phi**2
+    norm_coeff = ( max_rho / ( sigma * inf_norm_phi**2 ) )**(1.0_wp/3.0_wp)
+
+    ! phi_i = phi* * norm_coeff
+    spline_2d_phi % bcoef(:,:) = spline_2d_phi % bcoef(:,:) * norm_coeff
 
     residual = sigma
 
-    ! sigma_n = sigma_(n-1) / || phi_* ||_inf
-    sigma = sigma / inf_norm_phi * max_phi
+    ! sigma_i = sigma_(i-1) * norm_coeff
+    sigma = sigma * norm_coeff
 
     residual = abs( sigma - residual )
 
@@ -403,20 +412,20 @@ contains
     real(wp), intent(in) :: psi 
     real(wp) :: f
 
-!    f = psi
+    f = psi**2
 
-    real(wp) :: b, m, q, L, k
-
-    b = 1.0e+15_wp
-
-    m = 8.8_wp
-    q = -0.22_wp
-
-    L = 1.0_wp
-    k = 1.0e+02_wp
-
-    f = log( 1.0_wp + b**( m*psi + q ) +  L / ( 1.0_wp + exp( -k * ( psi - 0.095_wp ) ) ) * &
-             b**( 4.3_wp * ( -(max_phi-psi)**0.6_wp + (max_phi-0.025_wp)**0.6_wp ) ) ) / log( b )
+!    real(wp) :: b, m, q, L, k
+!
+!    b = 1.0e+15_wp
+!
+!    m = 8.8_wp
+!    q = -0.22_wp
+!
+!    L = 1.0_wp
+!    k = 1.0e+02_wp
+!
+!    f = log( 1.0_wp + b**( m*psi + q ) +  L / ( 1.0_wp + exp( -k * ( psi - 0.095_wp ) ) ) * &
+!             b**( 4.3_wp * ( -(max_phi-psi)**0.6_wp + (max_phi-0.025_wp)**0.6_wp ) ) ) / log( b )
 
   end function f
 
