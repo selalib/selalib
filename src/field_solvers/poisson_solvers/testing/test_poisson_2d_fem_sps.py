@@ -211,8 +211,10 @@ fs = 10
 fg = plt.figure()
 ax = fg.add_subplot(111)
 # contour plot
-clevels = np.linspace( np.min( phi_plt ), np.max( phi_plt ), 101)
+clevels = np.linspace( phi_plt.min(), phi_plt.max(), 101)
 im = ax.contourf( x1, x2, phi_plt, clevels, cmap='jet' )
+for c in im.collections:
+    c.set_edgecolor('face')
 fg.colorbar( im, ax=ax )
 # grid
 nr = n1//8
@@ -226,7 +228,8 @@ ax.set_title( r'Numerical solution: $\phi(x,y)$' )
 ax.set_aspect( 'equal' )
 fg.tight_layout()
 fg.show()
-#fg.savefig( './poisson_solver_circle.pdf', dpi=300 )
+fg_name = 'poisson_solver.pdf'
+fg.savefig( fg_name, dpi=300 )
 
 err_plt = np.ndarray([n2+1,n1])
 err_plt[:n2,:] = err[:,:]
@@ -236,9 +239,14 @@ fs = 10
 fg = plt.figure()
 ax = fg.add_subplot(111)
 # contour plot
-clevels = np.linspace( np.min( err_plt ), -np.min( err_plt ), 101)
+clevels = np.linspace( err_plt.min(), err_plt.max(), 101)
 im = ax.contourf( x1, x2, err_plt, clevels, cmap='seismic' )
-fg.colorbar( im, ax=ax )
+for c in im.collections:
+    c.set_edgecolor('face')
+cb = fg.colorbar( im, ax=ax )
+cb.formatter.set_powerlimits((0,0))
+cb.formatter.useMathText = True
+cb.update_ticks()
 # grid
 nr = n1//8
 ax.plot( x1[:,::nr], x2[:,::nr], color='lightgrey', lw=0.5 )
@@ -251,4 +259,5 @@ ax.set_title( r'Numerical error: $\phi-\phi_{ex}$' )
 ax.set_aspect( 'equal' )
 fg.tight_layout()
 fg.show()
-#fg.savefig( './poisson_solver_circle_error.pdf', dpi=300 )
+fg_name = 'poisson_solver_error.pdf'
+fg.savefig( fg_name, dpi=300 )
