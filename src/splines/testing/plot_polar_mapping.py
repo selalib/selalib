@@ -181,8 +181,8 @@ for k1 in k1_list:
 #    ax = fg.add_subplot(1,1,1)
 #    # intermediate mapping
 #    k2 = 'intermed'
-#    ax.plot( x1[(k1,k2)], x2[(k1,k2)], color='k', lw=0.3)
-#    ax.plot( x1[(k1,k2)].transpose(), x2[(k1,k2)].transpose(), color='k', lw=0.3 )
+#    ax.plot( x1[(k1,k2)], x2[(k1,k2)], color='lightgrey', lw=0.5 )
+#    ax.plot( x1[(k1,k2)].transpose(), x2[(k1,k2)].transpose(), color='lightgrey', lw=0.5 )
 #    # discrete mapping
 #    k2 = 'discrete'
 #    nr = 16
@@ -192,7 +192,10 @@ for k1 in k1_list:
 #    # plot style
 #    ax.set_xlim( -1., 1.3 )
 #    ax.annotate( r'$X$', xy=(0.1,-1.55) )
-#    ax.annotate( r'$Y$', xy=(1.1,0.05) )
+#    ax.annotate( r'$Y$', xy=(1.1,0.025) )
+#    #ax.set_ylim( -1.5, 1.5 )
+#    #ax.annotate( r'$X$', xy=(-0.25,-1.43) )
+#    #ax.annotate( r'$Y$', xy=(-0.95,0.025) )
 #    ax.set_xlabel( r'$x$', fontsize=fs )
 #    ax.set_ylabel( r'$y$', fontsize=fs, rotation=0 )
 ##    ax.set_title( 'Physical domain', fontsize=fs )
@@ -303,40 +306,45 @@ print( ' Testing 2D advection on Czarny mapping' )
 print( ' ======================================' )
 print()
 
-## save figures
-#xc = 0.25
-#yc = 0.0
-#
-#s = 0.4
-#t = np.linspace(0.0,2.0*np.pi,100)
-#
-#xm = s*np.cos(t)+xc
-#ym = s*np.sin(t)+yc
-#
-#fs = 10
-#fg = plt.figure()
-#ax = fg.add_subplot(111)
-#clevels = np.linspace( min_f, max_f, 101 )
-#i  = 17
-## plot grids
-#nr = 16
-#ax.plot( x1[:,::nr], x2[:,::nr], color='lightgrey', lw=0.5 )
-#ax.plot( x1[:,127 ], x2[:,127 ], color='lightgrey', lw=0.5 )
-#ax.plot( x1.transpose()[:,::nr], x2.transpose()[:,::nr], color='lightgrey', lw=0.5 )
-## plot center of rotation
-#ax.plot( xc, yc, '.', color='w' )
-#ax.annotate( r'$(x_c,y_c)$', xy=[xc,yc-0.15], color='w',
-#             horizontalalignment='center', verticalalignment='bottom', fontsize=fs )
-## plot analytical trajectory
-#ax.plot( xm, ym, '--', color='w' )
-## contour plot
-#im = ax.contourf( x1, x2, f[str(i)], clevels, cmap='jet' )
-## style
-#ax.set_xlabel( r'$x$', fontsize=fs )
-#ax.set_ylabel( r'$y$', fontsize=fs, rotation=0 )
-#ax.set_title( r'$\rho$ $(x,y)$' )
-#ax.set_aspect( 'equal' )
-#fg.colorbar( im )
-#fg.tight_layout()
-#fg.show()
-#fg.savefig( './advection.pdf', dpi=300 )
+# save figures
+xc = 0.25
+yc = 0.0
+
+s = 0.4
+t = np.linspace(0.0,2.0*np.pi,100)
+
+i  = 17
+
+xm = s*np.cos(t)+xc
+ym = s*np.sin(t)+yc
+
+fs = 10
+fg = plt.figure()
+ax = fg.add_subplot(111)
+clevels = np.linspace( min_f, max_f, 101 )
+im = ax.contourf( x1, x2, f[str(i)], clevels, cmap='jet' )
+for c in im.collections:
+    c.set_edgecolor('face')
+cb = fg.colorbar( im, ax=ax )
+cb.formatter.set_powerlimits((0,0))
+cb.formatter.useMathText = True
+cb.update_ticks()
+# plot grids
+nr = 16
+ax.plot( x1[:,::nr], x2[:,::nr], color='lightgrey', lw=0.5 )
+ax.plot( x1[:,127 ], x2[:,127 ], color='lightgrey', lw=0.5 )
+ax.plot( x1.transpose()[:,::nr], x2.transpose()[:,::nr], color='lightgrey', lw=0.5 )
+# plot center of rotation
+ax.plot( xc, yc, '.', color='w' )
+ax.annotate( r'$(x_c,y_c)$', xy=[xc,yc-0.15], color='w',
+             horizontalalignment='center', verticalalignment='bottom', fontsize=fs )
+# plot analytical trajectory
+ax.plot( xm, ym, '--', color='w' )
+# style
+ax.set_xlabel( r'$x$', fontsize=fs )
+ax.set_ylabel( r'$y$', fontsize=fs, rotation=0 )
+ax.set_title( r'$\rho$ $(x,y)$' )
+ax.set_aspect( 'equal' )
+fg.tight_layout()
+fg.show()
+fg.savefig( './advection.pdf', dpi=300 )
