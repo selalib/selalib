@@ -74,19 +74,23 @@ def plot_iterations( arg ):
 
     fg = plt.figure(figsize=[9.0,9.0])
     ax = fg.add_subplot(111)
-    cax = make_axes_locatable(ax).append_axes( 'right', size='8%', pad='5%' )
+    #cax = make_axes_locatable(ax).append_axes( 'right', size='8%', pad='5%' )
 
     for i in tt:
         t = str(i)
         ax.clear()
-        cax.clear()
+        #cax.clear()
         if ( arg == 'rho' ):
            clevels = np.linspace( min_rho, max_rho, 100 )
-           im = ax.contourf( x1, x2, rho[t], clevels, cmap='jet' )
+           im = ax.contourf( x1, x2, rho[t], clevels, cmap='seismic' )
+           for c in im.collections:
+               c.set_edgecolor('face')
            ax.set_title( r'Density $\rho$ at iteration $%g$' %i )
         if ( arg == 'phi' ):
            clevels = np.linspace( min_phi, max_phi, 100 )
-           im = ax.contourf( x1, x2, phi[t], clevels, cmap='jet' )
+           im = ax.contourf( x1, x2, phi[t], clevels, cmap='seismic' )
+           for c in im.collections:
+               c.set_edgecolor('face')
            ax.set_title( r'Potential $\phi$ at iteration $%g$' %i )
         nr = 16
         ax.plot( x1[:,::nr], x2[:,::nr], color='lightgrey', lw=0.5 )
@@ -95,6 +99,9 @@ def plot_iterations( arg ):
         ax.set_xlabel( r'$x$' )#, fontsize=fs )
         ax.set_ylabel( r'$y$', rotation=0 )#, fontsize=fs )
         ax.set_aspect( 'equal' )
-        fg.colorbar( im, cax=cax )
+        cb = fg.colorbar( im, ax=ax )
+        cb.formatter.set_powerlimits((0,0))
+        cb.formatter.useMathText = True
+        cb.update_ticks()
         fg.canvas.draw()
-        plt.pause(1.0)
+        plt.pause(1.e-03)
