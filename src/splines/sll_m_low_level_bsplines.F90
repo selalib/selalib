@@ -59,7 +59,8 @@ module sll_m_low_level_bsplines
     sll_s_uniform_bsplines_eval_basis_and_deriv   , &
     sll_s_uniform_bsplines_eval_basis_and_n_derivs, &
     ! Evaluation of uniform periodic spline (use 'sll_m_spline_1d' instead):
-    sll_s_eval_uniform_periodic_spline_curve
+    sll_s_eval_uniform_periodic_spline_curve, &
+    sll_s_eval_uniform_periodic_spline_curve_with_zero
 
   private
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -1175,5 +1176,21 @@ contains
     end do
 
   end subroutine sll_s_eval_uniform_periodic_spline_curve
+  
+  
+  SLL_PURE subroutine sll_s_eval_uniform_periodic_spline_curve_with_zero( degree, scoef, sval )
+
+    integer , intent(in   ) :: degree
+    real(wp), intent(in   ) :: scoef(:) 
+    real(wp), intent(  out) :: sval (:) 
+    
+    if(degree==0)then
+       sval=scoef
+    else
+       call  sll_s_eval_uniform_periodic_spline_curve( degree, scoef, sval )
+    end if
+
+  end subroutine sll_s_eval_uniform_periodic_spline_curve_with_zero
+
 
 end module sll_m_low_level_bsplines
