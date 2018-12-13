@@ -1177,7 +1177,7 @@ contains
 
   end subroutine sll_s_eval_uniform_periodic_spline_curve
   
-  
+  !Wrapper function to use sll_s_eval_uniform_periodic_spline_curve with zero as spline_degree 
   SLL_PURE subroutine sll_s_eval_uniform_periodic_spline_curve_with_zero( degree, scoef, sval )
 
     integer , intent(in   ) :: degree
