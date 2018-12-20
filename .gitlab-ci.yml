@@ -1,5 +1,53 @@
-stages:
-  - build
+---
+fedora-openmpi:
+  stage: build
+  script: 
+    - "scripts/fedora-openmpi-ci.sh"
+  only:
+    - develop
+  tags:
+    - fedora
+    - openmpi
+
+fedora-mpich:
+  stage: build
+  script: 
+    - "scripts/fedora-mpich-ci.sh"
+  only:
+    - develop
+  tags:
+    - fedora
+    - mpich
+
+pages:
+    script:
+    - mkdir public
+    - echo "Hello World !" > public/index.html
+    artifacts:
+        paths:
+        - public
+
+
+
+#intel-impi:
+#  stage: build
+#  script:
+#    - "scripts/intel16-build.sh"
+#  only:
+#    - develop
+#  tags:
+#    - intel
+    
+#ubuntu-openmpi:
+#  tags:
+#    - ubuntu
+#    - openmpi
+#  stage: build
+#  script: 
+#    - "scripts/selalib-ci.sh"
+#  only:
+#    - develop
+
 #  
 #
 #
@@ -31,44 +79,5 @@ stages:
 #    - develop
 #  tags:
 #    - osx
-#    - mpich    
-    
-fedora-openmpi:
-  stage: build
-  script: 
-    - "scripts/fedora-openmpi-ci.sh"
-  only:
-    - develop
-  tags:
-    - fedora
-    - openmpi
-
-fedora-mpich:
-  stage: build
-  script: 
-    - "scripts/fedora-mpich-ci.sh"
-  only:
-    - develop
-  tags:
-    - fedora
-    - mpich
-
-#intel-impi:
-#  stage: build
-#  script:
-#    - "scripts/intel16-build.sh"
-#  only:
-#    - develop
-#  tags:
-#    - intel
-    
-#ubuntu-openmpi:
-#  tags:
-#    - ubuntu
-#    - openmpi
-#  stage: build
-#  script: 
-#    - "scripts/selalib-ci.sh"
-#  only:
-#    - develop
+#    - mpich  
   
