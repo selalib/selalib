@@ -3,8 +3,9 @@
 image: ubuntu:18.10
 
 before_script:
-  - apt-get install libopenmpi-dev openmpi-bin libhdf5-openmpi-dev
-  - apt-get install cmake gfortran libfftw3-dev liblapack-dev libopenblas-dev doxygen texlive-latex3
+  - apt-get -y update
+  - apt-get -y install libopenmpi-dev openmpi-bin libhdf5-openmpi-dev
+  - apt-get -y install cmake gfortran libfftw3-dev liblapack-dev libopenblas-dev doxygen texlive-latex3
 
 fedora-openmpi:
   stage: build
