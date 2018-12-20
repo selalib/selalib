@@ -20,12 +20,15 @@ fedora-mpich:
     - mpich
 
 pages:
+    stage: build
     script:
-    - mkdir public
-    - echo "Hello World !" > public/index.html
+      - mkdir public
+      - echo "Hello World !" > public/index.html
     artifacts:
         paths:
         - public
+    tags:
+      - docker
 
 
 
