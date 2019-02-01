@@ -10,10 +10,10 @@ program test_interpolation_4d
     sll_p_pi
 
   use sll_m_sparse_grid_2d, only: &
-    sll_t_sparse_grid_interpolator_2d
+    sll_t_sparse_grid_2d
 
   use sll_m_sparse_grid_4d, only: &
-    sll_t_sparse_grid_interpolator_4d
+    sll_t_sparse_grid_4d
 
   implicit none
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -31,8 +31,8 @@ program test_interpolation_4d
   sll_real64, dimension(:), allocatable :: displacement
   sll_real64, dimension(:), allocatable :: displacement2d
 
-  type(sll_t_sparse_grid_interpolator_4d), target   :: interp
-  type(sll_t_sparse_grid_interpolator_2d), target   :: interp2d
+  type(sll_t_sparse_grid_4d), target   :: interp
+  type(sll_t_sparse_grid_2d), target   :: interp2d
 
   sll_real64 :: tol(8)
   logical :: fail
