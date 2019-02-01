@@ -10,7 +10,7 @@ program test_interpolation_2d
     sll_p_pi
 
   use sll_m_sparse_grid_2d, only: &
-    sll_t_sparse_grid_interpolator_2d
+    sll_t_sparse_grid_2d
 
   implicit none
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -28,7 +28,7 @@ program test_interpolation_2d
   sll_int32, dimension(2) :: dorder,levelsini
   sll_real64, dimension(:), allocatable :: displacement
 
-  type(sll_t_sparse_grid_interpolator_2d), target   :: interp
+  type(sll_t_sparse_grid_2d), target   :: interp
 
   logical :: fail
 
