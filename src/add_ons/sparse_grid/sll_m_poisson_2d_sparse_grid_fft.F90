@@ -14,7 +14,7 @@ module sll_m_poisson_2d_sparse_grid_fft
     sll_p_pi
 
   use sll_m_sparse_grid_2d, only: &
-    sll_t_sparse_grid_interpolator_2d
+    sll_t_sparse_grid_2d
 
   implicit none
 
@@ -46,7 +46,7 @@ contains
 !> Create Poisson solver object with Fourier spectral method on 2d sparse grid
 subroutine new_poisson_2d_sparse_grid_fft(this,interpolator)
   class(sll_t_fft_derivative),intent(inout) ::this !< Poisson solver object
-  type(sll_t_sparse_grid_interpolator_2d),intent(in) ::interpolator !< Underlying sparse grid
+  type(sll_t_sparse_grid_2d),intent(in) ::interpolator !< Underlying sparse grid
   sll_int32 :: ierr,i,j
   sll_real64, dimension(:), allocatable :: data1d
   sll_real64 :: size_factor
@@ -99,7 +99,7 @@ end subroutine new_poisson_2d_sparse_grid_fft
 !> Solve for potential
 subroutine solve_potential(this,interpolator,rho,phi)
   class(sll_t_fft_derivative),intent(inout) ::this !< Poisson solver object
-  type(sll_t_sparse_grid_interpolator_2d), intent(inout)   :: interpolator !< Underlying sparse grid.
+  type(sll_t_sparse_grid_2d), intent(inout)   :: interpolator !< Underlying sparse grid.
   sll_real64,dimension(:),intent(inout) ::phi !< Solution  of Poisson's equation
   sll_real64,dimension(:),intent(inout) ::rho !< Right-hand-side for Poisson's problem
   sll_int32 :: i
@@ -119,7 +119,7 @@ end subroutine solve_potential
 !> Compute the electric fields from rho
 subroutine solve_for_electric_field(this,interpolator,rho,ex,ey)
   class(sll_t_fft_derivative),intent(inout) ::this !< Poisson solver object
-  type(sll_t_sparse_grid_interpolator_2d), intent(inout)   :: interpolator !< underlying sparse grid
+  type(sll_t_sparse_grid_2d), intent(inout)   :: interpolator !< underlying sparse grid
   sll_real64, dimension(:),intent(inout) :: ex !< x component of electric field
   sll_real64, dimension(:),intent(inout) :: ey !< y component of electric field
   sll_real64, dimension(:),intent(inout) :: rho !< given density as rhs
@@ -142,7 +142,7 @@ end subroutine solve_for_electric_field
 
 !> Helper function to compute the Fourier coefficients for the derivative operation
 subroutine derivative_coeffs_1d(interpolator,dim,max_level,index,size_factor,data1d,data)
-  class(sll_t_sparse_grid_interpolator_2d), intent(in) :: interpolator
+  class(sll_t_sparse_grid_2d), intent(in) :: interpolator
   sll_real64, dimension(:), intent(inout) :: data, data1d
   sll_int32, intent(in) :: dim,max_level,index
   sll_real64 , intent(in) :: size_factor
@@ -164,7 +164,7 @@ end subroutine derivative_coeffs_1d
 
 !> Helper function to insert the real Fourier coefficient into the sparse grid data structure
 subroutine insert_fourier_real(sparsegrid,dim,max_level,index,data_in,data_out)
-  type(sll_t_sparse_grid_interpolator_2d), intent(in) :: sparsegrid
+  type(sll_t_sparse_grid_2d), intent(in) :: sparsegrid
   sll_int32, intent(in) :: dim,max_level,index
   sll_int32             :: n_points,index_running
   sll_real64,dimension(:),intent(in) :: data_in
@@ -185,7 +185,7 @@ end subroutine insert_fourier_real
 
 !> Helper function to insert the real Fourier coefficients into the sparse grid data structure (recursive part)
 recursive subroutine insert_recursive_fourier_real(sparsegrid,index_sg,ind,level,max_level,dim,data_in,data_out)
-  type(sll_t_sparse_grid_interpolator_2d), intent(in) :: sparsegrid
+  type(sll_t_sparse_grid_2d), intent(in) :: sparsegrid
   sll_int32, intent(in) :: level,max_level,index_sg,dim,ind
   sll_real64,dimension(:),intent(in) :: data_in
   sll_real64,dimension(:),intent(inout) :: data_out

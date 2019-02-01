@@ -10,7 +10,7 @@ program test_poisson_3d_sparsegrid_fft
     sll_t_fft3d_derivative
 
   use sll_m_sparse_grid_3d, only: &
-    sll_t_sparse_grid_interpolator_3d
+    sll_t_sparse_grid_3d
 
   implicit none
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -18,7 +18,7 @@ program test_poisson_3d_sparsegrid_fft
    sll_real64                    :: eta_max(3), eta_min(3)
    sll_int32                    :: error
 
-   type(sll_t_sparse_grid_interpolator_3d) :: interp
+   type(sll_t_sparse_grid_3d) :: interp
 
    sll_real64, allocatable      :: ex(:)
    sll_real64, allocatable      :: ey(:)
