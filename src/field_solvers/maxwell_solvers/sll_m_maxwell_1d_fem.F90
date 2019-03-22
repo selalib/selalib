@@ -168,6 +168,7 @@ contains
 
    end subroutine sll_s_compute_e_from_rho_1d_fem
 
+
    subroutine solve_circulant(self, eigvals, rhs, res)
      class(sll_t_maxwell_1d_fem) :: self
      sll_real64, intent(in) :: eigvals(:)    ! eigenvalues of circulant matrix
@@ -194,7 +195,7 @@ contains
      ! Backward FFT 
      call sll_s_fft_exec_r2r_1d( self%plan_bw, self%wsave, res )
      ! normalize
-     res = res / self%n_dofs
+     res = res / real(self%n_dofs, f64)
    end subroutine solve_circulant
 
 
@@ -336,7 +337,7 @@ contains
 
      self%n_dofs = n_dofs
      self%Lx = domain(2) - domain(1)
-     self%delta_x = self%Lx / n_dofs
+     self%delta_x = self%Lx / real(n_dofs, f64)
      self%s_deg_0 = s_deg_0
      self%s_deg_1 = s_deg_0 - 1
 
