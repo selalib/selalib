@@ -12,10 +12,21 @@ module sll_m_fekete_integration
 #include "sll_memory.h"
 #include "sll_working_precision.h"
 
+  use sll_m_hexagonal_meshes, only: &
+    sll_f_new_hex_mesh_2d, &
+    sll_s_write_caid_files, &
+    sll_t_hex_mesh_2d
+
+  use sll_m_box_splines, only: &
+    sll_s_write_connectivity, &
+    sll_f_boxspline_val_der
+
   implicit none
 
   public :: &
     sll_s_fekete_order_num, &
+    sll_s_write_all_django_files, &
+    sll_f_fekete_integral, &
     sll_f_fekete_points_and_weights
 
   private
@@ -35,10 +46,7 @@ module sll_m_fekete_integration
   end interface
 #endif
 
-  !> Integrate numerically with Fekete quadrature formula
-  interface fekete_integrate
-     module procedure fekete_integral
-  end interface fekete_integrate
+
 contains
 
 
@@ -112,7 +120,7 @@ contains
   !---------------------------------------------------------------------------
   !> @brief returns the points and weights of a Fekete rule.
   !> @details This code was first written by John Burkardt and is available
-  !> online under the GNU LGPL license. 
+  !> online under the GNU LGPL license.
   !> @param[IN] rule integer the index of the rule
   !> @param[IN] order_num integer the order (number of points of the rule)
   !> @param[OUT] xy real table the points of the rule
@@ -223,7 +231,7 @@ contains
        xyw_copy(1:3, low_left) = 10000._f64
     end do
   end subroutine rearrange_fekete_rule
-  
+
   !---------------------------------------------------------------------------
   !> @brief returns the number of Fekete rules available.
   !> @details This code was first written by John Burkardt and is available
@@ -338,7 +346,7 @@ contains
     sll_real64, intent(out) :: suborder_w(suborder_num)
     sll_real64, intent(out) :: suborder_xyz(3,suborder_num)
     sll_int32 ::  s
-    
+
     if(rule == 1) then
        suborder_xyz(1:3,1:suborder_num) = reshape((/ &
             1._f64/3._f64,  1._f64/3._f64, 1._f64/3._f64, &
@@ -791,7 +799,7 @@ contains
     call fekete_rule(rule, order_num, xy, w)
     call rearrange_fekete_rule(order_num, xy, w)
     xyw(3, :) = w
-    
+
     call reference_to_physical_t3 (node_xy2, order_num, xy, xy2)
     xyw(1:2, :) = xy2
 
@@ -812,9 +820,9 @@ contains
   !> @param[in]  pxy array of dimesion (2,3) containg the coordinates
   !>             of the edges of the triangle
   !> @return The value of the integral
-  function fekete_integral( f, pxy)
+  function sll_f_fekete_integral( f, pxy)
     sll_real64, dimension(2, 3), intent(in) :: pxy
-    sll_real64                  :: fekete_integral
+    sll_real64                  :: sll_f_fekete_integral
     procedure(function_2D)      :: f
     sll_real64, dimension(3,10) :: xyw
     sll_real64, dimension(2)    :: v1
@@ -833,9 +841,9 @@ contains
     xyw = sll_f_fekete_points_and_weights(pxy, 1)
 
     N = 10
-    fekete_integral = 0._f64
+    sll_f_fekete_integral = 0._f64
     do k=1,N
-       fekete_integral = fekete_integral + f(xyw(1,k), xyw(2,k))*xyw(3,k)
+       sll_f_fekete_integral = sll_f_fekete_integral + f(xyw(1,k), xyw(2,k))*xyw(3,k)
     end do
 
     ! Computing the area of the triangle
@@ -856,8 +864,8 @@ contains
     ! area
     area = sqrt(p*(p-a)*(p-b)*(p-c))
 
-    fekete_integral = fekete_integral * area
-  end function fekete_integral
+    sll_f_fekete_integral = sll_f_fekete_integral * area
+  end function sll_f_fekete_integral
 
   subroutine triangle_area ( node_xy, area )
     implicit none
@@ -873,5 +881,178 @@ contains
   return
 end subroutine triangle_area
 
-  
+  !---------------------------------------------------------------------------
+  !> @brief Writes fekete points coordinates of a hex-mesh reference triangle
+  !> @details Takes the reference triangle of a hexmesh and computes the
+  !> fekete points on it. Then it writes the results in a file following
+  !> CAID/Django nomenclature.
+  !> Output file : boxsplines_quadrature.txt
+  !> @param[in]  rule integer for the fekete quadrature rule
+  subroutine write_quadrature(rule)
+    sll_int32, intent(in)       :: rule
+    sll_int32                   :: out_unit
+    character(len=25), parameter :: name = "boxsplines_quadrature.txt"
+    sll_real64, dimension(2, 3) :: ref_pts
+    sll_real64, dimension(:,:), allocatable :: quad_pw
+    sll_int32  :: num_fek
+    sll_int32  :: i
+    sll_real64 :: x
+    sll_real64 :: y
+    sll_real64 :: w
+    sll_real64 :: volume
+    sll_int32  :: ierr
+    ! Definition of reference triangle, such that:
+    !    |
+    !    1  3
+    !    |  | \
+    !    |  |   \
+    !    |  |     X 2
+    !    |  |   /   
+    !    |  | /
+    !    0  1     
+    !    |
+    !    +--0-----1-->
+    ref_pts(:,1) = (/ 0._f64, 0.0_f64 /)
+    ! ref_pts(:,2) = (/ 1._f64, 0.0_f64 /)
+    ref_pts(:,2) = (/ sqrt(3._f64)*0.5_f64, 0.5_f64 /)
+    ref_pts(:,3) = (/ 0._f64, 1.0_f64 /)
+
+    call triangle_area(ref_pts, volume)
+    print *, "area triangle = ", volume
+
+    ! Computing fekete points on that triangle
+    call sll_s_fekete_order_num(rule, num_fek)
+    SLL_ALLOCATE(quad_pw(1:3, 1:num_fek), ierr)
+    quad_pw = sll_f_fekete_points_and_weights(ref_pts, rule)
+    ! For Gaussian quadrature rule:
+    ! num_fek = rule + 1
+    ! SLL_ALLOCATE(quad_pw(1:3, 1:num_fek), ierr)
+    ! quad_pw = gauss_triangle_points_and_weights(ref_pts, rule)
+
+    open( file=name, status="replace", form="formatted", newunit=out_unit )
+
+    write(out_unit, "(i6)") num_fek
+
+    do i=1,num_fek
+       x = quad_pw(1,i)
+       y = quad_pw(2,i)
+       w = quad_pw(3,i) * volume
+       write(out_unit, "(2(g25.17,a,1x),(g25.17))") x, ",", y, ",", w
+    end do
+    close(out_unit)
+  end subroutine write_quadrature
+
+  !---------------------------------------------------------------------------
+  !> @brief Writes on a file values of boxsplines on fekete points
+  !> @details Following CAID structure, we write a file with the values
+  !> of the basis function (box splines) on a reference element (triangle)
+  !> fekete points. Output for DJANGO.
+  !> Output file : boxsplines_basis_values.txt
+  !> @param[in] deg integer with degree of splines
+  subroutine write_basis_values(deg, rule)
+    sll_int32,  intent(in)      :: deg
+    sll_int32,  intent(in)      :: rule
+    sll_real64, dimension(2, 3) :: ref_pts
+    sll_real64, dimension(:, :), allocatable :: quad_pw
+    sll_real64, dimension(:, :), allocatable :: disp_vec
+    sll_int32,  parameter       :: out_unit=20
+    character(len=*), parameter :: name = "boxsplines_basis_values.txt"
+    sll_real64  :: x
+    sll_real64  :: y
+    sll_real64  :: val
+    sll_int32   :: ierr
+    sll_int32   :: nonZero
+    sll_int32   :: ind_nZ
+    sll_int32   :: nderiv
+    sll_int32   :: idx, idy
+    sll_int32   :: num_fek
+    sll_int32   :: ind_fek
+    ! Definition of reference triangle, such that:
+    !    |
+    !    1  3
+    !    |  |  \
+    !    |  |   \
+    !    |  |    \
+    !    |  |     \
+    !    |  | _____\
+    !    0  1      2
+    !    |
+    !    +--0-----1-->
+    ref_pts(:,1) = (/ 0._f64, 0.0_f64 /)
+    !    ref_pts(:,2) = (/ 1._f64, 0.0_f64 /)
+    ref_pts(:,2) = (/ sqrt(3._f64)/2._f64, 0.5_f64 /)
+    ref_pts(:,3) = (/ 0._f64, 1.0_f64 /)
+
+    ! Computing fekete points on the reference triangle
+    call sll_s_fekete_order_num ( rule, num_fek )
+    SLL_ALLOCATE(quad_pw(1:3, 1:num_fek), ierr)
+    quad_pw = sll_f_fekete_points_and_weights(ref_pts, rule)
+    ! ! For Gaussian qudrature:
+    ! num_fek = rule + 1
+    ! SLL_ALLOCATE(quad_pw(1:3, 1:num_fek), ierr)
+    ! quad_pw = gauss_triangle_points_and_weights(ref_pts, rule)
+
+    nonZero = 3*deg*deg !> Number of non null box splines on a cell
+    nderiv  = 1 !> Number of derivatives to be computed
+
+    !> The displament vector correspond to the translation
+    !> done to obtain the other non null basis functions
+    SLL_ALLOCATE(disp_vec(2, nonZero), ierr)
+    disp_vec(:,1) = 0._f64
+    disp_vec(:,2) = ref_pts(:,1) - ref_pts(:,2)
+    disp_vec(:,3) = ref_pts(:,1) - ref_pts(:,3)
+
+    open (unit=out_unit,file=name,action="write",status="replace")
+
+    write(out_unit, "(i6)") deg
+    write(out_unit, "(i6)") nderiv
+
+    do ind_nZ = 1, nonZero
+       do ind_fek = 1, num_fek
+          x = quad_pw(1, ind_fek) + disp_vec(1, ind_nZ)
+          y = quad_pw(2, ind_fek) + disp_vec(2, ind_nZ)
+          do idx = 0, nderiv
+             do idy = 0, nderiv-idx
+                val = sll_f_boxspline_val_der(x, y, deg, idx, idy)
+                write(out_unit, "(1(g25.18))", advance='no') val
+                if ((idx<nderiv).or.(idy<nderiv-idx))  then
+                   write(out_unit, "(1(a,1x))", advance='no') ","
+                end if
+             end do
+          end do
+          write(out_unit, *) ""
+       end do
+    end do
+
+    close(out_unit)
+    SLL_DEALLOCATE_ARRAY(disp_vec, ierr)
+    SLL_DEALLOCATE_ARRAY(quad_pw, ierr)
+
+  end subroutine write_basis_values
+
+  !> @brief This function is supposed to write all django input files
+  !> needed for a Django/Jorek simulation.
+  !> @param[in] num_cells integer number of cells in a radius of the hexagonal
+  !> mesh
+  !> @param[in] deg integer degree of the splines that will be used for the
+  !> interpolation
+  subroutine sll_s_write_all_django_files(num_cells, deg, rule, transf)
+    sll_int32, intent(in)          :: num_cells
+    sll_int32, intent(in)          :: deg
+    sll_int32, intent(in)          :: rule
+    type(sll_t_hex_mesh_2d), pointer :: mesh
+    character(len=*),  intent(in)  :: transf
+
+    mesh => sll_f_new_hex_mesh_2d(num_cells, 0._f64, 0._f64, radius = 1._f64)
+
+    call sll_s_write_caid_files(mesh, transf, deg)
+    call sll_s_write_connectivity(mesh, deg)
+    call write_basis_values(deg, rule)
+    call write_quadrature(rule)
+#ifdef DEBUG
+    print*, 'sll_s_write_all_django_files rule=', rule
+#endif
+
+  end subroutine sll_s_write_all_django_files
+
 end module sll_m_fekete_integration

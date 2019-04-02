@@ -44,7 +44,7 @@ module sll_m_particle_group_2d2v_lbf
      sll_c_distribution_params
 
   use sll_m_sparse_grid_4d, only: &
-    sll_t_sparse_grid_interpolator_4d
+    sll_t_sparse_grid_4d
 
   implicit none
 
@@ -99,7 +99,7 @@ module sll_m_particle_group_2d2v_lbf
     !> @name Sparse grid interpolation of the remapped density f, dimensions of remapping grid = particle grid
     !> @{
     sll_int32                                        :: remapped_f_interpolation_degree
-    type(sll_t_sparse_grid_interpolator_4d)          :: sparse_grid_interpolator
+    type(sll_t_sparse_grid_4d)          :: sparse_grid_interpolator
     sll_int32,  dimension(4)                         :: sparse_grid_max_levels
     sll_real64, dimension(:), allocatable            :: remapped_f_sparse_grid_coefficients
     sll_real64, dimension(:), allocatable            :: tmp_f_values_on_remapping_sparse_grid   !< used only during remapping

@@ -1,7 +1,3 @@
-IF(MPI_ENABLED)
-  SET(CMAKE_Fortran_COMPILER ${MPI_Fortran_COMPILER})
-ENDIF()
-
 SET( ADVECTION_SRC_FILES 
        sll_m_advection_1d_periodic.F90
        sll_m_advection_1d_non_uniform_cubic_splines.F90

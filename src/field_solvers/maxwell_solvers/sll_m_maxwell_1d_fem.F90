@@ -168,6 +168,7 @@ contains
 
    end subroutine sll_s_compute_e_from_rho_1d_fem
 
+
    subroutine solve_circulant(self, eigvals, rhs, res)
      class(sll_t_maxwell_1d_fem) :: self
      sll_real64, intent(in) :: eigvals(:)    ! eigenvalues of circulant matrix
@@ -194,7 +195,7 @@ contains
      ! Backward FFT 
      call sll_s_fft_exec_r2r_1d( self%plan_bw, self%wsave, res )
      ! normalize
-     res = res / self%n_dofs
+     res = res / real(self%n_dofs, f64)
    end subroutine solve_circulant
 
 
@@ -336,7 +337,7 @@ contains
 
      self%n_dofs = n_dofs
      self%Lx = domain(2) - domain(1)
-     self%delta_x = self%Lx / n_dofs
+     self%delta_x = self%Lx / real(n_dofs, f64)
      self%s_deg_0 = s_deg_0
      self%s_deg_1 = s_deg_0 - 1
 
@@ -395,20 +396,20 @@ contains
         coef0 =  self%mass_0(1)
         coef1 =  self%mass_1(1)
         do j=1,s_deg_0 - 1
-           cos_mode = cos(2*sll_p_pi*j*k/n_dofs)
+           cos_mode = cos(2*sll_p_pi*j*k/real(n_dofs,f64))
            coef0 = coef0 + 2* self%mass_0(j+1)*cos_mode
            coef1 = coef1 + 2* self%mass_1(j+1)*cos_mode
         enddo
         ! add last term for larger matrix
         j = s_deg_0
-        coef0 = coef0 + 2* self%mass_0(j+1)*cos(2*sll_p_pi*j*k/n_dofs)
+        coef0 = coef0 + 2* self%mass_0(j+1)*cos(2*sll_p_pi*j*k/real(n_dofs,f64))
         ! compute eigenvalues
         self%eig_mass0(k+1) = coef0 ! real part
         self%eig_mass0(n_dofs-k+1) = 0.0_f64 ! imaginary part
         self%eig_mass1(k+1) = coef1 ! real part
         self%eig_mass1(n_dofs-k+1) = 0.0_f64 ! imaginary part
-        cos_mode = cos(2*sll_p_pi*k/n_dofs)
-        sin_mode = sin(2*sll_p_pi*k/n_dofs)
+        cos_mode = cos(2*sll_p_pi*k/real(n_dofs,f64))
+        sin_mode = sin(2*sll_p_pi*k/real(n_dofs,f64))
         self%eig_weak_ampere(k+1) =  (coef1 / coef0) * (1-cos_mode) ! real part
         self%eig_weak_ampere(n_dofs-k+1) =  -(coef1 / coef0) * sin_mode   ! imaginary part
         self%eig_weak_poisson(k+1) = 1.0_f64 / (coef1 * ((1-cos_mode)**2 + &

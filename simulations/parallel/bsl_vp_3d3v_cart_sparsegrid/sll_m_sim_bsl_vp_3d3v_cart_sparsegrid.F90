@@ -38,7 +38,7 @@ module sll_m_sim_sl_vp_3d3v_cart_sparsegrid
     sll_c_simulation_base_class
 
   use sll_m_sparse_grid_3d, only: &
-    sll_t_sparse_grid_interpolator_3d
+    sll_t_sparse_grid_3d
 
   implicit none
 
@@ -85,7 +85,7 @@ module sll_m_sim_sl_vp_3d3v_cart_sparsegrid
      type(sll_t_fft3d_derivative)  :: poisson
      
      ! Interpolator
-     type(sll_t_sparse_grid_interpolator_3d)   :: interp_x, interp_v
+     type(sll_t_sparse_grid_3d)   :: interp_x, interp_v
 
      ! For parallelization
      type(sll_t_remap_plan_2d_real64), pointer :: remap_x2v, remap_v2x ! Remapper between layoutx and layoutv
