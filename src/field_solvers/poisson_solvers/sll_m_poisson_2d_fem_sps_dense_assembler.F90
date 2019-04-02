@@ -3,7 +3,7 @@ module sll_m_poisson_2d_fem_sps_dense_assembler
 
   use sll_m_working_precision, only: f64
 
-  use sll_m_elliptic_2d_fem_sps_weak_form, only: sll_c_elliptic_2d_fem_sps_weak_form
+  use sll_m_poisson_2d_fem_sps_weak_form, only: sll_t_poisson_2d_fem_sps_weak_form
 
   implicit none
 
@@ -20,7 +20,7 @@ module sll_m_poisson_2d_fem_sps_dense_assembler
     integer :: n1
     integer :: n2
 
-    class(sll_c_elliptic_2d_fem_sps_weak_form), pointer :: weak_form
+    class(sll_t_poisson_2d_fem_sps_weak_form), pointer :: weak_form
 
   contains
 
@@ -36,10 +36,10 @@ contains
 
   ! Initializer
   subroutine s_poisson_2d_fem_sps_dense_assembler__init( self, n1, n2, weak_form )
-    class(sll_t_poisson_2d_fem_sps_dense_assembler)   , intent(inout) :: self
-    integer                                           , intent(in   ) :: n1
-    integer                                           , intent(in   ) :: n2
-    class(sll_c_elliptic_2d_fem_sps_weak_form), target, intent(in   ) :: weak_form
+    class(sll_t_poisson_2d_fem_sps_dense_assembler)  , intent(inout) :: self
+    integer                                          , intent(in   ) :: n1
+    integer                                          , intent(in   ) :: n2
+    class(sll_t_poisson_2d_fem_sps_weak_form), target, intent(in   ) :: weak_form
 
     self % n1 = n1
     self % n2 = n2

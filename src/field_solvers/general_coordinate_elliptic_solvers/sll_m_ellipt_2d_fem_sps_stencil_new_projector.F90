@@ -1,4 +1,4 @@
-module sll_m_poisson_2d_fem_sps_stencil_new_projector
+module sll_m_ellipt_2d_fem_sps_stencil_new_projector
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_assert.h"
 
@@ -12,7 +12,7 @@ module sll_m_poisson_2d_fem_sps_stencil_new_projector
 
   implicit none
 
-  public :: sll_t_poisson_2d_fem_sps_stencil_new_projector
+  public :: sll_t_ellipt_2d_fem_sps_stencil_new_projector
 
   private
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -20,7 +20,7 @@ module sll_m_poisson_2d_fem_sps_stencil_new_projector
   ! Working precision
   integer, parameter :: wp = f64
 
-  type :: sll_t_poisson_2d_fem_sps_stencil_new_projector
+  type :: sll_t_ellipt_2d_fem_sps_stencil_new_projector
 
     integer :: n1
     integer :: n2
@@ -33,26 +33,26 @@ module sll_m_poisson_2d_fem_sps_stencil_new_projector
 
   contains
 
-    procedure :: init                    => s_poisson_2d_fem_sps_stencil_new_projector__init
-    procedure :: change_basis_matrix     => s_poisson_2d_fem_sps_stencil_new_projector__change_basis_matrix
-    procedure :: change_basis_vector     => s_poisson_2d_fem_sps_stencil_new_projector__change_basis_vector
-    procedure :: change_basis_vector_inv => s_poisson_2d_fem_sps_stencil_new_projector__change_basis_vecinv
-    procedure :: free                    => s_poisson_2d_fem_sps_stencil_new_projector__free
+    procedure :: init                    => s_ellipt_2d_fem_sps_stencil_new_projector__init
+    procedure :: change_basis_matrix     => s_ellipt_2d_fem_sps_stencil_new_projector__change_basis_matrix
+    procedure :: change_basis_vector     => s_ellipt_2d_fem_sps_stencil_new_projector__change_basis_vector
+    procedure :: change_basis_vector_inv => s_ellipt_2d_fem_sps_stencil_new_projector__change_basis_vecinv
+    procedure :: free                    => s_ellipt_2d_fem_sps_stencil_new_projector__free
 
-  end type sll_t_poisson_2d_fem_sps_stencil_new_projector
+  end type sll_t_ellipt_2d_fem_sps_stencil_new_projector
 
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 contains
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
   ! Initializer
-  subroutine s_poisson_2d_fem_sps_stencil_new_projector__init( self, n1, n2, p1, p2, L )
-    class(sll_t_poisson_2d_fem_sps_stencil_new_projector), intent(inout) :: self
-    integer                                              , intent(in   ) :: n1
-    integer                                              , intent(in   ) :: n2
-    integer                                              , intent(in   ) :: p1
-    integer                                              , intent(in   ) :: p2
-    real(wp)                                             , intent(in   ) :: L(:,:,:) ! matrix of barycentric coordinates
+  subroutine s_ellipt_2d_fem_sps_stencil_new_projector__init( self, n1, n2, p1, p2, L )
+    class(sll_t_ellipt_2d_fem_sps_stencil_new_projector), intent(inout) :: self
+    integer                                             , intent(in   ) :: n1
+    integer                                             , intent(in   ) :: n2
+    integer                                             , intent(in   ) :: p1
+    integer                                             , intent(in   ) :: p2
+    real(wp)                                            , intent(in   ) :: L(:,:,:) ! matrix of barycentric coordinates
 
     self % n1 = n1
     self % n2 = n2
@@ -67,12 +67,12 @@ contains
     allocate( self % L      ( size(L,1), size(L,2), size(L,3) ), source = L )
     allocate( self % Qp_temp( size(L,1), size(L,2), size(L,3) ) )
 
-  end subroutine s_poisson_2d_fem_sps_stencil_new_projector__init
+  end subroutine s_ellipt_2d_fem_sps_stencil_new_projector__init
 
   ! Change basis: C1 projection of stiffness and mass matrices
   ! NOTE: 'self' has intent(inout) because temporary storage has to be assigned
-  subroutine s_poisson_2d_fem_sps_stencil_new_projector__change_basis_matrix( self, Ql, Qp )
-    class(sll_t_poisson_2d_fem_sps_stencil_new_projector), intent(inout) :: self
+  subroutine s_ellipt_2d_fem_sps_stencil_new_projector__change_basis_matrix( self, Ql, Qp )
+    class(sll_t_ellipt_2d_fem_sps_stencil_new_projector) , intent(inout) :: self
     type(sll_t_linear_operator_matrix_stencil_to_stencil), intent(inout) :: Ql
     type(sll_t_linear_operator_matrix_c1_block_new)      , intent(inout) :: Qp
 
@@ -154,13 +154,13 @@ contains
 
     end associate
 
-  end subroutine s_poisson_2d_fem_sps_stencil_new_projector__change_basis_matrix
+  end subroutine s_ellipt_2d_fem_sps_stencil_new_projector__change_basis_matrix
 
   ! Change basis: C1 projection of vectors
-  subroutine s_poisson_2d_fem_sps_stencil_new_projector__change_basis_vector( self, V, Vp )
-    class(sll_t_poisson_2d_fem_sps_stencil_new_projector), intent(in   ) :: self
-    real(wp)                                             , intent(in   ) :: V(:,:)
-    type(sll_t_vector_space_c1_block)                    , intent(inout) :: Vp
+  subroutine s_ellipt_2d_fem_sps_stencil_new_projector__change_basis_vector( self, V, Vp )
+    class(sll_t_ellipt_2d_fem_sps_stencil_new_projector), intent(in   ) :: self
+    real(wp)                                            , intent(in   ) :: V(:,:)
+    type(sll_t_vector_space_c1_block)                   , intent(inout) :: Vp
 
     integer :: i1, i2, ll
 
@@ -193,13 +193,13 @@ contains
 
     end associate
 
-  end subroutine s_poisson_2d_fem_sps_stencil_new_projector__change_basis_vector
+  end subroutine s_ellipt_2d_fem_sps_stencil_new_projector__change_basis_vector
 
   ! Change basis: C1 projection of vectors
-  subroutine s_poisson_2d_fem_sps_stencil_new_projector__change_basis_vecinv( self, Vp, V )
-    class(sll_t_poisson_2d_fem_sps_stencil_new_projector), intent(in   ) :: self
-    type(sll_t_vector_space_c1_block)                    , intent(inout) :: Vp
-    real(wp)                                             , intent(inout) :: V (:)
+  subroutine s_ellipt_2d_fem_sps_stencil_new_projector__change_basis_vecinv( self, Vp, V )
+    class(sll_t_ellipt_2d_fem_sps_stencil_new_projector), intent(in   ) :: self
+    type(sll_t_vector_space_c1_block)                   , intent(inout) :: Vp
+    real(wp)                                            , intent(inout) :: V (:)
 
     integer :: i, i1, i2, j, j1, j2, ll
 
@@ -233,15 +233,15 @@ contains
 
     end associate
 
-  end subroutine s_poisson_2d_fem_sps_stencil_new_projector__change_basis_vecinv
+  end subroutine s_ellipt_2d_fem_sps_stencil_new_projector__change_basis_vecinv
 
   ! Deallocate allocatables
-  subroutine s_poisson_2d_fem_sps_stencil_new_projector__free( self )
-    class(sll_t_poisson_2d_fem_sps_stencil_new_projector), intent(inout) :: self
+  subroutine s_ellipt_2d_fem_sps_stencil_new_projector__free( self )
+    class(sll_t_ellipt_2d_fem_sps_stencil_new_projector), intent(inout) :: self
 
     deallocate( self % Qp_temp )
     deallocate( self % L       )
 
-  end subroutine s_poisson_2d_fem_sps_stencil_new_projector__free
+  end subroutine s_ellipt_2d_fem_sps_stencil_new_projector__free
 
-end module sll_m_poisson_2d_fem_sps_stencil_new_projector
+end module sll_m_ellipt_2d_fem_sps_stencil_new_projector

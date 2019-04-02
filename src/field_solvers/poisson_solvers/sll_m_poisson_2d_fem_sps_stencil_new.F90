@@ -17,7 +17,7 @@ module sll_m_poisson_2d_fem_sps_stencil_new
 
   use sll_m_poisson_2d_fem_sps_stencil_new_assembler, only: sll_t_poisson_2d_fem_sps_stencil_new_assembler
 
-  use sll_m_poisson_2d_fem_sps_stencil_new_projector, only: sll_t_poisson_2d_fem_sps_stencil_new_projector
+  use sll_m_ellipt_2d_fem_sps_stencil_new_projector, only: sll_t_ellipt_2d_fem_sps_stencil_new_projector
 
   use sll_m_vector_space_real_array_2d, only: sll_t_vector_space_real_array_2d
 
@@ -109,7 +109,7 @@ module sll_m_poisson_2d_fem_sps_stencil_new
     type(sll_t_poisson_2d_fem_sps_stencil_new_assembler) :: assembler
 
     ! C1 projector
-    type(sll_t_poisson_2d_fem_sps_stencil_new_projector) :: projector
+    type(sll_t_ellipt_2d_fem_sps_stencil_new_projector) :: projector
 
     ! Linear solver
     type(sll_t_conjugate_gradient) :: cjsolver
