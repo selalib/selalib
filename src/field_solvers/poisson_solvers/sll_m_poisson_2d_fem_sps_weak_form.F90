@@ -3,7 +3,7 @@ module sll_m_poisson_2d_fem_sps_weak_form
 
   use sll_m_working_precision, only: f64
 
-  use sll_m_elliptic_2d_fem_sps_weak_form, only: sll_c_elliptic_2d_fem_sps_weak_form
+  use sll_m_ellipt_2d_fem_sps_weak_form, only: sll_c_ellipt_2d_fem_sps_weak_form
 
   implicit none
 
@@ -15,7 +15,7 @@ module sll_m_poisson_2d_fem_sps_weak_form
   ! Working precision
   integer, parameter :: wp = f64
 
-  type, extends(sll_c_elliptic_2d_fem_sps_weak_form) :: sll_t_poisson_2d_fem_sps_weak_form
+  type, extends(sll_c_ellipt_2d_fem_sps_weak_form) :: sll_t_poisson_2d_fem_sps_weak_form
 
   contains
 
