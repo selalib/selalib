@@ -1,3 +1,8 @@
+# Compute rho=-div(grad(phi)) in curvilinear coordinates
+# How to run the script:
+# >> ipython3 qtconsole
+# >> run poisson_curvilinear.py circle
+
 import sys
 import sympy as sp
 from sympy import *
