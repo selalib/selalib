@@ -117,9 +117,9 @@ function sll_f_new_advection_2d_tri_mesh( mesh ) result(adv)
      is2 = mesh%nodes(2,i) 
      is3 = mesh%nodes(3,i) 
   
-     adv%xbas(is1) = adv%xbas(is1) + mesh%aire(i)/3.
-     adv%xbas(is2) = adv%xbas(is2) + mesh%aire(i)/3.
-     adv%xbas(is3) = adv%xbas(is3) + mesh%aire(i)/3.
+     adv%xbas(is1) = adv%xbas(is1) + mesh%area(i)/3.
+     adv%xbas(is2) = adv%xbas(is2) + mesh%area(i)/3.
+     adv%xbas(is3) = adv%xbas(is3) + mesh%area(i)/3.
   end do
 
 

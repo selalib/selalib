@@ -23,7 +23,10 @@ module sll_m_box_splines
     sll_p_sqrt3
 
   use sll_m_hex_pre_filters, only: &
-    sll_s_pre_filter_pfir
+       sll_s_pre_filter_pfir, &
+       sll_f_pre_filter_int, &
+       sll_f_pre_filter_piir2, &
+       sll_f_pre_filter_piir1
 
   use sll_m_hexagonal_meshes, only: &
     sll_f_cart_to_hex1, &
@@ -48,9 +51,9 @@ module sll_m_box_splines
     sll_f_compute_box_spline, &
     sll_f_hex_interpolate_value, &
     sll_f_new_box_spline_2d, &
+    sll_f_boxspline_val_der, &
     sll_t_box_spline_2d, &
     sll_o_delete, &
-    sll_s_write_all_django_files, &
     sll_s_write_connectivity
 
   private
@@ -168,7 +171,7 @@ contains  ! ****************************************************************
     sll_int32  :: k1_ref, k2_ref
     sll_int32  :: k
     sll_int32  :: i
-    !sll_int32  :: ierr
+    sll_int32  :: ierr
     sll_int32  :: nei
     sll_int32  :: num_pts_radius
     sll_real64 :: filter
@@ -181,7 +184,15 @@ contains  ! ****************************************************************
 
     ! Create a table for the filter values and fill it:
 
+    ! TODO: this should be controlled some other way........ sorry.
     call sll_s_pre_filter_pfir(spline%mesh, deg, filter_array)
+    ! If pINT, pIIR1 or  pIIR2:
+    ! SLL_ALLOCATE(filter_array(num_pts_radius), ierr)
+    ! do k=1, num_pts_radius
+    !    ! filter_array(k) = sll_f_pre_filter_int(spline%mesh, k, deg)
+    !    ! filter_array(k) = sll_f_pre_filter_piir1(spline%mesh, k, deg)
+    !    ! filter_array(k) = sll_f_pre_filter_piir2(spline%mesh, k, deg)
+    ! end do
 
     do i = 1, num_pts_tot
 
@@ -721,7 +732,7 @@ contains  ! ****************************************************************
     fp2h = chi_gen_val(x1+2.0_f64*h, x2, deg)
     fp1h = chi_gen_val(x1 + h,       x2, deg)
 
-    val = 0.25_f64/3._f64/h * ( - fp2h + 8._f64 * fp1h - 8._f64 * fm1h + fm2h)
+    val = ( - fp2h + 8._f64 * fp1h - 8._f64 * fm1h + fm2h) / 12._f64 / h
 
   end function sll_f_boxspline_x1_derivative
 
@@ -767,8 +778,8 @@ contains  ! ****************************************************************
   !> @param[in] deg integer with degree of splines
   !> @param[in] nderiv1 integer number of times to derive on the x direction
   !> @param[in] nderiv2 integer number of times to derive on the y direction
-  !> @return real nderiv-derivatives of box spline
-  function boxspline_val_der(x1, x2, deg, nderiv1, nderiv2) result(val)
+  !> @return real nderiv-derivatives of boxspline
+  function sll_f_boxspline_val_der(x1, x2, deg, nderiv1, nderiv2) result(val)
     sll_int32,  intent(in)  :: deg
     sll_int32,  intent(in)  :: nderiv1
     sll_int32,  intent(in)  :: nderiv2
@@ -796,177 +807,21 @@ contains  ! ****************************************************************
           !> derivative with respect to the second coo
           val = sll_f_boxspline_x2_derivative(x1_basis, x2_basis, deg)
        else
-          print *, "Error in boxspline_val_der : cannot compute this derivative"
+          print *, "Error in sll_f_boxspline_val_der : cannot compute this derivative"
        end if
     else if (nderiv1.eq.1) then
        ! derivative with respecto to the first coo
        if (nderiv2.eq.0) then
           val = sll_f_boxspline_x1_derivative(x1_basis, x2_basis, deg)
        else
-          print *, "Error in boxspline_val_der : cannot compute this derivative"
+          print *, "Error in sll_f_boxspline_val_der : cannot compute this derivative"
        end if
     end if
 
     SLL_DEALLOCATE_ARRAY(spline%coeffs,ierr)
     SLL_DEALLOCATE(spline,ierr)
     call sll_o_delete(mesh)
-  end function boxspline_val_der
-
-
-  ! !---------------------------------------------------------------------------
-  ! !> @brief Writes fekete points coordinates of a hex-mesh reference triangle
-  ! !> @details Takes the reference triangle of a hexmesh and computes the
-  ! !> fekete points on it. Then it writes the results in a file following
-  ! !> CAID/Django nomenclature.
-  ! !> Output file : quadrature.txt
-  ! !> @param[in]  rule integer for the fekete quadrature rule
-  ! subroutine write_quadrature(rule)
-  !   sll_int32, intent(in)       :: rule
-  !   sll_int32                   :: out_unit
-  !   character(len=14), parameter :: name = "quadrature.txt"
-  !   sll_real64, dimension(2, 3) :: ref_pts
-  !   sll_real64, dimension(:,:), allocatable :: quad_pw
-  !   sll_int32  :: num_fek
-  !   sll_int32  :: i
-  !   sll_real64 :: x
-  !   sll_real64 :: y
-  !   sll_real64 :: w
-  !   sll_real64 :: volume
-  !   sll_int32  :: ierr
-  !   ! Definition of reference triangle, such that:
-  !   !    |
-  !   !    1  3
-  !   !    |  |  \
-  !   !    |  |   \
-  !   !    |  |    \
-  !   !    |  |     \
-  !   !    |  | _____\
-  !   !    0  1      2
-  !   !    |
-  !   !    +--0-----1-->
-  !   ref_pts(:,1) = (/ 0._f64, 0.0_f64 /)
-  !   ref_pts(:,2) = (/ 1._f64, 0.0_f64 /)
-  !   !    ref_pts(:,2) = (/ sqrt(3._f64)/2._f64, 0.5_f64 /)
-  !   ref_pts(:,3) = (/ 0._f64, 1.0_f64 /)
-
-  !   call triangle_area(ref_pts, volume)
-  !   print *, "area triangle = ", volume
-
-  !   ! Computing fekete points on that triangle
-  !   call fekete_order_num(rule, num_fek)
-  !   SLL_ALLOCATE(quad_pw(1:3, 1:num_fek), ierr)
-  !   quad_pw = fekete_points_and_weights(ref_pts, rule)
-  !   ! For Gaussian quadrature rule:
-  !   ! num_fek = rule + 1
-  !   ! SLL_ALLOCATE(quad_pw(1:3, 1:num_fek), ierr)
-  !   ! quad_pw = gauss_triangle_points_and_weights(ref_pts, rule)
-
-  !   open( file=name, status="replace", form="formatted", newunit=out_unit )
-
-  !   write(out_unit, "(i6)") num_fek
-
-  !   do i=1,num_fek
-  !      x = quad_pw(1,i)
-  !      y = quad_pw(2,i)
-  !      w = quad_pw(3,i) * volume
-  !      write(out_unit, "(2(g25.17,a,1x),(g25.17))") x, ",", y, ",", w
-  !   end do
-  !   close(out_unit)
-  ! end subroutine write_quadrature
-
-  ! !---------------------------------------------------------------------------
-  ! !> @brief Writes on a file values of box splines on fekete points
-  ! !> @details Following CAID structure, we write a file with the values
-  ! !> of the basis function (box splines) on a reference element (triangle)
-  ! !> fekete points. Output for DJANGO.
-  ! !> Output file : basis_values.txt
-  ! !> @param[in] deg integer with degree of splines
-  ! subroutine write_basis_values(deg, rule)
-  !   sll_int32,  intent(in)      :: deg
-  !   sll_int32,  intent(in)      :: rule
-  !   sll_real64, dimension(2, 3) :: ref_pts
-  !   sll_real64, dimension(:, :), allocatable :: quad_pw
-  !   sll_real64, dimension(:, :), allocatable :: disp_vec
-  !   sll_int32,  parameter       :: out_unit=20
-  !   character(len=*), parameter :: name = "basis_values.txt"
-  !   sll_real64  :: x
-  !   sll_real64  :: y
-  !   sll_real64  :: a11
-  !   sll_real64  :: a12
-  !   sll_real64  :: a21
-  !   sll_real64  :: a22
-  !   sll_real64  :: val
-  !   sll_int32   :: ierr
-  !   sll_int32   :: nonZero
-  !   sll_int32   :: ind_nZ
-  !   sll_int32   :: nderiv
-  !   sll_int32   :: idx, idy
-  !   sll_int32   :: num_fek
-  !   sll_int32   :: ind_fek
-  !   ! Definition of reference triangle, such that:
-  !   !    |
-  !   !    1  3
-  !   !    |  |  \
-  !   !    |  |   \
-  !   !    |  |    \
-  !   !    |  |     \
-  !   !    |  | _____\
-  !   !    0  1      2
-  !   !    |
-  !   !    +--0-----1-->
-  !   ref_pts(:,1) = (/ 0._f64, 0.0_f64 /)
-  !   !    ref_pts(:,2) = (/ 1._f64, 0.0_f64 /)
-  !   ref_pts(:,2) = (/ sqrt(3._f64)/2._f64, 0.5_f64 /)
-  !   ref_pts(:,3) = (/ 0._f64, 1.0_f64 /)
-
-  !   ! Computing fekete points on the reference triangle
-  !   call fekete_order_num ( rule, num_fek )
-  !   SLL_ALLOCATE(quad_pw(1:3, 1:num_fek), ierr)
-  !   quad_pw = fekete_points_and_weights(ref_pts, rule)
-  !   ! ! For Gaussian qudrature:
-  !   ! num_fek = rule + 1
-  !   ! SLL_ALLOCATE(quad_pw(1:3, 1:num_fek), ierr)
-  !   ! quad_pw = gauss_triangle_points_and_weights(ref_pts, rule)
-
-  !   nonZero = 3*deg*deg !> Number of non null box splines on a cell
-  !   nderiv  = 1 !> Number of derivatives to be computed
-
-  !   !> The displament vector correspond to the translation
-  !   !> done to obtain the other non null basis functions
-  !   SLL_ALLOCATE(disp_vec(2, nonZero), ierr)
-  !   disp_vec(:,1) = 0._f64
-  !   disp_vec(:,2) = ref_pts(:,1) - ref_pts(:,2)
-  !   disp_vec(:,3) = ref_pts(:,1) - ref_pts(:,3)
-
-  !   open (unit=out_unit,file=name,action="write",status="replace")
-
-  !   write(out_unit, "(i6)") deg
-  !   write(out_unit, "(i6)") nderiv
-
-  !   do ind_nZ = 1, nonZero
-  !      do ind_fek = 1, num_fek
-  !         x = quad_pw(1, ind_fek) + disp_vec(1, ind_nZ)
-  !         y = quad_pw(2, ind_fek) + disp_vec(2, ind_nZ)
-  !         do idx = 0, nderiv
-  !            do idy = 0, nderiv-idx
-  !               val = boxspline_val_der(x, y, deg, idx, idy)
-  !               write(out_unit, "(1(g25.18))", advance='no') val
-  !               if ((idx<nderiv).or.(idy<nderiv-idx))  then
-  !                  write(out_unit, "(1(a,1x))", advance='no') ","
-  !               end if
-  !            end do
-  !         end do
-  !         write(out_unit, *) ""
-  !      end do
-  !   end do
-
-  !   close(out_unit)
-  !   SLL_DEALLOCATE_ARRAY(disp_vec, ierr)
-  !   SLL_DEALLOCATE_ARRAY(quad_pw, ierr)
-
-  ! end subroutine write_basis_values
-
-
+  end function sll_f_boxspline_val_der
 
   !---------------------------------------------------------------------------
   !> @brief Writes connectivity for CAID / DJANGO
@@ -1019,30 +874,6 @@ contains  ! ****************************************************************
 
   end subroutine sll_s_write_connectivity
 
-
-  !> @brief This function is supposed to write all django input files
-  !> needed for a Django/Jorek simulation.
-  !> @param[in] num_cells integer number of cells in a radius of the hexagonal
-  !> mesh
-  !> @param[in] deg integer degree of the splines that will be used for the
-  !> interpolation
-  subroutine sll_s_write_all_django_files(num_cells, deg, rule)
-    sll_int32, intent(in)          :: num_cells
-    sll_int32, intent(in)          :: deg
-    sll_int32, intent(in)          :: rule
-    type(sll_t_hex_mesh_2d), pointer :: mesh
-
-    mesh => sll_f_new_hex_mesh_2d(num_cells, 0._f64, 0._f64, radius = 1._f64)
-
-    call sll_s_write_caid_files(mesh, deg)
-    call sll_s_write_connectivity(mesh, deg)
-    !call write_basis_values(deg, rule)
-    !call write_quadrature(rule)
-#ifdef DEBUG
-    print*, 'sll_s_write_all_django_files rule=', rule
-#endif
-
-  end subroutine sll_s_write_all_django_files
 
   !> @brief Generic sub-routine defined for 2D box spline types.
   !> Deallocates the memory associated with the given box spline object.

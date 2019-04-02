@@ -82,7 +82,7 @@ contains
 
        ! Create a new file using default properties
        inquire(file=filename,opened=lopen)
-       SLL_ASSERT(.not. lopen)
+       SLL_ASSERT_ALWAYS(.not. lopen)
 
        open(file_id, &
             FILE=filename, &

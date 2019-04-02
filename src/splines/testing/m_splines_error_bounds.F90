@@ -9,7 +9,8 @@ module m_splines_error_bounds
     sll_f_spline_1d_error_bound         , &
     sll_f_spline_1d_error_bound_on_deriv, &
     sll_f_spline_2d_error_bound         , &
-    sll_f_spline_2d_error_bounds_on_grad
+    sll_f_spline_2d_error_bounds_on_grad, &
+    sll_f_spline_2d_error_bound_on_mixed_deriv
 
   private
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -138,5 +139,31 @@ contains
                  + f_tihomirov_error_bound( dx2, deg2-1, max_norm2 )
 
   end function sll_f_spline_2d_error_bounds_on_grad
+
+  !-----------------------------------------------------------------------------
+  ! NOTE: The following estimate has no theoretical justification but captures
+  !       the correct asympthotic rate of convergence.
+  !       The error constant is probably overestimated.
+  !-----------------------------------------------------------------------------
+  function sll_f_spline_2d_error_bound_on_mixed_deriv( profile_2d, dx1, dx2, deg1, deg2 ) result( max_error )
+    class(c_analytical_profile_2d), intent(in) :: profile_2d
+    real(wp)                      , intent(in) :: dx1
+    real(wp)                      , intent(in) :: dx2
+    integer                       , intent(in) :: deg1
+    integer                       , intent(in) :: deg2
+    real(wp) :: max_error
+
+    real(wp) :: max_norm1
+    real(wp) :: max_norm2
+
+    ! Max norm of highest partial derivatives in x1 and x2 of analytical profile
+    max_norm1 = profile_2d % max_norm( deg1+1, 1      )
+    max_norm2 = profile_2d % max_norm( 1     , deg2+1 )
+
+    ! Error bound on x1-x2 mixed derivative
+    max_error = f_tihomirov_error_bound( dx1, deg1-1, max_norm1 ) &
+              + f_tihomirov_error_bound( dx2, deg2-1, max_norm2 )
+
+  end function sll_f_spline_2d_error_bound_on_mixed_deriv
 
 end module m_splines_error_bounds

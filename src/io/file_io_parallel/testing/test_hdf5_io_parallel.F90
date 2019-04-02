@@ -103,7 +103,7 @@ program test_hdf5_io_parallel
 
   ! Create parallel HDF5 file
   call sll_s_hdf5_par_file_create( fname, pcomm, fid, ferror )
-  SLL_ASSERT( ferror == 0 )
+  SLL_ASSERT_ALWAYS( ferror == 0 )
 
   ! Parallel write array to file
   call sll_o_hdf5_par_write_array( &
@@ -113,11 +113,11 @@ program test_hdf5_io_parallel
     array       = a, &
     dsetname    = dsetname, &
     error       = ferror )
-  SLL_ASSERT( ferror == 0 )
+  SLL_ASSERT_ALWAYS( ferror == 0 )
 
   ! Close file
   call sll_s_hdf5_par_file_close( fid, ferror )
-  SLL_ASSERT( ferror == 0 )
+  SLL_ASSERT_ALWAYS( ferror == 0 )
 
   ! Allocate memory for reading data from file
   allocate( b(block(1),block(2)) )

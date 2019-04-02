@@ -68,23 +68,23 @@ end interface sll_o_create
 !                                                               
 !    Edges on boundaries:
 !
-!        nctfrt - number total de cotes frontieres            
-!        nctfro - number de cotes frontieres par reference   
-!        nctfrp - pointeur des tableaux de cotes frontieres 
+!        nctfrt - number total de edges boundaries            
+!        nctfro - number de edges boundaries par reference   
+!        nctfrp - pointer des arrays de edges boundaries 
 !                                                          
-!    Caracteristiques des frontieres internes: 
+!    Internal boundaries: 
 !
-!        nnofnt - nombre de noeuds sur les frontieres internes     
-!        ntrfnt - nombre total de triangles (ceux de droite)      
-!        ntrfrn - nombre de triangles par frontiere              
-!        ntrfrc - nombre cumule de triangles                    
-!        nndfnt - noeuds Dirichlet sur les frontieres internes 
-!        ncdfnt - cotes  Dirichlet sur les frontieres internes (VF)
+!        nnofnt - number nodes internal boundaries     
+!        ntrfnt - number total triangles 
+!        ntrfrn - number triangles par boundaries              
+!        ntrfrc - number cumsum triangles                    
+!        nndfnt - nodes Dirichlet internal boundaries 
+!        ncdfnt - edges Dirichlet internal boundaries 
 !                                                                 
-!    Tableau des classes d'elements:
+!    Array elements types:
 !
-!        nmxcol - nombre de classes des elements                
-!        nclcol - nombre d'elements dans chaque classe         
+!        nmxcol - number of type                
+!        nclcol - number of elements in every type
 !
 sll_real64, parameter :: grandx = 1.d+20
 
@@ -224,34 +224,27 @@ if (lask) then
    write(*,1700) trim(inpfil)
 end if
 
-! ----------- Valeurs par defaut et initialisations -------------------t
 write(6,900)
 
 ntypfr = 1  
 potfr  = 0.0_f64
-
-!--- 2.0 --- Lecture des donnees --------------------------------------
 
 open(10, file = inpfil)
 write(*,*)"Lecture de la namelist nlcham"
 read(10,nlcham,err=100)
 goto 200
 100 continue
-write(*,*)"Erreur de lecture de la namelist nlcham"
+write(*,*)"Error de lecture de la namelist nlcham"
 write(*,*)"Valeurs par defaut"
 write(*,nlcham)
 stop
 200 close(10)
-
-!--- 2.5 --- Ecriture des donnees -------------------------------------
 
 write(6,921)
 
 do i=1,nfrmx
    write(6,922) i,ntypfr(i),potfr(i)
 end do
-
-!--- 3.0 --- Controle des donnees -------------------------------------
 
 write(6,932)
 do ifr=1,nfrmx
@@ -266,14 +259,14 @@ do ifr=1,nfrmx
   end if
 end do
 
-900  format(//10x,'Conditions aux limites sur les frontieres')
+900  format(//10x,'Boundary conditions')
 902  format(/10x,'Reference :',i3,5x,'Dirichlet ')
 904  format(/10x,'Reference :',i3,5x,'Neumann')
-910  format(/10x,'Option non disponible'/  &
+910  format(/10x,'Option not available'/  &
      &       10x,'Reference :',i3,5x,'Type :',i3/)
 921  format(//5x,'Frontiere',5x,'ntypfr',7x,'potfr')
 922  format(5x,I3,4x,I10,2E12.3,2I10,E12.3)
-932  format(//10x,'CONDITIONS AUX LIMITES'/)
+932  format(//10x,'Boundary conditions'/)
 1050 format(/' Read settings from file  ', A, ' ?  Y')
 1700 format(/' New parameters write to file  ', A, /)
 1800 format(/' Settings may have been changed - New title :')
@@ -295,22 +288,21 @@ call initialize_poisson_solver(self, mesh, ntypfr, potfr)
 end subroutine initialize_poisson_solver_from_file
 
 !Subroutine: init_solveur_poisson   
-! Reservation de tableaux et calcul des 
-! matrices necessaires au solveur de poisson   
+! Allocate arrays 
 !
-! amass - matrice de masse diagonale     
-! mors1 - matrice morse2       
-! mors2 - elements des matrices morses
-! prof  - matrice profil    
-! grgr  - matrice grad-grad
-! gradx - matrice gradx   
-! grady - matrice grady  
-! fron  - noeuds Dirichlet
-! xaux  - tableaux auxiliaires reels          
-! iaux  - tableaux auxiliaires entiers       
+! amass - matrix mass diagonal
+! mors1 - matrix morse2       
+! mors2 - elements matrices morse
+! prof  - matrix profil    
+! grgr  - matrix grad-grad
+! gradx - matrix gradx   
+! grady - matrix grady  
+! fron  - nodes Dirichlet
+! xaux  - arrays auxiliar reals          
+! iaux  - arrays auxiliar integers       
 
-! Allocation des tableaux permettant de stocker des matrices sous forme morse
-! Tableau donnant le numero du dernier terme de chaque ligne (mors1)
+! Allocation arrays to stock matrix morse
+! Array number of last term of every line (mors1)
 subroutine initialize_poisson_solver( self, mesh, ntypfr, potfr )
 
 type(sll_t_poisson_2d_triangular), intent(out)         :: self
@@ -343,13 +335,11 @@ allocate(self%vtanty(mesh%nbtcot)); self%vtanty = 0.0_f64
 
 allocate(self%mors1(mesh%num_nodes+1)); self%mors1 = 0
 
-! Tableau contenant le numero des termes de chaque ligne (mors2)
-! on choisit une taille a priori superieure a la taille reelle
-! de ce tableau.
+! Array witth number of every line term (mors2)
 
 allocate(self%mors2(12*mesh%num_nodes)); self%mors2 = 0
  
-! Calcul de mors1,mors2.
+! mors1,mors2.
 
 call morse(mesh%npoel1,        &
            mesh%npoel2,        &
@@ -359,12 +349,6 @@ call morse(mesh%npoel1,        &
            self%mors1,         &
            self%mors2          )
  
-! Ajustement de la taille de mors2.
-! pas sur que ca fonctionne a tous les coups
-! deallocate(mors2); allocate(mors2(mors1(mesh%num_nodes+1)))
-
-! Adressage des tableaux permettant de stocker des matrices sous forme profil
-
 allocate(self%iprof(mesh%num_nodes+1)); self%iprof = 0
 
 call profil(mesh%nodes,     &
@@ -374,20 +358,20 @@ call profil(mesh%nodes,     &
             self%iprof      )
 
 !======================================================================
-!--- 2.0 --- POISSON par une methode d'elements finis -----------------
+!--- 2.0 --- POISSON finite element -----------------
 !======================================================================
  
-!matrice de masse diagonalisee
+!matrix de masse diagonalized
 allocate(self%amass(mesh%num_nodes)); self%amass = 0.0_f64 
  
-!matrice "grad-grad" stockee sous forme profil.
+!matrix "grad-grad" stocked profil form.
 allocate(self%grgr(self%iprof(mesh%num_nodes+1))); self%grgr = 0.0_f64
  
-!gradx et grady 
+!gradx grady 
 allocate(self%gradx(self%mors1(mesh%num_nodes+1))); self%gradx = 0.0_f64
 allocate(self%grady(self%mors1(mesh%num_nodes+1))); self%grady = 0.0_f64
 
-!--- Tableau relatif aux frontieres Dirichlet -------------------------
+!--- Array boundaries Dirichlet -------------------------
 
 ndir=0
 do nn=1,mesh%num_nodes
@@ -414,11 +398,11 @@ end do
 
 self%ndiric=ndir
 
-!--- Calcul des matrices ----------------------------------------------
+!--- Calcul des matrix ----------------------------------------------
 
 call poismc(self)
 
-!Calcul de la matrice B tel que B*Bt = A dans le cas Cholesky
+!Calcul de la matrix B tel que B*Bt = A dans le cas Cholesky
 
 allocate(tmp1(self%iprof(mesh%num_nodes+1))); tmp1 = 0.0_f64
 
@@ -431,57 +415,34 @@ end do
 
 deallocate(tmp1)
 
-!Tableaux pour les conditions limites
-!Initialisation des normales aux noeuds et du tableau indiquant 
-!les noeuds appartenant a la frontiere consideree
-
 SLL_CLEAR_ALLOCATE(self%vnx(1:self%mesh%num_nodes),ierr)
 SLL_CLEAR_ALLOCATE(self%vny(1:self%mesh%num_nodes),ierr)
 SLL_ALLOCATE(self%naux(1:self%mesh%num_nodes),ierr)
 self%naux = .false.
-
-! --- 8.5 --- Ecriture des tableaux ------------------------------------
-
-!if (ldebug) then
-!   write(6,900) 
-!   do i=1,mesh%num_nodes
-!      write(6,901) i,(self%mors2(j), j=self%mors1(i)+1,self%mors2(i+1))
-!   end do
-!   write(6,902) 
-!   write(6,903) (self%ifron(i),i=1,self%ndiric)
-!end if
-!
-!! ======================================================================
-!! --- 9.0 --- Formats --------------------------------------------------
-! 
-!900 format(//10x,'Tableau MORS2 pointe par le tableau MORS1'/  &
-!              3x,'No de noeud           Noeuds associes'/)
-!901 format(2x,I8,3x,12I8)
-!902 format(//10x,'Noeuds frontiere du type DIRICLET pour POISSON'/)
-!903 format(32000(2x,7I9/)/)
 
 end subroutine initialize_poisson_solver
 
 !======================================================================
 
 
-!Function: morse
-! Calcul du tableau contenant l'adresse du dernier terme de   
-! chaque ligne des matrices "morse" et le tableau contenant les
-! numeros des termes de ces matrices. Le terme diagonal est    
-! range en derniere place de chaque ligne.                      
+! Function: morse
+! Calculation of the arrays containing the address of the last term of   
+! each line of the "walrus" matrix and the arrays containing the
+! numbers of the terms of these matrixes. The diagonal term is    
+! last place in each line.                      
 !          
-! npoel1 - emplacement dans npoel2 du dernier element relatif a chaque
-!          noeud avec npoel1(1)=0 et npoel1(i+1) relatif au noeud i   
-! npoel2 - tableau des numeros des elements ayant un sommet en commun  
-! ntri   - numeros des sommets des triangles                 
-! nbt    - nombre de triangles du maillage                    
-! nbs    - nombre de noeuds                                    
+! npoel1 - location in npoel2 of the last element relative to each
+! node with npoel1(1)=0 and npoel1(i+1) relative to node i   
+! npoel2 - arrays numbers of elements having a common vertex  
+! ntri - triangles vertex numbers                 
+! nbt - number of mesh triangles                    
+! nbs - number of nodes                                    
 !                                                               
-! mors1  - tableau des adresses des derniers termes de chaque ligne 
-!          de la matrice avec la convention:                         
-!          mors1(1)=0 et mors1(i+1) adresse de aii                    
-! mors2  - tableau des numeros des termes des matrices "morse"         
+! mors1 - arrays addresses of the last terms of each line 
+! the matrix with the convention:                         
+! mors1(1)=0 and mors1(i+1) aii address                    
+! mors2 - arrays of the numbers of the "morse" matrix terms    
+
 subroutine morse(npoel1, npoel2, ntri, nbt, nbs, mors1, mors2)
 
 sll_int32,                   intent(in)  :: nbt
@@ -501,20 +462,18 @@ k  = 0
 
 mors1(1)=0
  
-do is=1,nbs  !Boucle sur les noeuds
+do is=1,nbs  !Boucle sur les nodes
 
-  !Nombre d'elements ayant is comme sommet
+  !elements 'is' node
 
   nel=npoel1(is+1)-npoel1(is)
   nlign=0
 
-  !Boucle sur ces elements
+  !Loop over this elements
 
   do iel=1,nel
 
      k=k+1
-
-     !numero de l'element
 
      numel=npoel2(k)
      is1=ntri(1,numel); is2=ntri(2,numel); is3=ntri(3,numel)
@@ -528,9 +487,9 @@ do is=1,nbs  !Boucle sur les noeuds
         js1=is1; js2=is2
      end if 
 
-     !On regarde si les 2 noeuds autres que is de l'element courant ont 
-     !deja ete pris en compte dans l'ensemble des noeuds interagissant 
-     !avec is.
+     !We see if the 2 nodes other than is of the current element 
+     !have already been taken into account in all the interacting nodes 
+     !with is.
 
      itest1=0; itest2=0
      if (nlign.NE.0) then 
@@ -555,12 +514,11 @@ do is=1,nbs  !Boucle sur les noeuds
 
   end do
 
-  !Definition de l'adresse du dernier terme de la ligne
-
+  !Definition of the address of the last term of the line
   mors1(is+1)=mors1(is)+nlign+1
 
-  !Remplissage du tableau mors2 avec les numeros des termes
-  !de la ligne is.
+  !Filling the jaw arrays2 with the term numbers
+  !of the is line.
 
   if (nlign.NE.0) then 
      do l=1,nlign
@@ -580,46 +538,38 @@ end subroutine morse
 
 !Function: poismc
 !                                                 
-! But: 
-!   Calcul de toutes les matrices du systeme   
-!       pour POISSON cartesien                      
+!   Compute all matrices for cartesian Poisson
 !                                                    
-! Parametres d'entree:                                
+! Input:
 !
-! m      - super-tableau                                        
-! coor   - coordonnees des noeuds                                
-! refs   - indice permettant de savoir si un noeud appartient     
-!          a une frontiere referencee                              
-! ifron  - tableau des noeuds Dirichlet                             
-! mors1  - tableau du nombre de termes par ligne de la matrice morse 
-!          symetrique                                                 
-! mors2  - tableau des numeros des termes de chaque ligne de la matrice
-!          morse symetrique                              
-! ntri   - numeros des sommets des triangles              
-! aire   - aire des triangles                              
-! iprof  - profil de la matrice grad-grad                   
+! m      - super-arrays                                        
+! coor   - coord nodes                                
+! refs   - indice if node in ref boundary
+! ifron  - arrays of nodes Dirichlet                             
+! mors1  - arrays of number terms per line matrix morse symetric                                                 
+! mors2  - arrays of number terms every line matrix morse symetric                              
+! ntri   - numbers triangles nodes
+! area   - area triangles                              
+! iprof  - profile matrix grad-grad                   
 !                                                            
-! noefnt - noeuds internes Dirichlet                          
+! noefnt - nodes interns Dirichlet                          
 !                                                              
-! Parametres resultats:
+! Output:
 ! 
-! agrgr  - matrice de l'operateur "grad-grad" sous forme "morse"
-! aliss  - matrice de lissage                                   
-! amass  - matrice de masse sous forme diagonalisee              
-! amclt  - matrice de masse diagonalisee relative a la condition  
-!          aux limites absorbante                             
-! aroro  - matrice de l'operateur "rot-rot" sous forme "morse" 
-! d1dx,  - derives des fonctions de base dans chaque triangle   
+! agrgr  - matrix operator "grad-grad" "morse"
+! aliss  - matrix fitting                                   
+! amass  - matrix mass diag
+! amclt  - matrix mass diag absorbing bc
+! aroro  - matrix operator "rot-rot" form "morse" 
+! d1dx,  - deriv  functions basis every triangle   
 !..d3dy                                                          
-! gradx  - matrice de l'operateur gradx                           
-! grady  - matrice de l'operateur grady                            
-! rotx   - matrice de l'operateur rotx                              
-! roty   - matrice de l'operateur roty                               
-! aire   - surface de chaque element                                  
-!Auteur:
-!   612-POISMC     
+! gradx  - matrix operator gradx                           
+! grady  - matrix operator grady                            
+! rotx   - matrix operator rotx                              
+! roty   - matrix operator roty                               
+! area   - every element                                  
 !
-! Puertolas - Version 1.0  Octobre  1992  
+!Auteur: Puertolas - Version 1.0  Octobre  1992  
 subroutine poismc(self)
 
 type(sll_t_poisson_2d_triangular),  intent(inout) :: self
@@ -633,7 +583,7 @@ sll_int32 :: is, j
 
 do iel=1,self%mesh%num_triangles
 
-  !Calcul des coefficients dependant de la geometrie du triangle.
+  !coefficients geometry
 
   is1t = self%mesh%nodes(1,iel)
   is2t = self%mesh%nodes(2,iel)
@@ -655,19 +605,19 @@ do iel=1,self%mesh%num_triangles
   dnty2 = x1t-x3t
   dnty3 = x2t-x1t
 
-  !Contribution a la matrice de masse
+  !Contribution matrix mass
 
-  amloc(1) = self%mesh%aire(iel)/3.
-  amloc(2) = self%mesh%aire(iel)/3.
-  amloc(3) = self%mesh%aire(iel)/3.
+  amloc(1) = self%mesh%area(iel)/3.
+  amloc(2) = self%mesh%area(iel)/3.
+  amloc(3) = self%mesh%area(iel)/3.
 
-  !Assemblage
+  !Assembling
 
   call asbld(amloc,is1t,is2t,is3t,self%amass)
 
-  !Contribution a la matrice grad-grad
+  !Contribution matrix grad-grad
 
-  coef=1./(4.*self%mesh%aire(iel))
+  coef=1./(4.*self%mesh%area(iel))
 
   aggloc(1)=(dntx1**2   +dnty1**2   )*coef
   aggloc(2)=(dntx1*dntx2+dnty1*dnty2)*coef
@@ -676,8 +626,7 @@ do iel=1,self%mesh%num_triangles
   aggloc(5)=(dntx2*dntx3+dnty2*dnty3)*coef
   aggloc(6)=(dntx3**2   +dnty3**2   )*coef
 
-  !Contribution aux matrices gradx et grady:
-  !Calcul de matrices locales.
+  !Contribution matrix gradx grady:
 
   grxloc(1)=-dntx1/6.; gryloc(1)=-dnty1/6.
   grxloc(2)=-dntx2/6.; gryloc(2)=-dnty2/6.
@@ -689,7 +638,7 @@ do iel=1,self%mesh%num_triangles
   grxloc(8)=-dntx2/6.; gryloc(8)=-dnty2/6.
   grxloc(9)=-dntx3/6.; gryloc(9)=-dnty3/6.
 
-  !Assemblage 
+  !Assembling 
 
   call asblp(self%iprof, aggloc,is1t,is2t,is3t,self%grgr)
 
@@ -706,94 +655,45 @@ do iel=1,self%mesh%num_triangles
 end do
 
 ! ======================================================================
-! ... Prise en compte des conditions aux limites Dirichlet
+! ... Dirichlet
 
 do j=1,self%ndiric
    is=self%ifron(j)             
    self%grgr(self%iprof(is+1))=grandx
 end do
 
-! ================================================================
-! ... Ecriture des matrices mass, grgr, gradx et grady
-
-!if (ldebug) then
-!  write(6,900) 
-!  do is=1,self%mesh%num_nodes
-!     write(6,901) is,self%amass(is)
-!  end do
-!
-!  write(6,907) 
-!  write(6,902) 
-!  do is=1,self%mesh%num_nodes
-!     nis=self%iprof(is+1)-self%iprof(is)
-!     write(6,903) is,(self%grgr(self%iprof(is)+il),il=1,nis)
-!  end do
-!
-!  write(6,904) 
-!  do is=1,self%mesh%num_nodes
-!     nis=self%mors1(is+1)-self%mors1(is)
-!     write(6,903) is,(self%gradx(self%mors1(is)+il),il=1,nis)
-!  end do
-!
-!  write(6,905) 
-!  do is=1,self%mesh%num_nodes
-!     nis=self%mors1(is+1)-self%mors1(is)
-!     write(6,903) is,(self%grady(self%mors1(is)+il),il=1,nis)
-!  end do
-!end if
-
-! ================================================================
-
-! 900 format(//10x,'Matrice de masse'/               &
-!              10x,'No de noeud     Terme diagonal'/)
-! 901 format(  10x,I10,E15.4)
-! 902 format(//10x,'Matrice grad-grad'/              &
-!               10x,'No de noeud     Termes de la ligne'/)
-! 903 format(  I10,5E12.3/10(10x,5E12.3/)/)
-! 904 format(//10x,'Matrice gradx'/              &
-!              10x,'No de noeud     Termes de la ligne'/)
-! 905 format(//10x,'Matrice grady'/              &
-!               10x,'No de noeud     Termes de la ligne'/)
-! 907 format(//10x,'Resolution du systeme par Choleski')
-
 end subroutine poismc
 
 !Function: poissn
-!calculer potentiel et champ electrique de l'equation de
+!potential and electric field 
 !Poisson en cartesien
-! Variables en argument :                                
 !
-! ex     - e1 projete sur les noeuds        
-! ey     - e2 projete sur les noeuds       
-! rho    - densite de charge aux noeuds du maillage 
-! phi    - potentiel aux noeuds du maillage        
-! ifron  - tableau des noeuds frontaliers verifiant Dirichlet
-! noefnt - noeuds sur les frontieres internes Dirichlet     
-! irffnt - numero de reference de ces noeuds               
-! grgr   - matrice de l'operateur "grad-grad"             
-! amass  - matrice de masse sous forme diagonalisee      
-! gra1   - matrice de l'operateur "grad1"               
-! gra2   - matrice de l'operateur "grad2"              
-! mors1  - tableau descriptif des matrices "morse"  
-! mors2  - tableau descriptif des matrices "morse"
-! iprof  - matrice profil                           
+! ex     - e1  nodes        
+! ey     - e2  nodes       
+! rho    - density charge nodes
+! phi    - potential nodes 
+! ifron  - nodes boundary Dirichlet
+! noefnt - nodes internal boundaries Dirichlet     
+! irffnt - reference of this nodes               
+! grgr   - matrix operator "grad-grad"             
+! amass  - matrix mass diag
+! gra1   - matrix operator "grad1"               
+! gra2   - matrix operator "grad2"              
+! mors1  - arrays matrix "morse"  
+! mors2  - arrays matrix "morse"
+! iprof  - matrix profil                           
 !
-! Tableaux auxilliaires :                            
 !
-! grgrdd - produit de la matrice grgr par le vecteur 
-!          "direction de descente" p (gradient conjugue) 
-! dird   - direction de descente dans la methode de gradient conjugue 
-! res    - residu dans la methode de gradient conjugue               
-! sdmb   - second membre du systeme a resoudre pour traiter         
-!          le potentiel                                            
-! sdmb12 - second membre du systeme a resoudre pour traiter       
-!          le champ electrique                                   
-! precd  - tableau local utilise dans la resolution de la correction 
-!          par un gradient conjugue preconditionne                  
-! nbs    - nombre de noeuds du maillage                            
-! nmxfr  - nombre de frontieres referencees                       
-! errpoi - precision (max du carre de l'erreur relative)         
-! nitgc  - nombre max d'iterations du gradient conjugue         
+! grgrdd - product matrix grgr vector p (gradient conjugue) 
+! dird   - direction method gradient conjugue 
+! res    - residual method gradient conjugue               
+! sdmb   - second member system potential                                            
+! sdmb12 - second member system electric field                                   
+! precd  - arrays local utilise gradient conjugue preconditionned                
+! nbs    - number nodes mesh                            
+! nmxfr  - number boundaries ref
+! errpoi - precision 
+! nitgc  - number max iterations gradient conjugue         
 !                                                              
 subroutine poissn(self,rho,phi,ex,ey)
 
@@ -810,12 +710,11 @@ sll_int32 :: i, is, nref, ierr
 
 ! ----------- CALCUL DU POTENTIEL  -------------------------------------
 !
-!... Calcul du second membre complet ...
+!... RHS ...
 
 SLL_ALLOCATE(sdmb(self%mesh%num_nodes),ierr)
 
 !!$OMP PARALLEL DEFAULT(SHARED), PRIVATE(is)
-
 !!$OMP DO SCHEDULE(RUNTIME)
 do is=1,self%mesh%num_nodes
    sdmb(is)=self%amass(is)*rho(is)/self%eps0
@@ -823,7 +722,7 @@ end do
 !!$OMP END DO 
 !!$OMP END PARALLEL
 
-!... Condition aux limites Dirichlet homogene 
+!... Dirichlet
 
 do is=1,self%ndiric
    nref=self%mesh%refs(self%ifron(is))
@@ -832,12 +731,12 @@ end do
 
 call sll_s_desrem(self%iprof, self%grgr,sdmb,self%mesh%num_nodes,phi)
 
-!*** CALCUL DES CHAMPS Ex et Ey:
+!*** Ex  Ey:
 
 if (present(ex) .and. present(ey)) then
 
   SLL_ALLOCATE(sdmb12(self%mesh%num_nodes),ierr)
-  !*** Second membre pour la composante x:
+  !*** RHS for Ex:
 
   call m1p(self%gradx,self%mors1,self%mors2,phi,self%mesh%num_nodes,sdmb12)
 
@@ -845,7 +744,7 @@ if (present(ex) .and. present(ey)) then
      ex(i)=sdmb12(i)/self%amass(i)
   end do
 
-  !*** Second membre pour la composante y:
+  !*** RHS for Ey:
 
   call m1p(self%grady,self%mors1,self%mors2,phi,self%mesh%num_nodes,sdmb12)
 
@@ -859,23 +758,21 @@ end subroutine poissn
 
 
 !Function: poifrc
-!Correction des champs sur les frontieres, en particulier
+!Correction on boundaries
 !
-! version qui ne tient pas compte de l'ordre des cotes de la frontiere
-!                                                                    
-!  - E.tau = 0 sur les frontieres Dirichlets
-!  - E.nu =  0 sur les frontieres Neumann  
+!  - E.tau = 0  boundaries Dirichlets
+!  - E.nu =  0  boundaries Neumann  
 !                                                                
-!Variables en argument:                                        
+!Input:
 !
-!  ksofro  - numeros des 2 sommets extremite du cote 
-!  krefro  - numero de reference du cote            
-!  vnofro  - composantes du vecteur normal (vers l'interieur)
-!  vnx,vny - tableaux donnant les composantes d'une normale aux noeuds
+!  ksofro  - numbers edge nodes
+!  krefro  - numbers edge reference 
+!  vnofro  - vector normal (inside)
+!  vnx,vny - arrays normal vectors nodes
 !                                                                   
-!Tableaux auxilliaires:                                           
+!Array local:                                           
 !
-! naux   - tableau permettant de reperer les noeuds d'une frontiere
+! naux   - arrays for nodes on boundary
 !
 subroutine poifrc(self, ex, ey)
 
@@ -886,11 +783,11 @@ sll_int32 :: is1, is2, ict
 sll_int32 :: i
       
 !!$ ======================================================================
-!!$ ... On force E.tau = 0 sur toutes les frontieres Dirichlet 
+!!$ ... E.tau = 0 boundaries Dirichlet 
 
 
-!!$ ... Boucle sur les cotes frontieres pour construire les normales aux
-!!$ ... noeuds "Dirichlet"
+!!$ ... loop over edges boundaries for normals
+!!$ ... nodes "Dirichlet"
 self%vnx=0.0_f64; self%vny=0.0_f64; self%naux= .false.
 
 do ict=1,self%mesh%nctfrt
@@ -912,7 +809,7 @@ do ict=1,self%mesh%nctfrt
 
 end do 
 
-!... on impose la condition E.tau=0
+!... E.tau=0
 
 do i=1,self%mesh%num_nodes
 
@@ -933,15 +830,11 @@ do i=1,self%mesh%num_nodes
 end do 
 
 !======================================================================
-! ... On force E.nu = 0 sur toutes les frontieres Neumann
-!
-! ... Initialisation des normales aux noeuds et du tableau indiquant 
-! ... les noeuds appartenant a la frontiere consideree
+! ... E.nu = 0 boundaries Neumann
 !
 self%vnx=0.0_f64; self%vny=0.0_f64; self%naux= .false.
 
-! ... Boucle sur les cotes frontieres pour construire les normales aux
-! ... noeuds "Neumann"
+! ... Loop over edges boundaries nodes "Neumann"
 
 do ict=1,self%mesh%nctfrt
 
@@ -962,7 +855,7 @@ do ict=1,self%mesh%nctfrt
 
 end do 
 
-!... on impose la condition E.nu=0
+!... E.nu=0
 
 do i=1,self%mesh%num_nodes
 
@@ -985,20 +878,19 @@ end subroutine poifrc
 
 
 !Function: profil
-!determination des numeros des elements situes sur la diagonale
-!de la matrice profil associee a la methode d'elements finis.
+!numbers elements on diagonal matrix profil associate 
 !
-!Parametres d'entree:
-! npoel1 - emplacement dans npoel2 du dernier element relatif a chaque
-!          noeud avec npoel1(1)=0 et npoel1(i+1) relatif au noeud i 
-! npoel2 - tableau des numeros des elements ayant un sommet en commun
-! ntri   - numeros des sommets des triangles                          
-! nbt    - nombre de triangles         
-! noe    - nombre de noeuds             
+! Input:
+! npoel1 - index in npoel2 of last element of every node
+!          with npoel1(1)=0 and npoel1(i+1) link to node i 
+! npoel2 - arrays numbers elements with common node
+! ntri   - numbers nodes triangles                          
+! nbt    - number triangles         
+! noe    - number nodes             
 !                                                                    
-!Parametre resultat:                                              
-! iprof  - tableau des numeros des termes situes sur la diagonale avec
-!        - iprof(i+1) numero du terme de la diagonale de la ligne i et
+! Ouput:                                              
+! iprof  - arrays numbers terms diagonal with
+!        - iprof(i+1) term diag line i
 !        - iprof(1)=0 
 !
 !Auteur:
@@ -1009,29 +901,29 @@ sll_int32, dimension(:) :: iprof
 sll_int32, dimension(:), intent(in) :: npoel1, npoel2
 sll_int32, dimension(:,:), intent(in) :: ntri
 sll_int32 :: in, k, is1, is2, is3, numel, ind, iel, nel
-sll_int32, intent(in) :: nbs      !Nombre de sommets
+sll_int32, intent(in) :: nbs      
 
 !************************************************************************
 !*
-!* determination de la longueur de chaque ligne de la matrice profil :
-!* pour chaque noeud i on cherche les noeuds j qui lui sont lies;
-!* si le noeud j n'a jamais ete rencontre, la longueur de la ligne j est
+!* Compute length of line i matrix profil :
+!* for every node i we look for nodes j linked;
+!* if node j not found, length line j is set to
 !* j-i+1
 !
-!* boucle sur les noeuds
+!* loop over nodes
 
 k=0
 do in=1,nbs
       
-  !* nombre d'elements ayant in comme sommet
+  !* number elements with in node
   nel=npoel1(in+1)-npoel1(in)
 
-  !* boucle sur ces elements
+  !* loop over these elements
 
   do iel=1,nel
 
     k=k+1
-    !* numero de l'element
+    !* number element
     numel=npoel2(k)
     is1=ntri(1,numel)
     ind=is1+1
@@ -1053,9 +945,9 @@ do in=1,nbs
 
 end do
 
-!* determination de la position des termes diagonaux de la matrice
-!* profil (il suffit de sommer les nombres d'elements des lignes
-!* precedentes et de la ligne courante).
+!* compute position terms diags matrix
+!* profil (sum numbers elements of lines
+!* before and current line ).
 
 do ind=3,nbs+1
    iprof(ind)=iprof(ind-1)+iprof(ind)
@@ -1064,19 +956,17 @@ end do
 end subroutine profil
 
 !Function: asbld
-!  Assembler une matrice elementaire    
-!  dans une matrice globale dans          
-!  le cas ou elle est diagonale            
+!  Assemble matrix element in matrix global if diagonal        
 !                                                                 
 !Parametres d'entree: 
 !                                 
-!  aele         -    Matrice elementaire diagonale           
-!                    (3 termes pour un element triangulaire)
-!  i1,i2,i3     -    numeros des sommets de l'element      
+!  aele         -    Matrix diag           
+!                    (3 terms per element triangular)
+!  i1,i2,i3     -    numbers nodes element      
 !                                                                 
 !Parametre resultat:                                     
 !                                                              
-!  xmass    -   matrice globale diagonalisee          
+!  xmass    -   matrix global diagonal     
 !
 !Auteur:
 !      J. Segre - Version 1.0  Juillet 1989
@@ -1093,21 +983,21 @@ end subroutine
 
 !Function: asblm2
 !   
-!          assembler 3 matrices elementaires
-!          dans 3 matrices globales stockees
-!          sous forme "morse" non symetriques
+!          assemble 3 matrix element
+!          3 matrix global stocked
+!          form "morse" non symetric
 !                                                          
-!      Entrees:
-!          aele1,aele2    -  Matrices elementaires          
-!          mors1          -  Tableau du nombre de termes par 
-!                            ligne de la matrice morse        
-!          mors2          -  Tableau des numeros des termes    
-!                            de chaque ligne de la matrice morse
-!          i1,i2,i3       -  Numeros des sommets de l'element
+!      Input:
+!          aele1,aele2    -  Matrices elements          
+!          mors1          -  Array number of terms per 
+!                            line matrix morse        
+!          mors2          -  Array numbers terms    
+!                            of every line matrix morse
+!          i1,i2,i3       -  Num nodes element
 !                                                         
-!      Sorties:
-!          a1,a2          -  Matrices globales stockees     
-!                            sous forme "morse"            
+!      Output:
+!          a1,a2          -  Matrix global stocked     
+!                            format "morse"            
 !
 !Auteur:
 !J. Segre - Version 1.0  Aout 1989  
@@ -1119,7 +1009,7 @@ sll_real64,    dimension(:), intent(in)  :: aele1, aele2
 sll_real64,    dimension(:), intent(out) :: a1, a2
 sll_int32 :: j, j1, j2, ind1, ind2, ind3
 
-! --- 1.1 --- Rangement des termes diagonaux ---------------------------
+! --- 1.1 --- terms diag ---------------------------
 
 ind1=mors1(i1+1)
 a1(ind1)=a1(ind1)+aele1(1)
@@ -1133,7 +1023,7 @@ ind3=mors1(i3+1)
 a1(ind3)=a1(ind3)+aele1(9)
 a2(ind3)=a2(ind3)+aele2(9)
       
-! --- 1.2 --- Rangement des autres termes ------------------------------
+! --- 1.2 --- other terms ------------------------------
 
 j2=ind1-1
 j1=mors1(i1)+1
@@ -1190,24 +1080,20 @@ end subroutine
 
 !Function: asblp
 !                                                      
-!      assembler une matrice elementaire             
-!      dans une matrice globale symetrique          
-!      stockee sous forme "profil"                 
+!      assemble matrix element             
+!      in matrix global symetric          
+!      format "profil"                 
 !                                                 
-!Entrees:
+!Input:
 !                                                                 
-!          aele         -  Matrice elementaire (6 ou 10 termes   
-!                          selon que l'element est un triangle  
-!                          ou un quadrilatere)                 
-!          iprof        -  Description du profil de la matrice 
-!                          c'est-a-dire liste des numeros d'ordre 
-!                          des termes diagonaux dans le tableau de
-!                          stockage de la matrice                
-!          i1,i2,i3     -  Numeros des sommets de l'element     
+!          aele         -  Matrix element (6 - 10 terms   
+!                          element triangle or quad)                 
+!          iprof        -  Description matrix 
+!          i1,i2,i3     -  Num nodes element     
 !                                                              
-!Sorties:
+!Output:
 !                                                             
-!          xmass        -  matrice globale stockee sous forme "profil"
+!          xmass        -  matrix global stockee format "profil"
 !                                                                    
 !Auteur:
 !       J. Segre - Version 1.0  Aout 1989
@@ -1217,7 +1103,7 @@ sll_int32, dimension(:) :: iprof
 sll_real64,    dimension(:) :: aele(*), xmass(*)
 sll_int32 :: i1, i2, i3, idiag1, idiag2, idiag3, ind
 
-!--- 1.1 --- Rangement des termes diagonaux ---------------------------
+!--- 1.1 --- terms diag ---------------------------
  
 idiag1 = iprof(i1+1)
 idiag2 = iprof(i2+1)
@@ -1227,8 +1113,8 @@ xmass(idiag1) = xmass(idiag1) + aele(1)
 xmass(idiag2) = xmass(idiag2) + aele(4)
 xmass(idiag3) = xmass(idiag3) + aele(6)
 
-!--- 1.2 --- Rangement des autres termes ------------------------------
-!           (on ne stocke que les aij tels que i>j)
+!--- 1.2 --- others terms ------------------------------
+!           (save only aij if i>j)
  
 if (i1 < i2) then 
    ind=idiag2+i1-i2
@@ -1261,19 +1147,17 @@ end subroutine asblp
  
 !Function: m1p
 !                                             
-!     faire l'operation : yvect =  xmors.xvect 
-!     ou  "xmors" est une matrice "morse"       
-!     xvect,yvect  des vecteurs                  
+!     yvect =  xmors.xvect 
+!     xvect,yvect  vectors                  
 !
-!Entrees:
-!          xmors        -     matrice  "morse"          
-!          xvect        -     vecteur operande           
-!          mors1,mors2  -     tableaux descriptifs de     
-!                             la matrice "morse"           
-!          nlign        -     nombre de lignes des matrices 
+!Input:
+!          xmors        -     matrix  "morse"          
+!          xvect        -     vector 
+!          mors1,mors2  -     arrays matrix "morse"           
+!          nlign        -     number lines matrices 
 !                                                      
-!Sorties:
-!          yvect    -   vecteur resultat            
+!Output:
+!          yvect    -   vector result
 !                                                  
 !Auteur:
 !     J. Segre - Version 1.0  Decembre 1989
@@ -1391,9 +1275,7 @@ end subroutine m1p
 
 
 
-!  Effectuer le calcul des composantes Ex et Ey du    
-!  ---    champ electrique a partir du potentiel au noeud.
-!         On appelle ca un lissage.                        
+!  Compute Ex et Ey from potential 
 subroutine poliss(self, phi, ex, ey)
 
 type(sll_t_poisson_2d_triangular), intent(inout) :: self
@@ -1406,8 +1288,6 @@ LOGICAL :: lerr
 
 lerr=.FALSE.
 
-! --- 1.0 --- Calcul des termes individuels des seconds membres --------
-  
 do ic=1,self%mesh%nbtcot
    self%vtanty(ic)=(phi(self%mesh%nuvac(1,ic))-phi(self%mesh%nuvac(2,ic)))/self%mesh%xlcod(ic)
 end do
@@ -1420,8 +1300,6 @@ do ic=1,self%mesh%nbtcot
    self%vtanty(ic)=self%vtanty(ic)*self%mesh%vtauy(ic)
 end do
 
-! --- 2.0 --- Calcul des seconds membres -------------------------------
-  
 do is=1,self%mesh%num_nodes
 
    iac=self%mesh%nbcov(is)+1
@@ -1637,7 +1515,7 @@ if (lerr) then
    stop
 end if
 
-! --- 3.0 --- Resolution des systemes lineaires 2*2 --------------------
+! --- 3.0 --- Solve systems 2*2 --------------------
 
 do is=1,self%mesh%num_nodes
    ex(is)=self%mesh%xmal2(is)*self%sv1(is)-self%mesh%xmal3(is)*self%sv2(is)
@@ -1647,9 +1525,10 @@ end do
 
 ! --- 9.0 --- Formats --------------------------------------------------
     
-900 format(//10x,'Erreur dans POLISS'   &
-            /10x,'On a trouve plus de 12 cotes')
+900 format(//10x,'Error dans POLISS'   &
+            /10x,'On a trouve more de 12 edges')
 
 end subroutine poliss
 
 end module sll_m_poisson_2d_tri
+
