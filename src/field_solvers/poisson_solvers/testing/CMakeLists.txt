@@ -88,14 +88,10 @@ IF(BUILD_MUDPACK)
   SET_TESTS_PROPERTIES( poisson_2d_mudpack_curvilinear_old PROPERTIES PASS_REGULAR_EXPRESSION "PASSED" )
 ENDIF(BUILD_MUDPACK)
 
-#-------------------------------------------------------------------------------
 # Test FE Poisson solver based on smooth polar splines (dense version)
-#-------------------------------------------------------------------------------
 add_executable( test_poisson_2d_fem_sps_dense test_poisson_2d_fem_sps_dense.F90 )
 target_link_libraries( test_poisson_2d_fem_sps_dense sll_poisson_solvers )
 
-#-------------------------------------------------------------------------------
 # Test FE Poisson solver based on smooth polar splines (stencil version)
-#-------------------------------------------------------------------------------
 add_executable( test_poisson_2d_fem_sps_stencil test_poisson_2d_fem_sps_stencil.F90 )
 target_link_libraries( test_poisson_2d_fem_sps_stencil sll_poisson_solvers )
