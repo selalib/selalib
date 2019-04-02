@@ -1,4 +1,4 @@
-program test_poisson_2d_fem_sps
+program test_qn_solver_2d_fem_sps
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_assert.h"
 
@@ -32,7 +32,7 @@ program test_poisson_2d_fem_sps
 
   use sll_m_polar_mapping_iga, only: sll_t_polar_mapping_iga
 
-  use sll_m_poisson_2d_fem_sps_stencil_new, only: sll_t_poisson_2d_fem_sps_stencil_new
+  use sll_m_qn_solver_2d_fem_sps_stencil_new, only: sll_t_qn_solver_2d_fem_sps_stencil_new
 
   use sll_m_boundary_condition_descriptors, only: sll_p_dirichlet
 
@@ -82,8 +82,12 @@ program test_poisson_2d_fem_sps
   real(wp), allocatable :: tau_eta2(:)
   real(wp), allocatable :: gtau(:,:)
 
-  ! Poisson solver
-  type(sll_t_poisson_2d_fem_sps_stencil_new) :: solver
+  ! 2D coefficients in quasi-neutrality equation
+  real(wp), allocatable :: coeffs1(:,:)
+  real(wp), allocatable :: coeffs2(:,:)
+
+  ! Quasi-neutrality solver
+  type(sll_t_qn_solver_2d_fem_sps_stencil_new) :: solver
 
 !  ! Stiffness/mass dense matrices and C1 projections
 !  real(wp), allocatable :: A (:,:)
@@ -126,7 +130,7 @@ program test_poisson_2d_fem_sps
   maptype = 1
 
   ! Create HDF5 file
-  call sll_s_hdf5_ser_file_create( 'poisson_2d_fem_sps.h5', file_id, h5_error )
+  call sll_s_hdf5_ser_file_create( 'qn_solver_2d_fem_sps.h5', file_id, h5_error )
 
   ! HDF5 I/O
   call sll_o_hdf5_ser_write_attribute( file_id, "/", "n1", n1, h5_error )
@@ -240,8 +244,7 @@ program test_poisson_2d_fem_sps
       do i2 = 1, nt2
         do i1 = 1, nt1
           eta = (/ tau_eta1(i1), tau_eta2(i2) /)
-          x   = mapping_discrete % eval( eta )
-          gtau(i1,i2) = rhs_circle( x )
+          gtau(i1,i2) = rhs_circle( eta )
         end do
       end do
 
@@ -266,8 +269,24 @@ program test_poisson_2d_fem_sps
   dt = sll_f_time_elapsed_between( t0, t1 )
   write(*,'(a,es8.1/)' ) " Time required for interpolation of right hand side: ", dt
 
+  ! Assign 2D coefficients
+  associate( nt1 => size( tau_eta1 ), nt2 => size( tau_eta2 ) )
+
+    allocate( coeffs1( nt1, nt2 ) )
+    allocate( coeffs2( nt1, nt2 ) )
+
+    do i2 = 1, nt2
+      do i1 = 1, nt1
+        eta = (/ tau_eta1(i1), tau_eta2(i2) /)
+        coeffs1(i1,i2) = fun_coeffs1( eta )
+        coeffs2(i1,i2) = fun_coeffs2( eta )
+      end do
+    end do
+
+  end associate
+
   !-----------------------------------------------------------------------------
-  ! Poisson solver
+  ! Quasi-neutrality solver
   !-----------------------------------------------------------------------------
 
   ! Initialize 2D spline for solution
@@ -275,13 +294,13 @@ program test_poisson_2d_fem_sps
 
   call sll_s_set_time_mark( t0 )
 
-  ! Initialize Poisson solver
-  call solver % init( bsplines_eta1, bsplines_eta2, breaks_eta1, breaks_eta2, mapping_discrete )
+  ! Initialize quasi-neutrality solver
+  call solver % init( bsplines_eta1, bsplines_eta2, breaks_eta1, breaks_eta2, mapping_discrete, coeffs1, coeffs2 )
 
   call sll_s_set_time_mark( t1 )
 
   dt = sll_f_time_elapsed_between( t0, t1 )
-  write(*,'(a,es8.1/)' ) " Time required for initialization of Poisson solver: ", dt
+  write(*,'(a,es8.1/)' ) " Time required for initialization of quasi-neutrality solver: ", dt
 
 !  ! Allocate stiffness/mass dense matrices and C1 projections
 !  allocate( A( n1*n2, n1*n2 ) )
@@ -314,7 +333,7 @@ program test_poisson_2d_fem_sps
   call sll_s_set_time_mark( t1 )
 
   dt = sll_f_time_elapsed_between( t0, t1 )
-  write(*,'(a,es8.1/)' ) " Time required for solution of Poisson equation: ", dt
+  write(*,'(a,es8.1/)' ) " Time required for solution of quasi-neutrality equation: ", dt
 
   ! Evaluate phi spline on logical grid and compute spatial L2-norm of error
 
@@ -337,11 +356,7 @@ program test_poisson_2d_fem_sps
 
       phi_spl(i1,i2) = spline_2d_phi % eval( eta(1), eta(2) )
 
-      if ( maptype == 0 ) then
-        phi_exact = ( 1.0_wp - eta(1)**2 ) * cos( sll_p_twopi * x(1) ) * sin( sll_p_twopi * x(2) )
-      else if ( maptype == 1 ) then
-        phi_exact = eta(1)**2 * ( 1.0_wp - eta(1)**2 ) * cos( eta(2) )
-      end if
+      phi_exact = eta(1)**2 * ( 1.0_wp - eta(1)**2 ) * cos( eta(2) )
 
       err(i1,i2) = phi_spl(i1,i2) - phi_exact
 
@@ -410,6 +425,11 @@ program test_poisson_2d_fem_sps
   deallocate( breaks_eta1 )
   deallocate( breaks_eta2 )
 
+  deallocate( gtau )
+
+  deallocate( coeffs1 )
+  deallocate( coeffs2 )
+
   deallocate( phi_spl )
 
 !  deallocate( A )
@@ -433,15 +453,39 @@ program test_poisson_2d_fem_sps
 contains
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
-  SLL_PURE function rhs_circle( x )
-    real(wp), intent(in) :: x(2)
+  SLL_PURE function fun_coeffs1( eta )
+    real(wp), intent(in) :: eta(2)
+    real(wp) :: fun_coeffs1
+
+    associate( s => eta(1), t => eta(2) )
+
+      fun_coeffs1 = exp( - tanh( ( s - 0.5_wp ) / 0.1_wp ) )
+
+    end associate
+
+  end function fun_coeffs1
+
+  SLL_PURE function fun_coeffs2( eta )
+    real(wp), intent(in) :: eta(2)
+    real(wp) :: fun_coeffs2
+
+    associate( s => eta(1), t => eta(2) )
+
+      fun_coeffs2 = 1.0_wp / exp( - tanh( ( s - 0.5_wp ) / 0.2_wp ) )
+
+    end associate
+
+  end function fun_coeffs2
+
+  SLL_PURE function rhs_circle( eta )
+    real(wp), intent(in) :: eta(2)
     real(wp) :: rhs_circle
 
-    associate( sq => x(1)**2 + x(2)**2, xp => sll_p_twopi * x(1), yp => sll_p_twopi * x(2) )
+    associate( s => eta(1), t => eta(2) )
 
       ! Conversion from INTEGER(4) to REAL(8): save space, no precision loss
-      rhs_circle = 8 * sll_p_pi**2 * ( 1 - sq ) * cos(xp) * sin(yp) + 4 * cos(xp) * sin(yp) &
-                   - 8 * sll_p_pi * ( x(1) * sin(xp) * sin(yp) - x(2) * cos(xp) * cos(yp) )
+      rhs_circle = ( 15 * s**2 + 20 * s * ( 2 * s**2 - 1 ) * ( ( tanh( 10 * s - 5 ) )**2 - 1 ) - 3 ) &
+                   * exp( - tanh( 10 * s - 5 ) ) * cos(t) + s**2 * ( 1 - s**2 ) * exp( tanh( 5 * s - 2.5_wp ) ) * cos(t)
 
     end associate
 
@@ -454,21 +498,28 @@ contains
     associate( s => eta(1), t => eta(2) )
 
       ! Conversion from INTEGER(4) to REAL(8): save space, no precision loss
-      rhs_target = ( 8 * d0**3 ) * s**5 + ( - 24 * d0**2 * e0 * cos(t)**3 + 20 * d0**2 * e0 * cos(t) &
-                   + 24 * d0**2 * cos(t)**3 - 20 * d0**2 * cos(t) ) * s**4 + ( - 8 * d0**3 - 42 * d0 &
-                   * e0**2 * cos(t)**2 + 16 * d0 * e0**2 - 24 * d0 * e0 * ( - cos(t)**2 + 1 )**2 - 12 &
-                   * d0 * e0 * cos(t)**2 - 42 * d0 * cos(t)**2 + 16 * d0 ) * s**3 + ( 8 * d0**2 * e0 &
-                   * cos(t)**3 - 12 * d0**2 * e0 * cos(t) - 8 * d0**2 * cos(t)**3 + 12 * d0**2 * cos(t) &
-                   - 15 * e0**3 * cos(t) - 12 * e0**2 * cos(t)**3 + 9 * e0**2 * cos(t) + 12 * e0 * cos(t)**3 &
-                   - 9 * e0 * cos(t) + 15 * cos(t) ) * s**2 + ( 10 * d0 * e0**2 * cos(t)**2 - 8 * d0 * e0**2 &
-                   - 8 * d0 * e0 * ( - cos(t)**2 + 1 )**2 - 20 * d0 * e0 * cos(t)**2 + 16 * d0 * e0 &
-                   + 10 * d0 * cos(t)**2 - 8 * d0) * s - 3 * cos(t) + 3 * e0**3 * cos(t) + e0**2 &
-                   * ( - 4 * cos(t)**3 + 3 * cos(t) ) + e0 * ( 4 * cos(t)**3 - 3 * cos(t) )
+      rhs_target = ( - 2 * d0 * s * ( ( s**2 - 1 ) * ( ( e0 + 1 )**2 * sin(t)**2 + ( 2 * d0 * s + e0 * cos(t) - cos(t) )**2 ) &
+                   * sin(t)**2 + 4 * ( s**2 - 1 ) * ( - d0 * e0 * s + d0 * s + 2 * e0 * cos(t) ) * sin(t)**2 * cos(t) &
+                   + 4 * ( 2 * s**2 - 1 ) * ( - d0 * e0 * s + d0 * s + 2 * e0 * cos(t) ) * sin(t)**2 * cos(t) &
+                   + 4 * ( 2 * s**2 - 1 ) * ( e0**2 - 4 * e0 * sin(t)**2 + 2 * e0 + 1 ) * cos(t)**2 ) + 2 * ( s**2 - 1 ) &
+                   * ( - d0 * e0 * s + d0 * s + 2 * e0 * cos(t) ) * ( 4 * d0 * s * cos(t) + e0 - 1 ) * sin(t)**2 &
+                   - 4 * ( 2 * s**2 - 1 ) * ( 2 * d0 * s * cos(t) + e0 - 1 ) * ( 2 * d0 * e0 * s * sin(t)**2 - d0 * e0 * s &
+                   - 2 * d0 * s * sin(t)**2 + d0 * s + 6 * e0 * cos(t)**3 - 4 * e0 * cos(t) ) + 2 * ( 2 * s**2 - 1 ) &
+                   * ( 4 * d0 * s * cos(t) + e0 - 1 ) * ( e0**2 - 4 * e0 * sin(t)**2 + 2 * e0 + 1 ) * cos(t) &
+                   + ( 2 * d0 * s * cos(t) + e0 - 1 ) * ( - 2 * d0 * s * ( e0 - 1 ) * ( s**2 - 1 ) * sin(t)**2 + 4 * s**2 &
+                   * ( - d0 * e0 * s + d0 * s + 2 * e0 * cos(t) ) * sin(t)**2 + 20 * s * ( s**2 - 1 ) * ( tanh( 10 * s - 5 )**2 - 1 ) &
+                   * ( - d0 * e0 * s + d0 * s + 2 * e0 * cos(t) ) * sin(t)**2 + 20 * s * ( 2 * s**2 - 1 ) &
+                   * ( tanh( 10 * s - 5 )**2 - 1 ) * ( e0**2 - 4 * e0 * sin(t)**2 + 2 * e0 + 1 ) * cos(t) &
+                   - ( s**2 - 1 ) * ( ( e0 + 1 )**2 * sin(t)**2 + ( 2 * d0 * s + e0 * cos(t) - cos(t) )**2 ) &
+                   * cos(t) - 2 * ( s**2 - 1 ) * ( - d0 * e0 * s + d0 * s + 2 * e0 * cos(t) ) * sin(t)**2 &
+                   + 2 * ( 6 * s**2 - 1 ) * ( e0**2 - 4 * e0 * sin(t)**2 + 2 * e0 + 1 ) * cos(t) ) ) * exp( - tanh( 10 * s - 5 ) )
+      
+      rhs_target = rhs_target / ( ( e0 + 1 )**2 * ( 2 * d0 * s * cos(t) + e0 - 1 )**3 )
 
-      rhs_target = - rhs_target / ( ( e0 + 1 )**2 * ( 2 * d0 * s * cos(t) + e0 - 1 )**3 )
+      rhs_target = rhs_target + s**2 * ( - s**2 + 1 ) * exp( tanh( ( 5 * s - 2.5_wp ) ) ) * cos(t)
 
     end associate
 
   end function rhs_target
 
-end program test_poisson_2d_fem_sps
+end program test_qn_solver_2d_fem_sps
