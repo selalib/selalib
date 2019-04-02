@@ -1,5 +1,69 @@
-stages:
-  - build
+---
+
+
+
+fedora-openmpi:
+  stage: build
+  script: 
+    - "scripts/fedora-openmpi-ci.sh"
+  only:
+    - develop
+  tags:
+    - fedora
+    - openmpi
+
+fedora-mpich:
+  stage: build
+  script: 
+    - "scripts/fedora-mpich-ci.sh"
+  only:
+    - develop
+  tags:
+    - fedora
+    - mpich
+
+pages:
+    stage: build
+    image: ubuntu:18.10
+
+    before_script:
+      - apt-get -y update
+      - apt-get -y install libopenmpi-dev openmpi-bin libhdf5-openmpi-dev
+      - apt-get -y install cmake gfortran libfftw3-dev liblapack-dev libopenblas-dev doxygen texlive-latex-extra
+
+    script:
+      - mkdir public
+      - cd build && make doc-user
+      - cp -r doc/html/* ../public/
+
+    artifacts:
+        paths:
+        - public
+        
+    tags:
+      - docker
+
+
+
+#intel-impi:
+#  stage: build
+#  script:
+#    - "scripts/intel16-build.sh"
+#  only:
+#    - develop
+#  tags:
+#    - intel
+    
+#ubuntu-openmpi:
+#  tags:
+#    - ubuntu
+#    - openmpi
+#  stage: build
+#  script: 
+#    - "scripts/selalib-ci.sh"
+#  only:
+#    - develop
+
 #  
 #
 #
@@ -31,44 +95,5 @@ stages:
 #    - develop
 #  tags:
 #    - osx
-#    - mpich    
-    
-fedora-openmpi:
-  stage: build
-  script: 
-    - "scripts/fedora-openmpi-ci.sh"
-  only:
-    - develop
-  tags:
-    - fedora
-    - openmpi
-
-fedora-mpich:
-  stage: build
-  script: 
-    - "scripts/fedora-mpich-ci.sh"
-  only:
-    - develop
-  tags:
-    - fedora
-    - mpich
-
-#intel-impi:
-#  stage: build
-#  script:
-#    - "scripts/intel16-build.sh"
-#  only:
-#    - develop
-#  tags:
-#    - intel
-    
-#ubuntu-openmpi:
-#  tags:
-#    - ubuntu
-#    - openmpi
-#  stage: build
-#  script: 
-#    - "scripts/selalib-ci.sh"
-#  only:
-#    - develop
+#    - mpich  
   

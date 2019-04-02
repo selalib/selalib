@@ -21,10 +21,10 @@ module sll_m_sim_bsl_vp_2d2d_cart_fullsparsegrid
     sll_c_simulation_base_class
 
   use sll_m_sparse_grid_2d, only: &
-    sll_t_sparse_grid_interpolator_2d
+    sll_t_sparse_grid_2d
 
   use sll_m_sparse_grid_4d, only: &
-    sll_t_sparse_grid_interpolator_4d
+    sll_t_sparse_grid_4d
 
   implicit none
 
@@ -70,8 +70,8 @@ module sll_m_sim_bsl_vp_2d2d_cart_fullsparsegrid
      type(sll_t_fft_derivative)  :: poisson
      
      ! Interpolator
-     type(sll_t_sparse_grid_interpolator_2d)   :: interp_x
-     type(sll_t_sparse_grid_interpolator_4d)   :: interp_xv
+     type(sll_t_sparse_grid_2d)   :: interp_x
+     type(sll_t_sparse_grid_4d)   :: interp_xv
 
      !Diagnostics
      sll_real64, dimension(:), allocatable :: nrj
@@ -534,7 +534,7 @@ subroutine scale_gaussian(sim, dim,dt,efield,fscale)
 
 !------------------------------------------------------------------------------!
  subroutine dehira_landau(interpolator,data)
-    class(sll_t_sparse_grid_interpolator_2d) :: interpolator
+    class(sll_t_sparse_grid_2d) :: interpolator
     sll_real64, dimension(:), intent(inout)   :: data
     sll_int32                                :: counter,level,l1,k1,k2
     sll_int32, dimension(2) :: l,no
@@ -564,7 +564,7 @@ subroutine scale_gaussian(sim, dim,dt,efield,fscale)
 
 !------------------------------------------------------------------------------!
   recursive subroutine dehira_landau_d_dimension(interpolator,surplus,data_array,level,factor,index,d)
-  class(sll_t_sparse_grid_interpolator_2d) :: interpolator
+  class(sll_t_sparse_grid_2d) :: interpolator
   sll_real64, intent(inout) :: surplus
   sll_real64, dimension(:), intent(in) :: data_array
   sll_int32, dimension(:), intent(in) :: level

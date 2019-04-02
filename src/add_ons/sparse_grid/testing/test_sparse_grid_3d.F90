@@ -11,7 +11,7 @@ program test_interpolation_3d
     sll_p_pi
 
   use sll_m_sparse_grid_3d, only: &
-    sll_t_sparse_grid_interpolator_3d
+    sll_t_sparse_grid_3d
 
   implicit none
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -28,7 +28,7 @@ program test_interpolation_3d
 
   sll_int32, dimension(3) :: dorder, levelsini
 
-  type(sll_t_sparse_grid_interpolator_3d)   :: interp
+  type(sll_t_sparse_grid_3d)   :: interp
 
   logical :: fail
 

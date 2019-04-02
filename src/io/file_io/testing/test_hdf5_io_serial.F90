@@ -66,15 +66,15 @@ program test_hdf5_io_serial
 
   ! Create HDF5 file
   call sll_s_hdf5_ser_file_create( fname, fid, ferror )
-  SLL_ASSERT( ferror == 0 )
+  SLL_ASSERT_ALWAYS( ferror == 0 )
 
   ! Write array to file
   call sll_o_hdf5_ser_write_array( fid, a, dsetname, ferror )
-  SLL_ASSERT( ferror == 0 )
+  SLL_ASSERT_ALWAYS( ferror == 0 )
 
   ! Close file
   call sll_s_hdf5_ser_file_close( fid, ferror )
-  SLL_ASSERT( ferror == 0 )
+  SLL_ASSERT_ALWAYS( ferror == 0 )
 
   ! Allocate memory for reading data from file
   allocate( b(7,11) )

@@ -87,7 +87,7 @@ contains
        
     ! Create a new file using default properties
     inquire(file=filename,opened=lopen)
-    SLL_ASSERT(.not. lopen)
+    SLL_ASSERT_ALWAYS(.not. lopen)
      
     open(file_id,FILE=filename,FORM='FORMATTED',IOSTAT=error)
     rewind(file_id)
@@ -134,7 +134,7 @@ contains
      character(len=*), intent(in) :: filetype  !< data file format
      sll_int32, intent(in)        :: nnodes_x1 !< x nodes number
        
-     SLL_ASSERT(filetype == 'HDF' .or. filetype == 'Binary')
+     SLL_ASSERT_ALWAYS(filetype == 'HDF' .or. filetype == 'Binary')
      write(file_id,"(a,i10,a)")"<DataItem Dimensions='",nnodes_x1, &
           "' NumberType='Float' Precision='8' Format='"//trim(filetype)//"'>"
      write(file_id,"(a)")trim(filename)
@@ -164,7 +164,7 @@ contains
      sll_int32, intent(in)        :: nnodes_x1 !< x nodes number
      sll_int32, intent(in)        :: nnodes_x2 !< y nodes number
        
-     SLL_ASSERT(filetype == 'HDF' .or. filetype == 'Binary')
+     SLL_ASSERT_ALWAYS(filetype == 'HDF' .or. filetype == 'Binary')
      write(file_id,"(a,2i5,a)")"<DataItem Dimensions='",nnodes_x2,nnodes_x1, &
           "' NumberType='Float' Precision='8' Format='"//trim(filetype)//"'>"
      write(file_id,"(a)")trim(filename)
@@ -186,7 +186,7 @@ contains
      sll_int32, intent(in)        :: nnodes_x2 !< y nodes number
      sll_int32, intent(in)        :: nnodes_x3 !< z nodes number
      
-     SLL_ASSERT(filetype == 'HDF' .or. filetype == 'Binary')
+     SLL_ASSERT_ALWAYS(filetype == 'HDF' .or. filetype == 'Binary')
      write(file_id,"(a,3i5,a)")"<DataItem Dimensions='",nnodes_x3, &
           nnodes_x2,nnodes_x1, &
           "' NumberType='Float' Precision='8' Format='"//trim(filetype)//"'>"
