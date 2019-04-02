@@ -228,8 +228,8 @@ ax.set_title( r'Numerical solution: $\phi(x,y)$' )
 ax.set_aspect( 'equal' )
 fg.tight_layout()
 fg.show()
-fg_name = 'poisson_solver.pdf'
-fg.savefig( fg_name, dpi=300 )
+#fg_name = 'poisson_solver.pdf'
+#fg.savefig( fg_name, dpi=300 )
 
 err_plt = np.ndarray([n2+1,n1])
 err_plt[:n2,:] = err[:,:]
@@ -259,5 +259,5 @@ ax.set_title( r'Numerical error: $\phi-\phi_{ex}$' )
 ax.set_aspect( 'equal' )
 fg.tight_layout()
 fg.show()
-fg_name = 'poisson_solver_error.pdf'
-fg.savefig( fg_name, dpi=300 )
+#fg_name = 'poisson_solver_error.pdf'
+#fg.savefig( fg_name, dpi=300 )
