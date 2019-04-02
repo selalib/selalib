@@ -32,8 +32,6 @@ program test_poisson_2d_fem_sps
 
   use sll_m_polar_mapping_iga, only: sll_t_polar_mapping_iga
 
-  use sll_m_poisson_2d_fem_sps_stencil, only: sll_t_poisson_2d_fem_sps_stencil
-
   use sll_m_poisson_2d_fem_sps_stencil_new, only: sll_t_poisson_2d_fem_sps_stencil_new
 
   use sll_m_boundary_condition_descriptors, only: sll_p_dirichlet
@@ -85,7 +83,6 @@ program test_poisson_2d_fem_sps
   real(wp), allocatable :: gtau(:,:)
 
   ! Poisson solver
-!  type(sll_t_poisson_2d_fem_sps_stencil    ) :: solver
   type(sll_t_poisson_2d_fem_sps_stencil_new) :: solver
 
 !  ! Stiffness/mass dense matrices and C1 projections
@@ -244,20 +241,20 @@ program test_poisson_2d_fem_sps
         do i1 = 1, nt1
           eta = (/ tau_eta1(i1), tau_eta2(i2) /)
           x   = mapping_discrete % eval( eta )
-          gtau(i1,i2) = rhs_cart( x )
+          gtau(i1,i2) = rhs_circle( x )
         end do
       end do
 
-     else if ( maptype == 1 ) then
+    else if ( maptype == 1 ) then
 
-       do i2 = 1, nt2
-         do i1 = 1, nt1
-           eta = (/ tau_eta1(i1), tau_eta2(i2) /)
-           gtau(i1,i2) = rhs_log( eta )
-         end do
-       end do
+      do i2 = 1, nt2
+        do i1 = 1, nt1
+          eta = (/ tau_eta1(i1), tau_eta2(i2) /)
+          gtau(i1,i2) = rhs_target( eta )
+        end do
+      end do
 
-     end if
+    end if
 
   end associate
 
@@ -363,26 +360,8 @@ program test_poisson_2d_fem_sps
 
   call sll_s_set_time_mark( t0 )
 
-!  ! Write stiffness matrix
-!  call sll_o_hdf5_ser_write_array( file_id, A, "/A", h5_error )
-!
-!  ! Write mass matrix
-!  call sll_o_hdf5_ser_write_array( file_id, M, "/M", h5_error )
-!
-!!  ! Write right hand side
-!!  call sll_o_hdf5_ser_write_array( file_id, solver % b, "/b", h5_error )
-
   ! Write solution
   call sll_o_hdf5_ser_write_array( file_id, solver % x, "/x", h5_error )
-
-!  ! Write C1 projection of stiffness matrix
-!  call sll_o_hdf5_ser_write_array( file_id, Ap, "/Ap", h5_error )
-!
-!  ! Write C1 projection of mass matrix
-!  call sll_o_hdf5_ser_write_array( file_id, Mp, "/Mp", h5_error )
-!
-!!  ! Write L matrix needed for projection
-!!  call sll_o_hdf5_ser_write_array( file_id, solver % L, "/L", h5_error )
 
   ! Write reshaped solution
   call sll_o_hdf5_ser_write_array( file_id, spline_2d_phi % bcoef(1:n1,1:n2), "/phi", h5_error )
@@ -393,12 +372,31 @@ program test_poisson_2d_fem_sps
   ! Write error
   call sll_o_hdf5_ser_write_array( file_id, err, "/error", h5_error )
 
+!  ! Write stiffness matrix
+!  call sll_o_hdf5_ser_write_array( file_id, A, "/A", h5_error )
+!
+!  ! Write mass matrix
+!  call sll_o_hdf5_ser_write_array( file_id, M, "/M", h5_error )
+!
+!!  ! Write right hand side
+!!  call sll_o_hdf5_ser_write_array( file_id, solver % b, "/b", h5_error )
+!
+!  ! Write C1 projection of stiffness matrix
+!  call sll_o_hdf5_ser_write_array( file_id, Ap, "/Ap", h5_error )
+!
+!  ! Write C1 projection of mass matrix
+!  call sll_o_hdf5_ser_write_array( file_id, Mp, "/Mp", h5_error )
+!
+!!  ! Write L matrix needed for projection
+!!  call sll_o_hdf5_ser_write_array( file_id, solver % L, "/L", h5_error )
+
   ! Close HDF5 file
   call sll_s_hdf5_ser_file_close ( file_id, h5_error )
 
   call sll_s_set_time_mark( t1 )
 
   dt = sll_f_time_elapsed_between( t0, t1 )
+
   write(*,'(a,es8.1/)') " Time required for writing HDF5 output: ", dt
 
   write(*,'(a,es8.2/)') " Spatial L2    norm of error: ", err_L2_norm
@@ -435,40 +433,43 @@ program test_poisson_2d_fem_sps
 contains
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
-  SLL_PURE function rhs_cart( x )
+  SLL_PURE function rhs_circle( x )
     real(wp), intent(in) :: x(2)
-    real(wp) :: rhs_cart
+    real(wp) :: rhs_circle
 
     associate( sq => x(1)**2 + x(2)**2, xp => sll_p_twopi * x(1), yp => sll_p_twopi * x(2) )
 
-      rhs_cart =  8.0_wp*sll_p_pi**2*(1.0_wp-sq)*cos(xp)*sin(yp)+4.0_wp*cos(xp)*sin(yp) &
-                 -8.0_wp*sll_p_pi*(x(1)*sin(xp)*sin(yp)-x(2)*cos(xp)*cos(yp))
+      ! Conversion from INTEGER(4) to REAL(8) (save space)
+      rhs_circle =   8 * sll_p_pi**2 * ( 1 - sq ) * cos(xp) * sin(yp) + 4 * cos(xp) * sin(yp) &
+                   - 8 * sll_p_pi * ( x(1) * sin(xp) * sin(yp) - x(2) * cos(xp) * cos(yp) )
 
     end associate
 
-  end function rhs_cart
+  end function rhs_circle
 
-  SLL_PURE function rhs_log( eta )
+  SLL_PURE function rhs_target( eta )
     real(wp), intent(in) :: eta(2)
-    real(wp) :: rhs_log
+    real(wp) :: rhs_target
 
     associate( s => eta(1), t => eta(2) )
 
-      rhs_log = (8.0_wp*d0**3)*s**5+(-24.0_wp*d0**2*e0*cos(t)**3+20.0_wp*d0**2*e0*cos(t)                  &
-                +24.0_wp*d0**2*cos(t)**3-20.0_wp*d0**2*cos(t))*s**4+(-8.0_wp*d0**3                        &
-                -42.0_wp*d0*e0**2*cos(t)**2+16.0_wp*d0*e0**2-24.0_wp*d0*e0*(-cos(t)**2+1.0_wp)**2         &
-                -12.0_wp*d0*e0*cos(t)**2-42.0_wp*d0*cos(t)**2+16.0_wp*d0)*s**3+(8.0_wp*d0**2*e0*cos(t)**3 &
-                -12.0_wp*d0**2*e0*cos(t)-8.0_wp*d0**2*cos(t)**3+12.0_wp*d0**2*cos(t)-15.0_wp*e0**3*cos(t) &
-                -12.0_wp*e0**2*cos(t)**3+9.0_wp*e0**2*cos(t)+12.0_wp*e0*cos(t)**3-9.0_wp*e0*cos(t)        &
-                +15.0_wp*cos(t))*s**2+(10.0_wp*d0*e0**2*cos(t)**2-8.0_wp*d0*e0**2                         &
-                -8.0_wp*d0*e0*(-cos(t)**2+1.0_wp)**2-20.0_wp*d0*e0*cos(t)**2+16.0_wp*d0*e0                &
-                +10.0_wp*d0*cos(t)**2-8.0_wp*d0)*s-3.0_wp*cos(t)+3.0_wp*e0**3*cos(t)                      &
-                +e0**2*(-4.0_wp*cos(t)**3+3.0_wp*cos(t))+e0*(4.0_wp*cos(t)**3-3.0_wp*cos(t))
+      ! Conversion from INTEGER(4) to REAL(8) (save space)
+      rhs_target = ( 8 * d0**3 ) * s**5 + ( - 24 * d0**2 * e0 * cos(t)**3 + 20 * d0**2 * e0 * cos(t)       &
+                   + 24 * d0**2 * cos(t)**3 - 20 * d0**2 * cos(t) ) * s**4 + ( - 8 * d0**3                 &
+                   - 42 * d0 * e0**2 * cos(t)**2 + 16 * d0 * e0**2 - 24 * d0 * e0 * ( - cos(t)**2 + 1 )**2 &
+                   - 12 * d0 * e0 * cos(t)**2 - 42 * d0 * cos(t)**2 + 16 * d0 ) * s**3                     &
+                   + ( 8 * d0**2 * e0 * cos(t)**3 - 12 * d0**2 * e0 * cos(t) - 8 * d0**2 * cos(t)**3       &
+                   + 12 * d0**2 * cos(t) - 15 * e0**3 * cos(t) - 12 * e0**2 * cos(t)**3                    &
+                   + 9 * e0**2 * cos(t) + 12 * e0 * cos(t)**3 - 9 * e0 * cos(t) + 15 * cos(t) ) * s**2     &
+                   + ( 10 * d0 * e0**2 * cos(t)**2 - 8 * d0 * e0**2 - 8 * d0 * e0 * ( - cos(t)**2 + 1 )**2 &
+                   - 20 * d0 * e0 * cos(t)**2 + 16 * d0 * e0 + 10 * d0 * cos(t)**2 - 8 * d0) * s           &
+                   - 3 * cos(t) + 3 * e0**3 * cos(t) + e0**2 * ( - 4 * cos(t)**3 + 3 * cos(t) )            &
+                   + e0 * ( 4 * cos(t)**3 - 3 * cos(t) )
 
-      rhs_log = - rhs_log / ( (1.0_wp+e0)**2 * (2.0_wp*d0*s*cos(t)+e0-1.0_wp)**3 )
+      rhs_target = - rhs_target / ( ( e0 + 1 )**2 * ( 2 * d0 * s * cos(t) + e0 - 1 )**3 )
 
     end associate
 
-  end function rhs_log
+  end function rhs_target
 
 end program test_poisson_2d_fem_sps
