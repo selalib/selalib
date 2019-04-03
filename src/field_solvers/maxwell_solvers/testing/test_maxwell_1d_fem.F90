@@ -112,7 +112,7 @@ program test_maxwell_1d_fem
   ! Evaluate spline curve at grid points and compute error
   ! Ex is a 1-form, i.e. one spline degree lower
   call sll_s_eval_uniform_periodic_spline_curve(deg-1, ex, sval)
-  err_ex = maxval(sval-ex_exact)
+  err_ex = maxval(abs(sval-ex_exact))
   print*, 'error Poisson',  err_ex
 
   call sll_s_plot_two_fields_1d('ex',nc_eta1,sval,ex_exact,0,0.0_f64)
@@ -134,7 +134,7 @@ program test_maxwell_1d_fem
   ! Evaluate spline curve at grid points and compute error
   ! Ex is a 1-form, i.e. one spline degree lower
   call sll_s_eval_uniform_periodic_spline_curve(deg-1, ex, sval)
-  err_ex2 = maxval(sval-ex_exact)
+  err_ex2 = maxval(abs(sval-ex_exact))
   print*, 'error Ampere',  err_ex2
   !call sll_plot_two_fields_1d('ex',nc_eta1,sval,ex_exact,0,0.0_f64)
 
@@ -169,9 +169,9 @@ program test_maxwell_1d_fem
      end do
 
      call sll_s_eval_uniform_periodic_spline_curve(deg, ey, sval)
-     err_ey = maxval(sval-ey_exact)
+     err_ey = maxval(abs(sval-ey_exact))
      call sll_s_eval_uniform_periodic_spline_curve(deg-1, bz, sval)
-     err_bz = maxval(sval-bz_exact)
+     err_bz = maxval(abs(sval-bz_exact))
 
      write(*,"(10x,' istep = ',I6)",advance="no") istep
      write(*,"(' time = ',g12.3,' sec')",advance="no") time

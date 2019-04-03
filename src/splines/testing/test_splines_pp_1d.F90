@@ -35,15 +35,16 @@ program test_splines_pp_1d
   logical   :: fail
  
   n_cells=8
-  degree=3
-  call spline_test(spline_pp,degree,n_cells,fail)
-  
-  if(fail .eqv. .false.) then
-     write(*,*) 'PASSED'
-  else  
-     write(*,*)'FAILED'
-     stop
-  end if
+  do degree = 1, 5
+      call spline_test(spline_pp,degree,n_cells,fail)
+      
+      if(fail .eqv. .false.) then
+         write(*,*) 'PASSED'
+      else  
+         write(*,*)'FAILED'
+         stop
+      end if
+  end do
 
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 contains
@@ -68,6 +69,18 @@ contains
     sll_real64 :: xi
     sll_int32  :: i
 
+    integer, dimension(33) :: seed = [ -1265139360,  1818735519, -1278717687, &
+                                         -28571184, -2049390160,  2074167660, &
+                                       -1778129250, -1663924455,  -300142776, &
+                                        1497205713,  1463052918, -1650171289, &
+                                        1313784976, -1898838479,  2125570893, &
+                                        -162457092,  1760636990,   524383974, &  
+                                         296008199,  -171091367,   399322358, &
+                                         967084750,  1776047718,  -895222581, &
+                                       -2070137937, -1280788435,  2086980348, &
+                                        1463273178,   465948978,  -701015021, &
+                                        1313707185,  1192973109,           0]
+
     
     fail=.false.
     allocate(val(degree+1))
@@ -75,13 +88,13 @@ contains
     domain(2)=sll_p_twopi 
     delta_x=(domain(2)-domain(1))/real(n_cells,f64)
  
-    call random_seed()
+    call random_seed(put=seed)
     call random_number(b_coeffs)
  
     call sll_s_spline_pp_init_1d( spline_pp, degree, n_cells)
+
     call sll_s_spline_pp_b_to_pp_1d(spline_pp, n_cells, b_coeffs, pp_coeffs)
 
-    call random_seed()
     call random_number(xp)
     xp=xp*(domain(2)-domain(1))
 
@@ -101,21 +114,20 @@ contains
        res2 = res2 + b_coeffs(index1d) * val(i)
     end do
     !write(*,*) 'Fehler horner vs normal:', abs(res-res2)
-    if(abs(res-res2)>1E-15) fail=.true.
-    if((spline_pp%degree-degree)>1E-15) then
+    if(abs(res-res2)>1d-15) fail=.true.
+    if(real(spline_pp%degree-degree)>1E-15) then
        fail=.true.
        print*, 'error in evaluate'
     end if
 
     !test horner for arbitrary polynomials
-    call random_seed()
     call random_number(xp)
     res=sll_f_spline_pp_horner_1d(degree, pp_coeffs, xp, 1)
     res2=0._f64
     do i=1, degree+1
        res2=res2+pp_coeffs(i,1)*xp**((degree+1)-i)
     end do
-    if(abs(res-res2)>1E-12) then 
+    if(abs(res-res2)>1d-12) then 
        fail=.true.
        print*, xp
        print*,'error in horner'

@@ -10,7 +10,7 @@ program test_poisson_2d_sparse_grid_fft
     sll_t_fft_derivative
 
   use sll_m_sparse_grid_2d, only: &
-    sll_t_sparse_grid_interpolator_2d
+    sll_t_sparse_grid_2d
 
   implicit none
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -19,7 +19,7 @@ program test_poisson_2d_sparse_grid_fft
    sll_int32   :: nc_eta1, nc_eta2
    sll_int32   :: error
 
-   type(sll_t_sparse_grid_interpolator_2d), target :: interp
+   type(sll_t_sparse_grid_2d), target :: interp
 
    sll_real64, dimension(:),allocatable      :: ex
    sll_real64, dimension(:),allocatable      :: ey
