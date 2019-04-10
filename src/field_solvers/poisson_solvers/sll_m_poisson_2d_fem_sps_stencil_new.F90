@@ -586,6 +586,10 @@ contains
       self % bp_vecsp_c1_block % vs % array(:,1-p2:0    ) = self % bp_vecsp_c1_block % vs % array(:,n2-p2+1:n2)
       self % bp_vecsp_c1_block % vs % array(:,n2+1:n2+p2) = self % bp_vecsp_c1_block % vs % array(:,1:p2      )
 
+      ! Set output vector (and first guess) to zero (no garbage)
+      self % xp_vecsp_c1_block % vs % array(:,:) = 0.0_wp
+      self % xp_vecsp_c1_block % vd % array(:)   = 0.0_wp
+
       ! Solve linear system Ap*xp=bp
       call self % cjsolver % solve( &
         A = self % Ap_linop_c1_block, &
