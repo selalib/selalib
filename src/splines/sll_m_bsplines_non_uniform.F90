@@ -171,8 +171,8 @@ contains
     real(wp) :: right(1:self%degree)
 
     ! Check on inputs
-    SLL_ASSERT( x > self%xmin - 1.0d-14 )
-    SLL_ASSERT( x < self%xmax + 1.0d-14 )
+    SLL_ASSERT( x >= self%xmin )
+    SLL_ASSERT( x <= self%xmax )
     SLL_ASSERT( size(values) == 1+self%degree )
 
     ! 1. Compute cell index 'icell'
@@ -228,8 +228,8 @@ contains
     real(wp) :: right(1:self%degree)
 
     ! Check on inputs
-    SLL_ASSERT( x > self%xmin - 1.0d-14 )
-    SLL_ASSERT( x < self%xmax + 1.0d-14 )
+    SLL_ASSERT( x >= self%xmin )
+    SLL_ASSERT( x <= self%xmax )
     SLL_ASSERT( size(derivs) == 1+self%degree )
 
     ! 1. Compute cell index 'icell' and x_offset
@@ -315,8 +315,8 @@ contains
     real(wp) :: a    (0:1          ,0:self%degree)
 
     ! Check on inputs
-    SLL_ASSERT( x > self%xmin - 1.0d-14 )
-    SLL_ASSERT( x < self%xmax + 1.0d-14 )
+    SLL_ASSERT( x >= self%xmin )
+    SLL_ASSERT( x <= self%xmax )
     SLL_ASSERT( n >= 0 )
     SLL_ASSERT( n <= self%degree )
     SLL_ASSERT( size(derivs,1) == 1+n           )
