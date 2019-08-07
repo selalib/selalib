@@ -70,8 +70,7 @@ ENDIF(BUILD_MUDPACK)
 ADD_EXECUTABLE( test_poisson_2d_fem test_poisson_2d_fem.F90 )
 TARGET_LINK_LIBRARIES( test_poisson_2d_fem sll_poisson_solvers
   sll_memory
-  sll_utilities
-  ${LAPACK_LIBRARIES}
+  sll_utilities ${LAPACK_LIBRARIES}
   ${BLAS_LIBRARIES})
 ADD_TEST( NAME poisson_2d_fem COMMAND test_poisson_2d_fem )
 SET_TESTS_PROPERTIES( poisson_2d_fem PROPERTIES PASS_REGULAR_EXPRESSION "PASSED" )
@@ -88,10 +87,29 @@ IF(BUILD_MUDPACK)
   SET_TESTS_PROPERTIES( poisson_2d_mudpack_curvilinear_old PROPERTIES PASS_REGULAR_EXPRESSION "PASSED" )
 ENDIF(BUILD_MUDPACK)
 
-# Test FE Poisson solver based on smooth polar splines (dense version)
+# Test FEM Poisson solver based on smooth polar splines (dense version)
 add_executable( test_poisson_2d_fem_sps_dense test_poisson_2d_fem_sps_dense.F90 )
 target_link_libraries( test_poisson_2d_fem_sps_dense sll_poisson_solvers )
 
-# Test FE Poisson solver based on smooth polar splines (stencil version)
-add_executable( test_poisson_2d_fem_sps_stencil test_poisson_2d_fem_sps_stencil.F90 )
-target_link_libraries( test_poisson_2d_fem_sps_stencil sll_poisson_solvers )
+#-------------------------------------------------------------------------------
+# Test FEM Poisson solver based on smooth polar splines (stencil version)
+#-------------------------------------------------------------------------------
+
+# Copy reference output files
+file( GLOB OUTPUT_DATA "*.h5" )
+file( COPY ${OUTPUT_DATA} DESTINATION ${CMAKE_CURRENT_BINARY_DIR} )
+
+set( TEST_NAME test_poisson_2d_fem_sps_stencil )
+
+# Copy reference input file
+file( GLOB INPUT_FILE ${TEST_NAME}.nml )
+file( COPY ${INPUT_FILE} DESTINATION ${CMAKE_CURRENT_BINARY_DIR} )
+
+add_executable( ${TEST_NAME} ${TEST_NAME}.F90 )
+target_link_libraries( ${TEST_NAME} sll_poisson_solvers )
+add_test( NAME ${TEST_NAME} COMMAND ${TEST_NAME} )
+set_tests_properties( ${TEST_NAME} PROPERTIES PASS_REGULAR_EXPRESSION "PASSED" TIMEOUT 60 )
+
+# compile executable to produce grid for manufactured solution
+add_executable( ${TEST_NAME}_grid ${TEST_NAME}_grid.F90 )
+target_link_libraries( ${TEST_NAME}_grid sll_poisson_solvers )

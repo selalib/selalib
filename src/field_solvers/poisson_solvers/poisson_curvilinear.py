@@ -4,6 +4,8 @@
 # >> run poisson_curvilinear.py circle
 
 import sys
+import h5py
+import numpy as np
 import sympy as sp
 from sympy import *
 
@@ -12,64 +14,114 @@ sp.init_printing()
 
 mapping = sys.argv[1]
 
-s = sp.symbols('s')
-t = sp.symbols('t')
+s = sp.symbols( 's', real=True, positive=True )
+t = sp.symbols( 'theta', real=True, positive=True )
 
 if ( mapping == 'circle' ):
    x = s*sp.cos(t)
    y = s*sp.sin(t)
 elif ( mapping == 'target' ):
-   xp = sp.symbols('x_p')
-   yp = sp.symbols('y_p')
-   k = sp.symbols('kappa')
-   d = sp.symbols('Delta')
+   k = sp.symbols( 'kappa', real=True, positive=True )
+   d = sp.symbols( 'Delta', real=True, positive=True )
+   xp = 0.0
+   yp = 0.0
    x = xp + s*sp.cos(t) - k*s*sp.cos(t) - d*s**2
    y = yp + s*sp.sin(t) + k*s*sp.sin(t)
 elif ( mapping == 'czarny' ):
-   yp = sp.symbols('y_p')
-   inv_asp_ratio = sp.symbols('epsilon')
-   e  = sp.symbols('e')
-   xi = sp.symbols('xi')
-   x = ( 1 - sp.sqrt( 1 + inv_asp_ratio * ( inv_asp_ratio + 2*s*sp.cos(t)) ) ) / inv_asp_ratio
-   y = yp + e * xi * s * sin(t) / ( 1 + inv_asp_ratio * x )
+    print( 'Not implemented' )
+    sys.exit()
+#   yp = 0.0
+#   epsil = sp.symbols( 'epsilon', real=True, positive=True )
+#   ellip = sp.symbols( 'e', real=True, positive=True )
+#   xi    = sp.symbols( 'xi', real=True, positive=True )
+#   x = ( 1 - sp.sqrt( 1 + epsil * ( epsil + 2*s*sp.cos(t)) ) ) / epsil
+#   y = yp + ellip * xi * s * sin(t) / ( 1 + epsil * x )
 
-g_ss = x.diff( s, 1 )**2 + y.diff( s, 1 )**2
-g_st = x.diff( s, 1 ) * x.diff( t, 1 ) + y.diff( s, 1 ) * y.diff( t, 1 )
-g_ts = x.diff( t, 1 ) * x.diff( s, 1 ) + y.diff( t, 1 ) * y.diff( s, 1 )
-g_tt = x.diff( t, 1 )**2 + y.diff( t, 1 )**2
+g_ss = x.diff( s )**2 + y.diff( s )**2
+g_st = x.diff( s ) * x.diff( t ) + y.diff( s ) * y.diff( t )
+g_ts = x.diff( t ) * x.diff( s ) + y.diff( t ) * y.diff( s )
+g_tt = x.diff( t )**2 + y.diff( t )**2
 
-g_ss = sp.simplify( g_ss )
-g_st = sp.simplify( g_st )
-g_ts = sp.simplify( g_ts )
-g_tt = sp.simplify( g_tt )
+g = sp.Matrix( [ [ g_ss, g_st ], [ g_ts, g_tt ] ] )
+g = sp.simplify( g )
 
-det_g = g_ss * g_tt - g_st * g_ts
-det_J = sp.sqrt( det_g )
-
+det_g = g.det()
 det_g = sp.simplify( det_g )
+
+G = g**(-1) * det_g
+G = sp.simplify( G )
+
+det_J = sp.sqrt( det_g )
 det_J = sp.simplify( det_J )
 
-g__ss =   g_tt / det_g
-g__st = - g_st / det_g
-g__ts = - g_ts / det_g
-g__tt =   g_ss / det_g
+phi = ( 1 - s**2 ) * sp.cos( 2*sp.pi*x ) * sp.sin( 2*sp.pi*y )
+
+dphi = sp.Matrix( [ phi.diff( s ), phi.diff( t ) ] )
+
+DET_g = det_g / s**2
+DET_J = det_J / s
+DPHI_DT = sp.cancel( dphi[1] / s )
+
+l_ss = det_J * G[0,0] / det_g * dphi[0]
+l_st = det_J * G[0,1] / det_g * dphi[1]
+l_ts = det_J * G[1,0] / det_g * dphi[0]
+l_tt = DET_J * G[1,1] / DET_g * DPHI_DT
+
+lap_temp = l_ss.diff( s ) + l_st.diff( s ) + l_ts.diff( t ) + l_tt.diff( t )
+lap_glob = lap_temp / det_J
+
+if ( sp.simplify( lap_temp.subs( s, 0 ) ) == 0 ):
+    # do not divide by det_J because numerator is 0
+    lap_pole = lap_temp.subs( s, 0 ) 
+    lap_pole = sp.simplify( lap_pole )
+else:
+    print( 'Error in evaluation of Laplacian at s=0' )
+    sys.exit()
+
+rho_glob = - lap_glob
+rho_pole = - lap_pole
 
 if ( mapping == 'circle' ):
-   phi = ( 1 - s**2 ) * sp.cos( 2*sp.pi*x ) * sp.sin( 2*sp.pi*y )
-else:
-   phi = s**2 * ( 1 - s**2 ) * sp.cos(t)
+    RHO_glob = lambdify( [ s, t ], rho_glob )
+    RHO_pole = lambdify( [ s, t ], rho_pole )
+elif ( mapping == 'target' ):
+    kv = 0.3
+    dv = 0.2
+    RHO_glob = lambdify( [ s, t ], ( rho_glob.subs( k, kv ) ).subs( d, dv ) )
+    RHO_pole = lambdify( [ s, t ], ( rho_pole.subs( k, kv ) ).subs( d, dv ) )
+elif ( mapping == 'czarny' ):
+    epsilv = 0.3
+    ellipv = 1.4
+    RHO_glob = lambdify( [ s, t ], ( rho_glob.subs( epsil, epsilv ) ).subs( ellip, ellipv ) )
+    RHO_pole = lambdify( [ s, t ], ( rho_pole.subs( epsil, epsilv ) ).subs( ellip, ellipv ) )
 
-dphi_ds = phi.diff( s, 1 )
-dphi_dt = phi.diff( t, 1 )
+# Open file
+file_name = 'test_poisson_2d_fem_sps_stencil_grid.h5'
+h5 = h5py.File( file_name, mode='r' )
 
-l_ss = det_J * g__ss * dphi_ds
-l_st = det_J * g__st * dphi_dt
-l_ts = det_J * g__ts * dphi_ds
-l_tt = det_J * g__tt * dphi_dt
+# Load data
+eta1_grid = h5['eta1_grid'].value
+eta2_grid = h5['eta2_grid'].value
 
-lap_phi = l_ss.diff( s, 1 ) + l_st.diff( s, 1 ) + l_ts.diff( t, 1 ) + l_tt.diff( t, 1 )
+# Close file
+h5.close()
 
-lap_phi = sp.simplify( lap_phi / det_J )
-#lap_phi = sp.collect ( lap_phi, [ s, k, d ] )
+n1 = eta1_grid.size
+n2 = eta2_grid.size
 
-rho = - lap_phi
+eta1_meshgrid, eta2_meshgrid = np.meshgrid( eta1_grid, eta2_grid )
+
+rho_grid = np.zeros( ( n2, n1 ) )
+
+rho_grid[:,0 ] = RHO_pole( eta1_meshgrid[:,0 ], eta2_meshgrid[:,0 ] )
+rho_grid[:,1:] = RHO_glob( eta1_meshgrid[:,1:], eta2_meshgrid[:,1:] )
+
+# Open file
+file_name = 'test_poisson_2d_fem_sps_stencil_rho.h5'
+h5 = h5py.File( file_name, mode='w' )
+
+# Write data
+h5.create_dataset( 'rho_grid', data=rho_grid )
+
+# Close file
+h5.close()
