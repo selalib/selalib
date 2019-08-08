@@ -25,9 +25,12 @@ module sll_m_jacobian_2d_pseudo_cartesian
 
     type(sll_t_polar_mapping_iga), pointer :: mapping => null()
 
+    real(wp) :: jmat_pole(2,2)
+
   contains
 
     procedure :: init => s_jacobian_2d_pseudo_cartesian__init
+    procedure :: pole => s_jacobian_2d_pseudo_cartesian__pole
     procedure :: eval => s_jacobian_2d_pseudo_cartesian__eval
     procedure :: free => s_jacobian_2d_pseudo_cartesian__free
 
@@ -49,6 +52,46 @@ contains
   end subroutine s_jacobian_2d_pseudo_cartesian__init
 
   !-----------------------------------------------------------------------------
+  subroutine s_jacobian_2d_pseudo_cartesian__pole( self, eta2_array )
+    class(sll_t_jacobian_2d_pseudo_cartesian), intent(inout) :: self
+    real(wp)                                 , intent(in   ) :: eta2_array(:)
+
+    integer  :: i2
+    real(wp) :: s, theta
+    real(wp) :: jmat_temp(2,2)
+
+    self % jmat_pole(:,:) = 0.0_wp
+
+    s = 0.0_wp
+
+    do i2 = 1, size( eta2_array )
+
+      theta = eta2_array(i2)
+
+      jmat_temp(2,2) =   self % mapping % spline_2d_x1 % eval_deriv_x1  ( s, theta ) * cos( theta ) &
+                       - self % mapping % spline_2d_x1 % eval_deriv_x1x2( s, theta ) * sin( theta )
+
+      jmat_temp(1,2) = - self % mapping % spline_2d_x1 % eval_deriv_x1  ( s, theta ) * sin( theta ) &
+                       - self % mapping % spline_2d_x1 % eval_deriv_x1x2( s, theta ) * cos( theta )
+
+      jmat_temp(2,1) = - self % mapping % spline_2d_x2 % eval_deriv_x1  ( s, theta ) * cos( theta ) &
+                       + self % mapping % spline_2d_x2 % eval_deriv_x1x2( s, theta ) * sin( theta )
+
+      jmat_temp(1,1) =   self % mapping % spline_2d_x2 % eval_deriv_x1  ( s, theta ) * sin( theta ) &
+                       + self % mapping % spline_2d_x2 % eval_deriv_x1x2( s, theta ) * cos( theta )
+
+      jmat_temp(:,:) = jmat_temp(:,:) / ( jmat_temp(1,1) * jmat_temp(2,2) - jmat_temp(1,2) * jmat_temp(2,1) )
+
+      self % jmat_pole(:,:) = self % jmat_pole(:,:) + jmat_temp(:,:)
+
+    end do
+
+    ! Take average over all values of theta
+    self % jmat_pole(:,:) = self % jmat_pole(:,:) / size( eta2_array )
+
+  end subroutine s_jacobian_2d_pseudo_cartesian__pole
+
+  !-----------------------------------------------------------------------------
   SLL_PURE function s_jacobian_2d_pseudo_cartesian__eval( self, eta ) result( jmat )
     class(sll_t_jacobian_2d_pseudo_cartesian), intent(in) :: self
     real(wp)                                 , intent(in) :: eta(2)
@@ -60,39 +103,11 @@ contains
 
     if ( eta(1) == 0.0_wp ) then
 
-      jmat(2,2) =   self % mapping % spline_2d_x1 % eval_deriv_x1  ( eta(1), eta(2) ) * cos( eta(2) ) &
-                  - self % mapping % spline_2d_x1 % eval_deriv_x1x2( eta(1), eta(2) ) * sin( eta(2) )
-
-      jmat(1,2) = - self % mapping % spline_2d_x1 % eval_deriv_x1  ( eta(1), eta(2) ) * sin( eta(2) ) &
-                  - self % mapping % spline_2d_x1 % eval_deriv_x1x2( eta(1), eta(2) ) * cos( eta(2) )
-
-      jmat(2,1) = - self % mapping % spline_2d_x2 % eval_deriv_x1  ( eta(1), eta(2) ) * cos( eta(2) ) &
-                  + self % mapping % spline_2d_x2 % eval_deriv_x1x2( eta(1), eta(2) ) * sin( eta(2) )
-
-      jmat(1,1) =   self % mapping % spline_2d_x2 % eval_deriv_x1  ( eta(1), eta(2) ) * sin( eta(2) ) &
-                  + self % mapping % spline_2d_x2 % eval_deriv_x1x2( eta(1), eta(2) ) * cos( eta(2) )
-
-      jmat(:,:) = jmat(:,:) / ( jmat(1,1)*jmat(2,2) - jmat(1,2)*jmat(2,1) )
+      jmat(:,:) = self % jmat_pole(:,:)
 
     else if ( 0.0_wp < eta(1) .and. eta(1) < eps ) then
 
-      ! Jacobian at s = 0
-
-      jmat_pole(2,2) =   self % mapping % spline_2d_x1 % eval_deriv_x1  ( eta(1), eta(2) ) * cos( eta(2) ) &
-                       - self % mapping % spline_2d_x1 % eval_deriv_x1x2( eta(1), eta(2) ) * sin( eta(2) )
-
-      jmat_pole(1,2) = - self % mapping % spline_2d_x1 % eval_deriv_x1  ( eta(1), eta(2) ) * sin( eta(2) ) &
-                       - self % mapping % spline_2d_x1 % eval_deriv_x1x2( eta(1), eta(2) ) * cos( eta(2) )
-
-      jmat_pole(2,1) = - self % mapping % spline_2d_x2 % eval_deriv_x1  ( eta(1), eta(2) ) * cos( eta(2) ) &
-                       + self % mapping % spline_2d_x2 % eval_deriv_x1x2( eta(1), eta(2) ) * sin( eta(2) )
-
-      jmat_pole(1,1) =   self % mapping % spline_2d_x2 % eval_deriv_x1  ( eta(1), eta(2) ) * sin( eta(2) ) &
-                       + self % mapping % spline_2d_x2 % eval_deriv_x1x2( eta(1), eta(2) ) * cos( eta(2) )
-
-      jmat_pole(:,:) = jmat_pole(:,:) / ( jmat_pole(1,1)*jmat_pole(2,2) - jmat_pole(1,2)*jmat_pole(2,1) )
-
-      ! Jacobian at s = eps
+      jmat_pole(:,:) = self % jmat_pole(:,:)
 
       jmat_eps(2,2) =   self % mapping % spline_2d_x1 % eval_deriv_x1( eps, eta(2) ) * cos( eta(2) ) &
                       - self % mapping % spline_2d_x1 % eval_deriv_x2( eps, eta(2) ) * sin( eta(2) ) / eps
