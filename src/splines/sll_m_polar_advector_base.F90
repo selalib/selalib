@@ -24,13 +24,13 @@ module sll_m_polar_advector_base
   contains
 
     ! Deferred procedures
-    procedure(i_sub_velocity_field), deferred :: velocity_field ! RHS of characteristic equations
-    procedure(i_fun_flow_field)    , deferred :: flow_field ! analytical characteristics
+    procedure(i_sub_velocity_field), deferred :: velocity_field
+    procedure(i_fun_flow_field)    , deferred :: flow_field
     procedure(i_sub_free)          , deferred :: free
 
     ! Non-deferred procedures
-    procedure :: advect_x1x2 => f_polar_advector__advect_x1x2 ! time integrator (Cartesian coordinates)
-    procedure :: advect_y1y2 => f_polar_advector__advect_y1y2 ! time integrator (intermediate coordinates)
+    procedure :: advect_cart        => f_polar_advector__advect_cart
+    procedure :: advect_pseudo_cart => f_polar_advector__advect_pseudo_cart
 
   end type sll_c_polar_advector
 
@@ -63,26 +63,23 @@ module sll_m_polar_advector_base
 contains
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
-  ! Advector (time integrator RK4): works in Cartesian coordinates (x1,x2)
-  function f_polar_advector__advect_x1x2( self, eta, h, mapping, spline_2d_a1, spline_2d_a2, tol, maxiter ) result( eta_new )
+  ! Advector (Runge-Kutta 3rd-order) using Cartesian coordinates
+  function f_polar_advector__advect_cart( self, eta, h, mapping, spline_2d_a1, spline_2d_a2 ) result( eta_new )
     class(sll_c_polar_advector), intent(in) :: self
     real(wp)                   , intent(in) :: eta(2)
     real(wp)                   , intent(in) :: h
     class(sll_c_polar_mapping) , intent(in) :: mapping
     type(sll_t_spline_2d)      , intent(in) :: spline_2d_a1
     type(sll_t_spline_2d)      , intent(in) :: spline_2d_a2
-    real(wp)                   , intent(in) :: tol
-    integer                    , intent(in) :: maxiter
     real(wp) :: eta_new(2)
 
-    real(wp) :: x(2), tmp(2), k1(2), k2(2), k3(2), k4(2)
+    integer , parameter :: maxiter = 100
+    real(wp), parameter :: tol = 1.0e-14_wp
+
+    real(wp) :: x(2), tmp(2), k1(2), k2(2), k3(2) ! x are Cartesian coordinates
 
     ! Initial position
     x = mapping % eval( eta )
-
-    !---------------------------------------------------------------------------
-    ! Using interpolated advection field
-    !---------------------------------------------------------------------------
 
     ! step #1
     k1(1) = spline_2d_a1 % eval( eta(1), eta(2) )
@@ -95,59 +92,32 @@ contains
     k2(2) = spline_2d_a2 % eval( tmp(1), tmp(2) )
 
     ! step #3
-    tmp = mapping % eval_inverse( x + 0.5_wp * h * k2, eta, tol, maxiter )
+    tmp = mapping % eval_inverse( x + h * ( 2.0_wp * k2 - k1 ), eta, tol, maxiter )
 
     k3(1) = spline_2d_a1 % eval( tmp(1), tmp(2) )
     k3(2) = spline_2d_a2 % eval( tmp(1), tmp(2) )
 
-    ! step #4
-    tmp = mapping % eval_inverse( x + h * k3, eta, tol, maxiter )
-
-    k4(1) = spline_2d_a1 % eval( tmp(1), tmp(2) )
-    k4(2) = spline_2d_a2 % eval( tmp(1), tmp(2) )
-
-!    !---------------------------------------------------------------------------
-!    ! Using analytical advection field
-!    !---------------------------------------------------------------------------
-!
-!    call self % velocity_field( x                  , k1 )
-!    call self % velocity_field( x + 0.5_wp * h * k1, k2 )
-!    call self % velocity_field( x + 0.5_wp * h * k2, k3 )
-!    call self % velocity_field( x +          h * k3, k4 )
-
     ! Final position
-    x = x + h * ( k1 + 2.0_wp * k2 + 2.0_wp * k3 + k4 ) / 6.0_wp
+    x = x + h * ( k1 + 4.0_wp * k2 + k3 ) / 6.0_wp
 
     eta_new = mapping % eval_inverse( x, eta, tol, maxiter )
 
-  end function f_polar_advector__advect_x1x2
+  end function f_polar_advector__advect_cart
 
-  ! Advector: works in intermediate coordinates (y1,y2)
-  function f_polar_advector__advect_y1y2( &
-    self        , &
-    eta         , &
-    h           , &
-    jac_2d_pcart, &
-    spline_2d_a1, &
-    spline_2d_a2, &
-    abs_tol     , &
-    rel_tol     , &
-    maxiter ) result( eta_new )
+  ! Advector (Runge-Kutta 3rd-order) using pseudo-Cartesian coordinates
+  function f_polar_advector__advect_pseudo_cart( self, eta, h, jac_2d_pcart, spline_2d_a1, spline_2d_a2 ) result( eta_new )
     class(sll_c_polar_advector)             , intent(in) :: self
     real(wp)                                , intent(in) :: eta(2)
     real(wp)                                , intent(in) :: h
     type(sll_t_jacobian_2d_pseudo_cartesian), intent(in) :: jac_2d_pcart
     type(sll_t_spline_2d)                   , intent(in) :: spline_2d_a1
     type(sll_t_spline_2d)                   , intent(in) :: spline_2d_a2
-    real(wp)                                , intent(in) :: abs_tol
-    real(wp)                                , intent(in) :: rel_tol
-    integer                                 , intent(in) :: maxiter
     real(wp) :: eta_new(2)
 
-    !---------------------------------------------------------------------------
-    ! Trapezoidal 2nd order
-    !---------------------------------------------------------------------------
-
+!    !---------------------------------------------------------------------------
+!    ! Implicit trapezoidal
+!    !---------------------------------------------------------------------------
+!
 !    integer  :: j
 !    real(wp) :: tol_sqr
 !    real(wp) :: y0(2), y(2), dy(2), temp(2), k2(2), a0(2)
@@ -200,15 +170,15 @@ contains
 !    end if
 
     !---------------------------------------------------------------------------
-    ! Runge-Kutta 3rd order
+    ! Runge-Kutta 3rd-order
     !---------------------------------------------------------------------------
 
     real(wp) :: a_x1, a_x2
-    real(wp) :: y(2), tmp(2), k1(2), k2(2), k3(2)
+    real(wp) :: x(2), tmp(2), k1(2), k2(2), k3(2) ! x are pseudo-Cartesian coordinates
     real(wp) :: jmat_comp(2,2)
 
     ! Initial position
-    y = polar_map( eta )
+    x = polar_map( eta )
 
     ! step #1
     a_x1  = spline_2d_a1 % eval( eta(1), eta(2) )
@@ -220,7 +190,7 @@ contains
     k1(2) = jmat_comp(2,1) * a_x1 + jmat_comp(2,2) * a_x2
 
     ! step #2
-    tmp = polar_map_inverse( y + 0.5_wp * h * k1 )
+    tmp = polar_map_inverse( x + 0.5_wp * h * k1 )
 
     a_x1  = spline_2d_a1 % eval( tmp(1), tmp(2) )
     a_x2  = spline_2d_a2 % eval( tmp(1), tmp(2) )
@@ -231,7 +201,7 @@ contains
     k2(2) = jmat_comp(2,1) * a_x1 + jmat_comp(2,2) * a_x2
 
     ! step #3
-    tmp = polar_map_inverse( y + h * ( 2.0_wp * k2 - k1 ) )
+    tmp = polar_map_inverse( x + h * ( 2.0_wp * k2 - k1 ) )
 
     a_x1  = spline_2d_a1 % eval( tmp(1), tmp(2) )
     a_x2  = spline_2d_a2 % eval( tmp(1), tmp(2) )
@@ -242,67 +212,9 @@ contains
     k3(2) = jmat_comp(2,1) * a_x1 + jmat_comp(2,2) * a_x2
 
     ! Final position
-    y = y + h * ( k1 + 4.0_wp * k2 + k3 ) / 6.0_wp
+    x = x + h * ( k1 + 4.0_wp * k2 + k3 ) / 6.0_wp
 
-    eta_new = polar_map_inverse( y )
-
-    !---------------------------------------------------------------------------
-    ! Runge-Kutta 4th order
-    !---------------------------------------------------------------------------
-
-!    real(wp) :: a_x1, a_x2
-!    real(wp) :: y(2), tmp(2), k1(2), k2(2), k3(2), k4(2)
-!    real(wp) :: jmat_comp(2,2)
-!
-!    ! Initial position
-!    y = polar_map( eta )
-!
-!    ! step #1
-!    a_x1  = spline_2d_a1 % eval( eta(1), eta(2) )
-!    a_x2  = spline_2d_a2 % eval( eta(1), eta(2) )
-!
-!    jmat_comp = jac_2d_pcart % eval( eta )
-!
-!    k1(1) = jmat_comp(1,1) * a_x1 + jmat_comp(1,2) * a_x2
-!    k1(2) = jmat_comp(2,1) * a_x1 + jmat_comp(2,2) * a_x2
-!
-!    ! step #2
-!    tmp = polar_map_inverse( y + 0.5_wp * h * k1 )
-!
-!    a_x1  = spline_2d_a1 % eval( tmp(1), tmp(2) )
-!    a_x2  = spline_2d_a2 % eval( tmp(1), tmp(2) )
-!
-!    jmat_comp = jac_2d_pcart % eval( tmp )
-!
-!    k2(1) = jmat_comp(1,1) * a_x1 + jmat_comp(1,2) * a_x2
-!    k2(2) = jmat_comp(2,1) * a_x1 + jmat_comp(2,2) * a_x2
-!
-!    ! step #3
-!    tmp = polar_map_inverse( y + 0.5_wp * h * k2 )
-!
-!    a_x1  = spline_2d_a1 % eval( tmp(1), tmp(2) )
-!    a_x2  = spline_2d_a2 % eval( tmp(1), tmp(2) )
-!
-!    jmat_comp = jac_2d_pcart % eval( tmp )
-!
-!    k3(1) = jmat_comp(1,1) * a_x1 + jmat_comp(1,2) * a_x2
-!    k3(2) = jmat_comp(2,1) * a_x1 + jmat_comp(2,2) * a_x2
-!
-!    ! step #4
-!    tmp = polar_map_inverse( y + h * k3 )
-!
-!    a_x1  = spline_2d_a1 % eval( tmp(1), tmp(2) )
-!    a_x2  = spline_2d_a2 % eval( tmp(1), tmp(2) )
-!
-!    jmat_comp = jac_2d_pcart % eval( tmp )
-!
-!    k4(1) = jmat_comp(1,1) * a_x1 + jmat_comp(1,2) * a_x2
-!    k4(2) = jmat_comp(2,1) * a_x1 + jmat_comp(2,2) * a_x2
-!
-!    ! Final position
-!    y = y + h * ( k1 + 2.0_wp * k2 + 2.0_wp * k3 + k4 ) / 6.0_wp
-!
-!    eta_new = polar_map_inverse( y )
+    eta_new = polar_map_inverse( x )
 
   !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
   contains
@@ -328,6 +240,6 @@ contains
 
     end function polar_map_inverse
 
-  end function f_polar_advector__advect_y1y2
+  end function f_polar_advector__advect_pseudo_cart
 
 end module sll_m_polar_advector_base
