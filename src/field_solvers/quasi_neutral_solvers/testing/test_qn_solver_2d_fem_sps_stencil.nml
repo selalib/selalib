@@ -1,0 +1,10 @@
+&splines
+  n1 = 128
+  n2 = 256
+  p1 = 3
+  p2 = 3
+/
+
+&geometry
+  maptype = 1
+/

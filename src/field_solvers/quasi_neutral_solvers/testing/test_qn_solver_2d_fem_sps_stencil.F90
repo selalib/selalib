@@ -1,4 +1,4 @@
-program test_qn_solver_2d_fem_sps
+program test_qn_solver_2d_fem_sps_stencil
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_assert.h"
 
@@ -36,6 +36,10 @@ program test_qn_solver_2d_fem_sps
 
   use sll_m_boundary_condition_descriptors, only: sll_p_dirichlet
 
+  use sll_m_gauss_legendre_integration, only: &
+    sll_f_gauss_legendre_points, &
+    sll_f_gauss_legendre_weights
+
   use sll_m_timer, only: &
     sll_t_time_mark    , &
     sll_s_set_time_mark, &
@@ -44,9 +48,11 @@ program test_qn_solver_2d_fem_sps
   use sll_m_hdf5_io_serial, only: &
     sll_t_hdf5_ser_handle     , &
     sll_s_hdf5_ser_file_create, &
+    sll_s_hdf5_ser_file_open  , &
     sll_s_hdf5_ser_file_close , &
     sll_o_hdf5_ser_write_array, &
-    sll_o_hdf5_ser_write_attribute
+    sll_o_hdf5_ser_write_attribute, &
+    sll_o_hdf5_ser_read_array
 
   implicit none
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -54,40 +60,44 @@ program test_qn_solver_2d_fem_sps
   ! Working precision
   integer, parameter :: wp = f64
 
-  ! To initialize B-splines (p1,p2 degrees)
-  integer :: mm, n1, n2, p1, p2, ncells1, ncells2, maptype!, nn
+  ! Tolerance valid for n1=128, n2=256 and p1=p2=3 in input file
+  ! (needs to be adjusted in case of different input values)
+  real(wp), parameter :: tolerance = 1e-6_wp
 
-  ! B-splines break points
-  real(wp), allocatable :: breaks_eta1(:)
-  real(wp), allocatable :: breaks_eta2(:)
+  ! Integer variables
+  integer :: mm, n1, n2, p1, p2, ncells1, ncells2, ntau1, ntau2, Nk1, Nk2, Nq1, Nq2, &
+             i1, i2, k1, k2, q1, q2, maptype, file_er(2), file_unit!, nn
 
-  ! 1D B-splines
-  class(sll_c_bsplines), allocatable :: bsplines_eta1
-  class(sll_c_bsplines), allocatable :: bsplines_eta2
+  ! Character variables
+  character(len=:), allocatable :: input_file
 
-  ! Analytical and discrete mappings
+  ! Logical variables
+  logical :: success
+
+  ! Real variables
+  real(wp) :: dt, L2_norm, Linf_norm, eta(2), x(2)
+
+  ! Real 1D allocatables
+  real(wp), allocatable :: breaks_eta1(:), breaks_eta2(:), tau_eta1(:), tau_eta2(:)
+
+  ! Real 2D allocatables
+  real(wp), allocatable :: gtau(:,:), coeffs1(:,:), coeffs2(:,:), phi_spl(:,:), err(:,:), &
+                           quad_points_eta1(:,:), quad_points_eta2(:,:), quad_weights_eta1(:,:), quad_weights_eta2(:,:)
+
+  ! Real 4D allocatables
+  real(wp), allocatable :: volume(:,:,:,:)
+
+  ! Abstract polymorphic types
+  class(sll_c_bsplines)                , allocatable :: bsplines_eta1, bsplines_eta2
   class(sll_c_polar_mapping_analytical), allocatable :: mapping_analytic
-  type(sll_t_polar_mapping_iga) :: mapping_discrete
-  real(wp) :: d0, e0, x0(2)
 
-  ! 2D splines representing right hand side and solution
-  type(sll_t_spline_2d) :: spline_2d_rhs
-  type(sll_t_spline_2d) :: spline_2d_phi
-
-  ! 2D spline interpolator
-  type(sll_t_spline_interpolator_2d) :: spline_interp_2d
-
-  ! Needed for 2D interpolation of right hand side
-  real(wp), allocatable :: tau_eta1(:)
-  real(wp), allocatable :: tau_eta2(:)
-  real(wp), allocatable :: gtau(:,:)
-
-  ! 2D coefficients in quasi-neutrality equation
-  real(wp), allocatable :: coeffs1(:,:)
-  real(wp), allocatable :: coeffs2(:,:)
-
-  ! Quasi-neutrality solver
+  ! Concrete types
+  type(sll_t_polar_mapping_iga)                :: mapping_discrete
+  type(sll_t_spline_2d)                        :: spline_2d_rhs, spline_2d_phi
+  type(sll_t_spline_interpolator_2d)           :: spline_interp_2d
   type(sll_t_qn_solver_2d_fem_sps_stencil_new) :: solver
+  type(sll_t_time_mark)                        :: t0, t1
+  type(sll_t_hdf5_ser_handle)                  :: file_id(2)
 
 !  ! Stiffness/mass dense matrices and C1 projections
 !  real(wp), allocatable :: A (:,:)
@@ -95,48 +105,36 @@ program test_qn_solver_2d_fem_sps
 !  real(wp), allocatable :: Ap(:,:)
 !  real(wp), allocatable :: Mp(:,:)
 
-  ! Auxiliary variables
-  integer  :: i1, i2
-  real(wp) :: eta(2), x(2)
+  ! Namelists in input file
+  namelist /splines/ &
+    n1, &
+    n2, &
+    p1, &
+    p2
 
-  ! Timing
-  type(sll_t_time_mark) :: t0, t1
-  real(wp) :: dt
+  namelist /geometry/ &
+    maptype
 
-  ! For hdf5 I/O
-  type(sll_t_hdf5_ser_handle) :: file_id
-  integer                     :: h5_error
-
-  real(wp), allocatable :: phi_spl(:,:), err(:,:)
-  real(wp) :: err_L2_norm, err_Linf_norm, dV, phi_exact
+  ! Read input file
+  input_file = trim( "test_qn_solver_2d_fem_sps_stencil.nml" )
+  open( file=input_file, status='old', action='read', newunit=file_unit )
+  read( file_unit, splines  ); rewind( file_unit )
+  read( file_unit, geometry );  close( file_unit )
 
   !-----------------------------------------------------------------------------
   ! Initialize B-splines basis functions
   !-----------------------------------------------------------------------------
 
-  call sll_s_set_time_mark( t0 )
-
-  ! Number of degrees of freedom (control points) along s and theta
-  mm = 128
-  n1 = mm
-  n2 = mm * 2
-!  nn = 3 + (n1-2) * n2
-
-  ! Spline degrees along s and theta
-  p1 = 3
-  p2 = 3
-
-  ! Mapping type: 0 circle, 1 target (no manufactured solution for Czarny's mapping)
-  maptype = 1
-
   ! Create HDF5 file
-  call sll_s_hdf5_ser_file_create( 'qn_solver_2d_fem_sps.h5', file_id, h5_error )
+  call sll_s_hdf5_ser_file_create( 'test_qn_solver_2d_fem_sps_stencil.h5', file_id(1), file_er(1) )
 
   ! HDF5 I/O
-  call sll_o_hdf5_ser_write_attribute( file_id, "/", "n1", n1, h5_error )
-  call sll_o_hdf5_ser_write_attribute( file_id, "/", "n2", n2, h5_error )
-  call sll_o_hdf5_ser_write_attribute( file_id, "/", "p1", p1, h5_error )
-  call sll_o_hdf5_ser_write_attribute( file_id, "/", "p2", p2, h5_error )
+  call sll_o_hdf5_ser_write_attribute( file_id(1), "/", "n1", n1, file_er(1) )
+  call sll_o_hdf5_ser_write_attribute( file_id(1), "/", "n2", n2, file_er(1) )
+  call sll_o_hdf5_ser_write_attribute( file_id(1), "/", "p1", p1, file_er(1) )
+  call sll_o_hdf5_ser_write_attribute( file_id(1), "/", "p2", p2, file_er(1) )
+
+  call sll_s_set_time_mark( t0 )
 
   ! Compute number of cells from number of interpolation points along s
   call sll_s_spline_1d_compute_num_cells( &
@@ -182,33 +180,33 @@ program test_qn_solver_2d_fem_sps
     ncells   = ncells2 )
 
   !-----------------------------------------------------------------------------
-  ! Initialize mapping and polar B-splines
+  ! Initialize mapping
   !-----------------------------------------------------------------------------
 
   ! Allocate analytical mapping
-  allocate( sll_t_polar_mapping_analytical_target :: mapping_analytic )
+  if ( maptype == 0 .or. maptype == 1 ) then
+    allocate( sll_t_polar_mapping_analytical_target :: mapping_analytic )
+  else if ( maptype == 2 ) then
+    allocate( sll_t_polar_mapping_analytical_czarny :: mapping_analytic )
+  end if
 
   ! Initialize analytical mapping
   select type ( mapping_analytic )
     type is ( sll_t_polar_mapping_analytical_target )
       if ( maptype == 0 ) then
-        x0 = (/ 0.0_wp, 0.0_wp /)
-        d0 = 0.0_wp
-        e0 = 0.0_wp
-        call mapping_analytic % init( x0, d0, e0 )
+        call mapping_analytic % init( x0=[0.0_wp,0.0_wp], d0=0.0_wp, e0=0.0_wp )
       else if ( maptype == 1 ) then
-        x0 = (/ 0.0_wp, 0.0_wp /)
-        d0 = 0.2_wp
-        e0 = 0.3_wp
-        call mapping_analytic % init( x0, d0, e0 )
+        call mapping_analytic % init( x0=[0.0_wp,0.0_wp], d0=0.2_wp, e0=0.3_wp )
       end if
-   end select
+    type is ( sll_t_polar_mapping_analytical_czarny )
+      call mapping_analytic % init( x0=[0.0_wp,0.0_wp], b=1.4_wp, e=0.3_wp )
+  end select
 
-  ! Discrete mapping
+  ! Initialize discrete mapping
   call mapping_discrete % init( bsplines_eta1, bsplines_eta2, mapping_analytic )
 
   ! Write mapping info
-  call mapping_discrete % store_data( n1, n2, file_id )
+  call mapping_discrete % store_data( n1, n2, file_id(1) )
 
   call sll_s_set_time_mark( t1 )
 
@@ -234,32 +232,15 @@ program test_qn_solver_2d_fem_sps
   ! Get interpolation points from 2D spline interpolator
   call spline_interp_2d % get_interp_points( tau_eta1, tau_eta2 )
 
+  ntau1 = size( tau_eta1 )
+  ntau2 = size( tau_eta2 )
+
   ! Evaluate right hand side on interpolation points
-  associate( nt1 => size( tau_eta1 ), nt2 => size( tau_eta2 ) )
+  allocate( gtau( ntau1, ntau2 ) )
 
-    allocate( gtau( nt1, nt2 ) )
-
-    if ( maptype == 0 ) then
-
-      do i2 = 1, nt2
-        do i1 = 1, nt1
-          eta = (/ tau_eta1(i1), tau_eta2(i2) /)
-          gtau(i1,i2) = rhs_circle( eta )
-        end do
-      end do
-
-    else if ( maptype == 1 ) then
-
-      do i2 = 1, nt2
-        do i1 = 1, nt1
-          eta = (/ tau_eta1(i1), tau_eta2(i2) /)
-          gtau(i1,i2) = rhs_target( eta )
-        end do
-      end do
-
-    end if
-
-  end associate
+  call sll_s_hdf5_ser_file_open( 'test_qn_solver_2d_fem_sps_stencil_rho.h5', file_id(2), file_er(2) )
+  call sll_o_hdf5_ser_read_array( file_id(2), gtau, '/rho_grid', file_er(2) )
+  !call sll_s_hdf5_ser_file_close( file_id(2), file_er(2) )
 
   ! Compute interpolant spline
   call spline_interp_2d % compute_interpolant( spline_2d_rhs, gtau )
@@ -270,20 +251,16 @@ program test_qn_solver_2d_fem_sps
   write(*,'(a,es8.1/)' ) " Time required for interpolation of right hand side: ", dt
 
   ! Assign 2D coefficients
-  associate( nt1 => size( tau_eta1 ), nt2 => size( tau_eta2 ) )
+  allocate( coeffs1( ntau1, ntau2 ) )
+  allocate( coeffs2( ntau1, ntau2 ) )
 
-    allocate( coeffs1( nt1, nt2 ) )
-    allocate( coeffs2( nt1, nt2 ) )
-
-    do i2 = 1, nt2
-      do i1 = 1, nt1
-        eta = (/ tau_eta1(i1), tau_eta2(i2) /)
-        coeffs1(i1,i2) = fun_coeffs1( eta )
-        coeffs2(i1,i2) = fun_coeffs2( eta )
-      end do
+  do i2 = 1, ntau2
+    do i1 = 1, ntau1
+      eta = (/ tau_eta1(i1), tau_eta2(i2) /)
+      coeffs1(i1,i2) = fun_coeffs1( eta )
+      coeffs2(i1,i2) = fun_coeffs2( eta )
     end do
-
-  end associate
+  end do
 
   !-----------------------------------------------------------------------------
   ! Quasi-neutrality solver
@@ -295,7 +272,14 @@ program test_qn_solver_2d_fem_sps
   call sll_s_set_time_mark( t0 )
 
   ! Initialize quasi-neutrality solver
-  call solver % init( bsplines_eta1, bsplines_eta2, breaks_eta1, breaks_eta2, mapping_discrete, coeffs1, coeffs2 )
+  call solver % init( &
+    bsplines_eta1   , &
+    bsplines_eta2   , &
+    breaks_eta1     , &
+    breaks_eta2     , &
+    mapping_discrete, &
+    coeffs1         , &
+    coeffs2 )
 
   call sll_s_set_time_mark( t1 )
 
@@ -320,6 +304,7 @@ program test_qn_solver_2d_fem_sps
 !  call solver % Ap_linop_c1_block % to_array( Ap )
 !  call solver % Mp_linop_c1_block % to_array( Mp )
 
+  ! Set boundary conditions
   call solver % set_boundary_conditions( sll_p_dirichlet )
 
   call sll_s_set_time_mark( t0 )
@@ -337,37 +322,88 @@ program test_qn_solver_2d_fem_sps
 
   ! Evaluate phi spline on logical grid and compute spatial L2-norm of error
 
-  allocate( phi_spl( n1, n2 ) )
-  allocate( err( n1, n2 ) )
+  ! Repeated point in theta
+  allocate( phi_spl( ntau1, ntau2+1 ) )
+  allocate( err( ntau1, ntau2+1 ) )
 
-  err_L2_norm   = 0.0_wp
-  err_Linf_norm = 0.0_wp
+  ! Quadrature points to compute L2-norm of error
+  Nk1 = ncells1
+  Nk2 = ncells2
+  Nq1 = 1 + p1
+  Nq2 = 1 + p2
 
-  ! Integral volume in logical space: ds * dtheta
-  dV = ( 1.0 / n1 ) * ( sll_p_twopi / n2 )
+  allocate( quad_points_eta1 ( Nq1, Nk1 ) )
+  allocate( quad_points_eta2 ( Nq2, Nk2 ) )
+  allocate( quad_weights_eta1( Nq1, Nk1 ) )
+  allocate( quad_weights_eta2( Nq2, Nk2 ) )
 
-  do i2 = 1, n2
-    do i1 = 1, n1
+  allocate( volume( Nq1, Nq2, Nk1, Nk2 ) )
 
-      eta(1) = real( i1-1, wp ) / real( n1-1, wp )
-      eta(2) = real( i2-1, wp ) * sll_p_twopi / real( n2, wp )
+  ! Quadrature points and weights along s
+  do k1 = 1, Nk1
+    quad_points_eta1 (:,k1) = sll_f_gauss_legendre_points ( Nq1, breaks_eta1(k1), breaks_eta1(k1+1) )
+    quad_weights_eta1(:,k1) = sll_f_gauss_legendre_weights( Nq1, breaks_eta1(k1), breaks_eta1(k1+1) )
+  end do
 
-      x = mapping_discrete % eval( eta )
+  ! Quadrature points and weights along theta
+  do k2 = 1, Nk2
+    quad_points_eta2 (:,k2) = sll_f_gauss_legendre_points ( Nq2, breaks_eta2(k2), breaks_eta2(k2+1) )
+    quad_weights_eta2(:,k2) = sll_f_gauss_legendre_weights( Nq2, breaks_eta2(k2), breaks_eta2(k2+1) )
+  end do
 
-      phi_spl(i1,i2) = spline_2d_phi % eval( eta(1), eta(2) )
-
-      phi_exact = eta(1)**2 * ( 1.0_wp - eta(1)**2 ) * cos( eta(2) )
-
-      err(i1,i2) = phi_spl(i1,i2) - phi_exact
-
-      err_L2_norm = err_L2_norm + err(i1,i2)**2 * mapping_discrete % jdet( eta ) * dV
-
-      err_Linf_norm = merge( abs( err(i1,i2) ), err_Linf_norm, abs( err(i1,i2) ) > err_Linf_norm )
-
+  do k2 = 1, Nk2
+    do k1 = 1, Nk1
+      do q2 = 1, Nq2
+        do q1 = 1, Nq1
+          eta(1) = quad_points_eta1(q1,k1)
+          eta(2) = quad_points_eta2(q2,k2)
+          volume(q1,q2,k1,k2) = abs( mapping_discrete % jdet( eta ) ) &
+                                * quad_weights_eta1(q1,k1) * quad_weights_eta2(q2,k2)
+        end do
+      end do
     end do
   end do
 
-  err_L2_norm = sqrt( err_L2_norm )
+  ! Compute L2-norm error
+  L2_norm = 0.0_wp
+
+  do k2 = 1, Nk2
+    do k1 = 1, Nk1
+      do q2 = 1, Nq2
+        do q1 = 1, Nq1
+
+          eta = (/ quad_points_eta1(q1,k1), quad_points_eta2(q2,k2) /)
+          x   = mapping_discrete % eval( eta )
+
+          L2_norm = L2_norm + volume(q1,q2,k1,k2) &
+                    * ( spline_2d_phi % eval( eta(1), eta(2) ) - phi_exact( eta, x ) )**2
+
+        end do
+      end do
+    end do
+  end do
+
+  L2_norm = sqrt( L2_norm )
+
+  ! Compute Linf-norm of error
+  Linf_norm = 0.0_wp
+
+  do i2 = 1, ntau2
+    do i1 = 1, ntau1
+
+      eta = (/ tau_eta1(i1), tau_eta2(i2) /)
+      x   = mapping_discrete % eval( eta )
+
+      phi_spl(i1,i2) = spline_2d_phi % eval( eta(1), eta(2) )
+      phi_spl(:,ntau2+1) = phi_spl(:,1)
+
+      err(i1,i2) = phi_spl(i1,i2) - phi_exact( eta, x )
+      err(:,ntau2+1) = err(:,1)
+
+      Linf_norm = merge( abs( err(i1,i2) ), Linf_norm, abs( err(i1,i2) ) > Linf_norm )
+
+    end do
+  end do
 
   !-----------------------------------------------------------------------------
   ! HDF5 I/O
@@ -376,77 +412,71 @@ program test_qn_solver_2d_fem_sps
   call sll_s_set_time_mark( t0 )
 
   ! Write solution
-  call sll_o_hdf5_ser_write_array( file_id, solver % x, "/x", h5_error )
+  call sll_o_hdf5_ser_write_array( file_id(1), solver % x, "/x", file_er(1) )
 
   ! Write reshaped solution
-  call sll_o_hdf5_ser_write_array( file_id, spline_2d_phi % bcoef(1:n1,1:n2), "/phi", h5_error )
+  call sll_o_hdf5_ser_write_array( file_id(1), spline_2d_phi % bcoef(1:n1,1:n2), "/phi", file_er(1) )
 
   ! Write phi spline
-  call sll_o_hdf5_ser_write_array( file_id, phi_spl, "/phi_spl", h5_error )
+  call sll_o_hdf5_ser_write_array( file_id(1), phi_spl, "/phi_spl", file_er(1) )
 
   ! Write error
-  call sll_o_hdf5_ser_write_array( file_id, err, "/error", h5_error )
+  call sll_o_hdf5_ser_write_array( file_id(1), err, "/error", file_er(1) )
 
 !  ! Write stiffness matrix
-!  call sll_o_hdf5_ser_write_array( file_id, A, "/A", h5_error )
+!  call sll_o_hdf5_ser_write_array( file_id, A, "/A", file_er(1) )
 !
 !  ! Write mass matrix
-!  call sll_o_hdf5_ser_write_array( file_id, M, "/M", h5_error )
+!  call sll_o_hdf5_ser_write_array( file_id, M, "/M", file_er(1) )
 !
 !!  ! Write right hand side
-!!  call sll_o_hdf5_ser_write_array( file_id, solver % b, "/b", h5_error )
+!!  call sll_o_hdf5_ser_write_array( file_id, solver % b, "/b", file_er(1) )
 !
 !  ! Write C1 projection of stiffness matrix
-!  call sll_o_hdf5_ser_write_array( file_id, Ap, "/Ap", h5_error )
+!  call sll_o_hdf5_ser_write_array( file_id, Ap, "/Ap", file_er(1) )
 !
 !  ! Write C1 projection of mass matrix
-!  call sll_o_hdf5_ser_write_array( file_id, Mp, "/Mp", h5_error )
+!  call sll_o_hdf5_ser_write_array( file_id, Mp, "/Mp", file_er(1) )
 !
 !!  ! Write L matrix needed for projection
-!!  call sll_o_hdf5_ser_write_array( file_id, solver % L, "/L", h5_error )
+!!  call sll_o_hdf5_ser_write_array( file_id, solver % L, "/L", file_er(1) )
 
   ! Close HDF5 file
-  call sll_s_hdf5_ser_file_close ( file_id, h5_error )
+  call sll_s_hdf5_ser_file_close ( file_id(1), file_er(1) )
 
   call sll_s_set_time_mark( t1 )
 
   dt = sll_f_time_elapsed_between( t0, t1 )
 
   write(*,'(a,es8.1/)') " Time required for writing HDF5 output: ", dt
+  write(*,'(a,es8.2/)') "   L2-norm of error: ", L2_norm
+  write(*,'(a,es8.2/)') " Linf-norm of error: ", Linf_norm
 
-  write(*,'(a,es8.2/)') " Spatial L2    norm of error: ", err_L2_norm
-
-  write(*,'(a,es8.2/)') " Spatial L-inf norm of error: ", err_Linf_norm
+  ! Check if test passed
+  success = .true.
+  if( max( L2_norm, Linf_norm ) > tolerance ) then
+    success = .false.
+    write(*,'(a,es7.1,a/)') "Test FAILED (tolerance ", tolerance, ")"
+  end if
+  if( success ) write(*,'(a/)') "Test PASSED"
 
   !-----------------------------------------------------------------------------
   ! Deallocations and free
   !-----------------------------------------------------------------------------
 
-  deallocate( breaks_eta1 )
-  deallocate( breaks_eta2 )
+  deallocate( breaks_eta1, breaks_eta2, tau_eta1, tau_eta2, gtau, coeffs1, coeffs2, phi_spl, err, &
+              quad_points_eta1, quad_points_eta2, quad_weights_eta1, quad_weights_eta2, volume )
 
-  deallocate( gtau )
-
-  deallocate( coeffs1 )
-  deallocate( coeffs2 )
-
-  deallocate( phi_spl )
-
-!  deallocate( A )
-!  deallocate( M )
-!  deallocate( Ap )
-!  deallocate( Mp )
+!  deallocate( A, M, Ap, Mp )
 
   deallocate( mapping_analytic )
 
+  call mapping_discrete % free()
   call bsplines_eta1 % free()
   call bsplines_eta2 % free()
-
-  call mapping_discrete % free()
-
   call spline_2d_rhs % free()
   call spline_2d_phi % free()
-
+  call spline_interp_2d % free()
   call solver % free()
 
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -477,49 +507,13 @@ contains
 
   end function fun_coeffs2
 
-  SLL_PURE function rhs_circle( eta )
+  SLL_PURE function phi_exact( eta, x )
     real(wp), intent(in) :: eta(2)
-    real(wp) :: rhs_circle
+    real(wp), intent(in) :: x(2)
+    real(wp) :: phi_exact
 
-    associate( s => eta(1), t => eta(2) )
+    phi_exact = ( 1.0_wp - eta(1)**2 ) * cos( sll_p_twopi * x(1) ) * sin( sll_p_twopi * x(2) )
 
-      ! Conversion from INTEGER(4) to REAL(8): save space, no precision loss
-      rhs_circle = ( 15 * s**2 + 20 * s * ( 2 * s**2 - 1 ) * ( ( tanh( 10 * s - 5 ) )**2 - 1 ) - 3 ) &
-                   * exp( - tanh( 10 * s - 5 ) ) * cos(t) + s**2 * ( 1 - s**2 ) * exp( tanh( 5 * s - 2.5_wp ) ) * cos(t)
+  end function phi_exact
 
-    end associate
-
-  end function rhs_circle
-
-  SLL_PURE function rhs_target( eta )
-    real(wp), intent(in) :: eta(2)
-    real(wp) :: rhs_target
-
-    associate( s => eta(1), t => eta(2) )
-
-      ! Conversion from INTEGER(4) to REAL(8): save space, no precision loss
-      rhs_target = ( - 2 * d0 * s * ( ( s**2 - 1 ) * ( ( e0 + 1 )**2 * sin(t)**2 + ( 2 * d0 * s + e0 * cos(t) - cos(t) )**2 ) &
-                   * sin(t)**2 + 4 * ( s**2 - 1 ) * ( - d0 * e0 * s + d0 * s + 2 * e0 * cos(t) ) * sin(t)**2 * cos(t) &
-                   + 4 * ( 2 * s**2 - 1 ) * ( - d0 * e0 * s + d0 * s + 2 * e0 * cos(t) ) * sin(t)**2 * cos(t) &
-                   + 4 * ( 2 * s**2 - 1 ) * ( e0**2 - 4 * e0 * sin(t)**2 + 2 * e0 + 1 ) * cos(t)**2 ) + 2 * ( s**2 - 1 ) &
-                   * ( - d0 * e0 * s + d0 * s + 2 * e0 * cos(t) ) * ( 4 * d0 * s * cos(t) + e0 - 1 ) * sin(t)**2 &
-                   - 4 * ( 2 * s**2 - 1 ) * ( 2 * d0 * s * cos(t) + e0 - 1 ) * ( 2 * d0 * e0 * s * sin(t)**2 - d0 * e0 * s &
-                   - 2 * d0 * s * sin(t)**2 + d0 * s + 6 * e0 * cos(t)**3 - 4 * e0 * cos(t) ) + 2 * ( 2 * s**2 - 1 ) &
-                   * ( 4 * d0 * s * cos(t) + e0 - 1 ) * ( e0**2 - 4 * e0 * sin(t)**2 + 2 * e0 + 1 ) * cos(t) &
-                   + ( 2 * d0 * s * cos(t) + e0 - 1 ) * ( - 2 * d0 * s * ( e0 - 1 ) * ( s**2 - 1 ) * sin(t)**2 + 4 * s**2 &
-                   * ( - d0 * e0 * s + d0 * s + 2 * e0 * cos(t) ) * sin(t)**2 + 20 * s * ( s**2 - 1 ) * ( tanh( 10 * s - 5 )**2 - 1 ) &
-                   * ( - d0 * e0 * s + d0 * s + 2 * e0 * cos(t) ) * sin(t)**2 + 20 * s * ( 2 * s**2 - 1 ) &
-                   * ( tanh( 10 * s - 5 )**2 - 1 ) * ( e0**2 - 4 * e0 * sin(t)**2 + 2 * e0 + 1 ) * cos(t) &
-                   - ( s**2 - 1 ) * ( ( e0 + 1 )**2 * sin(t)**2 + ( 2 * d0 * s + e0 * cos(t) - cos(t) )**2 ) &
-                   * cos(t) - 2 * ( s**2 - 1 ) * ( - d0 * e0 * s + d0 * s + 2 * e0 * cos(t) ) * sin(t)**2 &
-                   + 2 * ( 6 * s**2 - 1 ) * ( e0**2 - 4 * e0 * sin(t)**2 + 2 * e0 + 1 ) * cos(t) ) ) * exp( - tanh( 10 * s - 5 ) )
-      
-      rhs_target = rhs_target / ( ( e0 + 1 )**2 * ( 2 * d0 * s * cos(t) + e0 - 1 )**3 )
-
-      rhs_target = rhs_target + s**2 * ( - s**2 + 1 ) * exp( tanh( ( 5 * s - 2.5_wp ) ) ) * cos(t)
-
-    end associate
-
-  end function rhs_target
-
-end program test_qn_solver_2d_fem_sps
+end program test_qn_solver_2d_fem_sps_stencil

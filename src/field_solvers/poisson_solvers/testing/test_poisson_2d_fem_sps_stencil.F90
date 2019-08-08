@@ -1,4 +1,4 @@
-program test_poisson_2d_fem_sps
+program test_poisson_2d_fem_sps_stencil
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_assert.h"
 
@@ -476,4 +476,4 @@ contains
 
   end function phi_exact
 
-end program test_poisson_2d_fem_sps
+end program test_poisson_2d_fem_sps_stencil
