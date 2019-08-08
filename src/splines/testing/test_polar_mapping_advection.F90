@@ -41,6 +41,10 @@ program test_polar_mapping_advection
 
   use sll_m_spline_interpolator_2d, only: sll_t_spline_interpolator_2d
 
+  use sll_m_gauss_legendre_integration, only: &
+    sll_f_gauss_legendre_points, &
+    sll_f_gauss_legendre_weights
+
   use sll_m_hdf5_io_serial, only: &
     sll_t_hdf5_ser_handle     , &
     sll_s_hdf5_ser_file_create, &
@@ -54,256 +58,295 @@ program test_polar_mapping_advection
   ! Working precision
   integer, parameter :: wp = f64
 
-  ! To initialize B-splines
-  integer :: mm, n1, n2, deg1, deg2, ncells1, ncells2
+  ! Tolerance valid for n1=128, n2=256, p1=p2=3, dt=0.05 and iter=20 in input file
+  ! (needs to be adjusted in case of different input values)
+  real(wp), parameter :: tolerance = 1e-1_wp
 
-  ! To initialize non-uniform 1D B-splines along eta1
-  real(wp), allocatable :: breaks_eta1(:)
+  ! Integer variables
+  integer :: mm, n1, n2, p1, p2, ncells1, ncells2, ntau1, ntau2, Nk1, Nk2, Nq1, Nq2, &
+             i1, i2, k1, k2, q1, q2, i, iter, maxiter, maptype, file_er, file_unit
 
-  ! 1D B-splines
-  class(sll_c_bsplines), allocatable :: spline_basis_eta1
-  class(sll_c_bsplines), allocatable :: spline_basis_eta2
+  !Real variables
+  real(wp) :: dt, abs_tol, rel_tol, eta(2), eta_new(2), x(2), xi(2), a(2), &
+              err, L2_norm_space, Linf_norm_space, L2_error, Linf_error, f_ex_quad
 
-  ! Analytical and discrete IGA mappings
-  class(sll_c_polar_mapping_analytical), allocatable :: mapping_analytical
-  type(sll_t_polar_mapping_iga) :: mapping_iga
+  ! Character variables
+  character(len=32) :: attr_name
+  character(len=:), allocatable :: input_file
 
+  ! Logical variables
+  logical :: success
+
+  ! Real 1D allocatables
+  real(wp), allocatable :: breaks_eta1(:), breaks_eta2(:), tau_eta1(:), tau_eta2(:)
+
+  ! Real 2D allocatables
+  real(wp), allocatable :: f(:,:), f_ex(:,:), Ax(:,:), Ay(:,:), quad_points_eta1(:,:), &
+                           quad_points_eta2(:,:), quad_weights_eta1(:,:), quad_weights_eta2(:,:)
+
+  ! Real 4D allocatables
+  real(wp), allocatable :: volume(:,:,:,:)
+
+  ! Abstract polymorphic types
+  class(sll_c_bsplines)                , allocatable :: bsplines_eta1, bsplines_eta2
+  class(sll_c_polar_mapping_analytical), allocatable :: mapping_analytic
+
+  ! Concrete types
+  type(sll_t_polar_mapping_iga)            :: mapping_discrete
+  type(sll_t_spline_2d)                    :: spline_2d_f, spline_2d_Ax, spline_2d_Ay
+  type(sll_t_spline_interpolator_2d)       :: spline_interp_2d
   type(sll_t_jacobian_2d_pseudo_cartesian) :: jac_2d_pcart
+  type(sll_t_polar_advector_rotating)      :: advector
+  type(sll_t_hdf5_ser_handle)              :: file_id
 
-  ! 2D tensor-product splines for advection fields A1,A2 and distribution function f
-  type(sll_t_spline_2d) :: spline_2d_f
-  type(sll_t_spline_2d) :: spline_2d_a1
-  type(sll_t_spline_2d) :: spline_2d_a2
+  ! Namelists
+  namelist /splines/ &
+    n1, &
+    n2, &
+    p1, &
+    p2
 
-  ! 2D tensor-product spline interpolator
-  type(sll_t_spline_interpolator_2d) :: spline_interpolator_2d
+  namelist /geometry/ &
+    maptype
 
-  ! Interpolation points and fields
-  integer :: npts1, npts2
-  real(wp), allocatable :: e1_node(:)
-  real(wp), allocatable :: e2_node(:)
-  real(wp), allocatable :: f(:,:), f_ex(:,:)
-  real(wp), allocatable :: a1(:,:), a2(:,:)
+  namelist /time_integration/ &
+    dt, &
+    iter
 
-  ! For 2D advection
-  type(sll_t_polar_advector_rotating) :: advector
+  ! Read input file
+  input_file = trim( "test_polar_mapping_advection.nml" )
+  open( file=input_file, status='old', action='read', newunit=file_unit )
+  read( file_unit, splines  )        ; rewind( file_unit )
+  read( file_unit, geometry )        ; rewind( file_unit )
+  read( file_unit, time_integration );  close( file_unit )
 
-  ! Auxiliary variables
-  integer  :: i1, i2, i, iterations, maxiter
-  real(wp) :: eta(2), eta_new(2)
-  real(wp) :: x(2), xi(2), a(2)
-  real(wp) :: dt, dV, abs_tol, rel_tol
-  real(wp) :: err, err_L2_norm_space, err_Linf_norm_space, err_Linf_norm_time_L2, err_Linf_norm_time_Li
-
-  ! For hdf5 I/O
-  type(sll_t_hdf5_ser_handle) :: file_id
-  integer                     :: h5_error
-  character(len=32)           :: attr_name
-
-  !=============================================================================
+  !-----------------------------------------------------------------------------
   ! Initialize B-splines basis functions
-  !=============================================================================
+  !-----------------------------------------------------------------------------
 
-  mm = 64 * 16
-  n1 = mm
-  n2 = mm * 2
+  ! Create HDF5 file for output
+  call sll_s_hdf5_ser_file_create( 'mapping_test_advection.h5', file_id, file_er )
 
-  deg1 = 3
-  deg2 = 3
+  ! HDF5 I/O
+  call sll_o_hdf5_ser_write_attribute( file_id, "/", "n1", n1, file_er )
+  call sll_o_hdf5_ser_write_attribute( file_id, "/", "n2", n2, file_er )
+  call sll_o_hdf5_ser_write_attribute( file_id, "/", "p1", p1, file_er )
+  call sll_o_hdf5_ser_write_attribute( file_id, "/", "p2", p2, file_er )
 
-  ! Compute number of cells from number of interpolation points along eta1
+  ! Compute number of cells from number of interpolation points along s
   call sll_s_spline_1d_compute_num_cells( &
-    degree  = deg1          , &
+    degree  = p1            , &
     bc_xmin = sll_p_greville, &
     bc_xmax = sll_p_greville, &
     nipts   = n1            , &
     ncells  = ncells1 )
 
+  ! Construct break points along s to initialize non-uniform spline basis
   allocate( breaks_eta1( ncells1+1 ) )
-
   call sll_s_new_array_linspace( breaks_eta1, 0.0_wp, 1.0_wp, endpoint=.true. )
 
-  ! Create 1D spline basis along eta1 in [0,1]
+  ! Create 1D spline basis along s in [0,1]
   call sll_s_bsplines_new( &
-    bsplines = spline_basis_eta1, &
-    degree   = deg1             , &
-    periodic = .false.          , &
-    xmin     = 0.0_wp           , &
-    xmax     = 1.0_wp           , &
-    ncells   = ncells1          , &
+    bsplines = bsplines_eta1, &
+    degree   = p1           , &
+    periodic = .false.      , &
+    xmin     = 0.0_wp       , &
+    xmax     = 1.0_wp       , &
+    ncells   = ncells1      , &
     breaks   = breaks_eta1 )
-
-  deallocate( breaks_eta1 )
 
   ! Compute number of cells from number of interpolation points along eta2
   call sll_s_spline_1d_compute_num_cells( &
-    degree  = deg2          , &
+    degree  = p2          , &
     bc_xmin = sll_p_periodic, &
     bc_xmax = sll_p_periodic, &
     nipts   = n2            , &
     ncells  = ncells2 )
 
+  ! Construct break points along theta
+  allocate( breaks_eta2( ncells2+1 ) )
+  call sll_s_new_array_linspace( breaks_eta2, 0.0_wp, sll_p_twopi, endpoint=.true. )
+
   ! Create 1D spline basis along eta2 in [0,2pi]
   call sll_s_bsplines_new( &
-    bsplines = spline_basis_eta2, &
-    degree   = deg2             , &
-    periodic = .true.           , &
-    xmin     = 0.0_wp           , &
-    xmax     = sll_p_twopi      , &
+    bsplines = bsplines_eta2, &
+    degree   = p2           , &
+    periodic = .true.       , &
+    xmin     = 0.0_wp       , &
+    xmax     = sll_p_twopi  , &
     ncells   = ncells2 )
 
-  !=============================================================================
+  !-----------------------------------------------------------------------------
   ! Initialize standard 2D tensor-product splines and spline interpolator
-  !=============================================================================
+  !-----------------------------------------------------------------------------
 
   ! Initialize 2D tensor-product splines
-  call spline_2d_f  % init( spline_basis_eta1, spline_basis_eta2 )
-  call spline_2d_a1 % init( spline_basis_eta1, spline_basis_eta2 )
-  call spline_2d_a2 % init( spline_basis_eta1, spline_basis_eta2 )
+  call spline_2d_f  % init( bsplines_eta1, bsplines_eta2 )
+  call spline_2d_Ax % init( bsplines_eta1, bsplines_eta2 )
+  call spline_2d_Ay % init( bsplines_eta1, bsplines_eta2 )
 
   ! Initialize 2D tensor-product spline interpolator
-  call spline_interpolator_2d % init( spline_basis_eta1, spline_basis_eta2, &
+  call spline_interp_2d % init( bsplines_eta1, bsplines_eta2, &
                                       [ sll_p_greville, sll_p_periodic ], &
                                       [ sll_p_greville, sll_p_periodic ] )
 
   ! Get interpolation points and allocate 2D array of values
-  call spline_interpolator_2d % get_interp_points( e1_node, e2_node )
+  call spline_interp_2d % get_interp_points( tau_eta1, tau_eta2 )
 
-  npts1 = size( e1_node )
-  npts2 = size( e2_node )
-  allocate( f   ( npts1, npts2+1 ) ) ! repeated point along eta2
-  allocate( f_ex( npts1, npts2+1 ) ) ! repeated point along eta2
+  ntau1 = size( tau_eta1 )
+  ntau2 = size( tau_eta2 )
 
-  ! Create HDF5 file for output
-  call sll_s_hdf5_ser_file_create( 'mapping_test_advection.h5', file_id, h5_error )
+  ! Repeated point in theta
+  allocate( f   ( ntau1, ntau2+1 ) )
+  allocate( f_ex( ntau1, ntau2+1 ) )
 
-  !=============================================================================
+  !-----------------------------------------------------------------------------
   ! Initialize mapping
-  !=============================================================================
+  !-----------------------------------------------------------------------------
 
-!  allocate( sll_t_polar_mapping_analytical_target :: mapping_analytical )
-  allocate( sll_t_polar_mapping_analytical_czarny :: mapping_analytical )
+  ! Allocate analytical mapping
+  if ( maptype == 0 .or. maptype == 1 ) then
+    allocate( sll_t_polar_mapping_analytical_target :: mapping_analytic )
+  else if ( maptype == 2 ) then
+    allocate( sll_t_polar_mapping_analytical_czarny :: mapping_analytic )
+  end if
 
-  ! Initialize analytica mapping
-  select type ( mapping_analytical )
+  ! Initialize analytical mapping
+  select type ( mapping_analytic )
     type is ( sll_t_polar_mapping_analytical_target )
-      call mapping_analytical % init() ! circular mapping
-!      call mapping_analytical % init( x0=[0.0_wp,0.0_wp], d0=0.2_wp, e0=0.3_wp )
+      if ( maptype == 0 ) then
+        call mapping_analytic % init( x0=[0.0_wp,0.0_wp], d0=0.0_wp, e0=0.0_wp )
+      else if ( maptype == 1 ) then
+        call mapping_analytic % init( x0=[0.0_wp,0.0_wp], d0=0.2_wp, e0=0.3_wp )
+      end if
     type is ( sll_t_polar_mapping_analytical_czarny )
-      call mapping_analytical % init( x0=[0.0_wp,0.0_wp], b =1.4_wp, e =0.3_wp )
+      call mapping_analytic % init( x0=[0.0_wp,0.0_wp], b=1.4_wp, e=0.3_wp )
   end select
 
-  ! Initialize discrete IGA mapping
-  call mapping_iga % init( spline_basis_eta1, spline_basis_eta2, mapping_analytical )
+  ! Initialize discrete mapping
+  call mapping_discrete % init( bsplines_eta1, bsplines_eta2, mapping_analytic )
 
-  call mapping_iga % store_data( npts1, npts2, file_id )
+  ! Write mapping info
+  call mapping_discrete % store_data( n1, n2, file_id )
 
-  !=============================================================================
+  !-----------------------------------------------------------------------------
   ! Set initial distribution function
-  !=============================================================================
+  !-----------------------------------------------------------------------------
 
   ! Initial condition
-  do i2 = 1, npts2
-    do i1 = 1, npts1
-      x = mapping_iga % eval( [ e1_node(i1), e2_node(i2) ] )
+  do i2 = 1, ntau2
+    do i1 = 1, ntau1
+      eta(1) = tau_eta1(i1)
+      eta(2) = tau_eta2(i2)
+      x = mapping_discrete % eval( eta )
       f(i1,i2) = f_initial( x )
     end do
   end do
-
   ! Apply periodicity along eta2
-  f(:,npts2+1) = f(:,1)
+  f(:,ntau2+1) = f(:,1)
 
   ! Store initial solution
-  call sll_o_hdf5_ser_write_array( file_id, f, "/f_0", h5_error )
-  call sll_o_hdf5_ser_write_array( file_id, f, "/f_ex_0", h5_error )
+  call sll_o_hdf5_ser_write_array( file_id, f, "/f_0", file_er )
+  call sll_o_hdf5_ser_write_array( file_id, f, "/f_ex_0", file_er )
 
-  !=============================================================================
+  ! Compute interpolating spline for f
+  call spline_interp_2d % compute_interpolant( spline_2d_f, f(:,1:ntau2) )
+
+  !-----------------------------------------------------------------------------
   ! Evolve f in time
-  !=============================================================================
+  !-----------------------------------------------------------------------------
 
   ! Initialize advector
   call advector % init( xc=[0.25_wp,0.0_wp], omega=sll_p_twopi )
-!  call advector % init( xc=[-0.15_wp,0.0_wp], omega=sll_p_twopi )
 
-  ! Parameters for time cycle
-  iterations = 10 * 16
-  dt = 1.0e-01_wp / 16.0_wp
-
-  call sll_o_hdf5_ser_write_attribute( file_id, "/", "iterations", iterations, h5_error )
+  call sll_o_hdf5_ser_write_attribute( file_id, "/", "iterations", iter, file_er )
 
   ! Compute interpolating splines for advection fields
-  allocate( a1( npts1, npts2 ) )
-  allocate( a2( npts1, npts2 ) )
-  do i2 = 1, npts2
-    do i1 = 1, npts1
-      x = mapping_iga % eval( [ e1_node(i1), e2_node(i2) ] )
+  allocate( Ax( ntau1, ntau2 ) )
+  allocate( Ay( ntau1, ntau2 ) )
+
+  do i2 = 1, ntau2
+    do i1 = 1, ntau1
+      eta(1) = tau_eta1(i1)
+      eta(2) = tau_eta2(i2)
+      x = mapping_discrete % eval( eta )
       call advector % velocity_field( x, a )
-      a1(i1,i2) = a(1)
-      a2(i1,i2) = a(2)
+      Ax(i1,i2) = a(1)
+      Ay(i1,i2) = a(2)
     end do
   end do
-  call spline_interpolator_2d % compute_interpolant( spline_2d_a1, a1(:,:) )
-  call spline_interpolator_2d % compute_interpolant( spline_2d_a2, a2(:,:) )
+
+  call spline_interp_2d % compute_interpolant( spline_2d_Ax, Ax(:,:) )
+  call spline_interp_2d % compute_interpolant( spline_2d_Ay, Ay(:,:) )
 
   ! Initialize Jacobian of pseudo-Cartesian coordinates
-  call jac_2d_pcart % init( mapping_iga )
+  call jac_2d_pcart % init( mapping_discrete )
+  call jac_2d_pcart % pole( tau_eta2 )
 
-!  ! Set tolerance and maximum iterations for mapping inversion
-!  tol = 1.0e-14_wp
-!  maxiter = 100
+  ! Quadrature points to compute L2-norm of error
+  Nk1 = ncells1
+  Nk2 = ncells2
+  Nq1 = 1 + p1
+  Nq2 = 1 + p2
 
-  abs_tol = 1.0e-14_wp
-  rel_tol = 1.0e-12_wp
-  maxiter = 100
+  allocate( quad_points_eta1 ( Nq1, Nk1 ) )
+  allocate( quad_points_eta2 ( Nq2, Nk2 ) )
+  allocate( quad_weights_eta1( Nq1, Nk1 ) )
+  allocate( quad_weights_eta2( Nq2, Nk2 ) )
 
-  ! Integral volume in logical space: ds * dtheta
-  dV = ( 1.0 / n1 ) * ( sll_p_twopi / n2 )
+  allocate( volume( Nq1, Nq2, Nk1, Nk2 ) )
 
-  err_Linf_norm_time_L2 = 0.0_wp
-  err_Linf_norm_time_Li = 0.0_wp
+  ! Quadrature points and weights along s
+  do k1 = 1, Nk1
+    quad_points_eta1 (:,k1) = sll_f_gauss_legendre_points ( Nq1, breaks_eta1(k1), breaks_eta1(k1+1) )
+    quad_weights_eta1(:,k1) = sll_f_gauss_legendre_weights( Nq1, breaks_eta1(k1), breaks_eta1(k1+1) )
+  end do
+
+  ! Quadrature points and weights along theta
+  do k2 = 1, Nk2
+    quad_points_eta2 (:,k2) = sll_f_gauss_legendre_points ( Nq2, breaks_eta2(k2), breaks_eta2(k2+1) )
+    quad_weights_eta2(:,k2) = sll_f_gauss_legendre_weights( Nq2, breaks_eta2(k2), breaks_eta2(k2+1) )
+  end do
+
+  do k2 = 1, Nk2
+    do k1 = 1, Nk1
+      do q2 = 1, Nq2
+        do q1 = 1, Nq1
+          eta(1) = quad_points_eta1(q1,k1)
+          eta(2) = quad_points_eta2(q2,k2)
+          volume(q1,q2,k1,k2) = abs( mapping_discrete % jdet( eta ) ) &
+                                * quad_weights_eta1(q1,k1) * quad_weights_eta2(q2,k2)
+        end do
+      end do
+    end do
+  end do
+
+  L2_error   = 0.0_wp
+  Linf_error = 0.0_wp
 
   ! Time cycle
-  do i = 1, iterations
+  do i = 1, iter
 
-    ! Compute interpolating spline for f
-    call spline_interpolator_2d % compute_interpolant( spline_2d_f, f(:,1:npts2) )
+    Linf_norm_space = 0.0_wp
 
-    err_L2_norm_space   = 0.0_wp
-    err_Linf_norm_space = 0.0_wp
+    do i2 = 1, ntau2
+      do i1 = 1, ntau1
 
-    ! 2D advection
-    do i2 = 1, npts2
-      do i1 = 1, npts1
-
-        eta(1) = e1_node(i1)
-        eta(2) = e2_node(i2)
+        eta(1) = tau_eta1(i1)
+        eta(2) = tau_eta2(i2)
 
         ! Map logical coordinates to Cartesian coordinates using discrete IGA mapping
-        x = mapping_iga % eval( eta )
-
-!        write(*,'(a,es21.14,a,es21.14,a)') " (e1,e2) = (", eta(1), ",", eta(2), ") at t"
-!        write(*,'(a,es21.14,a,es21.14,a)') " (x1,x2) = (",   x(1), ",",   x(2), ") at t"
+        x = mapping_discrete % eval( eta )
 
 !        ! Advect point using analytical flow field
 !        x_new   = advector % flow_field( x, -dt )
-!        eta_new = mapping_iga % eval_inverse( x_new, eta, tol, maxiter )
+!        eta_new = mapping_discrete % eval_inverse( x_new, eta, tol, maxiter )
 
-!        ! Advect point using explicit Runge-Kutta 4th order (Cartesian coordinates)
-!        eta_new = advector % advect_x1x2( eta, -dt, mapping_iga, spline_2d_a1, spline_2d_a2, tol, maxiter )
+!        ! Advect point using Cartesian coordinates (RK3)
+!        eta_new = advector % advect_cart( eta, -dt, mapping_discrete, spline_2d_Ax, spline_2d_Ay )
 
-        ! Advect point using explicit Runge-Kutta 4th order (intermediate coordinates)
-        eta_new = advector % advect_y1y2( &
-          eta         , &
-          -dt         , &
-          jac_2d_pcart, &
-          spline_2d_a1, &
-          spline_2d_a2, &
-          rel_tol     , &
-          abs_tol     , &
-          maxiter )
-
-!        write(*,'(a,es21.14,a,es21.14,a)') " (x1,x2) = (", x_new(1), ",", x_new(2), ") at t+dt"
-!        write(*,'(a,es21.14,a,es21.14,a)') " (e1,e2) = (", eta_new(1), ",", eta_new(2), ") at t+dt"
+        ! Advect point using pseudo-Cartesian coordinates (RK3)
+        eta_new = advector % advect_pseudo_cart( eta, -dt, jac_2d_pcart, spline_2d_Ax, spline_2d_Ay )
 
         ! Evaluate distribution function at origin of characteristics
         f(i1,i2) = spline_2d_f % eval( eta_new(1), eta_new(2) )
@@ -314,68 +357,88 @@ program test_polar_mapping_advection
 
         err = f(i1,i2) - f_ex(i1,i2)
 
-        err_L2_norm_space = err_L2_norm_space + err**2 * abs( mapping_iga % jdet( eta ) ) * dV
-
-        err = abs( f(i1,i2) - f_ex(i1,i2) )
-
-        err_Linf_norm_space = merge( err, err_Linf_norm_space, err > err_Linf_norm_space )
+        Linf_norm_space = merge( abs( err ), Linf_norm_space, abs( err ) > Linf_norm_space )
 
       end do
     end do
 
-    err_L2_norm_space = sqrt( err_L2_norm_space )
+    ! Compute interpolating spline for f
+    call spline_interp_2d % compute_interpolant( spline_2d_f, f(:,1:ntau2) )
 
-    ! Compute L-inf norm of error in time of L2 norm of error in space
-    err_Linf_norm_time_L2 = merge( err_L2_norm_space, err_Linf_norm_time_L2, err_L2_norm_space > err_Linf_norm_time_L2 )
+    ! Compute spatial L2-norm of error
+    L2_norm_space   = 0.0_wp
 
-    ! Compute L-inf norm of error in time of L-inf norm of error in space
-    err_Linf_norm_time_Li = merge( err_Linf_norm_space, err_Linf_norm_time_Li, err_Linf_norm_space > err_Linf_norm_time_Li )
+    do k2 = 1, Nk2
+      do k1 = 1, Nk1
+        do q2 = 1, Nq2
+          do q1 = 1, Nq1
+
+            eta = (/ quad_points_eta1(q1,k1), quad_points_eta2(q2,k2) /)
+            x   = mapping_discrete % eval( eta )
+
+            xi = advector % flow_field( x, -dt*real(i,wp) )
+            f_ex_quad = f_initial( xi )
+
+            L2_norm_space = L2_norm_space + volume(q1,q2,k1,k2) &
+                            * ( spline_2d_f % eval( eta(1), eta(2) ) - f_ex_quad )**2
+
+          end do
+        end do
+      end do
+    end do
+
+    L2_norm_space = sqrt( L2_norm_space )
+
+    ! Compute L-inf norm in time of spatial L2 norm of error
+    L2_error = merge( L2_norm_space, L2_error, L2_norm_space > L2_error )
+
+    ! Compute L-inf norm in time of spatial L-inf norm of error
+    Linf_error = merge( Linf_norm_space, Linf_error, Linf_norm_space > Linf_error )
 
     ! Apply periodicity along eta2
-    f   (:,npts2+1) = f   (:,1)
-    f_ex(:,npts2+1) = f_ex(:,1)
+    f   (:,ntau2+1) = f   (:,1)
+    f_ex(:,ntau2+1) = f_ex(:,1)
 
     ! Store solution
     write( attr_name, '(a,i0)' ) "/f_", i 
-    call sll_o_hdf5_ser_write_array( file_id, f, trim(attr_name), h5_error )
+    call sll_o_hdf5_ser_write_array( file_id, f, trim(attr_name), file_er )
 
     ! Store exact solution
     write( attr_name, '(a,i0)' ) "/f_ex_", i 
-    call sll_o_hdf5_ser_write_array( file_id, f_ex, trim(attr_name), h5_error )
+    call sll_o_hdf5_ser_write_array( file_id, f_ex, trim(attr_name), file_er )
 
   end do
 
-  write(*,*)
-  write(*,'(a,es8.2)') " Maximum in time of spatial L2 norm of error = ", err_Linf_norm_time_L2
-  write(*,*)
-
-  write(*,*)
-  write(*,'(a,es8.2)') " Maximum in time of spatial L-inf norm of error = ", err_Linf_norm_time_Li
-  write(*,*)
-
   ! Close HDF5 file
-  call sll_s_hdf5_ser_file_close ( file_id, h5_error )
+  call sll_s_hdf5_ser_file_close ( file_id, file_er )
 
-  !=============================================================================
+  write(*,'(/a,es8.2)')  " Maximum in time of spatial   L2-norm of error: ", L2_error
+  write(*,'(/a,es8.2/)') " Maximum in time of spatial Linf-norm of error: ", Linf_error
+
+  ! Check if test passed
+  success = .true.
+  if( max( L2_error, Linf_error ) > tolerance ) then
+    success = .false.
+    write(*,'(a,es7.1,a/)') "Test FAILED (tolerance ", tolerance, ")"
+  end if
+  if( success ) write(*,'(a/)') "Test PASSED"
+
+  !-----------------------------------------------------------------------------
   ! Deallocate allocatables and free objects
-  !=============================================================================
+  !-----------------------------------------------------------------------------
 
-  deallocate( e1_node )
-  deallocate( e2_node )
-  deallocate( f    )
-  deallocate( f_ex )
-  deallocate( a1 )
-  deallocate( a2 )
+  deallocate( breaks_eta1, breaks_eta2, tau_eta1, tau_eta2, f, f_ex, Ax, Ay, &
+              quad_points_eta1, quad_points_eta2, quad_weights_eta1, quad_weights_eta2, volume )
 
-  deallocate( mapping_analytical )
+  deallocate( mapping_analytic )
 
-  call mapping_iga  % free()
+  call mapping_discrete  % free()
+  call bsplines_eta1 % free()
+  call bsplines_eta2 % free()
   call spline_2d_f  % free()
-  call spline_2d_a1 % free()
-  call spline_2d_a2 % free()
-  call spline_interpolator_2d % free()
-  call spline_basis_eta1 % free()
-  call spline_basis_eta2 % free()
+  call spline_2d_Ax % free()
+  call spline_2d_Ay % free()
+  call spline_interp_2d % free()
   call jac_2d_pcart % free()
   call advector % free()
 
@@ -383,31 +446,12 @@ program test_polar_mapping_advection
 contains
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
-  !-----------------------------------------------------------------------------
-  ! Initial distribution function
-  !-----------------------------------------------------------------------------
+  ! Initial distribution function (two cosine bells with elliptical cross-sections)
   SLL_PURE function f_initial( x ) result( f0 )
     real(wp), intent(in) :: x(2)
     real(wp) :: f0
 
-!    ! Cosine bell
-!
-!    real(wp), parameter :: x0(2) = [0.0_wp,0.0_wp]
-!    integer , parameter :: p = 4
-!    real(wp) :: xmod
-!
-!    xmod = norm2( x-x0 )
-!
-!    if ( xmod < 0.25_wp ) then
-!      f0 = cos( sll_p_twopi * (x(1)-x0(1)) )**p * cos( sll_p_twopi * (x(2)-x0(2)) )**p
-!    else
-!      f0 = 0.0_wp
-!    end if
-
-    ! Superposition of cosine bells with elliptical cross-sections
-
     real(wp), parameter :: x0(2) = [-0.15_wp,0.0_wp]
-!    real(wp), parameter :: x0(2) = [0.25_wp,0.0_wp]
     integer , parameter :: p = 4
     real(wp), parameter :: a = 0.3_wp
     real(wp) :: r1, r2

@@ -53,6 +53,7 @@ TARGET_LINK_LIBRARIES( sll_splines
   sll_linear_solvers
   sll_meshes
   sll_timer
+  sll_quadrature
   pppack
   ${LAPACK_LIBRARIES} )
 
