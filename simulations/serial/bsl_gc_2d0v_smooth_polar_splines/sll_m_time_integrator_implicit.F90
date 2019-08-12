@@ -79,6 +79,7 @@ contains
     self % tau_eta2 => tau_eta2
 
     call self % jacobian_2d_pseudo_cartesian % init( mapping_discrete )
+    call self % jacobian_2d_pseudo_cartesian % pole( tau_eta2 )
 
     self % poisson_solver   => poisson_solver
     self % spline_interp_2d => spline_interp_2d
