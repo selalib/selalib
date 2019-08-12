@@ -62,8 +62,18 @@ program sim_bsl_gc_2d0v_smooth_polar_splines
   ! Real variables
   real(wp) :: sigma, inf_norm_phi, residual, t_diff, t_iter, eta(2), norm_coeff
 
+  ! Parameters
   real(wp), parameter :: max_rho = 1.0_wp
-  real(wp), parameter :: max_phi = 0.15004864751654967_wp
+  real(wp), parameter :: max_phi = 1.0_wp
+!  real(wp), parameter :: max_phi = 0.15004864751654967_wp
+
+  ! Store information about functional form of f(phi) and normalization coefficient c
+  ! Options: "linear" or "quadratic" (other options have to be implemented separately)
+  character(len=*), parameter :: phi_profile = "quadratic"
+
+  ! Store information about choice of maximum value for normalization coefficient c
+  ! Options: 'max_rho' or 'max_phi'
+  character(len=*), parameter :: norm_choice = "max_phi"
 
   ! Namelists
 
@@ -80,7 +90,8 @@ program sim_bsl_gc_2d0v_smooth_polar_splines
 
   ! Character variables
   character(len=:), allocatable :: input_file
-  character(len=32) :: attr_name
+  character(len=32)  :: attr_name
+  character(len=256) :: err_msg
 
   ! Real 1D allocatables
   real(wp), allocatable :: breaks_eta1(:), breaks_eta2(:), tau_eta1(:), tau_eta2(:)
@@ -107,6 +118,12 @@ program sim_bsl_gc_2d0v_smooth_polar_splines
   open ( file=trim( input_file ), status='old', action='read', newunit=file_unit )
   read ( file_unit, splines  ); rewind( file_unit )
   read ( file_unit, geometry ); close ( file_unit )
+
+  ! Checks
+  if ( norm_choice /= "max_rho" .and. norm_choice /= "max_phi" ) then
+    err_msg = trim( "Invalid choice for 'norm_choice'. Options available: 'max_rho' or 'max_phi'" )
+    SLL_ERROR( "main program", err_msg )
+  end if
 
   ! Create HDF5 file
   call sll_s_hdf5_ser_file_create( 'sim_bsl_gc_2d0v_smooth_polar_splines_equilibrium.h5', file_id, h5_error )
@@ -251,7 +268,7 @@ program sim_bsl_gc_2d0v_smooth_polar_splines
     do i1 = 1, ntau1
       eta(1) = tau_eta1(i1)
       eta(2) = tau_eta2(i2)
-      rho(i1,i2) = sigma * f( phi(i1,i2) )
+      rho(i1,i2) = sigma * f( phi(i1,i2), phi_profile )
     end do
   end do
   rho(:,ntau2+1) = rho(:,1)
@@ -293,14 +310,12 @@ program sim_bsl_gc_2d0v_smooth_polar_splines
     ! || phi* ||_inf
     inf_norm_phi = maxval( abs( phi(:,:) ) )
 
-!    ! Normalization fixing maximum of phi
-!    norm_coeff = max_phi / inf_norm_phi
-
-!    ! Normalization fixing maximum of rho, valid for f(phi) = phi
-!    norm_coeff = sqrt( max_rho / ( sigma * inf_norm_phi ) )
-
-    ! Normalization fixing maximum of rho, valid for f(phi) = phi**2
-    norm_coeff = ( max_rho / ( sigma * inf_norm_phi**2 ) )**(1.0_wp/3.0_wp)
+    ! Normalization (TODO: decision control statement should be moved outside time cycle)
+    if ( norm_choice == "max_phi" ) then
+      norm_coeff = normalize_using_phi( max_phi, inf_norm_phi )
+    else if ( norm_choice == "max_rho" ) then
+      norm_coeff = normalize_using_rho( max_rho, inf_norm_phi, sigma, phi_profile )
+    end if
 
     ! phi_i = phi* * norm_coeff
     spline_2d_phi % bcoef(:,:) = spline_2d_phi % bcoef(:,:) * norm_coeff
@@ -317,7 +332,7 @@ program sim_bsl_gc_2d0v_smooth_polar_splines
         eta(1) = tau_eta1(i1)
         eta(2) = tau_eta2(i2)
         phi(i1,i2) = spline_2d_phi % eval( eta(1), eta(2) )
-        rho(i1,i2) = sigma * f( phi(i1,i2) )
+        rho(i1,i2) = sigma * f( phi(i1,i2), phi_profile )
       end do
     end do
     phi(:,ntau2+1) = phi(:,1)
@@ -408,11 +423,22 @@ contains
   end subroutine s_parse_command_arguments
 
   !-----------------------------------------------------------------------------
-  function f( psi )
-    real(wp), intent(in) :: psi 
+  function f( psi, psi_profile )
+    real(wp)        , intent(in) :: psi
+    character(len=*), intent(in) :: psi_profile
     real(wp) :: f
 
-    f = psi**2
+    character(len=256) :: err_msg
+
+    if ( psi_profile == "linear" ) then
+      f = psi
+    else if ( psi_profile == "quadratic" ) then
+      f = psi**2
+    else
+      err_msg = trim( "Options available for 'psi_profile': 'linear' or 'quadratic'" )
+      SLL_ERROR( "f( psi, psi_profile )", err_msg )
+      return
+    end if
 
 !    real(wp) :: b, m, q, L, k
 !
@@ -428,5 +454,37 @@ contains
 !             b**( 4.3_wp * ( -(max_phi-psi)**0.6_wp + (max_phi-0.025_wp)**0.6_wp ) ) ) / log( b )
 
   end function f
+
+  !-----------------------------------------------------------------------------
+  function normalize_using_phi( max_val, inf_norm_val ) result( norm_val )
+    real(wp), intent(in) :: max_val
+    real(wp), intent(in) :: inf_norm_val
+    real(wp) :: norm_val
+
+    norm_val = max_val / inf_norm_val
+
+  end function normalize_using_phi
+
+  !-----------------------------------------------------------------------------
+  function normalize_using_rho( max_val, inf_norm_val, sigma, phi_profile ) result( norm_val )
+    real(wp)        , intent(in) :: max_val
+    real(wp)        , intent(in) :: inf_norm_val
+    real(wp)        , intent(in) :: sigma
+    character(len=*), intent(in) :: phi_profile
+    real(wp) :: norm_val
+
+    character(len=256) :: err_msg
+
+    if ( phi_profile == "linear" ) then
+      norm_val = sqrt( max_val / ( sigma * inf_norm_val ) )
+    else if ( phi_profile == "quadratic" ) then
+      norm_val = ( max_val / ( sigma * inf_norm_val**2 ) )**(1.0_wp/3.0_wp)
+    else
+      err_msg = trim( "Options available for 'phi_profile': 'linear' or 'quadratic'" )
+      SLL_ERROR( "normalize_using_rho( ..., phi_profile )", err_msg )
+      return
+    end if
+
+  end function normalize_using_rho
 
 end program sim_bsl_gc_2d0v_smooth_polar_splines
