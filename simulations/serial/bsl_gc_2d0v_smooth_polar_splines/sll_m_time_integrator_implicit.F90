@@ -184,7 +184,6 @@ contains
       ! Evolve density
       if ( self % sim_state % evolve_background ) then
 
-        !$OMP PARALLEL DO PRIVATE(eta,success)
         do i2 = 1, ntau2
           do i1 = 1, ntau1
 
@@ -202,7 +201,6 @@ contains
 
           end do
         end do
-        !$OMP END PARALLEL DO
 
         ! Apply periodicity along theta
         if ( success ) then
@@ -213,7 +211,6 @@ contains
 
       else
 
-        !$OMP PARALLEL DO PRIVATE(eta,success)
         do i2 = 1, ntau2
           do i1 = 1, ntau1
 
@@ -224,7 +221,6 @@ contains
 
           end do
         end do
-        !$OMP END PARALLEL DO
 
         ! Apply periodicity along theta
         rho_copy(:,ntau2+1) = rho_copy(:,1)
@@ -266,7 +262,6 @@ contains
       ! Evolve density
       if ( self % sim_state % evolve_background ) then
 
-        !$OMP PARALLEL DO PRIVATE(eta,success)
         do i2 = 1, ntau2
           do i1 = 1, ntau1
 
@@ -284,7 +279,6 @@ contains
 
           end do
         end do
-        !$OMP END PARALLEL DO
 
         ! Apply periodicity along theta
         if ( success ) then
@@ -295,7 +289,6 @@ contains
 
       else
 
-        !$OMP PARALLEL DO PRIVATE(eta,success)
         do i2 = 1, ntau2
           do i1 = 1, ntau1
 
@@ -306,7 +299,6 @@ contains
 
           end do
         end do
-        !$OMP END PARALLEL DO
 
         ! Apply periodicity along theta
         rho(:,ntau2+1) = rho(:,1)
