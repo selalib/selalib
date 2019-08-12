@@ -130,7 +130,9 @@ program sim_bsl_gc_2d0v_smooth_polar_splines
   real(wp), allocatable :: breaks_eta1(:), breaks_eta2(:), tau_eta1(:), tau_eta2(:), intensity(:)
 
   ! Real 2D allocatables
-  real(wp), allocatable :: phi(:,:), location(:,:)
+  real(wp), allocatable :: phi_eq(:,:), Ex_eq(:,:), Ey_eq(:,:), location(:,:)
+
+  real(wp) :: Exy_eq(2)
 
   ! Abstract polymorphic types
   class(sll_c_bsplines)                , allocatable, target :: bsplines_eta1, bsplines_eta2
@@ -299,7 +301,7 @@ program sim_bsl_gc_2d0v_smooth_polar_splines
   t_diff = sll_f_time_elapsed_between( t0, t1 )
   write(*,'(a,es7.1,a)') " ( ", t_diff, " s )"
 
-  ! Associate auxiliary pointers (not necessary when using automatic pointer targetting, if supported by compiler)
+  ! Associate auxiliary pointers (not necessary when using automatic pointer targeting, if supported by compiler)
   bsplines_eta1_pointer    => bsplines_eta1
   bsplines_eta2_pointer    => bsplines_eta2
   mapping_discrete_pointer => mapping_discrete
@@ -317,7 +319,9 @@ program sim_bsl_gc_2d0v_smooth_polar_splines
     evolve_background )
 
   ! Repeated point along theta
-  allocate( phi( ntau1, ntau2+1 ) )
+  allocate( phi_eq( ntau1, ntau2+1 ) )
+  allocate( Ex_eq( ntau1, ntau2+1 ) )
+  allocate( Ey_eq( ntau1, ntau2+1 ) )
 
   ! Compute equilibrium density on interpolation points
   if ( equil_num ) then
@@ -326,11 +330,7 @@ program sim_bsl_gc_2d0v_smooth_polar_splines
     call sll_o_hdf5_ser_read_attribute( file_id_eq, "/", "iterations", it, h5_error )
     write( attr_name, '(a,i0)' ) "/rho_", it
     call sll_o_hdf5_ser_read_array( file_id_eq, sim_state % rho, trim(attr_name), h5_error )
-    call sll_o_hdf5_ser_read_array( file_id_eq, phi, trim(attr_name), h5_error )
 !    call sll_s_hdf5_ser_file_close( file_id_eq, h5_error )
-
-    ! Write data to HDF5 file
-    call sll_o_hdf5_ser_write_array( file_id, phi, "/phi_eq", h5_error )
 
   else
 
@@ -346,8 +346,49 @@ program sim_bsl_gc_2d0v_smooth_polar_splines
 
   end if
 
+  ! Compute interpolant spline for equilibrium density
+  call spline_interp_2d % compute_interpolant( sim_state % spline_2d_rho, sim_state % rho(:,1:ntau2) )
+
+  ! Solve Poisson equation for equilibrium potential
+  call poisson_solver % reset_charge()
+  call poisson_solver % accumulate_charge( sim_state % spline_2d_rho )
+  call poisson_solver % solve( sim_state % spline_2d_phi )
+
   ! Write data to HDF5 file
   call sll_o_hdf5_ser_write_array( file_id, sim_state % rho, "/rho_eq", h5_error )
+  do i2 = 1, ntau2
+    do i1 = 1, ntau1
+      eta(1) = tau_eta1(i1)
+      eta(2) = tau_eta2(i2)
+      phi_eq(i1,i2) = sim_state % spline_2d_phi  % eval( eta(1), eta(2) )
+      Exy_eq        = sim_state % electric_field % eval( eta )
+      Ex_eq (i1,i2) = Exy_eq(1)
+      Ey_eq (i1,i2) = Exy_eq(2)
+    end do
+  end do
+  ! Apply periodicity along theta
+  phi_eq(:,ntau2+1) = phi_eq(:,1)
+  Ex_eq(:,ntau2+1) = Ex_eq(:,1)
+  Ey_eq(:,ntau2+1) = Ey_eq(:,1)
+  call sll_o_hdf5_ser_write_array( file_id, phi_eq, "/phi_eq", h5_error )
+  call sll_o_hdf5_ser_write_array( file_id, Ex_eq, "/Ex_eq", h5_error )
+  call sll_o_hdf5_ser_write_array( file_id, Ey_eq, "/Ey_eq", h5_error )
+
+  ! Initialize scalar diagnostics
+  call diag % init( &
+    ncells1         , &
+    ncells2         , &
+    p1              , &
+    p2              , &
+    nx1             , &
+    nx2             , &
+    tau_eta1        , &
+    tau_eta2        , &
+    breaks_eta1     , &
+    breaks_eta2     , &
+    mapping_discrete, &
+    mapping_analytic, &
+    sim_state )
 
   ! Add perturbation to equilibrium
   do i2 = 1, ntau2
@@ -359,6 +400,21 @@ program sim_bsl_gc_2d0v_smooth_polar_splines
   end do
   ! Apply periodicity along theta
   sim_state % rho(:,ntau2+1) = sim_state % rho(:,1)
+
+  ! Compute interpolant spline for initial density
+  call spline_interp_2d % compute_interpolant( sim_state % spline_2d_rho, sim_state % rho(:,1:ntau2) )
+
+  ! Solve Poisson equation for initial potential
+  call poisson_solver % reset_charge()
+  call poisson_solver % accumulate_charge( sim_state % spline_2d_rho )
+  if ( sim_state % point_charges_present ) then
+    do ic = 1, nc
+      call poisson_solver % accumulate_charge( &
+        sim_state % point_charges(ic) % intensity, &
+        sim_state % point_charges(ic) % location )
+    end do
+  end if
+  call poisson_solver % solve( sim_state % spline_2d_phi )
 
   ! Allocate and initialize time integrator
 
@@ -397,37 +453,7 @@ program sim_bsl_gc_2d0v_smooth_polar_splines
 
   end select
 
-  ! Compute interpolant spline for initial density
-  call spline_interp_2d % compute_interpolant( sim_state % spline_2d_rho, sim_state % rho(:,1:ntau2) )
-
-  ! Solve Poisson equation
-  call poisson_solver % reset_charge()
-  call poisson_solver % accumulate_charge( sim_state % spline_2d_rho )
-  if ( sim_state % point_charges_present ) then
-    do ic = 1, nc
-      call poisson_solver % accumulate_charge( &
-        sim_state % point_charges(ic) % intensity, &
-        sim_state % point_charges(ic) % location )
-    end do
-  end if
-  call poisson_solver % solve( sim_state % spline_2d_phi )
-
-  ! Initialize scalar diagnostics
-  call diag % init( &
-    ncells1         , &
-    ncells2         , &
-    p1              , &
-    p2              , &
-    nx1             , &
-    nx2             , &
-    tau_eta1        , &
-    tau_eta2        , &
-    breaks_eta1     , &
-    breaks_eta2     , &
-    mapping_discrete, &
-    mapping_analytic, &
-    sim_state )
-
+  ! Set scalar diagnostics file
   file_name = "scalar_diagnostics.dat"
   status    = 'replace'
   position  = 'asis'
@@ -460,7 +486,7 @@ program sim_bsl_gc_2d0v_smooth_polar_splines
 
   do it = 1, iter
 
-    write(*,'(a,i4)',advance='no') "    iteration ", it
+    write(*,'(a,i5)',advance='no') "    iteration ", it
 
     call sll_s_set_time_mark( t0 )
 
@@ -519,7 +545,7 @@ program sim_bsl_gc_2d0v_smooth_polar_splines
   deallocate( breaks_eta1, breaks_eta2, tau_eta1, tau_eta2, intensity )
 
   ! Deallocate real 2D allocatables
-  deallocate( phi, location )
+  deallocate( phi_eq, Ex_eq, Ey_eq, location )
 
   ! Nullify auxiliary pointers (not necessary when using automatic pointer targetting, if supported by compiler)
   nullify( bsplines_eta1_pointer    )
@@ -580,16 +606,14 @@ contains
     real(wp) :: rho_equilibrium
 
     ! Diocotron instability
-    integer  :: l, p
+    integer  :: p
     real(wp) :: ampl, smin, smax, smid, dist
 
     if ( test_case == "diocotron" ) then
 
-      l = 9
       p = 50
       smin = 0.45_wp
       smax = 0.50_wp
-      ampl = 1.0e-04_wp
 
       smid = 0.5_wp * ( smin + smax )
       dist = 0.5_wp * ( smax - smin )
