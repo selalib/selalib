@@ -51,8 +51,12 @@ if ( nc > 0 ):
    for t in range(Ni):
        point_charges[t] = h5['point_charges_'+str(t)].value
 
-# Load equilibrium density
+# Load equilibrium
+# NOTE: only rho_eq available for simulations of point-like vortex dynamics
 rho_eq = h5['rho_eq'].value
+phi_eq = h5['phi_eq'].value
+#Ex_eq  = h5['Ex_eq' ].value
+#Ey_eq  = h5['Ey_eq' ].value
 
 # Load Cartesian grids
 x1_cart = h5['x1_cart'].value
@@ -64,14 +68,10 @@ h5.close()
 # magnitude of electric field
 Em = dict()
 for t in tt:
-    Em[t] = np.sqrt( Ex[t]**2 + Ey[t]**2 )
+    Em[t] = Ex[t]**2 + Ey[t]**2
 
 # to plot fine grid
 nr = n1 // 8
-
-#-------------------------------------------------------------------------------
-# Plot time evolution of RHO
-#-------------------------------------------------------------------------------
 
 # find minimum and maximum over all times
 def minmax( Q ):
@@ -111,6 +111,38 @@ for t in tt:
 # if max_delta_rho = 0.0, contour levels need to be increasing
 if ( max_delta_rho == min_delta_rho ):
    max_delta_rho = 1.0
+
+# NOTE: phi_eq not available for simulations of point-like vortex dynamics
+min_phi_eq = phi_eq.min()
+max_phi_eq = phi_eq.max()
+# if max_phi_eq = 0.0, contour levels need to be increasing
+if ( max_phi_eq == min_phi_eq ):
+   max_phi_eq = 1.0
+
+# NOTE: phi_eq not available for simulations of point-like vortex dynamics
+min_delta_phi = ( phi[0] - phi_eq ).min()
+max_delta_phi = ( phi[0] - phi_eq ).max()
+for t in tt:
+    delta_phi = phi[t] - phi_eq
+    if ( delta_phi.min() < min_delta_phi ):
+       min_delta_phi = delta_phi.min()
+    if ( delta_phi.max() > max_delta_phi ):
+       max_delta_phi = delta_phi.max()
+# if max_delta_phi = 0.0, contour levels need to be increasing
+if ( max_delta_phi == min_delta_phi ):
+   max_delta_phi = 1.0
+
+#min_Ex_eq = Ex_eq.min()
+#max_Ex_eq = Ex_eq.max()
+## if max_Ex_eq = 0.0, contour levels need to be increasing
+#if ( max_Ex_eq == min_Ex_eq ):
+#   max_Ex_eq = 1.0
+#
+#min_Ey_eq = Ey_eq.min()
+#max_Ey_eq = Ey_eq.max()
+## if max_Ey_eq = 0.0, contour levels need to be increasing
+#if ( max_Ey_eq == min_Ey_eq ):
+#   max_Ey_eq = 1.0
 
 #-------------------------------------------------------------------------------
 # Scalar diagnostics
