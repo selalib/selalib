@@ -1,0 +1,37 @@
+&splines
+  n1 = 128
+  n2 = 256
+  p1 = 3
+  p2 = 3
+/
+
+&geometry
+  maptype = 0
+/
+
+&time_integration
+  method = "explicit"
+  evolve_background = .true.
+  dt   = 0.1
+  iter = 700
+/
+
+&characteristics
+/
+
+&initial_condition
+  test_case = "diocotron"
+/
+
+&diagnostics
+  diag_freq = 5
+  nx1       = 512
+  nx2       = 512
+/
+
+&point_charges
+  nc = 0
+/
+
+&point_charges_specs
+/
