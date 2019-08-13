@@ -80,11 +80,12 @@ target_link_libraries( ${TEST_NAME} sll_splines )
 add_test( NAME ${TEST_NAME} COMMAND ${TEST_NAME} )
 set_tests_properties( ${TEST_NAME} PROPERTIES PASS_REGULAR_EXPRESSION "PASSED" TIMEOUT 60 )
 
+set( TEST_NAME test_jacobian_2d_pseudo_cartesian )
+add_executable( ${TEST_NAME} ${TEST_NAME}.F90 )
+target_link_libraries( ${TEST_NAME} sll_splines )
+
 #add_executable( test_greville_points test_greville_points.F90 )
 #target_link_libraries( test_greville_points sll_splines )
-#
-#add_executable( test_quasi_cartesian test_quasi_cartesian.F90 )
-#target_link_libraries( test_quasi_cartesian sll_splines )
 
 #-------------------------------------------------------------------------------
 
