@@ -10,10 +10,10 @@
 /
 
 &time_integration
-  method            = "explicit"
+  method = "implicit"
   evolve_background = .true.
-  dt                = 0.05
-  iter              = 1400
+  dt   = 0.1
+  iter = 100
 /
 
 &characteristics
@@ -23,20 +23,18 @@
 /
 
 &initial_condition
-  test_case = "vortex_in_cell"
+  test_case = "vortex_merger"
 /
 
 &diagnostics
-  diag_freq = 10
+  diag_freq = 1
   nx1       = 512
   nx2       = 512
 /
 
 &point_charges
-  nc = 1
+  nc = 0
 /
 
 &point_charges_specs
-  intensity(1)  = 0.0025
-  location(:,1) = 0.4, 0.0
 /
