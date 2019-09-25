@@ -27,13 +27,13 @@ program test_jacobian_2d_pseudo_cartesian
 
   use sll_m_spline_interpolator_2d, only: sll_t_spline_interpolator_2d
 
-  use sll_m_polar_mapping_analytical, only: sll_c_polar_mapping_analytical
+  use sll_m_singular_mapping_analytic, only: sll_c_singular_mapping_analytic
 
-  use sll_m_polar_mapping_analytical_target, only: sll_t_polar_mapping_analytical_target
+  use sll_m_singular_mapping_analytic_target, only: sll_t_singular_mapping_analytic_target
 
-  use sll_m_polar_mapping_analytical_czarny, only: sll_t_polar_mapping_analytical_czarny
+  use sll_m_singular_mapping_analytic_czarny, only: sll_t_singular_mapping_analytic_czarny
 
-  use sll_m_polar_mapping_iga, only: sll_t_polar_mapping_iga
+  use sll_m_singular_mapping_discrete, only: sll_t_singular_mapping_discrete
 
   use sll_m_jacobian_2d_pseudo_cartesian, only: sll_t_jacobian_2d_pseudo_cartesian
 
@@ -72,8 +72,8 @@ program test_jacobian_2d_pseudo_cartesian
   real(wp), parameter :: ellip = 1.4_wp
 
   ! Analytical and discrete mappings
-  class(sll_c_polar_mapping_analytical), allocatable :: mapping_analytical
-  type(sll_t_polar_mapping_iga) :: mapping_discrete
+  class(sll_c_singular_mapping_analytic), allocatable :: mapping_analytic
+  type(sll_t_singular_mapping_discrete) :: mapping_discrete
 
   ! Quasi-Cartesian Jacobian
   type(sll_t_jacobian_2d_pseudo_cartesian) :: jacobian
@@ -137,30 +137,30 @@ program test_jacobian_2d_pseudo_cartesian
   npts1 = size( e1_node )
   npts2 = size( e2_node )
 
-  allocate( sll_t_polar_mapping_analytical_target :: mapping_analytical )
+  allocate( sll_t_singular_mapping_analytic_target :: mapping_analytic )
 
   ! Initialize analytical mapping
-  select type ( mapping_analytical )
-    type is ( sll_t_polar_mapping_analytical_target )
-      call mapping_analytical % init( x0=[0.0_wp,0.0_wp], d0=delta, e0=kappa )
-    type is ( sll_t_polar_mapping_analytical_czarny )
-      call mapping_analytical % init( x0=[0.0_wp,0.0_wp], b =ellip, e =epsil )
+  select type ( mapping_analytic )
+    type is ( sll_t_singular_mapping_analytic_target )
+      call mapping_analytic % init( x0=[0.0_wp,0.0_wp], d0=delta, e0=kappa )
+    type is ( sll_t_singular_mapping_analytic_czarny )
+      call mapping_analytic % init( x0=[0.0_wp,0.0_wp], b =ellip, e =epsil )
   end select
 
   ! Initialize discrete mapping
-  call mapping_discrete % init( spline_basis_eta1, spline_basis_eta2, mapping_analytical )
+  call mapping_discrete % init( spline_basis_eta1, spline_basis_eta2, mapping_analytic )
 
   ! Initialize composite inverse Jacobian
   call jacobian % init( mapping_discrete )
 
   ! Compute analytical composite inverse Jacobian
-  select type ( mapping_analytical )
-    type is ( sll_t_polar_mapping_analytical_target )
+  select type ( mapping_analytic )
+    type is ( sll_t_singular_mapping_analytic_target )
       jmat_analytical(1,1) = 1.0_wp / ( 1.0_wp - kappa )
       jmat_analytical(1,2) = 0.0_wp
       jmat_analytical(2,1) = 0.0_wp
       jmat_analytical(2,2) = 1.0_wp / ( 1.0_wp + kappa )
-    type is ( sll_t_polar_mapping_analytical_czarny )
+    type is ( sll_t_singular_mapping_analytic_czarny )
       jmat_analytical(1,1) = - sqrt( 1.0_wp + epsil**2 )
       jmat_analytical(1,2) = 0.0_wp
       jmat_analytical(2,1) = 0.0_wp

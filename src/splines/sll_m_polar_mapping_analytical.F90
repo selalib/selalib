@@ -1,4 +1,4 @@
-module sll_m_polar_mapping_analytical
+module sll_m_singular_mapping_analytic
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_assert.h"
 
@@ -6,7 +6,7 @@ module sll_m_polar_mapping_analytical
 
   use sll_m_constants, only: sll_p_twopi
 
-  use sll_m_polar_mapping_base, only: sll_c_polar_mapping
+  use sll_m_singular_mapping_base, only: sll_c_singular_mapping
 
   use sll_m_hdf5_io_serial, only: &
     sll_t_hdf5_ser_handle     , &
@@ -16,7 +16,7 @@ module sll_m_polar_mapping_analytical
 
   implicit none
 
-  public :: sll_c_polar_mapping_analytical
+  public :: sll_c_singular_mapping_analytic
 
   private
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -24,9 +24,9 @@ module sll_m_polar_mapping_analytical
   !> Working precision
   integer, parameter :: wp = f64
 
-  !> Abstract type, analytical polar mapping
+  !> Abstract type, analytical singular mapping
   !  (may contain common components/methods)
-  type, extends(sll_c_polar_mapping), abstract :: sll_c_polar_mapping_analytical
+  type, extends(sll_c_singular_mapping), abstract :: sll_c_singular_mapping_analytic
 
   contains
 
@@ -34,17 +34,17 @@ module sll_m_polar_mapping_analytical
     procedure(i_fun_jmat_comp), deferred :: jmat_comp
 
     ! Non-deferred procedures
-    procedure :: store_data => s_polar_mapping_analytical__store_data
+    procedure :: store_data => s_singular_mapping_analytic__store_data
 
-  end type sll_c_polar_mapping_analytical
+  end type sll_c_singular_mapping_analytic
 
   ! Interfaces for deferred procedures
   abstract interface
 
     SLL_PURE function i_fun_jmat_comp( self, eta ) result( jmat_comp )
-      import sll_c_polar_mapping_analytical, wp
-      class(sll_c_polar_mapping_analytical), intent(in) :: self
-      real(wp)                             , intent(in) :: eta(2)
+      import sll_c_singular_mapping_analytic, wp
+      class(sll_c_singular_mapping_analytic), intent(in) :: self
+      real(wp)                              , intent(in) :: eta(2)
       real(wp) :: jmat_comp(2,2)
     end function i_fun_jmat_comp
 
@@ -54,11 +54,11 @@ module sll_m_polar_mapping_analytical
 contains
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
-  subroutine s_polar_mapping_analytical__store_data( self, n1, n2, file_id )
-    class(sll_c_polar_mapping_analytical), intent(in) :: self
-    integer                              , intent(in) :: n1
-    integer                              , intent(in) :: n2
-    type(sll_t_hdf5_ser_handle)          , intent(in) :: file_id
+  subroutine s_singular_mapping_analytic__store_data( self, n1, n2, file_id )
+    class(sll_c_singular_mapping_analytic), intent(in) :: self
+    integer                               , intent(in) :: n1
+    integer                               , intent(in) :: n2
+    type(sll_t_hdf5_ser_handle)           , intent(in) :: file_id
 
     integer  :: i1, i2
     real(wp) :: eta(2), x(2)
@@ -94,6 +94,6 @@ contains
     ! Store Jacobian determinant
     call sll_o_hdf5_ser_write_array( file_id, jacobian, "/jacobian", error )
 
-  end subroutine s_polar_mapping_analytical__store_data
+  end subroutine s_singular_mapping_analytic__store_data
 
-end module sll_m_polar_mapping_analytical
+end module sll_m_singular_mapping_analytic

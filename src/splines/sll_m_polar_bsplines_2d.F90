@@ -8,7 +8,7 @@ module sll_m_polar_bsplines_2d
 
   use sll_m_spline_2d, only: sll_t_spline_2d
 
-  use sll_m_polar_mapping_iga, only: sll_t_polar_mapping_iga
+  use sll_m_singular_mapping_discrete, only: sll_t_singular_mapping_discrete
 
   implicit none
 
@@ -24,7 +24,7 @@ module sll_m_polar_bsplines_2d
   type :: sll_t_polar_bsplines_2d
 
     ! Pointer to discrete IGA mapping (private member)
-    type(sll_t_polar_mapping_iga), pointer, private :: mapping => null()
+    type(sll_t_singular_mapping_discrete), pointer, private :: mapping => null()
 
     ! Pole of the singularity
     real(wp) :: pole(2)
@@ -57,10 +57,10 @@ contains
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
   subroutine s_polar_bsplines_2d__init( self, spline_basis_eta1, spline_basis_eta2, mapping )
-    class(sll_t_polar_bsplines_2d)       , intent(inout) :: self
-    class(sll_c_bsplines)                , intent(in   ) :: spline_basis_eta1
-    class(sll_c_bsplines)                , intent(in   ) :: spline_basis_eta2
-    type(sll_t_polar_mapping_iga), target, intent(in   ) :: mapping ! mapping must be discrete
+    class(sll_t_polar_bsplines_2d)               , intent(inout) :: self
+    class(sll_c_bsplines)                        , intent(in   ) :: spline_basis_eta1
+    class(sll_c_bsplines)                        , intent(in   ) :: spline_basis_eta2
+    type(sll_t_singular_mapping_discrete), target, intent(in   ) :: mapping ! mapping must be discrete
 
     real(wp) :: tau1, tau2, tau3
     integer  :: nb1, nb2

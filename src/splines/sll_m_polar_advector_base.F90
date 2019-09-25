@@ -9,7 +9,7 @@ module sll_m_polar_advector_base
 
   use sll_m_spline_2d, only: sll_t_spline_2d
 
-  use sll_m_polar_mapping_base, only: sll_c_polar_mapping
+  use sll_m_singular_mapping_base, only: sll_c_singular_mapping
 
   use sll_m_jacobian_2d_pseudo_cartesian, only: sll_t_jacobian_2d_pseudo_cartesian
 
@@ -65,12 +65,12 @@ contains
 
   ! Advector (Runge-Kutta 3rd-order) using Cartesian coordinates
   function f_polar_advector__advect_cart( self, eta, h, mapping, spline_2d_a1, spline_2d_a2 ) result( eta_new )
-    class(sll_c_polar_advector), intent(in) :: self
-    real(wp)                   , intent(in) :: eta(2)
-    real(wp)                   , intent(in) :: h
-    class(sll_c_polar_mapping) , intent(in) :: mapping
-    type(sll_t_spline_2d)      , intent(in) :: spline_2d_a1
-    type(sll_t_spline_2d)      , intent(in) :: spline_2d_a2
+    class(sll_c_polar_advector)  , intent(in) :: self
+    real(wp)                     , intent(in) :: eta(2)
+    real(wp)                     , intent(in) :: h
+    class(sll_c_singular_mapping), intent(in) :: mapping
+    type(sll_t_spline_2d)        , intent(in) :: spline_2d_a1
+    type(sll_t_spline_2d)        , intent(in) :: spline_2d_a2
     real(wp) :: eta_new(2)
 
     integer , parameter :: maxiter = 100

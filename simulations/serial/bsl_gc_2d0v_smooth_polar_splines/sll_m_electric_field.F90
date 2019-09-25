@@ -6,7 +6,7 @@ module sll_m_electric_field
 
   use sll_m_constants, only: sll_p_pi
 
-  use sll_m_polar_mapping_iga, only: sll_t_polar_mapping_iga
+  use sll_m_singular_mapping_discrete, only: sll_t_singular_mapping_discrete
 
   use sll_m_spline_2d, only: sll_t_spline_2d
 
@@ -25,8 +25,8 @@ module sll_m_electric_field
     ! Can be overwritten at initialization
     real(wp) :: eps = 1.0e-12_wp
 
-    type(sll_t_polar_mapping_iga), pointer :: mapping_discrete => null()
-    type(sll_t_spline_2d)        , pointer :: spline_2d_phi    => null()
+    type(sll_t_singular_mapping_discrete), pointer :: mapping_discrete => null()
+    type(sll_t_spline_2d)                , pointer :: spline_2d_phi    => null()
 
   contains
 
@@ -41,10 +41,10 @@ contains
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
   subroutine s_electric_field__init( self, mapping_discrete, spline_2d_phi, eps )
-    class(sll_t_electric_field)           , intent(inout) :: self
-    type (sll_t_polar_mapping_iga), target, intent(in   ) :: mapping_discrete
-    type (sll_t_spline_2d)        , target, intent(in   ) :: spline_2d_phi
-    real(wp), optional                    , intent(in   ) :: eps
+    class(sll_t_electric_field)                   , intent(inout) :: self
+    type (sll_t_singular_mapping_discrete), target, intent(in   ) :: mapping_discrete
+    type (sll_t_spline_2d)                , target, intent(in   ) :: spline_2d_phi
+    real(wp), optional                            , intent(in   ) :: eps
 
     self % mapping_discrete => mapping_discrete
 
