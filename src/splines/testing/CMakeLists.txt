@@ -68,11 +68,11 @@ add_executable( test_polar_spline_2d
 target_link_libraries( test_polar_spline_2d sll_splines )
 
 # Test singular disk-like mappings
-add_executable( test_polar_mapping test_polar_mapping.F90 $<TARGET_OBJECTS:analytical_profiles> )
-target_link_libraries( test_polar_mapping sll_splines )
+add_executable( test_singular_mapping test_singular_mapping.F90 $<TARGET_OBJECTS:analytical_profiles> )
+target_link_libraries( test_singular_mapping sll_splines )
 
 # Test advection on singular disk-like mappings using pseudo-Cartesian coordinates
-set( TEST_NAME test_polar_mapping_advection )
+set( TEST_NAME test_singular_mapping_advection )
 file( GLOB INPUT_FILE ${TEST_NAME}.nml )
 file( COPY ${INPUT_FILE} DESTINATION ${CMAKE_CURRENT_BINARY_DIR} )
 add_executable( ${TEST_NAME} ${TEST_NAME}.F90 )

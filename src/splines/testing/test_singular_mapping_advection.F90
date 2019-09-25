@@ -114,7 +114,7 @@ program test_singular_mapping_advection
     iter
 
   ! Read input file
-  input_file = trim( "test_polar_mapping_advection.nml" )
+  input_file = trim( "test_singular_mapping_advection.nml" )
   open( file=input_file, status='old', action='read', newunit=file_unit )
   read( file_unit, splines  )        ; rewind( file_unit )
   read( file_unit, geometry )        ; rewind( file_unit )
