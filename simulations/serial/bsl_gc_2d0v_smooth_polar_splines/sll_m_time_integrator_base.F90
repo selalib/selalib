@@ -10,8 +10,6 @@ module sll_m_time_integrator_base
 
   use sll_m_spline_interpolator_2d, only: sll_t_spline_interpolator_2d
 
-  use sll_m_polar_mapping_iga, only: sll_t_polar_mapping_iga
-
   use sll_m_jacobian_2d_pseudo_cartesian, only: sll_t_jacobian_2d_pseudo_cartesian
 
   use sll_m_poisson_2d_fem_sps_stencil_new, only: sll_t_poisson_2d_fem_sps_stencil_new

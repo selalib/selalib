@@ -8,7 +8,7 @@ module sll_m_simulation_state
 
   use sll_m_spline_2d, only: sll_t_spline_2d
 
-  use sll_m_polar_mapping_iga, only: sll_t_polar_mapping_iga
+  use sll_m_singular_mapping_discrete, only: sll_t_singular_mapping_discrete
 
   use sll_m_point_charge, only: sll_t_point_charge
 
@@ -31,7 +31,7 @@ module sll_m_simulation_state
     class(sll_c_bsplines), pointer :: bsplines_eta1
     class(sll_c_bsplines), pointer :: bsplines_eta2
 
-    type(sll_t_polar_mapping_iga), pointer :: mapping_discrete
+    type(sll_t_singular_mapping_discrete), pointer :: mapping_discrete
 
     type(sll_t_spline_2d)      :: spline_2d_rho
     type(sll_t_spline_2d)      :: spline_2d_phi
@@ -66,16 +66,16 @@ contains
     intensity       , &
     location        , &
     evolve_background )
-    class(sll_t_simulation_state)         , intent(inout) :: self
-    class(sll_c_bsplines)        , pointer, intent(in   ) :: bsplines_eta1
-    class(sll_c_bsplines)        , pointer, intent(in   ) :: bsplines_eta2
-    type(sll_t_polar_mapping_iga), pointer, intent(in   ) :: mapping_discrete
-    integer                               , intent(in   ) :: ntau1
-    integer                               , intent(in   ) :: ntau2
-    integer                               , intent(in   ) :: nc
-    real(wp)                              , intent(in   ) :: intensity(:)
-    real(wp)                              , intent(in   ) :: location(:,:)
-    logical                               , intent(in   ) :: evolve_background
+    class(sll_t_simulation_state)                 , intent(inout) :: self
+    class(sll_c_bsplines)                , pointer, intent(in   ) :: bsplines_eta1
+    class(sll_c_bsplines)                , pointer, intent(in   ) :: bsplines_eta2
+    type(sll_t_singular_mapping_discrete), pointer, intent(in   ) :: mapping_discrete
+    integer                                       , intent(in   ) :: ntau1
+    integer                                       , intent(in   ) :: ntau2
+    integer                                       , intent(in   ) :: nc
+    real(wp)                                      , intent(in   ) :: intensity(:)
+    real(wp)                                      , intent(in   ) :: location(:,:)
+    logical                                       , intent(in   ) :: evolve_background
 
     integer :: ic
 

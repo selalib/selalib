@@ -1,4 +1,4 @@
-module sll_m_polar_mapping_iga
+module sll_m_singular_mapping_discrete
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_assert.h"
 
@@ -6,9 +6,9 @@ module sll_m_polar_mapping_iga
 
   use sll_m_constants, only: sll_p_twopi
 
-  use sll_m_polar_mapping_base, only: sll_c_polar_mapping
+  use sll_m_singular_mapping_base, only: sll_c_singular_mapping
 
-  use sll_m_polar_mapping_analytical, only: sll_c_polar_mapping_analytical
+  use sll_m_singular_mapping_analytic, only: sll_c_singular_mapping_analytic
 
   use sll_m_boundary_condition_descriptors, only: &
     sll_p_greville, &
@@ -26,7 +26,7 @@ module sll_m_polar_mapping_iga
     sll_s_hdf5_ser_file_close , &
     sll_o_hdf5_ser_write_array
 
-  public :: sll_t_polar_mapping_iga
+  public :: sll_t_singular_mapping_discrete
 
   private
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -34,8 +34,8 @@ module sll_m_polar_mapping_iga
   !> Working precision
   integer, parameter :: wp = f64
 
-  !> Concrete type, iga polar mapping
-  type, extends(sll_c_polar_mapping) :: sll_t_polar_mapping_iga
+  !> Concrete type, discrete singular mapping
+  type, extends(sll_c_singular_mapping) :: sll_t_singular_mapping_discrete
 
     ! Number of basis functions along eta1 and eta2
     integer :: nbasis_eta1
@@ -61,24 +61,24 @@ module sll_m_polar_mapping_iga
 
   contains
 
-    procedure :: init       => s_polar_mapping_iga__init
-    procedure :: pole       => f_polar_mapping_iga__pole
-    procedure :: eval       => f_polar_mapping_iga__eval
-    procedure :: jmat       => f_polar_mapping_iga__jmat ! Jacobian matrix
-    procedure :: store_data => s_polar_mapping_iga__store_data
-    procedure :: free       => s_polar_mapping_iga__free
+    procedure :: init       => s_singular_mapping_discrete__init
+    procedure :: pole       => f_singular_mapping_discrete__pole
+    procedure :: eval       => f_singular_mapping_discrete__eval
+    procedure :: jmat       => f_singular_mapping_discrete__jmat ! Jacobian matrix
+    procedure :: store_data => s_singular_mapping_discrete__store_data
+    procedure :: free       => s_singular_mapping_discrete__free
 
-  end type sll_t_polar_mapping_iga
+  end type sll_t_singular_mapping_discrete
 
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 contains
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
-  subroutine s_polar_mapping_iga__init( self, spline_basis_eta1, spline_basis_eta2, mapping_analytical) 
-    class(sll_t_polar_mapping_iga)       , intent(inout) :: self
-    class(sll_c_bsplines)                , intent(in   ) :: spline_basis_eta1
-    class(sll_c_bsplines)                , intent(in   ) :: spline_basis_eta2
-    class(sll_c_polar_mapping_analytical), intent(in   ) :: mapping_analytical
+  subroutine s_singular_mapping_discrete__init( self, spline_basis_eta1, spline_basis_eta2, mapping_analytic)
+    class(sll_t_singular_mapping_discrete), intent(inout) :: self
+    class(sll_c_bsplines)                 , intent(in   ) :: spline_basis_eta1
+    class(sll_c_bsplines)                 , intent(in   ) :: spline_basis_eta2
+    class(sll_c_singular_mapping_analytic), intent(in   ) :: mapping_analytic
 
     integer  :: i1, i2
     real(wp) :: eta(2), x(2)
@@ -123,7 +123,7 @@ contains
         do i1 = 1, ntau1
           eta(1) = self % tau_eta1(i1)
           eta(2) = self % tau_eta2(i2)
-          x  (:) = mapping_analytical % eval( eta )
+          x  (:) = mapping_analytic % eval( eta )
           self % gtau_x1(i1,i2) = x(1)
           self % gtau_x2(i1,i2) = x(2)
         end do
@@ -141,33 +141,33 @@ contains
       spline = self % spline_2d_x2, &
       gtau   = self % gtau_x2 )
 
-  end subroutine s_polar_mapping_iga__init
+  end subroutine s_singular_mapping_discrete__init
 
   !-----------------------------------------------------------------------------
-  SLL_PURE function f_polar_mapping_iga__pole( self ) result( pole )
-    class(sll_t_polar_mapping_iga), intent(in) :: self
+  SLL_PURE function f_singular_mapping_discrete__pole( self ) result( pole )
+    class(sll_t_singular_mapping_discrete), intent(in) :: self
     real(wp) :: pole(2)
 
     pole(1) = self % spline_2d_x1 % bcoef(1,1)
     pole(2) = self % spline_2d_x2 % bcoef(1,1)
 
-  end function f_polar_mapping_iga__pole
+  end function f_singular_mapping_discrete__pole
 
   !-----------------------------------------------------------------------------
-  SLL_PURE function f_polar_mapping_iga__eval( self, eta ) result( x )
-    class(sll_t_polar_mapping_iga), intent(in) :: self
-    real(wp)                      , intent(in) :: eta(2)
+  SLL_PURE function f_singular_mapping_discrete__eval( self, eta ) result( x )
+    class(sll_t_singular_mapping_discrete), intent(in) :: self
+    real(wp)                              , intent(in) :: eta(2)
     real(wp) :: x(2)
 
     x(1) = self % spline_2d_x1 % eval( eta(1), eta(2) )
     x(2) = self % spline_2d_x2 % eval( eta(1), eta(2) )
 
-  end function f_polar_mapping_iga__eval
+  end function f_singular_mapping_discrete__eval
 
   !-----------------------------------------------------------------------------
-  SLL_PURE function f_polar_mapping_iga__jmat( self, eta ) result( jmat )
-    class(sll_t_polar_mapping_iga), intent(in) :: self
-    real(wp)                      , intent(in) :: eta(2)
+  SLL_PURE function f_singular_mapping_discrete__jmat( self, eta ) result( jmat )
+    class(sll_t_singular_mapping_discrete), intent(in) :: self
+    real(wp)                              , intent(in) :: eta(2)
     real(wp) :: jmat(2,2)
 
     ! J_11 = d(x1)/d(eta1)
@@ -179,14 +179,14 @@ contains
     jmat(2,1) = self % spline_2d_x2 % eval_deriv_x1( eta(1), eta(2) )
     jmat(2,2) = self % spline_2d_x2 % eval_deriv_x2( eta(1), eta(2) )
 
-  end function f_polar_mapping_iga__jmat
+  end function f_singular_mapping_discrete__jmat
 
   !-----------------------------------------------------------------------------
-  subroutine s_polar_mapping_iga__store_data( self, n1, n2, file_id )
-    class(sll_t_polar_mapping_iga), intent(in) :: self
-    integer                       , intent(in) :: n1
-    integer                       , intent(in) :: n2
-    type(sll_t_hdf5_ser_handle)   , intent(in) :: file_id
+  subroutine s_singular_mapping_discrete__store_data( self, n1, n2, file_id )
+    class(sll_t_singular_mapping_discrete), intent(in) :: self
+    integer                               , intent(in) :: n1
+    integer                               , intent(in) :: n2
+    type(sll_t_hdf5_ser_handle)           , intent(in) :: file_id
 
     integer  :: i1, i2
     real(wp) :: eta(2), x(2)
@@ -228,11 +228,11 @@ contains
       call sll_o_hdf5_ser_write_array( file_id, self % spline_2d_x2 % bcoef( 1:nb1, 1:nb2 ), "/c_x2", error )
     end associate
 
-  end subroutine s_polar_mapping_iga__store_data
+  end subroutine s_singular_mapping_discrete__store_data
 
   !-----------------------------------------------------------------------------
-  subroutine s_polar_mapping_iga__free( self )
-    class(sll_t_polar_mapping_iga), intent(inout) :: self
+  subroutine s_singular_mapping_discrete__free( self )
+    class(sll_t_singular_mapping_discrete), intent(inout) :: self
 
     deallocate( self % tau_eta1 )
     deallocate( self % tau_eta2 )
@@ -244,6 +244,6 @@ contains
 
     call self % spline_interp_eta12 % free()
 
-  end subroutine s_polar_mapping_iga__free
+  end subroutine s_singular_mapping_discrete__free
 
-end module sll_m_polar_mapping_iga
+end module sll_m_singular_mapping_discrete

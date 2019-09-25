@@ -22,13 +22,13 @@ program test_poisson_2d_fem_sps
 
   use sll_m_spline_interpolator_2d, only: sll_t_spline_interpolator_2d
 
-  use sll_m_polar_mapping_analytical, only: sll_c_polar_mapping_analytical
+  use sll_m_singular_mapping_analytic, only: sll_c_singular_mapping_analytic
 
-  use sll_m_polar_mapping_analytical_target, only: sll_t_polar_mapping_analytical_target
+  use sll_m_singular_mapping_analytic_target, only: sll_t_singular_mapping_analytic_target
 
-  use sll_m_polar_mapping_analytical_czarny, only: sll_t_polar_mapping_analytical_czarny
+  use sll_m_singular_mapping_analytic_czarny, only: sll_t_singular_mapping_analytic_czarny
 
-  use sll_m_polar_mapping_iga, only: sll_t_polar_mapping_iga
+  use sll_m_singular_mapping_discrete, only: sll_t_singular_mapping_discrete
 
   use sll_m_poisson_2d_fem_sps_dense, only: sll_t_poisson_2d_fem_sps_dense
 
@@ -62,8 +62,8 @@ program test_poisson_2d_fem_sps
   class(sll_c_bsplines), allocatable :: bsplines_eta2
 
   ! Analytical and discrete mappings
-  class(sll_c_polar_mapping_analytical), allocatable :: mapping_analytical
-  type(sll_t_polar_mapping_iga) :: mapping_iga
+  class(sll_c_singular_mapping_analytic), allocatable :: mapping_analytic
+  type(sll_t_singular_mapping_discrete) :: mapping_discrete
 
   ! 2D splines representing right hand side and solution
   type(sll_t_spline_2d) :: spline_2d_rhs
@@ -154,18 +154,18 @@ program test_poisson_2d_fem_sps
   ! Initialize mapping and polar B-splines
   !-----------------------------------------------------------------------------
 
-  allocate( sll_t_polar_mapping_analytical_czarny :: mapping_analytical )
+  allocate( sll_t_singular_mapping_analytic_czarny :: mapping_analytic )
 
   ! Analytical mapping
-  select type ( mapping_analytical )
-    type is ( sll_t_polar_mapping_analytical_target )
-      call mapping_analytical % init( x0=[0.0_wp,0.0_wp], d0=0.2_wp, e0=0.3_wp )
-    type is ( sll_t_polar_mapping_analytical_czarny )
-      call mapping_analytical % init( x0=[0.0_wp,0.0_wp], b =1.4_wp, e =0.3_wp )
+  select type ( mapping_analytic )
+    type is ( sll_t_singular_mapping_analytic_target )
+      call mapping_analytic % init( x0=[0.0_wp,0.0_wp], d0=0.2_wp, e0=0.3_wp )
+    type is ( sll_t_singular_mapping_analytic_czarny )
+      call mapping_analytic % init( x0=[0.0_wp,0.0_wp], b =1.4_wp, e =0.3_wp )
   end select
 
   ! Discrete mapping
-  call mapping_iga % init( bsplines_eta1, bsplines_eta2, mapping_analytical )
+  call mapping_discrete % init( bsplines_eta1, bsplines_eta2, mapping_analytic )
 
   call sll_s_set_time_mark( t1 )
 
@@ -199,7 +199,7 @@ program test_poisson_2d_fem_sps
     do i2 = 1, nt2
       do i1 = 1, nt1
         eta = (/ tau_eta1(i1), tau_eta2(i2) /)
-        x   = mapping_iga % eval( eta )
+        x   = mapping_discrete % eval( eta )
         gtau(i1,i2) = rhs( x )
       end do
     end do
@@ -224,7 +224,7 @@ program test_poisson_2d_fem_sps
   call sll_s_set_time_mark( t0 )
 
   ! Initialize Poisson solver
-  call solver % init( bsplines_eta1, bsplines_eta2, breaks_eta1, breaks_eta2, mapping_iga )
+  call solver % init( bsplines_eta1, bsplines_eta2, breaks_eta1, breaks_eta2, mapping_discrete )
 
   call sll_s_set_time_mark( t1 )
 
@@ -296,12 +296,12 @@ program test_poisson_2d_fem_sps
   deallocate( breaks_eta1 )
   deallocate( breaks_eta2 )
 
-  deallocate( mapping_analytical )
+  deallocate( mapping_analytic )
 
   call bsplines_eta1 % free()
   call bsplines_eta2 % free()
 
-  call mapping_iga % free()
+  call mapping_discrete % free()
 
   call spline_2d_rhs % free()
   call spline_2d_phi % free()
