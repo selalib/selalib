@@ -8,7 +8,7 @@ module sll_m_time_integrator_implicit
 
   use sll_m_spline_interpolator_2d, only: sll_t_spline_interpolator_2d
 
-  use sll_m_polar_mapping_iga, only: sll_t_polar_mapping_iga
+  use sll_m_singular_mapping_discrete, only: sll_t_singular_mapping_discrete
 
   use sll_m_point_charge, only: sll_t_point_charge
 
@@ -65,7 +65,7 @@ contains
     real(wp)                                          , intent(in   ) :: dt
     real(wp)                                  , target, intent(in   ) :: tau_eta1(:)
     real(wp)                                  , target, intent(in   ) :: tau_eta2(:)
-    type(sll_t_polar_mapping_iga)                     , intent(in   ) :: mapping_discrete
+    type(sll_t_singular_mapping_discrete)             , intent(in   ) :: mapping_discrete
     type(sll_t_spline_interpolator_2d)        , target, intent(in   ) :: spline_interp_2d
     type(sll_t_simulation_state)              , target, intent(in   ) :: sim_state
     type(sll_t_poisson_2d_fem_sps_stencil_new), target, intent(in   ) :: poisson_solver

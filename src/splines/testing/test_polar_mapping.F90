@@ -1,4 +1,4 @@
-program test_polar_mapping
+program test_singular_mapping
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
   use sll_m_working_precision, only: f64
@@ -7,11 +7,11 @@ program test_polar_mapping
 
   use sll_m_utilities, only: sll_s_new_array_linspace
 
-  use sll_m_polar_mapping_analytical_target, only: sll_t_polar_mapping_analytical_target
+  use sll_m_singular_mapping_analytic_target, only: sll_t_singular_mapping_analytic_target
 
-  use sll_m_polar_mapping_analytical_czarny, only: sll_t_polar_mapping_analytical_czarny
+  use sll_m_singular_mapping_analytic_czarny, only: sll_t_singular_mapping_analytic_czarny
 
-  use sll_m_polar_mapping_iga, only: sll_t_polar_mapping_iga
+  use sll_m_singular_mapping_discrete, only: sll_t_singular_mapping_discrete
 
   use sll_m_boundary_condition_descriptors, only: &
     sll_p_greville, &
@@ -60,10 +60,10 @@ program test_polar_mapping
   class(sll_c_bsplines), allocatable :: spline_basis_eta2
 
   ! Note: Circle corresponds to Target or Czarny default mapping
-  type(sll_t_polar_mapping_analytical_target) :: mapping_analytical_circle
-  type(sll_t_polar_mapping_analytical_target) :: mapping_analytical_target
-  type(sll_t_polar_mapping_analytical_czarny) :: mapping_analytical_czarny
-  type(sll_t_polar_mapping_iga) :: mapping_iga
+  type(sll_t_singular_mapping_analytic_target) :: mapping_analytic_circle
+  type(sll_t_singular_mapping_analytic_target) :: mapping_analytic_target
+  type(sll_t_singular_mapping_analytic_czarny) :: mapping_analytic_czarny
+  type(sll_t_singular_mapping_discrete) :: mapping_discrete
 
   ! New polar B-splines
   type(sll_t_polar_bsplines_2d) :: polar_spline_basis
@@ -164,35 +164,35 @@ program test_polar_mapping
   !-----------------------------------------------------------------------------
 
   ! Initialize analytical mapping
-  call mapping_analytical_circle % init()
+  call mapping_analytic_circle % init()
 
   ! Create HDF5 file
   call sll_s_hdf5_ser_file_create( 'mapping_analytic_circle.h5', file_id, h5_error )
 
   ! Store data in HDF5 file
-  call mapping_analytical_circle % store_data( npts1, npts2, file_id )
+  call mapping_analytic_circle % store_data( npts1, npts2, file_id )
 
   ! Close HDF5 file
   call sll_s_hdf5_ser_file_close ( file_id, h5_error )
 
   ! Initialize discrete IGA mapping
-  call mapping_iga % init( spline_basis_eta1, spline_basis_eta2, mapping_analytical_circle )
+  call mapping_discrete % init( spline_basis_eta1, spline_basis_eta2, mapping_analytic_circle )
 
   ! Create HDF5 file
   call sll_s_hdf5_ser_file_create( 'mapping_discrete_circle.h5', file_id, h5_error )
 
   ! Store data in HDF5 file
-  call mapping_iga % store_data( npts1, npts2, file_id)
+  call mapping_discrete % store_data( npts1, npts2, file_id)
 
   ! Close HDF5 file
   call sll_s_hdf5_ser_file_close ( file_id, h5_error )
 
   ! Initialize polar spline basis
-  call polar_spline_basis % init( spline_basis_eta1, spline_basis_eta2, mapping_iga )
+  call polar_spline_basis % init( spline_basis_eta1, spline_basis_eta2, mapping_discrete )
 
   call polar_spline_basis % free()
 
-  call mapping_iga % free()
+  call mapping_discrete % free()
 
   !-----------------------------------------------------------------------------
   ! Target
@@ -203,35 +203,35 @@ program test_polar_mapping
   e0 = 0.3_wp
 
   ! Initialize analytical mapping
-  call mapping_analytical_target % init( x0=x0, d0=d0, e0=e0 )
+  call mapping_analytic_target % init( x0=x0, d0=d0, e0=e0 )
 
   ! Create HDF5 file
   call sll_s_hdf5_ser_file_create( 'mapping_analytic_target.h5', file_id, h5_error )
 
   ! Store data in HDF5 file
-  call mapping_analytical_target % store_data( npts1, npts2, file_id )
+  call mapping_analytic_target % store_data( npts1, npts2, file_id )
 
   ! Close HDF5 file
   call sll_s_hdf5_ser_file_close ( file_id, h5_error )
 
   ! Initialize discrete IGA mapping
-  call mapping_iga % init( spline_basis_eta1, spline_basis_eta2, mapping_analytical_target )
+  call mapping_discrete % init( spline_basis_eta1, spline_basis_eta2, mapping_analytic_target )
 
   ! Create HDF5 file
   call sll_s_hdf5_ser_file_create( 'mapping_discrete_target.h5', file_id, h5_error )
 
   ! Store data in HDF5 file
-  call mapping_iga % store_data( npts1, npts2, file_id )
+  call mapping_discrete % store_data( npts1, npts2, file_id )
 
   ! Close HDF5 file
   call sll_s_hdf5_ser_file_close ( file_id, h5_error )
 
   ! Initialize polar spline basis
-  call polar_spline_basis % init( spline_basis_eta1, spline_basis_eta2, mapping_iga )
+  call polar_spline_basis % init( spline_basis_eta1, spline_basis_eta2, mapping_discrete )
 
   call polar_spline_basis % free()
 
-  call mapping_iga % free()
+  call mapping_discrete % free()
 
   !-----------------------------------------------------------------------------
   ! Czarny
@@ -242,35 +242,35 @@ program test_polar_mapping
   e  = 0.3_wp
 
   ! Initialize analytical mapping
-  call mapping_analytical_czarny % init( x0=x0, b=b, e=e )
+  call mapping_analytic_czarny % init( x0=x0, b=b, e=e )
 
   ! Create HDF5 file
   call sll_s_hdf5_ser_file_create( 'mapping_analytic_czarny.h5', file_id, h5_error )
 
   ! Store data in HDF5 file
-  call mapping_analytical_czarny % store_data( npts1, npts2, file_id )
+  call mapping_analytic_czarny % store_data( npts1, npts2, file_id )
 
   ! Close HDF5 file
   call sll_s_hdf5_ser_file_close ( file_id, h5_error )
 
   ! Initialize discrete IGA mapping
-  call mapping_iga % init( spline_basis_eta1, spline_basis_eta2, mapping_analytical_czarny )
+  call mapping_discrete % init( spline_basis_eta1, spline_basis_eta2, mapping_analytic_czarny )
 
   ! Create HDF5 file
   call sll_s_hdf5_ser_file_create( 'mapping_discrete_czarny.h5', file_id, h5_error )
 
   ! Store data in HDF5 file
-  call mapping_iga % store_data( npts1, npts2, file_id )
+  call mapping_discrete % store_data( npts1, npts2, file_id )
 
   ! Close HDF5 file
   call sll_s_hdf5_ser_file_close ( file_id, h5_error )
 
   ! Initialize polar spline basis
-  call polar_spline_basis % init( spline_basis_eta1, spline_basis_eta2, mapping_iga )
+  call polar_spline_basis % init( spline_basis_eta1, spline_basis_eta2, mapping_discrete )
 
   call polar_spline_basis % free()
 
-  call mapping_iga % free()
+  call mapping_discrete % free()
 
   !=============================================================================
   ! Test intermediate mapping
@@ -309,10 +309,10 @@ program test_polar_mapping
     do i1 = 1, npts1
       eta(1) = e1_grid(i1,i2)
       eta(2) = e2_grid(i1,i2)
-      x(:) = mapping_analytical_circle % eval( eta )
+      x(:) = mapping_analytic_circle % eval( eta )
       x1_grid(i1,i2) = x(1)
       x2_grid(i1,i2) = x(2)
-      jacobian(i1,i2) = mapping_analytical_circle % jdet( eta )
+      jacobian(i1,i2) = mapping_analytic_circle % jdet( eta )
     end do
   end do
 
@@ -331,10 +331,10 @@ program test_polar_mapping
     do i1 = 1, npts1
       eta(1) = e1_grid(i1,i2)
       eta(2) = e2_grid(i1,i2)
-      x(:) = mapping_analytical_target % eval( eta )
+      x(:) = mapping_analytic_target % eval( eta )
       x1_grid(i1,i2) = x(1)
       x2_grid(i1,i2) = x(2)
-      jacobian(i1,i2) = mapping_analytical_target % jdet( eta )
+      jacobian(i1,i2) = mapping_analytic_target % jdet( eta )
     end do
   end do
 
@@ -353,10 +353,10 @@ program test_polar_mapping
     do i1 = 1, npts1
       eta(1) = e1_grid(i1,i2)
       eta(2) = e2_grid(i1,i2)
-      x(:) = mapping_analytical_czarny % eval( eta )
+      x(:) = mapping_analytic_czarny % eval( eta )
       x1_grid(i1,i2) = x(1)
       x2_grid(i1,i2) = x(2)
-      jacobian(i1,i2) = mapping_analytical_czarny % jdet( eta )
+      jacobian(i1,i2) = mapping_analytic_czarny % jdet( eta )
     end do
   end do
 
@@ -407,14 +407,14 @@ program test_polar_mapping
   ! Circle
   !-----------------------------------------------------------------------------
 
-  call mapping_analytical_circle % init()
+  call mapping_analytic_circle % init()
 
-  call mapping_iga % init( spline_basis_eta1, spline_basis_eta2, mapping_analytical_circle )
+  call mapping_discrete % init( spline_basis_eta1, spline_basis_eta2, mapping_analytic_circle )
 
   ! Evaluate analytical profile at interpolation points
   do i2 = 1, n2
     do i1 = 1, n1
-      x = mapping_iga % eval( [tau1(i1),tau2(i2)] )
+      x = mapping_discrete % eval( [tau1(i1),tau2(i2)] )
       gtau(i1,i2) = profile % eval( x(1), x(2) )
     end do
   end do
@@ -461,7 +461,7 @@ program test_polar_mapping
     do i1 = 1, npts1
       eta(1) = real( i1-1, wp ) / real( npts1-1, wp )
       eta(2) = real( i2-1, wp ) * sll_p_twopi / real( npts2, wp )
-      x  (:) = mapping_iga % eval( eta )
+      x  (:) = mapping_discrete % eval( eta )
       interp_funct(i1,i2) = profile % eval( x(1), x(2) )
       interp_error(i1,i2) = profile % eval( x(1), x(2) ) - spline_2d % eval( eta(1), eta(2) )
       max_error = max( max_error, abs( interp_error(i1,i2) ) )
@@ -478,7 +478,7 @@ program test_polar_mapping
   write(*,'(a,es8.2)') " Maximum error = ", max_error
   write(*,*)
 
-  call mapping_iga % free()
+  call mapping_discrete % free()
 
   !-----------------------------------------------------------------------------
   ! Target
@@ -489,14 +489,14 @@ program test_polar_mapping
   d0 = 0.2_wp
   e0 = 0.3_wp
 
-  call mapping_analytical_target % init( x0=x0, d0=d0, e0=e0 )
+  call mapping_analytic_target % init( x0=x0, d0=d0, e0=e0 )
 
-  call mapping_iga % init( spline_basis_eta1, spline_basis_eta2, mapping_analytical_target )
+  call mapping_discrete % init( spline_basis_eta1, spline_basis_eta2, mapping_analytic_target )
 
   ! Evaluate analytical profile at interpolation points
   do i2 = 1, n2
     do i1 = 1, n1
-      x = mapping_iga % eval( [tau1(i1),tau2(i2)] )
+      x = mapping_discrete % eval( [tau1(i1),tau2(i2)] )
       gtau(i1,i2) = profile % eval( x(1), x(2) )
     end do
   end do
@@ -539,7 +539,7 @@ program test_polar_mapping
     do i1 = 1, npts1
       eta(1) = real( i1-1, wp ) / real( npts1-1, wp )
       eta(2) = real( i2-1, wp ) * sll_p_twopi / real( npts2, wp )
-      x  (:) = mapping_iga % eval( eta )
+      x  (:) = mapping_discrete % eval( eta )
       interp_funct(i1,i2) = profile % eval( x(1), x(2) )
       interp_error(i1,i2) = profile % eval( x(1), x(2) ) - spline_2d % eval( eta(1), eta(2) )
       max_error = max( max_error, abs( interp_error(i1,i2) ) )
@@ -556,7 +556,7 @@ program test_polar_mapping
   write(*,'(a,es8.2)') " Maximum error = ", max_error
   write(*,*)
 
-  call mapping_iga % free()
+  call mapping_discrete % free()
 
   !-----------------------------------------------------------------------------
   ! Czarny
@@ -567,14 +567,14 @@ program test_polar_mapping
   b  = 1.4_wp
   e  = 0.3_wp
 
-  call mapping_analytical_czarny % init( x0=x0, b=b, e=e )
+  call mapping_analytic_czarny % init( x0=x0, b=b, e=e )
 
-  call mapping_iga % init( spline_basis_eta1, spline_basis_eta2, mapping_analytical_czarny )
+  call mapping_discrete % init( spline_basis_eta1, spline_basis_eta2, mapping_analytic_czarny )
 
   ! Evaluate analytical profile at interpolation points
   do i2 = 1, n2
     do i1 = 1, n1
-      x = mapping_iga % eval( [tau1(i1),tau2(i2)] )
+      x = mapping_discrete % eval( [tau1(i1),tau2(i2)] )
       gtau(i1,i2) = profile % eval( x(1), x(2) )
     end do
   end do
@@ -617,7 +617,7 @@ program test_polar_mapping
     do i1 = 1, npts1
       eta(1) = real( i1-1, wp ) / real( npts1-1, wp )
       eta(2) = real( i2-1, wp ) * sll_p_twopi / real( npts2, wp )
-      x  (:) = mapping_iga % eval( eta )
+      x  (:) = mapping_discrete % eval( eta )
       interp_funct(i1,i2) = profile % eval( x(1), x(2) )
       interp_error(i1,i2) = profile % eval( x(1), x(2) ) - spline_2d % eval( eta(1), eta(2) )
       max_error = max( max_error, abs( interp_error(i1,i2) ) )
@@ -634,7 +634,7 @@ program test_polar_mapping
   write(*,'(a,es8.2)') " Maximum error = ", max_error
   write(*,*)
 
-  call mapping_iga % free()
+  call mapping_discrete % free()
 
   !-----------------------------------------------------------------------------
   ! Deallocate and free remaining objects
@@ -647,4 +647,4 @@ program test_polar_mapping
   call spline_2d % free()
   call spline_interpolator_2d % free()
 
-end program test_polar_mapping
+end program test_singular_mapping

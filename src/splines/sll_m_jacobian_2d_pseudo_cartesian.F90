@@ -6,7 +6,7 @@ module sll_m_jacobian_2d_pseudo_cartesian
 
   use sll_m_constants, only: sll_p_pi
 
-  use sll_m_polar_mapping_iga, only: sll_t_polar_mapping_iga
+  use sll_m_singular_mapping_discrete, only: sll_t_singular_mapping_discrete
 
   implicit none
 
@@ -23,7 +23,7 @@ module sll_m_jacobian_2d_pseudo_cartesian
     ! Can be overwritten at initialization
     real(wp) :: eps = 1.0e-12_wp
 
-    type(sll_t_polar_mapping_iga), pointer :: mapping => null()
+    type(sll_t_singular_mapping_discrete), pointer :: mapping => null()
 
     real(wp) :: jmat_pole(2,2)
 
@@ -41,9 +41,9 @@ contains
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
   subroutine s_jacobian_2d_pseudo_cartesian__init( self, mapping, eps )
-    class(sll_t_jacobian_2d_pseudo_cartesian), intent(inout) :: self
-    type (sll_t_polar_mapping_iga), target   , intent(in   ) :: mapping
-    real(wp), optional                       , intent(in   ) :: eps
+    class(sll_t_jacobian_2d_pseudo_cartesian)     , intent(inout) :: self
+    type (sll_t_singular_mapping_discrete), target, intent(in   ) :: mapping
+    real(wp), optional                            , intent(in   ) :: eps
 
     self % mapping => mapping
 

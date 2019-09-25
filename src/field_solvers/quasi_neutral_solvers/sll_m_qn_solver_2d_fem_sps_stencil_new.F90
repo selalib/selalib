@@ -13,7 +13,7 @@ module sll_m_qn_solver_2d_fem_sps_stencil_new
 
   use sll_m_polar_bsplines_2d, only: sll_t_polar_bsplines_2d
 
-  use sll_m_polar_mapping_iga, only: sll_t_polar_mapping_iga
+  use sll_m_singular_mapping_discrete, only: sll_t_singular_mapping_discrete
 
   use sll_m_qn_solver_2d_fem_sps_weak_form, only: sll_t_qn_solver_2d_fem_sps_weak_form
 
@@ -68,7 +68,7 @@ module sll_m_qn_solver_2d_fem_sps_stencil_new
     class(sll_c_bsplines), pointer :: bsplines_eta2 => null()
 
     ! Analytical and discrete mappings
-    type(sll_t_polar_mapping_iga), pointer :: mapping
+    type(sll_t_singular_mapping_discrete), pointer :: mapping
 
     ! Number of finite elements
     integer :: Nk1, Nk2
@@ -168,11 +168,11 @@ contains
     tol          , &
     verbose )
     class(sll_t_qn_solver_2d_fem_sps_stencil_new), intent(inout) :: self
-    class(sll_c_bsplines),                 target, intent(in   ) :: bsplines_eta1
-    class(sll_c_bsplines),                 target, intent(in   ) :: bsplines_eta2
+    class(sll_c_bsplines)                , target, intent(in   ) :: bsplines_eta1
+    class(sll_c_bsplines)                , target, intent(in   ) :: bsplines_eta2
     real(wp), allocatable                        , intent(in   ) :: breaks_eta1(:)
     real(wp), allocatable                        , intent(in   ) :: breaks_eta2(:)
-    type(sll_t_polar_mapping_iga),         target, intent(in   ) :: mapping
+    type(sll_t_singular_mapping_discrete), target, intent(in   ) :: mapping
     real(wp), allocatable                        , intent(in   ) :: coeffs1(:,:)
     real(wp), allocatable                        , intent(in   ) :: coeffs2(:,:)
     real(wp), optional                           , intent(in   ) :: tol

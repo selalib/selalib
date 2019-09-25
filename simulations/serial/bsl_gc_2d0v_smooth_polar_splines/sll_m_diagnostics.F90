@@ -10,9 +10,9 @@ module sll_m_diagnostics
 
   use sll_m_electric_field, only: sll_t_electric_field
 
-  use sll_m_polar_mapping_analytical, only: sll_c_polar_mapping_analytical
+  use sll_m_singular_mapping_analytic, only: sll_c_singular_mapping_analytic
 
-  use sll_m_polar_mapping_iga, only: sll_t_polar_mapping_iga
+  use sll_m_singular_mapping_discrete, only: sll_t_singular_mapping_discrete
 
   use sll_m_simulation_state, only: sll_t_simulation_state
 
@@ -55,7 +55,7 @@ module sll_m_diagnostics
     real(wp), allocatable :: x2_grid(:)
     real(wp), allocatable :: x1x2_inverse_grid(:,:,:)
 
-    type(sll_t_polar_mapping_iga), pointer :: mapping_discrete
+    type(sll_t_singular_mapping_discrete), pointer :: mapping_discrete
 
   contains
 
@@ -87,20 +87,20 @@ contains
     mapping_discrete, &
     mapping_analytic, &
     sim_state )
-    class(sll_t_diagnostics)             , intent(inout) :: self
-    integer                              , intent(in   ) :: ncells1
-    integer                              , intent(in   ) :: ncells2
-    integer                              , intent(in   ) :: p1
-    integer                              , intent(in   ) :: p2
-    integer                              , intent(in   ) :: nx1
-    integer                              , intent(in   ) :: nx2
-    real(wp)                             , intent(in   ) :: tau_eta1(:)
-    real(wp)                             , intent(in   ) :: tau_eta2(:)
-    real(wp)                             , intent(in   ) :: breaks_eta1(:)
-    real(wp)                             , intent(in   ) :: breaks_eta2(:)
-    type(sll_t_polar_mapping_iga), target, intent(in   ) :: mapping_discrete
-    class(sll_c_polar_mapping_analytical), intent(in   ) :: mapping_analytic
-    type(sll_t_simulation_state) , target, intent(in   ) :: sim_state
+    class(sll_t_diagnostics)                     , intent(inout) :: self
+    integer                                      , intent(in   ) :: ncells1
+    integer                                      , intent(in   ) :: ncells2
+    integer                                      , intent(in   ) :: p1
+    integer                                      , intent(in   ) :: p2
+    integer                                      , intent(in   ) :: nx1
+    integer                                      , intent(in   ) :: nx2
+    real(wp)                                     , intent(in   ) :: tau_eta1(:)
+    real(wp)                                     , intent(in   ) :: tau_eta2(:)
+    real(wp)                                     , intent(in   ) :: breaks_eta1(:)
+    real(wp)                                     , intent(in   ) :: breaks_eta2(:)
+    type(sll_t_singular_mapping_discrete), target, intent(in   ) :: mapping_discrete
+    class(sll_c_singular_mapping_analytic)       , intent(in   ) :: mapping_analytic
+    type(sll_t_simulation_state)         , target, intent(in   ) :: sim_state
 
     integer  :: i1, i2, k1, k2, q1, q2
     real(wp) :: eta(2), x(2)

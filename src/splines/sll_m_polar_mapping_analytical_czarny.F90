@@ -1,4 +1,4 @@
-module sll_m_polar_mapping_analytical_czarny
+module sll_m_singular_mapping_analytic_czarny
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_assert.h"
 
@@ -6,11 +6,11 @@ module sll_m_polar_mapping_analytical_czarny
 
   use sll_m_constants, only: sll_p_twopi
 
-  use sll_m_polar_mapping_analytical, only: sll_c_polar_mapping_analytical
+  use sll_m_singular_mapping_analytic, only: sll_c_singular_mapping_analytic
 
   implicit none
 
-  public :: sll_t_polar_mapping_analytical_czarny
+  public :: sll_t_singular_mapping_analytic_czarny
 
   private
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -18,8 +18,8 @@ module sll_m_polar_mapping_analytical_czarny
   !> Working precision
   integer, parameter :: wp = f64
 
-  !> Concrete type, analytical polar mapping
-  type, extends(sll_c_polar_mapping_analytical) :: sll_t_polar_mapping_analytical_czarny
+  !> Concrete type, analytical singular mapping
+  type, extends(sll_c_singular_mapping_analytic) :: sll_t_singular_mapping_analytic_czarny
 
     ! Default values (circle), can be overwritten from 'init' method
     real(wp) :: x0(2) = [ 0.0_wp, 0.0_wp ]
@@ -28,34 +28,34 @@ module sll_m_polar_mapping_analytical_czarny
 
   contains
 
-    procedure :: init => s_polar_mapping_analytical_czarny__init
-    procedure :: eval => f_polar_mapping_analytical_czarny__eval
-    procedure :: jmat => f_polar_mapping_analytical_czarny__jmat ! Jacobian matrix
-    procedure :: jmat_comp => f_polar_mapping_analytical_czarny__jmat_comp
+    procedure :: init      => s_singular_mapping_analytic_czarny__init
+    procedure :: eval      => f_singular_mapping_analytic_czarny__eval
+    procedure :: jmat      => f_singular_mapping_analytic_czarny__jmat ! Jacobian matrix
+    procedure :: jmat_comp => f_singular_mapping_analytic_czarny__jmat_comp
 
-  end type sll_t_polar_mapping_analytical_czarny
+  end type sll_t_singular_mapping_analytic_czarny
 
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 contains
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
-  subroutine s_polar_mapping_analytical_czarny__init( self, x0, b, e )
-    class(sll_t_polar_mapping_analytical_czarny), intent(inout) :: self
-    real(wp), optional                          , intent(in   ) :: x0(2)
-    real(wp), optional                          , intent(in   ) :: b
-    real(wp), optional                          , intent(in   ) :: e
+  subroutine s_singular_mapping_analytic_czarny__init( self, x0, b, e )
+    class(sll_t_singular_mapping_analytic_czarny), intent(inout) :: self
+    real(wp), optional                           , intent(in   ) :: x0(2)
+    real(wp), optional                           , intent(in   ) :: b
+    real(wp), optional                           , intent(in   ) :: e
 
     ! Overwrite parameters
     if ( present( x0 ) ) self % x0 = x0
     if ( present( b  ) ) self % b  = b
     if ( present( e  ) ) self % e  = e
 
-  end subroutine s_polar_mapping_analytical_czarny__init
+  end subroutine s_singular_mapping_analytic_czarny__init
 
   !-----------------------------------------------------------------------------
-  SLL_PURE function f_polar_mapping_analytical_czarny__eval( self, eta ) result( x )
-    class(sll_t_polar_mapping_analytical_czarny), intent(in) :: self
-    real(wp)                                    , intent(in) :: eta(2)
+  SLL_PURE function f_singular_mapping_analytic_czarny__eval( self, eta ) result( x )
+    class(sll_t_singular_mapping_analytic_czarny), intent(in) :: self
+    real(wp)                                     , intent(in) :: eta(2)
     real(wp) :: x(2)
 
     associate( s => eta(1), t => eta(2), x0 => self % x0, b => self % b, e => self % e )
@@ -66,12 +66,12 @@ contains
 
     end associate
 
-  end function f_polar_mapping_analytical_czarny__eval
+  end function f_singular_mapping_analytic_czarny__eval
 
   !-----------------------------------------------------------------------------
-  SLL_PURE function f_polar_mapping_analytical_czarny__jmat( self, eta ) result( jmat )
-    class(sll_t_polar_mapping_analytical_czarny), intent(in) :: self
-    real(wp)                                    , intent(in) :: eta(2)
+  SLL_PURE function f_singular_mapping_analytic_czarny__jmat( self, eta ) result( jmat )
+    class(sll_t_singular_mapping_analytic_czarny), intent(in) :: self
+    real(wp)                                     , intent(in) :: eta(2)
     real(wp) :: jmat(2,2)
 
     real(wp) :: tmp1, tmp2
@@ -92,12 +92,12 @@ contains
 
     end associate
 
-  end function f_polar_mapping_analytical_czarny__jmat
+  end function f_singular_mapping_analytic_czarny__jmat
 
   !-----------------------------------------------------------------------------
-  SLL_PURE function f_polar_mapping_analytical_czarny__jmat_comp( self, eta ) result( jmat_comp )
-    class(sll_t_polar_mapping_analytical_czarny), intent(in) :: self
-    real(wp)                                    , intent(in) :: eta(2)
+  SLL_PURE function f_singular_mapping_analytic_czarny__jmat_comp( self, eta ) result( jmat_comp )
+    class(sll_t_singular_mapping_analytic_czarny), intent(in) :: self
+    real(wp)                                     , intent(in) :: eta(2)
     real(wp) :: jmat_comp(2,2)
 
     real(wp) :: tmp1, tmp2
@@ -116,6 +116,6 @@ contains
 
     end associate
 
-  end function f_polar_mapping_analytical_czarny__jmat_comp
+  end function f_singular_mapping_analytic_czarny__jmat_comp
 
-end module sll_m_polar_mapping_analytical_czarny
+end module sll_m_singular_mapping_analytic_czarny

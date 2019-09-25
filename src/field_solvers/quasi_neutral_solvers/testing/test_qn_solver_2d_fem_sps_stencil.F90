@@ -24,13 +24,13 @@ program test_qn_solver_2d_fem_sps_stencil
 
   use sll_m_spline_interpolator_2d, only: sll_t_spline_interpolator_2d
 
-  use sll_m_polar_mapping_analytical, only: sll_c_polar_mapping_analytical
+  use sll_m_singular_mapping_analytic, only: sll_c_singular_mapping_analytic
 
-  use sll_m_polar_mapping_analytical_target, only: sll_t_polar_mapping_analytical_target
+  use sll_m_singular_mapping_analytic_target, only: sll_t_singular_mapping_analytic_target
 
-  use sll_m_polar_mapping_analytical_czarny, only: sll_t_polar_mapping_analytical_czarny
+  use sll_m_singular_mapping_analytic_czarny, only: sll_t_singular_mapping_analytic_czarny
 
-  use sll_m_polar_mapping_iga, only: sll_t_polar_mapping_iga
+  use sll_m_singular_mapping_discrete, only: sll_t_singular_mapping_discrete
 
   use sll_m_qn_solver_2d_fem_sps_stencil_new, only: sll_t_qn_solver_2d_fem_sps_stencil_new
 
@@ -88,11 +88,11 @@ program test_qn_solver_2d_fem_sps_stencil
   real(wp), allocatable :: volume(:,:,:,:)
 
   ! Abstract polymorphic types
-  class(sll_c_bsplines)                , allocatable :: bsplines_eta1, bsplines_eta2
-  class(sll_c_polar_mapping_analytical), allocatable :: mapping_analytic
+  class(sll_c_bsplines)                 , allocatable :: bsplines_eta1, bsplines_eta2
+  class(sll_c_singular_mapping_analytic), allocatable :: mapping_analytic
 
   ! Concrete types
-  type(sll_t_polar_mapping_iga)                :: mapping_discrete
+  type(sll_t_singular_mapping_discrete)        :: mapping_discrete
   type(sll_t_spline_2d)                        :: spline_2d_rhs, spline_2d_phi
   type(sll_t_spline_interpolator_2d)           :: spline_interp_2d
   type(sll_t_qn_solver_2d_fem_sps_stencil_new) :: solver
@@ -185,20 +185,20 @@ program test_qn_solver_2d_fem_sps_stencil
 
   ! Allocate analytical mapping
   if ( maptype == 0 .or. maptype == 1 ) then
-    allocate( sll_t_polar_mapping_analytical_target :: mapping_analytic )
+    allocate( sll_t_singular_mapping_analytic_target :: mapping_analytic )
   else if ( maptype == 2 ) then
-    allocate( sll_t_polar_mapping_analytical_czarny :: mapping_analytic )
+    allocate( sll_t_singular_mapping_analytic_czarny :: mapping_analytic )
   end if
 
   ! Initialize analytical mapping
   select type ( mapping_analytic )
-    type is ( sll_t_polar_mapping_analytical_target )
+    type is ( sll_t_singular_mapping_analytic_target )
       if ( maptype == 0 ) then
         call mapping_analytic % init( x0=[0.0_wp,0.0_wp], d0=0.0_wp, e0=0.0_wp )
       else if ( maptype == 1 ) then
         call mapping_analytic % init( x0=[0.0_wp,0.0_wp], d0=0.2_wp, e0=0.3_wp )
       end if
-    type is ( sll_t_polar_mapping_analytical_czarny )
+    type is ( sll_t_singular_mapping_analytic_czarny )
       call mapping_analytic % init( x0=[0.0_wp,0.0_wp], b=1.4_wp, e=0.3_wp )
   end select
 
