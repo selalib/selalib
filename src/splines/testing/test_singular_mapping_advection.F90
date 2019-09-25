@@ -21,11 +21,11 @@ program test_singular_mapping_advection
 
   use sll_m_jacobian_2d_pseudo_cartesian, only: sll_t_jacobian_2d_pseudo_cartesian
 
-  use sll_m_polar_advector_base, only: sll_c_polar_advector
+  use sll_m_singular_mapping_advector_base, only: sll_c_singular_mapping_advector
 
-  use sll_m_polar_advector_constant, only: sll_t_polar_advector_constant
+  use sll_m_singular_mapping_advector_constant, only: sll_t_singular_mapping_advector_constant
 
-  use sll_m_polar_advector_rotating, only: sll_t_polar_advector_rotating
+  use sll_m_singular_mapping_advector_rotating, only: sll_t_singular_mapping_advector_rotating
 
   use sll_m_boundary_condition_descriptors, only: &
     sll_p_greville, &
@@ -92,12 +92,12 @@ program test_singular_mapping_advection
   class(sll_c_singular_mapping_analytic), allocatable :: mapping_analytic
 
   ! Concrete types
-  type(sll_t_singular_mapping_discrete)    :: mapping_discrete
-  type(sll_t_spline_2d)                    :: spline_2d_f, spline_2d_Ax, spline_2d_Ay
-  type(sll_t_spline_interpolator_2d)       :: spline_interp_2d
-  type(sll_t_jacobian_2d_pseudo_cartesian) :: jac_2d_pcart
-  type(sll_t_polar_advector_rotating)      :: advector
-  type(sll_t_hdf5_ser_handle)              :: file_id
+  type(sll_t_singular_mapping_discrete)          :: mapping_discrete
+  type(sll_t_spline_2d)                          :: spline_2d_f, spline_2d_Ax, spline_2d_Ay
+  type(sll_t_spline_interpolator_2d)             :: spline_interp_2d
+  type(sll_t_jacobian_2d_pseudo_cartesian)       :: jac_2d_pcart
+  type(sll_t_singular_mapping_advector_rotating) :: advector
+  type(sll_t_hdf5_ser_handle)                    :: file_id
 
   ! Namelists
   namelist /splines/ &
