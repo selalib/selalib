@@ -40,7 +40,7 @@ program test_dot_product_stencil
   class(sll_c_vector_space), allocatable :: Ws_vecsp
 
   real(wp) :: error
-  real(wp), parameter :: tol = 2.0e-14_wp
+  real(wp), parameter :: tol = 1.0e-13_wp
 
   ! For CTest
   logical :: passed
