@@ -159,9 +159,9 @@ program test_poisson_2d_fem_sps
   ! Analytical mapping
   select type ( mapping_analytic )
     type is ( sll_t_singular_mapping_analytic_target )
-      call mapping_analytic % init( x0=[0.0_wp,0.0_wp], d0=0.2_wp, e0=0.3_wp )
+      call mapping_analytic % init( x0=[0.0_wp,0.0_wp], Delta=0.2_wp, kappa=0.3_wp )
     type is ( sll_t_singular_mapping_analytic_czarny )
-      call mapping_analytic % init( x0=[0.0_wp,0.0_wp], b =1.4_wp, e =0.3_wp )
+      call mapping_analytic % init( x0=[0.0_wp,0.0_wp], e=1.4_wp, eps=0.3_wp )
   end select
 
   ! Discrete mapping

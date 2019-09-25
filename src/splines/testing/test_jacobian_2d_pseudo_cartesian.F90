@@ -67,9 +67,9 @@ program test_jacobian_2d_pseudo_cartesian
   real(wp) :: jmat(2,2), jmat_analytical(2,2)
   real(wp) :: maxerr, errmat(2,2)
   real(wp), parameter :: kappa = 0.3_wp
-  real(wp), parameter :: delta = 0.2_wp
-  real(wp), parameter :: epsil = 0.3_wp
-  real(wp), parameter :: ellip = 1.4_wp
+  real(wp), parameter :: Delta = 0.2_wp
+  real(wp), parameter :: eps = 0.3_wp
+  real(wp), parameter :: e   = 1.4_wp
 
   ! Analytical and discrete mappings
   class(sll_c_singular_mapping_analytic), allocatable :: mapping_analytic
@@ -142,9 +142,9 @@ program test_jacobian_2d_pseudo_cartesian
   ! Initialize analytical mapping
   select type ( mapping_analytic )
     type is ( sll_t_singular_mapping_analytic_target )
-      call mapping_analytic % init( x0=[0.0_wp,0.0_wp], d0=delta, e0=kappa )
+      call mapping_analytic % init( x0=[0.0_wp,0.0_wp], Delta=Delta, kappa=kappa )
     type is ( sll_t_singular_mapping_analytic_czarny )
-      call mapping_analytic % init( x0=[0.0_wp,0.0_wp], b =ellip, e =epsil )
+      call mapping_analytic % init( x0=[0.0_wp,0.0_wp], e=e, eps=eps )
   end select
 
   ! Initialize discrete mapping
@@ -161,11 +161,11 @@ program test_jacobian_2d_pseudo_cartesian
       jmat_analytical(2,1) = 0.0_wp
       jmat_analytical(2,2) = 1.0_wp / ( 1.0_wp + kappa )
     type is ( sll_t_singular_mapping_analytic_czarny )
-      jmat_analytical(1,1) = - sqrt( 1.0_wp + epsil**2 )
+      jmat_analytical(1,1) = - sqrt( 1.0_wp + eps**2 )
       jmat_analytical(1,2) = 0.0_wp
       jmat_analytical(2,1) = 0.0_wp
-      jmat_analytical(2,2) = ( 2.0_wp - sqrt( 1.0_wp + epsil**2 ) ) / &
-                             ( ellip /  sqrt( 1.0_wp - epsil**2 * 0.25_wp ) )
+      jmat_analytical(2,2) = ( 2.0_wp - sqrt( 1.0_wp + eps**2 ) ) / &
+                             ( e /  sqrt( 1.0_wp - eps**2 * 0.25_wp ) )
   end select
 
   write(*,*)
