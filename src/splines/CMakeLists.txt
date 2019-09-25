@@ -9,16 +9,16 @@ SET( SPLINES_FILES
   sll_m_spline_interpolator_1d.F90
   sll_m_spline_interpolator_2d.F90
   #
+  sll_m_polar_bsplines_2d.F90
+  sll_m_polar_spline_interpolator_2d.F90
   sll_m_singular_mapping_base.F90
   sll_m_singular_mapping_discrete.F90
   sll_m_singular_mapping_analytic.F90
   sll_m_singular_mapping_analytic_target.F90
   sll_m_singular_mapping_analytic_czarny.F90
-  sll_m_polar_bsplines_2d.F90
-  sll_m_polar_spline_interpolator_2d.F90
-  sll_m_polar_advector_base.F90
-  sll_m_polar_advector_constant.F90
-  sll_m_polar_advector_rotating.F90
+  sll_m_singular_mapping_advector_base.F90
+  sll_m_singular_mapping_advector_constant.F90
+  sll_m_singular_mapping_advector_rotating.F90
   sll_m_jacobian_2d_pseudo_cartesian.F90
   #
   sll_m_spline_matrix.F90

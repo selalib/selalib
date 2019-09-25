@@ -1,4 +1,4 @@
-module sll_m_polar_advector_base
+module sll_m_singular_mapping_advector_base
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_assert.h"
 #include "sll_errors.h"
@@ -19,7 +19,7 @@ module sll_m_polar_advector_base
   ! Working precision
   integer, parameter :: wp = f64
 
-  type, abstract :: sll_c_polar_advector
+  type, abstract :: sll_c_singular_mapping_advector
 
   contains
 
@@ -29,32 +29,32 @@ module sll_m_polar_advector_base
     procedure(i_sub_free)          , deferred :: free
 
     ! Non-deferred procedures
-    procedure :: advect_cart        => f_polar_advector__advect_cart
-    procedure :: advect_pseudo_cart => f_polar_advector__advect_pseudo_cart
+    procedure :: advect_cart        => f_singular_mapping_advector__advect_cart
+    procedure :: advect_pseudo_cart => f_singular_mapping_advector__advect_pseudo_cart
 
-  end type sll_c_polar_advector
+  end type sll_c_singular_mapping_advector
 
   ! Interfaces for deferred procedures
   abstract interface
 
     SLL_PURE subroutine i_sub_velocity_field( self, x, a )
-      import sll_c_polar_advector, wp
-      class(sll_c_polar_advector), intent(in   ) :: self
-      real(wp)                   , intent(in   ) :: x(2)
-      real(wp)                   , intent(  out) :: a(2)
+      import sll_c_singular_mapping_advector, wp
+      class(sll_c_singular_mapping_advector), intent(in   ) :: self
+      real(wp)                              , intent(in   ) :: x(2)
+      real(wp)                              , intent(  out) :: a(2)
     end subroutine i_sub_velocity_field
 
     SLL_PURE function i_fun_flow_field( self, x, h ) result( y )
-      import sll_c_polar_advector, wp
-      class(sll_c_polar_advector), intent(in) :: self
-      real(wp)                   , intent(in) :: x(2)
-      real(wp)                   , intent(in) :: h
+      import sll_c_singular_mapping_advector, wp
+      class(sll_c_singular_mapping_advector), intent(in) :: self
+      real(wp)                              , intent(in) :: x(2)
+      real(wp)                              , intent(in) :: h
       real(wp) :: y(2)
     end function i_fun_flow_field
 
     subroutine i_sub_free( self )
-      import sll_c_polar_advector
-      class(sll_c_polar_advector), intent(inout) :: self
+      import sll_c_singular_mapping_advector
+      class(sll_c_singular_mapping_advector), intent(inout) :: self
     end subroutine i_sub_free
 
   end interface
@@ -64,13 +64,13 @@ contains
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
   ! Advector (Runge-Kutta 3rd-order) using Cartesian coordinates
-  function f_polar_advector__advect_cart( self, eta, h, mapping, spline_2d_a1, spline_2d_a2 ) result( eta_new )
-    class(sll_c_polar_advector)  , intent(in) :: self
-    real(wp)                     , intent(in) :: eta(2)
-    real(wp)                     , intent(in) :: h
-    class(sll_c_singular_mapping), intent(in) :: mapping
-    type(sll_t_spline_2d)        , intent(in) :: spline_2d_a1
-    type(sll_t_spline_2d)        , intent(in) :: spline_2d_a2
+  function f_singular_mapping_advector__advect_cart( self, eta, h, mapping, spline_2d_a1, spline_2d_a2 ) result( eta_new )
+    class(sll_c_singular_mapping_advector), intent(in) :: self
+    real(wp)                              , intent(in) :: eta(2)
+    real(wp)                              , intent(in) :: h
+    class(sll_c_singular_mapping)         , intent(in) :: mapping
+    type(sll_t_spline_2d)                 , intent(in) :: spline_2d_a1
+    type(sll_t_spline_2d)                 , intent(in) :: spline_2d_a2
     real(wp) :: eta_new(2)
 
     integer , parameter :: maxiter = 100
@@ -102,11 +102,11 @@ contains
 
     eta_new = mapping % eval_inverse( x, eta, tol, maxiter )
 
-  end function f_polar_advector__advect_cart
+  end function f_singular_mapping_advector__advect_cart
 
   ! Advector (Runge-Kutta 3rd-order) using pseudo-Cartesian coordinates
-  function f_polar_advector__advect_pseudo_cart( self, eta, h, jac_2d_pcart, spline_2d_a1, spline_2d_a2 ) result( eta_new )
-    class(sll_c_polar_advector)             , intent(in) :: self
+  function f_singular_mapping_advector__advect_pseudo_cart( self, eta, h, jac_2d_pcart, spline_2d_a1, spline_2d_a2 ) result( eta_new )
+    class(sll_c_singular_mapping_advector)  , intent(in) :: self
     real(wp)                                , intent(in) :: eta(2)
     real(wp)                                , intent(in) :: h
     type(sll_t_jacobian_2d_pseudo_cartesian), intent(in) :: jac_2d_pcart
@@ -240,6 +240,6 @@ contains
 
     end function polar_map_inverse
 
-  end function f_polar_advector__advect_pseudo_cart
+  end function f_singular_mapping_advector__advect_pseudo_cart
 
-end module sll_m_polar_advector_base
+end module sll_m_singular_mapping_advector_base
