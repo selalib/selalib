@@ -50,7 +50,7 @@ program test_singular_mapping
   integer :: npts1, npts2
 
   ! To initialize mappings
-  real(wp) :: x0(2), d0, e0, b, e
+  real(wp) :: x0(2), Delta, kappa, e, eps
 
   ! To initialize non-uniform 1D B-splines along eta1
   real(wp), allocatable :: breaks_eta1(:)
@@ -198,12 +198,12 @@ program test_singular_mapping
   ! Target
   !-----------------------------------------------------------------------------
 
-  x0 = [0.08_wp,0.0_wp]
-  d0 = 0.2_wp
-  e0 = 0.3_wp
+  x0    = [0.08_wp,0.0_wp]
+  Delta = 0.2_wp
+  kappa = 0.3_wp
 
   ! Initialize analytical mapping
-  call mapping_analytic_target % init( x0=x0, d0=d0, e0=e0 )
+  call mapping_analytic_target % init( x0=x0, Delta=Delta, kappa=kappa )
 
   ! Create HDF5 file
   call sll_s_hdf5_ser_file_create( 'mapping_analytic_target.h5', file_id, h5_error )
@@ -237,12 +237,12 @@ program test_singular_mapping
   ! Czarny
   !-----------------------------------------------------------------------------
 
-  x0 = [0.08_wp,0.0_wp]
-  b  = 1.4_wp
-  e  = 0.3_wp
+  x0  = [0.08_wp,0.0_wp]
+  e   = 1.4_wp
+  eps = 0.3_wp
 
   ! Initialize analytical mapping
-  call mapping_analytic_czarny % init( x0=x0, b=b, e=e )
+  call mapping_analytic_czarny % init( x0=x0, e=e, eps=eps )
 
   ! Create HDF5 file
   call sll_s_hdf5_ser_file_create( 'mapping_analytic_czarny.h5', file_id, h5_error )
@@ -485,11 +485,11 @@ program test_singular_mapping
   !-----------------------------------------------------------------------------
 
   ! Initialize mapping
-  x0 = [0.08_wp,0.0_wp]
-  d0 = 0.2_wp
-  e0 = 0.3_wp
+  x0    = [0.08_wp,0.0_wp]
+  Delta = 0.2_wp
+  kappa = 0.3_wp
 
-  call mapping_analytic_target % init( x0=x0, d0=d0, e0=e0 )
+  call mapping_analytic_target % init( x0=x0, Delta=Delta, kappa=kappa )
 
   call mapping_discrete % init( spline_basis_eta1, spline_basis_eta2, mapping_analytic_target )
 
@@ -563,11 +563,11 @@ program test_singular_mapping
   !-----------------------------------------------------------------------------
 
   ! Initialize mapping
-  x0 = [0.08_wp,0.0_wp]
-  b  = 1.4_wp
-  e  = 0.3_wp
+  x0  = [0.08_wp,0.0_wp]
+  e   = 1.4_wp
+  eps = 0.3_wp
 
-  call mapping_analytic_czarny % init( x0=x0, b=b, e=e )
+  call mapping_analytic_czarny % init( x0=x0, e=e, eps=eps )
 
   call mapping_discrete % init( spline_basis_eta1, spline_basis_eta2, mapping_analytic_czarny )
 

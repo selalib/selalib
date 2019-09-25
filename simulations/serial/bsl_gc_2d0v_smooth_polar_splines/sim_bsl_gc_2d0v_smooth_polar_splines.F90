@@ -248,12 +248,12 @@ program sim_bsl_gc_2d0v_smooth_polar_splines
   select type ( mapping_analytic )
     type is ( sll_t_singular_mapping_analytic_target )
       if ( maptype == 0 ) then
-        call mapping_analytic % init( x0=[0.0_wp,0.0_wp], d0=0.0_wp, e0=0.0_wp )
+        call mapping_analytic % init( x0=[0.0_wp,0.0_wp], Delta=0.0_wp, kappa=0.0_wp )
       else if ( maptype == 1 ) then
-        call mapping_analytic % init( x0=[0.0_wp,0.0_wp], d0=0.2_wp, e0=0.3_wp )
+        call mapping_analytic % init( x0=[0.0_wp,0.0_wp], Delta=0.2_wp, kappa=0.3_wp )
       end if
     type is ( sll_t_singular_mapping_analytic_czarny )
-      call mapping_analytic % init( x0=[0.0_wp,0.0_wp], b=1.4_wp, e=0.3_wp )
+      call mapping_analytic % init( x0=[0.0_wp,0.0_wp], e=1.4_wp, eps=0.3_wp )
   end select
 
   ! Initialize discrete mapping
