@@ -11,9 +11,23 @@ SET_TESTS_PROPERTIES( coordinate_transformations PROPERTIES PASS_REGULAR_EXPRESS
 # Unit tests for singular mapped disk-like domains
 #-------------------------------------------------------------------------------
 
+#-------------------------------------------------------------------------------
+# OBJECT libraries containing analytical profiles and error bounds
+#-------------------------------------------------------------------------------
+add_library( analytical_profiles_ct OBJECT
+  ../../../splines/splines_basic/testing/m_analytical_profiles_1d.F90
+  ../../../splines/splines_basic/testing/m_analytical_profiles_1d_base.F90
+  ../../../splines/splines_basic/testing/m_analytical_profiles_1d_cos.F90
+  ../../../splines/splines_basic/testing/m_analytical_profiles_1d_poly.F90
+  ../../../splines/splines_basic/testing/m_analytical_profiles_2d.F90
+  ../../../splines/splines_basic/testing/m_analytical_profiles_2d_base.F90
+  ../../../splines/splines_basic/testing/m_analytical_profiles_2d_cos_cos.F90
+  ../../../splines/splines_basic/testing/m_analytical_profiles_2d_poly.F90 )
+add_dependencies( analytical_profiles_ct sll_working_precision sll_constants )
+
 # Test singular disk-like mappings
 add_executable( test_singular_mapping test_singular_mapping.F90
-  $<TARGET_OBJECTS:analytical_profiles> )
+  $<TARGET_OBJECTS:analytical_profiles_ct> )
 target_link_libraries( test_singular_mapping sll_coordinate_transformations sll_splines )
 
 # Test advection on singular disk-like mappings using pseudo-Cartesian coordinates
