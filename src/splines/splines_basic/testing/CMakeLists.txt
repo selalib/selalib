@@ -1,5 +1,5 @@
 # Save .mod files locally (this does not pollute the main "modules" directory)
-SET(CMAKE_Fortran_MODULE_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}")
+#SET(CMAKE_Fortran_MODULE_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}")
 
 #-------------------------------------------------------------------------------
 # OBJECT libraries containing analytical profiles and error bounds
@@ -21,12 +21,9 @@ add_dependencies( splines_error_bounds analytical_profiles )
 #-------------------------------------------------------------------------------
 # New test for new interface of 1D splines
 #-------------------------------------------------------------------------------
-add_executable( test_spline_1d
-    test_spline_1d.F90
-  m_test_spline_1d.F90
+add_executable( test_spline_1d test_spline_1d.F90 m_test_spline_1d.F90
   $<TARGET_OBJECTS:analytical_profiles>
-  $<TARGET_OBJECTS:splines_error_bounds>
-  )
+  $<TARGET_OBJECTS:splines_error_bounds> )
 target_link_libraries( test_spline_1d sll_splines )
 
 add_test( NAME spline_1d_uniform                     COMMAND test_spline_1d -u )
@@ -41,12 +38,9 @@ set_tests_properties(
 #-------------------------------------------------------------------------------
 # New tests for 2D tensor-product spline using new interface
 #-------------------------------------------------------------------------------
-add_executable( test_spline_2d
-    test_spline_2d.F90
-  m_test_spline_2d.F90
+add_executable( test_spline_2d test_spline_2d.F90 m_test_spline_2d.F90
   $<TARGET_OBJECTS:analytical_profiles>
-  $<TARGET_OBJECTS:splines_error_bounds>
-  )
+  $<TARGET_OBJECTS:splines_error_bounds> )
 target_link_libraries( test_spline_2d sll_splines )
 
 add_test( NAME spline_2d_uniform                     COMMAND test_spline_2d -u )
@@ -61,31 +55,9 @@ set_tests_properties(
 #-------------------------------------------------------------------------------
 # New tests for 2D polar spline (experimental)
 #-------------------------------------------------------------------------------
-add_executable( test_polar_spline_2d
-  test_polar_spline_2d.F90
-  $<TARGET_OBJECTS:analytical_profiles>
-  )
+add_executable( test_polar_spline_2d test_polar_spline_2d.F90
+  $<TARGET_OBJECTS:analytical_profiles> )
 target_link_libraries( test_polar_spline_2d sll_splines )
-
-# Test singular disk-like mappings
-add_executable( test_singular_mapping test_singular_mapping.F90 $<TARGET_OBJECTS:analytical_profiles> )
-target_link_libraries( test_singular_mapping sll_splines )
-
-# Test advection on singular disk-like mappings using pseudo-Cartesian coordinates
-set( TEST_NAME test_singular_mapping_advection )
-file( GLOB INPUT_FILE ${TEST_NAME}.nml )
-file( COPY ${INPUT_FILE} DESTINATION ${CMAKE_CURRENT_BINARY_DIR} )
-add_executable( ${TEST_NAME} ${TEST_NAME}.F90 )
-target_link_libraries( ${TEST_NAME} sll_splines )
-add_test( NAME ${TEST_NAME} COMMAND ${TEST_NAME} )
-set_tests_properties( ${TEST_NAME} PROPERTIES PASS_REGULAR_EXPRESSION "PASSED" TIMEOUT 60 )
-
-set( TEST_NAME test_jacobian_2d_pseudo_cartesian )
-add_executable( ${TEST_NAME} ${TEST_NAME}.F90 )
-target_link_libraries( ${TEST_NAME} sll_splines )
-
-#add_executable( test_greville_points test_greville_points.F90 )
-#target_link_libraries( test_greville_points sll_splines )
 
 #-------------------------------------------------------------------------------
 

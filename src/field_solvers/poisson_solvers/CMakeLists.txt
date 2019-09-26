@@ -45,6 +45,8 @@ TARGET_LINK_LIBRARIES( sll_poisson_solvers
   sll_fft
   sll_general_coordinate_elliptic_solvers
   sll_meshes
+  sll_splines
+  sll_splines_smooth
   ${LAPACK_LIBRARIES})
 
 IF(BUILD_MUDPACK)
