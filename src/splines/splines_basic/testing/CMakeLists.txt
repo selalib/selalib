@@ -52,6 +52,10 @@ set_tests_properties(
   spline_2d_non_uniform_on_general_grid
   PROPERTIES PASS_REGULAR_EXPRESSION "PASSED" )
 
+# Executable to test Greville points (no unit test)
+add_executable( test_greville_points test_greville_points.F90 )
+target_link_libraries( test_greville_points sll_splines )
+
 #-------------------------------------------------------------------------------
 # New tests for 2D polar spline (experimental)
 #-------------------------------------------------------------------------------
