@@ -27,8 +27,6 @@ program test_singular_mapping
 
   use sll_m_spline_interpolator_2d, only: sll_t_spline_interpolator_2d
 
-  use sll_m_polar_bsplines_2d, only: sll_t_polar_bsplines_2d
-
   use m_analytical_profiles_2d_cos_cos, only: t_analytical_profile_2d_cos_cos
 
   use sll_m_hdf5_io_serial, only: &
@@ -64,9 +62,6 @@ program test_singular_mapping
   type(sll_t_singular_mapping_analytic_target) :: mapping_analytic_target
   type(sll_t_singular_mapping_analytic_czarny) :: mapping_analytic_czarny
   type(sll_t_singular_mapping_discrete) :: mapping_discrete
-
-  ! New polar B-splines
-  type(sll_t_polar_bsplines_2d) :: polar_spline_basis
 
   integer :: i1, i2
 
@@ -187,11 +182,6 @@ program test_singular_mapping
   ! Close HDF5 file
   call sll_s_hdf5_ser_file_close ( file_id, h5_error )
 
-  ! Initialize polar spline basis
-  call polar_spline_basis % init( spline_basis_eta1, spline_basis_eta2, mapping_discrete )
-
-  call polar_spline_basis % free()
-
   call mapping_discrete % free()
 
   !-----------------------------------------------------------------------------
@@ -226,11 +216,6 @@ program test_singular_mapping
   ! Close HDF5 file
   call sll_s_hdf5_ser_file_close ( file_id, h5_error )
 
-  ! Initialize polar spline basis
-  call polar_spline_basis % init( spline_basis_eta1, spline_basis_eta2, mapping_discrete )
-
-  call polar_spline_basis % free()
-
   call mapping_discrete % free()
 
   !-----------------------------------------------------------------------------
@@ -264,11 +249,6 @@ program test_singular_mapping
 
   ! Close HDF5 file
   call sll_s_hdf5_ser_file_close ( file_id, h5_error )
-
-  ! Initialize polar spline basis
-  call polar_spline_basis % init( spline_basis_eta1, spline_basis_eta2, mapping_discrete )
-
-  call polar_spline_basis % free()
 
   call mapping_discrete % free()
 
