@@ -1,19 +1,9 @@
-SET( SPLINES_FILES
-  sll_m_polar_bsplines_2d.F90
-  sll_m_singular_mapping_base.F90
-  sll_m_singular_mapping_discrete.F90
-  sll_m_singular_mapping_analytic.F90
-  sll_m_singular_mapping_analytic_target.F90
-  sll_m_singular_mapping_analytic_czarny.F90
-  sll_m_singular_mapping_advector_base.F90
-  sll_m_singular_mapping_advector_constant.F90
-  sll_m_singular_mapping_advector_rotating.F90
-  sll_m_jacobian_2d_pseudo_cartesian.F90 )
-
-ADD_LIBRARY( sll_splines_smooth STATIC ${SPLINES_FILES} )
+ADD_LIBRARY( sll_splines_smooth STATIC
+  sll_m_polar_bsplines_2d.F90 )
 
 TARGET_LINK_LIBRARIES( sll_splines_smooth
   sll_splines
+  sll_coordinate_transformations
   sll_working_precision
   sll_assert
   sll_errors
