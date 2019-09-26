@@ -12,7 +12,9 @@ target_link_libraries( sll_quasi_neutral_solvers
   sll_constants
   sll_fft
   sll_linear_solvers
-  sll_general_coordinate_elliptic_solvers )
+  sll_general_coordinate_elliptic_solvers
+  sll_splines
+  sll_splines_smooth )
 
 # Ctests
 if( BUILD_TESTING )
