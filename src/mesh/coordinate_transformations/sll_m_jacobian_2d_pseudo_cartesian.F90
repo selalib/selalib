@@ -52,6 +52,8 @@ contains
   end subroutine s_jacobian_2d_pseudo_cartesian__init
 
   !-----------------------------------------------------------------------------
+  ! Implements average over theta of inverse of equation (17) of https://doi.org/10.1016/j.jcp.2019.108889
+  !-----------------------------------------------------------------------------
   subroutine s_jacobian_2d_pseudo_cartesian__pole( self, eta2_array )
     class(sll_t_jacobian_2d_pseudo_cartesian), intent(inout) :: self
     real(wp)                                 , intent(in   ) :: eta2_array(:)
@@ -92,6 +94,8 @@ contains
   end subroutine s_jacobian_2d_pseudo_cartesian__pole
 
   !-----------------------------------------------------------------------------
+  ! Implements strategy described in section 4 of https://doi.org/10.1016/j.jcp.2019.108889
+  !-----------------------------------------------------------------------------
   SLL_PURE function s_jacobian_2d_pseudo_cartesian__eval( self, eta ) result( jmat )
     class(sll_t_jacobian_2d_pseudo_cartesian), intent(in) :: self
     real(wp)                                 , intent(in) :: eta(2)
@@ -101,10 +105,12 @@ contains
 
     eps = self % eps
 
+    ! Implements average over theta of inverse of equation (17) of https://doi.org/10.1016/j.jcp.2019.108889
     if ( eta(1) == 0.0_wp ) then
 
       jmat(:,:) = self % jmat_pole(:,:)
 
+    ! Implements last equation on page 7 of https://doi.org/10.1016/j.jcp.2019.108889
     else if ( 0.0_wp < eta(1) .and. eta(1) < eps ) then
 
       jmat_pole(:,:) = self % jmat_pole(:,:)
@@ -130,6 +136,7 @@ contains
       jmat(2,1) = (1.0_wp-eta(1)/eps)*jmat_pole(2,1) + eta(1)/eps*jmat_eps(2,1)
       jmat(2,2) = (1.0_wp-eta(1)/eps)*jmat_pole(2,2) + eta(1)/eps*jmat_eps(2,2)
 
+    ! Implements inverse of equation (16) of https://doi.org/10.1016/j.jcp.2019.108889
     else if ( eps <= eta(1) ) then
 
       jmat(2,2) =   self % mapping % spline_2d_x1 % eval_deriv_x1( eta(1), eta(2) ) * cos( eta(2) ) &

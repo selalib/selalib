@@ -1,3 +1,4 @@
+! Implements strategy described in section 6.2 of https://doi.org/10.1016/j.jcp.2019.108889
 program sim_bsl_gc_2d0v_smooth_polar_splines
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_assert.h"

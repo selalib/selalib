@@ -1,3 +1,4 @@
+! Implements test case described in section 4.1 of https://doi.org/10.1016/j.jcp.2019.108889
 program test_singular_mapping_advection
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_assert.h"

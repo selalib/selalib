@@ -1,5 +1,5 @@
-# See: Ronald C Davidson, PHYSICS OF NONNEUTRAL PLASMAS (Chapter 6)
-
+# See Ronald C Davidson, PHYSICS OF NONNEUTRAL PLASMAS (Chapter 6)
+# and section 6.3 of https://doi.org/10.1016/j.jcp.2019.108889
 import numpy as np
 
 # doi:10.1140/epjd/e2014-50180-9
