@@ -1,3 +1,4 @@
+! Implements second-order implicit scheme described in section 6.1.2 of https://doi.org/10.1016/j.jcp.2019.108889
 module sll_m_time_integrator_implicit
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_assert.h"

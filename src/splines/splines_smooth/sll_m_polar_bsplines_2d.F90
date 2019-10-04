@@ -1,3 +1,4 @@
+! Implements formulas in section 5.1 of https://doi.org/10.1016/j.jcp.2019.108889
 module sll_m_polar_bsplines_2d
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_assert.h"
