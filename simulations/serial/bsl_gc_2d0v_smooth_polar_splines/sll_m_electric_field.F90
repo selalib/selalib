@@ -55,6 +55,8 @@ contains
   end subroutine s_electric_field__init
 
   !-----------------------------------------------------------------------------
+  ! Implements strategy described in section 5.4 of https://doi.org/10.1016/j.jcp.2019.108889
+  !-----------------------------------------------------------------------------
   SLL_PURE function s_electric_field__eval( self, eta ) result( electric_field )
     class(sll_t_electric_field), intent(in) :: self
     real(wp)                   , intent(in) :: eta(2)
@@ -85,6 +87,7 @@ contains
       electric_field(1) = - ( d4*d2 - d1*d6 ) / ( d4*d5 - d3*d6 )
       electric_field(2) = - ( d1*d5 - d3*d2 ) / ( d4*d5 - d3*d6 )
 
+    ! Implements last equation of section 5.4 of https://doi.org/10.1016/j.jcp.2019.108889
     else if ( 0.0_wp < eta(1) .and. eta(1) < eps ) then
 
       th1 = 0.0_wp
@@ -120,6 +123,7 @@ contains
       electric_field(1) = (1.0_wp-eta(1)/eps)*ef_0(1) + eta(1)/eps*ef_eps(1)
       electric_field(2) = (1.0_wp-eta(1)/eps)*ef_0(2) + eta(1)/eps*ef_eps(2)
 
+    ! Implements equation (29) of https://doi.org/10.1016/j.jcp.2019.108889
     else if ( eps <= eta(1) ) then
 
       jmat = self % mapping_discrete % jmat( eta )
