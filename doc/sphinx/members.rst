@@ -32,7 +32,7 @@ Past members
 ------------
 * `Jakob Ameres (IPP Garching) <http://www-m16.ma.tum.de/Allgemeines/JakobAmeres>`_
 * `Aurore BACK (IEC Nancy) <https://sites.google.com/site/siteauroreback/>`_
-* `Yann BARSAMIAN` <http://www.barsamian.am/>`_
+* `Yann BARSAMIAN <http://www.barsamian.am/>`_
 * `Morgane BERGOT (ICJ Lyon) <http://math.univ-lyon1.fr/~bergot/>`_
 * Raphael BLANCHARD
 * `Celine CALDINI-QUEIROS (IPP Garching) <http://ccaldini.perso.math.cnrs.fr>`_
