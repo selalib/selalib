@@ -361,7 +361,7 @@ program sim_bsl_gc_2d0v_smooth_polar_splines
       eta(1) = tau_eta1(i1)
       eta(2) = tau_eta2(i2)
       phi_eq(i1,i2) = sim_state % spline_2d_phi  % eval( eta(1), eta(2) )
-      Exy_eq        = sim_state % electric_field % eval( eta )
+      Exy_eq        = - sim_state % grad_phi % eval( eta )
       Ex_eq (i1,i2) = Exy_eq(1)
       Ey_eq (i1,i2) = Exy_eq(2)
     end do

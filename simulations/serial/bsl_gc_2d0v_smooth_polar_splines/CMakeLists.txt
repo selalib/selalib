@@ -8,7 +8,6 @@ file( GLOB POST_PROC   "*.py"  )
 #-------------------------------------------------------------------------------
 
 add_library( ${SIM_NAME}_obj OBJECT
-             sll_m_electric_field.F90
              sll_m_diagnostics.F90
              sll_m_point_charge.F90
       	     sll_m_simulation_state.F90
