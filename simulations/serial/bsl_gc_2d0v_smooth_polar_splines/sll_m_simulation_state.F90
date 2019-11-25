@@ -12,7 +12,7 @@ module sll_m_simulation_state
 
   use sll_m_point_charge, only: sll_t_point_charge
 
-  use sll_m_electric_field, only: sll_t_electric_field
+  use sll_m_ellipt_2d_cartesian_gradient, only: sll_t_ellipt_2d_cartesian_gradient
 
   implicit none
 
@@ -33,9 +33,9 @@ module sll_m_simulation_state
 
     type(sll_t_singular_mapping_discrete), pointer :: mapping_discrete
 
-    type(sll_t_spline_2d)      :: spline_2d_rho
-    type(sll_t_spline_2d)      :: spline_2d_phi
-    type(sll_t_electric_field) :: electric_field
+    type(sll_t_spline_2d) :: spline_2d_rho
+    type(sll_t_spline_2d) :: spline_2d_phi
+    type(sll_t_ellipt_2d_cartesian_gradient) :: grad_phi
 
     integer :: nc
     logical :: point_charges_present
@@ -88,7 +88,7 @@ contains
 
     call self % spline_2d_rho  % init( self % bsplines_eta1, self % bsplines_eta2 )
     call self % spline_2d_phi  % init( self % bsplines_eta1, self % bsplines_eta2 )
-    call self % electric_field % init( self % mapping_discrete, self % spline_2d_phi )
+    call self % grad_phi % init( self % mapping_discrete, self % spline_2d_phi )
 
     SLL_ASSERT( nc == 0 .or. nc > 0 )
 
@@ -133,7 +133,7 @@ contains
 
     call sim_state_copy % spline_2d_rho  % init( sim_state_copy % bsplines_eta1, sim_state_copy % bsplines_eta2 )
     call sim_state_copy % spline_2d_phi  % init( sim_state_copy % bsplines_eta1, sim_state_copy % bsplines_eta2 )
-    call sim_state_copy % electric_field % init( sim_state_copy % mapping_discrete, sim_state_copy % spline_2d_phi )
+    call sim_state_copy % grad_phi % init( sim_state_copy % mapping_discrete, sim_state_copy % spline_2d_phi )
 
     sim_state_copy % nc = self % nc
 

@@ -8,7 +8,7 @@ module sll_m_diagnostics
 
   use sll_m_spline_2d, only: sll_t_spline_2d
 
-  use sll_m_electric_field, only: sll_t_electric_field
+  use sll_m_ellipt_2d_cartesian_gradient, only: sll_t_ellipt_2d_cartesian_gradient
 
   use sll_m_singular_mapping_analytic, only: sll_c_singular_mapping_analytic
 
@@ -198,7 +198,7 @@ contains
                phi_quad_eq      => self % phi_quad_eq     , &
                spline_2d_rho    => self % sim_state % spline_2d_rho, &
                spline_2d_phi    => self % sim_state % spline_2d_phi, &
-               electric_field   => self % sim_state % electric_field )
+               grad_phi         => self % sim_state % grad_phi )
 
       do k2 = 1, Nk2
         do k1 = 1, Nk1
@@ -210,7 +210,7 @@ contains
 
               mass = mass + volume(q1,q2,k1,k2) * spline_2d_rho % eval( eta(1), eta(2) )
 
-              El     = electric_field % eval( eta )
+              El     = - grad_phi % eval( eta )
               energy = energy + volume(q1,q2,k1,k2) * ( El(1)**2 + El(2)**2 )
 
               l2_norm_phi = l2_norm_phi + volume(q1,q2,k1,k2) * ( spline_2d_phi % eval( eta(1), eta(2) ) - phi_quad_eq(q1,q2,k1,k2) )**2
@@ -252,7 +252,7 @@ contains
           eta(1) = self % tau_eta1(i1)
           eta(2) = self % tau_eta2(i2)
           phi(i1,i2) = self % sim_state % spline_2d_phi % eval( eta(1), eta(2) )
-          E = self % sim_state % electric_field % eval( eta )
+          E = - self % sim_state % grad_phi % eval( eta )
           Ex(i1,i2) = E(1)
           Ey(i1,i2) = E(2)
         end do
@@ -307,7 +307,7 @@ contains
       ! Write electric field on Cartesian grid
       do i2 = 1, nx2
         do i1 = 1, nx1
-          E = self % sim_state % electric_field % eval( self % x1x2_inverse_grid(:,i1,i2) )
+          E = - self % sim_state % grad_phi % eval( self % x1x2_inverse_grid(:,i1,i2) )
           Ex_cart(i1,i2) = E(1)
           Ey_cart(i1,i2) = E(2)
         end do
