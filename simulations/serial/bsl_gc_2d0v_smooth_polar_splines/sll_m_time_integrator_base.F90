@@ -76,7 +76,7 @@ contains
     jmat_comp = self % jacobian_2d_pseudo_cartesian % eval( eta )
 
     ! Cartesian components of electric field
-    E = sim_state % electric_field % eval( eta )
+    E = - sim_state % grad_phi % eval( eta )
 
     ! Pseudo-Cartesian components of advection field
     u(1) = jmat_comp(1,1) * (-E(2)) + jmat_comp(1,2) * E(1)
