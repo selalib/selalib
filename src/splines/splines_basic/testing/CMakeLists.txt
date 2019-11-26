@@ -21,12 +21,9 @@ add_dependencies( splines_error_bounds analytical_profiles )
 #-------------------------------------------------------------------------------
 # New test for new interface of 1D splines
 #-------------------------------------------------------------------------------
-add_executable( test_spline_1d
-    test_spline_1d.F90
-  m_test_spline_1d.F90
+add_executable( test_spline_1d test_spline_1d.F90 m_test_spline_1d.F90
   $<TARGET_OBJECTS:analytical_profiles>
-  $<TARGET_OBJECTS:splines_error_bounds>
-  )
+  $<TARGET_OBJECTS:splines_error_bounds> )
 target_link_libraries( test_spline_1d sll_splines )
 
 add_test( NAME spline_1d_uniform                     COMMAND test_spline_1d -u )
@@ -41,12 +38,9 @@ set_tests_properties(
 #-------------------------------------------------------------------------------
 # New tests for 2D tensor-product spline using new interface
 #-------------------------------------------------------------------------------
-add_executable( test_spline_2d
-    test_spline_2d.F90
-  m_test_spline_2d.F90
+add_executable( test_spline_2d test_spline_2d.F90 m_test_spline_2d.F90
   $<TARGET_OBJECTS:analytical_profiles>
-  $<TARGET_OBJECTS:splines_error_bounds>
-  )
+  $<TARGET_OBJECTS:splines_error_bounds> )
 target_link_libraries( test_spline_2d sll_splines )
 
 add_test( NAME spline_2d_uniform                     COMMAND test_spline_2d -u )
@@ -57,6 +51,17 @@ set_tests_properties(
   spline_2d_non_uniform_on_uniform_grid
   spline_2d_non_uniform_on_general_grid
   PROPERTIES PASS_REGULAR_EXPRESSION "PASSED" )
+
+# Executable to test Greville points (no unit test)
+add_executable( test_greville_points test_greville_points.F90 )
+target_link_libraries( test_greville_points sll_splines )
+
+#-------------------------------------------------------------------------------
+# New tests for 2D polar spline (experimental)
+#-------------------------------------------------------------------------------
+add_executable( test_polar_spline_2d test_polar_spline_2d.F90
+  $<TARGET_OBJECTS:analytical_profiles> )
+target_link_libraries( test_polar_spline_2d sll_splines )
 
 #-------------------------------------------------------------------------------
 
