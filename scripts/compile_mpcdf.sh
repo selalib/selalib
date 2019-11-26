@@ -38,11 +38,11 @@ JMAKE=${JMAKE:=8}
 #MACROS="-DDISABLE_CACHE_BLOCKING"
 MACROS=${MACROS:=""}
 
-# BUILD_DIR_PRESET=$HOME/selalib_obj
+BUILD_DIR_PRESET=$HOME/selalib_obj
 # With many small files /tmp gives much better performance compared to the
 # home directory which often resides on a large shared GPFS file system.
 #umask 0077
-BUILD_DIR_PRESET=/tmp/$USER/selalib_obj
+# BUILD_DIR_PRESET=/tmp/$USER/selalib_obj
 #export ZFP_ROOT=/afs/ipp/home/k/khr/soft/amd64_sles11/opt/zfp/0.5.1-intel-16
 BUILD_DIR=${BUILD_DIR:="$BUILD_DIR_PRESET"}
 
