@@ -1,12 +1,13 @@
 #!/bin/bash
 
 # ---
-# Build selalib locally on an Ubuntu 16.04 machine.
+# Build selalib locally on an Ubuntu 18.04 machine.
 # Run this script directly from within the "scripts" folder.
 # ---
 
 
-BUILD_DIR=${BUILD_DIR:=${HOME}/selalib_obj}
+# build in /tmp
+BUILD_DIR=${BUILD_DIR:=/tmp/selalib_obj}
 # run the cmake configure step
 DO_CONF=${DO_CONF:=1}
 # run the actual build
@@ -16,10 +17,9 @@ USE_OPENMP=${USE_OPENMP:=ON}
 # build the external package "fmempool"
 USE_FMEMPOOL=${USE_FMEMPOOL:=OFF}
 # number of processors to be used for a parallel build
-JMAKE=${JMAKE:=1}
+JMAKE=${JMAKE:=4}
 # define the CMAKE build type
 CMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE:="Release"}
-
 #export ZFP_ROOT=/opt/apps/zfp/current
 
 
