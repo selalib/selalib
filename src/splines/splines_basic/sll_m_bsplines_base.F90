@@ -26,6 +26,7 @@ module sll_m_bsplines_base
     integer :: degree
     logical :: periodic
     logical :: uniform
+    logical :: radial
     integer :: ncells
     integer :: nbasis
 

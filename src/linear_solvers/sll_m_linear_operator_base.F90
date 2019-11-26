@@ -16,20 +16,20 @@ module sll_m_linear_operator_base
   contains
 
     ! Deferred procedures
-    procedure(i_fun_shape), deferred :: get_shape
-    procedure(i_sub_dot ) , deferred :: dot
-    procedure(i_sub_free) , deferred :: free
+    procedure(i_fun_get_shape), deferred :: get_shape
+    procedure(i_sub_dot      ), deferred :: dot
+    procedure(i_sub_free     ), deferred :: free
 
   end type sll_c_linear_operator
 
   ! Interfaces for deferred procedures
   abstract interface
 
-    function i_fun_shape( self ) result( s )
+    function i_fun_get_shape( self ) result( s )
       import sll_c_linear_operator
       class(sll_c_linear_operator), intent(in) :: self
       integer :: s(2)
-    end function i_fun_shape
+    end function i_fun_get_shape
 
     subroutine i_sub_dot( self, x, y )
       import sll_c_linear_operator, sll_c_vector_space
