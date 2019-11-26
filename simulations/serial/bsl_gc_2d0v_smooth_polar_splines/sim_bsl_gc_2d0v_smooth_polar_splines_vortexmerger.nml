@@ -1,0 +1,40 @@
+&splines
+  n1 = 128
+  n2 = 256
+  p1 = 3
+  p2 = 3
+/
+
+&geometry
+  maptype = 0
+/
+
+&time_integration
+  method = "implicit"
+  evolve_background = .true.
+  dt   = 0.1
+  iter = 100
+/
+
+&characteristics
+  abs_tol = 1.0e-12
+  rel_tol = 1.0e-14
+  maxiter = 100
+/
+
+&initial_condition
+  test_case = "vortex_merger"
+/
+
+&diagnostics
+  diag_freq = 1
+  nx1       = 512
+  nx2       = 512
+/
+
+&point_charges
+  nc = 0
+/
+
+&point_charges_specs
+/
