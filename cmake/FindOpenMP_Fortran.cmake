@@ -29,6 +29,12 @@
 
 INCLUDE (${CMAKE_ROOT}/Modules/FindPackageHandleStandardArgs.cmake)
 
+# Corner case: If both the environment variables are defined the build
+# may fail during OpenMP detection. 
+if(DEFINED ENV{OMP_STACKSIZE} AND DEFINED ENV{KMP_STACKSIZE})
+    unset(ENV{KMP_STACKSIZE})
+endif()
+
 SET (OpenMP_Fortran_FLAG_CANDIDATES
      #Intel
      "-qopenmp" 
