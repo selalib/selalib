@@ -35,7 +35,7 @@ pages:
     before_script:
       - env DEBIAN_FRONTEND=noninteractive apt-get -y update
       - env DEBIAN_FRONTEND=noninteractive apt-get -y install libopenmpi-dev openmpi-bin libhdf5-openmpi-dev
-      - env DEBIAN_FRONTEND=noninteractive apt-get -y install cmake gfortran libfftw3-dev liblapack-dev libopenblas-dev doxygen texlive-latex-extra
+      - env DEBIAN_FRONTEND=noninteractive apt-get -y install cmake g++ gfortran libfftw3-dev liblapack-dev libopenblas-dev doxygen texlive-latex-extra
 
     script:
       - mkdir -p public build
