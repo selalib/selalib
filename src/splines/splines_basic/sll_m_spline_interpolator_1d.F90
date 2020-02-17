@@ -138,7 +138,10 @@ contains
       SLL_ASSERT( bc_xmin == sll_p_periodic )
       SLL_ASSERT( bc_xmax == sll_p_periodic )
     end if
-    
+
+    ! Check that these are not radial B-splines on polar grid
+    SLL_ASSERT( .not. bspl % radial )
+
     ! Save pointer to B-splines
     ! (later needed to verify 1D spline input to 'compute_interpolant')
     self % bspl => bspl
