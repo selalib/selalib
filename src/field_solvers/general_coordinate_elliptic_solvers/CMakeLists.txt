@@ -2,7 +2,10 @@ ADD_LIBRARY( sll_general_coordinate_elliptic_solvers STATIC
              sll_m_lobatto_poisson.F90 
              sll_m_map_function.F90
              sll_m_lobalap.F90
-             sll_m_general_coordinate_elliptic_solver.F90 )
+             sll_m_general_coordinate_elliptic_solver.F90
+             sll_m_ellipt_2d_fem_sps_weak_form.F90
+             sll_m_ellipt_2d_fem_sps_stencil_new_projector.F90
+             sll_m_ellipt_2d_cartesian_gradient.F90 )
 
 TARGET_LINK_LIBRARIES( sll_general_coordinate_elliptic_solvers
                        sll_sparse_matrix 

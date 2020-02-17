@@ -1,0 +1,39 @@
+&splines
+  n1 = 256
+  n2 = 512
+  p1 = 3
+  p2 = 3
+/
+
+&geometry
+  maptype = 0
+/
+
+&time_integration
+  method            = "explicit"
+  evolve_background = .true.
+  dt                = 0.005
+  iter              = 7000
+/
+
+&characteristics
+/
+
+&initial_condition
+  test_case = "vortex_in_cell"
+/
+
+&diagnostics
+  diag_freq = 50
+  nx1       = 512
+  nx2       = 512
+/
+
+&point_charges
+  nc = 1
+/
+
+&point_charges_specs
+  intensity(1)  = 0.0025
+  location(:,1) = 0.4, 0.0
+/
