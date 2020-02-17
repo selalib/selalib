@@ -131,6 +131,7 @@ IF(MPI_ENABLED)
 ENDIF()
 
 INCLUDE(HDF5Config)
+INCLUDE(ZFPConfig)
 INCLUDE(FFTConfig)
 INCLUDE(DoxygenConfig)
 
@@ -144,6 +145,8 @@ ENDIF()
 
 INCLUDE(PreprocessorTarget)
 INCLUDE(CLAPP_framework)
+# Note: The following include must be placed after the compiler flags are fixed.
+INCLUDE(CompilerConfigString)
 
 INCLUDE(CTest)
 ENABLE_TESTING()
