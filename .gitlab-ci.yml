@@ -39,7 +39,7 @@ pages:
 
     script:
       - mkdir -p public build
-      - cd build && cmake .. -DHDF5_PARALLEL_ENABLED=ON && make && make doc-user
+      - cd build && cmake .. -DHDF5_PARALLEL_ENABLED=ON && make && make doc-dev
       - cp -r doc/html/* ../public/
 
     artifacts:
