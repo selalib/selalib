@@ -1,8 +1,7 @@
 #!/bin/bash -e
 
-
 # ---
-# Script to build selalib on MPCDF systems (Draco, Hydra, Linux clusters, KNL test cluster).
+# Script to build selalib on MPCDF systems, in particular on COBRA and DRACO.
 #
 # Important: This script needs to be run *in place* from the ./scripts/ folder
 # in order to be able to correctly determine the source location.  The build is
@@ -12,13 +11,7 @@
 # Note that various switches and flags can be set at the script invocation, e.g. via
 #   $ DO_CONF=0 JMAKE=16 ./compile_mpcdf.sh
 # without the need to edit this script.
-#
-# 2016, 2017  Klaus Reuter, MPCDF, khr@mpcdf.mpg.de
 # ---
-
-
-# The following switches can be set when calling the script e.g. as follows:
-#
 
 
 # run the cmake configure step
@@ -35,6 +28,7 @@ CMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE:="Release"}
 
 # build the external package "fmempool"
 USE_FMEMPOOL=${USE_FMEMPOOL:=OFF}
+#USE_FMEMPOOL=${USE_FMEMPOOL:=ON}
 
 # number of processors to be used for a parallel build
 JMAKE=${JMAKE:=8}
@@ -44,23 +38,20 @@ JMAKE=${JMAKE:=8}
 #MACROS="-DDISABLE_CACHE_BLOCKING"
 MACROS=${MACROS:=""}
 
-# select the object/build directory
-if [ x"$USER" != x"khr" ]; then
-    # default home directory
-    BUILD_DIR_PRESET=$HOME/selalib_obj
-else
-    # with many small files /tmp gives much better performance compared to the
-    # home directory which often resides on a large shared GPFS file system
-    umask 0077
-    BUILD_DIR_PRESET=/tmp/$USER/selalib_obj
-fi
+BUILD_DIR_PRESET=$HOME/selalib_obj
+# With many small files /tmp gives much better performance compared to the
+# home directory which often resides on a large shared GPFS file system.
+#umask 0077
+# BUILD_DIR_PRESET=/tmp/$USER/selalib_obj
+#export ZFP_ROOT=/afs/ipp/home/k/khr/soft/amd64_sles11/opt/zfp/0.5.1-intel-16
 BUILD_DIR=${BUILD_DIR:="$BUILD_DIR_PRESET"}
 
 # ifort: add the "-ipo-separate" flag (interprocedural optimization)
-USE_IPO=${USE_IPO:=0}
+# USE_IPO=${USE_IPO:=0}
+USE_IPO=${USE_IPO:=1}
 
 # ifort: add the "-fp-model precise" flag (better reproducibility, but deteriorates vectorization and speed)
-USE_FP_PRECISE=${USE_FP_PRECISE:=1}
+USE_FP_PRECISE=${USE_FP_PRECISE:=0}
 
 # ifort: align arrays to 64 byte boundaries to improve vectorization
 USE_ALIGNMENT=${USE_ALIGNMENT:=1}
@@ -107,80 +98,37 @@ fi
 mkdir -p $BUILD_DIR
 # apply redirection to log file
 {
-    # --- machine-dependent modules and optimization flags
+    # --- modules and machine-dependent optimization flags
     source /etc/profile.d/modules.sh
     module purge
+    # --- We're currently facing compiler errors with the 2019 version of Intel:
+    # module load intel
+    # module load impi
+    # module load mkl
+    module load intel/18.0.5
+    module load impi/2018.4
+    module load mkl/2018.4
     # ---
-    if [ x"$CLUSTER" == x"DRACO" ]; then
-        module load intel
-        module load mkl
-        module load impi
-#        module load itac
-        module load fftw
-        module load hdf5-mpi
-        module load cmake/3.7
-        module load anaconda/3
-        module load git
-        # --- optimization flags
-        INTEL_OPT_FLAGS="-O3 -xHost"
-    elif [ x"$CLUSTER" == x"ISAAC" ] || [ x"$CLUSTER" == x"GAIA" ] || [ x"$CLUSTER" == x"APPDEV" ] ; then
-        module load intel/17.0
-        module load mkl/2017
-        module load impi
-        module load itac
-        module load fftw
-        module load hdf5-mpi
-        module load cmake
-        module load anaconda/3
-        module load git
-        # --- optimization flags
-        #INTEL_OPT_FLAGS="-O3 -xHost"  # bails out
-        #INTEL_OPT_FLAGS="-O3 -xAVX2"  # bails out
-        INTEL_OPT_FLAGS="-O3 -xAVX"
-    elif [ x"${HOST:0:5}" == x"hydra" ]; then
-        module load intel/16.0
-        module load mkl/11.3
-        module load mpi.intel/5.1.3
-        module load fftw
-        module load hdf5-mpi
-        module load cmake/3.2
-        module load anaconda/3
-        module load git
-        # --- optimization flags
-        INTEL_OPT_FLAGS="-O3 -xAVX"
-    elif [ x"$CLUSTER" == x"KNL" ]; then
-        # 4-node KNL test cluster at MPCDF
-        module load intel/17.0
-        module load mkl/2017
-        module load impi/2017.2
-        module load fftw
-        module load hdf5-mpi
-        module load cmake/3.4
-        module load anaconda/3
-        module load git
-        # --- optimization flags
-        INTEL_OPT_FLAGS="-O3 -xCOMMON-AVX512"
-    else
-        # on any Linux cluster, we have Intel MPI in the impi module
-        module load intel/16.0
-        module load mkl/11.3
-        module load impi/5.1.3
-        module load fftw
-        module load hdf5-mpi
-        module load cmake/3.5
-        module load anaconda/3
-        module load git
-        # --- optimization flags
-        INTEL_OPT_FLAGS="-O3 -xHost"
+    module load fftw-serial
+    module load hdf5-mpi
+    module load cmake
+    module load anaconda/3
+    module load git
+
+    INTEL_OPT_FLAGS="-O3 -xHost"
+    # Skylake machines
+    if [ x"$CLUSTER" == x"COBRA" ] || [ x"$CLUSTER" == x"SAKURA" ] || [ x"$CLUSTER" == x"TALOS" ]; then
+        # high usage of AVX512 registers seems slightly beneficial
+        INTEL_OPT_FLAGS="$INTEL_OPT_FLAGS -qopt-zmm-usage=high"
     fi
     INTEL_OPT_FLAGS="$INTEL_OPT_FLAGS -nowarn"
-    
+
     # align to 64 byte boundaries to enable vectorization
     if [ x"$USE_ALIGNMENT" == x"1" ]
     then
         INTEL_F90_FLAGS="$INTEL_F90_FLAGS -align array64byte"
     fi
-    
+
     # WARNING : To get accurate results (unit tests)
     # we need to turn off aggressive FP optimizations as follows:
     # (fp-model precise costs about 2%-5%)
@@ -188,7 +136,7 @@ mkdir -p $BUILD_DIR
     then
         INTEL_OPT_FLAGS="$INTEL_OPT_FLAGS -fp-model precise"
     fi
-    
+
     # Inter-file interprocedural optimization accelerates by nearly 10%,
     # but makes compilation time significantly longer and sometimes produces internal compiler errors (seen with Intel 2017)
     if [ x"$USE_IPO" == x"1" ]
@@ -267,7 +215,7 @@ mkdir -p $BUILD_DIR
     else
       echo "skipping make step ..."
     fi
-    
+
     echo $SEP
     echo "OK!"
     echo $SEP
