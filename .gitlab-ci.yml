@@ -1,7 +1,13 @@
----
-
-
-
+ubuntu-mpich:
+  stage: build
+  script: 
+    - "scripts/selalib-ci.sh"
+  only:
+    - develop
+  tags:
+    - ubuntu
+    - mpich
+    
 fedora-openmpi:
   stage: build
   script: 
@@ -69,15 +75,7 @@ pages:
 #  
 #
 #
-#ubuntu-mpich:
-#  stage: build
-#  script: 
-#    - "scripts/selalib-ci.sh"
-#  only:
-#    - develop
-#  tags:
-#    - ubuntu
-#    - mpich
+
 #    
 #mavericks-openmpi:
 #  stage: build
