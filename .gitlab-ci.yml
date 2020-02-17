@@ -27,9 +27,9 @@ pages:
     image: ubuntu:18.10
 
     before_script:
-      - apt-get -y update
-      - apt-get -y install libopenmpi-dev openmpi-bin libhdf5-openmpi-dev
-      - apt-get -y install cmake gfortran libfftw3-dev liblapack-dev libopenblas-dev doxygen texlive-latex-extra
+      - env DEBIAN_FRONTEND=noninteractive apt-get -y update
+      - env DEBIAN_FRONTEND=noninteractive apt-get -y install libopenmpi-dev openmpi-bin libhdf5-openmpi-dev
+      - env DEBIAN_FRONTEND=noninteractive apt-get -y install cmake gfortran libfftw3-dev liblapack-dev libopenblas-dev doxygen texlive-latex-extra
 
     script:
       - mkdir public
