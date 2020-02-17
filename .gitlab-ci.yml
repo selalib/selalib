@@ -32,8 +32,8 @@ pages:
       - env DEBIAN_FRONTEND=noninteractive apt-get -y install cmake gfortran libfftw3-dev liblapack-dev libopenblas-dev doxygen texlive-latex-extra
 
     script:
-      - mkdir public
-      - cd build && make doc-user
+      - mkdir -p public build
+      - cd build && cmake .. -DHDF5_PARALLEL_ENABLED=ON && make && make doc-user
       - cp -r doc/html/* ../public/
 
     artifacts:
