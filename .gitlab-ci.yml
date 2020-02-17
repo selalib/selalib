@@ -23,7 +23,7 @@ fedora-mpich:
     - mpich
 
 pages:
-    stage: build
+    stage: deploy
     image: ubuntu:18.10
 
     before_script:
@@ -39,7 +39,9 @@ pages:
     artifacts:
         paths:
         - public
-        
+    only:
+        - develop
+
     tags:
       - docker
 
