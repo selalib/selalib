@@ -1,0 +1,1 @@
+SLL_TEST( dg_interpolator_1d sll_dg_interpolation)
