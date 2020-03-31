@@ -5,4 +5,6 @@ ADD_SUBDIRECTORY(errors)
 ADD_SUBDIRECTORY(memory)
 ADD_SUBDIRECTORY(timer)
 ADD_SUBDIRECTORY(utilities)  # Should be merged into other directories
-ADD_SUBDIRECTORY(fmempool)
+IF(USE_FMEMPOOL)
+  ADD_SUBDIRECTORY(fmempool)
+ENDIF(USE_FMEMPOOL)
