@@ -1576,7 +1576,7 @@ contains
        k1 = mesh%hex_coord(1, ind)
        k2 = mesh%hex_coord(2, ind)
        cells_dist = sll_f_cells_to_origin(k1, k2)
-       radius = mesh%radius / real(mesh%num_cells * cells_dist, f64)
+       radius = mesh%radius / real(mesh%num_cells, f64)  * real(cells_dist, f64)
 
        if (dist_to_origin .le. sll_p_epsilon_0) then
           x_new = 0._f64
