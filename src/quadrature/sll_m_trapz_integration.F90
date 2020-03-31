@@ -59,7 +59,7 @@ contains
 
     ans = 0.0_f64
     do k=1,n-1
-       ans = ans + 0.5*(f(x(k))+f(x(k+1)))*(x(k+1)-x(k))
+       ans = ans + 0.5_f64*(f(x(k))+f(x(k+1)))*(x(k+1)-x(k))
     end do
     trapz_integral_1d = ans
 

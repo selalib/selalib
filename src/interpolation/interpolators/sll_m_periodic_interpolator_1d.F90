@@ -290,7 +290,7 @@ contains  ! ****************************************************************
     ! num_points is the number of nodes (including both boundaries)
     ! and not the number of cells as used in the periodic interpolator module.
     interpolator%num_points = num_points - 1
-    interpolator%cell_size  = (xmax-xmin) / (num_points-1)
+    interpolator%cell_size  = (xmax-xmin) / real(num_points-1,f64)
     interpolator%domain_size = xmax-xmin
 
     call sll_s_periodic_interp_init(interpolator%per_interp, num_points-1, &

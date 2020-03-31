@@ -247,7 +247,7 @@ subroutine set_hierarchy_info(interpolator,counter,cdim,lvecin,kvecin,novecin)
      interpolator%hierarchy(counter)%function_type(cdim) = 0
   else
      interpolator%hierarchy(counter)%coordinate(cdim) = &
-          1.0_f64/(2.0_f64**ld)+kd*1.0_f64/(2.0_f64**(ld-1))
+          1.0_f64/(2.0_f64**ld)+real(kd, f64)*1.0_f64/(2.0_f64**(ld-1))
 
 
      lvec(cdim) = lvec(cdim)-1;
@@ -327,7 +327,7 @@ subroutine set_hierarchy_info_boundary(interpolator,counter,cdim,lvecin,kvecin,n
      interpolator%hierarchy(counter)%function_type(cdim) = -1
   else
      interpolator%hierarchy(counter)%coordinate(cdim) = &
-          1.0_f64/(2.0_f64**ld)+kd*1.0_f64/(2.0_f64**(ld-1))
+          1.0_f64/(2.0_f64**ld)+real(kd,f64)*1.0_f64/(2.0_f64**(ld-1))
 
 
      lvec(cdim) = lvec(cdim)-1;
@@ -451,7 +451,7 @@ end function interpolate_value_sg
        scale = 0.5_f64
        do level = 2, interpolator%levels(j)
           ind(level,j) = ind(level-1,j)*2
-          if (eta_norm(j)> scale*(ind(level,j)+1)) then
+          if (eta_norm(j)> scale*real(ind(level,j)+1,f64)) then
              ind(level,j) = ind(level,j)+1
           end if
           scale = scale*0.5_f64
@@ -509,7 +509,7 @@ end function interpolate_value_sg
        scale = 0.5_f64
        do level = 2, interpolator%levels(j)
           ind(level,j) = ind(level-1,j)*2
-          if (eta_norm(j)> scale*(ind(level,j)+1)) then
+          if (eta_norm(j)> scale*real(ind(level,j)+1,f64)) then
              ind(level,j) = ind(level,j)+1
           end if
           scale = scale*0.5_f64
@@ -706,7 +706,7 @@ subroutine interpolate_disp_nconst_in_1d(interpolator,displacement,dorder,data_i
                 coordinate(dorder(2))
            call interpolator%basis_function((coordinate_self-coordinate_ancestor)/&
                 interpolator%length(dorder(2))*&
-                2**(interpolator%hierarchy(index_parent)%level(dorder(2))), &
+                real(2**(interpolator%hierarchy(index_parent)%level(dorder(2))),f64), &
                 factor,&
                 interpolator%hierarchy(index_parent)%function_type(dorder(2)))
            call interpolator%sll_t_sparse_grid_interpolator%interpolate_disp_1d_periodic_for_neighbor&
@@ -781,7 +781,7 @@ subroutine interpolate_disp_linnconst_in_1d(interpolator,displacement,dorder,dat
                 coordinate(dorder(2))
            call interpolator%basis_function((coordinate_self-coordinate_ancestor)/&
                 interpolator%length(dorder(2))*&
-                2**(interpolator%hierarchy(index_parent)%level(dorder(2))), &
+                real(2**(interpolator%hierarchy(index_parent)%level(dorder(2))),f64), &
                 factor,&
                 interpolator%hierarchy(index_parent)%function_type(dorder(2)))
            call interpolator%sll_t_sparse_grid_interpolator%interpolate_disp_1d_periodic_for_neighbor&
@@ -1139,13 +1139,13 @@ subroutine linear_filter(interpolator, data, hs, width)
   do j=1,interpolator%size_basis
      dx = interpolator%hierarchy(j)%coordinate
      dxn(1) = dx(1); dxn(2) = dx(2) + width(2)
-     data(j) = data(j)*0.5_f64 + 0.125*interpolator%interpolate_from_interpolant_value(hs,dxn);
+     data(j) = data(j)*0.5_f64 + 0.125_f64*interpolator%interpolate_from_interpolant_value(hs,dxn);
      dxn(2) = dx(2) - width(2)
-     data(j) = data(j) +0.125*interpolator%interpolate_from_interpolant_value(hs,dxn);
+     data(j) = data(j) +0.125_f64*interpolator%interpolate_from_interpolant_value(hs,dxn);
      dxn(1) = dx(1)+width(1); dxn(2) = dx(2)
-     data(j) = data(j) + 0.125*interpolator%interpolate_from_interpolant_value(hs,dxn);
+     data(j) = data(j) + 0.125_f64*interpolator%interpolate_from_interpolant_value(hs,dxn);
      dxn(1) = dx(1) - width(1)
-     data(j) = data(j) + 0.125*interpolator%interpolate_from_interpolant_value(hs,dxn);
+     data(j) = data(j) + 0.125_f64*interpolator%interpolate_from_interpolant_value(hs,dxn);
   end do
   
 

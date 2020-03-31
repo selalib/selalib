@@ -158,9 +158,9 @@ subroutine sll_s_quintic_spline_interpolator_1d_init( interpolator, &
   interpolator%bc_max = bc_max
 
   SLL_ALLOCATE(interpolator%x(num_points),ierr)
-  dx = (x_max - x_min) / (num_points - 1)
+  dx = (x_max - x_min) / real(num_points - 1,f64)
   do i = 1, num_points
-     interpolator%x(i) = x_min + (i-1)*dx
+     interpolator%x(i) = x_min + real(i-1,f64)*dx
   end do
   interpolator%dx = dx
 

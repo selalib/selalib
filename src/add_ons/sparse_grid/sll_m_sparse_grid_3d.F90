@@ -154,7 +154,7 @@ end subroutine Interpolate_const_disp
        scale = 0.5_f64
        do level = 2, interpolator%max_level
           ind(level,j) = ind(level-1,j)*2
-          if (eta_norm(j)> scale*(ind(level,j)+1)) then
+          if (eta_norm(j)> scale*real(ind(level,j)+1,f64)) then
              ind(level,j) = ind(level,j)+1
           end if
           scale = scale*0.5_f64
@@ -211,7 +211,7 @@ end subroutine Interpolate_const_disp
        scale = 0.5_f64
        do level = 2, interpolator%levels(j)
           ind(level,j) = ind(level-1,j)*2
-          if (eta_norm(j)> scale*(ind(level,j)+1)) then
+          if (eta_norm(j)> scale*real(ind(level,j)+1,f64)) then
              ind(level,j) = ind(level,j)+1
           end if
           scale = scale*0.5_f64
@@ -601,7 +601,7 @@ subroutine set_hierarchy_info(interpolator,counter,cdim,lvecin,kvecin,novecin)
      interpolator%hierarchy(counter)%function_type(cdim) = 0
   else
      interpolator%hierarchy(counter)%coordinate(cdim) = &
-          1.0_f64/(2.0_f64**ld)+kd*1.0_f64/(2.0_f64**(ld-1))
+          1.0_f64/(2.0_f64**ld)+real(kd,f64)*1.0_f64/(2.0_f64**(ld-1))
 
 
      lvec(cdim) = lvec(cdim)-1;
@@ -687,7 +687,7 @@ subroutine set_hierarchy_info_boundary(interpolator,counter,cdim,lvecin,kvecin,n
      interpolator%hierarchy(counter)%function_type(cdim) = -1
   else
      interpolator%hierarchy(counter)%coordinate(cdim) = &
-          1.0_f64/(2.0_f64**ld)+kd*1.0_f64/(2.0_f64**(ld-1))
+          1.0_f64/(2.0_f64**ld)+real(kd,f64)*1.0_f64/(2.0_f64**(ld-1))
 
 
      lvec(cdim) = lvec(cdim)-1;
