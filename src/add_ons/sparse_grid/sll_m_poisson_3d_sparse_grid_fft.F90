@@ -127,7 +127,7 @@ subroutine solve_potential(this,interpolator,rho,phi)
 call interpolator%SPFFT(rho,this%fcoeffs)
 
 do i=1,interpolator%size_basis
-   this%fcoeffs(i) =  this%fcoeffs(i)*this%kpot(i)
+   this%fcoeffs(i) =  this%fcoeffs(i)*cmplx(this%kpot(i),0._f64,f64)
 end do
 
 call interpolator%ISPFFT(this%fcoeffs,phi)
@@ -179,9 +179,9 @@ subroutine derivative_coeffs_1d(interpolator,dim,max_level,index,size_factor,dat
 
   ! Derivative
   data1d(1) = 0.0_f64
-  data1d(size) = size/2*size_factor
+  data1d(size) = real(size/2,f64)*size_factor
   do k=1,size/2-1
-     data1d(2*k) = k*size_factor;
+     data1d(2*k) = real(k,f64)*size_factor;
      data1d(2*k+1) = -data1d(2*k);
   end do
   call insert_fourier_real(interpolator,dim,max_level,&

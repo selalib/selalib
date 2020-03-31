@@ -296,8 +296,8 @@ SLL_ALLOCATE(eta1(1:nc1,1:nc2), error)
 SLL_ALLOCATE(eta2(1:nc1,1:nc2), error)
 do j = 1, nc2
   do i = 1, nc1
-    eta1(i,j) = (i-1)*delta_eta1
-    eta2(i,j) = (j-1)*delta_eta2
+    eta1(i,j) = real(i-1,f64)*delta_eta1
+    eta2(i,j) = real(j-1,f64)*delta_eta2
     eta1(i,j) = eta1_min + modulo(eta1(i,j)+alpha1(i,j),eta1_max-eta1_min)
     eta2(i,j) = eta2_min + modulo(eta2(i,j)+alpha2(i,j),eta2_max-eta2_min)
   end do
