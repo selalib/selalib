@@ -25,7 +25,8 @@ module sll_m_lagrange_interpolation_1d_fast
     sll_s_lagrange_interpolation_1d_fast_disp_fixed_haloc_cells, &
     sll_s_lagrange_interpolation_1d_fast_disp_centered_periodicl, &
     sll_s_lagrange_interpolation_1d_fast_disp_centered_halo_cells, &
-    sll_s_lagrange_interpolation_1d_fast_disp_even_halo_cells
+    sll_s_lagrange_interpolation_1d_fast_disp_even_halo_cells, &
+    sll_s_lagrange_interpolation_1d_fast_haloc_cells
 
   private
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -889,5 +890,60 @@ contains
      end select
    end subroutine sll_s_lagrange_interpolation_1d_fast_disp_even_halo_cells
 
+
+
+   !------------------------------------------------------------------------------!
+  !> @brief Lagrange interpolation with halo cell boundaries,
+   !>     where the input array already contains halo cells.
+   !> Different displacements in for each value in the array
+  !>     ==> This is what you would typically use for an
+  !>         MPI decomposition with ghost cells.
+  !>
+  !> @param [in]  fi(:)      input array of length n, including the halos
+  !> @param [out] fp(:)      output array of length n, only the inner part is overwritten
+  !>            (ie boundaries of half stencil width are untouched)
+  !> @param [in] p(:)         offsets in units of dx (best interpolation result for p close to zero, about [-1,1], but not a requirement)
+  !> @param [in] stencil    number of points {3,5,7,9,11} in fi used for interpolation
+!DIR$ ATTRIBUTES FORCEINLINE :: sll_s_lagrange_interpolation_1d_fast_haloc_cells
+  subroutine sll_s_lagrange_interpolation_1d_fast_haloc_cells(fi, fp, p, stencil, index_shift)
+    sll_real64, intent(in)   :: fi(:)
+    sll_real64, intent(out)  :: fp(:)
+    sll_real64, intent(in)   :: p(:)
+    sll_int32,  intent(in)   :: stencil
+    sll_int32,  intent(in)   :: index_shift
+
+    ! local variables
+    sll_int32 :: n, i
+    
+    n = size(fi)
+
+    ! TODO: Add also the even values
+
+    select case (stencil)
+    case(7)
+       do i=1,n-6
+          fp(i) = lagr_7pt( fi(i), fi(i+1), fi(i+2), fi(i+3), fi(i+4), fi(i+5), fi(i+6)  , p(i) )
+       end do
+     case(5)       
+        do i=1,n-4
+           fp(i) = lagr_5pt( fi(i), fi(i+1), fi(i+2), fi(i+3), fi(i+4)  , p(i) )
+        end do
+     case(9)        
+       do i=1,n-8
+          fp(i) = lagr_9pt( fi(i), fi(i+1), fi(i+2), fi(i+3), fi(i+4), fi(i+5), fi(i+6), fi(i+7), fi(i+8), p(i) )
+       end do
+      case(11)     
+       do i=1,n-10
+          fp(i) = lagr_11pt( fi(i), fi(i+1), fi(i+2), fi(i+3), fi(i+4), fi(i+5), fi(i+6), fi(i+7), fi(i+8), fi(i+9), fi(i+10), p(i) )
+       end do
+      case(3)     
+        do i=1,n-2
+           fp(i) = lagr_3pt( fi(i), fi(i+1), fi(i+2)  , p(i) )
+        end do
+      case default
+        SLL_ERROR( 'sll_s_lagrange_interpolation_1d_fast_haloc_cells.', 'Lagrange stencil not implemented.')
+    end select
+  end subroutine sll_s_lagrange_interpolation_1d_fast_haloc_cells
+   
 
  end module sll_m_lagrange_interpolation_1d_fast
