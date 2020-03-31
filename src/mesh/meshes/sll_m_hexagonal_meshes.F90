@@ -1576,7 +1576,7 @@ contains
        k1 = mesh%hex_coord(1, ind)
        k2 = mesh%hex_coord(2, ind)
        cells_dist = sll_f_cells_to_origin(k1, k2)
-       radius = mesh%radius / mesh%num_cells * cells_dist
+       radius = mesh%radius / real(mesh%num_cells * cells_dist, f64)
 
        if (dist_to_origin .le. sll_p_epsilon_0) then
           x_new = 0._f64
@@ -1757,15 +1757,15 @@ contains
     transf_vecB(1:2) = (/ x_v1, y_v1 /)
 
     if (type == 1) then
-       transf_matA(1,1) = 0.5_f64 / mesh%num_cells
-       transf_matA(1,2) = -sll_p_sqrt3/2._f64 / mesh%num_cells
-       transf_matA(2,1) =  sll_p_sqrt3/2._f64 / mesh%num_cells
-       transf_matA(2,2) = 0.5_f64 / mesh%num_cells
+       transf_matA(1,1) = 0.5_f64 / real(mesh%num_cells, f64)
+       transf_matA(1,2) = -sll_p_sqrt3/2._f64 / real(mesh%num_cells, f64)
+       transf_matA(2,1) =  sll_p_sqrt3/2._f64 / real(mesh%num_cells, f64)
+       transf_matA(2,2) = 0.5_f64 / real(mesh%num_cells, f64)
     else
-       transf_matA(1,1) = 1._f64 / mesh%num_cells
-       transf_matA(1,2) = 0._f64 / mesh%num_cells
-       transf_matA(2,1) = 0._f64 / mesh%num_cells
-       transf_matA(2,2) = 1._f64 / mesh%num_cells
+       transf_matA(1,1) = 1._f64 / real(mesh%num_cells, f64)
+       transf_matA(1,2) = 0._f64 / real(mesh%num_cells, f64)
+       transf_matA(2,1) = 0._f64 / real(mesh%num_cells, f64)
+       transf_matA(2,2) = 1._f64 / real(mesh%num_cells, f64)
     end if
 
   end subroutine ref_to_hex_elmt

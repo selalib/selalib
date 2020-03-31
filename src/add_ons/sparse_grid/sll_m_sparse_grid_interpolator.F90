@@ -1664,7 +1664,7 @@ subroutine fft_on_stripe(interpolator,level)
   ! Scale the Fourier coefficients
   do i=1,no_points
      interpolator%fft_object(level+1)%out(i) = &
-          interpolator%fft_object(level+1)%out(i)/no_points
+          interpolator%fft_object(level+1)%out(i)/cmplx(no_points, 0.0_f64,f64)
   end do
 
 end subroutine fft_on_stripe
@@ -1884,8 +1884,8 @@ subroutine displace_fourier_coeffs(d_scale,size,data)!displacement)
   sll_real64 :: sin_val,cos_val
 
   do k=1,size/2
-     sin_val = sin(-k*d_scale)
-     cos_val = cos(-k*d_scale)
+     sin_val = sin(-real(k, f64)*d_scale)
+     cos_val = cos(-real(k, f64)*d_scale)
      data(2*k) = cmplx(real(data(2*k))*cos_val - aimag(data(2*k))*sin_val, &
           real(data(2*k))*sin_val+aimag(data(2*k))*cos_val, kind=f64)
      if(k<size/2) then

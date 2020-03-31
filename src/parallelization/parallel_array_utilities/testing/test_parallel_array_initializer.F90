@@ -141,10 +141,10 @@ do i=1,loc_sz_i
    gk = global_indices(3)
    gl = global_indices(4)
 
-   x  = mesh_4d%eta1_min+(gi-1)*mesh_4d%delta_eta1
-   y  = mesh_4d%eta2_min+(gj-1)*mesh_4d%delta_eta2
-   vx = mesh_4d%eta3_min+(gk-1)*mesh_4d%delta_eta3
-   vy = mesh_4d%eta4_min+(gl-1)*mesh_4D%delta_eta4
+   x  = mesh_4d%eta1_min+real(gi-1,f64)*mesh_4d%delta_eta1
+   y  = mesh_4d%eta2_min+real(gj-1,f64)*mesh_4d%delta_eta2
+   vx = mesh_4d%eta3_min+real(gk-1,f64)*mesh_4d%delta_eta3
+   vy = mesh_4d%eta4_min+real(gl-1,f64)*mesh_4D%delta_eta4
 
    v2 = vx*vx+vy*vy
 

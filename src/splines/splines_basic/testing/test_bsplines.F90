@@ -128,7 +128,7 @@ contains
 
     ! define uniform grid
     allocate( grid(ncells+1) )
-    grid(:) = [(0.0_wp+i, i=0,ncells)]
+    grid(:) = [(0.0_wp+real(i,wp), i=0,ncells)]
 
     do degree = 1, max_degree
 
