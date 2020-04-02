@@ -2,8 +2,7 @@
 ! C-like assert implementation for Fortran. To be used together with
 ! 'fassert.F90'.
 !
-! This file is part of the 'fmempool' package.  See README.md,
-! LICENSE.txt, and the documentation for details.
+! See README for details.
 !----------------------------------------------------------------------------
 
 ! https://gcc.gnu.org/onlinedocs/cpp/Traditional-macros.html#Traditional-macros
