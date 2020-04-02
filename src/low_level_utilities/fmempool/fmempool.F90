@@ -51,7 +51,7 @@ module fmempool
 
   type :: memslice
     logical :: acquired
-    logical*1, pointer :: mem(:)
+    integer(kind=1), pointer :: mem(:)
   end type memslice
 
   type :: mempool
@@ -130,7 +130,7 @@ contains
 
 
   subroutine mp_acquire_bytes(f_pointer, n_bytes)
-    logical*1, pointer :: f_pointer(:)
+    integer(kind=1), pointer :: f_pointer(:)
     integer(kind=8), intent(in) :: n_bytes
     integer :: it, j
     it = get_omp_thread_idx()
@@ -320,7 +320,7 @@ contains
     integer, intent(in) :: mn(1)
     integer, intent(in) :: mx(1)
     integer(kind=8) :: n_bytes, n_elem
-    logical*1, pointer :: ptr(:)
+    integer(kind=1), pointer :: ptr(:)
     double precision, pointer :: flat_ptr(:)
 
     n_elem = get_n_elem(mn, mx)
@@ -345,7 +345,7 @@ contains
     integer, intent(in) :: mn(2)
     integer, intent(in) :: mx(2)
     integer(kind=8) :: n_bytes, n_elem
-    logical*1, pointer :: ptr(:)
+    integer(kind=1), pointer :: ptr(:)
     double precision, pointer :: flat_ptr(:)
 
     n_elem = get_n_elem(mn, mx)
@@ -371,7 +371,7 @@ contains
     integer, intent(in) :: mn(3)
     integer, intent(in) :: mx(3)
     integer(kind=8) :: n_bytes, n_elem
-    logical*1, pointer :: ptr(:)
+    integer(kind=1), pointer :: ptr(:)
     double precision, pointer :: flat_ptr(:)
 
     n_elem = get_n_elem(mn, mx)
@@ -398,7 +398,7 @@ contains
     integer, intent(in) :: mn(6)
     integer, intent(in) :: mx(6)
     integer(kind=8) :: n_bytes, n_elem
-    logical*1, pointer :: ptr(:)
+    integer(kind=1), pointer :: ptr(:)
     double precision, pointer :: flat_ptr(:)
 
     n_elem = get_n_elem(mn, mx)
@@ -431,7 +431,7 @@ contains
     integer, intent(in) :: mn(1)
     integer, intent(in) :: mx(1)
     integer(kind=8) :: n_bytes, n_elem
-    logical*1, pointer :: ptr(:)
+    integer(kind=1), pointer :: ptr(:)
     real, pointer :: flat_ptr(:)
 
     n_elem = get_n_elem(mn, mx)
@@ -456,7 +456,7 @@ contains
     integer, intent(in) :: mn(2)
     integer, intent(in) :: mx(2)
     integer(kind=8) :: n_bytes, n_elem
-    logical*1, pointer :: ptr(:)
+    integer(kind=1), pointer :: ptr(:)
     real, pointer :: flat_ptr(:)
 
     n_elem = get_n_elem(mn, mx)
@@ -482,7 +482,7 @@ contains
     integer, intent(in) :: mn(3)
     integer, intent(in) :: mx(3)
     integer(kind=8) :: n_bytes, n_elem
-    logical*1, pointer :: ptr(:)
+    integer(kind=1), pointer :: ptr(:)
     real, pointer :: flat_ptr(:)
 
     n_elem = get_n_elem(mn, mx)
@@ -509,7 +509,7 @@ contains
     integer, intent(in) :: mn(6)
     integer, intent(in) :: mx(6)
     integer(kind=8) :: n_bytes, n_elem
-    logical*1, pointer :: ptr(:)
+    integer(kind=1), pointer :: ptr(:)
     real, pointer :: flat_ptr(:)
 
     n_elem = get_n_elem(mn, mx)
@@ -541,7 +541,7 @@ contains
     integer, intent(in) :: mn(1)
     integer, intent(in) :: mx(1)
     integer(kind=8) :: n_bytes, n_elem
-    logical*1, pointer :: ptr(:)
+    integer(kind=1), pointer :: ptr(:)
     integer, pointer :: flat_ptr(:)
 
     n_elem = get_n_elem(mn, mx)
@@ -566,7 +566,7 @@ contains
     integer, intent(in) :: mn(2)
     integer, intent(in) :: mx(2)
     integer(kind=8) :: n_bytes, n_elem
-    logical*1, pointer :: ptr(:)
+    integer(kind=1), pointer :: ptr(:)
     integer, pointer :: flat_ptr(:)
 
     n_elem = get_n_elem(mn, mx)
@@ -592,7 +592,7 @@ contains
     integer, intent(in) :: mn(3)
     integer, intent(in) :: mx(3)
     integer(kind=8) :: n_bytes, n_elem
-    logical*1, pointer :: ptr(:)
+    integer(kind=1), pointer :: ptr(:)
     integer, pointer :: flat_ptr(:)
 
     n_elem = get_n_elem(mn, mx)
@@ -619,7 +619,7 @@ contains
     integer, intent(in) :: mn(6)
     integer, intent(in) :: mx(6)
     integer(kind=8) :: n_bytes, n_elem
-    logical*1, pointer :: ptr(:)
+    integer(kind=1), pointer :: ptr(:)
     integer, pointer :: flat_ptr(:)
 
     n_elem = get_n_elem(mn, mx)
