@@ -2,8 +2,7 @@
 ! C-like assert implementation for Fortran. To be used together with
 ! 'fassert.inc'.
 !
-! This file is part of the 'fmempool' package.  See README.md,
-! LICENSE.txt, and the documentation for details.
+! See README for details.
 !----------------------------------------------------------------------------
 
 module assert

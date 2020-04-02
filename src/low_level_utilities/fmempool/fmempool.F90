@@ -1,8 +1,7 @@
 !---------------------------------------------------------------------------
-! Plain standalone Fortran re-implementation of the C-based mempool.
+! Plain Fortran implementation of a memory pool.
 !
-! This file is part of the 'fmempool' package.  See README.md,
-! LICENSE.txt, and the documentation for details.
+! See README for details.
 !---------------------------------------------------------------------------
 
 #include "fassert.inc"
