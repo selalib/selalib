@@ -1,0 +1,7 @@
+Plain Fortran memory pool implementation
+========================================
+
+Purpose: Allows to reuse memory (once allocated) for different datatypes, array
+shapes and dimensions. Useful for dynamic domain decomposition halos.
+
+Author: Klaus Reuter, MPCDF, 2017
