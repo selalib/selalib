@@ -6,3 +6,6 @@ ADD_SUBDIRECTORY(memory)
 ADD_SUBDIRECTORY(timer)
 ADD_SUBDIRECTORY(utilities)  # Should be merged into other directories
 ADD_SUBDIRECTORY(compression)
+IF(USE_FMEMPOOL)
+  ADD_SUBDIRECTORY(fmempool)
+ENDIF(USE_FMEMPOOL)
