@@ -107,7 +107,7 @@ contains
        ncopies = 2**(sum(dims))
        np = modulo(n_particles_local,ncopies)
        if ( np .ne. 0 ) then
-          n_particles_local = n_particles_local + np
+          n_particles_local = n_particles_local + ncopies - np
           
        end if
     else
