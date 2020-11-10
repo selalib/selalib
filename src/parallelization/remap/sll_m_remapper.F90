@@ -1,19 +1,19 @@
 /*
 !**************************************************************
 !  Copyright INRIA
-!  Authors : 
+!  Authors :
 !     CALVI project team
-!  
-!  This code SeLaLib (for Semi-Lagrangian-Library) 
-!  is a parallel library for simulating the plasma turbulence 
+!
+!  This code SeLaLib (for Semi-Lagrangian-Library)
+!  is a parallel library for simulating the plasma turbulence
 !  in a tokamak.
-!  
-!  This software is governed by the CeCILL-B license 
-!  under French law and abiding by the rules of distribution 
-!  of free software.  You can  use, modify and redistribute 
-!  the software under the terms of the CeCILL-B license as 
+!
+!  This software is governed by the CeCILL-B license
+!  under French law and abiding by the rules of distribution
+!  of free software.  You can  use, modify and redistribute
+!  the software under the terms of the CeCILL-B license as
 !  circulated by CEA, CNRS and INRIA at the following URL
-!  "http://www.cecill.info". 
+!  "http://www.cecill.info".
 !**************************************************************
 */
 
@@ -22,6 +22,10 @@
 !> @ingroup remap
 !> @brief
 !> Module for remapping
+!> @authors
+!> Edwin Chacon-Golcher
+!> Klaus Reuter
+!> Katharina Kormann
 module sll_m_remapper
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_assert.h"
@@ -41,7 +45,8 @@ module sll_m_remapper
     sll_t_collective_t, &
     sll_f_get_collective_rank, &
     sll_f_get_collective_size, &
-    sll_f_new_collective
+    sll_f_new_collective, &
+    sll_o_collective_bcast
 
   use sll_m_utilities, only: &
     sll_s_int2string, &
@@ -51,6 +56,15 @@ module sll_m_remapper
   use sll_mpi, only: &
     mpi_land
 
+  use sll_m_utilities, only: sll_f_query_environment
+
+#ifdef _OPENMP
+  use omp_lib
+#define OMP_COLLAPSE collapse(2)
+#define OMP_SCHEDULE schedule(static)
+!#define OMP_SCHEDULE schedule(dynamic)
+#endif
+
   implicit none
 
   public :: &
@@ -59,6 +73,7 @@ module sll_m_remapper
     sll_o_apply_remap_4d, &
     sll_o_apply_remap_5d, &
     sll_o_apply_remap_6d, &
+    sll_o_apply_tremap_6d, &
     sll_o_compute_local_sizes, &
     sll_s_factorize_in_three_powers_of_two, &
     sll_s_factorize_in_two_powers_of_two, &
@@ -91,6 +106,7 @@ module sll_m_remapper
     sll_t_layout_4d_ptr, &
     sll_t_layout_5d, &
     sll_t_layout_6d, &
+    sll_t_remap_decomposition, &
     sll_o_local_to_global, &
     sll_f_new_layout_2d, &
     sll_f_new_layout_2d_from_layout_4d, &
@@ -100,6 +116,7 @@ module sll_m_remapper
     sll_f_new_layout_5d, &
     sll_f_new_layout_6d, &
     sll_o_new_remap_plan, &
+    sll_o_new_remap_tplan, &
     sll_t_remap_plan_2d_comp64, &
     sll_t_remap_plan_2d_real64, &
     sll_t_remap_plan_2d_real64_ptr, &
@@ -127,15 +144,15 @@ module sll_m_remapper
 
   private
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-  
-  !> @brief Index limits contained        
+
+  !> @brief Index limits contained
   !> in a given processor.
   type :: box_2D
      sll_int32, private :: i_min, i_max
      sll_int32, private :: j_min, j_max
   end type box_2D
 
-  !> @brief Index limits contained        
+  !> @brief Index limits contained
   !> in a given processor.
   type :: box_3D
      sll_int32, private :: i_min, i_max
@@ -143,7 +160,7 @@ module sll_m_remapper
      sll_int32, private :: k_min, k_max
   end type box_3D
 
-  !> @brief Index limits contained        
+  !> @brief Index limits contained
   !> in a given processor.
   type :: box_4D
      sll_int32, private :: i_min, i_max
@@ -152,7 +169,7 @@ module sll_m_remapper
      sll_int32, private :: l_min, l_max
   end type box_4D
 
-  !> @brief Index limits contained        
+  !> @brief Index limits contained
   !> in a given processor.
   type :: box_5D
      sll_int32, private :: i_min, i_max
@@ -162,7 +179,7 @@ module sll_m_remapper
      sll_int32, private :: m_min, m_max
   end type box_5D
 
-  !> @brief Index limits contained        
+  !> @brief Index limits contained
   !> in a given processor.
   type :: box_6D
      sll_int32, private :: i_min, i_max
@@ -173,10 +190,17 @@ module sll_m_remapper
      sll_int32, private :: n_min, n_max
   end type box_6D
 
+  !> Type holding information about remap decomposition of the domain
+  type :: sll_t_remap_decomposition
+     sll_int32 :: num_procs(6)   !< Number of processors
+     sll_int32 :: local_sizes(6) !< Local sizes of array
+     sll_int32 :: indices_min(6) !< First index local to this domain
+     sll_int32 :: indices_max(6) !< Last index local to this domain
 
-  
+  end type sll_t_remap_decomposition
+
   !> @brief Information on a collective and an
-  !> array of boxes 
+  !> array of boxes
   !> @details that describes the distribution of data among
   !> different nodes. We are also adding some auxiliary fields, like the
   !> global dimensions of a given dataset distributed as per the information
@@ -189,13 +213,13 @@ module sll_m_remapper
   end type sll_t_layout_2d
 
   !> @brief Information on a collective and an
-  !> array of boxes 
+  !> array of boxes
   !> @details that describes the distribution of data among
   !> different nodes. We are also adding some auxiliary fields, like the
   !> global dimensions of a given dataset distributed as per the information
   !> in the layout.
   type :: sll_t_layout_3d
-     type(sll_t_collective_t), pointer, private     :: collective
+     type(sll_t_collective_t), pointer, private   :: collective
      sll_int32, private                           :: global_sz1 !< size
      sll_int32, private                           :: global_sz2 !< size
      sll_int32, private                           :: global_sz3 !< size
@@ -203,7 +227,7 @@ module sll_m_remapper
   end type sll_t_layout_3d
 
   !> @brief Information on a collective and an
-  !> array of boxes 
+  !> array of boxes
   !> @details that describes the distribution of data among
   !> different nodes. We are also adding some auxiliary fields, like the
   !> global dimensions of a given dataset distributed as per the information
@@ -218,7 +242,7 @@ module sll_m_remapper
   end type sll_t_layout_4d
 
   !> @brief Information on a collective and an
-  !> array of boxes 
+  !> array of boxes
   !> @details that describes the distribution of data among
   !> different nodes. We are also adding some auxiliary fields, like the
   !> global dimensions of a given dataset distributed as per the information
@@ -234,7 +258,7 @@ module sll_m_remapper
   end type sll_t_layout_5d
 
   !> @brief Information on a collective and an
-  !> array of boxes 
+  !> array of boxes
   !> @details that describes the distribution of data among
   !> different nodes. We are also adding some auxiliary fields, like the
   !> global dimensions of a given dataset distributed as per the information
@@ -267,7 +291,7 @@ MAKE_LAYOUT_POINTER_CONTAINER( layout_6d_ptr, sll_t_layout_6d )
   end type name
 
 MAKE_REMAP_POINTER_CONTAINER( sll_t_remap_plan_2d_real64_ptr, sll_t_remap_plan_2d_real64 )
-MAKE_REMAP_POINTER_CONTAINER( sll_t_remap_plan_4d_real64_ptr, sll_t_remap_plan_4d_real64 ) 
+MAKE_REMAP_POINTER_CONTAINER( sll_t_remap_plan_4d_real64_ptr, sll_t_remap_plan_4d_real64 )
 
   ! Since the plan stores the information on box intersections, now
   ! we need a different type of plan for every dimension. It is also
@@ -279,7 +303,7 @@ MAKE_REMAP_POINTER_CONTAINER( sll_t_remap_plan_4d_real64_ptr, sll_t_remap_plan_4
   ! data, the arrays are always linear. This implies manual packing/unpacking.
   !
   ! The 'is_uniform' slot is a logical flag that indicates whether the same
-  ! amount of data is going to be sent to all the processes in a 
+  ! amount of data is going to be sent to all the processes in a
   ! communicator (sender included). This is important to know because we can
   ! then replace the call to alltoallv by a call to alltoall.
 
@@ -386,7 +410,7 @@ MAKE_REMAP_POINTER_CONTAINER( sll_t_remap_plan_4d_real64_ptr, sll_t_remap_plan_4
   !> Set layout index
   interface sll_o_set_layout_j_min
      module procedure set_layout_2D_j_min, set_layout_3D_j_min, &
-          set_layout_4D_j_min, set_layout_5D_j_min, set_layout_6D_j_min  
+          set_layout_4D_j_min, set_layout_5D_j_min, set_layout_6D_j_min
   end interface
 
   !> Get corner index
@@ -440,7 +464,7 @@ MAKE_REMAP_POINTER_CONTAINER( sll_t_remap_plan_4d_real64_ptr, sll_t_remap_plan_4
   !> Get corner index
   interface sll_o_get_layout_l_max
      module procedure get_layout_4D_l_max, get_layout_5D_l_max, &
-          get_layout_6D_l_max 
+          get_layout_6D_l_max
   end interface sll_o_get_layout_l_max
 
   !> Set layout index
@@ -597,9 +621,15 @@ MAKE_REMAP_POINTER_CONTAINER( sll_t_remap_plan_4d_real64_ptr, sll_t_remap_plan_4
 
    !> Intersection
    interface intersect_boxes
-     module procedure intersect_boxes_2D, intersect_boxes_3D, &
-          intersect_boxes_4D, intersect_boxes_5D, intersect_boxes_6D
+      module procedure intersect_boxes_2D, intersect_boxes_3D, &
+           intersect_boxes_4D, intersect_boxes_5D, intersect_boxes_6D
    end interface intersect_boxes
+
+
+   !> Intersection
+   interface intersect_boxes_transp
+      module procedure intersect_boxes_6D_transp
+   end interface intersect_boxes_transp
 
    !> Optimization
    interface optimize_remap_plan
@@ -641,6 +671,13 @@ MAKE_REMAP_POINTER_CONTAINER( sll_t_remap_plan_4d_real64_ptr, sll_t_remap_plan_4
           new_remap_plan_6d_comp64
   end interface sll_o_new_remap_plan
 
+
+  !> Plan to apply remap
+  interface sll_o_new_remap_tplan
+     module procedure &
+          new_remap_tplan_6d_real64
+  end interface sll_o_new_remap_tplan
+
   !> Execute plan
   interface sll_o_apply_remap_2d
      module procedure apply_remap_2D_double, apply_remap_2d_complex !, &
@@ -668,6 +705,12 @@ MAKE_REMAP_POINTER_CONTAINER( sll_t_remap_plan_4d_real64_ptr, sll_t_remap_plan_4
   interface sll_o_apply_remap_6d
      module procedure apply_remap_6D_double, apply_remap_6D_int
   end interface sll_o_apply_remap_6d
+
+
+  !> Execute plan
+  interface sll_o_apply_tremap_6d
+     module procedure apply_tremap_6D_double
+  end interface sll_o_apply_tremap_6d
 
   !> Deallocate
   interface sll_o_delete
@@ -708,7 +751,7 @@ MAKE_REMAP_POINTER_CONTAINER( sll_t_remap_plan_4d_real64_ptr, sll_t_remap_plan_4
           global_to_local_4D, global_to_local_5D, global_to_local_6D
   end interface sll_o_global_to_local
 
-  !> @brief Initialize layout 
+  !> @brief Initialize layout
   !> @details It should have been allocated with new(), which means that
   !> its memory is allocated in accordance with the size of collective.
   interface sll_o_initialize_layout_with_distributed_array
@@ -717,6 +760,7 @@ MAKE_REMAP_POINTER_CONTAINER( sll_t_remap_plan_4d_real64_ptr, sll_t_remap_plan_4
      module procedure initialize_layout_with_distributed_4d_array
      module procedure initialize_layout_with_distributed_5d_array
      module procedure initialize_layout_with_distributed_6d_array
+     module procedure initialize_layout_with_distributed_3d_array_given
   end interface sll_o_initialize_layout_with_distributed_array
 
 
@@ -731,7 +775,7 @@ contains  !******************************************************************
   ! an abuse of the macro facility, we can convert into the multiple
   ! explicit declarations. But the centralized nature of the macro should
   ! not be discounted easily.
-  ! 
+  !
   ! One thing learned from this is that the macros called from inside a
   ! macro like this (like /* SLL_ALLOCATE */), don't need the semicolon, as they
   ! already have one themselves... it might be a good idea to remove the
@@ -777,7 +821,7 @@ contains  !******************************************************************
   NEW_DELETE_LAYOUT_FUNCTION( delete_layout_6D, sll_t_layout_6d )
 
   ! Access functions for the boxes. This is really an overkill... On one hand,
-  ! it is nice to hide everything behind access functions so that we 
+  ! it is nice to hide everything behind access functions so that we
   ! preserve the freedom of changing the representation of the types if
   ! needed. Also, this is not a performance-critical process. On the other
   ! hand, the only thing there is to hide here is a pair of chained %'s...
@@ -837,7 +881,7 @@ contains  !******************************************************************
     res = layout%slot;                                                   \
   end function fname
 
-  ! We use the macros to write the set_ get_ functions for the different 
+  ! We use the macros to write the set_ get_ functions for the different
   ! dimensions.
 
   ! 2D case:
@@ -960,8 +1004,8 @@ contains  !******************************************************************
   MAKE_SET_LAYOUT_SLOT_FUNCTION( set_layout_6D_n_min, sll_t_layout_6d, n_min )
   MAKE_SET_LAYOUT_SLOT_FUNCTION( set_layout_6D_n_max, sll_t_layout_6d, n_max )
 
-  ! Why should lims just give its collective nilly-willy? This is not 
-  ! pretty but I have the suspicion that direct access of the collective 
+  ! Why should lims just give its collective nilly-willy? This is not
+  ! pretty but I have the suspicion that direct access of the collective
   ! will be needed.
 #define MAKE_GET_LAYOUT_COLLECTIVE_FUNCTION( fname, layout_type ) \
   function fname( layout ); \
@@ -1061,12 +1105,12 @@ contains  !******************************************************************
   end function linear_index_6D
 
   subroutine initialize_layout_with_distributed_2d_array( &
-    global_npx1, &  
+    global_npx1, &
     global_npx2, &
     num_proc_x1, &
     num_proc_x2, &
     layout )
-    
+
     ! sll_t_layout_2d should have been allocated with new(), which means that
     ! its memory is allocated in accordance with the size of collective.
     ! This should be error-checked below for consistency.
@@ -1114,7 +1158,7 @@ contains  !******************************************************************
     SLL_ALLOCATE( intervals_x1(0:1,0:num_proc_x1-1), err )
     SLL_ALLOCATE( intervals_x2(0:1,0:num_proc_x2-1), err )
 
-    ! Allocate the layout to be returned.    
+    ! Allocate the layout to be returned.
     total_num_processors = num_proc_x1*num_proc_x2
     collective_size = get_layout_2D_size(layout)
     if( total_num_processors .ne. collective_size ) then
@@ -1151,15 +1195,18 @@ contains  !******************************************************************
     SLL_DEALLOCATE_ARRAY( intervals_x2, err )
   end subroutine initialize_layout_with_distributed_2d_array
 
+
+
+
   subroutine initialize_layout_with_distributed_3D_array( &
-    global_npx1, &  
+    global_npx1, &
     global_npx2, &
     global_npx3, &
     num_proc_x1, &
     num_proc_x2, &
     num_proc_x3, &
     layout )
-    
+
     ! layout should have been allocated with new(), which means that
     ! its memory is allocated in accordance with the size of collective.
     ! This should be error-checked below for consistency.
@@ -1222,7 +1269,7 @@ contains  !******************************************************************
     SLL_ALLOCATE( intervals_x2(0:1,0:num_proc_x2-1), err )
     SLL_ALLOCATE( intervals_x3(0:1,0:num_proc_x3-1), err )
 
-    ! Allocate the layout to be returned.    
+    ! Allocate the layout to be returned.
     total_num_processors = num_proc_x1*num_proc_x2*num_proc_x3
     collective_size = get_layout_3D_size(layout)
     if( total_num_processors .ne. collective_size ) then
@@ -1267,11 +1314,51 @@ contains  !******************************************************************
     SLL_DEALLOCATE_ARRAY( intervals_x1, err )
     SLL_DEALLOCATE_ARRAY( intervals_x2, err )
     SLL_DEALLOCATE_ARRAY( intervals_x3, err )
-   end subroutine initialize_layout_with_distributed_3D_array
+  end subroutine initialize_layout_with_distributed_3D_array
 
+
+  !> Initializes a distributed 3d layout on the given index range
+  !>  \a ind_min to \a ind_max
+  subroutine initialize_layout_with_distributed_3d_array_given( &
+       global_npoints, &
+       ind_min, &
+       ind_max, &
+       layout)
+    sll_int32, intent( in    ) :: global_npoints(3) !< Array specifying the global number of points
+    sll_int32, intent( in    ) :: ind_min(3)        !< Array specifying the first index of the local box
+    sll_int32, intent( in    ) :: ind_max(3)        !< Array specifying the upper index of the local box
+    type(sll_t_layout_3d), pointer, intent( inout ) :: layout !< Layout object to be initialized
+
+    sll_int32 :: process, rank, world_size
+    sll_int32 :: mn_proc(3), mx_proc(3)
+
+    layout%global_sz1 = global_npoints(1)
+    layout%global_sz2 = global_npoints(2)
+    layout%global_sz3 = global_npoints(3)
+
+    rank = sll_f_get_collective_rank(layout%collective)
+    world_size = sll_f_get_collective_size( layout%collective )
+
+    do process = 0, world_size-1
+       if ( rank == process ) then
+          mn_proc = ind_min
+          mx_proc = ind_max
+       end if
+       call sll_o_collective_bcast (layout%collective, mn_proc, process )
+       call sll_o_collective_bcast (layout%collective, mx_proc, process )
+       call sll_o_set_layout_i_min( layout, process, mn_proc(1) )
+       call sll_o_set_layout_i_max( layout, process, mx_proc(1) )
+       call sll_o_set_layout_j_min( layout, process, mn_proc(2) )
+       call sll_o_set_layout_j_max( layout, process, mx_proc(2) )
+       call sll_o_set_layout_k_min( layout, process, mn_proc(3) )
+       call sll_o_set_layout_k_max( layout, process, mx_proc(3) )
+    end do
+
+
+  end subroutine initialize_layout_with_distributed_3d_array_given
 
   subroutine initialize_layout_with_distributed_4D_array( &
-    global_npx1, &  
+    global_npx1, &
     global_npx2, &
     global_npx3, &
     global_npx4, &
@@ -1280,7 +1367,7 @@ contains  !******************************************************************
     num_proc_x3, &
     num_proc_x4, &
     layout )
-    
+
     ! sll_t_layout_4d should have been allocated with new(), which means that
     ! its memory is allocated in accordance with the size of collective.
     ! This should be error-checked below for consistency.
@@ -1347,7 +1434,7 @@ contains  !******************************************************************
     SLL_ALLOCATE( intervals_x3(0:1,0:num_proc_x3-1), err )
     SLL_ALLOCATE( intervals_x4(0:1,0:num_proc_x4-1), err )
 
-    ! Allocate the layout to be returned.    
+    ! Allocate the layout to be returned.
     total_num_processors = num_proc_x1*num_proc_x2*num_proc_x3*num_proc_x4
     collective_size = get_layout_4D_size(layout)
     if( total_num_processors .ne. collective_size ) then
@@ -1416,7 +1503,7 @@ contains  !******************************************************************
 
 
   subroutine initialize_layout_with_distributed_5D_array( &
-    global_npx1, &  
+    global_npx1, &
     global_npx2, &
     global_npx3, &
     global_npx4, &
@@ -1427,7 +1514,7 @@ contains  !******************************************************************
     num_proc_x4, &
     num_proc_x5, &
     layout )
-    
+
     ! sll_t_layout_5d should have been allocated with new(), which means that
     ! its memory is allocated in accordance with the size of collective.
     ! This should be error-checked below for consistency.
@@ -1506,7 +1593,7 @@ contains  !******************************************************************
     SLL_ALLOCATE( intervals_x4(0:1,0:num_proc_x4-1), err )
     SLL_ALLOCATE( intervals_x5(0:1,0:num_proc_x5-1), err )
 
-    ! Allocate the layout to be returned.    
+    ! Allocate the layout to be returned.
     total_num_processors = &
          num_proc_x1*num_proc_x2*num_proc_x3*num_proc_x4*num_proc_x5
     collective_size = get_layout_5D_size(layout)
@@ -1553,19 +1640,19 @@ contains  !******************************************************************
                            m )
                       i_min = intervals_x1(0,i)
                       i_max = intervals_x1(1,i)
-                      
+
                       j_min = intervals_x2(0,j)
                       j_max = intervals_x2(1,j)
-                      
+
                       k_min = intervals_x3(0,k)
                       k_max = intervals_x3(1,k)
-                      
+
                       l_min = intervals_x4(0,l)
                       l_max = intervals_x4(1,l)
-                      
+
                       m_min = intervals_x5(0,m)
                       m_max = intervals_x5(1,m)
-                                            
+
                       call sll_o_set_layout_i_min( layout, node, i_min )
                       call sll_o_set_layout_i_max( layout, node, i_max )
                       call sll_o_set_layout_j_min( layout, node, j_min )
@@ -1591,7 +1678,7 @@ contains  !******************************************************************
 
 
   subroutine initialize_layout_with_distributed_6D_array( &
-    global_npx1, &  
+    global_npx1, &
     global_npx2, &
     global_npx3, &
     global_npx4, &
@@ -1604,7 +1691,7 @@ contains  !******************************************************************
     num_proc_x5, &
     num_proc_x6, &
     layout )
-    
+
     ! sll_t_layout_6d should have been allocated with new(), which means that
     ! its memory is allocated in accordance with the size of collective.
     ! This should be error-checked below for consistency.
@@ -1693,7 +1780,7 @@ contains  !******************************************************************
     SLL_ALLOCATE( intervals_x5(0:1,0:num_proc_x5-1), err )
     SLL_ALLOCATE( intervals_x6(0:1,0:num_proc_x6-1), err )
 
-    ! Allocate the layout to be returned.    
+    ! Allocate the layout to be returned.
     total_num_processors = &
          num_proc_x1*num_proc_x2*num_proc_x3*num_proc_x4*num_proc_x5*num_proc_x6
     collective_size = get_layout_6D_size(layout)
@@ -1746,22 +1833,22 @@ contains  !******************************************************************
                            n )
                       i_min = intervals_x1(0,i)
                       i_max = intervals_x1(1,i)
-                      
+
                       j_min = intervals_x2(0,j)
                       j_max = intervals_x2(1,j)
-                      
+
                       k_min = intervals_x3(0,k)
                       k_max = intervals_x3(1,k)
-                      
+
                       l_min = intervals_x4(0,l)
                       l_max = intervals_x4(1,l)
-                      
+
                       m_min = intervals_x5(0,m)
                       m_max = intervals_x5(1,m)
-                      
+
                       n_min = intervals_x6(0,n)
                       n_max = intervals_x6(1,n)
-                      
+
                       call sll_o_set_layout_i_min( layout, node, i_min )
                       call sll_o_set_layout_i_max( layout, node, i_max )
                       call sll_o_set_layout_j_min( layout, node, j_min )
@@ -1801,7 +1888,7 @@ contains  !******************************************************************
             'We have not implemented how to handle this case.'
        print *, 'number of elements: ', num_elements
        print *, 'number of intervals: ', num_intervals
-       STOP 
+       STOP
     end if
     call split_array_indices_aux( &
       split_array_indices, &
@@ -1814,7 +1901,7 @@ contains  !******************************************************************
 
   ! split_array_indices_aux() is an auxiliary function that splits a range
   ! of indices described by 2 integers into a given number of intervals, the
-  ! function tries to partition the original interval equitably. 
+  ! function tries to partition the original interval equitably.
   recursive subroutine split_array_indices_aux( &
     intervals_array, &
     start_index, &
@@ -1871,7 +1958,7 @@ contains  !******************************************************************
   end subroutine split_array_indices_aux
 
 
-  ! The sll_o_new_remap_plan() functions define the communication pattern in a 
+  ! The sll_o_new_remap_plan() functions define the communication pattern in a
   ! collective. From the perspective of an individual process, they examines
   ! the communication needs in a one-to-many and many-to-one sense. The
   ! plan produces information needed to feed a lower level function that
@@ -1881,7 +1968,7 @@ contains  !******************************************************************
   ! - to whom does an individual process need to send its information, and
   ! - from whom does a process need to receive its information.
   ! Thus, while all processes make this call, the resulting plan will be
-  ! different among the processes, but the plan will be consistent in terms 
+  ! different among the processes, but the plan will be consistent in terms
   ! of which process is expecting what from whom.
   !
   ! The remap plan stores the buffers where the data to be sent/received
@@ -2002,6 +2089,100 @@ contains  !******************************************************************
   MAKE_NEW_REMAP_PLAN_FUNCTION(new_remap_plan_6D_comp64,remap_plan_6D_comp64,sll_t_layout_6d,box_6D, sll_comp64, dimension(:,:,:,:,:,:) )
 
 
+#define MAKE_NEW_REMAP_TPLAN_FUNCTION(fname, remap_type, layout_type, box_type, array_type, array_dim) \
+  function fname( initial, final, array ); \
+    intrinsic                       :: associated; \
+    type(remap_type), pointer       :: fname; \
+    type(layout_type), pointer      :: initial; \
+    type(layout_type), pointer      :: final; \
+    array_type, array_dim           :: array; \
+    type(sll_t_collective_t), pointer :: coli; \
+    type(sll_t_collective_t), pointer :: colf; \
+    type(box_type)                  :: ibox, fbox, inters; \
+    sll_int32                       :: i, f; \
+    sll_int32                       :: my_rank; \
+    sll_int32                       :: col_size; \
+    sll_int32                       :: ierr; \
+    sll_int32                       :: disp_counter; \
+    sll_int32                       :: send_counter; \
+    sll_int32                       :: recv_counter; \
+    sll_int64                       :: acc; \
+    if( (.not. associated(initial)) .or. (.not. associated(final)) ) then; \
+       print *, 'ERROR: un-initialized arguments given to sll_new_remap_plan'; \
+       print *, size(array); \
+       stop; \
+    end if; \
+    coli => sll_o_get_layout_collective(initial); \
+    colf => sll_o_get_layout_collective(final); \
+    if( .not. sll_f_collectives_are_same( coli, colf ) ) then; \
+       print *, 'ERROR: init and final configurations given to sll_o_new_remap_plan do not refer to the same collective.'; \
+       stop; \
+    end if; \
+    acc = 0; \
+    coli => sll_o_get_layout_collective(initial); \
+    my_rank  = sll_f_get_collective_rank( coli ); \
+    col_size = sll_f_get_collective_size( coli ); \
+    SLL_ALLOCATE( fname, ierr ); \
+    SLL_ALLOCATE( fname%send_displs(0:col_size-1), ierr ); \
+    fname%send_displs(:) = 0; \
+    SLL_ALLOCATE( fname%send_counts(0:col_size-1), ierr ); \
+    fname%send_counts(:) = 0; \
+    SLL_ALLOCATE( fname%recv_displs(0:col_size-1), ierr ); \
+    fname%recv_displs(:) = 0; \
+    SLL_ALLOCATE( fname%recv_counts(0:col_size-1), ierr ); \
+    fname%recv_counts(:) = 0; \
+    SLL_ALLOCATE( fname%send_boxes(0:col_size-1), ierr ); \
+    SLL_ALLOCATE( fname%recv_boxes(0:col_size-1), ierr ); \
+    fname%collective => sll_o_get_layout_collective(initial); \
+    send_counter = 0; \
+    disp_counter = 0; \
+    ibox = get_layout_box(initial, my_rank); \
+    fname%initial_layout => initial; \
+    fname%final_layout   => final; \
+    do f = 0, col_size-1; \
+    fbox = get_layout_box(final, f); \
+       if( intersect_boxes_transp( ibox, fbox, inters ) ) then; \
+          send_counter         = count_elements_in_box(inters); \
+          fname%send_counts(f) = send_counter; \
+          fname%send_displs(f) = disp_counter; \
+          disp_counter         = disp_counter + send_counter; \
+          fname%send_boxes(f)  = inters; \
+          acc                  = acc + send_counter; \
+       else; \
+          fname%send_counts(f) = 0; \
+          fname%send_displs(f) = disp_counter; \
+          fname%send_boxes(f)  = inters; \
+       end if; \
+    end do; \
+    SLL_ALLOCATE(fname%send_buffer(0:(acc-1)),ierr); \
+    acc          = 0; \
+    disp_counter = 0; \
+    fbox = get_layout_box(final, my_rank); \
+    do i = 0, col_size-1; \
+       ibox = get_layout_box(initial,i); \
+       if( intersect_boxes_transp( fbox, ibox, inters ) ) then; \
+          recv_counter         = count_elements_in_box(inters); \
+          fname%recv_counts(i) = recv_counter; \
+          fname%recv_displs(i) = disp_counter; \
+          disp_counter         = disp_counter + recv_counter; \
+          fname%recv_boxes(i)  = inters; \
+          acc                  = acc + recv_counter; \
+       else; \
+          fname%recv_counts(i)   = 0; \
+          fname%recv_displs(i) = disp_counter; \
+          fname%recv_boxes(i)  = inters; \
+       end if; \
+    end do; \
+    SLL_ALLOCATE(fname%recv_buffer(0:(acc-1)),ierr); \
+    fname%is_uniform = .false.; \
+    call optimize_remap_plan(fname); \
+  end function fname
+
+
+  MAKE_NEW_REMAP_TPLAN_FUNCTION(new_remap_tplan_6D_real64,sll_t_remap_plan_6d_real64,sll_t_layout_6d,box_6D, sll_real64, dimension(:,:,:,:,:,:) )
+
+
+
  ! Try to fix the name of the subroutine in the print statement by stringifying
  ! the name.
 #define MAKE_DELETE_REMAP_SUBROUTINE( fname, plan_type ) \
@@ -2044,7 +2225,7 @@ contains  !******************************************************************
   ! has comments.
   function new_remap_plan_3D( initial, final, int32_data_size )
     intrinsic                       :: associated
-    type(remap_plan_3D), pointer  :: new_remap_plan_3D 
+    type(remap_plan_3D), pointer  :: new_remap_plan_3D
     type(sll_t_layout_3d), pointer      :: initial
     type(sll_t_layout_3d), pointer      :: final
     sll_int32, intent(in)           :: int32_data_size
@@ -2069,7 +2250,7 @@ contains  !******************************************************************
        call errout(6,'F', &
          'init and final configurations given to sll_o_new_remap_plan do not refer to the same collective.',1989,'sll_remap.F90')
     end if
-  
+
     col => get_layout_3D_collective(initial)
     my_rank  = sll_f_get_collective_rank( col )
     col_size = sll_f_get_collective_size( col )
@@ -2091,12 +2272,12 @@ contains  !******************************************************************
     ibox = get_layout_3D_box(initial, my_rank)
     new_remap_plan_3D%initial_layout => initial
     new_remap_plan_3D%final_layout   => final
-    ! Find what data to send. 
+    ! Find what data to send.
     do f = 0, col_size-1  ! loop over the final layout to look for
                           ! box intersections.
     fbox = get_layout_3D_box(final, f)
-       if( intersect_boxes_3D( ibox, fbox, inters ) ) then 
-          ! compute how many elements to send. 
+       if( intersect_boxes_3D( ibox, fbox, inters ) ) then
+          ! compute how many elements to send.
           send_counter                     = count_elements_in_box_3D(inters)
           new_remap_plan_3D%send_counts(f)   = send_counter
           new_remap_plan_3D%send_displs(f) = disp_counter
@@ -2110,11 +2291,11 @@ contains  !******************************************************************
        end if
     end do
     ! Now that we know the total amount of data to send, we can allocate
-    ! the 'send' buffer. Note that we are allocating an integer array, 
+    ! the 'send' buffer. Note that we are allocating an integer array,
     ! so a size adjustment is needed.
     SLL_ALLOCATE(new_remap_plan_3D%send_buffer(0:(acc*int32_data_size-1)),ierr)
     acc          = 0
-    disp_counter = 0  
+    disp_counter = 0
     ! Find what data to receive. Now we compare it with the target layout
     ! for this node.
     fbox = get_layout_3D_box(final, my_rank)
@@ -2142,21 +2323,21 @@ contains  !******************************************************************
 
   ! The optimizer function is stand-alone. It may be used just
   ! before exiting the new_remap_plan_3D function.
-  ! 
-  ! The main idea behind the optimizations is the following: 
+  !
+  ! The main idea behind the optimizations is the following:
   ! An unoptimized remap plan is just a call to alltoallV() on a (possibly
-  ! very large) communicator. This is concise, but inefficient. For a 
-  ! given remapping operation, the re-arrangement of data will 
-  ! normally only require communications between subsets of processes 
-  ! within this communicator. The optimizer function thus has several 
+  ! very large) communicator. This is concise, but inefficient. For a
+  ! given remapping operation, the re-arrangement of data will
+  ! normally only require communications between subsets of processes
+  ! within this communicator. The optimizer function thus has several
   ! optimization opportunities:
   !
-  ! 1. The first level of optimizations is to identify the subsets of 
+  ! 1. The first level of optimizations is to identify the subsets of
   !    processes that communicate with one another, and then launch the
   !    alltoallV() call on this new (hopefully much smaller) communicator.
   ! 2. The second level of optimizations involves identifying those calls to
   !    alltoallV() which exhibit a regular pattern and than can be replaced
-  !    by a call to alltoall(), which gives the implementors of the 
+  !    by a call to alltoall(), which gives the implementors of the
   !    communications libraries better optimization opportunities.
   ! 3. The last level of optimization is to simplify the loading of the
   !    send buffers whenever possible.
@@ -2168,12 +2349,12 @@ contains  !******************************************************************
   ! supposed to directly exchange data. This permits the following steps:
   ! a. every process allocates an array of length 'collective_size'
   ! b. each process will figure out the ranks of the processes with which it
-  !    communicates (send or receive), and will find the one with the lowest 
+  !    communicates (send or receive), and will find the one with the lowest
   !    rank ( hereafter denominated 'lowest_rank' ) and will set:
-  !            array(my_rank) = lowest_rank 
+  !            array(my_rank) = lowest_rank
   ! c. the array is shared between all processes with an allgather() operation.
   ! d. we save a copy of this array.
-  ! e. then, each process will inspect the fields 'array(i)' of this array that 
+  ! e. then, each process will inspect the fields 'array(i)' of this array that
   !    correspond to the ranks with which this process is supposed to exchange
   !    (send or receive) any data. The process will find the lowest value and
   !    will set     array(my_rank) = lowest_value.
@@ -2186,16 +2367,16 @@ contains  !******************************************************************
   ! This algorithm will be able to sort out through complicated communication
   ! patterns where the exchanges are asymmetric.
   !
-  ! The optimized plan also compresses the 'box' arrays that store the 
-  ! information on the data that is to be sent/received, as well as the 
+  ! The optimized plan also compresses the 'box' arrays that store the
+  ! information on the data that is to be sent/received, as well as the
   ! send_counts and displacements...  This introduces a
   ! problem: The optimized plan has a notion of a reduced collective, as well
   ! as compressed box arrays, but will still need the 'global' information
-  ! about the layouts, since the sll_o_global_to_local function only has meaning 
-  ! in the context of the global layout. I find this 'mixing' very unpleasant, 
+  ! about the layouts, since the sll_o_global_to_local function only has meaning
+  ! in the context of the global layout. I find this 'mixing' very unpleasant,
   ! and it might invite confusing those two collectives (the parent and the
-  ! reduced), for now see no clean & easy way to fix this. Fortunately, at 
-  ! least, the reference to the larger collective is hidden inside the 'layout' 
+  ! reduced), for now see no clean & easy way to fix this. Fortunately, at
+  ! least, the reference to the larger collective is hidden inside the 'layout'
   ! information and used only by 'sll_o_global_to_local()'.
 #define MAKE_REMAP_OPTIMIZER( fname, remap_type, box_type ) \
 subroutine fname( plan ); \
@@ -2233,7 +2414,7 @@ MAKE_REMAP_OPTIMIZER( optimize_remap_plan_4D_comp64, remap_plan_4D_comp64, box_4
 
 MAKE_REMAP_OPTIMIZER( optimize_remap_plan_5D_int32, remap_plan_5D_int32, box_5D )
 #include "sll_k_make_remap_optimizer.F90"
-  
+
 MAKE_REMAP_OPTIMIZER( optimize_remap_plan_5D_real64, sll_t_remap_plan_5d_real64, box_5D )
 #include "sll_k_make_remap_optimizer.F90"
 
@@ -2259,7 +2440,7 @@ MAKE_REMAP_OPTIMIZER( optimize_remap_plan_6D_comp64, remap_plan_6D_comp64, box_6
     arrays_are_equal = .true.
     do i=1,n
        if( a1(i).ne.a2(i) ) then
-          arrays_are_equal = .false. 
+          arrays_are_equal = .false.
        end if
     end do
   end function arrays_are_equal
@@ -2325,7 +2506,7 @@ MAKE_REMAP_OPTIMIZER( optimize_remap_plan_6D_comp64, remap_plan_6D_comp64, box_6
   ! happen to be basic MPI types. A problem arises when we want to communicate
   ! something like a derived type.
   !
-  ! For derived types, one would normally be required to use the MPI 
+  ! For derived types, one would normally be required to use the MPI
   ! derived type functions like MPI_Type_struct and all that (or whatever
   ! their Fortran equivalent is) and all of a sudden we have lost containment
   ! (read: lost modularity) of the MPI LIBRARY.
@@ -2333,8 +2514,8 @@ MAKE_REMAP_OPTIMIZER( optimize_remap_plan_6D_comp64, remap_plan_6D_comp64, box_6
   ! Here we try an approach, standard in C but apparently unusual in Fortran.
   ! The idea is to always communicate the MPI_INTEGER datatype. The only extra
   ! step is to translate the arrays for counts and displacements in terms
-  ! of their integer-sizes. While we would still need a different 
-  ! apply_remap_XD() function for every new type, at least this will not 
+  ! of their integer-sizes. While we would still need a different
+  ! apply_remap_XD() function for every new type, at least this will not
   ! affect the sll_o_new_remap_plan() function.
   !
   ! For apply_remap_XD_int(), we use this approach as a test case, even though
@@ -2405,7 +2586,7 @@ MAKE_REMAP_OPTIMIZER( optimize_remap_plan_6D_comp64, remap_plan_6D_comp64, box_6
              stop 'apply_remap(): loading error'
           end if
           ! get the information on the box to send, get the limits,
-          ! convert to the local indices and find out where in the 
+          ! convert to the local indices and find out where in the
           ! buffer to start writing.
           sbox     = plan%send_boxes(i)
           loi      = get_box_3D_i_min(sbox)
@@ -2423,8 +2604,8 @@ MAKE_REMAP_OPTIMIZER( optimize_remap_plan_6D_comp64, remap_plan_6D_comp64, box_6
           ! array with a single index (loc). When we load the buffer, each
           ! data element may occupy multiple integer 'slots', hence the
           ! loading index needs to be manually increased. As an advantage,
-          ! we can do some error checking every time we send data to a 
-          ! different process, as we know what is the expected value of 
+          ! we can do some error checking every time we send data to a
+          ! different process, as we know what is the expected value of
           ! the index at that point.
           do kd = local_lo(3), local_hi(3)
              do jd = local_lo(2), local_hi(2)
@@ -2436,12 +2617,12 @@ MAKE_REMAP_OPTIMIZER( optimize_remap_plan_6D_comp64, remap_plan_6D_comp64, box_6
           end do
        end if
     end do
-    
+
 !    write (*,'(a,i4)') 'the send buffer in rank:', my_rank
 !    print *, sb(0:(size(sb)-1))
 !    flush( output_unit )
- 
-   if( plan%is_uniform .eqv. .false. ) then 
+
+   if( plan%is_uniform .eqv. .false. ) then
        call sll_o_collective_alltoallv( sb(:),       &
                                       scnts(0:col_sz-1), &
                                       sdisp(0:col_sz-1), &
@@ -2466,7 +2647,7 @@ MAKE_REMAP_OPTIMIZER( optimize_remap_plan_6D_comp64, remap_plan_6D_comp64, box_6
                   'ERROR: discrepancy between rdisp(i) and index for i = ', i
              stop 'unpacking error'
           end if
-          ! get the information on the box to receive, get the limits, and 
+          ! get the information on the box to receive, get the limits, and
           ! convert to the local indices.
           sbox = plan%recv_boxes(i)
           loi = get_box_3D_i_min(sbox)
@@ -2498,7 +2679,7 @@ MAKE_REMAP_OPTIMIZER( optimize_remap_plan_6D_comp64, remap_plan_6D_comp64, box_6
     sll_real64, dimension(:), pointer         :: sb     ! send buffer
     sll_real64, dimension(:), pointer         :: rb     ! receive buffer
     sll_int32, dimension(:), pointer          :: sdisp  ! send displacements
-    sll_int32, dimension(:), pointer          :: rdisp  ! receive displacements 
+    sll_int32, dimension(:), pointer          :: rdisp  ! receive displacements
     sll_int32, dimension(:), pointer          :: scnts  ! send counts
     sll_int32, dimension(:), pointer          :: rcnts  ! receive counts
     type(sll_t_collective_t), pointer           :: col    ! collective
@@ -2552,7 +2733,7 @@ MAKE_REMAP_OPTIMIZER( optimize_remap_plan_6D_comp64, remap_plan_6D_comp64, box_6
 !!$    call convert_into_integer_sizes(INT32_SIZEOF(data_in(1,1)), rcnts, &
 !!$         col_sz, rcntsi)
 !!$#endif
-    
+
 !!$#if 0
 !!$    write (*,'(a,i4)') 'parameters from rank ', my_rank
 !!$    print *, 'scntsi', scntsi(:)
@@ -2581,7 +2762,7 @@ MAKE_REMAP_OPTIMIZER( optimize_remap_plan_6D_comp64, remap_plan_6D_comp64, box_6
              stop 'apply_remap(): loading error'
           end if
           ! get the information on the box to send, get the limits,
-          ! convert to the local indices and find out where in the 
+          ! convert to the local indices and find out where in the
           ! buffer to start writing.
           sbox = plan%send_boxes(i)
           loi = get_box_2D_i_min(sbox)
@@ -2600,8 +2781,8 @@ MAKE_REMAP_OPTIMIZER( optimize_remap_plan_6D_comp64, remap_plan_6D_comp64, box_6
           ! array with a single index (loc). When we load the buffer, each
           ! data element may occupy multiple integer 'slots', hence the
           ! loading index needs to be manually increased. As an advantage,
-          ! we can do some error checking every time we send data to a 
-          ! different process, as we know what is the expected value of 
+          ! we can do some error checking every time we send data to a
+          ! different process, as we know what is the expected value of
           ! the index at that point.
           do jd = local_lo(2), local_hi(2)
              do id = local_lo(1), local_hi(1)
@@ -2614,13 +2795,13 @@ MAKE_REMAP_OPTIMIZER( optimize_remap_plan_6D_comp64, remap_plan_6D_comp64, box_6
        end if
     end do
 
-    ! Comment the following when not debugging    
+    ! Comment the following when not debugging
     !   write (*,'(a,i4)') 'the send buffer in rank:', my_rank
     !  print *, sb(0:(size(sb)-1))
     ! flush( output_unit )
     !    print *, 'from inside remap: rank ', my_rank, 'calling communications'
     !    flush( output_unit )
-   if( plan%is_uniform .eqv. .false. ) then 
+   if( plan%is_uniform .eqv. .false. ) then
       ! the following call can be changed from a generic to a type-specific
       ! call when right away, but especially if the apply_remap function gets
       ! specialized (i.e. gets rid of transfer() calls).
@@ -2656,7 +2837,7 @@ MAKE_REMAP_OPTIMIZER( optimize_remap_plan_6D_comp64, remap_plan_6D_comp64, box_6
                   'ERROR: discrepancy between rdisp(i) and index for i = ', i
              stop 'unpacking error'
           end if
-          ! get the information on the box to receive, get the limits, and 
+          ! get the information on the box to receive, get the limits, and
           ! convert to the local indices.
           sbox = plan%recv_boxes(i)
           loi = get_box_2D_i_min(sbox)
@@ -2691,7 +2872,7 @@ MAKE_REMAP_OPTIMIZER( optimize_remap_plan_6D_comp64, remap_plan_6D_comp64, box_6
     sll_comp64, dimension(:), pointer         :: sb     ! send buffer
     sll_comp64, dimension(:), pointer         :: rb     ! receive buffer
     sll_int32, dimension(:), pointer          :: sdisp  ! send displacements
-    sll_int32, dimension(:), pointer          :: rdisp  ! receive displacements 
+    sll_int32, dimension(:), pointer          :: rdisp  ! receive displacements
     sll_int32, dimension(:), pointer          :: scnts  ! send counts
     sll_int32, dimension(:), pointer          :: rcnts  ! receive counts
     type(sll_t_collective_t), pointer           :: col    ! collective
@@ -2743,7 +2924,7 @@ print *, 'remap 2d complex:'
              stop 'apply_remap(): loading error'
           end if
           ! get the information on the box to send, get the limits,
-          ! convert to the local indices and find out where in the 
+          ! convert to the local indices and find out where in the
           ! buffer to start writing.
           sbox = plan%send_boxes(i)
           loi = get_box_2D_i_min(sbox)
@@ -2759,8 +2940,8 @@ print *, 'remap 2d complex:'
           ! array with a single index (loc). When we load the buffer, each
           ! data element may occupy multiple integer 'slots', hence the
           ! loading index needs to be manually increased. As an advantage,
-          ! we can do some error checking every time we send data to a 
-          ! different process, as we know what is the expected value of 
+          ! we can do some error checking every time we send data to a
+          ! different process, as we know what is the expected value of
           ! the index at that point.
           do jd = local_lo(2), local_hi(2)
              do id = local_lo(1), local_hi(1)
@@ -2770,14 +2951,14 @@ print *, 'remap 2d complex:'
           end do
        end if
     end do
-    ! Comment the following when not debugging    
+    ! Comment the following when not debugging
 !!$    write (*,'(a,i4)') 'the send buffer in rank:', my_rank
 !!$    print *, sb(0:(size(sb)-1))
 !!$    flush( output_unit )
 !!$    print *, 'from inside remap: rank ', my_rank, 'calling communications'
 !!$    flush( output_unit )
 
-   if( plan%is_uniform .eqv. .false. ) then 
+   if( plan%is_uniform .eqv. .false. ) then
       ! the following call can be changed from a generic to a type-specific
       ! call when right away, but especially if the apply_remap function gets
       ! specialized (i.e. gets rid of transfer() calls).
@@ -2807,7 +2988,7 @@ print *, 'remap 2d complex:'
                   'ERROR: discrepancy between rdispi(i) and index for i = ', i
              stop 'unpacking error'
           end if
-          ! get the information on the box to receive, get the limits, and 
+          ! get the information on the box to receive, get the limits, and
           ! convert to the local indices.
           sbox = plan%recv_boxes(i)
           loi = get_box_2D_i_min(sbox)
@@ -2840,7 +3021,7 @@ print *, 'remap 2d complex:'
     sll_int32, dimension(:), pointer          :: sb     ! send buffer
     sll_int32, dimension(:), pointer          :: rb     ! receive buffer
     sll_int32, dimension(:), pointer          :: sdisp  ! send displacements
-    sll_int32, dimension(:), pointer          :: rdisp  ! receive displacements 
+    sll_int32, dimension(:), pointer          :: rdisp  ! receive displacements
     sll_int32, dimension(:), pointer          :: scnts  ! send counts
     sll_int32, dimension(:), pointer          :: rcnts  ! receive counts
     type(sll_t_collective_t), pointer           :: col    ! collective
@@ -2895,7 +3076,7 @@ print *, 'remap 2d complex:'
     call convert_into_integer_sizes(INT32_SIZEOF(data_in(1,1)), rcnts, &
          col_sz, rcntsi)
 #endif
-    
+
 #if 0
     write (*,'(a,i4)') 'parameters from rank ', my_rank
     print *, 'scntsi', scntsi(:)
@@ -2904,7 +3085,7 @@ print *, 'remap 2d complex:'
     print *, 'rdispi', rdispi(:)
     flush( output_unit )
 #endif
-    
+
     ! load the send buffer
     loc = 0             ! first loading is at position zero
     ! This step is obviously not needed for integers themselves. We put this
@@ -2922,7 +3103,7 @@ print *, 'remap 2d complex:'
              stop 'apply_remap(): loading error'
           end if
           ! get the information on the box to send, get the limits,
-          ! convert to the local indices and find out where in the 
+          ! convert to the local indices and find out where in the
           ! buffer to start writing.
           sbox = plan%send_boxes(i)
           loi = get_box_2D_i_min(sbox)
@@ -2936,8 +3117,8 @@ print *, 'remap 2d complex:'
           ! array with a single index (loc). When we load the buffer, each
           ! data element may occupy multiple integer 'slots', hence the
           ! loading index needs to be manually increased. As an advantage,
-          ! we can do some error checking every time we send data to a 
-          ! different process, as we know what is the expected value of 
+          ! we can do some error checking every time we send data to a
+          ! different process, as we know what is the expected value of
           ! the index at that point.
           do jd = local_lo(2), local_hi(2)
              do id = local_lo(1), local_hi(1)
@@ -2947,13 +3128,13 @@ print *, 'remap 2d complex:'
           end do
        end if
     end do
-    ! Comment the following when not debugging    
+    ! Comment the following when not debugging
     !   write (*,'(a,i4)') 'the send buffer in rank:', my_rank
     !  print *, sb(0:(size(sb)-1))
     ! flush( output_unit )
     !    print *, 'from inside remap: rank ', my_rank, 'calling communications'
     !    flush( output_unit )
-   if( plan%is_uniform .eqv. .false. ) then 
+   if( plan%is_uniform .eqv. .false. ) then
       ! the following call can be changed from a generic to a type-specific
       ! call when right away, but especially if the apply_remap function gets
       ! specialized (i.e. gets rid of transfer() calls).
@@ -2981,7 +3162,7 @@ print *, 'remap 2d complex:'
                   'ERROR: discrepancy between rdispi(i) and index for i = ', i
              stop 'unpacking error'
           end if
-          ! get the information on the box to receive, get the limits, and 
+          ! get the information on the box to receive, get the limits, and
           ! convert to the local indices.
           sbox = plan%recv_boxes(i)
           loi = get_box_2D_i_min(sbox)
@@ -3013,7 +3194,7 @@ print *, 'remap 2d complex:'
     sll_real64, dimension(:), pointer         :: sb     ! send buffer
     sll_real64, dimension(:), pointer         :: rb     ! receive buffer
     sll_int32, dimension(:), pointer          :: sdisp  ! send displacements
-    sll_int32, dimension(:), pointer          :: rdisp  ! receive displacements 
+    sll_int32, dimension(:), pointer          :: rdisp  ! receive displacements
     sll_int32, dimension(:), pointer          :: scnts  ! send counts
     sll_int32, dimension(:), pointer          :: rcnts  ! receive counts
     type(sll_t_collective_t), pointer           :: col    ! collective
@@ -3061,7 +3242,7 @@ print *, 'remap 2d complex:'
              stop 'apply_remap(): loading error'
           end if
           ! get the information on the box to send, get the limits,
-          ! convert to the local indices and find out where in the 
+          ! convert to the local indices and find out where in the
           ! buffer to start writing.
           sbox = plan%send_boxes(i)
           loi = get_box_3D_i_min(sbox)
@@ -3079,8 +3260,8 @@ print *, 'remap 2d complex:'
           ! array with a single index (loc). When we load the buffer, each
           ! data element may occupy multiple integer 'slots', hence the
           ! loading index needs to be manually increased. As an advantage,
-          ! we can do some error checking every time we send data to a 
-          ! different process, as we know what is the expected value of 
+          ! we can do some error checking every time we send data to a
+          ! different process, as we know what is the expected value of
           ! the index at that point.
           do kd = local_lo(3), local_hi(3)
              do jd = local_lo(2), local_hi(2)
@@ -3092,13 +3273,13 @@ print *, 'remap 2d complex:'
           end do
        end if
     end do
-    ! Comment the following when not debugging    
+    ! Comment the following when not debugging
  !   write (*,'(a,i4)') 'the send buffer in rank:', my_rank
   !  print *, sb(0:(size(sb)-1))
    ! flush( output_unit )
 !    print *, 'from inside remap: rank ', my_rank, 'calling communications'
 !    flush( output_unit )
-   if( plan%is_uniform .eqv. .false. ) then 
+   if( plan%is_uniform .eqv. .false. ) then
        call sll_o_collective_alltoallv( sb(:),       &
                                       scnts(0:col_sz-1), &
                                       sdisp(0:col_sz-1), &
@@ -3123,7 +3304,7 @@ print *, 'remap 2d complex:'
                   'ERROR: discrepancy between rdispi(i) and index for i = ', i
              stop 'unpacking error'
           end if
-          ! get the information on the box to receive, get the limits, and 
+          ! get the information on the box to receive, get the limits, and
           ! convert to the local indices.
           sbox = plan%recv_boxes(i)
           loi = get_box_3D_i_min(sbox)
@@ -3155,7 +3336,7 @@ print *, 'remap 2d complex:'
     sll_real64, dimension(:), pointer         :: sb     ! send buffer
     sll_real64, dimension(:), pointer         :: rb     ! receive buffer
     sll_int32, dimension(:), pointer          :: sdisp  ! send displacements
-    sll_int32, dimension(:), pointer          :: rdisp  ! receive displacements 
+    sll_int32, dimension(:), pointer          :: rdisp  ! receive displacements
     sll_int32, dimension(:), pointer          :: scnts  ! send counts
     sll_int32, dimension(:), pointer          :: rcnts  ! receive counts
     type(sll_t_collective_t), pointer           :: col    ! collective
@@ -3203,7 +3384,7 @@ print *, 'remap 2d complex:'
              stop 'apply_remap(): loading error'
           end if
           ! get the information on the box to send, get the limits,
-          ! convert to the local indices and find out where in the 
+          ! convert to the local indices and find out where in the
           ! buffer to start writing.
           sbox = plan%send_boxes(i)
           loi = get_box_4D_i_min(sbox)
@@ -3223,8 +3404,8 @@ print *, 'remap 2d complex:'
           ! array with a single index (loc). When we load the buffer, each
           ! data element may occupy multiple integer 'slots', hence the
           ! loading index needs to be manually increased. As an advantage,
-          ! we can do some error checking every time we send data to a 
-          ! different process, as we know what is the expected value of 
+          ! we can do some error checking every time we send data to a
+          ! different process, as we know what is the expected value of
           ! the index at that point.
           do ld = local_lo(4), local_hi(4)
              do kd = local_lo(3), local_hi(3)
@@ -3238,13 +3419,13 @@ print *, 'remap 2d complex:'
           end do
        end if
     end do
-    ! Comment the following when not debugging    
+    ! Comment the following when not debugging
     !   write (*,'(a,i4)') 'the send buffer in rank:', my_rank
     !  print *, sb(0:(size(sb)-1))
     ! flush( output_unit )
     !    print *, 'from inside remap: rank ', my_rank, 'calling communications'
     !    flush( output_unit )
-    if( plan%is_uniform .eqv. .false. ) then 
+    if( plan%is_uniform .eqv. .false. ) then
        call sll_o_collective_alltoallv( sb(:),       &
                                       scnts(0:col_sz-1), &
                                       sdisp(0:col_sz-1), &
@@ -3269,7 +3450,7 @@ print *, 'remap 2d complex:'
                   'ERROR: discrepancy between rdispi(i) and index for i = ', i
              stop 'unpacking error'
           end if
-          ! get the information on the box to receive, get the limits, and 
+          ! get the information on the box to receive, get the limits, and
           ! convert to the local indices.
           sbox = plan%recv_boxes(i)
           loi = get_box_4D_i_min(sbox)
@@ -3305,7 +3486,7 @@ print *, 'remap 2d complex:'
     sll_comp64, dimension(:), pointer          :: sb     ! send buffer
     sll_comp64, dimension(:), pointer          :: rb     ! receive buffer
     sll_int32, dimension(:), pointer          :: sdisp  ! send displacements
-    sll_int32, dimension(:), pointer          :: rdisp  ! receive displacements 
+    sll_int32, dimension(:), pointer          :: rdisp  ! receive displacements
     sll_int32, dimension(:), pointer          :: scnts  ! send counts
     sll_int32, dimension(:), pointer          :: rcnts  ! receive counts
     type(sll_t_collective_t), pointer           :: col    ! collective
@@ -3346,7 +3527,7 @@ print *, 'remap 2d complex:'
              stop 'apply_remap(): loading error'
           end if
           ! get the information on the box to send, get the limits,
-          ! convert to the local indices and find out where in the 
+          ! convert to the local indices and find out where in the
           ! buffer to start writing.
           sbox = plan%send_boxes(i)
           loi = get_box_3D_i_min(sbox)
@@ -3364,8 +3545,8 @@ print *, 'remap 2d complex:'
           ! array with a single index (loc). When we load the buffer, each
           ! data element may occupy multiple integer 'slots', hence the
           ! loading index needs to be manually increased. As an advantage,
-          ! we can do some error checking every time we send data to a 
-          ! different process, as we know what is the expected value of 
+          ! we can do some error checking every time we send data to a
+          ! different process, as we know what is the expected value of
           ! the index at that point.
           do kd = local_lo(3), local_hi(3)
              do jd = local_lo(2), local_hi(2)
@@ -3377,12 +3558,12 @@ print *, 'remap 2d complex:'
           end do
        end if
     end do
-    
+
 !    write (*,'(a,i4)') 'the send buffer in rank:', my_rank
 !    print *, sb(0:(size(sb)-1))
 !    flush( output_unit )
- 
-   if( plan%is_uniform .eqv. .false. ) then 
+
+   if( plan%is_uniform .eqv. .false. ) then
        call sll_o_collective_alltoallv( sb(:),       &
                                       scnts(0:col_sz-1), &
                                       sdisp(0:col_sz-1), &
@@ -3407,7 +3588,7 @@ print *, 'remap 2d complex:'
                   'ERROR: discrepancy between rdispi(i) and index for i = ', i
              stop 'unpacking error'
           end if
-          ! get the information on the box to receive, get the limits, and 
+          ! get the information on the box to receive, get the limits, and
           ! convert to the local indices.
           sbox = plan%recv_boxes(i)
           loi = get_box_3D_i_min(sbox)
@@ -3441,7 +3622,7 @@ print *, 'remap 2d complex:'
     sll_real64, dimension(:), pointer          :: sb     ! send buffer
     sll_real64, dimension(:), pointer          :: rb     ! receive buffer
     sll_int32, dimension(:), pointer          :: sdisp  ! send displacements
-    sll_int32, dimension(:), pointer          :: rdisp  ! receive displacements 
+    sll_int32, dimension(:), pointer          :: rdisp  ! receive displacements
     sll_int32, dimension(:), pointer          :: scnts  ! send counts
     sll_int32, dimension(:), pointer          :: rcnts  ! receive counts
     type(sll_t_collective_t), pointer           :: col    ! collective
@@ -3489,7 +3670,7 @@ print *, 'remap 2d complex:'
              stop 'apply_remap(): exchange buffer loading error'
           end if
           ! get the information on the box to send, get the limits,
-          ! convert to the local indices and find out where in the 
+          ! convert to the local indices and find out where in the
           ! buffer to start writing.
           sbox = plan%send_boxes(i)
           loi = get_box_5D_i_min(sbox)
@@ -3510,8 +3691,8 @@ print *, 'remap 2d complex:'
           ! The plan to load the send buffer is to traverse the send buffer
           ! array with a single index (loc). We manually increment the loading
           ! index. As an advantage,
-          ! we can do some error checking every time we send data to a 
-          ! different process, as we know what is the expected value of 
+          ! we can do some error checking every time we send data to a
+          ! different process, as we know what is the expected value of
           ! the index at that point.
              do md = local_lo(5), local_hi(5)
                 do ld = local_lo(4), local_hi(4)
@@ -3527,14 +3708,14 @@ print *, 'remap 2d complex:'
              end do
        end if
     end do
-    ! Comment the following when not debugging    
+    ! Comment the following when not debugging
 !!$    write (*,'(a,i4)') 'the send buffer in rank:', my_rank
 !!$    print *, sb(0:(size(sb)-1))
 !!$    flush( output_unit )
 !!$    print *, 'from inside remap: rank ', my_rank, 'calling communications'
 !!$    flush( output_unit )
 
-    if( plan%is_uniform .eqv. .false. ) then 
+    if( plan%is_uniform .eqv. .false. ) then
        call sll_o_collective_alltoallv( sb(:),       &
                                       scnts(0:col_sz-1), &
                                       sdisp(0:col_sz-1), &
@@ -3560,7 +3741,7 @@ print *, 'remap 2d complex:'
                   'ERROR: discrepancy between rdispi(i) and index for i = ', i
              stop 'exchange buffer unpacking error'
           end if
-          ! get the information on the box to receive, get the limits, and 
+          ! get the information on the box to receive, get the limits, and
           ! convert to the local indices.
           sbox = plan%recv_boxes(i)
           loi = get_box_5D_i_min(sbox)
@@ -3602,7 +3783,7 @@ print *, 'remap 2d complex:'
     sll_int32, dimension(:), pointer          :: sb     ! send buffer
     sll_int32, dimension(:), pointer          :: rb     ! receive buffer
     sll_int32, dimension(:), pointer          :: sdisp  ! send displacements
-    sll_int32, dimension(:), pointer          :: rdisp  ! receive displacements 
+    sll_int32, dimension(:), pointer          :: rdisp  ! receive displacements
     sll_int32, dimension(:), pointer          :: scnts  ! send counts
     sll_int32, dimension(:), pointer          :: rcnts  ! receive counts
     type(sll_t_collective_t), pointer           :: col    ! collective
@@ -3646,7 +3827,7 @@ print *, 'remap 2d complex:'
              stop 'apply_remap(): exchange buffer loading error'
           end if
           ! get the information on the box to send, get the limits,
-          ! convert to the local indices and find out where in the 
+          ! convert to the local indices and find out where in the
           ! buffer to start writing.
           sbox = plan%send_boxes(i)
           loi = get_box_5D_i_min(sbox)
@@ -3667,8 +3848,8 @@ print *, 'remap 2d complex:'
           ! array with a single index (loc). When we load the buffer, each
           ! data element may occupy multiple integer 'slots', hence the
           ! loading index needs to be manually increased. As an advantage,
-          ! we can do some error checking every time we send data to a 
-          ! different process, as we know what is the expected value of 
+          ! we can do some error checking every time we send data to a
+          ! different process, as we know what is the expected value of
           ! the index at that point.
              do md = local_lo(5), local_hi(5)
                 do ld = local_lo(4), local_hi(4)
@@ -3685,7 +3866,7 @@ print *, 'remap 2d complex:'
        end if
     end do
 
-    ! Comment the following when not debugging    
+    ! Comment the following when not debugging
 !!$    if(my_rank == 0) then
 !!$       write (*,'(a,i4)') 'send buffer, rank:', my_rank, 'buffer size = ', &
 !!$            size(sb)
@@ -3701,7 +3882,7 @@ print *, 'remap 2d complex:'
 !!$    print *, 'from inside remap: rank ', my_rank, 'calling communications'
 !!$    flush( output_unit )
 
-    if( plan%is_uniform .eqv. .false. ) then 
+    if( plan%is_uniform .eqv. .false. ) then
        call sll_o_collective_alltoallv( sb(:),       &
                                       scnts(0:col_sz-1), &
                                       sdisp(0:col_sz-1), &
@@ -3728,7 +3909,7 @@ print *, 'remap 2d complex:'
                   'ERROR: discrepancy between rdispi(i) and index for i = ', i
              stop 'exchange buffer unpacking error'
           end if
-          ! get the information on the box to receive, get the limits, and 
+          ! get the information on the box to receive, get the limits, and
           ! convert to the local indices.
           sbox = plan%recv_boxes(i)
           loi = get_box_5D_i_min(sbox)
@@ -3770,15 +3951,15 @@ print *, 'remap 2d complex:'
     type(sll_t_remap_plan_6d_real64), pointer              :: plan
     sll_real64, dimension(:,:,:,:,:,:), intent(in)  :: data_in
     sll_real64, dimension(:,:,:,:,:,:), intent(out) :: data_out
-    sll_real64, dimension(:), pointer          :: sb     ! send buffer
-    sll_real64, dimension(:), pointer          :: rb     ! receive buffer
+    sll_real64, dimension(:), pointer         :: sb     ! send buffer
+    sll_real64, dimension(:), pointer         :: rb     ! receive buffer
     sll_int32, dimension(:), pointer          :: sdisp  ! send displacements
-    sll_int32, dimension(:), pointer          :: rdisp  ! receive displacements 
+    sll_int32, dimension(:), pointer          :: rdisp  ! receive displacements
     sll_int32, dimension(:), pointer          :: scnts  ! send counts
     sll_int32, dimension(:), pointer          :: rcnts  ! receive counts
-    type(sll_t_collective_t), pointer           :: col    ! collective
-    type(sll_t_layout_6d), pointer                  :: init_layout  => NULL()
-    type(sll_t_layout_6d), pointer                  :: final_layout => NULL()
+    type(sll_t_collective_t), pointer         :: col    ! collective
+    type(sll_t_layout_6d), pointer            :: init_layout  => NULL()
+    type(sll_t_layout_6d), pointer            :: final_layout => NULL()
     sll_int32                                 :: id, jd, kd, ld, md, nd
     sll_int32                                 :: i
     sll_int32                                 :: col_sz
@@ -3787,8 +3968,12 @@ print *, 'remap 2d complex:'
     type(box_6D)                              :: sbox
     sll_int32                                 :: my_rank
     sll_int32                                 :: loc
-    sll_int32, dimension(1:6)                 :: local_lo, local_hi
+    sll_int32, dimension(1:6)                 :: local_lo, local_hi, local_width
     sll_int32, dimension(1:6)                 :: tmpa
+    logical, save :: first_call = .true.
+    ! --- auxiliary indices/offsets necessary for OpenMP parallel copy loops ---
+    sll_int32 :: ii,ij,ik,il,im,in  ! original indices, computed from zero-based ones
+    sll_int32 :: oj,ok,ol,om,on     ! offsets of the buffer, for zero-based indexing
 
     ! unpack the plan: There are inconsistencies here, one one hand we access
     ! directly and on the other with access functions... standardize...
@@ -3804,24 +3989,20 @@ print *, 'remap 2d complex:'
     sb           => plan%send_buffer
     rb           => plan%recv_buffer
 
-    ! print *, 'from rank ', my_rank, 'loading parameters: ', sdisp, rdisp, &
-    ! scnts, rcnts
 
-    ! load the send buffer
-    loc = 0             ! first loading is at position zero
     do i = 0, col_sz-1
        if( scnts(i) .ne. 0 ) then ! send something to rank 'i'
-          if( loc .ne. sdisp(i) ) then
-             print *, 'ERROR DETECTED in process: ', my_rank
-             print *, 'apply_remap_6D_double() ERROR: ', &
-                  'discrepancy between displs(i) and the loading index for ',&
-                  'i = ', i, ' displs(i) = ', sdisp(i)
-             write(*,'(a,i8)') 'col_sz = ', col_sz
-             flush( output_unit )
-             stop 'apply_remap(): exchange buffer loading error'
-          end if
+!!$          if( loc .ne. sdisp(i) ) then
+!!$             print *, 'ERROR DETECTED in process: ', my_rank
+!!$             print *, 'apply_remap_6D_double() ERROR: ', &
+!!$                  'discrepancy between displs(i) and the loading index for ',&
+!!$                  'i = ', i, ' displs(i) = ', sdisp(i)
+!!$             write(*,'(a,i8)') 'col_sz = ', col_sz
+!!$             flush( output_unit )
+!!$             stop 'apply_remap(): exchange buffer loading error'
+!!$          end if
           ! get the information on the box to send, get the limits,
-          ! convert to the local indices and find out where in the 
+          ! convert to the local indices and find out where in the
           ! buffer to start writing.
           sbox = plan%send_boxes(i)
           loi = get_box_6D_i_min(sbox)
@@ -3840,63 +4021,83 @@ print *, 'remap 2d complex:'
           local_lo = global_to_local_6D( init_layout, tmpa )
           tmpa(:)  = (/hii,hij,hik,hil,him,hin/)
           local_hi = global_to_local_6D( init_layout, tmpa)
+          local_width = local_hi-local_lo + 1
 
           ! The plan to load the send buffer is to traverse the send buffer
           ! array with a single index (loc). We manually increment the loading
           ! index. As an advantage,
-          ! we can do some error checking every time we send data to a 
-          ! different process, as we know what is the expected value of 
+          ! we can do some error checking every time we send data to a
+          ! different process, as we know what is the expected value of
           ! the index at that point.
-          do nd = local_lo(6), local_hi(6)
-             do md = local_lo(5), local_hi(5)
-                do ld = local_lo(4), local_hi(4)
-                   do kd = local_lo(3), local_hi(3)
-                      do jd = local_lo(2), local_hi(2)
-                         do id = local_lo(1), local_hi(1)
-                            sb(loc) = data_in(id,jd,kd,ld,md,nd)
-                            loc     = loc + 1
+!$omp parallel  default(shared) private(id,jd,kd,ld,md,nd, oj, ok, ol, om, on, ii, ij, ik, il, im, in, loc)
+!$omp do OMP_SCHEDULE OMP_COLLAPSE
+          do nd = 0,local_width(6)-1!local_lo(6), local_hi(6)
+             do md = 0,local_width(5)-1!local_lo(5), local_hi(5)
+                on = nd * product(local_width(1:5))
+                in = local_lo(6) + nd
+                om = md * product(local_width(1:4))
+                im = local_lo(5) + md
+                do ld = 0,local_width(4)-1!local_lo(4), local_hi(4)
+                   ol = ld * product(local_width(1:3))
+                   il = local_lo(4) + ld
+                   do kd = 0,local_width(3)-1!local_lo(3), local_hi(3)
+                      ok = kd * product(local_width(1:2))
+                      ik = local_lo(3) + kd
+                      do jd = 0,local_width(2)-1!local_lo(2), local_hi(2)
+                         oj = jd * local_width(1)
+                         ij = local_lo(2) + jd
+                         do id = 0,local_width(1)-1!local_lo(1), local_hi(1)
+                            ii = local_lo(1) + id
+                            loc = sdisp(i) + id + oj + ok + ol + om + on
+                            sb(loc) = data_in(ii,ij,ik,il,im,in)
                          end do
                       end do
                    end do
                 end do
              end do
           end do
+!$omp end do
+!$omp end parallel
+! --- previous version without OMP
+!!$          do nd = local_lo(6), local_hi(6)
+!!$             on = n *
+!!$             do md = local_lo(5), local_hi(5)
+!!$                do ld = local_lo(4), local_hi(4)
+!!$                   do kd = local_lo(3), local_hi(3)
+!!$                      do jd = local_lo(2), local_hi(2)
+!!$                         do id = local_lo(1), local_hi(1)
+!!$                            sb(loc) = data_in(id,jd,kd,ld,md,nd)
+!!$                            loc     = loc + 1
+!!$                         end do
+!!$                      end do
+!!$                   end do
+!!$                end do
+!!$             end do
+!!$          end do
        end if
-    end do
-    ! Comment the following when not debugging    
-!!$    write (*,'(a,i4)') 'the send buffer in rank:', my_rank
-!!$    print *, sb(0:(size(sb)-1))
-!!$    flush( output_unit )
-!!$    print *, 'from inside remap: rank ', my_rank, 'calling communications'
-!!$    flush( output_unit )
+   end do
 
-    if( plan%is_uniform .eqv. .false. ) then 
-       call sll_o_collective_alltoallv( sb(:),       &
-                                      scnts(0:col_sz-1), &
-                                      sdisp(0:col_sz-1), &
-                                      rb(:),       &
-                                      rcnts(0:col_sz-1), &
-                                      rdisp(0:col_sz-1), col )
+    if(plan%is_uniform .eqv. .false.) then
+       call sll_o_collective_alltoallv(sb, scnts(0:col_sz-1), sdisp(0:col_sz-1), &
+                                       rb, rcnts(0:col_sz-1), rdisp(0:col_sz-1), &
+                                       col)
     else
-       call sll_o_collective_alltoall ( sb(:), &
-                                      scnts(0), &
-                                      rcnts(0), &
-                                      rb(:), col )
+       call sll_o_collective_alltoall (sb, &
+                                       scnts(0), &
+                                       rcnts(0), &
+                                       rb, col )
     end if
 
-!!$    write (*,'(a, i4)') 'receive buffer in rank: ', my_rank
-!!$    print *, rb(0:size(rb)-1)
-!!$    flush( output_unit )
     ! Unpack the plan into the outgoing buffer.
     loc = 0  ! We load first from position 0 in the receive buffer.
     do i = 0, col_sz-1
        if( rcnts(i) .ne. 0 ) then ! we expect something from rank 'i'
-          if( loc .ne. rdisp(i) ) then
-             write (*,'(a,i4)') &
-                  'ERROR: discrepancy between rdispi(i) and index for i = ', i
-             stop 'exchange buffer unpacking error'
-          end if
-          ! get the information on the box to receive, get the limits, and 
+!!$          if( loc .ne. rdisp(i) ) then
+!!$             write (*,'(a,i4)') &
+!!$                  'ERROR: discrepancy between rdispi(i) and index for i = ', i
+!!$             stop 'exchange buffer unpacking error'
+!!$          end if
+          ! get the information on the box to receive, get the limits, and
           ! convert to the local indices.
           sbox = plan%recv_boxes(i)
           loi = get_box_6D_i_min(sbox)
@@ -3915,23 +4116,665 @@ print *, 'remap 2d complex:'
           local_lo = global_to_local_6D(final_layout, tmpa )
           tmpa(:)  = (/hii,hij,hik,hil,him,hin/)
           local_hi = global_to_local_6D(final_layout, tmpa)
-          do nd = local_lo(6), local_hi(6)
-             do md = local_lo(5), local_hi(5)
-                do ld = local_lo(4), local_hi(4)
-                   do kd = local_lo(3), local_hi(3)
-                      do jd = local_lo(2), local_hi(2)
-                         do id = local_lo(1), local_hi(1)
-                            data_out(id,jd,kd,ld,md,nd) = rb(loc)
-                            loc                         = loc + 1
+          local_width = local_hi-local_lo + 1
+
+!$omp parallel  default(shared) private(id,jd,kd,ld,md,nd, oj, ok, ol, om, on, ii, ij, ik, il, im, in, loc)
+!$omp do OMP_SCHEDULE OMP_COLLAPSE
+          do nd = 0,local_width(6)-1!local_lo(6), local_hi(6)
+             do md = 0,local_width(5)-1!local_lo(5), local_hi(5)
+                on = nd * product(local_width(1:5))
+                in = local_lo(6) + nd
+                om = md * product(local_width(1:4))
+                im = local_lo(5) + md
+                do ld = 0,local_width(4)-1!local_lo(4), local_hi(4)
+                   ol = ld * product(local_width(1:3))
+                   il = local_lo(4) + ld
+                   do kd = 0,local_width(3)-1!local_lo(3), local_hi(3)
+                      ok = kd * product(local_width(1:2))
+                      ik = local_lo(3) + kd
+                      do jd = 0,local_width(2)-1!local_lo(2), local_hi(2)
+                         oj = jd * local_width(1)
+                         ij = local_lo(2) + jd
+                         do id = 0,local_width(1)-1!local_lo(1), local_hi(1)
+                            ii = local_lo(1) + id
+                            loc = rdisp(i) + id + oj + ok + ol + om + on
+                            data_out(ii,ij,ik,il,im,in) = rb(loc)
+                            !loc                         = loc + 1
                          end do
                       end do
                    end do
                 end do
              end do
           end do
+!$omp end do
+!$omp end parallel
        end if
     end do
   end subroutine apply_remap_6D_double
+
+ subroutine apply_tremap_6D_double( plan, data_in, data_out )
+    type(sll_t_remap_plan_6d_real64), pointer              :: plan
+    sll_real64, dimension(:,:,:,:,:,:), intent(in)  :: data_in
+    sll_real64, dimension(:,:,:,:,:,:), intent(out) :: data_out
+    sll_real64, dimension(:), pointer         :: sb     ! send buffer
+    sll_real64, dimension(:), pointer         :: rb     ! receive buffer
+    sll_int32, dimension(:), pointer          :: sdisp  ! send displacements
+    sll_int32, dimension(:), pointer          :: rdisp  ! receive displacements
+    sll_int32, dimension(:), pointer          :: scnts  ! send counts
+    sll_int32, dimension(:), pointer          :: rcnts  ! receive counts
+    type(sll_t_collective_t), pointer         :: col    ! collective
+    type(sll_t_layout_6d), pointer            :: init_layout  => NULL()
+    type(sll_t_layout_6d), pointer            :: final_layout => NULL()
+    sll_int32                                 :: id, jd, kd, ld, md, nd
+    sll_int32                                 :: i
+    sll_int32                                 :: col_sz
+    sll_int32                                 :: loi, loj, lok, lol, lom, lon
+    sll_int32                                 :: hii, hij, hik, hil, him, hin
+    type(box_6D)                              :: sbox
+    sll_int32                                 :: my_rank
+    sll_int32                                 :: loc
+    sll_int32, dimension(1:6)                 :: local_lo, local_hi, local_width
+    sll_int32, dimension(1:6)                 :: tmpa
+    logical, save :: first_call = .true.
+    ! --- auxiliary indices/offsets necessary for OpenMP parallel copy loops ---
+    sll_int32 :: ii,ij,ik,il,im,in  ! original indices, computed from zero-based ones
+    sll_int32 :: oi,oj,ok,ol,om,on  ! offsets of the buffer, for zero-based indexing
+
+    ! unpack the plan: There are inconsistencies here, one one hand we access
+    ! directly and on the other with access functions... standardize...
+    sdisp        => plan%send_displs
+    rdisp        => plan%recv_displs
+    scnts        => plan%send_counts
+    rcnts        => plan%recv_counts
+    col          => plan%collective
+    col_sz       =  sll_f_get_collective_size(col)
+    init_layout  => get_remap_6D_initial_layout_real64(plan)
+    final_layout => get_remap_6D_final_layout_real64(plan)
+    my_rank      =  sll_f_get_collective_rank(col)
+    sb           => plan%send_buffer
+    rb           => plan%recv_buffer
+
+
+    do i = 0, col_sz-1
+       if( scnts(i) .ne. 0 ) then ! send something to rank 'i'
+!!$          if( loc .ne. sdisp(i) ) then
+!!$             print *, 'ERROR DETECTED in process: ', my_rank
+!!$             print *, 'apply_remap_6D_double() ERROR: ', &
+!!$                  'discrepancy between displs(i) and the loading index for ',&
+!!$                  'i = ', i, ' displs(i) = ', sdisp(i)
+!!$             write(*,'(a,i8)') 'col_sz = ', col_sz
+!!$             flush( output_unit )
+!!$             stop 'apply_remap(): exchange buffer loading error'
+!!$          end if
+          ! get the information on the box to send, get the limits,
+          ! convert to the local indices and find out where in the
+          ! buffer to start writing.
+          sbox = plan%send_boxes(i)
+          loi = get_box_6D_i_min(sbox)
+          loj = get_box_6D_j_min(sbox)
+          lok = get_box_6D_k_min(sbox)
+          lol = get_box_6D_l_min(sbox)
+          lom = get_box_6D_m_min(sbox)
+          lon = get_box_6D_n_min(sbox)
+          hii = get_box_6D_i_max(sbox)
+          hij = get_box_6D_j_max(sbox)
+          hik = get_box_6D_k_max(sbox)
+          hil = get_box_6D_l_max(sbox)
+          him = get_box_6D_m_max(sbox)
+          hin = get_box_6D_n_max(sbox)
+          tmpa(:)  = (/loi,loj,lok,lol,lom,lon/)
+          local_lo = global_to_local_6D( init_layout, tmpa )
+          tmpa(:)  = (/hii,hij,hik,hil,him,hin/)
+          local_hi = global_to_local_6D( init_layout, tmpa)
+          local_width = local_hi-local_lo + 1
+
+          ! The plan to load the send buffer is to traverse the send buffer
+          ! array with a single index (loc). We manually increment the loading
+          ! index. As an advantage,
+          ! we can do some error checking every time we send data to a
+          ! different process, as we know what is the expected value of
+          ! the index at that point.
+!$omp parallel  default(shared) private(id,jd,kd,ld,md,nd, oj, ok, ol, om, on, ii, ij, ik, il, im, in, loc)
+!$omp do OMP_SCHEDULE OMP_COLLAPSE
+          do nd = 0,local_width(6)-1!local_lo(6), local_hi(6)
+             do md = 0,local_width(5)-1!local_lo(5), local_hi(5)
+                on = nd * product(local_width(1:5))
+                in = local_lo(6) + nd
+                om = md * product(local_width(1:4))
+                im = local_lo(5) + md
+                do ld = 0,local_width(4)-1!local_lo(4), local_hi(4)
+                   ol = ld * product(local_width(1:3))
+                   il = local_lo(4) + ld
+                   do kd = 0,local_width(3)-1!local_lo(3), local_hi(3)
+                      ok = kd * product(local_width(1:2))
+                      ik = local_lo(3) + kd
+                      do jd = 0,local_width(2)-1!local_lo(2), local_hi(2)
+                         oj = jd * local_width(1)
+                         ij = local_lo(2) + jd
+                         do id = 0,local_width(1)-1!local_lo(1), local_hi(1)
+                            ii = local_lo(1) + id
+                            loc = sdisp(i) + id + oj + ok + ol + om + on
+                            sb(loc) = data_in(ii,ij,ik,il,im,in)
+                         end do
+                      end do
+                   end do
+                end do
+             end do
+          end do
+!$omp end do
+!$omp end parallel
+! --- previous version without OMP
+!!$          do nd = local_lo(6), local_hi(6)
+!!$             on = n *
+!!$             do md = local_lo(5), local_hi(5)
+!!$                do ld = local_lo(4), local_hi(4)
+!!$                   do kd = local_lo(3), local_hi(3)
+!!$                      do jd = local_lo(2), local_hi(2)
+!!$                         do id = local_lo(1), local_hi(1)
+!!$                            sb(loc) = data_in(id,jd,kd,ld,md,nd)
+!!$                            loc     = loc + 1
+!!$                         end do
+!!$                      end do
+!!$                   end do
+!!$                end do
+!!$             end do
+!!$          end do
+       end if
+   end do
+
+    if(plan%is_uniform .eqv. .false.) then
+       call sll_o_collective_alltoallv(sb, scnts(0:col_sz-1), sdisp(0:col_sz-1), &
+                                       rb, rcnts(0:col_sz-1), rdisp(0:col_sz-1), &
+                                       col)
+    else
+       call sll_o_collective_alltoall (sb, &
+                                       scnts(0), &
+                                       rcnts(0), &
+                                       rb, col )
+    end if
+
+    ! Unpack the plan into the outgoing buffer.
+    loc = 0  ! We load first from position 0 in the receive buffer.
+    do i = 0, col_sz-1
+       if( rcnts(i) .ne. 0 ) then ! we expect something from rank 'i'
+!!$          if( loc .ne. rdisp(i) ) then
+!!$             write (*,'(a,i4)') &
+!!$                  'ERROR: discrepancy between rdispi(i) and index for i = ', i
+!!$             stop 'exchange buffer unpacking error'
+!!$          end if
+          ! get the information on the box to receive, get the limits, and
+          ! convert to the local indices.
+          sbox = plan%recv_boxes(i)
+          loi = get_box_6D_i_min(sbox)
+          loj = get_box_6D_j_min(sbox)
+          lok = get_box_6D_k_min(sbox)
+          lol = get_box_6D_l_min(sbox)
+          lom = get_box_6D_m_min(sbox)
+          lon = get_box_6D_n_min(sbox)
+          hii = get_box_6D_i_max(sbox)
+          hij = get_box_6D_j_max(sbox)
+          hik = get_box_6D_k_max(sbox)
+          hil = get_box_6D_l_max(sbox)
+          him = get_box_6D_m_max(sbox)
+          hin = get_box_6D_n_max(sbox)
+          tmpa(:)  = (/loi,loj,lok,lol,lom,lon/)
+          local_lo = global_to_local_6D(final_layout, tmpa )
+          tmpa(:)  = (/hii,hij,hik,hil,him,hin/)
+          local_hi = global_to_local_6D(final_layout, tmpa)
+          local_width = local_hi-local_lo + 1
+
+! TODO: Accelerate these loops!
+
+!$omp parallel  default(shared) private(id,jd,kd,ld,md,nd, oj, ok, ol, om, on, ii, ij, ik, il, im, in, loc)
+!$omp do OMP_SCHEDULE OMP_COLLAPSE
+          do nd = 0,local_width(6)-1!local_lo(6), local_hi(6)
+             do md = 0,local_width(5)-1!local_lo(5), local_hi(5)
+                on = nd * product(local_width(4:5))!on = nd * product(local_width(1:5))
+                in = local_lo(6) + nd
+                om = md * local_width(4)!om = md * product(local_width(1:4))
+                im = local_lo(5) + md
+                do ld = 0,local_width(4)-1!local_lo(4), local_hi(4)
+                   ol = ld !ol = ld * product(local_width(1:3))
+                   il = local_lo(4) + ld
+                   do kd = 0,local_width(3)-1!local_lo(3), local_hi(3)
+                      ok = kd * product(local_width(4:6)) * product(local_width(1:2))!ok = kd * product(local_width(1:2))
+                      ik = local_lo(3) + kd
+                      do jd = 0,local_width(2)-1!local_lo(2), local_hi(2)
+                         oj = jd *  product(local_width(4:6)) * local_width(1)!oj = jd * local_width(1)
+                         ij = local_lo(2) + jd
+                         do id = 0,local_width(1)-1!local_lo(1), local_hi(1)
+                            oi = id *  product(local_width(4:6))
+                            ii = local_lo(1) + id
+                            loc = rdisp(i) + oi + oj + ok + ol + om + on
+                            !print*, oi, oj, ok, ol, om, on, loc
+                            !print*, ii, ij, ik, il, im, in, loc
+                            data_out(ii,ij,ik,il,im,in) = rb(loc)
+                            !loc                         = loc + 1
+                         end do
+                      end do
+                   end do
+                end do
+             end do
+          end do
+!$omp end do
+!$omp end parallel
+       end if
+    end do
+  end subroutine apply_tremap_6D_double
+
+
+ subroutine apply_remap_6D_double_ftranspose( plan, data_in, data_out )
+    type(sll_t_remap_plan_6d_real64), pointer              :: plan
+    sll_real64, dimension(:,:,:,:,:,:), intent(in)  :: data_in
+    sll_real64, dimension(:,:,:,:,:,:), intent(out) :: data_out
+    sll_real64, dimension(:), pointer         :: sb     ! send buffer
+    sll_real64, dimension(:), pointer         :: rb     ! receive buffer
+    sll_int32, dimension(:), pointer          :: sdisp  ! send displacements
+    sll_int32, dimension(:), pointer          :: rdisp  ! receive displacements
+    sll_int32, dimension(:), pointer          :: scnts  ! send counts
+    sll_int32, dimension(:), pointer          :: rcnts  ! receive counts
+    type(sll_t_collective_t), pointer         :: col    ! collective
+    type(sll_t_layout_6d), pointer            :: init_layout  => NULL()
+    type(sll_t_layout_6d), pointer            :: final_layout => NULL()
+    sll_int32                                 :: id, jd, kd, ld, md, nd
+    sll_int32                                 :: i
+    sll_int32                                 :: col_sz
+    sll_int32                                 :: loi, loj, lok, lol, lom, lon
+    sll_int32                                 :: hii, hij, hik, hil, him, hin
+    type(box_6D)                              :: sbox
+    sll_int32                                 :: my_rank
+    sll_int32                                 :: loc
+    sll_int32, dimension(1:6)                 :: local_lo, local_hi, local_width
+    sll_int32, dimension(1:6)                 :: tmpa
+    logical, save :: first_call = .true.
+    ! --- auxiliary indices/offsets necessary for OpenMP parallel copy loops ---
+    sll_int32 :: ii,ij,ik,il,im,in  ! original indices, computed from zero-based ones
+    sll_int32 :: oj,ok,ol,om,on     ! offsets of the buffer, for zero-based indexing
+
+    ! unpack the plan: There are inconsistencies here, one one hand we access
+    ! directly and on the other with access functions... standardize...
+    sdisp        => plan%send_displs
+    rdisp        => plan%recv_displs
+    scnts        => plan%send_counts
+    rcnts        => plan%recv_counts
+    col          => plan%collective
+    col_sz       =  sll_f_get_collective_size(col)
+    init_layout  => get_remap_6D_initial_layout_real64(plan)
+    final_layout => get_remap_6D_final_layout_real64(plan)
+    my_rank      =  sll_f_get_collective_rank(col)
+    sb           => plan%send_buffer
+    rb           => plan%recv_buffer
+
+
+    do i = 0, col_sz-1
+       if( scnts(i) .ne. 0 ) then ! send something to rank 'i'
+!!$          if( loc .ne. sdisp(i) ) then
+!!$             print *, 'ERROR DETECTED in process: ', my_rank
+!!$             print *, 'apply_remap_6D_double() ERROR: ', &
+!!$                  'discrepancy between displs(i) and the loading index for ',&
+!!$                  'i = ', i, ' displs(i) = ', sdisp(i)
+!!$             write(*,'(a,i8)') 'col_sz = ', col_sz
+!!$             flush( output_unit )
+!!$             stop 'apply_remap(): exchange buffer loading error'
+!!$          end if
+          ! get the information on the box to send, get the limits,
+          ! convert to the local indices and find out where in the
+          ! buffer to start writing.
+          sbox = plan%send_boxes(i)
+          loi = get_box_6D_i_min(sbox)
+          loj = get_box_6D_j_min(sbox)
+          lok = get_box_6D_k_min(sbox)
+          lol = get_box_6D_l_min(sbox)
+          lom = get_box_6D_m_min(sbox)
+          lon = get_box_6D_n_min(sbox)
+          hii = get_box_6D_i_max(sbox)
+          hij = get_box_6D_j_max(sbox)
+          hik = get_box_6D_k_max(sbox)
+          hil = get_box_6D_l_max(sbox)
+          him = get_box_6D_m_max(sbox)
+          hin = get_box_6D_n_max(sbox)
+          tmpa(:)  = (/loi,loj,lok,lol,lom,lon/)
+          local_lo = global_to_local_6D( init_layout, tmpa )
+          tmpa(:)  = (/hii,hij,hik,hil,him,hin/)
+          local_hi = global_to_local_6D( init_layout, tmpa)
+          local_width = local_hi-local_lo + 1
+
+          ! The plan to load the send buffer is to traverse the send buffer
+          ! array with a single index (loc). We manually increment the loading
+          ! index. As an advantage,
+          ! we can do some error checking every time we send data to a
+          ! different process, as we know what is the expected value of
+          ! the index at that point.
+!$omp parallel  default(shared) private(id,jd,kd,ld,md,nd, oj, ok, ol, om, on, ii, ij, ik, il, im, in, loc)
+!$omp do OMP_SCHEDULE OMP_COLLAPSE
+          do nd = 0,local_width(6)-1!local_lo(6), local_hi(6)
+             do md = 0,local_width(5)-1!local_lo(5), local_hi(5)
+                on = nd * product(local_width(1:5))
+                in = local_lo(6) + nd
+                om = md * product(local_width(1:4))
+                im = local_lo(5) + md
+                do ld = 0,local_width(4)-1!local_lo(4), local_hi(4)
+                   ol = ld * product(local_width(1:3))
+                   il = local_lo(4) + ld
+                   do kd = 0,local_width(3)-1!local_lo(3), local_hi(3)
+                      ok = kd * product(local_width(1:2))
+                      ik = local_lo(3) + kd
+                      do jd = 0,local_width(2)-1!local_lo(2), local_hi(2)
+                         oj = jd * local_width(1)
+                         ij = local_lo(2) + jd
+                         do id = 0,local_width(1)-1!local_lo(1), local_hi(1)
+                            ii = local_lo(1) + id
+                            loc = sdisp(i) + id + oj + ok + ol + om + on
+                            sb(loc) = data_in(ii,ij,ik,il,im,in)
+                         end do
+                      end do
+                   end do
+                end do
+             end do
+          end do
+!$omp end do
+!$omp end parallel
+! --- previous version without OMP
+!!$          do nd = local_lo(6), local_hi(6)
+!!$             on = n *
+!!$             do md = local_lo(5), local_hi(5)
+!!$                do ld = local_lo(4), local_hi(4)
+!!$                   do kd = local_lo(3), local_hi(3)
+!!$                      do jd = local_lo(2), local_hi(2)
+!!$                         do id = local_lo(1), local_hi(1)
+!!$                            sb(loc) = data_in(id,jd,kd,ld,md,nd)
+!!$                            loc     = loc + 1
+!!$                         end do
+!!$                      end do
+!!$                   end do
+!!$                end do
+!!$             end do
+!!$          end do
+       end if
+   end do
+
+    if(plan%is_uniform .eqv. .false.) then
+       call sll_o_collective_alltoallv(sb, scnts(0:col_sz-1), sdisp(0:col_sz-1), &
+                                       rb, rcnts(0:col_sz-1), rdisp(0:col_sz-1), &
+                                       col)
+    else
+       call sll_o_collective_alltoall (sb, &
+                                       scnts(0), &
+                                       rcnts(0), &
+                                       rb, col )
+    end if
+
+    ! Unpack the plan into the outgoing buffer.
+    loc = 0  ! We load first from position 0 in the receive buffer.
+    do i = 0, col_sz-1
+       if( rcnts(i) .ne. 0 ) then ! we expect something from rank 'i'
+!!$          if( loc .ne. rdisp(i) ) then
+!!$             write (*,'(a,i4)') &
+!!$                  'ERROR: discrepancy between rdispi(i) and index for i = ', i
+!!$             stop 'exchange buffer unpacking error'
+!!$          end if
+          ! get the information on the box to receive, get the limits, and
+          ! convert to the local indices.
+          sbox = plan%recv_boxes(i)
+          loi = get_box_6D_i_min(sbox)
+          loj = get_box_6D_j_min(sbox)
+          lok = get_box_6D_k_min(sbox)
+          lol = get_box_6D_l_min(sbox)
+          lom = get_box_6D_m_min(sbox)
+          lon = get_box_6D_n_min(sbox)
+          hii = get_box_6D_i_max(sbox)
+          hij = get_box_6D_j_max(sbox)
+          hik = get_box_6D_k_max(sbox)
+          hil = get_box_6D_l_max(sbox)
+          him = get_box_6D_m_max(sbox)
+          hin = get_box_6D_n_max(sbox)
+          tmpa(:)  = (/loi,loj,lok,lol,lom,lon/)
+          local_lo = global_to_local_6D(final_layout, tmpa )
+          tmpa(:)  = (/hii,hij,hik,hil,him,hin/)
+          local_hi = global_to_local_6D(final_layout, tmpa)
+          local_width = local_hi-local_lo + 1
+
+!$omp parallel  default(shared) private(id,jd,kd,ld,md,nd, oj, ok, ol, om, on, ii, ij, ik, il, im, in, loc)
+!$omp do OMP_SCHEDULE OMP_COLLAPSE
+          do nd = 0,local_width(6)-1!local_lo(6), local_hi(6)
+             do md = 0,local_width(5)-1!local_lo(5), local_hi(5)
+                on = nd * product(local_width(1:5))
+                in = local_lo(6) + nd
+                om = md * product(local_width(1:4))
+                im = local_lo(5) + md
+                do ld = 0,local_width(4)-1!local_lo(4), local_hi(4)
+                   ol = ld * product(local_width(1:3))
+                   il = local_lo(4) + ld
+                   do kd = 0,local_width(3)-1!local_lo(3), local_hi(3)
+                      ok = kd * product(local_width(1:2))
+                      ik = local_lo(3) + kd
+                      do jd = 0,local_width(2)-1!local_lo(2), local_hi(2)
+                         oj = jd * local_width(1)
+                         ij = local_lo(2) + jd
+                         do id = 0,local_width(1)-1!local_lo(1), local_hi(1)
+                            ii = local_lo(1) + id
+                            loc = rdisp(i) + id + oj + ok + ol + om + on
+                            data_out(il, im, in, ii,ij,ik) = rb(loc)
+                            !loc                         = loc + 1
+                         end do
+                      end do
+                   end do
+                end do
+             end do
+          end do
+!$omp end do
+!$omp end parallel
+       end if
+    end do
+  end subroutine apply_remap_6D_double_ftranspose
+
+
+   subroutine apply_remap_6D_double_btranspose( plan, data_in, data_out )
+    type(sll_t_remap_plan_6d_real64), pointer              :: plan
+    sll_real64, dimension(:,:,:,:,:,:), intent(in)  :: data_in
+    sll_real64, dimension(:,:,:,:,:,:), intent(out) :: data_out
+    sll_real64, dimension(:), pointer         :: sb     ! send buffer
+    sll_real64, dimension(:), pointer         :: rb     ! receive buffer
+    sll_int32, dimension(:), pointer          :: sdisp  ! send displacements
+    sll_int32, dimension(:), pointer          :: rdisp  ! receive displacements
+    sll_int32, dimension(:), pointer          :: scnts  ! send counts
+    sll_int32, dimension(:), pointer          :: rcnts  ! receive counts
+    type(sll_t_collective_t), pointer         :: col    ! collective
+    type(sll_t_layout_6d), pointer            :: init_layout  => NULL()
+    type(sll_t_layout_6d), pointer            :: final_layout => NULL()
+    sll_int32                                 :: id, jd, kd, ld, md, nd
+    sll_int32                                 :: i
+    sll_int32                                 :: col_sz
+    sll_int32                                 :: loi, loj, lok, lol, lom, lon
+    sll_int32                                 :: hii, hij, hik, hil, him, hin
+    type(box_6D)                              :: sbox
+    sll_int32                                 :: my_rank
+    sll_int32                                 :: loc
+    sll_int32, dimension(1:6)                 :: local_lo, local_hi, local_width
+    sll_int32, dimension(1:6)                 :: tmpa
+    logical, save :: first_call = .true.
+    ! --- auxiliary indices/offsets necessary for OpenMP parallel copy loops ---
+    sll_int32 :: ii,ij,ik,il,im,in  ! original indices, computed from zero-based ones
+    sll_int32 :: oj,ok,ol,om,on     ! offsets of the buffer, for zero-based indexing
+
+    ! unpack the plan: There are inconsistencies here, one one hand we access
+    ! directly and on the other with access functions... standardize...
+    sdisp        => plan%send_displs
+    rdisp        => plan%recv_displs
+    scnts        => plan%send_counts
+    rcnts        => plan%recv_counts
+    col          => plan%collective
+    col_sz       =  sll_f_get_collective_size(col)
+    init_layout  => get_remap_6D_initial_layout_real64(plan)
+    final_layout => get_remap_6D_final_layout_real64(plan)
+    my_rank      =  sll_f_get_collective_rank(col)
+    sb           => plan%send_buffer
+    rb           => plan%recv_buffer
+
+
+    do i = 0, col_sz-1
+       if( scnts(i) .ne. 0 ) then ! send something to rank 'i'
+!!$          if( loc .ne. sdisp(i) ) then
+!!$             print *, 'ERROR DETECTED in process: ', my_rank
+!!$             print *, 'apply_remap_6D_double() ERROR: ', &
+!!$                  'discrepancy between displs(i) and the loading index for ',&
+!!$                  'i = ', i, ' displs(i) = ', sdisp(i)
+!!$             write(*,'(a,i8)') 'col_sz = ', col_sz
+!!$             flush( output_unit )
+!!$             stop 'apply_remap(): exchange buffer loading error'
+!!$          end if
+          ! get the information on the box to send, get the limits,
+          ! convert to the local indices and find out where in the
+          ! buffer to start writing.
+          sbox = plan%send_boxes(i)
+          loi = get_box_6D_i_min(sbox)
+          loj = get_box_6D_j_min(sbox)
+          lok = get_box_6D_k_min(sbox)
+          lol = get_box_6D_l_min(sbox)
+          lom = get_box_6D_m_min(sbox)
+          lon = get_box_6D_n_min(sbox)
+          hii = get_box_6D_i_max(sbox)
+          hij = get_box_6D_j_max(sbox)
+          hik = get_box_6D_k_max(sbox)
+          hil = get_box_6D_l_max(sbox)
+          him = get_box_6D_m_max(sbox)
+          hin = get_box_6D_n_max(sbox)
+          tmpa(:)  = (/loi,loj,lok,lol,lom,lon/)
+          local_lo = global_to_local_6D( init_layout, tmpa )
+          tmpa(:)  = (/hii,hij,hik,hil,him,hin/)
+          local_hi = global_to_local_6D( init_layout, tmpa)
+          local_width = local_hi-local_lo + 1
+
+          ! The plan to load the send buffer is to traverse the send buffer
+          ! array with a single index (loc). We manually increment the loading
+          ! index. As an advantage,
+          ! we can do some error checking every time we send data to a
+          ! different process, as we know what is the expected value of
+          ! the index at that point.
+!$omp parallel  default(shared) private(id,jd,kd,ld,md,nd, oj, ok, ol, om, on, ii, ij, ik, il, im, in, loc)
+!$omp do OMP_SCHEDULE OMP_COLLAPSE
+          do nd = 0,local_width(6)-1!local_lo(6), local_hi(6)
+             do md = 0,local_width(5)-1!local_lo(5), local_hi(5)
+                on = nd * product(local_width(1:5))
+                in = local_lo(6) + nd
+                om = md * product(local_width(1:4))
+                im = local_lo(5) + md
+                do ld = 0,local_width(4)-1!local_lo(4), local_hi(4)
+                   ol = ld * product(local_width(1:3))
+                   il = local_lo(4) + ld
+                   do kd = 0,local_width(3)-1!local_lo(3), local_hi(3)
+                      ok = kd * product(local_width(1:2))
+                      ik = local_lo(3) + kd
+                      do jd = 0,local_width(2)-1!local_lo(2), local_hi(2)
+                         oj = jd * local_width(1)
+                         ij = local_lo(2) + jd
+                         do id = 0,local_width(1)-1!local_lo(1), local_hi(1)
+                            ii = local_lo(1) + id
+                            loc = sdisp(i) + id + oj + ok + ol + om + on
+                            sb(loc) = data_in(il,im,in,ii,ij,ik)
+                         end do
+                      end do
+                   end do
+                end do
+             end do
+          end do
+!$omp end do
+!$omp end parallel
+! --- previous version without OMP
+!!$          do nd = local_lo(6), local_hi(6)
+!!$             on = n *
+!!$             do md = local_lo(5), local_hi(5)
+!!$                do ld = local_lo(4), local_hi(4)
+!!$                   do kd = local_lo(3), local_hi(3)
+!!$                      do jd = local_lo(2), local_hi(2)
+!!$                         do id = local_lo(1), local_hi(1)
+!!$                            sb(loc) = data_in(id,jd,kd,ld,md,nd)
+!!$                            loc     = loc + 1
+!!$                         end do
+!!$                      end do
+!!$                   end do
+!!$                end do
+!!$             end do
+!!$          end do
+       end if
+   end do
+
+    if(plan%is_uniform .eqv. .false.) then
+       call sll_o_collective_alltoallv(sb, scnts(0:col_sz-1), sdisp(0:col_sz-1), &
+                                       rb, rcnts(0:col_sz-1), rdisp(0:col_sz-1), &
+                                       col)
+    else
+       call sll_o_collective_alltoall (sb, &
+                                       scnts(0), &
+                                       rcnts(0), &
+                                       rb, col )
+    end if
+
+    ! Unpack the plan into the outgoing buffer.
+    loc = 0  ! We load first from position 0 in the receive buffer.
+    do i = 0, col_sz-1
+       if( rcnts(i) .ne. 0 ) then ! we expect something from rank 'i'
+!!$          if( loc .ne. rdisp(i) ) then
+!!$             write (*,'(a,i4)') &
+!!$                  'ERROR: discrepancy between rdispi(i) and index for i = ', i
+!!$             stop 'exchange buffer unpacking error'
+!!$          end if
+          ! get the information on the box to receive, get the limits, and
+          ! convert to the local indices.
+          sbox = plan%recv_boxes(i)
+          loi = get_box_6D_i_min(sbox)
+          loj = get_box_6D_j_min(sbox)
+          lok = get_box_6D_k_min(sbox)
+          lol = get_box_6D_l_min(sbox)
+          lom = get_box_6D_m_min(sbox)
+          lon = get_box_6D_n_min(sbox)
+          hii = get_box_6D_i_max(sbox)
+          hij = get_box_6D_j_max(sbox)
+          hik = get_box_6D_k_max(sbox)
+          hil = get_box_6D_l_max(sbox)
+          him = get_box_6D_m_max(sbox)
+          hin = get_box_6D_n_max(sbox)
+          tmpa(:)  = (/loi,loj,lok,lol,lom,lon/)
+          local_lo = global_to_local_6D(final_layout, tmpa )
+          tmpa(:)  = (/hii,hij,hik,hil,him,hin/)
+          local_hi = global_to_local_6D(final_layout, tmpa)
+          local_width = local_hi-local_lo + 1
+
+!$omp parallel  default(shared) private(id,jd,kd,ld,md,nd, oj, ok, ol, om, on, ii, ij, ik, il, im, in, loc)
+!$omp do OMP_SCHEDULE OMP_COLLAPSE
+          do nd = 0,local_width(6)-1!local_lo(6), local_hi(6)
+             do md = 0,local_width(5)-1!local_lo(5), local_hi(5)
+                on = nd * product(local_width(1:5))
+                in = local_lo(6) + nd
+                om = md * product(local_width(1:4))
+                im = local_lo(5) + md
+                do ld = 0,local_width(4)-1!local_lo(4), local_hi(4)
+                   ol = ld * product(local_width(1:3))
+                   il = local_lo(4) + ld
+                   do kd = 0,local_width(3)-1!local_lo(3), local_hi(3)
+                      ok = kd * product(local_width(1:2))
+                      ik = local_lo(3) + kd
+                      do jd = 0,local_width(2)-1!local_lo(2), local_hi(2)
+                         oj = jd * local_width(1)
+                         ij = local_lo(2) + jd
+                         do id = 0,local_width(1)-1!local_lo(1), local_hi(1)
+                            ii = local_lo(1) + id
+                            loc = rdisp(i) + id + oj + ok + ol + om + on
+                            data_out(ii,ij,ik,il,im,in) = rb(loc)
+                            !loc                         = loc + 1
+                         end do
+                      end do
+                   end do
+                end do
+             end do
+          end do
+!$omp end do
+!$omp end parallel
+       end if
+    end do
+  end subroutine apply_remap_6D_double_btranspose
+
+
 
   subroutine apply_remap_6D_int( plan, data_in, data_out )
     type(remap_plan_6D_int32), pointer              :: plan
@@ -3940,7 +4783,7 @@ print *, 'remap 2d complex:'
     sll_int32, dimension(:), pointer          :: sb     ! send buffer
     sll_int32, dimension(:), pointer          :: rb     ! receive buffer
     sll_int32, dimension(:), pointer          :: sdisp  ! send displacements
-    sll_int32, dimension(:), pointer          :: rdisp  ! receive displacements 
+    sll_int32, dimension(:), pointer          :: rdisp  ! receive displacements
     sll_int32, dimension(:), pointer          :: scnts  ! send counts
     sll_int32, dimension(:), pointer          :: rcnts  ! receive counts
     type(sll_t_collective_t), pointer           :: col    ! collective
@@ -3984,7 +4827,7 @@ print *, 'remap 2d complex:'
              stop 'apply_remap(): exchange buffer loading error'
           end if
           ! get the information on the box to send, get the limits,
-          ! convert to the local indices and find out where in the 
+          ! convert to the local indices and find out where in the
           ! buffer to start writing.
           sbox = plan%send_boxes(i)
           loi = get_box_6D_i_min(sbox)
@@ -4007,8 +4850,8 @@ print *, 'remap 2d complex:'
           ! array with a single index (loc). When we load the buffer, each
           ! data element may occupy multiple integer 'slots', hence the
           ! loading index needs to be manually increased. As an advantage,
-          ! we can do some error checking every time we send data to a 
-          ! different process, as we know what is the expected value of 
+          ! we can do some error checking every time we send data to a
+          ! different process, as we know what is the expected value of
           ! the index at that point.
           do nd = local_lo(6), local_hi(6)
              do md = local_lo(5), local_hi(5)
@@ -4027,7 +4870,7 @@ print *, 'remap 2d complex:'
        end if
     end do
 
-    ! Comment the following when not debugging    
+    ! Comment the following when not debugging
 !!$    if(my_rank == 0) then
 !!$       write (*,'(a,i4)') 'send buffer, rank:', my_rank, 'buffer size = ', &
 !!$            size(sb)
@@ -4043,7 +4886,7 @@ print *, 'remap 2d complex:'
 !!$    print *, 'from inside remap: rank ', my_rank, 'calling communications'
 !!$    flush( output_unit )
 
-    if( plan%is_uniform .eqv. .false. ) then 
+    if( plan%is_uniform .eqv. .false. ) then
        call sll_o_collective_alltoallv( sb(:),       &
                                       scnts(0:col_sz-1), &
                                       sdisp(0:col_sz-1), &
@@ -4070,7 +4913,7 @@ print *, 'remap 2d complex:'
                   'ERROR: discrepancy between rdispi(i) and index for i = ', i
              stop 'exchange buffer unpacking error'
           end if
-          ! get the information on the box to receive, get the limits, and 
+          ! get the information on the box to receive, get the limits, and
           ! convert to the local indices.
           sbox = plan%recv_boxes(i)
           loi = get_box_6D_i_min(sbox)
@@ -4216,10 +5059,10 @@ print *, 'remap 2d complex:'
   !
   ! On the one hand, we could choose a scheme in which the global2local()
   ! function only responds in the context of the calling process, thus, if
-  ! a call to this function returns, say, '0' (and the array is indexed 1:N), 
-  ! then we know that the global index has no presence in the layout in the 
+  ! a call to this function returns, say, '0' (and the array is indexed 1:N),
+  ! then we know that the global index has no presence in the layout in the
   ! local process.
-  ! 
+  !
   ! On the other hand, the global2local() function could also be made to
   ! indicate the local index and rank of the other processes that also happen
   ! to have that global index in their domain. This second part, while it
@@ -4315,7 +5158,7 @@ print *, 'remap 2d complex:'
 
   ! We need to make sure that the decision of choosing '-1' as the return
   ! value when the global index is not available locally does not backfire.
-  ! If one decides to use an array with an indexing that contains -1, this 
+  ! If one decides to use an array with an indexing that contains -1, this
   ! would be problematic.
 
   function global_to_local_2D( layout, gtuple )
@@ -4612,7 +5455,7 @@ print *, 'remap 2d complex:'
   ! the return value of intersect_boxes() is 'logical', and answers
   ! the question whether the boxes intersect or not. 'ans' is a box with
   ! the actual intersection between the argument boxes. In case that there
-  ! is no intersection between the boxes the value [0,0] is returned. 
+  ! is no intersection between the boxes the value [0,0] is returned.
 
   function intersect_boxes_2D( b1, b2, ans )
     intrinsic                 :: min, max
@@ -4644,7 +5487,7 @@ print *, 'remap 2d complex:'
     loj = max(lojb1, lojb2)
     hij = min(hijb1, hijb2)
 
-    if( (loi .gt. hii) .or. (loj .gt. hij) ) then 
+    if( (loi .gt. hii) .or. (loj .gt. hij) ) then
        ans%i_min = 0
        ans%i_max = 0
        ans%j_min = 0
@@ -4699,7 +5542,7 @@ print *, 'remap 2d complex:'
     lok = max(lokb1, lokb2)
     hik = min(hikb1, hikb2)
 
-    if( (loi .gt. hii) .or. (loj .gt. hij) .or. (lok .gt. hik) ) then 
+    if( (loi .gt. hii) .or. (loj .gt. hij) .or. (lok .gt. hik) ) then
        ans%i_min = 0
        ans%i_max = 0
        ans%j_min = 0
@@ -4770,7 +5613,7 @@ print *, 'remap 2d complex:'
     hil = min(hilb1, hilb2)
 
     if( (loi .gt. hii) .or. (loj .gt. hij) .or. (lok .gt. hik) .or. &
-        (lol .gt. hil) ) then 
+        (lol .gt. hil) ) then
        ans%i_min = 0
        ans%i_max = 0
        ans%j_min = 0
@@ -4858,7 +5701,7 @@ print *, 'remap 2d complex:'
     him = min(himb1, himb2)
 
     if( (loi .gt. hii) .or. (loj .gt. hij) .or. (lok .gt. hik) .or. &
-        (lol .gt. hil) .or. (lom .gt. him) ) then 
+        (lol .gt. hil) .or. (lom .gt. him) ) then
        ans%i_min = 0
        ans%i_max = 0
        ans%j_min = 0
@@ -4963,7 +5806,7 @@ print *, 'remap 2d complex:'
     hin = min(hinb1, hinb2)
 
     if( (loi .gt. hii) .or. (loj .gt. hij) .or. (lok .gt. hik) .or. &
-        (lol .gt. hil) .or. (lom .gt. him) .or. (lon .gt. hin) ) then 
+        (lol .gt. hil) .or. (lom .gt. him) .or. (lon .gt. hin) ) then
        ans%i_min = 0
        ans%i_max = 0
        ans%j_min = 0
@@ -4993,6 +5836,115 @@ print *, 'remap 2d complex:'
        intersect_boxes_6D = .true.
     end if
   end function intersect_boxes_6D
+
+
+
+
+  function intersect_boxes_6D_transp( b1, b2, ans )
+    intrinsic                 :: min, max
+    logical                   :: intersect_boxes_6D_transp
+    type(box_6D), intent(in)  :: b1, b2
+    type(box_6D), intent(out) :: ans
+    sll_int32                 :: loi, hii
+    sll_int32                 :: loj, hij
+    sll_int32                 :: lok, hik
+    sll_int32                 :: lol, hil
+    sll_int32                 :: lom, him
+    sll_int32                 :: lon, hin
+    sll_int32                 :: loib1, hiib1
+    sll_int32                 :: lojb1, hijb1
+    sll_int32                 :: lokb1, hikb1
+    sll_int32                 :: lolb1, hilb1
+    sll_int32                 :: lomb1, himb1
+    sll_int32                 :: lonb1, hinb1
+
+    sll_int32                 :: loib2, hiib2
+    sll_int32                 :: lojb2, hijb2
+    sll_int32                 :: lokb2, hikb2
+    sll_int32                 :: lolb2, hilb2
+    sll_int32                 :: lomb2, himb2
+    sll_int32                 :: lonb2, hinb2
+
+    ! FIXME: add error checking, if boxes are null, for instance.
+    loib1 = get_box_6D_i_min(b1)
+    hiib1 = get_box_6D_i_max(b1)
+    lojb1 = get_box_6D_j_min(b1)
+    hijb1 = get_box_6D_j_max(b1)
+    lokb1 = get_box_6D_k_min(b1)
+    hikb1 = get_box_6D_k_max(b1)
+    lolb1 = get_box_6D_l_min(b1)
+    hilb1 = get_box_6D_l_max(b1)
+    lomb1 = get_box_6D_m_min(b1)
+    himb1 = get_box_6D_m_max(b1)
+    lonb1 = get_box_6D_n_min(b1)
+    hinb1 = get_box_6D_n_max(b1)
+
+    loib2 = get_box_6D_l_min(b2)
+    hiib2 = get_box_6D_l_max(b2)
+    lojb2 = get_box_6D_m_min(b2)
+    hijb2 = get_box_6D_m_max(b2)
+    lokb2 = get_box_6D_n_min(b2)
+    hikb2 = get_box_6D_n_max(b2)
+    lolb2 = get_box_6D_i_min(b2)
+    hilb2 = get_box_6D_i_max(b2)
+    lomb2 = get_box_6D_j_min(b2)
+    himb2 = get_box_6D_j_max(b2)
+    lonb2 = get_box_6D_k_min(b2)
+    hinb2 = get_box_6D_k_max(b2)
+
+    SLL_ASSERT( (loib1 .le. hiib1) .and. (loib2 .le. hiib2) )
+    SLL_ASSERT( (lojb1 .le. hijb1) .and. (lojb2 .le. hijb2) )
+    SLL_ASSERT( (lokb1 .le. hikb1) .and. (lokb2 .le. hikb2) )
+    SLL_ASSERT( (lolb1 .le. hilb1) .and. (lolb2 .le. hilb2) )
+    SLL_ASSERT( (lomb1 .le. himb1) .and. (lomb2 .le. himb2) )
+    SLL_ASSERT( (lonb1 .le. hinb1) .and. (lonb2 .le. hinb2) )
+
+    loi = max(loib1, loib2)
+    hii = min(hiib1, hiib2)
+    loj = max(lojb1, lojb2)
+    hij = min(hijb1, hijb2)
+    lok = max(lokb1, lokb2)
+    hik = min(hikb1, hikb2)
+    lol = max(lolb1, lolb2)
+    hil = min(hilb1, hilb2)
+    lom = max(lomb1, lomb2)
+    him = min(himb1, himb2)
+    lon = max(lonb1, lonb2)
+    hin = min(hinb1, hinb2)
+
+    if( (loi .gt. hii) .or. (loj .gt. hij) .or. (lok .gt. hik) .or. &
+        (lol .gt. hil) .or. (lom .gt. him) .or. (lon .gt. hin) ) then
+       ans%i_min = 0
+       ans%i_max = 0
+       ans%j_min = 0
+       ans%j_max = 0
+       ans%k_min = 0
+       ans%k_max = 0
+       ans%l_min = 0
+       ans%l_max = 0
+       ans%m_min = 0
+       ans%m_max = 0
+       ans%n_min = 0
+       ans%n_max = 0
+       intersect_boxes_6D_transp = .false.
+    else
+       ans%i_min = loi
+       ans%i_max = hii
+       ans%j_min = loj
+       ans%j_max = hij
+       ans%k_min = lok
+       ans%k_max = hik
+       ans%l_min = lol
+       ans%l_max = hil
+       ans%m_min = lom
+       ans%m_max = him
+       ans%n_min = lon
+       ans%n_max = hin
+       intersect_boxes_6D_transp = .true.
+    end if
+  end function intersect_boxes_6D_transp
+
+
 
 
   function count_elements_in_box_2D( box )
@@ -5299,7 +6251,7 @@ print *, 'remap 2d complex:'
   !> defined over the same collective, which describes the distribution of a 2D
   !> array of dimensions npx1 X npx2. Note that it assumes that it is the last
   !> two dimensions which are of size 1.
-  !> 
+  !>
   !> This function is special in that it allocates the new layout to be returned.
   !> So the usual interface of declaring the layout, calling new_layout() and
   !> then initializing is not followed. This irregularity is itself a bit of
@@ -5464,11 +6416,11 @@ print *, 'remap 2d complex:'
 
      open(44,file=fname//".mtv")
      write(44,*)"$DATA=CURVE2D"
-     write(44,*)"%toplabel = 'MPI topology'" 
+     write(44,*)"%toplabel = 'MPI topology'"
      write(44,*)"%subtitle = '"//fname//"'"
      write(44,*)"%equalscale=T"
      write(44,*)"%linetype = 0"
-     write(44,*)"%filltype = 4" 
+     write(44,*)"%filltype = 4"
      write(44,*)"%xmin=",1, " xmax=",layout%global_sz1
      write(44,*)"%ymin=",1, " ymax=",layout%global_sz2
      write(44,*)"0.0 0.0"
@@ -5491,7 +6443,7 @@ print *, 'remap 2d complex:'
   end subroutine write_to_file
 
 !------------------------------------------------------------------------------!
-  ! Procedures to find decomposition of 
+  ! Procedures to find decomposition of
 
   !> Helper function checking if number is divisible by two
   function divisible_by_two( num )
@@ -5503,7 +6455,8 @@ print *, 'remap 2d complex:'
        divisible_by_two = .false.
     end if
   end function divisible_by_two
-  
+
+
   !> Helper function checking if number is divisible by three
   function divisible_by_three( num )
     logical :: divisible_by_three
@@ -5516,7 +6469,7 @@ print *, 'remap 2d complex:'
   end function divisible_by_three
 
   !> @brief helper function to find proper partitioning of processors for 3D array
-  !> @details given a number that is a power of two, we decompose it in 3 factors 
+  !> @details given a number that is a power of two, we decompose it in 3 factors
   !> intended to be as close to each other as possible, while still keeping
   !> them factors of two as well.
   !> @param [in] num_procs Number of processors to be distributed
@@ -5566,7 +6519,7 @@ print *, 'remap 2d complex:'
 
 
   !> @brief helper function to find proper partitioning of processors for 2D array
-  !> @details given a number that is a power of two, we decompose it in 2 factors 
+  !> @details given a number that is a power of two, we decompose it in 2 factors
   !> intended to be as close to each other as possible, while still keeping
   !> them factors of two as well.
   !> @param [in] num_procs Number of processors to be distributed
@@ -5589,7 +6542,7 @@ print *, 'remap 2d complex:'
        if( exponent == 0 ) then
           f1   = 1
           f2   = 1
-       else 
+       else
           tmpi = (exponent-1)/2
           f1   = 2**((exponent-1)/2)
           f2   = 2**((exponent+1)/2)
