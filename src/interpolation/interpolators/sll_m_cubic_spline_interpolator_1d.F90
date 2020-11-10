@@ -132,6 +132,7 @@ contains  ! ****************************************************************
   end subroutine spline_interpolate1d_disp
 
 
+
   subroutine spline_interpolate1d_disp_inplace(this, num_pts, data, alpha)
     class(sll_t_cubic_spline_interpolator_1d),  intent(inout)       :: this
     !class(sll_t_cubic_spline_1d),  intent(in)      :: this
