@@ -6,7 +6,9 @@
 
 ! NOTE: Check the initialization of pba_pow(:) below when changing NUM_TERMS.
 ! Usual value (and maximum useful value in terms of double precision accuracy): 27
-#define NUM_TERMS 27
+!!! #define NUM_TERMS 27
+! Temporarily reduced to 15 terms to enable the test case at 16**6 resolution.
+#define NUM_TERMS 15
 
 ! Note: Uncomment one of the following macros to select how powers of p_b_a are computed.
 ! fast, pre-computed array
@@ -149,6 +151,12 @@ contains
 
     sll_int32                         :: i
     sll_int32                         :: np
+    logical, save :: first_call = .true.
+
+    if ((first_call).and.(NUM_TERMS < 27)) then
+      write(*,*) "WARNING: sll_s_cubic_spline_halo_1d uses NUM_TERMS=", NUM_TERMS
+    endif
+    first_call = .false.
 
     SLL_ASSERT( size(f) .ge. num_points-1 )
     SLL_ASSERT( size(d) .ge. num_points )
