@@ -13,7 +13,9 @@ TARGET_LINK_LIBRARIES( example_tridiagonal sll_linear_solvers )
 #-------------------------------------------------------------------------------
 # new test of conjugate gradient method
 #-------------------------------------------------------------------------------
-add_executable( test_conjugate_gradient test_conjugate_gradient.F90 )
-target_link_libraries( test_conjugate_gradient sll_vector_space sll_linear_solvers )
-add_test( NAME conjugate_gradient COMMAND test_conjugate_gradient )
-set_tests_properties( conjugate_gradient PROPERTIES PASS_REGULAR_EXPRESSION "PASSED" )
+IF(FULL_FORTRAN2003)
+  add_executable( test_conjugate_gradient test_conjugate_gradient.F90 )
+  target_link_libraries( test_conjugate_gradient sll_vector_space sll_linear_solvers )
+  add_test( NAME conjugate_gradient COMMAND test_conjugate_gradient )
+  set_tests_properties( conjugate_gradient PROPERTIES PASS_REGULAR_EXPRESSION "PASSED" )
+ENDIF()
