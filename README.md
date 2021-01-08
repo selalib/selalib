@@ -1,6 +1,4 @@
 ![Logo](/doc/sphinx/_static/selalib.png)
-
-
 REQUIRED COMPILER
 -----------------
 
