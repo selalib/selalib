@@ -33,7 +33,7 @@ pages:
   stage: deploy
   script:
     - cd build && make doc-dev
-    - cp -r doc/html/* ../public/
+    - mv doc/html ../public
   only:
     - master
   artifacts:
