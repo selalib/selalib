@@ -17,6 +17,7 @@ ctest:
   stage: test
   script:
     - cd build && make test
+  allow_failure: true
   artifacts:
       paths:
         - public
