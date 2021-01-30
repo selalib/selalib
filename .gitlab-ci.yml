@@ -32,7 +32,7 @@ ctest:
 pages:
   stage: deploy
   script:
-    - cd build && make doc-test
+    - cd build && make doc-dev
     - cp -r doc/html/* ../public/
   only:
     - master
