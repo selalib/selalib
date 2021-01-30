@@ -1,98 +1,42 @@
-ubuntu-mpich:
+image: pnavaro/selalib
+
+ubuntu-openmpi:
   stage: build
   script: 
-    - "scripts/selalib-ci.sh"
+    - mkdir -p public build
+    - cd build && cmake .. -DHDF5_PARALLEL_ENABLED=ON -DCMAKE_BUILD_TYPE=Release && make
   only:
-    - develop
+    - master
   tags:
-    - ubuntu
-    - mpich
     - large
+  artifacts:
+    paths:
+      - build
     
-fedora-openmpi:
-  stage: build
-  script: 
-    - "scripts/fedora-openmpi-ci.sh"
+ctest:
+  stage: test
+  script:
+    - cd build && make test
+  artifacts:
+      paths:
+        - public
   only:
-    - develop
+    - master
+  artifacts:
+    paths:
+      - build
   tags:
-    - fedora
-    - openmpi
     - large
-
-
-fedora-mpich:
-  stage: build
-  script: 
-    - "scripts/fedora-mpich-ci.sh"
-  only:
-    - develop
-  tags:
-    - fedora
-    - mpich
 
 pages:
-    stage: deploy
-    image: pnavaro/selalib
-
-    script:
-      - mkdir -p public build
-      - cd build && cmake .. -DHDF5_PARALLEL_ENABLED=ON && make && make doc-dev
-      - cp -r doc/html/* ../public/
-
-    artifacts:
-        paths:
-        - public
-    only:
-        - develop
-
-    tags:
-      - docker
-      - large
-
-
-
-#intel-impi:
-#  stage: build
-#  script:
-#    - "scripts/intel16-build.sh"
-#  only:
-#    - develop
-#  tags:
-#    - intel
-    
-#ubuntu-openmpi:
-#  tags:
-#    - ubuntu
-#    - openmpi
-#  stage: build
-#  script: 
-#    - "scripts/selalib-ci.sh"
-#  only:
-#    - develop
-
-#  
-#
-#
-
-#    
-#mavericks-openmpi:
-#  stage: build
-#  script: 
-#    - "scripts/selalib-ci.sh"
-#  only:
-#    - develop
-#  tags:
-#    - osx
-#    - openmpi
-#    
-#mavericks-mpich:
-#  stage: build
-#  script: 
-#    - "scripts/selalib-ci.sh"
-#  only:
-#    - develop
-#  tags:
-#    - osx
-#    - mpich  
-  
+  stage: deploy
+  script:
+    - cd build && make doc-test
+    - cp -r doc/html/* ../public/
+  only:
+    - master
+  artifacts:
+    paths:
+      - public
+  tags:
+    - large
