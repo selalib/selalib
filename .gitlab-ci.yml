@@ -48,7 +48,7 @@ pages:
   script:
     - cd build && make doc-dev
     - cd  ../doc && make
-    - mv ../build/html ../public
+    - mv build/html ../public
     - mv ../build/doc/html ../public/doc
   artifacts:
     paths:
