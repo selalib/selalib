@@ -16,6 +16,7 @@ fedora-openmpi:
   stage: build
   allow_failure: true
   script: 
+    - mkdir -p build
     - source /etc/profile.d/modules.sh && module load mpi/openmpi-x86_64
     - cd build && cmake -DCMAKE_BUILD_TYPE=Debug -DHDF5_PARALLEL_ENABLED=ON .. && make -j
   only:
