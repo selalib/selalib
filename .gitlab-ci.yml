@@ -1,5 +1,6 @@
 ubuntu-mpich:
   stage: build
+  allow_failure: true
   script: 
     - "scripts/selalib-ci.sh"
   only:
@@ -10,6 +11,7 @@ ubuntu-mpich:
     
 fedora-openmpi:
   stage: build
+  allow_failure: true
   script: 
     - "scripts/fedora-openmpi-ci.sh"
   only:
@@ -20,6 +22,7 @@ fedora-openmpi:
 
 fedora-mpich:
   stage: build
+  allow_failure: true
   script: 
     - "scripts/fedora-mpich-ci.sh"
   only:
