@@ -7,6 +7,7 @@ ubuntu-mpich:
     - mkdir -p build
     - cd build && cmake -DCMAKE_BUILD_TYPE=Release -DHDF5_PARALLEL_ENABLED=ON .. && make -j
   only:
+    - master
     - develop
   tags:
     - ubuntu
@@ -20,6 +21,7 @@ fedora-openmpi:
     - source /etc/profile.d/modules.sh && module load mpi/openmpi-x86_64
     - cd build && cmake -DCMAKE_BUILD_TYPE=Debug -DHDF5_PARALLEL_ENABLED=ON .. && make -j
   only:
+    - master
     - develop
   tags:
     - fedora
@@ -59,6 +61,7 @@ pages:
       - public
   only:
     - develop
+    - master
   tags:
     - docker
     - large
