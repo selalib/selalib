@@ -1,43 +1,106 @@
 image: pnavaro/selalib
 
-ubuntu-openmpi:
+ubuntu-mpich:
   stage: build
+  allow_failure: true
   script: 
-    - mkdir -p public build
-    - cd build && cmake .. -DHDF5_PARALLEL_ENABLED=ON -DCMAKE_BUILD_TYPE=Release && make
+    - mkdir -p build
+    - cd build && cmake -DCMAKE_BUILD_TYPE=Release -DHDF5_PARALLEL_ENABLED=ON .. && make -j
   only:
-    - master
+    - develop
   tags:
-    - large
+    - ubuntu
+    - mpich
+    
+fedora-openmpi:
+  stage: build
+  allow_failure: true
+  script: 
+    - mkdir -p build
+    - source /etc/profile.d/modules.sh && module load mpi/openmpi-x86_64
+    - cd build && cmake -DCMAKE_BUILD_TYPE=Debug -DHDF5_PARALLEL_ENABLED=ON .. && make -j
+  only:
+    - develop
+  tags:
+    - fedora
+    - openmpi
+
+ubuntu-build:
+  stage: build
+  script:
+    - mkdir -p build
+    - cd build && cmake .. -DHDF5_PARALLEL_ENABLED=ON && make -j
   artifacts:
     paths:
       - build
-    
-ctest:
+
+ubuntu-test:
   stage: test
+  allow_failure: true
   script:
     - cd build && make test
-  allow_failure: true
-  artifacts:
-      paths:
-        - public
-  only:
-    - master
   artifacts:
     paths:
       - build
-  tags:
-    - large
 
 pages:
   stage: deploy
   script:
     - cd build && make doc-dev
-    - mv doc/html ../public
-  only:
-    - master
+    - cd  ../doc && make
+    - mv build/html ../public
+    - mv ../build/doc/html ../public/doc
   artifacts:
     paths:
       - public
+  only:
+    - develop
   tags:
-    - large
+    - docker
+
+
+
+#intel-impi:
+#  stage: build
+#  script:
+#    - "scripts/intel16-build.sh"
+#  only:
+#    - develop
+#  tags:
+#    - intel
+    
+#ubuntu-openmpi:
+#  tags:
+#    - ubuntu
+#    - openmpi
+#  stage: build
+#  script: 
+#    - "scripts/selalib-ci.sh"
+#  only:
+#    - develop
+
+#  
+#
+#
+
+#    
+#mavericks-openmpi:
+#  stage: build
+#  script: 
+#    - "scripts/selalib-ci.sh"
+#  only:
+#    - develop
+#  tags:
+#    - osx
+#    - openmpi
+#    
+#mavericks-mpich:
+#  stage: build
+#  script: 
+#    - "scripts/selalib-ci.sh"
+#  only:
+#    - develop
+#  tags:
+#    - osx
+#    - mpich  
+  
