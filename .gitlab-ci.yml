@@ -1,8 +1,11 @@
+image: pnavaro/selalib
+
 ubuntu-mpich:
   stage: build
   allow_failure: true
   script: 
-    - "scripts/selalib-ci.sh"
+    - mkdir -p build
+    - cd build && cmake -DCMAKE_BUILD_TYPE=Release -DHDF5_PARALLEL_ENABLED=ON .. && make -j
   only:
     - develop
   tags:
@@ -13,43 +16,46 @@ fedora-openmpi:
   stage: build
   allow_failure: true
   script: 
-    - "scripts/fedora-openmpi-ci.sh"
+    - source /etc/profile.d/modules.sh && module load mpi/openmpi-x86_64
+    - cd build && cmake -DCMAKE_BUILD_TYPE=Debug -DHDF5_PARALLEL_ENABLED=ON .. && make -j
   only:
     - develop
   tags:
     - fedora
     - openmpi
 
-fedora-mpich:
+ubuntu-build:
   stage: build
+  script:
+    - mkdir -p build
+    - cd build && cmake .. -DHDF5_PARALLEL_ENABLED=ON && make -j
+  artifacts:
+    paths:
+      - build
+
+ubuntu-test:
+  stage: test
   allow_failure: true
-  script: 
-    - "scripts/fedora-mpich-ci.sh"
+  script:
+    - cd build && make test
+  artifacts:
+    paths:
+      - build
+
+pages:
+  stage: deploy
+  script:
+    - cd build && make doc-dev
+    - cd  ../doc && make
+    - mv ../build/html ../public
+    - mv ../build/doc/html ../public/doc
+  artifacts:
+    paths:
+      - public
   only:
     - develop
   tags:
-    - fedora
-    - mpich
-
-pages:
-    stage: deploy
-    image: pnavaro/selalib
-
-    script:
-      - mkdir -p public build
-      - cd build && cmake .. -DHDF5_PARALLEL_ENABLED=ON && make && make doc-dev
-      - cp -r doc/html/* ../public/doc
-      - cd  ../doc && make
-      - cp -r ../build/html/* ../public
-
-    artifacts:
-        paths:
-        - public
-    only:
-        - develop
-
-    tags:
-      - docker
+    - docker
 
 
 
