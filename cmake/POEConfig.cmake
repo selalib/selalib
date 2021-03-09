@@ -36,11 +36,8 @@ IF(POE_FOUND)
 ELSE(POE_FOUND)
 
    MACRO(ADD_MPI_TEST TEST_NAME EXEC_NAME PROCS ARGS)
-      IF(APPLE)
-         SET(MPIEXEC_PREFLAGS "-oversubscribe")
-      ELSE()
-         STRING(REGEX REPLACE "mpiexec" "mpirun" MPIEXEC ${MPIEXEC})
-      ENDIF()
+      SET(MPIEXEC_PREFLAGS "--oversubscribe")
+      STRING(REGEX REPLACE "mpiexec" "mpirun" MPIEXEC ${MPIEXEC})
       ADD_TEST(NAME ${TEST_NAME}
                COMMAND ${MPIEXEC} 
 		       ${MPIEXEC_PREFLAGS}
