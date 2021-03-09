@@ -1,0 +1,14 @@
+<map id="sll_s_configure_comm_real64_torus_2d" name="sll_s_configure_comm_real64_torus_2d">
+<area shape="rect" id="node1" title=" " alt="" coords="5,175,172,217"/>
+<area shape="rect" id="node2" href="$namespacesll__m__point__to__point__comms.html#a6848a4501521376f77d25cbcc09eb298" title=" " alt="" coords="247,107,361,133"/>
+<area shape="rect" id="node9" href="$namespacesll__m__point__to__point__comms.html#a2427e2779cffe9158b3fbcccf6ea7ff3" title=" " alt="" coords="273,157,335,184"/>
+<area shape="rect" id="node10" href="$namespacesll__m__point__to__point__comms.html#a68f5bcd7b19730d7ef13abc9ae08407b" title=" " alt="" coords="257,208,351,235"/>
+<area shape="rect" id="node11" href="$namespacesll__m__collective.html#a396122f49340f0778eb448430d865b4e" title="Determines the rank of the calling process in the communicator." alt="" coords="220,259,388,301"/>
+<area shape="rect" id="node3" href="$namespacesll__m__point__to__point__comms.html#aec6d99aac06fc524a627fb7e72df31c6" title=" " alt="" coords="449,5,586,32"/>
+<area shape="rect" id="node4" href="$namespacesll__m__point__to__point__comms.html#a8b121863ece95e8dd94458f440835b18" title=" " alt="" coords="647,107,740,133"/>
+<area shape="rect" id="node5" href="$namespacesll__m__point__to__point__comms.html#a649d95ce15846973ed2e19fcf54b02fe" title=" " alt="" coords="474,157,561,184"/>
+<area shape="rect" id="node7" href="$namespacesll__m__point__to__point__comms.html#ace7366fed79af3987767fde1b8184410" title=" " alt="" coords="465,107,569,133"/>
+<area shape="rect" id="node8" href="$namespacesll__m__point__to__point__comms.html#a419cb5e1f63300697382a581bc8c7862" title=" " alt="" coords="468,208,567,235"/>
+<area shape="rect" id="node6" href="$namespacesll__m__point__to__point__comms.html#a2ec99c657fccfca4a2631c9408e2a9c1" title=" " alt="" coords="660,183,727,209"/>
+<area shape="rect" id="node12" href="$namespacesll__m__collective.html#a37ea25f42a791be5a710a6cf0d1e1197" title="Checks if the pointer ptr is associated to an object." alt="" coords="436,259,599,301"/>
+</map>

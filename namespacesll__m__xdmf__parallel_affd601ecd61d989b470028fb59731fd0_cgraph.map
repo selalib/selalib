@@ -1,0 +1,4 @@
+<map id="sll_xdmf_open_2d_parallel" name="sll_xdmf_open_2d_parallel">
+<area shape="rect" id="node1" title="Open a XDMF format file for a 2d plot." alt="" coords="5,13,201,39"/>
+<area shape="rect" id="node2" href="$namespacesll__m__xml__io.html#aa79c90960210f0f247699f5c6559531a" title="Create the XML file and begin to write first lines. You get the file unit number." alt="" coords="249,5,395,47"/>
+</map>

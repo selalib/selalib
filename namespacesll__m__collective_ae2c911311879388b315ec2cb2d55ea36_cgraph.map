@@ -1,0 +1,5 @@
+<map id="sll_collective_allreduce_real64" name="sll_collective_allreduce_real64">
+<area shape="rect" id="node1" title="Combines real values from all processes and distributes the result back to all processes." alt="" coords="5,23,180,65"/>
+<area shape="rect" id="node2" href="$namespacesll__m__collective.html#a37ea25f42a791be5a710a6cf0d1e1197" title="Checks if the pointer ptr is associated to an object." alt="" coords="228,5,405,32"/>
+<area shape="rect" id="node3" href="$namespacesll__m__collective.html#a9a5729d7ca2e55890195f76c8a5cbd62" title="Checks the good execution of collective instruction." alt="" coords="240,56,393,83"/>
+</map>

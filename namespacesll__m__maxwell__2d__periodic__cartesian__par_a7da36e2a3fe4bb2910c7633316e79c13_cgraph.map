@@ -1,0 +1,9 @@
+<map id="sll_f_new_maxwell_2d_periodic_plan_cartesian_par" name="sll_f_new_maxwell_2d_periodic_plan_cartesian_par">
+<area shape="rect" id="node1" title="Presently, this function receives the geometric information as individual arguments...." alt="" coords="5,136,216,177"/>
+<area shape="rect" id="node2" href="$namespacesll__m__collective.html#a396122f49340f0778eb448430d865b4e" title="Determines the rank of the calling process in the communicator." alt="" coords="264,5,432,47"/>
+<area shape="rect" id="node4" href="$namespacesll__m__collective.html#af2d3c240d9dfe7e9c7d7f7c9e0529f17" title="Determines the size of the group associated with a communicator." alt="" coords="265,71,431,112"/>
+<area shape="rect" id="node5" href="$namespacesll__m__utilities.html#a8e7bf79ed229d0f50947a0550a674234" title="Check if an integer is equal to." alt="" coords="273,136,423,177"/>
+<area shape="rect" id="node6" href="$namespacesll__m__fft.html#a47960b64c3303440c96bd80c055868c1" title="Create new 1d complex to real plan for backward FFT." alt="" coords="280,201,416,243"/>
+<area shape="rect" id="node7" href="$namespacesll__m__fft.html#a11789fe259803b9a52c5de9f4b2fa521" title="Create new 1d real to complex plan for forward FFT." alt="" coords="280,267,416,308"/>
+<area shape="rect" id="node3" href="$namespacesll__m__collective.html#a37ea25f42a791be5a710a6cf0d1e1197" title="Checks if the pointer ptr is associated to an object." alt="" coords="480,39,643,80"/>
+</map>

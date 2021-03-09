@@ -1,0 +1,12 @@
+<map id="sll_s_fft_init_r2r_1d" name="sll_s_fft_init_r2r_1d">
+<area shape="rect" id="node1" title="Create new 1d real to real plan." alt="" coords="821,115,969,142"/>
+<area shape="rect" id="node2" href="$namespacesll__m__maxwell__1d__fem.html#a0f182f448b394a9ec1d0f5a3cd1f8153" title=" " alt="" coords="590,5,766,47"/>
+<area shape="rect" id="node3" href="$namespacesll__m__periodic__interp.html#abc80c95f808db2e9ff4e176e86d5d241" title=" " alt="" coords="583,71,773,112"/>
+<area shape="rect" id="node8" href="$namespacesll__m__poisson__2d__polar__par.html#a0f1dc18ba51644f7472cbb9f2b9b87df" title="sll_o_initialize the Poisson solver in polar coordinates" alt="" coords="589,137,767,193"/>
+<area shape="rect" id="node9" href="$namespacesll__m__qn__solver__2d__polar__par.html#a469531318563d910cd216334ff4a1828" title="Initialize the solver." alt="" coords="584,217,772,273"/>
+<area shape="rect" id="node4" href="$namespacesll__m__periodic__interpolator__1d.html#a137a06d731f848d2844a08ecd61f0ce5" title="initialize periodic interpolator" alt="" coords="299,35,535,76"/>
+<area shape="rect" id="node6" href="$namespacesll__m__advection__1d__periodic.html#abcf0ae4a5833355e3bf2f6c582130c82" title=" " alt="" coords="333,101,501,157"/>
+<area shape="rect" id="node5" href="$namespacesll__m__periodic__interpolator__1d.html#ad3e7d16f12ac8ac11ec359bdb2e6337d" title="Create a new interpolator." alt="" coords="5,35,251,76"/>
+<area shape="rect" id="node7" href="$namespacesll__m__advection__1d__periodic.html#a15d29082b9a28ef683f78578511aa95f" title=" " alt="" coords="44,101,212,157"/>
+<area shape="rect" id="node10" href="$namespacesll__m__qn__solver__3d__polar__par.html#a2e6d1e5238b003c9d2a5bf33a11644d0" title="Initialize the 3D (wrapper) solver." alt="" coords="323,217,511,273"/>
+</map>

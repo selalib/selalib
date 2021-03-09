@@ -1,0 +1,4 @@
+<map id="sll_t_nufft_interpolator_2d" name="sll_t_nufft_interpolator_2d">
+<area shape="rect" id="node1" title="The nufft&#45;based interpolator is only a wrapper around the capabilities of the nufft package." alt="" coords="5,80,197,107"/>
+<area shape="rect" id="node2" href="$structsll__m__interpolators__2d__base_1_1sll__c__interpolator__2d.html" title="Base class/basic interface for 2D interpolators." alt="" coords="23,5,180,32"/>
+</map>

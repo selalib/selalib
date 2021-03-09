@@ -1,0 +1,4 @@
+<map id="sll_t_cubic_spline_interpolator_2d" name="sll_t_cubic_spline_interpolator_2d">
+<area shape="rect" id="node1" title="The spline&#45;based interpolator is only a wrapper around the capabilities of the cubic splines." alt="" coords="16,80,152,121"/>
+<area shape="rect" id="node2" href="$structsll__m__interpolators__2d__base_1_1sll__c__interpolator__2d.html" title="Base class/basic interface for 2D interpolators." alt="" coords="5,5,163,32"/>
+</map>

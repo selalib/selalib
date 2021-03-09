@@ -1,0 +1,5 @@
+<map id="non_zeros_splines" name="non_zeros_splines">
+<area shape="rect" id="node1" title="Computes indices of non null splines on a given cell." alt="" coords="487,13,628,39"/>
+<area shape="rect" id="node2" href="$namespacesll__m__box__splines.html#a0c9a0bd0c7da4d792500caf130c3ddd0" title="Writes connectivity for CAID / DJANGO." alt="" coords="260,13,439,39"/>
+<area shape="rect" id="node3" href="$namespacesll__m__fekete__integration.html#adceb8456a1011a2bb4dcecfd28374463" title="This function is supposed to write all django input files needed for a Django/Jorek simulation." alt="" coords="5,5,212,47"/>
+</map>

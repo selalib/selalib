@@ -1,0 +1,6 @@
+<map id="c_xml_item" name="c_xml_item">
+<area shape="rect" id="node1" title="Base class for all the XML entities which can appear in content." alt="" coords="185,5,283,32"/>
+<area shape="rect" id="node2" href="$structsll__m__xml_1_1sll__t__xml__element.html" title="XML element type." alt="" coords="5,80,148,107"/>
+<area shape="rect" id="node3" href="$structsll__m__xml_1_1t__xml__chardata.html" title="XML type: chardata." alt="" coords="173,80,295,107"/>
+<area shape="rect" id="node4" href="$structsll__m__xml_1_1t__xml__content.html" title="XML type: linked list of XML entities, used in element content." alt="" coords="319,80,434,107"/>
+</map>

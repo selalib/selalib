@@ -1,0 +1,9 @@
+<map id="sll_t_poisson_2d_periodic_par" name="sll_t_poisson_2d_periodic_par">
+<area shape="rect" id="node1" title="Structure to store data from Poisson solver. This solver is parallel on structured cartesian mesh...." alt="" coords="599,161,815,188"/>
+<area shape="rect" id="node2" title=" " alt="" coords="314,12,434,39"/>
+<area shape="rect" id="node3" title=" " alt="" coords="296,65,452,106"/>
+<area shape="rect" id="node4" href="$structsll__m__fft_1_1sll__t__fft.html" title="Type for FFT plan in SeLaLib." alt="" coords="339,131,409,157"/>
+<area shape="rect" id="node5" title=" " alt="" coords="41,123,107,149"/>
+<area shape="rect" id="node6" title=" " alt="" coords="5,233,143,260"/>
+<area shape="rect" id="node7" title=" " alt="" coords="315,317,433,344"/>
+</map>

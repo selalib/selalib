@@ -1,0 +1,9 @@
+<map id="sll_t_maxwell_2d_periodic_plan_cartesian_par" name="sll_t_maxwell_2d_periodic_plan_cartesian_par">
+<area shape="rect" id="node1" title="Maxwell solver 2D object, PSTD scheme." alt="" coords="561,137,756,178"/>
+<area shape="rect" id="node2" title=" " alt="" coords="314,11,434,37"/>
+<area shape="rect" id="node3" href="$structsll__m__fft_1_1sll__t__fft.html" title="Type for FFT plan in SeLaLib." alt="" coords="339,77,409,104"/>
+<area shape="rect" id="node4" title=" " alt="" coords="41,11,107,37"/>
+<area shape="rect" id="node5" title=" " alt="" coords="5,121,143,148"/>
+<area shape="rect" id="node6" title=" " alt="" coords="296,206,452,247"/>
+<area shape="rect" id="node7" title=" " alt="" coords="315,351,433,377"/>
+</map>

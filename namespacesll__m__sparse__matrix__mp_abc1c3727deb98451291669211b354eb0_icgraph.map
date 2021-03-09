@@ -1,0 +1,7 @@
+<map id="sll_init_sparsematrix_mp" name="sll_init_sparsematrix_mp">
+<area shape="rect" id="node1" title=" " alt="" coords="788,60,975,87"/>
+<area shape="rect" id="node2" href="$namespacesll__m__sparse__matrix__mp.html#ad32ebfd00f8ef3065b6859eca129d87a" title="initialization of CSR matrix type thanks to the global index of each local dof of each element param[..." alt="" coords="557,60,740,87"/>
+<area shape="rect" id="node3" href="$namespacesll__m__sparse__matrix__mp.html#ab8ac37685dad402f808e43fd26578034" title="allocates the memory space for a new CSR type on the heap, initializes it with the given arguments an..." alt="" coords="323,60,509,87"/>
+<area shape="rect" id="node4" href="$namespacesll__m__general__coordinate__elliptic__solver__multipatch.html#ad5dcba50d55d23e36b6b7d9fbaae1da9" title="Assemble the matrix for elliptic solver." alt="" coords="37,5,243,61"/>
+<area shape="rect" id="node5" href="$namespacesll__m__general__coordinate__elliptic__solver__multipatch.html#ae9b2728b7fc567b24d783dc03390c489" title="Initialization for elleptic solver multipatch." alt="" coords="5,85,275,141"/>
+</map>

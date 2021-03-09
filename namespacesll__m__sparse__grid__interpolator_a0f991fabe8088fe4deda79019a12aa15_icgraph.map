@@ -1,0 +1,5 @@
+<map id="fft_on_stripe" name="fft_on_stripe">
+<area shape="rect" id="node1" title=" " alt="" coords="224,31,327,57"/>
+<area shape="rect" id="node2" href="$namespacesll__m__sparse__grid__interpolator.html#aed35bcf2b06e817253fd75cdeeb0f63e" title="Compute Fourier coefficients on sparse grid along dimension dim." alt="" coords="27,5,154,32"/>
+<area shape="rect" id="node3" href="$namespacesll__m__sparse__grid__interpolator.html#a756b07ef8bb7237d4ba19d1532a8fa26" title="Complex version of ToHierarchical1d_comp." alt="" coords="5,56,176,83"/>
+</map>

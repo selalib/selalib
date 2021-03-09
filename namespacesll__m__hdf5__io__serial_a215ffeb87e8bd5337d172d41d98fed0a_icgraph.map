@@ -1,0 +1,4 @@
+<map id="sll_hdf5_ser_write_char_array" name="sll_hdf5_ser_write_char_array">
+<area shape="rect" id="node1" title="Write Fortran string to HDF5 file as 1D array of characters." alt="" coords="235,5,375,47"/>
+<area shape="rect" id="node2" href="$namespacesll__m__hdf5__io__serial.html#acc5b9e1aedbae32f778c73192f7e73b5" title="Read complete file to string and store it into HDF5 data structure." alt="" coords="5,13,187,39"/>
+</map>

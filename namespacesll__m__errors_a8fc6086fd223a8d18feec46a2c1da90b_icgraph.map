@@ -1,0 +1,5 @@
+<map id="errout" name="errout">
+<area shape="rect" id="node1" title="Write error/warning message to a given unit." alt="" coords="220,31,281,57"/>
+<area shape="rect" id="node2" href="$namespacesll__m__errors.html#ab2b2de7bae16e75f78282c61d5e58e57" title="Print error message to standard&#45;error, stop execution and dump backtrace information." alt="" coords="16,5,161,32"/>
+<area shape="rect" id="node3" href="$namespacesll__m__errors.html#ad404dbc3701193c590ea4412c09d4b7f" title="Print warning message to standard&#45;error and continue execution." alt="" coords="5,56,172,83"/>
+</map>

@@ -1,0 +1,7 @@
+<map id="sll_f_gauss_lobatto_points_and_weights" name="sll_f_gauss_lobatto_points_and_weights">
+<area shape="rect" id="node1" title="Returns a 2d array of size (2,n) containing gauss&#45;lobatto points and weights in the interval [a,..." alt="" coords="581,93,740,134"/>
+<area shape="rect" id="node2" href="$namespacesll__m__general__coordinate__elliptic__solver.html#a6a5dd9c906ada7725f3e185423b28f82" title="Initialization for elliptic solver." alt="" coords="304,5,493,61"/>
+<area shape="rect" id="node3" href="$namespacesll__m__general__coordinate__elliptic__solver__multipatch.html#ae9b2728b7fc567b24d783dc03390c489" title="Initialization for elleptic solver multipatch." alt="" coords="264,85,533,141"/>
+<area shape="rect" id="node4" href="$namespacesll__m__general__coordinate__elliptic__solver.html#a1530444505e15898adb13de4fd54458c" title=" " alt="" coords="304,166,493,237"/>
+<area shape="rect" id="node5" href="$namespacesll__m__general__coordinate__elliptic__solver.html#a1019a5ae673b7ffeca510a34500c59b5" title=" " alt="" coords="5,166,216,237"/>
+</map>

@@ -1,0 +1,7 @@
+<map id="sll_t_maxwell_1d_fem" name="sll_t_maxwell_1d_fem">
+<area shape="rect" id="node1" title=" " alt="" coords="55,243,223,269"/>
+<area shape="rect" id="node2" href="$structsll__m__maxwell__1d__base_1_1sll__c__maxwell__1d__base.html" title=" " alt="" coords="5,139,180,165"/>
+<area shape="rect" id="node3" href="$structsll__m__fft_1_1sll__t__fft.html" title="Type for FFT plan in SeLaLib." alt="" coords="204,139,275,165"/>
+<area shape="rect" id="node4" title=" " alt="" coords="144,5,209,32"/>
+<area shape="rect" id="node5" title=" " alt="" coords="233,5,371,32"/>
+</map>

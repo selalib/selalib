@@ -1,0 +1,9 @@
+<map id="sll_t_nufft_interpolator_2d" name="sll_t_nufft_interpolator_2d">
+<area shape="rect" id="node1" title="The nufft&#45;based interpolator is only a wrapper around the capabilities of the nufft package." alt="" coords="151,469,343,496"/>
+<area shape="rect" id="node2" href="$structsll__m__interpolators__2d__base_1_1sll__c__interpolator__2d.html" title="Base class/basic interface for 2D interpolators." alt="" coords="5,364,163,391"/>
+<area shape="rect" id="node3" title=" " alt="" coords="211,5,349,32"/>
+<area shape="rect" id="node5" href="$namespacesll__m__nufft__interpolation.html#structsll__m__nufft__interpolation_1_1sll__t__nufft__2d" title="Nufft object for 2d interpolation. It contains fft plan and 1d array to pass data to nufft2d subrouti..." alt="" coords="269,364,379,391"/>
+<area shape="rect" id="node6" href="$structsll__m__fft_1_1sll__t__fft.html" title="Type for FFT plan in SeLaLib." alt="" coords="357,155,427,181"/>
+<area shape="rect" id="node4" title=" " alt="" coords="452,155,569,181"/>
+<area shape="rect" id="node7" title=" " alt="" coords="427,5,493,32"/>
+</map>

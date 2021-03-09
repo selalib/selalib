@@ -1,0 +1,4 @@
+<map id="bc_periodic_2d_fdtd" name="bc_periodic_2d_fdtd">
+<area shape="rect" id="node1" title="Set boundary conditions." alt="" coords="229,5,381,32"/>
+<area shape="rect" id="node2" href="$namespacesll__m__maxwell__2d__fdtd.html#aaee7a3dcf96a2a58313a4fe6bdb31a69" title="self routine exists only for testing purpose. Use ampere and faraday in your appication." alt="" coords="5,5,181,32"/>
+</map>

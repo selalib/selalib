@@ -1,0 +1,6 @@
+<map id="Graphical Class Hierarchy" name="Graphical Class Hierarchy">
+<area shape="rect" id="node1" href="$structsll__m__coordinate__transformation__2d__base_1_1sll__c__coordinate__transformation__2d__base.html" title="Abstract class for coordinate transformation." alt="" coords="5,71,236,112"/>
+<area shape="rect" id="node2" href="$structsll__m__coordinate__transformations__2d_1_1sll__t__coordinate__transformation__2d__analytic.html" title="Analytic transformation." alt="" coords="284,5,513,47"/>
+<area shape="rect" id="node3" href="$structsll__m__coordinate__transformations__2d_1_1sll__t__coordinate__transformation__2d__discrete.html" title=" " alt="" coords="284,71,513,112"/>
+<area shape="rect" id="node4" href="$structsll__m__coordinate__transformations__2d__nurbs_1_1sll__t__coordinate__transformation__2d__nurbs.html" title="Nurbs&#45;based coordinate transformation." alt="" coords="284,136,513,177"/>
+</map>

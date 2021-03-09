@@ -1,0 +1,8 @@
+<map id="sll_s_fft_init_c2c_1d" name="sll_s_fft_init_c2c_1d">
+<area shape="rect" id="node1" title="Create new 1d complex to complex plan." alt="" coords="547,126,699,153"/>
+<area shape="rect" id="node2" href="$namespacesll__m__sparse__grid__interpolator.html#aba310a580506ebd76f00591da61f21f6" title=" " alt="" coords="276,5,499,47"/>
+<area shape="rect" id="node4" href="$namespacesll__m__poisson__2d__periodic__par.html#ad41fe715bd84e1d002bbb219f4d68b46" title="Presently, this function receives the geometric information as individual arguments...." alt="" coords="289,71,485,127"/>
+<area shape="rect" id="node5" href="$namespacesll__m__poisson__2d__periodic__par.html#aee4e39c0cd0cf732b793a92c368019bb" title="Presently, this function receives the geometric information as individual arguments...." alt="" coords="289,151,485,207"/>
+<area shape="rect" id="node6" href="$namespacesll__m__poisson__3d__periodic__par.html#a709ec42fd1d3c83d3c036b4be76eadab" title="Allocate the structure for the 3d parallel Poisson solver." alt="" coords="289,231,485,287"/>
+<area shape="rect" id="node3" href="$namespacesll__m__sparse__grid__interpolator.html#a3fb5a2dabbb9b367be8955e16118eebc" title=" " alt="" coords="5,5,228,47"/>
+</map>

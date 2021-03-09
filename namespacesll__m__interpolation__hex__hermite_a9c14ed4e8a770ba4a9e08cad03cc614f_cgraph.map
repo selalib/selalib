@@ -1,0 +1,24 @@
+<map id="sll_s_hermite_interpolation" name="sll_s_hermite_interpolation">
+<area shape="rect" id="node1" title=" " alt="" coords="5,339,204,366"/>
+<area shape="rect" id="node2" href="$namespacesll__m__interpolation__hex__hermite.html#a9f78b03e5cd34701a65ed75f9bb07bf2" title=" " alt="" coords="280,49,443,75"/>
+<area shape="rect" id="node4" href="$namespacesll__m__interpolation__hex__hermite.html#acabd725d40798f1fec2229e4882041a6" title=" " alt="" coords="265,136,458,177"/>
+<area shape="rect" id="node8" href="$namespacesll__m__interpolation__hex__hermite.html#af4cfb42a75a2f3b731ab6b32acc908e2" title=" " alt="" coords="265,201,458,243"/>
+<area shape="rect" id="node11" href="$namespacesll__m__interpolation__hex__hermite.html#a82b55766f282cdd9f7f5584a22ebb4c9" title=" " alt="" coords="282,267,441,308"/>
+<area shape="rect" id="node12" href="$namespacesll__m__interpolation__hex__hermite.html#ae7ab8d757aa6c949e34d98cdac9572b5" title=" " alt="" coords="283,332,439,373"/>
+<area shape="rect" id="node13" href="$namespacesll__m__interpolation__hex__hermite.html#a07912de172c8b239a4c4922e4cb8f219" title=" " alt="" coords="299,398,423,425"/>
+<area shape="rect" id="node15" href="$namespacesll__m__hexagonal__meshes.html#aa579f5999884452ce000e206a88dc6b7" title="Returns indices of the edges of a given cell." alt="" coords="252,580,471,621"/>
+<area shape="rect" id="node21" href="$namespacesll__m__hexagonal__meshes.html#af2731e5fc29368fa0de959f672507c5a" title="&lt;BRIEF_DESCRIPTION&gt;" alt="" coords="266,449,457,491"/>
+<area shape="rect" id="node22" href="$namespacesll__m__hexagonal__meshes.html#a0770cf59d8b43bdb276ef0be796ad405" title="Given a mesh point and the first cartesian coordinate of a point (that is not on the mesh) we return ..." alt="" coords="266,515,457,556"/>
+<area shape="rect" id="node3" href="$namespacesll__m__interpolation__hex__hermite.html#a79758018e46e05a0238bea64070e0f6f" title=" " alt="" coords="537,5,691,47"/>
+<area shape="rect" id="node5" href="$namespacesll__m__interpolation__hex__hermite.html#a15c1bbf8eb31b9646c0e7c2bd08d771f" title=" " alt="" coords="531,71,697,112"/>
+<area shape="rect" id="node6" href="$namespacesll__m__interpolation__hex__hermite.html#a3405eaf4c82e7f6378b74674e547959f" title=" " alt="" coords="533,202,695,229"/>
+<area shape="rect" id="node7" href="$namespacesll__m__interpolation__hex__hermite.html#a6738f1f4f5350d018436c5ba32477028" title=" " alt="" coords="537,136,691,177"/>
+<area shape="rect" id="node9" href="$namespacesll__m__interpolation__hex__hermite.html#a9991d45ae0dff6633336e681d6585094" title=" " alt="" coords="531,253,697,295"/>
+<area shape="rect" id="node10" href="$namespacesll__m__interpolation__hex__hermite.html#ab3a682d4acff05dbb770af879b40ab06" title=" " alt="" coords="537,319,691,360"/>
+<area shape="rect" id="node14" href="$namespacesll__m__interpolation__hex__hermite.html#addcde1707cd2fff46423b77a095d1a96" title=" " alt="" coords="581,398,647,425"/>
+<area shape="rect" id="node16" href="$namespacesll__m__hexagonal__meshes.html#a4f66e0c718eda16377ca26d5c95b419f" title="Transform hexagonal coordinates to global index." alt="" coords="519,515,709,556"/>
+<area shape="rect" id="node19" href="$namespacesll__m__hexagonal__meshes.html#aa03f58c798d529ebb1b9d0f03b712035" title="Transform cartesian coordinates to 1st hexagonal coordinates." alt="" coords="519,580,709,621"/>
+<area shape="rect" id="node20" href="$namespacesll__m__hexagonal__meshes.html#a8e973ce50cda93bfa411d78cff346741" title="Transform cartesian coordinates to 2ndst hexagonal coordinates." alt="" coords="519,645,709,687"/>
+<area shape="rect" id="node17" href="$namespacesll__m__hexagonal__meshes.html#a47f7a419f8f8904d408ad3a630612ee4" title="Finds the index in the global array of the point which coordinates where passed as parameter." alt="" coords="757,481,948,523"/>
+<area shape="rect" id="node18" href="$namespacesll__m__hexagonal__meshes.html#a8bed234b81efa9e2e353c3f594c104e3" title="Computes the number of cell from point to origin." alt="" coords="757,547,948,588"/>
+</map>

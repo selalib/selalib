@@ -1,0 +1,4 @@
+<map id="local_hex_to_global" name="local_hex_to_global">
+<area shape="rect" id="node1" title="Same as sll_f_local_to_global but taking hexagonal coordinates as reference indexing." alt="" coords="5,5,156,32"/>
+<area shape="rect" id="node2" href="$namespacesll__m__hexagonal__meshes.html#a8bed234b81efa9e2e353c3f594c104e3" title="Computes the number of cell from point to origin." alt="" coords="204,5,355,32"/>
+</map>

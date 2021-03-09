@@ -1,0 +1,9 @@
+<map id="sll_s_compute_mu" name="sll_s_compute_mu">
+<area shape="rect" id="node1" title=" " alt="" coords="5,140,148,167"/>
+<area shape="rect" id="node2" href="$namespacesll__m__gauss__legendre__integration.html#a2b7c9ab61e7de446803fedecf4824099" title=" " alt="" coords="196,5,376,61"/>
+<area shape="rect" id="node3" href="$namespacesll__m__gauss__legendre__integration.html#a47b7463159f1c9e00a9b4645bd122b6f" title=" " alt="" coords="196,85,376,141"/>
+<area shape="rect" id="node4" href="$namespacesll__m__gauss__lobatto__integration.html#a43443dd7dd80f1289d964b572cd6ee2c" title="Returns a 1d array of size (n) containing gauss&#45;lobatto points in the interval [a,..." alt="" coords="203,165,369,221"/>
+<area shape="rect" id="node7" href="$namespacesll__m__gauss__lobatto__integration.html#ab2dd3e9cafb094226c63f629745b0654" title="Returns a 1d array of size (n) containing gauss&#45;lobatto weights in the interval [a,..." alt="" coords="197,245,375,301"/>
+<area shape="rect" id="node5" href="$namespacesll__m__gauss__lobatto__integration.html#aef28cd44b846400f5133a0ee289babbc" title="This comes from http://dl.acm.org, Algorithme 726 : ORTHPOL, appendices and supplements To use those ..." alt="" coords="424,213,579,254"/>
+<area shape="rect" id="node6" href="$namespacesll__m__gauss__lobatto__integration.html#a20a90d157ba32cd27c5d6f89eccf3735" title="Given n and a measure dlambda, this routine generates the n&#45;point Gaussian quadrature formula." alt="" coords="627,213,781,254"/>
+</map>

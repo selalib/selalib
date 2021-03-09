@@ -1,0 +1,10 @@
+<map id="sll_f_hex_interpolate_value" name="sll_f_hex_interpolate_value">
+<area shape="rect" id="node1" title="Interpolates on point of cartesian coordinates (x1, x2)" alt="" coords="5,129,164,170"/>
+<area shape="rect" id="node2" href="$namespacesll__m__box__splines.html#a3b94ddbae2c7b03c53ca2653ae187885" title="1st coo. of (x1, x2) in reference hex&#45;mesh coo." alt="" coords="241,5,374,32"/>
+<area shape="rect" id="node3" href="$namespacesll__m__box__splines.html#a1edd2773985cb3b80bdcdab980892673" title="2nd coo. of (x1, x2) in reference hex&#45;mesh coo." alt="" coords="241,56,374,83"/>
+<area shape="rect" id="node4" href="$namespacesll__m__box__splines.html#a3036d812bbf7826012acb93b1bc5ad44" title="Computes the box spline of degree deg on (x1, x2)" alt="" coords="258,107,357,133"/>
+<area shape="rect" id="node6" href="$namespacesll__m__hexagonal__meshes.html#aa03f58c798d529ebb1b9d0f03b712035" title="Transform cartesian coordinates to 1st hexagonal coordinates." alt="" coords="212,158,403,199"/>
+<area shape="rect" id="node7" href="$namespacesll__m__hexagonal__meshes.html#a8e973ce50cda93bfa411d78cff346741" title="Transform cartesian coordinates to 2ndst hexagonal coordinates." alt="" coords="212,223,403,265"/>
+<area shape="rect" id="node8" href="$namespacesll__m__hexagonal__meshes.html#a8bed234b81efa9e2e353c3f594c104e3" title="Computes the number of cell from point to origin." alt="" coords="212,289,403,330"/>
+<area shape="rect" id="node5" href="$namespacesll__m__box__splines.html#aba645e61067c71ff9b07c7848cf12073" title="Computes the binomial coefficient (n, k)" alt="" coords="451,107,519,133"/>
+</map>

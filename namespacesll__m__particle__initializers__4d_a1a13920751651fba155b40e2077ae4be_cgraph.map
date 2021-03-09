@@ -1,0 +1,5 @@
+<map id="sll_s_initial_hammersley_particles_4d" name="sll_s_initial_hammersley_particles_4d">
+<area shape="rect" id="node1" title="Initialize particles in a 2d+2v phase space using pseudo&#45;random generators. The Landau damping case w..." alt="" coords="5,27,189,69"/>
+<area shape="rect" id="node2" href="$namespacesll__m__particle__initializers__4d.html#a8764061f0ba5d4770941607bf24b02a5" title=" " alt="" coords="246,5,397,32"/>
+<area shape="rect" id="node3" href="$namespacesll__m__hammersley.html#a2a566de28da8d96f1d5235e3d69b81e0" title=" " alt="" coords="237,57,405,98"/>
+</map>

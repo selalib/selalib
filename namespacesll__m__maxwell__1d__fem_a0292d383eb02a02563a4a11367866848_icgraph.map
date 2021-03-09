@@ -1,0 +1,9 @@
+<map id="solve_circulant" name="solve_circulant">
+<area shape="rect" id="node1" title=" " alt="" coords="252,132,372,159"/>
+<area shape="rect" id="node2" href="$namespacesll__m__maxwell__1d__fem.html#a35f67335e750d8c00872ac2599d5bfbe" title="Compute E_i from j_i integrated over the time interval using weak Ampere formulation." alt="" coords="5,5,204,32"/>
+<area shape="rect" id="node3" href="$namespacesll__m__maxwell__1d__fem.html#aa1244c81bbfc9976cbfcfd84dd0a1b25" title=" " alt="" coords="21,56,188,83"/>
+<area shape="rect" id="node4" href="$namespacesll__m__maxwell__1d__fem.html#a297e5091887d7400c744050d772749d6" title="Compute square of the L2norm." alt="" coords="13,107,196,133"/>
+<area shape="rect" id="node5" href="$namespacesll__m__maxwell__1d__fem.html#af92aa77aac30fa9ad87a4cf10cb88ceb" title="Compute the L2 projection of a given function f on periodic splines of given degree." alt="" coords="27,157,182,184"/>
+<area shape="rect" id="node6" href="$namespacesll__m__maxwell__1d__fem.html#a47196627859f2c2d812ad68b15d300fb" title="compute Ey from Bz using weak Ampere formulation" alt="" coords="21,209,189,250"/>
+<area shape="rect" id="node7" href="$namespacesll__m__maxwell__1d__fem.html#aaeeec4271a275e01eeb77df71a32532c" title=" " alt="" coords="21,274,189,315"/>
+</map>

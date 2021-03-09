@@ -1,0 +1,5 @@
+<map id="initialize_sg3d" name="initialize_sg3d">
+<area shape="rect" id="node1" title="Initialization function. Set up the hierarchy of the sparse grid." alt="" coords="5,35,121,61"/>
+<area shape="rect" id="node2" href="$namespacesll__m__sparse__grid__3d.html#acb31033e0cce952f3d52082a206f7cae" title="Helfer function for initialization. Setting all the information needed for node counter of the sparse..." alt="" coords="169,5,312,32"/>
+<area shape="rect" id="node3" href="$namespacesll__m__sparse__grid__3d.html#a04d687a18dd0021142a601916c368d91" title="Helfer function for initialization. Setting all the information needed for node counter of the sparse..." alt="" coords="169,57,312,98"/>
+</map>

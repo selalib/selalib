@@ -1,0 +1,20 @@
+<map id="dgauss" name="dgauss">
+<area shape="rect" id="node1" title="Given n and a measure dlambda, this routine generates the n&#45;point Gaussian quadrature formula." alt="" coords="1173,267,1241,294"/>
+<area shape="rect" id="node2" href="$namespacesll__m__gauss__lobatto__integration.html#aef28cd44b846400f5133a0ee289babbc" title="This comes from http://dl.acm.org, Algorithme 726 : ORTHPOL, appendices and supplements To use those ..." alt="" coords="1075,267,1125,294"/>
+<area shape="rect" id="node3" href="$namespacesll__m__gauss__lobatto__integration.html#aff7a4b25544863e1049ea290d0c11db1" title="Gauss&#45;Lobatto Quadrature." alt="" coords="833,209,1027,235"/>
+<area shape="rect" id="node4" href="$namespacesll__m__gauss__lobatto__integration.html#a43443dd7dd80f1289d964b572cd6ee2c" title="Returns a 1d array of size (n) containing gauss&#45;lobatto points in the interval [a,..." alt="" coords="857,260,1003,301"/>
+<area shape="rect" id="node18" href="$namespacesll__m__gauss__lobatto__integration.html#ab2dd3e9cafb094226c63f629745b0654" title="Returns a 1d array of size (n) containing gauss&#45;lobatto weights in the interval [a,..." alt="" coords="857,329,1003,371"/>
+<area shape="rect" id="node5" href="$namespacesll__m__maxwell__2d__diga.html#aaf2e3de1e3a109d93be64114e8abeb03" title="Compute cell normals." alt="" coords="595,333,773,375"/>
+<area shape="rect" id="node6" href="$namespacesll__m__maxwell__2d__diga.html#aea7962198b6305c1256087d5a9e5c8fe" title="Initialize Maxwell solver object using DG method." alt="" coords="296,333,504,375"/>
+<area shape="rect" id="node8" href="$namespacesll__m__gauss__lobatto__integration.html#a094e30fa9676b7845eb9d5bb58451496" title="Construction of the derivative matrix for Gauss&#45;Lobatto, The matrix must be already allocated of size..." alt="" coords="611,56,757,97"/>
+<area shape="rect" id="node9" href="$namespacesll__m__gauss__lobatto__integration.html#a4d0d1b11b1c28ff20e217f22f5631e7a" title="Returns a 2d array of size (2,n) containing gauss&#45;lobatto points and weights in the interval [a,..." alt="" coords="605,516,763,557"/>
+<area shape="rect" id="node14" href="$namespacesll__m__dg__fields.html#afd907112b47b1a216f2bc3af0bdc9e44" title=" " alt="" coords="609,121,759,163"/>
+<area shape="rect" id="node15" href="$namespacesll__m__gyroaverage__utilities.html#ace9ca74c71712dea32a595db9b2585fa" title=" " alt="" coords="583,187,785,228"/>
+<area shape="rect" id="node16" href="$namespacesll__m__dg__fields.html#a66ffd9f6cf3e20a707f967e4cb457d30" title=" " alt="" coords="611,399,757,440"/>
+<area shape="rect" id="node17" href="$namespacesll__m__dg__interpolator__1d.html#aab53d5893320fe81960e78fc061d7239" title=" " alt="" coords="590,253,778,309"/>
+<area shape="rect" id="node7" href="$namespacesll__m__maxwell__2d__diga.html#aaf46345a54f1b41f672df6227faf9606" title=" " alt="" coords="5,333,217,375"/>
+<area shape="rect" id="node10" href="$namespacesll__m__general__coordinate__elliptic__solver.html#a6a5dd9c906ada7725f3e185423b28f82" title="Initialization for elliptic solver." alt="" coords="305,429,495,485"/>
+<area shape="rect" id="node11" href="$namespacesll__m__general__coordinate__elliptic__solver__multipatch.html#ae9b2728b7fc567b24d783dc03390c489" title="Initialization for elleptic solver multipatch." alt="" coords="265,509,535,565"/>
+<area shape="rect" id="node12" href="$namespacesll__m__general__coordinate__elliptic__solver.html#a1530444505e15898adb13de4fd54458c" title=" " alt="" coords="305,589,495,660"/>
+<area shape="rect" id="node13" href="$namespacesll__m__general__coordinate__elliptic__solver.html#a1019a5ae673b7ffeca510a34500c59b5" title=" " alt="" coords="6,589,217,660"/>
+</map>

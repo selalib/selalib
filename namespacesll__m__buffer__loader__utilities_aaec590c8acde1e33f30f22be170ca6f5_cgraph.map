@@ -1,0 +1,5 @@
+<map id="sll_s_load_buffer32_2d" name="sll_s_load_buffer32_2d">
+<area shape="rect" id="node1" title=" " alt="" coords="5,13,176,39"/>
+<area shape="rect" id="node2" href="$namespacesll__m__collective.html#a396122f49340f0778eb448430d865b4e" title="Determines the rank of the calling process in the communicator." alt="" coords="224,5,392,47"/>
+<area shape="rect" id="node3" href="$namespacesll__m__collective.html#a37ea25f42a791be5a710a6cf0d1e1197" title="Checks if the pointer ptr is associated to an object." alt="" coords="440,5,603,47"/>
+</map>

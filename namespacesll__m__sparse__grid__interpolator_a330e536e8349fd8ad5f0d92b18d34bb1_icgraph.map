@@ -1,0 +1,9 @@
+<map id="insert_recursive_fourier" name="insert_recursive_fourier">
+<area shape="rect" id="node1" title=" " alt="" coords="381,107,557,133"/>
+<area shape="rect" id="node2" href="$namespacesll__m__sparse__grid__interpolator.html#aad904cb37ec386510d3f63b8818ba2a1" title=" " alt="" coords="224,107,333,133"/>
+<area shape="rect" id="node3" href="$namespacesll__m__sparse__grid__interpolator.html#a906d1565abb9f4fc4d7f82d622d9f9b2" title=" " alt="" coords="45,5,137,32"/>
+<area shape="rect" id="node4" href="$namespacesll__m__sparse__grid__interpolator.html#af0b2f6f3a60fd454f62ea1d2158da770" title=" " alt="" coords="51,56,130,83"/>
+<area shape="rect" id="node5" href="$namespacesll__m__sparse__grid__interpolator.html#aed35bcf2b06e817253fd75cdeeb0f63e" title="Compute Fourier coefficients on sparse grid along dimension dim." alt="" coords="27,107,154,133"/>
+<area shape="rect" id="node6" href="$namespacesll__m__sparse__grid__interpolator.html#a756b07ef8bb7237d4ba19d1532a8fa26" title="Complex version of ToHierarchical1d_comp." alt="" coords="5,157,176,184"/>
+<area shape="rect" id="node7" href="$namespacesll__m__sparse__grid__interpolator.html#a939b2cd02adba4b67a52b65dbb4a79ab" title=" " alt="" coords="53,208,129,235"/>
+</map>

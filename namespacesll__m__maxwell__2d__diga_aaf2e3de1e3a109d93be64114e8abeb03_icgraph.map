@@ -1,0 +1,5 @@
+<map id="compute_normals" name="compute_normals">
+<area shape="rect" id="node1" title="Compute cell normals." alt="" coords="505,5,644,32"/>
+<area shape="rect" id="node2" href="$namespacesll__m__maxwell__2d__diga.html#aea7962198b6305c1256087d5a9e5c8fe" title="Initialize Maxwell solver object using DG method." alt="" coords="257,5,457,32"/>
+<area shape="rect" id="node3" href="$namespacesll__m__maxwell__2d__diga.html#aaf46345a54f1b41f672df6227faf9606" title=" " alt="" coords="5,5,209,32"/>
+</map>

@@ -1,0 +1,4 @@
+<map id="sll_s_nufft_2d_init" name="sll_s_nufft_2d_init">
+<area shape="rect" id="node1" title="Allocate and initialize data and prepare the fft plan." alt="" coords="5,13,144,39"/>
+<area shape="rect" id="node2" href="$namespacesll__m__fft.html#a0d2bc82fedd7e4f4d70a98f37b50ba1e" title="Create new 2d complex to complex plan." alt="" coords="192,5,328,47"/>
+</map>

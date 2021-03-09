@@ -1,0 +1,5 @@
+<map id="sll_c_hamiltonian_splitting_base" name="sll_c_hamiltonian_splitting_base">
+<area shape="rect" id="node1" title="Type for Hamiltonian splittings." alt="" coords="5,46,240,73"/>
+<area shape="rect" id="node2" href="$structsll__m__hamiltonian__splitting__pic__vm__1d2v_1_1sll__t__hamiltonian__splitting__pic__vm__1d2v.html" title="Hamiltonian splitting type for Vlasov&#45;Maxwell 1d2v." alt="" coords="288,5,483,47"/>
+<area shape="rect" id="node3" href="$structsll__m__hamiltonian__splitting__pic__vm__1d2v__boris_1_1sll__t__hamiltonian__splitting__pic__vm__1d2v__boris.html" title="Solves 1d2v Vlasov&#45;Maxwell with PIC and spline finite elements with Boris pusher." alt="" coords="288,71,483,112"/>
+</map>

@@ -1,0 +1,7 @@
+<map id="sll_s_solve_maxwell_2d_pstd" name="sll_s_solve_maxwell_2d_pstd">
+<area shape="rect" id="node1" title="self routine exists only for testing purpose. Use ampere and faraday in your appication." alt="" coords="5,74,161,115"/>
+<area shape="rect" id="node2" href="$namespacesll__m__maxwell__2d__pstd.html#a74db616d5f17b65e1ca88f283bc8000b" title="Solve ampere maxwell equation (ex,ey,hz)" alt="" coords="211,5,362,32"/>
+<area shape="rect" id="node3" href="$namespacesll__m__maxwell__2d__pstd.html#aa20b968c5e4bf1716c84ea3885261344" title="Solve ampere maxwell equation (hx,hy,ez)" alt="" coords="209,56,364,83"/>
+<area shape="rect" id="node4" href="$namespacesll__m__maxwell__2d__pstd.html#a92b48466038c1631ea80a44024285d47" title="Solve faraday equation (ex,ey,hz)" alt="" coords="211,107,362,133"/>
+<area shape="rect" id="node5" href="$namespacesll__m__maxwell__2d__pstd.html#a02862c86c5484cdb7efbbdd183498e60" title="Solve faraday equation (hx,hy,ez)" alt="" coords="209,157,364,184"/>
+</map>

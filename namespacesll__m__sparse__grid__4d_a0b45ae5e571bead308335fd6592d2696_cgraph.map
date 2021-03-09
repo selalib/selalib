@@ -1,0 +1,4 @@
+<map id="initialize_sg4d" name="initialize_sg4d">
+<area shape="rect" id="node1" title="Initialization function. Set up the hierarchy of the sparse grid." alt="" coords="5,5,121,32"/>
+<area shape="rect" id="node2" href="$namespacesll__m__sparse__grid__4d.html#ab2e78501dbce8eb2a8c196e73a7cd9aa" title="For a given sparse grid point fill the hierarchy information (4D specific)" alt="" coords="169,5,312,32"/>
+</map>

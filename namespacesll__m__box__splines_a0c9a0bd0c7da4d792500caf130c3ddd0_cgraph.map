@@ -1,0 +1,12 @@
+<map id="sll_s_write_connectivity" name="sll_s_write_connectivity">
+<area shape="rect" id="node1" title="Writes connectivity for CAID / DJANGO." alt="" coords="5,141,184,167"/>
+<area shape="rect" id="node2" href="$namespacesll__m__box__splines.html#a9ac06b8c624fbc68a93fe53f82402001" title="Computes indices of non null splines on a given cell." alt="" coords="257,107,398,134"/>
+<area shape="rect" id="node10" href="$namespacesll__m__hexagonal__meshes.html#a8a40f8d23b9b32726f74fe4ff6d89043" title="Function that allows to change from the current element notation to one more intuitive." alt="" coords="232,158,423,214"/>
+<area shape="rect" id="node3" href="$namespacesll__m__hexagonal__meshes.html#a36ffefac7d07203fe1143c726e6e5098" title="Transforms local index in a given reference local indexation to a global index from the mesh." alt="" coords="485,53,675,95"/>
+<area shape="rect" id="node4" href="$namespacesll__m__hexagonal__meshes.html#aa579f5999884452ce000e206a88dc6b7" title="Returns indices of the edges of a given cell." alt="" coords="471,119,689,160"/>
+<area shape="rect" id="node5" href="$namespacesll__m__hexagonal__meshes.html#a4f66e0c718eda16377ca26d5c95b419f" title="Transform hexagonal coordinates to global index." alt="" coords="737,5,928,47"/>
+<area shape="rect" id="node8" href="$namespacesll__m__hexagonal__meshes.html#aa03f58c798d529ebb1b9d0f03b712035" title="Transform cartesian coordinates to 1st hexagonal coordinates." alt="" coords="737,71,928,112"/>
+<area shape="rect" id="node9" href="$namespacesll__m__hexagonal__meshes.html#a8e973ce50cda93bfa411d78cff346741" title="Transform cartesian coordinates to 2ndst hexagonal coordinates." alt="" coords="737,136,928,177"/>
+<area shape="rect" id="node6" href="$namespacesll__m__hexagonal__meshes.html#a47f7a419f8f8904d408ad3a630612ee4" title="Finds the index in the global array of the point which coordinates where passed as parameter." alt="" coords="976,5,1167,47"/>
+<area shape="rect" id="node7" href="$namespacesll__m__hexagonal__meshes.html#a8bed234b81efa9e2e353c3f594c104e3" title="Computes the number of cell from point to origin." alt="" coords="976,132,1167,173"/>
+</map>

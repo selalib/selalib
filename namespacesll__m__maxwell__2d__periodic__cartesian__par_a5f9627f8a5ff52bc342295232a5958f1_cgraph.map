@@ -1,0 +1,4 @@
+<map id="sll_s_delete_maxwell_2d_periodic_plan_cartesian_par" name="sll_s_delete_maxwell_2d_periodic_plan_cartesian_par">
+<area shape="rect" id="node1" title="Delete maxwell solver object." alt="" coords="5,5,240,47"/>
+<area shape="rect" id="node2" href="$namespacesll__m__fft.html#a07f504fcd2559674b7b22de039f063ff" title="Delete a plan." alt="" coords="288,13,457,39"/>
+</map>

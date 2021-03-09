@@ -1,0 +1,4 @@
+<map id="sll_s_poisson_2d_polar_init" name="sll_s_poisson_2d_polar_init">
+<area shape="rect" id="node1" title="sll_o_initialize the Poisson solver in polar coordinates" alt="" coords="216,13,415,39"/>
+<area shape="rect" id="node2" href="$namespacesll__m__poisson__2d__polar.html#a626a3a26fa63ae7a36c1819d40877047" title="OO interface: allocate pointer to Poisson solver and initialize it." alt="" coords="5,5,168,47"/>
+</map>

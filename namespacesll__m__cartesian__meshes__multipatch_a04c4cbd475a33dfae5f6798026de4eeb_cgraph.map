@@ -1,0 +1,5 @@
+<map id="initialize_patch_lmmp2d" name="initialize_patch_lmmp2d">
+<area shape="rect" id="node1" title="initializes a previously allocated multipatch 2d logical mesh." alt="" coords="5,20,188,47"/>
+<area shape="rect" id="node2" href="$namespacesll__m__cartesian__meshes.html#a47fb939f257f84c12cc40b86a9d0fe11" title="allocates the memory space for a new 2D cartesian mesh on the heap, initializes it with the given arg..." alt="" coords="236,5,419,61"/>
+<area shape="rect" id="node3" href="$namespacesll__m__cartesian__meshes.html#ab2d0d888cbfa10e6b2a37a5bcf427ef3" title="initializes a cartesian mesh 2D object that has been already allocated." alt="" coords="467,5,649,61"/>
+</map>

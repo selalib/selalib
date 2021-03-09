@@ -1,0 +1,5 @@
+<map id="init_spline_1d" name="init_spline_1d">
+<area shape="rect" id="node1" title="Initializer." alt="" coords="5,57,117,84"/>
+<area shape="rect" id="node2" href="$namespacesll__m__gauss__legendre__integration.html#ad8ffc44405a576bb158ad8c1b009b41b" title="Returns a 2d array of size (2,npoints) containing gauss&#45;legendre points and weights in the interval [..." alt="" coords="165,5,388,61"/>
+<area shape="rect" id="node3" href="$namespacesll__m__splines__pp.html#a0c79f977725f86d5c265b682a0e56d02" title="Initialize sll_t_spline_pp_1d object (Set poly_coeffs depending on degree)" alt="" coords="199,86,355,127"/>
+</map>

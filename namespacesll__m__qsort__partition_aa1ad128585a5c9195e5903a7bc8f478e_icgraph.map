@@ -1,0 +1,13 @@
+<map id="partition" name="partition">
+<area shape="rect" id="node1" title=" " alt="" coords="1255,132,1332,159"/>
+<area shape="rect" id="node2" href="$namespacesll__m__qsort__partition.html#a2ce333a69b25b96185626ef494f55971" title=" " alt="" coords="1108,132,1207,159"/>
+<area shape="rect" id="node3" href="$namespacesll__m__sparse__matrix.html#ac5355751dadd75cc69b33fed0798de2c" title=" " alt="" coords="870,125,1027,166"/>
+<area shape="rect" id="node5" href="$namespacesll__m__sparse__matrix__mp.html#abc1c3727deb98451291669211b354eb0" title=" " alt="" coords="837,55,1060,97"/>
+<area shape="rect" id="node10" href="$namespacesll__m__sparse__matrix.html#a4d0df569f33bdd62f3a9a6ba079074ca" title="initialization of CSR matrix type thanks to the global index of each local dof of each element" alt="" coords="867,190,1030,231"/>
+<area shape="rect" id="node4" href="$namespacesll__m__sparse__matrix.html#aa80d24ea9a4248045fb6c11142206ca6" title="allocates the memory space for a new CSR type on the heap, initializes it with the given arguments an..." alt="" coords="608,126,775,167"/>
+<area shape="rect" id="node6" href="$namespacesll__m__sparse__matrix__mp.html#ad32ebfd00f8ef3065b6859eca129d87a" title="initialization of CSR matrix type thanks to the global index of each local dof of each element param[..." alt="" coords="610,45,773,101"/>
+<area shape="rect" id="node7" href="$namespacesll__m__sparse__matrix__mp.html#ab8ac37685dad402f808e43fd26578034" title="allocates the memory space for a new CSR type on the heap, initializes it with the given arguments an..." alt="" coords="323,53,545,94"/>
+<area shape="rect" id="node8" href="$namespacesll__m__general__coordinate__elliptic__solver__multipatch.html#ad5dcba50d55d23e36b6b7d9fbaae1da9" title="Assemble the matrix for elliptic solver." alt="" coords="37,5,243,61"/>
+<area shape="rect" id="node9" href="$namespacesll__m__general__coordinate__elliptic__solver__multipatch.html#ae9b2728b7fc567b24d783dc03390c489" title="Initialization for elleptic solver multipatch." alt="" coords="5,85,275,141"/>
+<area shape="rect" id="node11" href="$namespacesll__m__sparse__matrix.html#a482d60f2c137395c531bad0b281e24c7" title="allocates the memory space for a new CSR matrix," alt="" coords="593,191,789,233"/>
+</map>

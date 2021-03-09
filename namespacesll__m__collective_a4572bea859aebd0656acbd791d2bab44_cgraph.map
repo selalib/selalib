@@ -1,0 +1,4 @@
+<map id="sll_get_collective_comm" name="sll_get_collective_comm">
+<area shape="rect" id="node1" title="Gets the id (integer) of the communicator." alt="" coords="5,5,188,32"/>
+<area shape="rect" id="node2" href="$namespacesll__m__collective.html#a37ea25f42a791be5a710a6cf0d1e1197" title="Checks if the pointer ptr is associated to an object." alt="" coords="236,5,413,32"/>
+</map>

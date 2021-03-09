@@ -1,0 +1,52 @@
+<map id="sll_s_test_mpi_error" name="sll_s_test_mpi_error">
+<area shape="rect" id="node1" title="Checks the good execution of collective instruction." alt="" coords="500,1567,653,1593"/>
+<area shape="rect" id="node2" href="$namespacesll__m__collective.html#a8dab7b7d96c959eb3dedd3e19f4d61fe" title="Gathers integer data from all tasks and distribute the combined data to all tasks." alt="" coords="245,5,441,32"/>
+<area shape="rect" id="node3" href="$namespacesll__m__collective.html#ac6fd68dc8932ea38d0c68bcece483f2e" title=" " alt="" coords="257,57,429,98"/>
+<area shape="rect" id="node4" href="$namespacesll__m__collective.html#a78f61d53d5bdd42f97796955e07bfb4c" title="Gathers real data from all tasks and deliver the combined data to all tasks." alt="" coords="253,122,433,163"/>
+<area shape="rect" id="node5" href="$namespacesll__m__collective.html#a53667aea76e2fe9f17e7a9cac24e352f" title=" " alt="" coords="256,187,431,229"/>
+<area shape="rect" id="node6" href="$namespacesll__m__collective.html#a2754d94f0999ff85b88c176dfd0a00a1" title="Combines complex values from all processes and distributes the result back to all processes." alt="" coords="256,253,431,294"/>
+<area shape="rect" id="node7" href="$namespacesll__m__collective.html#a9c298f006bc891c360f347330868b9c7" title="Combines complex values from all processes and distributes the result back to all processes." alt="" coords="256,318,431,359"/>
+<area shape="rect" id="node8" href="$namespacesll__m__collective.html#ae2c911311879388b315ec2cb2d55ea36" title="Combines real values from all processes and distributes the result back to all processes." alt="" coords="256,383,431,425"/>
+<area shape="rect" id="node9" href="$namespacesll__m__collective.html#a58358f9e2a29a955f1a74799e8d1ef82" title="Combines real values from all processes and distributes the result back to all processes." alt="" coords="256,449,431,490"/>
+<area shape="rect" id="node10" href="$namespacesll__m__collective.html#afbefcdace51ce1ad308102217db348b4" title=" " alt="" coords="264,514,423,555"/>
+<area shape="rect" id="node11" href="$namespacesll__m__collective.html#a58b101c8bf5b1e4743459cd57510921e" title=" " alt="" coords="264,579,423,621"/>
+<area shape="rect" id="node12" href="$namespacesll__m__collective.html#a791a019c8abb4bd59c49410e3e605c8c" title=" " alt="" coords="260,645,427,686"/>
+<area shape="rect" id="node13" href="$namespacesll__m__collective.html#a9206b729fd41efd01618c3b596c266bb" title="Broadcasts an array of type &#39;sll_comp32&#39; from the process with rank &quot;root&quot; to all other processes of ..." alt="" coords="269,710,418,751"/>
+<area shape="rect" id="node14" href="$namespacesll__m__collective.html#a23ead6366850b7cc7994a054360a8e86" title="Broadcasts an array of type &#39;sll_comp64&#39; from the process with rank &quot;root&quot; to all other processes of ..." alt="" coords="269,775,418,817"/>
+<area shape="rect" id="node15" href="$namespacesll__m__collective.html#af89da345572519c7af94ca91df136bad" title="Broadcasts an array of type &#39;sll_int32&#39; from the process with rank &quot;root&quot; to all other processes of t..." alt="" coords="269,841,418,882"/>
+<area shape="rect" id="node16" href="$namespacesll__m__collective.html#a0e11549ffec638c68f5bfc9d6cf343ea" title="Broadcasts an array of type &#39;sll_int64&#39; from the process with rank &quot;root&quot; to all other processes of t..." alt="" coords="269,906,418,947"/>
+<area shape="rect" id="node17" href="$namespacesll__m__collective.html#afc0876f2ae6ddc95017be355f215a2fc" title="Broadcasts an array of type &#39;logical&#39; from the process with rank &quot;root&quot; to all other processes of the..." alt="" coords="269,971,418,1013"/>
+<area shape="rect" id="node18" href="$namespacesll__m__collective.html#abee1be2df2e3efa64687942279a3bb7c" title="Broadcasts an array of type &#39;sll_real32&#39; from the process with rank &quot;root&quot; to all other processes of ..." alt="" coords="269,1037,418,1078"/>
+<area shape="rect" id="node19" href="$namespacesll__m__collective.html#a7717f3f336d8cf3ddf394d63139cc180" title="Broadcasts an array of type &#39;sll_real64&#39; from the process with rank &quot;root&quot; to all other processes of ..." alt="" coords="269,1102,418,1143"/>
+<area shape="rect" id="node20" href="$namespacesll__m__collective.html#a90f99174b4655b4dd74bf90019715b3b" title=" " alt="" coords="265,1167,421,1209"/>
+<area shape="rect" id="node21" href="$namespacesll__m__collective.html#aff792c3cf8f33c94a6a625cc0df4b986" title="Gathers together real values from a group of processes." alt="" coords="265,1233,421,1274"/>
+<area shape="rect" id="node22" href="$namespacesll__m__collective.html#a95a00f757ec1e7863920bc95dd107f06" title=" " alt="" coords="265,1298,421,1339"/>
+<area shape="rect" id="node23" href="$namespacesll__m__collective.html#a5eb76797f4689a2e466569436b821115" title=" " alt="" coords="264,1363,423,1405"/>
+<area shape="rect" id="node24" href="$namespacesll__m__collective.html#ae703fe55ecd4d44c738c6c1c160579df" title="Reduces complex values on all processes to a single value." alt="" coords="264,1429,423,1470"/>
+<area shape="rect" id="node25" href="$namespacesll__m__collective.html#ab189d3ef05fd7c8cadabd2963d2b749a" title=" " alt="" coords="264,1494,423,1535"/>
+<area shape="rect" id="node26" href="$namespacesll__m__collective.html#a78e89442edf0c3e6c308fbcb994b8f5d" title="Sends data from one process to all other processes in a communicator." alt="" coords="264,1559,423,1601"/>
+<area shape="rect" id="node27" href="$namespacesll__m__collective.html#a8d1b630a6dbfca96c72de97f01993263" title="Sends data from one process to all other processes in a communicator." alt="" coords="248,1625,439,1652"/>
+<area shape="rect" id="node28" href="$namespacesll__m__collective.html#ade04fbeb0c43410cbefc6200e58f92c6" title="Sends data from one process to all other processes in a communicator." alt="" coords="264,1677,423,1718"/>
+<area shape="rect" id="node29" href="$namespacesll__m__collective.html#a0da50b4855a5305dc03e9f2378f64283" title="Creates new (wrapper around) communicators based on colors and keys." alt="" coords="267,1743,420,1769"/>
+<area shape="rect" id="node30" href="$namespacesll__m__collective.html#a939e5faf8e7354e95934cc448ea4623d" title="Starts the paralell environment." alt="" coords="265,1793,422,1820"/>
+<area shape="rect" id="node31" href="$namespacesll__m__collective.html#ab3a27eaa8cbb7d6c15ac06fdbc6cfce2" title=" " alt="" coords="246,1845,441,1886"/>
+<area shape="rect" id="node32" href="$namespacesll__m__collective.html#a232c8fc8720c6e1ee791617e22f8bf72" title="Combines logical values from all processes and distributes the result back to all processes." alt="" coords="249,1910,437,1951"/>
+<area shape="rect" id="node33" href="$namespacesll__m__collective.html#a58faad76af1ad0a1b388771c8a3c9157" title="Combines real values from all processes and distributes the result back to all processes." alt="" coords="249,1975,437,2017"/>
+<area shape="rect" id="node34" href="$namespacesll__m__collective.html#aa66cb9d644105795e81bb937f540ef8f" title="Sends integer data from all to all processes." alt="" coords="245,2041,442,2068"/>
+<area shape="rect" id="node35" href="$namespacesll__m__collective.html#a2a65c91d2073effaff0fe89980a68103" title=" " alt="" coords="5,2059,187,2101"/>
+<area shape="rect" id="node36" href="$namespacesll__m__collective.html#ae09231d0d76fe46ff2592bd3d0c10e27" title=" " alt="" coords="253,2143,434,2185"/>
+<area shape="rect" id="node37" href="$namespacesll__m__collective.html#ab5ba42bf69215f71166cd562546f0704" title="Sends integer data from all to all processes; each process may send a different amount of data and pr..." alt="" coords="241,2209,446,2236"/>
+<area shape="rect" id="node38" href="$namespacesll__m__collective.html#a4ab2422dd7186fe899c788dfa4befe72" title="Sends real data from all to all processes; each process may send a different amount of data and provi..." alt="" coords="237,2260,450,2287"/>
+<area shape="rect" id="node39" href="$namespacesll__m__collective.html#a9998b96a7386b82ea7cf47ab2062e05b" title="Blocks until all processes in the communicator have reached this routine." alt="" coords="258,2311,429,2337"/>
+<area shape="rect" id="node40" href="$namespacesll__m__point__to__point__comms.html#ab6f3256ff8c0bbee51626a7603f7ef6d" title=" " alt="" coords="15,2321,177,2377"/>
+<area shape="rect" id="node41" href="$namespacesll__m__collective.html#a369bd2c56e6a666d429de47603f0ef8f" title="Broadcasts an array of type &#39;sll_real64&#39; from the process with rank &quot;root&quot; to all other processes of ..." alt="" coords="262,2413,425,2454"/>
+<area shape="rect" id="node42" href="$namespacesll__m__collective.html#afd9d40fb05b44d26820f42f7407901e8" title="Gathers real values into specified locations from all processes in a group." alt="" coords="238,2479,449,2505"/>
+<area shape="rect" id="node43" href="$namespacesll__m__collective.html#a93956b1afc2f792f79388dea511083fe" title="Gathers real64 values into specified locations from all processes in a group." alt="" coords="254,2530,433,2571"/>
+<area shape="rect" id="node44" href="$namespacesll__m__collective.html#a4a8c68ed0dcd8da51dd472a30ec1e996" title="Reduces integer values on all processes to a single value." alt="" coords="245,2596,441,2623"/>
+<area shape="rect" id="node45" href="$namespacesll__m__collective.html#aa4f6031897a239a580ca064157f8cd21" title="Reduces logical values on all processes to a single value." alt="" coords="257,2647,429,2689"/>
+<area shape="rect" id="node46" href="$namespacesll__m__collective.html#af60e669d9e58597b27784437549e8d07" title="Reduces real values on all processes to a single value." alt="" coords="257,2713,429,2754"/>
+<area shape="rect" id="node47" href="$namespacesll__m__collective.html#a7b5259be20c1cf061c6d97f243147eb3" title=" " alt="" coords="257,2778,429,2819"/>
+<area shape="rect" id="node48" href="$namespacesll__m__collective.html#a236856042450d8918aee0abe8d8edaa9" title="Scatters a buffer in parts to all processes in a communicator." alt="" coords="237,2844,450,2871"/>
+<area shape="rect" id="node49" href="$namespacesll__m__point__to__point__comms.html#ac3b701c44660ce387e7c0e50adfa8c8f" title=" " alt="" coords="235,2895,452,2951"/>
+<area shape="rect" id="node50" href="$namespacesll__m__collective.html#a592327aa26a80b737512f9d054816c7f" title="Ends the paralell environment." alt="" coords="267,2975,420,3001"/>
+</map>

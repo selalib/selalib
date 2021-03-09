@@ -1,0 +1,25 @@
+<map id="index_hex_to_global" name="index_hex_to_global">
+<area shape="rect" id="node1" title="Finds the index in the global array of the point which coordinates where passed as parameter." alt="" coords="1203,479,1359,505"/>
+<area shape="rect" id="node2" href="$namespacesll__m__hexagonal__meshes.html#a4f66e0c718eda16377ca26d5c95b419f" title="Transform hexagonal coordinates to global index." alt="" coords="1010,296,1123,323"/>
+<area shape="rect" id="node20" href="$namespacesll__m__hexagonal__meshes.html#a9384fd0ae5d59bb61739f9814a391007" title="initializes a previously allocated 2d hex&#45;mesh" alt="" coords="979,504,1155,531"/>
+<area shape="rect" id="node3" href="$namespacesll__m__hexagonal__meshes.html#a9500c710f1292a6d8caca2f486e6c338" title="Computes the type of triangle of a given cell." alt="" coords="800,355,881,381"/>
+<area shape="rect" id="node4" href="$namespacesll__m__hexagonal__meshes.html#aa579f5999884452ce000e206a88dc6b7" title="Returns indices of the edges of a given cell." alt="" coords="757,289,925,330"/>
+<area shape="rect" id="node18" href="$namespacesll__m__hexagonal__meshes.html#af2731e5fc29368fa0de959f672507c5a" title="&lt;BRIEF_DESCRIPTION&gt;" alt="" coords="760,24,921,51"/>
+<area shape="rect" id="node19" href="$namespacesll__m__hexagonal__meshes.html#a0770cf59d8b43bdb276ef0be796ad405" title="Given a mesh point and the first cartesian coordinate of a point (that is not on the mesh) we return ..." alt="" coords="773,78,909,119"/>
+<area shape="rect" id="node5" href="$namespacesll__m__hexagonal__meshes.html#a5f174ae37e2084780d052402428340f8" title="returns the indices of the neighbouring cells/triangles" alt="" coords="535,85,658,112"/>
+<area shape="rect" id="node6" href="$namespacesll__m__hexagonal__meshes.html#a848cd2dc313a3701da4517ca97a4ae37" title="Computes the coordinate transformation hex&#45;&gt;aligned for an element." alt="" coords="517,136,676,163"/>
+<area shape="rect" id="node7" href="$namespacesll__m__triangular__meshes.html#a360e0a6483af779b0c50e4b84bfc377b" title="allocates the memory space for a new 2D triangular mesh on the heap, initializes it with the given he..." alt="" coords="504,187,689,243"/>
+<area shape="rect" id="node8" href="$namespacesll__m__box__splines.html#a9ac06b8c624fbc68a93fe53f82402001" title="Computes indices of non null splines on a given cell." alt="" coords="522,515,671,557"/>
+<area shape="rect" id="node11" href="$namespacesll__m__interpolation__hex__hermite.html#a9798c5acbe2996e930f4e51dee4b41ad" title=" " alt="" coords="491,384,703,440"/>
+<area shape="rect" id="node12" href="$namespacesll__m__hexagonal__meshes.html#a8fe8a1166a36d227d208c7badbc73cf6" title="Computes the coordinate transformation ref&#45;&gt;hex for an element." alt="" coords="533,464,661,491"/>
+<area shape="rect" id="node13" href="$namespacesll__m__hexagonal__meshes.html#a8a40f8d23b9b32726f74fe4ff6d89043" title="Function that allows to change from the current element notation to one more intuitive." alt="" coords="511,318,682,359"/>
+<area shape="rect" id="node14" href="$namespacesll__m__hexagonal__meshes.html#a99a1f6a0f986b08021d2c0f336ba4aef" title="Writes files for CAID." alt="" coords="272,325,431,352"/>
+<area shape="rect" id="node15" href="$namespacesll__m__interpolation__hex__hermite.html#a9c14ed4e8a770ba4a9e08cad03cc614f" title=" " alt="" coords="511,5,682,61"/>
+<area shape="rect" id="node16" href="$namespacesll__m__hexagonal__meshes.html#ad56d527a56b58b123d7351fec84cfd30" title="Same as write_field_hex_mesh but output in xmf." alt="" coords="498,581,695,608"/>
+<area shape="rect" id="node17" href="$namespacesll__m__hexagonal__meshes.html#a28202f1cd07426e9c2b838e2d30281ec" title="Same as write_hex_mesh but output is mtv file." alt="" coords="515,632,678,659"/>
+<area shape="rect" id="node9" href="$namespacesll__m__box__splines.html#a0c9a0bd0c7da4d792500caf130c3ddd0" title="Writes connectivity for CAID / DJANGO." alt="" coords="262,515,441,557"/>
+<area shape="rect" id="node10" href="$namespacesll__m__fekete__integration.html#adceb8456a1011a2bb4dcecfd28374463" title="This function is supposed to write all django input files needed for a Django/Jorek simulation." alt="" coords="5,599,212,641"/>
+<area shape="rect" id="node21" href="$namespacesll__m__hexagonal__meshes.html#aaa2262794e099a011cb267f899c82b15" title="Creates and initializes a new hexagonal mesh." alt="" coords="751,691,931,717"/>
+<area shape="rect" id="node22" href="$namespacesll__m__box__splines.html#a0f40714993a4e4bdcf19d5798130ae75" title="Computes the values or derivatives of box splines." alt="" coords="509,683,684,725"/>
+<area shape="rect" id="node23" href="$namespacesll__m__fekete__integration.html#ac7c05ae36ac69d55d2c022d71e82cae9" title="Writes on a file values of boxsplines on fekete points." alt="" coords="260,631,443,673"/>
+</map>

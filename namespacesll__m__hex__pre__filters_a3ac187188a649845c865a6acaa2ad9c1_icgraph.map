@@ -1,0 +1,4 @@
+<map id="sll_s_pre_filter_pfir" name="sll_s_pre_filter_pfir">
+<area shape="rect" id="node1" title="Pre&#45;filter PFIR to compute the box splines coefficients." alt="" coords="248,20,392,47"/>
+<area shape="rect" id="node2" href="$namespacesll__m__box__splines.html#a4849c1ba7dc56f9d04fb3193a019daeb" title="Computes box splines coefficients for dirichlet BC." alt="" coords="5,5,200,61"/>
+</map>

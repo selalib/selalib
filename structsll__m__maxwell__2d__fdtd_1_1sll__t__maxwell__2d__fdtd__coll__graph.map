@@ -1,0 +1,5 @@
+<map id="sll_t_maxwell_2d_fdtd" name="sll_t_maxwell_2d_fdtd">
+<area shape="rect" id="node1" title="Object with data to solve Maxwell equation Maxwell in TE mode: (Ex,Ey,Bz)" alt="" coords="66,241,234,268"/>
+<area shape="rect" id="node2" title=" " alt="" coords="5,5,143,32"/>
+<area shape="rect" id="node3" title=" " alt="" coords="167,5,285,32"/>
+</map>

@@ -1,0 +1,8 @@
+<map id="sll_collective_globalsum_real32" name="sll_collective_globalsum_real32">
+<area shape="rect" id="node1" title="Performs a global sum and writes the result in the given node." alt="" coords="5,39,188,80"/>
+<area shape="rect" id="node2" href="$namespacesll__m__collective.html#a1c2477e6d1993f5b924862a86f112f1e" title="Performs a global sum over an array and writes the result in the given node If no node in root_rank i..." alt="" coords="236,39,419,80"/>
+<area shape="rect" id="node3" href="$namespacesll__m__collective.html#a58faad76af1ad0a1b388771c8a3c9157" title="Combines real values from all processes and distributes the result back to all processes." alt="" coords="467,5,655,47"/>
+<area shape="rect" id="node6" href="$namespacesll__m__collective.html#af60e669d9e58597b27784437549e8d07" title="Reduces real values on all processes to a single value." alt="" coords="475,71,647,112"/>
+<area shape="rect" id="node4" href="$namespacesll__m__collective.html#a37ea25f42a791be5a710a6cf0d1e1197" title="Checks if the pointer ptr is associated to an object." alt="" coords="703,13,880,39"/>
+<area shape="rect" id="node5" href="$namespacesll__m__collective.html#a9a5729d7ca2e55890195f76c8a5cbd62" title="Checks the good execution of collective instruction." alt="" coords="715,70,868,97"/>
+</map>
