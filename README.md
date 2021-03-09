@@ -21,8 +21,8 @@ make
 
 This procedure is tested only on ubuntu 20.04 with following dependencies:
 
-- gfortran g++
-- cmake
-- libopenmpi-dev openmpi-bin libhdf5-openmpi-dev
-- libfftw3-dev liblapack-dev libopenblas-dev
-- doxygen texlive 
+- gfortran g++ cmake libopenmpi-dev openmpi-bin libhdf5-openmpi-dev libfftw3-dev liblapack-dev libopenblas-dev
+
+For documentation install
+
+- doxygen texlive graphviz
