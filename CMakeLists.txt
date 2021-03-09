@@ -2,7 +2,7 @@ IF(DEFINED CMAKE_BUILD_TYPE)
   SET(CMAKE_BUILD_TYPE ${CMAKE_BUILD_TYPE}
     CACHE STRING "Choose the type of build, options are: Debug Release.")
 ELSE()
-  SET(CMAKE_BUILD_TYPE Debug
+  SET(CMAKE_BUILD_TYPE Release
     CACHE STRING "Choose the type of build, options are: Debug Release.")
 ENDIF()
 
