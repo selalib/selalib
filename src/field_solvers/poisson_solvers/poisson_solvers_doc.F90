@@ -1,5 +1,5 @@
-!> @defgroup poisson_solvers sll_poisson_solvers 
-!> @brief 
+!> @defgroup poisson_solvers sll_poisson_solvers
+!> @brief
 !> Poisson solvers (serial version)
 !>
 !> <b> How to use it </b>

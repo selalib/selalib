@@ -1,5 +1,5 @@
-!> @defgroup multipatch sll_multipatch 
-!> @brief 
+!> @defgroup multipatch sll_multipatch
+!> @brief
 !> First draft of multipatch library
 !> @author Edwin Chacon-Golcher and Aurore Back
 !> @author Contact: Pierre Navaro

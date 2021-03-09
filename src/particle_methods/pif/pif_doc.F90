@@ -1,6 +1,6 @@
 !> @defgroup pif sll_pif
 !> @brief
-!> Particle method in Fourier space. 
+!> Particle method in Fourier space.
 !> @author Jakob Ameres
 !> @details
 !> Methods specific for Particle in Fourier
@@ -9,4 +9,4 @@
 !>
 !> <b> Examples </b>
 !> Fieldsolver is used in general dimensional particle in fourier
-!> @snippet 
+!> @snippet

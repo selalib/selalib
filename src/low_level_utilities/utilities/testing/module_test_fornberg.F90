@@ -35,59 +35,59 @@ module test_fornberg
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_working_precision.h"
 
-  use sll_m_fornberg, only: &
-    sll_s_populate_weights
+   use sll_m_fornberg, only: &
+      sll_s_populate_weights
 
-  implicit none
+   implicit none
 
-  private
+   private
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 contains
 
-  subroutine test_weights()
-    sll_real64 :: z
-    sll_int32 :: m, nd
-    sll_real64, allocatable :: c(:,:)
-    sll_real64, parameter :: x(0:2) = [-1.0_f64, 0.0_f64, 1.0_f64]
-    nd = size(x)-1
-    m = 2
-    z = 0.0_f64
-    allocate(c(0:nd, 0:m))
-    call sll_s_populate_weights(z, x, nd, m, c)
-    print *, c
-  end subroutine test_weights
+   subroutine test_weights()
+      sll_real64 :: z
+      sll_int32 :: m, nd
+      sll_real64, allocatable :: c(:, :)
+      sll_real64, parameter :: x(0:2) = [-1.0_f64, 0.0_f64, 1.0_f64]
+      nd = size(x) - 1
+      m = 2
+      z = 0.0_f64
+      allocate (c(0:nd, 0:m))
+      call sll_s_populate_weights(z, x, nd, m, c)
+      print *, c
+   end subroutine test_weights
 
-  subroutine test_backward_5pts()
-    sll_real64 :: z
-    sll_int32 :: m, nd
-    sll_real64, allocatable :: c(:,:)
-    sll_real64, parameter :: x(0:4) = [-4.0_f64, -3.0_f64, -2.0_f64, -1.0_f64, 0.0_f64]
-    nd = size(x)-1
-    m = 2
-    z = 0.0_f64
-    allocate(c(0:nd, 0:m))
-    call sll_s_populate_weights(z, x, nd, m, c)
-    print *, c(0,:)
-    print *, c(:,1)
-    print *, c(:,2)
-  end subroutine test_backward_5pts
+   subroutine test_backward_5pts()
+      sll_real64 :: z
+      sll_int32 :: m, nd
+      sll_real64, allocatable :: c(:, :)
+      sll_real64, parameter :: x(0:4) = [-4.0_f64, -3.0_f64, -2.0_f64, -1.0_f64, 0.0_f64]
+      nd = size(x) - 1
+      m = 2
+      z = 0.0_f64
+      allocate (c(0:nd, 0:m))
+      call sll_s_populate_weights(z, x, nd, m, c)
+      print *, c(0, :)
+      print *, c(:, 1)
+      print *, c(:, 2)
+   end subroutine test_backward_5pts
 
-  subroutine test_forward_5pts()
-    sll_real64 :: z
-    sll_int32 :: m, nd
-    sll_real64, allocatable :: c(:,:)
-    sll_real64, parameter :: x(0:4) = [0.0_f64, 1.0_f64, 2.0_f64, 3.0_f64, 4.0_f64]
-    nd = size(x)-1
-    m = 2
-    z = 0.0_f64
-    allocate(c(0:nd, 0:m))
-    call sll_s_populate_weights(z, x, nd, m, c)
-    write(*,*) " "
-    print *, c(:,1)
-    write(*,*) " "
-    write(*,*) [-(25.0_f64/12.0_f64),4.0_f64,-3.0_f64,4.0_f64/3.0_f64,-0.25_f64]
-  end subroutine test_forward_5pts
+   subroutine test_forward_5pts()
+      sll_real64 :: z
+      sll_int32 :: m, nd
+      sll_real64, allocatable :: c(:, :)
+      sll_real64, parameter :: x(0:4) = [0.0_f64, 1.0_f64, 2.0_f64, 3.0_f64, 4.0_f64]
+      nd = size(x) - 1
+      m = 2
+      z = 0.0_f64
+      allocate (c(0:nd, 0:m))
+      call sll_s_populate_weights(z, x, nd, m, c)
+      write (*, *) " "
+      print *, c(:, 1)
+      write (*, *) " "
+      write (*, *) [-(25.0_f64/12.0_f64), 4.0_f64, -3.0_f64, 4.0_f64/3.0_f64, -0.25_f64]
+   end subroutine test_forward_5pts
 
 end module test_fornberg
 #endif /* DOXYGEN_SHOULD_SKIP_THIS */

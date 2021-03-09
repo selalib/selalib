@@ -38,8 +38,8 @@
 !>  print *,'#mesh%num_cells=',mesh%num_cells
 !>end program
 !> \endcode
-!> Information from mesh_1d_unif_cart in namelist file test.nml is stored 
-!> in <code>mesh</code> 
+!> Information from mesh_1d_unif_cart in namelist file test.nml is stored
+!> in <code>mesh</code>
 !> <br>
 !> <br>
 !> SECOND EXAMPLE
@@ -75,22 +75,22 @@
 !>  print *,'#mesh%num_cells=',mesh%num_cells
 !>end program
 !> \endcode
-!> Information from mesh_1d_unif_cart_2 in namelist file test.nml is stored in 
-!> <code> mesh </code> 
+!> Information from mesh_1d_unif_cart_2 in namelist file test.nml is stored in
+!> <code> mesh </code>
 !> <br>
 !> <br>
 !> THIRD EXAMPLE
 !> <br>
 !> We can also choose the mesh we want to initialize
 !> when we want to initialize an array
-!> (not a <code>sll_t_cartesian_mesh_1d</code> which is uniform) 
+!> (not a <code>sll_t_cartesian_mesh_1d</code> which is uniform)
 !> <br>
 !> Suppose that we have the following namelist file test.nml
 !> <br>
 !> <br>
 !> \code
 !> &mesh_1d_cart_1
-!>  choice_1 = "landau" 
+!>  choice_1 = "landau"
 !> /
 !> &mesh_1d_landau_cart_1
 !>  num_cells_1 = 32
@@ -98,16 +98,16 @@
 !>  nbox_1 = 1
 !>  kmode_1 = 0.5
 !> /
-!> 
+!>
 !> &mesh_1d_cart_2
-!>  choice_2 = "unif" 
+!>  choice_2 = "unif"
 !> /
 !> &mesh_1d_unif_cart_2
 !>  num_cells_2 = 32
 !>  eta_min_2 = -6.
 !>  eta_max_2 = 6.
 !> /
-!>  
+!>
 !> \endcode
 !> <br>
 !> and the following code
@@ -125,7 +125,7 @@
 !>  print *,'#num_cells=',size(x)-1,size(v)-1
 !>end program
 !> \endcode
-!> Information from namelist file test.nml is stored in 
+!> Information from namelist file test.nml is stored in
 !> <code> x </code> and <code> v </code>.
 !> @author Michel Mehrenberger
 !> @todo add initialization in 2D,3D,4D if needed

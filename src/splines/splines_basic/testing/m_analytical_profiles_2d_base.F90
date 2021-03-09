@@ -7,81 +7,81 @@
 module m_analytical_profiles_2d_base
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
-  use sll_m_working_precision, only: f64
+   use sll_m_working_precision, only: f64
 
-  implicit none
+   implicit none
 
-  public :: &
-    t_profile_2d_info, &
-    c_analytical_profile_2d
+   public :: &
+      t_profile_2d_info, &
+      c_analytical_profile_2d
 
-  private
+   private
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
-  !> Working precision
-  integer, parameter :: wp = f64
+   !> Working precision
+   integer, parameter :: wp = f64
 
-  !-----------------------------------------------------------------------------
-  !> Structure with basic info about 2D profile
-  !-----------------------------------------------------------------------------
-  type :: t_profile_2d_info
+   !-----------------------------------------------------------------------------
+   !> Structure with basic info about 2D profile
+   !-----------------------------------------------------------------------------
+   type :: t_profile_2d_info
 
-    real(wp) :: x1_min, x1_max ! x1 limits
-    real(wp) :: x2_min, x2_max ! x2 limits
-    logical  :: x1_periodic    ! .true. if profile is periodic along x1
-    logical  :: x2_periodic    ! .true. if profile is periodic along x2
-    integer  :: x1_poly_order  ! polynomial order in x1 (-1 if not a polynomial)
-    integer  :: x2_poly_order  ! polynomial order in x2 (-1 if not a polynomial)
+      real(wp) :: x1_min, x1_max ! x1 limits
+      real(wp) :: x2_min, x2_max ! x2 limits
+      logical  :: x1_periodic    ! .true. if profile is periodic along x1
+      logical  :: x2_periodic    ! .true. if profile is periodic along x2
+      integer  :: x1_poly_order  ! polynomial order in x1 (-1 if not a polynomial)
+      integer  :: x2_poly_order  ! polynomial order in x2 (-1 if not a polynomial)
 
-  end type t_profile_2d_info
+   end type t_profile_2d_info
 
-  !-----------------------------------------------------------------------------
-  !> Abstract type for 2D analytical profile to be used for testing interpolation
-  !-----------------------------------------------------------------------------
-  type, abstract :: c_analytical_profile_2d
+   !-----------------------------------------------------------------------------
+   !> Abstract type for 2D analytical profile to be used for testing interpolation
+   !-----------------------------------------------------------------------------
+   type, abstract :: c_analytical_profile_2d
 
-  contains
-    ! Get profile info
-    procedure( i_subr_get_info     ), deferred :: get_info
+   contains
+      ! Get profile info
+      procedure(i_subr_get_info), deferred :: get_info
 
-    ! Evaluate 2D profile (or one of its derivatives)
-    procedure( i_func_eval_profile ), deferred :: eval
+      ! Evaluate 2D profile (or one of its derivatives)
+      procedure(i_func_eval_profile), deferred :: eval
 
-    ! Evaluate max norm of profile (or one of its derivatives) over domain
-    procedure( i_func_max_norm ), deferred :: max_norm
+      ! Evaluate max norm of profile (or one of its derivatives) over domain
+      procedure(i_func_max_norm), deferred :: max_norm
 
-  end type c_analytical_profile_2d
- 
-  !-----------------------------------------------------------------------------
-  abstract interface
+   end type c_analytical_profile_2d
 
-    ! Get profile info
-    pure subroutine i_subr_get_info( self, info )
-      import c_analytical_profile_2d, t_profile_2d_info
-      class( c_analytical_profile_2d ), intent(in   ) :: self
-      type ( t_profile_2d_info       ), intent(  out) :: info
-    end subroutine i_subr_get_info
+   !-----------------------------------------------------------------------------
+   abstract interface
 
-    ! Evaluate 2D profile (or one of its derivatives)
-    pure function i_func_eval_profile( self, x1, x2, diff_x1, diff_x2 ) result( f )
-      import c_analytical_profile_2d, wp
-      class( c_analytical_profile_2d ), intent(in) :: self
-      real(wp)                        , intent(in) :: x1
-      real(wp)                        , intent(in) :: x2
-      integer,                optional, intent(in) :: diff_x1
-      integer,                optional, intent(in) :: diff_x2
-      real(wp) :: f
-    end function i_func_eval_profile
+      ! Get profile info
+      pure subroutine i_subr_get_info(self, info)
+         import c_analytical_profile_2d, t_profile_2d_info
+         class(c_analytical_profile_2d), intent(in) :: self
+         type(t_profile_2d_info), intent(out) :: info
+      end subroutine i_subr_get_info
 
-    ! Evaluate max norm of profile (or one of its derivatives) over domain
-    function i_func_max_norm( self, diff_x1, diff_x2 ) result( norm )
-      import c_analytical_profile_2d, wp
-      class( c_analytical_profile_2d ), intent(in) :: self
-      integer,                optional, intent(in) :: diff_x1
-      integer,                optional, intent(in) :: diff_x2
-      real(wp) :: norm
-    end function i_func_max_norm
+      ! Evaluate 2D profile (or one of its derivatives)
+      pure function i_func_eval_profile(self, x1, x2, diff_x1, diff_x2) result(f)
+         import c_analytical_profile_2d, wp
+         class(c_analytical_profile_2d), intent(in) :: self
+         real(wp), intent(in) :: x1
+         real(wp), intent(in) :: x2
+         integer, optional, intent(in) :: diff_x1
+         integer, optional, intent(in) :: diff_x2
+         real(wp) :: f
+      end function i_func_eval_profile
 
-  end interface
+      ! Evaluate max norm of profile (or one of its derivatives) over domain
+      function i_func_max_norm(self, diff_x1, diff_x2) result(norm)
+         import c_analytical_profile_2d, wp
+         class(c_analytical_profile_2d), intent(in) :: self
+         integer, optional, intent(in) :: diff_x1
+         integer, optional, intent(in) :: diff_x2
+         real(wp) :: norm
+      end function i_func_max_norm
+
+   end interface
 
 end module m_analytical_profiles_2d_base
