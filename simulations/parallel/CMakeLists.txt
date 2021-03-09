@@ -73,11 +73,6 @@ if( HDF5_ENABLED AND HDF5_IS_PARALLEL AND HDF5_PARALLEL_ENABLED )
     add_subdirectory( pic_gc_2d0v_cart_optim                   )
     
     
-    #To delete/put somewhere else
-    #as the simulation seems not to do what
-    #is indicated
-    #ADD_SUBDIRECTORY( sim_4d_drift_kinetic_cartesian          )
- 
     # here are some other examples of simulations
     # they can serve as examples for selalib beginners
     # you can add some new examples
