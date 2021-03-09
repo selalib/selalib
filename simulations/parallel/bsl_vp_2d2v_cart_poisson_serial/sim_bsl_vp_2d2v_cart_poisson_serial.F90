@@ -2,104 +2,102 @@
 ! - vlasov-poisson
 ! - 4D cartesian: x,y, vx, vy (or x1, x2)
 ! - parallel for vlasov
-! - sequential for poisson 
+! - sequential for poisson
 
 program sim_bsl_vp_2d2v_cart_poisson_serial
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_working_precision.h"
 
-use sll_m_collective, only: &
-  sll_s_boot_collective, &
-  sll_f_get_collective_rank, &
-  sll_s_halt_collective, &
-  sll_v_world_collective
+   use sll_m_collective, only: &
+      sll_s_boot_collective, &
+      sll_f_get_collective_rank, &
+      sll_s_halt_collective, &
+      sll_v_world_collective
 
-use sll_m_sim_bsl_vp_2d2v_cart_poisson_serial, only: &
-  sll_s_delete_vp4d_par_cart, &
-  sll_f_new_vlasov_par_poisson_seq_cart, &
-  sll_t_simulation_4d_vlasov_par_poisson_seq_cart
+   use sll_m_sim_bsl_vp_2d2v_cart_poisson_serial, only: &
+      sll_s_delete_vp4d_par_cart, &
+      sll_f_new_vlasov_par_poisson_seq_cart, &
+      sll_t_simulation_4d_vlasov_par_poisson_seq_cart
 
-use sll_m_timer, only: &
-  sll_s_set_time_mark, &
-  sll_f_time_elapsed_since, &
-  sll_t_time_mark
+   use sll_m_timer, only: &
+      sll_s_set_time_mark, &
+      sll_f_time_elapsed_since, &
+      sll_t_time_mark
 
-implicit none
+   implicit none
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
-type(sll_t_simulation_4d_vlasov_par_poisson_seq_cart) :: sim  
+   type(sll_t_simulation_4d_vlasov_par_poisson_seq_cart) :: sim
 
-character(len=256) :: filename
-character(len=256) :: filename_local
-type(sll_t_time_mark)  :: t0
-sll_int32 :: icount
-sll_int32 :: i
-sll_int32 :: num_min
-sll_int32 :: num_max
-character(len=256) :: str
-call sll_s_boot_collective()
-if(sll_f_get_collective_rank(sll_v_world_collective)==0)then
-  print *, '#Start time mark t0'
-  call sll_s_set_time_mark(t0)
-  print *, '#Booting parallel environment...'
-endif
+   character(len=256) :: filename
+   character(len=256) :: filename_local
+   type(sll_t_time_mark)  :: t0
+   sll_int32 :: icount
+   sll_int32 :: i
+   sll_int32 :: num_min
+   sll_int32 :: num_max
+   character(len=256) :: str
+   call sll_s_boot_collective()
+   if (sll_f_get_collective_rank(sll_v_world_collective) == 0) then
+      print *, '#Start time mark t0'
+      call sll_s_set_time_mark(t0)
+      print *, '#Booting parallel environment...'
+   end if
 
-icount = command_argument_count()
-if(sll_f_get_collective_rank(sll_v_world_collective)==0)then
-  print *, '#count=',icount
-endif
-            
-call get_command_argument(1, filename)
-if (len_trim(filename) == 0)then
-  call sim%init( )
-  call sim%run( )
-else
-  filename_local = trim(filename)
-  call get_command_argument(2, str)
-  if(len_trim(str) == 0)then
-    call sim%init( filename_local )
-    call sim%run( )
-  else
-    read(str , *) num_max
-    num_min = 0
-    call get_command_argument(3, str)
-    if(len_trim(str) .ne. 0)then
-      num_min = num_max
-      read(str , *) num_max
-    endif
-    !print *,'#num=',num_min,num_max
-    do i=num_min,num_max
-      call sim%init( filename_local, i)
-      call sim%run( )
-      call sll_s_delete_vp4d_par_cart( sim )
-    enddo  
-  endif    
-endif
+   icount = command_argument_count()
+   if (sll_f_get_collective_rank(sll_v_world_collective) == 0) then
+      print *, '#count=', icount
+   end if
 
+   call get_command_argument(1, filename)
+   if (len_trim(filename) == 0) then
+      call sim%init()
+      call sim%run()
+   else
+      filename_local = trim(filename)
+      call get_command_argument(2, str)
+      if (len_trim(str) == 0) then
+         call sim%init(filename_local)
+         call sim%run()
+      else
+         read (str, *) num_max
+         num_min = 0
+         call get_command_argument(3, str)
+         if (len_trim(str) .ne. 0) then
+            num_min = num_max
+            read (str, *) num_max
+         end if
+         !print *,'#num=',num_min,num_max
+         do i = num_min, num_max
+            call sim%init(filename_local, i)
+            call sim%run()
+            call sll_s_delete_vp4d_par_cart(sim)
+         end do
+      end if
+   end if
 
-if(sll_f_get_collective_rank(sll_v_world_collective)==0)then
-  print *, '#reached end of sim4d_vp_cart test'
-  print *, '#time elapsed since t0 : ', sll_f_time_elapsed_since(t0)
-  print *, '#PASSED'
-endif
+   if (sll_f_get_collective_rank(sll_v_world_collective) == 0) then
+      print *, '#reached end of sim4d_vp_cart test'
+      print *, '#time elapsed since t0 : ', sll_f_time_elapsed_since(t0)
+      print *, '#PASSED'
+   end if
 
-call sll_s_halt_collective()
+   call sll_s_halt_collective()
 
 ! In this test, the name of the file to open is provided as a command line
 ! argument.
 
-  
 !  call get_command_argument(1, filename)
 !  filename_local = trim(filename)
-!  
+!
 !  sim => sll_f_new_vlasov_par_poisson_seq_cart( filename_local )
-!  
+!
 !  call sim%run()
-!  
+!
 !  !call simulation%init_from_file(filename_local)
 !  !call simulation%run( )
 !  !call delete_vp2d_par_cart(simulation)
-!  
+!
 !  if(sll_f_get_collective_rank(sll_v_world_collective)==0)then
 !    print *, '#reached end of sim4d_vp_cart test'
 !    print *, '#PASSED'
