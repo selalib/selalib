@@ -5,9 +5,9 @@ on:
       - main
 jobs:
   build-and-deploy:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
     steps:
-    - name: Install sphinx
+    - name: Install dependencies
       run: |
         sudo apt-get -yq update
         sudo apt-get install -yq python3-sphinx
