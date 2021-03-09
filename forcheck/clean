@@ -1,8 +1,0 @@
-## Cleaning after an in place cmake
-find . \(        -name 'CMakeFile*' 	\
-              -o -name 'cmake_install.cmake' 	\
-              -o -name 'CTestTestfile.cmake' 	\
-              -o -name 'Makefile' 	\
-              -o -name '*.mod' 	\
-	      -o -name '*.o' 	\
-	      -o -name 'core.*' \)  -exec rm -rf {} \;
