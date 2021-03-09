@@ -1,28 +1,26 @@
-**************************************************************
-!  Copyright: CEA, CNRS, INRIA, IPP, Universite de Strasbourg
-!  Authors : SeLaLib project team
-!    
-! 
-!  The SeLaLib software library is a modular library for kinetic
-!  and gyrokinetic simulations of plasmas in fusion energy devices
-!  by semi-Lagrangian or particle-in-cell methods.
-! 
-!  This software is governed by the CeCILL-B license
-!  under French law and abiding by the rules of distribution
-!  of free software.  You can  use, modify and redistribute
-!  the software under the terms of the CeCILL-B license as
-!  circulated by CEA, CNRS and INRIA at the following URL
-!  "http://www.cecill.info".
-!
-!  In addition, we ask you to cite the following reference in
-!  scientific publications which contain results obtained with
-!  this software and developments:
-!
-!  <TODO: Add reference when finished.>
-!**************************************************************
+Copyright: CEA, CNRS, INRIA, IPP, Universite de Strasbourg
+Authors : SeLaLib project team
+     
+The SeLaLib software library is a modular library for kinetic
+and gyrokinetic simulations of plasmas in fusion energy devices
+by semi-Lagrangian or particle-in-cell methods.
+
+This software is governed by the CeCILL-B license
+under French law and abiding by the rules of distribution
+of free software.  You can  use, modify and redistribute
+the software under the terms of the CeCILL-B license as
+circulated by CEA, CNRS and INRIA at the following URL
+"http://www.cecill.info".
+
+In addition, we ask you to cite the following reference in
+scientific publications which contain results obtained with
+this software and developments:
+
+<TODO: Add reference when finished.>
+
+
 
 CeCILL-B FREE SOFTWARE LICENSE AGREEMENT
-
 
     Notice
 
@@ -41,7 +39,7 @@ the two main principles guiding its drafting:
 The authors of the CeCILL-B (for Ce[a] C[nrs] I[nria] L[ogiciel] L[ibre])
 license are: 
 
-Commissariat à l'Energie Atomique - CEA, a public scientific, technical
+Commissariat Ã  l'Energie Atomique - CEA, a public scientific, technical
 and industrial research establishment, having its principal place of
 business at 25 rue Leblanc, immeuble Le Ponant D, 75015 Paris, France.
 
@@ -358,7 +356,7 @@ The Licensee expressly undertakes:
 
 The Licensee undertakes not to directly or indirectly infringe the
 intellectual property rights of the Holder and/or Contributors on the
-Software and to take, where applicable, vis-à-vis its staff, any and all
+Software and to take, where applicable, vis-Ã -vis its staff, any and all
 measures required to ensure respect of said intellectual property rights
 of the Holder and/or Contributors.
 
