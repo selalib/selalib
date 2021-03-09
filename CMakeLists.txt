@@ -160,7 +160,6 @@ ENDMACRO(SLL_TEST)
 
 ADD_SUBDIRECTORY(external)
 ADD_SUBDIRECTORY(src)
-ADD_SUBDIRECTORY(thirdparty)
 
 MESSAGE(STATUS "############################################################")
 MESSAGE(STATUS "####")
