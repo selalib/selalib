@@ -4,7 +4,7 @@ on:
     branches:
       - main
 jobs:
-  build-and-deploy:
+  build-and-test:
     runs-on: ubuntu-20.04
     steps:
     - name: Install dependencies
@@ -28,6 +28,6 @@ jobs:
         build-type: Release
         configure-options: 
         run-test: true
-        ctest-options: 
+        ctest-options: --output-on-failure
         install-build: true
         parallel: 8
