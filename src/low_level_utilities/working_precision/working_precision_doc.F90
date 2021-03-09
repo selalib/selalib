@@ -1,16 +1,15 @@
 ! This file is read by doxygen software
 ! Change it to match with your library
 ! http://www.stack.nl/~dimitri/doxygen/manual/docblocks.html#fortranblocks
-! To see the documentation, remove the line containing your directory 
-! in file Doxyfile.in (line 691) if it is excluded. 
+! To see the documentation, remove the line containing your directory
+! in file Doxyfile.in (line 691) if it is excluded.
 ! Type 'make doc' in build directory.
-! To check the results, open : 
-! selalib/documentation/build/html/doxygen/html/defgroup working_precisions.html 
+! To check the results, open :
+! selalib/documentation/build/html/doxygen/html/defgroup working_precisions.html
 ! The following lines will be read by doxygen to generate documentation:
 
-
-!> @defgroup working_precision sll_working_precision 
-!> @brief 
+!> @defgroup working_precision sll_working_precision
+!> @brief
 !> Define the kind type parameter for intern type data.
 !> @author Edwin Chacon-Golcher
 !> @details
@@ -23,7 +22,7 @@
 !> If you want to select the kind parameter \a n, you need to write \n
 !> \code
 !> real(kind=n) :: var1
-!> real*n       :: var2 
+!> real*n       :: var2
 !> \endcode
 !> The two entries \a var1 and \a var2 are equivalents.
 !> You can also define the constant like this \a 23.455_n.

@@ -4,7 +4,7 @@
 !! @authors Marco Restelli - <marco.restelli@gmail.com>
 !!
 !! @brief
-!! ODE time integrators, with a common interface.  
+!! ODE time integrators, with a common interface.
 !!
 !! @details
 !! The user should provide
@@ -50,5 +50,4 @@
 !! call solve(my_type, your_result)
 !! \endcode
 !!
-
 

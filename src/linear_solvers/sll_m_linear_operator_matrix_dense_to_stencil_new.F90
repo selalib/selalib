@@ -3,219 +3,219 @@ module sll_m_linear_operator_matrix_dense_to_stencil_new
 #include "sll_assert.h"
 #include "sll_errors.h"
 
-  use sll_m_working_precision, only: f64
+   use sll_m_working_precision, only: f64
 
-  use sll_m_linear_operator_base, only: sll_c_linear_operator
+   use sll_m_linear_operator_base, only: sll_c_linear_operator
 
-  use sll_m_vector_space_base, only: sll_c_vector_space
+   use sll_m_vector_space_base, only: sll_c_vector_space
 
-  use sll_m_vector_space_real_array_1d, only: sll_t_vector_space_real_array_1d
+   use sll_m_vector_space_real_array_1d, only: sll_t_vector_space_real_array_1d
 
-  use sll_m_vector_space_real_array_2d, only: sll_t_vector_space_real_array_2d
+   use sll_m_vector_space_real_array_2d, only: sll_t_vector_space_real_array_2d
 
-  implicit none
+   implicit none
 
-  public :: sll_t_linear_operator_matrix_dense_to_stencil_new
+   public :: sll_t_linear_operator_matrix_dense_to_stencil_new
 
-  private
+   private
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
-  ! Working precision
-  integer, parameter :: wp = f64
+   ! Working precision
+   integer, parameter :: wp = f64
 
-  type, extends(sll_c_linear_operator) :: sll_t_linear_operator_matrix_dense_to_stencil_new
+   type, extends(sll_c_linear_operator) :: sll_t_linear_operator_matrix_dense_to_stencil_new
 
-    real(wp), allocatable :: A (:,:,:)
+      real(wp), allocatable :: A(:, :, :)
 
-    integer :: s1
-    integer :: s2
-    integer :: s3
+      integer :: s1
+      integer :: s2
+      integer :: s3
 
-  contains
+   contains
 
-    procedure :: init      => s_linear_operator_matrix_dense_to_stencil_new__init
-    procedure :: get_shape => f_linear_operator_matrix_dense_to_stencil_new__get_shape
-    procedure :: dot       => s_linear_operator_matrix_dense_to_stencil_new__dot
-    procedure :: dot_incr  => s_linear_operator_matrix_dense_to_stencil_new__dot_incr
-    procedure :: free      => s_linear_operator_matrix_dense_to_stencil_new__free
+      procedure :: init => s_linear_operator_matrix_dense_to_stencil_new__init
+      procedure :: get_shape => f_linear_operator_matrix_dense_to_stencil_new__get_shape
+      procedure :: dot => s_linear_operator_matrix_dense_to_stencil_new__dot
+      procedure :: dot_incr => s_linear_operator_matrix_dense_to_stencil_new__dot_incr
+      procedure :: free => s_linear_operator_matrix_dense_to_stencil_new__free
 
-  end type sll_t_linear_operator_matrix_dense_to_stencil_new
+   end type sll_t_linear_operator_matrix_dense_to_stencil_new
 
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 contains
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
-  ! Initialize linear operator
-  subroutine s_linear_operator_matrix_dense_to_stencil_new__init( self, s1, s2, s3 )
-    class(sll_t_linear_operator_matrix_dense_to_stencil_new), intent(inout) :: self
-    integer                                                 , intent(in   ) :: s1
-    integer                                                 , intent(in   ) :: s2
-    integer                                                 , intent(in   ) :: s3
+   ! Initialize linear operator
+   subroutine s_linear_operator_matrix_dense_to_stencil_new__init(self, s1, s2, s3)
+      class(sll_t_linear_operator_matrix_dense_to_stencil_new), intent(inout) :: self
+      integer, intent(in) :: s1
+      integer, intent(in) :: s2
+      integer, intent(in) :: s3
 
-    allocate( self % A( s1, s2, s3 ) )
+      allocate (self%A(s1, s2, s3))
 
-    self % s1 = s1
-    self % s2 = s2
-    self % s3 = s3
+      self%s1 = s1
+      self%s2 = s2
+      self%s3 = s3
 
-  end subroutine s_linear_operator_matrix_dense_to_stencil_new__init
+   end subroutine s_linear_operator_matrix_dense_to_stencil_new__init
 
-  ! Get shape of linear operator
-  function f_linear_operator_matrix_dense_to_stencil_new__get_shape( self ) result( s )
-    class(sll_t_linear_operator_matrix_dense_to_stencil_new), intent(in) :: self
-    integer :: s(2)
+   ! Get shape of linear operator
+   function f_linear_operator_matrix_dense_to_stencil_new__get_shape(self) result(s)
+      class(sll_t_linear_operator_matrix_dense_to_stencil_new), intent(in) :: self
+      integer :: s(2)
 
-    s(1) = size( self % A, 1 ) * size( self % A, 2 )
-    s(2) = size( self % A, 3 )
+      s(1) = size(self%A, 1)*size(self%A, 2)
+      s(2) = size(self%A, 3)
 
-  end function f_linear_operator_matrix_dense_to_stencil_new__get_shape
+   end function f_linear_operator_matrix_dense_to_stencil_new__get_shape
 
-  ! Implement y=Ax, with A dense matrix (2D), x dense vector (1D) and y stencil vector (2D)
-  subroutine s_linear_operator_matrix_dense_to_stencil_new__dot( self, x, y )
-    class(sll_t_linear_operator_matrix_dense_to_stencil_new), intent(in   ) :: self
-    class(sll_c_vector_space)                               , intent(in   ) :: x ! dense
-    class(sll_c_vector_space)                               , intent(inout) :: y ! stencil
+   ! Implement y=Ax, with A dense matrix (2D), x dense vector (1D) and y stencil vector (2D)
+   subroutine s_linear_operator_matrix_dense_to_stencil_new__dot(self, x, y)
+      class(sll_t_linear_operator_matrix_dense_to_stencil_new), intent(in) :: self
+      class(sll_c_vector_space), intent(in) :: x ! dense
+      class(sll_c_vector_space), intent(inout) :: y ! stencil
 
-    integer  :: j1, j2, k
-    real(wp) :: temp
+      integer  :: j1, j2, k
+      real(wp) :: temp
 
-    character(len=*), parameter :: this_sub_name = "sll_t_linear_operator_matrix_dense_to_stencil_new % dot"
-    character(len=64) :: err_msg
+      character(len=*), parameter :: this_sub_name = "sll_t_linear_operator_matrix_dense_to_stencil_new % dot"
+      character(len=64) :: err_msg
 
-    select type ( x )
+      select type (x)
 
-    type is ( sll_t_vector_space_real_array_1d )
+      type is (sll_t_vector_space_real_array_1d)
 
-      ! Check dimensions
-      SLL_ASSERT( self%s3 == size(x%array) )
+         ! Check dimensions
+         SLL_ASSERT(self%s3 == size(x%array))
 
-      select type ( y )
+         select type (y)
 
-      type is ( sll_t_vector_space_real_array_2d )
+         type is (sll_t_vector_space_real_array_2d)
 
-        associate( p1 => -lbound( y % array, 1 ) + 1, &
-                   p2 => -lbound( y % array, 2 ) + 1 )
+            associate (p1 => -lbound(y%array, 1) + 1, &
+                       p2 => -lbound(y%array, 2) + 1)
 
-        associate( ny1 => ubound( y % array, 1 ) - p1, &
-                   ny2 => ubound( y % array, 2 ) - p2 )
+               associate (ny1 => ubound(y%array, 1) - p1, &
+                          ny2 => ubound(y%array, 2) - p2)
 
-          y % array = 0.0_wp
+                  y%array = 0.0_wp
 
-          !$OMP PARALLEL DO PRIVATE(temp)
-          do j2 = 1, ny2
-            do j1 = 1, p1
+!$OMP PARALLEL DO PRIVATE(temp)
+                  do j2 = 1, ny2
+                     do j1 = 1, p1
 
-              temp = 0.0_wp
+                        temp = 0.0_wp
 
-              do k = 1, size( x % array )
-                temp = temp + self % A(j1,j2,k) * x % array(k)
-              end do
+                        do k = 1, size(x%array)
+                           temp = temp + self%A(j1, j2, k)*x%array(k)
+                        end do
 
-              y % array(j1,j2) = y % array(j1,j2) + temp
+                        y%array(j1, j2) = y%array(j1, j2) + temp
 
-            end do
-          end do
-          !$OMP END PARALLEL DO
+                     end do
+                  end do
+!$OMP END PARALLEL DO
 
-          ! Update buffer regions
-          y % array(1-p1:0      ,:) = y % array(ny1-p1+1:ny1,:)
-          y % array(ny1+1:ny1+p1,:) = y % array(1:p1        ,:)
-          y % array(:,1-p2:0      ) = y % array(:,ny2-p2+1:ny2)
-          y % array(:,ny2+1:ny2+p2) = y % array(:,1:p2        )
+                  ! Update buffer regions
+                  y%array(1 - p1:0, :) = y%array(ny1 - p1 + 1:ny1, :)
+                  y%array(ny1 + 1:ny1 + p1, :) = y%array(1:p1, :)
+                  y%array(:, 1 - p2:0) = y%array(:, ny2 - p2 + 1:ny2)
+                  y%array(:, ny2 + 1:ny2 + p2) = y%array(:, 1:p2)
 
-        end associate
+               end associate
 
-        end associate
+            end associate
+
+         class default
+            err_msg = "y must be of type sll_t_vector_space_real_array_2d"
+            SLL_ERROR(this_sub_name, err_msg)
+
+         end select
 
       class default
-        err_msg = "y must be of type sll_t_vector_space_real_array_2d"
-        SLL_ERROR( this_sub_name, err_msg )
+         err_msg = "x must be of type sll_t_vector_space_real_array_1d"
+         SLL_ERROR(this_sub_name, err_msg)
 
       end select
 
-    class default
-      err_msg = "x must be of type sll_t_vector_space_real_array_1d"
-      SLL_ERROR( this_sub_name, err_msg )
+   end subroutine s_linear_operator_matrix_dense_to_stencil_new__dot
 
-    end select
+   ! Implement y=y+Ax, with A dense matrix (2D), x dense vector (1D) and y stencil vector (2D)
+   subroutine s_linear_operator_matrix_dense_to_stencil_new__dot_incr(self, x, y)
+      class(sll_t_linear_operator_matrix_dense_to_stencil_new), intent(in) :: self
+      class(sll_c_vector_space), intent(in) :: x ! dense
+      class(sll_c_vector_space), intent(inout) :: y ! stencil
 
-  end subroutine s_linear_operator_matrix_dense_to_stencil_new__dot
+      integer  :: j1, j2, k
+      real(wp) :: temp
 
-  ! Implement y=y+Ax, with A dense matrix (2D), x dense vector (1D) and y stencil vector (2D)
-  subroutine s_linear_operator_matrix_dense_to_stencil_new__dot_incr( self, x, y )
-    class(sll_t_linear_operator_matrix_dense_to_stencil_new), intent(in   ) :: self
-    class(sll_c_vector_space)                               , intent(in   ) :: x ! dense
-    class(sll_c_vector_space)                               , intent(inout) :: y ! stencil
+      character(len=*), parameter :: this_sub_name = "sll_t_linear_operator_matrix_dense_to_stencil_new % dot_incr"
+      character(len=64) :: err_msg
 
-    integer  :: j1, j2, k
-    real(wp) :: temp
+      select type (x)
 
-    character(len=*), parameter :: this_sub_name = "sll_t_linear_operator_matrix_dense_to_stencil_new % dot_incr"
-    character(len=64) :: err_msg
+      type is (sll_t_vector_space_real_array_1d)
 
-    select type ( x )
+         ! Check dimensions
+         SLL_ASSERT(self%s3 == size(x%array))
 
-    type is ( sll_t_vector_space_real_array_1d )
+         select type (y)
 
-      ! Check dimensions
-      SLL_ASSERT( self%s3 == size(x%array) )
+         type is (sll_t_vector_space_real_array_2d)
 
-      select type ( y )
+            associate (p1 => -lbound(y%array, 1) + 1, &
+                       p2 => -lbound(y%array, 2) + 1)
 
-      type is ( sll_t_vector_space_real_array_2d )
+               associate (ny1 => ubound(y%array, 1) - p1, &
+                          ny2 => ubound(y%array, 2) - p2)
 
-        associate( p1 => -lbound( y % array, 1 ) + 1, &
-                   p2 => -lbound( y % array, 2 ) + 1 )
+!$OMP PARALLEL DO PRIVATE(temp)
+                  do j2 = 1, ny2
+                     do j1 = 1, p1
 
-        associate( ny1 => ubound( y % array, 1 ) - p1, &
-                   ny2 => ubound( y % array, 2 ) - p2 )
+                        temp = 0.0_wp
 
-          !$OMP PARALLEL DO PRIVATE(temp)
-          do j2 = 1, ny2
-            do j1 = 1, p1
+                        do k = 1, size(x%array)
+                           temp = temp + self%A(j1, j2, k)*x%array(k)
+                        end do
 
-              temp = 0.0_wp
+                        y%array(j1, j2) = y%array(j1, j2) + temp
 
-              do k = 1, size( x % array )
-                temp = temp + self % A(j1,j2,k) * x % array(k)
-              end do
+                     end do
+                  end do
+!$OMP END PARALLEL DO
 
-              y % array(j1,j2) = y % array(j1,j2) + temp
+                  ! Update buffer regions
+                  y%array(1 - p1:0, :) = y%array(ny1 - p1 + 1:ny1, :)
+                  y%array(ny1 + 1:ny1 + p1, :) = y%array(1:p1, :)
+                  y%array(:, 1 - p2:0) = y%array(:, ny2 - p2 + 1:ny2)
+                  y%array(:, ny2 + 1:ny2 + p2) = y%array(:, 1:p2)
 
-            end do
-          end do
-          !$OMP END PARALLEL DO
+               end associate
 
-          ! Update buffer regions
-          y % array(1-p1:0      ,:) = y % array(ny1-p1+1:ny1,:)
-          y % array(ny1+1:ny1+p1,:) = y % array(1:p1        ,:)
-          y % array(:,1-p2:0      ) = y % array(:,ny2-p2+1:ny2)
-          y % array(:,ny2+1:ny2+p2) = y % array(:,1:p2        )
+            end associate
 
-        end associate
+         class default
+            err_msg = "y must be of type sll_t_vector_space_real_array_2d"
+            SLL_ERROR(this_sub_name, err_msg)
 
-        end associate
+         end select
 
       class default
-        err_msg = "y must be of type sll_t_vector_space_real_array_2d"
-        SLL_ERROR( this_sub_name, err_msg )
+         err_msg = "x must be of type sll_t_vector_space_real_array_1d"
+         SLL_ERROR(this_sub_name, err_msg)
 
       end select
 
-    class default
-      err_msg = "x must be of type sll_t_vector_space_real_array_1d"
-      SLL_ERROR( this_sub_name, err_msg )
+   end subroutine s_linear_operator_matrix_dense_to_stencil_new__dot_incr
 
-    end select
+   ! Free objects
+   subroutine s_linear_operator_matrix_dense_to_stencil_new__free(self)
+      class(sll_t_linear_operator_matrix_dense_to_stencil_new), intent(inout) :: self
 
-  end subroutine s_linear_operator_matrix_dense_to_stencil_new__dot_incr
+      deallocate (self%A)
 
-  ! Free objects
-  subroutine s_linear_operator_matrix_dense_to_stencil_new__free( self )
-    class(sll_t_linear_operator_matrix_dense_to_stencil_new), intent(inout) :: self
-
-    deallocate( self % A )
-
-  end subroutine s_linear_operator_matrix_dense_to_stencil_new__free
+   end subroutine s_linear_operator_matrix_dense_to_stencil_new__free
 
 end module sll_m_linear_operator_matrix_dense_to_stencil_new
