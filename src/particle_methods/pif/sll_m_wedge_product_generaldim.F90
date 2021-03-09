@@ -9,46 +9,39 @@ module sll_m_wedge_product_generaldim
 #include "sll_memory.h"
 #include "sll_working_precision.h"
 
-  implicit none
+   implicit none
 
-  public :: &
-    sll_f_cross_product_2d, &
-    sll_f_cross_product_3d
+   public :: &
+      sll_f_cross_product_2d, &
+      sll_f_cross_product_3d
 
-  private
+   private
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
- 
- contains
+
+contains
 
 !This is just an arbitrary definition
-pure function sll_f_cross_product_2d(v,w) result(cross)
+   pure function sll_f_cross_product_2d(v, w) result(cross)
 
-  sll_real64, dimension(:,:), intent(in) :: v,w
-  sll_real64, dimension(2,size(v,2))     :: cross
-  sll_real64, dimension(size(v,2))       :: determinante
-  
-  determinante(:)=v(1,:)*w(2,:) - v(2,:)*w(1,:)
-  cross(1,:)=v(1,:)*determinante
-  cross(2,:)=v(2,:)*determinante
+      sll_real64, dimension(:, :), intent(in) :: v, w
+      sll_real64, dimension(2, size(v, 2))     :: cross
+      sll_real64, dimension(size(v, 2))       :: determinante
 
-end function
+      determinante(:) = v(1, :)*w(2, :) - v(2, :)*w(1, :)
+      cross(1, :) = v(1, :)*determinante
+      cross(2, :) = v(2, :)*determinante
 
+   end function
 
-pure function sll_f_cross_product_3d( v, w) result(cross)
+   pure function sll_f_cross_product_3d(v, w) result(cross)
 
-  sll_real64, dimension(:,:), intent(in) :: v,w
-  sll_real64, dimension(3,size(v,2))     :: cross
+      sll_real64, dimension(:, :), intent(in) :: v, w
+      sll_real64, dimension(3, size(v, 2))     :: cross
 
-  
-  cross(1,:) = v(2,:) * w(3,:) - v(3,:) * w(2,:)
-  cross(2,:) = v(3,:) * w(1,:) - v(1,:) * w(3,:)
-  cross(3,:) = v(1,:) * w(2,:) - v(2,:) * w(1,:)
+      cross(1, :) = v(2, :)*w(3, :) - v(3, :)*w(2, :)
+      cross(2, :) = v(3, :)*w(1, :) - v(1, :)*w(3, :)
+      cross(3, :) = v(1, :)*w(2, :) - v(2, :)*w(1, :)
 
-end function
-
-
-
-
-
+   end function
 
 end module
