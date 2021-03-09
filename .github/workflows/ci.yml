@@ -1,0 +1,28 @@
+name: CI
+on:
+  push:
+    branches:
+      - master
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Install sphinx
+      run: |
+        sudo apt-get -yq update
+        sudo apt-get install -yq python3-sphinx
+        sudo apt-get install -yq libopenmpi-dev openmpi-bin libhdf5-openmpi-dev
+        sudo apt-get install -yq cmake gfortran g++
+        sudo apt-get install -yq libfftw3-dev liblapack-dev libopenblas-dev
+        sudo apt-get install -yq doxygen texlive graphviz
+    - name: Checkout
+      uses: actions/checkout@v2
+      with:
+        persist-credentials: false
+    - name: Build the book
+      run: mkdir build && cd build && cmake .. && make doc-dev
+    - name: GitHub Pages action
+      uses: peaceiris/actions-gh-pages@v3
+      with:
+        github_token: ${{ secrets.GITHUB_TOKEN }}
+        publish_dir: ./build/doc/html
