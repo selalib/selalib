@@ -1,7 +1,3 @@
-# Extract environmental variable FFTW_ROOT
-IF( DEFINED ENV{FFTW_ROOT} )
-   SET(FFTW_ROOT $ENV{FFTW_ROOT})
-ENDIF()
 
 # Set default library to FFTW if available, SLLFFT otherwise
 IF (FFTW_ENABLED)
