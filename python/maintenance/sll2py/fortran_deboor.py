@@ -1,5 +1,0 @@
-procedures = { \
-'banfac',
-'banslv',
-'bsplvb',
-}
