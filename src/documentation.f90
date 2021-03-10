@@ -1,12 +1,11 @@
 !> \mainpage Code Documentation
 !>
-!>
 !> For general installation, compiling and running, see
-!> <A HREF="http://selalib.gforge.inria.fr/">selalib.gforge.inria.fr </A>.
+!> <A HREF="https://selalib.github.io">selalib.github.io</A>.
 !>
-!> The documentation of Selalib will exist in three different forms,
+!> The documentation of Selalib will exist in two different forms,
 !> each intended for a possibly different audience. We have a "Selalib
-!> Manual" document (pdf format), which contains a listing of all the
+!> Guide" website, which contains a listing of all the
 !> library modules with a description of their interface. Ideally, a
 !> user should interact with a module only through the specified
 !> interface, which, if we have been successful, should permit the
@@ -25,7 +24,4 @@
 !> names and code organization, then the comments may be the only way
 !> to aid the reader in navigating the source code. All these documents
 !> will be made public upon the library release.
-!>
-!> \remark If you encountered a problem with doxygen please send an email
-!> to selalib-users@lists.gforge.inria.fr
 !>
