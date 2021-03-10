@@ -68,7 +68,7 @@ var sectionId = 'dynsection-8';
 <!-- Node2 -->
 <g id="node2" class="node">
 <title>Node2</title>
-<g id="a_node2"><a xlink:href="namespacesll__m__gauss__legendre__integration.html#ad8ffc44405a576bb158ad8c1b009b41b" target="_top" xlink:title="Returns a 2d array of size (2,npoints) containing gauss&#45;legendre points and weights in the interval [...">
+<g id="a_node2"><a xlink:href="namespacesll__m__gauss__legendre__integration.html#a0df63a9e8ee884c2d4a0d1f53602a949" target="_top" xlink:title="Returns a 2d array of size (2,npoints) containing gauss&#45;legendre points and weights in the interval [...">
 <polygon fill="white" stroke="black" points="155,-146 155,-187 322,-187 322,-146 155,-146"/>
 <text text-anchor="start" x="163" y="-175" font-family="Helvetica,sans-Serif" font-size="10.00">sll_m_gauss_legendre</text>
 <text text-anchor="start" x="163" y="-164" font-family="Helvetica,sans-Serif" font-size="10.00">_integration::sll_f_gauss</text>
@@ -85,7 +85,7 @@ var sectionId = 'dynsection-8';
 <!-- Node3 -->
 <g id="node3" class="node">
 <title>Node3</title>
-<g id="a_node3"><a xlink:href="namespacesll__m__gauss__lobatto__integration.html#a4d0d1b11b1c28ff20e217f22f5631e7a" target="_top" xlink:title="Returns a 2d array of size (2,n) containing gauss&#45;lobatto points and weights in the interval [a,...">
+<g id="a_node3"><a xlink:href="namespacesll__m__gauss__lobatto__integration.html#abde325bec9e6c51c78f56ecc3bb075d5" target="_top" xlink:title="Returns a 2d array of size (2,n) containing gauss&#45;lobatto points and weights in the interval [a,...">
 <polygon fill="white" stroke="black" points="176,-74.5 176,-126.5 301,-126.5 301,-74.5 176,-74.5"/>
 <text text-anchor="start" x="184" y="-114.5" font-family="Helvetica,sans-Serif" font-size="10.00">sll_m_gauss_lobatto</text>
 <text text-anchor="start" x="184" y="-103.5" font-family="Helvetica,sans-Serif" font-size="10.00">_integration::sll_f</text>

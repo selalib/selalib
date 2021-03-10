@@ -152,7 +152,7 @@ var sectionId = 'dynsection-1';
 <g id="a_node6"><a xlink:title=" ">
 <polygon fill="white" stroke="#bfbfbf" points="205,-49.5 205,-79.5 350,-79.5 350,-49.5 205,-49.5"/>
 <text text-anchor="start" x="213" y="-67.5" font-family="Helvetica,sans-Serif" font-size="10.00">real(kind=f64), dimension</text>
-<text text-anchor="middle" x="277.5" y="-56.5" font-family="Helvetica,sans-Serif" font-size="10.00">(:,:), pointer</text>
+<text text-anchor="middle" x="277.5" y="-56.5" font-family="Helvetica,sans-Serif" font-size="10.00">(:, :), pointer</text>
 </a>
 </g>
 </g>

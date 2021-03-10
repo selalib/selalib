@@ -85,47 +85,47 @@ $(function() {
 <div class="line"><a name="l00004"></a><span class="lineno">    4</span>&#160;<span class="preprocessor"></span><span class="preprocessor">#include &quot;sll_memory.h&quot;</span></div>
 <div class="line"><a name="l00005"></a><span class="lineno">    5</span>&#160;<span class="preprocessor"></span><span class="preprocessor">#include &quot;sll_working_precision.h&quot;</span></div>
 <div class="line"><a name="l00006"></a><span class="lineno">    6</span>&#160;<span class="preprocessor"></span> </div>
-<div class="line"><a name="l00007"></a><span class="lineno">    7</span>&#160;  <span class="keywordtype">implicit none</span></div>
+<div class="line"><a name="l00007"></a><span class="lineno">    7</span>&#160;   <span class="keywordtype">implicit none</span></div>
 <div class="line"><a name="l00008"></a><span class="lineno">    8</span>&#160; </div>
-<div class="line"><a name="l00009"></a><span class="lineno">    9</span>&#160;  <span class="keywordtype">public</span> :: &amp;</div>
-<div class="line"><a name="l00010"></a><span class="lineno">   10</span>&#160;    <a class="code" href="namespacesll__m__hermite__aligned__interpolation__2d.html#acf59b018e70c2402dfb50ff5570a0e9c">sll_f_new_hermite_aligned_interpolation_2d</a>, &amp;</div>
-<div class="line"><a name="l00011"></a><span class="lineno">   11</span>&#160;    <a class="code" href="structsll__m__hermite__aligned__interpolation__2d_1_1sll__t__hermite__aligned__interpolation__2d.html">sll_t_hermite_aligned_interpolation_2d</a></div>
+<div class="line"><a name="l00009"></a><span class="lineno">    9</span>&#160;   <span class="keywordtype">public</span> :: &amp;</div>
+<div class="line"><a name="l00010"></a><span class="lineno">   10</span>&#160;      <a class="code" href="namespacesll__m__hermite__aligned__interpolation__2d.html#acf59b018e70c2402dfb50ff5570a0e9c">sll_f_new_hermite_aligned_interpolation_2d</a>, &amp;</div>
+<div class="line"><a name="l00011"></a><span class="lineno">   11</span>&#160;      <a class="code" href="structsll__m__hermite__aligned__interpolation__2d_1_1sll__t__hermite__aligned__interpolation__2d.html">sll_t_hermite_aligned_interpolation_2d</a></div>
 <div class="line"><a name="l00012"></a><span class="lineno">   12</span>&#160; </div>
-<div class="line"><a name="l00013"></a><span class="lineno">   13</span>&#160;  <span class="keywordtype">private</span></div>
+<div class="line"><a name="l00013"></a><span class="lineno">   13</span>&#160;   <span class="keywordtype">private</span></div>
 <div class="line"><a name="l00014"></a><span class="lineno">   14</span>&#160;<span class="comment">!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++</span></div>
 <div class="line"><a name="l00015"></a><span class="lineno">   15</span>&#160; </div>
-<div class="line"><a name="l00016"></a><span class="lineno"><a class="line" href="structsll__m__hermite__aligned__interpolation__2d_1_1sll__t__hermite__aligned__interpolation__2d.html">   16</a></span>&#160;<span class="keyword">type</span> :: <a class="code" href="structsll__m__hermite__aligned__interpolation__2d_1_1sll__t__hermite__aligned__interpolation__2d.html">sll_t_hermite_aligned_interpolation_2d</a></div>
-<div class="line"><a name="l00017"></a><span class="lineno"><a class="line" href="structsll__m__hermite__aligned__interpolation__2d_1_1sll__t__hermite__aligned__interpolation__2d.html#a188e013479b2fe1abfa822cf30bfd604">   17</a></span>&#160;  sll_real64 :: eta_min(2) </div>
-<div class="line"><a name="l00018"></a><span class="lineno"><a class="line" href="structsll__m__hermite__aligned__interpolation__2d_1_1sll__t__hermite__aligned__interpolation__2d.html#af053de9ca0195a26c656cbe9efd22e2d">   18</a></span>&#160;  sll_real64 :: eta_max(2) </div>
+<div class="line"><a name="l00016"></a><span class="lineno"><a class="line" href="structsll__m__hermite__aligned__interpolation__2d_1_1sll__t__hermite__aligned__interpolation__2d.html">   16</a></span>&#160;   <span class="keyword">type</span> :: <a class="code" href="structsll__m__hermite__aligned__interpolation__2d_1_1sll__t__hermite__aligned__interpolation__2d.html">sll_t_hermite_aligned_interpolation_2d</a></div>
+<div class="line"><a name="l00017"></a><span class="lineno"><a class="line" href="structsll__m__hermite__aligned__interpolation__2d_1_1sll__t__hermite__aligned__interpolation__2d.html#a188e013479b2fe1abfa822cf30bfd604">   17</a></span>&#160;      sll_real64 :: eta_min(2) </div>
+<div class="line"><a name="l00018"></a><span class="lineno"><a class="line" href="structsll__m__hermite__aligned__interpolation__2d_1_1sll__t__hermite__aligned__interpolation__2d.html#af053de9ca0195a26c656cbe9efd22e2d">   18</a></span>&#160;      sll_real64 :: eta_max(2) </div>
 <div class="line"><a name="l00019"></a><span class="lineno">   19</span>&#160; </div>
-<div class="line"><a name="l00020"></a><span class="lineno">   20</span>&#160;<span class="keyword">end type </span><a class="code" href="structsll__m__hermite__aligned__interpolation__2d_1_1sll__t__hermite__aligned__interpolation__2d.html">sll_t_hermite_aligned_interpolation_2d</a> </div>
+<div class="line"><a name="l00020"></a><span class="lineno">   20</span>&#160;   <span class="keyword">end type </span><a class="code" href="structsll__m__hermite__aligned__interpolation__2d_1_1sll__t__hermite__aligned__interpolation__2d.html">sll_t_hermite_aligned_interpolation_2d</a></div>
 <div class="line"><a name="l00021"></a><span class="lineno">   21</span>&#160; </div>
 <div class="line"><a name="l00022"></a><span class="lineno">   22</span>&#160;<span class="keyword">contains</span></div>
 <div class="line"><a name="l00023"></a><span class="lineno">   23</span>&#160; </div>
-<div class="line"><a name="l00024"></a><span class="lineno">   24</span>&#160;<span class="keyword">function </span><a class="code" href="namespacesll__m__hermite__aligned__interpolation__2d.html#acf59b018e70c2402dfb50ff5570a0e9c">sll_f_new_hermite_aligned_interpolation_2d</a>() &amp;</div>
-<div class="line"><a name="l00025"></a><span class="lineno">   25</span>&#160;  result(interp)</div>
-<div class="line"><a name="l00026"></a><span class="lineno"><a class="line" href="namespacesll__m__hermite__aligned__interpolation__2d.html#acf59b018e70c2402dfb50ff5570a0e9c">   26</a></span>&#160;    </div>
-<div class="line"><a name="l00027"></a><span class="lineno">   27</span>&#160;  <span class="keywordtype">type</span>(<a class="code" href="structsll__m__hermite__aligned__interpolation__2d_1_1sll__t__hermite__aligned__interpolation__2d.html">sll_t_hermite_aligned_interpolation_2d</a>), <span class="keywordtype">pointer</span> :: interp</div>
-<div class="line"><a name="l00028"></a><span class="lineno">   28</span>&#160;  sll_int32 :: ierr</div>
-<div class="line"><a name="l00029"></a><span class="lineno">   29</span>&#160;  </div>
-<div class="line"><a name="l00030"></a><span class="lineno">   30</span>&#160;  sll_allocate(interp,ierr)</div>
-<div class="line"><a name="l00031"></a><span class="lineno">   31</span>&#160;  <span class="keyword">call </span><a class="code" href="namespacesll__m__hermite__aligned__interpolation__2d.html#ae9952c28bc5dc2ece56d3694984d4177">initialize_hermite_aligned_interpolation_2d</a>( interp )</div>
+<div class="line"><a name="l00024"></a><span class="lineno">   24</span>&#160;   <span class="keyword">function </span><a class="code" href="namespacesll__m__hermite__aligned__interpolation__2d.html#acf59b018e70c2402dfb50ff5570a0e9c">sll_f_new_hermite_aligned_interpolation_2d</a>() &amp;</div>
+<div class="line"><a name="l00025"></a><span class="lineno">   25</span>&#160;      result(interp)</div>
+<div class="line"><a name="l00026"></a><span class="lineno"><a class="line" href="namespacesll__m__hermite__aligned__interpolation__2d.html#acf59b018e70c2402dfb50ff5570a0e9c">   26</a></span>&#160; </div>
+<div class="line"><a name="l00027"></a><span class="lineno">   27</span>&#160;      <span class="keywordtype">type</span>(<a class="code" href="structsll__m__hermite__aligned__interpolation__2d_1_1sll__t__hermite__aligned__interpolation__2d.html">sll_t_hermite_aligned_interpolation_2d</a>), <span class="keywordtype">pointer</span> :: interp</div>
+<div class="line"><a name="l00028"></a><span class="lineno">   28</span>&#160;      sll_int32 :: ierr</div>
+<div class="line"><a name="l00029"></a><span class="lineno">   29</span>&#160; </div>
+<div class="line"><a name="l00030"></a><span class="lineno">   30</span>&#160;      sll_allocate(interp, ierr)</div>
+<div class="line"><a name="l00031"></a><span class="lineno">   31</span>&#160;      <span class="keyword">call </span><a class="code" href="namespacesll__m__hermite__aligned__interpolation__2d.html#ae9952c28bc5dc2ece56d3694984d4177">initialize_hermite_aligned_interpolation_2d</a>(interp)</div>
 <div class="line"><a name="l00032"></a><span class="lineno">   32</span>&#160; </div>
-<div class="line"><a name="l00033"></a><span class="lineno">   33</span>&#160;<span class="keyword">end function </span><a class="code" href="namespacesll__m__hermite__aligned__interpolation__2d.html#acf59b018e70c2402dfb50ff5570a0e9c">sll_f_new_hermite_aligned_interpolation_2d</a></div>
+<div class="line"><a name="l00033"></a><span class="lineno">   33</span>&#160;   <span class="keyword">end function </span><a class="code" href="namespacesll__m__hermite__aligned__interpolation__2d.html#acf59b018e70c2402dfb50ff5570a0e9c">sll_f_new_hermite_aligned_interpolation_2d</a></div>
 <div class="line"><a name="l00034"></a><span class="lineno">   34</span>&#160; </div>
-<div class="line"><a name="l00035"></a><span class="lineno">   35</span>&#160;<span class="keyword">subroutine </span><a class="code" href="namespacesll__m__hermite__aligned__interpolation__2d.html#ae9952c28bc5dc2ece56d3694984d4177">initialize_hermite_aligned_interpolation_2d</a>( interp )</div>
-<div class="line"><a name="l00036"></a><span class="lineno"><a class="line" href="namespacesll__m__hermite__aligned__interpolation__2d.html#ae9952c28bc5dc2ece56d3694984d4177">   36</a></span>&#160;  <span class="keywordtype">type</span>(<a class="code" href="structsll__m__hermite__aligned__interpolation__2d_1_1sll__t__hermite__aligned__interpolation__2d.html">sll_t_hermite_aligned_interpolation_2d</a>) :: interp</div>
-<div class="line"><a name="l00037"></a><span class="lineno">   37</span>&#160;<span class="comment">! sll_int32 :: r1 </span></div>
-<div class="line"><a name="l00038"></a><span class="lineno">   38</span>&#160;<span class="comment">! sll_int32 :: s1 </span></div>
-<div class="line"><a name="l00039"></a><span class="lineno">   39</span>&#160;<span class="comment">! sll_int32 :: r2 </span></div>
+<div class="line"><a name="l00035"></a><span class="lineno">   35</span>&#160;   <span class="keyword">subroutine </span><a class="code" href="namespacesll__m__hermite__aligned__interpolation__2d.html#ae9952c28bc5dc2ece56d3694984d4177">initialize_hermite_aligned_interpolation_2d</a>(interp)</div>
+<div class="line"><a name="l00036"></a><span class="lineno"><a class="line" href="namespacesll__m__hermite__aligned__interpolation__2d.html#ae9952c28bc5dc2ece56d3694984d4177">   36</a></span>&#160;      <span class="keywordtype">type</span>(<a class="code" href="structsll__m__hermite__aligned__interpolation__2d_1_1sll__t__hermite__aligned__interpolation__2d.html">sll_t_hermite_aligned_interpolation_2d</a>) :: interp</div>
+<div class="line"><a name="l00037"></a><span class="lineno">   37</span>&#160;<span class="comment">! sll_int32 :: r1</span></div>
+<div class="line"><a name="l00038"></a><span class="lineno">   38</span>&#160;<span class="comment">! sll_int32 :: s1</span></div>
+<div class="line"><a name="l00039"></a><span class="lineno">   39</span>&#160;<span class="comment">! sll_int32 :: r2</span></div>
 <div class="line"><a name="l00040"></a><span class="lineno">   40</span>&#160;<span class="comment">! sll_int32 :: s2</span></div>
-<div class="line"><a name="l00041"></a><span class="lineno">   41</span>&#160;<span class="comment">! sll_int32 :: num_cells_x1 </span></div>
-<div class="line"><a name="l00042"></a><span class="lineno">   42</span>&#160;<span class="comment">! sll_int32 :: num_cells_x2 </span></div>
-<div class="line"><a name="l00043"></a><span class="lineno">   43</span>&#160;  <span class="keywordflow">return</span></div>
-<div class="line"><a name="l00044"></a><span class="lineno">   44</span>&#160;  sll_assert(interp%eta_max(1)&gt;=interp%eta_min(1))</div>
-<div class="line"><a name="l00045"></a><span class="lineno">   45</span>&#160;  sll_assert(interp%eta_max(2)&gt;=interp%eta_min(2))</div>
-<div class="line"><a name="l00046"></a><span class="lineno">   46</span>&#160;   </div>
-<div class="line"><a name="l00047"></a><span class="lineno">   47</span>&#160;<span class="keyword">end subroutine </span><a class="code" href="namespacesll__m__hermite__aligned__interpolation__2d.html#ae9952c28bc5dc2ece56d3694984d4177">initialize_hermite_aligned_interpolation_2d</a> </div>
+<div class="line"><a name="l00041"></a><span class="lineno">   41</span>&#160;<span class="comment">! sll_int32 :: num_cells_x1</span></div>
+<div class="line"><a name="l00042"></a><span class="lineno">   42</span>&#160;<span class="comment">! sll_int32 :: num_cells_x2</span></div>
+<div class="line"><a name="l00043"></a><span class="lineno">   43</span>&#160;      <span class="keywordflow">return</span></div>
+<div class="line"><a name="l00044"></a><span class="lineno">   44</span>&#160;      sll_assert(interp%eta_max(1) &gt;= interp%eta_min(1))</div>
+<div class="line"><a name="l00045"></a><span class="lineno">   45</span>&#160;      sll_assert(interp%eta_max(2) &gt;= interp%eta_min(2))</div>
+<div class="line"><a name="l00046"></a><span class="lineno">   46</span>&#160; </div>
+<div class="line"><a name="l00047"></a><span class="lineno">   47</span>&#160;   <span class="keyword">end subroutine </span><a class="code" href="namespacesll__m__hermite__aligned__interpolation__2d.html#ae9952c28bc5dc2ece56d3694984d4177">initialize_hermite_aligned_interpolation_2d</a></div>
 <div class="line"><a name="l00048"></a><span class="lineno">   48</span>&#160; </div>
 <div class="line"><a name="l00049"></a><span class="lineno">   49</span>&#160;<span class="keyword">end module </span><a class="code" href="namespacesll__m__hermite__aligned__interpolation__2d.html">sll_m_hermite_aligned_interpolation_2d</a></div>
 </div><!-- fragment --></div><!-- contents -->
@@ -139,7 +139,7 @@ $(function() {
 <div id="url"></div>
 <div align=left><a href="https://github.com/selalib/selalib/issues/new"><small>&nbsp; &nbsp; Report Typos and Errors</small></a></div>
 <address class="footer"><small>
-Generated on Wed Mar 10 2021 09:25:53 for Semi-Lagrangian Library by &#160;<a href="http://www.doxygen.org/index.html">
+Generated on Wed Mar 10 2021 09:42:19 for Semi-Lagrangian Library by &#160;<a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/>
 </a> 1.8.17
 </small></address>

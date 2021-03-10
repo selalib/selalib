@@ -83,42 +83,42 @@ $(function() {
 <div class="line"><a name="l00002"></a><span class="lineno">    2</span>&#160;<span class="comment">!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++</span></div>
 <div class="line"><a name="l00003"></a><span class="lineno">    3</span>&#160;<span class="preprocessor">#include &quot;sll_working_precision.h&quot;</span></div>
 <div class="line"><a name="l00004"></a><span class="lineno">    4</span>&#160;<span class="preprocessor"></span> </div>
-<div class="line"><a name="l00005"></a><span class="lineno">    5</span>&#160;  <span class="keywordtype">implicit none</span></div>
+<div class="line"><a name="l00005"></a><span class="lineno">    5</span>&#160;   <span class="keywordtype">implicit none</span></div>
 <div class="line"><a name="l00006"></a><span class="lineno">    6</span>&#160; </div>
-<div class="line"><a name="l00007"></a><span class="lineno">    7</span>&#160;  <span class="keywordtype">public</span> :: &amp;</div>
-<div class="line"><a name="l00008"></a><span class="lineno">    8</span>&#160;    <a class="code" href="structsll__m__qn__2d__base_1_1sll__c__qn__2d__base.html">sll_c_qn_2d_base</a></div>
+<div class="line"><a name="l00007"></a><span class="lineno">    7</span>&#160;   <span class="keywordtype">public</span> :: &amp;</div>
+<div class="line"><a name="l00008"></a><span class="lineno">    8</span>&#160;      <a class="code" href="structsll__m__qn__2d__base_1_1sll__c__qn__2d__base.html">sll_c_qn_2d_base</a></div>
 <div class="line"><a name="l00009"></a><span class="lineno">    9</span>&#160; </div>
-<div class="line"><a name="l00010"></a><span class="lineno">   10</span>&#160;  <span class="keywordtype">private</span></div>
+<div class="line"><a name="l00010"></a><span class="lineno">   10</span>&#160;   <span class="keywordtype">private</span></div>
 <div class="line"><a name="l00011"></a><span class="lineno">   11</span>&#160;<span class="comment">!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++</span></div>
 <div class="line"><a name="l00012"></a><span class="lineno">   12</span>&#160; </div>
-<div class="line"><a name="l00013"></a><span class="lineno"><a class="line" href="structsll__m__qn__2d__base_1_1sll__c__qn__2d__base.html">   13</a></span>&#160;  <span class="keyword">type</span>, <span class="keyword">abstract</span> :: <a class="code" href="structsll__m__qn__2d__base_1_1sll__c__qn__2d__base.html">sll_c_qn_2d_base</a> </div>
-<div class="line"><a name="l00014"></a><span class="lineno">   14</span>&#160;  <span class="keyword">contains</span></div>
-<div class="line"><a name="l00015"></a><span class="lineno"><a class="line" href="structsll__m__qn__2d__base_1_1sll__c__qn__2d__base.html#a8c13538d9110d48d60e06d5b73b6fa3f">   15</a></span>&#160;    <span class="keywordtype">procedure</span>(<a class="code" href="interfacesll__m__qn__2d__base_1_1signature__precompute__qn__2d.html">signature_precompute_qn_2d</a>), <span class="keywordtype">deferred</span>, pass(qn) :: &amp;</div>
-<div class="line"><a name="l00016"></a><span class="lineno">   16</span>&#160;      precompute_qn</div>
-<div class="line"><a name="l00017"></a><span class="lineno"><a class="line" href="structsll__m__qn__2d__base_1_1sll__c__qn__2d__base.html#aa29515375e6691749c1bdeac39898d52">   17</a></span>&#160;    <span class="keywordtype">procedure</span>(<a class="code" href="interfacesll__m__qn__2d__base_1_1signature__solve__qn__2d.html">signature_solve_qn_2d</a>), <span class="keywordtype">deferred</span>, pass(qn) :: &amp;</div>
-<div class="line"><a name="l00018"></a><span class="lineno">   18</span>&#160;      solve_qn  </div>
-<div class="line"><a name="l00019"></a><span class="lineno">   19</span>&#160;  <span class="keyword">end type </span><a class="code" href="structsll__m__qn__2d__base_1_1sll__c__qn__2d__base.html">sll_c_qn_2d_base</a></div>
+<div class="line"><a name="l00013"></a><span class="lineno"><a class="line" href="structsll__m__qn__2d__base_1_1sll__c__qn__2d__base.html">   13</a></span>&#160;   <span class="keyword">type</span>, <span class="keyword">abstract</span> :: <a class="code" href="structsll__m__qn__2d__base_1_1sll__c__qn__2d__base.html">sll_c_qn_2d_base</a></div>
+<div class="line"><a name="l00014"></a><span class="lineno">   14</span>&#160;   <span class="keyword">contains</span></div>
+<div class="line"><a name="l00015"></a><span class="lineno"><a class="line" href="structsll__m__qn__2d__base_1_1sll__c__qn__2d__base.html#a8c13538d9110d48d60e06d5b73b6fa3f">   15</a></span>&#160;      <span class="keywordtype">procedure</span>(<a class="code" href="interfacesll__m__qn__2d__base_1_1signature__precompute__qn__2d.html">signature_precompute_qn_2d</a>), <span class="keywordtype">deferred</span>, pass(qn) :: &amp;</div>
+<div class="line"><a name="l00016"></a><span class="lineno">   16</span>&#160;         precompute_qn</div>
+<div class="line"><a name="l00017"></a><span class="lineno"><a class="line" href="structsll__m__qn__2d__base_1_1sll__c__qn__2d__base.html#aa29515375e6691749c1bdeac39898d52">   17</a></span>&#160;      <span class="keywordtype">procedure</span>(<a class="code" href="interfacesll__m__qn__2d__base_1_1signature__solve__qn__2d.html">signature_solve_qn_2d</a>), <span class="keywordtype">deferred</span>, pass(qn) :: &amp;</div>
+<div class="line"><a name="l00018"></a><span class="lineno">   18</span>&#160;         solve_qn</div>
+<div class="line"><a name="l00019"></a><span class="lineno">   19</span>&#160;   <span class="keyword">end type </span><a class="code" href="structsll__m__qn__2d__base_1_1sll__c__qn__2d__base.html">sll_c_qn_2d_base</a></div>
 <div class="line"><a name="l00020"></a><span class="lineno">   20</span>&#160; </div>
-<div class="line"><a name="l00021"></a><span class="lineno">   21</span>&#160;  abstract <span class="keyword">interface</span></div>
+<div class="line"><a name="l00021"></a><span class="lineno">   21</span>&#160;   abstract <span class="keyword">interface</span></div>
 <div class="line"><a name="l00022"></a><span class="lineno">   22</span>&#160; </div>
-<div class="line"><a name="l00023"></a><span class="lineno"><a class="line" href="interfacesll__m__qn__2d__base_1_1signature__precompute__qn__2d.html">   23</a></span>&#160;    <span class="keyword">subroutine </span><a class="code" href="interfacesll__m__qn__2d__base_1_1signature__precompute__qn__2d.html">signature_precompute_qn_2d</a>( qn, mu_points, mu_weights , N_mu)</div>
-<div class="line"><a name="l00024"></a><span class="lineno"><a class="line" href="interfacesll__m__qn__2d__base_1_1signature__precompute__qn__2d.html#adacf0a3b2a7a157006262ed890e19967">   24</a></span>&#160;      <span class="keywordtype">use </span><a class="code" href="namespacesll__m__working__precision.html">sll_m_working_precision</a></div>
-<div class="line"><a name="l00025"></a><span class="lineno">   25</span>&#160;      <span class="keywordtype">import </span><a class="code" href="structsll__m__qn__2d__base_1_1sll__c__qn__2d__base.html">sll_c_qn_2d_base</a>      </div>
-<div class="line"><a name="l00026"></a><span class="lineno">   26</span>&#160;      <span class="keywordtype">class</span>(<a class="code" href="structsll__m__qn__2d__base_1_1sll__c__qn__2d__base.html">sll_c_qn_2d_base</a>), <span class="keywordtype">target</span> :: qn</div>
-<div class="line"><a name="l00027"></a><span class="lineno">   27</span>&#160;      sll_int32,<span class="keywordtype">intent(in)</span> :: n_mu</div>
-<div class="line"><a name="l00028"></a><span class="lineno">   28</span>&#160;      sll_real64,<span class="keywordtype">dimension(1:N_mu)</span>,<span class="keywordtype">intent(in)</span> :: mu_points</div>
-<div class="line"><a name="l00029"></a><span class="lineno">   29</span>&#160;      sll_real64,<span class="keywordtype">dimension(1:N_mu)</span>,<span class="keywordtype">intent(in)</span> :: mu_weights</div>
-<div class="line"><a name="l00030"></a><span class="lineno">   30</span>&#160;    <span class="keyword">end subroutine </span><a class="code" href="interfacesll__m__qn__2d__base_1_1signature__precompute__qn__2d.html">signature_precompute_qn_2d</a></div>
-<div class="line"><a name="l00031"></a><span class="lineno">   31</span>&#160;  </div>
-<div class="line"><a name="l00032"></a><span class="lineno"><a class="line" href="interfacesll__m__qn__2d__base_1_1signature__solve__qn__2d.html">   32</a></span>&#160;    <span class="keyword">subroutine </span><a class="code" href="interfacesll__m__qn__2d__base_1_1signature__solve__qn__2d.html">signature_solve_qn_2d</a>( qn, phi)</div>
-<div class="line"><a name="l00033"></a><span class="lineno"><a class="line" href="interfacesll__m__qn__2d__base_1_1signature__solve__qn__2d.html#a04630c2f814f2888a360a3b404a808d5">   33</a></span>&#160;      <span class="keywordtype">use </span><a class="code" href="namespacesll__m__working__precision.html">sll_m_working_precision</a></div>
-<div class="line"><a name="l00034"></a><span class="lineno">   34</span>&#160;      <span class="keywordtype">import </span><a class="code" href="structsll__m__qn__2d__base_1_1sll__c__qn__2d__base.html">sll_c_qn_2d_base</a>      </div>
-<div class="line"><a name="l00035"></a><span class="lineno">   35</span>&#160;      <span class="keywordtype">class</span>(<a class="code" href="structsll__m__qn__2d__base_1_1sll__c__qn__2d__base.html">sll_c_qn_2d_base</a>), <span class="keywordtype">target</span> :: qn</div>
-<div class="line"><a name="l00036"></a><span class="lineno">   36</span>&#160;      sll_real64,<span class="keywordtype">dimension(:,:)</span>,<span class="keywordtype">intent(inout)</span> :: phi</div>
-<div class="line"><a name="l00037"></a><span class="lineno">   37</span>&#160;    <span class="keyword">end subroutine </span><a class="code" href="interfacesll__m__qn__2d__base_1_1signature__solve__qn__2d.html">signature_solve_qn_2d</a></div>
-<div class="line"><a name="l00038"></a><span class="lineno">   38</span>&#160;  <span class="keyword">end interface</span></div>
+<div class="line"><a name="l00023"></a><span class="lineno"><a class="line" href="interfacesll__m__qn__2d__base_1_1signature__precompute__qn__2d.html">   23</a></span>&#160;      <span class="keyword">subroutine </span><a class="code" href="interfacesll__m__qn__2d__base_1_1signature__precompute__qn__2d.html">signature_precompute_qn_2d</a>(qn, mu_points, mu_weights, N_mu)</div>
+<div class="line"><a name="l00024"></a><span class="lineno"><a class="line" href="interfacesll__m__qn__2d__base_1_1signature__precompute__qn__2d.html#adacf0a3b2a7a157006262ed890e19967">   24</a></span>&#160;         <span class="keywordtype">use </span><a class="code" href="namespacesll__m__working__precision.html">sll_m_working_precision</a></div>
+<div class="line"><a name="l00025"></a><span class="lineno">   25</span>&#160;         <span class="keywordtype">import </span><a class="code" href="structsll__m__qn__2d__base_1_1sll__c__qn__2d__base.html">sll_c_qn_2d_base</a></div>
+<div class="line"><a name="l00026"></a><span class="lineno">   26</span>&#160;         <span class="keywordtype">class</span>(<a class="code" href="structsll__m__qn__2d__base_1_1sll__c__qn__2d__base.html">sll_c_qn_2d_base</a>), <span class="keywordtype">target</span> :: qn</div>
+<div class="line"><a name="l00027"></a><span class="lineno">   27</span>&#160;         sll_int32, <span class="keywordtype">intent(in)</span> :: n_mu</div>
+<div class="line"><a name="l00028"></a><span class="lineno">   28</span>&#160;         sll_real64, <span class="keywordtype">dimension(1:N_mu)</span>, <span class="keywordtype">intent(in)</span> :: mu_points</div>
+<div class="line"><a name="l00029"></a><span class="lineno">   29</span>&#160;         sll_real64, <span class="keywordtype">dimension(1:N_mu)</span>, <span class="keywordtype">intent(in)</span> :: mu_weights</div>
+<div class="line"><a name="l00030"></a><span class="lineno">   30</span>&#160;      <span class="keyword">end subroutine </span><a class="code" href="interfacesll__m__qn__2d__base_1_1signature__precompute__qn__2d.html">signature_precompute_qn_2d</a></div>
+<div class="line"><a name="l00031"></a><span class="lineno">   31</span>&#160; </div>
+<div class="line"><a name="l00032"></a><span class="lineno"><a class="line" href="interfacesll__m__qn__2d__base_1_1signature__solve__qn__2d.html">   32</a></span>&#160;      <span class="keyword">subroutine </span><a class="code" href="interfacesll__m__qn__2d__base_1_1signature__solve__qn__2d.html">signature_solve_qn_2d</a>(qn, phi)</div>
+<div class="line"><a name="l00033"></a><span class="lineno"><a class="line" href="interfacesll__m__qn__2d__base_1_1signature__solve__qn__2d.html#a04630c2f814f2888a360a3b404a808d5">   33</a></span>&#160;         <span class="keywordtype">use </span><a class="code" href="namespacesll__m__working__precision.html">sll_m_working_precision</a></div>
+<div class="line"><a name="l00034"></a><span class="lineno">   34</span>&#160;         <span class="keywordtype">import </span><a class="code" href="structsll__m__qn__2d__base_1_1sll__c__qn__2d__base.html">sll_c_qn_2d_base</a></div>
+<div class="line"><a name="l00035"></a><span class="lineno">   35</span>&#160;         <span class="keywordtype">class</span>(<a class="code" href="structsll__m__qn__2d__base_1_1sll__c__qn__2d__base.html">sll_c_qn_2d_base</a>), <span class="keywordtype">target</span> :: qn</div>
+<div class="line"><a name="l00036"></a><span class="lineno">   36</span>&#160;         sll_real64, <span class="keywordtype">dimension(:, :)</span>, <span class="keywordtype">intent(inout)</span> :: phi</div>
+<div class="line"><a name="l00037"></a><span class="lineno">   37</span>&#160;      <span class="keyword">end subroutine </span><a class="code" href="interfacesll__m__qn__2d__base_1_1signature__solve__qn__2d.html">signature_solve_qn_2d</a></div>
+<div class="line"><a name="l00038"></a><span class="lineno">   38</span>&#160;   <span class="keyword">end interface</span></div>
 <div class="line"><a name="l00039"></a><span class="lineno">   39</span>&#160; </div>
-<div class="line"><a name="l00040"></a><span class="lineno">   40</span>&#160;<span class="keyword">end module </span>sll_m_qn_2d_base</div>
+<div class="line"><a name="l00040"></a><span class="lineno">   40</span>&#160;<span class="keyword">end module </span><a class="code" href="namespacesll__m__qn__2d__base.html">sll_m_qn_2d_base</a></div>
 </div><!-- fragment --></div><!-- contents -->
 <div class="ttc" id="anamespacesll__m__working__precision_html"><div class="ttname"><a href="namespacesll__m__working__precision.html">sll_m_working_precision</a></div><div class="ttdoc">Module to select the kind parameter.</div><div class="ttdef"><b>Definition:</b> <a href="sll__m__working__precision_8_f90_source.html#l00029">sll_m_working_precision.F90:29</a></div></div>
 <div class="ttc" id="anamespacesll__m__qn__2d__base_html"><div class="ttname"><a href="namespacesll__m__qn__2d__base.html">sll_m_qn_2d_base</a></div><div class="ttdef"><b>Definition:</b> <a href="sll__m__qn__2d__base_8_f90_source.html#l00001">sll_m_qn_2d_base.F90:1</a></div></div>
@@ -131,7 +131,7 @@ $(function() {
 <div id="url"></div>
 <div align=left><a href="https://github.com/selalib/selalib/issues/new"><small>&nbsp; &nbsp; Report Typos and Errors</small></a></div>
 <address class="footer"><small>
-Generated on Wed Mar 10 2021 09:25:53 for Semi-Lagrangian Library by &#160;<a href="http://www.doxygen.org/index.html">
+Generated on Wed Mar 10 2021 09:42:18 for Semi-Lagrangian Library by &#160;<a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/>
 </a> 1.8.17
 </small></address>

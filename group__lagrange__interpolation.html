@@ -80,9 +80,7 @@ $(function() {
 <a name="details" id="details"></a><h2 class="groupheader">Description</h2>
 <p>Lagrange interpolation. </p>
 <dl class="section author"><dt>Author</dt><dd>Raphael Blanchard, Klaus Reuter, Katharina Kormann; Contact: Katharina Kormann</dd></dl>
-<p>The library sll_lagrange_interpolation currently only offers two implementations of the interpolator routine <em>interpolate_array_disp</em> on uniform 1D grids. The module <a class="el" href="namespacesll__m__lagrange__interpolation__1d__fast.html" title="Module for 1D Lagrange interpolation on a uniform grid (only odd order)">sll_m_lagrange_interpolation_1d_fast</a> is a fast implementation that also works in combination with domain decomposition. In particular, for the MPI domain decomposition use case, it implements a Lagrange interpolation that is always centered around the point that is displaced (odd number of points). <br  />
- The module <a class="el" href="namespacesll__m__lagrange__interpolation__1d.html">sll_m_lagrange_interpolation_1d</a>, on the other hand, uses an interpolation that is centered around interval to which the point is displaced (even number of points). For the boundary closure, three possiblities are implemented: Either halo cells are provided or periodic boundary conditions can be used. A third alternative is to use a one-sided stencil at the boundary. <br  />
- </p><dl class="todo"><dt><b><a class="el" href="todo.html#_todo000008">Todo:</a></b></dt><dd><ul>
+<p>The library sll_lagrange_interpolation currently only offers two implementations of the interpolator routine <em>interpolate_array_disp</em> on uniform 1D grids. The module <a class="el" href="namespacesll__m__lagrange__interpolation__1d__fast.html" title="Module for 1D Lagrange interpolation on a uniform grid (only odd order)">sll_m_lagrange_interpolation_1d_fast</a> is a fast implementation that also works in combination with domain decomposition. In particular, for the MPI domain decomposition use case, it implements a Lagrange interpolation that is always centered around the point that is displaced (odd number of points). The module <a class="el" href="namespacesll__m__lagrange__interpolation__1d.html">sll_m_lagrange_interpolation_1d</a>, on the other hand, uses an interpolation that is centered around interval to which the point is displaced (even number of points). For the boundary closure, three possiblities are implemented: Either halo cells are provided or periodic boundary conditions can be used. A third alternative is to use a one-sided stencil at the boundary. </p><dl class="todo"><dt><b><a class="el" href="todo.html#_todo000008">Todo:</a></b></dt><dd><ul>
 <li>Improve efficiency of <a class="el" href="sll__m__lagrange__interpolation__1d_8_f90.html">sll_m_lagrange_interpolation_1d.F90</a></li>
 <li>Implement other interpolation routines. </li>
 </ul>
@@ -101,7 +99,7 @@ Fortran modules</h2></td></tr>
 <div id="url"></div>
 <div align=left><a href="https://github.com/selalib/selalib/issues/new"><small>&nbsp; &nbsp; Report Typos and Errors</small></a></div>
 <address class="footer"><small>
-Generated on Wed Mar 10 2021 09:25:55 for Semi-Lagrangian Library by &#160;<a href="http://www.doxygen.org/index.html">
+Generated on Wed Mar 10 2021 09:42:20 for Semi-Lagrangian Library by &#160;<a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/>
 </a> 1.8.17
 </small></address>

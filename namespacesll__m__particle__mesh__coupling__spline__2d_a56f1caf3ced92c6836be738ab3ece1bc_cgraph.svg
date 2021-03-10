@@ -21,7 +21,7 @@
 <!-- Node2 -->
 <g id="node2" class="node">
 <title>Node2</title>
-<g id="a_node2"><a xlink:href="namespacesll__m__splines__pp.html#af936c44d09c3ce67e7e0ac1dd39066b5" target="_top" xlink:title="Destructor 2d">
+<g id="a_node2"><a xlink:href="namespacesll__m__splines__pp.html#af936c44d09c3ce67e7e0ac1dd39066b5" target="_top" xlink:title="Destructor 2d.">
 <polygon fill="white" stroke="black" points="124,-0.5 124,-30.5 245,-30.5 245,-0.5 124,-0.5"/>
 <text text-anchor="start" x="132" y="-18.5" font-family="Helvetica,sans-Serif" font-size="10.00">sll_m_splines_pp::sll</text>
 <text text-anchor="middle" x="184.5" y="-7.5" font-family="Helvetica,sans-Serif" font-size="10.00">_s_spline_pp_free_2d</text>
@@ -37,7 +37,7 @@
 <!-- Node3 -->
 <g id="node3" class="node">
 <title>Node3</title>
-<g id="a_node3"><a xlink:href="namespacesll__m__splines__pp.html#a801edc3f369eab9b8195bb24b1f649a1" target="_top" xlink:title="Destructor 1d">
+<g id="a_node3"><a xlink:href="namespacesll__m__splines__pp.html#a801edc3f369eab9b8195bb24b1f649a1" target="_top" xlink:title="Destructor 1d.">
 <polygon fill="white" stroke="black" points="281,-0.5 281,-30.5 402,-30.5 402,-0.5 281,-0.5"/>
 <text text-anchor="start" x="289" y="-18.5" font-family="Helvetica,sans-Serif" font-size="10.00">sll_m_splines_pp::sll</text>
 <text text-anchor="middle" x="341.5" y="-7.5" font-family="Helvetica,sans-Serif" font-size="10.00">_s_spline_pp_free_1d</text>

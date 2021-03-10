@@ -21,7 +21,7 @@
 <!-- Node2 -->
 <g id="node2" class="node">
 <title>Node2</title>
-<g id="a_node2"><a xlink:href="namespacesll__m__fekete__integration.html#a000587e1502ac1254502c6e3d3600f26" target="_top" xlink:title="Gives the fekete points coordinates and associated weights for a certain rule in a given triangle.">
+<g id="a_node2"><a xlink:href="namespacesll__m__fekete__integration.html#adf467550a7dbaf4287e51119b1a86770" target="_top" xlink:title="Gives the fekete points coordinates and associated weights for a certain rule in a given triangle.">
 <polygon fill="white" stroke="black" points="312,-33 312,-63 420,-63 420,-33 312,-33"/>
 <text text-anchor="start" x="320" y="-51" font-family="Helvetica,sans-Serif" font-size="10.00">sll_f_fekete_points</text>
 <text text-anchor="middle" x="366" y="-40" font-family="Helvetica,sans-Serif" font-size="10.00">_and_weights</text>

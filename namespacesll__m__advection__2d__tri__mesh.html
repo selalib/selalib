@@ -193,7 +193,7 @@ Functions/Subroutines</h2></td></tr>
   </dd>
 </dl>
 
-<p class="definition">Definition at line <a class="el" href="sll__m__advection__2d__tri__mesh_8_f90_source.html#l00178">178</a> of file <a class="el" href="sll__m__advection__2d__tri__mesh_8_f90_source.html">sll_m_advection_2d_tri_mesh.F90</a>.</p>
+<p class="definition">Definition at line <a class="el" href="sll__m__advection__2d__tri__mesh_8_f90_source.html#l00175">175</a> of file <a class="el" href="sll__m__advection__2d__tri__mesh_8_f90_source.html">sll_m_advection_2d_tri_mesh.F90</a>.</p>
 
 </div>
 </div>
@@ -252,7 +252,7 @@ Functions/Subroutines</h2></td></tr>
 <p>Computes degrees of freedom on one point. </p>
 <p>Computes on a point the degrees of freedom (dof): For every annexing triangle we compute the first derivatives (following the triangle edges e1, e2, and e3) and the crossed derivatives (following e1+e2, e2+e3, and e1+e3). they are computed using the values of the function at the vertices. @params f_val [intent IN] real vector containing the function values at the vertices of annexing triangles @params f_der [intent OUT] real vector containing the values of the first derivatives following the vertices @params f_der2 [intent OUT] real vector containing the values of the second derivatives aka. crossed derivatives (see details) @params degree [intent IN] integer value of the number of cells parting from the point @params epsilon [intent IN] real value of the small distance to compute the dof </p>
 
-<p class="definition">Definition at line <a class="el" href="sll__m__advection__2d__tri__mesh_8_f90_source.html#l00142">142</a> of file <a class="el" href="sll__m__advection__2d__tri__mesh_8_f90_source.html">sll_m_advection_2d_tri_mesh.F90</a>.</p>
+<p class="definition">Definition at line <a class="el" href="sll__m__advection__2d__tri__mesh_8_f90_source.html#l00139">139</a> of file <a class="el" href="sll__m__advection__2d__tri__mesh_8_f90_source.html">sll_m_advection_2d_tri_mesh.F90</a>.</p>
 
 </div>
 </div>
@@ -316,7 +316,7 @@ Functions/Subroutines</h2></td></tr>
 <p>der_loc = [df12, df13, df23, df21, df31, df32] fomula : out += dfij * lamb(i)**2 * lam(j) * (1 + 2 * lam(k)) where i, j, k are the edges of the cell/triangle</p>
 <p>Sum over second derivatives func_loc = [d2f1, d2f2, d2f3] formula: out += d2fi * lam(i)**2 * lam(j) * lam(k) where i, j, k are the edges of the cell/triangle</p>
 
-<p class="definition">Definition at line <a class="el" href="sll__m__advection__2d__tri__mesh_8_f90_source.html#l00216">216</a> of file <a class="el" href="sll__m__advection__2d__tri__mesh_8_f90_source.html">sll_m_advection_2d_tri_mesh.F90</a>.</p>
+<p class="definition">Definition at line <a class="el" href="sll__m__advection__2d__tri__mesh_8_f90_source.html#l00213">213</a> of file <a class="el" href="sll__m__advection__2d__tri__mesh_8_f90_source.html">sll_m_advection_2d_tri_mesh.F90</a>.</p>
 
 </div>
 </div>
@@ -340,7 +340,7 @@ Functions/Subroutines</h2></td></tr>
 </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="sll__m__advection__2d__tri__mesh_8_f90_source.html#l00252">252</a> of file <a class="el" href="sll__m__advection__2d__tri__mesh_8_f90_source.html">sll_m_advection_2d_tri_mesh.F90</a>.</p>
+<p class="definition">Definition at line <a class="el" href="sll__m__advection__2d__tri__mesh_8_f90_source.html#l00249">249</a> of file <a class="el" href="sll__m__advection__2d__tri__mesh_8_f90_source.html">sll_m_advection_2d_tri_mesh.F90</a>.</p>
 
 </div>
 </div>
@@ -369,7 +369,7 @@ Functions/Subroutines</h2></td></tr>
 </dl>
 <dl class="section return"><dt>Returns</dt><dd>a pointer to the newly allocated object. </dd></dl>
 
-<p class="definition">Definition at line <a class="el" href="sll__m__advection__2d__tri__mesh_8_f90_source.html#l00062">62</a> of file <a class="el" href="sll__m__advection__2d__tri__mesh_8_f90_source.html">sll_m_advection_2d_tri_mesh.F90</a>.</p>
+<p class="definition">Definition at line <a class="el" href="sll__m__advection__2d__tri__mesh_8_f90_source.html#l00061">61</a> of file <a class="el" href="sll__m__advection__2d__tri__mesh_8_f90_source.html">sll_m_advection_2d_tri_mesh.F90</a>.</p>
 
 </div>
 </div>
@@ -418,62 +418,21 @@ Functions/Subroutines</h2></td></tr>
 </div><div class="memdoc">
 
 <p>Compute characterisitic origin in triangular mesh. </p>
-<p>xlm1 - 1ere coordonnee barycentrique <br  />
- xlm2 - 2eme coordonnee barycentrique <br  />
- xlm3 - 3eme coordonnee barycentrique <br  />
-</p>
-<p>coord - coordonnees des noeuds <br  />
- nodes - numero des sommets des triangles <br  />
- nvois - numero des voisins des elements <br  />
- aire - aire de chaque element <br  />
-</p>
-<p>coef1 - tableau temporaire des determinants <br  />
- coef2 - tableau temporaire des determinants <br  />
- coef3 - tableau temporaire des determinants <br  />
- coef4 - tableau temporaire <br  />
-</p>
-<p>numpt - tableau auxiliaire contenant les numeros des <br  />
- particules a eliminer <br  />
- nelet - tableau auxiliaire contenant les numeros des <br  />
- elements qui contenaient ces particules <br  />
- nlmloc - tableau auxiliaire contenant les numeros des <br  />
- elements ou l'on cherche les particules <br  />
- numres - tableau auxiliaire contenant les numeros des <br  />
- particules non encore localisees <br  />
-</p>
-<p>itest - tableau auxiliaire pour preciser le comportement: <br  />
-</p><ul>
-<li>si itest=0 la particules reste dans son triangle <br  />
-</li>
-<li>si itest=1,2,3 la particule traverse le cote 1,2ou3 <br  />
- mais ne traverse pas de frontiere <br  />
-</li>
-<li>si itest=11,12,13 la particule est absorbee par le <br  />
- cote frontiere 1,2,3 <br  />
-</li>
-<li>si itest=21,22,23 la particule est reflechie par <br  />
- le cote frontiere 1,2,3 <br  />
- Dans tous les cas le chiffre des unites de itest designe <br  />
- le numero du cote traverse par la particule. <br  />
- Le type de frontiere est defini dans le tableau nvoiv <br  />
-</li>
-<li>si nvoiv(i,n) &gt; 0 le cote i n'est pas une frontiere <br  />
-</li>
-<li>si nvoiv(i,n) = 0 le cote i absorbe les particules <br  />
-</li>
-<li>si nvoiv(i,n) =-1 le cote i reflechit les particules <br  />
-</li>
+<p>xlm1 - 1ere coordonnee barycentrique xlm2 - 2eme coordonnee barycentrique xlm3 - 3eme coordonnee barycentrique</p>
+<p>coord - coordonnees des noeuds nodes - numero des sommets des triangles nvois - numero des voisins des elements aire - aire de chaque element</p>
+<p>coef1 - tableau temporaire des determinants coef2 - tableau temporaire des determinants coef3 - tableau temporaire des determinants coef4 - tableau temporaire</p>
+<p>numpt - tableau auxiliaire contenant les numeros des particules a eliminer nelet - tableau auxiliaire contenant les numeros des elements qui contenaient ces particules nlmloc - tableau auxiliaire contenant les numeros des elements ou l'on cherche les particules numres - tableau auxiliaire contenant les numeros des particules non encore localisees</p>
+<p>itest - tableau auxiliaire pour preciser le comportement:</p><ul>
+<li>si itest=0 la particules reste dans son triangle</li>
+<li>si itest=1,2,3 la particule traverse le cote 1,2ou3 mais ne traverse pas de frontiere</li>
+<li>si itest=11,12,13 la particule est absorbee par le cote frontiere 1,2,3</li>
+<li>si itest=21,22,23 la particule est reflechie par le cote frontiere 1,2,3 Dans tous les cas le chiffre des unites de itest designe le numero du cote traverse par la particule. Le type de frontiere est defini dans le tableau nvoiv</li>
+<li>si nvoiv(i,n) &gt; 0 le cote i n'est pas une frontiere</li>
+<li>si nvoiv(i,n) = 0 le cote i absorbe les particules</li>
+<li>si nvoiv(i,n) =-1 le cote i reflechit les particules</li>
 </ul>
-<p>nbpert - nombre de particules a eliminer <br  />
- rho - densite de charge <br  />
- ad1 - tableau temporaire (adresse de la 1ere <br  />
- particule de chaque maille dans le tableau ordonne des particules) <br  />
- indice - tableau temporaire (incrementation du nombre de particules dja reperees) <br  />
- itabor - tableau temporaire (numeros des particules ordonnes suivant les numeros des mailles) nbpama - tableau temporaire (nombre de particules <br  />
- par maille) <br  />
-</p>
-<p>petitl - petite longueur de reference <br  />
- </p><dl class="params"><dt>Parameters</dt><dd>
+<p>nbpert - nombre de particules a eliminer rho - densite de charge ad1 - tableau temporaire (adresse de la 1ere particule de chaque maille dans le tableau ordonne des particules) indice - tableau temporaire (incrementation du nombre de particules dja reperees) itabor - tableau temporaire (numeros des particules ordonnes suivant les numeros des mailles) nbpama - tableau temporaire (nombre de particules par maille)</p>
+<p>petitl - petite longueur de reference </p><dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramdir">[in,out]</td><td class="paramname">adv</td><td>mesh </td></tr>
     <tr><td class="paramdir">[in,out]</td><td class="paramname">f_in</td><td>distribution function on nodes </td></tr>
@@ -484,7 +443,7 @@ Functions/Subroutines</h2></td></tr>
   </dd>
 </dl>
 
-<p class="definition">Definition at line <a class="el" href="sll__m__advection__2d__tri__mesh_8_f90_source.html#l00310">310</a> of file <a class="el" href="sll__m__advection__2d__tri__mesh_8_f90_source.html">sll_m_advection_2d_tri_mesh.F90</a>.</p>
+<p class="definition">Definition at line <a class="el" href="sll__m__advection__2d__tri__mesh_8_f90_source.html#l00307">307</a> of file <a class="el" href="sll__m__advection__2d__tri__mesh_8_f90_source.html">sll_m_advection_2d_tri_mesh.F90</a>.</p>
 
 </div>
 </div>
@@ -495,7 +454,7 @@ Functions/Subroutines</h2></td></tr>
 <div id="url"></div>
 <div align=left><a href="https://github.com/selalib/selalib/issues/new"><small>&nbsp; &nbsp; Report Typos and Errors</small></a></div>
 <address class="footer"><small>
-Generated on Wed Mar 10 2021 09:25:55 for Semi-Lagrangian Library by &#160;<a href="http://www.doxygen.org/index.html">
+Generated on Wed Mar 10 2021 09:42:20 for Semi-Lagrangian Library by &#160;<a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/>
 </a> 1.8.17
 </small></address>

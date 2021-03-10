@@ -106,8 +106,7 @@ Functions/Subroutines</h2></td></tr>
 <tr class="memdesc:a3dcc6ba7738ce0511cf8b9562f40ac21"><td class="mdescLeft">&#160;</td><td class="mdescRight">Compute the fft and interpolate array values when x and y could be outside the domaine. Useful for rotation and axisymetric geometry.  <a href="namespacesll__m__nufft__interpolation.html#a3dcc6ba7738ce0511cf8b9562f40ac21">More...</a><br /></td></tr>
 <tr class="separator:a3dcc6ba7738ce0511cf8b9562f40ac21"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a9cf8db8010fa72b2b232962b1f38fbec"><td class="memItemLeft" align="right" valign="top">subroutine&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacesll__m__nufft__interpolation.html#a9cf8db8010fa72b2b232962b1f38fbec">sll_s_nufft_2d_interpolate_array_from_fft</a> (self, x, y, f)</td></tr>
-<tr class="memdesc:a9cf8db8010fa72b2b232962b1f38fbec"><td class="mdescLeft">&#160;</td><td class="mdescRight">Compute the fft and interpolate array values when x and y are surely inside the domain. Optimized version for advector <br  />
-  <a href="namespacesll__m__nufft__interpolation.html#a9cf8db8010fa72b2b232962b1f38fbec">More...</a><br /></td></tr>
+<tr class="memdesc:a9cf8db8010fa72b2b232962b1f38fbec"><td class="mdescLeft">&#160;</td><td class="mdescRight">Compute the fft and interpolate array values when x and y are surely inside the domain. Optimized version for advector.  <a href="namespacesll__m__nufft__interpolation.html#a9cf8db8010fa72b2b232962b1f38fbec">More...</a><br /></td></tr>
 <tr class="separator:a9cf8db8010fa72b2b232962b1f38fbec"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <hr/><h2 class="groupheader">Data Type Documentation</h2>
@@ -269,7 +268,7 @@ Here is the caller graph for this function:</div>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">real(kind=f64), dimension(:,:), intent(in)&#160;</td>
+          <td class="paramtype">real(kind=f64), dimension(:, :), intent(in)&#160;</td>
           <td class="paramname"><em>f_in</em>&#160;</td>
         </tr>
         <tr>
@@ -427,19 +426,19 @@ Here is the caller graph for this function:</div>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">real(kind=f64), dimension(:,:), intent(in)&#160;</td>
+          <td class="paramtype">real(kind=f64), dimension(:, :), intent(in)&#160;</td>
           <td class="paramname"><em>x</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">real(kind=f64), dimension(:,:), intent(in)&#160;</td>
+          <td class="paramtype">real(kind=f64), dimension(:, :), intent(in)&#160;</td>
           <td class="paramname"><em>y</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">real(kind=f64), dimension(:,:), intent(out)&#160;</td>
+          <td class="paramtype">real(kind=f64), dimension(:, :), intent(out)&#160;</td>
           <td class="paramname"><em>f</em>&#160;</td>
         </tr>
         <tr>
@@ -450,8 +449,7 @@ Here is the caller graph for this function:</div>
       </table>
 </div><div class="memdoc">
 
-<p>Compute the fft and interpolate array values when x and y are surely inside the domain. Optimized version for advector <br  />
- </p>
+<p>Compute the fft and interpolate array values when x and y are surely inside the domain. Optimized version for advector. </p>
 
 <p class="definition">Definition at line <a class="el" href="sll__m__nufft__interpolation_8_f90_source.html#l00236">236</a> of file <a class="el" href="sll__m__nufft__interpolation_8_f90_source.html">sll_m_nufft_interpolation.F90</a>.</p>
 <div class="dynheader">
@@ -478,25 +476,25 @@ Here is the caller graph for this function:</div>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">real(kind=f64), dimension(:,:), intent(in)&#160;</td>
+          <td class="paramtype">real(kind=f64), dimension(:, :), intent(in)&#160;</td>
           <td class="paramname"><em>f_in</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">real(kind=f64), dimension(:,:), intent(in)&#160;</td>
+          <td class="paramtype">real(kind=f64), dimension(:, :), intent(in)&#160;</td>
           <td class="paramname"><em>x</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">real(kind=f64), dimension(:,:), intent(in)&#160;</td>
+          <td class="paramtype">real(kind=f64), dimension(:, :), intent(in)&#160;</td>
           <td class="paramname"><em>y</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">real(kind=f64), dimension(:,:), intent(out)&#160;</td>
+          <td class="paramtype">real(kind=f64), dimension(:, :), intent(out)&#160;</td>
           <td class="paramname"><em>f_out</em>&#160;</td>
         </tr>
         <tr>
@@ -540,19 +538,19 @@ Here is the caller graph for this function:</div>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">real(kind=f64), dimension(:,:), intent(inout)&#160;</td>
+          <td class="paramtype">real(kind=f64), dimension(:, :), intent(inout)&#160;</td>
           <td class="paramname"><em>f</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">real(kind=f64), dimension(:,:), intent(in)&#160;</td>
+          <td class="paramtype">real(kind=f64), dimension(:, :), intent(in)&#160;</td>
           <td class="paramname"><em>x</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">real(kind=f64), dimension(:,:), intent(in)&#160;</td>
+          <td class="paramtype">real(kind=f64), dimension(:, :), intent(in)&#160;</td>
           <td class="paramname"><em>y</em>&#160;</td>
         </tr>
         <tr>
@@ -582,7 +580,7 @@ Here is the call graph for this function:</div>
 <div id="url"></div>
 <div align=left><a href="https://github.com/selalib/selalib/issues/new"><small>&nbsp; &nbsp; Report Typos and Errors</small></a></div>
 <address class="footer"><small>
-Generated on Wed Mar 10 2021 09:25:56 for Semi-Lagrangian Library by &#160;<a href="http://www.doxygen.org/index.html">
+Generated on Wed Mar 10 2021 09:42:21 for Semi-Lagrangian Library by &#160;<a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/>
 </a> 1.8.17
 </small></address>

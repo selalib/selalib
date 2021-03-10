@@ -81,47 +81,47 @@ $(function() {
 <div class="contents">
 <a href="sll__m__working__precision_8_f90.html">Go to the documentation of this file.</a><div class="fragment"><div class="line"><a name="l00001"></a><span class="lineno">    1</span>&#160;<span class="comment">!**************************************************************</span></div>
 <div class="line"><a name="l00002"></a><span class="lineno">    2</span>&#160;<span class="comment">!  Copyright INRIA</span></div>
-<div class="line"><a name="l00003"></a><span class="lineno">    3</span>&#160;<span class="comment">!  Authors : </span></div>
+<div class="line"><a name="l00003"></a><span class="lineno">    3</span>&#160;<span class="comment">!  Authors :</span></div>
 <div class="line"><a name="l00004"></a><span class="lineno">    4</span>&#160;<span class="comment">!     CALVI project team</span></div>
-<div class="line"><a name="l00005"></a><span class="lineno">    5</span>&#160;<span class="comment">!  </span></div>
-<div class="line"><a name="l00006"></a><span class="lineno">    6</span>&#160;<span class="comment">!  This code SeLaLib (for Semi-Lagrangian-Library) </span></div>
-<div class="line"><a name="l00007"></a><span class="lineno">    7</span>&#160;<span class="comment">!  is a parallel library for simulating the plasma turbulence </span></div>
+<div class="line"><a name="l00005"></a><span class="lineno">    5</span>&#160;<span class="comment">!</span></div>
+<div class="line"><a name="l00006"></a><span class="lineno">    6</span>&#160;<span class="comment">!  This code SeLaLib (for Semi-Lagrangian-Library)</span></div>
+<div class="line"><a name="l00007"></a><span class="lineno">    7</span>&#160;<span class="comment">!  is a parallel library for simulating the plasma turbulence</span></div>
 <div class="line"><a name="l00008"></a><span class="lineno">    8</span>&#160;<span class="comment">!  in a tokamak.</span></div>
-<div class="line"><a name="l00009"></a><span class="lineno">    9</span>&#160;<span class="comment">!  </span></div>
-<div class="line"><a name="l00010"></a><span class="lineno">   10</span>&#160;<span class="comment">!  This software is governed by the CeCILL-B license </span></div>
-<div class="line"><a name="l00011"></a><span class="lineno">   11</span>&#160;<span class="comment">!  under French law and abiding by the rules of distribution </span></div>
-<div class="line"><a name="l00012"></a><span class="lineno">   12</span>&#160;<span class="comment">!  of free software.  You can  use, modify and redistribute </span></div>
-<div class="line"><a name="l00013"></a><span class="lineno">   13</span>&#160;<span class="comment">!  the software under the terms of the CeCILL-B license as </span></div>
+<div class="line"><a name="l00009"></a><span class="lineno">    9</span>&#160;<span class="comment">!</span></div>
+<div class="line"><a name="l00010"></a><span class="lineno">   10</span>&#160;<span class="comment">!  This software is governed by the CeCILL-B license</span></div>
+<div class="line"><a name="l00011"></a><span class="lineno">   11</span>&#160;<span class="comment">!  under French law and abiding by the rules of distribution</span></div>
+<div class="line"><a name="l00012"></a><span class="lineno">   12</span>&#160;<span class="comment">!  of free software.  You can  use, modify and redistribute</span></div>
+<div class="line"><a name="l00013"></a><span class="lineno">   13</span>&#160;<span class="comment">!  the software under the terms of the CeCILL-B license as</span></div>
 <div class="line"><a name="l00014"></a><span class="lineno">   14</span>&#160;<span class="comment">!  circulated by CEA, CNRS and INRIA at the following URL</span></div>
-<div class="line"><a name="l00015"></a><span class="lineno">   15</span>&#160;<span class="comment">!  &quot;http://www.cecill.info&quot;. </span></div>
+<div class="line"><a name="l00015"></a><span class="lineno">   15</span>&#160;<span class="comment">!  &quot;http://www.cecill.info&quot;.</span></div>
 <div class="line"><a name="l00016"></a><span class="lineno">   16</span>&#160;<span class="comment">!**************************************************************</span></div>
 <div class="line"><a name="l00017"></a><span class="lineno">   17</span>&#160; </div>
-<div class="line"><a name="l00018"></a><span class="lineno">   18</span>&#160;<span class="comment">! From the Fortran Standard (2.4.1.1): &quot;The kind type parameter indicates the </span></div>
-<div class="line"><a name="l00019"></a><span class="lineno">   19</span>&#160;<span class="comment">! decimal exponent range for the integer type (4.4.1), the decimal precision </span></div>
-<div class="line"><a name="l00020"></a><span class="lineno">   20</span>&#160;<span class="comment">! and exponent range for the real and complex types (4.4.2, 4.4.3), and the </span></div>
+<div class="line"><a name="l00018"></a><span class="lineno">   18</span>&#160;<span class="comment">! From the Fortran Standard (2.4.1.1): &quot;The kind type parameter indicates the</span></div>
+<div class="line"><a name="l00019"></a><span class="lineno">   19</span>&#160;<span class="comment">! decimal exponent range for the integer type (4.4.1), the decimal precision</span></div>
+<div class="line"><a name="l00020"></a><span class="lineno">   20</span>&#160;<span class="comment">! and exponent range for the real and complex types (4.4.2, 4.4.3), and the</span></div>
 <div class="line"><a name="l00021"></a><span class="lineno">   21</span>&#160;<span class="comment">! representation methods for the character and logical types (4.4.4, 4.4.5).&quot;</span></div>
 <div class="line"><a name="l00022"></a><span class="lineno">   22</span>&#160; </div>
 <div class="line"><a name="l00029"></a><span class="lineno"><a class="line" href="namespacesll__m__working__precision.html">   29</a></span>&#160;<span class="keyword">module</span> <a class="code" href="namespacesll__m__working__precision.html">sll_m_working_precision</a></div>
 <div class="line"><a name="l00030"></a><span class="lineno">   30</span>&#160; </div>
 <div class="line"><a name="l00031"></a><span class="lineno">   31</span>&#160;<span class="comment">!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++</span></div>
-<div class="line"><a name="l00032"></a><span class="lineno">   32</span>&#160;  <span class="keywordtype">implicit none</span></div>
+<div class="line"><a name="l00032"></a><span class="lineno">   32</span>&#160;   <span class="keywordtype">implicit none</span></div>
 <div class="line"><a name="l00033"></a><span class="lineno">   33</span>&#160; </div>
-<div class="line"><a name="l00034"></a><span class="lineno">   34</span>&#160;  <span class="keywordtype">public</span> :: &amp;</div>
-<div class="line"><a name="l00035"></a><span class="lineno">   35</span>&#160;    <a class="code" href="namespacesll__m__working__precision.html#a58d8b77d2a03a59596118908d6e7d4d2">f32</a>, &amp;</div>
-<div class="line"><a name="l00036"></a><span class="lineno">   36</span>&#160;    <a class="code" href="namespacesll__m__working__precision.html#ad3d7a50f8e8df0cc67fd9e1c459ffb88">f64</a>, &amp;</div>
-<div class="line"><a name="l00037"></a><span class="lineno">   37</span>&#160;    <a class="code" href="namespacesll__m__working__precision.html#a0b9c6a761530997725307f9cbbfbba04">i32</a>, &amp;</div>
-<div class="line"><a name="l00038"></a><span class="lineno">   38</span>&#160;    <a class="code" href="namespacesll__m__working__precision.html#a528ca608ac363fb575af80367deef143">i64</a></div>
+<div class="line"><a name="l00034"></a><span class="lineno">   34</span>&#160;   <span class="keywordtype">public</span> :: &amp;</div>
+<div class="line"><a name="l00035"></a><span class="lineno">   35</span>&#160;      <a class="code" href="namespacesll__m__working__precision.html#a58d8b77d2a03a59596118908d6e7d4d2">f32</a>, &amp;</div>
+<div class="line"><a name="l00036"></a><span class="lineno">   36</span>&#160;      <a class="code" href="namespacesll__m__working__precision.html#ad3d7a50f8e8df0cc67fd9e1c459ffb88">f64</a>, &amp;</div>
+<div class="line"><a name="l00037"></a><span class="lineno">   37</span>&#160;      <a class="code" href="namespacesll__m__working__precision.html#a0b9c6a761530997725307f9cbbfbba04">i32</a>, &amp;</div>
+<div class="line"><a name="l00038"></a><span class="lineno">   38</span>&#160;      <a class="code" href="namespacesll__m__working__precision.html#a528ca608ac363fb575af80367deef143">i64</a></div>
 <div class="line"><a name="l00039"></a><span class="lineno">   39</span>&#160; </div>
-<div class="line"><a name="l00040"></a><span class="lineno">   40</span>&#160;  <span class="keywordtype">private</span></div>
+<div class="line"><a name="l00040"></a><span class="lineno">   40</span>&#160;   <span class="keywordtype">private</span></div>
 <div class="line"><a name="l00041"></a><span class="lineno">   41</span>&#160;<span class="comment">!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++</span></div>
 <div class="line"><a name="l00042"></a><span class="lineno">   42</span>&#160; </div>
-<div class="line"><a name="l00043"></a><span class="lineno">   43</span>&#160;  <span class="comment">! The intent is that i32 will hold values up to 2**32-1</span></div>
+<div class="line"><a name="l00043"></a><span class="lineno">   43</span>&#160;   <span class="comment">! The intent is that i32 will hold values up to 2**32-1</span></div>
 <div class="line"><a name="l00045"></a><span class="lineno">   45</span>&#160;<span class="comment">!  integer, parameter :: i32 = kind(0)</span></div>
-<div class="line"><a name="l00046"></a><span class="lineno"><a class="line" href="namespacesll__m__working__precision.html#a0b9c6a761530997725307f9cbbfbba04">   46</a></span>&#160;  <span class="keywordtype">integer</span>, <span class="keywordtype">parameter</span> :: <a class="code" href="namespacesll__m__working__precision.html#a0b9c6a761530997725307f9cbbfbba04">i32</a> = selected_int_kind(9)</div>
+<div class="line"><a name="l00046"></a><span class="lineno"><a class="line" href="namespacesll__m__working__precision.html#a0b9c6a761530997725307f9cbbfbba04">   46</a></span>&#160;   <span class="keywordtype">integer</span>, <span class="keywordtype">parameter</span> :: <a class="code" href="namespacesll__m__working__precision.html#a0b9c6a761530997725307f9cbbfbba04">i32</a> = selected_int_kind(9)</div>
 <div class="line"><a name="l00048"></a><span class="lineno">   48</span>&#160;<span class="comment">!  integer, parameter :: i64 = kind(2_8**32) !i64=kind(1.0d0) should be specific enough</span></div>
-<div class="line"><a name="l00049"></a><span class="lineno"><a class="line" href="namespacesll__m__working__precision.html#a528ca608ac363fb575af80367deef143">   49</a></span>&#160;  <span class="keywordtype">integer</span>, <span class="keywordtype">parameter</span> :: <a class="code" href="namespacesll__m__working__precision.html#a528ca608ac363fb575af80367deef143">i64</a> = selected_int_kind(18)</div>
-<div class="line"><a name="l00051"></a><span class="lineno"><a class="line" href="namespacesll__m__working__precision.html#a58d8b77d2a03a59596118908d6e7d4d2">   51</a></span>&#160;  <span class="keywordtype">integer</span>, <span class="keywordtype">parameter</span> :: <a class="code" href="namespacesll__m__working__precision.html#a58d8b77d2a03a59596118908d6e7d4d2">f32</a> = selected_real_kind(1,37)</div>
-<div class="line"><a name="l00053"></a><span class="lineno"><a class="line" href="namespacesll__m__working__precision.html#ad3d7a50f8e8df0cc67fd9e1c459ffb88">   53</a></span>&#160;  <span class="keywordtype">integer</span>, <span class="keywordtype">parameter</span> :: <a class="code" href="namespacesll__m__working__precision.html#ad3d7a50f8e8df0cc67fd9e1c459ffb88">f64</a> = selected_real_kind(1,99)</div>
+<div class="line"><a name="l00049"></a><span class="lineno"><a class="line" href="namespacesll__m__working__precision.html#a528ca608ac363fb575af80367deef143">   49</a></span>&#160;   <span class="keywordtype">integer</span>, <span class="keywordtype">parameter</span> :: <a class="code" href="namespacesll__m__working__precision.html#a528ca608ac363fb575af80367deef143">i64</a> = selected_int_kind(18)</div>
+<div class="line"><a name="l00051"></a><span class="lineno"><a class="line" href="namespacesll__m__working__precision.html#a58d8b77d2a03a59596118908d6e7d4d2">   51</a></span>&#160;   <span class="keywordtype">integer</span>, <span class="keywordtype">parameter</span> :: <a class="code" href="namespacesll__m__working__precision.html#a58d8b77d2a03a59596118908d6e7d4d2">f32</a> = selected_real_kind(1, 37)</div>
+<div class="line"><a name="l00053"></a><span class="lineno"><a class="line" href="namespacesll__m__working__precision.html#ad3d7a50f8e8df0cc67fd9e1c459ffb88">   53</a></span>&#160;   <span class="keywordtype">integer</span>, <span class="keywordtype">parameter</span> :: <a class="code" href="namespacesll__m__working__precision.html#ad3d7a50f8e8df0cc67fd9e1c459ffb88">f64</a> = selected_real_kind(1, 99)</div>
 <div class="line"><a name="l00054"></a><span class="lineno">   54</span>&#160; </div>
 <div class="line"><a name="l00055"></a><span class="lineno">   55</span>&#160;<span class="keyword">end module </span><a class="code" href="namespacesll__m__working__precision.html">sll_m_working_precision</a></div>
 </div><!-- fragment --></div><!-- contents -->
@@ -136,7 +136,7 @@ $(function() {
 <div id="url"></div>
 <div align=left><a href="https://github.com/selalib/selalib/issues/new"><small>&nbsp; &nbsp; Report Typos and Errors</small></a></div>
 <address class="footer"><small>
-Generated on Wed Mar 10 2021 09:25:54 for Semi-Lagrangian Library by &#160;<a href="http://www.doxygen.org/index.html">
+Generated on Wed Mar 10 2021 09:42:19 for Semi-Lagrangian Library by &#160;<a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/>
 </a> 1.8.17
 </small></address>

@@ -391,7 +391,7 @@ var sectionId = 'dynsection-12';
 <!-- Node26 -->
 <g id="node26" class="node">
 <title>Node26</title>
-<g id="a_node26"><a xlink:href="namespacesll__m__fekete__integration.html#a000587e1502ac1254502c6e3d3600f26" target="_top" xlink:title="Gives the fekete points coordinates and associated weights for a certain rule in a given triangle.">
+<g id="a_node26"><a xlink:href="namespacesll__m__fekete__integration.html#adf467550a7dbaf4287e51119b1a86770" target="_top" xlink:title="Gives the fekete points coordinates and associated weights for a certain rule in a given triangle.">
 <polygon fill="white" stroke="black" points="356.5,-104 356.5,-134 464.5,-134 464.5,-104 356.5,-104"/>
 <text text-anchor="start" x="364.5" y="-122" font-family="Helvetica,sans-Serif" font-size="10.00">sll_f_fekete_points</text>
 <text text-anchor="middle" x="410.5" y="-111" font-family="Helvetica,sans-Serif" font-size="10.00">_and_weights</text>

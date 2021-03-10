@@ -98,7 +98,7 @@
 <!-- Node13 -->
 <g id="node13" class="node">
 <title>Node13</title>
-<g id="a_node13"><a xlink:href="namespacesll__m__gauss__legendre__integration.html#ad8ffc44405a576bb158ad8c1b009b41b" target="_top" xlink:title="Returns a 2d array of size (2,npoints) containing gauss&#45;legendre points and weights in the interval [...">
+<g id="a_node13"><a xlink:href="namespacesll__m__gauss__legendre__integration.html#a0df63a9e8ee884c2d4a0d1f53602a949" target="_top" xlink:title="Returns a 2d array of size (2,npoints) containing gauss&#45;legendre points and weights in the interval [...">
 <polygon fill="white" stroke="black" points="137,-170 137,-211 304,-211 304,-170 137,-170"/>
 <text text-anchor="start" x="145" y="-199" font-family="Helvetica,sans-Serif" font-size="10.00">sll_m_gauss_legendre</text>
 <text text-anchor="start" x="145" y="-188" font-family="Helvetica,sans-Serif" font-size="10.00">_integration::sll_f_gauss</text>
@@ -115,7 +115,7 @@
 <!-- Node14 -->
 <g id="node14" class="node">
 <title>Node14</title>
-<g id="a_node14"><a xlink:href="namespacesll__m__gauss__lobatto__integration.html#a4d0d1b11b1c28ff20e217f22f5631e7a" target="_top" xlink:title="Returns a 2d array of size (2,n) containing gauss&#45;lobatto points and weights in the interval [a,...">
+<g id="a_node14"><a xlink:href="namespacesll__m__gauss__lobatto__integration.html#abde325bec9e6c51c78f56ecc3bb075d5" target="_top" xlink:title="Returns a 2d array of size (2,n) containing gauss&#45;lobatto points and weights in the interval [a,...">
 <polygon fill="white" stroke="black" points="158,-98.5 158,-150.5 283,-150.5 283,-98.5 158,-98.5"/>
 <text text-anchor="start" x="166" y="-138.5" font-family="Helvetica,sans-Serif" font-size="10.00">sll_m_gauss_lobatto</text>
 <text text-anchor="start" x="166" y="-127.5" font-family="Helvetica,sans-Serif" font-size="10.00">_integration::sll_f</text>

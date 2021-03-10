@@ -80,8 +80,7 @@ $(function() {
 <div class="contents">
 <a name="details" id="details"></a><h2 class="groupheader">Description</h2>
 <div class="textblock"><p>Selalib periodic 2D poisson solver for cartesian coordinates. </p>
-<dl class="section author"><dt>Authors</dt><dd><br  />
- Aliou DIOUF (<a href="#" onclick="location.href='mai'+'lto:'+'ali'+'ou'+'.l.'+'di'+'ouf'+'@i'+'nri'+'a.'+'fr'; return false;">aliou<span style="display: none;">.nosp@m.</span>.l.d<span style="display: none;">.nosp@m.</span>iouf@<span style="display: none;">.nosp@m.</span>inri<span style="display: none;">.nosp@m.</span>a.fr</a>), Edwin CHACON-GOLCHER (<a href="#" onclick="location.href='mai'+'lto:'+'cha'+'co'+'ngo'+'lc'+'her'+'@m'+'ath'+'.u'+'nis'+'tr'+'a.f'+'r'; return false;">chaco<span style="display: none;">.nosp@m.</span>ngol<span style="display: none;">.nosp@m.</span>cher@<span style="display: none;">.nosp@m.</span>math<span style="display: none;">.nosp@m.</span>.unis<span style="display: none;">.nosp@m.</span>tra.<span style="display: none;">.nosp@m.</span>fr</a>)</dd></dl>
+<dl class="section author"><dt>Authors</dt><dd>Aliou DIOUF (<a href="#" onclick="location.href='mai'+'lto:'+'ali'+'ou'+'.l.'+'di'+'ouf'+'@i'+'nri'+'a.'+'fr'; return false;">aliou<span style="display: none;">.nosp@m.</span>.l.d<span style="display: none;">.nosp@m.</span>iouf@<span style="display: none;">.nosp@m.</span>inri<span style="display: none;">.nosp@m.</span>a.fr</a>), Edwin CHACON-GOLCHER (<a href="#" onclick="location.href='mai'+'lto:'+'cha'+'co'+'ngo'+'lc'+'her'+'@m'+'ath'+'.u'+'nis'+'tr'+'a.f'+'r'; return false;">chaco<span style="display: none;">.nosp@m.</span>ngol<span style="display: none;">.nosp@m.</span>cher@<span style="display: none;">.nosp@m.</span>math<span style="display: none;">.nosp@m.</span>.unis<span style="display: none;">.nosp@m.</span>tra.<span style="display: none;">.nosp@m.</span>fr</a>)</dd></dl>
 <p>While the solution region is 2D, the following solver is meant to be used with 4D arrays with size 1 in the last two dimensions. The reason for this is that the input data, the rho array, is the result of a reduction process in the last 2 dimensions. The computation of the potential which may be an in-place operation, needs to be treated as a 4D array in order to remap it appropriately with the 4D distribution function. There might be ways around this, like using 'reshape'... </p>
 </div><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="nested-classes"></a>
@@ -118,7 +117,7 @@ Functions/Subroutines</h2></td></tr>
         <tr>
           <td class="memname">subroutine, public sll_m_poisson_2d_periodic_par::sll_s_poisson_2d_periodic_par_free </td>
           <td>(</td>
-          <td class="paramtype">type (<a class="el" href="structsll__m__poisson__2d__periodic__par_1_1sll__t__poisson__2d__periodic__par.html">sll_t_poisson_2d_periodic_par</a>)&#160;</td>
+          <td class="paramtype">type(<a class="el" href="structsll__m__poisson__2d__periodic__par_1_1sll__t__poisson__2d__periodic__par.html">sll_t_poisson_2d_periodic_par</a>)&#160;</td>
           <td class="paramname"><em>plan</em></td><td>)</td>
           <td></td>
         </tr>
@@ -127,7 +126,7 @@ Functions/Subroutines</h2></td></tr>
 
 <p>Delete the Poisson solver object. </p>
 
-<p class="definition">Definition at line <a class="el" href="sll__m__poisson__2d__periodic__par_8_f90_source.html#l00577">577</a> of file <a class="el" href="sll__m__poisson__2d__periodic__par_8_f90_source.html">sll_m_poisson_2d_periodic_par.F90</a>.</p>
+<p class="definition">Definition at line <a class="el" href="sll__m__poisson__2d__periodic__par_8_f90_source.html#l00574">574</a> of file <a class="el" href="sll__m__poisson__2d__periodic__par_8_f90_source.html">sll_m_poisson_2d_periodic_par.F90</a>.</p>
 <div class="dynheader">
 Here is the call graph for this function:</div>
 <div class="dyncontent">
@@ -146,7 +145,7 @@ Here is the call graph for this function:</div>
         <tr>
           <td class="memname">subroutine, public sll_m_poisson_2d_periodic_par::sll_s_poisson_2d_periodic_par_init </td>
           <td>(</td>
-          <td class="paramtype">type (<a class="el" href="structsll__m__poisson__2d__periodic__par_1_1sll__t__poisson__2d__periodic__par.html">sll_t_poisson_2d_periodic_par</a>)&#160;</td>
+          <td class="paramtype">type(<a class="el" href="structsll__m__poisson__2d__periodic__par_1_1sll__t__poisson__2d__periodic__par.html">sll_t_poisson_2d_periodic_par</a>)&#160;</td>
           <td class="paramname"><em>plan</em>, </td>
         </tr>
         <tr>
@@ -219,7 +218,7 @@ Here is the call graph for this function:</div>
         <tr>
           <td class="memname">subroutine, public sll_m_poisson_2d_periodic_par::sll_s_poisson_2d_periodic_par_init_alt </td>
           <td>(</td>
-          <td class="paramtype">type (<a class="el" href="structsll__m__poisson__2d__periodic__par_1_1sll__t__poisson__2d__periodic__par.html">sll_t_poisson_2d_periodic_par</a>)&#160;</td>
+          <td class="paramtype">type(<a class="el" href="structsll__m__poisson__2d__periodic__par_1_1sll__t__poisson__2d__periodic__par.html">sll_t_poisson_2d_periodic_par</a>)&#160;</td>
           <td class="paramname"><em>plan</em>, </td>
         </tr>
         <tr>
@@ -274,7 +273,7 @@ Here is the call graph for this function:</div>
   </dd>
 </dl>
 
-<p class="definition">Definition at line <a class="el" href="sll__m__poisson__2d__periodic__par_8_f90_source.html#l00355">355</a> of file <a class="el" href="sll__m__poisson__2d__periodic__par_8_f90_source.html">sll_m_poisson_2d_periodic_par.F90</a>.</p>
+<p class="definition">Definition at line <a class="el" href="sll__m__poisson__2d__periodic__par_8_f90_source.html#l00353">353</a> of file <a class="el" href="sll__m__poisson__2d__periodic__par_8_f90_source.html">sll_m_poisson_2d_periodic_par.F90</a>.</p>
 <div class="dynheader">
 Here is the call graph for this function:</div>
 <div class="dyncontent">
@@ -293,19 +292,19 @@ Here is the call graph for this function:</div>
         <tr>
           <td class="memname">subroutine, public sll_m_poisson_2d_periodic_par::sll_s_poisson_2d_periodic_par_solve </td>
           <td>(</td>
-          <td class="paramtype">type (<a class="el" href="structsll__m__poisson__2d__periodic__par_1_1sll__t__poisson__2d__periodic__par.html">sll_t_poisson_2d_periodic_par</a>)&#160;</td>
+          <td class="paramtype">type(<a class="el" href="structsll__m__poisson__2d__periodic__par_1_1sll__t__poisson__2d__periodic__par.html">sll_t_poisson_2d_periodic_par</a>)&#160;</td>
           <td class="paramname"><em>plan</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">real(kind=f64), dimension(:,:)&#160;</td>
+          <td class="paramtype">real(kind=f64), dimension(:, :)&#160;</td>
           <td class="paramname"><em>rho</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">real(kind=f64), dimension(:,:)&#160;</td>
+          <td class="paramtype">real(kind=f64), dimension(:, :)&#160;</td>
           <td class="paramname"><em>phi</em>&#160;</td>
         </tr>
         <tr>
@@ -345,19 +344,19 @@ Here is the call graph for this function:</div>
         <tr>
           <td class="memname">subroutine, public sll_m_poisson_2d_periodic_par::sll_s_poisson_2d_periodic_par_solve_alt </td>
           <td>(</td>
-          <td class="paramtype">type (<a class="el" href="structsll__m__poisson__2d__periodic__par_1_1sll__t__poisson__2d__periodic__par.html">sll_t_poisson_2d_periodic_par</a>)&#160;</td>
+          <td class="paramtype">type(<a class="el" href="structsll__m__poisson__2d__periodic__par_1_1sll__t__poisson__2d__periodic__par.html">sll_t_poisson_2d_periodic_par</a>)&#160;</td>
           <td class="paramname"><em>plan</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">dimension(:,:)&#160;</td>
+          <td class="paramtype">dimension(:, :)&#160;</td>
           <td class="paramname"><em>rho</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">dimension(:,:)&#160;</td>
+          <td class="paramtype">dimension(:, :)&#160;</td>
           <td class="paramname"><em>phi</em>&#160;</td>
         </tr>
         <tr>
@@ -376,7 +375,7 @@ Here is the call graph for this function:</div>
   </dd>
 </dl>
 
-<p class="definition">Definition at line <a class="el" href="sll__m__poisson__2d__periodic__par_8_f90_source.html#l00461">461</a> of file <a class="el" href="sll__m__poisson__2d__periodic__par_8_f90_source.html">sll_m_poisson_2d_periodic_par.F90</a>.</p>
+<p class="definition">Definition at line <a class="el" href="sll__m__poisson__2d__periodic__par_8_f90_source.html#l00459">459</a> of file <a class="el" href="sll__m__poisson__2d__periodic__par_8_f90_source.html">sll_m_poisson_2d_periodic_par.F90</a>.</p>
 <div class="dynheader">
 Here is the call graph for this function:</div>
 <div class="dyncontent">
@@ -393,7 +392,7 @@ Here is the call graph for this function:</div>
 <div id="url"></div>
 <div align=left><a href="https://github.com/selalib/selalib/issues/new"><small>&nbsp; &nbsp; Report Typos and Errors</small></a></div>
 <address class="footer"><small>
-Generated on Wed Mar 10 2021 09:25:56 for Semi-Lagrangian Library by &#160;<a href="http://www.doxygen.org/index.html">
+Generated on Wed Mar 10 2021 09:42:21 for Semi-Lagrangian Library by &#160;<a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/>
 </a> 1.8.17
 </small></address>

@@ -86,54 +86,54 @@ $(function() {
 <div class="line"><a name="l00008"></a><span class="lineno">    8</span>&#160;<span class="preprocessor">#include &quot;sll_memory.h&quot;</span></div>
 <div class="line"><a name="l00009"></a><span class="lineno">    9</span>&#160;<span class="preprocessor"></span><span class="preprocessor">#include &quot;sll_working_precision.h&quot;</span></div>
 <div class="line"><a name="l00010"></a><span class="lineno">   10</span>&#160;<span class="preprocessor"></span> </div>
-<div class="line"><a name="l00011"></a><span class="lineno">   11</span>&#160;  <span class="keywordtype">implicit none</span></div>
+<div class="line"><a name="l00011"></a><span class="lineno">   11</span>&#160;   <span class="keywordtype">implicit none</span></div>
 <div class="line"><a name="l00012"></a><span class="lineno">   12</span>&#160; </div>
-<div class="line"><a name="l00013"></a><span class="lineno">   13</span>&#160;  <span class="keywordtype">public</span> :: &amp;</div>
-<div class="line"><a name="l00014"></a><span class="lineno">   14</span>&#160;    sll_c_time_splitting</div>
+<div class="line"><a name="l00013"></a><span class="lineno">   13</span>&#160;   <span class="keywordtype">public</span> :: &amp;</div>
+<div class="line"><a name="l00014"></a><span class="lineno">   14</span>&#160;      sll_c_time_splitting</div>
 <div class="line"><a name="l00015"></a><span class="lineno">   15</span>&#160; </div>
-<div class="line"><a name="l00016"></a><span class="lineno">   16</span>&#160;  <span class="keywordtype">private</span></div>
+<div class="line"><a name="l00016"></a><span class="lineno">   16</span>&#160;   <span class="keywordtype">private</span></div>
 <div class="line"><a name="l00017"></a><span class="lineno">   17</span>&#160;<span class="comment">!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++</span></div>
 <div class="line"><a name="l00018"></a><span class="lineno">   18</span>&#160; </div>
-<div class="line"><a name="l00019"></a><span class="lineno">   19</span>&#160;  <span class="keyword">type</span>, <span class="keyword">abstract</span> :: sll_c_time_splitting</div>
-<div class="line"><a name="l00020"></a><span class="lineno">   20</span>&#160;     sll_real64 :: current_time = 0.0_f64</div>
-<div class="line"><a name="l00021"></a><span class="lineno">   21</span>&#160;   <span class="keyword">contains</span> </div>
-<div class="line"><a name="l00022"></a><span class="lineno">   22</span>&#160;     <span class="keywordtype">procedure</span>(time_splitting_operator), pass(this), <span class="keywordtype">deferred</span> :: operator1</div>
-<div class="line"><a name="l00023"></a><span class="lineno">   23</span>&#160;     <span class="keywordtype">procedure</span>(time_splitting_operator), pass(this), <span class="keywordtype">deferred</span> :: operator2</div>
-<div class="line"><a name="l00024"></a><span class="lineno">   24</span>&#160;     <span class="keywordtype">procedure</span>, pass(this) :: lie_splitting</div>
-<div class="line"><a name="l00025"></a><span class="lineno">   25</span>&#160;     <span class="keywordtype">procedure</span>, pass(this) :: strang_splitting</div>
-<div class="line"><a name="l00026"></a><span class="lineno">   26</span>&#160;  <span class="keyword">end type </span>sll_c_time_splitting</div>
+<div class="line"><a name="l00019"></a><span class="lineno">   19</span>&#160;   <span class="keyword">type</span>, <span class="keyword">abstract</span> :: sll_c_time_splitting</div>
+<div class="line"><a name="l00020"></a><span class="lineno">   20</span>&#160;      sll_real64 :: current_time = 0.0_f64</div>
+<div class="line"><a name="l00021"></a><span class="lineno">   21</span>&#160;   <span class="keyword">contains</span></div>
+<div class="line"><a name="l00022"></a><span class="lineno">   22</span>&#160;      <span class="keywordtype">procedure</span>(time_splitting_operator), pass(this), <span class="keywordtype">deferred</span> :: operator1</div>
+<div class="line"><a name="l00023"></a><span class="lineno">   23</span>&#160;      <span class="keywordtype">procedure</span>(time_splitting_operator), pass(this), <span class="keywordtype">deferred</span> :: operator2</div>
+<div class="line"><a name="l00024"></a><span class="lineno">   24</span>&#160;      <span class="keywordtype">procedure</span>, pass(this) :: lie_splitting</div>
+<div class="line"><a name="l00025"></a><span class="lineno">   25</span>&#160;      <span class="keywordtype">procedure</span>, pass(this) :: strang_splitting</div>
+<div class="line"><a name="l00026"></a><span class="lineno">   26</span>&#160;   <span class="keyword">end type </span>sll_c_time_splitting</div>
 <div class="line"><a name="l00027"></a><span class="lineno">   27</span>&#160; </div>
-<div class="line"><a name="l00028"></a><span class="lineno">   28</span>&#160;  abstract <span class="keyword">interface</span></div>
-<div class="line"><a name="l00029"></a><span class="lineno">   29</span>&#160;     <span class="keyword">subroutine </span>time_splitting_operator (this, dt)</div>
-<div class="line"><a name="l00030"></a><span class="lineno">   30</span>&#160;       <span class="keywordtype">use </span><a class="code" href="namespacesll__m__working__precision.html">sll_m_working_precision</a></div>
-<div class="line"><a name="l00031"></a><span class="lineno">   31</span>&#160;       <span class="keywordtype">import </span>sll_c_time_splitting</div>
-<div class="line"><a name="l00032"></a><span class="lineno">   32</span>&#160;       <span class="keywordtype">class</span>(sll_c_time_splitting)   :: this</div>
-<div class="line"><a name="l00033"></a><span class="lineno">   33</span>&#160;       sll_real64, <span class="keywordtype">intent(in)</span>  :: dt</div>
-<div class="line"><a name="l00034"></a><span class="lineno">   34</span>&#160;     <span class="keyword">end subroutine </span>time_splitting_operator</div>
-<div class="line"><a name="l00035"></a><span class="lineno">   35</span>&#160;  <span class="keyword">end interface</span></div>
+<div class="line"><a name="l00028"></a><span class="lineno">   28</span>&#160;   abstract <span class="keyword">interface</span></div>
+<div class="line"><a name="l00029"></a><span class="lineno">   29</span>&#160;      <span class="keyword">subroutine </span>time_splitting_operator(this, dt)</div>
+<div class="line"><a name="l00030"></a><span class="lineno">   30</span>&#160;         <span class="keywordtype">use </span><a class="code" href="namespacesll__m__working__precision.html">sll_m_working_precision</a></div>
+<div class="line"><a name="l00031"></a><span class="lineno">   31</span>&#160;         <span class="keywordtype">import </span>sll_c_time_splitting</div>
+<div class="line"><a name="l00032"></a><span class="lineno">   32</span>&#160;         <span class="keywordtype">class</span>(sll_c_time_splitting)   :: this</div>
+<div class="line"><a name="l00033"></a><span class="lineno">   33</span>&#160;         sll_real64, <span class="keywordtype">intent(in)</span>  :: dt</div>
+<div class="line"><a name="l00034"></a><span class="lineno">   34</span>&#160;      <span class="keyword">end subroutine </span>time_splitting_operator</div>
+<div class="line"><a name="l00035"></a><span class="lineno">   35</span>&#160;   <span class="keyword">end interface</span></div>
 <div class="line"><a name="l00036"></a><span class="lineno">   36</span>&#160; </div>
-<div class="line"><a name="l00037"></a><span class="lineno">   37</span>&#160;  <span class="keyword">contains</span></div>
-<div class="line"><a name="l00042"></a><span class="lineno">   42</span>&#160;    <span class="keyword">subroutine </span>lie_splitting(this, dt, number_steps)</div>
+<div class="line"><a name="l00037"></a><span class="lineno">   37</span>&#160;<span class="keyword">contains</span></div>
+<div class="line"><a name="l00042"></a><span class="lineno">   42</span>&#160;   <span class="keyword">subroutine </span>lie_splitting(this, dt, number_steps)</div>
 <div class="line"><a name="l00043"></a><span class="lineno">   43</span>&#160;      <span class="keywordtype">class</span>(sll_c_time_splitting)   :: this</div>
 <div class="line"><a name="l00044"></a><span class="lineno">   44</span>&#160;      sll_real64, <span class="keywordtype">intent(in)</span>  :: dt</div>
 <div class="line"><a name="l00045"></a><span class="lineno">   45</span>&#160;      sll_int32, <span class="keywordtype">intent(in)</span>   :: number_steps</div>
 <div class="line"><a name="l00046"></a><span class="lineno">   46</span>&#160;      <span class="comment">! local variables</span></div>
 <div class="line"><a name="l00047"></a><span class="lineno">   47</span>&#160;      sll_int32  :: i</div>
-<div class="line"><a name="l00048"></a><span class="lineno">   48</span>&#160;      </div>
+<div class="line"><a name="l00048"></a><span class="lineno">   48</span>&#160; </div>
 <div class="line"><a name="l00049"></a><span class="lineno">   49</span>&#160;      <span class="keywordflow">do</span> i = 1, number_steps</div>
 <div class="line"><a name="l00050"></a><span class="lineno">   50</span>&#160;         <span class="keyword">call </span>this%operator1(dt)</div>
 <div class="line"><a name="l00051"></a><span class="lineno">   51</span>&#160;         <span class="keyword">call </span>this%operator2(dt)</div>
 <div class="line"><a name="l00052"></a><span class="lineno">   52</span>&#160;         this%current_time = this%current_time + dt</div>
 <div class="line"><a name="l00053"></a><span class="lineno">   53</span>&#160;<span class="keywordflow">      end do</span></div>
-<div class="line"><a name="l00054"></a><span class="lineno">   54</span>&#160;    <span class="keyword">end subroutine </span>lie_splitting</div>
+<div class="line"><a name="l00054"></a><span class="lineno">   54</span>&#160;   <span class="keyword">end subroutine </span>lie_splitting</div>
 <div class="line"><a name="l00055"></a><span class="lineno">   55</span>&#160; </div>
-<div class="line"><a name="l00060"></a><span class="lineno">   60</span>&#160;    <span class="keyword">subroutine </span>strang_splitting(this, dt, number_steps)</div>
+<div class="line"><a name="l00060"></a><span class="lineno">   60</span>&#160;   <span class="keyword">subroutine </span>strang_splitting(this, dt, number_steps)</div>
 <div class="line"><a name="l00061"></a><span class="lineno">   61</span>&#160;      <span class="keywordtype">class</span>(sll_c_time_splitting)    :: this</div>
 <div class="line"><a name="l00062"></a><span class="lineno">   62</span>&#160;      sll_real64, <span class="keywordtype">intent(in)</span>   :: dt</div>
 <div class="line"><a name="l00063"></a><span class="lineno">   63</span>&#160;      sll_int32, <span class="keywordtype">intent(in)</span>   :: number_steps</div>
 <div class="line"><a name="l00064"></a><span class="lineno">   64</span>&#160;      <span class="comment">! local variables</span></div>
 <div class="line"><a name="l00065"></a><span class="lineno">   65</span>&#160;      sll_int32  :: i</div>
-<div class="line"><a name="l00066"></a><span class="lineno">   66</span>&#160;     </div>
+<div class="line"><a name="l00066"></a><span class="lineno">   66</span>&#160; </div>
 <div class="line"><a name="l00067"></a><span class="lineno">   67</span>&#160;      <span class="keyword">call </span>this%operator1(0.5_f64*dt)</div>
 <div class="line"><a name="l00068"></a><span class="lineno">   68</span>&#160;      <span class="keywordflow">do</span> i = 1, number_steps - 2</div>
 <div class="line"><a name="l00069"></a><span class="lineno">   69</span>&#160;         <span class="keyword">call </span>this%operator2(dt)</div>
@@ -144,7 +144,7 @@ $(function() {
 <div class="line"><a name="l00074"></a><span class="lineno">   74</span>&#160;<span class="keywordflow">      end do</span></div>
 <div class="line"><a name="l00075"></a><span class="lineno">   75</span>&#160;      <span class="keyword">call </span>this%operator2(dt)</div>
 <div class="line"><a name="l00076"></a><span class="lineno">   76</span>&#160;      <span class="keyword">call </span>this%operator1(0.5_f64*dt)</div>
-<div class="line"><a name="l00077"></a><span class="lineno">   77</span>&#160;    <span class="keyword">end subroutine </span>strang_splitting</div>
+<div class="line"><a name="l00077"></a><span class="lineno">   77</span>&#160;   <span class="keyword">end subroutine </span>strang_splitting</div>
 <div class="line"><a name="l00078"></a><span class="lineno">   78</span>&#160; </div>
 <div class="line"><a name="l00079"></a><span class="lineno">   79</span>&#160;<span class="keyword">end module </span>sll_m_time_splitting</div>
 <div class="line"><a name="l00080"></a><span class="lineno">   80</span>&#160; </div>
@@ -157,7 +157,7 @@ $(function() {
 <div id="url"></div>
 <div align=left><a href="https://github.com/selalib/selalib/issues/new"><small>&nbsp; &nbsp; Report Typos and Errors</small></a></div>
 <address class="footer"><small>
-Generated on Wed Mar 10 2021 09:25:54 for Semi-Lagrangian Library by &#160;<a href="http://www.doxygen.org/index.html">
+Generated on Wed Mar 10 2021 09:42:20 for Semi-Lagrangian Library by &#160;<a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/>
 </a> 1.8.17
 </small></address>

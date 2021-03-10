@@ -116,10 +116,10 @@ Functions/Subroutines</h2></td></tr>
 <tr class="separator:acb6b052444c465a605b1fc56171fbe5e"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a9d35269cf7ccc666f5e045966a8a9d36"><td class="memItemLeft" align="right" valign="top">dimension(size(rhs))&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacesll__m__pif__fieldsolver.html#a9d35269cf7ccc666f5e045966a8a9d36">sll_pif_fieldsolver_solve_quasineutral</a> (this, rhs)</td></tr>
 <tr class="separator:a9d35269cf7ccc666f5e045966a8a9d36"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:af1715ae660d04728eda4f441e8cfd9ff"><td class="memItemLeft" align="right" valign="top">real(kind=f64) function, dimension(size(pos, 1), size(pos, 2))&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacesll__m__pif__fieldsolver.html#af1715ae660d04728eda4f441e8cfd9ff">sll_pif_fieldsolver_eval_gradient</a> (this, pos, fouriermodes)</td></tr>
-<tr class="separator:af1715ae660d04728eda4f441e8cfd9ff"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a35b73a6e50450a529cc1b09dbeb0ea03"><td class="memItemLeft" align="right" valign="top">real(kind=f64) function, dimension(size(pos, 2))&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacesll__m__pif__fieldsolver.html#a35b73a6e50450a529cc1b09dbeb0ea03">sll_pif_fieldsolver_eval_solution</a> (this, pos, fouriermodes)</td></tr>
-<tr class="separator:a35b73a6e50450a529cc1b09dbeb0ea03"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a8becc8a285f239141a27a27454d511e0"><td class="memItemLeft" align="right" valign="top">real(kind=f64) function, dimension(size(pos, 1), size(pos, 2))&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacesll__m__pif__fieldsolver.html#a8becc8a285f239141a27a27454d511e0">sll_pif_fieldsolver_eval_gradient</a> (this, pos, fouriermodes)</td></tr>
+<tr class="separator:a8becc8a285f239141a27a27454d511e0"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a5aad90cffdf8b8be41153af4ee7f9ef3"><td class="memItemLeft" align="right" valign="top">real(kind=f64) function, dimension(size(pos, 2))&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacesll__m__pif__fieldsolver.html#a5aad90cffdf8b8be41153af4ee7f9ef3">sll_pif_fieldsolver_eval_solution</a> (this, pos, fouriermodes)</td></tr>
+<tr class="separator:a5aad90cffdf8b8be41153af4ee7f9ef3"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a5a7224a096d124c9cfd139099210924f"><td class="memItemLeft" align="right" valign="top">allocatable&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacesll__m__pif__fieldsolver.html#a5a7224a096d124c9cfd139099210924f">get_fourier_modes_chunk</a> (this, particle, chunksize)</td></tr>
 <tr class="separator:a5a7224a096d124c9cfd139099210924f"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a82a909c8f5df5288752e185c2c5f9753"><td class="memItemLeft" align="right" valign="top">subroutine&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacesll__m__pif__fieldsolver.html#a82a909c8f5df5288752e185c2c5f9753">calc_fourier_modes</a> (this, particle, fouriermodes)</td></tr>
@@ -130,16 +130,16 @@ Functions/Subroutines</h2></td></tr>
 <tr class="separator:a31fef9d4562a70682bcc48d451e332eb"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a7b76a527400adea99c20acb86733d881"><td class="memItemLeft" align="right" valign="top">allocatable&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacesll__m__pif__fieldsolver.html#a7b76a527400adea99c20acb86733d881">get_fourier_modes</a> (this, particle)</td></tr>
 <tr class="separator:a7b76a527400adea99c20acb86733d881"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a6f88175ba66936b422fca3a5b72f9f24"><td class="memItemLeft" align="right" valign="top">recursive integer(kind=i32) function, dimension(:,:), allocatable&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacesll__m__pif__fieldsolver.html#a6f88175ba66936b422fca3a5b72f9f24">generate_exponents</a> (min_exponents, max_exponents)</td></tr>
-<tr class="separator:a6f88175ba66936b422fca3a5b72f9f24"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a2f8460b95ec0774db1be0e5e1853a8fb"><td class="memItemLeft" align="right" valign="top">dimension(size(basis, 1), size(basis, 2))&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacesll__m__pif__fieldsolver.html#a2f8460b95ec0774db1be0e5e1853a8fb">array_exponent_comp64</a> (basis, exponent)</td></tr>
-<tr class="separator:a2f8460b95ec0774db1be0e5e1853a8fb"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a660f5aefdba1be6a5dbfa18c14aaf28e"><td class="memItemLeft" align="right" valign="top">real(kind=f64) function, dimension(size(matrix, 1), size(matrix, 2)), public&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacesll__m__pif__fieldsolver.html#a660f5aefdba1be6a5dbfa18c14aaf28e">sll_f_diag_dot_matrix_real64</a> (diagonal, matrix)</td></tr>
-<tr class="separator:a660f5aefdba1be6a5dbfa18c14aaf28e"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ab3876545b2fb6d6fb1f5a887cb603997"><td class="memItemLeft" align="right" valign="top">recursive integer(kind=i32) function, dimension(:, :), allocatable&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacesll__m__pif__fieldsolver.html#ab3876545b2fb6d6fb1f5a887cb603997">generate_exponents</a> (min_exponents, max_exponents)</td></tr>
+<tr class="separator:ab3876545b2fb6d6fb1f5a887cb603997"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a179c5f4c57366c2a977c6c62f1df69f9"><td class="memItemLeft" align="right" valign="top">dimension(size(basis, 1), size(basis, 2))&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacesll__m__pif__fieldsolver.html#a179c5f4c57366c2a977c6c62f1df69f9">array_exponent_comp64</a> (basis, exponent)</td></tr>
+<tr class="separator:a179c5f4c57366c2a977c6c62f1df69f9"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ad2f4dad87b6ef2d3cf91301e2d9e4cc2"><td class="memItemLeft" align="right" valign="top">real(kind=f64) function, dimension(size(matrix, 1), size(matrix, 2)), public&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacesll__m__pif__fieldsolver.html#ad2f4dad87b6ef2d3cf91301e2d9e4cc2">sll_f_diag_dot_matrix_real64</a> (diagonal, matrix)</td></tr>
+<tr class="separator:ad2f4dad87b6ef2d3cf91301e2d9e4cc2"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <h2 class="groupheader">Function/Subroutine Documentation</h2>
-<a id="a2f8460b95ec0774db1be0e5e1853a8fb"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a2f8460b95ec0774db1be0e5e1853a8fb">&#9670;&nbsp;</a></span>array_exponent_comp64()</h2>
+<a id="a179c5f4c57366c2a977c6c62f1df69f9"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a179c5f4c57366c2a977c6c62f1df69f9">&#9670;&nbsp;</a></span>array_exponent_comp64()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -148,7 +148,7 @@ Functions/Subroutines</h2></td></tr>
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname">dimension(size(basis,1),size(basis,2)) sll_m_pif_fieldsolver::array_exponent_comp64 </td>
+          <td class="memname">dimension(size(basis, 1), size(basis, 2)) sll_m_pif_fieldsolver::array_exponent_comp64 </td>
           <td>(</td>
           <td class="paramtype">intent(in)&#160;</td>
           <td class="paramname"><em>basis</em>, </td>
@@ -172,11 +172,11 @@ Functions/Subroutines</h2></td></tr>
 </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="sll__m__pif__fieldsolver_8_f90_source.html#l00508">508</a> of file <a class="el" href="sll__m__pif__fieldsolver_8_f90_source.html">sll_m_pif_fieldsolver.F90</a>.</p>
+<p class="definition">Definition at line <a class="el" href="sll__m__pif__fieldsolver_8_f90_source.html#l00468">468</a> of file <a class="el" href="sll__m__pif__fieldsolver_8_f90_source.html">sll_m_pif_fieldsolver.F90</a>.</p>
 <div class="dynheader">
 Here is the caller graph for this function:</div>
 <div class="dyncontent">
-<div class="center"><iframe scrolling="no" frameborder="0" src="namespacesll__m__pif__fieldsolver_a2f8460b95ec0774db1be0e5e1853a8fb_icgraph.svg" width="399" height="38"><p><b>This browser is not able to show SVG: try Firefox, Chrome, Safari, or Opera instead.</b></p></iframe>
+<div class="center"><iframe scrolling="no" frameborder="0" src="namespacesll__m__pif__fieldsolver_a179c5f4c57366c2a977c6c62f1df69f9_icgraph.svg" width="399" height="38"><p><b>This browser is not able to show SVG: try Firefox, Chrome, Safari, or Opera instead.</b></p></iframe>
 </div>
 </div>
 
@@ -200,7 +200,7 @@ Here is the caller graph for this function:</div>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">real(kind=f64), dimension(:,:), intent(in)&#160;</td>
+          <td class="paramtype">real(kind=f64), dimension(:, :), intent(in)&#160;</td>
           <td class="paramname"><em>particle</em>, </td>
         </tr>
         <tr>
@@ -222,7 +222,7 @@ Here is the caller graph for this function:</div>
 </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="sll__m__pif__fieldsolver_8_f90_source.html#l00409">409</a> of file <a class="el" href="sll__m__pif__fieldsolver_8_f90_source.html">sll_m_pif_fieldsolver.F90</a>.</p>
+<p class="definition">Definition at line <a class="el" href="sll__m__pif__fieldsolver_8_f90_source.html#l00375">375</a> of file <a class="el" href="sll__m__pif__fieldsolver_8_f90_source.html">sll_m_pif_fieldsolver.F90</a>.</p>
 
 </div>
 </div>
@@ -244,7 +244,7 @@ Here is the caller graph for this function:</div>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">real(kind=f64), dimension(:,:), intent(in)&#160;</td>
+          <td class="paramtype">real(kind=f64), dimension(:, :), intent(in)&#160;</td>
           <td class="paramname"><em>particle</em>, </td>
         </tr>
         <tr>
@@ -266,7 +266,7 @@ Here is the caller graph for this function:</div>
 </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="sll__m__pif__fieldsolver_8_f90_source.html#l00202">202</a> of file <a class="el" href="sll__m__pif__fieldsolver_8_f90_source.html">sll_m_pif_fieldsolver.F90</a>.</p>
+<p class="definition">Definition at line <a class="el" href="sll__m__pif__fieldsolver_8_f90_source.html#l00182">182</a> of file <a class="el" href="sll__m__pif__fieldsolver_8_f90_source.html">sll_m_pif_fieldsolver.F90</a>.</p>
 <div class="dynheader">
 Here is the call graph for this function:</div>
 <div class="dyncontent">
@@ -294,7 +294,7 @@ Here is the call graph for this function:</div>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">real(kind=f64), dimension(:,:), intent(in)&#160;</td>
+          <td class="paramtype">real(kind=f64), dimension(:, :), intent(in)&#160;</td>
           <td class="paramname"><em>particle</em>, </td>
         </tr>
         <tr>
@@ -322,12 +322,12 @@ Here is the call graph for this function:</div>
 </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="sll__m__pif__fieldsolver_8_f90_source.html#l00179">179</a> of file <a class="el" href="sll__m__pif__fieldsolver_8_f90_source.html">sll_m_pif_fieldsolver.F90</a>.</p>
+<p class="definition">Definition at line <a class="el" href="sll__m__pif__fieldsolver_8_f90_source.html#l00164">164</a> of file <a class="el" href="sll__m__pif__fieldsolver_8_f90_source.html">sll_m_pif_fieldsolver.F90</a>.</p>
 
 </div>
 </div>
-<a id="a6f88175ba66936b422fca3a5b72f9f24"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a6f88175ba66936b422fca3a5b72f9f24">&#9670;&nbsp;</a></span>generate_exponents()</h2>
+<a id="ab3876545b2fb6d6fb1f5a887cb603997"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ab3876545b2fb6d6fb1f5a887cb603997">&#9670;&nbsp;</a></span>generate_exponents()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -336,7 +336,7 @@ Here is the call graph for this function:</div>
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname">recursive integer(kind=i32) function, dimension(:,:), allocatable sll_m_pif_fieldsolver::generate_exponents </td>
+          <td class="memname">recursive integer(kind=i32) function, dimension(:, :), allocatable sll_m_pif_fieldsolver::generate_exponents </td>
           <td>(</td>
           <td class="paramtype">integer(kind=i32), dimension(:), intent(in)&#160;</td>
           <td class="paramname"><em>min_exponents</em>, </td>
@@ -360,11 +360,11 @@ Here is the call graph for this function:</div>
 </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="sll__m__pif__fieldsolver_8_f90_source.html#l00464">464</a> of file <a class="el" href="sll__m__pif__fieldsolver_8_f90_source.html">sll_m_pif_fieldsolver.F90</a>.</p>
+<p class="definition">Definition at line <a class="el" href="sll__m__pif__fieldsolver_8_f90_source.html#l00427">427</a> of file <a class="el" href="sll__m__pif__fieldsolver_8_f90_source.html">sll_m_pif_fieldsolver.F90</a>.</p>
 <div class="dynheader">
 Here is the caller graph for this function:</div>
 <div class="dyncontent">
-<div class="center"><iframe scrolling="no" frameborder="0" src="namespacesll__m__pif__fieldsolver_a6f88175ba66936b422fca3a5b72f9f24_icgraph.svg" width="378" height="38"><p><b>This browser is not able to show SVG: try Firefox, Chrome, Safari, or Opera instead.</b></p></iframe>
+<div class="center"><iframe scrolling="no" frameborder="0" src="namespacesll__m__pif__fieldsolver_ab3876545b2fb6d6fb1f5a887cb603997_icgraph.svg" width="378" height="38"><p><b>This browser is not able to show SVG: try Firefox, Chrome, Safari, or Opera instead.</b></p></iframe>
 </div>
 </div>
 
@@ -388,7 +388,7 @@ Here is the caller graph for this function:</div>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">real(kind=f64), dimension(:,:), intent(in)&#160;</td>
+          <td class="paramtype">real(kind=f64), dimension(:, :), intent(in)&#160;</td>
           <td class="paramname"><em>particle</em>&#160;</td>
         </tr>
         <tr>
@@ -404,7 +404,7 @@ Here is the caller graph for this function:</div>
 </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="sll__m__pif__fieldsolver_8_f90_source.html#l00453">453</a> of file <a class="el" href="sll__m__pif__fieldsolver_8_f90_source.html">sll_m_pif_fieldsolver.F90</a>.</p>
+<p class="definition">Definition at line <a class="el" href="sll__m__pif__fieldsolver_8_f90_source.html#l00417">417</a> of file <a class="el" href="sll__m__pif__fieldsolver_8_f90_source.html">sll_m_pif_fieldsolver.F90</a>.</p>
 
 </div>
 </div>
@@ -426,7 +426,7 @@ Here is the caller graph for this function:</div>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">real(kind=f64), dimension(:,:), intent(in)&#160;</td>
+          <td class="paramtype">real(kind=f64), dimension(:, :), intent(in)&#160;</td>
           <td class="paramname"><em>particle</em>&#160;</td>
         </tr>
         <tr>
@@ -442,7 +442,7 @@ Here is the caller graph for this function:</div>
 </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="sll__m__pif__fieldsolver_8_f90_source.html#l00223">223</a> of file <a class="el" href="sll__m__pif__fieldsolver_8_f90_source.html">sll_m_pif_fieldsolver.F90</a>.</p>
+<p class="definition">Definition at line <a class="el" href="sll__m__pif__fieldsolver_8_f90_source.html#l00202">202</a> of file <a class="el" href="sll__m__pif__fieldsolver_8_f90_source.html">sll_m_pif_fieldsolver.F90</a>.</p>
 
 </div>
 </div>
@@ -464,7 +464,7 @@ Here is the caller graph for this function:</div>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">real(kind=f64), dimension(:,:), intent(in)&#160;</td>
+          <td class="paramtype">real(kind=f64), dimension(:, :), intent(in)&#160;</td>
           <td class="paramname"><em>particle</em>, </td>
         </tr>
         <tr>
@@ -486,7 +486,7 @@ Here is the caller graph for this function:</div>
 </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="sll__m__pif__fieldsolver_8_f90_source.html#l00166">166</a> of file <a class="el" href="sll__m__pif__fieldsolver_8_f90_source.html">sll_m_pif_fieldsolver.F90</a>.</p>
+<p class="definition">Definition at line <a class="el" href="sll__m__pif__fieldsolver_8_f90_source.html#l00152">152</a> of file <a class="el" href="sll__m__pif__fieldsolver_8_f90_source.html">sll_m_pif_fieldsolver.F90</a>.</p>
 
 </div>
 </div>
@@ -508,7 +508,7 @@ Here is the caller graph for this function:</div>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">real(kind=f64), dimension(:,:), intent(in)&#160;</td>
+          <td class="paramtype">real(kind=f64), dimension(:, :), intent(in)&#160;</td>
           <td class="paramname"><em>particle</em>, </td>
         </tr>
         <tr>
@@ -530,7 +530,7 @@ Here is the caller graph for this function:</div>
 </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="sll__m__pif__fieldsolver_8_f90_source.html#l00388">388</a> of file <a class="el" href="sll__m__pif__fieldsolver_8_f90_source.html">sll_m_pif_fieldsolver.F90</a>.</p>
+<p class="definition">Definition at line <a class="el" href="sll__m__pif__fieldsolver_8_f90_source.html#l00356">356</a> of file <a class="el" href="sll__m__pif__fieldsolver_8_f90_source.html">sll_m_pif_fieldsolver.F90</a>.</p>
 
 </div>
 </div>
@@ -558,7 +558,7 @@ Here is the caller graph for this function:</div>
 </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="sll__m__pif__fieldsolver_8_f90_source.html#l00421">421</a> of file <a class="el" href="sll__m__pif__fieldsolver_8_f90_source.html">sll_m_pif_fieldsolver.F90</a>.</p>
+<p class="definition">Definition at line <a class="el" href="sll__m__pif__fieldsolver_8_f90_source.html#l00387">387</a> of file <a class="el" href="sll__m__pif__fieldsolver_8_f90_source.html">sll_m_pif_fieldsolver.F90</a>.</p>
 
 </div>
 </div>
@@ -586,7 +586,7 @@ Here is the caller graph for this function:</div>
 </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="sll__m__pif__fieldsolver_8_f90_source.html#l00437">437</a> of file <a class="el" href="sll__m__pif__fieldsolver_8_f90_source.html">sll_m_pif_fieldsolver.F90</a>.</p>
+<p class="definition">Definition at line <a class="el" href="sll__m__pif__fieldsolver_8_f90_source.html#l00402">402</a> of file <a class="el" href="sll__m__pif__fieldsolver_8_f90_source.html">sll_m_pif_fieldsolver.F90</a>.</p>
 
 </div>
 </div>
@@ -626,18 +626,18 @@ Here is the caller graph for this function:</div>
 
 <p>Returns the l2norm for a coefficient vector of a solution. </p>
 
-<p class="definition">Definition at line <a class="el" href="sll__m__pif__fieldsolver_8_f90_source.html#l00075">75</a> of file <a class="el" href="sll__m__pif__fieldsolver_8_f90_source.html">sll_m_pif_fieldsolver.F90</a>.</p>
+<p class="definition">Definition at line <a class="el" href="sll__m__pif__fieldsolver_8_f90_source.html#l00072">72</a> of file <a class="el" href="sll__m__pif__fieldsolver_8_f90_source.html">sll_m_pif_fieldsolver.F90</a>.</p>
 
 </div>
 </div>
-<a id="a660f5aefdba1be6a5dbfa18c14aaf28e"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a660f5aefdba1be6a5dbfa18c14aaf28e">&#9670;&nbsp;</a></span>sll_f_diag_dot_matrix_real64()</h2>
+<a id="ad2f4dad87b6ef2d3cf91301e2d9e4cc2"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ad2f4dad87b6ef2d3cf91301e2d9e4cc2">&#9670;&nbsp;</a></span>sll_f_diag_dot_matrix_real64()</h2>
 
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">real(kind=f64) function, dimension(size(matrix,1),size(matrix,2)), public sll_m_pif_fieldsolver::sll_f_diag_dot_matrix_real64 </td>
+          <td class="memname">real(kind=f64) function, dimension(size(matrix, 1), size(matrix, 2)), public sll_m_pif_fieldsolver::sll_f_diag_dot_matrix_real64 </td>
           <td>(</td>
           <td class="paramtype">real(kind=f64), dimension(:), intent(in)&#160;</td>
           <td class="paramname"><em>diagonal</em>, </td>
@@ -645,7 +645,7 @@ Here is the caller graph for this function:</div>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">real(kind=f64), dimension(:,:), intent(in)&#160;</td>
+          <td class="paramtype">real(kind=f64), dimension(:, :), intent(in)&#160;</td>
           <td class="paramname"><em>matrix</em>&#160;</td>
         </tr>
         <tr>
@@ -656,18 +656,18 @@ Here is the caller graph for this function:</div>
       </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="sll__m__pif__fieldsolver_8_f90_source.html#l00527">527</a> of file <a class="el" href="sll__m__pif__fieldsolver_8_f90_source.html">sll_m_pif_fieldsolver.F90</a>.</p>
+<p class="definition">Definition at line <a class="el" href="sll__m__pif__fieldsolver_8_f90_source.html#l00485">485</a> of file <a class="el" href="sll__m__pif__fieldsolver_8_f90_source.html">sll_m_pif_fieldsolver.F90</a>.</p>
 <div class="dynheader">
 Here is the caller graph for this function:</div>
 <div class="dyncontent">
-<div class="center"><iframe scrolling="no" frameborder="0" src="namespacesll__m__pif__fieldsolver_a660f5aefdba1be6a5dbfa18c14aaf28e_icgraph.svg" width="379" height="52"><p><b>This browser is not able to show SVG: try Firefox, Chrome, Safari, or Opera instead.</b></p></iframe>
+<div class="center"><iframe scrolling="no" frameborder="0" src="namespacesll__m__pif__fieldsolver_ad2f4dad87b6ef2d3cf91301e2d9e4cc2_icgraph.svg" width="379" height="52"><p><b>This browser is not able to show SVG: try Firefox, Chrome, Safari, or Opera instead.</b></p></iframe>
 </div>
 </div>
 
 </div>
 </div>
-<a id="af1715ae660d04728eda4f441e8cfd9ff"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#af1715ae660d04728eda4f441e8cfd9ff">&#9670;&nbsp;</a></span>sll_pif_fieldsolver_eval_gradient()</h2>
+<a id="a8becc8a285f239141a27a27454d511e0"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a8becc8a285f239141a27a27454d511e0">&#9670;&nbsp;</a></span>sll_pif_fieldsolver_eval_gradient()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -676,7 +676,7 @@ Here is the caller graph for this function:</div>
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname">real(kind=f64) function, dimension(size(pos,1),size(pos,2)) sll_m_pif_fieldsolver::sll_pif_fieldsolver_eval_gradient </td>
+          <td class="memname">real(kind=f64) function, dimension(size(pos, 1), size(pos, 2)) sll_m_pif_fieldsolver::sll_pif_fieldsolver_eval_gradient </td>
           <td>(</td>
           <td class="paramtype">class(<a class="el" href="structsll__m__pif__fieldsolver_1_1sll__t__pif__fieldsolver.html">sll_t_pif_fieldsolver</a>), intent(in)&#160;</td>
           <td class="paramname"><em>this</em>, </td>
@@ -684,7 +684,51 @@ Here is the caller graph for this function:</div>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">real(kind=f64), dimension(:,:), intent(in)&#160;</td>
+          <td class="paramtype">real(kind=f64), dimension(:, :), intent(in)&#160;</td>
+          <td class="paramname"><em>pos</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">intent(in)&#160;</td>
+          <td class="paramname"><em>fouriermodes</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">private</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p class="definition">Definition at line <a class="el" href="sll__m__pif__fieldsolver_8_f90_source.html#l00313">313</a> of file <a class="el" href="sll__m__pif__fieldsolver_8_f90_source.html">sll_m_pif_fieldsolver.F90</a>.</p>
+
+</div>
+</div>
+<a id="a5aad90cffdf8b8be41153af4ee7f9ef3"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a5aad90cffdf8b8be41153af4ee7f9ef3">&#9670;&nbsp;</a></span>sll_pif_fieldsolver_eval_solution()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">real(kind=f64) function, dimension(size(pos, 2)) sll_m_pif_fieldsolver::sll_pif_fieldsolver_eval_solution </td>
+          <td>(</td>
+          <td class="paramtype">class(<a class="el" href="structsll__m__pif__fieldsolver_1_1sll__t__pif__fieldsolver.html">sll_t_pif_fieldsolver</a>), intent(in)&#160;</td>
+          <td class="paramname"><em>this</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">real(kind=f64), dimension(:, :), intent(in)&#160;</td>
           <td class="paramname"><em>pos</em>, </td>
         </tr>
         <tr>
@@ -707,50 +751,6 @@ Here is the caller graph for this function:</div>
 </div><div class="memdoc">
 
 <p class="definition">Definition at line <a class="el" href="sll__m__pif__fieldsolver_8_f90_source.html#l00342">342</a> of file <a class="el" href="sll__m__pif__fieldsolver_8_f90_source.html">sll_m_pif_fieldsolver.F90</a>.</p>
-
-</div>
-</div>
-<a id="a35b73a6e50450a529cc1b09dbeb0ea03"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a35b73a6e50450a529cc1b09dbeb0ea03">&#9670;&nbsp;</a></span>sll_pif_fieldsolver_eval_solution()</h2>
-
-<div class="memitem">
-<div class="memproto">
-<table class="mlabels">
-  <tr>
-  <td class="mlabels-left">
-      <table class="memname">
-        <tr>
-          <td class="memname">real(kind=f64) function, dimension(size(pos,2)) sll_m_pif_fieldsolver::sll_pif_fieldsolver_eval_solution </td>
-          <td>(</td>
-          <td class="paramtype">class(<a class="el" href="structsll__m__pif__fieldsolver_1_1sll__t__pif__fieldsolver.html">sll_t_pif_fieldsolver</a>), intent(in)&#160;</td>
-          <td class="paramname"><em>this</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">real(kind=f64), dimension(:,:), intent(in)&#160;</td>
-          <td class="paramname"><em>pos</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">intent(in)&#160;</td>
-          <td class="paramname"><em>fouriermodes</em>&#160;</td>
-        </tr>
-        <tr>
-          <td></td>
-          <td>)</td>
-          <td></td><td></td>
-        </tr>
-      </table>
-  </td>
-  <td class="mlabels-right">
-<span class="mlabels"><span class="mlabel">private</span></span>  </td>
-  </tr>
-</table>
-</div><div class="memdoc">
-
-<p class="definition">Definition at line <a class="el" href="sll__m__pif__fieldsolver_8_f90_source.html#l00372">372</a> of file <a class="el" href="sll__m__pif__fieldsolver_8_f90_source.html">sll_m_pif_fieldsolver.F90</a>.</p>
 
 </div>
 </div>
@@ -778,7 +778,7 @@ Here is the caller graph for this function:</div>
 </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="sll__m__pif__fieldsolver_8_f90_source.html#l00064">64</a> of file <a class="el" href="sll__m__pif__fieldsolver_8_f90_source.html">sll_m_pif_fieldsolver.F90</a>.</p>
+<p class="definition">Definition at line <a class="el" href="sll__m__pif__fieldsolver_8_f90_source.html#l00061">61</a> of file <a class="el" href="sll__m__pif__fieldsolver_8_f90_source.html">sll_m_pif_fieldsolver.F90</a>.</p>
 
 </div>
 </div>
@@ -816,7 +816,7 @@ Here is the caller graph for this function:</div>
 </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="sll__m__pif__fieldsolver_8_f90_source.html#l00089">89</a> of file <a class="el" href="sll__m__pif__fieldsolver_8_f90_source.html">sll_m_pif_fieldsolver.F90</a>.</p>
+<p class="definition">Definition at line <a class="el" href="sll__m__pif__fieldsolver_8_f90_source.html#l00084">84</a> of file <a class="el" href="sll__m__pif__fieldsolver_8_f90_source.html">sll_m_pif_fieldsolver.F90</a>.</p>
 <div class="dynheader">
 Here is the call graph for this function:</div>
 <div class="dyncontent">
@@ -860,7 +860,7 @@ Here is the call graph for this function:</div>
 </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="sll__m__pif__fieldsolver_8_f90_source.html#l00124">124</a> of file <a class="el" href="sll__m__pif__fieldsolver_8_f90_source.html">sll_m_pif_fieldsolver.F90</a>.</p>
+<p class="definition">Definition at line <a class="el" href="sll__m__pif__fieldsolver_8_f90_source.html#l00117">117</a> of file <a class="el" href="sll__m__pif__fieldsolver_8_f90_source.html">sll_m_pif_fieldsolver.F90</a>.</p>
 
 </div>
 </div>
@@ -898,7 +898,7 @@ Here is the call graph for this function:</div>
 </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="sll__m__pif__fieldsolver_8_f90_source.html#l00138">138</a> of file <a class="el" href="sll__m__pif__fieldsolver_8_f90_source.html">sll_m_pif_fieldsolver.F90</a>.</p>
+<p class="definition">Definition at line <a class="el" href="sll__m__pif__fieldsolver_8_f90_source.html#l00129">129</a> of file <a class="el" href="sll__m__pif__fieldsolver_8_f90_source.html">sll_m_pif_fieldsolver.F90</a>.</p>
 
 </div>
 </div>
@@ -936,7 +936,7 @@ Here is the call graph for this function:</div>
 </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="sll__m__pif__fieldsolver_8_f90_source.html#l00304">304</a> of file <a class="el" href="sll__m__pif__fieldsolver_8_f90_source.html">sll_m_pif_fieldsolver.F90</a>.</p>
+<p class="definition">Definition at line <a class="el" href="sll__m__pif__fieldsolver_8_f90_source.html#l00275">275</a> of file <a class="el" href="sll__m__pif__fieldsolver_8_f90_source.html">sll_m_pif_fieldsolver.F90</a>.</p>
 
 </div>
 </div>
@@ -979,7 +979,7 @@ Here is the call graph for this function:</div>
 <li>Phi''= pho </li>
 </ul>
 
-<p class="definition">Definition at line <a class="el" href="sll__m__pif__fieldsolver_8_f90_source.html#l00237">237</a> of file <a class="el" href="sll__m__pif__fieldsolver_8_f90_source.html">sll_m_pif_fieldsolver.F90</a>.</p>
+<p class="definition">Definition at line <a class="el" href="sll__m__pif__fieldsolver_8_f90_source.html#l00216">216</a> of file <a class="el" href="sll__m__pif__fieldsolver_8_f90_source.html">sll_m_pif_fieldsolver.F90</a>.</p>
 
 </div>
 </div>
@@ -1017,7 +1017,7 @@ Here is the call graph for this function:</div>
 </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="sll__m__pif__fieldsolver_8_f90_source.html#l00265">265</a> of file <a class="el" href="sll__m__pif__fieldsolver_8_f90_source.html">sll_m_pif_fieldsolver.F90</a>.</p>
+<p class="definition">Definition at line <a class="el" href="sll__m__pif__fieldsolver_8_f90_source.html#l00241">241</a> of file <a class="el" href="sll__m__pif__fieldsolver_8_f90_source.html">sll_m_pif_fieldsolver.F90</a>.</p>
 
 </div>
 </div>
@@ -1055,7 +1055,7 @@ Here is the call graph for this function:</div>
 </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="sll__m__pif__fieldsolver_8_f90_source.html#l00321">321</a> of file <a class="el" href="sll__m__pif__fieldsolver_8_f90_source.html">sll_m_pif_fieldsolver.F90</a>.</p>
+<p class="definition">Definition at line <a class="el" href="sll__m__pif__fieldsolver_8_f90_source.html#l00292">292</a> of file <a class="el" href="sll__m__pif__fieldsolver_8_f90_source.html">sll_m_pif_fieldsolver.F90</a>.</p>
 
 </div>
 </div>
@@ -1083,7 +1083,7 @@ Here is the call graph for this function:</div>
 </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="sll__m__pif__fieldsolver_8_f90_source.html#l00114">114</a> of file <a class="el" href="sll__m__pif__fieldsolver_8_f90_source.html">sll_m_pif_fieldsolver.F90</a>.</p>
+<p class="definition">Definition at line <a class="el" href="sll__m__pif__fieldsolver_8_f90_source.html#l00108">108</a> of file <a class="el" href="sll__m__pif__fieldsolver_8_f90_source.html">sll_m_pif_fieldsolver.F90</a>.</p>
 
 </div>
 </div>
@@ -1094,7 +1094,7 @@ Here is the call graph for this function:</div>
 <div id="url"></div>
 <div align=left><a href="https://github.com/selalib/selalib/issues/new"><small>&nbsp; &nbsp; Report Typos and Errors</small></a></div>
 <address class="footer"><small>
-Generated on Wed Mar 10 2021 09:25:56 for Semi-Lagrangian Library by &#160;<a href="http://www.doxygen.org/index.html">
+Generated on Wed Mar 10 2021 09:42:21 for Semi-Lagrangian Library by &#160;<a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/>
 </a> 1.8.17
 </small></address>

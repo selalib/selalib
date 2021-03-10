@@ -86,118 +86,118 @@ $(function() {
 <div class="line"><a name="l00011"></a><span class="lineno">   11</span>&#160;<span class="preprocessor">#include &quot;sll_memory.h&quot;</span></div>
 <div class="line"><a name="l00012"></a><span class="lineno">   12</span>&#160;<span class="preprocessor"></span><span class="preprocessor">#include &quot;sll_working_precision.h&quot;</span></div>
 <div class="line"><a name="l00013"></a><span class="lineno">   13</span>&#160;<span class="preprocessor"></span> </div>
-<div class="line"><a name="l00014"></a><span class="lineno">   14</span>&#160;  <span class="keywordtype">use </span><a class="code" href="namespacesll__m__operator__splitting.html">sll_m_operator_splitting</a>, <span class="keywordtype">only</span>: &amp;</div>
-<div class="line"><a name="l00015"></a><span class="lineno">   15</span>&#160;    <a class="code" href="namespacesll__m__operator__splitting.html#a9f1b9c3c2b355bf8fe5b3712f1e9f98c">sll_s_do_split_steps</a>, &amp;</div>
-<div class="line"><a name="l00016"></a><span class="lineno">   16</span>&#160;    <a class="code" href="namespacesll__m__operator__splitting.html#ad7ac7066d769b435f70a6364f9f98b6f">sll_s_operator_splitting_init</a>, &amp;</div>
-<div class="line"><a name="l00017"></a><span class="lineno">   17</span>&#160;    <a class="code" href="structsll__m__operator__splitting_1_1sll__t__operator__splitting.html">sll_t_operator_splitting</a></div>
+<div class="line"><a name="l00014"></a><span class="lineno">   14</span>&#160;   <span class="keywordtype">use </span><a class="code" href="namespacesll__m__operator__splitting.html">sll_m_operator_splitting</a>, <span class="keywordtype">only</span>: &amp;</div>
+<div class="line"><a name="l00015"></a><span class="lineno">   15</span>&#160;      <a class="code" href="namespacesll__m__operator__splitting.html#a9f1b9c3c2b355bf8fe5b3712f1e9f98c">sll_s_do_split_steps</a>, &amp;</div>
+<div class="line"><a name="l00016"></a><span class="lineno">   16</span>&#160;      <a class="code" href="namespacesll__m__operator__splitting.html#ad7ac7066d769b435f70a6364f9f98b6f">sll_s_operator_splitting_init</a>, &amp;</div>
+<div class="line"><a name="l00017"></a><span class="lineno">   17</span>&#160;      <a class="code" href="structsll__m__operator__splitting_1_1sll__t__operator__splitting.html">sll_t_operator_splitting</a></div>
 <div class="line"><a name="l00018"></a><span class="lineno">   18</span>&#160; </div>
-<div class="line"><a name="l00019"></a><span class="lineno">   19</span>&#160;  <span class="keywordtype">implicit none</span></div>
+<div class="line"><a name="l00019"></a><span class="lineno">   19</span>&#160;   <span class="keywordtype">implicit none</span></div>
 <div class="line"><a name="l00020"></a><span class="lineno">   20</span>&#160; </div>
-<div class="line"><a name="l00021"></a><span class="lineno">   21</span>&#160;  <span class="keywordtype">public</span> :: &amp;</div>
-<div class="line"><a name="l00022"></a><span class="lineno">   22</span>&#160;    <a class="code" href="namespacesll__m__linear__pendulum__operators.html#a605162229aac75b9225d219fdc47fa1e">sll_s_check_order</a></div>
+<div class="line"><a name="l00021"></a><span class="lineno">   21</span>&#160;   <span class="keywordtype">public</span> :: &amp;</div>
+<div class="line"><a name="l00022"></a><span class="lineno">   22</span>&#160;      <a class="code" href="namespacesll__m__linear__pendulum__operators.html#a605162229aac75b9225d219fdc47fa1e">sll_s_check_order</a></div>
 <div class="line"><a name="l00023"></a><span class="lineno">   23</span>&#160; </div>
-<div class="line"><a name="l00024"></a><span class="lineno">   24</span>&#160;  <span class="keywordtype">private</span></div>
+<div class="line"><a name="l00024"></a><span class="lineno">   24</span>&#160;   <span class="keywordtype">private</span></div>
 <div class="line"><a name="l00025"></a><span class="lineno">   25</span>&#160;<span class="comment">!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++</span></div>
 <div class="line"><a name="l00026"></a><span class="lineno">   26</span>&#160; </div>
-<div class="line"><a name="l00032"></a><span class="lineno"><a class="line" href="structsll__m__linear__pendulum__operators_1_1linear__pendulum__operators.html">   32</a></span>&#160;  <span class="keyword">type</span>, <span class="keyword">extends</span>(<a class="code" href="structsll__m__operator__splitting_1_1sll__t__operator__splitting.html">sll_t_operator_splitting</a>) :: <a class="code" href="structsll__m__linear__pendulum__operators_1_1linear__pendulum__operators.html">linear_pendulum_operators</a></div>
-<div class="line"><a name="l00033"></a><span class="lineno"><a class="line" href="structsll__m__linear__pendulum__operators_1_1linear__pendulum__operators.html#a5c9186acb55dcb6bfa87beef5055043a">   33</a></span>&#160;     sll_real64 :: x  </div>
-<div class="line"><a name="l00034"></a><span class="lineno"><a class="line" href="structsll__m__linear__pendulum__operators_1_1linear__pendulum__operators.html#ad4d04fe070dad3678da53a6e94a7dde9">   34</a></span>&#160;     sll_real64 :: v  </div>
+<div class="line"><a name="l00032"></a><span class="lineno"><a class="line" href="structsll__m__linear__pendulum__operators_1_1linear__pendulum__operators.html">   32</a></span>&#160;   <span class="keyword">type</span>, <span class="keyword">extends</span>(<a class="code" href="structsll__m__operator__splitting_1_1sll__t__operator__splitting.html">sll_t_operator_splitting</a>) :: <a class="code" href="structsll__m__linear__pendulum__operators_1_1linear__pendulum__operators.html">linear_pendulum_operators</a></div>
+<div class="line"><a name="l00033"></a><span class="lineno"><a class="line" href="structsll__m__linear__pendulum__operators_1_1linear__pendulum__operators.html#a5c9186acb55dcb6bfa87beef5055043a">   33</a></span>&#160;      sll_real64 :: x  </div>
+<div class="line"><a name="l00034"></a><span class="lineno"><a class="line" href="structsll__m__linear__pendulum__operators_1_1linear__pendulum__operators.html#ad4d04fe070dad3678da53a6e94a7dde9">   34</a></span>&#160;      sll_real64 :: v  </div>
 <div class="line"><a name="l00035"></a><span class="lineno">   35</span>&#160;   <span class="keyword">contains</span></div>
-<div class="line"><a name="l00036"></a><span class="lineno"><a class="line" href="structsll__m__linear__pendulum__operators_1_1linear__pendulum__operators.html#a50e2d221182563246ae5c6955764df6e">   36</a></span>&#160;     <span class="keywordtype">procedure</span>, pass(this) :: operatort =&gt; <a class="code" href="namespacesll__m__linear__pendulum__operators.html#a9ab14cfe05f9d8afb56132db98a3a91c">push_x</a> </div>
-<div class="line"><a name="l00037"></a><span class="lineno"><a class="line" href="structsll__m__linear__pendulum__operators_1_1linear__pendulum__operators.html#ab53904ec7e83dde127c2766e2394f078">   37</a></span>&#160;     <span class="keywordtype">procedure</span>, pass(this) :: operatorv =&gt; <a class="code" href="namespacesll__m__linear__pendulum__operators.html#a65bf3fc9982c10c1029d76b72afe57ff">push_v</a> </div>
-<div class="line"><a name="l00038"></a><span class="lineno">   38</span>&#160;  <span class="keyword">end type </span><a class="code" href="structsll__m__linear__pendulum__operators_1_1linear__pendulum__operators.html">linear_pendulum_operators</a></div>
+<div class="line"><a name="l00036"></a><span class="lineno"><a class="line" href="structsll__m__linear__pendulum__operators_1_1linear__pendulum__operators.html#a50e2d221182563246ae5c6955764df6e">   36</a></span>&#160;      <span class="keywordtype">procedure</span>, pass(this) :: operatort =&gt; <a class="code" href="namespacesll__m__linear__pendulum__operators.html#a9ab14cfe05f9d8afb56132db98a3a91c">push_x</a> </div>
+<div class="line"><a name="l00037"></a><span class="lineno"><a class="line" href="structsll__m__linear__pendulum__operators_1_1linear__pendulum__operators.html#ab53904ec7e83dde127c2766e2394f078">   37</a></span>&#160;      <span class="keywordtype">procedure</span>, pass(this) :: operatorv =&gt; <a class="code" href="namespacesll__m__linear__pendulum__operators.html#a65bf3fc9982c10c1029d76b72afe57ff">push_v</a> </div>
+<div class="line"><a name="l00038"></a><span class="lineno">   38</span>&#160;   <span class="keyword">end type </span><a class="code" href="structsll__m__linear__pendulum__operators_1_1linear__pendulum__operators.html">linear_pendulum_operators</a></div>
 <div class="line"><a name="l00039"></a><span class="lineno">   39</span>&#160; </div>
-<div class="line"><a name="l00040"></a><span class="lineno">   40</span>&#160;  <span class="comment">! module global variables</span></div>
-<div class="line"><a name="l00041"></a><span class="lineno"><a class="line" href="namespacesll__m__linear__pendulum__operators.html#a2276a1070863e518563e4de6bc958955">   41</a></span>&#160;  sll_real64, <span class="keywordtype">parameter</span> :: <a class="code" href="namespacesll__m__linear__pendulum__operators.html#a2276a1070863e518563e4de6bc958955">omega</a> = 2.0_f64       </div>
-<div class="line"><a name="l00042"></a><span class="lineno"><a class="line" href="namespacesll__m__linear__pendulum__operators.html#afe5e5ae53588f09ea2e019ec339fce03">   42</a></span>&#160;  sll_real64, <span class="keywordtype">parameter</span> :: <a class="code" href="namespacesll__m__linear__pendulum__operators.html#afe5e5ae53588f09ea2e019ec339fce03">x0</a> = 1.0_f64          </div>
-<div class="line"><a name="l00043"></a><span class="lineno"><a class="line" href="namespacesll__m__linear__pendulum__operators.html#a70a1a11fb5816e323af77e39e914c38a">   43</a></span>&#160;  sll_real64, <span class="keywordtype">parameter</span> :: <a class="code" href="namespacesll__m__linear__pendulum__operators.html#a70a1a11fb5816e323af77e39e914c38a">v0</a> = 2.0_f64          </div>
-<div class="line"><a name="l00044"></a><span class="lineno"><a class="line" href="namespacesll__m__linear__pendulum__operators.html#a652f637ac873ffa1e9d2c01d2c6ddb46">   44</a></span>&#160;  sll_real64, <span class="keywordtype">parameter</span> :: <a class="code" href="namespacesll__m__linear__pendulum__operators.html#a652f637ac873ffa1e9d2c01d2c6ddb46">t_final</a> = 1.0_f64     </div>
+<div class="line"><a name="l00040"></a><span class="lineno">   40</span>&#160;   <span class="comment">! module global variables</span></div>
+<div class="line"><a name="l00041"></a><span class="lineno"><a class="line" href="namespacesll__m__linear__pendulum__operators.html#a2276a1070863e518563e4de6bc958955">   41</a></span>&#160;   sll_real64, <span class="keywordtype">parameter</span> :: <a class="code" href="namespacesll__m__linear__pendulum__operators.html#a2276a1070863e518563e4de6bc958955">omega</a> = 2.0_f64       </div>
+<div class="line"><a name="l00042"></a><span class="lineno"><a class="line" href="namespacesll__m__linear__pendulum__operators.html#afe5e5ae53588f09ea2e019ec339fce03">   42</a></span>&#160;   sll_real64, <span class="keywordtype">parameter</span> :: <a class="code" href="namespacesll__m__linear__pendulum__operators.html#afe5e5ae53588f09ea2e019ec339fce03">x0</a> = 1.0_f64          </div>
+<div class="line"><a name="l00043"></a><span class="lineno"><a class="line" href="namespacesll__m__linear__pendulum__operators.html#a70a1a11fb5816e323af77e39e914c38a">   43</a></span>&#160;   sll_real64, <span class="keywordtype">parameter</span> :: <a class="code" href="namespacesll__m__linear__pendulum__operators.html#a70a1a11fb5816e323af77e39e914c38a">v0</a> = 2.0_f64          </div>
+<div class="line"><a name="l00044"></a><span class="lineno"><a class="line" href="namespacesll__m__linear__pendulum__operators.html#a652f637ac873ffa1e9d2c01d2c6ddb46">   44</a></span>&#160;   sll_real64, <span class="keywordtype">parameter</span> :: <a class="code" href="namespacesll__m__linear__pendulum__operators.html#a652f637ac873ffa1e9d2c01d2c6ddb46">t_final</a> = 1.0_f64     </div>
 <div class="line"><a name="l00045"></a><span class="lineno">   45</span>&#160;<span class="keyword">contains</span></div>
-<div class="line"><a name="l00046"></a><span class="lineno">   46</span>&#160;  </div>
-<div class="line"><a name="l00048"></a><span class="lineno">   48</span>&#160;  <span class="keyword">subroutine </span><a class="code" href="namespacesll__m__linear__pendulum__operators.html#a9ab14cfe05f9d8afb56132db98a3a91c">push_x</a> (this, dt)</div>
-<div class="line"><a name="l00049"></a><span class="lineno"><a class="line" href="namespacesll__m__linear__pendulum__operators.html#a9ab14cfe05f9d8afb56132db98a3a91c">   49</a></span>&#160;    <span class="keywordtype">class</span>(<a class="code" href="structsll__m__linear__pendulum__operators_1_1linear__pendulum__operators.html">linear_pendulum_operators</a>), <span class="keywordtype">intent(inout)</span>   :: this</div>
-<div class="line"><a name="l00050"></a><span class="lineno">   50</span>&#160;    sll_real64, <span class="keywordtype">intent(in)</span>                            :: dt   </div>
+<div class="line"><a name="l00046"></a><span class="lineno">   46</span>&#160; </div>
+<div class="line"><a name="l00048"></a><span class="lineno">   48</span>&#160;   <span class="keyword">subroutine </span><a class="code" href="namespacesll__m__linear__pendulum__operators.html#a9ab14cfe05f9d8afb56132db98a3a91c">push_x</a>(this, dt)</div>
+<div class="line"><a name="l00049"></a><span class="lineno"><a class="line" href="namespacesll__m__linear__pendulum__operators.html#a9ab14cfe05f9d8afb56132db98a3a91c">   49</a></span>&#160;      <span class="keywordtype">class</span>(<a class="code" href="structsll__m__linear__pendulum__operators_1_1linear__pendulum__operators.html">linear_pendulum_operators</a>), <span class="keywordtype">intent(inout)</span>   :: this</div>
+<div class="line"><a name="l00050"></a><span class="lineno">   50</span>&#160;      sll_real64, <span class="keywordtype">intent(in)</span>                            :: dt   </div>
 <div class="line"><a name="l00051"></a><span class="lineno">   51</span>&#160; </div>
-<div class="line"><a name="l00052"></a><span class="lineno">   52</span>&#160;    this%x = this%x + this%v * dt</div>
-<div class="line"><a name="l00053"></a><span class="lineno">   53</span>&#160;  <span class="keyword">end subroutine </span><a class="code" href="namespacesll__m__linear__pendulum__operators.html#a9ab14cfe05f9d8afb56132db98a3a91c">push_x</a></div>
+<div class="line"><a name="l00052"></a><span class="lineno">   52</span>&#160;      this%x = this%x + this%v*dt</div>
+<div class="line"><a name="l00053"></a><span class="lineno">   53</span>&#160;   <span class="keyword">end subroutine </span><a class="code" href="namespacesll__m__linear__pendulum__operators.html#a9ab14cfe05f9d8afb56132db98a3a91c">push_x</a></div>
 <div class="line"><a name="l00054"></a><span class="lineno">   54</span>&#160; </div>
-<div class="line"><a name="l00056"></a><span class="lineno">   56</span>&#160;  <span class="keyword">subroutine </span><a class="code" href="namespacesll__m__linear__pendulum__operators.html#a65bf3fc9982c10c1029d76b72afe57ff">push_v</a> (this, dt)</div>
-<div class="line"><a name="l00057"></a><span class="lineno"><a class="line" href="namespacesll__m__linear__pendulum__operators.html#a65bf3fc9982c10c1029d76b72afe57ff">   57</a></span>&#160;    <span class="keywordtype">class</span>(<a class="code" href="structsll__m__linear__pendulum__operators_1_1linear__pendulum__operators.html">linear_pendulum_operators</a>), <span class="keywordtype">intent(inout)</span>   :: this</div>
-<div class="line"><a name="l00058"></a><span class="lineno">   58</span>&#160;    sll_real64, <span class="keywordtype">intent(in)</span>                            :: dt   </div>
-<div class="line"><a name="l00059"></a><span class="lineno">   59</span>&#160;    </div>
-<div class="line"><a name="l00060"></a><span class="lineno">   60</span>&#160;    this%v = this%v -<a class="code" href="namespacesll__m__linear__pendulum__operators.html#a2276a1070863e518563e4de6bc958955">omega</a>**2 * this%x * dt</div>
-<div class="line"><a name="l00061"></a><span class="lineno">   61</span>&#160;  <span class="keyword">end subroutine </span><a class="code" href="namespacesll__m__linear__pendulum__operators.html#a65bf3fc9982c10c1029d76b72afe57ff">push_v</a></div>
+<div class="line"><a name="l00056"></a><span class="lineno">   56</span>&#160;   <span class="keyword">subroutine </span><a class="code" href="namespacesll__m__linear__pendulum__operators.html#a65bf3fc9982c10c1029d76b72afe57ff">push_v</a>(this, dt)</div>
+<div class="line"><a name="l00057"></a><span class="lineno"><a class="line" href="namespacesll__m__linear__pendulum__operators.html#a65bf3fc9982c10c1029d76b72afe57ff">   57</a></span>&#160;      <span class="keywordtype">class</span>(<a class="code" href="structsll__m__linear__pendulum__operators_1_1linear__pendulum__operators.html">linear_pendulum_operators</a>), <span class="keywordtype">intent(inout)</span>   :: this</div>
+<div class="line"><a name="l00058"></a><span class="lineno">   58</span>&#160;      sll_real64, <span class="keywordtype">intent(in)</span>                            :: dt   </div>
+<div class="line"><a name="l00059"></a><span class="lineno">   59</span>&#160; </div>
+<div class="line"><a name="l00060"></a><span class="lineno">   60</span>&#160;      this%v = this%v - <a class="code" href="namespacesll__m__linear__pendulum__operators.html#a2276a1070863e518563e4de6bc958955">omega</a>**2*this%x*dt</div>
+<div class="line"><a name="l00061"></a><span class="lineno">   61</span>&#160;   <span class="keyword">end subroutine </span><a class="code" href="namespacesll__m__linear__pendulum__operators.html#a65bf3fc9982c10c1029d76b72afe57ff">push_v</a></div>
 <div class="line"><a name="l00062"></a><span class="lineno">   62</span>&#160; </div>
-<div class="line"><a name="l00065"></a><span class="lineno">   65</span>&#160;  <span class="keyword">subroutine </span><a class="code" href="namespacesll__m__linear__pendulum__operators.html#a605162229aac75b9225d219fdc47fa1e">sll_s_check_order</a>( method, steps_fine, expected_order, test_passed )</div>
-<div class="line"><a name="l00066"></a><span class="lineno"><a class="line" href="namespacesll__m__linear__pendulum__operators.html#a605162229aac75b9225d219fdc47fa1e">   66</a></span>&#160;    sll_int32, <span class="keywordtype">intent(in)</span>  :: method         </div>
-<div class="line"><a name="l00068"></a><span class="lineno">   68</span>&#160;    sll_real64, <span class="keywordtype">intent(in)</span> :: steps_fine     </div>
-<div class="line"><a name="l00069"></a><span class="lineno">   69</span>&#160;    sll_int32, <span class="keywordtype">intent(in)</span>  :: expected_order </div>
-<div class="line"><a name="l00070"></a><span class="lineno">   70</span>&#160;    <span class="keywordtype">logical</span>, <span class="keywordtype">intent(inout)</span> :: test_passed</div>
+<div class="line"><a name="l00065"></a><span class="lineno">   65</span>&#160;   <span class="keyword">subroutine </span><a class="code" href="namespacesll__m__linear__pendulum__operators.html#a605162229aac75b9225d219fdc47fa1e">sll_s_check_order</a>(method, steps_fine, expected_order, test_passed)</div>
+<div class="line"><a name="l00066"></a><span class="lineno"><a class="line" href="namespacesll__m__linear__pendulum__operators.html#a605162229aac75b9225d219fdc47fa1e">   66</a></span>&#160;      sll_int32, <span class="keywordtype">intent(in)</span>  :: method         </div>
+<div class="line"><a name="l00068"></a><span class="lineno">   68</span>&#160;      sll_real64, <span class="keywordtype">intent(in)</span> :: steps_fine     </div>
+<div class="line"><a name="l00069"></a><span class="lineno">   69</span>&#160;      sll_int32, <span class="keywordtype">intent(in)</span>  :: expected_order </div>
+<div class="line"><a name="l00070"></a><span class="lineno">   70</span>&#160;      <span class="keywordtype">logical</span>, <span class="keywordtype">intent(inout)</span> :: test_passed</div>
 <div class="line"><a name="l00071"></a><span class="lineno">   71</span>&#160; </div>
-<div class="line"><a name="l00072"></a><span class="lineno">   72</span>&#160;    <span class="comment">! local variables</span></div>
-<div class="line"><a name="l00073"></a><span class="lineno">   73</span>&#160;    sll_real64 :: dt</div>
-<div class="line"><a name="l00074"></a><span class="lineno">   74</span>&#160;    sll_int32  :: number_time_steps</div>
-<div class="line"><a name="l00075"></a><span class="lineno">   75</span>&#160;    sll_real64 :: x_exact, v_exact </div>
-<div class="line"><a name="l00076"></a><span class="lineno">   76</span>&#160;    sll_real64 :: error0, error1, error2, order1, order2</div>
-<div class="line"><a name="l00077"></a><span class="lineno">   77</span>&#160;    <span class="keywordtype">type</span>(<a class="code" href="structsll__m__linear__pendulum__operators_1_1linear__pendulum__operators.html">linear_pendulum_operators</a>), <span class="keywordtype">target</span> :: my_pendulum</div>
-<div class="line"><a name="l00078"></a><span class="lineno">   78</span>&#160;    <span class="keywordtype">class</span>(<a class="code" href="structsll__m__operator__splitting_1_1sll__t__operator__splitting.html">sll_t_operator_splitting</a>), <span class="keywordtype">pointer</span> :: split</div>
-<div class="line"><a name="l00079"></a><span class="lineno">   79</span>&#160;    <span class="comment">!sll_int32 :: ierr</span></div>
-<div class="line"><a name="l00080"></a><span class="lineno">   80</span>&#160;    </div>
-<div class="line"><a name="l00081"></a><span class="lineno">   81</span>&#160;    <span class="comment">! initialise my_pendulum</span></div>
-<div class="line"><a name="l00082"></a><span class="lineno">   82</span>&#160;    split =&gt; my_pendulum</div>
-<div class="line"><a name="l00083"></a><span class="lineno">   83</span>&#160;    <span class="comment">!  call sll_s_operator_splitting_init(split,sll_p_lie_vt)</span></div>
-<div class="line"><a name="l00084"></a><span class="lineno">   84</span>&#160;    <span class="comment">!  call sll_s_operator_splitting_init(split,sll_p_strang_tvt)</span></div>
-<div class="line"><a name="l00085"></a><span class="lineno">   85</span>&#160;    <span class="comment">!  call sll_s_operator_splitting_init(split,sll_p_triple_jump_tvt)</span></div>
-<div class="line"><a name="l00086"></a><span class="lineno">   86</span>&#160;    <span class="keyword">call </span><a class="code" href="namespacesll__m__operator__splitting.html#ad7ac7066d769b435f70a6364f9f98b6f">sll_s_operator_splitting_init</a>(split,method)</div>
+<div class="line"><a name="l00072"></a><span class="lineno">   72</span>&#160;      <span class="comment">! local variables</span></div>
+<div class="line"><a name="l00073"></a><span class="lineno">   73</span>&#160;      sll_real64 :: dt</div>
+<div class="line"><a name="l00074"></a><span class="lineno">   74</span>&#160;      sll_int32  :: number_time_steps</div>
+<div class="line"><a name="l00075"></a><span class="lineno">   75</span>&#160;      sll_real64 :: x_exact, v_exact</div>
+<div class="line"><a name="l00076"></a><span class="lineno">   76</span>&#160;      sll_real64 :: error0, error1, error2, order1, order2</div>
+<div class="line"><a name="l00077"></a><span class="lineno">   77</span>&#160;      <span class="keywordtype">type</span>(<a class="code" href="structsll__m__linear__pendulum__operators_1_1linear__pendulum__operators.html">linear_pendulum_operators</a>), <span class="keywordtype">target</span> :: my_pendulum</div>
+<div class="line"><a name="l00078"></a><span class="lineno">   78</span>&#160;      <span class="keywordtype">class</span>(<a class="code" href="structsll__m__operator__splitting_1_1sll__t__operator__splitting.html">sll_t_operator_splitting</a>), <span class="keywordtype">pointer</span> :: split</div>
+<div class="line"><a name="l00079"></a><span class="lineno">   79</span>&#160;      <span class="comment">!sll_int32 :: ierr</span></div>
+<div class="line"><a name="l00080"></a><span class="lineno">   80</span>&#160; </div>
+<div class="line"><a name="l00081"></a><span class="lineno">   81</span>&#160;      <span class="comment">! initialise my_pendulum</span></div>
+<div class="line"><a name="l00082"></a><span class="lineno">   82</span>&#160;      split =&gt; my_pendulum</div>
+<div class="line"><a name="l00083"></a><span class="lineno">   83</span>&#160;      <span class="comment">!  call sll_s_operator_splitting_init(split,sll_p_lie_vt)</span></div>
+<div class="line"><a name="l00084"></a><span class="lineno">   84</span>&#160;      <span class="comment">!  call sll_s_operator_splitting_init(split,sll_p_strang_tvt)</span></div>
+<div class="line"><a name="l00085"></a><span class="lineno">   85</span>&#160;      <span class="comment">!  call sll_s_operator_splitting_init(split,sll_p_triple_jump_tvt)</span></div>
+<div class="line"><a name="l00086"></a><span class="lineno">   86</span>&#160;      <span class="keyword">call </span><a class="code" href="namespacesll__m__operator__splitting.html#ad7ac7066d769b435f70a6364f9f98b6f">sll_s_operator_splitting_init</a>(split, method)</div>
 <div class="line"><a name="l00087"></a><span class="lineno">   87</span>&#160; </div>
-<div class="line"><a name="l00088"></a><span class="lineno">   88</span>&#160;    <span class="comment">! compute exact solution at final time</span></div>
-<div class="line"><a name="l00089"></a><span class="lineno">   89</span>&#160;    x_exact = <a class="code" href="namespacesll__m__linear__pendulum__operators.html#afe5e5ae53588f09ea2e019ec339fce03">x0</a> * cos( <a class="code" href="namespacesll__m__linear__pendulum__operators.html#a2276a1070863e518563e4de6bc958955">omega</a> * <a class="code" href="namespacesll__m__linear__pendulum__operators.html#a652f637ac873ffa1e9d2c01d2c6ddb46">t_final</a> ) + (<a class="code" href="namespacesll__m__linear__pendulum__operators.html#a70a1a11fb5816e323af77e39e914c38a">v0</a> / <a class="code" href="namespacesll__m__linear__pendulum__operators.html#a2276a1070863e518563e4de6bc958955">omega</a>) * sin( <a class="code" href="namespacesll__m__linear__pendulum__operators.html#a2276a1070863e518563e4de6bc958955">omega</a> * <a class="code" href="namespacesll__m__linear__pendulum__operators.html#a652f637ac873ffa1e9d2c01d2c6ddb46">t_final</a> )</div>
-<div class="line"><a name="l00090"></a><span class="lineno">   90</span>&#160;    v_exact = -<a class="code" href="namespacesll__m__linear__pendulum__operators.html#afe5e5ae53588f09ea2e019ec339fce03">x0</a> * <a class="code" href="namespacesll__m__linear__pendulum__operators.html#a2276a1070863e518563e4de6bc958955">omega</a> * sin( <a class="code" href="namespacesll__m__linear__pendulum__operators.html#a2276a1070863e518563e4de6bc958955">omega</a>* <a class="code" href="namespacesll__m__linear__pendulum__operators.html#a652f637ac873ffa1e9d2c01d2c6ddb46">t_final</a> ) + <a class="code" href="namespacesll__m__linear__pendulum__operators.html#a70a1a11fb5816e323af77e39e914c38a">v0</a> * cos( <a class="code" href="namespacesll__m__linear__pendulum__operators.html#a2276a1070863e518563e4de6bc958955">omega</a> * <a class="code" href="namespacesll__m__linear__pendulum__operators.html#a652f637ac873ffa1e9d2c01d2c6ddb46">t_final</a> )</div>
-<div class="line"><a name="l00091"></a><span class="lineno">   91</span>&#160;  </div>
-<div class="line"><a name="l00092"></a><span class="lineno">   92</span>&#160;    <span class="comment">! do iterations with smallest time step</span></div>
-<div class="line"><a name="l00093"></a><span class="lineno">   93</span>&#160;    my_pendulum%x = <a class="code" href="namespacesll__m__linear__pendulum__operators.html#afe5e5ae53588f09ea2e019ec339fce03">x0</a></div>
-<div class="line"><a name="l00094"></a><span class="lineno">   94</span>&#160;    my_pendulum%v = <a class="code" href="namespacesll__m__linear__pendulum__operators.html#a70a1a11fb5816e323af77e39e914c38a">v0</a>  </div>
-<div class="line"><a name="l00095"></a><span class="lineno">   95</span>&#160;    dt = <a class="code" href="namespacesll__m__linear__pendulum__operators.html#a652f637ac873ffa1e9d2c01d2c6ddb46">t_final</a>/steps_fine</div>
-<div class="line"><a name="l00096"></a><span class="lineno">   96</span>&#160;    number_time_steps = int(steps_fine,i32)</div>
+<div class="line"><a name="l00088"></a><span class="lineno">   88</span>&#160;      <span class="comment">! compute exact solution at final time</span></div>
+<div class="line"><a name="l00089"></a><span class="lineno">   89</span>&#160;      x_exact = <a class="code" href="namespacesll__m__linear__pendulum__operators.html#afe5e5ae53588f09ea2e019ec339fce03">x0</a>*cos(<a class="code" href="namespacesll__m__linear__pendulum__operators.html#a2276a1070863e518563e4de6bc958955">omega</a>*<a class="code" href="namespacesll__m__linear__pendulum__operators.html#a652f637ac873ffa1e9d2c01d2c6ddb46">t_final</a>) + (<a class="code" href="namespacesll__m__linear__pendulum__operators.html#a70a1a11fb5816e323af77e39e914c38a">v0</a>/<a class="code" href="namespacesll__m__linear__pendulum__operators.html#a2276a1070863e518563e4de6bc958955">omega</a>)*sin(<a class="code" href="namespacesll__m__linear__pendulum__operators.html#a2276a1070863e518563e4de6bc958955">omega</a>*<a class="code" href="namespacesll__m__linear__pendulum__operators.html#a652f637ac873ffa1e9d2c01d2c6ddb46">t_final</a>)</div>
+<div class="line"><a name="l00090"></a><span class="lineno">   90</span>&#160;      v_exact = -<a class="code" href="namespacesll__m__linear__pendulum__operators.html#afe5e5ae53588f09ea2e019ec339fce03">x0</a>*<a class="code" href="namespacesll__m__linear__pendulum__operators.html#a2276a1070863e518563e4de6bc958955">omega</a>*sin(<a class="code" href="namespacesll__m__linear__pendulum__operators.html#a2276a1070863e518563e4de6bc958955">omega</a>*<a class="code" href="namespacesll__m__linear__pendulum__operators.html#a652f637ac873ffa1e9d2c01d2c6ddb46">t_final</a>) + <a class="code" href="namespacesll__m__linear__pendulum__operators.html#a70a1a11fb5816e323af77e39e914c38a">v0</a>*cos(<a class="code" href="namespacesll__m__linear__pendulum__operators.html#a2276a1070863e518563e4de6bc958955">omega</a>*<a class="code" href="namespacesll__m__linear__pendulum__operators.html#a652f637ac873ffa1e9d2c01d2c6ddb46">t_final</a>)</div>
+<div class="line"><a name="l00091"></a><span class="lineno">   91</span>&#160; </div>
+<div class="line"><a name="l00092"></a><span class="lineno">   92</span>&#160;      <span class="comment">! do iterations with smallest time step</span></div>
+<div class="line"><a name="l00093"></a><span class="lineno">   93</span>&#160;      my_pendulum%x = <a class="code" href="namespacesll__m__linear__pendulum__operators.html#afe5e5ae53588f09ea2e019ec339fce03">x0</a></div>
+<div class="line"><a name="l00094"></a><span class="lineno">   94</span>&#160;      my_pendulum%v = <a class="code" href="namespacesll__m__linear__pendulum__operators.html#a70a1a11fb5816e323af77e39e914c38a">v0</a></div>
+<div class="line"><a name="l00095"></a><span class="lineno">   95</span>&#160;      dt = <a class="code" href="namespacesll__m__linear__pendulum__operators.html#a652f637ac873ffa1e9d2c01d2c6ddb46">t_final</a>/steps_fine</div>
+<div class="line"><a name="l00096"></a><span class="lineno">   96</span>&#160;      number_time_steps = int(steps_fine, i32)</div>
 <div class="line"><a name="l00097"></a><span class="lineno">   97</span>&#160; </div>
-<div class="line"><a name="l00098"></a><span class="lineno">   98</span>&#160;    <span class="keyword">call </span><a class="code" href="namespacesll__m__operator__splitting.html#a9f1b9c3c2b355bf8fe5b3712f1e9f98c">sll_s_do_split_steps</a>(split, dt, number_time_steps)</div>
-<div class="line"><a name="l00099"></a><span class="lineno">   99</span>&#160;  </div>
-<div class="line"><a name="l00100"></a><span class="lineno">  100</span>&#160;    <span class="comment">! compute  mean square error</span></div>
-<div class="line"><a name="l00101"></a><span class="lineno">  101</span>&#160;    error0 =sqrt( (my_pendulum%x - x_exact)**2 +  (my_pendulum%v - v_exact)**2 )</div>
+<div class="line"><a name="l00098"></a><span class="lineno">   98</span>&#160;      <span class="keyword">call </span><a class="code" href="namespacesll__m__operator__splitting.html#a9f1b9c3c2b355bf8fe5b3712f1e9f98c">sll_s_do_split_steps</a>(split, dt, number_time_steps)</div>
+<div class="line"><a name="l00099"></a><span class="lineno">   99</span>&#160; </div>
+<div class="line"><a name="l00100"></a><span class="lineno">  100</span>&#160;      <span class="comment">! compute  mean square error</span></div>
+<div class="line"><a name="l00101"></a><span class="lineno">  101</span>&#160;      error0 = sqrt((my_pendulum%x - x_exact)**2 + (my_pendulum%v - v_exact)**2)</div>
 <div class="line"><a name="l00102"></a><span class="lineno">  102</span>&#160; </div>
-<div class="line"><a name="l00103"></a><span class="lineno">  103</span>&#160;    <span class="comment">! do iterations with middle time step</span></div>
-<div class="line"><a name="l00104"></a><span class="lineno">  104</span>&#160;    my_pendulum%x = <a class="code" href="namespacesll__m__linear__pendulum__operators.html#afe5e5ae53588f09ea2e019ec339fce03">x0</a></div>
-<div class="line"><a name="l00105"></a><span class="lineno">  105</span>&#160;    my_pendulum%v = <a class="code" href="namespacesll__m__linear__pendulum__operators.html#a70a1a11fb5816e323af77e39e914c38a">v0</a>  </div>
-<div class="line"><a name="l00106"></a><span class="lineno">  106</span>&#160;    dt = 2*dt</div>
-<div class="line"><a name="l00107"></a><span class="lineno">  107</span>&#160;    number_time_steps = number_time_steps / 2</div>
-<div class="line"><a name="l00108"></a><span class="lineno">  108</span>&#160;    <span class="keyword">call </span><a class="code" href="namespacesll__m__operator__splitting.html#a9f1b9c3c2b355bf8fe5b3712f1e9f98c">sll_s_do_split_steps</a>(split, dt, number_time_steps)</div>
-<div class="line"><a name="l00109"></a><span class="lineno">  109</span>&#160;  </div>
-<div class="line"><a name="l00110"></a><span class="lineno">  110</span>&#160;    <span class="comment">! compute mean square error</span></div>
-<div class="line"><a name="l00111"></a><span class="lineno">  111</span>&#160;    error1 = sqrt( (my_pendulum%x - x_exact)**2 +  (my_pendulum%v - v_exact)**2 )</div>
-<div class="line"><a name="l00112"></a><span class="lineno">  112</span>&#160;  </div>
-<div class="line"><a name="l00113"></a><span class="lineno">  113</span>&#160;    <span class="comment">! do iterations with largest time step</span></div>
-<div class="line"><a name="l00114"></a><span class="lineno">  114</span>&#160;    my_pendulum%x = <a class="code" href="namespacesll__m__linear__pendulum__operators.html#afe5e5ae53588f09ea2e019ec339fce03">x0</a></div>
-<div class="line"><a name="l00115"></a><span class="lineno">  115</span>&#160;    my_pendulum%v = <a class="code" href="namespacesll__m__linear__pendulum__operators.html#a70a1a11fb5816e323af77e39e914c38a">v0</a>  </div>
-<div class="line"><a name="l00116"></a><span class="lineno">  116</span>&#160;    dt = 2*dt</div>
-<div class="line"><a name="l00117"></a><span class="lineno">  117</span>&#160;    number_time_steps = number_time_steps / 2</div>
-<div class="line"><a name="l00118"></a><span class="lineno">  118</span>&#160;    <span class="keyword">call </span><a class="code" href="namespacesll__m__operator__splitting.html#a9f1b9c3c2b355bf8fe5b3712f1e9f98c">sll_s_do_split_steps</a>(split, dt, number_time_steps)</div>
-<div class="line"><a name="l00119"></a><span class="lineno">  119</span>&#160;  </div>
-<div class="line"><a name="l00120"></a><span class="lineno">  120</span>&#160;    <span class="comment">! compute  mean square error</span></div>
-<div class="line"><a name="l00121"></a><span class="lineno">  121</span>&#160;    error2 =sqrt( (my_pendulum%x - x_exact)**2 +  (my_pendulum%v - v_exact)**2 )</div>
+<div class="line"><a name="l00103"></a><span class="lineno">  103</span>&#160;      <span class="comment">! do iterations with middle time step</span></div>
+<div class="line"><a name="l00104"></a><span class="lineno">  104</span>&#160;      my_pendulum%x = <a class="code" href="namespacesll__m__linear__pendulum__operators.html#afe5e5ae53588f09ea2e019ec339fce03">x0</a></div>
+<div class="line"><a name="l00105"></a><span class="lineno">  105</span>&#160;      my_pendulum%v = <a class="code" href="namespacesll__m__linear__pendulum__operators.html#a70a1a11fb5816e323af77e39e914c38a">v0</a></div>
+<div class="line"><a name="l00106"></a><span class="lineno">  106</span>&#160;      dt = 2*dt</div>
+<div class="line"><a name="l00107"></a><span class="lineno">  107</span>&#160;      number_time_steps = number_time_steps/2</div>
+<div class="line"><a name="l00108"></a><span class="lineno">  108</span>&#160;      <span class="keyword">call </span><a class="code" href="namespacesll__m__operator__splitting.html#a9f1b9c3c2b355bf8fe5b3712f1e9f98c">sll_s_do_split_steps</a>(split, dt, number_time_steps)</div>
+<div class="line"><a name="l00109"></a><span class="lineno">  109</span>&#160; </div>
+<div class="line"><a name="l00110"></a><span class="lineno">  110</span>&#160;      <span class="comment">! compute mean square error</span></div>
+<div class="line"><a name="l00111"></a><span class="lineno">  111</span>&#160;      error1 = sqrt((my_pendulum%x - x_exact)**2 + (my_pendulum%v - v_exact)**2)</div>
+<div class="line"><a name="l00112"></a><span class="lineno">  112</span>&#160; </div>
+<div class="line"><a name="l00113"></a><span class="lineno">  113</span>&#160;      <span class="comment">! do iterations with largest time step</span></div>
+<div class="line"><a name="l00114"></a><span class="lineno">  114</span>&#160;      my_pendulum%x = <a class="code" href="namespacesll__m__linear__pendulum__operators.html#afe5e5ae53588f09ea2e019ec339fce03">x0</a></div>
+<div class="line"><a name="l00115"></a><span class="lineno">  115</span>&#160;      my_pendulum%v = <a class="code" href="namespacesll__m__linear__pendulum__operators.html#a70a1a11fb5816e323af77e39e914c38a">v0</a></div>
+<div class="line"><a name="l00116"></a><span class="lineno">  116</span>&#160;      dt = 2*dt</div>
+<div class="line"><a name="l00117"></a><span class="lineno">  117</span>&#160;      number_time_steps = number_time_steps/2</div>
+<div class="line"><a name="l00118"></a><span class="lineno">  118</span>&#160;      <span class="keyword">call </span><a class="code" href="namespacesll__m__operator__splitting.html#a9f1b9c3c2b355bf8fe5b3712f1e9f98c">sll_s_do_split_steps</a>(split, dt, number_time_steps)</div>
+<div class="line"><a name="l00119"></a><span class="lineno">  119</span>&#160; </div>
+<div class="line"><a name="l00120"></a><span class="lineno">  120</span>&#160;      <span class="comment">! compute  mean square error</span></div>
+<div class="line"><a name="l00121"></a><span class="lineno">  121</span>&#160;      error2 = sqrt((my_pendulum%x - x_exact)**2 + (my_pendulum%v - v_exact)**2)</div>
 <div class="line"><a name="l00122"></a><span class="lineno">  122</span>&#160; </div>
-<div class="line"><a name="l00123"></a><span class="lineno">  123</span>&#160;    <span class="comment">! compute order</span></div>
-<div class="line"><a name="l00124"></a><span class="lineno">  124</span>&#160;    <span class="comment">!print*, &#39;error&#39;, error0, error1, error2</span></div>
-<div class="line"><a name="l00125"></a><span class="lineno">  125</span>&#160;    order1 = log(error1/error0)/log(2.0_f64)</div>
-<div class="line"><a name="l00126"></a><span class="lineno">  126</span>&#160;    order2 = log(error2/error1)/log(2.0_f64)</div>
-<div class="line"><a name="l00127"></a><span class="lineno">  127</span>&#160;    <span class="keywordflow">if</span> ((abs(order1-expected_order) &gt; 5.e-2) .or. (abs(order2-expected_order) &gt; 5.e-2)) <span class="keywordflow">then</span>       </div>
-<div class="line"><a name="l00128"></a><span class="lineno">  128</span>&#160;       test_passed = .false.</div>
-<div class="line"><a name="l00129"></a><span class="lineno">  129</span>&#160;       print*, <span class="stringliteral">&#39;error coarse =&#39;</span>, error2</div>
-<div class="line"><a name="l00130"></a><span class="lineno">  130</span>&#160;       print*, <span class="stringliteral">&#39;error middle =&#39;</span>, error1</div>
-<div class="line"><a name="l00131"></a><span class="lineno">  131</span>&#160;       print*, <span class="stringliteral">&#39;      order (coarse/middle) =&#39;</span>, order2</div>
-<div class="line"><a name="l00132"></a><span class="lineno">  132</span>&#160;       print*, <span class="stringliteral">&#39;error fine   =&#39;</span>, error0</div>
-<div class="line"><a name="l00133"></a><span class="lineno">  133</span>&#160;       print*, <span class="stringliteral">&#39;      order (middle/fine) =&#39;</span>, order1</div>
-<div class="line"><a name="l00134"></a><span class="lineno">  134</span>&#160;<span class="keywordflow">    endif</span></div>
-<div class="line"><a name="l00135"></a><span class="lineno">  135</span>&#160;  <span class="keyword">end subroutine </span><a class="code" href="namespacesll__m__linear__pendulum__operators.html#a605162229aac75b9225d219fdc47fa1e">sll_s_check_order</a></div>
+<div class="line"><a name="l00123"></a><span class="lineno">  123</span>&#160;      <span class="comment">! compute order</span></div>
+<div class="line"><a name="l00124"></a><span class="lineno">  124</span>&#160;      <span class="comment">!print*, &#39;error&#39;, error0, error1, error2</span></div>
+<div class="line"><a name="l00125"></a><span class="lineno">  125</span>&#160;      order1 = log(error1/error0)/log(2.0_f64)</div>
+<div class="line"><a name="l00126"></a><span class="lineno">  126</span>&#160;      order2 = log(error2/error1)/log(2.0_f64)</div>
+<div class="line"><a name="l00127"></a><span class="lineno">  127</span>&#160;      <span class="keywordflow">if</span> ((abs(order1 - expected_order) &gt; 5.e-2) .or. (abs(order2 - expected_order) &gt; 5.e-2)) <span class="keywordflow">then</span></div>
+<div class="line"><a name="l00128"></a><span class="lineno">  128</span>&#160;         test_passed = .false.</div>
+<div class="line"><a name="l00129"></a><span class="lineno">  129</span>&#160;         print *, <span class="stringliteral">&#39;error coarse =&#39;</span>, error2</div>
+<div class="line"><a name="l00130"></a><span class="lineno">  130</span>&#160;         print *, <span class="stringliteral">&#39;error middle =&#39;</span>, error1</div>
+<div class="line"><a name="l00131"></a><span class="lineno">  131</span>&#160;         print *, <span class="stringliteral">&#39;      order (coarse/middle) =&#39;</span>, order2</div>
+<div class="line"><a name="l00132"></a><span class="lineno">  132</span>&#160;         print *, <span class="stringliteral">&#39;error fine   =&#39;</span>, error0</div>
+<div class="line"><a name="l00133"></a><span class="lineno">  133</span>&#160;         print *, <span class="stringliteral">&#39;      order (middle/fine) =&#39;</span>, order1</div>
+<div class="line"><a name="l00134"></a><span class="lineno">  134</span>&#160;<span class="keywordflow">      end if</span></div>
+<div class="line"><a name="l00135"></a><span class="lineno">  135</span>&#160;   <span class="keyword">end subroutine </span><a class="code" href="namespacesll__m__linear__pendulum__operators.html#a605162229aac75b9225d219fdc47fa1e">sll_s_check_order</a></div>
 <div class="line"><a name="l00136"></a><span class="lineno">  136</span>&#160; </div>
 <div class="line"><a name="l00137"></a><span class="lineno">  137</span>&#160;<span class="keyword">end module </span><a class="code" href="namespacesll__m__linear__pendulum__operators.html">sll_m_linear_pendulum_operators</a></div>
 </div><!-- fragment --></div><!-- contents -->
@@ -220,7 +220,7 @@ $(function() {
 <div id="url"></div>
 <div align=left><a href="https://github.com/selalib/selalib/issues/new"><small>&nbsp; &nbsp; Report Typos and Errors</small></a></div>
 <address class="footer"><small>
-Generated on Wed Mar 10 2021 09:25:54 for Semi-Lagrangian Library by &#160;<a href="http://www.doxygen.org/index.html">
+Generated on Wed Mar 10 2021 09:42:20 for Semi-Lagrangian Library by &#160;<a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/>
 </a> 1.8.17
 </small></address>

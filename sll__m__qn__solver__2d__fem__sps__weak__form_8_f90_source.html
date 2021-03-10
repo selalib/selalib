@@ -82,136 +82,136 @@ $(function() {
 <a href="sll__m__qn__solver__2d__fem__sps__weak__form_8_f90.html">Go to the documentation of this file.</a><div class="fragment"><div class="line"><a name="l00001"></a><span class="lineno"><a class="line" href="namespacesll__m__qn__solver__2d__fem__sps__weak__form.html">    1</a></span>&#160;<span class="keyword">module</span> <a class="code" href="namespacesll__m__qn__solver__2d__fem__sps__weak__form.html">sll_m_qn_solver_2d_fem_sps_weak_form</a></div>
 <div class="line"><a name="l00002"></a><span class="lineno">    2</span>&#160;<span class="comment">!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++</span></div>
 <div class="line"><a name="l00003"></a><span class="lineno">    3</span>&#160; </div>
-<div class="line"><a name="l00004"></a><span class="lineno">    4</span>&#160;  <span class="keywordtype">use </span><a class="code" href="namespacesll__m__working__precision.html">sll_m_working_precision</a>, <span class="keywordtype">only</span>: <a class="code" href="namespacesll__m__working__precision.html#ad3d7a50f8e8df0cc67fd9e1c459ffb88">f64</a></div>
+<div class="line"><a name="l00004"></a><span class="lineno">    4</span>&#160;   <span class="keywordtype">use </span><a class="code" href="namespacesll__m__working__precision.html">sll_m_working_precision</a>, <span class="keywordtype">only</span>: <a class="code" href="namespacesll__m__working__precision.html#ad3d7a50f8e8df0cc67fd9e1c459ffb88">f64</a></div>
 <div class="line"><a name="l00005"></a><span class="lineno">    5</span>&#160; </div>
-<div class="line"><a name="l00006"></a><span class="lineno">    6</span>&#160;  <span class="keywordtype">use </span><a class="code" href="namespacesll__m__ellipt__2d__fem__sps__weak__form.html">sll_m_ellipt_2d_fem_sps_weak_form</a>, <span class="keywordtype">only</span>: <a class="code" href="structsll__m__ellipt__2d__fem__sps__weak__form_1_1sll__c__ellipt__2d__fem__sps__weak__form.html">sll_c_ellipt_2d_fem_sps_weak_form</a></div>
+<div class="line"><a name="l00006"></a><span class="lineno">    6</span>&#160;   <span class="keywordtype">use </span><a class="code" href="namespacesll__m__ellipt__2d__fem__sps__weak__form.html">sll_m_ellipt_2d_fem_sps_weak_form</a>, <span class="keywordtype">only</span>: <a class="code" href="structsll__m__ellipt__2d__fem__sps__weak__form_1_1sll__c__ellipt__2d__fem__sps__weak__form.html">sll_c_ellipt_2d_fem_sps_weak_form</a></div>
 <div class="line"><a name="l00007"></a><span class="lineno">    7</span>&#160; </div>
-<div class="line"><a name="l00008"></a><span class="lineno">    8</span>&#160;  <span class="keywordtype">implicit none</span></div>
+<div class="line"><a name="l00008"></a><span class="lineno">    8</span>&#160;   <span class="keywordtype">implicit none</span></div>
 <div class="line"><a name="l00009"></a><span class="lineno">    9</span>&#160; </div>
-<div class="line"><a name="l00010"></a><span class="lineno">   10</span>&#160;  <span class="keywordtype">public</span> :: <a class="code" href="structsll__m__qn__solver__2d__fem__sps__weak__form_1_1sll__t__qn__solver__2d__fem__sps__weak__form.html">sll_t_qn_solver_2d_fem_sps_weak_form</a></div>
+<div class="line"><a name="l00010"></a><span class="lineno">   10</span>&#160;   <span class="keywordtype">public</span> :: <a class="code" href="structsll__m__qn__solver__2d__fem__sps__weak__form_1_1sll__t__qn__solver__2d__fem__sps__weak__form.html">sll_t_qn_solver_2d_fem_sps_weak_form</a></div>
 <div class="line"><a name="l00011"></a><span class="lineno">   11</span>&#160; </div>
-<div class="line"><a name="l00012"></a><span class="lineno">   12</span>&#160;  <span class="keywordtype">private</span></div>
+<div class="line"><a name="l00012"></a><span class="lineno">   12</span>&#160;   <span class="keywordtype">private</span></div>
 <div class="line"><a name="l00013"></a><span class="lineno">   13</span>&#160;<span class="comment">!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++</span></div>
 <div class="line"><a name="l00014"></a><span class="lineno">   14</span>&#160; </div>
-<div class="line"><a name="l00015"></a><span class="lineno">   15</span>&#160;  <span class="comment">! Working precision</span></div>
-<div class="line"><a name="l00016"></a><span class="lineno"><a class="line" href="namespacesll__m__qn__solver__2d__fem__sps__weak__form.html#a572601519dfd43a8990fcc72c97f14c9">   16</a></span>&#160;  <span class="keywordtype">integer</span>, <span class="keywordtype">parameter</span> :: <a class="code" href="namespacesll__m__qn__solver__2d__fem__sps__weak__form.html#a572601519dfd43a8990fcc72c97f14c9">wp</a> = <a class="code" href="namespacesll__m__working__precision.html#ad3d7a50f8e8df0cc67fd9e1c459ffb88">f64</a></div>
+<div class="line"><a name="l00015"></a><span class="lineno">   15</span>&#160;   <span class="comment">! Working precision</span></div>
+<div class="line"><a name="l00016"></a><span class="lineno"><a class="line" href="namespacesll__m__qn__solver__2d__fem__sps__weak__form.html#a572601519dfd43a8990fcc72c97f14c9">   16</a></span>&#160;   <span class="keywordtype">integer</span>, <span class="keywordtype">parameter</span> :: <a class="code" href="namespacesll__m__qn__solver__2d__fem__sps__weak__form.html#a572601519dfd43a8990fcc72c97f14c9">wp</a> = <a class="code" href="namespacesll__m__working__precision.html#ad3d7a50f8e8df0cc67fd9e1c459ffb88">f64</a></div>
 <div class="line"><a name="l00017"></a><span class="lineno">   17</span>&#160; </div>
-<div class="line"><a name="l00018"></a><span class="lineno"><a class="line" href="structsll__m__qn__solver__2d__fem__sps__weak__form_1_1sll__t__qn__solver__2d__fem__sps__weak__form.html">   18</a></span>&#160;  <span class="keyword">type</span>, <span class="keyword">extends</span>(<a class="code" href="structsll__m__ellipt__2d__fem__sps__weak__form_1_1sll__c__ellipt__2d__fem__sps__weak__form.html">sll_c_ellipt_2d_fem_sps_weak_form</a>) :: <a class="code" href="structsll__m__qn__solver__2d__fem__sps__weak__form_1_1sll__t__qn__solver__2d__fem__sps__weak__form.html">sll_t_qn_solver_2d_fem_sps_weak_form</a></div>
+<div class="line"><a name="l00018"></a><span class="lineno"><a class="line" href="structsll__m__qn__solver__2d__fem__sps__weak__form_1_1sll__t__qn__solver__2d__fem__sps__weak__form.html">   18</a></span>&#160;   <span class="keyword">type</span>, <span class="keyword">extends</span>(<a class="code" href="structsll__m__ellipt__2d__fem__sps__weak__form_1_1sll__c__ellipt__2d__fem__sps__weak__form.html">sll_c_ellipt_2d_fem_sps_weak_form</a>) :: <a class="code" href="structsll__m__qn__solver__2d__fem__sps__weak__form_1_1sll__t__qn__solver__2d__fem__sps__weak__form.html">sll_t_qn_solver_2d_fem_sps_weak_form</a></div>
 <div class="line"><a name="l00019"></a><span class="lineno">   19</span>&#160; </div>
-<div class="line"><a name="l00020"></a><span class="lineno">   20</span>&#160;  <span class="keyword">contains</span></div>
+<div class="line"><a name="l00020"></a><span class="lineno">   20</span>&#160;   <span class="keyword">contains</span></div>
 <div class="line"><a name="l00021"></a><span class="lineno">   21</span>&#160; </div>
-<div class="line"><a name="l00022"></a><span class="lineno"><a class="line" href="structsll__m__qn__solver__2d__fem__sps__weak__form_1_1sll__t__qn__solver__2d__fem__sps__weak__form.html#ade1fcc8f93302acea796b39df816d00d">   22</a></span>&#160;    <span class="keywordtype">procedure</span> :: element_mat =&gt; <a class="code" href="namespacesll__m__qn__solver__2d__fem__sps__weak__form.html#a98ec6a1f5aa1c855f998dd4016753dd4">s_qn_solver_2d_fem_sps_weak_form__element_mat</a></div>
-<div class="line"><a name="l00023"></a><span class="lineno"><a class="line" href="structsll__m__qn__solver__2d__fem__sps__weak__form_1_1sll__t__qn__solver__2d__fem__sps__weak__form.html#a3aabae837166d2b7f469c0d2236146a8">   23</a></span>&#160;    <span class="keywordtype">procedure</span> :: element_rhs =&gt; <a class="code" href="namespacesll__m__qn__solver__2d__fem__sps__weak__form.html#a36c2f42514de13943b346ce7a1167cdd">s_qn_solver_2d_fem_sps_weak_form__element_rhs</a></div>
+<div class="line"><a name="l00022"></a><span class="lineno"><a class="line" href="structsll__m__qn__solver__2d__fem__sps__weak__form_1_1sll__t__qn__solver__2d__fem__sps__weak__form.html#ade1fcc8f93302acea796b39df816d00d">   22</a></span>&#160;      <span class="keywordtype">procedure</span> :: element_mat =&gt; <a class="code" href="namespacesll__m__qn__solver__2d__fem__sps__weak__form.html#a98ec6a1f5aa1c855f998dd4016753dd4">s_qn_solver_2d_fem_sps_weak_form__element_mat</a></div>
+<div class="line"><a name="l00023"></a><span class="lineno"><a class="line" href="structsll__m__qn__solver__2d__fem__sps__weak__form_1_1sll__t__qn__solver__2d__fem__sps__weak__form.html#a3aabae837166d2b7f469c0d2236146a8">   23</a></span>&#160;      <span class="keywordtype">procedure</span> :: element_rhs =&gt; <a class="code" href="namespacesll__m__qn__solver__2d__fem__sps__weak__form.html#a36c2f42514de13943b346ce7a1167cdd">s_qn_solver_2d_fem_sps_weak_form__element_rhs</a></div>
 <div class="line"><a name="l00024"></a><span class="lineno">   24</span>&#160; </div>
-<div class="line"><a name="l00025"></a><span class="lineno">   25</span>&#160;  <span class="keyword">end type </span><a class="code" href="structsll__m__qn__solver__2d__fem__sps__weak__form_1_1sll__t__qn__solver__2d__fem__sps__weak__form.html">sll_t_qn_solver_2d_fem_sps_weak_form</a></div>
+<div class="line"><a name="l00025"></a><span class="lineno">   25</span>&#160;   <span class="keyword">end type </span><a class="code" href="structsll__m__qn__solver__2d__fem__sps__weak__form_1_1sll__t__qn__solver__2d__fem__sps__weak__form.html">sll_t_qn_solver_2d_fem_sps_weak_form</a></div>
 <div class="line"><a name="l00026"></a><span class="lineno">   26</span>&#160; </div>
 <div class="line"><a name="l00027"></a><span class="lineno">   27</span>&#160;<span class="comment">!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++</span></div>
 <div class="line"><a name="l00028"></a><span class="lineno">   28</span>&#160;<span class="keyword">contains</span></div>
 <div class="line"><a name="l00029"></a><span class="lineno">   29</span>&#160;<span class="comment">!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++</span></div>
 <div class="line"><a name="l00030"></a><span class="lineno">   30</span>&#160; </div>
-<div class="line"><a name="l00031"></a><span class="lineno">   31</span>&#160;  <span class="comment">! Compute elementary contribution to stiffness and mass matrices</span></div>
-<div class="line"><a name="l00032"></a><span class="lineno">   32</span>&#160;  <span class="keyword">subroutine </span><a class="code" href="namespacesll__m__qn__solver__2d__fem__sps__weak__form.html#a98ec6a1f5aa1c855f998dd4016753dd4">s_qn_solver_2d_fem_sps_weak_form__element_mat</a>( &amp;</div>
-<div class="line"><a name="l00033"></a><span class="lineno">   33</span>&#160;    self                        , &amp;</div>
-<div class="line"><a name="l00034"></a><span class="lineno">   34</span>&#160;    test_values_and_derivs_eta1 , &amp;</div>
-<div class="line"><a name="l00035"></a><span class="lineno">   35</span>&#160;    test_values_and_derivs_eta2 , &amp;</div>
-<div class="line"><a name="l00036"></a><span class="lineno">   36</span>&#160;    trial_values_and_derivs_eta1, &amp;</div>
-<div class="line"><a name="l00037"></a><span class="lineno">   37</span>&#160;    trial_values_and_derivs_eta2, &amp;</div>
-<div class="line"><a name="l00038"></a><span class="lineno">   38</span>&#160;    int_volume                  , &amp;</div>
-<div class="line"><a name="l00039"></a><span class="lineno">   39</span>&#160;    inv_metric                  , &amp;</div>
-<div class="line"><a name="l00040"></a><span class="lineno">   40</span>&#160;    coeffs1                     , &amp;</div>
-<div class="line"><a name="l00041"></a><span class="lineno">   41</span>&#160;    coeffs2                     , &amp;</div>
-<div class="line"><a name="l00042"></a><span class="lineno">   42</span>&#160;    Aij, &amp;</div>
-<div class="line"><a name="l00043"></a><span class="lineno">   43</span>&#160;    Mij )</div>
-<div class="line"><a name="l00044"></a><span class="lineno"><a class="line" href="namespacesll__m__qn__solver__2d__fem__sps__weak__form.html#a98ec6a1f5aa1c855f998dd4016753dd4">   44</a></span>&#160;    <span class="keywordtype">class</span>(<a class="code" href="structsll__m__qn__solver__2d__fem__sps__weak__form_1_1sll__t__qn__solver__2d__fem__sps__weak__form.html">sll_t_qn_solver_2d_fem_sps_weak_form</a>), <span class="keywordtype">intent(in   )</span> :: self</div>
-<div class="line"><a name="l00045"></a><span class="lineno">   45</span>&#160;<span class="keywordtype">    real</span>(wp)                                   , <span class="keywordtype">intent(in   )</span> :: test_values_and_derivs_eta1 (:,:)</div>
-<div class="line"><a name="l00046"></a><span class="lineno">   46</span>&#160;<span class="keywordtype">    real</span>(wp)                                   , <span class="keywordtype">intent(in   )</span> :: test_values_and_derivs_eta2 (:,:)</div>
-<div class="line"><a name="l00047"></a><span class="lineno">   47</span>&#160;<span class="keywordtype">    real</span>(wp)                                   , <span class="keywordtype">intent(in   )</span> :: trial_values_and_derivs_eta1(:,:)</div>
-<div class="line"><a name="l00048"></a><span class="lineno">   48</span>&#160;<span class="keywordtype">    real</span>(wp)                                   , <span class="keywordtype">intent(in   )</span> :: trial_values_and_derivs_eta2(:,:)</div>
-<div class="line"><a name="l00049"></a><span class="lineno">   49</span>&#160;<span class="keywordtype">    real</span>(wp)                                   , <span class="keywordtype">intent(in   )</span> :: int_volume(:,:)</div>
-<div class="line"><a name="l00050"></a><span class="lineno">   50</span>&#160;<span class="keywordtype">    real</span>(wp)                                   , <span class="keywordtype">intent(in   )</span> :: inv_metric(:,:,:,:)</div>
-<div class="line"><a name="l00051"></a><span class="lineno">   51</span>&#160;<span class="keywordtype">    real</span>(wp)                                   , <span class="keywordtype">intent(in   )</span> :: coeffs1(:,:)</div>
-<div class="line"><a name="l00052"></a><span class="lineno">   52</span>&#160;<span class="keywordtype">    real</span>(wp)                                   , <span class="keywordtype">intent(in   )</span> :: coeffs2(:,:)</div>
-<div class="line"><a name="l00053"></a><span class="lineno">   53</span>&#160;<span class="keywordtype">    real</span>(wp)                                   , <span class="keywordtype">intent(  out)</span> :: Aij</div>
-<div class="line"><a name="l00054"></a><span class="lineno">   54</span>&#160;<span class="keywordtype">    real</span>(wp)                                   , <span class="keywordtype">intent(  out)</span> :: Mij</div>
+<div class="line"><a name="l00031"></a><span class="lineno">   31</span>&#160;   <span class="comment">! Compute elementary contribution to stiffness and mass matrices</span></div>
+<div class="line"><a name="l00032"></a><span class="lineno">   32</span>&#160;   <span class="keyword">subroutine </span><a class="code" href="namespacesll__m__qn__solver__2d__fem__sps__weak__form.html#a98ec6a1f5aa1c855f998dd4016753dd4">s_qn_solver_2d_fem_sps_weak_form__element_mat</a>( &amp;</div>
+<div class="line"><a name="l00033"></a><span class="lineno">   33</span>&#160;      self, &amp;</div>
+<div class="line"><a name="l00034"></a><span class="lineno">   34</span>&#160;      test_values_and_derivs_eta1, &amp;</div>
+<div class="line"><a name="l00035"></a><span class="lineno">   35</span>&#160;      test_values_and_derivs_eta2, &amp;</div>
+<div class="line"><a name="l00036"></a><span class="lineno">   36</span>&#160;      trial_values_and_derivs_eta1, &amp;</div>
+<div class="line"><a name="l00037"></a><span class="lineno">   37</span>&#160;      trial_values_and_derivs_eta2, &amp;</div>
+<div class="line"><a name="l00038"></a><span class="lineno">   38</span>&#160;      int_volume, &amp;</div>
+<div class="line"><a name="l00039"></a><span class="lineno">   39</span>&#160;      inv_metric, &amp;</div>
+<div class="line"><a name="l00040"></a><span class="lineno">   40</span>&#160;      coeffs1, &amp;</div>
+<div class="line"><a name="l00041"></a><span class="lineno">   41</span>&#160;      coeffs2, &amp;</div>
+<div class="line"><a name="l00042"></a><span class="lineno">   42</span>&#160;      Aij, &amp;</div>
+<div class="line"><a name="l00043"></a><span class="lineno">   43</span>&#160;      Mij)</div>
+<div class="line"><a name="l00044"></a><span class="lineno"><a class="line" href="namespacesll__m__qn__solver__2d__fem__sps__weak__form.html#a98ec6a1f5aa1c855f998dd4016753dd4">   44</a></span>&#160;      <span class="keywordtype">class</span>(<a class="code" href="structsll__m__qn__solver__2d__fem__sps__weak__form_1_1sll__t__qn__solver__2d__fem__sps__weak__form.html">sll_t_qn_solver_2d_fem_sps_weak_form</a>), <span class="keywordtype">intent(in)</span> :: self</div>
+<div class="line"><a name="l00045"></a><span class="lineno">   45</span>&#160;<span class="keywordtype">      real</span>(wp), <span class="keywordtype">intent(in)</span> :: test_values_and_derivs_eta1(:, :)</div>
+<div class="line"><a name="l00046"></a><span class="lineno">   46</span>&#160;<span class="keywordtype">      real</span>(wp), <span class="keywordtype">intent(in)</span> :: test_values_and_derivs_eta2(:, :)</div>
+<div class="line"><a name="l00047"></a><span class="lineno">   47</span>&#160;<span class="keywordtype">      real</span>(wp), <span class="keywordtype">intent(in)</span> :: trial_values_and_derivs_eta1(:, :)</div>
+<div class="line"><a name="l00048"></a><span class="lineno">   48</span>&#160;<span class="keywordtype">      real</span>(wp), <span class="keywordtype">intent(in)</span> :: trial_values_and_derivs_eta2(:, :)</div>
+<div class="line"><a name="l00049"></a><span class="lineno">   49</span>&#160;<span class="keywordtype">      real</span>(wp), <span class="keywordtype">intent(in)</span> :: int_volume(:, :)</div>
+<div class="line"><a name="l00050"></a><span class="lineno">   50</span>&#160;<span class="keywordtype">      real</span>(wp), <span class="keywordtype">intent(in)</span> :: inv_metric(:, :, :, :)</div>
+<div class="line"><a name="l00051"></a><span class="lineno">   51</span>&#160;<span class="keywordtype">      real</span>(wp), <span class="keywordtype">intent(in)</span> :: coeffs1(:, :)</div>
+<div class="line"><a name="l00052"></a><span class="lineno">   52</span>&#160;<span class="keywordtype">      real</span>(wp), <span class="keywordtype">intent(in)</span> :: coeffs2(:, :)</div>
+<div class="line"><a name="l00053"></a><span class="lineno">   53</span>&#160;<span class="keywordtype">      real</span>(wp), <span class="keywordtype">intent(out)</span> :: Aij</div>
+<div class="line"><a name="l00054"></a><span class="lineno">   54</span>&#160;<span class="keywordtype">      real</span>(wp), <span class="keywordtype">intent(out)</span> :: Mij</div>
 <div class="line"><a name="l00055"></a><span class="lineno">   55</span>&#160; </div>
-<div class="line"><a name="l00056"></a><span class="lineno">   56</span>&#160;    <span class="keywordtype">integer</span> :: q1, q2, Nq1, Nq2</div>
+<div class="line"><a name="l00056"></a><span class="lineno">   56</span>&#160;      <span class="keywordtype">integer</span> :: q1, q2, Nq1, Nq2</div>
 <div class="line"><a name="l00057"></a><span class="lineno">   57</span>&#160; </div>
-<div class="line"><a name="l00058"></a><span class="lineno">   58</span>&#160;<span class="keywordtype">    real</span>(wp) :: v(2), w(2), t(2)</div>
+<div class="line"><a name="l00058"></a><span class="lineno">   58</span>&#160;<span class="keywordtype">      real</span>(wp) :: v(2), w(2), t(2)</div>
 <div class="line"><a name="l00059"></a><span class="lineno">   59</span>&#160; </div>
-<div class="line"><a name="l00060"></a><span class="lineno">   60</span>&#160;    <span class="comment">! Extract number of quadrature points</span></div>
-<div class="line"><a name="l00061"></a><span class="lineno">   61</span>&#160;    nq1 = <span class="keyword">size</span>( test_values_and_derivs_eta1, 1 )</div>
-<div class="line"><a name="l00062"></a><span class="lineno">   62</span>&#160;    nq2 = <span class="keyword">size</span>( test_values_and_derivs_eta2, 1 )</div>
+<div class="line"><a name="l00060"></a><span class="lineno">   60</span>&#160;      <span class="comment">! Extract number of quadrature points</span></div>
+<div class="line"><a name="l00061"></a><span class="lineno">   61</span>&#160;      nq1 = <span class="keyword">size</span>(test_values_and_derivs_eta1, 1)</div>
+<div class="line"><a name="l00062"></a><span class="lineno">   62</span>&#160;      nq2 = <span class="keyword">size</span>(test_values_and_derivs_eta2, 1)</div>
 <div class="line"><a name="l00063"></a><span class="lineno">   63</span>&#160; </div>
-<div class="line"><a name="l00064"></a><span class="lineno">   64</span>&#160;    aij = 0.0_wp</div>
-<div class="line"><a name="l00065"></a><span class="lineno">   65</span>&#160;    mij = 0.0_wp</div>
+<div class="line"><a name="l00064"></a><span class="lineno">   64</span>&#160;      aij = 0.0_wp</div>
+<div class="line"><a name="l00065"></a><span class="lineno">   65</span>&#160;      mij = 0.0_wp</div>
 <div class="line"><a name="l00066"></a><span class="lineno">   66</span>&#160; </div>
-<div class="line"><a name="l00067"></a><span class="lineno">   67</span>&#160;    <span class="comment">! Quadrature</span></div>
-<div class="line"><a name="l00068"></a><span class="lineno">   68</span>&#160;    <span class="keywordflow">do</span> q2 = 1, nq2</div>
-<div class="line"><a name="l00069"></a><span class="lineno">   69</span>&#160;      <span class="keywordflow">do</span> q1 = 1, nq1</div>
+<div class="line"><a name="l00067"></a><span class="lineno">   67</span>&#160;      <span class="comment">! Quadrature</span></div>
+<div class="line"><a name="l00068"></a><span class="lineno">   68</span>&#160;      <span class="keywordflow">do</span> q2 = 1, nq2</div>
+<div class="line"><a name="l00069"></a><span class="lineno">   69</span>&#160;         <span class="keywordflow">do</span> q1 = 1, nq1</div>
 <div class="line"><a name="l00070"></a><span class="lineno">   70</span>&#160; </div>
-<div class="line"><a name="l00071"></a><span class="lineno">   71</span>&#160;        <span class="comment">! 2D gradient in logical test space</span></div>
-<div class="line"><a name="l00072"></a><span class="lineno">   72</span>&#160;        v = [ test_values_and_derivs_eta1(q1,2) * test_values_and_derivs_eta2(q2,1), &amp;</div>
-<div class="line"><a name="l00073"></a><span class="lineno">   73</span>&#160;              test_values_and_derivs_eta1(q1,1) * test_values_and_derivs_eta2(q2,2) ]</div>
+<div class="line"><a name="l00071"></a><span class="lineno">   71</span>&#160;            <span class="comment">! 2D gradient in logical test space</span></div>
+<div class="line"><a name="l00072"></a><span class="lineno">   72</span>&#160;            v = [test_values_and_derivs_eta1(q1, 2)*test_values_and_derivs_eta2(q2, 1), &amp;</div>
+<div class="line"><a name="l00073"></a><span class="lineno">   73</span>&#160;                 test_values_and_derivs_eta1(q1, 1)*test_values_and_derivs_eta2(q2, 2)]</div>
 <div class="line"><a name="l00074"></a><span class="lineno">   74</span>&#160; </div>
-<div class="line"><a name="l00075"></a><span class="lineno">   75</span>&#160;        <span class="comment">! 2D gradient in logical trial space</span></div>
-<div class="line"><a name="l00076"></a><span class="lineno">   76</span>&#160;        w = [ trial_values_and_derivs_eta1(q1,2) * trial_values_and_derivs_eta2(q2,1), &amp;</div>
-<div class="line"><a name="l00077"></a><span class="lineno">   77</span>&#160;              trial_values_and_derivs_eta1(q1,1) * trial_values_and_derivs_eta2(q2,2) ]</div>
+<div class="line"><a name="l00075"></a><span class="lineno">   75</span>&#160;            <span class="comment">! 2D gradient in logical trial space</span></div>
+<div class="line"><a name="l00076"></a><span class="lineno">   76</span>&#160;            w = [trial_values_and_derivs_eta1(q1, 2)*trial_values_and_derivs_eta2(q2, 1), &amp;</div>
+<div class="line"><a name="l00077"></a><span class="lineno">   77</span>&#160;                 trial_values_and_derivs_eta1(q1, 1)*trial_values_and_derivs_eta2(q2, 2)]</div>
 <div class="line"><a name="l00078"></a><span class="lineno">   78</span>&#160; </div>
-<div class="line"><a name="l00079"></a><span class="lineno">   79</span>&#160;        t = matmul( inv_metric(q1,q2,:,:), w )</div>
+<div class="line"><a name="l00079"></a><span class="lineno">   79</span>&#160;            t = matmul(inv_metric(q1, q2, :, :), w)</div>
 <div class="line"><a name="l00080"></a><span class="lineno">   80</span>&#160; </div>
-<div class="line"><a name="l00081"></a><span class="lineno">   81</span>&#160;        <span class="comment">! Elementary contribution to stiffness matrix</span></div>
-<div class="line"><a name="l00082"></a><span class="lineno">   82</span>&#160;        aij = aij + ( coeffs1(q1,q2) * dot_product( v, t ) + coeffs2(q1,q2) * &amp;</div>
-<div class="line"><a name="l00083"></a><span class="lineno">   83</span>&#160;              test_values_and_derivs_eta1(q1,1) * test_values_and_derivs_eta2(q2,1) * &amp;</div>
-<div class="line"><a name="l00084"></a><span class="lineno">   84</span>&#160;              trial_values_and_derivs_eta1(q1,1) * trial_values_and_derivs_eta2(q2,1) ) * &amp;</div>
-<div class="line"><a name="l00085"></a><span class="lineno">   85</span>&#160;              int_volume(q1,q2)</div>
+<div class="line"><a name="l00081"></a><span class="lineno">   81</span>&#160;            <span class="comment">! Elementary contribution to stiffness matrix</span></div>
+<div class="line"><a name="l00082"></a><span class="lineno">   82</span>&#160;            aij = aij + (coeffs1(q1, q2)*dot_product(v, t) + coeffs2(q1, q2)* &amp;</div>
+<div class="line"><a name="l00083"></a><span class="lineno">   83</span>&#160;                         test_values_and_derivs_eta1(q1, 1)*test_values_and_derivs_eta2(q2, 1)* &amp;</div>
+<div class="line"><a name="l00084"></a><span class="lineno">   84</span>&#160;                         trial_values_and_derivs_eta1(q1, 1)*trial_values_and_derivs_eta2(q2, 1))* &amp;</div>
+<div class="line"><a name="l00085"></a><span class="lineno">   85</span>&#160;                  int_volume(q1, q2)</div>
 <div class="line"><a name="l00086"></a><span class="lineno">   86</span>&#160; </div>
-<div class="line"><a name="l00087"></a><span class="lineno">   87</span>&#160;        <span class="comment">! Elementary contribution to mass matrix</span></div>
-<div class="line"><a name="l00088"></a><span class="lineno">   88</span>&#160;        mij = mij + &amp;</div>
-<div class="line"><a name="l00089"></a><span class="lineno">   89</span>&#160;              test_values_and_derivs_eta1(q1,1) * test_values_and_derivs_eta2(q2,1) * &amp;</div>
-<div class="line"><a name="l00090"></a><span class="lineno">   90</span>&#160;              trial_values_and_derivs_eta1(q1,1) * trial_values_and_derivs_eta2(q2,1) * &amp;</div>
-<div class="line"><a name="l00091"></a><span class="lineno">   91</span>&#160;              int_volume(q1,q2)</div>
+<div class="line"><a name="l00087"></a><span class="lineno">   87</span>&#160;            <span class="comment">! Elementary contribution to mass matrix</span></div>
+<div class="line"><a name="l00088"></a><span class="lineno">   88</span>&#160;            mij = mij + &amp;</div>
+<div class="line"><a name="l00089"></a><span class="lineno">   89</span>&#160;                  test_values_and_derivs_eta1(q1, 1)*test_values_and_derivs_eta2(q2, 1)* &amp;</div>
+<div class="line"><a name="l00090"></a><span class="lineno">   90</span>&#160;                  trial_values_and_derivs_eta1(q1, 1)*trial_values_and_derivs_eta2(q2, 1)* &amp;</div>
+<div class="line"><a name="l00091"></a><span class="lineno">   91</span>&#160;                  int_volume(q1, q2)</div>
 <div class="line"><a name="l00092"></a><span class="lineno">   92</span>&#160; </div>
-<div class="line"><a name="l00093"></a><span class="lineno">   93</span>&#160;<span class="keywordflow">      end do</span></div>
-<div class="line"><a name="l00094"></a><span class="lineno">   94</span>&#160;<span class="keywordflow">    end do</span></div>
+<div class="line"><a name="l00093"></a><span class="lineno">   93</span>&#160;<span class="keywordflow">         end do</span></div>
+<div class="line"><a name="l00094"></a><span class="lineno">   94</span>&#160;<span class="keywordflow">      end do</span></div>
 <div class="line"><a name="l00095"></a><span class="lineno">   95</span>&#160; </div>
-<div class="line"><a name="l00096"></a><span class="lineno">   96</span>&#160;  <span class="keyword">end subroutine </span><a class="code" href="namespacesll__m__qn__solver__2d__fem__sps__weak__form.html#a98ec6a1f5aa1c855f998dd4016753dd4">s_qn_solver_2d_fem_sps_weak_form__element_mat</a></div>
+<div class="line"><a name="l00096"></a><span class="lineno">   96</span>&#160;   <span class="keyword">end subroutine </span><a class="code" href="namespacesll__m__qn__solver__2d__fem__sps__weak__form.html#a98ec6a1f5aa1c855f998dd4016753dd4">s_qn_solver_2d_fem_sps_weak_form__element_mat</a></div>
 <div class="line"><a name="l00097"></a><span class="lineno">   97</span>&#160; </div>
-<div class="line"><a name="l00098"></a><span class="lineno">   98</span>&#160;  <span class="comment">! Compute elementary contribution to right hand side</span></div>
-<div class="line"><a name="l00099"></a><span class="lineno">   99</span>&#160;  <span class="keyword">subroutine </span><a class="code" href="namespacesll__m__qn__solver__2d__fem__sps__weak__form.html#a36c2f42514de13943b346ce7a1167cdd">s_qn_solver_2d_fem_sps_weak_form__element_rhs</a>( &amp;</div>
-<div class="line"><a name="l00100"></a><span class="lineno">  100</span>&#160;    self                        , &amp;</div>
-<div class="line"><a name="l00101"></a><span class="lineno">  101</span>&#160;    test_values_and_derivs_eta1 , &amp;</div>
-<div class="line"><a name="l00102"></a><span class="lineno">  102</span>&#160;    test_values_and_derivs_eta2 , &amp;</div>
-<div class="line"><a name="l00103"></a><span class="lineno">  103</span>&#160;    data_2d_rhs                 , &amp;</div>
-<div class="line"><a name="l00104"></a><span class="lineno">  104</span>&#160;    int_volume                  , &amp;</div>
-<div class="line"><a name="l00105"></a><span class="lineno">  105</span>&#160;    bi )</div>
-<div class="line"><a name="l00106"></a><span class="lineno"><a class="line" href="namespacesll__m__qn__solver__2d__fem__sps__weak__form.html#a36c2f42514de13943b346ce7a1167cdd">  106</a></span>&#160;    <span class="keywordtype">class</span>(<a class="code" href="structsll__m__qn__solver__2d__fem__sps__weak__form_1_1sll__t__qn__solver__2d__fem__sps__weak__form.html">sll_t_qn_solver_2d_fem_sps_weak_form</a>), <span class="keywordtype">intent(in   )</span> :: self</div>
-<div class="line"><a name="l00107"></a><span class="lineno">  107</span>&#160;<span class="keywordtype">    real</span>(wp)                                   , <span class="keywordtype">intent(in   )</span> :: test_values_and_derivs_eta1(:,:)</div>
-<div class="line"><a name="l00108"></a><span class="lineno">  108</span>&#160;<span class="keywordtype">    real</span>(wp)                                   , <span class="keywordtype">intent(in   )</span> :: test_values_and_derivs_eta2(:,:)</div>
-<div class="line"><a name="l00109"></a><span class="lineno">  109</span>&#160;<span class="keywordtype">    real</span>(wp)                                   , <span class="keywordtype">intent(in   )</span> :: data_2d_rhs(:,:)</div>
-<div class="line"><a name="l00110"></a><span class="lineno">  110</span>&#160;<span class="keywordtype">    real</span>(wp)                                   , <span class="keywordtype">intent(in   )</span> :: int_volume (:,:)</div>
-<div class="line"><a name="l00111"></a><span class="lineno">  111</span>&#160;<span class="keywordtype">    real</span>(wp)                                   , <span class="keywordtype">intent(  out)</span> :: bi</div>
+<div class="line"><a name="l00098"></a><span class="lineno">   98</span>&#160;   <span class="comment">! Compute elementary contribution to right hand side</span></div>
+<div class="line"><a name="l00099"></a><span class="lineno">   99</span>&#160;   <span class="keyword">subroutine </span><a class="code" href="namespacesll__m__qn__solver__2d__fem__sps__weak__form.html#a36c2f42514de13943b346ce7a1167cdd">s_qn_solver_2d_fem_sps_weak_form__element_rhs</a>( &amp;</div>
+<div class="line"><a name="l00100"></a><span class="lineno">  100</span>&#160;      self, &amp;</div>
+<div class="line"><a name="l00101"></a><span class="lineno">  101</span>&#160;      test_values_and_derivs_eta1, &amp;</div>
+<div class="line"><a name="l00102"></a><span class="lineno">  102</span>&#160;      test_values_and_derivs_eta2, &amp;</div>
+<div class="line"><a name="l00103"></a><span class="lineno">  103</span>&#160;      data_2d_rhs, &amp;</div>
+<div class="line"><a name="l00104"></a><span class="lineno">  104</span>&#160;      int_volume, &amp;</div>
+<div class="line"><a name="l00105"></a><span class="lineno">  105</span>&#160;      bi)</div>
+<div class="line"><a name="l00106"></a><span class="lineno"><a class="line" href="namespacesll__m__qn__solver__2d__fem__sps__weak__form.html#a36c2f42514de13943b346ce7a1167cdd">  106</a></span>&#160;      <span class="keywordtype">class</span>(<a class="code" href="structsll__m__qn__solver__2d__fem__sps__weak__form_1_1sll__t__qn__solver__2d__fem__sps__weak__form.html">sll_t_qn_solver_2d_fem_sps_weak_form</a>), <span class="keywordtype">intent(in)</span> :: self</div>
+<div class="line"><a name="l00107"></a><span class="lineno">  107</span>&#160;<span class="keywordtype">      real</span>(wp), <span class="keywordtype">intent(in)</span> :: test_values_and_derivs_eta1(:, :)</div>
+<div class="line"><a name="l00108"></a><span class="lineno">  108</span>&#160;<span class="keywordtype">      real</span>(wp), <span class="keywordtype">intent(in)</span> :: test_values_and_derivs_eta2(:, :)</div>
+<div class="line"><a name="l00109"></a><span class="lineno">  109</span>&#160;<span class="keywordtype">      real</span>(wp), <span class="keywordtype">intent(in)</span> :: data_2d_rhs(:, :)</div>
+<div class="line"><a name="l00110"></a><span class="lineno">  110</span>&#160;<span class="keywordtype">      real</span>(wp), <span class="keywordtype">intent(in)</span> :: int_volume(:, :)</div>
+<div class="line"><a name="l00111"></a><span class="lineno">  111</span>&#160;<span class="keywordtype">      real</span>(wp), <span class="keywordtype">intent(out)</span> :: bi</div>
 <div class="line"><a name="l00112"></a><span class="lineno">  112</span>&#160; </div>
-<div class="line"><a name="l00113"></a><span class="lineno">  113</span>&#160;    <span class="keywordtype">integer</span> :: q1, q2, Nq1, Nq2</div>
+<div class="line"><a name="l00113"></a><span class="lineno">  113</span>&#160;      <span class="keywordtype">integer</span> :: q1, q2, Nq1, Nq2</div>
 <div class="line"><a name="l00114"></a><span class="lineno">  114</span>&#160; </div>
-<div class="line"><a name="l00115"></a><span class="lineno">  115</span>&#160;    <span class="comment">! Extract number of quadrature points</span></div>
-<div class="line"><a name="l00116"></a><span class="lineno">  116</span>&#160;    nq1 = <span class="keyword">size</span>( test_values_and_derivs_eta1, 1 )</div>
-<div class="line"><a name="l00117"></a><span class="lineno">  117</span>&#160;    nq2 = <span class="keyword">size</span>( test_values_and_derivs_eta2, 1 )</div>
+<div class="line"><a name="l00115"></a><span class="lineno">  115</span>&#160;      <span class="comment">! Extract number of quadrature points</span></div>
+<div class="line"><a name="l00116"></a><span class="lineno">  116</span>&#160;      nq1 = <span class="keyword">size</span>(test_values_and_derivs_eta1, 1)</div>
+<div class="line"><a name="l00117"></a><span class="lineno">  117</span>&#160;      nq2 = <span class="keyword">size</span>(test_values_and_derivs_eta2, 1)</div>
 <div class="line"><a name="l00118"></a><span class="lineno">  118</span>&#160; </div>
-<div class="line"><a name="l00119"></a><span class="lineno">  119</span>&#160;    bi = 0.0_wp</div>
+<div class="line"><a name="l00119"></a><span class="lineno">  119</span>&#160;      bi = 0.0_wp</div>
 <div class="line"><a name="l00120"></a><span class="lineno">  120</span>&#160; </div>
-<div class="line"><a name="l00121"></a><span class="lineno">  121</span>&#160;    <span class="comment">! Quadrature</span></div>
-<div class="line"><a name="l00122"></a><span class="lineno">  122</span>&#160;    <span class="keywordflow">do</span> q2 = 1, nq2</div>
-<div class="line"><a name="l00123"></a><span class="lineno">  123</span>&#160;      <span class="keywordflow">do</span> q1 = 1, nq1</div>
+<div class="line"><a name="l00121"></a><span class="lineno">  121</span>&#160;      <span class="comment">! Quadrature</span></div>
+<div class="line"><a name="l00122"></a><span class="lineno">  122</span>&#160;      <span class="keywordflow">do</span> q2 = 1, nq2</div>
+<div class="line"><a name="l00123"></a><span class="lineno">  123</span>&#160;         <span class="keywordflow">do</span> q1 = 1, nq1</div>
 <div class="line"><a name="l00124"></a><span class="lineno">  124</span>&#160; </div>
-<div class="line"><a name="l00125"></a><span class="lineno">  125</span>&#160;        <span class="comment">! Elementary contribution to mass matrix</span></div>
-<div class="line"><a name="l00126"></a><span class="lineno">  126</span>&#160;        bi = bi + &amp;</div>
-<div class="line"><a name="l00127"></a><span class="lineno">  127</span>&#160;             test_values_and_derivs_eta1(q1,1) * test_values_and_derivs_eta2(q2,1) * &amp;</div>
-<div class="line"><a name="l00128"></a><span class="lineno">  128</span>&#160;             data_2d_rhs(q1,q2) * int_volume(q1,q2)</div>
+<div class="line"><a name="l00125"></a><span class="lineno">  125</span>&#160;            <span class="comment">! Elementary contribution to mass matrix</span></div>
+<div class="line"><a name="l00126"></a><span class="lineno">  126</span>&#160;            bi = bi + &amp;</div>
+<div class="line"><a name="l00127"></a><span class="lineno">  127</span>&#160;                 test_values_and_derivs_eta1(q1, 1)*test_values_and_derivs_eta2(q2, 1)* &amp;</div>
+<div class="line"><a name="l00128"></a><span class="lineno">  128</span>&#160;                 data_2d_rhs(q1, q2)*int_volume(q1, q2)</div>
 <div class="line"><a name="l00129"></a><span class="lineno">  129</span>&#160; </div>
-<div class="line"><a name="l00130"></a><span class="lineno">  130</span>&#160;<span class="keywordflow">      end do</span></div>
-<div class="line"><a name="l00131"></a><span class="lineno">  131</span>&#160;<span class="keywordflow">    end do</span></div>
+<div class="line"><a name="l00130"></a><span class="lineno">  130</span>&#160;<span class="keywordflow">         end do</span></div>
+<div class="line"><a name="l00131"></a><span class="lineno">  131</span>&#160;<span class="keywordflow">      end do</span></div>
 <div class="line"><a name="l00132"></a><span class="lineno">  132</span>&#160; </div>
-<div class="line"><a name="l00133"></a><span class="lineno">  133</span>&#160;  <span class="keyword">end subroutine </span><a class="code" href="namespacesll__m__qn__solver__2d__fem__sps__weak__form.html#a36c2f42514de13943b346ce7a1167cdd">s_qn_solver_2d_fem_sps_weak_form__element_rhs</a></div>
+<div class="line"><a name="l00133"></a><span class="lineno">  133</span>&#160;   <span class="keyword">end subroutine </span><a class="code" href="namespacesll__m__qn__solver__2d__fem__sps__weak__form.html#a36c2f42514de13943b346ce7a1167cdd">s_qn_solver_2d_fem_sps_weak_form__element_rhs</a></div>
 <div class="line"><a name="l00134"></a><span class="lineno">  134</span>&#160; </div>
 <div class="line"><a name="l00135"></a><span class="lineno">  135</span>&#160;<span class="keyword">end module </span><a class="code" href="namespacesll__m__qn__solver__2d__fem__sps__weak__form.html">sll_m_qn_solver_2d_fem_sps_weak_form</a></div>
 </div><!-- fragment --></div><!-- contents -->
@@ -230,7 +230,7 @@ $(function() {
 <div id="url"></div>
 <div align=left><a href="https://github.com/selalib/selalib/issues/new"><small>&nbsp; &nbsp; Report Typos and Errors</small></a></div>
 <address class="footer"><small>
-Generated on Wed Mar 10 2021 09:25:53 for Semi-Lagrangian Library by &#160;<a href="http://www.doxygen.org/index.html">
+Generated on Wed Mar 10 2021 09:42:19 for Semi-Lagrangian Library by &#160;<a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/>
 </a> 1.8.17
 </small></address>

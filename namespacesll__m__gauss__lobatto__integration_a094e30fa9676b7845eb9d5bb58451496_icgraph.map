@@ -1,5 +1,5 @@
 <map id="sll_f_gauss_lobatto_derivative_matrix" name="sll_f_gauss_lobatto_derivative_matrix">
 <area shape="rect" id="node1" title="Construction of the derivative matrix for Gauss&#45;Lobatto, The matrix must be already allocated of size..." alt="" coords="521,5,668,47"/>
 <area shape="rect" id="node2" href="$namespacesll__m__maxwell__2d__diga.html#aea7962198b6305c1256087d5a9e5c8fe" title="Initialize Maxwell solver object using DG method." alt="" coords="265,5,473,47"/>
-<area shape="rect" id="node3" href="$namespacesll__m__maxwell__2d__diga.html#aaf46345a54f1b41f672df6227faf9606" title=" " alt="" coords="5,5,217,47"/>
+<area shape="rect" id="node3" href="$namespacesll__m__maxwell__2d__diga.html#a757b8a57dde51f462e899778a250a81d" title=" " alt="" coords="5,5,217,47"/>
 </map>

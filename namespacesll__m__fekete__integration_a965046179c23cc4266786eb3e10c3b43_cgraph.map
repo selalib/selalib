@@ -1,6 +1,6 @@
 <map id="sll_f_fekete_integral" name="sll_f_fekete_integral">
 <area shape="rect" id="node1" title="Fekete quadrature rule over a triangle." alt="" coords="5,107,160,133"/>
-<area shape="rect" id="node2" href="$namespacesll__m__fekete__integration.html#a000587e1502ac1254502c6e3d3600f26" title="Gives the fekete points coordinates and associated weights for a certain rule in a given triangle." alt="" coords="208,99,352,141"/>
+<area shape="rect" id="node2" href="$namespacesll__m__fekete__integration.html#adf467550a7dbaf4287e51119b1a86770" title="Gives the fekete points coordinates and associated weights for a certain rule in a given triangle." alt="" coords="208,99,352,141"/>
 <area shape="rect" id="node3" href="$namespacesll__m__fekete__integration.html#a27f642a490626a046858fb87eedff174" title="returns the points and weights of a Fekete rule." alt="" coords="445,81,540,108"/>
 <area shape="rect" id="node8" href="$namespacesll__m__fekete__integration.html#aa74e57776217489a27f8c7ef355a3e14" title="Re arranges the order of the quadrature point to go from lower&#45;left to top right." alt="" coords="410,132,575,159"/>
 <area shape="rect" id="node9" href="$namespacesll__m__fekete__integration.html#a51d156745cf92c12df4b41a477cd6c6a" title="maps T3 reference points to physical points." alt="" coords="400,183,585,209"/>

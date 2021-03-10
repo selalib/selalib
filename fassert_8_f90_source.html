@@ -88,22 +88,22 @@ $(function() {
 <div class="line"><a name="l00007"></a><span class="lineno">    7</span>&#160; </div>
 <div class="line"><a name="l00008"></a><span class="lineno"><a class="line" href="namespaceassert.html">    8</a></span>&#160;<span class="keyword">module</span> <a class="code" href="namespaceassert.html">assert</a></div>
 <div class="line"><a name="l00009"></a><span class="lineno">    9</span>&#160; </div>
-<div class="line"><a name="l00010"></a><span class="lineno">   10</span>&#160;  <span class="keywordtype">implicit none</span></div>
+<div class="line"><a name="l00010"></a><span class="lineno">   10</span>&#160;   <span class="keywordtype">implicit none</span></div>
 <div class="line"><a name="l00011"></a><span class="lineno">   11</span>&#160; </div>
 <div class="line"><a name="l00012"></a><span class="lineno">   12</span>&#160;<span class="keyword">contains</span></div>
 <div class="line"><a name="l00013"></a><span class="lineno">   13</span>&#160; </div>
-<div class="line"><a name="l00014"></a><span class="lineno">   14</span>&#160;  <span class="comment">! Assertion routine designed to mimick the behavior of C&#39;s &#39;assert&#39; from &#39;assert.h&#39;.</span></div>
-<div class="line"><a name="l00015"></a><span class="lineno">   15</span>&#160;  <span class="comment">! To be called from the ASSERT() macro from &#39;fassert.h&#39;, not directly.</span></div>
-<div class="line"><a name="l00016"></a><span class="lineno">   16</span>&#160;  <span class="keyword">subroutine </span><a class="code" href="namespaceassert.html#a702661a113a68dbfd7a64b4fb341939d">assertion</a>(cond, file, line)</div>
-<div class="line"><a name="l00017"></a><span class="lineno"><a class="line" href="namespaceassert.html#a702661a113a68dbfd7a64b4fb341939d">   17</a></span>&#160;    <span class="keywordtype">character(len=*)</span>, <span class="keywordtype">intent(in)</span> :: cond</div>
-<div class="line"><a name="l00018"></a><span class="lineno">   18</span>&#160;    <span class="keywordtype">character(len=*)</span>, <span class="keywordtype">intent(in)</span> :: file</div>
-<div class="line"><a name="l00019"></a><span class="lineno">   19</span>&#160;    <span class="keywordtype">integer</span>, <span class="keywordtype">intent(in)</span> :: line</div>
-<div class="line"><a name="l00020"></a><span class="lineno">   20</span>&#160;    <span class="keywordtype">character(len=6)</span> :: line_str</div>
-<div class="line"><a name="l00021"></a><span class="lineno">   21</span>&#160;    <span class="keyword">write</span>(line_str, <span class="stringliteral">&#39;(i6)&#39;</span>) line</div>
-<div class="line"><a name="l00022"></a><span class="lineno">   22</span>&#160;    <span class="keyword">write</span>(*,<span class="stringliteral">&#39;(a, a, a, a, a, a)&#39;</span>) file, <span class="stringliteral">&quot;:&quot;</span>, trim(adjustl(line_str)), <span class="stringliteral">&quot;: Assertion `&quot;</span>, cond, <span class="stringliteral">&quot;&#39; failed.&quot;</span></div>
-<div class="line"><a name="l00023"></a><span class="lineno">   23</span>&#160;    <span class="keyword">write</span>(*,<span class="stringliteral">&#39;(a)&#39;</span>) <span class="stringliteral">&quot;Aborted&quot;</span></div>
-<div class="line"><a name="l00024"></a><span class="lineno">   24</span>&#160;    stop 1</div>
-<div class="line"><a name="l00025"></a><span class="lineno">   25</span>&#160;  <span class="keyword">end subroutine </span><a class="code" href="namespaceassert.html#a702661a113a68dbfd7a64b4fb341939d">assertion</a></div>
+<div class="line"><a name="l00014"></a><span class="lineno">   14</span>&#160;   <span class="comment">! Assertion routine designed to mimick the behavior of C&#39;s &#39;assert&#39; from &#39;assert.h&#39;.</span></div>
+<div class="line"><a name="l00015"></a><span class="lineno">   15</span>&#160;   <span class="comment">! To be called from the ASSERT() macro from &#39;fassert.h&#39;, not directly.</span></div>
+<div class="line"><a name="l00016"></a><span class="lineno">   16</span>&#160;   <span class="keyword">subroutine </span><a class="code" href="namespaceassert.html#a702661a113a68dbfd7a64b4fb341939d">assertion</a>(cond, file, line)</div>
+<div class="line"><a name="l00017"></a><span class="lineno"><a class="line" href="namespaceassert.html#a702661a113a68dbfd7a64b4fb341939d">   17</a></span>&#160;      <span class="keywordtype">character(len=*)</span>, <span class="keywordtype">intent(in)</span> :: cond</div>
+<div class="line"><a name="l00018"></a><span class="lineno">   18</span>&#160;      <span class="keywordtype">character(len=*)</span>, <span class="keywordtype">intent(in)</span> :: file</div>
+<div class="line"><a name="l00019"></a><span class="lineno">   19</span>&#160;      <span class="keywordtype">integer</span>, <span class="keywordtype">intent(in)</span> :: line</div>
+<div class="line"><a name="l00020"></a><span class="lineno">   20</span>&#160;      <span class="keywordtype">character(len=6)</span> :: line_str</div>
+<div class="line"><a name="l00021"></a><span class="lineno">   21</span>&#160;      <span class="keyword">write</span> (line_str, <span class="stringliteral">&#39;(i6)&#39;</span>) line</div>
+<div class="line"><a name="l00022"></a><span class="lineno">   22</span>&#160;      <span class="keyword">write</span> (*, <span class="stringliteral">&#39;(a, a, a, a, a, a)&#39;</span>) file, <span class="stringliteral">&quot;:&quot;</span>, trim(adjustl(line_str)), <span class="stringliteral">&quot;: Assertion `&quot;</span>, cond, <span class="stringliteral">&quot;&#39; failed.&quot;</span></div>
+<div class="line"><a name="l00023"></a><span class="lineno">   23</span>&#160;      <span class="keyword">write</span> (*, <span class="stringliteral">&#39;(a)&#39;</span>) <span class="stringliteral">&quot;Aborted&quot;</span></div>
+<div class="line"><a name="l00024"></a><span class="lineno">   24</span>&#160;      stop 1</div>
+<div class="line"><a name="l00025"></a><span class="lineno">   25</span>&#160;   <span class="keyword">end subroutine </span><a class="code" href="namespaceassert.html#a702661a113a68dbfd7a64b4fb341939d">assertion</a></div>
 <div class="line"><a name="l00026"></a><span class="lineno">   26</span>&#160; </div>
 <div class="line"><a name="l00027"></a><span class="lineno">   27</span>&#160;<span class="keyword">end module </span><a class="code" href="namespaceassert.html">assert</a></div>
 </div><!-- fragment --></div><!-- contents -->
@@ -115,7 +115,7 @@ $(function() {
 <div id="url"></div>
 <div align=left><a href="https://github.com/selalib/selalib/issues/new"><small>&nbsp; &nbsp; Report Typos and Errors</small></a></div>
 <address class="footer"><small>
-Generated on Wed Mar 10 2021 09:25:54 for Semi-Lagrangian Library by &#160;<a href="http://www.doxygen.org/index.html">
+Generated on Wed Mar 10 2021 09:42:19 for Semi-Lagrangian Library by &#160;<a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/>
 </a> 1.8.17
 </small></address>

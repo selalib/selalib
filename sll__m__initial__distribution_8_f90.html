@@ -200,16 +200,16 @@ Variables</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-<b>Value:</b><div class="fragment"><div class="line"><a name="l00001"></a><span class="lineno">    1</span>&#160;  <span class="keyword">subroutine </span>fname( file_id, params );\</div>
-<div class="line"><a name="l00002"></a><span class="lineno">    2</span>&#160;    sll_int32, <span class="keywordtype">intent( in )</span> :: file_id;\</div>
-<div class="line"><a name="l00003"></a><span class="lineno">    3</span>&#160;    <span class="keywordtype">type</span>( sll_t_params_cos_gaussian ), <span class="keywordtype">intent( inout )</span> :: params; \</div>
-<div class="line"><a name="l00004"></a><span class="lineno">    4</span>&#160;    sll_real64 :: kx(dimx); \</div>
-<div class="line"><a name="l00005"></a><span class="lineno">    5</span>&#160;    sll_real64 :: alpha(dimalpha); \</div>
-<div class="line"><a name="l00006"></a><span class="lineno">    6</span>&#160;    sll_real64 :: v_thermal(dimv); \</div>
-<div class="line"><a name="l00007"></a><span class="lineno">    7</span>&#160;    sll_real64 :: v_mean(dimv); \</div>
-<div class="line"><a name="l00008"></a><span class="lineno">    8</span>&#160;    sll_int32  :: j; \</div>
-<div class="line"><a name="l00009"></a><span class="lineno">    9</span>&#160;    namelist /cos_onegaussian/ kx, alpha, v_thermal, v_mean; \</div>
-<div class="line"><a name="l00010"></a><span class="lineno">   10</span>&#160;    params%n_cos = dimalpha;</div>
+<b>Value:</b><div class="fragment"><div class="line"><a name="l00001"></a><span class="lineno">    1</span>&#160;   <span class="keyword">subroutine </span>fname(file_id, params); \</div>
+<div class="line"><a name="l00002"></a><span class="lineno">    2</span>&#160;      sll_int32, <span class="keywordtype">intent(in)</span> :: file_id; \</div>
+<div class="line"><a name="l00003"></a><span class="lineno">    3</span>&#160;      <span class="keywordtype">type</span>(sll_t_params_cos_gaussian), <span class="keywordtype">intent(inout)</span> :: params; \</div>
+<div class="line"><a name="l00004"></a><span class="lineno">    4</span>&#160;      sll_real64 :: kx(dimx); \</div>
+<div class="line"><a name="l00005"></a><span class="lineno">    5</span>&#160;      sll_real64 :: alpha(dimalpha); \</div>
+<div class="line"><a name="l00006"></a><span class="lineno">    6</span>&#160;      sll_real64 :: v_thermal(dimv); \</div>
+<div class="line"><a name="l00007"></a><span class="lineno">    7</span>&#160;      sll_real64 :: v_mean(dimv); \</div>
+<div class="line"><a name="l00008"></a><span class="lineno">    8</span>&#160;      sll_int32  :: j; \</div>
+<div class="line"><a name="l00009"></a><span class="lineno">    9</span>&#160;      namelist /cos_onegaussian/ kx, alpha, v_thermal, v_mean; \</div>
+<div class="line"><a name="l00010"></a><span class="lineno">   10</span>&#160;      params%n_cos = dimalpha;</div>
 </div><!-- fragment -->
 </div>
 </div>
@@ -250,19 +250,19 @@ Variables</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-<b>Value:</b><div class="fragment"><div class="line"><a name="l00001"></a><span class="lineno">    1</span>&#160;  <span class="keyword">subroutine </span>fname( file_id, params ); \</div>
-<div class="line"><a name="l00002"></a><span class="lineno">    2</span>&#160;    sll_int32, <span class="keywordtype">intent( in )</span> :: file_id; \</div>
-<div class="line"><a name="l00003"></a><span class="lineno">    3</span>&#160;    <span class="keywordtype">type</span>( sll_t_params_cos_gaussian ), <span class="keywordtype">intent( inout )</span> :: params; \</div>
-<div class="line"><a name="l00004"></a><span class="lineno">    4</span>&#160;    sll_real64 :: kx(dimx); \</div>
-<div class="line"><a name="l00005"></a><span class="lineno">    5</span>&#160;    sll_real64 :: alpha(dimalpha); \</div>
-<div class="line"><a name="l00006"></a><span class="lineno">    6</span>&#160;    sll_real64 :: v_thermal_1(dimv); \</div>
-<div class="line"><a name="l00007"></a><span class="lineno">    7</span>&#160;    sll_real64 :: v_mean_1(dimv); \</div>
-<div class="line"><a name="l00008"></a><span class="lineno">    8</span>&#160;    sll_real64 :: v_thermal_2(dimv); \</div>
-<div class="line"><a name="l00009"></a><span class="lineno">    9</span>&#160;    sll_real64 :: v_mean_2(dimv); \</div>
-<div class="line"><a name="l00010"></a><span class="lineno">   10</span>&#160;    sll_real64 :: delta; \</div>
-<div class="line"><a name="l00011"></a><span class="lineno">   11</span>&#160;    sll_int32  :: j; \</div>
-<div class="line"><a name="l00012"></a><span class="lineno">   12</span>&#160;    namelist /cos_twogaussian/ kx, alpha, v_thermal_1, v_mean_1, v_thermal_2, v_mean_2, delta; \</div>
-<div class="line"><a name="l00013"></a><span class="lineno">   13</span>&#160;    params%n_cos = dimalpha;</div>
+<b>Value:</b><div class="fragment"><div class="line"><a name="l00001"></a><span class="lineno">    1</span>&#160;      <span class="keyword">subroutine </span>fname(file_id, params); \</div>
+<div class="line"><a name="l00002"></a><span class="lineno">    2</span>&#160;         sll_int32, <span class="keywordtype">intent(in)</span> :: file_id; \</div>
+<div class="line"><a name="l00003"></a><span class="lineno">    3</span>&#160;         <span class="keywordtype">type</span>(sll_t_params_cos_gaussian), <span class="keywordtype">intent(inout)</span> :: params; \</div>
+<div class="line"><a name="l00004"></a><span class="lineno">    4</span>&#160;         sll_real64 :: kx(dimx); \</div>
+<div class="line"><a name="l00005"></a><span class="lineno">    5</span>&#160;         sll_real64 :: alpha(dimalpha); \</div>
+<div class="line"><a name="l00006"></a><span class="lineno">    6</span>&#160;         sll_real64 :: v_thermal_1(dimv); \</div>
+<div class="line"><a name="l00007"></a><span class="lineno">    7</span>&#160;         sll_real64 :: v_mean_1(dimv); \</div>
+<div class="line"><a name="l00008"></a><span class="lineno">    8</span>&#160;         sll_real64 :: v_thermal_2(dimv); \</div>
+<div class="line"><a name="l00009"></a><span class="lineno">    9</span>&#160;         sll_real64 :: v_mean_2(dimv); \</div>
+<div class="line"><a name="l00010"></a><span class="lineno">   10</span>&#160;         sll_real64 :: delta; \</div>
+<div class="line"><a name="l00011"></a><span class="lineno">   11</span>&#160;         sll_int32  :: j; \</div>
+<div class="line"><a name="l00012"></a><span class="lineno">   12</span>&#160;         namelist /cos_twogaussian/ kx, alpha, v_thermal_1, v_mean_1, v_thermal_2, v_mean_2, delta; \</div>
+<div class="line"><a name="l00013"></a><span class="lineno">   13</span>&#160;         params%n_cos = dimalpha;</div>
 </div><!-- fragment -->
 </div>
 </div>
@@ -273,7 +273,7 @@ Variables</h2></td></tr>
 <div id="url"></div>
 <div align=left><a href="https://github.com/selalib/selalib/issues/new"><small>&nbsp; &nbsp; Report Typos and Errors</small></a></div>
 <address class="footer"><small>
-Generated on Wed Mar 10 2021 09:25:54 for Semi-Lagrangian Library by &#160;<a href="http://www.doxygen.org/index.html">
+Generated on Wed Mar 10 2021 09:42:20 for Semi-Lagrangian Library by &#160;<a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/>
 </a> 1.8.17
 </small></address>

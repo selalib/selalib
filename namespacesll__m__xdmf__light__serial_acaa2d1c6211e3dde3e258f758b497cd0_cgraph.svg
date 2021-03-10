@@ -21,7 +21,7 @@
 <!-- Node2 -->
 <g id="node2" class="node">
 <title>Node2</title>
-<g id="a_node2"><a xlink:href="namespacesll__m__io__utilities.html#a3eeacaf67bd84761fd1ee6b7d9efdb01" target="_top" xlink:title="Write an array of integers to a single string: . Numbers are separated by a blank space; &#160;&#160;....">
+<g id="a_node2"><a xlink:href="namespacesll__m__io__utilities.html#a3eeacaf67bd84761fd1ee6b7d9efdb01" target="_top" xlink:title="Write an array of integers to a single string: . Numbers are separated by a blank space; ....">
 <polygon fill="white" stroke="black" points="140,-0.5 140,-30.5 256,-30.5 256,-0.5 140,-0.5"/>
 <text text-anchor="start" x="148" y="-18.5" font-family="Helvetica,sans-Serif" font-size="10.00">sll_m_io_utilities</text>
 <text text-anchor="middle" x="198" y="-7.5" font-family="Helvetica,sans-Serif" font-size="10.00">::sll_s_ints_to_string</text>

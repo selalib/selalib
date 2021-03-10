@@ -195,9 +195,9 @@ Functions/Subroutines</h2></td></tr>
 <tr class="memitem:af4c7023c3346377d9d627beef7d4be09"><td class="memItemLeft" align="right" valign="top">subroutine&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacesll__m__particle__group__2d2v__lbf.html#af4c7023c3346377d9d627beef7d4be09">periodic_correction</a> (p_group, x, y)</td></tr>
 <tr class="memdesc:af4c7023c3346377d9d627beef7d4be09"><td class="mdescLeft">&#160;</td><td class="mdescRight">periodic_correction ----------------------------------------------------------------------------------------------------&mdash; puts the point (x,y) back into the computational domain if periodic in x or y (or both) otherwise, does nothing  <a href="namespacesll__m__particle__group__2d2v__lbf.html#af4c7023c3346377d9d627beef7d4be09">More...</a><br /></td></tr>
 <tr class="separator:af4c7023c3346377d9d627beef7d4be09"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:afd7436d27d911764b09845a4755911bb"><td class="memItemLeft" align="right" valign="top">type(sll_t_int_list_element) function, pointer&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacesll__m__particle__group__2d2v__lbf.html#afd7436d27d911764b09845a4755911bb">sll_f_add_element_in_int_list</a> (head, new_element)</td></tr>
-<tr class="memdesc:afd7436d27d911764b09845a4755911bb"><td class="mdescLeft">&#160;</td><td class="mdescRight">sll_f_add_element_in_int_list ------------------------------------------------------------------------------------------&mdash; list management  <a href="namespacesll__m__particle__group__2d2v__lbf.html#afd7436d27d911764b09845a4755911bb">More...</a><br /></td></tr>
-<tr class="separator:afd7436d27d911764b09845a4755911bb"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a9ea469cf9548539be3e8977439eedb78"><td class="memItemLeft" align="right" valign="top">type(sll_t_int_list_element) function, pointer&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacesll__m__particle__group__2d2v__lbf.html#a9ea469cf9548539be3e8977439eedb78">sll_f_add_element_in_int_list</a> (head, new_element)</td></tr>
+<tr class="memdesc:a9ea469cf9548539be3e8977439eedb78"><td class="mdescLeft">&#160;</td><td class="mdescRight">sll_f_add_element_in_int_list ------------------------------------------------------------------------------------------&mdash; list management  <a href="namespacesll__m__particle__group__2d2v__lbf.html#a9ea469cf9548539be3e8977439eedb78">More...</a><br /></td></tr>
+<tr class="separator:a9ea469cf9548539be3e8977439eedb78"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a7c81cd38ca6e0bb185a2020db2114194"><td class="memItemLeft" align="right" valign="top">subroutine&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacesll__m__particle__group__2d2v__lbf.html#a7c81cd38ca6e0bb185a2020db2114194">convert_4d_index_to_1d</a> (k, j_x, j_y, j_vx, j_vy, n_parts_x, n_parts_y, n_parts_vx, n_parts_vy)</td></tr>
 <tr class="memdesc:a7c81cd38ca6e0bb185a2020db2114194"><td class="mdescLeft">&#160;</td><td class="mdescRight">convert_4d_index_to_1d -------------------------------------------------------------------------------------------------&mdash; given the 4d index of a node on a cartesian grid, returns its 1d index in some assumed order see inverse function convert_1d_index_to_4d  <a href="namespacesll__m__particle__group__2d2v__lbf.html#a7c81cd38ca6e0bb185a2020db2114194">More...</a><br /></td></tr>
 <tr class="separator:a7c81cd38ca6e0bb185a2020db2114194"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -257,32 +257,32 @@ Variables</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-<b>Value:</b><div class="fragment"><div class="line"><a name="l00001"></a><span class="lineno">    1</span>&#160;    do; \</div>
-<div class="line"><a name="l00002"></a><span class="lineno">    2</span>&#160;        k_neighbor = closest_particle(j_x+(djx), j_y+(djy), j_vx+(djvx), j_vy+(djvy)); \</div>
-<div class="line"><a name="l00003"></a><span class="lineno">    3</span>&#160;; \</div>
-<div class="line"><a name="l00004"></a><span class="lineno">    4</span>&#160;        <span class="keywordflow">if</span>(k_neighbor /= 0) then; \</div>
-<div class="line"><a name="l00005"></a><span class="lineno">    5</span>&#160;        do; \</div>
-<div class="line"><a name="l00006"></a><span class="lineno">    6</span>&#160;            coords = self%get_x(k_neighbor) ; \</div>
-<div class="line"><a name="l00007"></a><span class="lineno">    7</span>&#160;            x = coords(1) ; \</div>
-<div class="line"><a name="l00008"></a><span class="lineno">    8</span>&#160;            y = coords(2) ; \</div>
-<div class="line"><a name="l00009"></a><span class="lineno">    9</span>&#160;            coords = self%get_v(k_neighbor) ; \</div>
-<div class="line"><a name="l00010"></a><span class="lineno">   10</span>&#160;            vx = coords(1) ; \</div>
-<div class="line"><a name="l00011"></a><span class="lineno">   11</span>&#160;            vy = coords(2) ; \</div>
-<div class="line"><a name="l00012"></a><span class="lineno">   12</span>&#160;            <span class="keyword">call </span>periodic_correction(self,x,y) ; \</div>
+<b>Value:</b><div class="fragment"><div class="line"><a name="l00001"></a><span class="lineno">    1</span>&#160;   do; \</div>
+<div class="line"><a name="l00002"></a><span class="lineno">    2</span>&#160;      k_neighbor = closest_particle(j_x + (djx), j_y + (djy), j_vx + (djvx), j_vy + (djvy)); \</div>
+<div class="line"><a name="l00003"></a><span class="lineno">    3</span>&#160;      ; \</div>
+<div class="line"><a name="l00004"></a><span class="lineno">    4</span>&#160;      <span class="keywordflow">if</span> (k_neighbor /= 0) then; \</div>
+<div class="line"><a name="l00005"></a><span class="lineno">    5</span>&#160;         do; \</div>
+<div class="line"><a name="l00006"></a><span class="lineno">    6</span>&#160;            coords = self%get_x(k_neighbor); \</div>
+<div class="line"><a name="l00007"></a><span class="lineno">    7</span>&#160;            x = coords(1); \</div>
+<div class="line"><a name="l00008"></a><span class="lineno">    8</span>&#160;            y = coords(2); \</div>
+<div class="line"><a name="l00009"></a><span class="lineno">    9</span>&#160;            coords = self%get_v(k_neighbor); \</div>
+<div class="line"><a name="l00010"></a><span class="lineno">   10</span>&#160;            vx = coords(1); \</div>
+<div class="line"><a name="l00011"></a><span class="lineno">   11</span>&#160;            vy = coords(2); \</div>
+<div class="line"><a name="l00012"></a><span class="lineno">   12</span>&#160;            <span class="keyword">call </span>periodic_correction(self, x, y); \</div>
 <div class="line"><a name="l00013"></a><span class="lineno">   13</span>&#160;            <span class="keyword">call </span>update_closest_particle_arrays(k_neighbor, \</div>
-<div class="line"><a name="l00014"></a><span class="lineno">   14</span>&#160;                x - self%lbf_grid%eta1_min, y - self%lbf_grid%eta2_min, vx - self%lbf_grid%eta3_min, vy - self%lbf_grid%eta4_min, \</div>
-<div class="line"><a name="l00015"></a><span class="lineno">   15</span>&#160;                j_x, j_y, j_vx, j_vy, \</div>
-<div class="line"><a name="l00016"></a><span class="lineno">   16</span>&#160;                h_flow_grid_x, \</div>
-<div class="line"><a name="l00017"></a><span class="lineno">   17</span>&#160;                h_flow_grid_y, \</div>
-<div class="line"><a name="l00018"></a><span class="lineno">   18</span>&#160;                h_flow_grid_vx, \</div>
-<div class="line"><a name="l00019"></a><span class="lineno">   19</span>&#160;                h_flow_grid_vy, \</div>
-<div class="line"><a name="l00020"></a><span class="lineno">   20</span>&#160;                closest_particle, \</div>
-<div class="line"><a name="l00021"></a><span class="lineno">   21</span>&#160;                closest_particle_distance) ; \</div>
-<div class="line"><a name="l00022"></a><span class="lineno">   22</span>&#160;        exit; \</div>
-<div class="line"><a name="l00023"></a><span class="lineno">   23</span>&#160;        <span class="keyword">end </span>do; \</div>
-<div class="line"><a name="l00024"></a><span class="lineno">   24</span>&#160;        <span class="keyword">end </span>if; \</div>
-<div class="line"><a name="l00025"></a><span class="lineno">   25</span>&#160;    exit; \</div>
-<div class="line"><a name="l00026"></a><span class="lineno">   26</span>&#160;    <span class="keyword">end </span>do</div>
+<div class="line"><a name="l00014"></a><span class="lineno">   14</span>&#160;            x - self%lbf_grid%eta1_min, y - self%lbf_grid%eta2_min, vx - self%lbf_grid%eta3_min, vy - self%lbf_grid%eta4_min, \</div>
+<div class="line"><a name="l00015"></a><span class="lineno">   15</span>&#160;            j_x, j_y, j_vx, j_vy, \</div>
+<div class="line"><a name="l00016"></a><span class="lineno">   16</span>&#160;            h_flow_grid_x, \</div>
+<div class="line"><a name="l00017"></a><span class="lineno">   17</span>&#160;            h_flow_grid_y, \</div>
+<div class="line"><a name="l00018"></a><span class="lineno">   18</span>&#160;            h_flow_grid_vx, \</div>
+<div class="line"><a name="l00019"></a><span class="lineno">   19</span>&#160;            h_flow_grid_vy, \</div>
+<div class="line"><a name="l00020"></a><span class="lineno">   20</span>&#160;            closest_particle, \</div>
+<div class="line"><a name="l00021"></a><span class="lineno">   21</span>&#160;            closest_particle_distance); \</div>
+<div class="line"><a name="l00022"></a><span class="lineno">   22</span>&#160;            exit; \</div>
+<div class="line"><a name="l00023"></a><span class="lineno">   23</span>&#160;         <span class="keyword">end </span>do; \</div>
+<div class="line"><a name="l00024"></a><span class="lineno">   24</span>&#160;      <span class="keyword">end </span>if; \</div>
+<div class="line"><a name="l00025"></a><span class="lineno">   25</span>&#160;      exit; \</div>
+<div class="line"><a name="l00026"></a><span class="lineno">   26</span>&#160;   <span class="keyword">end </span>do</div>
 </div><!-- fragment -->
 </div>
 </div>
@@ -293,7 +293,7 @@ Variables</h2></td></tr>
 <div id="url"></div>
 <div align=left><a href="https://github.com/selalib/selalib/issues/new"><small>&nbsp; &nbsp; Report Typos and Errors</small></a></div>
 <address class="footer"><small>
-Generated on Wed Mar 10 2021 09:25:55 for Semi-Lagrangian Library by &#160;<a href="http://www.doxygen.org/index.html">
+Generated on Wed Mar 10 2021 09:42:20 for Semi-Lagrangian Library by &#160;<a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/>
 </a> 1.8.17
 </small></address>

@@ -81,8 +81,7 @@ $(function() {
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="func-members"></a>
 Functions/Subroutines</h2></td></tr>
 <tr class="memitem:ab8ac37685dad402f808e43fd26578034"><td class="memItemLeft" align="right" valign="top">type(<a class="el" href="structsll__m__sparse__matrix_1_1sll__t__csr__matrix.html">sll_t_csr_matrix</a>) function, pointer, public&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacesll__m__sparse__matrix__mp.html#ab8ac37685dad402f808e43fd26578034">sll_f_new_csr_matrix_mp</a> (num_rows, num_cols, num_patch, num_elements, local_to_global_row, num_local_dof_row, local_to_global_col, num_local_dof_col)</td></tr>
-<tr class="memdesc:ab8ac37685dad402f808e43fd26578034"><td class="mdescLeft">&#160;</td><td class="mdescRight">allocates the memory space for a new CSR type on the heap, initializes it with the given arguments and returns a pointer to the object. param[in] num_rows : number of rows param[in] num_cols : number of columns parma[in] num_patch: number of patch <br  />
- param[in] num_element : num_element(p) number of elements non zero for each patch param[in] local_to_global_row : local_to_global_row(p,\ell,i) gives the global row index of the matrix, for the element i and local degree of freedom \ell for patch p param[in] num_local_dof_row : num_local_dof_row(p) number of local degrees of freedom for the rows for each patch param[in] local_to_global_col : local_to_global_col(p,\ell,i) gives the global column index of the matrix, for the element i and local degree of freedom \ell for patch p param[in] num_local_dof_col : num_local_dof_col(p) number of local degrees of freedom for the columns for each patch return a pointer to the newly allocated object.  <a href="namespacesll__m__sparse__matrix__mp.html#ab8ac37685dad402f808e43fd26578034">More...</a><br /></td></tr>
+<tr class="memdesc:ab8ac37685dad402f808e43fd26578034"><td class="mdescLeft">&#160;</td><td class="mdescRight">allocates the memory space for a new CSR type on the heap, initializes it with the given arguments and returns a pointer to the object. param[in] num_rows : number of rows param[in] num_cols : number of columns parma[in] num_patch: number of patch param[in] num_element : num_element(p) number of elements non zero for each patch param[in] local_to_global_row : local_to_global_row(p,\ell,i) gives the global row index of the matrix, for the element i and local degree of freedom \ell for patch p param[in] num_local_dof_row : num_local_dof_row(p) number of local degrees of freedom for the rows for each patch param[in] local_to_global_col : local_to_global_col(p,\ell,i) gives the global column index of the matrix, for the element i and local degree of freedom \ell for patch p param[in] num_local_dof_col : num_local_dof_col(p) number of local degrees of freedom for the columns for each patch return a pointer to the newly allocated object.  <a href="namespacesll__m__sparse__matrix__mp.html#ab8ac37685dad402f808e43fd26578034">More...</a><br /></td></tr>
 <tr class="separator:ab8ac37685dad402f808e43fd26578034"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ad32ebfd00f8ef3065b6859eca129d87a"><td class="memItemLeft" align="right" valign="top">subroutine, public&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacesll__m__sparse__matrix__mp.html#ad32ebfd00f8ef3065b6859eca129d87a">sll_s_csr_matrix_mp_init</a> (mat, num_rows, num_cols, num_patch, num_elements, local_to_global_row, num_local_dof_row, local_to_global_col, num_local_dof_col)</td></tr>
 <tr class="memdesc:ad32ebfd00f8ef3065b6859eca129d87a"><td class="mdescLeft">&#160;</td><td class="mdescRight">initialization of CSR matrix type thanks to the global index of each local dof of each element param[inout] mat : CSR matrix structure param[in] num_rows : number of rows param[in] num_cols : number of columns param[in] num_patch: number of patchs param[in] num_element : num_element(p) number of non zero elements in each patch param[in] local_to_global_row : local_to_global_row(p,\ell,i) gives the global row index of the matrix, for the element i and local degree of freedom \ell for patch p param[in] num_local_dof_row : num_local_dof_row(p) number of local degrees of freedom for the rows for each patch param[in] local_to_global_col : local_to_global_col(p,\ell,i) gives the global column index of the matrix, for the element i and local degree of freedom \ell for patch p param[in] num_local_dof_col : num_local_dof_col(p) number of local degrees of freedom for the columns for each patch  <a href="namespacesll__m__sparse__matrix__mp.html#ad32ebfd00f8ef3065b6859eca129d87a">More...</a><br /></td></tr>
@@ -129,7 +128,7 @@ Functions/Subroutines</h2></td></tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">integer(kind=i32), dimension(:,:,:), intent(in)&#160;</td>
+          <td class="paramtype">integer(kind=i32), dimension(:, :, :), intent(in)&#160;</td>
           <td class="paramname"><em>LM_Columns</em>, </td>
         </tr>
         <tr>
@@ -141,7 +140,7 @@ Functions/Subroutines</h2></td></tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">integer(kind=i32), dimension(:,:,:), intent(in)&#160;</td>
+          <td class="paramtype">integer(kind=i32), dimension(:, :, :), intent(in)&#160;</td>
           <td class="paramname"><em>LM_Rows</em>, </td>
         </tr>
         <tr>
@@ -153,7 +152,7 @@ Functions/Subroutines</h2></td></tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">integer(kind=i32), dimension(:,:), pointer&#160;</td>
+          <td class="paramtype">integer(kind=i32), dimension(:, :), pointer&#160;</td>
           <td class="paramname"><em>api_columns</em>, </td>
         </tr>
         <tr>
@@ -175,7 +174,7 @@ Functions/Subroutines</h2></td></tr>
 </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="sll__m__sparse__matrix__mp_8_f90_source.html#l00197">197</a> of file <a class="el" href="sll__m__sparse__matrix__mp_8_f90_source.html">sll_m_sparse_matrix_mp.F90</a>.</p>
+<p class="definition">Definition at line <a class="el" href="sll__m__sparse__matrix__mp_8_f90_source.html#l00194">194</a> of file <a class="el" href="sll__m__sparse__matrix__mp_8_f90_source.html">sll_m_sparse_matrix_mp.F90</a>.</p>
 <div class="dynheader">
 Here is the caller graph for this function:</div>
 <div class="dyncontent">
@@ -218,7 +217,7 @@ Here is the caller graph for this function:</div>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">integer(kind=i32), dimension(:,:,:), intent(in)&#160;</td>
+          <td class="paramtype">integer(kind=i32), dimension(:, :, :), intent(in)&#160;</td>
           <td class="paramname"><em>local_to_global_row</em>, </td>
         </tr>
         <tr>
@@ -230,7 +229,7 @@ Here is the caller graph for this function:</div>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">integer(kind=i32), dimension(:,:,:), intent(in)&#160;</td>
+          <td class="paramtype">integer(kind=i32), dimension(:, :, :), intent(in)&#160;</td>
           <td class="paramname"><em>local_to_global_col</em>, </td>
         </tr>
         <tr>
@@ -247,10 +246,9 @@ Here is the caller graph for this function:</div>
       </table>
 </div><div class="memdoc">
 
-<p>allocates the memory space for a new CSR type on the heap, initializes it with the given arguments and returns a pointer to the object. param[in] num_rows : number of rows param[in] num_cols : number of columns parma[in] num_patch: number of patch <br  />
- param[in] num_element : num_element(p) number of elements non zero for each patch param[in] local_to_global_row : local_to_global_row(p,\ell,i) gives the global row index of the matrix, for the element i and local degree of freedom \ell for patch p param[in] num_local_dof_row : num_local_dof_row(p) number of local degrees of freedom for the rows for each patch param[in] local_to_global_col : local_to_global_col(p,\ell,i) gives the global column index of the matrix, for the element i and local degree of freedom \ell for patch p param[in] num_local_dof_col : num_local_dof_col(p) number of local degrees of freedom for the columns for each patch return a pointer to the newly allocated object. </p>
+<p>allocates the memory space for a new CSR type on the heap, initializes it with the given arguments and returns a pointer to the object. param[in] num_rows : number of rows param[in] num_cols : number of columns parma[in] num_patch: number of patch param[in] num_element : num_element(p) number of elements non zero for each patch param[in] local_to_global_row : local_to_global_row(p,\ell,i) gives the global row index of the matrix, for the element i and local degree of freedom \ell for patch p param[in] num_local_dof_row : num_local_dof_row(p) number of local degrees of freedom for the rows for each patch param[in] local_to_global_col : local_to_global_col(p,\ell,i) gives the global column index of the matrix, for the element i and local degree of freedom \ell for patch p param[in] num_local_dof_col : num_local_dof_col(p) number of local degrees of freedom for the columns for each patch return a pointer to the newly allocated object. </p>
 
-<p class="definition">Definition at line <a class="el" href="sll__m__sparse__matrix__mp_8_f90_source.html#l00067">67</a> of file <a class="el" href="sll__m__sparse__matrix__mp_8_f90_source.html">sll_m_sparse_matrix_mp.F90</a>.</p>
+<p class="definition">Definition at line <a class="el" href="sll__m__sparse__matrix__mp_8_f90_source.html#l00065">65</a> of file <a class="el" href="sll__m__sparse__matrix__mp_8_f90_source.html">sll_m_sparse_matrix_mp.F90</a>.</p>
 <div class="dynheader">
 Here is the call graph for this function:</div>
 <div class="dyncontent">
@@ -308,7 +306,7 @@ Here is the caller graph for this function:</div>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">integer(kind=i32), dimension(:,:,:), intent(in)&#160;</td>
+          <td class="paramtype">integer(kind=i32), dimension(:, :, :), intent(in)&#160;</td>
           <td class="paramname"><em>LM_Columns</em>, </td>
         </tr>
         <tr>
@@ -320,7 +318,7 @@ Here is the caller graph for this function:</div>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">integer(kind=i32), dimension(:,:,:), intent(in)&#160;</td>
+          <td class="paramtype">integer(kind=i32), dimension(:, :, :), intent(in)&#160;</td>
           <td class="paramname"><em>LM_Rows</em>, </td>
         </tr>
         <tr>
@@ -332,7 +330,7 @@ Here is the caller graph for this function:</div>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">integer(kind=i32), dimension(:,:), pointer&#160;</td>
+          <td class="paramtype">integer(kind=i32), dimension(:, :), pointer&#160;</td>
           <td class="paramname"><em>api_columns</em>, </td>
         </tr>
         <tr>
@@ -354,7 +352,7 @@ Here is the caller graph for this function:</div>
 </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="sll__m__sparse__matrix__mp_8_f90_source.html#l00318">318</a> of file <a class="el" href="sll__m__sparse__matrix__mp_8_f90_source.html">sll_m_sparse_matrix_mp.F90</a>.</p>
+<p class="definition">Definition at line <a class="el" href="sll__m__sparse__matrix__mp_8_f90_source.html#l00313">313</a> of file <a class="el" href="sll__m__sparse__matrix__mp_8_f90_source.html">sll_m_sparse_matrix_mp.F90</a>.</p>
 <div class="dynheader">
 Here is the call graph for this function:</div>
 <div class="dyncontent">
@@ -409,7 +407,7 @@ Here is the caller graph for this function:</div>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">integer(kind=i32), dimension(:,:,:), intent(in)&#160;</td>
+          <td class="paramtype">integer(kind=i32), dimension(:, :, :), intent(in)&#160;</td>
           <td class="paramname"><em>local_to_global_row</em>, </td>
         </tr>
         <tr>
@@ -421,7 +419,7 @@ Here is the caller graph for this function:</div>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">integer(kind=i32), dimension(:,:,:), intent(in)&#160;</td>
+          <td class="paramtype">integer(kind=i32), dimension(:, :, :), intent(in)&#160;</td>
           <td class="paramname"><em>local_to_global_col</em>, </td>
         </tr>
         <tr>
@@ -440,7 +438,7 @@ Here is the caller graph for this function:</div>
 
 <p>initialization of CSR matrix type thanks to the global index of each local dof of each element param[inout] mat : CSR matrix structure param[in] num_rows : number of rows param[in] num_cols : number of columns param[in] num_patch: number of patchs param[in] num_element : num_element(p) number of non zero elements in each patch param[in] local_to_global_row : local_to_global_row(p,\ell,i) gives the global row index of the matrix, for the element i and local degree of freedom \ell for patch p param[in] num_local_dof_row : num_local_dof_row(p) number of local degrees of freedom for the rows for each patch param[in] local_to_global_col : local_to_global_col(p,\ell,i) gives the global column index of the matrix, for the element i and local degree of freedom \ell for patch p param[in] num_local_dof_col : num_local_dof_col(p) number of local degrees of freedom for the columns for each patch </p>
 
-<p class="definition">Definition at line <a class="el" href="sll__m__sparse__matrix__mp_8_f90_source.html#l00114">114</a> of file <a class="el" href="sll__m__sparse__matrix__mp_8_f90_source.html">sll_m_sparse_matrix_mp.F90</a>.</p>
+<p class="definition">Definition at line <a class="el" href="sll__m__sparse__matrix__mp_8_f90_source.html#l00112">112</a> of file <a class="el" href="sll__m__sparse__matrix__mp_8_f90_source.html">sll_m_sparse_matrix_mp.F90</a>.</p>
 <div class="dynheader">
 Here is the call graph for this function:</div>
 <div class="dyncontent">
@@ -463,7 +461,7 @@ Here is the caller graph for this function:</div>
 <div id="url"></div>
 <div align=left><a href="https://github.com/selalib/selalib/issues/new"><small>&nbsp; &nbsp; Report Typos and Errors</small></a></div>
 <address class="footer"><small>
-Generated on Wed Mar 10 2021 09:25:57 for Semi-Lagrangian Library by &#160;<a href="http://www.doxygen.org/index.html">
+Generated on Wed Mar 10 2021 09:42:22 for Semi-Lagrangian Library by &#160;<a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/>
 </a> 1.8.17
 </small></address>

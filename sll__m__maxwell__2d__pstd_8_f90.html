@@ -161,11 +161,11 @@ Functions/Subroutines</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-<b>Value:</b><div class="fragment"><div class="line"><a name="l00001"></a><span class="lineno">    1</span>&#160;self%d_dx = field;\</div>
-<div class="line"><a name="l00002"></a><span class="lineno">    2</span>&#160;<span class="keyword">call </span>sll_s_fft_exec_r2c_1d(self%fwx, self%d_dx, self%tmp_x);\</div>
-<div class="line"><a name="l00003"></a><span class="lineno">    3</span>&#160;self%tmp_x(2:nc_x/2+1)=-cmplx(0.0_f64,self%kx(2:nc_x/2+1),kind=f64)*self%tmp_x(2:nc_x/2+1);\</div>
-<div class="line"><a name="l00004"></a><span class="lineno">    4</span>&#160;<span class="keyword">call </span>sll_s_fft_exec_c2r_1d(self%bwx, self%tmp_x, self%d_dx);\</div>
-<div class="line"><a name="l00005"></a><span class="lineno">    5</span>&#160;self%d_dx = self%d_dx / nc_x</div>
+<b>Value:</b><div class="fragment"><div class="line"><a name="l00001"></a><span class="lineno">    1</span>&#160;self%d_dx = field; \</div>
+<div class="line"><a name="l00002"></a><span class="lineno">    2</span>&#160;<span class="keyword">call </span>sll_s_fft_exec_r2c_1d(self%fwx, self%d_dx, self%tmp_x); \</div>
+<div class="line"><a name="l00003"></a><span class="lineno">    3</span>&#160;self%tmp_x(2:nc_x/2 + 1) = -cmplx(0.0_f64, self%kx(2:nc_x/2 + 1), kind=f64)*self%tmp_x(2:nc_x/2 + 1); \</div>
+<div class="line"><a name="l00004"></a><span class="lineno">    4</span>&#160;<span class="keyword">call </span>sll_s_fft_exec_c2r_1d(self%bwx, self%tmp_x, self%d_dx); \</div>
+<div class="line"><a name="l00005"></a><span class="lineno">    5</span>&#160;self%d_dx = self%d_dx/nc_x</div>
 </div><!-- fragment -->
 </div>
 </div>
@@ -184,11 +184,11 @@ Functions/Subroutines</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-<b>Value:</b><div class="fragment"><div class="line"><a name="l00001"></a><span class="lineno">    1</span>&#160;self%d_dy = field;                                            \</div>
-<div class="line"><a name="l00002"></a><span class="lineno">    2</span>&#160;<span class="keyword">call </span>sll_s_fft_exec_r2c_1d(self%fwy, self%d_dy, self%tmp_y);   \</div>
-<div class="line"><a name="l00003"></a><span class="lineno">    3</span>&#160;self%tmp_y(2:nc_y/2+1)=-cmplx(0.0_f64,self%ky(2:nc_y/2+1),kind=f64)*self%tmp_y(2:nc_y/2+1); \</div>
-<div class="line"><a name="l00004"></a><span class="lineno">    4</span>&#160;<span class="keyword">call </span>sll_s_fft_exec_c2r_1d(self%bwy, self%tmp_y, self%d_dy);   \</div>
-<div class="line"><a name="l00005"></a><span class="lineno">    5</span>&#160;self%d_dy = self%d_dy / nc_y</div>
+<b>Value:</b><div class="fragment"><div class="line"><a name="l00001"></a><span class="lineno">    1</span>&#160;self%d_dy = field; \</div>
+<div class="line"><a name="l00002"></a><span class="lineno">    2</span>&#160;<span class="keyword">call </span>sll_s_fft_exec_r2c_1d(self%fwy, self%d_dy, self%tmp_y); \</div>
+<div class="line"><a name="l00003"></a><span class="lineno">    3</span>&#160;self%tmp_y(2:nc_y/2 + 1) = -cmplx(0.0_f64, self%ky(2:nc_y/2 + 1), kind=f64)*self%tmp_y(2:nc_y/2 + 1); \</div>
+<div class="line"><a name="l00004"></a><span class="lineno">    4</span>&#160;<span class="keyword">call </span>sll_s_fft_exec_c2r_1d(self%bwy, self%tmp_y, self%d_dy); \</div>
+<div class="line"><a name="l00005"></a><span class="lineno">    5</span>&#160;self%d_dy = self%d_dy/nc_y</div>
 </div><!-- fragment -->
 </div>
 </div>
@@ -199,7 +199,7 @@ Functions/Subroutines</h2></td></tr>
 <div id="url"></div>
 <div align=left><a href="https://github.com/selalib/selalib/issues/new"><small>&nbsp; &nbsp; Report Typos and Errors</small></a></div>
 <address class="footer"><small>
-Generated on Wed Mar 10 2021 09:25:54 for Semi-Lagrangian Library by &#160;<a href="http://www.doxygen.org/index.html">
+Generated on Wed Mar 10 2021 09:42:20 for Semi-Lagrangian Library by &#160;<a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/>
 </a> 1.8.17
 </small></address>

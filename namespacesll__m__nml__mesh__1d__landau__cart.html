@@ -113,7 +113,7 @@ $(function() {
 <div class="line"> filename, &amp;</div>
 <div class="line"> proc_id=<a class="code" href="namespacesll__m__collective.html#a396122f49340f0778eb448430d865b4e">sll_f_get_collective_rank</a>(<a class="code" href="namespacesll__m__collective.html#ac45f7dfd29e6de6b1b85b364ba35ad38">sll_v_world_collective</a>))</div>
 </div><!-- fragment --><p>Possibilities for namelists variables </p><div class="fragment"><div class="line">num_cells : <span class="keywordtype">integer</span> &gt;= 1</div>
-<div class="line">eta_min : real </div>
+<div class="line">eta_min : real</div>
 <div class="line">nbox : <span class="keywordtype">integer</span> &gt;= 1</div>
 <div class="line">kmode : real &gt; 0.</div>
 </div><!-- fragment --><p> We have the relation <code>eta_min&lt; eta_max = nbox*2pi/kmode</code>. <br  />
@@ -121,8 +121,7 @@ $(function() {
  Examples of calls of interface (specific): <br  />
 </p><ol type="1">
 <li>Allocation and initialization of <code>real(kind=f64), pointer :: array(:)</code> according to <code>choice</code> read from namelist <code>mesh_1d_landau_cart</code> in <code>filename</code> <div class="fragment"><div class="line"><span class="keyword">call </span>sll_o_nml_mesh_1d_landau_cart(filename,array)</div>
-</div><!-- fragment --> The output <code>array</code> is of size <code>num_cells+1</code> with <br  />
- <div class="fragment"><div class="line">array(i) = eta_min+(i-1)*(eta_max-eta_min), i=1,num_cells+1</div>
+</div><!-- fragment --> The output <code>array</code> is of size <code>num_cells+1</code> with <div class="fragment"><div class="line">array(i) = eta_min+(i-1)*(eta_max-eta_min), i=1,num_cells+1</div>
 </div><!-- fragment --></li>
 <li>Same, but read this time, from namelist <code>mesh_1d_landau_cart_1</code>. <div class="fragment"><div class="line"><span class="keyword">call </span>sll_o_nml_mesh_1d_landau_cart(filename,array,clone=<span class="stringliteral">&quot;_1&quot;</span>)</div>
 </div><!-- fragment --></li>
@@ -148,8 +147,7 @@ Functions/Subroutines</h2></td></tr>
 <tr class="memdesc:a375cb6e2c55f0d0c54a8c68df03ed0ac"><td class="mdescLeft">&#160;</td><td class="mdescRight">create 1d (uniform) cartesian mesh from namelist  <a href="namespacesll__m__nml__mesh__1d__landau__cart.html#a375cb6e2c55f0d0c54a8c68df03ed0ac">More...</a><br /></td></tr>
 <tr class="separator:a375cb6e2c55f0d0c54a8c68df03ed0ac"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a4148d1e45bc41436e9fcc2590678e342"><td class="memItemLeft" align="right" valign="top">subroutine&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacesll__m__nml__mesh__1d__landau__cart.html#a4148d1e45bc41436e9fcc2590678e342">s_nml_mesh_1d_landau_cart_print</a> (filename, clone, proc_id)</td></tr>
-<tr class="memdesc:a4148d1e45bc41436e9fcc2590678e342"><td class="mdescLeft">&#160;</td><td class="mdescRight">print namelist info <br  />
-  <a href="namespacesll__m__nml__mesh__1d__landau__cart.html#a4148d1e45bc41436e9fcc2590678e342">More...</a><br /></td></tr>
+<tr class="memdesc:a4148d1e45bc41436e9fcc2590678e342"><td class="mdescLeft">&#160;</td><td class="mdescRight">print namelist info  <a href="namespacesll__m__nml__mesh__1d__landau__cart.html#a4148d1e45bc41436e9fcc2590678e342">More...</a><br /></td></tr>
 <tr class="separator:a4148d1e45bc41436e9fcc2590678e342"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <h2 class="groupheader">Function/Subroutine Documentation</h2>
@@ -210,7 +208,7 @@ Functions/Subroutines</h2></td></tr>
   </dd>
 </dl>
 
-<p class="definition">Definition at line <a class="el" href="sll__m__nml__mesh__1d__landau__cart_8_f90_source.html#l00189">189</a> of file <a class="el" href="sll__m__nml__mesh__1d__landau__cart_8_f90_source.html">sll_m_nml_mesh_1d_landau_cart.F90</a>.</p>
+<p class="definition">Definition at line <a class="el" href="sll__m__nml__mesh__1d__landau__cart_8_f90_source.html#l00188">188</a> of file <a class="el" href="sll__m__nml__mesh__1d__landau__cart_8_f90_source.html">sll_m_nml_mesh_1d_landau_cart.F90</a>.</p>
 
 </div>
 </div>
@@ -271,7 +269,7 @@ Functions/Subroutines</h2></td></tr>
   </dd>
 </dl>
 
-<p class="definition">Definition at line <a class="el" href="sll__m__nml__mesh__1d__landau__cart_8_f90_source.html#l00228">228</a> of file <a class="el" href="sll__m__nml__mesh__1d__landau__cart_8_f90_source.html">sll_m_nml_mesh_1d_landau_cart.F90</a>.</p>
+<p class="definition">Definition at line <a class="el" href="sll__m__nml__mesh__1d__landau__cart_8_f90_source.html#l00226">226</a> of file <a class="el" href="sll__m__nml__mesh__1d__landau__cart_8_f90_source.html">sll_m_nml_mesh_1d_landau_cart.F90</a>.</p>
 <div class="dynheader">
 Here is the call graph for this function:</div>
 <div class="dyncontent">
@@ -321,8 +319,7 @@ Here is the call graph for this function:</div>
 </table>
 </div><div class="memdoc">
 
-<p>print namelist info <br  />
- </p>
+<p>print namelist info </p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramdir">[in]</td><td class="paramname">filename</td><td>namelist file input </td></tr>
@@ -332,7 +329,7 @@ Here is the call graph for this function:</div>
   </dd>
 </dl>
 
-<p class="definition">Definition at line <a class="el" href="sll__m__nml__mesh__1d__landau__cart_8_f90_source.html#l00266">266</a> of file <a class="el" href="sll__m__nml__mesh__1d__landau__cart_8_f90_source.html">sll_m_nml_mesh_1d_landau_cart.F90</a>.</p>
+<p class="definition">Definition at line <a class="el" href="sll__m__nml__mesh__1d__landau__cart_8_f90_source.html#l00264">264</a> of file <a class="el" href="sll__m__nml__mesh__1d__landau__cart_8_f90_source.html">sll_m_nml_mesh_1d_landau_cart.F90</a>.</p>
 <div class="dynheader">
 Here is the call graph for this function:</div>
 <div class="dyncontent">
@@ -343,15 +340,15 @@ Here is the call graph for this function:</div>
 </div>
 </div>
 </div><!-- contents -->
-<div class="ttc" id="anamespacesll__m__collective_html_ac45f7dfd29e6de6b1b85b364ba35ad38"><div class="ttname"><a href="namespacesll__m__collective.html#ac45f7dfd29e6de6b1b85b364ba35ad38">sll_m_collective::sll_v_world_collective</a></div><div class="ttdeci">type(sll_t_collective_t), pointer, public sll_v_world_collective</div><div class="ttdoc">Control of subset assignment. Processes with the same color are in the same new communicator.</div><div class="ttdef"><b>Definition:</b> <a href="sll__m__collective_8_f90_source.html#l00254">sll_m_collective.F90:254</a></div></div>
-<div class="ttc" id="anamespacesll__m__collective_html_a396122f49340f0778eb448430d865b4e"><div class="ttname"><a href="namespacesll__m__collective.html#a396122f49340f0778eb448430d865b4e">sll_m_collective::sll_f_get_collective_rank</a></div><div class="ttdeci">integer(kind=i32) function, public sll_f_get_collective_rank(col)</div><div class="ttdoc">Determines the rank of the calling process in the communicator.</div><div class="ttdef"><b>Definition:</b> <a href="sll__m__collective_8_f90_source.html#l00526">sll_m_collective.F90:526</a></div></div>
+<div class="ttc" id="anamespacesll__m__collective_html_ac45f7dfd29e6de6b1b85b364ba35ad38"><div class="ttname"><a href="namespacesll__m__collective.html#ac45f7dfd29e6de6b1b85b364ba35ad38">sll_m_collective::sll_v_world_collective</a></div><div class="ttdeci">type(sll_t_collective_t), pointer, public sll_v_world_collective</div><div class="ttdoc">Control of subset assignment. Processes with the same color are in the same new communicator.</div><div class="ttdef"><b>Definition:</b> <a href="sll__m__collective_8_f90_source.html#l00253">sll_m_collective.F90:253</a></div></div>
+<div class="ttc" id="anamespacesll__m__collective_html_a396122f49340f0778eb448430d865b4e"><div class="ttname"><a href="namespacesll__m__collective.html#a396122f49340f0778eb448430d865b4e">sll_m_collective::sll_f_get_collective_rank</a></div><div class="ttdeci">integer(kind=i32) function, public sll_f_get_collective_rank(col)</div><div class="ttdoc">Determines the rank of the calling process in the communicator.</div><div class="ttdef"><b>Definition:</b> <a href="sll__m__collective_8_f90_source.html#l00519">sll_m_collective.F90:519</a></div></div>
 <!-- HTML footer for doxygen 1.8.7-->
 <!-- start footer part -->
 <hr class="footer"/>
 <div id="url"></div>
 <div align=left><a href="https://github.com/selalib/selalib/issues/new"><small>&nbsp; &nbsp; Report Typos and Errors</small></a></div>
 <address class="footer"><small>
-Generated on Wed Mar 10 2021 09:25:56 for Semi-Lagrangian Library by &#160;<a href="http://www.doxygen.org/index.html">
+Generated on Wed Mar 10 2021 09:42:21 for Semi-Lagrangian Library by &#160;<a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/>
 </a> 1.8.17
 </small></address>

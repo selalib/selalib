@@ -81,19 +81,19 @@ $(function() {
 <div class="contents">
 <a href="sll__m__timer_8_f90.html">Go to the documentation of this file.</a><div class="fragment"><div class="line"><a name="l00001"></a><span class="lineno">    1</span>&#160;<span class="comment">!**************************************************************</span></div>
 <div class="line"><a name="l00002"></a><span class="lineno">    2</span>&#160;<span class="comment">!  Copyright INRIA</span></div>
-<div class="line"><a name="l00003"></a><span class="lineno">    3</span>&#160;<span class="comment">!  Authors : </span></div>
+<div class="line"><a name="l00003"></a><span class="lineno">    3</span>&#160;<span class="comment">!  Authors :</span></div>
 <div class="line"><a name="l00004"></a><span class="lineno">    4</span>&#160;<span class="comment">!     CALVI project team</span></div>
-<div class="line"><a name="l00005"></a><span class="lineno">    5</span>&#160;<span class="comment">!  </span></div>
-<div class="line"><a name="l00006"></a><span class="lineno">    6</span>&#160;<span class="comment">!  This code SeLaLib (for Semi-Lagrangian-Library) </span></div>
-<div class="line"><a name="l00007"></a><span class="lineno">    7</span>&#160;<span class="comment">!  is a parallel library for simulating the plasma turbulence </span></div>
+<div class="line"><a name="l00005"></a><span class="lineno">    5</span>&#160;<span class="comment">!</span></div>
+<div class="line"><a name="l00006"></a><span class="lineno">    6</span>&#160;<span class="comment">!  This code SeLaLib (for Semi-Lagrangian-Library)</span></div>
+<div class="line"><a name="l00007"></a><span class="lineno">    7</span>&#160;<span class="comment">!  is a parallel library for simulating the plasma turbulence</span></div>
 <div class="line"><a name="l00008"></a><span class="lineno">    8</span>&#160;<span class="comment">!  in a tokamak.</span></div>
-<div class="line"><a name="l00009"></a><span class="lineno">    9</span>&#160;<span class="comment">!  </span></div>
-<div class="line"><a name="l00010"></a><span class="lineno">   10</span>&#160;<span class="comment">!  This software is governed by the CeCILL-B license </span></div>
-<div class="line"><a name="l00011"></a><span class="lineno">   11</span>&#160;<span class="comment">!  under French law and abiding by the rules of distribution </span></div>
-<div class="line"><a name="l00012"></a><span class="lineno">   12</span>&#160;<span class="comment">!  of free software.  You can  use, modify and redistribute </span></div>
-<div class="line"><a name="l00013"></a><span class="lineno">   13</span>&#160;<span class="comment">!  the software under the terms of the CeCILL-B license as </span></div>
+<div class="line"><a name="l00009"></a><span class="lineno">    9</span>&#160;<span class="comment">!</span></div>
+<div class="line"><a name="l00010"></a><span class="lineno">   10</span>&#160;<span class="comment">!  This software is governed by the CeCILL-B license</span></div>
+<div class="line"><a name="l00011"></a><span class="lineno">   11</span>&#160;<span class="comment">!  under French law and abiding by the rules of distribution</span></div>
+<div class="line"><a name="l00012"></a><span class="lineno">   12</span>&#160;<span class="comment">!  of free software.  You can  use, modify and redistribute</span></div>
+<div class="line"><a name="l00013"></a><span class="lineno">   13</span>&#160;<span class="comment">!  the software under the terms of the CeCILL-B license as</span></div>
 <div class="line"><a name="l00014"></a><span class="lineno">   14</span>&#160;<span class="comment">!  circulated by CEA, CNRS and INRIA at the following URL</span></div>
-<div class="line"><a name="l00015"></a><span class="lineno">   15</span>&#160;<span class="comment">!  &quot;http://www.cecill.info&quot;. </span></div>
+<div class="line"><a name="l00015"></a><span class="lineno">   15</span>&#160;<span class="comment">!  &quot;http://www.cecill.info&quot;.</span></div>
 <div class="line"><a name="l00016"></a><span class="lineno">   16</span>&#160;<span class="comment">!**************************************************************</span></div>
 <div class="line"><a name="l00017"></a><span class="lineno">   17</span>&#160; </div>
 <div class="line"><a name="l00030"></a><span class="lineno">   30</span>&#160; </div>
@@ -102,72 +102,71 @@ $(function() {
 <div class="line"><a name="l00042"></a><span class="lineno">   42</span>&#160;<span class="comment">!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++</span></div>
 <div class="line"><a name="l00043"></a><span class="lineno">   43</span>&#160;<span class="preprocessor">#include &quot;sll_working_precision.h&quot;</span></div>
 <div class="line"><a name="l00044"></a><span class="lineno">   44</span>&#160;<span class="preprocessor"></span> </div>
-<div class="line"><a name="l00045"></a><span class="lineno">   45</span>&#160;  <span class="keywordtype">implicit none</span></div>
+<div class="line"><a name="l00045"></a><span class="lineno">   45</span>&#160;   <span class="keywordtype">implicit none</span></div>
 <div class="line"><a name="l00046"></a><span class="lineno">   46</span>&#160; </div>
-<div class="line"><a name="l00047"></a><span class="lineno">   47</span>&#160;  <span class="keywordtype">public</span> :: &amp;</div>
-<div class="line"><a name="l00048"></a><span class="lineno">   48</span>&#160;    <a class="code" href="namespacesll__m__timer.html#a310e28ea52f0857a6b6c1f3711d29d99">sll_s_set_time_mark</a>, &amp;</div>
-<div class="line"><a name="l00049"></a><span class="lineno">   49</span>&#160;    <a class="code" href="namespacesll__m__timer.html#ae56e0d4a8d8694543404068e6e1c2eba">sll_f_time_elapsed_between</a>, &amp;</div>
-<div class="line"><a name="l00050"></a><span class="lineno">   50</span>&#160;    <a class="code" href="namespacesll__m__timer.html#a8ae1b33d093b6c0d8381b1bbfae6d3f0">sll_f_time_elapsed_since</a>, &amp;</div>
-<div class="line"><a name="l00051"></a><span class="lineno">   51</span>&#160;    <a class="code" href="structsll__m__timer_1_1sll__t__time__mark.html">sll_t_time_mark</a></div>
+<div class="line"><a name="l00047"></a><span class="lineno">   47</span>&#160;   <span class="keywordtype">public</span> :: &amp;</div>
+<div class="line"><a name="l00048"></a><span class="lineno">   48</span>&#160;      <a class="code" href="namespacesll__m__timer.html#a310e28ea52f0857a6b6c1f3711d29d99">sll_s_set_time_mark</a>, &amp;</div>
+<div class="line"><a name="l00049"></a><span class="lineno">   49</span>&#160;      <a class="code" href="namespacesll__m__timer.html#ae56e0d4a8d8694543404068e6e1c2eba">sll_f_time_elapsed_between</a>, &amp;</div>
+<div class="line"><a name="l00050"></a><span class="lineno">   50</span>&#160;      <a class="code" href="namespacesll__m__timer.html#a8ae1b33d093b6c0d8381b1bbfae6d3f0">sll_f_time_elapsed_since</a>, &amp;</div>
+<div class="line"><a name="l00051"></a><span class="lineno">   51</span>&#160;      <a class="code" href="structsll__m__timer_1_1sll__t__time__mark.html">sll_t_time_mark</a></div>
 <div class="line"><a name="l00052"></a><span class="lineno">   52</span>&#160; </div>
-<div class="line"><a name="l00053"></a><span class="lineno">   53</span>&#160;  <span class="keywordtype">private</span></div>
+<div class="line"><a name="l00053"></a><span class="lineno">   53</span>&#160;   <span class="keywordtype">private</span></div>
 <div class="line"><a name="l00054"></a><span class="lineno">   54</span>&#160;<span class="comment">!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++</span></div>
 <div class="line"><a name="l00055"></a><span class="lineno">   55</span>&#160; </div>
-<div class="line"><a name="l00058"></a><span class="lineno"><a class="line" href="namespacesll__m__timer.html#aa66421d3dbfb4c25199b2ff11b8a2faf">   58</a></span>&#160;  <span class="keywordtype">integer</span>, <span class="keywordtype">parameter</span> :: <a class="code" href="namespacesll__m__timer.html#aa66421d3dbfb4c25199b2ff11b8a2faf">itimer</a> = selected_int_kind(18)</div>
+<div class="line"><a name="l00058"></a><span class="lineno"><a class="line" href="namespacesll__m__timer.html#aa66421d3dbfb4c25199b2ff11b8a2faf">   58</a></span>&#160;   <span class="keywordtype">integer</span>, <span class="keywordtype">parameter</span> :: <a class="code" href="namespacesll__m__timer.html#aa66421d3dbfb4c25199b2ff11b8a2faf">itimer</a> = selected_int_kind(18)</div>
 <div class="line"><a name="l00059"></a><span class="lineno">   59</span>&#160; </div>
-<div class="line"><a name="l00061"></a><span class="lineno"><a class="line" href="structsll__m__timer_1_1sll__t__time__mark.html">   61</a></span>&#160;  <span class="keyword">type</span> <a class="code" href="structsll__m__timer_1_1sll__t__time__mark.html">sll_t_time_mark</a></div>
-<div class="line"><a name="l00062"></a><span class="lineno"><a class="line" href="structsll__m__timer_1_1sll__t__time__mark.html#a9909b3915e723535834ff75e7a45ee5b">   62</a></span>&#160;    <span class="keywordtype">integer(kind=itimer)</span> :: clock_ticks</div>
-<div class="line"><a name="l00063"></a><span class="lineno"><a class="line" href="structsll__m__timer_1_1sll__t__time__mark.html#a3783a2432d3433cbd40e4c7a033fdc0f">   63</a></span>&#160;    <span class="keywordtype">integer(kind=itimer)</span> :: clock_ticks_max</div>
-<div class="line"><a name="l00064"></a><span class="lineno"><a class="line" href="structsll__m__timer_1_1sll__t__time__mark.html#ad1673af82662e1aa53252081d2c3c162">   64</a></span>&#160;    <span class="keywordtype">integer(kind=itimer)</span> :: clock_ticks_per_sec</div>
-<div class="line"><a name="l00065"></a><span class="lineno">   65</span>&#160;  <span class="keyword">end type </span><a class="code" href="structsll__m__timer_1_1sll__t__time__mark.html">sll_t_time_mark</a></div>
+<div class="line"><a name="l00061"></a><span class="lineno"><a class="line" href="structsll__m__timer_1_1sll__t__time__mark.html">   61</a></span>&#160;   <span class="keyword">type</span> <a class="code" href="structsll__m__timer_1_1sll__t__time__mark.html">sll_t_time_mark</a></div>
+<div class="line"><a name="l00062"></a><span class="lineno"><a class="line" href="structsll__m__timer_1_1sll__t__time__mark.html#a9909b3915e723535834ff75e7a45ee5b">   62</a></span>&#160;      <span class="keywordtype">integer(kind=itimer)</span> :: clock_ticks</div>
+<div class="line"><a name="l00063"></a><span class="lineno"><a class="line" href="structsll__m__timer_1_1sll__t__time__mark.html#a3783a2432d3433cbd40e4c7a033fdc0f">   63</a></span>&#160;      <span class="keywordtype">integer(kind=itimer)</span> :: clock_ticks_max</div>
+<div class="line"><a name="l00064"></a><span class="lineno"><a class="line" href="structsll__m__timer_1_1sll__t__time__mark.html#ad1673af82662e1aa53252081d2c3c162">   64</a></span>&#160;      <span class="keywordtype">integer(kind=itimer)</span> :: clock_ticks_per_sec</div>
+<div class="line"><a name="l00065"></a><span class="lineno">   65</span>&#160;   <span class="keyword">end type </span><a class="code" href="structsll__m__timer_1_1sll__t__time__mark.html">sll_t_time_mark</a></div>
 <div class="line"><a name="l00066"></a><span class="lineno">   66</span>&#160; </div>
-<div class="line"><a name="l00067"></a><span class="lineno">   67</span>&#160;  <span class="keyword">contains</span></div>
+<div class="line"><a name="l00067"></a><span class="lineno">   67</span>&#160;<span class="keyword">contains</span></div>
 <div class="line"><a name="l00068"></a><span class="lineno">   68</span>&#160; </div>
-<div class="line"><a name="l00071"></a><span class="lineno">   71</span>&#160;  <span class="keyword">subroutine </span><a class="code" href="namespacesll__m__timer.html#a310e28ea52f0857a6b6c1f3711d29d99">sll_s_set_time_mark</a>(timer_obj)</div>
-<div class="line"><a name="l00072"></a><span class="lineno"><a class="line" href="namespacesll__m__timer.html#a310e28ea52f0857a6b6c1f3711d29d99">   72</a></span>&#160;    <span class="keywordtype">type</span>(<a class="code" href="structsll__m__timer_1_1sll__t__time__mark.html">sll_t_time_mark</a>), <span class="keywordtype">intent(out)</span> :: timer_obj</div>
-<div class="line"><a name="l00073"></a><span class="lineno">   73</span>&#160;    <span class="keyword">call </span>system_clock(count=timer_obj%clock_ticks, &amp;</div>
-<div class="line"><a name="l00074"></a><span class="lineno">   74</span>&#160;                      count_rate=timer_obj%clock_ticks_per_sec,&amp;</div>
-<div class="line"><a name="l00075"></a><span class="lineno">   75</span>&#160;                      count_max=timer_obj%clock_ticks_max)</div>
-<div class="line"><a name="l00076"></a><span class="lineno">   76</span>&#160;  <span class="keyword">end subroutine </span><a class="code" href="namespacesll__m__timer.html#a310e28ea52f0857a6b6c1f3711d29d99">sll_s_set_time_mark</a></div>
+<div class="line"><a name="l00071"></a><span class="lineno">   71</span>&#160;   <span class="keyword">subroutine </span><a class="code" href="namespacesll__m__timer.html#a310e28ea52f0857a6b6c1f3711d29d99">sll_s_set_time_mark</a>(timer_obj)</div>
+<div class="line"><a name="l00072"></a><span class="lineno"><a class="line" href="namespacesll__m__timer.html#a310e28ea52f0857a6b6c1f3711d29d99">   72</a></span>&#160;      <span class="keywordtype">type</span>(<a class="code" href="structsll__m__timer_1_1sll__t__time__mark.html">sll_t_time_mark</a>), <span class="keywordtype">intent(out)</span> :: timer_obj</div>
+<div class="line"><a name="l00073"></a><span class="lineno">   73</span>&#160;      <span class="keyword">call </span>system_clock(count=timer_obj%clock_ticks, &amp;</div>
+<div class="line"><a name="l00074"></a><span class="lineno">   74</span>&#160;                        count_rate=timer_obj%clock_ticks_per_sec, &amp;</div>
+<div class="line"><a name="l00075"></a><span class="lineno">   75</span>&#160;                        count_max=timer_obj%clock_ticks_max)</div>
+<div class="line"><a name="l00076"></a><span class="lineno">   76</span>&#160;   <span class="keyword">end subroutine </span><a class="code" href="namespacesll__m__timer.html#a310e28ea52f0857a6b6c1f3711d29d99">sll_s_set_time_mark</a></div>
 <div class="line"><a name="l00077"></a><span class="lineno">   77</span>&#160; </div>
-<div class="line"><a name="l00078"></a><span class="lineno">   78</span>&#160; </div>
-<div class="line"><a name="l00083"></a><span class="lineno">   83</span>&#160;  <span class="keyword">function </span><a class="code" href="namespacesll__m__timer.html#ae56e0d4a8d8694543404068e6e1c2eba">sll_f_time_elapsed_between</a>(t0,t1)</div>
-<div class="line"><a name="l00084"></a><span class="lineno"><a class="line" href="namespacesll__m__timer.html#ae56e0d4a8d8694543404068e6e1c2eba">   84</a></span>&#160;    <span class="keywordtype">type</span>(<a class="code" href="structsll__m__timer_1_1sll__t__time__mark.html">sll_t_time_mark</a>), <span class="keywordtype">intent(in)</span>     :: t0, t1</div>
-<div class="line"><a name="l00085"></a><span class="lineno">   85</span>&#160; </div>
-<div class="line"><a name="l00086"></a><span class="lineno">   86</span>&#160;<span class="keywordtype">    real</span>(kind=f64)        :: <a class="code" href="namespacesll__m__timer.html#ae56e0d4a8d8694543404068e6e1c2eba">sll_f_time_elapsed_between</a></div>
-<div class="line"><a name="l00087"></a><span class="lineno">   87</span>&#160;    <span class="keywordtype">integer(kind=itimer)</span>  :: clock_ticks</div>
-<div class="line"><a name="l00088"></a><span class="lineno">   88</span>&#160; </div>
-<div class="line"><a name="l00089"></a><span class="lineno">   89</span>&#160;    clock_ticks = t1%clock_ticks - t0%clock_ticks</div>
-<div class="line"><a name="l00090"></a><span class="lineno">   90</span>&#160;<span class="comment">!!$    if (t1%clock_ticks &lt; t0%clock_ticks) then</span></div>
-<div class="line"><a name="l00091"></a><span class="lineno">   91</span>&#160;<span class="comment">!!$       clock_ticks = clock_ticks + t0%clock_ticks_max</span></div>
-<div class="line"><a name="l00092"></a><span class="lineno">   92</span>&#160;<span class="comment">!!$    end if</span></div>
-<div class="line"><a name="l00093"></a><span class="lineno">   93</span>&#160;    <a class="code" href="namespacesll__m__timer.html#ae56e0d4a8d8694543404068e6e1c2eba">sll_f_time_elapsed_between</a> = &amp;</div>
-<div class="line"><a name="l00094"></a><span class="lineno">   94</span>&#160;<span class="keywordtype">         real</span>(clock_ticks,kind=f64) / real(t0%clock_ticks_per_sec,kind=f64)</div>
-<div class="line"><a name="l00095"></a><span class="lineno">   95</span>&#160;  <span class="keyword">end function </span><a class="code" href="namespacesll__m__timer.html#ae56e0d4a8d8694543404068e6e1c2eba">sll_f_time_elapsed_between</a></div>
-<div class="line"><a name="l00096"></a><span class="lineno">   96</span>&#160; </div>
-<div class="line"><a name="l00100"></a><span class="lineno">  100</span>&#160;  <span class="keyword">function </span><a class="code" href="namespacesll__m__timer.html#a8ae1b33d093b6c0d8381b1bbfae6d3f0">sll_f_time_elapsed_since</a>(t0)</div>
-<div class="line"><a name="l00101"></a><span class="lineno"><a class="line" href="namespacesll__m__timer.html#a8ae1b33d093b6c0d8381b1bbfae6d3f0">  101</a></span>&#160;    <span class="keywordtype">type</span>(<a class="code" href="structsll__m__timer_1_1sll__t__time__mark.html">sll_t_time_mark</a>), <span class="keywordtype">intent(in)</span> :: t0</div>
-<div class="line"><a name="l00102"></a><span class="lineno">  102</span>&#160; </div>
-<div class="line"><a name="l00103"></a><span class="lineno">  103</span>&#160;<span class="keywordtype">    real</span>(kind=f64)       :: <a class="code" href="namespacesll__m__timer.html#a8ae1b33d093b6c0d8381b1bbfae6d3f0">sll_f_time_elapsed_since</a></div>
-<div class="line"><a name="l00104"></a><span class="lineno">  104</span>&#160;    <span class="keywordtype">integer(kind=itimer)</span> :: t1</div>
-<div class="line"><a name="l00105"></a><span class="lineno">  105</span>&#160;    <span class="keywordtype">integer(kind=itimer)</span> :: clock_ticks</div>
-<div class="line"><a name="l00106"></a><span class="lineno">  106</span>&#160; </div>
-<div class="line"><a name="l00107"></a><span class="lineno">  107</span>&#160;    <span class="keyword">call </span>system_clock(count=t1)</div>
-<div class="line"><a name="l00108"></a><span class="lineno">  108</span>&#160;    clock_ticks = t1 - t0%clock_ticks</div>
-<div class="line"><a name="l00109"></a><span class="lineno">  109</span>&#160;<span class="comment">!!$    if (t1%clock_ticks &lt; t0%clock_ticks) then</span></div>
-<div class="line"><a name="l00110"></a><span class="lineno">  110</span>&#160;<span class="comment">!!$       clock_ticks = clock_ticks + t0%clock_ticks_max</span></div>
-<div class="line"><a name="l00111"></a><span class="lineno">  111</span>&#160;<span class="comment">!!$    end if</span></div>
-<div class="line"><a name="l00112"></a><span class="lineno">  112</span>&#160;    <a class="code" href="namespacesll__m__timer.html#a8ae1b33d093b6c0d8381b1bbfae6d3f0">sll_f_time_elapsed_since</a> = &amp;</div>
-<div class="line"><a name="l00113"></a><span class="lineno">  113</span>&#160;<span class="keywordtype">         real</span>(clock_ticks,kind=f64) / real(t0%clock_ticks_per_sec,kind=f64)</div>
-<div class="line"><a name="l00114"></a><span class="lineno">  114</span>&#160;  <span class="keyword">end function </span><a class="code" href="namespacesll__m__timer.html#a8ae1b33d093b6c0d8381b1bbfae6d3f0">sll_f_time_elapsed_since</a></div>
-<div class="line"><a name="l00115"></a><span class="lineno">  115</span>&#160; </div>
-<div class="line"><a name="l00116"></a><span class="lineno">  116</span>&#160;<span class="keyword">end module </span><a class="code" href="namespacesll__m__timer.html">sll_m_timer</a></div>
+<div class="line"><a name="l00082"></a><span class="lineno">   82</span>&#160;   <span class="keyword">function </span><a class="code" href="namespacesll__m__timer.html#ae56e0d4a8d8694543404068e6e1c2eba">sll_f_time_elapsed_between</a>(t0, t1)</div>
+<div class="line"><a name="l00083"></a><span class="lineno"><a class="line" href="namespacesll__m__timer.html#ae56e0d4a8d8694543404068e6e1c2eba">   83</a></span>&#160;      <span class="keywordtype">type</span>(<a class="code" href="structsll__m__timer_1_1sll__t__time__mark.html">sll_t_time_mark</a>), <span class="keywordtype">intent(in)</span>     :: t0, t1</div>
+<div class="line"><a name="l00084"></a><span class="lineno">   84</span>&#160; </div>
+<div class="line"><a name="l00085"></a><span class="lineno">   85</span>&#160;<span class="keywordtype">      real</span>(kind=f64)        :: <a class="code" href="namespacesll__m__timer.html#ae56e0d4a8d8694543404068e6e1c2eba">sll_f_time_elapsed_between</a></div>
+<div class="line"><a name="l00086"></a><span class="lineno">   86</span>&#160;      <span class="keywordtype">integer(kind=itimer)</span>  :: clock_ticks</div>
+<div class="line"><a name="l00087"></a><span class="lineno">   87</span>&#160; </div>
+<div class="line"><a name="l00088"></a><span class="lineno">   88</span>&#160;      clock_ticks = t1%clock_ticks - t0%clock_ticks</div>
+<div class="line"><a name="l00089"></a><span class="lineno">   89</span>&#160;<span class="comment">!!$    if (t1%clock_ticks &lt; t0%clock_ticks) then</span></div>
+<div class="line"><a name="l00090"></a><span class="lineno">   90</span>&#160;<span class="comment">!!$       clock_ticks = clock_ticks + t0%clock_ticks_max</span></div>
+<div class="line"><a name="l00091"></a><span class="lineno">   91</span>&#160;<span class="comment">!!$    end if</span></div>
+<div class="line"><a name="l00092"></a><span class="lineno">   92</span>&#160;      <a class="code" href="namespacesll__m__timer.html#ae56e0d4a8d8694543404068e6e1c2eba">sll_f_time_elapsed_between</a> = &amp;</div>
+<div class="line"><a name="l00093"></a><span class="lineno">   93</span>&#160;<span class="keywordtype">         real</span>(clock_ticks, kind=f64)/real(t0%clock_ticks_per_sec, kind=f64)</div>
+<div class="line"><a name="l00094"></a><span class="lineno">   94</span>&#160;   <span class="keyword">end function </span><a class="code" href="namespacesll__m__timer.html#ae56e0d4a8d8694543404068e6e1c2eba">sll_f_time_elapsed_between</a></div>
+<div class="line"><a name="l00095"></a><span class="lineno">   95</span>&#160; </div>
+<div class="line"><a name="l00099"></a><span class="lineno">   99</span>&#160;   <span class="keyword">function </span><a class="code" href="namespacesll__m__timer.html#a8ae1b33d093b6c0d8381b1bbfae6d3f0">sll_f_time_elapsed_since</a>(t0)</div>
+<div class="line"><a name="l00100"></a><span class="lineno"><a class="line" href="namespacesll__m__timer.html#a8ae1b33d093b6c0d8381b1bbfae6d3f0">  100</a></span>&#160;      <span class="keywordtype">type</span>(<a class="code" href="structsll__m__timer_1_1sll__t__time__mark.html">sll_t_time_mark</a>), <span class="keywordtype">intent(in)</span> :: t0</div>
+<div class="line"><a name="l00101"></a><span class="lineno">  101</span>&#160; </div>
+<div class="line"><a name="l00102"></a><span class="lineno">  102</span>&#160;<span class="keywordtype">      real</span>(kind=f64)       :: <a class="code" href="namespacesll__m__timer.html#a8ae1b33d093b6c0d8381b1bbfae6d3f0">sll_f_time_elapsed_since</a></div>
+<div class="line"><a name="l00103"></a><span class="lineno">  103</span>&#160;      <span class="keywordtype">integer(kind=itimer)</span> :: t1</div>
+<div class="line"><a name="l00104"></a><span class="lineno">  104</span>&#160;      <span class="keywordtype">integer(kind=itimer)</span> :: clock_ticks</div>
+<div class="line"><a name="l00105"></a><span class="lineno">  105</span>&#160; </div>
+<div class="line"><a name="l00106"></a><span class="lineno">  106</span>&#160;      <span class="keyword">call </span>system_clock(count=t1)</div>
+<div class="line"><a name="l00107"></a><span class="lineno">  107</span>&#160;      clock_ticks = t1 - t0%clock_ticks</div>
+<div class="line"><a name="l00108"></a><span class="lineno">  108</span>&#160;<span class="comment">!!$    if (t1%clock_ticks &lt; t0%clock_ticks) then</span></div>
+<div class="line"><a name="l00109"></a><span class="lineno">  109</span>&#160;<span class="comment">!!$       clock_ticks = clock_ticks + t0%clock_ticks_max</span></div>
+<div class="line"><a name="l00110"></a><span class="lineno">  110</span>&#160;<span class="comment">!!$    end if</span></div>
+<div class="line"><a name="l00111"></a><span class="lineno">  111</span>&#160;      <a class="code" href="namespacesll__m__timer.html#a8ae1b33d093b6c0d8381b1bbfae6d3f0">sll_f_time_elapsed_since</a> = &amp;</div>
+<div class="line"><a name="l00112"></a><span class="lineno">  112</span>&#160;<span class="keywordtype">         real</span>(clock_ticks, kind=f64)/real(t0%clock_ticks_per_sec, kind=f64)</div>
+<div class="line"><a name="l00113"></a><span class="lineno">  113</span>&#160;   <span class="keyword">end function </span><a class="code" href="namespacesll__m__timer.html#a8ae1b33d093b6c0d8381b1bbfae6d3f0">sll_f_time_elapsed_since</a></div>
+<div class="line"><a name="l00114"></a><span class="lineno">  114</span>&#160; </div>
+<div class="line"><a name="l00115"></a><span class="lineno">  115</span>&#160;<span class="keyword">end module </span><a class="code" href="namespacesll__m__timer.html">sll_m_timer</a></div>
 </div><!-- fragment --></div><!-- contents -->
 <div class="ttc" id="anamespacesll__m__timer_html"><div class="ttname"><a href="namespacesll__m__timer.html">sll_m_timer</a></div><div class="ttdoc">We can now use the functions.</div><div class="ttdef"><b>Definition:</b> <a href="sll__m__timer_8_f90_source.html#l00040">sll_m_timer.F90:40</a></div></div>
-<div class="ttc" id="anamespacesll__m__timer_html_ae56e0d4a8d8694543404068e6e1c2eba"><div class="ttname"><a href="namespacesll__m__timer.html#ae56e0d4a8d8694543404068e6e1c2eba">sll_m_timer::sll_f_time_elapsed_between</a></div><div class="ttdeci">real(kind=f64) function, public sll_f_time_elapsed_between(t0, t1)</div><div class="ttdoc">Computes the time elapsed between two time marks.</div><div class="ttdef"><b>Definition:</b> <a href="sll__m__timer_8_f90_source.html#l00084">sll_m_timer.F90:84</a></div></div>
+<div class="ttc" id="anamespacesll__m__timer_html_ae56e0d4a8d8694543404068e6e1c2eba"><div class="ttname"><a href="namespacesll__m__timer.html#ae56e0d4a8d8694543404068e6e1c2eba">sll_m_timer::sll_f_time_elapsed_between</a></div><div class="ttdeci">real(kind=f64) function, public sll_f_time_elapsed_between(t0, t1)</div><div class="ttdoc">Computes the time elapsed between two time marks.</div><div class="ttdef"><b>Definition:</b> <a href="sll__m__timer_8_f90_source.html#l00083">sll_m_timer.F90:83</a></div></div>
 <div class="ttc" id="anamespacesll__m__timer_html_a310e28ea52f0857a6b6c1f3711d29d99"><div class="ttname"><a href="namespacesll__m__timer.html#a310e28ea52f0857a6b6c1f3711d29d99">sll_m_timer::sll_s_set_time_mark</a></div><div class="ttdeci">subroutine, public sll_s_set_time_mark(timer_obj)</div><div class="ttdoc">reads time parameters from system and stores in its argument. param timer_obj an object of type sll_t...</div><div class="ttdef"><b>Definition:</b> <a href="sll__m__timer_8_f90_source.html#l00072">sll_m_timer.F90:72</a></div></div>
 <div class="ttc" id="astructsll__m__timer_1_1sll__t__time__mark_html"><div class="ttname"><a href="structsll__m__timer_1_1sll__t__time__mark.html">sll_m_timer::sll_t_time_mark</a></div><div class="ttdoc">type use for clock reading</div><div class="ttdef"><b>Definition:</b> <a href="sll__m__timer_8_f90_source.html#l00061">sll_m_timer.F90:61</a></div></div>
-<div class="ttc" id="anamespacesll__m__timer_html_a8ae1b33d093b6c0d8381b1bbfae6d3f0"><div class="ttname"><a href="namespacesll__m__timer.html#a8ae1b33d093b6c0d8381b1bbfae6d3f0">sll_m_timer::sll_f_time_elapsed_since</a></div><div class="ttdeci">real(kind=f64) function, public sll_f_time_elapsed_since(t0)</div><div class="ttdoc">Computes the time elapsed since a particular time mark was set.</div><div class="ttdef"><b>Definition:</b> <a href="sll__m__timer_8_f90_source.html#l00101">sll_m_timer.F90:101</a></div></div>
+<div class="ttc" id="anamespacesll__m__timer_html_a8ae1b33d093b6c0d8381b1bbfae6d3f0"><div class="ttname"><a href="namespacesll__m__timer.html#a8ae1b33d093b6c0d8381b1bbfae6d3f0">sll_m_timer::sll_f_time_elapsed_since</a></div><div class="ttdeci">real(kind=f64) function, public sll_f_time_elapsed_since(t0)</div><div class="ttdoc">Computes the time elapsed since a particular time mark was set.</div><div class="ttdef"><b>Definition:</b> <a href="sll__m__timer_8_f90_source.html#l00100">sll_m_timer.F90:100</a></div></div>
 <div class="ttc" id="anamespacesll__m__timer_html_aa66421d3dbfb4c25199b2ff11b8a2faf"><div class="ttname"><a href="namespacesll__m__timer.html#aa66421d3dbfb4c25199b2ff11b8a2faf">sll_m_timer::itimer</a></div><div class="ttdeci">integer, parameter itimer</div><div class="ttdoc">Kind parameter defined here determines clock resolution (e.g. see 'system_clock' intrinsic subroutine...</div><div class="ttdef"><b>Definition:</b> <a href="sll__m__timer_8_f90_source.html#l00058">sll_m_timer.F90:58</a></div></div>
 <!-- HTML footer for doxygen 1.8.7-->
 <!-- start footer part -->
@@ -175,7 +174,7 @@ $(function() {
 <div id="url"></div>
 <div align=left><a href="https://github.com/selalib/selalib/issues/new"><small>&nbsp; &nbsp; Report Typos and Errors</small></a></div>
 <address class="footer"><small>
-Generated on Wed Mar 10 2021 09:25:54 for Semi-Lagrangian Library by &#160;<a href="http://www.doxygen.org/index.html">
+Generated on Wed Mar 10 2021 09:42:19 for Semi-Lagrangian Library by &#160;<a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/>
 </a> 1.8.17
 </small></address>

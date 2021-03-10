@@ -8,8 +8,8 @@
 <area shape="rect" id="node11" href="$namespacesll__m__general__coordinate__elliptic__solver.html#accca7b4fada93fd5a46e69cb9889a2d3" title=" " alt="" coords="232,289,431,330"/>
 <area shape="rect" id="node13" href="$namespacesll__m__general__coordinate__elliptic__solver.html#af5e8d40d1650bab4953a450f4696a5f1" title=" " alt="" coords="229,355,434,381"/>
 <area shape="rect" id="node14" href="$namespacesll__m__general__coordinate__elliptic__solver.html#a028b7cd93513f607d6aec3541e076f93" title=" " alt="" coords="260,405,403,432"/>
-<area shape="rect" id="node15" href="$namespacesll__m__gauss__legendre__integration.html#ad8ffc44405a576bb158ad8c1b009b41b" title="Returns a 2d array of size (2,npoints) containing gauss&#45;legendre points and weights in the interval [..." alt="" coords="220,456,443,512"/>
-<area shape="rect" id="node16" href="$namespacesll__m__gauss__lobatto__integration.html#a4d0d1b11b1c28ff20e217f22f5631e7a" title="Returns a 2d array of size (2,n) containing gauss&#45;lobatto points and weights in the interval [a,..." alt="" coords="248,537,415,607"/>
+<area shape="rect" id="node15" href="$namespacesll__m__gauss__legendre__integration.html#a0df63a9e8ee884c2d4a0d1f53602a949" title="Returns a 2d array of size (2,npoints) containing gauss&#45;legendre points and weights in the interval [..." alt="" coords="220,456,443,512"/>
+<area shape="rect" id="node16" href="$namespacesll__m__gauss__lobatto__integration.html#abde325bec9e6c51c78f56ecc3bb075d5" title="Returns a 2d array of size (2,n) containing gauss&#45;lobatto points and weights in the interval [a,..." alt="" coords="248,537,415,607"/>
 <area shape="rect" id="node21" href="$namespacesll__m__cubic__splines.html#ad120ac4e32da463e3d694372548e3d58" title=" " alt="" coords="256,632,407,688"/>
 <area shape="rect" id="node6" href="$namespacesll__m__general__coordinate__elliptic__solver.html#ad3cd8986caf344e128bfc0894c2d68b9" title=" " alt="" coords="491,151,675,207"/>
 <area shape="rect" id="node7" href="$namespacesll__m__general__coordinate__elliptic__solver.html#a27d90b4a6ca26e6014ca4db59a27eda1" title=" " alt="" coords="723,126,901,167"/>

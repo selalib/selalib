@@ -70,7 +70,7 @@
 <!-- Node6 -->
 <g id="node6" class="node">
 <title>Node6</title>
-<g id="a_node6"><a xlink:href="namespacesll__m__gauss__lobatto__integration.html#a4d0d1b11b1c28ff20e217f22f5631e7a" target="_top" xlink:title="Returns a 2d array of size (2,n) containing gauss&#45;lobatto points and weights in the interval [a,...">
+<g id="a_node6"><a xlink:href="namespacesll__m__gauss__lobatto__integration.html#abde325bec9e6c51c78f56ecc3bb075d5" target="_top" xlink:title="Returns a 2d array of size (2,n) containing gauss&#45;lobatto points and weights in the interval [a,...">
 <polygon fill="white" stroke="black" points="449.5,-66 449.5,-96 568.5,-96 568.5,-66 449.5,-66"/>
 <text text-anchor="start" x="457.5" y="-84" font-family="Helvetica,sans-Serif" font-size="10.00">sll_f_gauss_lobatto</text>
 <text text-anchor="middle" x="509" y="-73" font-family="Helvetica,sans-Serif" font-size="10.00">_points_and_weights</text>
@@ -157,7 +157,7 @@
 <!-- Node4 -->
 <g id="node4" class="node">
 <title>Node4</title>
-<g id="a_node4"><a xlink:href="namespacesll__m__maxwell__2d__diga.html#aaf46345a54f1b41f672df6227faf9606" target="_top" xlink:title=" ">
+<g id="a_node4"><a xlink:href="namespacesll__m__maxwell__2d__diga.html#a757b8a57dde51f462e899778a250a81d" target="_top" xlink:title=" ">
 <polygon fill="white" stroke="black" points="0,-284 0,-314 159,-314 159,-284 0,-284"/>
 <text text-anchor="start" x="8" y="-302" font-family="Helvetica,sans-Serif" font-size="10.00">sll_m_maxwell_2d_diga</text>
 <text text-anchor="middle" x="79.5" y="-291" font-family="Helvetica,sans-Serif" font-size="10.00">::sll_f_new_maxwell_2d_diga</text>

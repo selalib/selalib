@@ -177,7 +177,7 @@ var sectionId = 'dynsection-0';
 <!-- Node9 -->
 <g id="node9" class="node">
 <title>Node9</title>
-<g id="a_node9"><a xlink:href="namespacesll__m__gauss__lobatto__integration.html#a4d0d1b11b1c28ff20e217f22f5631e7a" target="_top" xlink:title="Returns a 2d array of size (2,n) containing gauss&#45;lobatto points and weights in the interval [a,...">
+<g id="a_node9"><a xlink:href="namespacesll__m__gauss__lobatto__integration.html#abde325bec9e6c51c78f56ecc3bb075d5" target="_top" xlink:title="Returns a 2d array of size (2,n) containing gauss&#45;lobatto points and weights in the interval [a,...">
 <polygon fill="white" stroke="black" points="449.5,-77.5 449.5,-107.5 568.5,-107.5 568.5,-77.5 449.5,-77.5"/>
 <text text-anchor="start" x="457.5" y="-95.5" font-family="Helvetica,sans-Serif" font-size="10.00">sll_f_gauss_lobatto</text>
 <text text-anchor="middle" x="509" y="-84.5" font-family="Helvetica,sans-Serif" font-size="10.00">_points_and_weights</text>
@@ -264,7 +264,7 @@ var sectionId = 'dynsection-0';
 <!-- Node7 -->
 <g id="node7" class="node">
 <title>Node7</title>
-<g id="a_node7"><a xlink:href="namespacesll__m__maxwell__2d__diga.html#aaf46345a54f1b41f672df6227faf9606" target="_top" xlink:title=" ">
+<g id="a_node7"><a xlink:href="namespacesll__m__maxwell__2d__diga.html#a757b8a57dde51f462e899778a250a81d" target="_top" xlink:title=" ">
 <polygon fill="white" stroke="black" points="0,-214.5 0,-244.5 159,-244.5 159,-214.5 0,-214.5"/>
 <text text-anchor="start" x="8" y="-232.5" font-family="Helvetica,sans-Serif" font-size="10.00">sll_m_maxwell_2d_diga</text>
 <text text-anchor="middle" x="79.5" y="-221.5" font-family="Helvetica,sans-Serif" font-size="10.00">::sll_f_new_maxwell_2d_diga</text>

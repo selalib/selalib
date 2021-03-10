@@ -70,7 +70,7 @@
 <!-- Node4 -->
 <g id="node4" class="node">
 <title>Node4</title>
-<g id="a_node4"><a xlink:href="namespacesll__m__splines__pp.html#ad9b7b9b7852ac7873a01d8480d15819a" target="_top" xlink:title="Convert 2d spline in B form to spline in pp form with periodic boundary conditions">
+<g id="a_node4"><a xlink:href="namespacesll__m__splines__pp.html#ad9b7b9b7852ac7873a01d8480d15819a" target="_top" xlink:title="Convert 2d spline in B form to spline in pp form with periodic boundary conditions.">
 <polygon fill="white" stroke="black" points="0,-49.5 0,-79.5 116,-79.5 116,-49.5 0,-49.5"/>
 <text text-anchor="start" x="8" y="-67.5" font-family="Helvetica,sans-Serif" font-size="10.00">sll_s_spline_pp_b_to</text>
 <text text-anchor="middle" x="58" y="-56.5" font-family="Helvetica,sans-Serif" font-size="10.00">_pp_2d</text>
@@ -86,7 +86,7 @@
 <!-- Node6 -->
 <g id="node6" class="node">
 <title>Node6</title>
-<g id="a_node6"><a xlink:href="namespacesll__m__splines__pp.html#a3e49717b4c10582e60662adb7cfd24d2" target="_top" xlink:title="Convert 3d spline in B form to spline in pp form with periodic boundary conditions">
+<g id="a_node6"><a xlink:href="namespacesll__m__splines__pp.html#a3e49717b4c10582e60662adb7cfd24d2" target="_top" xlink:title="Convert 3d spline in B form to spline in pp form with periodic boundary conditions.">
 <polygon fill="white" stroke="black" points="0,-0.5 0,-30.5 116,-30.5 116,-0.5 0,-0.5"/>
 <text text-anchor="start" x="8" y="-18.5" font-family="Helvetica,sans-Serif" font-size="10.00">sll_s_spline_pp_b_to</text>
 <text text-anchor="middle" x="58" y="-7.5" font-family="Helvetica,sans-Serif" font-size="10.00">_pp_3d</text>

@@ -1,7 +1,7 @@
 <map id="sll_s_spline_pp_free_1d" name="sll_s_spline_pp_free_1d">
-<area shape="rect" id="node1" title="Destructor 1d" alt="" coords="433,85,609,112"/>
+<area shape="rect" id="node1" title="Destructor 1d." alt="" coords="433,85,609,112"/>
 <area shape="rect" id="node2" href="$namespacesll__m__particle__mesh__coupling__spline__1d.html#abecf76afa11f08f6dacbf54dd382acff" title="Destructor." alt="" coords="219,5,375,61"/>
-<area shape="rect" id="node3" href="$namespacesll__m__splines__pp.html#af936c44d09c3ce67e7e0ac1dd39066b5" title="Destructor 2d" alt="" coords="209,85,385,112"/>
-<area shape="rect" id="node5" href="$namespacesll__m__splines__pp.html#a602fe559b4885a83bfed2a0dd588a92d" title="Destructor 3d" alt="" coords="209,136,385,163"/>
+<area shape="rect" id="node3" href="$namespacesll__m__splines__pp.html#af936c44d09c3ce67e7e0ac1dd39066b5" title="Destructor 2d." alt="" coords="209,85,385,112"/>
+<area shape="rect" id="node5" href="$namespacesll__m__splines__pp.html#a602fe559b4885a83bfed2a0dd588a92d" title="Destructor 3d." alt="" coords="209,136,385,163"/>
 <area shape="rect" id="node4" href="$namespacesll__m__particle__mesh__coupling__spline__2d.html#a56f1caf3ced92c6836be738ab3ece1bc" title="Destructor." alt="" coords="5,71,161,127"/>
 </map>

@@ -1,5 +1,5 @@
 <map id="sll_s_ints_to_string" name="sll_s_ints_to_string">
-<area shape="rect" id="node1" title="Write an array of integers to a single string: . Numbers are separated by a blank space; &#160;&#160;...." alt="" coords="231,46,377,73"/>
+<area shape="rect" id="node1" title="Write an array of integers to a single string: . Numbers are separated by a blank space; ...." alt="" coords="231,46,377,73"/>
 <area shape="rect" id="node2" href="$namespacesll__m__xdmf__light__serial.html#ae7492113291a1a6e3ed86e9e0d335dad" title="Add field to grid (selected by its grid ID)" alt="" coords="5,5,183,47"/>
 <area shape="rect" id="node3" href="$namespacesll__m__xdmf__light__serial.html#acaa2d1c6211e3dde3e258f758b497cd0" title="Add grid to file (new grid ID is returned)" alt="" coords="5,71,183,112"/>
 </map>

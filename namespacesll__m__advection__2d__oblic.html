@@ -167,7 +167,7 @@ Functions/Subroutines</h2></td></tr>
 </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="sll__m__advection__2d__oblic_8_f90_source.html#l00103">103</a> of file <a class="el" href="sll__m__advection__2d__oblic_8_f90_source.html">sll_m_advection_2d_oblic.F90</a>.</p>
+<p class="definition">Definition at line <a class="el" href="sll__m__advection__2d__oblic_8_f90_source.html#l00098">98</a> of file <a class="el" href="sll__m__advection__2d__oblic_8_f90_source.html">sll_m_advection_2d_oblic.F90</a>.</p>
 <div class="dynheader">
 Here is the caller graph for this function:</div>
 <div class="dyncontent">
@@ -195,13 +195,13 @@ Here is the caller graph for this function:</div>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">real(kind=f64), dimension(:,:), intent(in)&#160;</td>
+          <td class="paramtype">real(kind=f64), dimension(:, :), intent(in)&#160;</td>
           <td class="paramname"><em>A1</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">real(kind=f64), dimension(:,:), intent(in)&#160;</td>
+          <td class="paramtype">real(kind=f64), dimension(:, :), intent(in)&#160;</td>
           <td class="paramname"><em>A2</em>, </td>
         </tr>
         <tr>
@@ -213,13 +213,13 @@ Here is the caller graph for this function:</div>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">real(kind=f64), dimension(:,:), intent(in)&#160;</td>
+          <td class="paramtype">real(kind=f64), dimension(:, :), intent(in)&#160;</td>
           <td class="paramname"><em>input</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">real(kind=f64), dimension(:,:), intent(out)&#160;</td>
+          <td class="paramtype">real(kind=f64), dimension(:, :), intent(out)&#160;</td>
           <td class="paramname"><em>output</em>&#160;</td>
         </tr>
         <tr>
@@ -235,7 +235,7 @@ Here is the caller graph for this function:</div>
 </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="sll__m__advection__2d__oblic_8_f90_source.html#l00236">236</a> of file <a class="el" href="sll__m__advection__2d__oblic_8_f90_source.html">sll_m_advection_2d_oblic.F90</a>.</p>
+<p class="definition">Definition at line <a class="el" href="sll__m__advection__2d__oblic_8_f90_source.html#l00224">224</a> of file <a class="el" href="sll__m__advection__2d__oblic_8_f90_source.html">sll_m_advection_2d_oblic.F90</a>.</p>
 
 </div>
 </div>
@@ -295,7 +295,7 @@ Here is the caller graph for this function:</div>
       </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="sll__m__advection__2d__oblic_8_f90_source.html#l00069">69</a> of file <a class="el" href="sll__m__advection__2d__oblic_8_f90_source.html">sll_m_advection_2d_oblic.F90</a>.</p>
+<p class="definition">Definition at line <a class="el" href="sll__m__advection__2d__oblic_8_f90_source.html#l00065">65</a> of file <a class="el" href="sll__m__advection__2d__oblic_8_f90_source.html">sll_m_advection_2d_oblic.F90</a>.</p>
 <div class="dynheader">
 Here is the call graph for this function:</div>
 <div class="dyncontent">
@@ -338,13 +338,13 @@ Here is the call graph for this function:</div>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">real(kind=f64), dimension(:,:), intent(in)&#160;</td>
+          <td class="paramtype">real(kind=f64), dimension(:, :), intent(in)&#160;</td>
           <td class="paramname"><em>input</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">real(kind=f64), dimension(:,:), intent(out)&#160;</td>
+          <td class="paramtype">real(kind=f64), dimension(:, :), intent(out)&#160;</td>
           <td class="paramname"><em>output</em>&#160;</td>
         </tr>
         <tr>
@@ -357,7 +357,7 @@ Here is the call graph for this function:</div>
 
 <p>solves \partial_t f + \nabla A \cdot f = 0, \ A = (A1,A2) for time step dt interpolation in aligned along iota = A1/A2 iota is the number of tours that has been done at x2_max the direction of iota is the line passing through (x1_min,x2_min) to (x1_max,x2_min+iota*(x2_max-x2_min)) here iota is real number for specific cases where x2_min+iota*(x2_max-x2_min) is a mesh point we refer to sll_advection_2d_integer_oblic here A1 and A2 are real numbers we refer to (future) oblic_advect_2d, when (A1,A2) are 2D arrays that is A1 and A2 depend both on x1 and x2 we use here constant advection in the x1 direction with an abstract 1d advector that can do the constant advection in the x2 direction, we use (for the moment) Lagrange interpolation with stencil (r,s) (r,s) = (0,1) : LAG1 (r,s) = (-1,2) : LAG3 (r,s) = (-2,3) : LAG5 periodic conditions are used in both x1 and x2 directions </p>
 
-<p class="definition">Definition at line <a class="el" href="sll__m__advection__2d__oblic_8_f90_source.html#l00167">167</a> of file <a class="el" href="sll__m__advection__2d__oblic_8_f90_source.html">sll_m_advection_2d_oblic.F90</a>.</p>
+<p class="definition">Definition at line <a class="el" href="sll__m__advection__2d__oblic_8_f90_source.html#l00159">159</a> of file <a class="el" href="sll__m__advection__2d__oblic_8_f90_source.html">sll_m_advection_2d_oblic.F90</a>.</p>
 <div class="dynheader">
 Here is the call graph for this function:</div>
 <div class="dyncontent">
@@ -374,7 +374,7 @@ Here is the call graph for this function:</div>
 <div id="url"></div>
 <div align=left><a href="https://github.com/selalib/selalib/issues/new"><small>&nbsp; &nbsp; Report Typos and Errors</small></a></div>
 <address class="footer"><small>
-Generated on Wed Mar 10 2021 09:25:55 for Semi-Lagrangian Library by &#160;<a href="http://www.doxygen.org/index.html">
+Generated on Wed Mar 10 2021 09:42:20 for Semi-Lagrangian Library by &#160;<a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/>
 </a> 1.8.17
 </small></address>

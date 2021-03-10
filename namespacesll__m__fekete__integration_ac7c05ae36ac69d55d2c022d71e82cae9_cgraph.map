@@ -1,7 +1,7 @@
 <map id="write_basis_values" name="write_basis_values">
 <area shape="rect" id="node1" title="Writes on a file values of boxsplines on fekete points." alt="" coords="5,446,152,473"/>
 <area shape="rect" id="node2" href="$namespacesll__m__box__splines.html#a0f40714993a4e4bdcf19d5798130ae75" title="Computes the values or derivatives of box splines." alt="" coords="200,221,375,263"/>
-<area shape="rect" id="node15" href="$namespacesll__m__fekete__integration.html#a000587e1502ac1254502c6e3d3600f26" title="Gives the fekete points coordinates and associated weights for a certain rule in a given triangle." alt="" coords="215,497,359,539"/>
+<area shape="rect" id="node15" href="$namespacesll__m__fekete__integration.html#adf467550a7dbaf4287e51119b1a86770" title="Gives the fekete points coordinates and associated weights for a certain rule in a given triangle." alt="" coords="215,497,359,539"/>
 <area shape="rect" id="node23" href="$namespacesll__m__fekete__integration.html#a0f14c18e1a21285d9a7d808077677951" title="returns the order of a Fekete rule for the triangle." alt="" coords="442,450,618,477"/>
 <area shape="rect" id="node3" href="$namespacesll__m__box__splines.html#a3b94ddbae2c7b03c53ca2653ae187885" title="1st coo. of (x1, x2) in reference hex&#45;mesh coo." alt="" coords="455,319,605,360"/>
 <area shape="rect" id="node4" href="$namespacesll__m__box__splines.html#a1edd2773985cb3b80bdcdab980892673" title="2nd coo. of (x1, x2) in reference hex&#45;mesh coo." alt="" coords="455,384,605,425"/>

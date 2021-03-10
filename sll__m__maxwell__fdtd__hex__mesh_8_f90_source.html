@@ -81,17 +81,17 @@ $(function() {
 <div class="contents">
 <a href="sll__m__maxwell__fdtd__hex__mesh_8_f90.html">Go to the documentation of this file.</a><div class="fragment"><div class="line"><a name="l00001"></a><span class="lineno">    1</span>&#160;<span class="comment">!**************************************************************</span></div>
 <div class="line"><a name="l00002"></a><span class="lineno">    2</span>&#160;<span class="comment">!  Copyright INRIA</span></div>
-<div class="line"><a name="l00003"></a><span class="lineno">    3</span>&#160;<span class="comment">!  </span></div>
-<div class="line"><a name="l00004"></a><span class="lineno">    4</span>&#160;<span class="comment">!  This code SeLaLib (for Semi-Lagrangian-Library) </span></div>
-<div class="line"><a name="l00005"></a><span class="lineno">    5</span>&#160;<span class="comment">!  is a parallel library for simulating the plasma turbulence </span></div>
+<div class="line"><a name="l00003"></a><span class="lineno">    3</span>&#160;<span class="comment">!</span></div>
+<div class="line"><a name="l00004"></a><span class="lineno">    4</span>&#160;<span class="comment">!  This code SeLaLib (for Semi-Lagrangian-Library)</span></div>
+<div class="line"><a name="l00005"></a><span class="lineno">    5</span>&#160;<span class="comment">!  is a parallel library for simulating the plasma turbulence</span></div>
 <div class="line"><a name="l00006"></a><span class="lineno">    6</span>&#160;<span class="comment">!  in a tokamak.</span></div>
-<div class="line"><a name="l00007"></a><span class="lineno">    7</span>&#160;<span class="comment">!  </span></div>
-<div class="line"><a name="l00008"></a><span class="lineno">    8</span>&#160;<span class="comment">!  This software is governed by the CeCILL-B license </span></div>
-<div class="line"><a name="l00009"></a><span class="lineno">    9</span>&#160;<span class="comment">!  under French law and abiding by the rules of distribution </span></div>
-<div class="line"><a name="l00010"></a><span class="lineno">   10</span>&#160;<span class="comment">!  of free software.  You can  use, modify and redistribute </span></div>
-<div class="line"><a name="l00011"></a><span class="lineno">   11</span>&#160;<span class="comment">!  the software under the terms of the CeCILL-B license as </span></div>
+<div class="line"><a name="l00007"></a><span class="lineno">    7</span>&#160;<span class="comment">!</span></div>
+<div class="line"><a name="l00008"></a><span class="lineno">    8</span>&#160;<span class="comment">!  This software is governed by the CeCILL-B license</span></div>
+<div class="line"><a name="l00009"></a><span class="lineno">    9</span>&#160;<span class="comment">!  under French law and abiding by the rules of distribution</span></div>
+<div class="line"><a name="l00010"></a><span class="lineno">   10</span>&#160;<span class="comment">!  of free software.  You can  use, modify and redistribute</span></div>
+<div class="line"><a name="l00011"></a><span class="lineno">   11</span>&#160;<span class="comment">!  the software under the terms of the CeCILL-B license as</span></div>
 <div class="line"><a name="l00012"></a><span class="lineno">   12</span>&#160;<span class="comment">!  circulated by CEA, CNRS and INRIA at the following URL</span></div>
-<div class="line"><a name="l00013"></a><span class="lineno">   13</span>&#160;<span class="comment">!  &quot;http://www.cecill.info&quot;. </span></div>
+<div class="line"><a name="l00013"></a><span class="lineno">   13</span>&#160;<span class="comment">!  &quot;http://www.cecill.info&quot;.</span></div>
 <div class="line"><a name="l00014"></a><span class="lineno">   14</span>&#160;<span class="comment">!</span></div>
 <div class="line"><a name="l00015"></a><span class="lineno">   15</span>&#160;<span class="comment">!</span></div>
 <div class="line"><a name="l00016"></a><span class="lineno">   16</span>&#160;<span class="comment">!</span></div>
@@ -106,73 +106,73 @@ $(function() {
 <div class="line"><a name="l00025"></a><span class="lineno">   25</span>&#160;<span class="preprocessor"></span><span class="preprocessor">#include &quot;sll_memory.h&quot;</span></div>
 <div class="line"><a name="l00026"></a><span class="lineno">   26</span>&#160;<span class="preprocessor"></span><span class="preprocessor">#include &quot;sll_assert.h&quot;</span></div>
 <div class="line"><a name="l00027"></a><span class="lineno">   27</span>&#160;<span class="preprocessor"></span><span class="preprocessor">#include &quot;sll_maxwell_solvers_macros.h&quot;</span></div>
-<div class="line"><a name="l00028"></a><span class="lineno">   28</span>&#160;<span class="preprocessor"></span>  <span class="keywordtype">use </span><a class="code" href="namespacesll__m__hexagonal__meshes.html">sll_m_hexagonal_meshes</a>, <span class="keywordtype">only</span> : &amp;</div>
-<div class="line"><a name="l00029"></a><span class="lineno">   29</span>&#160;       sll_hex_mesh_2d</div>
+<div class="line"><a name="l00028"></a><span class="lineno">   28</span>&#160;<span class="preprocessor"></span>   <span class="keywordtype">use </span><a class="code" href="namespacesll__m__hexagonal__meshes.html">sll_m_hexagonal_meshes</a>, <span class="keywordtype">only</span>: &amp;</div>
+<div class="line"><a name="l00029"></a><span class="lineno">   29</span>&#160;      sll_hex_mesh_2d</div>
 <div class="line"><a name="l00030"></a><span class="lineno">   30</span>&#160; </div>
-<div class="line"><a name="l00031"></a><span class="lineno">   31</span>&#160;<span class="keywordtype">implicit none</span></div>
+<div class="line"><a name="l00031"></a><span class="lineno">   31</span>&#160;   <span class="keywordtype">implicit none</span></div>
 <div class="line"><a name="l00032"></a><span class="lineno">   32</span>&#160;<span class="comment">!private</span></div>
 <div class="line"><a name="l00033"></a><span class="lineno">   33</span>&#160; </div>
-<div class="line"><a name="l00035"></a><span class="lineno"><a class="line" href="interfacesll__m__maxwell__fdtd__hex__mesh_1_1initialize.html">   35</a></span>&#160;<span class="keyword">interface</span> <a class="code" href="interfacesll__m__maxwell__fdtd__hex__mesh_1_1initialize.html">initialize</a></div>
-<div class="line"><a name="l00036"></a><span class="lineno">   36</span>&#160; <span class="keyword">module procedure</span> <a class="code" href="namespacesll__m__maxwell__fdtd__hex__mesh.html#a96611c674f5e292edb92dc2eb116f527">initialize_maxwell_hex_mesh_fdtd</a></div>
-<div class="line"><a name="l00037"></a><span class="lineno">   37</span>&#160;<span class="keyword">end interface</span></div>
-<div class="line"><a name="l00039"></a><span class="lineno"><a class="line" href="interfacesll__m__maxwell__fdtd__hex__mesh_1_1ampere.html">   39</a></span>&#160;<span class="keyword">interface</span> <a class="code" href="interfacesll__m__maxwell__fdtd__hex__mesh_1_1ampere.html">ampere</a></div>
-<div class="line"><a name="l00040"></a><span class="lineno">   40</span>&#160; <span class="keyword">module procedure</span> <a class="code" href="namespacesll__m__maxwell__fdtd__hex__mesh.html#a9787e0b2e4f3c32f10bd7a0d0ac63fb2">ampere_hex_mesh_fdtd</a></div>
-<div class="line"><a name="l00041"></a><span class="lineno">   41</span>&#160;<span class="keyword">end interface</span></div>
-<div class="line"><a name="l00043"></a><span class="lineno"><a class="line" href="interfacesll__m__maxwell__fdtd__hex__mesh_1_1faraday.html">   43</a></span>&#160;<span class="keyword">interface</span> <a class="code" href="interfacesll__m__maxwell__fdtd__hex__mesh_1_1faraday.html">faraday</a></div>
-<div class="line"><a name="l00044"></a><span class="lineno">   44</span>&#160; <span class="keyword">module procedure</span> <a class="code" href="namespacesll__m__maxwell__fdtd__hex__mesh.html#a9787e0b2e4f3c32f10bd7a0d0ac63fb2">ampere_hex_mesh_fdtd</a></div>
-<div class="line"><a name="l00045"></a><span class="lineno">   45</span>&#160;<span class="keyword">end interface</span></div>
+<div class="line"><a name="l00035"></a><span class="lineno"><a class="line" href="interfacesll__m__maxwell__fdtd__hex__mesh_1_1initialize.html">   35</a></span>&#160;   <span class="keyword">interface</span> <a class="code" href="interfacesll__m__maxwell__fdtd__hex__mesh_1_1initialize.html">initialize</a></div>
+<div class="line"><a name="l00036"></a><span class="lineno">   36</span>&#160;      <span class="keyword">module procedure</span> <a class="code" href="namespacesll__m__maxwell__fdtd__hex__mesh.html#a96611c674f5e292edb92dc2eb116f527">initialize_maxwell_hex_mesh_fdtd</a></div>
+<div class="line"><a name="l00037"></a><span class="lineno">   37</span>&#160;   <span class="keyword">end interface</span></div>
+<div class="line"><a name="l00039"></a><span class="lineno"><a class="line" href="interfacesll__m__maxwell__fdtd__hex__mesh_1_1ampere.html">   39</a></span>&#160;   <span class="keyword">interface</span> <a class="code" href="interfacesll__m__maxwell__fdtd__hex__mesh_1_1ampere.html">ampere</a></div>
+<div class="line"><a name="l00040"></a><span class="lineno">   40</span>&#160;      <span class="keyword">module procedure</span> <a class="code" href="namespacesll__m__maxwell__fdtd__hex__mesh.html#a9787e0b2e4f3c32f10bd7a0d0ac63fb2">ampere_hex_mesh_fdtd</a></div>
+<div class="line"><a name="l00041"></a><span class="lineno">   41</span>&#160;   <span class="keyword">end interface</span></div>
+<div class="line"><a name="l00043"></a><span class="lineno"><a class="line" href="interfacesll__m__maxwell__fdtd__hex__mesh_1_1faraday.html">   43</a></span>&#160;   <span class="keyword">interface</span> <a class="code" href="interfacesll__m__maxwell__fdtd__hex__mesh_1_1faraday.html">faraday</a></div>
+<div class="line"><a name="l00044"></a><span class="lineno">   44</span>&#160;      <span class="keyword">module procedure</span> <a class="code" href="namespacesll__m__maxwell__fdtd__hex__mesh.html#a9787e0b2e4f3c32f10bd7a0d0ac63fb2">ampere_hex_mesh_fdtd</a></div>
+<div class="line"><a name="l00045"></a><span class="lineno">   45</span>&#160;   <span class="keyword">end interface</span></div>
 <div class="line"><a name="l00046"></a><span class="lineno">   46</span>&#160; </div>
-<div class="line"><a name="l00047"></a><span class="lineno">   47</span>&#160;<span class="keywordtype">public</span> :: <a class="code" href="interfacesll__m__maxwell__fdtd__hex__mesh_1_1initialize.html">initialize</a>, <a class="code" href="interfacesll__m__maxwell__fdtd__hex__mesh_1_1ampere.html">ampere</a>, <a class="code" href="interfacesll__m__maxwell__fdtd__hex__mesh_1_1faraday.html">faraday</a></div>
+<div class="line"><a name="l00047"></a><span class="lineno">   47</span>&#160;   <span class="keywordtype">public</span> :: <a class="code" href="interfacesll__m__maxwell__fdtd__hex__mesh_1_1initialize.html">initialize</a>, <a class="code" href="interfacesll__m__maxwell__fdtd__hex__mesh_1_1ampere.html">ampere</a>, <a class="code" href="interfacesll__m__maxwell__fdtd__hex__mesh_1_1faraday.html">faraday</a></div>
 <div class="line"><a name="l00048"></a><span class="lineno">   48</span>&#160; </div>
-<div class="line"><a name="l00051"></a><span class="lineno"><a class="line" href="namespacesll__m__maxwell__fdtd__hex__mesh.html">   51</a></span>&#160;<span class="keyword">type</span>, <span class="keyword">public</span> :: <a class="code" href="namespacesll__m__maxwell__fdtd__hex__mesh.html#structsll__m__maxwell__fdtd__hex__mesh_1_1maxwell__hex__mesh__fdtd">maxwell_hex_mesh_fdtd</a></div>
+<div class="line"><a name="l00051"></a><span class="lineno"><a class="line" href="namespacesll__m__maxwell__fdtd__hex__mesh.html">   51</a></span>&#160;   <span class="keyword">type</span>, <span class="keyword">public</span> :: <a class="code" href="namespacesll__m__maxwell__fdtd__hex__mesh.html#structsll__m__maxwell__fdtd__hex__mesh_1_1maxwell__hex__mesh__fdtd">maxwell_hex_mesh_fdtd</a></div>
 <div class="line"><a name="l00052"></a><span class="lineno">   52</span>&#160; </div>
-<div class="line"><a name="l00053"></a><span class="lineno"><a class="line" href="namespacesll__m__maxwell__fdtd__hex__mesh.html#a3ca4b40f0b9c4d14ff931ca369aa9352">   53</a></span>&#160;  <span class="keywordtype">type</span>(sll_hex_mesh_2d), <span class="keywordtype">pointer</span> :: mesh</div>
-<div class="line"><a name="l00054"></a><span class="lineno"><a class="line" href="namespacesll__m__maxwell__fdtd__hex__mesh.html#aff064e849f7a90f54196506b88f20834">   54</a></span>&#160;  sll_real64                 :: c             </div>
-<div class="line"><a name="l00055"></a><span class="lineno"><a class="line" href="namespacesll__m__maxwell__fdtd__hex__mesh.html#a9337c08551b4d4442cbc491f22b9f2d3">   55</a></span>&#160;  sll_real64                 :: e_0           </div>
-<div class="line"><a name="l00056"></a><span class="lineno"><a class="line" href="namespacesll__m__maxwell__fdtd__hex__mesh.html#a4d3abd68c7d185047c0fa33a83c50b19">   56</a></span>&#160;  sll_int32                  :: polarization  </div>
+<div class="line"><a name="l00053"></a><span class="lineno"><a class="line" href="namespacesll__m__maxwell__fdtd__hex__mesh.html#a3ca4b40f0b9c4d14ff931ca369aa9352">   53</a></span>&#160;      <span class="keywordtype">type</span>(sll_hex_mesh_2d), <span class="keywordtype">pointer</span> :: mesh</div>
+<div class="line"><a name="l00054"></a><span class="lineno"><a class="line" href="namespacesll__m__maxwell__fdtd__hex__mesh.html#aff064e849f7a90f54196506b88f20834">   54</a></span>&#160;      sll_real64                 :: c             </div>
+<div class="line"><a name="l00055"></a><span class="lineno"><a class="line" href="namespacesll__m__maxwell__fdtd__hex__mesh.html#a9337c08551b4d4442cbc491f22b9f2d3">   55</a></span>&#160;      sll_real64                 :: e_0           </div>
+<div class="line"><a name="l00056"></a><span class="lineno"><a class="line" href="namespacesll__m__maxwell__fdtd__hex__mesh.html#a4d3abd68c7d185047c0fa33a83c50b19">   56</a></span>&#160;      sll_int32                  :: polarization  </div>
 <div class="line"><a name="l00057"></a><span class="lineno">   57</span>&#160; </div>
-<div class="line"><a name="l00058"></a><span class="lineno">   58</span>&#160;<span class="keyword">end type </span><a class="code" href="namespacesll__m__maxwell__fdtd__hex__mesh.html#structsll__m__maxwell__fdtd__hex__mesh_1_1maxwell__hex__mesh__fdtd">maxwell_hex_mesh_fdtd</a></div>
+<div class="line"><a name="l00058"></a><span class="lineno">   58</span>&#160;   <span class="keyword">end type </span><a class="code" href="namespacesll__m__maxwell__fdtd__hex__mesh.html#structsll__m__maxwell__fdtd__hex__mesh_1_1maxwell__hex__mesh__fdtd">maxwell_hex_mesh_fdtd</a></div>
 <div class="line"><a name="l00059"></a><span class="lineno">   59</span>&#160; </div>
 <div class="line"><a name="l00060"></a><span class="lineno">   60</span>&#160;<span class="keyword">contains</span></div>
 <div class="line"><a name="l00061"></a><span class="lineno">   61</span>&#160; </div>
-<div class="line"><a name="l00063"></a><span class="lineno">   63</span>&#160;<span class="keyword">subroutine </span><a class="code" href="namespacesll__m__maxwell__fdtd__hex__mesh.html#a96611c674f5e292edb92dc2eb116f527">initialize_maxwell_hex_mesh_fdtd</a>(self, mesh, polarization )</div>
+<div class="line"><a name="l00063"></a><span class="lineno">   63</span>&#160;   <span class="keyword">subroutine </span><a class="code" href="namespacesll__m__maxwell__fdtd__hex__mesh.html#a96611c674f5e292edb92dc2eb116f527">initialize_maxwell_hex_mesh_fdtd</a>(self, mesh, polarization)</div>
 <div class="line"><a name="l00064"></a><span class="lineno"><a class="line" href="namespacesll__m__maxwell__fdtd__hex__mesh.html#a96611c674f5e292edb92dc2eb116f527">   64</a></span>&#160; </div>
-<div class="line"><a name="l00065"></a><span class="lineno">   65</span>&#160;   <span class="keywordtype">type</span>(<a class="code" href="namespacesll__m__maxwell__fdtd__hex__mesh.html#structsll__m__maxwell__fdtd__hex__mesh_1_1maxwell__hex__mesh__fdtd">maxwell_hex_mesh_fdtd</a>) :: self</div>
-<div class="line"><a name="l00066"></a><span class="lineno">   66</span>&#160;   <span class="keywordtype">type</span>(sll_hex_mesh_2d)       :: mesh</div>
-<div class="line"><a name="l00067"></a><span class="lineno">   67</span>&#160;   sll_int32                   :: polarization </div>
+<div class="line"><a name="l00065"></a><span class="lineno">   65</span>&#160;      <span class="keywordtype">type</span>(<a class="code" href="namespacesll__m__maxwell__fdtd__hex__mesh.html#structsll__m__maxwell__fdtd__hex__mesh_1_1maxwell__hex__mesh__fdtd">maxwell_hex_mesh_fdtd</a>) :: self</div>
+<div class="line"><a name="l00066"></a><span class="lineno">   66</span>&#160;      <span class="keywordtype">type</span>(sll_hex_mesh_2d)       :: mesh</div>
+<div class="line"><a name="l00067"></a><span class="lineno">   67</span>&#160;      sll_int32                   :: polarization </div>
 <div class="line"><a name="l00068"></a><span class="lineno">   68</span>&#160; </div>
-<div class="line"><a name="l00069"></a><span class="lineno">   69</span>&#160;   self%mesh = mesh</div>
-<div class="line"><a name="l00070"></a><span class="lineno">   70</span>&#160;   self%c    = 1.0_f64</div>
-<div class="line"><a name="l00071"></a><span class="lineno">   71</span>&#160;   self%e_0  = 1.0_f64</div>
-<div class="line"><a name="l00072"></a><span class="lineno">   72</span>&#160;   </div>
-<div class="line"><a name="l00073"></a><span class="lineno">   73</span>&#160;   self%polarization = polarization</div>
+<div class="line"><a name="l00069"></a><span class="lineno">   69</span>&#160;      self%mesh = mesh</div>
+<div class="line"><a name="l00070"></a><span class="lineno">   70</span>&#160;      self%c = 1.0_f64</div>
+<div class="line"><a name="l00071"></a><span class="lineno">   71</span>&#160;      self%e_0 = 1.0_f64</div>
+<div class="line"><a name="l00072"></a><span class="lineno">   72</span>&#160; </div>
+<div class="line"><a name="l00073"></a><span class="lineno">   73</span>&#160;      self%polarization = polarization</div>
 <div class="line"><a name="l00074"></a><span class="lineno">   74</span>&#160; </div>
-<div class="line"><a name="l00075"></a><span class="lineno">   75</span>&#160;<span class="keyword">end subroutine </span><a class="code" href="namespacesll__m__maxwell__fdtd__hex__mesh.html#a96611c674f5e292edb92dc2eb116f527">initialize_maxwell_hex_mesh_fdtd</a></div>
+<div class="line"><a name="l00075"></a><span class="lineno">   75</span>&#160;   <span class="keyword">end subroutine </span><a class="code" href="namespacesll__m__maxwell__fdtd__hex__mesh.html#a96611c674f5e292edb92dc2eb116f527">initialize_maxwell_hex_mesh_fdtd</a></div>
 <div class="line"><a name="l00076"></a><span class="lineno">   76</span>&#160; </div>
 <div class="line"><a name="l00077"></a><span class="lineno">   77</span>&#160;<span class="comment">!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!</span></div>
 <div class="line"><a name="l00078"></a><span class="lineno">   78</span>&#160; </div>
-<div class="line"><a name="l00080"></a><span class="lineno">   80</span>&#160;<span class="keyword">subroutine </span><a class="code" href="namespacesll__m__maxwell__fdtd__hex__mesh.html#ad6651fcf82d86e04ccbd943fa3ce04ce">faraday_hex_mesh_fdtd</a>( self, fx, fy, fz, dt )</div>
+<div class="line"><a name="l00080"></a><span class="lineno">   80</span>&#160;   <span class="keyword">subroutine </span><a class="code" href="namespacesll__m__maxwell__fdtd__hex__mesh.html#ad6651fcf82d86e04ccbd943fa3ce04ce">faraday_hex_mesh_fdtd</a>(self, fx, fy, fz, dt)</div>
 <div class="line"><a name="l00081"></a><span class="lineno"><a class="line" href="namespacesll__m__maxwell__fdtd__hex__mesh.html#ad6651fcf82d86e04ccbd943fa3ce04ce">   81</a></span>&#160; </div>
-<div class="line"><a name="l00082"></a><span class="lineno">   82</span>&#160;<span class="keywordtype">type</span>(<a class="code" href="namespacesll__m__maxwell__fdtd__hex__mesh.html#structsll__m__maxwell__fdtd__hex__mesh_1_1maxwell__hex__mesh__fdtd">maxwell_hex_mesh_fdtd</a>)                 :: self</div>
-<div class="line"><a name="l00083"></a><span class="lineno">   83</span>&#160;sll_real64, <span class="keywordtype">dimension(:,:)</span>, <span class="keywordtype">target</span> :: fx   </div>
-<div class="line"><a name="l00084"></a><span class="lineno">   84</span>&#160;sll_real64, <span class="keywordtype">dimension(:,:)</span>, <span class="keywordtype">target</span> :: fy   </div>
-<div class="line"><a name="l00085"></a><span class="lineno">   85</span>&#160;sll_real64, <span class="keywordtype">dimension(:,:)</span>, <span class="keywordtype">target</span> :: fz   </div>
-<div class="line"><a name="l00086"></a><span class="lineno">   86</span>&#160;sll_real64, <span class="keywordtype">intent(in)</span> :: dt               </div>
-<div class="line"><a name="l00087"></a><span class="lineno">   87</span>&#160;sll_int32 :: i, j</div>
-<div class="line"><a name="l00088"></a><span class="lineno">   88</span>&#160;sll_real64 :: dex_dy, dey_dx, dez_dx, dez_dy</div>
-<div class="line"><a name="l00089"></a><span class="lineno">   89</span>&#160;sll_real64 :: delta</div>
-<div class="line"><a name="l00090"></a><span class="lineno">   90</span>&#160;sll_real64, <span class="keywordtype">dimension(:,:)</span>, <span class="keywordtype">pointer</span> :: ex</div>
-<div class="line"><a name="l00091"></a><span class="lineno">   91</span>&#160;sll_real64, <span class="keywordtype">dimension(:,:)</span>, <span class="keywordtype">pointer</span> :: ey</div>
-<div class="line"><a name="l00092"></a><span class="lineno">   92</span>&#160;sll_real64, <span class="keywordtype">dimension(:,:)</span>, <span class="keywordtype">pointer</span> :: ez</div>
-<div class="line"><a name="l00093"></a><span class="lineno">   93</span>&#160;sll_real64, <span class="keywordtype">dimension(:,:)</span>, <span class="keywordtype">pointer</span> :: bx</div>
-<div class="line"><a name="l00094"></a><span class="lineno">   94</span>&#160;sll_real64, <span class="keywordtype">dimension(:,:)</span>, <span class="keywordtype">pointer</span> :: by</div>
-<div class="line"><a name="l00095"></a><span class="lineno">   95</span>&#160;sll_real64, <span class="keywordtype">dimension(:,:)</span>, <span class="keywordtype">pointer</span> :: bz</div>
+<div class="line"><a name="l00082"></a><span class="lineno">   82</span>&#160;      <span class="keywordtype">type</span>(<a class="code" href="namespacesll__m__maxwell__fdtd__hex__mesh.html#structsll__m__maxwell__fdtd__hex__mesh_1_1maxwell__hex__mesh__fdtd">maxwell_hex_mesh_fdtd</a>)                 :: self</div>
+<div class="line"><a name="l00083"></a><span class="lineno">   83</span>&#160;      sll_real64, <span class="keywordtype">dimension(:, :)</span>, <span class="keywordtype">target</span> :: fx   </div>
+<div class="line"><a name="l00084"></a><span class="lineno">   84</span>&#160;      sll_real64, <span class="keywordtype">dimension(:, :)</span>, <span class="keywordtype">target</span> :: fy   </div>
+<div class="line"><a name="l00085"></a><span class="lineno">   85</span>&#160;      sll_real64, <span class="keywordtype">dimension(:, :)</span>, <span class="keywordtype">target</span> :: fz   </div>
+<div class="line"><a name="l00086"></a><span class="lineno">   86</span>&#160;      sll_real64, <span class="keywordtype">intent(in)</span> :: dt               </div>
+<div class="line"><a name="l00087"></a><span class="lineno">   87</span>&#160;      sll_int32 :: i, j</div>
+<div class="line"><a name="l00088"></a><span class="lineno">   88</span>&#160;      sll_real64 :: dex_dy, dey_dx, dez_dx, dez_dy</div>
+<div class="line"><a name="l00089"></a><span class="lineno">   89</span>&#160;      sll_real64 :: delta</div>
+<div class="line"><a name="l00090"></a><span class="lineno">   90</span>&#160;      sll_real64, <span class="keywordtype">dimension(:, :)</span>, <span class="keywordtype">pointer</span> :: ex</div>
+<div class="line"><a name="l00091"></a><span class="lineno">   91</span>&#160;      sll_real64, <span class="keywordtype">dimension(:, :)</span>, <span class="keywordtype">pointer</span> :: ey</div>
+<div class="line"><a name="l00092"></a><span class="lineno">   92</span>&#160;      sll_real64, <span class="keywordtype">dimension(:, :)</span>, <span class="keywordtype">pointer</span> :: ez</div>
+<div class="line"><a name="l00093"></a><span class="lineno">   93</span>&#160;      sll_real64, <span class="keywordtype">dimension(:, :)</span>, <span class="keywordtype">pointer</span> :: bx</div>
+<div class="line"><a name="l00094"></a><span class="lineno">   94</span>&#160;      sll_real64, <span class="keywordtype">dimension(:, :)</span>, <span class="keywordtype">pointer</span> :: by</div>
+<div class="line"><a name="l00095"></a><span class="lineno">   95</span>&#160;      sll_real64, <span class="keywordtype">dimension(:, :)</span>, <span class="keywordtype">pointer</span> :: bz</div>
 <div class="line"><a name="l00096"></a><span class="lineno">   96</span>&#160; </div>
-<div class="line"><a name="l00097"></a><span class="lineno">   97</span>&#160;delta = self%mesh%delta</div>
+<div class="line"><a name="l00097"></a><span class="lineno">   97</span>&#160;      delta = self%mesh%delta</div>
 <div class="line"><a name="l00098"></a><span class="lineno">   98</span>&#160; </div>
 <div class="line"><a name="l00099"></a><span class="lineno">   99</span>&#160;<span class="comment">!*** On utilise l&#39;equation de Faraday sur un demi pas</span></div>
-<div class="line"><a name="l00100"></a><span class="lineno">  100</span>&#160;<span class="comment">!*** de temps pour le calcul du champ magnetique  Bz </span></div>
-<div class="line"><a name="l00101"></a><span class="lineno">  101</span>&#160;<span class="comment">!*** a l&#39;instant n puis n+1/2 </span></div>
+<div class="line"><a name="l00100"></a><span class="lineno">  100</span>&#160;<span class="comment">!*** de temps pour le calcul du champ magnetique  Bz</span></div>
+<div class="line"><a name="l00101"></a><span class="lineno">  101</span>&#160;<span class="comment">!*** a l&#39;instant n puis n+1/2</span></div>
 <div class="line"><a name="l00102"></a><span class="lineno">  102</span>&#160; </div>
 <div class="line"><a name="l00103"></a><span class="lineno">  103</span>&#160;<span class="comment">!i1 = self%i1</span></div>
 <div class="line"><a name="l00104"></a><span class="lineno">  104</span>&#160;<span class="comment">!j1 = self%j1</span></div>
@@ -198,43 +198,43 @@ $(function() {
 <div class="line"><a name="l00124"></a><span class="lineno">  124</span>&#160;<span class="comment">!   do i=i1,j1</span></div>
 <div class="line"><a name="l00125"></a><span class="lineno">  125</span>&#160;<span class="comment">!   do j=i2+1,j2</span></div>
 <div class="line"><a name="l00126"></a><span class="lineno">  126</span>&#160;<span class="comment">!      dez_dy  = (ez(i,j)-ez(i,j-1)) / dy</span></div>
-<div class="line"><a name="l00127"></a><span class="lineno">  127</span>&#160;<span class="comment">!      bx(i,j) = bx(i,j) - dt * dez_dy </span></div>
+<div class="line"><a name="l00127"></a><span class="lineno">  127</span>&#160;<span class="comment">!      bx(i,j) = bx(i,j) - dt * dez_dy</span></div>
 <div class="line"><a name="l00128"></a><span class="lineno">  128</span>&#160;<span class="comment">!   end do</span></div>
 <div class="line"><a name="l00129"></a><span class="lineno">  129</span>&#160;<span class="comment">!   end do</span></div>
-<div class="line"><a name="l00130"></a><span class="lineno">  130</span>&#160;<span class="comment">!   </span></div>
+<div class="line"><a name="l00130"></a><span class="lineno">  130</span>&#160;<span class="comment">!</span></div>
 <div class="line"><a name="l00131"></a><span class="lineno">  131</span>&#160;<span class="comment">!   do i=i1+1,j1</span></div>
 <div class="line"><a name="l00132"></a><span class="lineno">  132</span>&#160;<span class="comment">!   do j=i2,j2</span></div>
 <div class="line"><a name="l00133"></a><span class="lineno">  133</span>&#160;<span class="comment">!      dez_dx  = (ez(i,j)-ez(i-1,j)) / dx</span></div>
-<div class="line"><a name="l00134"></a><span class="lineno">  134</span>&#160;<span class="comment">!      by(i,j) = by(i,j) + dt * dez_dx </span></div>
+<div class="line"><a name="l00134"></a><span class="lineno">  134</span>&#160;<span class="comment">!      by(i,j) = by(i,j) + dt * dez_dx</span></div>
 <div class="line"><a name="l00135"></a><span class="lineno">  135</span>&#160;<span class="comment">!   end do</span></div>
 <div class="line"><a name="l00136"></a><span class="lineno">  136</span>&#160;<span class="comment">!   end do</span></div>
 <div class="line"><a name="l00137"></a><span class="lineno">  137</span>&#160;<span class="comment">!</span></div>
 <div class="line"><a name="l00138"></a><span class="lineno">  138</span>&#160;<span class="comment">!end if</span></div>
 <div class="line"><a name="l00139"></a><span class="lineno">  139</span>&#160; </div>
-<div class="line"><a name="l00140"></a><span class="lineno">  140</span>&#160;<span class="keyword">end subroutine </span><a class="code" href="namespacesll__m__maxwell__fdtd__hex__mesh.html#ad6651fcf82d86e04ccbd943fa3ce04ce">faraday_hex_mesh_fdtd</a></div>
+<div class="line"><a name="l00140"></a><span class="lineno">  140</span>&#160;   <span class="keyword">end subroutine </span><a class="code" href="namespacesll__m__maxwell__fdtd__hex__mesh.html#ad6651fcf82d86e04ccbd943fa3ce04ce">faraday_hex_mesh_fdtd</a></div>
 <div class="line"><a name="l00141"></a><span class="lineno">  141</span>&#160; </div>
 <div class="line"><a name="l00142"></a><span class="lineno">  142</span>&#160;<span class="comment">!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!</span></div>
 <div class="line"><a name="l00143"></a><span class="lineno">  143</span>&#160; </div>
-<div class="line"><a name="l00145"></a><span class="lineno">  145</span>&#160;<span class="keyword">subroutine </span><a class="code" href="namespacesll__m__maxwell__fdtd__hex__mesh.html#a9787e0b2e4f3c32f10bd7a0d0ac63fb2">ampere_hex_mesh_fdtd</a>( self, fx, fy, fz, dt, jx, jy )</div>
+<div class="line"><a name="l00145"></a><span class="lineno">  145</span>&#160;   <span class="keyword">subroutine </span><a class="code" href="namespacesll__m__maxwell__fdtd__hex__mesh.html#a9787e0b2e4f3c32f10bd7a0d0ac63fb2">ampere_hex_mesh_fdtd</a>(self, fx, fy, fz, dt, jx, jy)</div>
 <div class="line"><a name="l00146"></a><span class="lineno"><a class="line" href="namespacesll__m__maxwell__fdtd__hex__mesh.html#a9787e0b2e4f3c32f10bd7a0d0ac63fb2">  146</a></span>&#160; </div>
-<div class="line"><a name="l00147"></a><span class="lineno">  147</span>&#160;<span class="keywordtype">type</span>(<a class="code" href="namespacesll__m__maxwell__fdtd__hex__mesh.html#structsll__m__maxwell__fdtd__hex__mesh_1_1maxwell__hex__mesh__fdtd">maxwell_hex_mesh_fdtd</a>) :: self</div>
-<div class="line"><a name="l00148"></a><span class="lineno">  148</span>&#160;sll_int32 :: i1, j1, i2, j2</div>
-<div class="line"><a name="l00149"></a><span class="lineno">  149</span>&#160;sll_real64, <span class="keywordtype">dimension(:,:)</span>, <span class="keywordtype">intent(inout)</span>, <span class="keywordtype">target</span> :: fx </div>
-<div class="line"><a name="l00150"></a><span class="lineno">  150</span>&#160;sll_real64, <span class="keywordtype">dimension(:,:)</span>, <span class="keywordtype">intent(inout)</span>, <span class="keywordtype">target</span> :: fy </div>
-<div class="line"><a name="l00151"></a><span class="lineno">  151</span>&#160;sll_real64, <span class="keywordtype">dimension(:,:)</span>, <span class="keywordtype">intent(inout)</span>, <span class="keywordtype">target</span> :: fz </div>
-<div class="line"><a name="l00152"></a><span class="lineno">  152</span>&#160;sll_real64, <span class="keywordtype">dimension(:,:)</span>, <span class="keywordtype">intent(in)</span>, <span class="keywordtype">optional</span> :: jx  </div>
-<div class="line"><a name="l00153"></a><span class="lineno">  153</span>&#160;sll_real64, <span class="keywordtype">dimension(:,:)</span>, <span class="keywordtype">intent(in)</span>, <span class="keywordtype">optional</span> :: jy  </div>
-<div class="line"><a name="l00154"></a><span class="lineno">  154</span>&#160;sll_int32 :: i, j</div>
-<div class="line"><a name="l00155"></a><span class="lineno">  155</span>&#160;sll_real64 :: dbz_dx, dbz_dy, dbx_dy, dby_dx</div>
-<div class="line"><a name="l00156"></a><span class="lineno">  156</span>&#160;sll_real64, <span class="keywordtype">intent(in)</span> :: dt </div>
-<div class="line"><a name="l00157"></a><span class="lineno">  157</span>&#160;sll_real64 :: dx, dy</div>
-<div class="line"><a name="l00158"></a><span class="lineno">  158</span>&#160;sll_real64 :: csq</div>
-<div class="line"><a name="l00159"></a><span class="lineno">  159</span>&#160;sll_real64, <span class="keywordtype">dimension(:,:)</span>, <span class="keywordtype">pointer</span> :: ex</div>
-<div class="line"><a name="l00160"></a><span class="lineno">  160</span>&#160;sll_real64, <span class="keywordtype">dimension(:,:)</span>, <span class="keywordtype">pointer</span> :: ey</div>
-<div class="line"><a name="l00161"></a><span class="lineno">  161</span>&#160;sll_real64, <span class="keywordtype">dimension(:,:)</span>, <span class="keywordtype">pointer</span> :: ez</div>
-<div class="line"><a name="l00162"></a><span class="lineno">  162</span>&#160;sll_real64, <span class="keywordtype">dimension(:,:)</span>, <span class="keywordtype">pointer</span> :: bx</div>
-<div class="line"><a name="l00163"></a><span class="lineno">  163</span>&#160;sll_real64, <span class="keywordtype">dimension(:,:)</span>, <span class="keywordtype">pointer</span> :: by</div>
-<div class="line"><a name="l00164"></a><span class="lineno">  164</span>&#160;sll_real64, <span class="keywordtype">dimension(:,:)</span>, <span class="keywordtype">pointer</span> :: bz</div>
+<div class="line"><a name="l00147"></a><span class="lineno">  147</span>&#160;      <span class="keywordtype">type</span>(<a class="code" href="namespacesll__m__maxwell__fdtd__hex__mesh.html#structsll__m__maxwell__fdtd__hex__mesh_1_1maxwell__hex__mesh__fdtd">maxwell_hex_mesh_fdtd</a>) :: self</div>
+<div class="line"><a name="l00148"></a><span class="lineno">  148</span>&#160;      sll_int32 :: i1, j1, i2, j2</div>
+<div class="line"><a name="l00149"></a><span class="lineno">  149</span>&#160;      sll_real64, <span class="keywordtype">dimension(:, :)</span>, <span class="keywordtype">intent(inout)</span>, <span class="keywordtype">target</span> :: fx </div>
+<div class="line"><a name="l00150"></a><span class="lineno">  150</span>&#160;      sll_real64, <span class="keywordtype">dimension(:, :)</span>, <span class="keywordtype">intent(inout)</span>, <span class="keywordtype">target</span> :: fy </div>
+<div class="line"><a name="l00151"></a><span class="lineno">  151</span>&#160;      sll_real64, <span class="keywordtype">dimension(:, :)</span>, <span class="keywordtype">intent(inout)</span>, <span class="keywordtype">target</span> :: fz </div>
+<div class="line"><a name="l00152"></a><span class="lineno">  152</span>&#160;      sll_real64, <span class="keywordtype">dimension(:, :)</span>, <span class="keywordtype">intent(in)</span>, <span class="keywordtype">optional</span> :: jx  </div>
+<div class="line"><a name="l00153"></a><span class="lineno">  153</span>&#160;      sll_real64, <span class="keywordtype">dimension(:, :)</span>, <span class="keywordtype">intent(in)</span>, <span class="keywordtype">optional</span> :: jy  </div>
+<div class="line"><a name="l00154"></a><span class="lineno">  154</span>&#160;      sll_int32 :: i, j</div>
+<div class="line"><a name="l00155"></a><span class="lineno">  155</span>&#160;      sll_real64 :: dbz_dx, dbz_dy, dbx_dy, dby_dx</div>
+<div class="line"><a name="l00156"></a><span class="lineno">  156</span>&#160;      sll_real64, <span class="keywordtype">intent(in)</span> :: dt </div>
+<div class="line"><a name="l00157"></a><span class="lineno">  157</span>&#160;      sll_real64 :: dx, dy</div>
+<div class="line"><a name="l00158"></a><span class="lineno">  158</span>&#160;      sll_real64 :: csq</div>
+<div class="line"><a name="l00159"></a><span class="lineno">  159</span>&#160;      sll_real64, <span class="keywordtype">dimension(:, :)</span>, <span class="keywordtype">pointer</span> :: ex</div>
+<div class="line"><a name="l00160"></a><span class="lineno">  160</span>&#160;      sll_real64, <span class="keywordtype">dimension(:, :)</span>, <span class="keywordtype">pointer</span> :: ey</div>
+<div class="line"><a name="l00161"></a><span class="lineno">  161</span>&#160;      sll_real64, <span class="keywordtype">dimension(:, :)</span>, <span class="keywordtype">pointer</span> :: ez</div>
+<div class="line"><a name="l00162"></a><span class="lineno">  162</span>&#160;      sll_real64, <span class="keywordtype">dimension(:, :)</span>, <span class="keywordtype">pointer</span> :: bx</div>
+<div class="line"><a name="l00163"></a><span class="lineno">  163</span>&#160;      sll_real64, <span class="keywordtype">dimension(:, :)</span>, <span class="keywordtype">pointer</span> :: by</div>
+<div class="line"><a name="l00164"></a><span class="lineno">  164</span>&#160;      sll_real64, <span class="keywordtype">dimension(:, :)</span>, <span class="keywordtype">pointer</span> :: bz</div>
 <div class="line"><a name="l00165"></a><span class="lineno">  165</span>&#160; </div>
 <div class="line"><a name="l00166"></a><span class="lineno">  166</span>&#160;<span class="comment">!i1 = self%i1</span></div>
 <div class="line"><a name="l00167"></a><span class="lineno">  167</span>&#160;<span class="comment">!j1 = self%j1</span></div>
@@ -257,14 +257,14 @@ $(function() {
 <div class="line"><a name="l00184"></a><span class="lineno">  184</span>&#160;<span class="comment">!   do i=i1,j1</span></div>
 <div class="line"><a name="l00185"></a><span class="lineno">  185</span>&#160;<span class="comment">!   do j=i2+1,j2</span></div>
 <div class="line"><a name="l00186"></a><span class="lineno">  186</span>&#160;<span class="comment">!      dbz_dy  = (bz(i,j)-bz(i,j-1)) / dy</span></div>
-<div class="line"><a name="l00187"></a><span class="lineno">  187</span>&#160;<span class="comment">!      ex(i,j) = ex(i,j) + dt*csq*dbz_dy </span></div>
+<div class="line"><a name="l00187"></a><span class="lineno">  187</span>&#160;<span class="comment">!      ex(i,j) = ex(i,j) + dt*csq*dbz_dy</span></div>
 <div class="line"><a name="l00188"></a><span class="lineno">  188</span>&#160;<span class="comment">!   end do</span></div>
 <div class="line"><a name="l00189"></a><span class="lineno">  189</span>&#160;<span class="comment">!   end do</span></div>
-<div class="line"><a name="l00190"></a><span class="lineno">  190</span>&#160;<span class="comment">!   </span></div>
+<div class="line"><a name="l00190"></a><span class="lineno">  190</span>&#160;<span class="comment">!</span></div>
 <div class="line"><a name="l00191"></a><span class="lineno">  191</span>&#160;<span class="comment">!   do i=i1+1,j1</span></div>
 <div class="line"><a name="l00192"></a><span class="lineno">  192</span>&#160;<span class="comment">!   do j=i2,j2</span></div>
 <div class="line"><a name="l00193"></a><span class="lineno">  193</span>&#160;<span class="comment">!      dbz_dx  = (bz(i,j)-bz(i-1,j)) / dx</span></div>
-<div class="line"><a name="l00194"></a><span class="lineno">  194</span>&#160;<span class="comment">!      ey(i,j) = ey(i,j) - dt*csq*dbz_dx </span></div>
+<div class="line"><a name="l00194"></a><span class="lineno">  194</span>&#160;<span class="comment">!      ey(i,j) = ey(i,j) - dt*csq*dbz_dx</span></div>
 <div class="line"><a name="l00195"></a><span class="lineno">  195</span>&#160;<span class="comment">!   end do</span></div>
 <div class="line"><a name="l00196"></a><span class="lineno">  196</span>&#160;<span class="comment">!   end do</span></div>
 <div class="line"><a name="l00197"></a><span class="lineno">  197</span>&#160;<span class="comment">!</span></div>
@@ -297,7 +297,7 @@ $(function() {
 <div class="line"><a name="l00224"></a><span class="lineno">  224</span>&#160;<span class="comment">!</span></div>
 <div class="line"><a name="l00225"></a><span class="lineno">  225</span>&#160;<span class="comment">!end if</span></div>
 <div class="line"><a name="l00226"></a><span class="lineno">  226</span>&#160; </div>
-<div class="line"><a name="l00227"></a><span class="lineno">  227</span>&#160;<span class="keyword">end subroutine </span><a class="code" href="namespacesll__m__maxwell__fdtd__hex__mesh.html#a9787e0b2e4f3c32f10bd7a0d0ac63fb2">ampere_hex_mesh_fdtd</a></div>
+<div class="line"><a name="l00227"></a><span class="lineno">  227</span>&#160;   <span class="keyword">end subroutine </span><a class="code" href="namespacesll__m__maxwell__fdtd__hex__mesh.html#a9787e0b2e4f3c32f10bd7a0d0ac63fb2">ampere_hex_mesh_fdtd</a></div>
 <div class="line"><a name="l00228"></a><span class="lineno">  228</span>&#160; </div>
 <div class="line"><a name="l00229"></a><span class="lineno">  229</span>&#160;<span class="comment">!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!</span></div>
 <div class="line"><a name="l00230"></a><span class="lineno">  230</span>&#160; </div>
@@ -318,7 +318,7 @@ $(function() {
 <div id="url"></div>
 <div align=left><a href="https://github.com/selalib/selalib/issues/new"><small>&nbsp; &nbsp; Report Typos and Errors</small></a></div>
 <address class="footer"><small>
-Generated on Wed Mar 10 2021 09:25:53 for Semi-Lagrangian Library by &#160;<a href="http://www.doxygen.org/index.html">
+Generated on Wed Mar 10 2021 09:42:18 for Semi-Lagrangian Library by &#160;<a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/>
 </a> 1.8.17
 </small></address>
