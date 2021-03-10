@@ -1,4 +1,4 @@
-!> \mainpage Code Documentation  
+!> \mainpage Code Documentation
 !>
 !>
 !> For general installation, compiling and running, see
@@ -10,7 +10,7 @@
 !> library modules with a description of their interface. Ideally, a
 !> user should interact with a module only through the specified
 !> interface, which, if we have been successful, should permit the
-!> user to complete the desired task in a reasonably simple way. 
+!> user to complete the desired task in a reasonably simple way.
 !>
 !> A second form of documentation will be through an automatic system
 !> (we have chosen Doxygen). Here the user or developer should find
@@ -24,8 +24,8 @@
 !> appear to be not sufficiently clear even after the use of descriptive
 !> names and code organization, then the comments may be the only way
 !> to aid the reader in navigating the source code. All these documents
-!> will be made public upon the library release.  
+!> will be made public upon the library release.
 !>
-!> \remark If you encountered a problem with doxygen please send an email 
+!> \remark If you encountered a problem with doxygen please send an email
 !> to selalib-users@lists.gforge.inria.fr
 !>

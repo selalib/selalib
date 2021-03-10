@@ -11,32 +11,31 @@ module sll_m_deboor_splines_1d
 !   banfac, &
 !   banslv
 
-  implicit none
+   implicit none
 
-  public :: &
-    sll_s_bsplvb, &
-    sll_s_bsplvd, &
-    sll_f_bvalue, &
-    sll_t_deboor_type, &
-    sll_s_interv, &
-    sll_s_splint, &
-    sll_s_splint_der
+   public :: &
+      sll_s_bsplvb, &
+      sll_s_bsplvd, &
+      sll_f_bvalue, &
+      sll_t_deboor_type, &
+      sll_s_interv, &
+      sll_s_splint, &
+      sll_s_splint_der
 
-  private
+   private
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-  
+
 !this derived type is created to avoid the save attribute you found
 !in module deboor splines 1d
 !Some deboor functions are clone copied because we don't want to have
 !side effects with general coordinates elliptic solver that uses
 !module deboor splines
-type :: sll_t_deboor_type
-   sll_int32 :: ilo = 1
-   sll_int32 :: j   = 1
-   sll_real64, dimension(20) :: deltal
-   sll_real64, dimension(20) :: deltar
-end type sll_t_deboor_type
-
+   type :: sll_t_deboor_type
+      sll_int32 :: ilo = 1
+      sll_int32 :: j = 1
+      sll_real64, dimension(20) :: deltal
+      sll_real64, dimension(20) :: deltar
+   end type sll_t_deboor_type
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 contains
@@ -70,63 +69,63 @@ contains
 !>   @parama[in] NDERIV, indicates that values of B-splines and their
 !>   derivatives up to but not including the NDERIV-th are asked for.
 !
-!   Reference: 
+!   Reference:
 !   Carl DeBoor,
 !   A Practical Guide to Splines,
 !   Springer, 2001,
 !   ISBN: 0387953663.
-subroutine sll_s_bsplvd ( deboor, t, k, x, left, a, dbiatx, nderiv )
+   subroutine sll_s_bsplvd(deboor, t, k, x, left, a, dbiatx, nderiv)
 
-type(sll_t_deboor_type) :: deboor
-sll_int32 :: k
-sll_int32 :: left
-sll_int32 :: nderiv
+      type(sll_t_deboor_type) :: deboor
+      sll_int32 :: k
+      sll_int32 :: left
+      sll_int32 :: nderiv
 
-sll_real64, dimension(k,k):: a!(k,k)
-sll_real64, dimension(k,nderiv), intent(out) :: dbiatx!(k,nderiv)
-sll_real64 :: factor
-sll_real64 :: fkp1mm
-sll_int32  :: i
-sll_int32  :: ideriv
-sll_int32  :: il
-sll_int32  :: j
-sll_int32  :: jlow
-sll_int32  :: jp1mid
-sll_int32  :: ldummy
-sll_int32  :: m
-sll_int32  :: mhigh
+      sll_real64, dimension(k, k):: a!(k,k)
+      sll_real64, dimension(k, nderiv), intent(out) :: dbiatx!(k,nderiv)
+      sll_real64 :: factor
+      sll_real64 :: fkp1mm
+      sll_int32  :: i
+      sll_int32  :: ideriv
+      sll_int32  :: il
+      sll_int32  :: j
+      sll_int32  :: jlow
+      sll_int32  :: jp1mid
+      sll_int32  :: ldummy
+      sll_int32  :: m
+      sll_int32  :: mhigh
 !  sll_real64 sum1  ! this one is not used...
-sll_real64,dimension(left+k):: t ! (left+k)
-sll_real64:: x
+      sll_real64, dimension(left + k):: t ! (left+k)
+      sll_real64:: x
 
-mhigh = max ( min ( nderiv, k ), 1 )
+      mhigh = max(min(nderiv, k), 1)
 !
 !  MHIGH is usually equal to NDERIV.
 !
-call sll_s_bsplvb ( deboor, t, k+1-mhigh, 1, x, left, dbiatx )
+      call sll_s_bsplvb(deboor, t, k + 1 - mhigh, 1, x, left, dbiatx)
 
-if ( mhigh == 1 ) then
-   return
-end if
+      if (mhigh == 1) then
+         return
+      end if
 !
 !  The first column of DBIATX always contains the B-spline values
 !  for the current order.  These are stored in column K+1-current
 !  order before sll_s_bsplvb is called to put values for the next
 !  higher order on top of it.
 !
-ideriv = mhigh
-do m = 2, mhigh
-   jp1mid = 1
-   do j = ideriv, k
-      dbiatx(j,ideriv) = dbiatx(jp1mid,1)
-      jp1mid = jp1mid + 1
-      
-   end do
-   ideriv = ideriv - 1
-   
-   call sll_s_bsplvb ( deboor, t, k+1-ideriv, 2, x, left, dbiatx )
-   
-end do
+      ideriv = mhigh
+      do m = 2, mhigh
+         jp1mid = 1
+         do j = ideriv, k
+            dbiatx(j, ideriv) = dbiatx(jp1mid, 1)
+            jp1mid = jp1mid + 1
+
+         end do
+         ideriv = ideriv - 1
+
+         call sll_s_bsplvb(deboor, t, k + 1 - ideriv, 2, x, left, dbiatx)
+
+      end do
 !
 !  At this point, B(LEFT-K+I, K+1-J)(X) is in DBIATX(I,J) for
 !  I=J,...,K and J=1,...,MHIGH ('=' NDERIV).
@@ -136,61 +135,61 @@ end do
 !  To obtain corresponding derivatives of B-splines in subsequent columns,
 !  generate their B-representation by differencing, then evaluate at X.
 !
-jlow = 1
-do i = 1, k
-   a(jlow:k,i) = 0.0D+00
-   jlow = i
-   a(i,i) = 1.0D+00
-end do
+      jlow = 1
+      do i = 1, k
+         a(jlow:k, i) = 0.0D+00
+         jlow = i
+         a(i, i) = 1.0D+00
+      end do
 !
 !  At this point, A(.,J) contains the B-coefficients for the J-th of the
 !  K B-splines of interest here.
 !
-do m = 2, mhigh
-   
-   fkp1mm = real ( k + 1 - m, kind = 8 )
-   il = left
-   i = k
-   !
-   !  For J = 1,...,K, construct B-coefficients of (M-1)st derivative of
-   !  B-splines from those for preceding derivative by differencing
-   !  and store again in  A(.,J).  The fact that  A(I,J) = 0 for
-   !  I < J is used.
-   !
-   do ldummy = 1, k+1-m
-      
-      factor = fkp1mm / ( t(il+k+1-m) - t(il) )
-      !
-      !  The assumption that T(LEFT) < T(LEFT+1) makes denominator
-      !  in FACTOR nonzero.
-      !
-      a(i,1:i) = ( a(i,1:i) - a(i-1,1:i) ) * factor
-      
-      il = il - 1
-      i = i - 1
-   
-   end do
-   !
-   !  For I = 1,...,K, combine B-coefficients A(.,I) with B-spline values
-   !  stored in DBIATX(.,M) to get value of (M-1)st derivative of
-   !  I-th B-spline (of interest here) at X, and store in DBIATX(I,M).
-   !
-   !  Storage of this value over the value of a B-spline
-   !  of order M there is safe since the remaining B-spline derivatives
-   !  of the same order do not use this value due to the fact
-   !  that  A(J,I) = 0  for J < I.
-   !
-   do i = 1, k
-      
-      jlow = max ( i, m )
-      
-      dbiatx(i,m) = dot_product ( a(jlow:k,i), dbiatx(jlow:k,m) )
-      
-   end do
+      do m = 2, mhigh
 
-end do
-return
-end subroutine sll_s_bsplvd
+         fkp1mm = real(k + 1 - m, kind=8)
+         il = left
+         i = k
+         !
+         !  For J = 1,...,K, construct B-coefficients of (M-1)st derivative of
+         !  B-splines from those for preceding derivative by differencing
+         !  and store again in  A(.,J).  The fact that  A(I,J) = 0 for
+         !  I < J is used.
+         !
+         do ldummy = 1, k + 1 - m
+
+            factor = fkp1mm/(t(il + k + 1 - m) - t(il))
+            !
+            !  The assumption that T(LEFT) < T(LEFT+1) makes denominator
+            !  in FACTOR nonzero.
+            !
+            a(i, 1:i) = (a(i, 1:i) - a(i - 1, 1:i))*factor
+
+            il = il - 1
+            i = i - 1
+
+         end do
+         !
+         !  For I = 1,...,K, combine B-coefficients A(.,I) with B-spline values
+         !  stored in DBIATX(.,M) to get value of (M-1)st derivative of
+         !  I-th B-spline (of interest here) at X, and store in DBIATX(I,M).
+         !
+         !  Storage of this value over the value of a B-spline
+         !  of order M there is safe since the remaining B-spline derivatives
+         !  of the same order do not use this value due to the fact
+         !  that  A(J,I) = 0  for J < I.
+         !
+         do i = 1, k
+
+            jlow = max(i, m)
+
+            dbiatx(i, m) = dot_product(a(jlow:k, i), dbiatx(jlow:k, m))
+
+         end do
+
+      end do
+      return
+   end subroutine sll_s_bsplvd
 
 !> Brackets a real value in an ascending vector of values.
 !> @details
@@ -243,122 +242,122 @@ end subroutine sll_s_bsplvd
 !!     0: XT(I)   <= X  < XT(I+1)
 !!    +1: XT(LXT) <= X
 !<
-subroutine sll_s_interv( deboor, xt, lxt, x, left, mflag )
-    
-type(sll_t_deboor_type)                     :: deboor
-sll_real64, dimension(:), intent(in)  :: xt
-sll_int32,                intent(in)  :: lxt
-sll_real64,               intent(in)  :: x
-sll_int32,                intent(out) :: left
-sll_int32,                intent(out) :: mflag
-sll_int32                             :: ihi
+   subroutine sll_s_interv(deboor, xt, lxt, x, left, mflag)
 
-sll_int32 :: istep
-sll_int32 :: middle
+      type(sll_t_deboor_type)                     :: deboor
+      sll_real64, dimension(:), intent(in)  :: xt
+      sll_int32, intent(in)  :: lxt
+      sll_real64, intent(in)  :: x
+      sll_int32, intent(out) :: left
+      sll_int32, intent(out) :: mflag
+      sll_int32                             :: ihi
+
+      sll_int32 :: istep
+      sll_int32 :: middle
 
 !SLL_ASSERT(size(xt) == lxt)
 
-ihi = deboor%ilo + 1
-if ( lxt <= ihi ) then
-   if ( xt(lxt) <= x ) go to 110
-   if ( lxt <= 1 ) then
-      mflag = -1
-      left = 1
-      return
-   end if
-   deboor%ilo = lxt - 1
-   ihi = lxt
-end if
-if ( xt(ihi) <= x ) go to 20
-if ( xt(deboor%ilo) <= x ) then
-   mflag = 0
-   left = deboor%ilo
-   return
-end if
+      ihi = deboor%ilo + 1
+      if (lxt <= ihi) then
+         if (xt(lxt) <= x) go to 110
+         if (lxt <= 1) then
+            mflag = -1
+            left = 1
+            return
+         end if
+         deboor%ilo = lxt - 1
+         ihi = lxt
+      end if
+      if (xt(ihi) <= x) go to 20
+      if (xt(deboor%ilo) <= x) then
+         mflag = 0
+         left = deboor%ilo
+         return
+      end if
 !
 !  Now X < XT(ILO).  Decrease ILO to capture X.
 !
-istep = 1
-    
-10  continue
-    
-ihi = deboor%ilo
-deboor%ilo = ihi - istep
+      istep = 1
 
-if ( 1 < deboor%ilo ) then
-   if ( xt(deboor%ilo) <= x ) go to 50
-   istep = istep * 2
-   go to 10
-end if
+10    continue
 
-deboor%ilo = 1
+      ihi = deboor%ilo
+      deboor%ilo = ihi - istep
 
-if ( x < xt(1) ) then
-   mflag = -1
-   left = 1
-   return
-end if
+      if (1 < deboor%ilo) then
+         if (xt(deboor%ilo) <= x) go to 50
+         istep = istep*2
+         go to 10
+      end if
 
-go to 50
+      deboor%ilo = 1
+
+      if (x < xt(1)) then
+         mflag = -1
+         left = 1
+         return
+      end if
+
+      go to 50
 !
 !  Now XT(IHI) <= X.  Increase IHI to capture X.
 !
-20  continue
-    
-istep = 1
-    
-30  continue
-    
-deboor%ilo = ihi
-ihi = deboor%ilo + istep
+20    continue
 
-if ( ihi < lxt ) then
-   if ( x < xt(ihi) ) go to 50
-   istep = istep * 2
-   go to 30
-end if
+      istep = 1
 
-if ( xt(lxt) <= x ) go to 110
+30    continue
+
+      deboor%ilo = ihi
+      ihi = deboor%ilo + istep
+
+      if (ihi < lxt) then
+         if (x < xt(ihi)) go to 50
+         istep = istep*2
+         go to 30
+      end if
+
+      if (xt(lxt) <= x) go to 110
 !
 !  Now XT(ILO) < = X < XT(IHI).  Narrow the interval.
 !
-ihi = lxt
+      ihi = lxt
 
-50 continue
-    
-do
-   
-  middle = ( deboor%ilo + ihi ) / 2
-  if ( middle == deboor%ilo ) then
-    mflag = 0
-    left = deboor%ilo
-    return
-  end if
-  !
-  !  It is assumed that MIDDLE = ILO in case IHI = ILO+1.
-  !
-  if ( xt(middle) <= x ) then
-    deboor%ilo = middle
-  else
-    ihi = middle
-  end if
-   
-end do
+50    continue
+
+      do
+
+         middle = (deboor%ilo + ihi)/2
+         if (middle == deboor%ilo) then
+            mflag = 0
+            left = deboor%ilo
+            return
+         end if
+         !
+         !  It is assumed that MIDDLE = ILO in case IHI = ILO+1.
+         !
+         if (xt(middle) <= x) then
+            deboor%ilo = middle
+         else
+            ihi = middle
+         end if
+
+      end do
 !
 !  Set output and return.
 !
 
-110 continue
-    
-mflag = 1
+110   continue
 
-if ( x == xt(lxt) ) mflag = 0
+      mflag = 1
 
-do left = lxt, 1, -1
-  if ( xt(left) < xt(lxt) ) return
-end do
+      if (x == xt(lxt)) mflag = 0
 
-end subroutine sll_s_interv
+      do left = lxt, 1, -1
+         if (xt(left) < xt(lxt)) return
+      end do
+
+   end subroutine sll_s_interv
 
 !***********************************************************************
 !> @brief
@@ -368,7 +367,7 @@ end subroutine sll_s_interv
 !>     JOUT = MAX ( JHIGH, (J+1)*(INDEX-1) )
 !>   with knot sequence T. The recurrence relation
 !>   \f[
-!> B_{i,j+1}(x) = \frac{x-t_i}{t_{i+j}-t_i} B_{i,j}(x) + 
+!> B_{i,j+1}(x) = \frac{x-t_i}{t_{i+j}-t_i} B_{i,j}(x) +
 !> \frac{t_{i+j+1}-x}{t_{i+j+1}-t_{i+1}} B_{i+1,j}(x)
 !> \f]
 !>   is used to generate B(LEFT-J:LEFT,J+1)(X) from B(LEFT-J+1:LEFT,J)(X)
@@ -418,61 +417,61 @@ end subroutine sll_s_interv
 !    Springer, 2001,
 !    ISBN: 0387953663.
 !
-subroutine sll_s_bsplvb ( deboor, t, jhigh, index, x, left, biatx )
+   subroutine sll_s_bsplvb(deboor, t, jhigh, index, x, left, biatx)
 
-type(sll_t_deboor_type) :: deboor
-sll_int32:: jhigh
+      type(sll_t_deboor_type) :: deboor
+      sll_int32:: jhigh
 
-sll_real64,dimension(jhigh):: biatx !(jhigh)
-sll_int32:: i
-sll_int32:: index
-sll_int32:: left
-sll_real64:: saved
-sll_real64,dimension(left+jhigh), intent(in) :: t!() left+jhigh
-sll_real64:: term
-sll_real64:: x
+      sll_real64, dimension(jhigh):: biatx !(jhigh)
+      sll_int32:: i
+      sll_int32:: index
+      sll_int32:: left
+      sll_real64:: saved
+      sll_real64, dimension(left + jhigh), intent(in) :: t!() left+jhigh
+      sll_real64:: term
+      sll_real64:: x
 
-if ( index == 1 ) then
-   deboor%j = 1
-   biatx(1) = 1.0_8
-   if ( jhigh <= deboor%j ) then
+      if (index == 1) then
+         deboor%j = 1
+         biatx(1) = 1.0_8
+         if (jhigh <= deboor%j) then
+            return
+         end if
+      end if
+
+      if (t(left + 1) <= t(left)) then
+         print *, 'x=', x
+         write (*, '(a)') ' '
+         write (*, '(a)') 'sll_s_bsplvb - Fatal error!'
+         write (*, '(a)') '  It is required that T(LEFT) < T(LEFT+1).'
+         write (*, '(a,i8)') '  But LEFT = ', left
+         write (*, '(a,g14.6)') '  T(LEFT) =   ', t(left)
+         write (*, '(a,g14.6)') '  T(LEFT+1) = ', t(left + 1)
+         stop
+      end if
+
+      do
+
+         deboor%deltar(deboor%j) = t(left + deboor%j) - x
+         deboor%deltal(deboor%j) = x - t(left + 1 - deboor%j)
+
+         saved = 0.0_f64
+         do i = 1, deboor%j
+            term = biatx(i)/(deboor%deltar(i) + deboor%deltal(deboor%j + 1 - i))
+            biatx(i) = saved + deboor%deltar(i)*term
+            saved = deboor%deltal(deboor%j + 1 - i)*term
+         end do
+
+         biatx(deboor%j + 1) = saved
+         deboor%j = deboor%j + 1
+
+         if (jhigh <= deboor%j) exit
+
+      end do
+
       return
-   end if
-end if
+   end subroutine sll_s_bsplvb
 
-if ( t(left+1) <= t(left) ) then
-   print*,'x=',x
-   write ( *, '(a)' ) ' '
-   write ( *, '(a)' ) 'sll_s_bsplvb - Fatal error!'
-   write ( *, '(a)' ) '  It is required that T(LEFT) < T(LEFT+1).'
-   write ( *, '(a,i8)' ) '  But LEFT = ', left
-   write ( *, '(a,g14.6)' ) '  T(LEFT) =   ', t(left)
-   write ( *, '(a,g14.6)' ) '  T(LEFT+1) = ', t(left+1)
-   stop
-end if
-
-do
-   
-  deboor%deltar(deboor%j) = t(left+deboor%j) - x
-  deboor%deltal(deboor%j) = x - t(left+1-deboor%j)
-   
-  saved = 0.0_f64
-  do i = 1, deboor%j
-     term = biatx(i) / ( deboor%deltar(i) + deboor%deltal(deboor%j+1-i) )
-     biatx(i) = saved + deboor%deltar(i) * term
-     saved = deboor%deltal(deboor%j+1-i) * term
-  end do
-
-  biatx(deboor%j+1) = saved
-  deboor%j = deboor%j + 1
-  
-  if ( jhigh <= deboor%j ) exit
-
-end do
-
-return
-end subroutine sll_s_bsplvb
-  
 !*********************************************************************
 !
 !
@@ -547,41 +546,41 @@ end subroutine sll_s_bsplvb
 !    derivative of the spline at X.
 !
 !> Evaluates a derivative of a spline from its B-spline representation.
-function sll_f_bvalue( deboor, t, coeff_splines, n, k, x, jderiv )
-    
-implicit none
+   function sll_f_bvalue(deboor, t, coeff_splines, n, k, x, jderiv)
 
-type(sll_t_deboor_type)        :: deboor
-sll_real64               :: sll_f_bvalue
+      implicit none
 
-sll_real64, dimension(:) :: t     
-sll_real64, dimension(:) :: coeff_splines 
-sll_int32                :: n
-sll_int32                :: k
-sll_real64               :: x
-sll_int32                :: jderiv
+      type(sll_t_deboor_type)        :: deboor
+      sll_real64               :: sll_f_bvalue
 
-sll_real64, dimension(:), allocatable :: aj
-sll_real64, dimension(:), allocatable :: dl
-sll_real64, dimension(:), allocatable :: dr
+      sll_real64, dimension(:) :: t
+      sll_real64, dimension(:) :: coeff_splines
+      sll_int32                :: n
+      sll_int32                :: k
+      sll_real64               :: x
+      sll_int32                :: jderiv
 
-sll_int32 :: i
-sll_int32 :: ilo
-sll_int32 :: j
-sll_int32 :: jc
-sll_int32 :: jcmax
-sll_int32 :: jcmin
-sll_int32 :: jj
-sll_int32 :: mflag
-sll_int32 :: ierr
+      sll_real64, dimension(:), allocatable :: aj
+      sll_real64, dimension(:), allocatable :: dl
+      sll_real64, dimension(:), allocatable :: dr
 
-sll_f_bvalue = 0.0_f64
+      sll_int32 :: i
+      sll_int32 :: ilo
+      sll_int32 :: j
+      sll_int32 :: jc
+      sll_int32 :: jcmax
+      sll_int32 :: jcmin
+      sll_int32 :: jj
+      sll_int32 :: mflag
+      sll_int32 :: ierr
 
-SLL_CLEAR_ALLOCATE(aj(1:k), ierr)
-SLL_CLEAR_ALLOCATE(dl(1:k), ierr)
-SLL_CLEAR_ALLOCATE(dr(1:k), ierr)
+      sll_f_bvalue = 0.0_f64
 
-if ( k <= jderiv ) return
+      SLL_CLEAR_ALLOCATE(aj(1:k), ierr)
+      SLL_CLEAR_ALLOCATE(dl(1:k), ierr)
+      SLL_CLEAR_ALLOCATE(dr(1:k), ierr)
+
+      if (k <= jderiv) return
 
 !  Find I so that 1 <= I < N+K and T(I) < T(I+1) and T(I) <= X < T(I+1).
 !
@@ -589,16 +588,16 @@ if ( k <= jderiv ) return
 !  spline F and  sll_f_bvalue = 0.  The asymmetry in this choice of I makes F
 !  right continuous.
 
-call sll_s_interv ( deboor, t, n+k, x, i, mflag )
+      call sll_s_interv(deboor, t, n + k, x, i, mflag)
 
-if ( mflag /= 0 ) return
+      if (mflag /= 0) return
 !
 !  If K = 1 (and JDERIV = 0), sll_f_bvalue = BCOEF(I).
 !
-if ( k <= 1 ) then
-  sll_f_bvalue = coeff_splines(i)
-  return
-end if
+      if (k <= 1) then
+         sll_f_bvalue = coeff_splines(i)
+         return
+      end if
 !
 !  Store the K B-spline coefficients relevant for the knot interval
 !  ( T(I),T(I+1) ) in AJ(1),...,AJ(K) and compute DL(J) = X - T(I+1-J),
@@ -607,95 +606,95 @@ end if
 !
 !  Set any T's not obtainable equal to T(1) or to T(N+K) appropriately.
 !
-jcmin = 1
+      jcmin = 1
 
-if ( k <= i ) then
-  
-  do j = 1, k-1
-    dl(j) = x - t(i+1-j)
-  end do
-   
-else
-   
-  jcmin = 1 - ( i - k )
-  do j = 1, i
-    dl(j) = x - t(i+1-j)
-  end do
-  do j = i, k-1
-    aj(k-j) = 0.0_8
-    dl(j) = dl(i)
-  end do
-   
-end if
+      if (k <= i) then
 
-jcmax = k
+         do j = 1, k - 1
+            dl(j) = x - t(i + 1 - j)
+         end do
 
-if ( n < i ) then
-   
-  jcmax = k + n - i
-  do j = 1, k + n - i
-    dr(j) = t(i+j) - x
-  end do
-   
-  do j = k+n-i, k-1
-    aj(j+1) = 0.0_8
-    dr(j) = dr(k+n-i)
-  end do
-   
-else
-   
-  do j = 1, k-1
-    dr(j) = t(i+j) - x
-  end do
-   
-end if
+      else
 
-do jc = jcmin, jcmax
-  aj(jc) = coeff_splines(i-k+jc)
-end do
+         jcmin = 1 - (i - k)
+         do j = 1, i
+            dl(j) = x - t(i + 1 - j)
+         end do
+         do j = i, k - 1
+            aj(k - j) = 0.0_8
+            dl(j) = dl(i)
+         end do
+
+      end if
+
+      jcmax = k
+
+      if (n < i) then
+
+         jcmax = k + n - i
+         do j = 1, k + n - i
+            dr(j) = t(i + j) - x
+         end do
+
+         do j = k + n - i, k - 1
+            aj(j + 1) = 0.0_8
+            dr(j) = dr(k + n - i)
+         end do
+
+      else
+
+         do j = 1, k - 1
+            dr(j) = t(i + j) - x
+         end do
+
+      end if
+
+      do jc = jcmin, jcmax
+         aj(jc) = coeff_splines(i - k + jc)
+      end do
 !
 !  Difference the coefficients JDERIV times.
 !
-do j = 1, jderiv
-   
-  ilo = k - j
-  do jj = 1, k - j
-    aj(jj) = ((aj(jj+1)-aj(jj))/(dl(ilo)+dr(jj)))*real(k-j,8)
-    ilo = ilo - 1
-  end do
-   
-end do
+      do j = 1, jderiv
+
+         ilo = k - j
+         do jj = 1, k - j
+            aj(jj) = ((aj(jj + 1) - aj(jj))/(dl(ilo) + dr(jj)))*real(k - j, 8)
+            ilo = ilo - 1
+         end do
+
+      end do
 !
 !  Compute value at X in (T(I),T(I+1)) of JDERIV-th derivative,
 !  given its relevant B-spline coefficients in AJ(1),...,AJ(K-JDERIV).
 !
-do j = jderiv+1, k-1
-  ilo = k-j
-  do jj = 1, k-j
-    aj(jj) = (aj(jj+1)*dl(ilo)+aj(jj)*dr(jj))/(dl(ilo)+dr(jj))
-    ilo = ilo - 1
-  end do
-end do
+      do j = jderiv + 1, k - 1
+         ilo = k - j
+         do jj = 1, k - j
+            aj(jj) = (aj(jj + 1)*dl(ilo) + aj(jj)*dr(jj))/(dl(ilo) + dr(jj))
+            ilo = ilo - 1
+         end do
+      end do
 
-sll_f_bvalue = aj(1)
+      sll_f_bvalue = aj(1)
 
-return
+      return
 
-end function sll_f_bvalue
-  
+   end function sll_f_bvalue
+
 !*************************************************************************
 !
-!! sll_s_splint produces the B-spline coefficients BCOEF of an 
+!! sll_s_splint produces the B-spline coefficients BCOEF of an
 ! interpolating spline.
 !
 !  Discussion:
 !
-!    The spline is of order K with knots T(1:N+K), and takes on the 
+!    The spline is of order K with knots T(1:N+K), and takes on the
 !    value GTAU(I) at TAU(I), for I = 1 to N.
 !
-!    The I-th equation of the linear system 
+!    The I-th equation of the linear system
 !
-!      A * BCOEF = B 
+!      A * BCOEF = B
 !
 !    for the B-spline coefficients of the interpolant enforces interpolation
 !    at TAU(1:N).
@@ -707,7 +706,7 @@ end function sll_f_bvalue
 !    in the rows of the array Q, with the main diagonal going
 !    into row K.  See comments in the program.
 !
-!    The banded system is then solved by a call to BANFAC, which 
+!    The banded system is then solved by a call to BANFAC, which
 !    constructs the triangular factorization for A and stores it again in
 !    Q, followed by a call to BANSLV, which then obtains the solution
 !    BCOEF by substitution.
@@ -750,167 +749,166 @@ end function sll_f_bvalue
 !    Input, integer ( kind = 4 ) K, the order of the spline.
 !
 !    Output, real ( kind = 8 ) Q((2*K-1)*N), the triangular factorization
-!    of the coefficient matrix of the linear system for the B-coefficients 
-!    of the spline interpolant.  The B-coefficients for the interpolant 
-!    of an additional data set can be obtained without going through all 
-!    the calculations in this routine, simply by loading HTAU into BCOEF 
+!    of the coefficient matrix of the linear system for the B-coefficients
+!    of the spline interpolant.  The B-coefficients for the interpolant
+!    of an additional data set can be obtained without going through all
+!    the calculations in this routine, simply by loading HTAU into BCOEF
 !    and then executing the call:
 !      call banslv ( q, 2*k-1, n, k-1, k-1, bcoef )
 !
-!    Output, real ( kind = 8 ) BCOEF(N), the B-spline coefficients of 
+!    Output, real ( kind = 8 ) BCOEF(N), the B-spline coefficients of
 !    the interpolant.
 !
 !    Output, integer ( kind = 4 ) IFLAG, error flag.
 !    1, = success.
 !    2, = failure.
 !
-subroutine sll_s_splint ( deboor, tau, gtau, t, n, k, q, coeff_splines, iflag )
-implicit none
+   subroutine sll_s_splint(deboor, tau, gtau, t, n, k, q, coeff_splines, iflag)
+      implicit none
 
-type(sll_t_deboor_type)                     :: deboor
-sll_real64, dimension(:), intent(in)  :: tau
-sll_real64, dimension(:), intent(in)  :: gtau 
-sll_real64, dimension(:), intent(in)  :: t
-sll_int32,                intent(in)  :: n
-sll_int32,                intent(in)  :: k
-sll_real64, dimension(:), intent(out) :: q
-sll_real64, dimension(:), intent(out) :: coeff_splines
-sll_int32,                intent(out) :: iflag
+      type(sll_t_deboor_type)                     :: deboor
+      sll_real64, dimension(:), intent(in)  :: tau
+      sll_real64, dimension(:), intent(in)  :: gtau
+      sll_real64, dimension(:), intent(in)  :: t
+      sll_int32, intent(in)  :: n
+      sll_int32, intent(in)  :: k
+      sll_real64, dimension(:), intent(out) :: q
+      sll_real64, dimension(:), intent(out) :: coeff_splines
+      sll_int32, intent(out) :: iflag
 
-sll_int32  :: j
-sll_int32  :: jj
-sll_int32  :: kpkm2
-sll_int32  :: left
-sll_int32  :: ilp1mx
-sll_real64 :: taui
-sll_int32  :: i
+      sll_int32  :: j
+      sll_int32  :: jj
+      sll_int32  :: kpkm2
+      sll_int32  :: left
+      sll_int32  :: ilp1mx
+      sll_real64 :: taui
+      sll_int32  :: i
 
-SLL_ASSERT(size(tau)  == n)
-SLL_ASSERT(size(gtau) == n)
-SLL_ASSERT(size(t)    == n+k)
-SLL_ASSERT(size(q)    == (2*k-1)*n)
+      SLL_ASSERT(size(tau) == n)
+      SLL_ASSERT(size(gtau) == n)
+      SLL_ASSERT(size(t) == n + k)
+      SLL_ASSERT(size(q) == (2*k - 1)*n)
 
-kpkm2 = 2 * ( k - 1 )
-left  = k
-q     = 0.0_f64
+      kpkm2 = 2*(k - 1)
+      left = k
+      q = 0.0_f64
 
 !  Loop over I to construct the N interpolation equations.
-do i = 1, n
-   
-  taui = tau(i)
-  ilp1mx = min ( i + k, n + 1 )
-  !
-  !  Find LEFT in the closed interval (I,I+K-1) such that
-  !
-  !    T(LEFT) <= TAU(I) < T(LEFT+1)
-  !
-  !  The matrix is singular if this is not possible.
-  !
-  left = max ( left, i )
-  
-  if ( taui < t(left) ) then
-    iflag = 2
-    write ( *, '(a)' ) ' '
-    write ( *, '(a)' ) 'sll_s_splint - Fatal Error!'
-    write ( *, '(a)' ) '  The linear system is not invertible!'
-    return
-  end if
+      do i = 1, n
 
-  do while ( t(left+1) <= taui )
-     
-    left = left + 1
-     
-    if ( left < ilp1mx ) then
-      cycle
-    end if
-     
-    left = left - 1
-     
-    if ( t(left+1) < taui ) then
-      iflag = 2
-      write ( *, '(a)' ) ' '
-      write ( *, '(a)' ) 'sll_s_splint - Fatal Error!'
-      write ( *, '(a)' ) '  The linear system is not invertible!'
-      return
-    end if
-     
-    exit
-     
-  end do
-  !
-  !  The I-th equation enforces interpolation at TAUI, hence for all J,
-  !
-  !    A(I,J) = B(J,K,T)(TAUI).
-  !
-  !Only the K entries with J = LEFT-K+1,...,LEFT actually might be nonzero.
-  !
-  !These K numbers are returned, in BCOEF 
-  ! (used for temporary storage here),
-  !  by the following.
-  !
-  call sll_s_bsplvb ( deboor, t, k, 1, taui, left, coeff_splines )
-  !
-  !  We therefore want BCOEF(J) = B(LEFT-K+J)(TAUI) to go into
-  !  A(I,LEFT-K+J), that is, into Q(I-(LEFT+J)+2*K,(LEFT+J)-K) since
-  !  A(I+J,J) is to go into Q(I+K,J), for all I, J, if we consider Q
-  !  as a two-dimensional array, with  2*K-1 rows.  See comments in
-  !  BANFAC.
-  !
-  !  In the present program, we treat Q as an equivalent
-  !  one-dimensional array, because of fortran restrictions on
-  !  dimension statements.
-  !
-  !  We therefore want  BCOEF(J) to go into the entry of Q with index:
-  !
-  !    I -(LEFT+J)+2*K + ((LEFT+J)-K-1)*(2*K-1)
-  !   = I-LEFT+1+(LEFT -K)*(2*K-1) + (2*K-2)*J
-  !
-  jj = i - left + 1 + ( left - k ) * ( k + k - 1 )
-  
-  do j = 1, k
-    jj = jj + kpkm2
-    q(jj) = coeff_splines(j)
-  end do
-  
-end do
+         taui = tau(i)
+         ilp1mx = min(i + k, n + 1)
+         !
+         !  Find LEFT in the closed interval (I,I+K-1) such that
+         !
+         !    T(LEFT) <= TAU(I) < T(LEFT+1)
+         !
+         !  The matrix is singular if this is not possible.
+         !
+         left = max(left, i)
+
+         if (taui < t(left)) then
+            iflag = 2
+            write (*, '(a)') ' '
+            write (*, '(a)') 'sll_s_splint - Fatal Error!'
+            write (*, '(a)') '  The linear system is not invertible!'
+            return
+         end if
+
+         do while (t(left + 1) <= taui)
+
+            left = left + 1
+
+            if (left < ilp1mx) then
+               cycle
+            end if
+
+            left = left - 1
+
+            if (t(left + 1) < taui) then
+               iflag = 2
+               write (*, '(a)') ' '
+               write (*, '(a)') 'sll_s_splint - Fatal Error!'
+               write (*, '(a)') '  The linear system is not invertible!'
+               return
+            end if
+
+            exit
+
+         end do
+         !
+         !  The I-th equation enforces interpolation at TAUI, hence for all J,
+         !
+         !    A(I,J) = B(J,K,T)(TAUI).
+         !
+         !Only the K entries with J = LEFT-K+1,...,LEFT actually might be nonzero.
+         !
+         !These K numbers are returned, in BCOEF
+         ! (used for temporary storage here),
+         !  by the following.
+         !
+         call sll_s_bsplvb(deboor, t, k, 1, taui, left, coeff_splines)
+         !
+         !  We therefore want BCOEF(J) = B(LEFT-K+J)(TAUI) to go into
+         !  A(I,LEFT-K+J), that is, into Q(I-(LEFT+J)+2*K,(LEFT+J)-K) since
+         !  A(I+J,J) is to go into Q(I+K,J), for all I, J, if we consider Q
+         !  as a two-dimensional array, with  2*K-1 rows.  See comments in
+         !  BANFAC.
+         !
+         !  In the present program, we treat Q as an equivalent
+         !  one-dimensional array, because of fortran restrictions on
+         !  dimension statements.
+         !
+         !  We therefore want  BCOEF(J) to go into the entry of Q with index:
+         !
+         !    I -(LEFT+J)+2*K + ((LEFT+J)-K-1)*(2*K-1)
+         !   = I-LEFT+1+(LEFT -K)*(2*K-1) + (2*K-2)*J
+         !
+         jj = i - left + 1 + (left - k)*(k + k - 1)
+
+         do j = 1, k
+            jj = jj + kpkm2
+            q(jj) = coeff_splines(j)
+         end do
+
+      end do
 !
 !  Obtain factorization of A, stored again in Q.
 !
-call banfac ( q, k+k-1, n, k-1, k-1, iflag )
+      call banfac(q, k + k - 1, n, k - 1, k - 1, iflag)
 
-if ( iflag == 2 ) then
-  write ( *, '(a)' ) ' '
-  write ( *, '(a)' ) 'sll_s_splint - Fatal Error!'
-  write ( *, '(a)' ) '  The linear system is not invertible!'
-  return
-end if
+      if (iflag == 2) then
+         write (*, '(a)') ' '
+         write (*, '(a)') 'sll_s_splint - Fatal Error!'
+         write (*, '(a)') '  The linear system is not invertible!'
+         return
+      end if
 !
-!  Solve 
+!  Solve
 !
 !    A * BCOEF = GTAU
 !
 !  by back substitution.
 !
-coeff_splines(1:n) = gtau(1:n)
+      coeff_splines(1:n) = gtau(1:n)
 
-call banslv ( q, k+k-1, n, k-1, k-1, coeff_splines )
+      call banslv(q, k + k - 1, n, k - 1, k - 1, coeff_splines)
 
-return
-end subroutine sll_s_splint
-
+      return
+   end subroutine sll_s_splint
 
 !*************************************************************************
 !
-!! sll_s_splint_der produces the B-spline coefficients BCOEF of an 
+!! sll_s_splint_der produces the B-spline coefficients BCOEF of an
 ! interpolating spline with the values of a derivative in points
 !
 !  Discussion:
 !
-!    The spline is of order K with knots T(1:N+K+M), and takes on the 
-!    value GTAU(I) at TAU(I), for I = 1 to N and 
+!    The spline is of order K with knots T(1:N+K+M), and takes on the
+!    value GTAU(I) at TAU(I), for I = 1 to N and
 !    value of the derivative GTAU_der(I) at TAU_der(I), for I = 1 to M
 !
-!    The I-th equation of the linear system 
+!    The I-th equation of the linear system
 !
 !      A  * BCOEF = B
 !      A' * BCOEF = B'
@@ -926,7 +924,7 @@ end subroutine sll_s_splint
 !    in the rows of the array Q, with the main diagonal going
 !    into row K.  See comments in the program.
 !
-!    The banded system is then solved by a call to BANFAC, which 
+!    The banded system is then solved by a call to BANFAC, which
 !    constructs the triangular factorization for A and stores it again in
 !    Q, followed by a call to BANSLV, which then obtains the solution
 !    BCOEF by substitution.
@@ -968,14 +966,14 @@ end subroutine sll_s_splint
 !    Input, integer ( kind = 4 ) K, the order of the spline.
 !
 !    Output, real ( kind = 8 ) Q((2*K-1)*(N+M)), the triangular factorization
-!    of the coefficient matrix of the linear system for the B-coefficients 
-!    of the spline interpolant.  The B-coefficients for the interpolant 
-!    of an additional data set can be obtained without going through all 
-!    the calculations in this routine, simply by loading HTAU into BCOEF 
+!    of the coefficient matrix of the linear system for the B-coefficients
+!    of the spline interpolant.  The B-coefficients for the interpolant
+!    of an additional data set can be obtained without going through all
+!    the calculations in this routine, simply by loading HTAU into BCOEF
 !    and then executing the call:
 !      call banslv ( q, 2*k-1, n+m, k-1, k-1, bcoef )
 !
-!    Output, real ( kind = 8 ) BCOEF(N+M), the B-spline coefficients of 
+!    Output, real ( kind = 8 ) BCOEF(N+M), the B-spline coefficients of
 !    the interpolant.
 !
 !    Output, integer ( kind = 4 ) IFLAG, error flag.
@@ -983,184 +981,180 @@ end subroutine sll_s_splint
 !    2, = failure.
 !
 
-subroutine sll_s_splint_der( deboor,        &
-                       tau,           &
-                       gtau,          &
-                       tau_der,       &
-                       gtau_der,      &
-                       t,             &
-                       n,             &
-                       m,             &
-                       k,             &
-                       q,             &
-                       bcoef_spline,  &
-                       iflag )
-    
-type(sll_t_deboor_type)                                  :: deboor
-sll_int32                            , intent(in)  :: n
-sll_int32                            , intent(in)  :: m
-sll_int32                            , intent(in)  :: k
-sll_real64, dimension(n)             , intent(in)  :: tau
-sll_real64, dimension(n)             , intent(in)  :: gtau 
-sll_int32,  dimension(m)             , intent(in)  :: tau_der
-sll_real64, dimension(m)             , intent(in)  :: gtau_der
-sll_real64, dimension(n+k+m)         , intent(in)  :: t
-sll_real64, dimension((2*k-1)*(n+m)) , intent(out) :: q
-sll_real64, dimension(n+m)           , intent(out) :: bcoef_spline 
-sll_int32                            , intent(out) :: iflag
+   subroutine sll_s_splint_der(deboor, &
+                               tau, &
+                               gtau, &
+                               tau_der, &
+                               gtau_der, &
+                               t, &
+                               n, &
+                               m, &
+                               k, &
+                               q, &
+                               bcoef_spline, &
+                               iflag)
 
+      type(sll_t_deboor_type)                                  :: deboor
+      sll_int32, intent(in)  :: n
+      sll_int32, intent(in)  :: m
+      sll_int32, intent(in)  :: k
+      sll_real64, dimension(n), intent(in)  :: tau
+      sll_real64, dimension(n), intent(in)  :: gtau
+      sll_int32, dimension(m), intent(in)  :: tau_der
+      sll_real64, dimension(m), intent(in)  :: gtau_der
+      sll_real64, dimension(n + k + m), intent(in)  :: t
+      sll_real64, dimension((2*k - 1)*(n + m)), intent(out) :: q
+      sll_real64, dimension(n + m), intent(out) :: bcoef_spline
+      sll_int32, intent(out) :: iflag
 
+      sll_real64, dimension(n + m)           :: bcoef
+      sll_int32 :: i
+      sll_int32 :: mflag
+      sll_int32 :: j, l
+      sll_int32 :: jj
+      sll_int32 :: kpkm2
+      sll_int32 :: left
+      sll_real64:: taui, taui_der
+      sll_real64, dimension(k, k):: a
+      sll_real64, dimension(k, 2) :: bcoef_der
 
-sll_real64, dimension(n+m)           :: bcoef 
-sll_int32 :: i
-sll_int32 :: mflag
-sll_int32 :: j,l
-sll_int32 :: jj
-sll_int32 :: kpkm2
-sll_int32 :: left
-sll_real64:: taui,taui_der
-sll_real64, dimension(k,k):: a
-sll_real64,dimension(k,2) :: bcoef_der
+      kpkm2 = 2*(k - 1)
+      left = k
+      q(1:(2*k - 1)*(n + m)) = 0.0_f64
+      a(1:k, 1:k) = 0.0_f64
+      bcoef_der(1:k, 1:2) = 0.0_f64
 
-kpkm2 = 2 * ( k - 1 )
-left = k
-q(1:(2*k-1)*(n+m)) = 0.0_f64
-a(1:k,1:k) = 0.0_f64
-bcoef_der(1:k,1:2) = 0.0_f64
-
-! we must suppose that m is <= than n 
-if (m > n) then
-   print*, 'problem m must be < = at n'
-   print*, 'value m =', m, 'value n =', n
-   stop
-end if
-l = 1 ! index for the derivative
+! we must suppose that m is <= than n
+      if (m > n) then
+         print *, 'problem m must be < = at n'
+         print *, 'value m =', m, 'value n =', n
+         stop
+      end if
+      l = 1 ! index for the derivative
 !
 !  Loop over I to construct the N interpolation equations.
 !
-do i = 1, n-1
-   
-  taui = tau(i)
-  
-  !
-  !  Find LEFT in the closed interval (I,I+K-1) such that
-  !
-  !    T(LEFT) <= TAU(I) < T(LEFT+1)
-  !
-  !  The matrix is singular if this is not possible.
-  !  With help of the Schoenberg-Whitney theorem 
-  !  we can prove that if the diagonal of the 
-  !  matrix B_j(x_i) is null, we have a non-inversible matrix.  
+      do i = 1, n - 1
 
-  call sll_s_interv( deboor, t, n+m+k, taui, left, mflag )
+         taui = tau(i)
 
-  !
-  !  The I-th equation enforces interpolation at TAUI, hence for all J,
-  !
-  !    A(I,J) = B(J,K,T)(TAUI).
-  !
-  !Only the K entries with J = LEFT-K+1,...,LEFT actually might be nonzero.
-  !
-  !These K numbers are returned, in BCOEF 
-  ! (used for temporary storage here),
-  !  by the following.
-  !
-  
-  call sll_s_bsplvb ( deboor, t, k, 1, taui, left, bcoef )
-  
-  !
-  !  We therefore want BCOEF(J) = B(LEFT-K+J)(TAUI) to go into
-  !  A(I,LEFT-K+J), that is, into Q(I-(LEFT+J)+2*K,(LEFT+J)-K) since
-  !  A(I+J,J) is to go into Q(I+K,J), for all I, J, if we consider Q
-  !  as a two-dimensional array, with  2*K-1 rows.  See comments in
-  !  BANFAC.
-  !
-  !  In the present program, we treat Q as an equivalent
-  !  one-dimensional array, because of fortran restrictions on
-  !  dimension statements.
-  !
-  !  We therefore want  BCOEF(J) to go into the entry of Q with index:
-  !
-  !    I -(LEFT+J)+2*K + ((LEFT+J)-K-1)*(2*K-1)
-  !    =  begin_ligne +  (begin_col -1) * number_coef_different_0
-  !   = I-LEFT+1+(LEFT -K)*(2*K-1) + (2*K-2)*J
-  !
-  jj = i - left + 1 + ( left - k ) * ( k + k - 1 ) + l - 1
-  
-  do j = 1, k
-     jj = jj + kpkm2  ! kpkm2 = 2*(k-1)
-     q(jj) = bcoef(j)
-  end do
+         !
+         !  Find LEFT in the closed interval (I,I+K-1) such that
+         !
+         !    T(LEFT) <= TAU(I) < T(LEFT+1)
+         !
+         !  The matrix is singular if this is not possible.
+         !  With help of the Schoenberg-Whitney theorem
+         !  we can prove that if the diagonal of the
+         !  matrix B_j(x_i) is null, we have a non-inversible matrix.
 
-  bcoef_spline(i+ l-1) = gtau(i)
-  if ( tau_der(l) == i ) then   
-     taui_der = taui
-     
-     call sll_s_bsplvd( deboor, t, k, taui_der, left, a, bcoef_der, 2)
+         call sll_s_interv(deboor, t, n + m + k, taui, left, mflag)
 
-     l = l + 1
-     jj = i - left + 1 + ( left - k ) * ( k + k - 1 ) + l - 1
-  
-     do j = 1, k
-        jj = jj + kpkm2  ! kpkm2 = 2*(k-1)
-        q(jj) = bcoef_der(j,2)
-     end do
-  bcoef_spline(i+ l-1) = gtau_der(l-1)
-  end if
-  
-end do
+         !
+         !  The I-th equation enforces interpolation at TAUI, hence for all J,
+         !
+         !    A(I,J) = B(J,K,T)(TAUI).
+         !
+         !Only the K entries with J = LEFT-K+1,...,LEFT actually might be nonzero.
+         !
+         !These K numbers are returned, in BCOEF
+         ! (used for temporary storage here),
+         !  by the following.
+         !
 
-taui = tau(n)
-call sll_s_interv( deboor, t, n+m+k, taui, left, mflag )
+         call sll_s_bsplvb(deboor, t, k, 1, taui, left, bcoef)
 
-if ( tau_der(l)== n ) then   
+         !
+         !  We therefore want BCOEF(J) = B(LEFT-K+J)(TAUI) to go into
+         !  A(I,LEFT-K+J), that is, into Q(I-(LEFT+J)+2*K,(LEFT+J)-K) since
+         !  A(I+J,J) is to go into Q(I+K,J), for all I, J, if we consider Q
+         !  as a two-dimensional array, with  2*K-1 rows.  See comments in
+         !  BANFAC.
+         !
+         !  In the present program, we treat Q as an equivalent
+         !  one-dimensional array, because of fortran restrictions on
+         !  dimension statements.
+         !
+         !  We therefore want  BCOEF(J) to go into the entry of Q with index:
+         !
+         !    I -(LEFT+J)+2*K + ((LEFT+J)-K-1)*(2*K-1)
+         !    =  begin_ligne +  (begin_col -1) * number_coef_different_0
+         !   = I-LEFT+1+(LEFT -K)*(2*K-1) + (2*K-2)*J
+         !
+         jj = i - left + 1 + (left - k)*(k + k - 1) + l - 1
 
-  taui_der = taui
-  
-  call sll_s_bsplvd( deboor, t, k, taui_der, left, a, bcoef_der, 2)
+         do j = 1, k
+            jj = jj + kpkm2  ! kpkm2 = 2*(k-1)
+            q(jj) = bcoef(j)
+         end do
 
-  
-  jj = n - left + 1 + ( left - k ) * ( k + k - 1 ) + l - 1
+         bcoef_spline(i + l - 1) = gtau(i)
+         if (tau_der(l) == i) then
+            taui_der = taui
 
-  do j = 1, k
-     jj = jj + kpkm2  ! kpkm2 = 2*(k-1)
-     q(jj) = bcoef_der(j,2)
-  end do
-  bcoef_spline(n+ l-1) = gtau_der(l)
-  l = l + 1
-      
-end if
+            call sll_s_bsplvd(deboor, t, k, taui_der, left, a, bcoef_der, 2)
 
-call sll_s_bsplvb ( deboor, t, k, 1, taui, left, bcoef )
-jj = n - left + 1 + ( left - k ) * ( k + k - 1 ) + l - 1
-   
-do j = 1, k
-  jj = jj + kpkm2  ! kpkm2 = 2*(k-1)
-  q(jj) = bcoef(j)
-end do
-bcoef_spline(n+l-1) = gtau(n)
+            l = l + 1
+            jj = i - left + 1 + (left - k)*(k + k - 1) + l - 1
+
+            do j = 1, k
+               jj = jj + kpkm2  ! kpkm2 = 2*(k-1)
+               q(jj) = bcoef_der(j, 2)
+            end do
+            bcoef_spline(i + l - 1) = gtau_der(l - 1)
+         end if
+
+      end do
+
+      taui = tau(n)
+      call sll_s_interv(deboor, t, n + m + k, taui, left, mflag)
+
+      if (tau_der(l) == n) then
+
+         taui_der = taui
+
+         call sll_s_bsplvd(deboor, t, k, taui_der, left, a, bcoef_der, 2)
+
+         jj = n - left + 1 + (left - k)*(k + k - 1) + l - 1
+
+         do j = 1, k
+            jj = jj + kpkm2  ! kpkm2 = 2*(k-1)
+            q(jj) = bcoef_der(j, 2)
+         end do
+         bcoef_spline(n + l - 1) = gtau_der(l)
+         l = l + 1
+
+      end if
+
+      call sll_s_bsplvb(deboor, t, k, 1, taui, left, bcoef)
+      jj = n - left + 1 + (left - k)*(k + k - 1) + l - 1
+
+      do j = 1, k
+         jj = jj + kpkm2  ! kpkm2 = 2*(k-1)
+         q(jj) = bcoef(j)
+      end do
+      bcoef_spline(n + l - 1) = gtau(n)
 
 !
 !  Obtain factorization of A, stored again in Q.
 !
-call banfac ( q, k+k-1, n+m, k-1, k-1, iflag )
+      call banfac(q, k + k - 1, n + m, k - 1, k - 1, iflag)
 
-if ( iflag == 2 ) then
-   write ( *, '(a)' ) ' '
-   write ( *, '(a)' ) 'sll_s_splint - Fatal Error!'
-   write ( *, '(a)' ) '  The linear system is not invertible!'
-   return
-end if
+      if (iflag == 2) then
+         write (*, '(a)') ' '
+         write (*, '(a)') 'sll_s_splint - Fatal Error!'
+         write (*, '(a)') '  The linear system is not invertible!'
+         return
+      end if
 !
-!  Solve 
+!  Solve
 !
 !    A * BCOEF = GTAU
 !
 !  by back substitution.
 !
-call banslv ( q, k+k-1, n+m, k-1, k-1, bcoef_spline )
+      call banslv(q, k + k - 1, n + m, k - 1, k - 1, bcoef_spline)
 
-end subroutine sll_s_splint_der
+   end subroutine sll_s_splint_der
 
-  
 end module sll_m_deboor_splines_1d

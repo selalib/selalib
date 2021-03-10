@@ -1,18 +1,18 @@
 !**************************************************************
 !  Copyright INRIA
-!  Authors : 
+!  Authors :
 !     CALVI project team
-!  
-!  This code SeLaLib (for Semi-Lagrangian-Library) 
-!  is a parallel library for simulating the plasma turbulence 
+!
+!  This code SeLaLib (for Semi-Lagrangian-Library)
+!  is a parallel library for simulating the plasma turbulence
 !  in a tokamak.
-!  
-!  This software is governed by the CeCILL-B license 
-!  under French law and abiding by the rules of distribution 
-!  of free software.  You can  use, modify and redistribute 
-!  the software under the terms of the CeCILL-B license as 
+!
+!  This software is governed by the CeCILL-B license
+!  under French law and abiding by the rules of distribution
+!  of free software.  You can  use, modify and redistribute
+!  the software under the terms of the CeCILL-B license as
 !  circulated by CEA, CNRS and INRIA at the following URL
-!  "http://www.cecill.info". 
+!  "http://www.cecill.info".
 !**************************************************************
 
 !> @ingroup advection
@@ -24,83 +24,82 @@ module sll_m_advection_1d_base
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_working_precision.h"
 
-  implicit none
+   implicit none
 
-  public :: &
-    sll_c_advector_1d, &
-    sll_t_advection_1d_base_ptr
+   public :: &
+      sll_c_advector_1d, &
+      sll_t_advection_1d_base_ptr
 
-  private
+   private
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
-type, abstract :: sll_c_advector_1d 
+   type, abstract :: sll_c_advector_1d
 
-contains
+   contains
 
-  procedure(signature_advect_1d_constant), deferred, pass(adv) :: advect_1d_constant
-  procedure(signature_advect_1d),          deferred, pass(adv) :: advect_1d
-  procedure(signature_advect_1d_delete),   deferred, pass(adv) :: delete
+      procedure(signature_advect_1d_constant), deferred, pass(adv) :: advect_1d_constant
+      procedure(signature_advect_1d), deferred, pass(adv) :: advect_1d
+      procedure(signature_advect_1d_delete), deferred, pass(adv) :: delete
 
-end type sll_c_advector_1d
+   end type sll_c_advector_1d
 
-type :: sll_t_advection_1d_base_ptr 
-  class(sll_c_advector_1d), pointer :: ptr
-end type sll_t_advection_1d_base_ptr
+   type :: sll_t_advection_1d_base_ptr
+      class(sll_c_advector_1d), pointer :: ptr
+   end type sll_t_advection_1d_base_ptr
 
 #ifndef DOXYGEN_SHOULD_SKIP_THIS
-abstract interface
+   abstract interface
 
-  subroutine signature_advect_1d_constant( adv,   &
-                                           a,     &
-                                           dt,    &
-                                           input, &
-                                           output)
+      subroutine signature_advect_1d_constant(adv, &
+                                              a, &
+                                              dt, &
+                                              input, &
+                                              output)
 
-    use sll_m_working_precision
-    import sll_c_advector_1d       
+         use sll_m_working_precision
+         import sll_c_advector_1d
 
-    class(sll_c_advector_1d)          :: adv
-    sll_real64,               intent(in)  :: a
-    sll_real64,               intent(in)  :: dt 
-    sll_real64, dimension(:), intent(in)  :: input
-    sll_real64, dimension(:), intent(out) :: output
+         class(sll_c_advector_1d)          :: adv
+         sll_real64, intent(in)  :: a
+         sll_real64, intent(in)  :: dt
+         sll_real64, dimension(:), intent(in)  :: input
+         sll_real64, dimension(:), intent(out) :: output
 
-  end subroutine signature_advect_1d_constant
+      end subroutine signature_advect_1d_constant
 
-end interface
+   end interface
 
-abstract interface
+   abstract interface
 
-  subroutine signature_advect_1d( adv,       &
-                                    A,       &
-                                    dt,      &
-                                    input,   &
-                                    output)
+      subroutine signature_advect_1d(adv, &
+                                     A, &
+                                     dt, &
+                                     input, &
+                                     output)
 
-    use sll_m_working_precision
-    import sll_c_advector_1d       
+         use sll_m_working_precision
+         import sll_c_advector_1d
 
-    class(sll_c_advector_1d)          :: adv
-    sll_real64, dimension(:), intent(in)  :: a
-    sll_real64,               intent(in)  :: dt 
-    sll_real64, dimension(:), intent(in)  :: input
-    sll_real64, dimension(:), intent(out) :: output
+         class(sll_c_advector_1d)          :: adv
+         sll_real64, dimension(:), intent(in)  :: a
+         sll_real64, intent(in)  :: dt
+         sll_real64, dimension(:), intent(in)  :: input
+         sll_real64, dimension(:), intent(out) :: output
 
-  end subroutine signature_advect_1d
+      end subroutine signature_advect_1d
 
-end interface
+   end interface
 
-abstract interface
+   abstract interface
 
-  subroutine signature_advect_1d_delete( adv )
+      subroutine signature_advect_1d_delete(adv)
 
-    import sll_c_advector_1d       
-    class(sll_c_advector_1d), intent(inout) :: adv
+         import sll_c_advector_1d
+         class(sll_c_advector_1d), intent(inout) :: adv
 
-  end subroutine signature_advect_1d_delete
+      end subroutine signature_advect_1d_delete
 
-end interface
-
+   end interface
 
 #endif /* DOXYGEN_SHOULD_SKIP_THIS */
 

@@ -8,306 +8,306 @@ module sll_m_vector_space_real_array_3d
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_errors.h"
 
-  use sll_m_working_precision, only: f64
+   use sll_m_working_precision, only: f64
 
-  use sll_m_vector_space_base, only: sll_c_vector_space
+   use sll_m_vector_space_base, only: sll_c_vector_space
 
-  implicit none
+   implicit none
 
-  public :: sll_t_vector_space_real_array_3d
+   public :: sll_t_vector_space_real_array_3d
 
-  private
+   private
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
-  !> Working precision
-  integer, parameter :: wp = f64
+   !> Working precision
+   integer, parameter :: wp = f64
 
-  !> @brief   Vector space for wrapping 3D Fortran real arrays
-  !> @details Concrete derived type providing the efficient implementation
-  !>          of all basic operations on a vector space that wraps a single 
-  !>          3D Fortran real array
-  type, extends(sll_c_vector_space) :: sll_t_vector_space_real_array_3d
+   !> @brief   Vector space for wrapping 3D Fortran real arrays
+   !> @details Concrete derived type providing the efficient implementation
+   !>          of all basic operations on a vector space that wraps a single
+   !>          3D Fortran real array
+   type, extends(sll_c_vector_space) :: sll_t_vector_space_real_array_3d
 
-    real(wp), allocatable :: array(:,:,:)
+      real(wp), allocatable :: array(:, :, :)
 
-  contains
+   contains
 
-    !> @name Basic operations (overloading the abstract methods)
-    procedure :: copy => copy__real
-    procedure :: incr => incr__real
-    procedure :: scal => scal__real
+      !> @name Basic operations (overloading the abstract methods)
+      procedure :: copy => copy__real
+      procedure :: incr => incr__real
+      procedure :: scal => scal__real
 
-    !> @name Additional operations
-    procedure :: add       => add__real
-    procedure :: mult      => mult__real
-    procedure :: mult_add  => mult_add__real
-    procedure :: incr_mult => incr_mult__real
-    procedure :: lcmb      => lcmb__real
-    procedure :: incr_lcmb => incr_lcmb__real
- 
-    !> @name Optional subroutines and functions
-    procedure :: norm  => norm__real
-    procedure :: inner => inner__real
-    !> @}
+      !> @name Additional operations
+      procedure :: add => add__real
+      procedure :: mult => mult__real
+      procedure :: mult_add => mult_add__real
+      procedure :: incr_mult => incr_mult__real
+      procedure :: lcmb => lcmb__real
+      procedure :: incr_lcmb => incr_lcmb__real
 
-  end type sll_t_vector_space_real_array_3d
+      !> @name Optional subroutines and functions
+      procedure :: norm => norm__real
+      procedure :: inner => inner__real
+      !> @}
 
-  ! Error messages
-  character(len=*), parameter :: wrong_type_x = "x not of type 'sll_t_vector_space_real_array_3d'"
-  character(len=*), parameter :: wrong_type_y = "y not of type 'sll_t_vector_space_real_array_3d'"
+   end type sll_t_vector_space_real_array_3d
+
+   ! Error messages
+   character(len=*), parameter :: wrong_type_x = "x not of type 'sll_t_vector_space_real_array_3d'"
+   character(len=*), parameter :: wrong_type_y = "y not of type 'sll_t_vector_space_real_array_3d'"
 
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 contains
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
-  subroutine copy__real( self, x )
-    class(sll_t_vector_space_real_array_3d), intent(inout) :: self
-    class(sll_c_vector_space)              , intent(in   ) :: x
+   subroutine copy__real(self, x)
+      class(sll_t_vector_space_real_array_3d), intent(inout) :: self
+      class(sll_c_vector_space), intent(in) :: x
 
-    character(len=*), parameter :: this_sub_name = "sll_t_vector_space_real_array_3d % copy"
+      character(len=*), parameter :: this_sub_name = "sll_t_vector_space_real_array_3d % copy"
 
-    select type( x )
+      select type (x)
 
-    class is( sll_t_vector_space_real_array_3d )
+      class is (sll_t_vector_space_real_array_3d)
 
-      ! Automatic allocation
-      self % array(:,:,:) = x % array
-
-    class default
-
-      SLL_ERROR( this_sub_name, wrong_type_x )
-
-    end select
-
-  end subroutine copy__real
-
-  !-----------------------------------------------------------------------------
-  subroutine incr__real( self, x )
-    class(sll_t_vector_space_real_array_3d), intent(inout) :: self
-    class(sll_c_vector_space)              , intent(in   ) :: x
-
-    character(len=*), parameter :: this_sub_name = "sll_t_vector_space_real_array_3d % incr"
-
-    select type( x )
-
-    class is( sll_t_vector_space_real_array_3d )
-
-      self % array(:,:,:) = self % array(:,:,:) + x % array(:,:,:)
-
-    class default
-
-      SLL_ERROR( this_sub_name, wrong_type_x )
-
-    end select
-
-  end subroutine incr__real
-
-  !-----------------------------------------------------------------------------
-  subroutine scal__real( self, a )
-    class(sll_t_vector_space_real_array_3d), intent(inout) :: self
-    real(wp)                               , intent(in   ) :: a
-
-    self % array(:,:,:) = self % array(:,:,:) * a
-
-  end subroutine scal__real
-
-  !-----------------------------------------------------------------------------
-  subroutine add__real( self, x, y )
-    class(sll_t_vector_space_real_array_3d), intent(inout) :: self
-    class(sll_c_vector_space)              , intent(in   ) :: x
-    class(sll_c_vector_space)              , intent(in   ) :: y
-
-    character(len=*), parameter :: this_sub_name = "sll_t_vector_space_real_array_3d % add"
-
-    select type( x )
-
-    class is( sll_t_vector_space_real_array_3d )
-
-      select type( y )
-
-      class is( sll_t_vector_space_real_array_3d )
-
-        self % array(:,:,:) = x % array(:,:,:) + y % array(:,:,:)
+         ! Automatic allocation
+         self%array(:, :, :) = x%array
 
       class default
 
-        SLL_ERROR( this_sub_name, wrong_type_y )
+         SLL_ERROR(this_sub_name, wrong_type_x)
 
       end select
 
-    class default
+   end subroutine copy__real
 
-      SLL_ERROR( this_sub_name, wrong_type_x )
+   !-----------------------------------------------------------------------------
+   subroutine incr__real(self, x)
+      class(sll_t_vector_space_real_array_3d), intent(inout) :: self
+      class(sll_c_vector_space), intent(in) :: x
 
-    end select
+      character(len=*), parameter :: this_sub_name = "sll_t_vector_space_real_array_3d % incr"
 
-  end subroutine add__real
+      select type (x)
 
-  !-----------------------------------------------------------------------------
-  subroutine mult__real( self, a, x )
-    class(sll_t_vector_space_real_array_3d), intent(inout) :: self
-    real(wp)                               , intent(in   ) :: a
-    class(sll_c_vector_space)              , intent(in   ) :: x
+      class is (sll_t_vector_space_real_array_3d)
 
-    character(len=*), parameter :: this_sub_name = "sll_t_vector_space_real_array_3d % mult"
-
-    select type( x )
-
-    class is( sll_t_vector_space_real_array_3d )
-
-      self % array(:,:,:) = a * x % array(:,:,:)
-
-    class default
-
-      SLL_ERROR( this_sub_name, wrong_type_x )
-
-    end select
-
-  end subroutine mult__real
-
-  !-----------------------------------------------------------------------------
-  subroutine mult_add__real( self, a, x, y )
-    class(sll_t_vector_space_real_array_3d), intent(inout) :: self
-    real(wp)                               , intent(in   ) :: a
-    class(sll_c_vector_space)              , intent(in   ) :: x
-    class(sll_c_vector_space)              , intent(in   ) :: y
-
-    character(len=*), parameter :: this_sub_name = "sll_t_vector_space_real_array_3d % mult_add"
-
-    select type( x )
-
-    class is( sll_t_vector_space_real_array_3d )
-
-      select type( y )
-
-      class is( sll_t_vector_space_real_array_3d )
-
-        self % array(:,:,:) = a * x % array(:,:,:) + y % array(:,:,:)
+         self%array(:, :, :) = self%array(:, :, :) + x%array(:, :, :)
 
       class default
 
-        SLL_ERROR( this_sub_name, wrong_type_y )
+         SLL_ERROR(this_sub_name, wrong_type_x)
 
       end select
 
-    class default
+   end subroutine incr__real
 
-      SLL_ERROR( this_sub_name, wrong_type_x )
+   !-----------------------------------------------------------------------------
+   subroutine scal__real(self, a)
+      class(sll_t_vector_space_real_array_3d), intent(inout) :: self
+      real(wp), intent(in) :: a
 
-    end select
+      self%array(:, :, :) = self%array(:, :, :)*a
 
-  end subroutine mult_add__real
+   end subroutine scal__real
 
-  !-----------------------------------------------------------------------------
-  subroutine incr_mult__real( self, a, x )
-    class(sll_t_vector_space_real_array_3d), intent(inout) :: self
-    real(wp)                               , intent(in   ) :: a
-    class(sll_c_vector_space)              , intent(in   ) :: x
+   !-----------------------------------------------------------------------------
+   subroutine add__real(self, x, y)
+      class(sll_t_vector_space_real_array_3d), intent(inout) :: self
+      class(sll_c_vector_space), intent(in) :: x
+      class(sll_c_vector_space), intent(in) :: y
 
-    character(len=*), parameter :: this_sub_name = "sll_t_vector_space_real_array_3d % incr_mult"
+      character(len=*), parameter :: this_sub_name = "sll_t_vector_space_real_array_3d % add"
 
-    select type( x )
+      select type (x)
 
-    class is( sll_t_vector_space_real_array_3d )
+      class is (sll_t_vector_space_real_array_3d)
 
-      self % array(:,:,:) = self % array(:,:,:) + a * x % array(:,:,:)
+         select type (y)
 
-    class default
+         class is (sll_t_vector_space_real_array_3d)
 
-      SLL_ERROR( this_sub_name, wrong_type_x )
+            self%array(:, :, :) = x%array(:, :, :) + y%array(:, :, :)
 
-    end select
+         class default
 
-  end subroutine incr_mult__real
+            SLL_ERROR(this_sub_name, wrong_type_y)
 
-  !----------------------------------------------------------------------------
-  subroutine lcmb__real( self, a, x )
-    class(sll_t_vector_space_real_array_3d), intent(inout) :: self
-    real(wp)                               , intent(in   ) :: a(:)
-    class(sll_c_vector_space)              , intent(in   ) :: x(:)
+         end select
 
-    character(len=*), parameter :: this_sub_name = "sll_t_vector_space_real_array_3d % lcmb"
+      class default
 
-    integer :: i
+         SLL_ERROR(this_sub_name, wrong_type_x)
 
-    select type( x )
+      end select
 
-    class is( sll_t_vector_space_real_array_3d )
+   end subroutine add__real
 
-      ! Construct linear combination incrementally
-      self % array(:,:,:) = a(1) * x(1) % array(:,:,:)
-      do i = 2, size( a )
-        self % array(:,:,:) = self % array(:,:,:) + a(i) * x(i) % array(:,:,:)
-      end do
+   !-----------------------------------------------------------------------------
+   subroutine mult__real(self, a, x)
+      class(sll_t_vector_space_real_array_3d), intent(inout) :: self
+      real(wp), intent(in) :: a
+      class(sll_c_vector_space), intent(in) :: x
 
-    class default
+      character(len=*), parameter :: this_sub_name = "sll_t_vector_space_real_array_3d % mult"
 
-      SLL_ERROR( this_sub_name, wrong_type_x )
+      select type (x)
 
-    end select
+      class is (sll_t_vector_space_real_array_3d)
 
-  end subroutine lcmb__real
+         self%array(:, :, :) = a*x%array(:, :, :)
 
-  !-----------------------------------------------------------------------------
-  subroutine incr_lcmb__real( self, a, x )
-    class(sll_t_vector_space_real_array_3d), intent(inout) :: self
-    real(wp)                               , intent(in   ) :: a(:)
-    class(sll_c_vector_space)              , intent(in   ) :: x(:)
+      class default
 
-    character(len=*), parameter :: this_sub_name = "sll_t_vector_space_real_array_3d % incr_lcmb"
+         SLL_ERROR(this_sub_name, wrong_type_x)
 
-    integer :: i
+      end select
 
-    select type( x )
+   end subroutine mult__real
 
-    class is( sll_t_vector_space_real_array_3d )
+   !-----------------------------------------------------------------------------
+   subroutine mult_add__real(self, a, x, y)
+      class(sll_t_vector_space_real_array_3d), intent(inout) :: self
+      real(wp), intent(in) :: a
+      class(sll_c_vector_space), intent(in) :: x
+      class(sll_c_vector_space), intent(in) :: y
 
-      ! Construct linear combination incrementally
-      do i = 1, size( a )
-        self % array(:,:,:) = self % array(:,:,:) + a(i) * x(i) % array(:,:,:)
-      end do
+      character(len=*), parameter :: this_sub_name = "sll_t_vector_space_real_array_3d % mult_add"
 
-    class default
+      select type (x)
 
-      SLL_ERROR( this_sub_name, wrong_type_x )
+      class is (sll_t_vector_space_real_array_3d)
 
-    end select
+         select type (y)
 
-  end subroutine incr_lcmb__real
+         class is (sll_t_vector_space_real_array_3d)
 
-  !-----------------------------------------------------------------------------
-  function norm__real( self ) result( res )
-    class(sll_t_vector_space_real_array_3d), intent(in) :: self
-    real(wp) :: res
+            self%array(:, :, :) = a*x%array(:, :, :) + y%array(:, :, :)
+
+         class default
+
+            SLL_ERROR(this_sub_name, wrong_type_y)
+
+         end select
+
+      class default
+
+         SLL_ERROR(this_sub_name, wrong_type_x)
+
+      end select
+
+   end subroutine mult_add__real
+
+   !-----------------------------------------------------------------------------
+   subroutine incr_mult__real(self, a, x)
+      class(sll_t_vector_space_real_array_3d), intent(inout) :: self
+      real(wp), intent(in) :: a
+      class(sll_c_vector_space), intent(in) :: x
+
+      character(len=*), parameter :: this_sub_name = "sll_t_vector_space_real_array_3d % incr_mult"
+
+      select type (x)
+
+      class is (sll_t_vector_space_real_array_3d)
+
+         self%array(:, :, :) = self%array(:, :, :) + a*x%array(:, :, :)
+
+      class default
+
+         SLL_ERROR(this_sub_name, wrong_type_x)
+
+      end select
+
+   end subroutine incr_mult__real
+
+   !----------------------------------------------------------------------------
+   subroutine lcmb__real(self, a, x)
+      class(sll_t_vector_space_real_array_3d), intent(inout) :: self
+      real(wp), intent(in) :: a(:)
+      class(sll_c_vector_space), intent(in) :: x(:)
+
+      character(len=*), parameter :: this_sub_name = "sll_t_vector_space_real_array_3d % lcmb"
+
+      integer :: i
+
+      select type (x)
+
+      class is (sll_t_vector_space_real_array_3d)
+
+         ! Construct linear combination incrementally
+         self%array(:, :, :) = a(1)*x(1)%array(:, :, :)
+         do i = 2, size(a)
+            self%array(:, :, :) = self%array(:, :, :) + a(i)*x(i)%array(:, :, :)
+         end do
+
+      class default
+
+         SLL_ERROR(this_sub_name, wrong_type_x)
+
+      end select
+
+   end subroutine lcmb__real
+
+   !-----------------------------------------------------------------------------
+   subroutine incr_lcmb__real(self, a, x)
+      class(sll_t_vector_space_real_array_3d), intent(inout) :: self
+      real(wp), intent(in) :: a(:)
+      class(sll_c_vector_space), intent(in) :: x(:)
+
+      character(len=*), parameter :: this_sub_name = "sll_t_vector_space_real_array_3d % incr_lcmb"
+
+      integer :: i
+
+      select type (x)
+
+      class is (sll_t_vector_space_real_array_3d)
+
+         ! Construct linear combination incrementally
+         do i = 1, size(a)
+            self%array(:, :, :) = self%array(:, :, :) + a(i)*x(i)%array(:, :, :)
+         end do
+
+      class default
+
+         SLL_ERROR(this_sub_name, wrong_type_x)
+
+      end select
+
+   end subroutine incr_lcmb__real
+
+   !-----------------------------------------------------------------------------
+   function norm__real(self) result(res)
+      class(sll_t_vector_space_real_array_3d), intent(in) :: self
+      real(wp) :: res
 
 #ifdef __PGI
-    res = sqrt( self % inner( self ) )
+      res = sqrt(self%inner(self))
 #else
-    res = norm2( self % array )
+      res = norm2(self%array)
 #endif
 
-  end function norm__real
+   end function norm__real
 
-  !-----------------------------------------------------------------------------
-  function inner__real( self, x ) result( res )
-    class(sll_t_vector_space_real_array_3d), intent(in) :: self
-    class(sll_c_vector_space)              , intent(in) :: x
-    real(wp) :: res
+   !-----------------------------------------------------------------------------
+   function inner__real(self, x) result(res)
+      class(sll_t_vector_space_real_array_3d), intent(in) :: self
+      class(sll_c_vector_space), intent(in) :: x
+      real(wp) :: res
 
-    character(len=*), parameter :: this_fun_name = "sll_t_vector_space_real_array_3d % inner"
+      character(len=*), parameter :: this_fun_name = "sll_t_vector_space_real_array_3d % inner"
 
-    select type( x )
+      select type (x)
 
-    class is( sll_t_vector_space_real_array_3d )
+      class is (sll_t_vector_space_real_array_3d)
 
-      res = sum( self % array * x % array )
+         res = sum(self%array*x%array)
 
-    class default
+      class default
 
-      SLL_ERROR( this_fun_name, wrong_type_x )
+         SLL_ERROR(this_fun_name, wrong_type_x)
 
-    end select
+      end select
 
-  end function inner__real
+   end function inner__real
 
 end module sll_m_vector_space_real_array_3d

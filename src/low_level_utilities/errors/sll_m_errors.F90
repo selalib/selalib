@@ -1,103 +1,102 @@
 module sll_m_errors
 
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-  use iso_fortran_env, only: &
-    error_unit
+   use iso_fortran_env, only: &
+      error_unit
 
-  implicit none
+   implicit none
 
-  public :: &
-    sll_s_error_handler, &
-    sll_s_warning_handler
+   public :: &
+      sll_s_error_handler, &
+      sll_s_warning_handler
 
-  private
+   private
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
-  ! Instead of using the non-standard subroutine abort() provided by the compiler,
-  ! use abort() from the C standard library "stdlib.h"
-  interface
-    subroutine c_abort() bind(C, name="abort")
-    end subroutine
-  end interface
+   ! Instead of using the non-standard subroutine abort() provided by the compiler,
+   ! use abort() from the C standard library "stdlib.h"
+   interface
+      subroutine c_abort() bind(C, name="abort")
+      end subroutine
+   end interface
 
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 contains
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
-  !----------------------------------------------------------------------------
-  !>  @brief
-  !>  Print warning message to standard-error and continue execution.
-  !>  @details
-  !>  
-  !----------------------------------------------------------------------------
-  subroutine sll_s_warning_handler( file_name, line_num, caller, message )
-    character(len=*), intent(in) :: file_name !< file name
-    integer         , intent(in) :: line_num  !< line number
-    character(len=*), intent(in) :: caller    !< program/subroutine/function
-    character(len=*), intent(in) :: message   !< error message
+   !----------------------------------------------------------------------------
+   !>  @brief
+   !>  Print warning message to standard-error and continue execution.
+   !>  @details
+   !>
+   !----------------------------------------------------------------------------
+   subroutine sll_s_warning_handler(file_name, line_num, caller, message)
+      character(len=*), intent(in) :: file_name !< file name
+      integer, intent(in) :: line_num  !< line number
+      character(len=*), intent(in) :: caller    !< program/subroutine/function
+      character(len=*), intent(in) :: message   !< error message
 
-    call errout( error_unit, 'W', file_name, line_num, caller, message )
+      call errout(error_unit, 'W', file_name, line_num, caller, message)
 
-  end subroutine sll_s_warning_handler
+   end subroutine sll_s_warning_handler
 
-  !----------------------------------------------------------------------------
-  !>  @brief
-  !>  Print error message to standard-error, stop execution and dump backtrace information.
-  !>  @details
-  !>  
-  !----------------------------------------------------------------------------
-  subroutine sll_s_error_handler( file_name, line_num, caller, message )
-    character(len=*), intent(in) :: file_name !< file name
-    integer         , intent(in) :: line_num  !< line number
-    character(len=*), intent(in) :: caller    !< program/subroutine/function
-    character(len=*), intent(in) :: message   !< error message
+   !----------------------------------------------------------------------------
+   !>  @brief
+   !>  Print error message to standard-error, stop execution and dump backtrace information.
+   !>  @details
+   !>
+   !----------------------------------------------------------------------------
+   subroutine sll_s_error_handler(file_name, line_num, caller, message)
+      character(len=*), intent(in) :: file_name !< file name
+      integer, intent(in) :: line_num  !< line number
+      character(len=*), intent(in) :: caller    !< program/subroutine/function
+      character(len=*), intent(in) :: message   !< error message
 
-    call errout( error_unit, 'F', file_name, line_num, caller, message )
-    call c_abort()
+      call errout(error_unit, 'F', file_name, line_num, caller, message)
+      call c_abort()
 
-  end subroutine sll_s_error_handler
+   end subroutine sll_s_error_handler
 
-  !----------------------------------------------------------------------------
-  !>  @brief
-  !>  Write error/warning message to a given unit.
-  !>  @details
-  !>  
-  !----------------------------------------------------------------------------
-  subroutine errout( out_unit, severity, file_name, line_num, caller, message )
-                     
-    integer         , intent(in) :: out_unit  !< output file unit number
-    character(len=1), intent(in) :: severity  !< "W" or "F" : Warning or Fatal
-    character(len=*), intent(in) :: file_name !< file name
-    integer         , intent(in) :: line_num  !< line number
-    character(len=*), intent(in) :: caller    !< program/subroutine/function
-    character(len=*), intent(in) :: message   !< error message
+   !----------------------------------------------------------------------------
+   !>  @brief
+   !>  Write error/warning message to a given unit.
+   !>  @details
+   !>
+   !----------------------------------------------------------------------------
+   subroutine errout(out_unit, severity, file_name, line_num, caller, message)
 
-    character(len=64) :: line_num_str
+      integer, intent(in) :: out_unit  !< output file unit number
+      character(len=1), intent(in) :: severity  !< "W" or "F" : Warning or Fatal
+      character(len=*), intent(in) :: file_name !< file name
+      integer, intent(in) :: line_num  !< line number
+      character(len=*), intent(in) :: caller    !< program/subroutine/function
+      character(len=*), intent(in) :: message   !< error message
 
+      character(len=64) :: line_num_str
 
-    write( out_unit,* )
-    select case ( severity )  !     *** Severity ***
-    case ( 'W' )!
-      write( out_unit,"(/10x,a)" ) '*** WARNING ***'
-    case ( 'F' )
-      write( out_unit,"(/10x,a)" ) '*** FATAL ERROR ***'
-    case default
-      write( out_unit,"(/10x,a)" ) '*** FATAL ERROR ***'
-      write( out_unit,"(/10x,a)" ) &
-        'Error handler (ERROUT) called with unknown severity level: ', severity
-    end select
+      write (out_unit, *)
+      select case (severity)  !     *** Severity ***
+      case ('W')!
+         write (out_unit, "(/10x,a)") '*** WARNING ***'
+      case ('F')
+         write (out_unit, "(/10x,a)") '*** FATAL ERROR ***'
+      case default
+         write (out_unit, "(/10x,a)") '*** FATAL ERROR ***'
+         write (out_unit, "(/10x,a)") &
+            'Error handler (ERROUT) called with unknown severity level: ', severity
+      end select
 
-    write( line_num_str,* ) line_num
-    line_num_str = adjustl( line_num_str )
+      write (line_num_str, *) line_num
+      line_num_str = adjustl(line_num_str)
 
-    write( out_unit,"(/10x,a)") &
-      'Generated by program or subroutine: '// trim( caller )
-    write( out_unit,"(/10x,a)") &
-      'In '//trim( file_name )//':'// trim( line_num_str )
-    write( out_unit,"(/10x,a)") trim( message )
-    write( out_unit,*)
+      write (out_unit, "(/10x,a)") &
+         'Generated by program or subroutine: '//trim(caller)
+      write (out_unit, "(/10x,a)") &
+         'In '//trim(file_name)//':'//trim(line_num_str)
+      write (out_unit, "(/10x,a)") trim(message)
+      write (out_unit, *)
 
-  end subroutine errout
-  !----------------------------------------------------------------------------
+   end subroutine errout
+   !----------------------------------------------------------------------------
 
 end module sll_m_errors

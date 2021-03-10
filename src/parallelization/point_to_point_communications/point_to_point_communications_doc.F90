@@ -1,18 +1,17 @@
 ! This file is read by doxygen software
 ! Change it to match with your library
 ! http://www.stack.nl/~dimitri/doxygen/manual/docblocks.html#fortranblocks
-! To see the documentation, remove the line containing your directory 
-! in file Doxyfile.in (line 691) if it is excluded. 
+! To see the documentation, remove the line containing your directory
+! in file Doxyfile.in (line 691) if it is excluded.
 ! Type 'make doc' in build directory.
-! To check the results, open : 
-! selalib/doc/build/html/doxygen/html/defgroup point_to_point_communicationss.html 
+! To check the results, open :
+! selalib/doc/build/html/doxygen/html/defgroup point_to_point_communicationss.html
 ! The following lines will be read by doxygen to generate documentation:
 
-
-!> @defgroup point_to_point_communications sll_point_to_point_communications 
-!> @brief 
-!> Draft for domain partitioning. 
-!> @author Selalib team 
+!> @defgroup point_to_point_communications sll_point_to_point_communications
+!> @brief
+!> Draft for domain partitioning.
+!> @author Selalib team
 !> You can add a contact, do not put your email to prevent spam.
 !> Contact: Laurent Navoret, IRMA
 !> @details

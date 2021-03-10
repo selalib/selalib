@@ -3,13 +3,13 @@
 !! @authors Yaman Güçlü    - <yaman.guclu@gmail.com>
 !! @authors Marco Restelli - <marco.restelli@gmail.com>
 !!
-!! @brief 
+!! @brief
 !! Wrappers for complex objects with addition/multiplication/copy.
 !! Real arrays already provided.
-!! 
+!!
 !! @details
 !! This library defines an abstract type \c sll_vector_space_base which
-!! can be used as a building block for the implementation of linear and 
+!! can be used as a building block for the implementation of linear and
 !! non-linear solvers, time integrators and so on.
 !! The main purpose of this type is decoupling the details of the "vector"
 !! object representation, such as internal fields and arrays with an
@@ -17,16 +17,16 @@
 !! purpose algorithm.
 !!
 !! The operators defined for \c sll_vector_space_base are essentially those
-!! required by a <a href="http://en.wikipedia.org/wiki/Vector_space" 
+!! required by a <a href="http://en.wikipedia.org/wiki/Vector_space"
 !! target="_blank"> vector space</a>, optionally including an inner product
 !! and norm.
 !!
 !! In a general situation, the user should extend the abstract type
 !! \c sll_vector_space_base and provide the necessary operators.
-!! Nevertheless, in many cases of interests the working vector space simply 
+!! Nevertheless, in many cases of interests the working vector space simply
 !! consists of a single multidimensional array.
 !! For this situation we provide the derived types \c sll_vector_space_real_1d,
-!! \c sll_vector_space_real_2d and \c sll_vector_space_real_3d, which easily 
+!! \c sll_vector_space_real_2d and \c sll_vector_space_real_3d, which easily
 !! wrap an existing 1D/2D/3D array through pointer association.
 !!
 !! @note
@@ -61,5 +61,4 @@
 !! call solve(my_type, your_result)
 !! \endcode
 !!
-
 

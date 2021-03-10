@@ -5,46 +5,45 @@ module sll_m_distribution_function
 #include "sll_memory.h"
 #include "sll_working_precision.h"
 
-  use sll_m_cartesian_meshes, only: &
-    sll_t_cartesian_mesh_2d
+   use sll_m_cartesian_meshes, only: &
+      sll_t_cartesian_mesh_2d
 
-  use sll_m_coordinate_transformation_2d_base, only: &
-    sll_c_coordinate_transformation_2d_base
+   use sll_m_coordinate_transformation_2d_base, only: &
+      sll_c_coordinate_transformation_2d_base
 
-  use sll_m_interpolators_1d_base, only: &
-    sll_c_interpolator_1d
+   use sll_m_interpolators_1d_base, only: &
+      sll_c_interpolator_1d
 
-  use sll_m_scalar_field_2d_old, only: &
-    sll_s_scalar_field_2d_init, &
-    sll_t_scalar_field_2d, &
-    sll_i_scalar_function_2d_old
+   use sll_m_scalar_field_2d_old, only: &
+      sll_s_scalar_field_2d_init, &
+      sll_t_scalar_field_2d, &
+      sll_i_scalar_function_2d_old
 
-  use sll_m_scalar_field_initializers_base, only: &
-    sll_p_cell_centered_field, &
-    sll_p_node_centered_field, &
-    sll_c_scalar_field_2d_initializer_base
+   use sll_m_scalar_field_initializers_base, only: &
+      sll_p_cell_centered_field, &
+      sll_p_node_centered_field, &
+      sll_c_scalar_field_2d_initializer_base
 
-  implicit none
+   implicit none
 
-  public :: &
-    sll_s_distribution_function_2d_init, &
-    sll_t_distribution_function_2d
+   public :: &
+      sll_s_distribution_function_2d_init, &
+      sll_t_distribution_function_2d
 
-  private
+   private
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 #define NEW_TYPE_FOR_DF( new_df_type, extended_type)                 \
-  type, extends(extended_type) :: new_df_type;                       \
-     sll_real64      :: pmass;                                       \
-     sll_real64      :: pcharge;                                     \
-     sll_real64      :: average;                                     \
-  end type new_df_type
+   type, extends(extended_type) :: new_df_type; \
+      sll_real64      :: pmass; \
+      sll_real64      :: pcharge; \
+      sll_real64      :: average; \
+   end type new_df_type
 
 !NEW_TYPE_FOR_DF(sll_distribution_function_2D_t, sll_t_scalar_field_2d)
 !NEW_TYPE_FOR_DF(sll_distribution_function_4D_t, scalar_field_4d)
 
-NEW_TYPE_FOR_DF( sll_t_distribution_function_2d, sll_t_scalar_field_2d )
-
+   NEW_TYPE_FOR_DF(sll_t_distribution_function_2d, sll_t_scalar_field_2d)
 
 !!$  interface write_distribution_function
 !!$     module procedure write_distribution_function_2D, &
@@ -56,98 +55,96 @@ NEW_TYPE_FOR_DF( sll_t_distribution_function_2d, sll_t_scalar_field_2d )
 contains
 
 #if 1
-  subroutine sll_new_distribution_function_2d( &
-    this, &
-    transf, &
-    data_position, &
-    name, &
-    data_func ) 
-    
-    class(sll_t_distribution_function_2d)   :: this
-    class(sll_c_coordinate_transformation_2d_base), pointer :: transf
-    procedure(sll_i_scalar_function_2d_old)           :: data_func
-    sll_int32, intent(in)                   :: data_position
-    character(len=*), intent(in)            :: name
-    sll_int32                         :: ierr
-    sll_int32  :: i1, i2
-    sll_real64 :: eta1, eta2
-    sll_real64 :: delta1, delta2
+   subroutine sll_new_distribution_function_2d( &
+      this, &
+      transf, &
+      data_position, &
+      name, &
+      data_func)
 
-    this%transf => transf
-    this%plot_counter = 0
-    this%name = name
-    this%data_position = data_position
-    this%pcharge = 1.0_f64
-    this%pmass = 1.0_f64
-    associate (mesh => transf%mesh)
+      class(sll_t_distribution_function_2d)   :: this
+      class(sll_c_coordinate_transformation_2d_base), pointer :: transf
+      procedure(sll_i_scalar_function_2d_old)           :: data_func
+      sll_int32, intent(in)                   :: data_position
+      character(len=*), intent(in)            :: name
+      sll_int32                         :: ierr
+      sll_int32  :: i1, i2
+      sll_real64 :: eta1, eta2
+      sll_real64 :: delta1, delta2
 
-    if (data_position == sll_p_node_centered_field) then
-       SLL_ALLOCATE(this%data(mesh%num_cells1+1,mesh%num_cells2+1), ierr)
-       do i2 = 1, mesh%num_cells2+1
-          do i1 = 1, mesh%num_cells1+1
-             this%data(i1,i2) = data_func(transf%x1_at_node(i1,i2), &
-                  transf%x2_at_node(i1,i2))
-          end do
-       end do
-    else if (data_position == sll_p_cell_centered_field) then
-       SLL_ALLOCATE(this%data(mesh%num_cells1+1,mesh%num_cells2+1), ierr)
-       delta1 = 1.0_f64/mesh%num_cells1
-       delta2 = 1.0_f64/mesh%num_cells2
-       eta2 = 0.5_f64 * delta2
-       do i2 = 1, mesh%num_cells2
-          eta1 = 0.5_f64 * delta1
-          do i1 = 1, mesh%num_cells1
-             this%data(i1,i2) = data_func(transf%x1(eta1,eta2), &
-                  transf%x2(eta1,eta2)) * transf%jacobian(eta1,eta2)
-             eta1 = eta1 + delta1
-          end do
-          eta2 = eta2 + delta2
-       end do
-    endif
+      this%transf => transf
+      this%plot_counter = 0
+      this%name = name
+      this%data_position = data_position
+      this%pcharge = 1.0_f64
+      this%pmass = 1.0_f64
+      associate (mesh => transf%mesh)
 
-    end associate
-  end subroutine sll_new_distribution_function_2d
+         if (data_position == sll_p_node_centered_field) then
+            SLL_ALLOCATE(this%data(mesh%num_cells1 + 1, mesh%num_cells2 + 1), ierr)
+            do i2 = 1, mesh%num_cells2 + 1
+               do i1 = 1, mesh%num_cells1 + 1
+                  this%data(i1, i2) = data_func(transf%x1_at_node(i1, i2), &
+                                                transf%x2_at_node(i1, i2))
+               end do
+            end do
+         else if (data_position == sll_p_cell_centered_field) then
+            SLL_ALLOCATE(this%data(mesh%num_cells1 + 1, mesh%num_cells2 + 1), ierr)
+            delta1 = 1.0_f64/mesh%num_cells1
+            delta2 = 1.0_f64/mesh%num_cells2
+            eta2 = 0.5_f64*delta2
+            do i2 = 1, mesh%num_cells2
+               eta1 = 0.5_f64*delta1
+               do i1 = 1, mesh%num_cells1
+                  this%data(i1, i2) = data_func(transf%x1(eta1, eta2), &
+                                                transf%x2(eta1, eta2))*transf%jacobian(eta1, eta2)
+                  eta1 = eta1 + delta1
+               end do
+               eta2 = eta2 + delta2
+            end do
+         end if
 
-  subroutine sll_s_distribution_function_2d_init( &
-    this, &
-    mass, &
-    charge, &
-    field_name, &
-    transf, &
-    data_position, &
-    eta1_interpolator, &
-    eta2_interpolator, &
-    initializer )
+      end associate
+   end subroutine sll_new_distribution_function_2d
 
-    class(sll_c_coordinate_transformation_2d_base), pointer :: transf
-    class(sll_c_interpolator_1d), pointer            :: eta1_interpolator
-    class(sll_c_interpolator_1d), pointer            :: eta2_interpolator
-    class(sll_c_scalar_field_2d_initializer_base), pointer, optional :: initializer
-    type(sll_t_distribution_function_2d), intent(inout)   :: this
-    sll_real64, intent(in)                              :: mass
-    sll_real64, intent(in)                              :: charge
-    character(len=*), intent(in)                        :: field_name
-    sll_int32, intent(in)                               :: data_position
+   subroutine sll_s_distribution_function_2d_init( &
+      this, &
+      mass, &
+      charge, &
+      field_name, &
+      transf, &
+      data_position, &
+      eta1_interpolator, &
+      eta2_interpolator, &
+      initializer)
 
-    this%pmass = mass
-    this%pcharge = charge
+      class(sll_c_coordinate_transformation_2d_base), pointer :: transf
+      class(sll_c_interpolator_1d), pointer            :: eta1_interpolator
+      class(sll_c_interpolator_1d), pointer            :: eta2_interpolator
+      class(sll_c_scalar_field_2d_initializer_base), pointer, optional :: initializer
+      type(sll_t_distribution_function_2d), intent(inout)   :: this
+      sll_real64, intent(in)                              :: mass
+      sll_real64, intent(in)                              :: charge
+      character(len=*), intent(in)                        :: field_name
+      sll_int32, intent(in)                               :: data_position
 
-    call sll_s_scalar_field_2d_init( &
+      this%pmass = mass
+      this%pcharge = charge
+
+      call sll_s_scalar_field_2d_init( &
          this, &
          field_name, &
          transf, &
          data_position, &
          eta1_interpolator, &
          eta2_interpolator, &
-         initializer )
-  end subroutine sll_s_distribution_function_2d_init
+         initializer)
+   end subroutine sll_s_distribution_function_2d_init
 #endif
-
-
 
 !!$  function sll_new_distribution_function_4D( mesh_descriptor_x,  &
 !!$                                             mesh_descriptor_v,  &
-!!$                                             center, name ) 
+!!$                                             center, name )
 !!$
 !!$    type(sll_distribution_function_4D_t), pointer :: &
 !!$         sll_new_distribution_function_4D
@@ -170,7 +167,6 @@ contains
 !!$
 !!$  end function sll_new_distribution_function_4D
 
-
 !!$  subroutine sll_delete_distribution_function( f )
 !!$    type(sll_distribution_function_2D_t), pointer      :: f
 !!$    sll_int32 :: ierr
@@ -188,11 +184,11 @@ contains
 !!$  NEW_ACCESS_FUNCTION(get_df_nc_eta1,     sll_int32,  nc_eta1)
 !!$  NEW_ACCESS_FUNCTION(get_df_eta1_min,   sll_real64, eta1_min)
 !!$  NEW_ACCESS_FUNCTION(get_df_eta1_max,   sll_real64, eta1_max)
-!!$  NEW_ACCESS_FUNCTION(get_df_delta_eta1, sll_real64, delta_eta1)   
+!!$  NEW_ACCESS_FUNCTION(get_df_delta_eta1, sll_real64, delta_eta1)
 !!$  NEW_ACCESS_FUNCTION(get_df_nc_eta2,     sll_int32,  nc_eta2)
 !!$  NEW_ACCESS_FUNCTION(get_df_eta2_min,   sll_real64, eta2_min)
 !!$  NEW_ACCESS_FUNCTION(get_df_eta2_max,   sll_real64, eta2_max)
-!!$  NEW_ACCESS_FUNCTION(get_df_delta_eta2, sll_real64, delta_eta2)   
+!!$  NEW_ACCESS_FUNCTION(get_df_delta_eta2, sll_real64, delta_eta2)
 !!$  NEW_ACCESS_FUNCTION(get_df_boundary1_type, sll_int32, boundary1_type)
 !!$  NEW_ACCESS_FUNCTION(get_df_boundary2_type, sll_int32, boundary2_type)
 !!$#undef NEW_ACCESS_FUNCTION
@@ -243,7 +239,7 @@ contains
 !!$    procedure(scalar_function_2D), pointer        :: get_df_jac22
 !!$    type(sll_distribution_function_2D_t), pointer :: f
 !!$    get_df_jac22 => f%field%descriptor%geom%Jacobian22
-!!$  end function get_df_jac22  
+!!$  end function get_df_jac22
 !!$
 !!$  function get_df_jac ( f )
 !!$    procedure(scalar_function_2D), pointer        :: get_df_jac
@@ -308,11 +304,11 @@ contains
 !!$    sll_real64 :: eta1
 !!$    sll_real64 :: eta2
 !!$    sll_real64 :: avg, avg_jac
-!!$    
-!!$    nc_eta1 = get_df_nc_eta1( dist_func_2D ) 
+!!$
+!!$    nc_eta1 = get_df_nc_eta1( dist_func_2D )
 !!$    delta_eta1 = get_df_delta_eta1( dist_func_2D )
 !!$    eta1_min = get_df_eta1_min( dist_func_2D )
-!!$    nc_eta2 = get_df_nc_eta2( dist_func_2D ) 
+!!$    nc_eta2 = get_df_nc_eta2( dist_func_2D )
 !!$    delta_eta2 = get_df_delta_eta2( dist_func_2D )
 !!$    eta2_min = get_df_eta2_min( dist_func_2D )
 !!$    x1 => get_df_x1 ( dist_func_2D )
@@ -327,9 +323,9 @@ contains
 !!$       eta2_min = eta2_min + 0.5_f64 * delta_eta2
 !!$    end if
 !!$
-!!$   
+!!$
 !!$  end subroutine sll_init_distribution_function_2D
-!!$  
+!!$
 !!$  subroutine sll_init_distribution_function_4D( dist_func_4D, test_case)
 !!$
 !!$    type(sll_distribution_function_4D_t), pointer :: dist_func_4D
@@ -340,7 +336,7 @@ contains
 !!$    sll_real64 :: delta_v1, delta_v2,  v1_min, v2_min
 !!$    sll_real64 :: x1, v1, x2, v2, eps, kx, ky, xi, vsq
 !!$    sll_int32  :: ix, jx, iv, jv
-!!$    
+!!$
 !!$    x1_min =   dist_func_4D%field%descriptor_x%eta1_min
 !!$    nnode_x1 = dist_func_4D%field%descriptor_x%nc_eta1+1
 !!$    delta_x1 = dist_func_4D%field%descriptor_x%delta_eta1
@@ -385,7 +381,7 @@ contains
 !!$    ! using a trapezoidal rule on a uniform grid of physical space
 !!$  subroutine compute_rho(dist_func_2D,rho,npoints)
 !!$    type(sll_distribution_function_2D_t), pointer      :: dist_func_2D
-!!$    type(field_1D_vec1), pointer                       :: rho 
+!!$    type(field_1D_vec1), pointer                       :: rho
 !!$    sll_int32                                          :: npoints ! number of integration points
 !!$
 !!$    ! local variables
@@ -415,10 +411,10 @@ contains
 !!$    sll_real64 :: eta2
 !!$
 !!$    ! get mesh data attached to f
-!!$    nc_eta1 = get_df_nc_eta1( dist_func_2D ) 
+!!$    nc_eta1 = get_df_nc_eta1( dist_func_2D )
 !!$    delta_eta1 = get_df_delta_eta1( dist_func_2D )
 !!$    eta1_min = get_df_eta1_min( dist_func_2D )
-!!$    nc_eta2 = get_df_nc_eta2( dist_func_2D ) 
+!!$    nc_eta2 = get_df_nc_eta2( dist_func_2D )
 !!$    delta_eta2 = get_df_delta_eta2( dist_func_2D )
 !!$    eta2_min = get_df_eta2_min( dist_func_2D )
 !!$    x1f => get_df_x1 ( dist_func_2D )
@@ -456,12 +452,12 @@ contains
 !!$       x2 = x2min
 !!$       do i2 = 1, npoints
 !!$          !sum = sum + FIELD_2D_AT_X( dist_func_2D, eta1f(x1, x2), eta2f(x1,x2) )
-!!$          ! FIELD_2D_AT_X needs to be defined and implemented using linear or 2D cubic spline interpolation 
+!!$          ! FIELD_2D_AT_X needs to be defined and implemented using linear or 2D cubic spline interpolation
 !!$          ! beware of case where eta1f and eta2f fall outside the grid (in this case 0 should be returned)
 !!$          x2 = x2 + delta_int
 !!$       end do
-!!$       SET_FIELD_1D_VALUE_AT_I( rho, i1, delta_int * sum ) 
-!!$       x1 = x1 + delta_rho 
+!!$       SET_FIELD_1D_VALUE_AT_I( rho, i1, delta_int * sum )
+!!$       x1 = x1 + delta_rho
 !!$    end do
 !!$
 !!$  end subroutine compute_rho
@@ -513,7 +509,7 @@ contains
 !!$    end do
 !!$
 !!$    call write_vec1d(val,nnode_x1,nnode_x2,name,"mesh_x",f%center)
-!!$    
+!!$
 !!$    f%plot_counter = f%plot_counter + 1
 !!$  end subroutine write_distribution_function_4D
 
