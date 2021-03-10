@@ -7,14 +7,14 @@
 !> @defgroup fft sll_fft
 !> @author Edwin Chacon-Golcher, Samuel De Santis, Pierre Navaro, Katharina Kormann
 !> @brief Interface around fftpack, fftw and the selalib fft.
-!> @details 
-!> 
+!> @details
+!>
 !>
 !> \section how How to use sll_m_fft module?
 !>
 !> The first thing is to add the line \code use sll_m_fft \endcode
 !> The sll_m_fft module can use internal or external librarie s
-!> 
+!>
 !> 1. Declare a fft plan
 !> \code type(sll_t_fft) :: p \endcode
 !> 2. Initialize the plan
@@ -27,8 +27,8 @@
 !> \a direction can take two values : sll_p_fft_forward and sll_p_fft_backward
 !>
 !> \a normalized is a boolean optional argument: If true, the transformed data is normalized by the (product) of the element length.  [default: false]
-!> \a aligned is a boolean optional argument (only used by FFTW): If true, FFTW assumes the the data is aligned (use \a fft_alloc for in/out data allocation in this case).  [default: false]         
-!> \a optimization is an optional argument (only used by FFTW): With this argument, you can set how rigorous the initialization of the planner will be. It can take the values  sll_p_fft_patient, sll_p_fft_estimate, sll_p_fft_exhaustive, sll_p_fft_wisdom_only. Note that \a in and \a out are overwritten for the last three options. sll_p_fft_wisdom_only only works if wisdom is available. [default: sll_p_fft_estimate]                      
+!> \a aligned is a boolean optional argument (only used by FFTW): If true, FFTW assumes the the data is aligned (use \a fft_alloc for in/out data allocation in this case).  [default: false]
+!> \a optimization is an optional argument (only used by FFTW): With this argument, you can set how rigorous the initialization of the planner will be. It can take the values  sll_p_fft_patient, sll_p_fft_estimate, sll_p_fft_exhaustive, sll_p_fft_wisdom_only. Note that \a in and \a out are overwritten for the last three options. sll_p_fft_wisdom_only only works if wisdom is available. [default: sll_p_fft_estimate]
 !>
 !> 3. Execute the plan
 !> \code call sll_s_fft_exec_c2c_1d( p, in, out ) \endcode
@@ -172,7 +172,7 @@
 !> call sll_s_fft_free( p )
 !> \endcode
 !>
-!> Two-dimensional transform  
+!> Two-dimensional transform
 !> \code
 !> sll_int32, parameter :: n = 2**5
 !> sll_int32, parameter :: m = 2**3
@@ -204,16 +204,16 @@
 !> which must be interpreted as the complex array
 !> \f[ \begin{pmatrix} r_0 &,& 0
 !>                     \\ r_1 &,& i_1
-!>                     \\ \vdots  & & \vdots 
+!>                     \\ \vdots  & & \vdots
 !>                     \\ r_{n/2-1} &,& i_{n/2-1}
 !>                     \\ r_{n/2} &,& 0
 !>                     \\ r_{n/2-1} &,& -i_{n/2-1}
 !>                     \\ \vdots    & & \vdots
-!>                     \\ r_1 &,& -i_1 
-!> \end{pmatrix}\f] 
+!>                     \\ r_1 &,& -i_1
+!> \end{pmatrix}\f]
 !> \warning Note that ffw uses \f$(r_0,r_1,\dots,r_{n/2-1},r_{n/2},i_{n/2-1},\dots,i_1)\f$
-!>          convention whereas fftpack uses \f$(r_0,r_1,i_1,\dots,r_{n/2-1},i_{n/2-1},r_{n/2})\f$. Through the interface, FFTW ordering is enforced also for FFTPACK. 
+!>          convention whereas fftpack uses \f$(r_0,r_1,i_1,\dots,r_{n/2-1},i_{n/2-1},r_{n/2})\f$. Through the interface, FFTW ordering is enforced also for FFTPACK.
 !> For r2c and r2c, the lower half (plus one element) is stored (non-negative frequencies). In higher dimensions, the first dimension is reduced to n/2+1 whereas the others remain n.
-!> 
+!>
 !>
 !------------------------------------------------------------------------------

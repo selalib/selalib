@@ -3,108 +3,106 @@ program unit_test_fields_multipatch
 #include "sll_memory.h"
 #include "sll_working_precision.h"
 
-  use sll_m_cartesian_meshes, only: &
-    sll_t_cartesian_mesh_2d
+   use sll_m_cartesian_meshes, only: &
+      sll_t_cartesian_mesh_2d
 
-  use sll_m_coordinate_transformation_multipatch, only: &
-    sll_t_coordinate_transformation_multipatch_2d
+   use sll_m_coordinate_transformation_multipatch, only: &
+      sll_t_coordinate_transformation_multipatch_2d
 
-  use sll_m_coordinate_transformations_2d_nurbs, only: &
-    sll_t_coordinate_transformation_2d_nurbs
+   use sll_m_coordinate_transformations_2d_nurbs, only: &
+      sll_t_coordinate_transformation_2d_nurbs
 
-  use sll_m_scalar_field_2d_multipatch, only: &
-    sll_s_set_slope_mp, &
-    sll_t_scalar_field_multipatch_2d
+   use sll_m_scalar_field_2d_multipatch, only: &
+      sll_s_set_slope_mp, &
+      sll_t_scalar_field_multipatch_2d
 
-  implicit none
+   implicit none
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
-  type(sll_t_coordinate_transformation_multipatch_2d)     :: T
-  type(sll_t_scalar_field_multipatch_2d)                  :: F
-  class(sll_t_cartesian_mesh_2d), pointer                  :: m
-  class(sll_t_coordinate_transformation_2d_nurbs), pointer :: transf
-  sll_int32  :: ipatch
-  sll_int32  :: i
-  sll_int32  :: j
-  sll_int32  :: num_patches
-  sll_int32  :: num_pts1
-  sll_int32  :: num_pts2
-  sll_real64 :: val
-  sll_real64 :: eta1
-  sll_real64 :: eta2
-  sll_real64 :: delta1
-  sll_real64 :: delta2
-  sll_real64 :: x1,x2
+   type(sll_t_coordinate_transformation_multipatch_2d)     :: T
+   type(sll_t_scalar_field_multipatch_2d)                  :: F
+   class(sll_t_cartesian_mesh_2d), pointer                  :: m
+   class(sll_t_coordinate_transformation_2d_nurbs), pointer :: transf
+   sll_int32  :: ipatch
+   sll_int32  :: i
+   sll_int32  :: j
+   sll_int32  :: num_patches
+   sll_int32  :: num_pts1
+   sll_int32  :: num_pts2
+   sll_real64 :: val
+   sll_real64 :: eta1
+   sll_real64 :: eta2
+   sll_real64 :: delta1
+   sll_real64 :: delta2
+   sll_real64 :: x1, x2
 
-  call T%init("square_4p_n10")
-  print *, 'initialized multipatch transformation'
-  
-  
-  call F%init("test_field_multipatch", T)
-  print *, 'initialized scalar field multipatch'
+   call T%init("square_4p_n10")
+   print *, 'initialized multipatch transformation'
 
-  call F%allocate_memory()
-  print *, 'allocated memory within the field'
+   call F%init("test_field_multipatch", T)
+   print *, 'initialized scalar field multipatch'
 
-  print *, 'initializing the multipatch field'
-  ! loop over patches. This is necessary as in the general case we will not
-  ! have a 'global' or 'abstract' 2d array we could use to reason. This is
-  ! because the physical domain could be modelled by a collection of patches
-  ! connected in some weird way.
-  num_patches = F%get_number_patches()
+   call F%allocate_memory()
+   print *, 'allocated memory within the field'
 
-  ! There is a lot of work here to initialize the multipatch. Could we do any
-  ! better and abstract this? This could be made into a function that takes
-  ! an analytical function initializer... but I guess that with the information
-  ! coming from CAID, we could also assume that the initial data also comes
-  ! from outside...
-  do ipatch=0, num_patches-1
-     m        => F%get_cartesian_mesh(ipatch)
-     transf   => F%get_transformation(ipatch)
+   print *, 'initializing the multipatch field'
+   ! loop over patches. This is necessary as in the general case we will not
+   ! have a 'global' or 'abstract' 2d array we could use to reason. This is
+   ! because the physical domain could be modelled by a collection of patches
+   ! connected in some weird way.
+   num_patches = F%get_number_patches()
 
-     num_pts1 = m%num_cells1+1
-     num_pts2 = m%num_cells2+1
-     delta1   = m%delta_eta1
-     delta2   = m%delta_eta2
+   ! There is a lot of work here to initialize the multipatch. Could we do any
+   ! better and abstract this? This could be made into a function that takes
+   ! an analytical function initializer... but I guess that with the information
+   ! coming from CAID, we could also assume that the initial data also comes
+   ! from outside...
+   do ipatch = 0, num_patches - 1
+      m => F%get_cartesian_mesh(ipatch)
+      transf => F%get_transformation(ipatch)
 
-     do j=1,num_pts1
-        eta2 = (j-1)*delta2
-        do i=1,num_pts2
-           ! here it is assumed that the eta_min's are = 0. This is supposed
-           ! to be the case for NURBS transformations.
-           eta1 = (i-1)*delta1
-           x1 = transf%x1(eta1,eta2)
-           x2 = transf%x2(eta1,eta2)
-           val  = test_function(x1,x2)
-           call F%set_value_at_indices( i, j, ipatch, val ) 
-        end do
-     end do
-  
-     print *, 'updating multipatch field coefficients in the boundary'
-     call sll_s_set_slope_mp(F,ipatch)
+      num_pts1 = m%num_cells1 + 1
+      num_pts2 = m%num_cells2 + 1
+      delta1 = m%delta_eta1
+      delta2 = m%delta_eta2
 
-  end do
+      do j = 1, num_pts1
+         eta2 = (j - 1)*delta2
+         do i = 1, num_pts2
+            ! here it is assumed that the eta_min's are = 0. This is supposed
+            ! to be the case for NURBS transformations.
+            eta1 = (i - 1)*delta1
+            x1 = transf%x1(eta1, eta2)
+            x2 = transf%x2(eta1, eta2)
+            val = test_function(x1, x2)
+            call F%set_value_at_indices(i, j, ipatch, val)
+         end do
+      end do
 
-  print *, 'updating multipatch field interpolation coefficients...'
-  call F%update_interpolation_coefficients()
+      print *, 'updating multipatch field coefficients in the boundary'
+      call sll_s_set_slope_mp(F, ipatch)
 
-  print *, 'writing to file...'
-  call F%write_to_file(1)
+   end do
 
-  call T%free() 
-  call F%free()
+   print *, 'updating multipatch field interpolation coefficients...'
+   call F%update_interpolation_coefficients()
 
-  print *, 'PASSED'
-  
+   print *, 'writing to file...'
+   call F%write_to_file(1)
+
+   call T%free()
+   call F%free()
+
+   print *, 'PASSED'
 
 contains
 
-  function test_function( x, y ) result(res)
-    sll_real64 :: res
-    sll_real64, intent(in) :: x
-    sll_real64, intent(in) :: y
-    res = sin(x)*cos(y)
-  end function test_function
+   function test_function(x, y) result(res)
+      sll_real64 :: res
+      sll_real64, intent(in) :: x
+      sll_real64, intent(in) :: y
+      res = sin(x)*cos(y)
+   end function test_function
 
 end program unit_test_fields_multipatch
 

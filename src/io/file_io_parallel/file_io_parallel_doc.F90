@@ -1,5 +1,5 @@
 !> @defgroup file_io_parallel sll_file_io_parallel
-!> @brief 
+!> @brief
 !> Create parallel files readable by visualization softwares.
 !> @details
 !> - External links:

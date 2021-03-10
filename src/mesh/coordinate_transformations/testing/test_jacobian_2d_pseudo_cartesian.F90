@@ -3,211 +3,211 @@ program test_jacobian_2d_pseudo_cartesian
 #include "sll_assert.h"
 #include "sll_errors.h"
 
-  use sll_m_working_precision, only: f64
+   use sll_m_working_precision, only: f64
 
-  use sll_m_constants, only: &
-    sll_p_pi, &
-    sll_p_twopi
+   use sll_m_constants, only: &
+      sll_p_pi, &
+      sll_p_twopi
 
-  use sll_m_utilities, only: sll_s_new_array_linspace
+   use sll_m_utilities, only: sll_s_new_array_linspace
 
-  use sll_m_boundary_condition_descriptors, only: &
-    sll_p_greville, &
-    sll_p_periodic
+   use sll_m_boundary_condition_descriptors, only: &
+      sll_p_greville, &
+      sll_p_periodic
 
-  use sll_m_bsplines, only: &
-    sll_c_bsplines, &
-    sll_s_bsplines_new
+   use sll_m_bsplines, only: &
+      sll_c_bsplines, &
+      sll_s_bsplines_new
 
-  use sll_m_spline_2d, only: sll_t_spline_2d
+   use sll_m_spline_2d, only: sll_t_spline_2d
 
-  use sll_m_spline_interpolator_1d, only: &
-    sll_s_spline_1d_compute_num_cells, &
-    sll_t_spline_interpolator_1d
+   use sll_m_spline_interpolator_1d, only: &
+      sll_s_spline_1d_compute_num_cells, &
+      sll_t_spline_interpolator_1d
 
-  use sll_m_spline_interpolator_2d, only: sll_t_spline_interpolator_2d
+   use sll_m_spline_interpolator_2d, only: sll_t_spline_interpolator_2d
 
-  use sll_m_singular_mapping_analytic, only: sll_c_singular_mapping_analytic
+   use sll_m_singular_mapping_analytic, only: sll_c_singular_mapping_analytic
 
-  use sll_m_singular_mapping_analytic_target, only: sll_t_singular_mapping_analytic_target
+   use sll_m_singular_mapping_analytic_target, only: sll_t_singular_mapping_analytic_target
 
-  use sll_m_singular_mapping_analytic_czarny, only: sll_t_singular_mapping_analytic_czarny
+   use sll_m_singular_mapping_analytic_czarny, only: sll_t_singular_mapping_analytic_czarny
 
-  use sll_m_singular_mapping_discrete, only: sll_t_singular_mapping_discrete
+   use sll_m_singular_mapping_discrete, only: sll_t_singular_mapping_discrete
 
-  use sll_m_jacobian_2d_pseudo_cartesian, only: sll_t_jacobian_2d_pseudo_cartesian
+   use sll_m_jacobian_2d_pseudo_cartesian, only: sll_t_jacobian_2d_pseudo_cartesian
 
-  implicit none
+   implicit none
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
-  ! Working precision
-  integer, parameter :: wp = f64
+   ! Working precision
+   integer, parameter :: wp = f64
 
-  ! To initialize B-splines
-  integer :: n1, n2, deg1, deg2, ncells1, ncells2
+   ! To initialize B-splines
+   integer :: n1, n2, deg1, deg2, ncells1, ncells2
 
-  ! To initialize non-uniform 1D B-splines along eta1
-  real(wp), allocatable :: breaks_eta1(:)
+   ! To initialize non-uniform 1D B-splines along eta1
+   real(wp), allocatable :: breaks_eta1(:)
 
-  ! 1D B-splines
-  class(sll_c_bsplines), allocatable :: spline_basis_eta1
-  class(sll_c_bsplines), allocatable :: spline_basis_eta2
+   ! 1D B-splines
+   class(sll_c_bsplines), allocatable :: spline_basis_eta1
+   class(sll_c_bsplines), allocatable :: spline_basis_eta2
 
-  ! 1D/2D tensor-product spline interpolators
-  type(sll_t_spline_interpolator_2d) :: spline_interpolator_2d
+   ! 1D/2D tensor-product spline interpolators
+   type(sll_t_spline_interpolator_2d) :: spline_interpolator_2d
 
-  ! Interpolation points and fields
-  integer :: npts1, npts2
-  real(wp), allocatable :: e1_node(:)
-  real(wp), allocatable :: e2_node(:)
+   ! Interpolation points and fields
+   integer :: npts1, npts2
+   real(wp), allocatable :: e1_node(:)
+   real(wp), allocatable :: e2_node(:)
 
-  ! Auxiliary variables
-  integer  :: i2, mm
-  real(wp) :: eta(2)
-  real(wp) :: jmat(2,2), jmat_analytical(2,2)
-  real(wp) :: maxerr, errmat(2,2)
-  real(wp), parameter :: kappa = 0.3_wp
-  real(wp), parameter :: Delta = 0.2_wp
-  real(wp), parameter :: eps = 0.3_wp
-  real(wp), parameter :: e   = 1.4_wp
+   ! Auxiliary variables
+   integer  :: i2, mm
+   real(wp) :: eta(2)
+   real(wp) :: jmat(2, 2), jmat_analytical(2, 2)
+   real(wp) :: maxerr, errmat(2, 2)
+   real(wp), parameter :: kappa = 0.3_wp
+   real(wp), parameter :: Delta = 0.2_wp
+   real(wp), parameter :: eps = 0.3_wp
+   real(wp), parameter :: e = 1.4_wp
 
-  ! Analytical and discrete mappings
-  class(sll_c_singular_mapping_analytic), allocatable :: mapping_analytic
-  type(sll_t_singular_mapping_discrete) :: mapping_discrete
+   ! Analytical and discrete mappings
+   class(sll_c_singular_mapping_analytic), allocatable :: mapping_analytic
+   type(sll_t_singular_mapping_discrete) :: mapping_discrete
 
-  ! Quasi-Cartesian Jacobian
-  type(sll_t_jacobian_2d_pseudo_cartesian) :: jacobian
+   ! Quasi-Cartesian Jacobian
+   type(sll_t_jacobian_2d_pseudo_cartesian) :: jacobian
 
-  mm = 16
-  n1 = mm
-  n2 = mm * 2
+   mm = 16
+   n1 = mm
+   n2 = mm*2
 
-  deg1 = 3
-  deg2 = 3
+   deg1 = 3
+   deg2 = 3
 
-  ! Compute number of cells from number of interpolation points along eta1
-  call sll_s_spline_1d_compute_num_cells( &
-    degree  = deg1          , &
-    bc_xmin = sll_p_greville, &
-    bc_xmax = sll_p_greville, &
-    nipts   = n1            , &
-    ncells  = ncells1 )
+   ! Compute number of cells from number of interpolation points along eta1
+   call sll_s_spline_1d_compute_num_cells( &
+      degree=deg1, &
+      bc_xmin=sll_p_greville, &
+      bc_xmax=sll_p_greville, &
+      nipts=n1, &
+      ncells=ncells1)
 
-  allocate( breaks_eta1( ncells1+1 ) )
+   allocate (breaks_eta1(ncells1 + 1))
 
-  call sll_s_new_array_linspace( breaks_eta1, 0.0_wp, 1.0_wp, endpoint=.true. )
+   call sll_s_new_array_linspace(breaks_eta1, 0.0_wp, 1.0_wp, endpoint=.true.)
 
-  ! Create 1D spline basis along eta1 in [0,1]
-  call sll_s_bsplines_new( &
-    bsplines = spline_basis_eta1, &
-    degree   = deg1             , &
-    periodic = .false.          , &
-    xmin     = 0.0_wp           , &
-    xmax     = 1.0_wp           , &
-    ncells   = ncells1          , &
-    breaks   = breaks_eta1 )
+   ! Create 1D spline basis along eta1 in [0,1]
+   call sll_s_bsplines_new( &
+      bsplines=spline_basis_eta1, &
+      degree=deg1, &
+      periodic=.false., &
+      xmin=0.0_wp, &
+      xmax=1.0_wp, &
+      ncells=ncells1, &
+      breaks=breaks_eta1)
 
-  deallocate( breaks_eta1 )
+   deallocate (breaks_eta1)
 
-  ! Compute number of cells from number of interpolation points along eta2
-  call sll_s_spline_1d_compute_num_cells( &
-    degree  = deg2          , &
-    bc_xmin = sll_p_periodic, &
-    bc_xmax = sll_p_periodic, &
-    nipts   = n2            , &
-    ncells  = ncells2 )
+   ! Compute number of cells from number of interpolation points along eta2
+   call sll_s_spline_1d_compute_num_cells( &
+      degree=deg2, &
+      bc_xmin=sll_p_periodic, &
+      bc_xmax=sll_p_periodic, &
+      nipts=n2, &
+      ncells=ncells2)
 
-  ! Create 1D spline basis along eta2 in [0,2pi]
-  call sll_s_bsplines_new( &
-    bsplines = spline_basis_eta2, &
-    degree   = deg2             , &
-    periodic = .true.           , &
-    xmin     = 0.0_wp           , &
-    xmax     = sll_p_twopi      , &
-    ncells   = ncells2 )
+   ! Create 1D spline basis along eta2 in [0,2pi]
+   call sll_s_bsplines_new( &
+      bsplines=spline_basis_eta2, &
+      degree=deg2, &
+      periodic=.true., &
+      xmin=0.0_wp, &
+      xmax=sll_p_twopi, &
+      ncells=ncells2)
 
-  ! Initialize 1D/2D tensor-product spline interpolators
-  call spline_interpolator_2d % init( spline_basis_eta1, spline_basis_eta2, &
-                                      [ sll_p_greville, sll_p_periodic ], &
-                                      [ sll_p_greville, sll_p_periodic ] )
+   ! Initialize 1D/2D tensor-product spline interpolators
+   call spline_interpolator_2d%init(spline_basis_eta1, spline_basis_eta2, &
+                                    [sll_p_greville, sll_p_periodic], &
+                                    [sll_p_greville, sll_p_periodic])
 
-  ! Get interpolation points and allocate 1D/2D array of values
-  call spline_interpolator_2d % get_interp_points( e1_node, e2_node )
+   ! Get interpolation points and allocate 1D/2D array of values
+   call spline_interpolator_2d%get_interp_points(e1_node, e2_node)
 
-  npts1 = size( e1_node )
-  npts2 = size( e2_node )
+   npts1 = size(e1_node)
+   npts2 = size(e2_node)
 
-  allocate( sll_t_singular_mapping_analytic_target :: mapping_analytic )
+   allocate (sll_t_singular_mapping_analytic_target :: mapping_analytic)
 
-  ! Initialize analytical mapping
-  select type ( mapping_analytic )
-    type is ( sll_t_singular_mapping_analytic_target )
-      call mapping_analytic % init( x0=[0.0_wp,0.0_wp], Delta=Delta, kappa=kappa )
-    type is ( sll_t_singular_mapping_analytic_czarny )
-      call mapping_analytic % init( x0=[0.0_wp,0.0_wp], e=e, eps=eps )
-  end select
+   ! Initialize analytical mapping
+   select type (mapping_analytic)
+   type is (sll_t_singular_mapping_analytic_target)
+      call mapping_analytic%init(x0=[0.0_wp, 0.0_wp], Delta=Delta, kappa=kappa)
+   type is (sll_t_singular_mapping_analytic_czarny)
+      call mapping_analytic%init(x0=[0.0_wp, 0.0_wp], e=e, eps=eps)
+   end select
 
-  ! Initialize discrete mapping
-  call mapping_discrete % init( spline_basis_eta1, spline_basis_eta2, mapping_analytic )
+   ! Initialize discrete mapping
+   call mapping_discrete%init(spline_basis_eta1, spline_basis_eta2, mapping_analytic)
 
-  ! Initialize composite inverse Jacobian
-  call jacobian % init( mapping_discrete )
+   ! Initialize composite inverse Jacobian
+   call jacobian%init(mapping_discrete)
 
-  ! Compute analytical composite inverse Jacobian
-  select type ( mapping_analytic )
-    type is ( sll_t_singular_mapping_analytic_target )
-      jmat_analytical(1,1) = 1.0_wp / ( 1.0_wp - kappa )
-      jmat_analytical(1,2) = 0.0_wp
-      jmat_analytical(2,1) = 0.0_wp
-      jmat_analytical(2,2) = 1.0_wp / ( 1.0_wp + kappa )
-    type is ( sll_t_singular_mapping_analytic_czarny )
-      jmat_analytical(1,1) = - sqrt( 1.0_wp + eps**2 )
-      jmat_analytical(1,2) = 0.0_wp
-      jmat_analytical(2,1) = 0.0_wp
-      jmat_analytical(2,2) = ( 2.0_wp - sqrt( 1.0_wp + eps**2 ) ) / &
-                             ( e /  sqrt( 1.0_wp - eps**2 * 0.25_wp ) )
-  end select
+   ! Compute analytical composite inverse Jacobian
+   select type (mapping_analytic)
+   type is (sll_t_singular_mapping_analytic_target)
+      jmat_analytical(1, 1) = 1.0_wp/(1.0_wp - kappa)
+      jmat_analytical(1, 2) = 0.0_wp
+      jmat_analytical(2, 1) = 0.0_wp
+      jmat_analytical(2, 2) = 1.0_wp/(1.0_wp + kappa)
+   type is (sll_t_singular_mapping_analytic_czarny)
+      jmat_analytical(1, 1) = -sqrt(1.0_wp + eps**2)
+      jmat_analytical(1, 2) = 0.0_wp
+      jmat_analytical(2, 1) = 0.0_wp
+      jmat_analytical(2, 2) = (2.0_wp - sqrt(1.0_wp + eps**2))/ &
+                              (e/sqrt(1.0_wp - eps**2*0.25_wp))
+   end select
 
-  write(*,*)
+   write (*, *)
 
-  maxerr = 0.0_wp
+   maxerr = 0.0_wp
 
-  do i2 = 1, npts2
+   do i2 = 1, npts2
 
       eta(1) = 0.0_wp
       eta(2) = e2_node(i2)
 
-      jmat   = jacobian % eval( eta )
-      errmat = abs( jmat - jmat_analytical )
+      jmat = jacobian%eval(eta)
+      errmat = abs(jmat - jmat_analytical)
 
-      write(*,'(a,f18.15)') 'theta  = ', eta(2)
+      write (*, '(a,f18.15)') 'theta  = ', eta(2)
 
-      write(*,'(a,f18.15,a,es8.2)') 'J(1,1) = ', jmat(1,1), '  error = ', errmat(1,1)
-      maxerr = merge( errmat(1,1), maxerr, errmat(1,1) > maxerr )
+      write (*, '(a,f18.15,a,es8.2)') 'J(1,1) = ', jmat(1, 1), '  error = ', errmat(1, 1)
+      maxerr = merge(errmat(1, 1), maxerr, errmat(1, 1) > maxerr)
 
-      write(*,'(a,f18.15,a,es8.2)') 'J(2,2) = ', jmat(2,2), '  error = ', errmat(2,2)
-      maxerr = merge( errmat(2,2), maxerr, errmat(2,2) > maxerr )
+      write (*, '(a,f18.15,a,es8.2)') 'J(2,2) = ', jmat(2, 2), '  error = ', errmat(2, 2)
+      maxerr = merge(errmat(2, 2), maxerr, errmat(2, 2) > maxerr)
 
-      write(*,'(a,f18.15,a,es8.2)') 'J(1,2) = ', jmat(1,2), '  error = ', errmat(1,2)
-      maxerr = merge( errmat(1,2), maxerr, errmat(1,2) > maxerr )
+      write (*, '(a,f18.15,a,es8.2)') 'J(1,2) = ', jmat(1, 2), '  error = ', errmat(1, 2)
+      maxerr = merge(errmat(1, 2), maxerr, errmat(1, 2) > maxerr)
 
-      write(*,'(a,f18.15,a,es8.2)') 'J(2,1) = ', jmat(2,1), '  error = ', errmat(2,1)
-      maxerr = merge( errmat(2,1), maxerr, errmat(2,1) > maxerr )
+      write (*, '(a,f18.15,a,es8.2)') 'J(2,1) = ', jmat(2, 1), '  error = ', errmat(2, 1)
+      maxerr = merge(errmat(2, 1), maxerr, errmat(2, 1) > maxerr)
 
-      write(*,*)
+      write (*, *)
 
-  end do
+   end do
 
-  write(*,'(a,es8.2)') 'maximum error = ', maxerr
-  write(*,*)
+   write (*, '(a,es8.2)') 'maximum error = ', maxerr
+   write (*, *)
 
-  deallocate( e1_node )
-  deallocate( e2_node )
+   deallocate (e1_node)
+   deallocate (e2_node)
 
-  call spline_interpolator_2d % free()
-  call spline_basis_eta1 % free()
-  call spline_basis_eta2 % free()
-  call mapping_discrete % free()
-  call jacobian % free()
+   call spline_interpolator_2d%free()
+   call spline_basis_eta1%free()
+   call spline_basis_eta2%free()
+   call mapping_discrete%free()
+   call jacobian%free()
 
 end program test_jacobian_2d_pseudo_cartesian

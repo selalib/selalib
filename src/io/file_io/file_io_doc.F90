@@ -1,6 +1,6 @@
 !> @defgroup file_io sll_file_io
 !> @author Pierre Navaro
-!> @brief 
+!> @brief
 !> Create files readable by visualization softwares.
 !> @details
 !> External links:

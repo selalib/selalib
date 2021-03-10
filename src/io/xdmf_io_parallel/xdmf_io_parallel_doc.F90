@@ -3,10 +3,10 @@
 !! @authors Yaman Güçlü    - <yaman.guclu@gmail.com>
 !! @authors Marco Restelli - <marco.restelli@gmail.com>
 !!
-!! @brief 
+!! @brief
 !! Write simulation output data in the form of an XDMF database.
 !! Parallel components.
-!! 
+!!
 !! @details
 !! Typically, an XDMF database is composed of a sequence of time dependent
 !! results. At each snapshot in time, one lightweight XML file is produced,

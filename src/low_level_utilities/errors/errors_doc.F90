@@ -6,7 +6,7 @@
 !! Provides macros for warnings and errors.
 !!
 !! @details
-!! - `SLL_ERROR(fun,msg)` 
+!! - `SLL_ERROR(fun,msg)`
 !! - `SLL_WARNING(fun,msg)`
 !!
 !! <h4> Header files available </h4>
