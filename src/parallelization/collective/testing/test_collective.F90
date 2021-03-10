@@ -166,7 +166,7 @@ program collective_test
                                        1, MPI_SUM, 0, sendbuf_real)
 
    if (rank == 0) then
-      if (sendbuf_real(1) .eq. size*(size - 1)*size/2.0_f64) then
+      if (sendbuf_real(1) - size*(size - 1)*size/2.0_f64 < 1e-14) then
          print *, '(ALLREDUCE REAL) PASS'
       else
          stop '(ALLREDUCE REAL) NOT PASS'
