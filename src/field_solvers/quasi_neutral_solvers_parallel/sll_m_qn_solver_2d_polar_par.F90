@@ -1,18 +1,18 @@
 !**************************************************************
 !  Copyright INRIA
-!  Authors : 
+!  Authors :
 !     CALVI project team
-!  
-!  This code SeLaLib (for Semi-Lagrangian-Library) 
-!  is a parallel library for simulating the plasma turbulence 
+!
+!  This code SeLaLib (for Semi-Lagrangian-Library)
+!  is a parallel library for simulating the plasma turbulence
 !  in a tokamak.
-!  
-!  This software is governed by the CeCILL-B license 
-!  under French law and abiding by the rules of distribution 
-!  of free software.  You can  use, modify and redistribute 
-!  the software under the terms of the CeCILL-B license as 
+!
+!  This software is governed by the CeCILL-B license
+!  under French law and abiding by the rules of distribution
+!  of free software.  You can  use, modify and redistribute
+!  the software under the terms of the CeCILL-B license as
 !  circulated by CEA, CNRS and INRIA at the following URL
-!  "http://www.cecill.info". 
+!  "http://www.cecill.info".
 !**************************************************************
 
 !> @ingroup quasi_neutral_solvers_parallel
@@ -222,552 +222,550 @@ module sll_m_qn_solver_2d_polar_par
 #include "sll_errors.h"
 #include "sll_working_precision.h"
 
-  use sll_m_constants, only: &
-    sll_p_epsilon_0
+   use sll_m_constants, only: &
+      sll_p_epsilon_0
 
-  use sll_m_boundary_condition_descriptors, only: &
-    sll_p_dirichlet, &
-    sll_p_neumann, &
-    sll_p_neumann_mode_0, &
-    sll_p_polar_origin
+   use sll_m_boundary_condition_descriptors, only: &
+      sll_p_dirichlet, &
+      sll_p_neumann, &
+      sll_p_neumann_mode_0, &
+      sll_p_polar_origin
 
-  use sll_m_collective, only: &
-    sll_f_get_collective_size, &
-    sll_s_halt_collective, &
-    sll_v_world_collective
+   use sll_m_collective, only: &
+      sll_f_get_collective_size, &
+      sll_s_halt_collective, &
+      sll_v_world_collective
 
-  use sll_m_fft, only: &
-    sll_t_fft, &
-    sll_p_fft_forward, &
-    sll_p_fft_backward, &
-    sll_f_fft_allocate_aligned_real, &
-    sll_s_fft_deallocate_aligned_real, &
-    sll_s_fft_init_r2r_1d, &
-    sll_s_fft_exec_r2r_1d, &
-    sll_s_fft_get_k_list_r2r_1d, &
-    sll_s_fft_free
+   use sll_m_fft, only: &
+      sll_t_fft, &
+      sll_p_fft_forward, &
+      sll_p_fft_backward, &
+      sll_f_fft_allocate_aligned_real, &
+      sll_s_fft_deallocate_aligned_real, &
+      sll_s_fft_init_r2r_1d, &
+      sll_s_fft_exec_r2r_1d, &
+      sll_s_fft_get_k_list_r2r_1d, &
+      sll_s_fft_free
 
-  use sll_m_remapper, only: &
-    sll_t_layout_2d, &
-    sll_o_compute_local_sizes, &
-    sll_o_get_layout_global_size_i, &
-    sll_o_get_layout_global_size_j, &
-    sll_o_local_to_global, &
-    sll_t_remap_plan_2d_real64, &
-    sll_o_new_remap_plan, &
-    sll_o_apply_remap_2d
+   use sll_m_remapper, only: &
+      sll_t_layout_2d, &
+      sll_o_compute_local_sizes, &
+      sll_o_get_layout_global_size_i, &
+      sll_o_get_layout_global_size_j, &
+      sll_o_local_to_global, &
+      sll_t_remap_plan_2d_real64, &
+      sll_o_new_remap_plan, &
+      sll_o_apply_remap_2d
 
-  use sll_m_tridiagonal, only: &
-    sll_s_setup_cyclic_tridiag, &
-    sll_o_solve_cyclic_tridiag
+   use sll_m_tridiagonal, only: &
+      sll_s_setup_cyclic_tridiag, &
+      sll_o_solve_cyclic_tridiag
 
-  use sll_m_utilities, only: &
-    sll_s_new_array_linspace
+   use sll_m_utilities, only: &
+      sll_s_new_array_linspace
 
-  implicit none
+   implicit none
 
-  public :: &
-    sll_t_qn_solver_2d_polar_par, &
-    sll_s_qn_solver_2d_polar_par_init, &
-    sll_s_qn_solver_2d_polar_par_solve, &
-    sll_s_qn_solver_2d_polar_par_free
+   public :: &
+      sll_t_qn_solver_2d_polar_par, &
+      sll_s_qn_solver_2d_polar_par_init, &
+      sll_s_qn_solver_2d_polar_par_solve, &
+      sll_s_qn_solver_2d_polar_par_free
 
-  private
+   private
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
-  !> Class for the Poisson solver in polar coordinate
-  type sll_t_qn_solver_2d_polar_par
+   !> Class for the Poisson solver in polar coordinate
+   type sll_t_qn_solver_2d_polar_par
 
-   real   (f64)              :: rmin      !< Min value of r coordinate
-   real   (f64)              :: rmax      !< Max value of r coordinate
-   integer(i32)              :: nr        !< Number of cells along r
-   integer(i32)              :: ntheta    !< Number of cells along theta
-   integer(i32)              :: bc(2)     !< Boundary conditions options
-   real   (f64)              :: epsilon_0 !< Vacuum permittivity (user may override)
-   real   (f64), allocatable :: g(:)      !< \f$ g(r) = \rho_{m,0}/(B^2\epsilon_0) \f$
+      real(f64)              :: rmin      !< Min value of r coordinate
+      real(f64)              :: rmax      !< Max value of r coordinate
+      integer(i32)              :: nr        !< Number of cells along r
+      integer(i32)              :: ntheta    !< Number of cells along theta
+      integer(i32)              :: bc(2)     !< Boundary conditions options
+      real(f64)              :: epsilon_0 !< Vacuum permittivity (user may override)
+      real(f64), allocatable :: g(:)      !< \f$ g(r) = \rho_{m,0}/(B^2\epsilon_0) \f$
 
-   type(sll_t_fft)           :: fw        !< Forward FFT plan
-   type(sll_t_fft)           :: bw        !< Inverse FFT plan
-   real   (f64), pointer     :: tmp (:)   !< 1D work array for FFT, real
-   integer(i32), allocatable :: k_list(:) !< List of local k values
-   real   (f64), allocatable :: z_r (:,:) !< 2D array sequential in r
-   real   (f64), pointer     :: z_a (:,:) !< 2D array sequential in theta
-   real   (f64), allocatable :: mat (:,:) !< Tridiagonal matrix (one for each k)
-   real   (f64), allocatable :: cts (:)   !< Lapack coefficients
-   integer(i32), allocatable :: ipiv(:)   !< Lapack pivot indices
+      type(sll_t_fft)           :: fw        !< Forward FFT plan
+      type(sll_t_fft)           :: bw        !< Inverse FFT plan
+      real(f64), pointer     :: tmp(:)   !< 1D work array for FFT, real
+      integer(i32), allocatable :: k_list(:) !< List of local k values
+      real(f64), allocatable :: z_r(:, :) !< 2D array sequential in r
+      real(f64), pointer     :: z_a(:, :) !< 2D array sequential in theta
+      real(f64), allocatable :: mat(:, :) !< Tridiagonal matrix (one for each k)
+      real(f64), allocatable :: cts(:)   !< Lapack coefficients
+      integer(i32), allocatable :: ipiv(:)   !< Lapack pivot indices
 
-   real(f64) :: bc_coeffs_rmin( 2: 3) ! needed for Neumann at r=r_min
-   real(f64) :: bc_coeffs_rmax(-2:-1) ! needed for Neumann at r=r_max
-   integer   :: skip0                 ! needed for full circle
+      real(f64) :: bc_coeffs_rmin(2:3) ! needed for Neumann at r=r_min
+      real(f64) :: bc_coeffs_rmax(-2:-1) ! needed for Neumann at r=r_max
+      integer   :: skip0                 ! needed for full circle
 
-   type(sll_t_layout_2d)           , pointer :: layout_r !< layout sequential in r
-   type(sll_t_layout_2d)           , pointer :: layout_a !< layout sequential in theta
-   type(sll_t_remap_plan_2d_real64), pointer :: rmp_ra   !< remap r->theta 
-   type(sll_t_remap_plan_2d_real64), pointer :: rmp_ar   !< remap theta->r
+      type(sll_t_layout_2d), pointer :: layout_r !< layout sequential in r
+      type(sll_t_layout_2d), pointer :: layout_a !< layout sequential in theta
+      type(sll_t_remap_plan_2d_real64), pointer :: rmp_ra   !< remap r->theta
+      type(sll_t_remap_plan_2d_real64), pointer :: rmp_ar   !< remap theta->r
 
-  end type sll_t_qn_solver_2d_polar_par
+   end type sll_t_qn_solver_2d_polar_par
 
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 contains
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
-  !=============================================================================
-  !> Initialize the solver
-  subroutine sll_s_qn_solver_2d_polar_par_init( solver, &
-      layout_r      , &
-      layout_a      , &
-      rmin          , &
-      rmax          , &
-      nr            , &
-      ntheta        , &
-      bc_rmin       , &
-      bc_rmax       , &
-      rho_m0        , &
-      b_magn        , &
-      lambda        , &
-      use_zonal_flow, &
-      epsilon_0     , &
-      rgrid         )
+   !=============================================================================
+   !> Initialize the solver
+   subroutine sll_s_qn_solver_2d_polar_par_init(solver, &
+                                                layout_r, &
+                                                layout_a, &
+                                                rmin, &
+                                                rmax, &
+                                                nr, &
+                                                ntheta, &
+                                                bc_rmin, &
+                                                bc_rmax, &
+                                                rho_m0, &
+                                                b_magn, &
+                                                lambda, &
+                                                use_zonal_flow, &
+                                                epsilon_0, &
+                                                rgrid)
 
-    type(sll_t_qn_solver_2d_polar_par), intent(  out) :: solver         !< solver object
-    type(sll_t_layout_2d)             , pointer       :: layout_r       !< layout sequential in r direction
-    type(sll_t_layout_2d)             , pointer       :: layout_a       !< layout sequential in theta direction
-    real(f64)                         , intent(in   ) :: rmin           !< rmin
-    real(f64)                         , intent(in   ) :: rmax           !< rmax
-    integer(i32)                      , intent(in   ) :: nr             !< number of cells radial
-    integer(i32)                      , intent(in   ) :: ntheta         !< number of cells angular
-    integer(i32)                      , intent(in   ) :: bc_rmin        !< boundary condition at r_min
-    integer(i32)                      , intent(in   ) :: bc_rmax        !< boundary condition at r_max
-    real(f64)                         , intent(in   ) :: rho_m0(:)      !< radial profile: total mass density of equilibrium
-    real(f64)                         , intent(in   ) :: b_magn(:)      !< radial profile: intensity of magnetic field
-    real(f64),                optional, intent(in   ) :: lambda(:)      !< radial profile: electron Debye length
-    logical  ,                optional, intent(in   ) :: use_zonal_flow !< if .false. set flux average to zero
-    real(f64),                optional, intent(in   ) :: epsilon_0      !< override default: vacuum permittivity
-    real(f64),        target, optional, intent(in   ) :: rgrid(:)       !< grid points along r
+      type(sll_t_qn_solver_2d_polar_par), intent(out) :: solver         !< solver object
+      type(sll_t_layout_2d), pointer       :: layout_r       !< layout sequential in r direction
+      type(sll_t_layout_2d), pointer       :: layout_a       !< layout sequential in theta direction
+      real(f64), intent(in) :: rmin           !< rmin
+      real(f64), intent(in) :: rmax           !< rmax
+      integer(i32), intent(in) :: nr             !< number of cells radial
+      integer(i32), intent(in) :: ntheta         !< number of cells angular
+      integer(i32), intent(in) :: bc_rmin        !< boundary condition at r_min
+      integer(i32), intent(in) :: bc_rmax        !< boundary condition at r_max
+      real(f64), intent(in) :: rho_m0(:)      !< radial profile: total mass density of equilibrium
+      real(f64), intent(in) :: b_magn(:)      !< radial profile: intensity of magnetic field
+      real(f64), optional, intent(in) :: lambda(:)      !< radial profile: electron Debye length
+      logical, optional, intent(in) :: use_zonal_flow !< if .false. set flux average to zero
+      real(f64), optional, intent(in) :: epsilon_0      !< override default: vacuum permittivity
+      real(f64), target, optional, intent(in) :: rgrid(:)       !< grid points along r
 
-    character(len=*), parameter :: this_sub_name = 'sll_s_qn_solver_2d_polar_par_init'
+      character(len=*), parameter :: this_sub_name = 'sll_s_qn_solver_2d_polar_par_init'
 
-    real(f64) :: hp, hm
-    real(f64) :: inv_r
-    real(f64) :: d0_coeffs(3)
-    real(f64) :: d1_coeffs(3)
-    real(f64) :: d2_coeffs(3)
-    real(f64) :: ddr_ln_g
-    real(f64) :: c
-    real(f64), allocatable :: r_nodes(:)
+      real(f64) :: hp, hm
+      real(f64) :: inv_r
+      real(f64) :: d0_coeffs(3)
+      real(f64) :: d1_coeffs(3)
+      real(f64) :: d2_coeffs(3)
+      real(f64) :: ddr_ln_g
+      real(f64) :: c
+      real(f64), allocatable :: r_nodes(:)
 
-    integer(i32) :: i, j, k
-    integer(i32) :: bck(2)
-    integer(i32) :: last
-    integer(i32) :: sh
+      integer(i32) :: i, j, k
+      integer(i32) :: bck(2)
+      integer(i32) :: last
+      integer(i32) :: sh
 
-    integer(i32) :: loc_sz_r(2) ! local shape of layout_r
-    integer(i32) :: loc_sz_a(2) ! local shape of layout_a
-    integer(i32) :: glob_idx(2) ! global indices
+      integer(i32) :: loc_sz_r(2) ! local shape of layout_r
+      integer(i32) :: loc_sz_a(2) ! local shape of layout_a
+      integer(i32) :: glob_idx(2) ! global indices
 
-    integer(i32), allocatable :: k_list_glob(:) ! global list of k values
+      integer(i32), allocatable :: k_list_glob(:) ! global list of k values
 
-    if (bc_rmin == sll_p_polar_origin .and. rmin /= 0.0_f64) then
-      SLL_ERROR( this_sub_name, "BC option 'sll_p_polar_origin' requires r_min = 0" )
-    end if
-
-    ! Set boundary condition at r_min
-    select case( bc_rmin )
-    case( sll_p_dirichlet, sll_p_neumann, sll_p_neumann_mode_0, sll_p_polar_origin )
-      solver%bc(1) = bc_rmin
-    case default
-      SLL_ERROR( this_sub_name, 'Unrecognized boundary condition at r_min' )
-    end select
-
-    ! Set boundary condition at r_max
-    select case( bc_rmax )
-    case( sll_p_dirichlet, sll_p_neumann, sll_p_neumann_mode_0 )
-      solver%bc(2) = bc_rmax
-    case default
-      SLL_ERROR( this_sub_name, 'Unrecognized boundary condition at r_max' )
-    end select
-
-    ! Important: if full circle is simulated, center point is not solved for!
-    !            Therefore, solution is calculated on nr+1-skip0 points.
-    sh = merge( 1, 0, bc_rmin==sll_p_polar_origin )
-
-    ! Consistency check: global size of 2D layouts must be (nr+1,ntheta)
-    SLL_ASSERT_ALWAYS( sll_o_get_layout_global_size_i( layout_r ) == nr+1-sh )
-    SLL_ASSERT_ALWAYS( sll_o_get_layout_global_size_j( layout_r ) == ntheta  )
-    !
-    SLL_ASSERT_ALWAYS( sll_o_get_layout_global_size_i( layout_a ) == nr+1-sh )
-    SLL_ASSERT_ALWAYS( sll_o_get_layout_global_size_j( layout_a ) == ntheta  )
-
-    ! Compute local size of 2D arrays in the two layouts
-    call sll_o_compute_local_sizes( layout_r, loc_sz_r(1), loc_sz_r(2) )
-    call sll_o_compute_local_sizes( layout_a, loc_sz_a(1), loc_sz_a(2) )
-
-    ! Consistency check: layout_r sequential in r, layout_a sequential in theta
-    SLL_ASSERT_ALWAYS( loc_sz_r(1) == nr+1-sh )
-    SLL_ASSERT_ALWAYS( loc_sz_a(2) == ntheta  )
-
-    ! Override vacuum permittivity in SI units
-    if (present( epsilon_0 )) then
-      solver%epsilon_0 = epsilon_0
-    else
-      solver%epsilon_0 = sll_p_epsilon_0
-    end if
-
-    ! Store global information in solver
-    solver%rmin     =  rmin
-    solver%rmax     =  rmax
-    solver%nr       =  nr
-    solver%ntheta   =  ntheta
-    solver%layout_a => layout_a
-    solver%layout_r => layout_r
-    solver%skip0    =  sh
-
-    ! r grid (possibly non-uniform)
-    allocate( r_nodes(nr+1) )
-
-    if (present( rgrid )) then  !--> Create computational grid from user data
-
-      SLL_ASSERT_ALWAYS( all( rgrid > 0.0_f64 ) )
-      if (bc_rmin == sll_p_polar_origin) then
-        SLL_ASSERT_ALWAYS( size(rgrid) == nr   )
-        SLL_ASSERT_ALWAYS( rgrid(nr  ) == rmax )
-        r_nodes(1 ) = -rgrid(1)
-        r_nodes(2:) =  rgrid(:)
-      else
-        SLL_ASSERT_ALWAYS( size(rgrid) == nr+1 )
-        SLL_ASSERT_ALWAYS( rgrid(   1) == rmin )
-        SLL_ASSERT_ALWAYS( rgrid(nr+1) == rmax )
-        r_nodes(:) = rgrid(:)
+      if (bc_rmin == sll_p_polar_origin .and. rmin /= 0.0_f64) then
+         SLL_ERROR(this_sub_name, "BC option 'sll_p_polar_origin' requires r_min = 0")
       end if
 
-    else  !-------------------------> Create uniform grid
+      ! Set boundary condition at r_min
+      select case (bc_rmin)
+      case (sll_p_dirichlet, sll_p_neumann, sll_p_neumann_mode_0, sll_p_polar_origin)
+         solver%bc(1) = bc_rmin
+      case default
+         SLL_ERROR(this_sub_name, 'Unrecognized boundary condition at r_min')
+      end select
 
-      if (bc_rmin == sll_p_polar_origin) then
-        associate( rmin => rmax / real(2*nr+1,f64) )
-          r_nodes(1) = -rmin
-          call sll_s_new_array_linspace( r_nodes(2:), rmin, rmax, endpoint=.true. )
-        end associate
+      ! Set boundary condition at r_max
+      select case (bc_rmax)
+      case (sll_p_dirichlet, sll_p_neumann, sll_p_neumann_mode_0)
+         solver%bc(2) = bc_rmax
+      case default
+         SLL_ERROR(this_sub_name, 'Unrecognized boundary condition at r_max')
+      end select
+
+      ! Important: if full circle is simulated, center point is not solved for!
+      !            Therefore, solution is calculated on nr+1-skip0 points.
+      sh = merge(1, 0, bc_rmin == sll_p_polar_origin)
+
+      ! Consistency check: global size of 2D layouts must be (nr+1,ntheta)
+      SLL_ASSERT_ALWAYS(sll_o_get_layout_global_size_i(layout_r) == nr + 1 - sh)
+      SLL_ASSERT_ALWAYS(sll_o_get_layout_global_size_j(layout_r) == ntheta)
+      !
+      SLL_ASSERT_ALWAYS(sll_o_get_layout_global_size_i(layout_a) == nr + 1 - sh)
+      SLL_ASSERT_ALWAYS(sll_o_get_layout_global_size_j(layout_a) == ntheta)
+
+      ! Compute local size of 2D arrays in the two layouts
+      call sll_o_compute_local_sizes(layout_r, loc_sz_r(1), loc_sz_r(2))
+      call sll_o_compute_local_sizes(layout_a, loc_sz_a(1), loc_sz_a(2))
+
+      ! Consistency check: layout_r sequential in r, layout_a sequential in theta
+      SLL_ASSERT_ALWAYS(loc_sz_r(1) == nr + 1 - sh)
+      SLL_ASSERT_ALWAYS(loc_sz_a(2) == ntheta)
+
+      ! Override vacuum permittivity in SI units
+      if (present(epsilon_0)) then
+         solver%epsilon_0 = epsilon_0
       else
-        call sll_s_new_array_linspace( r_nodes, rmin, rmax, endpoint=.true. )
+         solver%epsilon_0 = sll_p_epsilon_0
       end if
 
-    end if
+      ! Store global information in solver
+      solver%rmin = rmin
+      solver%rmax = rmax
+      solver%nr = nr
+      solver%ntheta = ntheta
+      solver%layout_a => layout_a
+      solver%layout_r => layout_r
+      solver%skip0 = sh
 
-    ! Allocate arrays global in r
-    allocate( solver%g   (nr+1) )
-    allocate( solver%z_r (nr+1-sh,loc_sz_r(2)) )
-    allocate( solver%mat((nr-1)*3,loc_sz_r(2)) ) ! for each k, matrix depends on r
-    allocate( solver%cts((nr-1)*7) )
-    allocate( solver%ipiv(nr-1) )
+      ! r grid (possibly non-uniform)
+      allocate (r_nodes(nr + 1))
 
-    ! Remap objects between two layouts (for transposing between f_r and f_a)
-    allocate( solver%z_a( loc_sz_a(1), ntheta ) )
-    solver%rmp_ra => sll_o_new_remap_plan( solver%layout_r, solver%layout_a, solver%z_r )
-    solver%rmp_ar => sll_o_new_remap_plan( solver%layout_a, solver%layout_r, solver%z_a )
-    deallocate( solver%z_a )
+      if (present(rgrid)) then  !--> Create computational grid from user data
 
-    ! Allocate in ALIGNED fashion 1D array for storing one row of f_a
-    solver%tmp => sll_f_fft_allocate_aligned_real( ntheta )
+         SLL_ASSERT_ALWAYS(all(rgrid > 0.0_f64))
+         if (bc_rmin == sll_p_polar_origin) then
+            SLL_ASSERT_ALWAYS(size(rgrid) == nr)
+            SLL_ASSERT_ALWAYS(rgrid(nr) == rmax)
+            r_nodes(1) = -rgrid(1)
+            r_nodes(2:) = rgrid(:)
+         else
+            SLL_ASSERT_ALWAYS(size(rgrid) == nr + 1)
+            SLL_ASSERT_ALWAYS(rgrid(1) == rmin)
+            SLL_ASSERT_ALWAYS(rgrid(nr + 1) == rmax)
+            r_nodes(:) = rgrid(:)
+         end if
 
-    ! Initialize plans for forward and backward FFTs
-    call sll_s_fft_init_r2r_1d( solver%fw, &
-      ntheta             , &
-      solver%tmp(:)      , &
-      solver%tmp(:)      , &
-      sll_p_fft_forward  , &
-      aligned    = .true., &
-      normalized = .true. )
+      else  !-------------------------> Create uniform grid
 
-    call sll_s_fft_init_r2r_1d( solver%bw, &
-      ntheta             , &
-      solver%tmp(:)      , &
-      solver%tmp(:)      , &
-      sll_p_fft_backward , &
-      aligned    = .true., &
-      normalized = .false. )
+         if (bc_rmin == sll_p_polar_origin) then
+            associate (rmin => rmax/real(2*nr + 1, f64))
+               r_nodes(1) = -rmin
+               call sll_s_new_array_linspace(r_nodes(2:), rmin, rmax, endpoint=.true.)
+            end associate
+         else
+            call sll_s_new_array_linspace(r_nodes, rmin, rmax, endpoint=.true.)
+         end if
 
-    ! Store non-dimensional coefficient g(r) = \rho(r) / (B(r)^2 \epsilon_0)
-    solver%g(1+sh:) = rho_m0(:) / (b_magn(:)**2 * solver%epsilon_0)
-    if (sh==1) then
-      solver%g(1) = solver%g(2) ! ghost point
-    end if
+      end if
 
-    ! Determine global k_list
-    allocate( k_list_glob( ntheta ) )
-    call sll_s_fft_get_k_list_r2r_1d( solver%fw, k_list_glob )
-    ! Extract local k list
-    allocate( solver%k_list(loc_sz_r(2)) )
-    do j = 1, loc_sz_r(2)
-      glob_idx(:) = sll_o_local_to_global( solver%layout_r, [1,j] )
-      solver%k_list(j) = k_list_glob(glob_idx(2))
-    end do
-    deallocate( k_list_glob )
+      ! Allocate arrays global in r
+      allocate (solver%g(nr + 1))
+      allocate (solver%z_r(nr + 1 - sh, loc_sz_r(2)))
+      allocate (solver%mat((nr - 1)*3, loc_sz_r(2))) ! for each k, matrix depends on r
+      allocate (solver%cts((nr - 1)*7))
+      allocate (solver%ipiv(nr - 1))
 
-    ! Store matrix coefficients into solver%mat
-    ! Cycle over k_j
-    do j = 1, loc_sz_r(2)
+      ! Remap objects between two layouts (for transposing between f_r and f_a)
+      allocate (solver%z_a(loc_sz_a(1), ntheta))
+      solver%rmp_ra => sll_o_new_remap_plan(solver%layout_r, solver%layout_a, solver%z_r)
+      solver%rmp_ar => sll_o_new_remap_plan(solver%layout_a, solver%layout_r, solver%z_a)
+      deallocate (solver%z_a)
 
-      ! Get value of k_j from precomputed list of local values
-      k = solver%k_list(j)
+      ! Allocate in ALIGNED fashion 1D array for storing one row of f_a
+      solver%tmp => sll_f_fft_allocate_aligned_real(ntheta)
 
-      !----------------------------------------------
-      ! Compute boundary conditions type for mode k_j
-      !----------------------------------------------
-      bck(:) = solver%bc(:)
-      do i = 1, 2
-        if (bck(i) == sll_p_neumann_mode_0) then 
-          if (k == 0) then
-            bck(i) = sll_p_neumann
-          else
-            bck(i) = sll_p_dirichlet
-          end if
-        end if
+      ! Initialize plans for forward and backward FFTs
+      call sll_s_fft_init_r2r_1d(solver%fw, &
+                                 ntheta, &
+                                 solver%tmp(:), &
+                                 solver%tmp(:), &
+                                 sll_p_fft_forward, &
+                                 aligned=.true., &
+                                 normalized=.true.)
+
+      call sll_s_fft_init_r2r_1d(solver%bw, &
+                                 ntheta, &
+                                 solver%tmp(:), &
+                                 solver%tmp(:), &
+                                 sll_p_fft_backward, &
+                                 aligned=.true., &
+                                 normalized=.false.)
+
+      ! Store non-dimensional coefficient g(r) = \rho(r) / (B(r)^2 \epsilon_0)
+      solver%g(1 + sh:) = rho_m0(:)/(b_magn(:)**2*solver%epsilon_0)
+      if (sh == 1) then
+         solver%g(1) = solver%g(2) ! ghost point
+      end if
+
+      ! Determine global k_list
+      allocate (k_list_glob(ntheta))
+      call sll_s_fft_get_k_list_r2r_1d(solver%fw, k_list_glob)
+      ! Extract local k list
+      allocate (solver%k_list(loc_sz_r(2)))
+      do j = 1, loc_sz_r(2)
+         glob_idx(:) = sll_o_local_to_global(solver%layout_r, [1, j])
+         solver%k_list(j) = k_list_glob(glob_idx(2))
       end do
+      deallocate (k_list_glob)
 
-      !----------------------------------------------
-      ! Compute matrix coefficients for a given k_j
-      !----------------------------------------------
-      do i = 2, nr
+      ! Store matrix coefficients into solver%mat
+      ! Cycle over k_j
+      do j = 1, loc_sz_r(2)
 
-        ! Finite difference coefficients for 0th (trivial), 1st and 2nd derivatives
-        hp = r_nodes(i+1)-r_nodes(i)
-        hm = r_nodes(i)  -r_nodes(i-1)
-        inv_r = 1.0_f64 / r_nodes(i)
-        d0_coeffs(:) = [0.0_f64, 1.0_f64, 0.0_f64]
-        d1_coeffs(:) = [-hp/hm, (hp**2-hm**2)/(hp*hm), hm/hp] / (hp+hm)
-        d2_coeffs(:) = [2*hp/(hp+hm), -2.0_f64, 2*hm/(hp+hm)] / (hp*hm)
+         ! Get value of k_j from precomputed list of local values
+         k = solver%k_list(j)
 
-        ! Compute d/dr(ln(g)) as (1/g)*(dg/dr) using finite differences
-        ddr_ln_g = dot_product( d1_coeffs(:), solver%g(i-1:i+1) ) / solver%g(i)
-
-        ! Determine contribution from zonal flow
-        if (present( lambda )) then
-          c = 1.0_f64 / (lambda(i-sh)**2 * solver%g(i))
-          if (present( use_zonal_flow )) then
-            if (use_zonal_flow .and. k == 0) then
-              c = 0.0_f64
+         !----------------------------------------------
+         ! Compute boundary conditions type for mode k_j
+         !----------------------------------------------
+         bck(:) = solver%bc(:)
+         do i = 1, 2
+            if (bck(i) == sll_p_neumann_mode_0) then
+               if (k == 0) then
+                  bck(i) = sll_p_neumann
+               else
+                  bck(i) = sll_p_dirichlet
+               end if
             end if
-          end if
-        else
-          c = 0.0_f64
-        end if
+         end do
 
-        ! Fill in elements of i-th matrix row
-        solver%mat(3*(i-1)-2:3*(i-1), j) =    &
-          - d2_coeffs(:)                      &
-          - d1_coeffs(:) * (inv_r + ddr_ln_g) &
-          + d0_coeffs(:) * ((k*inv_r)**2 + c)
+         !----------------------------------------------
+         ! Compute matrix coefficients for a given k_j
+         !----------------------------------------------
+         do i = 2, nr
 
-      end do
+            ! Finite difference coefficients for 0th (trivial), 1st and 2nd derivatives
+            hp = r_nodes(i + 1) - r_nodes(i)
+            hm = r_nodes(i) - r_nodes(i - 1)
+            inv_r = 1.0_f64/r_nodes(i)
+            d0_coeffs(:) = [0.0_f64, 1.0_f64, 0.0_f64]
+            d1_coeffs(:) = [-hp/hm, (hp**2 - hm**2)/(hp*hm), hm/hp]/(hp + hm)
+            d2_coeffs(:) = [2*hp/(hp + hm), -2.0_f64, 2*hm/(hp + hm)]/(hp*hm)
 
-      !----------------------------------------------
-      ! Set boundary condition at rmin
-      !----------------------------------------------
-      if (bck(1) == sll_p_dirichlet) then ! Dirichlet
-        solver%mat(1,j) = 0.0_f64
+            ! Compute d/dr(ln(g)) as (1/g)*(dg/dr) using finite differences
+            ddr_ln_g = dot_product(d1_coeffs(:), solver%g(i - 1:i + 1))/solver%g(i)
 
-      else if (bck(1) == sll_p_neumann) then ! Neumann
-
-        ! Coefficients of homogeneous boundary condition
-        hp = r_nodes(3)-r_nodes(2)
-        hm = r_nodes(2)-r_nodes(1)
-        d1_coeffs(:) = [-2-hp/hm, 2+hp/hm+hm/hp, -hm/hp]
-        solver % bc_coeffs_rmin(2:3) = -d1_coeffs(2:3)/d1_coeffs(1)
-
-        ! Gaussian elimination: remove phi(1) variable using boundary condition
-        solver%mat(3,j) = solver%mat(3,j) + solver%bc_coeffs_rmin(3) * solver%mat(1,j)
-        solver%mat(2,j) = solver%mat(2,j) + solver%bc_coeffs_rmin(2) * solver%mat(1,j)
-        solver%mat(1,j) = 0.0_f64
-
-      else if (bck(1) == sll_p_polar_origin) then ! center of circular domain
-
-        ! Gaussian elimination: phi(1) = (-1)^k phi(2)
-        solver%mat(2,j) = solver%mat(2,j) + (-1)**k * solver%mat(1,j)
-        solver%mat(1,j) = 0.0_f64
-
-      end if
-
-      !----------------------------------------------
-      ! Set boundary condition at rmax
-      !----------------------------------------------
-      last = 3*(nr-1)
-      if (bck(2) == sll_p_dirichlet) then ! Dirichlet
-        solver%mat(last,j) = 0.0_f64
-
-      else if (bck(2) == sll_p_neumann) then ! Neumann
-
-        ! Coefficients of homogeneous boundary condition
-        hp = r_nodes(nr+1)-r_nodes(nr)
-        hm = r_nodes(nr)-r_nodes(nr-1)
-        d1_coeffs(:) = [hp/hm, -2-hp/hm-hm/hp, 2+hm/hp]
-        solver % bc_coeffs_rmax(-2:-1) = -d1_coeffs(1:2)/d1_coeffs(3)
-
-        ! Gaussian elimination: remove phi(last) variable using boundary condition
-        solver%mat(last-2,j) = solver%mat(last-2,j) + solver%bc_coeffs_rmax(-2) * solver%mat(last,j)
-        solver%mat(last-1,j) = solver%mat(last-1,j) + solver%bc_coeffs_rmax(-1) * solver%mat(last,j)
-        solver%mat(last  ,j) = 0.0_f64
-
-      end if
-
-    end do
-
-  end subroutine sll_s_qn_solver_2d_polar_par_init
-
-
-  !=============================================================================
-  !> Solve the quasi-neutrality equation and get the electrostatic potential
-  subroutine sll_s_qn_solver_2d_polar_par_solve( solver, rho, phi )
-    type(sll_t_qn_solver_2d_polar_par) , intent(inout) :: solver   !< Solver object
-    real(f64)                          , intent(in   ) :: rho(:,:) !< Charge density
-    real(f64), target                  , intent(  out) :: phi(:,:) !< Potential
-
-    integer(i32) :: nr, ntheta, bck(2)
-    integer(i32) :: i, j, k
-    integer(i32) :: nrpts
-    integer(i32) :: sh
-
-    nr     = solver%nr
-    ntheta = solver%ntheta
-
-    ! Shift in radial grid indexing
-    sh = solver%skip0 ! =1 if bc_rmin==sll_p_polar_origin, =0 otherwise
-
-    ! Number of points in radial grid
-    nrpts = nr+1-sh
-
-    ! Consistency check: rho and phi must be given in layout sequential in theta
-    call verify_argument_sizes_par( solver%layout_a, rho, 'rho' )
-    call verify_argument_sizes_par( solver%layout_a, phi, 'phi' )
-
-    ! Use output array 'phi' as 2D work array sequential in theta
-    solver%z_a => phi(:,:)
-
-    ! For each r_i, compute FFT of rho(r_i,theta) to obtain \hat{rho}(r_i,k)
-    do i = 1, ubound( rho, 1 )
-      solver%tmp(:) = rho(i,:)
-      call sll_s_fft_exec_r2r_1d( solver%fw, solver%tmp(:), solver%tmp(:) )
-      solver%z_a(i,:) = solver%tmp(:)
-    end do
-
-    ! Remap \hat{rho}(k) to layout distributed in k (global in r) -> \hat{rho}_k(r)
-    call sll_o_apply_remap_2d( solver%rmp_ar, solver%z_a, solver%z_r )
-
-    ! Cycle over k_j
-    do j = 1, ubound( solver%z_r, 2 )
-
-      ! rhok(r) is k-th Fourier mode of rho(r,theta)
-      ! phik(r) is k-th Fourier mode of phi(r,theta)
-      ! rhok is 1D contiguous slice (column) of solver%z
-      ! we will overwrite rhok with phik
-      associate( rhok => solver%z_r(:,j), phik => solver%z_r(:,j) )
-
-        rhok(:) = rhok(:) / (solver%g(1+sh:) * solver%epsilon_0)
-
-        ! Solve tridiagonal system to obtain \hat{phi}_{k_j}(r) at internal points
-        call sll_s_setup_cyclic_tridiag( solver%mat(:,j), nr-1, solver%cts, solver%ipiv )
-        call sll_o_solve_cyclic_tridiag( solver%cts, solver%ipiv, &
-          rhok(2-sh:nrpts-1), nr-1, phik(2-sh:nrpts-1) )
-
-        ! Get value of k_j from precomputed list of local values
-        k = solver%k_list(j)
-
-        ! Compute boundary conditions type for mode k_j
-        bck(:) = solver%bc(:)
-        do i = 1, 2
-          if (bck(i) == sll_p_neumann_mode_0) then 
-            if (k == 0) then
-              bck(i) = sll_p_neumann
+            ! Determine contribution from zonal flow
+            if (present(lambda)) then
+               c = 1.0_f64/(lambda(i - sh)**2*solver%g(i))
+               if (present(use_zonal_flow)) then
+                  if (use_zonal_flow .and. k == 0) then
+                     c = 0.0_f64
+                  end if
+               end if
             else
-              bck(i) = sll_p_dirichlet
+               c = 0.0_f64
             end if
-          end if
-        end do
 
-        ! Boundary condition at rmin
-        if (bck(1) == sll_p_dirichlet) then ! Dirichlet
-          phik(1) = 0.0_f64
-        else if (bck(1) == sll_p_neumann) then ! Neumann
-          associate( c => solver % bc_coeffs_rmin )
-            phik(1) = c(2)*phik(2) + c(3)*phik(3)
-          end associate
-        end if
+            ! Fill in elements of i-th matrix row
+            solver%mat(3*(i - 1) - 2:3*(i - 1), j) = &
+               -d2_coeffs(:) &
+               - d1_coeffs(:)*(inv_r + ddr_ln_g) &
+               + d0_coeffs(:)*((k*inv_r)**2 + c)
 
-        ! Boundary condition at rmax
-        if (bck(2) == sll_p_dirichlet) then ! Dirichlet
-          phik(nrpts) = 0.0_f64
-        else if (bck(2) == sll_p_neumann) then ! Neumann
-          associate( c => solver % bc_coeffs_rmax )
-            phik(nrpts) = c(-2)*phik(nrpts-2) + c(-1)*phik(nrpts-1)
-          end associate
-        end if
+         end do
 
-      end associate
+         !----------------------------------------------
+         ! Set boundary condition at rmin
+         !----------------------------------------------
+         if (bck(1) == sll_p_dirichlet) then ! Dirichlet
+            solver%mat(1, j) = 0.0_f64
 
-    end do
+         else if (bck(1) == sll_p_neumann) then ! Neumann
 
-    ! Redistribute \hat{phi}(r_i,k_j) into layout global in k
-    call sll_o_apply_remap_2d( solver%rmp_ra, solver%z_r, solver%z_a )
-    
-    ! For each r_i, compute inverse FFT of \hat{phi}(r_i,k) to obtain phi(r_i,theta)
-    do i = 1, ubound( solver%z_a, 1 )
-      solver%tmp(:) = solver%z_a(i,:)
-      call sll_s_fft_exec_r2r_1d( solver%bw, solver%tmp(:), solver%tmp(:) )
-      phi(i,:) = solver%tmp(:)
-    end do
+            ! Coefficients of homogeneous boundary condition
+            hp = r_nodes(3) - r_nodes(2)
+            hm = r_nodes(2) - r_nodes(1)
+            d1_coeffs(:) = [-2 - hp/hm, 2 + hp/hm + hm/hp, -hm/hp]
+            solver%bc_coeffs_rmin(2:3) = -d1_coeffs(2:3)/d1_coeffs(1)
 
-  end subroutine sll_s_qn_solver_2d_polar_par_solve
+            ! Gaussian elimination: remove phi(1) variable using boundary condition
+            solver%mat(3, j) = solver%mat(3, j) + solver%bc_coeffs_rmin(3)*solver%mat(1, j)
+            solver%mat(2, j) = solver%mat(2, j) + solver%bc_coeffs_rmin(2)*solver%mat(1, j)
+            solver%mat(1, j) = 0.0_f64
 
+         else if (bck(1) == sll_p_polar_origin) then ! center of circular domain
 
-  !=============================================================================
-  !> Delete contents (local storage) of quasi-neutrality solver
-  subroutine sll_s_qn_solver_2d_polar_par_free( solver )
-    type(sll_t_qn_solver_2d_polar_par), intent(inout) :: solver
+            ! Gaussian elimination: phi(1) = (-1)^k phi(2)
+            solver%mat(2, j) = solver%mat(2, j) + (-1)**k*solver%mat(1, j)
+            solver%mat(1, j) = 0.0_f64
 
-    call sll_s_fft_free( solver%fw )
-    call sll_s_fft_free( solver%bw )
+         end if
 
-    call sll_s_fft_deallocate_aligned_real( solver%tmp )
+         !----------------------------------------------
+         ! Set boundary condition at rmax
+         !----------------------------------------------
+         last = 3*(nr - 1)
+         if (bck(2) == sll_p_dirichlet) then ! Dirichlet
+            solver%mat(last, j) = 0.0_f64
 
-    deallocate( solver%z_r  )
-    deallocate( solver%mat  )
-    deallocate( solver%cts  )
-    deallocate( solver%ipiv )
+         else if (bck(2) == sll_p_neumann) then ! Neumann
 
-    deallocate( solver%rmp_ra )
-    deallocate( solver%rmp_ar )
+            ! Coefficients of homogeneous boundary condition
+            hp = r_nodes(nr + 1) - r_nodes(nr)
+            hm = r_nodes(nr) - r_nodes(nr - 1)
+            d1_coeffs(:) = [hp/hm, -2 - hp/hm - hm/hp, 2 + hm/hp]
+            solver%bc_coeffs_rmax(-2:-1) = -d1_coeffs(1:2)/d1_coeffs(3)
 
-    solver%layout_r => null()
-    solver%layout_a => null()
-    solver%rmp_ra   => null()
-    solver%rmp_ar   => null()
+            ! Gaussian elimination: remove phi(last) variable using boundary condition
+            solver%mat(last - 2, j) = solver%mat(last - 2, j) + solver%bc_coeffs_rmax(-2)*solver%mat(last, j)
+            solver%mat(last - 1, j) = solver%mat(last - 1, j) + solver%bc_coeffs_rmax(-1)*solver%mat(last, j)
+            solver%mat(last, j) = 0.0_f64
 
-  end subroutine sll_s_qn_solver_2d_polar_par_free
+         end if
 
-  !=============================================================================
-  !> Check if array sizes are compatible with the layout 
-  subroutine verify_argument_sizes_par( layout, array, array_name )
-    type(sll_t_layout_2d), pointer    :: layout
-    real(f64)            , intent(in) :: array(:,:)
-    character(len=*)     , intent(in) :: array_name
+      end do
 
-    integer(i32)                :: n(2) ! nx_loc, ny_loc
-    character(len=*), parameter :: sfmt = "('['(i0)','(i0)']')"
-    character(len=256)          :: err_fmt
-    character(len=256)          :: err_msg
+   end subroutine sll_s_qn_solver_2d_polar_par_init
 
-    call sll_o_compute_local_sizes( layout, n(1), n(2) )
+   !=============================================================================
+   !> Solve the quasi-neutrality equation and get the electrostatic potential
+   subroutine sll_s_qn_solver_2d_polar_par_solve(solver, rho, phi)
+      type(sll_t_qn_solver_2d_polar_par), intent(inout) :: solver   !< Solver object
+      real(f64), intent(in) :: rho(:, :) !< Charge density
+      real(f64), target, intent(out) :: phi(:, :) !< Potential
 
-    if ( .not. all( shape(array)==n(:) ) ) then
-      ! Create error format string
-      err_fmt = "(a,"//sfmt//",a,"//sfmt//",a)"
-      ! Write error message to string
-      write( err_msg, err_fmt ) &
-        "shape("//array_name//") = ", shape(array), &
-        " is not compatible with local shape ", n ," of 2D layout"
-      ! Stop execution with error
-      SLL_ERROR( "sll_s_qn_solver_2d_polar_par_solve", trim(err_msg) )
-    end if
+      integer(i32) :: nr, ntheta, bck(2)
+      integer(i32) :: i, j, k
+      integer(i32) :: nrpts
+      integer(i32) :: sh
 
-  end subroutine verify_argument_sizes_par
+      nr = solver%nr
+      ntheta = solver%ntheta
+
+      ! Shift in radial grid indexing
+      sh = solver%skip0 ! =1 if bc_rmin==sll_p_polar_origin, =0 otherwise
+
+      ! Number of points in radial grid
+      nrpts = nr + 1 - sh
+
+      ! Consistency check: rho and phi must be given in layout sequential in theta
+      call verify_argument_sizes_par(solver%layout_a, rho, 'rho')
+      call verify_argument_sizes_par(solver%layout_a, phi, 'phi')
+
+      ! Use output array 'phi' as 2D work array sequential in theta
+      solver%z_a => phi(:, :)
+
+      ! For each r_i, compute FFT of rho(r_i,theta) to obtain \hat{rho}(r_i,k)
+      do i = 1, ubound(rho, 1)
+         solver%tmp(:) = rho(i, :)
+         call sll_s_fft_exec_r2r_1d(solver%fw, solver%tmp(:), solver%tmp(:))
+         solver%z_a(i, :) = solver%tmp(:)
+      end do
+
+      ! Remap \hat{rho}(k) to layout distributed in k (global in r) -> \hat{rho}_k(r)
+      call sll_o_apply_remap_2d(solver%rmp_ar, solver%z_a, solver%z_r)
+
+      ! Cycle over k_j
+      do j = 1, ubound(solver%z_r, 2)
+
+         ! rhok(r) is k-th Fourier mode of rho(r,theta)
+         ! phik(r) is k-th Fourier mode of phi(r,theta)
+         ! rhok is 1D contiguous slice (column) of solver%z
+         ! we will overwrite rhok with phik
+         associate (rhok => solver%z_r(:, j), phik => solver%z_r(:, j))
+
+            rhok(:) = rhok(:)/(solver%g(1 + sh:)*solver%epsilon_0)
+
+            ! Solve tridiagonal system to obtain \hat{phi}_{k_j}(r) at internal points
+            call sll_s_setup_cyclic_tridiag(solver%mat(:, j), nr - 1, solver%cts, solver%ipiv)
+            call sll_o_solve_cyclic_tridiag(solver%cts, solver%ipiv, &
+                                            rhok(2 - sh:nrpts - 1), nr - 1, phik(2 - sh:nrpts - 1))
+
+            ! Get value of k_j from precomputed list of local values
+            k = solver%k_list(j)
+
+            ! Compute boundary conditions type for mode k_j
+            bck(:) = solver%bc(:)
+            do i = 1, 2
+               if (bck(i) == sll_p_neumann_mode_0) then
+                  if (k == 0) then
+                     bck(i) = sll_p_neumann
+                  else
+                     bck(i) = sll_p_dirichlet
+                  end if
+               end if
+            end do
+
+            ! Boundary condition at rmin
+            if (bck(1) == sll_p_dirichlet) then ! Dirichlet
+               phik(1) = 0.0_f64
+            else if (bck(1) == sll_p_neumann) then ! Neumann
+               associate (c => solver%bc_coeffs_rmin)
+                  phik(1) = c(2)*phik(2) + c(3)*phik(3)
+               end associate
+            end if
+
+            ! Boundary condition at rmax
+            if (bck(2) == sll_p_dirichlet) then ! Dirichlet
+               phik(nrpts) = 0.0_f64
+            else if (bck(2) == sll_p_neumann) then ! Neumann
+               associate (c => solver%bc_coeffs_rmax)
+                  phik(nrpts) = c(-2)*phik(nrpts - 2) + c(-1)*phik(nrpts - 1)
+               end associate
+            end if
+
+         end associate
+
+      end do
+
+      ! Redistribute \hat{phi}(r_i,k_j) into layout global in k
+      call sll_o_apply_remap_2d(solver%rmp_ra, solver%z_r, solver%z_a)
+
+      ! For each r_i, compute inverse FFT of \hat{phi}(r_i,k) to obtain phi(r_i,theta)
+      do i = 1, ubound(solver%z_a, 1)
+         solver%tmp(:) = solver%z_a(i, :)
+         call sll_s_fft_exec_r2r_1d(solver%bw, solver%tmp(:), solver%tmp(:))
+         phi(i, :) = solver%tmp(:)
+      end do
+
+   end subroutine sll_s_qn_solver_2d_polar_par_solve
+
+   !=============================================================================
+   !> Delete contents (local storage) of quasi-neutrality solver
+   subroutine sll_s_qn_solver_2d_polar_par_free(solver)
+      type(sll_t_qn_solver_2d_polar_par), intent(inout) :: solver
+
+      call sll_s_fft_free(solver%fw)
+      call sll_s_fft_free(solver%bw)
+
+      call sll_s_fft_deallocate_aligned_real(solver%tmp)
+
+      deallocate (solver%z_r)
+      deallocate (solver%mat)
+      deallocate (solver%cts)
+      deallocate (solver%ipiv)
+
+      deallocate (solver%rmp_ra)
+      deallocate (solver%rmp_ar)
+
+      solver%layout_r => null()
+      solver%layout_a => null()
+      solver%rmp_ra => null()
+      solver%rmp_ar => null()
+
+   end subroutine sll_s_qn_solver_2d_polar_par_free
+
+   !=============================================================================
+   !> Check if array sizes are compatible with the layout
+   subroutine verify_argument_sizes_par(layout, array, array_name)
+      type(sll_t_layout_2d), pointer    :: layout
+      real(f64), intent(in) :: array(:, :)
+      character(len=*), intent(in) :: array_name
+
+      integer(i32)                :: n(2) ! nx_loc, ny_loc
+      character(len=*), parameter :: sfmt = "('['(i0)','(i0)']')"
+      character(len=256)          :: err_fmt
+      character(len=256)          :: err_msg
+
+      call sll_o_compute_local_sizes(layout, n(1), n(2))
+
+      if (.not. all(shape(array) == n(:))) then
+         ! Create error format string
+         err_fmt = "(a,"//sfmt//",a,"//sfmt//",a)"
+         ! Write error message to string
+         write (err_msg, err_fmt) &
+            "shape("//array_name//") = ", shape(array), &
+            " is not compatible with local shape ", n, " of 2D layout"
+         ! Stop execution with error
+         SLL_ERROR("sll_s_qn_solver_2d_polar_par_solve", trim(err_msg))
+      end if
+
+   end subroutine verify_argument_sizes_par
 
 end module sll_m_qn_solver_2d_polar_par

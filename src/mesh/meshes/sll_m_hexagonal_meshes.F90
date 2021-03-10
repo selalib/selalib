@@ -27,183 +27,182 @@ module sll_m_hexagonal_meshes
 #include "sll_errors.h"
 #include "sll_working_precision.h"
 
-  use sll_m_constants, only: &
-    sll_p_sqrt3, &
-    sll_p_epsilon_0
+   use sll_m_constants, only: &
+      sll_p_sqrt3, &
+      sll_p_epsilon_0
 
-  use sll_m_meshes_base, only: &
-    sll_c_mesh_2d_base
+   use sll_m_meshes_base, only: &
+      sll_c_mesh_2d_base
 
-  use sll_m_tri_mesh_xmf, only: &
-    sll_s_write_tri_mesh_xmf
+   use sll_m_tri_mesh_xmf, only: &
+      sll_s_write_tri_mesh_xmf
 
-  implicit none
+   implicit none
 
-  public :: &
-    sll_f_cart_to_hex1, &
-    sll_f_cart_to_hex2, &
-    sll_f_cells_to_origin, &
-    sll_f_change_elements_notation, &
-    sll_o_delete, &
-    sll_s_delete_hex_mesh_2d, &
-    sll_s_display_hex_mesh_2d, &
-    sll_s_get_cell_vertices_index, &
-    sll_s_get_edge_index, &
-    sll_s_get_triangle_index, &
-    sll_f_local_to_global, &
-    sll_f_new_hex_mesh_2d, &
-    sll_s_hex_mesh_2d_init, &
-    sll_t_hex_mesh_2d, &
-    sll_s_write_caid_files
+   public :: &
+      sll_f_cart_to_hex1, &
+      sll_f_cart_to_hex2, &
+      sll_f_cells_to_origin, &
+      sll_f_change_elements_notation, &
+      sll_o_delete, &
+      sll_s_delete_hex_mesh_2d, &
+      sll_s_display_hex_mesh_2d, &
+      sll_s_get_cell_vertices_index, &
+      sll_s_get_edge_index, &
+      sll_s_get_triangle_index, &
+      sll_f_local_to_global, &
+      sll_f_new_hex_mesh_2d, &
+      sll_s_hex_mesh_2d_init, &
+      sll_t_hex_mesh_2d, &
+      sll_s_write_caid_files
 
-  private
+   private
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
-  !> @brief 2d hexagonal mesh
-  type,extends(sll_c_mesh_2d_base) ::  sll_t_hex_mesh_2d
-     ! A hexagonal mesh (composed by equilateral triangles)
-     ! is defined by three directional vectors (r1, r2, r3)
-     ! the number of cells, the radius, and the coordinates of the center
-     sll_int32  :: num_cells     !< number of cells in any direction from origin
-     sll_int32  :: num_pts_tot   !< number of total points
-     sll_int32  :: num_triangles !< number of triangles
-     sll_int32  :: num_edges     !< number of edges
-     sll_real64 :: radius        !< distance between origin and external vertex
-     sll_real64 :: center_x1     !< x1 cartesian coordinate of the origin
-     sll_real64 :: center_x2     !< x2 cartesian coordinate of the origin
-     sll_real64 :: delta         !< cell spacing
-     sll_real64 :: r1_x1 !< first coordinate of first generator vector
-     sll_real64 :: r1_x2 !< second coordinate of first generator vector
-     sll_real64 :: r2_x1 !< first coordinate of second generator vector
-     sll_real64 :: r2_x2 !< second coordinate of second generator vector
-     sll_real64 :: r3_x1 !< first coordinate of third generator vector
-     sll_real64 :: r3_x2 !< second coordinate of third generator vector
+   !> @brief 2d hexagonal mesh
+   type, extends(sll_c_mesh_2d_base) ::  sll_t_hex_mesh_2d
+      ! A hexagonal mesh (composed by equilateral triangles)
+      ! is defined by three directional vectors (r1, r2, r3)
+      ! the number of cells, the radius, and the coordinates of the center
+      sll_int32  :: num_cells     !< number of cells in any direction from origin
+      sll_int32  :: num_pts_tot   !< number of total points
+      sll_int32  :: num_triangles !< number of triangles
+      sll_int32  :: num_edges     !< number of edges
+      sll_real64 :: radius        !< distance between origin and external vertex
+      sll_real64 :: center_x1     !< x1 cartesian coordinate of the origin
+      sll_real64 :: center_x2     !< x2 cartesian coordinate of the origin
+      sll_real64 :: delta         !< cell spacing
+      sll_real64 :: r1_x1 !< first coordinate of first generator vector
+      sll_real64 :: r1_x2 !< second coordinate of first generator vector
+      sll_real64 :: r2_x1 !< first coordinate of second generator vector
+      sll_real64 :: r2_x2 !< second coordinate of second generator vector
+      sll_real64 :: r3_x1 !< first coordinate of third generator vector
+      sll_real64 :: r3_x2 !< second coordinate of third generator vector
 
-     ! Matrix containing mesh points coordinates in cartesian coordinates :
-     sll_real64, pointer, dimension(:,:) :: cartesian_coord !< (2,1:num_pts_tot)
-     ! Matrix containing mesh points coordinates in hex coordinates (integers) :
-     sll_int32, pointer, dimension(:,:)  :: hex_coord !< (1:2,1:num_pts_tot)
-     ! Matrix containg global indices arranged from lower corner of hexagon
-     ! and following the r2, then r1 direction
-     sll_int32, pointer, dimension(:) :: global_indices !< (1:num_pts_tot)
+      ! Matrix containing mesh points coordinates in cartesian coordinates :
+      sll_real64, pointer, dimension(:, :) :: cartesian_coord !< (2,1:num_pts_tot)
+      ! Matrix containing mesh points coordinates in hex coordinates (integers) :
+      sll_int32, pointer, dimension(:, :)  :: hex_coord !< (1:2,1:num_pts_tot)
+      ! Matrix containg global indices arranged from lower corner of hexagon
+      ! and following the r2, then r1 direction
+      sll_int32, pointer, dimension(:) :: global_indices !< (1:num_pts_tot)
 
-     ! matrix containing the cartesian coordinates of the triangles' centers
-     sll_real64, pointer, dimension(:,:) :: center_cartesian_coord !<(2,num_tri)
-     ! matrix containing the index of the respective center
-     ! of the 2 triangles at the top of most points
-     sll_int32, pointer, dimension(:,:) :: center_index!< (1:2,1:num_pts_tot)
+      ! matrix containing the cartesian coordinates of the triangles' centers
+      sll_real64, pointer, dimension(:, :) :: center_cartesian_coord !<(2,num_tri)
+      ! matrix containing the index of the respective center
+      ! of the 2 triangles at the top of most points
+      sll_int32, pointer, dimension(:, :) :: center_index!< (1:2,1:num_pts_tot)
 
-     ! The following 2 tables are not always needed, to avoid useless allocation
-     ! and initialization we define a flag to know if they are required
-     sll_int32 :: EXTRA_TABLES
-     sll_real64, pointer, dimension(:,:) :: &
-          edge_center_cartesian_coord !< (1:2,1:num_edges)
-     ! matrix containing the index of the respective center of the 2 triangles
-     ! at the top of most points
-     sll_int32, pointer, dimension(:,:) :: edge_center_index!< (3,1:num_pts_tot)
+      ! The following 2 tables are not always needed, to avoid useless allocation
+      ! and initialization we define a flag to know if they are required
+      sll_int32 :: EXTRA_TABLES
+      sll_real64, pointer, dimension(:, :) :: &
+         edge_center_cartesian_coord !< (1:2,1:num_edges)
+      ! matrix containing the index of the respective center of the 2 triangles
+      ! at the top of most points
+      sll_int32, pointer, dimension(:, :) :: edge_center_index!< (3,1:num_pts_tot)
 
    contains
-     procedure, pass(mesh) :: eta1_node => eta1_node_hex
-     procedure, pass(mesh) :: eta2_node => eta2_node_hex
-     procedure, pass(mesh) :: eta1_cell_one_arg => eta1_cell_hex
-     procedure, pass(mesh) :: eta1_cell_two_arg => eta1_cell_hex_two_arg
-     procedure, pass(mesh) :: eta2_cell_one_arg => eta2_cell_hex
-     procedure, pass(mesh) :: eta2_cell_two_arg => eta2_cell_hex_two_arg
-     procedure, pass(mesh) :: index_hex_to_global
-     procedure, pass(mesh) :: hex_to_global
-     procedure, pass(mesh) :: global_to_hex1
-     procedure, pass(mesh) :: global_to_hex2
-     procedure, pass(mesh) :: global_to_x1
-     procedure, pass(mesh) :: global_to_x2
-     procedure, pass(mesh) :: sll_f_cart_to_hex1
-     procedure, pass(mesh) :: sll_f_cart_to_hex2
-     procedure, pass(mesh) :: global_to_local
-     procedure, pass(mesh) :: sll_f_local_to_global
-     procedure, pass(mesh) :: local_hex_to_global
-     procedure, pass(mesh) :: cell_type
-     procedure, pass(mesh) :: write_hex_mesh_2d
-     procedure, pass(mesh) :: write_hex_mesh_mtv
-     procedure, pass(mesh) :: get_neighbours
-     procedure, pass(mesh) :: hex_to_aligned_pt
-     procedure, pass(mesh) :: hex_to_aligned_elmt
-     procedure, pass(mesh) :: ref_to_hex_elmt
-     procedure, pass(mesh) :: ref_to_aligned_elmt
-     procedure, pass(mesh) :: display => sll_s_display_hex_mesh_2d
-     procedure, pass(mesh) :: write_field_hex_mesh_xmf
-     procedure, pass(mesh) :: delete => sll_s_delete_hex_mesh_2d
-  end type sll_t_hex_mesh_2d
+      procedure, pass(mesh) :: eta1_node => eta1_node_hex
+      procedure, pass(mesh) :: eta2_node => eta2_node_hex
+      procedure, pass(mesh) :: eta1_cell_one_arg => eta1_cell_hex
+      procedure, pass(mesh) :: eta1_cell_two_arg => eta1_cell_hex_two_arg
+      procedure, pass(mesh) :: eta2_cell_one_arg => eta2_cell_hex
+      procedure, pass(mesh) :: eta2_cell_two_arg => eta2_cell_hex_two_arg
+      procedure, pass(mesh) :: index_hex_to_global
+      procedure, pass(mesh) :: hex_to_global
+      procedure, pass(mesh) :: global_to_hex1
+      procedure, pass(mesh) :: global_to_hex2
+      procedure, pass(mesh) :: global_to_x1
+      procedure, pass(mesh) :: global_to_x2
+      procedure, pass(mesh) :: sll_f_cart_to_hex1
+      procedure, pass(mesh) :: sll_f_cart_to_hex2
+      procedure, pass(mesh) :: global_to_local
+      procedure, pass(mesh) :: sll_f_local_to_global
+      procedure, pass(mesh) :: local_hex_to_global
+      procedure, pass(mesh) :: cell_type
+      procedure, pass(mesh) :: write_hex_mesh_2d
+      procedure, pass(mesh) :: write_hex_mesh_mtv
+      procedure, pass(mesh) :: get_neighbours
+      procedure, pass(mesh) :: hex_to_aligned_pt
+      procedure, pass(mesh) :: hex_to_aligned_elmt
+      procedure, pass(mesh) :: ref_to_hex_elmt
+      procedure, pass(mesh) :: ref_to_aligned_elmt
+      procedure, pass(mesh) :: display => sll_s_display_hex_mesh_2d
+      procedure, pass(mesh) :: write_field_hex_mesh_xmf
+      procedure, pass(mesh) :: delete => sll_s_delete_hex_mesh_2d
+   end type sll_t_hex_mesh_2d
 
-  type hex_mesh_2d_ptr
-     type(sll_t_hex_mesh_2d), pointer :: hm
-  end type hex_mesh_2d_ptr
+   type hex_mesh_2d_ptr
+      type(sll_t_hex_mesh_2d), pointer :: hm
+   end type hex_mesh_2d_ptr
 
-  interface sll_o_delete
+   interface sll_o_delete
 !> @ingroup <DIRECTORY_NAME>
 !> @author <MODULE_AUTHOR_NAME_AND_AFFILIATION>
 !> @brief <BRIEF_DESCRIPTION>
 !> @details <DETAILED_DESCRIPTION>
-     module procedure sll_s_delete_hex_mesh_2d
-  end interface sll_o_delete
+      module procedure sll_s_delete_hex_mesh_2d
+   end interface sll_o_delete
 
 contains
 
-  ! Definition of a fonction to test if an argument is present
-  ! if it is it will asign it to the object at the slot,
-  ! else it will take a default value
+   ! Definition of a fonction to test if an argument is present
+   ! if it is it will asign it to the object at the slot,
+   ! else it will take a default value
 #define TEST_PRESENCE_AND_ASSIGN_VAL( obj, arg, slot, default_val ) \
-  if( present(arg) ) then ; \
-     obj%slot = arg; \
-  else; \
-     obj%slot = default_val; \
-  end if
+   if (present(arg)) then; \
+      obj%slot = arg; \
+   else; \
+      obj%slot = default_val; \
+   end if
 
+   !-------------------------------------------------------------------------
+   !> @brief Creates and initializes a new hexagonal mesh
+   !> @details An hexagonal mesh is defined using the number of cells
+   !>          in each direction, the coordinates of its center, the
+   !>          generator vectors values, and the radius
+   !> @param num_cells integer denoting the number of cells in
+   !> any direction parting from origin
+   !> @param center_x1 optional real: first cartesian coordinate of the origin
+   !> @param center_x2 optional real: second cartesian coordinate of the origin
+   !> @param r11 optional real: 1st cartesian coordinate of 1st generating vector
+   !> @param r12 optional real: 2nd cartesian coordinate of 1st generating vector
+   !> @param r21 optional real: 1st cartesian coordinate of 2nd generating vector
+   !> @param r22 optional real: 2nd cartesian coordinate of 2nd generating vector
+   !> @param r31 optional real: 1st cartesian coordinate of 3rd generating vector
+   !> @param r32 optional real: 2nd cartesian coordinate of 3rd generating vector
+   !> @param radius optional real: distance between origin and external vertex
+   !> @param EXTRA_TABLES integer flag: if set to 1 additional tables (for edges'
+   !> center) will be created
+   !> return a pointer to the newly allocated object.
+   function sll_f_new_hex_mesh_2d( &
+      num_cells, &
+      center_x1, &
+      center_x2, &
+      r11, &
+      r12, &
+      r21, &
+      r22, &
+      r31, &
+      r32, &
+      radius, &
+      EXTRA_TABLES) result(mesh)
 
-  !-------------------------------------------------------------------------
-  !> @brief Creates and initializes a new hexagonal mesh
-  !> @details An hexagonal mesh is defined using the number of cells
-  !>          in each direction, the coordinates of its center, the
-  !>          generator vectors values, and the radius
-  !> @param num_cells integer denoting the number of cells in
-  !> any direction parting from origin
-  !> @param center_x1 optional real: first cartesian coordinate of the origin
-  !> @param center_x2 optional real: second cartesian coordinate of the origin
-  !> @param r11 optional real: 1st cartesian coordinate of 1st generating vector
-  !> @param r12 optional real: 2nd cartesian coordinate of 1st generating vector
-  !> @param r21 optional real: 1st cartesian coordinate of 2nd generating vector
-  !> @param r22 optional real: 2nd cartesian coordinate of 2nd generating vector
-  !> @param r31 optional real: 1st cartesian coordinate of 3rd generating vector
-  !> @param r32 optional real: 2nd cartesian coordinate of 3rd generating vector
-  !> @param radius optional real: distance between origin and external vertex
-  !> @param EXTRA_TABLES integer flag: if set to 1 additional tables (for edges'
-  !> center) will be created
-  !> return a pointer to the newly allocated object.
-  function sll_f_new_hex_mesh_2d( &
-       num_cells, &
-       center_x1, &
-       center_x2, &
-       r11, &
-       r12, &
-       r21, &
-       r22, &
-       r31, &
-       r32, &
-       radius, &
-       EXTRA_TABLES) result(mesh)
+      type(sll_t_hex_mesh_2d), pointer :: mesh
+      sll_int32, intent(in) :: num_cells
+      sll_real64, optional, intent(in) :: radius
+      sll_real64, optional, intent(in) :: center_x1
+      sll_real64, optional, intent(in) :: center_x2
+      sll_real64, optional, intent(in) :: r11, r12
+      sll_real64, optional, intent(in) :: r21, r22
+      sll_real64, optional, intent(in) :: r31, r32
+      sll_int32, optional, intent(in) :: EXTRA_TABLES
+      sll_int32 :: ierr
 
-    type(sll_t_hex_mesh_2d), pointer :: mesh
-    sll_int32,            intent(in) :: num_cells
-    sll_real64, optional, intent(in) :: radius
-    sll_real64, optional, intent(in) :: center_x1
-    sll_real64, optional, intent(in) :: center_x2
-    sll_real64, optional, intent(in) :: r11, r12
-    sll_real64, optional, intent(in) :: r21, r22
-    sll_real64, optional, intent(in) :: r31, r32
-    sll_int32,  optional, intent(in) :: EXTRA_TABLES
-    sll_int32 :: ierr
+      SLL_ALLOCATE(mesh, ierr)
 
-    SLL_ALLOCATE(mesh, ierr)
-
-    call sll_s_hex_mesh_2d_init( &
+      call sll_s_hex_mesh_2d_init( &
          mesh, &
          num_cells, &
          radius, &
@@ -217,2033 +216,2002 @@ contains
          r32, &
          EXTRA_TABLES)
 
-  end function sll_f_new_hex_mesh_2d
+   end function sll_f_new_hex_mesh_2d
 
-  !-------------------------------------------------------------------------
-  !> @brief initializes a previously allocated 2d hex-mesh
-  !> @param num_cells integer denoting the number of cells in
-  !> any direction parting from origin
-  !> @param center_x1 optional real: first cartesian coordinate of the origin
-  !> @param center_x2 optional real: second cartesian coordinate of the origin
-  !> @param r11 optional real: 1st cartesian coordinate of 1st generating vector
-  !> @param r12 optional real: 2nd cartesian coordinate of 1st generating vector
-  !> @param r21 optional real: 1st cartesian coordinate of 2nd generating vector
-  !> @param r22 optional real: 2nd cartesian coordinate of 2nd generating vector
-  !> @param r31 optional real: 1st cartesian coordinate of 3rd generating vector
-  !> @param r32 optional real: 2nd cartesian coordinate of 3rd generating vector
-  !> @param radius optional real: distance between origin and external vertex
-  !> @param EXTRA_TABLES integer flag: if set to 1 additional tables (for edges'
-  !> center) will be created
-  !> return a pointer to the newly allocated object.
-  subroutine sll_s_hex_mesh_2d_init( &
-       mesh, &
-       num_cells, &
-       radius,    &
-       center_x1, &
-       center_x2, &
-       r1_x1,     &
-       r1_x2,     &
-       r2_x1,     &
-       r2_x2,     &
-       r3_x1,     &
-       r3_x2,     &
-       EXTRA_TABLES)
+   !-------------------------------------------------------------------------
+   !> @brief initializes a previously allocated 2d hex-mesh
+   !> @param num_cells integer denoting the number of cells in
+   !> any direction parting from origin
+   !> @param center_x1 optional real: first cartesian coordinate of the origin
+   !> @param center_x2 optional real: second cartesian coordinate of the origin
+   !> @param r11 optional real: 1st cartesian coordinate of 1st generating vector
+   !> @param r12 optional real: 2nd cartesian coordinate of 1st generating vector
+   !> @param r21 optional real: 1st cartesian coordinate of 2nd generating vector
+   !> @param r22 optional real: 2nd cartesian coordinate of 2nd generating vector
+   !> @param r31 optional real: 1st cartesian coordinate of 3rd generating vector
+   !> @param r32 optional real: 2nd cartesian coordinate of 3rd generating vector
+   !> @param radius optional real: distance between origin and external vertex
+   !> @param EXTRA_TABLES integer flag: if set to 1 additional tables (for edges'
+   !> center) will be created
+   !> return a pointer to the newly allocated object.
+   subroutine sll_s_hex_mesh_2d_init( &
+      mesh, &
+      num_cells, &
+      radius, &
+      center_x1, &
+      center_x2, &
+      r1_x1, &
+      r1_x2, &
+      r2_x1, &
+      r2_x2, &
+      r3_x1, &
+      r3_x2, &
+      EXTRA_TABLES)
 
+      type(sll_t_hex_mesh_2d)          :: mesh
+      sll_int32, intent(in) :: num_cells
+      sll_real64, optional, intent(in) :: radius
+      sll_real64, optional, intent(in) :: center_x1
+      sll_real64, optional, intent(in) :: center_x2
+      sll_real64, optional, intent(in) :: r1_x1, r1_x2
+      sll_real64, optional, intent(in) :: r2_x1, r2_x2
+      sll_real64, optional, intent(in) :: r3_x1, r3_x2
+      sll_int32, optional, intent(in) :: EXTRA_TABLES
+      sll_int32  :: ierr
+      sll_int32  :: i, j, global
+      sll_real64 :: position_x1
+      sll_real64 :: position_x2
+      sll_int32  :: k1, k2
+      sll_int32  :: index_tab
+      ! variables for optmizing computing time :
+      sll_int32  :: num_cells_plus1
+      sll_int32  :: num_cells_plus2
 
-    type(sll_t_hex_mesh_2d)          :: mesh
-    sll_int32,            intent(in) :: num_cells
-    sll_real64, optional, intent(in) :: radius
-    sll_real64, optional, intent(in) :: center_x1
-    sll_real64, optional, intent(in) :: center_x2
-    sll_real64, optional, intent(in) :: r1_x1, r1_x2
-    sll_real64, optional, intent(in) :: r2_x1, r2_x2
-    sll_real64, optional, intent(in) :: r3_x1, r3_x2
-    sll_int32,  optional, intent(in) :: EXTRA_TABLES
-    sll_int32  :: ierr
-    sll_int32  :: i, j, global
-    sll_real64 :: position_x1
-    sll_real64 :: position_x2
-    sll_int32  :: k1, k2
-    sll_int32  :: index_tab
-    ! variables for optmizing computing time :
-    sll_int32  :: num_cells_plus1
-    sll_int32  :: num_cells_plus2
+      ! By default the hexagonal mesh is centered at the (0,0) point
+      TEST_PRESENCE_AND_ASSIGN_VAL(mesh, center_x1, center_x1, 0.0_f64)
+      TEST_PRESENCE_AND_ASSIGN_VAL(mesh, center_x2, center_x2, 0.0_f64)
 
+      ! By default the hexagonal mesh has a radius of 1.
+      TEST_PRESENCE_AND_ASSIGN_VAL(mesh, radius, radius, 1.0_f64)
 
-    ! By default the hexagonal mesh is centered at the (0,0) point
-    TEST_PRESENCE_AND_ASSIGN_VAL( mesh, center_x1, center_x1, 0.0_f64 )
-    TEST_PRESENCE_AND_ASSIGN_VAL( mesh, center_x2, center_x2, 0.0_f64 )
+      ! By default the hexagonal mesh has for generator vectors :
+      ! r1 = (r11, r12) = ( sqrt(3)/2, 1/2 )
+      ! r2 = (r21, r22) = (-sqrt(3)/2, 1/2 )
+      ! r3 = (r31, r32) = ( 0, 1 )
+      TEST_PRESENCE_AND_ASSIGN_VAL(mesh, r1_x1, r1_x1, sll_p_sqrt3*0.5_f64)
+      TEST_PRESENCE_AND_ASSIGN_VAL(mesh, r1_x2, r1_x2, 0.5_f64)
+      TEST_PRESENCE_AND_ASSIGN_VAL(mesh, r2_x1, r2_x1, -sll_p_sqrt3*0.5_f64)
+      TEST_PRESENCE_AND_ASSIGN_VAL(mesh, r2_x2, r2_x2, 0.5_f64)
+      TEST_PRESENCE_AND_ASSIGN_VAL(mesh, r3_x1, r3_x1, 0.0_f64)
+      TEST_PRESENCE_AND_ASSIGN_VAL(mesh, r3_x2, r3_x2, 1.0_f64)
 
-    ! By default the hexagonal mesh has a radius of 1.
-    TEST_PRESENCE_AND_ASSIGN_VAL( mesh, radius, radius, 1.0_f64 )
+      mesh%num_cells = num_cells
+      mesh%delta = mesh%radius/real(num_cells, f64)
 
-    ! By default the hexagonal mesh has for generator vectors :
-    ! r1 = (r11, r12) = ( sqrt(3)/2, 1/2 )
-    ! r2 = (r21, r22) = (-sqrt(3)/2, 1/2 )
-    ! r3 = (r31, r32) = ( 0, 1 )
-    TEST_PRESENCE_AND_ASSIGN_VAL(mesh, r1_x1, r1_x1, sll_p_sqrt3 * 0.5_f64)
-    TEST_PRESENCE_AND_ASSIGN_VAL(mesh, r1_x2, r1_x2, 0.5_f64)
-    TEST_PRESENCE_AND_ASSIGN_VAL(mesh, r2_x1, r2_x1, -sll_p_sqrt3 * 0.5_f64)
-    TEST_PRESENCE_AND_ASSIGN_VAL(mesh, r2_x2, r2_x2, 0.5_f64)
-    TEST_PRESENCE_AND_ASSIGN_VAL(mesh, r3_x1, r3_x1, 0.0_f64)
-    TEST_PRESENCE_AND_ASSIGN_VAL(mesh, r3_x2, r3_x2, 1.0_f64)
+      ! The formula is = 6*sum(num_cells)+1 which simplifies to :
+      mesh%num_pts_tot = 3*mesh%num_cells*(mesh%num_cells + 1) + 1
 
-    mesh%num_cells = num_cells
-    mesh%delta = mesh%radius/real(num_cells,f64)
+      ! resizing :
+      mesh%r1_x1 = mesh%r1_x1*mesh%delta
+      mesh%r1_x2 = mesh%r1_x2*mesh%delta
+      mesh%r2_x1 = mesh%r2_x1*mesh%delta
+      mesh%r2_x2 = mesh%r2_x2*mesh%delta
+      mesh%r3_x1 = mesh%r3_x1*mesh%delta
+      mesh%r3_x2 = mesh%r3_x2*mesh%delta
 
-    ! The formula is = 6*sum(num_cells)+1 which simplifies to :
-    mesh%num_pts_tot   = 3 * mesh%num_cells * (mesh%num_cells + 1) + 1
-
-    ! resizing :
-    mesh%r1_x1 = mesh%r1_x1 * mesh%delta
-    mesh%r1_x2 = mesh%r1_x2 * mesh%delta
-    mesh%r2_x1 = mesh%r2_x1 * mesh%delta
-    mesh%r2_x2 = mesh%r2_x2 * mesh%delta
-    mesh%r3_x1 = mesh%r3_x1 * mesh%delta
-    mesh%r3_x2 = mesh%r3_x2 * mesh%delta
-
-    if ( mesh%radius <= 0.0_f64) then
-       print*,'ERROR, initialize_hex_mesh_2d(): ', &
+      if (mesh%radius <= 0.0_f64) then
+         print *, 'ERROR, initialize_hex_mesh_2d(): ', &
             'Problem to construct the mesh 2d '
-       print*,'because radius <= 0.'
-       STOP
-    end if
-    if ( mesh%num_cells <= 0) then
-       print*,'ERROR, initialize_hex_mesh_2d(): ', &
+         print *, 'because radius <= 0.'
+         STOP
+      end if
+      if (mesh%num_cells <= 0) then
+         print *, 'ERROR, initialize_hex_mesh_2d(): ', &
             'Problem to construct the mesh 2d '
-       print*,'because num_cells <= 0.'
-       STOP
-    end if
+         print *, 'because num_cells <= 0.'
+         STOP
+      end if
 
-    ! Allocation and initialization of coordinate matrices
-    ! and conectivity matrix
-    SLL_ALLOCATE(mesh%cartesian_coord(2, mesh%num_pts_tot), ierr)
-    SLL_ALLOCATE(mesh%hex_coord(2, mesh%num_pts_tot), ierr)
-    SLL_ALLOCATE(mesh%global_indices(mesh%num_pts_tot), ierr)
-    mesh%cartesian_coord(:,:)          = 0._f64
-    mesh%hex_coord(:,:)                = 0
-    mesh%global_indices(:)             = -1
+      ! Allocation and initialization of coordinate matrices
+      ! and conectivity matrix
+      SLL_ALLOCATE(mesh%cartesian_coord(2, mesh%num_pts_tot), ierr)
+      SLL_ALLOCATE(mesh%hex_coord(2, mesh%num_pts_tot), ierr)
+      SLL_ALLOCATE(mesh%global_indices(mesh%num_pts_tot), ierr)
+      mesh%cartesian_coord(:, :) = 0._f64
+      mesh%hex_coord(:, :) = 0
+      mesh%global_indices(:) = -1
 
-    ! Initializing coordinates of first mesh point (ie. center of hexagon)
-    mesh%cartesian_coord(1,1) = mesh%center_x1
-    mesh%cartesian_coord(2,1) = mesh%center_x2
+      ! Initializing coordinates of first mesh point (ie. center of hexagon)
+      mesh%cartesian_coord(1, 1) = mesh%center_x1
+      mesh%cartesian_coord(2, 1) = mesh%center_x2
 
-    !Useful variables
-    num_cells_plus1 = num_cells + 1
-    num_cells_plus2 = num_cells + 2
+      !Useful variables
+      num_cells_plus1 = num_cells + 1
+      num_cells_plus2 = num_cells + 2
 
-    ! ---------------------------------------------------------------------
-    ! BEGIN MATRICES INITIALIZATION ---------------------------------------
+      ! ---------------------------------------------------------------------
+      ! BEGIN MATRICES INITIALIZATION ---------------------------------------
 
-    ! Initializing coordinates of first mesh point (ie. center of hexagon)
-    global = 1
-    position_x1 = mesh%center_x1
-    position_x2 = mesh%center_x2 ! variable containing current position
-    mesh%cartesian_coord(1,global) = position_x1
-    mesh%cartesian_coord(2,global) = position_x2
+      ! Initializing coordinates of first mesh point (ie. center of hexagon)
+      global = 1
+      position_x1 = mesh%center_x1
+      position_x2 = mesh%center_x2 ! variable containing current position
+      mesh%cartesian_coord(1, global) = position_x1
+      mesh%cartesian_coord(2, global) = position_x2
 
-    do i = 1, num_cells ! variable following r1
-       ! Incrementation on r1 direction as we are going to the next hexagon
-       position_x1 = position_x1 + mesh%r1_x1
-       position_x2 = position_x2 + mesh%r1_x2
+      do i = 1, num_cells ! variable following r1
+         ! Incrementation on r1 direction as we are going to the next hexagon
+         position_x1 = position_x1 + mesh%r1_x1
+         position_x2 = position_x2 + mesh%r1_x2
 
-       ! We follow each hexagon edge :
-       ! First edge
-       do j = 1, i ! following r2, the number of points on edge = i
-          global = global + 1
+         ! We follow each hexagon edge :
+         ! First edge
+         do j = 1, i ! following r2, the number of points on edge = i
+            global = global + 1
 
-          mesh%cartesian_coord(1, global) = position_x1
-          mesh%cartesian_coord(2, global) = position_x2
+            mesh%cartesian_coord(1, global) = position_x1
+            mesh%cartesian_coord(2, global) = position_x2
 
-          mesh%hex_coord(1, global) = i
-          mesh%hex_coord(2, global) = j-1
+            mesh%hex_coord(1, global) = i
+            mesh%hex_coord(2, global) = j - 1
 
-          position_x1 = position_x1 + mesh%r2_x1
-          position_x2 = position_x2 + mesh%r2_x2
-       end do
+            position_x1 = position_x1 + mesh%r2_x1
+            position_x2 = position_x2 + mesh%r2_x2
+         end do
 
-       ! Second edge
-       do j = 1, i ! following -r1
-          global = global + 1
+         ! Second edge
+         do j = 1, i ! following -r1
+            global = global + 1
 
-          mesh%cartesian_coord(1, global) = position_x1
-          mesh%cartesian_coord(2, global) = position_x2
+            mesh%cartesian_coord(1, global) = position_x1
+            mesh%cartesian_coord(2, global) = position_x2
 
-          mesh%hex_coord(1, global) = i-j+1
-          mesh%hex_coord(2, global) = i
+            mesh%hex_coord(1, global) = i - j + 1
+            mesh%hex_coord(2, global) = i
 
-          position_x1 = position_x1 - mesh%r1_x1
-          position_x2 = position_x2 - mesh%r1_x2
-       end do
+            position_x1 = position_x1 - mesh%r1_x1
+            position_x2 = position_x2 - mesh%r1_x2
+         end do
 
-       ! Third edge
-       do j = 1, i ! following -r3
-          global = global + 1
+         ! Third edge
+         do j = 1, i ! following -r3
+            global = global + 1
 
-          mesh%cartesian_coord(1, global) = position_x1
-          mesh%cartesian_coord(2, global) = position_x2
+            mesh%cartesian_coord(1, global) = position_x1
+            mesh%cartesian_coord(2, global) = position_x2
 
-          mesh%hex_coord(1, global) = -j+1
-          mesh%hex_coord(2, global) = i-j+1
+            mesh%hex_coord(1, global) = -j + 1
+            mesh%hex_coord(2, global) = i - j + 1
 
-          position_x1 = position_x1 - mesh%r3_x1
-          position_x2 = position_x2 - mesh%r3_x2
-       end do
+            position_x1 = position_x1 - mesh%r3_x1
+            position_x2 = position_x2 - mesh%r3_x2
+         end do
 
-       ! Fourth edge
-       do j = 1, i ! following -r2
-          global = global + 1
+         ! Fourth edge
+         do j = 1, i ! following -r2
+            global = global + 1
 
-          mesh%cartesian_coord(1, global) = position_x1
-          mesh%cartesian_coord(2, global) = position_x2
+            mesh%cartesian_coord(1, global) = position_x1
+            mesh%cartesian_coord(2, global) = position_x2
 
-          mesh%hex_coord(1, global) = -i
-          mesh%hex_coord(2, global) = -j+1
+            mesh%hex_coord(1, global) = -i
+            mesh%hex_coord(2, global) = -j + 1
 
-          position_x1 = position_x1 - mesh%r2_x1
-          position_x2 = position_x2 - mesh%r2_x2
-       end do
+            position_x1 = position_x1 - mesh%r2_x1
+            position_x2 = position_x2 - mesh%r2_x2
+         end do
 
-       ! Fifth edge
-       do j = 1, i ! following r1
-          global = global + 1
+         ! Fifth edge
+         do j = 1, i ! following r1
+            global = global + 1
 
-          mesh%cartesian_coord(1, global) = position_x1
-          mesh%cartesian_coord(2, global) = position_x2
+            mesh%cartesian_coord(1, global) = position_x1
+            mesh%cartesian_coord(2, global) = position_x2
 
-          mesh%hex_coord(1, global) = -i+j-1
-          mesh%hex_coord(2, global) = -i
+            mesh%hex_coord(1, global) = -i + j - 1
+            mesh%hex_coord(2, global) = -i
 
-          position_x1 = position_x1 + mesh%r1_x1
-          position_x2 = position_x2 + mesh%r1_x2
-       end do
+            position_x1 = position_x1 + mesh%r1_x1
+            position_x2 = position_x2 + mesh%r1_x2
+         end do
 
-       ! Sixth edge
-       do j = 1, i ! following r3
-          global = global + 1
+         ! Sixth edge
+         do j = 1, i ! following r3
+            global = global + 1
 
-          mesh%cartesian_coord(1, global) = position_x1
-          mesh%cartesian_coord(2, global) = position_x2
+            mesh%cartesian_coord(1, global) = position_x1
+            mesh%cartesian_coord(2, global) = position_x2
 
-          mesh%hex_coord(1, global) = j-1
-          mesh%hex_coord(2, global) = -i+j-1
+            mesh%hex_coord(1, global) = j - 1
+            mesh%hex_coord(2, global) = -i + j - 1
 
-          position_x1 = position_x1 + mesh%r3_x1
-          position_x2 = position_x2 + mesh%r3_x2
-       end do
-    end do
+            position_x1 = position_x1 + mesh%r3_x1
+            position_x2 = position_x2 + mesh%r3_x2
+         end do
+      end do
 
-    ! Filling the global_indices table.
-    do global = 1, mesh%num_pts_tot 
+      ! Filling the global_indices table.
+      do global = 1, mesh%num_pts_tot
 
-       k1 = mesh%hex_coord(1, global)
-       k2 = mesh%hex_coord(2, global)
+         k1 = mesh%hex_coord(1, global)
+         k2 = mesh%hex_coord(2, global)
 
-       ! in order to switch from hexa coordinates to the global index
-       ! we need a routine that will compute a unique number index_tab
-       ! from the hexa coordinates. this unique number will index the array
-       ! global_indices which contains the numerotation
+         ! in order to switch from hexa coordinates to the global index
+         ! we need a routine that will compute a unique number index_tab
+         ! from the hexa coordinates. this unique number will index the array
+         ! global_indices which contains the numerotation
 
-       call index_hex_to_global(mesh, k1, k2, index_tab)
+         call index_hex_to_global(mesh, k1, k2, index_tab)
 
-       mesh%global_indices(index_tab)= global
+         mesh%global_indices(index_tab) = global
 
-    end do
+      end do
 
-    mesh%num_triangles = 6 * num_cells * num_cells
-    SLL_ALLOCATE(mesh%center_cartesian_coord(2, mesh%num_triangles), ierr)
-    SLL_ALLOCATE(mesh%center_index(2, mesh%num_pts_tot), ierr)
-    ! we  compute the cartesian coordinates and the indices
-    ! of the centers of the triangles of the mesh
-    call init_center_points_triangle(mesh)
+      mesh%num_triangles = 6*num_cells*num_cells
+      SLL_ALLOCATE(mesh%center_cartesian_coord(2, mesh%num_triangles), ierr)
+      SLL_ALLOCATE(mesh%center_index(2, mesh%num_pts_tot), ierr)
+      ! we  compute the cartesian coordinates and the indices
+      ! of the centers of the triangles of the mesh
+      call init_center_points_triangle(mesh)
 
+      ! if needed we can compute the cartesian coordinates and the indices
+      ! of the edges' center of each triangle
+      mesh%num_edges = 3*num_cells*(3*num_cells + 1)
 
-    ! if needed we can compute the cartesian coordinates and the indices
-    ! of the edges' center of each triangle
-    mesh%num_edges = 3 * num_cells * ( 3 * num_cells + 1 )
+      TEST_PRESENCE_AND_ASSIGN_VAL(mesh, EXTRA_TABLES, EXTRA_TABLES, 0)
+      if (mesh%EXTRA_TABLES .eq. 1) then
+         SLL_ALLOCATE(mesh%edge_center_cartesian_coord(2, mesh%num_edges), ierr)
+         SLL_ALLOCATE(mesh%edge_center_index(3, mesh%num_pts_tot), ierr)
+         call init_edge_center_triangle(mesh)
+      end if
 
-    TEST_PRESENCE_AND_ASSIGN_VAL( mesh, EXTRA_TABLES, EXTRA_TABLES, 0 )
-    if (mesh%EXTRA_TABLES.eq.1) then
-       SLL_ALLOCATE(mesh%edge_center_cartesian_coord(2, mesh%num_edges), ierr)
-       SLL_ALLOCATE(mesh%edge_center_index(3, mesh%num_pts_tot), ierr)
-       call init_edge_center_triangle(mesh)
-    end if
+      ! ----------------------------------------- END MATRICES INITIALIZATION
+      ! ---------------------------------------------------------------------
 
-
-    ! ----------------------------------------- END MATRICES INITIALIZATION
-    ! ---------------------------------------------------------------------
-
-  end subroutine sll_s_hex_mesh_2d_init
-
+   end subroutine sll_s_hex_mesh_2d_init
 
 !---------------------------------------------------------------------------
 !> @brief <BRIEF_DESCRIPTION>
 !> @details <DETAILED_DESCRIPTION>
 !> @param[<IN or OUT or INOUT>] <PARAM1> <DESCRIPTION>
 !> @param[<IN or OUT or INOUT>] <PARAM2> <DESCRIPTION>
-  subroutine init_center_points_triangle(mesh)
-    class(sll_t_hex_mesh_2d) :: mesh
-    sll_int32          :: center_index, global
-    sll_real64         :: k1, k2
-    sll_real64         :: x1, x2, x3
-    sll_real64         :: y1, y2, y3
-    sll_real64         :: xx, yy, r1x1
-    sll_real64         :: jacob, k1c, k2c
-    logical            :: inside
+   subroutine init_center_points_triangle(mesh)
+      class(sll_t_hex_mesh_2d) :: mesh
+      sll_int32          :: center_index, global
+      sll_real64         :: k1, k2
+      sll_real64         :: x1, x2, x3
+      sll_real64         :: y1, y2, y3
+      sll_real64         :: xx, yy, r1x1
+      sll_real64         :: jacob, k1c, k2c
+      logical            :: inside
 
-    jacob = mesh%r1_x1 * mesh%r2_x2 - mesh%r2_x1 * mesh%r1_x2
+      jacob = mesh%r1_x1*mesh%r2_x2 - mesh%r2_x1*mesh%r1_x2
 
-    mesh%center_cartesian_coord(:,:)   = 0._f64
-    mesh%center_index(:,:)             = -1
+      mesh%center_cartesian_coord(:, :) = 0._f64
+      mesh%center_index(:, :) = -1
 
-    center_index = 0
+      center_index = 0
 
-    r1x1 =  mesh%r1_x1*real(mesh%num_cells,f64)
+      r1x1 = mesh%r1_x1*real(mesh%num_cells, f64)
 
-    do global = 1, mesh%num_pts_tot
-       ! almost each point is the base of a lozenge , thus two triangle
-       ! from which we get two center points
+      do global = 1, mesh%num_pts_tot
+         ! almost each point is the base of a lozenge , thus two triangle
+         ! from which we get two center points
 
-       k1 = real(mesh%hex_coord(1, global),f64)
-       k2 = real(mesh%hex_coord(2, global),f64)
+         k1 = real(mesh%hex_coord(1, global), f64)
+         k2 = real(mesh%hex_coord(2, global), f64)
 
-       ! center point in the left triangle
+         ! center point in the left triangle
 
-       x1 = k1*mesh%r1_x1 + k2*mesh%r2_x1
-       x2 = k1*mesh%r1_x1 + (k2+1)*mesh%r2_x1
-       x3 = (k1+1)*mesh%r1_x1 + (k2+1)*mesh%r2_x1
-       y1 = k1*mesh%r1_x2 + k2*mesh%r2_x2
-       y2 = k1*mesh%r1_x2 + (k2+1)*mesh%r2_x2
-       y3 = (k1+1)*mesh%r1_x2 + (k2+1)*mesh%r2_x2
+         x1 = k1*mesh%r1_x1 + k2*mesh%r2_x1
+         x2 = k1*mesh%r1_x1 + (k2 + 1)*mesh%r2_x1
+         x3 = (k1 + 1)*mesh%r1_x1 + (k2 + 1)*mesh%r2_x1
+         y1 = k1*mesh%r1_x2 + k2*mesh%r2_x2
+         y2 = k1*mesh%r1_x2 + (k2 + 1)*mesh%r2_x2
+         y3 = (k1 + 1)*mesh%r1_x2 + (k2 + 1)*mesh%r2_x2
 
-       xx = x2 + ( (x3+x1)*0.5_f64 - x2 )* 2.0_f64 / 3.0_f64
-       yy = y2 + ( (y3+y1)*0.5_f64 - y2 )* 2.0_f64 / 3.0_f64
+         xx = x2 + ((x3 + x1)*0.5_f64 - x2)*2.0_f64/3.0_f64
+         yy = y2 + ((y3 + y1)*0.5_f64 - y2)*2.0_f64/3.0_f64
 
-       !test to check if the triangle on the left is inside
+         !test to check if the triangle on the left is inside
 
-       inside = .true.
+         inside = .true.
 
-       k1c = abs(mesh%r2_x2 * xx - mesh%r2_x1 * yy) / abs(jacob)
-       k2c = abs(mesh%r1_x1 * yy - mesh%r1_x2 * xx) / abs(jacob)
+         k1c = abs(mesh%r2_x2*xx - mesh%r2_x1*yy)/abs(jacob)
+         k2c = abs(mesh%r1_x1*yy - mesh%r1_x2*xx)/abs(jacob)
 
-       if ( ceiling(k1c) >  mesh%num_cells ) inside = .false.
-       if ( ceiling(k2c) >  mesh%num_cells ) inside = .false.
-       if ( abs(xx) > r1x1 ) inside = .false.
+         if (ceiling(k1c) > mesh%num_cells) inside = .false.
+         if (ceiling(k2c) > mesh%num_cells) inside = .false.
+         if (abs(xx) > r1x1) inside = .false.
 
-       if ( inside ) then
-          center_index = center_index + 1
-          mesh%center_cartesian_coord(1,center_index) = xx
-          mesh%center_cartesian_coord(2,center_index) = yy
-          mesh%center_index(1, global) = center_index
-       endif
+         if (inside) then
+            center_index = center_index + 1
+            mesh%center_cartesian_coord(1, center_index) = xx
+            mesh%center_cartesian_coord(2, center_index) = yy
+            mesh%center_index(1, global) = center_index
+         end if
 
+         ! center point in the right triangle
+         x1 = k1*mesh%r1_x1 + k2*mesh%r2_x1
+         x2 = (k1 + 1)*mesh%r1_x1 + k2*mesh%r2_x1
+         x3 = (k1 + 1)*mesh%r1_x1 + (k2 + 1)*mesh%r2_x1
+         y1 = k1*mesh%r1_x2 + k2*mesh%r2_x2
+         y2 = (k1 + 1)*mesh%r1_x2 + k2*mesh%r2_x2
+         y3 = (k1 + 1)*mesh%r1_x2 + (k2 + 1)*mesh%r2_x2
 
-       ! center point in the right triangle
-       x1 = k1*mesh%r1_x1     + k2*mesh%r2_x1
-       x2 = (k1+1)*mesh%r1_x1 + k2*mesh%r2_x1
-       x3 = (k1+1)*mesh%r1_x1 + (k2+1)*mesh%r2_x1
-       y1 = k1*mesh%r1_x2     + k2*mesh%r2_x2
-       y2 = (k1+1)*mesh%r1_x2 + k2*mesh%r2_x2
-       y3 = (k1+1)*mesh%r1_x2 + (k2+1)*mesh%r2_x2
+         xx = x2 + ((x3 + x1)*0.5_f64 - x2)*2.0_f64/3.0_f64
+         yy = y2 + ((y3 + y1)*0.5_f64 - y2)*2.0_f64/3.0_f64
 
-       xx = x2 + ( (x3+x1)*0.5_f64 - x2 )* 2.0_f64 / 3.0_f64
-       yy = y2 + ( (y3+y1)*0.5_f64 - y2 )* 2.0_f64 / 3.0_f64
+         ! test to check if the triangle on the left is inside
 
-       ! test to check if the triangle on the left is inside
+         inside = .true.
 
-       inside = .true.
+         k1c = abs(mesh%r2_x2*xx - mesh%r2_x1*yy)/abs(jacob)
+         k2c = abs(mesh%r1_x1*yy - mesh%r1_x2*xx)/abs(jacob)
 
+         if (ceiling(k1c) > mesh%num_cells) inside = .false.
+         if (ceiling(k2c) > mesh%num_cells) inside = .false.
+         if (abs(xx) > r1x1) inside = .false.
 
-       k1c = abs(mesh%r2_x2 * xx - mesh%r2_x1 * yy) / abs(jacob)
-       k2c = abs(mesh%r1_x1 * yy - mesh%r1_x2 * xx) / abs(jacob)
+         if (inside) then
+            center_index = center_index + 1
+            mesh%center_cartesian_coord(1, center_index) = xx
+            mesh%center_cartesian_coord(2, center_index) = yy
+            mesh%center_index(2, global) = center_index
+         end if
 
-       if ( ceiling(k1c) >  mesh%num_cells ) inside = .false.
-       if ( ceiling(k2c) >  mesh%num_cells ) inside = .false.
-       if ( abs(xx) > r1x1 ) inside = .false.
+      end do
 
-       if ( inside ) then
-          center_index = center_index + 1
-          mesh%center_cartesian_coord(1,center_index) = xx
-          mesh%center_cartesian_coord(2,center_index) = yy
-          mesh%center_index(2, global) = center_index
-       endif
-
-    enddo
-
-  end subroutine init_center_points_triangle
-
+   end subroutine init_center_points_triangle
 
 !---------------------------------------------------------------------------
 !> @brief <BRIEF_DESCRIPTION>
 !> @details <DETAILED_DESCRIPTION>
 !> @param[<IN or OUT or INOUT>] <PARAM1> <DESCRIPTION>
 !> @param[<IN or OUT or INOUT>] <PARAM2> <DESCRIPTION>
-  subroutine init_edge_center_triangle(mesh)
-    class(sll_t_hex_mesh_2d) :: mesh
-    sll_int32          :: edge_index
-    sll_int32          :: global, num_cells
-    sll_int32          :: k1, k2, k1c, k2c
-    sll_real64         :: x1, x2_l,x2_r, x3, y1, y2_l, y2_r, y3, xx, yy
-    logical            :: inside
-
-    num_cells = mesh%num_cells
-
-    mesh%edge_center_cartesian_coord(:,:)   = 0._f64
-    mesh%edge_center_index(:,:)             = -1
-    edge_index = 0
-
-    do global = 1, mesh%num_pts_tot
-       ! almost each point is the base of a lozenge , thus two triangle
-       ! from which we get two center points
-
-       k1 = mesh%hex_coord(1, global)
-       k2 = mesh%hex_coord(2, global)
-
-       x1   = real(k1,f64)*mesh%r1_x1 + real(k2,f64)*mesh%r2_x1
-       x2_l = real(k1,f64)*mesh%r1_x1 + real((k2+1),f64)*mesh%r2_x1
-       x2_r = real((k1+1),f64)*mesh%r1_x1 + real(k2,f64)*mesh%r2_x1
-       x3   = real((k1+1),f64)*mesh%r1_x1 + real((k2+1),f64)*mesh%r2_x1
-       y1   = real(k1,f64)*mesh%r1_x2 + real(k2,f64)*mesh%r2_x2
-       y2_l = real(k1,f64)*mesh%r1_x2 + real((k2+1),f64)*mesh%r2_x2
-       y2_r = real((k1+1),f64)*mesh%r1_x2 + real(k2,f64)*mesh%r2_x2
-       y3   = real((k1+1),f64)*mesh%r1_x2 + real((k2+1),f64)*mesh%r2_x2
-
-       !test to check if the left edge is inside
-
-       inside = .true.
-
-       k1c = k1
-       k2c = k2 + 1
-
-       if ( abs(k1c) > num_cells .or. abs(k2c) > num_cells .or. &
-            (k1c)*(k2c)<0 .and.( abs(k1c)+abs(k2c) > num_cells) ) inside=.false.
-
-       if ( inside ) then
-          ! center point of the left edge
-          xx = (x1+x2_l)*0.5_f64
-          yy = (y1+y2_l)*0.5_f64
-          edge_index = edge_index + 1
-          mesh%edge_center_cartesian_coord(1,edge_index) = xx
-          mesh%edge_center_cartesian_coord(2,edge_index) = yy
-          mesh%edge_center_index(1, global) = edge_index
-       endif
-
-
-       !test to check if the middle edge is inside
-
-       inside = .true.
-
-       k1c = k1 + 1
-       k2c = k2 + 1
-
-       if ( abs(k1c) > num_cells .or. abs(k2c) > num_cells .or. &
-           (k1c)*(k2c)<0 .and.( abs(k1c)+abs(k2c) > num_cells) ) inside=.false.
-
-       if ( inside ) then
-          ! center point of the middle edge
-          xx = (x1+x3)*0.5_f64
-          yy = (y1+y3)*0.5_f64
-          edge_index = edge_index + 1
-          mesh%edge_center_cartesian_coord(1,edge_index) = xx
-          mesh%edge_center_cartesian_coord(2,edge_index) = yy
-          mesh%edge_center_index(2, global) = edge_index
-       endif
-
-
-       !test to check if the right edge is inside
-
-       inside = .true.
-
-       k1c = k1 + 1
-       k2c = k2
-
-       if ( abs(k1c) > num_cells .or. abs(k2c) > num_cells .or. &
-            (k1c)*(k2c)<0 .and.( abs(k1c)+abs(k2c) > num_cells) ) inside=.false.
-
-       if ( inside ) then
-          ! center point of the right edge
-          xx = (x1+x2_r)*0.5_f64
-          yy = (y1+y2_r)*0.5_f64
-          edge_index = edge_index + 1
-          mesh%edge_center_cartesian_coord(1,edge_index) = xx
-          mesh%edge_center_cartesian_coord(2,edge_index) = yy
-          mesh%edge_center_index(3, global) = edge_index
-       endif
-
-    enddo
-
-
-  end subroutine init_edge_center_triangle
-
-
-  !> @brief Finds the index in the global array of the point which
-  !> coordinates where passed as parameter
-  !> @details To every mesh point of associated hexagonal coordinates (k1,k2)
-  !> we can associate a global index. This notation association can be
-  !> accessed through an array initialized at the initialization of the object
-  !> This function, computes the connectivity between the hexagonal mesh
-  !> and the table.
-  !> @param k1 integer denoting the first hexagonal coordinate of a point
-  !> @param k2 integer denoting the second hexagonal coordinate of a point
-  !> @param index_tab out integer denoting the index to get the global index of
-  !> the point situated at (k1, k2)
-  subroutine index_hex_to_global(mesh, k1, k2, index_tab)
-    class(sll_t_hex_mesh_2d)     :: mesh
-    sll_int32, intent(in)  :: k1, k2
-    sll_int32, intent(out) :: index_tab
-    sll_int32              :: k
-    sll_int32              :: nk1, nk2
-    sll_int32              :: n0
-    sll_int32              :: num_cells
-    sll_int32              :: num_cells_plus1
-
-    num_cells = mesh%num_cells
-    num_cells_plus1 = num_cells + 1
-
-    ! nk1 is the number of points before the edge corresponding to k1
-    ! nk2 is the number of points on the edge k1 :
-    ! if k1<=0 the points are in [-num_cells,k2]
-    ! if k1>0  ...               [-num_cells+k1,k2]
-
-    if (k1.le.0) then
-       k    = num_cells + k1
-       !this value is always an integer, floor avoids the transformation
-       nk1  = num_cells*k + floor(real(k*(k+1))*0.5)
-       nk2  = k2 + num_cells_plus1
-    else
-       ! n0 is the total number of points from (-num_cells,-num_cells) to
-       ! ( 0, numcells)
-       n0  =  num_cells**2 + floor(real(num_cells*num_cells_plus1)*0.5)
-       nk1 = n0 + k1*(2*num_cells + 1) - floor( real(k1*(k1-1))*0.5)
-       nk2 = k2 + num_cells_plus1 - k1
-    endif
-
-    index_tab = nk1 + nk2
-
-  end subroutine index_hex_to_global
-
-
-  !> @brief Computes the first cartesian coordinate of a given point
-  !> @details Computes the first cartesian coordinate on the cartesian system 
-  !> of a point which has for hexagonal coordinates (i,j)
-  !> @param i integer denoting the first hexagonal coordinate of a point
-  !> @param j integer denoting the second hexagonal coordinate of a point
-  !> returns res real containing the coordinate "eta1"
-  function eta1_node_hex(mesh, i, j) result(res)
-    ! The coordinates (i, j) correspond to the (r1, r2) basis
-    ! This function returns the 1st coordinate on the cartesian system
-    class(sll_t_hex_mesh_2d), intent(in) :: mesh
-    sll_int32, intent(in)  :: i
-    sll_int32, intent(in)  :: j
-    sll_real64 :: res
-
-    res = mesh%r1_x1*real(i,f64) + mesh%r2_x1*real(j,f64) + mesh%center_x1
-
-  end function eta1_node_hex
-
-  !> @brief Computes the second cartesian coordinate of a given point
-  !> @details Computes the second cartesian coordinate on the cartesian system 
-  !> of a point which has for hexagonal coordinates (i,j)
-  !> @param i integer denoting the first hexagonal coordinate of a point
-  !> @param j integer denoting the second hexagonal coordinate of a point
-  !> returns res real containing the coordinate "eta2"
-  function eta2_node_hex(mesh, i, j) result(res)
-    ! The coordinates (k1, k2) correspond to the (r1, r2) basis
-    ! This function the 2nd coordinate on the cartesian system
-    class(sll_t_hex_mesh_2d), intent(in)     :: mesh
-    sll_int32, intent(in)  :: i
-    sll_int32, intent(in)  :: j
-    sll_real64  :: res
-
-    res = mesh%r1_x2*real(i,f64) + mesh%r2_x2*real(j,f64) + mesh%center_x2
-  end function eta2_node_hex
-
-
-  !> @brief Computes the first cartesian coordinate of the center of the cell
-  !> @details Computes the first coordinate (eta1) on the cartesian system
-  !> of the center of the cell which has for global index cell_num
-  !> @param[in] cell_num integer denoting the index of the cell
-  !> returns res real containing 1st cartesian coordinate of the cell's center
-  function eta1_cell_hex(mesh, cell_num) result(res)
-    ! The index cell_num corresponds to the index of triangle
-    ! This function returns the 1st coordinate on the cartesian system
-    ! of the center of the triangle at num_ele
-    class(sll_t_hex_mesh_2d), intent(in) :: mesh
-    sll_int32,              intent(in) :: cell_num
-    sll_real64 :: res
-
-    SLL_ASSERT(0 < cell_num .and. cell_num <= mesh%num_triangles)
-    res = mesh%center_cartesian_coord(1, cell_num)
-  end function eta1_cell_hex
-
-  !> @brief Computes the 2nd cartesian coordinate of the center of the cell
-  !> @details Computes the 2nd coordinate (eta2) on the cartesian system 
-  !> of the center of the cell which has for global index cell_num
-  !> @param[in] cell_num integer denoting the index of the cell
-  !> returns res real containing 2nd cartesian coordinate of the cell's center
-  function eta2_cell_hex(mesh, cell_num) result(res)
-    ! The index num_ele corresponds to the index of triangle
-    ! This function returns the 2nd coordinate on the cartesian system
-    ! of the center of the triangle at num_ele
-    class(sll_t_hex_mesh_2d), intent(in) :: mesh
-    sll_int32,              intent(in) :: cell_num
-    sll_real64 :: res
-
-    SLL_ASSERT(0 < cell_num .and. cell_num <= mesh%num_triangles)
-    res = mesh%center_cartesian_coord(2, cell_num)
-  end function eta2_cell_hex
-
-
-  !---------------------------------------------------------------------------
-  !> @brief NOT IMPLEMENTED
-  !> @details NOT IMPLEMENTED
-  !> @param[<IN or OUT or INOUT>] <PARAM1> <DESCRIPTION>
-  !> @param[<IN or OUT or INOUT>] <PARAM2> <DESCRIPTION>
-  function eta1_cell_hex_two_arg(mesh, i, j) result(res)
-    class(sll_t_hex_mesh_2d),intent(in)     :: mesh
-    sll_int32, intent(in)      :: i, j
-    sll_real64 :: res
-
-    res = real(i+j+mesh%num_cells,f64)
-    print *, "Error in eta1_cell() :"
-    print *, "   function only works with ONE parameter (num_cell)"
-    STOP
-  end function eta1_cell_hex_two_arg
-
-  !---------------------------------------------------------------------------
-  !> @brief NOT IMPLEMENTED
-  !> @details NOT IMPLEMENTED
-  !> @param[<IN or OUT or INOUT>] <PARAM1> <DESCRIPTION>
-  !> @param[<IN or OUT or INOUT>] <PARAM2> <DESCRIPTION>
-  function eta2_cell_hex_two_arg(mesh, i, j) result(res)
-    class(sll_t_hex_mesh_2d),intent(in)     :: mesh
-    sll_int32, intent(in)      :: i, j
-    sll_real64 :: res
-
-    res = real(i+j+mesh%num_cells,f64)
-    print *, "Error in eta2_cell() :"
-    print *, "   function only works with ONE parameter (num_cell)"
-    STOP
-  end function eta2_cell_hex_two_arg
-
-
-  !---------------------------------------------------------------------------
-  !> @brief Computes the number of cell from point to origin
-  !> @details Takes the coordinates (k1,k2) on the (r1,r2) basis and returns
-  !> the number of cells between that point and the origin.
-  !> If (k1, k2) = (0,0), then val = 0
-  !> @param[IN] k1 integer first hexagonal coordinate of a point
-  !> @param[IN] k2 integer second hexagonal coordinate of a point
-  !> @param[OUT] val integer number of cells to origin
-  function sll_f_cells_to_origin(k1, k2) result(val)
-    sll_int32, intent(in)   :: k1
-    sll_int32, intent(in)   :: k2
-    sll_int32               :: val
-
-    ! We compute the number of cells from point to center
-    if (k1*k2 .gt. 0) then
-       val = max(abs(k1),abs(k2))
-    else
-       val = abs(k1) + abs(k2)
-    end if
-
-  end function sll_f_cells_to_origin
-
-
-  !---------------------------------------------------------------------------
-  !> @brief Computes the type of triangle of a given cell
-  !> @details Takes a given cell and determines if it is of type II if
-  !> is oriented as the cell#2 (triangle of edges: (0,0) (sqrt(3)/2, 1/2) (0,1))
-  !> or of type I otherwise (triangle of edges: (0,0) (-sqrt(3)/2, 1/2) (0,1))
-  !> @param[IN] num_ele integer index of the element
-  !> @param[IN] mesh hexagonal mesh
-  !> @param[OUT] val integer val = 1 if triangle of type I, 2 if triangle
-  !> of type II, or -1 if there was an error
-  subroutine cell_type(mesh, num_ele, val)
-    class(sll_t_hex_mesh_2d) :: mesh
-    sll_int32, intent(in)  :: num_ele
-    sll_int32, intent(out) :: val
-    sll_int32  :: k1
-    sll_int32  :: k2
-    sll_int32  :: num_hex
-    sll_int32  :: lower_index
-    sll_real64 :: x1
-    sll_real64 :: y1
-    sll_real64 :: x2
-
-    !Initialization:
-    val = -1
-
-    ! Getting center coordinates
-    x1 = mesh%center_cartesian_coord(1, num_ele)
-    y1 = mesh%center_cartesian_coord(2, num_ele)
-    ! Getting hexagonal coordinates
-    k1 = sll_f_cart_to_hex1(mesh, x1, y1)
-    k2 = sll_f_cart_to_hex2(mesh, x1, y1)
-    !Getting number of cells to origin:
-    num_hex = sll_f_cells_to_origin(k1,k2)
-
-    ! If the cell is not on the boundary, we can determine the
-    ! type of cell only by pairity of the cell index. If it's
-    ! even then is of type II, if it's odd then it's of type I.
-    if ((num_hex .lt. mesh%num_cells).and.(mesh%num_cells.ne.1)) then
-       if (modulo(num_ele, 2) .eq. 1) then
-          val = 1
-       else
-          val = 2
-       end if
-    elseif (mesh%num_cells.eq.1) then
-       if ((num_ele.eq.1).or.(num_ele.eq.4).or.(num_ele.eq.6)) then
-          val = 1
-       else
-          val = 2
-       end if
-    else
-       ! we just see if the center of the cell is to the
-       ! right or left of the lower point
-       lower_index = hex_to_global(mesh, k1, k2)
-       x2 = mesh%cartesian_coord(1, lower_index)
-       if(x2 < x1) then
-          val = 2
-       elseif (x2 > x1) then
-          val = 1
-       end if
-    end if
-  end subroutine cell_type
-
-  !---------------------------------------------------------
-  !> @brief Transform hexagonal coordinates to global index.
-  !> @details Takes the coordinates (k1,k2) on the (r1,r2) basis and
-  !> returns global index of that mesh point. By default the index of
-  !> the center of the mesh is 0. Then following the r1 direction and
-  !> a counter-clockwise motion we assing an index to every point of the mesh.
-  !> @param[IN] mesh hexagonal mesh
-  !> @param[IN] k1 first hexagonal coordinate
-  !> @param[IN] k2 second hexagonal coordinate
-  !> @param[OUT] val global index of point at (k1, k2)
-  function hex_to_global(mesh, k1, k2) result(val)
-    class(sll_t_hex_mesh_2d)  :: mesh
-    sll_int32, intent(in)   :: k1
-    sll_int32, intent(in)   :: k2
-    sll_int32               :: distance
-    sll_int32               :: index_tab
-    sll_int32               :: val
-
-    distance = sll_f_cells_to_origin(k1,k2)
-
-    ! Test if we are in domain
-    if (distance .le. mesh%num_cells) then
-
-       call index_hex_to_global(mesh, k1, k2,index_tab)
-       val = mesh%global_indices(index_tab)
-
-    else
-       val = -1
-    end if
-
-  end function hex_to_global
-
-
-  !---------------------------------------------------------
-  !> @brief Gives the 1st hexagonal coordinate to point of global index "index".
-  !> @details Takes the global index of the point (see hex_to_global(...)
-  !> for conventions) returns the first coordinate (k1) on the (r1,r2) basis
-  !> @param[IN] mesh hexagonal mesh
-  !> @param[IN] index global index of point we need hexagonal coordinates
-  function global_to_hex1(mesh, index) result(k1)
-    class(sll_t_hex_mesh_2d) :: mesh
-    sll_int32 :: index
-    sll_int32 :: k1
-
-    k1 = mesh%hex_coord(1,index)
-  end function global_to_hex1
-
-  !---------------------------------------------------------
-  !> @brief Gives the 2nd hexagonal coordinate to point of global index "index".
-  !> @details Takes the global index of the point (see hex_to_global(...)
-  !> for conventions) returns the second coordinate (k2) on the (r1,r2) basis
-  !> @param[IN] mesh hexagonal mesh
-  !> @param[IN] index global index of point we need hexagonal coordinates
-  function global_to_hex2(mesh, index) result(k2)
-    class(sll_t_hex_mesh_2d) :: mesh
-    sll_int32 :: index
-    sll_int32 :: k2
-
-    k2 = mesh%hex_coord(2,index)
-  end function global_to_hex2
-
-  !---------------------------------------------------------
-  !> @brief Gives the 1st cartesian coordinate to point of global index "index".
-  !> @details Takes the global index of the point (see hex_to_global(...)
-  !> for conventions) returns the first coordinate (x1) on the cartesian basis
-  !> @param[IN] mesh hexagonal mesh
-  !> @param[IN] index global index of point we need hexagonal coordinates
-  function global_to_x1(mesh, index) result(x1)
-    class(sll_t_hex_mesh_2d) :: mesh
-    sll_int32  :: index
-    sll_real64 :: x1
-
-    x1 = mesh%cartesian_coord(1, index)
-  end function global_to_x1
-
-  !---------------------------------------------------------
-  !> @brief Gives the 2nd cartesian coordinate to point of global index "index".
-  !> @details Takes the global index of the point (see hex_to_global(...)
-  !> for conventions) returns the second coordinate (x2) on the cartesian basis
-  !> @param[IN] mesh hexagonal mesh
-  !> @param[IN] index global index of point we need hexagonal coordinates
-  function global_to_x2(mesh, index) result(x2)
-    class(sll_t_hex_mesh_2d) :: mesh
-    sll_int32  :: index
-    sll_real64 :: x2
-
-    x2 = mesh%cartesian_coord(2, index)
-  end function global_to_x2
-
-
-  !---------------------------------------------------------
-  !> @brief Transform cartesian coordinates to 1st hexagonal coordinates.
-  !> @details Takes the coordinates (x1,x2) on the cartesian basis and
-  !> returns the first coordinate (k1) on the (r1, r2) basis
-  !> @param[IN] mesh hexagonal mesh
-  !> @param[IN] x1 first cartesian coordinate
-  !> @param[IN] x2 second cartesian coordinate
-  function sll_f_cart_to_hex1(mesh, x1, x2) result(k1)
-    class(sll_t_hex_mesh_2d) :: mesh
-    sll_real64 :: x1
-    sll_real64 :: x2
-    sll_int32  :: k1
-    sll_real64 :: jacob
-
-    jacob = mesh%r1_x1 * mesh%r2_x2 - mesh%r2_x1 * mesh%r1_x2
-    k1 = floor((mesh%r2_x2 * x1 - mesh%r2_x1 * x2)/jacob)
-  end function sll_f_cart_to_hex1
-
-  !---------------------------------------------------------
-  !> @brief Transform cartesian coordinates to 2ndst hexagonal coordinates.
-  !> @details Takes the coordinates (x1,x2) on the cartesian basis and
-  !> returns the second coordinate (k2) on the (r1, r2) basis
-  !> @param[IN] mesh hexagonal mesh
-  !> @param[IN] x1 first cartesian coordinate
-  !> @param[IN] x2 second cartesian coordinate
-  function sll_f_cart_to_hex2(mesh, x1, x2) result(k2)
-    class(sll_t_hex_mesh_2d) :: mesh
-    sll_real64 :: x1
-    sll_real64 :: x2
-    sll_int32  :: k2
-    sll_real64 :: jacob
-
-    jacob = mesh%r1_x1 * mesh%r2_x2 - mesh%r2_x1 * mesh%r1_x2
-    k2 = floor((mesh%r1_x1 * x2 - mesh%r1_x2 * x1)/jacob)
-  end function sll_f_cart_to_hex2
-
-  !---------------------------------------------------------
-  !> @brief Transforms global to local index in respect to a reference index.
-  !> @details In the same manner that we assign global indices (see
-  !> hex_to_global(...)) we assign local indices, but this time the initial
-  !> point is the point which index is ref_index
-  !> ie. local_index(i,i) = 1
-  !> @param[IN] mesh hexagonal mesh
-  !> @param[IN] ref_index reference index from which the local index is counted
-  !> @param[IN] global global index of point we wish to know local index
-  function global_to_local(mesh, ref_index, global) result(local)
-    class(sll_t_hex_mesh_2d) :: mesh
-    sll_int32 :: ref_index
-    sll_int32 :: global
-    sll_int32 :: k1_ref,  k2_ref
-    sll_int32 :: k1_glob, k2_glob
-    sll_int32 :: local
-
-    if ((ref_index.le.mesh%num_pts_tot).and.(ref_index.gt.0) &
-         .and.(global.le.mesh%num_pts_tot).and.(global.gt.0)) then
-
-       k1_ref  = mesh%hex_coord(1,ref_index)
-       k2_ref  = mesh%hex_coord(2,ref_index)
-       k1_glob = mesh%hex_coord(1,global)
-       k2_glob = mesh%hex_coord(2,global)
-
-       local = mesh%hex_to_global(k1_ref - k1_glob, k2_ref - k2_glob)
-    else
-       ! Out of domain
-       local = -1
-    end if
-
-  end function global_to_local
-
-
-  !---------------------------------------------------------
-  !> @brief Transforms local index in a given reference local indexation
-  !> to a global index from the mesh
-  !> @details returns the global index of the point which has as
-  ! local index local_index in the ref_index system
-  ! (see gloval_index(...) and global_to_local(...) for conventions)
-  ! ie. sll_f_local_to_global(1, i) = i
-  !> @param[IN] mesh hexagonal mesh
-  !> @param[IN] ref_index reference index where the local indexation starts
-  !> @param[IN] local local index in the indexation starting at ref_index
-  function sll_f_local_to_global(mesh, ref_index, local) result(global)
-    class(sll_t_hex_mesh_2d) :: mesh
-    sll_int32 :: ref_index, local
-    sll_int32 :: k1_ref, k2_ref
-    sll_int32 :: k1_loc, k2_loc
-    sll_int32 :: global
-
-    if ((ref_index.le.mesh%num_pts_tot).and.(ref_index.gt.0) &
-         .and.(local.le.mesh%num_pts_tot).and.(local.gt.0)) then
-       k1_ref = mesh%global_to_hex1(ref_index)
-       k2_ref = mesh%global_to_hex2(ref_index)
-       k1_loc = mesh%global_to_hex1(local)
-       k2_loc = mesh%global_to_hex2(local)
-
-       global = mesh%hex_to_global(k1_ref + k1_loc, k2_ref + k2_loc)
-    else
-       ! Out of domain
-       global = -1
-    end if
-
-  end function sll_f_local_to_global
-
-  !---------------------------------------------------------
-  !> @brief Same as sll_f_local_to_global but taking hexagonal coordinates
-  !> as reference indexing
-  !> @details returns the global index of the point which has as
-  ! local index (k1_ref, k2_ref) in hex coordanites in the ref_index system
-  ! (see gloval_index(...) and global_to_local(...) for conventions)
-  ! ie. sll_f_local_to_global(1, i) = i
-  !> @param[IN] mesh hexagonal mesh
-  !> @param[IN] k1_ref 1st hex coordinate of reference index for local system
-  !> @param[IN] k2_ref 2nd hex coordinate of reference index for local system
-  !> @param[IN] local Local index on reference system
-  function local_hex_to_global(mesh, k1_ref, k2_ref, local) result(global)
-    class(sll_t_hex_mesh_2d) :: mesh
-    sll_int32 :: k1_ref, k2_ref
-    sll_int32 :: k1_loc, k2_loc
-    sll_int32 :: local
-    sll_int32 :: global
-
-    k1_loc = mesh%global_to_hex1(local)
-    k2_loc = mesh%global_to_hex2(local)
-
-    if (sll_f_cells_to_origin(k1_ref + k1_loc, k2_ref + k2_loc).lt.mesh%num_cells) then
-       global = mesh%hex_to_global(k1_ref + k1_loc, k2_ref + k2_loc)
-    else
-       ! Out of domain
-       global = -1
-    end if
-  end function local_hex_to_global
-
-
-  !---------------------------------------------------------------------------
-  !> @brief Returns indices of the edges of a given cell
-  !> @details Returns global indices of the edges of a a given cell. The cell
-  !> index is obtained by knowing where the point at (x,y) is.
-  !> If you need the edges of a cell from which you only know the CELL INDEX,
-  !> you can use this function as follows:
-  !>   call sll_s_get_cell_vertices_index(mesh%center_cartesian_coord(1,cell_index), &
-  !                                 mesh%center_cartesian_coord(2,cell_index), &
-  !>                                mesh, &
-  !>                                s1, s2, s3)
-  !> @param[IN] x 1st cartesian coordiante of a point in the cell we wish to
-  !> know the indices
-  !> @param[IN] y 2nd cartesian coordiante of a point in the cell we wish to
-  !> know the indices
-  !> @param[IN] mesh hexagonal mesh
-  !> @param[OUT] s1 index of 1st vertex of the cell where (x,y) is
-  !> @param[OUT] s2 index of 2nd vertex of the cell where (x,y) is
-  !> @param[OUT] s3 index of 3rd vertex of the cell where (x,y) is
-  subroutine sll_s_get_cell_vertices_index( x, y, mesh, s1, s2, s3 )
-    sll_real64,            intent(in)  :: x
-    sll_real64,            intent(in)  :: y
-    class(sll_t_hex_mesh_2d), intent(in)  :: mesh ! Was pointer (YG - 05.10.2015)
-    sll_int32,             intent(out) :: s1
-    sll_int32,             intent(out) :: s2
-    sll_int32,             intent(out) :: s3
-
-    sll_real64 :: xi, radius, step
-    sll_int32  :: num_cells
-    sll_int32  :: i, j
-
-    num_cells = mesh%num_cells
-    radius    = mesh%radius
-    step      = mesh%delta
-
-    ! converting (x,y) to hexagonal coordinates
-    ! find the lowest point in the lozenge that contains (x,y)
-    i = sll_f_cart_to_hex1(mesh, x, y)
-    j = sll_f_cart_to_hex2(mesh, x, y)
-
-    ! coordinates of the vertices of the lozenge :
-    !(/i,j/),(/i,j+1/),(/i+1,j/), (/i+1,j+1/)
-
-    ! coordinate of the abscisse that parts the lozenge
-    ! in two equilateral triangle
-
-    xi = ( real(i,f64) - real(j,f64) ) * step * sll_p_sqrt3 * 0.5_f64
-
-    ! testing which triangle (x,y) is in, which gives us its vertices'
-    ! coordinates
-
-    if ( x > xi ) then
-       s1 = hex_to_global(mesh,i,j)
-       s2 = hex_to_global(mesh,i+1,j)
-       s3 = hex_to_global(mesh,i+1,j+1)
-    else if ( x < xi ) then
-       s1 = hex_to_global(mesh,i,j)
-       s2 = hex_to_global(mesh,i,j+1)
-       s3 = hex_to_global(mesh,i+1,j+1)
-    else if ( x == xi ) then
-       if (x < 0) then
-          s1 = hex_to_global(mesh,i,j)
-          s2 = hex_to_global(mesh,i+1,j)
-          s3 = hex_to_global(mesh,i+1,j+1)
-       elseif (x >= 0) then
-          s1 = hex_to_global(mesh,i,j)
-          s2 = hex_to_global(mesh,i,j+1)
-          s3 = hex_to_global(mesh,i+1,j+1)
-       endif
-    endif
-
-  end subroutine sll_s_get_cell_vertices_index
-
-
-  !---------------------------------------------------------------------------
-  !> @brief Given a mesh point and the first cartesian coordinate of a point
-  !> (that is not on the mesh) we return the given cell index
-  !> @details Given a the hexagonal coordiantes of a mesh point (k1, k2)
-  !> and the first cartesian coordinate of a point (x)
-  !> (that is not on the mesh) we return the given cell index.
-  !> This function is used to localize a point on the hexagonal mesh.
-  !> We suppose the user knows the cartesian coordinates (and thus the hexagonal
-  !> coordinates, see sll_f_cart_to_hex1 and sll_f_cart_to_hex2).
-  !> @param[IN] k1 first hexagonal coordinate of point we wish to localize
-  !> @param[IN] k2 second hexagonal coordinate of point we wish to localize
-  !> @param[IN] mesh hexagonal mesh
-  !> @param[IN] x first cartesian coordiante of point we wish to localize
-  !> @param[OUT] triangle_index index of the cell where the point is localized
-  subroutine sll_s_get_triangle_index( k1, k2, mesh, x, triangle_index )
-    sll_int32,             intent(in)  :: k1
-    sll_int32,             intent(in)  :: k2
-    class(sll_t_hex_mesh_2d), intent(in)  :: mesh   ! Was pointer (YG - 05.10.2015)
-    sll_real64,            intent(in)  :: x   !cartessian_abscisse_other_vertice
-    sll_int32,             intent(out) :: triangle_index
-
-    sll_int32 :: global
-
-    triangle_index = -1
-
-    ! almost every point is the lowest point of a lozenge , i.e. 2 triangles
-    ! we get therefore 2 indices per points
-    ! in order to have the correct one we test in which triangle we are
-
-    global = hex_to_global(mesh,k1,k2)
-
-    if ((global .gt. 0).and.(global.le.mesh%num_pts_tot)) then
-       if ( x < mesh%cartesian_coord(1,global) ) then
-          triangle_index = mesh%center_index(1,global) !left triangle
-       else
-          triangle_index = mesh%center_index(2,global) !right triangle
-       endif
-    end if
-
-  end subroutine sll_s_get_triangle_index
-
-
-  !-------------------------------------------------------------------------
-  !> @brief returns the indices of the neighbouring cells/triangles
-  !> @param mesh: hex_mesh hexagonal mesh
-  !> @param cell_index integer: index of the cell from which we want to know
-  !>   the neighbours
-  !> @param[OUT] nei_1 integer: index of the 1st neighbour
-  !> @param[OUT] nei_2 integer: index of the 2nd neighbour
-  !> @param[OUT] nei_3 integer: index of the 3rd neighbour
-  subroutine get_neighbours( mesh, cell_index, nei_1, nei_2, nei_3 )
-    class(sll_t_hex_mesh_2d), intent(in)  :: mesh
-    sll_int32,              intent(in)  :: cell_index
-    sll_int32,              intent(out) :: nei_1
-    sll_int32,              intent(out) :: nei_2
-    sll_int32,              intent(out) :: nei_3
-
-    sll_real64 :: xc
-    sll_real64 :: yc
-    sll_int32  :: s1
-    sll_int32  :: s2
-    sll_int32  :: s3
-    sll_real64 :: x1, y1
-    sll_real64 :: x2, y2
-    sll_real64 :: x3, y3
-    sll_real64 :: x
-    sll_real64 :: y
-    sll_int32  :: k1
-    sll_int32  :: k2
-    sll_real64 :: coef
-
-    ! Getting the cell's center coordinates:
-    xc = mesh%center_cartesian_coord(1, cell_index)
-    yc = mesh%center_cartesian_coord(2, cell_index)
-
-    ! Getting the cell's vertices indices:
-    call sll_s_get_cell_vertices_index(xc, yc, mesh, s1, s2, s3)
-
-    ! Getting the vertex coordinates:
-    x1 = mesh%cartesian_coord(1, s1)
-    y1 = mesh%cartesian_coord(2, s1)
-    x2 = mesh%cartesian_coord(1, s2)
-    y2 = mesh%cartesian_coord(2, s2)
-    x3 = mesh%cartesian_coord(1, s3)
-    y3 = mesh%cartesian_coord(2, s3)
-
-    ! Getting the neighbours centers coordinates by symmetry to the cell's edges
-    ! First center (symmetry with P1-P2) :
-    coef = 2._f64 * ((xc - x1)*(x2 - x1) + &
-         (yc - y1)*(y2 - y1))/((x2-x1)**2 + &
-         (y2 - y1)**2)
-    x = coef * (x2 - x1) - (xc - x1) + x1
-    y = coef * (y2 - y1) - (yc - y1) + y1
-    ! Getting its index :
-    k1 = sll_f_cart_to_hex1(mesh, x, y)
-    k2 = sll_f_cart_to_hex2(mesh, x, y)
-    call sll_s_get_triangle_index(k1, k2, mesh, x, nei_1)
-
-    ! Second center (symmetry with P2-P3) :
-    coef = 2._f64 * ((xc - x2)*(x3 - x2) + &
-         (yc - y2)*(y3 - y2))/((x3-x2)**2 + &
-         (y3 - y2)**2)
-    x = coef * (x3 - x2) - (xc - x2) + x2
-    y = coef * (y3 - y2) - (yc - y2) + y2
-    ! Getting its index :
-    k1 = sll_f_cart_to_hex1(mesh, x, y)
-    k2 = sll_f_cart_to_hex2(mesh, x, y)
-    call sll_s_get_triangle_index(k1, k2, mesh, x, nei_2)
-
-    ! Third center (symmetry with P1-P3) :
-    coef = 2._f64 * ((xc - x1)*(x3 - x1) + &
-         (yc - y1)*(y3 - y1))/((x3-x1)**2 + &
-         (y3 - y1)**2)
-    x = coef * (x3 - x1) - (xc - x1) + x1
-    y = coef * (y3 - y1) - (yc - y1) + y1
-    ! Getting its index :
-    k1 = sll_f_cart_to_hex1(mesh, x, y)
-    k2 = sll_f_cart_to_hex2(mesh, x, y)
-    call sll_s_get_triangle_index(k1, k2, mesh, x, nei_3)
-
-  end subroutine get_neighbours
-
+   subroutine init_edge_center_triangle(mesh)
+      class(sll_t_hex_mesh_2d) :: mesh
+      sll_int32          :: edge_index
+      sll_int32          :: global, num_cells
+      sll_int32          :: k1, k2, k1c, k2c
+      sll_real64         :: x1, x2_l, x2_r, x3, y1, y2_l, y2_r, y3, xx, yy
+      logical            :: inside
+
+      num_cells = mesh%num_cells
+
+      mesh%edge_center_cartesian_coord(:, :) = 0._f64
+      mesh%edge_center_index(:, :) = -1
+      edge_index = 0
+
+      do global = 1, mesh%num_pts_tot
+         ! almost each point is the base of a lozenge , thus two triangle
+         ! from which we get two center points
+
+         k1 = mesh%hex_coord(1, global)
+         k2 = mesh%hex_coord(2, global)
+
+         x1 = real(k1, f64)*mesh%r1_x1 + real(k2, f64)*mesh%r2_x1
+         x2_l = real(k1, f64)*mesh%r1_x1 + real((k2 + 1), f64)*mesh%r2_x1
+         x2_r = real((k1 + 1), f64)*mesh%r1_x1 + real(k2, f64)*mesh%r2_x1
+         x3 = real((k1 + 1), f64)*mesh%r1_x1 + real((k2 + 1), f64)*mesh%r2_x1
+         y1 = real(k1, f64)*mesh%r1_x2 + real(k2, f64)*mesh%r2_x2
+         y2_l = real(k1, f64)*mesh%r1_x2 + real((k2 + 1), f64)*mesh%r2_x2
+         y2_r = real((k1 + 1), f64)*mesh%r1_x2 + real(k2, f64)*mesh%r2_x2
+         y3 = real((k1 + 1), f64)*mesh%r1_x2 + real((k2 + 1), f64)*mesh%r2_x2
+
+         !test to check if the left edge is inside
+
+         inside = .true.
+
+         k1c = k1
+         k2c = k2 + 1
+
+         if (abs(k1c) > num_cells .or. abs(k2c) > num_cells .or. &
+             (k1c)*(k2c) < 0 .and. (abs(k1c) + abs(k2c) > num_cells)) inside = .false.
+
+         if (inside) then
+            ! center point of the left edge
+            xx = (x1 + x2_l)*0.5_f64
+            yy = (y1 + y2_l)*0.5_f64
+            edge_index = edge_index + 1
+            mesh%edge_center_cartesian_coord(1, edge_index) = xx
+            mesh%edge_center_cartesian_coord(2, edge_index) = yy
+            mesh%edge_center_index(1, global) = edge_index
+         end if
+
+         !test to check if the middle edge is inside
+
+         inside = .true.
+
+         k1c = k1 + 1
+         k2c = k2 + 1
+
+         if (abs(k1c) > num_cells .or. abs(k2c) > num_cells .or. &
+             (k1c)*(k2c) < 0 .and. (abs(k1c) + abs(k2c) > num_cells)) inside = .false.
+
+         if (inside) then
+            ! center point of the middle edge
+            xx = (x1 + x3)*0.5_f64
+            yy = (y1 + y3)*0.5_f64
+            edge_index = edge_index + 1
+            mesh%edge_center_cartesian_coord(1, edge_index) = xx
+            mesh%edge_center_cartesian_coord(2, edge_index) = yy
+            mesh%edge_center_index(2, global) = edge_index
+         end if
+
+         !test to check if the right edge is inside
+
+         inside = .true.
+
+         k1c = k1 + 1
+         k2c = k2
+
+         if (abs(k1c) > num_cells .or. abs(k2c) > num_cells .or. &
+             (k1c)*(k2c) < 0 .and. (abs(k1c) + abs(k2c) > num_cells)) inside = .false.
+
+         if (inside) then
+            ! center point of the right edge
+            xx = (x1 + x2_r)*0.5_f64
+            yy = (y1 + y2_r)*0.5_f64
+            edge_index = edge_index + 1
+            mesh%edge_center_cartesian_coord(1, edge_index) = xx
+            mesh%edge_center_cartesian_coord(2, edge_index) = yy
+            mesh%edge_center_index(3, global) = edge_index
+         end if
+
+      end do
+
+   end subroutine init_edge_center_triangle
+
+   !> @brief Finds the index in the global array of the point which
+   !> coordinates where passed as parameter
+   !> @details To every mesh point of associated hexagonal coordinates (k1,k2)
+   !> we can associate a global index. This notation association can be
+   !> accessed through an array initialized at the initialization of the object
+   !> This function, computes the connectivity between the hexagonal mesh
+   !> and the table.
+   !> @param k1 integer denoting the first hexagonal coordinate of a point
+   !> @param k2 integer denoting the second hexagonal coordinate of a point
+   !> @param index_tab out integer denoting the index to get the global index of
+   !> the point situated at (k1, k2)
+   subroutine index_hex_to_global(mesh, k1, k2, index_tab)
+      class(sll_t_hex_mesh_2d)     :: mesh
+      sll_int32, intent(in)  :: k1, k2
+      sll_int32, intent(out) :: index_tab
+      sll_int32              :: k
+      sll_int32              :: nk1, nk2
+      sll_int32              :: n0
+      sll_int32              :: num_cells
+      sll_int32              :: num_cells_plus1
+
+      num_cells = mesh%num_cells
+      num_cells_plus1 = num_cells + 1
+
+      ! nk1 is the number of points before the edge corresponding to k1
+      ! nk2 is the number of points on the edge k1 :
+      ! if k1<=0 the points are in [-num_cells,k2]
+      ! if k1>0  ...               [-num_cells+k1,k2]
+
+      if (k1 .le. 0) then
+         k = num_cells + k1
+         !this value is always an integer, floor avoids the transformation
+         nk1 = num_cells*k + floor(real(k*(k + 1))*0.5)
+         nk2 = k2 + num_cells_plus1
+      else
+         ! n0 is the total number of points from (-num_cells,-num_cells) to
+         ! ( 0, numcells)
+         n0 = num_cells**2 + floor(real(num_cells*num_cells_plus1)*0.5)
+         nk1 = n0 + k1*(2*num_cells + 1) - floor(real(k1*(k1 - 1))*0.5)
+         nk2 = k2 + num_cells_plus1 - k1
+      end if
+
+      index_tab = nk1 + nk2
+
+   end subroutine index_hex_to_global
+
+   !> @brief Computes the first cartesian coordinate of a given point
+   !> @details Computes the first cartesian coordinate on the cartesian system
+   !> of a point which has for hexagonal coordinates (i,j)
+   !> @param i integer denoting the first hexagonal coordinate of a point
+   !> @param j integer denoting the second hexagonal coordinate of a point
+   !> returns res real containing the coordinate "eta1"
+   function eta1_node_hex(mesh, i, j) result(res)
+      ! The coordinates (i, j) correspond to the (r1, r2) basis
+      ! This function returns the 1st coordinate on the cartesian system
+      class(sll_t_hex_mesh_2d), intent(in) :: mesh
+      sll_int32, intent(in)  :: i
+      sll_int32, intent(in)  :: j
+      sll_real64 :: res
+
+      res = mesh%r1_x1*real(i, f64) + mesh%r2_x1*real(j, f64) + mesh%center_x1
+
+   end function eta1_node_hex
+
+   !> @brief Computes the second cartesian coordinate of a given point
+   !> @details Computes the second cartesian coordinate on the cartesian system
+   !> of a point which has for hexagonal coordinates (i,j)
+   !> @param i integer denoting the first hexagonal coordinate of a point
+   !> @param j integer denoting the second hexagonal coordinate of a point
+   !> returns res real containing the coordinate "eta2"
+   function eta2_node_hex(mesh, i, j) result(res)
+      ! The coordinates (k1, k2) correspond to the (r1, r2) basis
+      ! This function the 2nd coordinate on the cartesian system
+      class(sll_t_hex_mesh_2d), intent(in)     :: mesh
+      sll_int32, intent(in)  :: i
+      sll_int32, intent(in)  :: j
+      sll_real64  :: res
+
+      res = mesh%r1_x2*real(i, f64) + mesh%r2_x2*real(j, f64) + mesh%center_x2
+   end function eta2_node_hex
+
+   !> @brief Computes the first cartesian coordinate of the center of the cell
+   !> @details Computes the first coordinate (eta1) on the cartesian system
+   !> of the center of the cell which has for global index cell_num
+   !> @param[in] cell_num integer denoting the index of the cell
+   !> returns res real containing 1st cartesian coordinate of the cell's center
+   function eta1_cell_hex(mesh, cell_num) result(res)
+      ! The index cell_num corresponds to the index of triangle
+      ! This function returns the 1st coordinate on the cartesian system
+      ! of the center of the triangle at num_ele
+      class(sll_t_hex_mesh_2d), intent(in) :: mesh
+      sll_int32, intent(in) :: cell_num
+      sll_real64 :: res
+
+      SLL_ASSERT(0 < cell_num .and. cell_num <= mesh%num_triangles)
+      res = mesh%center_cartesian_coord(1, cell_num)
+   end function eta1_cell_hex
+
+   !> @brief Computes the 2nd cartesian coordinate of the center of the cell
+   !> @details Computes the 2nd coordinate (eta2) on the cartesian system
+   !> of the center of the cell which has for global index cell_num
+   !> @param[in] cell_num integer denoting the index of the cell
+   !> returns res real containing 2nd cartesian coordinate of the cell's center
+   function eta2_cell_hex(mesh, cell_num) result(res)
+      ! The index num_ele corresponds to the index of triangle
+      ! This function returns the 2nd coordinate on the cartesian system
+      ! of the center of the triangle at num_ele
+      class(sll_t_hex_mesh_2d), intent(in) :: mesh
+      sll_int32, intent(in) :: cell_num
+      sll_real64 :: res
+
+      SLL_ASSERT(0 < cell_num .and. cell_num <= mesh%num_triangles)
+      res = mesh%center_cartesian_coord(2, cell_num)
+   end function eta2_cell_hex
+
+   !---------------------------------------------------------------------------
+   !> @brief NOT IMPLEMENTED
+   !> @details NOT IMPLEMENTED
+   !> @param[<IN or OUT or INOUT>] <PARAM1> <DESCRIPTION>
+   !> @param[<IN or OUT or INOUT>] <PARAM2> <DESCRIPTION>
+   function eta1_cell_hex_two_arg(mesh, i, j) result(res)
+      class(sll_t_hex_mesh_2d), intent(in)     :: mesh
+      sll_int32, intent(in)      :: i, j
+      sll_real64 :: res
+
+      res = real(i + j + mesh%num_cells, f64)
+      print *, "Error in eta1_cell() :"
+      print *, "   function only works with ONE parameter (num_cell)"
+      STOP
+   end function eta1_cell_hex_two_arg
+
+   !---------------------------------------------------------------------------
+   !> @brief NOT IMPLEMENTED
+   !> @details NOT IMPLEMENTED
+   !> @param[<IN or OUT or INOUT>] <PARAM1> <DESCRIPTION>
+   !> @param[<IN or OUT or INOUT>] <PARAM2> <DESCRIPTION>
+   function eta2_cell_hex_two_arg(mesh, i, j) result(res)
+      class(sll_t_hex_mesh_2d), intent(in)     :: mesh
+      sll_int32, intent(in)      :: i, j
+      sll_real64 :: res
+
+      res = real(i + j + mesh%num_cells, f64)
+      print *, "Error in eta2_cell() :"
+      print *, "   function only works with ONE parameter (num_cell)"
+      STOP
+   end function eta2_cell_hex_two_arg
+
+   !---------------------------------------------------------------------------
+   !> @brief Computes the number of cell from point to origin
+   !> @details Takes the coordinates (k1,k2) on the (r1,r2) basis and returns
+   !> the number of cells between that point and the origin.
+   !> If (k1, k2) = (0,0), then val = 0
+   !> @param[IN] k1 integer first hexagonal coordinate of a point
+   !> @param[IN] k2 integer second hexagonal coordinate of a point
+   !> @param[OUT] val integer number of cells to origin
+   function sll_f_cells_to_origin(k1, k2) result(val)
+      sll_int32, intent(in)   :: k1
+      sll_int32, intent(in)   :: k2
+      sll_int32               :: val
+
+      ! We compute the number of cells from point to center
+      if (k1*k2 .gt. 0) then
+         val = max(abs(k1), abs(k2))
+      else
+         val = abs(k1) + abs(k2)
+      end if
+
+   end function sll_f_cells_to_origin
+
+   !---------------------------------------------------------------------------
+   !> @brief Computes the type of triangle of a given cell
+   !> @details Takes a given cell and determines if it is of type II if
+   !> is oriented as the cell#2 (triangle of edges: (0,0) (sqrt(3)/2, 1/2) (0,1))
+   !> or of type I otherwise (triangle of edges: (0,0) (-sqrt(3)/2, 1/2) (0,1))
+   !> @param[IN] num_ele integer index of the element
+   !> @param[IN] mesh hexagonal mesh
+   !> @param[OUT] val integer val = 1 if triangle of type I, 2 if triangle
+   !> of type II, or -1 if there was an error
+   subroutine cell_type(mesh, num_ele, val)
+      class(sll_t_hex_mesh_2d) :: mesh
+      sll_int32, intent(in)  :: num_ele
+      sll_int32, intent(out) :: val
+      sll_int32  :: k1
+      sll_int32  :: k2
+      sll_int32  :: num_hex
+      sll_int32  :: lower_index
+      sll_real64 :: x1
+      sll_real64 :: y1
+      sll_real64 :: x2
+
+      !Initialization:
+      val = -1
+
+      ! Getting center coordinates
+      x1 = mesh%center_cartesian_coord(1, num_ele)
+      y1 = mesh%center_cartesian_coord(2, num_ele)
+      ! Getting hexagonal coordinates
+      k1 = sll_f_cart_to_hex1(mesh, x1, y1)
+      k2 = sll_f_cart_to_hex2(mesh, x1, y1)
+      !Getting number of cells to origin:
+      num_hex = sll_f_cells_to_origin(k1, k2)
+
+      ! If the cell is not on the boundary, we can determine the
+      ! type of cell only by pairity of the cell index. If it's
+      ! even then is of type II, if it's odd then it's of type I.
+      if ((num_hex .lt. mesh%num_cells) .and. (mesh%num_cells .ne. 1)) then
+         if (modulo(num_ele, 2) .eq. 1) then
+            val = 1
+         else
+            val = 2
+         end if
+      elseif (mesh%num_cells .eq. 1) then
+         if ((num_ele .eq. 1) .or. (num_ele .eq. 4) .or. (num_ele .eq. 6)) then
+            val = 1
+         else
+            val = 2
+         end if
+      else
+         ! we just see if the center of the cell is to the
+         ! right or left of the lower point
+         lower_index = hex_to_global(mesh, k1, k2)
+         x2 = mesh%cartesian_coord(1, lower_index)
+         if (x2 < x1) then
+            val = 2
+         elseif (x2 > x1) then
+            val = 1
+         end if
+      end if
+   end subroutine cell_type
+
+   !---------------------------------------------------------
+   !> @brief Transform hexagonal coordinates to global index.
+   !> @details Takes the coordinates (k1,k2) on the (r1,r2) basis and
+   !> returns global index of that mesh point. By default the index of
+   !> the center of the mesh is 0. Then following the r1 direction and
+   !> a counter-clockwise motion we assing an index to every point of the mesh.
+   !> @param[IN] mesh hexagonal mesh
+   !> @param[IN] k1 first hexagonal coordinate
+   !> @param[IN] k2 second hexagonal coordinate
+   !> @param[OUT] val global index of point at (k1, k2)
+   function hex_to_global(mesh, k1, k2) result(val)
+      class(sll_t_hex_mesh_2d)  :: mesh
+      sll_int32, intent(in)   :: k1
+      sll_int32, intent(in)   :: k2
+      sll_int32               :: distance
+      sll_int32               :: index_tab
+      sll_int32               :: val
+
+      distance = sll_f_cells_to_origin(k1, k2)
+
+      ! Test if we are in domain
+      if (distance .le. mesh%num_cells) then
+
+         call index_hex_to_global(mesh, k1, k2, index_tab)
+         val = mesh%global_indices(index_tab)
+
+      else
+         val = -1
+      end if
+
+   end function hex_to_global
+
+   !---------------------------------------------------------
+   !> @brief Gives the 1st hexagonal coordinate to point of global index "index".
+   !> @details Takes the global index of the point (see hex_to_global(...)
+   !> for conventions) returns the first coordinate (k1) on the (r1,r2) basis
+   !> @param[IN] mesh hexagonal mesh
+   !> @param[IN] index global index of point we need hexagonal coordinates
+   function global_to_hex1(mesh, index) result(k1)
+      class(sll_t_hex_mesh_2d) :: mesh
+      sll_int32 :: index
+      sll_int32 :: k1
+
+      k1 = mesh%hex_coord(1, index)
+   end function global_to_hex1
+
+   !---------------------------------------------------------
+   !> @brief Gives the 2nd hexagonal coordinate to point of global index "index".
+   !> @details Takes the global index of the point (see hex_to_global(...)
+   !> for conventions) returns the second coordinate (k2) on the (r1,r2) basis
+   !> @param[IN] mesh hexagonal mesh
+   !> @param[IN] index global index of point we need hexagonal coordinates
+   function global_to_hex2(mesh, index) result(k2)
+      class(sll_t_hex_mesh_2d) :: mesh
+      sll_int32 :: index
+      sll_int32 :: k2
+
+      k2 = mesh%hex_coord(2, index)
+   end function global_to_hex2
+
+   !---------------------------------------------------------
+   !> @brief Gives the 1st cartesian coordinate to point of global index "index".
+   !> @details Takes the global index of the point (see hex_to_global(...)
+   !> for conventions) returns the first coordinate (x1) on the cartesian basis
+   !> @param[IN] mesh hexagonal mesh
+   !> @param[IN] index global index of point we need hexagonal coordinates
+   function global_to_x1(mesh, index) result(x1)
+      class(sll_t_hex_mesh_2d) :: mesh
+      sll_int32  :: index
+      sll_real64 :: x1
+
+      x1 = mesh%cartesian_coord(1, index)
+   end function global_to_x1
+
+   !---------------------------------------------------------
+   !> @brief Gives the 2nd cartesian coordinate to point of global index "index".
+   !> @details Takes the global index of the point (see hex_to_global(...)
+   !> for conventions) returns the second coordinate (x2) on the cartesian basis
+   !> @param[IN] mesh hexagonal mesh
+   !> @param[IN] index global index of point we need hexagonal coordinates
+   function global_to_x2(mesh, index) result(x2)
+      class(sll_t_hex_mesh_2d) :: mesh
+      sll_int32  :: index
+      sll_real64 :: x2
+
+      x2 = mesh%cartesian_coord(2, index)
+   end function global_to_x2
+
+   !---------------------------------------------------------
+   !> @brief Transform cartesian coordinates to 1st hexagonal coordinates.
+   !> @details Takes the coordinates (x1,x2) on the cartesian basis and
+   !> returns the first coordinate (k1) on the (r1, r2) basis
+   !> @param[IN] mesh hexagonal mesh
+   !> @param[IN] x1 first cartesian coordinate
+   !> @param[IN] x2 second cartesian coordinate
+   function sll_f_cart_to_hex1(mesh, x1, x2) result(k1)
+      class(sll_t_hex_mesh_2d) :: mesh
+      sll_real64 :: x1
+      sll_real64 :: x2
+      sll_int32  :: k1
+      sll_real64 :: jacob
+
+      jacob = mesh%r1_x1*mesh%r2_x2 - mesh%r2_x1*mesh%r1_x2
+      k1 = floor((mesh%r2_x2*x1 - mesh%r2_x1*x2)/jacob)
+   end function sll_f_cart_to_hex1
+
+   !---------------------------------------------------------
+   !> @brief Transform cartesian coordinates to 2ndst hexagonal coordinates.
+   !> @details Takes the coordinates (x1,x2) on the cartesian basis and
+   !> returns the second coordinate (k2) on the (r1, r2) basis
+   !> @param[IN] mesh hexagonal mesh
+   !> @param[IN] x1 first cartesian coordinate
+   !> @param[IN] x2 second cartesian coordinate
+   function sll_f_cart_to_hex2(mesh, x1, x2) result(k2)
+      class(sll_t_hex_mesh_2d) :: mesh
+      sll_real64 :: x1
+      sll_real64 :: x2
+      sll_int32  :: k2
+      sll_real64 :: jacob
+
+      jacob = mesh%r1_x1*mesh%r2_x2 - mesh%r2_x1*mesh%r1_x2
+      k2 = floor((mesh%r1_x1*x2 - mesh%r1_x2*x1)/jacob)
+   end function sll_f_cart_to_hex2
+
+   !---------------------------------------------------------
+   !> @brief Transforms global to local index in respect to a reference index.
+   !> @details In the same manner that we assign global indices (see
+   !> hex_to_global(...)) we assign local indices, but this time the initial
+   !> point is the point which index is ref_index
+   !> ie. local_index(i,i) = 1
+   !> @param[IN] mesh hexagonal mesh
+   !> @param[IN] ref_index reference index from which the local index is counted
+   !> @param[IN] global global index of point we wish to know local index
+   function global_to_local(mesh, ref_index, global) result(local)
+      class(sll_t_hex_mesh_2d) :: mesh
+      sll_int32 :: ref_index
+      sll_int32 :: global
+      sll_int32 :: k1_ref, k2_ref
+      sll_int32 :: k1_glob, k2_glob
+      sll_int32 :: local
+
+      if ((ref_index .le. mesh%num_pts_tot) .and. (ref_index .gt. 0) &
+          .and. (global .le. mesh%num_pts_tot) .and. (global .gt. 0)) then
+
+         k1_ref = mesh%hex_coord(1, ref_index)
+         k2_ref = mesh%hex_coord(2, ref_index)
+         k1_glob = mesh%hex_coord(1, global)
+         k2_glob = mesh%hex_coord(2, global)
+
+         local = mesh%hex_to_global(k1_ref - k1_glob, k2_ref - k2_glob)
+      else
+         ! Out of domain
+         local = -1
+      end if
+
+   end function global_to_local
+
+   !---------------------------------------------------------
+   !> @brief Transforms local index in a given reference local indexation
+   !> to a global index from the mesh
+   !> @details returns the global index of the point which has as
+   ! local index local_index in the ref_index system
+   ! (see gloval_index(...) and global_to_local(...) for conventions)
+   ! ie. sll_f_local_to_global(1, i) = i
+   !> @param[IN] mesh hexagonal mesh
+   !> @param[IN] ref_index reference index where the local indexation starts
+   !> @param[IN] local local index in the indexation starting at ref_index
+   function sll_f_local_to_global(mesh, ref_index, local) result(global)
+      class(sll_t_hex_mesh_2d) :: mesh
+      sll_int32 :: ref_index, local
+      sll_int32 :: k1_ref, k2_ref
+      sll_int32 :: k1_loc, k2_loc
+      sll_int32 :: global
+
+      if ((ref_index .le. mesh%num_pts_tot) .and. (ref_index .gt. 0) &
+          .and. (local .le. mesh%num_pts_tot) .and. (local .gt. 0)) then
+         k1_ref = mesh%global_to_hex1(ref_index)
+         k2_ref = mesh%global_to_hex2(ref_index)
+         k1_loc = mesh%global_to_hex1(local)
+         k2_loc = mesh%global_to_hex2(local)
+
+         global = mesh%hex_to_global(k1_ref + k1_loc, k2_ref + k2_loc)
+      else
+         ! Out of domain
+         global = -1
+      end if
+
+   end function sll_f_local_to_global
+
+   !---------------------------------------------------------
+   !> @brief Same as sll_f_local_to_global but taking hexagonal coordinates
+   !> as reference indexing
+   !> @details returns the global index of the point which has as
+   ! local index (k1_ref, k2_ref) in hex coordanites in the ref_index system
+   ! (see gloval_index(...) and global_to_local(...) for conventions)
+   ! ie. sll_f_local_to_global(1, i) = i
+   !> @param[IN] mesh hexagonal mesh
+   !> @param[IN] k1_ref 1st hex coordinate of reference index for local system
+   !> @param[IN] k2_ref 2nd hex coordinate of reference index for local system
+   !> @param[IN] local Local index on reference system
+   function local_hex_to_global(mesh, k1_ref, k2_ref, local) result(global)
+      class(sll_t_hex_mesh_2d) :: mesh
+      sll_int32 :: k1_ref, k2_ref
+      sll_int32 :: k1_loc, k2_loc
+      sll_int32 :: local
+      sll_int32 :: global
+
+      k1_loc = mesh%global_to_hex1(local)
+      k2_loc = mesh%global_to_hex2(local)
+
+      if (sll_f_cells_to_origin(k1_ref + k1_loc, k2_ref + k2_loc) .lt. mesh%num_cells) then
+         global = mesh%hex_to_global(k1_ref + k1_loc, k2_ref + k2_loc)
+      else
+         ! Out of domain
+         global = -1
+      end if
+   end function local_hex_to_global
+
+   !---------------------------------------------------------------------------
+   !> @brief Returns indices of the edges of a given cell
+   !> @details Returns global indices of the edges of a a given cell. The cell
+   !> index is obtained by knowing where the point at (x,y) is.
+   !> If you need the edges of a cell from which you only know the CELL INDEX,
+   !> you can use this function as follows:
+   !>   call sll_s_get_cell_vertices_index(mesh%center_cartesian_coord(1,cell_index), &
+   !                                 mesh%center_cartesian_coord(2,cell_index), &
+   !>                                mesh, &
+   !>                                s1, s2, s3)
+   !> @param[IN] x 1st cartesian coordiante of a point in the cell we wish to
+   !> know the indices
+   !> @param[IN] y 2nd cartesian coordiante of a point in the cell we wish to
+   !> know the indices
+   !> @param[IN] mesh hexagonal mesh
+   !> @param[OUT] s1 index of 1st vertex of the cell where (x,y) is
+   !> @param[OUT] s2 index of 2nd vertex of the cell where (x,y) is
+   !> @param[OUT] s3 index of 3rd vertex of the cell where (x,y) is
+   subroutine sll_s_get_cell_vertices_index(x, y, mesh, s1, s2, s3)
+      sll_real64, intent(in)  :: x
+      sll_real64, intent(in)  :: y
+      class(sll_t_hex_mesh_2d), intent(in)  :: mesh ! Was pointer (YG - 05.10.2015)
+      sll_int32, intent(out) :: s1
+      sll_int32, intent(out) :: s2
+      sll_int32, intent(out) :: s3
+
+      sll_real64 :: xi, radius, step
+      sll_int32  :: num_cells
+      sll_int32  :: i, j
+
+      num_cells = mesh%num_cells
+      radius = mesh%radius
+      step = mesh%delta
+
+      ! converting (x,y) to hexagonal coordinates
+      ! find the lowest point in the lozenge that contains (x,y)
+      i = sll_f_cart_to_hex1(mesh, x, y)
+      j = sll_f_cart_to_hex2(mesh, x, y)
+
+      ! coordinates of the vertices of the lozenge :
+      !(/i,j/),(/i,j+1/),(/i+1,j/), (/i+1,j+1/)
+
+      ! coordinate of the abscisse that parts the lozenge
+      ! in two equilateral triangle
+
+      xi = (real(i, f64) - real(j, f64))*step*sll_p_sqrt3*0.5_f64
+
+      ! testing which triangle (x,y) is in, which gives us its vertices'
+      ! coordinates
+
+      if (x > xi) then
+         s1 = hex_to_global(mesh, i, j)
+         s2 = hex_to_global(mesh, i + 1, j)
+         s3 = hex_to_global(mesh, i + 1, j + 1)
+      else if (x < xi) then
+         s1 = hex_to_global(mesh, i, j)
+         s2 = hex_to_global(mesh, i, j + 1)
+         s3 = hex_to_global(mesh, i + 1, j + 1)
+      else if (x == xi) then
+         if (x < 0) then
+            s1 = hex_to_global(mesh, i, j)
+            s2 = hex_to_global(mesh, i + 1, j)
+            s3 = hex_to_global(mesh, i + 1, j + 1)
+         elseif (x >= 0) then
+            s1 = hex_to_global(mesh, i, j)
+            s2 = hex_to_global(mesh, i, j + 1)
+            s3 = hex_to_global(mesh, i + 1, j + 1)
+         end if
+      end if
+
+   end subroutine sll_s_get_cell_vertices_index
+
+   !---------------------------------------------------------------------------
+   !> @brief Given a mesh point and the first cartesian coordinate of a point
+   !> (that is not on the mesh) we return the given cell index
+   !> @details Given a the hexagonal coordiantes of a mesh point (k1, k2)
+   !> and the first cartesian coordinate of a point (x)
+   !> (that is not on the mesh) we return the given cell index.
+   !> This function is used to localize a point on the hexagonal mesh.
+   !> We suppose the user knows the cartesian coordinates (and thus the hexagonal
+   !> coordinates, see sll_f_cart_to_hex1 and sll_f_cart_to_hex2).
+   !> @param[IN] k1 first hexagonal coordinate of point we wish to localize
+   !> @param[IN] k2 second hexagonal coordinate of point we wish to localize
+   !> @param[IN] mesh hexagonal mesh
+   !> @param[IN] x first cartesian coordiante of point we wish to localize
+   !> @param[OUT] triangle_index index of the cell where the point is localized
+   subroutine sll_s_get_triangle_index(k1, k2, mesh, x, triangle_index)
+      sll_int32, intent(in)  :: k1
+      sll_int32, intent(in)  :: k2
+      class(sll_t_hex_mesh_2d), intent(in)  :: mesh   ! Was pointer (YG - 05.10.2015)
+      sll_real64, intent(in)  :: x   !cartessian_abscisse_other_vertice
+      sll_int32, intent(out) :: triangle_index
+
+      sll_int32 :: global
+
+      triangle_index = -1
+
+      ! almost every point is the lowest point of a lozenge , i.e. 2 triangles
+      ! we get therefore 2 indices per points
+      ! in order to have the correct one we test in which triangle we are
+
+      global = hex_to_global(mesh, k1, k2)
+
+      if ((global .gt. 0) .and. (global .le. mesh%num_pts_tot)) then
+         if (x < mesh%cartesian_coord(1, global)) then
+            triangle_index = mesh%center_index(1, global) !left triangle
+         else
+            triangle_index = mesh%center_index(2, global) !right triangle
+         end if
+      end if
+
+   end subroutine sll_s_get_triangle_index
+
+   !-------------------------------------------------------------------------
+   !> @brief returns the indices of the neighbouring cells/triangles
+   !> @param mesh: hex_mesh hexagonal mesh
+   !> @param cell_index integer: index of the cell from which we want to know
+   !>   the neighbours
+   !> @param[OUT] nei_1 integer: index of the 1st neighbour
+   !> @param[OUT] nei_2 integer: index of the 2nd neighbour
+   !> @param[OUT] nei_3 integer: index of the 3rd neighbour
+   subroutine get_neighbours(mesh, cell_index, nei_1, nei_2, nei_3)
+      class(sll_t_hex_mesh_2d), intent(in)  :: mesh
+      sll_int32, intent(in)  :: cell_index
+      sll_int32, intent(out) :: nei_1
+      sll_int32, intent(out) :: nei_2
+      sll_int32, intent(out) :: nei_3
+
+      sll_real64 :: xc
+      sll_real64 :: yc
+      sll_int32  :: s1
+      sll_int32  :: s2
+      sll_int32  :: s3
+      sll_real64 :: x1, y1
+      sll_real64 :: x2, y2
+      sll_real64 :: x3, y3
+      sll_real64 :: x
+      sll_real64 :: y
+      sll_int32  :: k1
+      sll_int32  :: k2
+      sll_real64 :: coef
+
+      ! Getting the cell's center coordinates:
+      xc = mesh%center_cartesian_coord(1, cell_index)
+      yc = mesh%center_cartesian_coord(2, cell_index)
+
+      ! Getting the cell's vertices indices:
+      call sll_s_get_cell_vertices_index(xc, yc, mesh, s1, s2, s3)
+
+      ! Getting the vertex coordinates:
+      x1 = mesh%cartesian_coord(1, s1)
+      y1 = mesh%cartesian_coord(2, s1)
+      x2 = mesh%cartesian_coord(1, s2)
+      y2 = mesh%cartesian_coord(2, s2)
+      x3 = mesh%cartesian_coord(1, s3)
+      y3 = mesh%cartesian_coord(2, s3)
+
+      ! Getting the neighbours centers coordinates by symmetry to the cell's edges
+      ! First center (symmetry with P1-P2) :
+      coef = 2._f64*((xc - x1)*(x2 - x1) + &
+                     (yc - y1)*(y2 - y1))/((x2 - x1)**2 + &
+                                           (y2 - y1)**2)
+      x = coef*(x2 - x1) - (xc - x1) + x1
+      y = coef*(y2 - y1) - (yc - y1) + y1
+      ! Getting its index :
+      k1 = sll_f_cart_to_hex1(mesh, x, y)
+      k2 = sll_f_cart_to_hex2(mesh, x, y)
+      call sll_s_get_triangle_index(k1, k2, mesh, x, nei_1)
+
+      ! Second center (symmetry with P2-P3) :
+      coef = 2._f64*((xc - x2)*(x3 - x2) + &
+                     (yc - y2)*(y3 - y2))/((x3 - x2)**2 + &
+                                           (y3 - y2)**2)
+      x = coef*(x3 - x2) - (xc - x2) + x2
+      y = coef*(y3 - y2) - (yc - y2) + y2
+      ! Getting its index :
+      k1 = sll_f_cart_to_hex1(mesh, x, y)
+      k2 = sll_f_cart_to_hex2(mesh, x, y)
+      call sll_s_get_triangle_index(k1, k2, mesh, x, nei_2)
+
+      ! Third center (symmetry with P1-P3) :
+      coef = 2._f64*((xc - x1)*(x3 - x1) + &
+                     (yc - y1)*(y3 - y1))/((x3 - x1)**2 + &
+                                           (y3 - y1)**2)
+      x = coef*(x3 - x1) - (xc - x1) + x1
+      y = coef*(y3 - y1) - (yc - y1) + y1
+      ! Getting its index :
+      k1 = sll_f_cart_to_hex1(mesh, x, y)
+      k2 = sll_f_cart_to_hex2(mesh, x, y)
+      call sll_s_get_triangle_index(k1, k2, mesh, x, nei_3)
+
+   end subroutine get_neighbours
 
 !---------------------------------------------------------------------------
 !> @brief <BRIEF_DESCRIPTION>
 !> @details <DETAILED_DESCRIPTION>
 !> @param[<IN or OUT or INOUT>] <PARAM1> <DESCRIPTION>
 !> @param[<IN or OUT or INOUT>] <PARAM2> <DESCRIPTION>
-  subroutine sll_s_get_edge_index(k1,k2,mesh,x,edge_index1,edge_index2,edge_index3)
-    type(sll_t_hex_mesh_2d), pointer :: mesh
-    sll_real64, intent(in)         :: x !cartessian_abscisse_other_vertice
-    sll_int32, intent(in)          :: k1, k2
-    sll_int32, intent(out)         :: edge_index1,edge_index2,edge_index3
-    sll_int32                      :: global, global2
+   subroutine sll_s_get_edge_index(k1, k2, mesh, x, edge_index1, edge_index2, edge_index3)
+      type(sll_t_hex_mesh_2d), pointer :: mesh
+      sll_real64, intent(in)         :: x !cartessian_abscisse_other_vertice
+      sll_int32, intent(in)          :: k1, k2
+      sll_int32, intent(out)         :: edge_index1, edge_index2, edge_index3
+      sll_int32                      :: global, global2
 
-    ! in short :
-    ! returns the three indices of the edge  of the triangle which contains
-    ! a point of abscisse x and which lowest vertex is of hexa. coordinate
-    ! k1, k2
+      ! in short :
+      ! returns the three indices of the edge  of the triangle which contains
+      ! a point of abscisse x and which lowest vertex is of hexa. coordinate
+      ! k1, k2
 
-    ! almost every point is the lowest point of a lozenge , i.e. 3 edges
-    ! we get therefore 3 indices per points
-    ! but we want the three indices of the triangle which contains a point
-    ! of abscisse x.
-    ! we therefore test in which kind of triangle we are
-    ! ( oriented left or right ) then we get directly the indices of the first
-    ! two edges then we deduce from the kind of triangle which point is to the
-    ! left ( respectively to the right ) and get the index of the third edge
+      ! almost every point is the lowest point of a lozenge , i.e. 3 edges
+      ! we get therefore 3 indices per points
+      ! but we want the three indices of the triangle which contains a point
+      ! of abscisse x.
+      ! we therefore test in which kind of triangle we are
+      ! ( oriented left or right ) then we get directly the indices of the first
+      ! two edges then we deduce from the kind of triangle which point is to the
+      ! left ( respectively to the right ) and get the index of the third edge
 
-    global = hex_to_global(mesh,k1,k2)
+      global = hex_to_global(mesh, k1, k2)
 
-    if ( x < mesh%cartesian_coord(1,global) ) then
-       edge_index1 = mesh%edge_center_index(1,global)
-       edge_index2 = mesh%edge_center_index(2,global)
-       global2 = hex_to_global(mesh,k1,k2+1)
-       edge_index3 = mesh%edge_center_index(3,global2)
-    else
-       edge_index1 = mesh%edge_center_index(3,global)
-       edge_index2 = mesh%edge_center_index(2,global)
-       global2 = hex_to_global(mesh,k1+1,k2)
-       edge_index3 = mesh%edge_center_index(1,global2)
-    endif
+      if (x < mesh%cartesian_coord(1, global)) then
+         edge_index1 = mesh%edge_center_index(1, global)
+         edge_index2 = mesh%edge_center_index(2, global)
+         global2 = hex_to_global(mesh, k1, k2 + 1)
+         edge_index3 = mesh%edge_center_index(3, global2)
+      else
+         edge_index1 = mesh%edge_center_index(3, global)
+         edge_index2 = mesh%edge_center_index(2, global)
+         global2 = hex_to_global(mesh, k1 + 1, k2)
+         edge_index3 = mesh%edge_center_index(1, global2)
+      end if
 
-    if (edge_index1 == -1 ) print*, "problem in sll_s_get_edge_index  l", __LINE__
-    if (edge_index2 == -1 ) print*, "problem in sll_s_get_edge_index  l", __LINE__
-    if (edge_index3 == -1 ) print*, "problem in sll_s_get_edge_index  l", __LINE__
+      if (edge_index1 == -1) print *, "problem in sll_s_get_edge_index  l", __LINE__
+      if (edge_index2 == -1) print *, "problem in sll_s_get_edge_index  l", __LINE__
+      if (edge_index3 == -1) print *, "problem in sll_s_get_edge_index  l", __LINE__
 
-  end subroutine sll_s_get_edge_index
+   end subroutine sll_s_get_edge_index
 
+   !> @brief Function that allows to change from the current element notation
+   !> to one more intuitive
+   !> @details As the notations of the elements, chosen by Charles, is not
+   !> really intuitive, this functions allow to go from that one, to one
+   !> easier to understand. It will give the index of the element in the new
+   !> notation system, when given an index of the older system.
+   !> Here is the difference between the two notation for a mesh of 6 elements
+   !> (ie. nc = 1):
+   !>      Charles notation:  || New notation:
+   !>           /|\           ||       /|\
+   !>         / 1|2 \         ||     / 2|1 \
+   !>        | 3\|/6 |        ||    | 3\|/6 |      The new notation system
+   !>        | /4|5\ |        ||    | /4|5\ |      respects more the hexagonal
+   !>           \|/           ||       \|/         notation style.
+   !> @param[in]  mesh pointer to the hexagonal mesh
+   !> @param[in]  i_elmt_old integer index of an element in Charles notation
+   !> @param[out] i_elmt integer index of an element in the new notation system.
+   function sll_f_change_elements_notation(mesh, i_elmt_old) result(i_elmt)
+      type(sll_t_hex_mesh_2d), pointer :: mesh
+      sll_int32, intent(in) :: i_elmt_old
+      sll_int32 :: i_elmt
+      sll_int32 :: e1, e2, e3
+      sll_int32 :: j1, j2, j3
+      sll_int32 :: e1_k1, e1_k2
+      sll_int32 :: e2_k1, e2_k2
+      sll_int32 :: e3_k1, e3_k2
+      sll_int32 :: e1_distance
+      sll_int32 :: e2_distance
+      sll_int32 :: e3_distance
+      sll_int32 :: sixth
+      sll_int32 :: layer
+      sll_int32 :: npts_layer
+      sll_int32 :: npts_layer_1
+      sll_int32 :: displacement
 
-  !> @brief Function that allows to change from the current element notation
-  !> to one more intuitive
-  !> @details As the notations of the elements, chosen by Charles, is not
-  !> really intuitive, this functions allow to go from that one, to one
-  !> easier to understand. It will give the index of the element in the new
-  !> notation system, when given an index of the older system.
-  !> Here is the difference between the two notation for a mesh of 6 elements
-  !> (ie. nc = 1):
-  !>      Charles notation:  || New notation:
-  !>           /|\           ||       /|\
-  !>         / 1|2 \         ||     / 2|1 \
-  !>        | 3\|/6 |        ||    | 3\|/6 |      The new notation system
-  !>        | /4|5\ |        ||    | /4|5\ |      respects more the hexagonal
-  !>           \|/           ||       \|/         notation style.
-  !> @param[in]  mesh pointer to the hexagonal mesh
-  !> @param[in]  i_elmt_old integer index of an element in Charles notation
-  !> @param[out] i_elmt integer index of an element in the new notation system.
-  function sll_f_change_elements_notation(mesh, i_elmt_old) result(i_elmt)
-    type(sll_t_hex_mesh_2d), pointer :: mesh
-    sll_int32, intent(in) :: i_elmt_old
-    sll_int32 :: i_elmt
-    sll_int32 :: e1, e2, e3
-    sll_int32 :: j1, j2, j3
-    sll_int32 :: e1_k1, e1_k2
-    sll_int32 :: e2_k1, e2_k2
-    sll_int32 :: e3_k1, e3_k2
-    sll_int32 :: e1_distance
-    sll_int32 :: e2_distance
-    sll_int32 :: e3_distance
-    sll_int32 :: sixth
-    sll_int32 :: layer
-    sll_int32 :: npts_layer
-    sll_int32 :: npts_layer_1
-    sll_int32 :: displacement
+      if (i_elmt_old .eq. -1) then
+         i_elmt = -1
+         return
+      end if
 
-    if (i_elmt_old.eq.-1) then
-       i_elmt = -1
-       return
-    end if
+      ! Getting cell vertices
+      call sll_s_get_cell_vertices_index(mesh%center_cartesian_coord(1, i_elmt_old), &
+                                         mesh%center_cartesian_coord(2, i_elmt_old), &
+                                         mesh, &
+                                         e1, e2, e3)
 
-    ! Getting cell vertices
-    call sll_s_get_cell_vertices_index(mesh%center_cartesian_coord(1,i_elmt_old), &
-         mesh%center_cartesian_coord(2,i_elmt_old), &
-         mesh, &
-         e1, e2, e3)
+      ! Getting their hexagonal coordinates
+      e1_k1 = mesh%hex_coord(1, e1)
+      e1_k2 = mesh%hex_coord(2, e1)
+      e2_k1 = mesh%hex_coord(1, e2)
+      e2_k2 = mesh%hex_coord(2, e2)
+      e3_k1 = mesh%hex_coord(1, e3)
+      e3_k2 = mesh%hex_coord(2, e3)
 
-    ! Getting their hexagonal coordinates
-    e1_k1 = mesh%hex_coord(1,e1)
-    e1_k2 = mesh%hex_coord(2,e1)
-    e2_k1 = mesh%hex_coord(1,e2)
-    e2_k2 = mesh%hex_coord(2,e2)
-    e3_k1 = mesh%hex_coord(1,e3)
-    e3_k2 = mesh%hex_coord(2,e3)
+      ! Getting their distance to origin:
+      e1_distance = sll_f_cells_to_origin(e1_k1, e1_k2)
+      e2_distance = sll_f_cells_to_origin(e2_k1, e2_k2)
+      e3_distance = sll_f_cells_to_origin(e3_k1, e3_k2)
 
-    ! Getting their distance to origin:
-    e1_distance = sll_f_cells_to_origin(e1_k1, e1_k2)
-    e2_distance = sll_f_cells_to_origin(e2_k1, e2_k2)
-    e3_distance = sll_f_cells_to_origin(e3_k1, e3_k2)
+      ! computing on which hexagonal layer is the cell
+      layer = e1_distance + e2_distance + e3_distance
+      layer = layer/3
 
-    ! computing on which hexagonal layer is the cell
-    layer = e1_distance + e2_distance + e3_distance
-    layer = layer / 3
+      !Computing on which sixth of the hexagon are we:
+      if ((e1_k1 >= 0) .and. (e1_k2 >= 0) .and. &
+          (e2_k1 >= 0) .and. (e2_k2 >= 0) .and. &
+          (e3_k1 >= 0) .and. (e3_k2 >= 0)) then
+         if (e1_k1 + e2_k1 + e3_k1 .gt. e1_k2 + e2_k2 + e3_k2) then
+            sixth = 1
+         else
+            sixth = 2
+         end if
+      elseif ((e1_k1 <= 0) .and. (e1_k2 <= 0) .and. &
+              (e2_k1 <= 0) .and. (e2_k2 <= 0) .and. &
+              (e3_k1 <= 0) .and. (e3_k2 <= 0)) then
+         if (abs(e1_k1 + e2_k1 + e3_k1) .gt. abs(e1_k2 + e2_k2 + e3_k2)) then
+            sixth = 4
+         else
+            sixth = 5
+         end if
+      elseif ((e1_k1 <= 0) .and. (e1_k2 >= 0) .and. &
+              (e2_k1 <= 0) .and. (e2_k2 >= 0) .and. &
+              (e3_k1 <= 0) .and. (e3_k2 >= 0)) then
+         sixth = 3
+      else
+         sixth = 6
+      end if
 
-    !Computing on which sixth of the hexagon are we:
-    if ((e1_k1 >= 0).and.(e1_k2 >= 0).and.&
-         (e2_k1 >= 0).and.(e2_k2 >= 0).and.&
-         (e3_k1 >= 0).and.(e3_k2 >= 0)) then
-       if (e1_k1+e2_k1+e3_k1 .gt. e1_k2+e2_k2+e3_k2) then
-          sixth = 1
-       else
-          sixth = 2
-       end if
-    elseif ((e1_k1 <= 0).and.(e1_k2 <= 0).and.&
-         (e2_k1 <= 0).and.(e2_k2 <= 0).and.&
-         (e3_k1 <= 0).and.(e3_k2 <= 0)) then
-       if (abs(e1_k1+e2_k1+e3_k1).gt.abs(e1_k2+e2_k2+e3_k2)) then
-          sixth = 4
-       else
-          sixth = 5
-       endif
-    elseif ((e1_k1 <= 0).and.(e1_k2 >= 0).and.&
-         (e2_k1 <= 0).and.(e2_k2 >= 0).and.&
-         (e3_k1 <= 0).and.(e3_k2 >= 0)) then
-       sixth = 3
-    else
-       sixth = 6
-    end if
+      if (layer .eq. 0) then
+         ! Treating the first layer separetly
+         i_elmt = sixth
+      else
+         ! founding the displacement:
+         npts_layer = 3*(layer + 1)*layer + 1
+         npts_layer_1 = 3*(layer - 1)*layer + 1
+         j1 = e1 - npts_layer
+         j2 = e2 - npts_layer
+         j3 = e3 - npts_layer
+         if (j1 <= 0) then
+            if (j2 <= 0) then
+               displacement = e3 - npts_layer
+               if (MOD(sixth, 2) .eq. 1) then
+                  displacement = 2*(displacement - 1) - (sixth - 1)
+               else
+                  displacement = 2*(displacement - 1) - (sixth - 1)
+               end if
+            elseif (j3 <= 0) then
+               displacement = e2 - npts_layer
+               if (MOD(sixth, 2) .eq. 1) then
+                  displacement = 2*(displacement - 1) - (sixth - 1)
+               else
+                  displacement = 2*(displacement - 1) - (sixth - 1)
+               end if
+            else
+               displacement = e1 - npts_layer_1
+               if (MOD(sixth, 2) .eq. 1) then
+                  displacement = 2*(displacement - 1) + sixth
+               else
+                  displacement = 2*(displacement - 1) + sixth
+               end if
+            end if
+         elseif (j2 <= 0) then
+            if (j3 <= 0) then
+               displacement = e1 - npts_layer
+               if (MOD(sixth, 2) .eq. 1) then
+                  displacement = 2*(displacement - 1) - (sixth - 1)
+               else
+                  displacement = 2*(displacement - 1) - (sixth - 1)
+               end if
+            else
+               displacement = e2 - npts_layer_1
+               if ((sixth .eq. 6) .and. (j1 .eq. 1)) then
+                  displacement = e3 - npts_layer_1
+               elseif ((sixth .eq. 6) .and. (j3 .eq. 1)) then
+                  displacement = e1 - npts_layer_1
+               else
+                  displacement = 2*(displacement - 1) + sixth
+               end if
+            end if
+         else
+            displacement = e3 - npts_layer_1
+            if (MOD(sixth, 2) .eq. 1) then
+               displacement = 2*(displacement - 1) + sixth
+            else
+               displacement = 2*(displacement - 1) + sixth
+            end if
+         end if
 
-    if (layer.eq.0) then
-       ! Treating the first layer separetly
-       i_elmt = sixth
-    else
-       ! founding the displacement:
-       npts_layer = 3 * (layer + 1) * layer + 1
-       npts_layer_1 = 3 * (layer - 1) * layer + 1
-       j1 = e1 - npts_layer
-       j2 = e2 - npts_layer
-       j3 = e3 - npts_layer
-       if (j1 <= 0) then
-          if (j2 <= 0) then
-             displacement = e3 - npts_layer
-             if (MOD(sixth,2).eq.1) then
-                displacement = 2*(displacement-1) - (sixth - 1)
-             else
-                displacement = 2*(displacement-1) - (sixth - 1)
-             endif
-          elseif (j3 <= 0) then
-             displacement = e2 -npts_layer
-             if (MOD(sixth,2).eq.1) then
-                displacement = 2*(displacement-1) - (sixth - 1)
-             else
-                displacement = 2*(displacement-1) - (sixth - 1)
-             end if
-          else
-             displacement = e1 - npts_layer_1
-             if (MOD(sixth,2).eq.1) then
-                displacement = 2*(displacement-1) + sixth
-             else
-                displacement = 2*(displacement-1) + sixth
-             end if
-          end if
-       elseif (j2 <= 0) then
-          if (j3 <= 0) then
-             displacement = e1 - npts_layer
-             if (MOD(sixth,2).eq.1) then
-                displacement = 2*(displacement-1) - (sixth - 1)
-             else
-                displacement = 2*(displacement-1) - (sixth - 1)
-             end if
-          else
-             displacement = e2 - npts_layer_1
-             if ((sixth.eq.6).and.(j1.eq.1)) then
-                displacement = e3 - npts_layer_1
-             elseif ((sixth.eq.6).and.(j3.eq.1)) then
-                displacement = e1 - npts_layer_1
-             else
-                displacement = 2*(displacement-1) + sixth
-             end if
-          end if
-       else
-          displacement = e3 - npts_layer_1
-          if (MOD(sixth,2).eq.1) then
-             displacement = 2*(displacement-1) + sixth
-          else
-             displacement = 2*(displacement-1) + sixth
-          end if
-       end if
+         ! result
+         i_elmt = 6*layer*layer + displacement
+      end if
+   end function sll_f_change_elements_notation
 
-       ! result
-       i_elmt = 6*layer*layer + displacement
-    end if
-  end function sll_f_change_elements_notation
+   !---------------------------------------------------------------------------
+   !> @brief Computes the coordinate transformation hex->aligned for a point.
+   !> @details Given a point in the hexagonal mesh, this subroutine computes the
+   !> coordinates it would have if mapped to an aligned flux surface.
+   !> @param[IN] mesh hexagonal mesh
+   !> @param[IN] ind integer index of the point to be mapped.
+   !> @param[IN] x real the x-coordinate of point to be mapped
+   !> @param[IN] y real the y-coordinate of point to be mapped
+   !> @param[OUT] x_new real the x-coordinate of mapped point
+   !> @param[OUT] y_new real the y-coordinate of mapped point
+   recursive subroutine hex_to_aligned_pt(mesh, ind, transf, x_new, y_new)
+      class(sll_t_hex_mesh_2d), intent(in)  :: mesh
+      sll_int32, intent(in)  :: ind
+      character(len=*), intent(in)  :: transf
+      sll_real64, intent(out) :: x_new
+      sll_real64, intent(out) :: y_new
+      ! Local
+      sll_real64 :: x
+      sll_real64 :: y
+      sll_real64 :: radius
+      sll_real64 :: angle
+      sll_real64 :: asin_gamma
+      sll_real64 :: kappa
+      sll_real64 :: x_temp
+      sll_real64 :: y_temp
+      sll_real64 :: dist_to_origin
+      sll_int32  :: k1
+      sll_int32  :: k2
+      sll_int32  :: cells_dist
 
-  !---------------------------------------------------------------------------
-  !> @brief Computes the coordinate transformation hex->aligned for a point.
-  !> @details Given a point in the hexagonal mesh, this subroutine computes the
-  !> coordinates it would have if mapped to an aligned flux surface.
-  !> @param[IN] mesh hexagonal mesh
-  !> @param[IN] ind integer index of the point to be mapped.
-  !> @param[IN] x real the x-coordinate of point to be mapped
-  !> @param[IN] y real the y-coordinate of point to be mapped
-  !> @param[OUT] x_new real the x-coordinate of mapped point
-  !> @param[OUT] y_new real the y-coordinate of mapped point
-  recursive subroutine hex_to_aligned_pt(mesh, ind, transf, x_new, y_new)
-    class(sll_t_hex_mesh_2d), intent(in)  :: mesh
-    sll_int32,              intent(in)  :: ind
-    character(len=*),       intent(in)  :: transf
-    sll_real64,             intent(out) :: x_new
-    sll_real64,             intent(out) :: y_new
-    ! Local
-    sll_real64 :: x
-    sll_real64 :: y
-    sll_real64 :: radius
-    sll_real64 :: angle
-    sll_real64 :: asin_gamma
-    sll_real64 :: kappa
-    sll_real64 :: x_temp
-    sll_real64 :: y_temp
-    sll_real64 :: dist_to_origin
-    sll_int32  :: k1
-    sll_int32  :: k2
-    sll_int32  :: cells_dist
+      ! Initalization
+      x = mesh%cartesian_coord(1, ind)
+      y = mesh%cartesian_coord(2, ind)
+      x_new = -1000.0_f64
+      y_new = -1000.0_f64
 
-    ! Initalization
-    x = mesh%cartesian_coord(1, ind)
-    y = mesh%cartesian_coord(2, ind)
-    x_new = -1000.0_f64
-    y_new = -1000.0_f64
+      select case (transf)
+      case ("CIRCLE")
+         !........................................................................
+         ! Computing current radius from point to origin
+         dist_to_origin = SQRT(x**2 + y**2)
 
-    select case(transf)
-    case("CIRCLE")
-       !........................................................................
-       ! Computing current radius from point to origin
-       dist_to_origin = SQRT(x**2 + y**2)
+         ! Computing the actual radius if the point was on a circle:
+         ! First we get the hexagonal coordinates
+         k1 = mesh%hex_coord(1, ind)
+         k2 = mesh%hex_coord(2, ind)
+         cells_dist = sll_f_cells_to_origin(k1, k2)
+         radius = mesh%radius/real(mesh%num_cells, f64)*real(cells_dist, f64)
 
-       ! Computing the actual radius if the point was on a circle:
-       ! First we get the hexagonal coordinates
-       k1 = mesh%hex_coord(1, ind)
-       k2 = mesh%hex_coord(2, ind)
-       cells_dist = sll_f_cells_to_origin(k1, k2)
-       radius = mesh%radius / real(mesh%num_cells, f64)  * real(cells_dist, f64)
+         if (dist_to_origin .le. sll_p_epsilon_0) then
+            x_new = 0._f64
+            y_new = 0._f64
+         else
+            x_new = x*radius/dist_to_origin
+            y_new = y*radius/dist_to_origin
+         end if
+         !........................................................................
+      case ("TOKAMAK")
+         !........................................................................
+         call mesh%hex_to_aligned_pt(ind, "CIRCLE", x_temp, y_temp)
+         ! Computing current radius and angle
+         radius = SQRT(x_temp**2 + y_temp**2)
+         angle = 0._f64
+         if (.not. ((x_temp .eq. 0._f64) .and. (y_temp .eq. 0._f64))) then
+            angle = ATAN2(y_temp, x_temp)
+         end if
 
-       if (dist_to_origin .le. sll_p_epsilon_0) then
-          x_new = 0._f64
-          y_new = 0._f64
-       else
-          x_new = x * radius/dist_to_origin
-          y_new = y * radius/dist_to_origin
-       end if
-       !........................................................................
-    case("TOKAMAK")
-       !........................................................................
-       call mesh%hex_to_aligned_pt(ind, "CIRCLE", x_temp, y_temp)
-       ! Computing current radius and angle
-       radius = SQRT(x_temp**2 + y_temp**2)
-       angle  = 0._f64
-       if (.not.( (x_temp .eq. 0._f64) .and. (y_temp .eq. 0._f64))) then
-          angle = ATAN2(y_temp, x_temp)
-       end if
+         ! Some constants taken from "Noncircular, finite aspect ratio, local
+         ! equilibrium model" by R.L. Miller et al, Physics of Plamas, Vol 5 ('98)
+         asin_gamma = 0.4290421956533866_f64
+         kappa = 1.66_f64
+         x_new = radius*COS(angle + asin_gamma*SIN(angle))
+         y_new = kappa*radius*SIN(angle)
+         !........................................................................
+      case default
+         print *, "ERROR in hex_to_aligned_pt: no known transformation =>", transf
+         print *, " Options are : CIRCLE and TOKAMAK."
+         STOP
+      end select
+   end subroutine hex_to_aligned_pt
 
-       ! Some constants taken from "Noncircular, finite aspect ratio, local
-       ! equilibrium model" by R.L. Miller et al, Physics of Plamas, Vol 5 ('98)
-       asin_gamma = 0.4290421956533866_f64
-       kappa      = 1.66_f64
-       x_new = radius * COS(angle + asin_gamma * SIN(angle))
-       y_new = kappa * radius * SIN(angle)
-       !........................................................................
-    case default
-       print *, "ERROR in hex_to_aligned_pt: no known transformation =>", transf
-       print *, " Options are : CIRCLE and TOKAMAK."
-       STOP
-    end select
-  end subroutine hex_to_aligned_pt
+   !---------------------------------------------------------------------------
+   !> @brief Computes the coordinate transformation hex->aligned for an element.
+   !> @details Given an element in the hexagonal mesh, this subroutine computes
+   !> the affine transformation that maps the element to the aligned transforma-
+   !> tion. This transformation can be written in the form AX + B = X'.
+   !> @param[IN] mesh hexagonal mesh
+   !> @param[IN] i_elmt int index of the element in the hexagonal mesh.
+   !> @param[OUT] transf_matA real matrix that contains the A matrix.
+   !> @param[OUT] transf_vecB real vector that contains the B vector.
+   subroutine hex_to_aligned_elmt(mesh, i_elmt, transf, transf_matA, transf_vecB)
+      class(sll_t_hex_mesh_2d), intent(in)  :: mesh
+      sll_int32, intent(in)  :: i_elmt
+      character(len=*), intent(in)  :: transf
+      sll_real64, dimension(2, 2), intent(out) :: transf_matA
+      sll_real64, dimension(2), intent(out) :: transf_vecB
+      ! Local
+      sll_real64 :: x_v1, y_v1
+      sll_real64 :: x_v2, y_v2
+      sll_real64 :: x_v3, y_v3
+      sll_real64 :: xp_v1, yp_v1
+      sll_real64 :: xp_v2, yp_v2
+      sll_real64 :: xp_v3, yp_v3
+      sll_real64 :: ccx, ccy
+      sll_int32  :: e1
+      sll_int32  :: e2
+      sll_int32  :: e3
+      sll_int32  :: error_flag
+      sll_int32  :: error_flag2
+      sll_real64, dimension(3, 3) :: P
+      sll_real64, dimension(3, 1) :: Bp1
+      sll_real64, dimension(3, 1) :: Bp2
+      sll_int32, dimension(3)    :: pivot
 
+      ! Getting the indices of the vertices, have to compute first the center coos
+      ccx = mesh%center_cartesian_coord(1, i_elmt)
+      ccy = mesh%center_cartesian_coord(2, i_elmt)
+      call sll_s_get_cell_vertices_index(ccx, ccy, mesh, e1, e2, e3)
 
-  !---------------------------------------------------------------------------
-  !> @brief Computes the coordinate transformation hex->aligned for an element.
-  !> @details Given an element in the hexagonal mesh, this subroutine computes
-  !> the affine transformation that maps the element to the aligned transforma-
-  !> tion. This transformation can be written in the form AX + B = X'.
-  !> @param[IN] mesh hexagonal mesh
-  !> @param[IN] i_elmt int index of the element in the hexagonal mesh.
-  !> @param[OUT] transf_matA real matrix that contains the A matrix.
-  !> @param[OUT] transf_vecB real vector that contains the B vector.
-  subroutine hex_to_aligned_elmt(mesh, i_elmt, transf, transf_matA, transf_vecB)
-    class(sll_t_hex_mesh_2d),     intent(in)  :: mesh
-    sll_int32,                  intent(in)  :: i_elmt
-    character(len=*),           intent(in)  :: transf
-    sll_real64, dimension(2,2), intent(out) :: transf_matA
-    sll_real64, dimension(2),   intent(out) :: transf_vecB
-    ! Local
-    sll_real64 :: x_v1, y_v1
-    sll_real64 :: x_v2, y_v2
-    sll_real64 :: x_v3, y_v3
-    sll_real64 :: xp_v1, yp_v1
-    sll_real64 :: xp_v2, yp_v2
-    sll_real64 :: xp_v3, yp_v3
-    sll_real64 :: ccx,  ccy
-    sll_int32  :: e1
-    sll_int32  :: e2
-    sll_int32  :: e3
-    sll_int32  :: error_flag
-    sll_int32  :: error_flag2
-    sll_real64, dimension(3, 3) :: P
-    sll_real64, dimension(3, 1) :: Bp1
-    sll_real64, dimension(3, 1) :: Bp2
-    sll_int32,  dimension(3)    :: pivot
+      ! Getting the coordinates of the vertices of the element (in the hexmesh)
+      x_v1 = mesh%cartesian_coord(1, e1)
+      y_v1 = mesh%cartesian_coord(2, e1)
+      x_v2 = mesh%cartesian_coord(1, e2)
+      y_v2 = mesh%cartesian_coord(2, e2)
+      x_v3 = mesh%cartesian_coord(1, e3)
+      y_v3 = mesh%cartesian_coord(2, e3)
 
-    ! Getting the indices of the vertices, have to compute first the center coos
-    ccx = mesh%center_cartesian_coord(1, i_elmt)
-    ccy = mesh%center_cartesian_coord(2, i_elmt)
-    call sll_s_get_cell_vertices_index(ccx, ccy, mesh, e1, e2, e3)
+      ! Getting the coordinates of the mapped triangle
+      call mesh%hex_to_aligned_pt(e1, transf, xp_v1, yp_v1)
+      call mesh%hex_to_aligned_pt(e2, transf, xp_v2, yp_v2)
+      call mesh%hex_to_aligned_pt(e3, transf, xp_v3, yp_v3)
 
-    ! Getting the coordinates of the vertices of the element (in the hexmesh)
-    x_v1 = mesh%cartesian_coord(1, e1)
-    y_v1 = mesh%cartesian_coord(2, e1)
-    x_v2 = mesh%cartesian_coord(1, e2)
-    y_v2 = mesh%cartesian_coord(2, e2)
-    x_v3 = mesh%cartesian_coord(1, e3)
-    y_v3 = mesh%cartesian_coord(2, e3)
+      ! We now want to get A and B in AX + B = X', where X contains the values of
+      ! the vertices in the hexmesh and X' the values of the mapped vertices,
+      ! A = ( a11 a12, a21 a22) a 2x2 matrix et B=(b1 b2).
+      ! For this we can solve two indepent linear systems of the form:
+      ! P * A1 = Bp1, where the i-th line of 3x3 matrix P = (x_vi, y_vi, 1),
+      ! A1 = (a11, a12, b1) and Bp1 = (xp_v1, xp_v2, xp_v3).
+      ! The second linear system is P * A2 = Bp2. where P is the same matrix as
+      ! in the previous system, A2 = (a21, a22, b2) and Bp2 is like Bp1 but
+      ! using the y coordinates of the mapped points.
+      ! We use LAPACK for the resolution.
 
-    ! Getting the coordinates of the mapped triangle
-    call mesh%hex_to_aligned_pt(e1, transf, xp_v1, yp_v1)
-    call mesh%hex_to_aligned_pt(e2, transf, xp_v2, yp_v2)
-    call mesh%hex_to_aligned_pt(e3, transf, xp_v3, yp_v3)
+      ! We first create the P matrices:
+      P(1, 1:2) = (/x_v1, y_v1/)
+      P(2, 1:2) = (/x_v2, y_v2/)
+      P(3, 1:2) = (/x_v3, y_v3/)
+      P(:, 3) = 1._f64
 
-    ! We now want to get A and B in AX + B = X', where X contains the values of
-    ! the vertices in the hexmesh and X' the values of the mapped vertices,
-    ! A = ( a11 a12, a21 a22) a 2x2 matrix et B=(b1 b2).
-    ! For this we can solve two indepent linear systems of the form:
-    ! P * A1 = Bp1, where the i-th line of 3x3 matrix P = (x_vi, y_vi, 1),
-    ! A1 = (a11, a12, b1) and Bp1 = (xp_v1, xp_v2, xp_v3).
-    ! The second linear system is P * A2 = Bp2. where P is the same matrix as
-    ! in the previous system, A2 = (a21, a22, b2) and Bp2 is like Bp1 but
-    ! using the y coordinates of the mapped points.
-    ! We use LAPACK for the resolution.
+      ! Then the RHS vectors:
+      Bp1(1, 1) = xp_v1
+      Bp1(2, 1) = xp_v2
+      Bp1(3, 1) = xp_v3
+      ! ... 2nd RHS vector:
+      Bp2(1, 1) = yp_v1
+      Bp2(2, 1) = yp_v2
+      Bp2(3, 1) = yp_v3
 
-    ! We first create the P matrices:
-    P(1, 1:2) = (/ x_v1, y_v1 /)
-    P(2, 1:2) = (/ x_v2, y_v2 /)
-    P(3, 1:2) = (/ x_v3, y_v3 /)
-    P(:, 3)   = 1._f64
+      ! Now we solve the system :
+      error_flag = 0
+      call DGESV(3, 1, P, 3, pivot, Bp1, 3, error_flag)
+      pivot(:) = 0
+      P(1, 1:2) = (/x_v1, y_v1/)
+      P(2, 1:2) = (/x_v2, y_v2/)
+      P(3, 1:2) = (/x_v3, y_v3/)
+      P(:, 3) = 1._f64
+      call DGESV(3, 1, P, 3, pivot, Bp2, 3, error_flag2)
+      if ((error_flag .ne. 0) .or. (error_flag2 .ne. 0)) then
+         print *, "LAPACK error flag for 1st sys = ", error_flag
+         print *, "LAPACK error flag for 2nd sys = ", error_flag2
+         SLL_ERROR('hex_to_aligned_elmt', "Error while calling DGESV from Lapack")
+      end if
 
-    ! Then the RHS vectors:
-    Bp1(1, 1) = xp_v1
-    Bp1(2, 1) = xp_v2
-    Bp1(3, 1) = xp_v3
-    ! ... 2nd RHS vector:
-    Bp2(1, 1) = yp_v1
-    Bp2(2, 1) = yp_v2
-    Bp2(3, 1) = yp_v3
+      transf_matA(1, 1) = Bp1(1, 1)
+      transf_matA(1, 2) = Bp1(2, 1)
+      transf_matA(2, 1) = Bp2(1, 1)
+      transf_matA(2, 2) = Bp2(2, 1)
 
-    ! Now we solve the system :
-    error_flag = 0
-    call DGESV( 3, 1, P, 3, pivot, Bp1, 3, error_flag )
-    pivot(:) = 0
-    P(1, 1:2) = (/ x_v1, y_v1 /)
-    P(2, 1:2) = (/ x_v2, y_v2 /)
-    P(3, 1:2) = (/ x_v3, y_v3 /)
-    P(:, 3)   = 1._f64
-    call DGESV( 3, 1, P, 3, pivot, Bp2, 3, error_flag2 )
-    if ((error_flag .ne. 0).or.(error_flag2 .ne. 0)) then
-       print *, "LAPACK error flag for 1st sys = ", error_flag
-       print *, "LAPACK error flag for 2nd sys = ", error_flag2
-       SLL_ERROR('hex_to_aligned_elmt', "Error while calling DGESV from Lapack")
-    end if
+      transf_vecB(1) = Bp1(3, 1)
+      transf_vecB(2) = Bp2(3, 1)
 
-    transf_matA(1, 1) = Bp1(1, 1)
-    transf_matA(1, 2) = Bp1(2, 1)
-    transf_matA(2, 1) = Bp2(1, 1)
-    transf_matA(2, 2) = Bp2(2, 1)
+   end subroutine hex_to_aligned_elmt
 
-    transf_vecB(1) = Bp1(3, 1)
-    transf_vecB(2) = Bp2(3, 1)
+   !---------------------------------------------------------------------------
+   !> @brief Computes the coordinate transformation ref->hex for an element.
+   !> @details The coordinate transformation is the transformation from the
+   !> reference element to the current cell. As the reference element is the 1st
+   !> cell of an hexagonal mesh of radius 1 the transformation is only a rotation
+   !> followed by a translation. Thus we only need 6 values to stock the
+   !> transformation. 4 values for the matrix A and 2 for the vector v, where:
+   !> Ax + b = x'. x being the reference coordinates and x' the coordinates of
+   !> the current mesh.
+   !> Reference coordinates: (0,0), (sqrt(3)/2, 0.5), (0,1)
+   !> @param[IN] mesh hexagonal mesh
+   !> @param[IN] i_elmt int index of the element in the hexagonal mesh.
+   !> @param[OUT] transf_matA real matrix that contains the A matrix.
+   !> @param[OUT] transf_vecB real vector that contains the B vector.
+   subroutine ref_to_hex_elmt(mesh, i_elmt, transf_matA, transf_vecB)
+      class(sll_t_hex_mesh_2d), intent(in)  :: mesh
+      sll_int32, intent(in)  :: i_elmt
+      sll_real64, dimension(2, 2), intent(out) :: transf_matA
+      sll_real64, dimension(2), intent(out) :: transf_vecB
+      ! Local
+      sll_int32  :: e1
+      sll_int32  :: e2
+      sll_int32  :: e3
+      sll_int32  :: type
+      sll_real64 :: x1, y1
+      sll_real64 :: x_v1
+      sll_real64 :: y_v1
 
-  end subroutine hex_to_aligned_elmt
+      ! We get the cells center coordinates in order to get its vertices
+      x1 = mesh%center_cartesian_coord(1, i_elmt)
+      y1 = mesh%center_cartesian_coord(2, i_elmt)
+      call sll_s_get_cell_vertices_index(x1, y1, mesh, e1, e2, e3)
 
-  !---------------------------------------------------------------------------
-  !> @brief Computes the coordinate transformation ref->hex for an element.
-  !> @details The coordinate transformation is the transformation from the
-  !> reference element to the current cell. As the reference element is the 1st
-  !> cell of an hexagonal mesh of radius 1 the transformation is only a rotation
-  !> followed by a translation. Thus we only need 6 values to stock the
-  !> transformation. 4 values for the matrix A and 2 for the vector v, where:
-  !> Ax + b = x'. x being the reference coordinates and x' the coordinates of
-  !> the current mesh.
-  !> Reference coordinates: (0,0), (sqrt(3)/2, 0.5), (0,1)
-  !> @param[IN] mesh hexagonal mesh
-  !> @param[IN] i_elmt int index of the element in the hexagonal mesh.
-  !> @param[OUT] transf_matA real matrix that contains the A matrix.
-  !> @param[OUT] transf_vecB real vector that contains the B vector.
-  subroutine ref_to_hex_elmt(mesh, i_elmt, transf_matA, transf_vecB)
-    class(sll_t_hex_mesh_2d),     intent(in)  :: mesh
-    sll_int32,                  intent(in)  :: i_elmt
-    sll_real64, dimension(2,2), intent(out) :: transf_matA
-    sll_real64, dimension(2),   intent(out) :: transf_vecB
-    ! Local
-    sll_int32  :: e1
-    sll_int32  :: e2
-    sll_int32  :: e3
-    sll_int32  :: type
-    sll_real64 :: x1, y1
-    sll_real64 :: x_v1
-    sll_real64 :: y_v1
+      ! We get the lowest vertex coordinates (by default: e1's coordinates)
+      x_v1 = mesh%cartesian_coord(1, e1)
+      y_v1 = mesh%cartesian_coord(2, e1)
 
-    ! We get the cells center coordinates in order to get its vertices
-    x1 = mesh%center_cartesian_coord(1, i_elmt)
-    y1 = mesh%center_cartesian_coord(2, i_elmt)
-    call sll_s_get_cell_vertices_index(x1, y1, mesh, e1, e2, e3)
+      ! Getting the cell type:
+      call mesh%cell_type(i_elmt, type)
 
-    ! We get the lowest vertex coordinates (by default: e1's coordinates)
-    x_v1 = mesh%cartesian_coord(1, e1)
-    y_v1 = mesh%cartesian_coord(2, e1)
+      ! We fill the matrices A and B:
+      transf_vecB(1:2) = (/x_v1, y_v1/)
 
-    ! Getting the cell type:
-    call mesh%cell_type(i_elmt, type)
+      if (type == 1) then
+         transf_matA(1, 1) = 0.5_f64/real(mesh%num_cells, f64)
+         transf_matA(1, 2) = -sll_p_sqrt3/2._f64/real(mesh%num_cells, f64)
+         transf_matA(2, 1) = sll_p_sqrt3/2._f64/real(mesh%num_cells, f64)
+         transf_matA(2, 2) = 0.5_f64/real(mesh%num_cells, f64)
+      else
+         transf_matA(1, 1) = 1._f64/real(mesh%num_cells, f64)
+         transf_matA(1, 2) = 0._f64/real(mesh%num_cells, f64)
+         transf_matA(2, 1) = 0._f64/real(mesh%num_cells, f64)
+         transf_matA(2, 2) = 1._f64/real(mesh%num_cells, f64)
+      end if
 
-    ! We fill the matrices A and B:
-    transf_vecB(1:2) = (/ x_v1, y_v1 /)
+   end subroutine ref_to_hex_elmt
 
-    if (type == 1) then
-       transf_matA(1,1) = 0.5_f64 / real(mesh%num_cells, f64)
-       transf_matA(1,2) = -sll_p_sqrt3/2._f64 / real(mesh%num_cells, f64)
-       transf_matA(2,1) =  sll_p_sqrt3/2._f64 / real(mesh%num_cells, f64)
-       transf_matA(2,2) = 0.5_f64 / real(mesh%num_cells, f64)
-    else
-       transf_matA(1,1) = 1._f64 / real(mesh%num_cells, f64)
-       transf_matA(1,2) = 0._f64 / real(mesh%num_cells, f64)
-       transf_matA(2,1) = 0._f64 / real(mesh%num_cells, f64)
-       transf_matA(2,2) = 1._f64 / real(mesh%num_cells, f64)
-    end if
+   !---------------------------------------------------------------------------
+   !> @brief Computes the coordinate transformation ref->aligned for an element.
+   !> @details Given an element in the hexagonal mesh, this subroutine computes
+   !> the affine transformation that maps the reference triangle to the element
+   !> following an aligned transformation. This transformation can be
+   !> written in the form AX + B = X', as it is a combination of ref_to_hex_elmt
+   !> and hex_to_aligned_elmt.
+   !> @param[IN] mesh hexagonal mesh
+   !> @param[IN] i_elmt int index of the element in the hexagonal mesh.
+   !> @param[OUT] transf_matA real matrix that contains the A matrix.
+   !> @param[OUT] transf_vecB real vector that contains the B vector.
+   subroutine ref_to_aligned_elmt(mesh, i_elmt, transf, transf_matA, transf_vecB)
+      class(sll_t_hex_mesh_2d), intent(in)  :: mesh
+      sll_int32, intent(in)  :: i_elmt
+      character(len=*), intent(in)  :: transf
+      sll_real64, dimension(2, 2), intent(out) :: transf_matA
+      sll_real64, dimension(2), intent(out) :: transf_vecB
+      ! Local
+      sll_real64, dimension(2, 2) :: transf_matA1
+      sll_real64, dimension(2)   :: transf_vecB1
+      sll_real64, dimension(2, 2) :: transf_matA2
+      sll_real64, dimension(2)   :: transf_vecB2
 
-  end subroutine ref_to_hex_elmt
+      ! To compute the transformation ref->aligned we compute first the
+      ! transformations ref->hex then hex->aligned:
+      call mesh%ref_to_hex_elmt(i_elmt, transf_matA1, transf_vecB1)
+      call mesh%hex_to_aligned_elmt(i_elmt, transf, transf_matA2, transf_vecB2)
 
-  !---------------------------------------------------------------------------
-  !> @brief Computes the coordinate transformation ref->aligned for an element.
-  !> @details Given an element in the hexagonal mesh, this subroutine computes
-  !> the affine transformation that maps the reference triangle to the element
-  !> following an aligned transformation. This transformation can be
-  !> written in the form AX + B = X', as it is a combination of ref_to_hex_elmt
-  !> and hex_to_aligned_elmt.
-  !> @param[IN] mesh hexagonal mesh
-  !> @param[IN] i_elmt int index of the element in the hexagonal mesh.
-  !> @param[OUT] transf_matA real matrix that contains the A matrix.
-  !> @param[OUT] transf_vecB real vector that contains the B vector.
-  subroutine ref_to_aligned_elmt(mesh, i_elmt, transf, transf_matA, transf_vecB)
-    class(sll_t_hex_mesh_2d),     intent(in)  :: mesh
-    sll_int32,                  intent(in)  :: i_elmt
-    character(len=*),           intent(in)  :: transf
-    sll_real64, dimension(2,2), intent(out) :: transf_matA
-    sll_real64, dimension(2),   intent(out) :: transf_vecB
-    ! Local
-    sll_real64, dimension(2,2) :: transf_matA1
-    sll_real64, dimension(2)   :: transf_vecB1
-    sll_real64, dimension(2,2) :: transf_matA2
-    sll_real64, dimension(2)   :: transf_vecB2
+      ! To get the composition of two linear combinations, we know that:
+      ! A = A2*A1 B=A2*B1+B2
+      transf_matA = MATMUL(transf_matA2, transf_matA1)
+      transf_vecB = MATMUL(transf_matA2, transf_vecB1) + transf_vecB2
 
-    ! To compute the transformation ref->aligned we compute first the
-    ! transformations ref->hex then hex->aligned:
-    call mesh%ref_to_hex_elmt(i_elmt, transf_matA1, transf_vecB1)
-    call mesh%hex_to_aligned_elmt(i_elmt, transf, transf_matA2, transf_vecB2)
+   end subroutine ref_to_aligned_elmt
 
-    ! To get the composition of two linear combinations, we know that:
-    ! A = A2*A1 B=A2*B1+B2
-    transf_matA = MATMUL(transf_matA2, transf_matA1)
-    transf_vecB = MATMUL(transf_matA2, transf_vecB1) + transf_vecB2
+   !-----------------------------------------------------------------------------
+   !> @brief Displays hexagonal mesh in terminal
+   !> @details Displays a simple text describing the mesh to the terminal
+   !> @param[IN] mesh hexagonal mesh
+   subroutine sll_s_display_hex_mesh_2d(mesh)
+      ! Displays mesh information on the terminal
+      class(sll_t_hex_mesh_2d), intent(in) :: mesh
 
-  end subroutine ref_to_aligned_elmt
-
-
-  !-----------------------------------------------------------------------------
-  !> @brief Displays hexagonal mesh in terminal
-  !> @details Displays a simple text describing the mesh to the terminal
-  !> @param[IN] mesh hexagonal mesh
-  subroutine sll_s_display_hex_mesh_2d(mesh)
-    ! Displays mesh information on the terminal
-    class(sll_t_hex_mesh_2d), intent(in) :: mesh
-
-    write(*,"(/,(a))") '2D mesh : num_cells   num_pts        center_x1       &
-         & center_x2  &
-         &       radius'
-    write(*,"(10x,2(i6,9x),3(g13.3,1x))") mesh%num_cells,  &
-         mesh%num_pts_tot,&
-         mesh%center_x1,  &
-         mesh%center_x2,  &
+      write (*, "(/,(a))") '2D mesh : num_cells   num_pts        center_x1       &
+           & center_x2  &
+           &       radius'
+      write (*, "(10x,2(i6,9x),3(g13.3,1x))") mesh%num_cells, &
+         mesh%num_pts_tot, &
+         mesh%center_x1, &
+         mesh%center_x2, &
          mesh%radius
-  end subroutine sll_s_display_hex_mesh_2d
+   end subroutine sll_s_display_hex_mesh_2d
 
+   !> @brief Writes files for CAID
+   !> @details Writes the files elements.txt, nodes.txt and dirichlet.txt
+   !> describing respectively the mesh's cells, edges and BC in the format of
+   !> DJANGO CAID and pigasus.
+   !> This is was written in order to have a Poisson solver for the hex-mesh
+   !> @param mesh hex-mesh that will be described
+   subroutine sll_s_write_caid_files(mesh, transf, spline_deg)
+      type(sll_t_hex_mesh_2d), pointer :: mesh
+      character(len=*), intent(in)  :: transf
+      character(len=20), parameter :: name_nodes = "boxsplines_nodes.txt"
+      character(len=23), parameter :: name_elemt = "boxsplines_elements.txt"
+      character(len=24), parameter :: name_diri = "boxsplines_dirichlet.txt"
+      sll_real64 :: x1, y1
+      sll_real64 :: scale
+      sll_int32  :: e1, e2, e3
+      sll_int32  :: temp_e
+      sll_int32  :: i, j
+      sll_int32  :: k1, k2
+      sll_int32  :: spline_deg
+      sll_int32  :: nen
+      sll_int32  :: num_pts_tot
+      sll_int32  :: num_ele
+      sll_int32  :: nei1, nei2, nei3
+      sll_int32  :: num_cells_to_origin
+      sll_int32  :: boundary
+      sll_int32  :: dirichlet
+      sll_int32  :: type
+      sll_int32, parameter :: out_unit = 20
+      sll_real64, dimension(2, 2) :: matA
+      sll_real64, dimension(2)   :: vecB
 
-  !> @brief Writes files for CAID
-  !> @details Writes the files elements.txt, nodes.txt and dirichlet.txt
-  !> describing respectively the mesh's cells, edges and BC in the format of
-  !> DJANGO CAID and pigasus.
-  !> This is was written in order to have a Poisson solver for the hex-mesh
-  !> @param mesh hex-mesh that will be described
-  subroutine sll_s_write_caid_files(mesh, transf, spline_deg)
-    type(sll_t_hex_mesh_2d), pointer :: mesh
-    character(len=*),  intent(in)  :: transf
-    character(len=20),   parameter :: name_nodes = "boxsplines_nodes.txt"
-    character(len=23),   parameter :: name_elemt = "boxsplines_elements.txt"
-    character(len=24),   parameter :: name_diri  = "boxsplines_dirichlet.txt"
-    sll_real64 :: x1, y1
-    sll_real64 :: scale
-    sll_int32  :: e1, e2, e3
-    sll_int32  :: temp_e
-    sll_int32  :: i, j
-    sll_int32  :: k1, k2
-    sll_int32  :: spline_deg
-    sll_int32  :: nen
-    sll_int32  :: num_pts_tot
-    sll_int32  :: num_ele
-    sll_int32  :: nei1, nei2, nei3
-    sll_int32  :: num_cells_to_origin
-    sll_int32  :: boundary
-    sll_int32  :: dirichlet
-    sll_int32  :: type
-    sll_int32,  parameter :: out_unit=20
-    sll_real64, dimension(2,2) :: matA
-    sll_real64, dimension(2)   :: vecB
+      ! Writing the nodes file....................
+      open (unit=out_unit, file=name_nodes, action="write", status="replace")
 
-    ! Writing the nodes file....................
-    open (unit=out_unit,file=name_nodes,action="write",status="replace")
+      ! We first write the total number of points/nodes:
+      num_pts_tot = mesh%num_pts_tot
+      write (out_unit, "(i6)") num_pts_tot
+      ! For every node...
+      do i = 1, num_pts_tot
+         k1 = mesh%hex_coord(1, i)
+         k2 = mesh%hex_coord(2, i)
+         num_cells_to_origin = sll_f_cells_to_origin(k1, k2)
+         boundary = 0
+         if (num_cells_to_origin .eq. mesh%num_cells) then
+            boundary = 1
+         end if
+         ! Mapping to circle:
+         if (transf .eq. "IDENTITY") then
+            x1 = mesh%cartesian_coord(1, i)
+            y1 = mesh%cartesian_coord(2, i)
+         else
+            call mesh%hex_to_aligned_pt(i, transf, x1, y1)
+         end if
 
-    ! We first write the total number of points/nodes:
-    num_pts_tot = mesh%num_pts_tot
-    write(out_unit, "(i6)") num_pts_tot
-    ! For every node...
-    do i=1, num_pts_tot
-       k1 = mesh%hex_coord(1, i)
-       k2 = mesh%hex_coord(2, i)
-       num_cells_to_origin = sll_f_cells_to_origin(k1, k2)
-       boundary = 0
-       if (num_cells_to_origin.eq.mesh%num_cells) then
-          boundary = 1
-       end if
-       ! Mapping to circle:
-       if (transf .eq. "IDENTITY") then
-          x1 = mesh%cartesian_coord(1, i)
-          y1 = mesh%cartesian_coord(2, i)
-       else
-          call mesh%hex_to_aligned_pt( i, transf, x1, y1)
-       end if
-
-       !... we write the coordinates
-       write (out_unit, "((i6),(a,1x),(g25.17),(a,1x),(g25.17))") boundary, &
+         !... we write the coordinates
+         write (out_unit, "((i6),(a,1x),(g25.17),(a,1x),(g25.17))") boundary, &
             ",", &
             x1, &
             ",", &
             y1
-    end do
+      end do
 
-    close(out_unit)
+      close (out_unit)
 
-    ! Writing the elements file....................
-    ! File containing general information about the cells and the transformation
-    open (unit=out_unit,file=name_elemt,action="write",status="replace")
+      ! Writing the elements file....................
+      ! File containing general information about the cells and the transformation
+      open (unit=out_unit, file=name_elemt, action="write", status="replace")
 
-    ! We first write the total number of cells/elements:
-    num_ele = mesh%num_triangles
-    write(out_unit, "(i6)") num_ele
+      ! We first write the total number of cells/elements:
+      num_ele = mesh%num_triangles
+      write (out_unit, "(i6)") num_ele
 
-    ! The scale is fix here
-    scale = 1._f64
-    !... we write its global number
-    write (out_unit, "(i6)") spline_deg
+      ! The scale is fix here
+      scale = 1._f64
+      !... we write its global number
+      write (out_unit, "(i6)") spline_deg
 
-    ! For every element...
-    do i=1, num_ele
-       !... we write its global number
-       write (out_unit, "(i6)") sll_f_change_elements_notation(mesh, i)
-       !... we write its type (1 or 2)
-       call mesh%cell_type(i, type)
-       write (out_unit, "(i6)") type
-       !... we write the spline degree
-       write(out_unit, "(i6)") spline_deg
-       !... we write the scale of the element
-       write(out_unit, "((f22.17),(a,1x))",advance='no') scale, ","
-       !... we write its neighbours
-       call mesh%get_neighbours(i, nei1, nei2, nei3)
-       write(out_unit, "(3((i6),(a,1x)))",advance='no') &
+      ! For every element...
+      do i = 1, num_ele
+         !... we write its global number
+         write (out_unit, "(i6)") sll_f_change_elements_notation(mesh, i)
+         !... we write its type (1 or 2)
+         call mesh%cell_type(i, type)
+         write (out_unit, "(i6)") type
+         !... we write the spline degree
+         write (out_unit, "(i6)") spline_deg
+         !... we write the scale of the element
+         write (out_unit, "((f22.17),(a,1x))", advance='no') scale, ","
+         !... we write its neighbours
+         call mesh%get_neighbours(i, nei1, nei2, nei3)
+         write (out_unit, "(3((i6),(a,1x)))", advance='no') &
             sll_f_change_elements_notation(mesh, nei1), ",", &
             sll_f_change_elements_notation(mesh, nei2), ",", &
             sll_f_change_elements_notation(mesh, nei3), ","
-       !... we write the indices of the edges
-       x1 = mesh%center_cartesian_coord(1, i)
-       y1 = mesh%center_cartesian_coord(2, i)
-       call sll_s_get_cell_vertices_index(x1, y1, mesh, e1, e2, e3)
-       if (type.ne.2) then
-          temp_e = e2
-          e2 = e3
-          e3 = temp_e
-       end if
-       write(out_unit, "((i6),(a,1x),(i6),(a,1x),(i6))") e1, ",",e2,",", e3
-       !... we write the coordinate transformation (*)
-       select case(transf)
-       case("IDENTITY")
-          call mesh%ref_to_hex_elmt(i, matA, vecB)
-       case ("TOKAMAK")
-          call mesh%ref_to_aligned_elmt(i, transf, matA, vecB)
-       case ("CIRCLE")
-          call mesh%ref_to_aligned_elmt(i, transf, matA, vecB)
-       case default
-          print *, "ERROR in write_caid_files(): Not known transfromation."
-          print *, " Options are : CIRCLE, TOKAMAK and IDENTITY."
-          STOP
-       end select
+         !... we write the indices of the edges
+         x1 = mesh%center_cartesian_coord(1, i)
+         y1 = mesh%center_cartesian_coord(2, i)
+         call sll_s_get_cell_vertices_index(x1, y1, mesh, e1, e2, e3)
+         if (type .ne. 2) then
+            temp_e = e2
+            e2 = e3
+            e3 = temp_e
+         end if
+         write (out_unit, "((i6),(a,1x),(i6),(a,1x),(i6))") e1, ",", e2, ",", e3
+         !... we write the coordinate transformation (*)
+         select case (transf)
+         case ("IDENTITY")
+            call mesh%ref_to_hex_elmt(i, matA, vecB)
+         case ("TOKAMAK")
+            call mesh%ref_to_aligned_elmt(i, transf, matA, vecB)
+         case ("CIRCLE")
+            call mesh%ref_to_aligned_elmt(i, transf, matA, vecB)
+         case default
+            print *, "ERROR in write_caid_files(): Not known transfromation."
+            print *, " Options are : CIRCLE, TOKAMAK and IDENTITY."
+            STOP
+         end select
 
-       write(out_unit, "(5((f22.17), (a,1x)), (f22.17))") &
-            matA(1,1), ",", matA(1,2), ",", matA(2,1), ",", matA(2,2), ",", &
+         write (out_unit, "(5((f22.17), (a,1x)), (f22.17))") &
+            matA(1, 1), ",", matA(1, 2), ",", matA(2, 1), ",", matA(2, 2), ",", &
             vecB(1), ",", vecB(2)
-    end do
-    print *, ""
-    close(out_unit)
+      end do
+      print *, ""
+      close (out_unit)
 
-    ! (*) The coordinate transformation is the transformation from the reference
-    ! element to the current cell. As the reference element is the 1st cell of
-    ! an hexagonal mesh of radius 1, the transformation is only a rotation
-    ! followed by a translation. Thus we only need 6 values to stock the
-    ! transformation. 4 values for the matrix A and 2 for the vector v, where:
-    ! Ax + b = x'. x being the reference coordinates and x' the coordinates of
-    ! the current mesh.
-    ! Reference coordinates: (0,0), (sqrt(3)/2, 0.5), (0,1)
+      ! (*) The coordinate transformation is the transformation from the reference
+      ! element to the current cell. As the reference element is the 1st cell of
+      ! an hexagonal mesh of radius 1, the transformation is only a rotation
+      ! followed by a translation. Thus we only need 6 values to stock the
+      ! transformation. 4 values for the matrix A and 2 for the vector v, where:
+      ! Ax + b = x'. x being the reference coordinates and x' the coordinates of
+      ! the current mesh.
+      ! Reference coordinates: (0,0), (sqrt(3)/2, 0.5), (0,1)
 
-    ! Writing the dirichlet file....................
-    open (unit=out_unit,file=name_diri,action="write",status="replace")
+      ! Writing the dirichlet file....................
+      open (unit=out_unit, file=name_diri, action="write", status="replace")
 
-    ! We first write the total number of cells/elements:
-    num_ele = mesh%num_triangles
-    write(out_unit, "(i6)") num_ele
+      ! We first write the total number of cells/elements:
+      num_ele = mesh%num_triangles
+      write (out_unit, "(i6)") num_ele
 
-    ! The number of splines non null in a cell depends on the degree
-    nen = 3*spline_deg*spline_deg
-    dirichlet = 1
+      ! The number of splines non null in a cell depends on the degree
+      nen = 3*spline_deg*spline_deg
+      dirichlet = 1
 
-    ! For every element...
-    do i=1, num_ele
-       !... we write its global number
-       write (out_unit, "(i6)") sll_f_change_elements_notation(mesh, i)
-       !... we write the number of elements non-nul
-       write (out_unit, "(i6)") nen
-       do j=1,nen
-          !... we write 1 as at the moment they are all dirichlet
-          write(out_unit, "((i6),(a,1x))", advance='no') dirichlet, ","
-       end do
-       write(out_unit, *) ""
-    end do
-    close(out_unit)
+      ! For every element...
+      do i = 1, num_ele
+         !... we write its global number
+         write (out_unit, "(i6)") sll_f_change_elements_notation(mesh, i)
+         !... we write the number of elements non-nul
+         write (out_unit, "(i6)") nen
+         do j = 1, nen
+            !... we write 1 as at the moment they are all dirichlet
+            write (out_unit, "((i6),(a,1x))", advance='no') dirichlet, ","
+         end do
+         write (out_unit, *) ""
+      end do
+      close (out_unit)
 
-  end subroutine sll_s_write_caid_files
+   end subroutine sll_s_write_caid_files
 
-  !---------------------------------------------------------------------------
-  !> @brief Writes the hexagonal mesh into a given file
-  !> @details Besides general information of the mesh, this function writes in
-  !> a text file (called 'name') for every point its global index, as well as
-  !> the hexagonal and cartesian coordinates
-  !> @param[IN] mesh the hexagonal mesh
-  !> @param[IN] name the name of the file where the info will be written into.
-  subroutine write_hex_mesh_2d( mesh, name )
-    class(sll_t_hex_mesh_2d), intent(in) :: mesh
-    character(len=*)      , intent(in) :: name
+   !---------------------------------------------------------------------------
+   !> @brief Writes the hexagonal mesh into a given file
+   !> @details Besides general information of the mesh, this function writes in
+   !> a text file (called 'name') for every point its global index, as well as
+   !> the hexagonal and cartesian coordinates
+   !> @param[IN] mesh the hexagonal mesh
+   !> @param[IN] name the name of the file where the info will be written into.
+   subroutine write_hex_mesh_2d(mesh, name)
+      class(sll_t_hex_mesh_2d), intent(in) :: mesh
+      character(len=*), intent(in) :: name
 
-    sll_int32  :: i
-    sll_int32  :: num_pts_tot
-    sll_int32  :: k1, k2
-    sll_int32  :: out_unit
+      sll_int32  :: i
+      sll_int32  :: num_pts_tot
+      sll_int32  :: k1, k2
+      sll_int32  :: out_unit
 
-    open( file=name, status="replace", form="formatted", newunit=out_unit )
+      open (file=name, status="replace", form="formatted", newunit=out_unit)
 
-    num_pts_tot = mesh%num_pts_tot
+      num_pts_tot = mesh%num_pts_tot
 
-    ! Optional writing every mesh point and its cartesian coordinates :
-    !    write(*,"(/,(a))") 'hex mesh : num_pnt    x1     x2'
+      ! Optional writing every mesh point and its cartesian coordinates :
+      !    write(*,"(/,(a))") 'hex mesh : num_pnt    x1     x2'
 
-    do i=1, num_pts_tot
-       k1 = mesh%global_to_hex1(i)
-       k2 = mesh%global_to_hex2(i)
-       write (out_unit, "(3(i6,1x),2(g13.3,1x))") i,                &
-            k1,                      &
-            k2,                      &
+      do i = 1, num_pts_tot
+         k1 = mesh%global_to_hex1(i)
+         k2 = mesh%global_to_hex2(i)
+         write (out_unit, "(3(i6,1x),2(g13.3,1x))") i, &
+            k1, &
+            k2, &
             mesh%global_to_x1(i), &
             mesh%global_to_x2(i)
-    end do
+      end do
 
-    close(out_unit)
-  end subroutine write_hex_mesh_2d
+      close (out_unit)
+   end subroutine write_hex_mesh_2d
 
+   !---------------------------------------------------------------------------
+   !> @brief Same as write_field_hex_mesh but output in xmf
+   !> @details This function writes for every point of the hex mesh its cartesian
+   !> coordinate as well as the value of a given field(vector) at that point
+   !> @param[IN] mesh the hexagonal mesh
+   !> @param[IN] field a vector of size =(number of pts of the mesh) containg the
+   !> values of a field on every mesh point.
+   !> @param[IN] name the name of the file where the info will be written into.
+   subroutine write_field_hex_mesh_xmf(mesh, field, name)
 
-  !---------------------------------------------------------------------------
-  !> @brief Same as write_field_hex_mesh but output in xmf
-  !> @details This function writes for every point of the hex mesh its cartesian
-  !> coordinate as well as the value of a given field(vector) at that point
-  !> @param[IN] mesh the hexagonal mesh
-  !> @param[IN] field a vector of size =(number of pts of the mesh) containg the
-  !> values of a field on every mesh point.
-  !> @param[IN] name the name of the file where the info will be written into.
-  subroutine write_field_hex_mesh_xmf(mesh, field, name)
+      class(sll_t_hex_mesh_2d), intent(in) :: mesh
+      sll_real64, dimension(:), intent(in) :: field
+      character(len=*), intent(in) :: name
 
-    class(sll_t_hex_mesh_2d),   intent(in) :: mesh
-    sll_real64, dimension(:), intent(in) :: field
-    character(len=*),         intent(in) :: name
+      sll_int32  :: i
+      sll_int32  :: num_triangles
+      sll_int32  :: num_pts_tot
+      sll_real64, allocatable :: coor(:, :)
+      sll_int32, allocatable :: ntri(:, :)
+      sll_int32  :: error
+      sll_real64 :: x1, x2
 
-    sll_int32  :: i
-    sll_int32  :: num_triangles
-    sll_int32  :: num_pts_tot
-    sll_real64, allocatable :: coor(:,:)
-    sll_int32,  allocatable :: ntri(:,:)
-    sll_int32  :: error
-    sll_real64 :: x1, x2
+      num_pts_tot = mesh%num_pts_tot
+      num_triangles = mesh%num_triangles
+      SLL_ALLOCATE(coor(2, num_pts_tot), error)
+      SLL_ALLOCATE(ntri(3, num_triangles), error)
 
-    num_pts_tot = mesh%num_pts_tot
-    num_triangles = mesh%num_triangles
-    SLL_ALLOCATE(coor(2,num_pts_tot),error)
-    SLL_ALLOCATE(ntri(3,num_triangles),error)
+      do i = 1, num_pts_tot
+         coor(1, i) = mesh%global_to_x1(i)
+         coor(2, i) = mesh%global_to_x2(i)
+      end do
 
-    do i=1, num_pts_tot
-       coor(1,i) = mesh%global_to_x1(i)
-       coor(2,i) = mesh%global_to_x2(i)
-    end do
-
-    do i=1, num_triangles
-       x1      = mesh%center_cartesian_coord(1, i)
-       x2      = mesh%center_cartesian_coord(2, i)
-       call sll_s_get_cell_vertices_index( &
+      do i = 1, num_triangles
+         x1 = mesh%center_cartesian_coord(1, i)
+         x2 = mesh%center_cartesian_coord(2, i)
+         call sll_s_get_cell_vertices_index( &
             x1, x2, mesh, &
-            ntri(1,i), ntri(2,i), ntri(3,i))
-    end do
+            ntri(1, i), ntri(2, i), ntri(3, i))
+      end do
 
-    call sll_s_write_tri_mesh_xmf(&
+      call sll_s_write_tri_mesh_xmf( &
          name, coor, ntri, &
          num_pts_tot, num_triangles, field, 'values')
 
-  end subroutine write_field_hex_mesh_xmf
+   end subroutine write_field_hex_mesh_xmf
 
+   !---------------------------------------------------------------------------
+   !> @brief Same as write_hex_mesh but output is mtv file.
+   !> @details Besides general information of the mesh, this function writes in
+   !> a text file (called 'name') for every point its global index, as well as
+   !> the hexagonal and cartesian coordinates.
+   !> To visualize use plotmtv.
+   !> @param[IN] mesh the hexagonal mesh
+   !> @param[IN] name the name of the file where the info will be written into.
+   subroutine write_hex_mesh_mtv(mesh, mtv_file)
+      class(sll_t_hex_mesh_2d), intent(in) :: mesh
+      character(len=*), intent(in) :: mtv_file
 
-  !---------------------------------------------------------------------------
-  !> @brief Same as write_hex_mesh but output is mtv file.
-  !> @details Besides general information of the mesh, this function writes in
-  !> a text file (called 'name') for every point its global index, as well as
-  !> the hexagonal and cartesian coordinates.
-  !> To visualize use plotmtv.
-  !> @param[IN] mesh the hexagonal mesh
-  !> @param[IN] name the name of the file where the info will be written into.
-  subroutine write_hex_mesh_mtv( mesh, mtv_file )
-    class(sll_t_hex_mesh_2d), intent(in) :: mesh
-    character(len=*)      , intent(in) :: mtv_file
+      sll_real64                 :: coor(2, mesh%num_pts_tot)
+      sll_int32                  :: ntri(3, mesh%num_triangles)
+      sll_real64                 :: x1
+      sll_real64                 :: y1
+      sll_int32                  :: is1
+      sll_int32                  :: is2
+      sll_int32                  :: is3
+      sll_int32                  :: out_unit
+      sll_int32                  :: i
 
-    sll_real64                 :: coor(2,mesh%num_pts_tot)
-    sll_int32                  :: ntri(3,mesh%num_triangles)
-    sll_real64                 :: x1
-    sll_real64                 :: y1
-    sll_int32                  :: is1
-    sll_int32                  :: is2
-    sll_int32                  :: is3
-    sll_int32                  :: out_unit
-    sll_int32                  :: i
+      open (file=mtv_file, status="replace", form="formatted", newunit=out_unit)
 
-    open( file=mtv_file, status="replace", form="formatted", newunit=out_unit )
+      !--- Drawing mesh ---
+      write (out_unit, "(a)") "$DATA=CURVE3D"
+      write (out_unit, "(a)") "%equalscale=T"
+      write (out_unit, "(a)") "%toplabel='Mesh' "
 
-    !--- Drawing mesh ---
-    write(out_unit,"(a)")"$DATA=CURVE3D"
-    write(out_unit,"(a)")"%equalscale=T"
-    write(out_unit,"(a)")"%toplabel='Mesh' "
+      do i = 1, mesh%num_triangles
+         x1 = mesh%center_cartesian_coord(1, i)
+         y1 = mesh%center_cartesian_coord(2, i)
 
-    do i = 1, mesh%num_triangles
-       x1 = mesh%center_cartesian_coord(1, i)
-       y1 = mesh%center_cartesian_coord(2, i)
+         call sll_s_get_cell_vertices_index(x1, y1, mesh, is1, is2, is3)
 
-       call sll_s_get_cell_vertices_index( x1, y1, mesh, is1, is2, is3)
+         ntri(1, i) = is1
+         ntri(2, i) = is2
+         ntri(3, i) = is3
 
-       ntri(1,i) = is1
-       ntri(2,i) = is2
-       ntri(3,i) = is3
+         coor(1, is1) = mesh%global_to_x1(is1)
+         coor(2, is1) = mesh%global_to_x2(is1)
+         coor(1, is2) = mesh%global_to_x1(is2)
+         coor(2, is2) = mesh%global_to_x2(is2)
+         coor(1, is3) = mesh%global_to_x1(is3)
+         coor(2, is3) = mesh%global_to_x2(is3)
 
-       coor(1,is1) = mesh%global_to_x1(is1)
-       coor(2,is1) = mesh%global_to_x2(is1)
-       coor(1,is2) = mesh%global_to_x1(is2)
-       coor(2,is2) = mesh%global_to_x2(is2)
-       coor(1,is3) = mesh%global_to_x1(is3)
-       coor(2,is3) = mesh%global_to_x2(is3)
+         write (out_unit, "(3f10.5)") coor(:, ntri(1, i)), 0.
+         write (out_unit, "(3f10.5)") coor(:, ntri(2, i)), 0.
+         write (out_unit, "(3f10.5)") coor(:, ntri(3, i)), 0.
+         write (out_unit, "(3f10.5)") coor(:, ntri(1, i)), 0.
+         write (out_unit, *)
+      end do
 
-       write(out_unit,"(3f10.5)")coor(:,ntri(1,i)),0.
-       write(out_unit,"(3f10.5)")coor(:,ntri(2,i)),0.
-       write(out_unit,"(3f10.5)")coor(:,ntri(3,i)),0.
-       write(out_unit,"(3f10.5)")coor(:,ntri(1,i)),0.
-       write(out_unit,*)
-    end do
+      !--- Number of knots and triangles
 
-    !--- Number of knots and triangles
+      write (out_unit, "(a)") "$DATA=CURVE3D"
+      write (out_unit, "(a)") "%equalscale=T"
+      write (out_unit, "(a)") "%toplabel='Numeber of knots and triangles' "
 
-    write(out_unit,"(a)")"$DATA=CURVE3D"
-    write(out_unit,"(a)")"%equalscale=T"
-    write(out_unit,"(a)")"%toplabel='Numeber of knots and triangles' "
+      do i = 1, mesh%num_triangles
+         write (out_unit, "(3f10.5)") coor(:, ntri(1, i)), 0.
+         write (out_unit, "(3f10.5)") coor(:, ntri(2, i)), 0.
+         write (out_unit, "(3f10.5)") coor(:, ntri(3, i)), 0.
+         write (out_unit, "(3f10.5)") coor(:, ntri(1, i)), 0.
+         write (out_unit, *)
+      end do
 
-    do i = 1, mesh%num_triangles
-       write(out_unit,"(3f10.5)")coor(:,ntri(1,i)),0.
-       write(out_unit,"(3f10.5)")coor(:,ntri(2,i)),0.
-       write(out_unit,"(3f10.5)")coor(:,ntri(3,i)),0.
-       write(out_unit,"(3f10.5)")coor(:,ntri(1,i)),0.
-       write(out_unit,*)
-    end do
+      do i = 1, mesh%num_triangles
+         x1 = (coor(1, ntri(1, i)) &
+               + coor(1, ntri(2, i)) &
+               + coor(1, ntri(3, i)))/3.0_f64
+         y1 = (coor(2, ntri(1, i)) &
+               + coor(2, ntri(2, i)) &
+               + coor(2, ntri(3, i)))/3.0_f64
+         write (out_unit, "(a)", advance="no") "@text x1="
+         write (out_unit, "(f8.5)", advance="no") x1
+         write (out_unit, "(a)", advance="no") " y1="
+         write (out_unit, "(f8.5)", advance="no") y1
+         write (out_unit, "(a)", advance="no") " z1=0. lc=4 ll='"
+         write (out_unit, "(i4)", advance="no") i
+         write (out_unit, "(a)") "'"
+      end do
 
-    do i = 1, mesh%num_triangles
-       x1 = (  coor(1,ntri(1,i))  &
-             + coor(1,ntri(2,i))  &
-         + coor(1,ntri(3,i))    )/3.0_f64
-       y1 = (  coor(2,ntri(1,i))  &
-             + coor(2,ntri(2,i))  &
-         + coor(2,ntri(3,i))    )/3.0_f64
-       write(out_unit,"(a)"   , advance="no")"@text x1="
-       write(out_unit,"(f8.5)", advance="no") x1
-       write(out_unit,"(a)"   , advance="no")" y1="
-       write(out_unit,"(f8.5)", advance="no") y1
-       write(out_unit,"(a)"   , advance="no")" z1=0. lc=4 ll='"
-       write(out_unit,"(i4)"  , advance="no") i
-       write(out_unit,"(a)")"'"
-    end do
+      do i = 1, mesh%num_pts_tot
+         x1 = coor(1, i)
+         y1 = coor(2, i)
+         write (out_unit, "(a)", advance="no") "@text x1="
+         write (out_unit, "(g15.3)", advance="no") x1
+         write (out_unit, "(a)", advance="no") " y1="
+         write (out_unit, "(g15.3)", advance="no") y1
+         write (out_unit, "(a)", advance="no") " z1=0. lc=5 ll='"
+         write (out_unit, "(i4)", advance="no") i
+         write (out_unit, "(a)") "'"
+      end do
 
-    do i = 1, mesh%num_pts_tot
-       x1 = coor(1,i)
-       y1 = coor(2,i)
-       write(out_unit,"(a)"   , advance="no")"@text x1="
-       write(out_unit,"(g15.3)", advance="no") x1
-       write(out_unit,"(a)"   , advance="no")" y1="
-       write(out_unit,"(g15.3)", advance="no") y1
-       write(out_unit,"(a)"   , advance="no")" z1=0. lc=5 ll='"
-       write(out_unit,"(i4)"  , advance="no") i
-       write(out_unit,"(a)")"'"
-    end do
+      !--- Knots' number
+      write (out_unit, *) "$DATA=CURVE3D"
+      write (out_unit, *) "%equalscale=T"
+      write (out_unit, *) "%toplabel='Knots number' "
 
-    !--- Knots' number
-    write(out_unit,*)"$DATA=CURVE3D"
-    write(out_unit,*)"%equalscale=T"
-    write(out_unit,*)"%toplabel='Knots number' "
+      do i = 1, mesh%num_triangles
+         write (out_unit, "(3f10.5)") coor(:, ntri(1, i)), 0.
+         write (out_unit, "(3f10.5)") coor(:, ntri(2, i)), 0.
+         write (out_unit, "(3f10.5)") coor(:, ntri(3, i)), 0.
+         write (out_unit, "(3f10.5)") coor(:, ntri(1, i)), 0.
+         write (out_unit, *)
+      end do
 
-    do i = 1, mesh%num_triangles
-       write(out_unit,"(3f10.5)")coor(:,ntri(1,i)),0.
-       write(out_unit,"(3f10.5)")coor(:,ntri(2,i)),0.
-       write(out_unit,"(3f10.5)")coor(:,ntri(3,i)),0.
-       write(out_unit,"(3f10.5)")coor(:,ntri(1,i)),0.
-       write(out_unit,*)
-    end do
+      do i = 1, mesh%num_pts_tot
+         x1 = coor(1, i)
+         y1 = coor(2, i)
+         write (out_unit, "(a)", advance="no") "@text x1="
+         write (out_unit, "(g15.3)", advance="no") x1
+         write (out_unit, "(a)", advance="no") " y1="
+         write (out_unit, "(g15.3)", advance="no") y1
+         write (out_unit, "(a)", advance="no") " z1=0. lc=5 ll='"
+         write (out_unit, "(i4)", advance="no") i
+         write (out_unit, "(a)") "'"
+      end do
 
-    do i = 1, mesh%num_pts_tot
-       x1 = coor(1,i)
-       y1 = coor(2,i)
-       write(out_unit,"(a)"   , advance="no")"@text x1="
-       write(out_unit,"(g15.3)", advance="no") x1
-       write(out_unit,"(a)"   , advance="no")" y1="
-       write(out_unit,"(g15.3)", advance="no") y1
-       write(out_unit,"(a)"   , advance="no")" z1=0. lc=5 ll='"
-       write(out_unit,"(i4)"  , advance="no") i
-       write(out_unit,"(a)")"'"
-    end do
+      !--- Triangles' number
+      write (out_unit, *) "$DATA=CURVE3D"
+      write (out_unit, *) "%equalscale=T"
+      write (out_unit, *) "%toplabel='Triangles number' "
 
-    !--- Triangles' number
-    write(out_unit,*)"$DATA=CURVE3D"
-    write(out_unit,*)"%equalscale=T"
-    write(out_unit,*)"%toplabel='Triangles number' "
+      do i = 1, mesh%num_triangles
+         write (out_unit, "(3f10.5)") coor(:, ntri(1, i)), 0.
+         write (out_unit, "(3f10.5)") coor(:, ntri(2, i)), 0.
+         write (out_unit, "(3f10.5)") coor(:, ntri(3, i)), 0.
+         write (out_unit, "(3f10.5)") coor(:, ntri(1, i)), 0.
+         write (out_unit, *)
+      end do
 
-    do i = 1, mesh%num_triangles
-       write(out_unit,"(3f10.5)")coor(:,ntri(1,i)),0.
-       write(out_unit,"(3f10.5)")coor(:,ntri(2,i)),0.
-       write(out_unit,"(3f10.5)")coor(:,ntri(3,i)),0.
-       write(out_unit,"(3f10.5)")coor(:,ntri(1,i)),0.
-       write(out_unit,*)
-    end do
+      do i = 1, mesh%num_triangles
+         x1 = (coor(1, ntri(1, i)) &
+               + coor(1, ntri(2, i)) &
+               + coor(1, ntri(3, i)))/3.0_f64
+         y1 = (coor(2, ntri(1, i)) &
+               + coor(2, ntri(2, i)) &
+               + coor(2, ntri(3, i)))/3.0_f64
+         write (out_unit, "(a)", advance="no") "@text x1="
+         write (out_unit, "(g15.3)", advance="no") x1
+         write (out_unit, "(a)", advance="no") " y1="
+         write (out_unit, "(g15.3)", advance="no") y1
+         write (out_unit, "(a)", advance="no") " z1=0. lc=4 ll='"
+         write (out_unit, "(i4)", advance="no") i
+         write (out_unit, "(a)") "'"
+      end do
 
-    do i = 1, mesh%num_triangles
-       x1 = (  coor(1,ntri(1,i))  &
-             + coor(1,ntri(2,i))  &
-         + coor(1,ntri(3,i))    )/3.0_f64
-       y1 = (  coor(2,ntri(1,i))  &
-             + coor(2,ntri(2,i))  &
-         + coor(2,ntri(3,i))    )/3.0_f64
-       write(out_unit,"(a)"   , advance="no")"@text x1="
-       write(out_unit,"(g15.3)", advance="no") x1
-       write(out_unit,"(a)"   , advance="no")" y1="
-       write(out_unit,"(g15.3)", advance="no") y1
-       write(out_unit,"(a)"   , advance="no")" z1=0. lc=4 ll='"
-       write(out_unit,"(i4)"  , advance="no") i
-       write(out_unit,"(a)")"'"
-    end do
+      write (out_unit, *) "$END"
+      close (out_unit)
 
-    write(out_unit,*)"$END"
-    close(out_unit)
+   end subroutine write_hex_mesh_mtv
 
-  end subroutine write_hex_mesh_mtv
+   !---------------------------------------------------------------------------
+   !> @brief Deletes an hexagonal mesh
+   !> @details Takes care of all deallocation necessary to sll_o_delete an hex mesh
+   !> @param[IN] mesh hexagonal mesh to be deleted
+   subroutine sll_s_delete_hex_mesh_2d(mesh)
+      class(sll_t_hex_mesh_2d), intent(inout) :: mesh
+      sll_int32 :: ierr
 
+      SLL_DEALLOCATE(mesh%cartesian_coord, ierr)
+      SLL_DEALLOCATE(mesh%hex_coord, ierr)
+      SLL_DEALLOCATE(mesh%global_indices, ierr)
+      if (mesh%EXTRA_TABLES .eq. 1) then
+         SLL_DEALLOCATE(mesh%center_cartesian_coord, ierr)
+         SLL_DEALLOCATE(mesh%center_index, ierr)
+         SLL_DEALLOCATE(mesh%edge_center_cartesian_coord, ierr)
+         SLL_DEALLOCATE(mesh%edge_center_index, ierr)
+      end if
 
-  !---------------------------------------------------------------------------
-  !> @brief Deletes an hexagonal mesh
-  !> @details Takes care of all deallocation necessary to sll_o_delete an hex mesh
-  !> @param[IN] mesh hexagonal mesh to be deleted
-  subroutine sll_s_delete_hex_mesh_2d( mesh )
-    class(sll_t_hex_mesh_2d), intent(inout) :: mesh
-    sll_int32 :: ierr
-
-    SLL_DEALLOCATE(mesh%cartesian_coord, ierr)
-    SLL_DEALLOCATE(mesh%hex_coord, ierr)
-    SLL_DEALLOCATE(mesh%global_indices, ierr)
-    if ( mesh%EXTRA_TABLES.eq.1) then
-       SLL_DEALLOCATE(mesh%center_cartesian_coord, ierr)
-       SLL_DEALLOCATE(mesh%center_index, ierr)
-       SLL_DEALLOCATE(mesh%edge_center_cartesian_coord, ierr)
-       SLL_DEALLOCATE(mesh%edge_center_index, ierr)
-    end if
-
-  end subroutine sll_s_delete_hex_mesh_2d
+   end subroutine sll_s_delete_hex_mesh_2d
 
 #undef TEST_PRESENCE_AND_ASSIGN_VAL
 end module sll_m_hexagonal_meshes

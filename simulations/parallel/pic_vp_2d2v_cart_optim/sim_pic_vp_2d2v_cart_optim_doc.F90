@@ -1,17 +1,16 @@
 ! This file is read by doxygen software
 ! Change it to match with your library
 ! http://www.stack.nl/~dimitri/doxygen/manual/docblocks.html#fortranblocks
-! To see the documentation, remove the line containing your directory 
-! in file Doxyfile.in (line 691) if it is excluded. 
+! To see the documentation, remove the line containing your directory
+! in file Doxyfile.in (line 691) if it is excluded.
 ! Type 'make doc' in build directory.
-! To check the results, open : 
-! selalib/doc/build/html/doxygen/html/defgroup pic_particle_typess.html 
+! To check the results, open :
+! selalib/doc/build/html/doxygen/html/defgroup pic_particle_typess.html
 ! The following lines will be read by doxygen to generate documentation:
 
-
-!> @defgroup pic_particle_types sll_pic_particle_types 
+!> @defgroup pic_particle_types sll_pic_particle_types
 !> @brief  4d PIC simulation for Landau damping test-case
-!>        
+!>
 !> @author Sever Hirstoaga
 !> You can add a contact, do not put your email to prevent spam.
 !> @details A Vlasov-Poisson equation on a cartesian mesh,
