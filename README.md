@@ -1,3 +1,3 @@
 # SeLaLib
 
-[![](https://img.shields.io/badge/License-CECILL-B-blue)](LICENSE)
+[![License badge](https://img.shields.io/badge/License-CECILLB-blue)](LICENSE)
