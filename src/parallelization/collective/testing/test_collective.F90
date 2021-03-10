@@ -56,6 +56,7 @@ program collective_test
 
 
   call sll_s_boot_collective()
+
   rank = sll_f_get_collective_rank( sll_v_world_collective )
   size = sll_f_get_collective_size( sll_v_world_collective )
 
@@ -167,7 +168,7 @@ program collective_test
                                       1    , MPI_SUM,0,sendbuf_real)
 
   if( rank == 0 ) then
-   if( sendbuf_real(1) .eq. size*(size-1)*size/2.0_f64 ) then
+   if( sendbuf_real(1) - real(size*(size-1)*size/2.0, kind=f32) < 1e-14 ) then
     print *,'(ALLREDUCE REAL) PASS'
    else
     stop '(ALLREDUCE REAL) NOT PASS'
@@ -615,6 +616,7 @@ program collective_test
    endif
  endif
 
+  call test_sll_collective_globalsum()
 
   SLL_DEALLOCATE_ARRAY(somme,ierr)
   SLL_DEALLOCATE_ARRAY(rdispls,ierr)
@@ -624,7 +626,6 @@ program collective_test
   SLL_DEALLOCATE_ARRAY(sendcounts,ierr)
   SLL_DEALLOCATE_ARRAY(recvcounts,ierr)
 
-  call test_sll_collective_globalsum()
 
   call sll_s_halt_collective()
 
@@ -679,7 +680,7 @@ subroutine test_sll_collective_globalsum
   endif
 
 
-endsubroutine
+end subroutine test_sll_collective_globalsum
 
 
 
