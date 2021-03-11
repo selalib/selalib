@@ -28,7 +28,6 @@
 # * 02 Dec 2015: fix dependency bug (YG).
 # * 15 Jan 2016: store names of all libraries (YG).
 # * 19 Jan 2016: 'collect_source_info' handles libraries with no sources (YG)
-# * 03 Jan 2017: Add PGI compiler (PN)
 # * 22 Feb 2017: To be able to use the preprocessed files for Forcheck analysis,
 #   the following changes were implemented: - Store a list of executables too. -
 #   No need to store list of source files, it can be retreived from the lists of
@@ -68,8 +67,6 @@ if(CMAKE_Fortran_COMPILER_ID MATCHES Intel)
   set(preprocessor_only_flags -EP)
 elseif(CMAKE_Fortran_COMPILER_ID MATCHES GNU)
   set(preprocessor_only_flags -cpp -E -P)
-elseif(CMAKE_Fortran_COMPILER_ID MATCHES PGI)
-  set(preprocessor_only_flags -Mcpp -E -P)
 else()
   message(SEND_ERROR "Unknown preprocessor flags for current compiler")
 endif()

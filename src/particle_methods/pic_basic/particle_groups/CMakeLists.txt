@@ -7,11 +7,7 @@ set(PARTICLE_GROUP_DEPS sll_assert sll_errors sll_memory sll_working_precision
                         sll_constants sll_meshes)
 
 if(NOT (FFT_LIB STREQUAL "SLLFFT"))
-  if(PGI)
-    list(APPEND PARTICLE_GROUP_SRCS sll_m_particle_group_2d2v_lbf_pgi.F90)
-  else(PGI)
-    list(APPEND PARTICLE_GROUP_SRCS sll_m_particle_group_2d2v_lbf.F90)
-  endif(PGI)
+  list(APPEND PARTICLE_GROUP_SRCS sll_m_particle_group_2d2v_lbf.F90)
   list(APPEND PARTICLE_GROUP_DEPS sll_distribution_function sll_sparse_grid)
 endif()
 
