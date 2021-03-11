@@ -13,12 +13,7 @@ elseif(FFT_LIB STREQUAL "FFTW")
 
 else()
 
-  if(CMAKE_Fortran_COMPILER_ID MATCHES PGI)
-    set(FFT_SRC sll_m_fft_sllfft_pgi.F90)
-  else(CMAKE_Fortran_COMPILER_ID MATCHES PGI)
-    set(FFT_SRC sll_m_fft_sllfft.F90)
-  endif(CMAKE_Fortran_COMPILER_ID MATCHES PGI)
-
+  set(FFT_SRC sll_m_fft_sllfft.F90)
   add_definitions(-D_DEFAULTFFTLIB=SLLFFT_MOD)
 
 endif()

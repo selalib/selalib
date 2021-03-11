@@ -99,11 +99,7 @@ contains
 #else
       inquire (file=cproc//"/"".", exist=dir_e)
       if (.not. dir_e) then
-#ifdef __PGI
-         call system("mkdir -p "//cproc)
-#else
-         call execute_command_line("mkdir -p "//cproc)
-#endif
+      call execute_command_line("mkdir -p "//cproc)
       end if
 #endif
 
@@ -205,11 +201,7 @@ contains
 #else
       inquire (file=cproc//"/"".", exist=dir_e)
       if (.not. dir_e) then
-#ifdef __PGI
-         call system("mkdir -p "//cproc)
-#else
          call execute_command_line("mkdir -p "//cproc)
-#endif
       end if
 #endif
 

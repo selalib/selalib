@@ -265,10 +265,8 @@ contains
       self%efield_dofs => efield_dofs
       self%bfield_dofs => bfield_dofs
 
-#ifndef __PGI
       ! Check that n_dofs is the same for both kernel smoothers.
       SLL_ASSERT(self%kernel_smoother_0%n_dofs == self%kernel_smoother_1%n_dofs)
-#endif
       SLL_ALLOCATE(self%j_dofs(self%kernel_smoother_0%n_dofs, 2), ierr)
       SLL_ALLOCATE(self%j_dofs_local(self%kernel_smoother_0%n_dofs, 2), ierr)
       SLL_ALLOCATE(self%bfield_dofs_mid(self%kernel_smoother_1%n_dofs), ierr)

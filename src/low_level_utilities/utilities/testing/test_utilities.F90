@@ -28,19 +28,11 @@ program utils_tester
 
    re64 = 3.2_f64
    re32 = 1.0_f32
-#ifdef __PGI
-   in64 = huge(in32)
-   !largest 64-bit integer 2**63-1
-   largest_int64 = huge(in64)
-   ! largest 32-bit int, 2**31-1
-   largest_int32 = huge(in32)
-#else
    in64 = transfer(z'7fffffff', in64) ! largest 32-bit int, 2**31-1
    !largest 64-bit integer 2**63-1
    largest_int64 = transfer(z'7fffffffffffffff', largest_int64)
    ! largest 32-bit int, 2**31-1
    largest_int32 = transfer(z'7fffffff', largest_int32)
-#endif
    in32 = 2
 
    test_passed = .true.

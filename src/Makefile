@@ -9,6 +9,3 @@ clear:
 
 del_orig_files:
 	find . -name '.orig' -exec rm {} \;
-
-del_pgi_files:
-	find . -name '*_pgi.F90' -exec rm {} \;

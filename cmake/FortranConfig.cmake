@@ -22,20 +22,6 @@ if(CMAKE_Fortran_COMPILER_ID MATCHES Intel)
       "-g -O0 -check all,noarg_temp_created -fpe0 -traceback -ftrapuv -fpic")
   set(CMAKE_SHARED_LIBRARY_LINK_Fortran_FLAGS "-shared-intel")
 
-elseif(CMAKE_Fortran_COMPILER_ID MATCHES PGI)
-
-  exec_program(
-    ${CMAKE_Fortran_COMPILER} ARGS
-    "--version"
-    OUTPUT_VARIABLE source_path)
-  string(REGEX MATCH "1[0-9]\\.([1-9]|1[0-2])\\-[0-9]" Fortran_COMPILER_VERSION
-               ${source_path})
-  set(CMAKE_Fortran_FLAGS_DEBUG
-      "-Mextend -Mbounds -Mchkptr -Mchkstk -O0 -g -Minform=inform -Mallocatable=03"
-  )
-  set(CMAKE_Fortran_FLAGS_RELEASE "-Mextend -fast -Mallocatable=03")
-  include(PGIConfig)
-
 elseif(CMAKE_Fortran_COMPILER_ID MATCHES IBM)
 
   set(CMAKE_Fortran_FLAGS_DEBUG "-qextname=flush -qxlf2003=polymorphic")
