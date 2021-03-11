@@ -1,3 +1,4 @@
+
 # Set default library to FFTW if available, SLLFFT otherwise
 IF (FFTW_ENABLED)
   FIND_PACKAGE(FFTW)
@@ -14,7 +15,7 @@ SET(FFT_LIB ${FFT_DEFAULT} CACHE STRING "fft library, options are : FFTW, SLLFFT
 # Perform checks and add definitions whenever FFT_LIB is changed by user
 IF(${FFT_LIB} STREQUAL "FFTPACK")
 
-	MESSAGE(FATAL_ERROR "The fftpack interface is deprecated, sorry, you must change FFT_LIB")
+  MESSAGE(FATAL_ERROR "The fftpack interface is deprecated, sorry")
   ADD_DEFINITIONS(-DFFTPACK)
 
 ELSEIF(${FFT_LIB} STREQUAL "FFTW")
@@ -22,7 +23,7 @@ ELSEIF(${FFT_LIB} STREQUAL "FFTW")
   IF(FFTW_FOUND)
      ADD_DEFINITIONS(-DFFTW)
   ELSE(FFTW_FOUND)
-     MESSAGE(SEND_ERROR "FFTW NOT FOUND, try set env variable FFTW_ROOT or change FFT_LIB ")
+     MESSAGE(SEND_ERROR "FFTW NOT FOUND, try set FFTW_ROOT or change FFT_LIB ")
   ENDIF(FFTW_FOUND)
   SET(FFTW_ENABLED ON)
 
