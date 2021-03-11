@@ -1,0 +1,5 @@
+<map id="sll_f_new_hex_mesh_2d" name="sll_f_new_hex_mesh_2d">
+<area shape="rect" id="node2" href="$namespacesll__m__fekete__integration.html#adceb8456a1011a2bb4dcecfd28374463" title="This function is supposed to write all django input files needed for a Django/Jorek simulation..." alt="" coords="635,5,823,47"/>
+<area shape="rect" id="node3" href="$namespacesll__m__box__splines.html#a0f40714993a4e4bdcf19d5798130ae75" title="Computes the values or derivatives of box splines. " alt="" coords="219,35,376,76"/>
+<area shape="rect" id="node4" href="$namespacesll__m__fekete__integration.html#ac7c05ae36ac69d55d2c022d71e82cae9" title="Writes on a file values of boxsplines on fekete points. " alt="" coords="424,35,587,76"/>
+</map>

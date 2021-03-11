@@ -1,0 +1,4 @@
+<map id="advector_1d_ampere_init" name="advector_1d_ampere_init">
+<area shape="rect" id="node2" href="$namespacesll__m__fft.html#a11789fe259803b9a52c5de9f4b2fa521" title="Create new 1d real to complex plan for forward FFT. " alt="" coords="220,5,347,47"/>
+<area shape="rect" id="node3" href="$namespacesll__m__fft.html#a47960b64c3303440c96bd80c055868c1" title="Create new 1d complex to real plan for backward FFT. " alt="" coords="220,71,347,112"/>
+</map>

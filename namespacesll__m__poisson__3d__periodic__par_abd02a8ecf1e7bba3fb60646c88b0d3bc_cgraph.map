@@ -1,0 +1,6 @@
+<map id="sll_s_poisson_3d_periodic_par_compute_e_from_phi" name="sll_s_poisson_3d_periodic_par_compute_e_from_phi">
+<area shape="rect" id="node2" href="$namespacesll__m__poisson__3d__periodic__par.html#a6fc0b8bbdb6b93b5d418937ee360469e" title="Compute the 3d potential from the Poisson equation with periodic boundary conditions. " alt="" coords="228,5,412,32"/>
+<area shape="rect" id="node4" href="$namespacesll__m__poisson__3d__periodic__par.html#a6faec9771d15efc3ddf0ba3068106730" title="Compute the 3d potential from the Poisson equation with periodic boundary conditions. " alt="" coords="228,56,412,83"/>
+<area shape="rect" id="node5" href="$namespacesll__m__poisson__3d__periodic__par.html#a11c21348feb49f0841156ee3b918b305" title="Compute the 3d potential from the Poisson equation with periodic boundary conditions. " alt="" coords="228,107,412,133"/>
+<area shape="rect" id="node3" href="$namespacesll__m__fft.html#a98e3ba2b5431c58a3f5100ac171616a5" title="Compute fast Fourier transform in complex to complex mode. " alt="" coords="460,49,587,90"/>
+</map>

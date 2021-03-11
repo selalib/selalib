@@ -1,0 +1,5 @@
+<map id="sll_t_electric_field_accumulator" name="sll_t_electric_field_accumulator">
+<area shape="rect" id="node2" href="$structsll__m__cartesian__meshes_1_1sll__t__cartesian__mesh__2d.html" title="2D cartesian mesh " alt="" coords="149,197,315,224"/>
+<area shape="rect" id="node3" href="$structsll__m__meshes__base_1_1sll__c__mesh__2d__base.html" title="2D logical mesh " alt="" coords="5,5,149,32"/>
+<area shape="rect" id="node6" href="$structsll__m__accumulators_1_1sll__t__field__accumulator__cell.html" title="sll_t_field_accumulator_cell" alt="" coords="339,197,522,224"/>
+</map>

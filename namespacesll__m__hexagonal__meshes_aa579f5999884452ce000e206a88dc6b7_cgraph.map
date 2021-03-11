@@ -1,0 +1,7 @@
+<map id="sll_s_get_cell_vertices_index" name="sll_s_get_cell_vertices_index">
+<area shape="rect" id="node2" href="$namespacesll__m__hexagonal__meshes.html#a066138062e95dab8690eb6e889dfe769" title="Transform cartesian coordinates to 1st hexagonal coordinates. " alt="" coords="208,5,336,32"/>
+<area shape="rect" id="node3" href="$namespacesll__m__hexagonal__meshes.html#aa108ce30c3a8af1414fbfeba3420d493" title="Transform cartesian coordinates to 2ndst hexagonal coordinates. " alt="" coords="208,56,336,83"/>
+<area shape="rect" id="node4" href="$namespacesll__m__hexagonal__meshes.html#af2ad9a5ed18f26e97513930ee9793370" title="Transform hexagonal coordinates to global index. " alt="" coords="221,107,323,133"/>
+<area shape="rect" id="node5" href="$namespacesll__m__hexagonal__meshes.html#a8bed234b81efa9e2e353c3f594c104e3" title="Computes the number of cell from point to origin. " alt="" coords="386,81,522,108"/>
+<area shape="rect" id="node6" href="$namespacesll__m__hexagonal__meshes.html#a47f7a419f8f8904d408ad3a630612ee4" title="Finds the index in the global array of the point which coordinates where passed as parameter..." alt="" coords="384,132,524,159"/>
+</map>

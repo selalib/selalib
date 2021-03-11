@@ -1,0 +1,5 @@
+<map id="interpolate_derivatives_ad1d" name="interpolate_derivatives_ad1d">
+<area shape="rect" id="node2" href="$namespacesll__m__arbitrary__degree__spline__interpolator__1d.html#af4fa9cf44592512067c22943d4c12382" title="First derivative interpolation on the point eta. " alt="" coords="240,13,420,39"/>
+<area shape="rect" id="node3" href="$namespacesll__m__deboor__splines__1d.html#aff1450d8d064a65cd88c8ae71dfb4b03" title="Evaluates a derivative of a spline from its B&#45;spline representation. " alt="" coords="468,5,615,47"/>
+<area shape="rect" id="node4" href="$namespacesll__m__deboor__splines__1d.html#a4f9fcaf3a83c7141df5d8a5299346c45" title="Brackets a real value in an ascending vector of values. " alt="" coords="663,5,809,47"/>
+</map>

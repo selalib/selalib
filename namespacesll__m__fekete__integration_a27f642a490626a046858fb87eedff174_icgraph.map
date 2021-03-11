@@ -1,0 +1,7 @@
+<map id="fekete_rule" name="fekete_rule">
+<area shape="rect" id="node2" href="$namespacesll__m__fekete__integration.html#adf467550a7dbaf4287e51119b1a86770" title="Gives the fekete points coordinates and associated weights for a certain rule in a given triangle..." alt="" coords="140,49,271,90"/>
+<area shape="rect" id="node3" href="$namespacesll__m__fekete__integration.html#a965046179c23cc4266786eb3e10c3b43" title="Fekete quadrature rule over a triangle. " alt="" coords="319,5,457,32"/>
+<area shape="rect" id="node4" href="$namespacesll__m__fekete__integration.html#acac4a2483e951c19928f9c4de14738d5" title="Writes fekete points coordinates of a hex&#45;mesh reference triangle. " alt="" coords="329,56,447,83"/>
+<area shape="rect" id="node6" href="$namespacesll__m__fekete__integration.html#ac7c05ae36ac69d55d2c022d71e82cae9" title="Writes on a file values of boxsplines on fekete points. " alt="" coords="321,107,455,133"/>
+<area shape="rect" id="node5" href="$namespacesll__m__fekete__integration.html#adceb8456a1011a2bb4dcecfd28374463" title="This function is supposed to write all django input files needed for a Django/Jorek simulation..." alt="" coords="505,74,655,115"/>
+</map>

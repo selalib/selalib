@@ -1,0 +1,14 @@
+<map id="sll_s_fft_free" name="sll_s_fft_free">
+<area shape="rect" id="node2" href="$namespacesll__m__sparse__grid__interpolator.html#a8e740494ef37235d56404e94c1c4a826" title="sll_m_sparse_grid_interpolator\l::fft_finalize" alt="" coords="185,5,383,47"/>
+<area shape="rect" id="node4" href="$namespacesll__m__maxwell__1d__fem.html#a73395fc583bd3e7ec4530eb3cca63001" title="sll_m_maxwell_1d_fem\l::free_1d_fem" alt="" coords="205,71,363,112"/>
+<area shape="rect" id="node5" href="$namespacesll__m__maxwell__2d__pstd.html#a115041f07d9437052cb8462f0e9fe8d2" title="delete maxwell solver object " alt="" coords="203,135,365,191"/>
+<area shape="rect" id="node6" href="$namespacesll__m__maxwell__3d__pstd.html#aef9f572b12298d135c7c874d34729bc8" title="delete maxwell solver object " alt="" coords="187,215,381,256"/>
+<area shape="rect" id="node7" href="$namespacesll__m__maxwell__2d__periodic__cartesian__par.html#a5f9627f8a5ff52bc342295232a5958f1" title="Delete maxwell solver object. " alt="" coords="151,279,417,335"/>
+<area shape="rect" id="node8" href="$namespacesll__m__poisson__2d__periodic.html#a929d96c76d37c7503ab0960713d14a7c" title="Delete the Poisson object. " alt="" coords="179,359,389,400"/>
+<area shape="rect" id="node9" href="$namespacesll__m__poisson__3d__periodic.html#a977a6a07e2739a02d896a59d5654b8d0" title="Delete the 3d poisson solver object. " alt="" coords="179,424,389,465"/>
+<area shape="rect" id="node10" href="$namespacesll__m__poisson__2d__periodic__par.html#ace570a76a3fc0c5db7ea1dfb12a7390f" title="Delete the Poisson solver object. " alt="" coords="195,489,373,545"/>
+<area shape="rect" id="node11" href="$namespacesll__m__poisson__3d__periodic__par.html#a433ef7557fe508cb93743adf82ffe5e5" title="Delete the solver structure. " alt="" coords="195,569,373,625"/>
+<area shape="rect" id="node12" href="$namespacesll__m__advection__1d__ampere.html#a9cd923522180f757528f144ac7bdc357" title="sll_m_advection_1d\l_ampere::delete" alt="" coords="215,648,353,689"/>
+<area shape="rect" id="node13" href="$namespacesll__m__advection__1d__spectral.html#abf7a156aea46657725aacbfbc4cce864" title="sll_m_advection_1d\l_spectral::delete" alt="" coords="215,713,353,755"/>
+<area shape="rect" id="node3" href="$namespacesll__m__sparse__grid__interpolator.html#a2f3935b7978ca313f2ead7e22715ff26" title="Finalize sparse grid. " alt="" coords="465,5,664,47"/>
+</map>

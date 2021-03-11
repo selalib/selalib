@@ -1,0 +1,5 @@
+<map id="sll_f_local_to_global" name="sll_f_local_to_global">
+<area shape="rect" id="node2" href="$namespacesll__m__box__splines.html#a9ac06b8c624fbc68a93fe53f82402001" title="Computes indices of non null splines on a given cell. " alt="" coords="192,5,329,47"/>
+<area shape="rect" id="node3" href="$namespacesll__m__box__splines.html#a0c9a0bd0c7da4d792500caf130c3ddd0" title="Writes connectivity for CAID / DJANGO. " alt="" coords="377,5,539,47"/>
+<area shape="rect" id="node4" href="$namespacesll__m__fekete__integration.html#adceb8456a1011a2bb4dcecfd28374463" title="This function is supposed to write all django input files needed for a Django/Jorek simulation..." alt="" coords="587,5,775,47"/>
+</map>

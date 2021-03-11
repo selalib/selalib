@@ -1,0 +1,7 @@
+<map id="change_basis_x2" name="change_basis_x2">
+<area shape="rect" id="node2" href="$namespacesll__m__box__splines.html#ae85be189f19eda4cfbd8461587cdbe98" title="Computes the value of a box spline. " alt="" coords="176,5,348,32"/>
+<area shape="rect" id="node3" href="$namespacesll__m__box__splines.html#a22194490adc78c1d67ab8345417700f8" title="Interpolates on point of cartesian coordinates (x1, x2) " alt="" coords="191,57,333,98"/>
+<area shape="rect" id="node4" href="$namespacesll__m__box__splines.html#a0f40714993a4e4bdcf19d5798130ae75" title="Computes the values or derivatives of box splines. " alt="" coords="183,123,341,149"/>
+<area shape="rect" id="node5" href="$namespacesll__m__fekete__integration.html#ac7c05ae36ac69d55d2c022d71e82cae9" title="Writes on a file values of boxsplines on fekete points. " alt="" coords="396,115,559,157"/>
+<area shape="rect" id="node6" href="$namespacesll__m__fekete__integration.html#adceb8456a1011a2bb4dcecfd28374463" title="This function is supposed to write all django input files needed for a Django/Jorek simulation..." alt="" coords="607,115,795,157"/>
+</map>

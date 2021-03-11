@@ -1,0 +1,16 @@
+<map id="sll_f_gauss_lobatto_points" name="sll_f_gauss_lobatto_points">
+<area shape="rect" id="node2" href="$namespacesll__m__dg__fields.html#a66ffd9f6cf3e20a707f967e4cb457d30" title="sll_m_dg_fields::sll\l_s_dg_field_2d_init" alt="" coords="211,5,344,47"/>
+<area shape="rect" id="node3" href="$namespacesll__m__maxwell__2d__diga.html#aea7962198b6305c1256087d5a9e5c8fe" title="Initialize Maxwell solver object using DG method. " alt="" coords="441,159,629,200"/>
+<area shape="rect" id="node5" href="$namespacesll__m__dg__fields.html#afd907112b47b1a216f2bc3af0bdc9e44" title="sll_m_dg_fields::sll\l_f_new_dg_field_2d" alt="" coords="209,123,346,164"/>
+<area shape="rect" id="node6" href="$namespacesll__m__gyroaverage__utilities.html#ace9ca74c71712dea32a595db9b2585fa" title="sll_m_gyroaverage_utilities\l::sll_s_compute_mu" alt="" coords="188,188,367,229"/>
+<area shape="rect" id="node7" href="$namespacesll__m__maxwell__2d__diga.html#aaf2e3de1e3a109d93be64114e8abeb03" title="Compute cell normals. " alt="" coords="197,253,357,295"/>
+<area shape="rect" id="node8" href="$namespacesll__m__dg__interpolator__1d.html#aab53d5893320fe81960e78fc061d7239" title="sll_m_dg_interpolator\l_1d::sll_s_dg_interpolator\l_1d_init" alt="" coords="192,318,363,374"/>
+<area shape="rect" id="node9" href="$namespacesll__m__gauss__lobatto__integration.html#abde325bec9e6c51c78f56ecc3bb075d5" title="Returns a 2d array of size (2,n) containing gauss&#45;lobatto points and weights in the interval [a..." alt="" coords="205,463,349,504"/>
+<area shape="rect" id="node15" href="$namespacesll__m__gauss__lobatto__integration.html#a40c64cf688951538c0093a24e463688c" title="Construction of the derivative matrix for Gauss&#45;Lobatto, The matrix must be already allocated of size..." alt="" coords="210,397,345,439"/>
+<area shape="rect" id="node4" href="$namespacesll__m__maxwell__2d__diga.html#a757b8a57dde51f462e899778a250a81d" title="sll_m_maxwell_2d_diga\l::sll_f_new_maxwell_2d_diga" alt="" coords="704,159,896,200"/>
+<area shape="rect" id="node10" href="$namespacesll__m__general__coordinate__elliptic__solver__multipatch.html#ae9b2728b7fc567b24d783dc03390c489" title="Initialization for elleptic solver multipatch. " alt="" coords="415,415,656,471"/>
+<area shape="rect" id="node11" href="$namespacesll__m__general__coordinate__elliptic__solver.html#aa97e7df003acbee3a05797610354c09d" title="sll_m_general_coordinate\l_elliptic_solver::compute\l_b_spline_and_deriv_at_x" alt="" coords="449,495,621,551"/>
+<area shape="rect" id="node12" href="$namespacesll__m__general__coordinate__elliptic__solver.html#a27d90b4a6ca26e6014ca4db59a27eda1" title="sll_m_general_coordinate\l_elliptic_solver::compute\l_global_splines_indices" alt="" coords="715,495,885,551"/>
+<area shape="rect" id="node13" href="$namespacesll__m__general__coordinate__elliptic__solver.html#a13e1428f9465e72bbf96682e92f305f8" title="Assemble the matrix for elliptic solver. " alt="" coords="956,459,1167,515"/>
+<area shape="rect" id="node14" href="$namespacesll__m__general__coordinate__elliptic__solver.html#a17eb78399c10cd0dcdd31c4bf2cb72e6" title="sll_m_general_coordinate\l_elliptic_solver::initconnectivity_new" alt="" coords="944,539,1179,580"/>
+</map>

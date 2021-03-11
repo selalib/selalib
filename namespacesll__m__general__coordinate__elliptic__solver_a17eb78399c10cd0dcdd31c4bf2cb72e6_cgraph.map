@@ -1,0 +1,12 @@
+<map id="initconnectivity_new" name="initconnectivity_new">
+<area shape="rect" id="node2" href="$namespacesll__m__general__coordinate__elliptic__solver.html#a57659e66efd4a5717590e13eee344000" title="compute_local_splines\l_indices" alt="" coords="197,5,351,47"/>
+<area shape="rect" id="node3" href="$namespacesll__m__general__coordinate__elliptic__solver.html#a27d90b4a6ca26e6014ca4db59a27eda1" title="compute_global_splines\l_indices" alt="" coords="193,129,355,171"/>
+<area shape="rect" id="node5" href="$namespacesll__m__general__coordinate__elliptic__solver.html#a28d7b2c5dc102d89fd10040982029e00" title="compute_local_to_global\l_splines_indices" alt="" coords="623,61,788,103"/>
+<area shape="rect" id="node4" href="$namespacesll__m__general__coordinate__elliptic__solver.html#aa97e7df003acbee3a05797610354c09d" title="compute_b_spline_and\l_deriv_at_x" alt="" coords="403,132,557,173"/>
+<area shape="rect" id="node6" href="$namespacesll__m__gauss__legendre__integration.html#a0df63a9e8ee884c2d4a0d1f53602a949" title="Returns a 2d array of size (2,npoints) containing gauss&#45;legendre points and weights in the interval [..." alt="" coords="605,126,805,182"/>
+<area shape="rect" id="node7" href="$namespacesll__m__gauss__lobatto__integration.html#abde325bec9e6c51c78f56ecc3bb075d5" title="Returns a 2d array of size (2,n) containing gauss&#45;lobatto points and weights in the interval [a..." alt="" coords="629,207,781,277"/>
+<area shape="rect" id="node8" href="$namespacesll__m__gauss__lobatto__integration.html#a43443dd7dd80f1289d964b572cd6ee2c" title="Returns a 1d array of size (n) containing gauss&#45;lobatto points in the interval [a,b]. " alt="" coords="859,174,1011,230"/>
+<area shape="rect" id="node11" href="$namespacesll__m__gauss__lobatto__integration.html#ab2dd3e9cafb094226c63f629745b0654" title="Returns a 1d array of size (n) containing gauss&#45;lobatto weights in the interval [a,b]. " alt="" coords="853,254,1016,310"/>
+<area shape="rect" id="node9" href="$namespacesll__m__gauss__lobatto__integration.html#aef28cd44b846400f5133a0ee289babbc" title="This comes from http://dl.acm.org, Algorithme 726 : ORTHPOL, appendices and supplements To use those ..." alt="" coords="1064,221,1205,263"/>
+<area shape="rect" id="node10" href="$namespacesll__m__gauss__lobatto__integration.html#a20a90d157ba32cd27c5d6f89eccf3735" title="Given n and a measure dlambda, this routine generates the n&#45;point Gaussian quadrature formula..." alt="" coords="1253,221,1395,263"/>
+</map>

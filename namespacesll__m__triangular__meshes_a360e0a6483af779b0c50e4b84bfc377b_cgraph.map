@@ -1,0 +1,9 @@
+<map id="new_triangular_mesh_2d_from_hex_mesh" name="new_triangular_mesh_2d_from_hex_mesh">
+<area shape="rect" id="node2" href="$namespacesll__m__hexagonal__meshes.html#aa579f5999884452ce000e206a88dc6b7" title="Returns indices of the edges of a given cell. " alt="" coords="199,71,399,112"/>
+<area shape="rect" id="node8" href="$namespacesll__m__triangular__meshes.html#a90f335b44591b8b71485a91db8dcd317" title="compute_areas" alt="" coords="243,137,354,163"/>
+<area shape="rect" id="node3" href="$namespacesll__m__hexagonal__meshes.html#a066138062e95dab8690eb6e889dfe769" title="Transform cartesian coordinates to 1st hexagonal coordinates. " alt="" coords="447,5,619,47"/>
+<area shape="rect" id="node4" href="$namespacesll__m__hexagonal__meshes.html#aa108ce30c3a8af1414fbfeba3420d493" title="Transform cartesian coordinates to 2ndst hexagonal coordinates. " alt="" coords="447,71,619,112"/>
+<area shape="rect" id="node5" href="$namespacesll__m__hexagonal__meshes.html#af2ad9a5ed18f26e97513930ee9793370" title="Transform hexagonal coordinates to global index. " alt="" coords="447,136,619,177"/>
+<area shape="rect" id="node6" href="$namespacesll__m__hexagonal__meshes.html#a8bed234b81efa9e2e353c3f594c104e3" title="Computes the number of cell from point to origin. " alt="" coords="667,103,839,144"/>
+<area shape="rect" id="node7" href="$namespacesll__m__hexagonal__meshes.html#a47f7a419f8f8904d408ad3a630612ee4" title="Finds the index in the global array of the point which coordinates where passed as parameter..." alt="" coords="667,168,839,209"/>
+</map>

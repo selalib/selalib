@@ -1,0 +1,5 @@
+<map id="sll_f_fft_allocate_aligned_real" name="sll_f_fft_allocate_aligned_real">
+<area shape="rect" id="node2" href="$namespacesll__m__poisson__2d__polar__par.html#a0f1dc18ba51644f7472cbb9f2b9b87df" title="sll_o_initialize the Poisson solver in polar coordinates " alt="" coords="175,5,336,61"/>
+<area shape="rect" id="node3" href="$namespacesll__m__qn__solver__2d__polar__par.html#a469531318563d910cd216334ff4a1828" title="Initialize the solver. " alt="" coords="171,85,340,141"/>
+<area shape="rect" id="node4" href="$namespacesll__m__qn__solver__3d__polar__par.html#a2e6d1e5238b003c9d2a5bf33a11644d0" title="Initialize the 3D (wrapper) solver. " alt="" coords="388,85,557,141"/>
+</map>

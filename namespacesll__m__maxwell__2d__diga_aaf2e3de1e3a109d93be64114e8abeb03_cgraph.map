@@ -1,0 +1,6 @@
+<map id="compute_normals" name="compute_normals">
+<area shape="rect" id="node2" href="$namespacesll__m__gauss__lobatto__integration.html#a43443dd7dd80f1289d964b572cd6ee2c" title="Returns a 1d array of size (n) containing gauss&#45;lobatto points in the interval [a,b]. " alt="" coords="184,5,336,61"/>
+<area shape="rect" id="node5" href="$namespacesll__m__gauss__lobatto__integration.html#ab2dd3e9cafb094226c63f629745b0654" title="Returns a 1d array of size (n) containing gauss&#45;lobatto weights in the interval [a,b]. " alt="" coords="179,85,341,141"/>
+<area shape="rect" id="node3" href="$namespacesll__m__gauss__lobatto__integration.html#aef28cd44b846400f5133a0ee289babbc" title="This comes from http://dl.acm.org, Algorithme 726 : ORTHPOL, appendices and supplements To use those ..." alt="" coords="389,53,531,94"/>
+<area shape="rect" id="node4" href="$namespacesll__m__gauss__lobatto__integration.html#a20a90d157ba32cd27c5d6f89eccf3735" title="Given n and a measure dlambda, this routine generates the n&#45;point Gaussian quadrature formula..." alt="" coords="579,53,720,94"/>
+</map>

@@ -1,0 +1,4 @@
+<map id="sll_f_gauss_lobatto_points" name="sll_f_gauss_lobatto_points">
+<area shape="rect" id="node2" href="$namespacesll__m__gauss__lobatto__integration.html#aef28cd44b846400f5133a0ee289babbc" title="This comes from http://dl.acm.org, Algorithme 726 : ORTHPOL, appendices and supplements To use those ..." alt="" coords="188,13,235,39"/>
+<area shape="rect" id="node3" href="$namespacesll__m__gauss__lobatto__integration.html#a20a90d157ba32cd27c5d6f89eccf3735" title="Given n and a measure dlambda, this routine generates the n&#45;point Gaussian quadrature formula..." alt="" coords="283,13,347,39"/>
+</map>

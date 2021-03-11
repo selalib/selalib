@@ -1,0 +1,23 @@
+<map id="sll_t_qn_solver_2d_fem_sps_stencil_new" name="sll_t_qn_solver_2d_fem_sps_stencil_new">
+<area shape="rect" id="node20" href="$structsll__m__conjugate__gradient_1_1sll__t__conjugate__gradient.html" title="sll_t_conjugate_gradient" alt="" coords="329,248,491,275"/>
+<area shape="rect" id="node25" href="$structsll__m__linear__operator__matrix__dense__to__dense_1_1sll__t__linear__operator__matrix__dense__to__dense.html" title="sll_t_linear_operator\l_matrix_dense_to_dense" alt="" coords="327,986,493,1027"/>
+<area shape="rect" id="node3" href="$structsll__m__ellipt__2d__fem__sps__stencil__new__projector_1_1sll__t__ellipt__2d__fem__sps__stencil__new__projector.html" title="sll_t_ellipt_2d_fem\l_sps_stencil_new_projector" alt="" coords="319,471,501,513"/>
+<area shape="rect" id="node6" href="$structsll__m__qn__solver__2d__fem__sps__stencil__new__assembler_1_1sll__t__qn__solver__2d__fem__sps__stencil__new__assembler.html" title="sll_t_qn_solver_2d\l_fem_sps_stencil_new\l_assembler" alt="" coords="333,536,487,592"/>
+<area shape="rect" id="node8" href="$structsll__m__vector__space__c1__block_1_1sll__t__vector__space__c1__block.html" title="sll_t_vector_space\l_c1_block" alt="" coords="691,229,821,270"/>
+<area shape="rect" id="node18" href="$structsll__m__linear__operator__matrix__stencil__to__stencil_1_1sll__t__linear__operator__matrix__stencil__to__stencil.html" title="sll_t_linear_operator\l_matrix_stencil_to_stencil" alt="" coords="323,1275,497,1317"/>
+<area shape="rect" id="node22" href="$structsll__m__linear__operator__matrix__c1__block__new_1_1sll__t__linear__operator__matrix__c1__block__new.html" title="sll_t_linear_operator\l_matrix_c1_block_new" alt="" coords="679,1045,833,1086"/>
+<area shape="rect" id="node23" href="$structsll__m__linear__operator__matrix__stencil__to__dense__new_1_1sll__t__linear__operator__matrix__stencil__to__dense__new.html" title="sll_t_linear_operator\l_matrix_stencil_to_dense_new" alt="" coords="309,1497,511,1538"/>
+<area shape="rect" id="node24" href="$structsll__m__linear__operator__matrix__dense__to__stencil__new_1_1sll__t__linear__operator__matrix__dense__to__stencil__new.html" title="sll_t_linear_operator\l_matrix_dense_to_stencil_new" alt="" coords="309,1210,511,1251"/>
+<area shape="rect" id="node27" href="$structsll__m__spline__interpolator__2d_1_1sll__t__spline__interpolator__2d.html" title="2D tensor&#45;product spline interpolator " alt="" coords="667,1969,845,1996"/>
+<area shape="rect" id="node29" href="$structsll__m__spline__interpolator__1d_1_1sll__t__spline__interpolator__1d.html" title="1D spline interpolator " alt="" coords="321,1969,499,1996"/>
+<area shape="rect" id="node31" href="$structsll__m__singular__mapping__discrete_1_1sll__t__singular__mapping__discrete.html" title="Concrete type, discrete singular mapping. " alt="" coords="1011,1731,1165,1773"/>
+<area shape="rect" id="node9" href="$structsll__m__vector__space__base_1_1sll__c__vector__space.html" title="Abstract base class for all vector spaces. " alt="" coords="25,96,160,123"/>
+<area shape="rect" id="node10" href="$structsll__m__vector__space__real__array__1d_1_1sll__t__vector__space__real__array__1d.html" title="Vector space for wrapping 1D Fortran real arrays. " alt="" coords="345,406,475,447"/>
+<area shape="rect" id="node12" href="$structsll__m__vector__space__real__array__2d_1_1sll__t__vector__space__real__array__2d.html" title="Vector space for wrapping 2D Fortran real arrays. " alt="" coords="345,21,475,62"/>
+<area shape="rect" id="node16" href="$structsll__m__spline__2d_1_1sll__t__spline__2d.html" title="2D tensor&#45;product spline " alt="" coords="535,1857,643,1884"/>
+<area shape="rect" id="node28" href="$structsll__m__spline__1d_1_1sll__t__spline__1d.html" title="1D spline " alt="" coords="356,2163,464,2189"/>
+<area shape="rect" id="node14" href="$structsll__m__qn__solver__2d__fem__sps__weak__form_1_1sll__t__qn__solver__2d__fem__sps__weak__form.html" title="sll_t_qn_solver_2d\l_fem_sps_weak_form" alt="" coords="1013,614,1163,655"/>
+<area shape="rect" id="node15" href="$structsll__m__ellipt__2d__fem__sps__weak__form_1_1sll__c__ellipt__2d__fem__sps__weak__form.html" title="sll_c_ellipt_2d_fem\l_sps_weak_form" alt="" coords="689,539,823,581"/>
+<area shape="rect" id="node19" href="$structsll__m__linear__operator__base_1_1sll__c__linear__operator.html" title="sll_c_linear_operator" alt="" coords="22,1476,163,1503"/>
+<area shape="rect" id="node32" href="$structsll__m__singular__mapping__base_1_1sll__c__singular__mapping.html" title="Abstract type, singular mapping. " alt="" coords="677,1739,835,1765"/>
+</map>

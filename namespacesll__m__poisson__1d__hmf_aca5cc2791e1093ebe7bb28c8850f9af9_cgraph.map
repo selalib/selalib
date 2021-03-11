@@ -1,0 +1,5 @@
+<map id="compute_e_from_rho_1d_hmf" name="compute_e_from_rho_1d_hmf">
+<area shape="rect" id="node2" href="$namespacesll__m__poisson__1d__hmf.html#a2b4b53444694dd14c7284f4cc0fa0bfd" title="Solve the 1d equation for the Vlasov&#45;HMF model. " alt="" coords="197,39,336,80"/>
+<area shape="rect" id="node3" href="$namespacesll__m__fft.html#a07ee4cd52316d2769eee6c35861d1482" title="Compute fast Fourier transform in real to complex mode. " alt="" coords="384,5,511,47"/>
+<area shape="rect" id="node4" href="$namespacesll__m__fft.html#a293ae19515b20fa6d456ef2c52f99b23" title="Compute fast Fourier transform in complex to real mode. " alt="" coords="384,71,511,112"/>
+</map>

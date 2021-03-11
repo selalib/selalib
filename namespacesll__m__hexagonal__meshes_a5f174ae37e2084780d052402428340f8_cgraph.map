@@ -1,0 +1,9 @@
+<map id="get_neighbours" name="get_neighbours">
+<area shape="rect" id="node2" href="$namespacesll__m__hexagonal__meshes.html#aa579f5999884452ce000e206a88dc6b7" title="Returns indices of the edges of a given cell. " alt="" coords="164,32,319,73"/>
+<area shape="rect" id="node3" href="$namespacesll__m__hexagonal__meshes.html#a066138062e95dab8690eb6e889dfe769" title="Transform cartesian coordinates to 1st hexagonal coordinates. " alt="" coords="367,10,495,37"/>
+<area shape="rect" id="node4" href="$namespacesll__m__hexagonal__meshes.html#aa108ce30c3a8af1414fbfeba3420d493" title="Transform cartesian coordinates to 2ndst hexagonal coordinates. " alt="" coords="367,79,495,106"/>
+<area shape="rect" id="node8" href="$namespacesll__m__hexagonal__meshes.html#a0770cf59d8b43bdb276ef0be796ad405" title="Given a mesh point and the first cartesian coordinate of a point (that is not on the mesh) we return ..." alt="" coords="180,149,303,191"/>
+<area shape="rect" id="node5" href="$namespacesll__m__hexagonal__meshes.html#af2ad9a5ed18f26e97513930ee9793370" title="Transform hexagonal coordinates to global index. " alt="" coords="379,134,482,161"/>
+<area shape="rect" id="node6" href="$namespacesll__m__hexagonal__meshes.html#a8bed234b81efa9e2e353c3f594c104e3" title="Computes the number of cell from point to origin. " alt="" coords="545,109,681,135"/>
+<area shape="rect" id="node7" href="$namespacesll__m__hexagonal__meshes.html#a47f7a419f8f8904d408ad3a630612ee4" title="Finds the index in the global array of the point which coordinates where passed as parameter..." alt="" coords="543,159,683,186"/>
+</map>

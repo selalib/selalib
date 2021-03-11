@@ -1,0 +1,5 @@
+<map id="allocate_memory_df_4d_mp" name="allocate_memory_df_4d_mp">
+<area shape="rect" id="node2" href="$namespacesll__m__collective.html#a396122f49340f0778eb448430d865b4e" title="Determines the rank of the calling process in the communicator. " alt="" coords="192,5,344,47"/>
+<area shape="rect" id="node4" href="$namespacesll__m__collective.html#af2d3c240d9dfe7e9c7d7f7c9e0529f17" title="Determines the size of the group associated with a communicator. " alt="" coords="193,71,343,112"/>
+<area shape="rect" id="node3" href="$namespacesll__m__collective.html#a37ea25f42a791be5a710a6cf0d1e1197" title="Checks if the pointer ptr is associated to an object. " alt="" coords="392,39,540,80"/>
+</map>

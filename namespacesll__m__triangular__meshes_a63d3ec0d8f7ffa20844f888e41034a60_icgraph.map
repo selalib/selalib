@@ -1,0 +1,4 @@
+<map id="initialize_triangular_mesh_2d" name="initialize_triangular_mesh_2d">
+<area shape="rect" id="node2" href="$namespacesll__m__triangular__meshes.html#a2ac9228dc5ee7e221823e2e8ca910fc1" title="Allocates the memory space for a new 2D triangular mesh on the heap,. " alt="" coords="184,5,329,47"/>
+<area shape="rect" id="node3" href="$namespacesll__m__triangular__meshes.html#aeaa9a64d84756d16271ae95145320618" title="Initialize a new 2D triangular mesh. " alt="" coords="183,71,331,112"/>
+</map>

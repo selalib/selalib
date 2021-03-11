@@ -1,0 +1,5 @@
+<map id="sll_t_p2p_comm_real64" name="sll_t_p2p_comm_real64">
+<area shape="rect" id="node2" href="$structsll__m__collective_1_1sll__t__collective__t.html" title="Wrapper around the communicator. " alt="" coords="97,267,216,293"/>
+<area shape="rect" id="node4" href="$structsll__m__point__to__point__comms_1_1port__real64.html" title="port_real64" alt="" coords="258,333,345,360"/>
+<area shape="rect" id="node5" href="$structsll__m__point__to__point__comms_1_1buffer__real64.html" title="buffer_real64" alt="" coords="392,191,489,218"/>
+</map>

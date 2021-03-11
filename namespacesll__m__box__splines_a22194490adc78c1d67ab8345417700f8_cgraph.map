@@ -1,0 +1,9 @@
+<map id="sll_f_hex_interpolate_value" name="sll_f_hex_interpolate_value">
+<area shape="rect" id="node2" href="$namespacesll__m__hexagonal__meshes.html#a066138062e95dab8690eb6e889dfe769" title="Transform cartesian coordinates to 1st hexagonal coordinates. " alt="" coords="195,5,367,47"/>
+<area shape="rect" id="node3" href="$namespacesll__m__hexagonal__meshes.html#aa108ce30c3a8af1414fbfeba3420d493" title="Transform cartesian coordinates to 2ndst hexagonal coordinates. " alt="" coords="195,71,367,112"/>
+<area shape="rect" id="node4" href="$namespacesll__m__hexagonal__meshes.html#a8bed234b81efa9e2e353c3f594c104e3" title="Computes the number of cell from point to origin. " alt="" coords="195,136,367,177"/>
+<area shape="rect" id="node5" href="$namespacesll__m__box__splines.html#a3b94ddbae2c7b03c53ca2653ae187885" title="1st coo. of (x1, x2) in reference hex&#45;mesh coo. " alt="" coords="219,202,342,229"/>
+<area shape="rect" id="node6" href="$namespacesll__m__box__splines.html#a1edd2773985cb3b80bdcdab980892673" title="2nd coo. of (x1, x2) in reference hex&#45;mesh coo. " alt="" coords="219,253,342,279"/>
+<area shape="rect" id="node7" href="$namespacesll__m__box__splines.html#a7a05a2e34070d0618d01288021e9ec28" title="Computes the box spline of degree deg on (x1, x2) " alt="" coords="235,303,326,330"/>
+<area shape="rect" id="node8" href="$namespacesll__m__box__splines.html#a12728f21737f7f8d9f56c33b69ec31d6" title="Computes the binomial coefficient (n, k) " alt="" coords="415,303,479,330"/>
+</map>

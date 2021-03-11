@@ -1,0 +1,8 @@
+<map id="sll_s_fft_init_r2c_1d" name="sll_s_fft_init_r2c_1d">
+<area shape="rect" id="node2" href="$namespacesll__m__maxwell__2d__pstd.html#adcf5bb75c1aa065d33e42588cfdfe224" title="Solve maxwell solver 2d cartesian periodic with PSTD scheme. " alt="" coords="192,5,381,47"/>
+<area shape="rect" id="node3" href="$namespacesll__m__maxwell__3d__pstd.html#a5b298dd4c8ea032cc430d64be6628a93" title="Initialize 3d maxwell solver on cartesian mesh with PSTD scheme. " alt="" coords="192,71,381,112"/>
+<area shape="rect" id="node4" href="$namespacesll__m__maxwell__2d__periodic__cartesian__par.html#a7da36e2a3fe4bb2910c7633316e79c13" title="Presently, this function receives the geometric information as individual arguments. We should consider passing the &#39;simple geometry&#39; object that we have for the cartesian cases. " alt="" coords="196,136,377,207"/>
+<area shape="rect" id="node5" href="$namespacesll__m__poisson__1d__hmf.html#aae08072cc17e25c6d41f142de5c63a49" title="Initialize the poisson 1d hmf solver. " alt="" coords="195,231,378,272"/>
+<area shape="rect" id="node6" href="$namespacesll__m__advection__1d__ampere.html#a3e5a945347e7e82c7146746f1fbf76f3" title="sll_m_advection_1d\l_ampere::advector_1d\l_ampere_init" alt="" coords="211,295,362,351"/>
+<area shape="rect" id="node7" href="$namespacesll__m__advection__1d__spectral.html#ac96f9986754a15eaa0cb1f161fbf6f65" title="sll_m_advection_1d\l_spectral::advector\l_1d_spectral_init" alt="" coords="218,375,355,431"/>
+</map>

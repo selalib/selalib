@@ -1,0 +1,10 @@
+<map id="sll_s_maxwell_2d_diga_init" name="sll_s_maxwell_2d_diga_init">
+<area shape="rect" id="node2" href="$namespacesll__m__gauss__lobatto__integration.html#a43443dd7dd80f1289d964b572cd6ee2c" title="Returns a 1d array of size (n) containing gauss&#45;lobatto points in the interval [a,b]. " alt="" coords="460,150,612,206"/>
+<area shape="rect" id="node5" href="$namespacesll__m__gauss__lobatto__integration.html#ab2dd3e9cafb094226c63f629745b0654" title="Returns a 1d array of size (n) containing gauss&#45;lobatto weights in the interval [a,b]. " alt="" coords="455,70,617,126"/>
+<area shape="rect" id="node6" href="$namespacesll__m__gauss__lobatto__integration.html#a40c64cf688951538c0093a24e463688c" title="Construction of the derivative matrix for Gauss&#45;Lobatto, The matrix must be already allocated of size..." alt="" coords="233,231,407,301"/>
+<area shape="rect" id="node7" href="$namespacesll__m__maxwell__2d__diga.html#aaf2e3de1e3a109d93be64114e8abeb03" title="Compute cell normals. " alt="" coords="257,129,383,155"/>
+<area shape="rect" id="node8" href="$namespacesll__m__dg__fields.html#a66ffd9f6cf3e20a707f967e4cb457d30" title="sll_m_dg_fields::sll\l_s_dg_field_2d_init" alt="" coords="253,12,387,53"/>
+<area shape="rect" id="node3" href="$namespacesll__m__gauss__lobatto__integration.html#aef28cd44b846400f5133a0ee289babbc" title="This comes from http://dl.acm.org, Algorithme 726 : ORTHPOL, appendices and supplements To use those ..." alt="" coords="665,117,807,159"/>
+<area shape="rect" id="node4" href="$namespacesll__m__gauss__lobatto__integration.html#a20a90d157ba32cd27c5d6f89eccf3735" title="Given n and a measure dlambda, this routine generates the n&#45;point Gaussian quadrature formula..." alt="" coords="855,117,996,159"/>
+<area shape="rect" id="node9" href="$namespacesll__m__dg__fields.html#ac58a04f8b3973e610bedff7f58924085" title="sll_m_dg_fields::set\l_value_dg_field_2d" alt="" coords="467,5,605,47"/>
+</map>
