@@ -35,6 +35,15 @@ program test_cubic_splines_nonuniform
    sll_int32  :: test, nb_test, ival, N_test1, N_test2, index_max_err(6), unif_case, bdr_case
    sll_real64 :: max_err(6)
 
+   sll_int32 :: nseed
+   sll_int32, allocatable :: seed(:) 
+
+   call random_seed(size=nseed)
+   allocate(seed(nseed))
+   seed = 42
+   call random_seed(put=seed)
+
+
    test_passed = .true.
 
    xmin_val = -10._f64
