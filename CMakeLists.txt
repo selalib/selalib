@@ -13,19 +13,8 @@ if(OPTIONS_FILE)
   message("OPTIONS_FILE ARE READ")
 endif()
 
-cmake_minimum_required(VERSION 2.8.12)
+cmake_minimum_required(VERSION 3.1.0)
 project(SeLaLib)
-
-if(POLICY CMP0051)
-  # CMake 3.1 and higher include generator expressions of the form
-  # $<TARGETLIB:obj> in the SOURCES property.  These need to be stripped
-  # everywhere that access the SOURCES property, so we just defer to the OLD
-  # behavior of not including generator expressions in the output for now.
-  cmake_policy(SET CMP0051 OLD)
-endif()
-if(POLICY CMP0045)
-  cmake_policy(SET CMP0045 OLD)
-endif()
 
 enable_language(Fortran)
 
@@ -229,5 +218,4 @@ mark_as_advanced(
   SZ_LIBRARY
   UNUSED_DUMMY_WARNING_ENABLED
   UNUSED_FUNCTION_WARNING_ENABLED
-  FFTW_ROOT
-  HDF5_ROOT)
+  )

@@ -26,7 +26,7 @@ if(NOT DEFINED PROCESSOR_COUNT)
 
   set(PROCESSOR_COUNT
       ${PROCESSOR_COUNT}
-      CACHE INTEGER "Processor number")
+      CACHE STRING "Processor number")
 
 endif()
 
