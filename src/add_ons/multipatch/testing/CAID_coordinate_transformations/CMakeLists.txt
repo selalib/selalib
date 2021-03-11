@@ -8,7 +8,7 @@ if(PYTHON3_FOUND)
 
   # choose python script to translate individual patch information.
   set(PATCH_SCRIPT
-      "${CMAKE_SOURCE_DIR}/python/python_scripts/nurbs_patch_txt_to_nml.py")
+      "${CMAKE_SOURCE_DIR}/python/nurbs_patch_txt_to_nml.py")
 
   # Search through subdirectories to do the translations of the patch and
   # connectivity information.
@@ -27,7 +27,7 @@ if(PYTHON3_FOUND)
   endforeach()
 
   set(MP_INFO_SCRIPT
-      "${CMAKE_SOURCE_DIR}/python/python_scripts/translate_multipatch_info.py")
+      "${CMAKE_SOURCE_DIR}/python/translate_multipatch_info.py")
 
   file(GLOB_RECURSE INFO_FILES "${CMAKE_CURRENT_SOURCE_DIR}/*_info.txt")
 
@@ -45,7 +45,7 @@ if(PYTHON3_FOUND)
   # desired arguments.
 
   set(CONNECTIVITY_SCRIPT
-      "${CMAKE_SOURCE_DIR}/python/python_scripts/translate_connectivity_info.py"
+      "${CMAKE_SOURCE_DIR}/python/translate_connectivity_info.py"
   )
 
   # we had read already the *_info.txt in INFO_FILES.
