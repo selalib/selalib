@@ -21,11 +21,7 @@ set(SPLINES_FILES
     sll_m_hex_pre_filters.F90
     sll_m_box_splines.F90)
 
-if(PGI)
-  list(APPEND SPLINES_FILES sll_m_cubic_splines_pgi.F90)
-else(PGI)
-  list(APPEND SPLINES_FILES sll_m_cubic_splines.F90)
-endif(PGI)
+list(APPEND SPLINES_FILES sll_m_cubic_splines.F90)
 
 add_library(sll_splines STATIC ${SPLINES_FILES})
 

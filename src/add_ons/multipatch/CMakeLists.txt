@@ -10,11 +10,7 @@ if(HDF5_ENABLED
       sll_m_scalar_field_2d_multipatch.F90
       sll_m_general_coordinate_elliptic_solver_multipatch.F90)
 
-  if(PGI)
-    list(APPEND MULTIPATCH_FILES sll_m_cartesian_meshes_multipatch_pgi.F90)
-  else(PGI)
-    list(APPEND MULTIPATCH_FILES sll_m_cartesian_meshes_multipatch.F90)
-  endif(PGI)
+  list(APPEND MULTIPATCH_FILES sll_m_cartesian_meshes_multipatch.F90)
 
   add_library(sll_multipatch STATIC ${MULTIPATCH_FILES})
 

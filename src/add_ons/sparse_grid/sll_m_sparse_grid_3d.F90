@@ -476,11 +476,7 @@ contains
 
       call interpolator%initialize_sg(levels, order, interpolation, &
                                       interpolation_type, eta_min, eta_max); 
-#ifdef __PGI
-      allocate (interpolator%index(0:interpolator%levels(1), 0:interpolator%levels(2), 0:interpolator%levels(3)))
-#else
       SLL_ALLOCATE(interpolator%index(0:interpolator%levels(1), 0:interpolator%levels(2), 0:interpolator%levels(3)), ierr)
-#endif
 
       ! Set the hierarchy of the grid
       counter = 1

@@ -11,7 +11,7 @@ set_tests_properties(pic_hammersley PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
 
 find_package(GSL)
 
-if(FGSL_FOUND AND NOT PGI)
+if(FGSL_FOUND)
   add_executable(test_fgsl_rng mod_unit.f90 rng.f90)
   target_include_directories(test_fgsl_rng PRIVATE ${FGSL_INCLUDES})
   target_link_libraries(test_fgsl_rng ${FGSL_LIBRARIES})
