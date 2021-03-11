@@ -1,10 +1,11 @@
-add_library( sll_quasi_neutral_solvers STATIC
-  sll_m_qn_solver_2d_polar.F90
-  sll_m_qn_solver_2d_fem_sps_weak_form.F90
+add_library(
+  sll_quasi_neutral_solvers STATIC
+  sll_m_qn_solver_2d_polar.F90 sll_m_qn_solver_2d_fem_sps_weak_form.F90
   sll_m_qn_solver_2d_fem_sps_stencil_new_assembler.F90
-  sll_m_qn_solver_2d_fem_sps_stencil_new.F90 )
+  sll_m_qn_solver_2d_fem_sps_stencil_new.F90)
 
-target_link_libraries( sll_quasi_neutral_solvers
+target_link_libraries(
+  sll_quasi_neutral_solvers
   sll_assert
   sll_errors
   sll_working_precision
@@ -14,9 +15,9 @@ target_link_libraries( sll_quasi_neutral_solvers
   sll_linear_solvers
   sll_general_coordinate_elliptic_solvers
   sll_splines
-  sll_splines_smooth )
+  sll_splines_smooth)
 
 # Ctests
-if( BUILD_TESTING )
-  add_subdirectory( testing )
-endif( BUILD_TESTING )
+if(BUILD_TESTING)
+  add_subdirectory(testing)
+endif(BUILD_TESTING)

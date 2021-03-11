@@ -20,7 +20,7 @@
 !**************************************************************
 */
 
-#if (defined ( GFORTRAN ) || defined ( __PGI ) || defined(MPIF90))
+#if (defined ( GFORTRAN ) || defined(MPIF90))
 # define STRNG(x) "x"
 #else
 # define STRNG(x) #x
