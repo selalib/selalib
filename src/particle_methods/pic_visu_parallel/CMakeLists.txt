@@ -1,15 +1,11 @@
-IF (MPI_ENABLED)  
+if(MPI_ENABLED)
 
-  ADD_LIBRARY( sll_pic_visu_parallel STATIC sll_m_pic_visu_parallel.F90 )
-  TARGET_LINK_LIBRARIES( sll_pic_visu_parallel
-    sll_utilities
-    sll_file_io
-    sll_assert
-    sll_pic_visu
-    sll_collective)
+  add_library(sll_pic_visu_parallel STATIC sll_m_pic_visu_parallel.F90)
+  target_link_libraries(sll_pic_visu_parallel sll_utilities sll_file_io
+                        sll_assert sll_pic_visu sll_collective)
 
-  IF(BUILD_TESTING)
-    ADD_SUBDIRECTORY(testing)
-  ENDIF(BUILD_TESTING)
+  if(BUILD_TESTING)
+    add_subdirectory(testing)
+  endif(BUILD_TESTING)
 
-ENDIF (MPI_ENABLED) 
+endif(MPI_ENABLED)

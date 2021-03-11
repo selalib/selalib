@@ -1,11 +1,9 @@
-ADD_LIBRARY( sll_point_to_point_communications STATIC
-  sll_m_point_to_point_comms.F90 )
+add_library(sll_point_to_point_communications STATIC
+            sll_m_point_to_point_comms.F90)
 
-TARGET_LINK_LIBRARIES( sll_point_to_point_communications
-  sll_collective )
-
+target_link_libraries(sll_point_to_point_communications sll_collective)
 
 # Ctests
-IF(BUILD_TESTING)
-  ADD_SUBDIRECTORY(testing)
-ENDIF(BUILD_TESTING)
+if(BUILD_TESTING)
+  add_subdirectory(testing)
+endif(BUILD_TESTING)

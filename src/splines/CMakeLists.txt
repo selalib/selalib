@@ -1,2 +1,2 @@
-ADD_SUBDIRECTORY(splines_basic)
-ADD_SUBDIRECTORY(splines_smooth)
+add_subdirectory(splines_basic)
+add_subdirectory(splines_smooth)
