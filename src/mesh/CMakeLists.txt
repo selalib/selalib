@@ -1,3 +1,3 @@
-ADD_SUBDIRECTORY(meshes)
-ADD_SUBDIRECTORY(mesh_calculus)
-ADD_SUBDIRECTORY(coordinate_transformations)
+add_subdirectory(meshes)
+add_subdirectory(mesh_calculus)
+add_subdirectory(coordinate_transformations)

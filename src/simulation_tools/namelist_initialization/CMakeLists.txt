@@ -1,3 +1,2 @@
-
-ADD_SUBDIRECTORY(dk_curv_mesh)
-ADD_SUBDIRECTORY(nml_mesh_cart)
+add_subdirectory(dk_curv_mesh)
+add_subdirectory(nml_mesh_cart)

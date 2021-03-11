@@ -1,5 +1,5 @@
 add_library(fmempool STATIC fmempool.F90 fassert.F90)
 
-IF(BUILD_TESTING)
-  ADD_SUBDIRECTORY( testing )
-ENDIF(BUILD_TESTING)
+if(BUILD_TESTING)
+  add_subdirectory(testing)
+endif(BUILD_TESTING)

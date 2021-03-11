@@ -1,175 +1,213 @@
+set(HDF5_ROOT
+    $ENV{HDF5_ROOT}
+    CACHE PATH "HDF5 location")
 
-SET(HDF5_ROOT $ENV{HDF5_ROOT} CACHE PATH "HDF5 location")
+if(NOT HDF5_FOUND AND HDF5_ENABLED)
 
-IF(NOT HDF5_FOUND AND HDF5_ENABLED)
+  if(MPI_Fortran_LIBRARIES)
+    list(GET MPI_Fortran_LIBRARIES 0 HEAD)
+    get_filename_component(MPI_LIB_ROOT ${HEAD} PATH)
+  else()
+    set(MPI_LIB_ROOT "")
+  endif()
 
-   IF (MPI_Fortran_LIBRARIES)
-     LIST(GET MPI_Fortran_LIBRARIES 0 HEAD) 
-     GET_FILENAME_COMPONENT(MPI_LIB_ROOT ${HEAD} PATH)
-   ELSE()
-     SET(MPI_LIB_ROOT "")
-   ENDIF()
+  set(HDF5_PATHS
+      ${HDF5_ROOT}
+      ${MPI_Fortran_INCLUDE_PATH}
+      $ENV{HDF5_HOME}
+      $ENV{HDF5ROOT}
+      $ENV{HDF5_BASE}
+      $ENV{HDF5_ROOT_DIR}
+      $ENV{HDF5_DIR}
+      $ENV{SZIP_LIB}
+      $ENV{SZIP_LIBDIR}
+      $ENV{HDF5_BASE}
+      /usr
+      /usr/include/hdf5/openmpi
+      /usr/include/hdf5/mpich
+      /usr/local
+      /opt/local)
 
-   SET(HDF5_PATHS ${HDF5_ROOT} 
-                  ${MPI_Fortran_INCLUDE_PATH}
-                  $ENV{HDF5_HOME}
-                  $ENV{HDF5ROOT} 
-                  $ENV{HDF5_BASE}
-                  $ENV{HDF5_ROOT_DIR}
-                  $ENV{HDF5_DIR}
-                  $ENV{SZIP_LIB}
-                  $ENV{SZIP_LIBDIR}
-                  $ENV{HDF5_BASE}
-                  /usr 
-                  /usr/include/hdf5/openmpi
-                  /usr/include/hdf5/mpich
-                  /usr/local 
-                  /opt/local)
+  find_path(
+    HDF5_INCLUDE_DIR
+    NAMES H5pubconf.h
+    HINTS ${HDF5_PATHS} $ENV{HDF5_INCLUDEDIR} $ENV{HDF5_INC_DIR}
+    PATH_SUFFIXES / include
+    DOC "PATH to H5pubconf.h")
 
-   FIND_PATH(HDF5_INCLUDE_DIR NAMES H5pubconf.h
-   HINTS ${HDF5_PATHS} $ENV{HDF5_INCLUDEDIR} $ENV{HDF5_INC_DIR} 
-   PATH_SUFFIXES / include
-   DOC "PATH to H5pubconf.h")
+  find_path(
+    HDF5_INCLUDE_DIR_FORTRAN
+    NAMES hdf5.mod
+    HINTS ${HDF5_PATHS} $ENV{HDF5_INCLUDEDIR} $ENV{HDF5_INC_DIR}
+    PATH_SUFFIXES / include hdf5/include include/fortran
+    DOC "PATH to hdf5.mod")
 
-   FIND_PATH(HDF5_INCLUDE_DIR_FORTRAN NAMES hdf5.mod
-   HINTS ${HDF5_PATHS} $ENV{HDF5_INCLUDEDIR} $ENV{HDF5_INC_DIR}
-   PATH_SUFFIXES / include hdf5/include include/fortran
-   DOC "PATH to hdf5.mod")
+  find_library(
+    HDF5_C_LIBRARY
+    NAMES libhdf5.a hdf5_openmpi hdf5_mpich hdf5
+    HINTS ${MPI_LIB_ROOT} ${HDF5_PATHS} $ENV{HDF5_LIBRARYDIR} $ENV{HDF5_LIB_DIR}
+    PATH_SUFFIXES lib hdf5/lib lib/x86_64-linux-gnu
+    DOC "PATH TO libhdf5")
 
-   FIND_LIBRARY(HDF5_C_LIBRARY NAMES libhdf5.a hdf5_openmpi hdf5_mpich hdf5
-   HINTS ${MPI_LIB_ROOT} ${HDF5_PATHS} $ENV{HDF5_LIBRARYDIR} $ENV{HDF5_LIB_DIR}
-   PATH_SUFFIXES lib hdf5/lib lib/x86_64-linux-gnu
-   DOC "PATH TO libhdf5")
+  find_library(
+    HDF5_FORTRAN_LIBRARY
+    NAMES libhdf5_fortran.a hdf5_openmpi_fortran hdf5_mpich_fortran hdf5_fortran
+    HINTS ${MPI_LIB_ROOT} ${HDF5_PATHS} $ENV{HDF5_LIBRARYDIR} $ENV{HDF5_LIB_DIR}
+    PATH_SUFFIXES lib hdf5/lib lib/x86_64-linux-gnu
+    DOC "PATH TO libhdf5_fortran")
 
-   FIND_LIBRARY(HDF5_FORTRAN_LIBRARY 
-   NAMES libhdf5_fortran.a hdf5_openmpi_fortran hdf5_mpich_fortran hdf5_fortran
-   HINTS ${MPI_LIB_ROOT} ${HDF5_PATHS} $ENV{HDF5_LIBRARYDIR} $ENV{HDF5_LIB_DIR}
-   PATH_SUFFIXES lib hdf5/lib lib/x86_64-linux-gnu
-   DOC "PATH TO libhdf5_fortran")
+  find_library(
+    ZLIB_LIBRARIES
+    NAMES z sz
+    HINTS ${HDF5_PATHS}
+    PATH_SUFFIXES lib hdf5/lib ENV${SZIP_LIB}
+    DOC "PATH TO zip library")
 
-   FIND_LIBRARY(ZLIB_LIBRARIES NAMES z sz
-                HINTS ${HDF5_PATHS} 
-	          PATH_SUFFIXES lib hdf5/lib
-                ENV${SZIP_LIB}
-	          DOC "PATH TO zip library")
+  set(HDF5_LIBRARIES ${HDF5_FORTRAN_LIBRARY} ${HDF5_C_LIBRARY}
+                     ${ZLIB_LIBRARIES})
 
-   SET(HDF5_LIBRARIES ${HDF5_FORTRAN_LIBRARY} ${HDF5_C_LIBRARY} ${ZLIB_LIBRARIES})
+  if(DEFINED HDF5_FORTRAN_LIBRARY)
+    set(HDF5_FOUND YES)
+  endif()
 
-   IF(DEFINED HDF5_FORTRAN_LIBRARY)
-      SET(HDF5_FOUND YES)
-   ENDIF()
+endif()
 
-ENDIF()
+if(HDF5_FOUND)
 
-IF(HDF5_FOUND)
+  message(STATUS "HDF5 FOUND")
 
-   MESSAGE(STATUS "HDF5 FOUND")
+  set(HDF5_IS_PARALLEL FALSE)
 
-   SET( HDF5_IS_PARALLEL FALSE )
+  macro(CHECK_HDF5_DEPS HDF5_HAVE_STRING HDF5_HAVE_BOOL)
+    file(STRINGS "${HDF5_INCLUDE_DIR}/H5pubconf.h" HDF5_HAVE_DEFINE
+         REGEX ${HDF5_HAVE_STRING})
+    if(HDF5_HAVE_DEFINE)
+      set(${HDF5_HAVE_BOOL} TRUE)
+    else()
+      set(${HDF5_HAVE_BOOL} FALSE)
+    endif()
+  endmacro(CHECK_HDF5_DEPS)
 
-   MACRO(CHECK_HDF5_DEPS HDF5_HAVE_STRING HDF5_HAVE_BOOL)
-      FILE( STRINGS "${HDF5_INCLUDE_DIR}/H5pubconf.h" 
-            HDF5_HAVE_DEFINE REGEX ${HDF5_HAVE_STRING} )
-      IF( HDF5_HAVE_DEFINE )
-         SET( ${HDF5_HAVE_BOOL} TRUE )
-      ELSE()
-         SET( ${HDF5_HAVE_BOOL} FALSE )
-      ENDIF()
-   ENDMACRO(CHECK_HDF5_DEPS)
-   
-   IF( EXISTS "${HDF5_INCLUDE_DIR}/H5pubconf.h" )
-      CHECK_HDF5_DEPS("HAVE_PARALLEL 1" HDF5_IS_PARALLEL)
-      CHECK_HDF5_DEPS("HAVE_LIBPTHREAD 1" HDF5_HAVE_LIBPTHREAD)
-      CHECK_HDF5_DEPS("HAVE_GPFS 1" HDF5_HAVE_GPFS)
-      CHECK_HDF5_DEPS("HAVE_LIBDL 1" HDF5_HAVE_LIBDL)
-      CHECK_HDF5_DEPS("HAVE_LIBSZ 1" HDF5_HAVE_LIBSZ)
-   ENDIF()
+  if(EXISTS "${HDF5_INCLUDE_DIR}/H5pubconf.h")
+    check_hdf5_deps("HAVE_PARALLEL 1" HDF5_IS_PARALLEL)
+    check_hdf5_deps("HAVE_LIBPTHREAD 1" HDF5_HAVE_LIBPTHREAD)
+    check_hdf5_deps("HAVE_GPFS 1" HDF5_HAVE_GPFS)
+    check_hdf5_deps("HAVE_LIBDL 1" HDF5_HAVE_LIBDL)
+    check_hdf5_deps("HAVE_LIBSZ 1" HDF5_HAVE_LIBSZ)
+  endif()
 
-   SET( HDF5_IS_PARALLEL ${HDF5_IS_PARALLEL} CACHE BOOL
-       "HDF5 library compiled with parallel IO support" )
-   MARK_AS_ADVANCED( HDF5_IS_PARALLEL )
+  set(HDF5_IS_PARALLEL
+      ${HDF5_IS_PARALLEL}
+      CACHE BOOL "HDF5 library compiled with parallel IO support")
+  mark_as_advanced(HDF5_IS_PARALLEL)
 
-   IF(HDF5_IS_PARALLEL) 
-      MESSAGE(STATUS "HDF5 parallel supported")
-      ADD_DEFINITIONS(-DHDF5_PARALLEL)
-   ELSE(HDF5_IS_PARALLEL)
-      MESSAGE(STATUS "HDF5 parallel not supported")
-   ENDIF()
+  if(HDF5_IS_PARALLEL)
+    message(STATUS "HDF5 parallel supported")
+    add_definitions(-DHDF5_PARALLEL)
+  else(HDF5_IS_PARALLEL)
+    message(STATUS "HDF5 parallel not supported")
+  endif()
 
-   SET( HDF5_HAVE_LIBPTHREAD ${HDF5_HAVE_LIBPTHREAD} CACHE BOOL
-       "HDF5 library compiled with pthread library" )
-   MARK_AS_ADVANCED( HDF5_HAVE_LIBPTHREAD )
-   IF(HDF5_HAVE_LIBPTHREAD)
-      FIND_LIBRARY(PTHREAD_LIBRARY NAMES pthread)
-      SET(HDF5_LIBRARIES ${HDF5_LIBRARIES} ${PTHREAD_LIBRARY})
-   ENDIF()
+  set(HDF5_HAVE_LIBPTHREAD
+      ${HDF5_HAVE_LIBPTHREAD}
+      CACHE BOOL "HDF5 library compiled with pthread library")
+  mark_as_advanced(HDF5_HAVE_LIBPTHREAD)
+  if(HDF5_HAVE_LIBPTHREAD)
+    find_library(PTHREAD_LIBRARY NAMES pthread)
+    set(HDF5_LIBRARIES ${HDF5_LIBRARIES} ${PTHREAD_LIBRARY})
+  endif()
 
-   SET( HDF5_HAVE_GPFS ${HDF5_HAVE_GPFS} CACHE BOOL
-       "HDF5 library compiled with GPFS" )
-   MARK_AS_ADVANCED( HDF5_HAVE_GPFS )
-   IF(HDF5_HAVE_GPFS)
-      FIND_LIBRARY(GPFS_LIBRARY NAMES gpfs)
-      SET(HDF5_LIBRARIES ${HDF5_LIBRARIES} ${GPFS_LIBRARY})
-   ENDIF()
+  set(HDF5_HAVE_GPFS
+      ${HDF5_HAVE_GPFS}
+      CACHE BOOL "HDF5 library compiled with GPFS")
+  mark_as_advanced(HDF5_HAVE_GPFS)
+  if(HDF5_HAVE_GPFS)
+    find_library(GPFS_LIBRARY NAMES gpfs)
+    set(HDF5_LIBRARIES ${HDF5_LIBRARIES} ${GPFS_LIBRARY})
+  endif()
 
-   SET( HDF5_HAVE_LIBDL ${HDF5_HAVE_LIBDL} CACHE BOOL
-       "HDF5 library compiled with LIBDL" )
-   MARK_AS_ADVANCED( HDF5_HAVE_LIBDL )
-   IF(HDF5_HAVE_LIBDL)
-      FIND_LIBRARY(DL_LIBRARY NAMES dl)
-      SET(HDF5_LIBRARIES ${HDF5_LIBRARIES} ${DL_LIBRARY})
-   ENDIF()
+  set(HDF5_HAVE_LIBDL
+      ${HDF5_HAVE_LIBDL}
+      CACHE BOOL "HDF5 library compiled with LIBDL")
+  mark_as_advanced(HDF5_HAVE_LIBDL)
+  if(HDF5_HAVE_LIBDL)
+    find_library(DL_LIBRARY NAMES dl)
+    set(HDF5_LIBRARIES ${HDF5_LIBRARIES} ${DL_LIBRARY})
+  endif()
 
-   SET( HDF5_HAVE_LIBSZ ${HDF5_HAVE_LIBSZ} CACHE BOOL
-       "HDF5 library compiled with LIBSZ" )
-   MARK_AS_ADVANCED( HDF5_HAVE_LIBSZ )
-   IF(HDF5_HAVE_LIBSZ)
-      FIND_LIBRARY(SZ_LIBRARY NAMES sz)
-      SET(HDF5_LIBRARIES ${HDF5_LIBRARIES} ${SZ_LIBRARY})
-   ENDIF()
+  set(HDF5_HAVE_LIBSZ
+      ${HDF5_HAVE_LIBSZ}
+      CACHE BOOL "HDF5 library compiled with LIBSZ")
+  mark_as_advanced(HDF5_HAVE_LIBSZ)
+  if(HDF5_HAVE_LIBSZ)
+    find_library(SZ_LIBRARY NAMES sz)
+    set(HDF5_LIBRARIES ${HDF5_LIBRARIES} ${SZ_LIBRARY})
+  endif()
 
+else()
 
-ELSE()
+  message(
+    STATUS
+      "Build SeLaLib without HDF5... binary output only for serial applications "
+  )
+  add_definitions(-DNOHDF5)
+  set(HDF5_ENABLED
+      OFF
+      CACHE BOOL " " FORCE)
+  set(HDF5_LIBRARIES "")
 
-   MESSAGE(STATUS "Build SeLaLib without HDF5... binary output only for serial applications ")
-   ADD_DEFINITIONS(-DNOHDF5)
-   SET(HDF5_ENABLED OFF CACHE BOOL " " FORCE)
-   SET(HDF5_LIBRARIES "")
+endif()
 
-ENDIF()
+if(HDF5_ENABLED
+   AND HDF5_IS_PARALLEL
+   AND NOT MPI_ENABLED)
 
-IF(HDF5_ENABLED AND HDF5_IS_PARALLEL AND NOT MPI_ENABLED)
+  message(STATUS "HD5 is PARALLEL and needs MPI, please set MPI_ENABLED")
+  message(STATUS "HD5 is set to OFF")
+  set(HDF5_ENABLED
+      OFF
+      CACHE BOOL " " FORCE)
+  add_definitions(-DNOHDF5)
 
-  MESSAGE(STATUS "HD5 is PARALLEL and needs MPI, please set MPI_ENABLED")
-  MESSAGE(STATUS "HD5 is set to OFF")
-  SET(HDF5_ENABLED OFF CACHE BOOL " " FORCE)
-  ADD_DEFINITIONS(-DNOHDF5)
+endif(
+  HDF5_ENABLED
+  AND HDF5_IS_PARALLEL
+  AND NOT MPI_ENABLED)
 
-ENDIF(HDF5_ENABLED AND HDF5_IS_PARALLEL AND NOT MPI_ENABLED)
+if(BUILD_HDF5)
 
+  set(HDF5_C_LIBRARY
+      ${CMAKE_BINARY_DIR}/lib/libhdf5.a
+      CACHE FILEPATH " " FORCE)
+  set(HDF5_ENABLED
+      ON
+      CACHE BOOL " " FORCE)
+  set(HDF5_FORTRAN_LIBRARY
+      ${CMAKE_BINARY_DIR}/lib/libhdf5_fortran.a
+      CACHE FILEPATH " " FORCE)
+  set(HDF5_INCLUDE_DIR
+      ${CMAKE_BINARY_DIR}/include
+      CACHE FILEPATH " " FORCE)
+  set(HDF5_INCLUDE_DIR_FORTRAN
+      ${CMAKE_BINARY_DIR}/include
+      CACHE FILEPATH " " FORCE)
+  set(HDF5_IS_PARALLEL
+      ON
+      CACHE BOOL " " FORCE)
+  set(HDF5_PARALLEL_ENABLED
+      ON
+      CACHE BOOL " " FORCE)
+  set(HDF5_LIBRARIES ${HDF5_FORTRAN_LIBRARY} ${HDF5_C_LIBRARY}
+                     ${ZLIB_LIBRARIES})
 
-IF(BUILD_HDF5)
+endif(BUILD_HDF5)
 
-  SET(HDF5_C_LIBRARY           ${CMAKE_BINARY_DIR}/lib/libhdf5.a CACHE FILEPATH " " FORCE)
-  SET(HDF5_ENABLED             ON CACHE BOOL " " FORCE)
-  SET(HDF5_FORTRAN_LIBRARY     ${CMAKE_BINARY_DIR}/lib/libhdf5_fortran.a CACHE FILEPATH " " FORCE)
-  SET(HDF5_INCLUDE_DIR         ${CMAKE_BINARY_DIR}/include CACHE FILEPATH " " FORCE)
-  SET(HDF5_INCLUDE_DIR_FORTRAN ${CMAKE_BINARY_DIR}/include CACHE FILEPATH " " FORCE)
-  SET(HDF5_IS_PARALLEL         ON CACHE BOOL " " FORCE)
-  SET(HDF5_PARALLEL_ENABLED    ON CACHE BOOL " " FORCE)
-  SET(HDF5_LIBRARIES ${HDF5_FORTRAN_LIBRARY} ${HDF5_C_LIBRARY} ${ZLIB_LIBRARIES})
+message(STATUS "##########################################################")
+message(STATUS "HDF5_INCLUDE_DIR:${HDF5_INCLUDE_DIR}")
+message(STATUS "HDF5_INCLUDE_DIR_FORTRAN:${HDF5_INCLUDE_DIR_FORTRAN}")
+message(STATUS "HDF5_LIBRARIES:${HDF5_LIBRARIES}")
+message(STATUS "ZLIB_LIBRARIES:${ZLIB_LIBRARIES}")
+message(STATUS "##########################################################")
 
-ENDIF(BUILD_HDF5)
-
-
-MESSAGE(STATUS "##########################################################")
-MESSAGE(STATUS "HDF5_INCLUDE_DIR:${HDF5_INCLUDE_DIR}")
-MESSAGE(STATUS "HDF5_INCLUDE_DIR_FORTRAN:${HDF5_INCLUDE_DIR_FORTRAN}")
-MESSAGE(STATUS "HDF5_LIBRARIES:${HDF5_LIBRARIES}")
-MESSAGE(STATUS "ZLIB_LIBRARIES:${ZLIB_LIBRARIES}")
-MESSAGE(STATUS "##########################################################")
-
-MARK_AS_ADVANCED(HDF5_FORTRAN_LIBRARY
-	           HDF5_C_LIBRARY
-                 HDF5_INCLUDE_DIR
+mark_as_advanced(HDF5_FORTRAN_LIBRARY HDF5_C_LIBRARY HDF5_INCLUDE_DIR
                  HDF5_INCLUDE_DIR_FORTRAN)

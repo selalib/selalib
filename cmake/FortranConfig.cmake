@@ -1,85 +1,101 @@
-# Determine how-to install the modules. CMAKE_BINARY_DIR is the directory
-# in which the make command is invoked.
-SET(CMAKE_Fortran_MODULE_DIRECTORY "${CMAKE_BINARY_DIR}/modules")
+# Determine how-to install the modules. CMAKE_BINARY_DIR is the directory in
+# which the make command is invoked.
+set(CMAKE_Fortran_MODULE_DIRECTORY "${CMAKE_BINARY_DIR}/modules")
 
 # Add the modules directory to the list of include directories
-#INCLUDE_DIRECTORIES(${CMAKE_Fortran_MODULE_DIRECTORY})
+# INCLUDE_DIRECTORIES(${CMAKE_Fortran_MODULE_DIRECTORY})
 
-GET_FILENAME_COMPONENT(Fortran_COMPILER_NAME "${CMAKE_Fortran_COMPILER}" NAME)
-MESSAGE(STATUS "CMAKE_Fortran_COMPILER_ID:${CMAKE_Fortran_COMPILER_ID}")
+get_filename_component(Fortran_COMPILER_NAME "${CMAKE_Fortran_COMPILER}" NAME)
+message(STATUS "CMAKE_Fortran_COMPILER_ID:${CMAKE_Fortran_COMPILER_ID}")
 
-IF (CMAKE_Fortran_COMPILER_ID MATCHES Intel)
+if(CMAKE_Fortran_COMPILER_ID MATCHES Intel)
 
-  EXEC_PROGRAM(${CMAKE_Fortran_COMPILER} ARGS "-v" OUTPUT_VARIABLE source_path)
-  MESSAGE(STATUS "${source_path}")
-  STRING(REGEX MATCH "1[0-9]\\.[0-9]\\.[0-9]" Fortran_COMPILER_VERSION ${source_path})
-  SET(CMAKE_Fortran_FLAGS_RELEASE "-nowarn -O3 -xHost -ip -fpic")
-  SET(CMAKE_Fortran_FLAGS_DEBUG   "-g -O0 -check all,noarg_temp_created -fpe0 -traceback -ftrapuv -fpic")
-  SET(CMAKE_SHARED_LIBRARY_LINK_Fortran_FLAGS "-shared-intel")
+  exec_program(
+    ${CMAKE_Fortran_COMPILER} ARGS
+    "-v"
+    OUTPUT_VARIABLE source_path)
+  message(STATUS "${source_path}")
+  string(REGEX MATCH "1[0-9]\\.[0-9]\\.[0-9]" Fortran_COMPILER_VERSION
+               ${source_path})
+  set(CMAKE_Fortran_FLAGS_RELEASE "-nowarn -O3 -xHost -ip -fpic")
+  set(CMAKE_Fortran_FLAGS_DEBUG
+      "-g -O0 -check all,noarg_temp_created -fpe0 -traceback -ftrapuv -fpic")
+  set(CMAKE_SHARED_LIBRARY_LINK_Fortran_FLAGS "-shared-intel")
 
-ELSEIF (CMAKE_Fortran_COMPILER_ID MATCHES PGI)
+elseif(CMAKE_Fortran_COMPILER_ID MATCHES IBM)
 
-  EXEC_PROGRAM(${CMAKE_Fortran_COMPILER} ARGS "--version" OUTPUT_VARIABLE source_path)
-  STRING(REGEX MATCH "1[0-9]\\.([1-9]|1[0-2])\\-[0-9]" Fortran_COMPILER_VERSION ${source_path})
-  SET(CMAKE_Fortran_FLAGS_DEBUG "-Mextend -Mbounds -Mchkptr -Mchkstk -O0 -g -Minform=inform -Mallocatable=03")
-  SET(CMAKE_Fortran_FLAGS_RELEASE "-Mextend -fast -Mallocatable=03")
-  INCLUDE(PGIConfig)
+  set(CMAKE_Fortran_FLAGS_DEBUG "-qextname=flush -qxlf2003=polymorphic")
+  set(CMAKE_Fortran_FLAGS_RELEASE
+      "-qnosave -qextname=flush -qxlf2003=polymorphic")
 
-ELSEIF (CMAKE_Fortran_COMPILER_ID MATCHES IBM)
+elseif(CMAKE_Fortran_COMPILER_ID MATCHES GNU)
 
-  SET(CMAKE_Fortran_FLAGS_DEBUG   "-qextname=flush -qxlf2003=polymorphic")
-  SET(CMAKE_Fortran_FLAGS_RELEASE "-qnosave -qextname=flush -qxlf2003=polymorphic")
+  exec_program(
+    ${CMAKE_Fortran_COMPILER} ARGS
+    "--version"
+    OUTPUT_VARIABLE source_path)
+  string(REGEX MATCH "[4-9]\\.[0-9]\\.[0-9]" Fortran_COMPILER_VERSION
+               ${source_path})
 
-ELSEIF (CMAKE_Fortran_COMPILER_ID MATCHES GNU)
-
-  EXEC_PROGRAM(${CMAKE_Fortran_COMPILER} ARGS "--version" OUTPUT_VARIABLE source_path)
-  STRING(REGEX MATCH "[4-9]\\.[0-9]\\.[0-9]" Fortran_COMPILER_VERSION ${source_path})
-
-  ADD_DEFINITIONS(-DGFORTRAN)
-  SET(CMAKE_Fortran_FLAGS_RELEASE "-std=f2008 -ffree-line-length-none -fstack-arrays -O3 -fPIC  -w")
-  IF(NOT APPLE)
-    SET(CMAKE_Fortran_FLAGS_RELEASE "${CMAKE_Fortran_FLAGS_RELEASE} -march=native")
-  ENDIF()
-  SET(CMAKE_Fortran_FLAGS_DEBUG "-std=f2008 -ffree-line-length-none \
+  add_definitions(-DGFORTRAN)
+  set(CMAKE_Fortran_FLAGS_RELEASE
+      "-std=f2008 -ffree-line-length-none -fstack-arrays -O3 -fPIC  -w")
+  if(NOT APPLE)
+    set(CMAKE_Fortran_FLAGS_RELEASE
+        "${CMAKE_Fortran_FLAGS_RELEASE} -march=native")
+  endif()
+  set(CMAKE_Fortran_FLAGS_DEBUG
+      "-std=f2008 -ffree-line-length-none \
   -fstack-arrays -O0 -g -fbacktrace -Werror=intrinsics-std -Wall \
   -pedantic -Wconversion-extra -Wuninitialized \
   -fcheck=array-temps,bounds,do,pointer,recursion \
-  -ffpe-trap=invalid,zero,overflow") #-Wno-integer-division -Werror")
+  -ffpe-trap=invalid,zero,overflow") # -Wno-integer-division -Werror")
 
-  SET(UNUSED_FUNCTION_WARNING_ENABLED OFF CACHE BOOL "Add -Wunused-function flag to gfortran")
-  IF(NOT UNUSED_FUNCTION_WARNING_ENABLED)
-    SET(CMAKE_Fortran_FLAGS_DEBUG "${CMAKE_Fortran_FLAGS_DEBUG} -Wno-unused-function")
-  ENDIF()
+  set(UNUSED_FUNCTION_WARNING_ENABLED
+      OFF
+      CACHE BOOL "Add -Wunused-function flag to gfortran")
+  if(NOT UNUSED_FUNCTION_WARNING_ENABLED)
+    set(CMAKE_Fortran_FLAGS_DEBUG
+        "${CMAKE_Fortran_FLAGS_DEBUG} -Wno-unused-function")
+  endif()
 
-  SET(UNUSED_DUMMY_WARNING_ENABLED OFF CACHE BOOL   "Add -Wunused-dummy-argument flag to gfortran")
-  IF(NOT UNUSED_DUMMY_WARNING_ENABLED)
-    SET(CMAKE_Fortran_FLAGS_DEBUG "${CMAKE_Fortran_FLAGS_DEBUG} -Wno-unused-dummy-argument")
-  ENDIF()
+  set(UNUSED_DUMMY_WARNING_ENABLED
+      OFF
+      CACHE BOOL "Add -Wunused-dummy-argument flag to gfortran")
+  if(NOT UNUSED_DUMMY_WARNING_ENABLED)
+    set(CMAKE_Fortran_FLAGS_DEBUG
+        "${CMAKE_Fortran_FLAGS_DEBUG} -Wno-unused-dummy-argument")
+  endif()
 
-ELSE()
+else()
 
-  MESSAGE(SEND_ERROR "NO KNOWN FORTRAN COMPILER FOUND")
+  message(SEND_ERROR "NO KNOWN FORTRAN COMPILER FOUND")
 
-ENDIF()
+endif()
 
-MESSAGE(STATUS "Fortran ${Fortran_COMPILER_NAME}-${Fortran_COMPILER_VERSION}")
+message(STATUS "Fortran ${Fortran_COMPILER_NAME}-${Fortran_COMPILER_VERSION}")
 
 # --- enable fully user-defineable compiler flags
-IF(FORCE_Fortran_FLAGS_RELEASE)
-  SET(CMAKE_Fortran_FLAGS_RELEASE "${FORCE_Fortran_FLAGS_RELEASE}")
-ENDIF()
+if(FORCE_Fortran_FLAGS_RELEASE)
+  set(CMAKE_Fortran_FLAGS_RELEASE "${FORCE_Fortran_FLAGS_RELEASE}")
+endif()
 
-SET(ADDITIONAL_COMPILER_FLAGS "" CACHE STRING "The user can define additional compiler flags here")
-SET(CMAKE_Fortran_FLAGS_DEBUG   "${CMAKE_Fortran_FLAGS_DEBUG} ${ADDITIONAL_COMPILER_FLAGS}")
-SET(CMAKE_Fortran_FLAGS_RELEASE "${CMAKE_Fortran_FLAGS_RELEASE} ${ADDITIONAL_COMPILER_FLAGS}")
+set(ADDITIONAL_COMPILER_FLAGS
+    ""
+    CACHE STRING "The user can define additional compiler flags here")
+set(CMAKE_Fortran_FLAGS_DEBUG
+    "${CMAKE_Fortran_FLAGS_DEBUG} ${ADDITIONAL_COMPILER_FLAGS}")
+set(CMAKE_Fortran_FLAGS_RELEASE
+    "${CMAKE_Fortran_FLAGS_RELEASE} ${ADDITIONAL_COMPILER_FLAGS}")
 
-IF(OPENMP_ENABLED)
-  FIND_PACKAGE(OpenMP_Fortran)
-  SET(CMAKE_Fortran_FLAGS_DEBUG "${CMAKE_Fortran_FLAGS_DEBUG} ${OpenMP_Fortran_FLAGS}")
-  SET(CMAKE_Fortran_FLAGS_RELEASE "${CMAKE_Fortran_FLAGS_RELEASE} ${OpenMP_Fortran_FLAGS}")
-ENDIF()
+if(OPENMP_ENABLED)
+  find_package(OpenMP_Fortran)
+  set(CMAKE_Fortran_FLAGS_DEBUG
+      "${CMAKE_Fortran_FLAGS_DEBUG} ${OpenMP_Fortran_FLAGS}")
+  set(CMAKE_Fortran_FLAGS_RELEASE
+      "${CMAKE_Fortran_FLAGS_RELEASE} ${OpenMP_Fortran_FLAGS}")
+endif()
 
-MARK_AS_ADVANCED(CLEAR CMAKE_Fortran_COMPILER)
-MARK_AS_ADVANCED(CLEAR CMAKE_C_COMPILER)
-MARK_AS_ADVANCED(CLEAR CMAKE_CXX_COMPILER)
-
+mark_as_advanced(CLEAR CMAKE_Fortran_COMPILER)
+mark_as_advanced(CLEAR CMAKE_C_COMPILER)
+mark_as_advanced(CLEAR CMAKE_CXX_COMPILER)
