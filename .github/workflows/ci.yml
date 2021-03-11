@@ -17,7 +17,7 @@ jobs:
         sudo apt-get install -yq libopenmpi-dev openmpi-bin libhdf5-openmpi-dev
         sudo apt-get install -yq cmake gfortran g++
         sudo apt-get install -yq libfftw3-dev liblapack-dev libopenblas-dev
-        sudo apt-get install -yq doxygen texlive-full graphviz
+        sudo apt-get install -yq doxygen texlive graphviz
     - name: Checkout
       uses: actions/checkout@v2
       with:
@@ -34,10 +34,3 @@ jobs:
         ctest-options: --output-on-failure
         install-build: true
         parallel: 8
-    - name: Run doxygen
-      run: cd ${{ runner.workspace }}/build && make doc-dev
-    - name: GitHub Pages action
-      uses: peaceiris/actions-gh-pages@v3
-      with:
-        github_token: ${{ secrets.GITHUB_TOKEN }}
-        publish_dir: ./build/doc/html
