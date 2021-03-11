@@ -1,39 +1,38 @@
-FIND_PROGRAM(LLRUN_EXECUTABLE
+find_program(
+  LLRUN_EXECUTABLE
   NAMES llrun
   DOC "LoadLeveler tool to launch parallel jobs.")
 
-IF (LLRUN_EXECUTABLE)
-  SET (LLRUN_FOUND "YES")
-ENDIF (LLRUN_EXECUTABLE)
+if(LLRUN_EXECUTABLE)
+  set(LLRUN_FOUND "YES")
+endif(LLRUN_EXECUTABLE)
 
-MARK_AS_ADVANCED( LLRUN_FOUND LLRUN_EXECUTABLE)
+mark_as_advanced(LLRUN_FOUND LLRUN_EXECUTABLE)
 
-IF(LLRUN_FOUND)
+if(LLRUN_FOUND)
 
-   SET(MPIEXEC_NUMPROC_FLAG "-procs") 
-   MACRO(ADD_MPI_TEST TEST_NAME EXEC_NAME PROCS ARGS)
-      ADD_TEST(NAME ${TEST_NAME}
-               COMMAND "${LLRUN_EXECUTABLE} -k class=clallmds job_name=selalib total_tasks=${PROCS} node=1 node_usage=not_shared wall_clock_limit=00:10:00 job_type=mpich environment=COPY_ALL; mpirun " 
+  set(MPIEXEC_NUMPROC_FLAG "-procs")
+  macro(ADD_MPI_TEST TEST_NAME EXEC_NAME PROCS ARGS)
+    add_test(
+      NAME ${TEST_NAME}
+      COMMAND
+        "${LLRUN_EXECUTABLE} -k class=clallmds job_name=selalib total_tasks=${PROCS} node=1 node_usage=not_shared wall_clock_limit=00:10:00 job_type=mpich environment=COPY_ALL; mpirun "
+        ${MPIEXEC_PREFLAGS} ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/${EXEC_NAME}
+        ${MPIEXEC_POSTFLAGS} ${ARGS} ${MPIEXEC_NUMPROC_FLAG} ${PROCS})
+  endmacro(ADD_MPI_TEST)
 
-                       ${MPIEXEC_PREFLAGS}
-	               ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/${EXEC_NAME}
-	               ${MPIEXEC_POSTFLAGS} ${ARGS}
-                       ${MPIEXEC_NUMPROC_FLAG} ${PROCS})
-   ENDMACRO(ADD_MPI_TEST)
+else(LLRUN_FOUND)
 
-ELSE(LLRUN_FOUND)
+  macro(ADD_MPI_TEST TEST_NAME EXEC_NAME PROCS ARGS)
+    if(NOT APPLE)
+      string(REGEX REPLACE "mpiexec" "mpirun" MPIEXEC ${MPIEXEC})
+    endif()
+    add_test(
+      NAME ${TEST_NAME}
+      COMMAND
+        ${MPIEXEC} ${MPIEXEC_NUMPROC_FLAG} ${PROCS} ${MPIEXEC_PREFLAGS}
+        ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/${EXEC_NAME} ${MPIEXEC_POSTFLAGS}
+        ${ARGS})
+  endmacro(ADD_MPI_TEST)
 
-   MACRO(ADD_MPI_TEST TEST_NAME EXEC_NAME PROCS ARGS)
-      IF(NOT APPLE)
-         STRING(REGEX REPLACE "mpiexec" "mpirun" MPIEXEC ${MPIEXEC})
-      ENDIF()
-      ADD_TEST(NAME ${TEST_NAME}
-               COMMAND ${MPIEXEC} 
-	               ${MPIEXEC_NUMPROC_FLAG} ${PROCS} ${MPIEXEC_PREFLAGS}
-	               ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/${EXEC_NAME}
-	               ${MPIEXEC_POSTFLAGS} ${ARGS})
-   ENDMACRO(ADD_MPI_TEST)
-
-ENDIF(LLRUN_FOUND)
-
-
+endif(LLRUN_FOUND)

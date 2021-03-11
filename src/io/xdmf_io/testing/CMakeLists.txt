@@ -1,8 +1,7 @@
 # XML file creation (using xml type)
-ADD_EXECUTABLE( test_xml unit_test_xml.F90 )
-TARGET_LINK_LIBRARIES( test_xml sll_xdmf_io )
+add_executable(test_xml unit_test_xml.F90)
+target_link_libraries(test_xml sll_xdmf_io)
 
-SET( XML_REFERENCE_FILE ${CMAKE_CURRENT_SOURCE_DIR}/ref1.xml )
-ADD_TEST( NAME xml COMMAND test_xml ${XML_REFERENCE_FILE} )
-SET_TESTS_PROPERTIES( xml PROPERTIES PASS_REGULAR_EXPRESSION "PASSED"
-  TIMEOUT 1 )
+set(XML_REFERENCE_FILE ${CMAKE_CURRENT_SOURCE_DIR}/ref1.xml)
+add_test(NAME xml COMMAND test_xml ${XML_REFERENCE_FILE})
+set_tests_properties(xml PROPERTIES PASS_REGULAR_EXPRESSION "PASSED" TIMEOUT 1)

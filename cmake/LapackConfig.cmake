@@ -1,118 +1,143 @@
-GET_FILENAME_COMPONENT(Fortran_COMPILER_NAME "${CMAKE_Fortran_COMPILER}" NAME)
+get_filename_component(Fortran_COMPILER_NAME "${CMAKE_Fortran_COMPILER}" NAME)
 
-IF(CMAKE_Fortran_COMPILER_ID MATCHES Intel)
-   IF(DEFINED ENV{MKLROOT})
-      IF(USE_MKL_WAS_ON AND NOT USE_MKL)
-         MESSAGE(WARNING "when MKLROOT is defined MKL library must be used. Now setting 'USE_MKL=ON'...")
-      ENDIF()
-      SET(USE_MKL ON CACHE BOOL "Using Intel Math Kernel Library" FORCE)
-      SET(USE_MKL_WAS_ON true CACHE INTERNAL "Previous value of USE_MKL flag")
-   ELSE()
-      MESSAGE(STATUS "Environment variable is not set, please load mkl vars")
-   ENDIF()
-ENDIF()
+if(CMAKE_Fortran_COMPILER_ID MATCHES Intel)
+  if(DEFINED ENV{MKLROOT})
+    if(USE_MKL_WAS_ON AND NOT USE_MKL)
+      message(
+        WARNING
+          "when MKLROOT is defined MKL library must be used. Now setting 'USE_MKL=ON'..."
+      )
+    endif()
+    set(USE_MKL
+        ON
+        CACHE BOOL "Using Intel Math Kernel Library" FORCE)
+    set(USE_MKL_WAS_ON
+        true
+        CACHE INTERNAL "Previous value of USE_MKL flag")
+  else()
+    message(STATUS "Environment variable is not set, please load mkl vars")
+  endif()
+endif()
 
+if(USE_MKL)
 
-IF(USE_MKL)
+  set(BLA_VENDOR "Intel")
 
-   SET(BLA_VENDOR "Intel")
+  string(REGEX REPLACE "^([^:]*):" " " MKLROOT $ENV{MKLROOT})
+  message(STATUS "MKLROOT:${MKLROOT}")
+  include_directories(${MKLROOT}/include/intel64/lp64 ${MKLROOT}/include)
+  if(APPLE)
+    set(LAPACK_LIBRARIES "-mkl")
+  else()
+    # --- NOTE: Recent versions (?>=11.0) Linux ifort support "-mkl" as well
+    if(Fortran_COMPILER_NAME MATCHES "ifort")
+      if(OPENMP_ENABLED)
+        set(LAPACK_LIBRARIES
+            "-Wl,--start-group ${MKLROOT}/lib/intel64/libmkl_intel_lp64.a ${MKLROOT}/lib/intel64/libmkl_core.a ${MKLROOT}/lib/intel64/libmkl_intel_thread.a -Wl,--end-group -lpthread -lm -ldl"
+        )
+      else()
+        set(LAPACK_LIBRARIES
+            "-Wl,--start-group ${MKLROOT}/lib/intel64/libmkl_intel_lp64.a ${MKLROOT}/lib/intel64/libmkl_core.a ${MKLROOT}/lib/intel64/libmkl_sequential.a -Wl,--end-group -lpthread -lm -ldl"
+        )
+      endif()
+    elseif(Fortran_COMPILER_NAME MATCHES "gfortran")
+      if(OPENMP_ENABLED)
+        set(LAPACK_LIBRARIES
+            "-Wl,--start-group ${MKLROOT}/lib/intel64/libmkl_gf_lp64.a ${MKLROOT}/lib/intel64/libmkl_core.a ${MKLROOT}/lib/intel64/libmkl_sequential.a -Wl,--end-group -lpthread -lm -ldl"
+        )
+      else()
+        set(LAPACK_LIBRARIES
+            " -Wl,--start-group ${MKLROOT}/lib/intel64/libmkl_gf_lp64.a ${MKLROOT}/lib/intel64/libmkl_core.a ${MKLROOT}/lib/intel64/libmkl_gnu_thread.a -Wl,--end-group -lpthread -lm -ldl"
+        )
+      endif()
+    else()
+      message(
+        FATAL_ERROR
+          "Don't know how to link MKL using the present compiler.  Intel ifort and GNU gfortran are supported."
+      )
+    endif()
+  endif(APPLE)
+  set(BLAS_LIBRARIES ${LAPACK_LIBRARIES})
+  set(BLAS_FOUND TRUE)
+  set(LAPACK_FOUND TRUE)
 
-   STRING(REGEX REPLACE "^([^:]*):" " " MKLROOT $ENV{MKLROOT})
-   MESSAGE(STATUS "MKLROOT:${MKLROOT}")
-   INCLUDE_DIRECTORIES(${MKLROOT}/include/intel64/lp64 ${MKLROOT}/include)
-   IF(APPLE)
-     SET(LAPACK_LIBRARIES "-mkl")
-   ELSE()
-     # --- NOTE: Recent versions (?>=11.0) Linux ifort support "-mkl" as well
-     IF(Fortran_COMPILER_NAME MATCHES "ifort")
-        IF(OPENMP_ENABLED)
-            SET(LAPACK_LIBRARIES "-Wl,--start-group ${MKLROOT}/lib/intel64/libmkl_intel_lp64.a ${MKLROOT}/lib/intel64/libmkl_core.a ${MKLROOT}/lib/intel64/libmkl_intel_thread.a -Wl,--end-group -lpthread -lm -ldl")
-        ELSE()
-            SET(LAPACK_LIBRARIES "-Wl,--start-group ${MKLROOT}/lib/intel64/libmkl_intel_lp64.a ${MKLROOT}/lib/intel64/libmkl_core.a ${MKLROOT}/lib/intel64/libmkl_sequential.a -Wl,--end-group -lpthread -lm -ldl")
-        ENDIF()
-     ELSEIF(Fortran_COMPILER_NAME MATCHES "gfortran")
-        IF(OPENMP_ENABLED)
-            SET(LAPACK_LIBRARIES "-Wl,--start-group ${MKLROOT}/lib/intel64/libmkl_gf_lp64.a ${MKLROOT}/lib/intel64/libmkl_core.a ${MKLROOT}/lib/intel64/libmkl_sequential.a -Wl,--end-group -lpthread -lm -ldl")
-        ELSE()
-            SET(LAPACK_LIBRARIES " -Wl,--start-group ${MKLROOT}/lib/intel64/libmkl_gf_lp64.a ${MKLROOT}/lib/intel64/libmkl_core.a ${MKLROOT}/lib/intel64/libmkl_gnu_thread.a -Wl,--end-group -lpthread -lm -ldl")
-        ENDIF()
-     ELSE()
-       MESSAGE(FATAL_ERROR "Don't know how to link MKL using the present compiler.  Intel ifort and GNU gfortran are supported.")
-     ENDIF()
-   ENDIF(APPLE)
-   SET(BLAS_LIBRARIES ${LAPACK_LIBRARIES})
-   SET(BLAS_FOUND TRUE)
-   SET(LAPACK_FOUND TRUE)
+else()
 
-ELSE()
+  # --- give the fast OpenBLAS library a first try with cmake FindLapack
+  if(CMAKE_VERSION VERSION_GREATER 3.6.2)
+    set(BLA_VENDOR OpenBLAS)
+    find_package(BLAS)
+    find_package(LAPACK)
+  endif()
 
-   # --- give the fast OpenBLAS library a first try with cmake FindLapack
-   IF(CMAKE_VERSION VERSION_GREATER 3.6.2)
-     SET(BLA_VENDOR OpenBLAS)
-     FIND_PACKAGE(BLAS)
-     FIND_PACKAGE(LAPACK)
-   ENDIF()
+  if(NOT LAPACK_FOUND)
 
-   IF( NOT LAPACK_FOUND)
+    # --- give the fast OpenBLAS library a second try
+    find_library(
+      OPENBLAS_LIBRARIES openblas
+      HINTS ENV OPENBLAS_ROOT # prioritize custom installation location
+            CMAKE_SYSTEM_LIBRARY_PATH # also search the default location
+            /usr/local/opt/openblas # Library location on mac with homebrew
+      PATH_SUFFIXES lib64 lib
+      DOC "OpenBLAS, the free high performance BLAS and LAPACK implementation")
 
-     # --- give the fast OpenBLAS library a second try 
-     FIND_LIBRARY(OPENBLAS_LIBRARIES
-                  openblas
-                  HINTS
-                     ENV OPENBLAS_ROOT  # prioritize custom installation location
-                     CMAKE_SYSTEM_LIBRARY_PATH  # also search the default location
-                     /usr/local/opt/openblas  # Library location on mac with homebrew
-                  PATH_SUFFIXES
-                     lib64 lib
-                  DOC "OpenBLAS, the free high performance BLAS and LAPACK implementation")
+    include(FindPackageHandleStandardArgs)
+    find_package_handle_standard_args(OPENBLAS DEFAULT_MSG OPENBLAS_LIBRARIES)
+    include(CheckFortranFunctionExists)
+    set(CMAKE_REQUIRED_LIBRARIES ${OPENBLAS_LIBRARIES})
+    check_fortran_function_exists(dpbtrs OPENBLAS_HAS_LAPACK)
 
-     INCLUDE(FindPackageHandleStandardArgs)
-     FIND_PACKAGE_HANDLE_STANDARD_ARGS(OPENBLAS DEFAULT_MSG OPENBLAS_LIBRARIES )
-     INCLUDE(CheckFortranFunctionExists)
-     SET(CMAKE_REQUIRED_LIBRARIES ${OPENBLAS_LIBRARIES})
-     CHECK_FORTRAN_FUNCTION_EXISTS(dpbtrs OPENBLAS_HAS_LAPACK)
+    if(OPENBLAS_FOUND AND OPENBLAS_HAS_LAPACK)
+      message(STATUS "OpenBLAS found and has lapack")
+      set(BLA_VENDOR OpenBLAS)
+      set(LAPACK_LIBRARIES ${OPENBLAS_LIBRARIES})
+      set(BLAS_LIBRARIES ${LAPACK_LIBRARIES})
+      set(BLAS_FOUND TRUE)
+      set(LAPACK_FOUND TRUE)
+    else()
+      # --- fall-back to slow reference implementations
+      if(APPLE)
+        set(BLA_VENDOR Apple)
+      else()
+        unset(BLA_VENDOR)
+      endif(APPLE)
+      find_package(BLAS)
+      find_package(LAPACK)
+    endif()
 
-     IF (OPENBLAS_FOUND AND OPENBLAS_HAS_LAPACK)
-        MESSAGE(STATUS "OpenBLAS found and has lapack" )
-        SET(BLA_VENDOR OpenBLAS)
-        SET(LAPACK_LIBRARIES ${OPENBLAS_LIBRARIES})
-        SET(BLAS_LIBRARIES ${LAPACK_LIBRARIES})
-        SET(BLAS_FOUND TRUE)
-        SET(LAPACK_FOUND TRUE)
-     ELSE()
-        # --- fall-back to slow reference implementations
-        IF(APPLE)
-           SET(BLA_VENDOR Apple)
-        ELSE()
-           UNSET(BLA_VENDOR)
-        ENDIF(APPLE)
-        FIND_PACKAGE(BLAS)
-        FIND_PACKAGE(LAPACK)
-     ENDIF()
+  endif()
 
-   ENDIF()
+endif()
 
-ENDIF()
-
-IF(NOT LAPACK_FOUND AND NOT BLAS_FOUND)
+if(NOT LAPACK_FOUND AND NOT BLAS_FOUND)
   # --- nothing to do here
-  
-  MESSAGE(STATUS "Failed to link LAPACK, BLAS, OpenBLAS or ATLAS libraries based on the environment information")
-  MESSAGE(STATUS "Going to search further in standard paths")
-  FIND_LIBRARY(BLAS_LIBRARIES NAMES blas HINTS /opt/local /usr/local PATH_SUFFIXES lib)
-  FIND_LIBRARY(LAPACK_LIBRARIES NAMES lapack HINTS /opt/local /usr/local PATH_SUFFIXES lib)
 
-ENDIF(NOT LAPACK_FOUND AND NOT BLAS_FOUND)
+  message(
+    STATUS
+      "Failed to link LAPACK, BLAS, OpenBLAS or ATLAS libraries based on the environment information"
+  )
+  message(STATUS "Going to search further in standard paths")
+  find_library(
+    BLAS_LIBRARIES
+    NAMES blas
+    HINTS /opt/local /usr/local
+    PATH_SUFFIXES lib)
+  find_library(
+    LAPACK_LIBRARIES
+    NAMES lapack
+    HINTS /opt/local /usr/local
+    PATH_SUFFIXES lib)
 
+endif(NOT LAPACK_FOUND AND NOT BLAS_FOUND)
 
-IF(LAPACK_LIBRARIES AND BLAS_LIBRARIES)
+if(LAPACK_LIBRARIES AND BLAS_LIBRARIES)
 
-  MESSAGE(STATUS "BLA_VENDOR:${BLA_VENDOR}")
-  MESSAGE(STATUS "BLAS_LIBRARIES:${BLAS_LIBRARIES}")
-  MESSAGE(STATUS "LAPACK_LIBRARIES:${LAPACK_LIBRARIES}")
+  message(STATUS "BLA_VENDOR:${BLA_VENDOR}")
+  message(STATUS "BLAS_LIBRARIES:${BLAS_LIBRARIES}")
+  message(STATUS "LAPACK_LIBRARIES:${LAPACK_LIBRARIES}")
 
-ELSE()
+else()
 
-   MESSAGE(SEND_ERROR "LAPACK NOT FOUND")
+  message(SEND_ERROR "LAPACK NOT FOUND")
 
-ENDIF(LAPACK_LIBRARIES AND BLAS_LIBRARIES)
+endif(LAPACK_LIBRARIES AND BLAS_LIBRARIES)

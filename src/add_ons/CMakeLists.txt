@@ -1,2 +1,2 @@
-ADD_SUBDIRECTORY(sparse_grid)
-ADD_SUBDIRECTORY(multipatch)
+add_subdirectory(sparse_grid)
+add_subdirectory(multipatch)

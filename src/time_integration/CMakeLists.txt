@@ -1,4 +1,4 @@
-add_subdirectory( ode_integrators )
-add_subdirectory( splitting_methods )
-add_subdirectory( characteristics )
-add_subdirectory( ode_solvers )
+add_subdirectory(ode_integrators)
+add_subdirectory(splitting_methods)
+add_subdirectory(characteristics)
+add_subdirectory(ode_solvers)

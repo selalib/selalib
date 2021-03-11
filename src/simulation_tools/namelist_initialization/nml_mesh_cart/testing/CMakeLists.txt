@@ -1,1 +1,1 @@
-ADD_SUBDIRECTORY(1d_cart)
+add_subdirectory(1d_cart)
