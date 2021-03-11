@@ -1,4 +1,4 @@
 <map id="interpolate_value_cs1d" name="interpolate_value_cs1d">
-<area shape="rect" id="node2" href="$namespacesll__m__cubic__splines.html#a270b2e29e091692ef5194206ca16687a" title="returns the value of the interpolated image of the abscissa x, using the spline coefficients stored i..." alt="" coords="208,5,347,61"/>
-<area shape="rect" id="node3" href="$namespacesll__m__cubic__splines.html#ab80965fe0af03954be7883b621079a50" title="sll_m_cubic_splines\l::interpolate_value_aux" alt="" coords="395,13,551,54"/>
+<area shape="rect" id="node2" href="$namespacesll__m__cubic__splines.html#a947f143aa0ed2c77f72b5b527802929a" title="returns the value of the interpolated image of the abscissa x, using the spline coefficients stored i..." alt="" coords="227,5,377,61"/>
+<area shape="rect" id="node3" href="$namespacesll__m__cubic__splines.html#ab80965fe0af03954be7883b621079a50" title="sll_m_cubic_splines\l::interpolate_value_aux" alt="" coords="425,13,600,54"/>
 </map>

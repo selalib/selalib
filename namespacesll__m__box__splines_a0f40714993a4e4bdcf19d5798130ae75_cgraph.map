@@ -1,14 +1,14 @@
 <map id="sll_f_boxspline_val_der" name="sll_f_boxspline_val_der">
-<area shape="rect" id="node2" href="$namespacesll__m__hexagonal__meshes.html#aaa2262794e099a011cb267f899c82b15" title="Creates and initializes a new hexagonal mesh. " alt="" coords="211,71,384,112"/>
-<area shape="rect" id="node7" href="$namespacesll__m__box__splines.html#ad4228ae18d2dbf7abe54f1727a800c76" title="Creates a box spline element. " alt="" coords="214,137,381,163"/>
-<area shape="rect" id="node8" href="$namespacesll__m__box__splines.html#a3b94ddbae2c7b03c53ca2653ae187885" title="1st coo. of (x1, x2) in reference hex&#45;mesh coo. " alt="" coords="236,187,359,214"/>
-<area shape="rect" id="node9" href="$namespacesll__m__box__splines.html#a1edd2773985cb3b80bdcdab980892673" title="2nd coo. of (x1, x2) in reference hex&#45;mesh coo. " alt="" coords="236,238,359,265"/>
-<area shape="rect" id="node10" href="$namespacesll__m__box__splines.html#a7a05a2e34070d0618d01288021e9ec28" title="Computes the box spline of degree deg on (x1, x2) " alt="" coords="473,347,563,374"/>
-<area shape="rect" id="node12" href="$namespacesll__m__box__splines.html#acefc07fcf7d400ff2f46c5ac346f8b1a" title="Computes y&#45;derivative on (x,y) " alt="" coords="233,340,362,381"/>
-<area shape="rect" id="node13" href="$namespacesll__m__box__splines.html#ae867b46ed0654e35ad21b818a3198601" title="Computes x&#45;derivative on (x,y) " alt="" coords="233,405,362,447"/>
-<area shape="rect" id="node3" href="$namespacesll__m__hexagonal__meshes.html#a9384fd0ae5d59bb61739f9814a391007" title="initializes a previously allocated 2d hex&#45;mesh " alt="" coords="432,71,604,112"/>
-<area shape="rect" id="node4" href="$namespacesll__m__hexagonal__meshes.html#a47f7a419f8f8904d408ad3a630612ee4" title="Finds the index in the global array of the point which coordinates where passed as parameter..." alt="" coords="657,5,829,47"/>
-<area shape="rect" id="node5" href="$namespacesll__m__hexagonal__meshes.html#abc0ec74da1d524a49e0bf0f1c3fb7ed7" title="&lt;BRIEF_DESCRIPTION&gt; " alt="" coords="652,71,833,112"/>
-<area shape="rect" id="node6" href="$namespacesll__m__hexagonal__meshes.html#a7c715615f53575368c5a2fccf6ea3583" title="&lt;BRIEF_DESCRIPTION&gt; " alt="" coords="655,136,830,177"/>
-<area shape="rect" id="node11" href="$namespacesll__m__box__splines.html#a12728f21737f7f8d9f56c33b69ec31d6" title="Computes the binomial coefficient (n, k) " alt="" coords="711,347,775,374"/>
+<area shape="rect" id="node2" href="$namespacesll__m__hexagonal__meshes.html#aaa2262794e099a011cb267f899c82b15" title="Creates and initializes a new hexagonal mesh. " alt="" coords="228,71,419,112"/>
+<area shape="rect" id="node7" href="$namespacesll__m__box__splines.html#ad4228ae18d2dbf7abe54f1727a800c76" title="Creates a box spline element. " alt="" coords="232,137,415,163"/>
+<area shape="rect" id="node8" href="$namespacesll__m__box__splines.html#a3b94ddbae2c7b03c53ca2653ae187885" title="1st coo. of (x1, x2) in reference hex&#45;mesh coo. " alt="" coords="257,187,390,214"/>
+<area shape="rect" id="node9" href="$namespacesll__m__box__splines.html#a1edd2773985cb3b80bdcdab980892673" title="2nd coo. of (x1, x2) in reference hex&#45;mesh coo. " alt="" coords="257,238,390,265"/>
+<area shape="rect" id="node10" href="$namespacesll__m__box__splines.html#a3036d812bbf7826012acb93b1bc5ad44" title="Computes the box spline of degree deg on (x1, x2) " alt="" coords="513,347,611,374"/>
+<area shape="rect" id="node12" href="$namespacesll__m__box__splines.html#acefc07fcf7d400ff2f46c5ac346f8b1a" title="Computes y&#45;derivative on (x,y) " alt="" coords="252,340,395,381"/>
+<area shape="rect" id="node13" href="$namespacesll__m__box__splines.html#ae867b46ed0654e35ad21b818a3198601" title="Computes x&#45;derivative on (x,y) " alt="" coords="252,405,395,447"/>
+<area shape="rect" id="node3" href="$namespacesll__m__hexagonal__meshes.html#a9384fd0ae5d59bb61739f9814a391007" title="initializes a previously allocated 2d hex&#45;mesh " alt="" coords="467,71,657,112"/>
+<area shape="rect" id="node4" href="$namespacesll__m__hexagonal__meshes.html#a47f7a419f8f8904d408ad3a630612ee4" title="Finds the index in the global array of the point which coordinates where passed as parameter..." alt="" coords="711,5,902,47"/>
+<area shape="rect" id="node5" href="$namespacesll__m__hexagonal__meshes.html#abc0ec74da1d524a49e0bf0f1c3fb7ed7" title="&lt;BRIEF_DESCRIPTION&gt; " alt="" coords="705,71,908,112"/>
+<area shape="rect" id="node6" href="$namespacesll__m__hexagonal__meshes.html#a7c715615f53575368c5a2fccf6ea3583" title="&lt;BRIEF_DESCRIPTION&gt; " alt="" coords="709,136,904,177"/>
+<area shape="rect" id="node11" href="$namespacesll__m__box__splines.html#aba645e61067c71ff9b07c7848cf12073" title="Computes the binomial coefficient (n, k) " alt="" coords="773,347,841,374"/>
 </map>

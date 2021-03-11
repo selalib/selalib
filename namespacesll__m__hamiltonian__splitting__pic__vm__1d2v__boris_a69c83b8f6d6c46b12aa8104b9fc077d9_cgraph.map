@@ -1,5 +1,5 @@
 <map id="operator_boris" name="operator_boris">
-<area shape="rect" id="node2" href="$namespacesll__m__hamiltonian__splitting__pic__vm__1d2v__boris.html#ac8d693a3bc8c8bf6e1de43c11dcb62a7" title="Pusher for E &#160;part. " alt="" coords="181,5,281,32"/>
-<area shape="rect" id="node3" href="$namespacesll__m__hamiltonian__splitting__pic__vm__1d2v__boris.html#a5148500216a51d240f6c41b6f47eddbc" title="Pusher for vxB part. " alt="" coords="181,56,281,83"/>
-<area shape="rect" id="node4" href="$namespacesll__m__hamiltonian__splitting__pic__vm__1d2v__boris.html#a25b45418545db3c23d3067fdd910f1e7" title="Pusher for x and accumulate current densities. " alt="" coords="157,107,305,133"/>
+<area shape="rect" id="node2" href="$namespacesll__m__hamiltonian__splitting__pic__vm__1d2v__boris.html#ac8d693a3bc8c8bf6e1de43c11dcb62a7" title="Pusher for E &#160;part. " alt="" coords="196,5,305,32"/>
+<area shape="rect" id="node3" href="$namespacesll__m__hamiltonian__splitting__pic__vm__1d2v__boris.html#a5148500216a51d240f6c41b6f47eddbc" title="Pusher for vxB part. " alt="" coords="196,56,305,83"/>
+<area shape="rect" id="node4" href="$namespacesll__m__hamiltonian__splitting__pic__vm__1d2v__boris.html#a25b45418545db3c23d3067fdd910f1e7" title="Pusher for x and accumulate current densities. " alt="" coords="169,107,332,133"/>
 </map>

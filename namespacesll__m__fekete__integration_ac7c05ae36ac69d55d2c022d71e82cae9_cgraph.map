@@ -1,24 +1,24 @@
 <map id="write_basis_values" name="write_basis_values">
-<area shape="rect" id="node2" href="$namespacesll__m__fekete__integration.html#a0f14c18e1a21285d9a7d808077677951" title="returns the order of a Fekete rule for the triangle. " alt="" coords="408,31,568,57"/>
-<area shape="rect" id="node5" href="$namespacesll__m__fekete__integration.html#adf467550a7dbaf4287e51119b1a86770" title="Gives the fekete points coordinates and associated weights for a certain rule in a given triangle..." alt="" coords="200,114,331,155"/>
-<area shape="rect" id="node11" href="$namespacesll__m__box__splines.html#a0f40714993a4e4bdcf19d5798130ae75" title="Computes the values or derivatives of box splines. " alt="" coords="187,387,344,429"/>
-<area shape="rect" id="node3" href="$namespacesll__m__fekete__integration.html#aa2915462263d3b13d58e9538bc87d2a8" title="returns the number of suborders for a Fekete rule. " alt="" coords="645,5,791,32"/>
-<area shape="rect" id="node4" href="$namespacesll__m__fekete__integration.html#ac49d3ac7ddf882cf310aa5ec0e1cb251" title="returns the suborders for a Fekete rule. " alt="" coords="661,56,775,83"/>
-<area shape="rect" id="node6" href="$namespacesll__m__fekete__integration.html#a27f642a490626a046858fb87eedff174" title="returns the points and weights of a Fekete rule. " alt="" coords="445,81,531,108"/>
-<area shape="rect" id="node9" href="$namespacesll__m__fekete__integration.html#aa74e57776217489a27f8c7ef355a3e14" title="Re arranges the order of the quadrature point to go from lower&#45;left to top right. ..." alt="" coords="415,132,561,159"/>
-<area shape="rect" id="node10" href="$namespacesll__m__fekete__integration.html#a51d156745cf92c12df4b41a477cd6c6a" title="maps T3 reference points to physical points. " alt="" coords="405,183,571,209"/>
-<area shape="rect" id="node7" href="$namespacesll__m__fekete__integration.html#a6c628fc6b0e9e59bc5b196175ebd7851" title="returns a compressed Fekete rule " alt="" coords="665,107,771,133"/>
-<area shape="rect" id="node8" href="$namespacesll__m__fekete__integration.html#a00966f8455b0a2836270ef9831e95dff" title="forces an I4 to lie between given limits by wrapping. " alt="" coords="681,157,755,184"/>
-<area shape="rect" id="node12" href="$namespacesll__m__hexagonal__meshes.html#aaa2262794e099a011cb267f899c82b15" title="Creates and initializes a new hexagonal mesh. " alt="" coords="401,547,575,589"/>
-<area shape="rect" id="node17" href="$namespacesll__m__box__splines.html#ad4228ae18d2dbf7abe54f1727a800c76" title="Creates a box spline element. " alt="" coords="405,613,571,654"/>
-<area shape="rect" id="node18" href="$namespacesll__m__box__splines.html#a3b94ddbae2c7b03c53ca2653ae187885" title="1st coo. of (x1, x2) in reference hex&#45;mesh coo. " alt="" coords="419,234,557,275"/>
-<area shape="rect" id="node19" href="$namespacesll__m__box__splines.html#a1edd2773985cb3b80bdcdab980892673" title="2nd coo. of (x1, x2) in reference hex&#45;mesh coo. " alt="" coords="419,299,557,341"/>
-<area shape="rect" id="node20" href="$namespacesll__m__box__splines.html#a7a05a2e34070d0618d01288021e9ec28" title="Computes the box spline of degree deg on (x1, x2) " alt="" coords="649,417,787,458"/>
-<area shape="rect" id="node22" href="$namespacesll__m__box__splines.html#acefc07fcf7d400ff2f46c5ac346f8b1a" title="Computes y&#45;derivative on (x,y) " alt="" coords="392,417,584,458"/>
-<area shape="rect" id="node23" href="$namespacesll__m__box__splines.html#ae867b46ed0654e35ad21b818a3198601" title="Computes x&#45;derivative on (x,y) " alt="" coords="392,482,584,523"/>
-<area shape="rect" id="node13" href="$namespacesll__m__hexagonal__meshes.html#a9384fd0ae5d59bb61739f9814a391007" title="initializes a previously allocated 2d hex&#45;mesh " alt="" coords="632,547,804,589"/>
-<area shape="rect" id="node14" href="$namespacesll__m__hexagonal__meshes.html#a47f7a419f8f8904d408ad3a630612ee4" title="Finds the index in the global array of the point which coordinates where passed as parameter..." alt="" coords="857,547,1029,589"/>
-<area shape="rect" id="node15" href="$namespacesll__m__hexagonal__meshes.html#abc0ec74da1d524a49e0bf0f1c3fb7ed7" title="&lt;BRIEF_DESCRIPTION&gt; " alt="" coords="852,613,1033,654"/>
-<area shape="rect" id="node16" href="$namespacesll__m__hexagonal__meshes.html#a7c715615f53575368c5a2fccf6ea3583" title="&lt;BRIEF_DESCRIPTION&gt; " alt="" coords="855,482,1030,523"/>
-<area shape="rect" id="node21" href="$namespacesll__m__box__splines.html#a12728f21737f7f8d9f56c33b69ec31d6" title="Computes the binomial coefficient (n, k) " alt="" coords="874,417,1011,458"/>
+<area shape="rect" id="node2" href="$namespacesll__m__fekete__integration.html#a0f14c18e1a21285d9a7d808077677951" title="returns the order of a Fekete rule for the triangle. " alt="" coords="441,31,619,57"/>
+<area shape="rect" id="node5" href="$namespacesll__m__fekete__integration.html#adf467550a7dbaf4287e51119b1a86770" title="Gives the fekete points coordinates and associated weights for a certain rule in a given triangle..." alt="" coords="215,114,360,155"/>
+<area shape="rect" id="node11" href="$namespacesll__m__box__splines.html#a0f40714993a4e4bdcf19d5798130ae75" title="Computes the values or derivatives of box splines. " alt="" coords="200,387,375,429"/>
+<area shape="rect" id="node3" href="$namespacesll__m__fekete__integration.html#aa2915462263d3b13d58e9538bc87d2a8" title="returns the number of suborders for a Fekete rule. " alt="" coords="699,5,863,32"/>
+<area shape="rect" id="node4" href="$namespacesll__m__fekete__integration.html#ac49d3ac7ddf882cf310aa5ec0e1cb251" title="returns the suborders for a Fekete rule. " alt="" coords="717,56,845,83"/>
+<area shape="rect" id="node6" href="$namespacesll__m__fekete__integration.html#a27f642a490626a046858fb87eedff174" title="returns the points and weights of a Fekete rule. " alt="" coords="482,81,578,108"/>
+<area shape="rect" id="node9" href="$namespacesll__m__fekete__integration.html#aa74e57776217489a27f8c7ef355a3e14" title="Re arranges the order of the quadrature point to go from lower&#45;left to top right. ..." alt="" coords="447,132,613,159"/>
+<area shape="rect" id="node10" href="$namespacesll__m__fekete__integration.html#a51d156745cf92c12df4b41a477cd6c6a" title="maps T3 reference points to physical points. " alt="" coords="437,183,623,209"/>
+<area shape="rect" id="node7" href="$namespacesll__m__fekete__integration.html#a6c628fc6b0e9e59bc5b196175ebd7851" title="returns a compressed Fekete rule " alt="" coords="721,107,840,133"/>
+<area shape="rect" id="node8" href="$namespacesll__m__fekete__integration.html#a00966f8455b0a2836270ef9831e95dff" title="forces an I4 to lie between given limits by wrapping. " alt="" coords="739,157,822,184"/>
+<area shape="rect" id="node12" href="$namespacesll__m__hexagonal__meshes.html#aaa2262794e099a011cb267f899c82b15" title="Creates and initializes a new hexagonal mesh. " alt="" coords="435,547,625,589"/>
+<area shape="rect" id="node17" href="$namespacesll__m__box__splines.html#ad4228ae18d2dbf7abe54f1727a800c76" title="Creates a box spline element. " alt="" coords="439,613,621,654"/>
+<area shape="rect" id="node18" href="$namespacesll__m__box__splines.html#a3b94ddbae2c7b03c53ca2653ae187885" title="1st coo. of (x1, x2) in reference hex&#45;mesh coo. " alt="" coords="455,234,605,275"/>
+<area shape="rect" id="node19" href="$namespacesll__m__box__splines.html#a1edd2773985cb3b80bdcdab980892673" title="2nd coo. of (x1, x2) in reference hex&#45;mesh coo. " alt="" coords="455,299,605,341"/>
+<area shape="rect" id="node20" href="$namespacesll__m__box__splines.html#a3036d812bbf7826012acb93b1bc5ad44" title="Computes the box spline of degree deg on (x1, x2) " alt="" coords="706,417,855,458"/>
+<area shape="rect" id="node22" href="$namespacesll__m__box__splines.html#acefc07fcf7d400ff2f46c5ac346f8b1a" title="Computes y&#45;derivative on (x,y) " alt="" coords="423,417,637,458"/>
+<area shape="rect" id="node23" href="$namespacesll__m__box__splines.html#ae867b46ed0654e35ad21b818a3198601" title="Computes x&#45;derivative on (x,y) " alt="" coords="423,482,637,523"/>
+<area shape="rect" id="node13" href="$namespacesll__m__hexagonal__meshes.html#a9384fd0ae5d59bb61739f9814a391007" title="initializes a previously allocated 2d hex&#45;mesh " alt="" coords="685,547,876,589"/>
+<area shape="rect" id="node14" href="$namespacesll__m__hexagonal__meshes.html#a47f7a419f8f8904d408ad3a630612ee4" title="Finds the index in the global array of the point which coordinates where passed as parameter..." alt="" coords="930,547,1121,589"/>
+<area shape="rect" id="node15" href="$namespacesll__m__hexagonal__meshes.html#abc0ec74da1d524a49e0bf0f1c3fb7ed7" title="&lt;BRIEF_DESCRIPTION&gt; " alt="" coords="924,613,1127,654"/>
+<area shape="rect" id="node16" href="$namespacesll__m__hexagonal__meshes.html#a7c715615f53575368c5a2fccf6ea3583" title="&lt;BRIEF_DESCRIPTION&gt; " alt="" coords="928,482,1123,523"/>
+<area shape="rect" id="node21" href="$namespacesll__m__box__splines.html#aba645e61067c71ff9b07c7848cf12073" title="Computes the binomial coefficient (n, k) " alt="" coords="951,417,1100,458"/>
 </map>

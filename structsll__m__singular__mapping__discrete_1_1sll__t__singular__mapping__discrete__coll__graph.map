@@ -1,7 +1,7 @@
 <map id="sll_t_singular_mapping_discrete" name="sll_t_singular_mapping_discrete">
-<area shape="rect" id="node2" href="$structsll__m__singular__mapping__base_1_1sll__c__singular__mapping.html" title="Abstract type, singular mapping. " alt="" coords="571,5,728,32"/>
-<area shape="rect" id="node3" href="$structsll__m__spline__2d_1_1sll__t__spline__2d.html" title="2D tensor&#45;product spline " alt="" coords="293,107,401,133"/>
-<area shape="rect" id="node6" href="$structsll__m__spline__interpolator__2d_1_1sll__t__spline__interpolator__2d.html" title="2D tensor&#45;product spline interpolator " alt="" coords="560,359,739,385"/>
-<area shape="rect" id="node7" href="$structsll__m__spline__1d_1_1sll__t__spline__1d.html" title="1D spline " alt="" coords="293,320,401,347"/>
-<area shape="rect" id="node8" href="$structsll__m__spline__interpolator__1d_1_1sll__t__spline__interpolator__1d.html" title="1D spline interpolator " alt="" coords="257,448,436,475"/>
+<area shape="rect" id="node2" href="$structsll__m__singular__mapping__base_1_1sll__c__singular__mapping.html" title="Abstract type, singular mapping. " alt="" coords="631,5,805,32"/>
+<area shape="rect" id="node3" href="$structsll__m__spline__2d_1_1sll__t__spline__2d.html" title="2D tensor&#45;product spline " alt="" coords="324,107,443,133"/>
+<area shape="rect" id="node6" href="$structsll__m__spline__interpolator__2d_1_1sll__t__spline__interpolator__2d.html" title="2D tensor&#45;product spline interpolator " alt="" coords="617,359,819,385"/>
+<area shape="rect" id="node7" href="$structsll__m__spline__1d_1_1sll__t__spline__1d.html" title="1D spline " alt="" coords="324,320,443,347"/>
+<area shape="rect" id="node8" href="$structsll__m__spline__interpolator__1d_1_1sll__t__spline__interpolator__1d.html" title="1D spline interpolator " alt="" coords="283,448,484,475"/>
 </map>

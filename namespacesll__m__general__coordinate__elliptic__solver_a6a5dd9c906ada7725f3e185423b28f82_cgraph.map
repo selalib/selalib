@@ -1,18 +1,18 @@
 <map id="initialize_general_elliptic_solver" name="initialize_general_elliptic_solver">
-<area shape="rect" id="node2" href="$namespacesll__m__general__coordinate__elliptic__solver.html#a7ff96a60c1ca1c84f6a4d6f42df49b93" title="Assembling knots array. " alt="" coords="195,5,303,32"/>
-<area shape="rect" id="node3" href="$namespacesll__m__deboor__splines__1d.html#a398ef6ca2b45ebcd64c4e1640a8b5bbe" title="Calculates the nonvanishing B&#45;splines and derivatives at X. " alt="" coords="176,57,323,98"/>
-<area shape="rect" id="node5" href="$namespacesll__m__deboor__splines__1d.html#a4f9fcaf3a83c7141df5d8a5299346c45" title="Brackets a real value in an ascending vector of values. " alt="" coords="176,122,323,163"/>
-<area shape="rect" id="node6" href="$namespacesll__m__general__coordinate__elliptic__solver.html#a6178a8050ae7382ba5ffc63e0df2857b" title="compute_global_knots" alt="" coords="391,133,543,160"/>
-<area shape="rect" id="node9" href="$namespacesll__m__general__coordinate__elliptic__solver.html#a4b97f8447ef161a4544d6888dd194f56" title="compute_non_zero_splines\l_and_deriv_at_cell_points" alt="" coords="377,402,557,443"/>
-<area shape="rect" id="node10" href="$namespacesll__m__general__coordinate__elliptic__solver.html#a1530444505e15898adb13de4fd54458c" title="sll_s_general_elliptic\l_solver_prototype_init" alt="" coords="175,239,324,281"/>
-<area shape="rect" id="node17" href="$namespacesll__m__sparse__matrix.html#adb438a42106336f09fc13c379a3ee56e" title="sll_m_sparse_matrix\l::sll_s_free_csr_matrix" alt="" coords="172,357,327,398"/>
-<area shape="rect" id="node4" href="$namespacesll__m__deboor__splines__1d.html#a6672aeacfcdae431900c9307a3a4bc93" title="Evaluates B&#45;splines at a point X with a given knot sequence. " alt="" coords="393,57,540,98"/>
-<area shape="rect" id="node7" href="$namespacesll__m__general__coordinate__elliptic__solver.html#affbbc69434a49d65cbbd0a62f77c5dcd" title="compute_bc_indices" alt="" coords="615,83,757,109"/>
-<area shape="rect" id="node8" href="$namespacesll__m__general__coordinate__elliptic__solver.html#a28d7b2c5dc102d89fd10040982029e00" title="compute_local_to_global\l_splines_indices" alt="" coords="813,137,979,178"/>
-<area shape="rect" id="node11" href="$namespacesll__m__general__coordinate__elliptic__solver.html#af5e8d40d1650bab4953a450f4696a5f1" title="compute_total_num_splines" alt="" coords="375,184,559,211"/>
-<area shape="rect" id="node13" href="$namespacesll__m__general__coordinate__elliptic__solver.html#aa9ceef40154354e9427b67d594a0f821" title="compute_index" alt="" coords="841,213,951,240"/>
-<area shape="rect" id="node14" href="$namespacesll__m__general__coordinate__elliptic__solver.html#a028b7cd93513f607d6aec3541e076f93" title="compute_vec_size" alt="" coords="401,285,532,312"/>
-<area shape="rect" id="node15" href="$namespacesll__m__general__coordinate__elliptic__solver.html#accca7b4fada93fd5a46e69cb9889a2d3" title="compute_non_zero_splines\l_at_cell_points" alt="" coords="377,337,557,378"/>
-<area shape="rect" id="node12" href="$namespacesll__m__general__coordinate__elliptic__solver.html#a2371433254cb8dfeb5dabf61337f90bd" title="compute_b_spline_at_x" alt="" coords="607,184,765,211"/>
-<area shape="rect" id="node16" href="$namespacesll__m__cubic__splines.html#aae80d16d07bd41d098d50dc749e68d24" title="sll_m_cubic_splines\l::sll_s_cubic_spline\l_2d_init" alt="" coords="617,329,755,385"/>
+<area shape="rect" id="node2" href="$namespacesll__m__general__coordinate__elliptic__solver.html#a7ff96a60c1ca1c84f6a4d6f42df49b93" title="Assembling knots array. " alt="" coords="211,5,333,32"/>
+<area shape="rect" id="node3" href="$namespacesll__m__deboor__splines__1d.html#a398ef6ca2b45ebcd64c4e1640a8b5bbe" title="Calculates the nonvanishing B&#45;splines and derivatives at X. " alt="" coords="191,57,353,98"/>
+<area shape="rect" id="node5" href="$namespacesll__m__deboor__splines__1d.html#a4f9fcaf3a83c7141df5d8a5299346c45" title="Brackets a real value in an ascending vector of values. " alt="" coords="191,122,353,163"/>
+<area shape="rect" id="node6" href="$namespacesll__m__general__coordinate__elliptic__solver.html#a6178a8050ae7382ba5ffc63e0df2857b" title="compute_global_knots" alt="" coords="422,133,591,160"/>
+<area shape="rect" id="node9" href="$namespacesll__m__general__coordinate__elliptic__solver.html#a4b97f8447ef161a4544d6888dd194f56" title="compute_non_zero_splines\l_and_deriv_at_cell_points" alt="" coords="407,402,606,443"/>
+<area shape="rect" id="node10" href="$namespacesll__m__general__coordinate__elliptic__solver.html#a1530444505e15898adb13de4fd54458c" title="sll_s_general_elliptic\l_solver_prototype_init" alt="" coords="189,239,355,281"/>
+<area shape="rect" id="node17" href="$namespacesll__m__sparse__matrix.html#adb438a42106336f09fc13c379a3ee56e" title="sll_m_sparse_matrix\l::sll_s_free_csr_matrix" alt="" coords="188,357,356,398"/>
+<area shape="rect" id="node4" href="$namespacesll__m__deboor__splines__1d.html#a6672aeacfcdae431900c9307a3a4bc93" title="Evaluates B&#45;splines at a point X with a given knot sequence. " alt="" coords="425,57,588,98"/>
+<area shape="rect" id="node7" href="$namespacesll__m__general__coordinate__elliptic__solver.html#affbbc69434a49d65cbbd0a62f77c5dcd" title="compute_bc_indices" alt="" coords="667,83,822,109"/>
+<area shape="rect" id="node8" href="$namespacesll__m__general__coordinate__elliptic__solver.html#a28d7b2c5dc102d89fd10040982029e00" title="compute_local_to_global\l_splines_indices" alt="" coords="880,137,1064,178"/>
+<area shape="rect" id="node11" href="$namespacesll__m__general__coordinate__elliptic__solver.html#af5e8d40d1650bab4953a450f4696a5f1" title="compute_total_num_splines" alt="" coords="404,184,609,211"/>
+<area shape="rect" id="node13" href="$namespacesll__m__general__coordinate__elliptic__solver.html#aa9ceef40154354e9427b67d594a0f821" title="compute_index" alt="" coords="911,213,1033,240"/>
+<area shape="rect" id="node14" href="$namespacesll__m__general__coordinate__elliptic__solver.html#a028b7cd93513f607d6aec3541e076f93" title="compute_vec_size" alt="" coords="435,285,578,312"/>
+<area shape="rect" id="node15" href="$namespacesll__m__general__coordinate__elliptic__solver.html#accca7b4fada93fd5a46e69cb9889a2d3" title="compute_non_zero_splines\l_at_cell_points" alt="" coords="407,337,606,378"/>
+<area shape="rect" id="node12" href="$namespacesll__m__general__coordinate__elliptic__solver.html#a2371433254cb8dfeb5dabf61337f90bd" title="compute_b_spline_at_x" alt="" coords="657,184,832,211"/>
+<area shape="rect" id="node16" href="$namespacesll__m__cubic__splines.html#ad120ac4e32da463e3d694372548e3d58" title="sll_m_cubic_splines\l::sll_s_cubic_spline\l_2d_init" alt="" coords="669,329,820,385"/>
 </map>

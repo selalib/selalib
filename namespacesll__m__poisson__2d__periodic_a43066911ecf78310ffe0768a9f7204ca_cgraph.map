@@ -1,4 +1,4 @@
 <map id="solve_e_fields_poisson_2d_periodic_fft" name="solve_e_fields_poisson_2d_periodic_fft">
-<area shape="rect" id="node2" href="$namespacesll__m__fft.html#aa3e1c7c78c99e85135cc7689f3e1cf4a" title="Compute fast Fourier transform in real to complex mode. " alt="" coords="211,5,337,47"/>
-<area shape="rect" id="node3" href="$namespacesll__m__fft.html#a3a86766cf71f4e4f51a565fe24bd2d77" title="Compute fast Fourier transform in complex to real mode. " alt="" coords="211,71,337,112"/>
+<area shape="rect" id="node2" href="$namespacesll__m__fft.html#aa3e1c7c78c99e85135cc7689f3e1cf4a" title="Compute fast Fourier transform in real to complex mode. " alt="" coords="224,5,360,47"/>
+<area shape="rect" id="node3" href="$namespacesll__m__fft.html#a3a86766cf71f4e4f51a565fe24bd2d77" title="Compute fast Fourier transform in complex to real mode. " alt="" coords="224,71,360,112"/>
 </map>

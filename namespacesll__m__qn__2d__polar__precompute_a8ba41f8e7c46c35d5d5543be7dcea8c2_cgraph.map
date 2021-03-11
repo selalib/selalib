@@ -1,6 +1,6 @@
 <map id="compute_d_spl2d" name="compute_d_spl2d">
-<area shape="rect" id="node2" href="$namespacesll__m__qn__2d__polar.html#ae949c4de5cf187b523f840eeba113fb7" title="sll_m_qn_2d_polar::\lsll_s_splcoefnat1d0old" alt="" coords="177,5,332,47"/>
-<area shape="rect" id="node3" href="$namespacesll__m__qn__2d__polar.html#abcea62ec060f212710f7a0a21d5aee81" title="sll_m_qn_2d_polar::\lsll_s_splcoefper1d0old" alt="" coords="177,71,332,112"/>
-<area shape="rect" id="node4" href="$namespacesll__m__qn__2d__polar.html#acf66f2e89cc10617e98a52d1a02719dc" title="sll_m_qn_2d_polar::\lsll_s_compute_splines\l_coefs_matrix_nat_1d" alt="" coords="177,135,332,191"/>
-<area shape="rect" id="node5" href="$namespacesll__m__qn__2d__polar.html#a381edd33cf621279035af16963950230" title="sll_m_qn_2d_polar::\lsll_s_compute_splines\l_coefs_matrix_per_1d" alt="" coords="177,215,332,271"/>
+<area shape="rect" id="node2" href="$namespacesll__m__qn__2d__polar.html#ae949c4de5cf187b523f840eeba113fb7" title="sll_m_qn_2d_polar::\lsll_s_splcoefnat1d0old" alt="" coords="189,5,360,47"/>
+<area shape="rect" id="node3" href="$namespacesll__m__qn__2d__polar.html#abcea62ec060f212710f7a0a21d5aee81" title="sll_m_qn_2d_polar::\lsll_s_splcoefper1d0old" alt="" coords="189,71,360,112"/>
+<area shape="rect" id="node4" href="$namespacesll__m__qn__2d__polar.html#acf66f2e89cc10617e98a52d1a02719dc" title="sll_m_qn_2d_polar::\lsll_s_compute_splines\l_coefs_matrix_nat_1d" alt="" coords="191,137,359,193"/>
+<area shape="rect" id="node5" href="$namespacesll__m__qn__2d__polar.html#a381edd33cf621279035af16963950230" title="sll_m_qn_2d_polar::\lsll_s_compute_splines\l_coefs_matrix_per_1d" alt="" coords="191,217,359,273"/>
 </map>

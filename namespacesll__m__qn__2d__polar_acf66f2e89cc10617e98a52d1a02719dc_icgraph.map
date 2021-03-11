@@ -1,6 +1,6 @@
 <map id="sll_s_compute_splines_coefs_matrix_nat_1d" name="sll_s_compute_splines_coefs_matrix_nat_1d">
-<area shape="rect" id="node2" href="$namespacesll__m__qn__2d__polar.html#a1c0e37fbdf76452f58d8c15fe7e11174" title="sll_s_precompute_inverse\l_qn_matrix_polar_splines" alt="" coords="224,17,397,58"/>
-<area shape="rect" id="node4" href="$namespacesll__m__qn__2d__polar__precompute.html#a8ba41f8e7c46c35d5d5543be7dcea8c2" title="sll_m_qn_2d_polar_precompute\l::compute_d_spl2d" alt="" coords="208,86,413,127"/>
-<area shape="rect" id="node3" href="$namespacesll__m__qn__2d__polar__splines__solver.html#ad8c21089183e4a8bcdb6bd79c1e37a4b" title="sll_m_qn_2d_polar_splines\l_solver::precompute_qn\l_2d_polar_splines" alt="" coords="475,5,653,61"/>
-<area shape="rect" id="node5" href="$namespacesll__m__qn__2d__polar__precompute.html#a41d1928c191efdcfecf8bbb3688e7cee" title="sll_m_qn_2d_polar_precompute\l::sll_s_compute_qns_matrix\l_polar_splines" alt="" coords="461,85,667,141"/>
+<area shape="rect" id="node2" href="$namespacesll__m__qn__2d__polar.html#a1c0e37fbdf76452f58d8c15fe7e11174" title="sll_s_precompute_inverse\l_qn_matrix_polar_splines" alt="" coords="240,17,431,58"/>
+<area shape="rect" id="node4" href="$namespacesll__m__qn__2d__polar__precompute.html#a8ba41f8e7c46c35d5d5543be7dcea8c2" title="sll_m_qn_2d_polar_precompute\l::compute_d_spl2d" alt="" coords="221,86,449,127"/>
+<area shape="rect" id="node3" href="$namespacesll__m__qn__2d__polar__splines__solver.html#ad8c21089183e4a8bcdb6bd79c1e37a4b" title="sll_m_qn_2d_polar_splines\l_solver::precompute_qn\l_2d_polar_splines" alt="" coords="513,5,709,61"/>
+<area shape="rect" id="node5" href="$namespacesll__m__qn__2d__polar__precompute.html#a41d1928c191efdcfecf8bbb3688e7cee" title="sll_m_qn_2d_polar_precompute\l::sll_s_compute_qns_matrix\l_polar_splines" alt="" coords="497,85,725,141"/>
 </map>

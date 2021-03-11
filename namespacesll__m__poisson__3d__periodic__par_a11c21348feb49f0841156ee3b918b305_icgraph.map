@@ -1,4 +1,4 @@
 <map id="sll_s_compute_ez_from_phi" name="sll_s_compute_ez_from_phi">
-<area shape="rect" id="node2" href="$namespacesll__m__poisson__3d__periodic__par.html#abd02a8ecf1e7bba3fb60646c88b0d3bc" title="sll_s_poisson_3d_periodic\l_par_compute_e_from_phi" alt="" coords="237,5,412,47"/>
-<area shape="rect" id="node3" href="$namespacesll__m__poisson__3d__periodic__par.html#a510b6fa2f25f0b39778c84b2ab502b94" title="Compute the electric fields from the potential (phi sequential along x3) " alt="" coords="237,70,412,126"/>
+<area shape="rect" id="node2" href="$namespacesll__m__poisson__3d__periodic__par.html#abd02a8ecf1e7bba3fb60646c88b0d3bc" title="sll_s_poisson_3d_periodic\l_par_compute_e_from_phi" alt="" coords="256,5,451,47"/>
+<area shape="rect" id="node3" href="$namespacesll__m__poisson__3d__periodic__par.html#a510b6fa2f25f0b39778c84b2ab502b94" title="Compute the electric fields from the potential (phi sequential along x3) " alt="" coords="256,71,451,127"/>
 </map>

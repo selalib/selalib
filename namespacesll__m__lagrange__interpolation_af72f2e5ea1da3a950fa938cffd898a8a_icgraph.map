@@ -1,5 +1,5 @@
 <map id="weight_product1d_per" name="weight_product1d_per">
-<area shape="rect" id="node2" href="$namespacesll__m__lagrange__interpolation.html#a856bccdbfeb834c6549ec6eb0ba696da" title="weight_product1d" alt="" coords="203,31,327,57"/>
-<area shape="rect" id="node3" href="$namespacesll__m__lagrange__interpolation.html#adb2e3da45e58c8762182a8ed3ab6ae9c" title="weight_product2d_x1" alt="" coords="375,5,520,32"/>
-<area shape="rect" id="node4" href="$namespacesll__m__lagrange__interpolation.html#a8b036d2d7a1d348e71e3bc55a467dcab" title="weight_product2d_x2" alt="" coords="375,56,520,83"/>
+<area shape="rect" id="node2" href="$namespacesll__m__lagrange__interpolation.html#a856bccdbfeb834c6549ec6eb0ba696da" title="weight_product1d" alt="" coords="220,31,359,57"/>
+<area shape="rect" id="node3" href="$namespacesll__m__lagrange__interpolation.html#adb2e3da45e58c8762182a8ed3ab6ae9c" title="weight_product2d_x1" alt="" coords="407,5,568,32"/>
+<area shape="rect" id="node4" href="$namespacesll__m__lagrange__interpolation.html#a8b036d2d7a1d348e71e3bc55a467dcab" title="weight_product2d_x2" alt="" coords="407,56,568,83"/>
 </map>

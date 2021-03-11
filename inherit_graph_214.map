@@ -1,3 +1,6 @@
 <map id="Graphical Class Hierarchy" name="Graphical Class Hierarchy">
-<area shape="rect" id="node1" href="$structsll__m__poisson__3d__base_1_1sll__c__poisson__3d__base.html" title="Abstract class for Poisson solver in 3 dimensions. " alt="" coords="5,5,163,32"/>
+<area shape="rect" id="node1" href="$structsll__m__poisson__2d__base_1_1sll__c__poisson__2d__base.html" title="PLEASE ADD DOCUMENTATION. " alt="" coords="5,71,175,98"/>
+<area shape="rect" id="node2" href="$structsll__m__poisson__2d__mudpack__curvilinear_1_1poisson__2d__mudpack__curvilinear.html" title="Derived type to solve Poisson equation on 2d curvilinear mesh. " alt="" coords="235,5,398,47"/>
+<area shape="rect" id="node3" href="$structsll__m__poisson__2d__periodic_1_1sll__t__poisson__2d__periodic.html" title="sll_t_poisson_2d_periodic" alt="" coords="223,71,411,98"/>
+<area shape="rect" id="node4" href="$structsll__m__poisson__2d__polar_1_1sll__t__poisson__2d__polar.html" title="Class for the Poisson solver in polar coordinate. " alt="" coords="232,122,401,149"/>
 </map>

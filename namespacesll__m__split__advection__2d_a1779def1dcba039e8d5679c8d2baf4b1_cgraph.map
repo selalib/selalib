@@ -1,4 +1,4 @@
 <map id="initialize_split_advection_2d" name="initialize_split_advection_2d">
-<area shape="rect" id="node2" href="$namespacesll__m__cubic__non__uniform__splines.html#a32c26d5d720eb88a9a3595ea1bcb988c" title="create new spline object " alt="" coords="245,5,416,61"/>
-<area shape="rect" id="node3" href="$namespacesll__m__operator__splitting.html#ad7ac7066d769b435f70a6364f9f98b6f" title="Initialises data for operator splitting. " alt="" coords="237,85,424,126"/>
+<area shape="rect" id="node2" href="$namespacesll__m__cubic__non__uniform__splines.html#a32c26d5d720eb88a9a3595ea1bcb988c" title="create new spline object " alt="" coords="271,5,458,61"/>
+<area shape="rect" id="node3" href="$namespacesll__m__operator__splitting.html#ad7ac7066d769b435f70a6364f9f98b6f" title="Initialises data for operator splitting. " alt="" coords="260,86,469,127"/>
 </map>

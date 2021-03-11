@@ -1,6 +1,6 @@
 <map id="fekete_rule" name="fekete_rule">
-<area shape="rect" id="node2" href="$namespacesll__m__fekete__integration.html#aa2915462263d3b13d58e9538bc87d2a8" title="returns the number of suborders for a Fekete rule. " alt="" coords="140,5,287,32"/>
-<area shape="rect" id="node3" href="$namespacesll__m__fekete__integration.html#ac49d3ac7ddf882cf310aa5ec0e1cb251" title="returns the suborders for a Fekete rule. " alt="" coords="156,56,271,83"/>
-<area shape="rect" id="node4" href="$namespacesll__m__fekete__integration.html#a6c628fc6b0e9e59bc5b196175ebd7851" title="returns a compressed Fekete rule " alt="" coords="160,107,267,133"/>
-<area shape="rect" id="node5" href="$namespacesll__m__fekete__integration.html#a00966f8455b0a2836270ef9831e95dff" title="forces an I4 to lie between given limits by wrapping. " alt="" coords="176,157,251,184"/>
+<area shape="rect" id="node2" href="$namespacesll__m__fekete__integration.html#aa2915462263d3b13d58e9538bc87d2a8" title="returns the number of suborders for a Fekete rule. " alt="" coords="149,5,313,32"/>
+<area shape="rect" id="node3" href="$namespacesll__m__fekete__integration.html#ac49d3ac7ddf882cf310aa5ec0e1cb251" title="returns the suborders for a Fekete rule. " alt="" coords="167,56,295,83"/>
+<area shape="rect" id="node4" href="$namespacesll__m__fekete__integration.html#a6c628fc6b0e9e59bc5b196175ebd7851" title="returns a compressed Fekete rule " alt="" coords="172,107,291,133"/>
+<area shape="rect" id="node5" href="$namespacesll__m__fekete__integration.html#a00966f8455b0a2836270ef9831e95dff" title="forces an I4 to lie between given limits by wrapping. " alt="" coords="190,157,273,184"/>
 </map>

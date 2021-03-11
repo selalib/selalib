@@ -1,4 +1,4 @@
 <map id="sll_t_poisson_2d_polar" name="sll_t_poisson_2d_polar">
-<area shape="rect" id="node2" href="$structsll__m__poisson__2d__base_1_1sll__c__poisson__2d__base.html" title="PLEASE ADD DOCUMENTATION. " alt="" coords="269,5,426,32"/>
-<area shape="rect" id="node4" href="$structsll__m__fft_1_1sll__t__fft.html" title="Type for FFT plan in SeLaLib. " alt="" coords="315,124,380,151"/>
+<area shape="rect" id="node2" href="$structsll__m__poisson__2d__base_1_1sll__c__poisson__2d__base.html" title="PLEASE ADD DOCUMENTATION. " alt="" coords="304,5,473,32"/>
+<area shape="rect" id="node3" href="$structsll__m__fft_1_1sll__t__fft.html" title="Type for FFT plan in SeLaLib. " alt="" coords="353,56,424,83"/>
 </map>

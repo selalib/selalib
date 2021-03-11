@@ -1,7 +1,7 @@
 <map id="init_pastix" name="init_pastix">
-<area shape="rect" id="node2" href="$namespacesll__m__collective.html#a939e5faf8e7354e95934cc448ea4623d" title="Starts the paralell environment. " alt="" coords="143,5,279,47"/>
-<area shape="rect" id="node4" href="$namespacesll__m__collective.html#a396122f49340f0778eb448430d865b4e" title="Determines the rank of the calling process in the communicator. " alt="" coords="135,71,287,112"/>
-<area shape="rect" id="node6" href="$namespacesll__m__collective.html#af2d3c240d9dfe7e9c7d7f7c9e0529f17" title="Determines the size of the group associated with a communicator. " alt="" coords="135,136,286,177"/>
-<area shape="rect" id="node3" href="$namespacesll__m__collective.html#a9a5729d7ca2e55890195f76c8a5cbd62" title="Checks the good execution of collective instruction. " alt="" coords="341,5,477,47"/>
-<area shape="rect" id="node5" href="$namespacesll__m__collective.html#a37ea25f42a791be5a710a6cf0d1e1197" title="Checks if the pointer ptr is associated to an object. " alt="" coords="335,103,483,144"/>
+<area shape="rect" id="node2" href="$namespacesll__m__collective.html#a939e5faf8e7354e95934cc448ea4623d" title="Starts the paralell environment. " alt="" coords="153,5,303,47"/>
+<area shape="rect" id="node4" href="$namespacesll__m__collective.html#a396122f49340f0778eb448430d865b4e" title="Determines the rank of the calling process in the communicator. " alt="" coords="144,71,312,112"/>
+<area shape="rect" id="node6" href="$namespacesll__m__collective.html#af2d3c240d9dfe7e9c7d7f7c9e0529f17" title="Determines the size of the group associated with a communicator. " alt="" coords="145,136,311,177"/>
+<area shape="rect" id="node3" href="$namespacesll__m__collective.html#a9a5729d7ca2e55890195f76c8a5cbd62" title="Checks the good execution of collective instruction. " alt="" coords="366,5,517,47"/>
+<area shape="rect" id="node5" href="$namespacesll__m__collective.html#a37ea25f42a791be5a710a6cf0d1e1197" title="Checks if the pointer ptr is associated to an object. " alt="" coords="360,103,523,144"/>
 </map>

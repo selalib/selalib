@@ -1,5 +1,5 @@
 <map id="compute_b_spline_and_deriv_at_x" name="compute_b_spline_and_deriv_at_x">
-<area shape="rect" id="node2" href="$namespacesll__m__general__coordinate__elliptic__solver.html#a27d90b4a6ca26e6014ca4db59a27eda1" title="compute_global_splines\l_indices" alt="" coords="208,35,369,76"/>
-<area shape="rect" id="node3" href="$namespacesll__m__general__coordinate__elliptic__solver.html#a13e1428f9465e72bbf96682e92f305f8" title="Assemble the matrix for elliptic solver. " alt="" coords="417,5,593,47"/>
-<area shape="rect" id="node4" href="$namespacesll__m__general__coordinate__elliptic__solver.html#a17eb78399c10cd0dcdd31c4bf2cb72e6" title="initconnectivity_new" alt="" coords="435,71,575,98"/>
+<area shape="rect" id="node2" href="$namespacesll__m__general__coordinate__elliptic__solver.html#a27d90b4a6ca26e6014ca4db59a27eda1" title="compute_global_splines\l_indices" alt="" coords="224,35,403,76"/>
+<area shape="rect" id="node3" href="$namespacesll__m__general__coordinate__elliptic__solver.html#a13e1428f9465e72bbf96682e92f305f8" title="Assemble the matrix for elliptic solver. " alt="" coords="451,5,647,47"/>
+<area shape="rect" id="node4" href="$namespacesll__m__general__coordinate__elliptic__solver.html#a17eb78399c10cd0dcdd31c4bf2cb72e6" title="initconnectivity_new" alt="" coords="470,71,627,98"/>
 </map>

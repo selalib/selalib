@@ -1,9 +1,9 @@
 <map id="solve_with_cg" name="solve_with_cg">
-<area shape="rect" id="node2" href="$namespacesll__m__sparse__matrix.html#a7d5478ffad5dfe54e84b5c4d203f380f" title="sll_s_solve_csr_matrix" alt="" coords="159,107,313,134"/>
-<area shape="rect" id="node8" href="$namespacesll__m__sparse__matrix.html#ade7113edc1de28dc83126428b54f632e" title="sll_s_solve_csr_matrix\l_perper" alt="" coords="159,159,313,200"/>
-<area shape="rect" id="node3" href="$namespacesll__m__general__coordinate__elliptic__solver__multipatch.html#acb2419ac4636b43343b2c695498a516e" title="sll_m_general_coordinate\l_elliptic_solver_multipatch\l::solve_gen_elliptic_eq_mp" alt="" coords="382,13,561,69"/>
-<area shape="rect" id="node6" href="$namespacesll__m__general__coordinate__elliptic__solver.html#a4f7fd26755a4faa1a8bdf94ff493eff1" title="Assemble the matrix for elliptic solver. " alt="" coords="387,93,556,149"/>
-<area shape="rect" id="node7" href="$namespacesll__m__general__coordinate__elliptic__solver.html#aff3042a62c26cedfdcf04569ac9ead5d" title="sll_m_general_coordinate\l_elliptic_solver::sll_s\l_set_rho_coefficients_coordinates\l_elliptic_eq_prototype" alt="" coords="361,173,581,244"/>
-<area shape="rect" id="node4" href="$namespacesll__m__general__coordinate__elliptic__solver__multipatch.html#ad586304ed7ac38e61ea43cf18d2ca0c1" title="sll_m_general_coordinate\l_elliptic_solver_multipatch\l::solve_linear_system_mp" alt="" coords="629,13,804,69"/>
-<area shape="rect" id="node5" href="$namespacesll__m__general__coordinate__elliptic__solver__multipatch.html#a6b7c5c791868306ed41bd47b97d88907" title="Assemble the matrix for elliptic solver. " alt="" coords="852,5,1071,76"/>
+<area shape="rect" id="node2" href="$namespacesll__m__sparse__matrix.html#a7d5478ffad5dfe54e84b5c4d203f380f" title="sll_s_solve_csr_matrix" alt="" coords="168,107,337,134"/>
+<area shape="rect" id="node8" href="$namespacesll__m__sparse__matrix.html#ade7113edc1de28dc83126428b54f632e" title="sll_s_solve_csr_matrix\l_perper" alt="" coords="168,159,337,200"/>
+<area shape="rect" id="node3" href="$namespacesll__m__general__coordinate__elliptic__solver__multipatch.html#acb2419ac4636b43343b2c695498a516e" title="sll_m_general_coordinate\l_elliptic_solver_multipatch\l::solve_gen_elliptic_eq_mp" alt="" coords="407,13,606,69"/>
+<area shape="rect" id="node6" href="$namespacesll__m__general__coordinate__elliptic__solver.html#a4f7fd26755a4faa1a8bdf94ff493eff1" title="Assemble the matrix for elliptic solver. " alt="" coords="412,93,601,149"/>
+<area shape="rect" id="node7" href="$namespacesll__m__general__coordinate__elliptic__solver.html#aff3042a62c26cedfdcf04569ac9ead5d" title="sll_m_general_coordinate\l_elliptic_solver::sll_s\l_set_rho_coefficients_coordinates\l_elliptic_eq_prototype" alt="" coords="385,173,628,244"/>
+<area shape="rect" id="node4" href="$namespacesll__m__general__coordinate__elliptic__solver__multipatch.html#ad586304ed7ac38e61ea43cf18d2ca0c1" title="sll_m_general_coordinate\l_elliptic_solver_multipatch\l::solve_linear_system_mp" alt="" coords="676,13,873,69"/>
+<area shape="rect" id="node5" href="$namespacesll__m__general__coordinate__elliptic__solver__multipatch.html#a6b7c5c791868306ed41bd47b97d88907" title="Assemble the matrix for elliptic solver. " alt="" coords="921,5,1161,76"/>
 </map>

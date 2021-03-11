@@ -1,5 +1,5 @@
 <map id="new_poisson_2d_periodic_fft" name="new_poisson_2d_periodic_fft">
-<area shape="rect" id="node2" href="$namespacesll__m__poisson__2d__periodic.html#a0a7c52e7a2f8e290fc36e2519295b2a0" title="sll_o_initialize the Poisson solver " alt="" coords="244,39,365,80"/>
-<area shape="rect" id="node3" href="$namespacesll__m__fft.html#abe788dd46bc7218c0f8cad37e09b1bdd" title="Create new 2d complex to real plan for forward FFT. " alt="" coords="413,5,540,47"/>
-<area shape="rect" id="node4" href="$namespacesll__m__fft.html#a8bf95871bff87667b2a2dcb7ce0c443c" title="Create new 2d real to complex plan for backward FFT. " alt="" coords="413,71,540,112"/>
+<area shape="rect" id="node2" href="$namespacesll__m__poisson__2d__periodic.html#a0a7c52e7a2f8e290fc36e2519295b2a0" title="sll_o_initialize the Poisson solver " alt="" coords="263,39,397,80"/>
+<area shape="rect" id="node3" href="$namespacesll__m__fft.html#abe788dd46bc7218c0f8cad37e09b1bdd" title="Create new 2d complex to real plan for forward FFT. " alt="" coords="445,5,581,47"/>
+<area shape="rect" id="node4" href="$namespacesll__m__fft.html#a8bf95871bff87667b2a2dcb7ce0c443c" title="Create new 2d real to complex plan for backward FFT. " alt="" coords="445,71,581,112"/>
 </map>

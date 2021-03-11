@@ -1,6 +1,6 @@
 <map id="sll_f_compute_box_spline" name="sll_f_compute_box_spline">
-<area shape="rect" id="node2" href="$namespacesll__m__box__splines.html#a3b94ddbae2c7b03c53ca2653ae187885" title="1st coo. of (x1, x2) in reference hex&#45;mesh coo. " alt="" coords="225,5,348,32"/>
-<area shape="rect" id="node3" href="$namespacesll__m__box__splines.html#a1edd2773985cb3b80bdcdab980892673" title="2nd coo. of (x1, x2) in reference hex&#45;mesh coo. " alt="" coords="225,56,348,83"/>
-<area shape="rect" id="node4" href="$namespacesll__m__box__splines.html#a7a05a2e34070d0618d01288021e9ec28" title="Computes the box spline of degree deg on (x1, x2) " alt="" coords="241,107,332,133"/>
-<area shape="rect" id="node5" href="$namespacesll__m__box__splines.html#a12728f21737f7f8d9f56c33b69ec31d6" title="Computes the binomial coefficient (n, k) " alt="" coords="396,107,460,133"/>
+<area shape="rect" id="node2" href="$namespacesll__m__box__splines.html#a3b94ddbae2c7b03c53ca2653ae187885" title="1st coo. of (x1, x2) in reference hex&#45;mesh coo. " alt="" coords="244,5,377,32"/>
+<area shape="rect" id="node3" href="$namespacesll__m__box__splines.html#a1edd2773985cb3b80bdcdab980892673" title="2nd coo. of (x1, x2) in reference hex&#45;mesh coo. " alt="" coords="244,56,377,83"/>
+<area shape="rect" id="node4" href="$namespacesll__m__box__splines.html#a3036d812bbf7826012acb93b1bc5ad44" title="Computes the box spline of degree deg on (x1, x2) " alt="" coords="261,107,360,133"/>
+<area shape="rect" id="node5" href="$namespacesll__m__box__splines.html#aba645e61067c71ff9b07c7848cf12073" title="Computes the binomial coefficient (n, k) " alt="" coords="425,107,493,133"/>
 </map>

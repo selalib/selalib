@@ -1,17 +1,17 @@
 <map id="sll_t_poisson_2d_fem_sps_dense" name="sll_t_poisson_2d_fem_sps_dense">
-<area shape="rect" id="node9" href="$structsll__m__conjugate__gradient_1_1sll__t__conjugate__gradient.html" title="sll_t_conjugate_gradient" alt="" coords="317,263,480,289"/>
-<area shape="rect" id="node13" href="$structsll__m__linear__operator__matrix__dense__to__dense_1_1sll__t__linear__operator__matrix__dense__to__dense.html" title="sll_t_linear_operator\l_matrix_dense_to_dense" alt="" coords="315,390,482,431"/>
-<area shape="rect" id="node3" href="$structsll__m__poisson__2d__fem__sps__dense__assembler_1_1sll__t__poisson__2d__fem__sps__dense__assembler.html" title="sll_t_poisson_2d_fem\l_sps_dense_assembler" alt="" coords="319,115,478,157"/>
-<area shape="rect" id="node15" href="$structsll__m__poisson__2d__fem__sps__dense__projector_1_1sll__t__poisson__2d__fem__sps__dense__projector.html" title="sll_t_poisson_2d_fem\l_sps_dense_projector" alt="" coords="324,585,473,626"/>
-<area shape="rect" id="node16" href="$structsll__m__singular__mapping__discrete_1_1sll__t__singular__mapping__discrete.html" title="Concrete type, discrete singular mapping. " alt="" coords="956,1013,1111,1054"/>
-<area shape="rect" id="node20" href="$structsll__m__spline__interpolator__2d_1_1sll__t__spline__interpolator__2d.html" title="2D tensor&#45;product spline interpolator " alt="" coords="612,1101,791,1128"/>
-<area shape="rect" id="node22" href="$structsll__m__spline__interpolator__1d_1_1sll__t__spline__interpolator__1d.html" title="1D spline interpolator " alt="" coords="309,1213,488,1240"/>
-<area shape="rect" id="node6" href="$structsll__m__vector__space__real__array__1d_1_1sll__t__vector__space__real__array__1d.html" title="Vector space for wrapping 1D Fortran real arrays. " alt="" coords="333,809,464,850"/>
-<area shape="rect" id="node7" href="$structsll__m__vector__space__base_1_1sll__c__vector__space.html" title="Abstract base class for all vector spaces. " alt="" coords="25,780,160,807"/>
-<area shape="rect" id="node18" href="$structsll__m__spline__2d_1_1sll__t__spline__2d.html" title="2D tensor&#45;product spline " alt="" coords="345,1496,453,1523"/>
-<area shape="rect" id="node21" href="$structsll__m__spline__1d_1_1sll__t__spline__1d.html" title="1D spline " alt="" coords="345,1105,453,1132"/>
-<area shape="rect" id="node11" href="$structsll__m__poisson__2d__fem__sps__weak__form_1_1sll__t__poisson__2d__fem__sps__weak__form.html" title="sll_t_poisson_2d_fem\l_sps_weak_form" alt="" coords="959,529,1107,570"/>
-<area shape="rect" id="node12" href="$structsll__m__ellipt__2d__fem__sps__weak__form_1_1sll__c__ellipt__2d__fem__sps__weak__form.html" title="sll_c_ellipt_2d_fem\l_sps_weak_form" alt="" coords="635,538,768,579"/>
-<area shape="rect" id="node14" href="$structsll__m__linear__operator__base_1_1sll__c__linear__operator.html" title="sll_c_linear_operator" alt="" coords="22,397,163,424"/>
-<area shape="rect" id="node17" href="$structsll__m__singular__mapping__base_1_1sll__c__singular__mapping.html" title="Abstract type, singular mapping. " alt="" coords="623,995,780,1021"/>
+<area shape="rect" id="node9" href="$structsll__m__conjugate__gradient_1_1sll__t__conjugate__gradient.html" title="sll_t_conjugate_gradient" alt="" coords="346,263,527,289"/>
+<area shape="rect" id="node13" href="$structsll__m__linear__operator__matrix__dense__to__dense_1_1sll__t__linear__operator__matrix__dense__to__dense.html" title="sll_t_linear_operator\l_matrix_dense_to_dense" alt="" coords="345,390,529,431"/>
+<area shape="rect" id="node3" href="$structsll__m__poisson__2d__fem__sps__dense__assembler_1_1sll__t__poisson__2d__fem__sps__dense__assembler.html" title="sll_t_poisson_2d_fem\l_sps_dense_assembler" alt="" coords="351,115,523,157"/>
+<area shape="rect" id="node15" href="$structsll__m__poisson__2d__fem__sps__dense__projector_1_1sll__t__poisson__2d__fem__sps__dense__projector.html" title="sll_t_poisson_2d_fem\l_sps_dense_projector" alt="" coords="355,585,518,626"/>
+<area shape="rect" id="node16" href="$structsll__m__singular__mapping__discrete_1_1sll__t__singular__mapping__discrete.html" title="Concrete type, discrete singular mapping. " alt="" coords="1053,1013,1225,1054"/>
+<area shape="rect" id="node20" href="$structsll__m__spline__interpolator__2d_1_1sll__t__spline__interpolator__2d.html" title="2D tensor&#45;product spline interpolator " alt="" coords="671,1101,872,1128"/>
+<area shape="rect" id="node22" href="$structsll__m__spline__interpolator__1d_1_1sll__t__spline__interpolator__1d.html" title="1D spline interpolator " alt="" coords="336,1213,537,1240"/>
+<area shape="rect" id="node6" href="$structsll__m__vector__space__real__array__1d_1_1sll__t__vector__space__real__array__1d.html" title="Vector space for wrapping 1D Fortran real arrays. " alt="" coords="365,809,508,850"/>
+<area shape="rect" id="node7" href="$structsll__m__vector__space__base_1_1sll__c__vector__space.html" title="Abstract base class for all vector spaces. " alt="" coords="29,780,173,807"/>
+<area shape="rect" id="node18" href="$structsll__m__spline__2d_1_1sll__t__spline__2d.html" title="2D tensor&#45;product spline " alt="" coords="377,1496,496,1523"/>
+<area shape="rect" id="node21" href="$structsll__m__spline__1d_1_1sll__t__spline__1d.html" title="1D spline " alt="" coords="377,1105,496,1132"/>
+<area shape="rect" id="node11" href="$structsll__m__poisson__2d__fem__sps__weak__form_1_1sll__t__poisson__2d__fem__sps__weak__form.html" title="sll_t_poisson_2d_fem\l_sps_weak_form" alt="" coords="1058,529,1221,570"/>
+<area shape="rect" id="node12" href="$structsll__m__ellipt__2d__fem__sps__weak__form_1_1sll__c__ellipt__2d__fem__sps__weak__form.html" title="sll_c_ellipt_2d_fem\l_sps_weak_form" alt="" coords="698,538,845,579"/>
+<area shape="rect" id="node14" href="$structsll__m__linear__operator__base_1_1sll__c__linear__operator.html" title="sll_c_linear_operator" alt="" coords="23,397,180,424"/>
+<area shape="rect" id="node17" href="$structsll__m__singular__mapping__base_1_1sll__c__singular__mapping.html" title="Abstract type, singular mapping. " alt="" coords="684,995,859,1021"/>
 </map>

@@ -1,8 +1,8 @@
 <map id="sll_s_fft_exec_c2c_2d" name="sll_s_fft_exec_c2c_2d">
-<area shape="rect" id="node2" href="$namespacesll__m__nufft__interpolation.html#a162b55abc00342f2e8676595c9427205" title="Compute the fft and prepare data for nufft call. " alt="" coords="205,93,392,134"/>
-<area shape="rect" id="node3" href="$namespacesll__m__nufft__interpolator__2d.html#aca9461cb9acb52b082e30014b709979d" title="sll_m_nufft_interpolator\l_2d::compute_interpolants\l_nufft2d" alt="" coords="442,5,617,61"/>
-<area shape="rect" id="node4" href="$namespacesll__m__nufft__interpolation.html#a39fecd3696259ffa2ad4a468ccb2feca" title="Compute the fft and interpolate array values. " alt="" coords="440,85,619,141"/>
-<area shape="rect" id="node7" href="$namespacesll__m__nufft__interpolation.html#a3dcc6ba7738ce0511cf8b9562f40ac21" title="Compute the fft and interpolate array values when x and y could be outside the domaine. Useful for rotation and axisymetric geometry. " alt="" coords="440,165,619,221"/>
-<area shape="rect" id="node5" href="$namespacesll__m__nufft__interpolator__2d.html#a8e9d9c0186d8a0bb539ff6cade219f60" title="sll_m_nufft_interpolator\l_2d::nufft_interpolate2d" alt="" coords="682,61,841,102"/>
-<area shape="rect" id="node6" href="$namespacesll__m__nufft__interpolator__2d.html#a7bb19c6e4f87524eaab22d595fac9d58" title="sll_m_nufft_interpolator\l_2d::nufft_interpolate2d_disp" alt="" coords="667,126,856,167"/>
+<area shape="rect" id="node2" href="$namespacesll__m__nufft__interpolation.html#a162b55abc00342f2e8676595c9427205" title="Compute the fft and prepare data for nufft call. " alt="" coords="216,93,420,134"/>
+<area shape="rect" id="node3" href="$namespacesll__m__nufft__interpolator__2d.html#aca9461cb9acb52b082e30014b709979d" title="sll_m_nufft_interpolator\l_2d::compute_interpolants\l_nufft2d" alt="" coords="469,5,664,61"/>
+<area shape="rect" id="node4" href="$namespacesll__m__nufft__interpolation.html#a39fecd3696259ffa2ad4a468ccb2feca" title="Compute the fft and interpolate array values. " alt="" coords="468,85,665,141"/>
+<area shape="rect" id="node7" href="$namespacesll__m__nufft__interpolation.html#a3dcc6ba7738ce0511cf8b9562f40ac21" title="Compute the fft and interpolate array values when x and y could be outside the domaine. Useful for rotation and axisymetric geometry. " alt="" coords="468,165,665,221"/>
+<area shape="rect" id="node5" href="$namespacesll__m__nufft__interpolator__2d.html#a8e9d9c0186d8a0bb539ff6cade219f60" title="sll_m_nufft_interpolator\l_2d::nufft_interpolate2d" alt="" coords="730,61,907,102"/>
+<area shape="rect" id="node6" href="$namespacesll__m__nufft__interpolator__2d.html#a7bb19c6e4f87524eaab22d595fac9d58" title="sll_m_nufft_interpolator\l_2d::nufft_interpolate2d_disp" alt="" coords="713,126,924,167"/>
 </map>

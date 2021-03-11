@@ -1,5 +1,5 @@
 <map id="base_hsieh_clough_tocher_reduced" name="base_hsieh_clough_tocher_reduced">
-<area shape="rect" id="node2" href="$namespacesll__m__interpolation__hex__hermite.html#a3405eaf4c82e7f6378b74674e547959f" title="get_sub_triangle_hex" alt="" coords="233,5,378,32"/>
-<area shape="rect" id="node3" href="$namespacesll__m__interpolation__hex__hermite.html#ab3a682d4acff05dbb770af879b40ab06" title="product_with_sigma\l_hct_r" alt="" coords="236,57,375,98"/>
-<area shape="rect" id="node4" href="$namespacesll__m__interpolation__hex__hermite.html#a9991d45ae0dff6633336e681d6585094" title="base_from_local_base\l_xi_htc_r" alt="" coords="229,122,381,163"/>
+<area shape="rect" id="node2" href="$namespacesll__m__interpolation__hex__hermite.html#a3405eaf4c82e7f6378b74674e547959f" title="get_sub_triangle_hex" alt="" coords="249,5,411,32"/>
+<area shape="rect" id="node3" href="$namespacesll__m__interpolation__hex__hermite.html#ab3a682d4acff05dbb770af879b40ab06" title="product_with_sigma\l_hct_r" alt="" coords="253,57,407,98"/>
+<area shape="rect" id="node4" href="$namespacesll__m__interpolation__hex__hermite.html#a9991d45ae0dff6633336e681d6585094" title="base_from_local_base\l_xi_htc_r" alt="" coords="247,122,413,163"/>
 </map>

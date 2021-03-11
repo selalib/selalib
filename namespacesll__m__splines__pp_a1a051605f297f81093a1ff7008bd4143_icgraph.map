@@ -1,7 +1,7 @@
 <map id="sll_s_spline_pp_b_to_pp_1d_cell" name="sll_s_spline_pp_b_to_pp_1d_cell">
-<area shape="rect" id="node2" href="$namespacesll__m__splines__pp.html#a9375e3f69bc194b10b4c9973e590a428" title="Convert 1d spline in B form to spline in pp form with periodic boundary conditions. " alt="" coords="196,5,339,47"/>
-<area shape="rect" id="node3" href="$namespacesll__m__splines__pp.html#ab15fd73674029fed73d3aad115a5348e" title="Convert 2d spline in B form in a cell to spline in pp form with periodic boundary conditions..." alt="" coords="196,71,339,112"/>
-<area shape="rect" id="node5" href="$namespacesll__m__splines__pp.html#a840a12d2e58e2e3fe29b1f1296b24e25" title="Convert 3d spline in B form in a cell to spline in pp form with periodic boundary conditions..." alt="" coords="196,136,339,177"/>
-<area shape="rect" id="node4" href="$namespacesll__m__splines__pp.html#ad9b7b9b7852ac7873a01d8480d15819a" title="Convert 2d spline in B form to spline in pp form with periodic boundary conditions. " alt="" coords="387,71,529,112"/>
-<area shape="rect" id="node6" href="$namespacesll__m__splines__pp.html#a3e49717b4c10582e60662adb7cfd24d2" title="Convert 3d spline in B form to spline in pp form with periodic boundary conditions. " alt="" coords="387,136,529,177"/>
+<area shape="rect" id="node2" href="$namespacesll__m__splines__pp.html#a9375e3f69bc194b10b4c9973e590a428" title="Convert 1d spline in B form to spline in pp form with periodic boundary conditions. " alt="" coords="208,5,363,47"/>
+<area shape="rect" id="node3" href="$namespacesll__m__splines__pp.html#ab15fd73674029fed73d3aad115a5348e" title="Convert 2d spline in B form in a cell to spline in pp form with periodic boundary conditions..." alt="" coords="208,71,363,112"/>
+<area shape="rect" id="node5" href="$namespacesll__m__splines__pp.html#a840a12d2e58e2e3fe29b1f1296b24e25" title="Convert 3d spline in B form in a cell to spline in pp form with periodic boundary conditions..." alt="" coords="208,136,363,177"/>
+<area shape="rect" id="node4" href="$namespacesll__m__splines__pp.html#ad9b7b9b7852ac7873a01d8480d15819a" title="Convert 2d spline in B form to spline in pp form with periodic boundary conditions. " alt="" coords="411,71,565,112"/>
+<area shape="rect" id="node6" href="$namespacesll__m__splines__pp.html#a3e49717b4c10582e60662adb7cfd24d2" title="Convert 3d spline in B form to spline in pp form with periodic boundary conditions. " alt="" coords="411,136,565,177"/>
 </map>

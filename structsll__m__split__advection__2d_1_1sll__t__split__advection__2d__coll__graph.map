@@ -1,6 +1,6 @@
 <map id="sll_t_split_advection_2d" name="sll_t_split_advection_2d">
-<area shape="rect" id="node2" href="$structsll__m__operator__splitting_1_1sll__t__operator__splitting.html" title="operator splitting object " alt="" coords="297,96,449,123"/>
-<area shape="rect" id="node11" href="$structsll__m__cubic__non__uniform__splines_1_1sll__t__cubic__nonunif__spline__1d.html" title="Spline object. " alt="" coords="307,243,440,285"/>
-<area shape="rect" id="node6" href="$structsll__m__cartesian__meshes_1_1sll__t__cartesian__mesh__2d.html" title="2D cartesian mesh " alt="" coords="290,309,457,336"/>
-<area shape="rect" id="node7" href="$structsll__m__meshes__base_1_1sll__c__mesh__2d__base.html" title="2D logical mesh " alt="" coords="5,752,149,779"/>
+<area shape="rect" id="node2" href="$structsll__m__operator__splitting_1_1sll__t__operator__splitting.html" title="operator splitting object " alt="" coords="317,99,488,125"/>
+<area shape="rect" id="node11" href="$structsll__m__cubic__non__uniform__splines_1_1sll__t__cubic__nonunif__spline__1d.html" title="Spline object. " alt="" coords="329,246,476,287"/>
+<area shape="rect" id="node6" href="$structsll__m__cartesian__meshes_1_1sll__t__cartesian__mesh__2d.html" title="2D cartesian mesh " alt="" coords="311,312,494,339"/>
+<area shape="rect" id="node7" href="$structsll__m__meshes__base_1_1sll__c__mesh__2d__base.html" title="2D logical mesh " alt="" coords="5,756,160,783"/>
 </map>

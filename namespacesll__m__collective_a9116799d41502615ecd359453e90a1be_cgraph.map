@@ -1,7 +1,7 @@
 <map id="sll_collective_globalsum_comp64" name="sll_collective_globalsum_comp64">
-<area shape="rect" id="node2" href="$namespacesll__m__collective.html#af068426dbec67186132d5acaefd50d75" title="Performs a global sum over an array and writes the result in the given node If no node in root_rank i..." alt="" coords="216,39,393,80"/>
-<area shape="rect" id="node3" href="$namespacesll__m__collective.html#ae703fe55ecd4d44c738c6c1c160579df" title="Reduces complex values on all processes to a single value. " alt="" coords="448,5,591,47"/>
-<area shape="rect" id="node5" href="$namespacesll__m__collective.html#a2754d94f0999ff85b88c176dfd0a00a1" title="Combines complex values from all processes and distributes the result back to all processes..." alt="" coords="441,71,597,112"/>
-<area shape="rect" id="node4" href="$namespacesll__m__collective.html#a9a5729d7ca2e55890195f76c8a5cbd62" title="Checks the good execution of collective instruction. " alt="" coords="657,21,795,47"/>
-<area shape="rect" id="node6" href="$namespacesll__m__collective.html#a37ea25f42a791be5a710a6cf0d1e1197" title="Checks if the pointer ptr is associated to an object. " alt="" coords="645,78,807,105"/>
+<area shape="rect" id="node2" href="$namespacesll__m__collective.html#af068426dbec67186132d5acaefd50d75" title="Performs a global sum over an array and writes the result in the given node If no node in root_rank i..." alt="" coords="236,39,432,80"/>
+<area shape="rect" id="node3" href="$namespacesll__m__collective.html#ae703fe55ecd4d44c738c6c1c160579df" title="Reduces complex values on all processes to a single value. " alt="" coords="488,5,647,47"/>
+<area shape="rect" id="node5" href="$namespacesll__m__collective.html#a2754d94f0999ff85b88c176dfd0a00a1" title="Combines complex values from all processes and distributes the result back to all processes..." alt="" coords="480,71,655,112"/>
+<area shape="rect" id="node4" href="$namespacesll__m__collective.html#a9a5729d7ca2e55890195f76c8a5cbd62" title="Checks the good execution of collective instruction. " alt="" coords="715,21,868,47"/>
+<area shape="rect" id="node6" href="$namespacesll__m__collective.html#a37ea25f42a791be5a710a6cf0d1e1197" title="Checks if the pointer ptr is associated to an object. " alt="" coords="703,78,880,105"/>
 </map>

@@ -1,4 +1,4 @@
 <map id="flip_buffer" name="flip_buffer">
-<area shape="rect" id="node2" href="$namespacesll__m__point__to__point__comms.html#a8b121863ece95e8dd94458f440835b18" title="check_port" alt="" coords="132,5,219,32"/>
-<area shape="rect" id="node3" href="$namespacesll__m__point__to__point__comms.html#a2ec99c657fccfca4a2631c9408e2a9c1" title="flip_bit" alt="" coords="145,56,205,83"/>
+<area shape="rect" id="node2" href="$namespacesll__m__point__to__point__comms.html#a8b121863ece95e8dd94458f440835b18" title="check_port" alt="" coords="140,5,233,32"/>
+<area shape="rect" id="node3" href="$namespacesll__m__point__to__point__comms.html#a2ec99c657fccfca4a2631c9408e2a9c1" title="flip_bit" alt="" coords="153,56,220,83"/>
 </map>

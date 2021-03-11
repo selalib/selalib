@@ -1,5 +1,5 @@
 <map id="sll_t_sparse_grid_interpolator" name="sll_t_sparse_grid_interpolator">
-<area shape="rect" id="node2" href="$structsll__m__sparse__grid__2d_1_1sll__t__sparse__grid__2d.html" title="Sparse grid object for 2d with interpolation routines. " alt="" coords="5,80,147,107"/>
-<area shape="rect" id="node3" href="$structsll__m__sparse__grid__3d_1_1sll__t__sparse__grid__3d.html" title="Sparse grid object for 3d with interpolation routines. " alt="" coords="171,80,312,107"/>
-<area shape="rect" id="node4" href="$structsll__m__sparse__grid__4d_1_1sll__t__sparse__grid__4d.html" title="Sparse grid object for 4d with interpolation routines. Note in 4d we have only an implementation of a..." alt="" coords="336,80,477,107"/>
+<area shape="rect" id="node2" href="$structsll__m__sparse__grid__2d_1_1sll__t__sparse__grid__2d.html" title="Sparse grid object for 2d with interpolation routines. " alt="" coords="5,80,160,107"/>
+<area shape="rect" id="node3" href="$structsll__m__sparse__grid__3d_1_1sll__t__sparse__grid__3d.html" title="Sparse grid object for 3d with interpolation routines. " alt="" coords="184,80,339,107"/>
+<area shape="rect" id="node4" href="$structsll__m__sparse__grid__4d_1_1sll__t__sparse__grid__4d.html" title="Sparse grid object for 4d with interpolation routines. Note in 4d we have only an implementation of a..." alt="" coords="363,80,517,107"/>
 </map>

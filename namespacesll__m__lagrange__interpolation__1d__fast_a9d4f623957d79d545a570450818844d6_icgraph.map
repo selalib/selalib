@@ -1,6 +1,6 @@
 <map id="lagr_8pt_coeff" name="lagr_8pt_coeff">
-<area shape="rect" id="node2" href="$namespacesll__m__lagrange__interpolation__1d__fast.html#a28560081ce2fd963ba6b3ac9803fed0d" title="single point 8&#45;pt&#45;lagrange interpolation " alt="" coords="171,5,239,32"/>
-<area shape="rect" id="node3" href="$namespacesll__m__lagrange__interpolation__1d__fast.html#a8f01abf1bf21f68b575c46dd11507c63" title="vectorizable 6&#45;pt&#45;lagrange interpolation " alt="" coords="157,56,253,83"/>
-<area shape="rect" id="node4" href="$namespacesll__m__lagrange__interpolation__1d__fast.html#acf928f88f9fe7cad7c9ee88b7526444d" title="sll_s_lagrange_interpolation\l_1d_fast_disp_centered_halo_cells" alt="" coords="301,15,527,57"/>
-<area shape="rect" id="node5" href="$namespacesll__m__lagrange__interpolation__1d__fast.html#a69a39cf6e3124d0623dc09ab168e7bfc" title="Even Lagrange interpolation with halo cells and no interval shift, i.e. p must be between zero and on..." alt="" coords="313,81,515,122"/>
+<area shape="rect" id="node2" href="$namespacesll__m__lagrange__interpolation__1d__fast.html#a28560081ce2fd963ba6b3ac9803fed0d" title="single point 8&#45;pt&#45;lagrange interpolation " alt="" coords="183,5,258,32"/>
+<area shape="rect" id="node3" href="$namespacesll__m__lagrange__interpolation__1d__fast.html#a8f01abf1bf21f68b575c46dd11507c63" title="vectorizable 6&#45;pt&#45;lagrange interpolation " alt="" coords="168,56,273,83"/>
+<area shape="rect" id="node4" href="$namespacesll__m__lagrange__interpolation__1d__fast.html#acf928f88f9fe7cad7c9ee88b7526444d" title="sll_s_lagrange_interpolation\l_1d_fast_disp_centered_halo_cells" alt="" coords="321,15,568,57"/>
+<area shape="rect" id="node5" href="$namespacesll__m__lagrange__interpolation__1d__fast.html#a69a39cf6e3124d0623dc09ab168e7bfc" title="Even Lagrange interpolation with halo cells and no interval shift, i.e. p must be between zero and on..." alt="" coords="333,81,556,122"/>
 </map>

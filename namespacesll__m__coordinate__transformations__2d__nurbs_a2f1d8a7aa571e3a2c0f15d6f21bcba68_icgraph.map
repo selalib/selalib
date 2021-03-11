@@ -1,6 +1,0 @@
-<map id="jacobian_matrix_2d_nurbs" name="jacobian_matrix_2d_nurbs">
-<area shape="rect" id="node2" href="$namespacesll__m__coordinate__transformations__2d__nurbs.html#a878db88391770a67a0ac1276457489e7" title="jacobian_2d_nurbs" alt="" coords="204,5,335,32"/>
-<area shape="rect" id="node3" href="$namespacesll__m__coordinate__transformations__2d__nurbs.html#aef2fee513c6f2a28b1c83c2450253293" title="transf_2d_jacobian\l_node_nurbs" alt="" coords="204,57,335,98"/>
-<area shape="rect" id="node4" href="$namespacesll__m__coordinate__transformations__2d__nurbs.html#a42b494c551b89c0b34891515850393de" title="jacobian_2d_cell_nurbs" alt="" coords="191,123,348,149"/>
-<area shape="rect" id="node5" href="$namespacesll__m__coordinate__transformations__2d__nurbs.html#a5f1d86aa86138b917ab7a3a190da9da8" title="inverse_jacobian_matrix\l_2d_nurbs" alt="" coords="188,174,351,215"/>
-</map>

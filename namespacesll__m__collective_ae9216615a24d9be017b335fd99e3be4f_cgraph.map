@@ -1,7 +1,7 @@
 <map id="sll_collective_globalsum_comp32" name="sll_collective_globalsum_comp32">
-<area shape="rect" id="node2" href="$namespacesll__m__collective.html#ad1d8018497a41286301bf1d7f9a88b12" title="Performs a global sum over an array and writes the result in the given node If no node in root_rank i..." alt="" coords="216,39,379,80"/>
-<area shape="rect" id="node3" href="$namespacesll__m__collective.html#a5eb76797f4689a2e466569436b821115" title="sll_collective_reduce\l_comp32" alt="" coords="433,5,576,47"/>
-<area shape="rect" id="node5" href="$namespacesll__m__collective.html#a53667aea76e2fe9f17e7a9cac24e352f" title="sll_collective_allreduce\l_comp32" alt="" coords="427,71,583,112"/>
-<area shape="rect" id="node4" href="$namespacesll__m__collective.html#a9a5729d7ca2e55890195f76c8a5cbd62" title="Checks the good execution of collective instruction. " alt="" coords="642,21,781,47"/>
-<area shape="rect" id="node6" href="$namespacesll__m__collective.html#a37ea25f42a791be5a710a6cf0d1e1197" title="Checks if the pointer ptr is associated to an object. " alt="" coords="631,78,792,105"/>
+<area shape="rect" id="node2" href="$namespacesll__m__collective.html#ad1d8018497a41286301bf1d7f9a88b12" title="Performs a global sum over an array and writes the result in the given node If no node in root_rank i..." alt="" coords="236,39,419,80"/>
+<area shape="rect" id="node3" href="$namespacesll__m__collective.html#a5eb76797f4689a2e466569436b821115" title="sll_collective_reduce\l_comp32" alt="" coords="475,5,633,47"/>
+<area shape="rect" id="node5" href="$namespacesll__m__collective.html#a53667aea76e2fe9f17e7a9cac24e352f" title="sll_collective_allreduce\l_comp32" alt="" coords="467,71,641,112"/>
+<area shape="rect" id="node4" href="$namespacesll__m__collective.html#a9a5729d7ca2e55890195f76c8a5cbd62" title="Checks the good execution of collective instruction. " alt="" coords="701,21,855,47"/>
+<area shape="rect" id="node6" href="$namespacesll__m__collective.html#a37ea25f42a791be5a710a6cf0d1e1197" title="Checks if the pointer ptr is associated to an object. " alt="" coords="689,78,867,105"/>
 </map>

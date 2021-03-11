@@ -1,5 +1,5 @@
 <map id="sll_s_setup_spline_nonunif_1d_periodic_aux" name="sll_s_setup_spline_nonunif_1d_periodic_aux">
-<area shape="rect" id="node2" href="$namespacesll__m__advection__1d__non__uniform__cubic__splines.html#a3764758795ef56e4229ab7dca94b1ef6" title="sll_m_advection_1d\l_non_uniform_cubic_splines\l::initialize_sll_t_advector\l_1d_non_uniform_cubic_splines" alt="" coords="225,5,432,76"/>
-<area shape="rect" id="node4" href="$namespacesll__m__cubic__non__uniform__splines.html#a0ca31c6377a98e37ce755d8bdd55517e" title="compute splines coefficients " alt="" coords="255,100,402,141"/>
-<area shape="rect" id="node3" href="$namespacesll__m__advection__1d__non__uniform__cubic__splines.html#acc49f9cb45ee80ca8099bf0d34200efd" title="sll_m_advection_1d\l_non_uniform_cubic_splines\l::sll_f_new_advector_1d\l_non_uniform_cubic_splines" alt="" coords="480,5,667,76"/>
+<area shape="rect" id="node2" href="$namespacesll__m__advection__1d__non__uniform__cubic__splines.html#a3764758795ef56e4229ab7dca94b1ef6" title="sll_m_advection_1d\l_non_uniform_cubic_splines\l::initialize_sll_t_advector\l_1d_non_uniform_cubic_splines" alt="" coords="244,5,472,76"/>
+<area shape="rect" id="node4" href="$namespacesll__m__cubic__non__uniform__splines.html#a0ca31c6377a98e37ce755d8bdd55517e" title="compute splines coefficients " alt="" coords="277,100,439,141"/>
+<area shape="rect" id="node3" href="$namespacesll__m__advection__1d__non__uniform__cubic__splines.html#acc49f9cb45ee80ca8099bf0d34200efd" title="sll_m_advection_1d\l_non_uniform_cubic_splines\l::sll_f_new_advector_1d\l_non_uniform_cubic_splines" alt="" coords="520,5,725,76"/>
 </map>

@@ -1,7 +1,6 @@
 var searchData=
 [
-  ['add_5fsingle',['add_single',['../interfacesll__m__particle__mesh__coupling__base_1_1add__single.html',1,'sll_m_particle_mesh_coupling_base']]],
-  ['add_5fsingle',['add_single',['../interfacesll__m__pic__poisson__base_1_1add__single.html',1,'sll_m_pic_poisson_base']]],
+  ['add_5fsingle',['add_single',['../interfacesll__m__particle__mesh__coupling__base_1_1add__single.html',1,'add_single'],['../interfacesll__m__pic__poisson__base_1_1add__single.html',1,'add_single']]],
   ['add_5fsingle_5fpp',['add_single_pp',['../interfacesll__m__particle__mesh__coupling__base_1_1add__single__pp.html',1,'sll_m_particle_mesh_coupling_base']]],
   ['add_5fupdate',['add_update',['../interfacesll__m__particle__mesh__coupling__base_1_1add__update.html',1,'sll_m_particle_mesh_coupling_base']]],
   ['add_5fupdate_5fpp',['add_update_pp',['../interfacesll__m__particle__mesh__coupling__base_1_1add__update__pp.html',1,'sll_m_particle_mesh_coupling_base']]],

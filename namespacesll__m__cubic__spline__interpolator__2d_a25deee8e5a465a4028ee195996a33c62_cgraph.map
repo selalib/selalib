@@ -1,4 +1,0 @@
-<map id="interpolate_value_cs2d" name="interpolate_value_cs2d">
-<area shape="rect" id="node2" href="$namespacesll__m__cubic__splines.html#a0d31216c37255093306a326985bba610" title="Returns the interpolated value of the image of the point (x1,x2) using the spline decomposition store..." alt="" coords="208,5,347,61"/>
-<area shape="rect" id="node3" href="$namespacesll__m__cubic__splines.html#ab80965fe0af03954be7883b621079a50" title="sll_m_cubic_splines\l::interpolate_value_aux" alt="" coords="395,13,551,54"/>
-</map>

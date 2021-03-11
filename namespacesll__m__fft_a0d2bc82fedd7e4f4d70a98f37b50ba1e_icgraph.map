@@ -1,4 +1,4 @@
 <map id="sll_s_fft_init_c2c_2d" name="sll_s_fft_init_c2c_2d">
-<area shape="rect" id="node2" href="$namespacesll__m__nufft__interpolation.html#a9aea94bbee7bcc4ddbfc89f899a739a3" title="Allocate and initialize data and prepare the fft plan. " alt="" coords="195,13,357,54"/>
-<area shape="rect" id="node3" href="$namespacesll__m__nufft__interpolator__2d.html#a967aed16dcd2d34dd2dc3fddec44da8c" title="sll_m_nufft_interpolator\l_2d::sll_s_nufft_interpolator\l_2d_init" alt="" coords="405,5,588,61"/>
+<area shape="rect" id="node2" href="$namespacesll__m__nufft__interpolation.html#a9aea94bbee7bcc4ddbfc89f899a739a3" title="Allocate and initialize data and prepare the fft plan. " alt="" coords="205,13,389,54"/>
+<area shape="rect" id="node3" href="$namespacesll__m__nufft__interpolator__2d.html#a967aed16dcd2d34dd2dc3fddec44da8c" title="sll_m_nufft_interpolator\l_2d::sll_s_nufft_interpolator\l_2d_init" alt="" coords="437,5,640,61"/>
 </map>

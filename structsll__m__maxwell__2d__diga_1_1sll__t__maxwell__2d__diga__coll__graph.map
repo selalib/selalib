@@ -1,5 +1,5 @@
 <map id="sll_t_maxwell_2d_diga" name="sll_t_maxwell_2d_diga">
-<area shape="rect" id="node2" href="$structsll__m__maxwell__2d__diga_1_1cell__type.html" title="Information about a mesh cell. " alt="" coords="191,436,266,463"/>
-<area shape="rect" id="node4" href="$structsll__m__maxwell__2d__diga_1_1edge__type.html" title="Local type with edge properties. " alt="" coords="287,162,370,189"/>
-<area shape="rect" id="node6" href="$structsll__m__dg__fields_1_1sll__t__dg__field__2d.html" title="Object to describe field data with DG numerical method. " alt="" coords="27,162,145,189"/>
+<area shape="rect" id="node2" href="$structsll__m__maxwell__2d__diga_1_1cell__type.html" title="Information about a mesh cell. " alt="" coords="213,436,294,463"/>
+<area shape="rect" id="node4" href="$structsll__m__maxwell__2d__diga_1_1edge__type.html" title="Local type with edge properties. " alt="" coords="306,162,396,189"/>
+<area shape="rect" id="node6" href="$structsll__m__dg__fields_1_1sll__t__dg__field__2d.html" title="Object to describe field data with DG numerical method. " alt="" coords="24,162,155,189"/>
 </map>

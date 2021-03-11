@@ -1,11 +1,11 @@
 <map id="check_port" name="check_port">
-<area shape="rect" id="node2" href="$namespacesll__m__point__to__point__comms.html#a649d95ce15846973ed2e19fcf54b02fe" title="flip_buffer" alt="" coords="149,124,227,151"/>
-<area shape="rect" id="node3" href="$namespacesll__m__point__to__point__comms.html#a6848a4501521376f77d25cbcc09eb298" title="connect_ports" alt="" coords="320,35,424,61"/>
-<area shape="rect" id="node9" href="$namespacesll__m__point__to__point__comms.html#a9ab957ce92cafbb7e3e9c61c0cf5cdab" title="sll_f_get_buffer" alt="" coords="317,253,427,280"/>
-<area shape="rect" id="node10" href="$namespacesll__m__point__to__point__comms.html#ace7366fed79af3987767fde1b8184410" title="port_is_busy" alt="" coords="140,175,236,201"/>
-<area shape="rect" id="node6" href="$namespacesll__m__point__to__point__comms.html#afbd46fb55887ffc3108f4889148bffaa" title="sll_s_comm_send_real64" alt="" coords="287,85,457,112"/>
-<area shape="rect" id="node7" href="$namespacesll__m__point__to__point__comms.html#ac3b701c44660ce387e7c0e50adfa8c8f" title="sll_s_comm_receive\l_real64" alt="" coords="301,187,443,229"/>
-<area shape="rect" id="node8" href="$namespacesll__m__point__to__point__comms.html#ab6f3256ff8c0bbee51626a7603f7ef6d" title="sll_s_delete_comm_real64" alt="" coords="284,136,460,163"/>
-<area shape="rect" id="node4" href="$namespacesll__m__point__to__point__comms.html#aa4b49425a11d8400f4c4e1009ccd7064" title="sll_s_create_comm_real64_ring" alt="" coords="508,5,713,32"/>
-<area shape="rect" id="node5" href="$namespacesll__m__point__to__point__comms.html#a7dcb12c869cca4261dda441bbf9fea98" title="sll_s_configure_comm\l_real64_torus_2d" alt="" coords="535,57,687,98"/>
+<area shape="rect" id="node2" href="$namespacesll__m__point__to__point__comms.html#a649d95ce15846973ed2e19fcf54b02fe" title="flip_buffer" alt="" coords="155,124,242,151"/>
+<area shape="rect" id="node3" href="$namespacesll__m__point__to__point__comms.html#a6848a4501521376f77d25cbcc09eb298" title="connect_ports" alt="" coords="339,35,453,61"/>
+<area shape="rect" id="node9" href="$namespacesll__m__point__to__point__comms.html#a9ab957ce92cafbb7e3e9c61c0cf5cdab" title="sll_f_get_buffer" alt="" coords="335,253,457,280"/>
+<area shape="rect" id="node10" href="$namespacesll__m__point__to__point__comms.html#ace7366fed79af3987767fde1b8184410" title="port_is_busy" alt="" coords="147,175,251,201"/>
+<area shape="rect" id="node6" href="$namespacesll__m__point__to__point__comms.html#afbd46fb55887ffc3108f4889148bffaa" title="sll_s_comm_send_real64" alt="" coords="303,85,489,112"/>
+<area shape="rect" id="node7" href="$namespacesll__m__point__to__point__comms.html#ac3b701c44660ce387e7c0e50adfa8c8f" title="sll_s_comm_receive\l_real64" alt="" coords="319,187,473,229"/>
+<area shape="rect" id="node8" href="$namespacesll__m__point__to__point__comms.html#ab6f3256ff8c0bbee51626a7603f7ef6d" title="sll_s_delete_comm_real64" alt="" coords="299,136,493,163"/>
+<area shape="rect" id="node4" href="$namespacesll__m__point__to__point__comms.html#aa4b49425a11d8400f4c4e1009ccd7064" title="sll_s_create_comm_real64_ring" alt="" coords="541,5,768,32"/>
+<area shape="rect" id="node5" href="$namespacesll__m__point__to__point__comms.html#a7dcb12c869cca4261dda441bbf9fea98" title="sll_s_configure_comm\l_real64_torus_2d" alt="" coords="571,57,738,98"/>
 </map>

@@ -1,4 +1,4 @@
 <map id="initialize_buffer_real64" name="initialize_buffer_real64">
-<area shape="rect" id="node2" href="$namespacesll__m__point__to__point__comms.html#a99312be7b1a4279658bd79f47ef3fbe8" title="initialize_port_real64" alt="" coords="204,5,344,32"/>
-<area shape="rect" id="node3" href="$namespacesll__m__point__to__point__comms.html#aff7a33d6a808b2a568f361d4e68af697" title="sll_f_new_comm_real64" alt="" coords="392,5,555,32"/>
+<area shape="rect" id="node2" href="$namespacesll__m__point__to__point__comms.html#a99312be7b1a4279658bd79f47ef3fbe8" title="initialize_port_real64" alt="" coords="224,5,383,32"/>
+<area shape="rect" id="node3" href="$namespacesll__m__point__to__point__comms.html#aff7a33d6a808b2a568f361d4e68af697" title="sll_f_new_comm_real64" alt="" coords="431,5,609,32"/>
 </map>

@@ -1,6 +1,6 @@
 <map id="get_omp_world_size" name="get_omp_world_size">
-<area shape="rect" id="node2" href="$namespacefmempool.html#a4707b24c669b90d37b91cf1b31104d60" title="mp_init" alt="" coords="218,5,282,32"/>
-<area shape="rect" id="node3" href="$namespacefmempool.html#acaa47cfd5441f3e1cb2611a852dfea18" title="mp_finalize" alt="" coords="206,56,294,83"/>
-<area shape="rect" id="node4" href="$namespacefmempool.html#a23b26c974416200addfc443357e41ffe" title="mp_compactify" alt="" coords="195,107,305,133"/>
-<area shape="rect" id="node5" href="$namespacefmempool.html#a5a4760ec9ec1446f3d541d7ddaa3ea0a" title="mp_statistics" alt="" coords="200,157,300,184"/>
+<area shape="rect" id="node2" href="$namespacefmempool.html#a4707b24c669b90d37b91cf1b31104d60" title="mp_init" alt="" coords="234,5,305,32"/>
+<area shape="rect" id="node3" href="$namespacefmempool.html#acaa47cfd5441f3e1cb2611a852dfea18" title="mp_finalize" alt="" coords="221,56,318,83"/>
+<area shape="rect" id="node4" href="$namespacefmempool.html#a23b26c974416200addfc443357e41ffe" title="mp_compactify" alt="" coords="208,107,331,133"/>
+<area shape="rect" id="node5" href="$namespacefmempool.html#a5a4760ec9ec1446f3d541d7ddaa3ea0a" title="mp_statistics" alt="" coords="215,157,324,184"/>
 </map>

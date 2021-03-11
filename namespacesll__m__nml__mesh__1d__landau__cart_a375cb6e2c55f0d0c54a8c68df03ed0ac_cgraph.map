@@ -1,4 +1,4 @@
 <map id="s_nml_mesh_1d_landau_cart_mesh" name="s_nml_mesh_1d_landau_cart_mesh">
-<area shape="rect" id="node2" href="$namespacesll__m__cartesian__meshes.html#a81d2553ba3157ced2c6f46d9610899a2" title="allocates the memory space for a new 1D cartesian mesh on the heap, initializes it with the given arg..." alt="" coords="216,5,383,61"/>
-<area shape="rect" id="node3" href="$namespacesll__m__cartesian__meshes.html#a943354705d0bce883bb181425f75d040" title="Initializes a previously allocated 1D cartesian mesh object. " alt="" coords="431,5,597,61"/>
+<area shape="rect" id="node2" href="$namespacesll__m__cartesian__meshes.html#a81d2553ba3157ced2c6f46d9610899a2" title="allocates the memory space for a new 1D cartesian mesh on the heap, initializes it with the given arg..." alt="" coords="232,5,415,61"/>
+<area shape="rect" id="node3" href="$namespacesll__m__cartesian__meshes.html#a943354705d0bce883bb181425f75d040" title="Initializes a previously allocated 1D cartesian mesh object. " alt="" coords="463,5,645,61"/>
 </map>

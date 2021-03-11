@@ -1,4 +1,4 @@
 <map id="interpolate_derivatives_cs1d" name="interpolate_derivatives_cs1d">
-<area shape="rect" id="node2" href="$namespacesll__m__cubic__splines.html#a4953531ecad73351b9e8283670841403" title="returns the values of the derivatives evaluated at a collection of abscissae stored in the input 1D a..." alt="" coords="240,5,385,61"/>
-<area shape="rect" id="node3" href="$namespacesll__m__cubic__splines.html#a575c8a1996272528d087f3a83f79fccb" title="sll_m_cubic_splines\l::interpolate_derivative_aux" alt="" coords="433,13,615,54"/>
+<area shape="rect" id="node2" href="$namespacesll__m__cubic__splines.html#a872e8839340faa83e0513d849103b674" title="returns the values of the derivatives evaluated at a collection of abscissae stored in the input 1D a..." alt="" coords="264,5,425,61"/>
+<area shape="rect" id="node3" href="$namespacesll__m__cubic__splines.html#a575c8a1996272528d087f3a83f79fccb" title="sll_m_cubic_splines\l::interpolate_derivative_aux" alt="" coords="473,13,679,54"/>
 </map>

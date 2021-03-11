@@ -1,7 +1,7 @@
 <map id="sll_t_linear_operator_matrix_c1_block_new" name="sll_t_linear_operator_matrix_c1_block_new">
-<area shape="rect" id="node2" href="$structsll__m__linear__operator__base_1_1sll__c__linear__operator.html" title="sll_c_linear_operator" alt="" coords="5,116,147,143"/>
-<area shape="rect" id="node3" href="$structsll__m__linear__operator__matrix__stencil__to__dense__new_1_1sll__t__linear__operator__matrix__stencil__to__dense__new.html" title="sll_t_linear_operator\l_matrix_stencil_to_dense_new" alt="" coords="264,415,465,457"/>
-<area shape="rect" id="node6" href="$structsll__m__linear__operator__matrix__stencil__to__stencil_1_1sll__t__linear__operator__matrix__stencil__to__stencil.html" title="sll_t_linear_operator\l_matrix_stencil_to_stencil" alt="" coords="278,551,451,593"/>
-<area shape="rect" id="node7" href="$structsll__m__linear__operator__matrix__dense__to__stencil__new_1_1sll__t__linear__operator__matrix__dense__to__stencil__new.html" title="sll_t_linear_operator\l_matrix_dense_to_stencil_new" alt="" coords="264,333,465,374"/>
-<area shape="rect" id="node8" href="$structsll__m__linear__operator__matrix__dense__to__dense_1_1sll__t__linear__operator__matrix__dense__to__dense.html" title="sll_t_linear_operator\l_matrix_dense_to_dense" alt="" coords="281,158,448,199"/>
+<area shape="rect" id="node2" href="$structsll__m__linear__operator__base_1_1sll__c__linear__operator.html" title="sll_c_linear_operator" alt="" coords="5,116,163,143"/>
+<area shape="rect" id="node3" href="$structsll__m__linear__operator__matrix__stencil__to__dense__new_1_1sll__t__linear__operator__matrix__stencil__to__dense__new.html" title="sll_t_linear_operator\l_matrix_stencil_to_dense_new" alt="" coords="288,446,511,487"/>
+<area shape="rect" id="node6" href="$structsll__m__linear__operator__matrix__stencil__to__stencil_1_1sll__t__linear__operator__matrix__stencil__to__stencil.html" title="sll_t_linear_operator\l_matrix_stencil_to_stencil" alt="" coords="303,538,495,579"/>
+<area shape="rect" id="node7" href="$structsll__m__linear__operator__matrix__dense__to__stencil__new_1_1sll__t__linear__operator__matrix__dense__to__stencil__new.html" title="sll_t_linear_operator\l_matrix_dense_to_stencil_new" alt="" coords="288,334,511,375"/>
+<area shape="rect" id="node8" href="$structsll__m__linear__operator__matrix__dense__to__dense_1_1sll__t__linear__operator__matrix__dense__to__dense.html" title="sll_t_linear_operator\l_matrix_dense_to_dense" alt="" coords="307,158,491,199"/>
 </map>

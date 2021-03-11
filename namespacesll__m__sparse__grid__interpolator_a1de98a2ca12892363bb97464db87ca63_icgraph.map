@@ -1,7 +1,7 @@
 <map id="insert_recursive" name="insert_recursive">
-<area shape="rect" id="node2" href="$namespacesll__m__sparse__grid__interpolator.html#a480541723892aac41a1d4802a693b61d" title="insert_periodic" alt="" coords="168,46,275,73"/>
-<area shape="rect" id="node3" href="$namespacesll__m__sparse__grid__interpolator.html#abde63630cfb91242fb29f6d8919a9ef8" title="interpolate_disp_1d\l_periodic" alt="" coords="323,5,457,47"/>
-<area shape="rect" id="node6" href="$namespacesll__m__sparse__grid__interpolator.html#a8b0c0e3ebd2c137d714e8d845b4595ca" title="interpolate_disp_1d\l_periodic_self" alt="" coords="323,71,457,112"/>
-<area shape="rect" id="node4" href="$namespacesll__m__sparse__grid__interpolator.html#a27497afcda9d0024745a848b26449a4d" title="interpolate_disp_recursive" alt="" coords="505,13,679,39"/>
-<area shape="rect" id="node5" href="$namespacesll__m__sparse__grid__interpolator.html#ada6560fddb123d6ef7b00b5397918de2" title="interpolate_disp" alt="" coords="727,13,840,39"/>
+<area shape="rect" id="node2" href="$namespacesll__m__sparse__grid__interpolator.html#a480541723892aac41a1d4802a693b61d" title="insert_periodic" alt="" coords="180,46,299,73"/>
+<area shape="rect" id="node3" href="$namespacesll__m__sparse__grid__interpolator.html#abde63630cfb91242fb29f6d8919a9ef8" title="interpolate_disp_1d\l_periodic" alt="" coords="347,5,497,47"/>
+<area shape="rect" id="node6" href="$namespacesll__m__sparse__grid__interpolator.html#a8b0c0e3ebd2c137d714e8d845b4595ca" title="interpolate_disp_1d\l_periodic_self" alt="" coords="347,71,497,112"/>
+<area shape="rect" id="node4" href="$namespacesll__m__sparse__grid__interpolator.html#a27497afcda9d0024745a848b26449a4d" title="interpolate_disp_recursive" alt="" coords="545,13,740,39"/>
+<area shape="rect" id="node5" href="$namespacesll__m__sparse__grid__interpolator.html#ada6560fddb123d6ef7b00b5397918de2" title="interpolate_disp" alt="" coords="788,13,915,39"/>
 </map>

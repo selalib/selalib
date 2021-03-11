@@ -1,8 +1,6 @@
 <map id="control_variate" name="control_variate">
-<area shape="rect" id="node2" href="$namespacesll__m__particle__sampling__interface.html#a51338b577137ecd2be8f8c26e464c665" title="sll_m_particle_sampling\l_interface::set_total\l_charge" alt="" coords="179,5,340,61"/>
-<area shape="rect" id="node3" href="$namespacesll__m__operator__splitting__pic__vp__2d2v.html#aa3f6cb5d82d703fa071c26943427a49a" title="sll_m_operator_splitting\l_pic_vp_2d2v::field_solver\l_vp_2d2v" alt="" coords="171,85,347,141"/>
-<area shape="rect" id="node4" href="$namespacesll__m__operator__splitting__pic__vp__2d2v.html#aa12c70b330be30b30e2ee8bb33ec4197" title="Destructor. " alt="" coords="160,165,359,221"/>
-<area shape="rect" id="node5" href="$sll__pif__general_8_f90.html#a2f3e44eee6a2692d40046b681d18b508" title="update_weight" alt="" coords="206,245,313,272"/>
-<area shape="rect" id="node6" href="$sll__pif__general_8_f90.html#aa49ff733438912b6660be1b8e95eefbb" title="symplectic_rungekutta" alt="" coords="407,245,560,272"/>
-<area shape="rect" id="node7" href="$sll__pif__general_8_f90.html#a5644387f046c7037e67670471428e232" title="sll_pif_general" alt="" coords="608,245,713,272"/>
+<area shape="rect" id="node2" href="$namespacesll__m__operator__splitting__pic__vp__2d2v.html#aa12c70b330be30b30e2ee8bb33ec4197" title="Destructor. " alt="" coords="173,5,393,61"/>
+<area shape="rect" id="node3" href="$sll__pif__general_8_f90.html#a2f3e44eee6a2692d40046b681d18b508" title="update_weight" alt="" coords="224,85,343,112"/>
+<area shape="rect" id="node4" href="$sll__pif__general_8_f90.html#aa49ff733438912b6660be1b8e95eefbb" title="symplectic_rungekutta" alt="" coords="441,85,612,112"/>
+<area shape="rect" id="node5" href="$sll__pif__general_8_f90.html#a5644387f046c7037e67670471428e232" title="sll_pif_general" alt="" coords="660,85,777,112"/>
 </map>

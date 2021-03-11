@@ -1,4 +1,4 @@
 <map id="sll_c_poisson_1d_base" name="sll_c_poisson_1d_base">
-<area shape="rect" id="node2" href="$structsll__m__poisson__1d__hmf_1_1sll__t__poisson__1d__hmf.html" title="Implementation of the poisson 1d solver for the Vlasov&#45;HMF model. " alt="" coords="5,80,153,107"/>
-<area shape="rect" id="node3" href="$structsll__m__poisson__1d__periodic_1_1sll__c__poisson__1d__periodic.html" title="sll_c_poisson_1d_periodic" alt="" coords="177,80,352,107"/>
+<area shape="rect" id="node2" href="$structsll__m__poisson__1d__hmf_1_1sll__t__poisson__1d__hmf.html" title="Implementation of the poisson 1d solver for the Vlasov&#45;HMF model. " alt="" coords="5,80,168,107"/>
+<area shape="rect" id="node3" href="$structsll__m__poisson__1d__periodic_1_1sll__c__poisson__1d__periodic.html" title="sll_c_poisson_1d_periodic" alt="" coords="193,80,383,107"/>
 </map>

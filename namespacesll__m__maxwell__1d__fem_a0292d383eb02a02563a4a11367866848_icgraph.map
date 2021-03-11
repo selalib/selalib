@@ -1,8 +1,8 @@
 <map id="solve_circulant" name="solve_circulant">
-<area shape="rect" id="node2" href="$namespacesll__m__maxwell__1d__fem.html#a47196627859f2c2d812ad68b15d300fb" title="compute Ey from Bz using weak Ampere formulation " alt="" coords="175,5,329,47"/>
-<area shape="rect" id="node3" href="$namespacesll__m__maxwell__1d__fem.html#a35f67335e750d8c00872ac2599d5bfbe" title="Compute E_i from j_i integrated over the time interval using weak Ampere formulation. " alt="" coords="163,71,341,98"/>
-<area shape="rect" id="node4" href="$namespacesll__m__maxwell__1d__fem.html#aaeeec4271a275e01eeb77df71a32532c" title="sll_s_compute_e_from\l_rho_1d_fem" alt="" coords="175,123,329,164"/>
-<area shape="rect" id="node5" href="$namespacesll__m__maxwell__1d__fem.html#af92aa77aac30fa9ad87a4cf10cb88ceb" title="Compute the L2 projection of a given function f on periodic splines of given degree. " alt="" coords="183,189,321,215"/>
-<area shape="rect" id="node6" href="$namespacesll__m__maxwell__1d__fem.html#abfc2b83c57927e44075c5d11b8949235" title="Compute square of the L2norm. " alt="" coords="170,239,334,266"/>
-<area shape="rect" id="node7" href="$namespacesll__m__maxwell__1d__fem.html#ad6fcfa748c66b9c8573c36a4a38b53c0" title="inner_product_1d_fem" alt="" coords="177,290,327,317"/>
+<area shape="rect" id="node2" href="$namespacesll__m__maxwell__1d__fem.html#a47196627859f2c2d812ad68b15d300fb" title="compute Ey from Bz using weak Ampere formulation " alt="" coords="189,5,357,47"/>
+<area shape="rect" id="node3" href="$namespacesll__m__maxwell__1d__fem.html#a35f67335e750d8c00872ac2599d5bfbe" title="Compute E_i from j_i integrated over the time interval using weak Ampere formulation. " alt="" coords="173,71,372,98"/>
+<area shape="rect" id="node4" href="$namespacesll__m__maxwell__1d__fem.html#aaeeec4271a275e01eeb77df71a32532c" title="sll_s_compute_e_from\l_rho_1d_fem" alt="" coords="189,123,357,164"/>
+<area shape="rect" id="node5" href="$namespacesll__m__maxwell__1d__fem.html#af92aa77aac30fa9ad87a4cf10cb88ceb" title="Compute the L2 projection of a given function f on periodic splines of given degree. " alt="" coords="195,189,350,215"/>
+<area shape="rect" id="node6" href="$namespacesll__m__maxwell__1d__fem.html#a297e5091887d7400c744050d772749d6" title="Compute square of the L2norm. " alt="" coords="181,239,364,266"/>
+<area shape="rect" id="node7" href="$namespacesll__m__maxwell__1d__fem.html#aa1244c81bbfc9976cbfcfd84dd0a1b25" title="inner_product_1d_fem" alt="" coords="189,290,356,317"/>
 </map>

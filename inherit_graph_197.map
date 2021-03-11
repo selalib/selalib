@@ -1,5 +1,4 @@
 <map id="Graphical Class Hierarchy" name="Graphical Class Hierarchy">
-<area shape="rect" id="node1" href="$structsll__m__ellipt__2d__fem__sps__weak__form_1_1sll__c__ellipt__2d__fem__sps__weak__form.html" title="sll_c_ellipt_2d_fem\l_sps_weak_form" alt="" coords="5,39,139,80"/>
-<area shape="rect" id="node2" href="$structsll__m__poisson__2d__fem__sps__weak__form_1_1sll__t__poisson__2d__fem__sps__weak__form.html" title="sll_t_poisson_2d_fem\l_sps_weak_form" alt="" coords="188,5,336,47"/>
-<area shape="rect" id="node3" href="$structsll__m__qn__solver__2d__fem__sps__weak__form_1_1sll__t__qn__solver__2d__fem__sps__weak__form.html" title="sll_t_qn_solver_2d\l_fem_sps_weak_form" alt="" coords="187,71,337,112"/>
+<area shape="rect" id="node1" href="$structsll__m__initial__distribution_1_1sll__c__distribution__params.html" title="Abstract data type for parameters of initial distribution. " alt="" coords="5,5,137,47"/>
+<area shape="rect" id="node2" href="$structsll__m__initial__distribution_1_1sll__t__params__cos__gaussian.html" title="Data type for distribution function with (multiple) Gaussians in v and one plus cosine perturbations ..." alt="" coords="185,13,384,39"/>
 </map>

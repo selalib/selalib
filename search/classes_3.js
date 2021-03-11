@@ -2,11 +2,7 @@ var searchData=
 [
   ['data_5f4d_5fptr',['data_4d_ptr',['../structsll__m__distribution__function__4d__multipatch_1_1data__4d__ptr.html',1,'sll_m_distribution_function_4d_multipatch']]],
   ['decomposition_5flocal_5f6d',['decomposition_local_6d',['../structsll__m__decomposition_1_1decomposition__local__6d.html',1,'sll_m_decomposition']]],
-  ['delete',['delete',['../interfacesll__m__lagrange__interpolation__1d_1_1delete.html',1,'sll_m_lagrange_interpolation_1d']]],
-  ['delete',['delete',['../interfacesll__m__scalar__field__1d_1_1delete.html',1,'sll_m_scalar_field_1d']]],
-  ['delete',['delete',['../interfacesll__m__mumps_1_1delete.html',1,'sll_m_mumps']]],
-  ['delete',['delete',['../interfacesll__m__paralution_1_1delete.html',1,'sll_m_paralution']]],
-  ['delete',['delete',['../interfacesll__m__pastix_1_1delete.html',1,'sll_m_pastix']]],
+  ['delete',['delete',['../interfacesll__m__lagrange__interpolation__1d_1_1delete.html',1,'delete'],['../interfacesll__m__mumps_1_1delete.html',1,'delete'],['../interfacesll__m__paralution_1_1delete.html',1,'delete'],['../interfacesll__m__pastix_1_1delete.html',1,'delete'],['../interfacesll__m__scalar__field__1d_1_1delete.html',1,'delete']]],
   ['delete_5finterpolator_5f2d',['delete_interpolator_2d',['../interfacesll__m__interpolators__2d__base_1_1delete__interpolator__2d.html',1,'sll_m_interpolators_2d_base']]],
   ['delete_5fmesh_5f1d',['delete_mesh_1d',['../interfacesll__m__meshes__base_1_1delete__mesh__1d.html',1,'sll_m_meshes_base']]],
   ['delete_5fmesh_5f2d',['delete_mesh_2d',['../interfacesll__m__meshes__base_1_1delete__mesh__2d.html',1,'sll_m_meshes_base']]],

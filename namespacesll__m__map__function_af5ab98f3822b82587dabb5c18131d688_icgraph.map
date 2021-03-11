@@ -1,5 +1,5 @@
 <map id="sll_s_map" name="sll_s_map">
-<area shape="rect" id="node2" href="$namespacesll__m__lobalap.html#a8b5820fa5df80cd8ffe0d44fc934a33f" title="sll_m_lobalap::build_mesh" alt="" coords="135,20,309,47"/>
-<area shape="rect" id="node3" href="$namespacesll__m__lobalap.html#adbbffd4923326de94ac0f93c76aa3fe3" title="sll_m_lobalap::sll\l_s_init" alt="" coords="357,13,480,54"/>
-<area shape="rect" id="node4" href="$namespacesll__m__lobatto__poisson.html#ade8d9828f8cfb56297d7d3ca1c09809e" title="sll_m_lobatto_poisson\l::initialize_lobatto\l_poisson" alt="" coords="528,5,679,61"/>
+<area shape="rect" id="node2" href="$namespacesll__m__lobalap.html#a8b5820fa5df80cd8ffe0d44fc934a33f" title="sll_m_lobalap::build_mesh" alt="" coords="140,20,335,47"/>
+<area shape="rect" id="node3" href="$namespacesll__m__lobalap.html#adbbffd4923326de94ac0f93c76aa3fe3" title="sll_m_lobalap::sll\l_s_init" alt="" coords="383,13,517,54"/>
+<area shape="rect" id="node4" href="$namespacesll__m__lobatto__poisson.html#ade8d9828f8cfb56297d7d3ca1c09809e" title="sll_m_lobatto_poisson\l::initialize_lobatto\l_poisson" alt="" coords="565,5,732,61"/>
 </map>

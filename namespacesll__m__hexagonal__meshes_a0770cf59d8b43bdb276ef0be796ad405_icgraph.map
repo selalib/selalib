@@ -1,4 +1,4 @@
 <map id="sll_s_get_triangle_index" name="sll_s_get_triangle_index">
-<area shape="rect" id="node2" href="$namespacesll__m__interpolation__hex__hermite.html#a9c14ed4e8a770ba4a9e08cad03cc614f" title="sll_m_interpolation\l_hex_hermite::sll_s\l_hermite_interpolation" alt="" coords="176,5,325,61"/>
-<area shape="rect" id="node3" href="$namespacesll__m__hexagonal__meshes.html#a5f174ae37e2084780d052402428340f8" title="returns the indices of the neighbouring cells/triangles " alt="" coords="195,85,306,112"/>
+<area shape="rect" id="node2" href="$namespacesll__m__interpolation__hex__hermite.html#a9c14ed4e8a770ba4a9e08cad03cc614f" title="sll_m_interpolation\l_hex_hermite::sll_s\l_hermite_interpolation" alt="" coords="189,5,360,61"/>
+<area shape="rect" id="node3" href="$namespacesll__m__hexagonal__meshes.html#a5f174ae37e2084780d052402428340f8" title="returns the indices of the neighbouring cells/triangles " alt="" coords="213,85,336,112"/>
 </map>

@@ -1,5 +1,4 @@
 var searchData=
 [
-  ['r1',['R1',['../sll__m__geometry__functions_8_f90.html#a918f64eb53db8e8dc694f36a87646476',1,'sll_m_geometry_functions.F90']]],
-  ['r2',['R2',['../sll__m__geometry__functions_8_f90.html#a7a255a2815b9453060f51c6eb22cfed8',1,'sll_m_geometry_functions.F90']]]
+  ['test_5fpresence_5fand_5fassign_5fval',['TEST_PRESENCE_AND_ASSIGN_VAL',['../sll__m__cartesian__meshes_8_f90.html#ad42fcfbef5b7c9cf9cc15dc9967ea541',1,'sll_m_cartesian_meshes.F90']]]
 ];

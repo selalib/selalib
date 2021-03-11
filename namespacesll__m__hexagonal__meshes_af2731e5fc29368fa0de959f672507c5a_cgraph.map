@@ -1,5 +1,5 @@
 <map id="sll_s_get_edge_index" name="sll_s_get_edge_index">
-<area shape="rect" id="node2" href="$namespacesll__m__hexagonal__meshes.html#af2ad9a5ed18f26e97513930ee9793370" title="Transform hexagonal coordinates to global index. " alt="" coords="200,31,303,57"/>
-<area shape="rect" id="node3" href="$namespacesll__m__hexagonal__meshes.html#a8bed234b81efa9e2e353c3f594c104e3" title="Computes the number of cell from point to origin. " alt="" coords="353,5,489,32"/>
-<area shape="rect" id="node4" href="$namespacesll__m__hexagonal__meshes.html#a47f7a419f8f8904d408ad3a630612ee4" title="Finds the index in the global array of the point which coordinates where passed as parameter..." alt="" coords="351,56,491,83"/>
+<area shape="rect" id="node2" href="$namespacesll__m__hexagonal__meshes.html#a4f66e0c718eda16377ca26d5c95b419f" title="Transform hexagonal coordinates to global index. " alt="" coords="215,31,328,57"/>
+<area shape="rect" id="node3" href="$namespacesll__m__hexagonal__meshes.html#a8bed234b81efa9e2e353c3f594c104e3" title="Computes the number of cell from point to origin. " alt="" coords="379,5,529,32"/>
+<area shape="rect" id="node4" href="$namespacesll__m__hexagonal__meshes.html#a47f7a419f8f8904d408ad3a630612ee4" title="Finds the index in the global array of the point which coordinates where passed as parameter..." alt="" coords="376,56,532,83"/>
 </map>

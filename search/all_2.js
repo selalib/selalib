@@ -1,6 +1,6 @@
 var searchData=
 [
-  ['b',['b',['../structsll__m__poisson__2d__fem__sps__dense_1_1sll__t__poisson__2d__fem__sps__dense.html#a127c6e525d500c2f17b6ef2d119fb754',1,'sll_m_poisson_2d_fem_sps_dense::sll_t_poisson_2d_fem_sps_dense::b()'],['../sll__m__geometry__functions_8_f90.html#a111da81ae5883147168bbb8366377b10',1,'B():&#160;sll_m_geometry_functions.F90'],['../sll__m__geometry__functions_8_f90.html#a111da81ae5883147168bbb8366377b10',1,'B():&#160;sll_m_geometry_functions.F90']]],
+  ['b',['b',['../structsll__m__poisson__2d__fem__sps__dense_1_1sll__t__poisson__2d__fem__sps__dense.html#a127c6e525d500c2f17b6ef2d119fb754',1,'sll_m_poisson_2d_fem_sps_dense::sll_t_poisson_2d_fem_sps_dense']]],
   ['b1',['B1',['../sll__m__geometry__functions_8_f90.html#a7b21d6a6a4573b4997b1f04b01cd4efb',1,'sll_m_geometry_functions.F90']]],
   ['b2',['B2',['../sll__m__geometry__functions_8_f90.html#a6945d50f798e1fde624d70c74457090e',1,'sll_m_geometry_functions.F90']]],
   ['backward_5ffd_5f5pt',['backward_fd_5pt',['../namespacesll__m__arbitrary__degree__spline__interpolator__1d.html#ace10701625bc9f222aac03751043d1f8',1,'sll_m_arbitrary_degree_spline_interpolator_1d']]],

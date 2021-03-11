@@ -1,8 +1,8 @@
 <map id="insert_recursive_fourier" name="insert_recursive_fourier">
-<area shape="rect" id="node2" href="$namespacesll__m__sparse__grid__interpolator.html#aad904cb37ec386510d3f63b8818ba2a1" title="insert_fourier" alt="" coords="211,107,308,133"/>
-<area shape="rect" id="node3" href="$namespacesll__m__sparse__grid__interpolator.html#aed35bcf2b06e817253fd75cdeeb0f63e" title="Compute Fourier coefficients on sparse grid along dimension dim. " alt="" coords="375,5,489,32"/>
-<area shape="rect" id="node4" href="$namespacesll__m__sparse__grid__interpolator.html#a756b07ef8bb7237d4ba19d1532a8fa26" title="Complex version of ToHierarchical1d_comp. " alt="" coords="356,56,508,83"/>
-<area shape="rect" id="node5" href="$namespacesll__m__sparse__grid__interpolator.html#a939b2cd02adba4b67a52b65dbb4a79ab" title="tohira1d" alt="" coords="398,107,466,133"/>
-<area shape="rect" id="node6" href="$namespacesll__m__sparse__grid__interpolator.html#af0b2f6f3a60fd454f62ea1d2158da770" title="todehi1d" alt="" coords="397,157,467,184"/>
-<area shape="rect" id="node7" href="$namespacesll__m__sparse__grid__interpolator.html#a906d1565abb9f4fc4d7f82d622d9f9b2" title="displace1d" alt="" coords="390,208,474,235"/>
+<area shape="rect" id="node2" href="$namespacesll__m__sparse__grid__interpolator.html#aad904cb37ec386510d3f63b8818ba2a1" title="insert_fourier" alt="" coords="229,107,339,133"/>
+<area shape="rect" id="node3" href="$namespacesll__m__sparse__grid__interpolator.html#aed35bcf2b06e817253fd75cdeeb0f63e" title="Compute Fourier coefficients on sparse grid along dimension dim. " alt="" coords="409,5,535,32"/>
+<area shape="rect" id="node4" href="$namespacesll__m__sparse__grid__interpolator.html#a756b07ef8bb7237d4ba19d1532a8fa26" title="Complex version of ToHierarchical1d_comp. " alt="" coords="387,56,557,83"/>
+<area shape="rect" id="node5" href="$namespacesll__m__sparse__grid__interpolator.html#a939b2cd02adba4b67a52b65dbb4a79ab" title="tohira1d" alt="" coords="434,107,510,133"/>
+<area shape="rect" id="node6" href="$namespacesll__m__sparse__grid__interpolator.html#af0b2f6f3a60fd454f62ea1d2158da770" title="todehi1d" alt="" coords="433,157,511,184"/>
+<area shape="rect" id="node7" href="$namespacesll__m__sparse__grid__interpolator.html#a906d1565abb9f4fc4d7f82d622d9f9b2" title="displace1d" alt="" coords="426,208,518,235"/>
 </map>

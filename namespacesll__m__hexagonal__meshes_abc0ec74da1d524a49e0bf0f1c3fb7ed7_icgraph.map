@@ -1,7 +1,7 @@
 <map id="init_center_points_triangle" name="init_center_points_triangle">
-<area shape="rect" id="node2" href="$namespacesll__m__hexagonal__meshes.html#a9384fd0ae5d59bb61739f9814a391007" title="initializes a previously allocated 2d hex&#45;mesh " alt="" coords="177,13,339,39"/>
-<area shape="rect" id="node3" href="$namespacesll__m__hexagonal__meshes.html#aaa2262794e099a011cb267f899c82b15" title="Creates and initializes a new hexagonal mesh. " alt="" coords="387,13,552,39"/>
-<area shape="rect" id="node4" href="$namespacesll__m__fekete__integration.html#adceb8456a1011a2bb4dcecfd28374463" title="This function is supposed to write all django input files needed for a Django/Jorek simulation..." alt="" coords="1016,5,1204,47"/>
-<area shape="rect" id="node5" href="$namespacesll__m__box__splines.html#a0f40714993a4e4bdcf19d5798130ae75" title="Computes the values or derivatives of box splines. " alt="" coords="600,35,757,76"/>
-<area shape="rect" id="node6" href="$namespacesll__m__fekete__integration.html#ac7c05ae36ac69d55d2c022d71e82cae9" title="Writes on a file values of boxsplines on fekete points. " alt="" coords="805,35,968,76"/>
+<area shape="rect" id="node2" href="$namespacesll__m__hexagonal__meshes.html#a9384fd0ae5d59bb61739f9814a391007" title="initializes a previously allocated 2d hex&#45;mesh " alt="" coords="192,13,368,39"/>
+<area shape="rect" id="node3" href="$namespacesll__m__hexagonal__meshes.html#aaa2262794e099a011cb267f899c82b15" title="Creates and initializes a new hexagonal mesh. " alt="" coords="416,13,596,39"/>
+<area shape="rect" id="node4" href="$namespacesll__m__fekete__integration.html#adceb8456a1011a2bb4dcecfd28374463" title="This function is supposed to write all django input files needed for a Django/Jorek simulation..." alt="" coords="1099,5,1305,47"/>
+<area shape="rect" id="node5" href="$namespacesll__m__box__splines.html#a0f40714993a4e4bdcf19d5798130ae75" title="Computes the values or derivatives of box splines. " alt="" coords="644,35,819,76"/>
+<area shape="rect" id="node6" href="$namespacesll__m__fekete__integration.html#ac7c05ae36ac69d55d2c022d71e82cae9" title="Writes on a file values of boxsplines on fekete points. " alt="" coords="867,35,1051,76"/>
 </map>

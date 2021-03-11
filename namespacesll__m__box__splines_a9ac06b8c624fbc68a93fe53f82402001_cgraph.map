@@ -1,9 +1,9 @@
 <map id="non_zeros_splines" name="non_zeros_splines">
-<area shape="rect" id="node2" href="$namespacesll__m__hexagonal__meshes.html#aa579f5999884452ce000e206a88dc6b7" title="Returns indices of the edges of a given cell. " alt="" coords="184,71,384,112"/>
-<area shape="rect" id="node8" href="$namespacesll__m__hexagonal__meshes.html#aacac8215a02ea6ec5ac3b80a47f378f3" title="Transforms local index in a given reference local indexation to a global index from the mesh..." alt="" coords="198,136,370,177"/>
-<area shape="rect" id="node3" href="$namespacesll__m__hexagonal__meshes.html#a066138062e95dab8690eb6e889dfe769" title="Transform cartesian coordinates to 1st hexagonal coordinates. " alt="" coords="432,5,604,47"/>
-<area shape="rect" id="node4" href="$namespacesll__m__hexagonal__meshes.html#aa108ce30c3a8af1414fbfeba3420d493" title="Transform cartesian coordinates to 2ndst hexagonal coordinates. " alt="" coords="432,71,604,112"/>
-<area shape="rect" id="node5" href="$namespacesll__m__hexagonal__meshes.html#af2ad9a5ed18f26e97513930ee9793370" title="Transform hexagonal coordinates to global index. " alt="" coords="432,136,604,177"/>
-<area shape="rect" id="node6" href="$namespacesll__m__hexagonal__meshes.html#a8bed234b81efa9e2e353c3f594c104e3" title="Computes the number of cell from point to origin. " alt="" coords="652,103,824,144"/>
-<area shape="rect" id="node7" href="$namespacesll__m__hexagonal__meshes.html#a47f7a419f8f8904d408ad3a630612ee4" title="Finds the index in the global array of the point which coordinates where passed as parameter..." alt="" coords="652,168,824,209"/>
+<area shape="rect" id="node2" href="$namespacesll__m__hexagonal__meshes.html#aa579f5999884452ce000e206a88dc6b7" title="Returns indices of the edges of a given cell. " alt="" coords="195,71,413,112"/>
+<area shape="rect" id="node8" href="$namespacesll__m__hexagonal__meshes.html#a36ffefac7d07203fe1143c726e6e5098" title="Transforms local index in a given reference local indexation to a global index from the mesh..." alt="" coords="209,136,399,177"/>
+<area shape="rect" id="node3" href="$namespacesll__m__hexagonal__meshes.html#aa03f58c798d529ebb1b9d0f03b712035" title="Transform cartesian coordinates to 1st hexagonal coordinates. " alt="" coords="461,5,652,47"/>
+<area shape="rect" id="node4" href="$namespacesll__m__hexagonal__meshes.html#a8e973ce50cda93bfa411d78cff346741" title="Transform cartesian coordinates to 2ndst hexagonal coordinates. " alt="" coords="461,71,652,112"/>
+<area shape="rect" id="node5" href="$namespacesll__m__hexagonal__meshes.html#a4f66e0c718eda16377ca26d5c95b419f" title="Transform hexagonal coordinates to global index. " alt="" coords="461,136,652,177"/>
+<area shape="rect" id="node6" href="$namespacesll__m__hexagonal__meshes.html#a8bed234b81efa9e2e353c3f594c104e3" title="Computes the number of cell from point to origin. " alt="" coords="700,103,891,144"/>
+<area shape="rect" id="node7" href="$namespacesll__m__hexagonal__meshes.html#a47f7a419f8f8904d408ad3a630612ee4" title="Finds the index in the global array of the point which coordinates where passed as parameter..." alt="" coords="700,168,891,209"/>
 </map>
