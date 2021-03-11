@@ -1,15 +1,17 @@
-IF(HDF5_ENABLED AND HDF5_PARALLEL_ENABLED AND HDF5_IS_PARALLEL)
-  ADD_EXECUTABLE( test_parallel_array_initializer 
-    test_parallel_array_initializer.F90 
-    m_parallel_array_output.F90 )
+if(HDF5_ENABLED
+   AND HDF5_PARALLEL_ENABLED
+   AND HDF5_IS_PARALLEL)
+  add_executable(
+    test_parallel_array_initializer test_parallel_array_initializer.F90
+                                    m_parallel_array_output.F90)
 
-  TARGET_LINK_LIBRARIES( test_parallel_array_initializer 
-                         sll_parallel_array_utilities )
+  target_link_libraries(test_parallel_array_initializer
+                        sll_parallel_array_utilities)
 
-  SET( ARGS " " )
-  ADD_MPI_TEST( parallel_array_initializers 
-    test_parallel_array_initializer ${PROCS} ${ARGS} )
-  SET_TESTS_PROPERTIES( parallel_array_initializers
-    PROPERTIES PASS_REGULAR_EXPRESSION "PASSED" )
+  set(ARGS " ")
+  add_mpi_test(parallel_array_initializers test_parallel_array_initializer
+               ${PROCS} ${ARGS})
+  set_tests_properties(parallel_array_initializers
+                       PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
 
-ENDIF()
+endif()

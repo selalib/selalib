@@ -1,6 +1,6 @@
-SET( PRECISION_SRC sll_m_working_precision.F90 )
-ADD_LIBRARY( sll_working_precision STATIC ${PRECISION_SRC} )
+set(PRECISION_SRC sll_m_working_precision.F90)
+add_library(sll_working_precision STATIC ${PRECISION_SRC})
 
-IF(BUILD_TESTING)
-  ADD_SUBDIRECTORY(testing)
-ENDIF(BUILD_TESTING)
+if(BUILD_TESTING)
+  add_subdirectory(testing)
+endif(BUILD_TESTING)

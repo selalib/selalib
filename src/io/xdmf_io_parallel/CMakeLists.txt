@@ -1,12 +1,11 @@
-SET( LIB sll_xdmf_io_parallel )
-SET( SRC sll_xdmf_io_parallel.F90 sll_m_xdmf_light_parallel.F90 )
-SET( DEP sll_xdmf_io sll_collective )
+set(LIB sll_xdmf_io_parallel)
+set(SRC sll_xdmf_io_parallel.F90 sll_m_xdmf_light_parallel.F90)
+set(DEP sll_xdmf_io sll_collective)
 
-ADD_LIBRARY( ${LIB} STATIC ${SRC} )
-TARGET_LINK_LIBRARIES( ${LIB} ${DEP} )
+add_library(${LIB} STATIC ${SRC})
+target_link_libraries(${LIB} ${DEP})
 
 # Tests
-IF( BUILD_TESTING )
-  ADD_SUBDIRECTORY( testing )
-ENDIF( BUILD_TESTING )
-
+if(BUILD_TESTING)
+  add_subdirectory(testing)
+endif(BUILD_TESTING)
