@@ -7,13 +7,8 @@
 
 set(pic_opt_initializers_files sll_m_particle_initializers_6d.F90)
 
-if(PGI)
-  list(APPEND pic_opt_initializers_files sll_m_particle_initializers_4d_pgi.F90
-       sll_m_particle_initializers_2d_pgi.F90)
-else(PGI)
-  list(APPEND pic_opt_initializers_files sll_m_particle_initializers_4d.F90
-       sll_m_particle_initializers_2d.F90)
-endif(PGI)
+list(APPEND pic_opt_initializers_files sll_m_particle_initializers_4d.F90
+     sll_m_particle_initializers_2d.F90)
 
 add_library(sll_pic_opt_initializers STATIC ${pic_opt_initializers_files})
 
