@@ -1,8 +1,0 @@
-<map id="sll_s_solve_general_coordinates_elliptic_eq_mp" name="sll_s_solve_general_coordinates_elliptic_eq_mp">
-<area shape="rect" id="node1" title="Assemble the matrix for elliptic solver." alt="" coords="5,14,212,55"/>
-<area shape="rect" id="node2" href="$namespacesll__m__sparse__matrix.html#a69a0ac919303b6063ba71c7e4f31137d" title=" " alt="" coords="1109,7,1281,63"/>
-<area shape="rect" id="node3" href="$namespacesll__m__general__coordinate__elliptic__solver__multipatch.html#ad586304ed7ac38e61ea43cf18d2ca0c1" title=" " alt="" coords="260,47,444,73"/>
-<area shape="rect" id="node4" href="$namespacesll__m__general__coordinate__elliptic__solver__multipatch.html#acb2419ac4636b43343b2c695498a516e" title=" " alt="" coords="492,43,631,85"/>
-<area shape="rect" id="node5" href="$namespacesll__m__sparse__matrix.html#a7d5478ffad5dfe54e84b5c4d203f380f" title=" " alt="" coords="679,43,856,85"/>
-<area shape="rect" id="node6" href="$namespacesll__m__sparse__matrix.html#a468090b4b06aeafdea056c08b63a72ef" title=" " alt="" coords="904,43,1061,85"/>
-</map>

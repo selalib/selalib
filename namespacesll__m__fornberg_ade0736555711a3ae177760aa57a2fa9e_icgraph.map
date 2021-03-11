@@ -1,6 +1,0 @@
-<map id="sll_s_populate_weights" name="sll_s_populate_weights">
-<area shape="rect" id="node1" title=" " alt="" coords="649,20,823,47"/>
-<area shape="rect" id="node2" href="$namespacesll__m__fornberg.html#a8c30422f89d4b1e746ae7959b2eba62f" title="Apply finite difference formula to compute derivative." alt="" coords="487,20,601,47"/>
-<area shape="rect" id="node3" href="$namespacesll__m__arbitrary__degree__spline__interpolator__1d.html#a21219bee7615ea3541b36b15663b223e" title=" " alt="" coords="264,5,439,61"/>
-<area shape="rect" id="node4" href="$namespacesll__m__arbitrary__degree__spline__interpolator__1d.html#aced91e0600d4237678d1e908a6fce316" title="computing the coefficients spline with a given data_array 1D cooresponding at the values of a functio..." alt="" coords="5,5,216,61"/>
-</map>

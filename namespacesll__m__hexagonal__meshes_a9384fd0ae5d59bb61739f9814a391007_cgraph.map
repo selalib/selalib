@@ -1,6 +1,0 @@
-<map id="sll_s_hex_mesh_2d_init" name="sll_s_hex_mesh_2d_init">
-<area shape="rect" id="node1" title="initializes a previously allocated 2d hex&#45;mesh" alt="" coords="5,64,181,91"/>
-<area shape="rect" id="node2" href="$namespacesll__m__hexagonal__meshes.html#a47f7a419f8f8904d408ad3a630612ee4" title="Finds the index in the global array of the point which coordinates where passed as parameter." alt="" coords="245,5,401,32"/>
-<area shape="rect" id="node3" href="$namespacesll__m__hexagonal__meshes.html#abc0ec74da1d524a49e0bf0f1c3fb7ed7" title="&lt;BRIEF_DESCRIPTION&gt;" alt="" coords="253,57,392,98"/>
-<area shape="rect" id="node4" href="$namespacesll__m__hexagonal__meshes.html#a7c715615f53575368c5a2fccf6ea3583" title="&lt;BRIEF_DESCRIPTION&gt;" alt="" coords="229,123,416,149"/>
-</map>

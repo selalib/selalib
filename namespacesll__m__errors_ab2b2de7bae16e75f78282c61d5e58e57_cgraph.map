@@ -1,4 +1,0 @@
-<map id="sll_s_error_handler" name="sll_s_error_handler">
-<area shape="rect" id="node1" title="Print error message to standard&#45;error, stop execution and dump backtrace information." alt="" coords="5,5,151,32"/>
-<area shape="rect" id="node2" href="$namespacesll__m__errors.html#a8fc6086fd223a8d18feec46a2c1da90b" title="Write error/warning message to a given unit." alt="" coords="199,5,260,32"/>
-</map>

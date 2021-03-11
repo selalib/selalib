@@ -1,9 +1,0 @@
-<map id="sll_s_fft_init_c2r_1d" name="sll_s_fft_init_c2r_1d">
-<area shape="rect" id="node1" title="Create new 1d complex to real plan for backward FFT." alt="" coords="261,228,412,255"/>
-<area shape="rect" id="node2" href="$namespacesll__m__advection__1d__ampere.html#a3e5a945347e7e82c7146746f1fbf76f3" title=" " alt="" coords="26,5,193,61"/>
-<area shape="rect" id="node3" href="$namespacesll__m__advection__1d__spectral.html#ac96f9986754a15eaa0cb1f161fbf6f65" title=" " alt="" coords="34,85,185,141"/>
-<area shape="rect" id="node4" href="$namespacesll__m__maxwell__2d__periodic__cartesian__par.html#a7da36e2a3fe4bb2910c7633316e79c13" title="Presently, this function receives the geometric information as individual arguments...." alt="" coords="8,166,211,237"/>
-<area shape="rect" id="node5" href="$namespacesll__m__maxwell__2d__pstd.html#adcf5bb75c1aa065d33e42588cfdfe224" title="Solve maxwell solver 2d cartesian periodic with PSTD scheme." alt="" coords="5,261,213,302"/>
-<area shape="rect" id="node6" href="$namespacesll__m__maxwell__3d__pstd.html#a5b298dd4c8ea032cc430d64be6628a93" title="Initialize 3d maxwell solver on cartesian mesh with PSTD scheme." alt="" coords="5,326,213,367"/>
-<area shape="rect" id="node7" href="$namespacesll__m__poisson__1d__hmf.html#aae08072cc17e25c6d41f142de5c63a49" title="Initialize the poisson 1d hmf solver." alt="" coords="9,391,209,433"/>
-</map>

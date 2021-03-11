@@ -1,7 +1,0 @@
-<map id="sll_s_poisson_2d_periodic_par_init" name="sll_s_poisson_2d_periodic_par_init">
-<area shape="rect" id="node1" title="Presently, this function receives the geometric information as individual arguments...." alt="" coords="5,71,196,112"/>
-<area shape="rect" id="node2" href="$namespacesll__m__collective.html#af2d3c240d9dfe7e9c7d7f7c9e0529f17" title="Determines the size of the group associated with a communicator." alt="" coords="244,5,409,47"/>
-<area shape="rect" id="node4" href="$namespacesll__m__utilities.html#a8e7bf79ed229d0f50947a0550a674234" title="Check if an integer is equal to." alt="" coords="251,71,402,112"/>
-<area shape="rect" id="node5" href="$namespacesll__m__fft.html#abd8e9cb4be235cbdce3b3f1c2ba1a9dd" title="Create new 1d complex to complex plan." alt="" coords="259,136,395,177"/>
-<area shape="rect" id="node3" href="$namespacesll__m__collective.html#a37ea25f42a791be5a710a6cf0d1e1197" title="Checks if the pointer ptr is associated to an object." alt="" coords="457,5,620,47"/>
-</map>

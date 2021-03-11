@@ -1,6 +1,0 @@
-<map id="initialize_poisson_1d_periodic" name="initialize_poisson_1d_periodic">
-<area shape="rect" id="node1" title="sll_o_initialize the solver" alt="" coords="452,35,587,76"/>
-<area shape="rect" id="node2" href="$namespacesll__m__poisson__1d__periodic.html#af90cec30174db5b250b0d6a711cd0b20" title=" " alt="" coords="228,5,392,47"/>
-<area shape="rect" id="node4" href="$namespacesll__m__poisson__1d__periodic.html#a5e799bc960e9bcd6e5a81efe076b44f9" title="Create a sll_o_new solver." alt="" coords="216,71,404,98"/>
-<area shape="rect" id="node3" href="$namespacesll__m__poisson__1d__periodic.html#a4cbc70f2b4c7f085c855239d7362b1d1" title=" " alt="" coords="5,5,168,47"/>
-</map>

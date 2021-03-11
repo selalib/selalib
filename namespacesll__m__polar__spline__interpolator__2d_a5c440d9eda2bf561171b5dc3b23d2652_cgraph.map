@@ -1,5 +1,0 @@
-<map id="s_polar_spline_interpolator_2d__init" name="s_polar_spline_interpolator_2d__init">
-<area shape="rect" id="node1" title="Initialize a 2D tensor&#45;product spline interpolator object." alt="" coords="5,5,204,47"/>
-<area shape="rect" id="node2" href="$namespacesll__m__bsplines.html#a048cd33489051f460fc3cab83de58295" title="Create B&#45;splines by mirroring radial basis onto extended domain [&#45;R,R]." alt="" coords="252,5,468,47"/>
-<area shape="rect" id="node3" href="$namespacesll__m__bsplines.html#ae01f3c92800bd791019d211054492a14" title="Allocate and initialize uniform or non&#45;uniform B&#45;splines." alt="" coords="516,5,657,47"/>
-</map>

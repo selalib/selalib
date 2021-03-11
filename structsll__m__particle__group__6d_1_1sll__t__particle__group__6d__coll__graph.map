@@ -1,9 +1,0 @@
-<map id="sll_t_particle_group_6d" name="sll_t_particle_group_6d">
-<area shape="rect" id="node1" title=" " alt="" coords="370,333,542,360"/>
-<area shape="rect" id="node2" href="$structsll__m__particle__representations_1_1sll__t__particle__6d.html" title="Type for a single particle in a 3d volume." alt="" coords="311,228,439,255"/>
-<area shape="rect" id="node3" title=" " alt="" coords="5,5,123,32"/>
-<area shape="rect" id="node4" title=" " alt="" coords="221,5,358,32"/>
-<area shape="rect" id="node6" href="$structsll__m__cartesian__meshes_1_1sll__t__cartesian__mesh__3d.html" title="3D cartesian mesh" alt="" coords="566,228,749,255"/>
-<area shape="rect" id="node5" title=" " alt="" coords="428,5,545,32"/>
-<area shape="rect" id="node7" href="$structsll__m__meshes__base_1_1sll__c__mesh__3d__base.html" title="3D logical mesh" alt="" coords="580,5,735,32"/>
-</map>

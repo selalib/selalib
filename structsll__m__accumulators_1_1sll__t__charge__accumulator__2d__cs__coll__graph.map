@@ -1,8 +1,0 @@
-<map id="sll_t_charge_accumulator_2d_cs" name="sll_t_charge_accumulator_2d_cs">
-<area shape="rect" id="node1" title=" " alt="" coords="265,345,453,387"/>
-<area shape="rect" id="node2" href="$structsll__m__cartesian__meshes_1_1sll__t__cartesian__mesh__2d.html" title="2D cartesian mesh" alt="" coords="171,249,354,275"/>
-<area shape="rect" id="node3" href="$structsll__m__meshes__base_1_1sll__c__mesh__2d__base.html" title="2D logical mesh" alt="" coords="5,5,160,32"/>
-<area shape="rect" id="node4" title=" " alt="" coords="185,5,322,32"/>
-<area shape="rect" id="node5" title=" " alt="" coords="377,5,495,32"/>
-<area shape="rect" id="node6" href="$structsll__m__accumulators_1_1charge__accumulator__cell__2d__cs.html" title=" " alt="" coords="384,241,539,283"/>
-</map>

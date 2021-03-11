@@ -1,5 +1,0 @@
-<map id="fft_initialize" name="fft_initialize">
-<area shape="rect" id="node1" title=" " alt="" coords="5,46,104,73"/>
-<area shape="rect" id="node2" href="$namespacesll__m__fft.html#af45a653220c441e3d483c921318af5a8" title="Function to allocate an aligned complex array." alt="" coords="152,5,351,47"/>
-<area shape="rect" id="node3" href="$namespacesll__m__fft.html#abd8e9cb4be235cbdce3b3f1c2ba1a9dd" title="Create new 1d complex to complex plan." alt="" coords="183,71,319,112"/>
-</map>

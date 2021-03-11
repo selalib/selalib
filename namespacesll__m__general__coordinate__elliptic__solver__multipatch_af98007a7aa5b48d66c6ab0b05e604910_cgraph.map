@@ -1,5 +1,0 @@
-<map id="sll_f_new_general_elliptic_solver_mp" name="sll_f_new_general_elliptic_solver_mp">
-<area shape="rect" id="node1" title="Initialization for elleptic solver." alt="" coords="5,39,196,80"/>
-<area shape="rect" id="node2" href="$namespacesll__m__timer.html#a8ae1b33d093b6c0d8381b1bbfae6d3f0" title="Computes the time elapsed since a particular time mark was set." alt="" coords="244,5,403,47"/>
-<area shape="rect" id="node3" href="$namespacesll__m__timer.html#a310e28ea52f0857a6b6c1f3711d29d99" title="reads time parameters from system and stores in its argument. param timer_obj an object of type sll_t..." alt="" coords="255,71,391,112"/>
-</map>

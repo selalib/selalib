@@ -1,4 +1,0 @@
-<map id="sll_s_poisson_2d_polar_init" name="sll_s_poisson_2d_polar_init">
-<area shape="rect" id="node1" title="sll_o_initialize the Poisson solver in polar coordinates" alt="" coords="5,13,204,39"/>
-<area shape="rect" id="node2" href="$namespacesll__m__utilities.html#a597cd0038286f2ca1fbeb97af32ba146" title="Equivalent to numpy.linspace @contact Yaman Güçlü, IPP Garching." alt="" coords="252,5,424,47"/>
-</map>

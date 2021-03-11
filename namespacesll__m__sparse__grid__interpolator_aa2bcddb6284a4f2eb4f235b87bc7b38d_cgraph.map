@@ -1,9 +1,0 @@
-<map id="interpolate_disp_1d_periodic_for_neighbor" name="interpolate_disp_1d_periodic_for_neighbor">
-<area shape="rect" id="node1" title=" " alt="" coords="5,64,176,105"/>
-<area shape="rect" id="node2" href="$namespacesll__m__sparse__grid__interpolator.html#abf11ecac63a5203e90d54abae235b748" title=" " alt="" coords="228,5,399,47"/>
-<area shape="rect" id="node4" href="$namespacesll__m__sparse__grid__interpolator.html#aa89226cc4257345b3f25fd8b49ed8cbf" title=" " alt="" coords="250,71,377,98"/>
-<area shape="rect" id="node6" href="$namespacesll__m__sparse__grid__interpolator.html#a49f0c1058e02eedcada267a3e8b9b486" title=" " alt="" coords="224,122,403,149"/>
-<area shape="rect" id="node3" href="$namespacesll__m__sparse__grid__interpolator.html#a2a6e7c82c896d91b90a3cc7376c43ee8" title=" " alt="" coords="473,5,615,47"/>
-<area shape="rect" id="node5" href="$namespacesll__m__sparse__grid__interpolator.html#a652e68ef87807a2193e0aa16fe3b0bc0" title=" " alt="" coords="477,71,611,98"/>
-<area shape="rect" id="node7" href="$namespacesll__m__sparse__grid__interpolator.html#a907d124de138d995f50d694eea3e92b3" title=" " alt="" coords="451,122,637,149"/>
-</map>

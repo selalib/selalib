@@ -1,8 +1,0 @@
-<map id="lagr_9pt_coeff" name="lagr_9pt_coeff">
-<area shape="rect" id="node1" title="Compute coefficients for Lagrange interpolation for normalized displacement p." alt="" coords="713,46,828,73"/>
-<area shape="rect" id="node2" href="$namespacesll__m__lagrange__interpolation__1d__fast.html#ab438e451a3dcbcc2ef9eeecfc097da6f" title="single point 9&#45;pt&#45;lagrange interpolation" alt="" coords="575,17,650,43"/>
-<area shape="rect" id="node4" href="$namespacesll__m__lagrange__interpolation__1d__fast.html#a7284854b87bb2413f22fea4861de4cfd" title="vectorizable 9&#45;pt&#45;lagrange interpolation" alt="" coords="560,71,665,98"/>
-<area shape="rect" id="node3" href="$namespacesll__m__lagrange__interpolation__1d__fast.html#ada2aaee72cea60e0d2beb19bb9e038c1" title="Lagrange interpolation with halo cell boundaries, where the input array already contains halo cells...." alt="" coords="295,5,501,47"/>
-<area shape="rect" id="node5" href="$namespacesll__m__lagrange__interpolation__1d__fast.html#ac26fc43ee907fcd29791154948c16dd3" title="Lagrange interpolation with halo cell boundaries, where the input array already contains halo cells...." alt="" coords="284,71,512,112"/>
-<area shape="rect" id="node6" href="$namespacesll__m__lagrange__interpolator__1d.html#a666c93a77c57376c29a70b853ab02e44" title=" " alt="" coords="5,71,236,112"/>
-</map>

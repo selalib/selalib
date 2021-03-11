@@ -1,5 +1,0 @@
-<map id="sll_collective_reduce_comp32" name="sll_collective_reduce_comp32">
-<area shape="rect" id="node1" title=" " alt="" coords="467,5,625,47"/>
-<area shape="rect" id="node2" href="$namespacesll__m__collective.html#ad1d8018497a41286301bf1d7f9a88b12" title="Performs a global sum over an array and writes the result in the given node If no node in root_rank i..." alt="" coords="236,5,419,47"/>
-<area shape="rect" id="node3" href="$namespacesll__m__collective.html#ae9216615a24d9be017b335fd99e3be4f" title="Performs a global sum and writes the result in the given node." alt="" coords="5,5,188,47"/>
-</map>

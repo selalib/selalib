@@ -1,4 +1,0 @@
-<map id="sll_s_dg_interpolator_1d_interpolate_array_disp_halo" name="sll_s_dg_interpolator_1d_interpolate_array_disp_halo">
-<area shape="rect" id="node1" title="Interpolation routine with halo cells." alt="" coords="5,5,169,61"/>
-<area shape="rect" id="node2" href="$namespacesll__m__dg__interpolator__1d.html#a29a8d8ece9ca80060cec3a8e5a9e0d7d" title="Evaluate Lagrange polynomial, optimized version." alt="" coords="217,20,360,47"/>
-</map>

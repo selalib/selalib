@@ -1,5 +1,0 @@
-<map id="sll_s_solve_faraday_2d_pstd" name="sll_s_solve_faraday_2d_pstd">
-<area shape="rect" id="node1" title="Solve Faraday equation." alt="" coords="5,23,156,65"/>
-<area shape="rect" id="node2" href="$namespacesll__m__maxwell__2d__pstd.html#a92b48466038c1631ea80a44024285d47" title="Solve faraday equation (ex,ey,hz)" alt="" coords="206,5,357,32"/>
-<area shape="rect" id="node3" href="$namespacesll__m__maxwell__2d__pstd.html#a02862c86c5484cdb7efbbdd183498e60" title="Solve faraday equation (hx,hy,ez)" alt="" coords="204,56,359,83"/>
-</map>

@@ -1,5 +1,0 @@
-<map id="sll_s_cubic_spline_halo_1d_periodic" name="sll_s_cubic_spline_halo_1d_periodic">
-<area shape="rect" id="node1" title=" " alt="" coords="5,39,144,80"/>
-<area shape="rect" id="node2" href="$namespacesll__m__cubic__spline__halo__1d.html#a7ffda62b1bc37b5a27c8f8793048f84b" title="Compute the coefficients of the local interpolating spline (after d(0) and c(num_points+2) have been ..." alt="" coords="192,5,395,47"/>
-<area shape="rect" id="node3" href="$namespacesll__m__cubic__spline__halo__1d.html#ae8a5edad1b576ff935f0d7567bc5b40c" title="This function corresponds to the interpolate_array_disp function of the interpolators but the displac..." alt="" coords="219,71,368,112"/>
-</map>

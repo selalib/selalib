@@ -1,6 +1,0 @@
-<map id="new_lagrange_interpolator_1d" name="new_lagrange_interpolator_1d">
-<area shape="rect" id="node1" title=" " alt="" coords="5,50,224,77"/>
-<area shape="rect" id="node2" href="$namespacesll__m__lagrange__interpolator__1d.html#a155a968d5ac71fa0518c039ed30c3f15" title=" " alt="" coords="272,50,464,77"/>
-<area shape="rect" id="node3" href="$namespacesll__m__lagrange__interpolation__1d.html#aed8c2f4f84a0baa74080da0a59c1797a" title=" " alt="" coords="512,5,803,47"/>
-<area shape="rect" id="node4" href="$namespacesll__m__lagrange__interpolation__1d.html#a830b118e6c360fa58b1d74b1323d5264" title="This function computes the weights w_j for the barycentric formula." alt="" coords="552,71,763,127"/>
-</map>

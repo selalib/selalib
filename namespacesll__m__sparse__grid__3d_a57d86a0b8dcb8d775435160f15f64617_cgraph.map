@@ -1,5 +1,0 @@
-<map id="interpolate_from_interpolant_value" name="interpolate_from_interpolant_value">
-<area shape="rect" id="node1" title="Compute the value of the sparse grid interpolant at position eta (using standard sparse grid interpol..." alt="" coords="5,39,215,80"/>
-<area shape="rect" id="node2" href="$namespacesll__m__sparse__grid__3d.html#a2bd4be0fdabc6f1fb46a6d4ec68328d2" title="Implements interpolate_from_interpolant_value for periodic sparse grid." alt="" coords="263,5,477,47"/>
-<area shape="rect" id="node3" href="$namespacesll__m__sparse__grid__3d.html#a09df31415bc404819675c2d2b23739a2" title="implements interpolation from hierarchical surplus (interpolate_from_interpolant_value) non&#45;periodic" alt="" coords="263,71,477,112"/>
-</map>

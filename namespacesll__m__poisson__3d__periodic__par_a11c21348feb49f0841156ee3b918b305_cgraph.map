@@ -1,4 +1,0 @@
-<map id="sll_s_compute_ez_from_phi" name="sll_s_compute_ez_from_phi">
-<area shape="rect" id="node1" title="Compute the 3d potential from the Poisson equation with periodic boundary conditions." alt="" coords="5,13,208,39"/>
-<area shape="rect" id="node2" href="$namespacesll__m__fft.html#a98e3ba2b5431c58a3f5100ac171616a5" title="Compute fast Fourier transform in complex to complex mode." alt="" coords="256,5,392,47"/>
-</map>

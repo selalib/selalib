@@ -1,7 +1,0 @@
-<map id="sll_s_ampere_te" name="sll_s_ampere_te">
-<area shape="rect" id="node1" title="Solve Ampere&#45;Maxwell equation (TE mode)" alt="" coords="5,78,133,105"/>
-<area shape="rect" id="node2" href="$namespacesll__m__collective.html#a396122f49340f0778eb448430d865b4e" title="Determines the rank of the calling process in the communicator." alt="" coords="196,5,364,47"/>
-<area shape="rect" id="node4" href="$namespacesll__m__collective.html#af2d3c240d9dfe7e9c7d7f7c9e0529f17" title="Determines the size of the group associated with a communicator." alt="" coords="197,71,363,112"/>
-<area shape="rect" id="node5" href="$namespacesll__m__maxwell__2d__periodic__cartesian__par.html#ab4f544487ff1b068c90854c36a4fad4e" title="Check array size." alt="" coords="181,137,379,163"/>
-<area shape="rect" id="node3" href="$namespacesll__m__collective.html#a37ea25f42a791be5a710a6cf0d1e1197" title="Checks if the pointer ptr is associated to an object." alt="" coords="427,39,589,80"/>
-</map>

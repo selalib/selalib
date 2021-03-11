@@ -1,7 +1,0 @@
-<map id="sll_t_hdf5_serial" name="sll_t_hdf5_serial">
-<area shape="rect" id="node1" title=" " alt="" coords="118,184,246,211"/>
-<area shape="rect" id="node2" title=" " alt="" coords="5,95,71,121"/>
-<area shape="rect" id="node3" title=" " alt="" coords="95,95,269,121"/>
-<area shape="rect" id="node4" href="$structsll__m__hdf5__io__serial_1_1sll__t__hdf5__ser__handle.html" title="Opaque object around HDF5 file id." alt="" coords="293,95,455,121"/>
-<area shape="rect" id="node5" title=" " alt="" coords="292,5,456,32"/>
-</map>

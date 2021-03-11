@@ -1,7 +1,0 @@
-<map id="sll_s_spline_pp_init_1d" name="sll_s_spline_pp_init_1d">
-<area shape="rect" id="node1" title="Initialize sll_t_spline_pp_1d object (Set poly_coeffs depending on degree)" alt="" coords="428,85,599,112"/>
-<area shape="rect" id="node2" href="$namespacesll__m__particle__mesh__coupling__spline__1d.html#a8cd446ae4a4dc74bfc2c041c67e2e0cd" title="Initializer." alt="" coords="217,5,373,61"/>
-<area shape="rect" id="node3" href="$namespacesll__m__splines__pp.html#ab0bd290f1a3b06fd9211b341b3b8fa18" title="Initialize sll_t_spline_pp_2d object." alt="" coords="209,85,380,112"/>
-<area shape="rect" id="node5" href="$namespacesll__m__splines__pp.html#aa89575bf1babec91a086cb0ad8dffeb5" title="Initialize sll_t_spline_pp_3d object." alt="" coords="209,136,380,163"/>
-<area shape="rect" id="node4" href="$namespacesll__m__particle__mesh__coupling__spline__2d.html#a22514cb0cee8c41615a57e70aaba936d" title=" " alt="" coords="5,71,161,127"/>
-</map>

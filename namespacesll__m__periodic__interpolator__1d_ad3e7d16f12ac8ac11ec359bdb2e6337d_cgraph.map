@@ -1,6 +1,0 @@
-<map id="new_periodic_1d_interpolator" name="new_periodic_1d_interpolator">
-<area shape="rect" id="node1" title="Create a new interpolator." alt="" coords="5,13,220,39"/>
-<area shape="rect" id="node2" href="$namespacesll__m__periodic__interpolator__1d.html#a137a06d731f848d2844a08ecd61f0ce5" title="initialize periodic interpolator" alt="" coords="268,13,473,39"/>
-<area shape="rect" id="node3" href="$namespacesll__m__periodic__interp.html#abc80c95f808db2e9ff4e176e86d5d241" title=" " alt="" coords="521,5,712,47"/>
-<area shape="rect" id="node4" href="$namespacesll__m__fft.html#a928055b91495cdbe4e1fcfaca976a8bc" title="Create new 1d real to real plan." alt="" coords="760,5,896,47"/>
-</map>

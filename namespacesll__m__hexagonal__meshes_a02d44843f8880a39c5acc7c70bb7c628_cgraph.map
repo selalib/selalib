@@ -1,4 +1,0 @@
-<map id="hex_to_aligned_pt" name="hex_to_aligned_pt">
-<area shape="rect" id="node1" title="Computes the coordinate transformation hex&#45;&gt;aligned for a point." alt="" coords="5,5,147,32"/>
-<area shape="rect" id="node2" href="$namespacesll__m__hexagonal__meshes.html#a8bed234b81efa9e2e353c3f594c104e3" title="Computes the number of cell from point to origin." alt="" coords="195,5,345,32"/>
-</map>

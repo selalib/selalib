@@ -1,8 +1,0 @@
-<map id="init_center_points_triangle" name="init_center_points_triangle">
-<area shape="rect" id="node1" title="&lt;BRIEF_DESCRIPTION&gt;" alt="" coords="1165,35,1304,76"/>
-<area shape="rect" id="node2" href="$namespacesll__m__hexagonal__meshes.html#a9384fd0ae5d59bb61739f9814a391007" title="initializes a previously allocated 2d hex&#45;mesh" alt="" coords="941,42,1117,69"/>
-<area shape="rect" id="node3" href="$namespacesll__m__hexagonal__meshes.html#aaa2262794e099a011cb267f899c82b15" title="Creates and initializes a new hexagonal mesh." alt="" coords="713,42,893,69"/>
-<area shape="rect" id="node4" href="$namespacesll__m__box__splines.html#a0f40714993a4e4bdcf19d5798130ae75" title="Computes the values or derivatives of box splines." alt="" coords="491,5,665,47"/>
-<area shape="rect" id="node6" href="$namespacesll__m__fekete__integration.html#adceb8456a1011a2bb4dcecfd28374463" title="This function is supposed to write all django input files needed for a Django/Jorek simulation." alt="" coords="5,35,212,76"/>
-<area shape="rect" id="node5" href="$namespacesll__m__fekete__integration.html#ac7c05ae36ac69d55d2c022d71e82cae9" title="Writes on a file values of boxsplines on fekete points." alt="" coords="260,5,443,47"/>
-</map>

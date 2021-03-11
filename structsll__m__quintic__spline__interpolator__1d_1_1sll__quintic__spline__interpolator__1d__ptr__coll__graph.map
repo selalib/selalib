@@ -1,7 +1,0 @@
-<map id="sll_quintic_spline_interpolator_1d_ptr" name="sll_quintic_spline_interpolator_1d_ptr">
-<area shape="rect" id="node1" title="Pointer to quintic spline interpolator implementation 1D." alt="" coords="179,345,333,387"/>
-<area shape="rect" id="node2" href="$structsll__m__quintic__spline__interpolator__1d_1_1sll__t__quintic__spline__interpolator__1d.html" title="Quintic spline interpolator 1d." alt="" coords="183,241,329,283"/>
-<area shape="rect" id="node3" href="$structsll__m__interpolators__1d__base_1_1sll__c__interpolator__1d.html" title="Abstract class for 1D interpolation and reconstruction." alt="" coords="5,5,163,32"/>
-<area shape="rect" id="node4" title=" " alt="" coords="187,5,325,32"/>
-<area shape="rect" id="node5" title=" " alt="" coords="349,5,467,32"/>
-</map>

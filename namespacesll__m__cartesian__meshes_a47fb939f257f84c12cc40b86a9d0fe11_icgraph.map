@@ -1,9 +1,0 @@
-<map id="sll_f_new_cartesian_mesh_2d" name="sll_f_new_cartesian_mesh_2d">
-<area shape="rect" id="node1" title="allocates the memory space for a new 2D cartesian mesh on the heap, initializes it with the given arg..." alt="" coords="601,151,752,193"/>
-<area shape="rect" id="node2" href="$namespacesll__m__cartesian__meshes__multipatch.html#a04c4cbd475a33dfae5f6798026de4eeb" title="initializes a previously allocated multipatch 2d logical mesh." alt="" coords="334,5,517,61"/>
-<area shape="rect" id="node3" href="$namespacesll__m__coordinate__transformations__2d.html#af092a7689bceb4039d222e5f2a03c6e7" title=" " alt="" coords="303,86,547,127"/>
-<area shape="rect" id="node4" href="$namespacesll__m__coordinate__transformations__2d__nurbs.html#a1ac1b0807542ac77efb925992c0d681e" title=" " alt="" coords="297,151,553,193"/>
-<area shape="rect" id="node6" href="$namespacesll__m__cartesian__meshes.html#ab5c7c7adab553e987f64394b4c61414f" title="Create a 2d mesh from two 1d meshes." alt="" coords="349,217,502,258"/>
-<area shape="rect" id="node7" href="$namespacesll__m__dk__curv__mesh.html#a4c65d8244e6f18bd6fb5cff4c5c5ee74" title="Initialize simulation from input file." alt="" coords="331,282,519,323"/>
-<area shape="rect" id="node5" href="$namespacesll__m__coordinate__transformations__2d__nurbs.html#a85ac2598975dd0e977cf92f9e02837d6" title=" " alt="" coords="5,144,249,200"/>
-</map>

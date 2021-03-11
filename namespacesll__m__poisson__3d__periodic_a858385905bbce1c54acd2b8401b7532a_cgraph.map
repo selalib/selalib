@@ -1,4 +1,0 @@
-<map id="sll_s_poisson_3d_periodic_solve" name="sll_s_poisson_3d_periodic_solve">
-<area shape="rect" id="node1" title="Compute the potential from 3d Poisson solver." alt="" coords="5,5,196,47"/>
-<area shape="rect" id="node2" href="$namespacesll__m__fft.html#abc7407ba0f073a2cb590410e3712a4d5" title="Compute fast Fourier transform in complex to complex mode." alt="" coords="244,5,380,47"/>
-</map>

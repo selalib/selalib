@@ -1,8 +1,0 @@
-<map id="sll_s_qn_solver_3d_polar_par_init" name="sll_s_qn_solver_3d_polar_par_init">
-<area shape="rect" id="node1" title="Initialize the 3D (wrapper) solver." alt="" coords="5,104,149,145"/>
-<area shape="rect" id="node2" href="$namespacesll__m__qn__solver__2d__polar__par.html#a469531318563d910cd216334ff4a1828" title="Initialize the solver." alt="" coords="197,97,385,153"/>
-<area shape="rect" id="node3" href="$namespacesll__m__fft.html#a57b954f8852bb5b19e1c312d1c9e72bb" title="Function to allocate an aligned real array." alt="" coords="435,5,603,47"/>
-<area shape="rect" id="node4" href="$namespacesll__m__fft.html#a050e94ded8dfce9bd43e8f984d8a4282" title="Get a list of the k modes in an r2r FFT k_list = [0, 1, 2, ..., n/2, (n+1)/2&#45;1, ....." alt="" coords="449,71,589,112"/>
-<area shape="rect" id="node5" href="$namespacesll__m__fft.html#a928055b91495cdbe4e1fcfaca976a8bc" title="Create new 1d real to real plan." alt="" coords="451,136,587,177"/>
-<area shape="rect" id="node6" href="$namespacesll__m__utilities.html#a597cd0038286f2ca1fbeb97af32ba146" title="Equivalent to numpy.linspace @contact Yaman Güçlü, IPP Garching." alt="" coords="433,201,605,243"/>
-</map>

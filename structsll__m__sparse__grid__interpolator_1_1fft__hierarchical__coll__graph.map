@@ -1,8 +1,0 @@
-<map id="fft_hierarchical" name="fft_hierarchical">
-<area shape="rect" id="node1" title="class to hold values for hierarchical fft computations" alt="" coords="205,257,324,284"/>
-<area shape="rect" id="node2" href="$structsll__m__fft_1_1sll__t__fft.html" title="Type for FFT plan in SeLaLib." alt="" coords="65,146,136,173"/>
-<area shape="rect" id="node3" title=" " alt="" coords="5,5,71,32"/>
-<area shape="rect" id="node4" title=" " alt="" coords="95,5,232,32"/>
-<area shape="rect" id="node5" title=" " alt="" coords="160,139,369,180"/>
-<area shape="rect" id="node6" title=" " alt="" coords="394,146,525,173"/>
-</map>

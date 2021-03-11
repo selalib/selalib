@@ -1,4 +1,0 @@
-<map id="sll_s_do_split_steps" name="sll_s_do_split_steps">
-<area shape="rect" id="node1" title="Apply the composition method for given number of times steps." alt="" coords="268,13,419,39"/>
-<area shape="rect" id="node2" href="$namespacesll__m__linear__pendulum__operators.html#a605162229aac75b9225d219fdc47fa1e" title="checks the order of a splitting method on the linear pendulum. used for unit testing." alt="" coords="5,5,220,47"/>
-</map>

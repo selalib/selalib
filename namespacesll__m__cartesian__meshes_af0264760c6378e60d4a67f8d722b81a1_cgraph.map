@@ -1,4 +1,0 @@
-<map id="tensor_product_2d_2d" name="tensor_product_2d_2d">
-<area shape="rect" id="node1" title="Create a 4d mesh from two 2d meshes." alt="" coords="5,13,171,39"/>
-<area shape="rect" id="node2" href="$namespacesll__m__cartesian__meshes.html#a6d8c6fe551144a10c586542ac8736426" title="allocates the memory space for a new 4D cartesian mesh on the heap," alt="" coords="219,5,369,47"/>
-</map>

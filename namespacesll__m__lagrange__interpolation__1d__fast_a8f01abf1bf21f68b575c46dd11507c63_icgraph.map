@@ -1,5 +1,0 @@
-<map id="lagr_8pt_vec" name="lagr_8pt_vec">
-<area shape="rect" id="node1" title="vectorizable 6&#45;pt&#45;lagrange interpolation" alt="" coords="300,46,405,73"/>
-<area shape="rect" id="node2" href="$namespacesll__m__lagrange__interpolation__1d__fast.html#acf928f88f9fe7cad7c9ee88b7526444d" title=" " alt="" coords="5,5,252,47"/>
-<area shape="rect" id="node3" href="$namespacesll__m__lagrange__interpolation__1d__fast.html#a69a39cf6e3124d0623dc09ab168e7bfc" title="Even Lagrange interpolation with halo cells and no interval shift, i.e. p must be between zero and on..." alt="" coords="17,71,240,112"/>
-</map>

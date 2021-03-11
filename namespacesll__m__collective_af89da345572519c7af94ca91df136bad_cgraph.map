@@ -1,4 +1,0 @@
-<map id="sll_collective_bcast_int32" name="sll_collective_bcast_int32">
-<area shape="rect" id="node1" title="Broadcasts an array of type &#39;sll_int32&#39; from the process with rank &quot;root&quot; to all other processes of t..." alt="" coords="5,5,155,47"/>
-<area shape="rect" id="node2" href="$namespacesll__m__collective.html#a9a5729d7ca2e55890195f76c8a5cbd62" title="Checks the good execution of collective instruction." alt="" coords="203,13,356,39"/>
-</map>

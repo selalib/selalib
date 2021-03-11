@@ -1,8 +1,0 @@
-<map id="sll_f_lagrange_interpolate" name="sll_f_lagrange_interpolate">
-<area shape="rect" id="node1" title=" " alt="" coords="697,100,888,127"/>
-<area shape="rect" id="node2" href="$namespacesll__m__advection__1d__csl__periodic.html#a03bf92b99e58381e267caa3da6634abd" title=" " alt="" coords="457,5,649,61"/>
-<area shape="rect" id="node5" href="$namespacesll__m__fcisl__toroidal.html#a14d560664340ffddd413d48bd72690fb" title=" " alt="" coords="478,85,629,141"/>
-<area shape="rect" id="node6" href="$namespacesll__m__advection__2d__oblic.html#a701d97949c6ca7f8be6889fa63fe2aea" title="solves \partial_t f + \nabla A \cdot f = 0, \ A = (A1,A2) for time step dt interpolation in aligned a..." alt="" coords="474,165,633,221"/>
-<area shape="rect" id="node3" href="$namespacesll__m__advection__1d__csl__periodic.html#a0001d2864a9d6542865e9c16916d5b19" title=" " alt="" coords="244,5,409,61"/>
-<area shape="rect" id="node4" href="$namespacesll__m__advection__1d__csl__periodic.html#aa0160216674adab2d9e9fc52c3c7dc53" title=" " alt="" coords="5,5,196,61"/>
-</map>

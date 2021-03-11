@@ -1,9 +1,0 @@
-<map id="ref_to_hex_elmt" name="ref_to_hex_elmt">
-<area shape="rect" id="node1" title="Computes the coordinate transformation ref&#45;&gt;hex for an element." alt="" coords="5,81,133,108"/>
-<area shape="rect" id="node2" href="$namespacesll__m__hexagonal__meshes.html#aa579f5999884452ce000e206a88dc6b7" title="Returns indices of the edges of a given cell." alt="" coords="181,74,349,115"/>
-<area shape="rect" id="node3" href="$namespacesll__m__hexagonal__meshes.html#a4f66e0c718eda16377ca26d5c95b419f" title="Transform hexagonal coordinates to global index." alt="" coords="411,31,524,57"/>
-<area shape="rect" id="node6" href="$namespacesll__m__hexagonal__meshes.html#aa03f58c798d529ebb1b9d0f03b712035" title="Transform cartesian coordinates to 1st hexagonal coordinates." alt="" coords="397,81,537,108"/>
-<area shape="rect" id="node7" href="$namespacesll__m__hexagonal__meshes.html#a8e973ce50cda93bfa411d78cff346741" title="Transform cartesian coordinates to 2ndst hexagonal coordinates." alt="" coords="397,132,537,159"/>
-<area shape="rect" id="node4" href="$namespacesll__m__hexagonal__meshes.html#a47f7a419f8f8904d408ad3a630612ee4" title="Finds the index in the global array of the point which coordinates where passed as parameter." alt="" coords="585,5,741,32"/>
-<area shape="rect" id="node5" href="$namespacesll__m__hexagonal__meshes.html#a8bed234b81efa9e2e353c3f594c104e3" title="Computes the number of cell from point to origin." alt="" coords="588,56,739,83"/>
-</map>

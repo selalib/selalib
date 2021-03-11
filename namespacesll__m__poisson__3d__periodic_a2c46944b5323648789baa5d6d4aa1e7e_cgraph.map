@@ -1,4 +1,0 @@
-<map id="sll_s_poisson_3d_periodic_init" name="sll_s_poisson_3d_periodic_init">
-<area shape="rect" id="node1" title="Allocate a structure to solve Poisson equation on 3d cartesian mesh with periodic boundary conditions..." alt="" coords="5,13,224,39"/>
-<area shape="rect" id="node2" href="$namespacesll__m__fft.html#a762529654907290a3d6359866278546a" title="Create new 3d complex to complex plan." alt="" coords="272,5,408,47"/>
-</map>

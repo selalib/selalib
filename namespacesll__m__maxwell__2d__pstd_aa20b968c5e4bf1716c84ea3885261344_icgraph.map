@@ -1,5 +1,0 @@
-<map id="ampere_tm_2d_pstd" name="ampere_tm_2d_pstd">
-<area shape="rect" id="node1" title="Solve ampere maxwell equation (hx,hy,ez)" alt="" coords="209,46,364,73"/>
-<area shape="rect" id="node2" href="$namespacesll__m__maxwell__2d__pstd.html#adfa28f7eb64f0e698d7ed6d20ee154c6" title=" " alt="" coords="8,5,159,47"/>
-<area shape="rect" id="node3" href="$namespacesll__m__maxwell__2d__pstd.html#ab9935225e97846f8c8fa2f1a97a8510b" title="self routine exists only for testing purpose. Use ampere and faraday in your appication." alt="" coords="5,71,161,112"/>
-</map>

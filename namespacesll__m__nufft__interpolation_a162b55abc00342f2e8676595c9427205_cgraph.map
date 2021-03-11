@@ -1,4 +1,0 @@
-<map id="sll_s_nufft_2d_compute_fft" name="sll_s_nufft_2d_compute_fft">
-<area shape="rect" id="node1" title="Compute the fft and prepare data for nufft call." alt="" coords="5,13,201,39"/>
-<area shape="rect" id="node2" href="$namespacesll__m__fft.html#a1da210c56b980ae78e65f9a4a473c432" title="Compute fast Fourier transform in complex to complex mode." alt="" coords="249,5,385,47"/>
-</map>

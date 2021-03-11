@@ -1,4 +1,0 @@
-<map id="sll_delete_collective" name="sll_delete_collective">
-<area shape="rect" id="node1" title="Marks the communicator object for deallocation." alt="" coords="5,5,160,32"/>
-<area shape="rect" id="node2" href="$namespacesll__m__collective.html#a37ea25f42a791be5a710a6cf0d1e1197" title="Checks if the pointer ptr is associated to an object." alt="" coords="208,5,385,32"/>
-</map>

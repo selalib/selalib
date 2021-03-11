@@ -1,6 +1,0 @@
-<map id="sll_xdmf_close_parallel" name="sll_xdmf_close_parallel">
-<area shape="rect" id="node1" title="Close the XML file and finish to write last lines." alt="" coords="5,46,180,73"/>
-<area shape="rect" id="node2" href="$namespacesll__m__collective.html#a396122f49340f0778eb448430d865b4e" title="Determines the rank of the calling process in the communicator." alt="" coords="228,5,396,47"/>
-<area shape="rect" id="node4" href="$namespacesll__m__xml__io.html#a214cc5ba4867ca81aa2551a414b4d2c2" title="Close the XML file and finish to write last lines. You give the file unit number." alt="" coords="239,71,385,112"/>
-<area shape="rect" id="node3" href="$namespacesll__m__collective.html#a37ea25f42a791be5a710a6cf0d1e1197" title="Checks if the pointer ptr is associated to an object." alt="" coords="444,5,607,47"/>
-</map>

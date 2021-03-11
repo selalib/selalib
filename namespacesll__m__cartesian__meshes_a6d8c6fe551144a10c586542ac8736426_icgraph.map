@@ -1,6 +1,0 @@
-<map id="sll_f_new_cartesian_mesh_4d" name="sll_f_new_cartesian_mesh_4d">
-<area shape="rect" id="node1" title="allocates the memory space for a new 4D cartesian mesh on the heap," alt="" coords="256,93,407,134"/>
-<area shape="rect" id="node2" href="$namespacesll__m__particle__group__2d2v__lbf.html#a98a7e81c8f6e1fa80a8984becf01a416" title="Initializer &#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;..." alt="" coords="14,5,199,61"/>
-<area shape="rect" id="node3" href="$namespacesll__m__particle__visualization__interface.html#aa011c00b14fee00c01f24bdd0ecd297c" title="visualization interface" alt="" coords="5,85,208,141"/>
-<area shape="rect" id="node4" href="$namespacesll__m__cartesian__meshes.html#af0264760c6378e60d4a67f8d722b81a1" title="Create a 4d mesh from two 2d meshes." alt="" coords="24,165,189,192"/>
-</map>

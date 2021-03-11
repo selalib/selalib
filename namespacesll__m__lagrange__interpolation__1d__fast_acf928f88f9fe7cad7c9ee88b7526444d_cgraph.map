@@ -1,9 +1,0 @@
-<map id="sll_s_lagrange_interpolation_1d_fast_disp_centered_halo_cells" name="sll_s_lagrange_interpolation_1d_fast_disp_centered_halo_cells">
-<area shape="rect" id="node1" title=" " alt="" coords="5,49,252,90"/>
-<area shape="rect" id="node2" href="$namespacesll__m__lagrange__interpolation__1d__fast.html#ac816afaf40d8b320cdd6fe0d60bd6381" title="vectorizable 4&#45;pt&#45;lagrange interpolation" alt="" coords="300,5,405,32"/>
-<area shape="rect" id="node4" href="$namespacesll__m__lagrange__interpolation__1d__fast.html#a7f4d88f171a861b1efa88dc385690aad" title="vectorizable 6&#45;pt&#45;lagrange interpolation" alt="" coords="300,56,405,83"/>
-<area shape="rect" id="node6" href="$namespacesll__m__lagrange__interpolation__1d__fast.html#a8f01abf1bf21f68b575c46dd11507c63" title="vectorizable 6&#45;pt&#45;lagrange interpolation" alt="" coords="300,107,405,133"/>
-<area shape="rect" id="node3" href="$namespacesll__m__lagrange__interpolation__1d__fast.html#a1e5686ba11a77c998f3a2e3925279956" title="Compute coefficients for Lagrange interpolation for normalized displacement p." alt="" coords="453,5,568,32"/>
-<area shape="rect" id="node5" href="$namespacesll__m__lagrange__interpolation__1d__fast.html#ad9f17b7a010913e89f73a0be4351071c" title="Compute coefficients for Lagrange interpolation for normalized displacement p." alt="" coords="453,56,568,83"/>
-<area shape="rect" id="node7" href="$namespacesll__m__lagrange__interpolation__1d__fast.html#a9d4f623957d79d545a570450818844d6" title="Compute coefficients for Lagrange interpolation for normalized displacement p." alt="" coords="453,107,568,133"/>
-</map>

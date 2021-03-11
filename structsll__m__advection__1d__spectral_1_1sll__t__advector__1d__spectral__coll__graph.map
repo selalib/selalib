@@ -1,8 +1,0 @@
-<map id="sll_t_advector_1d_spectral" name="sll_t_advector_1d_spectral">
-<area shape="rect" id="node1" title=" " alt="" coords="184,287,379,313"/>
-<area shape="rect" id="node2" href="$structsll__m__advection__1d__base_1_1sll__c__advector__1d.html" title=" " alt="" coords="5,139,144,165"/>
-<area shape="rect" id="node3" href="$structsll__m__fft_1_1sll__t__fft.html" title="Type for FFT plan in SeLaLib." alt="" coords="169,139,239,165"/>
-<area shape="rect" id="node4" title=" " alt="" coords="42,5,107,32"/>
-<area shape="rect" id="node5" title=" " alt="" coords="185,5,322,32"/>
-<area shape="rect" id="node6" title=" " alt="" coords="403,139,520,165"/>
-</map>

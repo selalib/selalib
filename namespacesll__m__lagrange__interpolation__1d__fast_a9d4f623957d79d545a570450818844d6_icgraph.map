@@ -1,7 +1,0 @@
-<map id="lagr_8pt_coeff" name="lagr_8pt_coeff">
-<area shape="rect" id="node1" title="Compute coefficients for Lagrange interpolation for normalized displacement p." alt="" coords="453,31,568,57"/>
-<area shape="rect" id="node2" href="$namespacesll__m__lagrange__interpolation__1d__fast.html#a28560081ce2fd963ba6b3ac9803fed0d" title="single point 8&#45;pt&#45;lagrange interpolation" alt="" coords="315,5,390,32"/>
-<area shape="rect" id="node3" href="$namespacesll__m__lagrange__interpolation__1d__fast.html#a8f01abf1bf21f68b575c46dd11507c63" title="vectorizable 6&#45;pt&#45;lagrange interpolation" alt="" coords="300,56,405,83"/>
-<area shape="rect" id="node4" href="$namespacesll__m__lagrange__interpolation__1d__fast.html#acf928f88f9fe7cad7c9ee88b7526444d" title=" " alt="" coords="5,15,252,57"/>
-<area shape="rect" id="node5" href="$namespacesll__m__lagrange__interpolation__1d__fast.html#a69a39cf6e3124d0623dc09ab168e7bfc" title="Even Lagrange interpolation with halo cells and no interval shift, i.e. p must be between zero and on..." alt="" coords="17,81,240,122"/>
-</map>

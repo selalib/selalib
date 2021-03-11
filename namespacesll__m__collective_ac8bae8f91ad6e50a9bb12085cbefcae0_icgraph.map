@@ -1,4 +1,0 @@
-<map id="sll_s_collective_globalsum_array_real64" name="sll_s_collective_globalsum_array_real64">
-<area shape="rect" id="node1" title="Performs a global sum over an array and writes the result in the given node If no node in root_rank i..." alt="" coords="236,5,432,47"/>
-<area shape="rect" id="node2" href="$namespacesll__m__collective.html#a111afaef4e1249822349750605043ce2" title="Performs a global sum and writes the result in the given node." alt="" coords="5,5,188,47"/>
-</map>

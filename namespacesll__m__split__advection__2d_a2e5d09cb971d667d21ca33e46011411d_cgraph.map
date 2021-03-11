@@ -1,6 +1,0 @@
-<map id="sll_f_new_split_advection_2d" name="sll_f_new_split_advection_2d">
-<area shape="rect" id="node1" title=" " alt="" coords="5,57,217,84"/>
-<area shape="rect" id="node2" href="$namespacesll__m__split__advection__2d.html#a1779def1dcba039e8d5679c8d2baf4b1" title="Initialise advection_2d object." alt="" coords="265,57,472,84"/>
-<area shape="rect" id="node3" href="$namespacesll__m__cubic__non__uniform__splines.html#a32c26d5d720eb88a9a3595ea1bcb988c" title="create new spline object" alt="" coords="531,5,718,61"/>
-<area shape="rect" id="node4" href="$namespacesll__m__operator__splitting.html#ad7ac7066d769b435f70a6364f9f98b6f" title="Initialises data for operator splitting." alt="" coords="520,86,729,127"/>
-</map>

@@ -1,6 +1,0 @@
-<map id="maxwell_hex_mesh_fdtd" name="maxwell_hex_mesh_fdtd">
-<area shape="rect" id="node1" title="Object with data to solve Maxwell equation Maxwell in TE mode: (Ex,Ey,Bz)" alt="" coords="140,109,325,136"/>
-<area shape="rect" id="node2" title=" " alt="" coords="5,5,140,32"/>
-<area shape="rect" id="node3" title=" " alt="" coords="164,5,301,32"/>
-<area shape="rect" id="node4" title=" " alt="" coords="326,5,443,32"/>
-</map>

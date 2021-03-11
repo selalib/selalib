@@ -1,4 +1,0 @@
-<map id="fg_to_sg" name="fg_to_sg">
-<area shape="rect" id="node1" title="Functions to evaluate fg on sg and sg on fg." alt="" coords="5,5,83,32"/>
-<area shape="rect" id="node2" href="$namespacesll__m__sparse__grid__3d.html#a7ad0c3953101082935dd80452359561c" title="Compute the index of a sparse grid node on level &quot;level&quot; with index &quot;index_on_level&quot; on full grid wit..." alt="" coords="131,5,209,32"/>
-</map>

@@ -1,5 +1,0 @@
-<map id="initialize_periodic_1d_advector" name="initialize_periodic_1d_advector">
-<area shape="rect" id="node1" title=" " alt="" coords="5,5,143,47"/>
-<area shape="rect" id="node2" href="$namespacesll__m__periodic__interp.html#abc80c95f808db2e9ff4e176e86d5d241" title=" " alt="" coords="191,5,381,47"/>
-<area shape="rect" id="node3" href="$namespacesll__m__fft.html#a928055b91495cdbe4e1fcfaca976a8bc" title="Create new 1d real to real plan." alt="" coords="429,5,565,47"/>
-</map>

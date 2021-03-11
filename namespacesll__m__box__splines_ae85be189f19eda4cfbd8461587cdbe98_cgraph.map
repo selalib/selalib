@@ -1,7 +1,0 @@
-<map id="sll_f_compute_box_spline" name="sll_f_compute_box_spline">
-<area shape="rect" id="node1" title="Computes the value of a box spline." alt="" coords="5,56,196,83"/>
-<area shape="rect" id="node2" href="$namespacesll__m__box__splines.html#a3b94ddbae2c7b03c53ca2653ae187885" title="1st coo. of (x1, x2) in reference hex&#45;mesh coo." alt="" coords="244,5,377,32"/>
-<area shape="rect" id="node3" href="$namespacesll__m__box__splines.html#a1edd2773985cb3b80bdcdab980892673" title="2nd coo. of (x1, x2) in reference hex&#45;mesh coo." alt="" coords="244,56,377,83"/>
-<area shape="rect" id="node4" href="$namespacesll__m__box__splines.html#a3036d812bbf7826012acb93b1bc5ad44" title="Computes the box spline of degree deg on (x1, x2)" alt="" coords="261,107,360,133"/>
-<area shape="rect" id="node5" href="$namespacesll__m__box__splines.html#aba645e61067c71ff9b07c7848cf12073" title="Computes the binomial coefficient (n, k)" alt="" coords="425,107,493,133"/>
-</map>

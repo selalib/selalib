@@ -1,7 +1,0 @@
-<map id="lagr_7pt_vec" name="lagr_7pt_vec">
-<area shape="rect" id="node1" title="vectorizable 7&#45;pt&#45;lagrange interpolation" alt="" coords="560,78,665,105"/>
-<area shape="rect" id="node2" href="$namespacesll__m__lagrange__interpolation__1d__fast.html#ac26fc43ee907fcd29791154948c16dd3" title="Lagrange interpolation with halo cell boundaries, where the input array already contains halo cells...." alt="" coords="284,5,512,47"/>
-<area shape="rect" id="node4" href="$namespacesll__m__lagrange__interpolation__1d__fast.html#ab18de38c85fd97f50c49d5573ab183b1" title="Lagrange interpolation, periodic boundary conditions." alt="" coords="294,71,502,112"/>
-<area shape="rect" id="node5" href="$namespacesll__m__lagrange__interpolation__1d__fast.html#a5165066a14857300420afc9315cca668" title="Lagrange interpolation, periodic boundary conditions, first value repeated at the end." alt="" coords="292,136,504,177"/>
-<area shape="rect" id="node3" href="$namespacesll__m__lagrange__interpolator__1d.html#a666c93a77c57376c29a70b853ab02e44" title=" " alt="" coords="5,71,236,112"/>
-</map>

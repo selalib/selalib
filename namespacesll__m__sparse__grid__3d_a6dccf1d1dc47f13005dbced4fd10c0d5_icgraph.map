@@ -1,5 +1,0 @@
-<map id="tohira" name="tohira">
-<area shape="rect" id="node1" title=" " alt="" coords="324,13,384,39"/>
-<area shape="rect" id="node2" href="$namespacesll__m__sparse__grid__3d.html#a31a3a48b64e437c26f6c8b3eae67a4e1" title="Sparse grid inverse FFT." alt="" coords="221,13,276,39"/>
-<area shape="rect" id="node3" href="$namespacesll__m__sparse__grid__3d.html#a1a7a611e44ecbbb689ee85411b7fc897" title="Compute value at displaced grid points using trigonometric interpolation (based on SG FFT)" alt="" coords="5,5,173,47"/>
-</map>

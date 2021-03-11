@@ -1,7 +1,0 @@
-<map id="sll_t_maxwell_2d_pstd" name="sll_t_maxwell_2d_pstd">
-<area shape="rect" id="node1" title="Maxwell solver object." alt="" coords="186,392,357,419"/>
-<area shape="rect" id="node2" href="$structsll__m__fft_1_1sll__t__fft.html" title="Type for FFT plan in SeLaLib." alt="" coords="111,147,181,174"/>
-<area shape="rect" id="node3" title=" " alt="" coords="5,5,71,32"/>
-<area shape="rect" id="node4" title=" " alt="" coords="148,5,285,32"/>
-<area shape="rect" id="node5" title=" " alt="" coords="377,147,494,174"/>
-</map>

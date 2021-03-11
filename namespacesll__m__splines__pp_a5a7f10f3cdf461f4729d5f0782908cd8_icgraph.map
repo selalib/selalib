@@ -1,4 +1,0 @@
-<map id="sll_s_spline_pp_horner_primitive_1d" name="sll_s_spline_pp_horner_primitive_1d">
-<area shape="rect" id="node1" title="Perform a 1d hornerschema on the pp_coeffs evaluate at x." alt="" coords="209,13,379,54"/>
-<area shape="rect" id="node2" href="$namespacesll__m__particle__mesh__coupling__spline__1d.html#a92e471387d403a8ea29430c0b18a5656" title="Helper function for add_current_update_v." alt="" coords="5,5,161,61"/>
-</map>

@@ -1,6 +1,0 @@
-<map id="sll_s_coordinate_transformation_2d_analytic_init" name="sll_s_coordinate_transformation_2d_analytic_init">
-<area shape="rect" id="node1" title=" " alt="" coords="719,5,949,47"/>
-<area shape="rect" id="node2" href="$namespacesll__m__coordinate__transformations__2d.html#a2811f406fc1559ec2c7b88b8182baaf2" title="Create the analytic coordinate transformation." alt="" coords="463,5,671,47"/>
-<area shape="rect" id="node3" href="$namespacesll__m__dk__curv__mesh.html#a6f315071892ebb64818730a4f493262f" title="select transformation" alt="" coords="241,5,415,47"/>
-<area shape="rect" id="node4" href="$namespacesll__m__dk__curv__mesh.html#a4c65d8244e6f18bd6fb5cff4c5c5ee74" title="Initialize simulation from input file." alt="" coords="5,5,193,47"/>
-</map>

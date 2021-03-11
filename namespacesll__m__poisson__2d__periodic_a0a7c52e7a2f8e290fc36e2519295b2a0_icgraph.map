@@ -1,4 +1,0 @@
-<map id="initialize_poisson_2d_periodic_fft" name="initialize_poisson_2d_periodic_fft">
-<area shape="rect" id="node1" title="sll_o_initialize the Poisson solver" alt="" coords="263,5,397,47"/>
-<area shape="rect" id="node2" href="$namespacesll__m__poisson__2d__periodic.html#a7eb1351d8af1caa0520fe316b4fbd2d3" title="Create a sll_o_new solver." alt="" coords="5,13,215,39"/>
-</map>

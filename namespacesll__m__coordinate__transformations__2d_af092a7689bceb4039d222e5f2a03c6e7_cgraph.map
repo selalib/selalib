@@ -1,8 +1,0 @@
-<map id="read_from_file_2d_discrete" name="read_from_file_2d_discrete">
-<area shape="rect" id="node1" title=" " alt="" coords="5,115,204,142"/>
-<area shape="rect" id="node2" href="$namespacesll__m__arbitrary__degree__spline__interpolator__2d.html#a94723d635bdbaad8fb8fd863b4b7bd07" title="Initialization of a pointer interpolator arbitrary degree splines 2d." alt="" coords="252,5,459,76"/>
-<area shape="rect" id="node4" href="$namespacesll__m__cartesian__meshes.html#a47fb939f257f84c12cc40b86a9d0fe11" title="allocates the memory space for a new 2D cartesian mesh on the heap, initializes it with the given arg..." alt="" coords="264,101,447,157"/>
-<area shape="rect" id="node6" href="$namespacesll__m__utilities.html#afa513cebb464773e58d9364a6e231924" title="Get a file unit number free before creating a file." alt="" coords="287,181,423,223"/>
-<area shape="rect" id="node3" href="$namespacesll__m__arbitrary__degree__spline__interpolator__2d.html#a994776d04ed7b9ec4faa194f04da5eec" title="Initialization of an interpolator arbitrary degree splines 2d. The parameters are." alt="" coords="507,13,716,69"/>
-<area shape="rect" id="node5" href="$namespacesll__m__cartesian__meshes.html#ab2d0d888cbfa10e6b2a37a5bcf427ef3" title="initializes a cartesian mesh 2D object that has been already allocated." alt="" coords="520,101,703,157"/>
-</map>

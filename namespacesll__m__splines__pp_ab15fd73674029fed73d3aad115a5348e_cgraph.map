@@ -1,4 +1,0 @@
-<map id="sll_s_spline_pp_b_to_pp_2d_cell" name="sll_s_spline_pp_b_to_pp_2d_cell">
-<area shape="rect" id="node1" title="Convert 2d spline in B form in a cell to spline in pp form with periodic boundary conditions." alt="" coords="5,5,160,47"/>
-<area shape="rect" id="node2" href="$namespacesll__m__splines__pp.html#a1a051605f297f81093a1ff7008bd4143" title="Convert 1d spline in B form in a cell to spline in pp form with periodic boundary conditions." alt="" coords="208,5,363,47"/>
-</map>
