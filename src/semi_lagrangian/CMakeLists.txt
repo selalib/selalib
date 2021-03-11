@@ -1,2 +1,2 @@
-ADD_SUBDIRECTORY(advection)
-ADD_SUBDIRECTORY(fcisl)
+add_subdirectory(advection)
+add_subdirectory(fcisl)

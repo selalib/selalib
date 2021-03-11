@@ -1,42 +1,42 @@
-SET(POISSON_SRCS sll_m_poisson_1d_base.F90
-                 sll_m_poisson_1d_periodic.F90
-                 sll_m_poisson_1d_hmf.F90
-                 sll_m_poisson_1d_polar.F90
-                 sll_m_poisson_2d_polar.F90
-                 sll_m_poisson_2d_base.F90
-                 sll_m_poisson_2d_periodic.F90
-                 sll_m_poisson_2d_elliptic_solver.F90
-                 sll_m_poisson_2d_fem.F90
-                 sll_m_poisson_3d_base.F90
-                 sll_m_hex_poisson.F90
-                 sll_m_poisson_2d_tri.F90
-                 sll_m_poisson_2d_fem_sps_weak_form.F90
-                 sll_m_poisson_2d_fem_sps_dense_assembler.F90
-                 sll_m_poisson_2d_fem_sps_dense_projector.F90
-                 sll_m_poisson_2d_fem_sps_dense.F90
-                 #sll_m_poisson_2d_fem_sps_stencil_assembler.F90
-                 #sll_m_poisson_2d_fem_sps_stencil_projector.F90
-                 #sll_m_poisson_2d_fem_sps_stencil.F90
-                 sll_m_poisson_2d_fem_sps_stencil_new_assembler.F90
-                 sll_m_poisson_2d_fem_sps_stencil_new.F90 )
+set(POISSON_SRCS
+    sll_m_poisson_1d_base.F90
+    sll_m_poisson_1d_periodic.F90
+    sll_m_poisson_1d_hmf.F90
+    sll_m_poisson_1d_polar.F90
+    sll_m_poisson_2d_polar.F90
+    sll_m_poisson_2d_base.F90
+    sll_m_poisson_2d_periodic.F90
+    sll_m_poisson_2d_elliptic_solver.F90
+    sll_m_poisson_2d_fem.F90
+    sll_m_poisson_3d_base.F90
+    sll_m_hex_poisson.F90
+    sll_m_poisson_2d_tri.F90
+    sll_m_poisson_2d_fem_sps_weak_form.F90
+    sll_m_poisson_2d_fem_sps_dense_assembler.F90
+    sll_m_poisson_2d_fem_sps_dense_projector.F90
+    sll_m_poisson_2d_fem_sps_dense.F90
+    # sll_m_poisson_2d_fem_sps_stencil_assembler.F90
+    # sll_m_poisson_2d_fem_sps_stencil_projector.F90
+    # sll_m_poisson_2d_fem_sps_stencil.F90
+    sll_m_poisson_2d_fem_sps_stencil_new_assembler.F90
+    sll_m_poisson_2d_fem_sps_stencil_new.F90)
 
-IF(FFT_LIB MATCHES FFTW)
-   LIST(APPEND POISSON_SRCS sll_m_poisson_3d_periodic.F90)
-ENDIF()
+if(FFT_LIB MATCHES FFTW)
+  list(APPEND POISSON_SRCS sll_m_poisson_3d_periodic.F90)
+endif()
 
-IF(BUILD_MUDPACK)
-  ADD_DEFINITIONS(-DMUDPACK)
-  SET(POISSON_SRCS ${POISSON_SRCS}
-                 sll_m_poisson_2d_mudpack_curvilinear.F90
-                 sll_m_poisson_2d_mudpack_curvilinear_old.F90
-                 sll_m_mudpack.F90
-                 sll_m_mudpack_curvilinear.F90)
-ENDIF(BUILD_MUDPACK)
+if(BUILD_MUDPACK)
+  add_definitions(-DMUDPACK)
+  set(POISSON_SRCS
+      ${POISSON_SRCS} sll_m_poisson_2d_mudpack_curvilinear.F90
+      sll_m_poisson_2d_mudpack_curvilinear_old.F90 sll_m_mudpack.F90
+      sll_m_mudpack_curvilinear.F90)
+endif(BUILD_MUDPACK)
 
+add_library(sll_poisson_solvers STATIC ${POISSON_SRCS})
 
-ADD_LIBRARY( sll_poisson_solvers STATIC ${POISSON_SRCS} )
-
-TARGET_LINK_LIBRARIES( sll_poisson_solvers
+target_link_libraries(
+  sll_poisson_solvers
   sll_assert
   sll_errors
   sll_memory
@@ -49,11 +49,11 @@ TARGET_LINK_LIBRARIES( sll_poisson_solvers
   sll_splines_smooth
   ${LAPACK_LIBRARIES})
 
-IF(BUILD_MUDPACK)
-  TARGET_LINK_LIBRARIES( sll_poisson_solvers mudpack)
-ENDIF(BUILD_MUDPACK)
+if(BUILD_MUDPACK)
+  target_link_libraries(sll_poisson_solvers mudpack)
+endif(BUILD_MUDPACK)
 
 # Ctests
-IF(BUILD_TESTING)
-  ADD_SUBDIRECTORY( testing )
-ENDIF(BUILD_TESTING)
+if(BUILD_TESTING)
+  add_subdirectory(testing)
+endif(BUILD_TESTING)

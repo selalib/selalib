@@ -1,21 +1,23 @@
-IF(NOT HDF5_IS_PARALLEL)
-   MESSAGE(STATUS "Serial version of HDF5 is installed")
-ENDIF(NOT HDF5_IS_PARALLEL)
+if(NOT HDF5_IS_PARALLEL)
+  message(STATUS "Serial version of HDF5 is installed")
+endif(NOT HDF5_IS_PARALLEL)
 
-SET(IO_SRC sll_m_ascii_io.F90 
-           sll_m_binary_io.F90 
-           sll_m_gnuplot.F90 
-           sll_m_hdf5_io_serial.F90
-           sll_m_xml_io.F90
-           sll_m_plotmtv.F90
-           sll_m_tri_mesh_xmf.F90
-           sll_m_xdmf.F90 )
+set(IO_SRC
+    sll_m_ascii_io.F90
+    sll_m_binary_io.F90
+    sll_m_gnuplot.F90
+    sll_m_hdf5_io_serial.F90
+    sll_m_xml_io.F90
+    sll_m_plotmtv.F90
+    sll_m_tri_mesh_xmf.F90
+    sll_m_xdmf.F90)
 
-ADD_LIBRARY(sll_file_io STATIC ${IO_SRC})
+add_library(sll_file_io STATIC ${IO_SRC})
 
-TARGET_INCLUDE_DIRECTORIES(sll_file_io BEFORE PUBLIC ${HDF5_INCLUDE_DIR_FORTRAN})
-TARGET_LINK_LIBRARIES(sll_file_io sll_utilities ${HDF5_LIBRARIES})
+target_include_directories(sll_file_io BEFORE
+                           PUBLIC ${HDF5_INCLUDE_DIR_FORTRAN})
+target_link_libraries(sll_file_io sll_utilities ${HDF5_LIBRARIES})
 
-IF(BUILD_TESTING)
-  ADD_SUBDIRECTORY(testing)
-ENDIF(BUILD_TESTING)
+if(BUILD_TESTING)
+  add_subdirectory(testing)
+endif(BUILD_TESTING)

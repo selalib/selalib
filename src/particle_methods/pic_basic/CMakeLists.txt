@@ -1,7 +1,7 @@
 add_subdirectory(pic_weights)
 add_subdirectory(particle_groups)
 add_subdirectory(pic_sampling)
-if (NOT (FFT_LIB STREQUAL "SLLFFT"))
+if(NOT (FFT_LIB STREQUAL "SLLFFT"))
   add_subdirectory(pic_visualization)
 endif()
 add_subdirectory(particle_mesh_coupling)
