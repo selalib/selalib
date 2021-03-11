@@ -1,18 +1,5 @@
-# FFTW_INCLUDE_DIR = fftw3.f03 FFTW_LIBRARIES = libfftw3.a FFTW_FOUND = true if
-# FFTW3 is found
-
-if(DEFINED ENV{FFTW_ROOT})
-  set(FFTW_ROOT
-      $ENV{FFTW_ROOT}
-      CACHE PATH "FFTW location")
-else()
-  set(FFTW_ROOT
-      "/usr/local"
-      CACHE PATH "FFTW location")
-endif()
-
 set(TRIAL_PATHS
-    ${FFTW_ROOT}
+    $ENV{FFTW_ROOT}
     $ENV{FFTW_HOME}
     $ENV{FFTW_DIR}
     $ENV{FFTW_BASE}
