@@ -1,11 +1,9 @@
-if(NOT PGI)
-  add_executable(test_maxwell_1d_fem test_maxwell_1d_fem.F90)
-  target_link_libraries(test_maxwell_1d_fem sll_maxwell_solvers)
+add_executable(test_maxwell_1d_fem test_maxwell_1d_fem.F90)
+target_link_libraries(test_maxwell_1d_fem sll_maxwell_solvers)
 
-  add_test(NAME maxwell_1d_fem COMMAND test_maxwell_1d_fem)
-  set_tests_properties(maxwell_1d_fem PROPERTIES PASS_REGULAR_EXPRESSION
+add_test(NAME maxwell_1d_fem COMMAND test_maxwell_1d_fem)
+set_tests_properties(maxwell_1d_fem PROPERTIES PASS_REGULAR_EXPRESSION
                                                  "PASSED")
-endif(NOT PGI)
 
 add_executable(test_maxwell_2d_fdtd test_maxwell_2d_fdtd.F90)
 target_link_libraries(test_maxwell_2d_fdtd sll_maxwell_solvers)

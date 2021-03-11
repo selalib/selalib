@@ -280,11 +280,7 @@ contains
       class(sll_t_vector_space_real_array_1d), intent(in) :: self
       real(wp) :: res
 
-#ifdef __PGI
-      res = sqrt(dot_product(self%array, self%array))
-#else
       res = norm2(self%array)
-#endif
 
    end function norm__real
 

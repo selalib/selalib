@@ -3,13 +3,8 @@ set(MAXWELL_SOLVERS_SRCS
     sll_m_maxwell_2d_diga.F90 sll_m_maxwell_1d_base.F90
     sll_m_maxwell_1d_fem.F90)
 
-if(PGI)
-  list(APPEND MAXWELL_SOLVERS_SRCS sll_m_maxwell_2d_pstd_pgi.F90
-       sll_m_maxwell_3d_pstd_pgi.F90)
-else(PGI)
-  list(APPEND MAXWELL_SOLVERS_SRCS sll_m_maxwell_2d_pstd.F90
-       sll_m_maxwell_3d_pstd.F90)
-endif(PGI)
+list(APPEND MAXWELL_SOLVERS_SRCS sll_m_maxwell_2d_pstd.F90
+     sll_m_maxwell_3d_pstd.F90)
 
 add_library(sll_maxwell_solvers STATIC ${MAXWELL_SOLVERS_SRCS})
 
