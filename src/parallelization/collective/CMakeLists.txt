@@ -1,10 +1,7 @@
-ADD_LIBRARY( sll_collective STATIC sll_m_collective.F90 )
-TARGET_LINK_LIBRARIES( sll_collective
-  sll_assert
-  sll_memory
-  sll_mpi
-  sll_utilities )
+add_library(sll_collective STATIC sll_m_collective.F90)
+target_link_libraries(sll_collective sll_assert sll_memory sll_mpi
+                      sll_utilities)
 
-IF(BUILD_TESTING)
-  ADD_SUBDIRECTORY(testing)
-ENDIF(BUILD_TESTING)
+if(BUILD_TESTING)
+  add_subdirectory(testing)
+endif(BUILD_TESTING)
