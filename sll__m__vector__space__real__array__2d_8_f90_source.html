@@ -348,39 +348,35 @@ $(function() {
 <div class="line"><a name="l00280"></a><span class="lineno"><a class="line" href="namespacesll__m__vector__space__real__array__2d.html#ae97ad4f969a30bb469ec72013415e45b">  280</a></span>&#160;      <span class="keywordtype">class</span>(<a class="code" href="structsll__m__vector__space__real__array__2d_1_1sll__t__vector__space__real__array__2d.html">sll_t_vector_space_real_array_2d</a>), <span class="keywordtype">intent(in)</span> :: self</div>
 <div class="line"><a name="l00281"></a><span class="lineno">  281</span>&#160;<span class="keywordtype">      real</span>(<a class="code" href="namespacesll__m__vector__space__real__array__2d.html#a572601519dfd43a8990fcc72c97f14c9">wp</a>) :: res</div>
 <div class="line"><a name="l00282"></a><span class="lineno">  282</span>&#160; </div>
-<div class="line"><a name="l00283"></a><span class="lineno">  283</span>&#160;<span class="preprocessor">#ifdef __PGI</span></div>
-<div class="line"><a name="l00284"></a><span class="lineno">  284</span>&#160;<span class="preprocessor"></span>      res = sqrt(self%inner(self))</div>
-<div class="line"><a name="l00285"></a><span class="lineno">  285</span>&#160;<span class="preprocessor">#else</span></div>
-<div class="line"><a name="l00286"></a><span class="lineno">  286</span>&#160;<span class="preprocessor"></span>      res = norm2(self%array)</div>
-<div class="line"><a name="l00287"></a><span class="lineno">  287</span>&#160;<span class="preprocessor">#endif</span></div>
-<div class="line"><a name="l00288"></a><span class="lineno">  288</span>&#160;<span class="preprocessor"></span> </div>
-<div class="line"><a name="l00289"></a><span class="lineno">  289</span>&#160;   <span class="keyword">end function </span><a class="code" href="namespacesll__m__vector__space__real__array__2d.html#ae97ad4f969a30bb469ec72013415e45b">norm__real</a></div>
-<div class="line"><a name="l00290"></a><span class="lineno">  290</span>&#160; </div>
-<div class="line"><a name="l00291"></a><span class="lineno">  291</span>&#160;   <span class="comment">!-----------------------------------------------------------------------------</span></div>
-<div class="line"><a name="l00292"></a><span class="lineno">  292</span>&#160;   <span class="keyword">function </span><a class="code" href="namespacesll__m__vector__space__real__array__2d.html#a0fa99e21c18f64c481eb214748813068">inner__real</a>(self, x) <span class="keyword">result</span>(res)</div>
-<div class="line"><a name="l00293"></a><span class="lineno"><a class="line" href="namespacesll__m__vector__space__real__array__2d.html#a0fa99e21c18f64c481eb214748813068">  293</a></span>&#160;      <span class="keywordtype">class</span>(<a class="code" href="structsll__m__vector__space__real__array__2d_1_1sll__t__vector__space__real__array__2d.html">sll_t_vector_space_real_array_2d</a>), <span class="keywordtype">intent(in)</span> :: self</div>
-<div class="line"><a name="l00294"></a><span class="lineno">  294</span>&#160;      <span class="keywordtype">class</span>(<a class="code" href="structsll__m__vector__space__base_1_1sll__c__vector__space.html">sll_c_vector_space</a>), <span class="keywordtype">intent(in)</span> :: x</div>
-<div class="line"><a name="l00295"></a><span class="lineno">  295</span>&#160;<span class="keywordtype">      real</span>(<a class="code" href="namespacesll__m__vector__space__real__array__2d.html#a572601519dfd43a8990fcc72c97f14c9">wp</a>) :: res</div>
+<div class="line"><a name="l00283"></a><span class="lineno">  283</span>&#160;      res = norm2(self%array)</div>
+<div class="line"><a name="l00284"></a><span class="lineno">  284</span>&#160; </div>
+<div class="line"><a name="l00285"></a><span class="lineno">  285</span>&#160;   <span class="keyword">end function </span><a class="code" href="namespacesll__m__vector__space__real__array__2d.html#ae97ad4f969a30bb469ec72013415e45b">norm__real</a></div>
+<div class="line"><a name="l00286"></a><span class="lineno">  286</span>&#160; </div>
+<div class="line"><a name="l00287"></a><span class="lineno">  287</span>&#160;   <span class="comment">!-----------------------------------------------------------------------------</span></div>
+<div class="line"><a name="l00288"></a><span class="lineno">  288</span>&#160;   <span class="keyword">function </span><a class="code" href="namespacesll__m__vector__space__real__array__2d.html#a0fa99e21c18f64c481eb214748813068">inner__real</a>(self, x) <span class="keyword">result</span>(res)</div>
+<div class="line"><a name="l00289"></a><span class="lineno"><a class="line" href="namespacesll__m__vector__space__real__array__2d.html#a0fa99e21c18f64c481eb214748813068">  289</a></span>&#160;      <span class="keywordtype">class</span>(<a class="code" href="structsll__m__vector__space__real__array__2d_1_1sll__t__vector__space__real__array__2d.html">sll_t_vector_space_real_array_2d</a>), <span class="keywordtype">intent(in)</span> :: self</div>
+<div class="line"><a name="l00290"></a><span class="lineno">  290</span>&#160;      <span class="keywordtype">class</span>(<a class="code" href="structsll__m__vector__space__base_1_1sll__c__vector__space.html">sll_c_vector_space</a>), <span class="keywordtype">intent(in)</span> :: x</div>
+<div class="line"><a name="l00291"></a><span class="lineno">  291</span>&#160;<span class="keywordtype">      real</span>(<a class="code" href="namespacesll__m__vector__space__real__array__2d.html#a572601519dfd43a8990fcc72c97f14c9">wp</a>) :: res</div>
+<div class="line"><a name="l00292"></a><span class="lineno">  292</span>&#160; </div>
+<div class="line"><a name="l00293"></a><span class="lineno">  293</span>&#160;      <span class="keywordtype">character(len=*)</span>, <span class="keywordtype">parameter</span> :: this_fun_name = <span class="stringliteral">&quot;sll_t_vector_space_real_array_2d % inner&quot;</span></div>
+<div class="line"><a name="l00294"></a><span class="lineno">  294</span>&#160; </div>
+<div class="line"><a name="l00295"></a><span class="lineno">  295</span>&#160;      <span class="keywordflow">select type</span> (x)</div>
 <div class="line"><a name="l00296"></a><span class="lineno">  296</span>&#160; </div>
-<div class="line"><a name="l00297"></a><span class="lineno">  297</span>&#160;      <span class="keywordtype">character(len=*)</span>, <span class="keywordtype">parameter</span> :: this_fun_name = <span class="stringliteral">&quot;sll_t_vector_space_real_array_2d % inner&quot;</span></div>
+<div class="line"><a name="l00297"></a><span class="lineno">  297</span>&#160;<span class="keywordflow">      class is</span> (<a class="code" href="structsll__m__vector__space__real__array__2d_1_1sll__t__vector__space__real__array__2d.html">sll_t_vector_space_real_array_2d</a>)</div>
 <div class="line"><a name="l00298"></a><span class="lineno">  298</span>&#160; </div>
-<div class="line"><a name="l00299"></a><span class="lineno">  299</span>&#160;      <span class="keywordflow">select type</span> (x)</div>
+<div class="line"><a name="l00299"></a><span class="lineno">  299</span>&#160;         res = sum(self%array*x%array)</div>
 <div class="line"><a name="l00300"></a><span class="lineno">  300</span>&#160; </div>
-<div class="line"><a name="l00301"></a><span class="lineno">  301</span>&#160;<span class="keywordflow">      class is</span> (<a class="code" href="structsll__m__vector__space__real__array__2d_1_1sll__t__vector__space__real__array__2d.html">sll_t_vector_space_real_array_2d</a>)</div>
+<div class="line"><a name="l00301"></a><span class="lineno">  301</span>&#160;<span class="keywordflow">      class default</span></div>
 <div class="line"><a name="l00302"></a><span class="lineno">  302</span>&#160; </div>
-<div class="line"><a name="l00303"></a><span class="lineno">  303</span>&#160;         res = sum(self%array*x%array)</div>
+<div class="line"><a name="l00303"></a><span class="lineno">  303</span>&#160;         sll_error(this_fun_name, <a class="code" href="namespacesll__m__vector__space__real__array__2d.html#ae8e05a663db53c667a829ad2bcccd67b">wrong_type_x</a>)</div>
 <div class="line"><a name="l00304"></a><span class="lineno">  304</span>&#160; </div>
-<div class="line"><a name="l00305"></a><span class="lineno">  305</span>&#160;<span class="keywordflow">      class default</span></div>
+<div class="line"><a name="l00305"></a><span class="lineno">  305</span>&#160;<span class="keywordflow">      end select</span></div>
 <div class="line"><a name="l00306"></a><span class="lineno">  306</span>&#160; </div>
-<div class="line"><a name="l00307"></a><span class="lineno">  307</span>&#160;         sll_error(this_fun_name, <a class="code" href="namespacesll__m__vector__space__real__array__2d.html#ae8e05a663db53c667a829ad2bcccd67b">wrong_type_x</a>)</div>
+<div class="line"><a name="l00307"></a><span class="lineno">  307</span>&#160;   <span class="keyword">end function </span><a class="code" href="namespacesll__m__vector__space__real__array__2d.html#a0fa99e21c18f64c481eb214748813068">inner__real</a></div>
 <div class="line"><a name="l00308"></a><span class="lineno">  308</span>&#160; </div>
-<div class="line"><a name="l00309"></a><span class="lineno">  309</span>&#160;<span class="keywordflow">      end select</span></div>
-<div class="line"><a name="l00310"></a><span class="lineno">  310</span>&#160; </div>
-<div class="line"><a name="l00311"></a><span class="lineno">  311</span>&#160;   <span class="keyword">end function </span><a class="code" href="namespacesll__m__vector__space__real__array__2d.html#a0fa99e21c18f64c481eb214748813068">inner__real</a></div>
-<div class="line"><a name="l00312"></a><span class="lineno">  312</span>&#160; </div>
-<div class="line"><a name="l00313"></a><span class="lineno">  313</span>&#160;<span class="keyword">end module </span><a class="code" href="namespacesll__m__vector__space__real__array__2d.html">sll_m_vector_space_real_array_2d</a></div>
+<div class="line"><a name="l00309"></a><span class="lineno">  309</span>&#160;<span class="keyword">end module </span><a class="code" href="namespacesll__m__vector__space__real__array__2d.html">sll_m_vector_space_real_array_2d</a></div>
 </div><!-- fragment --></div><!-- contents -->
-<div class="ttc" id="anamespacesll__m__vector__space__real__array__2d_html_a0fa99e21c18f64c481eb214748813068"><div class="ttname"><a href="namespacesll__m__vector__space__real__array__2d.html#a0fa99e21c18f64c481eb214748813068">sll_m_vector_space_real_array_2d::inner__real</a></div><div class="ttdeci">real(wp) function inner__real(self, x)</div><div class="ttdef"><b>Definition:</b> <a href="sll__m__vector__space__real__array__2d_8_f90_source.html#l00293">sll_m_vector_space_real_array_2d.F90:293</a></div></div>
+<div class="ttc" id="anamespacesll__m__vector__space__real__array__2d_html_a0fa99e21c18f64c481eb214748813068"><div class="ttname"><a href="namespacesll__m__vector__space__real__array__2d.html#a0fa99e21c18f64c481eb214748813068">sll_m_vector_space_real_array_2d::inner__real</a></div><div class="ttdeci">real(wp) function inner__real(self, x)</div><div class="ttdef"><b>Definition:</b> <a href="sll__m__vector__space__real__array__2d_8_f90_source.html#l00289">sll_m_vector_space_real_array_2d.F90:289</a></div></div>
 <div class="ttc" id="anamespacesll__m__vector__space__real__array__2d_html_ae8e05a663db53c667a829ad2bcccd67b"><div class="ttname"><a href="namespacesll__m__vector__space__real__array__2d.html#ae8e05a663db53c667a829ad2bcccd67b">sll_m_vector_space_real_array_2d::wrong_type_x</a></div><div class="ttdeci">character(len= *), parameter wrong_type_x</div><div class="ttdef"><b>Definition:</b> <a href="sll__m__vector__space__real__array__2d_8_f90_source.html#l00056">sll_m_vector_space_real_array_2d.F90:56</a></div></div>
 <div class="ttc" id="anamespacesll__m__vector__space__real__array__2d_html_aa7e4f6fe5af88db7c90aaac3b12c5e8a"><div class="ttname"><a href="namespacesll__m__vector__space__real__array__2d.html#aa7e4f6fe5af88db7c90aaac3b12c5e8a">sll_m_vector_space_real_array_2d::incr_mult__real</a></div><div class="ttdeci">subroutine incr_mult__real(self, a, x)</div><div class="ttdef"><b>Definition:</b> <a href="sll__m__vector__space__real__array__2d_8_f90_source.html#l00203">sll_m_vector_space_real_array_2d.F90:203</a></div></div>
 <div class="ttc" id="anamespacesll__m__vector__space__real__array__2d_html_ab2e6ee48b114e8f3fbd9ad1b770236f1"><div class="ttname"><a href="namespacesll__m__vector__space__real__array__2d.html#ab2e6ee48b114e8f3fbd9ad1b770236f1">sll_m_vector_space_real_array_2d::incr__real</a></div><div class="ttdeci">subroutine incr__real(self, x)</div><div class="ttdef"><b>Definition:</b> <a href="sll__m__vector__space__real__array__2d_8_f90_source.html#l00086">sll_m_vector_space_real_array_2d.F90:86</a></div></div>
@@ -407,7 +403,7 @@ $(function() {
 <div id="url"></div>
 <div align=left><a href="https://github.com/selalib/selalib/issues/new"><small>&nbsp; &nbsp; Report Typos and Errors</small></a></div>
 <address class="footer"><small>
-Generated on Thu Mar 11 2021 10:10:03 for Semi-Lagrangian Library by &#160;<a href="http://www.doxygen.org/index.html">
+Generated on Thu Mar 11 2021 10:51:50 for Semi-Lagrangian Library by &#160;<a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/>
 </a> 1.8.17
 </small></address>
