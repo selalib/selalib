@@ -47,7 +47,7 @@ ubuntu-test:
     paths:
       - build
   tags:
-    - large
+    - docker
 
 pages:
   stage: deploy
@@ -64,51 +64,3 @@ pages:
     - master
   tags:
     - docker
-    - large
-
-
-
-#intel-impi:
-#  stage: build
-#  script:
-#    - "scripts/intel16-build.sh"
-#  only:
-#    - develop
-#  tags:
-#    - intel
-    
-#ubuntu-openmpi:
-#  tags:
-#    - ubuntu
-#    - openmpi
-#  stage: build
-#  script: 
-#    - "scripts/selalib-ci.sh"
-#  only:
-#    - develop
-
-#  
-#
-#
-
-#    
-#mavericks-openmpi:
-#  stage: build
-#  script: 
-#    - "scripts/selalib-ci.sh"
-#  only:
-#    - develop
-#  tags:
-#    - osx
-#    - openmpi
-#    
-#mavericks-mpich:
-#  stage: build
-#  script: 
-#    - "scripts/selalib-ci.sh"
-#  only:
-#    - develop
-#  tags:
-#    - osx
-#    - mpich  
-  
