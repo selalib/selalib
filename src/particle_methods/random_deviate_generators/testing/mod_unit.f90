@@ -6,7 +6,6 @@ module mod_unit
              unit_assert_equal_within, unit_assert_true
    integer, parameter :: ik = selected_int_kind(6)
    integer, parameter :: dk = selected_real_kind(15)
-!FIXME - PGI does not accept  logical, protected :: unit_debug = .false.
    logical :: unit_debug = .false.
    logical, allocatable :: unit_ok(:)
    integer :: index_ok

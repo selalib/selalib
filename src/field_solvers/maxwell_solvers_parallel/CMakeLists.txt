@@ -1,10 +1,5 @@
-if(PGI)
-  add_library(sll_maxwell_parallel STATIC
-              sll_m_maxwell_2d_periodic_cartesian_par_pgi.F90)
-else(PGI)
-  add_library(sll_maxwell_parallel STATIC
-              sll_m_maxwell_2d_periodic_cartesian_par.F90)
-endif(PGI)
+add_library(sll_maxwell_parallel STATIC
+            sll_m_maxwell_2d_periodic_cartesian_par.F90)
 
 target_link_libraries(sll_maxwell_parallel sll_remap sll_fft)
 
