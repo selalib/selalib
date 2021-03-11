@@ -1,5 +1,3 @@
-image: pnavaro/selalib
-
 ubuntu-mpich:
   stage: build
   allow_failure: true
@@ -7,8 +5,7 @@ ubuntu-mpich:
     - mkdir -p build
     - cd build && cmake -DCMAKE_BUILD_TYPE=Release -DHDF5_PARALLEL_ENABLED=ON .. && make -j
   only:
-    - master
-    - develop
+    - main
   tags:
     - ubuntu
     - mpich
@@ -21,13 +18,13 @@ fedora-openmpi:
     - source /etc/profile.d/modules.sh && module load mpi/openmpi-x86_64
     - cd build && cmake -DCMAKE_BUILD_TYPE=Debug -DHDF5_PARALLEL_ENABLED=ON .. && make -j
   only:
-    - master
-    - develop
+    - main
   tags:
     - fedora
     - openmpi
 
 ubuntu-build:
+  image: pnavaro/selalib
   stage: build
   script:
     - mkdir -p build
@@ -36,9 +33,10 @@ ubuntu-build:
     paths:
       - build
   tags:
-    - large
+    - docker
 
 ubuntu-test:
+  image: pnavaro/selalib
   stage: test
   allow_failure: true
   script:
@@ -46,10 +44,13 @@ ubuntu-test:
   artifacts:
     paths:
       - build
+  only:
+    - main
   tags:
     - docker
 
 pages:
+  image: pnavaro/selalib
   stage: deploy
   script:
     - cd build && make doc-dev
@@ -60,7 +61,6 @@ pages:
     paths:
       - public
   only:
-    - develop
-    - master
+    - main
   tags:
     - docker
