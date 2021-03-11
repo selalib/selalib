@@ -1,41 +1,38 @@
-IF(FFT_LIB STREQUAL "FFTPACK")
+if(FFT_LIB STREQUAL "FFTPACK")
 
-  SET(FFT_SRC sll_m_fft_fftpack.F90)
-  SET(DEPENDENCIES dfftpack)
-  ADD_DEFINITIONS(-D_DEFAULTFFTLIB=FFTPACK_MOD)
+  set(FFT_SRC sll_m_fft_fftpack.F90)
+  set(DEPENDENCIES dfftpack)
+  add_definitions(-D_DEFAULTFFTLIB=FFTPACK_MOD)
 
-ELSEIF(FFT_LIB STREQUAL "FFTW")
+elseif(FFT_LIB STREQUAL "FFTW")
 
-  IF(FFTW_FOUND AND FFTW_ENABLED)
-     SET(FFT_SRC sll_m_fft_fftw3.F90)
-     ADD_DEFINITIONS(-D_DEFAULTFFTLIB=FFTW_MOD)
-  ENDIF()
+  if(FFTW_FOUND AND FFTW_ENABLED)
+    set(FFT_SRC sll_m_fft_fftw3.F90)
+    add_definitions(-D_DEFAULTFFTLIB=FFTW_MOD)
+  endif()
 
-ELSE()
+else()
 
-  IF(CMAKE_Fortran_COMPILER_ID MATCHES PGI)
-    SET(FFT_SRC sll_m_fft_sllfft_pgi.F90) 
-  ELSE(CMAKE_Fortran_COMPILER_ID MATCHES PGI)
-    SET(FFT_SRC sll_m_fft_sllfft.F90) 
-  ENDIF(CMAKE_Fortran_COMPILER_ID MATCHES PGI)
+  if(CMAKE_Fortran_COMPILER_ID MATCHES PGI)
+    set(FFT_SRC sll_m_fft_sllfft_pgi.F90)
+  else(CMAKE_Fortran_COMPILER_ID MATCHES PGI)
+    set(FFT_SRC sll_m_fft_sllfft.F90)
+  endif(CMAKE_Fortran_COMPILER_ID MATCHES PGI)
 
-  ADD_DEFINITIONS(-D_DEFAULTFFTLIB=SLLFFT_MOD)
+  add_definitions(-D_DEFAULTFFTLIB=SLLFFT_MOD)
 
-ENDIF()
+endif()
 
-ADD_LIBRARY(sll_fft STATIC ${FFT_SRC})
+add_library(sll_fft STATIC ${FFT_SRC})
 
-IF(FFTW_FOUND AND FFTW_ENABLED)
-  ADD_LIBRARY(sll_fftw3 STATIC sll_m_fftw3.F90)
-  TARGET_INCLUDE_DIRECTORIES(sll_fftw3 PRIVATE ${FFTW_INCLUDE_DIRS})
-  LIST(APPEND DEPENDENCIES sll_fftw3 ${FFTW_LIBRARIES})
-ENDIF(FFTW_FOUND AND FFTW_ENABLED)
+if(FFTW_FOUND AND FFTW_ENABLED)
+  add_library(sll_fftw3 STATIC sll_m_fftw3.F90)
+  target_include_directories(sll_fftw3 PRIVATE ${FFTW_INCLUDE_DIRS})
+  list(APPEND DEPENDENCIES sll_fftw3 ${FFTW_LIBRARIES})
+endif(FFTW_FOUND AND FFTW_ENABLED)
 
-
-TARGET_LINK_LIBRARIES( sll_fft sll_utilities 
-                               sll_memory 
-                               sll_assert 
-                               ${DEPENDENCIES} )
-IF(BUILD_TESTING)
-  ADD_SUBDIRECTORY( testing )
-ENDIF(BUILD_TESTING)
+target_link_libraries(sll_fft sll_utilities sll_memory sll_assert
+                      ${DEPENDENCIES})
+if(BUILD_TESTING)
+  add_subdirectory(testing)
+endif(BUILD_TESTING)

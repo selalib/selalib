@@ -1,4 +1,4 @@
-ADD_EXECUTABLE( test_fmempool test_fmempool.F90 )
-TARGET_LINK_LIBRARIES( test_fmempool fmempool )
-ADD_TEST( NAME fmempool COMMAND test_fmempool )
-SET_TESTS_PROPERTIES( fmempool PROPERTIES TIMEOUT 20 )
+add_executable(test_fmempool test_fmempool.F90)
+target_link_libraries(test_fmempool fmempool)
+add_test(NAME fmempool COMMAND test_fmempool)
+set_tests_properties(fmempool PROPERTIES TIMEOUT 20)

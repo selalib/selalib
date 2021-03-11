@@ -1,6 +1,6 @@
-ADD_LIBRARY( sll_timer STATIC sll_m_timer.F90 )
-TARGET_LINK_LIBRARIES(sll_timer sll_working_precision)
+add_library(sll_timer STATIC sll_m_timer.F90)
+target_link_libraries(sll_timer sll_working_precision)
 
-IF(BUILD_TESTING)
-  ADD_SUBDIRECTORY(testing)
-ENDIF(BUILD_TESTING)
+if(BUILD_TESTING)
+  add_subdirectory(testing)
+endif(BUILD_TESTING)

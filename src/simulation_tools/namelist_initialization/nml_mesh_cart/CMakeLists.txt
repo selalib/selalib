@@ -1,18 +1,13 @@
-SET( SRC_FILES    
-  sll_m_nml_mesh_1d_landau_cart.F90
-  sll_m_nml_mesh_1d_unif_cart.F90
-  sll_m_nml_mesh_1d_two_grid_cart.F90
-  sll_m_nml_mesh_1d_cart.F90 )
+set(SRC_FILES sll_m_nml_mesh_1d_landau_cart.F90 sll_m_nml_mesh_1d_unif_cart.F90
+              sll_m_nml_mesh_1d_two_grid_cart.F90 sll_m_nml_mesh_1d_cart.F90)
 
-ADD_LIBRARY( sll_nml_mesh_cart STATIC
-             ${SRC_FILES})
+add_library(sll_nml_mesh_cart STATIC ${SRC_FILES})
 
-TARGET_LINK_LIBRARIES( sll_nml_mesh_cart sll_meshes )
+target_link_libraries(sll_nml_mesh_cart sll_meshes)
 
 # Ctest
-IF(BUILD_TESTING)
+if(BUILD_TESTING)
 
-  ADD_SUBDIRECTORY(testing)
+  add_subdirectory(testing)
 
-
-ENDIF(BUILD_TESTING)
+endif(BUILD_TESTING)

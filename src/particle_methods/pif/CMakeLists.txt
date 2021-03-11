@@ -1,12 +1,8 @@
-ADD_LIBRARY( sll_pif STATIC sll_m_pif_fieldsolver.F90
-			     sll_m_wedge_product_generaldim.F90)
-TARGET_LINK_LIBRARIES( sll_pif
-  sll_memory
-  sll_assert
-  sll_collective
-  sll_utilities)
-					      
+add_library(sll_pif STATIC sll_m_pif_fieldsolver.F90
+                           sll_m_wedge_product_generaldim.F90)
+target_link_libraries(sll_pif sll_memory sll_assert sll_collective
+                      sll_utilities)
 
-IF(BUILD_TESTING)
-  ADD_SUBDIRECTORY(testing)
-ENDIF(BUILD_TESTING)
+if(BUILD_TESTING)
+  add_subdirectory(testing)
+endif(BUILD_TESTING)

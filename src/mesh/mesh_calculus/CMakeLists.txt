@@ -1,10 +1,8 @@
-ADD_LIBRARY(sll_mesh_calculus STATIC sll_m_mesh_calculus_2d.F90 )
+add_library(sll_mesh_calculus STATIC sll_m_mesh_calculus_2d.F90)
 
-TARGET_LINK_LIBRARIES(sll_mesh_calculus sll_coordinate_transformations
-                                        sll_meshes
-                                        sll_quadrature
-                                        sll_assert)
+target_link_libraries(sll_mesh_calculus sll_coordinate_transformations
+                      sll_meshes sll_quadrature sll_assert)
 
-IF(BUILD_TESTING)
-  ADD_SUBDIRECTORY(testing)
-ENDIF(BUILD_TESTING)
+if(BUILD_TESTING)
+  add_subdirectory(testing)
+endif(BUILD_TESTING)

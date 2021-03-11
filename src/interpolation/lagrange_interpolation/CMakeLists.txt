@@ -1,13 +1,12 @@
-ADD_LIBRARY( sll_lagrange_interpolation STATIC
-             sll_m_lagrange_interpolation.F90
-             sll_m_lagrange_interpolation_1d.F90
-             sll_m_lagrange_interpolation_1d_fast.F90)
+add_library(
+  sll_lagrange_interpolation STATIC
+  sll_m_lagrange_interpolation.F90 sll_m_lagrange_interpolation_1d.F90
+  sll_m_lagrange_interpolation_1d_fast.F90)
 
-TARGET_LINK_LIBRARIES( sll_lagrange_interpolation
-  sll_utilities
-  sll_boundary_condition_descriptors )
+target_link_libraries(sll_lagrange_interpolation sll_utilities
+                      sll_boundary_condition_descriptors)
 
 # Ctest
-IF(BUILD_TESTING)
-  ADD_SUBDIRECTORY(testing)
-ENDIF(BUILD_TESTING)
+if(BUILD_TESTING)
+  add_subdirectory(testing)
+endif(BUILD_TESTING)
