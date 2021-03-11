@@ -1,29 +1,7 @@
-IF(PGI)
+add_library(sll_remap STATIC sll_m_remapper.F90)
 
-  FIND_PROGRAM(PYTHON_EXECUTABLE NAMES python)
-  FIND_PROGRAM(FPP_EXECUTABLE NAMES gfortran)
-  SET(PREPROCESS_SCRIPT "${CMAKE_SOURCE_DIR}/python/cut_long_lines.py")
-  
-  SET(_FILE sll_m_remapper)
-  MESSAGE(STATUS "Cut long lines of file ${_FILE}.F90")
+target_link_libraries(sll_remap sll_collective sll_utilities)
 
-  EXECUTE_PROCESS(COMMAND ${FPP_EXECUTABLE} "-Iinclude" "-I${CMAKE_CURRENT_SOURCE_DIR}" "-E" "-w" "-P" "${CMAKE_CURRENT_SOURCE_DIR}/${_FILE}.F90"
-                     WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
-                     OUTPUT_FILE "${CMAKE_CURRENT_SOURCE_DIR}/${_FILE}_pgi.F90")
-
-  EXECUTE_PROCESS(COMMAND ${PYTHON_EXECUTABLE} ${PREPROCESS_SCRIPT} 
-                  WORKING_DIRECTORY ${CMAKE_SOURCE_DIR})
-
-  ADD_LIBRARY( sll_remap STATIC sll_m_remapper_pgi.F90 )
-
-ELSE(PGI)
-
-  ADD_LIBRARY( sll_remap STATIC sll_m_remapper.F90 )
-
-ENDIF(PGI)
-
-TARGET_LINK_LIBRARIES( sll_remap sll_collective sll_utilities ) 
-
-IF(BUILD_TESTING)
-  ADD_SUBDIRECTORY(testing)
-ENDIF(BUILD_TESTING)
+if(BUILD_TESTING)
+  add_subdirectory(testing)
+endif(BUILD_TESTING)

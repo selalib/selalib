@@ -1,12 +1,10 @@
-if( MPI_ENABLED )
-  add_subdirectory( pic_opt   )
-  add_subdirectory( pic_basic )
-  add_subdirectory( pif )
-  add_subdirectory( pic_visu_parallel )
-  add_subdirectory( pic_utilities )
-endif( MPI_ENABLED )
+if(MPI_ENABLED)
+  add_subdirectory(pic_opt)
+  add_subdirectory(pic_basic)
+  add_subdirectory(pif)
+  add_subdirectory(pic_visu_parallel)
+  add_subdirectory(pic_utilities)
+endif(MPI_ENABLED)
 
-ADD_SUBDIRECTORY(random_deviate_generators)
-ADD_SUBDIRECTORY(pic_visu)
-
-
+add_subdirectory(random_deviate_generators)
+add_subdirectory(pic_visu)

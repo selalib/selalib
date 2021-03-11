@@ -1,80 +1,101 @@
-# FFTW_INCLUDE_DIR = fftw3.f03
-# FFTW_LIBRARIES = libfftw3.a
-# FFTW_FOUND = true if FFTW3 is found
+# FFTW_INCLUDE_DIR = fftw3.f03 FFTW_LIBRARIES = libfftw3.a FFTW_FOUND = true if
+# FFTW3 is found
 
-IF(DEFINED ENV{FFTW_ROOT})
-   SET(FFTW_ROOT $ENV{FFTW_ROOT} CACHE PATH "FFTW location")
-ELSE()
-   SET(FFTW_ROOT "/usr/local" CACHE PATH "FFTW location")
-ENDIF()
+if(DEFINED ENV{FFTW_ROOT})
+  set(FFTW_ROOT
+      $ENV{FFTW_ROOT}
+      CACHE PATH "FFTW location")
+else()
+  set(FFTW_ROOT
+      "/usr/local"
+      CACHE PATH "FFTW location")
+endif()
 
-SET(TRIAL_PATHS ${FFTW_ROOT}
-                $ENV{FFTW_HOME}
-                $ENV{FFTW_DIR}
-                $ENV{FFTW_BASE}
-                $ENV{FFTW_ROOT_DIR}
-                /usr
-                /usr/local
-                /usr/lib64/mpich2
-                /usr/lib64/openmpi
-                /opt/local
- )
+set(TRIAL_PATHS
+    ${FFTW_ROOT}
+    $ENV{FFTW_HOME}
+    $ENV{FFTW_DIR}
+    $ENV{FFTW_BASE}
+    $ENV{FFTW_ROOT_DIR}
+    /usr
+    /usr/local
+    /usr/lib64/mpich2
+    /usr/lib64/openmpi
+    /opt/local)
 
+set(FFTW_F2003
+    ON
+    CACHE BOOL "Use FFTW Fortran 2003 interface")
 
-SET(FFTW_F2003 ON CACHE BOOL "Use FFTW Fortran 2003 interface")
+if(FFTW_F2003)
+  find_path(
+    FFTW_INCLUDE_DIRS
+    NAMES fftw3.f03
+    HINTS ${TRIAL_PATHS} $ENV{FFTW_INCLUDE}
+    PATH_SUFFIXES include
+    DOC "path to fftw3.f03")
+  if(FFTW_INCLUDE_DIRS)
+    add_definitions(-DFFTW_F2003)
+  else()
+    message(
+      WARNING
+        "Could not find FFTW F2003 header file, falling back to F77 interface..."
+    )
+    find_path(
+      FFTW_INCLUDE_DIRS
+      NAMES fftw3.f
+      HINTS ${TRIAL_PATHS} $ENV{FFTW_INCLUDE}
+      PATH_SUFFIXES include
+      DOC "path to fftw3.f")
+    set(FFTW_F2003
+        OFF
+        CACHE BOOL "Use FFTW Fortran 2003 interface" FORCE)
+    remove_definitions(-DFFTW_F2003)
+  endif(FFTW_INCLUDE_DIRS)
+else()
+  remove_definitions(-DFFTW_F2003)
+endif(FFTW_F2003)
 
-IF(FFTW_F2003)
-  FIND_PATH(FFTW_INCLUDE_DIRS NAMES fftw3.f03 
-                              HINTS ${TRIAL_PATHS} $ENV{FFTW_INCLUDE}
-                              PATH_SUFFIXES include DOC "path to fftw3.f03")
-  IF(FFTW_INCLUDE_DIRS)
-    ADD_DEFINITIONS(-DFFTW_F2003)
-  ELSE()
-    MESSAGE(WARNING "Could not find FFTW F2003 header file, falling back to F77 interface...")
-    FIND_PATH(FFTW_INCLUDE_DIRS NAMES fftw3.f
-                               HINTS ${TRIAL_PATHS} $ENV{FFTW_INCLUDE}
-                               PATH_SUFFIXES include DOC "path to fftw3.f")
-    SET(FFTW_F2003 OFF CACHE BOOL "Use FFTW Fortran 2003 interface" FORCE)
-    REMOVE_DEFINITIONS(-DFFTW_F2003)
-  ENDIF(FFTW_INCLUDE_DIRS)
-ELSE()
-   REMOVE_DEFINITIONS(-DFFTW_F2003)
-ENDIF(FFTW_F2003)
+find_library(
+  FFTW_LIBRARY
+  NAMES fftw3
+  HINTS ${TRIAL_PATHS} $ENV{FFTW_LIB}
+  PATH_SUFFIXES lib lib64)
 
-FIND_LIBRARY(FFTW_LIBRARY NAMES fftw3 
-                          HINTS ${TRIAL_PATHS} $ENV{FFTW_LIB}
-                          PATH_SUFFIXES lib lib64)
+set(FFTW_LIBRARIES ${FFTW_LIBRARY})
 
-SET(FFTW_LIBRARIES ${FFTW_LIBRARY})
+include(FindPackageHandleStandardArgs)
 
-INCLUDE(FindPackageHandleStandardArgs)
+find_package_handle_standard_args(FFTW DEFAULT_MSG FFTW_INCLUDE_DIRS
+                                  FFTW_LIBRARIES)
+if(USE_MKL AND NOT FFTW_FOUND)
 
-FIND_PACKAGE_HANDLE_STANDARD_ARGS(FFTW 
-                                  DEFAULT_MSG 
-                                  FFTW_INCLUDE_DIRS FFTW_LIBRARIES)
-IF(USE_MKL AND NOT FFTW_FOUND)
+  if(FFTW_F2003)
+    message(
+      WARNING
+        "Intel MKL wrappers to FFTW in use. F2003 interface not available, falling back to FFTW F77 interface..."
+    )
+  endif()
+  find_path(
+    FFTW_INCLUDE_DIRS
+    NAMES fftw3.f
+    HINTS $ENV{MKLROOT}/include
+    PATH_SUFFIXES fftw)
+  set(FFTW_LIBRARIES ${LAPACK_LIBRARIES})
+  set(FFTW_F2003
+      OFF
+      CACHE BOOL "Use FFTW Fortran 2003 interface" FORCE)
+  remove_definitions(-DFFTW_F2003)
 
-   IF(FFTW_F2003)
-      MESSAGE(WARNING "Intel MKL wrappers to FFTW in use. F2003 interface not available, falling back to FFTW F77 interface...")
-   ENDIF()
-   FIND_PATH(FFTW_INCLUDE_DIRS NAMES fftw3.f 
-                              HINTS $ENV{MKLROOT}/include
-                              PATH_SUFFIXES fftw)
-   SET(FFTW_LIBRARIES ${LAPACK_LIBRARIES})
-   SET(FFTW_F2003 OFF CACHE BOOL "Use FFTW Fortran 2003 interface" FORCE)
-   REMOVE_DEFINITIONS(-DFFTW_F2003)
+  find_package_handle_standard_args(FFTW DEFAULT_MSG FFTW_INCLUDE_DIRS
+                                    FFTW_LIBRARIES)
 
-   FIND_PACKAGE_HANDLE_STANDARD_ARGS(FFTW 
-                                     DEFAULT_MSG 
-                                     FFTW_INCLUDE_DIRS FFTW_LIBRARIES)
+endif()
 
-ENDIF()
+if(FFTW_FOUND)
 
+  message(STATUS "FFTW_INCLUDE_DIRS:${FFTW_INCLUDE_DIRS}")
+  message(STATUS "FFTW_LIBRARIES:${FFTW_LIBRARIES}")
+  mark_as_advanced(FFTW_INCLUDE_DIRS FFTW_LIBRARIES)
 
-IF(FFTW_FOUND)
-
-   MESSAGE(STATUS "FFTW_INCLUDE_DIRS:${FFTW_INCLUDE_DIRS}")
-   MESSAGE(STATUS "FFTW_LIBRARIES:${FFTW_LIBRARIES}")
-   MARK_AS_ADVANCED( FFTW_INCLUDE_DIRS FFTW_LIBRARIES)
-
-ENDIF(FFTW_FOUND)
+endif(FFTW_FOUND)

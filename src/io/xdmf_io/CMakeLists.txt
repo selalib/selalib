@@ -1,14 +1,14 @@
-SET( XDMF_SRC sll_xdmf_io.F90 sll_m_xml.F90 sll_m_xdmf_light_serial.F90 sll_m_io_utilities.F90 )
+set(XDMF_SRC sll_xdmf_io.F90 sll_m_xml.F90 sll_m_xdmf_light_serial.F90
+             sll_m_io_utilities.F90)
 
 # Object-oriented wrapper around Pierre's "sll_hdf5_io_serial"
-SET( XDMF_SRC ${XDMF_SRC} sll_m_hdf5_serial.F90 )
-SET( XDMF_DEP sll_file_io )
+set(XDMF_SRC ${XDMF_SRC} sll_m_hdf5_serial.F90)
+set(XDMF_DEP sll_file_io)
 
-ADD_LIBRARY( sll_xdmf_io STATIC ${XDMF_SRC} )
-TARGET_LINK_LIBRARIES( sll_xdmf_io ${XDMF_DEP} )
+add_library(sll_xdmf_io STATIC ${XDMF_SRC})
+target_link_libraries(sll_xdmf_io ${XDMF_DEP})
 
 # Tests
-IF( BUILD_TESTING )
-  ADD_SUBDIRECTORY( testing )
-ENDIF( BUILD_TESTING )
-
+if(BUILD_TESTING)
+  add_subdirectory(testing)
+endif(BUILD_TESTING)

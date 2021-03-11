@@ -2048,11 +2048,7 @@ contains
          if (.not. (present(bc_indices1) &
                     .and. present(bc_indices2))) then
 
-#ifndef __PGI
       SLL_ERROR('compute_local_to_global_splines_indices', 'bc_indices1 and bc_indices2 should be present as it is not the case for local/global_spline_indices')
-#else
-            SLL_ERROR('compute_local_to_global_splines_indices', 'bc_indices1 and bc_indices2 should be present')
-#endif
 
          else
             call compute_local_to_global_splines_indices_from_bc_indices( &

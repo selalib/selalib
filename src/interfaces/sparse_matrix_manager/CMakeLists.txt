@@ -1,71 +1,67 @@
-IF(MUMPS_ENABLED)
-  FIND_PACKAGE(MUMPS)
-ENDIF(MUMPS_ENABLED)
+if(MUMPS_ENABLED)
+  find_package(MUMPS)
+endif(MUMPS_ENABLED)
 
-IF(PASTIX_ENABLED)
-  FIND_PACKAGE(SCOTCH)
-  FIND_PACKAGE(PASTIX)
-ENDIF(PASTIX_ENABLED)
+if(PASTIX_ENABLED)
+  find_package(SCOTCH)
+  find_package(PASTIX)
+endif(PASTIX_ENABLED)
 
-IF(SUITESPARSE_ENABLED)
-  FIND_PACKAGE(SUITESPARSE)
-ENDIF(SUITESPARSE_ENABLED)
+if(SUITESPARSE_ENABLED)
+  find_package(SUITESPARSE)
+endif(SUITESPARSE_ENABLED)
 
-SET(SPM_SOURCES sll_m_qsort_partition.F90 
-                sll_m_sparse_matrix.F90
+set(SPM_SOURCES sll_m_qsort_partition.F90 sll_m_sparse_matrix.F90
                 sll_m_sparse_matrix_mp.F90)
 
-IF(SUITESPARSE_FOUND)
+if(SUITESPARSE_FOUND)
 
-  SET(INCLUDE_DIRS ${SUITESPARSE_INCLUDE_DIRS})
-  SET(SPM_SOURCES ${SPM_SOURCES} sll_m_umfpack.F90 umf4_f77wrapper.c)
+  set(INCLUDE_DIRS ${SUITESPARSE_INCLUDE_DIRS})
+  set(SPM_SOURCES ${SPM_SOURCES} sll_m_umfpack.F90 umf4_f77wrapper.c)
 
-ENDIF(SUITESPARSE_FOUND)
+endif(SUITESPARSE_FOUND)
 
-IF(PASTIX_FOUND)
+if(PASTIX_FOUND)
 
-  #PasTiX is parallel
-  SET(INCLUDE_DIRS ${PASTIX_INCLUDE_DIRS})
-  SET(SPM_SOURCES ${SPM_SOURCES} sll_m_pastix.F90)
+  # PasTiX is parallel
+  set(INCLUDE_DIRS ${PASTIX_INCLUDE_DIRS})
+  set(SPM_SOURCES ${SPM_SOURCES} sll_m_pastix.F90)
 
-ENDIF(PASTIX_FOUND)
+endif(PASTIX_FOUND)
 
-IF(MUMPS_FOUND)
+if(MUMPS_FOUND)
 
-  #MUMPS is parallel
-  SET(INCLUDE_DIRS ${MUMPS_INCLUDE_DIRS})
-  SET(SPM_SOURCES ${SPM_SOURCES} sll_m_mumps.F90)
+  # MUMPS is parallel
+  set(INCLUDE_DIRS ${MUMPS_INCLUDE_DIRS})
+  set(SPM_SOURCES ${SPM_SOURCES} sll_m_mumps.F90)
 
-ENDIF(MUMPS_FOUND)
+endif(MUMPS_FOUND)
 
-ADD_LIBRARY(sll_sparse_matrix STATIC ${SPM_SOURCES})
+add_library(sll_sparse_matrix STATIC ${SPM_SOURCES})
 
-TARGET_INCLUDE_DIRECTORIES( sll_sparse_matrix PRIVATE ${INCLUDE_DIRS})
-TARGET_LINK_LIBRARIES( sll_sparse_matrix sll_memory sll_assert)
+target_include_directories(sll_sparse_matrix PRIVATE ${INCLUDE_DIRS})
+target_link_libraries(sll_sparse_matrix sll_memory sll_assert)
 
-IF(SUITESPARSE_FOUND)
-  TARGET_LINK_LIBRARIES( sll_sparse_matrix ${SUITESPARSE_LIBRARIES}
-                                           ${BLAS_LIBRARIES})
-ENDIF()
+if(SUITESPARSE_FOUND)
+  target_link_libraries(sll_sparse_matrix ${SUITESPARSE_LIBRARIES}
+                        ${BLAS_LIBRARIES})
+endif()
 
-IF(PASTIX_FOUND)
-  TARGET_LINK_LIBRARIES( sll_sparse_matrix sll_collective
-                                           ${PASTIX_LIBRARIES} 
-                                           ${PTSCOTCH_LIBRARIES}
-                                           ${SCOTCH_LIBRARIES}
-                                           ${BLAS_LIBRARIES})
-ENDIF(PASTIX_FOUND)
+if(PASTIX_FOUND)
+  target_link_libraries(
+    sll_sparse_matrix sll_collective ${PASTIX_LIBRARIES} ${PTSCOTCH_LIBRARIES}
+    ${SCOTCH_LIBRARIES} ${BLAS_LIBRARIES})
+endif(PASTIX_FOUND)
 
-IF(MUMPS_FOUND)
-  TARGET_LINK_LIBRARIES( sll_sparse_matrix sll_collective ${MUMPS_LIBRARIES} )
-ENDIF(MUMPS_FOUND)
+if(MUMPS_FOUND)
+  target_link_libraries(sll_sparse_matrix sll_collective ${MUMPS_LIBRARIES})
+endif(MUMPS_FOUND)
 
-IF(BUILD_PARALUTION)
-  INCLUDE_DIRECTORIES(${CMAKE_BINARY_DIR}/paralution-prefix/src/paralution/src/)
-  ADD_LIBRARY(sll_paralution paralution_fortran.cpp sll_m_paralution.F90)
-ENDIF()
+if(BUILD_PARALUTION)
+  include_directories(${CMAKE_BINARY_DIR}/paralution-prefix/src/paralution/src/)
+  add_library(sll_paralution paralution_fortran.cpp sll_m_paralution.F90)
+endif()
 
-
-IF(BUILD_TESTING)
-  ADD_SUBDIRECTORY(testing)
-ENDIF(BUILD_TESTING)
+if(BUILD_TESTING)
+  add_subdirectory(testing)
+endif(BUILD_TESTING)

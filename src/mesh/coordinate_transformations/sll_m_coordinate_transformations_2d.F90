@@ -228,7 +228,6 @@ module sll_m_coordinate_transformations_2d
 
 #ifndef DOXYGEN_SHOULD_SKIP_THIS
 
-#ifndef __PGI
    abstract interface
       function two_arg_message_passing_func_discr(transf, eta1, eta2)
          use sll_m_working_precision
@@ -250,7 +249,6 @@ module sll_m_coordinate_transformations_2d
          sll_real64, intent(in)          :: eta2
       end function two_arg_message_passing_func_analyt
    end interface
-#endif /* __PGI */
 
 #endif /* DOXYGEN_SHOULD_SKIP_THIS */
 
@@ -353,9 +351,7 @@ contains
       transf%j_matrix(1, 2)%f => j12_func
       transf%j_matrix(2, 1)%f => j21_func
       transf%j_matrix(2, 2)%f => j22_func
-#ifndef __PGI
       transf%jacobian_func => jacobian_2d_analytic
-#endif
 
    end subroutine sll_s_coordinate_transformation_2d_analytic_init
 
@@ -364,9 +360,7 @@ contains
 
       nullify (transf%x1_func)
       nullify (transf%x2_func)
-#ifndef __PGI
       nullify (transf%jacobian_func)
-#endif
       nullify (transf%jacobian_matrix_function)
    end subroutine delete_transformation_2d_analytic
 
