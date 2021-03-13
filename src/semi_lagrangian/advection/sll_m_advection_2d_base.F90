@@ -15,6 +15,7 @@
 !  "http://www.cecill.info".
 !**************************************************************
 
+!> @ingroup advection
 module sll_m_advection_2d_base
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_working_precision.h"

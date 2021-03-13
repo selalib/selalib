@@ -18,6 +18,8 @@
 ! in development; should be at least cubic splines
 ! attached with computation of characteristics
 
+!> @ingroup advection
+!> @brief backward semi-lagrangian 1d advection
 module sll_m_advection_1d_bsl
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_memory.h"

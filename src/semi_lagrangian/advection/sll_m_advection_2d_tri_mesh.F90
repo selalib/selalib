@@ -1,5 +1,5 @@
-!> This fortran module is dedicated to advection on
-!> triangular mesh.
+!> @ingroup advection
+!> @brief advection on triangular mesh.
 module sll_m_advection_2d_tri_mesh
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_memory.h"

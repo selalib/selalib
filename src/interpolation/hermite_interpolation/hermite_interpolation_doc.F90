@@ -10,7 +10,7 @@
 
 !> @namespace sll_hermite_interpolation
 !> @brief
-!> Description of hermite_interpolation library (72 characters)
+!> Hermite interpolation
 !> @author Michel Mehrenberger Charles Prouveur, Laura Mendoza
 !> Christophe Steiner
 !> You can add a contact, do not put your email to prevent spam.

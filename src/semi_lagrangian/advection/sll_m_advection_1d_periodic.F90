@@ -17,6 +17,7 @@
 
 ! for the moment mimic of sll_m_periodic_interpolator_1d.F90
 
+!> @ingroup advection
 module sll_m_advection_1d_periodic
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_assert.h"
