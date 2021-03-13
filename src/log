@@ -1,4 +1,0 @@
-git rm field_solvers/maxwell_solvers/testing/test_maxwell_diga_hex_mesh.F90
-git rm field_solvers/maxwell_solvers/testing/test_maxwell_fdtd_hex_mesh.F90
-git rm field_solvers/maxwell_solvers/sll_m_maxwell_diga_hex_mesh.F90
-git rm field_solvers/maxwell_solvers/sll_m_maxwell_diga_hex_mesh.F90
