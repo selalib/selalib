@@ -12,10 +12,6 @@
 !  circulated by CEA, CNRS and INRIA at the following URL
 !  "http://www.cecill.info".
 !**************************************************************
-!
-!
-!  Contact : Pierre Navaro http://wwww-irma.u-strasbg.fr/~navaro
-!
 
 #define D_DX(field)                                                   \
 plan%d_dx = field; \

@@ -4,8 +4,6 @@
 ! and see what happens.
 ! We still need to find an analytic solution to check precision order.
 !
-!  Contact : Pierre Navaro http://wwww-irma.u-strasbg.fr/~navaro
-!
 program test_maxwell_dg_hex_mesh
 
 #include "sll_working_precision.h"

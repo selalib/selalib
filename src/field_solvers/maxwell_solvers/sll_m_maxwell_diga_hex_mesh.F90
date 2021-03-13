@@ -1,7 +1,3 @@
-!
-!
-!  Contact : Pierre Navaro http://wwww-irma.u-strasbg.fr/~navaro
-!
 module sll_m_maxwell_diga_hex_mesh
 
 #include "sll_working_precision.h"

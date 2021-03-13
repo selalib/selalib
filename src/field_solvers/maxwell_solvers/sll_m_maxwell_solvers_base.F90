@@ -13,10 +13,6 @@
 !  "http://www.cecill.info".
 !**************************************************************
 !
-!
-!  Contact : Pierre Navaro http://wwww-irma.u-strasbg.fr/~navaro
-!
-
 !> @ingroup maxwell_solvers
 !> This module contains common subroutines for  Maxwell solvers
 module sll_m_maxwell_solvers_base
