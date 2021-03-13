@@ -15,9 +15,9 @@
 !  "http://www.cecill.info".
 !**************************************************************
 
-! in development; use oblic interpolation
-! data are on uniform (fine) grid in x1
-
+!> @ingroup advection
+!> @brief use oblic interpolation
+!> @details data are on uniform (fine) grid in x1
 module sll_m_advection_2d_oblic
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_memory.h"

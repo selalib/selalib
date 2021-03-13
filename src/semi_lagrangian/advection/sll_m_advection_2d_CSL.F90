@@ -17,6 +17,7 @@
 
 !in development
 
+!> @ingroup advection
 module sll_m_advection_2d_csl
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_assert.h"

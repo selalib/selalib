@@ -18,6 +18,7 @@
 ! in development; should be at least cubic splines
 ! attached with computation of characteristics
 
+!> @ingroup advection
 module sll_m_advection_2d_bsl
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_memory.h"

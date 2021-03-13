@@ -15,10 +15,12 @@
 !  "http://www.cecill.info".
 !**************************************************************
 
-! in development; use integer oblic interpolation
-! data are on uniform (fine) grid in x1
-! we use a shift that corresponds to a mesh point
 
+!> @ingroup advection
+!> @brief use integer oblic interpolation
+!> @details
+!> data are on uniform (fine) grid in x1
+!> we use a shift that corresponds to a mesh point
 module sll_m_advection_2d_integer_oblic
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_assert.h"
