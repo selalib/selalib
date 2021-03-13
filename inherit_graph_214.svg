@@ -12,7 +12,7 @@
 <!-- Node0 -->
 <g id="node1" class="node">
 <title>Node0</title>
-<g id="a_node1"><a xlink:href="structsll__m__poisson__2d__base_1_1sll__c__poisson__2d__base.html" target="_top" xlink:title="PLEASE ADD DOCUMENTATION. ">
+<g id="a_node1"><a xlink:href="structsll__m__poisson__2d__base_1_1sll__c__poisson__2d__base.html" target="_top" xlink:title="sll_c_poisson_2d_base">
 <polygon fill="#ffffff" stroke="#000000" points="0,-38.5 0,-57.5 127,-57.5 127,-38.5 0,-38.5"/>
 <text text-anchor="middle" x="63.5" y="-45.5" font-family="Helvetica,sans-Serif" font-size="10.00" fill="#000000">sll_c_poisson_2d_base</text>
 </a>

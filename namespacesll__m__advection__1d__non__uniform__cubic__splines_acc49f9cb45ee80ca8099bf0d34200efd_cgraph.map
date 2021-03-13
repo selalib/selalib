@@ -1,5 +1,5 @@
 <map id="sll_f_new_advector_1d_non_uniform_cubic_splines" name="sll_f_new_advector_1d_non_uniform_cubic_splines">
 <area shape="rect" id="node2" href="$namespacesll__m__advection__1d__non__uniform__cubic__splines.html#a3764758795ef56e4229ab7dca94b1ef6" title="initialize_sll_t_advector\l_1d_non_uniform_cubic_splines" alt="" coords="228,13,456,54"/>
-<area shape="rect" id="node3" href="$namespacesll__m__cubic__non__uniform__splines.html#aefb9225983b59769f7adbf24dbdb47ff" title="PLEASE ADD DOCUMENTATION. " alt="" coords="504,5,741,61"/>
+<area shape="rect" id="node3" href="$namespacesll__m__cubic__non__uniform__splines.html#aefb9225983b59769f7adbf24dbdb47ff" title="sll_m_cubic_non_uniform\l_splines::sll_s_setup\l_spline_nonunif_1d_periodic_aux" alt="" coords="504,5,741,61"/>
 <area shape="rect" id="node4" href="$namespacesll__m__tridiagonal.html#a0eb4ec59f49ba01edaba9eca267d2a28" title="Give the factorization of the matrix in argument. " alt="" coords="789,13,976,54"/>
 </map>

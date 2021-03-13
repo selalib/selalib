@@ -19,7 +19,7 @@
 <!-- Node1 -->
 <g id="node2" class="node">
 <title>Node1</title>
-<g id="a_node2"><a xlink:href="namespacesll__m__cubic__non__uniform__splines.html#ac8b14ab9cbf822045356380851d80c20" target="_top" xlink:title="PLEASE ADD DOCUMENTATION. ">
+<g id="a_node2"><a xlink:href="namespacesll__m__cubic__non__uniform__splines.html#ac8b14ab9cbf822045356380851d80c20" target="_top" xlink:title="sll_m_cubic_non_uniform\l_splines::sll_s_compute\l_spline_nonunif_1d_periodic_aux2">
 <polygon fill="#ffffff" stroke="#000000" points="148,-60.5 148,-101.5 332,-101.5 332,-60.5 148,-60.5"/>
 <text text-anchor="start" x="156" y="-89.5" font-family="Helvetica,sans-Serif" font-size="10.00" fill="#000000">sll_m_cubic_non_uniform</text>
 <text text-anchor="start" x="156" y="-78.5" font-family="Helvetica,sans-Serif" font-size="10.00" fill="#000000">_splines::sll_s_compute</text>
@@ -36,7 +36,7 @@
 <!-- Node2 -->
 <g id="node3" class="node">
 <title>Node2</title>
-<g id="a_node3"><a xlink:href="namespacesll__m__cubic__non__uniform__splines.html#a6c0e817e4ecc3db5169312815e5e23cd" target="_top" xlink:title="PLEASE ADD DOCUMENTATION. ">
+<g id="a_node3"><a xlink:href="namespacesll__m__cubic__non__uniform__splines.html#a6c0e817e4ecc3db5169312815e5e23cd" target="_top" xlink:title="sll_m_cubic_non_uniform\l_splines::sll_s_interpolate\l_array_value_nonunif_aux">
 <polygon fill="#ffffff" stroke="#000000" points="167.5,-.5 167.5,-41.5 312.5,-41.5 312.5,-.5 167.5,-.5"/>
 <text text-anchor="start" x="175.5" y="-29.5" font-family="Helvetica,sans-Serif" font-size="10.00" fill="#000000">sll_m_cubic_non_uniform</text>
 <text text-anchor="start" x="175.5" y="-18.5" font-family="Helvetica,sans-Serif" font-size="10.00" fill="#000000">_splines::sll_s_interpolate</text>

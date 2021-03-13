@@ -19,7 +19,7 @@
 <!-- Node14 -->
 <g id="node2" class="node">
 <title>Node14</title>
-<g id="a_node2"><a xlink:href="namespacesll__m__cubic__non__uniform__splines.html#abf80b353529b3c878cd2c01a1b22a2dc" target="_top" xlink:title="PLEASE ADD DOCUMENTATION. ">
+<g id="a_node2"><a xlink:href="namespacesll__m__cubic__non__uniform__splines.html#abf80b353529b3c878cd2c01a1b22a2dc" target="_top" xlink:title="compute_spline_nonunif\l_1d_periodic">
 <polygon fill="#ffffff" stroke="#000000" points="172,-.5 172,-30.5 308,-30.5 308,-.5 172,-.5"/>
 <text text-anchor="start" x="180" y="-18.5" font-family="Helvetica,sans-Serif" font-size="10.00" fill="#000000">compute_spline_nonunif</text>
 <text text-anchor="middle" x="240" y="-7.5" font-family="Helvetica,sans-Serif" font-size="10.00" fill="#000000">_1d_periodic</text>

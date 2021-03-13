@@ -1,9 +1,9 @@
 <map id="sll_s_compute_spline_nonunif" name="sll_s_compute_spline_nonunif">
-<area shape="rect" id="node2" href="$namespacesll__m__cubic__non__uniform__splines.html#aefb9225983b59769f7adbf24dbdb47ff" title="PLEASE ADD DOCUMENTATION. " alt="" coords="215,5,405,47"/>
+<area shape="rect" id="node2" href="$namespacesll__m__cubic__non__uniform__splines.html#aefb9225983b59769f7adbf24dbdb47ff" title="sll_s_setup_spline\l_nonunif_1d_periodic_aux" alt="" coords="215,5,405,47"/>
 <area shape="rect" id="node4" href="$namespacesll__m__cubic__non__uniform__splines.html#a337ef4f96d615272c1fba3d8ae50a003" title="setup_spline_nonunif\l_1d_hermite_aux" alt="" coords="230,71,390,112"/>
-<area shape="rect" id="node5" href="$namespacesll__m__cubic__non__uniform__splines.html#abf80b353529b3c878cd2c01a1b22a2dc" title="PLEASE ADD DOCUMENTATION. " alt="" coords="219,136,401,177"/>
-<area shape="rect" id="node7" href="$namespacesll__m__cubic__non__uniform__splines.html#ac148229bfea45f98f91bff7d2ec6814a" title="PLEASE ADD DOCUMENTATION. " alt="" coords="219,201,401,243"/>
+<area shape="rect" id="node5" href="$namespacesll__m__cubic__non__uniform__splines.html#abf80b353529b3c878cd2c01a1b22a2dc" title="compute_spline_nonunif\l_1d_periodic" alt="" coords="219,136,401,177"/>
+<area shape="rect" id="node7" href="$namespacesll__m__cubic__non__uniform__splines.html#ac148229bfea45f98f91bff7d2ec6814a" title="compute_spline_nonunif\l_1d_hermite" alt="" coords="219,201,401,243"/>
 <area shape="rect" id="node3" href="$namespacesll__m__tridiagonal.html#a0eb4ec59f49ba01edaba9eca267d2a28" title="Give the factorization of the matrix in argument. " alt="" coords="453,39,640,80"/>
-<area shape="rect" id="node6" href="$namespacesll__m__cubic__non__uniform__splines.html#aa93254833d5ab0ebe87ed6a3ca6ac81f" title="PLEASE ADD DOCUMENTATION. " alt="" coords="456,136,637,177"/>
+<area shape="rect" id="node6" href="$namespacesll__m__cubic__non__uniform__splines.html#aa93254833d5ab0ebe87ed6a3ca6ac81f" title="compute_spline_nonunif\l_1d_periodic_aux" alt="" coords="456,136,637,177"/>
 <area shape="rect" id="node8" href="$namespacesll__m__cubic__non__uniform__splines.html#afeafc3d6034ceb578283a2d917b87d5b" title="compute_spline_nonunif\l_1d_hermite_aux" alt="" coords="456,201,637,243"/>
 </map>

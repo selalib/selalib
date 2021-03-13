@@ -19,7 +19,7 @@
 <!-- Node29 -->
 <g id="node2" class="node">
 <title>Node29</title>
-<g id="a_node2"><a xlink:href="namespacesll__m__cubic__non__uniform__splines.html#aefb9225983b59769f7adbf24dbdb47ff" target="_top" xlink:title="PLEASE ADD DOCUMENTATION. ">
+<g id="a_node2"><a xlink:href="namespacesll__m__cubic__non__uniform__splines.html#aefb9225983b59769f7adbf24dbdb47ff" target="_top" xlink:title="sll_s_setup_spline\l_nonunif_1d_periodic_aux">
 <polygon fill="#ffffff" stroke="#000000" points="157,-147.5 157,-177.5 300,-177.5 300,-147.5 157,-147.5"/>
 <text text-anchor="start" x="165" y="-165.5" font-family="Helvetica,sans-Serif" font-size="10.00" fill="#000000">sll_s_setup_spline</text>
 <text text-anchor="middle" x="228.5" y="-154.5" font-family="Helvetica,sans-Serif" font-size="10.00" fill="#000000">_nonunif_1d_periodic_aux</text>
@@ -51,7 +51,7 @@
 <!-- Node32 -->
 <g id="node5" class="node">
 <title>Node32</title>
-<g id="a_node5"><a xlink:href="namespacesll__m__cubic__non__uniform__splines.html#abf80b353529b3c878cd2c01a1b22a2dc" target="_top" xlink:title="PLEASE ADD DOCUMENTATION. ">
+<g id="a_node5"><a xlink:href="namespacesll__m__cubic__non__uniform__splines.html#abf80b353529b3c878cd2c01a1b22a2dc" target="_top" xlink:title="compute_spline_nonunif\l_1d_periodic">
 <polygon fill="#ffffff" stroke="#000000" points="160.5,-49.5 160.5,-79.5 296.5,-79.5 296.5,-49.5 160.5,-49.5"/>
 <text text-anchor="start" x="168.5" y="-67.5" font-family="Helvetica,sans-Serif" font-size="10.00" fill="#000000">compute_spline_nonunif</text>
 <text text-anchor="middle" x="228.5" y="-56.5" font-family="Helvetica,sans-Serif" font-size="10.00" fill="#000000">_1d_periodic</text>
@@ -67,7 +67,7 @@
 <!-- Node34 -->
 <g id="node7" class="node">
 <title>Node34</title>
-<g id="a_node7"><a xlink:href="namespacesll__m__cubic__non__uniform__splines.html#ac148229bfea45f98f91bff7d2ec6814a" target="_top" xlink:title="PLEASE ADD DOCUMENTATION. ">
+<g id="a_node7"><a xlink:href="namespacesll__m__cubic__non__uniform__splines.html#ac148229bfea45f98f91bff7d2ec6814a" target="_top" xlink:title="compute_spline_nonunif\l_1d_hermite">
 <polygon fill="#ffffff" stroke="#000000" points="160.5,-.5 160.5,-30.5 296.5,-30.5 296.5,-.5 160.5,-.5"/>
 <text text-anchor="start" x="168.5" y="-18.5" font-family="Helvetica,sans-Serif" font-size="10.00" fill="#000000">compute_spline_nonunif</text>
 <text text-anchor="middle" x="228.5" y="-7.5" font-family="Helvetica,sans-Serif" font-size="10.00" fill="#000000">_1d_hermite</text>
@@ -105,7 +105,7 @@
 <!-- Node33 -->
 <g id="node6" class="node">
 <title>Node33</title>
-<g id="a_node6"><a xlink:href="namespacesll__m__cubic__non__uniform__splines.html#aa93254833d5ab0ebe87ed6a3ca6ac81f" target="_top" xlink:title="PLEASE ADD DOCUMENTATION. ">
+<g id="a_node6"><a xlink:href="namespacesll__m__cubic__non__uniform__splines.html#aa93254833d5ab0ebe87ed6a3ca6ac81f" target="_top" xlink:title="compute_spline_nonunif\l_1d_periodic_aux">
 <polygon fill="#ffffff" stroke="#000000" points="338,-49.5 338,-79.5 474,-79.5 474,-49.5 338,-49.5"/>
 <text text-anchor="start" x="346" y="-67.5" font-family="Helvetica,sans-Serif" font-size="10.00" fill="#000000">compute_spline_nonunif</text>
 <text text-anchor="middle" x="406" y="-56.5" font-family="Helvetica,sans-Serif" font-size="10.00" fill="#000000">_1d_periodic_aux</text>

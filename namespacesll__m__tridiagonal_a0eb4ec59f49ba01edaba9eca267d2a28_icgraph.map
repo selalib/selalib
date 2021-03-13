@@ -1,5 +1,5 @@
 <map id="sll_s_setup_cyclic_tridiag" name="sll_s_setup_cyclic_tridiag">
-<area shape="rect" id="node2" href="$namespacesll__m__cubic__non__uniform__splines.html#aefb9225983b59769f7adbf24dbdb47ff" title="PLEASE ADD DOCUMENTATION. " alt="" coords="192,38,429,94"/>
+<area shape="rect" id="node2" href="$namespacesll__m__cubic__non__uniform__splines.html#aefb9225983b59769f7adbf24dbdb47ff" title="sll_m_cubic_non_uniform\l_splines::sll_s_setup\l_spline_nonunif_1d_periodic_aux" alt="" coords="192,38,429,94"/>
 <area shape="rect" id="node6" href="$namespacesll__m__cubic__non__uniform__splines.html#a337ef4f96d615272c1fba3d8ae50a003" title="sll_m_cubic_non_uniform\l_splines::setup_spline\l_nonunif_1d_hermite_aux" alt="" coords="215,118,406,174"/>
 <area shape="rect" id="node7" href="$namespacesll__m__cubic__splines.html#a35f9f53695f916944ed2f72a49531560" title="Returns a pointer to a heap&#45;allocated cubic spline object. " alt="" coords="235,214,386,270"/>
 <area shape="rect" id="node3" href="$namespacesll__m__advection__1d__non__uniform__cubic__splines.html#a3764758795ef56e4229ab7dca94b1ef6" title="sll_m_advection_1d\l_non_uniform_cubic_splines\l::initialize_sll_t_advector\l_1d_non_uniform_cubic_splines" alt="" coords="477,5,705,76"/>
@@ -8,7 +8,7 @@
 <area shape="rect" id="node8" href="$namespacesll__m__fdistribu4d__dk.html#ad019b52770477f636c8115bc5ad20475" title="sll_m_fdistribu4d_dk\l::function_xy_from_r" alt="" coords="513,181,670,223"/>
 <area shape="rect" id="node9" href="$namespacesll__m__cubic__spline__interpolator__1d.html#ab4aeb5dca8bc5be6fb404ac5e1ae7365" title="initialize cubic spline interpolator " alt="" coords="495,247,687,303"/>
 <area shape="rect" id="node13" href="$namespacesll__m__cubic__spline__interpolator__1d__nonuniform.html#a949072be71d85ad42efeb69878a0fc14" title="initialize cubic spline interpolator " alt="" coords="484,327,699,383"/>
-<area shape="rect" id="node10" href="$namespacesll__m__cubic__spline__interpolator__1d.html#ad719154e2d5d34641021bab462fbe00f" title="PLEASE ADD DOCUMENTATION. " alt="" coords="753,247,1015,303"/>
+<area shape="rect" id="node10" href="$namespacesll__m__cubic__spline__interpolator__1d.html#ad719154e2d5d34641021bab462fbe00f" title="sll_m_cubic_spline\l_interpolator_1d::sll\l_f_new_cubic_spline_interpolator_1d" alt="" coords="753,247,1015,303"/>
 <area shape="rect" id="node11" href="$namespacesll__m__poisson__2d__mudpack__curvilinear.html#aafe1b9a1d79ddc7a217d3a14a73c418d" title="sll_m_poisson_2d_mudpack\l_curvilinear::initialize\l_poisson_2d_mudpack_curvilinear" alt="" coords="1063,247,1308,303"/>
-<area shape="rect" id="node12" href="$namespacesll__m__poisson__2d__mudpack__curvilinear.html#a030b51f0e3782ea9c0e5dc2c0c27f035" title="PLEASE ADD DOCUMENTATION. " alt="" coords="1356,247,1601,303"/>
+<area shape="rect" id="node12" href="$namespacesll__m__poisson__2d__mudpack__curvilinear.html#a030b51f0e3782ea9c0e5dc2c0c27f035" title="sll_m_poisson_2d_mudpack\l_curvilinear::sll_f_new\l_poisson_2d_mudpack_curvilinear" alt="" coords="1356,247,1601,303"/>
 </map>

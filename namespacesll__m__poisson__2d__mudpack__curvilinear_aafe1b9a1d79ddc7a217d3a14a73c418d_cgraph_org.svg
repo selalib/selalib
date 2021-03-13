@@ -19,7 +19,7 @@
 <!-- Node18 -->
 <g id="node2" class="node">
 <title>Node18</title>
-<g id="a_node2"><a xlink:href="namespacesll__m__cubic__spline__interpolator__1d.html#ad719154e2d5d34641021bab462fbe00f" target="_top" xlink:title="PLEASE ADD DOCUMENTATION. ">
+<g id="a_node2"><a xlink:href="namespacesll__m__cubic__spline__interpolator__1d.html#ad719154e2d5d34641021bab462fbe00f" target="_top" xlink:title="sll_m_cubic_spline\l_interpolator_1d::sll\l_f_new_cubic_spline_interpolator_1d">
 <polygon fill="#ffffff" stroke="#000000" points="177,-250.5 177,-291.5 373,-291.5 373,-250.5 177,-250.5"/>
 <text text-anchor="start" x="185" y="-279.5" font-family="Helvetica,sans-Serif" font-size="10.00" fill="#000000">sll_m_cubic_spline</text>
 <text text-anchor="start" x="185" y="-268.5" font-family="Helvetica,sans-Serif" font-size="10.00" fill="#000000">_interpolator_1d::sll</text>

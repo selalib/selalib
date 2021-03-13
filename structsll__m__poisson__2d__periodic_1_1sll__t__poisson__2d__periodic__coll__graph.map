@@ -1,5 +1,5 @@
 <map id="sll_t_poisson_2d_periodic" name="sll_t_poisson_2d_periodic">
-<area shape="rect" id="node2" href="$structsll__m__poisson__2d__base_1_1sll__c__poisson__2d__base.html" title="PLEASE ADD DOCUMENTATION. " alt="" coords="5,304,175,331"/>
+<area shape="rect" id="node2" href="$structsll__m__poisson__2d__base_1_1sll__c__poisson__2d__base.html" title="sll_c_poisson_2d_base" alt="" coords="5,304,175,331"/>
 <area shape="rect" id="node3" href="$structsll__m__poisson__2d__periodic_1_1sll__t__poisson__2d__periodic__fft.html" title="derived type to sll_o_solve the Poisson equation on 2d regular cartesian mesh with periodic boundary ..." alt="" coords="199,304,408,331"/>
 <area shape="rect" id="node4" href="$structsll__m__fft_1_1sll__t__fft.html" title="Type for FFT plan in SeLaLib. " alt="" coords="143,140,213,167"/>
 </map>

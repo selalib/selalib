@@ -65,7 +65,7 @@ var sectionId = 'dynsection-2';
 <!-- Node8 -->
 <g id="node2" class="node">
 <title>Node8</title>
-<g id="a_node2"><a xlink:href="namespacesll__m__cubic__non__uniform__splines.html#aefb9225983b59769f7adbf24dbdb47ff" target="_top" xlink:title="PLEASE ADD DOCUMENTATION. ">
+<g id="a_node2"><a xlink:href="namespacesll__m__cubic__non__uniform__splines.html#aefb9225983b59769f7adbf24dbdb47ff" target="_top" xlink:title="sll_m_cubic_non_uniform\l_splines::sll_s_setup\l_spline_nonunif_1d_periodic_aux">
 <polygon fill="#ffffff" stroke="#000000" points="207,-.5 207,-41.5 385,-41.5 385,-.5 207,-.5"/>
 <text text-anchor="start" x="215" y="-29.5" font-family="Helvetica,sans-Serif" font-size="10.00" fill="#000000">sll_m_cubic_non_uniform</text>
 <text text-anchor="start" x="215" y="-18.5" font-family="Helvetica,sans-Serif" font-size="10.00" fill="#000000">_splines::sll_s_setup</text>
