@@ -10,8 +10,8 @@ jobs:
       - name: Install fprettify and cmake-format
         run: |
           pip install cmake-format fprettify
-          find . \( -name '*.F90' \)  -exec fprettify {} \;
-          find . \( -name 'CMakeLists.txt' \)  -exec cmake-format -i {} \;
+          find . \( -name '*.F90' \)  -exec /home/runner/.local/bin/fprettify {} \;
+          find . \( -name 'CMakeLists.txt' \)  -exec /home/runner/.local/bin/cmake-format -i {} \;
       - name: Create Pull Request
         id: cpr
         uses: peter-evans/create-pull-request@v3
