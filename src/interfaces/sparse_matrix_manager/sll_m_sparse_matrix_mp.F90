@@ -39,6 +39,7 @@ module sll_m_sparse_matrix_mp
 contains
 
    !> @brief allocates the memory space for a new CSR type on the heap,
+   !> @details
    !> initializes it with the given arguments and returns a pointer to the
    !> object.
    !> param[in] num_rows :  number of rows
@@ -87,6 +88,7 @@ contains
    end function sll_f_new_csr_matrix_mp
 
    !> @brief initialization of CSR matrix type
+   !> @details
    !> thanks to the global index of each local dof of each element
    !> param[inout] mat : CSR matrix structure
    !> param[in] num_rows :  number of rows
