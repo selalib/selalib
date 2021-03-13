@@ -9,8 +9,7 @@
 ! The following lines will be read by doxygen to generate documentation:
 
 !> @defgroup characteristics sll_characteristics
-!> @brief
-!> computes the characteristics for advection
+!> @brief computes the characteristics for advection
 !> @author Michel Mehrenberger
 !> You can add a contact, do not put your email to prevent spam.
 !> @details

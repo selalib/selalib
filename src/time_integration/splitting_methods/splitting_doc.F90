@@ -1,6 +1,5 @@
 !> @defgroup operator_splitting sll_operator_splitting
-!> @brief
-!> Operator splitting methods
+!> @brief Operator splitting methods
 !> @author Selalib team <br>
 !> Contact: Eric Sonnendr&uuml;cker
 !> @details

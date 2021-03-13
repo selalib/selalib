@@ -1,6 +1,3 @@
-!
-!  Contact : Pierre Navaro http://wwww-irma.u-strasbg.fr/~navaro
-!
 program test_maxwell_fdtd_hex_mesh
 
 #include "sll_working_precision.h"

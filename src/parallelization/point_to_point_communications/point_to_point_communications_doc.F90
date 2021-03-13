@@ -9,8 +9,7 @@
 ! The following lines will be read by doxygen to generate documentation:
 
 !> @defgroup point_to_point_communications sll_point_to_point_communications
-!> @brief
-!> Draft for domain partitioning.
+!> @brief Draft for domain partitioning.
 !> @author Selalib team
 !> You can add a contact, do not put your email to prevent spam.
 !> Contact: Laurent Navoret, IRMA

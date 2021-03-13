@@ -11,9 +11,6 @@
 !  circulated by CEA, CNRS and INRIA at the following URL
 !  "http://www.cecill.info".
 !
-!
-!  Contact : Pierre Navaro http://wwww-irma.u-strasbg.fr/~navaro
-!
 !**************************************************************
 !> @copyright INRIA
 !> @ingroup maxwell_solvers

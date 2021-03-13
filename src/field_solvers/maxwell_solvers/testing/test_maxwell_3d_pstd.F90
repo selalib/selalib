@@ -1,6 +1,3 @@
-!
-!  Contact : Pierre Navaro http://wwww-irma.u-strasbg.fr/~navaro
-!
 program test_maxwell_3d_pstd
 !-------------------------------------------------------------------
 !  test 2D Maxwell solver based on FFT

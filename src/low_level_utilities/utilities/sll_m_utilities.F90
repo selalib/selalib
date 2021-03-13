@@ -16,7 +16,7 @@
 !**************************************************************
 
 !> @ingroup utilities
-!> Some common numerical utilities
+!> @brief Some common numerical utilities
 module sll_m_utilities
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_errors.h"

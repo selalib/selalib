@@ -12,11 +12,6 @@
 !  circulated by CEA, CNRS and INRIA at the following URL
 !  "http://www.cecill.info".
 !
-!
-!
-!  Contact : Pierre Navaro http://wwww-irma.u-strasbg.fr/~navaro
-!
-!
 !**************************************************************
 
 module sll_m_maxwell_fdtd_hex_mesh
