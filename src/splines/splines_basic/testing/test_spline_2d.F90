@@ -743,6 +743,13 @@ contains
       integer  :: i
       real(wp) :: r
       real(wp) :: a, b
+      integer  :: nseed
+      integer, allocatable :: iseed(:)
+
+      call random_seed(size=nseed)
+      allocate(iseed(nseed))
+      iseed = 42
+      call random_seed(put=iseed)
 
       ! Generate breakpoints by applying random noise onto regular grid
       associate (dx => (xmax - xmin)/ncells)
