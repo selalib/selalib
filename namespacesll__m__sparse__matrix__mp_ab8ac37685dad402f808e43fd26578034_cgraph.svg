@@ -64,7 +64,7 @@ var sectionId = 'dynsection-1';
 <!-- Node7 -->
 <g id="node2" class="node">
 <title>Node7</title>
-<g id="a_node2"><a xlink:href="namespacesll__m__sparse__matrix__mp.html#ad32ebfd00f8ef3065b6859eca129d87a" target="_top" xlink:title="initialization of CSR matrix type thanks to the global index of each local dof of each element param[...">
+<g id="a_node2"><a xlink:href="namespacesll__m__sparse__matrix__mp.html#ad32ebfd00f8ef3065b6859eca129d87a" target="_top" xlink:title="initialization of CSR matrix type ">
 <polygon fill="#ffffff" stroke="#000000" points="176,-28 176,-47 313,-47 313,-28 176,-28"/>
 <text text-anchor="middle" x="244.5" y="-35" font-family="Helvetica,sans-Serif" font-size="10.00" fill="#000000">sll_s_csr_matrix_mp_init</text>
 </a>

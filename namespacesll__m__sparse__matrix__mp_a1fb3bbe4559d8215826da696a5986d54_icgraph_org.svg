@@ -19,7 +19,7 @@
 <!-- Node2 -->
 <g id="node2" class="node">
 <title>Node2</title>
-<g id="a_node2"><a xlink:href="namespacesll__m__sparse__matrix__mp.html#ad32ebfd00f8ef3065b6859eca129d87a" target="_top" xlink:title="initialization of CSR matrix type thanks to the global index of each local dof of each element param[...">
+<g id="a_node2"><a xlink:href="namespacesll__m__sparse__matrix__mp.html#ad32ebfd00f8ef3065b6859eca129d87a" target="_top" xlink:title="initialization of CSR matrix type ">
 <polygon fill="#ffffff" stroke="#000000" points="146,-41.5 146,-60.5 283,-60.5 283,-41.5 146,-41.5"/>
 <text text-anchor="middle" x="214.5" y="-48.5" font-family="Helvetica,sans-Serif" font-size="10.00" fill="#000000">sll_s_csr_matrix_mp_init</text>
 </a>
@@ -34,7 +34,7 @@
 <!-- Node3 -->
 <g id="node3" class="node">
 <title>Node3</title>
-<g id="a_node3"><a xlink:href="namespacesll__m__sparse__matrix__mp.html#ab8ac37685dad402f808e43fd26578034" target="_top" xlink:title="allocates the memory space for a new CSR type on the heap, initializes it with the given arguments an...">
+<g id="a_node3"><a xlink:href="namespacesll__m__sparse__matrix__mp.html#ab8ac37685dad402f808e43fd26578034" target="_top" xlink:title="allocates the memory space for a new CSR type on the heap, ">
 <polygon fill="#ffffff" stroke="#000000" points="319,-41.5 319,-60.5 459,-60.5 459,-41.5 319,-41.5"/>
 <text text-anchor="middle" x="389" y="-48.5" font-family="Helvetica,sans-Serif" font-size="10.00" fill="#000000">sll_f_new_csr_matrix_mp</text>
 </a>
