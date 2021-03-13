@@ -7,9 +7,6 @@
 !>$
 !>E_y(x,y,t) = \sin(\frac{2 M \pi}{L_x} x)  \sin(\frac{2 M \pi}{L_x} t)
 !>$
-!
-!  Contact : Eric Sonnendrucker
-!
 program test_maxwell_1d_fem
    !------------------------------------------------------------------------
    !  test 1D Maxwell spline finite element solver on a periodic grid
