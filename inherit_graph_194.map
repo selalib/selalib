@@ -1,7 +1,6 @@
 <map id="Graphical Class Hierarchy" name="Graphical Class Hierarchy">
-<area shape="rect" id="node1" href="$structsll__m__characteristics__1d__base_1_1sll__c__characteristics__1d__base.html" title="sll_c_characteristics\l_1d_base" alt="" coords="5,104,159,145"/>
-<area shape="rect" id="node2" href="$structsll__m__characteristics__1d__explicit__euler_1_1sll__t__charac__1d__explicit__euler.html" title="sll_t_charac_1d_explicit\l_euler" alt="" coords="222,5,399,47"/>
-<area shape="rect" id="node3" href="$structsll__m__characteristics__1d__explicit__euler__conservative_1_1explicit__euler__conservative__1d__charac__computer.html" title="explicit_euler_conservative\l_1d_charac_computer" alt="" coords="210,71,411,112"/>
-<area shape="rect" id="node4" href="$structsll__m__characteristics__1d__trapezoid_1_1sll__t__trapezoid__1d__charac.html" title="sll_t_trapezoid_1d\l_charac" alt="" coords="241,136,381,177"/>
-<area shape="rect" id="node5" href="$structsll__m__characteristics__1d__trapezoid__conservative_1_1sll__t__trapezoid__conservative__1d__charac.html" title="sll_t_trapezoid_conservative\l_1d_charac" alt="" coords="207,201,415,243"/>
+<area shape="rect" id="node1" href="$structsll__m__gyroaverage__2d__base_1_1sll__c__gyroaverage__2d__base.html" title="sll_c_gyroaverage_2d_base" alt="" coords="5,78,207,105"/>
+<area shape="rect" id="node2" href="$structsll__m__gyroaverage__2d__polar__hermite__solver_1_1gyroaverage__2d__polar__hermite__solver.html" title="gyroaverage_2d_polar\l_hermite_solver" alt="" coords="255,5,421,47"/>
+<area shape="rect" id="node3" href="$structsll__m__gyroaverage__2d__polar__pade__solver_1_1gyroaverage__2d__polar__pade__solver.html" title="gyroaverage_2d_polar\l_pade_solver" alt="" coords="255,71,421,112"/>
+<area shape="rect" id="node4" href="$structsll__m__gyroaverage__2d__polar__splines__solver_1_1gyroaverage__2d__polar__splines__solver.html" title="gyroaverage_2d_polar\l_splines_solver" alt="" coords="255,136,421,177"/>
 </map>

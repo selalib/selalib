@@ -12,9 +12,9 @@
 <!-- Node0 -->
 <g id="node1" class="node">
 <title>Node0</title>
-<g id="a_node1"><a xlink:href="interfacesll__m__collective_1_1sll__o__collective__alltoall.html" target="_top" xlink:title="Sends data from all to all processes. ">
+<g id="a_node1"><a xlink:href="interfacesll__m__collective_1_1sll__o__collective__scatter.html" target="_top" xlink:title="Sends data from one process to all other processes in a communicator. ">
 <polygon fill="#ffffff" stroke="#000000" points="0,-.5 0,-19.5 131,-19.5 131,-.5 0,-.5"/>
-<text text-anchor="middle" x="65.5" y="-7.5" font-family="Helvetica,sans-Serif" font-size="10.00" fill="#000000">sll_o_collective_alltoall</text>
+<text text-anchor="middle" x="65.5" y="-7.5" font-family="Helvetica,sans-Serif" font-size="10.00" fill="#000000">sll_o_collective_scatter</text>
 </a>
 </g>
 </g>

@@ -29,7 +29,7 @@ var searchData=
   ['i_5fxml_5fitem_5f_5fdelete',['i_xml_item__delete',['../interfacesll__m__xml_1_1i__xml__item____delete.html',1,'sll_m_xml']]],
   ['i_5fxml_5fitem_5f_5fwrite',['i_xml_item__write',['../interfacesll__m__xml_1_1i__xml__item____write.html',1,'sll_m_xml']]],
   ['init_5fgaussian_5f2d',['init_gaussian_2d',['../structsll__m__gaussian__2d__initializer_1_1init__gaussian__2d.html',1,'sll_m_gaussian_2d_initializer']]],
-  ['initialize',['initialize',['../interfacesll__m__maxwell__fdtd__hex__mesh_1_1initialize.html',1,'initialize'],['../interfacesll__m__mumps_1_1initialize.html',1,'initialize'],['../interfacesll__m__paralution_1_1initialize.html',1,'initialize'],['../interfacesll__m__pastix_1_1initialize.html',1,'initialize']]],
+  ['initialize',['initialize',['../interfacesll__m__mumps_1_1initialize.html',1,'initialize'],['../interfacesll__m__paralution_1_1initialize.html',1,'initialize'],['../interfacesll__m__pastix_1_1initialize.html',1,'initialize']]],
   ['interpolate_5f2d_5farray',['interpolate_2d_array',['../interfacesll__m__interpolators__2d__base_1_1interpolate__2d__array.html',1,'sll_m_interpolators_2d_base']]],
   ['interpolate_5f2d_5farray_5fdisp',['interpolate_2d_array_disp',['../interfacesll__m__interpolators__2d__base_1_1interpolate__2d__array__disp.html',1,'sll_m_interpolators_2d_base']]],
   ['interpolator_5f1d_5farray',['interpolator_1d_array',['../interfacesll__m__interpolators__1d__base_1_1interpolator__1d__array.html',1,'sll_m_interpolators_1d_base']]],

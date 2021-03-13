@@ -1,6 +1,5 @@
 <map id="Graphical Class Hierarchy" name="Graphical Class Hierarchy">
-<area shape="rect" id="node1" href="$structsll__m__characteristics__2d__base_1_1sll__c__characteristics__2d__base.html" title="sll_c_characteristics\l_2d_base" alt="" coords="5,71,159,112"/>
-<area shape="rect" id="node2" href="$structsll__m__characteristics__2d__explicit__euler_1_1sll__t__charac__2d__explicit__euler.html" title="sll_t_charac_2d_explicit\l_euler" alt="" coords="219,5,396,47"/>
-<area shape="rect" id="node3" href="$structsll__m__characteristics__2d__explicit__euler__conservative_1_1explicit__euler__conservative__2d__charac__computer.html" title="explicit_euler_conservative\l_2d_charac_computer" alt="" coords="207,71,408,112"/>
-<area shape="rect" id="node4" href="$structsll__m__characteristics__2d__verlet_1_1sll__t__charac__2d__verlet.html" title="sll_t_charac_2d_verlet" alt="" coords="224,137,391,163"/>
+<area shape="rect" id="node1" href="$structsll__m__hamiltonian__splitting__base_1_1sll__c__hamiltonian__splitting__base.html" title="Type for Hamiltonian splittings. " alt="" coords="5,46,240,73"/>
+<area shape="rect" id="node2" href="$structsll__m__hamiltonian__splitting__pic__vm__1d2v_1_1sll__t__hamiltonian__splitting__pic__vm__1d2v.html" title="Hamiltonian splitting type for Vlasov&#45;Maxwell 1d2v. " alt="" coords="288,5,483,47"/>
+<area shape="rect" id="node3" href="$structsll__m__hamiltonian__splitting__pic__vm__1d2v__boris_1_1sll__t__hamiltonian__splitting__pic__vm__1d2v__boris.html" title="Solves 1d2v Vlasov&#45;Maxwell with PIC and spline finite elements with Boris pusher. ..." alt="" coords="288,71,483,112"/>
 </map>

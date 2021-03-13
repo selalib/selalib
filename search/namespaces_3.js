@@ -150,8 +150,6 @@ var searchData=
   ['sll_5fm_5fmaxwell_5f2d_5fperiodic_5fcartesian_5fpar',['sll_m_maxwell_2d_periodic_cartesian_par',['../namespacesll__m__maxwell__2d__periodic__cartesian__par.html',1,'']]],
   ['sll_5fm_5fmaxwell_5f2d_5fpstd',['sll_m_maxwell_2d_pstd',['../namespacesll__m__maxwell__2d__pstd.html',1,'']]],
   ['sll_5fm_5fmaxwell_5f3d_5fpstd',['sll_m_maxwell_3d_pstd',['../namespacesll__m__maxwell__3d__pstd.html',1,'']]],
-  ['sll_5fm_5fmaxwell_5fdiga_5fhex_5fmesh',['sll_m_maxwell_diga_hex_mesh',['../namespacesll__m__maxwell__diga__hex__mesh.html',1,'']]],
-  ['sll_5fm_5fmaxwell_5ffdtd_5fhex_5fmesh',['sll_m_maxwell_fdtd_hex_mesh',['../namespacesll__m__maxwell__fdtd__hex__mesh.html',1,'']]],
   ['sll_5fm_5fmaxwell_5fsolvers_5fbase',['sll_m_maxwell_solvers_base',['../namespacesll__m__maxwell__solvers__base.html',1,'']]],
   ['sll_5fm_5fmemory',['sll_m_memory',['../namespacesll__m__memory.html',1,'']]],
   ['sll_5fm_5fmesh_5fcalculus_5f2d',['sll_m_mesh_calculus_2d',['../namespacesll__m__mesh__calculus__2d.html',1,'']]],

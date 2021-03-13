@@ -10,7 +10,5 @@ var searchData=
   ['jacobian_5fmatrix_5ffunction',['jacobian_matrix_function',['../structsll__m__coordinate__transformations__2d_1_1sll__t__coordinate__transformation__2d__analytic.html#ab2a7c90648746b7453f29d8a85f64da5',1,'sll_m_coordinate_transformations_2d::sll_t_coordinate_transformation_2d_analytic']]],
   ['jacobians_5fc',['jacobians_c',['../structsll__m__coordinate__transformations__2d_1_1sll__t__coordinate__transformation__2d__discrete.html#aef7d0e7e79a96e3343fb8fd589c92a4a',1,'sll_m_coordinate_transformations_2d::sll_t_coordinate_transformation_2d_discrete']]],
   ['jacobians_5fn',['jacobians_n',['../structsll__m__coordinate__transformations__2d_1_1sll__t__coordinate__transformation__2d__discrete.html#a37a187ae25ce3f3ee23cd2e9b6a7c68f',1,'sll_m_coordinate_transformations_2d::sll_t_coordinate_transformation_2d_discrete']]],
-  ['jmat_5fpole',['jmat_pole',['../structsll__m__jacobian__2d__pseudo__cartesian_1_1sll__t__jacobian__2d__pseudo__cartesian.html#a3f5b022bd53e9674bb739bd1df3017b3',1,'sll_m_jacobian_2d_pseudo_cartesian::sll_t_jacobian_2d_pseudo_cartesian']]],
-  ['jx',['jx',['../namespacesll__m__maxwell__diga__hex__mesh.html#a53dc26059f9ee379fd8e5572f235f461',1,'sll_m_maxwell_diga_hex_mesh::maxwell_dg_hex_mesh']]],
-  ['jy',['jy',['../namespacesll__m__maxwell__diga__hex__mesh.html#affd66bf34b4b64eb1fe5d8e1aba7dbfa',1,'sll_m_maxwell_diga_hex_mesh::maxwell_dg_hex_mesh']]]
+  ['jmat_5fpole',['jmat_pole',['../structsll__m__jacobian__2d__pseudo__cartesian_1_1sll__t__jacobian__2d__pseudo__cartesian.html#a3f5b022bd53e9674bb739bd1df3017b3',1,'sll_m_jacobian_2d_pseudo_cartesian::sll_t_jacobian_2d_pseudo_cartesian']]]
 ];

@@ -1,7 +1,6 @@
 var searchData=
 [
   ['factorize',['factorize',['../interfacesll__m__mumps_1_1factorize.html',1,'factorize'],['../interfacesll__m__paralution_1_1factorize.html',1,'factorize'],['../interfacesll__m__pastix_1_1factorize.html',1,'factorize']]],
-  ['faraday',['faraday',['../interfacesll__m__maxwell__fdtd__hex__mesh_1_1faraday.html',1,'sll_m_maxwell_fdtd_hex_mesh']]],
   ['fft_5fhierarchical',['fft_hierarchical',['../structsll__m__sparse__grid__interpolator_1_1fft__hierarchical.html',1,'sll_m_sparse_grid_interpolator']]],
   ['field_5f1d_5fmessage_5fpass',['field_1d_message_pass',['../interfacesll__m__scalar__field__1d__base_1_1field__1d__message__pass.html',1,'sll_m_scalar_field_1d_base']]],
   ['field_5f1d_5fsubroutine',['field_1d_subroutine',['../interfacesll__m__scalar__field__1d__base_1_1field__1d__subroutine.html',1,'sll_m_scalar_field_1d_base']]],

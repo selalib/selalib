@@ -160,8 +160,6 @@ var searchData=
   ['sll_5fm_5fmaxwell_5f2d_5fperiodic_5fcartesian_5fpar_2ef90',['sll_m_maxwell_2d_periodic_cartesian_par.F90',['../sll__m__maxwell__2d__periodic__cartesian__par_8_f90.html',1,'']]],
   ['sll_5fm_5fmaxwell_5f2d_5fpstd_2ef90',['sll_m_maxwell_2d_pstd.F90',['../sll__m__maxwell__2d__pstd_8_f90.html',1,'']]],
   ['sll_5fm_5fmaxwell_5f3d_5fpstd_2ef90',['sll_m_maxwell_3d_pstd.F90',['../sll__m__maxwell__3d__pstd_8_f90.html',1,'']]],
-  ['sll_5fm_5fmaxwell_5fdiga_5fhex_5fmesh_2ef90',['sll_m_maxwell_diga_hex_mesh.F90',['../sll__m__maxwell__diga__hex__mesh_8_f90.html',1,'']]],
-  ['sll_5fm_5fmaxwell_5ffdtd_5fhex_5fmesh_2ef90',['sll_m_maxwell_fdtd_hex_mesh.F90',['../sll__m__maxwell__fdtd__hex__mesh_8_f90.html',1,'']]],
   ['sll_5fm_5fmaxwell_5fsolvers_5fbase_2ef90',['sll_m_maxwell_solvers_base.F90',['../sll__m__maxwell__solvers__base_8_f90.html',1,'']]],
   ['sll_5fm_5fmemory_2ef90',['sll_m_memory.F90',['../sll__m__memory_8_f90.html',1,'']]],
   ['sll_5fm_5fmesh_5fcalculus_5f2d_2ef90',['sll_m_mesh_calculus_2d.F90',['../sll__m__mesh__calculus__2d_8_f90.html',1,'']]],
