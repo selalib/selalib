@@ -70,59 +70,59 @@ module sll_m_coordinate_transformations_2d_nurbs
       sll_real64, dimension(:, :), pointer :: x1_node => null()
       !> \f$ x_2(i,j) \f$
       sll_real64, dimension(:, :), pointer :: x2_node => null()
-      !> PLEASE ADD DOCUMENTATION
+      !> 
       sll_real64, dimension(:, :), pointer :: x1_cell => null()
-      !> PLEASE ADD DOCUMENTATION
+      !> 
       sll_real64, dimension(:, :), pointer :: x2_cell => null()
-      !> PLEASE ADD DOCUMENTATION
+      !> 
       type(sll_t_arbitrary_degree_spline_interpolator_2d) :: x1_interp
-      !> PLEASE ADD DOCUMENTATION
+      !> 
       type(sll_t_arbitrary_degree_spline_interpolator_2d) :: x2_interp
-      !> PLEASE ADD DOCUMENTATION
+      !> 
       type(sll_t_arbitrary_degree_spline_interpolator_2d) :: x3_interp
-      !> PLEASE ADD DOCUMENTATION
+      !> 
       sll_int32 :: is_rational
-      !> PLEASE ADD DOCUMENTATION
+      !> 
       sll_int32 :: spline_deg1
-      !> PLEASE ADD DOCUMENTATION
+      !> 
       sll_int32 :: spline_deg2
-      !> PLEASE ADD DOCUMENTATION
+      !> 
       sll_real64, dimension(:), pointer :: knots1
-      !> PLEASE ADD DOCUMENTATION
+      !> 
       sll_real64, dimension(:), pointer :: knots2
 
    contains
 
-      !> PLEASE ADD DOCUMENTATION
+      !> 
       procedure, pass(transf) :: get_cartesian_mesh => get_cartesian_mesh_nurbs_2d
-      !> PLEASE ADD DOCUMENTATION
+      !> 
       procedure, pass(transf) :: x1_at_node => x1_node_nurbs
-      !> PLEASE ADD DOCUMENTATION
+      !> 
       procedure, pass(transf) :: x2_at_node => x2_node_nurbs
-      !> PLEASE ADD DOCUMENTATION
+      !> 
       procedure, pass(transf) :: jacobian_at_node => transf_2d_jacobian_node_nurbs
-      !> PLEASE ADD DOCUMENTATION
+      !> 
       procedure, pass(transf) :: x1 => x1_nurbs
-      !> PLEASE ADD DOCUMENTATION
+      !> 
       procedure, pass(transf) :: x2 => x2_nurbs
-      !> PLEASE ADD DOCUMENTATION
+      !> 
       procedure, pass(transf) :: x1_at_cell => x1_cell_nurbs
-      !> PLEASE ADD DOCUMENTATION
+      !> 
       procedure, pass(transf) :: x2_at_cell => x2_cell_nurbs
-      !> PLEASE ADD DOCUMENTATION
+      !> 
       procedure, pass(transf) :: jacobian_at_cell => jacobian_2d_cell_nurbs
-      !> PLEASE ADD DOCUMENTATION
+      !> 
       procedure, pass(transf) :: jacobian => jacobian_2d_nurbs
-      !> PLEASE ADD DOCUMENTATION
+      !> 
       procedure, pass(transf) :: jacobian_matrix => jacobian_matrix_2d_nurbs
-      !> PLEASE ADD DOCUMENTATION
+      !> 
       procedure, pass(transf) :: inverse_jacobian_matrix => &
          inverse_jacobian_matrix_2d_nurbs
-      !> PLEASE ADD DOCUMENTATION
+      !> 
       procedure, pass(transf) :: write_to_file => write_to_file_2d_nurbs
-      !> PLEASE ADD DOCUMENTATION
+      !> 
       procedure, pass(transf) :: read_from_file => read_from_file_2d_nurbs
-      !> PLEASE ADD DOCUMENTATION
+      !> 
       procedure, pass(transf) :: delete => delete_transformation_2d_nurbs
    end type sll_t_coordinate_transformation_2d_nurbs
 
@@ -454,7 +454,7 @@ contains
       SLL_DEALLOCATE_ARRAY(weights_2d, ierr)
    end subroutine read_from_file_2d_nurbs
 
-   !> PLEASE ADD DOCUMENTATION
+   !> 
    function get_cartesian_mesh_nurbs_2d(transf) result(res)
       class(sll_t_cartesian_mesh_2d), pointer :: res
       class(sll_t_coordinate_transformation_2d_nurbs), intent(in) :: transf

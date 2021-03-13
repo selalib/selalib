@@ -15,6 +15,7 @@
 !  "http://www.cecill.info".
 !**************************************************************
 
+!> @brief Particle deposition routines
 module sll_m_accumulators
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_memory.h"

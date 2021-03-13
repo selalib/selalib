@@ -2013,7 +2013,7 @@ contains
       sll_f_x2_polar_f = (r1 + (r2 - r1)*eta1)*sin(2.0_f64*sll_p_pi*eta2)
    end function sll_f_x2_polar_f
 
-   !> PLEASE ADD DOCUMENTATION
+   !> 
    function sll_f_deriv_x1_polar_f_eta1(eta1, eta2, params)
       sll_real64 :: sll_f_deriv_x1_polar_f_eta1
       sll_real64, intent(in) :: eta1, eta2
@@ -2028,7 +2028,7 @@ contains
       sll_f_deriv_x1_polar_f_eta1 = (r2 - r1)*cos(2.0_f64*sll_p_pi*eta2)
    end function sll_f_deriv_x1_polar_f_eta1
 
-   !> PLEASE ADD DOCUMENTATION
+   !> 
    function sll_f_deriv_x1_polar_f_eta2(eta1, eta2, params)
       sll_real64 :: sll_f_deriv_x1_polar_f_eta2
       sll_real64, intent(in) :: eta1, eta2
@@ -2044,7 +2044,7 @@ contains
       sll_f_deriv_x1_polar_f_eta2 = -(r1 + (r2 - r1)*eta1)*sin(k*eta2)*k
    end function sll_f_deriv_x1_polar_f_eta2
 
-   !> PLEASE ADD DOCUMENTATION
+   !> 
    function sll_f_deriv_x2_polar_f_eta1(eta1, eta2, params)
       sll_real64 :: sll_f_deriv_x2_polar_f_eta1
       sll_real64, intent(in) :: eta1, eta2
@@ -2059,7 +2059,7 @@ contains
       sll_f_deriv_x2_polar_f_eta1 = (r2 - r1)*sin(2.0_f64*sll_p_pi*eta2)
    end function sll_f_deriv_x2_polar_f_eta1
 
-   !> PLEASE ADD DOCUMENTATION
+   !> 
    function sll_f_deriv_x2_polar_f_eta2(eta1, eta2, params)
       sll_real64 :: sll_f_deriv_x2_polar_f_eta2
       sll_real64, intent(in) :: eta1, eta2
@@ -2075,7 +2075,7 @@ contains
       sll_f_deriv_x2_polar_f_eta2 = (r1 + (r2 - r1)*eta1)*cos(k*eta2)*k
    end function sll_f_deriv_x2_polar_f_eta2
 
-   !> PLEASE ADD DOCUMENTATION
+   !> 
    function sll_f_jacobian_polar_f(eta1, eta2, params) result(jac)
       sll_real64             :: jac
       sll_real64, intent(in) :: eta1, eta2
@@ -2093,7 +2093,7 @@ contains
    ! what is the following used for? It is not meant or used for the
    ! coordinate transformation class... this one is used in the unit_test_2d.F90
    ! file but, what else?
-   !> PLEASE ADD DOCUMENTATION
+   !> 
    function sll_f_deriv1_jacobian_polar_f(eta1, eta2, params) result(deriv)
       sll_real64             :: deriv
       sll_real64, intent(in) :: eta1, eta2
@@ -2130,7 +2130,7 @@ contains
    ! A = -1.0
    ! B =  1.0
 
-   !> PLEASE ADD DOCUMENTATION
+   !> 
    function linear_map_f(eta, params) result(val)
       sll_real64 :: val
       sll_real64, intent(in) :: eta
@@ -2144,7 +2144,7 @@ contains
       val = (b - a)*eta + a
    end function linear_map_f
 
-   !> PLEASE ADD DOCUMENTATION
+   !> 
    function linear_map_jac_f(eta, params) result(val)
       sll_real64 :: val
       sll_real64, intent(in) :: eta

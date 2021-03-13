@@ -47,30 +47,30 @@ module sll_m_cubic_spline_interpolator_1d_nonuniform
       type(sll_t_cubic_spline_1d)            :: spline         !< cubic spline
       type(sll_t_cubic_nonunif_spline_1d), pointer :: nonunif_spline !< spline
    contains
-      !> PLEASE ADD DOCUMENTATION
+      !> 
       procedure, pass(interpolator) :: init => initialize_cs1d_interpolator2
-      !> PLEASE ADD DOCUMENTATION
+      !> 
       procedure :: compute_interpolants => compute_interpolants_cs1d
-      !> PLEASE ADD DOCUMENTATION
+      !> 
       procedure :: interpolate_from_interpolant_value => interpolate_value_cs1d
-      !> PLEASE ADD DOCUMENTATION
+      !> 
       procedure :: interpolate_from_interpolant_derivative_eta1 => interpolate_deriv1_cs1d
-      !> PLEASE ADD DOCUMENTATION
+      !> 
       procedure :: interpolate_from_interpolant_array => interpolate_values_cs1d
-      !> PLEASE ADD DOCUMENTATION
+      !> 
       !procedure :: interpolate_pointer_values => interpolate_pointer_values_cs1d
-      !> PLEASE ADD DOCUMENTATION
+      !> 
       procedure :: interpolate_from_interpolant_derivatives_eta1 => interpolate_derivatives_cs1d
-      !> PLEASE ADD DOCUMENTATION
+      !> 
       procedure, pass:: interpolate_array => spline_interpolate1d
-      !> PLEASE ADD DOCUMENTATION
+      !> 
       procedure, pass:: interpolate_array_disp => spline_interpolate1d_disp
-      !> PLEASE ADD DOCUMENTATION
+      !> 
       procedure, pass:: interpolate_array_disp_inplace => spline_interpolate1d_disp_inplace
       !generic :: initialize => initialize_cs1d_interpolator
-      !> PLEASE ADD DOCUMENTATION
+      !> 
       procedure, pass :: set_coefficients => set_coefficients_cs1d
-      !> PLEASE ADD DOCUMENTATION
+      !>
       procedure, pass :: get_coefficients => get_coefficients_cs1d
    end type sll_t_cubic_spline_interpolator_1d_nonuniform
 

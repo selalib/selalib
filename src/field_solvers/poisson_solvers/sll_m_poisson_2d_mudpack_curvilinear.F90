@@ -83,65 +83,65 @@ module sll_m_poisson_2d_mudpack_curvilinear
    !> Derived type to solve Poisson equation on 2d curvilinear mesh
    type, extends(sll_c_poisson_2d_base) :: poisson_2d_mudpack_curvilinear
 
-      !> PLEASE ADD DOCUMENTATION
+      !> 
       sll_real64, dimension(:, :), pointer :: cxx_2d
-      !> PLEASE ADD DOCUMENTATION
+      !> 
       sll_real64, dimension(:, :), pointer :: cxy_2d
-      !> PLEASE ADD DOCUMENTATION
+      !> 
       sll_real64, dimension(:, :), pointer :: cyy_2d
-      !> PLEASE ADD DOCUMENTATION
+      !> 
       sll_real64, dimension(:, :), pointer :: cx_2d
-      !> PLEASE ADD DOCUMENTATION
+      !> 
       sll_real64, dimension(:, :), pointer :: cy_2d
-      !> PLEASE ADD DOCUMENTATION
+      !> 
       sll_real64, dimension(:, :), pointer :: ce_2d
-      !> PLEASE ADD DOCUMENTATION
+      !> 
       sll_real64, dimension(:), pointer :: cxx_1d
-      !> PLEASE ADD DOCUMENTATION
+      !> 
       sll_real64, dimension(:), pointer :: cyy_1d
-      !> PLEASE ADD DOCUMENTATION
+      !> 
       sll_real64, dimension(:), pointer :: cx_1d
-      !> PLEASE ADD DOCUMENTATION
+      !> 
       sll_real64, dimension(:), pointer :: cy_1d
-      !> PLEASE ADD DOCUMENTATION
+      !> 
       sll_real64, dimension(:), pointer :: cex_1d
-      !> PLEASE ADD DOCUMENTATION
+      !> 
       sll_real64, dimension(:), pointer :: cey_1d
-      !> PLEASE ADD DOCUMENTATION
+      !> 
       sll_real64 :: cxx
-      !> PLEASE ADD DOCUMENTATION
+      !> 
       sll_real64 :: cyy
-      !> PLEASE ADD DOCUMENTATION
+      !> 
       sll_real64 :: cx
-      !> PLEASE ADD DOCUMENTATION
+      !> 
       sll_real64 :: cy
-      !> PLEASE ADD DOCUMENTATION
+      !> 
       sll_real64 :: ce
-      !> PLEASE ADD DOCUMENTATION
+      !> 
       sll_int32  :: mudpack_case
-      !> PLEASE ADD DOCUMENTATION
+      !> 
       class(sll_c_interpolator_2d), pointer   :: cxx_2d_interp
-      !> PLEASE ADD DOCUMENTATION
+      !> 
       class(sll_c_interpolator_2d), pointer   :: cxy_2d_interp
-      !> PLEASE ADD DOCUMENTATION
+      !> 
       class(sll_c_interpolator_2d), pointer   :: cyy_2d_interp
-      !> PLEASE ADD DOCUMENTATION
+      !> 
       class(sll_c_interpolator_2d), pointer   :: cx_2d_interp
-      !> PLEASE ADD DOCUMENTATION
+      !> 
       class(sll_c_interpolator_2d), pointer   :: cy_2d_interp
-      !> PLEASE ADD DOCUMENTATION
+      !> 
       class(sll_c_interpolator_2d), pointer   :: ce_2d_interp
-      !> PLEASE ADD DOCUMENTATION
+      !> 
       class(sll_c_interpolator_1d), pointer   :: cxx_1d_interp
-      !> PLEASE ADD DOCUMENTATION
+      !> 
       class(sll_c_interpolator_1d), pointer   :: cyy_1d_interp
-      !> PLEASE ADD DOCUMENTATION
+      !> 
       class(sll_c_interpolator_1d), pointer   :: cx_1d_interp
-      !> PLEASE ADD DOCUMENTATION
+      !> 
       class(sll_c_interpolator_1d), pointer   :: cy_1d_interp
-      !> PLEASE ADD DOCUMENTATION
+      !> 
       class(sll_c_interpolator_1d), pointer   :: cex_1d_interp
-      !> PLEASE ADD DOCUMENTATION
+      !> 
       class(sll_c_interpolator_1d), pointer   :: cey_1d_interp
 
       sll_real64, dimension(:), pointer :: work !< array for tmp data
@@ -152,11 +152,11 @@ module sll_m_poisson_2d_mudpack_curvilinear
 
    contains
 
-      !> PLEASE ADD DOCUMENTATION
+      !> 
       procedure, pass(poisson) :: initialize => initialize_poisson_2d_mudpack_curvilinear
-      !> PLEASE ADD DOCUMENTATION
+      !> 
       procedure, pass(poisson) :: compute_phi_from_rho => compute_phi_from_rho_2d_mudpack
-      !> PLEASE ADD DOCUMENTATION
+      !> 
       procedure, pass(poisson) :: compute_E_from_rho => compute_E_from_rho_2d_mudpack
 
       !> Compute the squarred L_2 for given coefficients
@@ -170,12 +170,12 @@ module sll_m_poisson_2d_mudpack_curvilinear
 
    end type poisson_2d_mudpack_curvilinear
 
-   !> PLEASE ADD DOCUMENTATION
+   !> 
    class(poisson_2d_mudpack_curvilinear), pointer :: mudpack_wrapper => null()
 
 contains
 
-   !> PLEASE ADD DOCUMENTATION
+   !>
    function sll_f_new_poisson_2d_mudpack_curvilinear( &
       eta1_min, &
       eta1_max, &
