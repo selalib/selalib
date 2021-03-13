@@ -1,11 +1,11 @@
 !> @defgroup assert sll_assert
 !!
+!! @brief
+!! Provides macro for assertion
 !! @authors
 !! Edwin Chacon-Golcher <br>
 !! Contact: Yaman Güçlü - <yaman.guclu@gmail.com>
 !!
-!! @brief
-!! Provides macro for assertion
 !! @details
 !! - `SLL_ASSERT(x)`
 !!

@@ -15,10 +15,10 @@
 !  "http://www.cecill.info".
 !**************************************************************
 
-! in development
-! use of CSL1D in 2D
-! begin with a specific example (for characteristics and interpolation)
-
+!> @ingroup advection
+!> @brief use of CSL1D in 2D
+!> @details
+!>  begin with a specific example (for characteristics and interpolation)
 module sll_m_advection_2d_tensor_product
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_memory.h"

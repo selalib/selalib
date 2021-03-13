@@ -18,6 +18,8 @@
 ! in development; should be at least cubic splines
 ! attached with computation of characteristics
 
+!> @ingroup advection
+!> @brief Parabolic Spline Method
 module sll_m_advection_1d_PSM
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_assert.h"

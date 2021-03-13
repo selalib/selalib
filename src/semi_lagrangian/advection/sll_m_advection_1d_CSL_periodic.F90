@@ -18,6 +18,8 @@
 ! in development; should be at least cubic splines
 ! attached with computation of characteristics
 
+!> @ingroup advection
+!> @brief conservative semi-lagrangian 1d advection using periodic interpolation
 module sll_m_advection_1d_CSL_periodic
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #include "sll_errors.h"

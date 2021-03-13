@@ -15,6 +15,7 @@
 !  "http://www.cecill.info".
 !**************************************************************
 
+!> @ingroup advection
 !> @brief Spectral 1d advection
 !> @details Boundary conditions must be periodic.
 module sll_m_advection_1d_spectral
