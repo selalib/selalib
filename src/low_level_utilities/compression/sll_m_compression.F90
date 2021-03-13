@@ -1,7 +1,8 @@
 !**************************************************************
 !> @brief
-!> Module providing an F90 interface to the ZFP compression library:
-!> http://computation.llnl.gov/projects/floating-point-compression
+!> Module providing an F90 interface to the ZFP compression library
+!> @details
+!> ZFP http://computation.llnl.gov/projects/floating-point-compression
 !> In addition it provides simple threaded (de)compression routines.
 !> Important: This module uses C-like 0-based indexing!
 !> @author
