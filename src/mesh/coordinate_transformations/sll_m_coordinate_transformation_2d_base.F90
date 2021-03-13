@@ -63,7 +63,7 @@ module sll_m_coordinate_transformation_2d_base
       !> Check if coordinates are already written in output file
       logical           :: written = .false.
    contains
-      !> PLEASE ADD DOCUMENTATION
+      !> 
       procedure(get_cartesian_mesh_ct), deferred, pass        :: get_cartesian_mesh
       !> x1 = x1(eta1,eta2)
       procedure(geometry_function_ct), deferred, pass       :: x1
@@ -88,11 +88,11 @@ module sll_m_coordinate_transformation_2d_base
       procedure(geometry_function_indices_ct), deferred, pass :: x2_at_cell
       !> jacobian_at_cell = jacobian_at_cell(i,j)
       procedure(geometry_function_indices_ct), deferred, pass :: jacobian_at_cell
-      !> PLEASE ADD DOCUMENTATION
+      !> 
       procedure(write_transformation_signature), deferred, pass :: write_to_file
-      !> PLEASE ADD DOCUMENTATION
+      !> 
       procedure(read_transformation), deferred, pass            :: read_from_file
-      !> PLEASE ADD DOCUMENTATION
+      !> 
       procedure(transformation_subroutine), deferred, pass      :: delete
    end type sll_c_coordinate_transformation_2d_base
 

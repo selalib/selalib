@@ -1,18 +1,12 @@
-!----------------------------------------------------------------------------
-! C-like assert implementation for Fortran. To be used together with
-! 'fassert.inc'.
-!
-! See README for details.
-!----------------------------------------------------------------------------
-
+@brief C-like assert implementation for Fortran.
 module assert
 
    implicit none
 
 contains
 
-   ! Assertion routine designed to mimick the behavior of C's 'assert' from 'assert.h'.
-   ! To be called from the ASSERT() macro from 'fassert.h', not directly.
+   !> Assertion routine designed to mimick the behavior of C's 'assert' from 'assert.h'.
+   !> To be called from the ASSERT() macro from 'fassert.h', not directly.
    subroutine assertion(cond, file, line)
       character(len=*), intent(in) :: cond
       character(len=*), intent(in) :: file

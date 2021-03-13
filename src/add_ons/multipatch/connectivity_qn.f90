@@ -1,3 +1,4 @@
+@brief connectivity for multipatch solver
 module connectivity_module
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
    implicit none

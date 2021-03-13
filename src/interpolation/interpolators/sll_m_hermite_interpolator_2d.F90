@@ -62,40 +62,40 @@ module sll_m_hermite_interpolator_2d
 !! Where the diverse interpolators diverge is in the way to initialize them.
 !! We basically copy the analog for cubic splines
    type, extends(sll_c_interpolator_2d) :: sll_hermite_interpolator_2d
-      !> PLEASE ADD DOCUMENTATION
+      !> 
       type(sll_t_hermite_interpolation_2d), pointer :: hermite
-      !> PLEASE ADD DOCUMENTATION
+      !> 
       sll_int32 :: npts1
-      !> PLEASE ADD DOCUMENTATION
+      !> 
       sll_int32 :: npts2
    contains
-      !> PLEASE ADD DOCUMENTATION
+      !> 
       procedure, pass(interpolator) :: init => initialize_hermite_interpolator_2d
-      !> PLEASE ADD DOCUMENTATION
+      !> 
       procedure :: compute_interpolants => wrap_compute_interpolants_hermite_2d
-      !> PLEASE ADD DOCUMENTATION
+      !> 
       procedure :: interpolate_from_interpolant_value => wrap_interpolate_value_hermite_2d
-      !> PLEASE ADD DOCUMENTATION
+      !> 
       procedure :: interpolate_from_interpolant_derivative_eta1 => wrap_interpolate_deriv1_hermite_2d
-      !> PLEASE ADD DOCUMENTATION
+      !> 
       procedure :: interpolate_from_interpolant_derivative_eta2 => wrap_interpolate_deriv2_hermite_2d
-      !> PLEASE ADD DOCUMENTATION
+      !> 
       procedure, pass :: interpolate_array => wrap_interpolate_array_hermite_2d
-      !> PLEASE ADD DOCUMENTATION
+      !> 
       procedure, pass :: interpolate_array_disp => wrap_interpolate2d_disp_hermite_2d
-      !> PLEASE ADD DOCUMENTATION
+      !> 
       procedure, pass :: set_coefficients => wrap_set_coefficients_hermite_2d
-      !> PLEASE ADD DOCUMENTATION
+      !> 
       procedure, pass :: get_coefficients => wrap_get_coefficients_hermite_2d
-      !> PLEASE ADD DOCUMENTATION
+      !> 
       procedure, pass :: coefficients_are_set => wrap_coefficients_are_set_hermite_2d
-      !> PLEASE ADD DOCUMENTATION
+      !> 
       procedure, pass :: delete => delete_sll_hermite_interpolator_2d
    end type sll_hermite_interpolator_2d
 
 contains
 
-   !> PLEASE ADD DOCUMENTATION
+   !> 
    function sll_f_new_hermite_interpolator_2d( &
       npts1, &
       npts2, &

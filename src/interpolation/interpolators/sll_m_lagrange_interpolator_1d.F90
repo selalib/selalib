@@ -41,36 +41,36 @@ module sll_m_lagrange_interpolator_1d
 
    !> Interpolator class of Lagrange 1D interpolator
    type, extends(sll_c_interpolator_1d) :: sll_t_lagrange_interpolator_1d
-      !> PLEASE ADD DOCUMENTATION
+      !> 
       type(sll_t_lagrange_interpolation_1d), pointer :: lagrange
-      !> PLEASE ADD DOCUMENTATION
+      !> 
       sll_int32                                    :: bc_type
       !> Number of points used for interpolation
       sll_int32                                    :: stencil_width
       !> Flag specifying how the Lagrange interpolation points should be chosen (either sll_p_lagrange_centered or sll_p_lagrange_fixed)
       sll_int32                                    :: interval_selection
    contains
-      !> PLEASE ADD DOCUMENTATION
+      !> 
       procedure, pass(interpolator) :: init => initialize_li1d_interpolator
-      !> PLEASE ADD DOCUMENTATION
+      !> 
       procedure :: compute_interpolants => compute_interpolants_li1d
-      !> PLEASE ADD DOCUMENTATION
+      !> 
       procedure :: interpolate_from_interpolant_derivatives_eta1 => interpolate_array_derivatives_li1d
-      !> PLEASE ADD DOCUMENTATION
+      !> 
       procedure :: interpolate_array => interpolate_array_li1d
-      !> PLEASE ADD DOCUMENTATION
+      !> 
       procedure :: interpolate_array_disp => interpolate_array_disp_li1d
-      !> PLEASE ADD DOCUMENTATION
+      !> 
       procedure :: interpolate_array_disp_inplace => interpolate_array_disp_inplace_li1d
-      !> PLEASE ADD DOCUMENTATION
+      !> 
       procedure :: interpolate_from_interpolant_derivative_eta1 => interpolate_derivative_eta1_li1d
-      !> PLEASE ADD DOCUMENTATION
+      !> 
       procedure :: interpolate_from_interpolant_array => interpolate_array_values_li1d
-      !> PLEASE ADD DOCUMENTATION
+      !> 
       procedure :: interpolate_from_interpolant_value => interpolate_value_li1d
-      !> PLEASE ADD DOCUMENTATION
+      !> 
       procedure, pass :: set_coefficients => set_coefficients_li1d
-      !> PLEASE ADD DOCUMENTATION
+      !>
       procedure, pass :: get_coefficients => get_coefficients_li1d
    end type sll_t_lagrange_interpolator_1d
 
