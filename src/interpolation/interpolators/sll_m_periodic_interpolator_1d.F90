@@ -40,25 +40,25 @@ module sll_m_periodic_interpolator_1d
       sll_real64                        :: domain_size!< length of interval
       type(sll_t_periodic_interp_work)  :: per_interp !< ???
    contains
-      !>PLEASE ADD DOCUMENTATION
+      !>
       procedure, pass(interpolator) :: init => initialize_per1d_interpolator
-      !>PLEASE ADD DOCUMENTATION
+      !>
       procedure :: compute_interpolants => compute_interpolants_per1d
-      !>PLEASE ADD DOCUMENTATION
+      !>
       procedure :: interpolate_from_interpolant_value => interpolate_value_per1d
-      !>PLEASE ADD DOCUMENTATION
+      !>
       procedure :: interpolate_from_interpolant_derivative_eta1 => interpolate_deriv1_per1d
-      !>PLEASE ADD DOCUMENTATION
+      !>
       procedure :: interpolate_from_interpolant_array => interpolate_values_per1d
-      !>PLEASE ADD DOCUMENTATION
+      !>
       procedure, pass:: interpolate_array => per_interpolate1d
-      !>PLEASE ADD DOCUMENTATION
+      !>
       procedure, pass:: interpolate_array_disp => per_interpolate1d_disp
-      !>PLEASE ADD DOCUMENTATION
+      !>
       procedure, pass:: interpolate_array_disp_inplace => per_interpolate1d_disp_inplace
-      !>PLEASE ADD DOCUMENTATION
+      !>
       procedure, pass :: set_coefficients => set_coefficients_per1d
-      !>PLEASE ADD DOCUMENTATION
+      !>
       procedure, pass :: get_coefficients => get_coefficients_per1d
 
    end type sll_t_periodic_interpolator_1d

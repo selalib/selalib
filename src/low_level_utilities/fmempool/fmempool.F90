@@ -1,10 +1,7 @@
-!---------------------------------------------------------------------------
-! Plain Fortran implementation of a memory pool.
-!
-! See README for details.
-!---------------------------------------------------------------------------
 
 #include "fassert.inc"
+
+!> @brief Plain Fortran implementation of a memory pool.
 module fmempool
    use iso_c_binding
 #ifdef _OPENMP

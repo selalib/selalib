@@ -113,53 +113,53 @@ module sll_m_coordinate_transformations_2d
       !character(len=64) :: label
       !logical           :: written! = .false.
       !type(sll_t_cartesian_mesh_2d), pointer :: mesh => null()
-      !> PLEASE ADD DOCUMENTATION
+      !> 
       type(jacobian_matrix_element), dimension(2, 2) :: j_matrix
-      !> PLEASE ADD DOCUMENTATION
+      !> 
       procedure(sll_i_transformation_func_nopass), pointer, nopass :: x1_func  ! user
-      !> PLEASE ADD DOCUMENTATION
+      !> 
       procedure(sll_i_transformation_func_nopass), pointer, nopass :: x2_func  ! user
-      !> PLEASE ADD DOCUMENTATION
+      !> 
       procedure(two_arg_message_passing_func_analyt), pointer, pass :: jacobian_func
-      !> PLEASE ADD DOCUMENTATION
+      !> 
       procedure(j_matrix_f_nopass), pointer, nopass :: jacobian_matrix_function
-      !> PLEASE ADD DOCUMENTATION
+      !> 
       sll_real64, dimension(:), pointer :: params => null() ! transf params
    contains
-      !> PLEASE ADD DOCUMENTATION
+      !> 
       procedure, pass(transf) :: init => sll_s_coordinate_transformation_2d_analytic_init
-      !> PLEASE ADD DOCUMENTATION
+      !> 
       procedure, pass(transf) :: get_cartesian_mesh => get_cartesian_mesh_analytic
       ! Functions with integer arguments
-      !> PLEASE ADD DOCUMENTATION
+      !> 
       procedure, pass(transf) :: x1_at_node => x1_node_analytic
-      !> PLEASE ADD DOCUMENTATION
+      !> 
       procedure, pass(transf) :: x2_at_node => x2_node_analytic
-      !> PLEASE ADD DOCUMENTATION
+      !> 
       procedure, pass(transf) :: jacobian_at_node => jacobian_node_analytic
-      !> PLEASE ADD DOCUMENTATION
+      !> 
       procedure, pass(transf) :: x1_at_cell => x1_cell_analytic
-      !> PLEASE ADD DOCUMENTATION
+      !> 
       procedure, pass(transf) :: x2_at_cell => x2_cell_analytic
-      !> PLEASE ADD DOCUMENTATION
+      !> 
       procedure, pass(transf) :: jacobian_at_cell => jacobian_2d_cell_analytic
       ! Functions with real arguments
-      !> PLEASE ADD DOCUMENTATION
+      !> 
       procedure, pass(transf) :: x1 => x1_analytic
-      !> PLEASE ADD DOCUMENTATION
+      !> 
       procedure, pass(transf) :: x2 => x2_analytic
-      !> PLEASE ADD DOCUMENTATION
+      !> 
       procedure, pass(transf) :: jacobian => jacobian_2d_analytic
-      !> PLEASE ADD DOCUMENTATION
+      !> 
       procedure, pass(transf) :: jacobian_matrix => jacobian_matrix_2d_analytic
-      !> PLEASE ADD DOCUMENTATION
+      !> 
       procedure, pass(transf) :: inverse_jacobian_matrix => &
          inverse_jacobian_matrix_2d_analytic
-      !> PLEASE ADD DOCUMENTATION
+      !> 
       procedure, pass(transf) :: write_to_file => write_to_file_2d_analytic
-      !> PLEASE ADD DOCUMENTATION
+      !> 
       procedure, pass(transf) :: read_from_file => read_from_file_2d_analytic
-      !> PLEASE ADD DOCUMENTATION
+      !> 
       procedure, pass(transf) :: delete => delete_transformation_2d_analytic
    end type sll_t_coordinate_transformation_2d_analytic
 
@@ -171,58 +171,58 @@ module sll_m_coordinate_transformations_2d
 
    type, extends(sll_c_coordinate_transformation_2d_base) :: &
       sll_t_coordinate_transformation_2d_discrete
-      !> PLEASE ADD DOCUMENTATION
+      !> 
       sll_real64, dimension(:, :), pointer :: x1_node => null()   ! x1(i,j)
-      !> PLEASE ADD DOCUMENTATION
+      !> 
       sll_real64, dimension(:, :), pointer :: x2_node => null()  ! x2(i,j)
-      !> PLEASE ADD DOCUMENTATION
+      !> 
       sll_real64, dimension(:, :), pointer :: x1_cell => null()
-      !> PLEASE ADD DOCUMENTATION
+      !> 
       sll_real64, dimension(:, :), pointer :: x2_cell => null()
-      !> PLEASE ADD DOCUMENTATION
+      !> 
       sll_real64, dimension(:, :), pointer :: jacobians_n => null()
-      !> PLEASE ADD DOCUMENTATION
+      !> 
       sll_real64, dimension(:, :), pointer :: jacobians_c => null()
 !     type(jacobian_matrix_element), dimension(2,2) :: j_matrix
-      !> PLEASE ADD DOCUMENTATION
+      !> 
       class(sll_c_interpolator_2d), pointer               :: x1_interp
-      !> PLEASE ADD DOCUMENTATION
+      !> 
       class(sll_c_interpolator_2d), pointer               :: x2_interp
       !type(sll_t_cartesian_mesh_2d), pointer :: mesh => null()
    contains
-      !> PLEASE ADD DOCUMENTATION
+      !> 
       procedure, pass(transf) :: init => &
          sll_s_coordinate_transformation_2d_discrete_init
-      !> PLEASE ADD DOCUMENTATION
+      !> 
       procedure, pass(transf) :: get_cartesian_mesh => get_cartesian_mesh_discrete
-      !> PLEASE ADD DOCUMENTATION
+      !> 
       procedure, pass(transf) :: x1_at_node => x1_node_discrete
-      !> PLEASE ADD DOCUMENTATION
+      !> 
       procedure, pass(transf) :: x2_at_node => x2_node_discrete
-      !> PLEASE ADD DOCUMENTATION
+      !> 
       procedure, pass(transf) :: jacobian_at_node => transf_2d_jacobian_node_discrete
-      !> PLEASE ADD DOCUMENTATION
+      !> 
       procedure, pass(transf) :: x1 => x1_discrete
-      !> PLEASE ADD DOCUMENTATION
+      !> 
       procedure, pass(transf) :: x2 => x2_discrete
-      !> PLEASE ADD DOCUMENTATION
+      !> 
       procedure, pass(transf) :: x1_at_cell => x1_cell_discrete
-      !> PLEASE ADD DOCUMENTATION
+      !> 
       procedure, pass(transf) :: x2_at_cell => x2_cell_discrete
-      !> PLEASE ADD DOCUMENTATION
+      !> 
       procedure, pass(transf) :: jacobian_at_cell => jacobian_2d_cell_discrete
-      !> PLEASE ADD DOCUMENTATION
+      !> 
       procedure, pass(transf) :: jacobian => jacobian_2d_discrete
-      !> PLEASE ADD DOCUMENTATION
+      !> 
       procedure, pass(transf) :: jacobian_matrix => jacobian_matrix_2d_discrete
-      !> PLEASE ADD DOCUMENTATION
+      !> 
       procedure, pass(transf) :: inverse_jacobian_matrix => &
          inverse_jacobian_matrix_2d_discrete
-      !> PLEASE ADD DOCUMENTATION
+      !> 
       procedure, pass(transf) :: write_to_file => write_to_file_2d_discrete
-      !> PLEASE ADD DOCUMENTATION
+      !> 
       procedure, pass(transf) :: read_from_file => read_from_file_2d_discrete
-      !> PLEASE ADD DOCUMENTATION
+      !> 
       procedure, pass(transf) :: delete => delete_transformation_2d_discrete
    end type sll_t_coordinate_transformation_2d_discrete
 
