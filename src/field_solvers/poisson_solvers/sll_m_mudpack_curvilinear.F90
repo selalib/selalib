@@ -74,10 +74,10 @@ module sll_m_mudpack_curvilinear
 !> Interpolator to compute rhs coefficient
    class(sll_c_interpolator_2d), pointer :: ce_interp
    type(sll_t_cubic_spline_interpolator_2d), target :: ce_cs2d
-!> 
+!>
    class(sll_c_interpolator_2d), pointer :: a12_interp
    type(sll_t_cubic_spline_interpolator_2d), target :: a12_cs2d
-!> 
+!>
    class(sll_c_interpolator_2d), pointer :: a21_interp
    type(sll_t_cubic_spline_interpolator_2d), target :: a21_cs2d
 

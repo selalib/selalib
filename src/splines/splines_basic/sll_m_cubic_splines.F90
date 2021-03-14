@@ -101,9 +101,9 @@ module sll_m_cubic_splines
       sll_real64, private                        :: slope_L
       !> right slope, for Hermite
       sll_real64, private                        :: slope_R
-      !> 
+      !>
       logical, private                           :: compute_slope_L
-      !> 
+      !>
       logical, private                           :: compute_slope_R
       !> Data required for the 'slow' algorithm based on a standard
       !> tridiagonal system solution. Note that we use the same nomenclature
@@ -125,18 +125,18 @@ module sll_m_cubic_splines
    !> This should be
    !> treated as an opaque type. No access to its internals is directly allowed.
    type :: sll_t_cubic_spline_2d
-      sll_int32, private   :: num_pts_x1  !< 
-      sll_int32, private   :: num_pts_x2  !< 
-      sll_real64, private   :: x1_delta    !< 
-      sll_real64, private   :: x1_rdelta   !< 
-      sll_real64, private   :: x2_delta    !< 
-      sll_real64, private   :: x2_rdelta   !< 
-      sll_real64, private   :: x1_min      !< 
-      sll_real64, private   :: x1_max      !< 
-      sll_real64, private   :: x2_min      !< 
-      sll_real64, private   :: x2_max      !< 
-      sll_int32, private   :: x1_bc_type  !< 
-      sll_int32, private   :: x2_bc_type  !< 
+      sll_int32, private   :: num_pts_x1  !<
+      sll_int32, private   :: num_pts_x2  !<
+      sll_real64, private   :: x1_delta    !<
+      sll_real64, private   :: x1_rdelta   !<
+      sll_real64, private   :: x2_delta    !<
+      sll_real64, private   :: x2_rdelta   !<
+      sll_real64, private   :: x1_min      !<
+      sll_real64, private   :: x1_max      !<
+      sll_real64, private   :: x2_min      !<
+      sll_real64, private   :: x2_max      !<
+      sll_int32, private   :: x1_bc_type  !<
+      sll_int32, private   :: x2_bc_type  !<
       ! if data is not used, it should be deleted make a decision...
       sll_real64, pointer, private :: data(:, :) => null()  !< data for the spline fit
       sll_real64, pointer, private :: d1(:) => null()      !< scratch space D (L*D = F),

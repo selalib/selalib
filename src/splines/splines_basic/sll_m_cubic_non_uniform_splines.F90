@@ -171,7 +171,7 @@ contains  ! ****************************************************************
       end select
    end subroutine sll_s_compute_spline_nonunif
 
-   !> 
+   !>
    subroutine compute_spline_nonunif_1D_periodic(f, spline)
       sll_real64, dimension(:), intent(in), target :: f    ! data to be fit
       type(sll_t_cubic_nonunif_spline_1d), pointer         :: spline
@@ -200,7 +200,7 @@ contains  ! ****************************************************************
       call compute_spline_nonunif_1D_periodic_aux(fp, nc, buf, ibuf, coeffs)
    end subroutine compute_spline_nonunif_1D_periodic
 
-   !> 
+   !>
    subroutine compute_spline_nonunif_1D_hermite(f, spline)
       sll_real64, dimension(:), intent(in), target :: f    ! data to be fit
       type(sll_t_cubic_nonunif_spline_1d), pointer         :: spline
@@ -268,7 +268,7 @@ lift(4, 2) = (spline%node_positions(nc) - spline%node_positions(nc - 2))*(spline
 !      0.79120879120879106       0.20571428571428568       3.07692307692324129E-003
 !      0.23999999999999971       0.59333333333333360       0.16666666666666666
 
-   !> 
+   !>
    subroutine sll_s_setup_spline_nonunif_1d_periodic_aux(node_pos, N, buf, ibuf)
       sll_real64, dimension(:), pointer :: node_pos, buf
       sll_int32, intent(in) :: N
@@ -352,7 +352,7 @@ lift(4, 2) = (spline%node_positions(nc) - spline%node_positions(nc - 2))*(spline
 
    end subroutine setup_spline_nonunif_1D_hermite_aux
 
-   !> 
+   !>
    subroutine compute_spline_nonunif_1D_periodic_aux(f, N, buf, ibuf, coeffs)
       sll_real64, dimension(:), pointer :: f, buf, coeffs
       sll_int32, intent(in) :: N
@@ -379,7 +379,7 @@ lift(4, 2) = (spline%node_positions(nc) - spline%node_positions(nc - 2))*(spline
       !print *,'error of compute_spline=',linf_err
    end subroutine compute_spline_nonunif_1D_periodic_aux
 
-   !> 
+   !>
    subroutine sll_s_compute_spline_nonunif_1d_periodic_aux2(f, N, buf, ibuf, coeffs)
       sll_real64, dimension(:) :: f
       sll_real64, dimension(:), pointer :: buf
@@ -589,7 +589,7 @@ lift(4, 2) = (spline%node_positions(nc) - spline%node_positions(nc - 2))*(spline
       end do
    end subroutine sll_s_interpolate_array_value_nonunif
 
-   !> 
+   !>
    subroutine sll_s_interpolate_array_value_nonunif_aux(a_in, a_out, n, node_pos, coeffs, n_cells)
       sll_int32, intent(in) :: n, n_cells
       sll_real64, dimension(1:n), intent(in)  :: a_in

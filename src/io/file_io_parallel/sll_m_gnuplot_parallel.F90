@@ -99,7 +99,7 @@ contains
 #else
       inquire (file=cproc//"/"".", exist=dir_e)
       if (.not. dir_e) then
-      call execute_command_line("mkdir -p "//cproc)
+         call execute_command_line("mkdir -p "//cproc)
       end if
 #endif
 

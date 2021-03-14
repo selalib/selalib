@@ -18,10 +18,10 @@ module sll_m_poisson_3d_base
    !> Abstract class for Poisson solver in 3 dimensions
    type, abstract :: sll_c_poisson_3d_base
    contains
-      !> 
+      !>
       procedure(signature_compute_phi_from_rho_3d), deferred, pass(poisson) :: &
          compute_phi_from_rho
-      !> 
+      !>
       procedure(signature_compute_E_from_rho_3d), deferred, pass(poisson) :: &
          compute_E_from_rho
    end type sll_c_poisson_3d_base

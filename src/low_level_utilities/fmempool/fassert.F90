@@ -1,4 +1,4 @@
-@brief C-like assert implementation for Fortran.
+@brief C - like assert implementation for Fortran.
 module assert
 
    implicit none

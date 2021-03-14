@@ -8,7 +8,7 @@
 !> b^T stands for the transposition of b
 !> we suppose that A is square
 !>
-!> @author Adnane Hamiaz Michel Mehrenberger 
+!> @author Adnane Hamiaz Michel Mehrenberger
 module csr_one_constraint_module
 
 contains
