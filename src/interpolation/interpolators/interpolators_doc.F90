@@ -13,7 +13,7 @@
 !! Classes for numerical interpolation.
 !! @authors Edwin-Chacon Golcher, Aurore Back and Pierre Navaro.
 !! @details
-!! 
+!!
 !!
 !! Methods:
 !! - compute_interpolants(...)
