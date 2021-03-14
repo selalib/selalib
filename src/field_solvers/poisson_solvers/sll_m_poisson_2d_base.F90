@@ -16,7 +16,7 @@ module sll_m_poisson_2d_base
    private
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
-   !> 
+   !>
    type, abstract :: sll_c_poisson_2d_base
 
    contains

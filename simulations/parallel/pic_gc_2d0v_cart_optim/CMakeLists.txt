@@ -17,6 +17,5 @@ if(BUILD_TESTING)
   file(COPY ${INPUT_FILES} DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
   set(ARGS ${CMAKE_CURRENT_BINARY_DIR}/params_pic_2d_KH.nml)
   add_mpi_test(${TEST_NAME} ${EXECUTABLE} ${PROCS} ${ARGS})
-  set_tests_properties(${TEST_NAME} PROPERTIES PASS_REGULAR_EXPRESSION
-                                               "PASSED")
+  set_tests_properties(${TEST_NAME} PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
 endif(BUILD_TESTING)

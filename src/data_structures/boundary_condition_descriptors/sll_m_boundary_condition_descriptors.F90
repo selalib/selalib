@@ -56,7 +56,7 @@ module sll_m_boundary_condition_descriptors
    sll_int32, parameter :: sll_p_hermite = 3
    !> Neumann boundary condition
    sll_int32, parameter :: sll_p_neumann_mode_0 = 4
-   !> 
+   !>
    sll_int32, parameter :: sll_p_set_to_limit = 5
    !> Interior of domain
    sll_int32, parameter :: sll_p_interior = 6

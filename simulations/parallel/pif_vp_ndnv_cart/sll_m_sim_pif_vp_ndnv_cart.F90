@@ -804,9 +804,8 @@ contains
          sim%particle(sim%maskv, :) = sim%particle(sim%maskv, :) - &
                                       sim%rk_c(rkidx)*sim%dt*sim%qm* &
                                       (sim%E(sim%particle(sim%maskx, :), t) + &                          ! Electric field external
-                                       (-sim%SOLVER%eval_gradient(sim%particle(sim%maskx, :), sim%solution))); !Electric field selfconsistent     sim%particle(sim%maskx, :) = sim%particle(sim%maskx, :) + sim%rk_d(rkidx)*sim%dt*sim%particle(sim%maskv, :);
- ! xx=mod(xx,repmat(L,1,npart));
-         t = (sim%tstep - 1)*sim%dt + sum(sim%rk_d(1:rkidx))*sim%dt; 
+                                       (-sim%SOLVER%eval_gradient(sim%particle(sim%maskx, :), sim%solution))); !Electric field selfconsistent     sim%particle(sim%maskx, :) = sim%particle(sim%maskx, :) + sim%rk_d(rkidx)*sim%dt*sim%particle(sim%maskv, :); ! xx=mod(xx,repmat(L,1,npart));
+ t = (sim%tstep - 1)*sim%dt + sum(sim%rk_d(1:rkidx))*sim%dt; 
       end do
       t = (sim%tstep)*sim%dt; 
    end subroutine symplectic_rungekutta_generalvp_pif

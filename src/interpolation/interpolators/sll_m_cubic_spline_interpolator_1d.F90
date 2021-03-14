@@ -248,7 +248,7 @@ contains  ! ****************************************************************
 !   val = sll_f_cubic_spline_1d_eval_deriv(eta1,interpolator%spline)
 ! end function interpolate_derivative_f95
 
-   !> 
+   !>
    function sll_f_new_cubic_spline_interpolator_1d( &
       num_points, &
       xmin, &

@@ -18,4 +18,3 @@ target_link_libraries(test_pic_initializers_6d sll_pic_opt_initializers
 add_test(NAME pic_initializers_6d COMMAND test_pic_initializers_6d)
 set_tests_properties(pic_initializers_6d PROPERTIES PASS_REGULAR_EXPRESSION
                                                     "PASSED")
-
